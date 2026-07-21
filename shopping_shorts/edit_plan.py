@@ -63,9 +63,12 @@ def _build_inventory(source_scripts):
                 "video_id": vid, "seg_id": sid,
                 "start": seg["start"], "end": seg["end"],
                 "text": seg.get("text", ""), "scene_desc": seg.get("scene_desc", ""),
+                "action": seg.get("action"),
             }
+            _act = seg.get("action")
+            _act_s = f" | 행위:{_act}" if _act else ""
             lines.append(
-                f"[{sid}] ({length}s) 화면:{seg.get('scene_desc','')} | 말:{seg.get('text','')}"
+                f"[{sid}] ({length}s) 화면:{seg.get('scene_desc','')} | 말:{seg.get('text','')}{_act_s}"
             )
     return seg_map, "\n".join(lines)
 
@@ -79,7 +82,43 @@ def _ground_ref(ref, seg_map):
     seg = seg_map.get(sid)
     if not seg:
         return None
-    return {"video_id": seg["video_id"], "seg_id": sid, "start": seg["start"], "end": seg["end"]}
+    return {"video_id": seg["video_id"], "seg_id": sid, "start": seg["start"], "end": seg["end"],
+            "scene_desc": seg.get("scene_desc", "")}
+
+
+_FACE_TOKENS = ("얼굴", "정면", "셀카", "자기소개", "말하는 사람", "脸", "人物", "正面", "自拍")
+
+
+def _is_face_seg(scene_desc):
+    """scene_desc에 인물 정면/얼굴 신호가 있으면 True — 대체 카드가 있을 때 후순위로 민다."""
+    s = (scene_desc or "").lower()
+    return any(t.lower() in s for t in _FACE_TOKENS)
+
+
+def _dedup_and_fill(flat, need):
+    """같은 (video_id,seg_id,start) 중복 제거 후, need 미만이면 가장 긴 세그먼트를
+    시간 이등분 서브슬라이스로 분할해 need개까지 채운다. 환각 없음 — start/end는 코드 계산."""
+    seen, uniq = set(), []
+    for s in flat:
+        k = (s.get("video_id", ""), s.get("seg_id", ""), s.get("start", 0.0))
+        if k in seen:
+            continue
+        seen.add(k)
+        uniq.append(s)
+    # 부족분을 서브슬라이스로 채움 — 가장 긴 것부터 반으로 쪼갠다.
+    while len(uniq) < need:
+        longest = max(uniq, key=lambda s: s.get("end", 0.0) - s.get("start", 0.0), default=None)
+        if longest is None or (longest["end"] - longest["start"]) < 1.0:
+            break  # 더 쪼갤 게 없음 — 있는 만큼만
+        mid = round((longest["start"] + longest["end"]) / 2, 2)
+        half = dict(longest)
+        half["seg_id"] = f"{longest['seg_id']}#2"
+        half["start"] = mid
+        longest["end"] = mid  # 원본은 앞 절반으로 줄임(제자리 수정)
+        uniq.append(half)
+    # need 미만으로 끝날 수 있다(잔여가 전부 1초 미만이면 위 break) — 호출부(_chronological_respine)가
+    # 그 경우를 가드한다. 여기서 truncate는 불필요: while이 len(uniq)>=need에서 멈추므로 넘치지 않는다.
+    return uniq
 
 
 def _chronological_respine(beats):
@@ -93,32 +132,50 @@ def _chronological_respine(beats):
     바나나 등)일 수 있어, CTA 나레이션("완성! 댓글")이 엉뚱한 릴 위에 얹혔다. CTA/엔딩 비트는
     모델이 고른 완성/시식 컷을 그대로 두고, 그 앞 body 비트들만 시간순으로 흐르게 한다.
 
-    의미 매칭(문장↔화면)을 일부러 포기한 배치이므로, 오탐 빨간불을 막기 위해 fit=4(정상)로
-    표시한다 — 이 값은 '시간순 스파인 배치'라는 뜻이지 '문장과 화면이 맞다'는 뜻이 아니다.
-    정렬 키는 (video_id, start): 한 소스는 시간순으로 이어 쓰고, 소스끼리는 묶어서 쓴다."""
+    의미 매칭(문장↔화면)을 일부러 포기한 배치이므로, 오탐 빨간불을 막기 위해 respined
+    플래그로 구분한다 — fit은 조작하지 않는다(④ fit 정직화, 2026-07-20). 프런트는 respined
+    비트를 중립(초록) 처리하고, fit은 모델이 매긴 원래 값을 그대로 노출한다.
+    정렬 키는 (video_id, start): 한 소스는 시간순으로 이어 쓰고, 소스끼리는 묶어서 쓴다.
+
+    ① visual_verb 앵커(2026-07-20): 나레이션이 화면의 구체적 시각행위(찢다·붓다·완성 등)를
+    지목하는 비트는 그 화면이 반드시 맞아야 하므로 꼬리처럼 앵커로 고정한다 — 모델이 고른
+    원 세그먼트·원 fit 그대로, respined 플래그 없음. 나머지 movable body 비트만 flat 풀에
+    모아 시간순 재배치한다. visual_verb 키가 없으면 .get()이 False → movable(기존 계약)."""
     if not beats:
         return beats
     # 꼬리 비트는 respine 대상에서 제외(앵커) — 모델이 고른 화면 그대로.
     body, tail = beats[:-1], beats[-1]
+    # visual_verb=True 비트도 앵커. 나머지 movable body만 flat 풀 → dedup → 시간순 재배치.
+    movable_idx = [j for j, b in enumerate(body) if not b.get("visual_verb")]
     flat, counts = [], []
-    for b in body:
-        segs = [b["primary"]] + list(b.get("alternates") or [])
+    for j in movable_idx:
+        segs = [body[j]["primary"]] + list(body[j].get("alternates") or [])
         counts.append(len(segs))
-        flat.extend(segs)
-    ordered = sorted(flat, key=lambda s: (s.get("video_id", ""), s.get("start", 0.0)))
-    out, i = [], 0
-    for b, n in zip(body, counts):
+        # 스냅샷 복사: _dedup_and_fill의 서브슬라이스가 제자리 mutation(longest["end"]=mid)하므로
+        # 참조로 넣으면 원본 비트의 primary/alternates까지 오염된다(이월 Minor 픽스 1).
+        flat.extend([dict(s) for s in segs])
+    flat = _dedup_and_fill(flat, need=sum(counts))
+    # 정렬: (video_id,start) 우선, 동시각이면 얼굴 세그먼트를 뒤로(대체 있을 때 후순위).
+    ordered = sorted(flat, key=lambda s: (s.get("video_id", ""), s.get("start", 0.0),
+                                          _is_face_seg(s.get("scene_desc", ""))))
+    moved, i = {}, 0
+    for j, n in zip(movable_idx, counts):
         chunk = ordered[i:i + n]
         i += n
-        nb = dict(b)
+        if not chunk:
+            # fill이 need를 못 채운 극단 케이스(잔여 세그 전부 1초 미만) — 이 비트로 돌아올
+            # 세그먼트가 바닥났다. 크래시 대신 원래 화면을 보존한다(아래 루프가 원본 append).
+            # 실제로 재배치되지 않았으니 respined 플래그도 달지 않는다.
+            continue
+        nb = dict(body[j])
         nb["primary"] = chunk[0]
         nb["alternates"] = chunk[1:]
-        nb["fit"] = 4
-        out.append(nb)
-    # 꼬리: 세그먼트는 원래 것 유지, fit만 스파인 계약(4)에 맞춘다(오탐 빨간불 방지 동일).
-    nb_tail = dict(tail)
-    nb_tail["fit"] = 4
-    out.append(nb_tail)
+        nb["respined"] = True   # 시간순 스파인 배치 = b-roll by design(빨간불 대상 아님)
+        moved[j] = nb           # ④ fit 덮어쓰기 삭제 — 모델 fit 그대로 보존
+    # movable은 재배치본, 앵커(visual_verb·빈chunk)는 원본 그대로.
+    out = [moved[j] if j in moved else dict(b) for j, b in enumerate(body)]
+    # 꼬리: 앵커 — 세그먼트·fit 모두 모델이 고른 그대로(respined 아님).
+    out.append(dict(tail))
     return out
 
 
@@ -149,6 +206,7 @@ def _validate_and_ground(raw_plan, seg_map, n_alternates, respine=True):
             "alternates": alts,
             "effect": beat.get("effect", "cut"),
             "fit": int(beat.get("fit") or 0),
+            "visual_verb": bool(beat.get("visual_verb", False)),
         })
     if respine:
         beats_out = _chronological_respine(beats_out)
@@ -210,6 +268,7 @@ _RESPONSE_SCHEMA = {
                     },
                     "effect": {"type": "string"},
                     "fit": {"type": "integer"},
+                    "visual_verb": {"type": "boolean"},
                 },
                 "required": ["role", "narration", "target_seconds", "primary"],
             },
@@ -248,9 +307,14 @@ _PROMPT = """너는 숏폼 쇼핑 영상 편집 감독이다. 아래 여러 소�
   (예: 소스가 2개면 둘 다 최소 한 번씩 이상 써라). 한 영상만 쓰면 믹스가 아니다.**
 - **말을 먼저 다 쓰고 화면을 나중에 맞추지 마라.** "쓸 화면이 있는 말"을 골라라 —
   나레이션과 primary 구간의 화면(scene_desc)이 실제로 어울려야 한다.
+- **얼굴 클로즈업 배제:** 사람 얼굴이 화면에 크게 나오는 컷(말하는 사람 정면 클로즈업,
+  셀카형 인물 샷)은 피하라. 제품·요리·과정·결과물이 보이는 화면을 우선 골라라.
+  얼굴만 나오는 구간은 대체 화면이 있으면 쓰지 마라(scene_desc로 판단).
 - 화면이 튀지 않게: 같은 소스 안에서는 되도록 시간 순서가 크게 뒤바뀌지 않는,
   자연스럽게 이어지는 구간을 골라라.
 - **소스 구간은 반드시 위 인벤토리의 seg_id로만 지목**해라. 없는 seg_id를 지어내지 마라.
+- **visual_verb: 이 비트의 나레이션이 화면에서 눈으로 보이는 구체적 동작·상태(찢다·붓다·완성·꺼내다·바르다 등)를
+  지목하면 true, 감정·설명·도입부처럼 특정 화면을 요구하지 않으면 false로 표시해라.**
 - **표절 금지:** 소스 원문 문장·구절을 그대로 베끼지 마라. 후킹 방식·구조·핵심
   셀링포인트만 계승해서 완전히 새 표현으로 써라.
 - 출력은 스키마 JSON만."""
@@ -285,9 +349,13 @@ _SCRIPTED_PROMPT = """너는 숏폼 쇼핑 영상 편집 감독이다. **나레�
   걸쳐도 좋다(관련성 우선). 전부 대사 내용과 화면(scene_desc)이 어울려야 한다.
 - **[여러 영상 모두 사용] primary 구간을 한 영상에만 몰지 마라. 소스가 여러 개면 고르게 섞어라.**
 - 나레이션과 primary 구간의 화면(scene_desc)이 실제로 어울리게 골라라.
+- **얼굴 클로즈업 배제:** 사람 얼굴이 크게 나오는 컷(정면 클로즈업·셀카형)은 피하고
+  제품·요리·과정·결과물 화면을 우선 골라라. 얼굴만 나오는 구간은 대체 화면이 있으면 쓰지 마라.
 - **소스 구간은 반드시 인벤토리의 seg_id로만 지목**해라. 없는 seg_id 지어내지 마라.
 - **fit: 이 비트의 나레이션과 primary 화면이 얼마나 잘 맞는지 1~5로 솔직하게 매겨라
   (5=딱 맞음, 3=무난, 1~2=마땅한 영상이 없어 억지로 붙임). 억지로 붙였으면 낮게 줘라.**
+- **visual_verb: 이 비트의 나레이션이 화면에서 눈으로 보이는 구체적 동작·상태(찢다·붓다·완성·꺼내다·바르다 등)를
+  지목하면 true, 감정·설명·도입부처럼 특정 화면을 요구하지 않으면 false로 표시해라.**
 - affiliate_target: 이 영상이 팔거나 연결할 핵심 제품/재료 하나를 정확한 이름으로.
 - 출력은 스키마 JSON만."""
 
@@ -317,6 +385,143 @@ def _vault_call(prompt, schema, max_tries=4):
             print(f"edit_plan._vault_call: {e!r}", file=sys.stderr)
             return None
     return None
+
+
+_SCENE_FIRST_SCHEMA = {
+    "type": "object",
+    "properties": {"candidates": {"type": "array", "minItems": 1, "items": {
+        "type": "object",
+        "properties": {
+            "hook": {"type": "string"},
+            "story_person": {"type": "string"}, "story_event": {"type": "string"},
+            "story_resolution": {"type": "string"}, "cta_line": {"type": "string"},
+            "cta_keyword": {"type": "string"},
+            "beats": {"type": "array", "minItems": 4, "items": {
+                "type": "object",
+                "properties": {
+                    "role": {"type": "string"}, "narration": {"type": "string"},
+                    "seg_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+                    "fit": {"type": "integer"}, "forced": {"type": "boolean"}},
+                "required": ["role", "narration", "seg_ids", "fit"]}}},
+        "required": ["hook", "beats"]}}},
+    "required": ["candidates"],
+}
+
+
+def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3, call=_vault_call):
+    """스토리 헌장 + 장면 팔레트 + 레퍼 구조 → 후보 n개. 각 비트는 seg_ids(2~4 다중컷)로
+    장면을 지목한다. 실패 시 []. 헌장이 품질을 담당하므로 별도 검증루프 없음(1콜)."""
+    from shopping_shorts import script_generate  # 지연 import(순환 방지)
+    char_target = int(target_seconds * _SYLLABLES_PER_SEC)
+    prompt = (
+        "너는 한국 쇼핑 숏폼(살림·요리) 대본 작가다. 아래 '스토리 헌장'을 반드시 지켜 "
+        f"탄탄한 대본 후보 {n}개를 만들어라. 단, 우리가 가진 장면으로만 말할 수 있게 쓰고, "
+        "각 비트(문장)에 그 말과 어울리는 장면 seg_id를 2~4개 시간순으로 붙여라.\n\n"
+        "[레퍼런스 — 훅·전개·설득구조만 계승(표절 금지), 다국어면 한국어로]\n"
+        f"{(reference_text or '')[:1500]}\n\n"
+        "[우리 장면 팔레트 — 이 seg_id 화면만 쓸 수 있다]\n"
+        f"{inventory_text}\n\n"
+        + script_generate._STORY_RULES_CORE + "\n" + script_generate._STORY_DECLARE + "\n"
+        "- ★위 헌장(인과사슬·훅 한방·CTA 미끼·비법 킥 감추기)을 반드시 지켜라 — 장면에 맞추느라 "
+        "스토리가 밋밋해지면 실패다. 스토리가 왕, 장면은 그 스토리를 보여줄 그림이다.\n"
+        f"- 전체 나레이션 글자수 합은 약 {char_target}자 내외. 각 비트: role·narration(구어체)·"
+        "seg_ids(2~4)·fit(1~5)·forced(그 장면이 이 말과 안 맞는데 억지로 붙였으면 true).\n"
+        "- 화면에 없는 걸 말하지 마라. 같은 seg_id를 여러 비트에서 재사용 금지.\n"
+        "출력은 스키마 JSON만.")
+    raw = call(prompt, _SCENE_FIRST_SCHEMA)
+    if not raw or not isinstance(raw, dict):
+        return []
+    return raw.get("candidates", []) or []
+
+
+def _ground_candidate(cand, seg_map, structure="free"):
+    """후보 비트(narration + seg_ids 다중컷)를 build_edit_plan 반환형 EDL로 grounding.
+    seg_ids[0]=primary, 나머지=alternates(연속재생). start/end/scene_desc는 코드가 되붙인다.
+    primary 무효 비트는 드롭. 유효 비트 0개면 None."""
+    beats_out = []
+    for beat in cand.get("beats", []):
+        segs = beat.get("seg_ids") or []
+        primary = _ground_ref({"seg_id": segs[0]}, seg_map) if segs else None
+        if primary is None:
+            continue
+        alts, seen = [], {primary["seg_id"]}
+        for sid in segs[1:]:
+            g = _ground_ref({"seg_id": sid}, seg_map)
+            if g and g["seg_id"] not in seen:
+                alts.append(g)
+                seen.add(g["seg_id"])
+        narration = beat.get("narration", "")
+        beats_out.append({
+            "beat_idx": len(beats_out), "role": beat.get("role", ""),
+            "narration": narration,
+            "target_seconds": round(max(1.5, len(narration.strip()) / _SYLLABLES_PER_SEC), 1),
+            "primary": primary, "alternates": alts, "effect": "cut",
+            "fit": int(beat.get("fit") or 0), "forced": bool(beat.get("forced", False)),
+        })
+    if not beats_out:
+        return None
+    return {"structure": structure, "beats": beats_out}
+
+
+def _score_candidate(plan):
+    """후보 추천 점수(0~1): 매칭 fit·억지없음·장면다양성. 빈 beats면 0.0."""
+    beats = plan.get("beats") or []
+    if not beats:
+        return 0.0
+    avg_fit = sum(int(b.get("fit") or 0) for b in beats) / len(beats) / 5.0
+    forced_ratio = sum(1 for b in beats if b.get("forced")) / len(beats)
+    seg_ids = []
+    for b in beats:
+        seg_ids.append((b.get("primary") or {}).get("seg_id"))
+        seg_ids += [(a or {}).get("seg_id") for a in (b.get("alternates") or [])]
+    seg_ids = [s for s in seg_ids if s]
+    diversity = (len(set(seg_ids)) / len(seg_ids)) if seg_ids else 0.0
+    return round(0.5 * avg_fit + 0.3 * (1 - forced_ratio) + 0.2 * diversity, 3)
+
+
+_CONFORM_SCHEMA = {
+    "type": "object",
+    "properties": {"narration": {"type": "string"}},
+    "required": ["narration"],
+}
+
+_CONFORM_PROMPT = """너는 숏폼 나레이션 카피 에디터다. 아래 문장을 **약 {char_target}자(공백 제외)**로
+압축해라. 발화 시간을 영상 클립 길이에 맞추는 작업이다.
+
+규칙:
+- 뜻·핵심 정보·역할(훅/전개/CTA)·말투를 유지한다. 정보를 새로 지어내지 않는다.
+- 압축만 한다 — 군더더기·중복·부사를 덜어낸다. 문장을 재창작하지 않는다.
+- 한 문장 또는 자연스러운 짧은 문장들로.
+
+[원문]
+{narration}
+
+스키마 JSON으로 narration 하나만 출력해라."""
+
+
+def conform_narration(narration, target_seconds, max_tries=4):
+    """문장을 target_seconds 발화 길이에 맞게 압축(콘폼) — 성공 시 새 문장, 실패 시 None.
+
+    싱크 콘폼루프(2026-07-20 설계)의 T2. 영상 예산(클립 실길이×슬로모 상한)을 초과한
+    비트의 나레이션만 표면 재단한다 — 서사는 대본이, 시간은 영상이 주인이다.
+    게이트: 결과의 추정 발화초(공백제외 글자수÷_SYLLABLES_PER_SEC)가 목표의 0.8~1.2배
+    아니면 None(뜻 훼손 없는 안전 폴백 = 호출부가 원문 유지 + freeze 잔존 플래그)."""
+    narration = (narration or "").strip()
+    if not narration or target_seconds <= 0:
+        return None
+    char_target = max(6, int(round(target_seconds * _SYLLABLES_PER_SEC)))
+    raw = _vault_call(
+        _CONFORM_PROMPT.format(char_target=char_target, narration=narration[:1000]),
+        _CONFORM_SCHEMA, max_tries=max_tries)
+    if not raw:
+        return None
+    new = (raw.get("narration") or "").strip()
+    if not new:
+        return None
+    est = len("".join(new.split())) / _SYLLABLES_PER_SEC
+    if not (0.8 * target_seconds <= est <= 1.2 * target_seconds):
+        return None
+    return new
 
 
 _TYPE_SCHEMA = {
@@ -380,6 +585,43 @@ def detect_video_type(source_scripts, max_retries=3, quota_sleep=8):
     return _DEFAULT_TYPE
 
 
+_RECONCILE_SCHEMA = {
+    "type": "object",
+    "properties": {"rewrites": {"type": "array", "items": {
+        "type": "object",
+        "properties": {"beat_idx": {"type": "integer"}, "narration": {"type": "string"}},
+        "required": ["beat_idx", "narration"]}}},
+    "required": ["rewrites"],
+}
+
+
+def _reconcile_weak_beats(beats, call=_vault_call):
+    """앵커(respined 아님)이면서 fit<=3인 비트의 나레이션만 화면(scene_desc)에 맞게
+    1회 Gemini 호출로 미세수정. 대상 0개면 호출 없이 그대로. 실패 시 원문 유지(fail-open)."""
+    weak = [b for b in beats if not b.get("respined") and 0 < int(b.get("fit") or 0) <= 3]
+    if not weak:
+        return beats
+    lines = "\n".join(
+        f"[{b['beat_idx']}] 화면:{(b.get('primary') or {}).get('scene_desc','')} | 현재대사:{b.get('narration','')}"
+        for b in weak)
+    prompt = (
+        "아래 비트들은 대사와 화면이 어긋난다. 각 비트의 대사를 **뜻과 정보는 유지**하되 "
+        "화면(scene_desc)에 어울리도록 표현만 자연스럽게 고쳐라. 화면에 없는 사실을 지어내지 마라.\n"
+        f"{lines}\n출력은 rewrites 배열의 JSON만.")
+    raw = call(prompt, _RECONCILE_SCHEMA)
+    if not raw or not isinstance(raw, dict):
+        return beats
+    fixes = {int(r["beat_idx"]): r["narration"]
+             for r in raw.get("rewrites", []) if r.get("narration")}
+    out = []
+    for b in beats:
+        nb = dict(b)
+        if b["beat_idx"] in fixes:
+            nb["narration"] = fixes[b["beat_idx"]]
+        out.append(nb)
+    return out
+
+
 def build_edit_plan(source_scripts, target_seconds, structure="template", video_type=None,
                     n_alternates=2, max_retries=4, quota_sleep=8, given_script=None):
     """소스 대본들 → 그라운딩·표절검사된 EDL(설계 §3-2). 실패 시 빈 EDL.
@@ -418,6 +660,7 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
         return empty
     raw.setdefault("structure", structure)
     grounded = _validate_and_ground(raw, seg_map, n_alternates)
+    grounded["beats"] = _reconcile_weak_beats(grounded["beats"])
     # 각 비트 target_seconds는 나레이션 글자수 기준으로 재계산(실제 렌더 길이 =
     # 나레이션 읽는 시간 ≈ 글자수÷_SYLLABLES_PER_SEC초). UI 표시 초와 실제 길이가 어긋나지 않게.
     for _b in grounded["beats"]:
@@ -431,3 +674,32 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
                                     else _plagiarism_flags(grounded["beats"],
                                                            [s.get("full_text", "") for s in source_scripts]))
     return grounded
+
+
+def build_scene_first_plan(source_scripts, reference_text, target_seconds,
+                           n_candidates=3, video_type=None, call=None):
+    """장면 우선 대본 모드: 팔레트+헌장으로 후보 n개 생성 → 각 EDL grounding·채점 →
+    최고 score에 recommended=True. 각 candidate.plan은 build_edit_plan 반환형(하류 렌더 호환).
+    후보 0개면 candidates=[](호출부가 기존 build_edit_plan로 폴백)."""
+    seg_map, inventory = _build_inventory(source_scripts)
+    detected = video_type or (detect_video_type(source_scripts) if source_scripts else _DEFAULT_TYPE)
+    if not seg_map:
+        return {"candidates": [], "detected_type": detected}
+    _call = call or _vault_call
+    raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates, call=_call)
+    src_texts = [s.get("full_text", "") for s in source_scripts]
+    cands = []
+    for r in raws:
+        plan = _ground_candidate(r, seg_map)
+        if plan is None:
+            continue
+        plan["detected_type"] = detected
+        plan["affiliate_target"] = r.get("story_event", "") or ""
+        plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)
+        story = {k: r.get(k, "") for k in
+                 ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
+        cands.append({"plan": plan, "story": story, "score": _score_candidate(plan), "recommended": False})
+    if cands:
+        best = max(range(len(cands)), key=lambda i: cands[i]["score"])
+        cands[best]["recommended"] = True
+    return {"candidates": cands, "detected_type": detected}

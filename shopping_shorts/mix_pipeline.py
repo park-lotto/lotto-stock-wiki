@@ -12,11 +12,11 @@ from pathlib import Path
 from shopping_shorts.store import Store
 from shopping_shorts.media_download import download_any
 from shopping_shorts.script_extract import extract_script
-from shopping_shorts.edit_plan import build_edit_plan
+from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC, build_edit_plan, conform_narration
 from shopping_shorts.scene_match import match_scene_assets
 from shopping_shorts import tts
 from shopping_shorts import audio_post
-from shopping_shorts.video_assemble import assemble, _beat_timeline, _probe_duration
+from shopping_shorts.video_assemble import assemble, _beat_timeline, _probe_duration, _MAX_SLOWMO
 from shopping_shorts.motion_assets import resolve_layers, DEFAULT_ASSETS_DIR
 from shopping_shorts.motion_packs import build_plan, load_packs
 from shopping_shorts.vmake_client import remove_subtitles
@@ -77,16 +77,25 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     return natural
 
 
-def _synthesize_beats(beats, tts_dir, *, voice):
+def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False):
     """비트별로 synthesize_line 호출. beat['tts_path']를 채운다.
     연속성(previous_text/next_text)은 인접 비트의 '원문'(naturalize 전) narration을 쓴다
     — naturalize된 텍스트(오디오 태그·추임새 포함)를 연속성으로 넘기면 ElevenLabs가
-    태그를 발화 텍스트로 오인할 수 있어서다."""
+    태그를 발화 텍스트로 오인할 수 있어서다.
+
+    skip_existing=True: 이미 tts_path가 있는 비트는 재합성하지 않는다. 렌더 경로
+    (run_preview/run_render)가 조립 직전 TTS를 '보장'하는 방어심층용 — 추천 후보(합성 완료,
+    tts_path 있음)는 0원, 갈아끼운 후보(tts_path 키 자체가 없음)만 그 자리에서 합성한다.
+    ★파일 실재가 아니라 tts_path '존재'로 판단한다 — 하류 tts_paths도 truthiness로만 보므로
+    존재하되 파일이 없는 경우의 처리(별개 관심사)를 이 버그 수정이 바꾸지 않게 한다.
+    """
     tts_dir = Path(tts_dir)
     tts_dir.mkdir(parents=True, exist_ok=True)
     total = len(beats)
     for i, beat in enumerate(beats):
         out = tts_dir / f"beat_{beat['beat_idx']}.mp3"
+        if skip_existing and beat.get("tts_path"):
+            continue
         synthesize_line(
             beat["narration"], out, voice=voice, beat_role=beat.get("role"),
             beat_index=i, beat_total=total,
@@ -101,6 +110,67 @@ def _synthesize_beats(beats, tts_dir, *, voice):
             dur = _probe_duration(str(out))
             beat["cap_durs"] = caption_sync.phrase_durs_from_words(
                 beat["narration"], words, dur)   # None일 수 있음 → 폴백
+
+
+# 콘폼 트리거 임계(초). 이하의 초과분은 켄번즈 홀드(≤0.8s)로 자연 흡수되는 수준이라
+# 제미니 리라이트+재TTS 비용을 쓰지 않는다(설계 §1, 2026-07-20).
+_CONFORM_MIN_GAP = 0.8
+
+
+def _conform_beats(beats, tts_dir, *, voice):
+    """싱크 콘폼 패스(2026-07-20 설계 T3) — 대사가 영상 예산을 넘는 비트만 표면 재단.
+
+    예산 = Σ(primary+alternates 구간 길이) × _MAX_SLOWMO. _plan_beat_clips가 세그먼트를
+    전부 소진한 뒤에만 얼리므로 이 예산이 "영상으로 채울 수 있는 최대"다(코드 검증) —
+    즉 초과분은 영상으로 못 채우고, 남은 유일한 레버는 대본 길이다.
+
+    비트당 리라이트 1회. 실패(키 소진·게이트 불통과·TTS 예외)는 조용히 통과 —
+    원문+freeze 폴백이 렌더 실패보다 낫다. sync_gap은 성공/실패 무관하게 남겨
+    편집안 화면이 근거를 보여준다(**b 스프레드로 자동 전달).
+
+    ⚠️ narration 교체는 재TTS **성공 후에만** — 실패 시 문장/음성 불일치를 만들지 않는다."""
+    total = len(beats)
+    for i, beat in enumerate(beats):
+        tp = beat.get("tts_path")
+        if not tp:
+            continue
+        segs = [beat.get("primary")] + list(beat.get("alternates") or [])
+        budget = sum(max(0.0, float(s["end"]) - float(s["start"])) for s in segs if s) * _MAX_SLOWMO
+        if budget <= 0:
+            continue
+        try:
+            tts_dur = _probe_duration(tp)
+        except Exception:
+            continue
+        gap = tts_dur - budget
+        beat["sync_gap"] = round(max(0.0, gap), 2)
+        if gap <= _CONFORM_MIN_GAP:
+            continue
+        new_n = conform_narration(beat["narration"], budget)
+        if not new_n:
+            continue   # 리라이트 실패 → 원문 유지, freeze 폴백(sync_gap 플래그 잔존)
+        out = Path(tts_dir) / f"beat_{beat['beat_idx']}.mp3"
+        try:
+            synthesize_line(
+                new_n, out, voice=voice, beat_role=beat.get("role"),
+                beat_index=i, beat_total=total,
+                previous_text=beats[i - 1]["narration"] if i > 0 else None,
+                next_text=beats[i + 1]["narration"] if i < total - 1 else None,
+            )
+        except Exception:
+            traceback.print_exc(file=sys.stderr)
+            continue   # 재TTS 실패 → narration 미교체(문장/음성 일치 유지)
+        beat["narration"] = new_n
+        beat["conformed"] = True
+        beat["tts_path"] = str(out)
+        # UI 표시 초 재계산(edit_plan과 같은 식) — 안 하면 화면 초와 실길이가 갈라진다.
+        beat["target_seconds"] = round(max(1.5, len(new_n.strip()) / _SYLLABLES_PER_SEC), 1)
+        beat["cap_durs"] = None
+        new_dur = _probe_duration(str(out))
+        words = asr_check.transcribe_words(str(out))
+        if words:
+            beat["cap_durs"] = caption_sync.phrase_durs_from_words(new_n, words, new_dur)
+        beat["sync_gap"] = round(max(0.0, new_dur - budget), 2)
 
 
 def _prepare_sources(urls, work):
@@ -174,7 +244,9 @@ def run_mix_job(job_id, db_path, work_root):
         source_scripts = list(extracts.values())
         _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
                       job["structure"], None, work, given_script=job.get("given_script"),
-                      voice=job.get("voice"), customer_id=job.get("customer_id", 0))
+                      voice=job.get("voice"), customer_id=job.get("customer_id", 0),
+                      scene_first=job.get("scene_first", False),
+                      reference_text=job.get("given_script") or "")
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
@@ -193,15 +265,33 @@ def run_mix_job(job_id, db_path, work_root):
 
 
 def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, video_type, work,
-                  given_script=None, voice=None, customer_id=0):
+                  given_script=None, voice=None, customer_id=0,
+                  scene_first=False, reference_text=""):
     """EDL 생성(3) + 비트별 TTS(4) → edit_plan 저장 + ready_for_review.
     run_mix_job(자동판별, video_type=None)과 retype_mix_job(사용자 선택 유형)이 공유.
     given_script: 있으면 확정 대본을 그대로 비트로 쪼개 영상만 매칭(영상제작 2단계).
-    voice: job의 voice 스냅샷(선택된 보이스 프리셋) — 있으면 비트별 TTS에 적용."""
+    voice: job의 voice 스냅샷(선택된 보이스 프리셋) — 있으면 비트별 TTS에 적용.
+    scene_first: 장면 우선 대본 모드(2026-07-20, Task6) — build_scene_first_plan으로 후보 n개를
+        생성해 store에 저장하고, 추천(recommended) 후보의 plan을 그대로 쓴다. 후보가 하나도 없으면
+        (grounding 전멸 등) 기존 build_edit_plan으로 폴백한다.
+    reference_text: scene_first일 때 스타일·구조를 계승할 레퍼런스 대본(보통 given_script 재활용)."""
     # 3) 통합 EDL
     store.update_mix_job(job_id, status="planning")
-    plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
-                           video_type=video_type, given_script=given_script)
+    if scene_first:
+        from shopping_shorts.edit_plan import build_scene_first_plan
+        sf = build_scene_first_plan(source_scripts, reference_text, target_seconds,
+                                    video_type=video_type)
+        if sf["candidates"]:
+            store.set_mix_candidates(job_id, sf["candidates"])
+            rec = next((cand for cand in sf["candidates"] if cand["recommended"]),
+                       sf["candidates"][0])
+            plan = rec["plan"]
+        else:
+            plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
+                                   video_type=video_type, given_script=given_script)
+    else:
+        plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
+                               video_type=video_type, given_script=given_script)
     # 빈 EDL(추출 전량 실패 또는 파이프라인 중간 전용풀 소진)을 ready_for_review로
     # 오보고하지 않는다 — 성공처럼 보이는 빈 리뷰화면 대신 즉시 실패로 정상 종료
     # (2026-07-12 최종 전체리뷰 Important).
@@ -218,6 +308,13 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 4) 비트별 TTS (naturalize + N-best + 연속성 + 프리셋 후처리)
     store.update_mix_job(job_id, status="tts")
     _synthesize_beats(plan["beats"], work / "tts", voice=voice)
+
+    # 4.5) 싱크 콘폼(2026-07-20) — 대사가 영상 예산을 넘는 비트만 압축 리라이트 + 그 비트 재TTS.
+    # 저장(아래) 전에 돌므로 preview·final 렌더 모두 자동 적용. 실패해도 job을 죽이지 않는다.
+    try:
+        _conform_beats(plan["beats"], work / "tts", voice=voice)
+    except Exception:
+        traceback.print_exc(file=sys.stderr)
 
     store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
 
@@ -343,11 +440,29 @@ def run_clean_sources(job_id, db_path, work_root):
             store.update_mix_job(job_id, clean_status="failed",
                                  clean_error="VMake 개인키가 등록되지 않았습니다")
             return
-        _ensure_clean_sources(store, job, job_id, work, key)
+        clean_map = _ensure_clean_sources(store, job, job_id, work, key)
         store.update_mix_job(job_id, clean_status="ready", clean_error=None)
     except Exception as e:  # noqa: BLE001 — BackgroundTasks라 밖에서 아무도 안 받는다
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, clean_status="failed", clean_error=str(e))
+        return
+    # ★썸네일(5단계) 배경은 자막 없는 조립본이 있어야 한다(app.py thumb/frames 우선순위 1번=
+    # clean_video_path). 여기까진 소스 각각만 청소됐지 조립본이 없어, clean_video_path가 영원히
+    # None이라 폴백이 preview_path(1단계 미리보기 — clean_fn=None으로 항상 원본 자막 그대로)로
+    # 떨어졌다(2026-07-20 사장님 제보: 자막제거 후 썸네일에 지우기 전 문구가 그대로 나옴).
+    # VMake는 위에서 이미 탔으니 여기선 clean_fn 없이 청소된 소스로 재조립만 한다(추가과금 0).
+    # 실패해도 clean_status는 되돌리지 않는다 — 소스청소(유료)는 이미 성공했다, 조립만 실패했다고
+    # "실패"로 보이면 사용자가 재시도해 혼란만 커진다(재시도 자체는 무해 — 캐시라 재과금 없음).
+    try:
+        plan = job.get("edit_plan")
+        if plan:
+            tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
+            out_path = work / "clean_preview.mp4"
+            assemble(plan, tts_paths, clean_map, str(out_path), clean_fn=None, deco={},
+                     cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)))
+            store.update_mix_job(job_id, clean_video_path=str(out_path))
+    except Exception:
+        traceback.print_exc(file=sys.stderr)
 
 
 def run_preview(job_id, db_path, work_root):
@@ -377,6 +492,12 @@ def run_preview(job_id, db_path, work_root):
         work.mkdir(parents=True, exist_ok=True)
         store.update_mix_job(job_id, preview_status="rendering", preview_error=None)
         plan = job["edit_plan"]
+        # ★TTS 보장(2026-07-21 실사고): 후보 선택(/api/mix/candidate)이 TTS 없는 후보 plan을
+        #   edit_plan에 꽂으면 tts_paths가 비어 video_assemble이 "렌더할 비트가 없습니다"로 죽었다.
+        #   조립 직전 스스로 낫는다 — 이미 있는 비트는 skip(재과금 0), 빠진 비트만 합성.
+        #   합성 결과(tts_path)를 edit_plan에 되박아 최종 렌더가 재합성 없이 재사용하게 한다.
+        _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True)
+        store.update_mix_job(job_id, edit_plan=plan)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         source_video_paths = _resolve_sources(job, work)
         out_path = work / "preview.mp4"
@@ -406,6 +527,10 @@ def run_render(job_id, db_path, work_root):
     try:
         store.update_mix_job(job_id, status="rendering")
         plan = job["edit_plan"]
+        # ★TTS 보장(2026-07-21) — run_preview와 같은 방어심층. 미리보기를 건너뛰고 바로 렌더에
+        #   와도(또는 TTS 없는 후보가 edit_plan에 있어도) 조립 직전 스스로 낫는다. 이미 있으면 skip.
+        _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True)
+        store.update_mix_job(job_id, edit_plan=plan)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         source_video_paths = _resolve_sources(job, work)
         out_path = work / "final.mp4"

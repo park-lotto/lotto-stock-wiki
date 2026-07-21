@@ -50,11 +50,15 @@ from shopping_shorts import edit_plan as _edit_plan
 from shopping_shorts import voice_presets, audio_post
 from shopping_shorts.tts import synthesize_tts
 from shopping_shorts import tts, asr_check
+from shopping_shorts import export_bundle
+from shopping_shorts import capcut_draft
+from shopping_shorts.video_assemble import _beat_timeline
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
 from shopping_shorts import frame_extract, scene_assets, scene_cut
 from shopping_shorts import effect_match, remotion_render, points
 from shopping_shorts import video_assemble
 from shopping_shorts import seo_generate, seo_probe
+from shopping_shorts import pattern_bank
 from shopping_shorts import thumb_title
 import uuid
 
@@ -1430,6 +1434,7 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
     target = int(body.get("target_seconds") or 30)
     structure = body.get("structure") if body.get("structure") in ("template", "free") else "template"
     subtitle_removal = bool(body.get("subtitle_removal", False))
+    scene_first = bool(body.get("scene_first", False))
     cid = getattr(request.state, "customer_id", 0)
     if _global_over_cap("render"):
         return JSONResponse(status_code=429, content={
@@ -1444,9 +1449,24 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
     # render_charge_day: '오늘 render를 과금했다'는 표식(+환불할 날짜). run_mix_job이 실패하면 딱
     # 이 날짜로 환불한다. 과금 안 하는 다른 create_mix_job 경로는 이 값을 비워 오환불을 막는다(리뷰 B).
     Store(DB_PATH).create_mix_job(job_id, urls, target, structure, subtitle_removal=subtitle_removal,
-                                  customer_id=cid, render_charge_day=_today_utc())
+                                  customer_id=cid, render_charge_day=_today_utc(),
+                                  scene_first=scene_first)
     background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True, "job_id": job_id}
+
+
+@app.post("/api/mix/candidate")
+def api_mix_candidate(body: dict):
+    """장면 우선 대본 모드(2026-07-20, Task6): 후보 선택 — 고른 후보의 plan을 edit_plan으로
+    세팅한다(미리보기/렌더가 이걸 읽는다)."""
+    job_id = (body.get("job_id") or "").strip()
+    idx = int(body.get("index") or 0)
+    store = Store(DB_PATH)
+    cands = store.get_mix_candidates(job_id)
+    if not cands or not (0 <= idx < len(cands)):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "후보 없음"})
+    store.update_mix_job(job_id, edit_plan=cands[idx]["plan"])
+    return {"ok": True}
 
 
 @app.post("/api/settings/vmake_key")
@@ -1469,7 +1489,8 @@ _MIX_ACTIVE_STAGES = ("downloading", "extracting", "planning", "tts")
 
 @app.get("/api/mix/status/{job_id}")
 def api_mix_status(job_id: str):
-    job = Store(DB_PATH).get_mix_job(job_id)
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     status, error = job["status"], job["error"]
@@ -1480,13 +1501,20 @@ def api_mix_status(job_id: str):
     if status in _MIX_ACTIVE_STAGES and _render_is_stale(job):
         status = "failed"
         error = "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."
+    # 장면 우선 대본 모드(2026-07-20, Task7): 후보 요약만 내려준다 — 전체 plan(beats 등)을
+    # 실으면 남의 창작물이 새는 것과 같은 노출 문제(§3981)가 나므로 카드 렌더용 필드만 뽑는다.
+    candidates = [{"index": i, "score": c.get("score"), "recommended": bool(c.get("recommended")),
+                   "hook": (c.get("story") or {}).get("hook", ""),
+                   "story_person": (c.get("story") or {}).get("story_person", "")}
+                  for i, c in enumerate(store.get_mix_candidates(job_id))]
     return {"ok": True, "status": status, "error": error,
             # 1단계 미리보기(2026-07-17): 폴러를 둘로 만들지 않으려고 기존 응답에 얹는다(스펙 §6.3).
             # preview_path는 서버 내부 경로라 안 내보낸다 — 파일은 전용 라우트로만 서빙.
             "preview_status": job.get("preview_status"),
             "preview_error": job.get("preview_error"),
             "clean_status": job.get("clean_status"),
-            "clean_error": job.get("clean_error")}
+            "clean_error": job.get("clean_error"),
+            "candidates": candidates}
 
 
 @app.get("/api/mix/result/{job_id}")
@@ -1998,11 +2026,95 @@ def api_mix_voice_preview(body: dict):
 
 
 @app.get("/api/mix/video/{job_id}")
-def api_mix_video(job_id: str):
+def api_mix_video(job_id: str, dl: int = 0):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
         return JSONResponse(status_code=404, content={"ok": False})
+    if dl:   # ?dl=1 → 첨부 다운로드(Content-Disposition attachment). 없으면 인라인 재생(기존).
+        return FileResponse(job["video_path"], media_type="video/mp4",
+                            filename=export_bundle.safe_name(job_id) + ".mp4")
     return FileResponse(job["video_path"])
+
+
+@app.get("/api/mix/export/{job_id}")
+def api_mix_export(job_id: str, part: str = ""):
+    """캡컷 편집용 내보내기 ZIP(설계 2026-07-20 §2, T1). part=sources|srt|script면 그것만(개별
+    다운로드), 없으면 전체(final·sources·tts·srt·script·seo·README). 유료게이트 deny-by-default가
+    이 경로를 자동 차단하므로(FREE 목록에 없음) full 등급만 받는다. 없는 재료는 건너뛴다(500 금지)."""
+    safe = os.path.basename(job_id)
+    if not safe or safe != job_id:
+        return JSONResponse(status_code=400, content={"ok": False})
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "편집안이 아직 없습니다"})
+    plan = job["edit_plan"]
+    work = _MIX_WORK_DIR / job_id
+    work.mkdir(parents=True, exist_ok=True)
+    tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan.get("beats", []) if b.get("tts_path")}
+    try:
+        source_video_paths = _resolve_sources(job, work)
+    except Exception:
+        source_video_paths = {}   # 소스 전멸이어도 srt/script/seo는 준다(설계 §6, 500 금지)
+    timeline = _beat_timeline(plan, tts_paths)
+    parts = {"sources": ["sources"], "srt": ["srt"], "script": ["script"]}.get(
+        part, export_bundle.ALL_PARTS)
+    final = job.get("video_path") if (job.get("video_path")
+                                      and Path(job["video_path"]).exists()) else None
+    out = work / f"export_{part or 'all'}.zip"
+    export_bundle.build_export_zip(
+        out, plan=plan, timeline=timeline, source_video_paths=source_video_paths,
+        tts_paths=tts_paths, final_video=final, seo=job.get("seo"), parts=parts)
+    fname = export_bundle.safe_name(job_id) + (f"_{part}" if part else "_capcut") + ".zip"
+    return FileResponse(str(out), media_type="application/zip", filename=fname)
+
+
+@app.get("/api/mix/capcut/{job_id}")
+def api_mix_capcut(job_id: str, base: str = ""):
+    """CapCut draft 매니페스트(설계 부록A, T2). base=캡컷이 draft를 볼 절대경로(프론트가 지정한
+    캡컷 Drafts 폴더). 서버가 work/<job>/capcut/<project>/에 draft+에셋을 조립하고, draft_content.json·
+    meta는 텍스트로 인라인, mp4/mp3는 asset URL로 돌려준다. 프론트가 File System Access API로
+    사용자 캡컷 폴더에 <project>/를 만들고 이 파일들을 쓴다. deny-by-default 자동보호."""
+    safe = os.path.basename(job_id)
+    if not safe or safe != job_id:
+        return JSONResponse(status_code=400, content={"ok": False})
+    if not base.strip():
+        return JSONResponse(status_code=400, content={"ok": False, "error": "캡컷 폴더 경로가 필요합니다"})
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "편집안이 아직 없습니다"})
+    plan = job["edit_plan"]
+    work = _MIX_WORK_DIR / job_id
+    tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan.get("beats", []) if b.get("tts_path")}
+    try:
+        source_video_paths = _resolve_sources(job, work)
+    except Exception:
+        source_video_paths = {}
+    timeline = _beat_timeline(plan, tts_paths)
+    out_root = work / "capcut"
+    out_root.mkdir(parents=True, exist_ok=True)
+    proj, project, files = capcut_draft.assemble_draft_folder(
+        out_root, base, plan=plan, timeline=timeline, source_video_paths=source_video_paths,
+        tts_paths=tts_paths, project_name=f"쇼핑쇼츠_{job_id[:8]}")
+    texts, assets = {}, []
+    for name in files:
+        if name.endswith(".json"):
+            texts[name] = (proj / name).read_text(encoding="utf-8")
+        else:
+            assets.append({"name": name, "url": f"/api/mix/capcut_asset/{job_id}/{name}"})
+    return {"ok": True, "project": project, "texts": texts, "assets": assets}
+
+
+@app.get("/api/mix/capcut_asset/{job_id}/{name}")
+def api_mix_capcut_asset(job_id: str, name: str):
+    """capcut 조립 폴더의 에셋(mp4/mp3) 서빙. 경로순회 차단 후 work/<job>/capcut/*/<name>."""
+    safe_j, safe_n = os.path.basename(job_id), os.path.basename(name)
+    if safe_j != job_id or safe_n != name:
+        return JSONResponse(status_code=400, content={"ok": False})
+    capdir = _MIX_WORK_DIR / job_id / "capcut"
+    hits = list(capdir.glob(f"*/{safe_n}")) if capdir.exists() else []
+    if not hits:
+        return JSONResponse(status_code=404, content={"ok": False})
+    return FileResponse(str(hits[0]))
 
 
 def _thumb_dir(job_id: str):
@@ -2026,10 +2138,15 @@ def api_thumb_frames(body: dict):
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     # ★배경 영상 우선순위 — 썸네일 배경은 **자막이 없어야 한다**(설계 Q1: 제목을 위에 새로
-    # 얹으니 배경 자막은 방해). 그래서 자막제거본(clean_video_path)·자막 없는 미리보기
-    # (preview_path)를 먼저 쓰고, 최종 렌더(video_path)는 **최후 폴백**이다 — 최종은 우리
-    # 나레이션 자막이 박혀 있어(사장님 제보 2026-07-19: "썸네일에 자막 필요없음") 배경으로 부적합했다.
-    # 예전엔 video_path를 먼저 봐서 자막 박힌 프레임이 나왔다.
+    # 얹으니 배경 자막은 방해). clean_video_path(2단계 자막제거 완료 시 mix_pipeline.
+    # run_clean_sources가 채운다, 2026-07-20)를 먼저 쓰고, preview_path(1단계 무료 미리보기)는
+    # 그 다음, 최종 렌더(video_path)는 최후 폴백이다.
+    # ⚠️preview_path는 자막이 없는 게 아니다 — run_preview가 clean_fn=None으로 늘 원본
+    # 자막째 렌더한다(무료 미리보기니까). 2단계를 아직 안 밟았으면(clean_video_path 없음) 이
+    # preview_path가 걸려 자막 있는 배경이 나온다 — 그건 "2단계 전"이라 맞는 동작이고, 2단계를
+    # 밟았는데도 이게 걸리면 버그다(2026-07-20 사장님 제보가 정확히 이 케이스: clean_video_path가
+    # 그때까지 아무도 안 채워서 늘 여기로 떨어졌었다).
+    # 최종 렌더(video_path)는 우리 나레이션 자막이 박혀 있어(사장님 제보 2026-07-19) 배경 부적합.
     # 셋 다 검사하므로 렌더 전(video_path 없음)에도 preview로 프레임을 뽑을 수 있다
     # (매칭 끝낸 작업이라도 최종 영상이 없어 "믹스 영상 없음"으로 막히던 것도 그대로 해소).
     video = None
@@ -2646,7 +2763,7 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 # 메서드 무관 무료(로그인 폼 POST 등) — 전부 정확 경로.
 _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout"}
 # GET만 무료(레퍼런스 랭킹 '조회') — POST/PUT 등 데이터변경은 같은 경로여도 차단.
-_FREE_EXACT_GET = {"/", "/api/me", "/api/reference", "/api/thumb", "/api/video"}
+_FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/api/thumb", "/api/video"}
 # 경계있는 prefix만(과다매칭 방지 — 트레일링 슬래시).
 _FREE_PREFIX = ("/static/", "/auth/google/")
 
@@ -2697,36 +2814,280 @@ def _set_session_cookie(response, customer_id: int):
                          max_age=_COOKIE_MAX_AGE, httponly=True, samesite="lax")
 
 
-_LOGIN_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1"><title>쇼핑쇼츠 로그인</title>
+# ── 브랜드 토큰 (한 곳에 몰아둔다 — 이름 확정 시 여기 1곳만 교체) ──
+# 이름 5안(ShortsFactory/Reelery/ShopReel/ShortsForge/Vidory) 중 사용자 확정 대기.
+# 지금은 추천안 Reelery 플레이스홀더. 팔레트(민트×블랙)는 sidebar.js 계승·고정.
+_BRAND = {
+    "name": "숏템박스",          # 확정(2026-07-20). 한글 주 + 영문 보조 락업.
+    "name_en": "SHOTEMBOX",     # 영문 CI(보조). 로고에 한글 밑 소문자 스페이싱으로.
+    "glyph": "📦",
+    "tagline": "폰으로 5분, 편집 몰라도 팔리는 쇼츠가 완성됩니다",
+    # 공개 페이지의 '카톡 문의' 링크(오픈채팅/채널 URL). 비면 /login으로 폴백 — 값만 넣으면 연결.
+    "kakao": "",
+}
+# 구글 로고 SVG(로그인 버튼용) — 브랜드색과 무관한 구글 공식 4색.
+_GOOGLE_SVG = ('<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.8-6.8'
+               'C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.3 17.7 9.5 24 9.5z"/>'
+               '<path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.1 5.4-4.6 7'
+               'l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16z"/><path fill="#FBBC05" d="M10.5 28.3c-.5-1.4-.8-2.9-.8-4.3'
+               's.3-2.9.8-4.3l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.6 10.4l7.9-6.1z"/>'
+               '<path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.1-5.5c-2 1.3-4.6 2.1-8.1 2.1'
+               '-6.3 0-11.6-3.8-13.5-9.1l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>')
+
+
+# 시그니처 심볼(브랜딩 보드 v1, out/브랜딩_CI_숏템탑스.html) — 박스(제작소)에서 랭킹된
+# 아이템이 쌓여 올라오고 맨 위 한 칸만 골드=TOP 인기템. 박스·대량생산·인기를 한 심볼에.
+_LOGO_SVG = (
+    '<svg class="sym" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템박스">'
+    '<defs><linearGradient id="lmg" x1="0" y1="0" x2="1" y2="1">'
+    '<stop offset="0" stop-color="#6ff0d6"/><stop offset="1" stop-color="#1f9e7a"/></linearGradient>'
+    '<linearGradient id="lgg" x1="0" y1="0" x2="1" y2="1">'
+    '<stop offset="0" stop-color="#ffe1a1"/><stop offset="1" stop-color="#f0a93a"/></linearGradient></defs>'
+    '<rect x="4" y="4" width="56" height="56" rx="16" stroke="url(#lmg)" stroke-width="3"/>'
+    '<rect x="16" y="40" width="32" height="8" rx="3" fill="#1f9e7a" opacity=".55"/>'
+    '<rect x="20" y="29" width="24" height="8" rx="3" fill="#6ff0d6" opacity=".9"/>'
+    '<rect x="24" y="18" width="16" height="8" rx="3" fill="url(#lgg)"/>'
+    '<path d="M32 11.5l3 4.5h-6l3-4.5z" fill="url(#lgg)"/></svg>')
+
+
+def _fill_brand(s: str) -> str:
+    """대문·로그인 템플릿의 브랜드 플레이스홀더를 _BRAND로 채운다(모듈 로드 시 1회)."""
+    return (s.replace("__NAME__", _BRAND["name"])
+             .replace("__NAME_EN__", _BRAND["name_en"])
+             .replace("__GLYPH__", _BRAND["glyph"])
+             .replace("__TAGLINE__", _BRAND["tagline"])
+             .replace("__KAKAO__", _BRAND.get("kakao") or "/login")
+             .replace("__LOGO_SVG__", _LOGO_SVG)
+             .replace("__GOOGLE_SVG__", _GOOGLE_SVG))
+
+
+# ── 공개 대문(랜딩) — 비로그인 방문자용. 민트×블랙, 한 페이지(B). ──
+_LANDING_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>__NAME__ — 폰으로 5분, 편집 몰라도 파는 쇼츠 완성</title>
+<link rel=preconnect href="https://fonts.googleapis.com">
+<link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel=stylesheet>
+<style>*{box-sizing:border-box;margin:0;padding:0}
+:root{--mint:#6ff0d6;--grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--gold:#ffcf6f;--gold-grad:linear-gradient(135deg,#ffe1a1,#f0a93a);
+--ink:#0b0f14;--panel:#111722;--line:#1e2735;--txt:#e8f0ee;--muted:#8aa0a0;--faint:#5f7373}
+body{background:radial-gradient(1100px 600px at 82% -12%,rgba(111,240,214,.10),transparent 60%),radial-gradient(900px 500px at 0% 112%,rgba(255,207,111,.06),transparent 55%),var(--ink);
+color:var(--txt);font-family:'Noto Sans KR',system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;word-break:keep-all}
+a{text-decoration:none;color:inherit}
+.display{font-family:'Black Han Sans',sans-serif;font-weight:400;letter-spacing:.01em}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .sym{width:34px;height:34px;flex:none;animation:floaty 4s ease-in-out infinite}
+.brand .wm{display:flex;flex-direction:column;line-height:1}
+.brand .nm{font-family:'Black Han Sans',sans-serif;font-size:22px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand .en{font-family:ui-monospace,monospace;font-size:9px;letter-spacing:2.4px;color:var(--faint);margin-top:2px}
+.nav .login{color:var(--txt);font-size:15.5px;font-weight:700;padding:7px 12px;border-radius:9px}
+.nav .login:hover{color:var(--mint);background:rgba(111,240,214,.08)}
+.nav .login.go{color:#062018;background:var(--grad)}
+.nav .login.go:hover{filter:brightness(1.06);color:#062018;background:var(--grad)}
+/* HERO — 가운데 정렬 */
+.hero{text-align:center;max-width:760px;margin:0 auto;padding:60px 0 40px}
+.badge{display:inline-block;font-size:12.5px;color:var(--mint);border:1px solid rgba(111,240,214,.3);border-radius:999px;padding:6px 15px;margin-bottom:22px;background:rgba(111,240,214,.06)}
+.hero h1{font-size:clamp(34px,5.2vw,54px);line-height:1.14;letter-spacing:.01em}
+.hero h1 .hl{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .sub{color:var(--muted);font-size:17px;margin:20px auto 30px;max-width:46ch}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:center}
+.cta{display:inline-flex;align-items:center;gap:8px;background:var(--grad);color:#062018;font-weight:700;font-size:16px;padding:15px 30px;border-radius:12px;border:0;cursor:pointer;box-shadow:0 8px 30px rgba(111,240,214,.18)}
+.cta:hover{filter:brightness(1.06)}
+.cta:not(.ghost){animation:ctaPulse 2.6s ease-in-out infinite}
+.cta.ghost{background:transparent;color:var(--txt);border:1px solid var(--line);box-shadow:none;font-weight:600;animation:none}
+.trust{color:var(--faint);font-size:12.5px;margin-top:16px}
+.stats{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:30px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px 22px;min-width:120px}
+.stat .num{font-family:'Black Han Sans',sans-serif;font-size:25px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat .lbl{color:var(--muted);font-size:12px;margin-top:2px}
+.sec{padding:50px 0}
+.sec h2{text-align:center;font-size:clamp(24px,3.4vw,30px);font-weight:900;margin-bottom:8px}
+.sec .lead{text-align:center;color:var(--muted);margin-bottom:36px}
+/* PAIN — 기존 3~5시간 vs 숏템박스 5분 */
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:stretch;max-width:860px;margin:0 auto}
+.vs .col{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px 24px}
+.vs .col.new{border-color:rgba(111,240,214,.35);box-shadow:0 0 0 1px rgba(111,240,214,.12) inset}
+.vs .tag{font-size:12px;font-weight:700;letter-spacing:.04em;margin-bottom:16px}
+.vs .old .tag{color:var(--muted)}.vs .new .tag{color:var(--mint)}
+.vs ul{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+.vs li{font-size:14px;display:flex;gap:9px;align-items:flex-start}
+.vs .old li{color:var(--muted)}.vs .old li .m{color:#e0623d;flex:none}
+.vs .new li{color:var(--txt)}.vs .new li .m{color:var(--mint);flex:none}
+.vs .time{font-family:'Black Han Sans',sans-serif;font-size:32px;line-height:1}
+.vs .old .time{color:#d68b6f}.vs .new .time{background:var(--grad);-webkit-background-clip:text;color:transparent}
+.vs .tl{font-size:12px;color:var(--faint);margin-top:5px}
+.vs .arrow{display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:26px}
+/* MONEY — 수치화 */
+.money{text-align:center;background:linear-gradient(180deg,rgba(255,207,111,.06),transparent);border:1px solid var(--line);border-radius:24px;padding:50px 24px}
+.money .k{font-size:13px;letter-spacing:.04em;color:var(--gold);font-weight:700;margin-bottom:8px}
+.money h2{font-size:clamp(23px,3.2vw,29px);font-weight:900;margin-bottom:30px}
+.money .big{display:flex;gap:26px;justify-content:center;flex-wrap:wrap}
+.money .m{min-width:150px}
+.money .m .n{font-family:'Black Han Sans',sans-serif;font-size:52px;line-height:1;background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.money .m .n .u{font-size:24px}
+.money .m .l{color:var(--muted);font-size:13.5px;margin-top:8px}
+.money .note{color:var(--faint);font-size:13px;margin-top:26px;max-width:44ch;margin-left:auto;margin-right:auto}
+.money .note b{color:var(--txt)}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px}
+.step .n{width:34px;height:34px;border-radius:10px;background:rgba(111,240,214,.1);color:var(--mint);font-family:'Black Han Sans',sans-serif;font-size:17px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.step h3{font-size:16px;font-weight:700;margin-bottom:6px}.step p{color:var(--muted);font-size:14px}
+.feat{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;gap:16px}
+.card .ic{font-size:24px;flex:none;line-height:1.2}
+.card h3{font-size:16px;font-weight:700;margin-bottom:5px}.card p{color:var(--muted);font-size:14px}
+.band{text-align:center;background:linear-gradient(180deg,rgba(111,240,214,.05),transparent);border:1px solid var(--line);border-radius:24px;padding:54px 24px;margin:44px 0 58px}
+.band h2{font-size:clamp(24px,3.4vw,30px);font-weight:900;margin-bottom:10px}.band p{color:var(--muted);margin-bottom:26px}
+.foot{text-align:center;color:var(--faint);font-size:12.5px;padding:0 0 42px}
+/* 애니메이션 */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:none}
+.d1{transition-delay:.06s}.d2{transition-delay:.14s}.d3{transition-delay:.22s}.d4{transition-delay:.3s}
+/* 히어로(위쪽) 온로드 등장 — JS 없이 확실히 순차 재생 */
+.rise{opacity:0;animation:riseIn .82s cubic-bezier(.2,.75,.2,1) both}
+@keyframes riseIn{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+.r1{animation-delay:.08s}.r2{animation-delay:.2s}.r3{animation-delay:.34s}.r4{animation-delay:.48s}.r5{animation-delay:.6s}
+.hero h1 .hl{background-size:220% auto;animation:sheen 3.2s linear infinite}
+@keyframes sheen{to{background-position:220% center}}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes ctaPulse{0%,100%{box-shadow:0 8px 30px rgba(111,240,214,.18)}50%{box-shadow:0 10px 44px rgba(111,240,214,.44)}}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.rise{opacity:1;animation:none}.brand .sym,.cta,.hero h1 .hl{animation:none}}
+@media(max-width:760px){.vs{grid-template-columns:1fr}.vs .arrow{transform:rotate(90deg);padding:2px 0}.steps,.feat{grid-template-columns:1fr}.money .big{gap:18px}}
+</style></head><body><div class=wrap>
+<div class=nav>
+<a class=brand href="/">__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></a>
+<span style="display:flex;gap:10px;align-items:center"><a class=login href="/pricing">요금</a><a class="login go" href="/login">로그인</a></span></div>
+<div class=hero>
+<span class="badge rise r1">생각 0 · 편집 0 · 딱 5분</span>
+<h1 class="display rise r2">머리 쓸 필요 없어요.<br>시키는 대로 <span class=hl>딸깍</span>, 5분이면 끝.</h1>
+<p class="sub rise r3">쇼츠 하나 만들려고 3~5시간씩 붙잡고 계셨죠? 이제 뭘 팔지 고민할 것도 없어요. 지금 제일 잘 팔리는 걸 짚어주면 딸깍 — 대본·영상·목소리·자막까지 AI가 알아서. 60대도, 컴맹도 그대로 됩니다.</p>
+<div class="row rise r4">
+<a class=cta href="/login">무료로 시작하기 →</a>
+<a class="cta ghost" href="/login">로그인</a></div>
+<div class="trust rise r4">구글 계정으로 3초 시작 · 카드 없이 무료 체험</div>
+<div class="stats rise r5">
+<div class=stat><div class=num><span data-to=5>0</span>분</div><div class=lbl>하나 만드는 시간</div></div>
+<div class=stat><div class=num>폰 하나</div><div class=lbl>필요한 장비 전부</div></div>
+<div class=stat><div class=num>0</div><div class=lbl>배워야 할 편집기술</div></div></div></div>
+<div class=sec>
+<h2 class=reveal>쇼츠 하나에, 아직도 이 고생 하시나요?</h2>
+<div class="lead reveal">남들이 반나절 붙잡고 있을 때, 사장님은 딸깍 한 번이면 됩니다</div>
+<div class=vs>
+<div class="col old reveal"><div class=tag>기존 방식</div>
+<ul>
+<li><span class=m>✕</span> 뭘 만들지 기획부터 고민</li>
+<li><span class=m>✕</span> 잘 팔리는 소스 영상 찾아 헤매기</li>
+<li><span class=m>✕</span> AI 툴 이것저것 켜서 대본·이미지</li>
+<li><span class=m>✕</span> 캡컷으로 자르고 붙이고 자막 달기</li>
+<li><span class=m>✕</span> 겨우 하나 올리면 진이 빠짐</li></ul>
+<div class=time>3~5시간</div><div class=tl>영상 하나에 반나절, 머리는 지끈</div></div>
+<div class=arrow>→</div>
+<div class="col new reveal d1"><div class=tag>숏템박스</div>
+<ul>
+<li><span class=m>✓</span> 지금 제일 잘 팔리는 걸 짚어줌 (고민 0)</li>
+<li><span class=m>✓</span> 딸깍 — 대본·장면·목소리·자막 자동</li>
+<li><span class=m>✓</span> 마음에 안 들면 다시 딸깍</li>
+<li><span class=m>✓</span> 바로 올릴 세로 쇼츠 완성</li>
+<li><span class=m>✓</span> 생각도, 손도 안 씀</li></ul>
+<div class=time>5분</div><div class=tl>고르고 딸깍, 그게 전부</div></div></div></div>
+<div class=sec><div class="money reveal">
+<div class=k>이 시간이면, 몇 개나?</div>
+<h2>같은 반나절에 60개.<br>나 대신 팔러 나갑니다.</h2>
+<div class=big>
+<div class=m><div class=n><span data-to=60>0</span><span class=u>배</span></div><div class=lbl>기존보다 빠르게<br>(3~5시간 → 5분)</div></div>
+<div class=m><div class=n><span data-to=10>0</span><span class=u>개</span></div><div class=lbl>하루 30분이면<br>손 안 대고</div></div>
+<div class=m><div class=n><span data-to=300>0</span><span class=u>개</span></div><div class=lbl>한 달이면<br>자동으로 쌓임</div></div></div>
+<div class=note>영상 하나에 <b>내 판매·제휴 링크</b>가 붙습니다. 자는 동안에도 쇼츠가 대신 팔아주는 구조 — 많이 찍어낼수록 유리합니다.</div></div></div>
+<div class=sec>
+<h2 class=reveal>딱 세 번이면 끝나요</h2>
+<div class="lead reveal">기획도 편집도 없이, 완성까지 5분</div>
+<div class=steps>
+<div class="step reveal"><div class=n>1</div><h3>고민은 안 해요</h3><p>지금 실시간 제일 잘 팔리는 걸 짚어줍니다. 검증된 1등을 그대로 벤치마킹 — 뭘 팔지 정할 필요도 없어요.</p></div>
+<div class="step reveal d1"><div class=n>2</div><h3>딸깍 한 번</h3><p>대본·장면·목소리·자막을 AI가 알아서 붙입니다. 손댈 게 없어요.</p></div>
+<div class="step reveal d2"><div class=n>3</div><h3>5분 뒤 완성</h3><p>바로 올릴 수 있는 세로 쇼츠가 나옵니다. 마음에 안 들면 다시 딸깍.</p></div></div></div>
+<div class=sec>
+<h2 class=reveal>왜 __NAME__인가</h2>
+<div class="lead reveal">파는 사람이 진짜 필요한 것만</div>
+<div class=feat>
+<div class="card reveal"><span class=ic>⏱️</span><div><h3>5분이면 완성</h3><p>기획·촬영·편집으로 반나절 쓰던 걸, 고르고 딸깍하면 5분 만에 끝냅니다.</p></div></div>
+<div class="card reveal d1"><span class=ic>📱</span><div><h3>폰으로도 된다</h3><p>PC도 프로그램 설치도 필요 없어요. 손 안의 폰에서 손가락 몇 번이면 됩니다.</p></div></div>
+<div class="card reveal"><span class=ic>👆</span><div><h3>딸깍 하나면 자동</h3><p>대본·장면·목소리·자막을 전부 AI가. 컴맹이어도, 60대여도 첫날부터 바로 완성합니다.</p></div></div>
+<div class="card reveal d1"><span class=ic>🔥</span><div><h3>지금 뜨는 걸 짚어줌</h3><p>뭘 만들지 고민할 필요 없어요. 실시간 제일 잘 팔리는 걸 골라줘서 검증된 1등만 벤치마킹합니다.</p></div></div></div></div>
+<div class=sec>
+<h2 class=reveal>요금은 간단해요</h2>
+<div class="lead reveal">무료로 써보고, 필요하면 이용권으로</div>
+<div class=reveal style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:640px;margin:0 auto">
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px;text-align:center">
+<div style="color:var(--muted);font-weight:700;font-size:14px">무료 체험</div>
+<div class=display style="font-size:34px;margin:6px 0">0<span style="font-size:15px;font-family:'Noto Sans KR';color:var(--muted)">원</span></div>
+<div style="color:var(--faint);font-size:13px;margin-bottom:16px">가입하면 바로 · 카드 없이</div>
+<a class=cta href="/login" style="width:100%;justify-content:center;font-size:14px;padding:12px">무료로 시작</a></div>
+<div style="background:var(--panel);border:1px solid rgba(255,207,111,.4);box-shadow:0 0 0 1px rgba(255,207,111,.14) inset;border-radius:18px;padding:24px;text-align:center;position:relative">
+<div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--gold-grad);color:#3a2600;font-family:'Black Han Sans',sans-serif;font-size:12px;padding:4px 12px;border-radius:999px">추천</div>
+<div style="color:var(--gold);font-weight:700;font-size:14px">Pro 이용권</div>
+<div class=display style="font-size:34px;margin:6px 0;background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent">가격 문의</div>
+<div style="color:var(--faint);font-size:13px;margin-bottom:16px">전 기능 무제한 · 무제한 제작</div>
+<a href="__KAKAO__" target=_blank rel=noopener style="display:inline-flex;width:100%;justify-content:center;background:var(--gold-grad);color:#3a2600;font-weight:700;font-size:14px;padding:12px;border-radius:12px;text-decoration:none">카톡으로 문의</a></div></div>
+<div class=reveal style="text-align:center;margin-top:20px"><a href="/pricing" style="color:var(--mint);font-weight:700;font-size:14px">요금 자세히 보기 →</a></div></div>
+<div class="band reveal">
+<h2>손자한테 안 물어봐도 됩니다</h2>
+<p>지금 5분, 무료로 하나 만들어보세요. 구글 계정이면 3초 · 카드 없이 시작.</p>
+<a class=cta href="/login">무료로 시작하기 →</a></div>
+<div class=foot>© __NAME__ · 폰으로 5분, 파는 사람을 위한 AI 쇼츠 제작</div>
+</div>
+<script>(function(){var rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
+var rev=document.querySelectorAll('.reveal');
+if(rm){rev.forEach(function(e){e.classList.add('in')});document.querySelectorAll('[data-to]').forEach(function(e){e.textContent=e.dataset.to});return;}
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.14});
+rev.forEach(function(e){io.observe(e);});
+function cu(el){var t=+el.dataset.to,s=null,d=1100;function f(ts){if(!s)s=ts;var p=Math.min((ts-s)/d,1);el.textContent=Math.round(t*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(f);}requestAnimationFrame(f);}
+var m=document.querySelector('.money');
+if(m){var mo=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.querySelectorAll('[data-to]').forEach(cu);mo.unobserve(e.target);}});},{threshold:.35});mo.observe(m);}
+setTimeout(function(){document.querySelectorAll('.hero [data-to]').forEach(cu);},520);
+})();</script>
+</body></html>"""
+
+
+# ── 로그인 페이지 — 민트×블랙(구조는 기존 유지: 구글버튼+운영자 접이식). ──
+_LOGIN_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>__NAME__ 로그인</title>
+<link rel=preconnect href="https://fonts.googleapis.com">
+<link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel=stylesheet>
 <style>*{box-sizing:border-box}
-body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
-background:#0a0a0d;font-family:'Malgun Gothic',system-ui,'Noto Sans KR',sans-serif;color:#e8e8ea}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;word-break:keep-all;
+background:radial-gradient(900px 500px at 80% -10%,rgba(111,240,214,.10),transparent 60%),#0b0f14;
+font-family:'Noto Sans KR',system-ui,sans-serif;color:#e8f0ee}
 .box{width:340px;padding:36px 30px;text-align:center}
-.logo{display:flex;align-items:center;justify-content:center;gap:10px;font-size:20px;font-weight:800;margin-bottom:34px}
-.logo .ic{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#ff8a4c,#ff5e62);
-display:flex;align-items:center;justify-content:center;font-size:18px}
-h1{font-size:22px;margin:0 0 8px}
-.sub{color:#ff9a6b;font-size:13px;margin-bottom:26px;line-height:1.6}
+.logo{display:flex;align-items:center;justify-content:center;gap:13px;margin-bottom:10px}
+.logo .sym{width:50px;height:50px;flex:none}
+.logo .wm{display:flex;flex-direction:column;line-height:1;text-align:left}
+.logo .nm{font-family:'Black Han Sans',sans-serif;font-size:33px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo .en{font-family:ui-monospace,monospace;font-size:11px;letter-spacing:3.2px;color:#7a9090;margin-top:3px}
+h1{font-size:22px;margin:26px 0 8px;font-weight:700}
+.sub{color:#6ff0d6;font-size:13px;margin-bottom:26px;line-height:1.6}
 .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;
-background:#15151b;border:1px solid #2c2c34;border-radius:10px;color:#e8e8ea;font-size:15px;
+background:#111722;border:1px solid #1e2735;border-radius:10px;color:#e8f0ee;font-size:15px;
 font-weight:700;cursor:pointer;text-decoration:none}
-.gbtn:hover{background:#1c1c24;border-color:#3a3a44}
+.gbtn:hover{background:#16202e;border-color:#2a3647}
 .gbtn svg{width:18px;height:18px}
 .err{color:#e0623d;font-size:12px;margin-top:16px;min-height:14px;line-height:1.6}
-.home{display:block;color:#6a6a76;font-size:12px;margin-top:22px;text-decoration:none}
-.atoggle{color:#45454f;font-size:11px;margin-top:30px;cursor:pointer;background:none;border:0}
+.home{display:block;color:#5f7373;font-size:12px;margin-top:22px;text-decoration:none}
+.home:hover{color:#6ff0d6}
+.atoggle{color:#3f5050;font-size:11px;margin-top:30px;cursor:pointer;background:none;border:0}
 .aform{display:none;margin-top:14px}.aform.show{display:block}
-.aform input{width:100%;margin:5px 0;padding:10px;background:#0e0e12;border:1px solid #2c2c34;
+.aform input{width:100%;margin:5px 0;padding:10px;background:#0a0f16;border:1px solid #1e2735;
 border-radius:8px;color:#eee;font-size:13px}
-.aform button{width:100%;margin-top:8px;padding:10px;background:#2a2a34;color:#cfcfd6;border:0;
+.aform button{width:100%;margin-top:8px;padding:10px;background:#16202e;color:#6ff0d6;border:1px solid #2a3647;
 border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}</style></head>
 <body><div class=box>
-<div class=logo><span class=ic>🛍️</span> 쇼핑쇼츠</div>
+<div class=logo>__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></div>
 <h1>로그인</h1>
 <div class=sub>구글 계정으로 로그인하세요<br>처음이면 <b>무료 체험</b>이 바로 시작돼요</div>
 <a class=gbtn href="/auth/google/login">
-<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.8-6.8C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.3 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.1 5.4-4.6 7l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16z"/><path fill="#FBBC05" d="M10.5 28.3c-.5-1.4-.8-2.9-.8-4.3s.3-2.9.8-4.3l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.6 10.4l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.1-5.5c-2 1.3-4.6 2.1-8.1 2.1-6.3 0-11.6-3.8-13.5-9.1l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
+__GOOGLE_SVG__
 Google 계정으로 로그인</a>
 <div class=err>__ERR__</div>
 <a class=home href="/">← 홈으로 돌아가기</a>
@@ -2736,6 +3097,214 @@ Google 계정으로 로그인</a>
 <input name=pass type=password placeholder=비밀번호 autocomplete=current-password>
 <button>운영자 로그인</button></form>
 </div></body></html>"""
+
+# ── 요금·이용권(상품 상세) — 공개 페이지. 구성·가격은 플레이스홀더(확정 시 값만 교체). ──
+_PRICING_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>__NAME__ — 요금 · 이용권</title>
+<link rel=preconnect href="https://fonts.googleapis.com">
+<link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel=stylesheet>
+<style>*{box-sizing:border-box;margin:0;padding:0}
+:root{--mint:#6ff0d6;--grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--gold:#ffcf6f;--gold-grad:linear-gradient(135deg,#ffe1a1,#f0a93a);
+--ink:#0b0f14;--panel:#111722;--line:#1e2735;--txt:#e8f0ee;--muted:#8aa0a0;--faint:#5f7373}
+body{background:radial-gradient(1100px 600px at 82% -12%,rgba(111,240,214,.10),transparent 60%),radial-gradient(900px 500px at 0% 112%,rgba(255,207,111,.06),transparent 55%),var(--ink);
+color:var(--txt);font-family:'Noto Sans KR',system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;word-break:keep-all}
+a{text-decoration:none;color:inherit}
+.display{font-family:'Black Han Sans',sans-serif;font-weight:400}
+.wrap{max-width:1000px;margin:0 auto;padding:0 24px}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .sym{width:34px;height:34px;flex:none}
+.brand .wm{display:flex;flex-direction:column;line-height:1}
+.brand .nm{font-family:'Black Han Sans',sans-serif;font-size:22px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand .en{font-family:ui-monospace,monospace;font-size:9px;letter-spacing:2.4px;color:var(--faint);margin-top:2px}
+.nav a.top{color:var(--muted);font-size:14px;font-weight:600}.nav a.top:hover{color:var(--mint)}
+.hero{text-align:center;max-width:700px;margin:0 auto;padding:52px 0 36px}
+.eyebrow{font-size:12px;letter-spacing:.2em;color:var(--mint);font-weight:700;margin-bottom:14px}
+.hero h1{font-size:clamp(30px,4.4vw,46px);line-height:1.18}
+.hero p{color:var(--muted);font-size:16px;margin:16px auto 26px;max-width:44ch}
+.row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:15px;padding:14px 26px;border-radius:12px;cursor:pointer;border:0}
+.btn.pri{background:var(--grad);color:#062018;box-shadow:0 8px 30px rgba(111,240,214,.18)}
+.btn.pri:hover{filter:brightness(1.06)}
+.btn.kko{background:var(--gold-grad);color:#3a2600}
+.btn.kko:hover{filter:brightness(1.05)}
+.btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line);font-weight:600}
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:760px;margin:20px auto 0}
+.plan{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:30px 26px;position:relative}
+.plan.pro{border-color:rgba(255,207,111,.4);box-shadow:0 0 0 1px rgba(255,207,111,.14) inset}
+.plan .rec{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--gold-grad);color:#3a2600;font-family:'Black Han Sans',sans-serif;font-size:12px;padding:4px 12px;border-radius:999px}
+.plan .pt{font-size:15px;font-weight:700;color:var(--muted)}
+.plan .pro-t{color:var(--gold)}
+.plan .price{font-family:'Black Han Sans',sans-serif;font-size:38px;margin:10px 0 4px}
+.plan.pro .price{background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.plan .price small{font-size:15px;color:var(--muted);font-family:'Noto Sans KR'}
+.plan .pd{color:var(--faint);font-size:13px;margin-bottom:18px}
+.plan ul{list-style:none;display:flex;flex-direction:column;gap:9px;margin-bottom:22px}
+.plan li{font-size:14px;color:var(--txt);display:flex;gap:9px}.plan li .c{color:var(--mint);flex:none}
+.plan .btn{width:100%;justify-content:center}
+.sec{padding:48px 0}
+.sec h2{text-align:center;font-size:clamp(22px,3vw,28px);font-weight:900;margin-bottom:8px}
+.sec .lead{text-align:center;color:var(--muted);margin-bottom:32px}
+.incl{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:820px;margin:0 auto}
+.incl .i{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;font-size:14px}
+.incl .i b{display:block;margin-bottom:3px}.incl .i span{color:var(--muted);font-size:13px}
+.revs{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:820px;margin:0 auto}
+.rev{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
+.rev p{font-size:14px;margin-bottom:10px}.rev .who{color:var(--faint);font-size:12.5px}
+.faq{max-width:720px;margin:0 auto}
+.qa{border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:12px;background:var(--panel)}
+.qa .q{font-weight:700;font-size:15px;margin-bottom:6px}.qa .a{color:var(--muted);font-size:14px}
+.band{text-align:center;background:linear-gradient(180deg,rgba(255,207,111,.05),transparent);border:1px solid var(--line);border-radius:24px;padding:50px 24px;margin:40px 0 58px}
+.band h2{font-size:clamp(23px,3.2vw,29px);font-weight:900;margin-bottom:10px}.band p{color:var(--muted);margin-bottom:24px}
+.tbd{color:var(--faint);font-size:12px;margin-top:14px}
+.foot{text-align:center;color:var(--faint);font-size:12.5px;padding:0 0 42px}
+@media(max-width:760px){.plans,.incl,.revs{grid-template-columns:1fr}}
+</style></head><body><div class=wrap>
+<div class=nav>
+<a class=brand href="/">__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></a>
+<a class="top" href="/login">로그인</a></div>
+<div class=hero>
+<div class=eyebrow>요금 · 이용권</div>
+<h1 class=display>필요한 만큼만,<br>부담 없이 시작하세요</h1>
+<p>먼저 무료로 만들어보고, 마음에 들면 이용권으로 계속. 결제·문의는 카톡으로 간편하게 안내해 드립니다.</p>
+<div class=row>
+<a class="btn pri" href="/login">무료로 시작하기 →</a>
+<a class="btn kko" href="__KAKAO__" target="_blank" rel="noopener">카톡으로 문의하기</a></div></div>
+<div class=plans>
+<div class=plan>
+<div class=pt>무료 체험</div>
+<div class=price>0<small>원</small></div>
+<div class=pd>가입하면 바로 시작 · 카드 없이</div>
+<ul>
+<li><span class=c>✓</span> 가입 후 일정 기간 전 기능 체험</li>
+<li><span class=c>✓</span> 레퍼런스 랭킹 열람</li>
+<li><span class=c>✓</span> 쇼츠 제작 체험</li></ul>
+<a class="btn pri" href="/login">무료로 시작</a></div>
+<div class="plan pro">
+<div class=rec>추천</div>
+<div class="pt pro-t">Pro 이용권</div>
+<div class=price>가격 문의<small></small></div>
+<div class=pd>기간·구성은 카톡으로 안내 (준비 중)</div>
+<ul>
+<li><span class=c>✓</span> 전 기능 무제한</li>
+<li><span class=c>✓</span> 쇼츠 무제한 제작</li>
+<li><span class=c>✓</span> 렌즈·대본·보이스 전부</li>
+<li><span class=c>✓</span> 우선 문의·운영 노하우</li></ul>
+<a class="btn kko" href="__KAKAO__" target="_blank" rel="noopener">카톡으로 문의</a></div></div>
+<div class=tbd style="text-align:center">※ 가격·이용권 기간은 확정 후 표기됩니다(현재 플레이스홀더).</div>
+<div class=sec>
+<h2>이용권에 들어있는 것</h2>
+<div class=lead>파는 사람이 처음부터 끝까지 쓰는 도구</div>
+<div class=incl>
+<div class=i><b>🔥 레퍼런스 랭킹</b><span>지금 제일 잘 팔리는 걸 짚어줌</span></div>
+<div class=i><b>🔎 렌즈 · 유사영상</b><span>짜맞출 소스 자동 수집</span></div>
+<div class=i><b>✍️ 대본 추출·리메이크</b><span>내 상품 이야기로 다시 씀</span></div>
+<div class=i><b>🎬 제작소</b><span>장면·자막 원클릭 조립</span></div>
+<div class=i><b>🎙️ AI 보이스</b><span>자연스러운 나레이션 자동</span></div>
+<div class=i><b>♾️ 무제한 제작</b><span>많이 찍어낼수록 유리</span></div></div></div>
+<div class=sec>
+<h2>먼저 써본 분들</h2>
+<div class=lead>(후기 자리 — 실제 후기로 교체 예정)</div>
+<div class=revs>
+<div class=rev><p>"편집 하나도 몰랐는데 하루에 몇 개씩 만들어요. 이게 5분이면 된다는 게 신기합니다."</p><div class=who>— 준비 중</div></div>
+<div class=rev><p>"뭘 만들지 고민이 제일 힘들었는데, 잘 팔리는 걸 짚어주니 그냥 딸깍만 하면 돼요."</p><div class=who>— 준비 중</div></div></div></div>
+<div class=sec>
+<h2>자주 묻는 질문</h2>
+<div class=faq>
+<div class=qa><div class=q>결제는 어떻게 하나요?</div><div class=a>카톡으로 문의하시면 안내해 드립니다. 확인 후 바로 이용권이 열립니다.</div></div>
+<div class=qa><div class=q>무료 체험만 써도 되나요?</div><div class=a>네. 체험 기간엔 전 기능을 그대로 쓰실 수 있고, 이후엔 레퍼런스 랭킹은 계속 보실 수 있어요.</div></div>
+<div class=qa><div class=q>환불되나요?</div><div class=a>환불 정책은 확정 후 안내드립니다(준비 중).</div></div></div></div>
+<div class=band>
+<h2>일단 무료로 하나 만들어보세요</h2>
+<p>구글 계정이면 3초 · 카드 없이 시작. 궁금한 건 카톡으로.</p>
+<div class=row>
+<a class="btn pri" href="/login">무료로 시작하기 →</a>
+<a class="btn kko" href="__KAKAO__" target="_blank" rel="noopener">카톡으로 문의</a></div></div>
+<div class=foot>© __NAME__ · 요금·이용권 안내</div>
+</div></body></html>"""
+
+# ── 내 계정(유저 자기 설정) — 로그인 전용. /api/me로 플랜·한도·연락처를 채운다. ──
+_ACCOUNT_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>__NAME__ — 내 계정</title>
+<link rel=preconnect href="https://fonts.googleapis.com">
+<link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel=stylesheet>
+<style>*{box-sizing:border-box;margin:0;padding:0}
+:root{--mint:#6ff0d6;--grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--gold:#ffcf6f;--gold-grad:linear-gradient(135deg,#ffe1a1,#f0a93a);
+--ink:#0b0f14;--panel:#111722;--line:#1e2735;--txt:#e8f0ee;--muted:#8aa0a0;--faint:#5f7373}
+body{background:radial-gradient(1000px 560px at 82% -12%,rgba(111,240,214,.09),transparent 60%),var(--ink);
+color:var(--txt);font-family:'Noto Sans KR',system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;word-break:keep-all;min-height:100vh}
+a{text-decoration:none;color:inherit}
+.wrap{max-width:520px;margin:0 auto;padding:0 22px}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .sym{width:32px;height:32px;flex:none}
+.brand .nm{font-family:'Black Han Sans',sans-serif;font-size:20px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.nav .back{color:var(--muted);font-size:14px;font-weight:600}.nav .back:hover{color:var(--mint)}
+h1{font-family:'Black Han Sans',sans-serif;font-size:30px;margin:16px 0 22px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:16px}
+.card h3{font-size:13px;letter-spacing:.03em;color:var(--faint);font-weight:700;margin-bottom:12px}
+.plan{display:flex;align-items:center;gap:12px}
+.plan .badge{font-family:'Black Han Sans',sans-serif;font-size:15px;padding:6px 14px;border-radius:999px}
+.badge.trial{background:rgba(111,240,214,.14);color:var(--mint)}
+.badge.free{background:#1a2028;color:var(--muted)}
+.badge.pro{background:var(--gold-grad);color:#3a2600}
+.plan .sub{color:var(--muted);font-size:14px}
+.lims{display:flex;gap:10px;flex-wrap:wrap}
+.lim{flex:1;min-width:90px;background:#0d131c;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+.lim .n{font-family:'Black Han Sans',sans-serif;font-size:24px;color:var(--mint)}
+.lim .l{color:var(--muted);font-size:12px;margin-top:2px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;border:0}
+.btn.kko{background:var(--gold-grad);color:#3a2600}
+.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);font-weight:600}
+.up p{color:var(--muted);font-size:13.5px;margin-bottom:14px}
+.foot{text-align:center;color:var(--faint);font-size:12px;padding:16px 0 40px}
+.hide{display:none!important}
+</style></head><body><div class=wrap>
+<div class=nav>
+<a class=brand href="/">__LOGO_SVG__<span class=nm>__NAME__</span></a>
+<a class=back href="/">← 앱으로</a></div>
+<h1>내 계정</h1>
+<div class=card>
+<h3>현재 플랜</h3>
+<div class=plan><span id=planBadge class="badge free">…</span><span id=planSub class=sub></span></div></div>
+<div class=card>
+<h3>하루 이용 한도</h3>
+<div class=lims>
+<div class=lim><div class=n id=limRender>–</div><div class=l>제작</div></div>
+<div class=lim><div class=n id=limLens>–</div><div class=l>렌즈</div></div>
+<div class=lim><div class=n id=limScript>–</div><div class=l>대본</div></div></div></div>
+<div class="card up" id=upCard>
+<h3>이용권</h3>
+<p id=upText>더 쓰고 싶으면 이용권으로 계속 쓸 수 있어요. 결제·문의는 카톡으로 안내해 드립니다.</p>
+<a class="btn kko" id=kkoBtn href="/pricing">카톡으로 문의</a></div>
+<a class="btn ghost" href="/logout">로그아웃</a>
+<div class=foot>© __NAME__</div>
+</div>
+<script>(function(){
+function t(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
+fetch("/api/me").then(function(r){return r.ok?r.json():null;}).then(function(d){
+if(!d)return;
+var L=d.limits||{};t("limRender",L.render);t("limLens",L.lens);t("limScript",L.script);
+var b=document.getElementById("planBadge");
+if(d.plan==="pro"){b.className="badge pro";t("planBadge","Pro 이용권");t("planSub","전 기능 무제한");document.getElementById("upCard").classList.add("hide");}
+else if(typeof d.days_left==="number"&&d.days_left>0){b.className="badge trial";t("planBadge","무료 체험");t("planSub","D-"+d.days_left+" 남음");}
+else{b.className="badge free";t("planBadge","무료");t("planSub","레퍼런스 랭킹 열람");}
+var kko=(d.contact&&d.contact.kakao)||"";
+var btn=document.getElementById("kkoBtn");
+if(/^https?:\\/\\//.test(kko)){btn.href=kko;btn.target="_blank";btn.rel="noopener";}
+else{btn.href="/pricing";}
+}).catch(function(){});
+})();</script>
+</body></html>"""
+
+_LANDING_HTML = _fill_brand(_LANDING_TMPL)
+_LOGIN_HTML = _fill_brand(_LOGIN_TMPL)
+_PRICING_HTML = _fill_brand(_PRICING_TMPL)
+_ACCOUNT_HTML = _fill_brand(_ACCOUNT_TMPL)
 
 _SIGNUP_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>쇼핑쇼츠 가입</title>
@@ -2769,6 +3338,16 @@ def _login_page(e: str = ""):
     else:
         msg = ""
     return _LOGIN_HTML.replace("__ERR__", msg)
+
+
+@app.get("/pricing", response_class=HTMLResponse)
+def _pricing_page():
+    return _PRICING_HTML   # 공개 요금·이용권 페이지(비로그인 방문자 포함)
+
+
+@app.get("/account", response_class=HTMLResponse)
+def _account_page():
+    return _ACCOUNT_HTML   # 로그인 유저 자기 계정(플랜·한도·문의). 데이터는 JS가 /api/me로 채움
 
 
 @app.get("/signup", response_class=HTMLResponse)
@@ -2923,6 +3502,10 @@ async def _auth_guard(request: Request, call_next):
         return await call_next(request)
     if path.startswith("/api/"):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
+    if path in ("/", "/index.html"):
+        return HTMLResponse(_LANDING_HTML)   # 비로그인 방문자 → 공개 대문(랜딩)
+    if request.method == "GET" and path == "/pricing":
+        return await call_next(request)      # 요금·이용권은 비로그인도 열람
     return RedirectResponse("/login")
 
 
@@ -3425,7 +4008,7 @@ def api_produce_works_delete(request: Request, work_id: str):
 
 
 @app.post("/api/produce/mix/start")
-def api_produce_mix_start(background_tasks: BackgroundTasks, body: dict):
+def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, body: dict):
     """2단계 영상믹스 — 확정 대본(given_script)을 소스영상 장면에 매칭하는 job 시작.
     리뷰·렌더는 기존 /api/mix/{status,result,adjust,render,video}를 그대로 쓴다.
     body: {script, urls, target_seconds, subtitle_removal, script_structure}.
@@ -3449,10 +4032,29 @@ def api_produce_mix_start(background_tasks: BackgroundTasks, body: dict):
     script_structure = body.get("script_structure") or None
     if not isinstance(script_structure, dict):
         script_structure = None   # 잘못된 형식은 조용히 버린다(보관 전용이라 무해)
+    # 유료게이트(2026-07-20 E): 제작소 2단계도 결국 run_mix_job→렌더로 돈이 나간다. /api/mix/start와
+    # 동일하게 render 과금+글로벌캡을 건다 — 안 걸면 제작소 흐름으로 하루 상한·전역 상한을 통째로
+    # 우회할 수 있다(1단계 script 과금은 별개 자원이라 render 과금을 대체하지 못한다). 검증(위 ssrf·
+    # 파싱)을 먼저 통과시킨 뒤 과금(리뷰 G1). render_charge_day를 채워 run_mix_job 실패 시 자동 환불된다.
+    cid = getattr(request.state, "customer_id", 0)
+    if _global_over_cap("render"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "global_limit",
+            "error": "지금 영상 만들기 이용이 많아요. 잠시 후 다시 시도해 주세요."})
+    if not check_and_count(cid, "render"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "daily_limit",
+            "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
+    global_incr_and_alert("render")
+    # 장면 우선 대본 모드(2026-07-20, Task7): produce.html "우리 시스템으로 믹스"는 항상 이 값을
+    # true로 보낸다. mix_pipeline._plan_and_tts가 build_scene_first_plan으로 후보 n개를 만들고
+    # 추천 후보를 자동 세팅한다(candidates=[]이면 기존 build_edit_plan으로 조용히 폴백).
+    scene_first = bool(body.get("scene_first", False))
     job_id = uuid.uuid4().hex[:12]
     Store(DB_PATH).create_mix_job(job_id, urls, target, "free",
                                   subtitle_removal=subtitle_removal, given_script=script,
-                                  script_structure=script_structure)
+                                  script_structure=script_structure, scene_first=scene_first,
+                                  customer_id=cid, render_charge_day=_today_utc())
     background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True, "job_id": job_id}
 
@@ -4309,6 +4911,86 @@ def api_fx_file(job_id: str):
     return FileResponse(job["fx_path"])
 
 
+# ── 부품은행(Pattern Bank) 큐레이션 API — Phase 0 (2026-07-21) ──────────────
+# 대본을 8버킷 부품으로 분해·큐레이션한다. 백엔드 로직은 store.py·pattern_bank.py에
+# 완성돼 있고 여기선 얇은 HTTP 래퍼만 얹는다(기존 흐름 무편집).
+
+@app.post("/api/pattern/ingest")
+def api_pattern_ingest(body: dict):
+    """대본 1건을 분해해 부품은행에 담는다. body: {full_text, product_category?}.
+    실 호출은 키풀(Gemini)을 쓴다 — 키가 없거나 추출 실패면 added=0으로도 200을 준다."""
+    full_text = (body.get("full_text") or "").strip()
+    if not full_text:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "full_text 필요"})
+    product_category = (body.get("product_category") or "").strip() or None
+    res = pattern_bank.ingest_script(
+        Store(DB_PATH), full_text, product_category=product_category)
+    return {"ok": True, **res}
+
+
+@app.get("/api/pattern/items")
+def api_pattern_items(bucket: str = None, status: str = None,
+                      order: str = "perf", is_negative: int = None):
+    """부품 목록. bucket/status로 필터, order=perf|freq|recent, is_negative(0/1)."""
+    items = Store(DB_PATH).list_pattern_items(
+        bucket=bucket or None, status=status or None,
+        is_negative=is_negative, order_by=order or "perf")
+    return {"ok": True, "items": items}
+
+
+@app.post("/api/pattern/item/status")
+def api_pattern_item_status(body: dict):
+    """부품 상태 변경(approve/reject/pending). body: {id, status}."""
+    item_id = body.get("id")
+    status = (body.get("status") or "").strip()
+    if item_id is None or not status:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "id·status 필요"})
+    Store(DB_PATH).set_pattern_item_status(item_id, status)
+    return {"ok": True}
+
+
+@app.post("/api/pattern/item/edit")
+def api_pattern_item_edit(body: dict):
+    """부품 문구·태그·메모 교정. body: {id, text?, tags?, note?}. None인 필드는 유지."""
+    item_id = body.get("id")
+    if item_id is None:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "id 필요"})
+    Store(DB_PATH).edit_pattern_item(
+        item_id, text=body.get("text"), tags=body.get("tags"), note=body.get("note"))
+    return {"ok": True}
+
+
+@app.get("/api/pattern/buckets")
+def api_pattern_buckets():
+    """{bucket: {pending, approved, rejected}} 카운트(is_negative=0만)."""
+    return {"ok": True, "counts": Store(DB_PATH).pattern_bucket_counts()}
+
+
+@app.get("/api/pattern/spines")
+def api_pattern_spines(status: str = None):
+    """매크로 스파인 목록. status로 필터."""
+    return {"ok": True, "spines": Store(DB_PATH).list_spines(status=status or None)}
+
+
+@app.post("/api/pattern/spine")
+def api_pattern_spine_add(body: dict):
+    """매크로 스파인 수동 시드. body: {name, situation_type?, character_roles?,
+    beat_chain?, emotion_arc?, appeal?, fit_categories?, status?}."""
+    name = (body.get("name") or "").strip()
+    if not name:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "name 필요"})
+    sid = Store(DB_PATH).add_spine(
+        name,
+        situation_type=body.get("situation_type"),
+        character_roles=body.get("character_roles"),
+        beat_chain=body.get("beat_chain"),
+        emotion_arc=body.get("emotion_arc"),
+        appeal=body.get("appeal"),
+        fit_categories=body.get("fit_categories"),
+        status=(body.get("status") or "pending"))
+    return {"ok": True, "id": sid}
+
+
 # 정적 프론트 (마운트는 맨 마지막)
 _STATIC = Path(__file__).parent / "static"
 
@@ -4318,7 +5000,7 @@ _STATIC = Path(__file__).parent / "static"
 # 반복됨(2026-07-14 역할배정·사이드바 등 실사고) → 매 요청 서버 재검증 강제.
 _NOCACHE = {"Cache-Control": "no-cache, must-revalidate"}
 for _pg in ("discover", "find", "library", "mix", "outreach", "produce", "collection",
-            "scene_library"):
+            "scene_library", "pattern_bank"):
     app.add_api_route(
         f"/{_pg}",
         (lambda n=_pg: FileResponse(_STATIC / f"{n}.html", media_type="text/html",

@@ -47,9 +47,10 @@ def test_cutaway_keeps_beat_length_and_overlays(tmp_path):
     mix = va._render_mix(_plan_one_beat(2.5), {0: str(tts)}, {0: str(src)}, work,
                          cutaway_paths={0: str(asset)})
 
-    # ① 비트 길이 불변 = TTS 길이(2.5초) — 자막 싱크 자물쇠
+    # ① 비트 길이 = TTS(2.5초) + 마지막 비트 여운(_LAST_RUNOUT). 단일 비트라 이 비트가 마지막이다.
+    #    나레이션 구간은 여전히 2.5초라 자막 싱크는 유지되고, 여운은 그 뒤 무성 footage다.
     dur = va._probe_duration(mix)
-    assert abs(dur - 2.5) < 0.15
+    assert abs(dur - (2.5 + va._LAST_RUNOUT)) < 0.15
     # ② 창 안(t=0.5)은 자산(초록), 창 밖(t=2.0, 자산 1.5초 종료 후)은 원본(빨강)
     r_in = _frame_rgb(mix, 0.5); r_out = _frame_rgb(mix, 2.0)
     assert r_in[1] > r_in[0] and r_in[1] > r_in[2]      # 초록 우세
@@ -62,5 +63,5 @@ def test_no_cutaway_path_is_unchanged(tmp_path):
     work = tmp_path / "w"; work.mkdir()
     mix = va._render_mix(_plan_one_beat(2.5), {0: str(tts)}, {0: str(src)}, work,
                          cutaway_paths=None)
-    assert abs(va._probe_duration(mix) - 2.5) < 0.15
+    assert abs(va._probe_duration(mix) - (2.5 + va._LAST_RUNOUT)) < 0.15  # 단일=마지막 비트 → 여운 +1s
     assert _frame_rgb(mix, 0.5)[0] > _frame_rgb(mix, 0.5)[1]  # 전부 빨강(오버레이 없음)

@@ -8,6 +8,35 @@ import urllib.request
 import uuid
 from pathlib import Path
 
+from shopping_shorts import config
+
+
+def _cookies_arg(url):
+    """플랫폼별 yt-dlp 쿠키 옵션 — 파일이 있을 때만 넣는다(없으면 기존처럼 무쿠키로
+    시도해 회귀가 없다). 2026-07-20: 유튜브·틱톡이 비로그인 요청을 봇으로 보고 막기
+    시작해서(사장님 실측: 최신 yt-dlp로도 재현) 로그인 세션 쿠키 없인 다운로드·메타
+    조회가 전부 실패한다. 쿠키파일은 사장님이 브라우저에서 직접 내보낸 것(config.py).
+
+    유튜브는 쿠키만으론 부족했다 — 실측: 메타(-j)는 쿠키로 되는데 실제 다운로드는
+    "No video formats found!"로 유명 공개영상(최초 유튜브 영상)까지 재현되는 별개
+    문제였다. 원인은 유튜브의 URL 서명 난독화("n challenge")를 yt-dlp가 못 풀어서 —
+    Deno(외부 JS 런타임, 로컬에 설치함)+해독 스크립트(--remote-components ejs:github,
+    최초 1회 다운로드 후 ~/.cache/yt-dlp/challenge-solver에 캐시)가 있어야 실제
+    포맷이 나온다. 캐시되면 다음부터 이 플래그 없이도 되지만, 캐시가 비어있는
+    새 환경(서버·캐시삭제 후)에서도 자동 복구되도록 유튜브 호출에 상시 포함한다
+    (이미 캐시 있으면 그냥 빠르게 스킵 — 매 호출 재다운로드 아님)."""
+    u = (url or "").lower()
+    if "youtube.com" in u or "youtu.be" in u:
+        path = config.YTDLP_COOKIES_YOUTUBE
+        extra = ["--remote-components", "ejs:github"]
+    elif "tiktok.com" in u:
+        path = config.YTDLP_COOKIES_TIKTOK
+        extra = []
+    else:
+        return []
+    cookies = ["--cookies", path] if path and Path(path).exists() else []
+    return cookies + extra
+
 
 def _oembed(url):
     """틱톡·유튜브 oEmbed → {thumbnail_url,title,author_name} (무료·무인증). 실패 시 {}.
@@ -34,7 +63,8 @@ def probe_grab_meta(url, timeout=40):
     폴백. 전부 실패하면 {}. 백그라운드 보강용이라 조용히 실패."""
     out = {}
     try:
-        r = subprocess.run([sys.executable, "-m", "yt_dlp", "-j", "--no-warnings", url],
+        r = subprocess.run([sys.executable, "-m", "yt_dlp", "-j", "--no-warnings",
+                            *_cookies_arg(url), url],
                            capture_output=True, text=True, timeout=timeout)
         if r.returncode == 0 and r.stdout.strip():
             d = json.loads(r.stdout)
@@ -78,7 +108,7 @@ def _download_ytdlp(url, dest_dir):
     out = str(Path(dest_dir) / (uuid.uuid4().hex[:8] + ".%(ext)s"))
     r = subprocess.run(
         [sys.executable, "-m", "yt_dlp", "-f", "mp4/bestvideo+bestaudio/best",
-         "--no-playlist", "-o", out, url],
+         "--no-playlist", *_cookies_arg(url), "-o", out, url],
         capture_output=True, text=True, timeout=300)
     if r.returncode != 0:
         raise RuntimeError(f"yt-dlp 실패({url}): {r.stderr[-300:]}")
@@ -148,7 +178,7 @@ def resolve_media_url(platform, video_id, timeout=30):
         r = subprocess.run(
             [sys.executable, "-m", "yt_dlp", "-g", "-f",
              "best[ext=mp4][vcodec!=none][acodec!=none]/best[ext=mp4]/best",
-             "--no-warnings", page],
+             "--no-warnings", *_cookies_arg(page), page],
             capture_output=True, text=True, encoding="utf-8", timeout=timeout)
     except Exception:
         return ""

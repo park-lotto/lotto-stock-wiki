@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>숏템탑스 · Brand Identity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0b0f14; --panel:#111722; --panel2:#0e141d; --line:#1e2735;
+    --mint:#6ff0d6; --mint-deep:#1f9e7a; --grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);
+    --gold:#ffcf6f; --gold-deep:#f0a93a;
+    --txt:#e8f0ee; --muted:#8aa0a0; --faint:#5f7373;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      radial-gradient(1100px 600px at 80% -10%, rgba(111,240,214,.10), transparent 60%),
+      radial-gradient(900px 500px at 0% 110%, rgba(255,207,111,.06), transparent 55%),
+      var(--ink);
+    color:var(--txt);
+    font-family:"Noto Sans KR",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.6;
+    word-break:keep-all;   /* 한글은 어절(공백) 단위로만 줄바꿈 — 단어 중간 끊김 방지 */
+  }
+  .display{font-family:"Black Han Sans",sans-serif;font-weight:400;letter-spacing:.01em}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  .eyebrow{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--mint);font-weight:700}
+  .mono{font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace}
+
+  /* ---- section frame ---- */
+  section{padding:64px 0;border-top:1px solid var(--line)}
+  section:first-of-type{border-top:0}
+  .sec-label{display:flex;align-items:baseline;gap:14px;margin-bottom:34px}
+  .sec-label .n{font-family:ui-monospace,monospace;font-size:12px;color:var(--faint)}
+  .sec-label h2{margin:0;font-size:15px;font-weight:700;letter-spacing:.02em;color:var(--txt)}
+  .sec-label .en{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--faint)}
+
+  /* ---- HERO ---- */
+  .hero{padding:78px 0 60px}
+  .hero-top{display:flex;align-items:center;gap:12px;margin-bottom:34px}
+  .hero-top .dot{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 12px var(--mint)}
+  .wordmark{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+  .wordmark .sym{width:96px;height:96px;flex:0 0 auto}
+  .wm-text .name{
+    font-size:clamp(52px,10vw,104px);line-height:.92;margin:0;
+    background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;
+    -webkit-text-fill-color:transparent;
+  }
+  .wm-text .name .tops{
+    background:linear-gradient(135deg,#ffe1a1,#f0a93a);-webkit-background-clip:text;background-clip:text;
+    color:transparent;-webkit-text-fill-color:transparent;
+  }
+  .wm-text .en{font-family:ui-monospace,monospace;font-size:13px;letter-spacing:.34em;color:var(--muted);margin-top:12px}
+  .tagline{font-size:clamp(19px,2.6vw,26px);font-weight:700;margin:30px 0 8px;max-width:22ch;line-height:1.32}
+  .tagline b{color:var(--mint)}
+  .tagline .hot{color:var(--gold)}
+  .sub{color:var(--muted);max-width:52ch}
+  .meaning{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}
+  .chip{border:1px solid var(--line);border-radius:999px;padding:8px 15px;font-size:13px;background:rgba(255,255,255,.02)}
+  .chip b{color:var(--txt)} .chip span{color:var(--faint)}
+
+  /* ---- symbol showcase ---- */
+  .sym-row{display:flex;align-items:flex-end;gap:34px;flex-wrap:wrap}
+  .sym-cell{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .sym-cell .cap{font-size:11px;color:var(--faint);font-family:ui-monospace,monospace}
+  .sym-box{background:var(--panel);border:1px solid var(--line);border-radius:22px;display:flex;align-items:center;justify-content:center}
+  .idea{margin-top:30px;color:var(--muted);max-width:60ch;font-size:14px}
+  .idea b{color:var(--mint)} .idea .g{color:var(--gold)}
+
+  /* ---- palette ---- */
+  .sw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+  .sw{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel2)}
+  .sw .chipc{height:78px}
+  .sw .meta{padding:11px 13px}
+  .sw .role{font-size:12px;font-weight:700}
+  .sw .hex{font-family:ui-monospace,monospace;font-size:12px;color:var(--muted);margin-top:2px}
+
+  /* ---- type ---- */
+  .type-card{border:1px solid var(--line);border-radius:16px;padding:24px;background:var(--panel2);margin-bottom:14px}
+  .type-card .role{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+  .type-card .face{font-size:13px;color:var(--mint);font-family:ui-monospace,monospace;margin-bottom:14px}
+  .spec-display{font-size:clamp(34px,6vw,60px);line-height:1.05;margin:0}
+  .spec-body{font-size:17px;margin:0;color:var(--txt)}
+  .spec-body .w{display:inline-block;margin-right:14px;color:var(--muted)}
+
+  /* ---- lockups ---- */
+  .lock-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+  .lock{border:1px solid var(--line);border-radius:16px;padding:26px;display:flex;align-items:center;justify-content:center;min-height:150px;position:relative}
+  .lock .tag{position:absolute;top:12px;left:14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-family:ui-monospace,monospace}
+  .lock.light{background:#f3f6f5}
+  .lh{display:flex;align-items:center;gap:12px}
+  .lh .lname{font-family:"Black Han Sans",sans-serif;font-size:26px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+  .lh .lname .t{background:linear-gradient(135deg,#ffe1a1,#f0a93a);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+  .lv{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .lv .lname{font-family:"Black Han Sans",sans-serif;font-size:24px;color:var(--mint)}
+  .mono1 .lname{-webkit-text-fill-color:var(--txt);color:var(--txt);background:none}
+  .light .lname{-webkit-text-fill-color:#0b0f14;color:#0b0f14;background:none}
+  .light .lname .t{-webkit-text-fill-color:var(--gold-deep);color:var(--gold-deep);background:none}
+
+  /* ---- landing preview ---- */
+  .land{border:1px solid var(--line);border-radius:20px;overflow:hidden;background:linear-gradient(180deg,#0d1420,#0a0e14)}
+  .land-bar{display:flex;align-items:center;gap:8px;padding:13px 18px;border-bottom:1px solid var(--line)}
+  .land-bar .lname{font-family:"Black Han Sans",sans-serif;font-size:17px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+  .land-bar .lname .t{background:linear-gradient(135deg,#ffe1a1,#f0a93a);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+  .land-bar .spacer{flex:1}
+  .land-bar .lg{font-size:12px;color:var(--muted)}
+  .land-bar .lgbtn{font-size:12px;font-weight:700;color:#062018;background:var(--grad);border-radius:8px;padding:8px 14px}
+  .land-body{display:grid;grid-template-columns:1.25fr .75fr;gap:30px;padding:44px 40px 50px;align-items:center}
+  .land-body h1{font-family:"Black Han Sans",sans-serif;font-size:clamp(30px,4.4vw,46px);line-height:1.1;margin:0 0 16px}
+  .land-body h1 .m{color:var(--mint)} .land-body h1 .g{color:var(--gold)}
+  .land-body p{color:var(--muted);margin:0 0 26px;max-width:34ch}
+  .land-cta{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .btn-primary{font-weight:700;color:#062018;background:var(--grad);border:0;border-radius:12px;padding:15px 26px;font-size:16px;cursor:pointer}
+  .btn-ghost{color:var(--txt);background:transparent;border:1px solid var(--line);border-radius:12px;padding:15px 22px;font-size:15px}
+  .trust{margin-top:18px;font-size:12px;color:var(--faint)}
+  .phone{justify-self:center}
+  .frame{width:190px;aspect-ratio:9/16;border-radius:22px;border:1px solid var(--line);background:#0a0f16;position:relative;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+  .frame .prod{position:absolute;inset:14px 14px 66px;border-radius:14px;background:linear-gradient(160deg,#16324a,#0d2035);display:flex;align-items:center;justify-content:center;font-size:36px;z-index:1}
+  .frame .rank{position:absolute;top:22px;left:22px;z-index:2;background:linear-gradient(135deg,#ffe1a1,#f0a93a);color:#3a2600;font-family:"Black Han Sans",sans-serif;font-size:13px;padding:4px 9px;border-radius:8px}
+  .frame .capbar{position:absolute;left:14px;right:14px;bottom:16px;z-index:2;min-height:40px;border-radius:10px;background:rgba(9,14,20,.9);border:1px solid var(--line);display:flex;align-items:center;padding:8px 11px;font-size:11px;line-height:1.35;color:var(--txt)}
+  .frame .capbar .kw{color:var(--gold);font-weight:700}
+
+  footer{padding:40px 0 70px;color:var(--faint);font-size:13px;text-align:center;border-top:1px solid var(--line)}
+
+  @media (max-width:720px){
+    .land-body{grid-template-columns:1fr;gap:26px}
+    .wordmark{gap:16px}.wordmark .sym{width:72px;height:72px}
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .fade{opacity:0;transform:translateY(10px);animation:rise .7s cubic-bezier(.2,.7,.2,1) forwards}
+    .d1{animation-delay:.05s}.d2{animation-delay:.15s}.d3{animation-delay:.25s}
+    @keyframes rise{to{opacity:1;transform:none}}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<div class="wrap hero">
+  <div class="hero-top fade d1"><span class="dot"></span><span class="eyebrow">숏템탑스 · Brand Identity v1</span></div>
+  <div class="wordmark fade d2">
+    <!-- 시그니처 심볼: 박스(제작소)에서 랭킹된 아이템이 쌓여 올라오고 맨 위는 TOP(골드) -->
+    <svg class="sym" viewBox="0 0 64 64" fill="none" aria-label="숏템탑스 심볼" role="img">
+      <defs>
+        <linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6ff0d6"/><stop offset="1" stop-color="#1f9e7a"/></linearGradient>
+        <linearGradient id="gg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe1a1"/><stop offset="1" stop-color="#f0a93a"/></linearGradient>
+      </defs>
+      <rect x="4" y="4" width="56" height="56" rx="16" stroke="url(#mg)" stroke-width="3"/>
+      <!-- 쌓여 올라오는 아이템 티어: 아래(넓고 흐림) → 위(좁고 골드=TOP) -->
+      <rect x="16" y="40" width="32" height="8" rx="3" fill="#1f9e7a" opacity=".55"/>
+      <rect x="20" y="29" width="24" height="8" rx="3" fill="#6ff0d6" opacity=".9"/>
+      <rect x="24" y="18" width="16" height="8" rx="3" fill="url(#gg)"/>
+      <path d="M32 11.5l3 4.5h-6l3-4.5z" fill="url(#gg)"/>
+    </svg>
+    <div class="wm-text">
+      <p class="name display">숏템<span class="tops">탑스</span></p>
+      <div class="en">S H O T T E M · T O P S</div>
+    </div>
+  </div>
+  <p class="tagline fade d3">레퍼런스만 넣으면, <b>팔리는 인기템</b> 쇼츠가 <span class="hot">뚝딱</span>.</p>
+  <p class="sub fade d3">파는 사람을 위한 자동 쇼핑 쇼츠 제작소. 링크 하나 넣으면 대본·장면·자막까지 알아서. 캡컷 몰라도 됩니다.</p>
+  <div class="meaning fade d3">
+    <span class="chip"><b>숏</b> <span>쇼츠 · 숏폼</span></span>
+    <span class="chip"><b>템</b> <span>파는 아이템</span></span>
+    <span class="chip"><b>탑스</b> <span>TOP 인기템</span></span>
+  </div>
+</div>
+
+<!-- ============ SYMBOL ============ -->
+<section><div class="wrap">
+  <div class="sec-label"><span class="n">01</span><h2>심볼 · 모노그램</h2><span class="en">Symbol</span></div>
+  <div class="sym-row">
+    <div class="sym-cell"><div class="sym-box" style="width:120px;height:120px">
+      <svg width="76" height="76" viewBox="0 0 64 64" fill="none"><rect x="4" y="4" width="56" height="56" rx="16" stroke="url(#mg)" stroke-width="3"/><rect x="16" y="40" width="32" height="8" rx="3" fill="#1f9e7a" opacity=".55"/><rect x="20" y="29" width="24" height="8" rx="3" fill="#6ff0d6" opacity=".9"/><rect x="24" y="18" width="16" height="8" rx="3" fill="url(#gg)"/><path d="M32 11.5l3 4.5h-6l3-4.5z" fill="url(#gg)"/></svg>
+    </div><span class="cap">앱 아이콘 76px</span></div>
+    <div class="sym-cell"><div class="sym-box" style="width:64px;height:64px">
+      <svg width="40" height="40" viewBox="0 0 64 64" fill="none"><rect x="4" y="4" width="56" height="56" rx="16" stroke="url(#mg)" stroke-width="4"/><rect x="18" y="40" width="28" height="7" rx="3" fill="#1f9e7a" opacity=".55"/><rect x="21" y="30" width="22" height="7" rx="3" fill="#6ff0d6" opacity=".9"/><rect x="25" y="20" width="14" height="7" rx="3" fill="url(#gg)"/></svg>
+    </div><span class="cap">40px</span></div>
+    <div class="sym-cell"><div class="sym-box" style="width:34px;height:34px">
+      <svg width="22" height="22" viewBox="0 0 64 64" fill="none"><rect x="6" y="6" width="52" height="52" rx="15" stroke="#6ff0d6" stroke-width="5"/><rect x="22" y="38" width="20" height="7" rx="3" fill="#6ff0d6" opacity=".7"/><rect x="25" y="27" width="14" height="7" rx="3" fill="#6ff0d6"/><rect x="28" y="17" width="8" height="7" rx="3" fill="url(#gg)"/></svg>
+    </div><span class="cap">파비콘 22px</span></div>
+  </div>
+  <p class="idea">상자(제작소·<b>공장처럼 찍어낸다</b>) 안에서 랭킹된 아이템이 쌓여 올라오고, 맨 위 한 칸만 <span class="g">골드=TOP 인기템</span>. 박스·대량생산·탑스를 한 심볼에 담았습니다. 아주 작아져도(파비콘) 티어 3칸 실루엣이 남게 설계.</p>
+</div></section>
+
+<!-- ============ COLOR ============ -->
+<section><div class="wrap">
+  <div class="sec-label"><span class="n">02</span><h2>색 · 팔레트</h2><span class="en">Color</span></div>
+  <div class="sw-grid">
+    <div class="sw"><div class="chipc" style="background:var(--grad)"></div><div class="meta"><div class="role">민트 그라디언트 (주)</div><div class="hex">#6FF0D6 → #1F9E7A</div></div></div>
+    <div class="sw"><div class="chipc" style="background:#6ff0d6"></div><div class="meta"><div class="role">민트 (강조·선택)</div><div class="hex">#6FF0D6</div></div></div>
+    <div class="sw"><div class="chipc" style="background:linear-gradient(135deg,#ffe1a1,#f0a93a)"></div><div class="meta"><div class="role">골드 · TOP/인기 (딱 한 곳)</div><div class="hex">#FFCF6F → #F0A93A</div></div></div>
+    <div class="sw"><div class="chipc" style="background:#111722"></div><div class="meta"><div class="role">패널 잉크</div><div class="hex">#111722</div></div></div>
+    <div class="sw"><div class="chipc" style="background:#0b0f14"></div><div class="meta"><div class="role">배경 잉크</div><div class="hex">#0B0F14</div></div></div>
+    <div class="sw"><div class="chipc" style="background:#e8f0ee"></div><div class="meta"><div class="role">본문 화이트</div><div class="hex">#E8F0EE</div></div></div>
+  </div>
+  <p class="idea">민트×블랙은 기존 제작소·사이드바 토큰 그대로 계승(일관성). <span class="g">골드는 "TOP/인기/뚝딱"에만</span> — 쇼핑의 열기를 딱 한 톤으로. 넘치면 브랜드가 흐려지니 랭킹 배지·핵심 CTA 강조에만 씁니다.</p>
+</div></section>
+
+<!-- ============ TYPE ============ -->
+<section><div class="wrap">
+  <div class="sec-label"><span class="n">03</span><h2>서체</h2><span class="en">Typography</span></div>
+  <div class="type-card">
+    <div class="role">Display · 워드마크·헤드라인</div>
+    <div class="face">Black Han Sans</div>
+    <p class="spec-display display">팔리는 쇼츠, 뚝딱</p>
+  </div>
+  <div class="type-card">
+    <div class="role">Body · 본문·UI</div>
+    <div class="face">Noto Sans KR — 400 / 700 / 900</div>
+    <p class="spec-body"><span class="w">보통</span>레퍼런스만 넣으면 대본·장면·자막까지 자동으로 만들어 드립니다.</p>
+    <p class="spec-body" style="font-weight:700;margin-top:8px"><span class="w">굵게</span>캡컷 몰라도, 딸깍 한 번이면 끝.</p>
+  </div>
+  <p class="idea">디스플레이는 <b>블랙한산스</b> — 두껍고 둥근 한글이라 임팩트 있으면서 시니어도 편히 읽힘(쇼핑·친근). 본문은 노토산스로 조용하게. 임팩트는 워드마크 한 곳에만.</p>
+</div></section>
+
+<!-- ============ LOCKUPS ============ -->
+<section><div class="wrap">
+  <div class="sec-label"><span class="n">04</span><h2>로고 응용</h2><span class="en">Lockups</span></div>
+  <div class="lock-grid">
+    <div class="lock"><span class="tag">가로 · 기본</span><div class="lh">
+      <svg width="34" height="34" viewBox="0 0 64 64" fill="none"><rect x="4" y="4" width="56" height="56" rx="16" stroke="url(#mg)" stroke-width="4"/><rect x="18" y="40" width="28" height="7" rx="3" fill="#1f9e7a" opacity=".55"/><rect x="21" y="30" width="22" height="7" rx="3" fill="#6ff0d6" opacity=".9"/><rect x="25" y="20" width="14" height="7" rx="3" fill="url(#gg)"/></svg>
+      <span class="lname display">숏템<span class="t">탑스</span></span></div></div>
+    <div class="lock"><span class="tag">세로</span><div class="lv">
+      <svg width="40" height="40" viewBox="0 0 64 64" fill="none"><rect x="4" y="4" width="56" height="56" rx="16" stroke="url(#mg)" stroke-width="4"/><rect x="18" y="40" width="28" height="7" rx="3" fill="#1f9e7a" opacity=".55"/><rect x="21" y="30" width="22" height="7" rx="3" fill="#6ff0d6" opacity=".9"/><rect x="25" y="20" width="14" height="7" rx="3" fill="url(#gg)"/></svg>
+      <span class="lname display">숏템탑스</span></div></div>
+    <div class="lock mono1"><span class="tag">모노 · 단색</span><div class="lh">
+      <svg width="34" height="34" viewBox="0 0 64 64" fill="none"><rect x="4" y="4" width="56" height="56" rx="16" stroke="#e8f0ee" stroke-width="4"/><rect x="18" y="40" width="28" height="7" rx="3" fill="#e8f0ee" opacity=".5"/><rect x="21" y="30" width="22" height="7" rx="3" fill="#e8f0ee" opacity=".8"/><rect x="25" y="20" width="14" height="7" rx="3" fill="#e8f0ee"/></svg>
+      <span class="lname display">숏템탑스</span></div></div>
+    <div class="lock light"><span class="tag">반전 · 라이트</span><div class="lh">
+      <svg width="34" height="34" viewBox="0 0 64 64" fill="none"><rect x="4" y="4" width="56" height="56" rx="16" stroke="#1f9e7a" stroke-width="4"/><rect x="18" y="40" width="28" height="7" rx="3" fill="#1f9e7a" opacity=".5"/><rect x="21" y="30" width="22" height="7" rx="3" fill="#1f9e7a" opacity=".8"/><rect x="25" y="20" width="14" height="7" rx="3" fill="#f0a93a"/></svg>
+      <span class="lname display">숏템<span class="t">탑스</span></span></div></div>
+  </div>
+</div></section>
+
+<!-- ============ LANDING PREVIEW ============ -->
+<section><div class="wrap">
+  <div class="sec-label"><span class="n">05</span><h2>대문 히어로 미리보기</h2><span class="en">Landing preview</span></div>
+  <div class="land">
+    <div class="land-bar">
+      <span class="lname display">숏템<span class="t">탑스</span></span>
+      <span class="spacer"></span>
+      <span class="lg">로그인</span>
+      <span class="lgbtn">무료로 시작</span>
+    </div>
+    <div class="land-body">
+      <div>
+        <h1>파는 사람을 위한<br><span class="m">쇼핑 쇼츠</span>, <span class="g">뚝딱</span>.</h1>
+        <p>잘 팔리는 영상 링크만 넣으세요. 대본·장면·자막까지 알아서 만들어 팔리는 쇼츠로 뽑아 드립니다.</p>
+        <div class="land-cta">
+          <button class="btn-primary">무료로 시작하기</button>
+          <button class="btn-ghost">예시 영상 보기</button>
+        </div>
+        <div class="trust">신용카드 없이 체험 · 캡컷 몰라도 OK</div>
+      </div>
+      <div class="phone"><div class="frame">
+        <span class="rank">TOP 1</span>
+        <div class="prod">🧴</div>
+        <div class="capbar">비법 궁금하면 댓글에 <span class="kw">'꿀템'</span></div>
+      </div></div>
+    </div>
+  </div>
+  <p class="idea">기존 로그인 문구 톤("처음이면 무료 체험") 계승 + 레퍼런스 "Shopping Factory" <b>구조</b>만 빌림(다크·로고·로그인/무료시작). 9:16 프레임의 <span class="g">TOP 배지</span>·댓글 키워드 CTA가 제품 본질을 그대로 보여줍니다.</p>
+</div></section>
+
+<footer>숏템탑스 · Brand Identity v1 — 민트×블랙 계승 + 골드 TOP 액센트 · out/브랜딩_CI_숏템탑스.html</footer>
+
+</body>
+</html>

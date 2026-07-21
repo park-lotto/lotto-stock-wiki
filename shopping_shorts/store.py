@@ -19,6 +19,18 @@ LEGACY_CUSTOMER_ID = 0
 #   job_id=None / step=0을 명시적으로 넘기면 → 정말로 그 값으로 덮어씀(재매칭 무효화 등)
 _UNSET = object()
 
+# 부품은행(2026-07-21, Phase0) — 대본을 분해해 담는 8버킷. 스타일 5(hook/ending/
+# adverb/cta/price)=리터럴 문구, 내용 3(evidence/conflict/emotion)=슬롯 템플릿.
+# 모듈 상수로 못박아 pattern_bucket_counts·UI 탭·추출 스키마가 같은 출처를 쓴다.
+PATTERN_BUCKETS = ("hook", "ending", "adverb", "cta", "price",
+                   "evidence", "conflict", "emotion")
+
+
+def _normalize_canonical(text):
+    """dedup 키 — strip + 소문자 + 연속 공백 1개. 공백·대소문자만 다른 문구는
+    같은 부품으로 합쳐(freq로 쌓아) 목록이 중복으로 붓지 않게 한다."""
+    return " ".join((text or "").split()).lower()
+
 
 class Store:
     def __init__(self, db_path):
@@ -313,7 +325,9 @@ class Store:
                     headcopy_json TEXT,
                     fx_plan TEXT,
                     fx_status TEXT,
-                    fx_path TEXT
+                    fx_path TEXT,
+                    scene_first INTEGER NOT NULL DEFAULT 0,
+                    candidates_json TEXT
                 )
             """)
             c.execute("""
@@ -544,11 +558,72 @@ class Store:
                 # run_mix_job이 실패 환불할 때 ①과금된 job인지 ②어느 날짜로 되돌릴지를 판단한다.
                 # /api/mix/start만 채운다 — produce 2단계·auto_run 경로는 과금 안 해 비운다(오환불 방지).
                 ("render_charge_day", "TEXT"),
+                # 장면 우선 대본 모드(2026-07-20, Task6) — build_scene_first_plan 후보 저장.
+                ("scene_first", "INTEGER NOT NULL DEFAULT 0"),
+                ("candidates_json", "TEXT"),
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
                 except sqlite3.OperationalError:
                     pass  # 이미 존재
+            # 부품은행(2026-07-21, Phase0) — S급 대본을 8버킷 부품으로 분해해 큐레이션.
+            #  · pattern_source: 분해 원본 대본 1건.
+            #  · pattern_item: 부품 1개. UNIQUE(bucket, canonical)로 같은 문구는 한 행에
+            #    freq로 쌓는다(add_pattern_item의 dedup). source_ids_json에 출처 누적.
+            #  · spine: 매크로 스파인(상황유형·비트체인·감정아크) 수동 시드용.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS pattern_source (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    source TEXT,
+                    url TEXT,
+                    full_text TEXT,
+                    product_category TEXT,
+                    category_source TEXT,
+                    perf_json TEXT,
+                    structure_json TEXT,
+                    spine_id INTEGER,
+                    is_winner INTEGER DEFAULT 0,
+                    created_at TEXT
+                )
+            """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS pattern_item (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    bucket TEXT,
+                    text TEXT,
+                    canonical TEXT,
+                    slot_role TEXT,
+                    source_ids_json TEXT,
+                    freq INTEGER DEFAULT 1,
+                    perf_score REAL DEFAULT 0,
+                    status TEXT DEFAULT 'pending',
+                    tags_json TEXT,
+                    note TEXT,
+                    is_negative INTEGER DEFAULT 0,
+                    created_at TEXT,
+                    updated_at TEXT,
+                    UNIQUE(bucket, canonical)
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_pattern_item_bucket "
+                      "ON pattern_item(bucket, status)")
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS spine (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT,
+                    situation_type TEXT,
+                    character_roles_json TEXT,
+                    beat_chain_json TEXT,
+                    emotion_arc TEXT,
+                    appeal TEXT,
+                    fit_categories_json TEXT,
+                    source_count INTEGER DEFAULT 0,
+                    perf_score REAL DEFAULT 0,
+                    status TEXT DEFAULT 'pending',
+                    created_at TEXT,
+                    updated_at TEXT
+                )
+            """)
             self._migrate_personal_tables(c)
             self._ensure_paywall_schema(c)
 
@@ -1600,27 +1675,252 @@ class Store:
                  "cost_krw": r[6], "mix_job_id": r[7], "unsure_reason": r[8],
                  "created_at": r[9], "updated_at": r[10]} for r in rows]
 
+    # ── 부품은행(2026-07-21, Phase0) ─────────────────────────────────────────
+    def add_pattern_source(self, source, url, full_text, product_category=None,
+                           category_source=None, perf=None, structure=None):
+        """분해 원본 대본 1건 저장 → id. perf/structure는 dict→JSON."""
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO pattern_source(source, url, full_text, product_category, "
+                "category_source, perf_json, structure_json, created_at) "
+                "VALUES(?,?,?,?,?,?,?,?)",
+                (source, url, full_text, product_category, category_source,
+                 json.dumps(perf, ensure_ascii=False) if perf is not None else None,
+                 json.dumps(structure, ensure_ascii=False) if structure is not None else None,
+                 now),
+            )
+            return cur.lastrowid
+
+    def add_pattern_item(self, bucket, text, canonical=None, slot_role=None,
+                         source_id=None, tags=None, is_negative=0):
+        """부품 1개 저장 → 행 id. **dedup**: 같은 (bucket, canonical)이 이미 있으면
+        새 행을 만들지 않고 freq+1 & source_ids_json에 source_id를 (중복 없이) append.
+        canonical 미지정 시 text를 정규화(strip·소문자·공백1개)해 생성한다."""
+        canon = canonical if canonical is not None else _normalize_canonical(text)
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT id, source_ids_json FROM pattern_item WHERE bucket=? AND canonical=?",
+                (bucket, canon)).fetchone()
+            if row:
+                item_id, sids_json = row
+                sids = json.loads(sids_json) if sids_json else []
+                if source_id is not None and source_id not in sids:
+                    sids.append(source_id)
+                c.execute(
+                    "UPDATE pattern_item SET freq=freq+1, source_ids_json=?, updated_at=? "
+                    "WHERE id=?",
+                    (json.dumps(sids), now, item_id))
+                return item_id
+            sids = [source_id] if source_id is not None else []
+            cur = c.execute(
+                "INSERT INTO pattern_item(bucket, text, canonical, slot_role, "
+                "source_ids_json, freq, perf_score, status, tags_json, note, "
+                "is_negative, created_at, updated_at) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (bucket, text, canon, slot_role, json.dumps(sids), 1, 0, "pending",
+                 json.dumps(tags, ensure_ascii=False) if tags is not None else None,
+                 None, is_negative, now, now))
+            return cur.lastrowid
+
+    _PATTERN_ORDER = {"perf": "perf_score DESC, freq DESC, id DESC",
+                      "freq": "freq DESC, perf_score DESC, id DESC",
+                      "recent": "updated_at DESC, id DESC"}
+
+    def list_pattern_items(self, bucket=None, status=None, is_negative=None,
+                           order_by="perf", limit=200):
+        conds, args = [], []
+        if bucket is not None:
+            conds.append("bucket=?")
+            args.append(bucket)
+        if status is not None:
+            conds.append("status=?")
+            args.append(status)
+        if is_negative is not None:
+            conds.append("is_negative=?")
+            args.append(is_negative)
+        q = ("SELECT id, bucket, text, canonical, slot_role, source_ids_json, freq, "
+             "perf_score, status, tags_json, note, is_negative, created_at, updated_at "
+             "FROM pattern_item")
+        if conds:
+            q += " WHERE " + " AND ".join(conds)
+        q += " ORDER BY " + self._PATTERN_ORDER.get(order_by, self._PATTERN_ORDER["perf"])
+        q += " LIMIT ?"
+        args.append(limit)
+        with self._conn() as c:
+            rows = c.execute(q, args).fetchall()
+        return [
+            {"id": r[0], "bucket": r[1], "text": r[2], "canonical": r[3],
+             "slot_role": r[4], "source_ids": json.loads(r[5]) if r[5] else [],
+             "freq": r[6], "perf_score": r[7], "status": r[8],
+             "tags": json.loads(r[9]) if r[9] else None, "note": r[10],
+             "is_negative": r[11], "created_at": r[12], "updated_at": r[13]}
+            for r in rows
+        ]
+
+    def set_pattern_item_status(self, item_id, status):
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute("UPDATE pattern_item SET status=?, updated_at=? WHERE id=?",
+                      (status, now, item_id))
+
+    def edit_pattern_item(self, item_id, text=None, tags=None, note=None):
+        """부품 문구·태그·메모 교정. None인 필드는 안 건드린다."""
+        sets, args = ["updated_at=?"], [datetime.now(timezone.utc).isoformat()]
+        if text is not None:
+            sets.append("text=?")
+            args.append(text)
+        if tags is not None:
+            sets.append("tags_json=?")
+            args.append(json.dumps(tags, ensure_ascii=False))
+        if note is not None:
+            sets.append("note=?")
+            args.append(note)
+        args.append(item_id)
+        with self._conn() as c:
+            c.execute(f"UPDATE pattern_item SET {', '.join(sets)} WHERE id=?", args)
+
+    def add_spine(self, name, situation_type=None, character_roles=None,
+                  beat_chain=None, emotion_arc=None, appeal=None,
+                  fit_categories=None, status="pending"):
+        """매크로 스파인 1건 저장 → id. 리스트 필드는 JSON."""
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO spine(name, situation_type, character_roles_json, "
+                "beat_chain_json, emotion_arc, appeal, fit_categories_json, status, "
+                "created_at, updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)",
+                (name, situation_type,
+                 json.dumps(character_roles, ensure_ascii=False) if character_roles is not None else None,
+                 json.dumps(beat_chain, ensure_ascii=False) if beat_chain is not None else None,
+                 emotion_arc, appeal,
+                 json.dumps(fit_categories, ensure_ascii=False) if fit_categories is not None else None,
+                 status, now, now))
+            return cur.lastrowid
+
+    def list_spines(self, status=None):
+        q = ("SELECT id, name, situation_type, character_roles_json, beat_chain_json, "
+             "emotion_arc, appeal, fit_categories_json, source_count, perf_score, "
+             "status, created_at, updated_at FROM spine")
+        args = []
+        if status is not None:
+            q += " WHERE status=?"
+            args.append(status)
+        q += " ORDER BY perf_score DESC, id DESC"
+        with self._conn() as c:
+            rows = c.execute(q, args).fetchall()
+        return [
+            {"id": r[0], "name": r[1], "situation_type": r[2],
+             "character_roles": json.loads(r[3]) if r[3] else None,
+             "beat_chain": json.loads(r[4]) if r[4] else None,
+             "emotion_arc": r[5], "appeal": r[6],
+             "fit_categories": json.loads(r[7]) if r[7] else None,
+             "source_count": r[8], "perf_score": r[9], "status": r[10],
+             "created_at": r[11], "updated_at": r[12]}
+            for r in rows
+        ]
+
+    def set_spine_status(self, spine_id, status):
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute("UPDATE spine SET status=?, updated_at=? WHERE id=?",
+                      (status, now, spine_id))
+
+    # --- Phase1: perf/spine 조회·저장 배관 ---
+    def list_pattern_sources(self, category_source=None, only_missing_spine=False, limit=1000):
+        """부품 소스 행 목록. category_source는 str 하나 또는 (튜플/리스트)로 IN 필터(R4).
+        perf/structure는 JSON 디코드해서 준다."""
+        where, params = [], []
+        if category_source is not None:
+            cs = (category_source,) if isinstance(category_source, str) else tuple(category_source)
+            where.append("category_source IN (%s)" % ",".join("?" * len(cs)))
+            params.extend(cs)
+        if only_missing_spine:
+            where.append("spine_id IS NULL")
+        sql = ("SELECT id, source, url, full_text, product_category, category_source, "
+               "perf_json, structure_json, spine_id, is_winner FROM pattern_source")
+        if where:
+            sql += " WHERE " + " AND ".join(where)
+        sql += " ORDER BY id DESC LIMIT ?"
+        params.append(limit)
+        with self._conn() as c:
+            rows = c.execute(sql, params).fetchall()
+        return [
+            {"id": r[0], "source": r[1], "url": r[2], "full_text": r[3],
+             "product_category": r[4], "category_source": r[5],
+             "perf": json.loads(r[6]) if r[6] else None,
+             "structure": json.loads(r[7]) if r[7] else None,
+             "spine_id": r[8], "is_winner": r[9]}
+            for r in rows
+        ]
+
+    def set_pattern_source_perf(self, source_id, perf):
+        with self._conn() as c:
+            c.execute("UPDATE pattern_source SET perf_json=? WHERE id=?",
+                      (json.dumps(perf, ensure_ascii=False) if perf is not None else None, source_id))
+
+    def set_pattern_source_spine(self, source_id, spine_id):
+        with self._conn() as c:
+            c.execute("UPDATE pattern_source SET spine_id=? WHERE id=?", (spine_id, source_id))
+
+    def pattern_source_url_exists(self, url):
+        """자동흡수 dedup — 빈 url은 항상 False(존재 안 함으로 취급)."""
+        if not url:
+            return False
+        with self._conn() as c:
+            return c.execute("SELECT 1 FROM pattern_source WHERE url=? LIMIT 1",
+                             (url,)).fetchone() is not None
+
+    def set_pattern_item_perf(self, item_id, perf_score):
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute("UPDATE pattern_item SET perf_score=?, updated_at=? WHERE id=?",
+                      (float(perf_score), now, item_id))
+
+    def update_spine_stats(self, spine_id, source_count, perf_score):
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute("UPDATE spine SET source_count=?, perf_score=?, updated_at=? WHERE id=?",
+                      (int(source_count), float(perf_score), now, spine_id))
+
+    def pattern_bucket_counts(self):
+        """{bucket: {pending, approved, rejected}} — is_negative=0만 집계.
+        8버킷 전부를 0으로 초기화해 반환(UI 탭이 빈 버킷도 그려야 하므로)."""
+        counts = {b: {"pending": 0, "approved": 0, "rejected": 0} for b in PATTERN_BUCKETS}
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT bucket, status, COUNT(*) FROM pattern_item "
+                "WHERE is_negative=0 GROUP BY bucket, status").fetchall()
+        for bucket, status, n in rows:
+            if bucket in counts and status in counts[bucket]:
+                counts[bucket][status] = n
+        return counts
+
     def create_mix_job(self, job_id, urls, target_seconds, structure,
                        subtitle_removal=False, given_script=None, script_structure=None,
-                       customer_id=LEGACY_CUSTOMER_ID, render_charge_day=None):
+                       customer_id=LEGACY_CUSTOMER_ID, render_charge_day=None,
+                       scene_first=False):
         """새 믹스 job 생성. 초기 status='downloading'.
         given_script: 영상제작 2단계 — 확정 대본을 그대로 쓸 때(나레이션 자동생성 대신).
         script_structure: 도서관에서 딸려온 대본 구조분석 dict(2026-07-15). 뒷단계가 꺼내 쓸
             스냅샷으로 보관만 한다. ⚠️ 인자 structure(template/free 모드 플래그)와 다른 것.
         customer_id: 유료게이트 렌더 크레딧 귀속(2026-07-19). run_mix_job이 실패하면 이 cid로
-            'render' 크레딧을 환불한다 — 실패했는데 크레딧만 날아가면 신뢰가 깨진다."""
+            'render' 크레딧을 환불한다 — 실패했는데 크레딧만 날아가면 신뢰가 깨진다.
+        scene_first: 장면 우선 대본 모드(2026-07-20, Task6) — _plan_and_tts가 build_scene_first_plan을
+            타도록 하는 플래그. given_script을 구조계승 레퍼런스 텍스트로 재활용한다."""
         now = datetime.now(timezone.utc).isoformat()
         with self._conn() as c:
             c.execute(
                 "INSERT INTO mix_jobs(job_id, urls_json, target_seconds, structure, "
                 "status, created_at, updated_at, subtitle_removal, given_script, "
-                "script_structure_json, customer_id, render_charge_day) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+                "script_structure_json, customer_id, render_charge_day, scene_first) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (job_id, json.dumps(urls, ensure_ascii=False), target_seconds,
                  structure, "downloading", now, now, 1 if subtitle_removal else 0,
                  given_script or None,
                  json.dumps(script_structure, ensure_ascii=False) if script_structure else None,
-                 customer_id, render_charge_day),
+                 customer_id, render_charge_day, 1 if scene_first else 0),
             )
 
     def get_mix_job(self, job_id):
@@ -1634,7 +1934,8 @@ class Store:
                 "fx_plan, fx_status, fx_path, "
                 "preview_status, preview_path, preview_error, "
                 "thumbnail_json, seo_json, "
-                "clean_sources_json, clean_status, clean_error, customer_id, render_charge_day "
+                "clean_sources_json, clean_status, clean_error, customer_id, render_charge_day, "
+                "scene_first "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -1661,6 +1962,7 @@ class Store:
             "clean_status": row[28], "clean_error": row[29],
             "customer_id": row[30] if row[30] is not None else 0,
             "render_charge_day": row[31],
+            "scene_first": bool(row[32]),
         }
 
     def update_mix_job(self, job_id, **fields):
@@ -1710,6 +2012,20 @@ class Store:
         vals.append(job_id)
         with self._conn() as c:
             c.execute(f"UPDATE mix_jobs SET {', '.join(cols)} WHERE job_id=?", tuple(vals))
+
+    def set_mix_candidates(self, job_id, candidates):
+        """장면 우선 대본 모드(2026-07-20, Task6) — build_scene_first_plan 후보 목록 저장.
+        각 candidate는 {"plan":.., "story":.., "score":.., "recommended":..} 형태(edit_plan.py)."""
+        with self._conn() as c:
+            c.execute("UPDATE mix_jobs SET candidates_json=? WHERE job_id=?",
+                     (json.dumps(candidates, ensure_ascii=False), job_id))
+
+    def get_mix_candidates(self, job_id):
+        """저장된 장면 우선 후보 목록. 없으면 []."""
+        with self._conn() as c:
+            row = c.execute("SELECT candidates_json FROM mix_jobs WHERE job_id=?",
+                            (job_id,)).fetchone()
+        return json.loads(row[0]) if row and row[0] else []
 
     # ── 6단계 SEO 키워드 측정 캐시(2026-07-17) ──
     # job이 아니라 전역이다 — 키워드 측정치는 어느 영상이 쟀든 같은 값이고,

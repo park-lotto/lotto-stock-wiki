@@ -253,6 +253,7 @@
             <div id="footageList" class="hint" style="margin:6px 0">🎬 담기로 화면에 쓸 영상을 고르세요. (1개=순서편집 · 2개+=믹스)</div>
             <button class="btn-next" style="padding:8px 16px" onclick="startProduceMix()">🎬 영상 매칭 시작</button>
             <div id="mixStatus" class="hint" style="margin-top:12px"></div>
+            <div id="mixCandidates" style="margin-top:10px"></div>
             <div id="mixReview" style="margin-top:12px"></div>
           </div>
         </div>
@@ -568,6 +569,7 @@
       <button class="btn-next" style="padding:12px 22px" onclick="renderFinal()">🎬 최종 렌더</button>
       <div id="finalStatus" class="hint" style="margin-top:10px"></div>
       <div id="finalVideo" style="margin-top:10px"></div>
+      <div id="exportBox" style="margin-top:14px"></div>
     </section>
 
     <div class="nav">
@@ -1592,14 +1594,14 @@ function jump(i){
   // "자막제거" 칩 한 번 클릭으로 게이트가 통째로 우회됐다. 뒤로(완료 단계)는 자유 — 잠긴 단계는
   // 항상 미완 프런티어 위쪽이라 뒤는 애초에 안 잠긴다.
   if(stepLocked(i)){ toast(stepLockMsg()); return; }
-  cur=i; renderSteps(); showPanel();
+  cur=i; renderSteps(); showPanel(); saveWork();   // ★단계를 서버에 남긴다(2026-07-19) — 안 남기면 새로고침이 1단계로 되돌린다
 }
 function go(d){
   const n=cur+d; if(n<0||n>=STEPS.length) return;
   // T7: 잠긴 앞단계로는 못 넘어간다(stepLocked = 미리보기 게이트 흡수, 유료 자막제거 우회 방지).
   // 뒤로는 자유. btnNext는 refreshNextBtn이 이미 잠가두지만 go()가 다른 경로로도 불려 두 겹 방어.
   if(stepLocked(n)){ toast(stepLockMsg()); return; }
-  cur=n; renderSteps(); showPanel();
+  cur=n; renderSteps(); showPanel(); saveWork();   // ★단계 이동을 저장(새로고침 복원용)
 }
 
 // ── 1단계 대본: 3모드 ──────────────────────────────
@@ -2062,6 +2064,76 @@ async function _restoreWork(workId){
   cur = (typeof st === 'number' && st >= 0 && st < STEPS.length) ? st : 0;
   if(cur > 0 && MIX_JOB && !canGoNext()) cur = 0;   // 미리보기 미확인이면 1단계로 되돌린다
   renderSteps(); showPanel(); refreshNextBtn();
+  // ★편집안(#mixReview)·미리보기 <video>를 되살린다(2026-07-19). 게이트 재동기(위)가 PREVIEW_STATUS를
+  //   서버 job에서 이미 읽어 맞췄다 — _restoreMixContext는 그 값을 안 건드리고 화면만 다시 그린다.
+  //   이게 없으면 저장은 살아도 새로고침 화면엔 미리보기가 안 뜬다(사장님 제보의 "프리뷰가 없어졌다").
+  if(MIX_JOB) await _restoreMixContext();
+}
+// ── 새로고침 복원 렌더 헬퍼(2026-07-19) ─────────────────────────
+// 미리보기 <video>는 pollPreview(막 만든 직후)와 _restoreMixContext(새로고침) 둘 다 여기서 그린다.
+// ★단일 출처: 이 markup을 두 곳에 복제하면 위 "하단 검정라인(display:block)" 수정이 한쪽만 반영돼 재발한다.
+function _renderPreviewVideo(job){
+  const box=document.getElementById('mixPreview'); if(!box) return;
+  const pvPanel=document.getElementById('mixPreviewPanel'); if(pvPanel) pvPanel.style.display='';
+  box.innerHTML = '<video controls muted playsinline autoplay style="display:block;width:100%;border-radius:12px;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.4)"'
+    + ' src="/api/produce/mix/preview/'+encodeURIComponent(job)+'?t='+Date.now()+'"></video>'
+    + '<div class="hint" style="margin-top:6px">원본 자막이 남아 있는 건 정상입니다 — 다음 단계에서 지웁니다.</div>';
+  const btn = document.getElementById('btnPreview'); if(btn) btn.disabled = false;
+}
+// 편집안(#mixReview) 렌더 본체 — loadMixReview(새 매칭)와 _restoreMixContext(복원)가 공유한다.
+// ★loadMixReview와 달리 PREVIEW_STATUS를 리셋하지 않는다: 리셋은 "새 매칭이라 미리보기 다시 봐야 함"의
+//   의미인데, 복원은 이미 확인한 미리보기를 되살리는 것이라 게이트를 다시 잠그면 안 된다.
+function _renderMixReviewBody(d){
+  MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
+  if(typeof window!=='undefined') window._mixBeats = d.beats || [];   // 조각 전체 보기(paletteStats)가 읽는다 — 실제 쓴 컷 집계용
+  const el=document.getElementById('mixReview');
+  el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+renderCoverageSignal(d.beats||[])
+    +`<button class="btn" style="margin:0 0 8px;padding:5px 12px;font-size:12px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="openPaletteView()" title="소스를 몇 조각으로 나눠 이 영상에 몇 컷 썼는지 썸네일로 봅니다">🔪 조각 전체 보기</button>`
+    +`<div id="paletteBox" data-open="0" style="margin-bottom:8px"></div>`
+    +(d.beats||[]).map((b,i)=>`
+    <div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:var(--inset)">
+      <span style="font-size:11px;background:var(--accent2);padding:2px 8px;border-radius:10px">${esc(b.role||'')}</span>
+      <div style="margin:6px 0;font-size:13px">${esc(b.narration||'')}</div>
+      <div class="hint">🎞 ${esc(b.primary?.video_id||'')} · ${b.primary?.start}s~${b.primary?.end}s · ${b.target_seconds}s${b.fit?` · 매칭 ${b.fit}/5`:''}${b.conformed?` · <span style="color:var(--accent)">⏱ 길이 맞춤</span>`:''}</div>
+      ${(b.fit&&b.fit<=2&&!b.respined)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⚠️ 이 문장에 맞는 영상이 부족합니다 — 대본을 살짝 바꾸거나 소스 영상을 추가하세요.</div>`:''}
+      ${(b.sync_gap&&b.sync_gap>0.8)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⏱ 대사가 영상보다 ${b.sync_gap}초 깁니다 — 끝부분이 잠시 머물 수 있어요. 대본을 살짝 줄이면 자연스러워집니다.</div>`:''}
+      <div class="scene-swap" id="sceneSwap${i}">${renderSwapButton(b, i)}</div>
+      <div class="scene-cutaway" id="sceneCutaway${i}">${renderSceneCutaway(b, i)}</div>
+    </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>!b.respined&&b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
+    +`<button id="btnPreview" class="btn-next" style="margin-top:8px;padding:7px 14px" onclick="startPreview()">▶ 미리보기 만들기</button>`
+    +`<button class="btn" style="margin-top:8px;margin-left:8px;padding:7px 14px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="cancelMixReview()" title="이 매칭을 취소하고 소스·대본을 고쳐 처음부터 다시 매칭합니다">✕ 취소하고 다시 매칭</button>`
+    +`<div class="hint" style="margin-top:6px">미리보기는 <b>왼쪽 화면</b>에 표시됩니다 🪞 · 장면이 안 맞으면 각 문장의 <b>🎞 다른 화면으로 바꾸기</b>로 고치거나, 위 <b>✕ 취소하고 다시 매칭</b>으로 다시 하세요.</div>`;
+  const _pvPanel=document.getElementById('mixPreviewPanel'), _pvBox=document.getElementById('mixPreview');
+  if(_pvPanel) _pvPanel.style.display='';
+  if(_pvBox) _pvBox.innerHTML='<div style="aspect-ratio:9/16;width:100%;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:18px"><div style="font-size:34px">🪞</div><div style="font-size:14px;line-height:1.5">오른쪽 <b style="color:var(--accent)">▶ 미리보기 만들기</b>를<br>누르면 <b>여기에서</b> 영상이<br>만들어지는 걸 보실 수 있어요</div></div>';
+}
+// 매칭 결과 취소 → 처음부터 다시(2026-07-20 사장님). 장면이 대사와 안 맞거나 이상하게 나오면
+// 이 매칭 job을 버리고, 소스·대본을 고쳐 "🎬 영상 매칭 시작"을 다시 누를 수 있게 리셋한다.
+// startProduceMix의 새 job 초기화와 같은 항목들을 되돌린다(폴러·미리보기 상태·게이트).
+function cancelMixReview(){
+  if(!confirm('이 매칭 결과를 취소할까요? 편집안·미리보기가 지워지고, 소스나 대본을 고쳐 처음부터 다시 매칭할 수 있어요.')) return;
+  try{ clearInterval(MIX_POLL); }catch(_){ } MIX_POLL=null;
+  try{ clearInterval(PREVIEW_POLL); }catch(_){ } PREVIEW_POLL=null;
+  try{ ++PREVIEW_GEN; }catch(_){ }
+  PREVIEW_STATUS=null; MIX_JOB=null;
+  const el=document.getElementById('mixReview'); if(el) el.innerHTML='';
+  const mc=document.getElementById('mixCandidates'); if(mc) mc.innerHTML='';
+  const st=document.getElementById('mixStatus'); if(st){ st.textContent=''; st._sblPipe=null; }
+  const _pvBox=document.getElementById('mixPreview'); if(_pvBox) _pvBox.innerHTML='';
+  const _pvPanel=document.getElementById('mixPreviewPanel'); if(_pvPanel) _pvPanel.style.display='none';
+  try{ refreshNextBtn(); }catch(_){ }   // 미리보기 사라졌으니 [다음] 다시 잠근다
+  try{ saveWork(); }catch(_){ }
+  const startBtn=document.querySelector('[onclick="startProduceMix()"]');
+  if(startBtn) startBtn.scrollIntoView({behavior:'smooth', block:'center'});
+}
+// 새로고침 복원: 편집안+미리보기를 다시 그린다. 매칭 결과가 없으면(만들다 만 job) 조용히 빠진다 —
+// 저장된 단계/게이트는 위에서 이미 맞춰졌다.
+async function _restoreMixContext(){
+  let d=null;
+  try{ d = await (await fetch('/api/mix/result/'+encodeURIComponent(MIX_JOB))).json(); }catch(e){}
+  if(!d || !d.ok) return;
+  _renderMixReviewBody(d);
+  if(PREVIEW_STATUS === 'ready') _renderPreviewVideo(MIX_JOB);
 }
 function _consumeProduceHandoff(){
   // 신규 핸드오프(즐겨찾기·랭킹에서 방금 넘어온 것)를 **진행 중 작업에 누적**한다.
@@ -2531,9 +2603,12 @@ async function startProduceMix(){
   try{ logPick('S3', {picked: 'mix_start', sources: urls, source_n: urls.length}); }catch(e){}
   const st=document.getElementById('mixStatus'); st.textContent='⏳ 시작 중…';
   document.getElementById('mixReview').innerHTML='';
+  const _mcEl=document.getElementById('mixCandidates'); if(_mcEl) _mcEl.innerHTML='';
   try{
+    // scene_first(2026-07-20, Task7): 장면 우선 대본 모드 — 팔레트+헌장으로 후보 n개를 만들어
+    // 가장 잘 맞는 것을 추천한다. 기본 ON(요청서 §4). 후보 UI는 pollMix가 ready_for_review에서 그린다.
     const r=await fetch('/api/produce/mix/start',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({script:STATE.script, urls, target_seconds:30})});
+      body:JSON.stringify({script:STATE.script, urls, target_seconds:30, scene_first:true})});
     const d=await r.json();
     if(!d.ok){ st.textContent='❌ '+(d.error||'실패'); return; }
     // ★재매칭 = 새 job이다. 옛 job의 미리보기 상태를 물고 있으면 canGoNext()가 그걸 보고
@@ -2547,6 +2622,10 @@ async function startProduceMix(){
     clearInterval(PREVIEW_POLL); PREVIEW_POLL=null; ++PREVIEW_GEN;
     PREVIEW_STATUS=null;
     MIX_JOB=d.job_id;
+    // ★새 job을 서버 작업파일에 즉시 남긴다(2026-07-19). 안 남기면 새로고침 시 _restoreWork가
+    //   job_id=null을 읽어 미리보기·편집안이 통째로 사라진다(사장님 제보). 게이트는 복원 후에도
+    //   서버 preview_status를 다시 읽어 canGoNext()로 잠그므로 미리보기 우회 위험은 없다.
+    saveWork();
     // 동적 단계바 시작(loader.js 있을 때만). 컨트롤러는 #mixStatus 속성에 담는다(최상위 변수 X).
     // ★로딩 UI는 부가기능 — 절대 매칭 흐름(폴링·게이트 재잠금)을 막으면 안 된다. try/catch로 감싼다.
     st._sblPipe = null;
@@ -2577,7 +2656,7 @@ async function pollMix(){
     } else if(d.status!=='failed'){
       st.textContent='상태: '+(MIX_LABEL[d.status]||d.status)+(d.error?' — '+d.error:'');   // loader.js 폴백
     }
-    if(d.status==='ready_for_review'){ clearInterval(MIX_POLL); loadMixReview(); }
+    if(d.status==='ready_for_review'){ clearInterval(MIX_POLL); renderCandidates(d.candidates||[]); loadMixReview(); }
     if(d.status==='failed'){ if(st) st._sblPipe=null; st.textContent='❌ 매칭 실패'+(d.error?' — '+d.error:''); clearInterval(MIX_POLL); }
   }catch(e){}
 }
@@ -2585,24 +2664,11 @@ async function loadMixReview(){
   const d=await (await fetch('/api/mix/result/'+MIX_JOB)).json();
   const el=document.getElementById('mixReview');
   if(!d.ok){ el.innerHTML=`<div class="hint" style="color:var(--fire)">편집안 로드 실패 ${esc(d.error||'')}</div>`; return; }
-  MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
-  el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+renderCoverageSignal(d.beats||[])+(d.beats||[]).map((b,i)=>`
-    <div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:var(--inset)">
-      <span style="font-size:11px;background:var(--accent2);padding:2px 8px;border-radius:10px">${esc(b.role||'')}</span>
-      <div style="margin:6px 0;font-size:13px">${esc(b.narration||'')}</div>
-      <div class="hint">🎞 ${esc(b.primary?.video_id||'')} · ${b.primary?.start}s~${b.primary?.end}s · ${b.target_seconds}s${b.fit?` · 매칭 ${b.fit}/5`:''}</div>
-      ${(b.fit&&b.fit<=2)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⚠️ 이 문장에 맞는 영상이 부족합니다 — 대본을 살짝 바꾸거나 소스 영상을 추가하세요.</div>`:''}
-      <div class="scene-swap" id="sceneSwap${i}">${renderSwapButton(b, i)}</div>
-      <div class="scene-cutaway" id="sceneCutaway${i}">${renderSceneCutaway(b, i)}</div>
-    </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
-    +`<button id="btnPreview" class="btn-next" style="margin-top:8px;padding:7px 14px" onclick="startPreview()">▶ 미리보기 만들기</button>`
-    +`<div class="hint" style="margin-top:6px">미리보기는 <b>왼쪽 화면</b>에 표시됩니다 🪞</div>`;
-  // 미리보기 렌더 타깃(#mixPreview)은 좌측 프리뷰 패널로 옮겼다 — 여기선 위치 안내만.
-  // 편집안이 떴으니 좌측 프리뷰 공간을 열고, 아직 안 만들었다는 안내를 넣는다.
-  const _pvPanel=document.getElementById('mixPreviewPanel'), _pvBox=document.getElementById('mixPreview');
-  if(_pvPanel) _pvPanel.style.display='';
-  // 미리보기 자리를 9:16 프레임으로 미리 잡아둔다(빈 공간이 아니라 "여기서 만들어진다"가 보이게).
-  if(_pvBox) _pvBox.innerHTML='<div style="aspect-ratio:9/16;width:100%;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:18px"><div style="font-size:34px">🪞</div><div style="font-size:14px;line-height:1.5">오른쪽 <b style="color:var(--accent)">▶ 미리보기 만들기</b>를<br>누르면 <b>여기에서</b> 영상이<br>만들어지는 걸 보실 수 있어요</div></div>';
+  // ★렌더 본체는 _renderMixReviewBody로 뽑았다(2026-07-19) — 새로고침 복원(_restoreMixContext)이
+  //   같은 화면을 그려야 하는데 markup을 복제하면 갈라진다. 아래 초기화(게이트 재잠금)는 여기 남는다:
+  //   loadMixReview는 "새 매칭"이라 미리보기를 다시 봐야 하고, 복원은 이미 본 것이라 안 잠근다.
+  //   _renderMixReviewBody는 커버리지 신호등·스왑버튼(어긋남구제)에 콘폼 배지·sync_gap 경고까지 포함한다.
+  _renderMixReviewBody(d);
   // 편집안을 새로 그렸다 = 새 매칭이다. 옛 미리보기 상태를 물고 있으면 사장님이 옛 영상을
   // 본 것으로 치고 다음이 열린다 → 여기서 반드시 초기화한다.
   // ★폴러도 같이 죽인다: 재매칭은 정상 흐름(⚠️ 매칭 약한 문장은 "대본을 살짝 바꾸세요"를 권한다)이고
@@ -2611,6 +2677,36 @@ async function loadMixReview(){
   clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; ++PREVIEW_GEN;
   PREVIEW_STATUS = null; refreshNextBtn();
 }
+
+// ── 장면 우선 후보 카드(2026-07-20, Task7) ─── CANDIDATES-START
+// 백엔드(Task6)는 이미 추천 후보(recommended)의 plan을 edit_plan에 자동세팅해두므로 이 카드가
+// 없어도 매칭은 동작한다 — 이건 그 자동선택을 사장님이 눈으로 보고 다른 후보로 바꿀 수 있게 하는 UI다.
+// 후보가 1개 이하(폴백 등으로 build_scene_first_plan이 후보를 못 만든 경우 포함)면 고를 게 없어 숨긴다.
+function renderCandidates(list){
+  const el = document.getElementById('mixCandidates');
+  if(!el) return;
+  if(!list || list.length < 2){ el.innerHTML = ''; return; }
+  el.innerHTML = '<div style="font-size:12px;color:var(--sub);margin-bottom:6px">🧬 대본 후보 '
+    + list.length + '개 — 마음에 드는 걸 골라보세요(⭐ 추천은 아래 편집안에 이미 반영됨)</div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    + list.map(c => `<div style="flex:1 1 160px;min-width:150px;border:1px solid ${c.recommended ? 'var(--accent)' : 'var(--line)'};border-radius:10px;padding:10px;background:var(--inset);cursor:pointer" onclick="pickCandidate(${c.index})">`
+      + (c.recommended ? '<span style="font-size:10px;background:var(--accent);color:#000;padding:2px 6px;border-radius:8px">⭐ 추천</span>' : '')
+      + `<div style="font-size:13px;margin-top:4px">${esc(c.hook || '')}</div>`
+      + `<div class="hint" style="margin-top:4px">${esc(c.story_person || '')}${c.score != null ? ` · 점수 ${c.score}` : ''}</div>`
+      + `</div>`).join('')
+    + '</div>';
+}
+// 후보 클릭 → 그 후보의 plan을 edit_plan으로 세팅(/api/mix/candidate) → 매칭 리뷰 다시 로드.
+async function pickCandidate(idx){
+  if(!MIX_JOB) return;
+  try{
+    const r = await (await fetch('/api/mix/candidate', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({job_id: MIX_JOB, index: idx})})).json();
+    if(!r.ok){ alert(r.error || '후보 전환 실패'); return; }
+  }catch(e){ alert('네트워크 오류'); return; }
+  loadMixReview();   // edit_plan이 바뀌었다 = 새 매칭과 동일하게 취급(미리보기 게이트도 다시 잠긴다)
+}
+// ─── CANDIDATES-END
 
 // ── 장면 라이브러리 검수(Task4, 2026-07-18) ──────────────
 // 자동배치(beat.cutaway)를 보여주고 빼거나, 미채택 제안(asset_suggestions)을 붙이는
@@ -2663,7 +2759,8 @@ async function toggleCutaway(idx, assetId){
 function renderCoverageSignal(beats){
   let green=0, yellow=0, red=0;
   for(const b of (beats||[])){
-    if(b.fit && b.fit<=2) red++;
+    if(b.respined) green++;            // 시간순 스파인 = 사람이 신경 안 쓰는 b-roll → 중립
+    else if(b.fit && b.fit<=2) red++;
     else if(b.fit===3) yellow++;
     else green++;                 // fit>=4 또는 fit 없음(스왑=사람이 고름)
   }
@@ -2677,7 +2774,7 @@ function renderCoverageSignal(beats){
 }
 // ─── SIGNAL-END
 function renderSwapButton(beat, idx){
-  const weak = beat.fit && beat.fit <= 2;
+  const weak = !beat.respined && beat.fit && beat.fit <= 2;
   const style = weak
     ? 'padding:8px 14px;font-size:14px;border:2px solid var(--fire);border-radius:8px;background:#1a0d0d;color:#fff;margin-top:6px'
     : 'padding:6px 12px;font-size:12px;border:1px solid var(--line);border-radius:8px;background:#0a1018;margin-top:6px';
@@ -2717,6 +2814,53 @@ async function doSwap(idx, segId){
   loadMixReview();   // 화면이 바뀜=옛 미리보기 무효 → 전체 재로드가 프리뷰까지 정리(2360 규율)
 }
 // ─── SWAP-END
+
+// ── 조각 전체 보기(2026-07-21 사장님: "이거 자른거 볼수있게 띄워봐") ─── PALETTE-START
+// 믹스가 소스를 몇 조각으로 나눠 이 영상에 몇 컷 썼는지 한눈에. 백엔드 변경 0 — 데이터가 이미 있다:
+//   /api/mix/segments = 팔레트 전체(썸네일·scene_desc·dur), d.beats = 실제 쓴 컷(primary+alternates,
+//   각 seg_id 보유). 조각내기는 scene_cut.detect_cuts(장면라이브러리와 같은 엔진) 위에 믹스가
+//   Gemini 세분화를 얹은 것 — 그래서 팔레트 조각 수 > 원시 컷 수.
+function paletteStats(beats){
+  // 최종 영상에 배치된 컷 = 각 비트의 primary + alternates(다중컷). 사용 seg_id 집합·총 배치수·소스수.
+  const used = new Set(); let placed = 0; const srcs = new Set();
+  for(const b of (beats||[])){
+    const refs = [b && b.primary].concat((b && b.alternates) || []);
+    for(const r of refs){
+      if(r && r.seg_id){ used.add(r.seg_id); placed++; if(r.video_id) srcs.add(r.video_id); }
+    }
+  }
+  return {usedIds: used, placed: placed, distinct: used.size, sources: srcs.size, beats: (beats||[]).length};
+}
+function paletteSummaryText(beats, totalSegs){
+  const s = paletteStats(beats);
+  const seg = (totalSegs!=null) ? `총 <b>${totalSegs}조각</b>으로 나눠 ` : '';
+  return `🔪 소스 <b>${s.sources}개</b> → ${seg}이 영상은 <b>${s.beats}문장</b>에 <b>${s.placed}컷</b> 사용 (조각 ${s.distinct}종)`;
+}
+async function openPaletteView(){
+  const box = document.getElementById('paletteBox');
+  if(!box) return;
+  if(box.dataset && box.dataset.open === '1'){ box.innerHTML=''; box.dataset.open='0'; return; }   // 토글 닫기
+  box.innerHTML = '<div class="hint">⏳ 조각 불러오는 중…</div>';
+  let d;
+  try{ d = await (await fetch('/api/mix/segments/'+encodeURIComponent(MIX_JOB))).json(); }
+  catch(e){ box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  if(!d.ok){ box.innerHTML='<div class="hint" style="color:var(--fire)">'+esc(d.error||'조각 불러오기 실패')+'</div>'; return; }
+  const beats = (window._mixBeats || []);
+  const st = paletteStats(beats);
+  const cards = (d.segments||[]).map(s=>{
+    const on = st.usedIds.has(s.seg_id);
+    return `<div style="flex:0 0 92px;opacity:${on?1:0.4}">
+      <img src="${esc(s.thumb_url)}" style="width:92px;height:163px;object-fit:cover;border-radius:6px;background:#000" alt="" onerror="this.style.visibility='hidden'">
+      <div class="hint" style="font-size:11px;margin-top:2px">${on?'✅ ':''}${esc((s.scene_desc||'').slice(0,16))}</div>
+      <div class="hint" style="font-size:10px">${s.dur}s${on?' · 사용':''}</div>
+    </div>`;
+  }).join('');
+  box.dataset.open = '1';
+  box.innerHTML = `<div style="margin:6px 0;font-size:13px">${paletteSummaryText(beats, (d.segments||[]).length)}</div>`
+    + `<div class="hint" style="margin-bottom:4px">밝은 게 이 영상에 <b>쓴 컷</b>(✅), 흐린 건 안 쓴 조각이에요.</div>`
+    + `<div style="display:flex;gap:8px;flex-wrap:wrap;max-height:400px;overflow-y:auto;padding-bottom:4px">${cards}</div>`;
+}
+// ─── PALETTE-END
 
 // ── 1단계 미리보기(2026-07-17) ──────────────
 // 다음 단계(자막제거)가 VMake 유료 API라, 컷·대본이 틀린 채 넘어가면 그 돈이 날아간다.
@@ -2818,16 +2962,9 @@ async function pollPreview(gen, job){
     if(PREVIEW_GEN !== gen || MIX_JOB !== job) return;
     if(d.preview_status === 'ready'){
       clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; PREVIEW_STATUS='ready';
-      // ?t= 캐시버스터 필수: 대본을 고쳐 재매칭하면 같은 URL에 다른 영상이 온다.
-      // display:block 필수 — <video>는 기본 inline이라 텍스트 baseline 위에 앉아 아래에
-      // descender 여백(수 px)이 생기고, background:#000 + 어두운 좌측 프리뷰 패널이 그
-      // 여백으로 비쳐 "하단 검정라인"으로 보인다(파일엔 없다: preview.mp4 하단행 luma가
-      // 위 행과 동일 실측). 최종렌더 <video>는 어두운 배경이 없어 이 여백이 안 보였다.
-      // fx 프리뷰(위)도 같은 이유로 display:block을 쓴다.
-      box.innerHTML = '<video controls muted playsinline autoplay style="display:block;width:100%;border-radius:12px;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.4)"'
-        + ' src="/api/produce/mix/preview/'+encodeURIComponent(job)+'?t='+Date.now()+'"></video>'
-        + '<div class="hint" style="margin-top:6px">원본 자막이 남아 있는 건 정상입니다 — 다음 단계에서 지웁니다.</div>';
-      const btn = document.getElementById('btnPreview'); if(btn) btn.disabled = false;
+      // <video> 렌더는 _renderPreviewVideo로 뽑았다(2026-07-19) — 새로고침 복원과 단일 출처.
+      // (?t= 캐시버스터·display:block 하단검정라인 주의는 그 함수 주석 참조.)
+      _renderPreviewVideo(job);
       refreshNextBtn();
     } else if(d.preview_status === 'failed'){
       clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; PREVIEW_STATUS='failed';
@@ -3215,6 +3352,86 @@ function refreshFinal(){
   s.innerHTML = MIX_JOB
     ? `대본 ${lenText(STATE.script)} · 자막제거 ${STATE.subtitleRemoval?'ON':'OFF'} · job ${esc(MIX_JOB)}`
     : '⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.';
+  renderExport({rendered:false});   // 내보내기(ZIP·개별)는 렌더 전에도 가능 — 완성 MP4 버튼만 렌더 후 붙는다
+}
+// ── 내보내기(다운로드 + 캡컷 편집용) — 설계 2026-07-20 T1 ──
+// 웹앱이라 캡컷 자동실행은 불가 → 캡컷 편집용 ZIP(장면영상·음성·SRT·대본)을 내려받아 캡컷에 올린다.
+function renderExport(opts){
+  const box=document.getElementById('exportBox'); if(!box) return;
+  if(!MIX_JOB){ box.innerHTML=''; return; }
+  const j=encodeURIComponent(MIX_JOB), rendered=!!(opts&&opts.rendered);
+  const big='display:inline-block;padding:9px 16px;margin:0 6px 8px 0;text-decoration:none';
+  const small='display:inline-block;padding:7px 12px;margin:0 6px 6px 0;text-decoration:none;font-size:12px';
+  const capcutOk = ('showDirectoryPicker' in window);
+  box.innerHTML =
+    '<div style="border-top:1px solid var(--line);padding-top:12px">'
+    + '<div style="font-size:14px;font-weight:600;margin-bottom:4px">📤 내보내기</div>'
+    // ★1순위: 캡컷으로 바로 보내기(원클릭). 60대 북극성 — 클릭 한 번이면 캡컷에 프로젝트가 생긴다.
+    + (capcutOk
+        ? `<button class="btn-next" style="${big};border:0;cursor:pointer;font-size:15px" onclick="sendToCapCut()">🎬 캡컷으로 보내기</button>`
+          + `<a class="btn-prev" style="${small}" href="/static/capcut_setup.bat" download>⚙ 캡컷 자동설정(최초 1회)</a>`
+          + `<button class="btn-prev" style="${small};border:0;cursor:pointer" onclick="resetCapCutFolder()">폴더 다시 지정</button>`
+          + '<div class="hint" style="margin:4px 0 10px">캡컷이 깔려 있으면 클릭 한 번으로 프로젝트가 만들어집니다. <b>처음 쓰실 때만</b>: 위 <b>⚙자동설정</b> 파일을 받아 한 번 더블클릭(캡컷은 꺼둔 채) → 캡컷 켜기 → 폴더 한 번 지정. Chrome·Edge 전용.</div>'
+        : '<div class="hint" style="margin-bottom:10px">💡 캡컷으로 바로 보내기는 <b>Chrome·Edge</b>에서만 됩니다. 지금 브라우저에선 아래 ZIP을 받아 캡컷에 올리세요.</div>')
+    + (rendered?`<a class="btn-next" style="${big}" href="/api/mix/video/${j}?dl=1" download>⬇ 완성 영상(MP4)</a>`:'')
+    + `<a class="btn-prev" style="${small}" href="/api/mix/export/${j}" download>📦 캡컷용 ZIP(수동)</a>`
+    + '<div class="hint" style="margin:6px 0 4px">개별 다운로드</div>'
+    + `<a class="btn-prev" style="${small}" href="/api/mix/export/${j}?part=sources" download>🎬 소스 영상</a>`
+    + `<a class="btn-prev" style="${small}" href="/api/mix/export/${j}?part=srt" download>📝 SRT 자막</a>`
+    + `<a class="btn-prev" style="${small}" href="/api/mix/export/${j}?part=script" download>📄 스크립트</a>`
+    + '</div>';
+}
+
+// ── 캡컷으로 보내기 (File System Access API, Chrome/Edge) — 설계 2026-07-20 T2 ──
+// 서버가 draft_content.json+에셋을 조립해 매니페스트로 주면, 브라우저가 사용자 캡컷 폴더에 직접 쓴다.
+// 폴더 핸들을 IndexedDB에 기억 → 2회차부터 폴더 선택 없이 원클릭. draft는 base 절대경로로 에셋을
+// 참조하므로 그 폴더에 파일을 함께 써야 캡컷이 찾는다(설계 부록A).
+const CAPCUT_DEFAULT_PATH = 'C:\\capcutproject\\CapCut Drafts';
+function _ccIdb(){ return new Promise((res,rej)=>{ const r=indexedDB.open('ss_capcut',1);
+  r.onupgradeneeded=()=>r.result.createObjectStore('h'); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+function _ccGet(k){ return _ccIdb().then(db=>new Promise(res=>{ const t=db.transaction('h','readonly').objectStore('h').get(k); t.onsuccess=()=>res(t.result); t.onerror=()=>res(null); })); }
+function _ccSet(k,v){ return _ccIdb().then(db=>new Promise(res=>{ const t=db.transaction('h','readwrite').objectStore('h').put(v,k); t.onsuccess=()=>res(); t.onerror=()=>res(); })); }
+function _ccDel(k){ return _ccIdb().then(db=>new Promise(res=>{ const t=db.transaction('h','readwrite').objectStore('h').delete(k); t.onsuccess=()=>res(); t.onerror=()=>res(); })); }
+// ★핸들을 페이지 로드 때 미리 읽어 전역에 둔다 — 그래야 클릭 핸들러에서 showDirectoryPicker 앞에
+//   await(IndexedDB)가 안 붙어 '사용자 제스처' 안에서 picker를 바로 띄울 수 있다(2026-07-20 버그).
+let _ccHandle = null;
+try{ _ccGet('dir').then(h=>{ _ccHandle = h||null; }).catch(()=>{}); }catch(e){}
+async function _ccPerm(h){ const opt={mode:'readwrite'};
+  if((await h.queryPermission(opt))==='granted') return true;
+  return (await h.requestPermission(opt))==='granted'; }
+async function resetCapCutFolder(){ localStorage.removeItem('capcut_path'); _ccHandle=null; await _ccDel('dir').catch(()=>{});
+  alert('캡컷 폴더를 초기화했어요. 다음에 보낼 때 다시 지정합니다.'); }
+async function sendToCapCut(){
+  if(!('showDirectoryPicker' in window)){ alert('캡컷으로 바로 보내기는 Chrome 또는 Edge에서만 됩니다.\n지금은 「📦 캡컷용 ZIP(수동)」을 받아 캡컷에 올려 주세요.'); return; }
+  if(!MIX_JOB){ alert('먼저 영상을 만들어 주세요'); return; }
+  let firstTime = false;
+  try{
+    // ★picker를 제스처 안에서 '맨 처음' 호출 — 앞에 어떤 await/prompt/alert도 두지 않는다.
+    if(!_ccHandle){
+      _ccHandle = await window.showDirectoryPicker({mode:'readwrite'});
+      _ccSet('dir', _ccHandle);   // 저장은 기다리지 않는다(제스처 이미 소비됨, 무해)
+      firstTime = true;
+    }
+    if(!(await _ccPerm(_ccHandle))){ alert('폴더 접근 권한이 필요합니다. 다시 시도해 주세요.'); _ccHandle=null; return; }
+    // 경로는 자동설정(.bat)이 C:\capcutproject\CapCut Drafts로 표준화하므로 기본값을 쓴다(prompt 없음).
+    // draft가 에셋을 절대경로로 참조하는데 브라우저는 고른 폴더의 경로를 안 알려주므로 이 표준 경로에 의존.
+    // 비표준 위치를 쓰는 사용자는 localStorage.capcut_path로 바꿀 수 있다('폴더 다시 지정' 후 재설정).
+    const path = localStorage.getItem('capcut_path') || CAPCUT_DEFAULT_PATH;
+    const m=await (await fetch('/api/mix/capcut/'+encodeURIComponent(MIX_JOB)+'?base='+encodeURIComponent(path))).json();
+    if(!m.ok){ alert('캡컷 프로젝트 생성 실패: '+(m.error||'')); return; }
+    const proj=await _ccHandle.getDirectoryHandle(m.project,{create:true});
+    for(const name of Object.keys(m.texts)){
+      const fh=await proj.getFileHandle(name,{create:true}); const w=await fh.createWritable(); await w.write(m.texts[name]); await w.close();
+    }
+    for(const a of m.assets){
+      const buf=await (await fetch(a.url)).arrayBuffer();
+      const fh=await proj.getFileHandle(a.name,{create:true}); const w=await fh.createWritable(); await w.write(buf); await w.close();
+    }
+    alert('✅ 캡컷으로 보냈어요!\n\n캡컷을 열면 「'+m.project+'」 프로젝트가 보입니다.\n안 보이면 캡컷을 완전히 껐다 다시 켜 주세요.');
+  }catch(e){
+    if(e&&e.name==='AbortError') return;   // 사용자가 폴더 선택 취소
+    alert('캡컷 보내기 실패: '+((e&&e.message)||e)+'\n\n대신 「📦 캡컷용 ZIP(수동)」을 받으실 수 있어요.');
+  }finally{ renderExport({rendered:true}); }
 }
 async function renderFinal(){
   if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); return; }
@@ -3232,7 +3449,8 @@ async function pollFinal(){
     const st=document.getElementById('finalStatus');
     st.textContent='상태: '+(MIX_LABEL[d.status]||d.status)+(d.error?' — '+d.error:'');
     if(d.status==='done'){ clearInterval(MIX_POLL);
-      document.getElementById('finalVideo').innerHTML=`<video controls src="/api/mix/video/${esc(MIX_JOB)}" style="max-width:360px;border-radius:10px"></video>`; }
+      document.getElementById('finalVideo').innerHTML=`<video controls src="/api/mix/video/${esc(MIX_JOB)}" style="max-width:360px;border-radius:10px"></video>`;
+      renderExport({rendered:true}); }   // 렌더 완료 → 완성 MP4 다운로드 버튼까지
     if(d.status==='failed'){ clearInterval(MIX_POLL); }
   }catch(e){}
 }
@@ -3642,11 +3860,20 @@ async function generateThumb(){
 }
 
 function renderThumbGallery(){
+  // ⬇ 다운로드 아이콘: 릴스/쇼츠 업로드 시 커버로 쓰려면 PNG를 직접 받아야 하는데 예전엔
+  // 다운로드 수단이 없어 이미지 우클릭-저장으로 우회해야 했다(2026-07-20 사장님 요청).
+  // download 속성이 있는 <a>는 같은 출처(same-origin) 파일이면 새 탭으로 안 새고 바로
+  // 저장 대화상자를 띄운다(우리 서버가 서빙하는 /api/produce/thumb/file/... 이라 문제없음).
+  // stopPropagation으로 카드의 onclick(선택)과 분리 — 다운로드가 선택 상태를 안 건드린다.
   document.getElementById('thumbGallery').innerHTML = THUMB_STATE.results.map(r => `
     <div onclick="selectThumbResult('${r.name}')" data-name="${r.name}"
-         style="cursor:pointer;border-radius:6px;overflow:hidden;border:2px solid
+         style="position:relative;cursor:pointer;border-radius:6px;overflow:hidden;border:2px solid
          ${THUMB_STATE.selected === r.name ? 'var(--accent2)' : 'transparent'}">
       <img src="${r.url}" style="width:100%;display:block">
+      <a href="${r.url}" download="${r.name}" onclick="event.stopPropagation()" title="다운로드"
+         style="position:absolute;right:4px;bottom:4px;width:24px;height:24px;border-radius:50%;
+         background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;
+         font-size:13px;line-height:1;text-decoration:none">⬇</a>
     </div>`).join('');
 }
 
