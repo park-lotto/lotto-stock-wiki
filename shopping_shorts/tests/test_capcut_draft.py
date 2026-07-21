@@ -134,3 +134,15 @@ def test_missing_source_skips_video_but_keeps_audio_text():
                               project_name="x")
     types = {t["type"] for t in draft["tracks"]}
     assert "video" not in types and "audio" in types and "text" in types
+
+
+def test_capcut_project_name_uses_headcopy_for_findability():
+    """캡컷 목록에서 알아보게 헤드카피를 앞에 둔다(2026-07-21 제보: job-id 해시만으론
+    '쇼핑쇼츠_...169a1'처럼 잘려 구분 불가). 없으면 첫 대사, 그것도 없으면 옛 폴백."""
+    from shopping_shorts import app as a
+    n = a._capcut_project_name("454169a1zzzz", {"headcopy": {"text": "써보면 놀라는 이것"}}, {})
+    assert n.startswith("써보면 놀라는 이것") and n.endswith("4541")   # 제목 앞, 짧은 id 접미
+    n2 = a._capcut_project_name("454169a1zzzz", {}, {"beats": [{"narration": "딱 한 뼘이면 OK"}]})
+    assert n2.startswith("딱 한 뼘이면 OK")                          # 헤드카피 없으면 첫 대사
+    n3 = a._capcut_project_name("454169a1zzzz", {}, {})
+    assert n3 == "쇼핑쇼츠_454169a1"                                  # 둘 다 없으면 옛 폴백

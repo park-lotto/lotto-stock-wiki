@@ -2119,6 +2119,19 @@ def api_mix_export(job_id: str, part: str = ""):
     return FileResponse(str(out), media_type="application/zip", filename=fname)
 
 
+def _capcut_project_name(job_id, job, plan):
+    """캡컷 프로젝트명 — 목록에서 알아보게 헤드카피(없으면 첫 대사)를 **앞**에 둔다.
+    캡컷은 이름을 가운데 잘라 보여줘서(예: '쇼핑쇼츠_...169a1') job-id 해시만으론
+    어느 게 방금 보낸 건지 구분이 안 됐다(2026-07-21 사장님 제보). 의미있는 제목을
+    앞에 두고 짧은 id를 접미로 붙여 유일성만 남긴다. 최종 정제는 safe_project_name."""
+    head = ((job.get("headcopy") or {}).get("text") or "").strip()
+    if not head:
+        beats = (plan or {}).get("beats") or []
+        head = ((beats[0].get("narration") if beats else "") or "").strip()
+    head = " ".join(head.split())[:24]
+    return f"{head} {job_id[:4]}" if head else f"쇼핑쇼츠_{job_id[:8]}"
+
+
 @app.get("/api/mix/capcut/{job_id}")
 def api_mix_capcut(job_id: str, base: str = ""):
     """CapCut draft 매니페스트(설계 부록A, T2). base=캡컷이 draft를 볼 절대경로(프론트가 지정한
@@ -2150,7 +2163,7 @@ def api_mix_capcut(job_id: str, base: str = ""):
     out_root.mkdir(parents=True, exist_ok=True)
     proj, project, files = capcut_draft.assemble_draft_folder(
         out_root, base, plan=plan, timeline=timeline, source_video_paths=source_video_paths,
-        tts_paths=tts_paths, project_name=f"쇼핑쇼츠_{job_id[:8]}")
+        tts_paths=tts_paths, project_name=_capcut_project_name(job_id, job, plan))
     texts, assets = {}, []
     for name in files:
         if name.endswith(".json"):
