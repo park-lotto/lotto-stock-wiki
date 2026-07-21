@@ -77,7 +77,7 @@
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
     });
   }
-  var html = "<h1>🛍️ <span class=\"ss-brand\">쇼핑쇼츠</span></h1>";
+  var html = "<h1>🛍️ <span class=\"ss-brand\">숏템박스</span></h1>";
   NAV.forEach(function (g) {
     html += '<div class="ss-group"><div class="ss-label">' + g.label + "</div>";
     g.items.forEach(function (it) {
