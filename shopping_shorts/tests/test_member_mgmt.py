@@ -32,3 +32,15 @@ def test_create_customer_stores_name_phone(tmp_path, monkeypatch):
     cid = s.create_customer("u1", "pw12", name="홍길동", phone="010-1234-5678")
     cust = s.get_customer(cid)
     assert cust["name"] == "홍길동" and cust["phone"] == "010-1234-5678"
+
+
+def test_add_and_list_payments(tmp_path, monkeypatch):
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("u2", "pw12")
+    p1 = s.add_payment(cid, 30000, "계좌이체", 30, paid_at=1000, note="1월")
+    s.add_payment(cid, 30000, "카드", 30, paid_at=2000)
+    assert p1["amount"] == 30000 and p1["period_days"] == 30
+    rows = s.list_payments(cid)
+    assert len(rows) == 2
+    assert rows[0]["paid_at"] == 2000   # 최신 먼저
+    assert rows[1]["method"] == "계좌이체"

@@ -2555,6 +2555,29 @@ class Store:
                 c.execute("UPDATE customers SET plan=?, full_access_until=? WHERE id=?",
                           (plan, int(full_access_until), customer_id))
 
+    def add_payment(self, customer_id, amount, method, period_days, paid_at=None, note=None):
+        """결제 1건 기록(append-only, 연장은 새 건). 삽입된 결제 dict 반환."""
+        now_ts = int(datetime.now(timezone.utc).timestamp())
+        pa = int(paid_at) if paid_at is not None else now_ts
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO payments(customer_id, amount, method, period_days, paid_at, note, created_at) "
+                "VALUES(?,?,?,?,?,?,?)",
+                (customer_id, int(amount), method, int(period_days), pa, note, now_ts))
+            pid = cur.lastrowid
+        return {"id": pid, "customer_id": customer_id, "amount": int(amount), "method": method,
+                "period_days": int(period_days), "paid_at": pa, "note": note, "created_at": now_ts}
+
+    def list_payments(self, customer_id):
+        """그 고객 결제 전체, 최신(paid_at desc, id desc) 먼저."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT id, customer_id, amount, method, period_days, paid_at, note, created_at "
+                "FROM payments WHERE customer_id=? ORDER BY paid_at DESC, id DESC",
+                (customer_id,)).fetchall()
+        return [{"id": r[0], "customer_id": r[1], "amount": r[2], "method": r[3],
+                 "period_days": r[4], "paid_at": r[5], "note": r[6], "created_at": r[7]} for r in rows]
+
     def approve_customer(self, customer_id, trial_days=7):
         """대기중 계정을 승인. 승인 시각 기록 + 그 순간부터 무료체험 시작.
         멱등: 이미 승인된 계정(approved_at 있음)엔 아무것도 안 한다(체험 리셋 방지)."""
