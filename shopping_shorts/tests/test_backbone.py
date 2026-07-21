@@ -242,6 +242,25 @@ def test_pick_backbone_most_segments():
     assert backbone.pick_backbone(sources) == "B"
 
 
+def test_pick_backbone_excludes_chinese_platforms():
+    # 샤오홍슈(중국어)는 세그 많아도 백본 불가 → 서브 전용. 인스타가 백본.
+    sources = [
+        {"video_id": "s0", "segments": [_seg("s0-1")]},
+        {"video_id": "s1", "segments": [_seg(f"s1-{i}") for i in range(9)]},  # 최다지만 샤오홍슈
+    ]
+    meta = {"s0": {"platform": "instagram", "comments": 10},
+            "s1": {"platform": "xiaohongshu", "comments": 999}}
+    assert backbone.pick_backbone(sources, meta=meta) == "s0"
+
+
+def test_pick_backbone_by_comments_among_eligible():
+    sources = [{"video_id": "s0", "segments": [_seg("s0-1")]},
+               {"video_id": "s1", "segments": [_seg("s1-1")]}]
+    meta = {"s0": {"platform": "instagram", "comments": 50},
+            "s1": {"platform": "instagram", "comments": 200}}
+    assert backbone.pick_backbone(sources, meta=meta) == "s1"   # 댓글 많은 것
+
+
 def test_pick_backbone_none_on_empty():
     assert backbone.pick_backbone([]) is None
 

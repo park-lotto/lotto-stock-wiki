@@ -236,15 +236,32 @@ def dedup_and_balance(beats, pool_sources):
     return out
 
 
-def pick_backbone(sources):
-    """제일 완결된 영상 = 백본. 휴리스틱: 세그먼트(과정 조각) 최다 영상.
-    동수면 먼저 온 것. 소스 없으면 None."""
-    best, best_n = None, -1
-    for s in sources or []:
-        n = len(s.get("segments") or [])
-        if n > best_n:
-            best, best_n = s.get("video_id"), n
-    return best
+# 중국어 플랫폼 = 백본 불가(대본이 중국어). 서브 전용(화면 스왑/삽입만).
+_CHINESE_PLATFORMS = {"xiaohongshu", "douyin", "rednote"}
+
+
+def pick_backbone(sources, meta=None):
+    """백본 선정(사장님 규칙). meta={video_id: {platform, comments}} 있으면:
+      ①중국어 플랫폼(샤오홍슈·도우인)은 제외 = 서브 전용(대본이 중국어라 흐름 뼈대로 못 씀)
+      ②남은 것 중 댓글수 최다 → 동수면 세그먼트 최다.
+    meta 없으면 세그먼트 최다(구 휴리스틱). 소스 없거나 후보 0이면 None."""
+    if not sources:
+        return None
+    meta = meta or {}
+
+    def eligible(s):
+        vid = s.get("video_id")
+        plat = (meta.get(vid, {}).get("platform") or "").lower()
+        return plat not in _CHINESE_PLATFORMS
+
+    cands = [s for s in sources if eligible(s)] or list(sources)  # 전부 중국어면 어쩔수없이 전체
+
+    def key(s):
+        vid = s.get("video_id")
+        m = meta.get(vid, {})
+        return (m.get("comments") or 0, len(s.get("segments") or []))
+
+    return max(cands, key=key).get("video_id")
 
 
 def order_by_backbone(beats, backbone_video):
