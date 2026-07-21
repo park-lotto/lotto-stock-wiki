@@ -13,7 +13,7 @@ from shopping_shorts.store import Store
 from shopping_shorts.media_download import download_any
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC, build_edit_plan, conform_narration
-from shopping_shorts.scene_match import match_scene_assets
+from shopping_shorts.scene_match import match_scene_assets, match_sfx
 from shopping_shorts import tts
 from shopping_shorts import audio_post
 from shopping_shorts.video_assemble import assemble, _beat_timeline, _probe_duration, _MAX_SLOWMO
@@ -393,6 +393,12 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     assets = store.list_scene_assets(customer_id=customer_id, asset_type="clip")
     if assets:
         plan = match_scene_assets(plan, assets)
+    # 3.6) 효과음(sfx) 역할 매칭 — 별도 자산 목록(asset_type="sfx")으로 조회한다. 위 clip
+    # 목록엔 sfx가 없으므로 재조회 필요. match_sfx가 beat["sfx"]={asset_id,position,..}를 심고,
+    # run_render/run_preview가 asset_id→media_path로 해석한다(컷어웨이와 같은 seam). Gemini 0회.
+    sfx_assets = store.list_scene_assets(customer_id=customer_id, asset_type="sfx")
+    if sfx_assets:
+        plan = match_sfx(plan, sfx_assets)
 
     # 4) 비트별 TTS (naturalize + N-best + 연속성 + 프리셋 후처리)
     store.update_mix_job(job_id, status="tts")
@@ -498,6 +504,19 @@ def _resolve_cutaway_paths(store, plan, customer_id):
     return out
 
 
+def _resolve_sfx_paths(store, plan, customer_id):
+    """비트에 붙은 sfx asset_id → media_path. 컷어웨이와 같은 패턴(저장위치=읽기위치).
+    run_render·run_preview 둘 다 이걸 써서 미리보기와 최종본이 같은 효과음을 낸다."""
+    out = {}
+    for beat in plan["beats"]:
+        sfx = beat.get("sfx")
+        if sfx:
+            asset = store.get_scene_asset(sfx["asset_id"], customer_id=customer_id)
+            if asset and asset.get("media_path"):
+                out[beat["beat_idx"]] = asset["media_path"]
+    return out
+
+
 def _clean_one(item, key, work):
     """소스 하나를 VMake로 청소 → (video_id, 클린경로). ThreadPool 워커용(DB 미접근)."""
     vid, src = item
@@ -539,7 +558,8 @@ def assemble_clean_video(job_id, db_path, work_root):
         out_path = Path(work_root) / job_id / "clean_preview.mp4"
         out_path.parent.mkdir(parents=True, exist_ok=True)
         assemble(plan, tts_paths, clean_map, str(out_path), clean_fn=None, deco={},
-                 cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)))
+                 cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)),
+                 sfx_paths=_resolve_sfx_paths(store, plan, job.get("customer_id", 0)))
         store.update_mix_job(job_id, clean_video_path=str(out_path))
         return str(out_path)
     except Exception:
@@ -621,7 +641,8 @@ def run_preview(job_id, db_path, work_root):
         assemble(plan, tts_paths, source_video_paths, str(out_path),
                  clean_fn=None,                      # ← 유료 VMake 건너뜀. 이게 핵심이다.
                  deco={},                             # ← 꾸미기 없음(4단계 소관)
-                 cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)))
+                 cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)),
+                 sfx_paths=_resolve_sfx_paths(store, plan, job.get("customer_id", 0)))
         store.update_mix_job(job_id, preview_status="ready", preview_path=str(out_path))
     except Exception as e:  # noqa: BLE001 — BackgroundTasks라 밖에서 아무도 안 받는다
         traceback.print_exc(file=sys.stderr)
@@ -686,9 +707,10 @@ def run_render(job_id, db_path, work_root):
         # 컷어웨이: 비트에 붙은 asset_id를 media_path로 해석해 assemble에 넘긴다.
         # 저장위치(match_scene_assets가 쓴 beat["cutaway"]) = 읽기위치(여기) — seam 일치.
         cutaway_paths = _resolve_cutaway_paths(store, plan, job.get("customer_id", 0))
+        sfx_paths = _resolve_sfx_paths(store, plan, job.get("customer_id", 0))
         assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=None,
                  headcopy=job.get("headcopy"), caption_style=caption_style,
-                 deco=deco, cutaway_paths=cutaway_paths)
+                 deco=deco, cutaway_paths=cutaway_paths, sfx_paths=sfx_paths)
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
