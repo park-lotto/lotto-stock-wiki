@@ -64,7 +64,7 @@ def test_preview_of_tts_less_candidate_gets_all_beats(job, monkeypatch):
     seen = {}
 
     def fake_assemble(plan, tts_paths, srcs, out, clean_fn=None, headcopy=None,
-                      caption_style=None, deco=None, cutaway_paths=None):
+                      caption_style=None, deco=None, cutaway_paths=None, sfx_paths=None):
         seen["tts_paths"] = dict(tts_paths)
         open(out, "w").write("x")
         return out
