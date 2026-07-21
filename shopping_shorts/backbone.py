@@ -38,6 +38,11 @@ def length_status(beat):
     return "ok"
 
 
+def target_chars(beat):
+    """이 비트 화면 길이에 들어갈 최대 한글 글자수 = clip_seconds * 5.7."""
+    return int(clip_seconds(beat) * _SYLLABLES_PER_SEC)
+
+
 def fill_clips_to_cover(beat, pool_sources):
     """화면이 대사보다 짧으면(over) 같은 행위 클립을 풀에서 더 붙여 길이를 채운다.
     이미 담긴 seg_id는 제외. 대사 읽는시간 근처까지만 채운다(과충전 방지)."""
@@ -164,7 +169,7 @@ def order_by_backbone(beats, backbone_video):
     return out
 
 
-def ping_pong_reconcile(beats, pool_sources, rewrite_call=None, max_rounds=2):
+def ping_pong_reconcile(beats, pool_sources, rewrite_call=None, max_rounds=2, trim_call=None):
     """핑퐁(대본↔장면 왕복). 매 라운드:
       1) action 불일치 비트 찾기(fit 안 믿음 — beat_action_mismatch).
       2) 각 비트: 같은 행위 클립이 풀에 있으면 **화면 스왑**(장면 쪽), 없으면 재작성 대기(대본 쪽).
@@ -191,11 +196,24 @@ def ping_pong_reconcile(beats, pool_sources, rewrite_call=None, max_rounds=2):
                 if b.get("beat_idx") in fixes and fixes[b["beat_idx"]]:
                     b["narration"] = fixes[b["beat_idx"]]
                     b.pop("need_rewrite", None)
-    # 길이 맞춤: 스왑/원본 클립이 대사보다 짧으면(over) 같은 행위 클립 더 붙여 채운다
-    # (화면이 대사 도중 끊겨 '넘어가'는 것 방지 — 캡컷 수작업 제거).
+    # 길이 맞춤 1) 화면 늘리기: 대사보다 화면 짧으면(over) 같은 행위 클립 더 붙임.
     for i, b in enumerate(out):
         if length_status(b) == "over":
             out[i] = fill_clips_to_cover(b, pool_sources)
+    # 길이 맞춤 2) 대사 줄이기: 화면을 못 늘려 여전히 넘치면(over) 대사를 화면 길이에
+    # 맞게 줄인다(trim_call). '부어보세요'가 완성 장면까지 넘어가는 것 방지(캡컷 수작업 제거).
+    over = [dict(out[i], beat_idx=out[i].get("beat_idx", i), target_chars=target_chars(out[i]))
+            for i in range(len(out)) if length_status(out[i]) == "over" and target_chars(out[i]) > 0]
+    if over and trim_call is not None:
+        try:
+            trims = trim_call(over) or {}
+        except Exception:
+            trims = {}
+        for b in out:
+            bi = b.get("beat_idx")
+            if bi in trims and trims[bi]:
+                b["narration"] = trims[bi]
+                b["length_trimmed"] = True
     return out
 
 
