@@ -4,8 +4,9 @@ from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from shopping_shorts.config import (DB_PATH, WINDOW_HOURS, DRAFT_BATCH_SIZE, MAX_CHANNELS,
-                                    YOUTUBE_WINDOW_HOURS, YOUTUBE_MAX_PER_KW)
-from shopping_shorts.channels import load_channels, merge_tracked
+                                    YOUTUBE_WINDOW_HOURS, YOUTUBE_MAX_PER_KW,
+                                    DEAD_AFTER_DAYS, CENSUS_RESULTS_PER_CHANNEL)
+from shopping_shorts.channels import load_channels, merge_tracked, select_tracked
 from shopping_shorts.apify_client import fetch_reels
 from shopping_shorts.ranking import build_items, build_youtube_items, build_tiktok_items, apply_grades
 from shopping_shorts.store import Store
@@ -175,12 +176,13 @@ def collect(platform="instagram", limit_channels=None):
 
     channels = load_channels()
 
-    # 발굴/등록 채널을 엑셀 목록과 union하고 죽은(추적제외) 채널은 뺀다. 손으로
-    # 등록/발굴한 채널이 cap(수집비 상한)에서 엑셀 꼬리보다 우선 살아남는다
-    # (2026-07-18). 엑셀 원본은 안 건드리는 소프트 관리 — 제외/추가 모두 DB에서만.
+    # 활동성 선별(2026-07-22): 생존+측정대기만 긁고 사망(센서스 판정)·수동제거는 뺀다.
+    # 팔로워 컷 없음. 센서스 전(활동테이블 빈 상태)엔 전원 측정대기라 전 채널 = 초기 안전동작.
+    # 엑셀 원본은 안 건드리는 소프트 관리 — 제외/추가/사망 모두 DB에서만.
     _store = Store(DB_PATH)
-    channels = merge_tracked(channels, _store.discovered_channels(),
-                             _store.removed_usernames())
+    channels = select_tracked(channels, _store.discovered_channels(),
+                              removed=_store.removed_usernames(),
+                              dead=_store.dead_usernames())
 
     if limit_channels:
         channels = channels[:limit_channels]
@@ -225,3 +227,82 @@ def collect(platform="instagram", limit_channels=None):
     ])
     _export_csv(all_items, run_date)  # 날짜별 CSV 아카이브
     return all_items
+
+
+def _norm_u(username):
+    return (username or "").strip().lstrip("@").lower()
+
+
+def _record_activity(seen, username, item, reel):
+    """센서스에서 본 릴스 1건으로 채널 활동레코드 갱신(채널당 최고 점수 + 최신 시각)."""
+    u = _norm_u(username)
+    views = item.get("views") or 0
+    comments = item.get("comments") or 0
+    density = (comments / views) if views > 0 else 0.0   # 참여밀도(조회 없으면 0)
+    age = item.get("age_hours") or 0
+    recency = max(0.0, 1 - age / (DEAD_AFTER_DAYS * 24))  # 최근일수록 1
+    score = density * (1 + recency)
+    ts = reel.get("timestamp")
+    cur = seen.get(u)
+    if cur is None:
+        seen[u] = {"username": username, "alive": True, "last_post_at": ts,
+                   "engagement_density": density, "activity_score": score}
+        return
+    if score > cur["activity_score"]:
+        cur["activity_score"] = score
+        cur["engagement_density"] = density
+    if ts and (not cur["last_post_at"] or ts > cur["last_post_at"]):
+        cur["last_post_at"] = ts
+
+
+def census():
+    """전수 센서스(2026-07-22) — 전 채널(팔로워/사망 필터 없음)을 긁어 활동성 판정.
+
+    최근 DEAD_AFTER_DAYS일 내 릴스를 반환한 채널 = 생존, 0건 = 사망. 전체 랭킹과
+    사망목록을 즉시 돌려주고, DB에 반영할 활동레코드(activity_records)도 함께 반환한다
+    — 호출부(app.py)가 이걸 background로 upsert해 "정리를 뒤에서" 처리한다. 하드삭제 없음.
+    Apify 실패 시 예외는 호출부로 전파(활동테이블 미갱신 → 사망 오판 안 함)."""
+    store = Store(DB_PATH)
+    excel = load_channels()
+    # 마스터 = 엑셀 전체 ∪ 발굴/등록, 수동제거만 제외. 사망 채널도 포함해 재확인(=부활 기회).
+    master = select_tracked(excel, store.discovered_channels(),
+                            removed=store.removed_usernames(), dead=set())
+    meta_by_user = {c["username"]: c for c in master}
+    usernames = list(meta_by_user.keys())
+
+    reels = fetch_reels(usernames, results_per_channel=CENSUS_RESULTS_PER_CHANNEL,
+                        only_newer_than=f"{DEAD_AFTER_DAYS} days")
+
+    now = datetime.now(timezone.utc)
+    all_items = []
+    seen_alive = {}   # 정규화 username -> 활동레코드
+    for r in reels:
+        user = r.get("ownerUsername") or r.get("username")
+        meta = meta_by_user.get(user)
+        if not meta:
+            continue
+        items = build_items([r], meta, prev_comments=store.prev_comments,
+                            prev_delta=store.prev_delta, now=now,
+                            window_hours=DEAD_AFTER_DAYS * 24)
+        for it in items:
+            all_items.append(it)
+            _record_activity(seen_alive, meta["username"], it, r)
+    apply_grades(all_items)
+
+    alive_norm = set(seen_alive.keys())
+    dead_channels = [c for c in master if _norm_u(c["username"]) not in alive_norm]
+    prior_dead = store.dead_usernames()
+    revived_n = sum(1 for u in alive_norm if u in prior_dead)
+
+    activity_records = list(seen_alive.values()) + [
+        {"username": c["username"], "alive": False} for c in dead_channels]
+
+    return {
+        "items": all_items,
+        "dead": dead_channels,
+        "activity_records": activity_records,
+        "scanned_n": len(usernames),
+        "alive_n": len(alive_norm),
+        "dead_n": len(dead_channels),
+        "revived_n": revived_n,
+    }
