@@ -2107,6 +2107,7 @@ function _renderMixReviewBody(d){
       ${(b.sync_gap&&b.sync_gap>0.8)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⏱ 대사가 영상보다 ${b.sync_gap}초 깁니다 — 끝부분이 잠시 머물 수 있어요. 대본을 살짝 줄이면 자연스러워집니다.</div>`:''}
       <div class="scene-swap" id="sceneSwap${i}">${renderSwapButton(b, i)}</div>
       <div class="scene-cutaway" id="sceneCutaway${i}">${renderSceneCutaway(b, i)}</div>
+      <div class="scene-sfx" id="sceneSfx${i}">${renderSceneSfx(b, i)}</div>
     </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>!b.respined&&b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
     +`<button id="btnPreview" class="btn-next" style="margin-top:8px;padding:7px 14px" onclick="startPreview()">▶ 미리보기 만들기</button>`
     +`<button class="btn" style="margin-top:8px;margin-left:8px;padding:7px 14px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="cancelMixReview()" title="이 매칭을 취소하고 소스·대본을 고쳐 처음부터 다시 매칭합니다">✕ 취소하고 다시 매칭</button>`
@@ -2775,6 +2776,37 @@ async function toggleCutaway(idx, assetId){
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
   const beat = (d.beats||[])[idx];
   if(beat && box) box.innerHTML = renderSceneCutaway(beat, idx);
+}
+
+// 자동배치된 효과음(beat.sfx)을 🔊 배지로 보여주고 빼는 최소 블록(스펙 §6).
+// 컷어웨이(renderSceneCutaway/toggleCutaway)와 같은 구조 — 아이콘(🔊)·대상 키(sfx)만 다르다.
+// 역할 매칭은 점수·제안 큐가 없어(자동배치 아니면 빈 채) 되넣기 UI는 없다 — 빼기만.
+function renderSceneSfx(beat, idx){
+  const sfx = beat.sfx;
+  if(!sfx) return '';
+  const posLabel = beat.role ? `${esc(beat.role)} 자리`
+                 : (sfx.position === 'first' ? '시작 자리' : '끝 자리');
+  return `<div style="display:flex;align-items:center;gap:8px;margin-top:6px;padding:6px;border:1px solid var(--line);border-radius:8px;background:#0a1018">`
+    + `<div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:24px;background:#000;border-radius:4px">🔊</div>`
+    + `<div style="flex:1;font-size:12px" class="hint">효과음 #${sfx.asset_id} · 역할 매칭(${posLabel})</div>`
+    + `<button class="btn-prev" style="padding:4px 8px;font-size:12px" onclick="removeSfx(${idx})">이 효과음 빼기</button>`
+    + `</div>`;
+}
+
+async function removeSfx(idx){
+  if(!MIX_JOB) return;
+  const box = document.getElementById('sceneSfx'+idx);
+  if(box) box.innerHTML = '<div class="hint">⏳ 반영 중…</div>';
+  try{
+    const r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/sfx',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({beat_idx: idx})})).json();
+    if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
+  }catch(e){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  const d = await (await fetch('/api/mix/result/'+MIX_JOB)).json();
+  if(!d.ok) return;
+  const beat = (d.beats||[])[idx];
+  if(beat && box) box.innerHTML = renderSceneSfx(beat, idx);
 }
 
 // ── [다른 화면으로] 스왑 피커(2026-07-19) ─── SWAP-START

@@ -1010,12 +1010,13 @@ def _beat_timeline(edit_plan, tts_paths):
             "cap_durs": beat.get("cap_durs"),
             "cap_offset": beat.get("cap_offset", 0.0),
             "caption_lines": beat.get("caption_lines"),   # AI가 끊어준 자막 호흡 줄(있으면)
+            "sfx": beat.get("sfx"),                        # 효과음 매칭(있으면) — position 읽기용
         })
         t0 += dur
     return timeline
 
 
-def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None, caption_style=None, deco=None):
+def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None, caption_style=None, deco=None, sfx_paths=None):
     """완성된 믹스 영상(in_video) 위에 우리 자막을 비트 타이밍대로 굽는다.
     비트 경계는 각 비트 tts 길이 누적(t0)으로 계산해, drawtext enable 구간을 전체
     타임라인 기준으로 배치한다(_caption_drawtexts에 t0 오프셋 전달). drawtext 값 안의
@@ -1083,7 +1084,22 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     motion = deco.get("motion") or {}
     motion_layers = [L for L in (motion.get("layers") or []) if L.get("_abspath")]
     has_motion = bool(motion_layers)
-    if not has_bgm and not has_overlay and not has_motion:
+    # 효과음(sfx): 비트별 position → 절대 오프셋(초)을 캡션과 **같은 함수**로 계산한다
+    # (별도 계산 금지 — 저장위치=읽기위치). first=0.0 / last=마지막 세그먼트 직전까지의 합
+    # (세그먼트 1개면 0.0). 절대시각 = 비트 t0 + 오프셋. sfx_events=[(경로, 절대초), ...].
+    sfx_paths = sfx_paths or {}
+    sfx_events = []
+    for b in timeline:
+        sfx = b.get("sfx")
+        path = sfx_paths.get(b["beat_idx"])
+        if not sfx or not path:
+            continue
+        segs = _caption_segments(b["narration"], preset=b.get("caption_lines"))
+        seg_durs = _caption_durations(segs, b["dur"], real_durs=b.get("cap_durs"))
+        offset = 0.0 if sfx.get("position") == "first" else sum(seg_durs[:-1])
+        sfx_events.append((path, b["t0"] + offset))
+    has_sfx = bool(sfx_events)
+    if not has_bgm and not has_overlay and not has_motion and not has_sfx:
         base_vf = vf
         _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-vf", base_vf, "-r", "30",
                      "-c:v", "libx264", "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
@@ -1107,14 +1123,29 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         m_inputs, m_fc, vcur, idx = _motion_layer_filters(motion_layers, idx, vcur)
         inputs += m_inputs
         fc += m_fc
+    # 오디오 믹스: 나레이션(항상) + BGM(있으면) + 효과음(있으면)을 한 번에 amix.
+    # duration=first → 첫 입력(나레이션) 길이로 잘린다. 효과음이 비트보다 길면 다음
+    # 비트 위로 흘러넘치되 영상 끝에서만 잘린다(v1 알려진 한계, 스펙 §4.3).
     amap = None
+    mix_labels = ["0:a"]                              # 나레이션(항상 있음, 첫 입력)
     if has_bgm:                                       # 배경음악(나레이션 위 낮은 볼륨)
         inputs += ["-i", bgm_path]
         vol = max(0.0, min(1.0, (bgm.get("volume", 15)) / 100.0))
         fc.append(f"[{idx}:a]aloop=loop=-1:size=2000000000,volume={vol:.3f}[bg]")
-        fc.append("[0:a][bg]amix=inputs=2:duration=first:dropout_transition=2[a]")
-        amap = "[a]"
+        mix_labels.append("bg")
         idx += 1
+    if has_sfx:                                       # 효과음(비트별 오프셋에 adelay)
+        sfx_vol = max(0.0, min(1.0, (deco.get("sfx_volume", 60)) / 100.0))
+        for i, (sfx_path, offset_sec) in enumerate(sfx_events):
+            inputs += ["-i", sfx_path]
+            ms = max(0, round(offset_sec * 1000))
+            fc.append(f"[{idx}:a]adelay={ms}:all=1,volume={sfx_vol:.3f}[sfx{i}]")
+            mix_labels.append(f"sfx{i}")
+            idx += 1
+    if len(mix_labels) > 1:
+        ins = "".join(f"[{lb}]" for lb in mix_labels)
+        fc.append(f"{ins}amix=inputs={len(mix_labels)}:duration=first:dropout_transition=2[a]")
+        amap = "[a]"
     cmd = ["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(fc), "-map", f"[{vcur}]"]
     cmd += (["-map", amap, "-c:a", "aac"] if amap else ["-map", "0:a", "-c:a", "copy"])
     cmd += ["-r", "30", "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out_path)]
@@ -1122,13 +1153,15 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     return str(out_path)
 
 
-def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, headcopy=None, caption_style=None, deco=None, cutaway_paths=None):
+def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, headcopy=None, caption_style=None, deco=None, cutaway_paths=None, sfx_paths=None):
     """EDL → 최종 mp4. 1)믹스(자막X) 2)clean_fn(있으면 자막제거) 3)우리 자막.
     clean_fn(mix_raw_path)->clean_path 를 주면 그 사이에 VMake 자막제거가 끼워진다
     (없으면 생략). 자막제거는 우리 자막을 굽기 전 깨끗한 믹스에 돌려야 우리 자막이
-    함께 지워지지 않는다."""
+    함께 지워지지 않는다.
+    sfx_paths: {beat_idx: media_path} — beat["sfx"]가 붙은 비트의 효과음 경로(컷어웨이와
+    같은 seam). _burn_captions가 position→오프셋을 캡션과 같은 함수로 계산해 amix에 섞는다."""
     work = Path(out_path).parent / f"asm_{uuid.uuid4().hex[:8]}"
     work.mkdir(parents=True, exist_ok=True)
     mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=cutaway_paths)
     base_video = clean_fn(mix_raw) if clean_fn else mix_raw
-    return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco)
+    return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco, sfx_paths=sfx_paths)

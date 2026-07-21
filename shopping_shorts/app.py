@@ -4505,6 +4505,29 @@ def api_produce_mix_cutaway(job_id: str, request: Request, body: dict):
     return {"ok": True}
 
 
+@app.post("/api/produce/mix/{job_id}/sfx")
+def api_produce_mix_sfx(job_id: str, request: Request, body: dict):
+    """검수판에서 비트의 효과음(beat["sfx"])을 제거한다(스펙 §6 — "이 효과음 빼기").
+    역할 매칭은 점수·제안 큐가 없어(자동배치 아니면 빈 채) v1은 제거만 지원 —
+    되살리려면 다시 매칭한다. 컷어웨이 토글과 같은 구조(대상 키만 sfx)."""
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    plan = job.get("edit_plan") or {}
+    beats = plan.get("beats") or []
+    try:
+        bi = int(body.get("beat_idx"))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 필요"})
+    hit = next((b for b in beats if b.get("beat_idx") == bi), None)
+    if hit is None:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 범위 밖"})
+    hit.pop("sfx", None)
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True}
+
+
 @app.get("/api/produce/mix/poster/{job_id}")
 def api_produce_mix_poster(job_id: str):
     """미리보기 실장면 배경용 — 매칭된 첫 소스 영상의 한 프레임을 9:16으로 잘라 JPG 서빙(캐시)."""
@@ -4647,6 +4670,19 @@ def _validate_render_mode(asset_type, render_mode):
             return "render_mode는 replace/cutaway만"
     elif render_mode is not None:
         return "render_mode는 clip에만 허용됨"
+    return None
+
+
+def _validate_role(asset_type, role):
+    """sfx/overlay의 role 통제어휘 검증(scene_assets._ROLES) — upload·commit 공용 헬퍼.
+    clip은 Gemini 자동태깅이 이미 이 어휘로 강제하지만 sfx/overlay는 role이 자유텍스트라
+    오타·이형태가 매칭 키를 흩뜨린다(스펙 §5). 빈 role은 허용 — 매칭 후보에서 빠질 뿐이라
+    저장 자체는 막지 않는다. 문제 없으면 None, 있으면 에러메시지."""
+    if asset_type not in ("sfx", "overlay"):
+        return None
+    r = (role or "").strip()
+    if r and r not in scene_assets._ROLES:
+        return f"role은 {'/'.join(scene_assets._ROLES)} 중 하나여야 합니다(비우면 매칭 안 함)"
     return None
 
 
@@ -4887,6 +4923,11 @@ def api_scene_save_commit(request: Request, body: dict):
         return JSONResponse(status_code=422,
                             content={"ok": False, "error": "asset_type은 clip/sfx/overlay만"})
 
+    # sfx/overlay role 통제어휘 검증(스펙 §5) — 자유텍스트 role이 매칭 키를 흩뜨리지 않게.
+    role_err = _validate_role(asset_type, body.get("role"))
+    if role_err:
+        return JSONResponse(status_code=422, content={"ok": False, "error": role_err})
+
     # render_mode는 clip에서만 의미가 있고 값도 두 가지뿐 — 원시값을 그대로 흘리면 나중에
     # 렌더 분기에서 예기치 못한 값을 만난다. clip일 때만 화이트리스트로 막는다(422).
     # (비clip은 기존과 동일하게 검증하지 않고 아래에서 무조건 None으로 저장한다 — 이 자리에서
@@ -4967,6 +5008,10 @@ async def api_scene_upload(request: Request, asset_type: str = Form(...),
     if ext not in allowed:
         return JSONResponse(status_code=422,
                             content={"ok": False, "error": f"{asset_type}는 {'/'.join(allowed)}만"})
+    # role 통제어휘 검증(스펙 §5) — sfx/overlay 업로드 폼은 드롭다운으로 막지만 서버도 방어.
+    role_err = _validate_role(asset_type, role)
+    if role_err:
+        return JSONResponse(status_code=422, content={"ok": False, "error": role_err})
     token = uuid.uuid4().hex
     _SCENE_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
     dest = _SCENE_ASSETS_DIR / f"{token}{ext}"
