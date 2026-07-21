@@ -145,7 +145,10 @@
       <h2>📊 레퍼런스 랭킹</h2>
     </div>
     <div class="desc">443개 레퍼런스 채널의 48시간 이내 릴스를 강도별로 랭킹합니다.</div>
-    <div class="ctypes" id="platformTabs" style="margin-bottom:12px">
+    <!-- 플랫폼 전환 토글 숨김(사장님 2026-07-21, 미사용) — 삭제 아님. switchPlatform·PLATFORM
+         로직은 보존해 PLATFORM 기본값 instagram으로 랭킹·수집이 계속 동작하고, 되살리려면
+         display:none만 지우면 된다. -->
+    <div class="ctypes" id="platformTabs" style="display:none;margin-bottom:12px">
       <div class="ctype active" data-platform="instagram" onclick="switchPlatform('instagram',this)">📷 인스타</div>
       <div class="ctype" data-platform="youtube" onclick="switchPlatform('youtube',this)">▶️ 유튜브</div>
       <div class="ctype" data-platform="tiktok" onclick="switchPlatform('tiktok',this)">🎵 틱톡</div>
