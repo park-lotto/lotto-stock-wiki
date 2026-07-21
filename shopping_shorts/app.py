@@ -3391,9 +3391,9 @@ else{btn.href="/pricing";}
 
 _LANDING_HTML = _fill_brand(_LANDING_TMPL)
 
-_PENDING_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+_PENDING_HTML = _fill_brand("""<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
-<title>승인 대기중 · 숏템탑스</title>
+<title>승인 대기중 · __NAME__</title>
 <style>body{font-family:-apple-system,'Malgun Gothic',sans-serif;background:#0f1115;color:#e8eaed;
 margin:0;display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center}
 .box{max-width:420px;padding:40px 28px}.emoji{font-size:56px}h1{font-size:22px;margin:18px 0 10px}
@@ -3402,7 +3402,7 @@ text-decoration:none;font-size:14px}</style></head>
 <body><div class=box><div class=emoji>🙏</div>
 <h1>가입 신청이 접수됐어요</h1>
 <p>운영자 승인 후 이용할 수 있어요.<br>잠시만 기다려 주세요.</p>
-<a href="/logout">로그아웃</a></div></body></html>"""
+<a href="/logout">로그아웃</a></div></body></html>""")
 
 _LOGIN_HTML = _fill_brand(_LOGIN_TMPL)
 _PRICING_HTML = _fill_brand(_PRICING_TMPL)
@@ -3931,10 +3931,13 @@ def api_grab(request: Request, background_tasks: BackgroundTasks,
         return _grab_popup_html(False, "로그인이 필요해요",
                                 "shoppingshorts.duckdns.org에 먼저 로그인하세요")
     # 유료게이트: /api/grab은 _AUTH_ALLOW라 미들웨어 게이트를 우회한다 → 여기서 직접 등급 확인.
-    # 담기(+백그라운드 메타 크롤 비용)는 유료 기능이므로 ranking_only(무료/체험만료)는 차단.
-    if access_level(cid) == "ranking_only":
-        return _grab_popup_html(False, "유료 기능이에요",
-                                "무료 체험이 끝났어요. 결제하면 담기를 계속 쓸 수 있어요")
+    # 담기(+백그라운드 메타 크롤 비용)는 full 전용. pending(승인대기)·ranking_only 모두 차단.
+    lvl = access_level(cid)
+    if lvl != "full":
+        title = "승인 대기중이에요" if lvl == "pending" else "유료 기능이에요"
+        msg = ("운영자 승인 후 담기를 쓸 수 있어요" if lvl == "pending"
+               else "무료 체험이 끝났어요. 결제하면 담기를 계속 쓸 수 있어요")
+        return _grab_popup_html(False, title, msg)
     platform = _grab_platform(url)
     if not platform:
         return _grab_popup_html(False, "담을 수 없는 링크예요", "유튜브·틱톡·샤오홍슈·도우인 영상 페이지에서 눌러주세요")
