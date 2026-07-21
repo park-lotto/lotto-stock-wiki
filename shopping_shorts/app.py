@@ -3761,6 +3761,27 @@ async def _admin_set_plan(request: Request):
     return {"ok": True}
 
 
+@app.post("/api/admin/approve")
+async def _admin_approve(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id 필요"}, status_code=422)
+    st = Store(DB_PATH)
+    try:
+        trial_days = int(st.get_setting("trial_days", 7))
+    except (TypeError, ValueError):
+        trial_days = 7
+    cust = st.approve_customer(cid, trial_days)
+    import sys as _s
+    print(f"[admin] approve cid={cid}", file=_s.stderr)
+    return {"ok": True, "customer": cust}
+
+
 @app.post("/api/admin/settings")
 async def _admin_settings(request: Request):
     denied = _require_admin(request)

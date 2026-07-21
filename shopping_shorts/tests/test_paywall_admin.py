@@ -58,3 +58,28 @@ def test_admin_settings_roundtrip(tmp_path, monkeypatch):
     assert r.status_code == 200
     assert s.get_setting("trial_days") == "3" and s.get_setting("limit_lens") == "9"
     assert s.get_setting("bogus") is None       # 허용 키만 저장
+
+
+def test_approve_customer_starts_trial_idempotent(tmp_path, monkeypatch):
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("pend", "pw12", approved=False)
+    assert appmod.access_level(cid) == "pending"
+    cust = s.approve_customer(cid, trial_days=7)
+    assert cust["approved_at"] is not None
+    assert cust["full_access_until"] > 0
+    assert appmod.access_level(cid) == "full"
+    first_until = cust["full_access_until"]
+    # 재승인해도 체험창이 리셋되지 않는다(멱등)
+    s.approve_customer(cid, trial_days=7)
+    assert s.get_customer(cid)["full_access_until"] == first_until
+
+
+def test_api_admin_approve_requires_admin(tmp_path, monkeypatch):
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("pend2", "pw12", approved=False)
+    other = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
+    assert other.post("/api/admin/approve", json={"customer_id": cid}).status_code == 403
+    owner = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})
+    r = owner.post("/api/admin/approve", json={"customer_id": cid})
+    assert r.status_code == 200 and r.json()["ok"] is True
+    assert appmod.access_level(cid) == "full"

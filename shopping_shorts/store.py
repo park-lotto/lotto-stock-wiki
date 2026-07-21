@@ -2435,6 +2435,20 @@ class Store:
                 c.execute("UPDATE customers SET plan=?, full_access_until=? WHERE id=?",
                           (plan, int(full_access_until), customer_id))
 
+    def approve_customer(self, customer_id, trial_days=7):
+        """대기중 계정을 승인. 승인 시각 기록 + 그 순간부터 무료체험 시작.
+        멱등: 이미 승인된 계정(approved_at 있음)엔 아무것도 안 한다(체험 리셋 방지)."""
+        now_ts = int(datetime.now(timezone.utc).timestamp())
+        try:
+            td = int(trial_days)
+        except (TypeError, ValueError):
+            td = 7
+        until = now_ts + td * 86400
+        with self._conn() as c:
+            c.execute("UPDATE customers SET approved_at=?, full_access_until=? "
+                      "WHERE id=? AND approved_at IS NULL", (now_ts, until, customer_id))
+        return self.get_customer(customer_id)
+
     def all_settings(self):
         with self._conn() as c:
             rows = c.execute("SELECT key, value FROM settings").fetchall()
