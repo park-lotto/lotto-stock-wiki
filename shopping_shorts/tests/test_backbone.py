@@ -135,6 +135,29 @@ def test_fill_clips_to_cover_narration():
     assert backbone.clip_seconds(nb) >= backbone.narration_seconds(beat["narration"]) * 0.9
 
 
+def test_target_chars_from_clip():
+    beat = {"primary": {"start": 0, "end": 10}, "alternates": []}
+    # 10초 * 5.7 = 57자
+    assert 54 <= backbone.target_chars(beat) <= 60
+
+
+def test_ping_pong_trims_overflow_narration():
+    # 대사가 화면보다 훨씬 김 + 풀에 채울 클립 없음 → trim_call로 대사 줄여 장면 안 넘게
+    beats = [{"beat_idx": 0, "narration": "가" * 60,
+              "primary": {"seg_id": "x", "start": 0, "end": 3, "action": "붓다"}, "alternates": []}]
+    pool = []  # 채울 클립 없음
+    trimmed = {}
+
+    def trim(items):
+        for it in items:
+            trimmed[it["beat_idx"]] = it["target_chars"]
+        return {it["beat_idx"]: "가" * it["target_chars"] for it in items}
+    out = backbone.ping_pong_reconcile(beats, pool, rewrite_call=None, trim_call=trim)
+    # 3초 화면 → 약 17자로 트림 요청됨
+    assert 0 in trimmed and trimmed[0] <= 20
+    assert backbone.length_status(out[0]) == "ok"
+
+
 def test_pick_backbone_most_segments():
     sources = [
         {"video_id": "A", "segments": [_seg("A-1"), _seg("A-2")]},

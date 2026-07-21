@@ -614,6 +614,25 @@ def _bb_rewrite(beats, call=_vault_call):
             for r in raw.get("rewrites", []) if r.get("narration")}
 
 
+def _bb_trim(beats, call=_vault_call):
+    """핑퐁 길이 트림 콜백 — 화면보다 긴 대사를 뜻 유지하며 target_chars 이내로 줄인다
+    → {beat_idx: 줄인 나레이션}. 대사가 다음 장면으로 넘어가는 것 방지."""
+    if not beats:
+        return {}
+    lines = "\n".join(
+        f"[{b['beat_idx']}] {b.get('target_chars', 0)}자 이내: {b.get('narration', '')}"
+        for b in beats)
+    prompt = (
+        "아래 대사들은 화면보다 길어 다음 장면으로 넘어간다. 각 대사를 **뜻·정보·말투는 유지**하되 "
+        "지정한 글자수 이내로 자연스럽게 줄여라(끊긴 느낌 없이 완결). 화면에 없는 사실 지어내지 마라.\n"
+        f"{lines}\n출력은 rewrites 배열의 JSON만.")
+    raw = call(prompt, _RECONCILE_SCHEMA)
+    if not raw or not isinstance(raw, dict):
+        return {}
+    return {int(r["beat_idx"]): r["narration"]
+            for r in raw.get("rewrites", []) if r.get("narration")}
+
+
 def _reconcile_weak_beats(beats, call=_vault_call):
     """앵커(respined 아님)이면서 fit<=3인 비트의 나레이션만 화면(scene_desc)에 맞게
     1회 Gemini 호출로 미세수정. 대상 0개면 호출 없이 그대로. 실패 시 원문 유지(fail-open)."""
@@ -720,7 +739,9 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             from shopping_shorts import backbone
             # 1) 행위 매칭(화면-대사 어긋남 + 길이) 2) 백본 순서 고정(과정순서)
             plan["beats"] = backbone.ping_pong_reconcile(
-                plan["beats"], source_scripts, rewrite_call=lambda bs: _bb_rewrite(bs, _call))
+                plan["beats"], source_scripts,
+                rewrite_call=lambda bs: _bb_rewrite(bs, _call),
+                trim_call=lambda bs: _bb_trim(bs, _call))
             bb = backbone.pick_backbone(source_scripts)
             if bb:
                 plan["beats"] = backbone.order_by_backbone(plan["beats"], bb)
