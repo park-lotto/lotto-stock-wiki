@@ -247,7 +247,9 @@ def run_mix_job(job_id, db_path, work_root):
                       voice=job.get("voice"), customer_id=job.get("customer_id", 0),
                       scene_first=job.get("scene_first", False),
                       reference_text=job.get("given_script") or "",
-                      ping_pong=job.get("ping_pong", False))
+                      # 핑퐁(대본↔장면 왕복 행위매칭): 전역 설정으로 on/off(기본 off·회귀0).
+                      # 스키마 컬럼 없이 한 스위치로 켠다 — store.set_setting('ping_pong_enabled','1').
+                      ping_pong=(store.get_setting("ping_pong_enabled", "") == "1"))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
