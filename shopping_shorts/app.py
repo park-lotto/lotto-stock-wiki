@@ -2199,6 +2199,14 @@ def api_thumb_frames(body: dict):
     # 최종 렌더(video_path)는 우리 나레이션 자막이 박혀 있어(사장님 제보 2026-07-19) 배경 부적합.
     # 셋 다 검사하므로 렌더 전(video_path 없음)에도 preview로 프레임을 뽑을 수 있다
     # (매칭 끝낸 작업이라도 최종 영상이 없어 "믹스 영상 없음"으로 막히던 것도 그대로 해소).
+    # ★자가치유: 2단계 자막제거는 했는데(clean_status=ready) 조립본(clean_video_path)이 없으면
+    # 여기서 즉석 조립한다 — 이전 조립이 재렌더/재매칭 레이스로 유실됐을 수 있다(2026-07-21 사장님
+    # 재제보: clean_status=ready·edit_plan 있음인데 clean_video_path=None으로 자막 preview가 걸렸음).
+    # VMake는 이미 탔으니 추가과금 0. 실패하면 아래 폴백 그대로.
+    _cvp = job.get("clean_video_path")
+    if job.get("clean_status") == "ready" and not (_cvp and Path(_cvp).exists()):
+        if mix_pipeline.assemble_clean_video(job_id, DB_PATH, _MIX_WORK_DIR):
+            job = Store(DB_PATH).get_mix_job(job_id)   # 새 clean_video_path 반영
     video = None
     for cand in (job.get("clean_video_path"), job.get("preview_path"), job.get("video_path")):
         if cand and Path(cand).exists():

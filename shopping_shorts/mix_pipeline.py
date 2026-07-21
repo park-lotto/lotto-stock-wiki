@@ -449,6 +449,33 @@ def _ensure_clean_sources(store, job, job_id, work, key):
     return cached
 
 
+def assemble_clean_video(job_id, db_path, work_root):
+    """자막제거(2단계) 후 '자막 없는 조립본'(clean_video_path)을 만들어 DB에 저장하고 경로 반환.
+    VMake는 이미 탔으므로 clean_fn=None으로 청소된 소스를 재조립만 한다(추가과금 0). edit_plan·
+    clean_sources가 없거나 조립 실패면 None. run_clean_sources(2단계)와 썸네일(5단계) 자가치유가
+    공유한다 — 이전 조립이 재렌더/재매칭 레이스로 유실돼도 썸네일에서 다시 만들 수 있게(2026-07-21).
+    """
+    store = Store(db_path)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return None
+    plan = job.get("edit_plan")
+    clean_map = job.get("clean_sources") or {}
+    if not plan or not clean_map:
+        return None
+    try:
+        tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
+        out_path = Path(work_root) / job_id / "clean_preview.mp4"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        assemble(plan, tts_paths, clean_map, str(out_path), clean_fn=None, deco={},
+                 cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)))
+        store.update_mix_job(job_id, clean_video_path=str(out_path))
+        return str(out_path)
+    except Exception:
+        traceback.print_exc(file=sys.stderr)
+        return None
+
+
 def run_clean_sources(job_id, db_path, work_root):
     """2단계: 각 소스 원본을 VMake로 자막제거해 clean_sources에 캐시.
     BackgroundTasks로 불리므로 예외를 밖으로 안 던진다(clean_status로만 알린다)."""
@@ -474,19 +501,10 @@ def run_clean_sources(job_id, db_path, work_root):
     # clean_video_path). 여기까진 소스 각각만 청소됐지 조립본이 없어, clean_video_path가 영원히
     # None이라 폴백이 preview_path(1단계 미리보기 — clean_fn=None으로 항상 원본 자막 그대로)로
     # 떨어졌다(2026-07-20 사장님 제보: 자막제거 후 썸네일에 지우기 전 문구가 그대로 나옴).
-    # VMake는 위에서 이미 탔으니 여기선 clean_fn 없이 청소된 소스로 재조립만 한다(추가과금 0).
-    # 실패해도 clean_status는 되돌리지 않는다 — 소스청소(유료)는 이미 성공했다, 조립만 실패했다고
-    # "실패"로 보이면 사용자가 재시도해 혼란만 커진다(재시도 자체는 무해 — 캐시라 재과금 없음).
-    try:
-        plan = job.get("edit_plan")
-        if plan:
-            tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
-            out_path = work / "clean_preview.mp4"
-            assemble(plan, tts_paths, clean_map, str(out_path), clean_fn=None, deco={},
-                     cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)))
-            store.update_mix_job(job_id, clean_video_path=str(out_path))
-    except Exception:
-        traceback.print_exc(file=sys.stderr)
+    # VMake는 위에서 이미 탔으니 clean_fn 없이 청소된 소스로 재조립만 한다(추가과금 0). 실패해도
+    # clean_status는 안 되돌린다 — 소스청소(유료)는 이미 성공, 조립만 실패했다고 "실패"로 보이면
+    # 재시도 혼란만 커진다. 조립 실패/유실 시엔 썸네일(5단계)이 자가치유로 다시 만든다(공유 헬퍼).
+    assemble_clean_video(job_id, db_path, work_root)
 
 
 def run_preview(job_id, db_path, work_root):
