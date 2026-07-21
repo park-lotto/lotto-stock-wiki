@@ -3386,7 +3386,7 @@ h1{font-family:'Black Han Sans',sans-serif;font-size:30px;margin:16px 0 22px}
 <h3>이용권</h3>
 <p id=upText>더 쓰고 싶으면 이용권으로 계속 쓸 수 있어요. 결제·문의는 카톡으로 안내해 드립니다.</p>
 <a class="btn kko" id=kkoBtn href="/pricing">카톡으로 문의</a></div>
-<a class="btn ghost" href="/logout">로그아웃</a>
+<form method=post action="/logout"><button type=submit class="btn ghost" style="width:100%">로그아웃</button></form>
 <div class=foot>© __NAME__</div>
 </div>
 <script>(function(){
@@ -3419,7 +3419,22 @@ text-decoration:none;font-size:14px}</style></head>
 <body><div class=box><div class=emoji>🙏</div>
 <h1>가입 신청이 접수됐어요</h1>
 <p>운영자 승인 후 이용할 수 있어요.<br>잠시만 기다려 주세요.</p>
-<a href="/logout">로그아웃</a></div></body></html>""")
+<form method=post action="/logout" style="margin-top:24px"><button type=submit style="background:none;border:0;color:#8ab4f8;font-size:14px;cursor:pointer;text-decoration:none">로그아웃</button></form></div></body></html>""")
+
+# 로그아웃 확인 화면 — GET /logout이 세션을 안 지우는 대신 이 화면을 준다(CSRF 방어).
+# 실제 로그아웃은 이 폼의 POST만.
+_LOGOUT_CONFIRM_HTML = _fill_brand("""<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>로그아웃 · __NAME__</title>
+<style>body{font-family:-apple-system,'Malgun Gothic',sans-serif;background:#0f1115;color:#e8eaed;
+margin:0;display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center}
+.box{max-width:380px;padding:40px 28px}h1{font-size:20px;margin:0 0 18px}
+button{background:#8ab4f8;color:#111;border:0;border-radius:8px;padding:11px 22px;font-size:15px;
+font-weight:700;cursor:pointer}a{display:block;margin-top:18px;color:#9aa0a6;font-size:13px;text-decoration:none}
+</style></head>
+<body><div class=box><h1>로그아웃 하시겠어요?</h1>
+<form method=post action="/logout"><button type=submit>로그아웃</button></form>
+<a href="/">돌아가기</a></div></body></html>""")
 
 _LOGIN_HTML = _fill_brand(_LOGIN_TMPL)
 _PRICING_HTML = _fill_brand(_PRICING_TMPL)
@@ -3459,8 +3474,15 @@ def _login_page(e: str = ""):
     return _LOGIN_HTML.replace("__ERR__", msg)
 
 
-@app.get("/logout")
-def _logout_page():
+@app.get("/logout", response_class=HTMLResponse)
+def _logout_confirm():
+    # CSRF 방어: GET은 세션을 지우지 않는다 — <img src="/logout">·링크 프리페치로 강제
+    # 로그아웃당하는 걸 막는다. 실제 로그아웃은 POST(_logout_do)만. 여기선 확인 버튼만 보여준다.
+    return _LOGOUT_CONFIRM_HTML
+
+
+@app.post("/logout")
+def _logout_do():
     # 세션 쿠키 제거 후 로그인 화면으로. pending 게이트에서도 통과시켜야 하는 유일한 탈출구
     # (2026-07-21, Task6) — 없으면 승인대기 유저가 로그아웃도 못 하는 함정에 갇힌다.
     r = RedirectResponse("/login", status_code=303)

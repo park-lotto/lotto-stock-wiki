@@ -102,9 +102,46 @@ def test_pending_gate_blocks_everything(tmp_path, monkeypatch):
     # 브랜드명은 라이브와 통일(_fill_brand 통과) — 옛 이름 '숏템탑스' 잔존 금지
     assert appmod._BRAND["name"] in r_home.text
     assert "숏템탑스" not in r_home.text
-    # 로그아웃은 통과(303 리다이렉트)
-    r_out = c.get("/logout", follow_redirects=False)
+    # 로그아웃은 통과 — POST가 실제 로그아웃(303), GET은 확인화면(200)
+    r_out = c.post("/logout", follow_redirects=False)
     assert r_out.status_code in (302, 303)
+
+
+def test_logout_get_does_not_clear_session(tmp_path, monkeypatch):
+    """CSRF 방어: GET /logout은 세션을 지우지 않는다(<img src=/logout>로 강제 로그아웃 불가).
+    대신 로그아웃 확인 화면(POST 버튼)을 200으로 보여준다."""
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("u1", "pw12")
+    c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)}, follow_redirects=False)
+    r = c.get("/logout")
+    # 쿠키를 삭제하는 set-cookie가 없어야 한다(=세션 유지)
+    sc = r.headers.get("set-cookie", "")
+    assert "dash_auth=;" not in sc and "dash_auth=\"\"" not in sc
+    # 확인 화면이어야 한다(리다이렉트로 즉시 로그아웃 아님)
+    assert r.status_code == 200
+    assert "로그아웃" in r.text
+
+
+def test_logout_post_clears_session(tmp_path, monkeypatch):
+    """POST /logout만 실제 로그아웃(쿠키 삭제 후 /login)."""
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("u2", "pw12")
+    c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)}, follow_redirects=False)
+    r = c.post("/logout")
+    assert r.status_code in (302, 303)
+    assert "/login" in r.headers.get("location", "")
+    sc = r.headers.get("set-cookie", "")
+    assert "dash_auth=" in sc  # 삭제용 set-cookie 존재
+
+
+def test_pending_can_logout_via_post(tmp_path, monkeypatch):
+    """승인대기 유저도 POST /logout으로 탈출 가능(게이트 통과)."""
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("pend", "pw12", approved=False)
+    c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)}, follow_redirects=False)
+    r = c.post("/logout")
+    assert r.status_code in (302, 303)
+    assert "/login" in r.headers.get("location", "")
 
 
 def test_grab_blocks_pending(tmp_path, monkeypatch):
