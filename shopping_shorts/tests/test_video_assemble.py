@@ -438,17 +438,18 @@ def test_plan_chains_multiple_segments_to_fill():
     assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips)
 
 
-def test_plan_slows_last_clip_when_short():
-    # 2.2 + 2.2 = 4.4 < 4.9 → 부족분 0.5는 마지막 클립을 슬로모로 늘림.
+def test_plan_fills_short_remainder_with_real_motion_not_slowmo():
+    # 2.2 + 2.2 = 4.4 < 4.9 → 부족분 0.5(≥_MIN_CLIP_KEEP)는 슬로모/정지 대신 실영상을 한 조각
+    #   더 붙여(1배속) 채운다 — "화면 멈춤" 방지(2026-07-21). 짧은 움직임 > 정지.
     segs = [_seg("A", 0.0, 2.2), _seg("B", 5.0, 7.2)]
     clips = va._plan_beat_clips(segs, tts_dur=4.9)
     assert abs(_total_out(clips) - 4.9) < 0.05
-    # 마지막 클립만 슬로모(out_dur > src_dur), 나머진 1배속
-    assert clips[-1]["out_dur"] > clips[-1]["src_dur"] + 1e-6
-    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips[:-1])
-    # 유출 0: src_dur는 구간 길이 이내
-    for c, s in zip(clips, segs):
-        assert c["src_dur"] <= (s["end"] - s["start"]) + 1e-9
+    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips)  # 전부 1배속(슬로모/정지 0)
+    assert len(clips) >= 3                                              # 조각을 더 이어붙였다
+    # 유출 0: src_dur는 각 구간 길이 이내
+    for c in clips:
+        s = next(s for s in segs if s["video_id"] == c["video_id"])
+        assert c["start"] + c["src_dur"] <= s["end"] + 1e-9
 
 
 def test_plan_absorbs_tiny_remainder_into_previous():

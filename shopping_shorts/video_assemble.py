@@ -156,6 +156,9 @@ def _run_ffmpeg(cmd, cwd=None):
 
 
 _MIN_CLIP = 0.8   # 초. 이보다 짧은 독립 클립은 만들지 않는다(깜빡임 방지).
+# 연속도 아닌 짧은 클립을 흡수(=정지 유발)하는 하한. 0.5초 이상 움직이는 실클립은 흡수하지 않고
+# 그대로 둔다 — 짧게 움직이는 게 정지프레임보다 낫다는 사장님 피드백(2026-07-21).
+_MIN_CLIP_KEEP = 0.5
 
 # 슬로우모션 상한. 소스가 나레이션보다 짧을 때 무제한으로 늘리면(옛 동작) 부자연스러운
 # 슬로우크롤이 됐다(사장님 실측, 2026-07-19). 재생은 최대 이 배율까지만 늘리고, 그 이상
@@ -273,14 +276,32 @@ def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None):
         if shortfall > eps:
             clips[-1]["out_dur"] += shortfall
 
-    # 0.8초 미만 독립 클립 제거: 그런 클립을 이웃에 흡수(이웃이 슬로모로 그 시간을 떠안는다).
-    # 앞 클립이 있으면 앞으로, 없으면(첫 클립) 뒤로 합친다. 합계(sum out_dur)는 보존된다.
+    # 0.8초 미만 독립 클립 제거: 그런 클립을 이웃에 흡수. 합계(sum out_dur)는 보존된다.
+    # ★흡수를 정지프레임으로 떠넘기지 않는다(2026-07-21 사장님 "화면 멈춤"): 이웃이 같은 소스의
+    #   연속 구간이면 src_dur도 늘려 **실프레임**으로 흡수한다. 안 그러면 2순위 루프가 실영상
+    #   움직임으로 채운 짧은 클립들이 여기서 다시 out_dur만 부풀어 프리즈로 되돌아갔다(실측:
+    #   b3 CTA 비트 0.97초 정지의 정체). 연속도 아니고 볼 만큼(≥_MIN_CLIP_KEEP) 움직이면 흡수
+    #   안 하고 그대로 둔다 — 짧은 움직임이 정지보다 낫다.
+    def _contig(nb, k):
+        n, s = clips[nb], clips[k]
+        return (n["video_id"] == s["video_id"]
+                and abs((n["start"] + n["src_dur"]) - s["start"]) < 0.05)
+
+    def _absorbable(k):
+        if clips[k]["out_dur"] >= min_clip - eps:
+            return False
+        nb = k - 1 if k > 0 else k + 1
+        return _contig(nb, k) or clips[k]["out_dur"] < _MIN_CLIP_KEEP - eps
+
     while len(clips) > 1:
-        idx = next((k for k, c in enumerate(clips) if c["out_dur"] < min_clip - eps), None)
+        idx = next((k for k in range(len(clips)) if _absorbable(k)), None)
         if idx is None:
             break
         nb = idx - 1 if idx > 0 else idx + 1
-        clips[nb]["out_dur"] += clips[idx]["out_dur"]
+        neigh = clips[nb]
+        if _contig(nb, idx):
+            neigh["src_dur"] += clips[idx]["src_dur"]   # 실프레임 연장 → 정지 안 생김
+        neigh["out_dur"] += clips[idx]["out_dur"]
         clips.pop(idx)
     return clips
 
