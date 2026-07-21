@@ -135,6 +135,37 @@ def test_fill_clips_to_cover_narration():
     assert backbone.clip_seconds(nb) >= backbone.narration_seconds(beat["narration"]) * 0.9
 
 
+def test_fill_story_beat_no_action_uses_balanced_broll():
+    # 스토리형 나레이션(요리행위 없음) — action 매칭이 실패해도 소스 균형 B롤로 화면을
+    # 채운다. 안 쓴 릴(s2)을 끌어와 한 릴 루프-반복을 막는 게 핵심(2026-07-21).
+    beat = {"narration": "밤마다 야식 타령하는 남편 때문에 골치가 정말 아팠거든요",
+            "primary": {"seg_id": "s1-13", "start": 0, "end": 0.7, "video_id": "s1"},
+            "alternates": []}
+    pool = [
+        {"video_id": "s1", "segments": [{"seg_id": "s1-2", "start": 0, "end": 1.0, "scene_desc": "감자"}]},
+        {"video_id": "s2", "segments": [
+            {"seg_id": "s2-1", "start": 0, "end": 3, "scene_desc": "굽는 감자"},
+            {"seg_id": "s2-2", "start": 3, "end": 6, "scene_desc": "담는 감자"}]},
+    ]
+    nb = backbone.fill_clips_to_cover(beat, pool)
+    assert backbone.clip_seconds(nb) >= backbone.narration_seconds(beat["narration"]) * 0.9
+    vids = [a["video_id"] for a in nb["alternates"]]
+    assert "s2" in vids        # 안 쓴 릴에서 B롤을 끌어옴(반복 방지)
+
+
+def test_fill_broll_prefers_underused_source():
+    # src_count로 이미 많이 쓴 릴(s1)보다 덜 쓴 릴(s2)을 먼저 붙인다.
+    from collections import Counter
+    beat = {"narration": "가" * 40,
+            "primary": {"seg_id": "p", "start": 0, "end": 1, "video_id": "s1"}, "alternates": []}
+    pool = [
+        {"video_id": "s1", "segments": [{"seg_id": "s1-a", "start": 0, "end": 3, "scene_desc": "s1"}]},
+        {"video_id": "s2", "segments": [{"seg_id": "s2-a", "start": 0, "end": 3, "scene_desc": "s2"}]},
+    ]
+    nb = backbone.fill_clips_to_cover(beat, pool, src_count=Counter({"s1": 3}))
+    assert nb["alternates"][0]["video_id"] == "s2"   # 덜 쓴 소스 먼저
+
+
 def test_target_chars_from_clip():
     beat = {"primary": {"start": 0, "end": 10}, "alternates": []}
     # 10초 * 5.7 = 57자
