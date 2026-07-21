@@ -128,3 +128,16 @@ def test_approved_at_column_and_backfill(tmp_path):
     with sqlite3.connect(dbp) as c:
         row = c.execute("SELECT approved_at FROM customers WHERE username='old'").fetchone()
     assert row[0] is not None       # 기존 계정 = 승인됨(백필)
+
+
+def test_create_customer_approved_flag(tmp_path):
+    from shopping_shorts.store import Store
+    s = Store(str(tmp_path / "t.db"))
+    cid_ok = s.create_customer("appr", "pw12")                 # 기본 approved=True
+    cust_ok = s.get_customer(cid_ok)
+    assert cust_ok["approved_at"] is not None
+    assert cust_ok["full_access_until"] > 0                     # 체험 시작됨
+    cid_pend = s.create_customer("pend", "pw12", approved=False)
+    cust_pend = s.get_customer(cid_pend)
+    assert cust_pend["approved_at"] is None                     # 대기중
+    assert cust_pend["full_access_until"] == 0                  # 체험 미시작

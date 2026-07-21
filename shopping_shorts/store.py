@@ -2353,23 +2353,31 @@ class Store:
             "sha256", password.encode("utf-8"), bytes.fromhex(salt), Store._PBKDF2_ITERATIONS
         ).hex()
 
-    def create_customer(self, username, password, email=None, google_sub=None):
+    def create_customer(self, username, password, email=None, google_sub=None, approved=True):
         """신규 고객 계정 생성. username 중복이면 ValueError. 성공 시 customer_id 반환.
-        가입 즉시 무료 체험 시작: full_access_until = now + trial_days(설정, 기본7)*86400."""
+        approved=True(기본): 가입 즉시 승인+무료체험 시작(full_access_until=now+trial_days).
+        approved=False: 대기중(approved_at=NULL) + 체험 미시작(full_access_until=0).
+        체험은 사장님 승인 시점(approve_customer)에 시작된다."""
         salt = secrets.token_hex(16)
         pw_hash = self._hash_password(password, salt)
-        try:
-            trial_days = int(self.get_setting("trial_days", 7))
-        except (TypeError, ValueError):
-            trial_days = 7
-        full_access_until = int(datetime.now(timezone.utc).timestamp()) + trial_days * 86400
+        now_ts = int(datetime.now(timezone.utc).timestamp())
+        if approved:
+            try:
+                trial_days = int(self.get_setting("trial_days", 7))
+            except (TypeError, ValueError):
+                trial_days = 7
+            full_access_until = now_ts + trial_days * 86400
+            approved_at = now_ts
+        else:
+            full_access_until = 0
+            approved_at = None
         with self._conn() as c:
             try:
                 cur = c.execute(
                     "INSERT INTO customers(username, password_hash, salt, created_at, "
-                    "plan, full_access_until, email, google_sub) "
-                    "VALUES(?,?,?,datetime('now'),'free',?,?,?)",
-                    (username, pw_hash, salt, full_access_until, email, google_sub),
+                    "plan, full_access_until, email, google_sub, approved_at) "
+                    "VALUES(?,?,?,datetime('now'),'free',?,?,?,?)",
+                    (username, pw_hash, salt, full_access_until, email, google_sub, approved_at),
                 )
             except sqlite3.IntegrityError:
                 raise ValueError(f"이미 존재하는 아이디: {username}")
@@ -2406,17 +2414,17 @@ class Store:
         return None
 
     def get_customer(self, customer_id):
-        """customer_id → {id, username, created_at, plan, full_access_until, google_sub, email} 또는 None."""
+        """customer_id → {id, username, created_at, plan, full_access_until, google_sub, email, approved_at} 또는 None."""
         with self._conn() as c:
             row = c.execute(
-                "SELECT id, username, created_at, plan, full_access_until, google_sub, email "
+                "SELECT id, username, created_at, plan, full_access_until, google_sub, email, approved_at "
                 "FROM customers WHERE id=?", (customer_id,)
             ).fetchone()
         if not row:
             return None
         return {"id": row[0], "username": row[1], "created_at": row[2],
                 "plan": row[3] or "free", "full_access_until": row[4] or 0,
-                "google_sub": row[5], "email": row[6]}
+                "google_sub": row[5], "email": row[6], "approved_at": row[7]}
 
     def set_plan(self, customer_id, plan, full_access_until=None):
         """등급 변경. plan='pro'|'free'. full_access_until(epoch초)를 주면 함께 설정(체험창)."""
