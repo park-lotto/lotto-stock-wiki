@@ -451,6 +451,15 @@ def _verify_and_fix(drafts, seconds=20):
             drafts[i]["script"] = fixed["script"].strip()
             drafts[i]["hook"] = (fixed.get("hook") or drafts[i].get("hook") or "").strip()
             drafts[i]["applied"] = ((drafts[i].get("applied") or "") + " · 검수 후 자동 보정").strip(" ·")
+    # 대본 품질 주석 + 정렬 — 재미강도(D14 강한장치) 있고 대화체 자연스러운 초안을 앞으로.
+    # 하드 재생성 대신 정렬로: 추천안([0])이 최고 품질이 되고, 약한 초안도 선택지로 남는다.
+    from shopping_shorts import tone_score
+    for d in drafts:
+        sc = d.get("script", "")
+        d["fun"] = tone_score.fun_intensity(sc)
+        d["tone"] = round(tone_score.score_conversational(sc)["score"], 3)
+    drafts.sort(key=lambda d: (d.get("fun", {}).get("has_strong", False), d.get("tone", 0)),
+                reverse=True)
     return drafts
 
 
