@@ -14,6 +14,7 @@ def _client(monkeypatch, tmp_path):
 
     def fake_gen(structure, full_text, elem_modes, category_lookup, **kw):
         cap["bank_context"] = kw.get("bank_context")
+        cap["has_bank_kw"] = "bank_context" in kw
         return [{"hook": "h", "script": "s", "applied": "a"}]
     monkeypatch.setattr(script_generate, "generate_variations", fake_gen)
     monkeypatch.setattr(bank_assemble, "assemble_bank_context",
@@ -34,4 +35,5 @@ def test_default_no_bank(monkeypatch, tmp_path):
     r = client.post("/api/wiki/generate?shortcode=X",
                     json={"base_script": "원본 대본", "category": "레시피"})
     assert r.status_code == 200
-    assert cap["bank_context"] == ""
+    # 기본(off): bank_context 인자를 아예 안 넘긴다 = 호출이 기존과 완전 동일(회귀0)
+    assert cap["has_bank_kw"] is False
