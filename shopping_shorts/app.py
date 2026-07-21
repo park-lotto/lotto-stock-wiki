@@ -2035,6 +2035,7 @@ def _voice_snapshot(store, body):
         "settings": body.get("settings") or (p or {}).get("voice_settings"),
         "speed": body.get("speed", 1.0),
         "silence_trim": body.get("silence_trim", "off"),
+        "pace_mode": body.get("pace_mode", True),
         "naturalize_profile": naturalize_profile,
         "model_id": (p or {}).get("model_id") or "eleven_v3",
     }
