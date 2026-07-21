@@ -808,9 +808,13 @@ async function traceByUrl(){
     if(!items.length){ if(body) body.innerHTML='<div style="padding:10px;color:var(--sub)">비슷한 영상을 못 찾았어요. 다른 장면이 담긴 링크로 시도해 보세요.</div>'; return; }
     let saved=new Set();
     try{ saved=new Set((await (await fetch('/api/mix/basket')).json()).shortcodes||[]); }catch(e){}
+    const tcap=d.caption||'';
     LENS_STATE['__trace__']={items, on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
-                             sel:new Set(), shortsOnly:false, ytLoading:false, keyword:'', caption:'', cnCands:[]};
+                             sel:new Set(), shortsOnly:false, ytLoading:false, keyword:'', caption:tcap, cnCands:[]};
     renderLens('__trace__');
+    // 📕🎬 중국앱 키워드검색 행을 레퍼런스 추적에도 붙인다(렌즈 유사영상과 동일 배선).
+    // 프레임은 서버에만 있어 caption으로 후보를 뽑는다(cn/keywords는 caption만으로도 동작).
+    fetchLensCnKeywords('__trace__', tcap, null);
   }catch(e){ const body=document.getElementById('scriptBody'); if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
 }
 // ─── TRACE-END
