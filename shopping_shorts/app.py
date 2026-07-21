@@ -3810,43 +3810,151 @@ def api_grab(request: Request, background_tasks: BackgroundTasks,
 _GRAB_BOOKMARKLET = r'''javascript:(function(){var h=location.host||"";if(/shoppingshorts|localhost|127\.0\.0\.1/.test(h)){alert("❗ 이 버튼은 '눌러서' 쓰는 게 아니라, 마우스로 북마크바에 끌어다(드래그) 저장하는 거예요.\n\n저장한 뒤, 유튜브·틱톡·샤오홍슈·도우인에서 영상을 열고 그 북마크를 누르세요.");return;}var q=function(s){var e=document.querySelector(s);return e?e.content:"";};var th=q('meta[property="og:image"]');var ti=q('meta[property="og:title"]')||document.title||"";window.open("__BASE__/api/grab?url="+encodeURIComponent(location.href)+"&thumbnail="+encodeURIComponent(th)+"&title="+encodeURIComponent(ti.slice(0,120)),"ss_grab","width=380,height=220");})();'''
 
 
+# 설치 안내 '신호등' 페이지(자가감지). __TM_URL__=텀퍼몽키 스토어 딥링크, __BM64__=북마클릿.
+# 설치가 끝나면 유저스크립트가 이 페이지에서 실행돼 data-ss-grab-installed 표식을 남기고
+# (grab_logic.js 비컨), 아래 스크립트가 폴링·포커스새로고침으로 감지해 자동으로 '완료'로 바꾼다.
+_GRAB_SETUP_HTML = """<!doctype html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>\U0001F4E5 담기 켜기</title>
+<style>
+  :root{color-scheme:light}
+  *{box-sizing:border-box}
+  body{margin:0;background:#f3f5f8;color:#1a1f2b;font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif}
+  .wrap{max-width:560px;margin:0 auto;padding:28px 18px 60px}
+  h1{font-size:26px;margin:.2em 0 .3em}
+  .lead{font-size:17px;line-height:1.65;color:#3a4252;margin:0 0 20px}
+  .warn{background:#fff3f2;border:2px solid #e0245e;border-radius:12px;padding:14px 16px;font-size:15px;line-height:1.6;margin:0 0 18px;color:#a01040}
+  .step{display:flex;gap:14px;align-items:flex-start;background:#fff;border:2px solid #e3e7ee;border-radius:16px;padding:18px 16px;margin:0 0 14px;transition:.25s}
+  .step.ok{border-color:#1f9d55;background:#f0fbf4}
+  .num{flex:0 0 40px;height:40px;border-radius:50%;background:#1f6feb;color:#fff;font-weight:800;font-size:19px;display:flex;align-items:center;justify-content:center}
+  .step.ok .num{background:#1f9d55}
+  #s3 .num{background:#c3c9d4}
+  #s3.ok .num{background:#1f9d55}
+  .cbody{flex:1;min-width:0}
+  .t{font-size:18px;font-weight:800;margin-bottom:4px}
+  .d{font-size:14.5px;line-height:1.6;color:#57607a;margin-bottom:12px}
+  .check{flex:0 0 auto;font-size:22px;color:#c3c9d4;font-weight:800}
+  .step.ok .check{color:#1f9d55}
+  .btn{display:inline-block;background:#1f6feb;color:#fff;text-decoration:none;font-weight:800;font-size:17px;padding:14px 20px;border-radius:12px;border:none;cursor:pointer;box-shadow:0 3px 10px rgba(31,111,235,.28)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:#fff;color:#1f6feb;border:2px solid #1f6feb;box-shadow:none}
+  .donebox{background:#eafaf0;border:2px solid #1f9d55;border-radius:16px;padding:20px 18px;font-size:17px;line-height:1.6;color:#186c3c;margin:4px 0 8px}
+  .recheck{display:block;width:100%;margin:8px 0 0;background:#fff;border:2px solid #cbd2dd;border-radius:12px;padding:13px;font-size:15px;font-weight:700;color:#3a4252;cursor:pointer}
+  .alt{margin:22px 0 0}
+  .alt>summary{cursor:pointer;color:#6b7488;font-weight:700;font-size:14px;padding:8px 0}
+  .altbox{background:#fff7e6;border:1px solid #f0c36d;border-radius:12px;padding:16px;margin:8px 0;font-size:14px;line-height:1.6;color:#7a6528}
+  .altbox .hi{font-weight:800;color:#a86;margin-bottom:6px}
+  .foot{color:#8a92a4;font-size:13px;line-height:1.6;margin-top:18px}
+  a{color:#1f6feb}
+</style></head>
+<body><div class="wrap">
+  <h1>\U0001F4E5 담기 기능 켜기</h1>
+  <p class="lead">유튜브·틱톡·샤오홍슈·도우인에서 <b>마음에 든 영상을 클릭 한 번</b>으로 모음집에 담는 기능이에요. 아래 <b>버튼 2개만</b> 순서대로 누르면 끝 — 다 되면 <b>③이 저절로 초록불</b>로 바뀝니다.</p>
+
+  <div id="browserWarn" class="warn" style="display:none">
+    ⚠️ 이 기능은 <b>PC의 크롬(Chrome) 또는 엣지(Edge)</b>에서만 켤 수 있어요.<br>이 페이지 주소를 복사해 PC 크롬에서 열어주세요.
+  </div>
+
+  <div id="steps">
+    <div class="step" id="s1">
+      <div class="num">1</div>
+      <div class="cbody">
+        <div class="t">담기 도구 설치</div>
+        <div class="d">‘Tampermonkey(텀퍼몽키)’ 무료 도구예요. 버튼을 누르면 새 탭이 열려요 → 파란 <b>“Chrome에 추가”</b> → <b>“확장 프로그램 추가”</b>. (이미 있으면 ②로 넘어가세요.)</div>
+        <a class="btn" href="__TM_URL__" target="_blank" rel="noopener" onclick="ssMark(1)">① 담기 도구 설치하기 ↗</a>
+      </div>
+      <div class="check">○</div>
+    </div>
+    <div class="step" id="s2">
+      <div class="num">2</div>
+      <div class="cbody">
+        <div class="t">스탁브레인 담기 켜기</div>
+        <div class="d">버튼을 누르면 설치창이 떠요 → <b>“설치”</b> 클릭. 설치창이 안 뜨면 위 ①부터 해주세요.</div>
+        <a class="btn" href="/grab.user.js" target="_blank" rel="noopener" onclick="ssMark(2)">② 담기 켜기 ↗</a>
+      </div>
+      <div class="check">○</div>
+    </div>
+    <div class="step" id="s3">
+      <div class="num">✓</div>
+      <div class="cbody">
+        <div class="t">완료</div>
+        <div class="d">위 2개를 마치면 <b>여기가 저절로 초록불</b>로 바뀌어요. 아무것도 안 눌러도 돼요.</div>
+      </div>
+      <div class="check">○</div>
+    </div>
+  </div>
+
+  <div id="doneBox" class="donebox" style="display:none">
+    \U0001F389 <b>설치 완료!</b> 이제 유튜브·틱톡·샤오홍슈·도우인에서 영상을 열면 오른쪽 아래에 <b>\U0001F4E5 담기</b> 버튼이 자동으로 떠요. 그 버튼만 누르면 담깁니다.
+    <div style="margin-top:12px"><a class="btn ghost" href="/collection">\U0001F3AC 담은 영상 보러가기</a></div>
+  </div>
+
+  <button id="recheck" class="recheck" style="display:none" onclick="location.reload()">설치했는데 안 바뀌나요? → 확인하기</button>
+
+  <details class="alt">
+    <summary>설치가 어렵나요? — 설치 없이 쓰는 방법(북마클릿)</summary>
+    <div class="altbox">
+      <div class="hi">① 아래 파란 버튼을 <span style="color:#c0392b">누르지 말고</span> 마우스로 <u>북마크바로 드래그</u>해서 놓으세요</div>
+      <div style="color:#a99;margin-bottom:10px">북마크바가 안 보이면 <b>Ctrl+Shift+B</b>. 드래그 = 버튼을 꾹 눌러 위쪽 북마크바까지 끌고 가 놓기.</div>
+      <a id="bm" draggable="true" href="#" class="btn" style="cursor:grab">\U0001F4E5 담기</a>
+      <div style="margin-top:12px;font-weight:700;color:#7a6528">② 영상을 <u>열고</u>(그리드 말고 영상 클릭해 들어간 뒤) 방금 만든 북마크를 누르면 끝.</div>
+    </div>
+  </details>
+
+  <p class="foot">담긴 영상은 <a href="/collection">\U0001F3AC 모음집</a>에서 확인 · 실제 다운로드는 제작소에서 자동(무료). shoppingshorts에 <b>로그인된 상태</b>여야 담깁니다.</p>
+</div>
+<script>
+(function(){
+  var UA=navigator.userAgent||"";
+  var inApp=/KAKAOTALK|Instagram|FBAN|FBAV|Line|NAVER|DaumApps/i.test(UA);
+  var mobile=/Android|iPhone|iPad|iPod/i.test(UA);
+  if(inApp||mobile){ var w=document.getElementById("browserWarn"); if(w) w.style.display=""; }
+  function detected(){
+    return document.documentElement.getAttribute("data-ss-grab-installed")==="1"
+        || (function(){try{return localStorage.getItem("ss_grab_ok")==="1";}catch(e){return false;}})();
+  }
+  function markDone(){
+    try{localStorage.setItem("ss_grab_ok","1");}catch(e){}
+    ["s1","s2","s3"].forEach(function(id){var e=document.getElementById(id);if(!e)return;e.classList.add("ok");var c=e.querySelector(".check");if(c)c.textContent="✓";});
+    var db=document.getElementById("doneBox"); if(db) db.style.display="";
+    var st=document.getElementById("steps"); if(st) st.style.opacity=".6";
+    var rc=document.getElementById("recheck"); if(rc) rc.style.display="none";
+  }
+  window.ssMark=function(n){ try{sessionStorage.setItem("ss_did"+n,"1"); if(n===2) sessionStorage.removeItem("ss_reloaded");}catch(e){} };
+  window.addEventListener("message",function(ev){ if(ev&&ev.data&&ev.data.__ssGrabInstalled) markDone(); });
+  function poll(n){
+    if(detected()){ markDone(); return; }
+    if(n>0){ setTimeout(function(){poll(n-1);},400); return; }
+    try{ if(sessionStorage.getItem("ss_did2")==="1"){ var rc=document.getElementById("recheck"); if(rc) rc.style.display=""; } }catch(e){}
+  }
+  poll(12);
+  document.addEventListener("visibilitychange",function(){
+    try{
+      if(document.visibilityState==="visible" && !detected()
+         && sessionStorage.getItem("ss_did2")==="1"
+         && sessionStorage.getItem("ss_reloaded")!=="1"){
+        sessionStorage.setItem("ss_reloaded","1");
+        location.reload();
+      }
+    }catch(e){}
+  });
+  try{ var bm=document.getElementById("bm"); if(bm) bm.setAttribute("href", atob("__BM64__")); }catch(e){}
+})();
+</script>
+</body></html>"""
+
+
 @app.get("/grab", include_in_schema=False)
 def grab_setup(request: Request):
-    """원클릭 담기 설치 안내(공개). '📥 담기' 버튼을 북마크바로 드래그하면 끝(확장 설치 불필요)."""
+    """원클릭 담기 설치 안내(공개). 자가감지 '신호등' — 설치가 끝나면 이 페이지가 유저스크립트
+    비컨을 감지해 자동으로 '완료'로 바꾼다(사용자는 '됐나?'를 판단하지 않는다). 유저스크립트가
+    안 맞는 환경엔 북마클릿(설치 불필요) 폴백을 <details>로 제공."""
     base = (PUBLIC_BASE_URL or "").rstrip("/")
     bm64 = base64.b64encode(_GRAB_BOOKMARKLET.replace("__BASE__", base).encode()).decode()
-    return HTMLResponse(f"""<!doctype html><meta charset="utf-8"><title>원클릭 담기 설치</title>
-<body style="font-family:system-ui,sans-serif;max-width:640px;margin:36px auto;padding:0 18px;line-height:1.7;color:#222">
-<h2>📥 원클릭 담기</h2>
-<p>네이티브 검색(무료·무제한)으로 보다가, 마음에 드는 영상을 <b>클릭 한 번</b>으로 모음집에 담는 기능입니다. 두 가지 방법 중 편한 걸 고르세요.</p>
-
-<div style="background:#eafaf0;border:2px solid #1f9d55;border-radius:12px;padding:18px;margin:16px 0">
-  <div style="font-weight:800;color:#1f7a44;font-size:16px;margin-bottom:6px">✅ 방법 1 (추천·제일 쉬움) — 버튼이 영상 위에 저절로 떠요</div>
-  <div style="font-size:14px;color:#555;margin-bottom:10px">Tampermonkey에 설치하면, 유튜브·틱톡·샤오홍슈·도우인 영상을 볼 때 오른쪽 아래에 <b>📥 담기</b> 버튼이 자동으로 떠요. 드래그도, 북마크도 필요 없이 <b>그 버튼만 누르면 끝</b>입니다.</div>
-  <ol style="margin:0 0 6px 18px;color:#444;font-size:14px">
-    <li>크롬에 <b>Tampermonkey</b> 확장이 없으면 먼저 설치(웹스토어에서 "Tampermonkey").</li>
-    <li>아래 링크를 누르면 Tampermonkey 설치창이 떠요 → <b>설치</b> 클릭.<br>
-        <a href="/grab.user.js" style="display:inline-block;margin-top:6px;padding:10px 18px;background:#1f9d55;color:#fff;border-radius:9px;text-decoration:none;font-weight:800">📥 담기 버튼 설치하기</a></li>
-    <li>이제 틱톡·샤오홍슈에서 영상을 열면 오른쪽 아래 <b>📥 담기</b> 버튼을 누르기만 하면 담김.</li>
-  </ol>
-</div>
-
-<details style="margin:12px 0">
-<summary style="cursor:pointer;color:#666;font-weight:700">방법 2 — 설치 없이 북마클릿으로 (조금 번거로움)</summary>
-<div style="background:#fff7e6;border:1px solid #f0c36d;border-radius:12px;padding:18px;margin:10px 0">
-  <div style="font-weight:800;margin-bottom:4px;color:#a86">① 아래 파란 버튼을 <span style="color:#c0392b">누르지 말고</span>, 마우스로 <u>북마크바에 끌어다(드래그)</u> 놓으세요</div>
-  <div style="font-size:13px;color:#888;margin-bottom:10px">북마크바가 안 보이면 <b>Ctrl+Shift+B</b>로 켜세요. 드래그 = 버튼을 마우스로 꾹 눌러 위쪽 북마크바까지 끌고 가서 놓기.</div>
-  <a id="bm" draggable="true" href="#" title="이 버튼을 위쪽 북마크바로 드래그하세요"
-     style="display:inline-block;padding:12px 22px;background:#1f6feb;color:#fff;border-radius:10px;text-decoration:none;font-weight:800;cursor:grab;font-size:16px">📥 담기</a>
-  <span style="color:#888;font-size:13px;margin-left:8px">↖ 이걸 <b>끌어서</b> 북마크바에 놓기</span>
-</div>
-<div style="font-weight:700">② 유튜브·틱톡·샤오홍슈·도우인에서 <u>영상을 열고</u>(검색결과 그리드 말고 영상 클릭해 들어간 뒤), 방금 만든 북마크를 누르면 끝</div>
-</div>
-</details>
-<p style="color:#666;margin-top:14px">담긴 영상은 <a href="/collection">🎬 모음집</a>에서 확인 · 실제 다운로드는 제작소에서 자동(무료).</p>
-<p style="color:#999;font-size:13px">※ 검색 결과 <b>그리드</b>가 아니라 <b>영상 상세 페이지</b>에서 눌러야 그 영상이 담깁니다. · shoppingshorts에 로그인된 상태여야 해요.</p>
-<script>document.getElementById("bm").setAttribute("href", atob("{bm64}"));</script>
-</body>""")
+    # Tampermonkey 크롬 웹스토어 상세(딥링크=검색 안 시킴). 엣지도 크롬스토어에서 설치 가능.
+    tm_url = "https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo"
+    html = _GRAB_SETUP_HTML.replace("__TM_URL__", tm_url).replace("__BM64__", bm64)
+    return HTMLResponse(html)
 
 
 # ── 영상제작 위저드(produce) ─────────────────────────────────
