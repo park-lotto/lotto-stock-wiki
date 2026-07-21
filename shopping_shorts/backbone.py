@@ -45,27 +45,51 @@ def target_chars(beat):
     return int(clip_seconds(beat) * _SYLLABLES_PER_SEC)
 
 
-def fill_clips_to_cover(beat, pool_sources):
-    """화면이 대사보다 짧으면(over) 같은 행위 클립을 풀에서 더 붙여 길이를 채운다.
-    이미 담긴 seg_id는 제외. 대사 읽는시간 근처까지만 채운다(과충전 방지)."""
-    need = narration_seconds(beat.get("narration", ""))
+def _least_used_segs(pool_sources, src_count, exclude_seg_ids, prefer_not_video=None):
+    """행위 무관 — 풀의 모든 세그먼트를 '덜 쓴 소스 우선'으로 정렬해 반환.
+    이미 쓴 seg_id·길이 0 구간은 제외. prefer_not_video(보통 primary 릴)는 맨 뒤로 밀어
+    같은 릴 반복을 피한다(2026-07-21 반복장면 해소)."""
+    segs = [{**seg, "video_id": vid} for vid, seg in _iter_segs(pool_sources)
+            if seg.get("seg_id") not in exclude_seg_ids
+            and (seg.get("end", 0) - seg.get("start", 0)) > 0.05]
+    segs.sort(key=lambda c: (c.get("video_id") == prefer_not_video,
+                             src_count.get(c.get("video_id"), 0)))
+    return segs
+
+
+def fill_clips_to_cover(beat, pool_sources, src_count=None):
+    """화면이 대사보다 짧으면(over) 풀에서 클립을 더 붙여 길이를 채운다. 원본 mutate 안 함.
+    1층 — 같은 행위 클립(대본 지목과 안 어긋남). 2층 — 행위로 못 채웠으면(스토리형 나레이션은
+    요리행위가 없어 1층이 텅 빔) **소스 균형 B롤**로 채운다: 안 쓴 릴을 우선 붙여, 짧은 한 릴을
+    렌더러가 앞에서부터 루프-반복하던 반복장면을 막는다(2026-07-21). 이미 담긴 seg_id 제외."""
     if length_status(beat) != "over":
         return dict(beat)
-    action = segment_action(beat.get("primary") or {}) or \
-        action_dict.tag_action(beat.get("narration", ""))
-    if not action:
-        return dict(beat)
+    need = narration_seconds(beat.get("narration", ""))
     used = {(beat.get("primary") or {}).get("seg_id")}
     used |= {a.get("seg_id") for a in (beat.get("alternates") or [])}
     nb = dict(beat)
     nb["alternates"] = list(beat.get("alternates") or [])
-    for clip in pick_clips_for_action(action, pool_sources):
-        if clip.get("seg_id") in used:
-            continue
-        nb["alternates"].append(clip)
-        used.add(clip.get("seg_id"))
-        if clip_seconds(nb) >= need:
-            break
+    # 1층 — 같은 행위 클립(화면-대본 못 유지).
+    action = segment_action(beat.get("primary") or {}) or \
+        action_dict.tag_action(beat.get("narration", ""))
+    if action:
+        for clip in pick_clips_for_action(action, pool_sources):
+            if clip.get("seg_id") in used:
+                continue
+            nb["alternates"].append(clip)
+            used.add(clip.get("seg_id"))
+            if clip_seconds(nb) >= need:
+                return nb
+    # 2층 — 아직 모자라면(행위 없음/부족) 소스 균형 B롤. 안 쓴 릴부터, primary 릴은 뒤로.
+    if clip_seconds(nb) < need:
+        sc = src_count if src_count is not None else Counter()
+        prim_vid = (beat.get("primary") or {}).get("video_id")
+        for clip in _least_used_segs(pool_sources, sc, used, prefer_not_video=prim_vid):
+            nb["alternates"].append(clip)
+            used.add(clip.get("seg_id"))
+            sc[clip.get("video_id")] = sc.get(clip.get("video_id"), 0) + 1
+            if clip_seconds(nb) >= need:
+                break
     return nb
 
 
@@ -332,10 +356,16 @@ def ping_pong_reconcile(beats, pool_sources, rewrite_call=None, max_rounds=2, tr
                 if b.get("beat_idx") in fixes and fixes[b["beat_idx"]]:
                     b["narration"] = fixes[b["beat_idx"]]
                     b.pop("need_rewrite", None)
-    # 길이 맞춤 1) 화면 늘리기: 대사보다 화면 짧으면(over) 같은 행위 클립 더 붙임.
+    # 길이 맞춤 1) 화면 늘리기: 대사보다 화면 짧으면(over) 클립 더 붙임. src_count를 전 비트에
+    # 걸쳐 유지해 fill이 안 쓴 릴부터 끌어오게 한다(한 릴 편중=반복장면 해소, 2026-07-21).
+    src_count = Counter()
+    for b in out:
+        v = (b.get("primary") or {}).get("video_id")
+        if v:
+            src_count[v] += 1
     for i, b in enumerate(out):
         if length_status(b) == "over":
-            out[i] = fill_clips_to_cover(b, pool_sources)
+            out[i] = fill_clips_to_cover(b, pool_sources, src_count=src_count)
     # 길이 맞춤 2) 대사 줄이기: 화면을 못 늘려 여전히 넘치면(over) 대사를 화면 길이에
     # 맞게 줄인다(trim_call). '부어보세요'가 완성 장면까지 넘어가는 것 방지(캡컷 수작업 제거).
     over = [dict(out[i], beat_idx=out[i].get("beat_idx", i), target_chars=target_chars(out[i]))
