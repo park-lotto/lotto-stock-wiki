@@ -44,3 +44,25 @@ def test_add_and_list_payments(tmp_path, monkeypatch):
     assert len(rows) == 2
     assert rows[0]["paid_at"] == 2000   # 최신 먼저
     assert rows[1]["method"] == "계좌이체"
+
+
+def test_approve_sets_start_end_and_payment(tmp_path, monkeypatch):
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("pend", "pw12", approved=False)
+    assert appmod.access_level(cid) == "pending"
+    cust = s.approve_customer(cid, period_days=30, amount=30000, method="계좌이체")
+    assert cust["approved_at"] is not None                 # 시작일
+    assert cust["full_access_until"] > cust["approved_at"] # 마감일 미래
+    assert appmod.access_level(cid) == "full"
+    assert len(s.list_payments(cid)) == 1
+
+
+def test_reapprove_extends_and_keeps_start(tmp_path, monkeypatch):
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("pend2", "pw12", approved=False)
+    c1 = s.approve_customer(cid, period_days=30, amount=30000, method="계좌")
+    start1, end1 = c1["approved_at"], c1["full_access_until"]
+    c2 = s.approve_customer(cid, period_days=30, amount=30000, method="계좌")
+    assert c2["approved_at"] == start1          # 시작일 불변
+    assert c2["full_access_until"] >= end1 + 30 * 86400 - 5   # 만료일 뒤로 연장(±오차)
+    assert len(s.list_payments(cid)) == 2       # 결제 2건 누적

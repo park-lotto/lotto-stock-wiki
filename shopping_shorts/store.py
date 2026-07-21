@@ -2578,18 +2578,31 @@ class Store:
         return [{"id": r[0], "customer_id": r[1], "amount": r[2], "method": r[3],
                  "period_days": r[4], "paid_at": r[5], "note": r[6], "created_at": r[7]} for r in rows]
 
-    def approve_customer(self, customer_id, trial_days=7):
-        """대기중 계정을 승인. 승인 시각 기록 + 그 순간부터 무료체험 시작.
-        멱등: 이미 승인된 계정(approved_at 있음)엔 아무것도 안 한다(체험 리셋 방지)."""
+    def approve_customer(self, customer_id, period_days, amount, method, note=None):
+        """승인(최초)=서비스 시작, 재호출=연장. 매번 결제 1건 기록.
+        - 최초(approved_at NULL): approved_at=now, full_access_until=now+period.
+        - 재호출: approved_at 유지, full_access_until을 현재 만료(미래면 그 뒤, 지났으면 now)에서 +period."""
         now_ts = int(datetime.now(timezone.utc).timestamp())
         try:
-            td = int(trial_days)
+            days = max(0, int(period_days))
         except (TypeError, ValueError):
-            td = 7
-        until = now_ts + td * 86400
+            days = 0
+        add = days * 86400
         with self._conn() as c:
-            c.execute("UPDATE customers SET approved_at=?, full_access_until=? "
-                      "WHERE id=? AND approved_at IS NULL", (now_ts, until, customer_id))
+            row = c.execute("SELECT approved_at, full_access_until FROM customers WHERE id=?",
+                            (customer_id,)).fetchone()
+            if row is None:
+                return None
+            approved_at, fau = row[0], row[1] or 0
+            base = fau if fau > now_ts else now_ts          # 연장 기준: 미래 만료면 그 뒤, 아니면 now
+            new_until = base + add
+            if approved_at is None:
+                c.execute("UPDATE customers SET approved_at=?, full_access_until=? WHERE id=?",
+                          (now_ts, now_ts + add, customer_id))
+            else:
+                c.execute("UPDATE customers SET full_access_until=? WHERE id=?",
+                          (new_until, customer_id))
+        self.add_payment(customer_id, amount, method, days, paid_at=now_ts, note=note)
         return self.get_customer(customer_id)
 
     def all_settings(self):
