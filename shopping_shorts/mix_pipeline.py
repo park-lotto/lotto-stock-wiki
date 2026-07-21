@@ -246,7 +246,8 @@ def run_mix_job(job_id, db_path, work_root):
                       job["structure"], None, work, given_script=job.get("given_script"),
                       voice=job.get("voice"), customer_id=job.get("customer_id", 0),
                       scene_first=job.get("scene_first", False),
-                      reference_text=job.get("given_script") or "")
+                      reference_text=job.get("given_script") or "",
+                      ping_pong=job.get("ping_pong", False))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
@@ -266,7 +267,7 @@ def run_mix_job(job_id, db_path, work_root):
 
 def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, video_type, work,
                   given_script=None, voice=None, customer_id=0,
-                  scene_first=False, reference_text=""):
+                  scene_first=False, reference_text="", ping_pong=False):
     """EDL 생성(3) + 비트별 TTS(4) → edit_plan 저장 + ready_for_review.
     run_mix_job(자동판별, video_type=None)과 retype_mix_job(사용자 선택 유형)이 공유.
     given_script: 있으면 확정 대본을 그대로 비트로 쪼개 영상만 매칭(영상제작 2단계).
@@ -280,7 +281,7 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     if scene_first:
         from shopping_shorts.edit_plan import build_scene_first_plan
         sf = build_scene_first_plan(source_scripts, reference_text, target_seconds,
-                                    video_type=video_type)
+                                    video_type=video_type, ping_pong=ping_pong)
         if sf["candidates"]:
             store.set_mix_candidates(job_id, sf["candidates"])
             rec = next((cand for cand in sf["candidates"] if cand["recommended"]),
