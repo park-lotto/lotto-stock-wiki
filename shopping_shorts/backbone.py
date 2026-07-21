@@ -6,8 +6,10 @@
 행위가 화면·대본 공통 못이라, 백본이 행위 순서를 고정하고 화면은 같은 행위의 다른 클립으로
 갈아끼워도 대본(행위 지목)과 안 어긋난다. 순수함수 — DB·Gemini 없음."""
 import re
+from collections import Counter
 
 from shopping_shorts import action_dict
+from shopping_shorts import pattern_bank
 
 _SYLLABLES_PER_SEC = 5.7      # edit_plan과 동일(한국어 초당 음절)
 _LEN_TOL = 0.35               # ±35%면 ok(넘침/모자람 판정 여유)
@@ -134,6 +136,104 @@ def reconcile_beat_by_action(beat, pool_sources):
     nb = dict(beat)
     nb["need_rewrite"] = True
     return nb, True
+
+
+_BACKBONE_SCRIPT_SCHEMA = {
+    "type": "object",
+    "properties": {"beats": {"type": "array", "items": {
+        "type": "object",
+        "properties": {"narration": {"type": "string"}, "seg_id": {"type": "string"}},
+        "required": ["narration", "seg_id"]}}},
+    "required": ["beats"],
+}
+
+
+def _backbone_script_prompt(flow, inventory, target_seconds):
+    flow_lines = "\n".join(
+        f"  {i+1}. [{f.get('action') or '-'}] {f.get('scene_desc', '')} (~{f.get('seconds', 0)}초)"
+        for i, f in enumerate(flow))
+    inv_lines = "\n".join(
+        f"  {it['seg_id']} [{it.get('action') or '-'}] {it.get('scene_desc', '')}"
+        for it in inventory)
+    return (
+        f"너는 한국 쇼핑 숏폼 대본 작가다. 아래 '잘된 영상의 흐름'을 뼈대로, 약 {target_seconds}초짜리 "
+        "**완전히 새로운 우리 대본**을 써라. 흐름(순서·리듬·강약)만 참고하고 문장은 절대 베끼지 마라.\n"
+        "★반드시 아래 '실제 장면 목록'에 있는 seg_id만 골라 써라 — 목록에 없는 장면을 요구하는 "
+        "대사는 쓰지 마라(있는 장면으로 말이 되게).\n\n"
+        f"[잘된 영상 흐름 — 순서·행위·길이 참고]\n{flow_lines}\n\n"
+        f"[실제 장면 목록 — 이 seg_id들만 사용]\n{inv_lines}\n\n"
+        "각 비트: narration(실제 읽을 우리 구어체 대사), seg_id(그 대사에 맞는 실제 장면). "
+        "0초 훅부터 끝 CTA까지 하나의 이야기로. JSON만 출력.")
+
+
+def generate_backbone_script(flow, inventory, target_seconds, call=None):
+    """백본 흐름 + 실제 장면 인벤토리 → 완전히 새 우리 대본(비트별 narration + 고른 seg_id).
+    인벤토리 밖 seg_id는 드롭(없는 장면 요구 차단). call None/실패면 []."""
+    if call is None:
+        call = pattern_bank._default_call
+    valid = {it.get("seg_id") for it in (inventory or [])}
+    res = call(_backbone_script_prompt(flow or [], inventory or [], target_seconds),
+               _BACKBONE_SCRIPT_SCHEMA)
+    if not res or not isinstance(res, dict):
+        return []
+    out = []
+    for b in res.get("beats", []):
+        if b.get("seg_id") in valid and (b.get("narration") or "").strip():
+            out.append({"narration": b["narration"].strip(), "seg_id": b["seg_id"]})
+    return out
+
+
+def backbone_flow(backbone_source):
+    """백본 '흐름' 뼈대 = 순서대로 [{seg_id, action, scene_desc, seconds}]. 대사(narration) 없음.
+    새 대본이 이 흐름(순서·행위·대략 길이)을 따르되 문장은 우리 것으로 쓴다(카피 아님)."""
+    flow = []
+    for seg in backbone_source.get("segments") or []:
+        flow.append({
+            "seg_id": seg.get("seg_id"),
+            "action": segment_action(seg),
+            "scene_desc": seg.get("scene_desc", ""),
+            "seconds": round((seg.get("end", 0) - seg.get("start", 0)), 2),
+        })
+    return flow
+
+
+def scene_inventory(sources):
+    """대본 생성기에 줄 '실제 존재하는 장면 목록' — 없는 장면을 요구하는 대본을 원천 차단.
+    → [{video_id, seg_id, action, scene_desc}]."""
+    return [{"video_id": vid, "seg_id": seg.get("seg_id"),
+             "action": segment_action(seg), "scene_desc": seg.get("scene_desc", "")}
+            for vid, seg in _iter_segs(sources)]
+
+
+def _vid_of(seg):
+    return seg.get("video_id") or (seg.get("seg_id") or "").rsplit("-", 1)[0]
+
+
+def dedup_and_balance(beats, pool_sources):
+    """전역 중복제거 + 소스 균형. 각 비트 primary가 이미 쓴 클립이면, 같은 행위의 '안 쓴'
+    클립으로 교체하되 **덜 쓴 소스 우선**. 반복장면(한 클립 여러 비트)과 한 소스 편중을 동시에 해소.
+    같은 행위 대체가 없으면 원본 유지(억지 교체 안 함)."""
+    used = set()
+    src_count = Counter()
+    out = []
+    for b in beats:
+        nb = dict(b)
+        p = nb.get("primary") or {}
+        sid = p.get("seg_id")
+        if sid in used:
+            action = segment_action(p)
+            if action:
+                fresh = [c for c in pick_clips_for_action(action, pool_sources)
+                         if c.get("seg_id") not in used]
+                if fresh:
+                    fresh.sort(key=lambda c: src_count[_vid_of(c)])   # 덜 쓴 소스 우선
+                    nb["primary"] = fresh[0]
+                    p = fresh[0]
+                    nb["balanced"] = True
+        used.add(p.get("seg_id"))
+        src_count[_vid_of(p)] += 1
+        out.append(nb)
+    return out
 
 
 def pick_backbone(sources):
