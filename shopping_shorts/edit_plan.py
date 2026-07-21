@@ -400,6 +400,7 @@ _SCENE_FIRST_SCHEMA = {
                 "type": "object",
                 "properties": {
                     "role": {"type": "string"}, "narration": {"type": "string"},
+                    "caption_lines": {"type": "array", "items": {"type": "string"}},
                     "seg_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}},
                     "fit": {"type": "integer"}, "forced": {"type": "boolean"}},
                 "required": ["role", "narration", "seg_ids", "fit"]}}},
@@ -431,6 +432,10 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "beats[0]이 곧 그 hook이어야 한다.\n"
         f"- 전체 나레이션 글자수 합은 약 {char_target}자 내외. 각 비트: role·narration(구어체)·"
         "seg_ids(2~4)·fit(1~5)·forced(그 장면이 이 말과 안 맞는데 억지로 붙였으면 true).\n"
+        "- ★caption_lines: 그 비트 narration을 화면 자막용으로 **2~3어절 호흡 단위**로 끊은 "
+        "배열. 수식어는 반드시 뒤 명사와 한 줄에 둬라('만든 사람'을 '만든'|'사람'으로 쪼개지 마라, "
+        "'이 소스'·'특제 비법'처럼 관형어+명사는 붙인다). 이어붙이면 narration과 글자가 정확히 "
+        "같아야 한다(단어 추가·삭제 금지, 문장부호 유지).\n"
         "- 화면에 없는 걸 말하지 마라. 같은 seg_id를 여러 비트에서 재사용 금지.\n"
         "출력은 스키마 JSON만.")
     raw = call(prompt, _SCENE_FIRST_SCHEMA)
@@ -486,11 +491,15 @@ def _ground_candidate(cand, seg_map, structure="free"):
                 alts.append(g)
                 seen.add(g["seg_id"])
         narration = beat.get("narration", "")
+        cap_lines = beat.get("caption_lines") or None
         if not beats_out:                       # 첫 유효 비트 = 훅 자리
-            narration = _lead_with_hook(narration, hook)
+            new_narr = _lead_with_hook(narration, hook)
+            if new_narr != narration:           # 훅을 얹었으면 옛 자막줄은 무효(정규식 폴백)
+                cap_lines = None
+            narration = new_narr
         beats_out.append({
             "beat_idx": len(beats_out), "role": beat.get("role", ""),
-            "narration": narration,
+            "narration": narration, "caption_lines": cap_lines,
             "target_seconds": round(max(1.5, len(narration.strip()) / _SYLLABLES_PER_SEC), 1),
             "primary": primary, "alternates": alts, "effect": "cut",
             "fit": int(beat.get("fit") or 0), "forced": bool(beat.get("forced", False)),

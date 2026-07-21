@@ -63,6 +63,26 @@ def test_ground_candidate_keeps_already_strong_beat0():
     assert plan["beats"][0]["narration"] == "와 이거 진짜 놀랐잖아요! 감자가 이렇게 되네요."
 
 
+def test_ground_candidate_carries_caption_lines():
+    # AI가 끊어준 자막 호흡줄을 비트에 실어보낸다(렌더가 그 경계를 씀)
+    cand = {"beats": [{"role": "훅", "narration": "곰팡이 핀 양파 보셨죠?",
+                       "caption_lines": ["곰팡이 핀", "양파 보셨죠?"],
+                       "seg_ids": ["s0-1"], "fit": 5, "forced": False}]}
+    plan = edit_plan._ground_candidate(cand, _seg_map())
+    assert plan["beats"][0]["caption_lines"] == ["곰팡이 핀", "양파 보셨죠?"]
+
+
+def test_caption_segments_honors_valid_preset_and_rejects_invalid():
+    from shopping_shorts import video_assemble as v
+    narr = "와 이거 만든 사람 진짜 천재 아닌가요"
+    # 이어붙여 원본과 같으면 그대로 — 수식어 '만든 사람' 안 쪼갬
+    assert v._caption_segments(narr, preset=["와 이거", "만든 사람", "진짜 천재 아닌가요"]) \
+        == ["와 이거", "만든 사람", "진짜 천재 아닌가요"]
+    # 글자가 다르면(모델이 바꿈) 무시하고 규칙 폴백
+    got = v._caption_segments(narr, preset=["엉뚱한", "줄"])
+    assert "".join(got).replace(" ", "") == narr.replace(" ", "")
+
+
 def test_ground_candidate_drops_invalid_primary():
     cand = {"beats": [{"role": "x", "narration": "n", "seg_ids": ["없는id"], "fit": 3, "forced": False}]}
     assert edit_plan._ground_candidate(cand, _seg_map()) is None   # 유효 비트 0개 → None

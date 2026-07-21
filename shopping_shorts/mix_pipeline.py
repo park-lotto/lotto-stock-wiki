@@ -109,7 +109,8 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False):
         if words:
             dur = _probe_duration(str(out))
             beat["cap_durs"] = caption_sync.phrase_durs_from_words(
-                beat["narration"], words, dur)   # None일 수 있음 → 폴백
+                beat["narration"], words, dur,
+                preset=beat.get("caption_lines"))   # None일 수 있음 → 폴백
 
 
 # 콘폼 트리거 임계(초). 이하의 초과분은 켄번즈 홀드(≤0.8s)로 자연 흡수되는 수준이라
@@ -162,6 +163,7 @@ def _conform_beats(beats, tts_dir, *, voice):
             continue   # 재TTS 실패 → narration 미교체(문장/음성 일치 유지)
         beat["narration"] = new_n
         beat["conformed"] = True
+        beat["caption_lines"] = None   # 나레이션이 바뀌면 AI 자막줄은 무효 → 정규식 폴백
         beat["tts_path"] = str(out)
         # UI 표시 초 재계산(edit_plan과 같은 식) — 안 하면 화면 초와 실길이가 갈라진다.
         beat["target_seconds"] = round(max(1.5, len(new_n.strip()) / _SYLLABLES_PER_SEC), 1)
@@ -636,7 +638,8 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
         words = asr_check.transcribe_words(str(out))
         if words:
             beat["cap_durs"] = caption_sync.phrase_durs_from_words(
-                beat["narration"], words, _probe_duration(str(out)))
+                beat["narration"], words, _probe_duration(str(out)),
+                preset=beat.get("caption_lines"))
         store.update_mix_job(job_id, edit_plan=plan)
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
