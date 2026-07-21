@@ -3838,7 +3838,7 @@ _GRAB_SETUP_HTML = """<!doctype html><html lang="ko"><head>
   body{margin:0;background:#f3f5f8;color:#1a1f2b;font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif}
   .wrap{max-width:560px;margin:0 auto;padding:28px 18px 60px}
   h1{font-size:26px;margin:.2em 0 .3em}
-  .lead{font-size:17px;line-height:1.65;color:#3a4252;margin:0 0 20px}
+  .lead{font-size:17.5px;line-height:1.7;color:#232a36;margin:0 0 20px}
   .warn{background:#fff3f2;border:2px solid #e0245e;border-radius:12px;padding:14px 16px;font-size:15px;line-height:1.6;margin:0 0 18px;color:#a01040}
   .step{display:flex;gap:14px;align-items:flex-start;background:#fff;border:2px solid #e3e7ee;border-radius:16px;padding:18px 16px;margin:0 0 14px;transition:.25s}
   .step.ok{border-color:#1f9d55;background:#f0fbf4}
@@ -3848,7 +3848,7 @@ _GRAB_SETUP_HTML = """<!doctype html><html lang="ko"><head>
   #s3.ok .num{background:#1f9d55}
   .cbody{flex:1;min-width:0}
   .t{font-size:18px;font-weight:800;margin-bottom:4px}
-  .d{font-size:14.5px;line-height:1.6;color:#57607a;margin-bottom:12px}
+  .d{font-size:15px;line-height:1.6;color:#3c4759;margin-bottom:12px}
   .check{flex:0 0 auto;font-size:22px;color:#c3c9d4;font-weight:800}
   .step.ok .check{color:#1f9d55}
   .btn{display:inline-block;background:#1f6feb;color:#fff;text-decoration:none;font-weight:800;font-size:17px;padding:14px 20px;border-radius:12px;border:none;cursor:pointer;box-shadow:0 3px 10px rgba(31,111,235,.28)}
@@ -3863,13 +3863,14 @@ _GRAB_SETUP_HTML = """<!doctype html><html lang="ko"><head>
   .foot{color:#8a92a4;font-size:13px;line-height:1.6;margin-top:18px}
   a{color:#1f6feb}
   .guide{margin:4px 0 22px;background:#fff;border:2px solid #e3e7ee;border-radius:16px;padding:18px 16px}
-  .ghead{font-size:18px;font-weight:800;margin:0 0 6px;color:#12305e}
-  .gsub{font-size:13.5px;color:#57607a;margin:0 0 12px}
-  .gstep{display:flex;gap:10px;align-items:flex-start;margin:18px 0 8px}
-  .gnum{flex:0 0 30px;height:30px;border-radius:50%;background:#1f6feb;color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center}
+  .ghead{font-size:20px;font-weight:800;margin:0 0 6px;color:#0f2748}
+  .gsub{font-size:15px;color:#42506a;margin:0 0 12px;line-height:1.5}
+  .gstep{display:flex;gap:11px;align-items:flex-start;margin:20px 0 10px}
+  .gnum{flex:0 0 34px;height:34px;border-radius:50%;background:#1f6feb;color:#fff;font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center}
   .gstep.warn .gnum{background:#e0245e}
-  .gtitle{font-size:15.5px;line-height:1.5;padding-top:3px}
-  .gstep.warn .gtitle{color:#a01040;font-weight:700}
+  .gtitle{font-size:17px;line-height:1.55;padding-top:4px;color:#141a24;font-weight:500}
+  .gstep.warn .gtitle{color:#96003f;font-weight:700}
+  .gbtn{display:inline-block;background:#1f6feb;color:#fff;text-decoration:none;font-weight:800;font-size:16px;padding:12px 18px;border-radius:10px;margin:2px 0 10px;box-shadow:0 3px 10px rgba(31,111,235,.28)}
   .gimg{display:block;width:100%;max-width:100%;height:auto;border:2px solid #e3e7ee;border-radius:10px;margin:0}
   .gwarnbox{background:#fff3f2;border:1.5px solid #e0245e;border-radius:10px;padding:11px 13px;font-size:13.5px;line-height:1.55;color:#a01040;margin:16px 0 0}
   .gdone{background:#eafaf0;border:1.5px solid #1f9d55;border-radius:10px;padding:12px 14px;font-size:15px;color:#186c3c;margin:12px 0 0;font-weight:600}
@@ -3991,10 +3992,12 @@ _GRAB_GUIDE_TEMPLATE = """<div class="guide">
     <div class="ghead">📸 사진 보고 그대로 따라 하기 — 이 4단계면 끝</div>
     <div class="gsub">아래 4장은 실제 크롬 화면이에요. 사진 속 빨간 화살표가 가리키는 곳을 누르면 됩니다.</div>
 
-    <div class="gstep"><div class="gnum">1</div><div class="gtitle">‘텀퍼몽키’ 설치 — 파란 <b>“Chrome에 추가”</b> 누르기 (위 <b>①</b> 버튼으로 이 화면 열기)</div></div>
+    <div class="gstep"><div class="gnum">1</div><div class="gtitle">‘텀퍼몽키’ 설치 — 아래 파란 버튼을 누르면 새 탭이 열려요 → 파란 <b>“Chrome에 추가”</b></div></div>
+    <a class="gbtn" href="__TM_URL__" target="_blank" rel="noopener" onclick="ssMark(1)">① 텀퍼몽키 설치 페이지 열기 ↗</a>
     <img class="gimg" src="__IMG1__" alt="1단계 텀퍼몽키 추가">
 
-    <div class="gstep"><div class="gnum">2</div><div class="gtitle">담기 스크립트 설치 — <b>“설치”</b> 누르기 (위 <b>②</b> 버튼으로 이 화면 열기)</div></div>
+    <div class="gstep"><div class="gnum">2</div><div class="gtitle">담기 스크립트 설치 — 아래 버튼을 누르면 설치창이 떠요 → <b>“설치”</b></div></div>
+    <a class="gbtn" href="/grab.user.js" target="_blank" rel="noopener" onclick="ssMark(2)">② 담기 스크립트 설치 열기 ↗</a>
     <img class="gimg" src="__IMG2__" alt="2단계 스크립트 설치">
 
     <div class="gstep warn"><div class="gnum">3</div><div class="gtitle">⚠️ 주소창에 <code>chrome://extensions</code> 입력 → 오른쪽 위 <b>“개발자 모드”</b> 스위치 켜기</div></div>
