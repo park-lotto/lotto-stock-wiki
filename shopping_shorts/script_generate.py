@@ -143,7 +143,7 @@ _GEN_PROMPT = """너는 한국 쇼핑 숏폼(살림·요리·인테리어) 대�
 [구조 요소별 지시 — 유지/변형]
 {elems}
 
-[{topic_line}]
+[{topic_line}]{bank}
 
 규칙:
 - 각 초안은 실제로 읽을 나레이션(구어체). 0초 훅부터 끝 CTA까지 이어지게.
@@ -162,7 +162,7 @@ _MIX_PROMPT = """너는 한국 쇼핑 숏폼 대본 작가다. 아래 여러 개
 약 {seconds}초 분량(대략 {words}단어)의 새 대본 초안 {n}개를 만들어라.
 
 [재료 대본들]
-{sources}
+{sources}{bank}
 
 규칙:
 - ★초안마다 먼저 '인물 1명·사건 1개·결말 1개'를 정하라. 다른 대본에서는 훅 방식·표현·
@@ -192,7 +192,7 @@ def _mix_source_block(sources):
     return "\n\n".join(lines)
 
 
-def generate_mix(sources, target_seconds=20, n=3, max_key_tries=3):
+def generate_mix(sources, target_seconds=20, n=3, max_key_tries=3, bank_context=""):
     """여러 S급 대본(각 {name, full_text, structure})의 강점을 조합해 새 대본 초안 리스트.
     우리믹스(Feature B) 모드. 소스 2개 미만이거나 무키면 []."""
     sources = [s for s in (sources or []) if (s.get("full_text") or "").strip()]
@@ -201,7 +201,8 @@ def generate_mix(sources, target_seconds=20, n=3, max_key_tries=3):
     n = max(1, min(int(n or 3), 5))
     seconds = max(5, min(int(target_seconds or 20), 90))
     words = max(15, round(seconds * 2.3))
-    prompt = _MIX_PROMPT.format(sources=_mix_source_block(sources[:3]), seconds=seconds, words=words, n=n)
+    prompt = _MIX_PROMPT.format(sources=_mix_source_block(sources[:3]), seconds=seconds, words=words, n=n,
+                                bank=("\n\n" + bank_context) if bank_context else "")
     return _verify_and_fix(_generate_drafts(prompt), seconds)
 
 
@@ -246,7 +247,7 @@ def _elem_lines(structure, elem_modes, category_lookup):
 
 
 def generate_variations(structure, full_text, elem_modes, category_lookup, mode="remake",
-                        my_topic="", subject="", n=3, max_key_tries=3):
+                        my_topic="", subject="", n=3, max_key_tries=3, bank_context=""):
     """구조+대본을 재료로 요소별 모드 지시에 맞춰 초안 리스트 반환. 실패/무키면 [].
 
     mode: "remake"(원본 소재 고정, 표현만 재작성) 또는 "transplant"(구조만 빌려 내 주제로).
@@ -268,7 +269,8 @@ def generate_variations(structure, full_text, elem_modes, category_lookup, mode=
             "(중복 회피) 리라이트하라. 없던 내용이나 다른 제품을 지어내지 마라." + subj_line)
     prompt = _GEN_PROMPT.format(
         full_text=full_text[:3000], elems=_elem_lines(structure or {}, elem_modes, category_lookup),
-        topic_line=topic_line, n=n)
+        topic_line=topic_line, n=n,
+        bank=("\n\n" + bank_context) if bank_context else "")
     for _ in range(max_key_tries):
         key, ki = comment_gen._current_key_and_idx()
         if key is None:
