@@ -3862,14 +3862,28 @@ _GRAB_SETUP_HTML = """<!doctype html><html lang="ko"><head>
   .altbox .hi{font-weight:800;color:#a86;margin-bottom:6px}
   .foot{color:#8a92a4;font-size:13px;line-height:1.6;margin-top:18px}
   a{color:#1f6feb}
+  .guide{margin:4px 0 22px;background:#fff;border:2px solid #e3e7ee;border-radius:16px;padding:18px 16px}
+  .ghead{font-size:18px;font-weight:800;margin:0 0 6px;color:#12305e}
+  .gsub{font-size:13.5px;color:#57607a;margin:0 0 12px}
+  .gstep{display:flex;gap:10px;align-items:flex-start;margin:18px 0 8px}
+  .gnum{flex:0 0 30px;height:30px;border-radius:50%;background:#1f6feb;color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center}
+  .gstep.warn .gnum{background:#e0245e}
+  .gtitle{font-size:15.5px;line-height:1.5;padding-top:3px}
+  .gstep.warn .gtitle{color:#a01040;font-weight:700}
+  .gimg{display:block;width:100%;max-width:100%;height:auto;border:2px solid #e3e7ee;border-radius:10px;margin:0}
+  .gwarnbox{background:#fff3f2;border:1.5px solid #e0245e;border-radius:10px;padding:11px 13px;font-size:13.5px;line-height:1.55;color:#a01040;margin:16px 0 0}
+  .gdone{background:#eafaf0;border:1.5px solid #1f9d55;border-radius:10px;padding:12px 14px;font-size:15px;color:#186c3c;margin:12px 0 0;font-weight:600}
+  code{background:#eef1f6;padding:2px 6px;border-radius:5px;font-size:13px;font-weight:700}
 </style></head>
 <body><div class="wrap">
   <h1>\U0001F4E5 담기 기능 켜기</h1>
-  <p class="lead">유튜브·틱톡·샤오홍슈·도우인에서 <b>마음에 든 영상을 클릭 한 번</b>으로 모음집에 담는 기능이에요. 아래 <b>버튼 2개만</b> 순서대로 누르면 끝 — 다 되면 <b>③이 저절로 초록불</b>로 바뀝니다.</p>
+  <p class="lead">유튜브·틱톡·샤오홍슈·도우인에서 <b>마음에 든 영상을 클릭 한 번</b>으로 모음집에 담는 기능이에요. <b>아래 사진 4단계</b>를 그대로 따라 하세요 — 다 되면 맨 아래 <b>③이 저절로 초록불</b>로 바뀝니다.</p>
 
   <div id="browserWarn" class="warn" style="display:none">
     ⚠️ 이 기능은 <b>PC의 크롬(Chrome) 또는 엣지(Edge)</b>에서만 켤 수 있어요.<br>이 페이지 주소를 복사해 PC 크롬에서 열어주세요.
   </div>
+
+  __GUIDE_SECTION__
 
   <div id="steps">
     <div class="step" id="s1">
@@ -3969,16 +3983,65 @@ _GRAB_SETUP_HTML = """<!doctype html><html lang="ko"><head>
 </body></html>"""
 
 
+# 사진 설치 매뉴얼(실제 크롬 스크린샷 4장, 화살표는 캡처에 이미 포함). 이미지는 base64로
+# 페이지에 직접 박는다 — /grab은 로그인 전에 열리므로 별도 이미지 URL은 인증에 막힐 수 있다.
+# ★3·4단계(개발자 모드·사용자 스크립트 허용)를 크게 강조: 이걸 안 켜면 설치해도 안 돈다
+# (2026-07-21 고객 실사고 — 텀퍼몽키·스크립트는 깔았는데 이 토글을 몰라서 📥가 안 떴음).
+_GRAB_GUIDE_TEMPLATE = """<div class="guide">
+    <div class="ghead">📸 사진 보고 그대로 따라 하기 — 이 4단계면 끝</div>
+    <div class="gsub">아래 4장은 실제 크롬 화면이에요. 사진 속 빨간 화살표가 가리키는 곳을 누르면 됩니다.</div>
+
+    <div class="gstep"><div class="gnum">1</div><div class="gtitle">‘텀퍼몽키’ 설치 — 파란 <b>“Chrome에 추가”</b> 누르기 (위 <b>①</b> 버튼으로 이 화면 열기)</div></div>
+    <img class="gimg" src="__IMG1__" alt="1단계 텀퍼몽키 추가">
+
+    <div class="gstep"><div class="gnum">2</div><div class="gtitle">담기 스크립트 설치 — <b>“설치”</b> 누르기 (위 <b>②</b> 버튼으로 이 화면 열기)</div></div>
+    <img class="gimg" src="__IMG2__" alt="2단계 스크립트 설치">
+
+    <div class="gstep warn"><div class="gnum">3</div><div class="gtitle">⚠️ 주소창에 <code>chrome://extensions</code> 입력 → 오른쪽 위 <b>“개발자 모드”</b> 스위치 켜기</div></div>
+    <img class="gimg" src="__IMG3__" alt="3단계 개발자 모드 켜기">
+
+    <div class="gstep warn"><div class="gnum">4</div><div class="gtitle">⚠️ <b>가장 중요!</b> 텀퍼몽키 <b>“세부정보”</b> → <b>“사용자 스크립트 허용”</b> 켜기 → 크롬을 껐다 켜기</div></div>
+    <img class="gimg" src="__IMG4__" alt="4단계 사용자 스크립트 허용">
+
+    <div class="gwarnbox">❗ <b>3·4번을 안 켜면</b> 텀퍼몽키와 스크립트를 다 깔아도 <b>아무것도 안 됩니다.</b> 여기가 제일 많이 놓치는 부분이에요.</div>
+    <div class="gdone">✅ 4단계를 마치면 유튜브·샤오홍슈 영상에 <b>📥 담기</b> 버튼이 자동으로 떠요.</div>
+  </div>"""
+
+_grab_guide_cache = None
+
+
+def _grab_guide_html():
+    """설치 매뉴얼 사진 4장을 base64 data URI로 박은 가이드 HTML(1회 계산 후 캐시)."""
+    global _grab_guide_cache
+    if _grab_guide_cache is not None:
+        return _grab_guide_cache
+    gdir = Path(__file__).parent / "static" / "guide"
+
+    def _uri(name):
+        try:
+            return "data:image/png;base64," + base64.b64encode((gdir / name).read_bytes()).decode()
+        except Exception:
+            return ""
+
+    _grab_guide_cache = (_GRAB_GUIDE_TEMPLATE
+                         .replace("__IMG1__", _uri("step1_tampermonkey.png"))
+                         .replace("__IMG2__", _uri("step2_script.png"))
+                         .replace("__IMG3__", _uri("step3_devmode.png"))
+                         .replace("__IMG4__", _uri("step4_userscripts.png")))
+    return _grab_guide_cache
+
+
 @app.get("/grab", include_in_schema=False)
 def grab_setup(request: Request):
-    """원클릭 담기 설치 안내(공개). 자가감지 '신호등' — 설치가 끝나면 이 페이지가 유저스크립트
-    비컨을 감지해 자동으로 '완료'로 바꾼다(사용자는 '됐나?'를 판단하지 않는다). 유저스크립트가
-    안 맞는 환경엔 북마클릿(설치 불필요) 폴백을 <details>로 제공."""
+    """원클릭 담기 설치 안내(공개). 사진 4단계 매뉴얼 + 자가감지 '신호등'(설치 끝나면 유저스크립트
+    비컨을 감지해 자동으로 '완료'로 바꾼다). 유저스크립트가 안 맞는 환경엔 북마클릿 폴백을 제공."""
     base = (PUBLIC_BASE_URL or "").rstrip("/")
     bm64 = base64.b64encode(_GRAB_BOOKMARKLET.replace("__BASE__", base).encode()).decode()
     # Tampermonkey 크롬 웹스토어 상세(딥링크=검색 안 시킴). 엣지도 크롬스토어에서 설치 가능.
     tm_url = "https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo"
-    html = _GRAB_SETUP_HTML.replace("__TM_URL__", tm_url).replace("__BM64__", bm64)
+    html = (_GRAB_SETUP_HTML
+            .replace("__GUIDE_SECTION__", _grab_guide_html())
+            .replace("__TM_URL__", tm_url).replace("__BM64__", bm64))
     return HTMLResponse(html)
 
 
