@@ -1759,6 +1759,19 @@ class Store:
             for r in rows
         ]
 
+    def auto_approve_style_buckets(self):
+        """스타일 부품(훅·어미·부사·CTA·가격)은 자동 승인 → 즉시 생성에 반영(A5, 표현력).
+        내용 부품(증거·전환·감정)은 사람 승인 유지. 반환=새로 승인된 개수."""
+        now = datetime.now(timezone.utc).isoformat()
+        style = ("hook", "ending", "adverb", "cta", "price")
+        with self._conn() as c:
+            cur = c.execute(
+                "UPDATE pattern_item SET status='approved', updated_at=? "
+                "WHERE status='pending' AND is_negative=0 AND bucket IN (%s)"
+                % ",".join("?" * len(style)),
+                (now, *style))
+            return cur.rowcount
+
     def set_pattern_item_status(self, item_id, status):
         now = datetime.now(timezone.utc).isoformat()
         with self._conn() as c:

@@ -857,6 +857,20 @@ def _relearn_category(db_path, category):
         print(f"relearn 실패 {category}: {e}")
 
 
+def _ingest_pattern_bank(db_path, full_text, url, category):
+    """위키에 담을 때마다 그 대본의 훅·어미·부사·CTA를 부품은행에 자동 적재(계속 쌓기).
+    스타일 부품은 즉시 자동승인 → 바로 생성에 반영(표현력↑). 백그라운드·실패 무해."""
+    if not (full_text or "").strip():
+        return
+    try:
+        store = Store(db_path)
+        pattern_bank.ingest_script(store, full_text, source="wiki", url=url or "",
+                                   product_category=category, category_source="user")
+        store.auto_approve_style_buckets()
+    except Exception as e:  # noqa: BLE001 — 은행 적재 실패는 위키 저장엔 영향 없음
+        print(f"pattern_bank ingest 실패: {e}")
+
+
 @app.post("/api/wiki/save")
 def api_wiki_save(request: Request, shortcode: str, background_tasks: BackgroundTasks):
     """S급 대본을 위키(도서관)에 저장 — 대본 확보(캐시/즉석추출) → 구조분석 → 저장.
@@ -909,6 +923,9 @@ def api_wiki_save(request: Request, shortcode: str, background_tasks: Background
     # 학습 소스에도 구조 채우고(재분석 없이 재사용) 그 카테고리 즉시 재학습(백그라운드).
     store.save_extract_structure(code, structure)
     background_tasks.add_task(_relearn_category, DB_PATH, item.get("category"))
+    # 부품은행 자동 적재(훅·어미·부사·CTA 계속 쌓기 + 스타일 자동승인 → 표현력↑).
+    background_tasks.add_task(_ingest_pattern_bank, DB_PATH, script.get("full_text", ""),
+                             item.get("video_url", ""), item.get("category"))
     return {"ok": True, "shortcode": code, "structure": structure, "has_video": media_target.exists()}
 
 
