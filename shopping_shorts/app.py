@@ -3894,7 +3894,7 @@ _GRAB_SETUP_HTML = """<!doctype html><html lang="ko"><head>
   <details class="alt">
     <summary>설치가 어렵나요? — 설치 없이 쓰는 방법(북마클릿)</summary>
     <div class="altbox">
-      <div class="hi">① 아래 파란 버튼을 <span style="color:#c0392b">누르지 말고</span> 마우스로 <u>북마크바에 끌어다(드래그)</u> 놓으세요</div>
+      <div class="hi">① 아래 파란 버튼을 <span style="color:#c0392b">누르지 말고</span> 마우스로 <u>북마크바로 드래그</u>해서 놓으세요</div>
       <div style="color:#a99;margin-bottom:10px">북마크바가 안 보이면 <b>Ctrl+Shift+B</b>. 드래그 = 버튼을 꾹 눌러 위쪽 북마크바까지 끌고 가 놓기.</div>
       <a id="bm" draggable="true" href="#" class="btn" style="cursor:grab">\U0001F4E5 담기</a>
       <div style="margin-top:12px;font-weight:700;color:#7a6528">② 영상을 <u>열고</u>(그리드 말고 영상 클릭해 들어간 뒤) 방금 만든 북마크를 누르면 끝.</div>
