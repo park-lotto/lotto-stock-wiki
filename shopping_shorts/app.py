@@ -2119,6 +2119,19 @@ def api_mix_export(job_id: str, part: str = ""):
     return FileResponse(str(out), media_type="application/zip", filename=fname)
 
 
+def _capcut_project_name(job_id, job, plan):
+    """캡컷 프로젝트명 — 목록에서 알아보게 헤드카피(없으면 첫 대사)를 **앞**에 둔다.
+    캡컷은 이름을 가운데 잘라 보여줘서(예: '쇼핑쇼츠_...169a1') job-id 해시만으론
+    어느 게 방금 보낸 건지 구분이 안 됐다(2026-07-21 사장님 제보). 의미있는 제목을
+    앞에 두고 짧은 id를 접미로 붙여 유일성만 남긴다. 최종 정제는 safe_project_name."""
+    head = ((job.get("headcopy") or {}).get("text") or "").strip()
+    if not head:
+        beats = (plan or {}).get("beats") or []
+        head = ((beats[0].get("narration") if beats else "") or "").strip()
+    head = " ".join(head.split())[:24]
+    return f"{head} {job_id[:4]}" if head else f"쇼핑쇼츠_{job_id[:8]}"
+
+
 @app.get("/api/mix/capcut/{job_id}")
 def api_mix_capcut(job_id: str, base: str = ""):
     """CapCut draft 매니페스트(설계 부록A, T2). base=캡컷이 draft를 볼 절대경로(프론트가 지정한
@@ -2150,7 +2163,7 @@ def api_mix_capcut(job_id: str, base: str = ""):
     out_root.mkdir(parents=True, exist_ok=True)
     proj, project, files = capcut_draft.assemble_draft_folder(
         out_root, base, plan=plan, timeline=timeline, source_video_paths=source_video_paths,
-        tts_paths=tts_paths, project_name=f"쇼핑쇼츠_{job_id[:8]}")
+        tts_paths=tts_paths, project_name=_capcut_project_name(job_id, job, plan))
     texts, assets = {}, []
     for name in files:
         if name.endswith(".json"):
@@ -4425,15 +4438,24 @@ def api_produce_mix_poster(job_id: str):
     return FileResponse(str(poster), media_type="image/jpeg")
 
 
-def _extract_beat_frame(work, beat, out_path):
+def _extract_beat_frame(work, beat, out_path, clean_sources=None):
     """beat.primary 클립의 start 시각 프레임 1장을 9:16(1080x1920)로 out_path에 저장.
-    소스 영상이 없으면 False(파일 안 만듦). 프로덕션 poster 로직을 비트 단위로 일반화."""
+    소스 영상이 없으면 False(파일 안 만듦). 프로덕션 poster 로직을 비트 단위로 일반화.
+
+    clean_sources={video_id: 청소본경로}가 있으면 그 vid는 **원본 대신 청소본**에서
+    프레임을 뜬다 — 2단계 자막제거를 켰는데도 꾸미기 미리보기에 원본 자막이 그대로
+    살아있던 버그 수정(2026-07-21 사장님 제보). 최종렌더·캡컷·썸네일은 이미 청소본을
+    쓰는데(app.py:2145·2214) 이 미리보기 프레임만 원본 glob을 써서 자막이 남았었다."""
     import subprocess
     pr = beat.get("primary") or {}
     vid = pr.get("video_id")
     ss = float(pr.get("start") or 0)
     src = None
-    if vid:
+    if vid and clean_sources:
+        _cp = clean_sources.get(vid)
+        if _cp and Path(_cp).exists():
+            src = Path(_cp)
+    if src is None and vid:
         src = next((work / vid).glob("*.mp4"), None)
     if src is None:
         src = next(work.glob("final.mp4"), None) or next(work.glob("mix_raw.mp4"), None)
@@ -4479,9 +4501,13 @@ def api_produce_mix_beatframe(job_id: str, i: int):
     if i < 0 or i >= len(beats):
         return JSONResponse(status_code=404, content={"ok": False})
     work = _MIX_WORK_DIR / job_id
-    out = work / "beatframes" / f"{i}.jpg"
+    # 2단계 자막제거를 밟았으면(clean_sources 존재) 청소본에서 프레임을 뜬다. 캐시 파일명도
+    # 분리(_clean)해, 자막제거 전에 캐시된 원본 프레임이 남아 미리보기에 지운 자막이 살아
+    # 있는 것처럼 보이는 캐시 오염을 막는다(2026-07-21 제보).
+    clean_map = job.get("clean_sources") or {}
+    out = work / "beatframes" / f"{i}{'_clean' if clean_map else ''}.jpg"
     if not out.exists():
-        _extract_beat_frame(work, beats[i], out)
+        _extract_beat_frame(work, beats[i], out, clean_sources=clean_map)
     if not out.exists():
         return JSONResponse(status_code=404, content={"ok": False})
     return FileResponse(str(out), media_type="image/jpeg")
