@@ -41,6 +41,18 @@ def test_set_item_perf_and_update_spine_stats(tmp_path):
     assert row["source_count"] == 3 and row["perf_score"] == 0.5
 
 
+def test_auto_approve_style_buckets(tmp_path):
+    s = _store(tmp_path)
+    h = s.add_pattern_item("hook", "이거 아세요?")       # 스타일 → 자동승인 대상
+    a = s.add_pattern_item("adverb", "진짜")
+    e = s.add_pattern_item("evidence", "{인물}이 {행위}")  # 내용 → 승인 안 함(사람 몫)
+    n = s.auto_approve_style_buckets()
+    assert n == 2
+    got = {i["id"]: i["status"] for i in s.list_pattern_items(limit=100)}
+    assert got[h] == "approved" and got[a] == "approved"
+    assert got[e] == "pending"   # 내용 부품은 그대로
+
+
 def test_list_pattern_sources_only_missing_spine(tmp_path):
     s = _store(tmp_path)
     a = s.add_pattern_source("crawl", "u1", "글A")

@@ -236,15 +236,51 @@ def dedup_and_balance(beats, pool_sources):
     return out
 
 
-def pick_backbone(sources):
-    """제일 완결된 영상 = 백본. 휴리스틱: 세그먼트(과정 조각) 최다 영상.
-    동수면 먼저 온 것. 소스 없으면 None."""
-    best, best_n = None, -1
-    for s in sources or []:
-        n = len(s.get("segments") or [])
-        if n > best_n:
-            best, best_n = s.get("video_id"), n
-    return best
+# 백본 가능 플랫폼 = 한글 대본이 있는 것만(인스타·유튜브). 나머지(샤오홍슈·도우인 등)=서브 전용.
+_BACKBONE_PLATFORMS = {"instagram", "youtube"}
+
+_PLATFORM_DOMAINS = [
+    ("instagram", ("instagram.com",)),
+    ("youtube", ("youtube.com", "youtu.be")),
+    ("xiaohongshu", ("xiaohongshu.com", "xhslink.com", "rednote")),
+    ("douyin", ("douyin.com",)),
+    ("tiktok", ("tiktok.com",)),
+]
+
+
+def platform_of(url):
+    """URL 도메인 → 플랫폼 이름. 모르면 ''."""
+    u = (url or "").lower()
+    for name, domains in _PLATFORM_DOMAINS:
+        if any(d in u for d in domains):
+            return name
+    return ""
+
+
+def pick_backbone(sources, meta=None, forced=None):
+    """백본 선정(사장님 규칙):
+      0) forced(사장님이 UI에서 지정한 메인)가 있으면 그게 무조건 우선.
+      1) 백본 = 인스타·유튜브(한글 대본)만 후보. 플랫폼 아는 소스 중 그 둘만.
+      2) 후보 중 댓글수 최다 → 동수면 세그먼트 최다.
+    meta 없으면(플랫폼 모름) 세그먼트 최다 폴백. 소스 없거나 후보 0이면 None."""
+    if not sources:
+        return None
+    if forced and any(s.get("video_id") == forced for s in sources):
+        return forced
+    meta = meta or {}
+    known = [s for s in sources if meta.get(s.get("video_id"), {}).get("platform")]
+    if known:
+        cands = [s for s in known
+                 if meta[s["video_id"]]["platform"].lower() in _BACKBONE_PLATFORMS]
+        cands = cands or [s for s in sources]   # 인스타/유튜브 하나도 없으면 전체(폴백)
+    else:
+        cands = list(sources)                   # 플랫폼 정보 없음 → 세그먼트 최다
+
+    def key(s):
+        m = meta.get(s.get("video_id"), {})
+        return (m.get("comments") or 0, len(s.get("segments") or []))
+
+    return max(cands, key=key).get("video_id")
 
 
 def order_by_backbone(beats, backbone_video):

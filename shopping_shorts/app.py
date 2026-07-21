@@ -882,6 +882,20 @@ def _relearn_category(db_path, category):
         print(f"relearn 실패 {category}: {e}")
 
 
+def _ingest_pattern_bank(db_path, full_text, url, category):
+    """위키에 담을 때마다 그 대본의 훅·어미·부사·CTA를 부품은행에 자동 적재(계속 쌓기).
+    스타일 부품은 즉시 자동승인 → 바로 생성에 반영(표현력↑). 백그라운드·실패 무해."""
+    if not (full_text or "").strip():
+        return
+    try:
+        store = Store(db_path)
+        pattern_bank.ingest_script(store, full_text, source="wiki", url=url or "",
+                                   product_category=category, category_source="user")
+        store.auto_approve_style_buckets()
+    except Exception as e:  # noqa: BLE001 — 은행 적재 실패는 위키 저장엔 영향 없음
+        print(f"pattern_bank ingest 실패: {e}")
+
+
 @app.post("/api/wiki/save")
 def api_wiki_save(request: Request, shortcode: str, background_tasks: BackgroundTasks):
     """S급 대본을 위키(도서관)에 저장 — 대본 확보(캐시/즉석추출) → 구조분석 → 저장.
@@ -934,6 +948,9 @@ def api_wiki_save(request: Request, shortcode: str, background_tasks: Background
     # 학습 소스에도 구조 채우고(재분석 없이 재사용) 그 카테고리 즉시 재학습(백그라운드).
     store.save_extract_structure(code, structure)
     background_tasks.add_task(_relearn_category, DB_PATH, item.get("category"))
+    # 부품은행 자동 적재(훅·어미·부사·CTA 계속 쌓기 + 스타일 자동승인 → 표현력↑).
+    background_tasks.add_task(_ingest_pattern_bank, DB_PATH, script.get("full_text", ""),
+                             item.get("video_url", ""), item.get("category"))
     return {"ok": True, "shortcode": code, "structure": structure, "has_video": media_target.exists()}
 
 
@@ -1136,11 +1153,14 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     elem_modes = ({k: v for k, v in _em.items() if k in script_generate.ELEM_KEYS}
                   if isinstance(_em, dict) else {})
     category_lookup = store.get_element_options(it.get("category") or "")
-    # 부품은행 주입(use_bank, 기본 off) — 승인된 스파인·부품을 프롬프트에 실어 자연스러운 대본으로.
-    # 켰을 때만 bank_context 인자를 넘긴다(끄면 호출이 기존과 완전 동일 = 회귀0).
+    # 부품은행 주입 — 승인된 스파인·부품(훅·어미·부사·CTA)을 프롬프트에 실어 표현력↑.
+    # 마스터 스위치(ping_pong_enabled)가 켜져 있으면 자동 주입(위키담기로 쌓인 걸 바로 활용).
     _gen_kw = dict(mode=mode, my_topic=my_topic, subject=subject, n=n)
-    if body.get("use_bank"):
-        _gen_kw["bank_context"] = bank_assemble.assemble_bank_context(store, it.get("category") or "")
+    _use_bank = body.get("use_bank") or (store.get_setting("ping_pong_enabled", "") == "1")
+    if _use_bank:
+        _bank = bank_assemble.assemble_bank_context(store, it.get("category") or "")
+        if _bank:
+            _gen_kw["bank_context"] = _bank
     drafts = script_generate.generate_variations(
         it.get("structure") or {}, it.get("full_text") or "", elem_modes, category_lookup, **_gen_kw)
     if not drafts:

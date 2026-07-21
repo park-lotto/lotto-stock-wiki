@@ -48,8 +48,7 @@ def test_scene_first_후보있으면_저장하고_추천후보를_edit_plan으�
          "story": {}, "score": 0.9, "recommended": True},
     ]
 
-    def fake_build_scene_first_plan(source_scripts, reference_text, target_seconds,
-                                    n_candidates=3, video_type=None, call=None, ping_pong=False):
+    def fake_build_scene_first_plan(source_scripts, reference_text, target_seconds, **kw):
         assert reference_text == "ref text"
         return {"candidates": candidates, "detected_type": "unbox"}
 

@@ -715,7 +715,8 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
 
 
 def build_scene_first_plan(source_scripts, reference_text, target_seconds,
-                           n_candidates=3, video_type=None, call=None, ping_pong=False):
+                           n_candidates=3, video_type=None, call=None, ping_pong=False,
+                           backbone_meta=None, backbone_forced=None):
     """장면 우선 대본 모드: 팔레트+헌장으로 후보 n개 생성 → 각 EDL grounding·채점 →
     최고 score에 recommended=True. 각 candidate.plan은 build_edit_plan 반환형(하류 렌더 호환).
     후보 0개면 candidates=[](호출부가 기존 build_edit_plan로 폴백).
@@ -742,7 +743,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 plan["beats"], source_scripts,
                 rewrite_call=lambda bs: _bb_rewrite(bs, _call),
                 trim_call=lambda bs: _bb_trim(bs, _call))
-            bb = backbone.pick_backbone(source_scripts)
+            bb = backbone.pick_backbone(source_scripts, meta=backbone_meta, forced=backbone_forced)
             if bb:
                 plan["beats"] = backbone.order_by_backbone(plan["beats"], bb)
             # 반복장면·한소스 편중 해소: 쓴 클립 재사용 금지 + 덜 쓴 소스 우선 교체
