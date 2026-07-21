@@ -3586,13 +3586,16 @@ async def _auth_guard(request: Request, call_next):
 
 # ── 유료게이트 접근권한 판정 (단일 진실원. API게이트·화면·크레딧 모두 이 함수만 본다) ──
 def access_level(customer_id, now=None):
-    """customer_id → "full"(전기능) | "ranking_only"(레퍼런스 랭킹만).
-    규칙: 사장님(0)=full / plan=pro=full / 체험중(now<full_access_until)=full / 그 외 ranking_only."""
+    """customer_id → "full"(전기능) | "ranking_only"(랭킹만) | "pending"(승인대기, 전면차단).
+    규칙: 사장님(0)=full / 계정없음=ranking_only / 미승인(approved_at NULL)=pending /
+    plan=pro=full / 체험중(now<full_access_until)=full / 그 외 ranking_only."""
     if customer_id == 0:
         return "full"                       # 사장님 = 영구 pro+admin
     cust = Store(DB_PATH).get_customer(customer_id)
     if not cust:
         return "ranking_only"
+    if cust.get("approved_at") is None:
+        return "pending"                    # ★승인 전엔 plan/체험보다 우선해 전면 차단
     if cust.get("plan") == "pro":
         return "full"
     if now is None:
