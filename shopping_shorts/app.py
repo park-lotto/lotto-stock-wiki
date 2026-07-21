@@ -1128,11 +1128,14 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     elem_modes = ({k: v for k, v in _em.items() if k in script_generate.ELEM_KEYS}
                   if isinstance(_em, dict) else {})
     category_lookup = store.get_element_options(it.get("category") or "")
-    # 부품은행 주입(use_bank, 기본 off) — 승인된 스파인·부품을 프롬프트에 실어 자연스러운 대본으로.
-    # 켰을 때만 bank_context 인자를 넘긴다(끄면 호출이 기존과 완전 동일 = 회귀0).
+    # 부품은행 주입 — 승인된 스파인·부품(훅·어미·부사·CTA)을 프롬프트에 실어 표현력↑.
+    # 마스터 스위치(ping_pong_enabled)가 켜져 있으면 자동 주입(위키담기로 쌓인 걸 바로 활용).
     _gen_kw = dict(mode=mode, my_topic=my_topic, subject=subject, n=n)
-    if body.get("use_bank"):
-        _gen_kw["bank_context"] = bank_assemble.assemble_bank_context(store, it.get("category") or "")
+    _use_bank = body.get("use_bank") or (store.get_setting("ping_pong_enabled", "") == "1")
+    if _use_bank:
+        _bank = bank_assemble.assemble_bank_context(store, it.get("category") or "")
+        if _bank:
+            _gen_kw["bank_context"] = _bank
     drafts = script_generate.generate_variations(
         it.get("structure") or {}, it.get("full_text") or "", elem_modes, category_lookup, **_gen_kw)
     if not drafts:
