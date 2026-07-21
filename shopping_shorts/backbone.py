@@ -5,7 +5,61 @@
 
 행위가 화면·대본 공통 못이라, 백본이 행위 순서를 고정하고 화면은 같은 행위의 다른 클립으로
 갈아끼워도 대본(행위 지목)과 안 어긋난다. 순수함수 — DB·Gemini 없음."""
+import re
+
 from shopping_shorts import action_dict
+
+_SYLLABLES_PER_SEC = 5.7      # edit_plan과 동일(한국어 초당 음절)
+_LEN_TOL = 0.35               # ±35%면 ok(넘침/모자람 판정 여유)
+
+
+def narration_seconds(narration):
+    """나레이션 읽는 시간(초) = 한글 음절수 / 5.7."""
+    syl = len(re.sub(r"[^가-힣]", "", narration or ""))
+    return syl / _SYLLABLES_PER_SEC
+
+
+def clip_seconds(beat):
+    """비트에 담긴 화면 총 길이(primary + alternates)."""
+    segs = [beat.get("primary")] + list(beat.get("alternates") or [])
+    return round(sum((s.get("end", 0) - s.get("start", 0)) for s in segs if s), 3)
+
+
+def length_status(beat):
+    """대사 읽는시간 vs 화면 길이. 'over'(대사가 화면보다 김=넘침)/'under'(화면이 남음)/'ok'."""
+    need = narration_seconds(beat.get("narration", ""))
+    have = clip_seconds(beat)
+    if need <= 0 or have <= 0:
+        return "ok"
+    if have < need * (1 - _LEN_TOL):
+        return "over"     # 화면이 모자라 대사가 넘어감
+    if have > need * (1 + _LEN_TOL):
+        return "under"    # 화면이 대사보다 많이 남음
+    return "ok"
+
+
+def fill_clips_to_cover(beat, pool_sources):
+    """화면이 대사보다 짧으면(over) 같은 행위 클립을 풀에서 더 붙여 길이를 채운다.
+    이미 담긴 seg_id는 제외. 대사 읽는시간 근처까지만 채운다(과충전 방지)."""
+    need = narration_seconds(beat.get("narration", ""))
+    if length_status(beat) != "over":
+        return dict(beat)
+    action = segment_action(beat.get("primary") or {}) or \
+        action_dict.tag_action(beat.get("narration", ""))
+    if not action:
+        return dict(beat)
+    used = {(beat.get("primary") or {}).get("seg_id")}
+    used |= {a.get("seg_id") for a in (beat.get("alternates") or [])}
+    nb = dict(beat)
+    nb["alternates"] = list(beat.get("alternates") or [])
+    for clip in pick_clips_for_action(action, pool_sources):
+        if clip.get("seg_id") in used:
+            continue
+        nb["alternates"].append(clip)
+        used.add(clip.get("seg_id"))
+        if clip_seconds(nb) >= need:
+            break
+    return nb
 
 
 def segment_action(seg):
@@ -77,6 +131,39 @@ def reconcile_beat_by_action(beat, pool_sources):
     return nb, True
 
 
+def pick_backbone(sources):
+    """제일 완결된 영상 = 백본. 휴리스틱: 세그먼트(과정 조각) 최다 영상.
+    동수면 먼저 온 것. 소스 없으면 None."""
+    best, best_n = None, -1
+    for s in sources or []:
+        n = len(s.get("segments") or [])
+        if n > best_n:
+            best, best_n = s.get("video_id"), n
+    return best
+
+
+def order_by_backbone(beats, backbone_video):
+    """백본 순서 고정(§8-2·D13): movable body 비트의 화면을 백본 시간순으로 재배치.
+    나레이션(대사)은 제자리 — 화면만 (재료→조리→완성) 흐르게. 제외(앵커):
+      ①꼬리(마지막) 비트 ②action_fixed(핑퐁이 맞춘) 비트 ③백본 영상이 아닌 화면.
+    이렇게 '결과 말하는데 조리중간 화면'류 순서 어긋남을 잡는다."""
+    if not beats:
+        return beats
+    body, tail = beats[:-1], beats[-1]
+    movable = [i for i, b in enumerate(body)
+               if not b.get("action_fixed")
+               and (b.get("primary") or {}).get("video_id") == backbone_video]
+    clips = sorted((body[i].get("primary") for i in movable),
+                   key=lambda p: (p or {}).get("start", 0.0))
+    out = [dict(b) for b in body]
+    for i, clip in zip(movable, clips):
+        out[i] = dict(body[i])
+        out[i]["primary"] = clip
+        out[i]["respined_backbone"] = True
+    out.append(dict(tail))
+    return out
+
+
 def ping_pong_reconcile(beats, pool_sources, rewrite_call=None, max_rounds=2):
     """핑퐁(대본↔장면 왕복). 매 라운드:
       1) action 불일치 비트 찾기(fit 안 믿음 — beat_action_mismatch).
@@ -104,6 +191,11 @@ def ping_pong_reconcile(beats, pool_sources, rewrite_call=None, max_rounds=2):
                 if b.get("beat_idx") in fixes and fixes[b["beat_idx"]]:
                     b["narration"] = fixes[b["beat_idx"]]
                     b.pop("need_rewrite", None)
+    # 길이 맞춤: 스왑/원본 클립이 대사보다 짧으면(over) 같은 행위 클립 더 붙여 채운다
+    # (화면이 대사 도중 끊겨 '넘어가'는 것 방지 — 캡컷 수작업 제거).
+    for i, b in enumerate(out):
+        if length_status(b) == "over":
+            out[i] = fill_clips_to_cover(b, pool_sources)
     return out
 
 

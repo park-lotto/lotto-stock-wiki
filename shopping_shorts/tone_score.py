@@ -37,6 +37,24 @@ def ending_diversity(text):
     return len(set(ends)) / len(ends)
 
 
+# 재미강도(D14) — 강한 재미 장치. 일반 서술만이면 반려(재생성).
+_DEVICE_MARKERS = {
+    "before_after": ["예전엔", "예전에", "전에는", "전엔", "원래", "이제는", "이젠", "바뀌", "달라졌", "옛날엔"],
+    "반전": ["근데", "알고보니", "사실은", "반전", "의외로", "놀랍게도", "그런데 이게", "웬걸"],
+    "극적대비": ["제일", "가장", "최고", "이것만", "딱 하나", "단 하나", "유일", "이거 하나로"],
+    "손실회피": ["모르면 손해", "놓치면", "안 하면", "후회", "손해예요", "이것만은"],
+}
+
+
+def fun_intensity(text):
+    """재미강도(D14): 강한 장치(비포애프터·반전·극적대비·손실회피)를 찾는다.
+    → {devices:[found], has_strong:bool, needs_regen:bool}. 하나도 없으면 재생성 신호."""
+    t = text or ""
+    found = [k for k, kws in _DEVICE_MARKERS.items() if any(w in t for w in kws)]
+    has = bool(found)
+    return {"devices": found, "has_strong": has, "needs_regen": not has}
+
+
 def score_conversational(text, approved_endings=None, negatives=None, call=None):
     """→ {score(0~1), flags:[...], needs_review:bool}. 높을수록 대화체(사람 같은)."""
     if not (text or "").strip():

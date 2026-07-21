@@ -718,8 +718,12 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             continue
         if ping_pong:
             from shopping_shorts import backbone
+            # 1) 행위 매칭(화면-대사 어긋남 + 길이) 2) 백본 순서 고정(과정순서)
             plan["beats"] = backbone.ping_pong_reconcile(
                 plan["beats"], source_scripts, rewrite_call=lambda bs: _bb_rewrite(bs, _call))
+            bb = backbone.pick_backbone(source_scripts)
+            if bb:
+                plan["beats"] = backbone.order_by_backbone(plan["beats"], bb)
         plan["detected_type"] = detected
         plan["affiliate_target"] = r.get("story_event", "") or ""
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)

@@ -21,6 +21,21 @@ def test_ai_smell_flagged():
     assert any("AI냄새" in f for f in r["flags"])
 
 
+def test_fun_intensity_detects_strong_device():
+    r = tone_score.fun_intensity("예전엔 맨날 실패했는데 이제는 한 번에 성공해요")  # before/after
+    assert r["has_strong"] is True and "before_after" in r["devices"]
+
+
+def test_fun_intensity_detects_twist():
+    r = tone_score.fun_intensity("맛있어 보이죠? 근데 알고보니 이게 다이어트 음식이에요")
+    assert r["has_strong"] is True and "반전" in r["devices"]
+
+
+def test_fun_intensity_flags_plain_story():
+    r = tone_score.fun_intensity("바나나를 팬에 올리고 계란을 부어서 구웠어요. 맛있게 먹었어요.")
+    assert r["has_strong"] is False and r["needs_regen"] is True
+
+
 def test_empty_is_zero():
     r = tone_score.score_conversational("")
     assert r["score"] == 0.0 and r["needs_review"] is False
