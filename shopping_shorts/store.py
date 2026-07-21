@@ -666,6 +666,16 @@ class Store:
                         count INTEGER NOT NULL DEFAULT 0,
                         PRIMARY KEY (customer_id, op, day)
                     )""")
+        # ── 회원승인(2026-07-21): approved_at NULL=대기중 / 값(epoch초)=승인시각 ──
+        try:
+            c.execute("ALTER TABLE customers ADD COLUMN approved_at INTEGER")
+            # 이번에 처음 추가된 경우에만 백필: 페이월/승인 도입 전부터 있던 기존
+            # 고객을 전부 '승인됨'으로 처리해 무통보 차단을 막는다. 이후 실행에선
+            # ALTER가 OperationalError로 튕겨 이 UPDATE를 안 타므로 신규 대기 계정을 안 덮는다.
+            now_ts = int(datetime.now(timezone.utc).timestamp())
+            c.execute("UPDATE customers SET approved_at=? WHERE approved_at IS NULL", (now_ts,))
+        except sqlite3.OperationalError:
+            pass  # 이미 존재
 
     def ensure_paywall_schema(self):
         """공개 래퍼(테스트·호출부용). __init__에서도 자동 실행되므로 보통 부를 필요 없다."""

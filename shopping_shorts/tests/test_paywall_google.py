@@ -111,3 +111,20 @@ def test_verified_email_kept():
         def get(self, *a, **k): return _FakeResp(200, {"sub": "s2", "email": "ok@x.com", "email_verified": True})
     ident = appmod._google_fetch_identity("code", _requests=FakeReq())
     assert ident["email"] == "ok@x.com"
+
+
+def test_approved_at_column_and_backfill(tmp_path):
+    import sqlite3
+    from shopping_shorts.store import Store
+    dbp = str(tmp_path / "t.db")
+    s = Store(dbp)
+    # 페이월 도입 전처럼 approved_at 없이 고객을 직접 INSERT(구버전 DB 재현)
+    with sqlite3.connect(dbp) as c:
+        c.execute("ALTER TABLE customers DROP COLUMN approved_at")  # 컬럼 제거해 구버전 재현
+        c.execute("INSERT INTO customers(username, password_hash, salt, created_at, plan, full_access_until) "
+                  "VALUES('old','h','s',datetime('now'),'free',0)")
+    # 다시 스키마 보증 → 컬럼 재추가 + 기존 행 백필
+    Store(dbp).ensure_paywall_schema()
+    with sqlite3.connect(dbp) as c:
+        row = c.execute("SELECT approved_at FROM customers WHERE username='old'").fetchone()
+    assert row[0] is not None       # 기존 계정 = 승인됨(백필)
