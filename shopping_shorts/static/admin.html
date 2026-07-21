@@ -10,8 +10,11 @@ th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #23232a}
 th{color:#8a8a92;font-weight:600}
 .badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
 .pro{background:#1c3d1f;color:#7ee787}.free{background:#3d1c1c;color:#ff9a8a}.trial{background:#1c2f3d;color:#7db4ff}
+.pending{background:#3d341c;color:#ffd479}
 button{border:0;border-radius:7px;padding:6px 12px;font-weight:700;font-size:12px;cursor:pointer;margin-right:4px}
-.bpro{background:#2ea043;color:#fff}.bfree{background:#6e2020;color:#fff}
+.bpro{background:#2ea043;color:#fff}.bfree{background:#6e2020;color:#fff}.bok{background:#d19b1e;color:#111}
+.wait{border-color:#5a4a1e;background:#1a1710}.wait h2{color:#ffd479}
+.empty{color:#6a6a72;font-size:13px;padding:6px 2px}
 input{background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;padding:8px 10px;font-size:13px;width:90px}
 label{display:inline-block;min-width:120px;color:#a8a8b0;font-size:13px;margin:5px 0}
 .save{background:#4f9dfa;color:#111;padding:8px 16px;margin-top:10px}
@@ -25,6 +28,12 @@ label{display:inline-block;min-width:120px;color:#a8a8b0;font-size:13px;margin:5
   <h2>설정 <span id=setMsg class=msg></span></h2>
   <div id=settings></div>
   <button class=save onclick=saveSettings()>설정 저장</button>
+</div>
+
+<div class="card wait">
+  <h2>🕓 승인 대기중 (<span id=pcnt>0</span>명) <span id=pMsg class=msg></span></h2>
+  <table><thead><tr><th>ID</th><th>이메일/아이디</th><th>가입일</th><th>승인</th></tr></thead>
+  <tbody id=prows></tbody></table>
 </div>
 
 <div class=card>
@@ -46,19 +55,38 @@ async function load(){
   // 설정 폼
   document.getElementById('settings').innerHTML=SETTING_FIELDS.map(([k,label])=>
     `<div><label>${label}</label><input id=set_${k} value="${(CURRENT[k]??'').toString().replace(/"/g,'&quot;')}"></div>`).join('');
-  // 고객표
-  document.getElementById('cnt').textContent=d.customers.length;
-  document.getElementById('rows').innerHTML=d.customers.map(c=>{
+  // 승인 대기(pending)와 일반 고객 분리 — pending은 pro를 줘도 안 열리므로 set_plan을 숨기고 [승인]만 노출
+  const pend=d.customers.filter(c=>c.level==='pending');
+  const rest=d.customers.filter(c=>c.level!=='pending');
+  const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // 승인 대기 표
+  document.getElementById('pcnt').textContent=pend.length;
+  document.getElementById('prows').innerHTML= pend.length ? pend.map(c=>{
+    const joined=c.created_at? new Date((''+c.created_at).length>10?c.created_at:c.created_at*1000).toLocaleString('ko-KR'):'-';
+    return `<tr><td>${c.id}</td><td>${esc(c.email||c.username)}</td>
+      <td style="font-size:12px;color:#8a8a92">${joined}</td>
+      <td><button class=bok onclick="approveCustomer(${c.id})">✅ 승인</button></td></tr>`;
+  }).join('') : '<tr><td colspan=4 class=empty>대기 중인 가입 신청이 없어요</td></tr>';
+  // 일반 고객표
+  document.getElementById('cnt').textContent=rest.length;
+  document.getElementById('rows').innerHTML=rest.map(c=>{
     const lvl=c.level==='full'?(c.plan==='pro'?'<span class="badge pro">pro</span>':'<span class="badge trial">체험중</span>')
               :'<span class="badge free">무료</span>';
     const exp=c.full_access_until? new Date(c.full_access_until*1000).toLocaleString('ko-KR'):'-';
     const u=c.usage||{};
-    return `<tr><td>${c.id}</td><td>${c.email||c.username||''}</td><td>${c.plan}</td><td>${lvl}</td>
+    return `<tr><td>${c.id}</td><td>${esc(c.email||c.username)}</td><td>${c.plan}</td><td>${lvl}</td>
       <td style="font-size:12px;color:#8a8a92">${exp}</td>
       <td style="font-size:12px">${u.lens||0}/${u.render||0}/${u.script||0}</td>
       <td><button class=bpro onclick="setPlan(${c.id},'pro')">pro 승격</button>
           <button class=bfree onclick="setPlan(${c.id},'free')">무료로</button></td></tr>`;
   }).join('');
+}
+async function approveCustomer(cid){
+  const r=await fetch('/api/admin/approve',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({customer_id:cid})});
+  const m=document.getElementById('pMsg');
+  if(r.ok){m.textContent='✅ 승인됨';m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
+  setTimeout(()=>m.textContent='',2000);
 }
 async function setPlan(cid,plan){
   const r=await fetch('/api/admin/set_plan',{method:'POST',headers:{'Content-Type':'application/json'},

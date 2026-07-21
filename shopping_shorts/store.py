@@ -2458,11 +2458,12 @@ class Store:
         """관리자용 전체 고객 목록(사장님 cid0 제외). 최근 가입 먼저."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT id, username, email, plan, full_access_until, created_at "
+                "SELECT id, username, email, plan, full_access_until, created_at, approved_at "
                 "FROM customers WHERE id != 0 ORDER BY id DESC"
             ).fetchall()
         return [{"id": r[0], "username": r[1], "email": r[2], "plan": r[3] or "free",
-                 "full_access_until": r[4] or 0, "created_at": r[5]} for r in rows]
+                 "full_access_until": r[4] or 0, "created_at": r[5], "approved_at": r[6]}
+                for r in rows]
 
     # ── 유료게이트 일일 사용량(크레딧) ──
     def usage_incr(self, customer_id, op, day):
