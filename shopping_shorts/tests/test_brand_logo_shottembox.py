@@ -19,6 +19,15 @@ def test_sidebar_logo_is_shottembox():
     assert "쇼핑쇼츠" not in js, "사이드바에 옛 브랜드 '쇼핑쇼츠'가 남아있다"
 
 
+def test_sidebar_logo_is_prominent():
+    """메인 로고는 크고 눈에 띄게(사장님 2026-07-21) — .ss-nav h1 폰트가 커야 한다."""
+    import re
+    js = (STATIC / "sidebar.js").read_text(encoding="utf-8")
+    m = re.search(r"\.ss-nav h1\{[^}]*font-size:\s*(\d+)px", js)
+    assert m, ".ss-nav h1 font-size를 못 찾음(구조 변경?)"
+    assert int(m.group(1)) >= 24, f"메인 로고가 작다({m.group(1)}px) — 크게 강조해야 함"
+
+
 def test_page_titles_use_shottembox_not_old_brand():
     for name in _TITLE_PAGES:
         html = (STATIC / name).read_text(encoding="utf-8")
