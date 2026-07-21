@@ -61,6 +61,23 @@ def parts_block(store, k=5, rng=random):
             + "\n".join(lines))
 
 
+def avoid_block(store, limit=6):
+    """novelty(P0-3): 최근 영상이 쓴 훅·인물·CTA를 '이건 이미 썼으니 다르게 써라'로 블록화.
+    이력 없으면 ''. 중괄호 소독(생성 프롬프트가 .format()을 탄다)."""
+    rec = store.recent_script_usage(limit=limit)
+    parts = []
+    if rec["hooks"]:
+        parts.append("· 훅: " + " / ".join(_sanitize(h) for h in rec["hooks"]))
+    if rec["persons"]:
+        parts.append("· 인물: " + ", ".join(_sanitize(p) for p in rec["persons"]))
+    if rec["ctas"]:
+        parts.append("· CTA: " + ", ".join(_sanitize(c) for c in rec["ctas"]))
+    if not parts:
+        return ""
+    return ("[최근 영상에서 이미 쓴 것 — ★반드시 다르게 써라(같은 훅·인물·CTA 반복 금지, "
+            "매 영상이 똑같이 열리면 안 된다)]\n" + "\n".join(parts))
+
+
 def assemble_bank_context(store, category, k=5):
     """스파인 charter + 부품 top-k 합본. 둘 다 없으면 ''(호출부는 빈 문자열이면
     기존 헌장만 써서 회귀0)."""

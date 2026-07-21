@@ -624,6 +624,15 @@ class Store:
                     updated_at TEXT
                 )
             """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS script_usage (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    hook TEXT,
+                    person TEXT,
+                    cta TEXT,
+                    created_at TEXT
+                )
+            """)
             self._migrate_personal_tables(c)
             self._ensure_paywall_schema(c)
 
@@ -2283,6 +2292,34 @@ class Store:
                 "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
                 (key, value),
             )
+
+    # ── novelty 메모리(P0-3): 최근 영상이 쓴 훅·인물·CTA를 기록해 다음 생성에서 회피 ──
+    def record_script_usage(self, hook="", person="", cta=""):
+        """방금 만든 영상 대본의 (훅·인물·CTA 키워드)를 기록. 전부 비면 안 넣는다.
+        빈 필드는 그대로 저장하되 recent 조회에서 걸러진다(빈 문자열 반환 방지)."""
+        hook, person, cta = (hook or "").strip(), (person or "").strip(), (cta or "").strip()
+        if not (hook or person or cta):
+            return
+        with self._conn() as c:
+            c.execute("INSERT INTO script_usage(hook, person, cta, created_at) VALUES(?,?,?,?)",
+                      (hook, person, cta, datetime.now(timezone.utc).isoformat()))
+
+    def recent_script_usage(self, limit=8):
+        """최근 사용 (훅·인물·CTA) → {hooks, persons, ctas}. 최신순, 각 필드는 빈값 제외.
+        limit은 '최근 job 수'라 각 리스트 길이는 그보다 짧을 수 있다(빈 필드 제외)."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT hook, person, cta FROM script_usage ORDER BY id DESC LIMIT ?",
+                (limit,)).fetchall()
+        out = {"hooks": [], "persons": [], "ctas": []}
+        for hook, person, cta in rows:
+            if hook:
+                out["hooks"].append(hook)
+            if person:
+                out["persons"].append(person)
+            if cta:
+                out["ctas"].append(cta)
+        return out
 
     # ── 틱톡 키워드검색 남용/비용 가드 (2026-07-14) ──
     # 별도 테이블을 만들지 않고 settings에 네임스페이스 키로 눌러쓴다:

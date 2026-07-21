@@ -351,7 +351,11 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
         if store.get_setting("bank_enabled", "") == "1":
             try:
                 from shopping_shorts import bank_assemble
-                bank_context = bank_assemble.assemble_bank_context(store, video_type or "")
+                # 은행(로테이션 부품·스파인) + novelty 회피블록(최근 쓴 훅·인물·CTA)을 함께 주입.
+                # 회피는 은행과 같은 스위치로 켠다 — 켜면 매 영상이 다른 훅으로 열리게 밀어준다.
+                _blocks = [bank_assemble.assemble_bank_context(store, video_type or ""),
+                           bank_assemble.avoid_block(store)]
+                bank_context = "\n\n".join(x for x in _blocks if x)
             except Exception:
                 traceback.print_exc(file=sys.stderr)
         sf = build_scene_first_plan(source_scripts, reference_text, target_seconds,
@@ -363,6 +367,14 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
             rec = next((cand for cand in sf["candidates"] if cand["recommended"]),
                        sf["candidates"][0])
             plan = rec["plan"]
+            # novelty(P0-3) 기록: 채택된 대본의 훅·인물·CTA를 남겨 다음 영상이 회피하게 한다.
+            # 스위치 무관하게 항상 기록(데이터가 쌓여야 켰을 때 즉시 효과) — 실패해도 job 안 죽인다.
+            try:
+                _st = rec.get("story") or {}
+                store.record_script_usage(_st.get("hook", ""), _st.get("story_person", ""),
+                                          _st.get("cta_keyword", ""))
+            except Exception:
+                traceback.print_exc(file=sys.stderr)
         else:
             plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
                                    video_type=video_type, given_script=given_script)
