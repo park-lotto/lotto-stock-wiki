@@ -25,3 +25,10 @@ def test_schema_has_name_phone_and_payments(tmp_path, monkeypatch):
         assert "name" in cols and "phone" in cols
         pcols = {r[1] for r in c.execute("PRAGMA table_info(payments)").fetchall()}
     assert {"id", "customer_id", "amount", "method", "period_days", "paid_at", "note", "created_at"} <= pcols
+
+
+def test_create_customer_stores_name_phone(tmp_path, monkeypatch):
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("u1", "pw12", name="홍길동", phone="010-1234-5678")
+    cust = s.get_customer(cid)
+    assert cust["name"] == "홍길동" and cust["phone"] == "010-1234-5678"
