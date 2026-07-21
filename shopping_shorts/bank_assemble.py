@@ -38,7 +38,8 @@ def parts_block(store, k=5):
         lines.append(f"· {_LABEL.get(b, b)}: {texts}")
     if not lines:
         return ""
-    return ("[승인된 부품 — 이 결을 따르거나 이 중에서 골라 써라(그대로 베끼지 말고 녹여라)]\n"
+    return ("[승인된 부품 — 이 결·패턴을 참고해 새로 써라. ★그대로 베끼기 금지: 특히 훅·CTA는 "
+            "구조와 리듬만 가져오고 단어·인물·소재는 반드시 우리 것으로 바꿔라(표절·중복 회피).]\n"
             + "\n".join(lines))
 
 
