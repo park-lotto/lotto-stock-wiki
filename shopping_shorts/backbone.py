@@ -131,6 +131,39 @@ def reconcile_beat_by_action(beat, pool_sources):
     return nb, True
 
 
+def pick_backbone(sources):
+    """제일 완결된 영상 = 백본. 휴리스틱: 세그먼트(과정 조각) 최다 영상.
+    동수면 먼저 온 것. 소스 없으면 None."""
+    best, best_n = None, -1
+    for s in sources or []:
+        n = len(s.get("segments") or [])
+        if n > best_n:
+            best, best_n = s.get("video_id"), n
+    return best
+
+
+def order_by_backbone(beats, backbone_video):
+    """백본 순서 고정(§8-2·D13): movable body 비트의 화면을 백본 시간순으로 재배치.
+    나레이션(대사)은 제자리 — 화면만 (재료→조리→완성) 흐르게. 제외(앵커):
+      ①꼬리(마지막) 비트 ②action_fixed(핑퐁이 맞춘) 비트 ③백본 영상이 아닌 화면.
+    이렇게 '결과 말하는데 조리중간 화면'류 순서 어긋남을 잡는다."""
+    if not beats:
+        return beats
+    body, tail = beats[:-1], beats[-1]
+    movable = [i for i, b in enumerate(body)
+               if not b.get("action_fixed")
+               and (b.get("primary") or {}).get("video_id") == backbone_video]
+    clips = sorted((body[i].get("primary") for i in movable),
+                   key=lambda p: (p or {}).get("start", 0.0))
+    out = [dict(b) for b in body]
+    for i, clip in zip(movable, clips):
+        out[i] = dict(body[i])
+        out[i]["primary"] = clip
+        out[i]["respined_backbone"] = True
+    out.append(dict(tail))
+    return out
+
+
 def ping_pong_reconcile(beats, pool_sources, rewrite_call=None, max_rounds=2):
     """핑퐁(대본↔장면 왕복). 매 라운드:
       1) action 불일치 비트 찾기(fit 안 믿음 — beat_action_mismatch).

@@ -135,6 +135,48 @@ def test_fill_clips_to_cover_narration():
     assert backbone.clip_seconds(nb) >= backbone.narration_seconds(beat["narration"]) * 0.9
 
 
+def test_pick_backbone_most_segments():
+    sources = [
+        {"video_id": "A", "segments": [_seg("A-1"), _seg("A-2")]},
+        {"video_id": "B", "segments": [_seg("B-1"), _seg("B-2"), _seg("B-3"), _seg("B-4")]},
+        {"video_id": "C", "segments": [_seg("C-1")]},
+    ]
+    assert backbone.pick_backbone(sources) == "B"
+
+
+def test_pick_backbone_none_on_empty():
+    assert backbone.pick_backbone([]) is None
+
+
+def test_order_by_backbone_sorts_body_by_backbone_time():
+    # body 비트 3개, 백본(BB) 화면이 시간 뒤죽박죽 → 백본 start 순으로 재정렬. 꼬리(CTA)는 고정.
+    beats = [
+        {"beat_idx": 0, "narration": "결과", "primary": {"seg_id": "BB-9", "start": 9, "end": 10, "video_id": "BB"}},
+        {"beat_idx": 1, "narration": "재료", "primary": {"seg_id": "BB-1", "start": 1, "end": 2, "video_id": "BB"}},
+        {"beat_idx": 2, "narration": "조리", "primary": {"seg_id": "BB-5", "start": 5, "end": 6, "video_id": "BB"}},
+        {"beat_idx": 3, "narration": "댓글 남겨주세요", "primary": {"seg_id": "X-1", "start": 0, "end": 1, "video_id": "X"}},
+    ]
+    out = backbone.order_by_backbone(beats, "BB")
+    # 앞 3개(movable body) 화면이 백본 start 오름차순(1,5,9), 꼬리(CTA)는 고정
+    starts = [b["primary"]["start"] for b in out[:3]]
+    assert starts == [1, 5, 9]
+    assert out[3]["primary"]["seg_id"] == "X-1"   # 꼬리 고정
+    # 나레이션(대사)은 제자리 — 화면만 시간순으로
+    assert [b["narration"] for b in out] == ["결과", "재료", "조리", "댓글 남겨주세요"]
+
+
+def test_order_by_backbone_keeps_action_fixed():
+    # ping_pong이 고친(action_fixed) 비트는 순서 재배치에서 제외(앵커)
+    beats = [
+        {"beat_idx": 0, "narration": "썰기", "action_fixed": True,
+         "primary": {"seg_id": "S1-9", "start": 9, "end": 10, "video_id": "S1"}},
+        {"beat_idx": 1, "narration": "재료", "primary": {"seg_id": "BB-1", "start": 1, "end": 2, "video_id": "BB"}},
+        {"beat_idx": 2, "narration": "조리", "primary": {"seg_id": "BB-5", "start": 5, "end": 6, "video_id": "BB"}},
+    ]
+    out = backbone.order_by_backbone(beats, "BB")
+    assert out[0]["primary"]["seg_id"] == "S1-9"   # action_fixed 그대로
+
+
 def test_pick_clips_excludes_backbone_video():
     pool = [{"video_id": "BB", "segments": [_seg("BB-1", action="붓다")]},
             {"video_id": "S1", "segments": [_seg("S1-1", action="붓다")]}]
