@@ -9,7 +9,8 @@ def test_get_or_create_by_google(tmp_path):
     cid = s.get_or_create_by_google("sub-abc", "a@x.com")
     assert cid and s.get_customer(cid)["plan"] == "free"
     assert s.get_customer(cid)["email"] == "a@x.com"
-    assert s.get_customer(cid)["full_access_until"] > 0          # 체험 자동시작
+    assert s.get_customer(cid)["approved_at"] is None            # ★대기중(승인 전)
+    assert s.get_customer(cid)["full_access_until"] == 0         # 체험은 승인 시 시작
     assert s.get_or_create_by_google("sub-abc", "a@x.com") == cid  # 같은 sub=같은 계정
     assert s.get_or_create_by_google("sub-def", "b@x.com") != cid  # 다른 sub=다른 계정
 

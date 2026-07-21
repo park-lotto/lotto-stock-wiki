@@ -2392,7 +2392,7 @@ class Store:
         username = "g_" + str(google_sub)               # username 유니크 제약 충족용(절단X — sub 전체가 dedup 키)
         try:
             return self.create_customer(username, secrets.token_hex(16),
-                                        email=email, google_sub=google_sub)
+                                        email=email, google_sub=google_sub, approved=False)
         except ValueError:
             with self._conn() as c:                     # 경합으로 방금 생성됐으면 재조회
                 row = c.execute("SELECT id FROM customers WHERE google_sub=?", (google_sub,)).fetchone()

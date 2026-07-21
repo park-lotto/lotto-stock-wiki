@@ -3463,7 +3463,7 @@ async def _api_signup(req: Request):
     if len(u) < 3 or len(p) < 4:
         return RedirectResponse("/signup?e=" + urllib.parse.quote("아이디 3자·비밀번호 4자 이상"), status_code=303)
     try:
-        customer_id = Store(DB_PATH).create_customer(u, p)
+        customer_id = Store(DB_PATH).create_customer(u, p, approved=False)
     except ValueError:
         return RedirectResponse("/signup?e=" + urllib.parse.quote("이미 존재하는 아이디입니다"), status_code=303)
     r = RedirectResponse("/", status_code=303)
