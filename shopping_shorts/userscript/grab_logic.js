@@ -16,6 +16,8 @@
   try {
     if (location.hostname.indexOf("shoppingshorts.duckdns.org") >= 0) {
       document.documentElement.setAttribute("data-ss-grab-installed", "1");
+      // localStorage는 JS월드가 아니라 '출처(origin)'로 공유돼 샌드박스 경계에 가장 강하다.
+      try { localStorage.setItem("ss_grab_ok", "1"); } catch (e) {}
       try { window.postMessage({ __ssGrabInstalled: true }, "*"); } catch (e) {}
       return;
     }

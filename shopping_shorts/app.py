@@ -3927,12 +3927,21 @@ _GRAB_SETUP_HTML = """<!doctype html><html lang="ko"><head>
   }
   window.ssMark=function(n){ try{sessionStorage.setItem("ss_did"+n,"1"); if(n===2) sessionStorage.removeItem("ss_reloaded");}catch(e){} };
   window.addEventListener("message",function(ev){ if(ev&&ev.data&&ev.data.__ssGrabInstalled) markDone(); });
-  function poll(n){
-    if(detected()){ markDone(); return; }
-    if(n>0){ setTimeout(function(){poll(n-1);},400); return; }
-    try{ if(sessionStorage.getItem("ss_did2")==="1"){ var rc=document.getElementById("recheck"); if(rc) rc.style.display=""; } }catch(e){}
-  }
-  poll(12);
+  // ★유저스크립트가 표식을 '언제' 남기든(느린 네트워크로 늦게 실행돼도) 즉시 감지 —
+  //   유한 폴링만 쓰면 그 시간 지나 표식이 생길 때 영영 못 잡는다(2026-07-21 고객 실사고).
+  try{
+    new MutationObserver(function(){ if(detected()) markDone(); })
+      .observe(document.documentElement,{attributes:true,attributeFilter:["data-ss-grab-installed"]});
+  }catch(e){}
+  var polls=0;
+  var iv=setInterval(function(){
+    if(detected()){ markDone(); clearInterval(iv); return; }
+    polls++;
+    // 12틱(약6초) 뒤 '확인하기'를 노출하되, 폴링은 멈추지 않는다(늦은 설치도 계속 감지).
+    if(polls===12){ try{ if(sessionStorage.getItem("ss_did2")==="1"){ var rc=document.getElementById("recheck"); if(rc) rc.style.display=""; } }catch(e){} }
+    if(polls>=300){ clearInterval(iv); }   // 약150초 상한(무한 타이머 방지)
+  },500);
+  if(detected()) markDone();
   document.addEventListener("visibilitychange",function(){
     try{
       if(document.visibilityState==="visible" && !detected()
