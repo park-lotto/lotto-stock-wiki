@@ -117,17 +117,19 @@ def extract_buckets(full_text, call=None):
 
 
 def ingest_script(store, full_text, source="manual", url="",
-                  product_category=None, call=None):
+                  product_category=None, category_source=None, perf=None, call=None):
     """대본을 분해해 부품은행에 담는다 → {source_id, added}.
 
     extract_buckets → add_pattern_source(원본 1건) → 각 부품 add_pattern_item(pending).
     스타일 버킷은 리터럴, 내용 버킷은 slot_role='template'. 추출 실패 시
-    {source_id: None, added: 0}(소스도 안 만든다 — 빈 소스 유령 방지)."""
+    {source_id: None, added: 0}(소스도 안 만든다 — 빈 소스 유령 방지).
+    perf/category_source는 자동크롤 결합(Phase1)에서 넘어온다(R3·R4)."""
     buckets = extract_buckets(full_text, call=call)
     if not buckets:
         return {"source_id": None, "added": 0}
     source_id = store.add_pattern_source(
-        source, url, full_text, product_category=product_category, structure=buckets)
+        source, url, full_text, product_category=product_category,
+        category_source=category_source, perf=perf, structure=buckets)
     added = 0
     for bucket in STYLE_BUCKETS:
         for text in buckets.get(bucket) or []:

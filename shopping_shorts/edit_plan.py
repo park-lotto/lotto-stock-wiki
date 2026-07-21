@@ -63,9 +63,12 @@ def _build_inventory(source_scripts):
                 "video_id": vid, "seg_id": sid,
                 "start": seg["start"], "end": seg["end"],
                 "text": seg.get("text", ""), "scene_desc": seg.get("scene_desc", ""),
+                "action": seg.get("action"),
             }
+            _act = seg.get("action")
+            _act_s = f" | 행위:{_act}" if _act else ""
             lines.append(
-                f"[{sid}] ({length}s) 화면:{seg.get('scene_desc','')} | 말:{seg.get('text','')}"
+                f"[{sid}] ({length}s) 화면:{seg.get('scene_desc','')} | 말:{seg.get('text','')}{_act_s}"
             )
     return seg_map, "\n".join(lines)
 

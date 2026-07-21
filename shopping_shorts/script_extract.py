@@ -15,6 +15,7 @@ import time
 from google.genai import types
 
 from pipeline.atoms import key_vault
+from shopping_shorts import action_dict
 from shopping_shorts import comment_gen
 from shopping_shorts import scene_cut
 from shopping_shorts.config import SHORTS_GEMINI_KEYS
@@ -40,6 +41,7 @@ _RESPONSE_SCHEMA = {
                     "end": {"type": "number"},
                     "text": {"type": "string"},
                     "scene_desc": {"type": "string"},
+                    "action": {"type": "string", "enum": action_dict.ACTION_VOCAB + ["없음"]},
                 },
                 "required": ["start", "end", "text", "scene_desc"],
             },
@@ -74,6 +76,8 @@ _PROMPT = """이 영상을 보고 시간 순서대로 세그먼트로 나눠 대
 - scene_desc: 그 구간 화면에 무엇이 보이는지 짧게(제품/행동/구도). 화면 속 **주 대상을
   정확히** 적어라 — 헷갈리는 물체를 다른 것으로 단정하지 마라(예: 양파를 참외로, 무를 감자로
   오인 금지). 확실치 않으면 색·형태로만 묘사하고 엉뚱한 이름을 붙이지 마라.
+- action: 그 구간의 주요 손동작을 하나 골라라(당기다·붓다·바르다·펴다·자르다·섞다·닦다·
+  누르다·끼우다·열다·담다·닫다). 해당 없으면 "없음".
 
 full_text에는 모든 세그먼트의 text를 순서대로 이어붙여라. 맨 앞 훅부터 한 단어도 빠짐없이
 완전히 이어붙이고, 다른 텍스트는 없이 JSON만 출력."""
@@ -83,12 +87,16 @@ def _assign_seg_ids(video_id, raw_segments):
     """모델이 준 세그먼트 목록에 seg_id 부여 + 숫자 필드 float 캐스팅(순수함수)."""
     out = []
     for n, seg in enumerate(raw_segments):
+        raw_action = seg.get("action")
+        if raw_action in (None, "", "없음") or raw_action not in action_dict.ACTION_VOCAB:
+            raw_action = action_dict.tag_action(f"{seg.get('text', '')} {seg.get('scene_desc', '')}")
         out.append({
             "seg_id": f"{video_id}-{n}",
             "start": float(seg.get("start") or 0.0),
             "end": float(seg.get("end") or 0.0),
             "text": seg.get("text", ""),
             "scene_desc": seg.get("scene_desc", ""),
+            "action": raw_action,  # str 동사 or None
         })
     return out
 
