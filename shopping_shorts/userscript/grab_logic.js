@@ -1,11 +1,25 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-07-19-g  (샤오홍슈 카드링크 xsec_token 앵커 우선 — 토큰없는 래퍼 오집 수정)
+// 로직 버전: 2026-07-21-a  (설치 확인 비컨 — /grab 자가감지 신호등용)
 (function () {
   "use strict";
   if (window.__ssGrabLoaded) return;   // 로더가 중복 실행돼도 한 번만
   window.__ssGrabLoaded = true;
   var BASE = "https://shoppingshorts.duckdns.org";
+
+  // ── 설치 확인 비컨 ─────────────────────────────────────────────
+  // 이 로직이 우리 설치 안내 페이지(shoppingshorts.duckdns.org/grab*)에서 돌면
+  // = 유저스크립트가 정상 설치됐다는 뜻. DOM에 표식을 남겨 그 페이지가 "설치 완료"를
+  // 스스로 감지하게 한다(사용자가 '됐나?'를 판단할 필요 없음). Tampermonkey 샌드박스는
+  // JS 스코프만 격리하고 DOM은 페이지와 공유하므로 이 attribute를 페이지 스크립트가 읽는다.
+  // 우리 도메인에선 담기 버튼을 붙이지 않고 여기서 끝낸다(자기 페이지에 엉뚱한 📥 방지).
+  try {
+    if (location.hostname.indexOf("shoppingshorts.duckdns.org") >= 0) {
+      document.documentElement.setAttribute("data-ss-grab-installed", "1");
+      try { window.postMessage({ __ssGrabInstalled: true }, "*"); } catch (e) {}
+      return;
+    }
+  } catch (e) {}
 
   function meta(p) {
     var e = document.querySelector('meta[property="' + p + '"]');
