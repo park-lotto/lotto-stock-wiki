@@ -4972,6 +4972,18 @@ def api_pattern_spines(status: str = None):
     return {"ok": True, "spines": Store(DB_PATH).list_spines(status=status or None)}
 
 
+@app.post("/api/pattern/spine/status")
+def api_pattern_spine_status(body: dict):
+    """스파인 승인/기각. body: {id, status}. 승격게이트(source_count>=3 AND approved)의
+    '사람 승인' 절반 — 야간배치는 pending만 만들고 여기서만 approved가 된다."""
+    spine_id = body.get("id")
+    status = (body.get("status") or "").strip()
+    if spine_id is None or not status:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "id·status 필요"})
+    Store(DB_PATH).set_spine_status(spine_id, status)
+    return {"ok": True}
+
+
 @app.post("/api/pattern/spine")
 def api_pattern_spine_add(body: dict):
     """매크로 스파인 수동 시드. body: {name, situation_type?, character_roles?,
