@@ -290,7 +290,18 @@ def _strip_punct(w):
     return w.strip(".,!?…\"'()[]")
 
 
-def _caption_segments(narration):
+def _wrap_long(segs):
+    """구절 리스트에서 _CAP_WRAP를 크게 넘는 초장문만 줄바꿈으로 방어(대부분 그대로 1줄)."""
+    out = []
+    for s in segs:
+        if len(s.replace(" ", "")) > _CAP_WRAP:
+            out.extend(textwrap.wrap(s, _CAP_WRAP) or [s])
+        else:
+            out.append(s)
+    return out
+
+
+def _caption_segments(narration, preset=None):
     """나레이션을 **의미(호흡) 단위**의 짧은 구절로 나눈다(2~3어절, 1줄).
     예) "여러분 / 오이 절대", "냉장고에 / 그냥 두지 마세요",
         "버리기 일쑤였는데 / 이 방법은 진짜", "남겨주시면 / 자세한 보관비법 / 바로 알려드릴게요".
@@ -303,10 +314,18 @@ def _caption_segments(narration):
       그 **뒤에서** 끊는다. ("여러분 |", "남겨주시면 |")
     - 그 밖에는 글자수(_CAP_TARGET) / 어절수(_CAP_MAX_WORDS) 목표 안에서 이어붙인다.
 
-    방어: 목표를 크게 넘는 아주 긴 단일 어절은 _CAP_WRAP로 강제 줄바꿈."""
+    방어: 목표를 크게 넘는 아주 긴 단일 어절은 _CAP_WRAP로 강제 줄바꿈.
+
+    preset: 대본을 쓴 AI가 미리 끊어준 호흡 줄(list). 이어붙였을 때 narration과 정확히
+    같으면(공백만 무시) 그대로 채택 — 규칙기반 두더지잡기를 근본적으로 대체한다(2026-07-21).
+    글자가 하나라도 다르면(모델이 문장을 바꿈) 무시하고 아래 규칙 폴백으로 안전하게 내려간다."""
     narr = (narration or "").strip()
     if not narr:
         return []
+    if preset and isinstance(preset, (list, tuple)):
+        lines = [str(x).strip() for x in preset if str(x).strip()]
+        if lines and "".join(lines).replace(" ", "") == narr.replace(" ", ""):
+            return _wrap_long(lines)
     words = narr.split()
     out, cur = [], []
     for i, w in enumerate(words):
@@ -350,13 +369,7 @@ def _caption_segments(narration):
         out[-2] = out[-2] + " " + out[-1]
         out.pop()
     # 목표를 크게 넘는 초장문 단일 구절만 줄바꿈으로 방어(대부분은 그대로 1줄).
-    segs = []
-    for s in out:
-        if len(s.replace(" ", "")) > _CAP_WRAP:
-            segs.extend(textwrap.wrap(s, _CAP_WRAP) or [s])
-        else:
-            segs.append(s)
-    return segs or [narr]
+    return _wrap_long(out) or [narr]
 
 
 def _caption_durations(segs, dur, real_durs=None):
@@ -392,12 +405,13 @@ def _caption_durations(segs, dur, real_durs=None):
     return floored
 
 
-def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None, cap_offset=0.0, tail=0.5):
+def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None, cap_offset=0.0, tail=0.5, cap_lines=None):
     """나레이션 한 비트의 자막(하단 바 + 순차 drawtext)을 필터 문자열 리스트로 반환한다.
     _segmented_drawtext 기반: highlight_rules가 있으면 단어별 강조, 없으면 세그먼트 1개
     (기존과 동일 산출물). 각 구절 enable 구간은 t0(전체 타임라인 오프셋)만큼 밀린다.
-    real_durs가 주어지면 _caption_durations에 그대로 전달해 ASR 실측 타이밍을 쓴다."""
-    segs = _caption_segments(narration)
+    real_durs가 주어지면 _caption_durations에 그대로 전달해 ASR 실측 타이밍을 쓴다.
+    cap_lines가 있으면(AI가 끊어준 호흡 줄) 그 경계를 그대로 쓴다 — 규칙 폴백은 안전망."""
+    segs = _caption_segments(narration, preset=cap_lines)
     if not segs:
         return []
     style = style or {}
@@ -958,6 +972,7 @@ def _beat_timeline(edit_plan, tts_paths):
             "role": beat.get("role", ""),
             "cap_durs": beat.get("cap_durs"),
             "cap_offset": beat.get("cap_offset", 0.0),
+            "caption_lines": beat.get("caption_lines"),   # AI가 끊어준 자막 호흡 줄(있으면)
         })
         t0 += dur
     return timeline
@@ -993,7 +1008,8 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         _tail = 0.5 if b is timeline[-1] else 0.0
         filters.extend(_caption_drawtexts(b["narration"], b["dur"], work, b["beat_idx"],
                                           b["t0"], caption_style, real_durs=b.get("cap_durs"),
-                                          cap_offset=b.get("cap_offset", 0.0), tail=_tail))
+                                          cap_offset=b.get("cap_offset", 0.0), tail=_tail,
+                                          cap_lines=b.get("caption_lines")))
     if headcopy and (headcopy.get("text") or "").strip():
         # enable 없으면 전체 표시(기존). 팩이 hook_only면 렌더 파생값 _headcopy_enable이 온다.
         hc_enable = ((deco or {}).get("motion") or {}).get("_headcopy_enable")

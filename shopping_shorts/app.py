@@ -1578,7 +1578,8 @@ def api_mix_result(job_id: str):
     for b in plan["beats"]:
         beats.append({**b, "plagiarism_flag": b["beat_idx"] in flags,
                       "tts_preview_url": f"/api/mix/tts/{job_id}/{b['beat_idx']}",
-                      "cap_segments": video_assemble._caption_segments(b.get("narration", ""))})
+                      "cap_segments": video_assemble._caption_segments(
+                          b.get("narration", ""), preset=b.get("caption_lines"))})
     detected = plan.get("detected_type") or _edit_plan._DEFAULT_TYPE
     return {
         "ok": True, "structure": plan["structure"], "beats": beats,
@@ -4459,7 +4460,7 @@ def api_produce_mix_beats_preview(job_id: str):
         out.append({
             "i": idx, "total": total,
             "caption": narr,                                        # 폴백·호환용(통째)
-            "segs": video_assemble._caption_segments(narr),         # 실제 렌더와 같은 구절 분할
+            "segs": video_assemble._caption_segments(narr, preset=b.get("caption_lines")),  # 렌더와 같은 분할
             "durs": b.get("cap_durs"),                              # 구절별 실제 표시시간(없으면 None)
         })
     return {"beats": out}
