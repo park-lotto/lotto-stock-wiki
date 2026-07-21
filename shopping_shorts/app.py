@@ -3896,6 +3896,7 @@ _GRAB_SETUP_HTML = """<!doctype html><html lang="ko"><head>
   .gtitle{font-size:17px;line-height:1.55;padding-top:4px;color:#141a24;font-weight:500}
   .gstep.warn .gtitle{color:#96003f;font-weight:700}
   .gbtn{display:inline-block;background:#1f6feb;color:#fff;text-decoration:none;font-weight:800;font-size:16px;padding:12px 18px;border-radius:10px;margin:2px 0 10px;box-shadow:0 3px 10px rgba(31,111,235,.28)}
+  .gcopy{display:inline-block;background:#fff;color:#1f6feb;border:2px solid #1f6feb;font-weight:800;font-size:15px;padding:11px 16px;border-radius:10px;margin:2px 0 10px;cursor:pointer;text-align:left;line-height:1.4}
   .gimg{display:block;width:100%;max-width:100%;height:auto;border:2px solid #e3e7ee;border-radius:10px;margin:0}
   .gwarnbox{background:#fff3f2;border:1.5px solid #e0245e;border-radius:10px;padding:11px 13px;font-size:13.5px;line-height:1.55;color:#a01040;margin:16px 0 0}
   .gdone{background:#eafaf0;border:1.5px solid #1f9d55;border-radius:10px;padding:12px 14px;font-size:15px;color:#186c3c;margin:12px 0 0;font-weight:600}
@@ -3912,29 +3913,11 @@ _GRAB_SETUP_HTML = """<!doctype html><html lang="ko"><head>
   __GUIDE_SECTION__
 
   <div id="steps">
-    <div class="step" id="s1">
-      <div class="num">1</div>
-      <div class="cbody">
-        <div class="t">담기 도구 설치</div>
-        <div class="d">‘Tampermonkey(텀퍼몽키)’ 무료 도구예요. 버튼을 누르면 새 탭이 열려요 → 파란 <b>“Chrome에 추가”</b> → <b>“확장 프로그램 추가”</b>. (이미 있으면 ②로 넘어가세요.)</div>
-        <a class="btn" href="__TM_URL__" target="_blank" rel="noopener" onclick="ssMark(1)">① 담기 도구 설치하기 ↗</a>
-      </div>
-      <div class="check">○</div>
-    </div>
-    <div class="step" id="s2">
-      <div class="num">2</div>
-      <div class="cbody">
-        <div class="t">스탁브레인 담기 켜기</div>
-        <div class="d">버튼을 누르면 설치창이 떠요 → <b>“설치”</b> 클릭. 설치창이 안 뜨면 위 ①부터 해주세요.</div>
-        <a class="btn" href="/grab.user.js" target="_blank" rel="noopener" onclick="ssMark(2)">② 담기 켜기 ↗</a>
-      </div>
-      <div class="check">○</div>
-    </div>
     <div class="step" id="s3">
       <div class="num">✓</div>
       <div class="cbody">
-        <div class="t">완료</div>
-        <div class="d">위 2개를 마치면 <b>여기가 저절로 초록불</b>로 바뀌어요. 아무것도 안 눌러도 돼요.</div>
+        <div class="t">설치 확인</div>
+        <div class="d">위 <b>사진 4단계</b>를 다 마치면 <b>여기가 저절로 초록불</b>로 바뀌어요. 아무것도 안 눌러도 돼요.</div>
       </div>
       <div class="check">○</div>
     </div>
@@ -3977,6 +3960,11 @@ _GRAB_SETUP_HTML = """<!doctype html><html lang="ko"><head>
     var rc=document.getElementById("recheck"); if(rc) rc.style.display="none";
   }
   window.ssMark=function(n){ try{sessionStorage.setItem("ss_did"+n,"1"); if(n===2) sessionStorage.removeItem("ss_reloaded");}catch(e){} };
+  // chrome:// 주소는 웹페이지 링크로 못 연다(크롬 정책) → '주소 복사'로 대신한다.
+  window.ssCopy=function(t,btn){
+    try{ navigator.clipboard.writeText(t); }catch(e){ try{var i=document.createElement("input");i.value=t;document.body.appendChild(i);i.select();document.execCommand("copy");i.remove();}catch(e2){} }
+    if(btn){ var o=btn.getAttribute("data-label")||btn.textContent; btn.setAttribute("data-label",o); btn.textContent="✅ 복사됐어요! 주소창에 붙여넣기(Ctrl+V) 후 Enter"; setTimeout(function(){btn.textContent=o;},2800); }
+  };
   window.addEventListener("message",function(ev){ if(ev&&ev.data&&ev.data.__ssGrabInstalled) markDone(); });
   // ★유저스크립트가 표식을 '언제' 남기든(느린 네트워크로 늦게 실행돼도) 즉시 감지 —
   //   유한 폴링만 쓰면 그 시간 지나 표식이 생길 때 영영 못 잡는다(2026-07-21 고객 실사고).
@@ -4025,10 +4013,12 @@ _GRAB_GUIDE_TEMPLATE = """<div class="guide">
     <a class="gbtn" href="/grab.user.js" target="_blank" rel="noopener" onclick="ssMark(2)">② 담기 스크립트 설치 열기 ↗</a>
     <img class="gimg" src="__IMG2__" alt="2단계 스크립트 설치">
 
-    <div class="gstep warn"><div class="gnum">3</div><div class="gtitle">⚠️ 주소창에 <code>chrome://extensions</code> 입력 → 오른쪽 위 <b>“개발자 모드”</b> 스위치 켜기</div></div>
+    <div class="gstep warn"><div class="gnum">3</div><div class="gtitle">⚠️ 아래 <b>“주소 복사”</b> 누르고 → 크롬 주소창에 <b>붙여넣기(Ctrl+V) + Enter</b> → 오른쪽 위 <b>“개발자 모드”</b> 스위치 켜기</div></div>
+    <button class="gcopy" onclick="ssCopy('chrome://extensions', this)">📋 chrome://extensions 주소 복사</button>
     <img class="gimg" src="__IMG3__" alt="3단계 개발자 모드 켜기">
 
-    <div class="gstep warn"><div class="gnum">4</div><div class="gtitle">⚠️ <b>가장 중요!</b> 텀퍼몽키 <b>“세부정보”</b> → <b>“사용자 스크립트 허용”</b> 켜기 → 크롬을 껐다 켜기</div></div>
+    <div class="gstep warn"><div class="gnum">4</div><div class="gtitle">⚠️ <b>가장 중요!</b> 아래 <b>“주소 복사”</b> 누르고 → 주소창에 <b>붙여넣기 + Enter</b> → 텀퍼몽키 설정에서 <b>“사용자 스크립트 허용”</b> 켜기 → 크롬을 껐다 켜기</div></div>
+    <button class="gcopy" onclick="ssCopy('chrome://extensions/?id=dhdgffkkebhmkfjojejmpbldmpobfkfo', this)">📋 텀퍼몽키 설정 주소 복사</button>
     <img class="gimg" src="__IMG4__" alt="4단계 사용자 스크립트 허용">
 
     <div class="gwarnbox">❗ <b>3·4번을 안 켜면</b> 텀퍼몽키와 스크립트를 다 깔아도 <b>아무것도 안 됩니다.</b> 여기가 제일 많이 놓치는 부분이에요.</div>
