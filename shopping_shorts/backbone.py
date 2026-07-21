@@ -52,6 +52,7 @@ def _broll_segs(pool_sources, src_count, exclude_seg_ids, prefer_video=None):
     길이 0 제외."""
     segs = [{**seg, "video_id": vid} for vid, seg in _iter_segs(pool_sources)
             if seg.get("seg_id") not in exclude_seg_ids
+            and not seg.get("has_effect")                 # 원본 효과 박힌 조각은 B롤로 안 씀
             and (seg.get("end", 0) - seg.get("start", 0)) > 0.05]
     segs.sort(key=lambda c: (c.get("video_id") != prefer_video,      # 같은 소스 먼저(False<True)
                              src_count.get(c.get("video_id"), 0)))
@@ -116,9 +117,12 @@ def _iter_segs(sources):
 
 
 def action_pool(pool_sources):
-    """행위 → [seg(+video_id)] 인덱스. best-of-N·커버율의 공통 자료구조."""
+    """행위 → [seg(+video_id)] 인덱스. best-of-N·커버율의 공통 자료구조.
+    원본 효과가 박힌 조각(has_effect)은 B롤 스왑/커버 후보에서 제외한다(2026-07-21)."""
     pool = {}
     for vid, seg in _iter_segs(pool_sources):
+        if seg.get("has_effect"):
+            continue
         a = segment_action(seg)
         if a:
             pool.setdefault(a, []).append({**seg, "video_id": vid})

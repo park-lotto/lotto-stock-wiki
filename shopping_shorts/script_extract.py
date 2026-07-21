@@ -42,6 +42,7 @@ _RESPONSE_SCHEMA = {
                     "text": {"type": "string"},
                     "scene_desc": {"type": "string"},
                     "action": {"type": "string", "enum": action_dict.ACTION_VOCAB + ["없음"]},
+                    "has_effect": {"type": "boolean"},
                 },
                 "required": ["start", "end", "text", "scene_desc"],
             },
@@ -78,6 +79,11 @@ _PROMPT = """이 영상을 보고 시간 순서대로 세그먼트로 나눠 대
   오인 금지). 확실치 않으면 색·형태로만 묘사하고 엉뚱한 이름을 붙이지 마라.
 - action: 그 구간의 주요 손동작을 하나 골라라(당기다·붓다·바르다·펴다·자르다·섞다·닦다·
   누르다·끼우다·열다·담다·닫다). 해당 없으면 "없음".
+- has_effect: 그 구간에 **원본 제작자가 넣은 지울 수 없는 시각 효과**가 있으면 true. 즉
+  화면 전환효과·줌인아웃 연출·분할화면·강한 색보정/필터·스티커/이모지/그래픽 오버레이·
+  큰 텍스트 애니메이션이 박혀 있어 **깨끗한 요리/제품 원본이 아닌** 조각이면 true. 평범하게
+  촬영된 요리/손동작/완성샷이면 false. (우리가 B롤로 재사용할 때 이물감이 생기는 조각을
+  걸러내려는 것 — 확실할 때만 true, 애매하면 false.)
 
 full_text에는 모든 세그먼트의 text를 순서대로 이어붙여라. 맨 앞 훅부터 한 단어도 빠짐없이
 완전히 이어붙이고, 다른 텍스트는 없이 JSON만 출력."""
@@ -97,6 +103,7 @@ def _assign_seg_ids(video_id, raw_segments):
             "text": seg.get("text", ""),
             "scene_desc": seg.get("scene_desc", ""),
             "action": raw_action,  # str 동사 or None
+            "has_effect": bool(seg.get("has_effect")),  # 원본 효과 박힘 → B롤 제외용
         })
     return out
 
