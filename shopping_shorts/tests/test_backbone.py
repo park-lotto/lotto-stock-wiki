@@ -158,6 +158,53 @@ def test_ping_pong_trims_overflow_narration():
     assert backbone.length_status(out[0]) == "ok"
 
 
+def test_generate_backbone_script_uses_flow_and_inventory():
+    captured = {}
+
+    def fake_call(prompt, schema):
+        captured["prompt"] = prompt
+        return {"beats": [
+            {"narration": "우리만의 새 훅이에요", "seg_id": "BB-1"},
+            {"narration": "여기서 계란을 부어요", "seg_id": "S1-1"}]}
+
+    flow = [{"seg_id": "BB-1", "action": "자르다", "scene_desc": "써는", "seconds": 2},
+            {"seg_id": "BB-2", "action": "붓다", "scene_desc": "붓는", "seconds": 3}]
+    inv = [{"video_id": "BB", "seg_id": "BB-1", "action": "자르다", "scene_desc": "써는"},
+           {"video_id": "S1", "seg_id": "S1-1", "action": "붓다", "scene_desc": "다른 붓는"}]
+    beats = backbone.generate_backbone_script(flow, inv, 20, call=fake_call)
+    assert [b["narration"] for b in beats] == ["우리만의 새 훅이에요", "여기서 계란을 부어요"]
+    # 흐름과 인벤토리가 프롬프트에 실렸나
+    assert "써는" in captured["prompt"] and "S1-1" in captured["prompt"]
+
+
+def test_generate_backbone_script_drops_invented_segids():
+    # 인벤토리에 없는 seg_id를 모델이 지어내면 드롭(없는 장면 요구 차단)
+    fake = lambda p, s: {"beats": [{"narration": "진짜", "seg_id": "BB-1"},
+                                    {"narration": "가짜장면", "seg_id": "ZZ-99"}]}
+    inv = [{"video_id": "BB", "seg_id": "BB-1", "action": "자르다", "scene_desc": "써는"}]
+    beats = backbone.generate_backbone_script([], inv, 20, call=fake)
+    assert [b["seg_id"] for b in beats] == ["BB-1"]   # ZZ-99 드롭
+
+
+def test_backbone_flow_extracts_skeleton():
+    bb = {"video_id": "BB", "segments": [
+        _seg("BB-1", scene_desc="바나나 써는", action="자르다"),
+        _seg("BB-2", scene_desc="계란 붓는", action="붓다")]}
+    flow = backbone.backbone_flow(bb)
+    assert [f["action"] for f in flow] == ["자르다", "붓다"]
+    assert flow[0]["scene_desc"] == "바나나 써는" and "narration" not in flow[0]  # 대사 아님
+
+
+def test_scene_inventory_lists_all_available():
+    sources = [
+        {"video_id": "BB", "segments": [_seg("BB-1", action="붓다")]},
+        {"video_id": "S1", "segments": [_seg("S1-1", action="자르다")]},
+    ]
+    inv = backbone.scene_inventory(sources)
+    acts = {i["action"] for i in inv}
+    assert acts == {"붓다", "자르다"} and len(inv) == 2
+
+
 def test_pick_backbone_most_segments():
     sources = [
         {"video_id": "A", "segments": [_seg("A-1"), _seg("A-2")]},
