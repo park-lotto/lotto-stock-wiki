@@ -393,6 +393,44 @@ def ping_pong_reconcile(beats, pool_sources, rewrite_call=None, max_rounds=2, tr
     return out
 
 
+def ensure_sources_used(beats, pool_sources):
+    """서브 의무삽입(P1): 모든 소스가 최소 1회 화면에 뜨게 강제. Gemini 선택편중(s2=0)은
+    dedup_and_balance('반복'만 고침)로 못 잡아, 안 쓰인 소스의 클립을 **같은 행위**(narration↔clip)로
+    비트 primary에 밀어넣는다 — 행위 못을 유지하므로 sync 안 깨진다. 행위가 안 맞으면 억지삽입
+    안 함(mismatch 금지). 교체 대상은 현재 primary가 가장 많이 쓰인 소스인 비트 우선(유일사용
+    소스는 안 뺏는다). 소스 1개 이하면 무변경."""
+    all_vids = {s.get("video_id") for s in (pool_sources or []) if s.get("segments")}
+    all_vids.discard(None)
+    if len(all_vids) <= 1:
+        return beats
+    out = [dict(b) for b in beats]
+    for vid in sorted(all_vids):
+        counts = Counter((b.get("primary") or {}).get("video_id") for b in out)
+        if counts.get(vid, 0) > 0:
+            continue  # 이미 쓰임
+        by_action = action_pool([s for s in pool_sources if s.get("video_id") == vid])
+        if not by_action:
+            continue
+        # 현재 primary 소스가 많이 쓰인 비트부터(유일사용 소스를 뺏지 않게)
+        order = sorted(range(len(out)),
+                       key=lambda i: -counts.get((out[i].get("primary") or {}).get("video_id"), 0))
+        for i in order:
+            b = out[i]
+            cur_vid = (b.get("primary") or {}).get("video_id")
+            if counts.get(cur_vid, 0) <= 1:
+                continue  # 그 비트의 소스가 유일사용이면 건드리지 않음
+            n_act = action_dict.tag_action(b.get("narration", ""))
+            clips = by_action.get(n_act) if n_act else None
+            if not clips:
+                continue
+            nb = dict(b)
+            nb["primary"] = clips[0]
+            nb["forced_source"] = True
+            out[i] = nb
+            break
+    return out
+
+
 def pick_clips_for_action(action, pool_sources, exclude_video=None):
     """그 행위의 클립들(화면 스왑 best-of-N 후보). exclude_video=백본이면 서브만 반환
     (차별화 1층: 순서·싱크는 백본, 픽셀은 다른 소스)."""
