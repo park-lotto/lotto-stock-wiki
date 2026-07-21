@@ -528,8 +528,10 @@ def _candidate_quality(beats):
     return 0.6 * tone + 0.4 * fun
 
 
-def _score_candidate(plan):
-    """후보 추천 점수(0~1): 매칭(fit·억지없음·장면다양성) + 품질(대화체·재미강도). 빈 beats면 0.0."""
+def _score_candidate(plan, avoid_hooks=None):
+    """후보 추천 점수(0~1): 매칭(fit·억지없음·장면다양성) + 품질(대화체·재미강도). 빈 beats면 0.0.
+    avoid_hooks(novelty 감점, belt-and-suspenders): 최근 영상이 쓴 훅 목록. 첫 비트(=훅)가
+    그와 n-gram 겹치면 감점 → 프롬프트 회피를 무시하고 같은 훅을 낸 후보가 추천되는 걸 막는다."""
     beats = plan.get("beats") or []
     if not beats:
         return 0.0
@@ -543,7 +545,12 @@ def _score_candidate(plan):
     diversity = (len(set(seg_ids)) / len(seg_ids)) if seg_ids else 0.0
     match = 0.5 * avg_fit + 0.3 * (1 - forced_ratio) + 0.2 * diversity
     quality = _candidate_quality(beats)          # 나레이션 없으면 0 → 매칭점수만(기존 계약 유지)
-    return round(0.75 * match + 0.25 * quality, 3)
+    score = 0.75 * match + 0.25 * quality
+    if avoid_hooks:
+        hook = beats[0].get("narration") or ""
+        overlap = max((_ngram_overlap(hook, h) for h in avoid_hooks), default=0.0)
+        score -= 0.3 * overlap                   # 최근 훅과 겹칠수록 감점(최대 0.3)
+    return round(max(0.0, min(1.0, score)), 3)
 
 
 _CONFORM_SCHEMA = {
@@ -783,7 +790,8 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
 
 def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                            n_candidates=3, video_type=None, call=None, ping_pong=False,
-                           backbone_meta=None, backbone_forced=None, bank_context=""):
+                           backbone_meta=None, backbone_forced=None, bank_context="",
+                           avoid_hooks=None):
     """장면 우선 대본 모드: 팔레트+헌장으로 후보 n개 생성 → 각 EDL grounding·채점 →
     최고 score에 recommended=True. 각 candidate.plan은 build_edit_plan 반환형(하류 렌더 호환).
     후보 0개면 candidates=[](호출부가 기존 build_edit_plan로 폴백).
@@ -823,7 +831,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)
         story = {k: r.get(k, "") for k in
                  ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
-        cands.append({"plan": plan, "story": story, "score": _score_candidate(plan), "recommended": False})
+        cands.append({"plan": plan, "story": story,
+                      "score": _score_candidate(plan, avoid_hooks=avoid_hooks), "recommended": False})
     if cands:
         best = max(range(len(cands)), key=lambda i: cands[i]["score"])
         cands[best]["recommended"] = True
