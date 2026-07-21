@@ -2520,11 +2520,20 @@ def api_lens_trace_url(request: Request, body: dict):
             return JSONResponse(status_code=502, content={
                 "ok": False, "error": "영상/썸네일을 가져오지 못했습니다(봇차단·만료·미지원 URL)"})
         items = search_similar_videos(image_url, source_caption=caption)
+        # 📕🎬 중국앱 키워드 후보(비전). 렌즈 유사영상은 프론트가 프레임으로 뽑지만 trace는
+        # 프레임이 서버에만 있다(유튜브는 아예 썸네일 URL·caption 없음) → 서버가 image_url에서
+        # 바이트를 받아 직접 만든다. cn_search_candidates는 image_bytes가 없으면 빈 리스트라
+        # caption만으론 안 됨(2026-07-21 사장님 제보로 확인). Gemini 무료쿼터, 실패해도 무시.
+        cn_cands = []
+        try:
+            img_bytes = requests.get(image_url, timeout=15).content
+            cn_cands = (cn_search_candidates(img_bytes, caption) or {}).get("candidates", [])
+        except Exception:
+            pass
         store.bump_lens(month)
         ok = True
-        # caption도 돌려준다 — 프론트가 이걸로 중국앱 후보 검색어(cn/keywords)를 뽑는다.
-        # 없으면 레퍼런스 추적 화면에 📕🎬 키워드검색 행이 안 뜬다(2026-07-21 사장님 제보).
-        return {"ok": True, "items": items, "count": len(items), "source_url": url, "caption": caption}
+        return {"ok": True, "items": items, "count": len(items), "source_url": url,
+                "caption": caption, "cn_candidates": cn_cands}
     finally:
         if not ok:
             refund_credit(cid, "lens")
