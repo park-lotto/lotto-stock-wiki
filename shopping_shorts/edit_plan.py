@@ -595,6 +595,25 @@ _RECONCILE_SCHEMA = {
 }
 
 
+def _bb_rewrite(beats, call=_vault_call):
+    """핑퐁 재작성 콜백(backbone.ping_pong_reconcile용) — 화면과 못 맞춘 비트의 나레이션을
+    화면(scene_desc)에 맞게 1회 수정 → {beat_idx: 새나레이션}. 실패/무대상이면 {}."""
+    if not beats:
+        return {}
+    lines = "\n".join(
+        f"[{b['beat_idx']}] 화면:{(b.get('primary') or {}).get('scene_desc','')} | 현재대사:{b.get('narration','')}"
+        for b in beats)
+    prompt = (
+        "아래 비트들은 대사와 화면이 어긋난다. 각 대사를 **뜻과 정보는 유지**하되 화면(scene_desc)에 "
+        "어울리도록 표현만 자연스럽게 고쳐라. 화면에 없는 사실을 지어내지 마라.\n"
+        f"{lines}\n출력은 rewrites 배열의 JSON만.")
+    raw = call(prompt, _RECONCILE_SCHEMA)
+    if not raw or not isinstance(raw, dict):
+        return {}
+    return {int(r["beat_idx"]): r["narration"]
+            for r in raw.get("rewrites", []) if r.get("narration")}
+
+
 def _reconcile_weak_beats(beats, call=_vault_call):
     """앵커(respined 아님)이면서 fit<=3인 비트의 나레이션만 화면(scene_desc)에 맞게
     1회 Gemini 호출로 미세수정. 대상 0개면 호출 없이 그대로. 실패 시 원문 유지(fail-open)."""
@@ -677,10 +696,14 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
 
 
 def build_scene_first_plan(source_scripts, reference_text, target_seconds,
-                           n_candidates=3, video_type=None, call=None):
+                           n_candidates=3, video_type=None, call=None, ping_pong=False):
     """장면 우선 대본 모드: 팔레트+헌장으로 후보 n개 생성 → 각 EDL grounding·채점 →
     최고 score에 recommended=True. 각 candidate.plan은 build_edit_plan 반환형(하류 렌더 호환).
-    후보 0개면 candidates=[](호출부가 기존 build_edit_plan로 폴백)."""
+    후보 0개면 candidates=[](호출부가 기존 build_edit_plan로 폴백).
+
+    ping_pong=True(opt-in, 기본 off로 회귀0): grounding 후 backbone 핑퐁으로 비트별
+    대본↔장면을 왕복 조정(행위 불일치=fit 거짓말 잡기 → 같은 행위 클립 스왑 or 나레이션 재작성).
+    """
     seg_map, inventory = _build_inventory(source_scripts)
     detected = video_type or (detect_video_type(source_scripts) if source_scripts else _DEFAULT_TYPE)
     if not seg_map:
@@ -693,6 +716,10 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         plan = _ground_candidate(r, seg_map)
         if plan is None:
             continue
+        if ping_pong:
+            from shopping_shorts import backbone
+            plan["beats"] = backbone.ping_pong_reconcile(
+                plan["beats"], source_scripts, rewrite_call=lambda bs: _bb_rewrite(bs, _call))
         plan["detected_type"] = detected
         plan["affiliate_target"] = r.get("story_event", "") or ""
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)
