@@ -809,12 +809,12 @@ async function traceByUrl(){
     let saved=new Set();
     try{ saved=new Set((await (await fetch('/api/mix/basket')).json()).shortcodes||[]); }catch(e){}
     const tcap=d.caption||'';
+    // 📕🎬 키워드검색 후보는 서버가 프레임 비전으로 만들어 cn_candidates로 내려준다
+    // (caption만으론 cn_search_candidates가 빈 리스트 — 프레임 필수라 서버가 처리).
+    const tcn=(d.cn_candidates||[]).filter(c=>c&&c.zh);
     LENS_STATE['__trace__']={items, on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
-                             sel:new Set(), shortsOnly:false, ytLoading:false, keyword:'', caption:tcap, cnCands:[]};
+                             sel:new Set(), shortsOnly:false, ytLoading:false, keyword:'', caption:tcap, cnCands:tcn};
     renderLens('__trace__');
-    // 📕🎬 중국앱 키워드검색 행을 레퍼런스 추적에도 붙인다(렌즈 유사영상과 동일 배선).
-    // 프레임은 서버에만 있어 caption으로 후보를 뽑는다(cn/keywords는 caption만으로도 동작).
-    fetchLensCnKeywords('__trace__', tcap, null);
   }catch(e){ const body=document.getElementById('scriptBody'); if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
 }
 // ─── TRACE-END
