@@ -154,15 +154,20 @@ async function load(){
   list.innerHTML = items.map(cardHtml).join("");
 }
 
+// 훅 유형(taxonomy) 라벨 — 자동수확·분류가 붙인 hook_type을 사람이 알아보게(유형 다양성 큐레이션).
+const HTYPE = {target_callout:"🎯 타깃콜아웃", shock:"😲 충격", discovery:"💡 발견",
+  warning:"🚫 경고", praise:"👏 극찬", confession:"🙈 고백", question:"❓ 질문"};
+
 function cardHtml(it){
   const sb = {pending:"b-pending", approved:"b-approved", rejected:"b-rejected"}[it.status] || "b-pending";
   const sl = {pending:"대기", approved:"승인", rejected:"기각"}[it.status] || it.status;
   const tpl = it.slot_role === "template" ? `<span class="badge b-tpl">슬롯템플릿</span>` : "";
+  const ht = (it.tags && it.tags.hook_type) ? `<span class="badge b-tpl">${HTYPE[it.tags.hook_type] || it.tags.hook_type}</span>` : "";
   const perf = (it.perf_score||0).toFixed ? Number(it.perf_score||0).toFixed(1) : it.perf_score;
   return `<div class="card" id="c${it.id}">
     <div class="txt">${esc(it.text)}</div>
     <div class="meta">
-      <span class="badge ${sb}">${sl}</span>${tpl}
+      <span class="badge ${sb}">${sl}</span>${tpl}${ht}
       <span>빈도 ${it.freq}</span><span>성과 ${perf}</span>
       ${it.slot_role && it.slot_role!=="template" ? `<span>역할 ${esc(it.slot_role)}</span>`:""}
     </div>

@@ -350,6 +350,7 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
         # 영상 대본 프롬프트에 실어준다. 기본 off → 회귀0. 매 job 상위 perf 풀에서 로테이션
         # 샘플되므로(P0-1) 영상마다 다른 훅으로 열린다. 조립 실패는 조용히 무주입(부가기능).
         bank_context = ""
+        avoid_hooks = None
         if store.get_setting("bank_enabled", "") == "1":
             try:
                 from shopping_shorts import bank_assemble
@@ -358,12 +359,14 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                 _blocks = [bank_assemble.assemble_bank_context(store, video_type or ""),
                            bank_assemble.avoid_block(store)]
                 bank_context = "\n\n".join(x for x in _blocks if x)
+                # 프롬프트 회피를 무시하고 같은 훅을 낸 후보를 추천단계에서도 감점(belt-and-suspenders).
+                avoid_hooks = store.recent_script_usage()["hooks"] or None
             except Exception:
                 traceback.print_exc(file=sys.stderr)
         sf = build_scene_first_plan(source_scripts, reference_text, target_seconds,
                                     video_type=video_type, ping_pong=ping_pong,
                                     backbone_meta=backbone_meta, backbone_forced=backbone_forced,
-                                    bank_context=bank_context)
+                                    bank_context=bank_context, avoid_hooks=avoid_hooks)
         if sf["candidates"]:
             store.set_mix_candidates(job_id, sf["candidates"])
             rec = next((cand for cand in sf["candidates"] if cand["recommended"]),

@@ -30,3 +30,17 @@ def test_quality_does_not_break_empty_and_fit_ranking():
 def test_score_bounded_0_1():
     s = edit_plan._score_candidate(_plan(["예전엔 눅눅했는데 이젠 바삭해요"], fit=5))
     assert 0.0 <= s <= 1.0
+
+
+def test_score_penalizes_recent_hook():
+    # novelty 감점(belt-and-suspenders): 첫 비트(훅)가 최근 쓴 훅과 겹치면 추천점수를 깎는다.
+    plan = _plan(["와 이거 진짜 대박인데요 완전 놀랐잖아요", "이거 하나면 끝이에요"], fit=5)
+    base = edit_plan._score_candidate(plan)
+    pen = edit_plan._score_candidate(plan, avoid_hooks=["와 이거 진짜 대박인데요 완전 놀랐잖아요"])
+    assert pen < base
+
+
+def test_score_no_penalty_for_fresh_hook():
+    plan = _plan(["완전 새로운 신선한 오프닝 문장이에요", "이거 하나면 끝"], fit=5)
+    assert edit_plan._score_candidate(plan, avoid_hooks=["전혀 다른 옛날 훅 문구"]) \
+        == edit_plan._score_candidate(plan)
