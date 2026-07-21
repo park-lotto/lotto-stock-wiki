@@ -59,6 +59,7 @@ from shopping_shorts import effect_match, remotion_render, points
 from shopping_shorts import video_assemble
 from shopping_shorts import seo_generate, seo_probe
 from shopping_shorts import pattern_bank
+from shopping_shorts import bank_assemble
 from shopping_shorts import thumb_title
 import uuid
 
@@ -1110,9 +1111,12 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     elem_modes = ({k: v for k, v in _em.items() if k in script_generate.ELEM_KEYS}
                   if isinstance(_em, dict) else {})
     category_lookup = store.get_element_options(it.get("category") or "")
+    # 부품은행 주입(use_bank, 기본 off) — 승인된 스파인·부품을 프롬프트에 실어 자연스러운 대본으로
+    bank_context = (bank_assemble.assemble_bank_context(store, it.get("category") or "")
+                    if body.get("use_bank") else "")
     drafts = script_generate.generate_variations(
         it.get("structure") or {}, it.get("full_text") or "", elem_modes, category_lookup,
-        mode=mode, my_topic=my_topic, subject=subject, n=n)
+        mode=mode, my_topic=my_topic, subject=subject, n=n, bank_context=bank_context)
     if not drafts:
         return JSONResponse(status_code=502, content={"ok": False, "error": "생성 실패(Gemini 키 소진 또는 오류) — 잠시 후 재시도"})
     cid = _cid(request)
