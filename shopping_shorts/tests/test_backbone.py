@@ -100,6 +100,41 @@ def test_ping_pong_noop_when_all_match():
     assert out == beats
 
 
+def test_narration_seconds_from_syllables():
+    # 한국어 초당 5.7음절 → 57자면 약 10초
+    s = backbone.narration_seconds("가" * 57)
+    assert 9.5 < s < 10.5
+
+
+def test_clip_seconds_sums_primary_and_alternates():
+    beat = {"primary": {"start": 0, "end": 3},
+            "alternates": [{"start": 0, "end": 2}, {"start": 0, "end": 1.5}]}
+    assert backbone.clip_seconds(beat) == 6.5
+
+
+def test_length_status_over_under_ok():
+    # 나레이션 10초인데 화면 3초 → over(화면이 모자라 대사가 넘침)
+    over = {"narration": "가" * 57, "primary": {"start": 0, "end": 3}, "alternates": []}
+    assert backbone.length_status(over) == "over"
+    # 나레이션 3초, 화면 10초 → under(화면이 남음)
+    under = {"narration": "가" * 17, "primary": {"start": 0, "end": 10}, "alternates": []}
+    assert backbone.length_status(under) == "under"
+    # 얼추 맞으면 ok
+    ok = {"narration": "가" * 57, "primary": {"start": 0, "end": 10}, "alternates": []}
+    assert backbone.length_status(ok) == "ok"
+
+
+def test_fill_clips_to_cover_narration():
+    # 화면 3초인데 대사 10초 필요 → 풀에서 같은 행위 클립 더 붙여 채움
+    beat = {"narration": "가" * 57, "primary": {"start": 0, "end": 3, "action": "붓다", "video_id": "BB"},
+            "alternates": []}
+    pool = [{"video_id": "S1", "segments": [
+        {"seg_id": "S1-1", "start": 0, "end": 4, "scene_desc": "붓는", "action": "붓다"},
+        {"seg_id": "S1-2", "start": 0, "end": 4, "scene_desc": "또붓는", "action": "붓다"}]}]
+    nb = backbone.fill_clips_to_cover(beat, pool)
+    assert backbone.clip_seconds(nb) >= backbone.narration_seconds(beat["narration"]) * 0.9
+
+
 def test_pick_clips_excludes_backbone_video():
     pool = [{"video_id": "BB", "segments": [_seg("BB-1", action="붓다")]},
             {"video_id": "S1", "segments": [_seg("S1-1", action="붓다")]}]
