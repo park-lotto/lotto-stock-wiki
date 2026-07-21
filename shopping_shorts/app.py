@@ -2140,6 +2140,11 @@ def api_mix_capcut(job_id: str, base: str = ""):
         source_video_paths = _resolve_sources(job, work)
     except Exception:
         source_video_paths = {}
+    # ★자막제거(2단계)를 했으면 캡컷도 '자막 없는' 청소본을 써야 한다 — 안 그러면 원본 자막이
+    # 그대로 살아난다(2026-07-21 사장님 제보). clean_sources={video_id: 청소본}을 원본 위에 덮는다.
+    for _vid, _cp in (job.get("clean_sources") or {}).items():
+        if _cp and Path(_cp).exists():
+            source_video_paths[_vid] = _cp
     timeline = _beat_timeline(plan, tts_paths)
     out_root = work / "capcut"
     out_root.mkdir(parents=True, exist_ok=True)
