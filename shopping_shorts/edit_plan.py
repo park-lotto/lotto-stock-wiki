@@ -745,6 +745,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             bb = backbone.pick_backbone(source_scripts)
             if bb:
                 plan["beats"] = backbone.order_by_backbone(plan["beats"], bb)
+            # 반복장면·한소스 편중 해소: 쓴 클립 재사용 금지 + 덜 쓴 소스 우선 교체
+            plan["beats"] = backbone.dedup_and_balance(plan["beats"], source_scripts)
         plan["detected_type"] = detected
         plan["affiliate_target"] = r.get("story_event", "") or ""
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)

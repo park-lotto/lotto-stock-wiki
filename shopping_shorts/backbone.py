@@ -6,6 +6,7 @@
 행위가 화면·대본 공통 못이라, 백본이 행위 순서를 고정하고 화면은 같은 행위의 다른 클립으로
 갈아끼워도 대본(행위 지목)과 안 어긋난다. 순수함수 — DB·Gemini 없음."""
 import re
+from collections import Counter
 
 from shopping_shorts import action_dict
 from shopping_shorts import pattern_bank
@@ -202,6 +203,37 @@ def scene_inventory(sources):
     return [{"video_id": vid, "seg_id": seg.get("seg_id"),
              "action": segment_action(seg), "scene_desc": seg.get("scene_desc", "")}
             for vid, seg in _iter_segs(sources)]
+
+
+def _vid_of(seg):
+    return seg.get("video_id") or (seg.get("seg_id") or "").rsplit("-", 1)[0]
+
+
+def dedup_and_balance(beats, pool_sources):
+    """전역 중복제거 + 소스 균형. 각 비트 primary가 이미 쓴 클립이면, 같은 행위의 '안 쓴'
+    클립으로 교체하되 **덜 쓴 소스 우선**. 반복장면(한 클립 여러 비트)과 한 소스 편중을 동시에 해소.
+    같은 행위 대체가 없으면 원본 유지(억지 교체 안 함)."""
+    used = set()
+    src_count = Counter()
+    out = []
+    for b in beats:
+        nb = dict(b)
+        p = nb.get("primary") or {}
+        sid = p.get("seg_id")
+        if sid in used:
+            action = segment_action(p)
+            if action:
+                fresh = [c for c in pick_clips_for_action(action, pool_sources)
+                         if c.get("seg_id") not in used]
+                if fresh:
+                    fresh.sort(key=lambda c: src_count[_vid_of(c)])   # 덜 쓴 소스 우선
+                    nb["primary"] = fresh[0]
+                    p = fresh[0]
+                    nb["balanced"] = True
+        used.add(p.get("seg_id"))
+        src_count[_vid_of(p)] += 1
+        out.append(nb)
+    return out
 
 
 def pick_backbone(sources):

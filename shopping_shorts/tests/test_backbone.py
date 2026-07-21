@@ -158,6 +158,34 @@ def test_ping_pong_trims_overflow_narration():
     assert backbone.length_status(out[0]) == "ok"
 
 
+def test_dedup_and_balance_removes_repeat():
+    # 두 비트가 같은 클립(s1-1) → 두번째는 안 쓴 같은 행위 클립으로 교체(반복 제거)
+    beats = [
+        {"beat_idx": 0, "narration": "붓기1", "primary": {"seg_id": "s1-1", "action": "붓다", "video_id": "s1"}},
+        {"beat_idx": 1, "narration": "붓기2", "primary": {"seg_id": "s1-1", "action": "붓다", "video_id": "s1"}},
+    ]
+    pool = [{"video_id": "s0", "segments": [
+        {"seg_id": "s0-3", "start": 0, "end": 2, "scene_desc": "다른 붓는", "action": "붓다"}]}]
+    out = backbone.dedup_and_balance(beats, pool)
+    ids = [b["primary"]["seg_id"] for b in out]
+    assert len(set(ids)) == 2          # 반복 제거됨
+    assert "s0-3" in ids               # 안 쓴 클립으로 교체
+
+
+def test_dedup_prefers_underused_source():
+    # 편중된 s1 대신 덜 쓴 소스(s0) 우선으로 교체
+    beats = [
+        {"beat_idx": 0, "narration": "a", "primary": {"seg_id": "s1-1", "action": "붓다", "video_id": "s1"}},
+        {"beat_idx": 1, "narration": "b", "primary": {"seg_id": "s1-1", "action": "붓다", "video_id": "s1"}},
+    ]
+    pool = [
+        {"video_id": "s1", "segments": [{"seg_id": "s1-9", "start": 0, "end": 2, "action": "붓다", "scene_desc": "s1붓"}]},
+        {"video_id": "s0", "segments": [{"seg_id": "s0-9", "start": 0, "end": 2, "action": "붓다", "scene_desc": "s0붓"}]},
+    ]
+    out = backbone.dedup_and_balance(beats, pool)
+    assert out[1]["primary"]["video_id"] == "s0"   # 덜 쓴 소스 우선
+
+
 def test_generate_backbone_script_uses_flow_and_inventory():
     captured = {}
 
