@@ -4482,6 +4482,29 @@ def api_produce_mix_cutaway(job_id: str, request: Request, body: dict):
     return {"ok": True}
 
 
+@app.post("/api/produce/mix/{job_id}/sfx")
+def api_produce_mix_sfx(job_id: str, request: Request, body: dict):
+    """검수판에서 비트의 효과음(beat["sfx"])을 제거한다(스펙 §6 — "이 효과음 빼기").
+    역할 매칭은 점수·제안 큐가 없어(자동배치 아니면 빈 채) v1은 제거만 지원 —
+    되살리려면 다시 매칭한다. 컷어웨이 토글과 같은 구조(대상 키만 sfx)."""
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    plan = job.get("edit_plan") or {}
+    beats = plan.get("beats") or []
+    try:
+        bi = int(body.get("beat_idx"))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 필요"})
+    hit = next((b for b in beats if b.get("beat_idx") == bi), None)
+    if hit is None:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 범위 밖"})
+    hit.pop("sfx", None)
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True}
+
+
 @app.get("/api/produce/mix/poster/{job_id}")
 def api_produce_mix_poster(job_id: str):
     """미리보기 실장면 배경용 — 매칭된 첫 소스 영상의 한 프레임을 9:16으로 잘라 JPG 서빙(캐시)."""
