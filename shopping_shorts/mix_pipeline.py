@@ -249,7 +249,10 @@ def run_mix_job(job_id, db_path, work_root):
                       reference_text=job.get("given_script") or "",
                       # 핑퐁(대본↔장면 왕복 행위매칭): 전역 설정으로 on/off(기본 off·회귀0).
                       # 스키마 컬럼 없이 한 스위치로 켠다 — store.set_setting('ping_pong_enabled','1').
-                      ping_pong=(store.get_setting("ping_pong_enabled", "") == "1"))
+                      ping_pong=(store.get_setting("ping_pong_enabled", "") == "1"),
+                      # 백본 선정: URL로 플랫폼 판별(인스타/유튜브만 백본, 샤오홍슈 서브) + 사장님 지정.
+                      backbone_meta=_backbone_meta_from_job(job, extracts),
+                      backbone_forced=job.get("backbone_main") or None)
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
@@ -267,9 +270,26 @@ def run_mix_job(job_id, db_path, work_root):
                 traceback.print_exc(file=sys.stderr)
 
 
+def _backbone_meta_from_job(job, extracts):
+    """job의 urls_json + extracts 키(s0/s1/s2 순서)로 백본 선정용 meta 구성.
+    → {video_id: {'platform': ...}}. 백본=인스타/유튜브 규칙이 실제로 걸리게 한다."""
+    import json as _json
+    from shopping_shorts import backbone as _bb
+    try:
+        urls = _json.loads(job.get("urls_json") or "[]")
+    except Exception:
+        urls = []
+    meta = {}
+    for i, key in enumerate(extracts.keys()):
+        url = urls[i] if i < len(urls) else ""
+        meta[key] = {"platform": _bb.platform_of(url)}
+    return meta
+
+
 def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, video_type, work,
                   given_script=None, voice=None, customer_id=0,
-                  scene_first=False, reference_text="", ping_pong=False):
+                  scene_first=False, reference_text="", ping_pong=False,
+                  backbone_meta=None, backbone_forced=None):
     """EDL 생성(3) + 비트별 TTS(4) → edit_plan 저장 + ready_for_review.
     run_mix_job(자동판별, video_type=None)과 retype_mix_job(사용자 선택 유형)이 공유.
     given_script: 있으면 확정 대본을 그대로 비트로 쪼개 영상만 매칭(영상제작 2단계).
@@ -283,7 +303,8 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     if scene_first:
         from shopping_shorts.edit_plan import build_scene_first_plan
         sf = build_scene_first_plan(source_scripts, reference_text, target_seconds,
-                                    video_type=video_type, ping_pong=ping_pong)
+                                    video_type=video_type, ping_pong=ping_pong,
+                                    backbone_meta=backbone_meta, backbone_forced=backbone_forced)
         if sf["candidates"]:
             store.set_mix_candidates(job_id, sf["candidates"])
             rec = next((cand for cand in sf["candidates"] if cand["recommended"]),
