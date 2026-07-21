@@ -89,7 +89,9 @@ def test_capcut_manifest_and_asset(monkeypatch, tmp_path):
     r = client.get("/api/mix/capcut/j1", params={"base": "C:/capcutproject/CapCut Drafts"})
     assert r.status_code == 200, r.text
     d = r.json()
-    assert d["ok"] and d["project"].startswith("쇼핑쇼츠")
+    # 프로젝트명 = 목록서 알아보게 헤드카피(없으면 첫 대사)를 앞에 둔다(2026-07-21).
+    # j1은 헤드카피가 없어 첫 비트 대사 "첫 장면이에요"가 앞에 온다.
+    assert d["ok"] and d["project"].startswith("첫 장면이에요")
     # draft_content.json·meta는 텍스트 인라인
     assert "draft_content.json" in d["texts"] and "draft_meta_info.json" in d["texts"]
     draft = __import__("json").loads(d["texts"]["draft_content.json"])

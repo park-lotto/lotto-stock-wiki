@@ -28,6 +28,32 @@ def test_sidebar_logo_is_prominent():
     assert int(m.group(1)) >= 24, f"메인 로고가 작다({m.group(1)}px) — 크게 강조해야 함"
 
 
+def test_sidebar_logo_click_goes_home():
+    """로고를 누르면 홈(/)으로 — '새로고침' 지시(사장님 2026-07-21)."""
+    import re
+    js = (STATIC / "sidebar.js").read_text(encoding="utf-8")
+    assert re.search(r"<h1[^>]*onclick", js), "로고 h1에 클릭 핸들러가 없다"
+    assert "location.href='/'" in js, "로고 클릭이 홈(/)으로 안 간다"
+
+
+def test_sidebar_menu_items_are_larger():
+    """카테고리 메뉴를 크게 — ss-item 폰트 15px 이상(사장님 2026-07-21)."""
+    import re
+    js = (STATIC / "sidebar.js").read_text(encoding="utf-8")
+    m = re.search(r"\.ss-item\{[^}]*font-size:\s*(\d+)px", js)
+    assert m and int(m.group(1)) >= 15, f"메뉴 항목이 작다 — {m and m.group(1)}px"
+
+
+def test_sidebar_groups_are_boxed():
+    """카테고리를 박스로 시각 구분 — ss-group에 테두리/배경(사장님 2026-07-21)."""
+    import re
+    js = (STATIC / "sidebar.js").read_text(encoding="utf-8")
+    m = re.search(r'"\.ss-group\{[^}]*\}"', js)
+    assert m, ".ss-group 스타일을 못 찾음"
+    block = m.group(0)
+    assert "border" in block or "background" in block, "그룹이 박스(테두리/배경)가 아니다"
+
+
 def test_page_titles_use_shottembox_not_old_brand():
     for name in _TITLE_PAGES:
         html = (STATIC / name).read_text(encoding="utf-8")

@@ -45,26 +45,33 @@ def target_chars(beat):
     return int(clip_seconds(beat) * _SYLLABLES_PER_SEC)
 
 
-def _least_used_segs(pool_sources, src_count, exclude_seg_ids, prefer_not_video=None):
-    """행위 무관 — 풀의 모든 세그먼트를 '덜 쓴 소스 우선'으로 정렬해 반환.
-    이미 쓴 seg_id·길이 0 구간은 제외. prefer_not_video(보통 primary 릴)는 맨 뒤로 밀어
-    같은 릴 반복을 피한다(2026-07-21 반복장면 해소)."""
+def _broll_segs(pool_sources, src_count, exclude_seg_ids, prefer_video=None):
+    """행위 무관 B롤 후보. **같은 소스(prefer_video=primary 릴) 우선** — 같은 요리라 의미가
+    안정된다(엉뚱한 타요리 조각 삽입 방지, 2026-07-21 바나나 커스터드 실사고). 같은 소스의
+    안 쓴 조각을 다 쓴 뒤에야 다른 소스로 넘어가되, 그때는 덜 쓴 소스 우선. 이미 쓴 seg_id·
+    길이 0 제외."""
     segs = [{**seg, "video_id": vid} for vid, seg in _iter_segs(pool_sources)
             if seg.get("seg_id") not in exclude_seg_ids
+            and not seg.get("has_effect")                 # 원본 효과 박힌 조각은 B롤로 안 씀
             and (seg.get("end", 0) - seg.get("start", 0)) > 0.05]
-    segs.sort(key=lambda c: (c.get("video_id") == prefer_not_video,
+    segs.sort(key=lambda c: (c.get("video_id") != prefer_video,      # 같은 소스 먼저(False<True)
                              src_count.get(c.get("video_id"), 0)))
     return segs
 
 
-def fill_clips_to_cover(beat, pool_sources, src_count=None):
-    """화면이 대사보다 짧으면(over) 풀에서 클립을 더 붙여 길이를 채운다. 원본 mutate 안 함.
-    1층 — 같은 행위 클립(대본 지목과 안 어긋남). 2층 — 행위로 못 채웠으면(스토리형 나레이션은
-    요리행위가 없어 1층이 텅 빔) **소스 균형 B롤**로 채운다: 안 쓴 릴을 우선 붙여, 짧은 한 릴을
-    렌더러가 앞에서부터 루프-반복하던 반복장면을 막는다(2026-07-21). 이미 담긴 seg_id 제외."""
-    if length_status(beat) != "over":
+def fill_clips_to_cover(beat, pool_sources, src_count=None, need=None):
+    """화면이 대사보다 짧으면 풀에서 클립을 더 붙여 길이를 채운다. 원본 mutate 안 함.
+    need: 채울 목표 초. None이면 나레이션 추정(narration_seconds)으로 length_status가 'over'일
+    때만 채운다(기존 동작). 값이 주어지면(=실 TTS 길이, TTS 후 재보정) clip_seconds가 그보다
+    짧을 때 채운다 — 추정≠실제로 생긴 틈이 프리즈로 새는 걸 막는다(뿌리 fix, 2026-07-21).
+    1층 — 같은 행위 클립(대본 지목과 안 어긋남). 2층 — 행위로 못 채우면 **같은 소스 우선 B롤**로
+    채운다(반복은 dedup_and_balance가 비트 사이에서 잡고, 여기선 요리 일관성이 우선)."""
+    if need is None:
+        if length_status(beat) != "over":
+            return dict(beat)
+        need = narration_seconds(beat.get("narration", ""))
+    elif clip_seconds(beat) >= need:
         return dict(beat)
-    need = narration_seconds(beat.get("narration", ""))
     used = {(beat.get("primary") or {}).get("seg_id")}
     used |= {a.get("seg_id") for a in (beat.get("alternates") or [])}
     nb = dict(beat)
@@ -80,11 +87,11 @@ def fill_clips_to_cover(beat, pool_sources, src_count=None):
             used.add(clip.get("seg_id"))
             if clip_seconds(nb) >= need:
                 return nb
-    # 2층 — 아직 모자라면(행위 없음/부족) 소스 균형 B롤. 안 쓴 릴부터, primary 릴은 뒤로.
+    # 2층 — 아직 모자라면 같은 소스 우선 B롤(요리 일관성).
     if clip_seconds(nb) < need:
         sc = src_count if src_count is not None else Counter()
         prim_vid = (beat.get("primary") or {}).get("video_id")
-        for clip in _least_used_segs(pool_sources, sc, used, prefer_not_video=prim_vid):
+        for clip in _broll_segs(pool_sources, sc, used, prefer_video=prim_vid):
             nb["alternates"].append(clip)
             used.add(clip.get("seg_id"))
             sc[clip.get("video_id")] = sc.get(clip.get("video_id"), 0) + 1
@@ -110,9 +117,12 @@ def _iter_segs(sources):
 
 
 def action_pool(pool_sources):
-    """행위 → [seg(+video_id)] 인덱스. best-of-N·커버율의 공통 자료구조."""
+    """행위 → [seg(+video_id)] 인덱스. best-of-N·커버율의 공통 자료구조.
+    원본 효과가 박힌 조각(has_effect)은 B롤 스왑/커버 후보에서 제외한다(2026-07-21)."""
     pool = {}
     for vid, seg in _iter_segs(pool_sources):
+        if seg.get("has_effect"):
+            continue
         a = segment_action(seg)
         if a:
             pool.setdefault(a, []).append({**seg, "video_id": vid})

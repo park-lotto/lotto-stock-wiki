@@ -136,7 +136,8 @@ def test_caption_segments_time_adverb_opener_breaks_first():
     # 떨어져 "아이, 아무 식빵이나"로 붙던 문제. 시간/빈도 도입어(…마다)는 자기 뒤에서
     # 끊겨 한 박자를 열고, 뒤 '수식어+명사'가 온전히 묶여야 한다("빵 달라는 아이").
     segs = va._caption_segments("아침마다 빵 달라는 아이, 아무 식빵이나 좋아하는 우리 아이")
-    assert segs == ["아침마다", "빵 달라는 아이,", "아무 식빵이나", "좋아하는 우리 아이"], segs
+    # 끝 쉼표는 표시용으로 제거됨(2026-07-21) → "빵 달라는 아이"
+    assert segs == ["아침마다", "빵 달라는 아이", "아무 식빵이나", "좋아하는 우리 아이"], segs
     assert not any(s.startswith("아이") for s in segs)   # 아이가 다음 구절 머리로 안 떨어짐
 
 
@@ -165,9 +166,9 @@ def test_caption_segments_manner_adverb_leads_verb():
 
 
 def test_caption_segments_keeps_meaningful_single_word_tail():
-    # 방어: 뜻 있는 긴 1어절 꼬리(서술어)는 병합하지 않는다("떨어지거든요." 유지).
+    # 방어: 뜻 있는 긴 1어절 꼬리(서술어)는 병합하지 않는다. 끝 마침표는 표시용 제거(2026-07-21).
     segs = va._caption_segments("혈당이 급격히 치솟았다가 뚝 떨어지거든요.")
-    assert any(s.endswith("떨어지거든요.") for s in segs)
+    assert any(s.endswith("떨어지거든요") for s in segs)
     assert "때" not in [va._strip_punct(s) for s in segs]  # 짧은 파편 없음
 
 
@@ -438,17 +439,18 @@ def test_plan_chains_multiple_segments_to_fill():
     assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips)
 
 
-def test_plan_slows_last_clip_when_short():
-    # 2.2 + 2.2 = 4.4 < 4.9 → 부족분 0.5는 마지막 클립을 슬로모로 늘림.
+def test_plan_fills_short_remainder_with_real_motion_not_slowmo():
+    # 2.2 + 2.2 = 4.4 < 4.9 → 부족분 0.5(≥_MIN_CLIP_KEEP)는 슬로모/정지 대신 실영상을 한 조각
+    #   더 붙여(1배속) 채운다 — "화면 멈춤" 방지(2026-07-21). 짧은 움직임 > 정지.
     segs = [_seg("A", 0.0, 2.2), _seg("B", 5.0, 7.2)]
     clips = va._plan_beat_clips(segs, tts_dur=4.9)
     assert abs(_total_out(clips) - 4.9) < 0.05
-    # 마지막 클립만 슬로모(out_dur > src_dur), 나머진 1배속
-    assert clips[-1]["out_dur"] > clips[-1]["src_dur"] + 1e-6
-    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips[:-1])
-    # 유출 0: src_dur는 구간 길이 이내
-    for c, s in zip(clips, segs):
-        assert c["src_dur"] <= (s["end"] - s["start"]) + 1e-9
+    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips)  # 전부 1배속(슬로모/정지 0)
+    assert len(clips) >= 3                                              # 조각을 더 이어붙였다
+    # 유출 0: src_dur는 각 구간 길이 이내
+    for c in clips:
+        s = next(s for s in segs if s["video_id"] == c["video_id"])
+        assert c["start"] + c["src_dur"] <= s["end"] + 1e-9
 
 
 def test_plan_absorbs_tiny_remainder_into_previous():

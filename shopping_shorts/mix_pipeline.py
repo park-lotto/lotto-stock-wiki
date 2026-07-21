@@ -122,6 +122,35 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False):
                 preset=beat.get("caption_lines"))   # None일 수 있음 → 폴백
 
 
+def _refill_beats_to_tts(beats, source_scripts, tts_dir):
+    """TTS 후 재보정 — 각 비트 화면(primary+alternates)이 **실 TTS 길이**보다 짧으면 풀에서
+    같은 소스 우선 B롤을 더 붙인다. 추정≠실제로 생긴 틈이 렌더에서 프리즈/슬로우로 새는 걸
+    막는 뿌리 fix(2026-07-21). backbone.fill_clips_to_cover(need=실TTS)를 재사용. 원본 beat의
+    alternates만 갱신(다른 필드 불변). probe/pool 문제는 조용히 통과(부가기능이 job 안 죽인다)."""
+    from collections import Counter
+    from shopping_shorts import backbone
+    if not source_scripts:
+        return
+    sc = Counter((b.get("primary") or {}).get("video_id")
+                 for b in beats if b.get("primary"))
+    for b in beats:
+        tp = b.get("tts_path")
+        if not tp:
+            continue
+        try:
+            td = _probe_duration(str(tp))
+        except Exception:
+            continue
+        if not td or backbone.clip_seconds(b) >= td:
+            continue
+        try:
+            filled = backbone.fill_clips_to_cover(b, source_scripts, src_count=sc, need=td)
+        except Exception:
+            traceback.print_exc(file=sys.stderr)
+            continue
+        b["alternates"] = filled.get("alternates", b.get("alternates"))
+
+
 # 콘폼 트리거 임계(초). 이하의 초과분은 켄번즈 홀드(≤0.8s)로 자연 흡수되는 수준이라
 # 제미니 리라이트+재TTS 비용을 쓰지 않는다(설계 §1, 2026-07-20).
 _CONFORM_MIN_GAP = 0.8
@@ -345,6 +374,12 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 4) 비트별 TTS (naturalize + N-best + 연속성 + 프리셋 후처리)
     store.update_mix_job(job_id, status="tts")
     _synthesize_beats(plan["beats"], work / "tts", voice=voice)
+
+    # 4.2) 프리즈 뿌리 fix(2026-07-21) — 화면을 **실 TTS 길이**만큼 재보정한다. fill은 plan
+    # 시점에 나레이션 추정(글자÷5.7)으로 채웠는데, 빠른 보이스면 실제 TTS가 추정과 달라 생긴
+    # 틈을 렌더가 프리즈/슬로우로 때워왔다(두더지잡기의 뿌리). 실 tts_dur보다 화면이 짧은
+    # 비트만 같은 소스 우선 B롤로 더 채운다 → 렌더가 정지 대신 실영상으로 채운다.
+    _refill_beats_to_tts(plan["beats"], source_scripts, work / "tts")
 
     # 4.5) 싱크 콘폼(2026-07-20) — 대사가 영상 예산을 넘는 비트만 압축 리라이트 + 그 비트 재TTS.
     # 저장(아래) 전에 돌므로 preview·final 렌더 모두 자동 적용. 실패해도 job을 죽이지 않는다.

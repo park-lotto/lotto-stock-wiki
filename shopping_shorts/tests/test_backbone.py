@@ -153,17 +153,48 @@ def test_fill_story_beat_no_action_uses_balanced_broll():
     assert "s2" in vids        # 안 쓴 릴에서 B롤을 끌어옴(반복 방지)
 
 
-def test_fill_broll_prefers_underused_source():
-    # src_count로 이미 많이 쓴 릴(s1)보다 덜 쓴 릴(s2)을 먼저 붙인다.
-    from collections import Counter
+def test_fill_broll_prefers_same_source_for_coherence():
+    # B롤은 primary와 같은 소스(=같은 요리) 조각을 먼저 붙인다 — 엉뚱한 타요리 조각(바나나
+    # 커스터드 실사고) 방지. 같은 소스를 다 쓴 뒤에야 다른 소스로 넘어간다.
     beat = {"narration": "가" * 40,
             "primary": {"seg_id": "p", "start": 0, "end": 1, "video_id": "s1"}, "alternates": []}
     pool = [
         {"video_id": "s1", "segments": [{"seg_id": "s1-a", "start": 0, "end": 3, "scene_desc": "s1"}]},
         {"video_id": "s2", "segments": [{"seg_id": "s2-a", "start": 0, "end": 3, "scene_desc": "s2"}]},
     ]
-    nb = backbone.fill_clips_to_cover(beat, pool, src_count=Counter({"s1": 3}))
-    assert nb["alternates"][0]["video_id"] == "s2"   # 덜 쓴 소스 먼저
+    nb = backbone.fill_clips_to_cover(beat, pool)
+    assert nb["alternates"][0]["video_id"] == "s1"   # 같은 소스(요리 일관성) 먼저
+
+
+def test_broll_excludes_effect_clips():
+    # 원본 효과 박힌 조각(has_effect)은 B롤 채움에서 빠진다(2026-07-21 19초 효과조각).
+    beat = {"narration": "가" * 40,
+            "primary": {"seg_id": "p", "start": 0, "end": 1, "video_id": "s1"}, "alternates": []}
+    pool = [{"video_id": "s1", "segments": [
+        {"seg_id": "eff", "start": 0, "end": 3, "scene_desc": "효과", "has_effect": True},
+        {"seg_id": "clean", "start": 3, "end": 6, "scene_desc": "깨끗"}]}]
+    nb = backbone.fill_clips_to_cover(beat, pool)
+    ids = [a["seg_id"] for a in nb["alternates"]]
+    assert "clean" in ids and "eff" not in ids   # 효과 조각 제외, 깨끗한 것만
+
+
+def test_action_pool_excludes_effect_clips():
+    pool = [{"video_id": "s1", "segments": [
+        {"seg_id": "a1", "action": "붓다", "has_effect": True, "start": 0, "end": 2},
+        {"seg_id": "a2", "action": "붓다", "start": 2, "end": 4}]}]
+    got = backbone.pick_clips_for_action("붓다", pool)
+    assert [c["seg_id"] for c in got] == ["a2"]   # 효과 조각 a1 제외
+
+
+def test_fill_to_explicit_need_covers_actual_tts():
+    # need(=실 TTS 길이)를 주면 나레이션 추정과 무관하게 그 길이까지 채운다(프리즈 뿌리 fix).
+    beat = {"narration": "가" * 5,   # 추정으론 짧지만
+            "primary": {"seg_id": "p", "start": 0, "end": 1.0, "video_id": "s1"}, "alternates": []}
+    pool = [{"video_id": "s1", "segments": [
+        {"seg_id": "s1-a", "start": 0, "end": 2.0, "scene_desc": "a"},
+        {"seg_id": "s1-b", "start": 2.0, "end": 4.0, "scene_desc": "b"}]}]
+    nb = backbone.fill_clips_to_cover(beat, pool, need=4.5)
+    assert backbone.clip_seconds(nb) >= 4.5 * 0.9   # 실 TTS 4.5초까지 채움
 
 
 def test_target_chars_from_clip():
