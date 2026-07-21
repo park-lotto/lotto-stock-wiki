@@ -136,7 +136,8 @@ def test_caption_segments_time_adverb_opener_breaks_first():
     # 떨어져 "아이, 아무 식빵이나"로 붙던 문제. 시간/빈도 도입어(…마다)는 자기 뒤에서
     # 끊겨 한 박자를 열고, 뒤 '수식어+명사'가 온전히 묶여야 한다("빵 달라는 아이").
     segs = va._caption_segments("아침마다 빵 달라는 아이, 아무 식빵이나 좋아하는 우리 아이")
-    assert segs == ["아침마다", "빵 달라는 아이,", "아무 식빵이나", "좋아하는 우리 아이"], segs
+    # 끝 쉼표는 표시용으로 제거됨(2026-07-21) → "빵 달라는 아이"
+    assert segs == ["아침마다", "빵 달라는 아이", "아무 식빵이나", "좋아하는 우리 아이"], segs
     assert not any(s.startswith("아이") for s in segs)   # 아이가 다음 구절 머리로 안 떨어짐
 
 
@@ -165,9 +166,9 @@ def test_caption_segments_manner_adverb_leads_verb():
 
 
 def test_caption_segments_keeps_meaningful_single_word_tail():
-    # 방어: 뜻 있는 긴 1어절 꼬리(서술어)는 병합하지 않는다("떨어지거든요." 유지).
+    # 방어: 뜻 있는 긴 1어절 꼬리(서술어)는 병합하지 않는다. 끝 마침표는 표시용 제거(2026-07-21).
     segs = va._caption_segments("혈당이 급격히 치솟았다가 뚝 떨어지거든요.")
-    assert any(s.endswith("떨어지거든요.") for s in segs)
+    assert any(s.endswith("떨어지거든요") for s in segs)
     assert "때" not in [va._strip_punct(s) for s in segs]  # 짧은 파편 없음
 
 

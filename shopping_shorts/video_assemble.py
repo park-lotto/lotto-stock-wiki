@@ -311,10 +311,26 @@ def _strip_punct(w):
     return w.strip(".,!?…\"'()[]")
 
 
+# 자막 각 줄 끝에서 뗄 문장부호(마침표·쉼표·말줄임). 감탄/의문(? !)·물결(~)은 톤이라 남긴다.
+_CAP_TRIM_TAIL = ".,、，。…"
+
+
+def _strip_cap_tail(s):
+    """표시용 — 자막 한 줄 끝의 마침표·쉼표·말줄임만 뗀다('봤잖아요.'→'봤잖아요'). ?!~는 유지."""
+    s = s.rstrip()
+    while s and s[-1] in _CAP_TRIM_TAIL:
+        s = s[:-1].rstrip()
+    return s
+
+
 def _wrap_long(segs):
-    """구절 리스트에서 _CAP_WRAP를 크게 넘는 초장문만 줄바꿈으로 방어(대부분 그대로 1줄)."""
+    """구절 리스트에서 _CAP_WRAP를 크게 넘는 초장문만 줄바꿈으로 방어(대부분 그대로 1줄).
+    각 줄은 표시용으로 끝 문장부호를 정리한다(2026-07-21 사장님 '봤잖아요.' 마침표 노출)."""
     out = []
     for s in segs:
+        s = _strip_cap_tail(s)
+        if not s:
+            continue
         if len(s.replace(" ", "")) > _CAP_WRAP:
             out.extend(textwrap.wrap(s, _CAP_WRAP) or [s])
         else:
