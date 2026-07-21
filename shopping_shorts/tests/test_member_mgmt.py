@@ -66,3 +66,54 @@ def test_reapprove_extends_and_keeps_start(tmp_path, monkeypatch):
     assert c2["approved_at"] == start1          # 시작일 불변
     assert c2["full_access_until"] >= end1 + 30 * 86400 - 5   # 만료일 뒤로 연장(±오차)
     assert len(s.list_payments(cid)) == 2       # 결제 2건 누적
+
+
+def test_admin_approve_with_payment(tmp_path, monkeypatch):
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("pend", "pw12", approved=False)
+    owner = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})
+    r = owner.post("/api/admin/approve",
+                   json={"customer_id": cid, "period_days": 30, "amount": 30000, "method": "계좌"})
+    assert r.status_code == 200 and r.json()["ok"] is True
+    assert appmod.access_level(cid) == "full"
+    assert len(s.list_payments(cid)) == 1
+
+
+def test_admin_payment_extends(tmp_path, monkeypatch):
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("u", "pw12", approved=False)
+    owner = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})
+    owner.post("/api/admin/approve", json={"customer_id": cid, "period_days": 30, "amount": 30000, "method": "계좌"})
+    end1 = s.get_customer(cid)["full_access_until"]
+    r = owner.post("/api/admin/payment", json={"customer_id": cid, "period_days": 30, "amount": 30000, "method": "카드"})
+    assert r.status_code == 200
+    assert s.get_customer(cid)["full_access_until"] > end1
+    assert len(s.list_payments(cid)) == 2
+
+
+def test_admin_payments_list(tmp_path, monkeypatch):
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("u", "pw12", approved=False)
+    owner = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})
+    owner.post("/api/admin/approve", json={"customer_id": cid, "period_days": 30, "amount": 30000, "method": "계좌"})
+    r = owner.get(f"/api/admin/payments?customer_id={cid}")
+    assert r.status_code == 200 and len(r.json()["payments"]) == 1
+
+
+def test_admin_customers_has_name_phone_and_last_payment(tmp_path, monkeypatch):
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("u", "pw12", approved=False, name="김철수", phone="010-0000-0000")
+    owner = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})
+    owner.post("/api/admin/approve", json={"customer_id": cid, "period_days": 30, "amount": 30000, "method": "계좌"})
+    row = [c for c in owner.get("/api/admin/customers").json()["customers"] if c["id"] == cid][0]
+    assert row["name"] == "김철수" and row["phone"] == "010-0000-0000"
+    assert row["last_payment"]["amount"] == 30000 and row["payment_count"] == 1
+
+
+def test_signup_stores_name_phone(tmp_path, monkeypatch):
+    s = _setup(tmp_path, monkeypatch)
+    c = TestClient(appmod.app, follow_redirects=False)
+    c.post("/api/signup", data={"user": "newby", "pass": "pw12345", "name": "이영희", "phone": "010-1111-2222"})
+    with s._conn() as conn:
+        row = conn.execute("SELECT name, phone FROM customers WHERE username='newby'").fetchone()
+    assert row is not None and row[0] == "이영희" and row[1] == "010-1111-2222"

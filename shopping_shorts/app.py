@@ -3489,6 +3489,8 @@ a{color:#7db4ff;font-size:12px;text-decoration:none}
 <body><form class=box method=post action=/api/signup>
 <h1>🛍️ 쇼핑쇼츠 가입</h1>
 <input name=user placeholder=아이디(영문/숫자) autocomplete=username autofocus>
+<input name=name placeholder=이름 autocomplete=name>
+<input name=phone placeholder="전화번호(010-0000-0000)" autocomplete=tel>
 <input name=pass type=password placeholder=비밀번호 autocomplete=new-password>
 <button>가입하기</button>
 <div class=err>__ERR__</div>
@@ -3568,10 +3570,13 @@ async def _api_signup(req: Request):
     form = urllib.parse.parse_qs(body)
     u = (form.get("user") or [""])[0].strip()
     p = (form.get("pass") or [""])[0]
+    name = (form.get("name") or [""])[0].strip()
+    phone = (form.get("phone") or [""])[0].strip()
     if len(u) < 3 or len(p) < 4:
         return RedirectResponse("/signup?e=" + urllib.parse.quote("아이디 3자·비밀번호 4자 이상"), status_code=303)
     try:
-        customer_id = Store(DB_PATH).create_customer(u, p, approved=False)
+        customer_id = Store(DB_PATH).create_customer(u, p, approved=False,
+                                                     name=name or None, phone=phone or None)
     except ValueError:
         return RedirectResponse("/signup?e=" + urllib.parse.quote("이미 존재하는 아이디입니다"), status_code=303)
     r = RedirectResponse("/", status_code=303)
@@ -3885,17 +3890,53 @@ async def _admin_approve(request: Request):
     body = await request.json()
     try:
         cid = int(body.get("customer_id"))
+        period_days = int(body.get("period_days"))
+        amount = int(body.get("amount"))
     except (TypeError, ValueError):
-        return JSONResponse({"error": "customer_id 필요"}, status_code=422)
+        return JSONResponse({"error": "customer_id·period_days·amount 필요"}, status_code=422)
+    if period_days < 0 or amount < 0:
+        return JSONResponse({"error": "음수 불가"}, status_code=422)
+    method = (body.get("method") or "").strip()
+    note = body.get("note")
     st = Store(DB_PATH)
-    try:
-        trial_days = int(st.get_setting("trial_days", 7))
-    except (TypeError, ValueError):
-        trial_days = 7
-    cust = st.approve_customer(cid, trial_days)
+    cust = st.approve_customer(cid, period_days, amount, method, note=note)
+    if cust is None:
+        return JSONResponse({"error": "없는 고객"}, status_code=404)
     import sys as _s
-    print(f"[admin] approve cid={cid}", file=_s.stderr)
+    print(f"[admin] approve cid={cid} +{period_days}d {amount}원", file=_s.stderr)
     return {"ok": True, "customer": cust}
+
+
+@app.post("/api/admin/payment")
+async def _admin_payment(request: Request):
+    """이미 승인된 고객에 결제 추가+기간 연장(approve_customer 재호출과 동일 경로)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+        period_days = int(body.get("period_days"))
+        amount = int(body.get("amount"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id·period_days·amount 필요"}, status_code=422)
+    if period_days < 0 or amount < 0:
+        return JSONResponse({"error": "음수 불가"}, status_code=422)
+    method = (body.get("method") or "").strip()
+    note = body.get("note")
+    st = Store(DB_PATH)
+    cust = st.approve_customer(cid, period_days, amount, method, note=note)
+    if cust is None:
+        return JSONResponse({"error": "없는 고객"}, status_code=404)
+    return {"ok": True, "customer": cust}
+
+
+@app.get("/api/admin/payments")
+def _admin_payments(request: Request, customer_id: int = 0):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return {"payments": Store(DB_PATH).list_payments(customer_id)}
 
 
 @app.post("/api/admin/settings")

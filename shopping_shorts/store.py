@@ -2611,15 +2611,24 @@ class Store:
         return {k: v for k, v in rows}
 
     def list_customers(self):
-        """관리자용 전체 고객 목록(사장님 cid0 제외). 최근 가입 먼저."""
+        """관리자용 전체 고객 목록(사장님 cid0 제외). 최근 가입 먼저. 최근 결제 요약 포함."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT id, username, email, plan, full_access_until, created_at, approved_at "
+                "SELECT id, username, email, plan, full_access_until, created_at, approved_at, name, phone "
                 "FROM customers WHERE id != 0 ORDER BY id DESC"
             ).fetchall()
-        return [{"id": r[0], "username": r[1], "email": r[2], "plan": r[3] or "free",
-                 "full_access_until": r[4] or 0, "created_at": r[5], "approved_at": r[6]}
-                for r in rows]
+            out = []
+            for r in rows:
+                cid = r[0]
+                p = c.execute("SELECT amount, paid_at FROM payments WHERE customer_id=? "
+                              "ORDER BY paid_at DESC, id DESC LIMIT 1", (cid,)).fetchone()
+                cnt = c.execute("SELECT COUNT(*) FROM payments WHERE customer_id=?", (cid,)).fetchone()[0]
+                out.append({"id": cid, "username": r[1], "email": r[2], "plan": r[3] or "free",
+                            "full_access_until": r[4] or 0, "created_at": r[5], "approved_at": r[6],
+                            "name": r[7], "phone": r[8],
+                            "last_payment": ({"amount": p[0], "paid_at": p[1]} if p else None),
+                            "payment_count": cnt})
+        return out
 
     # ── 유료게이트 일일 사용량(크레딧) ──
     def usage_incr(self, customer_id, op, day):

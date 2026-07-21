@@ -92,8 +92,9 @@ def test_api_admin_approve_requires_admin(tmp_path, monkeypatch):
     s = _setup(tmp_path, monkeypatch)
     cid = s.create_customer("pend2", "pw12", approved=False)
     other = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
-    assert other.post("/api/admin/approve", json={"customer_id": cid}).status_code == 403
+    body = {"customer_id": cid, "period_days": 30, "amount": 30000, "method": "계좌"}
+    assert other.post("/api/admin/approve", json=body).status_code == 403
     owner = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})
-    r = owner.post("/api/admin/approve", json={"customer_id": cid})
+    r = owner.post("/api/admin/approve", json=body)
     assert r.status_code == 200 and r.json()["ok"] is True
     assert appmod.access_level(cid) == "full"
