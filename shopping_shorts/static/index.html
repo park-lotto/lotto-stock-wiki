@@ -177,8 +177,10 @@
     </div>
     <div class="toolbar">
       <button id="collectBtn" onclick="doCollect()">⚡ 지금 수집</button>
+      <button id="censusBtn" onclick="doCensus()" title="전 채널을 긁어 활동성 재판정 — 2일 내 안 올린 채널은 정리, 다시 올린 채널은 부활. 가끔만 누르세요(비용).">🌐 전수조사</button>
       <span id="status" style="color:var(--sub);font-size:12px"></span>
     </div>
+    <div id="censusSummary" style="margin:-8px 0 14px;font-size:12px;color:var(--sub)"></div>
     <details id="refRegister" style="margin:4px 0 12px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
       <summary id="refSummary" style="padding:9px 12px;cursor:pointer;font-size:12px;color:var(--sub)">➕ 레퍼런스 채널 등록</summary>
       <div style="padding:0 12px 10px">
@@ -627,6 +629,30 @@ function _pollVisionTags(times){
     }catch(e){}
     _pollVisionTags(times-1);
   }, wait);
+}
+// 전수조사(센서스) — 팔로워·사망 필터 없이 전 채널을 긁어 활동성(2일 내 업로드) 재판정.
+// 2일 내 안 올린 채널은 정리(dead), 다시 올린 채널은 부활(revived). 비용이 커 가끔만 누른다.
+async function doCensus(){
+  const btn=document.getElementById("censusBtn"), st=document.getElementById("status");
+  const sum=document.getElementById("censusSummary");
+  if(!confirm('전 채널을 긁어 활동성을 재판정합니다. 수십 초~몇 분 걸리고 비용이 듭니다. 진행할까요?')) return;
+  btn.disabled=true; st.textContent="전수조사 중… 수십 초~몇 분 걸립니다";
+  try{
+    const r = await fetch("/api/census", {method:"POST"});
+    const d = await readJson(r);
+    if(!d.ok) throw new Error(d.error||"실패");
+    STATE.items = d.items; st.textContent=`✅ ${d.count}건 (${fmtTime(d.collected_at)})`;
+    render();
+    const dead = d.dead||[];
+    let html = `<span style="color:var(--txt)">스캔 <b>${d.scanned_n}</b> · 생존 <b style="color:var(--ok)">${d.alive_n}</b> · 사망 <b style="color:var(--fire)">${d.dead_n}</b> · 부활 <b style="color:var(--gold)">${d.revived_n}</b></span>`;
+    if(dead.length){
+      html += `<details style="margin-top:6px"><summary style="cursor:pointer">정리 대상 ${d.dead_n}개</summary>`
+        + `<div style="margin-top:4px">` + dead.map(x=>'@'+esc(x.username)).join(', ') + `</div></details>`;
+    }
+    sum.innerHTML = html;
+    _pollVisionTags(5);   // 백그라운드 비전 태깅 병합(수집과 동일)
+  }catch(e){ st.textContent="❌ "+e.message; }
+  finally{ btn.disabled=false; }
 }
 async function loadLast(){
   const d = await (await fetch("/api/reference?platform="+PLATFORM)).json();

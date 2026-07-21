@@ -17,7 +17,7 @@ import requests
 from fastapi import BackgroundTasks, FastAPI, Request, UploadFile, File, Form
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
-from shopping_shorts.service import collect, generate_missing_drafts, next_draft_targets
+from shopping_shorts.service import collect, census, generate_missing_drafts, next_draft_targets
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
 from shopping_shorts.auto_run import run_auto_job, default_stages
@@ -185,6 +185,38 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
         import re
         msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
         return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+
+
+def _apply_activity(records):
+    """센서스 활동레코드를 DB에 반영(생존/사망/부활). background_tasks로 실행."""
+    store = Store(DB_PATH)
+    for rec in records:
+        store.upsert_activity(**rec)
+
+
+@app.post("/api/census")
+def api_census(background_tasks: BackgroundTasks):
+    """🔬 전수 센서스 — 전 채널(팔로워/사망 필터 없음)을 긁어 활동성 판정. 전체 랭킹을
+    즉시 반환하고, 활동성 DB반영(생존/사망/부활)은 응답 후 background로 처리한다
+    ("정리를 뒤에서"). 이후 매일 수집은 여기서 살아있다고 판정된 채널만 긁는다."""
+    try:
+        result = census()
+    except Exception as e:
+        import re
+        msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+        return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+    items = result["items"]
+    store = Store(DB_PATH)
+    collected_at = datetime.now(timezone.utc).isoformat()
+    store.save_last_run(items, collected_at)          # 레퍼런스 랭킹 캐시도 갱신
+    background_tasks.add_task(_apply_activity, result["activity_records"])
+    background_tasks.add_task(generate_missing_drafts, next_draft_targets(items, store))
+    background_tasks.add_task(_tag_new_items, items)
+    _attach_vision_tags(items, store)
+    return {"ok": True, "count": len(items), "items": items,
+            "collected_at": collected_at, "dead": result["dead"],
+            "scanned_n": result["scanned_n"], "alive_n": result["alive_n"],
+            "dead_n": result["dead_n"], "revived_n": result["revived_n"]}
 
 
 _VISION_TAG_CAP = 60  # 1회 수집당 새 태깅 상한(비용 가드). 초과분은 다음 수집 때.

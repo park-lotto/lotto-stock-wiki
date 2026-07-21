@@ -453,6 +453,19 @@ class Store:
                     removed_at TEXT
                 )
             """)
+            # 채널 활동성(2026-07-22) — 팔로워 컷을 대체하는 자동 선별 레이어.
+            # 센서스(전수조사)가 채워넣는다: 최근 업로드 있으면 alive=1, 없으면 0.
+            # removed_channels(수동 제거)와 독립 — 둘 다 있으면 removed가 우선(항상 제외).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS channel_activity (
+                    username TEXT PRIMARY KEY,
+                    last_post_at TEXT,
+                    engagement_density REAL DEFAULT 0,
+                    activity_score REAL DEFAULT 0,
+                    alive INTEGER DEFAULT 1,
+                    checked_at TEXT
+                )
+            """)
             # 발굴 피드(누적 모드 시 유지) — 단일행 JSON.
             c.execute("""
                 CREATE TABLE IF NOT EXISTS discovery_feed (
@@ -783,6 +796,59 @@ class Store:
                 "SELECT username, name, removed_at FROM removed_channels ORDER BY removed_at DESC"
             ).fetchall()
         return [{"username": r[0], "name": r[1], "removed_at": r[2]} for r in rows]
+
+    # ── 채널 활동성(2026-07-22) — 센서스가 채우는 자동 선별 레이어 ──
+    @staticmethod
+    def _norm_user(username):
+        return (username or "").strip().lstrip("@").lower()
+
+    def upsert_activity(self, username, alive, last_post_at=None,
+                        engagement_density=0.0, activity_score=0.0):
+        """센서스 결과 1채널 기록(덮어쓰기). alive=True면 last_post_at 등 갱신,
+        False(사망)면 alive만 0으로 내리고 last_post_at은 건드리지 않는다(이전 기록 보존).
+        죽었던 채널을 alive=True로 upsert하면 자동 부활."""
+        u = self._norm_user(username)
+        with self._conn() as c:
+            if alive:
+                c.execute(
+                    "INSERT INTO channel_activity"
+                    "(username, last_post_at, engagement_density, activity_score, alive, checked_at) "
+                    "VALUES(?,?,?,?,1,datetime('now')) "
+                    "ON CONFLICT(username) DO UPDATE SET "
+                    "last_post_at=excluded.last_post_at, engagement_density=excluded.engagement_density, "
+                    "activity_score=excluded.activity_score, alive=1, checked_at=excluded.checked_at",
+                    (u, last_post_at, engagement_density, activity_score),
+                )
+            else:
+                c.execute(
+                    "INSERT INTO channel_activity(username, alive, checked_at) "
+                    "VALUES(?,0,datetime('now')) "
+                    "ON CONFLICT(username) DO UPDATE SET alive=0, checked_at=datetime('now')",
+                    (u,),
+                )
+
+    def activity_map(self):
+        """{username: {alive, last_post_at, engagement_density, activity_score, checked_at}} (소문자키)."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT username, alive, last_post_at, engagement_density, activity_score, checked_at "
+                "FROM channel_activity"
+            ).fetchall()
+        return {r[0]: {"alive": bool(r[1]), "last_post_at": r[2],
+                       "engagement_density": r[3], "activity_score": r[4],
+                       "checked_at": r[5]} for r in rows}
+
+    def dead_usernames(self):
+        """센서스가 사망(alive=0) 판정한 username 집합(소문자)."""
+        with self._conn() as c:
+            rows = c.execute("SELECT username FROM channel_activity WHERE alive=0").fetchall()
+        return {r[0] for r in rows}
+
+    def alive_usernames(self):
+        """센서스가 생존(alive=1) 판정한 username 집합(소문자)."""
+        with self._conn() as c:
+            rows = c.execute("SELECT username FROM channel_activity WHERE alive=1").fetchall()
+        return {r[0] for r in rows}
 
     def prev_comments(self, shortcode):
         """가장 최근에 기록된 이 영상의 댓글수. 없으면 None."""
