@@ -417,6 +417,31 @@ def api_mix_basket_remove(request: Request, body: dict):
     return {"ok": True, "count": len(store.mix_basket_shortcodes(customer_id=cid))}
 
 
+@app.post("/api/mix/basket/reprobe")
+def api_mix_basket_reprobe(request: Request, body: dict, background_tasks: BackgroundTasks):
+    """즐겨찾기 카드의 보강메타(조회수·좋아요·댓글·팔로워 등)를 다시 수집한다
+    (2026-07-21 사장님 요청). 담을 때 메타가 안 넘어왔거나 백그라운드 probe가
+    실패해 카드가 비어 보이는 항목을 사장님이 카드에서 직접 재수집한다 —
+    자동 재수집은 Apify/토큰 비용이 들어 안 돌리고 버튼으로만(원하는 것만).
+    담기(toggle)와 같은 `_enrich_grab` 경로를 재사용하므로 팔로워를 안 주는
+    플랫폼(틱톡)은 여전히 조회수·좋아요·댓글까지만 채워진다(그건 플랫폼 한계)."""
+    sc = (body.get("shortcode") or "").strip()
+    if not sc:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "shortcode 필요"})
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    item = next((x for x in store.mix_basket_list(customer_id=cid)
+                 if x.get("shortcode") == sc), None)
+    if not item:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "담긴 항목이 아닙니다"})
+    url = item.get("url") or ""
+    if not (url and _grab_platform(url)):
+        return JSONResponse(status_code=400,
+                            content={"ok": False, "error": "재수집할 수 없는 링크입니다"})
+    background_tasks.add_task(_enrich_grab, url, sc, cid)
+    return {"ok": True}
+
+
 @app.get("/api/mix/basket")
 def api_mix_basket(request: Request):
     """바구니 항목 목록(담은 순서) + shortcode 집합."""
