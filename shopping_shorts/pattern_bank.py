@@ -75,10 +75,37 @@ _PROMPT = """너는 바이럴 숏폼 대본을 '재사용 가능한 부품'으�
 반드시 {슬롯} 형태를 써서 리터럴 사연을 그대로 담지 마라. JSON만 출력."""
 
 
-def _default_call(prompt, schema, max_key_tries=3):
-    """comment_gen 전용 키풀 로테이션으로 JSON 생성(structure_analyze 방식). 무키/실패면 None."""
-    if not comment_gen.SHORTS_GEMINI_KEYS:
+def _vault_fallback(prompt, schema, max_tries=4):
+    """전용 SHORTS 키풀이 비었을 때 key_vault 예비키풀(general)로 폴백. edit_plan._vault_call과 동일 경로.
+    서버에 SHORTS_GEMINI_KEYS 미설정이어도 부품은행 추출이 도는 핵심 수정."""
+    kv = comment_gen.key_vault
+    keys = kv.get_live_keys_cascade("general")
+    if not keys:
         return None
+    for key in keys[:max_tries]:
+        try:
+            resp = kv.get_client_for_key(key).models.generate_content(
+                model=_MODEL, contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json", response_schema=schema),
+            )
+            return json.loads(resp.text)
+        except Exception as e:  # noqa: BLE001
+            if kv.is_daily_exhausted_error(e) or kv.is_account_disabled_error(e):
+                kv.mark_exhausted(kv._owner_group(key) or "general", key)
+                continue
+            if kv.is_quota_error(e):
+                continue
+            print(f"pattern_bank._vault_fallback: {e!r}", file=sys.stderr)
+            return None
+    return None
+
+
+def _default_call(prompt, schema, max_key_tries=3):
+    """comment_gen 전용 키풀 로테이션으로 JSON 생성(structure_analyze 방식).
+    전용 풀이 비었으면 key_vault 예비풀로 폴백. 무키/실패면 None."""
+    if not comment_gen.SHORTS_GEMINI_KEYS:
+        return _vault_fallback(prompt, schema)
     for _ in range(max_key_tries):
         key, ki = comment_gen._current_key_and_idx()
         if key is None:
