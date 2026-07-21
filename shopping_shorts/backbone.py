@@ -77,6 +77,36 @@ def reconcile_beat_by_action(beat, pool_sources):
     return nb, True
 
 
+def ping_pong_reconcile(beats, pool_sources, rewrite_call=None, max_rounds=2):
+    """핑퐁(대본↔장면 왕복). 매 라운드:
+      1) action 불일치 비트 찾기(fit 안 믿음 — beat_action_mismatch).
+      2) 각 비트: 같은 행위 클립이 풀에 있으면 **화면 스왑**(장면 쪽), 없으면 재작성 대기(대본 쪽).
+      3) 재작성 대기 비트 나레이션을 화면에 맞게 rewrite_call로 1회 수정.
+    불일치 0 또는 max_rounds 소진까지 반복. rewrite_call(beats)->{beat_idx: 새나레이션}.
+    rewrite_call 없거나 실패면 그 비트는 스왑만(대본 쪽 스킵). 원본 mutate 안 함."""
+    out = [dict(b) for b in beats]
+    for _ in range(max_rounds):
+        bad = [i for i, b in enumerate(out) if beat_action_mismatch(b)]
+        if not bad:
+            break
+        need_rewrite = []
+        for i in bad:
+            nb, still = reconcile_beat_by_action(out[i], pool_sources)
+            out[i] = nb
+            if still:
+                need_rewrite.append(out[i])
+        if need_rewrite and rewrite_call is not None:
+            try:
+                fixes = rewrite_call(need_rewrite) or {}
+            except Exception:
+                fixes = {}
+            for b in out:
+                if b.get("beat_idx") in fixes and fixes[b["beat_idx"]]:
+                    b["narration"] = fixes[b["beat_idx"]]
+                    b.pop("need_rewrite", None)
+    return out
+
+
 def pick_clips_for_action(action, pool_sources, exclude_video=None):
     """그 행위의 클립들(화면 스왑 best-of-N 후보). exclude_video=백본이면 서브만 반환
     (차별화 1층: 순서·싱크는 백본, 픽셀은 다른 소스)."""
