@@ -286,6 +286,10 @@
           <div id="speedBtns" style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px"></div>
           <div style="font-size:12px;color:var(--sub)">무음 삭제</div>
           <div id="silenceBtns" style="display:flex;gap:6px;margin:4px 0 10px"></div>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub);margin:2px 0 10px;cursor:pointer">
+            <input type="checkbox" id="paceMode" checked onchange="setPace(this.checked)">
+            ⚡ 속도감 모드 <span style="opacity:.7">(무음 컷·타이트 이음)</span>
+          </label>
           <!-- whisper role 선택(#whisperRoleControls)은 여기 없다 — 2026-07-17 결함① 수정으로
                renderPresetCards()가 선택된 whisper 카드 "안"에 직접 그린다. 예전엔 여기(카드
                14개 전부 밑)에 있어 화면 밖으로 밀려났었다. -->
@@ -3040,7 +3044,7 @@ async function onSubToggle(){
 }
 
 // ── 4단계 보이스 프리셋 ──────────────
-let VOICE = { preset_id:null, voice_id:null, settings:null, speed:1.0, silence_trim:'off', group_id:null, variant:null };
+let VOICE = { preset_id:null, voice_id:null, settings:null, speed:1.0, silence_trim:'off', pace_mode:true, group_id:null, variant:null };
 let VOICE_GROUPS = [];
 let SEL_VARIANT = {}; // group_id -> 'stable'|'natural'|'expressive'|'whisper' (기본 노출은 stable, 나머지는 버튼으로 전환)
 const VARIANT_LABELS = {stable:'안정', natural:'자연', expressive:'표현', whisper:'속삭임'};
@@ -3117,7 +3121,7 @@ function pickPreset(gid){
   if(!v) return;
   VOICE={preset_id:v.preset_id, voice_id:v.voice_id,
          settings:Object.assign({}, v.voice_settings), speed:v.default_speed,
-         silence_trim:v.default_silence_trim, group_id:gid, variant};
+         silence_trim:v.default_silence_trim, pace_mode:VOICE.pace_mode!==false, group_id:gid, variant};
   document.getElementById('voiceControls').style.display='block';
   pickHighlight();
   renderPresetCards();  // whisper role 선택도 이 안에서 카드와 같이 그려진다(결함① 수정, 별도 호출 불필요)
@@ -3132,6 +3136,7 @@ function pickPreset(gid){
 }
 function setSpeed(s){ VOICE.speed=s; pickHighlight(); }
 function setSil(v){ VOICE.silence_trim=v; pickHighlight(); }
+function setPace(v){ VOICE.pace_mode=v; }
 // 카드 안 role 버튼을 고르면 카드 전체를 다시 그린다(WHISPER_PICK은 renderPresetCards()가 읽는다) —
 // 예전엔 #whisperRoleControls 하나만 갱신하는 renderWhisperRoleBtns()가 따로 있었지만, 그 div가
 // 이제 카드 마크업 안에서만 존재하므로(결함① 수정) 카드 재렌더가 곧 role 버튼 재렌더다.
@@ -3145,6 +3150,7 @@ function _whisperRolesForBody(){
 function pickHighlight(){
   document.getElementById('speedBtns').innerHTML=SPEEDS.map(s=>`<button onclick="setSpeed(${s})" class="tab${VOICE.speed===s?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${s}x</button>`).join('');
   document.getElementById('silenceBtns').innerHTML=SIL.map(([v,l])=>`<button onclick="setSil('${v}')" class="tab${VOICE.silence_trim===v?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${l}</button>`).join('');
+  const _pm=document.getElementById('paceMode'); if(_pm) _pm.checked=VOICE.pace_mode!==false;
 }
 function syncAdvLabels(){
   const g=id=>document.getElementById(id);
@@ -3169,7 +3175,7 @@ async function previewVoice(){
   el.textContent='⏳ 생성 중…';
   try{
     const r=await fetch('/api/mix/voice/preview',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({job_id:MIX_JOB, preset_id:VOICE.preset_id, voice_id:VOICE.voice_id, settings:VOICE.settings, speed:VOICE.speed, silence_trim:VOICE.silence_trim, whisper_roles:_whisperRolesForBody()})});
+      body:JSON.stringify({job_id:MIX_JOB, preset_id:VOICE.preset_id, voice_id:VOICE.voice_id, settings:VOICE.settings, speed:VOICE.speed, silence_trim:VOICE.silence_trim, pace_mode:VOICE.pace_mode, whisper_roles:_whisperRolesForBody()})});
     if(!r.ok){ el.textContent='❌ 실패'; return; }
     const b=await r.blob();
     el.innerHTML=`<audio controls autoplay src="${URL.createObjectURL(b)}" style="height:30px"></audio>`;
@@ -3181,7 +3187,7 @@ async function applyVoice(){
   el.textContent='⏳ 전체 음성 생성 중…';
   try{
     await fetch('/api/mix/voice',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({job_id:MIX_JOB, preset_id:VOICE.preset_id, voice_id:VOICE.voice_id, settings:VOICE.settings, speed:VOICE.speed, silence_trim:VOICE.silence_trim, whisper_roles:_whisperRolesForBody()})});
+      body:JSON.stringify({job_id:MIX_JOB, preset_id:VOICE.preset_id, voice_id:VOICE.voice_id, settings:VOICE.settings, speed:VOICE.speed, silence_trim:VOICE.silence_trim, pace_mode:VOICE.pace_mode, whisper_roles:_whisperRolesForBody()})});
   }catch(e){ el.textContent='❌ 요청 실패'; return; }
   const poll=setInterval(async()=>{
     try{
