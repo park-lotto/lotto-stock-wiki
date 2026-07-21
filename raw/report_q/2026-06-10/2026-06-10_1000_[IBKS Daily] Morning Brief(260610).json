@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_[IBKS Daily] Morning Brief(260610).md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": null,
+    "report_date": "2026년 06월 10일",
+    "target_kind": "market",
+    "market_direction": "급등",
+    "macro_vars": [
+      "KOSPI 8,096.9P (+8.2%)",
+      "KOSDAQ 967.8P (+6.2%)",
+      "VKOSPI 91.23P (+19.04%)"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "삼성전기",
+      "리노공업",
+      "SK하이닉스",
+      "LG디스플레이",
+      "엔켐",
+      "JW중외제약",
+      "루닛",
+      "롯데지주",
+      "한진칼",
+      "현대해상",
+      "다우기술",
+      "메지온",
+      "롯데웰푸드",
+      "SK디스커버리",
+      "SK오션플랜트",
+      "율촌화학",
+      "SK케미칼",
+      "KG모빌리티",
+      "롯데관광개발",
+      "한국전력",
+      "한전기술",
+      "KT",
+      "에스엠"
+    ],
+    "risk": "국내 증시는 급등락을 보이며, 한국형 공포지수인 코스피200 변동성지수(VKOSPI)는 91.23P(+19.04%)로 사상 최고치 기록",
+    "quote": "전일 미국 필라델피아 반도체 지수 5% 이상 상승, 중동 긴장 완화 등의 영향으로 국내 대형 반도체주 등 전반적인 투자심리 회복하며 KOSPI 8,000P선 회복"
+  }
+}

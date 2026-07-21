@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_[신흥국 전략] 인도, 견조한 성장 뒤에 남은 하반기 ...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김근아",
+    "report_date": "2026년 6월 10일",
+    "target_kind": "market",
+    "market_direction": "중립",
+    "macro_vars": [
+      "인도 FY2026년 4/4분기 실질 GDP 성장률 YoY +7.8%",
+      "FY2026 연간 성장률 YoY +7.7%",
+      "인도 기준금리 5.25%",
+      "FY2027 성장률 전망 6.6%",
+      "CPI 전망 5.1%"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026년 6월",
+        "event": "RBI 통화정책회의(기준금리 5.25% 동결)"
+      }
+    ],
+    "top_picks": null,
+    "risk": [
+      "고유가 부담에 따른 경상수지 적자 및 인플레이션 압력",
+      "민간소비 둔화 및 몬순 약화로 인한 농가소득 둔화",
+      "성장 둔화 및 물가 상방 리스크"
+    ],
+    "quote": "인도 경제가 성장 방어와 물가·환율 안정 사이에서 이전보다 어려운 정책 환경에 직면했음을 보여주는 대목이다. 하반기 인도 경제에 대해서는 하방 리스크의 현실화 여부에 주목할 필요가 있다."
+  }
+}

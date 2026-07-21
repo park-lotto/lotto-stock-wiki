@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_Non-China 공급망의 가치, 매수 기회.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "윤재성, 김형준",
+    "report_date": "2026년 06월 10일",
+    "stocks": [
+      {
+        "name": "OCI홀딩스",
+        "code": "010060",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "550,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "6~7월 Section 232 관련 결과 확인 및 모멘텀",
+        "thesis": [
+          "미국 태양광 에너지 안보 관점에서의 Non-China 공급망 구축 핵심 업체",
+          "6~7월 Section 232 관련 모멘텀 및 밸류에이션 매력",
+          "최근 주가 급락은 펀더먼털보다는 단순한 주식 수급 이슈"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "한국 태양광 업체들이 에너지 안보 관점에서 미국의 단기 전력 공급 부족을 해결할 수 있는 Non-China 공급망 구축의 핵심임",
+        "quote": "Top Picks는 OCI홀딩스와 한화솔루션이다.",
+        "sector": "신재생"
+      },
+      {
+        "name": "한화솔루션",
+        "code": "009830",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "60,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "6~7월 Section 232 관련 결과 확인 및 모멘텀",
+        "thesis": [
+          "미국 태양광 에너지 안보 관점에서의 Non-China 공급망 구축 핵심 업체",
+          "상대적 저평가 상태(GW당 EV 1.1조)",
+          "최근 주가 급락은 펀더먼털보다는 단순한 주식 수급 이슈"
+        ],
+        "valuation_basis": "GW당 EV 1.1조 수준으로 상대적 저평가 상태",
+        "risk": null,
+        "supply_comment": "한국 태양광 업체들이 에너지 안보 관점에서 미국의 단기 전력 공급 부족을 해결할 수 있는 Non-China 공급망 구축의 핵심임",
+        "quote": "Top Picks는 OCI홀딩스와 한화솔루션이다.",
+        "sector": "신재생"
+      }
+    ]
+  }
+}

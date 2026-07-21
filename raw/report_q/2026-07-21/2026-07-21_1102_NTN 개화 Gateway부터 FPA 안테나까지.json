@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-21_1102_NTN 개화 Gateway부터 FPA 안테나까지.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "iM증권",
+    "analyst": "신희철",
+    "report_date": "2026-07-21",
+    "stocks": [
+      {
+        "name": "인텔리안테크",
+        "code": "189300",
+        "rating": "Buy",
+        "rating_changed": null,
+        "tp_new": 89000,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": {
+          "quote": "동사의 2분기 예상 매출액은 841억원(+30.0% QoQ, +12.6% YoY)으로 두 자릿수 견조한 증가세를 보일 것으로 전망한다. 이에 따라 올해 2분기 동사는 영업이익 44억원(+151.2% YoY, OPM 5.3%)을 기록할 것으로 판단한다. ‘26년 연간 기준으로는 매출액 및 영업이익 전망치를 각각 3,672억원(+15% YoY), 300억원(+YoY 151%, OPM 8.2%)으로 제시한다."
+        },
+        "estimate_revision": null,
+        "next_catalyst": "주요 위성 사업자들의 서비스 상용화가 예상되는 시점인 '27년 및 LEO 위성통신 개화",
+        "thesis": [
+          "주요 LEO 사업자향 FPA 및 Gateway 공급 확대에 따른 탑라인 성장",
+          "다수의 위성사업자와의 레퍼런스를 기반으로 한 LEO 위성통신 시장 수혜",
+          "해상용 VSAT 시장 회복 및 하이브리드 통신 수요 확대"
+        ],
+        "valuation_basis": "12개월 선행 당기순이익 325억원에 Global Peer 평균 밸류에이션(33배)을 10% 할인한 30배를 적용",
+        "risk": null,
+        "supply_comment": "미국 캘리포니아 Gateway 신공장 준공 이후 시험 가동 및 생산 안정화 단계 진입",
+        "quote": "인텔리안테크의 투자의견을 Buy로 제시하며, 목표주가 89,000원으로 커버리지를 개시한다."
+      }
+    ],
+    "sector": "통신"
+  }
+}

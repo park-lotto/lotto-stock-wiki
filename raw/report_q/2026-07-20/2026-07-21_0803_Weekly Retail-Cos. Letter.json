@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-07-20",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-21_0803_Weekly Retail-Cos. Letter.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "박종대, 양정석",
+    "report_date": "2026.7.20",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "가계 자산효과",
+      "외국인 인바운드",
+      "가계 소득효과"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "소비내수",
+        "stance": "비중확대",
+        "reason": "자산효과, 외국인 인바운드, 소득효과 등 세가지 모멘텀이 실적 개선을 견인"
+      },
+      {
+        "sector": "화장품미용",
+        "stance": null,
+        "reason": "해외 역직구 시장 확대 및 K-뷰티 수출 증가세"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "현대백화점",
+      "롯데쇼핑",
+      "신세계",
+      "에이피알",
+      "아모레퍼시픽",
+      "LG생활건강",
+      "달바글로벌",
+      "실리콘투",
+      "한국콜마",
+      "코스맥스",
+      "코스메카코리아",
+      "펌텍코리아",
+      "코웨이",
+      "이마트",
+      "GS리테일",
+      "BGF리테일",
+      "호텔신라",
+      "네오팜",
+      "코스맥스엔비티",
+      "동국제약"
+    ],
+    "risk": "자산효과 둔화, 기존점 성장률 둔화 가능성, 패션 카테고리 소비 위축",
+    "quote": "백화점 모멘텀 세가지, 자산효과/소득효과/외국인 인바운드 현황 분석"
+  }
+}

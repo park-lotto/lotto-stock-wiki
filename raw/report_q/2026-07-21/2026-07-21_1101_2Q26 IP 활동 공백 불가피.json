@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-21_1101_2Q26 IP 활동 공백 불가피.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "이환욱",
+    "report_date": "2026.07.20",
+    "stocks": [
+      {
+        "name": "와이지엔터테인먼트",
+        "code": "122870",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "57,000원",
+        "tp_prev": "57,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 예상 매출액 1,114억원(+10.9% yoy), 영업이익 86억원(+2.6% yoy). 시장 컨센서스(매출액: 1,144억원, 영업이익: 107억원)를 하회할 전망.",
+        "estimate_revision": null,
+        "next_catalyst": "다음달 중순 ‘빅뱅’의 20주년 기념 앨범 발매 및 대규모 월드투어 시작, 신인 IP(보이그룹) 런칭.",
+        "thesis": [
+          "2분기 실적을 저점으로 2H26 실적 개선 가시성 높음",
+          "빅뱅 20주년 앨범 및 대규모 월드투어 예정",
+          "트레저/베이비몬스터 신보 활동과 아시아투어 예정 및 신인 IP 런칭 기대감"
+        ],
+        "valuation_basis": "12개월 선행 P/E 15배 언더 구간으로 밸류에이션 부담 지속 감소",
+        "risk": "오프라인 콘서트 공백으로 인한 QoQ 역성장, 앨범 단위당 판매량 하락에 따른 원가 부담 및 디지털 싱글 제작비 부담",
+        "supply_comment": null,
+        "quote": "2분기 실적을 저점으로 2H26 실적 개선 가시성은 매우 높다는 판단이다."
+      }
+    ]
+  }
+}

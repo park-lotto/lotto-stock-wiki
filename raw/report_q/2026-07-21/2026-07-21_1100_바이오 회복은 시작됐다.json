@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-21_1100_바이오 회복은 시작됐다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "손현정",
+    "report_date": "2026.07.21",
+    "stocks": [
+      {
+        "name": "CJ제일제당",
+        "code": "097950",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "260,000원",
+        "tp_prev": "300,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "CJ제일제당은 2Q26 연결 매출액 7조 213억원(YoY -9.3%), 영업이익 2,722억원(YoY -31.0%, OPM 3.9%)을 기록하며 컨센서스에 부합할 전망이다.",
+        "estimate_revision": "하반기 바이오 실적은 전년의 낮은 기저와 미국의 중국산 라이신 반덤핑 조치에 따른 판가 및 판매량 개선 효과를 바탕으로 회복세가 이어질 전망이다.",
+        "next_catalyst": "식품의 안정적인 이익과 바이오의 점진적인 회복이 전사 증익을 견인할 것으로 예상한다.",
+        "thesis": [
+          "식품 부문 국내 가공식품 판매 호조 및 해외 마케팅 집행에 따른 수익성 변화",
+          "메치오닌을 비롯한 사료용 아미노산 판가 상승을 통한 바이오 실적 회복",
+          "2027년 예상 EPS에 Target PER 9배를 적용한 밸류에이션 리레이팅"
+        ],
+        "valuation_basis": "2027년 예상 EPS에 Target PER 9배를 적용한 목표주가 260,000원을 제시하며 투자의견 BUY로 커버리지를 재개한다.",
+        "risk": "대두박·옥수수 가격 상승과 사료용 아미노산 수요 불확실성",
+        "supply_comment": null,
+        "quote": "현재 주가는 2027년 예상 PER 6배 수준으로, 바이오 실적 회복과 재무구조 개선 가능성이 충분히 반영되지 않은 구간이다."
+      }
+    ]
+  }
+}

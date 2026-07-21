@@ -1,0 +1,28 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_[IBKS Economy Monitor] Focus on Week 왜 원달러 ...md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": [
+      "정용택",
+      "김예슬"
+    ],
+    "report_date": "2026. 6. 5",
+    "target_kind": "market",
+    "market_direction": "원/달러 환율 상방 리스크 유지",
+    "macro_vars": [
+      "중동 리스크",
+      "외국인 대규모 주식매도",
+      "대미 투자 약정"
+    ],
+    "recommended_sectors": [],
+    "style": "null",
+    "event_calendar": [],
+    "top_picks": null,
+    "risk": "중동 사태 장기화 가능성, 대미 투자 약정에 따른 대규모 달러 수요 발생, 외국인 주식 매도 지속 가능성",
+    "quote": "우리 경제의 취약점을 건드리는 중동사태와 외국인 대규모 주식매도라는 수급 우려가 금리차 등 기존의 환율 설명 변수들을 제치고 최근 원/달러 환율 변동을 설명"
+  }
+}

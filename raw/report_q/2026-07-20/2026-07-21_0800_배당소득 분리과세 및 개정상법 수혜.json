@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-20",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-21_0800_배당소득 분리과세 및 개정상법 수혜.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "iM증권",
+    "analyst": "이상헌, 장호",
+    "report_date": "2026.07.20",
+    "stocks": [
+      {
+        "name": "효성",
+        "code": "004800",
+        "rating": "Buy",
+        "rating_changed": "Maintain",
+        "tp_new": "185,000원",
+        "tp_prev": "100,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2026E 매출액 2,511십억원, 영업이익 488십억원, 순이익 309십억원",
+        "estimate_revision": null,
+        "next_catalyst": "배당소득 분리과세 적용을 위한 배당 확대 및 상법 개정으로 인한 지배구조 개선",
+        "thesis": [
+          "배당소득 분리과세 제도 도입에 따른 고배당 기조 유지 및 DPS 상향 예상",
+          "감사위원 분리선출 확대 및 집중투표제 도입 등으로 인한 지배구조 개선효과 가시화",
+          "감사위원회 위원 선임 시 최대주주 의결권 3% 제한으로 독립적인 감사기구 역할 기대"
+        ],
+        "valuation_basis": "K-IFRS 연결요약재무제표 및 PER 밴드 등 참조",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "자회사 실적호조로 배당 확대되는 환경하에서 배당소득 분리과세 요건 충족 위하여 올해 DPS 상향될 듯 ⇒ 향후에도 배당확대 지속성 높아질 듯",
+        "sector": "기타"
+      }
+    ]
+  }
+}

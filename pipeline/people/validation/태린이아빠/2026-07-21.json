@@ -1,0 +1,33 @@
+{
+  "date": "2026-07-21",
+  "hit_rate": null,
+  "mentioned_count": 16,
+  "matched": [],
+  "missed": [
+    "SK하이닉스",
+    "기술주",
+    "달바글로벌",
+    "로봇",
+    "반도체",
+    "반도체 소부장",
+    "빅테크",
+    "삼양식품",
+    "샘씨엔에스",
+    "소비재",
+    "에이피알",
+    "전력",
+    "코스맥스",
+    "코오롱티슈진",
+    "하나마이크론",
+    "헬스케어"
+  ],
+  "candidates": [],
+  "thresholds": {
+    "mode": "his",
+    "vacuum_pct_max": 35.0,
+    "min_up_count": 1,
+    "require_up_gt_down": true,
+    "require_leader": false,
+    "top_n": 20
+  }
+}

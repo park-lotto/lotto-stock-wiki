@@ -1,0 +1,147 @@
+{
+  "meta": {
+    "date": "2026-07-20",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-21_0805_2Q26 Pre 대체로 컨센 상회. 3Q가 견조한 업...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "윤재성",
+    "report_date": "2026년 7월 20일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "S-Oil",
+        "code": "010950",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "200,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 영업이익 1.02조원(QoQ -17%, YoY 흑전) 전망. 3Q26 영업이익 4,922억원(QoQ -52%, YoY +115%) 추정.",
+        "estimate_revision": "2026~27년 영업이익 추정치를 각각 3.78조원/3.65조원으로 25~40% 상향.",
+        "next_catalyst": "정제마진 강세와 8월 OSP 마이너스 전환에 따른 원가 절감효과",
+        "thesis": [
+          "윤활기유 판가 급등으로 실적 대폭 개선",
+          "정제마진 강세 지속",
+          "Capex 종료를 반영한 배당 확대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "정제마진 강세와 8월 OSP 마이너스 전환에 따른 원가 절감효과에 근거해 2026~27년 영업이익 추정치를 각각 3.78조원/3.65조원으로 25~40% 상향.",
+        "sector": "정유"
+      },
+      {
+        "name": "SK이노베이션",
+        "code": "096770",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "200,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 영업이익 1.8조원(QoQ -16%, YoY 흑전) 전망. 3Q26 영업이익 0.92조원(QoQ -57%, YoY 흑전) 추정.",
+        "estimate_revision": null,
+        "next_catalyst": "윤활기유 대폭 개선 및 업황 회복",
+        "thesis": [
+          "사상 최대치 영업이익 전망",
+          "S-Oil 대비 정유/PX Capa 2배 수준",
+          "윤활기유 내 그룹 3 비중 100% 및 Capa 3배 수준"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2026년 영업이익 6.5조원(YoY +1,505%)으로 사상 최대치 추정.",
+        "sector": "정유"
+      },
+      {
+        "name": "금호석유화학",
+        "code": "011780",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "180,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 영업이익 2,084억원(QoQ +251%, YoY +220%) 전망. 3Q26 영업이익 1,197억원(QoQ -43%, YoY +42%) 전망.",
+        "estimate_revision": null,
+        "next_catalyst": "주요 제품 사이클 회복",
+        "thesis": [
+          "합성고무 실적 대폭 개선",
+          "MDI 강세에 따른 지분법이익 개선",
+          "SBR/BR 마진 연중 최대치 기록 중"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "SBR/BR 마진(Spot)은 제한된 공급으로 연중 최대치 기록 중",
+        "quote": "주요 제품 모두 사이클 회복 국면 진입 가능성 높아져.",
+        "sector": "석유화학"
+      },
+      {
+        "name": "효성티앤씨",
+        "code": "298020",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "590,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 영업이익 1,618억원(QoQ +88%, YoY +121%) 전망. 3Q26 영업이익 1,404억원(QoQ -13%, YoY +150%) 전망.",
+        "estimate_revision": null,
+        "next_catalyst": "회복 사이클 진입",
+        "thesis": [
+          "스판덱스/PTMG 대폭 개선",
+          "나일론/폴리 흑자전환",
+          "중국 수요 CAGR +10% 이상 증가"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "스판덱스/PTMG의 대폭 개선과 나일론/폴리의 흑자전환 덕분",
+        "sector": "석유화학"
+      },
+      {
+        "name": "OCI홀딩스",
+        "code": "010060",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "550,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 영업이익 1,224억원(QoQ +1,023%, YoY 흑전) 전망. 3Q26 영업이익 1,108억원(QoQ -10%, YoY 흑전) 추정.",
+        "estimate_revision": null,
+        "next_catalyst": "Section 232 발표에 따른 폴리실리콘 가격 상승",
+        "thesis": [
+          "비중국산 폴리실리콘 가격 상승 기대",
+          "이연 판매 확대 및 가동률 상승",
+          "저렴한 변동비 기반 경쟁력 보유"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "Section 232 발표로 비중국산 폴리실리콘 가격 상승 기대되고, 이연 판매 확대 및 가동률 상승에 따른 고정비 감소 효과도 더해져",
+        "sector": "태양광"
+      },
+      {
+        "name": "한화솔루션",
+        "code": "009830",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "60,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 영업이익 2,307억원(QoQ +149%, YoY +126%) 전망. 3Q26 영업이익 1,844억원(QoQ -20%, YoY 흑전) 추정.",
+        "estimate_revision": null,
+        "next_catalyst": "미국 태양광 모듈 판가 상승 및 공장 가동",
+        "thesis": [
+          "태양광 모듈 판가 상승에 따른 레버리지 효과",
+          "케미칼 사업부 실적 개선",
+          "미국 태양광 모듈 공급과잉 해소"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "미국 태양광 모듈 공급과잉 해소",
+        "quote": "미국 태양광 모듈 공급과잉 해소되며 판가 상승 국면 진입",
+        "sector": "태양광"
+      }
+    ]
+  }
+}

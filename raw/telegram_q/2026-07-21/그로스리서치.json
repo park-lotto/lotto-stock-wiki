@@ -1,0 +1,157 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "지투지바이오",
+      "rating": null,
+      "tp": null,
+      "ts": "08:10",
+      "quote": "세마글루타이드 기반 GB-7001, 25~45% 고함량 제형과 초기 방출 제어 데이터 확보",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "CXMT",
+      "rating": null,
+      "tp": null,
+      "ts": "08:25",
+      "quote": "HBM 대신 DDR5 집중 전략",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "BMS",
+      "rating": null,
+      "tp": null,
+      "ts": "09:05",
+      "quote": "NVIDIA DGX SuperPOD와 Vera Rubin NVL72 시스템 도입",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "리가켐바이오",
+      "rating": null,
+      "tp": null,
+      "ts": "09:14",
+      "quote": "LCB02A 비임상 유효성·안전성 연구",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "씨이랩",
+      "rating": null,
+      "tp": null,
+      "ts": "09:28",
+      "quote": "씨이랩이 한국데이터센터에너지효율협회(KDCEA)에 회원사로 가입",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "한화오션",
+      "rating": null,
+      "tp": null,
+      "ts": "09:43",
+      "quote": "대만 양밍해운, 1만3000TEU급 LNG 이중연료 컨테이너선 6척 건조 계약 승인",
+      "sector": "조선"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성전자",
+      "rating": null,
+      "tp": null,
+      "ts": "10:05",
+      "quote": "대표이사 직속 ‘RX(Robotics eXperience)사업추진실’ 신설",
+      "sector": "로봇"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LIG D&A",
+      "rating": null,
+      "tp": null,
+      "ts": "10:21",
+      "quote": "LIG D&A의 첨단 센서와 무기체계를 에어버스 최신 무인기 플랫폼에 통합",
+      "sector": "방산"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "에임드바이오",
+      "rating": null,
+      "tp": null,
+      "ts": "10:38",
+      "quote": "바이오헤이븐에 기술이전한 FGFR3 표적 ADC ‘AMB302(BHV-1530)’",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "지투지바이오",
+      "rating": null,
+      "tp": null,
+      "ts": "10:51",
+      "quote": "의료·바이오 AI 기업 스파이더코어와 플랫폼 구축 계약",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "알테오젠",
+      "rating": null,
+      "tp": null,
+      "ts": "14:32",
+      "quote": "코스닥150 이탈 매도와 코스피200 편입 매수를 합산할 경우, 약 3,600억원의 패시브 자금 순유출 가능성 제기",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "AMD",
+      "rating": null,
+      "tp": null,
+      "ts": "14:58",
+      "quote": "AMD가 연내 첫 랙스케일 AI 시스템 Helios를 출시하며 Microsoft가 신규 고객으로 합류",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "이엔셀",
+      "rating": null,
+      "tp": null,
+      "ts": "15:10",
+      "quote": "이엔셀, 첨단재생의료실시기관인 엘병원과 업무협약(MOU) 체결",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "바이오솔루션",
+      "rating": null,
+      "tp": null,
+      "ts": "15:18",
+      "quote": "바이오솔루션은 환자 본인의 연골세포를 손상 부위에 이식하는 ‘카티라이프’와, 다른 사람의 연골세포를 관절에 주사하는 ‘스페로큐어’를 개발 중",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "현대로템",
+      "rating": null,
+      "tp": null,
+      "ts": "16:16",
+      "quote": "현대로템, K2 전차 54대, K808 차륜형장갑차 141대 수출 추진",
+      "sector": "방산"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "두산로보틱스",
+      "rating": null,
+      "tp": null,
+      "ts": "16:34",
+      "quote": "두산로보틱스는 지멘스, 애자일 로봇, 스킬드 AI 등과 함께 도입 평가 진행",
+      "sector": "로봇"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SGC에너지",
+      "rating": null,
+      "tp": null,
+      "ts": "17:38",
+      "quote": "보유 부지를 활용해 글로벌 빅테크 대상 AI 데이터센터 사업 추진",
+      "sector": "전력"
+    }
+  ]
+}

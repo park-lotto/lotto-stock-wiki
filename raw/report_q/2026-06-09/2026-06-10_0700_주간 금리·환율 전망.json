@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "Daishin Research",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_0700_주간 금리·환율 전망.md"
+  },
+  "questionnaire": {
+    "broker": "Daishin Research",
+    "analyst": [
+      "공동락",
+      "이정훈"
+    ],
+    "report_date": "2026. 6.8",
+    "target_kind": "market",
+    "market": {
+      "market_direction": "null",
+      "macro_vars": [
+        "금리",
+        "환율",
+        "기준금리",
+        "인플레이션"
+      ],
+      "recommended_sectors": null,
+      "style": "null",
+      "event_calendar": [
+        {
+          "date": "F1Q말",
+          "event": "종전 기대에 따른 제한적 채권 강세 종료 이후 다시 물가 우려, 수급 부담 가세하며 금리 재상승 우려"
+        },
+        {
+          "date": "F2Q말",
+          "event": "기준금리 인상 개시 전망. 단발성 아닌 사이클을 형성하는 통화정책 일정 부담"
+        },
+        {
+          "date": "F3Q말",
+          "event": "여전히 인상 사이클 이어지며 금리 상승세 추가 분출 우려"
+        },
+        {
+          "date": "F4Q말",
+          "event": "높아진 금리 레벨과 인상 사이클 호흡 조절 국면 돌입 기대. 금리 레벨 업 이후 고점 영역 스프레드 예상"
+        }
+      ],
+      "top_picks": null,
+      "risk": "종전 지연, 외국인 순매도 및 연준 긴축 우려 등 대내외 악재 지속돼 6월말까지 1,500원대 환율 이어질 전망",
+      "quote": "고용 개선 여파에 따른 미국 기준금리 전망 컨센서스 변화 가능성, 기준금리 인상 속도와 폭에 대한 프라이싱 과정 추가될 것, 대내외 악재 모두 겹친 상황이나, 1,550 원대 환율은 분명한 오버 슈팅. 연준 금리 인상 반영해도 하반기 중동 정세 해결 시점에서 1,400 원대 재진입 예상"
+    }
+  }
+}

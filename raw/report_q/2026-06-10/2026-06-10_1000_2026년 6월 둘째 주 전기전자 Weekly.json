@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_2026년 6월 둘째 주 전기전자 Weekly.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": [
+      "박희철",
+      "최보영"
+    ],
+    "report_date": "2026/ 6/ 10",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "매크로 불확실성",
+      "SOCAMM 관련 노이즈",
+      "금 선물",
+      "은 선물",
+      "구리 선물",
+      "원/달러 환율"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "부진",
+        "reason": "매크로 불확실성 및 SOCAMM 관련 노이즈 등으로 섹터 수익률 전반적으로 부진"
+      },
+      {
+        "sector": "IT",
+        "stance": "긍정",
+        "reason": "MLCC 기업들의 경우 외사의 업황 관련 강한 코멘트와 함께 전반적으로 긍정적인 주가 추이"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "Kingboard Laminates",
+      "Gold Circuit"
+    ],
+    "risk": "매크로 불확실성 및 SOCAMM 관련 노이즈",
+    "quote": "매크로 불확실성 및 SOCAMM 관련 노이즈 등으로 섹터 수익률 전반적으로 부진"
+  }
+}

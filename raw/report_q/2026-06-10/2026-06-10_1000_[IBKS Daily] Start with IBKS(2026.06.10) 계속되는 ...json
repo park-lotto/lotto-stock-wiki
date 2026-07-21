@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_[IBKS Daily] Start with IBKS(2026.06.10) 계속되는 ...md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": null,
+    "report_date": "2026. 06. 10",
+    "target_kind": "market",
+    "market_direction": "급등",
+    "macro_vars": [
+      "미국 반도체주 반등",
+      "AI 투자 사이클 기대",
+      "이란·이스라엘 충돌 완화에 따른 유가 안정",
+      "중국 5월 수출액 19.4% 증가",
+      "미국 주택건설 경기",
+      "중동 긴장 재확대"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "긍정",
+        "reason": "미국 반도체주 반등과 AI 투자 사이클 기대로 삼성전자와 SK하이닉스 등 대형 반도체주 강세"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스"
+    ],
+    "risk": "중동 긴장 재확대 및 미국 기술주 변동성에 따른 투자심리 위축",
+    "quote": "반도체주 중심 저가매수세 유입에 급등. 전일 급락에 따른 반발 매수세가 유입된 가운데 미국 반도체주 반등과 AI 투자 사이클 기대가 이어지며 삼성전자와 SK하이닉스 등 대형 반도체주가 강세를 주도."
+  }
+}

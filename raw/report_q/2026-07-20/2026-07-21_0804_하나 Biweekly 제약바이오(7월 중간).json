@@ -1,0 +1,85 @@
+{
+  "meta": {
+    "date": "2026-07-20",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-21_0804_하나 Biweekly 제약바이오(7월 중간).md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김선아",
+    "report_date": "2026년 7월 20일",
+    "target_kind": "market",
+    "market_direction": "호재에 둔하고 악재에만 민감한 분위기",
+    "macro_vars": [
+      "미국 관세 정책",
+      "미국 10년물 국채 금리",
+      "고환율"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "바이오",
+        "stance": "비중 확대",
+        "reason": "펀더멘털은 견조하나 시장 공포 심리로 인한 과도한 주가 하락 상태로, 섹터 전반의 부진 우려가 있으나 개별 기업의 성과 확인 시 반등 가능"
+      }
+    ],
+    "style": "가치주 및 펀더멘털 기반 우량 종목 선호",
+    "event_calendar": [
+      {
+        "date": "07월 12일",
+        "event": "AAIC (국제 알츠하이머학회)"
+      },
+      {
+        "date": "09월 12일",
+        "event": "WCLC (세계 폐암학회)"
+      },
+      {
+        "date": "09월 28일",
+        "event": "EASD (유럽 당뇨병학회)"
+      },
+      {
+        "date": "10월 12일",
+        "event": "World ADC-USA (세계 ADC학회)"
+      },
+      {
+        "date": "10월 23일",
+        "event": "ESMO (유럽 종양학회)"
+      },
+      {
+        "date": "11월 04일",
+        "event": "SITC (국제면역항암학회)"
+      },
+      {
+        "date": "11월 05일",
+        "event": "AASLD (미국 간학회)"
+      },
+      {
+        "date": "11월 09일",
+        "event": "Bio Europe"
+      },
+      {
+        "date": "11월 14일",
+        "event": "Obesity Week (비만학회)"
+      },
+      {
+        "date": "12월 04일",
+        "event": "AES (미국 뇌전증학회 연례회의)"
+      },
+      {
+        "date": "12월 12일",
+        "event": "ASH (미국 혈액학회)"
+      },
+      {
+        "date": "12월 16일",
+        "event": "CTAD (알츠하이머 임상학회)"
+      }
+    ],
+    "top_picks": [
+      "SK바이오팜",
+      "알테오젠",
+      "올릭스",
+      "리가켐바이오"
+    ],
+    "risk": "시장 전반의 공포 심리 확산, 글로벌 제약/바이오 섹터 내 악재 민감도 상승",
+    "quote": "최근의 제약/바이오의 주가 하락은 섹터를 넘어 시장 전반에 대한 공포 심리 때문으로 보이니, 펀더멘털을 읽을 수 있는 이성을 되찾기를 기다려야 한다."
+  }
+}

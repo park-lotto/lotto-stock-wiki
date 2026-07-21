@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "IM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_[Morning Brief] AI 인프라 공급 우려로 미 증시 혼조...md"
+  },
+  "questionnaire": {
+    "broker": "IM증권",
+    "analyst": null,
+    "report_date": "2026-06-10",
+    "target_kind": "market",
+    "market_direction": "혼조세",
+    "macro_vars": [
+      "중국 생산자물가지수, 소비자물가지수",
+      "미국 소비자물가지수",
+      "애플 WWDC(~12)",
+      "미국-이란 사태 플로우"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "소비내수",
+        "stance": "강세",
+        "reason": "백화점 매출 증가세 및 면세점 외국인 소비 증가세에 따른 실적 기대감"
+      },
+      {
+        "sector": "반도체",
+        "stance": "약세",
+        "reason": "AI 인프라 공급 우려 및 반도체 업종 전반 약세"
+      }
+    ],
+    "style": "순환매",
+    "event_calendar": [
+      {
+        "date": "2026-06-10",
+        "event": "중국 생산자물가지수, 소비자물가지수 발표 예정"
+      },
+      {
+        "date": "2026-06-10",
+        "event": "미국 소비자물가지수 발표 예정"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "신세계",
+      "현대백화점",
+      "애플"
+    ],
+    "risk": "지정학적 경계감(트럼프 대통령 이란 대응 시사 및 자위적 공습 보도), AI 인프라 공급 우려",
+    "quote": "미 증시는 AI 인프라 공급 우려 속 하락 마감. 장중 반도체 업종 약세가 심화되어 필라델피아 반도체지수 장중 -8% 넘게 급락."
+  }
+}
