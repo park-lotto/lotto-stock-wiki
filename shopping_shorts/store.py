@@ -1827,6 +1827,19 @@ class Store:
             c.execute("UPDATE spine SET status=?, updated_at=? WHERE id=?",
                       (status, now, spine_id))
 
+    def pick_spine_for_category(self, category, status="approved", min_sources=3):
+        """생성용 스파인 1건 — 승격게이트(status·source_count>=min_sources) 통과 +
+        category가 fit_categories에 포함(fit_categories 비면 범용으로 매칭)되는 것 중
+        perf 최고. 없으면 None. 리더가 게이트를 강제해 미승인·저소스 스파인이 생성에 못 샌다(A1)."""
+        for sp in self.list_spines(status=status):     # perf_score DESC 정렬 보장
+            if (sp.get("source_count") or 0) < min_sources:
+                continue
+            fits = sp.get("fit_categories") or []
+            if category and fits and category not in fits:
+                continue
+            return sp        # 첫 통과 = 최고 perf
+        return None
+
     # --- Phase1: perf/spine 조회·저장 배관 ---
     def list_pattern_sources(self, category_source=None, only_missing_spine=False, limit=1000):
         """부품 소스 행 목록. category_source는 str 하나 또는 (튜플/리스트)로 IN 필터(R4).

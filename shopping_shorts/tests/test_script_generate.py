@@ -182,8 +182,8 @@ def test_refine_rewrite_injects_story_charter(monkeypatch):
 def test_all_format_prompts_have_no_stray_braces():
     """헌장·감각표현 라이브러리에 { } 가 섞이면 .format()이 KeyError로 터진다 —
     각 프롬프트가 정상 kwargs로 포맷되는지(=중괄호 오염 없음) 확인."""
-    script_generate._GEN_PROMPT.format(full_text="t", elems="e", topic_line="x", n=1)
-    script_generate._MIX_PROMPT.format(sources="s", seconds=20, words=46, n=1)
+    script_generate._GEN_PROMPT.format(full_text="t", elems="e", topic_line="x", n=1, bank="")
+    script_generate._MIX_PROMPT.format(sources="s", seconds=20, words=46, n=1, bank="")
     script_generate._REWRITE_PROMPT.format(script="s", instruction="i")
     script_generate._PARTIAL_PROMPT.format(script="s", selected="sel", instruction="i")
     script_generate._FIX_PROMPT.format(script="s", instruction="i", words=46)
