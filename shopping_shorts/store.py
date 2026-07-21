@@ -699,6 +699,22 @@ class Store:
         except sqlite3.OperationalError:
             pass  # 이미 존재
 
+        # ── 회원관리(2026-07-22): 이름·전화 + 결제이력 ──
+        #   ★같은 커서 c 사용 — 이 메서드는 _init_schema가 customers를 만드는 열린 트랜잭션
+        #   안에서 c를 넘겨받는다. 새 self._conn()을 열면 미커밋 customers가 안 보여 깨진다.
+        existing = {r[1] for r in c.execute("PRAGMA table_info(customers)").fetchall()}
+        for col in ("name", "phone"):
+            if col not in existing:
+                c.execute(f"ALTER TABLE customers ADD COLUMN {col} TEXT")
+        c.execute(
+            "CREATE TABLE IF NOT EXISTS payments ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, customer_id INTEGER NOT NULL, "
+            "amount INTEGER NOT NULL DEFAULT 0, method TEXT, "
+            "period_days INTEGER NOT NULL DEFAULT 0, paid_at INTEGER NOT NULL, "
+            "note TEXT, created_at INTEGER NOT NULL)"
+        )
+        c.execute("CREATE INDEX IF NOT EXISTS idx_payments_customer ON payments(customer_id)")
+
     def ensure_paywall_schema(self):
         """공개 래퍼(테스트·호출부용). __init__에서도 자동 실행되므로 보통 부를 필요 없다."""
         with self._conn() as c:
