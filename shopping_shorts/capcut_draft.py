@@ -65,8 +65,9 @@ def _clip():
 
 
 def _base_segment(material_id, target_start, target_dur, *, source_start=0, source_dur=None,
-                  extra_refs=None, render_index=0, source_timerange=True):
-    """세그먼트 공통 골격. source_timerange=False면 null(텍스트)."""
+                  extra_refs=None, render_index=0, source_timerange=True, volume=1.0):
+    """세그먼트 공통 골격. source_timerange=False면 null(텍스트).
+    volume=0.0으로 원본 클립 오디오를 음소거한다(영상 트랙 전용 — 우리 TTS만 들리게)."""
     seg = {
         "id": _uid(),
         "material_id": material_id,
@@ -77,7 +78,7 @@ def _base_segment(material_id, target_start, target_dur, *, source_start=0, sour
         "render_timerange": {"start": 0, "duration": 0},
         "extra_material_refs": extra_refs or [],
         "clip": _clip(), "uniform_scale": {"on": True, "value": 1.0},
-        "speed": 1.0, "volume": 1.0, "last_nonzero_volume": 1.0,
+        "speed": 1.0, "volume": volume, "last_nonzero_volume": 1.0,
         "visible": True, "reverse": False, "is_loop": False, "is_placeholder": False,
         "is_tone_modify": False, "intensifies_audio": False, "cartoon": False,
         "render_index": render_index, "track_render_index": 0, "track_attribute": 0,
@@ -183,8 +184,10 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                 vdur = _us((video_durs or {}).get(src_real, 0.0)) or (t0 + dur)
                 vm = _video_material(abs_path, prim.get("video_id", "clip"), vdur, cw, ch)
                 mats["videos"].append(vm)
+                # volume=0.0 → 원본 클립 오디오 음소거(원본 음악·말소리 제거, 우리 TTS만 들리게).
+                # last_nonzero_volume=1.0이라 사장님이 캡컷에서 필요하면 되살릴 수 있다.
                 seg = _base_segment(vm["id"], t0, dur, source_start=_us(prim["start"]),
-                                    source_dur=dur, render_index=0,
+                                    source_dur=dur, render_index=0, volume=0.0,
                                     extra_refs=[sp["id"], ca["id"], sc["id"], ph["id"], vs["id"]])
                 vid_track["segments"].append(seg)
 
