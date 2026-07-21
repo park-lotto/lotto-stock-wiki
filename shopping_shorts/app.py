@@ -1532,6 +1532,23 @@ def api_get_vmake_key():
     return {"ok": True, "configured": bool(key)}      # 원문은 노출하지 않음
 
 
+@app.get("/api/settings/smart_mix")
+def api_get_smart_mix():
+    """스마트 믹스(부품은행+반복회피+핑퐁) 마스터 스위치 상태. bank_enabled로 대표."""
+    return {"ok": True, "on": Store(DB_PATH).get_setting("bank_enabled", "") == "1"}
+
+
+@app.post("/api/settings/smart_mix")
+def api_set_smart_mix(body: dict):
+    """딸깍 하나로 부품은행 주입(bank_enabled)·반복회피(novelty)·핑퐁(ping_pong_enabled)을
+    함께 켜고 끈다. 셋 다 scene_first 믹스에서만 작동하고 기본 off라 켜기 전엔 라이브 무변화."""
+    val = "1" if body.get("on") else "0"
+    store = Store(DB_PATH)
+    store.set_setting("bank_enabled", val)
+    store.set_setting("ping_pong_enabled", val)
+    return {"ok": True, "on": val == "1"}
+
+
 # 매칭 파이프라인의 '진행 중' 단계들(run_mix_job: downloading→extracting→planning→tts).
 # 각 단계가 update_mix_job으로 updated_at을 갱신하므로, 여기 오래 멈춰 있으면 죽은 잔해다.
 _MIX_ACTIVE_STAGES = ("downloading", "extracting", "planning", "tts")

@@ -1,8 +1,16 @@
 """생성 프롬프트 주입용 은행 컨텍스트 조립(Phase2 토대). store 읽기만, Gemini 없음.
 ★중괄호 소독 필수 — script_generate 프롬프트가 .format()을 돌린다(_STORY_RULES_CORE 옆에 낀다)."""
+import random
+
 from shopping_shorts.pattern_bank import STYLE_BUCKETS
 
 _LABEL = {"hook": "훅", "ending": "마무리", "adverb": "담화부사", "cta": "CTA", "price": "가격표현"}
+
+# 로테이션 창: 상위 perf 풀(=max(k*_POOL_MULT, _POOL_MIN))에서 k개를 매 호출 랜덤 샘플.
+# top-k 고정이면 매 영상이 같은 훅으로 열려 단조롭다(P0-1) — 잘된 것 위주(풀=perf 상위)로
+# 하되 그 안에서 무작위라 job마다 다른 조합이 나온다. 풀보다 승인이 적으면 전부 쓴다.
+_POOL_MULT = 4
+_POOL_MIN = 12
 
 
 def _sanitize(text):
@@ -27,11 +35,21 @@ def spine_charter(spine):
     return head
 
 
-def parts_block(store, k=5):
-    """STYLE_BUCKETS별 승인부품 top-k(perf) → 프롬프트 블록. 부품 없으면 ''."""
+def _sample_bucket(store, bucket, k, rng=random):
+    """승인 부품 상위 perf 풀에서 k개 랜덤 샘플(로테이션). 풀=상위 max(k*_POOL_MULT,_POOL_MIN)개,
+    승인이 k 이하면 전부. perf 상위를 풀로 쓰되 그 안에서 무작위 → 잘된 것 위주로 매번 다르게."""
+    pool = store.list_pattern_items(bucket=bucket, status="approved", order_by="perf",
+                                    limit=max(k * _POOL_MULT, _POOL_MIN))
+    if len(pool) <= k:
+        return pool
+    return rng.sample(pool, k)
+
+
+def parts_block(store, k=5, rng=random):
+    """STYLE_BUCKETS별 승인부품 k개(상위 perf 풀에서 로테이션 샘플) → 프롬프트 블록. 부품 없으면 ''."""
     lines = []
     for b in STYLE_BUCKETS:
-        items = store.list_pattern_items(bucket=b, status="approved", order_by="perf", limit=k)
+        items = _sample_bucket(store, b, k, rng=rng)
         if not items:
             continue
         texts = ", ".join(_sanitize(it["text"]) for it in items)
@@ -41,6 +59,23 @@ def parts_block(store, k=5):
     return ("[승인된 부품 — 이 결·패턴을 참고해 새로 써라. ★그대로 베끼기 금지: 특히 훅·CTA는 "
             "구조와 리듬만 가져오고 단어·인물·소재는 반드시 우리 것으로 바꿔라(표절·중복 회피).]\n"
             + "\n".join(lines))
+
+
+def avoid_block(store, limit=6):
+    """novelty(P0-3): 최근 영상이 쓴 훅·인물·CTA를 '이건 이미 썼으니 다르게 써라'로 블록화.
+    이력 없으면 ''. 중괄호 소독(생성 프롬프트가 .format()을 탄다)."""
+    rec = store.recent_script_usage(limit=limit)
+    parts = []
+    if rec["hooks"]:
+        parts.append("· 훅: " + " / ".join(_sanitize(h) for h in rec["hooks"]))
+    if rec["persons"]:
+        parts.append("· 인물: " + ", ".join(_sanitize(p) for p in rec["persons"]))
+    if rec["ctas"]:
+        parts.append("· CTA: " + ", ".join(_sanitize(c) for c in rec["ctas"]))
+    if not parts:
+        return ""
+    return ("[최근 영상에서 이미 쓴 것 — ★반드시 다르게 써라(같은 훅·인물·CTA 반복 금지, "
+            "매 영상이 똑같이 열리면 안 된다)]\n" + "\n".join(parts))
 
 
 def assemble_bank_context(store, category, k=5):

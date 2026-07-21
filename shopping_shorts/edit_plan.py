@@ -409,9 +409,13 @@ _SCENE_FIRST_SCHEMA = {
 }
 
 
-def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3, call=_vault_call):
+def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3, call=_vault_call,
+                            bank_context=""):
     """스토리 헌장 + 장면 팔레트 + 레퍼 구조 → 후보 n개. 각 비트는 seg_ids(2~4 다중컷)로
-    장면을 지목한다. 실패 시 []. 헌장이 품질을 담당하므로 별도 검증루프 없음(1콜)."""
+    장면을 지목한다. 실패 시 []. 헌장이 품질을 담당하므로 별도 검증루프 없음(1콜).
+
+    bank_context(P0-2): 부품은행에서 조립한 승인 훅·어미·부사·CTA·스파인 블록(빈 문자열이면
+    미주입=회귀0). 영상 믹스 대본이 매번 같은 훅으로 열리지 않게 로테이션된 부품을 실어준다."""
     from shopping_shorts import script_generate  # 지연 import(순환 방지)
     char_target = int(target_seconds * _SYLLABLES_PER_SEC)
     prompt = (
@@ -437,7 +441,8 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "'이 소스'·'특제 비법'처럼 관형어+명사는 붙인다). 이어붙이면 narration과 글자가 정확히 "
         "같아야 한다(단어 추가·삭제 금지, 문장부호 유지).\n"
         "- 화면에 없는 걸 말하지 마라. 같은 seg_id를 여러 비트에서 재사용 금지.\n"
-        "출력은 스키마 JSON만.")
+        + ((bank_context + "\n") if bank_context else "")
+        + "출력은 스키마 JSON만.")
     raw = call(prompt, _SCENE_FIRST_SCHEMA)
     if not raw or not isinstance(raw, dict):
         return []
@@ -762,7 +767,7 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
 
 def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                            n_candidates=3, video_type=None, call=None, ping_pong=False,
-                           backbone_meta=None, backbone_forced=None):
+                           backbone_meta=None, backbone_forced=None, bank_context=""):
     """장면 우선 대본 모드: 팔레트+헌장으로 후보 n개 생성 → 각 EDL grounding·채점 →
     최고 score에 recommended=True. 각 candidate.plan은 build_edit_plan 반환형(하류 렌더 호환).
     후보 0개면 candidates=[](호출부가 기존 build_edit_plan로 폴백).
@@ -775,7 +780,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     if not seg_map:
         return {"candidates": [], "detected_type": detected}
     _call = call or _vault_call
-    raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates, call=_call)
+    raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates,
+                                   call=_call, bank_context=bank_context)
     src_texts = [s.get("full_text", "") for s in source_scripts]
     cands = []
     for r in raws:
