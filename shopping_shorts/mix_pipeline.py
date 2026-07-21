@@ -103,13 +103,22 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False):
             next_text=beats[i + 1]["narration"] if i < total - 1 else None,
         )
         beat["tts_path"] = str(out)
+        # UI '영상 길이'는 target_seconds 합인데, 추정(글자÷5.7)은 보이스 speed를 못 봐서
+        # 빠른 보이스(speed>1)면 실제 음성보다 길게 잡혀 '음성이 짧아요' 오경고가 떴다.
+        # 실제 발화초로 덮어 UI·조립(tts_dur)·최종영상을 한 값으로 맞춘다(2026-07-21).
+        # probe 실패(손상·미존재 mp3)는 조용히 추정 유지 — target 덮어쓰기는 부가기능이라 죽이면 안 된다.
+        try:
+            _ad = _probe_duration(str(out))
+        except Exception:
+            _ad = None
+        if _ad and _ad > 0:
+            beat["target_seconds"] = round(_ad, 1)
         # 자막 타이밍용: 실제 말한 워드 시각으로 구절 표시시간 계산(실패/키없음 → 미설정=폴백).
         beat["cap_durs"] = None
         words = asr_check.transcribe_words(str(out))
         if words:
-            dur = _probe_duration(str(out))
             beat["cap_durs"] = caption_sync.phrase_durs_from_words(
-                beat["narration"], words, dur,
+                beat["narration"], words, _ad or 0.0,
                 preset=beat.get("caption_lines"))   # None일 수 있음 → 폴백
 
 
@@ -165,10 +174,12 @@ def _conform_beats(beats, tts_dir, *, voice):
         beat["conformed"] = True
         beat["caption_lines"] = None   # 나레이션이 바뀌면 AI 자막줄은 무효 → 정규식 폴백
         beat["tts_path"] = str(out)
-        # UI 표시 초 재계산(edit_plan과 같은 식) — 안 하면 화면 초와 실길이가 갈라진다.
-        beat["target_seconds"] = round(max(1.5, len(new_n.strip()) / _SYLLABLES_PER_SEC), 1)
         beat["cap_durs"] = None
         new_dur = _probe_duration(str(out))
+        # UI 표시 초 = 실제 발화초(빠른 보이스 speed까지 반영). 추정(글자÷5.7)은 speed를
+        # 못 봐 오차가 커서 실측으로 둔다(2026-07-21). 실측 실패 시에만 추정 폴백.
+        beat["target_seconds"] = round(new_dur, 1) if new_dur and new_dur > 0 \
+            else round(max(1.5, len(new_n.strip()) / _SYLLABLES_PER_SEC), 1)
         words = asr_check.transcribe_words(str(out))
         if words:
             beat["cap_durs"] = caption_sync.phrase_durs_from_words(new_n, words, new_dur)
