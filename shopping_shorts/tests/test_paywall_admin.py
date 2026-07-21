@@ -60,18 +60,15 @@ def test_admin_settings_roundtrip(tmp_path, monkeypatch):
     assert s.get_setting("bogus") is None       # 허용 키만 저장
 
 
-def test_approve_customer_starts_trial_idempotent(tmp_path, monkeypatch):
+def test_approve_customer_sets_service_and_records_payment(tmp_path, monkeypatch):
     s = _setup(tmp_path, monkeypatch)
     cid = s.create_customer("pend", "pw12", approved=False)
     assert appmod.access_level(cid) == "pending"
-    cust = s.approve_customer(cid, trial_days=7)
+    cust = s.approve_customer(cid, period_days=30, amount=30000, method="계좌이체")
     assert cust["approved_at"] is not None
     assert cust["full_access_until"] > 0
     assert appmod.access_level(cid) == "full"
-    first_until = cust["full_access_until"]
-    # 재승인해도 체험창이 리셋되지 않는다(멱등)
-    s.approve_customer(cid, trial_days=7)
-    assert s.get_customer(cid)["full_access_until"] == first_until
+    assert len(s.list_payments(cid)) == 1
 
 
 def test_admin_customers_shows_pending_level_and_approved_at(tmp_path, monkeypatch):
@@ -95,8 +92,9 @@ def test_api_admin_approve_requires_admin(tmp_path, monkeypatch):
     s = _setup(tmp_path, monkeypatch)
     cid = s.create_customer("pend2", "pw12", approved=False)
     other = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
-    assert other.post("/api/admin/approve", json={"customer_id": cid}).status_code == 403
+    body = {"customer_id": cid, "period_days": 30, "amount": 30000, "method": "계좌"}
+    assert other.post("/api/admin/approve", json=body).status_code == 403
     owner = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})
-    r = owner.post("/api/admin/approve", json={"customer_id": cid})
+    r = owner.post("/api/admin/approve", json=body)
     assert r.status_code == 200 and r.json()["ok"] is True
     assert appmod.access_level(cid) == "full"
