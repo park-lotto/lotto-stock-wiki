@@ -20,16 +20,39 @@ def _silence_filter(level):
     return _SILENCE.get(level or "off")
 
 
-def post_process(in_path, out_path, tempo=1.0, silence_trim="off"):
+# 속도감 모드 전용 파라미터. 끝 여백을 남겨 기관총처럼 안 들리게(0=최대 타이트),
+# 가장자리 페이드로 딱 붙일 때 클릭음 방지.
+_PACE_TAIL_PAD = 0.08    # 문장 끝 고정 여백(초)
+_PACE_FADE = 0.012       # 가장자리 페이드(초)
+
+
+def _pace_filters():
+    """앞·중간·뒤 무음 모두 제거 + 끝 고정 여백 + 클릭방지 페이드.
+    기존 silence_trim(뒤/중간만)과 달리 start_periods=1로 문장 첫머리 숨까지 잘라
+    다음 문장이 딱 붙게 한다. apad는 마지막(여백은 페이드 대상 아님)."""
+    return [
+        ("silenceremove=start_periods=1:start_threshold=-38dB:start_silence=0.05:"
+         "stop_periods=-1:stop_duration=0.3:stop_threshold=-38dB"),
+        f"afade=t=in:st=0:d={_PACE_FADE}",
+        f"apad=pad_dur={_PACE_TAIL_PAD}",
+    ]
+
+
+def post_process(in_path, out_path, tempo=1.0, silence_trim="off", pace_mode=False):
     """in_path mp3에 속도(tempo)·무음삭제를 적용해 out_path로. 둘 다 no-op이면 in_path 그대로 반환.
 
-    tempo: atempo 배율(1.0=변화없음). silence_trim: off/weak/mid/strong."""
+    tempo: atempo 배율(1.0=변화없음). silence_trim: off/weak/mid/strong.
+    pace_mode: True면 속도감 모드 — 앞·중간·뒤 무음을 모두 잘라 문장을 딱 붙이고
+    끝 여백·가장자리 페이드를 얹는다(silence_trim은 무시). 기본 False(하위호환)."""
     filters = []
     if tempo and abs(tempo - 1.0) > 1e-3:
         filters.append(f"atempo={tempo:.3f}".rstrip("0").rstrip("."))
-    sf = _silence_filter(silence_trim)
-    if sf:
-        filters.append(sf)
+    if pace_mode:
+        filters.extend(_pace_filters())
+    else:
+        sf = _silence_filter(silence_trim)
+        if sf:
+            filters.append(sf)
     if not filters:
         return in_path
     # ffmpeg는 같은 파일을 입력이자 출력으로 쓰지 못한다(in-place 시 입력이 잘려 실패).

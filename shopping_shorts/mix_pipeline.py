@@ -34,8 +34,9 @@ def _source_video_id(i):
 
 def _voice_params(voice):
     """job의 voice 스냅샷(dict|None) → (voice_id, voice_settings, speed, extra_tempo,
-    silence_trim, naturalize_profile, model_id). voice 없으면 전부 기본값(config 기본 성우,
-    속도 1.0, 무음삭제 off, naturalize_profile None → naturalize()가 자체 기본값 사용).
+    silence_trim, naturalize_profile, model_id, pace_mode). voice 없으면 전부 기본값(config
+    기본 성우, 속도 1.0, 무음삭제 off, naturalize_profile None → naturalize()가 자체 기본값 사용,
+    pace_mode False → 속도감 다듬기 없음 = 옛 동작).
 
     스냅샷은 /api/mix/voice가 프리셋에서 통째로 복사해 넣는다 — naturalize_profile·model_id가
     빠지면 튜닝 작업대에서 동결한 값이 렌더에 도달하지 못한다(2026-07-15 whole-branch 리뷰 S1/S8)."""
@@ -44,7 +45,7 @@ def _voice_params(voice):
     extra_tempo = speed / 1.2 if speed > 1.2 else 1.0  # 1.2 초과분만 atempo로
     return (v.get("voice_id"), v.get("settings"), speed, extra_tempo,
             v.get("silence_trim", "off"), v.get("naturalize_profile"),
-            v.get("model_id") or "eleven_v3")
+            v.get("model_id") or "eleven_v3", v.get("pace_mode", False))
 
 
 def asr_ranker(path, text):
@@ -65,7 +66,7 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
 
     profile 미지정 시 voice 스냅샷의 naturalize_profile을 쓴다. seed/n_best는 merge_profile을
     거친 값으로 읽어 텍스트와 오디오가 같은 기준을 보게 한다(S10)."""
-    voice_id, settings, speed, extra_tempo, trim, prof_v, model_id = _voice_params(voice)
+    voice_id, settings, speed, extra_tempo, trim, prof_v, model_id, pace_mode = _voice_params(voice)
     prof = merge_profile(profile if profile is not None else prof_v)
     natural = naturalize(narration, prof, beat_role=beat_role,
                          beat_index=beat_index, beat_total=beat_total)
@@ -73,7 +74,8 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
                         base_seed=prof.get("seed"), ranker=ranker,
                         voice_id=voice_id, voice_settings=settings, speed=speed,
                         model_id=model_id, previous_text=previous_text, next_text=next_text)
-    audio_post.post_process(str(out_path), str(out_path), tempo=extra_tempo, silence_trim=trim)
+    audio_post.post_process(str(out_path), str(out_path), tempo=extra_tempo,
+                            silence_trim=trim, pace_mode=pace_mode)
     return natural
 
 
