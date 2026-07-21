@@ -424,6 +424,11 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         + script_generate._STORY_RULES_CORE + "\n" + script_generate._STORY_DECLARE + "\n"
         "- ★위 헌장(인과사슬·훅 한방·CTA 미끼·비법 킥 감추기)을 반드시 지켜라 — 장면에 맞추느라 "
         "스토리가 밋밋해지면 실패다. 스토리가 왕, 장면은 그 스토리를 보여줄 그림이다.\n"
+        "- ★★영상은 beats를 읽는다 — hook은 헤드라인 필드일 뿐 화면엔 안 나온다. 그러니 "
+        "beats[0].narration을 반드시 hook과 같은 강한 오프너('와 이거 진짜 대박인데요?'·'이걸 왜 "
+        "이제 알았지?'·'저 이거 몰라서 손해 봤잖아요'·'이거 진짜 절대 하지 마세요' 류)로 시작해라. "
+        "hook만 세게 써놓고 첫 비트를 '매번 ~하던 참이었거든요'처럼 밋밋하게 열면 실패다. "
+        "beats[0]이 곧 그 hook이어야 한다.\n"
         f"- 전체 나레이션 글자수 합은 약 {char_target}자 내외. 각 비트: role·narration(구어체)·"
         "seg_ids(2~4)·fit(1~5)·forced(그 장면이 이 말과 안 맞는데 억지로 붙였으면 true).\n"
         "- 화면에 없는 걸 말하지 마라. 같은 seg_id를 여러 비트에서 재사용 금지.\n"
@@ -434,10 +439,40 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
     return raw.get("candidates", []) or []
 
 
+_STRONG_OPENER_TOKENS = ("와 ", "와,", "아니", "이거", "이걸", "저 이거", "헐", "대박",
+                         "세상에", "이런", "저만")
+
+
+def _hook_opener(hook):
+    """hook의 첫 절(첫 ?/!/. 까지) — 강한 오프너로 beats[0]에 얹을 조각. 없으면 ''."""
+    h = (hook or "").strip()
+    if not h:
+        return ""
+    for i, ch in enumerate(h):
+        if ch in "?!":
+            return h[:i + 1]
+    return h.split(".")[0].strip()
+
+
+def _lead_with_hook(narration, hook):
+    """beats[0]이 강한 오프너로 안 열리면 hook 앞절을 붙여 강제로 세게 연다(2026-07-21).
+    이미 강해 보이면(오프너 토큰 시작 or 앞 12자에 ?/!) 그대로 둔다(중복 방지)."""
+    n = (narration or "").strip()
+    head = n[:12]
+    if n.startswith(_STRONG_OPENER_TOKENS) or "?" in head or "!" in head:
+        return n
+    opener = _hook_opener(hook)
+    if not opener or opener in n:
+        return n
+    return f"{opener} {n}"
+
+
 def _ground_candidate(cand, seg_map, structure="free"):
     """후보 비트(narration + seg_ids 다중컷)를 build_edit_plan 반환형 EDL로 grounding.
     seg_ids[0]=primary, 나머지=alternates(연속재생). start/end/scene_desc는 코드가 되붙인다.
-    primary 무효 비트는 드롭. 유효 비트 0개면 None."""
+    primary 무효 비트는 드롭. 유효 비트 0개면 None.
+    ★영상은 beats를 읽으므로 첫 비트가 밋밋하면 hook(강한 오프너)을 앞에 얹는다."""
+    hook = cand.get("hook", "")
     beats_out = []
     for beat in cand.get("beats", []):
         segs = beat.get("seg_ids") or []
@@ -451,6 +486,8 @@ def _ground_candidate(cand, seg_map, structure="free"):
                 alts.append(g)
                 seen.add(g["seg_id"])
         narration = beat.get("narration", "")
+        if not beats_out:                       # 첫 유효 비트 = 훅 자리
+            narration = _lead_with_hook(narration, hook)
         beats_out.append({
             "beat_idx": len(beats_out), "role": beat.get("role", ""),
             "narration": narration,

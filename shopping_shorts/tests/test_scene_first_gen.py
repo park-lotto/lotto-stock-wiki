@@ -45,6 +45,24 @@ def test_ground_candidate_multicut_to_edl():
     assert b0["target_seconds"] > 0                                # 글자수 기준 재계산됨
 
 
+def test_ground_candidate_leads_weak_beat0_with_hook():
+    # 훅은 강한데 beats[0]이 밋밋 → 첫 비트에 hook 앞절을 얹어 세게 연다(영상은 beats를 읽음)
+    cand = {"hook": "와 이거 진짜 대박인데요? 남편이 야식 타령해서 골치였는데 끝!",
+            "beats": [{"role": "훅", "narration": "매번 찐 감자만 주니 지겹다더라고요.",
+                       "seg_ids": ["s0-1"], "fit": 5, "forced": False}]}
+    plan = edit_plan._ground_candidate(cand, _seg_map())
+    assert plan["beats"][0]["narration"].startswith("와 이거 진짜 대박인데요?")
+
+
+def test_ground_candidate_keeps_already_strong_beat0():
+    # beats[0]이 이미 강한 오프너로 열면 hook을 또 얹지 않는다(중복 방지)
+    cand = {"hook": "와 이거 대박이죠? 어쩌고",
+            "beats": [{"role": "훅", "narration": "와 이거 진짜 놀랐잖아요! 감자가 이렇게 되네요.",
+                       "seg_ids": ["s0-1"], "fit": 5, "forced": False}]}
+    plan = edit_plan._ground_candidate(cand, _seg_map())
+    assert plan["beats"][0]["narration"] == "와 이거 진짜 놀랐잖아요! 감자가 이렇게 되네요."
+
+
 def test_ground_candidate_drops_invalid_primary():
     cand = {"beats": [{"role": "x", "narration": "n", "seg_ids": ["없는id"], "fit": 3, "forced": False}]}
     assert edit_plan._ground_candidate(cand, _seg_map()) is None   # 유효 비트 0개 → None
