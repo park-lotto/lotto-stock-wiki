@@ -3377,6 +3377,20 @@ else{btn.href="/pricing";}
 </body></html>"""
 
 _LANDING_HTML = _fill_brand(_LANDING_TMPL)
+
+_PENDING_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>승인 대기중 · 숏템탑스</title>
+<style>body{font-family:-apple-system,'Malgun Gothic',sans-serif;background:#0f1115;color:#e8eaed;
+margin:0;display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center}
+.box{max-width:420px;padding:40px 28px}.emoji{font-size:56px}h1{font-size:22px;margin:18px 0 10px}
+p{color:#9aa0a6;line-height:1.6;font-size:15px}a{display:inline-block;margin-top:24px;color:#8ab4f8;
+text-decoration:none;font-size:14px}</style></head>
+<body><div class=box><div class=emoji>🙏</div>
+<h1>가입 신청이 접수됐어요</h1>
+<p>운영자 승인 후 이용할 수 있어요.<br>잠시만 기다려 주세요.</p>
+<a href="/logout">로그아웃</a></div></body></html>"""
+
 _LOGIN_HTML = _fill_brand(_LOGIN_TMPL)
 _PRICING_HTML = _fill_brand(_PRICING_TMPL)
 _ACCOUNT_HTML = _fill_brand(_ACCOUNT_TMPL)
@@ -3413,6 +3427,15 @@ def _login_page(e: str = ""):
     else:
         msg = ""
     return _LOGIN_HTML.replace("__ERR__", msg)
+
+
+@app.get("/logout")
+def _logout_page():
+    # 세션 쿠키 제거 후 로그인 화면으로. pending 게이트에서도 통과시켜야 하는 유일한 탈출구
+    # (2026-07-21, Task6) — 없으면 승인대기 유저가 로그아웃도 못 하는 함정에 갇힌다.
+    r = RedirectResponse("/login", status_code=303)
+    r.delete_cookie("dash_auth")
+    return r
 
 
 @app.get("/pricing", response_class=HTMLResponse)
@@ -3568,9 +3591,17 @@ async def _auth_guard(request: Request, call_next):
     customer_id = _verify_session(request.cookies.get("dash_auth"))
     if customer_id is not None:
         request.state.customer_id = customer_id
+        lvl = access_level(customer_id)
+        if lvl == "pending":
+            # 승인 전 전면 차단. /logout만 통과(로그아웃 가능), /static은 위에서 이미 허용.
+            if path == "/logout":
+                return await call_next(request)
+            if path.startswith("/api/"):
+                return JSONResponse({"error": "승인 대기중이에요", "level": "pending"}, status_code=403)
+            return HTMLResponse(_PENDING_HTML)
         # 유료게이트: 로그인은 됐으나 등급이 ranking_only(무료/체험만료)면 유료 경로 차단.
         # 사장님(0)·pro·체험중은 access_level=full이라 안 걸린다. deny-by-default.
-        if access_level(customer_id) == "ranking_only" and _ranking_only_blocked(path, request.method):
+        if lvl == "ranking_only" and _ranking_only_blocked(path, request.method):
             return JSONResponse(
                 {"error": "유료 기능이에요. 결제하면 열려요.", "level": "ranking_only"},
                 status_code=402)

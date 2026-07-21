@@ -86,3 +86,19 @@ def test_anonymous_pricing_is_public(tmp_path, monkeypatch):
     r = c.get("/pricing")
     assert r.status_code == 200
     assert "이용권" in r.text
+
+
+def test_pending_gate_blocks_everything(tmp_path, monkeypatch):
+    """미승인(pending) 세션은 API=403, 화면=대기실 HTML, /logout만 통과."""
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("pend", "pw12", approved=False)
+    c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
+    # 보호 API → 403 pending
+    r_api = c.get("/api/reference/register", follow_redirects=False)
+    assert r_api.status_code == 403 and r_api.json().get("level") == "pending"
+    # 일반 화면 → 대기실 HTML(로그인/랜딩 아님)
+    r_home = c.get("/", follow_redirects=False)
+    assert r_home.status_code == 200 and "승인" in r_home.text
+    # 로그아웃은 통과(303 리다이렉트)
+    r_out = c.get("/logout", follow_redirects=False)
+    assert r_out.status_code in (302, 303)
