@@ -3390,6 +3390,20 @@ else{btn.href="/pricing";}
 </body></html>"""
 
 _LANDING_HTML = _fill_brand(_LANDING_TMPL)
+
+_PENDING_HTML = _fill_brand("""<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>승인 대기중 · __NAME__</title>
+<style>body{font-family:-apple-system,'Malgun Gothic',sans-serif;background:#0f1115;color:#e8eaed;
+margin:0;display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center}
+.box{max-width:420px;padding:40px 28px}.emoji{font-size:56px}h1{font-size:22px;margin:18px 0 10px}
+p{color:#9aa0a6;line-height:1.6;font-size:15px}a{display:inline-block;margin-top:24px;color:#8ab4f8;
+text-decoration:none;font-size:14px}</style></head>
+<body><div class=box><div class=emoji>🙏</div>
+<h1>가입 신청이 접수됐어요</h1>
+<p>운영자 승인 후 이용할 수 있어요.<br>잠시만 기다려 주세요.</p>
+<a href="/logout">로그아웃</a></div></body></html>""")
+
 _LOGIN_HTML = _fill_brand(_LOGIN_TMPL)
 _PRICING_HTML = _fill_brand(_PRICING_TMPL)
 _ACCOUNT_HTML = _fill_brand(_ACCOUNT_TMPL)
@@ -3426,6 +3440,15 @@ def _login_page(e: str = ""):
     else:
         msg = ""
     return _LOGIN_HTML.replace("__ERR__", msg)
+
+
+@app.get("/logout")
+def _logout_page():
+    # 세션 쿠키 제거 후 로그인 화면으로. pending 게이트에서도 통과시켜야 하는 유일한 탈출구
+    # (2026-07-21, Task6) — 없으면 승인대기 유저가 로그아웃도 못 하는 함정에 갇힌다.
+    r = RedirectResponse("/login", status_code=303)
+    r.delete_cookie("dash_auth")
+    return r
 
 
 @app.get("/pricing", response_class=HTMLResponse)
@@ -3476,7 +3499,7 @@ async def _api_signup(req: Request):
     if len(u) < 3 or len(p) < 4:
         return RedirectResponse("/signup?e=" + urllib.parse.quote("아이디 3자·비밀번호 4자 이상"), status_code=303)
     try:
-        customer_id = Store(DB_PATH).create_customer(u, p)
+        customer_id = Store(DB_PATH).create_customer(u, p, approved=False)
     except ValueError:
         return RedirectResponse("/signup?e=" + urllib.parse.quote("이미 존재하는 아이디입니다"), status_code=303)
     r = RedirectResponse("/", status_code=303)
@@ -3581,9 +3604,17 @@ async def _auth_guard(request: Request, call_next):
     customer_id = _verify_session(request.cookies.get("dash_auth"))
     if customer_id is not None:
         request.state.customer_id = customer_id
+        lvl = access_level(customer_id)
+        if lvl == "pending":
+            # 승인 전 전면 차단. /logout만 통과(로그아웃 가능), /static은 위에서 이미 허용.
+            if path == "/logout":
+                return await call_next(request)
+            if path.startswith("/api/"):
+                return JSONResponse({"error": "승인 대기중이에요", "level": "pending"}, status_code=403)
+            return HTMLResponse(_PENDING_HTML)
         # 유료게이트: 로그인은 됐으나 등급이 ranking_only(무료/체험만료)면 유료 경로 차단.
         # 사장님(0)·pro·체험중은 access_level=full이라 안 걸린다. deny-by-default.
-        if access_level(customer_id) == "ranking_only" and _ranking_only_blocked(path, request.method):
+        if lvl == "ranking_only" and _ranking_only_blocked(path, request.method):
             return JSONResponse(
                 {"error": "유료 기능이에요. 결제하면 열려요.", "level": "ranking_only"},
                 status_code=402)
@@ -3599,13 +3630,16 @@ async def _auth_guard(request: Request, call_next):
 
 # ── 유료게이트 접근권한 판정 (단일 진실원. API게이트·화면·크레딧 모두 이 함수만 본다) ──
 def access_level(customer_id, now=None):
-    """customer_id → "full"(전기능) | "ranking_only"(레퍼런스 랭킹만).
-    규칙: 사장님(0)=full / plan=pro=full / 체험중(now<full_access_until)=full / 그 외 ranking_only."""
+    """customer_id → "full"(전기능) | "ranking_only"(랭킹만) | "pending"(승인대기, 전면차단).
+    규칙: 사장님(0)=full / 계정없음=ranking_only / 미승인(approved_at NULL)=pending /
+    plan=pro=full / 체험중(now<full_access_until)=full / 그 외 ranking_only."""
     if customer_id == 0:
         return "full"                       # 사장님 = 영구 pro+admin
     cust = Store(DB_PATH).get_customer(customer_id)
     if not cust:
         return "ranking_only"
+    if cust.get("approved_at") is None:
+        return "pending"                    # ★승인 전엔 plan/체험보다 우선해 전면 차단
     if cust.get("plan") == "pro":
         return "full"
     if now is None:
@@ -3771,6 +3805,27 @@ async def _admin_set_plan(request: Request):
     return {"ok": True}
 
 
+@app.post("/api/admin/approve")
+async def _admin_approve(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id 필요"}, status_code=422)
+    st = Store(DB_PATH)
+    try:
+        trial_days = int(st.get_setting("trial_days", 7))
+    except (TypeError, ValueError):
+        trial_days = 7
+    cust = st.approve_customer(cid, trial_days)
+    import sys as _s
+    print(f"[admin] approve cid={cid}", file=_s.stderr)
+    return {"ok": True, "customer": cust}
+
+
 @app.post("/api/admin/settings")
 async def _admin_settings(request: Request):
     denied = _require_admin(request)
@@ -3876,10 +3931,13 @@ def api_grab(request: Request, background_tasks: BackgroundTasks,
         return _grab_popup_html(False, "로그인이 필요해요",
                                 "shoppingshorts.duckdns.org에 먼저 로그인하세요")
     # 유료게이트: /api/grab은 _AUTH_ALLOW라 미들웨어 게이트를 우회한다 → 여기서 직접 등급 확인.
-    # 담기(+백그라운드 메타 크롤 비용)는 유료 기능이므로 ranking_only(무료/체험만료)는 차단.
-    if access_level(cid) == "ranking_only":
-        return _grab_popup_html(False, "유료 기능이에요",
-                                "무료 체험이 끝났어요. 결제하면 담기를 계속 쓸 수 있어요")
+    # 담기(+백그라운드 메타 크롤 비용)는 full 전용. pending(승인대기)·ranking_only 모두 차단.
+    lvl = access_level(cid)
+    if lvl != "full":
+        title = "승인 대기중이에요" if lvl == "pending" else "유료 기능이에요"
+        msg = ("운영자 승인 후 담기를 쓸 수 있어요" if lvl == "pending"
+               else "무료 체험이 끝났어요. 결제하면 담기를 계속 쓸 수 있어요")
+        return _grab_popup_html(False, title, msg)
     platform = _grab_platform(url)
     if not platform:
         return _grab_popup_html(False, "담을 수 없는 링크예요", "유튜브·틱톡·샤오홍슈·도우인 영상 페이지에서 눌러주세요")

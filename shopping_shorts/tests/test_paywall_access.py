@@ -68,3 +68,17 @@ def test_api_me_auth_off_is_admin(tmp_path, monkeypatch):
     assert d["customer_id"] == 0 and d["level"] == "full" and d["plan"] == "pro"
     assert d["days_left"] is None
     assert d["limits"]["lens"] == 5 and d["limits"]["render"] == 2
+
+
+def test_access_level_pending(tmp_path, monkeypatch):
+    from shopping_shorts import app as appmod
+    from shopping_shorts.store import Store
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    s = Store(str(tmp_path / "t.db"))
+    cid = s.create_customer("pend", "pw12", approved=False)
+    assert appmod.access_level(cid) == "pending"
+    # 승인된 계정은 pending 아님
+    cid2 = s.create_customer("ok", "pw12")
+    assert appmod.access_level(cid2) == "full"
+    # 사장님은 DB와 무관하게 full
+    assert appmod.access_level(0) == "full"

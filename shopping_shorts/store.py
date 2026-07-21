@@ -666,6 +666,16 @@ class Store:
                         count INTEGER NOT NULL DEFAULT 0,
                         PRIMARY KEY (customer_id, op, day)
                     )""")
+        # ── 회원승인(2026-07-21): approved_at NULL=대기중 / 값(epoch초)=승인시각 ──
+        try:
+            c.execute("ALTER TABLE customers ADD COLUMN approved_at INTEGER")
+            # 이번에 처음 추가된 경우에만 백필: 페이월/승인 도입 전부터 있던 기존
+            # 고객을 전부 '승인됨'으로 처리해 무통보 차단을 막는다. 이후 실행에선
+            # ALTER가 OperationalError로 튕겨 이 UPDATE를 안 타므로 신규 대기 계정을 안 덮는다.
+            now_ts = int(datetime.now(timezone.utc).timestamp())
+            c.execute("UPDATE customers SET approved_at=? WHERE approved_at IS NULL", (now_ts,))
+        except sqlite3.OperationalError:
+            pass  # 이미 존재
 
     def ensure_paywall_schema(self):
         """공개 래퍼(테스트·호출부용). __init__에서도 자동 실행되므로 보통 부를 필요 없다."""
@@ -2343,23 +2353,31 @@ class Store:
             "sha256", password.encode("utf-8"), bytes.fromhex(salt), Store._PBKDF2_ITERATIONS
         ).hex()
 
-    def create_customer(self, username, password, email=None, google_sub=None):
+    def create_customer(self, username, password, email=None, google_sub=None, approved=True):
         """신규 고객 계정 생성. username 중복이면 ValueError. 성공 시 customer_id 반환.
-        가입 즉시 무료 체험 시작: full_access_until = now + trial_days(설정, 기본7)*86400."""
+        approved=True(기본): 가입 즉시 승인+무료체험 시작(full_access_until=now+trial_days).
+        approved=False: 대기중(approved_at=NULL) + 체험 미시작(full_access_until=0).
+        체험은 사장님 승인 시점(approve_customer)에 시작된다."""
         salt = secrets.token_hex(16)
         pw_hash = self._hash_password(password, salt)
-        try:
-            trial_days = int(self.get_setting("trial_days", 7))
-        except (TypeError, ValueError):
-            trial_days = 7
-        full_access_until = int(datetime.now(timezone.utc).timestamp()) + trial_days * 86400
+        now_ts = int(datetime.now(timezone.utc).timestamp())
+        if approved:
+            try:
+                trial_days = int(self.get_setting("trial_days", 7))
+            except (TypeError, ValueError):
+                trial_days = 7
+            full_access_until = now_ts + trial_days * 86400
+            approved_at = now_ts
+        else:
+            full_access_until = 0
+            approved_at = None
         with self._conn() as c:
             try:
                 cur = c.execute(
                     "INSERT INTO customers(username, password_hash, salt, created_at, "
-                    "plan, full_access_until, email, google_sub) "
-                    "VALUES(?,?,?,datetime('now'),'free',?,?,?)",
-                    (username, pw_hash, salt, full_access_until, email, google_sub),
+                    "plan, full_access_until, email, google_sub, approved_at) "
+                    "VALUES(?,?,?,datetime('now'),'free',?,?,?,?)",
+                    (username, pw_hash, salt, full_access_until, email, google_sub, approved_at),
                 )
             except sqlite3.IntegrityError:
                 raise ValueError(f"이미 존재하는 아이디: {username}")
@@ -2374,7 +2392,7 @@ class Store:
         username = "g_" + str(google_sub)               # username 유니크 제약 충족용(절단X — sub 전체가 dedup 키)
         try:
             return self.create_customer(username, secrets.token_hex(16),
-                                        email=email, google_sub=google_sub)
+                                        email=email, google_sub=google_sub, approved=False)
         except ValueError:
             with self._conn() as c:                     # 경합으로 방금 생성됐으면 재조회
                 row = c.execute("SELECT id FROM customers WHERE google_sub=?", (google_sub,)).fetchone()
@@ -2396,17 +2414,17 @@ class Store:
         return None
 
     def get_customer(self, customer_id):
-        """customer_id → {id, username, created_at, plan, full_access_until, google_sub, email} 또는 None."""
+        """customer_id → {id, username, created_at, plan, full_access_until, google_sub, email, approved_at} 또는 None."""
         with self._conn() as c:
             row = c.execute(
-                "SELECT id, username, created_at, plan, full_access_until, google_sub, email "
+                "SELECT id, username, created_at, plan, full_access_until, google_sub, email, approved_at "
                 "FROM customers WHERE id=?", (customer_id,)
             ).fetchone()
         if not row:
             return None
         return {"id": row[0], "username": row[1], "created_at": row[2],
                 "plan": row[3] or "free", "full_access_until": row[4] or 0,
-                "google_sub": row[5], "email": row[6]}
+                "google_sub": row[5], "email": row[6], "approved_at": row[7]}
 
     def set_plan(self, customer_id, plan, full_access_until=None):
         """등급 변경. plan='pro'|'free'. full_access_until(epoch초)를 주면 함께 설정(체험창)."""
@@ -2417,6 +2435,20 @@ class Store:
                 c.execute("UPDATE customers SET plan=?, full_access_until=? WHERE id=?",
                           (plan, int(full_access_until), customer_id))
 
+    def approve_customer(self, customer_id, trial_days=7):
+        """대기중 계정을 승인. 승인 시각 기록 + 그 순간부터 무료체험 시작.
+        멱등: 이미 승인된 계정(approved_at 있음)엔 아무것도 안 한다(체험 리셋 방지)."""
+        now_ts = int(datetime.now(timezone.utc).timestamp())
+        try:
+            td = int(trial_days)
+        except (TypeError, ValueError):
+            td = 7
+        until = now_ts + td * 86400
+        with self._conn() as c:
+            c.execute("UPDATE customers SET approved_at=?, full_access_until=? "
+                      "WHERE id=? AND approved_at IS NULL", (now_ts, until, customer_id))
+        return self.get_customer(customer_id)
+
     def all_settings(self):
         with self._conn() as c:
             rows = c.execute("SELECT key, value FROM settings").fetchall()
@@ -2426,11 +2458,12 @@ class Store:
         """관리자용 전체 고객 목록(사장님 cid0 제외). 최근 가입 먼저."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT id, username, email, plan, full_access_until, created_at "
+                "SELECT id, username, email, plan, full_access_until, created_at, approved_at "
                 "FROM customers WHERE id != 0 ORDER BY id DESC"
             ).fetchall()
         return [{"id": r[0], "username": r[1], "email": r[2], "plan": r[3] or "free",
-                 "full_access_until": r[4] or 0, "created_at": r[5]} for r in rows]
+                 "full_access_until": r[4] or 0, "created_at": r[5], "approved_at": r[6]}
+                for r in rows]
 
     # ── 유료게이트 일일 사용량(크레딧) ──
     def usage_incr(self, customer_id, op, day):

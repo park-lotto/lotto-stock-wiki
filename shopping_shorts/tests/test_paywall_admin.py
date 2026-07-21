@@ -58,3 +58,45 @@ def test_admin_settings_roundtrip(tmp_path, monkeypatch):
     assert r.status_code == 200
     assert s.get_setting("trial_days") == "3" and s.get_setting("limit_lens") == "9"
     assert s.get_setting("bogus") is None       # 허용 키만 저장
+
+
+def test_approve_customer_starts_trial_idempotent(tmp_path, monkeypatch):
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("pend", "pw12", approved=False)
+    assert appmod.access_level(cid) == "pending"
+    cust = s.approve_customer(cid, trial_days=7)
+    assert cust["approved_at"] is not None
+    assert cust["full_access_until"] > 0
+    assert appmod.access_level(cid) == "full"
+    first_until = cust["full_access_until"]
+    # 재승인해도 체험창이 리셋되지 않는다(멱등)
+    s.approve_customer(cid, trial_days=7)
+    assert s.get_customer(cid)["full_access_until"] == first_until
+
+
+def test_admin_customers_shows_pending_level_and_approved_at(tmp_path, monkeypatch):
+    """관리자 목록이 pending 등급을 노출하고 모든 행에 approved_at 필드를 준다."""
+    s = _setup(tmp_path, monkeypatch)
+    s.create_customer("pend", "pw12", approved=False)   # 미승인
+    s.create_customer("ok", "pw12")                      # 승인됨(체험중)
+    owner = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})
+    r = owner.get("/api/admin/customers")
+    assert r.status_code == 200
+    custs = r.json()["customers"]
+    levels = [cu["level"] for cu in custs]
+    assert "pending" in levels
+    assert all("approved_at" in cu for cu in custs)
+    # 미승인 계정은 approved_at이 비어(None) 있어야 한다
+    pend = [cu for cu in custs if cu["username"] == "pend"][0]
+    assert pend["approved_at"] is None and pend["level"] == "pending"
+
+
+def test_api_admin_approve_requires_admin(tmp_path, monkeypatch):
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("pend2", "pw12", approved=False)
+    other = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
+    assert other.post("/api/admin/approve", json={"customer_id": cid}).status_code == 403
+    owner = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})
+    r = owner.post("/api/admin/approve", json={"customer_id": cid})
+    assert r.status_code == 200 and r.json()["ok"] is True
+    assert appmod.access_level(cid) == "full"

@@ -86,3 +86,45 @@ def test_anonymous_pricing_is_public(tmp_path, monkeypatch):
     r = c.get("/pricing")
     assert r.status_code == 200
     assert "이용권" in r.text
+
+
+def test_pending_gate_blocks_everything(tmp_path, monkeypatch):
+    """미승인(pending) 세션은 API=403, 화면=대기실 HTML, /logout만 통과."""
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("pend", "pw12", approved=False)
+    c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
+    # 보호 API → 403 pending
+    r_api = c.get("/api/reference/register", follow_redirects=False)
+    assert r_api.status_code == 403 and r_api.json().get("level") == "pending"
+    # 일반 화면 → 대기실 HTML(로그인/랜딩 아님)
+    r_home = c.get("/", follow_redirects=False)
+    assert r_home.status_code == 200 and "승인" in r_home.text
+    # 브랜드명은 라이브와 통일(_fill_brand 통과) — 옛 이름 '숏템탑스' 잔존 금지
+    assert appmod._BRAND["name"] in r_home.text
+    assert "숏템탑스" not in r_home.text
+    # 로그아웃은 통과(303 리다이렉트)
+    r_out = c.get("/logout", follow_redirects=False)
+    assert r_out.status_code in (302, 303)
+
+
+def test_grab_blocks_pending(tmp_path, monkeypatch):
+    """미승인(pending) 계정은 /api/grab 담기 불가 — _AUTH_ALLOW 우회 경로 구멍 막기.
+    /api/grab은 200 HTML 팝업이라 상태코드로 구분 안 됨 → 본문 문구로 차단 확인."""
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("pend", "pw12", approved=False)
+    c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
+    r = c.get("/api/grab?url=https://www.youtube.com/watch?v=x&title=t")
+    # 대기중은 담기 성공 팝업이 아니라 차단 안내여야 한다
+    assert "담겼어요" not in r.text
+    assert "승인" in r.text or "대기" in r.text
+
+
+def test_grab_blocks_ranking_only(tmp_path, monkeypatch):
+    """체험만료(ranking_only)도 여전히 /api/grab 차단(회귀 확인)."""
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("free1", "pw12")
+    s.set_plan(cid, "free", full_access_until=0)   # 체험 만료 → ranking_only
+    c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
+    r = c.get("/api/grab?url=https://www.youtube.com/watch?v=x&title=t")
+    assert "담겼어요" not in r.text
+    assert "유료" in r.text
