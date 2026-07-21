@@ -514,8 +514,22 @@ def _ground_candidate(cand, seg_map, structure="free"):
     return {"structure": structure, "beats": beats_out}
 
 
+def _candidate_quality(beats):
+    """후보 대본의 품질(0~1) — 대화체(tone)·재미강도(fun, D14). 전 비트 나레이션을 이어
+    tone_score로 재는 순수 계산(Gemini 없음). 나레이션이 비면 0(매칭점수만으로 판정).
+    P1: scene_first는 헌장 1콜이라 위키생성의 _verify_and_fix 품질정렬을 못 받았다 — 추천
+    선택에 품질을 직접 넣어 '말투 좋고 재미장치 있는' 후보가 추천되게 한다."""
+    from shopping_shorts import tone_score
+    text = " ".join((b.get("narration") or "").strip() for b in beats).strip()
+    if not text:
+        return 0.0
+    tone = tone_score.score_conversational(text)["score"]         # 0~1(문어체·AI냄새·어미단조 감점)
+    fun = 1.0 if tone_score.fun_intensity(text)["has_strong"] else 0.0
+    return 0.6 * tone + 0.4 * fun
+
+
 def _score_candidate(plan):
-    """후보 추천 점수(0~1): 매칭 fit·억지없음·장면다양성. 빈 beats면 0.0."""
+    """후보 추천 점수(0~1): 매칭(fit·억지없음·장면다양성) + 품질(대화체·재미강도). 빈 beats면 0.0."""
     beats = plan.get("beats") or []
     if not beats:
         return 0.0
@@ -527,7 +541,9 @@ def _score_candidate(plan):
         seg_ids += [(a or {}).get("seg_id") for a in (b.get("alternates") or [])]
     seg_ids = [s for s in seg_ids if s]
     diversity = (len(set(seg_ids)) / len(seg_ids)) if seg_ids else 0.0
-    return round(0.5 * avg_fit + 0.3 * (1 - forced_ratio) + 0.2 * diversity, 3)
+    match = 0.5 * avg_fit + 0.3 * (1 - forced_ratio) + 0.2 * diversity
+    quality = _candidate_quality(beats)          # 나레이션 없으면 0 → 매칭점수만(기존 계약 유지)
+    return round(0.75 * match + 0.25 * quality, 3)
 
 
 _CONFORM_SCHEMA = {
@@ -800,6 +816,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 plan["beats"] = backbone.order_by_backbone(plan["beats"], bb)
             # 반복장면·한소스 편중 해소: 쓴 클립 재사용 금지 + 덜 쓴 소스 우선 교체
             plan["beats"] = backbone.dedup_and_balance(plan["beats"], source_scripts)
+            # 서브 의무삽입: 아예 안 쓰인 소스(s2=0)를 같은 행위로 강제 삽입(dedup으론 못 잡음)
+            plan["beats"] = backbone.ensure_sources_used(plan["beats"], source_scripts)
         plan["detected_type"] = detected
         plan["affiliate_target"] = r.get("story_event", "") or ""
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)
