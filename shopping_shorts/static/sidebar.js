@@ -27,9 +27,11 @@
     "body{display:flex;min-height:100vh;margin:0}" +
     ".ss-nav{width:230px;background:var(--panel,#111722);border-right:1px solid var(--line,#1e2735);" +
       "padding:16px;flex-shrink:0;box-sizing:border-box;font-family:'Malgun Gothic',system-ui,sans-serif}" +
-    ".ss-nav h1{font-size:16px;font-weight:800;margin:0 0 16px}" +
+    // 메인 로고 = 크고 눈에 띄게(사장님 2026-07-21). 26px·900·자간압축으로 존재감을 준다.
+    ".ss-nav h1{font-size:26px;font-weight:900;letter-spacing:-.5px;margin:2px 0 20px;display:flex;align-items:center;gap:7px}" +
     // 브랜드 텍스트만 민트 그라디언트(이모지는 제외 — text-fill:transparent가 이모지 글리프까지 비운다)
-    ".ss-brand{background:var(--grad,linear-gradient(135deg,#6ff0d6,#1f9e7a));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}" +
+    // + 은은한 민트 글로우로 강조(drop-shadow는 clip:text에서도 글자 외곽에 먹는다).
+    ".ss-brand{background:var(--grad,linear-gradient(135deg,#6ff0d6,#1f9e7a));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;filter:drop-shadow(0 0 12px rgba(55,224,189,.35))}" +
     ".ss-group{margin-bottom:18px}" +
     ".ss-label{font-size:11px;color:var(--sel-fg,#6ff0d6);text-transform:uppercase;margin-bottom:8px}" +
     ".ss-item{padding:10px 12px;border-radius:8px;font-size:14px;color:var(--txt,#e6edf3);cursor:pointer;margin-bottom:2px}" +
@@ -58,7 +60,7 @@
     "@media(max-width:760px){body{flex-direction:column}" +
       ".ss-nav{width:100%;border-right:none;border-bottom:1px solid var(--line,#1e2735);display:flex;gap:6px;" +
         "overflow-x:auto;align-items:center;white-space:nowrap;padding:10px 12px}" +
-      ".ss-nav h1{margin:0 8px 0 0;flex-shrink:0}" +
+      ".ss-nav h1{margin:0 8px 0 0;flex-shrink:0;font-size:19px}" +
       ".ss-group{margin:0;display:flex;gap:6px;align-items:center}" +
       ".ss-label{display:none}" +
       ".ss-item{margin:0;padding:6px 10px;flex-shrink:0;font-size:12px}}";
