@@ -1,3 +1,4 @@
+- 2026-07-20 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-07-20.md
 - 2026-07-19 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-07-19.md
 - 2026-07-18 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-07-18.md
 - 2026-07-17 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-07-17.md

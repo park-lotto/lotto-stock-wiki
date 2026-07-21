@@ -104,7 +104,22 @@ _SENSORY_LIB = (
 # 이어짐 (3) 훅·CTA 두 자리에 가장 중요한 걸 배치 (4) 레시피는 표현(감각어)에 집중.
 # CTA는 하드코딩 1문구가 아니라 소재 적합형 선택 — "레시피라고 다 같지 않다".
 # ★헌장 텍스트에 { } 금지 — _GEN_PROMPT/_MIX_PROMPT/리파인이 .format()을 쓴다(깨진다).
-_STORY_RULES_CORE = """- ★가장 중요한 건 스토리라인이다. 아래 규칙은 전부 '하나의 탄탄한 이야기'를 위한 것 —
+_STORY_RULES_CORE = """- ★★★짤드라마 필수(이게 이 포맷의 생명): 이건 정보영상이 아니라 '짧은 이야기(짤드라마)'다.
+  구체적 인물이 구체적 상황에서 겪는 미니 드라마로 써라. '여러분'·'우리' 같은 일반 청자
+  호칭이나 '이렇게 드세요/하세요'식 설명·나열·강의체는 절대 금지 — 그건 허접한 튜토리얼이다.
+  반드시 '누가(엄마·남편·시어머니·아이·지인·나) 어떤 상황에서(갑자기 왔는데·밤마다·매번·어느날)
+  겪은 일'로, 장면이 눈에 그려지는 이야기로 시작해 전개하라.
+  예: "어제 시어머니가 예고도 없이 들이닥쳤는데" / "남편이 매일 밤 야식 타령을 하길래" /
+      "애가 아침을 통 안 먹어서 속 터졌는데" / "다이어트 중인 언니가 이건 괜찮냐고 묻길래".
+  → 인물·갈등·전환(반전)·해소가 있는 하나의 장면. 정보는 그 이야기 속에 녹여라.
+- ★★★탄탄한 회수(느슨한 스토리 반려): 훅에서 등장시킨 그 인물·갈등이 결말에서 반드시
+  '회수'돼야 한다. 남편이 야식을 찾으며 시작했으면 결말도 '그 남편이 이제 이것만 찾는다'로
+  닫아라 — 중간에 슬그머니 다른 인물(아이들 등)로 갈아타 시작한 갈등을 버리지 마라.
+  그리고 각 문장은 앞 문장의 '결과 또는 이유'여야 한다(인과 다리): "투덜대더라고요 → (그래서)
+  홧김에 다르게 해봤더니 → (그랬더니) 웬걸" 처럼 왜 그 행동을 했는지 연결하라. 근거 없이
+  "그런데 갑자기 이렇게 하니까"로 점프하면 스토리가 끊긴다. 시작(설정)–중간(전환)–끝(회수)이
+  한 인물의 한 사건으로 꿰여야 '탄탄하다'.
+- ★가장 중요한 건 스토리라인이다. 아래 규칙은 전부 '하나의 탄탄한 이야기'를 위한 것 —
   사람이 자기 이야기를 들려주듯 자연스럽게 흐르게 하라. 정보 나열·설명문 금지.
 - ★한 스토리 원칙: 대본 전체가 인물 1명·사건 1개·결말 1개의 '하나의 이야기'다.
   훅에서 던진 궁금증/문제가 전개에서 원인→전환점으로 풀리고 결말에서 해소돼야 한다.
@@ -113,6 +128,16 @@ _STORY_RULES_CORE = """- ★가장 중요한 건 스토리라인이다. 아래 �
 - ★훅 원칙: 첫 문장(훅)에는 이 영상에서 가장 강력한 한 방 — 제일 놀랍거나 궁금하거나
   이득이 큰 핵심 —을 앞세워라. 밋밋한 인사·서론·배경설명으로 시작하지 마라.
   훅과 CTA가 영상에서 가장 중요한 두 자리다(첫 1초에 붙잡고 끝에 행동시킨다).
+- ★★강한 훅 오프너 필수(약한 훅 반려): 첫 문장은 반드시 감탄·충격·궁금증을 터뜨리는 오프너로
+  시작하라. '남편이 야식을 찾길래…' 같은 잔잔한 상황설명을 첫 문장에 두지 마라 — 강한 오프너를
+  먼저 던지고 그 다음 문장에서 상황을 풀어라. 아래 훅 구조를 채용하되 소재에 맞게 변형('여러분'은
+  빼도 됨):
+  · 충격/감탄: "와 이거 때문에 진짜 깜짝 놀랐잖아요" / "와 이거 진짜 대박인데요?"
+  · 뒤늦은 발견: "이걸 왜 이제 알았지?" / "이런 게 있었네요?" / "이거 저만 몰랐나요?"
+  · 극찬: "이거 만든 사람 천재 아닌가요?"
+  · 강한 경고: "이거 진짜 절대 하지 마세요"
+  · 자기고백: "저 이거 몰라서 진짜 손해 봤잖아요"
+  강한 오프너 → (상황·인물) → 반전 → 회수 순으로 흐르게 하라.
 - ★CTA 원칙: 마지막 문장은 반드시 행동유도(CTA)로 끝난다. 핵심 비법 하나는 본문에서
   다 밝히지 말고 아껴서, CTA가 그 아낀 비법과 자연스럽게 이어지게 하라.
   · 소재가 레시피/비법/방법형이면 반드시 댓글 키워드형: "…궁금하면 댓글에 'OO' 남겨주세요"
@@ -143,7 +168,7 @@ _GEN_PROMPT = """너는 한국 쇼핑 숏폼(살림·요리·인테리어) 대�
 [구조 요소별 지시 — 유지/변형]
 {elems}
 
-[{topic_line}]
+[{topic_line}]{bank}
 
 규칙:
 - 각 초안은 실제로 읽을 나레이션(구어체). 0초 훅부터 끝 CTA까지 이어지게.
@@ -162,7 +187,7 @@ _MIX_PROMPT = """너는 한국 쇼핑 숏폼 대본 작가다. 아래 여러 개
 약 {seconds}초 분량(대략 {words}단어)의 새 대본 초안 {n}개를 만들어라.
 
 [재료 대본들]
-{sources}
+{sources}{bank}
 
 규칙:
 - ★초안마다 먼저 '인물 1명·사건 1개·결말 1개'를 정하라. 다른 대본에서는 훅 방식·표현·
@@ -192,7 +217,7 @@ def _mix_source_block(sources):
     return "\n\n".join(lines)
 
 
-def generate_mix(sources, target_seconds=20, n=3, max_key_tries=3):
+def generate_mix(sources, target_seconds=20, n=3, max_key_tries=3, bank_context=""):
     """여러 S급 대본(각 {name, full_text, structure})의 강점을 조합해 새 대본 초안 리스트.
     우리믹스(Feature B) 모드. 소스 2개 미만이거나 무키면 []."""
     sources = [s for s in (sources or []) if (s.get("full_text") or "").strip()]
@@ -201,7 +226,8 @@ def generate_mix(sources, target_seconds=20, n=3, max_key_tries=3):
     n = max(1, min(int(n or 3), 5))
     seconds = max(5, min(int(target_seconds or 20), 90))
     words = max(15, round(seconds * 2.3))
-    prompt = _MIX_PROMPT.format(sources=_mix_source_block(sources[:3]), seconds=seconds, words=words, n=n)
+    prompt = _MIX_PROMPT.format(sources=_mix_source_block(sources[:3]), seconds=seconds, words=words, n=n,
+                                bank=("\n\n" + bank_context) if bank_context else "")
     return _verify_and_fix(_generate_drafts(prompt), seconds)
 
 
@@ -246,7 +272,7 @@ def _elem_lines(structure, elem_modes, category_lookup):
 
 
 def generate_variations(structure, full_text, elem_modes, category_lookup, mode="remake",
-                        my_topic="", subject="", n=3, max_key_tries=3):
+                        my_topic="", subject="", n=3, max_key_tries=3, bank_context=""):
     """구조+대본을 재료로 요소별 모드 지시에 맞춰 초안 리스트 반환. 실패/무키면 [].
 
     mode: "remake"(원본 소재 고정, 표현만 재작성) 또는 "transplant"(구조만 빌려 내 주제로).
@@ -268,7 +294,8 @@ def generate_variations(structure, full_text, elem_modes, category_lookup, mode=
             "(중복 회피) 리라이트하라. 없던 내용이나 다른 제품을 지어내지 마라." + subj_line)
     prompt = _GEN_PROMPT.format(
         full_text=full_text[:3000], elems=_elem_lines(structure or {}, elem_modes, category_lookup),
-        topic_line=topic_line, n=n)
+        topic_line=topic_line, n=n,
+        bank=("\n\n" + bank_context) if bank_context else "")
     for _ in range(max_key_tries):
         key, ki = comment_gen._current_key_and_idx()
         if key is None:
@@ -449,6 +476,15 @@ def _verify_and_fix(drafts, seconds=20):
             drafts[i]["script"] = fixed["script"].strip()
             drafts[i]["hook"] = (fixed.get("hook") or drafts[i].get("hook") or "").strip()
             drafts[i]["applied"] = ((drafts[i].get("applied") or "") + " · 검수 후 자동 보정").strip(" ·")
+    # 대본 품질 주석 + 정렬 — 재미강도(D14 강한장치) 있고 대화체 자연스러운 초안을 앞으로.
+    # 하드 재생성 대신 정렬로: 추천안([0])이 최고 품질이 되고, 약한 초안도 선택지로 남는다.
+    from shopping_shorts import tone_score
+    for d in drafts:
+        sc = d.get("script", "")
+        d["fun"] = tone_score.fun_intensity(sc)
+        d["tone"] = round(tone_score.score_conversational(sc)["score"], 3)
+    drafts.sort(key=lambda d: (d.get("fun", {}).get("has_strong", False), d.get("tone", 0)),
+                reverse=True)
     return drafts
 
 

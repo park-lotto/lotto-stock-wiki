@@ -63,9 +63,12 @@ def _build_inventory(source_scripts):
                 "video_id": vid, "seg_id": sid,
                 "start": seg["start"], "end": seg["end"],
                 "text": seg.get("text", ""), "scene_desc": seg.get("scene_desc", ""),
+                "action": seg.get("action"),
             }
+            _act = seg.get("action")
+            _act_s = f" | 행위:{_act}" if _act else ""
             lines.append(
-                f"[{sid}] ({length}s) 화면:{seg.get('scene_desc','')} | 말:{seg.get('text','')}"
+                f"[{sid}] ({length}s) 화면:{seg.get('scene_desc','')} | 말:{seg.get('text','')}{_act_s}"
             )
     return seg_map, "\n".join(lines)
 
@@ -384,6 +387,135 @@ def _vault_call(prompt, schema, max_tries=4):
     return None
 
 
+_SCENE_FIRST_SCHEMA = {
+    "type": "object",
+    "properties": {"candidates": {"type": "array", "minItems": 1, "items": {
+        "type": "object",
+        "properties": {
+            "hook": {"type": "string"},
+            "story_person": {"type": "string"}, "story_event": {"type": "string"},
+            "story_resolution": {"type": "string"}, "cta_line": {"type": "string"},
+            "cta_keyword": {"type": "string"},
+            "beats": {"type": "array", "minItems": 4, "items": {
+                "type": "object",
+                "properties": {
+                    "role": {"type": "string"}, "narration": {"type": "string"},
+                    "seg_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+                    "fit": {"type": "integer"}, "forced": {"type": "boolean"}},
+                "required": ["role", "narration", "seg_ids", "fit"]}}},
+        "required": ["hook", "beats"]}}},
+    "required": ["candidates"],
+}
+
+
+def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3, call=_vault_call):
+    """스토리 헌장 + 장면 팔레트 + 레퍼 구조 → 후보 n개. 각 비트는 seg_ids(2~4 다중컷)로
+    장면을 지목한다. 실패 시 []. 헌장이 품질을 담당하므로 별도 검증루프 없음(1콜)."""
+    from shopping_shorts import script_generate  # 지연 import(순환 방지)
+    char_target = int(target_seconds * _SYLLABLES_PER_SEC)
+    prompt = (
+        "너는 한국 쇼핑 숏폼(살림·요리) 대본 작가다. 아래 '스토리 헌장'을 반드시 지켜 "
+        f"탄탄한 대본 후보 {n}개를 만들어라. 단, 우리가 가진 장면으로만 말할 수 있게 쓰고, "
+        "각 비트(문장)에 그 말과 어울리는 장면 seg_id를 2~4개 시간순으로 붙여라.\n\n"
+        "[레퍼런스 — 훅·전개·설득구조만 계승(표절 금지), 다국어면 한국어로]\n"
+        f"{(reference_text or '')[:1500]}\n\n"
+        "[우리 장면 팔레트 — 이 seg_id 화면만 쓸 수 있다]\n"
+        f"{inventory_text}\n\n"
+        + script_generate._STORY_RULES_CORE + "\n" + script_generate._STORY_DECLARE + "\n"
+        "- ★위 헌장(인과사슬·훅 한방·CTA 미끼·비법 킥 감추기)을 반드시 지켜라 — 장면에 맞추느라 "
+        "스토리가 밋밋해지면 실패다. 스토리가 왕, 장면은 그 스토리를 보여줄 그림이다.\n"
+        "- ★★영상은 beats를 읽는다 — hook은 헤드라인 필드일 뿐 화면엔 안 나온다. 그러니 "
+        "beats[0].narration을 반드시 hook과 같은 강한 오프너('와 이거 진짜 대박인데요?'·'이걸 왜 "
+        "이제 알았지?'·'저 이거 몰라서 손해 봤잖아요'·'이거 진짜 절대 하지 마세요' 류)로 시작해라. "
+        "hook만 세게 써놓고 첫 비트를 '매번 ~하던 참이었거든요'처럼 밋밋하게 열면 실패다. "
+        "beats[0]이 곧 그 hook이어야 한다.\n"
+        f"- 전체 나레이션 글자수 합은 약 {char_target}자 내외. 각 비트: role·narration(구어체)·"
+        "seg_ids(2~4)·fit(1~5)·forced(그 장면이 이 말과 안 맞는데 억지로 붙였으면 true).\n"
+        "- 화면에 없는 걸 말하지 마라. 같은 seg_id를 여러 비트에서 재사용 금지.\n"
+        "출력은 스키마 JSON만.")
+    raw = call(prompt, _SCENE_FIRST_SCHEMA)
+    if not raw or not isinstance(raw, dict):
+        return []
+    return raw.get("candidates", []) or []
+
+
+_STRONG_OPENER_TOKENS = ("와 ", "와,", "아니", "이거", "이걸", "저 이거", "헐", "대박",
+                         "세상에", "이런", "저만")
+
+
+def _hook_opener(hook):
+    """hook의 첫 절(첫 ?/!/. 까지) — 강한 오프너로 beats[0]에 얹을 조각. 없으면 ''."""
+    h = (hook or "").strip()
+    if not h:
+        return ""
+    for i, ch in enumerate(h):
+        if ch in "?!":
+            return h[:i + 1]
+    return h.split(".")[0].strip()
+
+
+def _lead_with_hook(narration, hook):
+    """beats[0]이 강한 오프너로 안 열리면 hook 앞절을 붙여 강제로 세게 연다(2026-07-21).
+    이미 강해 보이면(오프너 토큰 시작 or 앞 12자에 ?/!) 그대로 둔다(중복 방지)."""
+    n = (narration or "").strip()
+    head = n[:12]
+    if n.startswith(_STRONG_OPENER_TOKENS) or "?" in head or "!" in head:
+        return n
+    opener = _hook_opener(hook)
+    if not opener or opener in n:
+        return n
+    return f"{opener} {n}"
+
+
+def _ground_candidate(cand, seg_map, structure="free"):
+    """후보 비트(narration + seg_ids 다중컷)를 build_edit_plan 반환형 EDL로 grounding.
+    seg_ids[0]=primary, 나머지=alternates(연속재생). start/end/scene_desc는 코드가 되붙인다.
+    primary 무효 비트는 드롭. 유효 비트 0개면 None.
+    ★영상은 beats를 읽으므로 첫 비트가 밋밋하면 hook(강한 오프너)을 앞에 얹는다."""
+    hook = cand.get("hook", "")
+    beats_out = []
+    for beat in cand.get("beats", []):
+        segs = beat.get("seg_ids") or []
+        primary = _ground_ref({"seg_id": segs[0]}, seg_map) if segs else None
+        if primary is None:
+            continue
+        alts, seen = [], {primary["seg_id"]}
+        for sid in segs[1:]:
+            g = _ground_ref({"seg_id": sid}, seg_map)
+            if g and g["seg_id"] not in seen:
+                alts.append(g)
+                seen.add(g["seg_id"])
+        narration = beat.get("narration", "")
+        if not beats_out:                       # 첫 유효 비트 = 훅 자리
+            narration = _lead_with_hook(narration, hook)
+        beats_out.append({
+            "beat_idx": len(beats_out), "role": beat.get("role", ""),
+            "narration": narration,
+            "target_seconds": round(max(1.5, len(narration.strip()) / _SYLLABLES_PER_SEC), 1),
+            "primary": primary, "alternates": alts, "effect": "cut",
+            "fit": int(beat.get("fit") or 0), "forced": bool(beat.get("forced", False)),
+        })
+    if not beats_out:
+        return None
+    return {"structure": structure, "beats": beats_out}
+
+
+def _score_candidate(plan):
+    """후보 추천 점수(0~1): 매칭 fit·억지없음·장면다양성. 빈 beats면 0.0."""
+    beats = plan.get("beats") or []
+    if not beats:
+        return 0.0
+    avg_fit = sum(int(b.get("fit") or 0) for b in beats) / len(beats) / 5.0
+    forced_ratio = sum(1 for b in beats if b.get("forced")) / len(beats)
+    seg_ids = []
+    for b in beats:
+        seg_ids.append((b.get("primary") or {}).get("seg_id"))
+        seg_ids += [(a or {}).get("seg_id") for a in (b.get("alternates") or [])]
+    seg_ids = [s for s in seg_ids if s]
+    diversity = (len(set(seg_ids)) / len(seg_ids)) if seg_ids else 0.0
+    return round(0.5 * avg_fit + 0.3 * (1 - forced_ratio) + 0.2 * diversity, 3)
+
+
 _CONFORM_SCHEMA = {
     "type": "object",
     "properties": {"narration": {"type": "string"}},
@@ -500,6 +632,44 @@ _RECONCILE_SCHEMA = {
 }
 
 
+def _bb_rewrite(beats, call=_vault_call):
+    """핑퐁 재작성 콜백(backbone.ping_pong_reconcile용) — 화면과 못 맞춘 비트의 나레이션을
+    화면(scene_desc)에 맞게 1회 수정 → {beat_idx: 새나레이션}. 실패/무대상이면 {}."""
+    if not beats:
+        return {}
+    lines = "\n".join(
+        f"[{b['beat_idx']}] 화면:{(b.get('primary') or {}).get('scene_desc','')} | 현재대사:{b.get('narration','')}"
+        for b in beats)
+    prompt = (
+        "아래 비트들은 대사와 화면이 어긋난다. 각 대사를 **뜻과 정보는 유지**하되 화면(scene_desc)에 "
+        "어울리도록 표현만 자연스럽게 고쳐라. 화면에 없는 사실을 지어내지 마라.\n"
+        f"{lines}\n출력은 rewrites 배열의 JSON만.")
+    raw = call(prompt, _RECONCILE_SCHEMA)
+    if not raw or not isinstance(raw, dict):
+        return {}
+    return {int(r["beat_idx"]): r["narration"]
+            for r in raw.get("rewrites", []) if r.get("narration")}
+
+
+def _bb_trim(beats, call=_vault_call):
+    """핑퐁 길이 트림 콜백 — 화면보다 긴 대사를 뜻 유지하며 target_chars 이내로 줄인다
+    → {beat_idx: 줄인 나레이션}. 대사가 다음 장면으로 넘어가는 것 방지."""
+    if not beats:
+        return {}
+    lines = "\n".join(
+        f"[{b['beat_idx']}] {b.get('target_chars', 0)}자 이내: {b.get('narration', '')}"
+        for b in beats)
+    prompt = (
+        "아래 대사들은 화면보다 길어 다음 장면으로 넘어간다. 각 대사를 **뜻·정보·말투는 유지**하되 "
+        "지정한 글자수 이내로 자연스럽게 줄여라(끊긴 느낌 없이 완결). 화면에 없는 사실 지어내지 마라.\n"
+        f"{lines}\n출력은 rewrites 배열의 JSON만.")
+    raw = call(prompt, _RECONCILE_SCHEMA)
+    if not raw or not isinstance(raw, dict):
+        return {}
+    return {int(r["beat_idx"]): r["narration"]
+            for r in raw.get("rewrites", []) if r.get("narration")}
+
+
 def _reconcile_weak_beats(beats, call=_vault_call):
     """앵커(respined 아님)이면서 fit<=3인 비트의 나레이션만 화면(scene_desc)에 맞게
     1회 Gemini 호출로 미세수정. 대상 0개면 호출 없이 그대로. 실패 시 원문 유지(fail-open)."""
@@ -579,3 +749,49 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
                                     else _plagiarism_flags(grounded["beats"],
                                                            [s.get("full_text", "") for s in source_scripts]))
     return grounded
+
+
+def build_scene_first_plan(source_scripts, reference_text, target_seconds,
+                           n_candidates=3, video_type=None, call=None, ping_pong=False,
+                           backbone_meta=None, backbone_forced=None):
+    """장면 우선 대본 모드: 팔레트+헌장으로 후보 n개 생성 → 각 EDL grounding·채점 →
+    최고 score에 recommended=True. 각 candidate.plan은 build_edit_plan 반환형(하류 렌더 호환).
+    후보 0개면 candidates=[](호출부가 기존 build_edit_plan로 폴백).
+
+    ping_pong=True(opt-in, 기본 off로 회귀0): grounding 후 backbone 핑퐁으로 비트별
+    대본↔장면을 왕복 조정(행위 불일치=fit 거짓말 잡기 → 같은 행위 클립 스왑 or 나레이션 재작성).
+    """
+    seg_map, inventory = _build_inventory(source_scripts)
+    detected = video_type or (detect_video_type(source_scripts) if source_scripts else _DEFAULT_TYPE)
+    if not seg_map:
+        return {"candidates": [], "detected_type": detected}
+    _call = call or _vault_call
+    raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates, call=_call)
+    src_texts = [s.get("full_text", "") for s in source_scripts]
+    cands = []
+    for r in raws:
+        plan = _ground_candidate(r, seg_map)
+        if plan is None:
+            continue
+        if ping_pong:
+            from shopping_shorts import backbone
+            # 1) 행위 매칭(화면-대사 어긋남 + 길이) 2) 백본 순서 고정(과정순서)
+            plan["beats"] = backbone.ping_pong_reconcile(
+                plan["beats"], source_scripts,
+                rewrite_call=lambda bs: _bb_rewrite(bs, _call),
+                trim_call=lambda bs: _bb_trim(bs, _call))
+            bb = backbone.pick_backbone(source_scripts, meta=backbone_meta, forced=backbone_forced)
+            if bb:
+                plan["beats"] = backbone.order_by_backbone(plan["beats"], bb)
+            # 반복장면·한소스 편중 해소: 쓴 클립 재사용 금지 + 덜 쓴 소스 우선 교체
+            plan["beats"] = backbone.dedup_and_balance(plan["beats"], source_scripts)
+        plan["detected_type"] = detected
+        plan["affiliate_target"] = r.get("story_event", "") or ""
+        plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)
+        story = {k: r.get(k, "") for k in
+                 ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
+        cands.append({"plan": plan, "story": story, "score": _score_candidate(plan), "recommended": False})
+    if cands:
+        best = max(range(len(cands)), key=lambda i: cands[i]["score"])
+        cands[best]["recommended"] = True
+    return {"candidates": cands, "detected_type": detected}

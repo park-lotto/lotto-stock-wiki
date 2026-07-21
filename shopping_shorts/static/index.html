@@ -808,8 +808,12 @@ async function traceByUrl(){
     if(!items.length){ if(body) body.innerHTML='<div style="padding:10px;color:var(--sub)">비슷한 영상을 못 찾았어요. 다른 장면이 담긴 링크로 시도해 보세요.</div>'; return; }
     let saved=new Set();
     try{ saved=new Set((await (await fetch('/api/mix/basket')).json()).shortcodes||[]); }catch(e){}
+    const tcap=d.caption||'';
+    // 📕🎬 키워드검색 후보는 서버가 프레임 비전으로 만들어 cn_candidates로 내려준다
+    // (caption만으론 cn_search_candidates가 빈 리스트 — 프레임 필수라 서버가 처리).
+    const tcn=(d.cn_candidates||[]).filter(c=>c&&c.zh);
     LENS_STATE['__trace__']={items, on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
-                             sel:new Set(), shortsOnly:false, ytLoading:false, keyword:'', caption:'', cnCands:[]};
+                             sel:new Set(), shortsOnly:false, ytLoading:false, keyword:'', caption:tcap, cnCands:tcn};
     renderLens('__trace__');
   }catch(e){ const body=document.getElementById('scriptBody'); if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
 }
@@ -942,6 +946,7 @@ function renderLens(shortcode){
       <button onclick="lensBulkSave('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">📥 선택 담기(${selCount})</button>
       <button onclick="lensBulkDelete('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">🗑 선택 삭제(${selCount})</button>
       ${st.ytLoading?'<span style="color:var(--sub)">▶️ 유튜브 불러오는 중…</span>':''}
+      <a href="/grab" target="_blank" rel="noopener" title="샤오홍슈·도우인·틱톡·인스타 영상에 '📥 담기' 버튼이 안 뜨면 여기서 1회 켜기" style="text-decoration:none;font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--accent);background:#1f6feb1a;color:var(--accent);font-weight:700;margin-left:auto;white-space:nowrap">📥 담기 버튼 켜기</a>
     </div>
     ${st.cnCands && st.cnCands.length ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)">
       <div style="font-size:12px;color:var(--sub);margin-bottom:5px">📕🎬🎵📷 비슷한 영상 찾기 — 눌러서 열고, 마음에 들면 📥담기</div>

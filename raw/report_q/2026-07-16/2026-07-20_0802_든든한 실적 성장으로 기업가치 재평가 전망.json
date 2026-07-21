@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-20_0802_든든한 실적 성장으로 기업가치 재평가 전망.md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "오현진",
+    "report_date": "2026. 7. 16",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "뉴파워프라즈마",
+        "code": "144960",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "26년 동사의 실적은 매출액 6,733억원(YoY 16%), 영업이익 679억원(YoY 137%)을 전망",
+        "estimate_revision": null,
+        "next_catalyst": "향후 사업 성과에 따른 기업가치 재평가",
+        "thesis": [
+          "반도체 및 디스플레이 공정용 플라즈마 부품 전문 업체",
+          "반도체 산업 내 투자 확대와 미세 공정 전환에 따른 플라즈마 공정 채택 증가",
+          "자회사 도우인시스(UTG) 및 스페이스프로(방산) 전방 시장 성장에 따른 수혜"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "같은 제품군을 판매하는 업체는 미국의 MKS 등 일부 업체 외에 제한적",
+        "quote": "전 사업부의 견조한 성장을 중심으로 26년 동사의 실적은 매출액 6,733억원(YoY 16%), 영업이익 679억원(YoY 137%)을 전망"
+      }
+    ]
+  }
+}

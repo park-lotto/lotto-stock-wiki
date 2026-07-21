@@ -58,6 +58,8 @@ from shopping_shorts import frame_extract, scene_assets, scene_cut
 from shopping_shorts import effect_match, remotion_render, points
 from shopping_shorts import video_assemble
 from shopping_shorts import seo_generate, seo_probe
+from shopping_shorts import pattern_bank
+from shopping_shorts import bank_assemble
 from shopping_shorts import thumb_title
 import uuid
 
@@ -413,6 +415,31 @@ def api_mix_basket_remove(request: Request, body: dict):
     cid = _cid(request)
     store.mix_basket_remove(sc, customer_id=cid)
     return {"ok": True, "count": len(store.mix_basket_shortcodes(customer_id=cid))}
+
+
+@app.post("/api/mix/basket/reprobe")
+def api_mix_basket_reprobe(request: Request, body: dict, background_tasks: BackgroundTasks):
+    """즐겨찾기 카드의 보강메타(조회수·좋아요·댓글·팔로워 등)를 다시 수집한다
+    (2026-07-21 사장님 요청). 담을 때 메타가 안 넘어왔거나 백그라운드 probe가
+    실패해 카드가 비어 보이는 항목을 사장님이 카드에서 직접 재수집한다 —
+    자동 재수집은 Apify/토큰 비용이 들어 안 돌리고 버튼으로만(원하는 것만).
+    담기(toggle)와 같은 `_enrich_grab` 경로를 재사용하므로 팔로워를 안 주는
+    플랫폼(틱톡)은 여전히 조회수·좋아요·댓글까지만 채워진다(그건 플랫폼 한계)."""
+    sc = (body.get("shortcode") or "").strip()
+    if not sc:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "shortcode 필요"})
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    item = next((x for x in store.mix_basket_list(customer_id=cid)
+                 if x.get("shortcode") == sc), None)
+    if not item:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "담긴 항목이 아닙니다"})
+    url = item.get("url") or ""
+    if not (url and _grab_platform(url)):
+        return JSONResponse(status_code=400,
+                            content={"ok": False, "error": "재수집할 수 없는 링크입니다"})
+    background_tasks.add_task(_enrich_grab, url, sc, cid)
+    return {"ok": True}
 
 
 @app.get("/api/mix/basket")
@@ -855,6 +882,20 @@ def _relearn_category(db_path, category):
         print(f"relearn 실패 {category}: {e}")
 
 
+def _ingest_pattern_bank(db_path, full_text, url, category):
+    """위키에 담을 때마다 그 대본의 훅·어미·부사·CTA를 부품은행에 자동 적재(계속 쌓기).
+    스타일 부품은 즉시 자동승인 → 바로 생성에 반영(표현력↑). 백그라운드·실패 무해."""
+    if not (full_text or "").strip():
+        return
+    try:
+        store = Store(db_path)
+        pattern_bank.ingest_script(store, full_text, source="wiki", url=url or "",
+                                   product_category=category, category_source="user")
+        store.auto_approve_style_buckets()
+    except Exception as e:  # noqa: BLE001 — 은행 적재 실패는 위키 저장엔 영향 없음
+        print(f"pattern_bank ingest 실패: {e}")
+
+
 @app.post("/api/wiki/save")
 def api_wiki_save(request: Request, shortcode: str, background_tasks: BackgroundTasks):
     """S급 대본을 위키(도서관)에 저장 — 대본 확보(캐시/즉석추출) → 구조분석 → 저장.
@@ -907,6 +948,9 @@ def api_wiki_save(request: Request, shortcode: str, background_tasks: Background
     # 학습 소스에도 구조 채우고(재분석 없이 재사용) 그 카테고리 즉시 재학습(백그라운드).
     store.save_extract_structure(code, structure)
     background_tasks.add_task(_relearn_category, DB_PATH, item.get("category"))
+    # 부품은행 자동 적재(훅·어미·부사·CTA 계속 쌓기 + 스타일 자동승인 → 표현력↑).
+    background_tasks.add_task(_ingest_pattern_bank, DB_PATH, script.get("full_text", ""),
+                             item.get("video_url", ""), item.get("category"))
     return {"ok": True, "shortcode": code, "structure": structure, "has_video": media_target.exists()}
 
 
@@ -1109,9 +1153,16 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     elem_modes = ({k: v for k, v in _em.items() if k in script_generate.ELEM_KEYS}
                   if isinstance(_em, dict) else {})
     category_lookup = store.get_element_options(it.get("category") or "")
+    # 부품은행 주입 — 승인된 스파인·부품(훅·어미·부사·CTA)을 프롬프트에 실어 표현력↑.
+    # 마스터 스위치(ping_pong_enabled)가 켜져 있으면 자동 주입(위키담기로 쌓인 걸 바로 활용).
+    _gen_kw = dict(mode=mode, my_topic=my_topic, subject=subject, n=n)
+    _use_bank = body.get("use_bank") or (store.get_setting("ping_pong_enabled", "") == "1")
+    if _use_bank:
+        _bank = bank_assemble.assemble_bank_context(store, it.get("category") or "")
+        if _bank:
+            _gen_kw["bank_context"] = _bank
     drafts = script_generate.generate_variations(
-        it.get("structure") or {}, it.get("full_text") or "", elem_modes, category_lookup,
-        mode=mode, my_topic=my_topic, subject=subject, n=n)
+        it.get("structure") or {}, it.get("full_text") or "", elem_modes, category_lookup, **_gen_kw)
     if not drafts:
         return JSONResponse(status_code=502, content={"ok": False, "error": "생성 실패(Gemini 키 소진 또는 오류) — 잠시 후 재시도"})
     cid = _cid(request)
@@ -1433,6 +1484,7 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
     target = int(body.get("target_seconds") or 30)
     structure = body.get("structure") if body.get("structure") in ("template", "free") else "template"
     subtitle_removal = bool(body.get("subtitle_removal", False))
+    scene_first = bool(body.get("scene_first", False))
     cid = getattr(request.state, "customer_id", 0)
     if _global_over_cap("render"):
         return JSONResponse(status_code=429, content={
@@ -1447,9 +1499,24 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
     # render_charge_day: '오늘 render를 과금했다'는 표식(+환불할 날짜). run_mix_job이 실패하면 딱
     # 이 날짜로 환불한다. 과금 안 하는 다른 create_mix_job 경로는 이 값을 비워 오환불을 막는다(리뷰 B).
     Store(DB_PATH).create_mix_job(job_id, urls, target, structure, subtitle_removal=subtitle_removal,
-                                  customer_id=cid, render_charge_day=_today_utc())
+                                  customer_id=cid, render_charge_day=_today_utc(),
+                                  scene_first=scene_first)
     background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True, "job_id": job_id}
+
+
+@app.post("/api/mix/candidate")
+def api_mix_candidate(body: dict):
+    """장면 우선 대본 모드(2026-07-20, Task6): 후보 선택 — 고른 후보의 plan을 edit_plan으로
+    세팅한다(미리보기/렌더가 이걸 읽는다)."""
+    job_id = (body.get("job_id") or "").strip()
+    idx = int(body.get("index") or 0)
+    store = Store(DB_PATH)
+    cands = store.get_mix_candidates(job_id)
+    if not cands or not (0 <= idx < len(cands)):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "후보 없음"})
+    store.update_mix_job(job_id, edit_plan=cands[idx]["plan"])
+    return {"ok": True}
 
 
 @app.post("/api/settings/vmake_key")
@@ -1472,7 +1539,8 @@ _MIX_ACTIVE_STAGES = ("downloading", "extracting", "planning", "tts")
 
 @app.get("/api/mix/status/{job_id}")
 def api_mix_status(job_id: str):
-    job = Store(DB_PATH).get_mix_job(job_id)
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     status, error = job["status"], job["error"]
@@ -1483,13 +1551,20 @@ def api_mix_status(job_id: str):
     if status in _MIX_ACTIVE_STAGES and _render_is_stale(job):
         status = "failed"
         error = "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."
+    # 장면 우선 대본 모드(2026-07-20, Task7): 후보 요약만 내려준다 — 전체 plan(beats 등)을
+    # 실으면 남의 창작물이 새는 것과 같은 노출 문제(§3981)가 나므로 카드 렌더용 필드만 뽑는다.
+    candidates = [{"index": i, "score": c.get("score"), "recommended": bool(c.get("recommended")),
+                   "hook": (c.get("story") or {}).get("hook", ""),
+                   "story_person": (c.get("story") or {}).get("story_person", "")}
+                  for i, c in enumerate(store.get_mix_candidates(job_id))]
     return {"ok": True, "status": status, "error": error,
             # 1단계 미리보기(2026-07-17): 폴러를 둘로 만들지 않으려고 기존 응답에 얹는다(스펙 §6.3).
             # preview_path는 서버 내부 경로라 안 내보낸다 — 파일은 전용 라우트로만 서빙.
             "preview_status": job.get("preview_status"),
             "preview_error": job.get("preview_error"),
             "clean_status": job.get("clean_status"),
-            "clean_error": job.get("clean_error")}
+            "clean_error": job.get("clean_error"),
+            "candidates": candidates}
 
 
 @app.get("/api/mix/result/{job_id}")
@@ -2490,9 +2565,20 @@ def api_lens_trace_url(request: Request, body: dict):
             return JSONResponse(status_code=502, content={
                 "ok": False, "error": "영상/썸네일을 가져오지 못했습니다(봇차단·만료·미지원 URL)"})
         items = search_similar_videos(image_url, source_caption=caption)
+        # 📕🎬 중국앱 키워드 후보(비전). 렌즈 유사영상은 프론트가 프레임으로 뽑지만 trace는
+        # 프레임이 서버에만 있다(유튜브는 아예 썸네일 URL·caption 없음) → 서버가 image_url에서
+        # 바이트를 받아 직접 만든다. cn_search_candidates는 image_bytes가 없으면 빈 리스트라
+        # caption만으론 안 됨(2026-07-21 사장님 제보로 확인). Gemini 무료쿼터, 실패해도 무시.
+        cn_cands = []
+        try:
+            img_bytes = requests.get(image_url, timeout=15).content
+            cn_cands = (cn_search_candidates(img_bytes, caption) or {}).get("candidates", [])
+        except Exception:
+            pass
         store.bump_lens(month)
         ok = True
-        return {"ok": True, "items": items, "count": len(items), "source_url": url}
+        return {"ok": True, "items": items, "count": len(items), "source_url": url,
+                "caption": caption, "cn_candidates": cn_cands}
     finally:
         if not ok:
             refund_credit(cid, "lens")
@@ -3785,43 +3871,216 @@ def api_grab(request: Request, background_tasks: BackgroundTasks,
 _GRAB_BOOKMARKLET = r'''javascript:(function(){var h=location.host||"";if(/shoppingshorts|localhost|127\.0\.0\.1/.test(h)){alert("❗ 이 버튼은 '눌러서' 쓰는 게 아니라, 마우스로 북마크바에 끌어다(드래그) 저장하는 거예요.\n\n저장한 뒤, 유튜브·틱톡·샤오홍슈·도우인에서 영상을 열고 그 북마크를 누르세요.");return;}var q=function(s){var e=document.querySelector(s);return e?e.content:"";};var th=q('meta[property="og:image"]');var ti=q('meta[property="og:title"]')||document.title||"";window.open("__BASE__/api/grab?url="+encodeURIComponent(location.href)+"&thumbnail="+encodeURIComponent(th)+"&title="+encodeURIComponent(ti.slice(0,120)),"ss_grab","width=380,height=220");})();'''
 
 
+# 설치 안내 '신호등' 페이지(자가감지). __TM_URL__=텀퍼몽키 스토어 딥링크, __BM64__=북마클릿.
+# 설치가 끝나면 유저스크립트가 이 페이지에서 실행돼 data-ss-grab-installed 표식을 남기고
+# (grab_logic.js 비컨), 아래 스크립트가 폴링·포커스새로고침으로 감지해 자동으로 '완료'로 바꾼다.
+_GRAB_SETUP_HTML = """<!doctype html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>\U0001F4E5 담기 켜기</title>
+<style>
+  :root{color-scheme:light}
+  *{box-sizing:border-box}
+  body{margin:0;background:#f3f5f8;color:#1a1f2b;font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif}
+  .wrap{max-width:560px;margin:0 auto;padding:28px 18px 60px}
+  h1{font-size:26px;margin:.2em 0 .3em}
+  .lead{font-size:17.5px;line-height:1.7;color:#232a36;margin:0 0 20px}
+  .warn{background:#fff3f2;border:2px solid #e0245e;border-radius:12px;padding:14px 16px;font-size:15px;line-height:1.6;margin:0 0 18px;color:#a01040}
+  .step{display:flex;gap:14px;align-items:flex-start;background:#fff;border:2px solid #e3e7ee;border-radius:16px;padding:18px 16px;margin:0 0 14px;transition:.25s}
+  .step.ok{border-color:#1f9d55;background:#f0fbf4}
+  .num{flex:0 0 40px;height:40px;border-radius:50%;background:#1f6feb;color:#fff;font-weight:800;font-size:19px;display:flex;align-items:center;justify-content:center}
+  .step.ok .num{background:#1f9d55}
+  #s3 .num{background:#c3c9d4}
+  #s3.ok .num{background:#1f9d55}
+  .cbody{flex:1;min-width:0}
+  .t{font-size:18px;font-weight:800;margin-bottom:4px}
+  .d{font-size:15px;line-height:1.6;color:#3c4759;margin-bottom:12px}
+  .check{flex:0 0 auto;font-size:22px;color:#c3c9d4;font-weight:800}
+  .step.ok .check{color:#1f9d55}
+  .btn{display:inline-block;background:#1f6feb;color:#fff;text-decoration:none;font-weight:800;font-size:17px;padding:14px 20px;border-radius:12px;border:none;cursor:pointer;box-shadow:0 3px 10px rgba(31,111,235,.28)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:#fff;color:#1f6feb;border:2px solid #1f6feb;box-shadow:none}
+  .donebox{background:#eafaf0;border:2px solid #1f9d55;border-radius:16px;padding:20px 18px;font-size:17px;line-height:1.6;color:#186c3c;margin:4px 0 8px}
+  .recheck{display:block;width:100%;margin:8px 0 0;background:#fff;border:2px solid #cbd2dd;border-radius:12px;padding:13px;font-size:15px;font-weight:700;color:#3a4252;cursor:pointer}
+  .alt{margin:22px 0 0}
+  .alt>summary{cursor:pointer;color:#6b7488;font-weight:700;font-size:14px;padding:8px 0}
+  .altbox{background:#fff7e6;border:1px solid #f0c36d;border-radius:12px;padding:16px;margin:8px 0;font-size:14px;line-height:1.6;color:#7a6528}
+  .altbox .hi{font-weight:800;color:#a86;margin-bottom:6px}
+  .foot{color:#8a92a4;font-size:13px;line-height:1.6;margin-top:18px}
+  a{color:#1f6feb}
+  .guide{margin:4px 0 22px;background:#fff;border:2px solid #e3e7ee;border-radius:16px;padding:18px 16px}
+  .ghead{font-size:20px;font-weight:800;margin:0 0 6px;color:#0f2748}
+  .gsub{font-size:15px;color:#42506a;margin:0 0 12px;line-height:1.5}
+  .gstep{display:flex;gap:11px;align-items:flex-start;margin:20px 0 10px}
+  .gnum{flex:0 0 34px;height:34px;border-radius:50%;background:#1f6feb;color:#fff;font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center}
+  .gstep.warn .gnum{background:#e0245e}
+  .gtitle{font-size:17px;line-height:1.55;padding-top:4px;color:#141a24;font-weight:500}
+  .gstep.warn .gtitle{color:#96003f;font-weight:700}
+  .gbtn{display:inline-block;background:#1f6feb;color:#fff;text-decoration:none;font-weight:800;font-size:16px;padding:12px 18px;border-radius:10px;margin:2px 0 10px;box-shadow:0 3px 10px rgba(31,111,235,.28)}
+  .gcopy{display:inline-block;background:#fff;color:#1f6feb;border:2px solid #1f6feb;font-weight:800;font-size:15px;padding:11px 16px;border-radius:10px;margin:2px 0 10px;cursor:pointer;text-align:left;line-height:1.4}
+  .gimg{display:block;width:100%;max-width:100%;height:auto;border:2px solid #e3e7ee;border-radius:10px;margin:0}
+  .gwarnbox{background:#fff3f2;border:1.5px solid #e0245e;border-radius:10px;padding:11px 13px;font-size:13.5px;line-height:1.55;color:#a01040;margin:16px 0 0}
+  .gdone{background:#eafaf0;border:1.5px solid #1f9d55;border-radius:10px;padding:12px 14px;font-size:15px;color:#186c3c;margin:12px 0 0;font-weight:600}
+  code{background:#eef1f6;padding:2px 6px;border-radius:5px;font-size:13px;font-weight:700}
+</style></head>
+<body><div class="wrap">
+  <h1>\U0001F4E5 담기 기능 켜기</h1>
+  <p class="lead">유튜브·틱톡·샤오홍슈·도우인에서 <b>마음에 든 영상을 클릭 한 번</b>으로 모음집에 담는 기능이에요. <b>아래 사진 4단계</b>를 그대로 따라 하세요 — 다 되면 맨 아래 <b>③이 저절로 초록불</b>로 바뀝니다.</p>
+
+  <div id="browserWarn" class="warn" style="display:none">
+    ⚠️ 이 기능은 <b>PC의 크롬(Chrome) 또는 엣지(Edge)</b>에서만 켤 수 있어요.<br>이 페이지 주소를 복사해 PC 크롬에서 열어주세요.
+  </div>
+
+  __GUIDE_SECTION__
+
+  <div id="steps">
+    <div class="step" id="s3">
+      <div class="num">✓</div>
+      <div class="cbody">
+        <div class="t">설치 확인</div>
+        <div class="d">위 <b>사진 4단계</b>를 다 마치면 <b>여기가 저절로 초록불</b>로 바뀌어요. 아무것도 안 눌러도 돼요.</div>
+      </div>
+      <div class="check">○</div>
+    </div>
+  </div>
+
+  <div id="doneBox" class="donebox" style="display:none">
+    \U0001F389 <b>설치 완료!</b> 이제 유튜브·틱톡·샤오홍슈·도우인에서 영상을 열면 오른쪽 아래에 <b>\U0001F4E5 담기</b> 버튼이 자동으로 떠요. 그 버튼만 누르면 담깁니다.
+    <div style="margin-top:12px"><a class="btn ghost" href="/collection">\U0001F3AC 담은 영상 보러가기</a></div>
+  </div>
+
+  <button id="recheck" class="recheck" style="display:none" onclick="location.reload()">설치했는데 안 바뀌나요? → 확인하기</button>
+
+  <details class="alt">
+    <summary>설치가 어렵나요? — 설치 없이 쓰는 방법(북마클릿)</summary>
+    <div class="altbox">
+      <div class="hi">① 아래 파란 버튼을 <span style="color:#c0392b">누르지 말고</span> 마우스로 <u>북마크바로 드래그</u>해서 놓으세요</div>
+      <div style="color:#a99;margin-bottom:10px">북마크바가 안 보이면 <b>Ctrl+Shift+B</b>. 드래그 = 버튼을 꾹 눌러 위쪽 북마크바까지 끌고 가 놓기.</div>
+      <a id="bm" draggable="true" href="#" class="btn" style="cursor:grab">\U0001F4E5 담기</a>
+      <div style="margin-top:12px;font-weight:700;color:#7a6528">② 영상을 <u>열고</u>(그리드 말고 영상 클릭해 들어간 뒤) 방금 만든 북마크를 누르면 끝.</div>
+    </div>
+  </details>
+
+  <p class="foot">담긴 영상은 <a href="/collection">\U0001F3AC 모음집</a>에서 확인 · 실제 다운로드는 제작소에서 자동(무료). shoppingshorts에 <b>로그인된 상태</b>여야 담깁니다.</p>
+</div>
+<script>
+(function(){
+  var UA=navigator.userAgent||"";
+  var inApp=/KAKAOTALK|Instagram|FBAN|FBAV|Line|NAVER|DaumApps/i.test(UA);
+  var mobile=/Android|iPhone|iPad|iPod/i.test(UA);
+  if(inApp||mobile){ var w=document.getElementById("browserWarn"); if(w) w.style.display=""; }
+  function detected(){
+    return document.documentElement.getAttribute("data-ss-grab-installed")==="1"
+        || (function(){try{return localStorage.getItem("ss_grab_ok")==="1";}catch(e){return false;}})();
+  }
+  function markDone(){
+    try{localStorage.setItem("ss_grab_ok","1");}catch(e){}
+    ["s1","s2","s3"].forEach(function(id){var e=document.getElementById(id);if(!e)return;e.classList.add("ok");var c=e.querySelector(".check");if(c)c.textContent="✓";});
+    var db=document.getElementById("doneBox"); if(db) db.style.display="";
+    var st=document.getElementById("steps"); if(st) st.style.opacity=".6";
+    var rc=document.getElementById("recheck"); if(rc) rc.style.display="none";
+  }
+  window.ssMark=function(n){ try{sessionStorage.setItem("ss_did"+n,"1"); if(n===2) sessionStorage.removeItem("ss_reloaded");}catch(e){} };
+  // chrome:// 주소는 웹페이지 링크로 못 연다(크롬 정책) → '주소 복사'로 대신한다.
+  window.ssCopy=function(t,btn){
+    try{ navigator.clipboard.writeText(t); }catch(e){ try{var i=document.createElement("input");i.value=t;document.body.appendChild(i);i.select();document.execCommand("copy");i.remove();}catch(e2){} }
+    if(btn){ var o=btn.getAttribute("data-label")||btn.textContent; btn.setAttribute("data-label",o); btn.textContent="✅ 복사됐어요! 주소창에 붙여넣기(Ctrl+V) 후 Enter"; setTimeout(function(){btn.textContent=o;},2800); }
+  };
+  window.addEventListener("message",function(ev){ if(ev&&ev.data&&ev.data.__ssGrabInstalled) markDone(); });
+  // ★유저스크립트가 표식을 '언제' 남기든(느린 네트워크로 늦게 실행돼도) 즉시 감지 —
+  //   유한 폴링만 쓰면 그 시간 지나 표식이 생길 때 영영 못 잡는다(2026-07-21 고객 실사고).
+  try{
+    new MutationObserver(function(){ if(detected()) markDone(); })
+      .observe(document.documentElement,{attributes:true,attributeFilter:["data-ss-grab-installed"]});
+  }catch(e){}
+  var polls=0;
+  var iv=setInterval(function(){
+    if(detected()){ markDone(); clearInterval(iv); return; }
+    polls++;
+    // 12틱(약6초) 뒤 '확인하기'를 노출하되, 폴링은 멈추지 않는다(늦은 설치도 계속 감지).
+    if(polls===12){ try{ if(sessionStorage.getItem("ss_did2")==="1"){ var rc=document.getElementById("recheck"); if(rc) rc.style.display=""; } }catch(e){} }
+    if(polls>=300){ clearInterval(iv); }   // 약150초 상한(무한 타이머 방지)
+  },500);
+  if(detected()) markDone();
+  document.addEventListener("visibilitychange",function(){
+    try{
+      if(document.visibilityState==="visible" && !detected()
+         && sessionStorage.getItem("ss_did2")==="1"
+         && sessionStorage.getItem("ss_reloaded")!=="1"){
+        sessionStorage.setItem("ss_reloaded","1");
+        location.reload();
+      }
+    }catch(e){}
+  });
+  try{ var bm=document.getElementById("bm"); if(bm) bm.setAttribute("href", atob("__BM64__")); }catch(e){}
+})();
+</script>
+</body></html>"""
+
+
+# 사진 설치 매뉴얼(실제 크롬 스크린샷 4장, 화살표는 캡처에 이미 포함). 이미지는 base64로
+# 페이지에 직접 박는다 — /grab은 로그인 전에 열리므로 별도 이미지 URL은 인증에 막힐 수 있다.
+# ★3·4단계(개발자 모드·사용자 스크립트 허용)를 크게 강조: 이걸 안 켜면 설치해도 안 돈다
+# (2026-07-21 고객 실사고 — 텀퍼몽키·스크립트는 깔았는데 이 토글을 몰라서 📥가 안 떴음).
+_GRAB_GUIDE_TEMPLATE = """<div class="guide">
+    <div class="ghead">📸 사진 보고 그대로 따라 하기 — 이 4단계면 끝</div>
+    <div class="gsub">아래 4장은 실제 크롬 화면이에요. 사진 속 빨간 화살표가 가리키는 곳을 누르면 됩니다.</div>
+
+    <div class="gstep"><div class="gnum">1</div><div class="gtitle">‘텀퍼몽키’ 설치 — 아래 파란 버튼을 누르면 새 탭이 열려요 → 파란 <b>“Chrome에 추가”</b></div></div>
+    <a class="gbtn" href="__TM_URL__" target="_blank" rel="noopener" onclick="ssMark(1)">① 텀퍼몽키 설치 페이지 열기 ↗</a>
+    <img class="gimg" src="__IMG1__" alt="1단계 텀퍼몽키 추가">
+
+    <div class="gstep"><div class="gnum">2</div><div class="gtitle">담기 스크립트 설치 — 아래 버튼을 누르면 설치창이 떠요 → <b>“설치”</b></div></div>
+    <a class="gbtn" href="/grab.user.js" target="_blank" rel="noopener" onclick="ssMark(2)">② 담기 스크립트 설치 열기 ↗</a>
+    <img class="gimg" src="__IMG2__" alt="2단계 스크립트 설치">
+
+    <div class="gstep warn"><div class="gnum">3</div><div class="gtitle">⚠️ 아래 <b>“주소 복사”</b> 누르고 → 크롬 주소창에 <b>붙여넣기(Ctrl+V) + Enter</b> → 오른쪽 위 <b>“개발자 모드”</b> 스위치 켜기</div></div>
+    <button class="gcopy" onclick="ssCopy('chrome://extensions', this)">📋 chrome://extensions 주소 복사</button>
+    <img class="gimg" src="__IMG3__" alt="3단계 개발자 모드 켜기">
+
+    <div class="gstep warn"><div class="gnum">4</div><div class="gtitle">⚠️ <b>가장 중요!</b> 아래 <b>“주소 복사”</b> 누르고 → 주소창에 <b>붙여넣기 + Enter</b> → 텀퍼몽키 설정에서 <b>“사용자 스크립트 허용”</b> 켜기 → 크롬을 껐다 켜기</div></div>
+    <button class="gcopy" onclick="ssCopy('chrome://extensions/?id=dhdgffkkebhmkfjojejmpbldmpobfkfo', this)">📋 텀퍼몽키 설정 주소 복사</button>
+    <img class="gimg" src="__IMG4__" alt="4단계 사용자 스크립트 허용">
+
+    <div class="gwarnbox">❗ <b>3·4번을 안 켜면</b> 텀퍼몽키와 스크립트를 다 깔아도 <b>아무것도 안 됩니다.</b> 여기가 제일 많이 놓치는 부분이에요.</div>
+    <div class="gdone">✅ 4단계를 마치면 유튜브·샤오홍슈 영상에 <b>📥 담기</b> 버튼이 자동으로 떠요.</div>
+  </div>"""
+
+_grab_guide_cache = None
+
+
+def _grab_guide_html():
+    """설치 매뉴얼 사진 4장을 base64 data URI로 박은 가이드 HTML(1회 계산 후 캐시)."""
+    global _grab_guide_cache
+    if _grab_guide_cache is not None:
+        return _grab_guide_cache
+    gdir = Path(__file__).parent / "static" / "guide"
+
+    def _uri(name):
+        try:
+            return "data:image/png;base64," + base64.b64encode((gdir / name).read_bytes()).decode()
+        except Exception:
+            return ""
+
+    _grab_guide_cache = (_GRAB_GUIDE_TEMPLATE
+                         .replace("__IMG1__", _uri("step1_tampermonkey.png"))
+                         .replace("__IMG2__", _uri("step2_script.png"))
+                         .replace("__IMG3__", _uri("step3_devmode.png"))
+                         .replace("__IMG4__", _uri("step4_userscripts.png")))
+    return _grab_guide_cache
+
+
 @app.get("/grab", include_in_schema=False)
 def grab_setup(request: Request):
-    """원클릭 담기 설치 안내(공개). '📥 담기' 버튼을 북마크바로 드래그하면 끝(확장 설치 불필요)."""
+    """원클릭 담기 설치 안내(공개). 사진 4단계 매뉴얼 + 자가감지 '신호등'(설치 끝나면 유저스크립트
+    비컨을 감지해 자동으로 '완료'로 바꾼다). 유저스크립트가 안 맞는 환경엔 북마클릿 폴백을 제공."""
     base = (PUBLIC_BASE_URL or "").rstrip("/")
     bm64 = base64.b64encode(_GRAB_BOOKMARKLET.replace("__BASE__", base).encode()).decode()
-    return HTMLResponse(f"""<!doctype html><meta charset="utf-8"><title>원클릭 담기 설치</title>
-<body style="font-family:system-ui,sans-serif;max-width:640px;margin:36px auto;padding:0 18px;line-height:1.7;color:#222">
-<h2>📥 원클릭 담기</h2>
-<p>네이티브 검색(무료·무제한)으로 보다가, 마음에 드는 영상을 <b>클릭 한 번</b>으로 모음집에 담는 기능입니다. 두 가지 방법 중 편한 걸 고르세요.</p>
-
-<div style="background:#eafaf0;border:2px solid #1f9d55;border-radius:12px;padding:18px;margin:16px 0">
-  <div style="font-weight:800;color:#1f7a44;font-size:16px;margin-bottom:6px">✅ 방법 1 (추천·제일 쉬움) — 버튼이 영상 위에 저절로 떠요</div>
-  <div style="font-size:14px;color:#555;margin-bottom:10px">Tampermonkey에 설치하면, 유튜브·틱톡·샤오홍슈·도우인 영상을 볼 때 오른쪽 아래에 <b>📥 담기</b> 버튼이 자동으로 떠요. 드래그도, 북마크도 필요 없이 <b>그 버튼만 누르면 끝</b>입니다.</div>
-  <ol style="margin:0 0 6px 18px;color:#444;font-size:14px">
-    <li>크롬에 <b>Tampermonkey</b> 확장이 없으면 먼저 설치(웹스토어에서 "Tampermonkey").</li>
-    <li>아래 링크를 누르면 Tampermonkey 설치창이 떠요 → <b>설치</b> 클릭.<br>
-        <a href="/grab.user.js" style="display:inline-block;margin-top:6px;padding:10px 18px;background:#1f9d55;color:#fff;border-radius:9px;text-decoration:none;font-weight:800">📥 담기 버튼 설치하기</a></li>
-    <li>이제 틱톡·샤오홍슈에서 영상을 열면 오른쪽 아래 <b>📥 담기</b> 버튼을 누르기만 하면 담김.</li>
-  </ol>
-</div>
-
-<details style="margin:12px 0">
-<summary style="cursor:pointer;color:#666;font-weight:700">방법 2 — 설치 없이 북마클릿으로 (조금 번거로움)</summary>
-<div style="background:#fff7e6;border:1px solid #f0c36d;border-radius:12px;padding:18px;margin:10px 0">
-  <div style="font-weight:800;margin-bottom:4px;color:#a86">① 아래 파란 버튼을 <span style="color:#c0392b">누르지 말고</span>, 마우스로 <u>북마크바에 끌어다(드래그)</u> 놓으세요</div>
-  <div style="font-size:13px;color:#888;margin-bottom:10px">북마크바가 안 보이면 <b>Ctrl+Shift+B</b>로 켜세요. 드래그 = 버튼을 마우스로 꾹 눌러 위쪽 북마크바까지 끌고 가서 놓기.</div>
-  <a id="bm" draggable="true" href="#" title="이 버튼을 위쪽 북마크바로 드래그하세요"
-     style="display:inline-block;padding:12px 22px;background:#1f6feb;color:#fff;border-radius:10px;text-decoration:none;font-weight:800;cursor:grab;font-size:16px">📥 담기</a>
-  <span style="color:#888;font-size:13px;margin-left:8px">↖ 이걸 <b>끌어서</b> 북마크바에 놓기</span>
-</div>
-<div style="font-weight:700">② 유튜브·틱톡·샤오홍슈·도우인에서 <u>영상을 열고</u>(검색결과 그리드 말고 영상 클릭해 들어간 뒤), 방금 만든 북마크를 누르면 끝</div>
-</div>
-</details>
-<p style="color:#666;margin-top:14px">담긴 영상은 <a href="/collection">🎬 모음집</a>에서 확인 · 실제 다운로드는 제작소에서 자동(무료).</p>
-<p style="color:#999;font-size:13px">※ 검색 결과 <b>그리드</b>가 아니라 <b>영상 상세 페이지</b>에서 눌러야 그 영상이 담깁니다. · shoppingshorts에 로그인된 상태여야 해요.</p>
-<script>document.getElementById("bm").setAttribute("href", atob("{bm64}"));</script>
-</body>""")
+    # Tampermonkey 크롬 웹스토어 상세(딥링크=검색 안 시킴). 엣지도 크롬스토어에서 설치 가능.
+    tm_url = "https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo"
+    html = (_GRAB_SETUP_HTML
+            .replace("__GUIDE_SECTION__", _grab_guide_html())
+            .replace("__TM_URL__", tm_url).replace("__BM64__", bm64))
+    return HTMLResponse(html)
 
 
 # ── 영상제작 위저드(produce) ─────────────────────────────────
@@ -4021,10 +4280,14 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
     global_incr_and_alert("render")
+    # 장면 우선 대본 모드(2026-07-20, Task7): produce.html "우리 시스템으로 믹스"는 항상 이 값을
+    # true로 보낸다. mix_pipeline._plan_and_tts가 build_scene_first_plan으로 후보 n개를 만들고
+    # 추천 후보를 자동 세팅한다(candidates=[]이면 기존 build_edit_plan으로 조용히 폴백).
+    scene_first = bool(body.get("scene_first", False))
     job_id = uuid.uuid4().hex[:12]
     Store(DB_PATH).create_mix_job(job_id, urls, target, "free",
                                   subtitle_removal=subtitle_removal, given_script=script,
-                                  script_structure=script_structure,
+                                  script_structure=script_structure, scene_first=scene_first,
                                   customer_id=cid, render_charge_day=_today_utc())
     background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True, "job_id": job_id}
@@ -4882,6 +5145,98 @@ def api_fx_file(job_id: str):
     return FileResponse(job["fx_path"])
 
 
+# ── 부품은행(Pattern Bank) 큐레이션 API — Phase 0 (2026-07-21) ──────────────
+# 대본을 8버킷 부품으로 분해·큐레이션한다. 백엔드 로직은 store.py·pattern_bank.py에
+# 완성돼 있고 여기선 얇은 HTTP 래퍼만 얹는다(기존 흐름 무편집).
+
+@app.post("/api/pattern/ingest")
+def api_pattern_ingest(body: dict):
+    """대본 1건을 분해해 부품은행에 담는다. body: {full_text, product_category?}.
+    실 호출은 키풀(Gemini)을 쓴다 — 키가 없거나 추출 실패면 added=0으로도 200을 준다."""
+    full_text = (body.get("full_text") or "").strip()
+    if not full_text:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "full_text 필요"})
+    product_category = (body.get("product_category") or "").strip() or None
+    res = pattern_bank.ingest_script(
+        Store(DB_PATH), full_text, product_category=product_category)
+    return {"ok": True, **res}
+
+
+@app.get("/api/pattern/items")
+def api_pattern_items(bucket: str = None, status: str = None,
+                      order: str = "perf", is_negative: int = None):
+    """부품 목록. bucket/status로 필터, order=perf|freq|recent, is_negative(0/1)."""
+    items = Store(DB_PATH).list_pattern_items(
+        bucket=bucket or None, status=status or None,
+        is_negative=is_negative, order_by=order or "perf")
+    return {"ok": True, "items": items}
+
+
+@app.post("/api/pattern/item/status")
+def api_pattern_item_status(body: dict):
+    """부품 상태 변경(approve/reject/pending). body: {id, status}."""
+    item_id = body.get("id")
+    status = (body.get("status") or "").strip()
+    if item_id is None or not status:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "id·status 필요"})
+    Store(DB_PATH).set_pattern_item_status(item_id, status)
+    return {"ok": True}
+
+
+@app.post("/api/pattern/item/edit")
+def api_pattern_item_edit(body: dict):
+    """부품 문구·태그·메모 교정. body: {id, text?, tags?, note?}. None인 필드는 유지."""
+    item_id = body.get("id")
+    if item_id is None:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "id 필요"})
+    Store(DB_PATH).edit_pattern_item(
+        item_id, text=body.get("text"), tags=body.get("tags"), note=body.get("note"))
+    return {"ok": True}
+
+
+@app.get("/api/pattern/buckets")
+def api_pattern_buckets():
+    """{bucket: {pending, approved, rejected}} 카운트(is_negative=0만)."""
+    return {"ok": True, "counts": Store(DB_PATH).pattern_bucket_counts()}
+
+
+@app.get("/api/pattern/spines")
+def api_pattern_spines(status: str = None):
+    """매크로 스파인 목록. status로 필터."""
+    return {"ok": True, "spines": Store(DB_PATH).list_spines(status=status or None)}
+
+
+@app.post("/api/pattern/spine/status")
+def api_pattern_spine_status(body: dict):
+    """스파인 승인/기각. body: {id, status}. 승격게이트(source_count>=3 AND approved)의
+    '사람 승인' 절반 — 야간배치는 pending만 만들고 여기서만 approved가 된다."""
+    spine_id = body.get("id")
+    status = (body.get("status") or "").strip()
+    if spine_id is None or not status:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "id·status 필요"})
+    Store(DB_PATH).set_spine_status(spine_id, status)
+    return {"ok": True}
+
+
+@app.post("/api/pattern/spine")
+def api_pattern_spine_add(body: dict):
+    """매크로 스파인 수동 시드. body: {name, situation_type?, character_roles?,
+    beat_chain?, emotion_arc?, appeal?, fit_categories?, status?}."""
+    name = (body.get("name") or "").strip()
+    if not name:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "name 필요"})
+    sid = Store(DB_PATH).add_spine(
+        name,
+        situation_type=body.get("situation_type"),
+        character_roles=body.get("character_roles"),
+        beat_chain=body.get("beat_chain"),
+        emotion_arc=body.get("emotion_arc"),
+        appeal=body.get("appeal"),
+        fit_categories=body.get("fit_categories"),
+        status=(body.get("status") or "pending"))
+    return {"ok": True, "id": sid}
+
+
 # 정적 프론트 (마운트는 맨 마지막)
 _STATIC = Path(__file__).parent / "static"
 
@@ -4891,7 +5246,7 @@ _STATIC = Path(__file__).parent / "static"
 # 반복됨(2026-07-14 역할배정·사이드바 등 실사고) → 매 요청 서버 재검증 강제.
 _NOCACHE = {"Cache-Control": "no-cache, must-revalidate"}
 for _pg in ("discover", "find", "library", "mix", "outreach", "produce", "collection",
-            "scene_library"):
+            "scene_library", "pattern_bank"):
     app.add_api_route(
         f"/{_pg}",
         (lambda n=_pg: FileResponse(_STATIC / f"{n}.html", media_type="text/html",

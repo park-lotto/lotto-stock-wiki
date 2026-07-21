@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_사업 효율성 제고.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "류형근",
+    "report_date": "2026.06.09",
+    "stocks": [
+      {
+        "name": "하나마이크론",
+        "code": "067310",
+        "rating": "BUY",
+        "rating_changed": "신규",
+        "tp_new": 57000,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 Earning Surprise 전망. 분기 최대 영업이익 경신할 것. 영업이익 전망: 대신증권 962억원, 영업이익 730억원 (본문 내 영업이익 수치 기재오류로 판단되어 원문 인용)",
+        "estimate_revision": "2Q26 실적은 이를 증명하는 변곡점이 될 것이라는 판단",
+        "next_catalyst": "2Q26부터 본격화될 이익 체질의 개선, Advanced Packaging 사업을 통한 고부가 제품군 경쟁력 확대",
+        "thesis": [
+          "1) 하나마이크론 VINA 판가 정책 변화로 인한 수익성 안정화",
+          "2) 본사 비메모리 테스트 물량 확대 및 메모리 제품 다각화",
+          "3) 브라질 법인 웨이퍼 판가 인상 및 고객 확대"
+        ],
+        "valuation_basis": "Target P/E 21배 적용 (2023-2026년 평균 12m Fwd P/E에서 1SD 할증)",
+        "risk": "낮은 설비투자의 효율성 및 투하 자본 대비 낮은 수익성으로 인한 재무 부담 우려",
+        "supply_comment": "SK하이닉스의 Fab Space 효율화 전략 및 Legacy 반도체 외주 확대",
+        "quote": "당사의 경우, 하나마이크론이 지난날의 약점을 이겨낼 수 있을 것으로 전망. 변화된 이익의 질을 보여줄 것이며, 2Q26 실적은 이를 증명하는 변곡점이 될 것이라는 판단"
+      }
+    ]
+  }
+}

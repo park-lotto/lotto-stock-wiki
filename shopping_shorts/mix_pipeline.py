@@ -77,16 +77,25 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     return natural
 
 
-def _synthesize_beats(beats, tts_dir, *, voice):
+def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False):
     """비트별로 synthesize_line 호출. beat['tts_path']를 채운다.
     연속성(previous_text/next_text)은 인접 비트의 '원문'(naturalize 전) narration을 쓴다
     — naturalize된 텍스트(오디오 태그·추임새 포함)를 연속성으로 넘기면 ElevenLabs가
-    태그를 발화 텍스트로 오인할 수 있어서다."""
+    태그를 발화 텍스트로 오인할 수 있어서다.
+
+    skip_existing=True: 이미 tts_path가 있는 비트는 재합성하지 않는다. 렌더 경로
+    (run_preview/run_render)가 조립 직전 TTS를 '보장'하는 방어심층용 — 추천 후보(합성 완료,
+    tts_path 있음)는 0원, 갈아끼운 후보(tts_path 키 자체가 없음)만 그 자리에서 합성한다.
+    ★파일 실재가 아니라 tts_path '존재'로 판단한다 — 하류 tts_paths도 truthiness로만 보므로
+    존재하되 파일이 없는 경우의 처리(별개 관심사)를 이 버그 수정이 바꾸지 않게 한다.
+    """
     tts_dir = Path(tts_dir)
     tts_dir.mkdir(parents=True, exist_ok=True)
     total = len(beats)
     for i, beat in enumerate(beats):
         out = tts_dir / f"beat_{beat['beat_idx']}.mp3"
+        if skip_existing and beat.get("tts_path"):
+            continue
         synthesize_line(
             beat["narration"], out, voice=voice, beat_role=beat.get("role"),
             beat_index=i, beat_total=total,
@@ -235,7 +244,15 @@ def run_mix_job(job_id, db_path, work_root):
         source_scripts = list(extracts.values())
         _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
                       job["structure"], None, work, given_script=job.get("given_script"),
-                      voice=job.get("voice"), customer_id=job.get("customer_id", 0))
+                      voice=job.get("voice"), customer_id=job.get("customer_id", 0),
+                      scene_first=job.get("scene_first", False),
+                      reference_text=job.get("given_script") or "",
+                      # 핑퐁(대본↔장면 왕복 행위매칭): 전역 설정으로 on/off(기본 off·회귀0).
+                      # 스키마 컬럼 없이 한 스위치로 켠다 — store.set_setting('ping_pong_enabled','1').
+                      ping_pong=(store.get_setting("ping_pong_enabled", "") == "1"),
+                      # 백본 선정: URL로 플랫폼 판별(인스타/유튜브만 백본, 샤오홍슈 서브) + 사장님 지정.
+                      backbone_meta=_backbone_meta_from_job(job, extracts),
+                      backbone_forced=job.get("backbone_main") or None)
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
@@ -253,16 +270,52 @@ def run_mix_job(job_id, db_path, work_root):
                 traceback.print_exc(file=sys.stderr)
 
 
+def _backbone_meta_from_job(job, extracts):
+    """job의 urls_json + extracts 키(s0/s1/s2 순서)로 백본 선정용 meta 구성.
+    → {video_id: {'platform': ...}}. 백본=인스타/유튜브 규칙이 실제로 걸리게 한다."""
+    import json as _json
+    from shopping_shorts import backbone as _bb
+    try:
+        urls = _json.loads(job.get("urls_json") or "[]")
+    except Exception:
+        urls = []
+    meta = {}
+    for i, key in enumerate(extracts.keys()):
+        url = urls[i] if i < len(urls) else ""
+        meta[key] = {"platform": _bb.platform_of(url)}
+    return meta
+
+
 def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, video_type, work,
-                  given_script=None, voice=None, customer_id=0):
+                  given_script=None, voice=None, customer_id=0,
+                  scene_first=False, reference_text="", ping_pong=False,
+                  backbone_meta=None, backbone_forced=None):
     """EDL 생성(3) + 비트별 TTS(4) → edit_plan 저장 + ready_for_review.
     run_mix_job(자동판별, video_type=None)과 retype_mix_job(사용자 선택 유형)이 공유.
     given_script: 있으면 확정 대본을 그대로 비트로 쪼개 영상만 매칭(영상제작 2단계).
-    voice: job의 voice 스냅샷(선택된 보이스 프리셋) — 있으면 비트별 TTS에 적용."""
+    voice: job의 voice 스냅샷(선택된 보이스 프리셋) — 있으면 비트별 TTS에 적용.
+    scene_first: 장면 우선 대본 모드(2026-07-20, Task6) — build_scene_first_plan으로 후보 n개를
+        생성해 store에 저장하고, 추천(recommended) 후보의 plan을 그대로 쓴다. 후보가 하나도 없으면
+        (grounding 전멸 등) 기존 build_edit_plan으로 폴백한다.
+    reference_text: scene_first일 때 스타일·구조를 계승할 레퍼런스 대본(보통 given_script 재활용)."""
     # 3) 통합 EDL
     store.update_mix_job(job_id, status="planning")
-    plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
-                           video_type=video_type, given_script=given_script)
+    if scene_first:
+        from shopping_shorts.edit_plan import build_scene_first_plan
+        sf = build_scene_first_plan(source_scripts, reference_text, target_seconds,
+                                    video_type=video_type, ping_pong=ping_pong,
+                                    backbone_meta=backbone_meta, backbone_forced=backbone_forced)
+        if sf["candidates"]:
+            store.set_mix_candidates(job_id, sf["candidates"])
+            rec = next((cand for cand in sf["candidates"] if cand["recommended"]),
+                       sf["candidates"][0])
+            plan = rec["plan"]
+        else:
+            plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
+                                   video_type=video_type, given_script=given_script)
+    else:
+        plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
+                               video_type=video_type, given_script=given_script)
     # 빈 EDL(추출 전량 실패 또는 파이프라인 중간 전용풀 소진)을 ready_for_review로
     # 오보고하지 않는다 — 성공처럼 보이는 빈 리뷰화면 대신 즉시 실패로 정상 종료
     # (2026-07-12 최종 전체리뷰 Important).
@@ -463,6 +516,12 @@ def run_preview(job_id, db_path, work_root):
         work.mkdir(parents=True, exist_ok=True)
         store.update_mix_job(job_id, preview_status="rendering", preview_error=None)
         plan = job["edit_plan"]
+        # ★TTS 보장(2026-07-21 실사고): 후보 선택(/api/mix/candidate)이 TTS 없는 후보 plan을
+        #   edit_plan에 꽂으면 tts_paths가 비어 video_assemble이 "렌더할 비트가 없습니다"로 죽었다.
+        #   조립 직전 스스로 낫는다 — 이미 있는 비트는 skip(재과금 0), 빠진 비트만 합성.
+        #   합성 결과(tts_path)를 edit_plan에 되박아 최종 렌더가 재합성 없이 재사용하게 한다.
+        _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True)
+        store.update_mix_job(job_id, edit_plan=plan)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         source_video_paths = _resolve_sources(job, work)
         out_path = work / "preview.mp4"
@@ -492,6 +551,10 @@ def run_render(job_id, db_path, work_root):
     try:
         store.update_mix_job(job_id, status="rendering")
         plan = job["edit_plan"]
+        # ★TTS 보장(2026-07-21) — run_preview와 같은 방어심층. 미리보기를 건너뛰고 바로 렌더에
+        #   와도(또는 TTS 없는 후보가 edit_plan에 있어도) 조립 직전 스스로 낫는다. 이미 있으면 skip.
+        _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True)
+        store.update_mix_job(job_id, edit_plan=plan)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         source_video_paths = _resolve_sources(job, work)
         out_path = work / "final.mp4"

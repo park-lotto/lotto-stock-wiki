@@ -1,0 +1,11 @@
+{"ts": "2026-07-20T05:24:59.892067+00:00", "event": "plan_created", "brief": "장면스파인 페이즈1: 대본-화면 싱크", "count": 5}
+{"ts": "2026-07-20T07:02:25.448685+00:00", "event": "story_started", "id": "G001", "title": "④fit정직화"}
+{"ts": "2026-07-20T07:02:25.553791+00:00", "event": "checkpoint", "id": "G001", "status": "complete", "evidence": "라이브(main 418c9a5dd), 개별+whole-branch 리뷰통과, 서버 실관측 5->18조각", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-07-20T07:02:25.659331+00:00", "event": "story_started", "id": "G002", "title": "⓪분석세분화"}
+{"ts": "2026-07-20T07:02:25.771673+00:00", "event": "checkpoint", "id": "G002", "status": "complete", "evidence": "라이브(main 418c9a5dd), 개별+whole-branch 리뷰통과, 서버 실관측 5->18조각", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-07-20T07:02:25.873223+00:00", "event": "story_started", "id": "G003", "title": "②dedup서브슬라이스"}
+{"ts": "2026-07-20T07:02:25.973867+00:00", "event": "checkpoint", "id": "G003", "status": "complete", "evidence": "라이브(main 418c9a5dd), 개별+whole-branch 리뷰통과, 서버 실관측 5->18조각", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-07-20T07:02:26.077203+00:00", "event": "story_started", "id": "G004", "title": "①visual_verb앵커"}
+{"ts": "2026-07-20T07:02:26.177237+00:00", "event": "checkpoint", "id": "G004", "status": "complete", "evidence": "라이브(main 418c9a5dd), 개별+whole-branch 리뷰통과, 서버 실관측 5->18조각", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-07-20T07:02:26.281551+00:00", "event": "story_started", "id": "G005", "title": "③리컨사일"}
+{"ts": "2026-07-20T07:02:54.253239+00:00", "event": "checkpoint", "id": "G005", "status": "complete", "evidence": "라이브 main 418c9a5dd, 리뷰통과, 서버 실관측 5→18조각", "verify_cmd": "서버 실키 extract_script(s1 실영상) + finish 게이트 pytest", "verify_evidence": "s1영상 5→18조각(scene_cut 18경계 반영). finish 게이트 통과(baseline 8 그대로). main 418c9a5dd 배포"}
