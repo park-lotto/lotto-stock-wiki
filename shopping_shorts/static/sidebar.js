@@ -32,9 +32,11 @@
     // 브랜드 텍스트만 민트 그라디언트(이모지는 제외 — text-fill:transparent가 이모지 글리프까지 비운다)
     // + 은은한 민트 글로우로 강조(drop-shadow는 clip:text에서도 글자 외곽에 먹는다).
     ".ss-brand{background:var(--grad,linear-gradient(135deg,#6ff0d6,#1f9e7a));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;filter:drop-shadow(0 0 12px rgba(55,224,189,.35))}" +
-    ".ss-group{margin-bottom:18px}" +
-    ".ss-label{font-size:11px;color:var(--sel-fg,#6ff0d6);text-transform:uppercase;margin-bottom:8px}" +
-    ".ss-item{padding:10px 12px;border-radius:8px;font-size:14px;color:var(--txt,#e6edf3);cursor:pointer;margin-bottom:2px}" +
+    // 카테고리 = 박스로 시각 구분 + 크게(사장님 2026-07-21). 그룹을 inset 카드로 감싸고
+    // 라벨은 카드 헤더처럼, 항목은 15px·굵게로 키워 눈에 잘 띄고 누르기 쉽게.
+    ".ss-group{margin-bottom:12px;background:var(--inset,#0c1412);border:1px solid var(--line,#1e2735);border-radius:12px;padding:8px 8px 6px}" +
+    ".ss-label{font-size:12px;color:var(--sel-fg,#6ff0d6);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin:2px 6px 8px}" +
+    ".ss-item{padding:11px 12px;border-radius:9px;font-size:15px;font-weight:600;color:var(--txt,#e6edf3);cursor:pointer;margin-bottom:3px}" +
     ".ss-item.ss-disabled{cursor:default;opacity:.45}" +
     // 선택/활성 표면 = 민트 토큰(--sel-bg/--sel-fg). 아직 토큰이 없는 페이지도 폴백으로 민트가 뜬다.
     ".ss-item.active{background:var(--sel-bg,linear-gradient(90deg,#123a30,#0c221c));color:var(--sel-fg,#6ff0d6)}" +
@@ -61,7 +63,7 @@
       ".ss-nav{width:100%;border-right:none;border-bottom:1px solid var(--line,#1e2735);display:flex;gap:6px;" +
         "overflow-x:auto;align-items:center;white-space:nowrap;padding:10px 12px}" +
       ".ss-nav h1{margin:0 8px 0 0;flex-shrink:0;font-size:19px}" +
-      ".ss-group{margin:0;display:flex;gap:6px;align-items:center}" +
+      ".ss-group{margin:0;padding:0;background:none;border:none;display:flex;gap:6px;align-items:center}" +
       ".ss-label{display:none}" +
       ".ss-item{margin:0;padding:6px 10px;flex-shrink:0;font-size:12px}}";
   var style = document.createElement("style");
@@ -79,7 +81,8 @@
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
     });
   }
-  var html = "<h1>🛍️ <span class=\"ss-brand\">숏템박스</span></h1>";
+  // 로고 클릭 = 홈(/)으로(사장님 2026-07-21) — 커서·title로 클릭 가능함을 알린다.
+  var html = "<h1 onclick=\"location.href='/'\" style=\"cursor:pointer\" title=\"홈으로\">🛍️ <span class=\"ss-brand\">숏템박스</span></h1>";
   NAV.forEach(function (g) {
     html += '<div class="ss-group"><div class="ss-label">' + g.label + "</div>";
     g.items.forEach(function (it) {
