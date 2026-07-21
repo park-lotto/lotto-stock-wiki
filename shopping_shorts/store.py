@@ -1827,6 +1827,63 @@ class Store:
             c.execute("UPDATE spine SET status=?, updated_at=? WHERE id=?",
                       (status, now, spine_id))
 
+    # --- Phase1: perf/spine 조회·저장 배관 ---
+    def list_pattern_sources(self, category_source=None, only_missing_spine=False, limit=1000):
+        """부품 소스 행 목록. category_source는 str 하나 또는 (튜플/리스트)로 IN 필터(R4).
+        perf/structure는 JSON 디코드해서 준다."""
+        where, params = [], []
+        if category_source is not None:
+            cs = (category_source,) if isinstance(category_source, str) else tuple(category_source)
+            where.append("category_source IN (%s)" % ",".join("?" * len(cs)))
+            params.extend(cs)
+        if only_missing_spine:
+            where.append("spine_id IS NULL")
+        sql = ("SELECT id, source, url, full_text, product_category, category_source, "
+               "perf_json, structure_json, spine_id, is_winner FROM pattern_source")
+        if where:
+            sql += " WHERE " + " AND ".join(where)
+        sql += " ORDER BY id DESC LIMIT ?"
+        params.append(limit)
+        with self._conn() as c:
+            rows = c.execute(sql, params).fetchall()
+        return [
+            {"id": r[0], "source": r[1], "url": r[2], "full_text": r[3],
+             "product_category": r[4], "category_source": r[5],
+             "perf": json.loads(r[6]) if r[6] else None,
+             "structure": json.loads(r[7]) if r[7] else None,
+             "spine_id": r[8], "is_winner": r[9]}
+            for r in rows
+        ]
+
+    def set_pattern_source_perf(self, source_id, perf):
+        with self._conn() as c:
+            c.execute("UPDATE pattern_source SET perf_json=? WHERE id=?",
+                      (json.dumps(perf, ensure_ascii=False) if perf is not None else None, source_id))
+
+    def set_pattern_source_spine(self, source_id, spine_id):
+        with self._conn() as c:
+            c.execute("UPDATE pattern_source SET spine_id=? WHERE id=?", (spine_id, source_id))
+
+    def pattern_source_url_exists(self, url):
+        """자동흡수 dedup — 빈 url은 항상 False(존재 안 함으로 취급)."""
+        if not url:
+            return False
+        with self._conn() as c:
+            return c.execute("SELECT 1 FROM pattern_source WHERE url=? LIMIT 1",
+                             (url,)).fetchone() is not None
+
+    def set_pattern_item_perf(self, item_id, perf_score):
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute("UPDATE pattern_item SET perf_score=?, updated_at=? WHERE id=?",
+                      (float(perf_score), now, item_id))
+
+    def update_spine_stats(self, spine_id, source_count, perf_score):
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute("UPDATE spine SET source_count=?, perf_score=?, updated_at=? WHERE id=?",
+                      (int(source_count), float(perf_score), now, spine_id))
+
     def pattern_bucket_counts(self):
         """{bucket: {pending, approved, rejected}} — is_negative=0만 집계.
         8버킷 전부를 0으로 초기화해 반환(UI 탭이 빈 버킷도 그려야 하므로)."""
