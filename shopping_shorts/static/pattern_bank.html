@@ -199,16 +199,35 @@ async function loadSpines(){
   let spines = [];
   try{ spines = (await jget("/api/pattern/spines")).spines || []; }catch(e){}
   if(!spines.length){ list.innerHTML = `<div class="empty">매크로 스파인이 없습니다.</div>`; return; }
-  list.innerHTML = spines.map(s=>`<div class="spine">
-    <div class="name">${esc(s.name)}</div>
+  list.innerHTML = spines.map(s=>{
+    const sc = s.source_count||0;
+    const perf = Number(s.perf_score||0).toFixed(2);
+    // 승격게이트: source_count>=3 AND approved 여야 생성에 쓰임
+    let gate, gtxt;
+    if(s.status==="approved" && sc>=3){ gate="🟢"; gtxt="생성 사용 가능"; }
+    else if(sc>=3){ gate="🟡"; gtxt="승인 대기 (소스 충분)"; }
+    else { gate="🔴"; gtxt=`소스 ${sc}/3 — 더 쌓여야 함`; }
+    return `<div class="spine">
+    <div class="name">${gate} ${esc(s.name)}</div>
     <div class="m">
       ${s.situation_type?`상황: <b>${esc(s.situation_type)}</b> · `:""}
       ${s.emotion_arc?`감정선: ${esc(s.emotion_arc)} · `:""}
       ${s.appeal?`소구: ${esc(s.appeal)} · `:""}
-      상태: ${esc(s.status)} · 소스 ${s.source_count}
+      상태: <b>${esc(s.status)}</b> · 소스 <b>${sc}</b> · 성과 <b>${perf}</b> · <span style="color:var(--gold)">${gtxt}</span>
       ${Array.isArray(s.beat_chain)&&s.beat_chain.length?`<br>비트: ${esc(s.beat_chain.join(" → "))}`:""}
     </div>
-  </div>`).join("");
+    <div style="margin-top:8px;display:flex;gap:6px">
+      ${s.status!=="approved"?`<button class="primary" onclick="setSpineStatus(${s.id},'approved')">승인</button>`:""}
+      ${s.status!=="rejected"?`<button onclick="setSpineStatus(${s.id},'rejected')">기각</button>`:""}
+      ${s.status!=="pending"?`<button onclick="setSpineStatus(${s.id},'pending')">대기로</button>`:""}
+    </div>
+  </div>`;}).join("");
+}
+
+async function setSpineStatus(id, status){
+  const r = await jpost("/api/pattern/spine/status", {id, status});
+  if(r.ok){ toast(status==="approved"?"스파인 승인됨":status==="rejected"?"기각됨":"대기로"); loadSpines(); }
+  else toast(r.error||"실패");
 }
 
 async function doIngest(){
