@@ -3346,13 +3346,46 @@ function playAllBeats(){
 }
 
 // ── 8단계 최종검수·렌더 ──────────────
-function refreshFinal(){
+async function refreshFinal(){
   const s=document.getElementById('finalSummary');
   if(!s) return;
   s.innerHTML = MIX_JOB
     ? `대본 ${lenText(STATE.script)} · 자막제거 ${STATE.subtitleRemoval?'ON':'OFF'} · job ${esc(MIX_JOB)}`
     : '⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.';
   renderExport({rendered:false});   // 내보내기(ZIP·개별)는 렌더 전에도 가능 — 완성 MP4 버튼만 렌더 후 붙는다
+  // ★이미 렌더된 최종 영상 되살리기(2026-07-21 사장님 제보: 다른 페이지 갔다 오면 영상이 사라짐).
+  //   완성 MP4는 서버 job(video_path)에 그대로 남는데, refreshFinal이 렌더상태를 안 봐서 화면에서만
+  //   비었었다. 여기서 상태를 조회해 done이면 <video>·완성MP4 버튼을 다시 그린다.
+  if(!MIX_JOB) return;
+  const fv=document.getElementById('finalVideo');
+  if(fv && fv.querySelector('video')){ renderExport({rendered:true}); return; }   // 이미 떠 있으면 버튼만 승격
+  try{
+    const d=await (await fetch('/api/mix/status/'+encodeURIComponent(MIX_JOB))).json();
+    if(d && d.status==='done'){
+      if(fv) fv.innerHTML=`<video controls src="/api/mix/video/${esc(MIX_JOB)}" style="max-width:360px;border-radius:10px"></video>`;
+      renderExport({rendered:true});
+    }
+  }catch(e){}
+}
+// ── 카톡·공유로 보내기 (Web Share API) — 2026-07-21 사장님 ──
+// 완성 MP4를 파일로 받아 navigator.share에 넘긴다 → 휴대폰이면 OS 공유시트(카톡·인스타 등)가 뜬다.
+// 데스크톱/미지원 브라우저는 파일공유가 막혀 canShare가 false → 다운로드 안내로 폴백(거짓 성공 금지).
+async function shareVideo(){
+  if(!MIX_JOB){ alert('먼저 「🎬 최종 렌더」로 영상을 완성해 주세요.'); return; }
+  try{
+    const resp=await fetch('/api/mix/video/'+encodeURIComponent(MIX_JOB)+'?dl=1');
+    if(!resp.ok) throw new Error('영상을 아직 찾을 수 없어요');
+    const blob=await resp.blob();
+    const file=new File([blob], 'shopping_short.mp4', {type:'video/mp4'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title:'완성 영상'});
+      return;   // 공유시트에서 카톡을 고르면 됨
+    }
+    throw new Error('unsupported');
+  }catch(e){
+    if(e && e.name==='AbortError') return;   // 사용자가 공유 취소
+    alert('이 기기·브라우저에선 바로 공유가 안 돼요.\n\n📱 휴대폰(카톡 설치)에서 이 페이지를 열면 「카톡으로 보내기」가 뜹니다.\n💻 컴퓨터에선 「⬇ 완성 영상(MP4)」으로 내려받아 카톡 대화창에 첨부해 주세요.');
+  }
 }
 // ── 내보내기(다운로드 + 캡컷 편집용) — 설계 2026-07-20 T1 ──
 // 웹앱이라 캡컷 자동실행은 불가 → 캡컷 편집용 ZIP(장면영상·음성·SRT·대본)을 내려받아 캡컷에 올린다.
@@ -3374,6 +3407,10 @@ function renderExport(opts){
           + '<div class="hint" style="margin:4px 0 10px">캡컷이 깔려 있으면 클릭 한 번으로 프로젝트가 만들어집니다. <b>처음 쓰실 때만</b>: 위 <b>⚙자동설정</b> 파일을 받아 한 번 더블클릭(캡컷은 꺼둔 채) → 캡컷 켜기 → 폴더 한 번 지정. Chrome·Edge 전용.</div>'
         : '<div class="hint" style="margin-bottom:10px">💡 캡컷으로 바로 보내기는 <b>Chrome·Edge</b>에서만 됩니다. 지금 브라우저에선 아래 ZIP을 받아 캡컷에 올리세요.</div>')
     + (rendered?`<a class="btn-next" style="${big}" href="/api/mix/video/${j}?dl=1" download>⬇ 완성 영상(MP4)</a>`:'')
+    // ★카톡·공유(2026-07-21 사장님): 완성 영상을 휴대폰 공유시트로 → 거기서 카톡 선택. 모바일 전용이
+    //   실질적이라(데스크톱은 파일공유 미지원 많음) 아래 shareVideo가 안 되면 다운로드 안내로 폴백한다.
+    + (rendered?`<button class="btn-next" style="${big};border:0;cursor:pointer" onclick="shareVideo()">📱 카톡·공유로 보내기</button>`:'')
+    + (rendered?'<div class="hint" style="margin:2px 0 8px">📱 <b>휴대폰</b>에서 누르면 카톡·인스타 등으로 바로 보낼 수 있어요. 컴퓨터에선 위 <b>⬇완성 영상(MP4)</b>으로 받아 카톡에 첨부하세요.</div>':'')
     + `<a class="btn-prev" style="${small}" href="/api/mix/export/${j}" download>📦 캡컷용 ZIP(수동)</a>`
     + '<div class="hint" style="margin:6px 0 4px">개별 다운로드</div>'
     + `<a class="btn-prev" style="${small}" href="/api/mix/export/${j}?part=sources" download>🎬 소스 영상</a>`
