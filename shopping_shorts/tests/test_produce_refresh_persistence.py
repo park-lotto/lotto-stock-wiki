@@ -127,6 +127,7 @@ function renderCoverageSignal(){ return ''; }
 function renderSwapButton(){ return ''; }
 function renderSceneCutaway(){ return ''; }
 function renderSceneSfx(){ return ''; }
+function renderTrimControls(){ return ''; }
 function esc(s){ return s || ''; }
 const _els = {};
 function _el(id){ if(!_els[id]) _els[id] = {innerHTML:'', style:{}, disabled:false, textContent:''}; return _els[id]; }
