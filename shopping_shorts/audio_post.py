@@ -5,7 +5,6 @@ ElevenLabs speed는 0.7~1.2만 지원해, 그 이상(1.3~1.5) 속도는 여기�
 import os
 import re as _re
 import subprocess
-import subprocess as _subprocess
 import tempfile
 
 # 레벨별 silenceremove 파라미터. stop_duration=자를 최소 무음길이(초), stop_threshold=무음 판정 dB.
@@ -102,13 +101,16 @@ def _parse_silence_edges(stderr, total_dur):
 
 def detect_edge_silence(path, edge):
     """path의 앞/뒤 무음 길이(초). edge in {"head","tail"}. 감지 실패 시 0.0."""
-    from shopping_shorts.video_assemble import _probe_duration
-    total = _probe_duration(path)
-    if total <= 0:
+    try:
+        from shopping_shorts.video_assemble import _probe_duration
+        total = _probe_duration(path)
+        if total <= 0:
+            return 0.0
+        proc = subprocess.run(
+            ["ffmpeg", "-i", str(path), "-af", "silencedetect=noise=-40dB:d=0.2",
+             "-f", "null", "-"],
+            capture_output=True, text=True, check=True)
+        head, tail = _parse_silence_edges(proc.stderr or "", total)
+        return head if edge == "head" else tail
+    except Exception:
         return 0.0
-    proc = _subprocess.run(
-        ["ffmpeg", "-i", str(path), "-af", "silencedetect=noise=-40dB:d=0.2",
-         "-f", "null", "-"],
-        capture_output=True, text=True)
-    head, tail = _parse_silence_edges(proc.stderr or "", total)
-    return head if edge == "head" else tail
