@@ -396,7 +396,7 @@ _SCENE_FIRST_SCHEMA = {
             "story_person": {"type": "string"}, "story_event": {"type": "string"},
             "story_resolution": {"type": "string"}, "cta_line": {"type": "string"},
             "cta_keyword": {"type": "string"},
-            "beats": {"type": "array", "minItems": 4, "items": {
+            "beats": {"type": "array", "minItems": 5, "items": {
                 "type": "object",
                 "properties": {
                     "role": {"type": "string"}, "narration": {"type": "string"},
@@ -450,6 +450,11 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         # 처럼 다음 조각이 앞과 안 맞물리는 어색한 중간 연결어는 금지. 소리내어 읽어도 매끄럽게.
         "- ★비트들을 하나의 이어지는 이야기로 써라 — 각 문장이 앞 문장을 자연스럽게 이어받아야 "
         "한다(뚝뚝 끊긴 조각 나열 금지, 어색한 중간 연결어 금지). 인물을 세웠으면 끝까지 관통.\n"
+        "- ★★스토리 전개 고도화(5비트+ 아크): 같은 길이 안에서 이야기를 촘촘히 전개해라 — "
+        "① 상황·인물 설정(누가·왜) → ② 기대/문제 고조(그래서 어땠는데) → ③ 반전·비하인드"
+        "(근데 알고보니·비법은) → ④ 절정·증거(반응·결과) → ⑤ 해소+CTA. 각 비트가 서로 다른 "
+        "전개 단계를 맡아 이야기가 '깊어지게'(같은 말 반복·단순 특징 나열 금지). 밋밋한 정보 나열이 "
+        "아니라 기승전결이 살아있는 미니드라마로.\n"
         + ((bank_context + "\n") if bank_context else "")
         + "출력은 스키마 JSON만.")
     raw = call(prompt, _SCENE_FIRST_SCHEMA)
