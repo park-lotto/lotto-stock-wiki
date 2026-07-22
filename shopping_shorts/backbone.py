@@ -291,12 +291,36 @@ def platform_of(url):
     return ""
 
 
+def score_backbones(sources, meta=None):
+    """각 소스를 백본 후보로 채점 → [{video_id, coverage, engagement, score}] 점수 내림차순.
+    ★60대는 어느 걸 메인으로 둘지 판단 못 하니 시스템이 점수로 자동 선정하기 위한 근거(2026-07-22).
+      · coverage = 그 소스의 행위들을 '나머지 풀'이 얼마나 커버하나(재조합 가능성) — 높을수록
+        장면 갈아끼우기가 잘 돼 좋은 뼈대.
+      · engagement = 댓글수(meta) 정규화.
+      score = 0.6·coverage + 0.4·engagement. 순수 계산(추가 Gemini 없음)."""
+    if not sources:
+        return []
+    meta = meta or {}
+    max_c = max((meta.get(s.get("video_id"), {}).get("comments") or 0) for s in sources) or 1
+    out = []
+    for s in sources:
+        vid = s.get("video_id")
+        others = [o for o in sources if o.get("video_id") != vid]
+        cov = coverage(s, others)["coverage_pct"] if others else 0.0
+        eng = (meta.get(vid, {}).get("comments") or 0) / max_c
+        out.append({"video_id": vid, "coverage": round(cov, 3),
+                    "engagement": round(eng, 3), "score": round(0.6 * cov + 0.4 * eng, 3)})
+    out.sort(key=lambda x: x["score"], reverse=True)
+    return out
+
+
 def pick_backbone(sources, meta=None, forced=None):
     """백본 선정(사장님 규칙):
-      0) forced(사장님이 UI에서 지정한 메인)가 있으면 그게 무조건 우선.
+      0) forced(사장님이 UI에서 지정한 메인)가 있으면 그게 무조건 우선(override).
       1) 백본 = 인스타·유튜브(한글 대본)만 후보. 플랫폼 아는 소스 중 그 둘만.
-      2) 후보 중 댓글수 최다 → 동수면 세그먼트 최다.
-    meta 없으면(플랫폼 모름) 세그먼트 최다 폴백. 소스 없거나 후보 0이면 None."""
+      2) 후보 중 **score_backbones 최고점**(재조합 가능성 coverage + 참여도) — 60대가 메인을
+         안 골라도 시스템이 '잘 섞일' 백본을 자동 선정한다(2026-07-22, 예전 댓글수·세그먼트수 대체).
+    meta 없어도 coverage(순수계산)로 채점된다. 소스 없거나 후보 0이면 None."""
     if not sources:
         return None
     if forced and any(s.get("video_id") == forced for s in sources):
@@ -308,13 +332,11 @@ def pick_backbone(sources, meta=None, forced=None):
                  if meta[s["video_id"]]["platform"].lower() in _BACKBONE_PLATFORMS]
         cands = cands or [s for s in sources]   # 인스타/유튜브 하나도 없으면 전체(폴백)
     else:
-        cands = list(sources)                   # 플랫폼 정보 없음 → 세그먼트 최다
-
-    def key(s):
-        m = meta.get(s.get("video_id"), {})
-        return (m.get("comments") or 0, len(s.get("segments") or []))
-
-    return max(cands, key=key).get("video_id")
+        cands = list(sources)                   # 플랫폼 정보 없음 → coverage로 채점
+    scores = {r["video_id"]: r["score"] for r in score_backbones(sources, meta)}
+    # coverage 동점(예: 세그먼트 없음)이면 세그먼트 최다로 tiebreak → 기존 동작 보존.
+    return max(cands, key=lambda s: (scores.get(s.get("video_id"), 0.0),
+                                     len(s.get("segments") or []))).get("video_id")
 
 
 def order_by_backbone(beats, backbone_video):
