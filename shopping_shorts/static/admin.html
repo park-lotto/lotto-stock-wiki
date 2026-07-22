@@ -5,14 +5,17 @@ body{margin:0;background:#0b0b0e;color:#e8e8ea;font-family:system-ui,'Noto Sans 
 h1{color:#4f9dfa;font-size:20px;margin:0 0 4px}.sub{color:#8a8a92;font-size:13px;margin-bottom:18px}
 .card{background:#16161c;border:1px solid #2a2a30;border-radius:12px;padding:16px;margin-bottom:16px}
 h2{font-size:15px;margin:0 0 12px;color:#cfd2d6}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #23232a}
-th{color:#8a8a92;font-weight:600}
-.badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:11px 12px;border-bottom:1px solid #23232a}
+th{color:#9a9aa2;font-weight:600;font-size:14px}
+.badge{padding:3px 9px;border-radius:10px;font-size:13px;font-weight:700}
+.filterbar{display:flex;gap:10px;margin:4px 0 14px;flex-wrap:wrap}
+.filterbar input{width:280px;max-width:60vw;font-size:15px;padding:9px 12px}
+.filterbar select{background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;font-size:15px;padding:9px 12px;cursor:pointer}
 .pro{background:#1c3d1f;color:#7ee787}.free{background:#3d1c1c;color:#ff9a8a}.trial{background:#1c2f3d;color:#7db4ff}
 .admin{background:#3a1c3d;color:#e59aff}
 .pending{background:#3d341c;color:#ffd479}
-button{border:0;border-radius:7px;padding:6px 12px;font-weight:700;font-size:12px;cursor:pointer;margin-right:4px}
+button{border:0;border-radius:7px;padding:7px 13px;font-weight:700;font-size:13px;cursor:pointer;margin-right:4px}
 .bpro{background:#2ea043;color:#fff}.bfree{background:#6e2020;color:#fff}.bok{background:#d19b1e;color:#111}.bpay{background:#3a5bd0;color:#fff}
 .bedit{background:#5a4bd0;color:#fff}.bdel{background:#8b1a1a;color:#fff}.btrial{background:#1c6a8a;color:#fff}
 .wait{border-color:#5a4a1e;background:#1a1710}.wait h2{color:#ffd479}
@@ -49,6 +52,15 @@ tbody tr:hover{background:#1b1b22}
 
 <div class=card>
   <h2>고객 (<span id=cnt>0</span>명) <span id=cMsg class=msg></span></h2>
+  <div class=filterbar>
+    <input id=custSearch placeholder="🔍 이름·전화·이메일로 찾기" oninput="renderCustomers()">
+    <select id=tierFilter onchange="renderCustomers()">
+      <option value="">전체 등급</option>
+      <option value="pro">pro</option>
+      <option value="trial">체험중</option>
+      <option value="free">일반회원</option>
+    </select>
+  </div>
   <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>시작일</th><th>마감일</th><th>결제</th><th>오늘 사용(렌즈/렌더/대본)</th><th>접속7일(IP/기기)</th><th>조작</th></tr></thead>
   <tbody id=rows></tbody></table>
 </div>
@@ -81,9 +93,24 @@ async function load(){
       <td style="font-size:12px;color:#8a8a92">${joined}</td>
       <td><button class=bok onclick="approveCustomer(${c.id})">✅ 승인</button></td></tr>`;
   }).join('') : '<tr><td colspan=6 class=empty>대기 중인 가입 신청이 없어요</td></tr>';
-  // 일반 고객표
+  // 일반 고객표 — 검색·등급 필터 적용 렌더
+  renderCustomers();
+}
+
+function _tierOf(c){ return c.level==='full' ? (c.plan==='pro'?'pro':'trial') : 'free'; }
+
+function renderCustomers(){
+  const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const q=((document.getElementById('custSearch')||{}).value||'').trim().toLowerCase();
+  const tier=(document.getElementById('tierFilter')||{}).value||'';
+  const rest=(window._CUST||[]).filter(c=>c.approved_at!=null).filter(c=>{
+    if(tier && _tierOf(c)!==tier) return false;
+    if(q){ const hay=`${c.name||''} ${c.phone||''} ${c.email||''} ${c.username||''}`.toLowerCase();
+           if(hay.indexOf(q)<0) return false; }
+    return true;
+  });
   document.getElementById('cnt').textContent=rest.length;
-  document.getElementById('rows').innerHTML=rest.map(c=>{
+  document.getElementById('rows').innerHTML= rest.length ? rest.map(c=>{
     const lvl=c.level==='full'?(c.plan==='pro'?'<span class="badge pro">pro</span>':'<span class="badge trial">체험중</span>')
               :'<span class="badge free">일반회원</span>';
     const u=c.usage||{};
@@ -93,18 +120,18 @@ async function load(){
     const accCell = `<span style="color:${accSusp?'#ff6b6b':'#8a8a92'};font-weight:${accSusp?'700':'400'}">${acc.ips}IP/${acc.devices}기기${accSusp?' ⚠️':''}</span>`;
     const adminBadge = c.is_admin ? ' <span class="badge admin">관리자</span>' : '';
     return `<tr><td>${c.id}</td><td>${esc(c.name)}${adminBadge}</td><td>${esc(c.phone)}</td><td>${esc(c.email||c.username)}</td><td>${c.plan}</td><td>${lvl}</td>
-      <td style="font-size:12px;color:#8a8a92">${c.approved_at? new Date(c.approved_at*1000).toLocaleDateString('ko-KR'):'-'}</td>
-      <td style="font-size:12px;color:#8a8a92">${c.full_access_until? new Date(c.full_access_until*1000).toLocaleDateString('ko-KR'):'-'}</td>
+      <td style="color:#8a8a92">${c.approved_at? new Date(c.approved_at*1000).toLocaleDateString('ko-KR'):'-'}</td>
+      <td style="color:#8a8a92">${c.full_access_until? new Date(c.full_access_until*1000).toLocaleDateString('ko-KR'):'-'}</td>
       <td>${c.last_payment? `<span class=paylink data-cid=${c.id} style="cursor:pointer;color:#8ab4f8">${c.last_payment.amount.toLocaleString()}원 · ${c.payment_count}건</span>` : '-'}</td>
-      <td style="font-size:12px">${u.lens||0}/${u.render||0}/${u.script||0}</td>
-      <td style="font-size:12px">${accCell}</td>
+      <td>${u.lens||0}/${u.render||0}/${u.script||0}</td>
+      <td>${accCell}</td>
       <td><button class=bpay onclick="addPayment(${c.id})">결제추가</button>
           <button class=bedit onclick="editInfo(${c.id})">정보수정</button>
           <button class=bfree onclick="setPlan(${c.id},'free')">일반회원</button>
           <button class=btrial onclick="grantTrial(${c.id})">체험</button>
           <button class=bpro onclick="setPlan(${c.id},'pro')">pro</button>
           ${c.is_admin?'':`<button class=bdel onclick="delCustomer(${c.id})">삭제</button>`}</td></tr>`;
-  }).join('');
+  }).join('') : '<tr><td colspan=12 class=empty>조건에 맞는 고객이 없어요</td></tr>';
 }
 async function approveCustomer(cid){
   const days = prompt('이용일수 (예: 30)', '');
