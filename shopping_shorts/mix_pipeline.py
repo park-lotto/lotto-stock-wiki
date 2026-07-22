@@ -16,6 +16,7 @@ from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC, build_edit_plan, confo
 from shopping_shorts.scene_match import match_scene_assets, match_sfx
 from shopping_shorts import tts
 from shopping_shorts import audio_post
+from shopping_shorts import config
 from shopping_shorts.video_assemble import assemble, _beat_timeline, _probe_duration, _MAX_SLOWMO
 from shopping_shorts.motion_assets import resolve_layers, DEFAULT_ASSETS_DIR
 from shopping_shorts.motion_packs import build_plan, load_packs
@@ -74,8 +75,11 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
                         base_seed=prof.get("seed"), ranker=ranker,
                         voice_id=voice_id, voice_settings=settings, speed=speed,
                         model_id=model_id, previous_text=previous_text, next_text=next_text)
+    # 비트별 라우드니스 정규화는 실제 ElevenLabs 음성일 때만 — 키 없는 개발용 무음 mock에
+    # loudnorm을 걸면 무음 바닥을 노이즈로 끌어올린다(reference_local_tts_silent_mock_trap).
     audio_post.post_process(str(out_path), str(out_path), tempo=extra_tempo,
-                            silence_trim=trim, pace_mode=pace_mode)
+                            silence_trim=trim, pace_mode=pace_mode,
+                            loudnorm=bool(config.ELEVENLABS_API_KEY))
     return natural
 
 
