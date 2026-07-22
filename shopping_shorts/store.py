@@ -706,6 +706,16 @@ class Store:
                         count INTEGER NOT NULL DEFAULT 0,
                         PRIMARY KEY (customer_id, op, day)
                     )""")
+        # ── 돌려쓰기 소프트감지(2026-07-22): 계정별 접속 IP·기기(UA)를 하루 단위로 기록.
+        #    (cid, day, ip, ua) 유니크라 같은 조합 재접속은 INSERT OR IGNORE로 무시 → 하루 1행.
+        #    차단 안 함 — admin에 '접속 IP N개 / 기기 N종'을 보여 사장님이 공유 의심을 눈으로 판단. ──
+        c.execute("""CREATE TABLE IF NOT EXISTS customer_access (
+                        customer_id INTEGER NOT NULL,
+                        day TEXT NOT NULL,
+                        ip TEXT NOT NULL,
+                        ua TEXT NOT NULL,
+                        PRIMARY KEY (customer_id, day, ip, ua)
+                    )""")
         # ── 회원승인(2026-07-21): approved_at NULL=대기중 / 값(epoch초)=승인시각 ──
         try:
             c.execute("ALTER TABLE customers ADD COLUMN approved_at INTEGER")
@@ -2715,6 +2725,23 @@ class Store:
             row = c.execute("SELECT count FROM usage WHERE customer_id=? AND op=? AND day=?",
                             (customer_id, op, day)).fetchone()
         return row[0] if row else 0
+
+    # ── 돌려쓰기 소프트감지(2026-07-22): 접속 IP·기기 기록 + 요약 ──
+    def record_access(self, customer_id, ip, ua, day):
+        """계정 접속 1건 기록. (cid, day, ip, ua) 유니크 → 같은 조합 재접속은 무시(하루 1행)."""
+        ua = (ua or "")[:200]                       # UA는 길어 절단(admin 표시·중복판정엔 충분)
+        ip = (ip or "")[:64]
+        with self._conn() as c:
+            c.execute("INSERT OR IGNORE INTO customer_access(customer_id, day, ip, ua) "
+                      "VALUES(?,?,?,?)", (customer_id, day, ip, ua))
+
+    def access_summary(self, customer_id, since_day):
+        """since_day(포함) 이후의 고유 IP 수·고유 기기(UA) 수. 공유 의심 지표."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT COUNT(DISTINCT ip), COUNT(DISTINCT ua) FROM customer_access "
+                "WHERE customer_id=? AND day>=?", (customer_id, since_day)).fetchone()
+        return {"ips": (row[0] or 0), "devices": (row[1] or 0)}
 
     def usage_decr(self, customer_id, op, day):
         """(customer_id, op, day) 카운트 -1(0 밑으로 안 감), 감소 후 값 반환. 실패 환불용.

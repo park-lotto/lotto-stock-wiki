@@ -38,7 +38,7 @@ label{display:inline-block;min-width:120px;color:#a8a8b0;font-size:13px;margin:5
 
 <div class=card>
   <h2>고객 (<span id=cnt>0</span>명) <span id=cMsg class=msg></span></h2>
-  <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>시작일</th><th>마감일</th><th>결제</th><th>오늘 사용(렌즈/렌더/대본)</th><th>조작</th></tr></thead>
+  <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>시작일</th><th>마감일</th><th>결제</th><th>오늘 사용(렌즈/렌더/대본)</th><th>접속7일(IP/기기)</th><th>조작</th></tr></thead>
   <tbody id=rows></tbody></table>
 </div>
 
@@ -76,11 +76,16 @@ async function load(){
     const lvl=c.level==='full'?(c.plan==='pro'?'<span class="badge pro">pro</span>':'<span class="badge trial">체험중</span>')
               :'<span class="badge free">무료</span>';
     const u=c.usage||{};
+    const acc=c.access_7d||{ips:0,devices:0};
+    // 돌려쓰기 의심: 최근 7일 고유 IP 3개↑ 또는 기기 3종↑이면 빨간 강조(차단은 안 함, 사장님 눈으로 판단)
+    const accSusp = (acc.ips>=3 || acc.devices>=3);
+    const accCell = `<span style="color:${accSusp?'#ff6b6b':'#8a8a92'};font-weight:${accSusp?'700':'400'}">${acc.ips}IP/${acc.devices}기기${accSusp?' ⚠️':''}</span>`;
     return `<tr><td>${c.id}</td><td>${esc(c.name)}</td><td>${esc(c.phone)}</td><td>${esc(c.email||c.username)}</td><td>${c.plan}</td><td>${lvl}</td>
       <td style="font-size:12px;color:#8a8a92">${c.approved_at? new Date(c.approved_at*1000).toLocaleDateString('ko-KR'):'-'}</td>
       <td style="font-size:12px;color:#8a8a92">${c.full_access_until? new Date(c.full_access_until*1000).toLocaleDateString('ko-KR'):'-'}</td>
       <td>${c.last_payment? `<span class=paylink data-cid=${c.id} style="cursor:pointer;color:#8ab4f8">${c.last_payment.amount.toLocaleString()}원 · ${c.payment_count}건</span>` : '-'}</td>
       <td style="font-size:12px">${u.lens||0}/${u.render||0}/${u.script||0}</td>
+      <td style="font-size:12px">${accCell}</td>
       <td><button class=bpay onclick="addPayment(${c.id})">결제추가</button>
           <button class=bpro onclick="setPlan(${c.id},'pro')">pro 승격</button>
           <button class=bfree onclick="setPlan(${c.id},'free')">무료로</button></td></tr>`;
