@@ -14,7 +14,7 @@ th{color:#8a8a92;font-weight:600}
 .pending{background:#3d341c;color:#ffd479}
 button{border:0;border-radius:7px;padding:6px 12px;font-weight:700;font-size:12px;cursor:pointer;margin-right:4px}
 .bpro{background:#2ea043;color:#fff}.bfree{background:#6e2020;color:#fff}.bok{background:#d19b1e;color:#111}.bpay{background:#3a5bd0;color:#fff}
-.bedit{background:#5a4bd0;color:#fff}.bdel{background:#8b1a1a;color:#fff}
+.bedit{background:#5a4bd0;color:#fff}.bdel{background:#8b1a1a;color:#fff}.btrial{background:#1c6a8a;color:#fff}
 .wait{border-color:#5a4a1e;background:#1a1710}.wait h2{color:#ffd479}
 .empty{color:#6a6a72;font-size:13px;padding:6px 2px}
 input{background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;padding:8px 10px;font-size:13px;width:90px}
@@ -76,7 +76,7 @@ async function load(){
   document.getElementById('cnt').textContent=rest.length;
   document.getElementById('rows').innerHTML=rest.map(c=>{
     const lvl=c.level==='full'?(c.plan==='pro'?'<span class="badge pro">pro</span>':'<span class="badge trial">체험중</span>')
-              :'<span class="badge free">무료</span>';
+              :'<span class="badge free">일반회원</span>';
     const u=c.usage||{};
     const acc=c.access_7d||{ips:0,devices:0};
     // 돌려쓰기 의심: 최근 7일 고유 IP 3개↑ 또는 기기 3종↑이면 빨간 강조(차단은 안 함, 사장님 눈으로 판단)
@@ -91,8 +91,9 @@ async function load(){
       <td style="font-size:12px">${accCell}</td>
       <td><button class=bpay onclick="addPayment(${c.id})">결제추가</button>
           <button class=bedit onclick="editInfo(${c.id})">정보수정</button>
-          <button class=bpro onclick="setPlan(${c.id},'pro')">pro 승격</button>
-          <button class=bfree onclick="setPlan(${c.id},'free')">무료로</button>
+          <button class=bfree onclick="setPlan(${c.id},'free')">일반회원</button>
+          <button class=btrial onclick="grantTrial(${c.id})">체험</button>
+          <button class=bpro onclick="setPlan(${c.id},'pro')">pro</button>
           ${c.is_admin?'':`<button class=bdel onclick="delCustomer(${c.id})">삭제</button>`}</td></tr>`;
   }).join('');
 }
@@ -156,6 +157,16 @@ async function setPlan(cid,plan){
     body:JSON.stringify({customer_id:cid,plan})});
   const m=document.getElementById('cMsg');
   if(r.ok){m.textContent='✅ 변경됨';m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
+  setTimeout(()=>m.textContent='',2000);
+}
+async function grantTrial(cid){
+  const def=(CURRENT.trial_days||'7');
+  const days=prompt('체험 며칠 줄까요? (전기능 열림)', def);
+  if(days===null) return;
+  const r=await fetch('/api/admin/set_plan',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({customer_id:cid, plan:'free', days:Number(days)||0})});
+  const m=document.getElementById('cMsg');
+  if(r.ok){m.textContent='✅ 체험 부여됨';m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
   setTimeout(()=>m.textContent='',2000);
 }
 async function saveSettings(){
