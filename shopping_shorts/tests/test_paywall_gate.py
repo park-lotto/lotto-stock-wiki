@@ -186,6 +186,18 @@ def test_admin_only_endpoints_block_pro_user(tmp_path, monkeypatch):
                   params={"url": "https://instagram.com/x"}).status_code == 403
 
 
+def test_discover_run_admin_only_feed_open(tmp_path, monkeypatch):
+    """발굴 실행(업데이트·키워드검색)은 관리자 전용(2026-07-23) — 회당 Apify run
+    수십 개가 도는 유료 크롤이라 pro도 403. 결과 피드 보기는 전 회원 공유(200)."""
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("pro8", "pw12")
+    s.set_plan(cid, "pro")
+    c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
+    assert c.get("/api/discover/update").status_code == 403
+    assert c.get("/api/discover?keyword=주방템").status_code == 403
+    assert c.get("/api/discover/feed").status_code == 200
+
+
 def test_admin_can_register_reference(tmp_path, monkeypatch):
     """관리자(cid0)는 레퍼런스 등록 가능 — 가드가 관리자를 막지 않는다(403 아님)."""
     _setup(tmp_path, monkeypatch)

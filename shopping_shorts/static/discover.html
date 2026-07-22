@@ -94,7 +94,10 @@
 
     <!-- 발굴 탭 -->
     <section id="pane-discover">
-      <div class="searchbar" style="margin-bottom:8px;align-items:center">
+      <!-- 발굴 실행(업데이트·키워드검색)은 Apify 유료 크롤 → 관리자 전용(2026-07-23).
+           기본 숨김(구독자 화면 플래시 방지) → 아래 /api/me 체크가 cid0일 때만 켠다.
+           백엔드(/api/discover, /api/discover/update)도 _require_admin으로 막혀 있다. -->
+      <div class="searchbar admin-only" style="margin-bottom:8px;align-items:center;display:none">
         <button id="updateBtn" onclick="runUpdate()" style="background:linear-gradient(90deg,#1f6feb,#238636);font-weight:600">🔄 업데이트 — 새 채널 자동 발굴</button>
         <label class="opt">기간
           <select id="optDays">
@@ -115,8 +118,8 @@
       <div class="searchbar" style="margin-bottom:12px">
         <span class="status" id="ustatus" style="margin:0;align-self:center">기간·개수를 정하고 누르면 여러 카테고리를 한 번에 검색해 모르던 채널을 랭킹으로 올립니다. 누적을 켜면 돌릴수록 리스트가 쌓입니다.</span>
       </div>
-      <div class="cats" id="cats"></div>
-      <div class="searchbar">
+      <div class="cats admin-only" id="cats" style="display:none"></div>
+      <div class="searchbar admin-only" style="display:none">
         <input id="kw" placeholder="카테고리·키워드 직접 입력 (예: 주방템, 캠핑용품)" onkeydown="if(event.key==='Enter')runDiscover(this.value)">
         <button id="searchBtn" onclick="runDiscover(document.getElementById('kw').value)">검색</button>
       </div>
@@ -339,6 +342,17 @@ async function loadFeed(){
   }catch(e){}
 }
 loadFeed();
+// ── 관리자(사장님 cid0) 전용 발굴버튼(2026-07-23) — index.html 운영버튼과 동일 패턴 ──
+// 업데이트·카테고리·키워드검색은 Apify 유료 크롤이라 관리자만 쓴다. 피드 보기는 전 회원 공유.
+window.IS_ADMIN=false;
+fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
+  if(d && d.customer_id===0){
+    window.IS_ADMIN=true;
+    document.querySelectorAll('.admin-only').forEach(el=>{ el.style.display=''; });
+  }else{
+    document.getElementById('dstatus').textContent='저장된 발굴 피드를 보고, 마음에 드는 채널은 "목록추가"로 담으세요. (새 발굴 실행은 관리자가 돌립니다)';
+  }
+}).catch(()=>{});
 </script>
 <script src="/sidebar.js?v=2"></script>
 </body>
