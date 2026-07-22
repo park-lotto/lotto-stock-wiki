@@ -436,14 +436,6 @@ function sortKey(i){
 //   그래서 한글 검색어는 "단어 시작" 위치에서만, 수량사·활용형 문맥은 배제하고 맞춘다.
 //   한계: 화면 자막(썸네일)에만 있는 주제어(예: 캡션에 '오이'가 없는 오이영상)는 못 찾는다
 //   — 그건 OCR(②) 몫. 여기선 캡션·카테고리·이름 텍스트 안에서만 정확도를 올린다.
-function _normUser(u){ return (u||'').trim().replace(/^@/,'').toLowerCase(); }
-// 검색어가 채널(아이디/이름)을 가리키나 — 카드의 채널명을 클릭하거나 @아이디를 치면
-// 그 채널의 영상만 뜨게 한다. 비전태그 유무와 무관(2026-07-22).
-function _isChannelHit(it, needle){
-  const n = _normUser(needle);
-  if(!n) return false;
-  return _normUser(it.username).includes(n) || (it.name||'').toLowerCase().includes(needle.trim().toLowerCase());
-}
 function matchesSearch(it, q){
   const needle = (q||'').trim().toLowerCase();
   if(!needle) return true;                       // 빈 검색어 = 전체
@@ -458,6 +450,16 @@ function matchesSearch(it, q){
   // 상위어면 하위 종류까지 넓혀 찾는다: "빵"→베이글·식빵, "야채"→가지·오이 (2026-07-18).
   // 하위어(베이글) 검색은 그대로 좁게. 확장어도 각각 단어경계 매칭을 거친다.
   return _expandQuery(needle).some(t => _koreanWordHit(hay, t));
+}
+// 검색어가 채널(아이디/이름)을 가리키나 — 카드의 채널명을 클릭하거나 @아이디를 치면
+// 그 채널의 영상만 뜨게 한다. 비전태그 유무와 무관(2026-07-22).
+// 함수 선언(호이스팅)이라 위 matchesSearch보다 아래 있어도 호출된다 — 또한 검색JS
+// 테스트가 matchesSearch부터 슬라이스해 eval하므로 반드시 그 안(검색 끝 마커 이전)에 둔다.
+function _normUser(u){ return (u||'').trim().replace(/^@/,'').toLowerCase(); }
+function _isChannelHit(it, needle){
+  const n = _normUser(needle);
+  if(!n) return false;
+  return _normUser(it.username).includes(n) || (it.name||'').toLowerCase().includes(needle.trim().toLowerCase());
 }
 // 수량 세는 말 앞에 붙는 한정사 — "여러 가지"·"몇 가지"·"두 가지"는 채소 가지가 아니다.
 var _COUNTER_QUALIFIERS = ['여러','몇','몇몇','각','온갖','수','한','두','세','네',
