@@ -86,3 +86,11 @@ def test_trial_render_refund_restores_one_shot(tmp_path, monkeypatch):
     assert s.usage_get(cid, "render", "trial") == 0        # 재도전 가능
     # 이제 다시 1회 허용
     assert app.check_and_count(cid, "render") is True
+
+
+def test_list_customers_exposes_trial_ends_at(tmp_path):
+    s = Store(str(tmp_path / "t.db"))
+    cid = s.create_customer("evt", "pw12", approved=False)   # 이벤트 체험
+    rows = {c["id"]: c for c in s.list_customers()}
+    assert "trial_ends_at" in rows[cid]
+    assert rows[cid]["trial_ends_at"] is not None            # 미승인 체험자는 창 열림
