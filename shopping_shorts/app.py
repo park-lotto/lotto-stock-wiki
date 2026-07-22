@@ -3299,17 +3299,20 @@ _GOOGLE_SVG = ('<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6
 
 # 시그니처 심볼(브랜딩 보드 v1, out/브랜딩_CI_숏템탑스.html) — 박스(제작소)에서 랭킹된
 # 아이템이 쌓여 올라오고 맨 위 한 칸만 골드=TOP 인기템. 박스·대량생산·인기를 한 심볼에.
-_LOGO_SVG = (
+_LOGO_SVG = (  # v2 엠블럼(2026-07-23): 다크 디스크+민트 링, 스택 3단(TOP=골드)+상승 화살촉
     '<svg class="sym" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템박스">'
-    '<defs><linearGradient id="lmg" x1="0" y1="0" x2="1" y2="1">'
+    '<defs><radialGradient id="ldk" cx="50%" cy="42%" r="65%">'
+    '<stop offset="0" stop-color="#1c2b25"/><stop offset="1" stop-color="#0b120f"/></radialGradient>'
+    '<linearGradient id="lmg" x1="0" y1="0" x2="1" y2="1">'
     '<stop offset="0" stop-color="#6ff0d6"/><stop offset="1" stop-color="#1f9e7a"/></linearGradient>'
     '<linearGradient id="lgg" x1="0" y1="0" x2="1" y2="1">'
     '<stop offset="0" stop-color="#ffe1a1"/><stop offset="1" stop-color="#f0a93a"/></linearGradient></defs>'
-    '<rect x="4" y="4" width="56" height="56" rx="16" stroke="url(#lmg)" stroke-width="3"/>'
-    '<rect x="16" y="40" width="32" height="8" rx="3" fill="#1f9e7a" opacity=".55"/>'
-    '<rect x="20" y="29" width="24" height="8" rx="3" fill="#6ff0d6" opacity=".9"/>'
-    '<rect x="24" y="18" width="16" height="8" rx="3" fill="url(#lgg)"/>'
-    '<path d="M32 11.5l3 4.5h-6l3-4.5z" fill="url(#lgg)"/></svg>')
+    '<circle cx="32" cy="32" r="29" fill="url(#ldk)"/>'
+    '<circle cx="32" cy="32" r="29" stroke="url(#lmg)" stroke-width="2.4"/>'
+    '<rect x="17.6" y="40" width="28.8" height="6" rx="2.8" fill="#1d8a68"/>'
+    '<rect x="20.8" y="32" width="22.4" height="6" rx="2.8" fill="url(#lmg)"/>'
+    '<rect x="24" y="24" width="16" height="6" rx="2.8" fill="url(#lgg)"/>'
+    '<path d="M32 13.8l8 8.2H24l8-8.2z" fill="url(#lgg)"/></svg>')
 
 
 def _fill_brand(s: str) -> str:
