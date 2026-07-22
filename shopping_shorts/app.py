@@ -635,9 +635,15 @@ def _save_discovery_snapshot(store, items):
 
 
 @app.get("/api/discover")
-def api_discover(keyword: str, max_channels: int = 15):
+def api_discover(request: Request, keyword: str, max_channels: int = 15):
     """🔎 채널 발굴 — 카테고리 키워드로 '내가 모르던 채널' 중 최근 48h 댓글이
-    빠르게 쌓이는 릴스를 캐치(기존 랭킹엔진 재사용)."""
+    빠르게 쌓이는 릴스를 캐치(기존 랭킹엔진 재사용).
+
+    ★관리자(사장님 cid0) 전용(2026-07-23) — 검색+릴스수집+프로필 = Apify 유료
+    크롤이라 수집·전수조사와 같은 관리자 가드를 건다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
     keyword = (keyword or "").strip()
     if not keyword:
         return JSONResponse(status_code=422, content={"ok": False, "error": "키워드를 입력하세요"})
@@ -663,10 +669,18 @@ _DISCOVER_CATEGORIES = ["#주방템", "#살림템", "#인테리어", "#자취템
 
 
 @app.get("/api/discover/update")
-def api_discover_update(days: int = 2, max_total: int = 40, accumulate: bool = False):
+def api_discover_update(request: Request, days: int = 2, max_total: int = 40,
+                        accumulate: bool = False):
     """🔄 업데이트 시작(비동기) — 몇 분 걸리는 수집을 백그라운드 스레드로 돌리고
     즉시 반환한다(2026-07-12, 동기처리 시 프론트가 몇 분 멈추고 배포 재시작에
-    응답이 깨지던 문제). 프론트는 /api/discover/status를 폴링해 진행/결과 확인."""
+    응답이 깨지던 문제). 프론트는 /api/discover/status를 폴링해 진행/결과 확인.
+
+    ★관리자(사장님 cid0) 전용(2026-07-23) — 1회에 Apify run 최대 47개(검색6+
+    채널당 릴스run+프로필1)가 도는 유료 크롤. 결과 피드는 전 회원 공유라
+    회원이 눌러야 할 이유도 없다(보기는 /api/discover/feed로 그대로 열림)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
     from shopping_shorts import discover_jobs
     days = max(1, min(int(days), 14))
     max_total = max(10, min(int(max_total), 120))
