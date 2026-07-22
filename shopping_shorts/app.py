@@ -4300,7 +4300,7 @@ def _require_admin(request):
     return None
 
 
-_ADMIN_SETTING_KEYS = {"trial_days", "limit_lens", "limit_render", "limit_script",
+_ADMIN_SETTING_KEYS = {"trial_days", "trial_event_hours", "limit_lens", "limit_render", "limit_script",
                        "limit_lens_pro", "limit_render_pro", "limit_script_pro",
                        "global_cap_lens", "global_cap_render", "global_cap_script",
                        "contact_kakao", "contact_phone"}
