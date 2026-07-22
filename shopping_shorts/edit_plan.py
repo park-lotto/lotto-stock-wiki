@@ -410,12 +410,15 @@ _SCENE_FIRST_SCHEMA = {
 
 
 def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3, call=_vault_call,
-                            bank_context=""):
+                            bank_context="", order_block=""):
     """스토리 헌장 + 장면 팔레트 + 레퍼 구조 → 후보 n개. 각 비트는 seg_ids(2~4 다중컷)로
     장면을 지목한다. 실패 시 []. 헌장이 품질을 담당하므로 별도 검증루프 없음(1콜).
 
     bank_context(P0-2): 부품은행에서 조립한 승인 훅·어미·부사·CTA·스파인 블록(빈 문자열이면
-    미주입=회귀0). 영상 믹스 대본이 매번 같은 훅으로 열리지 않게 로테이션된 부품을 실어준다."""
+    미주입=회귀0). 영상 믹스 대본이 매번 같은 훅으로 열리지 않게 로테이션된 부품을 실어준다.
+    order_block(2026-07-22 백본 통합): 백본 영상의 시간순 장면 뼈대 블록. 빈 문자열이면 무주입.
+    ★스토리·은행·다중컷(rich 품질기계)은 그대로 두고 화면 '순서'만 제약한다 — 별도의 뼈다귀
+    생성기(장면당 한 줄)를 쓰면 스키마에 스토리 필드가 없어 이야기가 원천 불가였다(그날 실사고)."""
     from shopping_shorts import script_generate  # 지연 import(순환 방지)
     char_target = int(target_seconds * _SYLLABLES_PER_SEC)
     prompt = (
@@ -426,6 +429,7 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         f"{(reference_text or '')[:1500]}\n\n"
         "[우리 장면 팔레트 — 이 seg_id 화면만 쓸 수 있다]\n"
         f"{inventory_text}\n\n"
+        + ((order_block + "\n\n") if order_block else "")
         + script_generate._STORY_RULES_CORE + "\n" + script_generate._STORY_DECLARE + "\n"
         "- ★위 헌장(인과사슬·훅 한방·CTA 미끼·비법 킥 감추기)을 반드시 지켜라 — 장면에 맞추느라 "
         "스토리가 밋밋해지면 실패다. 스토리가 왕, 장면은 그 스토리를 보여줄 그림이다.\n"
@@ -814,52 +818,31 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
     return grounded
 
 
-def _backbone_style_block(bank_context=""):
-    """백본-베이스 대본생성에 실을 '품질 레이어' = 짤드라마 헌장 + 은행 훅·말투 부품.
-    이게 빠지면 백본 흐름만 밋밋하게 따라가 설명체가 나온다(2026-07-22 대본 초기화 실사고)."""
-    from shopping_shorts import script_generate
-    block = script_generate._STORY_RULES_CORE
-    if bank_context:
-        block += "\n\n" + bank_context
-    return block
+def _backbone_order_block(backbone_video, source_scripts):
+    """백본 영상의 시간순 장면 뼈대 → rich 생성 프롬프트에 넣을 '순서 제약' 블록.
 
-
-def _backbone_base_candidates(source_scripts, target_seconds, call,
-                              backbone_meta=None, backbone_forced=None, bank_context=""):
-    """백본-베이스 후보 생성(확정스펙 1~3단계): 백본 1개 선정 → 흐름 추출(대사 아님, 뼈대만)
-    → 실제 장면 인벤토리(백본+서브)에 맞춰 100% 우리 대본 생성. build_scene_first_plan이
-    쓰는 raw 후보 형태([{hook, beats:[{seg_ids, narration, role, fit}]}])로 감싼다.
-    ★대본생성에 짤드라마 헌장+은행 부품(style_block)을 실어 밋밋한 설명체를 막는다.
-    백본 못 고르거나(플랫폼·소스 부족) 생성 비면 [](호출부가 레퍼런스-먼저로 폴백)."""
+    ★생성기를 갈아끼우지 않는다(2026-07-22 페이블 점검 결론). 예전엔 백본용 뼈다귀 생성기
+    (장면당 narration+seg_id 한 줄, 스토리 필드 없는 스키마)를 따로 만들어 스마트믹스가 그리로
+    빠졌고 — 스키마가 이야기를 표현 못 해 단조·무스토리·은행묻힘이 구조적으로 났다. 이제
+    rich 생성기(_scene_first_candidates: 스토리 선언·짤드라마 헌장·은행·다중컷·사이징)를 그대로
+    쓰고, 백본이 주는 건 이 '화면 순서' 제약 하나다. 백본=순서, rich=대본."""
     from shopping_shorts import backbone
-    bb = backbone.pick_backbone(source_scripts, meta=backbone_meta, forced=backbone_forced)
-    if not bb:
-        return []
-    bb_src = next((s for s in source_scripts if s.get("video_id") == bb), None)
+    bb_src = next((s for s in (source_scripts or [])
+                   if s.get("video_id") == backbone_video), None)
     if not bb_src:
-        return []
+        return ""
     flow = backbone.backbone_flow(bb_src)
-    inventory = backbone.scene_inventory(source_scripts)
-    style = _backbone_style_block(bank_context)
-    # 백본 순서(뼈대)는 고정하고, 그 위에 쓰는 대본을 N개 뽑는다 → 심사위원이 최고를 고른다
-    # (조각 1개만 뽑던 걸 best-of-N + 품질심사로 올림). 같은 대본 중복은 버린다.
-    from shopping_shorts import config
-    n = getattr(config, "BACKBONE_DRAFTS_N", 3)
-    raws, seen = [], set()
-    for _ in range(max(1, n)):
-        bb_beats = backbone.generate_backbone_script(
-            flow, inventory, target_seconds, call=call, style_block=style)
-        if not bb_beats:
-            continue
-        key = tuple((b.get("narration") or "").strip() for b in bb_beats)
-        if key in seen:
-            continue
-        seen.add(key)
-        beats = [{"seg_ids": [b["seg_id"]], "narration": b["narration"], "role": "", "fit": 5}
-                 for b in bb_beats]
-        # _backbone_video: 이 후보의 백본(순서 고정용). 호출부가 이걸로 order_by_backbone 한다.
-        raws.append({"hook": "", "beats": beats, "_backbone_video": bb})
-    return raws
+    if not flow:
+        return ""
+    lines = "\n".join(
+        f"  {i+1}. {f.get('seg_id')} [{f.get('action') or '-'}] {f.get('scene_desc', '')}"
+        for i, f in enumerate(flow))
+    return (
+        f"[화면 순서 뼈대 — 백본 영상 {backbone_video}의 시간순 진행]\n{lines}\n"
+        "★화면 진행은 위 뼈대의 시간순을 따르라 — 비트들의 seg_ids가 전체적으로 이 순서를 "
+        "거스르지 않게 배치해라(과정이 뒤로 갔다 앞으로 오는 뒤죽박죽 금지). 다른 영상(서브) "
+        "컷은 흐름에 맞는 자리에 끼워 넣어도 된다. 순서는 뼈대를 따르되, 대사는 헌장대로 "
+        "온전히 하나의 이야기로 써라.")
 
 
 def build_scene_first_plan(source_scripts, reference_text, target_seconds,
@@ -882,14 +865,22 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     if not seg_map:
         return {"candidates": [], "detected_type": detected}
     _call = call or _vault_call
-    raws = []
+    # 백본 통합(2026-07-22 페이블 점검): 생성기는 rich 하나만 쓴다. backbone_base면 백본을
+    # 골라 '화면 순서 제약' 블록만 프롬프트에 얹는다 — 스토리·은행·다중컷은 rich가 담당,
+    # 백본은 순서만 담당. (예전 뼈다귀 생성기 분기는 스키마에 스토리 필드가 없어 폐기.)
+    bb_video, order_block = None, ""
     if backbone_base:
-        raws = _backbone_base_candidates(source_scripts, target_seconds, _call,
-                                         backbone_meta=backbone_meta, backbone_forced=backbone_forced,
-                                         bank_context=bank_context)
-    if not raws:
-        raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates,
-                                       call=_call, bank_context=bank_context)
+        from shopping_shorts import backbone
+        bb_video = backbone.pick_backbone(source_scripts, meta=backbone_meta,
+                                          forced=backbone_forced)
+        if bb_video:
+            order_block = _backbone_order_block(bb_video, source_scripts)
+    raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates,
+                                   call=_call, bank_context=bank_context,
+                                   order_block=order_block)
+    if bb_video:
+        for r in raws:
+            r.setdefault("_backbone_video", bb_video)   # 핑퐁 순서고정이 이 백본을 쓴다
     src_texts = [s.get("full_text", "") for s in source_scripts]
     cands = []
     for r in raws:

@@ -1,9 +1,11 @@
-"""백본-베이스(확정스펙 2026-07-21): build_scene_first_plan(backbone_base=True)는 레퍼런스
-자유생성 대신 백본 흐름 위에 100% 우리 대본을 생성한다(실제 seg_id만). 못 고르면 폴백."""
+"""백본 통합(2026-07-22 페이블 점검 결론): 생성기는 rich(_scene_first_candidates) 하나만.
+backbone_base=True는 백본의 '화면 순서 제약' 블록만 프롬프트에 얹는다 — 스토리 선언·짤드라마
+헌장·은행·다중컷은 rich가 담당. (예전 뼈다귀 생성기는 스키마에 스토리 필드가 없어 단조·무스토리·
+은행묻힘이 구조적으로 났고 폐기됨 — 그 회귀 방지가 이 테스트들.)"""
 from shopping_shorts import edit_plan
 
 
-# BB는 세그먼트 2개(최다) → 백본으로 뽑힌다. S1은 서브.
+# BB는 세그먼트 2개(최다)+인스타 → 백본. S1은 서브.
 _SOURCES = [
     {"video_id": "BB", "full_text": "백본대본", "segments": [
         {"seg_id": "BB-1", "start": 0, "end": 3, "text": "", "scene_desc": "재료 손질", "action": "자르다"},
@@ -12,86 +14,66 @@ _SOURCES = [
         {"seg_id": "S1-9", "start": 0, "end": 3, "text": "", "scene_desc": "붓는 장면", "action": "붓다"}]},
 ]
 
-
-def _bb_call(prompt, schema):
-    # 백본 대본생성 스키마(beats: narration+seg_id) — 실제 seg_id(BB-1)와 없는 seg_id(ZZ-9) 섞음.
-    return {"beats": [
-        {"narration": "이거 진짜 대박인데요, 이렇게 썰기만 하면 끝나요", "seg_id": "BB-1"},
-        {"narration": "짜잔, 이렇게 완성됩니다", "seg_id": "BB-2"},
-        {"narration": "없는 장면 요구", "seg_id": "ZZ-9"}]}
+_RICH = {"candidates": [{
+    "hook": "이거 실화냐?", "story_person": "남편",
+    "beats": [
+        {"role": "훅", "narration": "이거 실화냐? 남편이 아침을 거르더라고요", "seg_ids": ["BB-1"], "fit": 5},
+        {"role": "결말", "narration": "이젠 이것만 찾아요", "seg_ids": ["BB-2"], "fit": 5}]}]}
 
 
-def test_backbone_base_uses_backbone_script():
-    res = edit_plan.build_scene_first_plan(_SOURCES, "레퍼런스무시", 20, n_candidates=3,
-                                           call=_bb_call, backbone_base=True)
-    assert len(res["candidates"]) == 1
-    beats = res["candidates"][0]["plan"]["beats"]
-    # 우리가 생성한 백본 대본이 실렸다(레퍼런스 자유생성 아님).
-    assert "썰기만 하면" in beats[0]["narration"]
-    # 인벤토리 밖 seg_id(ZZ-9)는 드롭 — 없는 장면 요구 차단.
-    assert all(b["primary"]["seg_id"] in ("BB-1", "BB-2") for b in beats)
-
-
-def test_backbone_base_falls_back_when_no_beats():
-    # 백본 대본생성이 비면(빈 beats) 레퍼런스-먼저로 폴백해야 한다(회귀0).
-    def _empty_bb(prompt, schema):
-        if "beats" in schema.get("required", []):
-            return {"beats": []}                       # 백본 생성 실패
-        return {"candidates": [{"beats": [            # 레퍼런스-먼저 후보
-            {"seg_ids": ["BB-1"], "narration": "폴백 대본", "fit": 4, "role": "훅"}]}]}
-    res = edit_plan.build_scene_first_plan(_SOURCES, "레퍼런스", 20, n_candidates=1,
-                                           call=_empty_bb, backbone_base=True)
-    assert res["candidates"]
-    assert "폴백" in res["candidates"][0]["plan"]["beats"][0]["narration"]
-
-
-def test_backbone_base_prompt_carries_drama_and_bank():
-    # 백본-베이스 대본생성 프롬프트에 짤드라마 헌장 + 강한오프너 규칙 + 은행부품이 실려야 한다
-    # (안 실리면 흐름만 밋밋하게 따라가 설명체가 나온다 — 2026-07-22 대본 초기화 실사고).
+def test_backbone_base_uses_rich_generator_with_order_block():
+    # 백본은 '순서 블록'으로만 개입 — 프롬프트에 스토리 헌장+은행+순서 뼈대가 전부 실려야 한다.
     seen = {}
 
     def _cap(prompt, schema):
-        if "beats" in schema.get("required", []):
-            seen["prompt"] = prompt
-            return {"beats": [{"narration": "훅", "seg_id": "BB-1"}]}
-        return {"candidates": []}
-    edit_plan.build_scene_first_plan(_SOURCES, "ref", 20, n_candidates=1,
-                                     call=_cap, backbone_base=True,
-                                     bank_context="[은행 훅 재료] 이거 실화냐")
+        seen["prompt"], seen["schema"] = prompt, schema
+        return _RICH
+    res = edit_plan.build_scene_first_plan(_SOURCES, "ref", 20, n_candidates=1, call=_cap,
+                                           backbone_base=True, bank_context="[은행 훅] 이거 실화냐")
     p = seen["prompt"]
-    assert "짤드라마" in p                       # 짤드라마 헌장 주입
-    assert "설명체" in p                         # 강한 오프너(설명체 금지) 규칙
-    assert "이거 실화냐" in p                    # 은행 부품 주입
-    assert "화면=행위, 대사=이야기" in p         # 중간 비트도 설명 말고 이야기로(핵심 규칙)
+    assert "화면 순서 뼈대" in p and "BB-1" in p and "BB-2" in p   # 백본 순서 제약
+    assert p.index("BB-1 [자르다]") < p.index("BB-2 [올리다]")      # 시간순 나열
+    assert "짤드라마" in p                                         # rich 스토리 헌장 그대로
+    assert "[은행 훅] 이거 실화냐" in p                             # 은행 부품 주입 그대로
+    # rich 스키마(스토리 필드·다중컷)로 생성 — 뼈다귀 스키마(beats+seg_id 단일) 회귀 방지.
+    cand_props = seen["schema"]["properties"]["candidates"]["items"]["properties"]
+    assert "story_person" in cand_props and "hook" in cand_props
+    # 후보가 rich 형태로 grounding됨 + 스토리 필드 보존.
+    rec = res["candidates"][0]
+    assert rec["story"]["story_person"] == "남편"
+    assert "남편" in rec["plan"]["beats"][0]["narration"]
 
 
-def test_judge_picks_best_of_n_drafts():
-    # 백본 순서 위에서 N개 안 생성 → 심사위원(대본품질)이 제일 좋은 걸 추천.
-    state = {"i": 0}
+def test_backbone_base_off_has_no_order_block():
+    seen = {}
 
+    def _cap(prompt, schema):
+        seen["prompt"] = prompt
+        return _RICH
+    edit_plan.build_scene_first_plan(_SOURCES, "ref", 20, n_candidates=1, call=_cap,
+                                     backbone_base=False)
+    assert "화면 순서 뼈대" not in seen["prompt"]
+
+
+def test_backbone_order_block_empty_when_backbone_missing():
+    assert edit_plan._backbone_order_block("없는영상", _SOURCES) == ""
+    assert edit_plan._backbone_order_block("BB", []) == ""
+
+
+def test_judge_picks_best_candidate():
+    # rich 생성이 후보 2개를 주면 심사위원(대본품질·장면싱크·스토리라인)이 최고를 추천한다.
     def _call(prompt, schema):
         props = schema.get("properties", {})
-        if "script_quality" in props:                      # 심사 콜
-            return {"script_quality": 5 if "좋은 훅" in prompt else 1,
-                    "scene_sync": 3, "storyline": 3}
-        state["i"] += 1                                     # 생성 콜: 초안마다 다르게
-        if state["i"] == 1:
-            return {"beats": [{"narration": "밋밋한 설명이에요", "seg_id": "BB-1"}]}
-        return {"beats": [{"narration": "좋은 훅 이거 실화냐", "seg_id": "BB-2"}]}
-
+        if "script_quality" in props:                    # 심사 콜
+            good = "남편" in prompt                      # 스토리 있는 후보에 고득점
+            return {"script_quality": 5 if good else 1, "scene_sync": 3, "storyline": 5 if good else 1}
+        return {"candidates": [
+            {"hook": "", "beats": [{"role": "", "narration": "달걀을 부어요",
+                                    "seg_ids": ["BB-1"], "fit": 5}]},
+            {"hook": "h", "story_person": "남편", "beats": [
+                {"role": "훅", "narration": "남편이 아침을 거르더라고요", "seg_ids": ["BB-2"], "fit": 5}]}]}
     res = edit_plan.build_scene_first_plan(_SOURCES, "ref", 20, call=_call,
                                            backbone_base=True, judge=True)
-    assert len(res["candidates"]) >= 2                      # best-of-N(중복 제거 후)
     rec = next(c for c in res["candidates"] if c["recommended"])
-    assert "좋은 훅" in rec["plan"]["beats"][0]["narration"]   # 심사 최고점이 추천됨
-    assert rec["judge"]["script_quality"] == 5
-
-
-def test_backbone_base_off_is_reference_first():
-    # backbone_base=False면 기존 레퍼런스-먼저 경로 그대로(회귀0).
-    def _ref(prompt, schema):
-        return {"candidates": [{"beats": [
-            {"seg_ids": ["BB-1"], "narration": "레퍼런스 대본", "fit": 4, "role": "훅"}]}]}
-    res = edit_plan.build_scene_first_plan(_SOURCES, "레퍼런스", 20, n_candidates=1,
-                                           call=_ref, backbone_base=False)
-    assert "레퍼런스 대본" in res["candidates"][0]["plan"]["beats"][0]["narration"]
+    assert "남편" in rec["plan"]["beats"][0]["narration"]   # 스토리 후보가 이김
+    assert rec["judge"]["storyline"] == 5
