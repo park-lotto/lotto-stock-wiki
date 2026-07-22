@@ -47,6 +47,7 @@ from shopping_shorts import youtube_search
 from shopping_shorts.config import APIFY_TOKENS
 from shopping_shorts.media_download import resolve_media_url, download_any, probe_grab_meta
 from shopping_shorts import edit_plan as _edit_plan
+from shopping_shorts import edit_plan
 from shopping_shorts import voice_presets, audio_post
 from shopping_shorts import pron_corrections
 from shopping_shorts.tts import synthesize_tts
@@ -2142,6 +2143,42 @@ def api_pron_global_delete(request: Request, phrase: str):
     d.pop(phrase, None)
     pron_corrections.save(store, d)
     return {"ok": True}
+
+
+_PRON_SUGGEST_SCHEMA = {
+    "type": "object",
+    "properties": {"suggestions": {"type": "array", "items": {
+        "type": "object",
+        "properties": {"phrase": {"type": "string"}, "respelling": {"type": "string"},
+                       "reason": {"type": "string"}},
+        "required": ["phrase", "respelling"]}}},
+    "required": ["suggestions"],
+}
+
+
+@app.post("/api/pron/suggest")
+async def api_pron_suggest(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    text = (body.get("text") or "").strip()
+    if not text:
+        return {"suggestions": []}
+    prompt = (
+        "다음 한국어 나레이션에서 TTS가 이어발음(연음)·발음을 어색하게 읽을 만한 구절을 찾아라. "
+        "각 구절마다 성우가 자연스럽게 읽도록 소리 나는 대로 다시 쓴 '재표기'를 제시하라. "
+        "예: '좋은데요'→'조은데요', '같이'→'가치'. 원문에 실제로 있는 구절만. 없으면 빈 배열.\n"
+        f"나레이션: {text}\n출력은 스키마 JSON만."
+    )
+    result = edit_plan._vault_call(prompt, _PRON_SUGGEST_SCHEMA)
+    if not result or not isinstance(result.get("suggestions"), list):
+        return {"suggestions": []}
+    # 원문에 실제로 있는 구절만 통과(환각 제거) + no-op 제거.
+    out = [s for s in result["suggestions"]
+           if s.get("phrase") and s.get("respelling")
+           and s["phrase"] in text and s["phrase"] != s["respelling"]]
+    return {"suggestions": out}
 
 
 def _voice_snapshot(store, body):
