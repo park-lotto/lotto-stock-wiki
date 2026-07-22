@@ -3985,6 +3985,51 @@ def _record_access(customer_id, request):
         pass
 
 
+# 활동 트레일(2026-07-22): 경로→친절한 액션명. 이 목록에 걸리는 요청만 '몇 번 전 뭘 했다'로 남는다.
+# 나머지(단순 조회·정적)는 last_seen(접속중)만 갱신하고 로그엔 안 남긴다.
+_ACTIVITY_MAP = (
+    ("/api/mix/start", "영상 제작 시작"),
+    ("/api/produce/mix/render", "영상 렌더"),
+    ("/api/produce/mix/settings", "제작 설정"),
+    ("/api/grab", "재료 담기"),
+    ("/api/find/analyze", "렌즈 분석"),
+    ("/api/find/candidates", "유사영상 검색"),
+    ("/api/find/translate_keyword", "키워드 번역"),
+    ("/api/produce/extract_from_url", "대본 추출"),
+    ("/api/produce/category", "카테고리 분류"),
+    ("/api/produce/save_to_wiki", "대본 저장"),
+    ("/api/collect", "소스 수집"),
+)
+_LASTSEEN_SEEN = {}   # cid → 마지막 last_seen 기록 epoch(60s 스로틀)
+_ACTIVITY_SEEN = {}   # (cid, action) → 마지막 로그 epoch(60s 중복제거)
+
+
+def _track_activity(customer_id, path):
+    """접속중(last_seen) 갱신 + 의미있는 액션이면 활동 로그. best-effort, 요청 절대 안 막는다.
+    사장님(0)은 항상 온라인이라 굳이 기록 안 함(노이즈)."""
+    if not customer_id:
+        return
+    try:
+        now = int(datetime.now(timezone.utc).timestamp())
+        st = Store(DB_PATH)
+        if now - _LASTSEEN_SEEN.get(customer_id, 0) >= 60:          # last_seen 60s 스로틀
+            st.touch_customer(customer_id, now)
+            if len(_LASTSEEN_SEEN) > 50000:
+                _LASTSEEN_SEEN.clear()
+            _LASTSEEN_SEEN[customer_id] = now
+        for pref, label in _ACTIVITY_MAP:
+            if path.startswith(pref):
+                k = (customer_id, label)
+                if now - _ACTIVITY_SEEN.get(k, 0) >= 60:            # 같은 액션 60s 내 1건만
+                    st.record_activity(customer_id, label, now)
+                    if len(_ACTIVITY_SEEN) > 50000:
+                        _ACTIVITY_SEEN.clear()
+                    _ACTIVITY_SEEN[k] = now
+                break
+    except Exception:
+        pass
+
+
 @app.middleware("http")
 async def _auth_guard(request: Request, call_next):
     if not _AUTH_ON:
@@ -4006,6 +4051,7 @@ async def _auth_guard(request: Request, call_next):
     if customer_id is not None:
         request.state.customer_id = customer_id
         _record_access(customer_id, request)   # 돌려쓰기 소프트감지(best-effort, 차단 안 함)
+        _track_activity(customer_id, path)     # 접속중·활동기록(best-effort)
         lvl = access_level(customer_id)
         if lvl == "pending":
             # 승인 전 전면 차단. /logout만 통과(로그아웃 가능), /static은 위에서 이미 허용.
@@ -4275,6 +4321,7 @@ def _admin_customers(request: Request):
         cu["access_7d"] = st.access_summary(cu["id"], since7)   # {ips, devices} 최근 7일 고유 수
         cu["is_admin"] = _is_admin(cu["id"])                    # 관리자 배지용
         cu["code_admin"] = _code_admin(cu["id"])                # 코드 고정 관리자(UI 토글 불가)
+        # last_seen은 store.list_customers가 이미 넣어줌 → 프론트가 '접속중/N분전' 계산
         out.append(cu)
     return {"ok": True, "customers": out, "settings": st.all_settings()}
 
@@ -4327,6 +4374,15 @@ async def _admin_customer_set_admin(request: Request):
         return JSONResponse({"error": "고정 관리자는 변경할 수 없어요"}, status_code=400)
     Store(DB_PATH).set_customer_admin(cid, bool(body.get("admin")))
     return {"ok": True}
+
+
+@app.get("/api/admin/customer/activity")
+def _admin_customer_activity(request: Request, customer_id: int):
+    """이 고객의 최근 활동(몇 번 전 뭘 했다). admin 전용."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return {"ok": True, "activity": Store(DB_PATH).recent_activity(customer_id, 12)}
 
 
 @app.post("/api/admin/set_plan")

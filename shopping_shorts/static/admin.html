@@ -61,7 +61,7 @@ tbody tr:hover{background:#1b1b22}
       <option value="free">일반회원</option>
     </select>
   </div>
-  <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>시작일</th><th>마감일</th><th>결제</th><th>오늘 사용(렌즈/렌더/대본)</th><th>접속7일(IP/기기)</th><th>조작</th></tr></thead>
+  <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>시작일</th><th>마감일</th><th>결제</th><th>오늘 사용(렌즈/렌더/대본)</th><th>접속7일(IP/기기)</th><th>접속/활동</th><th>조작</th></tr></thead>
   <tbody id=rows></tbody></table>
 </div>
 
@@ -98,6 +98,16 @@ async function load(){
 }
 
 function _tierOf(c){ return c.level==='full' ? (c.plan==='pro'?'pro':'trial') : 'free'; }
+function _ago(s){ if(s<60)return '방금 전'; if(s<3600)return Math.floor(s/60)+'분 전'; if(s<86400)return Math.floor(s/3600)+'시간 전'; return Math.floor(s/86400)+'일 전'; }
+// 접속/활동 셀 클릭 → 최근 활동 트레일 팝업
+document.addEventListener('click', async (e)=>{
+  const el=e.target.closest('.actlink'); if(!el) return;
+  const cid=el.dataset.actcid;
+  const d=await (await fetch('/api/admin/customer/activity?customer_id='+cid)).json();
+  const now=Math.floor(Date.now()/1000);
+  const lines=(d.activity||[]).map(a=>`${_ago(now-a.at)}  ·  ${a.action}`).join('\n') || '기록된 활동이 없어요';
+  alert('최근 활동\n\n'+lines);
+});
 
 function renderCustomers(){
   const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -119,12 +129,16 @@ function renderCustomers(){
     const accSusp = (acc.ips>=3 || acc.devices>=3);
     const accCell = `<span style="color:${accSusp?'#ff6b6b':'#8a8a92'};font-weight:${accSusp?'700':'400'}">${acc.ips}IP/${acc.devices}기기${accSusp?' ⚠️':''}</span>`;
     const adminBadge = c.is_admin ? ' <span class="badge admin">관리자</span>' : '';
+    const ls = c.last_seen||0, nowS=Math.floor(Date.now()/1000);
+    const online = ls && (nowS-ls) < 300;   // 5분 내 활동 = 접속중
+    const seenCell = `<span class=actlink data-actcid=${c.id} title="최근 활동 보기" style="cursor:pointer;color:${online?'#7ee787':'#8ab4f8'}">${online?'🟢 접속중':(ls?'⚪ '+_ago(nowS-ls):'-')}</span>`;
     return `<tr><td>${c.id}</td><td>${esc(c.name)}${adminBadge}</td><td>${esc(c.phone)}</td><td>${esc(c.email||c.username)}</td><td>${c.plan}</td><td>${lvl}</td>
       <td style="color:#8a8a92">${c.approved_at? new Date(c.approved_at*1000).toLocaleDateString('ko-KR'):'-'}</td>
       <td style="color:#8a8a92">${c.full_access_until? new Date(c.full_access_until*1000).toLocaleDateString('ko-KR'):'-'}</td>
       <td>${c.last_payment? `<span class=paylink data-cid=${c.id} style="cursor:pointer;color:#8ab4f8">${c.last_payment.amount.toLocaleString()}원 · ${c.payment_count}건</span>` : '-'}</td>
       <td>${u.lens||0}/${u.render||0}/${u.script||0}</td>
       <td>${accCell}</td>
+      <td>${seenCell}</td>
       <td><button class=bpay onclick="addPayment(${c.id})">결제추가</button>
           <button class=bedit onclick="editInfo(${c.id})">정보수정</button>
           <button class=bfree onclick="setPlan(${c.id},'free')">일반회원</button>
@@ -134,7 +148,7 @@ function renderCustomers(){
             ? `<button class=badm onclick="setAdmin(${c.id},false)">관리자해제</button>`
             : `<button class=badm onclick="setAdmin(${c.id},true)">관리자지정</button>`)}
           ${c.is_admin?'':`<button class=bdel onclick="delCustomer(${c.id})">삭제</button>`}</td></tr>`;
-  }).join('') : '<tr><td colspan=12 class=empty>조건에 맞는 고객이 없어요</td></tr>';
+  }).join('') : '<tr><td colspan=13 class=empty>조건에 맞는 고객이 없어요</td></tr>';
 }
 async function approveCustomer(cid){
   const days = prompt('이용일수 (예: 30)', '');
