@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>숏템박스 레퍼런스 랭킹</title>
 <script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<!-- 세련된 한글 폰트(배지용, 2026-07-22). 실패해도 시스템폰트로 폴백 — 회귀 없음. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
   /* 스탁브레인 민트-블랙 투톤(다크 기본). produce.html과 동일 토큰. */
   :root{--bg:#0a0f0d;--panel:#101815;--line:#1e2b26;--txt:#eaf3f0;--sub:#8fa1a0;
@@ -54,29 +56,33 @@
      색점으로 어떤 썸네일 위에서도 잘 읽히게. ⭐는 지표 종합 상위(진짜 괜찮은 것). */
   .ibadge{position:absolute;top:8px;left:8px;z-index:3;pointer-events:none;
           display:inline-flex;align-items:center;gap:5px;max-width:calc(100% - 16px);
-          font-size:12px;font-weight:800;line-height:1.15;padding:5px 11px;border-radius:999px;
-          color:#fff;letter-spacing:-.3px;white-space:nowrap;
-          background:rgba(18,18,22,.74);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
-          box-shadow:0 3px 12px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.15);
-          text-shadow:0 1px 2px rgba(0,0,0,.55)}
-  .ibadge .dot{width:7px;height:7px;border-radius:50%;flex:none;background:currentColor;
-               box-shadow:0 0 7px currentColor}
-  .ibadge.rising{color:#ff6b6b}   /* 소형 급상승 */
-  .ibadge.proven{color:#ffd24d}   /* 대형 반응 뜨거움 */
-  .ibadge.gem{color:#3be0d0}      /* 알짜 */
-  .ibadge.hot{color:#ff9a4d}      /* 상승중 */
-  .ibadge.reach{color:#6db3ff}    /* 도달 큼 */
-  .ibadge.flat{color:#b0b0ba}     /* 반응 보통 */
-  /* ⭐ 진짜 괜찮은 항목 — 금색 글로우 pill */
-  .ibadge.star{color:#1a1200;font-weight:900;
-               background:linear-gradient(135deg,#ffe27a,#ffc933);
+          font-family:'Pretendard Variable',Pretendard,-apple-system,system-ui,sans-serif;
+          font-size:12px;font-weight:700;line-height:1.1;padding:5px 11px 5px 8px;border-radius:999px;
+          color:#fff;letter-spacing:-.2px;white-space:nowrap;
+          background:rgba(16,16,20,.7);backdrop-filter:blur(8px) saturate(1.3);-webkit-backdrop-filter:blur(8px) saturate(1.3);
+          box-shadow:0 4px 14px rgba(0,0,0,.42),inset 0 0 0 1px rgba(255,255,255,.14);
+          text-shadow:0 1px 2px rgba(0,0,0,.5)}
+  .ibadge .emo{display:inline-block;font-size:13.5px;line-height:1;
+               animation:emoBob 1.5s ease-in-out infinite;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
+  @keyframes emoBob{0%,100%{transform:translateY(0) scale(1)}45%{transform:translateY(-2.5px) scale(1.18)}}
+  .ibadge .lbl{color:currentColor;filter:brightness(1.15)}
+  .ibadge.rising{color:#ff7a7a} .ibadge.proven{color:#ffd76b} .ibadge.gem{color:#4fe6d6}
+  .ibadge.hot{color:#ffa657}  .ibadge.reach{color:#7cbcff} .ibadge.flat{color:#c2c2cc}
+  /* ⭐ 진짜 괜찮은 항목 — 금색 글로우 pill, 별 회전 */
+  .ibadge.star{font-weight:800;color:#2a1e00;
+               background:linear-gradient(135deg,#ffe793,#ffc93a);text-shadow:none;
                box-shadow:0 0 0 1.5px #ffd24d,0 4px 16px rgba(255,196,0,.55);
-               text-shadow:none;animation:starGlow 1.9s ease-in-out infinite}
+               animation:starGlow 1.9s ease-in-out infinite}
+  .ibadge.star .lbl{background:none;-webkit-text-fill-color:#2a1e00;color:#2a1e00}
+  .ibadge.star .emo{animation:emoSpin 2.2s ease-in-out infinite;filter:drop-shadow(0 0 3px rgba(255,220,120,.9))}
+  @keyframes emoSpin{0%,100%{transform:rotate(-10deg) scale(1)}50%{transform:rotate(10deg) scale(1.22)}}
   @keyframes starGlow{0%,100%{box-shadow:0 0 0 1.5px #ffd24d,0 4px 14px rgba(255,196,0,.45)}
                       50%{box-shadow:0 0 0 1.5px #fff0b0,0 4px 22px rgba(255,196,0,.9)}}
   .vbadge{position:absolute;bottom:8px;right:8px;z-index:3;pointer-events:none;
-          font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;letter-spacing:-.2px;
-          background:rgba(0,0,0,.66);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+          font-family:'Pretendard Variable',Pretendard,system-ui,sans-serif;
+          font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:-.2px;
+          background:rgba(0,0,0,.62);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.4);
+          backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
   .card .body{padding:12px;flex:1;display:flex;flex-direction:column}
   .card .rank{font-size:12px;color:var(--sub)}
   .card .ch{font-weight:600;font-size:14px;margin:4px 0;display:flex;align-items:center;justify-content:space-between;gap:6px}
@@ -566,14 +572,14 @@ function setSearch(q){ STATE.q = q; render(); }
 function _pctl(sorted, v){ let lo=0,hi=sorted.length; while(lo<hi){const m=(lo+hi)>>1; if(sorted[m]<=v) lo=m+1; else hi=m;} return sorted.length? lo/sorted.length : 0; }
 function _fmtViews(n){ n=n||0; return n>=10000 ? (n/10000).toFixed(1)+'만' : n.toLocaleString(); }
 function _insight(vr, dr, sr){
-  // 규모(조회수) · 상태(반응/상승세) 형식. 백분위 조합.
-  if(vr>=0.70 && dr>=0.60) return {t:'대형채널 · 반응 뜨거움', c:'proven'}; // 도달 크고 반응도 뜨겁다
-  if(vr<=0.40 && sr>=0.70) return {t:'소형채널 · 반응 급상승', c:'rising'}; // 작은데 지금 치고 올라옴
-  if(vr<=0.40 && dr>=0.75) return {t:'소형채널 · 알짜 반응', c:'gem'};      // 작은데 참여밀도 최상
-  if(vr>=0.70 && dr<0.40)  return {t:'대형채널 · 반응 보통', c:'flat'};     // 도달만 크고 반응 미지근
-  if(sr>=0.85)             return {t:'반응 상승중', c:'hot'};
-  if(dr>=0.90)             return {t:'참여율 최상위', c:'gem'};
-  if(vr>=0.85)             return {t:'대형채널 · 도달 큼', c:'reach'};
+  // 규모(BIG/SMALL) · 상태. 짧고 트렌디하게, 이모지 분리.
+  if(vr>=0.70 && dr>=0.60) return {e:'🔥', t:'BIG채널 · 반응UP', c:'proven'}; // 도달 크고 반응도 뜨겁다
+  if(vr<=0.40 && sr>=0.70) return {e:'🚀', t:'SMALL채널 · 떡상中', c:'rising'}; // 작은데 지금 치고 올라옴
+  if(vr<=0.40 && dr>=0.75) return {e:'💎', t:'SMALL채널 · 알짜', c:'gem'};     // 작은데 참여밀도 최상
+  if(vr>=0.70 && dr<0.40)  return {e:'📺', t:'BIG채널 · 반응보통', c:'flat'};  // 도달만 크고 반응 미지근
+  if(sr>=0.85)             return {e:'📈', t:'반응 급상승', c:'hot'};
+  if(dr>=0.90)             return {e:'💎', t:'참여율 TOP', c:'gem'};
+  if(vr>=0.85)             return {e:'👑', t:'BIG채널 · 도달UP', c:'reach'};
   return null;
 }
 function badgeHTML(i, ctx){
@@ -583,9 +589,9 @@ function badgeHTML(i, ctx){
   if(b){
     // ⭐ = 진짜 괜찮은 것: 도달·반응·상승세 종합(반응 가중) 상위. 화면당 소수만.
     const score = vr*0.40 + dr*0.45 + sr*0.15;
-    const star = score>=0.80;
-    const inner = star ? `⭐ ${b.t}` : `<span class="dot"></span>${b.t}`;
-    h+=`<span class="ibadge ${star?'star':b.c}">${inner}</span>`;
+    const star = score>=0.85;
+    const emo = star ? '⭐' : b.e;
+    h+=`<span class="ibadge ${star?'star':b.c}"><span class="emo">${emo}</span><span class="lbl">${b.t}</span></span>`;
   }
   if(i.views) h+=`<span class="vbadge">👁 ${_fmtViews(i.views)}</span>`;
   return h;
