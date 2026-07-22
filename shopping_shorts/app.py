@@ -48,6 +48,7 @@ from shopping_shorts.config import APIFY_TOKENS
 from shopping_shorts.media_download import resolve_media_url, download_any, probe_grab_meta
 from shopping_shorts import edit_plan as _edit_plan
 from shopping_shorts import voice_presets, audio_post
+from shopping_shorts import pron_corrections
 from shopping_shorts.tts import synthesize_tts
 from shopping_shorts import tts, asr_check
 from shopping_shorts import export_bundle
@@ -2102,6 +2103,44 @@ async def api_voice_tune_profile_save(preset_id: str, req: Request):
     prof["_frozen"] = bool(body.get("frozen"))
     p["naturalize_profile"] = prof
     store.upsert_voice_preset(p)
+    return {"ok": True}
+
+
+@app.get("/api/pron/global")
+def api_pron_global_list(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    d = pron_corrections.load(Store(DB_PATH))
+    return {"entries": [{"phrase": k, "respelling": v} for k, v in d.items()]}
+
+
+@app.post("/api/pron/global")
+async def api_pron_global_save(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    phrase = (body.get("phrase") or "").strip()
+    respelling = (body.get("respelling") or "").strip()
+    if not phrase or not respelling or phrase == respelling:
+        return JSONResponse({"error": "구절/재표기가 비었거나 동일합니다"}, status_code=400)
+    store = Store(DB_PATH)
+    d = pron_corrections.load(store)
+    d[phrase] = respelling
+    pron_corrections.save(store, d)
+    return {"ok": True}
+
+
+@app.delete("/api/pron/global/{phrase}")
+def api_pron_global_delete(request: Request, phrase: str):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    d = pron_corrections.load(store)
+    d.pop(phrase, None)
+    pron_corrections.save(store, d)
     return {"ok": True}
 
 
