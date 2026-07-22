@@ -629,9 +629,14 @@ def assemble_clean_video(job_id, db_path, work_root):
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         out_path = Path(work_root) / job_id / "clean_preview.mp4"
         out_path.parent.mkdir(parents=True, exist_ok=True)
+        # burn_captions=False — 이 조립본은 '자막 없는 clean 배경'(썸네일용)이다. 우리 나레이션
+        # 자막을 구우면 썸네일 배경에 글자가 박혀 그 위에 제목을 얹을 수 없다(2026-07-22 사장님
+        # 제보: clean_preview.mp4에 나레이션 자막이 박혀 나왔다). 원본 자막은 clean_map(자막제거
+        # 소스)이 이미 없앴고, 여기선 우리 자막만 생략한다. 캡션 패스가 빠져 더 빠르기도 하다.
         assemble(plan, tts_paths, clean_map, str(out_path), clean_fn=None, deco={},
                  cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)),
-                 sfx_paths=_resolve_sfx_paths(store, plan, job.get("customer_id", 0)))
+                 sfx_paths=_resolve_sfx_paths(store, plan, job.get("customer_id", 0)),
+                 burn_captions=False)
         store.update_mix_job(job_id, clean_video_path=str(out_path))
         return str(out_path)
     except Exception:
