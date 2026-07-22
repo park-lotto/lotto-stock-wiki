@@ -219,6 +219,7 @@
     <div class="cards" id="cards">
       <div class="empty">「지금 수집」을 눌러 시작하세요.</div>
     </div>
+    <div id="channelHistoryWrap"></div>
   </main>
   <div class="modal-bg" id="scriptModal">
     <div class="modal-box">
@@ -435,9 +436,18 @@ function sortKey(i){
 //   그래서 한글 검색어는 "단어 시작" 위치에서만, 수량사·활용형 문맥은 배제하고 맞춘다.
 //   한계: 화면 자막(썸네일)에만 있는 주제어(예: 캡션에 '오이'가 없는 오이영상)는 못 찾는다
 //   — 그건 OCR(②) 몫. 여기선 캡션·카테고리·이름 텍스트 안에서만 정확도를 올린다.
+function _normUser(u){ return (u||'').trim().replace(/^@/,'').toLowerCase(); }
+// 검색어가 채널(아이디/이름)을 가리키나 — 카드의 채널명을 클릭하거나 @아이디를 치면
+// 그 채널의 영상만 뜨게 한다. 비전태그 유무와 무관(2026-07-22).
+function _isChannelHit(it, needle){
+  const n = _normUser(needle);
+  if(!n) return false;
+  return _normUser(it.username).includes(n) || (it.name||'').toLowerCase().includes(needle.trim().toLowerCase());
+}
 function matchesSearch(it, q){
   const needle = (q||'').trim().toLowerCase();
   if(!needle) return true;                       // 빈 검색어 = 전체
+  if(_isChannelHit(it, needle)) return true;     // ★채널명/아이디 검색 → 그 채널이면 통과
   // 비전 주제태그가 있으면 그걸 우선 매칭(캡션 무시) — 캡션에 우연히 든 말('빵빵한 사운드')이
   // '빵'에 걸리던 오검을 없앤다(2026-07-19). 태그 없으면(백그라운드 태깅 전) 캡션 백업.
   const hasTags = (it.vision_subject && it.vision_subject.trim())
@@ -525,6 +535,8 @@ function setSearch(q){ STATE.q = q; render(); }
 function render(){
   let items = STATE.items.slice();
   const searching = !!(STATE.q && STATE.q.trim());
+  const histWrap = document.getElementById("channelHistoryWrap");
+  if(histWrap) histWrap.innerHTML = "";   // 검색/필터 바뀔 때마다 초기화
   // 검색 중엔 카테고리·유형 필터를 무시하고 로드된 전체에서 찾는다(2026-07-18).
   // 왜: "오이" 쳤는데 지금 켠 '비법·꿀팁형' 탭에 없으면 안 잡히던 문제. 검색은 전역이어야 한다.
   if(!searching){
@@ -544,7 +556,7 @@ function render(){
       </div>
       <div class="body">
         <div class="rank">#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</div>
-        <div class="ch"><span class="chname">${i.name||i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${i.url}', this)">🔗 복사</button></div>
+        <div class="ch"><span class="chname" title="이 채널 영상만 보기(지난 한 달 포함)" style="cursor:pointer" onclick="searchChannel('${esc(i.username||'')}')">${i.name||i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${i.url}', this)">🔗 복사</button></div>
         ${i.followers?`<div class="rank" style="margin:-4px 0 4px">팔로워 ${i.followers.toLocaleString()}</div>`:''}
         ${i.views?`<div class="stat" title="조회수 — 유튜브/틱톡의 핵심 신호(속도·참여율의 기준)"><span>조회수</span><b>${i.views.toLocaleString()}</b></div>`:''}
         <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${i.comments.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>
@@ -566,6 +578,45 @@ function render(){
       </div>
     </div>`).join("");
   markSavedButtons();
+  // 채널 모드 감지 — 검색 결과가 한 채널로 수렴하면 그 채널의 '지난 한 달'을 아래에 붙인다.
+  const users = [...new Set(items.map(i=>_normUser(i.username)).filter(Boolean))];
+  if(searching && users.length===1){
+    _renderChannelHistory(users[0], items.map(i=>i.shortcode));
+  }
+}
+// 카드의 채널명 클릭 → 그 채널만(검색어=아이디). matchesSearch가 그 채널을 통과시키고
+// render의 채널모드 감지가 '지난 한 달'을 붙인다.
+function searchChannel(username){
+  if(!username) return;
+  const box=document.getElementById("rankSearch");
+  if(box) box.value = username;
+  setSearch(username);
+}
+async function _renderChannelHistory(username, liveShortcodes){
+  const wrap=document.getElementById("channelHistoryWrap");
+  if(!wrap) return;
+  try{
+    const ex=encodeURIComponent((liveShortcodes||[]).filter(Boolean).join(','));
+    const d=await (await fetch(`/api/channel/history?username=${encodeURIComponent(username)}&exclude=${ex}`)).json();
+    if(!d || !d.ok || !Array.isArray(d.items) || !d.items.length){ wrap.innerHTML=''; return; }
+    const cards = d.items.map(_historyCard).join('');
+    wrap.innerHTML = `<div style="margin:18px 0 8px;padding-top:12px;border-top:1px solid var(--line);color:var(--sub);font-size:13px">📅 지난 한 달 · @${esc(username)} <b style="color:var(--txt)">(${d.items.length})</b> <span style="font-size:11px">— 48시간 창에서 내려간 과거 수집분</span></div><div class="cards">${cards}</div>`;
+    markSavedButtons();
+  }catch(e){ wrap.innerHTML=''; }
+}
+function _historyCard(h){
+  return `<div class="card">
+    <div class="thumb"><img src="${h.thumb?('/api/thumb?url='+encodeURIComponent(h.thumb)):''}" loading="lazy" onerror="this.style.visibility='hidden'"></div>
+    <div class="body">
+      <div class="rank">${esc(h.category||'')} · ${fmtTime(h.last_seen)}</div>
+      <div class="ch"><span class="chname">${esc(h.name||h.username||'')}</span></div>
+      ${h.views?`<div class="stat"><span>조회수</span><b>${(h.views||0).toLocaleString()}</b></div>`:''}
+      <div class="stat"><span>댓글</span><b>${(h.comments||0).toLocaleString()}</b></div>
+      <div class="actions"><div class="btns">
+        <button class="view" onclick="window.open('${h.url}','_blank')">👁 보기</button>
+        <button class="save" id="save_${h.shortcode}" onclick="toggleMix('${h.shortcode}', this)">📥 담기</button>
+      </div></div>
+    </div></div>`;
 }
 function fmtTime(iso){
   // collected_at은 UTC로 저장됨 — 브라우저 로컬시간(한국이면 KST)으로 변환해 표시
