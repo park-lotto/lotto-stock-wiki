@@ -19,6 +19,8 @@ def video_id_from_url(url):
 
 _SEARCH_URL = "https://www.googleapis.com/youtube/v3/search"
 _VIDEOS_URL = "https://www.googleapis.com/youtube/v3/videos"
+_CHANNELS_URL = "https://www.googleapis.com/youtube/v3/channels"
+_COMMENTS_URL = "https://www.googleapis.com/youtube/v3/commentThreads"
 
 # 제목 문자(스크립트) 기반 언어 필터 — regionCode/relevanceLanguage는 약한 힌트라
 # 조회수순 검색에 외국 영상이 섞인다(실측 2026-07-13). 제목에 해당 언어 문자가
@@ -127,3 +129,55 @@ def search_shorts(keywords, published_after_iso, max_per_kw=20, token=None, lang
     for r in raw:
         r.update(stats.get(r["video_id"], {"views": 0, "likes": 0, "comments": 0}))
     return raw
+
+
+def _first_ok(url, params):
+    """YOUTUBE_API_KEYS를 순서대로 시도. 쿼터/403이면 다음 키. 전부 실패면 None."""
+    for tok in YOUTUBE_API_KEYS:
+        try:
+            r = requests.get(url, params={**params, "key": tok}, timeout=30)
+            if r.status_code == 403:
+                continue
+            r.raise_for_status()
+            return r.json()
+        except Exception:
+            continue
+    return None
+
+
+def enrich_youtube(url):
+    """유튜브 URL → 채널·지표·인기댓글·캡션 통합 dict. 유튜브 아니면 None,
+    쿼터소진 시 {"status": "quota"}."""
+    vid = video_id_from_url(url)
+    if not vid:
+        return None
+    vd = _first_ok(_VIDEOS_URL, {"part": "snippet,statistics", "id": vid})
+    if not vd or not vd.get("items"):
+        return {"status": "quota"} if vd is None else None
+    it = vd["items"][0]; sn = it.get("snippet", {}); stt = it.get("statistics", {})
+    channel_id = sn.get("channelId", "")
+    cd = _first_ok(_CHANNELS_URL, {"part": "snippet,statistics", "id": channel_id}) if channel_id else None
+    csn = (cd["items"][0]["snippet"] if cd and cd.get("items") else {})
+    cst = (cd["items"][0]["statistics"] if cd and cd.get("items") else {})
+    custom = csn.get("customUrl", "")
+    channel_url = ("https://www.youtube.com/" + custom) if custom else (
+        "https://www.youtube.com/channel/" + channel_id if channel_id else "")
+    cm = _first_ok(_COMMENTS_URL, {"part": "snippet", "videoId": vid,
+                                   "order": "relevance", "maxResults": 5})
+    top = []
+    for t in (cm.get("items", []) if cm else []):
+        c = t["snippet"]["topLevelComment"]["snippet"]
+        top.append({"author": c.get("authorDisplayName", ""),
+                    "text": c.get("textDisplay", ""), "likes": int(c.get("likeCount") or 0)})
+    return {
+        "platform": "youtube",
+        "channel_name": csn.get("title", ""),
+        "channel_url": channel_url,
+        "subscribers": int(cst.get("subscriberCount") or 0),
+        "views": int(stt.get("viewCount") or 0),
+        "likes": int(stt.get("likeCount") or 0),
+        "comment_count": int(stt.get("commentCount") or 0),
+        "upload_date": sn.get("publishedAt", ""),
+        "caption": sn.get("description", ""),
+        "top_comments": top,
+    }
