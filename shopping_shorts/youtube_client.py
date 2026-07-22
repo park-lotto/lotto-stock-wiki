@@ -7,6 +7,16 @@ import re
 import requests
 from shopping_shorts.config import YOUTUBE_API_KEYS
 
+# YouTube URL → video_id 파서
+_YT_ID = re.compile(r"(?:v=|youtu\.be/|/shorts/)([A-Za-z0-9_-]{11})")
+
+def video_id_from_url(url):
+    """유튜브 watch/youtu.be/shorts URL → 11자 video_id. 유튜브 아니면 None."""
+    if not url:
+        return None
+    m = _YT_ID.search(url)
+    return m.group(1) if m else None
+
 _SEARCH_URL = "https://www.googleapis.com/youtube/v3/search"
 _VIDEOS_URL = "https://www.googleapis.com/youtube/v3/videos"
 
