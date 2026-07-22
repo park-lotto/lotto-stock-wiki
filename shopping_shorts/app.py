@@ -3516,9 +3516,10 @@ setTimeout(function(){document.querySelectorAll('.hero [data-to]').forEach(cu);}
 </body></html>"""
 
 
-# ── 로그인 페이지 — "프로그램 런처" 연출(2026-07-23 사장님): 부팅 시퀀스(게이지+상태)
-#    후 로그인 박스가 떠오른다. JS 꺼짐/reduced-motion이면 부팅 생략·전부 즉시 표시.
-#    구조는 기존 유지: 구글버튼+운영자 접이식(__ERR__·/api/login 폼 그대로).
+# ── 로그인 페이지 — "프로그램 런처" 연출 v3(2026-07-23 사장님): 엔진 부팅 로그(모듈 로드
+#    타임라인+%카운터+링 스피너) 후 아이디·비번 폼이 메인, 구글은 보조 버튼.
+#    /api/login이 관리자(env)+고객(DB) 둘 다 검증하므로 폼 하나로 충분.
+#    JS 꺼짐/reduced-motion이면 부팅 생략·전부 즉시 표시.
 _LOGIN_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png"><title>__NAME__ 로그인</title>
@@ -3530,67 +3531,97 @@ body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:c
 background:radial-gradient(1000px 560px at 50% -18%,rgba(111,240,214,.11),transparent 62%),
 radial-gradient(700px 420px at 88% 108%,rgba(255,207,111,.05),transparent 55%),#090d10;
 font-family:'Noto Sans KR',system-ui,sans-serif;color:#e8f0ee}
-.box{width:384px;max-width:calc(100vw - 32px);padding:44px 34px 28px;text-align:center;
+.box{width:400px;max-width:calc(100vw - 24px);padding:38px 32px 26px;text-align:center;
 background:linear-gradient(180deg,#101a1c,#0c1214);border:1px solid #1e2b2c;border-radius:24px;
-box-shadow:0 34px 90px rgba(0,0,0,.6),0 0 0 1px rgba(111,240,214,.05) inset}
-.logo{display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:6px}
-.logo .sym{width:78px;height:78px;flex:none;filter:drop-shadow(0 0 16px rgba(111,240,214,.30))}
-@media (prefers-reduced-motion:no-preference){.logo .sym{animation:lpulse 3.2s ease-in-out infinite}}
+box-shadow:0 34px 90px rgba(0,0,0,.6),0 0 0 1px rgba(111,240,214,.05) inset;
+animation:cardin .5s ease}
+@keyframes cardin{from{opacity:0;transform:scale(.96) translateY(8px)}}
+.emwrap{position:relative;width:94px;height:94px;margin:0 auto}
+.emwrap .sym{position:absolute;inset:8px;width:78px;height:78px;filter:drop-shadow(0 0 16px rgba(111,240,214,.30))}
+@media (prefers-reduced-motion:no-preference){.emwrap .sym{animation:lpulse 3.2s ease-in-out infinite}}
 @keyframes lpulse{50%{filter:drop-shadow(0 0 30px rgba(111,240,214,.55))}}
-.logo .wm{display:flex;flex-direction:column;line-height:1;align-items:center}
-.logo .nm{font-family:'Black Han Sans',sans-serif;font-size:31px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);-webkit-background-clip:text;background-clip:text;color:transparent}
-.logo .en{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:3.4px;color:#7a9090;margin-top:5px}
-.ver{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:2px;color:#3f5a54;margin-top:10px}
-.boot{max-height:60px;margin:20px 0 4px;transition:opacity .4s ease,max-height .45s ease .15s,margin .45s ease .15s;overflow:hidden}
+.ring{position:absolute;inset:0;border-radius:50%;border:2px solid transparent;
+border-top-color:#6ff0d6;border-right-color:rgba(111,240,214,.35);opacity:0;transition:opacity .3s}
+body.booting .ring{opacity:1;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.wm{display:flex;flex-direction:column;line-height:1;align-items:center;margin-top:13px}
+.nm{font-family:'Black Han Sans',sans-serif;font-size:31px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.en{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:3.4px;color:#7a9090;margin-top:5px}
+.ver{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:2px;color:#3f5a54;margin-top:9px}
+.boot{max-height:120px;margin:18px 0 2px;transition:opacity .4s ease,max-height .45s ease .2s,margin .45s ease .2s;overflow:hidden;text-align:left}
 .boot.done{opacity:0;max-height:0;margin:0}
-.bar{height:4px;background:#0a1210;border:1px solid #1c2a28;border-radius:99px;overflow:hidden}
-.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#6ff0d6,#1f9e7a);border-radius:99px;transition:width .34s ease}
-.bstat{font-family:ui-monospace,monospace;font-size:11px;color:#527068;margin-top:9px;letter-spacing:.6px;min-height:13px}
+.bhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+.blabel{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:1.6px;color:#47605a}
+.bpct{font-family:ui-monospace,monospace;font-size:12px;color:#6ff0d6}
+.bar{height:5px;background:#0a1210;border:1px solid #1c2a28;border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:99px;transition:width .3s ease;
+background:linear-gradient(90deg,#1f9e7a,#6ff0d6,#1f9e7a);background-size:200% 100%;animation:flow 1.1s linear infinite}
+@keyframes flow{to{background-position:-200% 0}}
+.blog{font-family:ui-monospace,monospace;font-size:11px;line-height:1.75;color:#527068;margin-top:8px;height:58px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
+.blog .ok{color:#49c9a9}.blog .cur{color:#9fe8d6}
+.blog .cur:after{content:'▌';margin-left:2px;animation:blink .7s step-end infinite}
+@keyframes blink{50%{opacity:0}}
 .auth{transition:opacity .5s ease,transform .5s ease}
 body.booting .auth{opacity:0;transform:translateY(12px);pointer-events:none}
-h1{font-size:19px;margin:18px 0 6px;font-weight:700}
-.sub{color:#6ff0d6;font-size:13px;margin-bottom:22px;line-height:1.6}
-.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;
-background:#111722;border:1px solid #1e2735;border-radius:12px;color:#e8f0ee;font-size:15px;
+h1{font-size:18px;margin:16px 0 14px;font-weight:700}
+.lform input{width:100%;margin:5px 0;padding:13px 14px;background:#0a1113;border:1px solid #1e2b2c;
+border-radius:11px;color:#e8f0ee;font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s}
+.lform input:focus{border-color:#2f6a5c;box-shadow:0 0 0 3px rgba(111,240,214,.08)}
+.lbtn{width:100%;margin-top:10px;padding:13px;border:0;border-radius:11px;cursor:pointer;
+font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:15px;color:#08110e;
+background:linear-gradient(135deg,#6ff0d6,#1f9e7a);box-shadow:0 6px 22px rgba(31,158,122,.35);
+transition:transform .12s,box-shadow .12s}
+.lbtn:hover{transform:translateY(-1px);box-shadow:0 9px 28px rgba(31,158,122,.45)}
+.or{display:flex;align-items:center;gap:12px;margin:16px 0 10px;color:#3f5050;font-size:11px}
+.or:before,.or:after{content:'';flex:1;height:1px;background:#1a2626}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:11px;
+background:#101820;border:1px solid #1e2735;border-radius:11px;color:#b7c6c2;font-size:13px;
 font-weight:700;cursor:pointer;text-decoration:none;transition:background .15s,border-color .15s}
-.gbtn:hover{background:#16202e;border-color:#2f6a5c}
-.gbtn svg{width:18px;height:18px}
-.err{color:#e0623d;font-size:12px;margin-top:16px;min-height:14px;line-height:1.6}
-.home{display:block;color:#5f7373;font-size:12px;margin-top:20px;text-decoration:none}
-.home:hover{color:#6ff0d6}
-.atoggle{color:#3f5050;font-size:11px;margin-top:26px;cursor:pointer;background:none;border:0}
-.aform{display:none;margin-top:14px}.aform.show{display:block}
-.aform input{width:100%;margin:5px 0;padding:10px;background:#0a0f16;border:1px solid #1e2735;
-border-radius:8px;color:#eee;font-size:13px}
-.aform button{width:100%;margin-top:8px;padding:10px;background:#16202e;color:#6ff0d6;border:1px solid #2a3647;
-border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}</style></head>
+.gbtn:hover{background:#16202e;border-color:#2a3647}
+.gbtn svg{width:16px;height:16px}
+.err{color:#e0623d;font-size:12px;margin-top:13px;min-height:14px;line-height:1.6}
+.home{display:block;color:#5f7373;font-size:12px;margin-top:16px;text-decoration:none}
+.home:hover{color:#6ff0d6}</style></head>
 <body><div class=box>
-<div class=logo>__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></div>
+<div class=emwrap><div class=ring></div>__LOGO_SVG__</div>
+<div class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></div>
 <div class=ver>__NAME_EN__ STUDIO</div>
-<div class=boot id=boot><div class=bar><i id=bbar></i></div><div class=bstat id=bstat></div></div>
+<div class=boot id=boot>
+<div class=bhead><span class=blabel>SYSTEM BOOT</span><span class=bpct id=bpct>0%</span></div>
+<div class=bar><i id=bbar></i></div>
+<div class=blog id=blog></div>
+</div>
 <div class=auth>
 <h1>로그인</h1>
-<div class=sub>구글 계정으로 로그인하세요<br>처음이면 <b>무료 체험</b>이 바로 시작돼요</div>
+<form class=lform method=post action=/api/login>
+<input name=user placeholder="아이디 (이메일)" autocomplete=username>
+<input name=pass type=password placeholder=비밀번호 autocomplete=current-password>
+<button class=lbtn>로그인 →</button></form>
+<div class=or>또는</div>
 <a class=gbtn href="/auth/google/login">
 __GOOGLE_SVG__
-Google 계정으로 로그인</a>
+Google 계정으로 계속하기</a>
 <div class=err>__ERR__</div>
 <a class=home href="/">← 홈으로 돌아가기</a>
-<button class=atoggle onclick="document.getElementById('af').classList.toggle('show')">운영자 로그인</button>
-<form class=aform id=af method=post action=/api/login>
-<input name=user placeholder=아이디 autocomplete=username>
-<input name=pass type=password placeholder=비밀번호 autocomplete=current-password>
-<button>운영자 로그인</button></form>
 </div>
 </div>
 <script>(function(){
 if(matchMedia('(prefers-reduced-motion:reduce)').matches){document.getElementById('boot').classList.add('done');return;}
 var b=document.body;b.classList.add('booting');
-var bar=document.getElementById('bbar'),st=document.getElementById('bstat');
-var steps=[[14,'리소스 확인 중...'],[46,'서버 연결 중...'],[78,'세션 확인 중...'],[100,'준비 완료']],i=0;
-function nx(){if(i>=steps.length){b.classList.remove('booting');document.getElementById('boot').classList.add('done');return;}
-bar.style.width=steps[i][0]+'%';st.textContent=steps[i][1];i++;setTimeout(nx,i===steps.length?430:320);}
-setTimeout(nx,140);
+var bar=document.getElementById('bbar'),pct=document.getElementById('bpct'),lg=document.getElementById('blog');
+var steps=[[9,'코어 부팅'],[24,'AI 엔진 초기화'],[42,'트렌드 데이터 동기화'],[61,'대본 생성 모듈 로드'],[78,'렌더 파이프라인 웜업'],[92,'보안 채널 연결'],[100,'준비 완료']];
+var i=0,shown=0,tk=null;
+function tick(){shown=Math.min(shown+3,steps[Math.min(i,steps.length-1)][0]);pct.textContent=shown+'%';}
+tk=setInterval(tick,40);
+function nx(){
+var cur=lg.querySelector('.cur');if(cur){cur.className='ok';cur.textContent='  ✓ '+cur.dataset.t;}
+if(i>=steps.length){clearInterval(tk);pct.textContent='100%';
+setTimeout(function(){b.classList.remove('booting');document.getElementById('boot').classList.add('done');},260);return;}
+bar.style.width=steps[i][0]+'%';
+var d=document.createElement('div');d.className='cur';d.dataset.t=steps[i][1];d.textContent='  › '+steps[i][1];
+lg.appendChild(d);while(lg.children.length>3)lg.removeChild(lg.firstChild);
+i++;setTimeout(nx,i===steps.length?460:300);}
+setTimeout(nx,160);
 })();</script>
 </body></html>"""
 
@@ -3862,7 +3893,10 @@ a{color:#7db4ff;font-size:12px;text-decoration:none}
 
 
 @app.get("/login", response_class=HTMLResponse)
-def _login_page(e: str = ""):
+def _login_page(request: Request, e: str = ""):
+    # 이미 로그인된 세션이면 홈으로 — 앱 런처(작은 창)가 /login을 직접 열어도 재로그인 강요 안 함.
+    if _AUTH_ON and _verify_session(request.cookies.get("dash_auth", "")) is not None:
+        return RedirectResponse("/", status_code=303)
     if e == "1":
         msg = "아이디 또는 비밀번호가 틀렸습니다"
     elif e:   # 구글 콜백 등에서 온 안내 — XSS 방지 이스케이프
