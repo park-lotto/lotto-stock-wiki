@@ -24,6 +24,7 @@ from shopping_shorts.vmake_client import remove_subtitles
 from shopping_shorts.narration_naturalize import naturalize, merge_profile
 from shopping_shorts import asr_check
 from shopping_shorts import caption_sync
+from shopping_shorts import pron_corrections
 
 # 모션 자산 폴더(테스트가 monkeypatch로 교체 가능하도록 모듈 상수로 노출)
 MOTION_ASSETS_DIR = DEFAULT_ASSETS_DIR
@@ -58,7 +59,7 @@ def asr_ranker(path, text):
 
 def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=None,
                     beat_index=None, beat_total=None, previous_text=None, next_text=None,
-                    ranker=asr_ranker):
+                    ranker=asr_ranker, global_pron=None):
     """한 줄을 naturalize→TTS(N-best·연속성)→후처리까지 합성하고 변환텍스트를 반환.
 
     **튜닝 작업대와 실제 렌더가 공유하는 단일 경로**다. 양쪽이 각자 파이프라인을 조립하면
@@ -69,6 +70,8 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     거친 값으로 읽어 텍스트와 오디오가 같은 기준을 보게 한다(S10)."""
     voice_id, settings, speed, extra_tempo, trim, prof_v, model_id, pace_mode = _voice_params(voice)
     prof = merge_profile(profile if profile is not None else prof_v)
+    # 전역 발음교정을 profile 위에 병합(설계 §2-A) — 렌더·작업대 공통 choke.
+    prof = pron_corrections.overlay(prof, global_pron or {})
     natural = naturalize(narration, prof, beat_role=beat_role,
                          beat_index=beat_index, beat_total=beat_total)
     # 오독 자동회피(2026-07-22): Whisper 랭커(GROQ 키)가 실동작할 때만 n을 최소 2로
@@ -90,7 +93,7 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     return natural
 
 
-def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False):
+def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron=None):
     """비트별로 synthesize_line 호출. beat['tts_path']를 채운다.
     연속성(previous_text/next_text)은 인접 비트의 '원문'(naturalize 전) narration을 쓴다
     — naturalize된 텍스트(오디오 태그·추임새 포함)를 연속성으로 넘기면 ElevenLabs가
@@ -114,6 +117,7 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False):
             beat_index=i, beat_total=total,
             previous_text=beats[i - 1]["narration"] if i > 0 else None,
             next_text=beats[i + 1]["narration"] if i < total - 1 else None,
+            global_pron=global_pron,
         )
         beat["tts_path"] = str(out)
         # UI '영상 길이'는 target_seconds 합인데, 추정(글자÷5.7)은 보이스 speed를 못 봐서
@@ -169,7 +173,7 @@ def _refill_beats_to_tts(beats, source_scripts, tts_dir):
 _CONFORM_MIN_GAP = 0.8
 
 
-def _conform_beats(beats, tts_dir, *, voice):
+def _conform_beats(beats, tts_dir, *, voice, global_pron=None):
     """싱크 콘폼 패스(2026-07-20 설계 T3) — 대사가 영상 예산을 넘는 비트만 표면 재단.
 
     예산 = Σ(primary+alternates 구간 길이) × _MAX_SLOWMO. _plan_beat_clips가 세그먼트를
@@ -208,6 +212,7 @@ def _conform_beats(beats, tts_dir, *, voice):
                 beat_index=i, beat_total=total,
                 previous_text=beats[i - 1]["narration"] if i > 0 else None,
                 next_text=beats[i + 1]["narration"] if i < total - 1 else None,
+                global_pron=global_pron,
             )
         except Exception:
             traceback.print_exc(file=sys.stderr)
@@ -263,6 +268,7 @@ def _prepare_sources(urls, work):
 def run_mix_job(job_id, db_path, work_root):
     """다운로드→추출→EDL→TTS. 완료 시 status='ready_for_review'."""
     store = Store(db_path)
+    _gpron = pron_corrections.load(store)
     job = store.get_mix_job(job_id)
     if not job:
         return
@@ -307,7 +313,8 @@ def run_mix_job(job_id, db_path, work_root):
                       ping_pong=(store.get_setting("ping_pong_enabled", "") == "1"),
                       # 백본 선정: URL로 플랫폼 판별(인스타/유튜브만 백본, 샤오홍슈 서브) + 사장님 지정.
                       backbone_meta=_backbone_meta_from_job(job, extracts),
-                      backbone_forced=job.get("backbone_main") or None)
+                      backbone_forced=job.get("backbone_main") or None,
+                      global_pron=_gpron)
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
@@ -344,7 +351,7 @@ def _backbone_meta_from_job(job, extracts):
 def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, video_type, work,
                   given_script=None, voice=None, customer_id=0,
                   scene_first=False, reference_text="", ping_pong=False,
-                  backbone_meta=None, backbone_forced=None):
+                  backbone_meta=None, backbone_forced=None, global_pron=None):
     """EDL 생성(3) + 비트별 TTS(4) → edit_plan 저장 + ready_for_review.
     run_mix_job(자동판별, video_type=None)과 retype_mix_job(사용자 선택 유형)이 공유.
     given_script: 있으면 확정 대본을 그대로 비트로 쪼개 영상만 매칭(영상제작 2단계).
@@ -418,7 +425,7 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
 
     # 4) 비트별 TTS (naturalize + N-best + 연속성 + 프리셋 후처리)
     store.update_mix_job(job_id, status="tts")
-    _synthesize_beats(plan["beats"], work / "tts", voice=voice)
+    _synthesize_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron)
 
     # 4.2) 프리즈 뿌리 fix(2026-07-21) — 화면을 **실 TTS 길이**만큼 재보정한다. fill은 plan
     # 시점에 나레이션 추정(글자÷5.7)으로 채웠는데, 빠른 보이스면 실제 TTS가 추정과 달라 생긴
@@ -429,7 +436,7 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 4.5) 싱크 콘폼(2026-07-20) — 대사가 영상 예산을 넘는 비트만 압축 리라이트 + 그 비트 재TTS.
     # 저장(아래) 전에 돌므로 preview·final 렌더 모두 자동 적용. 실패해도 job을 죽이지 않는다.
     try:
-        _conform_beats(plan["beats"], work / "tts", voice=voice)
+        _conform_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron)
     except Exception:
         traceback.print_exc(file=sys.stderr)
 
@@ -440,6 +447,7 @@ def retype_mix_job(job_id, video_type, db_path, work_root):
     """사용자가 감지된 영상 유형을 바꾸면, 저장된 extract로 EDL+TTS만 재생성한다
     (재다운로드·재추출 없음 — 방식3의 '확인/변경' 경로, 설계 §3-6)."""
     store = Store(db_path)
+    _gpron = pron_corrections.load(store)
     job = store.get_mix_job(job_id)
     if not job or not job.get("extract"):
         return  # 추출 캐시 없으면 재생성 불가
@@ -448,7 +456,8 @@ def retype_mix_job(job_id, video_type, db_path, work_root):
         source_scripts = list(job["extract"].values())
         _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
                       job["structure"], video_type, work, given_script=job.get("given_script"),
-                      voice=job.get("voice"), customer_id=job.get("customer_id", 0))
+                      voice=job.get("voice"), customer_id=job.get("customer_id", 0),
+                      global_pron=_gpron)
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
@@ -631,6 +640,7 @@ def run_preview(job_id, db_path, work_root):
     BackgroundTasks로 불리므로 예외를 밖으로 던지지 않는다(아무도 안 받는다).
     """
     store = Store(db_path)
+    _gpron = pron_corrections.load(store)
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return
@@ -645,7 +655,8 @@ def run_preview(job_id, db_path, work_root):
         #   edit_plan에 꽂으면 tts_paths가 비어 video_assemble이 "렌더할 비트가 없습니다"로 죽었다.
         #   조립 직전 스스로 낫는다 — 이미 있는 비트는 skip(재과금 0), 빠진 비트만 합성.
         #   합성 결과(tts_path)를 edit_plan에 되박아 최종 렌더가 재합성 없이 재사용하게 한다.
-        _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True)
+        _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True,
+                          global_pron=_gpron)
         store.update_mix_job(job_id, edit_plan=plan)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         source_video_paths = _resolve_sources(job, work)
@@ -669,6 +680,7 @@ def run_render(job_id, db_path, work_root):
     """확인된 EDL을 최종 mp4로 렌더. subtitle_removal이 켜져 있으면 믹스 후
     VMake로 원본 자막을 제거하고 그 위에 우리 자막을 굽는다. 완료 시 status='done'."""
     store = Store(db_path)
+    _gpron = pron_corrections.load(store)
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return
@@ -679,7 +691,8 @@ def run_render(job_id, db_path, work_root):
         plan = job["edit_plan"]
         # ★TTS 보장(2026-07-21) — run_preview와 같은 방어심층. 미리보기를 건너뛰고 바로 렌더에
         #   와도(또는 TTS 없는 후보가 edit_plan에 있어도) 조립 직전 스스로 낫는다. 이미 있으면 skip.
-        _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True)
+        _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True,
+                          global_pron=_gpron)
         store.update_mix_job(job_id, edit_plan=plan)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         source_video_paths = _resolve_sources(job, work)
