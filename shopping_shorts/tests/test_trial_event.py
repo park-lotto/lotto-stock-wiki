@@ -21,3 +21,26 @@ def test_approved_signup_has_no_trial_window(tmp_path):
     s = _store(tmp_path)
     cid = s.create_customer("appr", "pw12")  # 기본 approved=True
     assert s.get_customer(cid)["trial_ends_at"] is None
+
+
+def test_access_level_full_during_trial_then_pending(tmp_path, monkeypatch):
+    import shopping_shorts.app as app
+    monkeypatch.setattr(app, "DB_PATH", str(tmp_path / "t.db"))
+    s = Store(str(tmp_path / "t.db"))
+    cid = s.create_customer("evt", "pw12", approved=False)
+    tea = s.get_customer(cid)["trial_ends_at"]
+    # 창 안: full
+    assert app.access_level(cid, now=tea - 10) == "full"
+    # 창 밖: pending
+    assert app.access_level(cid, now=tea + 10) == "pending"
+
+
+def test_access_level_legacy_pending_customer_stays_pending(tmp_path, monkeypatch):
+    import shopping_shorts.app as app
+    monkeypatch.setattr(app, "DB_PATH", str(tmp_path / "t.db"))
+    s = Store(str(tmp_path / "t.db"))
+    cid = s.create_customer("evt", "pw12", approved=False)
+    # trial_ends_at를 NULL로 강제(기존 고객 흉내)
+    with s._conn() as c:
+        c.execute("UPDATE customers SET trial_ends_at=NULL WHERE id=?", (cid,))
+    assert app.access_level(cid, now=int(time.time())) == "pending"

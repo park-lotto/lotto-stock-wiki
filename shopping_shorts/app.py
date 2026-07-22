@@ -3716,7 +3716,13 @@ def access_level(customer_id, now=None):
     if not cust:
         return "ranking_only"
     if cust.get("approved_at") is None:
-        return "pending"                    # ★승인 전엔 plan/체험보다 우선해 전면 차단
+        # 🎁 무료체험 이벤트: 미승인이라도 가입 후 체험창(trial_ends_at) 안이면 full로 맛보기.
+        #    창 밖이면 대기실 전면차단(pending). NULL(기존고객)은 0 취급 → 즉시 pending.
+        if now is None:
+            now = int(datetime.now(timezone.utc).timestamp())
+        if now < (cust.get("trial_ends_at") or 0):
+            return "full"
+        return "pending"
     if cust.get("plan") == "pro":
         return "full"
     if now is None:
