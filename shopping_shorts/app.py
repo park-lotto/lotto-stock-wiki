@@ -53,6 +53,8 @@ from shopping_shorts import tts, asr_check
 from shopping_shorts import export_bundle
 from shopping_shorts import capcut_draft
 from shopping_shorts.video_assemble import _beat_timeline
+from shopping_shorts.audio_post import detect_edge_silence
+from shopping_shorts.video_assemble import _probe_duration, _effective_dur, _TRIM_FLOOR
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
 from shopping_shorts import frame_extract, scene_assets, scene_cut
 from shopping_shorts import effect_match, remotion_render, points
@@ -4740,6 +4742,50 @@ def api_produce_mix_cutaway(job_id: str, request: Request, body: dict):
         hit["cutaway"] = {"asset_id": int(aid), "match_type": "manual"}
     store.update_mix_job(job_id, edit_plan=plan)
     return {"ok": True}
+
+
+@app.post("/api/produce/mix/{job_id}/trim")
+def api_produce_mix_trim(job_id: str, body: dict):
+    """비트의 앞/뒤 조용한 부분을 자른다(비파괴 — head_trim/tail_trim만 저장).
+    mode=auto: silencedetect로 그 엣지 무음 길이 산출. nudge: step 누적. reset: 0.
+    렌더 중이면 409(regen 규율). 하한 가드: 트림 합이 (probe−_TRIM_FLOOR)를 못 넘는다."""
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    if job.get("status") in ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409, content={"ok": False, "error": "렌더 중에는 자를 수 없어요"})
+    plan = job.get("edit_plan") or {}
+    beats = plan.get("beats") or []
+    try:
+        bi = int(body.get("beat_idx"))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 필요"})
+    edge = body.get("edge")
+    if edge not in ("tail", "head"):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "edge는 tail/head"})
+    hit = next((b for b in beats if b.get("beat_idx") == bi), None)
+    if hit is None:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 범위 밖"})
+    key = "tail_trim" if edge == "tail" else "head_trim"
+    mode = body.get("mode", "nudge")
+    tts = hit.get("tts_path")
+    if mode == "reset":
+        hit[key] = 0.0
+    elif mode == "auto":
+        hit[key] = float(detect_edge_silence(tts, edge)) if tts else 0.0
+    else:  # nudge
+        step = float(body.get("step", 0.3))
+        hit[key] = round(float(hit.get(key, 0.0)) + step, 3)
+    # 하한 가드: head+tail이 probe−floor를 넘으면 이번 엣지를 되돌려 막는다.
+    probe = _probe_duration(tts) if tts else 0.0
+    if probe > 0:
+        head, tail = hit.get("head_trim", 0.0), hit.get("tail_trim", 0.0)
+        if _effective_dur(probe, head, tail) <= _TRIM_FLOOR and (head + tail) > (probe - _TRIM_FLOOR):
+            hit[key] = max(0.0, round(probe - _TRIM_FLOOR - (head + tail - hit.get(key, 0.0)), 3))
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True, "head_trim": hit.get("head_trim", 0.0),
+            "tail_trim": hit.get("tail_trim", 0.0), "trimmed": hit.get(key, 0.0)}
 
 
 @app.post("/api/produce/mix/{job_id}/sfx")
