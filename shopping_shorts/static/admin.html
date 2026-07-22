@@ -17,7 +17,7 @@ th{color:#9a9aa2;font-weight:600;font-size:14px}
 .pending{background:#3d341c;color:#ffd479}
 button{border:0;border-radius:7px;padding:7px 13px;font-weight:700;font-size:13px;cursor:pointer;margin-right:4px}
 .bpro{background:#2ea043;color:#fff}.bfree{background:#6e2020;color:#fff}.bok{background:#d19b1e;color:#111}.bpay{background:#3a5bd0;color:#fff}
-.bedit{background:#5a4bd0;color:#fff}.bdel{background:#8b1a1a;color:#fff}.btrial{background:#1c6a8a;color:#fff}
+.bedit{background:#5a4bd0;color:#fff}.bdel{background:#8b1a1a;color:#fff}.btrial{background:#1c6a8a;color:#fff}.badm{background:#7a3da8;color:#fff}
 .wait{border-color:#5a4a1e;background:#1a1710}.wait h2{color:#ffd479}
 .empty{color:#6a6a72;font-size:13px;padding:6px 2px}
 input{background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;padding:8px 10px;font-size:13px;width:90px}
@@ -130,6 +130,9 @@ function renderCustomers(){
           <button class=bfree onclick="setPlan(${c.id},'free')">일반회원</button>
           <button class=btrial onclick="grantTrial(${c.id})">체험</button>
           <button class=bpro onclick="setPlan(${c.id},'pro')">pro</button>
+          ${c.code_admin?'':(c.is_admin
+            ? `<button class=badm onclick="setAdmin(${c.id},false)">관리자해제</button>`
+            : `<button class=badm onclick="setAdmin(${c.id},true)">관리자지정</button>`)}
           ${c.is_admin?'':`<button class=bdel onclick="delCustomer(${c.id})">삭제</button>`}</td></tr>`;
   }).join('') : '<tr><td colspan=12 class=empty>조건에 맞는 고객이 없어요</td></tr>';
 }
@@ -193,6 +196,17 @@ async function setPlan(cid,plan){
     body:JSON.stringify({customer_id:cid,plan})});
   const m=document.getElementById('cMsg');
   if(r.ok){m.textContent='✅ 변경됨';m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
+  setTimeout(()=>m.textContent='',2000);
+}
+async function setAdmin(cid,flag){
+  const row=(window._CUST||[]).find(c=>c.id===cid)||{};
+  const who=row.email||row.username||cid;
+  if(flag && !confirm(`${who} 계정에 관리자 권한을 줄까요?\n관리자와 동일하게 모든 관리 기능·삭제까지 쓸 수 있어요.`)) return;
+  if(!flag && !confirm(`${who}의 관리자 권한을 회수할까요?`)) return;
+  const r=await fetch('/api/admin/customer/set_admin',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({customer_id:cid, admin:flag})});
+  const m=document.getElementById('cMsg');
+  if(r.ok){m.textContent=flag?'✅ 관리자 지정됨':'✅ 관리자 해제됨';m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
   setTimeout(()=>m.textContent='',2000);
 }
 async function grantTrial(cid){

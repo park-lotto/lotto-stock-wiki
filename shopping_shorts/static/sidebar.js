@@ -42,8 +42,9 @@
     ".ss-acct-u{display:flex;justify-content:space-between;font-size:12.5px;color:var(--txt,#e6edf3);padding:2px 2px}" +
     ".ss-acct-u b{color:var(--sel-fg,#6ff0d6);font-weight:700}" +
     ".ss-acct-since{font-size:11px;color:var(--sub,#8b98a9);margin-top:9px;text-align:right}" +
-    ".ss-acct-links{display:flex;gap:8px;margin-top:12px}" +
-    ".ss-acct-link{flex:1;text-align:center;font-size:12px;color:var(--txt,#e6edf3);text-decoration:none;padding:8px 6px;border:1px solid var(--line,#1e2735);border-radius:8px;background:var(--panel,#111722)}" +
+    ".ss-acct-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}" +
+    ".ss-acct-link{flex:1 1 0;white-space:nowrap;text-align:center;font-size:12px;color:var(--txt,#e6edf3);text-decoration:none;padding:8px 4px;border:1px solid var(--line,#1e2735);border-radius:8px;background:var(--panel,#111722)}" +
+    ".ss-acct-link.wide{flex-basis:100%}" +
     ".ss-acct-link:hover{border-color:var(--accent,#37e0bd);color:var(--sel-fg,#6ff0d6)}" +
     // 브랜드 텍스트만 민트 그라디언트(이모지는 제외 — text-fill:transparent가 이모지 글리프까지 비운다)
     // + 은은한 민트 글로우로 강조(drop-shadow는 clip:text에서도 글자 외곽에 먹는다).
@@ -298,7 +299,7 @@
           '<div class="ss-acct-badge" style="color:' + tierColor + ";border-color:" + tierColor + '">' + escHtml(tier) + "</div></div></div>" +
       '<div class="ss-acct-sub">' + escHtml(sub) + "</div>" + usage + member +
       '<div class="ss-acct-links">' +
-        (admin ? '<a href="/admin" class="ss-acct-link" style="color:#ffd97a;border-color:#5a4a1e">🔐 관리페이지</a>' : '') +
+        (admin ? '<a href="/admin" target="_blank" rel="noopener" class="ss-acct-link wide" style="color:#ffd97a;border-color:#5a4a1e">🔐 관리페이지</a>' : '') +
         '<a href="/account" class="ss-acct-link">⚙️ 내 계정</a>' +
         '<a href="#" class="ss-acct-link" onclick="window.__ssLogout();return false">↩ 로그아웃</a></div>';
     var h1 = nav.querySelector("h1");
