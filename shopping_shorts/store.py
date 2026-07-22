@@ -94,6 +94,18 @@ class Store:
                     PRIMARY KEY (customer_id, shortcode)
                 )
             """)
+            # 소스 보강정보 캐시(레퍼런스정보, 2026-07-22) — url당 1행, 채널/댓글/자막
+            # 등 외부수집 결과를 캐싱(7일 TTL은 get_enrichment 호출부에서 판단).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS source_enrichment (
+                    url TEXT PRIMARY KEY,
+                    platform TEXT,
+                    channel_name TEXT, channel_url TEXT, subscribers INTEGER,
+                    views INTEGER, likes INTEGER, comment_count INTEGER,
+                    upload_date TEXT, top_comments_json TEXT, caption TEXT,
+                    status TEXT, fetched_at TEXT
+                )
+            """)
             # 영상제작으로 "보낸" 도서관 대본(2026-07-13) — 우리믹스 탭 기본 목록.
             # script_wiki를 shortcode로 참조. customer_id별 독립(멀티테넌시 패턴).
             c.execute("""
@@ -1693,6 +1705,49 @@ class Store:
         if not row:
             return None
         return {"keywords": json.loads(row[0]), "frame_paths": json.loads(row[1]), "analyzed_at": row[2]}
+
+    def upsert_enrichment(self, url, platform, data, status, now):
+        """소스 보강정보(채널명·구독자·댓글 등) 캐시 저장(url당 1행, 덮어쓰기)."""
+        d = data or {}
+        with self._conn() as c:
+            c.execute("""
+                INSERT INTO source_enrichment
+                  (url, platform, channel_name, channel_url, subscribers, views, likes,
+                   comment_count, upload_date, top_comments_json, caption, status, fetched_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+                ON CONFLICT(url) DO UPDATE SET
+                  platform=excluded.platform, channel_name=excluded.channel_name,
+                  channel_url=excluded.channel_url, subscribers=excluded.subscribers,
+                  views=excluded.views, likes=excluded.likes, comment_count=excluded.comment_count,
+                  upload_date=excluded.upload_date, top_comments_json=excluded.top_comments_json,
+                  caption=excluded.caption, status=excluded.status, fetched_at=excluded.fetched_at
+            """, (url, platform, d.get("channel_name", ""), d.get("channel_url", ""),
+                  d.get("subscribers"), d.get("views"), d.get("likes"), d.get("comment_count"),
+                  d.get("upload_date", ""), json.dumps(d.get("top_comments") or [], ensure_ascii=False),
+                  d.get("caption", ""), status, now))
+
+    def get_enrichment(self, url, max_age_days=7, now=None):
+        """캐시된 소스 보강정보. max_age_days 넘게 오래됐거나 없으면 None."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT platform, channel_name, channel_url, subscribers, views, likes, "
+                "comment_count, upload_date, top_comments_json, caption, status, fetched_at "
+                "FROM source_enrichment WHERE url=?", (url,)).fetchone()
+        if not row:
+            return None
+        fetched_at = row[11]
+        if max_age_days is not None and fetched_at:
+            now_dt = datetime.fromisoformat(now) if now else datetime.utcnow()
+            try:
+                if now_dt - datetime.fromisoformat(fetched_at) > timedelta(days=max_age_days):
+                    return None
+            except ValueError:
+                pass
+        return {"platform": row[0], "channel_name": row[1], "channel_url": row[2],
+                "subscribers": row[3], "views": row[4], "likes": row[5],
+                "comment_count": row[6], "upload_date": row[7],
+                "top_comments": json.loads(row[8] or "[]"), "caption": row[9],
+                "status": row[10]}
 
     def save_vision_tags(self, shortcode, subject, keywords):
         """썸네일 비전 주제태그 저장(덮어쓰기). keywords: [str]."""
