@@ -2215,12 +2215,17 @@ function renderPool(){
       <div style="flex:1;min-width:0">
         <div style="font-size:12px;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📹 영상 ${i+1}${it.name?' · '+esc(it.name):''}</div>
         <a href="${esc(it.url||'#')}" target="_blank" style="font-size:11px;color:var(--accent)">원본 ↗</a>
+        <div class="enrich" data-url="${esc(it.url||'')}" data-platform="${(it.url||'').includes('youtu')?'유튜브':''}"
+             style="font-size:11px;color:var(--sub);margin-top:4px"></div>
       </div>
       <button class="btn-prev" style="padding:6px 10px;font-size:12px" onclick="openScriptModal(${i})">📝 뽑기${it.pickScript?' ✓':''}</button>
       <button class="btn-prev" style="padding:6px 10px;font-size:12px;${it.useFootage?'border-color:var(--ok);color:var(--ok)':''}" onclick="toggleFootage(${i})">🎬 담기${it.useFootage?' ✓':''}</button>
       <button class="btn-prev" title="이 영상의 흐름(순서·리듬)을 뼈대로 삼습니다 — 대본은 100% 새로 씁니다. 스마트 믹스일 때 적용." style="padding:6px 10px;font-size:12px;${it.bbMain?'border-color:var(--accent);color:var(--accent)':''}" onclick="designateBackbone(${i})">⭐ 메인${it.bbMain?' ✓':''}</button>
       <button class="poolDel" title="영상풀에서 빼기" onclick="removeFootage(${i})" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 2px">✕</button>
     </div>`).join('');
+  // 재료 카드 하단 정보 슬롯 — 화면에 보이면(IntersectionObserver) lazy 자동조회(Task 6, index.html과 동일 패턴).
+  const io=new IntersectionObserver((ents)=>{ents.forEach(e=>{ if(e.isIntersecting){ enrichCard(e.target); io.unobserve(e.target);} });},{rootMargin:'100px'});
+  box.querySelectorAll('.enrich').forEach(el=>io.observe(el));
 }
 // 재료 썸네일 클릭 → 미리보기 오버레이(2026-07-19 사장님 요청). 재생소스(play_url)가 있으면
 // 인라인 재생, 없으면(대부분 grab/즐겨찾기 유래) 큰 이미지 + 원본에서 보기. 원본은 한국에서
@@ -4063,6 +4068,60 @@ function _bootRestore(){
 }
 _bootRestore();
 refreshFinalPeek();
+
+// ── 재료(HANDOFF) 카드 하단 정보 슬롯 — index.html의 enrichCard/forceEnrich/renderEnrich를
+// 그대로 복제(Task 6, 별도 페이지라 공유 불가). XSS수정판(esc(d.channel_url||'#')) 기준.
+function _fmtCount(n){
+  if(n==null || isNaN(n)) return '';
+  n=Number(n);
+  if(n>=100000000) return (n/100000000).toFixed(1).replace(/\.0$/,'')+'억';
+  if(n>=10000) return (n/10000).toFixed(1).replace(/\.0$/,'')+'만';
+  if(n>=1000) return (n/1000).toFixed(1).replace(/\.0$/,'')+'천';
+  return String(n);
+}
+// 유튜브는 무료(yt-dlp)라 자동, 비유튜브(Apify 유료)는 관리자만 수동버튼으로 채운다.
+async function enrichCard(el){
+  if(el.dataset.done) return;
+  const url=el.dataset.url, pf=(el.dataset.platform||'').toLowerCase();
+  const isYt = pf.includes('유튜브') || url.includes('youtu');
+  if(!isYt){
+    // 비유튜브 실조회는 Apify 유료 → 관리자(customer_id===0)만 버튼 노출. 비관리자는 빈 슬롯.
+    if(window.IS_ADMIN){
+      el.innerHTML=`<button onclick="forceEnrich(this.parentNode)" style="font-size:11px;background:none;border:1px solid var(--sub);color:var(--sub);border-radius:8px;padding:2px 8px;cursor:pointer">ℹ️ 정보 채우기</button>`;
+    }
+    return;
+  }
+  el.dataset.done="1"; el.textContent="…";
+  try{
+    const d=await (await fetch('/api/enrich',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url, platform:'youtube'})})).json();
+    el.innerHTML=renderEnrich(d);
+  }catch(e){ el.textContent=""; el.dataset.done=""; }
+}
+async function forceEnrich(el){
+  const saved = el.innerHTML;
+  el.innerHTML="…";
+  try{
+    const d=await (await fetch('/api/enrich',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url:el.dataset.url, platform:(el.dataset.platform||'').toLowerCase(), force:true})})).json();
+    el.innerHTML=renderEnrich(d);
+  }catch(e){ el.innerHTML=saved; }
+}
+function renderEnrich(d){
+  if(!d || (d.status && d.status!=='ok')){
+    const msg={quota:'정보 없음(쿼터)', no_data:'정보 없음', needs_manual:''}[d&&d.status]||'정보 없음';
+    return msg?`<span style="color:var(--sub)">${msg}</span>`:'';
+  }
+  const ch = d.channel_name?`👤 <a href="${esc(d.channel_url||'#')}" target="_blank" style="color:var(--accent)">${esc(d.channel_name)}</a>${d.subscribers?(' · 구독 '+_fmtCount(d.subscribers)):''}`:'';
+  const stat = [d.views!=null?('👁 '+_fmtCount(d.views)):'', d.likes!=null?('❤ '+_fmtCount(d.likes)):'', d.comment_count!=null?('💬 '+_fmtCount(d.comment_count)):'', d.upload_date?('📅 '+esc((d.upload_date||'').slice(0,10))):''].filter(Boolean).join('  ·  ');
+  const cmts = (d.top_comments||[]).slice(0,5).map(c=>`<div style="margin:2px 0">💬 <b>${esc(c.author)}</b> ${esc((c.text||'').slice(0,120))}</div>`).join('');
+  const cmtBlock = cmts?`<details style="margin-top:4px"><summary style="cursor:pointer">인기 댓글 ${d.top_comments.length}</summary>${cmts}</details>`:'';
+  const capBlock = d.caption?`<details style="margin-top:4px"><summary style="cursor:pointer">원문 캡션</summary><div style="white-space:pre-wrap;margin-top:2px">${esc(d.caption)}</div></details>`:'';
+  return `${ch?('<div>'+ch+'</div>'):''}${stat?('<div style="margin-top:2px">'+stat+'</div>'):''}${cmtBlock}${capBlock}`;
+}
+// 관리자(사장님 cid0) 판별 — 비유튜브 재료의 "정보 채우기" 버튼 노출 조건(index.html과 동일 플래그명).
+window.IS_ADMIN=false;
+fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{ if(d && d.customer_id===0) window.IS_ADMIN=true; }).catch(()=>{});
 </script>
 <script src="/loader.js"></script>
 <script src="/sidebar.js?v=2"></script>
