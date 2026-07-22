@@ -279,6 +279,7 @@
     <section class="panel" data-step="2">
       <h3>3 · TTS 음성</h3>
       <div class="sub">성우 프리셋을 고르면 톤·속도·감도가 한 번에 세팅됩니다. 들어보고 다음으로.</div>
+      <button id="openVoiceTune" style="display:none" class="btn-prev" onclick="window.open('/voice_tune','_blank')">🩺 발음교정 작업대 열기</button>
       <label style="display:flex;align-items:center;gap:8px;margin:8px 0;cursor:pointer">
         <input type="checkbox" id="noVoice" onchange="onNoVoice()"> <b>자막/음성 없이 진행</b>
         <span class="hint">켜면 TTS·자막 없이 영상만 내보냅니다</span>
@@ -3367,6 +3368,7 @@ async function renderTtsBeats(){
           <button class="btn-prev" style="padding:3px 8px" onclick="vpResetOffset(${i})">↩︎ 되돌리기</button>
           <select id="vpTone${i}" style="padding:3px"><option value="stable">안정</option><option value="natural">자연</option><option value="expressive">표현</option><option value="whisper">속삭임</option></select>
           <button class="btn-prev" style="padding:3px 8px" onclick="vpRegenTone(${i})">🔁 톤 바꿔 다시</button>
+          ${window.IS_ADMIN?`<button class="btn-prev" style="padding:3px 8px" onclick="pronReport(this,${i})">🩺 발음 이상해요</button>`:''}
           <span id="vpMsg${i}" class="hint"></span>
         </div>`:'<span class="hint">음성 없음</span>'}
       </div>`;
@@ -3478,6 +3480,25 @@ async function vpRegenTone(i){
     await fetch('/api/mix/tts/'+MIX_JOB+'/'+b.beat_idx+'/regen',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(v)});
     setTimeout(()=>{ renderTtsBeats(); }, 4000);   // 재생성+재동기 후 새로고침
   }catch(e){ if(m) m.textContent='❌ 실패'; }
+}
+// 관리자 전용: 비트 발음 제보(인라인 미니폼, prompt() 미사용)
+function pronReport(btn,i){
+  const b=VP_BEATS[i]; if(!b) return;
+  const text=b.narration||'';
+  const wrap=document.createElement('span');
+  wrap.innerHTML=`<input placeholder="코멘트(선택)" style="width:140px;padding:3px"> `
+    +`<button class="btn-prev" style="padding:3px 8px">보내기</button> <button class="btn-prev" style="padding:3px 8px">취소</button>`;
+  const [inp,send,cancel]=wrap.querySelectorAll('input,button');
+  btn.replaceWith(wrap);
+  cancel.onclick=()=>wrap.replaceWith(btn);
+  send.onclick=async()=>{
+    send.disabled=true;
+    try{
+      const r=await fetch('/api/pron/report',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({text, comment:inp.value})});
+      wrap.textContent=r.ok?'✓ 제보됨':'제보 실패';
+    }catch(e){ wrap.textContent='제보 실패'; }
+  };
 }
 function vpGateNext(){
   const yellow=(VP_BEATS||[]).map((b,i)=>i).filter(i=>!(Array.isArray(VP_BEATS[i].cap_durs)&&VP_BEATS[i].cap_durs.length));
@@ -4186,7 +4207,8 @@ function renderEnrich(d){
 }
 // 관리자(사장님 cid0) 판별 — 비유튜브 재료의 "정보 채우기" 버튼 노출 조건(index.html과 동일 플래그명).
 window.IS_ADMIN=false;
-fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{ if(d && d.customer_id===0) window.IS_ADMIN=true; }).catch(()=>{});
+fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{ if(d && d.customer_id===0){ window.IS_ADMIN=true;
+  const b=document.getElementById('openVoiceTune'); if(b) b.style.display=''; } }).catch(()=>{});
 </script>
 <script src="/loader.js"></script>
 <script src="/sidebar.js?v=2"></script>
