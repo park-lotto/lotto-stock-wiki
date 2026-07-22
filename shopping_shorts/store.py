@@ -2765,11 +2765,14 @@ class Store:
         else:
             full_access_until = 0
             approved_at = None
+            # 무료체험 이벤트는 기본 OFF(2026-07-22 사장님 결정): 가입 직후 바로 대기실(잠김),
+            # 사장님이 체험/pro를 줘야 시작. 설정 trial_event_hours를 0보다 크게 주면 그 시간만큼
+            # 자동 맛보기(옛 이벤트)를 다시 켤 수 있다.
             try:
-                trial_hours = int(self.get_setting("trial_event_hours", 24))
+                trial_hours = int(self.get_setting("trial_event_hours", 0))
             except (TypeError, ValueError):
-                trial_hours = 24
-            trial_ends_at = now_ts + trial_hours * 3600   # 🎁 가입 후 24h 맛보기 창
+                trial_hours = 0
+            trial_ends_at = (now_ts + trial_hours * 3600) if trial_hours > 0 else None
         with self._conn() as c:
             try:
                 cur = c.execute(
