@@ -227,6 +227,44 @@
     .cp-fail{background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.35);border-radius:10px;
       padding:12px;font-size:12.5px;color:#ffb4b4}
     .cp-fail b{color:#fff}
+    /* ── 2단계 자막제거 모션 (M1-M5) ── */
+    @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    .rise{animation:rise .28s ease both}
+    /* M2 스위치 스프링 */
+    .sw-knob{transition:left .25s cubic-bezier(.34,1.56,.64,1),background .25s ease}
+    .sw-track{transition:background .25s ease}
+    @keyframes knobPop{0%{box-shadow:0 0 0 0 rgba(55,224,189,.55)}100%{box-shadow:0 0 0 7px rgba(55,224,189,0)}}
+    .sw-input:checked ~ .sw-track .sw-knob{animation:knobPop .5s ease}
+    /* M3 스캔라인 + 흐름바 */
+    @keyframes flow{0%{left:-40%}100%{left:100%}}
+    .cp-bar::before{content:"";position:absolute;top:0;bottom:0;left:-40%;width:40%;border-radius:6px;
+      background:linear-gradient(90deg,transparent,#37e0bd,#1f9e7a,transparent);animation:flow 1.4s ease-in-out infinite}
+    @keyframes scan{0%{transform:translateY(-100%)}100%{transform:translateY(1000%)}}
+    .cp-scan::after{content:"";position:absolute;left:0;right:0;height:14px;
+      background:linear-gradient(180deg,transparent,rgba(55,224,189,.75),transparent);
+      box-shadow:0 0 14px rgba(55,224,189,.6);animation:scan 1.6s linear infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+    .cp-run-lbl .cp-dot{animation:blink 1s infinite}
+    /* M4 완료 스태거 리빌 */
+    @keyframes fadeCell{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+    .cp-compare .cp-cell{opacity:0;animation:fadeCell .3s ease forwards}
+    .cp-compare .cp-cell:first-child{animation-delay:0s}
+    .cp-compare .cp-cell:last-child{animation-delay:.24s}
+    @keyframes drawArrow{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+    .cp-arrow{opacity:0;animation:drawArrow .3s ease .12s forwards}
+    @keyframes checkPop{0%{transform:scale(0)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+    .cp-chk{animation:checkPop .4s cubic-bezier(.34,1.56,.64,1) .38s both}
+    /* M5 버튼 마이크로 */
+    .btn-clean,.cp-redo{transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease}
+    .btn-clean:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(55,224,189,.18)}
+    .btn-clean:active,.cp-redo:active{transform:scale(.97)}
+    .cp-redo:hover{border-color:var(--accent);color:var(--txt)}
+    /* 접근성: 모션 축소 요청 시 전부 정지 */
+    @media(prefers-reduced-motion:reduce){
+      .rise,.sw-knob,.cp-bar::before,.cp-scan::after,.cp-compare .cp-cell,.cp-arrow,.cp-chk,
+      .cp-run-lbl .cp-dot,.btn-clean,.cp-redo{animation:none!important;transition:none!important}
+      .cp-compare .cp-cell,.cp-arrow{opacity:1}
+    }
   </style>
 </head>
 <body>
