@@ -25,6 +25,7 @@ def test_smart_mix_toggle_on_sets_both(tmp_path, monkeypatch):
     s = Store(app_mod.DB_PATH)
     assert s.get_setting("bank_enabled") == "1"
     assert s.get_setting("ping_pong_enabled") == "1"
+    assert s.get_setting("backbone_base_enabled") == "1"   # 백본-베이스도 함께 켜진다
     assert c.get("/api/settings/smart_mix").json()["on"] is True
 
 
@@ -35,4 +36,5 @@ def test_smart_mix_toggle_off_clears_both(tmp_path, monkeypatch):
     s = Store(app_mod.DB_PATH)
     assert s.get_setting("bank_enabled") == "0"
     assert s.get_setting("ping_pong_enabled") == "0"
+    assert s.get_setting("backbone_base_enabled") == "0"
     assert c.get("/api/settings/smart_mix").json()["on"] is False

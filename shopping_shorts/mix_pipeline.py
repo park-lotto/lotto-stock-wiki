@@ -294,9 +294,12 @@ def run_mix_job(job_id, db_path, work_root):
                       # 핑퐁(대본↔장면 왕복 행위매칭): 전역 설정으로 on/off(기본 off·회귀0).
                       # 스키마 컬럼 없이 한 스위치로 켠다 — store.set_setting('ping_pong_enabled','1').
                       ping_pong=(store.get_setting("ping_pong_enabled", "") == "1"),
+                      # 백본-베이스(2026-07-21 확정스펙): 켜면 레퍼런스 자유생성 대신 백본 흐름 위에
+                      # 100% 우리 대본을 생성한다. 스마트 믹스 토글이 이 설정도 함께 켠다.
+                      backbone_base=(store.get_setting("backbone_base_enabled", "") == "1"),
                       # 백본 선정: URL로 플랫폼 판별(인스타/유튜브만 백본, 샤오홍슈 서브) + 사장님 지정.
                       backbone_meta=_backbone_meta_from_job(job, extracts),
-                      backbone_forced=job.get("backbone_main") or None)
+                      backbone_forced=_resolve_backbone_forced(job, extracts))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
@@ -314,15 +317,26 @@ def run_mix_job(job_id, db_path, work_root):
                 traceback.print_exc(file=sys.stderr)
 
 
-def _backbone_meta_from_job(job, extracts):
-    """job의 urls_json + extracts 키(s0/s1/s2 순서)로 백본 선정용 meta 구성.
-    → {video_id: {'platform': ...}}. 백본=인스타/유튜브 규칙이 실제로 걸리게 한다."""
+def _job_urls(job):
+    """job에서 소스 URL 리스트를 뽑는다. get_mix_job은 'urls'(파싱된 list)로 주지만
+    혹시 원시행(urls_json 문자열)이 와도 안전하게 파싱한다."""
     import json as _json
-    from shopping_shorts import backbone as _bb
+    u = job.get("urls")
+    if isinstance(u, list):
+        return u
     try:
-        urls = _json.loads(job.get("urls_json") or "[]")
+        return _json.loads(job.get("urls_json") or "[]")
     except Exception:
-        urls = []
+        return []
+
+
+def _backbone_meta_from_job(job, extracts):
+    """job의 urls + extracts 키(s0/s1/s2 순서)로 백본 선정용 meta 구성.
+    → {video_id: {'platform': ...}}. 백본=인스타/유튜브 규칙이 실제로 걸리게 한다.
+    ⚠️ get_mix_job은 'urls'(list) 키로 준다 — 예전 'urls_json' 접근은 항상 빈 값이라
+    플랫폼 규칙이 통째로 죽어 있었다(2026-07-22 수정)."""
+    from shopping_shorts import backbone as _bb
+    urls = _job_urls(job)
     meta = {}
     for i, key in enumerate(extracts.keys()):
         url = urls[i] if i < len(urls) else ""
@@ -330,10 +344,25 @@ def _backbone_meta_from_job(job, extracts):
     return meta
 
 
+def _resolve_backbone_forced(job, extracts):
+    """job.backbone_main(사장님이 UI에서 고른 urls 인덱스, 0-based) → 추출 소스의 video_id.
+    extracts 키 순서 = 소스 순서(=urls 순서)라 인덱스로 바로 집는다. None/범위밖이면 None
+    (자동 선정으로 폴백)."""
+    idx = job.get("backbone_main")
+    if idx is None:
+        return None
+    try:
+        idx = int(idx)
+    except (TypeError, ValueError):
+        return None
+    keys = list(extracts.keys())
+    return keys[idx] if 0 <= idx < len(keys) else None
+
+
 def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, video_type, work,
                   given_script=None, voice=None, customer_id=0,
                   scene_first=False, reference_text="", ping_pong=False,
-                  backbone_meta=None, backbone_forced=None):
+                  backbone_meta=None, backbone_forced=None, backbone_base=False):
     """EDL 생성(3) + 비트별 TTS(4) → edit_plan 저장 + ready_for_review.
     run_mix_job(자동판별, video_type=None)과 retype_mix_job(사용자 선택 유형)이 공유.
     given_script: 있으면 확정 대본을 그대로 비트로 쪼개 영상만 매칭(영상제작 2단계).
@@ -366,7 +395,8 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
         sf = build_scene_first_plan(source_scripts, reference_text, target_seconds,
                                     video_type=video_type, ping_pong=ping_pong,
                                     backbone_meta=backbone_meta, backbone_forced=backbone_forced,
-                                    bank_context=bank_context, avoid_hooks=avoid_hooks)
+                                    bank_context=bank_context, avoid_hooks=avoid_hooks,
+                                    backbone_base=backbone_base)
         if sf["candidates"]:
             store.set_mix_candidates(job_id, sf["candidates"])
             rec = next((cand for cand in sf["candidates"] if cand["recommended"]),
