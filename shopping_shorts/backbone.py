@@ -182,7 +182,7 @@ _BACKBONE_SCRIPT_SCHEMA = {
 }
 
 
-def _backbone_script_prompt(flow, inventory, target_seconds):
+def _backbone_script_prompt(flow, inventory, target_seconds, style_block=""):
     flow_lines = "\n".join(
         f"  {i+1}. [{f.get('action') or '-'}] {f.get('scene_desc', '')} (~{f.get('seconds', 0)}초)"
         for i, f in enumerate(flow))
@@ -196,17 +196,25 @@ def _backbone_script_prompt(flow, inventory, target_seconds):
         "대사는 쓰지 마라(있는 장면으로 말이 되게).\n\n"
         f"[잘된 영상 흐름 — 순서·행위·길이 참고]\n{flow_lines}\n\n"
         f"[실제 장면 목록 — 이 seg_id들만 사용]\n{inv_lines}\n\n"
-        "각 비트: narration(실제 읽을 우리 구어체 대사), seg_id(그 대사에 맞는 실제 장면). "
-        "0초 훅부터 끝 CTA까지 하나의 이야기로. JSON만 출력.")
+        # ★짤드라마·훅·은행 부품(style_block) 주입 — 이게 없으면 흐름만 밋밋하게 따라가
+        #  "여러분 ~해요/알려드려요" 설명체가 나온다(2026-07-22 실사고: 대본 초기화 현상).
+        + ((style_block + "\n\n") if style_block else "")
+        + "각 비트: narration(실제 읽을 우리 구어체 대사), seg_id(그 대사에 맞는 실제 장면).\n"
+        "★첫 비트(narration)는 반드시 강한 훅으로 열어라 — '여러분~', '~알려드려요', '~해요' 류 "
+        "밋밋한 설명체 오프너 금지. 궁금증·반전·강한 주장·인물 상황으로 확 잡아채라.\n"
+        "0초 훅부터 끝 CTA까지 하나의 짤드라마(짧은 이야기)로. 요리 순서 나열이 아니라 이야기다. "
+        "JSON만 출력.")
 
 
-def generate_backbone_script(flow, inventory, target_seconds, call=None):
+def generate_backbone_script(flow, inventory, target_seconds, call=None, style_block=""):
     """백본 흐름 + 실제 장면 인벤토리 → 완전히 새 우리 대본(비트별 narration + 고른 seg_id).
-    인벤토리 밖 seg_id는 드롭(없는 장면 요구 차단). call None/실패면 []."""
+    인벤토리 밖 seg_id는 드롭(없는 장면 요구 차단). call None/실패면 [].
+    style_block: 짤드라마 규칙 + 은행 훅·말투 부품(edit_plan이 조립해 주입) — 없으면 밋밋해진다."""
     if call is None:
         call = pattern_bank._default_call
     valid = {it.get("seg_id") for it in (inventory or [])}
-    res = call(_backbone_script_prompt(flow or [], inventory or [], target_seconds),
+    res = call(_backbone_script_prompt(flow or [], inventory or [], target_seconds,
+                                       style_block=style_block),
                _BACKBONE_SCRIPT_SCHEMA)
     if not res or not isinstance(res, dict):
         return []
