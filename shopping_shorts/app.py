@@ -52,6 +52,7 @@ from shopping_shorts.tts import synthesize_tts
 from shopping_shorts import tts, asr_check
 from shopping_shorts import export_bundle
 from shopping_shorts import capcut_draft
+from shopping_shorts.youtube_client import enrich_youtube
 from shopping_shorts.video_assemble import _beat_timeline
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
 from shopping_shorts import frame_extract, scene_assets, scene_cut
@@ -559,6 +560,40 @@ def api_mix_basket(request: Request):
     cid = _cid(request)
     return {"ok": True, "items": store.mix_basket_list(customer_id=cid),
             "shortcodes": sorted(store.mix_basket_shortcodes(customer_id=cid))}
+
+
+@app.post("/api/enrich")
+def api_enrich(request: Request, body: dict):
+    """레퍼런스(바구니 카드 등)의 소스 링크를 보강정보(채널명·구독자·조회수·인기댓글 등)로
+    채운다. 유튜브는 API 무료쿼터라 누구나 자동 조회+7일 캐시. 비유튜브(틱톡 등)는 실조회가
+    Apify 유료라 기본은 needs_manual만 반환하고, force=true(관리자 전용)일 때만 실조회를
+    시도한다 — 비관리자가 force로 남의 크레딧을 태우지 못하게 게이트(2026-07-22)."""
+    url = (body.get("url") or "").strip()
+    platform = (body.get("platform") or "").lower()
+    force = bool(body.get("force"))
+    if not url:
+        return {"status": "no_data"}
+    store = Store(DB_PATH)
+    cached = store.get_enrichment(url)
+    if cached:
+        return {"ok": True, **cached}
+    now = datetime.utcnow().isoformat()
+    if platform == "youtube" or "youtu" in url:
+        data = enrich_youtube(url)
+        if not data:
+            store.upsert_enrichment(url, platform, {}, "no_data", now)
+            return {"status": "no_data"}
+        if data.get("status") == "quota":
+            return {"status": "quota"}          # 쿼터소진은 캐시하지 않음(다음 시도가 다른 키로 성공할 수 있음)
+        store.upsert_enrichment(url, "youtube", data, "ok", now)
+        return {"ok": True, "status": "ok", **data}
+    if not force:
+        return {"status": "needs_manual"}
+    denied = _require_admin(request)   # 비유튜브 실조회(Apify 유료)는 관리자만
+    if denied:
+        return denied
+    # 비유튜브 force(관리자): Apify 경로 — 현 단계는 미구현 스텁(후속 계획)
+    return {"status": "no_data"}
 
 
 def _err(e):
