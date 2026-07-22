@@ -77,7 +77,7 @@ def test_scene_first_no_bank_leaves_prompt_clean():
 def test_build_scene_first_plan_threads_bank(monkeypatch):
     box = {}
 
-    def fake_candidates(inv, ref, secs, n=3, call=None, bank_context=""):
+    def fake_candidates(inv, ref, secs, n=3, call=None, bank_context="", order_block=""):
         box["bank"] = bank_context
         return []
 
