@@ -52,7 +52,7 @@
     // 라벨은 카드 헤더처럼, 항목은 15px·굵게로 키워 눈에 잘 띄고 누르기 쉽게.
     ".ss-group{margin-bottom:14px;background:var(--inset,#0c1412);border:1px solid var(--line,#1e2735);border-radius:12px;padding:9px 9px 7px}" +
     ".ss-label{font-size:12px;color:var(--sel-fg,#6ff0d6);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin:3px 6px 9px}" +
-    ".ss-item{padding:12px 13px;border-radius:9px;font-size:15.5px;font-weight:600;color:var(--txt,#e6edf3);cursor:pointer;margin-bottom:4px}" +
+    ".ss-item{padding:12px 13px;border-radius:9px;font-size:16px;font-weight:600;color:var(--txt,#e6edf3);cursor:pointer;margin-bottom:4px}" +
     ".ss-item.ss-disabled{cursor:default;opacity:.45}" +
     // 선택/활성 표면 = 민트 토큰(--sel-bg/--sel-fg). 아직 토큰이 없는 페이지도 폴백으로 민트가 뜬다.
     ".ss-item.active{background:var(--sel-bg,linear-gradient(90deg,#123a30,#0c221c));color:var(--sel-fg,#6ff0d6)}" +
