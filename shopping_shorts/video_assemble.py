@@ -225,7 +225,7 @@ def _extend_last_clip_for_runout(plan, segs, runout=_LAST_RUNOUT):
     return plan
 
 
-def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None):
+def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None, max_shot=None):
     """비트의 순서 구간 리스트 → 나레이션 길이(tts_dur)에 맞춘 클립 계획.
     각 클립은 자기 구간 [start,end]를 절대 넘지 않는다(유출 0). 부족분은 아래 정책으로 채운다.
     반환: [{"video_id","start","src_dur","out_dur"}, ...]
@@ -234,21 +234,45 @@ def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None):
     보통 구간보다 훨씬 길어(구간 2초 vs 릴 30초) 뒤에 실프레임이 남아있다. `src_durs`
     ({video_id: 소스총길이})가 주어지면 마지막 클립의 읽기 창을 소스에 남은 만큼 더 늘려
     **1배속 실영상**으로 채운다 → freeze/억지슬로우 없음. 소스까지 소진돼야만 슬로모 폴백.
-    src_durs 미제공(하위호환)이면 예전처럼 마지막 클립을 슬로모로 늘린다."""
+    src_durs 미제공(하위호환)이면 예전처럼 마지막 클립을 슬로모로 늘린다.
+
+    max_shot(2026-07-22): 한 컷을 이보다 오래 안 끈다 — 세그먼트를 이 상한 청크로 **번갈아**
+    재생(라운드로빈)해 긴 정지(7초 홀드) 대신 distinct 앵글로 컷한다(벤치마크 ~1.1초 컷 밀도).
+    같은 세그먼트는 창을 앞으로 밀며 재생(정지 아님). None/0이면 옛 동작(세그 통째 재생)."""
     eps = 1e-3
     clips = []
     filled = 0.0
-    for seg in segments:
-        remaining = tts_dur - filled
-        if remaining <= eps:
-            break
-        seg_len = seg["end"] - seg["start"]
-        if seg_len <= eps:
-            continue
-        take = min(seg_len, remaining)   # 1배속으로 이만큼 재생(구간 이내)
-        clips.append({"video_id": seg["video_id"], "start": seg["start"],
-                      "src_dur": take, "out_dur": take})
-        filled += take
+    if max_shot and max_shot > eps and len(segments) > 1:
+        # 라운드로빈: distinct 세그먼트를 max_shot씩 번갈아 → 컷 밀도↑. 각 세그 읽기위치를 유지해
+        # 다시 올 땐 이어서 재생(같은 프레임 반복 아님). 다 소진되면 아래 공통 shortfall로.
+        pos = [seg["start"] for seg in segments]
+        oi, guard0 = 0, 0
+        while tts_dur - filled > eps and guard0 < 2000:
+            guard0 += 1
+            i = oi % len(segments); oi += 1
+            seg = segments[i]
+            avail = seg["end"] - pos[i]
+            if avail <= eps:
+                if all(segments[k]["end"] - pos[k] <= eps for k in range(len(segments))):
+                    break                          # 전 세그 소진 → shortfall 정책으로
+                continue
+            take = min(avail, max_shot, tts_dur - filled)
+            clips.append({"video_id": seg["video_id"], "start": pos[i],
+                          "src_dur": take, "out_dur": take})
+            pos[i] += take
+            filled += take
+    else:
+        for seg in segments:
+            remaining = tts_dur - filled
+            if remaining <= eps:
+                break
+            seg_len = seg["end"] - seg["start"]
+            if seg_len <= eps:
+                continue
+            take = min(seg_len, remaining)   # 1배속으로 이만큼 재생(구간 이내)
+            clips.append({"video_id": seg["video_id"], "start": seg["start"],
+                          "src_dur": take, "out_dur": take})
+            filled += take
 
     if not clips:
         # 구간이 하나도 못 쓰였다(모두 길이 0). 첫 구간을 tts_dur로 슬로모(방어적 폴백).
@@ -607,7 +631,11 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             continue
         # 소스별 총길이를 넘겨 '멈춤 대신 소스 실프레임 더 재생'을 켠다(2026-07-20).
         beat_src_durs = {s["video_id"]: _src_dur(s["video_id"]) for s in segs}
-        plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs)
+        # 컷 밀도(2026-07-22): 한 컷을 MAX_SHOT_SECONDS 넘게 안 끌고 distinct 세그먼트를 번갈아
+        # 재생 → 긴 정지 대신 컷(벤치마크급). 포인트 비트는 홀드가 맞으니 라운드로빈 안 함.
+        from shopping_shorts import backbone as _bb, config as _cfg
+        _max_shot = None if _bb.is_point_beat(beat) else getattr(_cfg, "MAX_SHOT_SECONDS", 0) or None
+        plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs, max_shot=_max_shot)
         # 마지막 비트 여운: 실프레임 여유는 1배속으로, 부족분은 아래 slowmo/freeze 기계가 흡수.
         runout = _LAST_RUNOUT if idx == _runout_idx else 0.0
         if runout > 0:
