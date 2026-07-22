@@ -1185,11 +1185,56 @@ function renderLens(shortcode){
           <button class="save${isSaved?' saved':''}" onclick="toggleLensSave('${shortcode}','${i.savesc}',this)">${isSaved?'🎬 담김✓':'📥 담기'}</button>
         </div>
         <div style="margin-top:4px"><a href="${_openUrl(i.url)}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🔗 원본 열기</a></div>
+        <div class="enrich" data-url="${esc(i.url||'')}" data-platform="${esc(plabel||'')}"
+             style="font-size:11px;color:var(--sub);margin-top:6px"></div>
       </div>
     </div>`;
   }).join('') || (st.ytLoading?'<div style="font-size:12px;color:var(--sub);padding:10px">불러오는 중…</div>':'<div style="font-size:12px;color:var(--sub);padding:10px">켠 플랫폼 결과 없음 — 위 🔗 바로가기로 찾아 담으세요</div>');
   box.innerHTML=`<div id="lensRoot" data-sc="${shortcode}">${bar}<div class="cards">${cards}</div></div>`;
   box._lensCurSC=shortcode;
+  const io=new IntersectionObserver((ents)=>{ents.forEach(e=>{ if(e.isIntersecting){ enrichCard(e.target); io.unobserve(e.target);} });},{rootMargin:'100px'});
+  box.querySelectorAll('.enrich').forEach(el=>io.observe(el));
+}
+// 렌즈 카드 하단 정보 슬롯 — 화면에 보이면(IntersectionObserver) lazy 자동조회.
+// 유튜브는 무료(yt-dlp)라 자동, 비유튜브(Apify 유료)는 관리자만 수동버튼으로 채운다.
+async function enrichCard(el){
+  if(el.dataset.done) return;
+  const url=el.dataset.url, pf=(el.dataset.platform||'').toLowerCase();
+  const isYt = pf.includes('유튜브') || url.includes('youtu');
+  if(!isYt){
+    // 비유튜브 실조회는 Apify 유료 → 관리자(customer_id===0)만 버튼 노출. 비관리자는 빈 슬롯.
+    if(window.IS_ADMIN){
+      el.innerHTML=`<button onclick="forceEnrich(this.parentNode)" style="font-size:11px;background:none;border:1px solid var(--sub);color:var(--sub);border-radius:8px;padding:2px 8px;cursor:pointer">ℹ️ 정보 채우기</button>`;
+    }
+    return;
+  }
+  el.dataset.done="1"; el.textContent="…";
+  try{
+    const d=await (await fetch('/api/enrich',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url, platform:'youtube'})})).json();
+    el.innerHTML=renderEnrich(d);
+  }catch(e){ el.textContent=""; el.dataset.done=""; }
+}
+async function forceEnrich(el){
+  const saved = el.innerHTML;
+  el.innerHTML="…";
+  try{
+    const d=await (await fetch('/api/enrich',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url:el.dataset.url, platform:(el.dataset.platform||'').toLowerCase(), force:true})})).json();
+    el.innerHTML=renderEnrich(d);
+  }catch(e){ el.innerHTML=saved; }
+}
+function renderEnrich(d){
+  if(!d || (d.status && d.status!=='ok')){
+    const msg={quota:'정보 없음(쿼터)', no_data:'정보 없음', needs_manual:''}[d&&d.status]||'정보 없음';
+    return msg?`<span style="color:var(--sub)">${msg}</span>`:'';
+  }
+  const ch = d.channel_name?`👤 <a href="${esc(d.channel_url||'#')}" target="_blank" style="color:var(--accent)">${esc(d.channel_name)}</a>${d.subscribers?(' · 구독 '+_fmtCount(d.subscribers)):''}`:'';
+  const stat = [d.views!=null?('👁 '+_fmtCount(d.views)):'', d.likes!=null?('❤ '+_fmtCount(d.likes)):'', d.comment_count!=null?('💬 '+_fmtCount(d.comment_count)):'', d.upload_date?('📅 '+esc((d.upload_date||'').slice(0,10))):''].filter(Boolean).join('  ·  ');
+  const cmts = (d.top_comments||[]).slice(0,5).map(c=>`<div style="margin:2px 0">💬 <b>${esc(c.author)}</b> ${esc((c.text||'').slice(0,120))}</div>`).join('');
+  const cmtBlock = cmts?`<details style="margin-top:4px"><summary style="cursor:pointer">인기 댓글 ${d.top_comments.length}</summary>${cmts}</details>`:'';
+  const capBlock = d.caption?`<details style="margin-top:4px"><summary style="cursor:pointer">원문 캡션</summary><div style="white-space:pre-wrap;margin-top:2px">${esc(d.caption)}</div></details>`:'';
+  return `${ch?('<div>'+ch+'</div>'):''}${stat?('<div style="margin-top:2px">'+stat+'</div>'):''}${cmtBlock}${capBlock}`;
 }
 // 렌즈가 검색에서 이미 받은 메타(조회수·좋아요·채널·길이)를 담을 때 함께 넘긴다. 서버가
 // yt-dlp로 재수집(유튜브 봇차단·샤오홍슈 무oEmbed로 자주 빈값)하기 전에 이 값이 먼저 저장돼
@@ -1768,8 +1813,10 @@ renderCtypes(); renderCats(); loadLast(); loadRefAdded();
 // 수집·전수조사·레퍼런스등록은 크롤 비용이 드는 운영 액션이라 관리자만 쓴다.
 // 위 인라인 display:none으로 기본 숨김(구독자 화면 플래시 방지) → cid0일 때만 켠다.
 // 백엔드도 _require_admin으로 막혀 있어 화면을 조작해도 403이라 진짜 관리자 전용이다.
+window.IS_ADMIN=false;
 fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
   if(d && d.customer_id===0){
+    window.IS_ADMIN=true;
     ['collectBtn','censusBtn','refRegister'].forEach(id=>{
       const el=document.getElementById(id); if(el) el.style.display='';
     });

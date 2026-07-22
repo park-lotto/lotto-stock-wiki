@@ -7,8 +7,20 @@ import re
 import requests
 from shopping_shorts.config import YOUTUBE_API_KEYS
 
+# YouTube URL → video_id 파서
+_YT_ID = re.compile(r"(?:v=|youtu\.be/|/shorts/)([A-Za-z0-9_-]{11})")
+
+def video_id_from_url(url):
+    """유튜브 watch/youtu.be/shorts URL → 11자 video_id. 유튜브 아니면 None."""
+    if not url:
+        return None
+    m = _YT_ID.search(url)
+    return m.group(1) if m else None
+
 _SEARCH_URL = "https://www.googleapis.com/youtube/v3/search"
 _VIDEOS_URL = "https://www.googleapis.com/youtube/v3/videos"
+_CHANNELS_URL = "https://www.googleapis.com/youtube/v3/channels"
+_COMMENTS_URL = "https://www.googleapis.com/youtube/v3/commentThreads"
 
 # 제목 문자(스크립트) 기반 언어 필터 — regionCode/relevanceLanguage는 약한 힌트라
 # 조회수순 검색에 외국 영상이 섞인다(실측 2026-07-13). 제목에 해당 언어 문자가
@@ -117,3 +129,68 @@ def search_shorts(keywords, published_after_iso, max_per_kw=20, token=None, lang
     for r in raw:
         r.update(stats.get(r["video_id"], {"views": 0, "likes": 0, "comments": 0}))
     return raw
+
+
+def _first_ok(url, params):
+    """YOUTUBE_API_KEYS를 순서대로 시도. 쿼터/403이면 다음 키. 전부 실패면 None.
+
+    반환: (json_or_None, saw_403). saw_403은 실패한 시도 중 403(쿼터/권한)을
+    실제로 봤는지 — 네트워크오류·5xx·JSON깨짐 등 다른 실패와 구분해
+    호출부가 "쿼터소진"을 오표기하지 않게 한다."""
+    saw_403 = False
+    for tok in YOUTUBE_API_KEYS:
+        try:
+            r = requests.get(url, params={**params, "key": tok}, timeout=30)
+            if r.status_code == 403:
+                saw_403 = True
+                continue
+            r.raise_for_status()
+            return r.json(), saw_403
+        except Exception:
+            continue
+    return None, saw_403
+
+
+def enrich_youtube(url):
+    """유튜브 URL → 채널·지표·인기댓글·캡션 통합 dict. 유튜브 아니면 None,
+    쿼터소진(전 키 403) 시 {"status": "quota"}.
+
+    channel/comments 조회 실패 시 비디오 필드만 채우고 나머지는 빈값으로
+    degrade(best-effort) — 레퍼런스 표시용이라 의도된 동작."""
+    vid = video_id_from_url(url)
+    if not vid:
+        return None
+    vd, saw_403 = _first_ok(_VIDEOS_URL, {"part": "snippet,statistics", "id": vid})
+    if vd is None:
+        return {"status": "quota"} if saw_403 else None
+    if not vd.get("items"):
+        return None
+    it = vd["items"][0]; sn = it.get("snippet", {}); stt = it.get("statistics", {})
+    channel_id = sn.get("channelId", "")
+    cd, _ = _first_ok(_CHANNELS_URL, {"part": "snippet,statistics", "id": channel_id}) if channel_id else (None, False)
+    csn = (cd["items"][0]["snippet"] if cd and cd.get("items") else {})
+    cst = (cd["items"][0]["statistics"] if cd and cd.get("items") else {})
+    custom = csn.get("customUrl", "")
+    channel_url = ("https://www.youtube.com/" + custom) if custom else (
+        "https://www.youtube.com/channel/" + channel_id if channel_id else "")
+    cm, _ = _first_ok(_COMMENTS_URL, {"part": "snippet", "videoId": vid,
+                                      "order": "relevance", "maxResults": 5})
+    top = []
+    for t in (cm.get("items", []) if cm else []):
+        c = ((t.get("snippet") or {}).get("topLevelComment") or {}).get("snippet")
+        if not c:
+            continue  # 삭제/모더레이션된 댓글 등 파싱 불가 항목은 스킵
+        top.append({"author": c.get("authorDisplayName", ""),
+                    "text": c.get("textDisplay", ""), "likes": int(c.get("likeCount") or 0)})
+    return {
+        "platform": "youtube",
+        "channel_name": csn.get("title", ""),
+        "channel_url": channel_url,
+        "subscribers": int(cst.get("subscriberCount") or 0),
+        "views": int(stt.get("viewCount") or 0),
+        "likes": int(stt.get("likeCount") or 0),
+        "comment_count": int(stt.get("commentCount") or 0),
+        "upload_date": sn.get("publishedAt", ""),
+        "caption": sn.get("description", ""),
+        "top_comments": top,
+    }
