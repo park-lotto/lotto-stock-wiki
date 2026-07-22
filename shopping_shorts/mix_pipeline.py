@@ -71,7 +71,14 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     prof = merge_profile(profile if profile is not None else prof_v)
     natural = naturalize(narration, prof, beat_role=beat_role,
                          beat_index=beat_index, beat_total=beat_total)
-    tts.synthesize_best(natural, str(out_path), n=prof.get("n_best", 1),
+    # 오독 자동회피(2026-07-22): Whisper 랭커(GROQ 키)가 실동작할 때만 n을 최소 2로
+    # 끌어올려 오독 적은 take를 자동 선택한다(best-of-N). 키가 없으면 랭킹이 안 되므로
+    # profile값 그대로 둔다 — 안 그러면 랭킹도 못 하면서 TTS만 N배 낭비한다.
+    # floor라 명시 프리셋(n_best=3 등)은 안 깎는다(whole-branch S4 계약 유지).
+    n_best = prof.get("n_best", 1)
+    if config.GROQ_API_KEY and n_best < 2:
+        n_best = 2
+    tts.synthesize_best(natural, str(out_path), n=n_best,
                         base_seed=prof.get("seed"), ranker=ranker,
                         voice_id=voice_id, voice_settings=settings, speed=speed,
                         model_id=model_id, previous_text=previous_text, next_text=next_text)
