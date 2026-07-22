@@ -4011,8 +4011,38 @@ def _api_me(request: Request):
             return int(st.get_setting(k, d))
         except (TypeError, ValueError):
             return d
+    # 계정 패널(2026-07-22): 구글 이메일·이름·가입 며칠째·오늘 사용량.
+    is_admin = (cid == 0)
+    email = "관리자" if is_admin else ((cust or {}).get("email") or (cust or {}).get("username") or "")
+    name = (cust or {}).get("name") or "" if cust else ""
+    # 등급별 실제 크레딧 상한(check_and_count와 동일 규칙) — 패널에 'x/상한' 표시용.
+    if is_admin:
+        usage = None                       # 관리자=무제한, 사용량 표시 안 함
+        limits = {"lens": None, "render": None, "script": None}
+    else:
+        day = _today_utc()
+        usage = {op: st.usage_get(cid, op, day) for op in ("lens", "render", "script")}
+        if plan == "pro":
+            limits = {op: _lim(f"limit_{op}_pro", _CREDIT_PRO_DEFAULTS.get(op, 100))
+                      for op in ("lens", "render", "script")}
+        else:
+            limits = {op: _lim(f"limit_{op}", _CREDIT_DEFAULTS.get(op, 5))
+                      for op in ("lens", "render", "script")}
+    # 가입 며칠째 — created_at은 UTC 문자열(datetime('now') 또는 ISO). 파싱 실패 시 None.
+    member_days = None
+    ca = (cust or {}).get("created_at") if cust else None
+    if ca:
+        try:
+            dt = datetime.fromisoformat(str(ca).replace("Z", "+00:00").split(".")[0])
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            member_days = max(0, (datetime.now(timezone.utc) - dt).days) + 1
+        except (ValueError, TypeError):
+            member_days = None
     return {"customer_id": cid, "level": access_level(cid, now), "plan": plan,
-            "days_left": days_left,
+            "days_left": days_left, "is_admin": is_admin,
+            "email": email, "name": name, "member_days": member_days,
+            "usage": usage, "usage_limits": limits,
             "limits": {"lens": _lim("limit_lens", 5), "render": _lim("limit_render", 2),
                        "script": _lim("limit_script", 10)},
             "contact": {"kakao": st.get_setting("contact_kakao", ""),

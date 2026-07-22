@@ -25,18 +25,34 @@
 
   var css =
     "body{display:flex;min-height:100vh;margin:0}" +
-    ".ss-nav{width:230px;background:var(--panel,#111722);border-right:1px solid var(--line,#1e2735);" +
-      "padding:16px;flex-shrink:0;box-sizing:border-box;font-family:'Malgun Gothic',system-ui,sans-serif}" +
+    ".ss-nav{width:270px;background:var(--panel,#111722);border-right:1px solid var(--line,#1e2735);" +
+      "padding:20px 18px;flex-shrink:0;box-sizing:border-box;font-family:'Malgun Gothic',system-ui,sans-serif}" +
     // 메인 로고 = 크고 눈에 띄게(사장님 2026-07-21). 26px·900·자간압축으로 존재감을 준다.
-    ".ss-nav h1{font-size:26px;font-weight:900;letter-spacing:-.5px;margin:2px 0 20px;display:flex;align-items:center;gap:7px}" +
+    ".ss-nav h1{font-size:26px;font-weight:900;letter-spacing:-.5px;margin:2px 0 16px;display:flex;align-items:center;gap:7px}" +
+    // 계정 패널(2026-07-22) — 로고 바로 아래. 구글아이디·등급·오늘 사용량·가입일·로그아웃.
+    ".ss-acct{margin:0 0 16px;background:var(--inset,#0c1412);border:1px solid var(--line,#1e2735);border-radius:14px;padding:14px 14px 12px}" +
+    ".ss-acct-top{display:flex;align-items:center;gap:11px}" +
+    ".ss-acct-av{width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#08110e;background:var(--grad,linear-gradient(135deg,#6ff0d6,#1f9e7a))}" +
+    ".ss-acct-id{min-width:0;flex:1}" +
+    ".ss-acct-email{font-size:13.5px;font-weight:700;color:var(--txt,#e6edf3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}" +
+    ".ss-acct-badge{display:inline-block;margin-top:4px;font-size:11px;font-weight:800;border:1px solid;border-radius:6px;padding:1px 8px}" +
+    ".ss-acct-sub{font-size:12px;color:var(--sub,#8b98a9);margin:9px 2px 0;line-height:1.4}" +
+    ".ss-acct-usage{margin-top:11px;padding-top:10px;border-top:1px solid var(--line,#1e2735)}" +
+    ".ss-acct-usage-h{font-size:10.5px;color:var(--sub,#8b98a9);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}" +
+    ".ss-acct-u{display:flex;justify-content:space-between;font-size:12.5px;color:var(--txt,#e6edf3);padding:2px 2px}" +
+    ".ss-acct-u b{color:var(--sel-fg,#6ff0d6);font-weight:700}" +
+    ".ss-acct-since{font-size:11px;color:var(--sub,#8b98a9);margin-top:9px;text-align:right}" +
+    ".ss-acct-links{display:flex;gap:8px;margin-top:12px}" +
+    ".ss-acct-link{flex:1;text-align:center;font-size:12px;color:var(--txt,#e6edf3);text-decoration:none;padding:8px 6px;border:1px solid var(--line,#1e2735);border-radius:8px;background:var(--panel,#111722)}" +
+    ".ss-acct-link:hover{border-color:var(--accent,#37e0bd);color:var(--sel-fg,#6ff0d6)}" +
     // 브랜드 텍스트만 민트 그라디언트(이모지는 제외 — text-fill:transparent가 이모지 글리프까지 비운다)
     // + 은은한 민트 글로우로 강조(drop-shadow는 clip:text에서도 글자 외곽에 먹는다).
     ".ss-brand{background:var(--grad,linear-gradient(135deg,#6ff0d6,#1f9e7a));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;filter:drop-shadow(0 0 12px rgba(55,224,189,.35))}" +
     // 카테고리 = 박스로 시각 구분 + 크게(사장님 2026-07-21). 그룹을 inset 카드로 감싸고
     // 라벨은 카드 헤더처럼, 항목은 15px·굵게로 키워 눈에 잘 띄고 누르기 쉽게.
-    ".ss-group{margin-bottom:12px;background:var(--inset,#0c1412);border:1px solid var(--line,#1e2735);border-radius:12px;padding:8px 8px 6px}" +
-    ".ss-label{font-size:12px;color:var(--sel-fg,#6ff0d6);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin:2px 6px 8px}" +
-    ".ss-item{padding:11px 12px;border-radius:9px;font-size:15px;font-weight:600;color:var(--txt,#e6edf3);cursor:pointer;margin-bottom:3px}" +
+    ".ss-group{margin-bottom:14px;background:var(--inset,#0c1412);border:1px solid var(--line,#1e2735);border-radius:12px;padding:9px 9px 7px}" +
+    ".ss-label{font-size:12px;color:var(--sel-fg,#6ff0d6);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin:3px 6px 9px}" +
+    ".ss-item{padding:12px 13px;border-radius:9px;font-size:16px;font-weight:600;color:var(--txt,#e6edf3);cursor:pointer;margin-bottom:4px}" +
     ".ss-item.ss-disabled{cursor:default;opacity:.45}" +
     // 선택/활성 표면 = 민트 토큰(--sel-bg/--sel-fg). 아직 토큰이 없는 페이지도 폴백으로 민트가 뜬다.
     ".ss-item.active{background:var(--sel-bg,linear-gradient(90deg,#123a30,#0c221c));color:var(--sel-fg,#6ff0d6)}" +
@@ -62,6 +78,7 @@
     "@media(max-width:760px){body{flex-direction:column}" +
       ".ss-nav{width:100%;border-right:none;border-bottom:1px solid var(--line,#1e2735);display:flex;gap:6px;" +
         "overflow-x:auto;align-items:center;white-space:nowrap;padding:10px 12px}" +
+      ".ss-acct{display:none}" +   // 모바일 가로바엔 계정카드 공간이 없다 → /account로
       ".ss-nav h1{margin:0 8px 0 0;flex-shrink:0;font-size:19px}" +
       ".ss-group{margin:0;padding:0;background:none;border:none;display:flex;gap:6px;align-items:center}" +
       ".ss-label{display:none}" +
@@ -246,10 +263,51 @@
       el.innerHTML = el.innerHTML + ' <span class="ss-lock">🔒</span>';
     });
   }
+  // 계정 패널(2026-07-22) — 로고 바로 아래. 구글아이디·등급·오늘 사용량·가입일·로그아웃.
+  window.__ssLogout = function () {
+    fetch("/logout", { method: "POST" })
+      .then(function () { location.href = "/login"; })
+      .catch(function () { location.href = "/login"; });
+  };
+  function _accountCard(d) {
+    var nav = document.querySelector(".ss-nav");
+    if (!nav || document.getElementById("ss-acct")) return;
+    var admin = !!d.is_admin;
+    var email = escHtml(d.email || "");
+    var initial = escHtml((d.email || "?").trim().charAt(0).toUpperCase() || "?");
+    var tier, tierColor, sub;
+    if (admin) { tier = "관리자"; tierColor = "#ffd97a"; sub = "전 기능 · 무제한"; }
+    else if (d.plan === "pro") { tier = "프로"; tierColor = "#6ff0d6"; sub = "전 기능 이용중"; }
+    else if (d.level === "pending") { tier = "승인대기"; tierColor = "#ffa94d"; sub = "승인 후 이용 가능해요"; }
+    else if (typeof d.days_left === "number" && d.days_left > 0) { tier = "체험 D-" + d.days_left; tierColor = "#7db4ff"; sub = "만료 후엔 랭킹만 열려요"; }
+    else { tier = "무료"; tierColor = "#8b98a9"; sub = "랭킹 열람만 가능해요"; }
+    var usage = "";
+    if (d.usage && d.usage_limits) {
+      var rows = [["렌즈", "lens"], ["영상", "render"], ["대본", "script"]].map(function (p) {
+        var u = d.usage[p[1]], lim = d.usage_limits[p[1]];
+        return '<div class="ss-acct-u"><span>' + p[0] + '</span><b>' + u + (lim != null ? " / " + lim : "") + "</b></div>";
+      }).join("");
+      usage = '<div class="ss-acct-usage"><div class="ss-acct-usage-h">오늘 사용량</div>' + rows + "</div>";
+    }
+    var member = (typeof d.member_days === "number") ? '<div class="ss-acct-since">가입 ' + d.member_days + "일째</div>" : "";
+    var card = document.createElement("div");
+    card.id = "ss-acct"; card.className = "ss-acct";
+    card.innerHTML =
+      '<div class="ss-acct-top"><div class="ss-acct-av">' + initial + "</div>" +
+        '<div class="ss-acct-id"><div class="ss-acct-email" title="' + email + '">' + email + "</div>" +
+          '<div class="ss-acct-badge" style="color:' + tierColor + ";border-color:" + tierColor + '">' + escHtml(tier) + "</div></div></div>" +
+      '<div class="ss-acct-sub">' + escHtml(sub) + "</div>" + usage + member +
+      '<div class="ss-acct-links"><a href="/account" class="ss-acct-link">⚙️ 내 계정</a>' +
+        '<a href="#" class="ss-acct-link" onclick="window.__ssLogout();return false">↩ 로그아웃</a></div>';
+    var h1 = nav.querySelector("h1");
+    if (h1 && h1.nextSibling) nav.insertBefore(card, h1.nextSibling);
+    else nav.insertBefore(card, nav.firstChild);
+  }
   function initPaywall() {
     fetch("/api/me").then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
       if (!d) return;
       _pw.level = d.level; _pw.contact = d.contact || {};
+      _accountCard(d);   // 로고 아래 계정 패널
       if (d.level === "ranking_only") _pwLockSidebar();
       else if (typeof d.days_left === "number" && d.days_left >= 0 && d.plan !== "pro") _pwBanner(d.days_left);
     }).catch(function () {});
