@@ -788,11 +788,22 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
     return grounded
 
 
+def _backbone_style_block(bank_context=""):
+    """백본-베이스 대본생성에 실을 '품질 레이어' = 짤드라마 헌장 + 은행 훅·말투 부품.
+    이게 빠지면 백본 흐름만 밋밋하게 따라가 설명체가 나온다(2026-07-22 대본 초기화 실사고)."""
+    from shopping_shorts import script_generate
+    block = script_generate._STORY_RULES_CORE
+    if bank_context:
+        block += "\n\n" + bank_context
+    return block
+
+
 def _backbone_base_candidates(source_scripts, target_seconds, call,
-                              backbone_meta=None, backbone_forced=None):
+                              backbone_meta=None, backbone_forced=None, bank_context=""):
     """백본-베이스 후보 생성(확정스펙 1~3단계): 백본 1개 선정 → 흐름 추출(대사 아님, 뼈대만)
     → 실제 장면 인벤토리(백본+서브)에 맞춰 100% 우리 대본 생성. build_scene_first_plan이
     쓰는 raw 후보 형태([{hook, beats:[{seg_ids, narration, role, fit}]}])로 감싼다.
+    ★대본생성에 짤드라마 헌장+은행 부품(style_block)을 실어 밋밋한 설명체를 막는다.
     백본 못 고르거나(플랫폼·소스 부족) 생성 비면 [](호출부가 레퍼런스-먼저로 폴백)."""
     from shopping_shorts import backbone
     bb = backbone.pick_backbone(source_scripts, meta=backbone_meta, forced=backbone_forced)
@@ -803,7 +814,9 @@ def _backbone_base_candidates(source_scripts, target_seconds, call,
         return []
     flow = backbone.backbone_flow(bb_src)
     inventory = backbone.scene_inventory(source_scripts)
-    bb_beats = backbone.generate_backbone_script(flow, inventory, target_seconds, call=call)
+    bb_beats = backbone.generate_backbone_script(
+        flow, inventory, target_seconds, call=call,
+        style_block=_backbone_style_block(bank_context))
     if not bb_beats:
         return []
     # 백본-베이스는 생성 단계에서 이미 실제 장면(seg_id)에 맞춰 썼으므로 forced=false, fit 높게.
@@ -836,7 +849,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     raws = []
     if backbone_base:
         raws = _backbone_base_candidates(source_scripts, target_seconds, _call,
-                                         backbone_meta=backbone_meta, backbone_forced=backbone_forced)
+                                         backbone_meta=backbone_meta, backbone_forced=backbone_forced,
+                                         bank_context=bank_context)
     if not raws:
         raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates,
                                        call=_call, bank_context=bank_context)
