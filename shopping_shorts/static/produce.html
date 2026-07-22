@@ -1657,7 +1657,7 @@ function setScriptMode(mode){
 }
 document.querySelectorAll('#scriptTabs .tab').forEach(t=> t.onclick=()=>setScriptMode(t.dataset.mode));
 
-function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 // SYLLABLES_PER_SEC=5.7 — 2026-07-17 성우 14명을 서버에서 실합성해 측정한 값(음절÷발화초,
 // 한글 1글자≈1음절). 파이썬 쪽 진실은 shopping_shorts/edit_plan.py의 _SYLLABLES_PER_SEC —
 // JS는 그 상수를 못 읽으므로(서버가 값을 내려주지 않음, 이 태스크 범위 밖) 여기 숫자로 나란히
