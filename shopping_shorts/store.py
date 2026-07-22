@@ -327,7 +327,8 @@ class Store:
                     fx_status TEXT,
                     fx_path TEXT,
                     scene_first INTEGER NOT NULL DEFAULT 0,
-                    candidates_json TEXT
+                    candidates_json TEXT,
+                    backbone_main INTEGER
                 )
             """)
             c.execute("""
@@ -587,6 +588,10 @@ class Store:
                 # 장면 우선 대본 모드(2026-07-20, Task6) — build_scene_first_plan 후보 저장.
                 ("scene_first", "INTEGER NOT NULL DEFAULT 0"),
                 ("candidates_json", "TEXT"),
+                # 백본(메인) 지정(2026-07-22) — 사장님이 UI에서 고른 '흐름 뼈대' 소스의
+                # urls 인덱스(0-based). None=자동 선정(인스타/유튜브·댓글수 규칙). run_mix_job이
+                # 이 인덱스를 추출 소스의 video_id로 풀어 backbone_forced로 넘긴다.
+                ("backbone_main", "INTEGER"),
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -2040,7 +2045,7 @@ class Store:
     def create_mix_job(self, job_id, urls, target_seconds, structure,
                        subtitle_removal=False, given_script=None, script_structure=None,
                        customer_id=LEGACY_CUSTOMER_ID, render_charge_day=None,
-                       scene_first=False):
+                       scene_first=False, backbone_main=None):
         """새 믹스 job 생성. 초기 status='downloading'.
         given_script: 영상제작 2단계 — 확정 대본을 그대로 쓸 때(나레이션 자동생성 대신).
         script_structure: 도서관에서 딸려온 대본 구조분석 dict(2026-07-15). 뒷단계가 꺼내 쓸
@@ -2048,19 +2053,22 @@ class Store:
         customer_id: 유료게이트 렌더 크레딧 귀속(2026-07-19). run_mix_job이 실패하면 이 cid로
             'render' 크레딧을 환불한다 — 실패했는데 크레딧만 날아가면 신뢰가 깨진다.
         scene_first: 장면 우선 대본 모드(2026-07-20, Task6) — _plan_and_tts가 build_scene_first_plan을
-            타도록 하는 플래그. given_script을 구조계승 레퍼런스 텍스트로 재활용한다."""
+            타도록 하는 플래그. given_script을 구조계승 레퍼런스 텍스트로 재활용한다.
+        backbone_main: 사장님이 UI에서 지정한 '메인(백본)' 소스의 urls 인덱스(0-based) 또는 None.
+            None이면 자동 선정(인스타/유튜브·댓글수 규칙). run_mix_job이 인덱스→video_id로 푼다."""
         now = datetime.now(timezone.utc).isoformat()
+        bb = None if backbone_main is None else int(backbone_main)
         with self._conn() as c:
             c.execute(
                 "INSERT INTO mix_jobs(job_id, urls_json, target_seconds, structure, "
                 "status, created_at, updated_at, subtitle_removal, given_script, "
-                "script_structure_json, customer_id, render_charge_day, scene_first) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "script_structure_json, customer_id, render_charge_day, scene_first, backbone_main) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (job_id, json.dumps(urls, ensure_ascii=False), target_seconds,
                  structure, "downloading", now, now, 1 if subtitle_removal else 0,
                  given_script or None,
                  json.dumps(script_structure, ensure_ascii=False) if script_structure else None,
-                 customer_id, render_charge_day, 1 if scene_first else 0),
+                 customer_id, render_charge_day, 1 if scene_first else 0, bb),
             )
 
     def get_mix_job(self, job_id):
@@ -2075,7 +2083,7 @@ class Store:
                 "preview_status, preview_path, preview_error, "
                 "thumbnail_json, seo_json, "
                 "clean_sources_json, clean_status, clean_error, customer_id, render_charge_day, "
-                "scene_first "
+                "scene_first, backbone_main "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -2103,6 +2111,7 @@ class Store:
             "customer_id": row[30] if row[30] is not None else 0,
             "render_charge_day": row[31],
             "scene_first": bool(row[32]),
+            "backbone_main": row[33],
         }
 
     def update_mix_job(self, job_id, **fields):

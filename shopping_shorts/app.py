@@ -1622,12 +1622,14 @@ def api_get_smart_mix():
 
 @app.post("/api/settings/smart_mix")
 def api_set_smart_mix(body: dict):
-    """딸깍 하나로 부품은행 주입(bank_enabled)·반복회피(novelty)·핑퐁(ping_pong_enabled)을
-    함께 켜고 끈다. 셋 다 scene_first 믹스에서만 작동하고 기본 off라 켜기 전엔 라이브 무변화."""
+    """딸깍 하나로 부품은행 주입(bank_enabled)·반복회피(novelty)·핑퐁(ping_pong_enabled)·
+    백본-베이스(backbone_base_enabled, 백본 흐름 위 100% 우리 대본)를 함께 켜고 끈다.
+    전부 scene_first 믹스에서만 작동하고 기본 off라 켜기 전엔 라이브 무변화."""
     val = "1" if body.get("on") else "0"
     store = Store(DB_PATH)
     store.set_setting("bank_enabled", val)
     store.set_setting("ping_pong_enabled", val)
+    store.set_setting("backbone_base_enabled", val)
     return {"ok": True, "on": val == "1"}
 
 
@@ -3786,6 +3788,18 @@ def _today_utc():
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 
+def _valid_backbone_main(raw, n_urls):
+    """UI가 보낸 backbone_main(메인 소스 인덱스)을 검증. 정수·[0,n) 범위면 그대로,
+    아니면 None(자동 선정). 잘못된 값에 믹스 job을 죽이지 않는다."""
+    if raw is None:
+        return None
+    try:
+        idx = int(raw)
+    except (TypeError, ValueError):
+        return None
+    return idx if 0 <= idx < n_urls else None
+
+
 def check_and_count(customer_id, op):
     """유료 op(lens/render/script) 실행 전 호출. 일일 상한 초과면 False(막기),
     아니면 카운트+1 후 True. 사장님(0)·pro는 높은 상한(limit_{op}_pro)."""
@@ -4532,11 +4546,15 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     # true로 보낸다. mix_pipeline._plan_and_tts가 build_scene_first_plan으로 후보 n개를 만들고
     # 추천 후보를 자동 세팅한다(candidates=[]이면 기존 build_edit_plan으로 조용히 폴백).
     scene_first = bool(body.get("scene_first", False))
+    # 백본(메인) 지정(2026-07-22): 사장님이 재료카드에서 '⭐메인'으로 고른 소스의 urls 인덱스.
+    # 범위 밖·형변환 실패는 None으로 흘려 자동 선정에 맡긴다(잘못된 값에 job을 죽이지 않는다).
+    backbone_main = _valid_backbone_main(body.get("backbone_main"), len(urls))
     job_id = uuid.uuid4().hex[:12]
     Store(DB_PATH).create_mix_job(job_id, urls, target, "free",
                                   subtitle_removal=subtitle_removal, given_script=script,
                                   script_structure=script_structure, scene_first=scene_first,
-                                  customer_id=cid, render_charge_day=_today_utc())
+                                  customer_id=cid, render_charge_day=_today_utc(),
+                                  backbone_main=backbone_main)
     background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True, "job_id": job_id}
 
