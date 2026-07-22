@@ -692,7 +692,7 @@ def run_clean_sources(job_id, db_path, work_root):
         key = _vmake_key(store)
         if not key:
             store.update_mix_job(job_id, clean_status="failed",
-                                 clean_error="VMake 개인키가 등록되지 않았습니다")
+                                 clean_error="AI 자막 제거 설정이 완료되지 않았습니다 (관리자 문의)")
             return
         clean_map = _ensure_clean_sources(store, job, job_id, work, key)
         store.update_mix_job(job_id, clean_status="ready", clean_error=None)
@@ -790,7 +790,7 @@ def run_render(job_id, db_path, work_root):
         if job.get("subtitle_removal"):
             key = _vmake_key(store)
             if not key:
-                raise RuntimeError("자막 제거가 켜져 있으나 VMake 개인키가 등록되지 않았습니다")
+                raise RuntimeError("자막 제거가 켜져 있으나 설정이 완료되지 않았습니다 (관리자 문의)")
             clean_map = _ensure_clean_sources(store, job, job_id, work, key)
             store.update_mix_job(job_id, clean_status="ready", clean_error=None)
             source_video_paths = {vid: clean_map.get(vid, p)

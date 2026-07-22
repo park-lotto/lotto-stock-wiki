@@ -181,6 +181,90 @@
     .kwBadge.blue{border-color:#4a90d9}
     .kwBadge.red{border-color:#d94a4a}
     .mini{font-size:12px;padding:2px 6px}
+    /* ── 2단계 자막제거 카드 ── */
+    .clean-card{background:var(--inset);border:1px solid var(--line);border-radius:14px;padding:16px}
+    .clean-top{display:flex;align-items:center;gap:13px;cursor:pointer;position:relative}
+    .clean-top .badge{width:42px;height:42px;border-radius:11px;flex:none;display:flex;align-items:center;
+      justify-content:center;background:linear-gradient(135deg,#123a30,#0c221c);border:1px solid var(--accent2);font-size:20px}
+    .clean-meta{display:flex;flex-direction:column;gap:2px}
+    .clean-meta .ttl{font-size:15px}
+    .clean-meta .desc{color:var(--sub);font-size:12px}
+    /* 프리미엄 스위치 — 체크박스는 시각 숨김, 접근성 유지 */
+    .sw-input{position:absolute;opacity:0;width:46px;height:26px;margin:0;right:0;cursor:pointer}
+    .sw-track{margin-left:auto;width:46px;height:26px;border-radius:20px;flex:none;position:relative;
+      background:#26332e;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+    .sw-knob{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#c9d6d1}
+    .sw-input:checked ~ .sw-track{background:linear-gradient(90deg,#1f9e7a,#37e0bd)}
+    .sw-input:checked ~ .sw-track .sw-knob{left:23px;background:#eafaf5}
+    .sw-input:focus-visible ~ .sw-track{outline:2px solid var(--accent);outline-offset:2px}
+    .btn-clean{background:linear-gradient(90deg,#123a30,#0c221c);border:1px solid var(--accent);color:var(--sel-fg);
+      font-weight:600;font-size:13px;padding:10px 16px;border-radius:9px;cursor:pointer}
+    /* 처리중 */
+    .cp-run{position:relative}
+    .cp-bar{height:7px;border-radius:6px;background:var(--panel);overflow:hidden;position:relative;border:1px solid var(--line)}
+    .cp-run-lbl{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--txt);margin-top:10px}
+    .cp-run-lbl .cp-dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+    .cp-run-sub{font-size:11.5px;color:var(--sub);margin-top:4px}
+    .cp-scan{position:relative;width:104px;height:185px;border-radius:9px;overflow:hidden;margin-bottom:12px;
+      background:linear-gradient(160deg,#2a3a44,#141c22);border:1px solid #0006}
+    .cp-scan img{width:100%;height:100%;object-fit:cover;display:block}
+    /* 완료 C 비교 */
+    .cp-compare{display:flex;align-items:center;gap:0;margin-top:2px}
+    .cp-cell{flex:1;display:flex;flex-direction:column;align-items:center}
+    .cp-frame{position:relative;width:100%;max-width:170px;aspect-ratio:9/16;border-radius:10px;overflow:hidden;
+      background:#000;border:1px solid #0006}
+    .cp-frame img{width:100%;height:100%;object-fit:cover;display:block}
+    .cp-lbl{position:absolute;top:8px;left:8px;font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.55);color:#fff}
+    .cp-lbl.on{color:var(--accent)}
+    .cp-chk{position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:var(--accent);
+      color:#04120e;font-weight:900;font-size:12px;display:flex;align-items:center;justify-content:center}
+    .cp-cap{text-align:center;font-size:11.5px;color:var(--sub);margin-top:7px}
+    .cp-cap.good{color:var(--accent);font-weight:600}
+    .cp-arrow{flex:none;width:52px;text-align:center;color:var(--accent);font-size:26px}
+    .cp-arrow span{display:block;font-size:10px;color:var(--sub);margin-top:3px}
+    .cp-redo{margin-top:14px;background:none;border:1px solid var(--line);color:var(--sub);font-size:12px;
+      padding:7px 13px;border-radius:8px;cursor:pointer}
+    .cp-fail{background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.35);border-radius:10px;
+      padding:12px;font-size:12.5px;color:#ffb4b4}
+    .cp-fail b{color:#fff}
+    /* ── 2단계 자막제거 모션 (M1-M5) ── */
+    @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    .rise{animation:rise .28s ease both}
+    /* M2 스위치 스프링 */
+    .sw-knob{transition:left .25s cubic-bezier(.34,1.56,.64,1),background .25s ease}
+    .sw-track{transition:background .25s ease}
+    @keyframes knobPop{0%{box-shadow:0 0 0 0 rgba(55,224,189,.55)}100%{box-shadow:0 0 0 7px rgba(55,224,189,0)}}
+    .sw-input:checked ~ .sw-track .sw-knob{animation:knobPop .5s ease}
+    /* M3 스캔라인 + 흐름바 */
+    @keyframes flow{0%{left:-40%}100%{left:100%}}
+    .cp-bar::before{content:"";position:absolute;top:0;bottom:0;left:-40%;width:40%;border-radius:6px;
+      background:linear-gradient(90deg,transparent,#37e0bd,#1f9e7a,transparent);animation:flow 1.4s ease-in-out infinite}
+    @keyframes scan{0%{transform:translateY(-100%)}100%{transform:translateY(1000%)}}
+    .cp-scan::after{content:"";position:absolute;left:0;right:0;height:14px;
+      background:linear-gradient(180deg,transparent,rgba(55,224,189,.75),transparent);
+      box-shadow:0 0 14px rgba(55,224,189,.6);animation:scan 1.6s linear infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+    .cp-run-lbl .cp-dot{animation:blink 1s infinite}
+    /* M4 완료 스태거 리빌 */
+    @keyframes fadeCell{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+    .cp-compare .cp-cell{opacity:0;animation:fadeCell .3s ease forwards}
+    .cp-compare .cp-cell:first-child{animation-delay:0s}
+    .cp-compare .cp-cell:last-child{animation-delay:.24s}
+    @keyframes drawArrow{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+    .cp-arrow{opacity:0;animation:drawArrow .3s ease .12s forwards}
+    @keyframes checkPop{0%{transform:scale(0)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+    .cp-chk{animation:checkPop .4s cubic-bezier(.34,1.56,.64,1) .38s both}
+    /* M5 버튼 마이크로 */
+    .btn-clean,.cp-redo{transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease}
+    .btn-clean:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(55,224,189,.18)}
+    .btn-clean:active,.cp-redo:active{transform:scale(.97)}
+    .cp-redo:hover{border-color:var(--accent);color:var(--txt)}
+    /* 접근성: 모션 축소 요청 시 전부 정지 */
+    @media(prefers-reduced-motion:reduce){
+      .rise,.sw-knob,.cp-bar::before,.cp-scan::after,.cp-compare .cp-cell,.cp-arrow,.cp-chk,
+      .cp-run-lbl .cp-dot,.btn-clean,.cp-redo{animation:none!important;transition:none!important}
+      .cp-compare .cp-cell,.cp-arrow{opacity:1}
+    }
   </style>
 </head>
 <body>
@@ -264,16 +348,23 @@
       </div>
     </section>
     <section class="panel" data-step="1">
-      <h3>2 · 자막제거</h3>
-      <div class="sub">소스 영상에 박힌 원본 자막(하드섭)을 VMake AI로 제거합니다. 우리 자막을 새로 입히려면 켜세요.</div>
-      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--inset)">
-        <input type="checkbox" id="subToggle" onchange="onSubToggle()" style="width:18px;height:18px">
-        <span><b>원본 자막 제거 (VMake)</b><div class="hint">끄면 원본 영상 그대로 사용. 켜면 렌더 시 VMake로 자막 제거 후 우리 자막을 굽습니다.</div></span>
-      </label>
-      <div id="subState" class="hint" style="margin-top:8px"></div>
-      <div id="cleanPreviewWrap" style="margin-top:12px;display:none">
-        <button id="btnCleanPreview" class="btn" onclick="startCleanPreview()">자막제거 미리보기</button>
-        <div id="cleanPreview" class="hint" style="margin-top:10px"></div>
+      <h3>2 · 자막 제거</h3>
+      <div class="sub">소스 영상에 박힌 원본 자막을 AI로 지우고, 우리 자막을 새로 입혀요.</div>
+      <div class="clean-card rise">
+        <label class="clean-top">
+          <span class="badge">🧼</span>
+          <span class="clean-meta">
+            <b class="ttl">AI 자막 제거</b>
+            <span id="subDesc" class="desc">끄면 원본 영상 그대로 사용해요</span>
+          </span>
+          <input type="checkbox" id="subToggle" onchange="onSubToggle()" class="sw-input">
+          <span class="sw-track"><span class="sw-knob"></span></span>
+        </label>
+        <div id="subState" class="hint" style="margin-top:8px"></div>
+        <div id="cleanPreviewWrap" style="margin-top:12px;display:none">
+          <button id="btnCleanPreview" class="btn-clean" onclick="startCleanPreview()">✨ 자막제거 미리보기</button>
+          <div id="cleanPreview" style="margin-top:12px"></div>
+        </div>
       </div>
     </section>
     <section class="panel" data-step="2">
@@ -2065,7 +2156,7 @@ async function _restoreWork(workId){
 
   // ★렌더설정 복원(C-2). 이걸 비워두면 renderFinal이 `await saveHeadcopy()`로 **빈 STATE를
   // 그대로 job에 POST해** 어제 해둔 헤드카피·자막스타일·꾸미기를 전부 null로 덮는다.
-  // 게다가 subtitle_removal은 job에 남아(mix_pipeline이 job에서 읽는다) **유료 VMake가 그대로
+  // 게다가 subtitle_removal은 job에 남아(mix_pipeline이 job에서 읽는다) **유료 자막제거가 그대로
   // 도는데** UI는 STATE.subtitleRemoval=false라 "꺼짐"이라 표시한다 — 몰래 과금.
   // 서버가 job에서 읽어 내려준 값이다(작업파일에 복제하지 않는다 = 진실의 원천은 job 하나).
   const sg = d.settings || {};
@@ -2081,7 +2172,7 @@ async function _restoreWork(workId){
 
   // ★게이트 재동기(스펙 §4.5). 아래 `cur` 대입은 jump()/go()를 **안 거치므로** 게이트 검사를
   // 건너뛴다. 서버에서 미리보기 상태를 다시 읽어 맞추지 않으면 "1단계 미리보기를 한 번도 안
-  // 봤는데 2단계로 복원된" 상태가 되어 유료 자막제거(VMake)로 그냥 넘어간다.
+  // 봤는데 2단계로 복원된" 상태가 되어 유료 자막제거로 그냥 넘어간다.
   // 이 트랙은 같은 종류의 구멍에 이미 두 번 데었다(C-1: go만 막고 jump 놓침 / C-3: 재매칭의
   // 끝만 봉인하고 시작 놓침). 세 번째는 없다.
   PREVIEW_STATUS = null;
@@ -3051,7 +3142,7 @@ async function openPaletteView(){
 // ─── PALETTE-END
 
 // ── 1단계 미리보기(2026-07-17) ──────────────
-// 다음 단계(자막제거)가 VMake 유료 API라, 컷·대본이 틀린 채 넘어가면 그 돈이 날아간다.
+// 다음 단계(자막제거)가 유료 AI API라, 컷·대본이 틀린 채 넘어가면 그 돈이 날아간다.
 // 편집안(텍스트)만 보고는 "잘 붙었나"를 판단할 수 없으므로 여기서 공짜로(clean_fn 없이) 렌더해
 // 보여주고 OK를 받는다. 스펙 docs/superpowers/specs/2026-07-17-제작소-1단계-미리보기-design.md
 let PREVIEW_STATUS = null;   // null|'rendering'|'ready'|'failed'
@@ -3173,7 +3264,12 @@ async function startCleanPreview(){
   clearInterval(CLEAN_POLL); CLEAN_POLL=null;
   const myGen=++CLEAN_GEN, myJob=MIX_JOB;
   if(btn) btn.disabled=true;
-  box.innerHTML='<div class="hint">⏳ 자막 제거 중… VMake AI (최대 ~1시간)</div>';
+  box.innerHTML='<div class="cp-run rise">'
+    +'<div class="cp-scan"><img src="/api/produce/mix/clean_thumb/'+encodeURIComponent(myJob)+'?kind=original&t='+Date.now()+'" onerror="this.style.display=\'none\'"></div>'
+    +'<div class="cp-bar"></div>'
+    +'<div class="cp-run-lbl"><span class="cp-dot"></span>AI가 자막 영역을 자연스럽게 복원하는 중…</div>'
+    +'<div class="cp-run-sub">보통 몇 분, 길면 수십 분 걸릴 수 있어요. 다른 단계 먼저 진행해도 돼요.</div>'
+    +'</div>';
   try{
     const d=await (await fetch('/api/produce/mix/clean',{method:'POST',
       headers:{'Content-Type':'application/json'}, body:JSON.stringify({job_id:myJob})})).json();
@@ -3191,14 +3287,18 @@ async function pollClean(gen,job){
     if(d.clean_status==='ready'){
       clearInterval(CLEAN_POLL); CLEAN_POLL=null;
       const t=Date.now(), u='/api/produce/mix/clean_thumb/'+encodeURIComponent(job);
-      box.innerHTML='<div style="display:flex;gap:10px;align-items:flex-start">'
-        +'<figure style="margin:0"><img src="'+u+'?kind=original&t='+t+'" style="width:150px;border-radius:8px;background:#000"><figcaption class="hint" style="text-align:center">원본(자막 있음)</figcaption></figure>'
-        +'<figure style="margin:0"><img src="'+u+'?kind=clean&t='+t+'" style="width:150px;border-radius:8px;background:#000"><figcaption class="hint" style="text-align:center">자막 제거됨</figcaption></figure>'
-        +'</div>';
+      box.innerHTML='<div class="cp-compare">'
+        +'<div class="cp-cell"><div class="cp-frame"><img src="'+u+'?kind=original&t='+t+'"><span class="cp-lbl">BEFORE</span></div><div class="cp-cap">원본</div></div>'
+        +'<div class="cp-arrow">→<span>AI 제거</span></div>'
+        +'<div class="cp-cell"><div class="cp-frame"><img src="'+u+'?kind=clean&t='+t+'"><span class="cp-lbl on">AFTER</span><span class="cp-chk">✓</span></div><div class="cp-cap good">자막 제거됨</div></div>'
+        +'</div>'
+        +'<button class="cp-redo" onclick="startCleanPreview()">↻ 다시 미리보기</button>';
       if(btn) btn.disabled=false;
     } else if(d.clean_status==='failed'){
       clearInterval(CLEAN_POLL); CLEAN_POLL=null;
-      box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ 자막제거 실패 — '+esc(d.clean_error||'')+'</div>';
+      if(d.clean_error) console.warn('clean failed:', d.clean_error);
+      box.innerHTML='<div class="cp-fail"><b>자막 제거에 실패했어요.</b> 잠시 후 다시 시도해 주세요. (문제가 계속되면 관리자에게 문의)</div>'
+        +'<button class="cp-redo" onclick="startCleanPreview()">↻ 다시 시도</button>';
       if(btn) btn.disabled=false;
     }
   }catch(e){ /* 다음 tick 재시도 */ }
@@ -3207,6 +3307,8 @@ async function pollClean(gen,job){
 // ── 3단계 자막제거 ──────────────
 function refreshSub(){
   const cb=document.getElementById('subToggle'); if(cb) cb.checked=STATE.subtitleRemoval;
+  const dd=document.getElementById('subDesc');
+  if(dd) dd.textContent = STATE.subtitleRemoval ? '렌더 시 자동 적용돼요' : '끄면 원본 영상 그대로 사용해요';
   const s=document.getElementById('subState');
   if(s) s.textContent = MIX_JOB ? '' : '⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.';
   // T7: 못 쓰는 컨트롤은 비활성 노출 대신 숨긴다 — 자막제거 켜짐+매칭됨일 때만 미리보기가 등장.
@@ -3215,6 +3317,8 @@ function refreshSub(){
 }
 async function onSubToggle(){
   STATE.subtitleRemoval = document.getElementById('subToggle').checked;
+  const dd=document.getElementById('subDesc');
+  if(dd) dd.textContent = STATE.subtitleRemoval ? '렌더 시 자동 적용돼요' : '끄면 원본 영상 그대로 사용해요';
   // T7: disabled 노출 대신 숨김 — 자막제거 켜짐+매칭됨일 때만 미리보기 버튼이 나타난다.
   const cwrap=document.getElementById('cleanPreviewWrap');
   if(cwrap) cwrap.style.display = (STATE.subtitleRemoval && MIX_JOB) ? '' : 'none';
