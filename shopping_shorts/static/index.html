@@ -1167,17 +1167,20 @@ async function enrichCard(el){
   }catch(e){ el.textContent=""; el.dataset.done=""; }
 }
 async function forceEnrich(el){
+  const saved = el.innerHTML;
   el.innerHTML="…";
-  const d=await (await fetch('/api/enrich',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({url:el.dataset.url, platform:(el.dataset.platform||'').toLowerCase(), force:true})})).json();
-  el.innerHTML=renderEnrich(d);
+  try{
+    const d=await (await fetch('/api/enrich',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url:el.dataset.url, platform:(el.dataset.platform||'').toLowerCase(), force:true})})).json();
+    el.innerHTML=renderEnrich(d);
+  }catch(e){ el.innerHTML=saved; }
 }
 function renderEnrich(d){
   if(!d || (d.status && d.status!=='ok')){
     const msg={quota:'정보 없음(쿼터)', no_data:'정보 없음', needs_manual:''}[d&&d.status]||'정보 없음';
     return msg?`<span style="color:var(--sub)">${msg}</span>`:'';
   }
-  const ch = d.channel_name?`👤 <a href="${d.channel_url||'#'}" target="_blank" style="color:var(--accent)">${esc(d.channel_name)}</a>${d.subscribers?(' · 구독 '+_fmtCount(d.subscribers)):''}`:'';
+  const ch = d.channel_name?`👤 <a href="${esc(d.channel_url||'#')}" target="_blank" style="color:var(--accent)">${esc(d.channel_name)}</a>${d.subscribers?(' · 구독 '+_fmtCount(d.subscribers)):''}`:'';
   const stat = [d.views!=null?('👁 '+_fmtCount(d.views)):'', d.likes!=null?('❤ '+_fmtCount(d.likes)):'', d.comment_count!=null?('💬 '+_fmtCount(d.comment_count)):'', d.upload_date?('📅 '+esc((d.upload_date||'').slice(0,10))):''].filter(Boolean).join('  ·  ');
   const cmts = (d.top_comments||[]).slice(0,5).map(c=>`<div style="margin:2px 0">💬 <b>${esc(c.author)}</b> ${esc((c.text||'').slice(0,120))}</div>`).join('');
   const cmtBlock = cmts?`<details style="margin-top:4px"><summary style="cursor:pointer">인기 댓글 ${d.top_comments.length}</summary>${cmts}</details>`:'';
