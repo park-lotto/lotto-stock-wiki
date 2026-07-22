@@ -3815,7 +3815,7 @@ def _is_trial(customer_id, now=None):
 
 # ── 유료게이트 비용 방어: 계정별 일일 크레딧 + 전역 상한 ──
 _CREDIT_DEFAULTS = {"lens": 5, "render": 2, "script": 10}
-_CREDIT_PRO_DEFAULTS = {"lens": 100, "render": 50, "script": 200}
+_CREDIT_PRO_DEFAULTS = {"lens": 100, "render": 10, "script": 200}  # 하루 영상 최대 10개(돌려쓰기 상한, 2026-07-22)
 _GLOBAL_CAP_DEFAULTS = {"lens": 200, "render": 100, "script": 400}
 
 
