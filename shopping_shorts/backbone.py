@@ -45,27 +45,55 @@ def target_chars(beat):
     return int(clip_seconds(beat) * _SYLLABLES_PER_SEC)
 
 
-def _broll_segs(pool_sources, src_count, exclude_seg_ids, prefer_video=None):
+# 완성·시즐 등 '맛있어 보이는' 비주얼 키워드(2026-07-22 사장님 원칙: 앰비언트 비트는 매칭
+# 욕심 대신 음식이 맛있어 보이는 장면 위주). scene_desc에 이게 있으면 B롤로 우선.
+_VISUAL_KEYWORDS = ("완성", "클로즈", "클로즈업", "치즈", "육즙", "시즐", "흐르", "윤기", "노릇",
+                    "플레이팅", "먹음직", "김이", "부드럽", "촉촉", "바삭", "당기", "늘어", "골든")
+
+
+def _visual_score(seg):
+    """세그먼트가 '맛있어 보이는 비주얼'인가 — scene_desc 키워드 기반(0~N). 앰비언트 채움에서
+    조리 중간 파편보다 완성·클로즈업·시즐을 우선하게 한다."""
+    desc = seg.get("scene_desc", "") or ""
+    return sum(1 for kw in _VISUAL_KEYWORDS if kw in desc)
+
+
+def _seg_dur(seg):
+    return (seg.get("end", 0) - seg.get("start", 0)) if seg else 0.0
+
+
+def _broll_segs(pool_sources, src_count, exclude_seg_ids, prefer_video=None, min_shot=0.0):
     """행위 무관 B롤 후보. **같은 소스(prefer_video=primary 릴) 우선** — 같은 요리라 의미가
     안정된다(엉뚱한 타요리 조각 삽입 방지, 2026-07-21 바나나 커스터드 실사고). 같은 소스의
     안 쓴 조각을 다 쓴 뒤에야 다른 소스로 넘어가되, 그때는 덜 쓴 소스 우선. 이미 쓴 seg_id·
-    길이 0 제외."""
+    길이 0 제외.
+    min_shot(2026-07-22): 이보다 짧은 파편은 뒤로 미룬다(뚝뚝 끊김 방지). 같은 소스 안에서는
+    ★맛있어 보이는 비주얼(_visual_score) → 긴 컷 순으로 골라 앰비언트를 매력적으로 채운다."""
     segs = [{**seg, "video_id": vid} for vid, seg in _iter_segs(pool_sources)
             if seg.get("seg_id") not in exclude_seg_ids
             and not seg.get("has_effect")                 # 원본 효과 박힌 조각은 B롤로 안 씀
-            and (seg.get("end", 0) - seg.get("start", 0)) > 0.05]
+            and _seg_dur(seg) > 0.05]
     segs.sort(key=lambda c: (c.get("video_id") != prefer_video,      # 같은 소스 먼저(False<True)
-                             src_count.get(c.get("video_id"), 0)))
+                             src_count.get(c.get("video_id"), 0),
+                             _seg_dur(c) < min_shot,                  # 너무 짧은 파편은 뒤로
+                             -_visual_score(c),                       # 맛있어 보이는 것 우선
+                             -_seg_dur(c)))                           # 긴 컷 우선(파편 억제)
     return segs
 
 
-def fill_clips_to_cover(beat, pool_sources, src_count=None, need=None):
+def fill_clips_to_cover(beat, pool_sources, src_count=None, need=None,
+                        max_clips=None, min_shot=None):
     """화면이 대사보다 짧으면 풀에서 클립을 더 붙여 길이를 채운다. 원본 mutate 안 함.
     need: 채울 목표 초. None이면 나레이션 추정(narration_seconds)으로 length_status가 'over'일
     때만 채운다(기존 동작). 값이 주어지면(=실 TTS 길이, TTS 후 재보정) clip_seconds가 그보다
     짧을 때 채운다 — 추정≠실제로 생긴 틈이 프리즈로 새는 걸 막는다(뿌리 fix, 2026-07-21).
     1층 — 같은 행위 클립(대본 지목과 안 어긋남). 2층 — 행위로 못 채우면 **같은 소스 우선 B롤**로
-    채운다(반복은 dedup_and_balance가 비트 사이에서 잡고, 여기선 요리 일관성이 우선)."""
+    채운다(반복은 dedup_and_balance가 비트 사이에서 잡고, 여기선 요리 일관성이 우선).
+    ★max_clips(2026-07-22): 비트당 총 클립 상한 — 이만큼 차면 부족해도 파편을 그만 붙인다
+    (모자란 길이는 conform/홀드가 흡수, 뚝뚝 끊김 방지). min_shot: 긴 컷 우선 정렬 기준."""
+    from shopping_shorts import config
+    max_clips = getattr(config, "MAX_CLIPS_PER_BEAT", 3) if max_clips is None else max_clips
+    min_shot = getattr(config, "MIN_SHOT_SECONDS", 1.2) if min_shot is None else min_shot
     if need is None:
         if length_status(beat) != "over":
             return dict(beat)
@@ -76,26 +104,30 @@ def fill_clips_to_cover(beat, pool_sources, src_count=None, need=None):
     used |= {a.get("seg_id") for a in (beat.get("alternates") or [])}
     nb = dict(beat)
     nb["alternates"] = list(beat.get("alternates") or [])
-    # 1층 — 같은 행위 클립(화면-대본 못 유지).
+
+    def _count():
+        return 1 + len(nb["alternates"])   # primary + alternates
+    # 1층 — 같은 행위 클립(화면-대본 못 유지). ★긴 컷 우선(파편 억제).
     action = segment_action(beat.get("primary") or {}) or \
         action_dict.tag_action(beat.get("narration", ""))
-    if action:
-        for clip in pick_clips_for_action(action, pool_sources):
-            if clip.get("seg_id") in used:
-                continue
+    if action and _count() < max_clips:
+        cands = [c for c in pick_clips_for_action(action, pool_sources)
+                 if c.get("seg_id") not in used]
+        cands.sort(key=lambda c: -_seg_dur(c))
+        for clip in cands:
             nb["alternates"].append(clip)
             used.add(clip.get("seg_id"))
-            if clip_seconds(nb) >= need:
+            if clip_seconds(nb) >= need or _count() >= max_clips:
                 return nb
-    # 2층 — 아직 모자라면 같은 소스 우선 B롤(요리 일관성).
-    if clip_seconds(nb) < need:
+    # 2층 — 아직 모자라면 같은 소스 우선 B롤(비주얼·긴 컷 우선). 상한까지만.
+    if clip_seconds(nb) < need and _count() < max_clips:
         sc = src_count if src_count is not None else Counter()
         prim_vid = (beat.get("primary") or {}).get("video_id")
-        for clip in _broll_segs(pool_sources, sc, used, prefer_video=prim_vid):
+        for clip in _broll_segs(pool_sources, sc, used, prefer_video=prim_vid, min_shot=min_shot):
             nb["alternates"].append(clip)
             used.add(clip.get("seg_id"))
             sc[clip.get("video_id")] = sc.get(clip.get("video_id"), 0) + 1
-            if clip_seconds(nb) >= need:
+            if clip_seconds(nb) >= need or _count() >= max_clips:
                 break
     return nb
 
@@ -281,6 +313,54 @@ def dedup_and_balance(beats, pool_sources):
                     nb["balanced"] = True
         used.add(p.get("seg_id"))
         src_count[_vid_of(p)] += 1
+        out.append(nb)
+    return out
+
+
+# 포인트 비트 = 결정적 '투입' 행위(비법 소스 얹기·바르기·뿌리기 등). 이 비트는 그 행위 장면이
+# 영상의 핵심이라 정확 매칭+길게 홀드해야 한다(2026-07-22 사장님 원칙). 나머지(앰비언트)는
+# 매칭 욕심 대신 맛있어 보이는 비주얼 위주.
+_POINT_ACTIONS = {"붓다", "뿌리다", "올리다", "바르다", "짜다", "얹다", "두드리다"}
+
+
+def is_point_beat(beat):
+    """이 비트가 포인트(결정적 투입 행위)인가 — 나레이션 행위가 _POINT_ACTIONS면 True.
+    포인트면 그 행위 장면을 주인공으로 길게 홀드하고 파편 B롤로 묻지 않는다."""
+    n_act = action_dict.tag_action(beat.get("narration", "") or "")
+    return n_act in _POINT_ACTIONS
+
+
+def dedup_clips_global(beats, pool_sources, max_clips=None):
+    """전역 컷 반복 해소(2026-07-22 페이블 — dedup_and_balance는 primary만 봐서 alternates
+    B롤 체인이 비트마다 똑같이 반복됐다: job 실측 s0-2·s0-3이 5비트에 반복). primary+alternates를
+    **영상 전체에서 seg 1회** 원칙으로 본다. 이미 쓴 alternate는 안 쓴 비주얼 클립으로 교체,
+    없으면 드롭(반복보다 낫다 — 길이는 홀드/conform이 흡수). primary는 dedup_and_balance가
+    이미 처리하므로 여기선 alternates만 손댄다. ★포인트 비트의 primary는 절대 안 건드린다."""
+    from shopping_shorts import config
+    max_clips = getattr(config, "MAX_CLIPS_PER_BEAT", 3) if max_clips is None else max_clips
+    min_shot = getattr(config, "MIN_SHOT_SECONDS", 1.2)
+    used = set()
+    src_count = Counter()
+    out = []
+    for b in beats:
+        nb = dict(b)
+        p = nb.get("primary") or {}
+        used.add(p.get("seg_id"))
+        src_count[_vid_of(p)] += 1
+        new_alts = []
+        for a in (nb.get("alternates") or []):
+            if 1 + len(new_alts) >= max_clips:      # 상한 초과분은 버린다(적고 길게)
+                break
+            sid = a.get("seg_id")
+            if sid not in used and _seg_dur(a) > 0:
+                new_alts.append(a); used.add(sid); src_count[_vid_of(a)] += 1
+                continue
+            # 이미 쓴/빈 클립 → 안 쓴 비주얼 B롤로 교체(없으면 드롭 = 반복 안 함).
+            repl = next((c for c in _broll_segs(pool_sources, src_count, used,
+                                                prefer_video=_vid_of(p), min_shot=min_shot)), None)
+            if repl:
+                new_alts.append(repl); used.add(repl.get("seg_id")); src_count[_vid_of(repl)] += 1
+        nb["alternates"] = new_alts
         out.append(nb)
     return out
 

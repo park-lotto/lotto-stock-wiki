@@ -818,6 +818,20 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
     return grounded
 
 
+def _verify_fits(beats):
+    """fit 자기신고 검증(2026-07-22 페이블 점검): fit은 생성 Gemini의 자기채점이라 전부 5/5로
+    나와 — 화면의 '매칭 5/5' 표시, 추천점수의 avg_fit(50%), fit≤2 스왑버튼, fit≤3 약비트
+    재작성이 전부 무력화돼 있었다(banana 실사고: '썰어' 대사에 '뒤집는' 화면이 fit5).
+    행위 증거가 있을 때만 정직하게 깎는다: 나레이션 행위 ≠ 화면 행위(둘 다 검출) → fit≤2.
+    모호하면(행위 미검출) 보류 = 오탐 없음. ping_pong이 스왑으로 고치면 fit=5로 복원된다."""
+    from shopping_shorts import backbone
+    for b in beats:
+        if backbone.beat_action_mismatch(b):
+            b["fit"] = min(int(b.get("fit") or 0), 2)
+            b["fit_evidence"] = "action_mismatch"
+    return beats
+
+
 def _backbone_order_block(backbone_video, source_scripts):
     """백본 영상의 시간순 장면 뼈대 → rich 생성 프롬프트에 넣을 '순서 제약' 블록.
 
@@ -887,6 +901,9 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         plan = _ground_candidate(r, seg_map)
         if plan is None:
             continue
+        # fit 정직화(페이블): 행위 불일치 증거가 있으면 자기신고 fit을 깎는다 — 스왑버튼·
+        # 약비트 재작성·추천점수가 실제로 작동. ping_pong이 스왑으로 고치면 5로 복원됨.
+        plan["beats"] = _verify_fits(plan["beats"])
         if ping_pong:
             from shopping_shorts import backbone
             # 1) 행위 매칭(화면-대사 어긋남 + 길이) 2) 백본 순서 고정(과정순서)
@@ -903,6 +920,9 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             plan["beats"] = backbone.dedup_and_balance(plan["beats"], source_scripts)
             # 서브 의무삽입: 아예 안 쓰인 소스(s2=0)를 같은 행위로 강제 삽입(dedup으론 못 잡음)
             plan["beats"] = backbone.ensure_sources_used(plan["beats"], source_scripts)
+            # 전역 컷 반복 해소(alternates 포함) + 비트당 클립 상한 → 뚝뚝 끊김·B롤 반복 해소
+            # (dedup_and_balance는 primary만 봐서 B롤 체인이 비트마다 반복됐다, job 실측).
+            plan["beats"] = backbone.dedup_clips_global(plan["beats"], source_scripts)
         plan["detected_type"] = detected
         plan["affiliate_target"] = r.get("story_event", "") or ""
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)

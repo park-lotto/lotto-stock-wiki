@@ -161,8 +161,12 @@ def _refill_beats_to_tts(beats, source_scripts, tts_dir):
             continue
         if not td or backbone.clip_seconds(b) >= td:
             continue
+        # 포인트 비트(비법 소스 얹기 등 결정적 행위)는 그 장면이 주인공 — 클립을 덜 붙여(상한 2)
+        # 파편으로 묻지 않고 길게 홀드한다. 앰비언트 비트는 기본 상한(config)으로 비주얼을 채움.
+        mc = 2 if backbone.is_point_beat(b) else None
         try:
-            filled = backbone.fill_clips_to_cover(b, source_scripts, src_count=sc, need=td)
+            filled = backbone.fill_clips_to_cover(b, source_scripts, src_count=sc, need=td,
+                                                  max_clips=mc)
         except Exception:
             traceback.print_exc(file=sys.stderr)
             continue
@@ -315,8 +319,9 @@ def run_mix_job(job_id, db_path, work_root):
                       # 백본-베이스(2026-07-21 확정스펙): 켜면 레퍼런스 자유생성 대신 백본 흐름 위에
                       # 100% 우리 대본을 생성한다. 스마트 믹스 토글이 이 설정도 함께 켠다.
                       backbone_base=(store.get_setting("backbone_base_enabled", "") == "1"),
-                      # 백본 선정: URL로 플랫폼 판별(인스타/유튜브만 백본, 샤오홍슈 서브) + 사장님 지정.
-                      backbone_meta=_backbone_meta_from_job(job, extracts),
+                      # 백본 선정: URL로 플랫폼 판별(인스타/유튜브만 백본, 샤오홍슈 서브)
+                      # + 참여도(수집캐시 댓글수) + 사장님 지정.
+                      backbone_meta=_backbone_meta_from_job(job, extracts, store=store),
                       backbone_forced=_resolve_backbone_forced(job, extracts),
                       global_pron=_gpron)
     except Exception as e:
@@ -361,17 +366,40 @@ def _job_urls(job):
         return []
 
 
-def _backbone_meta_from_job(job, extracts):
+def _engagement_map(store):
+    """수집 캐시(last_run)의 shortcode→댓글수 맵. 백본 선정의 참여도 신호용(사장님: '댓글도
+    봐야 한다'). 캐시 없으면 빈 맵 — 참여도 0으로 무해 폴백."""
+    m = {}
+    for platform in ("instagram", "youtube", "tiktok"):
+        try:
+            items, _ = store.load_last_run_platform(platform)
+        except Exception:
+            continue
+        for it in items or []:
+            sc, c = it.get("shortcode"), it.get("comments")
+            if sc and len(str(sc)) >= 5 and c is not None:
+                m[str(sc)] = c
+    return m
+
+
+def _backbone_meta_from_job(job, extracts, store=None):
     """job의 urls + extracts 키(s0/s1/s2 순서)로 백본 선정용 meta 구성.
-    → {video_id: {'platform': ...}}. 백본=인스타/유튜브 규칙이 실제로 걸리게 한다.
+    → {video_id: {'platform': ..., 'comments': ...}}. 백본=인스타/유튜브 규칙 + 참여도(댓글수,
+    2026-07-22 페이블 — 그전엔 comments 미배선이라 score_backbones의 참여도 0.4가 죽어 있었다).
     ⚠️ get_mix_job은 'urls'(list) 키로 준다 — 예전 'urls_json' 접근은 항상 빈 값이라
     플랫폼 규칙이 통째로 죽어 있었다(2026-07-22 수정)."""
     from shopping_shorts import backbone as _bb
     urls = _job_urls(job)
+    eng = _engagement_map(store) if store is not None else {}
     meta = {}
     for i, key in enumerate(extracts.keys()):
         url = urls[i] if i < len(urls) else ""
-        meta[key] = {"platform": _bb.platform_of(url)}
+        m = {"platform": _bb.platform_of(url)}
+        for sc, c in eng.items():
+            if sc in url:                      # url에 shortcode 포함(인스타/유튜브 공통)
+                m["comments"] = c
+                break
+        meta[key] = m
     return meta
 
 
