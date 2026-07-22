@@ -66,18 +66,17 @@
                animation:emoBob 1.5s ease-in-out infinite;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
   @keyframes emoBob{0%,100%{transform:translateY(0) scale(1)}45%{transform:translateY(-2.5px) scale(1.18)}}
   .ibadge .lbl{color:currentColor;filter:brightness(1.15)}
-  .ibadge.rising{color:#ff7a7a} .ibadge.proven{color:#ffd76b} .ibadge.gem{color:#4fe6d6}
-  .ibadge.hot{color:#ffa657}  .ibadge.reach{color:#7cbcff} .ibadge.flat{color:#c2c2cc}
-  /* ⭐ 진짜 괜찮은 항목 — 금색 글로우 pill, 별 회전 */
-  .ibadge.star{font-weight:800;color:#2a1e00;
-               background:linear-gradient(135deg,#ffe793,#ffc93a);text-shadow:none;
-               box-shadow:0 0 0 1.5px #ffd24d,0 4px 16px rgba(255,196,0,.55);
-               animation:starGlow 1.9s ease-in-out infinite}
-  .ibadge.star .lbl{background:none;-webkit-text-fill-color:#2a1e00;color:#2a1e00}
-  .ibadge.star .emo{animation:emoSpin 2.2s ease-in-out infinite;filter:drop-shadow(0 0 3px rgba(255,220,120,.9))}
-  @keyframes emoSpin{0%,100%{transform:rotate(-10deg) scale(1)}50%{transform:rotate(10deg) scale(1.22)}}
-  @keyframes starGlow{0%,100%{box-shadow:0 0 0 1.5px #ffd24d,0 4px 14px rgba(255,196,0,.45)}
-                      50%{box-shadow:0 0 0 1.5px #fff0b0,0 4px 22px rgba(255,196,0,.9)}}
+  .ibadge.red{color:#ff6b6b}          /* 뜨는 중(급상승·떡상) */
+  .ibadge.green{color:#a6f078}        /* 반응 좋음(연두) */
+  /* 🎯 진짜 봐야할 것 — 강조: 빨강 채움 pill + 크게 + 맥동 (극소수만) */
+  .ibadge.must{color:#fff;font-weight:800;font-size:12.5px;padding:6px 12px 6px 9px;
+               background:linear-gradient(135deg,#ff4d4d,#d81f1f);text-shadow:none;
+               box-shadow:0 0 0 1.5px rgba(255,150,150,.9),0 4px 16px rgba(255,50,50,.6);
+               animation:mustGlow 1.5s ease-in-out infinite}
+  .ibadge.must .lbl{color:#fff;filter:none}
+  .ibadge.must .emo{animation:emoBob 1.05s ease-in-out infinite}
+  @keyframes mustGlow{0%,100%{box-shadow:0 0 0 1.5px rgba(255,150,150,.85),0 4px 14px rgba(255,50,50,.5)}
+                      50%{box-shadow:0 0 0 2px rgba(255,200,200,1),0 5px 24px rgba(255,50,50,.95)}}
   .vbadge{position:absolute;bottom:8px;right:8px;z-index:3;pointer-events:none;
           font-family:'Pretendard Variable',Pretendard,system-ui,sans-serif;
           font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:-.2px;
@@ -572,14 +571,11 @@ function setSearch(q){ STATE.q = q; render(); }
 function _pctl(sorted, v){ let lo=0,hi=sorted.length; while(lo<hi){const m=(lo+hi)>>1; if(sorted[m]<=v) lo=m+1; else hi=m;} return sorted.length? lo/sorted.length : 0; }
 function _fmtViews(n){ n=n||0; return n>=10000 ? (n/10000).toFixed(1)+'만' : n.toLocaleString(); }
 function _insight(vr, dr, sr){
-  // 규모(BIG/SMALL) · 상태. 짧고 트렌디하게, 이모지 분리.
-  if(vr>=0.70 && dr>=0.60) return {e:'🔥', t:'BIG채널 · 반응UP', c:'proven'}; // 도달 크고 반응도 뜨겁다
-  if(vr<=0.40 && sr>=0.70) return {e:'🚀', t:'SMALL채널 · 떡상中', c:'rising'}; // 작은데 지금 치고 올라옴
-  if(vr<=0.40 && dr>=0.75) return {e:'💎', t:'SMALL채널 · 알짜', c:'gem'};     // 작은데 참여밀도 최상
-  if(vr>=0.70 && dr<0.40)  return {e:'📺', t:'BIG채널 · 반응보통', c:'flat'};  // 도달만 크고 반응 미지근
-  if(sr>=0.85)             return {e:'📈', t:'반응 급상승', c:'hot'};
-  if(dr>=0.90)             return {e:'💎', t:'참여율 TOP', c:'gem'};
-  if(vr>=0.85)             return {e:'👑', t:'BIG채널 · 도달UP', c:'reach'};
+  // 아주 선별적 — 평범한 건 배지 없음(대부분 배지 X). 빨강=뜨는중, 연두=반응 좋음.
+  if(vr<=0.40 && sr>=0.85) return {e:'🚀', t:'SMALL · 떡상中', c:'red'};   // 작은데 빠르게(발굴가치)
+  if(dr>=0.90 && vr<=0.45) return {e:'💎', t:'SMALL · 알짜', c:'green'};   // 작은데 반응 최상
+  if(dr>=0.90 && vr>=0.60) return {e:'🔥', t:'반응 좋음', c:'green'};      // 반응 확실히 좋음
+  if(sr>=0.92)             return {e:'📈', t:'급상승', c:'red'};
   return null;
 }
 function badgeHTML(i, ctx){
@@ -587,11 +583,13 @@ function badgeHTML(i, ctx){
   const b=_insight(vr, dr, sr);
   let h='';
   if(b){
-    // ⭐ = 진짜 괜찮은 것: 도달·반응·상승세 종합(반응 가중) 상위. 화면당 소수만.
-    const score = vr*0.40 + dr*0.45 + sr*0.15;
-    const star = score>=0.85;
-    const emo = star ? '⭐' : b.e;
-    h+=`<span class="ibadge ${star?'star':b.c}"><span class="emo">${emo}</span><span class="lbl">${b.t}</span></span>`;
+    // 🎯 진짜 봐야할 것: 도달·반응·상승세 종합(반응 가중) 최상위만 — 극소수. 크고 빨갛게 강조.
+    const score = vr*0.35 + dr*0.50 + sr*0.15;
+    const must = score>=0.90;
+    const cls = must ? 'must' : b.c;
+    const emo = must ? '🎯' : b.e;
+    const txt = must ? '진짜 봐야할 것' : b.t;
+    h+=`<span class="ibadge ${cls}"><span class="emo">${emo}</span><span class="lbl">${txt}</span></span>`;
   }
   if(i.views) h+=`<span class="vbadge">👁 ${_fmtViews(i.views)}</span>`;
   return h;
