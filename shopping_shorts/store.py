@@ -2721,6 +2721,36 @@ class Store:
                 "google_sub": row[5], "email": row[6], "approved_at": row[7],
                 "name": row[8], "phone": row[9], "trial_ends_at": row[10]}
 
+    def update_customer_info(self, customer_id, name, phone):
+        """관리자 정보수정: 이름·전화 갱신(구글 가입은 이름·전화가 비어 admin에서 채운다).
+        None이 아닌 값만 덮어쓴다 — 한쪽만 고칠 때 다른 쪽을 지우지 않게."""
+        sets, params = [], []
+        if name is not None:
+            sets.append("name=?"); params.append(name)
+        if phone is not None:
+            sets.append("phone=?"); params.append(phone)
+        if not sets:
+            return
+        params.append(customer_id)
+        with self._conn() as c:
+            c.execute(f"UPDATE customers SET {', '.join(sets)} WHERE id=?", params)
+
+    def delete_customer(self, customer_id):
+        """관리자 완전 삭제: 이 고객의 모든 데이터를 지운다 — 결제·접속·사용량뿐 아니라
+        customer_id 컬럼을 가진 모든 테이블(담기·대본·제작물·크레딧 등)까지. 사장님(0)은 안 지운다.
+        (customers.id는 AUTOINCREMENT라 재사용 안 됨 → 고아가 남아도 새 계정이 물려받진 않지만,
+         '완전 삭제' 이름값대로 콘텐츠까지 청소한다.)"""
+        if customer_id == 0:
+            return
+        with self._conn() as c:
+            tables = [r[0] for r in c.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
+            for t in tables:
+                cols = {r[1] for r in c.execute(f"PRAGMA table_info({t})").fetchall()}
+                if "customer_id" in cols:           # 테이블명은 sqlite_master 출처(사용자입력 아님)
+                    c.execute(f"DELETE FROM {t} WHERE customer_id=?", (customer_id,))
+            c.execute("DELETE FROM customers WHERE id=?", (customer_id,))
+
     def set_plan(self, customer_id, plan, full_access_until=None):
         """등급 변경. plan='pro'|'free'. full_access_until(epoch초)를 주면 함께 설정(체험창)."""
         with self._conn() as c:
