@@ -698,6 +698,15 @@ class Store:
                     created_at TEXT
                 )
             """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS pron_reports (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    text TEXT NOT NULL,
+                    comment TEXT DEFAULT '',
+                    created_at TEXT,
+                    resolved INTEGER DEFAULT 0
+                )
+            """)
             self._migrate_personal_tables(c)
             self._ensure_paywall_schema(c)
 
@@ -2606,6 +2615,29 @@ class Store:
                 "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
                 (key, value),
             )
+
+    def add_pron_report(self, text, comment, created_at):
+        """발음 제보 1건 저장. 신규 row id 반환."""
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO pron_reports(text, comment, created_at) VALUES(?,?,?)",
+                (text, comment or "", created_at),
+            )
+            return cur.lastrowid
+
+    def list_pron_reports(self, include_resolved=False):
+        """제보 목록(최신순). 기본은 미처리(resolved=0)만."""
+        q = ("SELECT id, text, comment, created_at FROM pron_reports "
+             + ("" if include_resolved else "WHERE resolved=0 ")
+             + "ORDER BY id DESC")
+        with self._conn() as c:
+            rows = c.execute(q).fetchall()
+        return [{"id": r[0], "text": r[1], "comment": r[2], "created_at": r[3]} for r in rows]
+
+    def resolve_pron_report(self, report_id):
+        """제보를 처리됨으로 표시(resolved=1)."""
+        with self._conn() as c:
+            c.execute("UPDATE pron_reports SET resolved=1 WHERE id=?", (report_id,))
 
     # ── novelty 메모리(P0-3): 최근 영상이 쓴 훅·인물·CTA를 기록해 다음 생성에서 회피 ──
     def record_script_usage(self, hook="", person="", cta=""):
