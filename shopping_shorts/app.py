@@ -2033,8 +2033,11 @@ def api_mix_tts_regen(job_id: str, beat_idx: int, body: dict, background_tasks: 
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
-    if job.get("status") in ("rendering", "removing_subtitles"):
-        return JSONResponse(status_code=409, content={"ok": False, "error": "렌더 중에는 재생성할 수 없어요"})
+    # 렌더 단계뿐 아니라 '이 음성으로 전체 생성'(active stage "tts") 등 활성 단계 전부에서 막는다.
+    # 안 막으면 전체생성 백그라운드가 이 비트 새 톤 mp3를 job 기본 보이스로 덮어써 톤 변경이 사라진다
+    # (2026-07-23 진단 — 스크린샷 "전체 음성 생성 중…" 상태에서 톤 바꿔도 적용 안 됨).
+    if job.get("status") in _MIX_ACTIVE_STAGES + ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409, content={"ok": False, "error": "생성·렌더 중에는 재생성할 수 없어요"})
     # job의 voice 스냅샷(model_id·silence_trim·naturalize_profile 등) 위에 UI가 보낸
     # 톤/성우 키만 덮어쓴다 — 통째로 새 dict를 만들면 _voice_params가 나머지를 기본값으로
     # 채워 재생성 비트만 소리가 달라진다("작업대 소리 ≠ 렌더 소리", mix_pipeline._voice_params

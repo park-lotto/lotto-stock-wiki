@@ -874,6 +874,9 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
             beat["cap_durs"] = caption_sync.phrase_durs_from_words(
                 beat["narration"], words, _probe_duration(str(out)),
                 preset=beat.get("caption_lines"))
+        # 완료 신호: 단조 증가 버전. 프론트가 이 값 변화를 폴링해 '재합성 끝'을 안다
+        # (mp3는 같은 경로/URL이라 겉으론 구분이 안 되므로 — 고정 4초 추측을 이 신호로 대체).
+        beat["tts_ver"] = (beat.get("tts_ver") or 0) + 1
         store.update_mix_job(job_id, edit_plan=plan)
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
