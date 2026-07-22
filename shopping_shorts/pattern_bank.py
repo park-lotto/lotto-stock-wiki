@@ -17,7 +17,7 @@ import sys
 
 from google.genai import types
 
-from shopping_shorts import comment_gen
+from shopping_shorts import comment_gen, gemini_audit
 from shopping_shorts.store import PATTERN_BUCKETS
 
 _MODEL = comment_gen._MODEL
@@ -157,10 +157,15 @@ def ingest_script(store, full_text, source="manual", url="",
     source_id = store.add_pattern_source(
         source, url, full_text, product_category=product_category,
         category_source=category_source, perf=perf, structure=buckets)
+    from shopping_shorts.hook_harvest import is_engagement_bait
     added = 0
+    hook_bait_blocked = 0
     for bucket in STYLE_BUCKETS:
         for text in buckets.get(bucket) or []:
             if not (text or "").strip():
+                continue
+            if bucket == "hook" and is_engagement_bait(text):   # 참여유도 멘트는 훅 오염 — 차단
+                hook_bait_blocked += 1
                 continue
             store.add_pattern_item(bucket, text, source_id=source_id)
             added += 1
@@ -171,7 +176,8 @@ def ingest_script(store, full_text, source="manual", url="",
             store.add_pattern_item(bucket, text, slot_role="template", source_id=source_id)
             added += 1
     # buckets: 적재 요약(수집 자동적재의 by_bucket 보고용) — 기존 호출부는 source_id/added만 읽어 무해.
-    return {"source_id": source_id, "added": added, "buckets": buckets}
+    return {"source_id": source_id, "added": added, "buckets": buckets,
+            "hook_bait_blocked": hook_bait_blocked}
 
 
 def ingest_negative(store, text, bucket):
@@ -235,6 +241,11 @@ def ingest_collected(store, items, top_n=None, min_kr=None, ingest_fn=None,
     report = {"considered": len(cand), "added_sources": 0, "added_items": 0,
               "skipped_dup": 0, "skipped_short": max(0, len(items or []) - len(cand)),
               "by_bucket": {}}
+    # 제미니 검열 계측 — attempted(실제 호출) 대비 succeeded, 성공분 구조, 훅 스팸.
+    attempted = 0
+    structures = []          # 성공 소스의 structure_json(완성도 판정용)
+    hook_total = 0           # 추출된 훅 총수(차단 전)
+    hook_bait = 0            # 그중 스팸으로 차단한 수
     for it in cand:
         if report["added_sources"] >= top_n:
             break
@@ -244,6 +255,7 @@ def ingest_collected(store, items, top_n=None, min_kr=None, ingest_fn=None,
             report["skipped_dup"] += 1
             continue
         seen.add(fp)
+        attempted += 1
         try:
             perf = perf_fn(it)
             res = ingest_fn(store, caption, source="collect",
@@ -252,11 +264,18 @@ def ingest_collected(store, items, top_n=None, min_kr=None, ingest_fn=None,
                             category_source=None, perf=perf, call=call)
         except Exception as e:
             print(f"ingest_collected(item): {e!r}", file=sys.stderr)
-            continue
+            continue                                  # 실패 = attempted엔 셌으나 succeeded엔 안 셈
         if res and res.get("source_id"):
             report["added_sources"] += 1
             report["added_items"] += res.get("added", 0)
-            for bucket, texts in (res.get("buckets") or {}).items():
+            structs = res.get("buckets") or {}
+            structures.append(structs)
+            hook_total += len(structs.get("hook") or [])   # 추출 원본(스팸 포함)
+            hook_bait += res.get("hook_bait_blocked", 0)    # 그중 차단분(부분집합)
+            for bucket, texts in structs.items():
                 if texts:
                     report["by_bucket"][bucket] = report["by_bucket"].get(bucket, 0) + len(texts)
+    report["gemini_audit"] = gemini_audit.compute_audit(
+        attempted=attempted, succeeded=report["added_sources"],
+        structures=structures, hook_total=hook_total, hook_bait=hook_bait)
     return report
