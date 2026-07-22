@@ -588,14 +588,40 @@ def conform_narration(narration, target_seconds, max_tries=4):
         _CONFORM_PROMPT.format(char_target=char_target, narration=narration[:1000]),
         _CONFORM_SCHEMA, max_tries=max_tries)
     if not raw:
-        return None
+        return _trim_to_budget(narration, char_target)   # Gemini 실패·쿼터 → 결정적 폴백
     new = (raw.get("narration") or "").strip()
     if not new:
-        return None
+        return _trim_to_budget(narration, char_target)
     est = len("".join(new.split())) / _SYLLABLES_PER_SEC
     if not (0.8 * target_seconds <= est <= 1.2 * target_seconds):
-        return None
+        return _trim_to_budget(narration, char_target)   # Gemini 결과 부적합 → 결정적 폴백
     return new
+
+
+# 문법을 안 깨고 뺄 수 있는 군더더기 부사·강조어(콘폼 결정적 폴백용). '계란물을 모두 부어요'
+# → '계란물을 부어요'처럼 뜻·문장은 그대로 두고 시간만 줄인다.
+_FILLER_WORDS = ("모두", "정말", "진짜", "아주", "너무", "살짝", "그냥", "이제", "바로",
+                 "좀", "막", "딱", "한번", "완전", "엄청", "되게", "조금", "약간", "다시",
+                 "계속", "꼭", "이렇게", "그렇게", "얼른", "어서", "곧바로", "무려")
+
+
+def _trim_to_budget(narration, char_target):
+    """Gemini 없이 결정적으로 대사를 예산 글자수에 맞추는 콘폼 폴백(2026-07-22, 사장님 요청).
+    Gemini 쿼터·실패로 콘폼이 조용히 안 되던 걸 대체 — 문법이 안 깨지게 군더더기 부사부터
+    하나씩 덜어 길이를 줄인다. 이미 예산 내거나 뺄 게 없어 그대로면 None(원문 유지)."""
+    def clen(s):
+        return len("".join(s.split()))
+    narration = (narration or "").strip()
+    if not narration or clen(narration) <= char_target:
+        return None
+    words = narration.split()
+    for filler in _FILLER_WORDS:
+        if clen(" ".join(words)) <= char_target:
+            break
+        if filler in words:
+            words = [w for w in words if w != filler]
+    new = " ".join(words).strip()
+    return new if (new and new != narration) else None
 
 
 _TYPE_SCHEMA = {
