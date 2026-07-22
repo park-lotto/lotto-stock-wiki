@@ -145,7 +145,13 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
 
     platform == "tiktok"이면 키워드검색이 Apify 유료라 남용/비용 가드를 건다:
     ① 월예산 킬스위치(초과 시 429 budget_exceeded) ② 사용자별 하루 상한
-    (초과 시 429 daily_limit). 통과 후 수집하면 하루카운트 +1, 추정비용 누적."""
+    (초과 시 429 daily_limit). 통과 후 수집하면 하루카운트 +1, 추정비용 누적.
+
+    ★관리자(사장님 cid0) 전용(2026-07-22) — 수집=크롤 비용이 드는 운영 액션이라
+    구독자(pro 포함)에겐 화면·API 모두 막는다. 화면 숨김만으론 pro가 직접 호출 가능."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
     if platform == "tiktok":
         guard = Store(DB_PATH)
         knobs = _tiktok_knobs(guard)
@@ -195,28 +201,83 @@ def _apply_activity(records):
 
 
 @app.post("/api/census")
-def api_census(background_tasks: BackgroundTasks):
-    """🔬 전수 센서스 — 전 채널(팔로워/사망 필터 없음)을 긁어 활동성 판정. 전체 랭킹을
-    즉시 반환하고, 활동성 DB반영(생존/사망/부활)은 응답 후 background로 처리한다
-    ("정리를 뒤에서"). 이후 매일 수집은 여기서 살아있다고 판정된 채널만 긁는다."""
+def api_census(request: Request, background_tasks: BackgroundTasks):
+    """🔬 전수 센서스(비동기, 2026-07-22) — 전 채널(팔로워/사망 필터 없음)을 긁어 활동성
+    판정. census가 수분 걸려 동기 응답은 모바일에서 Failed to fetch가 났다(서버는 완료해도
+    화면만 실패). 그래서 잡을 접수하고 job_id만 즉시 돌려준 뒤 실제 작업은 background에서
+    돌린다. 프론트는 /api/census/status/{job_id}를 폴링해 진행/결과를 받는다.
+
+    ★관리자(사장님 cid0) 전용(2026-07-22) — 전 채널 크롤=고비용 운영 액션."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    job_id = uuid.uuid4().hex[:12]
+    Store(DB_PATH).create_census_job(job_id)
+    background_tasks.add_task(_run_census_job, job_id)
+    return {"ok": True, "job_id": job_id}
+
+
+def _run_census_job(job_id):
+    """background: census() 실행 → last_run 저장·활동반영·비전태그 → 결과를 job에 담아 done.
+    느린 후속(초안·신규 비전태깅)은 done 뒤에 돌려 결과 응답을 늦추지 않는다. 실패는
+    민감정보 마스킹 후 error로 기록 — 프론트는 status 폴링으로 이 결과/에러를 받는다."""
+    store = Store(DB_PATH)
     try:
         result = census()
     except Exception as e:
         import re
         msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
-        return JSONResponse(status_code=500, content={"ok": False, "error": msg})
-    items = result["items"]
-    store = Store(DB_PATH)
-    collected_at = datetime.now(timezone.utc).isoformat()
-    store.save_last_run(items, collected_at)          # 레퍼런스 랭킹 캐시도 갱신
-    background_tasks.add_task(_apply_activity, result["activity_records"])
-    background_tasks.add_task(generate_missing_drafts, next_draft_targets(items, store))
-    background_tasks.add_task(_tag_new_items, items)
-    _attach_vision_tags(items, store)
-    return {"ok": True, "count": len(items), "items": items,
-            "collected_at": collected_at, "dead": result["dead"],
-            "scanned_n": result["scanned_n"], "alive_n": result["alive_n"],
-            "dead_n": result["dead_n"], "revived_n": result["revived_n"]}
+        store.update_census_job(job_id, status="error", error=msg)
+        return
+    try:
+        items = result["items"]
+        collected_at = datetime.now(timezone.utc).isoformat()
+        store.save_last_run(items, collected_at)          # 레퍼런스 랭킹 캐시도 갱신
+        _apply_activity(result["activity_records"])       # 생존/사망/부활 DB반영
+        _attach_vision_tags(items, store)                 # 기존 비전 태그 실어 보냄
+        payload = {"count": len(items), "items": items,
+                   "collected_at": collected_at, "dead": result["dead"],
+                   "scanned_n": result["scanned_n"], "alive_n": result["alive_n"],
+                   "dead_n": result["dead_n"], "revived_n": result["revived_n"]}
+        store.update_census_job(job_id, status="done", result=payload)
+    except Exception as e:
+        import re
+        msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+        store.update_census_job(job_id, status="error", error=msg)
+        return
+    # done 이후 느린 후속 — 실패해도 이미 저장된 결과엔 영향 없음(삼킨다).
+    try:
+        generate_missing_drafts(next_draft_targets(items, store))
+        _tag_new_items(items)
+    except Exception:
+        pass
+
+
+# 전수조사 잡이 이 분(min)간 갱신 없이 running이면 서버 재시작 등으로 죽은 잔해 → failed 통보.
+_CENSUS_STALE_MIN = 20
+
+
+@app.get("/api/census/status/{job_id}")
+def api_census_status(job_id: str):
+    """전수조사 잡 상태/결과 폴링. running/done/error. done이면 결과 payload를 함께 준다.
+    running인데 오래 갱신이 없으면(서버 재시작 등) error로 알린다 — 무한 대기 방지."""
+    job = Store(DB_PATH).get_census_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    status = job["status"]
+    if status == "running":
+        try:
+            age_min = (datetime.now(timezone.utc)
+                       - datetime.fromisoformat(job["updated_at"])).total_seconds() / 60
+        except Exception:
+            age_min = 0
+        if age_min > _CENSUS_STALE_MIN:
+            return {"ok": True, "status": "error",
+                    "error": "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."}
+        return {"ok": True, "status": "running"}
+    if status == "error":
+        return {"ok": True, "status": "error", "error": job["error"] or "실패"}
+    return {"ok": True, "status": "done", **(job["result"] or {})}
 
 
 _VISION_TAG_CAP = 60  # 1회 수집당 새 태깅 상한(비용 가드). 초과분은 다음 수집 때.
@@ -586,11 +647,16 @@ def api_discover_added():
 
 
 @app.post("/api/reference/register")
-def api_reference_register(url: str):
+def api_reference_register(request: Request, url: str):
     """레퍼런스 채널을 URL 붙여넣기로 직접 등록(2026-07-18). 인스타 채널/릴스
     URL에서 username을 뽑아 discovered_channels에 소프트 추가 — 엑셀 원본은
     안 건드리고 다음 수집부터 랭킹에 포함(비용 0, 프로필 조회 안 함).
-    이미 엑셀·발굴목록에 있으면 already=True로 알려주고 중복 추가하지 않는다."""
+    이미 엑셀·발굴목록에 있으면 already=True로 알려주고 중복 추가하지 않는다.
+
+    ★관리자(사장님 cid0) 전용(2026-07-22) — 랭킹 대상(레퍼런스 목록) 편집은 운영 액션."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
     username = username_from_url(url)
     if not username:
         low = (url or "").lower()
@@ -1573,12 +1639,14 @@ def api_get_smart_mix():
 
 @app.post("/api/settings/smart_mix")
 def api_set_smart_mix(body: dict):
-    """딸깍 하나로 부품은행 주입(bank_enabled)·반복회피(novelty)·핑퐁(ping_pong_enabled)을
-    함께 켜고 끈다. 셋 다 scene_first 믹스에서만 작동하고 기본 off라 켜기 전엔 라이브 무변화."""
+    """딸깍 하나로 부품은행 주입(bank_enabled)·반복회피(novelty)·핑퐁(ping_pong_enabled)·
+    백본-베이스(backbone_base_enabled, 백본 흐름 위 100% 우리 대본)를 함께 켜고 끈다.
+    전부 scene_first 믹스에서만 작동하고 기본 off라 켜기 전엔 라이브 무변화."""
     val = "1" if body.get("on") else "0"
     store = Store(DB_PATH)
     store.set_setting("bank_enabled", val)
     store.set_setting("ping_pong_enabled", val)
+    store.set_setting("backbone_base_enabled", val)
     return {"ok": True, "on": val == "1"}
 
 
@@ -3755,6 +3823,18 @@ def _today_utc():
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 
+def _valid_backbone_main(raw, n_urls):
+    """UI가 보낸 backbone_main(메인 소스 인덱스)을 검증. 정수·[0,n) 범위면 그대로,
+    아니면 None(자동 선정). 잘못된 값에 믹스 job을 죽이지 않는다."""
+    if raw is None:
+        return None
+    try:
+        idx = int(raw)
+    except (TypeError, ValueError):
+        return None
+    return idx if 0 <= idx < n_urls else None
+
+
 def check_and_count(customer_id, op):
     """유료 op(lens/render/script) 실행 전 호출. 일일 상한 초과면 False(막기),
     아니면 카운트+1 후 True. 사장님(0)·pro는 높은 상한(limit_{op}_pro)."""
@@ -4508,12 +4588,16 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     # true로 보낸다. mix_pipeline._plan_and_tts가 build_scene_first_plan으로 후보 n개를 만들고
     # 추천 후보를 자동 세팅한다(candidates=[]이면 기존 build_edit_plan으로 조용히 폴백).
     scene_first = bool(body.get("scene_first", False))
+    # 백본(메인) 지정(2026-07-22): 사장님이 재료카드에서 '⭐메인'으로 고른 소스의 urls 인덱스.
+    # 범위 밖·형변환 실패는 None으로 흘려 자동 선정에 맡긴다(잘못된 값에 job을 죽이지 않는다).
+    backbone_main = _valid_backbone_main(body.get("backbone_main"), len(urls))
     job_id = uuid.uuid4().hex[:12]
     Store(DB_PATH).create_mix_job(job_id, urls, target, "free",
                                   subtitle_removal=subtitle_removal, given_script=script,
                                   script_structure=script_structure, scene_first=scene_first,
                                   customer_id=cid,
-                                  render_charge_day=("trial" if _is_trial(cid) else _today_utc()))
+                                  render_charge_day=("trial" if _is_trial(cid) else _today_utc()),
+                                  backbone_main=backbone_main)
     background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True, "job_id": job_id}
 

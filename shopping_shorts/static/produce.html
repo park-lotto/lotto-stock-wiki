@@ -253,7 +253,7 @@
             <div id="footageList" class="hint" style="margin:6px 0">🎬 담기로 화면에 쓸 영상을 고르세요. (1개=순서편집 · 2개+=믹스)</div>
             <label style="display:flex;align-items:center;gap:8px;margin:6px 0 10px;font-size:12px;cursor:pointer">
               <input type="checkbox" id="smartMixToggle" onchange="setSmartMix(this.checked)">
-              <span>✨ 스마트 믹스 <span class="hint">— 부품은행 훅·말투 + 반복 회피(매번 다른 훅) + 대본↔장면 핑퐁</span></span>
+              <span>✨ 스마트 믹스 <span class="hint">— 백본 흐름 기반 새 대본 + 부품은행 훅·말투 + 반복 회피(매번 다른 훅) + 대본↔장면 핑퐁</span></span>
             </label>
             <button class="btn-next" style="padding:8px 16px" onclick="startProduceMix()">🎬 영상 매칭 시작</button>
             <div id="mixStatus" class="hint" style="margin-top:12px"></div>
@@ -2218,6 +2218,7 @@ function renderPool(){
       </div>
       <button class="btn-prev" style="padding:6px 10px;font-size:12px" onclick="openScriptModal(${i})">📝 뽑기${it.pickScript?' ✓':''}</button>
       <button class="btn-prev" style="padding:6px 10px;font-size:12px;${it.useFootage?'border-color:var(--ok);color:var(--ok)':''}" onclick="toggleFootage(${i})">🎬 담기${it.useFootage?' ✓':''}</button>
+      <button class="btn-prev" title="이 영상의 흐름(순서·리듬)을 뼈대로 삼습니다 — 대본은 100% 새로 씁니다. 스마트 믹스일 때 적용." style="padding:6px 10px;font-size:12px;${it.bbMain?'border-color:var(--accent);color:var(--accent)':''}" onclick="designateBackbone(${i})">⭐ 메인${it.bbMain?' ✓':''}</button>
       <button class="poolDel" title="영상풀에서 빼기" onclick="removeFootage(${i})" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 2px">✕</button>
     </div>`).join('');
 }
@@ -2284,6 +2285,17 @@ function removeMixUrlRow(btn){
 function toggleFootage(i){
   if(!HANDOFF[i]) return;
   HANDOFF[i].useFootage=!HANDOFF[i].useFootage;
+  // 담기 해제한 영상이 '메인'이었으면 지정도 해제(백본은 화면에 담긴 것 중에서만).
+  if(!HANDOFF[i].useFootage) HANDOFF[i].bbMain=false;
+  syncFootageToMixUrls(); renderPool(); saveWork();
+}
+// ⭐ 메인(백본) 지정 — 오직 하나만. 잘된 영상 1개의 흐름을 뼈대로 삼는다(대본은 새로 씀).
+// 지정하면 화면에도 담는다(백본은 믹스에 들어가야 하므로). 같은 걸 다시 누르면 해제=자동 선정.
+function designateBackbone(i){
+  if(!HANDOFF[i]) return;
+  const was=HANDOFF[i].bbMain;
+  HANDOFF.forEach(h=>{ h.bbMain=false; });
+  if(!was){ HANDOFF[i].bbMain=true; HANDOFF[i].useFootage=true; }
   syncFootageToMixUrls(); renderPool(); saveWork();
 }
 // 담긴 영상 개수만 표시한다(2026-07-18 개편). 예전엔 담긴 URL을 #mixUrls 입력칸에 **복사**해
@@ -2293,6 +2305,16 @@ function syncFootageToMixUrls(){
   const n=HANDOFF.filter(h=>h.useFootage).length;
   const fl=document.getElementById('footageList');
   if(fl) fl.textContent=n?`🎬 화면 ${n}개 담김 (${n===1?'순서편집':'믹스'})`:'🎬 담기로 화면에 쓸 영상을 고르세요. (1개=순서편집 · 2개+=믹스)';
+}
+// ⭐메인(백본)으로 지정한 영상이 collectMixUrls() 결과 배열에서 몇 번째인지(0-based).
+// 서버는 이 인덱스를 추출 소스 순서에 맞춰 백본으로 삼는다. 지정 없거나 못 찾으면 -1(자동).
+function collectBackboneIndex(urls){
+  const bb=HANDOFF.find(h=>h.bbMain && h.useFootage);
+  if(!bb) return -1;
+  const u=bb.url||'';
+  // collectMixUrls와 동일한 실제 URL 규칙(rednote는 play_url로 치환)으로 맞춰 찾는다.
+  const eff=(bb.play_url && /rednote\.com|xiaohongshu\.com|xhslink\.com/.test(u))?bb.play_url:bb.url;
+  return urls.indexOf(eff);
 }
 // 믹스에 쓸 URL = 영상풀에서 🎬담긴 것 + 아직 확정 안 하고 입력칸에 남은 것(중복 제거).
 function collectMixUrls(){
@@ -2633,8 +2655,11 @@ async function startProduceMix(){
   try{
     // scene_first(2026-07-20, Task7): 장면 우선 대본 모드 — 팔레트+헌장으로 후보 n개를 만들어
     // 가장 잘 맞는 것을 추천한다. 기본 ON(요청서 §4). 후보 UI는 pollMix가 ready_for_review에서 그린다.
+    const _bbIdx=collectBackboneIndex(urls);
+    const _mixBody={script:STATE.script, urls, target_seconds:30, scene_first:true};
+    if(_bbIdx>=0) _mixBody.backbone_main=_bbIdx;   // ⭐메인 지정 시에만(없으면 서버 자동 선정)
     const r=await fetch('/api/produce/mix/start',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({script:STATE.script, urls, target_seconds:30, scene_first:true})});
+      body:JSON.stringify(_mixBody)});
     const d=await r.json();
     if(!d.ok){ st.textContent='❌ '+(d.error||'실패'); return; }
     // ★재매칭 = 새 job이다. 옛 job의 미리보기 상태를 물고 있으면 canGoNext()가 그걸 보고

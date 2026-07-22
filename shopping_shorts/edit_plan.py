@@ -788,24 +788,58 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
     return grounded
 
 
+def _backbone_base_candidates(source_scripts, target_seconds, call,
+                              backbone_meta=None, backbone_forced=None):
+    """백본-베이스 후보 생성(확정스펙 1~3단계): 백본 1개 선정 → 흐름 추출(대사 아님, 뼈대만)
+    → 실제 장면 인벤토리(백본+서브)에 맞춰 100% 우리 대본 생성. build_scene_first_plan이
+    쓰는 raw 후보 형태([{hook, beats:[{seg_ids, narration, role, fit}]}])로 감싼다.
+    백본 못 고르거나(플랫폼·소스 부족) 생성 비면 [](호출부가 레퍼런스-먼저로 폴백)."""
+    from shopping_shorts import backbone
+    bb = backbone.pick_backbone(source_scripts, meta=backbone_meta, forced=backbone_forced)
+    if not bb:
+        return []
+    bb_src = next((s for s in source_scripts if s.get("video_id") == bb), None)
+    if not bb_src:
+        return []
+    flow = backbone.backbone_flow(bb_src)
+    inventory = backbone.scene_inventory(source_scripts)
+    bb_beats = backbone.generate_backbone_script(flow, inventory, target_seconds, call=call)
+    if not bb_beats:
+        return []
+    # 백본-베이스는 생성 단계에서 이미 실제 장면(seg_id)에 맞춰 썼으므로 forced=false, fit 높게.
+    # hook은 빈값 — beats[0] 자체가 흐름의 오프너다(_lead_with_hook가 빈 훅이면 무변화).
+    beats = [{"seg_ids": [b["seg_id"]], "narration": b["narration"], "role": "", "fit": 5}
+             for b in bb_beats]
+    return [{"hook": "", "beats": beats}]
+
+
 def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                            n_candidates=3, video_type=None, call=None, ping_pong=False,
                            backbone_meta=None, backbone_forced=None, bank_context="",
-                           avoid_hooks=None):
+                           avoid_hooks=None, backbone_base=False):
     """장면 우선 대본 모드: 팔레트+헌장으로 후보 n개 생성 → 각 EDL grounding·채점 →
     최고 score에 recommended=True. 각 candidate.plan은 build_edit_plan 반환형(하류 렌더 호환).
     후보 0개면 candidates=[](호출부가 기존 build_edit_plan로 폴백).
 
     ping_pong=True(opt-in, 기본 off로 회귀0): grounding 후 backbone 핑퐁으로 비트별
     대본↔장면을 왕복 조정(행위 불일치=fit 거짓말 잡기 → 같은 행위 클립 스왑 or 나레이션 재작성).
-    """
+
+    backbone_base=True(opt-in, 기본 off로 회귀0): 백본-베이스 확정스펙(2026-07-21). 레퍼런스
+    자유생성 대신 **잘된 영상 1개의 흐름(순서·리듬)** 을 뼈대로, 실제 장면 인벤토리(백본+서브)에
+    맞춰 100% 우리 대본을 생성한다(없는 장면 요구 차단 → 소스에 클립 없어도 천장 없음). 백본을
+    못 고르거나 생성이 비면 조용히 레퍼런스-먼저로 폴백(회귀0)."""
     seg_map, inventory = _build_inventory(source_scripts)
     detected = video_type or (detect_video_type(source_scripts) if source_scripts else _DEFAULT_TYPE)
     if not seg_map:
         return {"candidates": [], "detected_type": detected}
     _call = call or _vault_call
-    raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates,
-                                   call=_call, bank_context=bank_context)
+    raws = []
+    if backbone_base:
+        raws = _backbone_base_candidates(source_scripts, target_seconds, _call,
+                                         backbone_meta=backbone_meta, backbone_forced=backbone_forced)
+    if not raws:
+        raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates,
+                                       call=_call, bank_context=bank_context)
     src_texts = [s.get("full_text", "") for s in source_scripts]
     cands = []
     for r in raws:
