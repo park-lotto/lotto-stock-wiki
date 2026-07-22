@@ -11,7 +11,7 @@ import socket
 import tempfile
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import requests
 from fastapi import BackgroundTasks, FastAPI, Request, UploadFile, File, Form
@@ -184,6 +184,9 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
         store.save_last_run(items, collected_at)
         background_tasks.add_task(generate_missing_drafts, next_draft_targets(items, store))
         background_tasks.add_task(_tag_new_items, items)   # 신규 썸네일 비전 태깅(백그라운드)
+        # 수집→대본은행 자동 적재(2026-07-22): 밀도+속도 상위 표본을 부품으로 분해해 은행에
+        # 쌓는다(소스당 Gemini 1콜이라 백그라운드). 결과는 /api/bank/ingest_report로 화면에 보고.
+        background_tasks.add_task(_bank_ingest_collected_bg, DB_PATH, items, collected_at)
         _attach_vision_tags(items, store)                  # 이미 태깅된 것(재수집)은 즉시 실어 보냄
         return {"ok": True, "count": len(items), "items": items,
                 "collected_at": collected_at}
@@ -191,6 +194,20 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
         import re
         msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
         return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+
+
+@app.get("/api/bank/ingest_report")
+def api_bank_ingest_report():
+    """'지금 수집' 후 백그라운드 은행 적재의 최근 결과(수집 화면이 폴링해 보고).
+    아직 한 번도 안 돌았으면 status=none."""
+    import json as _json
+    raw = Store(DB_PATH).get_setting("bank_ingest_last", "")
+    if not raw:
+        return {"ok": True, "report": {"status": "none"}}
+    try:
+        return {"ok": True, "report": _json.loads(raw)}
+    except Exception:
+        return {"ok": True, "report": {"status": "none"}}
 
 
 def _apply_activity(records):
@@ -675,6 +692,16 @@ def api_reference_register(request: Request, url: str):
     return {"ok": True, "username": username, "already": False}
 
 
+@app.get("/api/channel/history")
+def api_channel_history(username: str, exclude: str = ""):
+    """채널 검색 시 '지난 한 달'(2026-07-22) — 그 채널의 누적 히스토리(reel_history)를
+    last_seen 최신순으로 반환. exclude=지금 48h 랭킹에 이미 뜬 shortcode 쉼표목록
+    (중복 카드 방지). 조회 전용이라 무료 등급도 허용(랭킹 열람의 연장)."""
+    excl = [s for s in (exclude or "").split(",") if s.strip()]
+    items = Store(DB_PATH).channel_history(username, exclude=excl)
+    return {"ok": True, "username": username, "items": items, "count": len(items)}
+
+
 @app.get("/api/prune/scan")
 def api_prune_scan():
     """🧹 죽은 채널 정리 — 마지막 수집에서 릴스가 하나도 안 잡힌 엑셀 채널을
@@ -992,6 +1019,31 @@ def _ingest_pattern_bank(db_path, full_text, url, category):
         store.auto_approve_style_buckets()
     except Exception as e:  # noqa: BLE001 — 은행 적재 실패는 위키 저장엔 영향 없음
         print(f"pattern_bank ingest 실패: {e}")
+
+
+def _bank_ingest_collected_bg(db_path, items, collected_at):
+    """'지금 수집' 후 백그라운드: 랭킹 상위 표본을 부품은행에 자동 분해·적재하고
+    결과 리포트를 설정에 남긴다(수집 화면이 /api/bank/ingest_report로 읽어 보고).
+    소스당 Gemini 1콜이라 요청을 막지 않게 백그라운드로 돈다. 실패 무해."""
+    import json as _json
+    from datetime import datetime as _dt, timezone as _tz
+    try:
+        store = Store(db_path)
+    except Exception as e:  # noqa: BLE001
+        print(f"bank ingest(store) 실패: {e}")
+        return
+    day = (collected_at or "")[:10] or _dt.now(_tz.utc).strftime("%Y-%m-%d")
+    store.set_setting("bank_ingest_last", _json.dumps(
+        {"status": "running", "date": day, "collected_at": collected_at}, ensure_ascii=False))
+    try:
+        rep = pattern_bank.ingest_collected(store, items)
+        store.auto_approve_style_buckets()   # 스타일 부품 즉시 사용가능(위키 적재와 동일)
+        rep.update({"status": "done", "date": day, "collected_at": collected_at})
+        store.set_setting("bank_ingest_last", _json.dumps(rep, ensure_ascii=False))
+    except Exception as e:  # noqa: BLE001
+        print(f"bank ingest(collected) 실패: {e}")
+        store.set_setting("bank_ingest_last", _json.dumps(
+            {"status": "error", "date": day, "error": str(e)}, ensure_ascii=False))
 
 
 @app.post("/api/wiki/save")
@@ -2970,7 +3022,8 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 # 메서드 무관 무료(로그인 폼 POST 등) — 전부 정확 경로.
 _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout"}
 # GET만 무료(레퍼런스 랭킹 '조회') — POST/PUT 등 데이터변경은 같은 경로여도 차단.
-_FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/api/thumb", "/api/video"}
+_FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/api/thumb", "/api/video",
+                   "/api/channel/history"}   # 채널 히스토리='지난 한 달' 조회 = 랭킹 열람의 연장(무료 허용)
 # 경계있는 prefix만(과다매칭 방지 — 트레일링 슬래시).
 _FREE_PREFIX = ("/static/", "/auth/google/")
 
@@ -3730,6 +3783,38 @@ def _google_callback(request: Request, code: str = "", state: str = "", error: s
     return r
 
 
+def _client_ip(request):
+    """nginx 뒤라 실제 IP는 X-Forwarded-For 첫 항목. 없으면 X-Real-IP, 그다음 소켓 주소."""
+    xff = request.headers.get("x-forwarded-for")
+    if xff:
+        return xff.split(",")[0].strip()
+    return request.headers.get("x-real-ip") or (request.client.host if request.client else "")
+
+
+_ACCESS_SEEN = set()   # (cid, day, ip, ua) 이 프로세스에서 이미 기록한 조합 → DB 중복호출 방지
+
+
+def _record_access(customer_id, request):
+    """돌려쓰기 소프트감지: 로그인 사용자의 접속 IP·기기를 하루 단위로 기록(차단 안 함).
+    best-effort — 절대 요청을 막지 않는다. 사장님(0)은 여러 기기가 정상이라 제외."""
+    if not customer_id:
+        return
+    try:
+        ip = _client_ip(request)
+        ua = request.headers.get("user-agent", "")[:200]
+        day = _today_utc()
+        key = (customer_id, day, ip, ua)
+        if key in _ACCESS_SEEN:
+            return
+        Store(DB_PATH).record_access(customer_id, ip, ua, day)
+        # ★쓰기 성공 후에만 seen 표시 — 실패(DB락 등)면 다음 요청에서 재시도 가능(기록 유실 방지)
+        if len(_ACCESS_SEEN) > 50000:      # 무한증식 방지 — 넘치면 비운다(날짜 바뀌면 어차피 새 키)
+            _ACCESS_SEEN.clear()
+        _ACCESS_SEEN.add(key)
+    except Exception:
+        pass
+
+
 @app.middleware("http")
 async def _auth_guard(request: Request, call_next):
     if not _AUTH_ON:
@@ -3750,6 +3835,7 @@ async def _auth_guard(request: Request, call_next):
     customer_id = _verify_session(request.cookies.get("dash_auth"))
     if customer_id is not None:
         request.state.customer_id = customer_id
+        _record_access(customer_id, request)   # 돌려쓰기 소프트감지(best-effort, 차단 안 함)
         lvl = access_level(customer_id)
         if lvl == "pending":
             # 승인 전 전면 차단. /logout만 통과(로그아웃 가능), /static은 위에서 이미 허용.
@@ -3815,7 +3901,7 @@ def _is_trial(customer_id, now=None):
 
 # ── 유료게이트 비용 방어: 계정별 일일 크레딧 + 전역 상한 ──
 _CREDIT_DEFAULTS = {"lens": 5, "render": 2, "script": 10}
-_CREDIT_PRO_DEFAULTS = {"lens": 100, "render": 50, "script": 200}
+_CREDIT_PRO_DEFAULTS = {"lens": 100, "render": 10, "script": 200}  # 하루 영상 최대 10개(돌려쓰기 상한, 2026-07-22)
 _GLOBAL_CAP_DEFAULTS = {"lens": 200, "render": 100, "script": 400}
 
 
@@ -3934,8 +4020,23 @@ def _api_me(request: Request):
 
 
 # ── 유료게이트 관리자(사장님 cid0 전용) — 결제 승격·설정 조정 ──
+# 사장님(cid0) 외 추가 관리자 = 이 구글 계정들. 코드로만 바꾼다(admin UI로 못 늘려 공격면 없음).
+_ADMIN_EMAILS = {"parklotto12@gmail.com"}
+
+
+def _is_admin(customer_id):
+    """cid0(사장님) 또는 이메일이 관리자 화이트리스트에 있으면 관리자."""
+    if customer_id == 0:
+        return True
+    if not customer_id:
+        return False
+    cust = Store(DB_PATH).get_customer(customer_id)
+    email = (cust or {}).get("email") or ""
+    return email.lower() in _ADMIN_EMAILS
+
+
 def _require_admin(request):
-    if getattr(request.state, "customer_id", None) != 0:
+    if not _is_admin(getattr(request.state, "customer_id", None)):
         return JSONResponse({"error": "관리자 전용"}, status_code=403)
     return None
 
@@ -3953,12 +4054,47 @@ def _admin_customers(request: Request):
         return denied
     st = Store(DB_PATH)
     day = _today_utc()
+    since7 = (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%d")  # 돌려쓰기 감지 창(7일)
     out = []
     for cu in st.list_customers():
         cu["level"] = access_level(cu["id"])
         cu["usage"] = {op: st.usage_get(cu["id"], op, day) for op in ("lens", "render", "script")}
+        cu["access_7d"] = st.access_summary(cu["id"], since7)   # {ips, devices} 최근 7일 고유 수
+        cu["is_admin"] = _is_admin(cu["id"])                    # 관리자 배지용
         out.append(cu)
     return {"ok": True, "customers": out, "settings": st.all_settings()}
+
+
+@app.post("/api/admin/customer/update")
+async def _admin_customer_update(request: Request):
+    """관리자 정보수정 — 고객 이름·전화. body: {customer_id, name?, phone?}."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id 필요"}, status_code=400)
+    Store(DB_PATH).update_customer_info(cid, body.get("name"), body.get("phone"))
+    return {"ok": True}
+
+
+@app.post("/api/admin/customer/delete")
+async def _admin_customer_delete(request: Request):
+    """관리자 완전 삭제 — 고객+결제이력+접속기록. 사장님(0)·다른 관리자는 못 지운다(락아웃 방지)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id 필요"}, status_code=400)
+    if _is_admin(cid):
+        return JSONResponse({"error": "관리자 계정은 삭제할 수 없어요"}, status_code=400)
+    Store(DB_PATH).delete_customer(cid)
+    return {"ok": True}
 
 
 @app.post("/api/admin/set_plan")
@@ -4060,7 +4196,7 @@ async def _admin_settings(request: Request):
 
 @app.get("/admin", response_class=HTMLResponse)
 def _admin_page(request: Request):
-    if getattr(request.state, "customer_id", None) != 0:
+    if not _is_admin(getattr(request.state, "customer_id", None)):
         return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
     return FileResponse(Path(__file__).parent / "static" / "admin.html",
                         media_type="text/html; charset=utf-8")

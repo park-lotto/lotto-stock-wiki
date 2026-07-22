@@ -111,6 +111,28 @@ class Store:
                     collected_at TEXT
                 )
             """)
+            # 수집 누적 히스토리(2026-07-22) — last_run은 매 수집 통째 덮어써 48h 창에서
+            # 내려간 영상이 사라진다. 채널 검색 시 '지난 한 달'을 보여주려 shortcode별로
+            # 누적한다. 비전태그는 vision_tags 테이블을 조회 시 조인(중복저장 안 함).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS reel_history (
+                    shortcode TEXT PRIMARY KEY,
+                    username TEXT,
+                    name TEXT,
+                    category TEXT,
+                    url TEXT,
+                    thumb TEXT,
+                    caption TEXT,
+                    views INTEGER,
+                    comments INTEGER,
+                    first_seen TEXT,
+                    last_seen TEXT
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_reel_history_user "
+                      "ON reel_history(username)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_reel_history_seen "
+                      "ON reel_history(last_seen)")
             c.execute("""
                 CREATE TABLE IF NOT EXISTS source_analysis (
                     shortcode TEXT PRIMARY KEY,
@@ -706,6 +728,16 @@ class Store:
                         count INTEGER NOT NULL DEFAULT 0,
                         PRIMARY KEY (customer_id, op, day)
                     )""")
+        # ── 돌려쓰기 소프트감지(2026-07-22): 계정별 접속 IP·기기(UA)를 하루 단위로 기록.
+        #    (cid, day, ip, ua) 유니크라 같은 조합 재접속은 INSERT OR IGNORE로 무시 → 하루 1행.
+        #    차단 안 함 — admin에 '접속 IP N개 / 기기 N종'을 보여 사장님이 공유 의심을 눈으로 판단. ──
+        c.execute("""CREATE TABLE IF NOT EXISTS customer_access (
+                        customer_id INTEGER NOT NULL,
+                        day TEXT NOT NULL,
+                        ip TEXT NOT NULL,
+                        ua TEXT NOT NULL,
+                        PRIMARY KEY (customer_id, day, ip, ua)
+                    )""")
         # ── 회원승인(2026-07-21): approved_at NULL=대기중 / 값(epoch초)=승인시각 ──
         try:
             c.execute("ALTER TABLE customers ADD COLUMN approved_at INTEGER")
@@ -1160,7 +1192,9 @@ class Store:
         return {r[0] for r in rows}
 
     def save_last_run(self, items, collected_at):
-        """마지막 수집 결과 전체(items + 시각)를 저장. 단일 행 덮어쓰기."""
+        """마지막 수집 결과 전체(items + 시각)를 저장. 단일 행 덮어쓰기.
+        + 수집분을 reel_history에 누적(shortcode upsert)해 48h 창에서 내려가도
+        30일간 보존한다. 누적은 부가작업 — 실패해도 last_run 저장은 살린다."""
         with self._conn() as c:
             c.execute(
                 "INSERT INTO last_run(id, items_json, collected_at) VALUES(1, ?, ?) "
@@ -1168,6 +1202,78 @@ class Store:
                 "collected_at=excluded.collected_at",
                 (json.dumps(items, ensure_ascii=False), collected_at),
             )
+            try:
+                self._record_history(c, items, collected_at)
+            except Exception:
+                pass  # 히스토리 누적 실패가 수집 저장을 막지 않는다
+
+    @staticmethod
+    def _norm_username(u):
+        return (u or "").strip().lstrip("@").lower()
+
+    def _record_history(self, c, items, collected_at):
+        """수집 items를 reel_history에 shortcode 기준 upsert하고 30일 지난 행을 정리.
+        같은 커넥션(c)에서 실행 — save_last_run과 원자적으로 커밋된다.
+        first_seen은 최초값 유지, last_seen·조회수·댓글수·썸네일·캡션·카테고리는 갱신."""
+        for it in items or []:
+            sc = (it.get("shortcode") or "").strip()
+            user = self._norm_username(it.get("username"))
+            if not sc or not user:
+                continue  # 고유키/채널키 없으면 스킵(안전)
+            c.execute(
+                "INSERT INTO reel_history"
+                "(shortcode, username, name, category, url, thumb, caption,"
+                " views, comments, first_seen, last_seen) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?) "
+                "ON CONFLICT(shortcode) DO UPDATE SET "
+                "  username=excluded.username, name=excluded.name,"
+                "  category=excluded.category, url=excluded.url, thumb=excluded.thumb,"
+                "  caption=excluded.caption, views=excluded.views,"
+                "  comments=excluded.comments, last_seen=excluded.last_seen",
+                (sc, user, it.get("name"), it.get("category"), it.get("url"),
+                 it.get("thumbnail"), it.get("caption"),
+                 int(it.get("views") or 0), int(it.get("comments") or 0),
+                 collected_at, collected_at),
+            )
+        # 30일 정리 — last_seen이 30일보다 오래된 행 삭제(수집이 곧 정리 트리거).
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+        c.execute("DELETE FROM reel_history WHERE last_seen < ?", (cutoff,))
+
+    def channel_history(self, username, exclude=()):
+        """한 채널의 지난 30일 수집분을 last_seen 최신순으로 반환.
+        exclude=지금 랭킹에 이미 뜬 shortcode들(중복 카드 방지).
+        비전태그(subject/keywords)는 vision_tags를 조인해 함께 준다."""
+        user = self._norm_username(username)
+        if not user:
+            return []
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT h.shortcode, h.username, h.name, h.category, h.url, h.thumb,"
+                "       h.caption, h.views, h.comments, h.first_seen, h.last_seen,"
+                "       v.subject, v.keywords_json "
+                "FROM reel_history h "
+                "LEFT JOIN vision_tags v ON v.shortcode = h.shortcode "
+                "WHERE h.username = ? "
+                "ORDER BY h.last_seen DESC",
+                (user,),
+            ).fetchall()
+        skip = {s for s in (exclude or []) if s}
+        out = []
+        for r in rows:
+            if r[0] in skip:
+                continue
+            try:
+                vkw = json.loads(r[12]) if r[12] else []
+            except (TypeError, ValueError):
+                vkw = []
+            out.append({
+                "shortcode": r[0], "username": r[1], "name": r[2],
+                "category": r[3], "url": r[4], "thumb": r[5], "caption": r[6],
+                "views": r[7], "comments": r[8],
+                "first_seen": r[9], "last_seen": r[10],
+                "vision_subject": r[11] or "", "vision_keywords": vkw,
+            })
+        return out
 
     def load_last_run(self):
         """마지막 수집 결과 반환 → (items, collected_at). 없으면 ([], None)."""
@@ -2615,6 +2721,36 @@ class Store:
                 "google_sub": row[5], "email": row[6], "approved_at": row[7],
                 "name": row[8], "phone": row[9], "trial_ends_at": row[10]}
 
+    def update_customer_info(self, customer_id, name, phone):
+        """관리자 정보수정: 이름·전화 갱신(구글 가입은 이름·전화가 비어 admin에서 채운다).
+        None이 아닌 값만 덮어쓴다 — 한쪽만 고칠 때 다른 쪽을 지우지 않게."""
+        sets, params = [], []
+        if name is not None:
+            sets.append("name=?"); params.append(name)
+        if phone is not None:
+            sets.append("phone=?"); params.append(phone)
+        if not sets:
+            return
+        params.append(customer_id)
+        with self._conn() as c:
+            c.execute(f"UPDATE customers SET {', '.join(sets)} WHERE id=?", params)
+
+    def delete_customer(self, customer_id):
+        """관리자 완전 삭제: 이 고객의 모든 데이터를 지운다 — 결제·접속·사용량뿐 아니라
+        customer_id 컬럼을 가진 모든 테이블(담기·대본·제작물·크레딧 등)까지. 사장님(0)은 안 지운다.
+        (customers.id는 AUTOINCREMENT라 재사용 안 됨 → 고아가 남아도 새 계정이 물려받진 않지만,
+         '완전 삭제' 이름값대로 콘텐츠까지 청소한다.)"""
+        if customer_id == 0:
+            return
+        with self._conn() as c:
+            tables = [r[0] for r in c.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
+            for t in tables:
+                cols = {r[1] for r in c.execute(f"PRAGMA table_info({t})").fetchall()}
+                if "customer_id" in cols:           # 테이블명은 sqlite_master 출처(사용자입력 아님)
+                    c.execute(f"DELETE FROM {t} WHERE customer_id=?", (customer_id,))
+            c.execute("DELETE FROM customers WHERE id=?", (customer_id,))
+
     def set_plan(self, customer_id, plan, full_access_until=None):
         """등급 변경. plan='pro'|'free'. full_access_until(epoch초)를 주면 함께 설정(체험창)."""
         with self._conn() as c:
@@ -2715,6 +2851,23 @@ class Store:
             row = c.execute("SELECT count FROM usage WHERE customer_id=? AND op=? AND day=?",
                             (customer_id, op, day)).fetchone()
         return row[0] if row else 0
+
+    # ── 돌려쓰기 소프트감지(2026-07-22): 접속 IP·기기 기록 + 요약 ──
+    def record_access(self, customer_id, ip, ua, day):
+        """계정 접속 1건 기록. (cid, day, ip, ua) 유니크 → 같은 조합 재접속은 무시(하루 1행)."""
+        ua = (ua or "")[:200]                       # UA는 길어 절단(admin 표시·중복판정엔 충분)
+        ip = (ip or "")[:64]
+        with self._conn() as c:
+            c.execute("INSERT OR IGNORE INTO customer_access(customer_id, day, ip, ua) "
+                      "VALUES(?,?,?,?)", (customer_id, day, ip, ua))
+
+    def access_summary(self, customer_id, since_day):
+        """since_day(포함) 이후의 고유 IP 수·고유 기기(UA) 수. 공유 의심 지표."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT COUNT(DISTINCT ip), COUNT(DISTINCT ua) FROM customer_access "
+                "WHERE customer_id=? AND day>=?", (customer_id, since_day)).fetchone()
+        return {"ips": (row[0] or 0), "devices": (row[1] or 0)}
 
     def usage_decr(self, customer_id, op, day):
         """(customer_id, op, day) 카운트 -1(0 밑으로 안 감), 감소 후 값 반환. 실패 환불용.

@@ -225,13 +225,14 @@
       <div class="tab" data-tab="density" title="댓글수 ÷ 팔로워수 — 팔로워 규모 대비 반응이 얼마나 뜨거운지(작은 채널도 상위권 가능)">💥 참여밀도</div>
     </div>
     <div class="ctypes" id="ctypes"></div>
-    <input id="rankSearch" type="text" placeholder="🔍 랭킹 검색 (피자·물총·이케아…)"
-           oninput="setSearch(this.value)"
-           style="width:100%;max-width:360px;margin:8px 0;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
+    <input id="rankSearch" type="text" placeholder="🔍 숏템검색 — 채널명·소재·링크 (채이홈·피자·인스타링크…)"
+           oninput="setSearch(this.value)" onkeydown="if(event.key==='Enter')onSearchEnter(this.value)"
+           style="width:100%;max-width:420px;margin:8px 0;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
     <div class="cats" id="cats"></div>
     <div class="cards" id="cards">
       <div class="empty">「지금 수집」을 눌러 시작하세요.</div>
     </div>
+    <div id="channelHistoryWrap"></div>
   </main>
   <div class="modal-bg" id="scriptModal">
     <div class="modal-box">
@@ -451,6 +452,7 @@ function sortKey(i){
 function matchesSearch(it, q){
   const needle = (q||'').trim().toLowerCase();
   if(!needle) return true;                       // 빈 검색어 = 전체
+  if(_isChannelHit(it, needle)) return true;     // ★채널명/아이디 검색 → 그 채널이면 통과
   // 비전 주제태그가 있으면 그걸 우선 매칭(캡션 무시) — 캡션에 우연히 든 말('빵빵한 사운드')이
   // '빵'에 걸리던 오검을 없앤다(2026-07-19). 태그 없으면(백그라운드 태깅 전) 캡션 백업.
   const hasTags = (it.vision_subject && it.vision_subject.trim())
@@ -461,6 +463,16 @@ function matchesSearch(it, q){
   // 상위어면 하위 종류까지 넓혀 찾는다: "빵"→베이글·식빵, "야채"→가지·오이 (2026-07-18).
   // 하위어(베이글) 검색은 그대로 좁게. 확장어도 각각 단어경계 매칭을 거친다.
   return _expandQuery(needle).some(t => _koreanWordHit(hay, t));
+}
+// 검색어가 채널(아이디/이름)을 가리키나 — 카드의 채널명을 클릭하거나 @아이디를 치면
+// 그 채널의 영상만 뜨게 한다. 비전태그 유무와 무관(2026-07-22).
+// 함수 선언(호이스팅)이라 위 matchesSearch보다 아래 있어도 호출된다 — 또한 검색JS
+// 테스트가 matchesSearch부터 슬라이스해 eval하므로 반드시 그 안(검색 끝 마커 이전)에 둔다.
+function _normUser(u){ return (u||'').trim().replace(/^@/,'').toLowerCase(); }
+function _isChannelHit(it, needle){
+  const n = _normUser(needle);
+  if(!n) return false;
+  return _normUser(it.username).includes(n) || (it.name||'').toLowerCase().includes(needle.trim().toLowerCase());
 }
 // 수량 세는 말 앞에 붙는 한정사 — "여러 가지"·"몇 가지"·"두 가지"는 채소 가지가 아니다.
 var _COUNTER_QUALIFIERS = ['여러','몇','몇몇','각','온갖','수','한','두','세','네',
@@ -556,9 +568,15 @@ function badgeHTML(i, ctx){
   if(i.views) h+=`<span class="vbadge">👁 ${_fmtViews(i.views)}</span>`;
   return h;
 }
+// 검색창 하나로 채널명·소재·링크 — 링크면 엔터 시 원본·유사 영상 추적으로 보낸다(2026-07-22).
+// (채널명·소재는 oninput이 이미 필터링. 링크만 엔터라는 명시 동작이 필요 — 유료 렌즈 남용 방지.)
+function _looksLikeUrl(q){ return /^\s*https?:\/\//i.test(q||''); }
+function onSearchEnter(v){ if(_looksLikeUrl(v)) traceByUrl((v||'').trim()); }
 function render(){
   let items = STATE.items.slice();
   const searching = !!(STATE.q && STATE.q.trim());
+  const histWrap = document.getElementById("channelHistoryWrap");
+  if(histWrap) histWrap.innerHTML = "";   // 검색/필터 바뀔 때마다 초기화
   // 검색 중엔 카테고리·유형 필터를 무시하고 로드된 전체에서 찾는다(2026-07-18).
   // 왜: "오이" 쳤는데 지금 켠 '비법·꿀팁형' 탭에 없으면 안 잡히던 문제. 검색은 전역이어야 한다.
   if(!searching){
@@ -573,7 +591,12 @@ function render(){
                 ds:items.map(i=>i.density||0).sort((a,b)=>a-b),
                 ss:items.map(i=>i.speed||0).sort((a,b)=>a-b) };
   const el = document.getElementById("cards");
-  if(!items.length){ el.innerHTML='<div class="empty">결과 없음.</div>'; return; }
+  if(!items.length){
+    el.innerHTML = (searching && _looksLikeUrl(STATE.q))
+      ? '<div class="empty">🔗 링크 감지 — <b>엔터</b>를 누르면 이 영상의 원본·유사 영상을 찾아드려요.</div>'
+      : '<div class="empty">결과 없음.</div>';
+    return;
+  }
   el.innerHTML = items.map((i,idx)=>`
     <div class="card">
       <div class="thumb">
@@ -583,7 +606,7 @@ function render(){
       </div>
       <div class="body">
         <div class="rank">#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</div>
-        <div class="ch"><span class="chname">${i.name||i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${i.url}', this)">🔗 복사</button></div>
+        <div class="ch"><span class="chname" title="이 채널 영상만 보기(지난 한 달 포함)" style="cursor:pointer" onclick="searchChannel('${esc(i.username||'')}')">${i.name||i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${i.url}', this)">🔗 복사</button></div>
         ${i.followers?`<div class="rank" style="margin:-4px 0 4px">팔로워 ${i.followers.toLocaleString()}</div>`:''}
         ${i.views?`<div class="stat" title="조회수 — 유튜브/틱톡의 핵심 신호(속도·참여율의 기준)"><span>조회수</span><b>${i.views.toLocaleString()}</b></div>`:''}
         <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${i.comments.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>
@@ -605,6 +628,45 @@ function render(){
       </div>
     </div>`).join("");
   markSavedButtons();
+  // 채널 모드 감지 — 검색 결과가 한 채널로 수렴하면 그 채널의 '지난 한 달'을 아래에 붙인다.
+  const users = [...new Set(items.map(i=>_normUser(i.username)).filter(Boolean))];
+  if(searching && users.length===1){
+    _renderChannelHistory(users[0], items.map(i=>i.shortcode));
+  }
+}
+// 카드의 채널명 클릭 → 그 채널만(검색어=아이디). matchesSearch가 그 채널을 통과시키고
+// render의 채널모드 감지가 '지난 한 달'을 붙인다.
+function searchChannel(username){
+  if(!username) return;
+  const box=document.getElementById("rankSearch");
+  if(box) box.value = username;
+  setSearch(username);
+}
+async function _renderChannelHistory(username, liveShortcodes){
+  const wrap=document.getElementById("channelHistoryWrap");
+  if(!wrap) return;
+  try{
+    const ex=encodeURIComponent((liveShortcodes||[]).filter(Boolean).join(','));
+    const d=await (await fetch(`/api/channel/history?username=${encodeURIComponent(username)}&exclude=${ex}`)).json();
+    if(!d || !d.ok || !Array.isArray(d.items) || !d.items.length){ wrap.innerHTML=''; return; }
+    const cards = d.items.map(_historyCard).join('');
+    wrap.innerHTML = `<div style="margin:18px 0 8px;padding-top:12px;border-top:1px solid var(--line);color:var(--sub);font-size:13px">📅 지난 한 달 · @${esc(username)} <b style="color:var(--txt)">(${d.items.length})</b> <span style="font-size:11px">— 48시간 창에서 내려간 과거 수집분</span></div><div class="cards">${cards}</div>`;
+    markSavedButtons();
+  }catch(e){ wrap.innerHTML=''; }
+}
+function _historyCard(h){
+  return `<div class="card">
+    <div class="thumb"><img src="${h.thumb?('/api/thumb?url='+encodeURIComponent(h.thumb)):''}" loading="lazy" onerror="this.style.visibility='hidden'"></div>
+    <div class="body">
+      <div class="rank">${esc(h.category||'')} · ${fmtTime(h.last_seen)}</div>
+      <div class="ch"><span class="chname">${esc(h.name||h.username||'')}</span></div>
+      ${h.views?`<div class="stat"><span>조회수</span><b>${(h.views||0).toLocaleString()}</b></div>`:''}
+      <div class="stat"><span>댓글</span><b>${(h.comments||0).toLocaleString()}</b></div>
+      <div class="actions"><div class="btns">
+        <button class="view" onclick="window.open('${h.url}','_blank')">👁 보기</button>
+        <button class="save" id="save_${h.shortcode}" onclick="toggleMix('${h.shortcode}', this)">📥 담기</button>
+      </div></div>
+    </div></div>`;
 }
 function fmtTime(iso){
   // collected_at은 UTC로 저장됨 — 브라우저 로컬시간(한국이면 KST)으로 변환해 표시
@@ -639,9 +701,39 @@ async function doCollect(){
     STATE.items = d.items; st.textContent=`✅ ${d.count}건 수집 (${fmtTime(d.collected_at)})`;
     render();
     if(PLATFORM==='tiktok') loadTtSettings();   // 하루 남은 횟수·지출 갱신
-    else _pollVisionTags(5);                    // 백그라운드 태깅이 채워지는 대로 병합(검색 정확도 승격)
+    else { _pollVisionTags(5); _pollBankIngest(8); }   // 태깅 병합 + 대본은행 자동적재 보고
   }catch(e){ st.textContent="❌ "+e.message; }
   finally{ btn.disabled=false; }
+}
+// 수집 직후 백그라운드로 도는 대본은행 자동적재의 결과를 폴링해 화면에 보고한다.
+// running이면 "분석 중…", done이면 신규/중복 요약. #status 아래 전용 줄에 그린다.
+function _bankIngestEl(){
+  let el=document.getElementById('bankIngest');
+  if(!el){ el=document.createElement('div'); el.id='bankIngest';
+    el.style.cssText='margin-top:6px;font-size:12px;color:var(--sub)';
+    const st=document.getElementById('status'); if(st&&st.parentNode) st.parentNode.insertBefore(el, st.nextSibling); }
+  return el;
+}
+function _fmtBuckets(by){
+  const NM={hook:'훅',ending:'어미',adverb:'부사',cta:'CTA',evidence:'근거',conflict:'갈등',emotion:'감정',price:'가격'};
+  return Object.entries(by||{}).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${NM[k]||k}+${v}`).join('·');
+}
+async function _pollBankIngest(times){
+  if(PLATFORM!=='instagram' || times<=0) return;
+  const el=_bankIngestEl();
+  try{
+    const d=await (await fetch('/api/bank/ingest_report')).json();
+    const rep=(d&&d.report)||{};
+    if(rep.status==='done'){
+      const bk=_fmtBuckets(rep.by_bucket);
+      el.textContent=`🏦 대본은행 자동적재: 신규 ${rep.added_sources||0}건`
+        +(rep.added_items?` (부품 ${rep.added_items}개${bk?' · '+bk:''})`:'')
+        +(rep.skipped_dup?` · 중복 ${rep.skipped_dup}건 건너뜀`:'');
+      return;   // 끝 — 더 폴링 안 함
+    }
+    el.textContent='🏦 대본은행 자동 분석 중… (백그라운드, 잠시 후 결과)';
+  }catch(e){}
+  setTimeout(()=>_pollBankIngest(times-1), 6000);   // 6초 간격 재폴링
 }
 // 수집 후 백그라운드 비전 태깅이 완료되는 대로 /api/reference를 몇 번 다시 읽어
 // STATE.items에 vision_subject·vision_keywords를 병합한다 → 검색이 자동으로 더 정확해진다.
@@ -885,9 +977,10 @@ async function lensSearch(btn, shortcode){
 // ── URL 붙여넣기 → 구글렌즈 원본/유사 역추적(2026-07-19) ─── TRACE-START
 // 프레임 캡처 대신 서버가 URL을 받아 중간 프레임을 뽑는다(/api/lens/trace_url). 결과 형태는
 // lensSearch와 동일 → renderLens를 합성 shortcode '__trace__'로 그대로 재활용(담기·필터 공짜).
-async function traceByUrl(){
+async function traceByUrl(urlArg){
   const inp=document.getElementById('traceUrl');
-  const url=(inp && inp.value||'').trim();
+  // urlArg가 오면 그걸 쓴다(메인 검색창에서 링크 붙여넣고 엔터). 없으면 전용 입력칸 값.
+  const url=((typeof urlArg==='string' ? urlArg : (inp && inp.value)) || '').trim();
   if(!url){ if(inp) inp.focus(); return; }
   openScript('<div class="sm-loading">🔗 원본·유사 영상 추적 중… (10~20초)</div>','🔗 레퍼런스 추적',true);
   try{

@@ -45,6 +45,25 @@ def test_backbone_base_falls_back_when_no_beats():
     assert "폴백" in res["candidates"][0]["plan"]["beats"][0]["narration"]
 
 
+def test_backbone_base_prompt_carries_drama_and_bank():
+    # 백본-베이스 대본생성 프롬프트에 짤드라마 헌장 + 강한오프너 규칙 + 은행부품이 실려야 한다
+    # (안 실리면 흐름만 밋밋하게 따라가 설명체가 나온다 — 2026-07-22 대본 초기화 실사고).
+    seen = {}
+
+    def _cap(prompt, schema):
+        if "beats" in schema.get("required", []):
+            seen["prompt"] = prompt
+            return {"beats": [{"narration": "훅", "seg_id": "BB-1"}]}
+        return {"candidates": []}
+    edit_plan.build_scene_first_plan(_SOURCES, "ref", 20, n_candidates=1,
+                                     call=_cap, backbone_base=True,
+                                     bank_context="[은행 훅 재료] 이거 실화냐")
+    p = seen["prompt"]
+    assert "짤드라마" in p                       # 짤드라마 헌장 주입
+    assert "설명체" in p                         # 강한 오프너(설명체 금지) 규칙
+    assert "이거 실화냐" in p                    # 은행 부품 주입
+
+
 def test_backbone_base_off_is_reference_first():
     # backbone_base=False면 기존 레퍼런스-먼저 경로 그대로(회귀0).
     def _ref(prompt, schema):

@@ -2201,11 +2201,36 @@ function _consumeProduceHandoff(){
   saveWork();
 }
 // 왼쪽 영상 풀 렌더 — 각 영상에 📝뽑기 / 🎬담기(토글). 역할 미리배정 없음, 겸용 허용.
+// 백본(메인) 후보 적격 플랫폼 — 한글 대본이 있는 것만(인스타·유튜브). 나머지는 서브 전용.
+function _bbPlatformOf(url){
+  const u=String(url||'').toLowerCase();
+  if(u.includes('instagram.com')) return 'instagram';
+  if(u.includes('youtube.com')||u.includes('youtu.be')) return 'youtube';
+  if(u.includes('xiaohongshu')||u.includes('xhslink')||u.includes('rednote')) return 'xiaohongshu';
+  if(u.includes('douyin')) return 'douyin';
+  if(u.includes('tiktok')) return 'tiktok';
+  return '';
+}
+// ⭐추천 메인(백본) — 담긴 것 중 적격(인스타/유튜브) & 참여도 높은 것을 힌트로 제시(2026-07-22).
+// 60대가 메인을 안 골라도 시스템이 추천. 실제 정밀 선정(coverage)은 매칭 시작 후 백엔드가 한다.
+// 사용자가 ⭐메인을 직접 지정하면 그게 우선이라 추천표시는 끈다.
+function _recommendedBbIdx(){
+  if(HANDOFF.some(h=>h.bbMain)) return -1;                 // 수동 지정 있으면 추천 숨김
+  let best=-1, bestEng=-1;
+  HANDOFF.forEach((h,i)=>{
+    if(!h.useFootage) return;
+    if(!['instagram','youtube'].includes(_bbPlatformOf(h.url))) return;   // 적격만
+    const eng=(h.comments||h.likes||h.score||0);
+    if(eng>bestEng){ bestEng=eng; best=i; }
+  });
+  return best;
+}
 function renderPool(){
   const box=document.getElementById('poolList'); if(!box) return;
   const empty=document.getElementById('poolEmpty');
   if(!HANDOFF.length){ box.innerHTML=''; if(empty) empty.style.display='block'; return; }
   if(empty) empty.style.display='none';
+  const _recBb=_recommendedBbIdx();
   box.innerHTML=HANDOFF.map((it,i)=>`
     <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;gap:10px;align-items:center">
       <div onclick="previewMaterial(${i})" title="미리보기" style="position:relative;flex-shrink:0;width:72px;height:96px;border-radius:6px;background:#000;cursor:pointer;overflow:hidden">
@@ -2218,6 +2243,7 @@ function renderPool(){
       </div>
       <button class="btn-prev" style="padding:6px 10px;font-size:12px" onclick="openScriptModal(${i})">📝 뽑기${it.pickScript?' ✓':''}</button>
       <button class="btn-prev" style="padding:6px 10px;font-size:12px;${it.useFootage?'border-color:var(--ok);color:var(--ok)':''}" onclick="toggleFootage(${i})">🎬 담기${it.useFootage?' ✓':''}</button>
+      ${i===_recBb?`<span title="시스템 추천 메인 — 담긴 것 중 잘 섞일 뼈대. 그냥 두면 자동 적용, 바꾸려면 다른 영상의 ⭐메인을 누르세요." style="font-size:11px;color:var(--accent);align-self:center">⭐추천</span>`:''}
       <button class="btn-prev" title="이 영상의 흐름(순서·리듬)을 뼈대로 삼습니다 — 대본은 100% 새로 씁니다. 스마트 믹스일 때 적용." style="padding:6px 10px;font-size:12px;${it.bbMain?'border-color:var(--accent);color:var(--accent)':''}" onclick="designateBackbone(${i})">⭐ 메인${it.bbMain?' ✓':''}</button>
       <button class="poolDel" title="영상풀에서 빼기" onclick="removeFootage(${i})" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 2px">✕</button>
     </div>`).join('');

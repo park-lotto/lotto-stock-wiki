@@ -763,6 +763,12 @@ def run_render(job_id, db_path, work_root):
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
+        # 🎁 무료체험 이벤트: 최종 렌더(자막제거·조립)가 실패하면 체험 1회를 돌려준다(재도전 가능).
+        #   과금은 /api/mix/start(run_mix_job 단계)에서 한 번뿐이고 최종렌더는 같은 job의 뒷단계라,
+        #   run_mix_job이 성공해 여기까지 온 체험 job은 실패해도 환불이 안 됐다 → 여기서 메운다.
+        #   유료(render_charge_day=날짜)는 기존 동작 유지(미환불) — 체험 한정.
+        if job.get("render_charge_day") == "trial":
+            _refund_render_charge(store, job.get("customer_id", 0), "trial")
 
 
 def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
