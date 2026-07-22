@@ -952,11 +952,17 @@ def _fixed_drawtext(spec, work, key, default_color="0xFFFFFF"):
     size = max(8, int(spec.get("size") or 64))
     xf = min(1.0, max(0.0, (spec.get("x", 50)) / 100.0))
     yf = min(1.0, max(0.0, (spec.get("y", 14)) / 100.0))
+    # 워터마크 등 spec.float가 켜지면 y를 시간표현식으로 만들어 위아래로 은은히 떠다니게 한다
+    # (진폭=화면높이 0.6%, 주기 3s). ffmpeg 식평가는 sin/PI/t 지원(자막 슬라이드에서 검증됨).
+    if spec.get("float"):
+        y_expr = f"y=(h*{yf:.4f}-th/2+h*0.006*sin(2*PI*t/3))"
+    else:
+        y_expr = f"y=(h*{yf:.4f}-th/2)"
     parts = [
         f"drawtext=fontfile={fontref}:textfile=txt_{key}.txt",
         f"fontcolor={_hex_to_ff(spec.get('color'), default_color)}",
         f"fontsize={size}",
-        f"x=(w*{xf:.4f}-tw/2)", f"y=(h*{yf:.4f}-th/2)",
+        f"x=(w*{xf:.4f}-tw/2)", y_expr,
     ]
     if spec.get("alpha") is not None:
         parts.append(f"alpha={max(0.0, min(1.0, float(spec.get('alpha')))):.2f}")
@@ -1082,8 +1088,9 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         wm_spec = {"text": wm.get("text"), "font": wm.get("font"),
                    "color": wm.get("color", "#FFFFFF"),
                    "size": wm.get("size", 30),
-                   "x": wm.get("x", 50), "y": wm.get("y", 95),
+                   "x": wm.get("x", 50), "y": wm.get("y", 88),
                    "alpha": wm.get("alpha", 0.6),
+                   "float": wm.get("float", True),
                    "outline": wm.get("outline", True),
                    "outline_color": wm.get("outline_color", "#000000"),
                    "outline_w": wm.get("outline_w", 3)}

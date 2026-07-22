@@ -491,7 +491,7 @@
                   <input id="wmText" type="text" placeholder="@내채널" oninput="updateDeco()" style="width:150px;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 9px;font-size:13px">
                   <input id="wmColor" type="color" value="#FFFFFF" oninput="updateDeco()">
                   <label style="font-size:12px;color:var(--sub)">위치
-                    <select id="wmPos" onchange="updateDeco()" style="background:var(--inset);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px">
+                    <select id="wmPos" onchange="WM_MANUAL_Y=null;updateDeco()" style="background:var(--inset);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px">
                       <option value="bc" selected>하단중앙</option><option value="br">우하단</option><option value="bl">좌하단</option><option value="tr">우상단</option><option value="tl">좌상단</option>
                     </select></label>
                   <label style="font-size:12px;color:var(--sub)">투명도 <input id="wmAlpha" type="range" min="20" max="100" value="60" oninput="updateDeco()"></label>
@@ -1270,20 +1270,41 @@ function saveMyPreset(){
 function applyMyPreset(i){ const p=myPresets()[i]; if(p) applyConfig(p.hc, p.cap); }
 function deleteMyPreset(i){ const list=myPresets(); list.splice(i,1); localStorage.setItem('hc_my_presets', JSON.stringify(list)); renderMyPresets(); }
 // ── 🏷 워터마크 · 추가 텍스트(deco) ──────────────
-const WM_POS={bc:{x:50,y:95},br:{x:82,y:94},bl:{x:18,y:94},tr:{x:82,y:8},tl:{x:18,y:8}};
+const WM_POS={bc:{x:50,y:88},br:{x:82,y:94},bl:{x:18,y:94},tr:{x:82,y:8},tl:{x:18,y:8}};
+let WM_MANUAL_Y=null;   // 워터마크를 미리보기에서 세로로 드래그해 잡은 y%(없으면 프리셋 사용)
 function updateDeco(){
   const g=id=>document.getElementById(id); if(!g('wmOn')) return;
   STATE.deco=STATE.deco||{extra_texts:[]};
   const on=g('wmOn').checked, text=(g('wmText').value||'').trim();
   const pos=WM_POS[g('wmPos').value]||WM_POS.bc, alpha=+g('wmAlpha').value/100;
-  STATE.deco.watermark=(on&&text)?{text, color:g('wmColor').value, x:pos.x, y:pos.y, size:30, alpha,
+  const wmY=(WM_MANUAL_Y!=null?WM_MANUAL_Y:pos.y);
+  STATE.deco.watermark=(on&&text)?{text, color:g('wmColor').value, x:pos.x, y:wmY, size:30, alpha, float:true,
     font:'Pretendard-ExtraBold.otf', outline:true, outline_color:'#000000', outline_w:3}:null;
   const wp=g('wmPreview'), scale=PREVIEW_W/VIDEO_W, w=STATE.deco.watermark;
   if(w){ wp.style.display='block'; wp.textContent=w.text; wp.style.left=w.x+'%'; wp.style.top=w.y+'%';
     wp.style.color=w.color; wp.style.opacity=w.alpha; wp.style.fontFamily="'HCPretendard',sans-serif";
     wp.style.fontWeight=900; wp.style.fontSize=Math.max(9,w.size*scale)+'px';
     wp.style.textShadow='1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000';
+    wp.style.pointerEvents='auto'; wp.style.cursor='move';   // 세로 드래그 가능하게(기본 none이었음)
+    bindWatermarkDrag(wp);
+    // 위아래로 은은히 떠다니는 float(미리보기). composite:'add'로 기존 translate(-50%,-50%) 센터링 보존.
+    if(!wp._floatAnim && wp.animate){
+      wp._floatAnim=wp.animate([{transform:'translateY(-4px)'},{transform:'translateY(4px)'}],
+        {duration:1500,direction:'alternate',iterations:Infinity,easing:'ease-in-out',composite:'add'});
+    }
   } else wp.style.display='none';
+}
+// 워터마크 미리보기 세로 드래그 — y만 움직인다(가로는 프리셋 유지). 1회만 바인딩.
+function bindWatermarkDrag(wp){
+  if(wp._dragBound) return; wp._dragBound=true;
+  wp.onmousedown=e=>{ e.preventDefault();
+    const pv=document.getElementById('hcPreview');
+    const move=ev=>{ const r=pv.getBoundingClientRect();
+      WM_MANUAL_Y=Math.round(Math.max(0,Math.min(100,(ev.clientY-r.top)/r.height*100)));
+      wp.style.top=WM_MANUAL_Y+'%'; };
+    const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); updateDeco(); };
+    document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
+  };
 }
 function addExtraText(){
   STATE.deco=STATE.deco||{extra_texts:[]}; STATE.deco.extra_texts=STATE.deco.extra_texts||[];
@@ -1340,10 +1361,9 @@ function bindExtraDrag(){
   const pv=document.getElementById('hcPreview');
   document.querySelectorAll('#extraPreview .exPv').forEach(el=>{
     el.onmousedown=e=>{ e.preventDefault(); const i=+el.dataset.i;
-      const move=ev=>{ const r=pv.getBoundingClientRect();
-        STATE.deco.extra_texts[i].x=Math.round(Math.max(0,Math.min(100,(ev.clientX-r.left)/r.width*100)));
+      const move=ev=>{ const r=pv.getBoundingClientRect();  // 세로만 이동(가로는 고정)
         STATE.deco.extra_texts[i].y=Math.round(Math.max(0,Math.min(100,(ev.clientY-r.top)/r.height*100)));
-        el.style.left=STATE.deco.extra_texts[i].x+'%'; el.style.top=STATE.deco.extra_texts[i].y+'%'; };
+        el.style.top=STATE.deco.extra_texts[i].y+'%'; };
       const up=()=>{ document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); };
       document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
     };
@@ -1582,11 +1602,10 @@ function bindHCDrag(){
   const pv=document.getElementById('hcPreview'), tx=document.getElementById('hcPreviewText');
   if(!pv||!tx||tx._dragBound) return; tx._dragBound=true;
   tx.style.cursor='move'; let drag=false;
-  const move=e=>{ if(!drag) return; const r=pv.getBoundingClientRect();
-    const cx=(e.touches?e.touches[0].clientX:e.clientX), cy=(e.touches?e.touches[0].clientY:e.clientY);
-    let x=Math.round(Math.max(0,Math.min(100,(cx-r.left)/r.width*100)));
+  const move=e=>{ if(!drag) return; const r=pv.getBoundingClientRect();  // 세로만 이동(가로는 위치버튼으로)
+    const cy=(e.touches?e.touches[0].clientY:e.clientY);
     let y=Math.round(Math.max(0,Math.min(100,(cy-r.top)/r.height*100)));
-    document.getElementById('hcX').value=x; document.getElementById('hcY').value=y; updateHC(); };
+    document.getElementById('hcY').value=y; updateHC(); };
   tx.addEventListener('mousedown', e=>{drag=true; e.preventDefault();});
   tx.addEventListener('touchstart', e=>{drag=true;}, {passive:true});
   document.addEventListener('mousemove', move);
