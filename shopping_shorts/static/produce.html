@@ -3510,10 +3510,26 @@ async function vpRegenTone(i){
   const v=_voiceForTone(tone);   // 현재 성우의 그 톤 variant → {voice_id,settings,speed}
   const m=document.getElementById('vpMsg'+i);
   if(!v){ if(m) m.textContent='이 성우는 그 톤이 없어요'; return; }
+  const prevVer=(+b.tts_ver||0);   // 완료 감지 기준값(재합성 끝나면 서버가 +1)
   if(m) m.textContent='🔁 다시 만드는 중…';
   try{
-    await fetch('/api/mix/tts/'+MIX_JOB+'/'+b.beat_idx+'/regen',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(v)});
-    setTimeout(()=>{ renderTtsBeats(); }, 4000);   // 재생성+재동기 후 새로고침
+    const r=await fetch('/api/mix/tts/'+MIX_JOB+'/'+b.beat_idx+'/regen',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(v)});
+    if(!r.ok){
+      // 전체 생성 등 활성 단계 중엔 409 — 덮어써 사라지지 않게 서버가 막는다
+      if(m) m.textContent = r.status===409 ? '⏳ 생성 중엔 못 바꿔요 — 전체 생성이 끝나고 다시 눌러요' : '❌ 실패';
+      return;
+    }
+    // 고정 4초 추측 대신 tts_ver 변화를 폴링 — 실제 재합성(>4초)이 끝난 뒤에만 새로고침해
+    // 옛 mp3가 캐시버스터 새 URL로 굳는 걸 막는다(2026-07-23 근본원인 ②).
+    const started=Date.now();
+    const poll=setInterval(async()=>{
+      try{
+        const d=await (await fetch('/api/mix/result/'+MIX_JOB)).json();
+        const nb=(d.beats||[]).find(x=>x.beat_idx===b.beat_idx);
+        if(nb && (+nb.tts_ver||0)>prevVer){ clearInterval(poll); renderTtsBeats(); return; }
+        if(Date.now()-started>60000){ clearInterval(poll); if(m) m.textContent='❌ 시간 초과 — 다시 시도해 주세요'; }
+      }catch(e){}
+    }, 1500);
   }catch(e){ if(m) m.textContent='❌ 실패'; }
 }
 // 관리자 전용: 비트 발음 제보(인라인 미니폼, prompt() 미사용)
