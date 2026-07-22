@@ -2085,7 +2085,11 @@ async def api_voice_tune_synth(req: Request):
 
 
 @app.get("/api/voice-tune/audio/{fname}")
-def api_voice_tune_audio(fname: str):
+def api_voice_tune_audio(request: Request, fname: str):
+    # 작업대는 전부 관리자 전용 — 캐시 오디오도 같은 게이트로 일관성 유지(Task5 리뷰 Minor).
+    denied = _require_admin(request)
+    if denied:
+        return denied
     f = _TUNE_CACHE / fname
     if not f.exists():
         return JSONResponse({"error": "not found"}, status_code=404)
