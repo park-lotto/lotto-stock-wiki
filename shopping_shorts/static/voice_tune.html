@@ -16,6 +16,10 @@
  button{cursor:pointer}
 </style></head><body>
 <div id="left">
+  <div class="card" id="report-inbox" style="border-color:#c80">
+    <b>📥 제보함</b> (제작소에서 보낸 어색한 문장)
+    <div id="ri_list" style="font-size:13px;margin-top:6px"></div>
+  </div>
   <div class="card" id="pron-lab" style="border-color:#0a7">
     <b>🩺 발음교정 작업대</b> (전역 — 모든 보이스·영상 적용)
     <textarea id="pl_text" rows="2" style="width:100%;margin:6px 0" placeholder="어색하게 읽히는 문장을 붙여넣으세요"></textarea>
@@ -217,6 +221,29 @@ async function plLoadList(){
   pl_list.innerHTML='<b>전역 사전('+e.length+')</b><br>'+e.map((x,i)=>
     `${esc(x.phrase)} → ${esc(x.respelling)} <a href="#" onclick="plDelete(${i});return false" style="color:#e33">삭제</a>`).join('<br>');
 }
+let plReports = [];
+async function plLoadReports(){
+  try{
+    const j = await (await fetch('/api/pron/reports')).json();
+    plReports = j.reports || [];
+  }catch(_){ plReports = []; }
+  ri_list.innerHTML = plReports.length
+    ? plReports.map((r,i)=>`<div style="margin:4px 0;padding:4px;border-bottom:1px solid #eee">
+        <b>${esc(r.text)}</b> <span style="color:#888">${esc(r.comment||'')}</span><br>
+        <button onclick="plReportPick(${i})">이 문장 교정</button>
+        <button onclick="plReportResolve(${i})">✓ 처리됨</button></div>`).join('')
+    : '<span style="color:#999">제보 없음</span>';
+}
+function plReportPick(i){
+  const r = plReports[i]; if(!r) return;
+  pl_text.value = r.text;
+  document.getElementById('pron-lab').scrollIntoView({behavior:'smooth'});
+}
+async function plReportResolve(i){
+  const r = plReports[i]; if(!r) return;
+  await fetch('/api/pron/reports/'+r.id+'/resolve',{method:'POST'});
+  plLoadReports();
+}
 async function init(){
  // /api/voice-presets 실제 응답: {ok, groups:[{group_id,name,variants:{variant:{preset_id,...}}}]}
  // (계획서가 가정한 {presets:[{preset_id,name,variant}]}과 다름 — groups/variants를 평탄화한다.
@@ -232,6 +259,7 @@ async function init(){
  corpus=(await (await fetch('/api/voice-tune/corpus')).json()).lines;
  renderCards(); await loadPreset();
  plLoadList();
+ plLoadReports();
 }
 init();
 </script></body></html>

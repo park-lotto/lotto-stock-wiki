@@ -2272,6 +2272,38 @@ def api_pron_global_delete(request: Request, phrase: str):
     return {"ok": True}
 
 
+@app.post("/api/pron/report")
+async def api_pron_report(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    text = (body.get("text") or "").strip()
+    if not text:
+        return JSONResponse({"error": "문장이 비었습니다"}, status_code=400)
+    comment = (body.get("comment") or "").strip()
+    created_at = datetime.now(timezone.utc).isoformat()
+    rid = Store(DB_PATH).add_pron_report(text, comment, created_at)
+    return {"ok": True, "id": rid}
+
+
+@app.get("/api/pron/reports")
+def api_pron_reports_list(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return {"reports": Store(DB_PATH).list_pron_reports()}
+
+
+@app.post("/api/pron/reports/{report_id}/resolve")
+def api_pron_report_resolve(request: Request, report_id: int):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    Store(DB_PATH).resolve_pron_report(report_id)
+    return {"ok": True}
+
+
 _PRON_SUGGEST_SCHEMA = {
     "type": "object",
     "properties": {"suggestions": {"type": "array", "items": {
