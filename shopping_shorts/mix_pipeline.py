@@ -161,8 +161,12 @@ def _refill_beats_to_tts(beats, source_scripts, tts_dir):
             continue
         if not td or backbone.clip_seconds(b) >= td:
             continue
+        # 포인트 비트(비법 소스 얹기 등 결정적 행위)는 그 장면이 주인공 — 클립을 덜 붙여(상한 2)
+        # 파편으로 묻지 않고 길게 홀드한다. 앰비언트 비트는 기본 상한(config)으로 비주얼을 채움.
+        mc = 2 if backbone.is_point_beat(b) else None
         try:
-            filled = backbone.fill_clips_to_cover(b, source_scripts, src_count=sc, need=td)
+            filled = backbone.fill_clips_to_cover(b, source_scripts, src_count=sc, need=td,
+                                                  max_clips=mc)
         except Exception:
             traceback.print_exc(file=sys.stderr)
             continue
