@@ -95,6 +95,45 @@ def post_process(in_path, out_path, tempo=1.0, silence_trim="off", pace_mode=Fal
     return str(out_path)
 
 
+def _audio_dur(path):
+    """ffprobe로 오디오 길이(초). 실패면 0.0."""
+    try:
+        r = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "csv=p=0", str(path)],
+            stdin=subprocess.DEVNULL, capture_output=True, text=True, check=True)
+        return float((r.stdout or "0").strip() or 0.0)
+    except Exception:
+        return 0.0
+
+
+def trim_tail_silence(in_path, out_path, pad=0.08, threshold="-40dB"):
+    """비트 TTS 끝의 자연 무음(호흡·여백)만 잘라 이어붙임을 딱 맞춘다 — 비트 사이 dead-air
+    제거(2026-07-22, 레퍼런스 릴스는 무음 0). **뒤만** 자르고(중간 쉼·문장 리듬은 보존) 아주
+    작은 여백(pad)으로 급함·클릭음 방지. areverse로 앞을 만들어 뒤 무음만 제거 후 되돌린다.
+    ⚠️ 무음 mock(키 없음) 보호: 결과가 입력 대비 과도하게 짧아지면(전부 무음) 원본 유지."""
+    in_dur = _audio_dur(in_path)
+    filt = (f"areverse,silenceremove=start_periods=1:start_threshold={threshold}:"
+            f"start_silence=0.02,areverse,apad=pad_dur={pad}")
+    same = os.path.abspath(str(in_path)) == os.path.abspath(str(out_path))
+    fd, tmp = tempfile.mkstemp(suffix=".mp3", dir=os.path.dirname(os.path.abspath(str(out_path))))
+    os.close(fd)
+    try:
+        subprocess.run(["ffmpeg", "-y", "-i", str(in_path), "-af", filt, "-q:a", "4", tmp],
+                       stdin=subprocess.DEVNULL, capture_output=True, check=True)
+    except Exception:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        return str(in_path)   # 실패해도 원본 그대로(무해)
+    out_dur = _audio_dur(tmp)
+    # mock/오작동 보호: 말이 있는 비트(0.5s+)가 0.3s 미만으로 잘리면 전부 무음이었던 것 → 원본.
+    if in_dur > 0.5 and out_dur < 0.3:
+        os.remove(tmp)
+        return str(in_path)
+    os.replace(tmp, str(out_path))
+    return str(out_path)
+
+
 def _parse_silence_edges(stderr, total_dur):
     """silencedetect stderr → (앞무음초, 뒤무음초).
     앞무음 = silence_start≈0에서 시작한 구간의 end.
