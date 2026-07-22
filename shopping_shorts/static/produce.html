@@ -253,7 +253,7 @@
             <div id="footageList" class="hint" style="margin:6px 0">🎬 담기로 화면에 쓸 영상을 고르세요. (1개=순서편집 · 2개+=믹스)</div>
             <label style="display:flex;align-items:center;gap:8px;margin:6px 0 10px;font-size:12px;cursor:pointer">
               <input type="checkbox" id="smartMixToggle" onchange="setSmartMix(this.checked)">
-              <span>✨ 스마트 믹스 <span class="hint">— 백본 흐름 기반 새 대본 + 부품은행 훅·말투 + 반복 회피(매번 다른 훅) + 대본↔장면 핑퐁</span></span>
+              <span>✨ 스마트 믹스</span>
             </label>
             <button class="btn-next" style="padding:8px 16px" onclick="startProduceMix()">🎬 영상 매칭 시작</button>
             <div id="mixStatus" class="hint" style="margin-top:12px"></div>
@@ -593,7 +593,7 @@
   <!-- 📝뽑기: 도서관(library.html) 구조분석 생성 모달 이식(pm 네임스페이스, id 충돌방지) -->
   <div class="gen-bg" id="pmModal">
     <div class="gen-box">
-      <div class="gen-head"><b>📝 대본 뽑기 · 구조 분석 생성</b><button class="x" onclick="pmClose()">✕</button></div>
+      <div class="gen-head"><b>📝 대본 · 구조 분석 생성</b><button class="x" onclick="pmClose()">✕</button></div>
       <div class="gen-body">
         <div class="gen-sec">유지할 요소 (체크=원본유지 / 해제 시 아래에서 선택)</div>
         <div class="toggles" id="pmToggles">
@@ -2212,12 +2212,12 @@ function _consumeProduceHandoff(){
   if(b){
     b.style.display='block';
     b.innerHTML = arrived
-      ? `⭐ 레퍼런스에서 <b>영상 ${arrived}개</b>를 받았어요 (영상풀 총 ${HANDOFF.length}개) — 각 영상에서 📝뽑기(대본)·🎬담기(화면)를 골라주세요.`
+      ? `⭐ 레퍼런스에서 <b>영상 ${arrived}개</b>를 받았어요 (영상풀 총 ${HANDOFF.length}개) — 각 영상에서 📝대본·🎬담기(화면)를 골라주세요.`
       : (restored
           ? (HANDOFF.length
               ? `↩️ 이어서 작업 중 — 받은 <b>영상 ${HANDOFF.length}개</b>와 상태·대본을 유지했어요.`
               : `↩️ 이어서 작업 중 — <b>확정한 대본</b>을 유지했어요. 영상은 아직 담지 않았습니다.`)
-          : `⭐ 즐겨찾기에서 <b>영상 ${HANDOFF.length}개</b>를 받았어요 — 각 영상에서 📝뽑기(대본)·🎬담기(화면)를 골라주세요. 같은 영상을 둘 다로 써도 됩니다.`);
+          : `⭐ 즐겨찾기에서 <b>영상 ${HANDOFF.length}개</b>를 받았어요 — 각 영상에서 📝대본·🎬담기(화면)를 골라주세요. 같은 영상을 둘 다로 써도 됩니다.`);
   }
   renderPool();
   syncFootageToMixUrls();
@@ -2267,7 +2267,7 @@ function renderPool(){
         <div class="enrich" data-url="${esc(it.url||'')}" data-platform="${(it.url||'').includes('youtu')?'유튜브':''}"
              style="font-size:11px;color:var(--sub);margin-top:4px"></div>
       </div>
-      <button class="btn-prev" style="padding:6px 10px;font-size:12px" onclick="openScriptModal(${i})">📝 뽑기${it.pickScript?' ✓':''}</button>
+      <button class="btn-prev" style="padding:6px 10px;font-size:12px" onclick="openScriptModal(${i})">📝 대본${it.pickScript?' ✓':''}</button>
       <button class="btn-prev" style="padding:6px 10px;font-size:12px;${it.useFootage?'border-color:var(--ok);color:var(--ok)':''}" onclick="toggleFootage(${i})">🎬 담기${it.useFootage?' ✓':''}</button>
       ${i===_recBb?`<span title="시스템 추천 메인 — 담긴 것 중 잘 섞일 뼈대. 그냥 두면 자동 적용, 바꾸려면 다른 영상의 ⭐메인을 누르세요." style="font-size:11px;color:var(--accent);align-self:center">⭐추천</span>`:''}
       <button class="btn-prev" title="이 영상의 흐름(순서·리듬)을 뼈대로 삼습니다 — 대본은 100% 새로 씁니다. 스마트 믹스일 때 적용." style="padding:6px 10px;font-size:12px;${it.bbMain?'border-color:var(--accent);color:var(--accent)':''}" onclick="designateBackbone(${i})">⭐ 메인${it.bbMain?' ✓':''}</button>
@@ -2423,7 +2423,7 @@ async function openScriptModal(i){
     // 백엔드 api_wiki_generate의 폴백 조건(structure가 dict이거나 base_script가 비지 않음)과 같은 식.
     // 여기서 어긋나면 버튼이 열렸는데 서버가 404로 답하는 그 사고가 그대로 재발한다.
     if(!PM_BASE_STRUCT && !PM_BASE_SCRIPT.trim()){
-      document.getElementById('pmResults').innerHTML='<div class="hint" style="color:var(--fire)">추출은 됐으나 원본 대본·구조가 비어 새 대본을 만들 수 없습니다 — 뽑기를 다시 눌러주세요</div>';
+      document.getElementById('pmResults').innerHTML='<div class="hint" style="color:var(--fire)">추출은 됐으나 원본 대본·구조가 비어 새 대본을 만들 수 없습니다 — 📝대본을 다시 눌러주세요</div>';
       return;
     }
     document.getElementById('pmRun').disabled=false;
@@ -2641,7 +2641,7 @@ function onFinalCategoryChange(sel){
 // 오른쪽 "확정 대본" peek — 대본이 바뀔 때마다 갱신(onScriptInput/useDraft에서 호출).
 function refreshFinalPeek(){
   const p=document.getElementById('finalScriptPeek');
-  if(p) p.innerHTML = STATE.script ? `"${esc(STATE.script.slice(0,60))}…" · ${lenText(STATE.script)}` : '<span style="color:var(--sub)">아직 대본이 없습니다. 왼쪽 영상에서 📝뽑기 하거나 직접 작성하세요.</span>';
+  if(p) p.innerHTML = STATE.script ? `"${esc(STATE.script.slice(0,60))}…" · ${lenText(STATE.script)}` : '<span style="color:var(--sub)">아직 대본이 없습니다. 왼쪽 영상에서 📝대본을 누르거나 직접 작성하세요.</span>';
   const b=document.getElementById('saveWikiBtn');
   if(b){
     // 위키 유래 대본(mix 목록/조합)은 담을 원본이 없다 — 버튼을 숨기지 않으면
@@ -2756,7 +2756,8 @@ async function pollMix(){
     if(_pipe && d.status!=='failed'){
       // 단계바 진행. ready_for_review=전부 완료, 그 외는 해당 단계로.
       const idx=MIX_STAGE_ORDER.indexOf(d.status);
-      if(d.status==='ready_for_review') _pipe.set(4, '매칭 완료!');
+      // 완료는 done()으로 — set(4)는 5단계를 '진행 중'(스피너·펄스)으로 그려 "완료!"인데도 뱅글뱅글 돈다.
+      if(d.status==='ready_for_review') _pipe.done('매칭 완료! 아래에서 대본 후보를 골라주세요');
       else if(idx>=0) _pipe.set(idx, (MIX_LABEL[d.status]||d.status)+' <b>'+(idx+1)+'/4</b>');
       else st.textContent='상태: '+(MIX_LABEL[d.status]||d.status);   // rendering 등
     } else if(d.status!=='failed'){
