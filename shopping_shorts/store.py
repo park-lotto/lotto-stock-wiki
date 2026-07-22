@@ -759,6 +759,14 @@ class Store:
                         ua TEXT NOT NULL,
                         PRIMARY KEY (customer_id, day, ip, ua)
                     )""")
+        # ── 활동 로그(2026-07-22): '몇 번 전 뭘 했다' 트레일. 미들웨어가 의미있는 액션만 기록. ──
+        c.execute("""CREATE TABLE IF NOT EXISTS customer_activity (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        customer_id INTEGER NOT NULL,
+                        at INTEGER NOT NULL,
+                        action TEXT NOT NULL
+                    )""")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_cust_act ON customer_activity(customer_id, at)")
         # ── 회원승인(2026-07-21): approved_at NULL=대기중 / 값(epoch초)=승인시각 ──
         try:
             c.execute("ALTER TABLE customers ADD COLUMN approved_at INTEGER")
@@ -779,6 +787,12 @@ class Store:
         # ── 관리자 지정(2026-07-22): admin=1이면 관리자(권한 관리자와 동일). 사장님이 UI로 부여/회수. ──
         try:
             c.execute("ALTER TABLE customers ADD COLUMN admin INTEGER NOT NULL DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass  # 이미 존재
+
+        # ── 접속중·마지막활동(2026-07-22): last_seen=마지막 요청 epoch. NULL=한 번도 안 옴. ──
+        try:
+            c.execute("ALTER TABLE customers ADD COLUMN last_seen INTEGER")
         except sqlite3.OperationalError:
             pass  # 이미 존재
 
@@ -2922,7 +2936,7 @@ class Store:
         """관리자용 전체 고객 목록(사장님 cid0 제외). 최근 가입 먼저. 최근 결제 요약 포함."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT id, username, email, plan, full_access_until, created_at, approved_at, name, phone, trial_ends_at, admin "
+                "SELECT id, username, email, plan, full_access_until, created_at, approved_at, name, phone, trial_ends_at, admin, last_seen "
                 "FROM customers WHERE id != 0 ORDER BY id DESC"
             ).fetchall()
             out = []
@@ -2934,6 +2948,7 @@ class Store:
                 out.append({"id": cid, "username": r[1], "email": r[2], "plan": r[3] or "free",
                             "full_access_until": r[4] or 0, "created_at": r[5], "approved_at": r[6],
                             "name": r[7], "phone": r[8], "trial_ends_at": r[9], "admin": bool(r[10]),
+                            "last_seen": r[11],
                             "last_payment": ({"amount": p[0], "paid_at": p[1]} if p else None),
                             "payment_count": cnt})
         return out
@@ -2954,6 +2969,25 @@ class Store:
             row = c.execute("SELECT count FROM usage WHERE customer_id=? AND op=? AND day=?",
                             (customer_id, op, day)).fetchone()
         return row[0] if row else 0
+
+    # ── 접속중·활동기록(2026-07-22) ──
+    def touch_customer(self, customer_id, at):
+        """마지막 활동 시각 갱신(미들웨어가 스로틀해서 호출). '접속중' 판정·마지막기록 표시용."""
+        with self._conn() as c:
+            c.execute("UPDATE customers SET last_seen=? WHERE id=?", (int(at), customer_id))
+
+    def record_activity(self, customer_id, action, at):
+        """활동 1건 append. 미들웨어가 의미있는 액션(제작·렌즈·담기 등)만 dedup해서 넣는다."""
+        with self._conn() as c:
+            c.execute("INSERT INTO customer_activity(customer_id, at, action) VALUES(?,?,?)",
+                      (customer_id, int(at), (action or "")[:80]))
+
+    def recent_activity(self, customer_id, limit=12):
+        """최근 활동 N건(최신 먼저) → [{at, action}]. admin '몇 번 전 뭘 했다' 표시용."""
+        with self._conn() as c:
+            rows = c.execute("SELECT at, action FROM customer_activity WHERE customer_id=? "
+                             "ORDER BY at DESC, id DESC LIMIT ?", (customer_id, int(limit))).fetchall()
+        return [{"at": r[0], "action": r[1]} for r in rows]
 
     # ── 돌려쓰기 소프트감지(2026-07-22): 접속 IP·기기 기록 + 요약 ──
     def record_access(self, customer_id, ip, ua, day):
