@@ -121,6 +121,13 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
             global_pron=global_pron,
         )
         beat["tts_path"] = str(out)
+        # ★비트 끝 무음 트림(2026-07-22) — 각 비트 TTS 뒤 자연 무음(호흡·여백)을 잘라 이어붙임을
+        # 딱 맞춘다. 안 자르면 비트 경계마다 dead-air가 남아 뚝뚝 끊긴다(레퍼런스 릴스는 무음 0).
+        # 뒤만 자르고 작은 여백을 남겨 급함·클릭 방지. 실패·mock은 원본 유지(무해).
+        try:
+            audio_post.trim_tail_silence(out, out)
+        except Exception:
+            traceback.print_exc(file=sys.stderr)
         # UI '영상 길이'는 target_seconds 합인데, 추정(글자÷5.7)은 보이스 speed를 못 봐서
         # 빠른 보이스(speed>1)면 실제 음성보다 길게 잡혀 '음성이 짧아요' 오경고가 떴다.
         # 실제 발화초로 덮어 UI·조립(tts_dur)·최종영상을 한 값으로 맞춘다(2026-07-21).
