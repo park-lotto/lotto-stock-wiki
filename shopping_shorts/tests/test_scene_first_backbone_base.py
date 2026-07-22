@@ -65,6 +65,28 @@ def test_backbone_base_prompt_carries_drama_and_bank():
     assert "화면=행위, 대사=이야기" in p         # 중간 비트도 설명 말고 이야기로(핵심 규칙)
 
 
+def test_judge_picks_best_of_n_drafts():
+    # 백본 순서 위에서 N개 안 생성 → 심사위원(대본품질)이 제일 좋은 걸 추천.
+    state = {"i": 0}
+
+    def _call(prompt, schema):
+        props = schema.get("properties", {})
+        if "script_quality" in props:                      # 심사 콜
+            return {"script_quality": 5 if "좋은 훅" in prompt else 1,
+                    "scene_sync": 3, "storyline": 3}
+        state["i"] += 1                                     # 생성 콜: 초안마다 다르게
+        if state["i"] == 1:
+            return {"beats": [{"narration": "밋밋한 설명이에요", "seg_id": "BB-1"}]}
+        return {"beats": [{"narration": "좋은 훅 이거 실화냐", "seg_id": "BB-2"}]}
+
+    res = edit_plan.build_scene_first_plan(_SOURCES, "ref", 20, call=_call,
+                                           backbone_base=True, judge=True)
+    assert len(res["candidates"]) >= 2                      # best-of-N(중복 제거 후)
+    rec = next(c for c in res["candidates"] if c["recommended"])
+    assert "좋은 훅" in rec["plan"]["beats"][0]["narration"]   # 심사 최고점이 추천됨
+    assert rec["judge"]["script_quality"] == 5
+
+
 def test_backbone_base_off_is_reference_first():
     # backbone_base=False면 기존 레퍼런스-먼저 경로 그대로(회귀0).
     def _ref(prompt, schema):
