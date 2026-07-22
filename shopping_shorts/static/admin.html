@@ -22,15 +22,24 @@ label{display:inline-block;min-width:120px;color:#a8a8b0;font-size:13px;margin:5
 .save{background:#4f9dfa;color:#111;padding:8px 16px;margin-top:10px}
 .msg{color:#7ee787;font-size:12px;margin-left:8px}
 .err{color:#ff9a8a}
+details.card>summary{cursor:pointer;font-size:15px;font-weight:600;color:#cfd2d6;list-style:none;user-select:none}
+details.card>summary::-webkit-details-marker{display:none}
+details.card>summary::before{content:'▸';color:#8a8a92;margin-right:6px;font-size:12px}
+details.card[open]>summary::before{content:'▾'}
+.setgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px 20px;margin:14px 0}
+.setfield{display:flex;align-items:center;gap:8px}
+.setfield label{min-width:92px;margin:0}
+.setfield input{flex:1;width:auto}
+tbody tr:hover{background:#1b1b22}
 </style></head><body>
 <h1>🔐 유료게이트 관리자</h1>
 <div class=sub>결제 확인된 계정을 <b>pro</b>로 승격 / 체험·크레딧 설정 조정</div>
 
-<div class=card>
-  <h2>설정 <span id=setMsg class=msg></span></h2>
-  <div id=settings></div>
+<details class=card>
+  <summary>⚙️ 설정 (체험·크레딧·안내) <span id=setMsg class=msg></span></summary>
+  <div id=settings class=setgrid></div>
   <button class=save onclick=saveSettings()>설정 저장</button>
-</div>
+</details>
 
 <div class="card wait">
   <h2>🕓 승인 대기중 (<span id=pcnt>0</span>명) <span id=pMsg class=msg></span></h2>
@@ -56,7 +65,7 @@ async function load(){
   const d=await r.json(); CURRENT=d.settings||{}; window._CUST=d.customers||[];
   // 설정 폼
   document.getElementById('settings').innerHTML=SETTING_FIELDS.map(([k,label])=>
-    `<div><label>${label}</label><input id=set_${k} value="${(CURRENT[k]??'').toString().replace(/"/g,'&quot;')}"></div>`).join('');
+    `<div class=setfield><label>${label}</label><input id=set_${k} value="${(CURRENT[k]??'').toString().replace(/"/g,'&quot;')}"></div>`).join('');
   // 미승인(approved_at null) = 순수대기 + 이벤트 체험중 → 모두 대기명단(사장님이 승인 가능해야 함).
   const pend=d.customers.filter(c=>c.approved_at==null);
   const rest=d.customers.filter(c=>c.approved_at!=null);
