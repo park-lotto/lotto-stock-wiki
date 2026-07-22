@@ -50,19 +50,33 @@
               width:52px;height:52px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;
               font-size:20px;display:flex;align-items:center;justify-content:center;
               pointer-events:none;border:2px solid rgba(255,255,255,.85)}
-  /* 썸네일 위 직관 배지(2026-07-22) — 숫자 대신 "소형인데 빠르게" 같은 한줄 판단 라벨 */
-  .ibadge{position:absolute;top:7px;left:7px;z-index:2;pointer-events:none;
-          font-size:11.5px;font-weight:800;padding:3px 8px;border-radius:7px;color:#fff;
-          box-shadow:0 1px 4px rgba(0,0,0,.45);letter-spacing:-.2px}
-  .ibadge.rising{background:linear-gradient(135deg,#ff4d4f,#ff7a45)}   /* 소형인데 급상승 */
-  .ibadge.proven{background:linear-gradient(135deg,#f5a623,#e8b400);color:#1a1200} /* 대형인데 반응까지 */
-  .ibadge.gem{background:linear-gradient(135deg,#13c2c2,#08979c)}      /* 작은데 알짜 */
-  .ibadge.hot{background:linear-gradient(135deg,#fa541c,#d4380d)}       /* 지금 급상승 */
-  .ibadge.reach{background:rgba(24,90,157,.92)}                        /* 도달 큼 */
-  .ibadge.flat{background:rgba(80,80,90,.9)}                           /* 크지만 반응 평범 */
-  .vbadge{position:absolute;top:7px;right:7px;z-index:2;pointer-events:none;
-          font-size:11px;font-weight:700;padding:2px 7px;border-radius:7px;
-          background:rgba(0,0,0,.62);color:#fff}
+  /* 썸네일 위 직관 배지(2026-07-22 v2) — "대형채널 · 반응 뜨거움" 식 라벨. 통일된 다크 pill+
+     색점으로 어떤 썸네일 위에서도 잘 읽히게. ⭐는 지표 종합 상위(진짜 괜찮은 것). */
+  .ibadge{position:absolute;top:8px;left:8px;z-index:3;pointer-events:none;
+          display:inline-flex;align-items:center;gap:5px;max-width:calc(100% - 16px);
+          font-size:12px;font-weight:800;line-height:1.15;padding:5px 11px;border-radius:999px;
+          color:#fff;letter-spacing:-.3px;white-space:nowrap;
+          background:rgba(18,18,22,.74);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+          box-shadow:0 3px 12px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.15);
+          text-shadow:0 1px 2px rgba(0,0,0,.55)}
+  .ibadge .dot{width:7px;height:7px;border-radius:50%;flex:none;background:currentColor;
+               box-shadow:0 0 7px currentColor}
+  .ibadge.rising{color:#ff6b6b}   /* 소형 급상승 */
+  .ibadge.proven{color:#ffd24d}   /* 대형 반응 뜨거움 */
+  .ibadge.gem{color:#3be0d0}      /* 알짜 */
+  .ibadge.hot{color:#ff9a4d}      /* 상승중 */
+  .ibadge.reach{color:#6db3ff}    /* 도달 큼 */
+  .ibadge.flat{color:#b0b0ba}     /* 반응 보통 */
+  /* ⭐ 진짜 괜찮은 항목 — 금색 글로우 pill */
+  .ibadge.star{color:#1a1200;font-weight:900;
+               background:linear-gradient(135deg,#ffe27a,#ffc933);
+               box-shadow:0 0 0 1.5px #ffd24d,0 4px 16px rgba(255,196,0,.55);
+               text-shadow:none;animation:starGlow 1.9s ease-in-out infinite}
+  @keyframes starGlow{0%,100%{box-shadow:0 0 0 1.5px #ffd24d,0 4px 14px rgba(255,196,0,.45)}
+                      50%{box-shadow:0 0 0 1.5px #fff0b0,0 4px 22px rgba(255,196,0,.9)}}
+  .vbadge{position:absolute;bottom:8px;right:8px;z-index:3;pointer-events:none;
+          font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;letter-spacing:-.2px;
+          background:rgba(0,0,0,.66);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.4)}
   .card .body{padding:12px;flex:1;display:flex;flex-direction:column}
   .card .rank{font-size:12px;color:var(--sub)}
   .card .ch{font-weight:600;font-size:14px;margin:4px 0;display:flex;align-items:center;justify-content:space-between;gap:6px}
@@ -551,20 +565,28 @@ function setSearch(q){ STATE.q = q; render(); }
 // 백분위'로 보고 "소형인데 빠르게" 같은 한줄 판단 라벨을 붙인다. 절대값이 아니라 지금 목록 대비 상대.
 function _pctl(sorted, v){ let lo=0,hi=sorted.length; while(lo<hi){const m=(lo+hi)>>1; if(sorted[m]<=v) lo=m+1; else hi=m;} return sorted.length? lo/sorted.length : 0; }
 function _fmtViews(n){ n=n||0; return n>=10000 ? (n/10000).toFixed(1)+'만' : n.toLocaleString(); }
-function _insight(i, ctx){
-  const vr=_pctl(ctx.vs, i.views||0), dr=_pctl(ctx.ds, i.density||0), sr=_pctl(ctx.ss, i.speed||0);
-  if(vr>=0.70 && dr>=0.60) return {t:'👑 대형인데 반응까지', c:'proven'};   // 도달 크고 반응도 뜨겁다=검증된 히트
-  if(vr<=0.40 && sr>=0.70) return {t:'🚀 소형인데 빠르게 오르는중', c:'rising'}; // 작은데 지금 치고 올라옴
-  if(vr<=0.40 && dr>=0.75) return {t:'💎 작은데 반응 알짜', c:'gem'};       // 작은데 참여밀도 최상
-  if(vr>=0.70 && dr<0.40)  return {t:'📺 크지만 반응은 평범', c:'flat'};    // 도달만 크고 반응 미지근
-  if(sr>=0.85)             return {t:'🔥 지금 급상승', c:'hot'};
-  if(dr>=0.90)             return {t:'💎 참여밀도 최상위', c:'gem'};
-  if(vr>=0.85)             return {t:'📺 도달 큼', c:'reach'};
+function _insight(vr, dr, sr){
+  // 규모(조회수) · 상태(반응/상승세) 형식. 백분위 조합.
+  if(vr>=0.70 && dr>=0.60) return {t:'대형채널 · 반응 뜨거움', c:'proven'}; // 도달 크고 반응도 뜨겁다
+  if(vr<=0.40 && sr>=0.70) return {t:'소형채널 · 반응 급상승', c:'rising'}; // 작은데 지금 치고 올라옴
+  if(vr<=0.40 && dr>=0.75) return {t:'소형채널 · 알짜 반응', c:'gem'};      // 작은데 참여밀도 최상
+  if(vr>=0.70 && dr<0.40)  return {t:'대형채널 · 반응 보통', c:'flat'};     // 도달만 크고 반응 미지근
+  if(sr>=0.85)             return {t:'반응 상승중', c:'hot'};
+  if(dr>=0.90)             return {t:'참여율 최상위', c:'gem'};
+  if(vr>=0.85)             return {t:'대형채널 · 도달 큼', c:'reach'};
   return null;
 }
 function badgeHTML(i, ctx){
-  let h=''; const b=_insight(i, ctx);
-  if(b) h+=`<span class="ibadge ${b.c}">${b.t}</span>`;
+  const vr=_pctl(ctx.vs, i.views||0), dr=_pctl(ctx.ds, i.density||0), sr=_pctl(ctx.ss, i.speed||0);
+  const b=_insight(vr, dr, sr);
+  let h='';
+  if(b){
+    // ⭐ = 진짜 괜찮은 것: 도달·반응·상승세 종합(반응 가중) 상위. 화면당 소수만.
+    const score = vr*0.40 + dr*0.45 + sr*0.15;
+    const star = score>=0.80;
+    const inner = star ? `⭐ ${b.t}` : `<span class="dot"></span>${b.t}`;
+    h+=`<span class="ibadge ${star?'star':b.c}">${inner}</span>`;
+  }
   if(i.views) h+=`<span class="vbadge">👁 ${_fmtViews(i.views)}</span>`;
   return h;
 }
