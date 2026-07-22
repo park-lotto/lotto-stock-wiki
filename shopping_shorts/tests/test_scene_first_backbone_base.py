@@ -62,6 +62,7 @@ def test_backbone_base_prompt_carries_drama_and_bank():
     assert "짤드라마" in p                       # 짤드라마 헌장 주입
     assert "설명체" in p                         # 강한 오프너(설명체 금지) 규칙
     assert "이거 실화냐" in p                    # 은행 부품 주입
+    assert "화면=행위, 대사=이야기" in p         # 중간 비트도 설명 말고 이야기로(핵심 규칙)
 
 
 def test_backbone_base_off_is_reference_first():
