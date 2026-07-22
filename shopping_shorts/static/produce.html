@@ -2108,7 +2108,7 @@ function _renderMixReviewBody(d){
       <div style="margin:6px 0;font-size:13px">${esc(b.narration||'')}</div>
       <div class="hint">🎞 ${esc(b.primary?.video_id||'')} · ${b.primary?.start}s~${b.primary?.end}s · ${b.target_seconds}s${b.fit?` · 매칭 ${b.fit}/5`:''}${b.conformed?` · <span style="color:var(--accent)">⏱ 길이 맞춤</span>`:''}</div>
       ${(b.fit&&b.fit<=2&&!b.respined)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⚠️ 이 문장에 맞는 영상이 부족합니다 — 대본을 살짝 바꾸거나 소스 영상을 추가하세요.</div>`:''}
-      ${(b.sync_gap&&b.sync_gap>0.8)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⏱ 대사가 영상보다 ${b.sync_gap}초 깁니다 — 끝부분이 잠시 머물 수 있어요. 대본을 살짝 줄이면 자연스러워집니다.</div>`:''}
+      ${(b.sync_gap&&b.sync_gap>0.8)?`<div id="syncGap${i}" style="color:var(--fire);font-size:12px;margin-top:3px">⏱ 대사가 영상보다 ${b.sync_gap}초 깁니다. <button class="btn-prev" style="padding:4px 10px;font-size:12px;margin-left:6px" onclick="doShorten(${i})">✂ 대사 줄이기</button></div>`:''}
       <div class="scene-swap" id="sceneSwap${i}">${renderSwapButton(b, i)}</div>
       <div class="scene-cutaway" id="sceneCutaway${i}">${renderSceneCutaway(b, i)}</div>
       <div class="scene-sfx" id="sceneSfx${i}">${renderSceneSfx(b, i)}</div>
@@ -2947,6 +2947,21 @@ function renderTrimControls(beat, idx){
     + `<button class="btn-prev" style="padding:6px 10px;font-size:12px" onclick="doTrim(${idx},'head','nudge')">◂ 앞 −0.3초</button>`
     + ((tail||head)?`<button class="btn-prev" style="padding:6px 10px;font-size:12px" onclick="doTrim(${idx},(${tail}?'tail':'head'),'reset')">◂ 되돌리기</button>`:'')
     + state + `</div>`;
+}
+// ✂ 대사 줄이기 — 그 비트 대사를 화면 예산에 맞게 축약+재TTS(경고만 뜨던 걸 실제로 손봄).
+async function doShorten(idx){
+  if(!MIX_JOB) return;
+  const box=document.getElementById('syncGap'+idx);
+  if(box) box.innerHTML='<span class="hint">⏳ 대사 줄이는 중…</span>';
+  let r;
+  try{
+    r=await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/shorten',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({beat_idx:idx})})).json();
+  }catch(e){ if(box) box.innerHTML='<span class="hint" style="color:var(--fire)">네트워크 오류</span>'; return; }
+  if(!r.ok){ if(box) box.innerHTML='<span class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</span>'; return; }
+  if(!r.changed){ if(box) box.innerHTML='<span class="hint" style="color:var(--sub)">'+esc(r.note||'더 줄일 여지가 없어요')+'</span>'; return; }
+  loadMixReview();   // 대사·길이 바뀜=옛 미리보기 무효 → 전체 재로드(트림과 동일 규율)
 }
 async function doTrim(idx, edge, mode){
   if(!MIX_JOB) return;
