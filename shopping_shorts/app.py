@@ -3753,10 +3753,11 @@ def _record_access(customer_id, request):
         key = (customer_id, day, ip, ua)
         if key in _ACCESS_SEEN:
             return
-        _ACCESS_SEEN.add(key)
+        Store(DB_PATH).record_access(customer_id, ip, ua, day)
+        # ★쓰기 성공 후에만 seen 표시 — 실패(DB락 등)면 다음 요청에서 재시도 가능(기록 유실 방지)
         if len(_ACCESS_SEEN) > 50000:      # 무한증식 방지 — 넘치면 비운다(날짜 바뀌면 어차피 새 키)
             _ACCESS_SEEN.clear()
-        Store(DB_PATH).record_access(customer_id, ip, ua, day)
+        _ACCESS_SEEN.add(key)
     except Exception:
         pass
 
