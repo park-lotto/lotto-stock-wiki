@@ -285,9 +285,16 @@ def census():
                             prev_delta=store.prev_delta, now=now,
                             window_hours=DEAD_AFTER_DAYS * 24)
         for it in items:
+            # 전수조사 참여밀도 = (좋아요+댓글)/조회수 (영상별). build_items의 기본
+            # density는 댓글÷팔로워인데 릴스 스크래퍼엔 팔로워가 없어 전부 0이 된다
+            # → 조회수 기준으로 덮어써야 소형채널도 밀도로 상위에 오른다.
+            v = it.get("views") or 0
+            it["density"] = ((it.get("likes") or 0) + (it.get("comments") or 0)) / v if v else 0.0
             all_items.append(it)
             _record_activity(seen_alive, meta["username"], it, r)
     apply_grades(all_items)
+    # 채널당 상한이 아니라 영상별 참여밀도 내림차순 → 소형채널의 뜨거운 영상이 안 밀린다.
+    all_items.sort(key=lambda i: i.get("density") or 0.0, reverse=True)
 
     alive_norm = set(seen_alive.keys())
     dead_channels = [c for c in master if _norm_u(c["username"]) not in alive_norm]

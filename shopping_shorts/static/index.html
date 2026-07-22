@@ -642,7 +642,7 @@ async function doCensus(){
     const d = await readJson(r);
     if(!d.ok) throw new Error(d.error||"실패");
     STATE.items = d.items; st.textContent=`✅ ${d.count}건 (${fmtTime(d.collected_at)})`;
-    render();
+    setTab('density');   // 전수조사는 영상별 참여밀도순으로 — 소형채널도 안 밀리게
     const dead = d.dead||[];
     let html = `<span style="color:var(--txt)">스캔 <b>${d.scanned_n}</b> · 생존 <b style="color:var(--ok)">${d.alive_n}</b> · 사망 <b style="color:var(--fire)">${d.dead_n}</b> · 부활 <b style="color:var(--gold)">${d.revived_n}</b></span>`;
     if(dead.length){
