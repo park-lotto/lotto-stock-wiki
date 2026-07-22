@@ -297,7 +297,9 @@
         '<div class="ss-acct-id"><div class="ss-acct-email" title="' + email + '">' + email + "</div>" +
           '<div class="ss-acct-badge" style="color:' + tierColor + ";border-color:" + tierColor + '">' + escHtml(tier) + "</div></div></div>" +
       '<div class="ss-acct-sub">' + escHtml(sub) + "</div>" + usage + member +
-      '<div class="ss-acct-links"><a href="/account" class="ss-acct-link">⚙️ 내 계정</a>' +
+      '<div class="ss-acct-links">' +
+        (admin ? '<a href="/admin" class="ss-acct-link" style="color:#ffd97a;border-color:#5a4a1e">🔐 관리페이지</a>' : '') +
+        '<a href="/account" class="ss-acct-link">⚙️ 내 계정</a>' +
         '<a href="#" class="ss-acct-link" onclick="window.__ssLogout();return false">↩ 로그아웃</a></div>';
     var h1 = nav.querySelector("h1");
     if (h1 && h1.nextSibling) nav.insertBefore(card, h1.nextSibling);
