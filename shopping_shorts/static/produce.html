@@ -3781,7 +3781,8 @@ function drawThumb(ctx, img, layers, W, H){
 }
 
 const THUMB_STATE = {frames: [], frame_ts: null, frame_url: null, img: null,
-                     layers: [], sel: 0, results: [], selected: null, title_cands: []};
+                     layers: [], sel: 0, results: [], selected: null, title_cands: [],
+                     job: null};   // job=이 상태가 속한 MIX_JOB. 바뀌면 리셋(2026-07-22)
 
 // 추출은 수 초 걸린다. THUMB_STATE.frames는 '응답이 와야' 채워지므로 그것만 보고 가드하면
 // 대기 중 단계를 오갈 때마다 요청이 겹쳐 ffmpeg가 같은 폴더에 동시에 쓴다(실측: 3벌).
@@ -4137,6 +4138,18 @@ async function selectThumbResult(name){
 let THUMB_INITED = false;
 function initThumb(){
   if (!THUMB_INITED){ initThumbDrag(); THUMB_INITED = true; }  // 리스너는 한 번만
+  // ★job이 바뀌었으면(재매칭·복원으로 MIX_JOB 교체) 이전 작업의 썸네일 상태를 버린다.
+  // 안 그러면 프레임(=job_id로 새로 받음)은 새 영상인데 텍스트 레이어·제목추천은 이전 작업
+  // 것이 남아 "타코 영상에 아침밥 제목"이 뜬다(2026-07-22 실측). 같은 job 재진입(단계 왕복)은
+  // job이 그대로라 리셋 안 함 — 작업 중이던 레이어를 지우지 않는다.
+  if (typeof MIX_JOB !== 'undefined' && MIX_JOB && THUMB_STATE.job && THUMB_STATE.job !== MIX_JOB){
+    THUMB_STATE.frames = []; THUMB_STATE.layers = []; THUMB_STATE.title_cands = [];
+    THUMB_STATE.results = []; THUMB_STATE.selected = null; THUMB_STATE.sel = 0;
+    THUMB_STATE.frame_ts = null; THUMB_STATE.frame_url = null; THUMB_STATE.img = null;
+    const sug = document.getElementById('thumbTitleSuggest'); if (sug) sug.innerHTML = '';
+    const gal = document.getElementById('thumbGallery'); if (gal) gal.innerHTML = '';
+  }
+  if (typeof MIX_JOB !== 'undefined' && MIX_JOB) THUMB_STATE.job = MIX_JOB;
   if (!THUMB_STATE.frames.length) loadThumbFrames();           // 프레임은 이미 있으면 재요청 안 함
   renderThumbLayers();
 }
