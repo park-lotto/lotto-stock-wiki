@@ -4072,8 +4072,9 @@ async def _admin_customer_update(request: Request):
     if denied:
         return denied
     body = await request.json()
-    cid = body.get("customer_id")
-    if not cid:
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
         return JSONResponse({"error": "customer_id 필요"}, status_code=400)
     Store(DB_PATH).update_customer_info(cid, body.get("name"), body.get("phone"))
     return {"ok": True}
@@ -4086,8 +4087,9 @@ async def _admin_customer_delete(request: Request):
     if denied:
         return denied
     body = await request.json()
-    cid = body.get("customer_id")
-    if not cid:
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
         return JSONResponse({"error": "customer_id 필요"}, status_code=400)
     if _is_admin(cid):
         return JSONResponse({"error": "관리자 계정은 삭제할 수 없어요"}, status_code=400)

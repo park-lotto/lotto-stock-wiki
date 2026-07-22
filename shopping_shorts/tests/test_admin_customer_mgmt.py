@@ -45,10 +45,19 @@ def test_delete_customer_removes_all(tmp_path):
     s.add_payment(cid, 30000, "계좌", 30)
     s.record_access(cid, "1.1.1.1", "UA", "2026-07-22")
     s.usage_incr(cid, "render", "2026-07-22")
+    s.create_mix_job("jdel01", ["u"], 30, "free", customer_id=cid)   # 콘텐츠(제작 job)
     s.delete_customer(cid)
     assert s.get_customer(cid) is None
     assert s.list_payments(cid) == []
     assert s.access_summary(cid, "2026-07-01") == {"ips": 0, "devices": 0}
+    assert s.get_mix_job("jdel01") is None                           # 완전삭제=콘텐츠도 청소
+
+
+def test_delete_endpoint_rejects_nonint_cid(tmp_path, monkeypatch):
+    s = _setup(tmp_path, monkeypatch)
+    owner = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})
+    r = owner.post("/api/admin/customer/delete", json={"customer_id": "abc"})
+    assert r.status_code == 400                                      # 잘못된 입력 거부
 
 
 def test_delete_customer_ignores_owner(tmp_path):
