@@ -2559,8 +2559,14 @@ def api_thumb_frames(body: dict):
     # VMake는 이미 탔으니 추가과금 0. 실패하면 아래 폴백 그대로.
     _cvp = job.get("clean_video_path")
     if job.get("clean_status") == "ready" and not (_cvp and Path(_cvp).exists()):
-        if mix_pipeline.assemble_clean_video(job_id, DB_PATH, _MIX_WORK_DIR):
-            job = Store(DB_PATH).get_mix_job(job_id)   # 새 clean_video_path 반영
+        # 자가치유 조립은 ffmpeg를 태운다 — 실패(RuntimeError)나 배포 재시작으로 ffmpeg가
+        # 죽으면(exit 255) 여기서 예외가 그대로 올라가 500이 났다(2026-07-22 실측). 그러면
+        # 아래 preview/최종 폴백을 못 타고 프레임이 아예 안 나온다. 삼키고 폴백으로 넘긴다.
+        try:
+            if mix_pipeline.assemble_clean_video(job_id, DB_PATH, _MIX_WORK_DIR):
+                job = Store(DB_PATH).get_mix_job(job_id)   # 새 clean_video_path 반영
+        except Exception:
+            pass   # 자막 없는 배경을 못 만들면 자막 있는 preview/최종으로라도 프레임을 낸다
     video = None
     for cand in (job.get("clean_video_path"), job.get("preview_path"), job.get("video_path")):
         if cand and Path(cand).exists():
