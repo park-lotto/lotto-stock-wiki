@@ -129,3 +129,32 @@ def test_api_me_is_admin_for_email_admin(tmp_path, monkeypatch):
     cn = TestClient(appmod.app, cookies={"dash_auth": _cookie(normal_cid)})
     assert ca.get("/api/me").json()["is_admin"] is True
     assert cn.get("/api/me").json()["is_admin"] is False
+
+
+# ── 관리자 지정/회수(스텝권한=관리자 동일) ──
+def test_set_customer_admin_grants_is_admin(tmp_path, monkeypatch):
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    s = Store(str(tmp_path / "t.db"))
+    cid = s.create_customer("g_x", "pw12", email="x@y.com")
+    assert appmod._is_admin(cid) is False
+    s.set_customer_admin(cid, True)
+    assert s.get_customer(cid)["admin"] is True
+    assert appmod._is_admin(cid) is True          # 지정 관리자=권한 동일
+    s.set_customer_admin(cid, False)
+    assert appmod._is_admin(cid) is False
+
+
+def test_set_admin_endpoint_and_refuses_code_admin(tmp_path, monkeypatch):
+    s = _setup(tmp_path, monkeypatch)
+    normal = s.create_customer("g_x", "pw12", email="x@y.com")
+    codeadmin = s.create_customer("g_p", "pw12", email="parklotto12@gmail.com")
+    owner = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})
+    # 일반 계정 관리자 지정 성공
+    r = owner.post("/api/admin/customer/set_admin", json={"customer_id": normal, "admin": True})
+    assert r.status_code == 200 and appmod._is_admin(normal) is True
+    # 지정 관리자도 admin API 접근 가능(권한 동일)
+    c2 = TestClient(appmod.app, cookies={"dash_auth": _cookie(normal)})
+    assert c2.get("/api/admin/customers").status_code == 200
+    # 코드 고정 관리자는 UI로 변경 거부
+    r2 = owner.post("/api/admin/customer/set_admin", json={"customer_id": codeadmin, "admin": False})
+    assert r2.status_code == 400
