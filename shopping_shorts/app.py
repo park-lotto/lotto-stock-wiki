@@ -11,7 +11,7 @@ import socket
 import tempfile
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import requests
 from fastapi import BackgroundTasks, FastAPI, Request, UploadFile, File, Form
@@ -3783,6 +3783,38 @@ def _google_callback(request: Request, code: str = "", state: str = "", error: s
     return r
 
 
+def _client_ip(request):
+    """nginx 뒤라 실제 IP는 X-Forwarded-For 첫 항목. 없으면 X-Real-IP, 그다음 소켓 주소."""
+    xff = request.headers.get("x-forwarded-for")
+    if xff:
+        return xff.split(",")[0].strip()
+    return request.headers.get("x-real-ip") or (request.client.host if request.client else "")
+
+
+_ACCESS_SEEN = set()   # (cid, day, ip, ua) 이 프로세스에서 이미 기록한 조합 → DB 중복호출 방지
+
+
+def _record_access(customer_id, request):
+    """돌려쓰기 소프트감지: 로그인 사용자의 접속 IP·기기를 하루 단위로 기록(차단 안 함).
+    best-effort — 절대 요청을 막지 않는다. 사장님(0)은 여러 기기가 정상이라 제외."""
+    if not customer_id:
+        return
+    try:
+        ip = _client_ip(request)
+        ua = request.headers.get("user-agent", "")[:200]
+        day = _today_utc()
+        key = (customer_id, day, ip, ua)
+        if key in _ACCESS_SEEN:
+            return
+        Store(DB_PATH).record_access(customer_id, ip, ua, day)
+        # ★쓰기 성공 후에만 seen 표시 — 실패(DB락 등)면 다음 요청에서 재시도 가능(기록 유실 방지)
+        if len(_ACCESS_SEEN) > 50000:      # 무한증식 방지 — 넘치면 비운다(날짜 바뀌면 어차피 새 키)
+            _ACCESS_SEEN.clear()
+        _ACCESS_SEEN.add(key)
+    except Exception:
+        pass
+
+
 @app.middleware("http")
 async def _auth_guard(request: Request, call_next):
     if not _AUTH_ON:
@@ -3803,6 +3835,7 @@ async def _auth_guard(request: Request, call_next):
     customer_id = _verify_session(request.cookies.get("dash_auth"))
     if customer_id is not None:
         request.state.customer_id = customer_id
+        _record_access(customer_id, request)   # 돌려쓰기 소프트감지(best-effort, 차단 안 함)
         lvl = access_level(customer_id)
         if lvl == "pending":
             # 승인 전 전면 차단. /logout만 통과(로그아웃 가능), /static은 위에서 이미 허용.
@@ -3868,7 +3901,7 @@ def _is_trial(customer_id, now=None):
 
 # ── 유료게이트 비용 방어: 계정별 일일 크레딧 + 전역 상한 ──
 _CREDIT_DEFAULTS = {"lens": 5, "render": 2, "script": 10}
-_CREDIT_PRO_DEFAULTS = {"lens": 100, "render": 50, "script": 200}
+_CREDIT_PRO_DEFAULTS = {"lens": 100, "render": 10, "script": 200}  # 하루 영상 최대 10개(돌려쓰기 상한, 2026-07-22)
 _GLOBAL_CAP_DEFAULTS = {"lens": 200, "render": 100, "script": 400}
 
 
@@ -4006,10 +4039,12 @@ def _admin_customers(request: Request):
         return denied
     st = Store(DB_PATH)
     day = _today_utc()
+    since7 = (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%d")  # 돌려쓰기 감지 창(7일)
     out = []
     for cu in st.list_customers():
         cu["level"] = access_level(cu["id"])
         cu["usage"] = {op: st.usage_get(cu["id"], op, day) for op in ("lens", "render", "script")}
+        cu["access_7d"] = st.access_summary(cu["id"], since7)   # {ips, devices} 최근 7일 고유 수
         out.append(cu)
     return {"ok": True, "customers": out, "settings": st.all_settings()}
 
