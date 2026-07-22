@@ -1090,9 +1090,21 @@ def _bank_ingest_collected_bg(db_path, items, collected_at):
         {"status": "running", "date": day, "collected_at": collected_at}, ensure_ascii=False))
     try:
         rep = pattern_bank.ingest_collected(store, items)
+        # 훅수확 이관(2026-07-23): 밤4시 크론이 아니라 수집 버튼이 우승작 훅을 즉시 수확한다.
+        try:
+            from shopping_shorts import daily_batch
+            rep["harvested_hooks"] = daily_batch.harvest_hooks(store)
+        except Exception as he:  # noqa: BLE001
+            print(f"bank ingest(harvest_hooks) 실패: {he}")
+            rep["harvested_hooks"] = 0
         store.auto_approve_style_buckets()   # 스타일 부품 즉시 사용가능(위키 적재와 동일)
         rep.update({"status": "done", "date": day, "collected_at": collected_at})
         store.set_setting("bank_ingest_last", _json.dumps(rep, ensure_ascii=False))
+        # 검열은 따로도 저장(패널이 흡수리포트와 분리해 읽기 쉽게).
+        audit = rep.get("gemini_audit")
+        if audit is not None:
+            store.set_setting("gemini_audit_last", _json.dumps(
+                {**audit, "date": day, "collected_at": collected_at}, ensure_ascii=False))
     except Exception as e:  # noqa: BLE001
         print(f"bank ingest(collected) 실패: {e}")
         store.set_setting("bank_ingest_last", _json.dumps(
