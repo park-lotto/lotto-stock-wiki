@@ -49,6 +49,8 @@ def test_add_and_list_payments(tmp_path, monkeypatch):
 def test_approve_sets_start_end_and_payment(tmp_path, monkeypatch):
     s = _setup(tmp_path, monkeypatch)
     cid = s.create_customer("pend", "pw12", approved=False)
+    with s._conn() as conn:                      # 체험창 만료 강제 → 진짜 pending 상태로 검증
+        conn.execute("UPDATE customers SET trial_ends_at=NULL WHERE id=?", (cid,))
     assert appmod.access_level(cid) == "pending"
     cust = s.approve_customer(cid, period_days=30, amount=30000, method="계좌이체")
     assert cust["approved_at"] is not None                 # 시작일

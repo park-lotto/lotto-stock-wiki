@@ -717,6 +717,12 @@ class Store:
         except sqlite3.OperationalError:
             pass  # 이미 존재
 
+        # ── 무료체험 이벤트(2026-07-22): 미승인 가입자에게 24h 체험창. NULL=창없음(기존고객·승인생성) ──
+        try:
+            c.execute("ALTER TABLE customers ADD COLUMN trial_ends_at INTEGER")
+        except sqlite3.OperationalError:
+            pass  # 이미 존재. 하위호환: 기존 행은 NULL(만료 취급)로 남아 동작 불변.
+
         # ── 회원관리(2026-07-22): 이름·전화 + 결제이력 ──
         #   ★같은 커서 c 사용 — 이 메서드는 _init_schema가 customers를 만드는 열린 트랜잭션
         #   안에서 c를 넘겨받는다. 새 self._conn()을 열면 미커밋 customers가 안 보여 깨진다.
@@ -2542,16 +2548,23 @@ class Store:
                 trial_days = 7
             full_access_until = now_ts + trial_days * 86400
             approved_at = now_ts
+            trial_ends_at = None                     # 승인 생성은 이벤트 체험창 불필요
         else:
             full_access_until = 0
             approved_at = None
+            try:
+                trial_hours = int(self.get_setting("trial_event_hours", 24))
+            except (TypeError, ValueError):
+                trial_hours = 24
+            trial_ends_at = now_ts + trial_hours * 3600   # 🎁 가입 후 24h 맛보기 창
         with self._conn() as c:
             try:
                 cur = c.execute(
                     "INSERT INTO customers(username, password_hash, salt, created_at, "
-                    "plan, full_access_until, email, google_sub, approved_at, name, phone) "
-                    "VALUES(?,?,?,datetime('now'),'free',?,?,?,?,?,?)",
-                    (username, pw_hash, salt, full_access_until, email, google_sub, approved_at, name, phone),
+                    "plan, full_access_until, email, google_sub, approved_at, name, phone, trial_ends_at) "
+                    "VALUES(?,?,?,datetime('now'),'free',?,?,?,?,?,?,?)",
+                    (username, pw_hash, salt, full_access_until, email, google_sub,
+                     approved_at, name, phone, trial_ends_at),
                 )
             except sqlite3.IntegrityError:
                 raise ValueError(f"이미 존재하는 아이디: {username}")
@@ -2591,7 +2604,8 @@ class Store:
         """customer_id → {id, username, created_at, plan, full_access_until, google_sub, email, approved_at, name, phone} 또는 None."""
         with self._conn() as c:
             row = c.execute(
-                "SELECT id, username, created_at, plan, full_access_until, google_sub, email, approved_at, name, phone "
+                "SELECT id, username, created_at, plan, full_access_until, google_sub, email, "
+                "approved_at, name, phone, trial_ends_at "
                 "FROM customers WHERE id=?", (customer_id,)
             ).fetchone()
         if not row:
@@ -2599,7 +2613,7 @@ class Store:
         return {"id": row[0], "username": row[1], "created_at": row[2],
                 "plan": row[3] or "free", "full_access_until": row[4] or 0,
                 "google_sub": row[5], "email": row[6], "approved_at": row[7],
-                "name": row[8], "phone": row[9]}
+                "name": row[8], "phone": row[9], "trial_ends_at": row[10]}
 
     def set_plan(self, customer_id, plan, full_access_until=None):
         """등급 변경. plan='pro'|'free'. full_access_until(epoch초)를 주면 함께 설정(체험창)."""
@@ -2669,7 +2683,7 @@ class Store:
         """관리자용 전체 고객 목록(사장님 cid0 제외). 최근 가입 먼저. 최근 결제 요약 포함."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT id, username, email, plan, full_access_until, created_at, approved_at, name, phone "
+                "SELECT id, username, email, plan, full_access_until, created_at, approved_at, name, phone, trial_ends_at "
                 "FROM customers WHERE id != 0 ORDER BY id DESC"
             ).fetchall()
             out = []
@@ -2680,7 +2694,7 @@ class Store:
                 cnt = c.execute("SELECT COUNT(*) FROM payments WHERE customer_id=?", (cid,)).fetchone()[0]
                 out.append({"id": cid, "username": r[1], "email": r[2], "plan": r[3] or "free",
                             "full_access_until": r[4] or 0, "created_at": r[5], "approved_at": r[6],
-                            "name": r[7], "phone": r[8],
+                            "name": r[7], "phone": r[8], "trial_ends_at": r[9],
                             "last_payment": ({"amount": p[0], "paid_at": p[1]} if p else None),
                             "payment_count": cnt})
         return out

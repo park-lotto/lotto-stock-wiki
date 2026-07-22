@@ -1597,7 +1597,8 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
     # render_charge_day: '오늘 render를 과금했다'는 표식(+환불할 날짜). run_mix_job이 실패하면 딱
     # 이 날짜로 환불한다. 과금 안 하는 다른 create_mix_job 경로는 이 값을 비워 오환불을 막는다(리뷰 B).
     Store(DB_PATH).create_mix_job(job_id, urls, target, structure, subtitle_removal=subtitle_removal,
-                                  customer_id=cid, render_charge_day=_today_utc(),
+                                  customer_id=cid,
+                                  render_charge_day=("trial" if _is_trial(cid) else _today_utc()),
                                   scene_first=scene_first)
     background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True, "job_id": job_id}
@@ -3784,7 +3785,13 @@ def access_level(customer_id, now=None):
     if not cust:
         return "ranking_only"
     if cust.get("approved_at") is None:
-        return "pending"                    # ★승인 전엔 plan/체험보다 우선해 전면 차단
+        # 🎁 무료체험 이벤트: 미승인이라도 가입 후 체험창(trial_ends_at) 안이면 full로 맛보기.
+        #    창 밖이면 대기실 전면차단(pending). NULL(기존고객)은 0 취급 → 즉시 pending.
+        if now is None:
+            now = int(datetime.now(timezone.utc).timestamp())
+        if now < (cust.get("trial_ends_at") or 0):
+            return "full"
+        return "pending"
     if cust.get("plan") == "pro":
         return "full"
     if now is None:
@@ -3792,6 +3799,18 @@ def access_level(customer_id, now=None):
     if now < (cust.get("full_access_until") or 0):
         return "full"                       # 무료 체험 창
     return "ranking_only"
+
+
+def _is_trial(customer_id, now=None):
+    """무료체험 이벤트 중인가 = 미승인(approved_at None) AND 체험창(trial_ends_at) 안. 사장님(0) 제외."""
+    if customer_id == 0:
+        return False
+    cust = Store(DB_PATH).get_customer(customer_id)
+    if not cust or cust.get("approved_at") is not None:
+        return False
+    if now is None:
+        now = int(datetime.now(timezone.utc).timestamp())
+    return now < (cust.get("trial_ends_at") or 0)
 
 
 # ── 유료게이트 비용 방어: 계정별 일일 크레딧 + 전역 상한 ──
@@ -3820,6 +3839,13 @@ def check_and_count(customer_id, op):
     """유료 op(lens/render/script) 실행 전 호출. 일일 상한 초과면 False(막기),
     아니면 카운트+1 후 True. 사장님(0)·pro는 높은 상한(limit_{op}_pro)."""
     st = Store(DB_PATH)
+    # 🎁 무료체험 이벤트: 체험 유저의 render는 '오늘' 대신 영구 "trial" 버킷으로 딱 1회.
+    #    렌즈·대본은 아래 일반 일일 한도 그대로(사장님이 담기·렌즈 열기를 택함).
+    if op == "render" and _is_trial(customer_id):
+        if st.usage_get(customer_id, "render", "trial") >= 1:
+            return False
+        st.usage_incr(customer_id, "render", "trial")
+        return True
     is_paid = (customer_id == 0) or (st.get_customer(customer_id) or {}).get("plan") == "pro"
     if is_paid:
         key, dflt = f"limit_{op}_pro", _CREDIT_PRO_DEFAULTS.get(op, 100)
@@ -4569,7 +4595,8 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     Store(DB_PATH).create_mix_job(job_id, urls, target, "free",
                                   subtitle_removal=subtitle_removal, given_script=script,
                                   script_structure=script_structure, scene_first=scene_first,
-                                  customer_id=cid, render_charge_day=_today_utc(),
+                                  customer_id=cid,
+                                  render_charge_day=("trial" if _is_trial(cid) else _today_utc()),
                                   backbone_main=backbone_main)
     background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True, "job_id": job_id}

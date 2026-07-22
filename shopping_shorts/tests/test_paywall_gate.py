@@ -92,6 +92,8 @@ def test_pending_gate_blocks_everything(tmp_path, monkeypatch):
     """미승인(pending) 세션은 API=403, 화면=대기실 HTML, /logout만 통과."""
     s = _setup(tmp_path, monkeypatch)
     cid = s.create_customer("pend", "pw12", approved=False)
+    with s._conn() as conn:                      # 체험창 만료 강제 → 진짜 pending 상태로 검증
+        conn.execute("UPDATE customers SET trial_ends_at=NULL WHERE id=?", (cid,))
     c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
     # 보호 API → 403 pending
     r_api = c.get("/api/reference/register", follow_redirects=False)
@@ -149,6 +151,8 @@ def test_grab_blocks_pending(tmp_path, monkeypatch):
     /api/grab은 200 HTML 팝업이라 상태코드로 구분 안 됨 → 본문 문구로 차단 확인."""
     s = _setup(tmp_path, monkeypatch)
     cid = s.create_customer("pend", "pw12", approved=False)
+    with s._conn() as conn:                      # 체험창 만료 강제 → 진짜 pending 상태로 검증
+        conn.execute("UPDATE customers SET trial_ends_at=NULL WHERE id=?", (cid,))
     c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
     r = c.get("/api/grab?url=https://www.youtube.com/watch?v=x&title=t")
     # 대기중은 담기 성공 팝업이 아니라 차단 안내여야 한다

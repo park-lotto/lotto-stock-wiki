@@ -55,15 +55,18 @@ async function load(){
   // 설정 폼
   document.getElementById('settings').innerHTML=SETTING_FIELDS.map(([k,label])=>
     `<div><label>${label}</label><input id=set_${k} value="${(CURRENT[k]??'').toString().replace(/"/g,'&quot;')}"></div>`).join('');
-  // 승인 대기(pending)와 일반 고객 분리 — pending은 pro를 줘도 안 열리므로 set_plan을 숨기고 [승인]만 노출
-  const pend=d.customers.filter(c=>c.level==='pending');
-  const rest=d.customers.filter(c=>c.level!=='pending');
+  // 미승인(approved_at null) = 순수대기 + 이벤트 체험중 → 모두 대기명단(사장님이 승인 가능해야 함).
+  const pend=d.customers.filter(c=>c.approved_at==null);
+  const rest=d.customers.filter(c=>c.approved_at!=null);
   const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
   // 승인 대기 표
   document.getElementById('pcnt').textContent=pend.length;
+  const nowSec=Math.floor(Date.now()/1000);
   document.getElementById('prows').innerHTML= pend.length ? pend.map(c=>{
     const joined=c.created_at? new Date((''+c.created_at).length>10?c.created_at:c.created_at*1000).toLocaleString('ko-KR'):'-';
-    return `<tr><td>${c.id}</td><td>${esc(c.name)}</td><td>${esc(c.phone)}</td><td>${esc(c.email||c.username)}</td>
+    const trialLeft = c.trial_ends_at && c.trial_ends_at>nowSec ? Math.ceil((c.trial_ends_at-nowSec)/3600) : 0;
+    const trialBadge = trialLeft ? ` <span class="badge trial">🎁 체험중 ${trialLeft}h</span>` : '';
+    return `<tr><td>${c.id}</td><td>${esc(c.name)}${trialBadge}</td><td>${esc(c.phone)}</td><td>${esc(c.email||c.username)}</td>
       <td style="font-size:12px;color:#8a8a92">${joined}</td>
       <td><button class=bok onclick="approveCustomer(${c.id})">✅ 승인</button></td></tr>`;
   }).join('') : '<tr><td colspan=6 class=empty>대기 중인 가입 신청이 없어요</td></tr>';

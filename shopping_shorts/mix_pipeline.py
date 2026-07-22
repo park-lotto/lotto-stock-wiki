@@ -7,6 +7,7 @@ run_render: 사용자가 확인 후 최종 ffmpeg 렌더 → done.
 import sys
 import traceback
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
 from pathlib import Path
 
 from shopping_shorts.store import Store
@@ -308,13 +309,25 @@ def run_mix_job(job_id, db_path, work_root):
         # ★render_charge_day가 있는 job만(=/api/mix/start가 실제 과금한 것) 환불하고, 딱 그 날짜로
         #   되돌린다. produce 2단계·auto_run·retype는 과금 안 해 이 값이 없다 → 오환불로 전역
         #   카운터를 갉아 다른 유저 과금을 상쇄하는 일을 막는다(리뷰 B/F).
-        day = job.get("render_charge_day")
-        if day:
-            try:
-                store.usage_decr(job.get("customer_id", 0), "render", day)
-                store.usage_decr(-1, "render", day)
-            except Exception:
-                traceback.print_exc(file=sys.stderr)
+        _refund_render_charge(store, job.get("customer_id", 0), job.get("render_charge_day"))
+
+
+def _refund_render_charge(store, customer_id, charge_day):
+    """렌더 실패 환불. charge_day=None이면 과금 안 한 job(오환불 방지) → no-op.
+    "trial"(🎁 무료체험 이벤트)이면 계정은 영구 trial 버킷을, 전역은 오늘 버킷을 되돌린다
+    (전역은 항상 today로 집계됐다). 그 외(날짜)면 계정·전역 둘 다 그 날짜로."""
+    if not charge_day:
+        return
+    try:
+        if charge_day == "trial":
+            store.usage_decr(customer_id, "render", "trial")
+            today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            store.usage_decr(-1, "render", today)
+        else:
+            store.usage_decr(customer_id, "render", charge_day)
+            store.usage_decr(-1, "render", charge_day)
+    except Exception:
+        traceback.print_exc(file=sys.stderr)
 
 
 def _job_urls(job):
