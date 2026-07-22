@@ -14,6 +14,17 @@ def test_new_brand_and_card_markup_present():
     assert 'class="sw-track"' in HTML          # 프리미엄 스위치 트랙
 
 
+def test_state_render_strings_present():
+    # 로딩 스캔 연출·완료 C비교·실패 친절문구가 JS innerHTML에 존재
+    assert "AI가 자막 영역을 자연스럽게 복원하는 중" in HTML
+    assert "길면 수십 분" in HTML
+    assert 'class="cp-compare"' in HTML
+    assert "cp-arrow" in HTML and "AI 제거" in HTML
+    assert "자막 제거에 실패했어요" in HTML
+    # desc 토글: subDesc 갱신
+    assert 'id="subDesc"' in HTML and "렌더 시 자동 적용" in HTML
+
+
 def test_motion_keyframes_present():
     for kf in ["@keyframes rise", "@keyframes scan", "@keyframes drawArrow",
                "@keyframes checkPop", "@keyframes flow"]:

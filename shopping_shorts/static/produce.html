@@ -3287,14 +3287,18 @@ async function pollClean(gen,job){
     if(d.clean_status==='ready'){
       clearInterval(CLEAN_POLL); CLEAN_POLL=null;
       const t=Date.now(), u='/api/produce/mix/clean_thumb/'+encodeURIComponent(job);
-      box.innerHTML='<div style="display:flex;gap:10px;align-items:flex-start">'
-        +'<figure style="margin:0"><img src="'+u+'?kind=original&t='+t+'" style="width:150px;border-radius:8px;background:#000"><figcaption class="hint" style="text-align:center">원본(자막 있음)</figcaption></figure>'
-        +'<figure style="margin:0"><img src="'+u+'?kind=clean&t='+t+'" style="width:150px;border-radius:8px;background:#000"><figcaption class="hint" style="text-align:center">자막 제거됨</figcaption></figure>'
-        +'</div>';
+      box.innerHTML='<div class="cp-compare">'
+        +'<div class="cp-cell"><div class="cp-frame"><img src="'+u+'?kind=original&t='+t+'"><span class="cp-lbl">BEFORE</span></div><div class="cp-cap">원본</div></div>'
+        +'<div class="cp-arrow">→<span>AI 제거</span></div>'
+        +'<div class="cp-cell"><div class="cp-frame"><img src="'+u+'?kind=clean&t='+t+'"><span class="cp-lbl on">AFTER</span><span class="cp-chk">✓</span></div><div class="cp-cap good">자막 제거됨</div></div>'
+        +'</div>'
+        +'<button class="cp-redo" onclick="startCleanPreview()">↻ 다시 미리보기</button>';
       if(btn) btn.disabled=false;
     } else if(d.clean_status==='failed'){
       clearInterval(CLEAN_POLL); CLEAN_POLL=null;
-      box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ 자막제거 실패 — '+esc(d.clean_error||'')+'</div>';
+      if(d.clean_error) console.warn('clean failed:', d.clean_error);
+      box.innerHTML='<div class="cp-fail"><b>자막 제거에 실패했어요.</b> 잠시 후 다시 시도해 주세요. (문제가 계속되면 관리자에게 문의)</div>'
+        +'<button class="cp-redo" onclick="startCleanPreview()">↻ 다시 시도</button>';
       if(btn) btn.disabled=false;
     }
   }catch(e){ /* 다음 tick 재시도 */ }
@@ -3303,6 +3307,8 @@ async function pollClean(gen,job){
 // ── 3단계 자막제거 ──────────────
 function refreshSub(){
   const cb=document.getElementById('subToggle'); if(cb) cb.checked=STATE.subtitleRemoval;
+  const dd=document.getElementById('subDesc');
+  if(dd) dd.textContent = STATE.subtitleRemoval ? '렌더 시 자동 적용돼요' : '끄면 원본 영상 그대로 사용해요';
   const s=document.getElementById('subState');
   if(s) s.textContent = MIX_JOB ? '' : '⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.';
   // T7: 못 쓰는 컨트롤은 비활성 노출 대신 숨긴다 — 자막제거 켜짐+매칭됨일 때만 미리보기가 등장.
@@ -3311,6 +3317,8 @@ function refreshSub(){
 }
 async function onSubToggle(){
   STATE.subtitleRemoval = document.getElementById('subToggle').checked;
+  const dd=document.getElementById('subDesc');
+  if(dd) dd.textContent = STATE.subtitleRemoval ? '렌더 시 자동 적용돼요' : '끄면 원본 영상 그대로 사용해요';
   // T7: disabled 노출 대신 숨김 — 자막제거 켜짐+매칭됨일 때만 미리보기 버튼이 나타난다.
   const cwrap=document.getElementById('cleanPreviewWrap');
   if(cwrap) cwrap.style.display = (STATE.subtitleRemoval && MIX_JOB) ? '' : 'none';
