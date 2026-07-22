@@ -184,6 +184,9 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
         store.save_last_run(items, collected_at)
         background_tasks.add_task(generate_missing_drafts, next_draft_targets(items, store))
         background_tasks.add_task(_tag_new_items, items)   # 신규 썸네일 비전 태깅(백그라운드)
+        # 수집→대본은행 자동 적재(2026-07-22): 밀도+속도 상위 표본을 부품으로 분해해 은행에
+        # 쌓는다(소스당 Gemini 1콜이라 백그라운드). 결과는 /api/bank/ingest_report로 화면에 보고.
+        background_tasks.add_task(_bank_ingest_collected_bg, DB_PATH, items, collected_at)
         _attach_vision_tags(items, store)                  # 이미 태깅된 것(재수집)은 즉시 실어 보냄
         return {"ok": True, "count": len(items), "items": items,
                 "collected_at": collected_at}
@@ -191,6 +194,20 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
         import re
         msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
         return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+
+
+@app.get("/api/bank/ingest_report")
+def api_bank_ingest_report():
+    """'지금 수집' 후 백그라운드 은행 적재의 최근 결과(수집 화면이 폴링해 보고).
+    아직 한 번도 안 돌았으면 status=none."""
+    import json as _json
+    raw = Store(DB_PATH).get_setting("bank_ingest_last", "")
+    if not raw:
+        return {"ok": True, "report": {"status": "none"}}
+    try:
+        return {"ok": True, "report": _json.loads(raw)}
+    except Exception:
+        return {"ok": True, "report": {"status": "none"}}
 
 
 def _apply_activity(records):
@@ -992,6 +1009,31 @@ def _ingest_pattern_bank(db_path, full_text, url, category):
         store.auto_approve_style_buckets()
     except Exception as e:  # noqa: BLE001 — 은행 적재 실패는 위키 저장엔 영향 없음
         print(f"pattern_bank ingest 실패: {e}")
+
+
+def _bank_ingest_collected_bg(db_path, items, collected_at):
+    """'지금 수집' 후 백그라운드: 랭킹 상위 표본을 부품은행에 자동 분해·적재하고
+    결과 리포트를 설정에 남긴다(수집 화면이 /api/bank/ingest_report로 읽어 보고).
+    소스당 Gemini 1콜이라 요청을 막지 않게 백그라운드로 돈다. 실패 무해."""
+    import json as _json
+    from datetime import datetime as _dt, timezone as _tz
+    try:
+        store = Store(db_path)
+    except Exception as e:  # noqa: BLE001
+        print(f"bank ingest(store) 실패: {e}")
+        return
+    day = (collected_at or "")[:10] or _dt.now(_tz.utc).strftime("%Y-%m-%d")
+    store.set_setting("bank_ingest_last", _json.dumps(
+        {"status": "running", "date": day, "collected_at": collected_at}, ensure_ascii=False))
+    try:
+        rep = pattern_bank.ingest_collected(store, items)
+        store.auto_approve_style_buckets()   # 스타일 부품 즉시 사용가능(위키 적재와 동일)
+        rep.update({"status": "done", "date": day, "collected_at": collected_at})
+        store.set_setting("bank_ingest_last", _json.dumps(rep, ensure_ascii=False))
+    except Exception as e:  # noqa: BLE001
+        print(f"bank ingest(collected) 실패: {e}")
+        store.set_setting("bank_ingest_last", _json.dumps(
+            {"status": "error", "date": day, "error": str(e)}, ensure_ascii=False))
 
 
 @app.post("/api/wiki/save")

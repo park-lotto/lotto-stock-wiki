@@ -170,7 +170,8 @@ def ingest_script(store, full_text, source="manual", url="",
                 continue
             store.add_pattern_item(bucket, text, slot_role="template", source_id=source_id)
             added += 1
-    return {"source_id": source_id, "added": added}
+    # buckets: 적재 요약(수집 자동적재의 by_bucket 보고용) — 기존 호출부는 source_id/added만 읽어 무해.
+    return {"source_id": source_id, "added": added, "buckets": buckets}
 
 
 def ingest_negative(store, text, bucket):
@@ -179,3 +180,83 @@ def ingest_negative(store, text, bucket):
     시드 예: cta '확인하셨어요', emotion '너무 좋아합니다'(요약체). 일반 목록
     (is_negative=0)에 안 뜨고, 생성 단계에서 '피해야 할 부품' 필터로 쓴다."""
     return store.add_pattern_item(bucket, text, is_negative=1)
+
+
+def _fingerprint(text):
+    """캡션/대본 지문 — 한글·영숫자만 남겨 소문자화 후 앞 160자 해시. 인스타 CDN url이
+    수집마다 바뀌어도(중복 재적재의 주범) 같은 내용을 같은 지문으로 잡는다. 빈 텍스트면 ''."""
+    import hashlib
+    import re
+    norm = re.sub(r"[^가-힣0-9a-zA-Z]", "", (text or "")).lower()[:160]
+    return hashlib.md5(norm.encode("utf-8")).hexdigest() if norm else ""
+
+
+def _kr_len(s):
+    import re
+    return len(re.findall(r"[가-힣]", s or ""))
+
+
+def ingest_collected(store, items, top_n=None, min_kr=None, ingest_fn=None,
+                     call=None, perf_fn=None):
+    """'지금 수집' 랭킹 아이템을 밀도+속도 종합점수 상위 N건만 부품은행에 자동 적재.
+
+    ★상위 = score(정규화 밀도+속도+가속 종합) 내림차순 상위 N건. 임계값이 아니라 순위 상위를
+      넓게 뽑는다(정규화 점수라 임계값이면 소수만 남아 '표본 많이'와 안 맞음, 2026-07-22 실측 9건).
+    ★중복 학습 필터 = 캡션 지문(_fingerprint). 이미 은행에 있는 대본·이번 배치 내 중복을 건너뛴다
+      → 매 수집마다 같은 우승작이 재적재되는 걸 막는다(CDN url 중복검사는 주소가 바뀌어 헛돎).
+    ★한국어 캡션 min_kr자+ 만(버킷 추출이 한국어 기반 — 짧거나 외국어는 노이즈).
+    각 소스는 pending으로 들어가 큐레이션에서 사람이 승인(category_source=None=R4 통계 오염 방지).
+
+    return: {considered, added_sources, added_items, skipped_dup, skipped_short, by_bucket}.
+    부가기능이라 개별 실패는 삼키고 계속한다."""
+    from shopping_shorts import config, perf_score
+    top_n = config.BANK_INGEST_TOP_N if top_n is None else top_n
+    min_kr = config.BANK_INGEST_MIN_KR if min_kr is None else min_kr
+    if ingest_fn is None:
+        ingest_fn = ingest_script
+    if perf_fn is None:
+        perf_fn = perf_score.perf_from_item
+
+    # 이미 은행에 있는 대본 지문(중복 학습 필터의 '학습' 부분).
+    seen = set()
+    try:
+        for s in store.list_pattern_sources(limit=100000):
+            fp = _fingerprint(s.get("full_text"))
+            if fp:
+                seen.add(fp)
+    except Exception as e:
+        print(f"ingest_collected(seen): {e!r}", file=sys.stderr)
+
+    # 한국어 캡션 있는 것만, score 내림차순.
+    cand = [it for it in (items or [])
+            if _kr_len(it.get("caption")) >= min_kr]
+    cand.sort(key=lambda it: (it.get("score") or 0), reverse=True)
+
+    report = {"considered": len(cand), "added_sources": 0, "added_items": 0,
+              "skipped_dup": 0, "skipped_short": max(0, len(items or []) - len(cand)),
+              "by_bucket": {}}
+    for it in cand:
+        if report["added_sources"] >= top_n:
+            break
+        caption = it.get("caption") or ""
+        fp = _fingerprint(caption)
+        if not fp or fp in seen:
+            report["skipped_dup"] += 1
+            continue
+        seen.add(fp)
+        try:
+            perf = perf_fn(it)
+            res = ingest_fn(store, caption, source="collect",
+                            url=it.get("url") or it.get("video_url") or "",
+                            product_category=it.get("category"),
+                            category_source=None, perf=perf, call=call)
+        except Exception as e:
+            print(f"ingest_collected(item): {e!r}", file=sys.stderr)
+            continue
+        if res and res.get("source_id"):
+            report["added_sources"] += 1
+            report["added_items"] += res.get("added", 0)
+            for bucket, texts in (res.get("buckets") or {}).items():
+                if texts:
+                    report["by_bucket"][bucket] = report["by_bucket"].get(bucket, 0) + len(texts)
+    return report
