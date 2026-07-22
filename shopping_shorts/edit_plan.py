@@ -920,6 +920,9 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             plan["beats"] = backbone.dedup_and_balance(plan["beats"], source_scripts)
             # 서브 의무삽입: 아예 안 쓰인 소스(s2=0)를 같은 행위로 강제 삽입(dedup으론 못 잡음)
             plan["beats"] = backbone.ensure_sources_used(plan["beats"], source_scripts)
+            # 전역 컷 반복 해소(alternates 포함) + 비트당 클립 상한 → 뚝뚝 끊김·B롤 반복 해소
+            # (dedup_and_balance는 primary만 봐서 B롤 체인이 비트마다 반복됐다, job 실측).
+            plan["beats"] = backbone.dedup_clips_global(plan["beats"], source_scripts)
         plan["detected_type"] = detected
         plan["affiliate_target"] = r.get("story_event", "") or ""
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)
