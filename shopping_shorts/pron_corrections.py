@@ -15,11 +15,15 @@ _KEY = "global_pron_dict"
 
 
 def load(store):
-    """전역 발음사전 {phrase: respelling}. 없거나 JSON 손상 시 {}(graceful)."""
-    raw = store.get_setting(_KEY, None)
-    if not raw:
-        return {}
+    """전역 발음사전 {phrase: respelling}. 없거나 JSON 손상 시 {}(graceful).
+
+    get_setting 호출까지 try로 감싼다 — 발음교정은 부가기능이라 store 조회가 어떤
+    이유로든(미구현 mock·DB 미초기화 등) 실패해도 {}로 폴백해 렌더를 죽이지 않는다
+    (overlay의 방어 원칙과 동일)."""
     try:
+        raw = store.get_setting(_KEY, None)
+        if not raw:
+            return {}
         d = json.loads(raw)
         return d if isinstance(d, dict) else {}
     except Exception:

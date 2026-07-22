@@ -763,12 +763,15 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
     tts_dir = work / "tts"
     tts_dir.mkdir(parents=True, exist_ok=True)
     out = tts_dir / f"beat_{beat_idx}.mp3"
+    # 이 mp3는 최종 렌더가 skip_existing으로 재사용하므로, 전역 발음교정을 여기서도
+    # 적용해야 재합성한 비트만 교정이 빠지는 일이 없다(Task2 리뷰 Important).
     try:
         synthesize_line(
             beat["narration"], out, voice=voice_override, beat_role=beat.get("role"),
             beat_index=i, beat_total=total,
             previous_text=plan["beats"][i - 1]["narration"] if i > 0 else None,
             next_text=plan["beats"][i + 1]["narration"] if i < total - 1 else None,
+            global_pron=pron_corrections.load(store),
         )
         beat["tts_path"] = str(out)
         beat["voice_override"] = voice_override
@@ -794,7 +797,8 @@ def resynth_tts_job(job_id, db_path, work_root):
     work = Path(work_root) / job_id
     store.update_mix_job(job_id, status="tts")
     try:
-        _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"))
+        _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"),
+                          global_pron=pron_corrections.load(store))
         store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
