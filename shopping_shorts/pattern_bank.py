@@ -101,13 +101,22 @@ def _vault_fallback(prompt, schema, max_tries=4):
     return None
 
 
-def _default_call(prompt, schema, max_key_tries=3):
-    """comment_gen 전용 키풀 로테이션으로 JSON 생성(structure_analyze 방식).
-    전용 풀이 비었으면 key_vault 예비풀로 폴백. 무키/실패면 None."""
+def _default_call(prompt, schema, max_key_tries=None):
+    """comment_gen 전용 키풀 라운드로빈으로 JSON 생성(structure_analyze 방식).
+    전용 풀이 비었으면 key_vault 예비풀로 폴백. 무키/실패면 None.
+
+    ★2026-07-23 수정 — 호출마다 _next_live_key_and_idx로 다음 키를 쓴다(부하 분산).
+    분당 429(PerMinute)는 일시적이라 그 키를 영구 제외하지 않고 다음 키로 재시도한다
+    (예전엔 즉시 None → 45키 있어도 1키만 몰려 성공률 7%였다). 일일 소진·계정 비활성만
+    영구 제외(_mark_key_exhausted)."""
     if not comment_gen.SHORTS_GEMINI_KEYS:
         return _vault_fallback(prompt, schema)
+    # 라이브 키 수만큼(최소 3, 상한 12) 다른 키로 시도 — 분당 한도에 걸린 키를 건너뛴다.
+    if max_key_tries is None:
+        live_n = len(comment_gen._live_key_indices())
+        max_key_tries = max(3, min(live_n, 12))
     for _ in range(max_key_tries):
-        key, ki = comment_gen._current_key_and_idx()
+        key, ki = comment_gen._next_live_key_and_idx()
         if key is None:
             return None
         try:
@@ -120,7 +129,9 @@ def _default_call(prompt, schema, max_key_tries=3):
         except Exception as e:  # noqa: BLE001 — 추출 실패는 치명적 아님(빈 dict로 처리)
             if (comment_gen.key_vault.is_daily_exhausted_error(e)
                     or comment_gen.key_vault.is_account_disabled_error(e)):
-                comment_gen._mark_key_exhausted(ki)
+                comment_gen._mark_key_exhausted(ki)   # 일일 소진·계정 비활성 → 그날 제외
+                continue
+            if comment_gen.key_vault.is_quota_error(e):  # 분당 429 등 일시적 → 다른 키로 재시도(제외 안 함)
                 continue
             print(f"pattern_bank._default_call: {e!r}", file=sys.stderr)
             return None
