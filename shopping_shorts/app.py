@@ -3516,7 +3516,9 @@ setTimeout(function(){document.querySelectorAll('.hero [data-to]').forEach(cu);}
 </body></html>"""
 
 
-# ── 로그인 페이지 — 민트×블랙(구조는 기존 유지: 구글버튼+운영자 접이식). ──
+# ── 로그인 페이지 — "프로그램 런처" 연출(2026-07-23 사장님): 부팅 시퀀스(게이지+상태)
+#    후 로그인 박스가 떠오른다. JS 꺼짐/reduced-motion이면 부팅 생략·전부 즉시 표시.
+#    구조는 기존 유지: 구글버튼+운영자 접이식(__ERR__·/api/login 폼 그대로).
 _LOGIN_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png"><title>__NAME__ 로그인</title>
@@ -3525,25 +3527,38 @@ _LOGIN_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel=stylesheet>
 <style>*{box-sizing:border-box}
 body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;word-break:keep-all;
-background:radial-gradient(900px 500px at 80% -10%,rgba(111,240,214,.10),transparent 60%),#0b0f14;
+background:radial-gradient(1000px 560px at 50% -18%,rgba(111,240,214,.11),transparent 62%),
+radial-gradient(700px 420px at 88% 108%,rgba(255,207,111,.05),transparent 55%),#090d10;
 font-family:'Noto Sans KR',system-ui,sans-serif;color:#e8f0ee}
-.box{width:340px;padding:36px 30px;text-align:center}
-.logo{display:flex;align-items:center;justify-content:center;gap:13px;margin-bottom:10px}
-.logo .sym{width:50px;height:50px;flex:none}
-.logo .wm{display:flex;flex-direction:column;line-height:1;text-align:left}
-.logo .nm{font-family:'Black Han Sans',sans-serif;font-size:33px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);-webkit-background-clip:text;background-clip:text;color:transparent}
-.logo .en{font-family:ui-monospace,monospace;font-size:11px;letter-spacing:3.2px;color:#7a9090;margin-top:3px}
-h1{font-size:22px;margin:26px 0 8px;font-weight:700}
-.sub{color:#6ff0d6;font-size:13px;margin-bottom:26px;line-height:1.6}
+.box{width:384px;max-width:calc(100vw - 32px);padding:44px 34px 28px;text-align:center;
+background:linear-gradient(180deg,#101a1c,#0c1214);border:1px solid #1e2b2c;border-radius:24px;
+box-shadow:0 34px 90px rgba(0,0,0,.6),0 0 0 1px rgba(111,240,214,.05) inset}
+.logo{display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:6px}
+.logo .sym{width:78px;height:78px;flex:none;filter:drop-shadow(0 0 16px rgba(111,240,214,.30))}
+@media (prefers-reduced-motion:no-preference){.logo .sym{animation:lpulse 3.2s ease-in-out infinite}}
+@keyframes lpulse{50%{filter:drop-shadow(0 0 30px rgba(111,240,214,.55))}}
+.logo .wm{display:flex;flex-direction:column;line-height:1;align-items:center}
+.logo .nm{font-family:'Black Han Sans',sans-serif;font-size:31px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo .en{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:3.4px;color:#7a9090;margin-top:5px}
+.ver{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:2px;color:#3f5a54;margin-top:10px}
+.boot{max-height:60px;margin:20px 0 4px;transition:opacity .4s ease,max-height .45s ease .15s,margin .45s ease .15s;overflow:hidden}
+.boot.done{opacity:0;max-height:0;margin:0}
+.bar{height:4px;background:#0a1210;border:1px solid #1c2a28;border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#6ff0d6,#1f9e7a);border-radius:99px;transition:width .34s ease}
+.bstat{font-family:ui-monospace,monospace;font-size:11px;color:#527068;margin-top:9px;letter-spacing:.6px;min-height:13px}
+.auth{transition:opacity .5s ease,transform .5s ease}
+body.booting .auth{opacity:0;transform:translateY(12px);pointer-events:none}
+h1{font-size:19px;margin:18px 0 6px;font-weight:700}
+.sub{color:#6ff0d6;font-size:13px;margin-bottom:22px;line-height:1.6}
 .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;
-background:#111722;border:1px solid #1e2735;border-radius:10px;color:#e8f0ee;font-size:15px;
-font-weight:700;cursor:pointer;text-decoration:none}
-.gbtn:hover{background:#16202e;border-color:#2a3647}
+background:#111722;border:1px solid #1e2735;border-radius:12px;color:#e8f0ee;font-size:15px;
+font-weight:700;cursor:pointer;text-decoration:none;transition:background .15s,border-color .15s}
+.gbtn:hover{background:#16202e;border-color:#2f6a5c}
 .gbtn svg{width:18px;height:18px}
 .err{color:#e0623d;font-size:12px;margin-top:16px;min-height:14px;line-height:1.6}
-.home{display:block;color:#5f7373;font-size:12px;margin-top:22px;text-decoration:none}
+.home{display:block;color:#5f7373;font-size:12px;margin-top:20px;text-decoration:none}
 .home:hover{color:#6ff0d6}
-.atoggle{color:#3f5050;font-size:11px;margin-top:30px;cursor:pointer;background:none;border:0}
+.atoggle{color:#3f5050;font-size:11px;margin-top:26px;cursor:pointer;background:none;border:0}
 .aform{display:none;margin-top:14px}.aform.show{display:block}
 .aform input{width:100%;margin:5px 0;padding:10px;background:#0a0f16;border:1px solid #1e2735;
 border-radius:8px;color:#eee;font-size:13px}
@@ -3551,6 +3566,9 @@ border-radius:8px;color:#eee;font-size:13px}
 border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}</style></head>
 <body><div class=box>
 <div class=logo>__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></div>
+<div class=ver>__NAME_EN__ STUDIO</div>
+<div class=boot id=boot><div class=bar><i id=bbar></i></div><div class=bstat id=bstat></div></div>
+<div class=auth>
 <h1>로그인</h1>
 <div class=sub>구글 계정으로 로그인하세요<br>처음이면 <b>무료 체험</b>이 바로 시작돼요</div>
 <a class=gbtn href="/auth/google/login">
@@ -3563,7 +3581,18 @@ Google 계정으로 로그인</a>
 <input name=user placeholder=아이디 autocomplete=username>
 <input name=pass type=password placeholder=비밀번호 autocomplete=current-password>
 <button>운영자 로그인</button></form>
-</div></body></html>"""
+</div>
+</div>
+<script>(function(){
+if(matchMedia('(prefers-reduced-motion:reduce)').matches){document.getElementById('boot').classList.add('done');return;}
+var b=document.body;b.classList.add('booting');
+var bar=document.getElementById('bbar'),st=document.getElementById('bstat');
+var steps=[[14,'리소스 확인 중...'],[46,'서버 연결 중...'],[78,'세션 확인 중...'],[100,'준비 완료']],i=0;
+function nx(){if(i>=steps.length){b.classList.remove('booting');document.getElementById('boot').classList.add('done');return;}
+bar.style.width=steps[i][0]+'%';st.textContent=steps[i][1];i++;setTimeout(nx,i===steps.length?430:320);}
+setTimeout(nx,140);
+})();</script>
+</body></html>"""
 
 # ── 요금·이용권(상품 상세) — 공개 페이지. 구성·가격은 플레이스홀더(확정 시 값만 교체). ──
 _PRICING_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
