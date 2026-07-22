@@ -600,9 +600,39 @@ async function doCollect(){
     STATE.items = d.items; st.textContent=`✅ ${d.count}건 수집 (${fmtTime(d.collected_at)})`;
     render();
     if(PLATFORM==='tiktok') loadTtSettings();   // 하루 남은 횟수·지출 갱신
-    else _pollVisionTags(5);                    // 백그라운드 태깅이 채워지는 대로 병합(검색 정확도 승격)
+    else { _pollVisionTags(5); _pollBankIngest(8); }   // 태깅 병합 + 대본은행 자동적재 보고
   }catch(e){ st.textContent="❌ "+e.message; }
   finally{ btn.disabled=false; }
+}
+// 수집 직후 백그라운드로 도는 대본은행 자동적재의 결과를 폴링해 화면에 보고한다.
+// running이면 "분석 중…", done이면 신규/중복 요약. #status 아래 전용 줄에 그린다.
+function _bankIngestEl(){
+  let el=document.getElementById('bankIngest');
+  if(!el){ el=document.createElement('div'); el.id='bankIngest';
+    el.style.cssText='margin-top:6px;font-size:12px;color:var(--sub)';
+    const st=document.getElementById('status'); if(st&&st.parentNode) st.parentNode.insertBefore(el, st.nextSibling); }
+  return el;
+}
+function _fmtBuckets(by){
+  const NM={hook:'훅',ending:'어미',adverb:'부사',cta:'CTA',evidence:'근거',conflict:'갈등',emotion:'감정',price:'가격'};
+  return Object.entries(by||{}).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${NM[k]||k}+${v}`).join('·');
+}
+async function _pollBankIngest(times){
+  if(PLATFORM!=='instagram' || times<=0) return;
+  const el=_bankIngestEl();
+  try{
+    const d=await (await fetch('/api/bank/ingest_report')).json();
+    const rep=(d&&d.report)||{};
+    if(rep.status==='done'){
+      const bk=_fmtBuckets(rep.by_bucket);
+      el.textContent=`🏦 대본은행 자동적재: 신규 ${rep.added_sources||0}건`
+        +(rep.added_items?` (부품 ${rep.added_items}개${bk?' · '+bk:''})`:'')
+        +(rep.skipped_dup?` · 중복 ${rep.skipped_dup}건 건너뜀`:'');
+      return;   // 끝 — 더 폴링 안 함
+    }
+    el.textContent='🏦 대본은행 자동 분석 중… (백그라운드, 잠시 후 결과)';
+  }catch(e){}
+  setTimeout(()=>_pollBankIngest(times-1), 6000);   // 6초 간격 재폴링
 }
 // 수집 후 백그라운드 비전 태깅이 완료되는 대로 /api/reference를 몇 번 다시 읽어
 // STATE.items에 vision_subject·vision_keywords를 병합한다 → 검색이 자동으로 더 정확해진다.
