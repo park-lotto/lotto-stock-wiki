@@ -145,7 +145,13 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
 
     platform == "tiktok"이면 키워드검색이 Apify 유료라 남용/비용 가드를 건다:
     ① 월예산 킬스위치(초과 시 429 budget_exceeded) ② 사용자별 하루 상한
-    (초과 시 429 daily_limit). 통과 후 수집하면 하루카운트 +1, 추정비용 누적."""
+    (초과 시 429 daily_limit). 통과 후 수집하면 하루카운트 +1, 추정비용 누적.
+
+    ★관리자(사장님 cid0) 전용(2026-07-22) — 수집=크롤 비용이 드는 운영 액션이라
+    구독자(pro 포함)에겐 화면·API 모두 막는다. 화면 숨김만으론 pro가 직접 호출 가능."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
     if platform == "tiktok":
         guard = Store(DB_PATH)
         knobs = _tiktok_knobs(guard)
@@ -195,11 +201,16 @@ def _apply_activity(records):
 
 
 @app.post("/api/census")
-def api_census(background_tasks: BackgroundTasks):
+def api_census(request: Request, background_tasks: BackgroundTasks):
     """🔬 전수 센서스(비동기, 2026-07-22) — 전 채널(팔로워/사망 필터 없음)을 긁어 활동성
     판정. census가 수분 걸려 동기 응답은 모바일에서 Failed to fetch가 났다(서버는 완료해도
     화면만 실패). 그래서 잡을 접수하고 job_id만 즉시 돌려준 뒤 실제 작업은 background에서
-    돌린다. 프론트는 /api/census/status/{job_id}를 폴링해 진행/결과를 받는다."""
+    돌린다. 프론트는 /api/census/status/{job_id}를 폴링해 진행/결과를 받는다.
+
+    ★관리자(사장님 cid0) 전용(2026-07-22) — 전 채널 크롤=고비용 운영 액션."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
     job_id = uuid.uuid4().hex[:12]
     Store(DB_PATH).create_census_job(job_id)
     background_tasks.add_task(_run_census_job, job_id)
@@ -636,11 +647,16 @@ def api_discover_added():
 
 
 @app.post("/api/reference/register")
-def api_reference_register(url: str):
+def api_reference_register(request: Request, url: str):
     """레퍼런스 채널을 URL 붙여넣기로 직접 등록(2026-07-18). 인스타 채널/릴스
     URL에서 username을 뽑아 discovered_channels에 소프트 추가 — 엑셀 원본은
     안 건드리고 다음 수집부터 랭킹에 포함(비용 0, 프로필 조회 안 함).
-    이미 엑셀·발굴목록에 있으면 already=True로 알려주고 중복 추가하지 않는다."""
+    이미 엑셀·발굴목록에 있으면 already=True로 알려주고 중복 추가하지 않는다.
+
+    ★관리자(사장님 cid0) 전용(2026-07-22) — 랭킹 대상(레퍼런스 목록) 편집은 운영 액션."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
     username = username_from_url(url)
     if not username:
         low = (url or "").lower()
