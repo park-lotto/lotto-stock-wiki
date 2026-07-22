@@ -44,3 +44,28 @@ def test_access_level_legacy_pending_customer_stays_pending(tmp_path, monkeypatc
     with s._conn() as c:
         c.execute("UPDATE customers SET trial_ends_at=NULL WHERE id=?", (cid,))
     assert app.access_level(cid, now=int(time.time())) == "pending"
+
+
+def test_trial_render_capped_at_one(tmp_path, monkeypatch):
+    import shopping_shorts.app as app
+    monkeypatch.setattr(app, "DB_PATH", str(tmp_path / "t.db"))
+    s = Store(str(tmp_path / "t.db"))
+    cid = s.create_customer("evt", "pw12", approved=False)  # 체험중
+    assert app._is_trial(cid) is True
+    assert app.check_and_count(cid, "render") is True    # 1회차 허용
+    assert app.check_and_count(cid, "render") is False   # 2회차 차단
+    # 렌즈는 체험 상한 안 걸림(일일 한도만) — 여러 번 True
+    assert app.check_and_count(cid, "lens") is True
+    assert app.check_and_count(cid, "lens") is True
+
+
+def test_nontrial_render_uses_daily_limit(tmp_path, monkeypatch):
+    import shopping_shorts.app as app
+    monkeypatch.setattr(app, "DB_PATH", str(tmp_path / "t.db"))
+    s = Store(str(tmp_path / "t.db"))
+    cid = s.create_customer("appr", "pw12")   # 승인+체험중(full, 미이벤트)
+    assert app._is_trial(cid) is False
+    # 일일 render 기본 상한 2 → 2회 True, 3회째 False
+    assert app.check_and_count(cid, "render") is True
+    assert app.check_and_count(cid, "render") is True
+    assert app.check_and_count(cid, "render") is False
