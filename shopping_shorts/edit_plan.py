@@ -840,22 +840,32 @@ def _backbone_base_candidates(source_scripts, target_seconds, call,
         return []
     flow = backbone.backbone_flow(bb_src)
     inventory = backbone.scene_inventory(source_scripts)
-    bb_beats = backbone.generate_backbone_script(
-        flow, inventory, target_seconds, call=call,
-        style_block=_backbone_style_block(bank_context))
-    if not bb_beats:
-        return []
-    # 백본-베이스는 생성 단계에서 이미 실제 장면(seg_id)에 맞춰 썼으므로 forced=false, fit 높게.
-    # hook은 빈값 — beats[0] 자체가 흐름의 오프너다(_lead_with_hook가 빈 훅이면 무변화).
-    beats = [{"seg_ids": [b["seg_id"]], "narration": b["narration"], "role": "", "fit": 5}
-             for b in bb_beats]
-    return [{"hook": "", "beats": beats}]
+    style = _backbone_style_block(bank_context)
+    # 백본 순서(뼈대)는 고정하고, 그 위에 쓰는 대본을 N개 뽑는다 → 심사위원이 최고를 고른다
+    # (조각 1개만 뽑던 걸 best-of-N + 품질심사로 올림). 같은 대본 중복은 버린다.
+    from shopping_shorts import config
+    n = getattr(config, "BACKBONE_DRAFTS_N", 3)
+    raws, seen = [], set()
+    for _ in range(max(1, n)):
+        bb_beats = backbone.generate_backbone_script(
+            flow, inventory, target_seconds, call=call, style_block=style)
+        if not bb_beats:
+            continue
+        key = tuple((b.get("narration") or "").strip() for b in bb_beats)
+        if key in seen:
+            continue
+        seen.add(key)
+        beats = [{"seg_ids": [b["seg_id"]], "narration": b["narration"], "role": "", "fit": 5}
+                 for b in bb_beats]
+        # _backbone_video: 이 후보의 백본(순서 고정용). 호출부가 이걸로 order_by_backbone 한다.
+        raws.append({"hook": "", "beats": beats, "_backbone_video": bb})
+    return raws
 
 
 def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                            n_candidates=3, video_type=None, call=None, ping_pong=False,
                            backbone_meta=None, backbone_forced=None, bank_context="",
-                           avoid_hooks=None, backbone_base=False):
+                           avoid_hooks=None, backbone_base=False, judge=False):
     """장면 우선 대본 모드: 팔레트+헌장으로 후보 n개 생성 → 각 EDL grounding·채점 →
     최고 score에 recommended=True. 각 candidate.plan은 build_edit_plan 반환형(하류 렌더 호환).
     후보 0개면 candidates=[](호출부가 기존 build_edit_plan로 폴백).
@@ -893,7 +903,9 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 plan["beats"], source_scripts,
                 rewrite_call=lambda bs: _bb_rewrite(bs, _call),
                 trim_call=lambda bs: _bb_trim(bs, _call))
-            bb = backbone.pick_backbone(source_scripts, meta=backbone_meta, forced=backbone_forced)
+            # 이 후보의 백본(순서 뼈대) — 백본-베이스면 후보 자신의 것, 아니면 전역 선정.
+            bb = r.get("_backbone_video") or backbone.pick_backbone(
+                source_scripts, meta=backbone_meta, forced=backbone_forced)
             if bb:
                 plan["beats"] = backbone.order_by_backbone(plan["beats"], bb)
             # 반복장면·한소스 편중 해소: 쓴 클립 재사용 금지 + 덜 쓴 소스 우선 교체
@@ -905,8 +917,17 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)
         story = {k: r.get(k, "") for k in
                  ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
-        cands.append({"plan": plan, "story": story,
-                      "score": _score_candidate(plan, avoid_hooks=avoid_hooks), "recommended": False})
+        rule_score = _score_candidate(plan, avoid_hooks=avoid_hooks)
+        cand = {"plan": plan, "story": story, "score": rule_score, "recommended": False}
+        # ★심사위원(사장님 기준: 대본품질·장면싱크·스토리라인) — judge on일 때만(Gemini 콜).
+        # 규칙점수(빠른 계산)와 반반 섞어 최종 순위. 심사 실패는 규칙점수만으로 폴백(무해).
+        if judge:
+            from shopping_shorts import candidate_judge
+            jr = candidate_judge.judge(plan.get("beats"), call=_call)
+            if jr:
+                cand["judge"] = jr
+                cand["score"] = round(0.5 * rule_score + 0.5 * jr["total"], 3)
+        cands.append(cand)
     if cands:
         best = max(range(len(cands)), key=lambda i: cands[i]["score"])
         cands[best]["recommended"] = True

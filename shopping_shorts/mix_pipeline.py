@@ -428,7 +428,10 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                                     video_type=video_type, ping_pong=ping_pong,
                                     backbone_meta=backbone_meta, backbone_forced=backbone_forced,
                                     bank_context=bank_context, avoid_hooks=avoid_hooks,
-                                    backbone_base=backbone_base)
+                                    backbone_base=backbone_base,
+                                    # 심사위원(대본품질·장면싱크·스토리라인)으로 best-of-N 선택 —
+                                    # 백본-베이스(스마트믹스)일 때만. 여러 안 중 제일 좋은 대본 채택.
+                                    judge=backbone_base)
         if sf["candidates"]:
             store.set_mix_candidates(job_id, sf["candidates"])
             rec = next((cand for cand in sf["candidates"] if cand["recommended"]),
