@@ -1531,7 +1531,8 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
     # render_charge_day: '오늘 render를 과금했다'는 표식(+환불할 날짜). run_mix_job이 실패하면 딱
     # 이 날짜로 환불한다. 과금 안 하는 다른 create_mix_job 경로는 이 값을 비워 오환불을 막는다(리뷰 B).
     Store(DB_PATH).create_mix_job(job_id, urls, target, structure, subtitle_removal=subtitle_removal,
-                                  customer_id=cid, render_charge_day=_today_utc(),
+                                  customer_id=cid,
+                                  render_charge_day=("trial" if _is_trial(cid) else _today_utc()),
                                   scene_first=scene_first)
     background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True, "job_id": job_id}
@@ -4511,7 +4512,8 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     Store(DB_PATH).create_mix_job(job_id, urls, target, "free",
                                   subtitle_removal=subtitle_removal, given_script=script,
                                   script_structure=script_structure, scene_first=scene_first,
-                                  customer_id=cid, render_charge_day=_today_utc())
+                                  customer_id=cid,
+                                  render_charge_day=("trial" if _is_trial(cid) else _today_utc()))
     background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True, "job_id": job_id}
 

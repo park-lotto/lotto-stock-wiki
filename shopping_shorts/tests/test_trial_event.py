@@ -69,3 +69,20 @@ def test_nontrial_render_uses_daily_limit(tmp_path, monkeypatch):
     assert app.check_and_count(cid, "render") is True
     assert app.check_and_count(cid, "render") is True
     assert app.check_and_count(cid, "render") is False
+
+
+def test_trial_render_refund_restores_one_shot(tmp_path, monkeypatch):
+    import shopping_shorts.app as app
+    from shopping_shorts import mix_pipeline
+    monkeypatch.setattr(app, "DB_PATH", str(tmp_path / "t.db"))
+    dbp = str(tmp_path / "t.db")
+    s = Store(dbp)
+    cid = s.create_customer("evt", "pw12", approved=False)
+    # 체험 렌더 1회 소진
+    assert app.check_and_count(cid, "render") is True
+    assert s.usage_get(cid, "render", "trial") == 1
+    # 실패 환불 시뮬: render_charge_day="trial" job의 환불 규칙 적용
+    mix_pipeline._refund_render_charge(s, cid, "trial")
+    assert s.usage_get(cid, "render", "trial") == 0        # 재도전 가능
+    # 이제 다시 1회 허용
+    assert app.check_and_count(cid, "render") is True
