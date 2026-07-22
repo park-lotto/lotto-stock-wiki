@@ -283,6 +283,8 @@
         <input type="checkbox" id="noVoice" onchange="onNoVoice()"> <b>자막/음성 없이 진행</b>
         <span class="hint">켜면 TTS·자막 없이 영상만 내보냅니다</span>
       </label>
+      <details style="margin:8px 0">
+        <summary style="cursor:pointer;font-weight:600">🎙 보이스 선택 (평소엔 접어둠 · 눌러서 펼치기)</summary>
       <div id="voiceUI">
         <div id="presetCards">불러오는 중…</div>
         <div id="voiceControls" style="display:none;margin-top:12px">
@@ -311,6 +313,7 @@
           <div id="voicePreview" style="margin-top:8px"></div>
         </div>
       </div>
+      </details>
       <div id="ttsBeats" style="margin-top:14px"></div>
       <button class="btn-next" style="margin-top:12px;padding:8px 16px" onclick="vpGateNext()">다음 단계 (꾸미기) →</button>
     </section>

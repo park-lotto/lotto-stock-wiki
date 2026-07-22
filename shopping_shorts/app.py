@@ -47,7 +47,9 @@ from shopping_shorts import youtube_search
 from shopping_shorts.config import APIFY_TOKENS
 from shopping_shorts.media_download import resolve_media_url, download_any, probe_grab_meta
 from shopping_shorts import edit_plan as _edit_plan
+from shopping_shorts import edit_plan
 from shopping_shorts import voice_presets, audio_post
+from shopping_shorts import pron_corrections
 from shopping_shorts.tts import synthesize_tts
 from shopping_shorts import tts, asr_check
 from shopping_shorts import export_bundle
@@ -2089,8 +2091,11 @@ _TUNE_CACHE = Path(__file__).parent / "data" / "voice_tune_cache"
 
 
 @app.get("/api/voice-tune/corpus")
-def api_voice_tune_corpus():
+def api_voice_tune_corpus(request: Request):
     """튜닝 작업대 회귀 코퍼스(고정 10줄) — role별 카드로 렌더링."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
     import json as _json
     lines = _json.loads(_TUNE_CORPUS.read_text(encoding="utf-8")) if _TUNE_CORPUS.exists() else []
     return {"lines": lines}
@@ -2099,6 +2104,9 @@ def api_voice_tune_corpus():
 @app.post("/api/voice-tune/preview")
 async def api_voice_tune_preview(req: Request):
     """합성 없이 naturalize만 실행해 변환텍스트를 실시간 미리보기."""
+    denied = _require_admin(req)
+    if denied:
+        return denied
     body = await req.json()
     text = body.get("text", "")
     profile = body.get("profile") or {}
@@ -2115,6 +2123,9 @@ async def api_voice_tune_synth(req: Request):
     일부만 보내던 탓에 작업대는 기본성우(Rachel)·1.0배속·후처리없음으로 합성돼 사장님이
     "튜닝해서 승인한 소리"와 영상 소리가 딴판이었다(2026-07-15 리뷰 S3/S5/S6/S8).
     캐시 키에 nonce를 포함해 '재롤'이 실제로 새 take를 뽑게 한다(S9)."""
+    denied = _require_admin(req)
+    if denied:
+        return denied
     body = await req.json()
     profile = body.get("profile") or {}
     preset_id = body.get("preset_id", "adhoc")
@@ -2147,7 +2158,11 @@ async def api_voice_tune_synth(req: Request):
 
 
 @app.get("/api/voice-tune/audio/{fname}")
-def api_voice_tune_audio(fname: str):
+def api_voice_tune_audio(request: Request, fname: str):
+    # 작업대는 전부 관리자 전용 — 캐시 오디오도 같은 게이트로 일관성 유지(Task5 리뷰 Minor).
+    denied = _require_admin(request)
+    if denied:
+        return denied
     f = _TUNE_CACHE / fname
     if not f.exists():
         return JSONResponse({"error": "not found"}, status_code=404)
@@ -2155,7 +2170,10 @@ def api_voice_tune_audio(fname: str):
 
 
 @app.get("/api/voice-tune/profile/{preset_id}")
-def api_voice_tune_profile_get(preset_id: str):
+def api_voice_tune_profile_get(preset_id: str, request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
     p = Store(DB_PATH).get_voice_preset(preset_id)
     return {"profile": (p or {}).get("naturalize_profile") if p else None}
 
@@ -2163,6 +2181,9 @@ def api_voice_tune_profile_get(preset_id: str):
 @app.post("/api/voice-tune/profile/{preset_id}")
 async def api_voice_tune_profile_save(preset_id: str, req: Request):
     """튜닝 작업대에서 완성한 프로파일을 프리셋에 동결 저장. 없는 preset_id면 작업대 임시 프리셋 생성."""
+    denied = _require_admin(req)
+    if denied:
+        return denied
     body = await req.json()
     store = Store(DB_PATH)
     p = store.get_voice_preset(preset_id)
@@ -2176,6 +2197,80 @@ async def api_voice_tune_profile_save(preset_id: str, req: Request):
     p["naturalize_profile"] = prof
     store.upsert_voice_preset(p)
     return {"ok": True}
+
+
+@app.get("/api/pron/global")
+def api_pron_global_list(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    d = pron_corrections.load(Store(DB_PATH))
+    return {"entries": [{"phrase": k, "respelling": v} for k, v in d.items()]}
+
+
+@app.post("/api/pron/global")
+async def api_pron_global_save(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    phrase = (body.get("phrase") or "").strip()
+    respelling = (body.get("respelling") or "").strip()
+    if not phrase or not respelling or phrase == respelling:
+        return JSONResponse({"error": "구절/재표기가 비었거나 동일합니다"}, status_code=400)
+    store = Store(DB_PATH)
+    d = pron_corrections.load(store)
+    d[phrase] = respelling
+    pron_corrections.save(store, d)
+    return {"ok": True}
+
+
+@app.delete("/api/pron/global/{phrase}")
+def api_pron_global_delete(request: Request, phrase: str):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    d = pron_corrections.load(store)
+    d.pop(phrase, None)
+    pron_corrections.save(store, d)
+    return {"ok": True}
+
+
+_PRON_SUGGEST_SCHEMA = {
+    "type": "object",
+    "properties": {"suggestions": {"type": "array", "items": {
+        "type": "object",
+        "properties": {"phrase": {"type": "string"}, "respelling": {"type": "string"},
+                       "reason": {"type": "string"}},
+        "required": ["phrase", "respelling"]}}},
+    "required": ["suggestions"],
+}
+
+
+@app.post("/api/pron/suggest")
+async def api_pron_suggest(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    text = (body.get("text") or "").strip()
+    if not text:
+        return {"suggestions": []}
+    prompt = (
+        "다음 한국어 나레이션에서 TTS가 이어발음(연음)·발음을 어색하게 읽을 만한 구절을 찾아라. "
+        "각 구절마다 성우가 자연스럽게 읽도록 소리 나는 대로 다시 쓴 '재표기'를 제시하라. "
+        "예: '좋은데요'→'조은데요', '같이'→'가치'. 원문에 실제로 있는 구절만. 없으면 빈 배열.\n"
+        f"나레이션: {text}\n출력은 스키마 JSON만."
+    )
+    result = edit_plan._vault_call(prompt, _PRON_SUGGEST_SCHEMA)
+    if not result or not isinstance(result.get("suggestions"), list):
+        return {"suggestions": []}
+    # 원문에 실제로 있는 구절만 통과(환각 제거) + no-op 제거.
+    out = [s for s in result["suggestions"]
+           if s.get("phrase") and s.get("respelling")
+           and s["phrase"] in text and s["phrase"] != s["respelling"]]
+    return {"suggestions": out}
 
 
 def _voice_snapshot(store, body):
@@ -5832,6 +5927,20 @@ for _pg in ("discover", "find", "library", "mix", "outreach", "produce", "collec
                                     headers=_NOCACHE)),
         include_in_schema=False,
     )
+
+# 작업대(발음교정 튜닝 워크벤치)는 관리자(customer_id==0) 전용 — 위 클린 URL 루프와
+# 달리 명시 게이트가 필요해 별도 처리한다. "/voice_tune"과 "/voice_tune.html" 둘 다
+# 명시 라우트로 등록해 아래 StaticFiles 마운트(확장자 그대로 서빙)보다 먼저 매칭시킨다
+# — 안 그러면 /voice_tune.html 직접 접근이 게이트 없이 뚫린다(2026-07-22).
+def _voice_tune_page(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return FileResponse(_STATIC / "voice_tune.html", media_type="text/html", headers=_NOCACHE)
+
+
+app.add_api_route("/voice_tune", _voice_tune_page, include_in_schema=False)
+app.add_api_route("/voice_tune.html", _voice_tune_page, include_in_schema=False)
 
 # ★C-1(2026-07-16 라이브 실증): 위 _NOCACHE는 /produce 등 "클린 URL" 라우트에만 붙는다.
 # /sidebar.js 같은 정적 JS/CSS/HTML은 아래 StaticFiles 마운트가 헤더 없이 그대로 서빙해서

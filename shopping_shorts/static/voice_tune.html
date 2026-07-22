@@ -16,6 +16,24 @@
  button{cursor:pointer}
 </style></head><body>
 <div id="left">
+  <div class="card" id="pron-lab" style="border-color:#0a7">
+    <b>🩺 발음교정 작업대</b> (전역 — 모든 보이스·영상 적용)
+    <textarea id="pl_text" rows="2" style="width:100%;margin:6px 0" placeholder="어색하게 읽히는 문장을 붙여넣으세요"></textarea>
+    <div class="row">
+      <button onclick="plSynth('orig')">▶ 원본 합성</button>
+      <button onclick="plSuggest()">🤖 AI 교정 제안</button>
+    </div>
+    <div id="pl_suggest" style="font-size:13px;margin:4px 0"></div>
+    <div class="row">구절 <input id="pl_phrase" style="flex:1"> → 재표기 <input id="pl_respell" style="flex:1"></div>
+    <div class="row">
+      <button onclick="plSynth('fixed')">▶ 교정 합성(A/B)</button>
+      <button onclick="plSave()">💾 전역 사전에 저장</button>
+    </div>
+    <audio id="pl_au_orig" controls style="height:32px;width:100%"></audio>
+    <audio id="pl_au_fixed" controls style="height:32px;width:100%"></audio>
+    <div id="pl_list" style="font-size:12px;margin-top:6px"></div>
+    <p id="pl_msg" style="color:#0a7;margin:4px 0"></p>
+  </div>
   <div class="row"><select id="preset"></select>
     <button onclick="synthAll()">전체 재합성</button></div>
   <div id="cards"></div>
@@ -151,6 +169,54 @@ async function loadPreset(){
  if(profile.seed)seed.value=profile.seed; if(profile.n_best)nbest.value=profile.n_best;
  renderStages();previewAll();
 }
+function plApplyFix(t){const p=pl_phrase.value.trim(),r=pl_respell.value.trim();
+  return (p&&r)?t.split(p).join(r):t;}
+let plSuggestions=[];
+let plEntries=[];
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+async function plSynth(which){
+  const raw=pl_text.value.trim(); if(!raw)return;
+  const text=which==='fixed'?plApplyFix(raw):raw;
+  const r=await fetch('/api/voice-tune/synth',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({text,profile:withMeta(),preset_id:preset.value,line_id:'pl-'+which,nonce:Date.now()})});
+  if(!r.ok){pl_msg.textContent='합성 실패';return;}
+  const j=await r.json();
+  document.getElementById('pl_au_'+which).src=j.audio_url+'?t='+Date.now();
+}
+async function plSuggest(){
+  const raw=pl_text.value.trim(); if(!raw)return;
+  pl_suggest.textContent='분석 중…';
+  const r=await fetch('/api/pron/suggest',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({text:raw})});
+  const s=(await r.json()).suggestions||[];
+  plSuggestions=s;
+  if(!s.length){pl_suggest.textContent='AI 제안 없음 — 직접 입력하세요';return;}
+  pl_suggest.innerHTML=s.map((x,i)=>`<a href="#" onclick="plPickSuggestion(${i});return false">
+    ${esc(x.phrase)} → <b>${esc(x.respelling)}</b></a> <span style="color:#999">${esc(x.reason||'')}</span>`).join('<br>');
+}
+function plPickSuggestion(i){
+  const x=plSuggestions[i]; if(!x)return;
+  pl_phrase.value=x.phrase; pl_respell.value=x.respelling;
+}
+async function plSave(){
+  const phrase=pl_phrase.value.trim(),respelling=pl_respell.value.trim();
+  const r=await fetch('/api/pron/global',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({phrase,respelling})});
+  pl_msg.textContent=(r.ok)?'저장 완료 ✓ (이후 모든 영상에 적용)':'실패: '+(await r.json()).error;
+  plLoadList();
+}
+async function plDelete(i){
+  const x=plEntries[i]; if(!x)return;
+  const r=await fetch('/api/pron/global/'+encodeURIComponent(x.phrase),{method:'DELETE'});
+  if(!r.ok){pl_msg.textContent='삭제 실패';return;}
+  plLoadList();
+}
+async function plLoadList(){
+  const e=(await (await fetch('/api/pron/global')).json()).entries||[];
+  plEntries=e;
+  pl_list.innerHTML='<b>전역 사전('+e.length+')</b><br>'+e.map((x,i)=>
+    `${esc(x.phrase)} → ${esc(x.respelling)} <a href="#" onclick="plDelete(${i});return false" style="color:#e33">삭제</a>`).join('<br>');
+}
 async function init(){
  // /api/voice-presets 실제 응답: {ok, groups:[{group_id,name,variants:{variant:{preset_id,...}}}]}
  // (계획서가 가정한 {presets:[{preset_id,name,variant}]}과 다름 — groups/variants를 평탄화한다.
@@ -165,6 +231,7 @@ async function init(){
  preset.onchange=loadPreset;
  corpus=(await (await fetch('/api/voice-tune/corpus')).json()).lines;
  renderCards(); await loadPreset();
+ plLoadList();
 }
 init();
 </script></body></html>
