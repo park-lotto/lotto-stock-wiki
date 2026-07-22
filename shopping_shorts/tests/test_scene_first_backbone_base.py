@@ -63,6 +63,8 @@ def test_backbone_base_prompt_carries_drama_and_bank():
     assert "설명체" in p                         # 강한 오프너(설명체 금지) 규칙
     assert "이거 실화냐" in p                    # 은행 부품 주입
     assert "화면=행위, 대사=이야기" in p         # 중간 비트도 설명 말고 이야기로(핵심 규칙)
+    assert "스토리 아크를 비트에 분배" in p       # 인물→긴장→반응 아크 강제(진짜 스토리짤)
+    assert "인물이 중간·끝까지 관통" in p         # 세운 인물이 중간에 안 사라지게
 
 
 def test_judge_picks_best_of_n_drafts():
