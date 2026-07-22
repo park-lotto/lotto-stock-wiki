@@ -212,9 +212,9 @@
       <div class="tab" data-tab="density" title="댓글수 ÷ 팔로워수 — 팔로워 규모 대비 반응이 얼마나 뜨거운지(작은 채널도 상위권 가능)">💥 참여밀도</div>
     </div>
     <div class="ctypes" id="ctypes"></div>
-    <input id="rankSearch" type="text" placeholder="🔍 랭킹 검색 (피자·물총·이케아…)"
-           oninput="setSearch(this.value)"
-           style="width:100%;max-width:360px;margin:8px 0;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
+    <input id="rankSearch" type="text" placeholder="🔍 숏템검색 — 채널명·소재·링크 (채이홈·피자·인스타링크…)"
+           oninput="setSearch(this.value)" onkeydown="if(event.key==='Enter')onSearchEnter(this.value)"
+           style="width:100%;max-width:420px;margin:8px 0;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
     <div class="cats" id="cats"></div>
     <div class="cards" id="cards">
       <div class="empty">「지금 수집」을 눌러 시작하세요.</div>
@@ -534,6 +534,10 @@ function _expandQuery(needle){
 }
 function setSearch(q){ STATE.q = q; render(); }
 // ── 검색 끝 ──
+// 검색창 하나로 채널명·소재·링크 — 링크면 엔터 시 원본·유사 영상 추적으로 보낸다(2026-07-22).
+// (채널명·소재는 oninput이 이미 필터링. 링크만 엔터라는 명시 동작이 필요 — 유료 렌즈 남용 방지.)
+function _looksLikeUrl(q){ return /^\s*https?:\/\//i.test(q||''); }
+function onSearchEnter(v){ if(_looksLikeUrl(v)) traceByUrl((v||'').trim()); }
 function render(){
   let items = STATE.items.slice();
   const searching = !!(STATE.q && STATE.q.trim());
@@ -549,7 +553,12 @@ function render(){
   }
   items.sort((a,b)=> sortKey(b)-sortKey(a));
   const el = document.getElementById("cards");
-  if(!items.length){ el.innerHTML='<div class="empty">결과 없음.</div>'; return; }
+  if(!items.length){
+    el.innerHTML = (searching && _looksLikeUrl(STATE.q))
+      ? '<div class="empty">🔗 링크 감지 — <b>엔터</b>를 누르면 이 영상의 원본·유사 영상을 찾아드려요.</div>'
+      : '<div class="empty">결과 없음.</div>';
+    return;
+  }
   el.innerHTML = items.map((i,idx)=>`
     <div class="card">
       <div class="thumb">
@@ -929,9 +938,10 @@ async function lensSearch(btn, shortcode){
 // ── URL 붙여넣기 → 구글렌즈 원본/유사 역추적(2026-07-19) ─── TRACE-START
 // 프레임 캡처 대신 서버가 URL을 받아 중간 프레임을 뽑는다(/api/lens/trace_url). 결과 형태는
 // lensSearch와 동일 → renderLens를 합성 shortcode '__trace__'로 그대로 재활용(담기·필터 공짜).
-async function traceByUrl(){
+async function traceByUrl(urlArg){
   const inp=document.getElementById('traceUrl');
-  const url=(inp && inp.value||'').trim();
+  // urlArg가 오면 그걸 쓴다(메인 검색창에서 링크 붙여넣고 엔터). 없으면 전용 입력칸 값.
+  const url=((typeof urlArg==='string' ? urlArg : (inp && inp.value)) || '').trim();
   if(!url){ if(inp) inp.focus(); return; }
   openScript('<div class="sm-loading">🔗 원본·유사 영상 추적 중… (10~20초)</div>','🔗 레퍼런스 추적',true);
   try{
