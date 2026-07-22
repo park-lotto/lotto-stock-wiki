@@ -4219,15 +4219,27 @@ def _api_me(request: Request):
 _ADMIN_EMAILS = {"parklotto12@gmail.com"}
 
 
+def _code_admin(customer_id):
+    """코드로 고정된 관리자 = 사장님(0) 또는 이메일 화이트리스트. UI로 회수 불가(락아웃 방지 바닥)."""
+    if customer_id == 0:
+        return True
+    if not customer_id:
+        return False
+    email = (Store(DB_PATH).get_customer(customer_id) or {}).get("email") or ""
+    return email.lower() in _ADMIN_EMAILS
+
+
 def _is_admin(customer_id):
-    """cid0(사장님) 또는 이메일이 관리자 화이트리스트에 있으면 관리자."""
+    """관리자 = 사장님(0) 또는 이메일 화이트리스트(코드) 또는 사장님이 UI로 지정(customers.admin=1).
+    지정 관리자는 권한이 코드 관리자와 완전히 동일하다."""
     if customer_id == 0:
         return True
     if not customer_id:
         return False
     cust = Store(DB_PATH).get_customer(customer_id)
-    email = (cust or {}).get("email") or ""
-    return email.lower() in _ADMIN_EMAILS
+    if not cust:
+        return False
+    return ((cust.get("email") or "").lower() in _ADMIN_EMAILS) or bool(cust.get("admin"))
 
 
 def _require_admin(request):
@@ -4256,6 +4268,7 @@ def _admin_customers(request: Request):
         cu["usage"] = {op: st.usage_get(cu["id"], op, day) for op in ("lens", "render", "script")}
         cu["access_7d"] = st.access_summary(cu["id"], since7)   # {ips, devices} 최근 7일 고유 수
         cu["is_admin"] = _is_admin(cu["id"])                    # 관리자 배지용
+        cu["code_admin"] = _code_admin(cu["id"])                # 코드 고정 관리자(UI 토글 불가)
         out.append(cu)
     return {"ok": True, "customers": out, "settings": st.all_settings()}
 
@@ -4289,6 +4302,24 @@ async def _admin_customer_delete(request: Request):
     if _is_admin(cid):
         return JSONResponse({"error": "관리자 계정은 삭제할 수 없어요"}, status_code=400)
     Store(DB_PATH).delete_customer(cid)
+    return {"ok": True}
+
+
+@app.post("/api/admin/customer/set_admin")
+async def _admin_customer_set_admin(request: Request):
+    """관리자 지정/회수 — 사장님이 다른 계정에 관리자 권한(관리자와 동일)을 준다.
+    body: {customer_id, admin: bool}. 코드 고정 관리자(사장님·화이트리스트)는 UI로 못 바꾼다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id 필요"}, status_code=400)
+    if _code_admin(cid):
+        return JSONResponse({"error": "고정 관리자는 변경할 수 없어요"}, status_code=400)
+    Store(DB_PATH).set_customer_admin(cid, bool(body.get("admin")))
     return {"ok": True}
 
 
