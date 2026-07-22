@@ -5157,6 +5157,58 @@ def api_produce_mix_trim(job_id: str, body: dict):
             "tail_trim": hit.get("tail_trim", 0.0), "trimmed": hit.get(key, 0.0)}
 
 
+@app.post("/api/produce/mix/{job_id}/shorten")
+def api_produce_mix_shorten(job_id: str, body: dict):
+    """'⏱ 대사가 영상보다 김' 비트의 대사를 화면 예산에 맞게 줄이고 그 비트만 재TTS
+    (2026-07-22 사장님 요청 — 경고만 뜨고 손볼 버튼이 없었다). 뜻·역할·말투 유지 축약
+    (conform_narration: Gemini 실패 시 결정적 폴백). 성공 시 narration·tts·sync_gap 갱신."""
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    if job.get("status") in ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409, content={"ok": False, "error": "렌더 중에는 줄일 수 없어요"})
+    plan = job.get("edit_plan") or {}
+    beats = plan.get("beats") or []
+    try:
+        bi = int(body.get("beat_idx"))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 필요"})
+    hit = next((b for b in beats if b.get("beat_idx") == bi), None)
+    if hit is None:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 범위 밖"})
+    # 화면 예산 = (primary+alternates 구간 합) × 슬로모 상한. 대사를 여기 맞춘다(_conform_beats와 동일).
+    segs = [hit.get("primary")] + list(hit.get("alternates") or [])
+    budget = sum(max(0.0, float(s["end"]) - float(s["start"])) for s in segs if s) * mix_pipeline._MAX_SLOWMO
+    if budget <= 0:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "화면 길이를 알 수 없어요"})
+    new_n = _edit_plan.conform_narration(hit.get("narration", ""), budget)
+    if not new_n or new_n == hit.get("narration"):
+        return {"ok": True, "changed": False, "narration": hit.get("narration", ""),
+                "note": "더 줄일 여지가 없어요(뜻 훼손 없이)"}
+    # 그 비트만 재TTS(렌더와 동일 공유 경로) → 실제 발화초로 sync_gap 재계산.
+    idx = beats.index(hit)
+    out = _MIX_WORK_DIR / job_id / "tts" / f"beat_{hit['beat_idx']}.mp3"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        mix_pipeline.synthesize_line(
+            new_n, out, voice=job.get("voice"), beat_role=hit.get("role"),
+            beat_index=idx, beat_total=len(beats),
+            previous_text=beats[idx - 1]["narration"] if idx > 0 else None,
+            next_text=beats[idx + 1]["narration"] if idx < len(beats) - 1 else None)
+        dur = mix_pipeline._probe_duration(str(out))
+    except Exception as e:  # noqa: BLE001 — 실패해도 원문 유지(불일치 안 만든다)
+        return JSONResponse(status_code=500, content={"ok": False, "error": f"재합성 실패: {e}"})
+    hit["narration"] = new_n
+    hit["caption_lines"] = None                     # 대사 바뀜 → 자막줄 무효(정규식 폴백)
+    hit["tts_path"] = str(out)
+    if dur and dur > 0:
+        hit["target_seconds"] = round(dur, 1)
+        hit["sync_gap"] = round(max(0.0, dur - budget), 2)
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True, "changed": True, "narration": new_n, "sync_gap": hit.get("sync_gap", 0.0)}
+
+
 @app.post("/api/produce/mix/{job_id}/sfx")
 def api_produce_mix_sfx(job_id: str, request: Request, body: dict):
     """검수판에서 비트의 효과음(beat["sfx"])을 제거한다(스펙 §6 — "이 효과음 빼기").
