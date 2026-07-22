@@ -533,6 +533,19 @@ class Store:
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_auto_jobs "
                       "ON auto_jobs(customer_id, created_at DESC)")
+            # 전수조사 비동기 잡(2026-07-22). census가 수분 걸려 동기 요청은 모바일에서
+            # Failed to fetch가 난다 → 접수 후 폴링으로 바꾼다. mix_jobs 재활용 금지 교훈대로
+            # 전용 테이블(결과 전체를 result_json에 담아 done 시 프론트가 통째로 받는다).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS census_jobs (
+                    job_id TEXT PRIMARY KEY,
+                    status TEXT NOT NULL,
+                    result_json TEXT,
+                    error TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
             # 기존 DB용 마이그레이션 — mix_jobs 자막제거 필드(2026-07-13).
             # 새 DB는 위 CREATE에 이미 있어 여기선 "이미 존재" 예외를 조용히 넘긴다.
             for col, ddl in (
@@ -2153,6 +2166,39 @@ class Store:
             row = c.execute("SELECT candidates_json FROM mix_jobs WHERE job_id=?",
                             (job_id,)).fetchone()
         return json.loads(row[0]) if row and row[0] else []
+
+    # ── 전수조사 비동기 잡(2026-07-22) ──
+    def create_census_job(self, job_id):
+        """새 전수조사 job 생성. 초기 status='running'."""
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute("INSERT INTO census_jobs(job_id, status, created_at, updated_at) "
+                      "VALUES(?,?,?,?)", (job_id, "running", now, now))
+
+    def get_census_job(self, job_id):
+        """전수조사 job 1건 → dict(result_json 파싱됨). 없으면 None."""
+        with self._conn() as c:
+            row = c.execute("SELECT job_id, status, result_json, error, created_at, updated_at "
+                            "FROM census_jobs WHERE job_id=?", (job_id,)).fetchone()
+        if not row:
+            return None
+        return {"job_id": row[0], "status": row[1],
+                "result": json.loads(row[2]) if row[2] else None,
+                "error": row[3], "created_at": row[4], "updated_at": row[5]}
+
+    def update_census_job(self, job_id, status=None, result=None, error=None):
+        """status/result/error 갱신(+updated_at). result는 JSON 직렬화."""
+        cols, vals = [], []
+        if status is not None:
+            cols.append("status=?"); vals.append(status)
+        if result is not None:
+            cols.append("result_json=?"); vals.append(json.dumps(result, ensure_ascii=False))
+        if error is not None:
+            cols.append("error=?"); vals.append(error)
+        cols.append("updated_at=?"); vals.append(datetime.now(timezone.utc).isoformat())
+        vals.append(job_id)
+        with self._conn() as c:
+            c.execute(f"UPDATE census_jobs SET {', '.join(cols)} WHERE job_id=?", tuple(vals))
 
     # ── 6단계 SEO 키워드 측정 캐시(2026-07-17) ──
     # job이 아니라 전역이다 — 키워드 측정치는 어느 영상이 쟀든 같은 값이고,

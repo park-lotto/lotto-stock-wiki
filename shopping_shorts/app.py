@@ -196,27 +196,77 @@ def _apply_activity(records):
 
 @app.post("/api/census")
 def api_census(background_tasks: BackgroundTasks):
-    """🔬 전수 센서스 — 전 채널(팔로워/사망 필터 없음)을 긁어 활동성 판정. 전체 랭킹을
-    즉시 반환하고, 활동성 DB반영(생존/사망/부활)은 응답 후 background로 처리한다
-    ("정리를 뒤에서"). 이후 매일 수집은 여기서 살아있다고 판정된 채널만 긁는다."""
+    """🔬 전수 센서스(비동기, 2026-07-22) — 전 채널(팔로워/사망 필터 없음)을 긁어 활동성
+    판정. census가 수분 걸려 동기 응답은 모바일에서 Failed to fetch가 났다(서버는 완료해도
+    화면만 실패). 그래서 잡을 접수하고 job_id만 즉시 돌려준 뒤 실제 작업은 background에서
+    돌린다. 프론트는 /api/census/status/{job_id}를 폴링해 진행/결과를 받는다."""
+    job_id = uuid.uuid4().hex[:12]
+    Store(DB_PATH).create_census_job(job_id)
+    background_tasks.add_task(_run_census_job, job_id)
+    return {"ok": True, "job_id": job_id}
+
+
+def _run_census_job(job_id):
+    """background: census() 실행 → last_run 저장·활동반영·비전태그 → 결과를 job에 담아 done.
+    느린 후속(초안·신규 비전태깅)은 done 뒤에 돌려 결과 응답을 늦추지 않는다. 실패는
+    민감정보 마스킹 후 error로 기록 — 프론트는 status 폴링으로 이 결과/에러를 받는다."""
+    store = Store(DB_PATH)
     try:
         result = census()
     except Exception as e:
         import re
         msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
-        return JSONResponse(status_code=500, content={"ok": False, "error": msg})
-    items = result["items"]
-    store = Store(DB_PATH)
-    collected_at = datetime.now(timezone.utc).isoformat()
-    store.save_last_run(items, collected_at)          # 레퍼런스 랭킹 캐시도 갱신
-    background_tasks.add_task(_apply_activity, result["activity_records"])
-    background_tasks.add_task(generate_missing_drafts, next_draft_targets(items, store))
-    background_tasks.add_task(_tag_new_items, items)
-    _attach_vision_tags(items, store)
-    return {"ok": True, "count": len(items), "items": items,
-            "collected_at": collected_at, "dead": result["dead"],
-            "scanned_n": result["scanned_n"], "alive_n": result["alive_n"],
-            "dead_n": result["dead_n"], "revived_n": result["revived_n"]}
+        store.update_census_job(job_id, status="error", error=msg)
+        return
+    try:
+        items = result["items"]
+        collected_at = datetime.now(timezone.utc).isoformat()
+        store.save_last_run(items, collected_at)          # 레퍼런스 랭킹 캐시도 갱신
+        _apply_activity(result["activity_records"])       # 생존/사망/부활 DB반영
+        _attach_vision_tags(items, store)                 # 기존 비전 태그 실어 보냄
+        payload = {"count": len(items), "items": items,
+                   "collected_at": collected_at, "dead": result["dead"],
+                   "scanned_n": result["scanned_n"], "alive_n": result["alive_n"],
+                   "dead_n": result["dead_n"], "revived_n": result["revived_n"]}
+        store.update_census_job(job_id, status="done", result=payload)
+    except Exception as e:
+        import re
+        msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+        store.update_census_job(job_id, status="error", error=msg)
+        return
+    # done 이후 느린 후속 — 실패해도 이미 저장된 결과엔 영향 없음(삼킨다).
+    try:
+        generate_missing_drafts(next_draft_targets(items, store))
+        _tag_new_items(items)
+    except Exception:
+        pass
+
+
+# 전수조사 잡이 이 분(min)간 갱신 없이 running이면 서버 재시작 등으로 죽은 잔해 → failed 통보.
+_CENSUS_STALE_MIN = 20
+
+
+@app.get("/api/census/status/{job_id}")
+def api_census_status(job_id: str):
+    """전수조사 잡 상태/결과 폴링. running/done/error. done이면 결과 payload를 함께 준다.
+    running인데 오래 갱신이 없으면(서버 재시작 등) error로 알린다 — 무한 대기 방지."""
+    job = Store(DB_PATH).get_census_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    status = job["status"]
+    if status == "running":
+        try:
+            age_min = (datetime.now(timezone.utc)
+                       - datetime.fromisoformat(job["updated_at"])).total_seconds() / 60
+        except Exception:
+            age_min = 0
+        if age_min > _CENSUS_STALE_MIN:
+            return {"ok": True, "status": "error",
+                    "error": "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."}
+        return {"ok": True, "status": "running"}
+    if status == "error":
+        return {"ok": True, "status": "error", "error": job["error"] or "실패"}
+    return {"ok": True, "status": "done", **(job["result"] or {})}
 
 
 _VISION_TAG_CAP = 60  # 1회 수집당 새 태깅 상한(비용 가드). 초과분은 다음 수집 때.
