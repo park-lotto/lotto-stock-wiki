@@ -692,6 +692,16 @@ def api_reference_register(request: Request, url: str):
     return {"ok": True, "username": username, "already": False}
 
 
+@app.get("/api/channel/history")
+def api_channel_history(username: str, exclude: str = ""):
+    """채널 검색 시 '지난 한 달'(2026-07-22) — 그 채널의 누적 히스토리(reel_history)를
+    last_seen 최신순으로 반환. exclude=지금 48h 랭킹에 이미 뜬 shortcode 쉼표목록
+    (중복 카드 방지). 조회 전용이라 무료 등급도 허용(랭킹 열람의 연장)."""
+    excl = [s for s in (exclude or "").split(",") if s.strip()]
+    items = Store(DB_PATH).channel_history(username, exclude=excl)
+    return {"ok": True, "username": username, "items": items, "count": len(items)}
+
+
 @app.get("/api/prune/scan")
 def api_prune_scan():
     """🧹 죽은 채널 정리 — 마지막 수집에서 릴스가 하나도 안 잡힌 엑셀 채널을
@@ -3012,7 +3022,8 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 # 메서드 무관 무료(로그인 폼 POST 등) — 전부 정확 경로.
 _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout"}
 # GET만 무료(레퍼런스 랭킹 '조회') — POST/PUT 등 데이터변경은 같은 경로여도 차단.
-_FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/api/thumb", "/api/video"}
+_FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/api/thumb", "/api/video",
+                   "/api/channel/history"}   # 채널 히스토리='지난 한 달' 조회 = 랭킹 열람의 연장(무료 허용)
 # 경계있는 prefix만(과다매칭 방지 — 트레일링 슬래시).
 _FREE_PREFIX = ("/static/", "/auth/google/")
 
