@@ -10,9 +10,11 @@ th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #23232a}
 th{color:#8a8a92;font-weight:600}
 .badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
 .pro{background:#1c3d1f;color:#7ee787}.free{background:#3d1c1c;color:#ff9a8a}.trial{background:#1c2f3d;color:#7db4ff}
+.admin{background:#3a1c3d;color:#e59aff}
 .pending{background:#3d341c;color:#ffd479}
 button{border:0;border-radius:7px;padding:6px 12px;font-weight:700;font-size:12px;cursor:pointer;margin-right:4px}
 .bpro{background:#2ea043;color:#fff}.bfree{background:#6e2020;color:#fff}.bok{background:#d19b1e;color:#111}.bpay{background:#3a5bd0;color:#fff}
+.bedit{background:#5a4bd0;color:#fff}.bdel{background:#8b1a1a;color:#fff}
 .wait{border-color:#5a4a1e;background:#1a1710}.wait h2{color:#ffd479}
 .empty{color:#6a6a72;font-size:13px;padding:6px 2px}
 input{background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;padding:8px 10px;font-size:13px;width:90px}
@@ -38,7 +40,7 @@ label{display:inline-block;min-width:120px;color:#a8a8b0;font-size:13px;margin:5
 
 <div class=card>
   <h2>고객 (<span id=cnt>0</span>명) <span id=cMsg class=msg></span></h2>
-  <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>시작일</th><th>마감일</th><th>결제</th><th>오늘 사용(렌즈/렌더/대본)</th><th>조작</th></tr></thead>
+  <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>시작일</th><th>마감일</th><th>결제</th><th>오늘 사용(렌즈/렌더/대본)</th><th>접속7일(IP/기기)</th><th>조작</th></tr></thead>
   <tbody id=rows></tbody></table>
 </div>
 
@@ -51,19 +53,22 @@ let CURRENT={};
 async function load(){
   const r=await fetch('/api/admin/customers');
   if(r.status===403){document.body.innerHTML='<h2>관리자 전용입니다</h2>';return;}
-  const d=await r.json(); CURRENT=d.settings||{};
+  const d=await r.json(); CURRENT=d.settings||{}; window._CUST=d.customers||[];
   // 설정 폼
   document.getElementById('settings').innerHTML=SETTING_FIELDS.map(([k,label])=>
     `<div><label>${label}</label><input id=set_${k} value="${(CURRENT[k]??'').toString().replace(/"/g,'&quot;')}"></div>`).join('');
-  // 승인 대기(pending)와 일반 고객 분리 — pending은 pro를 줘도 안 열리므로 set_plan을 숨기고 [승인]만 노출
-  const pend=d.customers.filter(c=>c.level==='pending');
-  const rest=d.customers.filter(c=>c.level!=='pending');
+  // 미승인(approved_at null) = 순수대기 + 이벤트 체험중 → 모두 대기명단(사장님이 승인 가능해야 함).
+  const pend=d.customers.filter(c=>c.approved_at==null);
+  const rest=d.customers.filter(c=>c.approved_at!=null);
   const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
   // 승인 대기 표
   document.getElementById('pcnt').textContent=pend.length;
+  const nowSec=Math.floor(Date.now()/1000);
   document.getElementById('prows').innerHTML= pend.length ? pend.map(c=>{
     const joined=c.created_at? new Date((''+c.created_at).length>10?c.created_at:c.created_at*1000).toLocaleString('ko-KR'):'-';
-    return `<tr><td>${c.id}</td><td>${esc(c.name)}</td><td>${esc(c.phone)}</td><td>${esc(c.email||c.username)}</td>
+    const trialLeft = c.trial_ends_at && c.trial_ends_at>nowSec ? Math.ceil((c.trial_ends_at-nowSec)/3600) : 0;
+    const trialBadge = trialLeft ? ` <span class="badge trial">🎁 체험중 ${trialLeft}h</span>` : '';
+    return `<tr><td>${c.id}</td><td>${esc(c.name)}${trialBadge}</td><td>${esc(c.phone)}</td><td>${esc(c.email||c.username)}</td>
       <td style="font-size:12px;color:#8a8a92">${joined}</td>
       <td><button class=bok onclick="approveCustomer(${c.id})">✅ 승인</button></td></tr>`;
   }).join('') : '<tr><td colspan=6 class=empty>대기 중인 가입 신청이 없어요</td></tr>';
@@ -73,14 +78,22 @@ async function load(){
     const lvl=c.level==='full'?(c.plan==='pro'?'<span class="badge pro">pro</span>':'<span class="badge trial">체험중</span>')
               :'<span class="badge free">무료</span>';
     const u=c.usage||{};
-    return `<tr><td>${c.id}</td><td>${esc(c.name)}</td><td>${esc(c.phone)}</td><td>${esc(c.email||c.username)}</td><td>${c.plan}</td><td>${lvl}</td>
+    const acc=c.access_7d||{ips:0,devices:0};
+    // 돌려쓰기 의심: 최근 7일 고유 IP 3개↑ 또는 기기 3종↑이면 빨간 강조(차단은 안 함, 사장님 눈으로 판단)
+    const accSusp = (acc.ips>=3 || acc.devices>=3);
+    const accCell = `<span style="color:${accSusp?'#ff6b6b':'#8a8a92'};font-weight:${accSusp?'700':'400'}">${acc.ips}IP/${acc.devices}기기${accSusp?' ⚠️':''}</span>`;
+    const adminBadge = c.is_admin ? ' <span class="badge admin">관리자</span>' : '';
+    return `<tr><td>${c.id}</td><td>${esc(c.name)}${adminBadge}</td><td>${esc(c.phone)}</td><td>${esc(c.email||c.username)}</td><td>${c.plan}</td><td>${lvl}</td>
       <td style="font-size:12px;color:#8a8a92">${c.approved_at? new Date(c.approved_at*1000).toLocaleDateString('ko-KR'):'-'}</td>
       <td style="font-size:12px;color:#8a8a92">${c.full_access_until? new Date(c.full_access_until*1000).toLocaleDateString('ko-KR'):'-'}</td>
       <td>${c.last_payment? `<span class=paylink data-cid=${c.id} style="cursor:pointer;color:#8ab4f8">${c.last_payment.amount.toLocaleString()}원 · ${c.payment_count}건</span>` : '-'}</td>
       <td style="font-size:12px">${u.lens||0}/${u.render||0}/${u.script||0}</td>
+      <td style="font-size:12px">${accCell}</td>
       <td><button class=bpay onclick="addPayment(${c.id})">결제추가</button>
+          <button class=bedit onclick="editInfo(${c.id})">정보수정</button>
           <button class=bpro onclick="setPlan(${c.id},'pro')">pro 승격</button>
-          <button class=bfree onclick="setPlan(${c.id},'free')">무료로</button></td></tr>`;
+          <button class=bfree onclick="setPlan(${c.id},'free')">무료로</button>
+          ${c.is_admin?'':`<button class=bdel onclick="delCustomer(${c.id})">삭제</button>`}</td></tr>`;
   }).join('');
 }
 async function approveCustomer(cid){
@@ -93,6 +106,27 @@ async function approveCustomer(cid){
     body:JSON.stringify({customer_id:cid, period_days:Number(days)||0, amount:Number(amount)||0, method})});
   const m=document.getElementById('pMsg');
   if(r.ok){m.textContent='✅ 승인됨';m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
+  setTimeout(()=>m.textContent='',2000);
+}
+async function editInfo(cid){
+  const row=(window._CUST||[]).find(c=>c.id===cid)||{};
+  const name = prompt('이름', row.name||'');
+  if(name===null) return;
+  const phone = prompt('전화', row.phone||'');
+  if(phone===null) return;
+  const r = await fetch('/api/admin/customer/update',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({customer_id:cid, name, phone})});
+  const m=document.getElementById('cMsg');
+  if(r.ok){m.textContent='✅ 수정됨';m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
+  setTimeout(()=>m.textContent='',2000);
+}
+async function delCustomer(cid){
+  const row=(window._CUST||[]).find(c=>c.id===cid)||{};
+  if(!confirm(`정말 삭제할까요? (${row.email||row.username||cid})\n고객·결제이력·접속기록이 모두 지워지고 되돌릴 수 없어요.`)) return;
+  const r = await fetch('/api/admin/customer/delete',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({customer_id:cid})});
+  const m=document.getElementById('cMsg');
+  if(r.ok){m.textContent='🗑️ 삭제됨';m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
   setTimeout(()=>m.textContent='',2000);
 }
 async function addPayment(cid){

@@ -63,6 +63,8 @@ def test_admin_settings_roundtrip(tmp_path, monkeypatch):
 def test_approve_customer_sets_service_and_records_payment(tmp_path, monkeypatch):
     s = _setup(tmp_path, monkeypatch)
     cid = s.create_customer("pend", "pw12", approved=False)
+    with s._conn() as conn:                      # 체험창 만료 강제 → 진짜 pending 상태로 검증
+        conn.execute("UPDATE customers SET trial_ends_at=NULL WHERE id=?", (cid,))
     assert appmod.access_level(cid) == "pending"
     cust = s.approve_customer(cid, period_days=30, amount=30000, method="계좌이체")
     assert cust["approved_at"] is not None
@@ -75,6 +77,8 @@ def test_admin_customers_shows_pending_level_and_approved_at(tmp_path, monkeypat
     """관리자 목록이 pending 등급을 노출하고 모든 행에 approved_at 필드를 준다."""
     s = _setup(tmp_path, monkeypatch)
     s.create_customer("pend", "pw12", approved=False)   # 미승인
+    with s._conn() as conn:                      # 체험창 만료 강제 → 진짜 pending 상태로 검증
+        conn.execute("UPDATE customers SET trial_ends_at=NULL WHERE username='pend'")
     s.create_customer("ok", "pw12")                      # 승인됨(체험중)
     owner = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})
     r = owner.get("/api/admin/customers")

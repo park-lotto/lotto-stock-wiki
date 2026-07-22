@@ -588,14 +588,40 @@ def conform_narration(narration, target_seconds, max_tries=4):
         _CONFORM_PROMPT.format(char_target=char_target, narration=narration[:1000]),
         _CONFORM_SCHEMA, max_tries=max_tries)
     if not raw:
-        return None
+        return _trim_to_budget(narration, char_target)   # Gemini 실패·쿼터 → 결정적 폴백
     new = (raw.get("narration") or "").strip()
     if not new:
-        return None
+        return _trim_to_budget(narration, char_target)
     est = len("".join(new.split())) / _SYLLABLES_PER_SEC
     if not (0.8 * target_seconds <= est <= 1.2 * target_seconds):
-        return None
+        return _trim_to_budget(narration, char_target)   # Gemini 결과 부적합 → 결정적 폴백
     return new
+
+
+# 문법을 안 깨고 뺄 수 있는 군더더기 부사·강조어(콘폼 결정적 폴백용). '계란물을 모두 부어요'
+# → '계란물을 부어요'처럼 뜻·문장은 그대로 두고 시간만 줄인다.
+_FILLER_WORDS = ("모두", "정말", "진짜", "아주", "너무", "살짝", "그냥", "이제", "바로",
+                 "좀", "막", "딱", "한번", "완전", "엄청", "되게", "조금", "약간", "다시",
+                 "계속", "꼭", "이렇게", "그렇게", "얼른", "어서", "곧바로", "무려")
+
+
+def _trim_to_budget(narration, char_target):
+    """Gemini 없이 결정적으로 대사를 예산 글자수에 맞추는 콘폼 폴백(2026-07-22, 사장님 요청).
+    Gemini 쿼터·실패로 콘폼이 조용히 안 되던 걸 대체 — 문법이 안 깨지게 군더더기 부사부터
+    하나씩 덜어 길이를 줄인다. 이미 예산 내거나 뺄 게 없어 그대로면 None(원문 유지)."""
+    def clen(s):
+        return len("".join(s.split()))
+    narration = (narration or "").strip()
+    if not narration or clen(narration) <= char_target:
+        return None
+    words = narration.split()
+    for filler in _FILLER_WORDS:
+        if clen(" ".join(words)) <= char_target:
+            break
+        if filler in words:
+            words = [w for w in words if w != filler]
+    new = " ".join(words).strip()
+    return new if (new and new != narration) else None
 
 
 _TYPE_SCHEMA = {
@@ -788,24 +814,72 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
     return grounded
 
 
+def _backbone_style_block(bank_context=""):
+    """백본-베이스 대본생성에 실을 '품질 레이어' = 짤드라마 헌장 + 은행 훅·말투 부품.
+    이게 빠지면 백본 흐름만 밋밋하게 따라가 설명체가 나온다(2026-07-22 대본 초기화 실사고)."""
+    from shopping_shorts import script_generate
+    block = script_generate._STORY_RULES_CORE
+    if bank_context:
+        block += "\n\n" + bank_context
+    return block
+
+
+def _backbone_base_candidates(source_scripts, target_seconds, call,
+                              backbone_meta=None, backbone_forced=None, bank_context=""):
+    """백본-베이스 후보 생성(확정스펙 1~3단계): 백본 1개 선정 → 흐름 추출(대사 아님, 뼈대만)
+    → 실제 장면 인벤토리(백본+서브)에 맞춰 100% 우리 대본 생성. build_scene_first_plan이
+    쓰는 raw 후보 형태([{hook, beats:[{seg_ids, narration, role, fit}]}])로 감싼다.
+    ★대본생성에 짤드라마 헌장+은행 부품(style_block)을 실어 밋밋한 설명체를 막는다.
+    백본 못 고르거나(플랫폼·소스 부족) 생성 비면 [](호출부가 레퍼런스-먼저로 폴백)."""
+    from shopping_shorts import backbone
+    bb = backbone.pick_backbone(source_scripts, meta=backbone_meta, forced=backbone_forced)
+    if not bb:
+        return []
+    bb_src = next((s for s in source_scripts if s.get("video_id") == bb), None)
+    if not bb_src:
+        return []
+    flow = backbone.backbone_flow(bb_src)
+    inventory = backbone.scene_inventory(source_scripts)
+    bb_beats = backbone.generate_backbone_script(
+        flow, inventory, target_seconds, call=call,
+        style_block=_backbone_style_block(bank_context))
+    if not bb_beats:
+        return []
+    # 백본-베이스는 생성 단계에서 이미 실제 장면(seg_id)에 맞춰 썼으므로 forced=false, fit 높게.
+    # hook은 빈값 — beats[0] 자체가 흐름의 오프너다(_lead_with_hook가 빈 훅이면 무변화).
+    beats = [{"seg_ids": [b["seg_id"]], "narration": b["narration"], "role": "", "fit": 5}
+             for b in bb_beats]
+    return [{"hook": "", "beats": beats}]
+
+
 def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                            n_candidates=3, video_type=None, call=None, ping_pong=False,
                            backbone_meta=None, backbone_forced=None, bank_context="",
-                           avoid_hooks=None):
+                           avoid_hooks=None, backbone_base=False):
     """장면 우선 대본 모드: 팔레트+헌장으로 후보 n개 생성 → 각 EDL grounding·채점 →
     최고 score에 recommended=True. 각 candidate.plan은 build_edit_plan 반환형(하류 렌더 호환).
     후보 0개면 candidates=[](호출부가 기존 build_edit_plan로 폴백).
 
     ping_pong=True(opt-in, 기본 off로 회귀0): grounding 후 backbone 핑퐁으로 비트별
     대본↔장면을 왕복 조정(행위 불일치=fit 거짓말 잡기 → 같은 행위 클립 스왑 or 나레이션 재작성).
-    """
+
+    backbone_base=True(opt-in, 기본 off로 회귀0): 백본-베이스 확정스펙(2026-07-21). 레퍼런스
+    자유생성 대신 **잘된 영상 1개의 흐름(순서·리듬)** 을 뼈대로, 실제 장면 인벤토리(백본+서브)에
+    맞춰 100% 우리 대본을 생성한다(없는 장면 요구 차단 → 소스에 클립 없어도 천장 없음). 백본을
+    못 고르거나 생성이 비면 조용히 레퍼런스-먼저로 폴백(회귀0)."""
     seg_map, inventory = _build_inventory(source_scripts)
     detected = video_type or (detect_video_type(source_scripts) if source_scripts else _DEFAULT_TYPE)
     if not seg_map:
         return {"candidates": [], "detected_type": detected}
     _call = call or _vault_call
-    raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates,
-                                   call=_call, bank_context=bank_context)
+    raws = []
+    if backbone_base:
+        raws = _backbone_base_candidates(source_scripts, target_seconds, _call,
+                                         backbone_meta=backbone_meta, backbone_forced=backbone_forced,
+                                         bank_context=bank_context)
+    if not raws:
+        raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates,
+                                       call=_call, bank_context=bank_context)
     src_texts = [s.get("full_text", "") for s in source_scripts]
     cands = []
     for r in raws:

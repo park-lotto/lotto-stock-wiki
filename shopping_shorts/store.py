@@ -111,6 +111,28 @@ class Store:
                     collected_at TEXT
                 )
             """)
+            # 수집 누적 히스토리(2026-07-22) — last_run은 매 수집 통째 덮어써 48h 창에서
+            # 내려간 영상이 사라진다. 채널 검색 시 '지난 한 달'을 보여주려 shortcode별로
+            # 누적한다. 비전태그는 vision_tags 테이블을 조회 시 조인(중복저장 안 함).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS reel_history (
+                    shortcode TEXT PRIMARY KEY,
+                    username TEXT,
+                    name TEXT,
+                    category TEXT,
+                    url TEXT,
+                    thumb TEXT,
+                    caption TEXT,
+                    views INTEGER,
+                    comments INTEGER,
+                    first_seen TEXT,
+                    last_seen TEXT
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_reel_history_user "
+                      "ON reel_history(username)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_reel_history_seen "
+                      "ON reel_history(last_seen)")
             c.execute("""
                 CREATE TABLE IF NOT EXISTS source_analysis (
                     shortcode TEXT PRIMARY KEY,
@@ -327,7 +349,8 @@ class Store:
                     fx_status TEXT,
                     fx_path TEXT,
                     scene_first INTEGER NOT NULL DEFAULT 0,
-                    candidates_json TEXT
+                    candidates_json TEXT,
+                    backbone_main INTEGER
                 )
             """)
             c.execute("""
@@ -587,6 +610,10 @@ class Store:
                 # 장면 우선 대본 모드(2026-07-20, Task6) — build_scene_first_plan 후보 저장.
                 ("scene_first", "INTEGER NOT NULL DEFAULT 0"),
                 ("candidates_json", "TEXT"),
+                # 백본(메인) 지정(2026-07-22) — 사장님이 UI에서 고른 '흐름 뼈대' 소스의
+                # urls 인덱스(0-based). None=자동 선정(인스타/유튜브·댓글수 규칙). run_mix_job이
+                # 이 인덱스를 추출 소스의 video_id로 풀어 backbone_forced로 넘긴다.
+                ("backbone_main", "INTEGER"),
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -701,6 +728,16 @@ class Store:
                         count INTEGER NOT NULL DEFAULT 0,
                         PRIMARY KEY (customer_id, op, day)
                     )""")
+        # ── 돌려쓰기 소프트감지(2026-07-22): 계정별 접속 IP·기기(UA)를 하루 단위로 기록.
+        #    (cid, day, ip, ua) 유니크라 같은 조합 재접속은 INSERT OR IGNORE로 무시 → 하루 1행.
+        #    차단 안 함 — admin에 '접속 IP N개 / 기기 N종'을 보여 사장님이 공유 의심을 눈으로 판단. ──
+        c.execute("""CREATE TABLE IF NOT EXISTS customer_access (
+                        customer_id INTEGER NOT NULL,
+                        day TEXT NOT NULL,
+                        ip TEXT NOT NULL,
+                        ua TEXT NOT NULL,
+                        PRIMARY KEY (customer_id, day, ip, ua)
+                    )""")
         # ── 회원승인(2026-07-21): approved_at NULL=대기중 / 값(epoch초)=승인시각 ──
         try:
             c.execute("ALTER TABLE customers ADD COLUMN approved_at INTEGER")
@@ -711,6 +748,12 @@ class Store:
             c.execute("UPDATE customers SET approved_at=? WHERE approved_at IS NULL", (now_ts,))
         except sqlite3.OperationalError:
             pass  # 이미 존재
+
+        # ── 무료체험 이벤트(2026-07-22): 미승인 가입자에게 24h 체험창. NULL=창없음(기존고객·승인생성) ──
+        try:
+            c.execute("ALTER TABLE customers ADD COLUMN trial_ends_at INTEGER")
+        except sqlite3.OperationalError:
+            pass  # 이미 존재. 하위호환: 기존 행은 NULL(만료 취급)로 남아 동작 불변.
 
         # ── 회원관리(2026-07-22): 이름·전화 + 결제이력 ──
         #   ★같은 커서 c 사용 — 이 메서드는 _init_schema가 customers를 만드는 열린 트랜잭션
@@ -1149,7 +1192,9 @@ class Store:
         return {r[0] for r in rows}
 
     def save_last_run(self, items, collected_at):
-        """마지막 수집 결과 전체(items + 시각)를 저장. 단일 행 덮어쓰기."""
+        """마지막 수집 결과 전체(items + 시각)를 저장. 단일 행 덮어쓰기.
+        + 수집분을 reel_history에 누적(shortcode upsert)해 48h 창에서 내려가도
+        30일간 보존한다. 누적은 부가작업 — 실패해도 last_run 저장은 살린다."""
         with self._conn() as c:
             c.execute(
                 "INSERT INTO last_run(id, items_json, collected_at) VALUES(1, ?, ?) "
@@ -1157,6 +1202,78 @@ class Store:
                 "collected_at=excluded.collected_at",
                 (json.dumps(items, ensure_ascii=False), collected_at),
             )
+            try:
+                self._record_history(c, items, collected_at)
+            except Exception:
+                pass  # 히스토리 누적 실패가 수집 저장을 막지 않는다
+
+    @staticmethod
+    def _norm_username(u):
+        return (u or "").strip().lstrip("@").lower()
+
+    def _record_history(self, c, items, collected_at):
+        """수집 items를 reel_history에 shortcode 기준 upsert하고 30일 지난 행을 정리.
+        같은 커넥션(c)에서 실행 — save_last_run과 원자적으로 커밋된다.
+        first_seen은 최초값 유지, last_seen·조회수·댓글수·썸네일·캡션·카테고리는 갱신."""
+        for it in items or []:
+            sc = (it.get("shortcode") or "").strip()
+            user = self._norm_username(it.get("username"))
+            if not sc or not user:
+                continue  # 고유키/채널키 없으면 스킵(안전)
+            c.execute(
+                "INSERT INTO reel_history"
+                "(shortcode, username, name, category, url, thumb, caption,"
+                " views, comments, first_seen, last_seen) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?) "
+                "ON CONFLICT(shortcode) DO UPDATE SET "
+                "  username=excluded.username, name=excluded.name,"
+                "  category=excluded.category, url=excluded.url, thumb=excluded.thumb,"
+                "  caption=excluded.caption, views=excluded.views,"
+                "  comments=excluded.comments, last_seen=excluded.last_seen",
+                (sc, user, it.get("name"), it.get("category"), it.get("url"),
+                 it.get("thumbnail"), it.get("caption"),
+                 int(it.get("views") or 0), int(it.get("comments") or 0),
+                 collected_at, collected_at),
+            )
+        # 30일 정리 — last_seen이 30일보다 오래된 행 삭제(수집이 곧 정리 트리거).
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+        c.execute("DELETE FROM reel_history WHERE last_seen < ?", (cutoff,))
+
+    def channel_history(self, username, exclude=()):
+        """한 채널의 지난 30일 수집분을 last_seen 최신순으로 반환.
+        exclude=지금 랭킹에 이미 뜬 shortcode들(중복 카드 방지).
+        비전태그(subject/keywords)는 vision_tags를 조인해 함께 준다."""
+        user = self._norm_username(username)
+        if not user:
+            return []
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT h.shortcode, h.username, h.name, h.category, h.url, h.thumb,"
+                "       h.caption, h.views, h.comments, h.first_seen, h.last_seen,"
+                "       v.subject, v.keywords_json "
+                "FROM reel_history h "
+                "LEFT JOIN vision_tags v ON v.shortcode = h.shortcode "
+                "WHERE h.username = ? "
+                "ORDER BY h.last_seen DESC",
+                (user,),
+            ).fetchall()
+        skip = {s for s in (exclude or []) if s}
+        out = []
+        for r in rows:
+            if r[0] in skip:
+                continue
+            try:
+                vkw = json.loads(r[12]) if r[12] else []
+            except (TypeError, ValueError):
+                vkw = []
+            out.append({
+                "shortcode": r[0], "username": r[1], "name": r[2],
+                "category": r[3], "url": r[4], "thumb": r[5], "caption": r[6],
+                "views": r[7], "comments": r[8],
+                "first_seen": r[9], "last_seen": r[10],
+                "vision_subject": r[11] or "", "vision_keywords": vkw,
+            })
+        return out
 
     def load_last_run(self):
         """마지막 수집 결과 반환 → (items, collected_at). 없으면 ([], None)."""
@@ -2040,7 +2157,7 @@ class Store:
     def create_mix_job(self, job_id, urls, target_seconds, structure,
                        subtitle_removal=False, given_script=None, script_structure=None,
                        customer_id=LEGACY_CUSTOMER_ID, render_charge_day=None,
-                       scene_first=False):
+                       scene_first=False, backbone_main=None):
         """새 믹스 job 생성. 초기 status='downloading'.
         given_script: 영상제작 2단계 — 확정 대본을 그대로 쓸 때(나레이션 자동생성 대신).
         script_structure: 도서관에서 딸려온 대본 구조분석 dict(2026-07-15). 뒷단계가 꺼내 쓸
@@ -2048,19 +2165,22 @@ class Store:
         customer_id: 유료게이트 렌더 크레딧 귀속(2026-07-19). run_mix_job이 실패하면 이 cid로
             'render' 크레딧을 환불한다 — 실패했는데 크레딧만 날아가면 신뢰가 깨진다.
         scene_first: 장면 우선 대본 모드(2026-07-20, Task6) — _plan_and_tts가 build_scene_first_plan을
-            타도록 하는 플래그. given_script을 구조계승 레퍼런스 텍스트로 재활용한다."""
+            타도록 하는 플래그. given_script을 구조계승 레퍼런스 텍스트로 재활용한다.
+        backbone_main: 사장님이 UI에서 지정한 '메인(백본)' 소스의 urls 인덱스(0-based) 또는 None.
+            None이면 자동 선정(인스타/유튜브·댓글수 규칙). run_mix_job이 인덱스→video_id로 푼다."""
         now = datetime.now(timezone.utc).isoformat()
+        bb = None if backbone_main is None else int(backbone_main)
         with self._conn() as c:
             c.execute(
                 "INSERT INTO mix_jobs(job_id, urls_json, target_seconds, structure, "
                 "status, created_at, updated_at, subtitle_removal, given_script, "
-                "script_structure_json, customer_id, render_charge_day, scene_first) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "script_structure_json, customer_id, render_charge_day, scene_first, backbone_main) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (job_id, json.dumps(urls, ensure_ascii=False), target_seconds,
                  structure, "downloading", now, now, 1 if subtitle_removal else 0,
                  given_script or None,
                  json.dumps(script_structure, ensure_ascii=False) if script_structure else None,
-                 customer_id, render_charge_day, 1 if scene_first else 0),
+                 customer_id, render_charge_day, 1 if scene_first else 0, bb),
             )
 
     def get_mix_job(self, job_id):
@@ -2075,7 +2195,7 @@ class Store:
                 "preview_status, preview_path, preview_error, "
                 "thumbnail_json, seo_json, "
                 "clean_sources_json, clean_status, clean_error, customer_id, render_charge_day, "
-                "scene_first "
+                "scene_first, backbone_main "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -2103,6 +2223,7 @@ class Store:
             "customer_id": row[30] if row[30] is not None else 0,
             "render_charge_day": row[31],
             "scene_first": bool(row[32]),
+            "backbone_main": row[33],
         }
 
     def update_mix_job(self, job_id, **fields):
@@ -2533,16 +2654,23 @@ class Store:
                 trial_days = 7
             full_access_until = now_ts + trial_days * 86400
             approved_at = now_ts
+            trial_ends_at = None                     # 승인 생성은 이벤트 체험창 불필요
         else:
             full_access_until = 0
             approved_at = None
+            try:
+                trial_hours = int(self.get_setting("trial_event_hours", 24))
+            except (TypeError, ValueError):
+                trial_hours = 24
+            trial_ends_at = now_ts + trial_hours * 3600   # 🎁 가입 후 24h 맛보기 창
         with self._conn() as c:
             try:
                 cur = c.execute(
                     "INSERT INTO customers(username, password_hash, salt, created_at, "
-                    "plan, full_access_until, email, google_sub, approved_at, name, phone) "
-                    "VALUES(?,?,?,datetime('now'),'free',?,?,?,?,?,?)",
-                    (username, pw_hash, salt, full_access_until, email, google_sub, approved_at, name, phone),
+                    "plan, full_access_until, email, google_sub, approved_at, name, phone, trial_ends_at) "
+                    "VALUES(?,?,?,datetime('now'),'free',?,?,?,?,?,?,?)",
+                    (username, pw_hash, salt, full_access_until, email, google_sub,
+                     approved_at, name, phone, trial_ends_at),
                 )
             except sqlite3.IntegrityError:
                 raise ValueError(f"이미 존재하는 아이디: {username}")
@@ -2582,7 +2710,8 @@ class Store:
         """customer_id → {id, username, created_at, plan, full_access_until, google_sub, email, approved_at, name, phone} 또는 None."""
         with self._conn() as c:
             row = c.execute(
-                "SELECT id, username, created_at, plan, full_access_until, google_sub, email, approved_at, name, phone "
+                "SELECT id, username, created_at, plan, full_access_until, google_sub, email, "
+                "approved_at, name, phone, trial_ends_at "
                 "FROM customers WHERE id=?", (customer_id,)
             ).fetchone()
         if not row:
@@ -2590,7 +2719,37 @@ class Store:
         return {"id": row[0], "username": row[1], "created_at": row[2],
                 "plan": row[3] or "free", "full_access_until": row[4] or 0,
                 "google_sub": row[5], "email": row[6], "approved_at": row[7],
-                "name": row[8], "phone": row[9]}
+                "name": row[8], "phone": row[9], "trial_ends_at": row[10]}
+
+    def update_customer_info(self, customer_id, name, phone):
+        """관리자 정보수정: 이름·전화 갱신(구글 가입은 이름·전화가 비어 admin에서 채운다).
+        None이 아닌 값만 덮어쓴다 — 한쪽만 고칠 때 다른 쪽을 지우지 않게."""
+        sets, params = [], []
+        if name is not None:
+            sets.append("name=?"); params.append(name)
+        if phone is not None:
+            sets.append("phone=?"); params.append(phone)
+        if not sets:
+            return
+        params.append(customer_id)
+        with self._conn() as c:
+            c.execute(f"UPDATE customers SET {', '.join(sets)} WHERE id=?", params)
+
+    def delete_customer(self, customer_id):
+        """관리자 완전 삭제: 이 고객의 모든 데이터를 지운다 — 결제·접속·사용량뿐 아니라
+        customer_id 컬럼을 가진 모든 테이블(담기·대본·제작물·크레딧 등)까지. 사장님(0)은 안 지운다.
+        (customers.id는 AUTOINCREMENT라 재사용 안 됨 → 고아가 남아도 새 계정이 물려받진 않지만,
+         '완전 삭제' 이름값대로 콘텐츠까지 청소한다.)"""
+        if customer_id == 0:
+            return
+        with self._conn() as c:
+            tables = [r[0] for r in c.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
+            for t in tables:
+                cols = {r[1] for r in c.execute(f"PRAGMA table_info({t})").fetchall()}
+                if "customer_id" in cols:           # 테이블명은 sqlite_master 출처(사용자입력 아님)
+                    c.execute(f"DELETE FROM {t} WHERE customer_id=?", (customer_id,))
+            c.execute("DELETE FROM customers WHERE id=?", (customer_id,))
 
     def set_plan(self, customer_id, plan, full_access_until=None):
         """등급 변경. plan='pro'|'free'. full_access_until(epoch초)를 주면 함께 설정(체험창)."""
@@ -2660,7 +2819,7 @@ class Store:
         """관리자용 전체 고객 목록(사장님 cid0 제외). 최근 가입 먼저. 최근 결제 요약 포함."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT id, username, email, plan, full_access_until, created_at, approved_at, name, phone "
+                "SELECT id, username, email, plan, full_access_until, created_at, approved_at, name, phone, trial_ends_at "
                 "FROM customers WHERE id != 0 ORDER BY id DESC"
             ).fetchall()
             out = []
@@ -2671,7 +2830,7 @@ class Store:
                 cnt = c.execute("SELECT COUNT(*) FROM payments WHERE customer_id=?", (cid,)).fetchone()[0]
                 out.append({"id": cid, "username": r[1], "email": r[2], "plan": r[3] or "free",
                             "full_access_until": r[4] or 0, "created_at": r[5], "approved_at": r[6],
-                            "name": r[7], "phone": r[8],
+                            "name": r[7], "phone": r[8], "trial_ends_at": r[9],
                             "last_payment": ({"amount": p[0], "paid_at": p[1]} if p else None),
                             "payment_count": cnt})
         return out
@@ -2692,6 +2851,23 @@ class Store:
             row = c.execute("SELECT count FROM usage WHERE customer_id=? AND op=? AND day=?",
                             (customer_id, op, day)).fetchone()
         return row[0] if row else 0
+
+    # ── 돌려쓰기 소프트감지(2026-07-22): 접속 IP·기기 기록 + 요약 ──
+    def record_access(self, customer_id, ip, ua, day):
+        """계정 접속 1건 기록. (cid, day, ip, ua) 유니크 → 같은 조합 재접속은 무시(하루 1행)."""
+        ua = (ua or "")[:200]                       # UA는 길어 절단(admin 표시·중복판정엔 충분)
+        ip = (ip or "")[:64]
+        with self._conn() as c:
+            c.execute("INSERT OR IGNORE INTO customer_access(customer_id, day, ip, ua) "
+                      "VALUES(?,?,?,?)", (customer_id, day, ip, ua))
+
+    def access_summary(self, customer_id, since_day):
+        """since_day(포함) 이후의 고유 IP 수·고유 기기(UA) 수. 공유 의심 지표."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT COUNT(DISTINCT ip), COUNT(DISTINCT ua) FROM customer_access "
+                "WHERE customer_id=? AND day>=?", (customer_id, since_day)).fetchone()
+        return {"ips": (row[0] or 0), "devices": (row[1] or 0)}
 
     def usage_decr(self, customer_id, op, day):
         """(customer_id, op, day) 카운트 -1(0 밑으로 안 감), 감소 후 값 반환. 실패 환불용.

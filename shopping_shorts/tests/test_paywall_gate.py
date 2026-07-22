@@ -92,6 +92,8 @@ def test_pending_gate_blocks_everything(tmp_path, monkeypatch):
     """미승인(pending) 세션은 API=403, 화면=대기실 HTML, /logout만 통과."""
     s = _setup(tmp_path, monkeypatch)
     cid = s.create_customer("pend", "pw12", approved=False)
+    with s._conn() as conn:                      # 체험창 만료 강제 → 진짜 pending 상태로 검증
+        conn.execute("UPDATE customers SET trial_ends_at=NULL WHERE id=?", (cid,))
     c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
     # 보호 API → 403 pending
     r_api = c.get("/api/reference/register", follow_redirects=False)
@@ -149,6 +151,8 @@ def test_grab_blocks_pending(tmp_path, monkeypatch):
     /api/grab은 200 HTML 팝업이라 상태코드로 구분 안 됨 → 본문 문구로 차단 확인."""
     s = _setup(tmp_path, monkeypatch)
     cid = s.create_customer("pend", "pw12", approved=False)
+    with s._conn() as conn:                      # 체험창 만료 강제 → 진짜 pending 상태로 검증
+        conn.execute("UPDATE customers SET trial_ends_at=NULL WHERE id=?", (cid,))
     c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
     r = c.get("/api/grab?url=https://www.youtube.com/watch?v=x&title=t")
     # 대기중은 담기 성공 팝업이 아니라 차단 안내여야 한다
@@ -165,3 +169,28 @@ def test_grab_blocks_ranking_only(tmp_path, monkeypatch):
     r = c.get("/api/grab?url=https://www.youtube.com/watch?v=x&title=t")
     assert "담겼어요" not in r.text
     assert "유료" in r.text
+
+
+# ── 관리자(cid0) 전용 운영버튼(2026-07-22) — 수집·전수조사·레퍼런스등록 ──
+def test_admin_only_endpoints_block_pro_user(tmp_path, monkeypatch):
+    """수집·전수조사·레퍼런스등록은 관리자 전용 — pro 구독자(full등급, 비관리자)도 403.
+    화면 숨김만으론 pro가 API를 직접 호출할 수 있어 백엔드도 막았다는 증거."""
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("pro9", "pw12")
+    s.set_plan(cid, "pro")                     # full 등급이지만 cid≠0 → 관리자 아님
+    c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
+    # 403(관리자 전용)이지 402(유료)가 아니다 — pro는 유료게이트는 통과하나 관리자 가드에 막힌다
+    assert c.post("/api/collect?platform=instagram").status_code == 403
+    assert c.post("/api/census").status_code == 403
+    assert c.post("/api/reference/register",
+                  params={"url": "https://instagram.com/x"}).status_code == 403
+
+
+def test_admin_can_register_reference(tmp_path, monkeypatch):
+    """관리자(cid0)는 레퍼런스 등록 가능 — 가드가 관리자를 막지 않는다(403 아님)."""
+    _setup(tmp_path, monkeypatch)
+    monkeypatch.setattr(appmod, "load_channels", lambda: [])   # 엑셀 없이도 동작
+    c = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})   # cid0 = 사장님
+    r = c.post("/api/reference/register",
+               params={"url": "https://instagram.com/adminpick"})
+    assert r.status_code == 200 and r.json()["ok"] is True

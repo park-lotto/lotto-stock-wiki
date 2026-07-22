@@ -1,0 +1,71 @@
+"""후보 대본 심사위원(2026-07-22) — 사장님 기준: '제일 좋은 건 대본 채점 + 대본↔장면 싱크 +
+스토리라인이 맞는지'를 기준(rubric)으로 본다. coverage 같은 proxy가 아니라 **실제 만들어진
+후보**를 3축으로 채점해 백본·후보를 고른다.
+
+  · script_quality = 대본 자체(훅 세기·짤드라마·말투 자연스러움).
+  · scene_sync     = 비트별 대사↔화면(행위·장면)이 맞나.
+  · storyline      = 처음~끝이 하나의 이야기로 말이 되나(순서·인과·마무리).
+
+Gemini 판단이 필요한 부분(특히 storyline)이라 call 주입점으로 실제 호출을 회피한다
+(pattern_bank/edit_plan과 동일 패턴). 실패/무키 시 None → 호출부가 규칙점수로 폴백."""
+import sys
+
+_SCORE = {"type": "integer"}   # 0~5
+_JUDGE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "script_quality": _SCORE,
+        "scene_sync": _SCORE,
+        "storyline": _SCORE,
+        "reason": {"type": "string"},
+    },
+    "required": ["script_quality", "scene_sync", "storyline"],
+}
+
+
+def _beats_block(beats):
+    lines = []
+    for i, b in enumerate(beats or []):
+        p = b.get("primary") or {}
+        scene = (p.get("scene_desc") or p.get("action") or p.get("seg_id") or "").strip()
+        lines.append(f"  {i+1}. 대사: {(b.get('narration') or '').strip()}  |  화면: {scene}")
+    return "\n".join(lines)
+
+
+def _judge_prompt(beats):
+    return (
+        "너는 한국 쇼핑 숏폼 편집 심사위원이다. 아래 '완성된 후보'(비트별 대사+그 순간 화면)를 "
+        "세 기준으로 0~5점 매겨라(5=최고). 후하지 말고 엄격하게.\n"
+        "① script_quality = 대본 자체: 첫 대사가 강한 훅인가(‘여러분~/알려드려요’ 설명체면 낮음), "
+        "짤드라마(인물·상황·반전)인가, 말투가 자연스러운가.\n"
+        "② scene_sync = 각 대사와 그 순간 화면(행위·장면)이 맞나. '썰어'인데 뒤집는 화면이면 낮음.\n"
+        "③ storyline = 처음~끝이 하나의 이야기로 말이 되나. 순서·인과가 맞고 마무리(CTA)까지 "
+        "흐르나. 요리 순서 나열이면 낮음.\n\n"
+        f"[완성된 후보]\n{_beats_block(beats)}\n\n"
+        "각 0~5 정수와 reason(한 줄) JSON만 출력.")
+
+
+def judge(beats, call=None):
+    """후보(grounded beats)를 3축 채점 → {script_quality, scene_sync, storyline, reason, total}.
+    total = 세 점수 평균/5 (0~1). call None이면 실제 Gemini. 실패/빈 beats면 None(규칙점수 폴백)."""
+    if not beats:
+        return None
+    if call is None:
+        from shopping_shorts import pattern_bank
+        call = pattern_bank._default_call
+    try:
+        res = call(_judge_prompt(beats), _JUDGE_SCHEMA)
+    except Exception as e:
+        print(f"candidate_judge.judge: {e!r}", file=sys.stderr)
+        return None
+    if not res or not isinstance(res, dict):
+        return None
+    def _c(k):
+        try:
+            return max(0, min(5, int(res.get(k, 0))))
+        except (TypeError, ValueError):
+            return 0
+    sq, ss, sl = _c("script_quality"), _c("scene_sync"), _c("storyline")
+    return {"script_quality": sq, "scene_sync": ss, "storyline": sl,
+            "reason": (res.get("reason") or "").strip(),
+            "total": round((sq + ss + sl) / 15.0, 3)}

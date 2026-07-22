@@ -11,7 +11,7 @@ import socket
 import tempfile
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import requests
 from fastapi import BackgroundTasks, FastAPI, Request, UploadFile, File, Form
@@ -147,7 +147,13 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
 
     platform == "tiktok"이면 키워드검색이 Apify 유료라 남용/비용 가드를 건다:
     ① 월예산 킬스위치(초과 시 429 budget_exceeded) ② 사용자별 하루 상한
-    (초과 시 429 daily_limit). 통과 후 수집하면 하루카운트 +1, 추정비용 누적."""
+    (초과 시 429 daily_limit). 통과 후 수집하면 하루카운트 +1, 추정비용 누적.
+
+    ★관리자(사장님 cid0) 전용(2026-07-22) — 수집=크롤 비용이 드는 운영 액션이라
+    구독자(pro 포함)에겐 화면·API 모두 막는다. 화면 숨김만으론 pro가 직접 호출 가능."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
     if platform == "tiktok":
         guard = Store(DB_PATH)
         knobs = _tiktok_knobs(guard)
@@ -180,6 +186,9 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
         store.save_last_run(items, collected_at)
         background_tasks.add_task(generate_missing_drafts, next_draft_targets(items, store))
         background_tasks.add_task(_tag_new_items, items)   # 신규 썸네일 비전 태깅(백그라운드)
+        # 수집→대본은행 자동 적재(2026-07-22): 밀도+속도 상위 표본을 부품으로 분해해 은행에
+        # 쌓는다(소스당 Gemini 1콜이라 백그라운드). 결과는 /api/bank/ingest_report로 화면에 보고.
+        background_tasks.add_task(_bank_ingest_collected_bg, DB_PATH, items, collected_at)
         _attach_vision_tags(items, store)                  # 이미 태깅된 것(재수집)은 즉시 실어 보냄
         return {"ok": True, "count": len(items), "items": items,
                 "collected_at": collected_at}
@@ -187,6 +196,20 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
         import re
         msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
         return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+
+
+@app.get("/api/bank/ingest_report")
+def api_bank_ingest_report():
+    """'지금 수집' 후 백그라운드 은행 적재의 최근 결과(수집 화면이 폴링해 보고).
+    아직 한 번도 안 돌았으면 status=none."""
+    import json as _json
+    raw = Store(DB_PATH).get_setting("bank_ingest_last", "")
+    if not raw:
+        return {"ok": True, "report": {"status": "none"}}
+    try:
+        return {"ok": True, "report": _json.loads(raw)}
+    except Exception:
+        return {"ok": True, "report": {"status": "none"}}
 
 
 def _apply_activity(records):
@@ -197,11 +220,16 @@ def _apply_activity(records):
 
 
 @app.post("/api/census")
-def api_census(background_tasks: BackgroundTasks):
+def api_census(request: Request, background_tasks: BackgroundTasks):
     """🔬 전수 센서스(비동기, 2026-07-22) — 전 채널(팔로워/사망 필터 없음)을 긁어 활동성
     판정. census가 수분 걸려 동기 응답은 모바일에서 Failed to fetch가 났다(서버는 완료해도
     화면만 실패). 그래서 잡을 접수하고 job_id만 즉시 돌려준 뒤 실제 작업은 background에서
-    돌린다. 프론트는 /api/census/status/{job_id}를 폴링해 진행/결과를 받는다."""
+    돌린다. 프론트는 /api/census/status/{job_id}를 폴링해 진행/결과를 받는다.
+
+    ★관리자(사장님 cid0) 전용(2026-07-22) — 전 채널 크롤=고비용 운영 액션."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
     job_id = uuid.uuid4().hex[:12]
     Store(DB_PATH).create_census_job(job_id)
     background_tasks.add_task(_run_census_job, job_id)
@@ -638,11 +666,16 @@ def api_discover_added():
 
 
 @app.post("/api/reference/register")
-def api_reference_register(url: str):
+def api_reference_register(request: Request, url: str):
     """레퍼런스 채널을 URL 붙여넣기로 직접 등록(2026-07-18). 인스타 채널/릴스
     URL에서 username을 뽑아 discovered_channels에 소프트 추가 — 엑셀 원본은
     안 건드리고 다음 수집부터 랭킹에 포함(비용 0, 프로필 조회 안 함).
-    이미 엑셀·발굴목록에 있으면 already=True로 알려주고 중복 추가하지 않는다."""
+    이미 엑셀·발굴목록에 있으면 already=True로 알려주고 중복 추가하지 않는다.
+
+    ★관리자(사장님 cid0) 전용(2026-07-22) — 랭킹 대상(레퍼런스 목록) 편집은 운영 액션."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
     username = username_from_url(url)
     if not username:
         low = (url or "").lower()
@@ -659,6 +692,16 @@ def api_reference_register(url: str):
         return {"ok": True, "username": username, "already": True}
     store.add_discovered(username)
     return {"ok": True, "username": username, "already": False}
+
+
+@app.get("/api/channel/history")
+def api_channel_history(username: str, exclude: str = ""):
+    """채널 검색 시 '지난 한 달'(2026-07-22) — 그 채널의 누적 히스토리(reel_history)를
+    last_seen 최신순으로 반환. exclude=지금 48h 랭킹에 이미 뜬 shortcode 쉼표목록
+    (중복 카드 방지). 조회 전용이라 무료 등급도 허용(랭킹 열람의 연장)."""
+    excl = [s for s in (exclude or "").split(",") if s.strip()]
+    items = Store(DB_PATH).channel_history(username, exclude=excl)
+    return {"ok": True, "username": username, "items": items, "count": len(items)}
 
 
 @app.get("/api/prune/scan")
@@ -978,6 +1021,31 @@ def _ingest_pattern_bank(db_path, full_text, url, category):
         store.auto_approve_style_buckets()
     except Exception as e:  # noqa: BLE001 — 은행 적재 실패는 위키 저장엔 영향 없음
         print(f"pattern_bank ingest 실패: {e}")
+
+
+def _bank_ingest_collected_bg(db_path, items, collected_at):
+    """'지금 수집' 후 백그라운드: 랭킹 상위 표본을 부품은행에 자동 분해·적재하고
+    결과 리포트를 설정에 남긴다(수집 화면이 /api/bank/ingest_report로 읽어 보고).
+    소스당 Gemini 1콜이라 요청을 막지 않게 백그라운드로 돈다. 실패 무해."""
+    import json as _json
+    from datetime import datetime as _dt, timezone as _tz
+    try:
+        store = Store(db_path)
+    except Exception as e:  # noqa: BLE001
+        print(f"bank ingest(store) 실패: {e}")
+        return
+    day = (collected_at or "")[:10] or _dt.now(_tz.utc).strftime("%Y-%m-%d")
+    store.set_setting("bank_ingest_last", _json.dumps(
+        {"status": "running", "date": day, "collected_at": collected_at}, ensure_ascii=False))
+    try:
+        rep = pattern_bank.ingest_collected(store, items)
+        store.auto_approve_style_buckets()   # 스타일 부품 즉시 사용가능(위키 적재와 동일)
+        rep.update({"status": "done", "date": day, "collected_at": collected_at})
+        store.set_setting("bank_ingest_last", _json.dumps(rep, ensure_ascii=False))
+    except Exception as e:  # noqa: BLE001
+        print(f"bank ingest(collected) 실패: {e}")
+        store.set_setting("bank_ingest_last", _json.dumps(
+            {"status": "error", "date": day, "error": str(e)}, ensure_ascii=False))
 
 
 @app.post("/api/wiki/save")
@@ -1583,7 +1651,8 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
     # render_charge_day: '오늘 render를 과금했다'는 표식(+환불할 날짜). run_mix_job이 실패하면 딱
     # 이 날짜로 환불한다. 과금 안 하는 다른 create_mix_job 경로는 이 값을 비워 오환불을 막는다(리뷰 B).
     Store(DB_PATH).create_mix_job(job_id, urls, target, structure, subtitle_removal=subtitle_removal,
-                                  customer_id=cid, render_charge_day=_today_utc(),
+                                  customer_id=cid,
+                                  render_charge_day=("trial" if _is_trial(cid) else _today_utc()),
                                   scene_first=scene_first)
     background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True, "job_id": job_id}
@@ -1624,12 +1693,14 @@ def api_get_smart_mix():
 
 @app.post("/api/settings/smart_mix")
 def api_set_smart_mix(body: dict):
-    """딸깍 하나로 부품은행 주입(bank_enabled)·반복회피(novelty)·핑퐁(ping_pong_enabled)을
-    함께 켜고 끈다. 셋 다 scene_first 믹스에서만 작동하고 기본 off라 켜기 전엔 라이브 무변화."""
+    """딸깍 하나로 부품은행 주입(bank_enabled)·반복회피(novelty)·핑퐁(ping_pong_enabled)·
+    백본-베이스(backbone_base_enabled, 백본 흐름 위 100% 우리 대본)를 함께 켜고 끈다.
+    전부 scene_first 믹스에서만 작동하고 기본 off라 켜기 전엔 라이브 무변화."""
     val = "1" if body.get("on") else "0"
     store = Store(DB_PATH)
     store.set_setting("bank_enabled", val)
     store.set_setting("ping_pong_enabled", val)
+    store.set_setting("backbone_base_enabled", val)
     return {"ok": True, "on": val == "1"}
 
 
@@ -3046,7 +3117,8 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 # 메서드 무관 무료(로그인 폼 POST 등) — 전부 정확 경로.
 _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout"}
 # GET만 무료(레퍼런스 랭킹 '조회') — POST/PUT 등 데이터변경은 같은 경로여도 차단.
-_FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/api/thumb", "/api/video"}
+_FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/api/thumb", "/api/video",
+                   "/api/channel/history"}   # 채널 히스토리='지난 한 달' 조회 = 랭킹 열람의 연장(무료 허용)
 # 경계있는 prefix만(과다매칭 방지 — 트레일링 슬래시).
 _FREE_PREFIX = ("/static/", "/auth/google/")
 
@@ -3806,6 +3878,38 @@ def _google_callback(request: Request, code: str = "", state: str = "", error: s
     return r
 
 
+def _client_ip(request):
+    """nginx 뒤라 실제 IP는 X-Forwarded-For 첫 항목. 없으면 X-Real-IP, 그다음 소켓 주소."""
+    xff = request.headers.get("x-forwarded-for")
+    if xff:
+        return xff.split(",")[0].strip()
+    return request.headers.get("x-real-ip") or (request.client.host if request.client else "")
+
+
+_ACCESS_SEEN = set()   # (cid, day, ip, ua) 이 프로세스에서 이미 기록한 조합 → DB 중복호출 방지
+
+
+def _record_access(customer_id, request):
+    """돌려쓰기 소프트감지: 로그인 사용자의 접속 IP·기기를 하루 단위로 기록(차단 안 함).
+    best-effort — 절대 요청을 막지 않는다. 사장님(0)은 여러 기기가 정상이라 제외."""
+    if not customer_id:
+        return
+    try:
+        ip = _client_ip(request)
+        ua = request.headers.get("user-agent", "")[:200]
+        day = _today_utc()
+        key = (customer_id, day, ip, ua)
+        if key in _ACCESS_SEEN:
+            return
+        Store(DB_PATH).record_access(customer_id, ip, ua, day)
+        # ★쓰기 성공 후에만 seen 표시 — 실패(DB락 등)면 다음 요청에서 재시도 가능(기록 유실 방지)
+        if len(_ACCESS_SEEN) > 50000:      # 무한증식 방지 — 넘치면 비운다(날짜 바뀌면 어차피 새 키)
+            _ACCESS_SEEN.clear()
+        _ACCESS_SEEN.add(key)
+    except Exception:
+        pass
+
+
 @app.middleware("http")
 async def _auth_guard(request: Request, call_next):
     if not _AUTH_ON:
@@ -3826,6 +3930,7 @@ async def _auth_guard(request: Request, call_next):
     customer_id = _verify_session(request.cookies.get("dash_auth"))
     if customer_id is not None:
         request.state.customer_id = customer_id
+        _record_access(customer_id, request)   # 돌려쓰기 소프트감지(best-effort, 차단 안 함)
         lvl = access_level(customer_id)
         if lvl == "pending":
             # 승인 전 전면 차단. /logout만 통과(로그아웃 가능), /static은 위에서 이미 허용.
@@ -3861,7 +3966,13 @@ def access_level(customer_id, now=None):
     if not cust:
         return "ranking_only"
     if cust.get("approved_at") is None:
-        return "pending"                    # ★승인 전엔 plan/체험보다 우선해 전면 차단
+        # 🎁 무료체험 이벤트: 미승인이라도 가입 후 체험창(trial_ends_at) 안이면 full로 맛보기.
+        #    창 밖이면 대기실 전면차단(pending). NULL(기존고객)은 0 취급 → 즉시 pending.
+        if now is None:
+            now = int(datetime.now(timezone.utc).timestamp())
+        if now < (cust.get("trial_ends_at") or 0):
+            return "full"
+        return "pending"
     if cust.get("plan") == "pro":
         return "full"
     if now is None:
@@ -3871,9 +3982,21 @@ def access_level(customer_id, now=None):
     return "ranking_only"
 
 
+def _is_trial(customer_id, now=None):
+    """무료체험 이벤트 중인가 = 미승인(approved_at None) AND 체험창(trial_ends_at) 안. 사장님(0) 제외."""
+    if customer_id == 0:
+        return False
+    cust = Store(DB_PATH).get_customer(customer_id)
+    if not cust or cust.get("approved_at") is not None:
+        return False
+    if now is None:
+        now = int(datetime.now(timezone.utc).timestamp())
+    return now < (cust.get("trial_ends_at") or 0)
+
+
 # ── 유료게이트 비용 방어: 계정별 일일 크레딧 + 전역 상한 ──
 _CREDIT_DEFAULTS = {"lens": 5, "render": 2, "script": 10}
-_CREDIT_PRO_DEFAULTS = {"lens": 100, "render": 50, "script": 200}
+_CREDIT_PRO_DEFAULTS = {"lens": 100, "render": 10, "script": 200}  # 하루 영상 최대 10개(돌려쓰기 상한, 2026-07-22)
 _GLOBAL_CAP_DEFAULTS = {"lens": 200, "render": 100, "script": 400}
 
 
@@ -3881,10 +4004,29 @@ def _today_utc():
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 
+def _valid_backbone_main(raw, n_urls):
+    """UI가 보낸 backbone_main(메인 소스 인덱스)을 검증. 정수·[0,n) 범위면 그대로,
+    아니면 None(자동 선정). 잘못된 값에 믹스 job을 죽이지 않는다."""
+    if raw is None:
+        return None
+    try:
+        idx = int(raw)
+    except (TypeError, ValueError):
+        return None
+    return idx if 0 <= idx < n_urls else None
+
+
 def check_and_count(customer_id, op):
     """유료 op(lens/render/script) 실행 전 호출. 일일 상한 초과면 False(막기),
     아니면 카운트+1 후 True. 사장님(0)·pro는 높은 상한(limit_{op}_pro)."""
     st = Store(DB_PATH)
+    # 🎁 무료체험 이벤트: 체험 유저의 render는 '오늘' 대신 영구 "trial" 버킷으로 딱 1회.
+    #    렌즈·대본은 아래 일반 일일 한도 그대로(사장님이 담기·렌즈 열기를 택함).
+    if op == "render" and _is_trial(customer_id):
+        if st.usage_get(customer_id, "render", "trial") >= 1:
+            return False
+        st.usage_incr(customer_id, "render", "trial")
+        return True
     is_paid = (customer_id == 0) or (st.get_customer(customer_id) or {}).get("plan") == "pro"
     if is_paid:
         key, dflt = f"limit_{op}_pro", _CREDIT_PRO_DEFAULTS.get(op, 100)
@@ -3973,8 +4115,23 @@ def _api_me(request: Request):
 
 
 # ── 유료게이트 관리자(사장님 cid0 전용) — 결제 승격·설정 조정 ──
+# 사장님(cid0) 외 추가 관리자 = 이 구글 계정들. 코드로만 바꾼다(admin UI로 못 늘려 공격면 없음).
+_ADMIN_EMAILS = {"parklotto12@gmail.com"}
+
+
+def _is_admin(customer_id):
+    """cid0(사장님) 또는 이메일이 관리자 화이트리스트에 있으면 관리자."""
+    if customer_id == 0:
+        return True
+    if not customer_id:
+        return False
+    cust = Store(DB_PATH).get_customer(customer_id)
+    email = (cust or {}).get("email") or ""
+    return email.lower() in _ADMIN_EMAILS
+
+
 def _require_admin(request):
-    if getattr(request.state, "customer_id", None) != 0:
+    if not _is_admin(getattr(request.state, "customer_id", None)):
         return JSONResponse({"error": "관리자 전용"}, status_code=403)
     return None
 
@@ -3992,12 +4149,47 @@ def _admin_customers(request: Request):
         return denied
     st = Store(DB_PATH)
     day = _today_utc()
+    since7 = (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%d")  # 돌려쓰기 감지 창(7일)
     out = []
     for cu in st.list_customers():
         cu["level"] = access_level(cu["id"])
         cu["usage"] = {op: st.usage_get(cu["id"], op, day) for op in ("lens", "render", "script")}
+        cu["access_7d"] = st.access_summary(cu["id"], since7)   # {ips, devices} 최근 7일 고유 수
+        cu["is_admin"] = _is_admin(cu["id"])                    # 관리자 배지용
         out.append(cu)
     return {"ok": True, "customers": out, "settings": st.all_settings()}
+
+
+@app.post("/api/admin/customer/update")
+async def _admin_customer_update(request: Request):
+    """관리자 정보수정 — 고객 이름·전화. body: {customer_id, name?, phone?}."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id 필요"}, status_code=400)
+    Store(DB_PATH).update_customer_info(cid, body.get("name"), body.get("phone"))
+    return {"ok": True}
+
+
+@app.post("/api/admin/customer/delete")
+async def _admin_customer_delete(request: Request):
+    """관리자 완전 삭제 — 고객+결제이력+접속기록. 사장님(0)·다른 관리자는 못 지운다(락아웃 방지)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id 필요"}, status_code=400)
+    if _is_admin(cid):
+        return JSONResponse({"error": "관리자 계정은 삭제할 수 없어요"}, status_code=400)
+    Store(DB_PATH).delete_customer(cid)
+    return {"ok": True}
 
 
 @app.post("/api/admin/set_plan")
@@ -4099,7 +4291,7 @@ async def _admin_settings(request: Request):
 
 @app.get("/admin", response_class=HTMLResponse)
 def _admin_page(request: Request):
-    if getattr(request.state, "customer_id", None) != 0:
+    if not _is_admin(getattr(request.state, "customer_id", None)):
         return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
     return FileResponse(Path(__file__).parent / "static" / "admin.html",
                         media_type="text/html; charset=utf-8")
@@ -4627,11 +4819,16 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     # true로 보낸다. mix_pipeline._plan_and_tts가 build_scene_first_plan으로 후보 n개를 만들고
     # 추천 후보를 자동 세팅한다(candidates=[]이면 기존 build_edit_plan으로 조용히 폴백).
     scene_first = bool(body.get("scene_first", False))
+    # 백본(메인) 지정(2026-07-22): 사장님이 재료카드에서 '⭐메인'으로 고른 소스의 urls 인덱스.
+    # 범위 밖·형변환 실패는 None으로 흘려 자동 선정에 맡긴다(잘못된 값에 job을 죽이지 않는다).
+    backbone_main = _valid_backbone_main(body.get("backbone_main"), len(urls))
     job_id = uuid.uuid4().hex[:12]
     Store(DB_PATH).create_mix_job(job_id, urls, target, "free",
                                   subtitle_removal=subtitle_removal, given_script=script,
                                   script_structure=script_structure, scene_first=scene_first,
-                                  customer_id=cid, render_charge_day=_today_utc())
+                                  customer_id=cid,
+                                  render_charge_day=("trial" if _is_trial(cid) else _today_utc()),
+                                  backbone_main=backbone_main)
     background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True, "job_id": job_id}
 

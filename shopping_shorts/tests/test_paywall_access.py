@@ -76,6 +76,8 @@ def test_access_level_pending(tmp_path, monkeypatch):
     monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
     s = Store(str(tmp_path / "t.db"))
     cid = s.create_customer("pend", "pw12", approved=False)
+    with s._conn() as conn:                      # 체험창 만료 강제 → 진짜 pending 상태로 검증
+        conn.execute("UPDATE customers SET trial_ends_at=NULL WHERE id=?", (cid,))
     assert appmod.access_level(cid) == "pending"
     # 승인된 계정은 pending 아님
     cid2 = s.create_customer("ok", "pw12")

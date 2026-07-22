@@ -182,7 +182,7 @@ _BACKBONE_SCRIPT_SCHEMA = {
 }
 
 
-def _backbone_script_prompt(flow, inventory, target_seconds):
+def _backbone_script_prompt(flow, inventory, target_seconds, style_block=""):
     flow_lines = "\n".join(
         f"  {i+1}. [{f.get('action') or '-'}] {f.get('scene_desc', '')} (~{f.get('seconds', 0)}초)"
         for i, f in enumerate(flow))
@@ -196,17 +196,25 @@ def _backbone_script_prompt(flow, inventory, target_seconds):
         "대사는 쓰지 마라(있는 장면으로 말이 되게).\n\n"
         f"[잘된 영상 흐름 — 순서·행위·길이 참고]\n{flow_lines}\n\n"
         f"[실제 장면 목록 — 이 seg_id들만 사용]\n{inv_lines}\n\n"
-        "각 비트: narration(실제 읽을 우리 구어체 대사), seg_id(그 대사에 맞는 실제 장면). "
-        "0초 훅부터 끝 CTA까지 하나의 이야기로. JSON만 출력.")
+        # ★짤드라마·훅·은행 부품(style_block) 주입 — 이게 없으면 흐름만 밋밋하게 따라가
+        #  "여러분 ~해요/알려드려요" 설명체가 나온다(2026-07-22 실사고: 대본 초기화 현상).
+        + ((style_block + "\n\n") if style_block else "")
+        + "각 비트: narration(실제 읽을 우리 구어체 대사), seg_id(그 대사에 맞는 실제 장면).\n"
+        "★첫 비트(narration)는 반드시 강한 훅으로 열어라 — '여러분~', '~알려드려요', '~해요' 류 "
+        "밋밋한 설명체 오프너 금지. 궁금증·반전·강한 주장·인물 상황으로 확 잡아채라.\n"
+        "0초 훅부터 끝 CTA까지 하나의 짤드라마(짧은 이야기)로. 요리 순서 나열이 아니라 이야기다. "
+        "JSON만 출력.")
 
 
-def generate_backbone_script(flow, inventory, target_seconds, call=None):
+def generate_backbone_script(flow, inventory, target_seconds, call=None, style_block=""):
     """백본 흐름 + 실제 장면 인벤토리 → 완전히 새 우리 대본(비트별 narration + 고른 seg_id).
-    인벤토리 밖 seg_id는 드롭(없는 장면 요구 차단). call None/실패면 []."""
+    인벤토리 밖 seg_id는 드롭(없는 장면 요구 차단). call None/실패면 [].
+    style_block: 짤드라마 규칙 + 은행 훅·말투 부품(edit_plan이 조립해 주입) — 없으면 밋밋해진다."""
     if call is None:
         call = pattern_bank._default_call
     valid = {it.get("seg_id") for it in (inventory or [])}
-    res = call(_backbone_script_prompt(flow or [], inventory or [], target_seconds),
+    res = call(_backbone_script_prompt(flow or [], inventory or [], target_seconds,
+                                       style_block=style_block),
                _BACKBONE_SCRIPT_SCHEMA)
     if not res or not isinstance(res, dict):
         return []
@@ -291,12 +299,36 @@ def platform_of(url):
     return ""
 
 
+def score_backbones(sources, meta=None):
+    """각 소스를 백본 후보로 채점 → [{video_id, coverage, engagement, score}] 점수 내림차순.
+    ★60대는 어느 걸 메인으로 둘지 판단 못 하니 시스템이 점수로 자동 선정하기 위한 근거(2026-07-22).
+      · coverage = 그 소스의 행위들을 '나머지 풀'이 얼마나 커버하나(재조합 가능성) — 높을수록
+        장면 갈아끼우기가 잘 돼 좋은 뼈대.
+      · engagement = 댓글수(meta) 정규화.
+      score = 0.6·coverage + 0.4·engagement. 순수 계산(추가 Gemini 없음)."""
+    if not sources:
+        return []
+    meta = meta or {}
+    max_c = max((meta.get(s.get("video_id"), {}).get("comments") or 0) for s in sources) or 1
+    out = []
+    for s in sources:
+        vid = s.get("video_id")
+        others = [o for o in sources if o.get("video_id") != vid]
+        cov = coverage(s, others)["coverage_pct"] if others else 0.0
+        eng = (meta.get(vid, {}).get("comments") or 0) / max_c
+        out.append({"video_id": vid, "coverage": round(cov, 3),
+                    "engagement": round(eng, 3), "score": round(0.6 * cov + 0.4 * eng, 3)})
+    out.sort(key=lambda x: x["score"], reverse=True)
+    return out
+
+
 def pick_backbone(sources, meta=None, forced=None):
     """백본 선정(사장님 규칙):
-      0) forced(사장님이 UI에서 지정한 메인)가 있으면 그게 무조건 우선.
+      0) forced(사장님이 UI에서 지정한 메인)가 있으면 그게 무조건 우선(override).
       1) 백본 = 인스타·유튜브(한글 대본)만 후보. 플랫폼 아는 소스 중 그 둘만.
-      2) 후보 중 댓글수 최다 → 동수면 세그먼트 최다.
-    meta 없으면(플랫폼 모름) 세그먼트 최다 폴백. 소스 없거나 후보 0이면 None."""
+      2) 후보 중 **score_backbones 최고점**(재조합 가능성 coverage + 참여도) — 60대가 메인을
+         안 골라도 시스템이 '잘 섞일' 백본을 자동 선정한다(2026-07-22, 예전 댓글수·세그먼트수 대체).
+    meta 없어도 coverage(순수계산)로 채점된다. 소스 없거나 후보 0이면 None."""
     if not sources:
         return None
     if forced and any(s.get("video_id") == forced for s in sources):
@@ -308,13 +340,11 @@ def pick_backbone(sources, meta=None, forced=None):
                  if meta[s["video_id"]]["platform"].lower() in _BACKBONE_PLATFORMS]
         cands = cands or [s for s in sources]   # 인스타/유튜브 하나도 없으면 전체(폴백)
     else:
-        cands = list(sources)                   # 플랫폼 정보 없음 → 세그먼트 최다
-
-    def key(s):
-        m = meta.get(s.get("video_id"), {})
-        return (m.get("comments") or 0, len(s.get("segments") or []))
-
-    return max(cands, key=key).get("video_id")
+        cands = list(sources)                   # 플랫폼 정보 없음 → coverage로 채점
+    scores = {r["video_id"]: r["score"] for r in score_backbones(sources, meta)}
+    # coverage 동점(예: 세그먼트 없음)이면 세그먼트 최다로 tiebreak → 기존 동작 보존.
+    return max(cands, key=lambda s: (scores.get(s.get("video_id"), 0.0),
+                                     len(s.get("segments") or []))).get("video_id")
 
 
 def order_by_backbone(beats, backbone_video):
