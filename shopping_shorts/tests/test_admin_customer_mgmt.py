@@ -158,3 +158,18 @@ def test_set_admin_endpoint_and_refuses_code_admin(tmp_path, monkeypatch):
     # 코드 고정 관리자는 UI로 변경 거부
     r2 = owner.post("/api/admin/customer/set_admin", json={"customer_id": codeadmin, "admin": False})
     assert r2.status_code == 400
+
+
+# ── 관리자는 하루 렌더 상한(10) 없이 무제한 (2026-07-22 버그픽스) ──
+def test_admin_render_unlimited(tmp_path, monkeypatch):
+    s = _setup(tmp_path, monkeypatch)
+    for i in range(15):                                     # 사장님(0) 15회 다 통과
+        assert appmod.check_and_count(0, "render") is True, f"owner {i}회차"
+    acid = s.create_customer("g_a", "pw12", email="parklotto12@gmail.com")
+    for i in range(15):                                     # 이메일 관리자도 무제한
+        assert appmod.check_and_count(acid, "render") is True, f"admin {i}회차"
+    # 일반 pro는 여전히 10 상한
+    pcid = s.create_customer("g_p", "pw12")
+    s.set_plan(pcid, "pro")
+    passed = sum(1 for _ in range(20) if appmod.check_and_count(pcid, "render"))
+    assert passed == 10                                     # pro=10 유지
