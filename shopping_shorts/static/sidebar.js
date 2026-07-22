@@ -4,16 +4,14 @@
 (function () {
   // PWA 부트스트랩 — 앱 페이지 전체(사이드바 포함 페이지)에 매니페스트·아이콘을 주입.
   // 페이지마다 <head>를 손대면 드리프트되므로 여기 한 곳에서(공개 대문·로그인은 app.py가 직접).
+  // (setAttribute 대신 프로퍼티 할당 — 테스트 하네스의 미니 DOM에도 안전)
   if (!document.querySelector('link[rel="manifest"]')) {
-    [["link", { rel: "manifest", href: "/manifest.webmanifest" }],
-     ["meta", { name: "theme-color", content: "#0c1411" }],
-     ["link", { rel: "icon", href: "/favicon.ico" }],
-     ["link", { rel: "apple-touch-icon", href: "/apple-touch-icon.png" }]
-    ].forEach(function (t) {
-      var el = document.createElement(t[0]);
-      for (var k in t[1]) el.setAttribute(k, t[1][k]);
-      document.head.appendChild(el);
-    });
+    var _mf = document.createElement("link"); _mf.rel = "manifest"; _mf.href = "/manifest.webmanifest";
+    var _tc = document.createElement("meta"); _tc.name = "theme-color"; _tc.content = "#0c1411";
+    var _fi = document.createElement("link"); _fi.rel = "icon"; _fi.href = "/favicon.ico";
+    var _at = document.createElement("link"); _at.rel = "apple-touch-icon"; _at.href = "/apple-touch-icon.png";
+    document.head.appendChild(_mf); document.head.appendChild(_tc);
+    document.head.appendChild(_fi); document.head.appendChild(_at);
   }
 
   var NAV = [
