@@ -143,6 +143,22 @@ def _probe_duration(path):
     return float(out.stdout.strip())
 
 
+_TRIM_FLOOR = 0.4  # 비트 트림 후 남길 최소 길이(초). 과트림·역전 방지.
+
+
+def _effective_dur(probe, head_trim=0.0, tail_trim=0.0, floor=_TRIM_FLOOR):
+    """probe(원본 TTS 길이)에서 앞/뒤 트림을 뺀 실질 비트 길이. 하한 가드 포함.
+    음수 트림은 0으로 취급. 결과가 floor 밑이면 floor로 고정한다."""
+    d = probe - max(0.0, head_trim) - max(0.0, tail_trim)
+    return max(floor, d)
+
+
+def _beat_effective_dur(beat, tts_path):
+    """비트 dict의 head_trim/tail_trim을 반영한 실질 길이(단일 출처)."""
+    return _effective_dur(_probe_duration(tts_path),
+                          beat.get("head_trim", 0.0), beat.get("tail_trim", 0.0))
+
+
 def _run_ffmpeg(cmd, cwd=None):
     """ffmpeg 실행. 실패 시 stderr를 예외에 담아 원인을 삼키지 않는다.
     stdin=DEVNULL 필수(Windows): pytest 캡처 중에는 부모 stdin 핸들이 유효하지
