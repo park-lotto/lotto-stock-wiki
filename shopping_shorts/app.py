@@ -4020,8 +4020,23 @@ def _api_me(request: Request):
 
 
 # ── 유료게이트 관리자(사장님 cid0 전용) — 결제 승격·설정 조정 ──
+# 사장님(cid0) 외 추가 관리자 = 이 구글 계정들. 코드로만 바꾼다(admin UI로 못 늘려 공격면 없음).
+_ADMIN_EMAILS = {"parklotto12@gmail.com"}
+
+
+def _is_admin(customer_id):
+    """cid0(사장님) 또는 이메일이 관리자 화이트리스트에 있으면 관리자."""
+    if customer_id == 0:
+        return True
+    if not customer_id:
+        return False
+    cust = Store(DB_PATH).get_customer(customer_id)
+    email = (cust or {}).get("email") or ""
+    return email.lower() in _ADMIN_EMAILS
+
+
 def _require_admin(request):
-    if getattr(request.state, "customer_id", None) != 0:
+    if not _is_admin(getattr(request.state, "customer_id", None)):
         return JSONResponse({"error": "관리자 전용"}, status_code=403)
     return None
 
@@ -4045,8 +4060,39 @@ def _admin_customers(request: Request):
         cu["level"] = access_level(cu["id"])
         cu["usage"] = {op: st.usage_get(cu["id"], op, day) for op in ("lens", "render", "script")}
         cu["access_7d"] = st.access_summary(cu["id"], since7)   # {ips, devices} 최근 7일 고유 수
+        cu["is_admin"] = _is_admin(cu["id"])                    # 관리자 배지용
         out.append(cu)
     return {"ok": True, "customers": out, "settings": st.all_settings()}
+
+
+@app.post("/api/admin/customer/update")
+async def _admin_customer_update(request: Request):
+    """관리자 정보수정 — 고객 이름·전화. body: {customer_id, name?, phone?}."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    cid = body.get("customer_id")
+    if not cid:
+        return JSONResponse({"error": "customer_id 필요"}, status_code=400)
+    Store(DB_PATH).update_customer_info(cid, body.get("name"), body.get("phone"))
+    return {"ok": True}
+
+
+@app.post("/api/admin/customer/delete")
+async def _admin_customer_delete(request: Request):
+    """관리자 완전 삭제 — 고객+결제이력+접속기록. 사장님(0)·다른 관리자는 못 지운다(락아웃 방지)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    cid = body.get("customer_id")
+    if not cid:
+        return JSONResponse({"error": "customer_id 필요"}, status_code=400)
+    if _is_admin(cid):
+        return JSONResponse({"error": "관리자 계정은 삭제할 수 없어요"}, status_code=400)
+    Store(DB_PATH).delete_customer(cid)
+    return {"ok": True}
 
 
 @app.post("/api/admin/set_plan")
@@ -4148,7 +4194,7 @@ async def _admin_settings(request: Request):
 
 @app.get("/admin", response_class=HTMLResponse)
 def _admin_page(request: Request):
-    if getattr(request.state, "customer_id", None) != 0:
+    if not _is_admin(getattr(request.state, "customer_id", None)):
         return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
     return FileResponse(Path(__file__).parent / "static" / "admin.html",
                         media_type="text/html; charset=utf-8")

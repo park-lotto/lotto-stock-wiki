@@ -2721,6 +2721,30 @@ class Store:
                 "google_sub": row[5], "email": row[6], "approved_at": row[7],
                 "name": row[8], "phone": row[9], "trial_ends_at": row[10]}
 
+    def update_customer_info(self, customer_id, name, phone):
+        """관리자 정보수정: 이름·전화 갱신(구글 가입은 이름·전화가 비어 admin에서 채운다).
+        None이 아닌 값만 덮어쓴다 — 한쪽만 고칠 때 다른 쪽을 지우지 않게."""
+        sets, params = [], []
+        if name is not None:
+            sets.append("name=?"); params.append(name)
+        if phone is not None:
+            sets.append("phone=?"); params.append(phone)
+        if not sets:
+            return
+        params.append(customer_id)
+        with self._conn() as c:
+            c.execute(f"UPDATE customers SET {', '.join(sets)} WHERE id=?", params)
+
+    def delete_customer(self, customer_id):
+        """관리자 완전 삭제: 고객 + 결제이력 + 접속기록을 지운다. 사장님(0)은 안 지운다."""
+        if customer_id == 0:
+            return
+        with self._conn() as c:
+            c.execute("DELETE FROM payments WHERE customer_id=?", (customer_id,))
+            c.execute("DELETE FROM customer_access WHERE customer_id=?", (customer_id,))
+            c.execute("DELETE FROM usage WHERE customer_id=?", (customer_id,))
+            c.execute("DELETE FROM customers WHERE id=?", (customer_id,))
+
     def set_plan(self, customer_id, plan, full_access_until=None):
         """등급 변경. plan='pro'|'free'. full_access_until(epoch초)를 주면 함께 설정(체험창)."""
         with self._conn() as c:
