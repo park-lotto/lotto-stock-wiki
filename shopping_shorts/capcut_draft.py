@@ -193,6 +193,7 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
 
         # ── 음성 트랙: 비트 TTS ──
         tts_real = tts_paths.get(idx)
+        _head = _us(tl.get("head_trim", 0.0))   # 앞트림 → 오디오 소스 시작 오프셋
         if tts_real:
             abs_path = asset_paths.get(tts_real)
             if abs_path:
@@ -203,7 +204,7 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                     mats[key].append(m)
                 am = _audio_material(abs_path, "beat_%02d" % idx, dur)
                 mats["audios"].append(am)
-                seg = _base_segment(am["id"], t0, dur, source_start=0, source_dur=dur,
+                seg = _base_segment(am["id"], t0, dur, source_start=_head, source_dur=dur,
                                     render_index=0,
                                     extra_refs=[sp["id"], ph["id"], be["id"], sc["id"], vs["id"]])
                 aud_track["segments"].append(seg)

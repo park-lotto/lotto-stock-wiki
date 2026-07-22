@@ -143,6 +143,22 @@ def _probe_duration(path):
     return float(out.stdout.strip())
 
 
+_TRIM_FLOOR = 0.4  # 비트 트림 후 남길 최소 길이(초). 과트림·역전 방지.
+
+
+def _effective_dur(probe, head_trim=0.0, tail_trim=0.0, floor=_TRIM_FLOOR):
+    """probe(원본 TTS 길이)에서 앞/뒤 트림을 뺀 실질 비트 길이. 하한 가드 포함.
+    음수 트림은 0으로 취급. 결과가 floor 밑이면 floor로 고정한다."""
+    d = probe - max(0.0, head_trim) - max(0.0, tail_trim)
+    return max(floor, d)
+
+
+def _beat_effective_dur(beat, tts_path):
+    """비트 dict의 head_trim/tail_trim을 반영한 실질 길이(단일 출처)."""
+    return _effective_dur(_probe_duration(tts_path),
+                          beat.get("head_trim", 0.0), beat.get("tail_trim", 0.0))
+
+
 def _run_ffmpeg(cmd, cwd=None):
     """ffmpeg 실행. 실패 시 stderr를 예외에 담아 원인을 삼키지 않는다.
     stdin=DEVNULL 필수(Windows): pytest 캡처 중에는 부모 stdin 핸들이 유효하지
@@ -580,7 +596,8 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
         tts = tts_paths.get(idx)
         if not tts:
             continue
-        tts_dur = _probe_duration(tts)
+        tts_dur = _beat_effective_dur(beat, tts)
+        _head_trim = beat.get("head_trim", 0.0)
         # 순서 구간 리스트 = [primary] + alternates. 소스에 실재하고 + 디코드 가능한 것만.
         # 손상/빈 소스(_src_dur=0)는 여기서 걸러야 아래 -ss 렌더가 예외로 죽지 않는다(2026-07-19).
         segs = [s for s in ([beat["primary"]] + list(beat.get("alternates", [])))
@@ -668,7 +685,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 "ffmpeg", "-y",
                 "-i", str(beat_video),   # 0: 내 다중클립 비트영상(이미 vf 적용)
                 "-i", str(cutaway),      # 1: 컷어웨이 자산(오디오 버림 = b-roll)
-                "-i", str(tts),          # 2: 나레이션
+                "-ss", f"{_head_trim:.3f}", "-i", str(tts),          # 2: 나레이션(앞트림 반영)
                 "-filter_complex", fc, "-r", "30",
                 "-map", "[vout]", "-map", "2:a:0",
                 # 여운(runout): 마지막 비트만 대사 뒤 화면이 더 산다 — 오디오는 tts 길이에서
@@ -679,7 +696,8 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
         else:
             # 비트 나레이션(tts) 오디오를 얹고 길이를 tts_dur(+마지막 비트는 여운)로 맞춘다.
             _run_ffmpeg([
-                "ffmpeg", "-y", "-i", str(beat_video), "-i", str(tts),
+                "ffmpeg", "-y", "-i", str(beat_video),
+                "-ss", f"{_head_trim:.3f}", "-i", str(tts),
                 "-map", "0:v:0", "-map", "1:a:0", "-t", f"{tts_dur + runout:.3f}",
                 "-c:v", "copy", "-c:a", "aac", str(clip),
             ])
@@ -1000,7 +1018,7 @@ def _beat_timeline(edit_plan, tts_paths):
         tts = tts_paths.get(idx)
         if not tts:
             continue
-        dur = _probe_duration(tts)
+        dur = _beat_effective_dur(beat, tts)
         timeline.append({
             "beat_idx": idx,
             "t0": t0,
@@ -1011,6 +1029,7 @@ def _beat_timeline(edit_plan, tts_paths):
             "cap_offset": beat.get("cap_offset", 0.0),
             "caption_lines": beat.get("caption_lines"),   # AI가 끊어준 자막 호흡 줄(있으면)
             "sfx": beat.get("sfx"),                        # 효과음 매칭(있으면) — position 읽기용
+            "head_trim": beat.get("head_trim", 0.0),
         })
         t0 += dur
     return timeline

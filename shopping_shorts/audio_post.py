@@ -3,6 +3,7 @@
 ElevenLabs speed는 0.7~1.2만 지원해, 그 이상(1.3~1.5) 속도는 여기서 atempo로 얹는다.
 무음삭제는 나레이션 사이 쉬는 구간을 잘라 빠르게 이어붙인다(레벨: off/weak/mid/strong)."""
 import os
+import re as _re
 import subprocess
 import tempfile
 
@@ -76,3 +77,40 @@ def post_process(in_path, out_path, tempo=1.0, silence_trim="off", pace_mode=Fal
     if same:
         os.replace(target, str(out_path))
     return str(out_path)
+
+
+def _parse_silence_edges(stderr, total_dur):
+    """silencedetect stderr → (앞무음초, 뒤무음초).
+    앞무음 = silence_start≈0에서 시작한 구간의 end.
+    뒤무음 = silence_end≈total_dur에서 끝난 구간의 duration(끝에 닿는 것만)."""
+    starts = [float(m) for m in _re.findall(r"silence_start:\s*([0-9.]+)", stderr)]
+    ends = _re.findall(r"silence_end:\s*([0-9.]+)\s*\|\s*silence_duration:\s*([0-9.]+)", stderr)
+    head = 0.0
+    tail = 0.0
+    for s in starts:
+        if s <= 0.05:            # 0에서 시작 = 앞무음
+            # 짝지는 end 찾기(첫 end)
+            if ends:
+                head = float(ends[0][0])
+            break
+    for end_t, dur in ends:
+        if abs(float(end_t) - total_dur) <= 0.05:   # 끝에 닿음 = 뒤무음
+            tail = float(dur)
+    return head, tail
+
+
+def detect_edge_silence(path, edge):
+    """path의 앞/뒤 무음 길이(초). edge in {"head","tail"}. 감지 실패 시 0.0."""
+    try:
+        from shopping_shorts.video_assemble import _probe_duration
+        total = _probe_duration(path)
+        if total <= 0:
+            return 0.0
+        proc = subprocess.run(
+            ["ffmpeg", "-i", str(path), "-af", "silencedetect=noise=-40dB:d=0.2",
+             "-f", "null", "-"],
+            capture_output=True, text=True, check=True)
+        head, tail = _parse_silence_edges(proc.stderr or "", total)
+        return head if edge == "head" else tail
+    except Exception:
+        return 0.0

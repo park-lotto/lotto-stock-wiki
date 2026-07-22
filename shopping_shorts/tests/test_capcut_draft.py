@@ -146,3 +146,19 @@ def test_capcut_project_name_uses_headcopy_for_findability():
     assert n2.startswith("딱 한 뼘이면 OK")                          # 헤드카피 없으면 첫 대사
     n3 = a._capcut_project_name("454169a1zzzz", {}, {})
     assert n3 == "쇼핑쇼츠_454169a1"                                  # 둘 다 없으면 옛 폴백
+
+
+def test_capcut_audio_reflects_head_trim():
+    from shopping_shorts.capcut_draft import build_draft, _us
+    plan = {"beats": [{"beat_idx": 0, "narration": "가",
+                       "primary": {"video_id": "v1", "start": 0}, "head_trim": 0.5}]}
+    timeline = [{"beat_idx": 0, "t0": 0.0, "dur": 4.0, "narration": "가", "head_trim": 0.5}]
+    draft, _ = build_draft(
+        plan=plan, timeline=timeline,
+        source_video_paths={"v1": "/x/v1.mp4"}, tts_paths={0: "/x/b0.mp3"},
+        asset_paths={"/x/v1.mp4": "C:/d/v1.mp4", "/x/b0.mp3": "C:/d/b0.mp3"},
+        project_name="t")
+    aud_track = next(t for t in draft["tracks"] if t["type"] == "audio")
+    seg = aud_track["segments"][0]
+    assert seg["source_timerange"]["start"] == _us(0.5)   # 앞트림이 source_start로
+    assert seg["source_timerange"]["duration"] == _us(4.0)

@@ -2108,6 +2108,7 @@ function _renderMixReviewBody(d){
       <div class="scene-swap" id="sceneSwap${i}">${renderSwapButton(b, i)}</div>
       <div class="scene-cutaway" id="sceneCutaway${i}">${renderSceneCutaway(b, i)}</div>
       <div class="scene-sfx" id="sceneSfx${i}">${renderSceneSfx(b, i)}</div>
+      <div class="scene-trim" id="sceneTrim${i}">${renderTrimControls(b, i)}</div>
     </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>!b.respined&&b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
     +`<button id="btnPreview" class="btn-next" style="margin-top:8px;padding:7px 14px" onclick="startPreview()">▶ 미리보기 만들기</button>`
     +`<button class="btn" style="margin-top:8px;margin-left:8px;padding:7px 14px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="cancelMixReview()" title="이 매칭을 취소하고 소스·대본을 고쳐 처음부터 다시 매칭합니다">✕ 취소하고 다시 매칭</button>`
@@ -2922,6 +2923,41 @@ async function doSwap(idx, segId){
   loadMixReview();   // 화면이 바뀜=옛 미리보기 무효 → 전체 재로드가 프리뷰까지 정리(2360 규율)
 }
 // ─── SWAP-END
+
+// ── [끝/앞 조용한 부분 자르기] 트림(2026-07-22) ─── TRIM-START
+// 목소리 끝난 뒤 남는 무음 꼬리를 자른다. dur가 TTS길이에 묶여 있어 영상·자막이 함께 준다.
+// 자동 1버튼(무음 감지) + 뒤/앞 −0.3초 미세조정 + 되돌리기. 슬라이더 대신 버튼(시니어).
+function renderTrimControls(beat, idx){
+  const tail = +(beat.tail_trim||0), head = +(beat.head_trim||0);
+  const state = (tail||head)
+    ? `<span class="hint" style="font-size:11px">현재: ${tail?`끝 ${tail.toFixed(1)}초`:''}${(tail&&head)?' · ':''}${head?`앞 ${head.toFixed(1)}초`:''} 잘림</span>`
+    : '';
+  return `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px">`
+    + `<button class="btn-prev" style="padding:6px 12px;font-size:12px" onclick="doTrim(${idx},'tail','auto')">✂ 끝 조용한 부분 자르기</button>`
+    + `<button class="btn-prev" style="padding:6px 10px;font-size:12px" onclick="doTrim(${idx},'tail','nudge')">뒤 −0.3초 ▸</button>`
+    + `<button class="btn-prev" style="padding:6px 10px;font-size:12px" onclick="doTrim(${idx},'head','nudge')">◂ 앞 −0.3초</button>`
+    + ((tail||head)?`<button class="btn-prev" style="padding:6px 10px;font-size:12px" onclick="doTrim(${idx},(${tail}?'tail':'head'),'reset')">◂ 되돌리기</button>`:'')
+    + state + `</div>`;
+}
+async function doTrim(idx, edge, mode){
+  if(!MIX_JOB) return;
+  const box = document.getElementById('sceneTrim'+idx);
+  if(box) box.innerHTML = '<div class="hint">⏳ 자르는 중…</div>';
+  let r;
+  try{
+    r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/trim',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({beat_idx: idx, edge, mode, step: 0.3})})).json();
+  }catch(e){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
+  if(mode==='auto' && edge==='tail' && !r.tail_trim){
+    if(box) box.innerHTML = renderTrimControls({tail_trim:0,head_trim:r.head_trim}, idx)
+      + '<div class="hint" style="color:var(--sub);font-size:11px">자를 조용한 부분이 없어요</div>';
+    return;
+  }
+  loadMixReview();   // 길이 바뀜=옛 미리보기 무효 → 전체 재로드가 프리뷰까지 정리(스왑과 동일 규율)
+}
+// ─── TRIM-END
 
 // ── 조각 전체 보기(2026-07-21 사장님: "이거 자른거 볼수있게 띄워봐") ─── PALETTE-START
 // 믹스가 소스를 몇 조각으로 나눠 이 영상에 몇 컷 썼는지 한눈에. 백엔드 변경 0 — 데이터가 이미 있다:
