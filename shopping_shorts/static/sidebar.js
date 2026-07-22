@@ -2,6 +2,20 @@
    기존에 페이지마다 <aside class="sidebar">를 손으로 복붙하다 항목이 제각각
    드리프트되고 mix 페이지엔 아예 없던 문제를 하나로 통일(2026-07-13). */
 (function () {
+  // PWA 부트스트랩 — 앱 페이지 전체(사이드바 포함 페이지)에 매니페스트·아이콘을 주입.
+  // 페이지마다 <head>를 손대면 드리프트되므로 여기 한 곳에서(공개 대문·로그인은 app.py가 직접).
+  if (!document.querySelector('link[rel="manifest"]')) {
+    [["link", { rel: "manifest", href: "/manifest.webmanifest" }],
+     ["meta", { name: "theme-color", content: "#0c1411" }],
+     ["link", { rel: "icon", href: "/favicon.ico" }],
+     ["link", { rel: "apple-touch-icon", href: "/apple-touch-icon.png" }]
+    ].forEach(function (t) {
+      var el = document.createElement(t[0]);
+      for (var k in t[1]) el.setAttribute(k, t[1][k]);
+      document.head.appendChild(el);
+    });
+  }
+
   var NAV = [
     { label: "리서치", items: [
       { icon: "📊", text: "레퍼런스 랭킹",   href: "/", free: true },
