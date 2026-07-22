@@ -118,3 +118,14 @@ def test_admin_delete_refuses_admin_account(tmp_path, monkeypatch):
     r = owner.post("/api/admin/customer/delete", json={"customer_id": admin_cid})
     assert r.status_code == 400                              # 관리자 계정 삭제 거부(락아웃 방지)
     assert s.get_customer(admin_cid) is not None
+
+
+# ── /api/me가 이메일 관리자에게 is_admin=true (사이드바 관리페이지 버튼용) ──
+def test_api_me_is_admin_for_email_admin(tmp_path, monkeypatch):
+    s = _setup(tmp_path, monkeypatch)
+    admin_cid = s.create_customer("g_admin", "pw12", email="parklotto12@gmail.com")
+    normal_cid = s.create_customer("g_norm", "pw12", email="x@y.com")
+    ca = TestClient(appmod.app, cookies={"dash_auth": _cookie(admin_cid)})
+    cn = TestClient(appmod.app, cookies={"dash_auth": _cookie(normal_cid)})
+    assert ca.get("/api/me").json()["is_admin"] is True
+    assert cn.get("/api/me").json()["is_admin"] is False

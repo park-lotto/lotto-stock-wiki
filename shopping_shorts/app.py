@@ -4176,7 +4176,8 @@ def _api_me(request: Request):
         except (TypeError, ValueError):
             return d
     # 계정 패널(2026-07-22): 구글 이메일·이름·가입 며칠째·오늘 사용량.
-    is_admin = (cid == 0)
+    is_admin = _is_admin(cid)   # 사장님(0) + 이메일 화이트리스트(parklotto12) 모두 관리자
+
     email = "관리자" if is_admin else ((cust or {}).get("email") or (cust or {}).get("username") or "")
     name = (cust or {}).get("name") or "" if cust else ""
     # 등급별 실제 크레딧 상한(check_and_count와 동일 규칙) — 패널에 'x/상한' 표시용.
