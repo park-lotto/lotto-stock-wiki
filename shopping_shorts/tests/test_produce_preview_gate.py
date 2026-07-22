@@ -83,6 +83,9 @@ function collectMixUrls(){
   for (const u of [...fromPool, ...typed]) if (!seen.has(u)) { seen.add(u); out.push(u); }
   return out;
 }
+// startProduceMix가 ⭐메인(백본) 인덱스를 이 슬라이스 밖 심볼로 읽는다(2026-07-22). HANDOFF가
+// 비어 지정도 없으니 -1(자동) — 재매칭 흐름과 무관. 없으면 ReferenceError로 startProduceMix가 죽는다.
+function collectBackboneIndex(urls){ return -1; }
 
 // ── 가짜 시계: setInterval을 진짜로 등록하고 수동으로 tick한다 ──
 let _timerSeq = 0;
