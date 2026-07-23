@@ -260,10 +260,55 @@
     .btn-clean:active,.cp-redo:active{transform:scale(.97)}
     .cp-redo:hover{border-color:var(--accent);color:var(--txt)}
     /* 접근성: 모션 축소 요청 시 전부 정지 */
+    /* ── 숏템 고품질 자막제거기 히어로 ── */
+    .hero{position:relative;border-radius:18px;padding:1.5px;background:linear-gradient(120deg,#1f9e7a,#37e0bd,#123a30,#37e0bd);
+      background-size:300% 300%;animation:borderflow 6s ease infinite}
+    @keyframes borderflow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    .hero-in{background:radial-gradient(120% 140% at 15% 0%,#12241e,#0b1310 60%);border-radius:16.5px;padding:20px}
+    .hbar{display:flex;align-items:center;gap:14px;cursor:pointer;position:relative}
+    .hicon{width:52px;height:52px;border-radius:14px;flex:none;display:flex;align-items:center;justify-content:center;
+      font-size:26px;background:linear-gradient(135deg,#123a30,#0c221c);border:1px solid var(--accent2);
+      box-shadow:0 0 20px rgba(55,224,189,.25);animation:iconpulse 2.6s ease-in-out infinite}
+    @keyframes iconpulse{0%,100%{box-shadow:0 0 16px rgba(55,224,189,.2)}50%{box-shadow:0 0 30px rgba(55,224,189,.45)}}
+    .hmeta{display:flex;flex-direction:column;gap:3px;min-width:0}
+    .htitle{font-size:18px;font-weight:800;letter-spacing:-.2px;display:flex;align-items:center;gap:8px}
+    .hpill{font-size:10px;font-weight:700;color:#04120e;background:linear-gradient(90deg,var(--gold),#e8b53a);padding:2px 7px;border-radius:20px}
+    .htag{color:var(--sub);font-size:12.5px}
+    .show{display:flex;align-items:center;gap:0;margin:16px 0 2px;background:#0a0e0c;border:1px solid var(--line);
+      border-radius:13px;padding:16px 10px;position:relative}
+    .demotag{position:absolute;top:8px;left:11px;font-size:9.5px;color:var(--sub);letter-spacing:.05em;text-transform:uppercase}
+    .demo{flex:1;display:flex;flex-direction:column;align-items:center}
+    .dframe{position:relative;width:100%;max-width:124px;aspect-ratio:9/16;border-radius:10px;overflow:hidden;
+      background:linear-gradient(160deg,#2a3a44,#141c22);border:1px solid #0006}
+    .dframe .sky{position:absolute;inset:0;background:radial-gradient(120px 80px at 30% 22%,#3a5566,transparent),radial-gradient(90px 90px at 72% 68%,#4a3b52,transparent)}
+    .dframe .subbar{position:absolute;left:7px;right:7px;bottom:12px;text-align:center}
+    .dframe .subbar span{background:rgba(0,0,0,.62);color:#fff;font-size:8.5px;padding:2px 5px;border-radius:3px}
+    .dframe .dscan{position:absolute;left:0;right:0;top:0;height:16px;
+      background:linear-gradient(180deg,transparent,rgba(55,224,189,.8),transparent);
+      box-shadow:0 0 16px rgba(55,224,189,.7);animation:scan 1.8s linear infinite}
+    .dframe .dchk{position:absolute;top:7px;right:7px;width:19px;height:19px;border-radius:50%;background:var(--accent);
+      color:#04120e;font-weight:900;font-size:11px;display:flex;align-items:center;justify-content:center;
+      animation:checkPop .5s cubic-bezier(.34,1.56,.64,1) 1.1s both}
+    .dcap{font-size:10.5px;color:var(--sub);margin-top:6px}
+    .dcap.g{color:var(--accent);font-weight:600}
+    .darrow{flex:none;width:44px;text-align:center;color:var(--accent);font-size:23px}
+    .darrow span{display:block;font-size:9px;color:var(--sub);margin-top:2px}
+    .chips{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+    .chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--txt);background:var(--inset);
+      border:1px solid var(--line);border-radius:9px;padding:8px 11px;opacity:0;transform:translateY(6px);animation:chipin .4s ease forwards}
+    .chip:nth-child(1){animation-delay:.15s}.chip:nth-child(2){animation-delay:.3s}.chip:nth-child(3){animation-delay:.45s}
+    @keyframes chipin{to{opacity:1;transform:none}}
+    .chip b{color:var(--accent);font-weight:700}
+    .cta{margin-top:14px;width:100%;background:linear-gradient(90deg,#1f9e7a,#37e0bd);border:none;color:#04120e;
+      font-weight:800;font-size:14px;padding:13px;border-radius:11px;cursor:pointer;letter-spacing:-.2px;
+      box-shadow:0 6px 20px rgba(55,224,189,.22);transition:transform .12s ease,box-shadow .12s ease}
+    .cta:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(55,224,189,.3)}
+    .cta:active{transform:scale(.98)}
+    .ctahint{text-align:center;font-size:11px;color:var(--sub);margin-top:8px}
     @media(prefers-reduced-motion:reduce){
       .rise,.sw-knob,.cp-bar::before,.cp-scan::after,.cp-compare .cp-cell,.cp-arrow,.cp-chk,
-      .cp-run-lbl .cp-dot,.btn-clean,.cp-redo{animation:none!important;transition:none!important}
-      .cp-compare .cp-cell,.cp-arrow{opacity:1}
+      .cp-run-lbl .cp-dot,.btn-clean,.cp-redo,.hero,.hicon,.dframe .dscan,.dframe .dchk,.chip,.cta{animation:none!important;transition:none!important}
+      .cp-compare .cp-cell,.cp-arrow,.chip{opacity:1}
     }
   </style>
 </head>
@@ -349,21 +394,36 @@
     </section>
     <section class="panel" data-step="1">
       <h3>2 · 자막 제거</h3>
-      <div class="sub">소스 영상에 박힌 원본 자막을 AI로 지우고, 우리 자막을 새로 입혀요.</div>
-      <div class="clean-card rise">
-        <label class="clean-top">
-          <span class="badge">🧼</span>
-          <span class="clean-meta">
-            <b class="ttl">AI 자막 제거</b>
-            <span id="subDesc" class="desc">끄면 원본 영상 그대로 사용해요</span>
-          </span>
-          <input type="checkbox" id="subToggle" onchange="onSubToggle()" class="sw-input">
-          <span class="sw-track"><span class="sw-knob"></span></span>
-        </label>
-        <div id="subState" class="hint" style="margin-top:8px"></div>
-        <div id="cleanPreviewWrap" style="margin-top:12px;display:none">
-          <button id="btnCleanPreview" class="btn-clean" onclick="startCleanPreview()">✨ 자막제거 미리보기</button>
-          <div id="cleanPreview" style="margin-top:12px"></div>
+      <div class="hero rise">
+        <div class="hero-in">
+          <label class="hbar">
+            <span class="hicon">🧼</span>
+            <span class="hmeta">
+              <span class="htitle">숏템 고품질 자막제거기 <span class="hpill">HD</span></span>
+              <span class="htag">채널 자막·워터마크를 AI가 감쪽같이 지우고, 우리 자막을 새로 입혀요</span>
+            </span>
+            <input type="checkbox" id="subToggle" onchange="onSubToggle()" class="sw-input">
+            <span class="sw-track"><span class="sw-knob"></span></span>
+          </label>
+          <div id="cleanShowcase">
+            <div class="show">
+              <div class="demotag">Live demo</div>
+              <div class="demo"><div class="dframe"><div class="sky"></div><div class="subbar"><span>원본 채널 자막</span></div></div><div class="dcap">원본</div></div>
+              <div class="darrow">→<span>AI</span></div>
+              <div class="demo"><div class="dframe after"><div class="sky"></div><div class="dscan"></div><div class="dchk">✓</div></div><div class="dcap g">깨끗하게 제거</div></div>
+            </div>
+            <div class="chips">
+              <span class="chip">🎯 <span>하드섭 <b>정밀 제거</b></span></span>
+              <span class="chip">✨ <span>원본 <b>화질 그대로</b></span></span>
+              <span class="chip">⚡ <span><b>원클릭</b> 미리보기</span></span>
+            </div>
+          </div>
+          <div id="subState" class="hint" style="margin-top:10px"></div>
+          <div id="cleanPreviewWrap" style="margin-top:14px;display:none">
+            <button id="btnCleanPreview" class="cta" onclick="startCleanPreview()">✨ 내 영상으로 미리보기</button>
+            <div class="ctahint">미리 확인하면 최종 렌더가 이 결과를 그대로 써서 추가 비용 없이 빨라져요</div>
+            <div id="cleanPreview" style="margin-top:12px"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -3264,6 +3324,7 @@ async function startCleanPreview(){
   clearInterval(CLEAN_POLL); CLEAN_POLL=null;
   const myGen=++CLEAN_GEN, myJob=MIX_JOB;
   if(btn) btn.disabled=true;
+  const _sc=document.getElementById('cleanShowcase'); if(_sc) _sc.style.display='none';  // 실결과 뜨는 동안 데모 숨김
   box.innerHTML='<div class="cp-run rise">'
     +'<div class="cp-scan"><img src="/api/produce/mix/clean_thumb/'+encodeURIComponent(myJob)+'?kind=original&t='+Date.now()+'" onerror="this.style.display=\'none\'"></div>'
     +'<div class="cp-bar"></div>'
@@ -3297,6 +3358,7 @@ async function pollClean(gen,job){
     } else if(d.clean_status==='failed'){
       clearInterval(CLEAN_POLL); CLEAN_POLL=null;
       if(d.clean_error) console.warn('clean failed:', d.clean_error);
+      const _sc=document.getElementById('cleanShowcase'); if(_sc) _sc.style.display='';  // 실패 시 데모 다시 노출(빈 화면 방지)
       box.innerHTML='<div class="cp-fail"><b>자막 제거에 실패했어요.</b> 잠시 후 다시 시도해 주세요. (문제가 계속되면 관리자에게 문의)</div>'
         +'<button class="cp-redo" onclick="startCleanPreview()">↻ 다시 시도</button>';
       if(btn) btn.disabled=false;
@@ -3307,18 +3369,17 @@ async function pollClean(gen,job){
 // ── 3단계 자막제거 ──────────────
 function refreshSub(){
   const cb=document.getElementById('subToggle'); if(cb) cb.checked=STATE.subtitleRemoval;
-  const dd=document.getElementById('subDesc');
-  if(dd) dd.textContent = STATE.subtitleRemoval ? '렌더 시 자동 적용돼요' : '끄면 원본 영상 그대로 사용해요';
   const s=document.getElementById('subState');
   if(s) s.textContent = MIX_JOB ? '' : '⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.';
+  // 실결과가 이미 떠 있으면 데모 숨김, 아니면 데모(쇼케이스) 노출 — 페이지가 비지 않게.
+  const sc=document.getElementById('cleanShowcase'), cp=document.getElementById('cleanPreview');
+  if(sc) sc.style.display = (cp && cp.innerHTML.trim()) ? 'none' : '';
   // T7: 못 쓰는 컨트롤은 비활성 노출 대신 숨긴다 — 자막제거 켜짐+매칭됨일 때만 미리보기가 등장.
   const wrap=document.getElementById('cleanPreviewWrap');
   if(wrap) wrap.style.display = (STATE.subtitleRemoval && MIX_JOB) ? '' : 'none';
 }
 async function onSubToggle(){
   STATE.subtitleRemoval = document.getElementById('subToggle').checked;
-  const dd=document.getElementById('subDesc');
-  if(dd) dd.textContent = STATE.subtitleRemoval ? '렌더 시 자동 적용돼요' : '끄면 원본 영상 그대로 사용해요';
   // T7: disabled 노출 대신 숨김 — 자막제거 켜짐+매칭됨일 때만 미리보기 버튼이 나타난다.
   const cwrap=document.getElementById('cleanPreviewWrap');
   if(cwrap) cwrap.style.display = (STATE.subtitleRemoval && MIX_JOB) ? '' : 'none';
