@@ -360,13 +360,9 @@
       <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
         <!-- ◀ 왼쪽: 미리보기(장면 매칭 후) + 재료 그리드 -->
         <div style="flex:1 1 240px;min-width:220px;max-width:320px;align-self:stretch">
-          <!-- 🪞 1단계 미리보기 — 편집안이 뜨면(loadMixReview) 이 좌측 공간이 프리뷰 자리가 된다.
-               우측 편집안을 읽으며 스크롤해도 따라오도록 sticky. 오른쪽 [▶ 미리보기 만들기]가
-               여기(#mixPreview)로 렌더한다(2026-07-19 사장님 요청 — 우측 인라인→좌측 프리뷰). -->
-          <div id="mixPreviewPanel" class="previewSlot" style="display:none;margin-bottom:16px">
-            <div class="hint" style="margin-bottom:6px">🪞 미리보기 (9:16)</div>
-            <div id="mixPreview"></div>
-          </div>
+          <!-- 🪞 미리보기(#mixPreviewPanel/#mixPreview)는 Task 6에서 화면 붙이기(매칭, data-step=7)
+               패널의 좌측 레일로 옮겨갔다 — 매칭 리뷰·후보 선택 UI가 통째로 그리로 이사했기
+               때문이다. 이 자리(제작소)엔 더는 미리보기 슬롯이 없다. -->
           <div style="font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">◀ 넘어온 영상 (재료) · 뺄 건 클릭</div>
           <div id="poolList" class="poolGrid"></div>
           <div id="poolEmpty" class="hint" style="display:none;margin-top:6px">즐겨찾기에서 영상을 보내거나, 아래에 URL을 직접 넣으세요.</div>
@@ -397,13 +393,11 @@
           </details>
           <!-- 분석 극장(B, Task5) — ⚡시작 후 매칭 대기시간 동안 원본 구조 해부를 보여준다.
                playTheater()가 채우고, pollMix가 ready_for_review/failed에서 숨긴다.
-               구조 세그먼트가 없으면(우아한 폴백) 비어 있는 채로 hidden 유지 — 매칭 흐름은 안 막는다. -->
+               구조 세그먼트가 없으면(우아한 폴백) 비어 있는 채로 hidden 유지 — 매칭 흐름은 안 막는다.
+               여기 남는다(Task 6) — 매칭이 도는 동안은 이 패널(0)에 그대로 머물다가, 완료되면
+               pollMix가 화면 붙이기(패널7)로 넘겨준다. #mixStatus/#mixCandidates/#mixReview는
+               그 패널7로 옮겨갔다(아래 참조). -->
           <div id="theater" hidden style="margin-top:12px"></div>
-          <!-- 매칭 진행 상태 — 신규 매칭 패널(data-step=7)이 자리 잡기 전(Task 6)까지 여기 유지한다.
-               startProduceMix()가 null가드 없이 #mixStatus/#mixReview에 바로 쓰므로 DOM에 반드시 있어야 한다. -->
-          <div id="mixStatus" class="hint" style="margin-top:12px"></div>
-          <div id="mixCandidates" style="margin-top:10px"></div>
-          <div id="mixReview" style="margin-top:12px"></div>
         </div>
       </div>
     </section>
@@ -750,6 +744,40 @@
       <div id="exportBox" style="margin-top:14px"></div>
     </section>
 
+    <!-- 8) 화면 붙이기(매칭) — Task 6(2026-07-23) 신규. 물리적으로는 꼬리에 붙지만(data-step=7,
+         기존 인덱스 불변) 오브바에선 2번째로 보인다(ORB_TO_PANEL[1]=7). ⚡시작(Task4)이 매칭을
+         걸고, 완료되면 pollMix가 이 패널로 데려온다(패널0=제작소는 그대로, 미리보기는 여기로 이사).
+         위→아래 한 방향: ① 새 대본 고르기(가로카드, 추천이 이미 선택돼 있음) ② 장면 확인(문장↔화면,
+         상세 편집은 접힘) ③ 좌측 레일 미리보기 → 확인되면 "다음(음성)". -->
+    <section class="panel" data-step="7">
+      <h3>화면 붙이기</h3>
+      <div class="sub">대본 후보를 고르고, 문장마다 어떤 화면이 붙는지 확인하세요. 확인되면 왼쪽에서 미리보기가 재생됩니다.</div>
+      <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
+        <!-- ◀ 좌측 레일: ③ 미리보기(9:16) — 편집안이 뜨면(loadMixReview) 여기가 프리뷰 자리가 된다.
+             T8: 다른 패널의 .previewSlot과 같은 규약(sticky) 공유. -->
+        <div style="flex:1 1 240px;min-width:220px;max-width:320px;align-self:stretch">
+          <div id="mixPreviewPanel" class="previewSlot" style="display:none">
+            <div class="hint" style="margin-bottom:6px">🪞 ③ 미리보기 (9:16)</div>
+            <div id="mixPreview"></div>
+          </div>
+          <div id="mixPreviewHint" class="hint" style="margin-top:6px">②까지 확인하고 아래 <b>▶ 미리보기 만들기</b>를 누르면 여기서 재생됩니다.</div>
+        </div>
+        <!-- ▶ 우측: ①②③ 순서대로 위→아래 -->
+        <div style="flex:1 1 300px;min-width:280px">
+          <div id="mixStatus" class="hint"></div>
+          <div style="font-size:13px;font-weight:800;margin:8px 0 6px">① 새 대본 고르기</div>
+          <div id="mixCandidates"></div>
+          <div style="font-size:13px;font-weight:800;margin:16px 0 6px">② 장면 확인</div>
+          <details id="matchSceneDetails">
+            <summary style="cursor:pointer;font-size:12px;color:var(--sub);font-weight:800">장면 바꾸기 · 전체 보기 ▾</summary>
+            <div id="mixReview" style="margin-top:10px"></div>
+          </details>
+          <button class="btn-next" style="margin-top:16px;padding:8px 16px" onclick="go(1)">다음 (3 · 음성) →</button>
+        </div>
+      </div>
+    </section>
+    <!-- ── 화면 붙이기 끝(패널) ── -->
+
     <div class="nav">
       <button class="btn-prev" id="btnPrev" onclick="go(-1)">← 이전</button>
       <button class="btn-next" id="btnNext" onclick="go(1)">다음 →</button>
@@ -797,6 +825,11 @@ const STEP_LABELS = ["영상/대본","화면 붙이기","음성","꾸미기","�
 const ORB_TO_PANEL = [0, 7, 2, 3, 4, 5, 6];
 const PANEL_TO_ORB = Object.fromEntries(ORB_TO_PANEL.map((p,o)=>[p,o]));
 function orbIndex(){ return PANEL_TO_ORB[cur] ?? 0; }
+// 물리 패널 수(=<section class="panel">의 실제 개수, 지금 8) — 오브 라벨 수(STEP_LABELS.length=7)와는
+// 다른 축이다! cur는 "패널" 인덱스이므로 되돌리기(revertWork)·작업복원(_restoreWork)의 범위 체크는
+// 반드시 이걸 써야 한다 — STEP_LABELS.length를 쓰면 신규 매칭 패널(data-step=7)이 범위 밖으로
+// 오판돼 0으로 튕긴다(Task 2 리뷰 Minor②, Task 6에서 수정).
+const PANEL_COUNT = document.querySelectorAll('.panel').length;
 let cur = 0;
 
 function renderSteps(){
@@ -823,10 +856,27 @@ function showPanel(){
   if(cur===4) initThumb();
   if(cur===5) initSeo();
   if(cur===6) refreshFinal();
-  if(cur===7) initMatch();   // 화면 붙이기(매칭) 패널 — 신규(Task 6에서 실구현), 지금은 스텁
+  if(cur===7) initMatch();   // 화면 붙이기(매칭) 패널 — 신규(Task 6)
 }
-// 매칭 패널(data-step=7, 신규) 초기화 — Task 6에서 실구현. 지금은 훅만 배선한다.
-function initMatch(){}
+// 매칭 패널(data-step=7, 신규) 초기화 — Task 6. showPanel()이 cur===7일 때마다 부른다.
+// ①(#mixCandidates)②(#mixReview)③(#mixPreviewPanel)은 전부 startProduceMix/pollMix/
+// loadMixReview/startPreview가 이미 채운다(패널이 옮겨왔을 뿐 로직은 그대로) — 이 함수는
+// "이 패널에 막 들어왔는데 아직 아무것도 없다"는 두 경우만 보충한다.
+function initMatch(){
+  if(!MIX_JOB){
+    // 매칭을 아직 시작 안 했다 — 자유 이동은 허용하되(T7 규약) 빈 화면 대신 안내를 준다.
+    const cands = document.getElementById('mixCandidates'); if(cands) cands.innerHTML = '';
+    const rev = document.getElementById('mixReview'); if(rev) rev.innerHTML = '';
+    const st = document.getElementById('mixStatus');
+    if(st) st.textContent = '아직 매칭을 시작하지 않았어요 — 1단계에서 ⚡ 이대로 만들기 시작을 눌러주세요.';
+    return;
+  }
+  // 매칭 진행/완료 중 — 이미 그려진 게 있으면(폴링·자동전환이 이미 채웠다) 손대지 않는다.
+  // 비어 있으면(예: 새로고침 없이 이 패널로 막 들어옴, 또는 서버 복원 전) 결과를 다시 채운다.
+  const rev = document.getElementById('mixReview');
+  if(rev && !rev.innerHTML.trim()) _restoreMixContext();
+}
+// ── 화면 붙이기 끝 ──
 
 // ── 6단계 SEO(2026-07-17) ──────────────
 // 산출물은 서버 mix_jobs.seo_json이 유일한 진실이다. STATE에만 두면
@@ -2121,7 +2171,7 @@ function revertWork(){
   if(STATE.script) setScriptMode('manual');
   renderPool(); syncFootageToMixUrls(); refreshFinalPeek();
   const st = w.step;
-  cur = (typeof st === 'number' && st >= 0 && st < STEP_LABELS.length) ? st : cur;
+  cur = (typeof st === 'number' && st >= 0 && st < PANEL_COUNT) ? st : cur;
   if(cur > 0 && MIX_JOB && !canGoNext()) cur = 0;   // 미리보기 미확인이면 1단계로(게이트 규약 유지)
   renderSteps(); showPanel(); refreshNextBtn();
   saveWork();   // 되돌린 상태를 새 현재로 저장(_pushWork가 스냅샷 체인을 전진 → 다시 누르면 원상복귀)
@@ -2175,7 +2225,7 @@ async function _restoreWork(workId){
     }catch(e){}   // 못 읽으면 null로 둔다 = 잠긴 채. 모르면 안전한 쪽.
   }
   const st = d.step;
-  cur = (typeof st === 'number' && st >= 0 && st < STEP_LABELS.length) ? st : 0;
+  cur = (typeof st === 'number' && st >= 0 && st < PANEL_COUNT) ? st : 0;
   if(cur > 0 && MIX_JOB && !canGoNext()) cur = 0;   // 미리보기 미확인이면 1단계로 되돌린다
   renderSteps(); showPanel(); refreshNextBtn();
   // ★편집안(#mixReview)·미리보기 <video>를 되살린다(2026-07-19). 게이트 재동기(위)가 PREVIEW_STATUS를
@@ -2432,7 +2482,10 @@ async function startFromAiPick(){
   refreshFinalPeek(); saveWork();
   playTheater(window._aiPick && window._aiPick.structure);   // 대기시간 동안 원본 구조 해부 연출(Task5)
   await startProduceMix();
-  jump(1);   // 오브 인덱스 1 = 화면 붙이기(매칭, ORB_TO_PANEL[1]=7). Task 6 전까지는 빈 패널.
+  // ★Task 6: 여기서 곧장 jump(1)하지 않는다 — startProduceMix()는 job만 걸고 바로 돌아온다
+  // (매칭은 폴링으로 백그라운드에서 돈다). 즉시 넘어가면 아직 아무것도 없는 빈 패널7만 보인다.
+  // 극장(Task5)이 보이는 이 패널(0)에 그대로 머물다가, 매칭이 실제로 끝나면(ready_for_review)
+  // pollMix가 화면 붙이기(패널7)로 데려간다.
 }
 // ── AI PICK 끝 ──
 // 분석 극장(B, 2026-07-23 Task5) — ⚡ "이대로 만들기 시작" 직후, 매칭 job이 도는 대기시간을
@@ -2982,7 +3035,10 @@ async function pollMix(){
     if(d.status==='ready_for_review' || d.status==='failed'){
       const th=document.getElementById('theater'); if(th) th.hidden = true;
     }
-    if(d.status==='ready_for_review'){ clearInterval(MIX_POLL); renderCandidates(d.candidates||[]); loadMixReview(); }
+    if(d.status==='ready_for_review'){
+      clearInterval(MIX_POLL); renderCandidates(d.candidates||[]); loadMixReview();
+      jump(1);   // 오브 인덱스 1 = 화면 붙이기(매칭, ORB_TO_PANEL[1]=7). Task 6: 매칭 완료 시 자동 이동.
+    }
     if(d.status==='failed'){ if(st) st._sblPipe=null; st.textContent='❌ 매칭 실패'+(d.error?' — '+d.error:''); clearInterval(MIX_POLL); }
   }catch(e){}
 }
@@ -3290,9 +3346,13 @@ function canGoNext(){
 // 미리보기 확인(canGoNext)'이 끝나야 열린다 = 기존 0→1 미리보기 게이트(유료 자막제거 우회 방지)를
 // 모든 dot에 일관 적용. canGoNext는 'failed'도 통과시키는 탈출구가 있어 렌더가 고장나도 안 갇힌다.
 function stepLocked(i){
-  // 0단계(허브)는 항상 열림. 1~6단계는 '매칭(MIX_JOB) 후 · 미리보기 확인 전'에만 잠근다 —
-  // 기존 0→1 미리보기 게이트(유료 자막제거 우회 방지)를 dot에 그대로 반영한다. 매칭 전(MIX_JOB
-  // 없음)엔 안 잠근다(기존 설계 유지: 그땐 자유 이동, 빈 단계는 T7a 잠금 카드가 받는다).
+  // ★Task 6(2026-07-23): 화면 붙이기(매칭, 패널7)는 게이트 예외다 — 후보를 고르고 장면을 확인해
+  // 미리보기를 "만드는" 자리 자체가 이 패널이라, 여기서 막으면 미리보기를 영영 못 만든다(예전엔
+  // 이 UI가 패널0에 있어서 0단계=허브와 함께 안 잠겼다 — 패널7로 이사하며 이 예외도 같이 옮겨왔다).
+  if(i === 7) return false;
+  // 0단계(허브)는 항상 열림. 나머지(2~6단계: 음성·꾸미기·썸네일·SEO·완성)는 '매칭(MIX_JOB) 후 ·
+  // 미리보기 확인 전'에만 잠근다 — 유료 자막제거 우회 방지. 매칭 전(MIX_JOB 없음)엔 안
+  // 잠근다(기존 설계 유지: 그땐 자유 이동, 빈 단계는 T7a 잠금 카드가 받는다).
   return i >= 1 && !!MIX_JOB && !canGoNext();
 }
 function stepLockMsg(){
@@ -3319,9 +3379,10 @@ function refreshNextBtn(){
   //   (renderSteps는 아무 함수도 안 불러서 재귀는 없다.)
   renderSteps();
   if(!b) return;
-  // btnNext는 기존과 동일하게 **0→1 전이만** 게이트한다 — 다른 단계에선 안 끼어든다.
+  // btnNext는 **화면 붙이기(매칭, 패널7)→다음 전이만** 게이트한다(Task 6로 이관 — 매칭 리뷰·
+  // 미리보기 UI가 패널0에서 패널7로 옮겨오며 이 게이트도 같이 옮겨왔다). 다른 단계에선 안 끼어든다.
   // dot 잠금(stepLocked)이 나머지 시각 표현을 맡는다.
-  const gated = (cur === 0 && MIX_JOB && !canGoNext());
+  const gated = (cur === 7 && MIX_JOB && !canGoNext());
   b.disabled = gated;
   b.title = gated ? stepLockMsg() : '';
 }

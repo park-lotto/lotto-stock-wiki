@@ -142,3 +142,87 @@ def test_theater_hides_on_mix_done():
     end = HTML.index("async function loadMixReview(")
     body = HTML[start:end]
     assert "theater" in body and ("hidden = true" in body or "hidden=true" in body)
+
+
+# ── Task 6: 2단계 "화면 붙이기"(매칭) 패널 — 위→아래 한 방향 ──────────
+def test_match_panel_present():
+    assert 'data-step="7"' in HTML
+    assert "initMatch" in HTML
+    assert "새 대본 고르기" in HTML and "장면 확인" in HTML
+    assert "다음 (3" in HTML or "음성" in HTML   # 다음 단계 유도
+
+
+def test_match_panel_hosts_mix_dom_not_panel0():
+    # 매칭 결과 DOM(#mixCandidates/#mixReview/#mixPreviewPanel)이 패널0이 아니라 신규
+    # 패널7 쪽으로 옮겨왔는지 — 패널0 섹션 본문에는 더는 없어야 한다.
+    p0_start = HTML.index('<section class="panel" data-step="0">')
+    p0_end = HTML.index('<section class="panel" data-step="1">')
+    p0_body = HTML[p0_start:p0_end]
+    assert 'id="mixCandidates"' not in p0_body
+    assert 'id="mixReview"' not in p0_body
+    p7_start = HTML.index('<section class="panel" data-step="7">')
+    p7_end = HTML.index('<div class="nav">')
+    p7_body = HTML[p7_start:p7_end]
+    assert 'id="mixCandidates"' in p7_body
+    assert 'id="mixReview"' in p7_body
+    assert 'id="mixPreviewPanel"' in p7_body
+
+
+def test_init_match_is_not_a_stub():
+    # Task 2의 스텁 `function initMatch(){}`가 실구현으로 바뀌었는지.
+    assert "function initMatch(){}" not in HTML
+    start = HTML.index("function initMatch(")
+    end = HTML.index("// ── 화면 붙이기 끝 ──")
+    body = HTML[start:end]
+    assert "MIX_JOB" in body
+
+
+# ── Task 6 carried bug(Task 2 리뷰 Minor②): revertWork/_restoreWork의 cur 바운드가
+# STEP_LABELS.length(오브 라벨 수=7)를 쓰면, 패널7(매칭)이 생겨 실제 패널 수가 8이 된
+# 지금은 cur:7 복원이 범위 밖으로 오판돼 0으로 튕긴다. PANEL_COUNT(물리 패널 수)를 써야 한다.
+def test_revert_and_restore_use_panel_count_not_step_labels_length():
+    assert "const PANEL_COUNT" in HTML
+    for start, end in (
+        ("function revertWork(){", "async function _restoreWork(workId){"),
+        ("async function _restoreWork(workId){", "function _renderPreviewVideo(job){"),
+    ):
+        body = HTML[HTML.index(start):HTML.index(end)]
+        assert "PANEL_COUNT" in body, f"{start} 바운드가 PANEL_COUNT를 안 쓴다"
+        assert "STEP_LABELS.length" not in body, (
+            f"{start}가 여전히 STEP_LABELS.length(오브 라벨 수)로 cur(패널 인덱스)를 바운드한다 "
+            "— 매칭 패널(7) 복원이 범위 밖으로 오판돼 0으로 튕긴다")
+
+
+@pytest.mark.skipif(not shutil.which("node"), reason="node 필요")
+def test_revert_work_restores_matching_panel_step7(tmp_path):
+    # revertWork()도 _restoreWork와 같은 클래스의 버그를 가졌다(Task2 리뷰 Minor②) — 실행 증거.
+    start = HTML.index("function revertWork(){")
+    end = HTML.index("async function _restoreWork(workId){")
+    body = HTML[start:end]
+    driver = r"""
+    'use strict';
+    let HANDOFF = [];
+    const STATE = { script:'', script_src_idx:null, script_from_wiki:null };
+    const PANEL_COUNT = 8;
+    let cur = 0, MIX_JOB = null;
+    function canGoNext(){ return true; }
+    function setScriptMode(){}
+    function renderPool(){}
+    function syncFootageToMixUrls(){}
+    function refreshFinalPeek(){}
+    function renderSteps(){}
+    function showPanel(){}
+    function refreshNextBtn(){}
+    function saveWork(){}
+    let _prevCommitted = JSON.stringify({script:'대본', step:7});
+    revertWork();
+    console.log(JSON.stringify({cur}));
+    """
+    js = tmp_path / "t.js"
+    js.write_text(body + driver, encoding="utf-8")
+    out = subprocess.run(["node", str(js)], capture_output=True, text=True,
+                         encoding="utf-8", errors="replace",
+                         stdin=subprocess.DEVNULL, timeout=30)
+    assert out.returncode == 0, out.stderr
+    assert '"cur":7' in out.stdout.strip().splitlines()[-1], (
+        "revertWork가 매칭 패널(step:7)로 되돌리지 못했다 — PANEL_COUNT 바운드 확인: " + out.stdout)

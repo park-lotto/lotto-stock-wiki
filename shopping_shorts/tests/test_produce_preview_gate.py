@@ -148,40 +148,52 @@ _SCENARIO_BTN = r"""
 (() => {
   const fails = [];
   const b = document.getElementById('btnNext');
-  PREVIEW_STATUS = null;  cur = 0;  refreshNextBtn();
-  if (b.disabled !== true) fails.push('1단계·미리보기 전인데 btnNext가 안 잠겼다');
+  MIX_JOB = 'J1';
+  // ★Task 6(2026-07-23): 매칭 리뷰·미리보기 UI가 패널0에서 패널7(화면 붙이기)로 옮겨오며
+  // btnNext 게이트도 cur===0에서 cur===7로 같이 옮겨왔다 — 게이트는 여전히 "매칭 리뷰+미리보기를
+  // 하는 그 패널"에 걸린다, 다만 그 패널이 이제 7번이다.
+  PREVIEW_STATUS = null;  cur = 7;  refreshNextBtn();
+  if (b.disabled !== true) fails.push('화면 붙이기(매칭)·미리보기 전인데 btnNext가 안 잠겼다');
   if (!String(b.title || '').trim()) fails.push('왜 잠겼는지 안내(title)가 없다');
   PREVIEW_STATUS = 'ready'; refreshNextBtn();
   if (b.disabled !== false) fails.push('미리보기 후에도 btnNext가 잠겨 있다');
   // 다른 단계에선 이 게이트가 끼어들면 안 된다
   PREVIEW_STATUS = null; cur = 2; refreshNextBtn();
-  if (b.disabled !== false) fails.push('3단계인데 1단계 게이트가 다음을 잠갔다');
+  if (b.disabled !== false) fails.push('3단계인데 화면 붙이기 게이트가 다음을 잠갔다');
+  cur = 0; refreshNextBtn();
+  if (b.disabled !== false) fails.push('제작소(0단계)인데 화면 붙이기 게이트가 다음을 잠갔다');
   if (fails.length) { console.error('FAIL: ' + fails.join(' / ')); process.exit(1); }
   console.log('PASS');
 })();
 """
 
 # ★C-1: 상단 스텝칩이 모든 단계에 onclick="jump(o)"를 달고 있다. jump에 가드가 없으면
-# "화면 붙이기" 칩 한 번 클릭으로 게이트가 통째로 우회된다 — 게다가 그 뒤 refreshNextBtn()은
-# cur=1이라 gated=false로 계산해 버튼까지 도로 열어준다(우회 흔적도 안 남는다).
+# "음성" 칩 한 번 클릭으로 게이트가 통째로 우회된다 — 게다가 그 뒤 refreshNextBtn()은
+# gated=false로 계산해 버튼까지 도로 열어준다(우회 흔적도 안 남는다).
 # ★Task 2(2026-07-23): jump(o)는 이제 오브(표시) 인덱스를 받아 ORB_TO_PANEL로 패널을 구한다.
-# jump(1) → 패널7(화면 붙이기/매칭, 신규) — 자막제거(패널1)는 오브에서 빠져 더는 jump(1)의
-# 목적지가 아니다. 게이트 로직(stepLocked) 자체는 패널이 뭐든 동일하게 적용되므로 검증 의도는
-# 그대로 살아있다 — 기대 cur 값만 새 매핑에 맞춘다.
+# ★Task 6(2026-07-23): 화면 붙이기(매칭, 패널7=오브1)는 게이트 예외가 됐다 — 매칭 리뷰·후보
+# 선택·미리보기 제작 UI 자체가 이 패널로 옮겨왔으므로, 여기 들어가는 걸 막으면 미리보기를
+# 영영 못 만든다. 그래서 이 시나리오의 "막혀야 한다" 검증은 그 다음 단계(음성=오브2)로 옮겼다.
 _SCENARIO_JUMP = r"""
 (() => {
   const fails = [];
   MIX_JOB = 'J1';
 
+  // 화면 붙이기(매칭, 오브1)는 게이트 예외 — 미리보기 여부와 무관하게 항상 들어간다.
   PREVIEW_STATUS = null; cur = 0;
   jump(1);
-  if (cur !== 0) fails.push('스텝칩 클릭(jump)이 게이트를 우회했다 — cur=' + cur + ' → 미리보기 못 본 채 유료 VMake가 돈다');
-  jump(6);
-  if (cur !== 0) fails.push('마지막 단계로 점프해 게이트를 우회했다 — cur=' + cur);
+  if (cur !== 7) fails.push('화면 붙이기(매칭) 패널이 게이트에 막혔다 — 여기서 후보를 골라야 하는데 못 들어간다(cur=' + cur + ')');
 
-  PREVIEW_STATUS = 'ready'; cur = 0;
-  jump(1);
-  if (cur !== 7) fails.push('미리보기를 봤는데도 스텝칩 점프가 막혔다 — 진행 불가(cur=' + cur + ')');
+  // 화면 붙이기를 지나 그 다음(음성=오브2)으로는 여전히 미리보기 확인 전엔 못 간다.
+  PREVIEW_STATUS = null; cur = 7;
+  jump(2);
+  if (cur !== 7) fails.push('스텝칩 클릭(jump)이 게이트를 우회했다 — cur=' + cur + ' → 미리보기 못 본 채 유료 VMake가 돈다');
+  jump(6);
+  if (cur !== 7) fails.push('마지막 단계로 점프해 게이트를 우회했다 — cur=' + cur);
+
+  PREVIEW_STATUS = 'ready'; cur = 7;
+  jump(2);
+  if (cur !== 2) fails.push('미리보기를 봤는데도 스텝칩 점프가 막혔다 — 진행 불가(cur=' + cur + ')');
 
   // 뒤로 가는 건 막지 않는다(앞으로만 막는다)
   PREVIEW_STATUS = null; cur = 3;
@@ -318,7 +330,9 @@ _SCENARIO_REMATCH_RELOCKS_GATE = r"""
   const btn = document.getElementById('btnNext');
 
   // 1) J1을 미리보기까지 봤다 — 게이트 열림
-  MIX_JOB = 'J1'; cur = 0;
+  // ★Task 6(2026-07-23): 매칭 리뷰·미리보기 UI가 패널7(화면 붙이기)에 있으므로 cur=7이 그
+  // 게이트가 실제로 걸리는 자리다(예전엔 패널0이었다).
+  MIX_JOB = 'J1'; cur = 7;
   _statusResponse = { ok:true, preview_status:'ready' };
   await startPreview(); await _drain(); await _tick();
   if (PREVIEW_STATUS !== 'ready') { console.error('FAIL(전제): J1 미리보기가 ready가 아니다 — ' + PREVIEW_STATUS); process.exit(1); }

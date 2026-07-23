@@ -52,7 +52,9 @@ function orbIndex(){ return PANEL_TO_ORB[cur] ?? 0; }
 function canGoNext(){ return PREVIEW_STATUS === 'ready' || PREVIEW_STATUS === 'failed'; }
 // T7 게이트(origin/main 병합, 2026-07-20): 0→1 미리보기 게이트를 stepLocked 단일화로 흡수.
 // jump/go가 canGoNext 대신 stepLocked를 보므로 소스와 동일 구현을 스텁한다(1단계+ 매칭후·미리보기전 잠금).
-function stepLocked(i){ return i >= 1 && !!MIX_JOB && !canGoNext(); }
+// ★Task 6(2026-07-23): 화면 붙이기(매칭, 패널7)는 게이트 예외 — 후보를 고르고 미리보기를
+// "만드는" 자리 자체라 여기서 막으면 미리보기를 영영 못 만든다. 소스와 동일하게 스텁한다.
+function stepLocked(i){ if(i === 7) return false; return i >= 1 && !!MIX_JOB && !canGoNext(); }
 function stepLockMsg(){ return !MIX_JOB ? '먼저 1단계에서 영상을 매칭하세요' : '먼저 1단계에서 미리보기를 확인하세요'; }
 function toast(){}
 function renderSteps(){}
@@ -71,34 +73,40 @@ def js_nav():
 def test_step_navigation_persists_and_gate_holds(js_nav):
     """★단계 이동은 saveWork()를 불러야 한다 — 안 부르면 서버 step이 0에 멈춰 새로고침이 1단계로 되돌린다.
 
-    ① 미리보기 미확인이면 go(1)은 막힌다(게이트) — cur=0, 저장도 없음.
-    ② 미리보기 ready면 go(1)로 전진하고 **저장한다**.
-    ③ jump(앞 단계)도, ④ go(-1) 뒤로가기도 저장한다(뒤로 간 자리도 새로고침이 지켜야 한다).
+    ★Task 6(2026-07-23): 화면 붙이기(매칭, 패널7=오브1)가 게이트 예외가 됐다 — 후보를 고르고
+    미리보기를 "만드는" 자리 자체이므로, 여기 들어가는 걸 막으면 미리보기를 영영 못 만든다.
+    게이트는 그 다음 단계(음성=오브2)부터 다시 적용된다.
 
-    ★Task 2(2026-07-23): go(1)이 이제 오브 순서로 움직인다 — 패널0(대본)에서 오브+1은
-    ORB_TO_PANEL[1]=7(화면 붙이기/매칭, 신규)이라 fwdCur는 1이 아니라 7이다. jump(3)은
-    ORB_TO_PANEL[3]=3이라(항등) 그대로 3 — 이후 go(-1)도 오브축에서 -1이라 그대로 2.
+    ① 제작소(0)→화면 붙이기(1=패널7)는 미리보기 여부와 무관하게 항상 열린다 — 저장도 된다.
+    ② 화면 붙이기(패널7)에서 그 다음(음성)으로는 미리보기 미확인이면 막힌다(게이트) — 저장 없음.
+    ③ 미리보기 ready면 go(1)로 전진하고 **저장한다**.
+    ④ jump(앞 단계)도, ⑤ go(-1) 뒤로가기도 저장한다(뒤로 간 자리도 새로고침이 지켜야 한다).
     """
     out = _run(js_nav, """
       const r = {};
-      // ① 게이트: 미리보기 없이 앞으로 못 간다
+      // ① 화면 붙이기(매칭)는 게이트 예외 — 미리보기 없이도 들어간다 + 저장한다
       cur = 0; MIX_JOB = 'j1'; PREVIEW_STATUS = null; _saves = 0;
+      go(1); r.matchCur = cur; r.matchSaves = _saves;
+      // ② 게이트: 화면 붙이기에서 그 다음(음성)으로는 미리보기 없이 못 간다
+      _saves = 0;
       go(1); r.gatedCur = cur; r.gatedSaves = _saves;
-      // ② 미리보기 ready → 전진 + 저장
+      // ③ 미리보기 ready → 전진 + 저장
       PREVIEW_STATUS = 'ready'; _saves = 0;
       go(1); r.fwdCur = cur; r.fwdSaves = _saves;
-      // ③ jump 앞으로 → 저장
+      // ④ jump 앞으로 → 저장
       _saves = 0; jump(3); r.jumpCur = cur; r.jumpSaves = _saves;
-      // ④ go(-1) 뒤로 → 저장
+      // ⑤ go(-1) 뒤로 → 저장
       _saves = 0; go(-1); r.backCur = cur; r.backSaves = _saves;
       console.log(JSON.stringify(r));
     """)
-    assert '"gatedCur":0' in out, f"①게이트가 뚫렸다 — 미리보기 없이 2단계로 갔다: {out}"
-    assert '"gatedSaves":0' in out, f"①막혔는데 저장했다(return 전에 saveWork): {out}"
-    assert '"fwdCur":7' in out, f"②미리보기 ready인데 전진 못 했다: {out}"
-    assert '"fwdSaves":1' in out, f"②전진했는데 saveWork 미호출 — 서버 step이 0에 멈춰 새로고침이 1단계로 되돌린다(증상2): {out}"
-    assert '"jumpCur":3' in out and '"jumpSaves":1' in out, f"③jump가 저장 안 했다: {out}"
-    assert '"backCur":2' in out and '"backSaves":1' in out, f"④go(-1)가 저장 안 했다: {out}"
+    assert '"matchCur":7' in out, f"①화면 붙이기(매칭) 패널이 게이트에 막혔다: {out}"
+    assert '"matchSaves":1' in out, f"①전진했는데 saveWork 미호출: {out}"
+    assert '"gatedCur":7' in out, f"②게이트가 뚫렸다 — 미리보기 없이 음성 단계로 갔다: {out}"
+    assert '"gatedSaves":0' in out, f"②막혔는데 저장했다(return 전에 saveWork): {out}"
+    assert '"fwdCur":2' in out, f"③미리보기 ready인데 전진 못 했다: {out}"
+    assert '"fwdSaves":1' in out, f"③전진했는데 saveWork 미호출 — 서버 step이 0에 멈춰 새로고침이 1단계로 되돌린다(증상2): {out}"
+    assert '"jumpCur":3' in out and '"jumpSaves":1' in out, f"④jump가 저장 안 했다: {out}"
+    assert '"backCur":2' in out and '"backSaves":1' in out, f"⑤go(-1)가 저장 안 했다: {out}"
 
 
 def test_start_mix_persists_job_id():
@@ -124,6 +132,9 @@ const STATE = { script:'', script_src_idx:null, script_from_wiki:null,
                 subtitleRemoval:false, headcopy:null, captionStyle:null,
                 deco:{ extra_texts:[], motion:null } };
 const STEP_LABELS = ['대본','화면 붙이기','TTS','꾸미기','썸네일','SEO','최종'];
+// Task 6(2026-07-23): cur 바운드는 PANEL_COUNT(물리 패널 수, 지금 8)를 쓴다 — STEP_LABELS.length
+// (오브 라벨 수)와는 다른 축이다.
+const PANEL_COUNT = 8;
 function canGoNext(){ return PREVIEW_STATUS === 'ready' || PREVIEW_STATUS === 'failed'; }
 function refreshNextBtn(){}
 function renderSteps(){}
