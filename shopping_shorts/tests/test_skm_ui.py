@@ -1,3 +1,4 @@
+import json
 import re
 import shutil
 import subprocess
@@ -42,14 +43,43 @@ def test_produce_links_theme_and_brands():
 
 
 # ── Task 2: 오브 단계바 — 라벨 rename + 매칭 단계 삽입 ──────────────
+# (v6 목업 정렬, 2026-07-23 후속) 자막제거가 헤드라인 오브로 복귀 — 8단계.
 def test_orb_labels_and_mapping():
     assert '"영상/대본"' in HTML and '"화면 붙이기"' in HTML and '"완성"' in HTML
     assert "ORB_TO_PANEL" in HTML and "STEP_LABELS" in HTML
-    assert '"자막제거"' not in HTML.split("STEP_LABELS")[1][:200]  # 자막제거는 오브 라벨 아님
+    # STEP_LABELS는 정확히 8개, 자막제거 포함(v6 목업과 정렬 — 더는 오브에서 안 빠진다)
+    m = re.search(r"const STEP_LABELS\s*=\s*(\[[^\]]*\])", HTML)
+    assert m, "STEP_LABELS 선언을 못 찾음"
+    labels = json.loads(m.group(1))
+    assert labels == ["영상/대본", "화면 붙이기", "자막제거", "음성", "꾸미기", "썸네일", "SEO", "완성"], labels
+
+
+def test_orb_to_panel_mapping_v6():
+    m = re.search(r"const ORB_TO_PANEL\s*=\s*(\[[^\]]*\])", HTML)
+    assert m, "ORB_TO_PANEL 선언을 못 찾음"
+    mapping = json.loads(m.group(1))
+    assert mapping == [0, 7, 1, 2, 3, 4, 5, 6], mapping
 
 
 def test_orbbar_class_used():
     assert 'class="orbbar"' in HTML or "'orbbar'" in HTML or '"orbbar"' in HTML
+
+
+def test_panel0_title_is_video_script_not_studio():
+    assert "1 · 영상/대본" in HTML
+    assert "1 · 제작소" not in HTML
+
+
+# ── v6 목업 정렬: renderSteps가 볼(숫자/✓)+라벨(항상 노출)+진행선(orbfill)을 그린다 ──
+def test_render_steps_emits_v6_orb_markup():
+    start = HTML.index("function renderSteps(){")
+    end = HTML.index("// ── 오브바 끝 ──")
+    body = HTML[start:end]
+    assert "orbline" in body
+    assert "orbfill" in body
+    assert '"ball"' in body or "'ball'" in body
+    assert '"lb"' in body or "'lb'" in body
+    assert "label" in body  # 라벨 텍스트를 실제로 넣는다(hover 전용 title이 아니라)
 
 
 @pytest.mark.skipif(not shutil.which("node"), reason="node 필요")

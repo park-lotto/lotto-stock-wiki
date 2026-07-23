@@ -17,20 +17,34 @@
 @keyframes auroraDrift{ to{ background-position: 8% 4%, -6% 6%, 0 0; } }
 @media(prefers-reduced-motion:reduce){ .aurora-bg{ animation:none; } }
 
-/* ── 오브 단계바 ── */
-.orbbar{ display:flex; gap:6px; align-items:center; }
-.orb{ width:30px; height:30px; border-radius:50%; display:grid; place-items:center;
-  font-size:13px; font-weight:900; background:var(--panel); border:2px solid var(--line);
-  color:var(--sub); transition:transform .15s; }
-.orb:hover{ transform:scale(1.12); }
-.orb.on{ background:linear-gradient(135deg,#6ef0d4,#14b8a6); border-color:transparent;
-  color:#04201b; box-shadow:0 0 14px rgba(62,224,191,.6); animation:orbPulse 1.8s infinite; }
-.orb.done{ background:#facc6b; border-color:#facc6b; color:#231a00; }
+/* ── 오브 단계바(v6 목업 정렬, 2026-07-23) ──
+   정본: docs/superpowers/specs/assets-숏템메이커목업/final-mock-v6.html (.orbbar/.orbline/.orbfill/.orb/.ball/.lb, L10-23)
+   구조: .orbbar(행) > .orbline(배경 진행선) > .orbfill(골드→민트 그라디언트 진행폭)
+         + .orb(각 단계) > .ball(원형 숫자/✓) + .lb(단계명, 항상 노출 — hover 전용 아님).
+   재사용을 염두에 두고 페이지 종속 토큰 없이 목업 리터럴 hex 그대로 포팅했다(다른 페이지 공통 컴포넌트 예정). */
+.orbbar{ position:relative; display:flex; align-items:flex-start; justify-content:space-between;
+  margin:0 6px 18px; padding-top:4px; }
+.orbline{ position:absolute; top:20px; left:24px; right:24px; height:4px; background:#1a2436; border-radius:4px; }
+.orbfill{ position:absolute; left:0; top:0; bottom:0; border-radius:4px;
+  background:linear-gradient(90deg,#facc6b,#3ee0bf); box-shadow:0 0 12px rgba(62,224,191,.6); }
+.orb{ position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:5px;
+  flex:1; cursor:pointer; }
+.orb .ball{ width:36px; height:36px; border-radius:50%; display:grid; place-items:center;
+  font-size:13px; font-weight:900; transition:transform .15s;
+  background:radial-gradient(circle at 32% 28%, #17222f, #0b111c 70%); border:2px solid #243244; color:#5a6580; }
+.orb:hover .ball{ transform:scale(1.12); }
+.orb.done .ball{ background:radial-gradient(circle at 32% 28%, #ffe29a, #f5b53f 75%); border-color:transparent; color:#3a2800; }
+.orb.cur .ball{ background:radial-gradient(circle at 32% 28%, #7df5db, #14b8a6 75%); border-color:transparent;
+  color:#04201b; animation:orbPulse 1.6s ease-out infinite; }
+.orb.cur::after{ content:""; position:absolute; top:-6px; width:48px; height:48px; border-radius:50%;
+  border:2px solid rgba(62,224,191,.5); animation:orbRing 1.6s ease-out infinite; }
+@keyframes orbPulse{ 0%{box-shadow:0 0 0 0 rgba(62,224,191,.55)} 70%{box-shadow:0 0 0 14px rgba(62,224,191,0)} 100%{box-shadow:0 0 0 0 rgba(62,224,191,0)} }
+@keyframes orbRing{ 0%{transform:scale(.9); opacity:1} 100%{transform:scale(1.5); opacity:0} }
+.orb .lb{ font-size:11px; font-weight:800; color:#5a6580; text-align:center; }
+.orb.cur .lb{ color:#fff; text-shadow:0 0 12px rgba(62,224,191,.8); }
+.orb.done .lb{ color:#c9a44a; }
 .orb.locked{ cursor:not-allowed; opacity:.6; }
-@keyframes orbPulse{ 0%,100%{box-shadow:0 0 10px rgba(62,224,191,.5)} 50%{box-shadow:0 0 22px rgba(62,224,191,.9)} }
-@media(prefers-reduced-motion:reduce){ .orb.on{ animation:none; } }
-.orb-seg{ flex:1; height:3px; background:var(--line); border-radius:2px; }
-.orb-seg.fill{ background:linear-gradient(90deg,#6ef0d4,#14b8a6); }
+@media(prefers-reduced-motion:reduce){ .orb.cur .ball, .orb.cur::after{ animation:none; } }
 
 /* ── 카드 · CTA · 통계 타일 ── */
 .skm-card{ background:var(--panel); border:1px solid rgba(62,224,191,.4); border-radius:14px; padding:16px; }
