@@ -704,8 +704,15 @@ def api_discover_feed():
 
 
 @app.post("/api/discover/add")
-def api_discover_add(username: str, name: str = ""):
-    """발굴 채널을 벤치마크 목록에 추가(이후 메인 랭킹에도 추적)."""
+def api_discover_add(request: Request, username: str, name: str = ""):
+    """발굴 채널을 벤치마크 목록에 추가(이후 메인 랭킹에도 추적).
+
+    ★관리자(사장님 cid0) 전용(2026-07-23) — 클릭 자체 비용은 0이지만, 추가된 채널이
+    전 회원 공유 추적목록에 들어가 다음날부터 매일 자동수집(Apify 유료)이 늘어난다.
+    발굴 실행·레퍼런스 URL 등록과 같은 관리자 가드를 건다(피드 보기는 전 회원 유지)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
     Store(DB_PATH).add_discovered(username.strip().lstrip("@"), name)
     return {"ok": True, "username": username}
 

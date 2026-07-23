@@ -261,7 +261,11 @@ function renderDiscover(items){
   const el=document.getElementById('dcards');
   const list = DSTATE.items.slice().filter(passFilter).sort((a,b)=>dSortKey(b)-dSortKey(a));
   if(!list.length){ el.innerHTML='<div class="empty">결과 없음.</div>'; return; }
-  el.innerHTML = list.map((i,idx)=>`
+  el.innerHTML = _renderDiscoverCards(list);
+  revealAdmin();   // 목록추가 버튼(.admin-only)은 렌더 후 관리자에게만 노출(피드 렌더가 /api/me보다 늦어도 안전)
+}
+function _renderDiscoverCards(list){
+  return list.map((i,idx)=>`
     <div class="card">
       <div class="badges">${isHot(i)?'<span class="badge hot">🔥 핫</span>':''}${isNew(i)?'<span class="badge new">🆕 뉴</span>':''}</div>
       <div class="thumb">
@@ -278,7 +282,7 @@ function renderDiscover(items){
         <div class="stat"><span>참여밀도</span><b>${((i.density||0)*100).toFixed(2)}%</b></div>
         <div class="btns">
           <button class="view" onclick="window.open('${i.url}','_blank')">👁 보기</button>
-          <button class="add" id="add_${i.username}" onclick="addChannel('${i.username}',this)">➕ 목록추가</button>
+          <button class="add admin-only" id="add_${i.username}" style="display:none" onclick="addChannel('${i.username}',this)">➕ 목록추가</button>
         </div>
       </div>
     </div>`).join("");
@@ -345,12 +349,13 @@ loadFeed();
 // ── 관리자(사장님 cid0) 전용 발굴버튼(2026-07-23) — index.html 운영버튼과 동일 패턴 ──
 // 업데이트·카테고리·키워드검색은 Apify 유료 크롤이라 관리자만 쓴다. 피드 보기는 전 회원 공유.
 window.IS_ADMIN=false;
+function revealAdmin(){ if(window.IS_ADMIN) document.querySelectorAll('.admin-only').forEach(el=>{ el.style.display=''; }); }
 fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
   if(d && d.customer_id===0){
     window.IS_ADMIN=true;
-    document.querySelectorAll('.admin-only').forEach(el=>{ el.style.display=''; });
+    revealAdmin();
   }else{
-    document.getElementById('dstatus').textContent='저장된 발굴 피드를 보고, 마음에 드는 채널은 "목록추가"로 담으세요. (새 발굴 실행은 관리자가 돌립니다)';
+    document.getElementById('dstatus').textContent='저장된 발굴 피드를 볼 수 있습니다. (새 채널 발굴·목록추가는 관리자 전용)';
   }
 }).catch(()=>{});
 </script>
