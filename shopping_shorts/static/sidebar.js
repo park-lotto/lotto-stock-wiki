@@ -2,6 +2,20 @@
    기존에 페이지마다 <aside class="sidebar">를 손으로 복붙하다 항목이 제각각
    드리프트되고 mix 페이지엔 아예 없던 문제를 하나로 통일(2026-07-13). */
 (function () {
+  // 런처 v3 팝업 핸드오프(2026-07-23): 이 창이 로그인 팝업(name=stb_login)이고 열어준 부모가
+  // 살아있으면 = 로그인 성공으로 /(홈)가 뜬 것 → 부모를 홈으로 보내고 팝업을 닫는다.
+  // 작은 런처 창(바로가기 --window-size)으로 열렸다가 로그인했으면 넓게 키운다(막히면 무시).
+  // (try/catch·프로퍼티 접근만 — 테스트 하네스 미니 DOM에도 안전)
+  try {
+    if (window.name === "stb_login" && window.opener && !window.opener.closed) {
+      window.opener.location.href = "/";
+      window.close();
+      return;
+    }
+    if (window.outerWidth && window.outerWidth < 700) {
+      try { window.resizeTo(1500, 950); } catch (_) {}
+    }
+  } catch (_) {}
   // PWA 부트스트랩 — 앱 페이지 전체(사이드바 포함 페이지)에 매니페스트·아이콘을 주입.
   // 페이지마다 <head>를 손대면 드리프트되므로 여기 한 곳에서(공개 대문·로그인은 app.py가 직접).
   // (setAttribute 대신 프로퍼티 할당 — 테스트 하네스의 미니 DOM에도 안전)

@@ -3513,6 +3513,15 @@ var m=document.querySelector('.money');
 if(m){var mo=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.querySelectorAll('[data-to]').forEach(cu);mo.unobserve(e.target);}});},{threshold:.35});mo.observe(m);}
 setTimeout(function(){document.querySelectorAll('.hero [data-to]').forEach(cu);},520);
 })();</script>
+<script>(function(){
+// 런처 v3(2026-07-23): 로그인 링크 → 작은 런처 팝업으로("있어보이게"). 팝업 차단·모바일은 일반 이동 폴백.
+document.addEventListener('click',function(e){
+  var a=e.target.closest?e.target.closest('a[href="/login"]'):null; if(!a) return;
+  if(window.innerWidth<600) return;                 // 모바일·좁은 화면은 팝업 어색 → 그냥 이동
+  var w=window.open('/login','stb_login','width=440,height=800,menubar=no,toolbar=no,location=no,status=no,resizable=yes');
+  if(w){ e.preventDefault(); try{w.focus();}catch(_){}}   // w=null(차단) → preventDefault 안 함 = 기본 이동
+},true);
+})();</script>
 </body></html>"""
 
 
