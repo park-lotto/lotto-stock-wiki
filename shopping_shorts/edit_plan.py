@@ -945,12 +945,17 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         cand = {"plan": plan, "story": story, "score": rule_score, "recommended": False}
         # ★심사위원(사장님 기준: 대본품질·장면싱크·스토리라인) — judge on일 때만(Gemini 콜).
         # 규칙점수(빠른 계산)와 반반 섞어 최종 순위. 심사 실패는 규칙점수만으로 폴백(무해).
+        from shopping_shorts import candidate_judge
         if judge:
-            from shopping_shorts import candidate_judge
             jr = candidate_judge.judge(plan.get("beats"), call=_call)
             if jr:
                 cand["judge"] = jr
                 cand["score"] = round(0.5 * rule_score + 0.5 * jr["total"], 3)
+        # T6 컷리듬/반복 결정적 감점 — judge on/off 둘 다 적용(파편·반복 후보 순위 하락).
+        pen = candidate_judge.cut_rhythm_penalty(plan.get("beats"))
+        if pen:
+            cand["cut_penalty"] = pen
+            cand["score"] = round(max(0.0, cand["score"] - pen), 3)
         cands.append(cand)
     if cands:
         best = max(range(len(cands)), key=lambda i: cands[i]["score"])

@@ -23,6 +23,32 @@ _JUDGE_SCHEMA = {
 }
 
 
+def cut_rhythm_penalty(beats):
+    """컷리듬/반복 결정적 감점(0~0.3) — T6 이중방어. 심사위원(Gemini)이 파편·반복 후보를
+    높게 줘도 최종 순위에서 끌어내려 P1(뚝뚝 끊김)·P2(장면 반복)가 후보 선택으로 재발하지
+    않게 한다. 두 축: ①파편=비트당 클립이 상한(MAX_CLIPS_PER_BEAT) 초과 ②반복=클립 seg가
+    영상 전체에서 재사용. 결정적이라 Gemini 죽어도(규칙점수 폴백) 그대로 작동한다."""
+    from shopping_shorts import config
+    segs = []
+    n_beats = 0
+    for b in (beats or []):
+        if not b:
+            continue
+        n_beats += 1
+        p = b.get("primary") or {}
+        if p.get("seg_id"):
+            segs.append(p["seg_id"])
+        for a in (b.get("alternates") or []):
+            if a.get("seg_id"):
+                segs.append(a["seg_id"])
+    if not segs or not n_beats:
+        return 0.0
+    cap = getattr(config, "MAX_CLIPS_PER_BEAT", 3) or 3
+    chop = max(0.0, (len(segs) / n_beats) - cap) / cap   # 비트당 평균이 상한의 2배면 1.0
+    repeat = 1.0 - len(set(segs)) / len(segs)             # 전부 고유=0, 절반 재사용=0.5
+    return round(min(0.3, 0.15 * min(1.0, chop) + 0.15 * repeat), 3)
+
+
 def _beats_block(beats):
     lines = []
     for i, b in enumerate(beats or []):
