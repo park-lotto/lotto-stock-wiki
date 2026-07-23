@@ -164,6 +164,16 @@ def _refill_beats_to_tts(beats, source_scripts, tts_dir):
         return
     sc = Counter((b.get("primary") or {}).get("video_id")
                  for b in beats if b.get("primary"))
+    # ★전역 used seg(2026-07-23 사장님 "동일 장면 반복 그만"): 모든 비트가 이미 쓴 seg를 모아
+    # fill에 넘겨 비트 사이 반복을 막는다. 비트를 채울 때마다 새로 붙은 seg를 여기 등록한다.
+    used_all = set()
+    for b in beats:
+        p = b.get("primary") or {}
+        if p.get("seg_id"):
+            used_all.add(p["seg_id"])
+        for a in (b.get("alternates") or []):
+            if a.get("seg_id"):
+                used_all.add(a["seg_id"])
     for b in beats:
         tp = b.get("tts_path")
         if not tp:
@@ -179,11 +189,15 @@ def _refill_beats_to_tts(beats, source_scripts, tts_dir):
         mc = 2 if backbone.is_point_beat(b) else None
         try:
             filled = backbone.fill_clips_to_cover(b, source_scripts, src_count=sc, need=td,
-                                                  max_clips=mc)
+                                                  max_clips=mc, avoid_segs=used_all)
         except Exception:
             traceback.print_exc(file=sys.stderr)
             continue
-        b["alternates"] = filled.get("alternates", b.get("alternates"))
+        new_alts = filled.get("alternates", b.get("alternates"))
+        b["alternates"] = new_alts
+        for a in (new_alts or []):        # 새로 붙은 seg를 전역에 등록 → 다음 비트가 안 겹치게
+            if a.get("seg_id"):
+                used_all.add(a["seg_id"])
 
 
 # 콘폼 트리거 임계(초). 이하의 초과분은 켄번즈 홀드(≤0.8s)로 자연 흡수되는 수준이라

@@ -82,7 +82,7 @@ def _broll_segs(pool_sources, src_count, exclude_seg_ids, prefer_video=None, min
 
 
 def fill_clips_to_cover(beat, pool_sources, src_count=None, need=None,
-                        max_clips=None, min_shot=None):
+                        max_clips=None, min_shot=None, avoid_segs=None):
     """화면이 대사보다 짧으면 풀에서 클립을 더 붙여 길이를 채운다. 원본 mutate 안 함.
     need: 채울 목표 초. None이면 나레이션 추정(narration_seconds)으로 length_status가 'over'일
     때만 채운다(기존 동작). 값이 주어지면(=실 TTS 길이, TTS 후 재보정) clip_seconds가 그보다
@@ -102,6 +102,11 @@ def fill_clips_to_cover(beat, pool_sources, src_count=None, need=None,
         return dict(beat)
     used = {(beat.get("primary") or {}).get("seg_id")}
     used |= {a.get("seg_id") for a in (beat.get("alternates") or [])}
+    # ★avoid_segs(2026-07-23): 다른 비트들이 이미 쓴 seg. TTS 후 _refill이 fill을 비트마다
+    # 돌릴 때 이걸 넘겨 '비트 사이 동일 장면 반복'을 막는다(dedup은 plan에서만 돌아 무력했다).
+    # 풀이 모자라 못 채우면 반복 대신 홀드/conform이 흡수 — 사장님 "그만 좀 반복하자".
+    if avoid_segs:
+        used |= set(avoid_segs)
     nb = dict(beat)
     nb["alternates"] = list(beat.get("alternates") or [])
 
