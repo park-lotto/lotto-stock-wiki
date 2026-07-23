@@ -84,3 +84,31 @@ def assemble_bank_context(store, category, k=5):
     spine = store.pick_spine_for_category(category) if category else None
     blocks = [x for x in (spine_charter(spine), parts_block(store, k)) if x]
     return "\n\n".join(blocks)
+
+
+def bank_usage_snapshot(store, category, k=5):
+    """생성 프롬프트에 은행이 무엇을 주입했나 — 계측 dict(읽기만, Gemini 없음).
+    empty=True면 스파인·부품 통째로 비어 bank_context가 '' = 은행 무용."""
+    enabled = store.get_setting("bank_enabled", "") == "1"
+    spine = store.pick_spine_for_category(category) if category else None
+    spine_beats = len((spine or {}).get("beat_chain") or []) if spine else 0
+    parts_by_bucket = {}
+    for b in STYLE_BUCKETS:
+        pool = store.list_pattern_items(bucket=b, status="approved", order_by="perf",
+                                        limit=max(k * _POOL_MULT, _POOL_MIN))
+        n = min(len(pool), k)
+        if n:
+            parts_by_bucket[b] = n
+    parts_total = sum(parts_by_bucket.values())
+    rec = store.recent_script_usage()
+    avoid_present = bool(rec.get("hooks") or rec.get("persons") or rec.get("ctas"))
+    return {
+        "bank_enabled": enabled,
+        "spine_present": bool(spine),
+        "spine_beats": spine_beats,
+        "parts_by_bucket": parts_by_bucket,
+        "parts_total": parts_total,
+        "avoid_present": avoid_present,
+        "category": category or "",
+        "empty": (not spine) and parts_total == 0,
+    }
