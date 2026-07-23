@@ -496,9 +496,12 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                                     backbone_meta=backbone_meta, backbone_forced=backbone_forced,
                                     bank_context=bank_context, avoid_hooks=avoid_hooks,
                                     backbone_base=backbone_base,
-                                    # 심사위원(대본품질·장면싱크·스토리라인)으로 best-of-N 선택 —
-                                    # 백본-베이스(스마트믹스)일 때만. 여러 안 중 제일 좋은 대본 채택.
-                                    judge=backbone_base)
+                                    # 심사위원(대본품질·장면싱크·스토리라인)으로 best-of-N 선택.
+                                    # ★2026-07-23: 은행/핑퐁이 켜진 스마트 경로면 항상 심사한다
+                                    # (예전엔 backbone_base일 때만이라, 서버에 backbone_base 미설정 →
+                                    # 심사가 통째로 꺼져 제일 탄탄한 후보를 못 골랐다. 사장님 지적).
+                                    judge=(backbone_base or ping_pong
+                                           or store.get_setting("bank_enabled", "") == "1"))
         if sf["candidates"]:
             store.set_mix_candidates(job_id, sf["candidates"])
             rec = next((cand for cand in sf["candidates"] if cand["recommended"]),
