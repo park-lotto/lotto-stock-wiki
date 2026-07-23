@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>영상 제작소 · 숏템박스</title>
+  <title>🛠 숏템메이커 · 숏템박스</title>
   <!-- FOUC 방지: 저장된 테마를 렌더 전에 즉시 반영(sidebar.js는 body 주입이라 늦음) -->
   <script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <style>
@@ -313,9 +313,10 @@
   </style>
 </head>
 <body>
+  <div class="aurora-bg"></div>
   <main class="main">
     <div class="head">
-      <h2>🎬 영상 제작소</h2>
+      <h2>🛠 숏템메이커</h2>
       <div class="desc">레퍼런스 대본으로 시작해 영상·음성·꾸미기·SEO까지 한 번에 만듭니다.</div>
     </div>
 
@@ -4439,6 +4440,7 @@ window.IS_ADMIN=false;
 fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{ if(d && d.customer_id===0){ window.IS_ADMIN=true;
   const b=document.getElementById('openVoiceTune'); if(b) b.style.display=''; } }).catch(()=>{});
 </script>
+<link rel="stylesheet" href="theme.css?v=1">
 <script src="/loader.js"></script>
 <script src="/sidebar.js?v=2"></script>
 </body>
