@@ -27,6 +27,8 @@ from shopping_shorts.frame_extract import (download_video, extract_frames,
                                            extract_frame_at, extract_grid_frames)
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.structure_analyze import analyze_structure
+from shopping_shorts import backbone
+from shopping_shorts.aipick import build_aipick
 from shopping_shorts.categorize import categorize, KEYWORDS as CATEGORY_KEYWORDS
 from shopping_shorts import script_generate
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
@@ -5085,6 +5087,82 @@ def api_produce_works_delete(request: Request, work_id: str):
     if not Store(DB_PATH).delete_produce_work(work_id, customer_id=_cid(request)):
         return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
     return {"ok": True}
+
+
+# ── AI PICK 사전분석(2026-07-23, 숏템메이커 리뉴얼 Task3) ──────────────
+# 지금 구조에서 "영상제작에 담긴 소스"는 work 단위가 아니라 **고객 단위 버킷**
+# (produce_script_picks, /api/produce/picks와 같은 출처)이다. work_id는 이 시점엔
+# 아직 없을 수도 있고(1단계 첫 진입, WORK_ID=null), 있어도 그 work의 상태에 저장된
+# ⭐메인 지정(있다면)을 읽는 용도로만 쓴다 — 소스 목록 자체는 항상 picks 버킷.
+def _load_work_sources(work_id, cid):
+    """AI PICK용 소스 목록. script_wiki(도서관) 항목 중 '영상제작에 담긴' 것만,
+    backbone/aipick이 기대하는 얇은 필드로 변환한다.
+    ⚠️ views(조회수)는 이 시스템 어디에도 저장되지 않는다(script_wiki 스키마 확인,
+    2026-07-23) — 거짓 수치 대신 항상 None(aipick.build_aipick이 우아하게 폴백).
+    seconds는 whisper 세그먼트(start/end)에서 실측(마지막 세그먼트 end) — 저장 안 됐으면 None.
+    structure는 도서관 저장 시(api_produce_save_to_wiki) 이미 1회 analyze_structure가
+    돌아 캐시돼 있으므로 그대로 실어 aipick.py가 재분석(Gemini 재호출) 없이 재사용하게 한다."""
+    store = Store(DB_PATH)
+    picks = store.produce_pick_shortcodes(customer_id=cid)
+    items = [w for w in store.wiki_list(customer_id=cid) if w["shortcode"] in picks]
+    sources = []
+    for w in items:
+        segs = w.get("segments") or []
+        seconds = round(max((s.get("end", 0) for s in segs), default=0), 1) if segs else None
+        sources.append({
+            "video_id": w["shortcode"],
+            "text": w.get("full_text", ""),
+            "followers": w.get("followers") or None,
+            "comments": w.get("comments") or None,
+            "seconds": seconds,
+            "views": None,
+            "structure": w.get("structure") or None,
+            "source_url": w.get("source_url", ""),
+        })
+    return sources
+
+
+def _build_source_meta(sources):
+    """backbone.score_backbones/pick_backbone이 기대하는 meta = {video_id: {platform,
+    comments, avg_comments}}. avg_comments = 지금 pool(담긴 소스들)의 댓글수 평균 —
+    comments_x_avg 타일("평균 대비 N배")의 기준값."""
+    counted = [s["comments"] for s in sources if s.get("comments") is not None]
+    avg = round(sum(counted) / len(counted), 1) if counted else None
+    meta = {}
+    for s in sources:
+        meta[s["video_id"]] = {
+            "platform": backbone.platform_of(s.get("source_url", "")),
+            "comments": s.get("comments"),
+            "avg_comments": avg,
+        }
+    return meta
+
+
+def _forced_backbone(work_id, cid):
+    """work.state에 사장님이 UI에서 지정한 ⭐메인(있다면)을 읽는다. work_id 없음/남의
+    work/필드 없음이면 None(=자동 선정 폴백, pick_backbone의 기본 동작).
+    프론트(Task4~)가 아직 이 필드를 안 쓰므로 이름은 mix_pipeline의 backbone_main
+    관례를 따르되 shortcode 문자열을 직접 담게 열어둔다(인덱스는 여기선 의미 없음
+    — picks 소스는 url 인덱스가 아니라 shortcode로 식별된다)."""
+    if not work_id:
+        return None
+    w = Store(DB_PATH).get_produce_work(work_id, customer_id=cid)
+    if not w:
+        return None
+    state = w.get("state")
+    if not isinstance(state, dict):
+        return None
+    return state.get("backbone_main") or None
+
+
+@app.get("/api/produce/aipick")
+def api_produce_aipick(request: Request, work_id: str = ""):
+    """1단계 "AI가 미리 픽 추천" 조회 — 지금 담긴 소스를 pick_backbone/score_backbones/
+    analyze_structure로 사전분석해 프론트 계약 하나로 묶어 반환(build_aipick)."""
+    cid = _cid(request)
+    sources = _load_work_sources(work_id, cid)
+    meta = _build_source_meta(sources)
+    return build_aipick(sources, meta, forced=_forced_backbone(work_id, cid))
 
 
 @app.post("/api/produce/mix/start")
