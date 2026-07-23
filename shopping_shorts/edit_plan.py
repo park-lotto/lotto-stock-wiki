@@ -729,8 +729,11 @@ def _bb_rewrite(beats, call=_vault_call):
         f"[{b['beat_idx']}] 화면:{(b.get('primary') or {}).get('scene_desc','')} | 현재대사:{b.get('narration','')}"
         for b in beats)
     prompt = (
-        "아래 비트들은 대사와 화면이 어긋난다. 각 대사를 **뜻과 정보는 유지**하되 화면(scene_desc)에 "
-        "어울리도록 표현만 자연스럽게 고쳐라. 화면에 없는 사실을 지어내지 마라.\n"
+        "아래 비트들은 대사와 화면이 어긋난다. ★스토리가 왕이다 — 화자가 들려주는 이야기 흐름과 "
+        "말투를 그대로 유지해라. 화면묘사문으로 바꾸지 마라('달콤한 향이 퍼지네요' 같은 장면설명 금지). "
+        "대사가 화면과 **정면으로 모순되는 구체적 동작 단어**(예: 화면은 뒤집는데 '썰어')만 그 한 곳을 "
+        "화면과 안 부딪히게 살짝 바꾸거나 빼라. 나머지 이야기 문장은 절대 건드리지 마라. "
+        "화면에 없는 사실 지어내지 마라.\n"
         f"{lines}\n출력은 rewrites 배열의 JSON만.")
     raw = call(prompt, _RECONCILE_SCHEMA)
     if not raw or not isinstance(raw, dict):
