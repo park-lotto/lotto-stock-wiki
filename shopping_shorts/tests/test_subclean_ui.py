@@ -9,9 +9,11 @@ def test_no_vmake_anywhere_in_produce_html():
 
 
 def test_new_brand_and_card_markup_present():
-    assert "AI 자막 제거" in HTML
-    assert 'class="clean-card"' in HTML or 'class="clean-card ' in HTML
-    assert 'class="sw-track"' in HTML          # 프리미엄 스위치 트랙
+    assert "숏템 고품질 자막제거기" in HTML       # 브랜드 히어로 타이틀
+    assert 'class="hero' in HTML                  # 히어로 카드
+    assert 'id="cleanShowcase"' in HTML           # 항상 보이는 데모 쇼케이스
+    assert 'class="chips"' in HTML                # 기능 칩
+    assert 'class="sw-track"' in HTML             # 프리미엄 스위치 트랙
 
 
 def test_state_render_strings_present():
@@ -21,8 +23,6 @@ def test_state_render_strings_present():
     assert 'class="cp-compare"' in HTML
     assert "cp-arrow" in HTML and "AI 제거" in HTML
     assert "자막 제거에 실패했어요" in HTML
-    # desc 토글: subDesc 갱신
-    assert 'id="subDesc"' in HTML and "렌더 시 자동 적용" in HTML
 
 
 def test_motion_keyframes_present():
