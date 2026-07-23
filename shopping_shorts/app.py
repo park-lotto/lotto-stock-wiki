@@ -3326,6 +3326,17 @@ def _fill_brand(s: str) -> str:
              .replace("__GOOGLE_SVG__", _GOOGLE_SVG))
 
 
+def _with_pay(html: str) -> str:
+    """결제 CTA(__PAY_HREF__/__PAY_LABEL__)를 요청 시점에 채운다 — 설정 pay_url(외부 결제링크)이
+    있으면 '결제하기', 없으면 카톡 문의로 폴백. 설정 변경이 재시작 없이 바로 반영되게 요청마다 읽는다."""
+    st = Store(DB_PATH)
+    pay = (st.get_setting("pay_url", "") or "").strip()
+    kakao = (st.get_setting("contact_kakao", "") or _BRAND.get("kakao") or "/login").strip()
+    href = pay or kakao
+    label = "💳 결제하기 →" if pay else "카톡으로 문의"
+    return html.replace("__PAY_HREF__", href).replace("__PAY_LABEL__", label)
+
+
 # ── 공개 대문(랜딩) — 비로그인 방문자용. 민트×블랙, 한 페이지(B). ──
 _LANDING_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
@@ -3495,7 +3506,7 @@ a{text-decoration:none;color:inherit}
 <div style="color:var(--gold);font-weight:700;font-size:14px">Pro 이용권</div>
 <div class=display style="font-size:34px;margin:6px 0;background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent">가격 문의</div>
 <div style="color:var(--faint);font-size:13px;margin-bottom:16px">전 기능 무제한 · 무제한 제작</div>
-<a href="__KAKAO__" target=_blank rel=noopener style="display:inline-flex;width:100%;justify-content:center;background:var(--gold-grad);color:#3a2600;font-weight:700;font-size:14px;padding:12px;border-radius:12px;text-decoration:none">카톡으로 문의</a></div></div>
+<a href="__PAY_HREF__" target=_blank rel=noopener style="display:inline-flex;width:100%;justify-content:center;background:var(--gold-grad);color:#3a2600;font-weight:700;font-size:14px;padding:12px;border-radius:12px;text-decoration:none">__PAY_LABEL__</a></div></div>
 <div class=reveal style="text-align:center;margin-top:20px"><a href="/pricing" style="color:var(--mint);font-weight:700;font-size:14px">요금 자세히 보기 →</a></div></div>
 <div class="band reveal">
 <h2>손자한테 안 물어봐도 됩니다</h2>
@@ -3708,7 +3719,7 @@ a{text-decoration:none;color:inherit}
 <p>먼저 무료로 만들어보고, 마음에 들면 이용권으로 계속. 결제·문의는 카톡으로 간편하게 안내해 드립니다.</p>
 <div class=row>
 <a class="btn pri" href="/login">무료로 시작하기 →</a>
-<a class="btn kko" href="__KAKAO__" target="_blank" rel="noopener">카톡으로 문의하기</a></div></div>
+<a class="btn kko" href="__PAY_HREF__" target="_blank" rel="noopener">__PAY_LABEL__</a></div></div>
 <div class=plans>
 <div class=plan>
 <div class=pt>무료 체험</div>
@@ -3729,7 +3740,7 @@ a{text-decoration:none;color:inherit}
 <li><span class=c>✓</span> 쇼츠 무제한 제작</li>
 <li><span class=c>✓</span> 렌즈·대본·보이스 전부</li>
 <li><span class=c>✓</span> 우선 문의·운영 노하우</li></ul>
-<a class="btn kko" href="__KAKAO__" target="_blank" rel="noopener">카톡으로 문의</a></div></div>
+<a class="btn kko" href="__PAY_HREF__" target="_blank" rel="noopener">__PAY_LABEL__</a></div></div>
 <div class=tbd style="text-align:center">※ 가격·이용권 기간은 확정 후 표기됩니다(현재 플레이스홀더).</div>
 <div class=sec>
 <h2>이용권에 들어있는 것</h2>
@@ -3758,7 +3769,7 @@ a{text-decoration:none;color:inherit}
 <p>구글 계정이면 3초 · 카드 없이 시작. 궁금한 건 카톡으로.</p>
 <div class=row>
 <a class="btn pri" href="/login">무료로 시작하기 →</a>
-<a class="btn kko" href="__KAKAO__" target="_blank" rel="noopener">카톡으로 문의</a></div></div>
+<a class="btn kko" href="__PAY_HREF__" target="_blank" rel="noopener">__PAY_LABEL__</a></div></div>
 <div class=foot>© __NAME__ · 요금·이용권 안내</div>
 </div></body></html>"""
 
@@ -3818,7 +3829,7 @@ h1{font-family:'Black Han Sans',sans-serif;font-size:30px;margin:16px 0 22px}
 <div class="card up" id=upCard>
 <h3>이용권</h3>
 <p id=upText>더 쓰고 싶으면 이용권으로 계속 쓸 수 있어요. 결제·문의는 카톡으로 안내해 드립니다.</p>
-<a class="btn kko" id=kkoBtn href="/pricing">카톡으로 문의</a></div>
+<a class="btn kko" id=kkoBtn href="/pricing">__PAY_LABEL__</a></div>
 <form method=post action="/logout"><button type=submit class="btn ghost" style="width:100%">로그아웃</button></form>
 <div class=foot>© __NAME__</div>
 </div>
@@ -3831,10 +3842,11 @@ var b=document.getElementById("planBadge");
 if(d.plan==="pro"){b.className="badge pro";t("planBadge","Pro 이용권");t("planSub","전 기능 무제한");document.getElementById("upCard").classList.add("hide");}
 else if(typeof d.days_left==="number"&&d.days_left>0){b.className="badge trial";t("planBadge","무료 체험");t("planSub","D-"+d.days_left+" 남음");}
 else{b.className="badge free";t("planBadge","무료");t("planSub","레퍼런스 랭킹 열람");}
-var kko=(d.contact&&d.contact.kakao)||"";
+var c=d.contact||{};var pay=(c.pay||"").trim(),kko=(c.kakao||"").trim();
 var btn=document.getElementById("kkoBtn");
-if(/^https?:\\/\\//.test(kko)){btn.href=kko;btn.target="_blank";btn.rel="noopener";}
-else{btn.href="/pricing";}
+if(pay){btn.href=pay;btn.target="_blank";btn.rel="noopener";btn.textContent="💳 결제하기 →";}
+else if(/^https?:\\/\\//.test(kko)){btn.href=kko;btn.target="_blank";btn.rel="noopener";btn.textContent="카톡으로 문의";}
+else{btn.href="/pricing";btn.textContent="카톡으로 문의";}
 }).catch(function(){});
 })();</script>
 </body></html>"""
@@ -3852,8 +3864,9 @@ p{color:#9aa0a6;line-height:1.6;font-size:15px}a{display:inline-block;margin-top
 text-decoration:none;font-size:14px}</style></head>
 <body><div class=box><div class=emoji>🙏</div>
 <h1>가입 신청이 접수됐어요</h1>
-<p>운영자 승인 후 이용할 수 있어요.<br>잠시만 기다려 주세요.</p>
-<form method=post action="/logout" style="margin-top:24px"><button type=submit style="background:none;border:0;color:#8ab4f8;font-size:14px;cursor:pointer;text-decoration:none">로그아웃</button></form></div></body></html>""")
+<p>운영자 승인 후 이용할 수 있어요.<br>결제하고 알려주시면 바로 열어드려요.</p>
+<a href="__PAY_HREF__" target=_blank rel=noopener style="display:inline-block;margin-top:22px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);color:#08110e;font-weight:700;padding:12px 24px;border-radius:11px;text-decoration:none;font-size:15px">__PAY_LABEL__</a>
+<form method=post action="/logout" style="margin-top:16px"><button type=submit style="background:none;border:0;color:#8ab4f8;font-size:14px;cursor:pointer;text-decoration:none">로그아웃</button></form></div></body></html>""")
 
 # 로그아웃 확인 화면 — GET /logout이 세션을 안 지우는 대신 이 화면을 준다(CSRF 방어).
 # 실제 로그아웃은 이 폼의 POST만.
@@ -3933,7 +3946,7 @@ def _logout_do():
 
 @app.get("/pricing", response_class=HTMLResponse)
 def _pricing_page():
-    return _PRICING_HTML   # 공개 요금·이용권 페이지(비로그인 방문자 포함)
+    return _with_pay(_PRICING_HTML)   # 공개 요금·이용권 페이지(비로그인 방문자 포함) + 결제링크 주입
 
 
 @app.get("/account", response_class=HTMLResponse)
@@ -4173,7 +4186,7 @@ async def _auth_guard(request: Request, call_next):
                 return await call_next(request)
             if path.startswith("/api/"):
                 return JSONResponse({"error": "승인 대기중이에요", "level": "pending"}, status_code=403)
-            return HTMLResponse(_PENDING_HTML)
+            return HTMLResponse(_with_pay(_PENDING_HTML))
         # 유료게이트: 로그인은 됐으나 등급이 ranking_only(무료/체험만료)면 유료 경로 차단.
         # 사장님(0)·pro·체험중은 access_level=full이라 안 걸린다. deny-by-default.
         if lvl == "ranking_only" and _ranking_only_blocked(path, request.method):
@@ -4184,7 +4197,7 @@ async def _auth_guard(request: Request, call_next):
     if path.startswith("/api/"):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
     if path in ("/", "/index.html"):
-        return HTMLResponse(_LANDING_HTML)   # 비로그인 방문자 → 공개 대문(랜딩)
+        return HTMLResponse(_with_pay(_LANDING_HTML))   # 비로그인 방문자 → 공개 대문(랜딩) + 결제링크 주입
     if request.method == "GET" and path == "/pricing":
         return await call_next(request)      # 요금·이용권은 비로그인도 열람
     return RedirectResponse("/login")
@@ -4381,7 +4394,8 @@ def _api_me(request: Request):
             "limits": {"lens": _lim("limit_lens", 5), "render": _lim("limit_render", 2),
                        "script": _lim("limit_script", 10)},
             "contact": {"kakao": st.get_setting("contact_kakao", ""),
-                        "phone": st.get_setting("contact_phone", "")}}
+                        "phone": st.get_setting("contact_phone", ""),
+                        "pay": st.get_setting("pay_url", "")}}
 
 
 # ── 유료게이트 관리자(사장님 cid0 전용) — 결제 승격·설정 조정 ──
@@ -4421,7 +4435,7 @@ def _require_admin(request):
 _ADMIN_SETTING_KEYS = {"trial_days", "trial_event_hours", "limit_lens", "limit_render", "limit_script",
                        "limit_lens_pro", "limit_render_pro", "limit_script_pro",
                        "global_cap_lens", "global_cap_render", "global_cap_script",
-                       "contact_kakao", "contact_phone"}
+                       "contact_kakao", "contact_phone", "pay_url"}
 
 
 @app.get("/api/admin/customers")
