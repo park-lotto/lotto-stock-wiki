@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "DS INVESTMENT & SECURITIES",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-22_0806_Beyond K-Wave. K가 이끄는 소비 확장.md"
+  },
+  "questionnaire": {
+    "broker": "DS INVESTMENT & SECURITIES",
+    "analyst": "장지혜",
+    "report_date": "2026.07.21",
+    "target_kind": "market",
+    "market_direction": "K-Wave는 글로벌 커버리지 지역과 사업 영역을 확대하며 지속 성장 전망. 관련된 엔터/미디어/음식료 업체의 해외 실적 성장 및 수익성 개선 전망",
+    "macro_vars": [
+      "26년 1-5월 누적 인바운드 관광객 871만명(전년비 21% 증가)",
+      "한류 산업(콘텐츠) 수출액 149억 달러",
+      "한류 연관산업(식품, 화장품, 관광 등) 수출액 498억 달러",
+      "26년 1-6월 글로벌 외국인 한류 소비액 6.6조원(YoY +59%)"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "엔터",
+        "stance": "비중확대",
+        "reason": "K-Pop 메가 IP의 활약 및 차세대 IP의 글로벌 활동 지역 커버리지 확대, 강화된 MD 전략을 통한 지속 가능한 팬덤 소비 유도"
+      },
+      {
+        "sector": "미디어",
+        "stance": "비중확대",
+        "reason": "드라마, 영화, 예능 등 글로벌 시청자의 선호도 견조, 글로벌 OTT 시청 점유율 견조 및 플랫폼 강화(티빙, 4D PLEX)"
+      },
+      {
+        "sector": "소비내수",
+        "stance": "비중확대",
+        "reason": "K-Food 수출 지역과 품목 다변화로 침투율 상승, 글로벌 수요 대응을 위한 CAPA 확대, 건기식 ODM 기업들의 글로벌 브랜드 아시아 생산기지 역할 확대"
+      }
+    ],
+    "style": "성장주",
+    "event_calendar": [
+      {
+        "date": "2026-07-01",
+        "event": "Stray Kids 투어 시작"
+      },
+      {
+        "date": "2026-08-01",
+        "event": "BIGBANG 투어 시작"
+      }
+    ],
+    "top_picks": [
+      "하이브",
+      "삼양식품",
+      "오리온",
+      "YG",
+      "SM",
+      "JYP",
+      "CJ ENM",
+      "코스맥스엔비티",
+      "노바렉스"
+    ],
+    "risk": [
+      "27년 실적 기저 부담",
+      "K-Pop 성장에 대한 우려로 인한 밸류에이션 디레이팅",
+      "시장 수급 환경의 반도체 및 성장주 쏠림",
+      "환율 상승, 유가, 원부자재 가격 상승"
+    ],
+    "quote": "K-Wave(한류)는 음악, 드라마와 같은 콘텐츠에서 음식, 패션, 뷰티 라이프 스타일 소비재와 웹툰, 게임으로 소비 확대"
+  }
+}

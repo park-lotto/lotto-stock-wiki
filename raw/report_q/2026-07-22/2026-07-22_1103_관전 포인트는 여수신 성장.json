@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-07-22",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-22_1103_관전 포인트는 여수신 성장.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "우도형",
+    "report_date": "2026.07.22",
+    "stocks": [
+      {
+        "name": "카카오뱅크",
+        "code": "323410",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "28,000원",
+        "tp_prev": "-원",
+        "tp_direction": null,
+        "earnings_outlook": "2분기 당기순이익은 1,340억원으로 컨센서스에 부합할 것으로 판단된다.",
+        "estimate_revision": "2026년 당기순이익은 6,124억원, ROE는 8.9%가 전망된다.",
+        "next_catalyst": [
+          "개인사업자 부동산대출 갈아타기 상품 출시",
+          "수신 성장",
+          "보금자리론 공급 및 수수료 수익"
+        ],
+        "thesis": [
+          "고금리 환경과 개인사업자대출 갈아타기 출시로 원화대출 성장은 경쟁사 대비 양호할 것으로 판단",
+          "모임통장 기반 수신 성장이 자금운용자산 증가 및 이자이익 증가로 이어질 것으로 판단",
+          "해외투자(슈퍼뱅크, 뱅크X, M Bank) 및 캐피탈 자회사 인수를 통한 이익 다각화"
+        ],
+        "valuation_basis": "12M Fwd BPS 15,391원, Target PBR 1.82배 적용",
+        "risk": "가계대출 성장이 제한적인 상황에서 정부가 정책대출 비중을 축소할 예정임",
+        "supply_comment": null,
+        "quote": "카카오뱅크에 대해 투자의견 Buy, 목표주가는 28,000원으로 커버리지를 개시한다."
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "DS INVESTMENT & SECURITIES",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_0700_DS Futures Daily.md"
+  },
+  "questionnaire": {
+    "broker": "DS INVESTMENT & SECURITIES",
+    "analyst": null,
+    "report_date": "2026.06.09",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "KOSPI 200",
+      "KOSDAQ 150",
+      "변동성지수"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "NAVER",
+      "미래에셋증권",
+      "삼성중공업",
+      "LG전자",
+      "LG디스플레이",
+      "두산에너빌리티",
+      "한국전력",
+      "대우건설"
+    ],
+    "risk": "이 지표는 선물 거래대금 흐름만 보므로 결정적 매매신호가 아닙니다. 미결제약정(OI)·베이시스·옵션 지표와 함께 교차 확인하세요.",
+    "quote": "KOSPI 200 선물에서 외국인과 기관의 일일 순매수가 이상치인 날을 감지합니다. 단순 금액 크기가 아닌 20일 평균 대비 얼마나 변한 흐름인지(Z-score)를 기준으로 시그널을 판단합니다."
+  }
+}

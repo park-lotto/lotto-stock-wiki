@@ -1,0 +1,67 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SK하이닉스",
+      "rating": null,
+      "tp": null,
+      "ts": "07:15",
+      "quote": "SK하이닉스가 인텔의 오하이오 반도체 캠퍼스 부지와 시설 인수를 위한 실제 절차에 돌입",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "해성디에스",
+      "rating": null,
+      "tp": null,
+      "ts": "09:00",
+      "quote": "해성디에스가 중국 DRAM 업체 CXMT를 DDR5 패키지 기판 고객사로 확보",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "이엔셀",
+      "rating": null,
+      "tp": null,
+      "ts": "09:22",
+      "quote": "이엔셀, 세포·유전자치료제 신약, CDMO를 넘어 항노화 기업으로…이엔셀의 진화",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "디앤디파마텍",
+      "rating": null,
+      "tp": null,
+      "ts": "10:00",
+      "quote": "MASH 치료제 후보물질 자보페그두타이드(DD01)의 임상 2상 12주 결과가 The Lancet Gastroenterology & Hepatology 온라인판에 게재",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "플래티어",
+      "rating": null,
+      "tp": null,
+      "ts": "10:00",
+      "quote": "신세계I&C와 79억6000만원 규모 커머스 플랫폼 구축 계약 체결",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "바이오솔루션",
+      "rating": null,
+      "tp": null,
+      "ts": "11:07",
+      "quote": "8월 Type C 미팅에서 미국 3상 개발 방향 논의",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성바이오에피스",
+      "rating": null,
+      "tp": null,
+      "ts": "16:40",
+      "quote": "ADC 신약 후보물질 ‘SBE303’의 상업화·후속 개발을 위한 본계약을 체결",
+      "sector": "바이오"
+    }
+  ]
+}
