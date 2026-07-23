@@ -504,6 +504,10 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
             rec = next((cand for cand in sf["candidates"] if cand["recommended"]),
                        sf["candidates"][0])
             plan = rec["plan"]
+            # 주입 미리보기(2026-07-23): 이 대본에 실제로 들어간 은행 블록을 plan에 실어 리뷰
+            # 화면이 '은행이 뭘 댔나'를 눈으로 검증하게 한다(빈 문자열이면 은행 미주입).
+            if bank_context:
+                plan["bank_injected"] = bank_context
             # novelty(P0-3) 기록: 채택된 대본의 훅·인물·CTA를 남겨 다음 영상이 회피하게 한다.
             # 스위치 무관하게 항상 기록(데이터가 쌓여야 켰을 때 즉시 효과) — 실패해도 job 안 죽인다.
             try:

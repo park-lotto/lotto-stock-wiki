@@ -14,6 +14,7 @@ structure_analyze 패턴을 따른다: comment_gen 전용 키풀 로테이션 + 
 """
 import json
 import sys
+import time
 
 from google.genai import types
 
@@ -21,6 +22,10 @@ from shopping_shorts import comment_gen, gemini_audit
 from shopping_shorts.store import PATTERN_BUCKETS
 
 _MODEL = comment_gen._MODEL
+
+# 버스트 429 백오프(초): 한 라운드(라이브 키 전부)가 통째로 분당 429면 이만큼 쉬었다 재시도.
+# 분당창(보통 60초)이 리셋되도록 점점 길게. 100편 몰이 수집에서 29%→100% 근접이 목표.
+_QUOTA_BACKOFF = (12, 24, 40)
 
 # 스타일=리터럴, 내용=슬롯템플릿. store.PATTERN_BUCKETS를 이 둘로 가른다.
 STYLE_BUCKETS = ("hook", "ending", "adverb", "cta", "price")
@@ -111,30 +116,41 @@ def _default_call(prompt, schema, max_key_tries=None):
     영구 제외(_mark_key_exhausted)."""
     if not comment_gen.SHORTS_GEMINI_KEYS:
         return _vault_fallback(prompt, schema)
-    # 라이브 키 수만큼(최소 3, 상한 12) 다른 키로 시도 — 분당 한도에 걸린 키를 건너뛴다.
+    # 한 라운드 = 라이브 키 전부 시도(상한 16). ★버스트 429 백오프(2026-07-23): 100편 수집처럼
+    # 호출이 몰리면 전 키가 같은 분에 429로 걸려 성공률 29%까지 떨어졌다. 한 라운드가 통째로
+    # 429면 포기 대신 분당창이 리셋되게 잠깐 기다렸다(_QUOTA_BACKOFF) 재시도 → 29%→100% 근접.
     if max_key_tries is None:
         live_n = len(comment_gen._live_key_indices())
-        max_key_tries = max(3, min(live_n, 12))
-    for _ in range(max_key_tries):
-        key, ki = comment_gen._next_live_key_and_idx()
-        if key is None:
-            return None
-        try:
-            resp = comment_gen._client_for_key(key).models.generate_content(
-                model=_MODEL, contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json", response_schema=schema),
-            )
-            return json.loads(resp.text)
-        except Exception as e:  # noqa: BLE001 — 추출 실패는 치명적 아님(빈 dict로 처리)
-            if (comment_gen.key_vault.is_daily_exhausted_error(e)
-                    or comment_gen.key_vault.is_account_disabled_error(e)):
-                comment_gen._mark_key_exhausted(ki)   # 일일 소진·계정 비활성 → 그날 제외
-                continue
-            if comment_gen.key_vault.is_quota_error(e):  # 분당 429 등 일시적 → 다른 키로 재시도(제외 안 함)
-                continue
-            print(f"pattern_bank._default_call: {e!r}", file=sys.stderr)
-            return None
+        max_key_tries = max(3, min(live_n, 16))
+    for round_i in range(len(_QUOTA_BACKOFF) + 1):
+        all_quota = True          # 이 라운드가 전부 429(일시 한도)였나 → 대기 후 재시도
+        tried = 0
+        for _ in range(max_key_tries):
+            key, ki = comment_gen._next_live_key_and_idx()
+            if key is None:
+                break
+            tried += 1
+            try:
+                resp = comment_gen._client_for_key(key).models.generate_content(
+                    model=_MODEL, contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json", response_schema=schema),
+                )
+                return json.loads(resp.text)
+            except Exception as e:  # noqa: BLE001 — 추출 실패는 치명적 아님(빈 dict로 처리)
+                if (comment_gen.key_vault.is_daily_exhausted_error(e)
+                        or comment_gen.key_vault.is_account_disabled_error(e)):
+                    comment_gen._mark_key_exhausted(ki)   # 일일 소진·계정 비활성 → 그날 제외
+                    continue
+                if comment_gen.key_vault.is_quota_error(e):  # 분당 429 → 다른 키(제외 안 함)
+                    continue
+                print(f"pattern_bank._default_call: {e!r}", file=sys.stderr)
+                all_quota = False
+                break
+        if tried == 0 or not all_quota:
+            return None            # 라이브 키 없음 or 비-쿼터 에러 → 즉시 포기
+        if round_i < len(_QUOTA_BACKOFF):
+            time.sleep(_QUOTA_BACKOFF[round_i])   # 이 라운드 전부 429 → 분당창 리셋 대기
     return None
 
 

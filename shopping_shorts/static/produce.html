@@ -2265,6 +2265,17 @@ function _renderPreviewVideo(job){
 // 편집안(#mixReview) 렌더 본체 — loadMixReview(새 매칭)와 _restoreMixContext(복원)가 공유한다.
 // ★loadMixReview와 달리 PREVIEW_STATUS를 리셋하지 않는다: 리셋은 "새 매칭이라 미리보기 다시 봐야 함"의
 //   의미인데, 복원은 이미 확인한 미리보기를 되살리는 것이라 게이트를 다시 잠그면 안 된다.
+// 🏦 주입 미리보기(검증) — 이 대본 생성에 실제로 들어간 은행 블록(스파인·말투·전개)을 보여준다.
+async function _loadBankInjected(){
+  const box=document.getElementById('bankInjectedBody'); if(!box||!MIX_JOB) return;
+  try{
+    const d=await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/bank_injected')).json();
+    const t=(d&&d.injected||'').trim();
+    if(!t){ box.innerHTML='이 대본엔 은행이 주입되지 않았어요(✨스마트 믹스 꺼짐 또는 은행 비어있음).'; return; }
+    box.innerHTML='<div style="white-space:pre-wrap;background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:10px;max-height:320px;overflow:auto;line-height:1.5">'+esc(t)+'</div>'
+      +'<div class="hint" style="margin-top:4px">↑ AI가 이 대본을 쓸 때 참고한 은행 부품입니다(훅·어미·CTA=말투 / 근거·갈등·감정=전개 / 아크=스파인).</div>';
+  }catch(e){ box.textContent='불러오기 실패'; }
+}
 function _renderMixReviewBody(d){
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
   if(typeof window!=='undefined') window._mixBeats = d.beats || [];   // 조각 전체 보기(paletteStats)가 읽는다 — 실제 쓴 컷 집계용
@@ -2286,7 +2297,9 @@ function _renderMixReviewBody(d){
     </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>!b.respined&&b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
     +`<button id="btnPreview" class="btn-next" style="margin-top:8px;padding:7px 14px" onclick="startPreview()">▶ 미리보기 만들기</button>`
     +`<button class="btn" style="margin-top:8px;margin-left:8px;padding:7px 14px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="cancelMixReview()" title="이 매칭을 취소하고 소스·대본을 고쳐 처음부터 다시 매칭합니다">✕ 취소하고 다시 매칭</button>`
-    +`<div class="hint" style="margin-top:6px">미리보기는 <b>왼쪽 화면</b>에 표시됩니다 🪞 · 장면이 안 맞으면 각 문장의 <b>🎞 다른 화면으로 바꾸기</b>로 고치거나, 위 <b>✕ 취소하고 다시 매칭</b>으로 다시 하세요.</div>`;
+    +`<div class="hint" style="margin-top:6px">미리보기는 <b>왼쪽 화면</b>에 표시됩니다 🪞 · 장면이 안 맞으면 각 문장의 <b>🎞 다른 화면으로 바꾸기</b>로 고치거나, 위 <b>✕ 취소하고 다시 매칭</b>으로 다시 하세요.</div>`
+    +`<details id="bankInjectedBox" style="margin-top:10px;font-size:12px"><summary style="cursor:pointer;color:var(--sub)">🏦 이번 대본에 쓴 은행 부품 보기 (검증)</summary><div id="bankInjectedBody" class="hint" style="margin-top:6px">불러오는 중…</div></details>`;
+  _loadBankInjected();
   const _pvPanel=document.getElementById('mixPreviewPanel'), _pvBox=document.getElementById('mixPreview');
   if(_pvPanel) _pvPanel.style.display='';
   if(_pvBox) _pvBox.innerHTML='<div style="aspect-ratio:9/16;width:100%;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:18px"><div style="font-size:34px">🪞</div><div style="font-size:14px;line-height:1.5">오른쪽 <b style="color:var(--accent)">▶ 미리보기 만들기</b>를<br>누르면 <b>여기에서</b> 영상이<br>만들어지는 걸 보실 수 있어요</div></div>';

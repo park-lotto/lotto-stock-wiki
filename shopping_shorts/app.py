@@ -5380,6 +5380,18 @@ def api_produce_mix_sfx(job_id: str, request: Request, body: dict):
     return {"ok": True}
 
 
+@app.get("/api/produce/mix/{job_id}/bank_injected")
+def api_produce_mix_bank_injected(job_id: str):
+    """주입 미리보기(2026-07-23) — 이 대본 생성에 실제로 들어간 은행 블록(스파인·말투·전개)을
+    그대로 돌려준다. '은행이 이번 대본에 뭘 댔나'를 눈으로 검증. 스마트믹스 off거나 은행이
+    비었으면 injected=''(주입 없음)."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    plan = job.get("edit_plan") or {}
+    return {"ok": True, "injected": plan.get("bank_injected", "")}
+
+
 @app.get("/api/produce/mix/poster/{job_id}")
 def api_produce_mix_poster(job_id: str):
     """미리보기 실장면 배경용 — 매칭된 첫 소스 영상의 한 프레임을 9:16으로 잘라 JPG 서빙(캐시)."""
