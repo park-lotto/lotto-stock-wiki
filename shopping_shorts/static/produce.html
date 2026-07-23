@@ -772,6 +772,7 @@
             <summary style="cursor:pointer;font-size:12px;color:var(--sub);font-weight:800">장면 바꾸기 · 전체 보기 ▾</summary>
             <div id="mixReview" style="margin-top:10px"></div>
           </details>
+          <div id="mixPreviewCta" style="margin-top:16px"></div>
           <button class="btn-next" style="margin-top:16px;padding:8px 16px" onclick="go(1)">다음 (3 · 음성) →</button>
         </div>
       </div>
@@ -2286,11 +2287,15 @@ function _renderMixReviewBody(d){
       <div class="scene-sfx" id="sceneSfx${i}">${renderSceneSfx(b, i)}</div>
       <div class="scene-trim" id="sceneTrim${i}">${renderTrimControls(b, i)}</div>
     </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>!b.respined&&b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
-    +`<button id="btnPreview" class="btn-next" style="margin-top:8px;padding:7px 14px" onclick="startPreview()">▶ 미리보기 만들기</button>`
-    +`<button class="btn" style="margin-top:8px;margin-left:8px;padding:7px 14px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="cancelMixReview()" title="이 매칭을 취소하고 소스·대본을 고쳐 처음부터 다시 매칭합니다">✕ 취소하고 다시 매칭</button>`
+    +`<button class="btn" style="margin-top:8px;padding:7px 14px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="cancelMixReview()" title="이 매칭을 취소하고 소스·대본을 고쳐 처음부터 다시 매칭합니다">✕ 취소하고 다시 매칭</button>`
     +`<div class="hint" style="margin-top:6px">미리보기는 <b>왼쪽 화면</b>에 표시됩니다 🪞 · 장면이 안 맞으면 각 문장의 <b>🎞 다른 화면으로 바꾸기</b>로 고치거나, 위 <b>✕ 취소하고 다시 매칭</b>으로 다시 하세요.</div>`
     +`<details id="bankInjectedBox" style="margin-top:10px;font-size:12px"><summary style="cursor:pointer;color:var(--sub)">🏦 이번 대본에 쓴 은행 부품 보기 (검증)</summary><div id="bankInjectedBody" class="hint" style="margin-top:6px">불러오는 중…</div></details>`;
   _loadBankInjected();
+  // ▶ 미리보기 만들기 버튼은 접힌 '장면 확인' 안이 아니라 패널의 항상 보이는 자리(#mixPreviewCta)에
+  // 그린다(2026-07-23 사장님: "넘어왔는데 랜더하는 게 없다" — 버튼이 접힌 details에 묻혀 있었다).
+  const _cta=document.getElementById('mixPreviewCta');
+  if(_cta) _cta.innerHTML='<button id="btnPreview" class="btn-next" style="padding:8px 16px" onclick="startPreview()">▶ 미리보기 만들기</button>'
+    +'<div class="hint" style="margin-top:6px">미리보기는 <b>왼쪽 화면</b>에 표시됩니다 🪞</div>';
   const _pvPanel=document.getElementById('mixPreviewPanel'), _pvBox=document.getElementById('mixPreview');
   if(_pvPanel) _pvPanel.style.display='';
   if(_pvBox) _pvBox.innerHTML='<div style="aspect-ratio:9/16;width:100%;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:18px"><div style="font-size:34px">🪞</div><div style="font-size:14px;line-height:1.5">오른쪽 <b style="color:var(--accent)">▶ 미리보기 만들기</b>를<br>누르면 <b>여기에서</b> 영상이<br>만들어지는 걸 보실 수 있어요</div></div>';
