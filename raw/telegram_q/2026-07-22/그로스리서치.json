@@ -20,11 +20,38 @@
     },
     {
       "broker": "그로쓰리서치",
+      "stock": "와이바이오로직스",
+      "rating": null,
+      "tp": null,
+      "ts": "08:25",
+      "quote": "11월 SITC에서 AR170·AR166의 환자 조직 기반 중개연구 데이터 공개 예정",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "아델",
+      "rating": null,
+      "tp": null,
+      "ts": "08:57",
+      "quote": "퇴행성뇌질환 신약개발사 아델이 코스닥 상장예비심사를 청구",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "알지노믹스",
+      "rating": null,
+      "tp": null,
+      "ts": "09:15",
+      "quote": "올해 상반기 2차례에 이어 이번까지 총 3차례 연구비 수령",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
       "stock": "이엔셀",
       "rating": null,
       "tp": null,
       "ts": "09:22",
-      "quote": "이엔셀, 세포·유전자치료제 신약, CDMO를 넘어 항노화 기업으로…이엔셀의 진화",
+      "quote": "다양한 세포·유전자치료제 생산이 가능한 GMP 시스템 구축",
       "sector": "바이오"
     },
     {
@@ -56,12 +83,30 @@
     },
     {
       "broker": "그로쓰리서치",
+      "stock": "SGC에너지",
+      "rating": null,
+      "tp": null,
+      "ts": "17:38",
+      "quote": "1차 사업은 기존 40MW에서 60MW로 확대됐으며, ’28년 1월 상업운영 목표",
+      "sector": "전력"
+    },
+    {
+      "broker": "그로쓰리서치",
       "stock": "삼성바이오에피스",
       "rating": null,
       "tp": null,
       "ts": "16:40",
       "quote": "ADC 신약 후보물질 ‘SBE303’의 상업화·후속 개발을 위한 본계약을 체결",
       "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LS마린솔루션",
+      "rating": null,
+      "tp": null,
+      "ts": "17:12",
+      "quote": "케이블 적재 용량을 4,000톤에서 7,000톤급으로 확대",
+      "sector": "전력"
     }
   ]
 }
