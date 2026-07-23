@@ -60,3 +60,39 @@ def test_produce_js_syntax_ok():
         path = f.name
     r = subprocess.run(["node", "--check", path], stdin=subprocess.DEVNULL, capture_output=True, text=True)
     assert r.returncode == 0, r.stderr
+
+
+# ── Task 4: 1단계 재구성 — 믹스탭 제거·자동담김·AI PICK·빈 상태 ──────────
+def test_mix_tab_removed():
+    # "우리 시스템으로 믹스" 탭·조합 생성 UI 제거
+    assert "우리 시스템으로 믹스" not in HTML
+    assert "SCRIPT_MODE_HTML" not in HTML or "mix:" not in HTML.split("SCRIPT_MODE_HTML")[1][:400]
+
+
+def test_aipick_and_emptystate_present():
+    assert "renderAiPick" in HTML and "renderEmptyState" in HTML
+    assert "이 뼈대로 완전 새로운 대본을 만듭니다" in HTML
+    assert "아직 담긴 영상이 없어요" in HTML
+    assert "이대로 만들기 시작" in HTML          # ⚡ CTA
+    assert 'class="cta-shine"' in HTML or "'cta-shine'" in HTML
+
+
+def test_no_banned_copy():
+    assert "복사가 아니에요" not in HTML
+    # 브리프 원문 슬라이스(HTML.split('id="scriptModeBody"')[0])는 <head><style>의 keyframe
+    # "100%{...}"(savedPop 등, 본문과 무관)까지 걸려 항상 거짓양성이 난다 — renderAiPick 카드를
+    # 만드는 JS 구간만 정밀 검사한다(목업 v6의 "100% 새로운 대본을 만듭니다"를 배제 확인).
+    start = HTML.index("function renderAiPick(")
+    end = HTML.index("// ── AI PICK 끝 ──")
+    assert "100%" not in HTML[start:end]
+
+
+def test_pool_card_toggle_only():
+    # renderPool()이 카드 5버튼(뽑기/담기/메인/정보채우기/✕)이 아니라 ✓뱃지 토글만 그린다.
+    start = HTML.index("function renderPool(){")
+    end = HTML.index("function previewMaterial")
+    body = HTML[start:end]
+    assert "toggleFootage(${i})" in body
+    assert "openScriptModal(${i})" not in body
+    assert "designateBackbone(${i})" not in body
+    assert "removeFootage(${i})" not in body
