@@ -761,7 +761,7 @@
             <div class="hint" style="margin-bottom:6px">🪞 ③ 미리보기 (9:16)</div>
             <div id="mixPreview"></div>
           </div>
-          <div id="mixPreviewHint" class="hint" style="margin-top:6px">②까지 확인하고 아래 <b>▶ 미리보기 만들기</b>를 누르면 여기서 재생됩니다.</div>
+          <div id="mixPreviewHint" class="hint" style="margin-top:6px">②까지 확인하고 아래 <b>🎬 대본 × 영상 믹스 미리보기</b>를 누르면 여기서 재생됩니다.</div>
         </div>
         <!-- ▶ 우측: ①②③ 순서대로 위→아래 -->
         <div style="flex:1 1 300px;min-width:280px">
@@ -774,7 +774,7 @@
             <div id="mixReview" style="margin-top:10px"></div>
           </details>
           <div id="mixPreviewCta" style="margin-top:16px"></div>
-          <button class="btn-next" style="margin-top:16px;padding:8px 16px" onclick="go(1)">다음 (3 · 음성) →</button>
+          <!-- 중복 제거(2026-07-23 사장님): in-card '다음' 버튼은 맨 아래 전역 '다음 →'(#btnNext)와 go(1) 동일 + 라벨(음성)도 오브 재정렬로 stale였음. 하단 전역 nav로 일원화. -->
         </div>
       </div>
     </section>
@@ -2292,14 +2292,14 @@ function _renderMixReviewBody(d){
     +`<div class="hint" style="margin-top:6px">미리보기는 <b>왼쪽 화면</b>에 표시됩니다 🪞 · 장면이 안 맞으면 각 문장의 <b>🎞 다른 화면으로 바꾸기</b>로 고치거나, 위 <b>✕ 취소하고 다시 매칭</b>으로 다시 하세요.</div>`
     +`<details id="bankInjectedBox" style="margin-top:10px;font-size:12px"><summary style="cursor:pointer;color:var(--sub)">🏦 이번 대본에 쓴 은행 부품 보기 (검증)</summary><div id="bankInjectedBody" class="hint" style="margin-top:6px">불러오는 중…</div></details>`;
   _loadBankInjected();
-  // ▶ 미리보기 만들기 버튼은 접힌 '장면 확인' 안이 아니라 패널의 항상 보이는 자리(#mixPreviewCta)에
+  // 🎬 대본 × 영상 믹스 미리보기 버튼은 접힌 '장면 확인' 안이 아니라 패널의 항상 보이는 자리(#mixPreviewCta)에
   // 그린다(2026-07-23 사장님: "넘어왔는데 랜더하는 게 없다" — 버튼이 접힌 details에 묻혀 있었다).
   const _cta=document.getElementById('mixPreviewCta');
-  if(_cta) _cta.innerHTML='<button id="btnPreview" class="btn-next" style="padding:8px 16px" onclick="startPreview()">▶ 미리보기 만들기</button>'
+  if(_cta) _cta.innerHTML='<button id="btnPreview" class="btn-next" style="padding:8px 16px" onclick="startPreview()">🎬 대본 × 영상 믹스 미리보기</button>'
     +'<div class="hint" style="margin-top:6px">미리보기는 <b>왼쪽 화면</b>에 표시됩니다 🪞</div>';
   const _pvPanel=document.getElementById('mixPreviewPanel'), _pvBox=document.getElementById('mixPreview');
   if(_pvPanel) _pvPanel.style.display='';
-  if(_pvBox) _pvBox.innerHTML='<div style="aspect-ratio:9/16;width:100%;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:18px"><div style="font-size:34px">🪞</div><div style="font-size:14px;line-height:1.5">오른쪽 <b style="color:var(--accent)">▶ 미리보기 만들기</b>를<br>누르면 <b>여기에서</b> 영상이<br>만들어지는 걸 보실 수 있어요</div></div>';
+  if(_pvBox) _pvBox.innerHTML='<div style="aspect-ratio:9/16;width:100%;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:18px"><div style="font-size:34px">🪞</div><div style="font-size:14px;line-height:1.5">오른쪽 <b style="color:var(--accent)">🎬 대본 × 영상 믹스 미리보기</b>를<br>누르면 <b>여기에서</b> 영상이<br>만들어지는 걸 보실 수 있어요</div></div>';
 }
 // 매칭 결과 취소 → 처음부터 다시(2026-07-20 사장님). 장면이 대사와 안 맞거나 이상하게 나오면
 // 이 매칭 job을 버리고, 소스·대본을 고쳐 "🎬 영상 매칭 시작"을 다시 누를 수 있게 리셋한다.
