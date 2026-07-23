@@ -2172,16 +2172,16 @@ class Store:
 
     def pick_spine_for_category(self, category, status="approved", min_sources=3):
         """생성용 스파인 1건 — 승격게이트(status·source_count>=min_sources) 통과 +
-        category가 fit_categories에 포함(fit_categories 비면 범용으로 매칭)되는 것 중
-        perf 최고. 없으면 None. 리더가 게이트를 강제해 미승인·저소스 스파인이 생성에 못 샌다(A1)."""
-        for sp in self.list_spines(status=status):     # perf_score DESC 정렬 보장
-            if (sp.get("source_count") or 0) < min_sources:
-                continue
-            fits = sp.get("fit_categories") or []
-            if category and fits and category not in fits:
-                continue
-            return sp        # 첫 통과 = 최고 perf
-        return None
+        category가 fit_categories에 포함(fit_categories 비면 범용으로 매칭)되는 것 중 **로테이션**.
+        ★2026-07-23(사장님: "매번 같은 스토리"): 예전엔 perf 최고 1개만 뽑아 늘 같은 아크
+        (역발상 경고형 등 깔때기)만 나왔다 → 승인 스파인을 매 호출 랜덤으로 골라 '인물 드라마형'
+        (대화체) 같은 다른 아크도 돌아가며 나오게 한다. 없으면 None."""
+        import random
+        eligible = [sp for sp in self.list_spines(status=status)
+                    if (sp.get("source_count") or 0) >= min_sources
+                    and not (category and (sp.get("fit_categories") or [])
+                             and category not in sp.get("fit_categories"))]
+        return random.choice(eligible) if eligible else None
 
     # --- Phase1: perf/spine 조회·저장 배관 ---
     def list_pattern_sources(self, category_source=None, only_missing_spine=False, limit=1000):

@@ -396,7 +396,7 @@ _SCENE_FIRST_SCHEMA = {
             "story_person": {"type": "string"}, "story_event": {"type": "string"},
             "story_resolution": {"type": "string"}, "cta_line": {"type": "string"},
             "cta_keyword": {"type": "string"},
-            "beats": {"type": "array", "minItems": 5, "items": {
+            "beats": {"type": "array", "minItems": 6, "items": {
                 "type": "object",
                 "properties": {
                     "role": {"type": "string"}, "narration": {"type": "string"},
@@ -429,6 +429,10 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "/ 그래서 지금은 ~' 식으로. 화면에 그 사람·그 순간이 안 보여도 된다 — 이야기는 화자의 "
         "목소리로 흐르고, 장면은 그 밑에 깔리는 먹음직스러운 그림일 뿐이다. '맛있다·진하다·예술이다' "
         "같은 감상 나열은 이야기가 아니다(반려). 누가·무슨 말·왜·그래서·반전이 있어야 한다.\n"
+        "★★구체적 인용 대화 필수: 실제 주고받은 말을 **따옴표로 최소 2번** 넣어라 — "
+        "'남편이 \"밥 없어?\" 하길래' / '그래서 제가 \"이거 먹어봐\" 했더니' / '한 입 먹고 \"이거 "
+        "밖에서 파는 거야?\" 하더라고요' 식으로. 두루뭉실 요약('맛있대요') 말고 그 순간 그 사람이 "
+        "한 말을 그대로. 이 대화가 있고 없고가 탄탄함을 가른다.\n"
         "★장면 붙이기: 각 비트에 seg_id를 2~4개 시간순으로 붙이되, **결정적 행위 비트**(비법 얹기·"
         "붓기·자르기 등)만 그 행위 장면과 정확히 맞춰라. 나머지 이야기 비트는 화면을 설명할 "
         "필요 없이 먹음직스러운 장면을 깔면 된다(대사와 화면이 1:1일 필요 없음).\n"
