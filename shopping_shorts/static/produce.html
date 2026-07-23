@@ -402,7 +402,7 @@
       </div>
     </section>
     <section class="panel" data-step="1">
-      <h3>2 · 자막 제거</h3>
+      <h3>3 · 자막 제거</h3>
       <div class="hero rise">
         <div class="hero-in">
           <label class="hbar">
@@ -437,7 +437,7 @@
       </div>
     </section>
     <section class="panel" data-step="2">
-      <h3>3 · TTS 음성</h3>
+      <h3>4 · 음성</h3>
       <div class="sub">성우 프리셋을 고르면 톤·속도·감도가 한 번에 세팅됩니다. 들어보고 다음으로.</div>
       <button id="openVoiceTune" style="display:none" class="btn-prev" onclick="window.open('/voice_tune','_blank')">🩺 발음교정 작업대 열기</button>
       <label style="display:flex;align-items:center;gap:8px;margin:8px 0;cursor:pointer">
@@ -479,7 +479,7 @@
       <button class="btn-next" style="margin-top:12px;padding:8px 16px" onclick="vpGateNext()">다음 단계 (꾸미기) →</button>
     </section>
     <section class="panel" data-step="3">
-      <h3>4 · 꾸미기</h3>
+      <h3>5 · 꾸미기</h3>
       <div class="sub">아래 <b>완성 스타일</b>을 고르면 바로 완성돼요. 실제 장면 위에서 미리보고, 더 손보고 싶으면 <b>직접 다듬기</b>를 펼치세요.</div>
       <!-- 🪞 피팅룸: 좌(큰 미러) + 우(문구·스타일카드·강조·고급) -->
       <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-top:12px">
@@ -687,7 +687,7 @@
       </div>
     </section>
     <section class="panel" data-step="4">
-      <h3>5 · 썸네일</h3>
+      <h3>6 · 썸네일</h3>
       <div class="sub">영상에서 프레임을 고르고 텍스트를 올려 썸네일을 만드세요.</div>
 
       <div style="font-size:12px;color:var(--sub);margin:10px 0 6px">배경 프레임 선택 <span id="thumbFrameCount"></span></div>
@@ -725,7 +725,7 @@
       <div id="thumbGallery" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div>
     </section>
     <section class="panel" data-step="5">
-      <h3>6 · SEO</h3>
+      <h3>7 · SEO</h3>
       <div class="sub">제목·설명·태그를 만들고, 키워드를 유튜브에서 실제로 재서 근거를 붙입니다.</div>
       <div class="seoBar">
         <button class="btn primary" id="seoGenAll" onclick="seoGenerate()">AI로 전체 생성</button>
@@ -735,7 +735,7 @@
       <div id="seoBody" class="seoBody"></div>
     </section>
     <section class="panel" data-step="6">
-      <h3>7 · 최종검수 · 렌더</h3>
+      <h3>8 · 완성 · 렌더</h3>
       <div class="sub">확정 대본·장면매칭·음성·자막제거 설정을 최종 영상으로 렌더합니다.</div>
       <div id="finalSummary" class="hint" style="margin-bottom:10px"></div>
       <button class="btn-next" style="padding:12px 22px" onclick="renderFinal()">🎬 최종 렌더</button>
@@ -750,7 +750,7 @@
          위→아래 한 방향: ① 새 대본 고르기(가로카드, 추천이 이미 선택돼 있음) ② 장면 확인(문장↔화면,
          상세 편집은 접힘) ③ 좌측 레일 미리보기 → 확인되면 "다음(음성)". -->
     <section class="panel" data-step="7">
-      <h3>화면 붙이기</h3>
+      <h3>2 · 화면 붙이기</h3>
       <div class="sub">대본 후보를 고르고, 문장마다 어떤 화면이 붙는지 확인하세요. 확인되면 왼쪽에서 미리보기가 재생됩니다.</div>
       <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
         <!-- ◀ 좌측 레일: ③ 미리보기(9:16) — 편집안이 뜨면(loadMixReview) 여기가 프리뷰 자리가 된다.
