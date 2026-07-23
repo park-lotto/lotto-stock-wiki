@@ -2361,19 +2361,23 @@ function renderPool(){
 // 담긴(useFootage) 재료가 하나라도 있으면 서버(/api/produce/aipick)에 "지금 담긴 것 중
 // 완성도 1위가 뭐야"를 묻는다. 없으면 조회 없이 바로 빈 상태(불필요한 요청 방지).
 async function refreshStep0(){
-  if(!HANDOFF.some(h=>h.useFootage)){ renderEmptyState(); return; }
+  const hasFootage = HANDOFF.some(h=>h.useFootage);
+  if(!hasFootage){ renderEmptyState(); return; }
   try{
     const q = WORK_ID ? ('?work_id='+encodeURIComponent(WORK_ID)) : '';
     const r = await fetch('/api/produce/aipick'+q);
-    renderAiPick(await r.json());
+    renderAiPick(await r.json(), hasFootage);
   }catch(e){ renderEmptyState(); }
 }
 // AI PICK 카드 — build_aipick(aipick.py) 응답을 그대로 카드로 옮긴다.
 // ⚠️ views/views_x_followers는 저장소에 조회수 자체가 없어 항상 null(app.py 주석 확인) —
 // null인 타일은 아예 렌더하지 않는다("null배" 노출 금지). structure.segments가 비면([])
 // 스트립 없이 우아하게 넘어간다.
-function renderAiPick(d){
-  if(!d || d.pick_id==null){ renderEmptyState(); return; }
+function renderAiPick(d, hasFootage){
+  // pick_id==null은 두 경우가 다르다: 담긴 재료가 아예 없으면(hasFootage=false) 빈 상태,
+  // 재료는 담겨 있는데 그 대본을 아직 분석 못 했으면(hasFootage=true) 별도 안내 —
+  // "아직 담긴 영상이 없어요"를 ✓체크된 카드가 보이는 화면에 띄우면 모순돼 보인다.
+  if(!d || d.pick_id==null){ hasFootage ? renderNoScriptState() : renderEmptyState(); return; }
   window._aiPick = d;
   const t = d.tiles || {}, seg = (d.structure && d.structure.segments) || [];
   const strip = seg.length ? `<div class="strip">${seg.map(s=>
@@ -2395,7 +2399,7 @@ function renderAiPick(d){
       <details style="margin-top:10px">
         <summary style="cursor:pointer;font-size:12px;color:var(--sub);font-weight:800">🔁 다른 대본 보기 · ✍️ 직접 쓰기</summary>
         <div style="margin-top:10px">
-          ${others.length?`<div class="hint" style="margin-bottom:8px">다른 후보 ${others.length}개 — 담긴 재료를 켜고 끄면 AI PICK이 바뀝니다.</div>`:''}
+          ${others.length?`<div class="hint" style="margin-bottom:8px">다른 후보 ${others.length}개 — 분석된 대본 중 완성도 1위를 골랐어요.</div>`:''}
           <div id="scriptModeBody">${SCRIPT_MODE_HTML.manual()}</div>
           <div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap">
             <select id="finalCategory" onchange="onFinalCategoryChange(this)" style="display:none;background:var(--inset);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:12px" title="학습 그룹핑 카테고리 — 추론이 틀렸으면 여기서 고치세요"></select>
@@ -2441,6 +2445,18 @@ function renderEmptyState(){
         <div class="hint" style="margin-top:8px">왼쪽 <b>🔗 URL 직접 추가</b>에서 붙여넣으면 바로 담깁니다.</div>
       </details>
     </div>`;
+}
+// 재료는 담겨 있지만(✓ 켜짐) 그 재료의 대본을 아직 분석하지 못해 AI PICK을 못 고른 경우 —
+// renderEmptyState()("아직 담긴 영상이 없어요")를 쓰면 왼쪽 레일의 ✓카드와 모순돼 보인다.
+// 직접 쓰기 경로(SCRIPT_MODE_HTML.manual)는 그대로 열어둔다.
+function renderNoScriptState(){
+  const el = document.getElementById('aiPick'); if(!el) return;
+  el.innerHTML = `
+    <div class="skm-card empty">
+      <h2>담긴 영상의 대본을 아직 분석하지 못했어요 — 대본을 뽑거나 직접 쓸 수 있어요.</h2>
+      <div id="scriptModeBody">${SCRIPT_MODE_HTML.manual()}</div>
+    </div>`;
+  refreshFinalPeek();
 }
 // ── 빈 상태 끝 ──
 // 재료 썸네일 클릭 → 미리보기 오버레이(2026-07-19 사장님 요청). 재생소스(play_url)가 있으면

@@ -87,6 +87,23 @@ def test_no_banned_copy():
     assert "100%" not in HTML[start:end]
 
 
+# ── Task 4 리뷰 수정: 거짓 카피 제거 + 모순 빈 상태 분리 ──────────
+def test_aipick_hint_is_truthful():
+    # 토글이 AI PICK을 바꾼다는 거짓 카피 제거(백엔드는 work_id만 보내 서버측 라이브러리
+    # picks로 계산하지, 화면의 ✓ 토글 세트를 반영하지 않는다).
+    assert "AI PICK이 바뀝니다" not in HTML
+    assert "분석된 대본 중 완성도 1위를 골랐어요" in HTML
+
+
+def test_footage_on_but_no_pick_state_distinct():
+    # 재료(✓)는 담겨 있는데 그 대본을 아직 분석 못한 경우는 "아직 담긴 영상이 없어요"와
+    # 다른 문구를 써야 한다 — 안 그러면 왼쪽 레일의 ✓카드와 모순돼 보인다.
+    assert "renderNoScriptState" in HTML
+    assert "담긴 영상의 대본을 아직 분석하지 못했어요" in HTML
+    # refreshStep0이 hasFootage를 renderAiPick에 넘겨 null-pick 분기를 가른다.
+    assert "renderAiPick(await r.json(), hasFootage)" in HTML
+
+
 def test_pool_card_toggle_only():
     # renderPool()이 카드 5버튼(뽑기/담기/메인/정보채우기/✕)이 아니라 ✓뱃지 토글만 그린다.
     start = HTML.index("function renderPool(){")
