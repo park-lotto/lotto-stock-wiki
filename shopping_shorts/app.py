@@ -3218,6 +3218,7 @@ if not _AUTH_ON:
           "운영이면 DASH_PASS를 반드시 설정하세요.", file=_sys.stderr)
 _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico", "/healthz",
                "/pay",   # 계좌입금 안내 페이지(공개 — 대기중·비로그인도 결제 안내 봄)
+               "/terms", "/privacy", "/refund",   # 법적 고지(공개 — 비로그인·대기중도 열람)
                # PWA: 매니페스트는 브라우저가 쿠키 없이(credentials omit) fetch한다 → 공개 필수.
                "/manifest.webmanifest", "/apple-touch-icon.png",
                "/icon-192.png", "/icon-512.png", "/icon-maskable-512.png",
@@ -3332,9 +3333,17 @@ _LOGO_SVG = (  # v2 엠블럼(2026-07-23): 다크 디스크+민트 링, 스택 3
     '<path d="M32 13.8l8 8.2H24l8-8.2z" fill="url(#lgg)"/></svg>')
 
 
+# 공개 페이지 하단 법적 고지 링크(약관·개인정보·환불). 모든 대문/로그인 푸터에 __LEGAL__로 주입.
+_LEGAL_LINKS = ('<div style="margin-top:8px;font-size:12px">'
+                '<a href="/terms" style="color:#7a9090;text-decoration:none">이용약관</a>'
+                ' · <a href="/privacy" style="color:#7a9090;text-decoration:none">개인정보처리방침</a>'
+                ' · <a href="/refund" style="color:#7a9090;text-decoration:none">환불정책</a></div>')
+
+
 def _fill_brand(s: str) -> str:
     """대문·로그인 템플릿의 브랜드 플레이스홀더를 _BRAND로 채운다(모듈 로드 시 1회)."""
-    return (s.replace("__NAME__", _BRAND["name"])
+    return (s.replace("__LEGAL__", _LEGAL_LINKS)
+             .replace("__NAME__", _BRAND["name"])
              .replace("__NAME_EN__", _BRAND["name_en"])
              .replace("__GLYPH__", _BRAND["glyph"])
              .replace("__TAGLINE__", _BRAND["tagline"])
@@ -3535,7 +3544,7 @@ a{text-decoration:none;color:inherit}
 <h2>손자한테 안 물어봐도 됩니다</h2>
 <p>지금 5분, 무료로 하나 만들어보세요. 구글 계정이면 3초 · 카드 없이 시작.</p>
 <a class=cta href="/login">무료로 시작하기 →</a></div>
-<div class=foot>© __NAME__ · 폰으로 5분, 파는 사람을 위한 AI 쇼츠 제작</div>
+<div class=foot>© __NAME__ · 폰으로 5분, 파는 사람을 위한 AI 쇼츠 제작__LEGAL__</div>
 </div>
 <script>(function(){var rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
 var rev=document.querySelectorAll('.reveal');
@@ -3646,6 +3655,7 @@ __GOOGLE_SVG__
 Google 계정으로 계속하기</a>
 <div class=err>__ERR__</div>
 <a class=home href="/">← 홈으로 돌아가기</a>
+<div style="text-align:center;color:#5f7373">__LEGAL__</div>
 </div>
 </div>
 <script>(function(){
@@ -3793,7 +3803,7 @@ a{text-decoration:none;color:inherit}
 <div class=row>
 <a class="btn pri" href="/login">무료로 시작하기 →</a>
 <a class="btn kko" href="__PAY_HREF__" target="_blank" rel="noopener">__PAY_LABEL__</a></div></div>
-<div class=foot>© __NAME__ · 요금·이용권 안내</div>
+<div class=foot>© __NAME__ · 요금·이용권 안내__LEGAL__</div>
 </div></body></html>"""
 
 # ── 내 계정(유저 자기 설정) — 로그인 전용. /api/me로 플랜·한도·연락처를 채운다. ──
@@ -3854,7 +3864,7 @@ h1{font-family:'Black Han Sans',sans-serif;font-size:30px;margin:16px 0 22px}
 <p id=upText>더 쓰고 싶으면 이용권으로 계속 쓸 수 있어요. 결제·문의는 카톡으로 안내해 드립니다.</p>
 <a class="btn kko" id=kkoBtn href="/pricing">__PAY_LABEL__</a></div>
 <form method=post action="/logout"><button type=submit class="btn ghost" style="width:100%">로그아웃</button></form>
-<div class=foot>© __NAME__</div>
+<div class=foot>© __NAME____LEGAL__</div>
 </div>
 <script>(function(){
 function t(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
@@ -3889,7 +3899,8 @@ text-decoration:none;font-size:14px}</style></head>
 <h1>가입 신청이 접수됐어요</h1>
 <p>운영자 승인 후 이용할 수 있어요.<br>결제하고 알려주시면 바로 열어드려요.</p>
 <a href="__PAY_HREF__" target=_blank rel=noopener style="display:inline-block;margin-top:22px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);color:#08110e;font-weight:700;padding:12px 24px;border-radius:11px;text-decoration:none;font-size:15px">__PAY_LABEL__</a>
-<form method=post action="/logout" style="margin-top:16px"><button type=submit style="background:none;border:0;color:#8ab4f8;font-size:14px;cursor:pointer;text-decoration:none">로그아웃</button></form></div></body></html>""")
+<form method=post action="/logout" style="margin-top:16px"><button type=submit style="background:none;border:0;color:#8ab4f8;font-size:14px;cursor:pointer;text-decoration:none">로그아웃</button></form>
+<div style="margin-top:20px;color:#5f6773;font-size:12px">__LEGAL__</div></div></body></html>""")
 
 # 로그아웃 확인 화면 — GET /logout이 세션을 안 지우는 대신 이 화면을 준다(CSRF 방어).
 # 실제 로그아웃은 이 폼의 POST만.
@@ -4043,6 +4054,158 @@ def _deposit_contact(kakao, phone):
 def _deposit_page():
     """계좌입금 안내(공개). 사장님이 admin에 은행·계좌·예금주 넣으면 표시."""
     return _DEPOSIT_TMPL.replace("__BODY__", _deposit_body())
+
+
+# ── 법적 고지 문서(공개): 이용약관 · 개인정보처리방침 · 환불정책 ──
+# 서비스명은 브랜드 토큰, 사업자정보는 admin 설정(biz_*)에서 요청 시점에 읽어 채운다.
+# 값이 비면 "(준비 중)"으로 표시 → 사장님이 실제 값을 나중에 admin에서 채워 넣으면 즉시 반영.
+_LEGAL_TMPL = _fill_brand("""<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png">
+<title>__DOCTITLE__ · __NAME__</title>
+<style>*{box-sizing:border-box}body{margin:0;min-height:100vh;
+background:radial-gradient(900px 500px at 50% -15%,rgba(111,240,214,.08),transparent 60%),#090d10;
+font-family:'Noto Sans KR',system-ui,sans-serif;color:#dbe6e3;word-break:keep-all;padding:32px 18px 64px;line-height:1.75}
+.wrap{max-width:760px;margin:0 auto}
+.brand{display:inline-flex;align-items:center;gap:8px;color:#8aa0a0;font-size:14px;margin-bottom:18px;text-decoration:none}
+.brand svg{width:26px;height:26px;flex:none}.brand b{color:#e8f0ee}
+h1{font-size:24px;margin:0 0 4px}.upd{color:#7a9090;font-size:12.5px;margin-bottom:26px}
+h2{font-size:16px;color:#6ff0d6;margin:30px 0 8px;padding-top:6px}
+p,li{font-size:14px;color:#c5d3cf}
+ul{padding-left:20px;margin:8px 0}li{margin:4px 0}
+.biz{margin-top:38px;padding:16px 18px;background:#0c1416;border:1px solid #1c2a2b;border-radius:14px;font-size:13px;color:#9fb2ad;line-height:1.9}
+.biz b{color:#c5d3cf;font-weight:600}
+.nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:30px}
+.nav a{flex:1;min-width:120px;text-align:center;padding:11px;border-radius:11px;text-decoration:none;font-size:13px;font-weight:700;
+background:#101a1c;border:1px solid #1e2b2c;color:#b7c6c2}
+.nav a.on{background:linear-gradient(135deg,#6ff0d6,#1f9e7a);color:#08110e;border-color:transparent}
+.home{display:inline-block;margin-top:20px;color:#5f7373;font-size:13px;text-decoration:none}</style></head>
+<body><div class=wrap>
+<a class=brand href="/">__LOGO_SVG__ <b>__NAME__</b></a>
+<h1>__DOCTITLE__</h1><div class=upd>__UPDATED__</div>
+__BODY__
+__BIZ__
+<div class=nav>__NAV__</div>
+<a class=home href="/">← __NAME__ 홈으로</a>
+</div></body></html>""")
+
+_LEGAL_UPDATED = "시행일 2026-07-23"
+
+def _biz_block():
+    """사업자정보 표시(전자상거래법). admin 설정(biz_*)이 비면 '(준비 중)'."""
+    import html as _h
+    st = Store(DB_PATH)
+    def g(k, d="(준비 중)"):
+        v = (st.get_setting(k, "") or "").strip()
+        return _h.escape(v) if v else d
+    return (
+        '<div class=biz>'
+        f'<b>상호</b> {g("biz_name", _BRAND["name"])} &nbsp;·&nbsp; '
+        f'<b>대표자</b> {g("biz_owner")}<br>'
+        f'<b>사업자등록번호</b> {g("biz_regno")}<br>'
+        f'<b>통신판매업신고</b> {g("biz_sales_no")}<br>'
+        f'<b>주소</b> {g("biz_addr")}<br>'
+        f'<b>문의</b> {g("biz_email")}'
+        '</div>')
+
+def _legal_nav(active: str):
+    items = [("/terms", "이용약관"), ("/privacy", "개인정보처리방침"), ("/refund", "환불정책")]
+    return "".join(
+        f'<a href="{href}"{" class=on" if href == active else ""}>{label}</a>'
+        for href, label in items)
+
+def _legal_page(path: str, title: str, body: str) -> str:
+    return (_LEGAL_TMPL
+            .replace("__DOCTITLE__", title)
+            .replace("__UPDATED__", _LEGAL_UPDATED)
+            .replace("__BODY__", body)
+            .replace("__BIZ__", _biz_block())
+            .replace("__NAV__", _legal_nav(path)))
+
+_TERMS_BODY = f"""
+<p>본 약관은 {_BRAND['name']}(이하 "회사")가 제공하는 AI 쇼츠 제작 서비스(이하 "서비스")의 이용조건과 절차, 회사와 이용자의 권리·의무를 규정합니다.</p>
+<h2>제1조 (서비스 내용)</h2>
+<p>회사는 이용자가 업로드·선택한 소재를 바탕으로 AI가 대본·음성·영상을 생성·편집하는 온라인 이용권 서비스를 제공합니다. 서비스는 이용권(크레딧)에 따라 렌즈·제작(렌더) 등 기능 이용량이 정해집니다.</p>
+<h2>제2조 (이용계약의 성립)</h2>
+<p>이용계약은 이용자가 구글 계정 등으로 가입하고 회사가 이를 승인함으로써 성립합니다. 회사는 운영상·기술상 필요에 따라 가입 승인을 보류하거나 이용을 제한할 수 있습니다.</p>
+<h2>제3조 (이용권과 결제)</h2>
+<ul>
+<li>이용권은 계좌입금 등 회사가 안내하는 방법으로 결제하며, 입금 확인 후 활성화됩니다.</li>
+<li>이용권별 제공 기능·기간·제작 횟수는 서비스 내 안내에 따릅니다.</li>
+<li>환불에 관한 사항은 별도의 <a href="/refund" style="color:#6ff0d6">환불정책</a>을 따릅니다.</li>
+</ul>
+<h2>제4조 (이용자의 의무)</h2>
+<ul>
+<li>이용자는 타인의 저작권·초상권 등 권리를 침해하는 소재를 업로드해서는 안 됩니다. 업로드 소재에 대한 책임은 이용자에게 있습니다.</li>
+<li>불법·음란·타인 비방 등 위법하거나 제3자의 권리를 침해하는 콘텐츠 제작에 서비스를 이용할 수 없습니다.</li>
+<li>계정을 타인과 공유하거나 자동화 수단으로 부정 이용해서는 안 됩니다.</li>
+</ul>
+<h2>제5조 (콘텐츠의 권리)</h2>
+<p>이용자가 서비스로 생성한 결과물의 이용권한은 이용자에게 있습니다. 다만 이용자가 업로드한 소재에 제3자의 권리가 포함된 경우, 그 이용에 대한 책임은 이용자가 부담합니다.</p>
+<h2>제6조 (서비스의 중단·변경)</h2>
+<p>회사는 시스템 점검·교체, 통신 두절, 천재지변 등 부득이한 사유가 있을 때 서비스 제공을 일시 중단할 수 있으며, 이 경우 가능한 범위에서 사전 고지합니다.</p>
+<h2>제7조 (책임의 제한)</h2>
+<p>서비스는 AI 자동 생성 결과물을 제공하며, 결과물의 상업적 성과·정확성·완전성을 보증하지 않습니다. 회사는 이용자가 업로드한 소재로 인한 분쟁, 이용자의 서비스 이용 결과에 대해 법령이 허용하는 범위에서 책임을 지지 않습니다.</p>
+<h2>제8조 (약관의 개정)</h2>
+<p>회사는 관련 법령을 위반하지 않는 범위에서 약관을 개정할 수 있으며, 개정 시 시행일과 개정 내용을 서비스 내에 공지합니다.</p>
+"""
+
+_PRIVACY_BODY = f"""
+<p>{_BRAND['name']}(이하 "회사")는 「개인정보 보호법」 등 관련 법령을 준수하며, 이용자의 개인정보를 다음과 같이 처리합니다.</p>
+<h2>1. 수집하는 개인정보 항목</h2>
+<ul>
+<li>구글 계정 로그인 시: 이메일 주소, 이름(프로필), 계정 식별자</li>
+<li>이용·결제 과정에서: 연락처(전화번호), 입금자명 등 결제 확인에 필요한 정보</li>
+<li>서비스 이용 과정에서 자동 생성: 접속 기록, 이용 내역, 기기·브라우저 정보</li>
+</ul>
+<h2>2. 개인정보의 이용 목적</h2>
+<ul>
+<li>회원 식별 및 로그인 유지, 이용권·결제 관리</li>
+<li>서비스 제공, 이용 문의·고객 응대</li>
+<li>부정 이용 방지 및 서비스 운영·개선</li>
+</ul>
+<h2>3. 보유 및 이용 기간</h2>
+<p>회원 탈퇴 시 또는 수집·이용 목적 달성 시 지체 없이 파기합니다. 다만 관련 법령에 따라 보존이 필요한 경우 해당 기간 동안 보관합니다(예: 전자상거래법상 계약·결제 기록).</p>
+<h2>4. 제3자 제공 및 처리위탁</h2>
+<p>회사는 이용자의 개인정보를 동의 없이 외부에 제공하지 않습니다. 다만 서비스 제공을 위해 아래와 같이 일부 처리를 위탁할 수 있습니다.</p>
+<ul>
+<li>구글(Google): 계정 로그인 인증</li>
+<li>AI·클라우드 인프라 제공사: 대본·음성·영상 생성 처리</li>
+</ul>
+<h2>5. 이용자의 권리</h2>
+<p>이용자는 언제든지 본인의 개인정보를 조회·수정·삭제하거나 처리 정지를 요청할 수 있으며, 회원 탈퇴로 개인정보 삭제를 요청할 수 있습니다.</p>
+<h2>6. 개인정보 보호책임자</h2>
+<p>개인정보 관련 문의는 아래 사업자정보의 문의처로 접수해 주시면 지체 없이 답변·처리합니다.</p>
+"""
+
+_REFUND_BODY = f"""
+<p>{_BRAND['name']}(이하 "회사")의 이용권 결제에 대한 환불 기준은 다음과 같습니다. 본 서비스는 결제 즉시 이용 가능한 <b>디지털 콘텐츠(이용권)</b>입니다.</p>
+<h2>1. 전액 환불 (미사용)</h2>
+<p>결제 후 서비스 기능(렌즈·제작 등)을 <b>한 번도 사용하지 않은 경우</b>, 결제일로부터 <b>7일 이내</b> 요청 시 전액 환불해 드립니다.</p>
+<h2>2. 환불 불가 (사용 개시 후)</h2>
+<p>이용권으로 <b>제작(렌더)·렌즈 등 기능을 1회라도 사용한 경우</b>, 해당 이용권은 디지털 콘텐츠의 특성상 환불이 불가합니다. 이는 「전자상거래법」 제17조제2항에 따라 <b>사용에 의해 재화등의 가치가 현저히 감소한 경우</b>에 해당합니다.</p>
+<h2>3. 회사 귀책 사유</h2>
+<p>서비스 장애 등 회사의 책임 있는 사유로 이용권을 정상적으로 사용하지 못한 경우, 사용하지 못한 분에 대해 환불하거나 이용권을 복구해 드립니다. (제작 실패 시 소진된 이용 횟수는 자동 복구됩니다.)</p>
+<h2>4. 환불 절차</h2>
+<ul>
+<li>환불은 아래 사업자정보의 문의처로 요청해 주세요.</li>
+<li>계좌입금 결제분은 입금하신 계좌로, 요청 확인 후 영업일 기준 3일 이내 환불합니다.</li>
+</ul>
+<p style="color:#8aa0a0;font-size:12.5px;margin-top:14px">※ 본 정책은 관련 법령의 소비자 보호 규정에 우선하지 않으며, 법령과 상충하는 부분은 법령이 정하는 바에 따릅니다.</p>
+"""
+
+
+@app.get("/terms", response_class=HTMLResponse)
+def _terms_page():
+    return _legal_page("/terms", "이용약관", _TERMS_BODY)
+
+@app.get("/privacy", response_class=HTMLResponse)
+def _privacy_page():
+    return _legal_page("/privacy", "개인정보처리방침", _PRIVACY_BODY)
+
+@app.get("/refund", response_class=HTMLResponse)
+def _refund_page():
+    return _legal_page("/refund", "환불정책", _REFUND_BODY)
 
 
 @app.get("/pricing", response_class=HTMLResponse)
@@ -4537,7 +4700,8 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_event_hours", "limit_lens", "limit_r
                        "limit_lens_pro", "limit_render_pro", "limit_script_pro",
                        "global_cap_lens", "global_cap_render", "global_cap_script",
                        "contact_kakao", "contact_phone", "pay_url",
-                       "bank_name", "bank_account", "bank_holder", "deposit_note"}
+                       "bank_name", "bank_account", "bank_holder", "deposit_note",
+                       "biz_name", "biz_owner", "biz_regno", "biz_addr", "biz_sales_no", "biz_email"}
 
 
 @app.get("/api/admin/customers")
