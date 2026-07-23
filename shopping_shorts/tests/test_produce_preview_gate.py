@@ -23,7 +23,8 @@ NODE = shutil.which("node")
 
 # jump()·go() = 게이트를 통과시키는 두 경로. jump는 상단 스텝칩(renderSteps)이 모든 단계에
 # onclick으로 달아둔다 — 슬라이스에 반드시 포함해야 한다(옛 판은 여기가 빠져 C-1을 못 봤다).
-_JUMP_START = "function jump(i){"
+# ★Task 2(2026-07-23): jump(i) → jump(o) — 파라미터명이 오브(표시) 인덱스로 바뀌었다.
+_JUMP_START = "function jump(o){"
 _JUMP_END = "// ── 1단계 대본: 3모드"
 # loadMixReview(재매칭 시 폴러 정리)부터 미리보기 전체까지.
 _PREVIEW_START = "async function loadMixReview(){"
@@ -67,7 +68,13 @@ var cur = 0;
 var MIX_JOB = 'J1';
 var MIX_POLL = null;
 var STATE = { script: '확정된 대본' };     // startProduceMix가 없으면 alert하고 빠진다
-var STEPS = ["제작소","자막제거","TTS","꾸미기","썸네일","SEO","최종검수"];
+// Task 2(2026-07-23): jump/go가 오브 표시축(STEP_LABELS)과 실제 패널축(ORB_TO_PANEL)을 나눠
+// 쓴다 — 슬라이스에 안 담기는 심볼이라 여기서 실제 소스와 같은 값으로 준다(자막제거=패널1은
+// 오브에서 빠지고 화면 붙이기=패널7이 2번째 오브가 된다).
+var STEP_LABELS = ["영상/대본","화면 붙이기","음성","꾸미기","썸네일","SEO","완성"];
+var ORB_TO_PANEL = [0, 7, 2, 3, 4, 5, 6];
+var PANEL_TO_ORB = Object.fromEntries(ORB_TO_PANEL.map((p,o)=>[p,o]));
+function orbIndex(){ return PANEL_TO_ORB[cur] ?? 0; }
 function renderSteps(){}
 function showPanel(){ refreshNextBtn(); }
 function saveWork(){}   // 상태유지(2026-07-19): jump/go/startProduceMix가 단계·job을 서버에 남긴다 — 슬라이스 밖 심볼
@@ -154,9 +161,13 @@ _SCENARIO_BTN = r"""
 })();
 """
 
-# ★C-1: 상단 스텝칩이 모든 단계에 onclick="jump(i)"를 달고 있다. jump에 가드가 없으면
-# "자막제거" 칩 한 번 클릭으로 게이트가 통째로 우회된다 — 게다가 그 뒤 refreshNextBtn()은
+# ★C-1: 상단 스텝칩이 모든 단계에 onclick="jump(o)"를 달고 있다. jump에 가드가 없으면
+# "화면 붙이기" 칩 한 번 클릭으로 게이트가 통째로 우회된다 — 게다가 그 뒤 refreshNextBtn()은
 # cur=1이라 gated=false로 계산해 버튼까지 도로 열어준다(우회 흔적도 안 남는다).
+# ★Task 2(2026-07-23): jump(o)는 이제 오브(표시) 인덱스를 받아 ORB_TO_PANEL로 패널을 구한다.
+# jump(1) → 패널7(화면 붙이기/매칭, 신규) — 자막제거(패널1)는 오브에서 빠져 더는 jump(1)의
+# 목적지가 아니다. 게이트 로직(stepLocked) 자체는 패널이 뭐든 동일하게 적용되므로 검증 의도는
+# 그대로 살아있다 — 기대 cur 값만 새 매핑에 맞춘다.
 _SCENARIO_JUMP = r"""
 (() => {
   const fails = [];
@@ -170,7 +181,7 @@ _SCENARIO_JUMP = r"""
 
   PREVIEW_STATUS = 'ready'; cur = 0;
   jump(1);
-  if (cur !== 1) fails.push('미리보기를 봤는데도 스텝칩 점프가 막혔다 — 진행 불가');
+  if (cur !== 7) fails.push('미리보기를 봤는데도 스텝칩 점프가 막혔다 — 진행 불가(cur=' + cur + ')');
 
   // 뒤로 가는 건 막지 않는다(앞으로만 막는다)
   PREVIEW_STATUS = null; cur = 3;
@@ -180,7 +191,7 @@ _SCENARIO_JUMP = r"""
   // 매칭 전(MIX_JOB 없음)이면 게이트가 걸리면 안 된다 — go()와 같은 조건
   MIX_JOB = null; PREVIEW_STATUS = null; cur = 0;
   jump(1);
-  if (cur !== 1) fails.push('매칭도 안 했는데 게이트가 걸렸다');
+  if (cur !== 7) fails.push('매칭도 안 했는데 게이트가 걸렸다(cur=' + cur + ')');
 
   if (fails.length) { console.error('FAIL: ' + fails.join(' / ')); process.exit(1); }
   console.log('PASS');
@@ -401,13 +412,21 @@ def test_preview_url_has_cache_buster():
 
 
 def test_go_has_gate_guard():
-    """disabled만으론 부족 — go(1)이 다른 경로로 불릴 수 있다(방어 두 겹)."""
+    """disabled만으론 부족 — go(1)이 다른 경로로 불릴 수 있다(방어 두 겹).
+
+    ★Task 2(2026-07-23): go(d)는 이제 오브 인덱스를 계산해 jump(o)에 위임한다 — 게이트 가드
+    (stepLocked)는 jump() 안에 있다. go() 자체는 더는 stepLocked를 직접 부르지 않으므로,
+    "go가 게이트를 우회하지 않는다"는 이제 "go가 jump로 위임한다"로 확인한다.
+    """
     html = PRODUCE_HTML.read_text(encoding="utf-8")
     i = html.find("function go(d){")
     assert i != -1, "go() 못 찾음"
     body = html[i: i + 320]
-    # T7: 게이트 가드가 canGoNext() 직접호출 → stepLocked()로 수렴(stepLocked 안에서 canGoNext를 본다).
-    assert "stepLocked(" in body, f"go()에 게이트 가드가 없다: {body[:180]!r}"
+    assert "jump(" in body, f"go()가 jump()로 위임하지 않는다 — 게이트 가드를 우회할 수 있다: {body[:180]!r}"
+    # jump() 자체는 여전히 stepLocked로 게이트를 지킨다(위임 대상이 가드를 갖고 있는지 확인).
+    j = html.find("function jump(")
+    assert j != -1, "jump() 못 찾음"
+    assert "stepLocked(" in html[j: j + 900], "jump()에 게이트 가드가 없다 — go()의 위임이 무의미해진다"
 
 
 def test_stale_review_hint_is_gone():

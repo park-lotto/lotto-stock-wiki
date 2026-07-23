@@ -43,7 +43,12 @@ def _run(js, body):
 _NAV_HARNESS = r"""
 'use strict';
 let cur = 0, MIX_JOB = null, PREVIEW_STATUS = null, _saves = 0;
-const STEPS = ['대본','자막제거','TTS','꾸미기','썸네일','SEO','최종'];
+// Task 2(2026-07-23): jump/go가 오브 표시축(STEP_LABELS)과 실제 패널축(ORB_TO_PANEL)을 나눠
+// 쓴다 — 슬라이스에 안 담기는 심볼이라 실제 소스와 같은 값으로 여기서 준다.
+const STEP_LABELS = ['대본','화면 붙이기','TTS','꾸미기','썸네일','SEO','최종'];
+const ORB_TO_PANEL = [0, 7, 2, 3, 4, 5, 6];
+const PANEL_TO_ORB = Object.fromEntries(ORB_TO_PANEL.map((p,o)=>[p,o]));
+function orbIndex(){ return PANEL_TO_ORB[cur] ?? 0; }
 function canGoNext(){ return PREVIEW_STATUS === 'ready' || PREVIEW_STATUS === 'failed'; }
 // T7 게이트(origin/main 병합, 2026-07-20): 0→1 미리보기 게이트를 stepLocked 단일화로 흡수.
 // jump/go가 canGoNext 대신 stepLocked를 보므로 소스와 동일 구현을 스텁한다(1단계+ 매칭후·미리보기전 잠금).
@@ -59,7 +64,8 @@ function saveWork(){ _saves++; }
 @pytest.fixture(scope="module")
 def js_nav():
     src = PRODUCE_HTML.read_text(encoding="utf-8")
-    return _NAV_HARNESS + _slice(src, "function jump(i){", "// ── 1단계 대본: 3모드")
+    # ★Task 2(2026-07-23): jump(i) → jump(o) — 파라미터명이 오브(표시) 인덱스로 바뀌었다.
+    return _NAV_HARNESS + _slice(src, "function jump(o){", "// ── 1단계 대본: 3모드")
 
 
 def test_step_navigation_persists_and_gate_holds(js_nav):
@@ -68,6 +74,10 @@ def test_step_navigation_persists_and_gate_holds(js_nav):
     ① 미리보기 미확인이면 go(1)은 막힌다(게이트) — cur=0, 저장도 없음.
     ② 미리보기 ready면 go(1)로 전진하고 **저장한다**.
     ③ jump(앞 단계)도, ④ go(-1) 뒤로가기도 저장한다(뒤로 간 자리도 새로고침이 지켜야 한다).
+
+    ★Task 2(2026-07-23): go(1)이 이제 오브 순서로 움직인다 — 패널0(대본)에서 오브+1은
+    ORB_TO_PANEL[1]=7(화면 붙이기/매칭, 신규)이라 fwdCur는 1이 아니라 7이다. jump(3)은
+    ORB_TO_PANEL[3]=3이라(항등) 그대로 3 — 이후 go(-1)도 오브축에서 -1이라 그대로 2.
     """
     out = _run(js_nav, """
       const r = {};
@@ -85,7 +95,7 @@ def test_step_navigation_persists_and_gate_holds(js_nav):
     """)
     assert '"gatedCur":0' in out, f"①게이트가 뚫렸다 — 미리보기 없이 2단계로 갔다: {out}"
     assert '"gatedSaves":0' in out, f"①막혔는데 저장했다(return 전에 saveWork): {out}"
-    assert '"fwdCur":1' in out, f"②미리보기 ready인데 전진 못 했다: {out}"
+    assert '"fwdCur":7' in out, f"②미리보기 ready인데 전진 못 했다: {out}"
     assert '"fwdSaves":1' in out, f"②전진했는데 saveWork 미호출 — 서버 step이 0에 멈춰 새로고침이 1단계로 되돌린다(증상2): {out}"
     assert '"jumpCur":3' in out and '"jumpSaves":1' in out, f"③jump가 저장 안 했다: {out}"
     assert '"backCur":2' in out and '"backSaves":1' in out, f"④go(-1)가 저장 안 했다: {out}"
@@ -113,7 +123,7 @@ let STYLE_TOUCHED = false, PENDING_STYLE_RESTORE = false, MIX_REVIEW_SUGGESTIONS
 const STATE = { script:'', script_src_idx:null, script_from_wiki:null,
                 subtitleRemoval:false, headcopy:null, captionStyle:null,
                 deco:{ extra_texts:[], motion:null } };
-const STEPS = ['대본','자막제거','TTS','꾸미기','썸네일','SEO','최종'];
+const STEP_LABELS = ['대본','화면 붙이기','TTS','꾸미기','썸네일','SEO','최종'];
 function canGoNext(){ return PREVIEW_STATUS === 'ready' || PREVIEW_STATUS === 'failed'; }
 function refreshNextBtn(){}
 function renderSteps(){}

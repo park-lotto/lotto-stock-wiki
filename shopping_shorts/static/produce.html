@@ -775,25 +775,34 @@
   </div>
 
 <script>
-const STEPS = ["제작소","자막제거","TTS","꾸미기","썸네일","SEO","최종검수"];
+// ── 오브 단계바(2026-07-23) ────────────────────────────────
+// 표시(오브)와 실제 패널(data-step)을 분리한다: 자막제거(패널1)는 헤드라인 오브에서 빠지고
+// (다른 세션이 나중에 새 구조에 끼운다) 화면 붙이기(매칭, 신규 패널7 — Task 6에서 추가)가
+// 대신 2번째 오브로 노출된다. 패널 인덱스는 물리적으로 안 바뀐다 — jump/go가 매핑을 경유한다.
+const STEP_LABELS = ["영상/대본","화면 붙이기","음성","꾸미기","썸네일","SEO","완성"];
+// 표시 오브 → 실제 패널 data-step (자막제거=1은 오브에서 빠짐; 매칭=신규 7)
+const ORB_TO_PANEL = [0, 7, 2, 3, 4, 5, 6];
+const PANEL_TO_ORB = Object.fromEntries(ORB_TO_PANEL.map((p,o)=>[p,o]));
+function orbIndex(){ return PANEL_TO_ORB[cur] ?? 0; }
 let cur = 0;
 
 function renderSteps(){
   const el = document.getElementById('steps');
   if(!el) return;
-  el.innerHTML = STEPS.map((s,i)=>{
-    const lk = stepLocked(i);
-    return `
-    <div class="step ${i<cur?'done':''} ${i===cur?'active':''} ${lk?'locked':''}" onclick="jump(${i})">
-      <div class="dot">${i<cur?'✓':(lk?'🔒':(i+1))}</div>
-      <div class="lbl">${s}</div>
-    </div>`;
-  }).join('');
+  const oi = orbIndex();
+  el.innerHTML =
+    '<div class="orbbar">' + STEP_LABELS.map((label, o)=>{
+      const cls = o < oi ? 'orb done' : o === oi ? 'orb on' : 'orb';
+      const dot = o < oi ? '✓' : (o+1);
+      const seg = o < STEP_LABELS.length-1 ? `<span class="orb-seg${o<oi?' fill':''}"></span>` : '';
+      return `<span class="${cls}" title="${label}" onclick="jump(${o})">${dot}</span>${seg}`;
+    }).join('') + '</div>';
 }
+// ── 오브바 끝 ──
 function showPanel(){
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('show', +p.dataset.step===cur));
   document.getElementById('btnPrev').disabled = cur===0;
-  document.getElementById('btnNext').textContent = cur===STEPS.length-1 ? '완료' : '다음 →';
+  document.getElementById('btnNext').textContent = cur===STEP_LABELS.length-1 ? '완료' : '다음 →';
   refreshNextBtn();   // 1단계 미리보기 게이트(2026-07-17) — 단계 이동·초기 렌더마다 상태를 맞춘다
   if(cur===1) refreshSub();
   if(cur===2) loadTtsBeats();
@@ -801,7 +810,10 @@ function showPanel(){
   if(cur===4) initThumb();
   if(cur===5) initSeo();
   if(cur===6) refreshFinal();
+  if(cur===7) initMatch();   // 화면 붙이기(매칭) 패널 — 신규(Task 6에서 실구현), 지금은 스텁
 }
+// 매칭 패널(data-step=7, 신규) 초기화 — Task 6에서 실구현. 지금은 훅만 배선한다.
+function initMatch(){}
 
 // ── 6단계 SEO(2026-07-17) ──────────────
 // 산출물은 서버 mix_jobs.seo_json이 유일한 진실이다. STATE에만 두면
@@ -1771,21 +1783,23 @@ async function saveHeadcopy(){
   try{ await fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({job_id:MIX_JOB, headcopy:STATE.headcopy, caption_style:STATE.captionStyle, deco:STATE.deco})}); }catch(e){}
 }
-function jump(i){
-  if(i === cur) return;
+function jump(o){
+  // o = 오브(표시) 인덱스. ORB_TO_PANEL로 실제 패널 인덱스(cur)를 구한다 — 자막제거(패널1)는
+  // 오브에 없으므로 o와 cur가 더는 같은 축이 아니다(Task 2, 2026-07-23).
+  const p = ORB_TO_PANEL[o];
+  if(p === cur) return;
   // T7(§4-3): 잠긴 단계(회색+🔒)로는 못 간다. stepLocked가 기존 0→1 미리보기 게이트를 흡수해
   // **모든 dot**에 일관 적용한다 — 예전엔 renderSteps가 모든 칩에 onclick="jump(i)"를 박아
   // "자막제거" 칩 한 번 클릭으로 게이트가 통째로 우회됐다. 뒤로(완료 단계)는 자유 — 잠긴 단계는
   // 항상 미완 프런티어 위쪽이라 뒤는 애초에 안 잠긴다.
-  if(stepLocked(i)){ toast(stepLockMsg()); return; }
-  cur=i; renderSteps(); showPanel(); saveWork();   // ★단계를 서버에 남긴다(2026-07-19) — 안 남기면 새로고침이 1단계로 되돌린다
+  if(stepLocked(p)){ toast(stepLockMsg()); return; }
+  cur=p; renderSteps(); showPanel(); saveWork();   // ★단계를 서버에 남긴다(2026-07-19) — 안 남기면 새로고침이 1단계로 되돌린다
 }
 function go(d){
-  const n=cur+d; if(n<0||n>=STEPS.length) return;
-  // T7: 잠긴 앞단계로는 못 넘어간다(stepLocked = 미리보기 게이트 흡수, 유료 자막제거 우회 방지).
-  // 뒤로는 자유. btnNext는 refreshNextBtn이 이미 잠가두지만 go()가 다른 경로로도 불려 두 겹 방어.
-  if(stepLocked(n)){ toast(stepLockMsg()); return; }
-  cur=n; renderSteps(); showPanel(); saveWork();   // ★단계 이동을 저장(새로고침 복원용)
+  // 오브 순서로 ±d 이동 → 매핑을 경유해 jump(o)에 위임한다. 게이트 가드는 jump 안에 있다
+  // (stepLocked) — go()가 따로 들고 있지 않다(Task 2, 2026-07-23. 이전엔 go()가 직접 확인했다).
+  const o = Math.min(STEP_LABELS.length-1, Math.max(0, orbIndex()+d));
+  jump(o);
 }
 
 // ── 1단계 대본: 3모드 ──────────────────────────────
@@ -2194,7 +2208,7 @@ function revertWork(){
   if(STATE.script) setScriptMode('manual');
   renderPool(); syncFootageToMixUrls(); refreshFinalPeek();
   const st = w.step;
-  cur = (typeof st === 'number' && st >= 0 && st < STEPS.length) ? st : cur;
+  cur = (typeof st === 'number' && st >= 0 && st < STEP_LABELS.length) ? st : cur;
   if(cur > 0 && MIX_JOB && !canGoNext()) cur = 0;   // 미리보기 미확인이면 1단계로(게이트 규약 유지)
   renderSteps(); showPanel(); refreshNextBtn();
   saveWork();   // 되돌린 상태를 새 현재로 저장(_pushWork가 스냅샷 체인을 전진 → 다시 누르면 원상복귀)
@@ -2245,7 +2259,7 @@ async function _restoreWork(workId){
     }catch(e){}   // 못 읽으면 null로 둔다 = 잠긴 채. 모르면 안전한 쪽.
   }
   const st = d.step;
-  cur = (typeof st === 'number' && st >= 0 && st < STEPS.length) ? st : 0;
+  cur = (typeof st === 'number' && st >= 0 && st < STEP_LABELS.length) ? st : 0;
   if(cur > 0 && MIX_JOB && !canGoNext()) cur = 0;   // 미리보기 미확인이면 1단계로 되돌린다
   renderSteps(); showPanel(); refreshNextBtn();
   // ★편집안(#mixReview)·미리보기 <video>를 되살린다(2026-07-19). 게이트 재동기(위)가 PREVIEW_STATUS를
