@@ -113,3 +113,32 @@ def test_pool_card_toggle_only():
     assert "openScriptModal(${i})" not in body
     assert "designateBackbone(${i})" not in body
     assert "removeFootage(${i})" not in body
+
+
+# ── Task 5: 분석 극장(B) — ⚡시작 후 대기시간 실시간 해부 연출 ──────────
+def test_theater_present_and_guarded():
+    assert "playTheater" in HTML
+    assert "원본 대본 해부" in HTML
+    assert 'class="thea"' in HTML or "'thea'" in HTML
+    assert "// ── 분석 극장 끝 ──" in HTML
+
+
+def test_theater_host_element_present():
+    assert 'id="theater"' in HTML
+
+
+def test_theater_no_op_when_no_segments():
+    # segments가 비었으면(구조 데이터 없음) 극장 host를 숨기고 return — 매칭 흐름을 막지 않는다.
+    start = HTML.index("function playTheater(")
+    end = HTML.index("// ── 분석 극장 끝 ──")
+    body = HTML[start:end]
+    assert "hidden = true" in body or "hidden=true" in body
+    assert "return" in body
+
+
+def test_theater_hides_on_mix_done():
+    # 매칭 완료(ready_for_review) 또는 실패(failed) 시 극장 host를 숨긴다(pollMix에서 배선).
+    start = HTML.index("async function pollMix(")
+    end = HTML.index("async function loadMixReview(")
+    body = HTML[start:end]
+    assert "theater" in body and ("hidden = true" in body or "hidden=true" in body)
