@@ -857,7 +857,7 @@ function renderSteps(){
 function showPanel(){
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('show', +p.dataset.step===cur));
   document.getElementById('btnPrev').disabled = cur===0;
-  document.getElementById('btnNext').textContent = cur===STEP_LABELS.length-1 ? '완료' : '다음 →';
+  document.getElementById('btnNext').textContent = orbIndex()===STEP_LABELS.length-1 ? '완료' : '다음 →';
   refreshNextBtn();   // 1단계 미리보기 게이트(2026-07-17) — 단계 이동·초기 렌더마다 상태를 맞춘다
   if(cur===1) refreshSub();
   if(cur===2) loadTtsBeats();
@@ -3091,14 +3091,14 @@ function renderCandidates(list){
   const el = document.getElementById('mixCandidates');
   if(!el) return;
   if(!list || list.length < 2){ el.innerHTML = ''; return; }
-  el.innerHTML = '<div style="font-size:12px;color:var(--sub);margin-bottom:6px">🧬 대본 후보 '
-    + list.length + '개 — 마음에 드는 걸 골라보세요(⭐ 추천은 아래 편집안에 이미 반영됨)</div>'
+  const LBL = ['A안','B안','C안','D안','E안'];
+  el.innerHTML = '<div style="font-size:12px;color:var(--sub);margin-bottom:8px">🧬 새 대본 '
+    + list.length + '개 만들었어요 — 하나만 고르세요</div>'
     + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-    + list.map(c => `<div style="flex:1 1 160px;min-width:150px;border:1px solid ${c.recommended ? 'var(--accent)' : 'var(--line)'};border-radius:10px;padding:10px;background:var(--inset);cursor:pointer" onclick="pickCandidate(${c.index})">`
-      + (c.recommended ? '<span style="font-size:10px;background:var(--accent);color:#000;padding:2px 6px;border-radius:8px">⭐ 추천</span>' : '')
-      + `<div style="font-size:13px;margin-top:4px">${esc(c.hook || '')}</div>`
-      + `<div class="hint" style="margin-top:4px">${esc(c.story_person || '')}${c.score != null ? ` · 점수 ${c.score}` : ''}</div>`
-      + `</div>`).join('')
+    + list.map((c,i) => `<div class="cand${c.recommended?' on':''}" onclick="pickCandidate(${c.index})">`
+        + `<div class="cb">${LBL[i]||('후보 '+(i+1))}${c.recommended?'<span class="rec">👍 추천</span>':''}</div>`
+        + `<p>${esc(c.hook||'')}${c.story_person?(' — '+esc(c.story_person)):''}${c.score!=null?` · 점수 ${c.score}`:''}</p>`
+        + `</div>`).join('')
     + '</div>';
 }
 // 후보 클릭 → 그 후보의 plan을 edit_plan으로 세팅(/api/mix/candidate) → 매칭 리뷰 다시 로드.

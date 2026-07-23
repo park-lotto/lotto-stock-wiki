@@ -266,3 +266,28 @@ def test_revert_work_restores_matching_panel_step7(tmp_path):
     assert out.returncode == 0, out.stderr
     assert '"cur":7' in out.stdout.strip().splitlines()[-1], (
         "revertWork가 매칭 패널(step:7)로 되돌리지 못했다 — PANEL_COUNT 바운드 확인: " + out.stdout)
+
+
+# ── v6 목업(final-mock-v6.html) 매칭 패널 이식 — btnNext 라벨 버그 + 후보카드 스타일 ──
+
+def test_btn_next_uses_orb_index_not_panel_cur():
+    # cur는 패널 인덱스(매칭=7)인데 STEP_LABELS.length-1(오브 마지막=7)과 그대로 비교하면
+    # 매칭 패널이 마지막 오브가 아닌데도 '완료'로 잘못 뜬다. orbIndex()로 비교해야 한다.
+    assert "orbIndex()===STEP_LABELS.length-1 ? '완료' : '다음 →'" in HTML
+    assert "cur===STEP_LABELS.length-1 ? '완료'" not in HTML
+
+
+def test_theme_has_v6_cand_and_beat_classes():
+    for cls in (".cand", ".cand.on", ".cand .cb", ".cand .rec", ".beat", ".beat .sc", ".beat .fit"):
+        assert cls in CSS, cls
+
+
+def test_render_candidates_uses_v6_cand_markup():
+    start = HTML.index("function renderCandidates(list){")
+    end = HTML.index("async function pickCandidate(idx){")
+    body = HTML[start:end]
+    assert 'class="cand' in body
+    assert "pickCandidate(" in body   # 기존 배선 유지
+    assert "c.index" in body and "c.recommended" in body and "c.hook" in body
+    assert "c.story_person" in body and "c.score" in body
+    assert "list.length < 2" in body   # 후보 1개 이하 조기 반환 유지

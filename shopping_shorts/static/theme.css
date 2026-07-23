@@ -122,3 +122,15 @@
 .why .tag{ font-size:11px; padding:4px 10px; border-radius:99px; font-weight:900; border:1px solid; }
 .why .tag.t1{ border-color:#facc6b; color:#facc6b; background:rgba(250,204,107,.08); }
 .why .tag.t2{ border-color:#3ee0bf; color:#3ee0bf; background:rgba(62,224,191,.08); }
+
+/* ── 화면 붙이기(매칭) 후보·장면 카드 (v6 final-mock-v6.html 이식) ── */
+.seqno{ display:inline-grid; place-items:center; width:22px; height:22px; border-radius:50%; background:linear-gradient(135deg,#7df5db,#14b8a6); color:#04201b; font-size:12px; font-weight:900; margin-right:7px; }
+.cand{ flex:1; background:rgba(13,20,32,.95); border:2px solid #243244; border-radius:12px; padding:10px; cursor:pointer; font-size:12px; }
+.cand.on{ border-color:#3ee0bf; box-shadow:0 0 16px rgba(62,224,191,.25); }
+.cand .cb{ font-size:12px; font-weight:900; color:#fff; display:flex; gap:6px; align-items:center; margin-bottom:5px; }
+.cand .rec{ font-size:9px; padding:2px 7px; border-radius:99px; background:linear-gradient(135deg,#7df5db,#14b8a6); color:#04201b; font-weight:900; }
+.cand p{ margin:0; color:#8b97b0; font-weight:700; font-size:11px; line-height:1.5; }
+.beat{ display:flex; gap:8px; align-items:center; background:rgba(7,12,22,.85); border:1px solid #243244; border-radius:9px; padding:7px 10px; font-size:11px; font-weight:700; margin-bottom:5px; }
+.beat .sc{ width:28px; height:20px; border-radius:4px; background:linear-gradient(160deg,#2b3a4e,#141d2c); flex-shrink:0; }
+.beat .tx{ flex:1; color:#cfe9ff; }
+.beat .fit{ color:#3ee0bf; font-weight:900; }
