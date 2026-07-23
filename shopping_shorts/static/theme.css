@@ -140,3 +140,11 @@
 .pool-card .pickbadge{ position:absolute; top:-7px; left:-4px; font-size:9px; font-weight:900; color:#231a00; background:linear-gradient(135deg,#ffe29a,#f5b53f); border-radius:99px; padding:2px 7px; white-space:nowrap; }
 .pool-card .pool-x{ position:absolute; top:-7px; right:-6px; width:18px; height:18px; border-radius:50%; border:0; background:#243244; color:#cfe9ff; font-size:10px; font-weight:900; cursor:pointer; display:none; line-height:1; }
 .pool-card:hover .pool-x{ display:block; }
+
+/* ── ⚡ 매칭 진행중 피드백(2026-07-23 Task8) — 패널0(사용자가 보는 화면)용 미러 ── */
+@keyframes skmspin{ to{ transform:rotate(360deg); } }
+.skm-spin{ display:inline-block; animation:skmspin 1s linear infinite; }
+.match-progress{ display:flex; align-items:center; gap:10px; margin-top:10px; padding:10px 14px; border-radius:12px;
+  background:rgba(62,224,191,.08); border:1px solid rgba(62,224,191,.45); color:#cfe9ff; font-weight:800; font-size:13px; }
+.match-progress .dot{ width:18px; height:18px; border-radius:50%; border:3px solid rgba(62,224,191,.25); border-top-color:#3ee0bf; animation:skmspin .8s linear infinite; flex-shrink:0; }
+.aiPickCta:disabled{ opacity:.85; cursor:progress; }

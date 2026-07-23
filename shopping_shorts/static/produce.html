@@ -398,6 +398,7 @@
                pollMix가 화면 붙이기(패널7)로 넘겨준다. #mixStatus/#mixCandidates/#mixReview는
                그 패널7로 옮겨갔다(아래 참조). -->
           <div id="theater" hidden style="margin-top:12px"></div>
+          <div id="matchProgress" class="match-progress" hidden style="margin-top:10px"></div>
         </div>
       </div>
     </section>
@@ -2533,12 +2534,35 @@ async function startFromAiPick(){
   }
   if(!STATE.script){ alert('대본을 확보하지 못했습니다 — 아래 "✍️ 직접 쓰기"로 입력해 주세요.'); return; }
   refreshFinalPeek(); saveWork();
+  setMatchingUI(true, '매칭 준비 중…');   // ★Task8: 버튼 즉시 before/after 변화 + 패널0 스피너
   playTheater(window._aiPick && window._aiPick.structure);   // 대기시간 동안 원본 구조 해부 연출(Task5)
-  await startProduceMix();
+  try{
+    await startProduceMix();
+  }catch(e){
+    setMatchingUI(false);
+    const mp=document.getElementById('matchProgress');
+    if(mp){ mp.hidden=false; mp.innerHTML='<span>❌ 매칭을 시작하지 못했어요. 다시 시도해 주세요.</span>'; }
+  }
   // ★Task 6: 여기서 곧장 jump(1)하지 않는다 — startProduceMix()는 job만 걸고 바로 돌아온다
   // (매칭은 폴링으로 백그라운드에서 돈다). 즉시 넘어가면 아직 아무것도 없는 빈 패널7만 보인다.
   // 극장(Task5)이 보이는 이 패널(0)에 그대로 머물다가, 매칭이 실제로 끝나면(ready_for_review)
   // pollMix가 화면 붙이기(패널7)로 데려간다.
+}
+// ⚡ 클릭 후 대기 동안 패널0(사용자가 보는 화면)에 "매칭 중" 동적 피드백을 준다.
+// 진짜 단계 진행(#mixStatus·loader.js)은 패널7에 있어 대기 중엔 안 보이므로, 여기서 미러링한다(Task8).
+function setMatchingUI(on, label){
+  const btn=document.querySelector('.aiPickCta');
+  if(btn){
+    if(on){ if(btn.dataset.orig==null) btn.dataset.orig=btn.innerHTML; btn.disabled=true; btn.innerHTML='<span class="skm-spin">🔄</span> 매칭 중…'; }
+    else { btn.disabled=false; if(btn.dataset.orig!=null){ btn.innerHTML=btn.dataset.orig; delete btn.dataset.orig; } }
+  }
+  const mp=document.getElementById('matchProgress'); if(!mp) return;
+  if(on){ mp.hidden=false; updateMatchProgress(label||'매칭 준비 중…'); }
+  else { mp.hidden=true; mp.innerHTML=''; }
+}
+function updateMatchProgress(label){
+  const mp=document.getElementById('matchProgress'); if(!mp||mp.hidden) return;
+  mp.innerHTML='<span class="dot"></span><span>'+ (label||'매칭 중…') +'</span>';
 }
 // ── AI PICK 끝 ──
 // 분석 극장(B, 2026-07-23 Task5) — ⚡ "이대로 만들기 시작" 직후, 매칭 job이 도는 대기시간을
@@ -3088,7 +3112,7 @@ async function pollMix(){
   try{
     const d=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
     const st=document.getElementById('mixStatus');
-    if(!d.ok){ if(st) st._sblPipe=null; st.textContent='상태 조회 실패'+(d.error?' — '+d.error:''); clearInterval(MIX_POLL); const th0=document.getElementById('theater'); if(th0) th0.hidden=true; return; }
+    if(!d.ok){ if(st) st._sblPipe=null; st.textContent='상태 조회 실패'+(d.error?' — '+d.error:''); clearInterval(MIX_POLL); const th0=document.getElementById('theater'); if(th0) th0.hidden=true; setMatchingUI(false); return; }
     const _pipe = st ? st._sblPipe : null;
     if(_pipe && d.status!=='failed'){
       // 단계바 진행. ready_for_review=전부 완료, 그 외는 해당 단계로.
@@ -3100,16 +3124,18 @@ async function pollMix(){
     } else if(d.status!=='failed'){
       st.textContent='상태: '+(MIX_LABEL[d.status]||d.status)+(d.error?' — '+d.error:'');   // loader.js 폴백
     }
+    updateMatchProgress(MIX_LABEL[d.status]||d.status);   // ★Task8: 패널0 미러링 — 사용자가 있는 화면에도 같은 단계 표시
     // 극장(Task5) 종료 — 성공/실패 어느 쪽이든 대기 연출은 끝났으니 숨긴다. (commit 7d156f09c에서
     // 이 두 분기가 매칭 완료 신호였다 — 별도 job 상태를 새로 만들지 않고 그대로 재사용한다.)
     if(d.status==='ready_for_review' || d.status==='failed'){
       const th=document.getElementById('theater'); if(th) th.hidden = true;
     }
     if(d.status==='ready_for_review'){
+      setMatchingUI(false);   // ★Task8: 버튼 복원 + 패널0 스피너 정리 — 패널7로 넘어가기 전에
       clearInterval(MIX_POLL); renderCandidates(d.candidates||[]); loadMixReview();
       jump(1);   // 오브 인덱스 1 = 화면 붙이기(매칭, ORB_TO_PANEL[1]=7). Task 6: 매칭 완료 시 자동 이동.
     }
-    if(d.status==='failed'){ if(st) st._sblPipe=null; st.textContent='❌ 매칭 실패'+(d.error?' — '+d.error:''); clearInterval(MIX_POLL); }
+    if(d.status==='failed'){ setMatchingUI(false); if(st) st._sblPipe=null; st.textContent='❌ 매칭 실패'+(d.error?' — '+d.error:''); clearInterval(MIX_POLL); }
   }catch(e){}
 }
 async function loadMixReview(){
