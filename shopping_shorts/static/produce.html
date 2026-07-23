@@ -40,7 +40,7 @@
     .previewSlot{position:sticky;top:12px;align-self:flex-start;z-index:7}
 
     /* 진행바 — 크게(60대 최우선). 완료=채운 민트+체크, 현재=링+숨쉬기(색이 아니라 형태로도 구분) */
-    .steps{display:flex;align-items:flex-start;gap:0;margin:26px 0 30px;max-width:1120px}
+    .steps{margin:26px 0 30px;max-width:1120px}  /* 컨테이너는 블록 — 안의 .orbbar(theme.css)가 100% 채워 오브를 균등 분배 */
     .step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;cursor:pointer}
     .step .dot{width:52px;height:52px;border-radius:50%;background:var(--panel);border:2px solid var(--line);
       display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--sub);z-index:1;
