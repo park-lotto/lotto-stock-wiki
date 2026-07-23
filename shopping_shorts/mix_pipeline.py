@@ -30,6 +30,11 @@ from shopping_shorts import pron_corrections
 # 모션 자산 폴더(테스트가 monkeypatch로 교체 가능하도록 모듈 상수로 노출)
 MOTION_ASSETS_DIR = DEFAULT_ASSETS_DIR
 
+# ★TTS 고정 시드(2026-07-23 사장님 "왜 매일 달라지나"): 프리셋에 seed가 없으면(대부분) v3가
+# 매 렌더 다른 목소리로 뽑혀 비트마다·날마다 성우가 달라졌다. 고정 시드를 박아 결정성 확보
+# — 튜닝한 톤(stability·style)·모델은 그대로 두고 '매번 달라짐'만 없앤다. 명시 seed는 존중.
+_PINNED_TTS_SEED = 7
+
 
 def _source_video_id(i):
     return f"s{i}"
@@ -83,7 +88,8 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     if config.GROQ_API_KEY and n_best < 2:
         n_best = 2
     tts.synthesize_best(natural, str(out_path), n=n_best,
-                        base_seed=prof.get("seed"), ranker=ranker,
+                        base_seed=(prof.get("seed") if prof.get("seed") is not None else _PINNED_TTS_SEED),
+                        ranker=ranker,
                         voice_id=voice_id, voice_settings=settings, speed=speed,
                         model_id=model_id, previous_text=previous_text, next_text=next_text)
     # 비트별 라우드니스 정규화는 실제 ElevenLabs 음성일 때만 — 키 없는 개발용 무음 mock에
