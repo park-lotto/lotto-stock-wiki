@@ -740,9 +740,28 @@ function _bankIngestEl(){
     const st=document.getElementById('status'); if(st&&st.parentNode) st.parentNode.insertBefore(el, st.nextSibling); }
   return el;
 }
-function _fmtBuckets(by){
-  const NM={hook:'훅',ending:'어미',adverb:'부사',cta:'CTA',evidence:'근거',conflict:'갈등',emotion:'감정',price:'가격'};
-  return Object.entries(by||{}).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${NM[k]||k}+${v}`).join('·');
+function _sumBuckets(by,keys){ return keys.reduce((s,k)=>s+(by&&by[k]||0),0); }
+function _pct(x){ return (x===null||x===undefined)?'—':Math.round(x*100)+'%'; }
+// 흡수 리포트 + 제미니 검열을 한 패널로. 신호등(🟢🟡🔴) + 3지표 + 경고사유.
+function _renderBankPanel(rep){
+  const by=rep.by_bucket||{};
+  const story=_sumBuckets(by,['conflict','emotion','evidence','spine']);
+  const style=_sumBuckets(by,['adverb','cta','ending','price']);
+  const hook=by.hook||0;
+  let html=`📦 <b>오늘 은행 흡수</b>: 우승영상 ${rep.added_sources||0}편 · 부품 ${rep.added_items||0}개`
+    +` <span style="color:var(--sub)">(훅 ${hook}·스토리구조 ${story}·스타일 ${style})</span>`
+    +(rep.harvested_hooks?` · 훅수확 +${rep.harvested_hooks}`:'')
+    +(rep.skipped_dup?` · 중복 ${rep.skipped_dup} 건너뜀`:'');
+  const a=rep.gemini_audit;
+  if(a){
+    const h=a.health||{};
+    html+=`<br>🤖 <b>제미니 검열 ${h.level||''}</b> `
+      +`성공률 ${_pct(a.success_rate)} (${a.succeeded||0}/${a.attempted||0})`
+      +` · 완성도 ${_pct(a.completeness_rate)}`
+      +` · 훅스팸 ${_pct(a.hook_spam_ratio)}${a.hook_bait?`(차단 ${a.hook_bait})`:''}`;
+    (h.reasons||[]).forEach(r=>{ html+=`<br><span style="color:#c0392b">⚠️ ${r}</span>`; });
+  }
+  return html;
 }
 async function _pollBankIngest(times){
   if(PLATFORM!=='instagram' || times<=0) return;
@@ -751,10 +770,7 @@ async function _pollBankIngest(times){
     const d=await (await fetch('/api/bank/ingest_report')).json();
     const rep=(d&&d.report)||{};
     if(rep.status==='done'){
-      const bk=_fmtBuckets(rep.by_bucket);
-      el.textContent=`🏦 대본은행 자동적재: 신규 ${rep.added_sources||0}건`
-        +(rep.added_items?` (부품 ${rep.added_items}개${bk?' · '+bk:''})`:'')
-        +(rep.skipped_dup?` · 중복 ${rep.skipped_dup}건 건너뜀`:'');
+      el.innerHTML=_renderBankPanel(rep);
       return;   // 끝 — 더 폴링 안 함
     }
     el.textContent='🏦 대본은행 자동 분석 중… (백그라운드, 잠시 후 결과)';

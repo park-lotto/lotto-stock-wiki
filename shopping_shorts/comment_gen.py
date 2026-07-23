@@ -109,6 +109,23 @@ def _current_key_and_idx():
     return SHORTS_GEMINI_KEYS[idx], idx
 
 
+# 라운드로빈 커서 — 호출마다 다음 라이브 키로 넘겨 부하를 분산한다. _current_key_and_idx가
+# 늘 live[0]만 줘서 45개 키가 있어도 1번 키만 때리던 버그(성공률 7%)를 고친다(2026-07-23).
+_rr_cursor = {"i": 0}
+
+
+def _next_live_key_and_idx():
+    """라이브 키를 라운드로빈으로 하나씩 반환(호출마다 다음 키). 다 소진되면 (None, None)."""
+    live = _live_key_indices()
+    if not live:
+        return None, None
+    with _STATE_LOCK:
+        i = _rr_cursor["i"] % len(live)
+        _rr_cursor["i"] = i + 1
+    idx = live[i]
+    return SHORTS_GEMINI_KEYS[idx], idx
+
+
 def build_prompt(caption, channel, category):
     return _PROMPT.format(
         caption=(caption or "(캡션 없음 — 채널·카테고리로 유추)"),

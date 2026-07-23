@@ -55,6 +55,22 @@ def classify_hook(text):
     return None
 
 
+# 참여유도(engagement-bait) 판별어 — 인스타 댓글유도 멘트는 훅이 아니라 은행 오염원.
+# 부분일치 하나라도 걸리면 bait. 오늘 실측 26% 오염이 전부 이 부류였다(2026-07-22).
+_BAIT_KEYWORDS = (
+    "댓글", "프로필", "팔로우", "DM", "디엠", "남겨주", "정보 전송", "정보 보내",
+    "링크 No", "링크 no", "아무 글자", "아무글자", "두 글자", "두글자", "요청함", "숨김함",
+)
+
+
+def is_engagement_bait(text):
+    """훅 문구가 인스타 참여유도 멘트인가(=은행에 넣으면 안 되는 오염). 부분일치 판별.
+    빈 값은 False(짧은 것은 clean_hook_candidate가 이미 거른다)."""
+    if not text:
+        return False
+    return any(k in text for k in _BAIT_KEYWORDS)
+
+
 def harvest_hooks_from_crawl(store, platforms=("youtube", "tiktok", "instagram"),
                              grades=("S", "A"), max_per_run=_MAX_PER_RUN):
     """우승작(grade in grades) 캡션에서 훅 후보를 뽑아 hook 버킷 pending으로 추가 → 추가 건수.
@@ -75,6 +91,8 @@ def harvest_hooks_from_crawl(store, platforms=("youtube", "tiktok", "instagram")
                     continue
                 hook = clean_hook_candidate(it.get("caption") or "")
                 if not hook:
+                    continue
+                if is_engagement_bait(hook):        # 참여유도 멘트는 훅 아님 — 은행 오염 차단
                     continue
                 htype = classify_hook(hook)
                 tags = {"hook_type": htype, "source": "harvest"} if htype else {"source": "harvest"}

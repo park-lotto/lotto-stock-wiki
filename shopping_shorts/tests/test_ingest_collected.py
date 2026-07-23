@@ -70,3 +70,43 @@ def test_by_bucket_aggregated():
     rep = _run(_FakeStore(), items, top_n=10)
     assert rep["by_bucket"]["hook"] == 2                 # 소스당 훅 1개 × 2
     assert rep["added_items"] == 2
+
+
+def _flaky_ingest(store, text, source="collect", url="", product_category=None,
+                  category_source=None, perf=None, call=None):
+    # 홀수 호출은 Gemini 실패(source_id None) 흉내 → 검열 성공률 측정 검증용.
+    _flaky_ingest.n += 1
+    if _flaky_ingest.n % 2 == 1:
+        return {"source_id": None, "added": 0}          # 429 등으로 빈손
+    return {"source_id": _flaky_ingest.n, "added": 3,
+            "buckets": {"hook": ["훅"], "spine": {"beat_chain": ["a", "b", "c"]},
+                        "adverb": ["진짜", "완전"], "cta": ["댓글"], "ending": ["돼요", "예요"]},
+            "hook_bait_blocked": 0}
+
+
+def test_gemini_audit_success_rate():
+    _flaky_ingest.n = 0
+    items = [_mk(_KR + str(i), score=i / 10, url=f"u{i}") for i in range(4)]
+    rep = pattern_bank.ingest_collected(_FakeStore(), items, ingest_fn=_flaky_ingest,
+                                        perf_fn=lambda it: None, top_n=10)
+    aud = rep["gemini_audit"]
+    assert aud["attempted"] == 4                          # 4건 다 호출
+    assert aud["succeeded"] == 2 and aud["failed"] == 2   # 절반만 성공
+    assert abs(aud["success_rate"] - 0.5) < 1e-9
+    assert aud["health"]["level"] == "🟢"                 # 0.5는 통과선
+
+
+def test_gemini_audit_hook_spam_ratio():
+    def baity(store, text, **kw):
+        return {"source_id": 1, "added": 1,
+                "buckets": {"hook": ["진짜훅", "댓글에 남겨주세요"],  # 2개 중 1개 스팸
+                            "spine": {"beat_chain": ["a", "b", "c"]},
+                            "adverb": ["아주"], "cta": ["c"], "ending": ["요"]},
+                "hook_bait_blocked": 1}
+    items = [_mk(_KR, score=1.0, url="u1")]
+    rep = pattern_bank.ingest_collected(_FakeStore(), items, ingest_fn=baity,
+                                        perf_fn=lambda it: None, top_n=10)
+    aud = rep["gemini_audit"]
+    assert aud["hook_total"] == 2 and aud["hook_bait"] == 1
+    assert abs(aud["hook_spam_ratio"] - 0.5) < 1e-9
+    assert aud["health"]["level"] == "🟡"                 # 스팸 50% > 15%

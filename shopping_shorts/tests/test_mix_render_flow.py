@@ -72,4 +72,6 @@ def test_render_on_no_key_fails(monkeypatch, tmp_path):
 
     mp.run_render("j", str(tmp_path / "db"), str(tmp_path))
     assert _statuses(store)[-1] == "failed"
-    assert any("키" in (u.get("error") or "") for u in store.updates)
+    # 새 문구: 벤더명(VMake) 없이 "설정이 완료되지 않았습니다"로 사유 전달
+    assert any("설정" in (u.get("error") or "") for u in store.updates)
+    assert not any("VMake" in (u.get("error") or "") for u in store.updates)

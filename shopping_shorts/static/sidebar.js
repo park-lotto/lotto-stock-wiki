@@ -2,6 +2,18 @@
    기존에 페이지마다 <aside class="sidebar">를 손으로 복붙하다 항목이 제각각
    드리프트되고 mix 페이지엔 아예 없던 문제를 하나로 통일(2026-07-13). */
 (function () {
+  // PWA 부트스트랩 — 앱 페이지 전체(사이드바 포함 페이지)에 매니페스트·아이콘을 주입.
+  // 페이지마다 <head>를 손대면 드리프트되므로 여기 한 곳에서(공개 대문·로그인은 app.py가 직접).
+  // (setAttribute 대신 프로퍼티 할당 — 테스트 하네스의 미니 DOM에도 안전)
+  if (!document.querySelector('link[rel="manifest"]')) {
+    var _mf = document.createElement("link"); _mf.rel = "manifest"; _mf.href = "/manifest.webmanifest";
+    var _tc = document.createElement("meta"); _tc.name = "theme-color"; _tc.content = "#0c1411";
+    var _fi = document.createElement("link"); _fi.rel = "icon"; _fi.href = "/favicon.ico";
+    var _at = document.createElement("link"); _at.rel = "apple-touch-icon"; _at.href = "/apple-touch-icon.png";
+    document.head.appendChild(_mf); document.head.appendChild(_tc);
+    document.head.appendChild(_fi); document.head.appendChild(_at);
+  }
+
   var NAV = [
     { label: "리서치", items: [
       { icon: "📊", text: "레퍼런스 랭킹",   href: "/", free: true },
@@ -100,7 +112,22 @@
     });
   }
   // 로고 클릭 = 홈(/)으로(사장님 2026-07-21) — 커서·title로 클릭 가능함을 알린다.
-  var html = "<h1 onclick=\"location.href='/'\" style=\"cursor:pointer\" title=\"홈으로\">🛍️ <span class=\"ss-brand\">숏템박스</span></h1>";
+  // 브랜드 엠블럼(v2, app.py _LOGO_SVG와 동일 도형 — id만 ss- 접두어로 충돌 방지)
+  var BRAND_SVG =
+    '<svg width="24" height="24" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템박스" style="flex-shrink:0">' +
+    '<defs><radialGradient id="ssdk" cx="50%" cy="42%" r="65%">' +
+    '<stop offset="0" stop-color="#1c2b25"/><stop offset="1" stop-color="#0b120f"/></radialGradient>' +
+    '<linearGradient id="ssmg" x1="0" y1="0" x2="1" y2="1">' +
+    '<stop offset="0" stop-color="#6ff0d6"/><stop offset="1" stop-color="#1f9e7a"/></linearGradient>' +
+    '<linearGradient id="ssgg" x1="0" y1="0" x2="1" y2="1">' +
+    '<stop offset="0" stop-color="#ffe1a1"/><stop offset="1" stop-color="#f0a93a"/></linearGradient></defs>' +
+    '<circle cx="32" cy="32" r="29" fill="url(#ssdk)"/>' +
+    '<circle cx="32" cy="32" r="29" stroke="url(#ssmg)" stroke-width="2.4"/>' +
+    '<rect x="17.6" y="40" width="28.8" height="6" rx="2.8" fill="#1d8a68"/>' +
+    '<rect x="20.8" y="32" width="22.4" height="6" rx="2.8" fill="url(#ssmg)"/>' +
+    '<rect x="24" y="24" width="16" height="6" rx="2.8" fill="url(#ssgg)"/>' +
+    '<path d="M32 13.8l8 8.2H24l8-8.2z" fill="url(#ssgg)"/></svg>';
+  var html = "<h1 onclick=\"location.href='/'\" style=\"cursor:pointer\" title=\"홈으로\">" + BRAND_SVG + " <span class=\"ss-brand\">숏템박스</span></h1>";
   NAV.forEach(function (g) {
     html += '<div class="ss-group"><div class="ss-label">' + g.label + "</div>";
     g.items.forEach(function (it) {

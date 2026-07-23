@@ -635,9 +635,15 @@ def _save_discovery_snapshot(store, items):
 
 
 @app.get("/api/discover")
-def api_discover(keyword: str, max_channels: int = 15):
+def api_discover(request: Request, keyword: str, max_channels: int = 15):
     """🔎 채널 발굴 — 카테고리 키워드로 '내가 모르던 채널' 중 최근 48h 댓글이
-    빠르게 쌓이는 릴스를 캐치(기존 랭킹엔진 재사용)."""
+    빠르게 쌓이는 릴스를 캐치(기존 랭킹엔진 재사용).
+
+    ★관리자(사장님 cid0) 전용(2026-07-23) — 검색+릴스수집+프로필 = Apify 유료
+    크롤이라 수집·전수조사와 같은 관리자 가드를 건다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
     keyword = (keyword or "").strip()
     if not keyword:
         return JSONResponse(status_code=422, content={"ok": False, "error": "키워드를 입력하세요"})
@@ -663,10 +669,18 @@ _DISCOVER_CATEGORIES = ["#주방템", "#살림템", "#인테리어", "#자취템
 
 
 @app.get("/api/discover/update")
-def api_discover_update(days: int = 2, max_total: int = 40, accumulate: bool = False):
+def api_discover_update(request: Request, days: int = 2, max_total: int = 40,
+                        accumulate: bool = False):
     """🔄 업데이트 시작(비동기) — 몇 분 걸리는 수집을 백그라운드 스레드로 돌리고
     즉시 반환한다(2026-07-12, 동기처리 시 프론트가 몇 분 멈추고 배포 재시작에
-    응답이 깨지던 문제). 프론트는 /api/discover/status를 폴링해 진행/결과 확인."""
+    응답이 깨지던 문제). 프론트는 /api/discover/status를 폴링해 진행/결과 확인.
+
+    ★관리자(사장님 cid0) 전용(2026-07-23) — 1회에 Apify run 최대 47개(검색6+
+    채널당 릴스run+프로필1)가 도는 유료 크롤. 결과 피드는 전 회원 공유라
+    회원이 눌러야 할 이유도 없다(보기는 /api/discover/feed로 그대로 열림)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
     from shopping_shorts import discover_jobs
     days = max(1, min(int(days), 14))
     max_total = max(10, min(int(max_total), 120))
@@ -1076,9 +1090,21 @@ def _bank_ingest_collected_bg(db_path, items, collected_at):
         {"status": "running", "date": day, "collected_at": collected_at}, ensure_ascii=False))
     try:
         rep = pattern_bank.ingest_collected(store, items)
+        # 훅수확 이관(2026-07-23): 밤4시 크론이 아니라 수집 버튼이 우승작 훅을 즉시 수확한다.
+        try:
+            from shopping_shorts import daily_batch
+            rep["harvested_hooks"] = daily_batch.harvest_hooks(store)
+        except Exception as he:  # noqa: BLE001
+            print(f"bank ingest(harvest_hooks) 실패: {he}")
+            rep["harvested_hooks"] = 0
         store.auto_approve_style_buckets()   # 스타일 부품 즉시 사용가능(위키 적재와 동일)
         rep.update({"status": "done", "date": day, "collected_at": collected_at})
         store.set_setting("bank_ingest_last", _json.dumps(rep, ensure_ascii=False))
+        # 검열은 따로도 저장(패널이 흡수리포트와 분리해 읽기 쉽게).
+        audit = rep.get("gemini_audit")
+        if audit is not None:
+            store.set_setting("gemini_audit_last", _json.dumps(
+                {**audit, "date": day, "collected_at": collected_at}, ensure_ascii=False))
     except Exception as e:  # noqa: BLE001
         print(f"bank ingest(collected) 실패: {e}")
         store.set_setting("bank_ingest_last", _json.dumps(
@@ -2033,8 +2059,11 @@ def api_mix_tts_regen(job_id: str, beat_idx: int, body: dict, background_tasks: 
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
-    if job.get("status") in ("rendering", "removing_subtitles"):
-        return JSONResponse(status_code=409, content={"ok": False, "error": "렌더 중에는 재생성할 수 없어요"})
+    # 렌더 단계뿐 아니라 '이 음성으로 전체 생성'(active stage "tts") 등 활성 단계 전부에서 막는다.
+    # 안 막으면 전체생성 백그라운드가 이 비트 새 톤 mp3를 job 기본 보이스로 덮어써 톤 변경이 사라진다
+    # (2026-07-23 진단 — 스크린샷 "전체 음성 생성 중…" 상태에서 톤 바꿔도 적용 안 됨).
+    if job.get("status") in _MIX_ACTIVE_STAGES + ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409, content={"ok": False, "error": "생성·렌더 중에는 재생성할 수 없어요"})
     # job의 voice 스냅샷(model_id·silence_trim·naturalize_profile 등) 위에 UI가 보낸
     # 톤/성우 키만 덮어쓴다 — 통째로 새 dict를 만들면 _voice_params가 나머지를 기본값으로
     # 채워 재생성 비트만 소리가 달라진다("작업대 소리 ≠ 렌더 소리", mix_pipeline._voice_params
@@ -3172,6 +3201,9 @@ if not _AUTH_ON:
     print("⚠️ [보안] DASH_PASS 미설정 → 인증·유료게이트 OFF(전원 full/admin). "
           "운영이면 DASH_PASS를 반드시 설정하세요.", file=_sys.stderr)
 _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico", "/healthz",
+               # PWA: 매니페스트는 브라우저가 쿠키 없이(credentials omit) fetch한다 → 공개 필수.
+               "/manifest.webmanifest", "/apple-touch-icon.png",
+               "/icon-192.png", "/icon-512.png", "/icon-maskable-512.png",
                "/insta_fill_comment.user.js",
                # 유저스크립트(insta_fill_comment)가 인스타 탭에서 전송 감지 시 GM_xmlhttpRequest로
                # 완료기록을 POST한다. 인증쿠키 없이 오므로 허용. 마킹은 저위험(되돌리기 가능).
@@ -3267,17 +3299,20 @@ _GOOGLE_SVG = ('<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6
 
 # 시그니처 심볼(브랜딩 보드 v1, out/브랜딩_CI_숏템탑스.html) — 박스(제작소)에서 랭킹된
 # 아이템이 쌓여 올라오고 맨 위 한 칸만 골드=TOP 인기템. 박스·대량생산·인기를 한 심볼에.
-_LOGO_SVG = (
+_LOGO_SVG = (  # v2 엠블럼(2026-07-23): 다크 디스크+민트 링, 스택 3단(TOP=골드)+상승 화살촉
     '<svg class="sym" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템박스">'
-    '<defs><linearGradient id="lmg" x1="0" y1="0" x2="1" y2="1">'
+    '<defs><radialGradient id="ldk" cx="50%" cy="42%" r="65%">'
+    '<stop offset="0" stop-color="#1c2b25"/><stop offset="1" stop-color="#0b120f"/></radialGradient>'
+    '<linearGradient id="lmg" x1="0" y1="0" x2="1" y2="1">'
     '<stop offset="0" stop-color="#6ff0d6"/><stop offset="1" stop-color="#1f9e7a"/></linearGradient>'
     '<linearGradient id="lgg" x1="0" y1="0" x2="1" y2="1">'
     '<stop offset="0" stop-color="#ffe1a1"/><stop offset="1" stop-color="#f0a93a"/></linearGradient></defs>'
-    '<rect x="4" y="4" width="56" height="56" rx="16" stroke="url(#lmg)" stroke-width="3"/>'
-    '<rect x="16" y="40" width="32" height="8" rx="3" fill="#1f9e7a" opacity=".55"/>'
-    '<rect x="20" y="29" width="24" height="8" rx="3" fill="#6ff0d6" opacity=".9"/>'
-    '<rect x="24" y="18" width="16" height="8" rx="3" fill="url(#lgg)"/>'
-    '<path d="M32 11.5l3 4.5h-6l3-4.5z" fill="url(#lgg)"/></svg>')
+    '<circle cx="32" cy="32" r="29" fill="url(#ldk)"/>'
+    '<circle cx="32" cy="32" r="29" stroke="url(#lmg)" stroke-width="2.4"/>'
+    '<rect x="17.6" y="40" width="28.8" height="6" rx="2.8" fill="#1d8a68"/>'
+    '<rect x="20.8" y="32" width="22.4" height="6" rx="2.8" fill="url(#lmg)"/>'
+    '<rect x="24" y="24" width="16" height="6" rx="2.8" fill="url(#lgg)"/>'
+    '<path d="M32 13.8l8 8.2H24l8-8.2z" fill="url(#lgg)"/></svg>')
 
 
 def _fill_brand(s: str) -> str:
@@ -3294,6 +3329,7 @@ def _fill_brand(s: str) -> str:
 # ── 공개 대문(랜딩) — 비로그인 방문자용. 민트×블랙, 한 페이지(B). ──
 _LANDING_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png">
 <title>__NAME__ — 폰으로 5분, 편집 몰라도 파는 쇼츠 완성</title>
 <link rel=preconnect href="https://fonts.googleapis.com">
 <link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
@@ -3480,57 +3516,119 @@ setTimeout(function(){document.querySelectorAll('.hero [data-to]').forEach(cu);}
 </body></html>"""
 
 
-# ── 로그인 페이지 — 민트×블랙(구조는 기존 유지: 구글버튼+운영자 접이식). ──
+# ── 로그인 페이지 — "프로그램 런처" 연출 v3(2026-07-23 사장님): 엔진 부팅 로그(모듈 로드
+#    타임라인+%카운터+링 스피너) 후 아이디·비번 폼이 메인, 구글은 보조 버튼.
+#    /api/login이 관리자(env)+고객(DB) 둘 다 검증하므로 폼 하나로 충분.
+#    JS 꺼짐/reduced-motion이면 부팅 생략·전부 즉시 표시.
 _LOGIN_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1"><title>__NAME__ 로그인</title>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png"><title>__NAME__ 로그인</title>
 <link rel=preconnect href="https://fonts.googleapis.com">
 <link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel=stylesheet>
 <style>*{box-sizing:border-box}
 body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;word-break:keep-all;
-background:radial-gradient(900px 500px at 80% -10%,rgba(111,240,214,.10),transparent 60%),#0b0f14;
+background:radial-gradient(1000px 560px at 50% -18%,rgba(111,240,214,.11),transparent 62%),
+radial-gradient(700px 420px at 88% 108%,rgba(255,207,111,.05),transparent 55%),#090d10;
 font-family:'Noto Sans KR',system-ui,sans-serif;color:#e8f0ee}
-.box{width:340px;padding:36px 30px;text-align:center}
-.logo{display:flex;align-items:center;justify-content:center;gap:13px;margin-bottom:10px}
-.logo .sym{width:50px;height:50px;flex:none}
-.logo .wm{display:flex;flex-direction:column;line-height:1;text-align:left}
-.logo .nm{font-family:'Black Han Sans',sans-serif;font-size:33px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);-webkit-background-clip:text;background-clip:text;color:transparent}
-.logo .en{font-family:ui-monospace,monospace;font-size:11px;letter-spacing:3.2px;color:#7a9090;margin-top:3px}
-h1{font-size:22px;margin:26px 0 8px;font-weight:700}
-.sub{color:#6ff0d6;font-size:13px;margin-bottom:26px;line-height:1.6}
-.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;
-background:#111722;border:1px solid #1e2735;border-radius:10px;color:#e8f0ee;font-size:15px;
-font-weight:700;cursor:pointer;text-decoration:none}
+.box{width:400px;max-width:calc(100vw - 24px);padding:38px 32px 26px;text-align:center;
+background:linear-gradient(180deg,#101a1c,#0c1214);border:1px solid #1e2b2c;border-radius:24px;
+box-shadow:0 34px 90px rgba(0,0,0,.6),0 0 0 1px rgba(111,240,214,.05) inset;
+animation:cardin .5s ease}
+@keyframes cardin{from{opacity:0;transform:scale(.96) translateY(8px)}}
+.emwrap{position:relative;width:94px;height:94px;margin:0 auto}
+.emwrap .sym{position:absolute;inset:8px;width:78px;height:78px;filter:drop-shadow(0 0 16px rgba(111,240,214,.30))}
+@media (prefers-reduced-motion:no-preference){.emwrap .sym{animation:lpulse 3.2s ease-in-out infinite}}
+@keyframes lpulse{50%{filter:drop-shadow(0 0 30px rgba(111,240,214,.55))}}
+.ring{position:absolute;inset:0;border-radius:50%;border:2px solid transparent;
+border-top-color:#6ff0d6;border-right-color:rgba(111,240,214,.35);opacity:0;transition:opacity .3s}
+body.booting .ring{opacity:1;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.wm{display:flex;flex-direction:column;line-height:1;align-items:center;margin-top:13px}
+.nm{font-family:'Black Han Sans',sans-serif;font-size:31px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.en{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:3.4px;color:#7a9090;margin-top:5px}
+.ver{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:2px;color:#3f5a54;margin-top:9px}
+.boot{max-height:120px;margin:18px 0 2px;transition:opacity .4s ease,max-height .45s ease .2s,margin .45s ease .2s;overflow:hidden;text-align:left}
+.boot.done{opacity:0;max-height:0;margin:0}
+.bhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+.blabel{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:1.6px;color:#47605a}
+.bpct{font-family:ui-monospace,monospace;font-size:12px;color:#6ff0d6}
+.bar{height:5px;background:#0a1210;border:1px solid #1c2a28;border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:99px;transition:width .3s ease;
+background:linear-gradient(90deg,#1f9e7a,#6ff0d6,#1f9e7a);background-size:200% 100%;animation:flow 1.1s linear infinite}
+@keyframes flow{to{background-position:-200% 0}}
+.blog{font-family:ui-monospace,monospace;font-size:11px;line-height:1.75;color:#527068;margin-top:8px;height:58px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
+.blog .ok{color:#49c9a9}.blog .cur{color:#9fe8d6}
+.blog .cur:after{content:'▌';margin-left:2px;animation:blink .7s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+.auth{transition:opacity .5s ease,transform .5s ease}
+body.booting .auth{opacity:0;transform:translateY(12px);pointer-events:none}
+h1{font-size:18px;margin:16px 0 14px;font-weight:700}
+.lform input{width:100%;margin:5px 0;padding:13px 14px;background:#0a1113;border:1px solid #1e2b2c;
+border-radius:11px;color:#e8f0ee;font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s}
+.lform input:focus{border-color:#2f6a5c;box-shadow:0 0 0 3px rgba(111,240,214,.08)}
+.lbtn{width:100%;margin-top:10px;padding:13px;border:0;border-radius:11px;cursor:pointer;
+font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:15px;color:#08110e;
+background:linear-gradient(135deg,#6ff0d6,#1f9e7a);box-shadow:0 6px 22px rgba(31,158,122,.35);
+transition:transform .12s,box-shadow .12s}
+.lbtn:hover{transform:translateY(-1px);box-shadow:0 9px 28px rgba(31,158,122,.45)}
+.or{display:flex;align-items:center;gap:12px;margin:16px 0 10px;color:#3f5050;font-size:11px}
+.or:before,.or:after{content:'';flex:1;height:1px;background:#1a2626}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:11px;
+background:#101820;border:1px solid #1e2735;border-radius:11px;color:#b7c6c2;font-size:13px;
+font-weight:700;cursor:pointer;text-decoration:none;transition:background .15s,border-color .15s}
 .gbtn:hover{background:#16202e;border-color:#2a3647}
-.gbtn svg{width:18px;height:18px}
-.err{color:#e0623d;font-size:12px;margin-top:16px;min-height:14px;line-height:1.6}
-.home{display:block;color:#5f7373;font-size:12px;margin-top:22px;text-decoration:none}
-.home:hover{color:#6ff0d6}
-.atoggle{color:#3f5050;font-size:11px;margin-top:30px;cursor:pointer;background:none;border:0}
-.aform{display:none;margin-top:14px}.aform.show{display:block}
-.aform input{width:100%;margin:5px 0;padding:10px;background:#0a0f16;border:1px solid #1e2735;
-border-radius:8px;color:#eee;font-size:13px}
-.aform button{width:100%;margin-top:8px;padding:10px;background:#16202e;color:#6ff0d6;border:1px solid #2a3647;
-border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}</style></head>
+.gbtn svg{width:16px;height:16px}
+.err{color:#e0623d;font-size:12px;margin-top:13px;min-height:14px;line-height:1.6}
+.home{display:block;color:#5f7373;font-size:12px;margin-top:16px;text-decoration:none}
+.home:hover{color:#6ff0d6}</style></head>
 <body><div class=box>
-<div class=logo>__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></div>
+<div class=emwrap><div class=ring></div>__LOGO_SVG__</div>
+<div class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></div>
+<div class=ver>__NAME_EN__ STUDIO</div>
+<div class=boot id=boot>
+<div class=bhead><span class=blabel>SYSTEM BOOT</span><span class=bpct id=bpct>0%</span></div>
+<div class=bar><i id=bbar></i></div>
+<div class=blog id=blog></div>
+</div>
+<div class=auth>
 <h1>로그인</h1>
-<div class=sub>구글 계정으로 로그인하세요<br>처음이면 <b>무료 체험</b>이 바로 시작돼요</div>
+<form class=lform method=post action=/api/login>
+<input name=user placeholder="아이디 (이메일)" autocomplete=username>
+<input name=pass type=password placeholder=비밀번호 autocomplete=current-password>
+<button class=lbtn>로그인 →</button></form>
+<div class=or>또는</div>
 <a class=gbtn href="/auth/google/login">
 __GOOGLE_SVG__
-Google 계정으로 로그인</a>
+Google 계정으로 계속하기</a>
 <div class=err>__ERR__</div>
 <a class=home href="/">← 홈으로 돌아가기</a>
-<button class=atoggle onclick="document.getElementById('af').classList.toggle('show')">운영자 로그인</button>
-<form class=aform id=af method=post action=/api/login>
-<input name=user placeholder=아이디 autocomplete=username>
-<input name=pass type=password placeholder=비밀번호 autocomplete=current-password>
-<button>운영자 로그인</button></form>
-</div></body></html>"""
+</div>
+</div>
+<script>(function(){
+if(matchMedia('(prefers-reduced-motion:reduce)').matches){document.getElementById('boot').classList.add('done');return;}
+var b=document.body;b.classList.add('booting');
+var bar=document.getElementById('bbar'),pct=document.getElementById('bpct'),lg=document.getElementById('blog');
+var steps=[[9,'코어 부팅'],[24,'AI 엔진 초기화'],[42,'트렌드 데이터 동기화'],[61,'대본 생성 모듈 로드'],[78,'렌더 파이프라인 웜업'],[92,'보안 채널 연결'],[100,'준비 완료']];
+var i=0,shown=0,tk=null;
+function tick(){shown=Math.min(shown+3,steps[Math.min(i,steps.length-1)][0]);pct.textContent=shown+'%';}
+tk=setInterval(tick,40);
+function nx(){
+var cur=lg.querySelector('.cur');if(cur){cur.className='ok';cur.textContent='  ✓ '+cur.dataset.t;}
+if(i>=steps.length){clearInterval(tk);pct.textContent='100%';
+setTimeout(function(){b.classList.remove('booting');document.getElementById('boot').classList.add('done');},260);return;}
+bar.style.width=steps[i][0]+'%';
+var d=document.createElement('div');d.className='cur';d.dataset.t=steps[i][1];d.textContent='  › '+steps[i][1];
+lg.appendChild(d);while(lg.children.length>3)lg.removeChild(lg.firstChild);
+i++;setTimeout(nx,i===steps.length?460:300);}
+setTimeout(nx,160);
+})();</script>
+</body></html>"""
 
 # ── 요금·이용권(상품 상세) — 공개 페이지. 구성·가격은 플레이스홀더(확정 시 값만 교체). ──
 _PRICING_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png">
 <title>__NAME__ — 요금 · 이용권</title>
 <link rel=preconnect href="https://fonts.googleapis.com">
 <link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
@@ -3658,6 +3756,7 @@ a{text-decoration:none;color:inherit}
 # ── 내 계정(유저 자기 설정) — 로그인 전용. /api/me로 플랜·한도·연락처를 채운다. ──
 _ACCOUNT_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png">
 <title>__NAME__ — 내 계정</title>
 <link rel=preconnect href="https://fonts.googleapis.com">
 <link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
@@ -3735,6 +3834,7 @@ _LANDING_HTML = _fill_brand(_LANDING_TMPL)
 
 _PENDING_HTML = _fill_brand("""<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png">
 <title>승인 대기중 · __NAME__</title>
 <style>body{font-family:-apple-system,'Malgun Gothic',sans-serif;background:#0f1115;color:#e8eaed;
 margin:0;display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center}
@@ -3750,6 +3850,7 @@ text-decoration:none;font-size:14px}</style></head>
 # 실제 로그아웃은 이 폼의 POST만.
 _LOGOUT_CONFIRM_HTML = _fill_brand("""<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png">
 <title>로그아웃 · __NAME__</title>
 <style>body{font-family:-apple-system,'Malgun Gothic',sans-serif;background:#0f1115;color:#e8eaed;
 margin:0;display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center}
@@ -3766,7 +3867,8 @@ _PRICING_HTML = _fill_brand(_PRICING_TMPL)
 _ACCOUNT_HTML = _fill_brand(_ACCOUNT_TMPL)
 
 _SIGNUP_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1"><title>쇼핑쇼츠 가입</title>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png"><title>쇼핑쇼츠 가입</title>
 <style>body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;
 background:#0b0b0e;font-family:system-ui,'Noto Sans KR',sans-serif}
 .box{background:#16161c;border:1px solid #2a2a30;border-radius:14px;padding:32px 28px;width:280px}
@@ -3791,7 +3893,10 @@ a{color:#7db4ff;font-size:12px;text-decoration:none}
 
 
 @app.get("/login", response_class=HTMLResponse)
-def _login_page(e: str = ""):
+def _login_page(request: Request, e: str = ""):
+    # 이미 로그인된 세션이면 홈으로 — 앱 런처(작은 창)가 /login을 직접 열어도 재로그인 강요 안 함.
+    if _AUTH_ON and _verify_session(request.cookies.get("dash_auth", "")) is not None:
+        return RedirectResponse("/", status_code=303)
     if e == "1":
         msg = "아이디 또는 비밀번호가 틀렸습니다"
     elif e:   # 구글 콜백 등에서 온 안내 — XSS 방지 이스케이프
@@ -6130,6 +6235,14 @@ def api_pattern_spine_add(body: dict):
 
 # 정적 프론트 (마운트는 맨 마지막)
 _STATIC = Path(__file__).parent / "static"
+
+
+# PWA 매니페스트 — StaticFiles의 mimetypes 추측(.webmanifest 미등록 환경=octet-stream)에
+# 맡기지 않고 표준 타입을 명시한다. 마운트보다 먼저 등록돼 우선 매칭.
+@app.get("/manifest.webmanifest", include_in_schema=False)
+def _pwa_manifest():
+    return FileResponse(_STATIC / "manifest.webmanifest",
+                        media_type="application/manifest+json")
 
 # 클린 URL — /library, /mix 등 확장자(.html) 없이 접근. (index는 루트 '/'로 자동)
 # 기존 /xxx.html 경로도 아래 StaticFiles 마운트로 계속 동작(백워드 호환).

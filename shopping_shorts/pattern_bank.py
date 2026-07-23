@@ -17,7 +17,7 @@ import sys
 
 from google.genai import types
 
-from shopping_shorts import comment_gen
+from shopping_shorts import comment_gen, gemini_audit
 from shopping_shorts.store import PATTERN_BUCKETS
 
 _MODEL = comment_gen._MODEL
@@ -101,13 +101,22 @@ def _vault_fallback(prompt, schema, max_tries=4):
     return None
 
 
-def _default_call(prompt, schema, max_key_tries=3):
-    """comment_gen 전용 키풀 로테이션으로 JSON 생성(structure_analyze 방식).
-    전용 풀이 비었으면 key_vault 예비풀로 폴백. 무키/실패면 None."""
+def _default_call(prompt, schema, max_key_tries=None):
+    """comment_gen 전용 키풀 라운드로빈으로 JSON 생성(structure_analyze 방식).
+    전용 풀이 비었으면 key_vault 예비풀로 폴백. 무키/실패면 None.
+
+    ★2026-07-23 수정 — 호출마다 _next_live_key_and_idx로 다음 키를 쓴다(부하 분산).
+    분당 429(PerMinute)는 일시적이라 그 키를 영구 제외하지 않고 다음 키로 재시도한다
+    (예전엔 즉시 None → 45키 있어도 1키만 몰려 성공률 7%였다). 일일 소진·계정 비활성만
+    영구 제외(_mark_key_exhausted)."""
     if not comment_gen.SHORTS_GEMINI_KEYS:
         return _vault_fallback(prompt, schema)
+    # 라이브 키 수만큼(최소 3, 상한 12) 다른 키로 시도 — 분당 한도에 걸린 키를 건너뛴다.
+    if max_key_tries is None:
+        live_n = len(comment_gen._live_key_indices())
+        max_key_tries = max(3, min(live_n, 12))
     for _ in range(max_key_tries):
-        key, ki = comment_gen._current_key_and_idx()
+        key, ki = comment_gen._next_live_key_and_idx()
         if key is None:
             return None
         try:
@@ -120,7 +129,9 @@ def _default_call(prompt, schema, max_key_tries=3):
         except Exception as e:  # noqa: BLE001 — 추출 실패는 치명적 아님(빈 dict로 처리)
             if (comment_gen.key_vault.is_daily_exhausted_error(e)
                     or comment_gen.key_vault.is_account_disabled_error(e)):
-                comment_gen._mark_key_exhausted(ki)
+                comment_gen._mark_key_exhausted(ki)   # 일일 소진·계정 비활성 → 그날 제외
+                continue
+            if comment_gen.key_vault.is_quota_error(e):  # 분당 429 등 일시적 → 다른 키로 재시도(제외 안 함)
                 continue
             print(f"pattern_bank._default_call: {e!r}", file=sys.stderr)
             return None
@@ -157,10 +168,15 @@ def ingest_script(store, full_text, source="manual", url="",
     source_id = store.add_pattern_source(
         source, url, full_text, product_category=product_category,
         category_source=category_source, perf=perf, structure=buckets)
+    from shopping_shorts.hook_harvest import is_engagement_bait
     added = 0
+    hook_bait_blocked = 0
     for bucket in STYLE_BUCKETS:
         for text in buckets.get(bucket) or []:
             if not (text or "").strip():
+                continue
+            if bucket == "hook" and is_engagement_bait(text):   # 참여유도 멘트는 훅 오염 — 차단
+                hook_bait_blocked += 1
                 continue
             store.add_pattern_item(bucket, text, source_id=source_id)
             added += 1
@@ -171,7 +187,8 @@ def ingest_script(store, full_text, source="manual", url="",
             store.add_pattern_item(bucket, text, slot_role="template", source_id=source_id)
             added += 1
     # buckets: 적재 요약(수집 자동적재의 by_bucket 보고용) — 기존 호출부는 source_id/added만 읽어 무해.
-    return {"source_id": source_id, "added": added, "buckets": buckets}
+    return {"source_id": source_id, "added": added, "buckets": buckets,
+            "hook_bait_blocked": hook_bait_blocked}
 
 
 def ingest_negative(store, text, bucket):
@@ -235,6 +252,11 @@ def ingest_collected(store, items, top_n=None, min_kr=None, ingest_fn=None,
     report = {"considered": len(cand), "added_sources": 0, "added_items": 0,
               "skipped_dup": 0, "skipped_short": max(0, len(items or []) - len(cand)),
               "by_bucket": {}}
+    # 제미니 검열 계측 — attempted(실제 호출) 대비 succeeded, 성공분 구조, 훅 스팸.
+    attempted = 0
+    structures = []          # 성공 소스의 structure_json(완성도 판정용)
+    hook_total = 0           # 추출된 훅 총수(차단 전)
+    hook_bait = 0            # 그중 스팸으로 차단한 수
     for it in cand:
         if report["added_sources"] >= top_n:
             break
@@ -244,6 +266,7 @@ def ingest_collected(store, items, top_n=None, min_kr=None, ingest_fn=None,
             report["skipped_dup"] += 1
             continue
         seen.add(fp)
+        attempted += 1
         try:
             perf = perf_fn(it)
             res = ingest_fn(store, caption, source="collect",
@@ -252,11 +275,18 @@ def ingest_collected(store, items, top_n=None, min_kr=None, ingest_fn=None,
                             category_source=None, perf=perf, call=call)
         except Exception as e:
             print(f"ingest_collected(item): {e!r}", file=sys.stderr)
-            continue
+            continue                                  # 실패 = attempted엔 셌으나 succeeded엔 안 셈
         if res and res.get("source_id"):
             report["added_sources"] += 1
             report["added_items"] += res.get("added", 0)
-            for bucket, texts in (res.get("buckets") or {}).items():
+            structs = res.get("buckets") or {}
+            structures.append(structs)
+            hook_total += len(structs.get("hook") or [])   # 추출 원본(스팸 포함)
+            hook_bait += res.get("hook_bait_blocked", 0)    # 그중 차단분(부분집합)
+            for bucket, texts in structs.items():
                 if texts:
                     report["by_bucket"][bucket] = report["by_bucket"].get(bucket, 0) + len(texts)
+    report["gemini_audit"] = gemini_audit.compute_audit(
+        attempted=attempted, succeeded=report["added_sources"],
+        structures=structures, hook_total=hook_total, hook_bait=hook_bait)
     return report
