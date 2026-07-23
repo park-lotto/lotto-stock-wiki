@@ -3,6 +3,7 @@ import json
 import re
 import subprocess
 import sys
+import time
 import urllib.parse
 import urllib.request
 import uuid
@@ -103,19 +104,31 @@ def _download_instagram(url, dest_dir):
     return path, raw.get("caption", "")
 
 
-def _download_ytdlp(url, dest_dir):
-    """유튜브/틱톡 다운로드 → (mp4경로, caption). yt-dlp 경로는 캡션 없음(빈 문자열)."""
+def _download_ytdlp(url, dest_dir, max_attempts=3):
+    """유튜브/틱톡 다운로드 → (mp4경로, caption). yt-dlp 경로는 캡션 없음(빈 문자열).
+
+    틱톡은 JS 챌린지·IP 레이트리밋으로 추출이 간헐적으로 깨진다(rehydration 에러) — 같은 URL도
+    됐다 안 됐다 한다(2026-07-23 서버 실측: 같은 영상이 성공↔실패 반복, 버전·쿠키·curl_cffi 다 정상).
+    단발 호출이면 그 한 번의 실패가 그대로 사용자 에러가 되므로, 백오프를 두고 재시도해 간헐적
+    실패를 자가치유한다. 비공개·삭제 영상은 매 시도 같은 에러라 max_attempts 뒤 그대로 실패한다."""
     out = str(Path(dest_dir) / (uuid.uuid4().hex[:8] + ".%(ext)s"))
-    r = subprocess.run(
-        [sys.executable, "-m", "yt_dlp", "-f", "mp4/bestvideo+bestaudio/best",
-         "--no-playlist", *_cookies_arg(url), "-o", out, url],
-        capture_output=True, text=True, timeout=300)
-    if r.returncode != 0:
-        raise RuntimeError(f"yt-dlp 실패({url}): {r.stderr[-300:]}")
-    files = sorted(Path(dest_dir).glob(Path(out).stem.split('.')[0] + "*"))
-    if not files:
-        raise RuntimeError(f"yt-dlp 산출물 없음: {url}")
-    return str(files[0]), ""
+    stem = Path(out).stem.split('.')[0]
+    last_err = ""
+    for attempt in range(max_attempts):
+        r = subprocess.run(
+            [sys.executable, "-m", "yt_dlp", "-f", "mp4/bestvideo+bestaudio/best",
+             "--no-playlist", *_cookies_arg(url), "-o", out, url],
+            capture_output=True, text=True, timeout=300)
+        if r.returncode == 0:
+            files = sorted(Path(dest_dir).glob(stem + "*"))
+            if files:
+                return str(files[0]), ""
+            last_err = "산출물 없음"
+        else:
+            last_err = r.stderr[-300:]
+        if attempt < max_attempts - 1:
+            time.sleep(2 * (attempt + 1))   # 2s·4s 백오프 — 틱톡 챌린지/레이트리밋 완화
+    raise RuntimeError(f"yt-dlp 실패({url}, {max_attempts}회 시도): {last_err}")
 
 
 def _is_direct_video(u):
