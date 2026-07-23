@@ -7,14 +7,12 @@
          visual-style.html(A안 네온) · layout.html(오브 단계바) · analysis-show.html(구조 스트립·분석 극장)
    ============================================================ */
 
-:root{ --bg:#070b14; --panel:#0d1420; --line:#243244; --txt:#e7ecf7; --sub:#8b97b0;
-  --mint:#3ee0bf; --aurora:#8c6ef0; --gold:#facc6b; --danger:#ff6b80; }
-:root[data-theme="light"]{ --bg:#eef2fb; --panel:#fff; --txt:#0b1220; --sub:#5a6580; }
+:root{ --mint:#3ee0bf; --aurora:#8c6ef0; }
 
 /* ── 오로라 배경 ── */
 .aurora-bg{ position:fixed; inset:0; z-index:-1; background:
   radial-gradient(60% 50% at 20% 15%, rgba(62,224,191,.10), transparent 60%),
-  radial-gradient(50% 45% at 85% 20%, rgba(140,110,240,.12), transparent 60%), var(--bg);
+  radial-gradient(50% 45% at 85% 20%, rgba(140,110,240,.12), transparent 60%), #070b14;
   animation:auroraDrift 22s ease-in-out infinite alternate; }
 @keyframes auroraDrift{ to{ background-position: 8% 4%, -6% 6%, 0 0; } }
 @media(prefers-reduced-motion:reduce){ .aurora-bg{ animation:none; } }
@@ -27,7 +25,7 @@
 .orb:hover{ transform:scale(1.12); }
 .orb.on{ background:linear-gradient(135deg,#6ef0d4,#14b8a6); border-color:transparent;
   color:#04201b; box-shadow:0 0 14px rgba(62,224,191,.6); animation:orbPulse 1.8s infinite; }
-.orb.done{ background:var(--gold); border-color:var(--gold); color:#231a00; }
+.orb.done{ background:#facc6b; border-color:#facc6b; color:#231a00; }
 .orb.locked{ cursor:not-allowed; opacity:.6; }
 @keyframes orbPulse{ 0%,100%{box-shadow:0 0 10px rgba(62,224,191,.5)} 50%{box-shadow:0 0 22px rgba(62,224,191,.9)} }
 @media(prefers-reduced-motion:reduce){ .orb.on{ animation:none; } }

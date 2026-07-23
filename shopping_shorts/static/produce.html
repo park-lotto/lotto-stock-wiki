@@ -311,6 +311,7 @@
       .cp-compare .cp-cell,.cp-arrow,.chip{opacity:1}
     }
   </style>
+  <link rel="stylesheet" href="theme.css?v=1">
 </head>
 <body>
   <div class="aurora-bg"></div>
@@ -4440,7 +4441,6 @@ window.IS_ADMIN=false;
 fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{ if(d && d.customer_id===0){ window.IS_ADMIN=true;
   const b=document.getElementById('openVoiceTune'); if(b) b.style.display=''; } }).catch(()=>{});
 </script>
-<link rel="stylesheet" href="theme.css?v=1">
 <script src="/loader.js"></script>
 <script src="/sidebar.js?v=2"></script>
 </body>
