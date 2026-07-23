@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_0700_Agentic Commerce와 A2A Economy, 블록체인의 역할은 ...md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "양현경",
+    "report_date": "2026.06.09",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "미국 5월 고용지표",
+      "미 연준 연내 기준금리 인상 가능성",
+      "글로벌 위험자산 선호심리 위축"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.06.03",
+        "event": "비자·마스터카드·스트라이프 '스테이블코인 동맹'…신규 플랫폼 출시"
+      },
+      {
+        "date": "2026.06.06",
+        "event": "비트코인 결국 6만달러 붕괴…'반토막 쇼크'에 투자자들 패닉"
+      },
+      {
+        "date": "2026.06.07",
+        "event": "스트래티지·비트마인 직격탄…기업 가상자산 보유 평가손실 눈덩이"
+      },
+      {
+        "date": "2026.06.07",
+        "event": "카드사가 가상자산거래소 주주로?…삼성카드 두나무 진입 목적은"
+      },
+      {
+        "date": "2026.06.08",
+        "event": "이재명 '디지털자산 허브' 공약 1년 … 육성은 정체, 규제만 전속력"
+      }
+    ],
+    "top_picks": [
+      "로빈후드",
+      "Visa",
+      "Mastercard",
+      "Stripe",
+      "Coinbase",
+      "구글"
+    ],
+    "risk": "가상자산 현물 ETF 순매도세 지속, 비트코인 DAT 기업인 Strategy가 배당재원을 마련하기 위해 비트코인 매도한 점 등 가상자산 시장의 하방 압력",
+    "quote": "단기적으로 Agentic Commerce에서 블록체인은 선택적 결제수단으로 활용될 것으로 예상. 다만, 중장기적으로 Agent-to-Agent Economy에서 블록체인은 핵심 결제 인프라로 성장할 것으로 전망"
+  }
+}
