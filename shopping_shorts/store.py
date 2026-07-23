@@ -2702,6 +2702,21 @@ class Store:
                 out["ctas"].append(cta)
         return out
 
+    def append_bank_usage(self, record, cap=50):
+        """생성 순응 job 레코드를 bank_usage_recent 링버퍼에 append(최근 cap개 유지). 반환=현재 리스트."""
+        import json
+        raw = self.get_setting("bank_usage_recent", "")
+        try:
+            lst = json.loads(raw) if raw else []
+        except Exception:
+            lst = []
+        if not isinstance(lst, list):
+            lst = []
+        lst.append(record)
+        lst = lst[-cap:]
+        self.set_setting("bank_usage_recent", json.dumps(lst, ensure_ascii=False))
+        return lst
+
     # ── 틱톡 키워드검색 남용/비용 가드 (2026-07-14) ──
     # 별도 테이블을 만들지 않고 settings에 네임스페이스 키로 눌러쓴다:
     #   tiktok_daily:{customer_id}:{YYYY-MM-DD} → 그 날 그 고객의 수집 횟수

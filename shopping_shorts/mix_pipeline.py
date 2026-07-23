@@ -425,6 +425,36 @@ def _resolve_backbone_forced(job, extracts):
     return keys[idx] if 0 <= idx < len(keys) else None
 
 
+def _record_bank_usage(store, snapshot, bank_context, rec, candidates,
+                       sample_n=10, cap=50, call=None):
+    """생성 순응 검열 레코드 1건을 만들어 링버퍼에 쌓고 집계를 저장한다(부가 관측, 실패 무해).
+    은행 주입 job 중 sample_n에 1편만 제미니 순응 채점(counter % N == 1)."""
+    from shopping_shorts import bank_usage_audit, bank_compliance
+    plan = (rec or {}).get("plan") or {}
+    story = (rec or {}).get("story") or {}
+    conf = bank_usage_audit.structural_conformance(plan, snapshot, story)
+    jsnap = bank_usage_audit.judge_snapshot(candidates)
+    compliance = None
+    if not snapshot.get("empty"):
+        counter = 0
+        try:
+            counter = int(store.get_setting("bank_compliance_counter", "0") or "0")
+        except (TypeError, ValueError):
+            counter = 0
+        counter += 1
+        store.set_setting("bank_compliance_counter", str(counter))
+        if counter % sample_n == 1:
+            if call is None:
+                from shopping_shorts import pattern_bank
+                call = pattern_bank._default_call
+            compliance = bank_compliance.judge_compliance(bank_context, plan.get("beats"), call)
+    record = {"snapshot": snapshot, "conformance": conf, "judge": jsnap, "compliance": compliance}
+    recent = store.append_bank_usage(record, cap=cap)
+    import json as _json
+    agg = bank_usage_audit.compute_usage_audit(recent)
+    store.set_setting("bank_usage_audit_last", _json.dumps(agg, ensure_ascii=False))
+
+
 def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, video_type, work,
                   given_script=None, voice=None, customer_id=0,
                   scene_first=False, reference_text="", ping_pong=False,
@@ -447,6 +477,7 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
         # 샘플되므로(P0-1) 영상마다 다른 훅으로 열린다. 조립 실패는 조용히 무주입(부가기능).
         bank_context = ""
         avoid_hooks = None
+        bank_snapshot = None        # ← 생성 순응 검열용 주입 스냅샷
         if store.get_setting("bank_enabled", "") == "1":
             try:
                 from shopping_shorts import bank_assemble
@@ -455,6 +486,7 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                 _blocks = [bank_assemble.assemble_bank_context(store, video_type or ""),
                            bank_assemble.avoid_block(store)]
                 bank_context = "\n\n".join(x for x in _blocks if x)
+                bank_snapshot = bank_assemble.bank_usage_snapshot(store, video_type or "")  # 생성 순응 검열용
                 # 프롬프트 회피를 무시하고 같은 훅을 낸 후보를 추천단계에서도 감점(belt-and-suspenders).
                 avoid_hooks = store.recent_script_usage()["hooks"] or None
             except Exception:
@@ -480,6 +512,12 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                                           _st.get("cta_keyword", ""))
             except Exception:
                 traceback.print_exc(file=sys.stderr)
+            # 생성 순응 검열(부가 관측, 실패해도 job 안 죽인다) — 은행이 켜졌던 job만
+            if bank_snapshot is not None:
+                try:
+                    _record_bank_usage(store, bank_snapshot, bank_context, rec, sf["candidates"])
+                except Exception:
+                    traceback.print_exc(file=sys.stderr)
         else:
             plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
                                    video_type=video_type, given_script=given_script)

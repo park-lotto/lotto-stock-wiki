@@ -761,6 +761,20 @@ function _renderBankPanel(rep){
       +` · 훅스팸 ${_pct(a.hook_spam_ratio)}${a.hook_bait?`(차단 ${a.hook_bait})`:''}`;
     (h.reasons||[]).forEach(r=>{ html+=`<br><span style="color:#c0392b">⚠️ ${r}</span>`; });
   }
+  const u=rep.usage_audit;
+  if(u && u.n){
+    const uh=u.health||{};
+    const c=u.compliance;
+    html+=`<br>🎬 <b>생성 순응 ${uh.level||''}</b> (최근 ${u.n}편) `
+      +`은행 사용률 ${_pct(u.bank_used_rate)}`
+      +` · 구조순응 ${_pct(u.conformance_pass_rate)}`
+      +` · 표절 ${_pct(u.plagiarism_rate)}`
+      +(u.judge_avg!=null?` · 심사 ${(u.judge_avg*5).toFixed(1)}/5`:'');
+    if(c){ html+=`<br><span style="color:var(--sub)">순응샘플(${c.n}) `
+      +`아크 ${c.arc_avg}/5 · 부품 ${c.flavor_avg}/5`
+      +(c.verbatim_rate?` · 표절 ${_pct(c.verbatim_rate)}`:'')+`</span>`; }
+    (uh.reasons||[]).forEach(r=>{ html+=`<br><span style="color:#c0392b">⚠️ ${r}</span>`; });
+  }
   return html;
 }
 async function _pollBankIngest(times){

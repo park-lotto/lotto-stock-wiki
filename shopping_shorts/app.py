@@ -203,16 +203,23 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
 
 @app.get("/api/bank/ingest_report")
 def api_bank_ingest_report():
-    """'지금 수집' 후 백그라운드 은행 적재의 최근 결과(수집 화면이 폴링해 보고).
-    아직 한 번도 안 돌았으면 status=none."""
+    """'지금 수집' 후 은행 적재 결과 + 생성 순응 검열(usage_audit)을 함께 보고."""
     import json as _json
-    raw = Store(DB_PATH).get_setting("bank_ingest_last", "")
-    if not raw:
-        return {"ok": True, "report": {"status": "none"}}
-    try:
-        return {"ok": True, "report": _json.loads(raw)}
-    except Exception:
-        return {"ok": True, "report": {"status": "none"}}
+    store = Store(DB_PATH)
+    raw = store.get_setting("bank_ingest_last", "")
+    report = {"status": "none"}
+    if raw:
+        try:
+            report = _json.loads(raw)
+        except Exception:
+            report = {"status": "none"}
+    ua_raw = store.get_setting("bank_usage_audit_last", "")
+    if ua_raw:
+        try:
+            report["usage_audit"] = _json.loads(ua_raw)
+        except Exception:
+            pass
+    return {"ok": True, "report": report}
 
 
 def _apply_activity(records):
