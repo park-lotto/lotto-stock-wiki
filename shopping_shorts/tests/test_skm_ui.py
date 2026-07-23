@@ -315,3 +315,40 @@ def test_render_candidates_uses_v6_cand_markup():
     assert "c.index" in body and "c.recommended" in body and "c.hook" in body
     assert "c.story_person" in body and "c.score" in body
     assert "list.length < 2" in body   # 후보 1개 이하 조기 반환 유지
+
+
+# ── Task 8: ⚡ 클릭 직후 "매칭 중" 동적 피드백 — 패널0(사용자가 보는 화면) ──────────
+def test_match_progress_wired_in_html():
+    assert "setMatchingUI" in HTML
+    assert 'id="matchProgress"' in HTML
+    assert "매칭 중" in HTML
+
+
+def test_match_progress_style_in_css():
+    assert ".match-progress" in CSS
+
+
+def test_start_from_ai_pick_calls_set_matching_ui_before_theater():
+    # 버튼을 누른 즉시(playTheater보다 먼저) before/after 변화 + 스피너가 켜져야 한다.
+    start = HTML.index("async function startFromAiPick(){")
+    end = HTML.index("// ── AI PICK 끝 ──")
+    body = HTML[start:end]
+    assert "setMatchingUI(true" in body
+    assert body.index("setMatchingUI(true") < body.index("playTheater(")
+
+
+def test_poll_mix_mirrors_stage_to_panel0_and_restores_button():
+    start = HTML.index("async function pollMix(")
+    end = HTML.index("async function loadMixReview(")
+    body = HTML[start:end]
+    assert "updateMatchProgress(" in body
+    assert "setMatchingUI(false)" in body
+
+
+def test_set_matching_ui_toggles_button_disabled_state():
+    start = HTML.index("function setMatchingUI(on, label){")
+    end = HTML.index("function updateMatchProgress(label){")
+    body = HTML[start:end]
+    assert "btn.disabled=true" in body
+    assert "btn.disabled=false" in body
+    assert ".aiPickCta" in body
