@@ -32,26 +32,27 @@ def _parse_approx_sec(approx_sec):
 def _beats_to_segments(beats, target_seconds):
     """analyze_structure()의 실제 반환 키는 segments/pct가 아니라
     beats:[{label,desc,approx_sec}] + target_seconds(초). approx_sec("0-2")를 파싱해
-    프론트 계약의 segments:[{label,pct,color}]로 변환한다. approx_sec가 없거나
-    target_seconds가 0이면 비트 수로 균등 분배(항상 pct를 채워 프론트가 막대를 그릴 수 있게)."""
+    프론트 계약의 segments:[{label,pct,color}]로 변환한다.
+
+    approx_sec는 structure_analyze._SCHEMA에서 선택 필드라 Gemini가 일부 비트만
+    채울 수 있다. pct 산정 기준을 비트마다 다르게(파싱된 애는 dur/total, 안 된
+    애는 100/n) 섞으면 합이 100%를 벗어난다(예: 3비트 중 2개만 2s+3s로 파싱되면
+    40+60+33.3=133.3%). 그래서 기준을 하나로 통일한다:
+    - 전 비트가 파싱되고 총합>0이면 → 전부 dur/total*100
+    - 하나라도 못 파싱되거나 총합이 0이면 → 전부 100/n 균등분배
+    이렇게 하면 항상 합이 ~100%(반올림 오차 이내)로 맞는다."""
     if not beats:
         return []
+    n = len(beats)
     durations = []
     for b in beats:
         rng = _parse_approx_sec(b.get("approx_sec"))
         durations.append((rng[1] - rng[0]) if rng and rng[1] > rng[0] else None)
-    total = sum(d for d in durations if d is not None) or 0
-    if not total and target_seconds:
-        total = target_seconds
-    n = len(beats)
+    total = sum(durations) if all(d is not None for d in durations) else 0
+    uniform = total <= 0
     segs = []
     for b, d in zip(beats, durations):
-        if total and d is not None:
-            pct = round(d / total * 100, 1)
-        elif total and d is None:
-            pct = round(100 / n, 1)
-        else:
-            pct = round(100 / n, 1)
+        pct = round(100 / n, 1) if uniform else round(d / total * 100, 1)
         label = b.get("label", "")
         segs.append({"label": label, "pct": pct, "color": _SEG_COLORS.get(label, "#8ea2ff")})
     return segs
@@ -68,7 +69,9 @@ def build_aipick(sources, meta, forced=None):
     pick = sources[idx]
     m = meta.get(str(pick_id), {})
     views, followers = pick.get("views"), pick.get("followers")
-    comments, avg = pick.get("comments", m.get("comments")), m.get("avg_comments")
+    # comments는 항상 pick(소스)에 이미 실려 있다(_load_work_sources가 키 자체를
+    # 빠짐없이 채운다, 값은 None일 수 있어도) — m.get("comments") 기본값은 도달 불가라 제거.
+    comments, avg = pick.get("comments"), m.get("avg_comments")
     tiles = {
         "views": views,
         "views_x_followers": round(views / followers, 1) if views and followers else None,

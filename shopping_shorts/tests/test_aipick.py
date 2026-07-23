@@ -26,3 +26,47 @@ def test_build_aipick_structure_falls_back_empty(monkeypatch):
     out = build_aipick([{"video_id": "a", "text": "x", "comments": 1}], {})
     assert out["structure"] == {}   # 구조분석 실패해도 pick/tiles는 살아있음
     assert out["pick_id"] == "a"
+
+
+def test_build_aipick_structure_partial_approx_sec_sums_to_100(monkeypatch):
+    # 회귀: 일부 비트만 approx_sec가 파싱되면(선택 필드라 Gemini가 누락 가능)
+    # 파싱된 애는 dur/total, 못 된 애는 100/n로 기준이 섞여 합이 100%를 넘던 버그.
+    # (2비트 2s+3s → total=5 → 40,60 + 세번째 균등33.3 = 133.3%)
+    from shopping_shorts import aipick
+    partial = {
+        "beats": [
+            {"label": "훅", "desc": "d1", "approx_sec": "0-2"},
+            {"label": "문제제기", "desc": "d2", "approx_sec": "2-5"},
+            {"label": "결과", "desc": "d3"},  # approx_sec 없음
+        ],
+        "target_seconds": 10,
+        "hook_type": "", "devices": [],
+    }
+    monkeypatch.setattr(aipick, "analyze_structure", lambda *a, **k: partial)
+    out = build_aipick([{"video_id": "a", "text": "x", "comments": 1}], {})
+    segs = out["structure"]["segments"]
+    assert len(segs) == 3
+    total_pct = sum(s["pct"] for s in segs)
+    assert abs(total_pct - 100) < 0.5
+    # 하나라도 파싱 안 되면 전부 균등분배로 통일(기준 혼합 금지)
+    assert all(abs(s["pct"] - 100 / 3) < 0.1 for s in segs)
+
+
+def test_build_aipick_structure_full_approx_sec_distributes_by_duration(monkeypatch):
+    from shopping_shorts import aipick
+    full = {
+        "beats": [
+            {"label": "훅", "desc": "d1", "approx_sec": "0-2"},
+            {"label": "문제제기", "desc": "d2", "approx_sec": "2-5"},
+        ],
+        "target_seconds": 5,
+        "hook_type": "", "devices": [],
+    }
+    monkeypatch.setattr(aipick, "analyze_structure", lambda *a, **k: full)
+    out = build_aipick([{"video_id": "a", "text": "x", "comments": 1}], {})
+    segs = out["structure"]["segments"]
+    total_pct = sum(s["pct"] for s in segs)
+    assert abs(total_pct - 100) < 0.5
+    # 2s/5s=40%, 3s/5s=60% — 비트 수 균등(50/50)이 아니라 실제 길이 비례여야 함
+    assert abs(segs[0]["pct"] - 40) < 0.5
+    assert abs(segs[1]["pct"] - 60) < 0.5
