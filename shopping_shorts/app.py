@@ -1804,6 +1804,20 @@ def api_mix_status(job_id: str):
     if status in _MIX_ACTIVE_STAGES and _render_is_stale(job):
         status = "failed"
         error = "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."
+    # ★clean/preview 단계도 같은 staleness 가드(2026-07-23 실사고). 배포 재시작이 진행 중이던
+    # 2단계 자막제거(clean) BackgroundTask를 죽이면 except가 못 돌아 clean_status='cleaning'이
+    # DB에 영원히 남고, 프론트가 "AI가 자막 영역을 복원하는 중"을 무한 표시한다. status(위)엔 이미
+    # 이 가드가 있었으나 clean/preview에는 없어 같은 사고가 이 단계에서 재발했다. GET이라 DB는
+    # 안 건드리고 응답에서만 failed로 알려 pollClean이 재시도 UI를 연다(_render_is_stale는
+    # updated_at 기반·단계무관, 이미 clean 재실행 가드에서 쓰인다).
+    clean_status, clean_error = job.get("clean_status"), job.get("clean_error")
+    if clean_status == "cleaning" and _render_is_stale(job):
+        clean_status = "failed"
+        clean_error = clean_error or "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."
+    preview_status, preview_error = job.get("preview_status"), job.get("preview_error")
+    if preview_status == "rendering" and _render_is_stale(job):
+        preview_status = "failed"
+        preview_error = preview_error or "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."
     # 장면 우선 대본 모드(2026-07-20, Task7): 후보 요약만 내려준다 — 전체 plan(beats 등)을
     # 실으면 남의 창작물이 새는 것과 같은 노출 문제(§3981)가 나므로 카드 렌더용 필드만 뽑는다.
     candidates = [{"index": i, "score": c.get("score"), "recommended": bool(c.get("recommended")),
@@ -1813,10 +1827,10 @@ def api_mix_status(job_id: str):
     return {"ok": True, "status": status, "error": error,
             # 1단계 미리보기(2026-07-17): 폴러를 둘로 만들지 않으려고 기존 응답에 얹는다(스펙 §6.3).
             # preview_path는 서버 내부 경로라 안 내보낸다 — 파일은 전용 라우트로만 서빙.
-            "preview_status": job.get("preview_status"),
-            "preview_error": job.get("preview_error"),
-            "clean_status": job.get("clean_status"),
-            "clean_error": job.get("clean_error"),
+            "preview_status": preview_status,
+            "preview_error": preview_error,
+            "clean_status": clean_status,
+            "clean_error": clean_error,
             "candidates": candidates}
 
 
