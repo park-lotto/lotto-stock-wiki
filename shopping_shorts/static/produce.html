@@ -3940,8 +3940,40 @@ async function shareVideo(){
     throw new Error('unsupported');
   }catch(e){
     if(e && e.name==='AbortError') return;   // 사용자가 공유 취소
-    alert('이 기기·브라우저에선 바로 공유가 안 돼요.\n\n📱 휴대폰(카톡 설치)에서 이 페이지를 열면 「카톡으로 보내기」가 뜹니다.\n💻 컴퓨터에선 「⬇ 완성 영상(MP4)」으로 내려받아 카톡 대화창에 첨부해 주세요.');
+    alert('이 기기·브라우저에선 바로 공유가 안 돼요.\n\n📱 휴대폰(카톡 설치)에서 이 페이지를 열면 「카톡으로 보내기」가 뜹니다.\n💻 컴퓨터에선 「🖥→📱 QR로 폰에 보내기」로 폰에 넘겨 보내세요.');
   }
+}
+
+// ── QR '폰으로 보내기' 모달 (2026-07-23) — PC에서 완성영상을 폰으로 넘겨 폰 카톡 네이티브 공유 ──
+async function showShareQr(job){
+  let ov=document.getElementById('qrOverlay');
+  if(!ov){
+    ov=document.createElement('div'); ov.id='qrOverlay';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;z-index:99999';
+    ov.innerHTML='<div id="qrBox" style="background:#fff;color:#141414;border-radius:18px;padding:24px 22px;max-width:340px;width:88%;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.45)"></div>';
+    ov.addEventListener('click',e=>{ if(e.target===ov) ov.remove(); });
+    document.body.appendChild(ov);
+  }
+  const box=ov.querySelector('#qrBox');
+  box.innerHTML='<div style="padding:40px 0;color:#888">QR 만드는 중…</div>';
+  try{
+    const r=await fetch('/api/share/link/'+encodeURIComponent(job));
+    const d=await r.json();
+    if(!d || !d.ok){ box.innerHTML='<div style="padding:24px">'+((d&&d.error)||'만들지 못했어요')+'</div>'; return; }
+    box.innerHTML=
+      '<div style="font-weight:800;font-size:18px;margin-bottom:3px">📱 폰으로 보내기</div>'
+     +'<div style="color:#777;font-size:13px;margin-bottom:14px">폰 카메라로 아래 QR을 스캔하세요</div>'
+     +'<div id="qrImg" style="width:240px;height:240px;margin:0 auto;background:#fff">'+(d.qr_svg||'')+'</div>'
+     +'<div style="font-size:11px;color:#9aa;word-break:break-all;margin:12px 4px 8px">'+d.url+'</div>'
+     +'<button id="qrCopy" style="width:100%;font-size:16px;font-weight:800;border:0;border-radius:12px;padding:14px;background:#eef1f6;color:#222;cursor:pointer;margin-bottom:8px">링크 복사</button>'
+     +'<button id="qrClose" style="width:100%;font-size:15px;border:0;border-radius:12px;padding:12px;background:#141414;color:#fff;cursor:pointer">닫기</button>'
+     +'<div style="font-size:11px;color:#aab;margin-top:12px;line-height:1.6">폰에서 열리면 <b>「카톡·인스타로 보내기」</b>를 누르세요.<br>링크는 24시간 유효합니다.</div>';
+    const svg=box.querySelector('#qrImg svg');
+    if(svg){ svg.setAttribute('width','240'); svg.setAttribute('height','240'); svg.style.display='block'; }
+    box.querySelector('#qrClose').addEventListener('click',()=>ov.remove());
+    const cp=box.querySelector('#qrCopy');
+    cp.addEventListener('click',async()=>{ try{ await navigator.clipboard.writeText(d.url); cp.textContent='복사됨 ✓'; }catch(e){ cp.textContent='복사 실패 — 길게 눌러 복사'; } });
+  }catch(e){ box.innerHTML='<div style="padding:24px">오류가 났어요. 다시 시도해 주세요.</div>'; }
 }
 // ── 내보내기(다운로드 + 캡컷 편집용) — 설계 2026-07-20 T1 ──
 // 웹앱이라 캡컷 자동실행은 불가 → 캡컷 편집용 ZIP(장면영상·음성·SRT·대본)을 내려받아 캡컷에 올린다.
@@ -3966,7 +3998,9 @@ function renderExport(opts){
     // ★카톡·공유(2026-07-21 사장님): 완성 영상을 휴대폰 공유시트로 → 거기서 카톡 선택. 모바일 전용이
     //   실질적이라(데스크톱은 파일공유 미지원 많음) 아래 shareVideo가 안 되면 다운로드 안내로 폴백한다.
     + (rendered?`<button class="btn-next" style="${big};border:0;cursor:pointer" onclick="shareVideo()">📱 카톡·공유로 보내기</button>`:'')
-    + (rendered?'<div class="hint" style="margin:2px 0 8px">📱 <b>휴대폰</b>에서 누르면 카톡·인스타 등으로 바로 보낼 수 있어요. 컴퓨터에선 위 <b>⬇완성 영상(MP4)</b>으로 받아 카톡에 첨부하세요.</div>':'')
+    // ★PC용 QR(2026-07-23): 카톡 PC는 웹에서 mp4를 대화방에 못 넣는다 → 폰으로 넘겨 폰 카톡 네이티브 공유.
+    + (rendered?`<button class="btn-next" style="${big};border:0;cursor:pointer;background:#fee500;color:#191600" onclick="showShareQr('${j}')">🖥→📱 QR로 폰에 보내기</button>`:'')
+    + (rendered?'<div class="hint" style="margin:2px 0 8px">📱 <b>휴대폰</b>이면 「카톡·공유로 보내기」로 바로 전송. 💻 <b>컴퓨터</b>면 「QR로 폰에 보내기」를 눌러 폰으로 스캔 → 폰 카톡으로 보내세요.</div>':'')
     + `<a class="btn-prev" style="${small}" href="/api/mix/export/${j}" download>📦 캡컷용 ZIP(수동)</a>`
     + '<div class="hint" style="margin:6px 0 4px">개별 다운로드</div>'
     + `<a class="btn-prev" style="${small}" href="/api/mix/export/${j}?part=sources" download>🎬 소스 영상</a>`
