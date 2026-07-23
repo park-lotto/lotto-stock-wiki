@@ -193,7 +193,9 @@ def run(db_path):
     n3 = ingest_crawl_winners(store)
     n4 = recompute_perf_scores(store)
     n5 = cluster_and_gate_spines(store)
-    print(f"daily_batch: 구조 {n1} · 통계 {n2} · 자동흡수 {n3} · perf {n4} · 스파인 {n5}")
+    # 말투(스타일)+전개(내용) 부품 자동승인 — 생성에 바로 실리게(2026-07-23, 내용 주입).
+    n6 = store.auto_approve_style_buckets() + store.auto_approve_content_buckets()
+    print(f"daily_batch: 구조 {n1} · 통계 {n2} · 자동흡수 {n3} · perf {n4} · 스파인 {n5} · 승인 {n6}")
 
 
 if __name__ == "__main__":

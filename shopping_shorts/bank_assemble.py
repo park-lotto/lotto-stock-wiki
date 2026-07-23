@@ -2,7 +2,7 @@
 ★중괄호 소독 필수 — script_generate 프롬프트가 .format()을 돌린다(_STORY_RULES_CORE 옆에 낀다)."""
 import random
 
-from shopping_shorts.pattern_bank import STYLE_BUCKETS
+from shopping_shorts.pattern_bank import STYLE_BUCKETS, CONTENT_BUCKETS
 
 _LABEL = {"hook": "훅", "ending": "마무리", "adverb": "담화부사", "cta": "CTA", "price": "가격표현"}
 
@@ -61,6 +61,27 @@ def parts_block(store, k=5, rng=random):
             + "\n".join(lines))
 
 
+_CONTENT_LABEL = {"evidence": "근거 대는 법", "conflict": "갈등·문제 설정", "emotion": "감정 반응"}
+
+
+def content_block(store, k=4, rng=random):
+    """내용 버킷(근거·갈등·감정) 승인 템플릿 → '전개 패턴' 블록(2026-07-23). 우승작에서 뽑은
+    '{인물}이 {행위}하니 {결과}' 슬롯 템플릿이라, 생성이 표면 말투를 넘어 **이야기 전개**를
+    검증된 패턴으로 깊게 쓰게 한다. 템플릿 없으면 ''(회귀0)."""
+    lines = []
+    for b in CONTENT_BUCKETS:
+        items = _sample_bucket(store, b, k, rng=rng)
+        if not items:
+            continue
+        texts = " / ".join(_sanitize(it["text"]) for it in items)
+        lines.append(f"· {_CONTENT_LABEL.get(b, b)}: {texts}")
+    if not lines:
+        return ""
+    return ("[학습된 전개 패턴 — 우승작에서 뽑은 이야기 전개 틀. ★이 {슬롯} 구조로 스토리를 "
+            "'깊게' 전개하되(근거·갈등·감정), 슬롯은 우리 소재·인물로 채워라. 리터럴 베끼기 금지.]\n"
+            + "\n".join(lines))
+
+
 def avoid_block(store, limit=6):
     """novelty(P0-3): 최근 영상이 쓴 훅·인물·CTA를 '이건 이미 썼으니 다르게 써라'로 블록화.
     이력 없으면 ''. 중괄호 소독(생성 프롬프트가 .format()을 탄다)."""
@@ -82,5 +103,6 @@ def assemble_bank_context(store, category, k=5):
     """스파인 charter + 부품 top-k 합본. 둘 다 없으면 ''(호출부는 빈 문자열이면
     기존 헌장만 써서 회귀0)."""
     spine = store.pick_spine_for_category(category) if category else None
-    blocks = [x for x in (spine_charter(spine), parts_block(store, k)) if x]
+    # 스파인(아크) + 말투(parts_block) + ★전개 패턴(content_block, 2026-07-23) 3층 주입.
+    blocks = [x for x in (spine_charter(spine), parts_block(store, k), content_block(store)) if x]
     return "\n\n".join(blocks)

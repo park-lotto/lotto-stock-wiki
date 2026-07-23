@@ -1070,6 +1070,7 @@ def _ingest_pattern_bank(db_path, full_text, url, category):
         pattern_bank.ingest_script(store, full_text, source="wiki", url=url or "",
                                    product_category=category, category_source="user")
         store.auto_approve_style_buckets()
+        store.auto_approve_content_buckets()   # 전개 템플릿(근거·갈등·감정)도 즉시 생성 반영(2026-07-23)
     except Exception as e:  # noqa: BLE001 — 은행 적재 실패는 위키 저장엔 영향 없음
         print(f"pattern_bank ingest 실패: {e}")
 
@@ -1098,6 +1099,7 @@ def _bank_ingest_collected_bg(db_path, items, collected_at):
             print(f"bank ingest(harvest_hooks) 실패: {he}")
             rep["harvested_hooks"] = 0
         store.auto_approve_style_buckets()   # 스타일 부품 즉시 사용가능(위키 적재와 동일)
+        store.auto_approve_content_buckets()   # 전개 템플릿(근거·갈등·감정)도 즉시 생성 반영(2026-07-23)
         rep.update({"status": "done", "date": day, "collected_at": collected_at})
         store.set_setting("bank_ingest_last", _json.dumps(rep, ensure_ascii=False))
         # 검열은 따로도 저장(패널이 흡수리포트와 분리해 읽기 쉽게).

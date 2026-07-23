@@ -2076,7 +2076,7 @@ class Store:
 
     def auto_approve_style_buckets(self):
         """스타일 부품(훅·어미·부사·CTA·가격)은 자동 승인 → 즉시 생성에 반영(A5, 표현력).
-        내용 부품(증거·전환·감정)은 사람 승인 유지. 반환=새로 승인된 개수."""
+        내용 부품(증거·전환·감정)은 auto_approve_content_buckets로 별도 승인. 반환=새로 승인된 개수."""
         now = datetime.now(timezone.utc).isoformat()
         style = ("hook", "ending", "adverb", "cta", "price")
         with self._conn() as c:
@@ -2085,6 +2085,21 @@ class Store:
                 "WHERE status='pending' AND is_negative=0 AND bucket IN (%s)"
                 % ",".join("?" * len(style)),
                 (now, *style))
+            return cur.rowcount
+
+    def auto_approve_content_buckets(self):
+        """내용 부품(근거·갈등·감정)도 자동 승인 → 이야기 '전개' 템플릿을 생성에 반영(2026-07-23,
+        사장님 확정). 이것들은 리터럴 사연이 아니라 '{인물}이 {행위}하니 {결과}' 슬롯 템플릿이라
+        표절 위험이 없어 자동승인해도 안전 — 생성이 우승작 전개 패턴을 참고해 스토리를 깊게 쓴다.
+        반환=새로 승인된 개수."""
+        now = datetime.now(timezone.utc).isoformat()
+        content = ("evidence", "conflict", "emotion")
+        with self._conn() as c:
+            cur = c.execute(
+                "UPDATE pattern_item SET status='approved', updated_at=? "
+                "WHERE status='pending' AND is_negative=0 AND bucket IN (%s)"
+                % ",".join("?" * len(content)),
+                (now, *content))
             return cur.rowcount
 
     def set_pattern_item_status(self, item_id, status):
