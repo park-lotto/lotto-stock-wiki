@@ -3217,6 +3217,7 @@ if not _AUTH_ON:
     print("⚠️ [보안] DASH_PASS 미설정 → 인증·유료게이트 OFF(전원 full/admin). "
           "운영이면 DASH_PASS를 반드시 설정하세요.", file=_sys.stderr)
 _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico", "/healthz",
+               "/pay",   # 계좌입금 안내 페이지(공개 — 대기중·비로그인도 결제 안내 봄)
                # PWA: 매니페스트는 브라우저가 쿠키 없이(credentials omit) fetch한다 → 공개 필수.
                "/manifest.webmanifest", "/apple-touch-icon.png",
                "/icon-192.png", "/icon-512.png", "/icon-maskable-512.png",
@@ -3347,9 +3348,15 @@ def _with_pay(html: str) -> str:
     있으면 '결제하기', 없으면 카톡 문의로 폴백. 설정 변경이 재시작 없이 바로 반영되게 요청마다 읽는다."""
     st = Store(DB_PATH)
     pay = (st.get_setting("pay_url", "") or "").strip()
+    bank = (st.get_setting("bank_account", "") or "").strip()
     kakao = (st.get_setting("contact_kakao", "") or _BRAND.get("kakao") or "/login").strip()
-    href = pay or kakao
-    label = "💳 결제하기 →" if pay else "카톡으로 문의"
+    # 우선순위: 외부 결제링크(pay_url) > 계좌입금 안내페이지(/pay, 계좌 설정 시) > 카톡 문의
+    if pay:
+        href, label = pay, "💳 결제하기 →"
+    elif bank:
+        href, label = "/pay", "💳 결제 안내"
+    else:
+        href, label = kakao, "카톡으로 문의"
     return html.replace("__PAY_HREF__", href).replace("__PAY_LABEL__", label)
 
 
@@ -3960,6 +3967,84 @@ def _logout_do():
     return r
 
 
+# ── 계좌입금 안내 페이지(2026-07-23) — 사장님이 admin에 은행·계좌·예금주 넣으면 자동 표시. ──
+_DEPOSIT_TMPL = _fill_brand("""<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png">
+<title>결제 안내 · __NAME__</title>
+<style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+background:radial-gradient(900px 500px at 50% -15%,rgba(111,240,214,.10),transparent 60%),#090d10;
+font-family:'Noto Sans KR',system-ui,sans-serif;color:#e8f0ee;word-break:keep-all;padding:20px}
+.box{width:440px;max-width:100%;background:linear-gradient(180deg,#101a1c,#0c1214);border:1px solid #1e2b2c;border-radius:22px;padding:34px 28px 26px;box-shadow:0 30px 80px rgba(0,0,0,.55)}
+h1{font-size:20px;margin:0 0 4px;text-align:center}.sub{color:#8aa0a0;font-size:13px;text-align:center;margin-bottom:22px}
+.row{background:#0a1113;border:1px solid #1e2b2c;border-radius:12px;padding:14px 16px;margin:9px 0;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.k{color:#7a9090;font-size:13px;flex:none}.v{font-weight:700;font-size:16px;text-align:right;word-break:break-all}
+.acc .v{font-size:20px;color:#6ff0d6;letter-spacing:.3px}
+.copy{margin-left:10px;background:#16202a;border:1px solid #2a3647;color:#b7c6c2;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;flex:none}
+.copy:hover{border-color:#37e0bd;color:#6ff0d6}
+.note{background:#101c18;border:1px solid #1d3a30;border-radius:12px;padding:14px 16px;margin:16px 0 6px;font-size:13px;line-height:1.7;color:#b9d3c9}
+.note b{color:#6ff0d6}
+.contact{display:flex;gap:10px;margin-top:16px}
+.contact a{flex:1;text-align:center;padding:12px;border-radius:11px;text-decoration:none;font-weight:700;font-size:14px}
+.kko{background:linear-gradient(135deg,#6ff0d6,#1f9e7a);color:#08110e}
+.tel{background:#101820;border:1px solid #1e2735;color:#b7c6c2}
+.home{display:block;text-align:center;color:#5f7373;font-size:12px;margin-top:16px;text-decoration:none}
+.empty{color:#c9a24b;text-align:center;font-size:13px;line-height:1.7;padding:8px 0}</style></head>
+<body><div class=box>
+<h1>💳 결제 안내</h1><div class=sub>__NAME__ 이용권 · 계좌입금</div>
+__BODY__
+<a class=home href="/">← 돌아가기</a>
+</div>
+<script>function cp(t){navigator.clipboard&&navigator.clipboard.writeText(t);var e=event.target;var o=e.textContent;e.textContent='복사됨';setTimeout(function(){e.textContent=o;},1200);}</script>
+</body></html>""")
+
+
+def _deposit_body():
+    """계좌 설정이 있으면 계좌 카드, 없으면 안내문구. 요청 시점에 admin 설정을 읽는다."""
+    st = Store(DB_PATH)
+    bank = (st.get_setting("bank_name", "") or "").strip()
+    acc = (st.get_setting("bank_account", "") or "").strip()
+    holder = (st.get_setting("bank_holder", "") or "").strip()
+    note = (st.get_setting("deposit_note", "") or "").strip()
+    kakao = (st.get_setting("contact_kakao", "") or "").strip()
+    phone = (st.get_setting("contact_phone", "") or "").strip()
+    import html as _h
+    if not acc:
+        return ('<div class=empty>결제 안내가 아직 준비 중이에요.<br>아래로 문의해 주세요.</div>'
+                + _deposit_contact(kakao, phone))
+    rows = ""
+    if bank:
+        rows += f'<div class=row><span class=k>은행</span><span class=v>{_h.escape(bank)}</span></div>'
+    rows += (f'<div class="row acc"><span class=k>계좌번호</span>'
+             f'<span class=v id=acc>{_h.escape(acc)}</span>'
+             f'<button class=copy onclick="cp(document.getElementById(\'acc\').textContent)">복사</button></div>')
+    if holder:
+        rows += f'<div class=row><span class=k>예금주</span><span class=v>{_h.escape(holder)}</span></div>'
+    note_html = (f'<div class=note>{_h.escape(note)}</div>' if note else
+                 '<div class=note>입금 금액·이용권은 아래로 <b>문의</b>해 주세요.<br>'
+                 '입금 후 <b>입금자명</b>을 알려주시면 <b>바로 이용권을 열어드려요.</b></div>')
+    return rows + note_html + _deposit_contact(kakao, phone)
+
+
+def _deposit_contact(kakao, phone):
+    import html as _h
+    if not kakao and not phone:
+        return ""
+    out = '<div class=contact>'
+    if kakao:
+        href = kakao if kakao.startswith("http") else ("https://" + kakao)
+        out += f'<a class=kko href="{_h.escape(href)}" target=_blank rel=noopener>💬 카톡 문의</a>'
+    if phone:
+        out += f'<a class=tel href="tel:{_h.escape(phone)}">📞 {_h.escape(phone)}</a>'
+    return out + '</div>'
+
+
+@app.get("/pay", response_class=HTMLResponse)
+def _deposit_page():
+    """계좌입금 안내(공개). 사장님이 admin에 은행·계좌·예금주 넣으면 표시."""
+    return _DEPOSIT_TMPL.replace("__BODY__", _deposit_body())
+
+
 @app.get("/pricing", response_class=HTMLResponse)
 def _pricing_page():
     return _with_pay(_PRICING_HTML)   # 공개 요금·이용권 페이지(비로그인 방문자 포함) + 결제링크 주입
@@ -4451,7 +4536,8 @@ def _require_admin(request):
 _ADMIN_SETTING_KEYS = {"trial_days", "trial_event_hours", "limit_lens", "limit_render", "limit_script",
                        "limit_lens_pro", "limit_render_pro", "limit_script_pro",
                        "global_cap_lens", "global_cap_render", "global_cap_script",
-                       "contact_kakao", "contact_phone", "pay_url"}
+                       "contact_kakao", "contact_phone", "pay_url",
+                       "bank_name", "bank_account", "bank_holder", "deposit_note"}
 
 
 @app.get("/api/admin/customers")

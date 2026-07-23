@@ -69,7 +69,8 @@ tbody tr:hover{background:#1b1b22}
 const SETTING_FIELDS=[
   ['trial_days','체험 기간(일)'],['trial_event_hours','가입 자동체험(시간,0=끔)'],['limit_lens','무료 렌즈/일'],['limit_render','무료 렌더/일'],
   ['limit_script','무료 대본/일'],['limit_lens_pro','pro 렌즈/일'],['limit_render_pro','pro 렌더/일'],
-  ['global_cap_lens','전역 렌즈/일'],['contact_kakao','카톡 안내'],['contact_phone','전화 안내'],['pay_url','결제 링크(URL)']];
+  ['global_cap_lens','전역 렌즈/일'],['contact_kakao','카톡 안내'],['contact_phone','전화 안내'],['pay_url','결제 링크(URL)'],
+  ['bank_name','은행'],['bank_account','계좌번호'],['bank_holder','예금주'],['deposit_note','입금 안내문구']];
 let CURRENT={};
 async function load(){
   const r=await fetch('/api/admin/customers');
