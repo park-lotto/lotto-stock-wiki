@@ -102,7 +102,10 @@ def avoid_block(store, limit=6):
 def assemble_bank_context(store, category, k=5):
     """스파인 charter + 부품 top-k 합본. 둘 다 없으면 ''(호출부는 빈 문자열이면
     기존 헌장만 써서 회귀0)."""
-    spine = store.pick_spine_for_category(category) if category else None
+    # ★category 비어도(자동유형 경로는 video_type=None→"") 스파인을 건너뛰지 마라(2026-07-23
+    # 실측 버그: `if category`가 falsy라 pick을 아예 안 불러 승인 스파인 4개가 죽어 있었다).
+    # pick_spine_for_category(None)은 fit_categories 없는 범용 스파인을 perf 최고로 반환한다.
+    spine = store.pick_spine_for_category(category or None)
     # 스파인(아크) + 말투(parts_block) + ★전개 패턴(content_block, 2026-07-23) 3층 주입.
     blocks = [x for x in (spine_charter(spine), parts_block(store, k), content_block(store)) if x]
     return "\n\n".join(blocks)
@@ -112,7 +115,7 @@ def bank_usage_snapshot(store, category, k=5):
     """생성 프롬프트에 은행이 무엇을 주입했나 — 계측 dict(읽기만, Gemini 없음).
     empty=True면 스파인·부품 통째로 비어 bank_context가 '' = 은행 무용."""
     enabled = store.get_setting("bank_enabled", "") == "1"
-    spine = store.pick_spine_for_category(category) if category else None
+    spine = store.pick_spine_for_category(category or None)   # 빈 category=범용(위 assemble와 동일)
     spine_beats = len((spine or {}).get("beat_chain") or []) if spine else 0
     parts_by_bucket = {}
     for b in STYLE_BUCKETS:
