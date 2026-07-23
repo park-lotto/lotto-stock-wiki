@@ -26,8 +26,10 @@ PRODUCE_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce
 NODE = shutil.which("node")
 
 # openGenFromWiki 전체 + (PM_GEN 등 전역 선언 + openScriptModal 전체)를 이어붙인다.
+# 2026-07-23 Task4: genMix()가 믹스탭과 함께 제거돼 END 앵커를 그 자리에 남은
+# 마커(`// ── openGenFromWiki 끝 ──`)로 옮겼다(produce.html 참조).
 _GENFROMWIKI_START = "function openGenFromWiki(){"
-_GENFROMWIKI_END = "function genMix(){"
+_GENFROMWIKI_END = "// ── openGenFromWiki 끝 ──"
 _SCRIPTMODAL_START = "let PM_IDX=null, PM_BASE_STRUCT=null, PM_CATEGORY='', PM_URL='', PM_SHORTCODE='', PM_BASE_SCRIPT='';"
 _SCRIPTMODAL_END = "function pmUseRaw(){"
 
