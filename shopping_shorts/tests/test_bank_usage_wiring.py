@@ -59,3 +59,14 @@ def test_record_bank_usage_skips_llm_between_samples(tmp_path):
     assert calls["n"] == 1                          # 1번째만 샘플(%10==1), 2~5는 스킵
     audit = json.loads(store.get_setting("bank_usage_audit_last"))
     assert audit["n"] == 5
+
+
+def test_ingest_report_attaches_usage_audit(tmp_path, monkeypatch):
+    import json as _json
+    from shopping_shorts import app as app_mod
+    store = Store(str(tmp_path / "t.db"))
+    store.set_setting("bank_usage_audit_last",
+                      _json.dumps({"n": 3, "bank_used_rate": 1.0, "health": {"level": "🟢", "reasons": []}}))
+    monkeypatch.setattr(app_mod, "DB_PATH", str(tmp_path / "t.db"))
+    out = app_mod.api_bank_ingest_report()
+    assert out["report"]["usage_audit"]["n"] == 3
