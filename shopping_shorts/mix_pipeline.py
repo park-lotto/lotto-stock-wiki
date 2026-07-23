@@ -588,6 +588,11 @@ def retype_mix_job(job_id, video_type, db_path, work_root):
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
+        # 🎁 무료체험: 재타이핑(유형 변경 후 EDL+TTS 재생성)이 실패해도 체험 1회를 돌려준다.
+        #   run_render 실패 환불과 대칭 — 체험자가 재타이핑 실패로 유일한 1회를 잃고 잠기는 걸 막는다.
+        #   유료(render_charge_day=날짜)는 미환불(기존 동작). usage_decr는 0 밑으로 안 가 이중환불 안전.
+        if job.get("render_charge_day") == "trial":
+            _refund_render_charge(store, job.get("customer_id", 0), "trial")
 
 
 def _resolve_sources(job, work):
