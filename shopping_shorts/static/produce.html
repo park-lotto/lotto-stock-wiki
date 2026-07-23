@@ -2411,13 +2411,12 @@ function _recommendedBbIdx(){
   return best;
 }
 // ★Task 4(2026-07-23) 재구성: 카드마다 있던 5버튼(📝뽑기/🎬담기/⭐메인/✕/정보채우기)을
-// 없애고 썸네일 클릭=✓뱃지 토글 하나로 합쳤다(자동담김). 대본은 더 이상 영상별로 따로
-// "뽑는" 게 아니라, 담긴(useFootage) 재료 중 AI PICK이 스스로 완성도 1위를 고른다
-// (refreshStep0/renderAiPick). 미리보기(previewMaterial)는 남긴다 — 썸네일이 곧 토글
-// 버튼이라 큰 미리보기가 여전히 필요하다면 길게 눌러야 하나, 지금은 클릭=토글로 통일하고
-// 원본 확인은 각 카드의 title(hover)과 결과 쪽 AI PICK 카드가 대신한다.
-// ⭐메인 수동 지정 UI(designateBackbone)도 함께 뺐다 — AI가 항상 자동으로 뼈대를 고른다
-// (_recommendedBbIdx/designateBackbone/collectBackboneIndex는 호출부가 없어 휴면 상태로 남는다).
+// 없애고 썸네일 클릭 하나로 합쳤다(자동담김). 대본은 영상별로 따로 "뽑는" 게 아니라,
+// 담긴(useFootage) 재료 중 AI PICK이 스스로 완성도 1위를 고른다(refreshStep0/renderAiPick).
+// ★Task 7(2026-07-23) 추가: 썸네일 클릭 = pickFootage(그 영상을 AI PICK으로 지정, 담기도
+// 자동 ON) — 어떤 카드가 지금 픽인지 금색 뱃지(.pick/.pickbadge)로 보인다. 빼기는 우상단
+// ✕(hover) = dropFootage. toggleFootage/designateBackbone은 옛 경로로 남겨둔다(현재 호출부
+// 없음 — 테스트·향후 재사용 대비 휴면 유지, collectBackboneIndex는 여전히 라이브 배선).
 function renderPool(){
   const box=document.getElementById('poolList'); if(!box) return;
   const empty=document.getElementById('poolEmpty');
@@ -2427,11 +2426,18 @@ function renderPool(){
     return;
   }
   if(empty) empty.style.display='none';
-  box.innerHTML=HANDOFF.map((it,i)=>`
-    <div class="pool-card${it.useFootage?' on':''}" onclick="toggleFootage(${i})" title="${esc(it.name||('영상 '+(i+1)))}">
-      ${it.thumbnail?`<img src="${it.thumbnail.includes('gstatic.com')?it.thumbnail:('/api/thumb?url='+encodeURIComponent(it.thumbnail))}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">`:''}
-      <span class="badge">${it.useFootage?'✓':''}</span>
-    </div>`).join('');
+  // 🤖 AI PICK 표시(2026-07-23 Task7): 사장님이 직접 지정(bbMain)했으면 그 카드, 아직
+  // 아무도 안 골랐으면 서버 자동선정(window._aiPick.pick_id)과 shortcode가 일치하는 카드에
+  // 금색 뱃지를 붙인다. 클릭=그 영상을 픽으로 지정(pickFootage), ✕=믹스에서 빼기(dropFootage).
+  const _anyPick = HANDOFF.some(h=>h.bbMain);
+  box.innerHTML=HANDOFF.map((it,i)=>{
+    const isPick = it.bbMain || (!_anyPick && it.shortcode && window._aiPick && it.shortcode===window._aiPick.pick_id);
+    return `<div class="pool-card${it.useFootage?' on':''}${isPick?' pick':''}" onclick="pickFootage(${i})" title="${esc(it.name||('영상 '+(i+1)))}">`
+      + (it.thumbnail?`<img src="${it.thumbnail.includes('gstatic.com')?it.thumbnail:('/api/thumb?url='+encodeURIComponent(it.thumbnail))}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">`:'')
+      + (isPick?'<span class="pickbadge">🤖 AI PICK</span>':'<span class="badge">'+(it.useFootage?'✓':'')+'</span>')
+      + `<button class="pool-x" title="빼기" onclick="event.stopPropagation();dropFootage(${i})">✕</button>`
+      + `</div>`;
+  }).join('');
 }
 // ── Task 4(2026-07-23): 자동담김 도착 감지 → AI PICK 또는 빈 상태 ──────────
 // 담긴(useFootage) 재료가 하나라도 있으면 서버(/api/produce/aipick)에 "지금 담긴 것 중
@@ -2440,8 +2446,11 @@ async function refreshStep0(){
   const hasFootage = HANDOFF.some(h=>h.useFootage);
   if(!hasFootage){ renderEmptyState(); return; }
   try{
-    const q = WORK_ID ? ('?work_id='+encodeURIComponent(WORK_ID)) : '';
-    const r = await fetch('/api/produce/aipick'+q);
+    // 사장님이 썸네일을 클릭해 특정 영상을 AI PICK으로 지정(bbMain)했으면 서버에도 강제한다
+    // (안 그러면 완성도 자동선정이 클릭을 덮어씀 — forced가 지정 시 최우선, app.py 참조).
+    const forced = (HANDOFF.find(h=>h.bbMain && h.useFootage)||{}).shortcode || '';
+    const q = '?' + [ WORK_ID?('work_id='+encodeURIComponent(WORK_ID)):'', forced?('forced='+encodeURIComponent(forced)):'' ].filter(Boolean).join('&');
+    const r = await fetch('/api/produce/aipick'+(q==='?'?'':q));
     renderAiPick(await r.json(), hasFootage);
   }catch(e){ renderEmptyState(); }
 }
@@ -2457,6 +2466,9 @@ function renderAiPick(d, hasFootage){
   // "아직 담긴 영상이 없어요"를 ✓체크된 카드가 보이는 화면에 띄우면 모순돼 보인다.
   if(!d || d.pick_id==null){ hasFootage ? renderNoScriptState() : renderEmptyState(); return; }
   window._aiPick = d;
+  // 자동선정 결과(bbMain 미지정 상태)를 왼쪽 레일에도 반영 — 사장님이 아직 안 골랐으면
+  // 서버가 고른 완성도 1위 썸네일에 픽 표시가 붙는다(renderPool의 _anyPick 폴백 로직).
+  if(typeof renderPool==='function') renderPool();
   const t = d.tiles || {}, stc = d.structure || {}, seg = (stc.segments) || [];
   const pm = d.pick_meta || {};
   const hf = (typeof HANDOFF!=='undefined' && HANDOFF[d.pick_index]) || {};
@@ -2638,6 +2650,23 @@ function removeMixUrlRow(btn){
   const rows=wrap.querySelectorAll('.row');
   if(rows.length<=1){ const inp=wrap.querySelector('.mixUrl'); if(inp) inp.value=''; return; }
   btn.closest('.row').remove();
+}
+// 썸네일 클릭 = 이 영상을 AI PICK으로 지정(그 대본이 카드에 뜬다). 담김도 자동 ON.
+function pickFootage(i){
+  if(!HANDOFF[i]) return;
+  HANDOFF.forEach(h=>{ h.bbMain=false; });
+  HANDOFF[i].bbMain=true; HANDOFF[i].useFootage=true;
+  if(typeof syncFootageToMixUrls==='function') syncFootageToMixUrls();
+  renderPool(); saveWork();
+  if(typeof refreshStep0==='function') refreshStep0();
+}
+// ✕ = 이 영상을 믹스에서 뺀다(픽이었으면 픽 해제).
+function dropFootage(i){
+  if(!HANDOFF[i]) return;
+  HANDOFF[i].useFootage=false; HANDOFF[i].bbMain=false;
+  if(typeof syncFootageToMixUrls==='function') syncFootageToMixUrls();
+  renderPool(); saveWork();
+  if(typeof refreshStep0==='function') refreshStep0();
 }
 function toggleFootage(i){
   if(!HANDOFF[i]) return;

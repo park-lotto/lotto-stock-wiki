@@ -134,3 +134,9 @@
 .beat .sc{ width:28px; height:20px; border-radius:4px; background:linear-gradient(160deg,#2b3a4e,#141d2c); flex-shrink:0; }
 .beat .tx{ flex:1; color:#cfe9ff; }
 .beat .fit{ color:#3ee0bf; font-weight:900; }
+
+/* ── 영상풀 AI PICK 표시(2026-07-23 Task7) — 썸네일 클릭으로 픽 지정 ── */
+.pool-card.pick{ outline:2px solid #facc6b; outline-offset:1px; box-shadow:0 0 12px rgba(250,204,107,.5); }
+.pool-card .pickbadge{ position:absolute; top:-7px; left:-4px; font-size:9px; font-weight:900; color:#231a00; background:linear-gradient(135deg,#ffe29a,#f5b53f); border-radius:99px; padding:2px 7px; white-space:nowrap; }
+.pool-card .pool-x{ position:absolute; top:-7px; right:-6px; width:18px; height:18px; border-radius:50%; border:0; background:#243244; color:#cfe9ff; font-size:10px; font-weight:900; cursor:pointer; display:none; line-height:1; }
+.pool-card:hover .pool-x{ display:block; }

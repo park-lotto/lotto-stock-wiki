@@ -5436,13 +5436,13 @@ def _forced_backbone(work_id, cid):
 
 
 @app.get("/api/produce/aipick")
-def api_produce_aipick(request: Request, work_id: str = ""):
+def api_produce_aipick(request: Request, work_id: str = "", forced: str = ""):
     """1단계 "AI가 미리 픽 추천" 조회 — 지금 담긴 소스를 pick_backbone/score_backbones/
     analyze_structure로 사전분석해 프론트 계약 하나로 묶어 반환(build_aipick)."""
     cid = _cid(request)
     sources = _load_work_sources(work_id, cid)
     meta = _build_source_meta(sources)
-    return build_aipick(sources, meta, forced=_forced_backbone(work_id, cid))
+    return build_aipick(sources, meta, forced=(forced or _forced_backbone(work_id, cid)) or None)
 
 
 @app.post("/api/produce/mix/start")

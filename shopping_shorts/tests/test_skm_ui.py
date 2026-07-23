@@ -145,14 +145,38 @@ def test_footage_on_but_no_pick_state_distinct():
 
 
 def test_pool_card_toggle_only():
-    # renderPool()이 카드 5버튼(뽑기/담기/메인/정보채우기/✕)이 아니라 ✓뱃지 토글만 그린다.
+    # renderPool()이 카드 옛 5버튼(뽑기/담기/메인/정보채우기)을 되살리지 않는다.
+    # ★Task7(2026-07-23): 클릭=pickFootage(AI PICK 지정)로 바뀌었고, 빼기는 ✕(dropFootage) 하나만 남는다.
     start = HTML.index("function renderPool(){")
     end = HTML.index("function previewMaterial")
     body = HTML[start:end]
-    assert "toggleFootage(${i})" in body
+    assert "pickFootage(${i})" in body
+    assert "dropFootage(${i})" in body
     assert "openScriptModal(${i})" not in body
     assert "designateBackbone(${i})" not in body
     assert "removeFootage(${i})" not in body
+
+
+# ── Task 7(2026-07-23): 썸네일에 AI PICK 표시 + 클릭으로 픽 지정 ──────────
+def test_pick_footage_and_drop_footage_wired():
+    assert "function pickFootage(i){" in HTML
+    assert "function dropFootage(i){" in HTML
+    assert "bbMain=true" in HTML  # pickFootage가 지정한 카드를 백본으로 못박는다
+
+
+def test_pool_card_marks_pick_with_badge():
+    assert "pickbadge" in HTML
+    assert ".pool-card.pick" in CSS
+    assert "pickbadge" in CSS
+
+
+def test_refresh_step0_sends_forced_param():
+    # 사장님이 지정한 픽(bbMain)이 있으면 /api/produce/aipick에 forced=로 강제 전달한다.
+    start = HTML.index("async function refreshStep0(){")
+    end = HTML.index("}", HTML.index("catch(e){ renderEmptyState(); }", start))
+    body = HTML[start:end]
+    assert "bbMain" in body
+    assert "forced=" in body
 
 
 # ── Task 5: 분석 극장(B) — ⚡시작 후 대기시간 실시간 해부 연출 ──────────
