@@ -11,12 +11,21 @@
     },
     {
       "broker": "그로쓰리서치",
-      "stock": "해성디에스",
+      "stock": "엔비디아",
       "rating": null,
       "tp": null,
-      "ts": "09:00",
-      "quote": "해성디에스가 중국 DRAM 업체 CXMT를 DDR5 패키지 기판 고객사로 확보",
+      "ts": "07:56",
+      "quote": "Vera Rubin NVL72가 본격 양산에 돌입했으며 CoreWeave, Google Cloud, Microsoft Azure, Oracle Cloud 등 주요 고객사에 공급 시작",
       "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성전자",
+      "rating": null,
+      "tp": null,
+      "ts": "08:19",
+      "quote": "삼성전자가 대표이사 직속 'RX(Robotics eXperience)사업추진실'을 신설하고 로봇 사업 확대에 본격 착수",
+      "sector": "로봇"
     },
     {
       "broker": "그로쓰리서치",
@@ -24,7 +33,7 @@
       "rating": null,
       "tp": null,
       "ts": "08:25",
-      "quote": "11월 SITC에서 AR170·AR166의 환자 조직 기반 중개연구 데이터 공개 예정",
+      "quote": "PD-1·VEGF에 IL-2 변이체(IL-2v)를 결합한 삼중항체 플랫폼 '멀티앱카인' 개발",
       "sector": "바이오"
     },
     {
@@ -38,11 +47,29 @@
     },
     {
       "broker": "그로쓰리서치",
+      "stock": "에스트래픽",
+      "rating": null,
+      "tp": null,
+      "ts": "08:59",
+      "quote": "무선통신 기반 차세대 신호시스템 한국형 열차제어시스템(KTCS-M) 기술력을 높게 평가",
+      "sector": "기타"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "해성디에스",
+      "rating": null,
+      "tp": null,
+      "ts": "09:00",
+      "quote": "해성디에스가 중국 DRAM 업체 CXMT를 DDR5 패키지 기판 고객사로 확보",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
       "stock": "알지노믹스",
       "rating": null,
       "tp": null,
       "ts": "09:15",
-      "quote": "올해 상반기 2차례에 이어 이번까지 총 3차례 연구비 수령",
+      "quote": "RNA 치환효소 기술 기반 유전성 난청 치료제 공동연구 진행",
       "sector": "바이오"
     },
     {
@@ -51,7 +78,7 @@
       "rating": null,
       "tp": null,
       "ts": "09:22",
-      "quote": "다양한 세포·유전자치료제 생산이 가능한 GMP 시스템 구축",
+      "quote": "이엔셀, 세포·유전자치료제 신약, CDMO를 넘어 항노화 기업으로…이엔셀의 진화",
       "sector": "바이오"
     },
     {
@@ -83,12 +110,57 @@
     },
     {
       "broker": "그로쓰리서치",
-      "stock": "SGC에너지",
+      "stock": "LG에너지솔루션",
       "rating": null,
       "tp": null,
-      "ts": "17:38",
-      "quote": "1차 사업은 기존 40MW에서 60MW로 확대됐으며, ’28년 1월 상업운영 목표",
-      "sector": "전력"
+      "ts": "13:14",
+      "quote": "현대차그룹·LG에너지솔루션 미국 합작법인 ‘HL-GA 배터리’ 공장 내부 공사 마무리",
+      "sector": "2차전지"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성바이오로직스",
+      "rating": null,
+      "tp": null,
+      "ts": "13:25",
+      "quote": "폴리펩타이드그룹 지분 100%를 12월까지 인수할 계획",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성디스플레이",
+      "rating": null,
+      "tp": null,
+      "ts": "13:39",
+      "quote": "삼성디스플레이, 정부 ‘메가 프로젝트’의 일환으로 발표한 충청권 투자 계획을 즉시 실행할 방침",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "현대차",
+      "rating": null,
+      "tp": null,
+      "ts": "14:23",
+      "quote": "삼성전자 점유율은 지난해 40%에서 올해 32%로 하락하지만 선두 유지 전망",
+      "sector": "자동차"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LIG넥스원",
+      "rating": null,
+      "tp": null,
+      "ts": "14:40",
+      "quote": "말레이시아가 약 1조원 규모의 중거리 방공망 도입을 추진",
+      "sector": "방산"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "노보노디스크",
+      "rating": null,
+      "tp": null,
+      "ts": "16:23",
+      "quote": "한국노보노디스크제약이 식약처에 위고비의 MASH 적응증 확대를 신청",
+      "sector": "바이오"
     },
     {
       "broker": "그로쓰리서치",
