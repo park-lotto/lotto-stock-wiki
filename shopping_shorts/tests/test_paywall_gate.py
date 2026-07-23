@@ -198,6 +198,20 @@ def test_discover_run_admin_only_feed_open(tmp_path, monkeypatch):
     assert c.get("/api/discover/feed").status_code == 200
 
 
+def test_discover_add_admin_only(tmp_path, monkeypatch):
+    """목록추가(/api/discover/add)도 관리자 전용(2026-07-23) — 추가 채널이 전 회원
+    공유 추적목록에 들어가 다음날부터 매일 Apify 수집이 늘기 때문. pro는 403,
+    관리자(cid0)는 200으로 추가된다."""
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("pro9", "pw12")
+    s.set_plan(cid, "pro")
+    pro = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
+    assert pro.post("/api/discover/add", params={"username": "somech"}).status_code == 403
+    admin = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})
+    r = admin.post("/api/discover/add", params={"username": "adminch"})
+    assert r.status_code == 200 and r.json()["ok"] is True
+
+
 def test_admin_can_register_reference(tmp_path, monkeypatch):
     """관리자(cid0)는 레퍼런스 등록 가능 — 가드가 관리자를 막지 않는다(403 아님)."""
     _setup(tmp_path, monkeypatch)
