@@ -2432,6 +2432,8 @@ async function refreshStep0(){
     renderAiPick(await r.json(), hasFootage);
   }catch(e){ renderEmptyState(); }
 }
+// 조회수·댓글 등 큰 숫자를 "240만"/"1.2억" 식으로 축약(v6 목업 표기와 동일).
+function fmtNum(n){ n=Number(n)||0; if(n>=1e8) return (n/1e8).toFixed(n%1e8?1:0)+'억'; if(n>=1e4) return (n/1e4).toFixed(n%1e4>=1000?1:0)+'만'; return n.toLocaleString(); }
 // AI PICK 카드 — build_aipick(aipick.py) 응답을 그대로 카드로 옮긴다.
 // ⚠️ views/views_x_followers는 저장소에 조회수 자체가 없어 항상 null(app.py 주석 확인) —
 // null인 타일은 아예 렌더하지 않는다("null배" 노출 금지). structure.segments가 비면([])
@@ -2442,7 +2444,22 @@ function renderAiPick(d, hasFootage){
   // "아직 담긴 영상이 없어요"를 ✓체크된 카드가 보이는 화면에 띄우면 모순돼 보인다.
   if(!d || d.pick_id==null){ hasFootage ? renderNoScriptState() : renderEmptyState(); return; }
   window._aiPick = d;
-  const t = d.tiles || {}, seg = (d.structure && d.structure.segments) || [];
+  const t = d.tiles || {}, stc = d.structure || {}, seg = (stc.segments) || [];
+  const pm = d.pick_meta || {};
+  const hf = (typeof HANDOFF!=='undefined' && HANDOFF[d.pick_index]) || {};
+  const _name = pm.title || hf.name || '선택 영상';
+  const _thumb = pm.thumbnail || hf.thumbnail || '';
+  const _sub = [pm.category, (pm.followers!=null?('팔로워 '+fmtNum(pm.followers)):null)].filter(Boolean).join(' · ');
+  const _who = `<div class="aipick-who">${_thumb?`<img class="th" src="${_thumb.includes('gstatic.com')?_thumb:('/api/thumb?url='+encodeURIComponent(_thumb))}" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">`:'<div class="th"></div>'}<div><div class="nm">${esc(_name)}</div>${_sub?`<div class="sub">${esc(_sub)}</div>`:''}</div></div>`;
+  const _tiles = [];
+  if(t.views!=null) _tiles.push(`<div class="stt"><div class="v hot">${fmtNum(t.views)}</div><div class="k">조회수</div>${t.views_x_followers!=null?`<div class="x">팔로워의 ${t.views_x_followers}배 🔥</div>`:''}</div>`);
+  if(t.comments!=null) _tiles.push(`<div class="stt"><div class="v">${Number(t.comments).toLocaleString()}</div><div class="k">댓글</div>${t.comments_x_avg!=null?`<div class="x mint">평균의 ${t.comments_x_avg}배</div>`:''}</div>`);
+  if(t.engagement_rank!=null) _tiles.push(`<div class="stt"><div class="v mint">${t.engagement_rank}위</div><div class="k">참여밀도</div></div>`);
+  if(t.seconds!=null) _tiles.push(`<div class="stt"><div class="v">${t.seconds}초</div><div class="k">길이</div></div>`);
+  const _tags = [];
+  if(stc.hook_type) _tags.push(`<span class="tag t1">🎙 ${esc(stc.hook_type)} 훅</span>`);
+  (stc.devices||[]).forEach(dv=>_tags.push(`<span class="tag t2">👥 ${esc(dv)}</span>`));
+  const _why = _tags.length ? `<div class="why">${_tags.join('')}</div>` : '';
   const strip = seg.length ? `<div class="strip">${seg.map(s=>
      `<div class="seg" style="flex:${s.pct};background:${s.color}">${esc(s.label)}</div>`).join('')}</div>` : '';
   const others = (d.candidates || []).filter(c=>c.video_id!==d.pick_id);
@@ -2450,12 +2467,9 @@ function renderAiPick(d, hasFootage){
   el.innerHTML = `
     <div class="skm-card">
       <b>🤖 AI PICK · 완성도 1위 대본</b>
-      <div class="tiles">
-        ${t.views_x_followers!=null?`<div class="stat-tile"><b>${t.views_x_followers}배🔥</b><span>조회수/팔로워</span></div>`:''}
-        ${t.comments_x_avg!=null?`<div class="stat-tile"><b>${t.comments_x_avg}배</b><span>댓글/평균</span></div>`:''}
-        ${t.engagement_rank!=null?`<div class="stat-tile"><b>${t.engagement_rank}위</b><span>참여밀도</span></div>`:''}
-        ${t.seconds!=null?`<div class="stat-tile"><b>${t.seconds}초</b><span>길이</span></div>`:''}
-      </div>
+      ${_who}
+      <div class="stats">${_tiles.join('')}</div>
+      ${_why}
       ${strip}
       <div class="newline">✨ 이 뼈대로 완전 새로운 대본을 만듭니다</div>
       <button class="cta-shine aiPickCta" onclick="startFromAiPick()">⚡ 이대로 만들기 시작</button>

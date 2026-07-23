@@ -12,6 +12,7 @@ def test_build_aipick_picks_top_and_tiles():
     assert out["tiles"]["comments"] is not None
     assert out["tiles"]["engagement_rank"] == 1
     assert isinstance(out["candidates"], list) and len(out["candidates"]) == 2
+    assert isinstance(out["pick_meta"], dict) and "title" in out["pick_meta"]
 
 
 def test_build_aipick_respects_forced():

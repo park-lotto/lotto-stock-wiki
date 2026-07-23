@@ -60,7 +60,7 @@ def _beats_to_segments(beats, target_seconds):
 
 def build_aipick(sources, meta, forced=None):
     if not sources:
-        return {"pick_id": None, "pick_index": -1, "tiles": {}, "structure": {}, "candidates": []}
+        return {"pick_id": None, "pick_index": -1, "tiles": {}, "structure": {}, "candidates": [], "pick_meta": {}}
     meta = meta or {}
     scored = score_backbones(sources, meta)                 # [{video_id,coverage,engagement,score}] score desc
     ranks = {r["video_id"]: i + 1 for i, r in enumerate(scored)}
@@ -94,4 +94,10 @@ def build_aipick(sources, meta, forced=None):
             "devices": struct_raw.get("devices", []),
         }
     return {"pick_id": pick_id, "pick_index": idx, "tiles": tiles,
-            "structure": structure, "candidates": [{"video_id": r["video_id"], "score": r["score"]} for r in scored]}
+            "structure": structure, "candidates": [{"video_id": r["video_id"], "score": r["score"]} for r in scored],
+            "pick_meta": {
+                "title": pick.get("title") or pick.get("name"),
+                "category": pick.get("category"),
+                "followers": pick.get("followers"),
+                "thumbnail": pick.get("thumbnail") or pick.get("thumb"),
+            }}

@@ -107,6 +107,16 @@ def test_aipick_and_emptystate_present():
     assert 'class="cta-shine"' in HTML or "'cta-shine'" in HTML
 
 
+def test_aipick_card_faithful_to_v6_mock():
+    # final-mock-v6.html(36-52, 100-116행) 이식 확인 — who블록·수치타일·훅/디바이스 태그.
+    assert ".aipick-who" in CSS and ".stt" in CSS
+    start = HTML.index("function renderAiPick(")
+    end = HTML.index("// ── AI PICK 끝 ──")
+    body = HTML[start:end]
+    assert "aipick-who" in body
+    assert "why" in body
+
+
 def test_no_banned_copy():
     assert "복사가 아니에요" not in HTML
     # 브리프 원문 슬라이스(HTML.split('id="scriptModeBody"')[0])는 <head><style>의 keyframe
