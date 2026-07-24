@@ -88,6 +88,11 @@ TTS_MAX_WORKERS = int(os.getenv("TTS_MAX_WORKERS", "3"))
 # 유튜브 URL을 yt_relay 큐에 넣고, 사장님 PC의 에이전트가 큐를 폴링해 주거용 IP로 받아
 # 서버에 업로드한다. 서버에서만 켠다(YT_RELAY_ENABLED=1) — 로컬/에이전트는 꺼야
 # 무한루프가 안 난다(에이전트는 _download_ytdlp를 직접 부른다). KEY는 에이전트 인증용.
+# B안(주거용 프록시, 2026-07-24) — A안(PC 릴레이)의 "사장님 PC 의존" 한계를 없앤다. 프록시 URL을
+# 넣으면 서버가 직접 유튜브를 그 IP로 받아 PC 없이 24/7·고객 다중 동시 처리된다(업체 무관, 형식
+# http://user:pass@host:port). 우선순위: 프록시 > 릴레이(A) > 직접. 미설정이면 기존 A/직접 그대로(회귀0).
+YTDLP_PROXY = os.getenv("YTDLP_PROXY", "")
+
 YT_RELAY_ENABLED = os.getenv("YT_RELAY_ENABLED", "") == "1"
 YT_RELAY_KEY = os.getenv("YT_RELAY_KEY", "")
 YT_RELAY_DIR = Path(__file__).parent / "data" / "yt_relay"   # 에이전트가 올린 mp4 보관

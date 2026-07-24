@@ -39,6 +39,16 @@ def _cookies_arg(url):
     return cookies + extra
 
 
+def _proxy_arg(url):
+    """B안(2026-07-24): 유튜브만 프록시로 보낸다(config.YTDLP_PROXY 설정 시). 서버 데이터센터 IP가
+    유튜브에 봇차단당하는 걸 주거용 프록시로 우회 → PC 릴레이 없이 서버가 직접 받는다. 틱톡·샤오홍슈
+    등은 서버서도 되므로 프록시를 안 태워(대역폭·비용 절약). 미설정이면 [](회귀0)."""
+    u = (url or "").lower()
+    if config.YTDLP_PROXY and ("youtube.com" in u or "youtu.be" in u):
+        return ["--proxy", config.YTDLP_PROXY]
+    return []
+
+
 def _oembed(url):
     """틱톡·유튜브 oEmbed → {thumbnail_url,title,author_name} (무료·무인증). 실패 시 {}.
     yt-dlp가 틱톡에서 자주 깨져(rehydration) 썸네일·작성자를 이걸로 보강한다(2026-07-18 실측)."""
@@ -65,7 +75,7 @@ def probe_grab_meta(url, timeout=40):
     out = {}
     try:
         r = subprocess.run([sys.executable, "-m", "yt_dlp", "-j", "--no-warnings",
-                            *_cookies_arg(url), url],
+                            *_cookies_arg(url), *_proxy_arg(url), url],
                            capture_output=True, text=True, timeout=timeout)
         if r.returncode == 0 and r.stdout.strip():
             d = json.loads(r.stdout)
@@ -117,7 +127,7 @@ def _download_ytdlp(url, dest_dir, max_attempts=3):
     for attempt in range(max_attempts):
         r = subprocess.run(
             [sys.executable, "-m", "yt_dlp", "-f", "mp4/bestvideo+bestaudio/best",
-             "--no-playlist", *_cookies_arg(url), "-o", out, url],
+             "--no-playlist", *_cookies_arg(url), *_proxy_arg(url), "-o", out, url],
             capture_output=True, text=True, timeout=300)
         if r.returncode == 0:
             files = sorted(Path(dest_dir).glob(stem + "*"))
@@ -200,7 +210,9 @@ def download_any(url, dest_dir):
     # ★유튜브는 서버(데이터센터 IP)서 봇차단당해 yt-dlp가 통째로 막힌다 → 릴레이가 켜져 있으면
     # 사장님 PC 에이전트로 오프로드한다(주거용 IP). 로컬/에이전트는 YT_RELAY_ENABLED=0이라
     # 아래 직접 yt-dlp 경로로 간다(회귀0). 틱톡·샤오홍슈 등은 서버서도 되므로 릴레이 안 탄다.
-    if config.YT_RELAY_ENABLED and ("youtube.com" in u or "youtu.be" in u):
+    # 우선순위: 프록시(B) > 릴레이(A) > 직접. 프록시가 있으면 서버가 직접 받으므로(아래 _download_ytdlp가
+    # _proxy_arg로 프록시를 붙인다) PC 릴레이를 건너뛴다 — PC 의존 없이 고객 다중 처리 가능.
+    if config.YT_RELAY_ENABLED and not config.YTDLP_PROXY and ("youtube.com" in u or "youtu.be" in u):
         return _download_via_relay(url, dest_dir)
     if any(s in u for s in ("youtube.com", "youtu.be", "tiktok.com",
                              "xiaohongshu.com", "xhslink.com", "douyin.com",
@@ -224,7 +236,7 @@ def resolve_media_url(platform, video_id, timeout=30):
         r = subprocess.run(
             [sys.executable, "-m", "yt_dlp", "-g", "-f",
              "best[ext=mp4][vcodec!=none][acodec!=none]/best[ext=mp4]/best",
-             "--no-warnings", *_cookies_arg(page), page],
+             "--no-warnings", *_cookies_arg(page), *_proxy_arg(page), page],
             capture_output=True, text=True, encoding="utf-8", timeout=timeout)
     except Exception:
         return ""
