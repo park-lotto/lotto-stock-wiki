@@ -2282,10 +2282,12 @@ function _renderMixReviewBody(d){
   const el=document.getElementById('mixReview');
   // ★P1/P2(2026-07-24): 조용한 폴백·불변식 위반을 화면에 띄운다. 예전엔 개선 생성기가 실패해도
   // 옛 대본이 조용히 나와 "고쳤는데 왜 그대로냐"가 반복됐다 — 이제 왜 그런지 보인다.
-  const _genWarn = (d.generator==='legacy_fallback')
+  // ★게이트/생성기 경고는 관리자(cid0)만 본다(2026-07-25) — 일반 사용자는 기술 경고 대신
+  // 최선안을 조용히 받는다(백엔드는 gate를 항상 저장, 표시만 역할로 게이팅).
+  const _genWarn = (window.IS_ADMIN && d.generator==='legacy_fallback')
     ? `<div style="border:1px solid var(--fire);border-radius:10px;padding:10px;margin-bottom:8px;background:rgba(255,90,90,.08);font-size:13px">⚠️ <b>개선 생성기 실패 → 예전 방식 대본</b><div class="hint" style="margin-top:4px">${esc(d.generator_note||'다시 매칭을 권장합니다.')}</div></div>`
     : '';
-  const _gv = (d.gate && !d.gate.ok) ? (d.gate.violations||[]) : [];
+  const _gv = (window.IS_ADMIN && d.gate && !d.gate.ok) ? (d.gate.violations||[]) : [];
   const _gateWarn = _gv.length
     ? `<div style="border:1px solid var(--fire);border-radius:10px;padding:10px;margin-bottom:8px;background:rgba(255,90,90,.06);font-size:13px">🚧 <b>렌더 전 점검에서 걸린 것</b><ul style="margin:6px 0 0 18px;padding:0">${_gv.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`
     : '';
