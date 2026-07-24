@@ -23,6 +23,25 @@ from PIL import ImageFont
 
 # 출력 규격(숏폼 세로). 소스 해상도가 달라도 여기로 통일해야 concat -c copy가 안전.
 _OUT_W, _OUT_H = 1080, 1920
+# ★x264 프리셋(2026-07-24): 미리보기는 assemble(fast=True)가 veryfast로 바꿔 6분→~1.5분.
+# 최종은 medium 유지(고화질). 소셜 숏폼은 플랫폼 재인코딩되므로 veryfast도 체감차 거의 없다.
+_X264_PRESET = "medium"
+
+import contextlib as _contextlib
+
+
+@_contextlib.contextmanager
+def preview_preset(preset="veryfast"):
+    """이 블록 안의 assemble 인코딩을 빠른 프리셋으로(미리보기 전용). 끝나면 원복.
+    ★2026-07-24: 미리보기가 1080p·medium·30초로 6분 걸려 배포 재시작과 겹쳐 죽었다.
+    veryfast면 ~1.5분. 최종 렌더는 이 컨텍스트 밖이라 medium 고화질 유지."""
+    global _X264_PRESET
+    prev = _X264_PRESET
+    _X264_PRESET = preset
+    try:
+        yield
+    finally:
+        _X264_PRESET = prev
 _FONT_DIR = Path(__file__).parent / "static" / "fonts"
 # 반중복탐지 회피(2026-07-14) — 말 안 해도 항상 적용. 화질 오염 없는(비가역 손상X)
 # 것만 자동화: ①전 비트 기본 크롭+줌(살짝 확대, 원본과 프레임 구도가 달라짐)
@@ -589,7 +608,7 @@ def _extend_with_frozen_motion(sub_path, play_out, freeze, out_path):
         "ffmpeg", "-y", "-i", str(sub_path),
         "-vf", f"tpad=stop_mode=clone:stop_duration={freeze:.3f},{_kenburns_vf(total)}",
         "-r", "30", "-an", "-t", f"{total:.3f}",
-        "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out_path),
+        "-c:v", "libx264", "-preset", _X264_PRESET, "-pix_fmt", "yuv420p", str(out_path),
     ])
     return out_path
 
@@ -673,7 +692,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 "ffmpeg", "-y", "-ss", f"{start:.3f}", "-t", f"{c['src_dur']:.3f}",
                 "-i", str(src),
                 "-vf", vf_full, "-r", "30", "-an", "-t", f"{play_out:.3f}",
-                "-c:v", "libx264", "-pix_fmt", "yuv420p", str(sub),
+                "-c:v", "libx264", "-preset", _X264_PRESET, "-pix_fmt", "yuv420p", str(sub),
             ])
             # 그래도 비면(소스 손상/범위밖) 이 클립만 버린다 — 하나가 미리보기 전체를 죽이지 않게.
             if not sub.exists() or _probe_duration(sub) <= 0.05:
@@ -720,7 +739,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 # 여운(runout): 마지막 비트만 대사 뒤 화면이 더 산다 — 오디오는 tts 길이에서
                 # 자연 종료(무성 여운). 컷어웨이 창(win)은 tts_dur 기준 그대로(여운을 덮지 않음).
                 "-t", f"{tts_dur + runout:.3f}",
-                "-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
+                "-c:v", "libx264", "-preset", _X264_PRESET, "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
             ])
         else:
             # 비트 나레이션(tts) 오디오를 얹고 길이를 tts_dur(+마지막 비트는 여운)로 맞춘다.
@@ -1157,7 +1176,7 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     if not has_bgm and not has_overlay and not has_motion and not has_sfx:
         base_vf = vf
         _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-vf", base_vf, "-r", "30",
-                     "-c:v", "libx264", "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
+                     "-c:v", "libx264", "-preset", _X264_PRESET, "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
                     cwd=str(work))
         return str(out_path)
     inputs = ["-i", str(in_video)]
@@ -1203,7 +1222,7 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         amap = "[a]"
     cmd = ["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(fc), "-map", f"[{vcur}]"]
     cmd += (["-map", amap, "-c:a", "aac"] if amap else ["-map", "0:a", "-c:a", "copy"])
-    cmd += ["-r", "30", "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out_path)]
+    cmd += ["-r", "30", "-c:v", "libx264", "-preset", _X264_PRESET, "-pix_fmt", "yuv420p", str(out_path)]
     _run_ffmpeg(cmd, cwd=str(work))
     return str(out_path)
 
@@ -1214,7 +1233,9 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, 
     (없으면 생략). 자막제거는 우리 자막을 굽기 전 깨끗한 믹스에 돌려야 우리 자막이
     함께 지워지지 않는다.
     sfx_paths: {beat_idx: media_path} — beat["sfx"]가 붙은 비트의 효과음 경로(컷어웨이와
-    같은 seam). _burn_captions가 position→오프셋을 캡션과 같은 함수로 계산해 amix에 섞는다."""
+    같은 seam). _burn_captions가 position→오프셋을 캡션과 같은 함수로 계산해 amix에 섞는다.
+    ★인코딩 프리셋은 모듈 _X264_PRESET(기본 medium). 미리보기는 호출부(run_preview)가
+    preview_preset() 컨텍스트로 veryfast로 감싼다 — 최종은 그대로 medium 고화질."""
     work = Path(out_path).parent / f"asm_{uuid.uuid4().hex[:8]}"
     work.mkdir(parents=True, exist_ok=True)
     mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=cutaway_paths)
