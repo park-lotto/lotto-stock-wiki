@@ -337,7 +337,21 @@ def run_mix_job(job_id, db_path, work_root):
         store.update_mix_job(job_id, status="extracting")
         def _extract(item):
             vid, path = item
-            r = extract_script(path, vid, caption=captions.get(vid, ""))
+            # 캐시 재사용(2026-07-24): 이 소스 대본을 담기/AI PICK/뽑기 때 이미 뽑아
+            # script_extracts에 저장했으면 그대로 쓴다 — Gemini/Whisper 재전사 스킵(속도↑).
+            # ★품질 무해 가드: extract_script와 동일한 {segments(seg_id 포함), full_text} 형태를
+            #   그대로 저장했으므로 동일 데이터다. 단 seg_id가 다 있어야 장면매칭이 성립하므로,
+            #   segments가 비었거나 seg_id 없는 항목이 하나라도 있으면 캐시를 버리고 새로 추출한다.
+            cached = None
+            try:
+                cached = store.get_extract(vid)
+            except Exception:
+                cached = None
+            segs = (cached or {}).get("segments")
+            if segs and all(s.get("seg_id") for s in segs):
+                r = {"segments": segs, "full_text": (cached.get("full_text") or "")}
+            else:
+                r = extract_script(path, vid, caption=captions.get(vid, ""))
             r["video_id"] = vid
             return vid, r
         with ThreadPoolExecutor(max_workers=max(1, len(video_paths))) as ex:
