@@ -335,6 +335,27 @@ def is_point_beat(beat):
     return n_act in _POINT_ACTIONS
 
 
+_ADJ_TOL = 0.35   # 앞 클립 끝과 다음 클립 시작이 이 이내면 '이어붙임'(=컷이 아님)
+
+
+def is_continuous(prev_clip, cand):
+    """두 클립이 화면상 '안 잘린 연속'인가 — 같은 소스 + 앞 끝≈뒤 시작.
+
+    ★2026-07-24 실사고: s2-0→s2-1→s2-2… 처럼 원본 인접 구간을 순서대로 붙이면 seg_id는
+    전부 고유(반복 게이트 통과)인데 화면은 원본을 그냥 튼 것이라 컷이 없다. 고유성과 별개로
+    이걸 따로 봐야 한다."""
+    if not prev_clip or not cand:
+        return False
+    # ★필드가 없으면 '모른다' = 컷으로 본다. 안 그러면 video_id 둘 다 None(같다)·시각 0≈0으로
+    # 모든 클립이 연속으로 오판된다(자체 테스트에서 실측).
+    pv, cv = _vid_of(prev_clip), _vid_of(cand)
+    if not pv or not cv or pv != cv:
+        return False
+    if prev_clip.get("end") is None or cand.get("start") is None:
+        return False
+    return abs(float(prev_clip["end"]) - float(cand["start"])) <= _ADJ_TOL
+
+
 def dedup_clips_global(beats, pool_sources, max_clips=None):
     """전역 컷 반복 해소(2026-07-22 페이블 — dedup_and_balance는 primary만 봐서 alternates
     B롤 체인이 비트마다 똑같이 반복됐다: job 실측 s0-2·s0-3이 5비트에 반복). primary+alternates를
@@ -347,24 +368,33 @@ def dedup_clips_global(beats, pool_sources, max_clips=None):
     used = set()
     src_count = Counter()
     out = []
+    prev = None      # ★직전에 화면에 나갈 클립(비트 경계도 넘는다) — 이어붙임 판정용
     for b in beats:
         nb = dict(b)
         p = nb.get("primary") or {}
         used.add(p.get("seg_id"))
         src_count[_vid_of(p)] += 1
+        if p.get("seg_id"):
+            prev = p
         new_alts = []
         for a in (nb.get("alternates") or []):
             if 1 + len(new_alts) >= max_clips:      # 상한 초과분은 버린다(적고 길게)
                 break
             sid = a.get("seg_id")
-            if sid not in used and _seg_dur(a) > 0:
+            # ★is_continuous(2026-07-24 실사고): seg_id가 고유해도 같은 소스의 **인접 구간**을
+            # 순서대로 붙이면 컷이 없어 원본을 그냥 트는 화면이 된다(사장님 "연속재생").
+            # 고유성만 보던 dedup을 '이어붙임'까지 보게 확장한다.
+            if sid not in used and _seg_dur(a) > 0 and not is_continuous(prev, a):
                 new_alts.append(a); used.add(sid); src_count[_vid_of(a)] += 1
+                prev = a
                 continue
-            # 이미 쓴/빈 클립 → 안 쓴 비주얼 B롤로 교체(없으면 드롭 = 반복 안 함).
+            # 이미 쓴/빈/이어붙임 클립 → 안 쓴 비주얼 B롤로 교체(이어붙임 아닌 것으로).
             repl = next((c for c in _broll_segs(pool_sources, src_count, used,
-                                                prefer_video=_vid_of(p), min_shot=min_shot)), None)
+                                                prefer_video=_vid_of(p), min_shot=min_shot)
+                         if not is_continuous(prev, c)), None)
             if repl:
                 new_alts.append(repl); used.add(repl.get("seg_id")); src_count[_vid_of(repl)] += 1
+                prev = repl
         nb["alternates"] = new_alts
         out.append(nb)
     return out
