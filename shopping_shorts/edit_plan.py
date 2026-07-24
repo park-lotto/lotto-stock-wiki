@@ -566,10 +566,38 @@ def _candidate_quality(beats):
     return 0.6 * tone + 0.4 * fun
 
 
+def _cut_rhythm_penalty(beats):
+    """컷 리듬 감점(0~0.2, 브리프 T6) — 파편화(비트당 클립 과다=짧은 컷 연발)와 전역 반복
+    (같은 seg 재사용=B롤 체인)을 감지한다. T1~T5가 구성을 고쳐도 후보들이 이 축에서 다를 수
+    있어, 추천 선택이 파편·반복 후보를 다시 고르지 않게 하는 안전망. 잘 구성된 후보(비트당
+    클립 ≤ MAX_CLIPS_PER_BEAT·seg 전부 고유)는 0 → 정상 경로 회귀0."""
+    beats = beats or []
+    if not beats:
+        return 0.0
+    seg_ids = []
+    for b in beats:
+        p = (b.get("primary") or {}).get("seg_id")
+        if p:
+            seg_ids.append(p)
+        for a in (b.get("alternates") or []):
+            sid = (a or {}).get("seg_id")
+            if sid:
+                seg_ids.append(sid)
+    clips = len(seg_ids)
+    if clips == 0:
+        return 0.0
+    from shopping_shorts.config import MAX_CLIPS_PER_BEAT
+    avg_clips = clips / len(beats)
+    frag = min(1.0, max(0.0, avg_clips - MAX_CLIPS_PER_BEAT) / MAX_CLIPS_PER_BEAT)
+    repeat = 1.0 - len(set(seg_ids)) / clips     # 고유가 아닌 클립 비중(전역 반복)
+    return round(min(0.2, 0.1 * frag + 0.1 * repeat), 3)
+
+
 def _score_candidate(plan, avoid_hooks=None):
     """후보 추천 점수(0~1): 매칭(fit·억지없음·장면다양성) + 품질(대화체·재미강도). 빈 beats면 0.0.
     avoid_hooks(novelty 감점, belt-and-suspenders): 최근 영상이 쓴 훅 목록. 첫 비트(=훅)가
-    그와 n-gram 겹치면 감점 → 프롬프트 회피를 무시하고 같은 훅을 낸 후보가 추천되는 걸 막는다."""
+    그와 n-gram 겹치면 감점 → 프롬프트 회피를 무시하고 같은 훅을 낸 후보가 추천되는 걸 막는다.
+    컷 리듬 감점(T6): 파편화·전역 반복이 심한 후보를 강등한다."""
     beats = plan.get("beats") or []
     if not beats:
         return 0.0
@@ -584,6 +612,7 @@ def _score_candidate(plan, avoid_hooks=None):
     match = 0.5 * avg_fit + 0.3 * (1 - forced_ratio) + 0.2 * diversity
     quality = _candidate_quality(beats)          # 나레이션 없으면 0 → 매칭점수만(기존 계약 유지)
     score = 0.75 * match + 0.25 * quality
+    score -= _cut_rhythm_penalty(beats)          # T6: 파편·반복 후보 강등(안전망)
     if avoid_hooks:
         hook = beats[0].get("narration") or ""
         overlap = max((_ngram_overlap(hook, h) for h in avoid_hooks), default=0.0)

@@ -739,7 +739,7 @@
       <h3>8 · 완성 · 렌더</h3>
       <div class="sub">확정 대본·장면매칭·음성·자막제거 설정을 최종 영상으로 렌더합니다.</div>
       <div id="finalSummary" class="hint" style="margin-bottom:10px"></div>
-      <button class="btn-next" style="padding:12px 22px" onclick="renderFinal()">🎬 최종 렌더</button>
+      <button id="btnFinalRender" class="btn-next" style="padding:12px 22px" onclick="renderFinal()">🎬 최종 렌더</button>
       <div id="finalStatus" class="hint" style="margin-top:10px"></div>
       <div id="finalVideo" style="margin-top:10px"></div>
       <div id="exportBox" style="margin-top:14px"></div>
@@ -4086,25 +4086,36 @@ async function sendToCapCut(){
     alert('캡컷 보내기 실패: '+((e&&e.message)||e)+'\n\n대신 「📦 캡컷용 ZIP(수동)」을 받으실 수 있어요.');
   }finally{ renderExport({rendered:true}); }
 }
+// ⚡ 최종 렌더 — 2단계 매칭처럼 동적 피드백: 버튼 스피너 + 진행 박스 + 완성 영상 미리보기 자리(#finalVideo).
+function _finalRenderRestore(msg){
+  const st=document.getElementById('finalStatus'); if(st){ st.className='hint'; st.textContent=msg||''; }
+  const btn=document.getElementById('btnFinalRender'); if(btn){ btn.disabled=false; if(btn.dataset.orig!=null){ btn.innerHTML=btn.dataset.orig; delete btn.dataset.orig; } }
+}
 async function renderFinal(){
   if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); return; }
-  const st=document.getElementById('finalStatus'); st.textContent='⏳ 렌더 시작…';
-  document.getElementById('finalVideo').innerHTML='';
+  const btn=document.getElementById('btnFinalRender');
+  if(btn){ if(btn.dataset.orig==null) btn.dataset.orig=btn.innerHTML; btn.disabled=true; btn.innerHTML='<span class="skm-spin">🔄</span> 렌더 중…'; }
+  const st=document.getElementById('finalStatus'); if(st){ st.className='match-progress'; st.innerHTML='<span class="dot"></span><span>렌더 준비 중…</span>'; }
+  // 렌더 전 '미리보기 자리' — 완성 영상이 여기서 나온다(2단계 미리보기와 동일 연출)
+  document.getElementById('finalVideo').innerHTML='<div style="aspect-ratio:9/16;max-width:300px;margin-top:10px;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--sub);text-align:center;padding:18px"><div style="font-size:32px">🎬</div><div style="font-size:13px;line-height:1.5">렌더가 끝나면<br><b>여기에서 완성 영상</b>이<br>재생됩니다</div></div>';
   await saveHeadcopy();   // 헤드카피 설정을 job에 반영 후 렌더
   const r=await fetch('/api/mix/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:MIX_JOB})});
   const d=await r.json().catch(()=>({ok:false}));
-  if(!r.ok||!d.ok){ st.textContent='❌ 렌더 시작 실패'; return; }
+  if(!r.ok||!d.ok){ _finalRenderRestore('❌ 렌더 시작 실패'); document.getElementById('finalVideo').innerHTML=''; return; }
   MIX_POLL=setInterval(pollFinal,3000); pollFinal();
 }
 async function pollFinal(){
   try{
     const d=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
     const st=document.getElementById('finalStatus');
-    st.textContent='상태: '+(MIX_LABEL[d.status]||d.status)+(d.error?' — '+d.error:'');
+    if(d.status!=='done' && d.status!=='failed'){
+      if(st){ st.className='match-progress'; st.innerHTML='<span class="dot"></span><span>'+(MIX_LABEL[d.status]||d.status)+(d.error?' — '+d.error:'')+'</span>'; }
+    }
     if(d.status==='done'){ clearInterval(MIX_POLL);
-      document.getElementById('finalVideo').innerHTML=`<video controls src="/api/mix/video/${esc(MIX_JOB)}" style="max-width:360px;border-radius:10px"></video>`;
+      document.getElementById('finalVideo').innerHTML=`<video controls autoplay muted src="/api/mix/video/${esc(MIX_JOB)}" style="max-width:300px;border-radius:12px;margin-top:10px"></video>`;
+      _finalRenderRestore('✅ 렌더 완료 — 완성 영상이 재생됩니다');
       renderExport({rendered:true}); }   // 렌더 완료 → 완성 MP4 다운로드 버튼까지
-    if(d.status==='failed'){ clearInterval(MIX_POLL); }
+    if(d.status==='failed'){ clearInterval(MIX_POLL); _finalRenderRestore('❌ 렌더 실패'+(d.error?' — '+d.error:'')); }
   }catch(e){}
 }
 
