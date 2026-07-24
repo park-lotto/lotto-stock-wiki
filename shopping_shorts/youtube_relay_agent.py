@@ -79,6 +79,13 @@ def _handle(job):
 
 
 def main():
+    # 윈도우 콘솔 기본 코드페이지(cp949)는 '—'·이모지 등을 못 찍어 print에서 UnicodeEncodeError로
+    # 죽는다(2026-07-24 실측). yt-dlp 에러 메시지에도 유니코드가 섞이므로 stdio를 utf-8로 강제한다.
+    for _s in (sys.stdout, sys.stderr):
+        try:
+            _s.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
     if not KEY:
         print("YT_RELAY_KEY 환경변수가 없습니다. 서버와 같은 키를 설정하세요.", file=sys.stderr)
         sys.exit(1)

@@ -911,6 +911,17 @@ class Store:
         return [{"name": r[1] or r[0], "username": r[0], "followers": 0, "inpock": "",
                  "added_at": r[2] or ""} for r in rows]
 
+    def instagram_activity_map(self):
+        """reel_history에서 채널별 마지막 활동일·표시명 맵. {norm_username: {"last": iso, "name": str}}.
+        관리페이지가 '이 채널이 최근 영상을 올렸나(활동중)'를 무료로 보여주는 데 쓴다 —
+        Apify 재조회 없이 이미 쌓인 수집이력만 집계. username은 저장 시 소문자 정규화돼 있다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT username, MAX(last_seen) AS last, MAX(name) AS nm "
+                "FROM reel_history GROUP BY username"
+            ).fetchall()
+        return {r[0]: {"last": r[1] or "", "name": r[2] or ""} for r in rows}
+
     def remove_channel(self, username, name=""):
         """죽은 채널을 추적 제외목록에 추가(소프트 삭제). 발굴목록에 있었다면 함께 제거."""
         with self._conn() as c:

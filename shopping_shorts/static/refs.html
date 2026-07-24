@@ -61,10 +61,19 @@
   table.tbl td.date{color:var(--sub);font-variant-numeric:tabular-nums;white-space:nowrap}
   table.tbl .handle{font-weight:600;color:var(--txt)}
   table.tbl .nm{color:var(--sub);font-size:12px}
+  table.tbl td.ac{white-space:nowrap;font-size:12.5px}
+  td.ac.ac-live{color:var(--good);font-weight:600}
+  td.ac.ac-ok{color:var(--txt)}
+  td.ac.ac-dead{color:var(--danger)}
+  td.ac.ac-none{color:var(--sub)}
+  .src{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:10px;
+    margin-left:6px;vertical-align:middle}
+  .src-excel{background:rgba(123,180,255,.16);color:#7db4ff}
+  .src-manual{background:rgba(55,224,189,.16);color:var(--accent)}
   table.tbl tr:hover td{background:rgba(55,224,189,.04)}
-  table.tbl td.act{text-align:right;width:60px}
-  .delbtn{color:var(--danger);cursor:pointer;font-weight:700;border:1px solid transparent;
-    border-radius:6px;padding:2px 8px}
+  table.tbl td.act{text-align:right;width:72px;white-space:nowrap}
+  .delbtn{display:inline-block;white-space:nowrap;color:var(--danger);cursor:pointer;font-weight:700;
+    border:1px solid transparent;border-radius:6px;padding:3px 10px}
   .delbtn:hover{border-color:var(--danger);background:rgba(229,83,75,.1)}
   .empty{color:var(--sub);font-size:13px;padding:8px 2px}
   .count{color:var(--sub);font-weight:400}
@@ -104,6 +113,7 @@
     <div class="toolbar">
       <input id="q" type="text" placeholder="🔍 채널 검색 (핸들·이름)" oninput="renderRows()">
       <select id="sort" onchange="renderRows()">
+        <option value="active">활동순 (최근 올린 채널 먼저)</option>
         <option value="added">등록순 (최신)</option>
         <option value="added_old">등록순 (오래된)</option>
         <option value="name">이름순 (가나다·ABC)</option>
@@ -193,20 +203,35 @@ async function loadCurrentSet(){
   }catch(e){}
 }
 
-let ITEMS=[];   // 현재 플랫폼 등록목록 [{key, name, added}]
+let ITEMS=[];   // 현재 플랫폼 등록목록 [{key, name, added, last, src, followers}]
 function fmtDate(s){ return (s||'').slice(0,10) || '—'; }   // "2026-07-18 12:00:00" → "2026-07-18"
+
+// 마지막 수집영상 날짜 → 활동 라벨(무료, reel_history 기반). ''=수집된 적 없음.
+// d=경과일(정렬키). 작을수록 최근 활동.
+function activity(last){
+  if(!last) return {txt:'수집 전', cls:'ac-none', d:1e9};
+  const t=new Date(String(last).replace(' ','T'));
+  if(isNaN(t.getTime())) return {txt:'—', cls:'ac-none', d:1e9};
+  const d=Math.floor((Date.now()-t.getTime())/86400000);
+  if(d<=2)  return {txt:'🟢 활동중 ('+d+'일 전)', cls:'ac-live', d};
+  if(d<=7)  return {txt:d+'일 전', cls:'ac-ok', d};
+  if(d<=30) return {txt:'🔴 '+d+'일째 잠잠', cls:'ac-dead', d};
+  return {txt:'💤 30일+ 없음', cls:'ac-dead', d};
+}
 
 async function loadList(){
   const wrap=document.getElementById('listWrap');
   wrap.innerHTML='<div class="empty">불러오는 중…</div>';
   try{
     if(PLAT==='instagram'){
-      const d=await (await fetch('/api/discover/added')).json();
-      // 인스타는 name이 username과 다르면 표시명으로 병기(대개 같음).
-      ITEMS=(d.items||[]).map(c=>({key:c.username, name:(c.name&&c.name!==c.username)?c.name:'', added:c.added_at||''}));
+      // 엑셀 기본채널 + 손등록 통합 + 활동여부(무료). 서버 API가 union·활동 조인.
+      const d=await (await fetch('/api/refs/instagram')).json();
+      ITEMS=(d.items||[]).map(c=>({key:c.username, name:(c.name&&c.name!==c.username)?c.name:'',
+        added:c.added_at||'', last:c.last_active||'', src:c.source||'manual', followers:c.followers||0}));
     }else{
       const d=await (await fetch('/api/seeds?platform='+PLAT)).json();
-      ITEMS=(d.items||[]).filter(s=>s.kind==='account').map(s=>({key:s.value, name:'', added:s.added_at||''}));
+      ITEMS=(d.items||[]).filter(s=>s.kind==='account').map(s=>({key:s.value, name:'',
+        added:s.added_at||'', last:'', src:'', followers:0}));
     }
   }catch(e){ wrap.innerHTML='<div class="empty">목록을 불러오지 못했습니다.</div>'; return; }
   renderRows();
@@ -216,25 +241,31 @@ function renderRows(){
   const wrap=document.getElementById('listWrap'), cnt=document.getElementById('listCount');
   const q=(document.getElementById('q').value||'').trim().toLowerCase();
   const sort=document.getElementById('sort').value;
+  const isIg=(PLAT==='instagram');
   cnt.textContent=ITEMS.length?('('+ITEMS.length+')'):'';
   if(!ITEMS.length){ wrap.innerHTML='<div class="empty">아직 등록된 채널이 없습니다. 위에서 붙여넣어 등록하세요.</div>'; return; }
   let rows=ITEMS.slice();
   if(q) rows=rows.filter(r=>(r.key+' '+r.name).toLowerCase().includes(q));
   if(sort==='name') rows.sort((a,b)=>a.key.localeCompare(b.key,'ko'));
   else if(sort==='added_old') rows.sort((a,b)=>(a.added||'').localeCompare(b.added||''));
+  else if(sort==='active') rows.sort((a,b)=>activity(a.last).d-activity(b.last).d);   // 최근 활동 먼저
   else rows.sort((a,b)=>(b.added||'').localeCompare(a.added||''));   // added(최신) 기본
   if(!rows.length){ wrap.innerHTML='<div class="empty">"'+esc(q)+'" 검색 결과가 없습니다.</div>'; return; }
   const body=rows.map((r,i)=>{
     const k=esc(r.key).replace(/'/g,"\\'");
+    const badge=isIg ? ' <span class="src src-'+(r.src||'manual')+'">'+(r.src==='excel'?'기본':'등록')+'</span>' : '';
     const nm=r.name?'<div class="nm">'+esc(r.name)+'</div>':'';
+    const ac=activity(r.last);
+    const actCell=isIg ? '<td class="ac '+ac.cls+'">'+ac.txt+'</td>' : '<td class="ac ac-none">—</td>';
     return '<tr><td class="num">'+(i+1)+'</td>'
-      +'<td><span class="handle">@'+esc(r.key)+'</span>'+nm+'</td>'
+      +'<td><span class="handle">@'+esc(r.key)+'</span>'+badge+nm+'</td>'
+      +actCell
       +'<td class="date">'+fmtDate(r.added)+'</td>'
       +'<td class="act"><span class="delbtn" title="등록 취소" onclick="removeOne(\''+k+'\')">삭제</span></td></tr>';
   }).join('');
   const shown = rows.length!==ITEMS.length ? ' <span class="nm">('+rows.length+'개 표시)</span>' : '';
   wrap.innerHTML='<table class="tbl"><thead><tr><th>#</th><th>채널'+shown
-    +'</th><th>등록일</th><th></th></tr></thead><tbody>'+body+'</tbody></table>';
+    +'</th><th>활동</th><th>등록일</th><th></th></tr></thead><tbody>'+body+'</tbody></table>';
 }
 
 async function removeOne(key){

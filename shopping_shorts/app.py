@@ -34,7 +34,7 @@ from shopping_shorts.categorize import categorize, KEYWORDS as CATEGORY_KEYWORDS
 from shopping_shorts import script_generate
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
-from shopping_shorts.channels import load_channels, username_from_url
+from shopping_shorts.channels import load_channels, username_from_url, merge_tracked
 from shopping_shorts.video_analysis import (analyze_video, translate_keyword, cn_search_keyword,
                                             cn_search_keyword_vision, judge_same_product,
                                             cn_search_candidates)
@@ -785,6 +785,42 @@ def api_discover_add(request: Request, username: str, name: str = ""):
 def api_discover_added():
     """발굴로 추가한 채널 목록."""
     return {"ok": True, "items": Store(DB_PATH).discovered_channels()}
+
+
+@app.get("/api/refs/instagram")
+def api_refs_instagram(request: Request):
+    """관리페이지용 인스타 레퍼런스 통합 목록(2026-07-24) — 엑셀 기본 채널 + 손등록을
+    union(제외 반영)하고 활동여부를 붙인다. **Apify 조회 없음(무료)**: 구독자수는 엑셀에
+    이미 있는 값만, 활동일(last_active)은 수집이력(reel_history)에서. 그래서 사장님이
+    '엑셀에 원래 있던 채널까지 한 표에서, 살아있는지 보고' 관리할 수 있다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    try:
+        excel = load_channels()          # 엑셀 벤치마킹 채널(서버에만 있음 — 로컬은 빈 목록)
+    except Exception:
+        excel = []
+    excel_norm = {store._norm_username(c["username"]) for c in excel}
+    disc = store.discovered_channels()
+    removed = store.removed_usernames()
+    # 관리 목록은 수집비 cap과 무관하게 '등록된 전부'를 보여준다(수집은 별도로 cap 적용).
+    merged = merge_tracked(excel, disc, removed, max_channels=10 ** 9)
+    act = store.instagram_activity_map()
+    added = {store._norm_username(d["username"]): d.get("added_at", "") for d in disc}
+    items = []
+    for ch in merged:
+        u = store._norm_username(ch["username"])
+        a = act.get(u, {})
+        items.append({
+            "username": (ch["username"] or "").lstrip("@"),
+            "name": a.get("name") or ch.get("name") or "",
+            "followers": int(ch.get("followers") or 0),
+            "last_active": a.get("last") or "",   # ""=수집된 적 없음
+            "added_at": added.get(u, ""),
+            "source": "excel" if u in excel_norm else "manual",
+        })
+    return {"ok": True, "items": items}
 
 
 @app.post("/api/reference/register")
@@ -4516,7 +4552,11 @@ async def _auth_guard(request: Request, call_next):
     # 외부인이 /synth를 반복 호출해 ElevenLabs·GROQ 크레딧을 태우고 /profile/{임의id}로
     # voice_presets에 임의 행을 넣을 수 있었다(2026-07-15 리뷰 S7). 운영자는 대시보드
     # 로그인 세션으로 접근한다.
-    if path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/"):
+    # /api/yt_relay/*는 사장님 PC 릴레이 에이전트가 로그인 쿠키 없이 호출한다(2026-07-24).
+    # 자체 키 인증(_relay_auth_ok: YT_RELAY_KEY)이 있어 로그인 가드는 건너뛴다 — 안 그러면
+    # 에이전트가 401에 막혀 유튜브 다운로드가 통째로 죽는다.
+    if (path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/")
+            or path.startswith("/api/yt_relay/")):
         return await call_next(request)
     customer_id = _verify_session(request.cookies.get("dash_auth"))
     if customer_id is not None:
