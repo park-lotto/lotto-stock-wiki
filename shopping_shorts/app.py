@@ -4516,7 +4516,11 @@ async def _auth_guard(request: Request, call_next):
     # 외부인이 /synth를 반복 호출해 ElevenLabs·GROQ 크레딧을 태우고 /profile/{임의id}로
     # voice_presets에 임의 행을 넣을 수 있었다(2026-07-15 리뷰 S7). 운영자는 대시보드
     # 로그인 세션으로 접근한다.
-    if path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/"):
+    # /api/yt_relay/*는 사장님 PC 릴레이 에이전트가 로그인 쿠키 없이 호출한다(2026-07-24).
+    # 자체 키 인증(_relay_auth_ok: YT_RELAY_KEY)이 있어 로그인 가드는 건너뛴다 — 안 그러면
+    # 에이전트가 401에 막혀 유튜브 다운로드가 통째로 죽는다.
+    if (path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/")
+            or path.startswith("/api/yt_relay/")):
         return await call_next(request)
     customer_id = _verify_session(request.cookies.get("dash_auth"))
     if customer_id is not None:
