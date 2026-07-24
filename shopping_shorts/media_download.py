@@ -45,7 +45,11 @@ def _proxy_arg(url):
     등은 서버서도 되므로 프록시를 안 태워(대역폭·비용 절약). 미설정이면 [](회귀0)."""
     u = (url or "").lower()
     if config.YTDLP_PROXY and ("youtube.com" in u or "youtu.be" in u):
-        return ["--proxy", config.YTDLP_PROXY]
+        # 회전 주거용 프록시는 죽은 IP로 라우팅되면 502(Tunnel failed)를 뱉는다 — 재시도하면
+        # 새 IP로 성공한다(2026-07-24 실측: GB풀 불량, DE/CA/FR 정상). 재시도를 넉넉히 줘서
+        # 드문 502에 소스가 통째로 스킵되지 않게 한다.
+        return ["--proxy", config.YTDLP_PROXY,
+                "--extractor-retries", "10", "--retries", "10", "--socket-timeout", "30"]
     return []
 
 
