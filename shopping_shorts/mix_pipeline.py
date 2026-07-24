@@ -274,19 +274,31 @@ def _prepare_sources(urls, work):
     나머지로 계속한다 — 불량 URL 하나(렌즈 즐겨찾기로 샌 instagram.com/popular/{슬러그} 등)가
     배치 전체를 죽이던 걸 막는다. 근본차단은 lens_discover._is_watchable(입구), 여기는 백스톱.
     video_id는 인덱스 기준(s{i})이라 중간이 빠져도 나머지 매칭에 영향 없다(갭 허용).
-    전부 실패(0개 생존)하면 RuntimeError. skipped=[(url, err), ...]."""
-    video_paths = {}
-    captions = {}
-    skipped = []
-    for i, url in enumerate(urls):
+    전부 실패(0개 생존)하면 RuntimeError. skipped=[(url, err), ...].
+
+    병렬 다운로드(2026-07-24 속도개선 T③) — 아래 '대본 추출(병렬)' 단계와 같은
+    ThreadPoolExecutor 패턴. 예외는 워커 안에서 잡아 (vid, path, caption, err) 튜플로
+    돌려주므로 ex.map이 첫 예외에서 멈추는 일이 없다(소스별 격리 유지)."""
+    def _download_one(item):
+        i, url = item
         vid = _source_video_id(i)
         d = Path(work) / vid
         d.mkdir(parents=True, exist_ok=True)
         try:
             path, caption = download_any(url, str(d))
+            return vid, path, caption, None
         except Exception as e:  # noqa: BLE001 — 소스별 격리가 목적
-            skipped.append((url, str(e)))
             print(f"_prepare_sources: 소스 스킵 — {url}: {e}", file=sys.stderr)
+            return vid, None, None, (url, str(e))
+
+    video_paths = {}
+    captions = {}
+    skipped = []
+    with ThreadPoolExecutor(max_workers=max(1, len(urls))) as ex:
+        results = list(ex.map(_download_one, enumerate(urls)))
+    for vid, path, caption, err in results:
+        if err is not None:
+            skipped.append(err)
             continue
         video_paths[vid] = path
         captions[vid] = caption
