@@ -1836,9 +1836,13 @@ def api_mix_status(job_id: str):
         preview_error = preview_error or "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."
     # 장면 우선 대본 모드(2026-07-20, Task7): 후보 요약만 내려준다 — 전체 plan(beats 등)을
     # 실으면 남의 창작물이 새는 것과 같은 노출 문제(§3981)가 나므로 카드 렌더용 필드만 뽑는다.
+    # script(2026-07-24): 후보 대본 '전체 나레이션'은 사장님이 A/B/C를 비교해 고르는 자기 산출물이라
+    # 카드에서 통째로 보여준다 — 소스 plan(컷·seg_ids 등)이 아니라 말할 문장만 이어붙인다(edit_plan §561과 동일).
     candidates = [{"index": i, "score": c.get("score"), "recommended": bool(c.get("recommended")),
                    "hook": (c.get("story") or {}).get("hook", ""),
-                   "story_person": (c.get("story") or {}).get("story_person", "")}
+                   "story_person": (c.get("story") or {}).get("story_person", ""),
+                   "script": " ".join((b.get("narration") or "").strip()
+                                       for b in ((c.get("plan") or {}).get("beats") or [])).strip()}
                   for i, c in enumerate(store.get_mix_candidates(job_id))]
     return {"ok": True, "status": status, "error": error,
             # 1단계 미리보기(2026-07-17): 폴러를 둘로 만들지 않으려고 기존 응답에 얹는다(스펙 §6.3).
