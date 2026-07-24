@@ -626,7 +626,10 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 화면에 뜬다(조용한 실패 금지). 순수 계산이라 실패해도 job은 안 죽인다.
     try:
         from shopping_shorts import plan_gate
-        plan["gate"] = plan_gate.check_plan(plan.get("beats"), target_seconds)
+        plan["gate"] = plan_gate.check_plan(
+            plan.get("beats"), target_seconds,
+            pool_video_count=len({s.get("video_id") for s in (source_scripts or [])
+                                  if s.get("segments")} - {None}))
         if not plan["gate"]["ok"]:
             print("plan_gate 위반: " + " / ".join(plan["gate"]["violations"]), file=sys.stderr)
     except Exception:
