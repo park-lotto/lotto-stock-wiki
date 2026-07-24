@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_0700_한번은 겪어야 할 과정이 시작 됐음을 보여주다.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "대신증권",
+    "analyst": "문남중",
+    "report_date": "2026. 6. 8",
+    "market_direction": "중립/조정",
+    "macro_vars": [
+      "미국 5월 고용지표",
+      "미국 5월 CPI/근원",
+      "ECB 금리 인상",
+      "실질정책금리",
+      "물가상승",
+      "장기 금리 상승"
+    ],
+    "recommended_sectors": [],
+    "style": "내리면 사고, 오르면 파는 트레이딩 접근",
+    "event_calendar": [
+      {
+        "date": "10일",
+        "event": "미국 5월 CPI/근원 발표"
+      },
+      {
+        "date": "11일",
+        "event": "ECB 금리 인상 확인"
+      },
+      {
+        "date": "16~17일",
+        "event": "6월 FOMC"
+      }
+    ],
+    "top_picks": null,
+    "risk": "글로벌 통화 긴축 부상 및 증시 변동성 확대, 연준 금리 인하 환경 실종",
+    "quote": "6.5일 미국 증시 급락은 올해 한번은 겪어야 할 ‘글로벌 통화 긴축 부상’ 이에 연동되는 증시 변동성 확대라는 과정이 시작됐음을 보여줬다."
+  }
+}

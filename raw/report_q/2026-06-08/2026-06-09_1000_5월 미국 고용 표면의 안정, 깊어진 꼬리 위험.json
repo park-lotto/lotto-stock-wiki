@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_5월 미국 고용 표면의 안정, 깊어진 꼬리 위험.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": [
+      "김호정",
+      "임지윤"
+    ],
+    "report_date": "2026.06.08",
+    "target_kind": "market",
+    "market_direction": "중립",
+    "macro_vars": [
+      "미국 5월 실업률 4.3%",
+      "비농업 고용 17.2만 명",
+      "시간당 평균 임금 전년 대비 3.4% 상승",
+      "MS-BVAR 침체 확률 2.6~3.8%",
+      "국제 유가(Brent 90달러대)"
+    ],
+    "recommended_sectors": [],
+    "style": "방어적",
+    "event_calendar": [
+      {
+        "date": "2026.06.16-17",
+        "event": "FOMC(케빈 워시 의장 체제 하 첫 점도표)"
+      }
+    ],
+    "top_picks": null,
+    "risk": "완충 소진으로 인한 고용시장의 꼬리 위험(tail risk) 확대 및 지정학적 리스크에 따른 유가 변동성",
+    "quote": "지금의 노동시장은 '견조한 정체'라는 독특한 균형에 있다. 대규모 해고가 없어 표면은 안정적이지만, 채용과 재취업이 부진하고 충격을 흡수할 여력이 사라졌다."
+  }
+}

@@ -1,0 +1,146 @@
+[
+  {
+    "broker": "그로쓰리서치",
+    "stock": "스피어",
+    "rating": null,
+    "tp": null,
+    "ts": "08:20",
+    "quote": "SpaceX의 성장과 함께 스피어가 어떤 기회를 맞이하고 있는지도 쉽고 자세하게 풀어드리겠습니다.",
+    "sector": "기타"
+  },
+  {
+    "broker": "그로쓰리서치",
+    "stock": "지슨",
+    "rating": null,
+    "tp": null,
+    "ts": "08:55",
+    "quote": "2분기 매출은 49억원으로 전년 동기 대비 82% 증가, 영업이익 4억6000만원, 순이익 3억9000만원을 기록하며 흑자 전환에 성공",
+    "sector": "양자보안"
+  },
+  {
+    "broker": "그로쓰리서치",
+    "stock": "삼성전자, 현대차",
+    "rating": null,
+    "tp": null,
+    "ts": "09:00",
+    "quote": "이재용·정의선 회장, ‘실리콘밸리 & 더 월드’ 자문위원 위촉",
+    "sector": "반도체"
+  },
+  {
+    "broker": "그로쓰리서치",
+    "stock": "오픈AI",
+    "rating": null,
+    "tp": null,
+    "ts": "09:06",
+    "quote": "조지아주에 ‘프로젝트 카멜리아’ 데이터센터 건설, 초기 투자액 200억달러, 총사업비 300억달러 이상",
+    "sector": "IT"
+  },
+  {
+    "broker": "그로쓰리서치",
+    "stock": "HLB",
+    "rating": null,
+    "tp": null,
+    "ts": "09:50",
+    "quote": "세 번째 CRL로 기존 허가 절차는 중단된 상황, 보완 및 재신청을 거쳐 승인 시 기존 상업화 조직 활용 가능",
+    "sector": "바이오"
+  },
+  {
+    "broker": "그로쓰리서치",
+    "stock": "삼성전자",
+    "rating": null,
+    "tp": null,
+    "ts": "09:57",
+    "quote": "세계 최초 양산 HBM4에 자체 파운드리 4나노 공정 적용",
+    "sector": "반도체"
+  },
+  {
+    "broker": "그로쓰리서치",
+    "stock": "화통, 유화",
+    "rating": null,
+    "tp": null,
+    "ts": "10:13",
+    "quote": "화통은 SpaceX 위성용 PCB의 핵심 공급사 지위를 유지하고 있으며 주문 배분에도 변화가 없는 상황",
+    "sector": "통신"
+  },
+  {
+    "broker": "그로쓰리서치",
+    "stock": "코스메카코리아",
+    "rating": null,
+    "tp": null,
+    "ts": "11:10",
+    "quote": "산업보고서에서 소개한 코스메카코리아가 10%대 급등 중입니다.",
+    "sector": "화장품미용"
+  },
+  {
+    "broker": "그로쓰리서치",
+    "stock": "LG에너지솔루션",
+    "rating": null,
+    "tp": null,
+    "ts": "12:47",
+    "quote": "EVE에너지 상대로 미국 ITC 수입배제 신청과 특허소송 제기",
+    "sector": "2차전지"
+  },
+  {
+    "broker": "그로쓰리서치",
+    "stock": "큐리언트",
+    "rating": null,
+    "tp": null,
+    "ts": "13:03",
+    "quote": "HER2 양성 환자 유래 종양 모델에서 반응률 53.6% 기록, 동일 용량 엔허투의 42.9%를 웃도는 비임상 효능 확인",
+    "sector": "바이오"
+  },
+  {
+    "broker": "그로쓰리서치",
+    "stock": "삼천당제약",
+    "rating": null,
+    "tp": null,
+    "ts": "15:10",
+    "quote": "삼천당제약은 미국 FDA로부터 경구용 세마글루타이드 Pre-ANDA 답변을 수령",
+    "sector": "바이오"
+  },
+  {
+    "broker": "그로쓰리서치",
+    "stock": "한화오션",
+    "rating": null,
+    "tp": null,
+    "ts": "09:29",
+    "quote": "레이도스 깁스 앤 콕스와 전문 서비스 계약 체결, 평시 물류와 유사시 군수 수송을 겸하는 이중용도 선박 개발",
+    "sector": "조선"
+  },
+  {
+    "broker": "그로쓰리서치",
+    "stock": "한미약품",
+    "rating": null,
+    "tp": null,
+    "ts": "10:38",
+    "quote": "자체 플랫폼 HARP-pSAR로 HM17321 후보물질 도출",
+    "sector": "바이오"
+  },
+  {
+    "broker": "그로쓰리서치",
+    "stock": "큐리오시스",
+    "rating": null,
+    "tp": null,
+    "ts": "11:43",
+    "quote": "큐리오시스가 독일 Merck KGaA 그룹과 5년 글로벌 공급 계약을 체결했습니다.",
+    "sector": "바이오"
+  },
+  {
+    "broker": "그로쓰리서치",
+    "stock": "SK하이닉스",
+    "rating": null,
+    "tp": null,
+    "ts": "14:50",
+    "quote": "SK하이닉스가 미국 산호세 미주 법인을 통해 3D 적층(Stacked) D램-온(on)-로직(Logic) 설계 엔지니어를 채용 중",
+    "sector": "반도체"
+  },
+  {
+    "broker": "그로쓰리서치",
+    "stock": "AMD",
+    "rating": null,
+    "tp": null,
+    "ts": "14:56",
+    "quote": "AMD Advancing AI 2026 키노트(7.23)에서 차세대 GPU Instinct MI455X 공개",
+    "sector": "반도체"
+  }
+]

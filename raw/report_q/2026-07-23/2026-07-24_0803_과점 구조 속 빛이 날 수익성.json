@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-23",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-24_0803_과점 구조 속 빛이 날 수익성.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "IBK투자증권",
+    "analyst": "강민구",
+    "report_date": "2026. 7. 23",
+    "stocks": [
+      {
+        "name": "뉴파워프라즈마",
+        "code": "144960",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "15,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026F 실적은 연결 기준 매출액 7,049억 원(YoY, +22.0%), 영업이익 729억원(YoY, +154.3%)으로 전망한다.",
+        "estimate_revision": "금년 매출과 영업이익은 모두 사상 최대치를 경신할 것으로 전망한다.",
+        "next_catalyst": "반도체 공정 내 플라즈마 적용 확대 트렌드와 자회사의 실적 개선",
+        "thesis": [
+          "강력한 플라즈마 부품 시장의 과점 구조",
+          "다각화된 고객 포트폴리오가 수요의 증거",
+          "우주항공과 Foldable 기반 자회사 성장 시나리오"
+        ],
+        "valuation_basis": "목표주가는 2026F EPS 1,211원과 최근 5년 평균 P/E에 할인율 10%를 반영한 12.5x를 적용해 산출했다.",
+        "risk": "연결 자회사의 실적 변동성",
+        "supply_comment": "반도체 CAPEX 확대에 따라 공정 장비의 수요는 급증하고 있지만, 플라즈마 부품은 소수 기업에게 의존하고 있기 때문이다.",
+        "quote": "동사에 대한 투자의견은 매수, 목표주가는 15,000원을 제시한다. 현 주가는 반도체 공정 내 플라즈마 적용 확대 트렌드와 자회사의 실적 개선을 충분히 반영하지 못한 수준이라고 판단하기 때문이다."
+      }
+    ]
+  }
+}

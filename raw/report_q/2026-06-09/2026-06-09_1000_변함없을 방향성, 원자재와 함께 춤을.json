@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_변함없을 방향성, 원자재와 함께 춤을.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "최진영",
+    "report_date": "2026.05.20",
+    "target_kind": "market",
+    "market_direction": "비중확대",
+    "macro_vars": [
+      "2027년 말까지 인플레이션 방향은 불변",
+      "유가 상승",
+      "구조적 공급 부족",
+      "슈퍼 엘니뇨 진정",
+      "뒤늦게 반영된 유동성"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "전력",
+        "stance": "확대",
+        "reason": "구조적 공급 부족과 2차전지향 금속 수요 증가"
+      },
+      {
+        "sector": "기타",
+        "stance": "확대",
+        "reason": "인플레이션 헤지 자산인 원자재 비중 확대 권고"
+      }
+    ],
+    "style": "인플레이션 견인 자산에 주목",
+    "event_calendar": [
+      {
+        "date": "2026.05.20",
+        "event": "원자재 리포트 발간"
+      }
+    ],
+    "top_picks": null,
+    "risk": "종전(호르무즈 해협 개방) 가능성",
+    "quote": "그러한 점에서 호르무즈 해협이 다시 개방된다 하더라도 에너지와 비철금속에 대한 기존 비중 확대 의견 유지(2027년 상반기限)할 것을 권고"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_광 IO 시대의 정렬자.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "박장욱",
+    "report_date": "2026.06.09",
+    "stocks": [
+      {
+        "name": "성호전자",
+        "code": "043260",
+        "rating": "N.R",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2024A 매출액 2,073억원, 영업이익 63억원; 2025A 매출액 2,316억원, 영업이익 76억원; 2026F 매출액 2,724억원, 영업이익 300억원; 2027F 매출액 7,944억원, 영업이익 2,065억원; 2028F 매출액 12,977억원, 영업이익 3,698억원",
+        "estimate_revision": null,
+        "next_catalyst": "ASIC 진영의 광 I/O 채택 규모, NVIDIA 차기 로드맵에서 NVSwitch 1계층 및 서버시장 광 I/O 도입 여부",
+        "thesis": [
+          "ADS테크 인수를 통해 액티브 얼라인 장비회사로 변모",
+          "2028년부터 본격 개화가 예상되는 스케일업 광 시장",
+          "2028년 공장 증설분까지 선반영. 스케일업 광 개화속도가 관전포인트"
+        ],
+        "valuation_basis": "동사의 28년 예상 P/E는 10배이나, 현재 보유 중인 CB,BW의 희석 시가총액 반영시, P/E 20배",
+        "risk": "ASIC 진영의 광 I/O 채택 규모가 작거나 NVIDIA의 서버향 광 I/O 채택 시점이 지연되는 경우",
+        "supply_comment": "성호전자(043260)",
+        "quote": "동사의 28년 예상 P/E는 10배이나, 현재 보유 중인 CB,BW의 희석 시가총액 반영시, P/E 20배로 현재 주가는 신규 공장 1·2부지 증설에 따른 실적 성장 부분을 상당 부분 선반영."
+      }
+    ]
+  }
+}
