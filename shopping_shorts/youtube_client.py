@@ -164,6 +164,45 @@ def _first_ok(url, params):
     return None, saw_403
 
 
+# seed 문자열에서 채널 식별자 추출
+_CH_ID = re.compile(r"/channel/(UC[A-Za-z0-9_-]{6,})")
+_HANDLE = re.compile(r"@([A-Za-z0-9._-]+)")
+_LEGACY_USER = re.compile(r"/user/([A-Za-z0-9._-]+)")
+
+
+def _channel_from_api(param_key, param_val):
+    """channels.list(forHandle|forUsername|id) → (channel_id, uploads) 또는 (None,None)."""
+    data, _ = _first_ok(_CHANNELS_URL,
+                        {"part": "contentDetails", param_key: param_val})
+    items = (data or {}).get("items") or []
+    if not items:
+        return None, None
+    cid = items[0].get("id")
+    uploads = (((items[0].get("contentDetails") or {})
+                .get("relatedPlaylists") or {}).get("uploads"))
+    return cid, uploads
+
+
+def _resolve_channel(seed):
+    """seed(핸들/URL) → (channel_id, uploads_playlist). 실패 시 (None, None).
+
+    /channel/UC.. URL은 API 없이 직접 파싱(uploads = UU + id[2:])."""
+    if not seed:
+        return None, None
+    m = _CH_ID.search(seed)
+    if m:
+        cid = m.group(1)
+        return cid, "UU" + cid[2:]          # 업로드 플레이리스트 규칙(UC→UU)
+    m = _HANDLE.search(seed)
+    if m:
+        return _channel_from_api("forHandle", "@" + m.group(1))
+    m = _LEGACY_USER.search(seed)
+    if m:
+        return _channel_from_api("forUsername", m.group(1))
+    # 순수 핸들("salim" 등 @없음)도 forHandle로 시도
+    return _channel_from_api("forHandle", "@" + seed.strip().lstrip("@"))
+
+
 def enrich_youtube(url):
     """유튜브 URL → 채널·지표·인기댓글·캡션 통합 dict. 유튜브 아니면 None,
     쿼터소진(전 키 403) 시 {"status": "quota"}.
