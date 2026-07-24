@@ -60,6 +60,29 @@ def test_endpoints_auth_and_deliver():
     assert c.post(f"/api/yt_relay/deliver/{rid}", data={"key": "y"}).status_code == 403
 
 
+def test_relay_bypasses_login_guard():
+    """로그인 가드(_auth_guard)가 켜져 있어도 /api/yt_relay/*는 자체 키 인증으로 통과.
+    통과하면 401(로그인)이 아니라 403(키 불일치)이 나와야 한다 — 안 그러면 에이전트가 막힌다."""
+    from fastapi.testclient import TestClient
+    import shopping_shorts.app as A
+    from shopping_shorts import config
+
+    tmp = Path(tempfile.mkdtemp())
+    A.DB_PATH = tmp / "r.db"
+    config.YT_RELAY_KEY = "k"
+    Store(A.DB_PATH)
+    orig = A._AUTH_ON
+    A._AUTH_ON = True                       # 유료게이트 ON 상황 재현
+    try:
+        c = TestClient(A.app)
+        # 잘못된 키 → 로그인 가드(401)가 아니라 릴레이 자체 가드(403)
+        assert c.get("/api/yt_relay/next", params={"key": "bad"}).status_code == 403
+        # 로그인 필요한 다른 api는 여전히 401(가드 정상 동작 확인)
+        assert c.get("/api/reference").status_code == 401
+    finally:
+        A._AUTH_ON = orig
+
+
 def test_routing_switch():
     from shopping_shorts import config, media_download as m
     calls = []
