@@ -65,7 +65,7 @@ def asr_ranker(path, text):
 
 def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=None,
                     beat_index=None, beat_total=None, previous_text=None, next_text=None,
-                    ranker=asr_ranker, global_pron=None):
+                    ranker=asr_ranker, global_pron=None, n_best_cap=None):
     """한 줄을 naturalize→TTS(N-best·연속성)→후처리까지 합성하고 변환텍스트를 반환.
 
     **튜닝 작업대와 실제 렌더가 공유하는 단일 경로**다. 양쪽이 각자 파이프라인을 조립하면
@@ -73,7 +73,11 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     새 호출부를 만들지 말고 이 함수를 쓸 것.
 
     profile 미지정 시 voice 스냅샷의 naturalize_profile을 쓴다. seed/n_best는 merge_profile을
-    거친 값으로 읽어 텍스트와 오디오가 같은 기준을 보게 한다(S10)."""
+    거친 값으로 읽어 텍스트와 오디오가 같은 기준을 보게 한다(S10).
+
+    n_best_cap(2026-07-24, 매칭 속도개선): 지정 시 최종 n_best를 이 값으로 상한한다.
+    2단계 매칭(run_mix_job)이 best-of-1로 빠르게 돌게 하기 위함 — 최종 렌더 경로는
+    n_best_cap을 넘기지 않아 기존 best-of-2 floor가 그대로 유지된다."""
     voice_id, settings, speed, extra_tempo, trim, prof_v, model_id, pace_mode = _voice_params(voice)
     prof = merge_profile(profile if profile is not None else prof_v)
     # 전역 발음교정을 profile 위에 병합(설계 §2-A) — 렌더·작업대 공통 choke.
@@ -87,6 +91,10 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     n_best = prof.get("n_best", 1)
     if config.GROQ_API_KEY and n_best < 2:
         n_best = 2
+    # n_best_cap은 floor 적용 '이후'에 상한한다 — 매칭 단계는 이 상한으로 1까지 눌러
+    # 빠르게 돌고, 명시 프리셋(n_best=3 등)이 있어도 예측 가능하게 잘린다.
+    if n_best_cap is not None:
+        n_best = min(n_best, n_best_cap)
     tts.synthesize_best(natural, str(out_path), n=n_best,
                         base_seed=(prof.get("seed") if prof.get("seed") is not None else _PINNED_TTS_SEED),
                         ranker=ranker,
@@ -100,7 +108,8 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     return natural
 
 
-def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron=None):
+def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron=None,
+                      n_best_cap=None):
     """비트별로 synthesize_line 호출. beat['tts_path']를 채운다.
     연속성(previous_text/next_text)은 인접 비트의 '원문'(naturalize 전) narration을 쓴다
     — naturalize된 텍스트(오디오 태그·추임새 포함)를 연속성으로 넘기면 ElevenLabs가
@@ -124,7 +133,7 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
             beat_index=i, beat_total=total,
             previous_text=beats[i - 1]["narration"] if i > 0 else None,
             next_text=beats[i + 1]["narration"] if i < total - 1 else None,
-            global_pron=global_pron,
+            global_pron=global_pron, n_best_cap=n_best_cap,
         )
         beat["tts_path"] = str(out)
         # ★비트 끝 무음 트림(2026-07-22) — 각 비트 TTS 뒤 자연 무음(호흡·여백)을 잘라 이어붙임을
@@ -274,19 +283,31 @@ def _prepare_sources(urls, work):
     나머지로 계속한다 — 불량 URL 하나(렌즈 즐겨찾기로 샌 instagram.com/popular/{슬러그} 등)가
     배치 전체를 죽이던 걸 막는다. 근본차단은 lens_discover._is_watchable(입구), 여기는 백스톱.
     video_id는 인덱스 기준(s{i})이라 중간이 빠져도 나머지 매칭에 영향 없다(갭 허용).
-    전부 실패(0개 생존)하면 RuntimeError. skipped=[(url, err), ...]."""
-    video_paths = {}
-    captions = {}
-    skipped = []
-    for i, url in enumerate(urls):
+    전부 실패(0개 생존)하면 RuntimeError. skipped=[(url, err), ...].
+
+    병렬 다운로드(2026-07-24 속도개선 T③) — 아래 '대본 추출(병렬)' 단계와 같은
+    ThreadPoolExecutor 패턴. 예외는 워커 안에서 잡아 (vid, path, caption, err) 튜플로
+    돌려주므로 ex.map이 첫 예외에서 멈추는 일이 없다(소스별 격리 유지)."""
+    def _download_one(item):
+        i, url = item
         vid = _source_video_id(i)
         d = Path(work) / vid
         d.mkdir(parents=True, exist_ok=True)
         try:
             path, caption = download_any(url, str(d))
+            return vid, path, caption, None
         except Exception as e:  # noqa: BLE001 — 소스별 격리가 목적
-            skipped.append((url, str(e)))
             print(f"_prepare_sources: 소스 스킵 — {url}: {e}", file=sys.stderr)
+            return vid, None, None, (url, str(e))
+
+    video_paths = {}
+    captions = {}
+    skipped = []
+    with ThreadPoolExecutor(max_workers=max(1, len(urls))) as ex:
+        results = list(ex.map(_download_one, enumerate(urls)))
+    for vid, path, caption, err in results:
+        if err is not None:
+            skipped.append(err)
             continue
         video_paths[vid] = path
         captions[vid] = caption
@@ -350,7 +371,11 @@ def run_mix_job(job_id, db_path, work_root):
                       # + 참여도(수집캐시 댓글수) + 사장님 지정.
                       backbone_meta=_backbone_meta_from_job(job, extracts, store=store),
                       backbone_forced=_resolve_backbone_forced(job, extracts),
-                      global_pron=_gpron)
+                      global_pron=_gpron,
+                      # 매칭 단계 속도개선(2026-07-24): best-of-1로 TTS take 1개만 만들어
+                      # Whisper 재전사 랭킹을 생략한다. 품질 best-of-2는 run_render가 담당
+                      # (아래 run_render는 이 상한을 넘기지 않아 기존 floor 그대로).
+                      n_best_cap=1)
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
@@ -479,7 +504,7 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                   given_script=None, voice=None, customer_id=0,
                   scene_first=False, reference_text="", ping_pong=False,
                   backbone_meta=None, backbone_forced=None, backbone_base=False,
-                  global_pron=None):
+                  global_pron=None, n_best_cap=None):
     """EDL 생성(3) + 비트별 TTS(4) → edit_plan 저장 + ready_for_review.
     run_mix_job(자동판별, video_type=None)과 retype_mix_job(사용자 선택 유형)이 공유.
     given_script: 있으면 확정 대본을 그대로 비트로 쪼개 영상만 매칭(영상제작 2단계).
@@ -571,8 +596,11 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
         plan = match_sfx(plan, sfx_assets)
 
     # 4) 비트별 TTS (naturalize + N-best + 연속성 + 프리셋 후처리)
+    # n_best_cap: run_mix_job(매칭)이 best-of-1로 눌러 속도를 낸다. 최종 렌더는 이 값을 넘기지
+    # 않아(run_render는 별도 경로) 기존 best-of-2 floor가 그대로 유지된다(2026-07-24).
     store.update_mix_job(job_id, status="tts")
-    _synthesize_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron)
+    _synthesize_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron,
+                      n_best_cap=n_best_cap)
 
     # 4.2) 프리즈 뿌리 fix(2026-07-21) — 화면을 **실 TTS 길이**만큼 재보정한다. fill은 plan
     # 시점에 나레이션 추정(글자÷5.7)으로 채웠는데, 빠른 보이스면 실제 TTS가 추정과 달라 생긴
@@ -848,6 +876,16 @@ def run_render(job_id, db_path, work_root):
         plan = job["edit_plan"]
         # ★TTS 보장(2026-07-21) — run_preview와 같은 방어심층. 미리보기를 건너뛰고 바로 렌더에
         #   와도(또는 TTS 없는 후보가 edit_plan에 있어도) 조립 직전 스스로 낫는다. 이미 있으면 skip.
+        # ⚠️ n_best_cap 미지정 의도적(2026-07-24 매칭속도개선 T①) — skip_existing=True라 이미
+        #   tts_path 있는 비트(=매칭 단계 run_mix_job이 만든 best-of-1 오디오)는 여기서 재합성되지
+        #   않고 그대로 최종본에 쓰인다. 강제 재합성(best-of-2로 갱신)은 고려했으나 보류한다:
+        #   _refill_beats_to_tts/_conform_beats(위 _plan_and_tts)가 이미 이 '매칭 단계 오디오
+        #   길이'를 기준으로 화면 커버리지·싱크 콘폼을 확정해뒀다 — 렌더에서 다른 take(길이가
+        #   미세하게 다를 수 있음)로 갈아끼우면 그 확정과 실제 오디오가 어긋나 프리즈/타이밍
+        #   버그(2026-07-21 두더지잡기)가 재발할 위험이 있다. 안전 우선 — 사장님 판단 필요:
+        #   최종 품질을 best-of-2로 되돌리려면 conform 이후 별도 재보정 패스가 같이 필요하다.
+        #   (여기서 새로 합성되는 비트, 즉 tts_path가 아예 없던 갈아끼운 후보는 n_best_cap 없이
+        #   기존 floor(best-of-2)로 정상 합성된다 — 영향 없음.)
         _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True,
                           global_pron=_gpron)
         store.update_mix_job(job_id, edit_plan=plan)
