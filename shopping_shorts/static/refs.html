@@ -46,12 +46,27 @@
   .pill.dup{background:rgba(224,178,58,.16);color:var(--warn)}
   .pill.fail{background:rgba(229,83,75,.16);color:var(--danger)}
   .faillist{color:var(--danger);font-size:12.5px;margin-top:6px}
-  .list{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
-  .chip{display:inline-flex;align-items:center;gap:8px;padding:5px 10px;border:1px solid var(--line);
-    border-radius:20px;background:var(--inset);font-size:13px}
-  .chip .x{color:var(--danger);cursor:pointer;font-weight:700;line-height:1}
-  .chip .x:hover{color:#ff7a72}
-  .empty{color:var(--sub);font-size:13px;padding:4px 0}
+  .toolbar{display:flex;gap:10px;align-items:center;margin:2px 0 12px;flex-wrap:wrap}
+  .toolbar input{flex:1;min-width:160px;background:var(--inset);color:var(--txt);
+    border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-size:13px}
+  .toolbar input:focus{outline:none;border-color:var(--accent)}
+  .toolbar select{background:var(--inset);color:var(--txt);border:1px solid var(--line);
+    border-radius:9px;padding:8px 10px;font-size:13px;cursor:pointer}
+  .tblwrap{overflow-x:auto}
+  table.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.tbl th,table.tbl td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+  table.tbl th{color:var(--sub);font-weight:600;font-size:12px;text-transform:none;
+    position:sticky;top:0;background:var(--inset)}
+  table.tbl td.num{color:var(--sub);font-variant-numeric:tabular-nums;width:38px}
+  table.tbl td.date{color:var(--sub);font-variant-numeric:tabular-nums;white-space:nowrap}
+  table.tbl .handle{font-weight:600;color:var(--txt)}
+  table.tbl .nm{color:var(--sub);font-size:12px}
+  table.tbl tr:hover td{background:rgba(55,224,189,.04)}
+  table.tbl td.act{text-align:right;width:60px}
+  .delbtn{color:var(--danger);cursor:pointer;font-weight:700;border:1px solid transparent;
+    border-radius:6px;padding:2px 8px}
+  .delbtn:hover{border-color:var(--danger);background:rgba(229,83,75,.1)}
+  .empty{color:var(--sub);font-size:13px;padding:8px 2px}
   .count{color:var(--sub);font-weight:400}
   .yt-note{background:rgba(224,178,58,.09);border:1px solid rgba(224,178,58,.3);
     border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--warn);margin-bottom:12px}
@@ -86,7 +101,15 @@
 
   <div class="card">
     <h2>📋 현재 등록된 채널 <span class="count" id="listCount"></span></h2>
-    <div class="list" id="list"><div class="empty">불러오는 중…</div></div>
+    <div class="toolbar">
+      <input id="q" type="text" placeholder="🔍 채널 검색 (핸들·이름)" oninput="renderRows()">
+      <select id="sort" onchange="renderRows()">
+        <option value="added">등록순 (최신)</option>
+        <option value="added_old">등록순 (오래된)</option>
+        <option value="name">이름순 (가나다·ABC)</option>
+      </select>
+    </div>
+    <div class="tblwrap" id="listWrap"><div class="empty">불러오는 중…</div></div>
   </div>
 </div>
 
@@ -170,25 +193,48 @@ async function loadCurrentSet(){
   }catch(e){}
 }
 
+let ITEMS=[];   // 현재 플랫폼 등록목록 [{key, name, added}]
+function fmtDate(s){ return (s||'').slice(0,10) || '—'; }   // "2026-07-18 12:00:00" → "2026-07-18"
+
 async function loadList(){
-  const el=document.getElementById('list'), cnt=document.getElementById('listCount');
-  el.innerHTML='<div class="empty">불러오는 중…</div>';
-  let items=[];
+  const wrap=document.getElementById('listWrap');
+  wrap.innerHTML='<div class="empty">불러오는 중…</div>';
   try{
     if(PLAT==='instagram'){
       const d=await (await fetch('/api/discover/added')).json();
-      items=(d.items||[]).map(c=>({label:'@'+c.username, key:c.username}));
+      // 인스타는 name이 username과 다르면 표시명으로 병기(대개 같음).
+      ITEMS=(d.items||[]).map(c=>({key:c.username, name:(c.name&&c.name!==c.username)?c.name:'', added:c.added_at||''}));
     }else{
       const d=await (await fetch('/api/seeds?platform='+PLAT)).json();
-      items=(d.items||[]).filter(s=>s.kind==='account').map(s=>({label:'@'+s.value, key:s.value}));
+      ITEMS=(d.items||[]).filter(s=>s.kind==='account').map(s=>({key:s.value, name:'', added:s.added_at||''}));
     }
-  }catch(e){ el.innerHTML='<div class="empty">목록을 불러오지 못했습니다.</div>'; return; }
-  cnt.textContent=items.length?('('+items.length+')'):'';
-  if(!items.length){ el.innerHTML='<div class="empty">아직 등록된 채널이 없습니다.</div>'; return; }
-  el.innerHTML=items.map(it=>
-    '<span class="chip">'+esc(it.label)
-    +' <span class="x" title="등록 취소" onclick="removeOne(\''+esc(it.key).replace(/'/g,"\\'")+'\')">✕</span></span>'
-  ).join('');
+  }catch(e){ wrap.innerHTML='<div class="empty">목록을 불러오지 못했습니다.</div>'; return; }
+  renderRows();
+}
+
+function renderRows(){
+  const wrap=document.getElementById('listWrap'), cnt=document.getElementById('listCount');
+  const q=(document.getElementById('q').value||'').trim().toLowerCase();
+  const sort=document.getElementById('sort').value;
+  cnt.textContent=ITEMS.length?('('+ITEMS.length+')'):'';
+  if(!ITEMS.length){ wrap.innerHTML='<div class="empty">아직 등록된 채널이 없습니다. 위에서 붙여넣어 등록하세요.</div>'; return; }
+  let rows=ITEMS.slice();
+  if(q) rows=rows.filter(r=>(r.key+' '+r.name).toLowerCase().includes(q));
+  if(sort==='name') rows.sort((a,b)=>a.key.localeCompare(b.key,'ko'));
+  else if(sort==='added_old') rows.sort((a,b)=>(a.added||'').localeCompare(b.added||''));
+  else rows.sort((a,b)=>(b.added||'').localeCompare(a.added||''));   // added(최신) 기본
+  if(!rows.length){ wrap.innerHTML='<div class="empty">"'+esc(q)+'" 검색 결과가 없습니다.</div>'; return; }
+  const body=rows.map((r,i)=>{
+    const k=esc(r.key).replace(/'/g,"\\'");
+    const nm=r.name?'<div class="nm">'+esc(r.name)+'</div>':'';
+    return '<tr><td class="num">'+(i+1)+'</td>'
+      +'<td><span class="handle">@'+esc(r.key)+'</span>'+nm+'</td>'
+      +'<td class="date">'+fmtDate(r.added)+'</td>'
+      +'<td class="act"><span class="delbtn" title="등록 취소" onclick="removeOne(\''+k+'\')">삭제</span></td></tr>';
+  }).join('');
+  const shown = rows.length!==ITEMS.length ? ' <span class="nm">('+rows.length+'개 표시)</span>' : '';
+  wrap.innerHTML='<table class="tbl"><thead><tr><th>#</th><th>채널'+shown
+    +'</th><th>등록일</th><th></th></tr></thead><tbody>'+body+'</tbody></table>';
 }
 
 async function removeOne(key){
