@@ -197,6 +197,14 @@
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (!d || !d.ok) { window.alert("삭제 실패"); return; }
+        // 로컬 draft(sessionStorage)가 방금 지운 작업을 붙들고 있으면 함께 지운다(2026-07-24).
+        // 안 지우면 제작소 재진입 시 _consumeProduceHandoff가 그 draft를 복원→saveWork의
+        // INSERT 폴백으로 되살려, 지운 작업이 1단계로 부활하고 '내 작업'에 다시 뜬다.
+        // URL ?work= 만 보던 기존 가드는 다른 화면에서 삭제할 때 이 draft를 놓쳤다.
+        try {
+          var w = JSON.parse(sessionStorage.getItem("produce_work") || "null");
+          if (w && w.work_id === wid) sessionStorage.removeItem("produce_work");
+        } catch (e) {}
         var open = null;
         try { open = new URLSearchParams(location.search).get("work"); } catch (e) {}
         if (open === wid) { location.href = "/produce?new=1"; return; }
