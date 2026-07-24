@@ -874,12 +874,14 @@ class Store:
             c.execute("DELETE FROM removed_channels WHERE username=?", (username,))
 
     def discovered_channels(self):
-        """추가된 발굴 채널 [{name, username, followers, inpock}] (collect union용 메타 형태)."""
+        """추가된 발굴 채널 [{name, username, followers, inpock, added_at}] (collect union용 메타 형태).
+        added_at은 관리페이지 표시용 — collect union 소비자는 이 키를 무시한다(추가 키라 무해)."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT username, name FROM discovered_channels ORDER BY added_at DESC"
+                "SELECT username, name, added_at FROM discovered_channels ORDER BY added_at DESC"
             ).fetchall()
-        return [{"name": r[1] or r[0], "username": r[0], "followers": 0, "inpock": ""} for r in rows]
+        return [{"name": r[1] or r[0], "username": r[0], "followers": 0, "inpock": "",
+                 "added_at": r[2] or ""} for r in rows]
 
     def remove_channel(self, username, name=""):
         """죽은 채널을 추적 제외목록에 추가(소프트 삭제). 발굴목록에 있었다면 함께 제거."""
@@ -1065,9 +1067,9 @@ class Store:
 
     def list_seeds(self, platform):
         with self._conn() as c:
-            rows = c.execute("SELECT kind, value FROM platform_seeds WHERE platform=? "
+            rows = c.execute("SELECT kind, value, added_at FROM platform_seeds WHERE platform=? "
                              "ORDER BY added_at ASC, rowid ASC", (platform,)).fetchall()
-        return [{"kind": r[0], "value": r[1]} for r in rows]
+        return [{"kind": r[0], "value": r[1], "added_at": r[2] or ""} for r in rows]
 
     # ── 플랫폼 스코프 스냅샷(가속 계산용) ──
     def save_run_platform(self, platform, run_date, rows):
