@@ -213,9 +213,8 @@ function activity(last){
   const t=new Date(String(last).replace(' ','T'));
   if(isNaN(t.getTime())) return {txt:'—', cls:'ac-none', d:1e9};
   const d=Math.floor((Date.now()-t.getTime())/86400000);
-  if(d<=0)  return {txt:'🟢 오늘 새 영상', cls:'ac-live', d};
-  if(d<=2)  return {txt:'🟢 '+d+'일 전 영상', cls:'ac-live', d};
-  if(d<=7)  return {txt:'🟢 '+d+'일 전 영상', cls:'ac-ok', d};
+  // 사장님 기준(2026-07-24): 하루 이내 올렸으면 🟢, 2일째부터 🔴.
+  if(d<=1)  return {txt:'🟢 '+(d===0?'오늘':'어제')+' 새 영상', cls:'ac-live', d};
   if(d<=30) return {txt:'🔴 '+d+'일째 새 영상 없음', cls:'ac-dead', d};
   return {txt:'💤 30일+ 잠잠', cls:'ac-dead', d};
 }
