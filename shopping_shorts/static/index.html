@@ -867,6 +867,54 @@ function _fmtDur(s){
   s=Math.round(Number(s)); const m=Math.floor(s/60), ss=s%60;
   return m+':'+String(ss).padStart(2,'0');
 }
+// ── 트렌드 검색카드(2026-07-24) ──────────────────────
+// 인스·틱·유튜 상위 통합에서 소재를 뽑아 샤오·도우 딥링크 카드로. 순수함수는 node 테스트됨.
+const _TREND_STOP = new Set(['만들기','완성','레시피','털기','또','집에서','하는','추천','리뷰','종','신상털기']);
+function _titleKeyword(title){
+  // 제목에서 핵심 명사구 근사: 이모지·해시태그·괄호 제거 후 불용어 밖 최장 토큰.
+  let t = String(title||'').replace(/[#\[\](){}!?~…·|]/g,' ')
+            .replace(/[\u{1F000}-\u{1FFFF}☀-➿]/gu,' ');
+  const toks = t.split(/\s+/).map(s=>s.trim()).filter(Boolean).filter(w=>!_TREND_STOP.has(w));
+  if(!toks.length) return '';
+  return toks.reduce((a,b)=> b.length>=a.length ? b : a, toks[0]);
+}
+function _extractSubject(item){
+  const vs = (item.vision_subject||'').trim();
+  if(vs) return vs;
+  return _titleKeyword(item.title||'');
+}
+function _normSubjectKey(s){
+  return String(s||'').toLowerCase().replace(/\s+/g,'')
+           .replace(/(을|를|이|가|은|는|의|도|에|와|과|만)$/,'');
+}
+function _score(item){
+  const v = item.views;
+  if(v!=null && !isNaN(v)) return Number(v);
+  const l = item.likes;
+  return (l!=null && !isNaN(l)) ? Number(l) : 0;
+}
+function _groupBySubject(items){
+  const map = new Map();
+  for(const it of (items||[])){
+    const subj = _extractSubject(it);
+    if(!subj) continue;
+    const key = _normSubjectKey(subj);
+    if(!key) continue;
+    let g = map.get(key);
+    if(!g){ g = {subjectKo:subj, items:[], platforms:new Set(), maxScore:0}; map.set(key,g); }
+    g.items.push(it);
+    if(it.platform) g.platforms.add(it.platform);
+    g.maxScore = Math.max(g.maxScore, _score(it));
+  }
+  const groups = [...map.values()].map(g=>({
+    subjectKo:g.subjectKo, items:g.items, platforms:[...g.platforms],
+    count:g.items.length, maxScore:g.maxScore,
+  }));
+  groups.sort((a,b)=> b.maxScore - a.maxScore);
+  return groups;
+}
+// ── 트렌드 검색카드 끝 ──
+
 // 플랫폼별 검색 페이지 URL(search_links.py의 _URL_BUILDERS와 동일). 바로가기+담기용.
 function _lensSearchUrl(platform, kw){
   const q=encodeURIComponent(kw||'');
