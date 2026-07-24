@@ -443,21 +443,25 @@
   function _ssEsc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
 
   function initSignupAlert() {
+    // 브라우저 밖(테스트 하네스 등)에선 조용히 꺼진다 — localStorage·fetch 없으면 no-op(스크립트 안 깬다).
+    if (typeof window === "undefined" || !window.localStorage) return;
+    var _f = window.fetch || (typeof fetch === "function" ? fetch : null);
+    if (!_f) return;
     var firstRun = true;
     function tick() {
-      _origFetch("/api/admin/pending", { headers: { "Accept": "application/json" } })
+      _f("/api/admin/pending", { headers: { "Accept": "application/json" } })
         .then(function (r) { if (!r.ok) throw new Error("not-admin"); return r.json(); })
         .then(function (d) {
           if (!d || !d.ok) return;
           var newestId = d.newest_id || 0;
-          var seen = parseInt(localStorage.getItem(_SS_SEEN_KEY) || "0", 10) || 0;
+          var seen = parseInt(window.localStorage.getItem(_SS_SEEN_KEY) || "0", 10) || 0;
           if (firstRun && seen === 0) {
             // 첫 방문(기록 없음): 기존 대기자로 시끄럽게 울리지 않는다. 기준선만 잡는다.
-            localStorage.setItem(_SS_SEEN_KEY, String(newestId));
+            window.localStorage.setItem(_SS_SEEN_KEY, String(newestId));
           } else if (newestId > seen) {
             _ssDing();
             _ssToast(d.newest, d.count);
-            localStorage.setItem(_SS_SEEN_KEY, String(newestId));
+            window.localStorage.setItem(_SS_SEEN_KEY, String(newestId));
           }
           firstRun = false;
           setTimeout(tick, 25000);                  // 관리자면 25초마다 계속
