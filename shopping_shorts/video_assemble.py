@@ -529,6 +529,11 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
         # 기존 폴백 "h-text_h-150"의 근사치를 %로 환산(문자 높이는 size*1.2로 근사)
         # 150 = 1080p 기준 하단 여백(720p 100px ×1.5, 2026-07-24 1080p 업그레이드)
         ypct = max(0.0, min(100.0, (_OUT_H - 150 - size * 0.6) / _OUT_H * 100.0))
+    # 자막 가로 위치(%): UI 드래그 결과가 style.x_pct로 온다. 미지정이면 종전대로 중앙(50).
+    # 예전엔 아래 _segmented_drawtext 호출에 50이 하드코딩돼, 미리보기로 옮겨도 최종 렌더는
+    # 항상 중앙이었다(2026-07-25 배선). 0~100 클램프.
+    xpct = style.get("x_pct")
+    xpct = 50.0 if xpct is None else max(0.0, min(100.0, float(xpct)))
     use_box = bool(style.get("box"))
     # 하단 자막 바 기본 OFF(2026-07-19) — 300px·black@0.82 바가 화면 하단 23%를
     # 덮어 "검정바"로 보인다는 제보. 그림자 자막만으로 가독성 확보. 원본 소각자막을
@@ -558,7 +563,7 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
         t += d
         end = (dur + tail if i == len(segs) - 1 else t) + t0 + cap_offset
         seg_parts = _segmented_drawtext(
-            seg, style, work, f"cap_{idx}_{i}", 50, ypct,
+            seg, style, work, f"cap_{idx}_{i}", xpct, ypct,
             highlight_rules=style.get("highlight_rules"), default_color="0xFFFFFF",
             single_line=True,   # 자막은 무조건 한 줄(폭 넘으면 폰트 자동축소)
         )

@@ -665,6 +665,10 @@ class Store:
                 ("clean_sources_json", "TEXT"),
                 ("clean_status", "TEXT"),   # null|cleaning|ready|failed
                 ("clean_error", "TEXT"),
+                # 지워진 자막 영역(2026-07-25). 자막제거 시 원본↔클린 프레임 diff로 구한
+                # '어디가 지워졌나' 박스. clean_regions_json={"sources":{vid:box},"primary":box}.
+                # box={x_pct,y_pct(중심),w_pct,h_pct,score}. 5단계 꾸미기가 자막 자동정렬·마커에 쓴다.
+                ("clean_regions_json", "TEXT"),
                 # 유료게이트(2026-07-19): 이 job의 렌더 크레딧을 낸 고객 — 실패 시 환불 귀속.
                 ("customer_id", "INTEGER NOT NULL DEFAULT 0"),
                 # render 크레딧을 과금한 날(YYYY-MM-DD, UTC). 비어있으면 '과금 안 함'.
@@ -2465,7 +2469,7 @@ class Store:
                 "preview_status, preview_path, preview_error, "
                 "thumbnail_json, seo_json, "
                 "clean_sources_json, clean_status, clean_error, customer_id, render_charge_day, "
-                "scene_first, backbone_main "
+                "scene_first, backbone_main, clean_regions_json "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -2494,6 +2498,7 @@ class Store:
             "render_charge_day": row[31],
             "scene_first": bool(row[32]),
             "backbone_main": row[33],
+            "clean_regions": json.loads(row[34]) if row[34] else None,
         }
 
     def update_mix_job(self, job_id, **fields):
@@ -2535,6 +2540,10 @@ class Store:
             cols.append("clean_sources_json=?")
             vals.append(json.dumps(fields["clean_sources"], ensure_ascii=False)
                         if fields["clean_sources"] else None)
+        if "clean_regions" in fields:
+            cols.append("clean_regions_json=?")
+            vals.append(json.dumps(fields["clean_regions"], ensure_ascii=False)
+                        if fields["clean_regions"] else None)
         for k, col in (("extract", "extract_json"), ("edit_plan", "edit_plan_json")):
             if k in fields:
                 cols.append(f"{col}=?")

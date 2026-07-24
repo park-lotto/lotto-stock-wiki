@@ -22,6 +22,7 @@ from shopping_shorts.video_assemble import assemble, _beat_timeline, _probe_dura
 from shopping_shorts.motion_assets import resolve_layers, DEFAULT_ASSETS_DIR
 from shopping_shorts.motion_packs import build_plan, load_packs
 from shopping_shorts.vmake_client import remove_subtitles
+from shopping_shorts import sub_region
 from shopping_shorts.narration_naturalize import naturalize, merge_profile
 from shopping_shorts import asr_check
 from shopping_shorts import caption_sync
@@ -762,10 +763,14 @@ def _resolve_sfx_paths(store, plan, customer_id):
 
 
 def _clean_one(item, key, work):
-    """소스 하나를 VMake로 청소 → (video_id, 클린경로). ThreadPool 워커용(DB 미접근)."""
+    """소스 하나를 VMake로 청소 → (video_id, 클린경로, 지워진자막박스|None). ThreadPool 워커용(DB 미접근).
+    청소 직후 원본↔클린을 diff해 '어디가 지워졌나'를 그 자리에서 구한다 — VMake는 좌표를 안 주지만
+    우리가 before/after를 둘 다 쥐고 있어 계산 가능하다(best-effort, 실패해도 None으로 청소는 성공)."""
     vid, src = item
     out = str(Path(work) / f"clean_src_{vid}.mp4")
-    return vid, remove_subtitles(src, key, out_path=out)
+    clean_path = remove_subtitles(src, key, out_path=out)
+    region = sub_region.detect_erased_region(src, clean_path, work)
+    return vid, clean_path, region
 
 
 def _ensure_clean_sources(store, job, job_id, work, key):
@@ -773,13 +778,22 @@ def _ensure_clean_sources(store, job, job_id, work, key):
     각 스레드는 remove_subtitles만 하고 경로를 반환 → DB 저장은 취합 후 메인에서 1회(경합 없음)."""
     source_map = _resolve_sources(job, Path(work))
     cached = dict(job.get("clean_sources") or {})
+    # 지워진 자막영역: 소스별 박스 맵 + 1등(primary). 이미 있으면 이어붙인다(재청소 안 한 소스는 유지).
+    regions = dict((job.get("clean_regions") or {}).get("sources") or {})
     todo = [(vid, src) for vid, src in source_map.items()
             if not (cached.get(vid) and Path(cached[vid]).exists())]
     if todo:
         with ThreadPoolExecutor(max_workers=len(todo)) as ex:
-            for vid, out in ex.map(lambda t: _clean_one(t, key, work), todo):
+            for vid, out, region in ex.map(lambda t: _clean_one(t, key, work), todo):
                 cached[vid] = out
-        store.update_mix_job(job_id, clean_sources=cached)
+                if region:
+                    regions[vid] = region
+                else:
+                    regions.pop(vid, None)   # 이 소스엔 지속 변화 없음(원본에 자막 없었음)
+        # 넓고 자주 쓰인 위치를 1번으로 — 소스마다 자막 위치가 달라도 대표 한 자리를 고른다.
+        primary = sub_region.pick_primary(list(regions.values()))
+        store.update_mix_job(job_id, clean_sources=cached,
+                             clean_regions={"sources": regions, "primary": primary})
     return cached
 
 
