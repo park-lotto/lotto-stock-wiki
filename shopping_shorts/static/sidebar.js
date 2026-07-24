@@ -383,15 +383,105 @@
     });
   };
 
+  // ── 새 회원 가입 알림 — 관리자 페이지 어디서나 '띠링' + 팝업 (2026-07-24) ──
+  // /api/admin/pending 을 폴링한다. 관리자만 200 → 폴러 유지, 비관리자는 첫 응답이 비-200이라
+  // 조용히 꺼진다(부하·노출 없음). 새 가입(newest_id 증가)이 감지되면 소리+토스트.
+  var _SS_SEEN_KEY = "ss_signup_last_seen";     // 마지막으로 본 최신 가입 id(localStorage) — 새로고침 넘어 유지
+  var _ssAudioCtx = null;
+
+  function _ssDing() {
+    // Web Audio로 '띠링띠링' 2연음 — 오디오 파일 없이 생성. 자동재생 정책에 막히면 조용히 실패(토스트는 뜸).
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      if (!_ssAudioCtx) _ssAudioCtx = new AC();
+      if (_ssAudioCtx.state === "suspended") { try { _ssAudioCtx.resume(); } catch (e) {} }
+      var t0 = _ssAudioCtx.currentTime;
+      [0, 0.18].forEach(function (off) {            // 두 번 '띠링'
+        var o = _ssAudioCtx.createOscillator(), g = _ssAudioCtx.createGain();
+        o.type = "sine";
+        o.frequency.setValueAtTime(1318, t0 + off);          // E6
+        o.frequency.setValueAtTime(1760, t0 + off + 0.08);   // A6 (살짝 올려 '띠링' 느낌)
+        g.gain.setValueAtTime(0.0001, t0 + off);
+        g.gain.exponentialRampToValueAtTime(0.25, t0 + off + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + off + 0.16);
+        o.connect(g); g.connect(_ssAudioCtx.destination);
+        o.start(t0 + off); o.stop(t0 + off + 0.17);
+      });
+    } catch (e) {}
+  }
+
+  function _ssToast(newest, count) {
+    if (!document.body) return;
+    var box = document.getElementById("ssSignupToasts");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "ssSignupToasts";
+      box.style.cssText = "position:fixed;top:16px;right:16px;z-index:99999;display:flex;flex-direction:column;gap:10px;max-width:340px;font-family:system-ui,sans-serif";
+      document.body.appendChild(box);
+    }
+    var who = (newest && (newest.name || newest.username)) || "새 회원";
+    var sub = (newest && (newest.phone || newest.email)) || "";
+    var card = document.createElement("div");
+    card.style.cssText = "background:#0c1411;color:#e9f5ee;border:1px solid #1f6f4f;border-left:4px solid #2fd18a;border-radius:12px;padding:14px 16px;box-shadow:0 8px 28px rgba(0,0,0,.45);cursor:pointer;animation:ssSlideIn .25s ease";
+    card.innerHTML =
+      '<div style="font-size:13px;font-weight:800;color:#2fd18a;margin-bottom:4px">🆕 새 회원 가입 신청' +
+      (count > 1 ? ' <span style="color:#9fd">· 대기 ' + count + '명</span>' : '') + '</div>' +
+      '<div style="font-size:15px;font-weight:700">' + _ssEsc(who) + '</div>' +
+      (sub ? '<div style="font-size:12px;color:#9db;margin-top:2px">' + _ssEsc(sub) + '</div>' : '') +
+      '<div style="font-size:12px;color:#7fd6a8;margin-top:8px;font-weight:700">클릭 → 승인하러 가기 →</div>';
+    card.onclick = function () { location.href = "/admin"; };
+    box.appendChild(card);
+    setTimeout(function () { try { card.style.transition = "opacity .4s"; card.style.opacity = "0"; setTimeout(function () { card.remove(); }, 400); } catch (e) {} }, 12000);
+    if (!document.getElementById("ssSignupKf")) {
+      var st = document.createElement("style"); st.id = "ssSignupKf";
+      st.textContent = "@keyframes ssSlideIn{from{transform:translateX(30px);opacity:0}to{transform:none;opacity:1}}";
+      document.head.appendChild(st);
+    }
+  }
+
+  function _ssEsc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+
+  function initSignupAlert() {
+    // 브라우저 밖(테스트 하네스 등)에선 조용히 꺼진다 — localStorage·fetch 없으면 no-op(스크립트 안 깬다).
+    if (typeof window === "undefined" || !window.localStorage) return;
+    var _f = window.fetch || (typeof fetch === "function" ? fetch : null);
+    if (!_f) return;
+    var firstRun = true;
+    function tick() {
+      _f("/api/admin/pending", { headers: { "Accept": "application/json" } })
+        .then(function (r) { if (!r.ok) throw new Error("not-admin"); return r.json(); })
+        .then(function (d) {
+          if (!d || !d.ok) return;
+          var newestId = d.newest_id || 0;
+          var seen = parseInt(window.localStorage.getItem(_SS_SEEN_KEY) || "0", 10) || 0;
+          if (firstRun && seen === 0) {
+            // 첫 방문(기록 없음): 기존 대기자로 시끄럽게 울리지 않는다. 기준선만 잡는다.
+            window.localStorage.setItem(_SS_SEEN_KEY, String(newestId));
+          } else if (newestId > seen) {
+            _ssDing();
+            _ssToast(d.newest, d.count);
+            window.localStorage.setItem(_SS_SEEN_KEY, String(newestId));
+          }
+          firstRun = false;
+          setTimeout(tick, 25000);                  // 관리자면 25초마다 계속
+        })
+        .catch(function () { /* 비관리자/에러 → 폴러 정지(재시도 안 함) */ });
+    }
+    tick();
+  }
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", mount);
     document.addEventListener("DOMContentLoaded", __ssPaintTheme);
     document.addEventListener("DOMContentLoaded", mountWorks);
     document.addEventListener("DOMContentLoaded", initPaywall);
+    document.addEventListener("DOMContentLoaded", initSignupAlert);
   } else {
     mount();
     __ssPaintTheme();
     mountWorks();
     initPaywall();
+    initSignupAlert();
   }
 })();

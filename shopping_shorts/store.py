@@ -2944,20 +2944,35 @@ class Store:
                 raise ValueError(f"이미 존재하는 아이디: {username}")
         return cur.lastrowid
 
-    def get_or_create_by_google(self, google_sub, email=None):
-        """구글 sub로 고객 조회, 없으면 신규 생성(가입시 체험 자동시작). customer_id 반환."""
+    def get_or_create_by_google(self, google_sub, email=None, return_created=False):
+        """구글 sub로 고객 조회, 없으면 신규 생성(가입시 체험 자동시작). customer_id 반환.
+        return_created=True면 (customer_id, created) 튜플 — created=신규가입 여부(가입 알림용)."""
+        def _ret(cid, created):
+            return (cid, created) if return_created else cid
         with self._conn() as c:
             row = c.execute("SELECT id FROM customers WHERE google_sub=?", (google_sub,)).fetchone()
         if row:
-            return row[0]
+            return _ret(row[0], False)
         username = "g_" + str(google_sub)               # username 유니크 제약 충족용(절단X — sub 전체가 dedup 키)
         try:
-            return self.create_customer(username, secrets.token_hex(16),
-                                        email=email, google_sub=google_sub, approved=False)
+            cid = self.create_customer(username, secrets.token_hex(16),
+                                       email=email, google_sub=google_sub, approved=False)
+            return _ret(cid, True)                       # 방금 새로 만든 계정 = 신규가입
         except ValueError:
             with self._conn() as c:                     # 경합으로 방금 생성됐으면 재조회
                 row = c.execute("SELECT id FROM customers WHERE google_sub=?", (google_sub,)).fetchone()
-            return row[0] if row else None
+            return _ret(row[0] if row else None, False)  # 경합 패자는 알림 안 울림(승자만 1번)
+
+    def pending_customers(self):
+        """승인 대기(approved_at IS NULL) 고객 목록 — 관리자 알림 폴링용(가벼운 쿼리).
+        최근 가입 먼저. 사장님(0) 제외. → [{id, username, name, phone, email, created_at}]."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT id, username, name, phone, email, created_at FROM customers "
+                "WHERE id != 0 AND approved_at IS NULL ORDER BY id DESC"
+            ).fetchall()
+        return [{"id": r[0], "username": r[1], "name": r[2], "phone": r[3],
+                 "email": r[4], "created_at": r[5]} for r in rows]
 
     def verify_customer(self, username, password):
         """username/password 검증 → 성공 시 customer_id, 실패 시 None.
