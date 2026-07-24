@@ -1004,11 +1004,11 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             if jr:
                 cand["judge"] = jr
                 cand["score"] = round(0.5 * rule_score + 0.5 * jr["total"], 3)
-        # T6 컷리듬/반복 결정적 감점 — judge on/off 둘 다 적용(파편·반복 후보 순위 하락).
-        pen = candidate_judge.cut_rhythm_penalty(plan.get("beats"))
-        if pen:
-            cand["cut_penalty"] = pen
-            cand["score"] = round(max(0.0, cand["score"] - pen), 3)
+        # T6 컷리듬/반복 감점은 _score_candidate(rule_score) 안에서 이미 빠진다 — 여기서 또 빼면
+        # 이중 감점(2026-07-24 병합에서 candidate_judge판+edit_plan판 중복 발견). 관측용으로만 노출.
+        _cp = _cut_rhythm_penalty(plan.get("beats"))
+        if _cp:
+            cand["cut_penalty"] = round(_cp, 3)
         cands.append(cand)
     if cands:
         best = max(range(len(cands)), key=lambda i: cands[i]["score"])
