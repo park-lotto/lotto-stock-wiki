@@ -152,13 +152,20 @@ class Store:
                     views INTEGER,
                     comments INTEGER,
                     first_seen TEXT,
-                    last_seen TEXT
+                    last_seen TEXT,
+                    upload_ts TEXT
                 )
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_reel_history_user "
                       "ON reel_history(username)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_reel_history_seen "
                       "ON reel_history(last_seen)")
+            # 업로드 시각(2026-07-24): 기존 DB용 마이그레이션. first_seen/last_seen은 '수집' 시각이라
+            # 활동여부(채널이 최근 영상을 올렸나)엔 부적합 — 실제 게시 시각(item.timestamp=createdAt)을 저장한다.
+            try:
+                c.execute("ALTER TABLE reel_history ADD COLUMN upload_ts TEXT")
+            except sqlite3.OperationalError:
+                pass  # 이미 존재
             c.execute("""
                 CREATE TABLE IF NOT EXISTS source_analysis (
                     shortcode TEXT PRIMARY KEY,
@@ -912,13 +919,16 @@ class Store:
                  "added_at": r[2] or ""} for r in rows]
 
     def instagram_activity_map(self):
-        """reel_history에서 채널별 마지막 활동일·표시명 맵. {norm_username: {"last": iso, "name": str}}.
-        관리페이지가 '이 채널이 최근 영상을 올렸나(활동중)'를 무료로 보여주는 데 쓴다 —
-        Apify 재조회 없이 이미 쌓인 수집이력만 집계. username은 저장 시 소문자 정규화돼 있다."""
+        """reel_history에서 채널별 '가장 최근 새 영상' 시각·표시명 맵. {norm_username: {"last": iso, "name": str}}.
+        관리페이지가 '이 채널이 최근 영상을 올렸나(활동중)'를 무료로 보여주는 데 쓴다.
+        ★기준=first_seen(그 영상이 수집에 처음 잡힌 시각 ≈ 게시 근사). last_seen(마지막 수집시각)은
+        매 수집마다 갱신돼 전 채널이 '방금'이 되므로 절대 쓰지 않는다. upload_ts(실제 게시시각)는
+        저장은 하되(다음 수집부터 채워짐) 형식(epoch/ISO)이 확정되기 전엔 정렬 기준으로 섞지 않는다.
+        username은 저장 시 소문자 정규화돼 있다."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT username, MAX(last_seen) AS last, MAX(name) AS nm "
-                "FROM reel_history GROUP BY username"
+                "SELECT username, MAX(first_seen) AS last, "
+                "MAX(name) AS nm FROM reel_history GROUP BY username"
             ).fetchall()
         return {r[0]: {"last": r[1] or "", "name": r[2] or ""} for r in rows}
 
@@ -1305,17 +1315,18 @@ class Store:
             c.execute(
                 "INSERT INTO reel_history"
                 "(shortcode, username, name, category, url, thumb, caption,"
-                " views, comments, first_seen, last_seen) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?) "
+                " views, comments, first_seen, last_seen, upload_ts) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?) "
                 "ON CONFLICT(shortcode) DO UPDATE SET "
                 "  username=excluded.username, name=excluded.name,"
                 "  category=excluded.category, url=excluded.url, thumb=excluded.thumb,"
                 "  caption=excluded.caption, views=excluded.views,"
-                "  comments=excluded.comments, last_seen=excluded.last_seen",
+                "  comments=excluded.comments, last_seen=excluded.last_seen,"
+                "  upload_ts=COALESCE(NULLIF(excluded.upload_ts,''), reel_history.upload_ts)",
                 (sc, user, it.get("name"), it.get("category"), it.get("url"),
                  it.get("thumbnail"), it.get("caption"),
                  int(it.get("views") or 0), int(it.get("comments") or 0),
-                 collected_at, collected_at),
+                 collected_at, collected_at, str(it.get("timestamp") or "")),
             )
         # 30일 정리 — last_seen이 30일보다 오래된 행 삭제(수집이 곧 정리 트리거).
         cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()

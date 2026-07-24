@@ -206,17 +206,17 @@ async function loadCurrentSet(){
 let ITEMS=[];   // 현재 플랫폼 등록목록 [{key, name, added, last, src, followers}]
 function fmtDate(s){ return (s||'').slice(0,10) || '—'; }   // "2026-07-18 12:00:00" → "2026-07-18"
 
-// 마지막 수집영상 날짜 → 활동 라벨(무료, reel_history 기반). ''=수집된 적 없음.
-// d=경과일(정렬키). 작을수록 최근 활동.
+// 가장 최근 '새 영상'이 수집에 처음 잡힌 시점 → 활동 라벨(무료, reel_history first_seen 기반).
+// ''=수집이력 없음(등록만 했거나 아직 한 번도 안 잡힘). d=경과일(정렬키), 작을수록 최근 활동.
 function activity(last){
-  if(!last) return {txt:'수집 전', cls:'ac-none', d:1e9};
+  if(!last) return {txt:'수집 이력 없음', cls:'ac-none', d:1e9};
   const t=new Date(String(last).replace(' ','T'));
   if(isNaN(t.getTime())) return {txt:'—', cls:'ac-none', d:1e9};
   const d=Math.floor((Date.now()-t.getTime())/86400000);
-  if(d<=2)  return {txt:'🟢 활동중 ('+d+'일 전)', cls:'ac-live', d};
-  if(d<=7)  return {txt:d+'일 전', cls:'ac-ok', d};
-  if(d<=30) return {txt:'🔴 '+d+'일째 잠잠', cls:'ac-dead', d};
-  return {txt:'💤 30일+ 없음', cls:'ac-dead', d};
+  // 사장님 기준(2026-07-24): 하루 이내 올렸으면 🟢, 2일째부터 🔴.
+  if(d<=1)  return {txt:'🟢 '+(d===0?'오늘':'어제')+' 새 영상', cls:'ac-live', d};
+  if(d<=30) return {txt:'🔴 '+d+'일째 새 영상 없음', cls:'ac-dead', d};
+  return {txt:'💤 30일+ 잠잠', cls:'ac-dead', d};
 }
 
 async function loadList(){
