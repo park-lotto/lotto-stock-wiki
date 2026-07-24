@@ -45,3 +45,32 @@ def test_empty_is_safe():
     assert r["beat_count"] == 0 and isinstance(r["violations"], list)
     r2 = plan_gate.check_plan(None)
     assert r2["beat_count"] == 0
+
+
+def test_source_scene_counts():
+    """소스별 장면 수 집계(관리자 관측용, 2026-07-24). primary만 세고 alternates 제외."""
+    from shopping_shorts import plan_gate
+    beats = [{"primary": {"seg_id": "a", "video_id": "s0"}, "alternates": [{"seg_id": "z", "video_id": "s9"}]},
+             {"primary": {"seg_id": "b", "video_id": "s0"}},
+             {"primary": {"seg_id": "c", "video_id": "s1"}}]
+    assert plan_gate.source_scene_counts(beats) == {"s0": 2, "s1": 1}   # alternates s9 제외
+    assert plan_gate.source_scene_counts([]) == {}
+
+
+def test_attach_sources_report():
+    """스킵·0장면을 리포트로 노출(조용한 실패 방지)."""
+    from shopping_shorts import mix_pipeline
+
+    class _S:
+        def __init__(self, plan): self._p = plan; self.saved = None
+        def get_mix_job(self, j): return {"edit_plan": self._p}
+        def update_mix_job(self, j, **k): self.saved = k
+
+    plan = {"beats": [{"primary": {"seg_id": "a", "video_id": "s0"}},
+                      {"primary": {"seg_id": "b", "video_id": "s2"}}]}
+    s = _S(plan)
+    mix_pipeline._attach_sources_report(s, "j", ["u0", "u1", "u2"], [("u1", "502 err")])
+    rep = s.saved["edit_plan"]["sources_report"]
+    assert rep[0]["scenes"] == 1 and not rep[0]["skipped"]        # u0=s0 1장면
+    assert rep[1]["skipped"] and "502" in rep[1]["reason"]         # u1 스킵
+    assert rep[2]["scenes"] == 1                                   # u2=s2 1장면

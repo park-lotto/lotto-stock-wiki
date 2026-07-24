@@ -1951,6 +1951,9 @@ def api_mix_result(job_id: str):
         "generator": plan.get("generator", ""),
         "generator_note": plan.get("generator_note", ""),
         "gate": plan.get("gate") or None,
+        # 소스별 기여 리포트(관리자 관측, 2026-07-24) — 프런트가 admin일 때만 렌더. 본인 소스 정보라
+        # 민감하진 않지만 시니어 고객에겐 안 보이게 화면단에서 가린다(window.IS_ADMIN).
+        "sources_report": plan.get("sources_report") or None,
         "detected_type": detected,
         "detected_type_label": _edit_plan.VIDEO_TYPES.get(detected, {}).get("label", detected),
         "affiliate_target": plan.get("affiliate_target", ""),

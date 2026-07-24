@@ -328,6 +328,28 @@ def _prepare_sources(urls, work):
     return video_paths, captions, skipped
 
 
+def _attach_sources_report(store, job_id, urls, skipped):
+    """소스 URL별 리포트를 edit_plan에 붙인다(관리자 관측). video_id=s{index}라 urls[index]로 라벨.
+    각 항목 {n, url, scenes, skipped, reason}. scenes=완성본에 실제 들어간 장면 수(0=한 장면도 안 씀).
+    skipped=다운로드 실패로 아예 빠짐(reason에 사유). ★조용한 실패 노출용."""
+    from shopping_shorts import plan_gate
+    job = store.get_mix_job(job_id)
+    plan = (job or {}).get("edit_plan") or {}
+    counts = plan_gate.source_scene_counts(plan.get("beats") or [])
+    skip_map = {u: e for u, e in (skipped or [])}
+    report = []
+    for i, url in enumerate(urls or []):
+        vid = _source_video_id(i)
+        if url in skip_map:
+            report.append({"n": i + 1, "url": url, "scenes": 0,
+                           "skipped": True, "reason": str(skip_map[url])[:200]})
+        else:
+            report.append({"n": i + 1, "url": url, "scenes": int(counts.get(vid, 0)),
+                           "skipped": False})
+    plan["sources_report"] = report
+    store.update_mix_job(job_id, edit_plan=plan)
+
+
 def run_mix_job(job_id, db_path, work_root):
     """다운로드→추출→EDL→TTS. 완료 시 status='ready_for_review'."""
     store = Store(db_path)
@@ -396,6 +418,14 @@ def run_mix_job(job_id, db_path, work_root):
                       backbone_meta=_backbone_meta_from_job(job, extracts, store=store),
                       backbone_forced=_resolve_backbone_forced(job, extracts),
                       global_pron=_gpron)
+
+        # 소스 기여 리포트(2026-07-24, 관리자 관측) — 몇 번 영상이 몇 장면 들어갔나 / 스킵됐나.
+        # 조용한 스킵(프록시 502로 유튜브 소스가 빠져도 완성본만 나오던 문제)을 눈에 보이게 한다.
+        # 관측용이라 실패해도 믹스 결과엔 영향 없음.
+        try:
+            _attach_sources_report(store, job_id, job["urls"], skipped)
+        except Exception:
+            traceback.print_exc(file=sys.stderr)
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))

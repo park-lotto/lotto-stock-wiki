@@ -2282,7 +2282,19 @@ function _renderMixReviewBody(d){
   const _gateWarn = _gv.length
     ? `<div style="border:1px solid var(--fire);border-radius:10px;padding:10px;margin-bottom:8px;background:rgba(255,90,90,.06);font-size:13px">🚧 <b>렌더 전 점검에서 걸린 것</b><ul style="margin:6px 0 0 18px;padding:0">${_gv.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`
     : '';
-  el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+_genWarn+_gateWarn+renderCoverageSignal(d.beats||[])
+  // 소스별 기여 리포트 — 관리자(사장님)만 표시. 몇 번 영상이 몇 장면 들어갔나/스킵됐나(조용한 실패 노출).
+  const _sr = (window.IS_ADMIN && Array.isArray(d.sources_report)) ? d.sources_report : [];
+  const _srBad = _sr.filter(s=>s.skipped || s.scenes===0).length;
+  const _srPanel = _sr.length
+    ? `<div style="border:1px solid ${_srBad?'var(--fire)':'var(--line)'};border-radius:10px;padding:10px;margin-bottom:8px;background:${_srBad?'rgba(255,90,90,.06)':'var(--inset)'};font-size:12px">
+        <b>🛠 소스 기여 (관리자용)</b> — 넣은 ${_sr.length}개 중 실제 사용 ${_sr.filter(s=>s.scenes>0).length}개${_srBad?` · <span style="color:var(--fire)">문제 ${_srBad}개</span>`:''}
+        <table style="width:100%;margin-top:6px;border-collapse:collapse">${_sr.map(s=>`<tr style="border-top:1px solid var(--line)">
+          <td style="padding:3px 4px;white-space:nowrap">${s.n}번</td>
+          <td style="padding:3px 4px">${s.skipped?`<span style="color:var(--fire)">✖ 스킵</span>`:(s.scenes>0?`<b>${s.scenes}</b> 장면`:`<span style="color:var(--fire)">0 장면(안 씀)</span>`)}</td>
+          <td style="padding:3px 4px;color:var(--sub);word-break:break-all">${esc((s.url||'').slice(0,60))}${s.reason?`<div class="hint" style="color:var(--fire)">${esc(s.reason.slice(0,120))}</div>`:''}</td>
+        </tr>`).join('')}</table></div>`
+    : '';
+  el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+_genWarn+_gateWarn+_srPanel+renderCoverageSignal(d.beats||[])
     +`<button class="btn" style="margin:0 0 8px;padding:5px 12px;font-size:12px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="openPaletteView()" title="소스를 몇 조각으로 나눠 이 영상에 몇 컷 썼는지 썸네일로 봅니다">🔪 조각 전체 보기</button>`
     +`<div id="paletteBox" data-open="0" style="margin-bottom:8px"></div>`
     +(d.beats||[]).map((b,i)=>`

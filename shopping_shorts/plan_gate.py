@@ -29,6 +29,22 @@ def _clips(beat):
     return out
 
 
+def source_scene_counts(beats):
+    """비트별로 화면에 나가는 클립(primary)의 video_id를 세어 소스별 장면 수 반환.
+    {video_id: 장면수}. 관리자 관측용(2026-07-24 — 어느 소스가 몇 장면 들어갔나·조용한 스킵 노출).
+    alternates(교체 후보)는 렌더 안 되니 제외한다."""
+    counts = {}
+    for b in beats or []:
+        p = b.get("primary") or {}
+        vid = p.get("video_id")
+        if not vid:                       # primary에 video_id 없으면 첫 클립으로 폴백
+            cs = _clips(b)
+            vid = cs[0].get("video_id") if cs else None
+        if vid:
+            counts[vid] = counts.get(vid, 0) + 1
+    return counts
+
+
 def _continuous_runs(beats):
     """영상 전체를 한 줄로 펴서 '같은 소스의 인접 구간이 연달아' 이어지는 구간을 찾는다.
 
