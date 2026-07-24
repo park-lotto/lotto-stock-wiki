@@ -256,8 +256,8 @@
     </div>
     <div id="seedPanel" style="display:none;margin-bottom:12px">
       <div id="ttMode" style="display:none;margin-bottom:6px">
-        <label style="font-size:12px;color:var(--sub);cursor:pointer"><input type="radio" name="ttmode" value="keyword" checked onclick="ttModeChange()"> 🔎 키워드 검색발굴</label>
-        <label style="font-size:12px;color:var(--sub);cursor:pointer;margin-left:12px"><input type="radio" name="ttmode" value="account" onclick="ttModeChange()"> 🎵 계정 시드</label>
+        <label style="font-size:12px;color:var(--sub);cursor:pointer"><input type="radio" name="ttmode" value="keyword" onclick="ttModeChange()"> 🔎 키워드 검색발굴 (유료 · 현재 꺼짐)</label>
+        <label style="font-size:12px;color:var(--sub);cursor:pointer;margin-left:12px"><input type="radio" name="ttmode" value="account" checked onclick="ttModeChange()"> 🎵 계정 시드</label>
       </div>
       <input id="seedInput" type="text" placeholder="검색 키워드 (예: 살림꿀팁)" style="padding:8px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
       <select id="seedLang" title="검색 언어(지역) — 한국어면 국내영상, 다른 언어면 그 나라 영상 발굴" style="padding:8px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
@@ -396,7 +396,7 @@ function updatePlatformCopy(p){
   const speedEl=document.querySelector('.tab[data-tab="speed"]'); if(speedEl) speedEl.title = tip.speed;
   const densityEl=document.querySelector('.tab[data-tab="density"]'); if(densityEl) densityEl.title = tip.density;
 }
-function ttMode(){ const r=document.querySelector('input[name="ttmode"]:checked'); return r?r.value:'keyword'; }
+function ttMode(){ const r=document.querySelector('input[name="ttmode"]:checked'); return r?r.value:'account'; }
 function switchPlatform(p, el){
   PLATFORM=p;
   updatePlatformCopy(p);
@@ -960,8 +960,13 @@ async function doCensus(){
 }
 async function loadLast(){
   const d = await (await fetch("/api/reference?platform="+PLATFORM)).json();
-  if(d.items?.length){ STATE.items=d.items; render();
-    document.getElementById("status").textContent=`마지막 수집: ${fmtTime(d.collected_at)}`; }
+  STATE.items = d.items || [];   // 결과 없어도 무조건 갈아끼움 — 이전 플랫폼 카드 잔존 방지
+  render();
+  if(STATE.items.length){
+    document.getElementById("status").textContent=`마지막 수집: ${fmtTime(d.collected_at)}`;
+  } else {
+    document.getElementById("status").textContent="아직 수집 결과가 없습니다. (관리자 수집 대기)";
+  }
 }
 function goComment(sc){ location.href = '/outreach?focus=' + encodeURIComponent(sc); }
 async function copyLink(url, btn){
