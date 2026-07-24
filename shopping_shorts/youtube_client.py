@@ -203,6 +203,60 @@ def _resolve_channel(seed):
     return _channel_from_api("forHandle", "@" + seed.strip().lstrip("@"))
 
 
+_PLAYLIST_ITEMS_URL = "https://www.googleapis.com/youtube/v3/playlistItems"
+
+
+def fetch_channel_shorts(seed, max_videos=50, cache_get=None, cache_put=None):
+    """채널 시드(핸들/URL)의 최근 Shorts(≤60초) → search_shorts와 동일한 raw dict 리스트.
+
+    cache_get(seed)->(cid,uploads)|None / cache_put(seed,cid,uploads): 해석 캐시 콜백(선택).
+    창(14일) 필터는 하지 않는다 — build_youtube_items가 window_hours로 거른다.
+    비공개·삭제·해석실패 채널은 빈 리스트(예외 안 던짐)."""
+    resolved = cache_get(seed) if cache_get else None
+    if resolved:
+        cid, uploads = resolved
+    else:
+        cid, uploads = _resolve_channel(seed)
+        if uploads and cache_put:
+            cache_put(seed, cid, uploads)
+    if not uploads:
+        return []
+
+    pl, _ = _first_ok(_PLAYLIST_ITEMS_URL, {
+        "part": "contentDetails", "playlistId": uploads,
+        "maxResults": min(max_videos, 50)})
+    vids = [((it.get("contentDetails") or {}).get("videoId"))
+            for it in ((pl or {}).get("items") or [])]
+    vids = [v for v in vids if v]
+    if not vids:
+        return []
+
+    out = []
+    for i in range(0, len(vids), 50):                       # videos.list 상한 50
+        chunk = vids[i:i + 50]
+        vd, _ = _first_ok(_VIDEOS_URL, {
+            "part": "snippet,contentDetails,statistics", "id": ",".join(chunk)})
+        for it in ((vd or {}).get("items") or []):
+            secs = _parse_duration_secs((it.get("contentDetails") or {}).get("duration"))
+            if secs is None or secs > 60:                   # 숏폼(≤60초)만
+                continue
+            sn = it.get("snippet") or {}
+            st = it.get("statistics") or {}
+            out.append({
+                "video_id": it.get("id"),
+                "channel_id": sn.get("channelId"),
+                "channel_title": sn.get("channelTitle"),
+                "title": sn.get("title"),
+                "description": sn.get("description"),
+                "thumbnail": ((sn.get("thumbnails") or {}).get("high") or {}).get("url", ""),
+                "published_at": sn.get("publishedAt"),
+                "views": int(st.get("viewCount") or 0),
+                "likes": int(st.get("likeCount") or 0),
+                "comments": int(st.get("commentCount") or 0),
+            })
+    return out
+
+
 def enrich_youtube(url):
     """유튜브 URL → 채널·지표·인기댓글·캡션 통합 dict. 유튜브 아니면 None,
     쿼터소진(전 키 403) 시 {"status": "quota"}.
