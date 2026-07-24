@@ -35,6 +35,7 @@
       { icon: "📚", text: "대본 즐겨찾기",   href: "/library" },
       { icon: "🔎", text: "신규채널 픽업",   href: "/discover" },
       { icon: "🎞️", text: "장면 라이브러리", href: "/scene_library" },
+      { icon: "📋", text: "레퍼런스 채널 관리", href: "/refs", admin: true },
     ] },
     { label: "제작", items: [
       { icon: "🎬", text: "영상 제작소",     href: "/produce" },
@@ -149,10 +150,12 @@
     html += '<div class="ss-group"><div class="ss-label">' + g.label + "</div>";
     g.items.forEach(function (it) {
       var active = !!it.href && (it.href === path || (it.href === "/" && path === "/"));
-      var cls = "ss-item" + (active ? " active" : "") + (it.href ? "" : " ss-disabled");
+      // 관리자 전용 항목(admin:true)은 기본 숨김으로 렌더 → /api/me가 is_admin이면 아래에서 노출.
+      var cls = "ss-item" + (active ? " active" : "") + (it.href ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "");
+      var hide = it.admin ? ' style="display:none"' : "";
       var onclick = it.href && !active ? ' onclick="location.href=\'' + esc(it.href) + "'\"" : "";
       var payAttr = (it.href ? ' data-ss-href="' + esc(it.href) + '"' : "") + (it.free ? ' data-ss-free="1"' : "");
-      html += '<div class="' + cls + '"' + payAttr + onclick + ">" + it.icon + " " + it.text + "</div>";
+      html += '<div class="' + cls + '"' + payAttr + hide + onclick + ">" + it.icon + " " + it.text + "</div>";
     });
     html += "</div>";
   });
@@ -328,6 +331,8 @@
     var nav = document.querySelector(".ss-nav");
     if (!nav || document.getElementById("ss-acct")) return;
     var admin = !!d.is_admin;
+    // 관리자면 사이드바의 admin 전용 항목(레퍼런스 채널 관리 등)을 노출.
+    if (admin) document.querySelectorAll(".ss-admin-only").forEach(function (e) { e.style.display = ""; });
     var email = escHtml(d.email || "");
     var initial = escHtml((d.email || "?").trim().charAt(0).toUpperCase() || "?");
     var tier, tierColor, sub;

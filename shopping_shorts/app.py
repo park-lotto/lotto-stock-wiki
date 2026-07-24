@@ -6686,6 +6686,22 @@ def _voice_tune_page(request: Request):
 app.add_api_route("/voice_tune", _voice_tune_page, include_in_schema=False)
 app.add_api_route("/voice_tune.html", _voice_tune_page, include_in_schema=False)
 
+
+# 레퍼런스 채널 통합 관리페이지(2026-07-24) — 관리자(customer_id==0) 전용.
+# 인스타·유튜브·틱톡 레퍼런스 계정을 "엑셀처럼" 여러 줄 붙여넣기로 일괄 등록/관리한다.
+# 등록·목록·삭제는 전부 기존 API 재사용(신규 등록 로직 없음): 인스타=/api/reference/register
+# +/api/discover/added+/api/prune/remove, 틱톡·유튜브=/api/seeds(kind=account). 그래서
+# 이 페이지는 게이트 있는 정적 라우트 하나면 된다(voice_tune과 동일 이유로 mount보다 먼저).
+def _refs_page(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return FileResponse(_STATIC / "refs.html", media_type="text/html", headers=_NOCACHE)
+
+
+app.add_api_route("/refs", _refs_page, include_in_schema=False)
+app.add_api_route("/refs.html", _refs_page, include_in_schema=False)
+
 # ★C-1(2026-07-16 라이브 실증): 위 _NOCACHE는 /produce 등 "클린 URL" 라우트에만 붙는다.
 # /sidebar.js 같은 정적 JS/CSS/HTML은 아래 StaticFiles 마운트가 헤더 없이 그대로 서빙해서
 # 브라우저가 무기한 캐시했다 — 실측: 서버는 새 sidebar.js(mountWorks 포함, 5957바이트)를
