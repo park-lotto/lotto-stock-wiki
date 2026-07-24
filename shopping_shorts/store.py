@@ -595,6 +595,20 @@ class Store:
                     updated_at TEXT NOT NULL
                 )
             """)
+            # ★유튜브 로컬 릴레이 큐(2026-07-24): 서버(데이터센터 IP)는 유튜브 쇼츠 다운로드가
+            # 봇차단이라, 사장님 PC(주거용 IP) 에이전트가 대신 받아 서버로 올린다. 서버는 여기
+            # 요청을 넣고 done될 때까지 폴링한다. 상태: pending→done|failed.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS yt_relay (
+                    req_id TEXT PRIMARY KEY,
+                    url TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'pending',
+                    out_path TEXT,
+                    error TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
             # 기존 DB용 마이그레이션 — mix_jobs 자막제거 필드(2026-07-13).
             # 새 DB는 위 CREATE에 이미 있어 여기선 "이미 존재" 예외를 조용히 넘긴다.
             for col, ddl in (
@@ -888,12 +902,14 @@ class Store:
             c.execute("DELETE FROM removed_channels WHERE username=?", (username,))
 
     def discovered_channels(self):
-        """추가된 발굴 채널 [{name, username, followers, inpock}] (collect union용 메타 형태)."""
+        """추가된 발굴 채널 [{name, username, followers, inpock, added_at}] (collect union용 메타 형태).
+        added_at은 관리페이지 표시용 — collect union 소비자는 이 키를 무시한다(추가 키라 무해)."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT username, name FROM discovered_channels ORDER BY added_at DESC"
+                "SELECT username, name, added_at FROM discovered_channels ORDER BY added_at DESC"
             ).fetchall()
-        return [{"name": r[1] or r[0], "username": r[0], "followers": 0, "inpock": ""} for r in rows]
+        return [{"name": r[1] or r[0], "username": r[0], "followers": 0, "inpock": "",
+                 "added_at": r[2] or ""} for r in rows]
 
     def remove_channel(self, username, name=""):
         """죽은 채널을 추적 제외목록에 추가(소프트 삭제). 발굴목록에 있었다면 함께 제거."""
@@ -1079,9 +1095,9 @@ class Store:
 
     def list_seeds(self, platform):
         with self._conn() as c:
-            rows = c.execute("SELECT kind, value FROM platform_seeds WHERE platform=? "
+            rows = c.execute("SELECT kind, value, added_at FROM platform_seeds WHERE platform=? "
                              "ORDER BY added_at ASC, rowid ASC", (platform,)).fetchall()
-        return [{"kind": r[0], "value": r[1]} for r in rows]
+        return [{"kind": r[0], "value": r[1], "added_at": r[2] or ""} for r in rows]
 
     # ── 플랫폼 스코프 스냅샷(가속 계산용) ──
     def save_run_platform(self, platform, run_date, rows):
@@ -2769,6 +2785,39 @@ class Store:
             if cta:
                 out["ctas"].append(cta)
         return out
+
+    # ── 유튜브 로컬 릴레이 큐(2026-07-24) ──
+    def enqueue_yt_relay(self, url):
+        """유튜브 다운로드 요청을 큐에 넣고 req_id 반환. PC 에이전트가 받아 처리한다."""
+        import secrets
+        req_id = secrets.token_hex(8)
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute("INSERT INTO yt_relay(req_id, url, status, created_at, updated_at) "
+                      "VALUES(?,?,'pending',?,?)", (req_id, url, now, now))
+        return req_id
+
+    def next_pending_yt_relay(self):
+        """가장 오래된 pending 요청 1건 → {req_id, url}. 없으면 None. 에이전트가 폴링한다."""
+        with self._conn() as c:
+            r = c.execute("SELECT req_id, url FROM yt_relay WHERE status='pending' "
+                          "ORDER BY created_at LIMIT 1").fetchone()
+        return {"req_id": r[0], "url": r[1]} if r else None
+
+    def finish_yt_relay(self, req_id, out_path=None, error=None):
+        """에이전트가 완료(out_path) 또는 실패(error) 보고. status를 done|failed로."""
+        now = datetime.now(timezone.utc).isoformat()
+        st = "done" if out_path else "failed"
+        with self._conn() as c:
+            c.execute("UPDATE yt_relay SET status=?, out_path=?, error=?, updated_at=? WHERE req_id=?",
+                      (st, out_path, error, now, req_id))
+
+    def get_yt_relay(self, req_id):
+        """요청 상태 → {status, out_path, error}. 서버가 done될 때까지 폴링. 없으면 None."""
+        with self._conn() as c:
+            r = c.execute("SELECT status, out_path, error FROM yt_relay WHERE req_id=?",
+                          (req_id,)).fetchone()
+        return {"status": r[0], "out_path": r[1], "error": r[2]} if r else None
 
     def append_bank_usage(self, record, cap=50):
         """생성 순응 job 레코드를 bank_usage_recent 링버퍼에 append(최근 cap개 유지). 반환=현재 리스트."""

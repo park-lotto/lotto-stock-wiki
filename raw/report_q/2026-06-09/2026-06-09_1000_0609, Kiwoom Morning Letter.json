@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "Kiwoom Securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_0609, Kiwoom Morning Letter.md"
+  },
+  "questionnaire": {
+    "broker": "Kiwoom Securities",
+    "analyst": null,
+    "report_date": "2026-06-09",
+    "target_kind": "market",
+    "market_direction": "bearish",
+    "macro_vars": [
+      "KOSPI -8.29%",
+      "KOSDAQ -9.08%",
+      "달러/원 1,526.97",
+      "미국 국채(10년) 4.562%"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "bearish",
+        "reason": "기술주 급락과 반도체 차익실현 매물 및 금리 인상 전망"
+      },
+      {
+        "sector": "기타",
+        "stance": "bearish",
+        "reason": "중동발 지정학적 리스크 재부각으로 인한 시장 전반의 약세"
+      }
+    ],
+    "style": "Risk-off",
+    "event_calendar": [
+      {
+        "date": "6.08",
+        "event": "일본 GDP (QoQ) 1분기"
+      },
+      {
+        "date": "6.09",
+        "event": "한국 GDP (YoY) 1분기"
+      },
+      {
+        "date": "6.10",
+        "event": "미국 CPI (YoY) 5월"
+      },
+      {
+        "date": "6.11",
+        "event": "한국 실업률 5월"
+      }
+    ],
+    "top_picks": [
+      "NAVER",
+      "삼성전자",
+      "SK하이닉스"
+    ],
+    "risk": "중동발 지정학적 리스크 및 미국 고용지표 호조에 따른 금리 인상 우려",
+    "quote": "8일(월) 코스피는 기술주 급락과 중동 긴장 재고조에 서킷브레이커가 발동되며 급락(KOSPI -8.29%, KOSDAQ -9.08%)."
+  }
+}

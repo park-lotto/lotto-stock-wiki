@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_AI 팩토리, 보수적으로 추정해도 현재가치 19...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS투자증권",
+    "analyst": "최승호",
+    "report_date": "2026.06.09",
+    "stocks": [
+      {
+        "name": "NAVER",
+        "code": "035420",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "450,000원",
+        "tp_prev": "300,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "당사는 27년 AI DC 매출 0.8조원, 28년 2.4조원, 29년 매출 3.9조원,영업이익 0.8조원을 예상한다.",
+        "estimate_revision": "SOTP 밸류에이션으로 네이버 기존 부여하던 본업가치 46조원 + 네이버 신규 AI 데이터센터 가치 18.6조원을 합산해 목표주가를 45만원으로 상향한다.",
+        "next_catalyst": "가시화 된 매출",
+        "thesis": [
+          "엔비디아와 협업을 통한 1GW 규모 글로벌 AI 팩토리(데이터센터) 구축",
+          "400MW까지 사용 가능한 확실한 고객 확보로 매출 가시화",
+          "IasS-PaaS-SaaS-AI모델을 모두 보유한 국내 유일의 풀스택 클라우드 플레이어"
+        ],
+        "valuation_basis": "SOTP 밸류에이션 활용 (본업가치 46조원 + AI 데이터센터 가치 18.6조원, Target 배수 15배 적용)",
+        "risk": "자본조달 방식에 따른 이자비용 발생 가능성",
+        "supply_comment": "200MW 기준 10억달러는 네이버가, 10억달러를 전략적 파트너가, 나머지 80억달러는 외부투자를 통해 조달할 예정.",
+        "quote": "이에 SOTP 밸류에이션으로 네이버 기존 부여하던 본업가치 46조원 + 네이버 신규 AI 데이터센터 가치 18.6조원을 합산해 목표주가를 45만원으로 상향한다."
+      }
+    ]
+  }
+}

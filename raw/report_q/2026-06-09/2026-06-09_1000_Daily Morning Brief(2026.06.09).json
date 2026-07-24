@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "DAOL",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_Daily Morning Brief(2026.06.09).md"
+  },
+  "questionnaire": {
+    "broker": "DAOL",
+    "analyst": "jeehyun12@daolfn.com",
+    "report_date": "09 Jun. 2026",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "미국채 2yr 4.162%(+1.5bp)",
+      "미국채 10yr 4.562%(+3.2bp)",
+      "JPY 160.16(-0.08%)",
+      "EUR 1.153(+0.10%)",
+      "Dollar 99.98(-0.09%)",
+      "WTI $91.3(+0.84%)",
+      "Brent $94.25(+1.25%)"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6월 8일",
+        "event": "한국 1분기(잠정) GDP"
+      }
+    ],
+    "top_picks": [
+      "SK하이닉스",
+      "삼성중공업",
+      "네이버",
+      "엔비디아",
+      "엔씨소프트",
+      "제주항공",
+      "미리츠",
+      "한화"
+    ],
+    "risk": "중동 전쟁 및 대만 관련 지정학적 리스크 지속, 인플레이션 우려, 주요국의 금리 정책 불확실성",
+    "quote": "미국 증시, 이스라엘-이란 간 긴장 완화에 따른 투자심리 개선과 견 건전일 급락에 따른 저가 매수세 유입에 힘입어 기술주 및 반도체주 위주 상승, 일부 우량주는 상대적으로 부진한 흐름 보이며 3대 지수 혼조 마감"
+  }
+}

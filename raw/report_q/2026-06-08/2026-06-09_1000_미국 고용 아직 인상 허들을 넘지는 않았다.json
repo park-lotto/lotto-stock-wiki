@@ -1,0 +1,34 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_미국 고용 아직 인상 허들을 넘지는 않았다.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "이정훈",
+    "report_date": "2026.06.08",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "미국 5월 비농업 취업자 +17.2만 명",
+      "실업률 4.3%",
+      "시간당 임금상승률 +3.4%YoY"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "이번주",
+        "event": "CPI 발표"
+      }
+    ],
+    "top_picks": null,
+    "risk": [
+      "인플레이션 재상승",
+      "중동 정세 불확실성",
+      "에너지 가격 급등에 따른 경제 하방 압력"
+    ],
+    "quote": "연준은 금융시장의 투자자들처럼 ‘결국에는 해결될 것’이라는 기대에 기반해서 의사 결정을 할 수 없다. 따라서 Core 인플레이션 영향이 정말로 뚜렷해지거나, 혹은 중동 문제의 방향성이 분명해질 때까지는 매파적 스탠스를 유지하며 전략적 인내에 나설 가능성이 더 높다."
+  }
+}

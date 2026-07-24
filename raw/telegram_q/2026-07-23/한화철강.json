@@ -2,42 +2,36 @@
   "sector_name": "2차전지",
   "sector_view": "중립",
   "points": [
-    "탄산리튬 가격의 변동성이 지속되며 시장 관망세 형성",
-    "호주 리튬 업계는 투자 심리가 다소 개선되었으나 공격적 확장에는 신중함",
-    "유럽 전기차 시장에서 중국산 플러그인하이브리드 점유율 상승세"
+    "탄산리튬 선물 가격은 반등했으나 현물가는 하락세를 보이며 시장 내 관망세 지속",
+    "리튬 광석 공급 부족과 재고 감소 기대가 핵심 변수로 부각 중",
+    "호주 리튬 업체들은 리튬 가격 회복에 따라 증설과 재가동을 추진하나 공격적 투자에는 신중함",
+    "에너지저장장치 수요가 전기차 대비 양호한 흐름을 보임"
   ],
   "stocks_mentioned": [
     {
       "name": "Wesfarmers",
-      "comment": "Mt Holland 리튬 프로젝트 생산량 확대를 위한 대규모 투자 발표",
+      "comment": "Mt Holland 프로젝트 생산량 확대를 위해 14억호주달러 투자 결정",
       "ts": "10:42",
       "quote": "Wesfarmers는 SQM과 공동 보유한 Mt Holland 리튬 프로젝트 생산량을 두 배로 늘리기 위해 14억호주달러를 투자합니다.",
       "sector": "2차전지"
     },
     {
       "name": "Mineral Resources",
-      "comment": "Bald Hill 광산 재가동 및 Mt Marion 광산 지하 확장 추진",
+      "comment": "Bald Hill 광산 재가동 및 Mt Marion 광산 지하 확장에 투자",
       "ts": "10:42",
       "quote": "Mineral Resources가 Bald Hill 광산 재가동 추진",
       "sector": "2차전지"
     },
     {
       "name": "PLS",
-      "comment": "Pilgangoora 리튬 사업 확장 발표 및 현금흐름 창출 전망",
+      "comment": "Pilgangoora 리튬 사업 확장에 1억7천500만호주달러 투자 발표",
       "ts": "10:42",
       "quote": "PLS가 Pilgangoora 리튬 사업 확장에 1억7천500만호주달러 투자 발표",
       "sector": "2차전지"
     },
     {
       "name": "Liontown Resources",
-      "comment": "의미 있는 잉여현금흐름 창출 전망",
-      "ts": "10:42",
-      "quote": "Citi는 PLS, Liontown Resources, IGO가 의미 있는 잉여현금흐름을 창출할 것으로 전망함",
-      "sector": "2차전지"
-    },
-    {
-      "name": "IGO",
-      "comment": "의미 있는 잉여현금흐름 창출 전망",
+      "comment": "향후 잉여현금흐름 창출이 전망되는 기업 중 하나",
       "ts": "10:42",
       "quote": "Citi는 PLS, Liontown Resources, IGO가 의미 있는 잉여현금흐름을 창출할 것으로 전망함",
       "sector": "2차전지"
@@ -45,15 +39,15 @@
   ],
   "events": [
     {
-      "fact": "중국 탄산리튬 선물 가격 변동성 확대 및 현물가 하락",
+      "fact": "GFEX 탄산리튬 주력 선물 가격 상승 및 Mysteel 현물가 하락",
       "ts": "10:37",
       "quote": "GFEX 탄산리튬 주력 선물은 장중 14만 위안/톤을 하회한 뒤 2.21% 반등 마감한 반면 Mysteel 배터리급 탄산리튬 현물가는 2.28% 하락했으며"
     },
     {
-      "fact": "유럽 플러그인하이브리드 시장 내 중국 브랜드 점유율 사상 최고치 기록",
-      "ts": "14:01",
-      "quote": "중국 브랜드의 유럽 플러그인하이브리드 판매 점유율은 6월 34%로 사상 최고치를 기록했습니다."
+      "fact": "Wesfarmers의 Mt Holland 프로젝트 대규모 투자 발표",
+      "ts": "10:42",
+      "quote": "Wesfarmers는 SQM과 공동 보유한 Mt Holland 리튬 프로젝트 생산량을 두 배로 늘리기 위해 14억호주달러를 투자합니다."
     }
   ],
-  "quote": "리튬 시장은 공급 부족과 재고 감소 기대 속에서 가격 변동성이 지속되는 가운데, 중국발 전기차·하이브리드 차량의 유럽 점유율 확대가 주요 변수로 작용하고 있음."
+  "quote": "리튬 시장은 가격 반등에 따른 증설 기조에도 불구하고 재고 이슈와 수요 회복 여부에 대한 신중한 관망세가 지속되고 있다."
 }

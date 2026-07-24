@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_0700_3고 현상, 악재지만 위기 시그널은 아니다.md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "박상현",
+    "report_date": "2026-06-02",
+    "target_kind": "market",
+    "market_direction": "3고 현상이 증시 및 주요 자산가격의 조정압력으로 작용하고 있음",
+    "macro_vars": [
+      "고물가(미국 소비자물가)",
+      "고금리(미국/국내 국채 금리)",
+      "고유가(원유 재고 및 수급)",
+      "고환율(달러-원 환율)"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-06",
+        "event": "5월 미국 물가지표 발표 및 6월 FOMC회의, 스페이스 X 공모 청약"
+      }
+    ],
+    "top_picks": null,
+    "risk": "호르무즈 봉쇄 장기화에 따른 글로벌 원유재고 부족 현상",
+    "quote": "글로벌 반도체 주가의 단기 급등에 따른 차익실현 압박이 커진 것도 있지만 국내외적으로 이란발 리스크 장기화에 따른 고유가 현상이 3고 현상을 촉발시킨 것이 증시 및 가상화폐 등 주요 자산가격의 조정압력으로 작용하고 있다."
+  }
+}
