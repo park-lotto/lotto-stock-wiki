@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "eugenefn",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "eugenefn",
+    "analyst": "양승윤",
+    "report_date": "06/08",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "KF-21 인니 분담금",
+      "미국 연방 하원 군사위원회 NDAA 통과"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "보스턴다이나믹스의 부품 공급망 본격 검토에 따라 관련 밸류체인 주목 받을 가능성"
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "중동 외 아시아로의 천궁 수출 가능성 부각 및 말레이 사업 대기"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "미국 연방 하원 군사위원회가 해외 조선소에서 미 해군 전투함 건조를 금지하는 내용이 포함된 2027 회계연도 국방수권법안을 통과"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "보스턴다이나믹스",
+      "화신정공",
+      "LIG D&A",
+      "HD한국조선해양",
+      "삼성중공업"
+    ],
+    "risk": "미국 연방 하원 군사위원회가 해외 조선소에서 미 해군 전투함 건조를 금지하는 내용이 포함된 2027 회계연도 국방수권법안(NDAA)을 통과시킴",
+    "quote": "보스턴다이내믹스의 부품 공급망 본격 검토에 따라 관련 밸류체인 주목 받을 가능성. 인도네시아 국방군수청이 5월 18일 자로 LIG D&A에 2개 포대 분의 천궁-II 도입을 위한 구매의향서(LOI)를 전달한 것으로 보도됨. 미국 연방 하원 군사위원회가 해외 조선소에서 미 해군 전투함 건조를 금지하는 내용이 포함된 2027 회계연도(2026년 10월~2027년 9월) 국방수권법안(NDAA)을 통과시킴"
+  }
+}

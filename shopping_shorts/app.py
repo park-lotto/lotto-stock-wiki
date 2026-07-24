@@ -21,6 +21,7 @@ from shopping_shorts.service import collect, census, generate_missing_drafts, ne
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
 from shopping_shorts.auto_run import run_auto_job, default_stages
+from shopping_shorts import config
 from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI
 from shopping_shorts.frame_extract import (download_video, extract_frames,
@@ -33,7 +34,7 @@ from shopping_shorts.categorize import categorize, KEYWORDS as CATEGORY_KEYWORDS
 from shopping_shorts import script_generate
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
-from shopping_shorts.channels import load_channels, username_from_url
+from shopping_shorts.channels import load_channels, username_from_url, merge_tracked
 from shopping_shorts.video_analysis import (analyze_video, translate_keyword, cn_search_keyword,
                                             cn_search_keyword_vision, judge_same_product,
                                             cn_search_candidates)
@@ -55,6 +56,7 @@ from shopping_shorts import pron_corrections
 from shopping_shorts.tts import synthesize_tts
 from shopping_shorts import tts, asr_check
 from shopping_shorts import export_bundle
+from shopping_shorts import qr_svg
 from shopping_shorts import capcut_draft
 from shopping_shorts.youtube_client import enrich_youtube
 from shopping_shorts.video_assemble import _beat_timeline
@@ -80,6 +82,20 @@ def _seed_voice_presets():
         voice_presets.seed_presets(Store(DB_PATH))
     except Exception:
         pass  # seed 실패가 앱 기동을 막지 않게
+
+
+@app.on_event("startup")
+def _prune_activity_logs():
+    """기동 시 오래된 활동·접속 로그 정리(2026-07-24) — customer_activity/customer_access는
+    append만 돼 무한증가한다. 30일 지난 행을 지워 DB 비대를 막는다(best-effort, 실패 무시).
+    재시작마다 도는 것으로 충분 — 표는 최근 트레일·7일 공유감지에만 쓰여 30일이면 넉넉하다."""
+    try:
+        n_act, n_acc = Store(DB_PATH).prune_activity(keep_days=30)
+        if n_act or n_acc:
+            import sys as _sys
+            print(f"[prune] activity -{n_act}, access -{n_acc}", file=_sys.stderr)
+    except Exception:
+        pass  # 정리 실패가 앱 기동을 막지 않게
 
 
 @app.on_event("startup")
@@ -150,9 +166,17 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
     platform != "instagram"인 경우 댓글 draft/save_last_run(인스타 전용
     캐시)은 건너뛴다 — 유튜브 등은 _collect_youtube가 자체적으로 저장한다.
 
-    platform == "tiktok"이면 키워드검색이 Apify 유료라 남용/비용 가드를 건다:
-    ① 월예산 킬스위치(초과 시 429 budget_exceeded) ② 사용자별 하루 상한
-    (초과 시 429 daily_limit). 통과 후 수집하면 하루카운트 +1, 추정비용 누적.
+    platform == "tiktok"이면 남용 방지 가드를 건다: 사용자별 하루 상한(초과 시
+    429 daily_limit). 통과 후 수집하면 하루카운트 +1.
+
+    ⚠️ 월예산 킬스위치(budget_exceeded)·추정지출 누적(add_tiktok_spend)은
+    2026-07-24부로 건너뛴다 — 키워드검색(Apify 유료)이 옵트인으로 빠져
+    _collect_tiktok()이 기본 include_paid_keywords=False(무료 yt-dlp 계정 시드만)라
+    실제 지출이 없다. 그런데도 예산 게이트가 남아있으면 유령 지출이 쌓여
+    무료 수집조차 budget_exceeded로 막혀버린다(이번 Fix 2 사유). 코드는
+    지우지 않는다 — 나중에 유료 키워드검색을 다시 켤 때 이 블록도 함께
+    되살릴 것(예산 체크 + est 계산 + add_tiktok_spend 복원).
+    daily_limit(일일 횟수 제한)은 비용과 무관한 남용 방지 가드라 계속 유지한다.
 
     ★관리자(사장님 cid0) 전용(2026-07-22) — 수집=크롤 비용이 드는 운영 액션이라
     구독자(pro 포함)에겐 화면·API 모두 막는다. 화면 숨김만으론 pro가 직접 호출 가능."""
@@ -163,12 +187,9 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
         guard = Store(DB_PATH)
         knobs = _tiktok_knobs(guard)
         now = datetime.now(timezone.utc)
-        month, day = now.strftime("%Y-%m"), now.strftime("%Y-%m-%d")
+        day = now.strftime("%Y-%m-%d")
         cid = _cid(request)
-        if guard.tiktok_month_spend(month) >= knobs["month_budget"]:
-            return JSONResponse(status_code=429, content={
-                "ok": False, "error_code": "budget_exceeded",
-                "error": f"이번 달 틱톡 예산(${knobs['month_budget']:.2f})을 다 썼습니다"})
+        # 월예산 킬스위치는 건너뜀 — 위 docstring 참고(유료 검색 꺼져 있어 실지출 없음).
         if guard.tiktok_daily_count(cid, day) >= knobs["daily_limit"]:
             return JSONResponse(status_code=429, content={
                 "ok": False, "error_code": "daily_limit",
@@ -177,11 +198,8 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
         items = collect(platform=platform, limit_channels=limit)
         if platform == "tiktok":
             guard.bump_tiktok_daily(_cid(request), datetime.now(timezone.utc).strftime("%Y-%m-%d"))
-            # 언어 시드 1개 = 1회 검색(그 언어로 search_count개). 지출 = 언어시드수 × 개수 × 단가.
-            n_lang = len([s for s in guard.list_seeds("tiktok") if s["kind"] in _TIKTOK_LANG_KINDS])
-            est = n_lang * knobs["search_count"] * _TIKTOK_COST_PER_ITEM
-            if est:
-                guard.add_tiktok_spend(datetime.now(timezone.utc).strftime("%Y-%m"), est)
+            # 추정지출 누적(add_tiktok_spend)도 건너뜀 — 위 docstring 참고.
+            # 유료를 되살릴 때 함께 복원: est = n_lang × search_count × _TIKTOK_COST_PER_ITEM
         if platform != "instagram":
             _, collected_at = Store(DB_PATH).load_last_run_platform(platform)
             return {"ok": True, "count": len(items), "items": items,
@@ -309,6 +327,44 @@ def api_census_status(job_id: str):
     if status == "error":
         return {"ok": True, "status": "error", "error": job["error"] or "실패"}
     return {"ok": True, "status": "done", **(job["result"] or {})}
+
+
+# ── 유튜브 로컬 릴레이(2026-07-24) ── 서버 데이터센터 IP가 유튜브에 봇차단당해, 사장님 PC의
+# 에이전트(youtube_relay_agent.py)가 큐를 폴링→주거용 IP로 다운로드→여기로 업로드한다.
+def _relay_auth_ok(key):
+    """에이전트 인증 — YT_RELAY_KEY 일치. 키 미설정이면 릴레이 자체를 잠근다(항상 거부)."""
+    return bool(config.YT_RELAY_KEY) and hmac.compare_digest(key or "", config.YT_RELAY_KEY)
+
+
+@app.get("/api/yt_relay/next")
+def api_yt_relay_next(key: str = ""):
+    """PC 에이전트가 폴링 — 처리할 pending 유튜브 요청 1건 {req_id, url} 또는 {}."""
+    if not _relay_auth_ok(key):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "인증 실패"})
+    job = Store(DB_PATH).next_pending_yt_relay()
+    return {"ok": True, "job": job}
+
+
+@app.post("/api/yt_relay/deliver/{req_id}")
+async def api_yt_relay_deliver(req_id: str, key: str = Form(""),
+                               file: UploadFile = File(None), error: str = Form("")):
+    """에이전트가 결과 회신 — mp4 업로드(성공) 또는 error 문자열(실패). 파일은
+    YT_RELAY_DIR에 저장하고 store에 done/failed 기록 → 서버 폴링(_download_via_relay)이 회수."""
+    if not _relay_auth_ok(key):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "인증 실패"})
+    store = Store(DB_PATH)
+    if error and not file:
+        store.finish_yt_relay(req_id, error=error[:500])
+        return {"ok": True, "status": "failed"}
+    if not file:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "파일·error 둘 다 없음"})
+    config.YT_RELAY_DIR.mkdir(parents=True, exist_ok=True)
+    ext = (Path(file.filename or "").suffix or ".mp4")
+    out_path = config.YT_RELAY_DIR / (req_id + ext)
+    with open(out_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+    store.finish_yt_relay(req_id, out_path=str(out_path))
+    return {"ok": True, "status": "done"}
 
 
 _VISION_TAG_CAP = 60  # 1회 수집당 새 태깅 상한(비용 가드). 초과분은 다음 수집 때.
@@ -730,6 +786,42 @@ def api_discover_add(request: Request, username: str, name: str = ""):
 def api_discover_added():
     """발굴로 추가한 채널 목록."""
     return {"ok": True, "items": Store(DB_PATH).discovered_channels()}
+
+
+@app.get("/api/refs/instagram")
+def api_refs_instagram(request: Request):
+    """관리페이지용 인스타 레퍼런스 통합 목록(2026-07-24) — 엑셀 기본 채널 + 손등록을
+    union(제외 반영)하고 활동여부를 붙인다. **Apify 조회 없음(무료)**: 구독자수는 엑셀에
+    이미 있는 값만, 활동일(last_active)은 수집이력(reel_history)에서. 그래서 사장님이
+    '엑셀에 원래 있던 채널까지 한 표에서, 살아있는지 보고' 관리할 수 있다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    try:
+        excel = load_channels()          # 엑셀 벤치마킹 채널(서버에만 있음 — 로컬은 빈 목록)
+    except Exception:
+        excel = []
+    excel_norm = {store._norm_username(c["username"]) for c in excel}
+    disc = store.discovered_channels()
+    removed = store.removed_usernames()
+    # 관리 목록은 수집비 cap과 무관하게 '등록된 전부'를 보여준다(수집은 별도로 cap 적용).
+    merged = merge_tracked(excel, disc, removed, max_channels=10 ** 9)
+    act = store.instagram_activity_map()
+    added = {store._norm_username(d["username"]): d.get("added_at", "") for d in disc}
+    items = []
+    for ch in merged:
+        u = store._norm_username(ch["username"])
+        a = act.get(u, {})
+        items.append({
+            "username": (ch["username"] or "").lstrip("@"),
+            "name": a.get("name") or ch.get("name") or "",
+            "followers": int(ch.get("followers") or 0),
+            "last_active": a.get("last") or "",   # ""=수집된 적 없음
+            "added_at": added.get(u, ""),
+            "source": "excel" if u in excel_norm else "manual",
+        })
+    return {"ok": True, "items": items}
 
 
 @app.post("/api/reference/register")
@@ -1820,9 +1912,13 @@ def api_mix_status(job_id: str):
         preview_error = preview_error or "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."
     # 장면 우선 대본 모드(2026-07-20, Task7): 후보 요약만 내려준다 — 전체 plan(beats 등)을
     # 실으면 남의 창작물이 새는 것과 같은 노출 문제(§3981)가 나므로 카드 렌더용 필드만 뽑는다.
+    # script(2026-07-24): 후보 대본 '전체 나레이션'은 사장님이 A/B/C를 비교해 고르는 자기 산출물이라
+    # 카드에서 통째로 보여준다 — 소스 plan(컷·seg_ids 등)이 아니라 말할 문장만 이어붙인다(edit_plan §561과 동일).
     candidates = [{"index": i, "score": c.get("score"), "recommended": bool(c.get("recommended")),
                    "hook": (c.get("story") or {}).get("hook", ""),
-                   "story_person": (c.get("story") or {}).get("story_person", "")}
+                   "story_person": (c.get("story") or {}).get("story_person", ""),
+                   "script": " ".join((b.get("narration") or "").strip()
+                                       for b in ((c.get("plan") or {}).get("beats") or [])).strip()}
                   for i, c in enumerate(store.get_mix_candidates(job_id))]
     return {"ok": True, "status": status, "error": error,
             # 1단계 미리보기(2026-07-17): 폴러를 둘로 만들지 않으려고 기존 응답에 얹는다(스펙 §6.3).
@@ -1850,6 +1946,11 @@ def api_mix_result(job_id: str):
     detected = plan.get("detected_type") or _edit_plan._DEFAULT_TYPE
     return {
         "ok": True, "structure": plan["structure"], "beats": beats,
+        # ★P1/P2(2026-07-24): 어느 생성기가 만들었나 + 렌더 전 불변식 위반을 화면에 띄우기 위해
+        # 내보낸다(조용한 폴백·조용한 위반 금지). 없으면 옛 job → 프런트가 경고 안 그린다.
+        "generator": plan.get("generator", ""),
+        "generator_note": plan.get("generator_note", ""),
+        "gate": plan.get("gate") or None,
         "detected_type": detected,
         "detected_type_label": _edit_plan.VIDEO_TYPES.get(detected, {}).get("label", detected),
         "affiliate_target": plan.get("affiliate_target", ""),
@@ -2481,6 +2582,54 @@ def api_mix_video(job_id: str, dl: int = 0):
         return FileResponse(job["video_path"], media_type="video/mp4",
                             filename=export_bundle.safe_name(job_id) + ".mp4")
     return FileResponse(job["video_path"])
+
+
+# ── QR '폰으로 보내기' (2026-07-23) ──
+# 흐름: 제작소(로그인됨)에서 /api/share/link/{job} 호출 → 단축링크+QR(SVG) 발급 → 화면에 QR 표시.
+#       폰이 스캔 → /s/{sid}(로그인 불필요, 미들웨어 allowlist) → 영상+카톡공유 버튼.
+@app.get("/api/share/link/{job_id}")
+def api_share_link(job_id: str, request: Request):
+    """완성 영상의 QR용 단축 공유링크+QR SVG 발급(로그인 필요 — 미들웨어 게이트 통과분만 도달)."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
+        return JSONResponse(status_code=404, content={"ok": False, "error": "완성 영상이 없어요"})
+    sid = _share_put(job_id)
+    if PUBLIC_BASE_URL:
+        base = PUBLIC_BASE_URL.rstrip("/")
+    else:
+        proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+        host = request.headers.get("host") or request.url.netloc
+        base = f"{proto}://{host}"
+    url = f"{base}/s/{sid}"
+    try:
+        qr = qr_svg.qr_svg(url)
+    except Exception:
+        qr = ""   # QR 실패해도 링크 텍스트로 폴백(프런트가 복사 UI 제공)
+    return {"ok": True, "url": url, "qr_svg": qr}
+
+
+@app.get("/api/share/v/{sid}")
+def api_share_v(sid: str, dl: int = 0):
+    """단축 id로 영상 스트리밍(로그인 불필요·저장소 조회). allowlist 경로."""
+    job_id = _share_get(sid)
+    if not job_id:
+        return JSONResponse(status_code=403, content={"ok": False, "error": "링크가 만료됐어요"})
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    if dl:
+        return FileResponse(job["video_path"], media_type="video/mp4",
+                            filename=export_bundle.safe_name(job_id) + ".mp4")
+    return FileResponse(job["video_path"], media_type="video/mp4")
+
+
+@app.get("/s/{sid}", response_class=HTMLResponse)
+def share_page(sid: str):
+    """폰이 QR로 여는 모바일 공유 페이지(로그인 불필요). 폰 카톡 네이티브 공유로 전송."""
+    job_id = _share_get(sid)
+    if not job_id:
+        return HTMLResponse(_SHARE_EXPIRED_HTML, status_code=403)
+    return HTMLResponse(_SHARE_PAGE_HTML.replace("__VID__", f"/api/share/v/{sid}"))
 
 
 @app.get("/api/mix/export/{job_id}")
@@ -3308,6 +3457,83 @@ def _set_session_cookie(response, customer_id: int):
     expiry = int(datetime.now(timezone.utc).timestamp()) + _COOKIE_MAX_AGE
     response.set_cookie("dash_auth", _sign_session(customer_id, expiry),
                          max_age=_COOKIE_MAX_AGE, httponly=True, samesite="lax")
+
+
+# ── QR '폰으로 보내기' 단축 공유 (2026-07-23) ──
+# PC 웹은 카톡 대화방에 mp4를 직접 못 넣는다(카톡 PC가 파일 붙여넣기 미지원). 그래서 완성 영상의
+# '로그인 없이 열리는' 단기 링크를 QR로 띄운다 → 폰으로 스캔해 폰 카톡 네이티브 공유로 전송.
+# ★URL을 짧게(/s/{8자}) 유지해야 QR이 v3(검증범위) 안에 든다 → 긴 서명토큰 대신 메모리 저장소에
+#   짧은 id→(job,만료)를 담는다. 재기동 시 사라짐 = 24h 만료와 같은 성질(재발급하면 됨). 무상태 필요 없음.
+_SHARE_TTL = 60 * 60 * 24  # 24시간
+_SHARE_STORE: dict = {}    # sid -> (job_id, expiry_ts)
+
+
+def _share_put(job_id: str) -> str:
+    now = int(datetime.now(timezone.utc).timestamp())
+    for k in [k for k, (_, e) in _SHARE_STORE.items() if e < now]:   # 만료 청소(누수 방지)
+        _SHARE_STORE.pop(k, None)
+    sid = secrets.token_urlsafe(6)   # ~8자
+    _SHARE_STORE[sid] = (job_id, now + _SHARE_TTL)
+    return sid
+
+
+def _share_get(sid: str):
+    v = _SHARE_STORE.get(sid)
+    if not v:
+        return None
+    job_id, exp = v
+    if int(datetime.now(timezone.utc).timestamp()) > exp:
+        _SHARE_STORE.pop(sid, None)
+        return None
+    return job_id
+
+
+_SHARE_PAGE_HTML = """<!doctype html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>완성 영상 · 숏템박스</title>
+<style>
+ *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+ body{background:#0d0f12;color:#eef2f6;font-family:-apple-system,"Malgun Gothic",sans-serif;
+      min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px 16px 40px}
+ h1{font-size:19px;font-weight:800;margin:8px 0 4px;letter-spacing:1px}
+ .sub{color:#8b93a7;font-size:13px;margin-bottom:16px}
+ video{width:100%;max-width:420px;border-radius:16px;background:#000;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+ .btns{width:100%;max-width:420px;margin-top:18px;display:flex;flex-direction:column;gap:12px}
+ button,a.dl{font-size:19px;font-weight:800;border:0;border-radius:14px;padding:18px;text-align:center;
+      text-decoration:none;cursor:pointer}
+ #shareBtn{background:#fee500;color:#191600}
+ a.dl{background:#1c2740;color:#dfe7f5}
+ .tip{color:#6b7488;font-size:12px;margin-top:14px;text-align:center;line-height:1.6;max-width:420px}
+</style></head><body>
+ <h1>완성 영상 📱</h1>
+ <div class="sub">아래 버튼으로 카톡·인스타에 바로 보내세요</div>
+ <video src="__VID__" controls playsinline preload="metadata"></video>
+ <div class="btns">
+   <button id="shareBtn">카톡·인스타로 보내기</button>
+   <a class="dl" href="__VID__?dl=1" download>영상 저장(다운로드)</a>
+ </div>
+ <div class="tip">버튼을 누르면 공유창이 떠요. 카톡을 고르고 대화방을 선택하면 전송됩니다.<br>안 뜨면 '영상 저장' 후 갤러리에서 공유하세요.</div>
+<script>
+ const V="__VID__";
+ document.getElementById('shareBtn').addEventListener('click', async ()=>{
+   try{
+     const r=await fetch(V); const b=await r.blob();
+     const f=new File([b],'shopping_short.mp4',{type:'video/mp4'});
+     if(navigator.canShare && navigator.canShare({files:[f]})){
+       await navigator.share({files:[f], title:'완성 영상'}); return;
+     }
+     if(navigator.share){ await navigator.share({title:'완성 영상', url:location.href}); return; }
+     location.href=V+'?dl=1';
+   }catch(e){ if(e && e.name==='AbortError') return; location.href=V+'?dl=1'; }
+ });
+</script></body></html>"""
+
+_SHARE_EXPIRED_HTML = """<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>링크 만료</title><style>body{background:#0d0f12;color:#eef2f6;font-family:-apple-system,"Malgun Gothic",sans-serif;
+min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+h1{font-size:22px;margin-bottom:10px}p{color:#8b93a7;line-height:1.6}</style></head>
+<body><h1>⏱ 링크가 만료됐어요</h1><p>공유 링크는 24시간만 유효해요.<br>제작소에서 QR을 다시 띄워 주세요.</p></body></html>"""
 
 
 # ── 브랜드 토큰 (한 곳에 몰아둔다 — 이름 확정 시 여기 1곳만 교체) ──
@@ -4263,6 +4489,19 @@ async def _api_login(req: Request):
     return RedirectResponse("/login?e=1", status_code=303)
 
 
+def _notify_new_signup(*, name=None, username=None, phone=None, email=None):
+    """새 회원 가입 → 사장님 텔레그램 알림(승인 재촉). 부가채널이라 절대 요청을 막지 않는다:
+    notify.send_telegram이 무키/네트워크예외를 이미 삼키므로 여기선 얇게 감싸기만."""
+    try:
+        who = (name or "").strip() or (username or "").strip() or "새 회원"
+        parts = [p for p in [phone, email] if p]           # 있는 것만 덧붙임
+        tail = (" · " + " · ".join(parts)) if parts else ""
+        from shopping_shorts import notify
+        notify.send_telegram(f"🆕 새 가입 신청: {who}{tail}\n→ /admin 에서 승인해주세요 (승인 대기중)")
+    except Exception:
+        pass                                                # 알림 실패가 가입을 막으면 안 된다
+
+
 @app.post("/api/signup")
 async def _api_signup(req: Request):
     body = (await req.body()).decode("utf-8", "ignore")
@@ -4278,6 +4517,7 @@ async def _api_signup(req: Request):
                                                      name=name or None, phone=phone or None)
     except ValueError:
         return RedirectResponse("/signup?e=" + urllib.parse.quote("이미 존재하는 아이디입니다"), status_code=303)
+    _notify_new_signup(name=name, username=u, phone=phone)   # 사장님 텔레 알림(무키면 no-op)
     r = RedirectResponse("/", status_code=303)
     _set_session_cookie(r, customer_id)
     return r
@@ -4351,9 +4591,12 @@ def _google_callback(request: Request, code: str = "", state: str = "", error: s
     ident = _google_fetch_identity(code)
     if not ident:
         return RedirectResponse("/login?e=" + urllib.parse.quote("구글 인증에 실패했어요"), status_code=303)
-    cid = Store(DB_PATH).get_or_create_by_google(ident["sub"], ident.get("email"))
+    cid, created = Store(DB_PATH).get_or_create_by_google(
+        ident["sub"], ident.get("email"), return_created=True)
     if cid is None:
         return RedirectResponse("/login?e=" + urllib.parse.quote("계정 생성 실패"), status_code=303)
+    if created:                                              # 신규 구글 가입만 알림(재로그인은 조용히)
+        _notify_new_signup(username="구글", email=ident.get("email"))
     r = RedirectResponse("/", status_code=303)
     _set_session_cookie(r, cid)
     r.delete_cookie("g_state")
@@ -4452,7 +4695,13 @@ async def _auth_guard(request: Request, call_next):
     # 외부인이 /synth를 반복 호출해 ElevenLabs·GROQ 크레딧을 태우고 /profile/{임의id}로
     # voice_presets에 임의 행을 넣을 수 있었다(2026-07-15 리뷰 S7). 운영자는 대시보드
     # 로그인 세션으로 접근한다.
-    if path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/"):
+    # /s/{sid}·/api/share/v/{sid} = QR '폰으로 보내기' 공개경로(단축id 저장소 조회, 로그인 불필요).
+    #   폰이 쿠키 없이 연다. ★/api/share/link(발급)은 여기 없음 → 로그인 게이트 유지(로그인해야 QR 발급).
+    # /api/yt_relay/*는 사장님 PC 릴레이 에이전트가 로그인 쿠키 없이 호출한다(2026-07-24).
+    #   자체 키 인증(_relay_auth_ok: YT_RELAY_KEY)이 있어 로그인 가드는 건너뛴다 — 안 그러면 유튜브 다운로드가 죽는다.
+    if (path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/")
+            or path.startswith("/s/") or path.startswith("/api/share/v/")
+            or path.startswith("/api/yt_relay/")):
         return await call_next(request)
     customer_id = _verify_session(request.cookies.get("dash_auth"))
     if customer_id is not None:
@@ -4738,6 +4987,20 @@ def _admin_customers(request: Request):
         # last_seen은 store.list_customers가 이미 넣어줌 → 프론트가 '접속중/N분전' 계산
         out.append(cu)
     return {"ok": True, "customers": out, "settings": st.all_settings()}
+
+
+@app.get("/api/admin/pending")
+def _admin_pending(request: Request):
+    """승인 대기 회원 요약 — 프론트(sidebar.js)가 폴링해 '띠링' 팝업을 띄운다.
+    관리자만 200. 비관리자는 _require_admin이 막아 폴러가 조용히 꺼진다(부하 없음)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    pend = Store(DB_PATH).pending_customers()
+    newest = pend[0] if pend else None                      # id DESC 정렬이라 [0]이 최신
+    return {"ok": True, "count": len(pend),
+            "newest_id": (newest["id"] if newest else 0),
+            "newest": newest, "pending": pend[:20]}          # 팝업 목록은 최근 20건까지
 
 
 @app.post("/api/admin/customer/update")
@@ -6442,16 +6705,33 @@ def api_seo_generate(body: dict):
 @app.post("/api/produce/thumb/titles")
 def api_thumb_titles(body: dict):
     """확정 대본으로 썸네일에 얹을 짧은 제목 후보를 뽑는다. DB 기록 안 함(무과금 미리보기 —
-    seo/generate·fx/suggest와 같은 규약). 사장님이 후보를 눌러 레이어에 얹고 다듬는다."""
+    seo/generate·fx/suggest와 같은 규약). 사장님이 후보를 눌러 레이어에 얹고 다듬는다.
+
+    ★화면 대본 우선(2026-07-24 사고): job.given_script는 '영상 매칭(믹스)' 순간에 고정된다.
+    그 뒤 1단계에서 대본을 새 영상에 맞게 고쳐도 job엔 옛 대본이 남아, 제목이 옛 영상 주제로
+    나온다(바나나 팬케이크 영상에 며칠 전 '밥솥 식빵' 제목이 나온 실사고). 그래서 프런트가
+    보내주는 '지금 화면의 대본'(script)을 있으면 우선 쓴다 — 사장님이 보는 것과 제목을 맞춘다.
+    화면 대본이 job 대본과 다르면 script_mismatch=true로 알려, 프런트가 '영상 매칭을 다시
+    해야 나레이션에도 반영된다'고 경고한다(제목만 바꾸면 영상 나레이션↔제목이 또 어긋난다)."""
     job_id = (body.get("job_id") or "").strip()
     job = Store(DB_PATH).get_mix_job(job_id) if job_id else None
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
-    titles = thumb_title.generate(job)
+    screen_script = (body.get("script") or "").strip()
+    job_script = (job.get("given_script") or "").strip()
+    used_script = screen_script or job_script
+    if not used_script:
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": "대본이 비어 있어요 — 1단계에서 대본을 확정하세요"})
+    # 화면 대본으로 제목을 짓되, headcopy/구조는 job 것을 그대로 참고로 둔다(대본이 진실의 축).
+    job_for_titles = dict(job)
+    job_for_titles["given_script"] = used_script
+    mismatch = bool(screen_script and job_script and screen_script != job_script)
+    titles = thumb_title.generate(job_for_titles)
     if titles is None:
         return JSONResponse(status_code=502,
                             content={"ok": False, "error": "제목 생성 실패 — 잠시 후 다시 눌러보세요"})
-    return {"ok": True, "titles": titles}
+    return {"ok": True, "titles": titles, "script_mismatch": mismatch}
 
 
 @app.get("/api/produce/seo/get")
@@ -6664,6 +6944,22 @@ def _voice_tune_page(request: Request):
 
 app.add_api_route("/voice_tune", _voice_tune_page, include_in_schema=False)
 app.add_api_route("/voice_tune.html", _voice_tune_page, include_in_schema=False)
+
+
+# 레퍼런스 채널 통합 관리페이지(2026-07-24) — 관리자(customer_id==0) 전용.
+# 인스타·유튜브·틱톡 레퍼런스 계정을 "엑셀처럼" 여러 줄 붙여넣기로 일괄 등록/관리한다.
+# 등록·목록·삭제는 전부 기존 API 재사용(신규 등록 로직 없음): 인스타=/api/reference/register
+# +/api/discover/added+/api/prune/remove, 틱톡·유튜브=/api/seeds(kind=account). 그래서
+# 이 페이지는 게이트 있는 정적 라우트 하나면 된다(voice_tune과 동일 이유로 mount보다 먼저).
+def _refs_page(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return FileResponse(_STATIC / "refs.html", media_type="text/html", headers=_NOCACHE)
+
+
+app.add_api_route("/refs", _refs_page, include_in_schema=False)
+app.add_api_route("/refs.html", _refs_page, include_in_schema=False)
 
 # ★C-1(2026-07-16 라이브 실증): 위 _NOCACHE는 /produce 등 "클린 URL" 라우트에만 붙는다.
 # /sidebar.js 같은 정적 JS/CSS/HTML은 아래 StaticFiles 마운트가 헤더 없이 그대로 서빙해서

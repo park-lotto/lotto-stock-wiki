@@ -45,13 +45,13 @@ def test_produce_links_theme_and_brands():
 # ── Task 2: 오브 단계바 — 라벨 rename + 매칭 단계 삽입 ──────────────
 # (v6 목업 정렬, 2026-07-23 후속) 자막제거가 헤드라인 오브로 복귀 — 8단계.
 def test_orb_labels_and_mapping():
-    assert '"영상/대본"' in HTML and '"화면 붙이기"' in HTML and '"완성"' in HTML
+    assert '"영상/대본출력"' in HTML and '"영상대본MIX"' in HTML and '"최종렌더"' in HTML
     assert "ORB_TO_PANEL" in HTML and "STEP_LABELS" in HTML
     # STEP_LABELS는 정확히 8개, 자막제거 포함(v6 목업과 정렬 — 더는 오브에서 안 빠진다)
     m = re.search(r"const STEP_LABELS\s*=\s*(\[[^\]]*\])", HTML)
     assert m, "STEP_LABELS 선언을 못 찾음"
     labels = json.loads(m.group(1))
-    assert labels == ["영상/대본", "화면 붙이기", "자막제거", "음성", "꾸미기", "썸네일", "SEO", "완성"], labels
+    assert labels == ["영상/대본출력", "영상대본MIX", "고품질 자막제거", "TTS음성", "자막꾸미기", "썸네일", "SEO해시테크", "최종렌더"], labels
 
 
 def test_orb_to_panel_mapping_v6():
@@ -66,7 +66,7 @@ def test_orbbar_class_used():
 
 
 def test_panel0_title_is_video_script_not_studio():
-    assert "1 · 영상/대본" in HTML
+    assert "1 · 영상/대본출력" in HTML
     assert "1 · 제작소" not in HTML
 
 
@@ -314,6 +314,7 @@ def test_render_candidates_uses_v6_cand_markup():
     assert "pickCandidate(" in body   # 기존 배선 유지
     assert "c.index" in body and "c.recommended" in body and "c.hook" in body
     assert "c.story_person" in body and "c.score" in body
+    assert "c.script" in body   # 대본 전체 표시(2026-07-24) — 훅만이 아니라 나레이션 전문
     assert "list.length < 2" in body   # 후보 1개 이하 조기 반환 유지
 
 

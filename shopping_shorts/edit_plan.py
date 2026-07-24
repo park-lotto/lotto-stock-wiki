@@ -382,6 +382,12 @@ def _vault_call(prompt, schema, max_tries=4):
                 continue
             if key_vault.is_quota_error(e):
                 continue
+            # ★503/과부하는 일시적(2026-07-24 실측: scene_first가 이걸로 죽어 옛 대본으로 폴백,
+            # 30초·7~8컷·대화 개선이 통째로 안 탔다). 포기 대신 잠깐 쉬고 다음 키로 재시도한다.
+            m = str(e)
+            if any(c in m for c in ("503", "UNAVAILABLE", "overloaded", "high demand")):
+                time.sleep(2)
+                continue
             print(f"edit_plan._vault_call: {e!r}", file=sys.stderr)
             return None
     return None
@@ -396,7 +402,7 @@ _SCENE_FIRST_SCHEMA = {
             "story_person": {"type": "string"}, "story_event": {"type": "string"},
             "story_resolution": {"type": "string"}, "cta_line": {"type": "string"},
             "cta_keyword": {"type": "string"},
-            "beats": {"type": "array", "minItems": 7, "items": {
+            "beats": {"type": "array", "minItems": 6, "items": {
                 "type": "object",
                 "properties": {
                     "role": {"type": "string"}, "narration": {"type": "string"},
@@ -453,9 +459,11 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "이제 알았지?'·'저 이거 몰라서 손해 봤잖아요'·'이거 진짜 절대 하지 마세요' 류)로 시작해라. "
         "hook만 세게 써놓고 첫 비트를 '매번 ~하던 참이었거든요'처럼 밋밋하게 열면 실패다. "
         "beats[0]이 곧 그 hook이어야 한다.\n"
-        f"- ★길이를 꽉 채워라: 전체 나레이션 글자수 합을 약 {char_target}자에 **가깝게**(±10%) 써라. "
-        f"너무 짧으면(예: {char_target}자의 60%) 이야기가 빈약해 실패다 — 반전·비하인드를 더 넣어 "
-        "목표 글자수를 채워라. 비트는 **7~8개**로 나눠 각 단계를 촘촘히.\n"
+        f"- ★★길이를 목표에 맞춰라(짧아도 길어도 실패): 전체 나레이션 글자수 합을 "
+        f"**{int(char_target*0.85)}~{int(char_target*1.15)}자**(목표 {char_target}자) 안에 둬라. "
+        f"이보다 짧으면 빈약해서 반려, **넘치면 영상이 너무 길어져 반려**(★{int(char_target*1.15)}자를 "
+        "절대 넘기지 마라 — 말을 늘리지 말고 핵심만). 비트는 **6~7개**로 나눠라(각 비트 25~40자). "
+        "8개 이상 잘게 쪼개거나 비트마다 길게 늘어놓으면 실패다.\n"
         "  각 비트: role·narration(구어체)·seg_ids(2~4)·fit(1~5)·forced(그 장면이 이 말과 안 맞는데 억지로면 true).\n"
         "- ★caption_lines: 그 비트 narration을 화면 자막용으로 **2~3어절 호흡 단위**로 끊은 "
         "배열. 수식어는 반드시 뒤 명사와 한 줄에 둬라('만든 사람'을 '만든'|'사람'으로 쪼개지 마라, "
@@ -1004,11 +1012,11 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             if jr:
                 cand["judge"] = jr
                 cand["score"] = round(0.5 * rule_score + 0.5 * jr["total"], 3)
-        # T6 컷리듬/반복 결정적 감점 — judge on/off 둘 다 적용(파편·반복 후보 순위 하락).
-        pen = candidate_judge.cut_rhythm_penalty(plan.get("beats"))
-        if pen:
-            cand["cut_penalty"] = pen
-            cand["score"] = round(max(0.0, cand["score"] - pen), 3)
+        # T6 컷리듬/반복 감점은 _score_candidate(rule_score) 안에서 이미 빠진다 — 여기서 또 빼면
+        # 이중 감점(2026-07-24 병합에서 candidate_judge판+edit_plan판 중복 발견). 관측용으로만 노출.
+        _cp = _cut_rhythm_penalty(plan.get("beats"))
+        if _cp:
+            cand["cut_penalty"] = round(_cp, 3)
         cands.append(cand)
     if cands:
         best = max(range(len(cands)), key=lambda i: cands[i]["score"])

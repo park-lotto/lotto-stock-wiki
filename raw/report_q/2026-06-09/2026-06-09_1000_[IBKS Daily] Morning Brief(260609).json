@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_[IBKS Daily] Morning Brief(260609).md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": null,
+    "report_date": "2026년 06월 09일 (화)",
+    "target_kind": "market",
+    "market_direction": "하락",
+    "macro_vars": [
+      "KOSPI 7,484.4P (-8.3%)",
+      "KOSDAQ 911.4P (-9.1%)",
+      "원달러 환율 1,530원대 마감"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "NAVER",
+      "LG유플러스",
+      "현대백화점",
+      "한미약품",
+      "KT",
+      "에스엠",
+      "메지온",
+      "오리온홀딩스",
+      "한국전력",
+      "한전기술",
+      "현대위아",
+      "신세계",
+      "SK",
+      "한화솔루션",
+      "SK네트웍스",
+      "현대건설",
+      "이수스페셜티케미컬",
+      "삼아알미늄",
+      "미래에셋생명",
+      "미래에셋증권",
+      "가온칩스",
+      "이수페타시스",
+      "에이비엘바이오",
+      "삼천당제약"
+    ],
+    "risk": "반도체 중심 투심 약화, 양 지수 서킷브레이커 발동, 외국인 KOSPI 순매도",
+    "quote": "KOSPI는 전 거래일 대비 8.3% 하락한 7,484.4P로 마감, KOSDAQ은 전 거래일 대비 9.1% 하락한 911.4P로 마감"
+  }
+}

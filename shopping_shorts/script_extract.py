@@ -132,9 +132,10 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
     갈아탄다. **503은 키가 아니라 모델 용량 문제**라 키 로테이션으로는 절대 안 풀린다 —
     실측(서버, 같은 순간): 키 16개 중 5개를 각각 때려 gemini-3.5-flash가 5/5 전부 503,
     같은 키로 gemini-3.1-flash-lite는 정상(실제 extract_script로 구간 6개·본문 208자 확보).
-    폴백 전 재시도가 필요한 이유: 503은 spike라 잠깐 뒤 원래 모델이 살아나는 경우가 많고,
-    그때까지 품질 좋은 쪽을 쓰는 게 낫다. 그래서 primary로 2번 겪은 뒤에만 내려간다.
-    폴백 후엔 sleep을 넣지 않는다 — 다른 모델이라 앞 모델의 혼잡과 무관하다."""
+    폴백 시점: 예전엔 spike 회복을 기대해 primary 503을 2번 겪은 뒤 내려갔으나, 검열 실측
+    성공률 29%(100/350, 2026-07-24)로 3.5-flash가 spike가 아니라 지속적으로 막힌 게 드러나
+    **첫 503에서 바로** 폴백한다(죽은 모델 재시도 낭비 제거). 폴백 후엔 sleep을 넣지 않는다 —
+    다른 모델이라 앞 모델의 혼잡과 무관하다."""
     if not SHORTS_GEMINI_KEYS:
         raise RuntimeError("script_extract: SHORTS_GEMINI_KEY가 설정되지 않았습니다")
     prompt = _PROMPT.format(caption=caption or "(캡션 없음)",
@@ -176,9 +177,13 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
             if any(c in m for c in ("503", "UNAVAILABLE", "overloaded")):
                 if model == _MODEL:
                     primary_503 += 1
-                    if primary_503 >= 2:
+                    # 첫 503에서 바로 폴백(2026-07-24). 기존엔 2번 겪은 뒤 내려갔으나(spike면 곧
+                    # 살아난다는 가정), 검열 실측 성공률 29%(100/350)로 3.5-flash가 spike가 아니라
+                    # 지속적으로 막혀 있음이 드러났다 → 죽은 모델에 재시도를 낭비할수록 손해. 503은
+                    # 키가 아니라 모델 용량이라 키 로테이션으로 안 풀리고, lite는 같은 키로 정상.
+                    if primary_503 >= 1:
                         model = _FALLBACK_MODEL
-                        print(f"script_extract: {_MODEL} 503 반복 → {_FALLBACK_MODEL}로 폴백",
+                        print(f"script_extract: {_MODEL} 503 → {_FALLBACK_MODEL}로 폴백",
                               file=sys.stderr)
                         continue  # 다른 모델이라 앞 모델의 혼잡과 무관 — 기다리지 않는다
                 if attempt < max_retries - 1:

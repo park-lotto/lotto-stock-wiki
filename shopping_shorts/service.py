@@ -12,7 +12,7 @@ from shopping_shorts.ranking import build_items, build_youtube_items, build_tikt
 from shopping_shorts.store import Store
 from shopping_shorts.comment_gen import generate as _gen_comments
 from shopping_shorts import ai_categorize, topic_grouper
-from shopping_shorts.youtube_client import search_shorts as yt_search
+from shopping_shorts.youtube_client import search_shorts as yt_search, fetch_channel_shorts as yt_fetch_channel
 from shopping_shorts.tiktok_client import fetch_account_videos as tt_fetch
 from shopping_shorts.tiktok_search import search_full as tt_search_full
 
@@ -88,27 +88,42 @@ def generate_missing_drafts(items):
 
 
 def _collect_youtube():
-    """유튜브 키워드 시드로 인기 Shorts 발굴 → 조회수 기반 랭킹.
+    """유튜브 키워드 시드(발굴) + 계정 시드(채널기반) → 조회수 기반 랭킹(무료 Data API).
 
-    시드의 kind = 언어코드(ko/en/ja/zh/ru). 언어별로 묶어 각 언어·지역으로
-    검색(regionCode 편향 → 외국영상 혼입 방지). 예전 kind="keyword" 시드는 ko로 취급."""
+    키워드 시드 kind=언어코드(ko/en/ja/zh/ru), 예전 kind="keyword"는 ko로 취급.
+    계정 시드 kind="account"(핸들/URL) → fetch_channel_shorts로 최근 Shorts(≤60초).
+    두 경로 raw를 video_id로 중복제거 후 공통 파이프라인."""
     store = Store(DB_PATH)
     seeds = store.list_seeds("youtube")
     if not seeds:
         return []
-    # 언어별 키워드 묶음 (kind가 언어코드가 아니면 ko)
     _LANGS = {"ko", "en", "ja", "zh", "ru"}
     by_lang = {}
+    accounts = []
     for s in seeds:
-        lang = s["kind"] if s["kind"] in _LANGS else "ko"
-        by_lang.setdefault(lang, []).append(s["value"])
+        if s["kind"] == "account":
+            accounts.append(s["value"])
+        else:
+            lang = s["kind"] if s["kind"] in _LANGS else "ko"
+            by_lang.setdefault(lang, []).append(s["value"])
     now = datetime.now(timezone.utc)
     after = (now - timedelta(hours=YOUTUBE_WINDOW_HOURS)).strftime("%Y-%m-%dT%H:%M:%SZ")
     raw = []
     for lang, kws in by_lang.items():
         raw.extend(yt_search(kws, after, max_per_kw=YOUTUBE_MAX_PER_KW, lang=lang))
+    for acc in accounts:
+        raw.extend(yt_fetch_channel(acc, cache_get=store.yt_cache_get,
+                                    cache_put=store.yt_cache_put))
+    # video_id 중복제거(키워드·계정 양쪽서 같은 영상이 나올 수 있음) — 첫 등장 우선
+    seen, deduped = set(), []
+    for r in raw:
+        vid = r.get("video_id")
+        if not vid or vid in seen:
+            continue
+        seen.add(vid)
+        deduped.append(r)
     items = build_youtube_items(
-        raw,
+        deduped,
         prev_base=lambda sc: store.prev_base_platform("youtube", sc),
         prev_delta=lambda sc: store.prev_delta_platform("youtube", sc),
         now=now, window_hours=YOUTUBE_WINDOW_HOURS,
@@ -121,11 +136,13 @@ def _collect_youtube():
     return items
 
 
-def _collect_tiktok():
+def _collect_tiktok(include_paid_keywords=False):
     """틱톡 시드 계정(@handle)들의 최근 영상 → 조회수 기반 랭킹(무료 yt-dlp).
 
-    시드 kind='account'. 계정마다 yt-dlp로 훑어(실패계정은 스킵) 14일 창 내 영상을
-    공통 item으로 만든다. 유튜브와 동일한 지표·저장 구조."""
+    include_paid_keywords=False(기본): **무료 경로만** — 계정 시드(yt-dlp)만 훑는다.
+    키워드 시드 검색은 Apify 건당과금이라 자동 수집에서 뺐다(2026-07-24 "과금 없는 구조").
+    코드는 지우지 않는다 — 관리자가 명시로 켤 때만(True) 돈다.
+    """
     store = Store(DB_PATH)
     seeds = store.list_seeds("tiktok")
     if not seeds:
@@ -140,7 +157,7 @@ def _collect_tiktok():
     # 번역돼 저장됨(UI addSeed). 언어당 tiktok_search_count(기본 50)개. 계정 경로와 같은
     # raw 스키마라 아래 build_tiktok_items로 함께 흘러간다.
     lang_seeds = [s["value"] for s in seeds if s["kind"] in _TIKTOK_LANG_KINDS]
-    if lang_seeds:
+    if include_paid_keywords and lang_seeds:
         count = int(store.get_setting("tiktok_search_count", TIKTOK_SEARCH_COUNT_DEFAULT))
         for kw in lang_seeds:
             raw.extend(tt_search_full(kw, max_results=count))

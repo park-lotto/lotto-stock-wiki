@@ -1,4 +1,11 @@
-"""틱톡 키워드검색 수집(Apify) — service.collect(platform='tiktok')의 언어별 시드 경로.
+"""틱톡 키워드검색 수집(Apify) — **옵트인 경로**의 언어별 시드 검색.
+
+⚠️ 2026-07-24 계약 변경: 키워드 검색은 Apify 건당과금이라 **자동 수집에서 빠졌다**
+(사장님 "과금 없는 구조"). `collect(platform='tiktok')`는 이제 무료 계정시드만 돈다
+(그 계약은 test_collect_tiktok_free_only.py가 지킨다). 아래 검색 로직 테스트들은
+유료 경로를 명시로 켜서(`_collect_tiktok(include_paid_keywords=True)`) 검증한다 —
+검색 로직 자체는 그대로 살아 있어야 하므로 테스트를 지우지 않는다.
+
 
 계정시드(yt-dlp) 경로와 공존한다. 키워드 시드는 kind=언어코드(ko/en/ja/zh/ru)로 저장되며
 (비한국어는 등록 시 이미 그 언어로 번역돼 들어옴), service는 저장된 값 그대로 각 언어로
@@ -31,7 +38,7 @@ def test_collect_tiktok_searches_each_language_seed_directly(monkeypatch, tmp_pa
 
     monkeypatch.setattr(service, "tt_search_full", fake_search_full)
 
-    items = service.collect(platform="tiktok")
+    items = service._collect_tiktok(include_paid_keywords=True)   # 유료 경로 명시로 켬
 
     assert sorted(calls) == ["mold removal", "곰팡이 제거"]
     assert len(items) == 2
@@ -56,7 +63,7 @@ def test_collect_tiktok_respects_search_count_setting(monkeypatch, tmp_path):
 
     monkeypatch.setattr(service, "tt_search_full", fake_search_full)
 
-    service.collect(platform="tiktok")
+    service._collect_tiktok(include_paid_keywords=True)   # 유료 경로 명시로 켬
     assert captured["max_results"] == 30
 
 
@@ -69,7 +76,7 @@ def test_collect_tiktok_search_count_defaults_to_50(monkeypatch, tmp_path):
     captured = {}
     monkeypatch.setattr(service, "tt_search_full",
                         lambda kw, max_results=50, **_: captured.update(n=max_results) or [])
-    service.collect(platform="tiktok")
+    service._collect_tiktok(include_paid_keywords=True)   # 유료 경로 명시로 켬
     assert captured["n"] == 50
 
 

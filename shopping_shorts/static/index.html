@@ -249,15 +249,15 @@
     <!-- 플랫폼 전환 토글 숨김(사장님 2026-07-21, 미사용) — 삭제 아님. switchPlatform·PLATFORM
          로직은 보존해 PLATFORM 기본값 instagram으로 랭킹·수집이 계속 동작하고, 되살리려면
          display:none만 지우면 된다. -->
-    <div class="ctypes" id="platformTabs" style="display:none;margin-bottom:12px">
+    <div class="ctypes" id="platformTabs" style="margin-bottom:12px">
       <div class="ctype active" data-platform="instagram" onclick="switchPlatform('instagram',this)">📷 인스타</div>
       <div class="ctype" data-platform="youtube" onclick="switchPlatform('youtube',this)">▶️ 유튜브</div>
       <div class="ctype" data-platform="tiktok" onclick="switchPlatform('tiktok',this)">🎵 틱톡</div>
     </div>
     <div id="seedPanel" style="display:none;margin-bottom:12px">
       <div id="ttMode" style="display:none;margin-bottom:6px">
-        <label style="font-size:12px;color:var(--sub);cursor:pointer"><input type="radio" name="ttmode" value="keyword" checked onclick="ttModeChange()"> 🔎 키워드 검색발굴</label>
-        <label style="font-size:12px;color:var(--sub);cursor:pointer;margin-left:12px"><input type="radio" name="ttmode" value="account" onclick="ttModeChange()"> 🎵 계정 시드</label>
+        <label style="font-size:12px;color:var(--sub);cursor:pointer"><input type="radio" name="ttmode" value="keyword" onclick="ttModeChange()"> 🔎 키워드 검색발굴 (유료 · 현재 꺼짐)</label>
+        <label style="font-size:12px;color:var(--sub);cursor:pointer;margin-left:12px"><input type="radio" name="ttmode" value="account" checked onclick="ttModeChange()"> 🎵 계정 시드</label>
       </div>
       <input id="seedInput" type="text" placeholder="검색 키워드 (예: 살림꿀팁)" style="padding:8px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
       <select id="seedLang" title="검색 언어(지역) — 한국어면 국내영상, 다른 언어면 그 나라 영상 발굴" style="padding:8px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
@@ -368,19 +368,44 @@
     </div>
   </div>
 <script>
-// 유형(제작·수익화 방식) = 초보자 탐색 1차축. topics = 그 유형의 세부주제(2차축).
+// 유형(제작·수익화 방식) = 초보자 탐색축. 2026-07-16 백엔드가 '인테리어'+'생활용품'을
+// '홈템'으로 합치면서 세부주제(2차축)가 사라졌다 — 이제 버튼 1개 = 백엔드 카테고리 1개다.
+// ★버튼은 백엔드가 내는 5개 카테고리(홈템/레시피/가전/뷰티/기타)를 전부 덮어야
+//   '전체 = 버튼 합'이 된다. 홈템·기타 버튼이 없던 옛 매핑에선 두 덩어리가 통째로 누락됐다.
 const CTYPES = [
-  {key:"전체",  label:"✨ 전체",       topics:[]},
-  {key:"비법형", label:"🔥 비법·꿀팁형", topics:["인테리어","레시피"]},
-  {key:"제품형", label:"🛒 제품추천형",  topics:["생활용품","가전"]},
-  {key:"혼합형", label:"💄 뷰티(혼합)",  topics:["뷰티"]},
+  {key:"전체",  label:"✨ 전체",        topics:[]},
+  {key:"홈템",   label:"🏠 홈·살림템",   topics:[]},
+  {key:"비법형", label:"🔥 비법·꿀팁형",  topics:[]},
+  {key:"제품형", label:"🛒 제품추천형",   topics:[]},
+  {key:"혼합형", label:"💄 뷰티",        topics:[]},
+  {key:"기타",   label:"📦 기타",        topics:[]},
 ];
-const TOPIC_CTYPE = {인테리어:"비법형",레시피:"비법형",생활용품:"제품형",가전:"제품형",뷰티:"혼합형",기타:"기타"};
+// 백엔드 category(홈템/레시피/가전/뷰티/기타) → 버튼 key. 모든 값이 CTYPES key와 1:1.
+const TOPIC_CTYPE = {홈템:"홈템", 레시피:"비법형", 가전:"제품형", 뷰티:"혼합형", 기타:"기타"};
 let STATE = {items:[], tab:"comments", ctype:"전체", cat:"전체", q:""};
 let PLATFORM='instagram';
-function ttMode(){ const r=document.querySelector('input[name="ttmode"]:checked'); return r?r.value:'keyword'; }
+// ── 플랫폼별 안내문구·지표 툴팁(2026-07-24, 토글 노출 대응) — 인스타 기준 문구를
+// 그대로 두면 틱톡/유튜브(시드계정·키워드+14일창, 조회수기반)에 거짓 설명이 된다. ──
+const DESC_BY_PLATFORM = {
+  instagram: '등록한 레퍼런스 채널의 <b>48시간</b> 이내 릴스를 강도별로 랭킹합니다.',
+  tiktok:    '등록한 <b>시드 계정</b>의 최근 <b>14일</b> 숏폼을 조회수 기반 강도로 랭킹합니다. (무료 수집)',
+  youtube:   '<b>키워드 시드</b>로 발굴한 최근 <b>14일</b> Shorts를 조회수 기반 강도로 랭킹합니다.',
+};
+const TAB_TIP = {
+  instagram: {speed:'댓글수 ÷ 경과시간', density:'댓글수 ÷ 팔로워수'},
+  tiktok:    {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
+  youtube:   {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
+};
+function updatePlatformCopy(p){
+  const descEl=document.querySelector('.desc'); if(descEl) descEl.innerHTML = DESC_BY_PLATFORM[p] || DESC_BY_PLATFORM.instagram;
+  const tip = TAB_TIP[p] || TAB_TIP.instagram;
+  const speedEl=document.querySelector('.tab[data-tab="speed"]'); if(speedEl) speedEl.title = tip.speed;
+  const densityEl=document.querySelector('.tab[data-tab="density"]'); if(densityEl) densityEl.title = tip.density;
+}
+function ttMode(){ const r=document.querySelector('input[name="ttmode"]:checked'); return r?r.value:'account'; }
 function switchPlatform(p, el){
   PLATFORM=p;
+  updatePlatformCopy(p);
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('seedPanel').style.display = (p==='instagram')?'none':'block';
@@ -941,8 +966,13 @@ async function doCensus(){
 }
 async function loadLast(){
   const d = await (await fetch("/api/reference?platform="+PLATFORM)).json();
-  if(d.items?.length){ STATE.items=d.items; render();
-    document.getElementById("status").textContent=`마지막 수집: ${fmtTime(d.collected_at)}`; }
+  STATE.items = d.items || [];   // 결과 없어도 무조건 갈아끼움 — 이전 플랫폼 카드 잔존 방지
+  render();
+  if(STATE.items.length){
+    document.getElementById("status").textContent=`마지막 수집: ${fmtTime(d.collected_at)}`;
+  } else {
+    document.getElementById("status").textContent="아직 수집 결과가 없습니다. (관리자 수집 대기)";
+  }
 }
 function goComment(sc){ location.href = '/outreach?focus=' + encodeURIComponent(sc); }
 async function copyLink(url, btn){
@@ -1936,7 +1966,7 @@ async function commitScene(){
   finally{ btn.disabled = false; btn.textContent = '💾 라이브러리에 저장'; }
 }
 
-renderCtypes(); renderCats(); loadLast(); loadRefAdded();
+renderCtypes(); renderCats(); loadLast(); loadRefAdded(); updatePlatformCopy(PLATFORM);
 
 // ── 관리자(사장님 cid0) 전용 운영버튼(2026-07-22) ──
 // 수집·전수조사·레퍼런스등록은 크롤 비용이 드는 운영 액션이라 관리자만 쓴다.

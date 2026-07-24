@@ -229,8 +229,28 @@ def _kr_len(s):
     return len(re.findall(r"[가-힣]", s or ""))
 
 
+def _bank_retry_mark(store, url, it, error, now):
+    """흡수 실패 항목을 재큐에 담는다(지수 백오프). 큐 오류가 흡수를 막지 않게 삼킨다."""
+    if not url:
+        return
+    try:
+        store.bank_retry_upsert(url, json.dumps(it, ensure_ascii=False), "collect", error, now)
+    except Exception as e:
+        print(f"ingest_collected(retry_mark): {e!r}", file=sys.stderr)
+
+
+def _bank_retry_clear(store, url):
+    """성공 시 재큐에서 제거."""
+    if not url:
+        return
+    try:
+        store.bank_retry_clear(url)
+    except Exception:
+        pass
+
+
 def ingest_collected(store, items, top_n=None, min_kr=None, ingest_fn=None,
-                     call=None, perf_fn=None):
+                     call=None, perf_fn=None, now=None):
     """'지금 수집' 랭킹 아이템을 밀도+속도 종합점수 상위 N건만 부품은행에 자동 적재.
 
     ★상위 = score(정규화 밀도+속도+가속 종합) 내림차순 상위 N건. 임계값이 아니라 순위 상위를
@@ -260,10 +280,20 @@ def ingest_collected(store, items, top_n=None, min_kr=None, ingest_fn=None,
     except Exception as e:
         print(f"ingest_collected(seen): {e!r}", file=sys.stderr)
 
+    now = time.time() if now is None else now
     # 한국어 캡션 있는 것만, score 내림차순.
     cand = [it for it in (items or [])
             if _kr_len(it.get("caption")) >= min_kr]
     cand.sort(key=lambda it: (it.get("score") or 0), reverse=True)
+    # 재시도 큐 드레인(2026-07-24): 지난 실행에서 503으로 놓친 상위영상을 백오프 시점에 재투입.
+    # 앞에 붙여 top_n 안에서 우선 처리 — 상위권 밖으로 밀려도 유실되지 않게 한다.
+    try:
+        retry_items = store.bank_retry_due(now)
+    except Exception as e:
+        retry_items = []
+        print(f"ingest_collected(retry_due): {e!r}", file=sys.stderr)
+    if retry_items:
+        cand = retry_items + cand
 
     report = {"considered": len(cand), "added_sources": 0, "added_items": 0,
               "skipped_dup": 0, "skipped_short": max(0, len(items or []) - len(cand)),
@@ -282,15 +312,16 @@ def ingest_collected(store, items, top_n=None, min_kr=None, ingest_fn=None,
             report["skipped_dup"] += 1
             continue
         seen.add(fp)
+        url = it.get("url") or it.get("video_url") or ""
         attempted += 1
         try:
             perf = perf_fn(it)
-            res = ingest_fn(store, caption, source="collect",
-                            url=it.get("url") or it.get("video_url") or "",
+            res = ingest_fn(store, caption, source="collect", url=url,
                             product_category=it.get("category"),
                             category_source=None, perf=perf, call=call)
         except Exception as e:
             print(f"ingest_collected(item): {e!r}", file=sys.stderr)
+            _bank_retry_mark(store, url, it, repr(e), now)   # 실패 재큐(백오프)
             continue                                  # 실패 = attempted엔 셌으나 succeeded엔 안 셈
         if res and res.get("source_id"):
             report["added_sources"] += 1
@@ -302,6 +333,9 @@ def ingest_collected(store, items, top_n=None, min_kr=None, ingest_fn=None,
             for bucket, texts in structs.items():
                 if texts:
                     report["by_bucket"][bucket] = report["by_bucket"].get(bucket, 0) + len(texts)
+            _bank_retry_clear(store, url)                    # 성공 → 재큐에서 제거
+        else:
+            _bank_retry_mark(store, url, it, "empty_result(503?)", now)   # 빈 결과 = 재큐
     report["gemini_audit"] = gemini_audit.compute_audit(
         attempted=attempted, succeeded=report["added_sources"],
         structures=structures, hook_total=hook_total, hook_bait=hook_bait)

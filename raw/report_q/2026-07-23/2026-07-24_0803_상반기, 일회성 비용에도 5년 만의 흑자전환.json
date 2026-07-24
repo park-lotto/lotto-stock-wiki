@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-23",
+    "broker": "SK 증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-24_0803_상반기, 일회성 비용에도 5년 만의 흑자전환.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "SK 증권",
+    "analyst": "박형우, R.A 정영환",
+    "report_date": "2026-07-23",
+    "stocks": [
+      {
+        "name": "LG 디스플레이",
+        "code": "034220",
+        "rating": "매수(유지)",
+        "rating_changed": false,
+        "tp_new": "16,000 원",
+        "tp_prev": "20,000 원",
+        "tp_direction": "down",
+        "earnings_outlook": "2분기 영업손익은 -1,077 억원(적자축소, 이하 YoY)을 기록했다. 3 분기 영업이익은 4,304 억원(-0%, OPM 6%)으로 전망한다.",
+        "estimate_revision": "26년 2분기 영업이익 SK 증권 추정치 -113 십억원, 컨센서스 -95 십억원. 26년 연간 영업이익 SK 증권 추정치 846 십억원, 컨센서스 1,108 십억원.",
+        "next_catalyst": "정상화에 성공해 흑자기조가 유지될 전망이며, 영업이익 개선과 영업외손실 축소가 겹치면 순이익 급반등 예상.",
+        "thesis": [
+          "희망퇴직 비용 반영 종료에 따른 손익 개선",
+          "감가상각비 축소로 인한 손익분기점 하락",
+          "제한적인 CAPEX 운용을 통한 재무구조 개선"
+        ],
+        "valuation_basis": "27F EPS 에 PER 10 배를 반영해 산출.",
+        "risk": "IT 수요 둔화, 부품 원가 상승 부담, 중국 업체와의 단가 경쟁 심화",
+        "supply_comment": "올해 CAPEX 는 2조원 중후반 수준으로, 더 이상 과거처럼 5~8조원을 집행하는 경쟁시장이 아님.",
+        "quote": "2 분기는 적자이나, 상반기는 흑전. 하반기 성수기 진입"
+      }
+    ]
+  }
+}

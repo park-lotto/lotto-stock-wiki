@@ -10,6 +10,19 @@ from shopping_shorts.config import YOUTUBE_API_KEYS
 # YouTube URL → video_id 파서
 _YT_ID = re.compile(r"(?:v=|youtu\.be/|/shorts/)([A-Za-z0-9_-]{11})")
 
+_DURATION = re.compile(r"PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?")
+
+
+def _parse_duration_secs(iso):
+    """ISO8601 재생시간(PT#H#M#S) → 초. 빈값/None → None."""
+    if not iso:
+        return None
+    m = _DURATION.fullmatch(iso)
+    if not m:
+        return None
+    h, mnt, s = (int(x) if x else 0 for x in m.groups())
+    return h * 3600 + mnt * 60 + s
+
 def video_id_from_url(url):
     """유튜브 watch/youtu.be/shorts URL → 11자 video_id. 유튜브 아니면 None."""
     if not url:
@@ -149,6 +162,99 @@ def _first_ok(url, params):
         except Exception:
             continue
     return None, saw_403
+
+
+# seed 문자열에서 채널 식별자 추출
+_CH_ID = re.compile(r"/channel/(UC[A-Za-z0-9_-]{6,})")
+_HANDLE = re.compile(r"@([A-Za-z0-9._-]+)")
+_LEGACY_USER = re.compile(r"/user/([A-Za-z0-9._-]+)")
+
+
+def _channel_from_api(param_key, param_val):
+    """channels.list(forHandle|forUsername|id) → (channel_id, uploads) 또는 (None,None)."""
+    data, _ = _first_ok(_CHANNELS_URL,
+                        {"part": "contentDetails", param_key: param_val})
+    items = (data or {}).get("items") or []
+    if not items:
+        return None, None
+    cid = items[0].get("id")
+    uploads = (((items[0].get("contentDetails") or {})
+                .get("relatedPlaylists") or {}).get("uploads"))
+    return cid, uploads
+
+
+def _resolve_channel(seed):
+    """seed(핸들/URL) → (channel_id, uploads_playlist). 실패 시 (None, None).
+
+    /channel/UC.. URL은 API 없이 직접 파싱(uploads = UU + id[2:])."""
+    if not seed:
+        return None, None
+    m = _CH_ID.search(seed)
+    if m:
+        cid = m.group(1)
+        return cid, "UU" + cid[2:]          # 업로드 플레이리스트 규칙(UC→UU)
+    m = _HANDLE.search(seed)
+    if m:
+        return _channel_from_api("forHandle", "@" + m.group(1))
+    m = _LEGACY_USER.search(seed)
+    if m:
+        return _channel_from_api("forUsername", m.group(1))
+    # 순수 핸들("salim" 등 @없음)도 forHandle로 시도
+    return _channel_from_api("forHandle", "@" + seed.strip().lstrip("@"))
+
+
+_PLAYLIST_ITEMS_URL = "https://www.googleapis.com/youtube/v3/playlistItems"
+
+
+def fetch_channel_shorts(seed, max_videos=50, cache_get=None, cache_put=None):
+    """채널 시드(핸들/URL)의 최근 Shorts(≤60초) → search_shorts와 동일한 raw dict 리스트.
+
+    cache_get(seed)->(cid,uploads)|None / cache_put(seed,cid,uploads): 해석 캐시 콜백(선택).
+    창(14일) 필터는 하지 않는다 — build_youtube_items가 window_hours로 거른다.
+    비공개·삭제·해석실패 채널은 빈 리스트(예외 안 던짐)."""
+    resolved = cache_get(seed) if cache_get else None
+    if resolved:
+        cid, uploads = resolved
+    else:
+        cid, uploads = _resolve_channel(seed)
+        if uploads and cache_put:
+            cache_put(seed, cid, uploads)
+    if not uploads:
+        return []
+
+    pl, _ = _first_ok(_PLAYLIST_ITEMS_URL, {
+        "part": "contentDetails", "playlistId": uploads,
+        "maxResults": min(max_videos, 50)})
+    vids = [((it.get("contentDetails") or {}).get("videoId"))
+            for it in ((pl or {}).get("items") or [])]
+    vids = [v for v in vids if v]
+    if not vids:
+        return []
+
+    out = []
+    for i in range(0, len(vids), 50):                       # videos.list 상한 50
+        chunk = vids[i:i + 50]
+        vd, _ = _first_ok(_VIDEOS_URL, {
+            "part": "snippet,contentDetails,statistics", "id": ",".join(chunk)})
+        for it in ((vd or {}).get("items") or []):
+            secs = _parse_duration_secs((it.get("contentDetails") or {}).get("duration"))
+            if secs is None or secs > 60:                   # 숏폼(≤60초)만
+                continue
+            sn = it.get("snippet") or {}
+            st = it.get("statistics") or {}
+            out.append({
+                "video_id": it.get("id"),
+                "channel_id": sn.get("channelId"),
+                "channel_title": sn.get("channelTitle"),
+                "title": sn.get("title"),
+                "description": sn.get("description"),
+                "thumbnail": ((sn.get("thumbnails") or {}).get("high") or {}).get("url", ""),
+                "published_at": sn.get("publishedAt"),
+                "views": int(st.get("viewCount") or 0),
+                "likes": int(st.get("likeCount") or 0),
+                "comments": int(st.get("commentCount") or 0),
+            })
+    return out
 
 
 def enrich_youtube(url):
