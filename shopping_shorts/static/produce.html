@@ -3173,6 +3173,7 @@ async function startProduceMix(){
     clearInterval(PREVIEW_POLL); PREVIEW_POLL=null; ++PREVIEW_GEN;
     PREVIEW_STATUS=null;
     MIX_JOB=d.job_id;
+    CAND_SEL=null;   // 새 매칭 = 아직 아무 후보도 손 안 댐 → 추천이 선택 기본값(옛 job의 선택 잔상 제거)
     // ★새 job을 서버 작업파일에 즉시 남긴다(2026-07-19). 안 남기면 새로고침 시 _restoreWork가
     //   job_id=null을 읽어 미리보기·편집안이 통째로 사라진다(사장님 제보). 게이트는 복원 후에도
     //   서버 preview_status를 다시 읽어 canGoNext()로 잠그므로 미리보기 우회 위험은 없다.
@@ -3244,32 +3245,85 @@ async function loadMixReview(){
 // 백엔드(Task6)는 이미 추천 후보(recommended)의 plan을 edit_plan에 자동세팅해두므로 이 카드가
 // 없어도 매칭은 동작한다 — 이건 그 자동선택을 사장님이 눈으로 보고 다른 후보로 바꿀 수 있게 하는 UI다.
 // 후보가 1개 이하(폴백 등으로 build_scene_first_plan이 후보를 못 만든 경우 포함)면 고를 게 없어 숨긴다.
+const CAND_LBL = ['A안','B안','C안','D안','E안'];
+let CAND_LIST = [];        // 마지막으로 그린 후보 목록(pickCandidate가 다시 그릴 때 재사용)
+let CAND_SEL  = null;      // 지금 '선택된' 후보의 index(c.index). null이면 recommended를 따른다.
+// 후보 대본의 예상 발화시간(초) — 자막·보이스 추정과 같은 SYLLABLES_PER_SEC로 계산(공백 제외 글자수÷음절속도).
+// AI PICK 카드의 '길이'는 원본 영상 길이(고정)라, 여기선 '이 대본을 읽으면 나올 영상 길이'를 따로 보여준다.
+function _candSecs(c){
+  const sps = (typeof SYLLABLES_PER_SEC!=='undefined') ? SYLLABLES_PER_SEC : 5.7;   // 슬라이스 테스트(전역 없음) 방어
+  const t = (c.script || c.hook || '').replace(/\s/g,'');
+  return t ? Math.max(1, Math.round(t.length / sps)) : 0;
+}
+// 지금 선택된 후보 index 결정: 명시 선택(CAND_SEL) > recommended > 첫 번째.
+function _candSelIdx(list){
+  if(CAND_SEL!=null && list.some(c=>c.index===CAND_SEL)) return CAND_SEL;
+  const rec = list.find(c=>c.recommended);
+  return rec ? rec.index : (list[0] ? list[0].index : null);
+}
+// index(c.index) → 'B안' 라벨(리스트 내 위치 기준).
+function _candLabelOf(list, idx){
+  const pos = (list||[]).findIndex(c=>c.index===idx);
+  return pos>=0 ? (CAND_LBL[pos] || ('후보 '+(pos+1))) : '';
+}
+// 왼쪽 미리보기 영역(#mixPreviewHint)에도 '지금 무슨 대본으로 만드는지' 알린다. phase='switching'이면 바꾸는 중.
+function _syncPreviewCandHint(label, phase){
+  const h = document.getElementById('mixPreviewHint');
+  if(!h) return;
+  const base = '②까지 확인하고 아래 <b>🎬 대본 × 영상 믹스 미리보기</b>를 누르면 여기서 재생됩니다.';
+  const tag = !label ? '' : (phase==='switching'
+    ? `<div style="color:var(--accent);font-weight:800;margin-bottom:6px">🔄 <b>${esc(label)}</b> 대본으로 바꾸는 중…</div>`
+    : `<div style="color:var(--accent);font-weight:800;margin-bottom:6px">🎬 <b>${esc(label)}</b> 대본으로 미리보기를 만들어요</div>`);
+  h.innerHTML = tag + base;
+}
 function renderCandidates(list){
   const el = document.getElementById('mixCandidates');
   if(!el) return;
-  if(!list || list.length < 2){ el.innerHTML = ''; return; }
-  const LBL = ['A안','B안','C안','D안','E안'];
+  if(!list || list.length < 2){ el.innerHTML = ''; CAND_LIST = []; return; }
+  CAND_LIST = list;
+  const selIdx = _candSelIdx(list);
   el.innerHTML = '<div style="font-size:12px;color:var(--sub);margin-bottom:8px">🧬 새 대본 '
     + list.length + '개 만들었어요 — <b style="color:var(--accent)">카드를 눌러 하나를 고르세요</b>(추천이 이미 선택돼 있어요)</div>'
+    // ★지금 어떤 대본으로 미리보기를 만드는지 항상 보이는 상태줄(2026-07-25 사장님: "체크가 됐는지 모르겠다").
+    + `<div id="candStatus" style="font-size:12px;font-weight:800;margin-bottom:8px;padding:6px 10px;border-radius:8px;background:rgba(62,224,191,.10);border:1px solid rgba(62,224,191,.35);color:var(--accent)">🎬 지금 <b>${_candLabelOf(list,selIdx)}</b> 대본으로 미리보기를 만들어요</div>`
     + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-    + list.map((c,i) => `<div class="cand${c.recommended?' on':''}" onclick="pickCandidate(${c.index})" style="cursor:pointer;flex:1 1 260px;min-width:0">`
-        + `<div class="cb">${LBL[i]||('후보 '+(i+1))}${c.recommended?'<span class="rec">👍 추천·선택됨</span>':''}</div>`
+    + list.map((c,i) => {
+        const on = (c.index===selIdx);
+        const badge = (c.recommended && on) ? '<span class="rec">👍 추천 · 선택됨</span>'
+                    : on ? '<span class="rec">✅ 선택됨</span>'
+                    : c.recommended ? '<span class="rec" style="background:linear-gradient(135deg,#c9d3e6,#8b97b0);color:#1a2233">👍 추천</span>'
+                    : '';
         // 대본 전체 표시(2026-07-24 사장님): A/B/C를 통째로 읽고 비교해 고른다 — 훅 한 줄이 아니라 나레이션 전문.
-        + `<p style="white-space:pre-wrap">${esc(c.script || c.hook || '')}</p>`
-        + `<div style="margin-top:6px;font-size:10px;color:#6b7488">${c.story_person?esc(c.story_person):''}${c.score!=null?(c.story_person?' · ':'')+`점수 ${c.score}`:''}</div>`
-        + `<div class="pickhint" style="font-size:11px;color:var(--sub);margin-top:6px">👆 이 대본으로 고르기</div>`
-        + `</div>`).join('')
+        return `<div class="cand${on?' on':''}" onclick="pickCandidate(${c.index})" style="cursor:pointer;flex:1 1 260px;min-width:0">`
+          + `<div class="cb">${CAND_LBL[i]||('후보 '+(i+1))}${badge}</div>`
+          + `<p style="white-space:pre-wrap">${esc(c.script || c.hook || '')}</p>`
+          // ⏱ 예상 영상시간(2026-07-25 사장님): 이 대본을 읽으면 나올 영상 길이 — A/B/C 아래마다.
+          + `<div style="margin-top:6px;font-size:11px;color:var(--accent2);font-weight:800">⏱ 예상 영상시간 약 ${_candSecs(c)}초</div>`
+          + `<div style="margin-top:3px;font-size:10px;color:#6b7488">${c.story_person?esc(c.story_person):''}${c.score!=null?(c.story_person?' · ':'')+`점수 ${c.score}`:''}</div>`
+          + `<div class="pickhint" style="font-size:11px;color:${on?'var(--accent)':'var(--sub)'};margin-top:6px">${on?'✅ 이 대본으로 만드는 중':'👆 이 대본으로 고르기'}</div>`
+          + `</div>`;
+      }).join('')
     + '</div>';
+  _syncPreviewCandHint(_candLabelOf(list, selIdx));
 }
 // 후보 클릭 → 그 후보의 plan을 edit_plan으로 세팅(/api/mix/candidate) → 매칭 리뷰 다시 로드.
 async function pickCandidate(idx){
   if(!MIX_JOB) return;
+  const prev = CAND_SEL;
+  CAND_SEL = idx;                     // 낙관적: 클릭 즉시 선택 박스·라벨을 그 카드로 옮긴다(체크가 됐는지 바로 보인다)
+  renderCandidates(CAND_LIST);
+  const lbl = _candLabelOf(CAND_LIST, idx);
+  _syncPreviewCandHint(lbl, 'switching');
+  const cs = document.getElementById('candStatus'); if(cs) cs.innerHTML = `🔄 <b>${esc(lbl)}</b> 대본으로 바꾸는 중…`;
   try{
     const r = await (await fetch('/api/mix/candidate', {method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({job_id: MIX_JOB, index: idx})})).json();
-    if(!r.ok){ alert(r.error || '후보 전환 실패'); return; }
-  }catch(e){ alert('네트워크 오류'); return; }
+    if(!r.ok){ alert(r.error || '후보 전환 실패'); CAND_SEL = prev; renderCandidates(CAND_LIST); return; }
+  }catch(e){ alert('네트워크 오류'); CAND_SEL = prev; renderCandidates(CAND_LIST); return; }
   loadMixReview();   // edit_plan이 바뀌었다 = 새 매칭과 동일하게 취급(미리보기 게이트도 다시 잠긴다)
+  _syncPreviewCandHint(lbl);   // loadMixReview가 편집안을 다시 그려도 미리보기 힌트는 지금 대본을 가리킨다
+  const cs2 = document.getElementById('candStatus');   // '바꾸는 중' → 정착 메시지로(loadMixReview는 후보를 다시 안 그린다)
+  if(cs2) cs2.innerHTML = `🎬 지금 <b>${esc(lbl)}</b> 대본으로 미리보기를 만들어요`;
 }
 // ─── CANDIDATES-END
 
