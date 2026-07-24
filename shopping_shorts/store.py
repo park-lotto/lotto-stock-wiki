@@ -547,6 +547,14 @@ class Store:
                     updated_at TEXT
                 )
             """)
+            # 해외HOT 발굴 피드 — discovery_feed와 동일한 단일행 JSON 패턴(2026-07-25).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS overseas_feed (
+                    id INTEGER PRIMARY KEY CHECK (id = 1),
+                    items_json TEXT NOT NULL,
+                    updated_at TEXT
+                )
+            """)
             # "같은 주제 모아보기"(2026-07-13) — 수집 배치(캡션 묶음) 안에서 Gemini가
             # 같은 제품/주제로 판단한 항목끼리 group_id를 공유한다. platform 컬럼을
             # 처음부터 둬 유튜브·틱톡 랭킹이 나중에 붙어도 스키마 변경 없이 그대로
@@ -914,6 +922,24 @@ class Store:
     def load_discovery_feed(self):
         with self._conn() as c:
             row = c.execute("SELECT items_json, updated_at FROM discovery_feed WHERE id=1").fetchone()
+        if not row:
+            return [], None
+        return json.loads(row[0]), row[1]
+
+    # ── 해외HOT 발굴 피드 — discovery_feed와 동일한 단일행 JSON 패턴(2026-07-25) ──
+    def save_overseas_feed(self, items):
+        with self._conn() as c:
+            c.execute("CREATE TABLE IF NOT EXISTS overseas_feed(id INTEGER PRIMARY KEY, items_json TEXT, updated_at TEXT)")
+            c.execute(
+                "INSERT INTO overseas_feed(id, items_json, updated_at) VALUES(1, ?, datetime('now')) "
+                "ON CONFLICT(id) DO UPDATE SET items_json=excluded.items_json, updated_at=excluded.updated_at",
+                (json.dumps(items, ensure_ascii=False),),
+            )
+
+    def load_overseas_feed(self):
+        with self._conn() as c:
+            c.execute("CREATE TABLE IF NOT EXISTS overseas_feed(id INTEGER PRIMARY KEY, items_json TEXT, updated_at TEXT)")
+            row = c.execute("SELECT items_json, updated_at FROM overseas_feed WHERE id=1").fetchone()
         if not row:
             return [], None
         return json.loads(row[0]), row[1]

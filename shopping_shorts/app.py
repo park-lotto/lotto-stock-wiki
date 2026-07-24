@@ -819,6 +819,25 @@ def api_discover_feed():
     return {"ok": True, "items": items, "updated_at": updated_at}
 
 
+@app.get("/api/overseas/update")
+def api_overseas_update():
+    """해외HOT 수집 시작(백그라운드). 프론트는 /api/overseas/status 폴링."""
+    from shopping_shorts import overseas_hot_jobs
+    return {"ok": True, **overseas_hot_jobs.start()}
+
+
+@app.get("/api/overseas/status")
+def api_overseas_status():
+    from shopping_shorts import overseas_hot_jobs
+    return {"ok": True, **overseas_hot_jobs.status()}
+
+
+@app.get("/api/overseas/feed")
+def api_overseas_feed():
+    items, updated_at = Store(DB_PATH).load_overseas_feed()
+    return {"ok": True, "items": items, "updated_at": updated_at}
+
+
 @app.post("/api/discover/add")
 def api_discover_add(request: Request, username: str, name: str = ""):
     """발굴 채널을 벤치마크 목록에 추가(이후 메인 랭킹에도 추적).

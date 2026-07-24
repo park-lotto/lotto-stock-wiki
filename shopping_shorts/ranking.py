@@ -195,3 +195,54 @@ def build_tiktok_items(raw, prev_base, prev_delta, now=None, window_hours=336):
             "caption": r.get("title", ""),
         })
     return items
+
+
+def build_reddit_items(raw, prev_base, prev_delta, now=None, window_hours=48):
+    """Reddit 정규화 dict(reddit_source) → 공통 item(upvote 기반 지표). 48h 이내만.
+
+    주신호=upvote: base_count=ups, speed=ups/경과h, density=댓글/ups, accel=Δ−직전Δ.
+    build_tiktok_items와 동일 구조라 apply_grades/sort_by를 그대로 태운다."""
+    now = now or datetime.now(timezone.utc)
+    items = []
+    for r in raw:
+        ts = r.get("published_at")
+        if not ts:
+            continue
+        age = hours_since(ts, now=now)
+        if age > window_hours or age < 0:
+            continue
+        ups = int(r.get("ups") or 0)
+        sc = r.get("post_id") or ""
+        prev = prev_base(sc)
+        is_new = prev is None
+        delta = ups if is_new else ups - prev
+        prev_d = prev_delta(sc)
+        accel = None if prev_d is None else delta - prev_d
+        comments = int(r.get("num_comments") or 0)
+        items.append({
+            "platform": "reddit",
+            "source": "reddit",
+            "shortcode": sc,
+            "post_id": sc,
+            "name": r.get("subreddit", ""),
+            "username": r.get("subreddit", ""),
+            "thumbnail": r.get("thumbnail", ""),
+            "url": r.get("permalink", ""),
+            "media_url": r.get("media_url", ""),
+            "media_platform": r.get("media_platform", ""),
+            "comments": comments,
+            "likes": ups,
+            "views": ups,
+            "base_count": ups,
+            "ups": ups,
+            "age_hours": round(age, 1),
+            "delta": delta,
+            "is_new": is_new,
+            "accel": accel,
+            "speed": ups / age if age > 0 else float(ups),
+            "density": comments / ups if ups else 0.0,
+            "category": r.get("category", ""),
+            "caption": r.get("title", ""),
+            "title": r.get("title", ""),
+        })
+    return items
