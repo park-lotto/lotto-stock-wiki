@@ -1,6 +1,9 @@
 """Reddit 공개 .json으로 서브레딧 급상승/오늘상위 영상 포스트를 무료 수집 →
 정규화 dict. TikTok 무료 키워드검색이 없는 공백을 Reddit '정찰'이 메꾼다.
 urllib만 사용(외부 의존성 0). User-Agent 없으면 429."""
+import json
+import time
+import urllib.request
 from datetime import datetime, timezone
 
 _IMG_EXT = (".jpg", ".jpeg", ".png", ".gif", ".webp")
@@ -68,3 +71,27 @@ def normalize_children(children, category=""):
             "category": category,
         })
     return out
+
+
+_UA = "stocklab-overseas-hot/1.0 (by /u/shorttembox)"
+
+
+def _http_get(url, timeout=15):
+    req = urllib.request.Request(url, headers={"User-Agent": _UA})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.read().decode("utf-8")
+
+
+def fetch_subreddit(subreddit, category="", sort="rising", limit=50, retries=2, pause=1.0):
+    """서브레딧의 rising/top-day 영상 포스트 정규화 리스트. 실패 시 빈 리스트(부분실패 허용)."""
+    suffix = "top.json?t=day&limit=%d" % limit if sort == "top" else "%s.json?limit=%d" % (sort, limit)
+    url = "https://www.reddit.com/r/%s/%s" % (subreddit, suffix)
+    for attempt in range(retries + 1):
+        try:
+            data = json.loads(_http_get(url))
+            children = (data.get("data") or {}).get("children") or []
+            return normalize_children(children, category=category)
+        except Exception:
+            if attempt < retries:
+                time.sleep(pause * (attempt + 1))
+    return []

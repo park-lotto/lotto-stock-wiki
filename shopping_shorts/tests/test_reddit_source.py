@@ -62,3 +62,24 @@ def test_normalize_keeps_only_videos_and_maps_fields():
     assert it["category"] == "테스트"
     assert it["published_at"].endswith("Z")
     assert it["permalink"] == "https://www.reddit.com/r/x/comments/aaa/"
+
+
+import shopping_shorts.reddit_source as rs
+
+
+def test_fetch_subreddit_parses_listing(monkeypatch):
+    fake = ('{"data":{"children":[{"data":{"id":"aaa","title":"t","ups":10,'
+            '"num_comments":1,"created_utc":1785000000,"permalink":"/r/x/comments/aaa/",'
+            '"subreddit":"x","url":"https://youtu.be/z","is_video":false,"media":null,'
+            '"thumbnail":"https://th/aaa.jpg"}}]}}')
+    monkeypatch.setattr(rs, "_http_get", lambda url, timeout=15: fake)
+    items = rs.fetch_subreddit("x", category="테스트", sort="rising", limit=50)
+    assert len(items) == 1 and items[0]["media_platform"] == "youtube"
+
+
+def test_fetch_subreddit_swallows_errors(monkeypatch):
+    def boom(url, timeout=15):
+        raise RuntimeError("429")
+    monkeypatch.setattr(rs, "_http_get", boom)
+    monkeypatch.setattr(rs.time, "sleep", lambda *_: None)
+    assert rs.fetch_subreddit("x", category="테스트") == []   # 부분실패 허용
