@@ -3039,6 +3039,19 @@ class Store:
                 "WHERE customer_id=? AND day>=?", (customer_id, since_day)).fetchone()
         return {"ips": (row[0] or 0), "devices": (row[1] or 0)}
 
+    def prune_activity(self, keep_days=30, now_ts=None):
+        """오래된 활동·접속 로그 정리(2026-07-24) — 두 테이블은 계속 append만 돼 무한증가한다.
+        customer_activity(at=epoch초)·customer_access(day=YYYY-MM-DD)에서 keep_days보다
+        오래된 행을 삭제한다. 반환: (활동삭제수, 접속삭제수). now_ts는 테스트 주입용."""
+        import time as _t
+        now_ts = int(now_ts if now_ts is not None else _t.time())
+        cutoff_ts = now_ts - keep_days * 86400
+        cutoff_day = datetime.fromtimestamp(cutoff_ts, timezone.utc).strftime("%Y-%m-%d")
+        with self._conn() as c:
+            n_act = c.execute("DELETE FROM customer_activity WHERE at < ?", (cutoff_ts,)).rowcount
+            n_acc = c.execute("DELETE FROM customer_access WHERE day < ?", (cutoff_day,)).rowcount
+        return (n_act or 0, n_acc or 0)
+
     def usage_decr(self, customer_id, op, day):
         """(customer_id, op, day) 카운트 -1(0 밑으로 안 감), 감소 후 값 반환. 실패 환불용.
         예약(usage_incr)했다가 작업이 실패하면 이걸로 되돌린다 — points.refund와 대칭."""

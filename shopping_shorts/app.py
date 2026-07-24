@@ -83,6 +83,20 @@ def _seed_voice_presets():
 
 
 @app.on_event("startup")
+def _prune_activity_logs():
+    """기동 시 오래된 활동·접속 로그 정리(2026-07-24) — customer_activity/customer_access는
+    append만 돼 무한증가한다. 30일 지난 행을 지워 DB 비대를 막는다(best-effort, 실패 무시).
+    재시작마다 도는 것으로 충분 — 표는 최근 트레일·7일 공유감지에만 쓰여 30일이면 넉넉하다."""
+    try:
+        n_act, n_acc = Store(DB_PATH).prune_activity(keep_days=30)
+        if n_act or n_acc:
+            import sys as _sys
+            print(f"[prune] activity -{n_act}, access -{n_acc}", file=_sys.stderr)
+    except Exception:
+        pass  # 정리 실패가 앱 기동을 막지 않게
+
+
+@app.on_event("startup")
 def _warn_missing_contact():
     """유료게이트가 켜졌는데(_AUTH_ON) 연락처가 비어 있으면 기동 경고.
     수동 승격 모델에선 '무료 체험 끝' 모달이 결제 유입 경로의 전부다 — 연락처가 비면
