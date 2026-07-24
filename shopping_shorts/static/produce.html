@@ -2283,7 +2283,7 @@ function _renderMixReviewBody(d){
     ? `<div style="border:1px solid var(--fire);border-radius:10px;padding:10px;margin-bottom:8px;background:rgba(255,90,90,.06);font-size:13px">🚧 <b>렌더 전 점검에서 걸린 것</b><ul style="margin:6px 0 0 18px;padding:0">${_gv.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`
     : '';
   // 소스별 기여 리포트 — 관리자(사장님)만 표시. 몇 번 영상이 몇 장면 들어갔나/스킵됐나(조용한 실패 노출).
-  const _sr = (window.IS_ADMIN && Array.isArray(d.sources_report)) ? d.sources_report : [];
+  const _sr = ((typeof window!=='undefined' && window.IS_ADMIN) && Array.isArray(d.sources_report)) ? d.sources_report : [];
   const _srBad = _sr.filter(s=>s.skipped || s.scenes===0).length;
   const _srPanel = _sr.length
     ? `<div style="border:1px solid ${_srBad?'var(--fire)':'var(--line)'};border-radius:10px;padding:10px;margin-bottom:8px;background:${_srBad?'rgba(255,90,90,.06)':'var(--inset)'};font-size:12px">
