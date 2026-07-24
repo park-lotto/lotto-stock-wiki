@@ -25,23 +25,34 @@ from PIL import ImageFont
 _OUT_W, _OUT_H = 1080, 1920
 # ★x264 프리셋(2026-07-24): 미리보기는 assemble(fast=True)가 veryfast로 바꿔 6분→~1.5분.
 # 최종은 medium 유지(고화질). 소셜 숏폼은 플랫폼 재인코딩되므로 veryfast도 체감차 거의 없다.
-_X264_PRESET = "medium"
-
+# ★x264 프리셋(2026-07-24): 기본 medium(최종 고화질). 미리보기는 preview_preset()가
+# veryfast로 낮춰 6분→~1.5분. ★스레드로컬인 이유(오류검사에서 잡음): run_preview와
+# run_render는 각각 BackgroundTasks 스레드에서 돈다 — 모듈 전역이면 미리보기가 켠
+# veryfast가 동시에 도는 **최종 렌더**까지 저화질로 오염시키는 레이스가 난다.
+# assemble 호출 트리는 스레드 내부 분기가 없으므로(실측: 이 모듈에 ThreadPool 없음)
+# 스레드로컬이 정확히 "이 렌더만" 바꾼다.
 import contextlib as _contextlib
+import threading as _threading
+
+_preset_local = _threading.local()
+
+
+def _preset():
+    return getattr(_preset_local, "value", "medium")
 
 
 @_contextlib.contextmanager
 def preview_preset(preset="veryfast"):
-    """이 블록 안의 assemble 인코딩을 빠른 프리셋으로(미리보기 전용). 끝나면 원복.
-    ★2026-07-24: 미리보기가 1080p·medium·30초로 6분 걸려 배포 재시작과 겹쳐 죽었다.
-    veryfast면 ~1.5분. 최종 렌더는 이 컨텍스트 밖이라 medium 고화질 유지."""
-    global _X264_PRESET
-    prev = _X264_PRESET
-    _X264_PRESET = preset
+    """이 블록(현재 스레드) 안의 assemble 인코딩만 빠른 프리셋으로. 끝나면 원복."""
+    prev = getattr(_preset_local, "value", None)
+    _preset_local.value = preset
     try:
         yield
     finally:
-        _X264_PRESET = prev
+        if prev is None:
+            del _preset_local.value
+        else:
+            _preset_local.value = prev
 _FONT_DIR = Path(__file__).parent / "static" / "fonts"
 # 반중복탐지 회피(2026-07-14) — 말 안 해도 항상 적용. 화질 오염 없는(비가역 손상X)
 # 것만 자동화: ①전 비트 기본 크롭+줌(살짝 확대, 원본과 프레임 구도가 달라짐)
@@ -608,7 +619,7 @@ def _extend_with_frozen_motion(sub_path, play_out, freeze, out_path):
         "ffmpeg", "-y", "-i", str(sub_path),
         "-vf", f"tpad=stop_mode=clone:stop_duration={freeze:.3f},{_kenburns_vf(total)}",
         "-r", "30", "-an", "-t", f"{total:.3f}",
-        "-c:v", "libx264", "-preset", _X264_PRESET, "-pix_fmt", "yuv420p", str(out_path),
+        "-c:v", "libx264", "-preset", _preset(), "-pix_fmt", "yuv420p", str(out_path),
     ])
     return out_path
 
@@ -692,7 +703,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 "ffmpeg", "-y", "-ss", f"{start:.3f}", "-t", f"{c['src_dur']:.3f}",
                 "-i", str(src),
                 "-vf", vf_full, "-r", "30", "-an", "-t", f"{play_out:.3f}",
-                "-c:v", "libx264", "-preset", _X264_PRESET, "-pix_fmt", "yuv420p", str(sub),
+                "-c:v", "libx264", "-preset", _preset(), "-pix_fmt", "yuv420p", str(sub),
             ])
             # 그래도 비면(소스 손상/범위밖) 이 클립만 버린다 — 하나가 미리보기 전체를 죽이지 않게.
             if not sub.exists() or _probe_duration(sub) <= 0.05:
@@ -739,7 +750,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 # 여운(runout): 마지막 비트만 대사 뒤 화면이 더 산다 — 오디오는 tts 길이에서
                 # 자연 종료(무성 여운). 컷어웨이 창(win)은 tts_dur 기준 그대로(여운을 덮지 않음).
                 "-t", f"{tts_dur + runout:.3f}",
-                "-c:v", "libx264", "-preset", _X264_PRESET, "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
+                "-c:v", "libx264", "-preset", _preset(), "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
             ])
         else:
             # 비트 나레이션(tts) 오디오를 얹고 길이를 tts_dur(+마지막 비트는 여운)로 맞춘다.
@@ -1176,7 +1187,7 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     if not has_bgm and not has_overlay and not has_motion and not has_sfx:
         base_vf = vf
         _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-vf", base_vf, "-r", "30",
-                     "-c:v", "libx264", "-preset", _X264_PRESET, "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
+                     "-c:v", "libx264", "-preset", _preset(), "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
                     cwd=str(work))
         return str(out_path)
     inputs = ["-i", str(in_video)]
@@ -1222,7 +1233,7 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         amap = "[a]"
     cmd = ["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(fc), "-map", f"[{vcur}]"]
     cmd += (["-map", amap, "-c:a", "aac"] if amap else ["-map", "0:a", "-c:a", "copy"])
-    cmd += ["-r", "30", "-c:v", "libx264", "-preset", _X264_PRESET, "-pix_fmt", "yuv420p", str(out_path)]
+    cmd += ["-r", "30", "-c:v", "libx264", "-preset", _preset(), "-pix_fmt", "yuv420p", str(out_path)]
     _run_ffmpeg(cmd, cwd=str(work))
     return str(out_path)
 
