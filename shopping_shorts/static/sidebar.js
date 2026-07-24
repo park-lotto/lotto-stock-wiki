@@ -102,6 +102,9 @@
     ".ss-work-del{flex-shrink:0;cursor:pointer;color:var(--sub,#8b98a9);opacity:0;padding:2px 4px;font-size:13px}" +
     ".ss-work:hover .ss-work-del{opacity:.65}" +
     ".ss-work-del:hover{opacity:1;color:#ff6b6b}" +
+    // 데스크톱: 상단 계정 카드에 '⚙️ 내 계정'이 있어 이 메뉴는 중복 → 숨김. 모바일은 카드가
+    // 숨겨지므로(.ss-acct display:none) 이 메뉴를 노출한다(2026-07-24).
+    "@media(min-width:761px){.ss-group-acct{display:none}}" +
     "@media(max-width:760px){body{flex-direction:column}" +
       ".ss-nav{width:100%;border-right:none;border-bottom:1px solid var(--line,#1e2735);display:flex;gap:6px;" +
         "overflow-x:auto;align-items:center;white-space:nowrap;padding:10px 12px}" +
@@ -154,8 +157,10 @@
     html += "</div>";
   });
 
-  // 내 계정(유저 자기 설정) — 무료 등급도 접근(data-ss-free). 페이월 잠금 제외.
-  html += '<div class="ss-group"><div class="ss-item" data-ss-href="/account" data-ss-free="1"' +
+  // 내 계정 메뉴 — 데스크톱에선 상단 계정 카드(_accountCard)의 '⚙️ 내 계정'과 중복이라 숨긴다.
+  // 단 모바일(≤760px)에선 그 카드(.ss-acct)가 공간 부족으로 display:none이라, 이 메뉴가 /account·
+  // 로그아웃에 닿는 유일한 통로다 → 모바일에만 노출(ss-item-acct + 아래 @media)(2026-07-24).
+  html += '<div class="ss-group ss-group-acct"><div class="ss-item ss-item-acct" data-ss-href="/account" data-ss-free="1"' +
           ' onclick="location.href=\'/account\'">👤 내 계정</div></div>';
 
   // 테마 토글(민트-블랙 ↔ 화이트-민트). data-theme + localStorage로 전 페이지 공유.
