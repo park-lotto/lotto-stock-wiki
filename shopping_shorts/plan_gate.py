@@ -77,7 +77,7 @@ def _seg_ids(beat):
     return out
 
 
-def check_plan(beats, target_seconds=None):
+def check_plan(beats, target_seconds=None, pool_video_count=None):
     """최종 beats를 불변식으로 검사 → {"ok", "violations"[], 지표들}.
 
     violations는 **사람이 읽는 한 줄**로 만든다(그대로 UI에 뜬다).
@@ -118,6 +118,13 @@ def check_plan(beats, target_seconds=None):
         top = ", ".join(f"{r['from']}~{r['to']}({r['seconds']}초)" for r in long_runs[:3])
         v.append(f"컷 없이 이어지는 구간 {len(long_runs)}곳 — 원본을 그대로 트는 느낌 ({top})")
 
+    # ★소스 편중(2026-07-24): 여러 영상을 담았는데 한 소스만 통째로 쓰면 '믹스'가 아니다.
+    # 실측 사고: 후보마다 s0만/s1만/s2만 써서 원본 하나를 그대로 트는 화면이 됐다.
+    vids = [c.get("video_id") for b in beats for c in _clips(b) if c.get("video_id")]
+    vset = set(vids)
+    if vids and len(vset) == 1 and pool_video_count and pool_video_count > 1:
+        v.append(f"소스 {pool_video_count}개 중 1개({next(iter(vset))})만 사용 — 믹스가 안 됐습니다")
+
     secs = round(sum(float(b.get("target_seconds") or 0) for b in beats), 1)
     if target_seconds and secs and secs < target_seconds * _SHORT_RATIO:
         v.append(f"길이가 {secs}초로 목표 {target_seconds}초보다 많이 짧습니다")
@@ -130,5 +137,6 @@ def check_plan(beats, target_seconds=None):
         "repeat_segs": sorted(repeats),
         "unique_segs": len(dup),
         "total_clips": len(all_segs),
+        "sources_used": sorted(vset),
         "continuous_runs": runs,          # 컷 없이 이어진 구간(진단용 — 화면엔 위반만 뜬다)
     }

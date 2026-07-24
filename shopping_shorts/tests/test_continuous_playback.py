@@ -71,3 +71,33 @@ def test_dedup_replaces_continuous_alternate():
     alts = out[0].get("alternates") or []
     # s2-1(이어붙임)은 그대로 쓰이면 안 된다 — 교체되거나 드롭
     assert all(a.get("seg_id") != "s2-1" for a in alts)
+
+
+# ── 한 소스만 쓰던 사고(2026-07-24) ────────────────────────────
+def _src(vid, n, desc="완성된 요리 클로즈업"):
+    return {"video_id": vid, "segments": [
+        {"seg_id": f"{vid}-{i}", "start": i * 2.0, "end": i * 2.0 + 1.8, "scene_desc": desc}
+        for i in range(n)]}
+
+
+def test_unused_source_is_forced_in_even_without_action_tag():
+    """스토리·대화체 대본은 행위 태그가 없어 의무삽입이 조용히 아무것도 안 했다 →
+    앰비언트 비트엔 안 쓴 소스의 비주얼 클립을 넣어야 한다."""
+    pool = [_src("s0", 6), _src("s1", 6)]
+    # 전 비트가 s0만 쓰고, 나레이션엔 행위 동사가 없다(순수 스토리 문장)
+    beats = [{"primary": {"seg_id": f"s0-{i}", "video_id": "s0", "start": i * 2.0,
+                          "end": i * 2.0 + 1.8},
+              "alternates": [], "narration": "남편이 진짜 좋아하더라고요", "target_seconds": 3.0}
+             for i in range(5)]
+    out = backbone.ensure_sources_used(beats, pool)
+    vids = {(b.get("primary") or {}).get("video_id") for b in out}
+    assert "s1" in vids, "안 쓴 소스가 여전히 안 들어감"
+
+
+def test_gate_flags_single_source_when_more_available():
+    beats = [{"primary": {"seg_id": f"s0-{i}", "video_id": "s0", "start": i * 5.0,
+                          "end": i * 5.0 + 1.8}, "alternates": [], "target_seconds": 3.0}
+             for i in range(5)]
+    r = plan_gate.check_plan(beats, target_seconds=15, pool_video_count=3)
+    assert not r["ok"] and any("1개" in v for v in r["violations"])
+    assert r["sources_used"] == ["s0"]

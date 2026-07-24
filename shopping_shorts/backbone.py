@@ -545,6 +545,24 @@ def ping_pong_reconcile(beats, pool_sources, rewrite_call=None, max_rounds=2, tr
     return out
 
 
+def _visual_segs_of(pool_sources, vid, min_shot=None):
+    """그 소스(vid)의 세그먼트를 **비주얼 좋은 순**(_visual_score)으로 — 앰비언트 비트에 쓸
+    '먹음직스러운 그림'. 행위 태그가 없어도 쓸 수 있는 후보를 준다(2트랙 원칙)."""
+    from shopping_shorts import config
+    min_shot = getattr(config, "MIN_SHOT_SECONDS", 1.2) if min_shot is None else min_shot
+    segs = []
+    for s in (pool_sources or []):
+        if s.get("video_id") != vid:
+            continue
+        for seg in (s.get("segments") or []):
+            c = dict(seg)
+            c["video_id"] = vid
+            if _seg_dur(c) >= min_shot:
+                segs.append(c)
+    segs.sort(key=lambda c: (-_visual_score(c), -_seg_dur(c)))
+    return segs
+
+
 def ensure_sources_used(beats, pool_sources):
     """서브 의무삽입(P1): 모든 소스가 최소 1회 화면에 뜨게 강제. Gemini 선택편중(s2=0)은
     dedup_and_balance('반복'만 고침)로 못 잡아, 안 쓰인 소스의 클립을 **같은 행위**(narration↔clip)로
@@ -561,7 +579,9 @@ def ensure_sources_used(beats, pool_sources):
         if counts.get(vid, 0) > 0:
             continue  # 이미 쓰임
         by_action = action_pool([s for s in pool_sources if s.get("video_id") == vid])
-        if not by_action:
+        # ★행위 태그가 하나도 없는 소스라도 건너뛰지 않는다(2026-07-24) — 앰비언트 비트엔
+        # 비주얼 클립으로 넣을 수 있다. 예전엔 여기서 continue라 그 소스가 영영 안 쓰였다.
+        if not by_action and not _visual_segs_of(pool_sources, vid):
             continue
         # 현재 primary 소스가 많이 쓰인 비트부터(유일사용 소스를 뺏지 않게)
         order = sorted(range(len(out)),
@@ -573,6 +593,16 @@ def ensure_sources_used(beats, pool_sources):
                 continue  # 그 비트의 소스가 유일사용이면 건드리지 않음
             n_act = action_dict.tag_action(b.get("narration", ""))
             clips = by_action.get(n_act) if n_act else None
+            # ★n_act가 None일 때만(=문장이 행위를 아예 안 가리킴) 비주얼로 넣는다.
+            # 행위가 있는 문장("썰어요")에 안 맞는 클립을 밀어넣으면 싱크가 깨진다(옛 계약 유지).
+            if not clips and not n_act and not is_point_beat(b):
+                # ★2026-07-24 실사고("한 영상만 씀"): 대본을 스토리·대화체로 바꾸자 대부분 비트에
+                # 행위 태그가 없어(n_act=None) 의무삽입이 조용히 아무것도 안 했고, 후보가 소스
+                # 하나만 통째로 쓰게 됐다(실측: 후보0=s0×13, 후보1=s1×16, 후보2=s2×15).
+                # 포인트 비트(결정적 행위)는 행위 매칭을 지켜야 하지만, **앰비언트 비트는 그냥
+                # 먹음직스러운 그림이면 된다**(2트랙 원칙) → 안 쓴 소스의 비주얼 상위 클립을 쓴다.
+                cands = [c for c in _visual_segs_of(pool_sources, vid)]
+                clips = cands or None
             if not clips:
                 continue
             nb = dict(b)
