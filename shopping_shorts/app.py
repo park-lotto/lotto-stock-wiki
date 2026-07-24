@@ -56,6 +56,7 @@ from shopping_shorts import pron_corrections
 from shopping_shorts.tts import synthesize_tts
 from shopping_shorts import tts, asr_check
 from shopping_shorts import export_bundle
+from shopping_shorts import qr_svg
 from shopping_shorts import capcut_draft
 from shopping_shorts.youtube_client import enrich_youtube
 from shopping_shorts.video_assemble import _beat_timeline
@@ -2583,6 +2584,54 @@ def api_mix_video(job_id: str, dl: int = 0):
     return FileResponse(job["video_path"])
 
 
+# ── QR '폰으로 보내기' (2026-07-23) ──
+# 흐름: 제작소(로그인됨)에서 /api/share/link/{job} 호출 → 단축링크+QR(SVG) 발급 → 화면에 QR 표시.
+#       폰이 스캔 → /s/{sid}(로그인 불필요, 미들웨어 allowlist) → 영상+카톡공유 버튼.
+@app.get("/api/share/link/{job_id}")
+def api_share_link(job_id: str, request: Request):
+    """완성 영상의 QR용 단축 공유링크+QR SVG 발급(로그인 필요 — 미들웨어 게이트 통과분만 도달)."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
+        return JSONResponse(status_code=404, content={"ok": False, "error": "완성 영상이 없어요"})
+    sid = _share_put(job_id)
+    if PUBLIC_BASE_URL:
+        base = PUBLIC_BASE_URL.rstrip("/")
+    else:
+        proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+        host = request.headers.get("host") or request.url.netloc
+        base = f"{proto}://{host}"
+    url = f"{base}/s/{sid}"
+    try:
+        qr = qr_svg.qr_svg(url)
+    except Exception:
+        qr = ""   # QR 실패해도 링크 텍스트로 폴백(프런트가 복사 UI 제공)
+    return {"ok": True, "url": url, "qr_svg": qr}
+
+
+@app.get("/api/share/v/{sid}")
+def api_share_v(sid: str, dl: int = 0):
+    """단축 id로 영상 스트리밍(로그인 불필요·저장소 조회). allowlist 경로."""
+    job_id = _share_get(sid)
+    if not job_id:
+        return JSONResponse(status_code=403, content={"ok": False, "error": "링크가 만료됐어요"})
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    if dl:
+        return FileResponse(job["video_path"], media_type="video/mp4",
+                            filename=export_bundle.safe_name(job_id) + ".mp4")
+    return FileResponse(job["video_path"], media_type="video/mp4")
+
+
+@app.get("/s/{sid}", response_class=HTMLResponse)
+def share_page(sid: str):
+    """폰이 QR로 여는 모바일 공유 페이지(로그인 불필요). 폰 카톡 네이티브 공유로 전송."""
+    job_id = _share_get(sid)
+    if not job_id:
+        return HTMLResponse(_SHARE_EXPIRED_HTML, status_code=403)
+    return HTMLResponse(_SHARE_PAGE_HTML.replace("__VID__", f"/api/share/v/{sid}"))
+
+
 @app.get("/api/mix/export/{job_id}")
 def api_mix_export(job_id: str, part: str = ""):
     """캡컷 편집용 내보내기 ZIP(설계 2026-07-20 §2, T1). part=sources|srt|script면 그것만(개별
@@ -3408,6 +3457,83 @@ def _set_session_cookie(response, customer_id: int):
     expiry = int(datetime.now(timezone.utc).timestamp()) + _COOKIE_MAX_AGE
     response.set_cookie("dash_auth", _sign_session(customer_id, expiry),
                          max_age=_COOKIE_MAX_AGE, httponly=True, samesite="lax")
+
+
+# ── QR '폰으로 보내기' 단축 공유 (2026-07-23) ──
+# PC 웹은 카톡 대화방에 mp4를 직접 못 넣는다(카톡 PC가 파일 붙여넣기 미지원). 그래서 완성 영상의
+# '로그인 없이 열리는' 단기 링크를 QR로 띄운다 → 폰으로 스캔해 폰 카톡 네이티브 공유로 전송.
+# ★URL을 짧게(/s/{8자}) 유지해야 QR이 v3(검증범위) 안에 든다 → 긴 서명토큰 대신 메모리 저장소에
+#   짧은 id→(job,만료)를 담는다. 재기동 시 사라짐 = 24h 만료와 같은 성질(재발급하면 됨). 무상태 필요 없음.
+_SHARE_TTL = 60 * 60 * 24  # 24시간
+_SHARE_STORE: dict = {}    # sid -> (job_id, expiry_ts)
+
+
+def _share_put(job_id: str) -> str:
+    now = int(datetime.now(timezone.utc).timestamp())
+    for k in [k for k, (_, e) in _SHARE_STORE.items() if e < now]:   # 만료 청소(누수 방지)
+        _SHARE_STORE.pop(k, None)
+    sid = secrets.token_urlsafe(6)   # ~8자
+    _SHARE_STORE[sid] = (job_id, now + _SHARE_TTL)
+    return sid
+
+
+def _share_get(sid: str):
+    v = _SHARE_STORE.get(sid)
+    if not v:
+        return None
+    job_id, exp = v
+    if int(datetime.now(timezone.utc).timestamp()) > exp:
+        _SHARE_STORE.pop(sid, None)
+        return None
+    return job_id
+
+
+_SHARE_PAGE_HTML = """<!doctype html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>완성 영상 · 숏템박스</title>
+<style>
+ *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+ body{background:#0d0f12;color:#eef2f6;font-family:-apple-system,"Malgun Gothic",sans-serif;
+      min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px 16px 40px}
+ h1{font-size:19px;font-weight:800;margin:8px 0 4px;letter-spacing:1px}
+ .sub{color:#8b93a7;font-size:13px;margin-bottom:16px}
+ video{width:100%;max-width:420px;border-radius:16px;background:#000;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+ .btns{width:100%;max-width:420px;margin-top:18px;display:flex;flex-direction:column;gap:12px}
+ button,a.dl{font-size:19px;font-weight:800;border:0;border-radius:14px;padding:18px;text-align:center;
+      text-decoration:none;cursor:pointer}
+ #shareBtn{background:#fee500;color:#191600}
+ a.dl{background:#1c2740;color:#dfe7f5}
+ .tip{color:#6b7488;font-size:12px;margin-top:14px;text-align:center;line-height:1.6;max-width:420px}
+</style></head><body>
+ <h1>완성 영상 📱</h1>
+ <div class="sub">아래 버튼으로 카톡·인스타에 바로 보내세요</div>
+ <video src="__VID__" controls playsinline preload="metadata"></video>
+ <div class="btns">
+   <button id="shareBtn">카톡·인스타로 보내기</button>
+   <a class="dl" href="__VID__?dl=1" download>영상 저장(다운로드)</a>
+ </div>
+ <div class="tip">버튼을 누르면 공유창이 떠요. 카톡을 고르고 대화방을 선택하면 전송됩니다.<br>안 뜨면 '영상 저장' 후 갤러리에서 공유하세요.</div>
+<script>
+ const V="__VID__";
+ document.getElementById('shareBtn').addEventListener('click', async ()=>{
+   try{
+     const r=await fetch(V); const b=await r.blob();
+     const f=new File([b],'shopping_short.mp4',{type:'video/mp4'});
+     if(navigator.canShare && navigator.canShare({files:[f]})){
+       await navigator.share({files:[f], title:'완성 영상'}); return;
+     }
+     if(navigator.share){ await navigator.share({title:'완성 영상', url:location.href}); return; }
+     location.href=V+'?dl=1';
+   }catch(e){ if(e && e.name==='AbortError') return; location.href=V+'?dl=1'; }
+ });
+</script></body></html>"""
+
+_SHARE_EXPIRED_HTML = """<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>링크 만료</title><style>body{background:#0d0f12;color:#eef2f6;font-family:-apple-system,"Malgun Gothic",sans-serif;
+min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+h1{font-size:22px;margin-bottom:10px}p{color:#8b93a7;line-height:1.6}</style></head>
+<body><h1>⏱ 링크가 만료됐어요</h1><p>공유 링크는 24시간만 유효해요.<br>제작소에서 QR을 다시 띄워 주세요.</p></body></html>"""
 
 
 # ── 브랜드 토큰 (한 곳에 몰아둔다 — 이름 확정 시 여기 1곳만 교체) ──
@@ -4552,10 +4678,12 @@ async def _auth_guard(request: Request, call_next):
     # 외부인이 /synth를 반복 호출해 ElevenLabs·GROQ 크레딧을 태우고 /profile/{임의id}로
     # voice_presets에 임의 행을 넣을 수 있었다(2026-07-15 리뷰 S7). 운영자는 대시보드
     # 로그인 세션으로 접근한다.
+    # /s/{sid}·/api/share/v/{sid} = QR '폰으로 보내기' 공개경로(단축id 저장소 조회, 로그인 불필요).
+    #   폰이 쿠키 없이 연다. ★/api/share/link(발급)은 여기 없음 → 로그인 게이트 유지(로그인해야 QR 발급).
     # /api/yt_relay/*는 사장님 PC 릴레이 에이전트가 로그인 쿠키 없이 호출한다(2026-07-24).
-    # 자체 키 인증(_relay_auth_ok: YT_RELAY_KEY)이 있어 로그인 가드는 건너뛴다 — 안 그러면
-    # 에이전트가 401에 막혀 유튜브 다운로드가 통째로 죽는다.
+    #   자체 키 인증(_relay_auth_ok: YT_RELAY_KEY)이 있어 로그인 가드는 건너뛴다 — 안 그러면 유튜브 다운로드가 죽는다.
     if (path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/")
+            or path.startswith("/s/") or path.startswith("/api/share/v/")
             or path.startswith("/api/yt_relay/")):
         return await call_next(request)
     customer_id = _verify_session(request.cookies.get("dash_auth"))
