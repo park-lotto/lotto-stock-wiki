@@ -6467,16 +6467,33 @@ def api_seo_generate(body: dict):
 @app.post("/api/produce/thumb/titles")
 def api_thumb_titles(body: dict):
     """확정 대본으로 썸네일에 얹을 짧은 제목 후보를 뽑는다. DB 기록 안 함(무과금 미리보기 —
-    seo/generate·fx/suggest와 같은 규약). 사장님이 후보를 눌러 레이어에 얹고 다듬는다."""
+    seo/generate·fx/suggest와 같은 규약). 사장님이 후보를 눌러 레이어에 얹고 다듬는다.
+
+    ★화면 대본 우선(2026-07-24 사고): job.given_script는 '영상 매칭(믹스)' 순간에 고정된다.
+    그 뒤 1단계에서 대본을 새 영상에 맞게 고쳐도 job엔 옛 대본이 남아, 제목이 옛 영상 주제로
+    나온다(바나나 팬케이크 영상에 며칠 전 '밥솥 식빵' 제목이 나온 실사고). 그래서 프런트가
+    보내주는 '지금 화면의 대본'(script)을 있으면 우선 쓴다 — 사장님이 보는 것과 제목을 맞춘다.
+    화면 대본이 job 대본과 다르면 script_mismatch=true로 알려, 프런트가 '영상 매칭을 다시
+    해야 나레이션에도 반영된다'고 경고한다(제목만 바꾸면 영상 나레이션↔제목이 또 어긋난다)."""
     job_id = (body.get("job_id") or "").strip()
     job = Store(DB_PATH).get_mix_job(job_id) if job_id else None
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
-    titles = thumb_title.generate(job)
+    screen_script = (body.get("script") or "").strip()
+    job_script = (job.get("given_script") or "").strip()
+    used_script = screen_script or job_script
+    if not used_script:
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": "대본이 비어 있어요 — 1단계에서 대본을 확정하세요"})
+    # 화면 대본으로 제목을 짓되, headcopy/구조는 job 것을 그대로 참고로 둔다(대본이 진실의 축).
+    job_for_titles = dict(job)
+    job_for_titles["given_script"] = used_script
+    mismatch = bool(screen_script and job_script and screen_script != job_script)
+    titles = thumb_title.generate(job_for_titles)
     if titles is None:
         return JSONResponse(status_code=502,
                             content={"ok": False, "error": "제목 생성 실패 — 잠시 후 다시 눌러보세요"})
-    return {"ok": True, "titles": titles}
+    return {"ok": True, "titles": titles, "script_mismatch": mismatch}
 
 
 @app.get("/api/produce/seo/get")
