@@ -35,6 +35,7 @@ from shopping_shorts import script_generate
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
 from shopping_shorts.channels import load_channels, username_from_url, merge_tracked
+from shopping_shorts import video_analysis
 from shopping_shorts.video_analysis import (analyze_video, translate_keyword, cn_search_keyword,
                                             cn_search_keyword_vision, judge_same_product,
                                             cn_search_candidates)
@@ -209,6 +210,7 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
         store.save_last_run(items, collected_at)
         background_tasks.add_task(generate_missing_drafts, next_draft_targets(items, store))
         background_tasks.add_task(_tag_new_items, items)   # 신규 썸네일 비전 태깅(백그라운드)
+        background_tasks.add_task(_translate_new_subjects, items)  # 새 소재 한→중 번역(백그라운드)
         # 수집→대본은행 자동 적재(2026-07-22): 밀도+속도 상위 표본을 부품으로 분해해 은행에
         # 쌓는다(소스당 Gemini 1콜이라 백그라운드). 결과는 /api/bank/ingest_report로 화면에 보고.
         background_tasks.add_task(_bank_ingest_collected_bg, DB_PATH, items, collected_at)
@@ -368,6 +370,8 @@ async def api_yt_relay_deliver(req_id: str, key: str = Form(""),
 
 
 _VISION_TAG_CAP = 60  # 1회 수집당 새 태깅 상한(비용 가드). 초과분은 다음 수집 때.
+_TRANSLATE_CAP = 40      # 수집직후 백그라운드 소재 번역(_translate_new_subjects, Task3)의 1회 상한. 이 엔드포인트는 안 씀.
+_TRANSLATE_MAXLEN = 40   # 번역 요청 소재 길이 상한(비정상 입력 방어).
 
 
 def _tag_new_items(items):
@@ -392,6 +396,30 @@ def _tag_new_items(items):
             store.save_vision_tags(it["shortcode"], tags.get("subject", ""), tags.get("keywords", []))
     if len(todo) > len(capped):
         print(f"[vision_tags] {len(todo) - len(capped)}건 다음 수집으로 미룸(상한 {_VISION_TAG_CAP})")
+
+
+def _translate_new_subjects(items):
+    """수집 직후 백그라운드: 새 vision_subject를 한→중 번역해 translations 캐시에 채운다.
+    이미 번역된 건 skip. 상한(_TRANSLATE_CAP) 초과분은 다음 수집으로 미룬다.
+    비전태그가 먼저 채워져야 subject가 생기므로 1수집 지연은 정상(트렌드는 회차 누적)."""
+    store = Store(DB_PATH)
+    subjects = []
+    seen = set()
+    for it in items:
+        s = (it.get("vision_subject") or "").strip()
+        if s and s not in seen:
+            seen.add(s)
+            subjects.append(s)
+    have = store.translations_map(subjects)
+    todo = [s for s in subjects if s not in have]
+    for s in todo[:_TRANSLATE_CAP]:
+        try:
+            zh = (video_analysis.translate_keyword(s) or {}).get("zh", "") or ""
+        except Exception:
+            zh = ""
+        store.save_translation(s, zh)
+    if len(todo) > _TRANSLATE_CAP:
+        print(f"[translations] {len(todo) - _TRANSLATE_CAP}건 다음 수집으로 미룸(상한 {_TRANSLATE_CAP})")
 
 
 def _attach_vision_tags(items, store=None):
@@ -449,6 +477,29 @@ def api_generate_drafts(background_tasks: BackgroundTasks):
         return {"ok": True, "count": 0, "message": "더 이상 생성할 항목이 없습니다"}
     background_tasks.add_task(generate_missing_drafts, targets)
     return {"ok": True, "count": len(targets)}
+
+
+@app.get("/api/translate")
+def api_translate(q: str = ""):
+    """트렌드카드용 한→중 소재 번역(캐시 우선). 미스면 translate_keyword 1회 후 저장.
+
+    빈/과다 입력은 zh="" 로 안전 반환(딥링크는 ko 폴백). 캐시 히트는 Gemini 호출 0."""
+    ko = (q or "").strip()
+    if not ko:
+        return {"ok": True, "ko": "", "zh": ""}
+    if len(ko) > _TRANSLATE_MAXLEN:
+        return {"ok": False, "ko": ko, "zh": "", "error": "too_long"}
+    store = Store(DB_PATH)
+    cached = store.get_translation(ko)
+    if cached is not None:
+        return {"ok": True, "ko": ko, "zh": cached}
+    zh = ""
+    try:
+        zh = (video_analysis.translate_keyword(ko) or {}).get("zh", "") or ""
+    except Exception:
+        zh = ""
+    store.save_translation(ko, zh)   # 빈 zh도 저장 → 반복 호출 방지
+    return {"ok": True, "ko": ko, "zh": zh}
 
 
 @app.get("/api/reference")
