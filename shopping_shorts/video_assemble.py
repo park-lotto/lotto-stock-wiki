@@ -1041,6 +1041,16 @@ def _fixed_drawtext(spec, work, key, default_color="0xFFFFFF"):
     return ":".join(parts)
 
 
+def _default_headcopy_enable(timeline):
+    """명시 enable(hook_only 팩)이 없을 때의 기본(2026-07-25) — 헤드카피를 **마지막 비트 시작
+    전까지**만 노출해 끝의 CTA 자막과 두 줄로 겹치지 않게 한다(job 57ec653ba579: 상단 헤드카피
+    + 하단 CTA 충돌). 비트가 2개 미만이면 제한하지 않는다(None=기존 전체표시)."""
+    if not timeline or len(timeline) < 2:
+        return None
+    last_t0 = float(timeline[-1]["t0"])
+    return f"lte(t,{last_t0:.2f})"
+
+
 def _headcopy_drawtext_parts(hc, work, enable=None):
     """헤드카피 drawtext 필터 리스트 — _segmented_drawtext 래퍼(기본색 오렌지).
     hc['highlight_rules']가 있으면 단어별 강조, 없으면 세그먼트 1개(기존과 동일).
@@ -1140,6 +1150,9 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     if headcopy and (headcopy.get("text") or "").strip():
         # enable 없으면 전체 표시(기존). 팩이 hook_only면 렌더 파생값 _headcopy_enable이 온다.
         hc_enable = ((deco or {}).get("motion") or {}).get("_headcopy_enable")
+        if not hc_enable:
+            # 명시 enable 없으면 끝 비트(CTA)와 겹치지 않게 마지막 비트 전까지만(2026-07-25).
+            hc_enable = _default_headcopy_enable(timeline)
         filters.extend(_headcopy_drawtext_parts(headcopy, work, enable=hc_enable))
     # 꾸미기 장식(deco): 추가 텍스트(여러 개) + 워터마크 닉네임. 모두 고정 drawtext.
     deco = deco or {}
