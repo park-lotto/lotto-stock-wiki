@@ -94,6 +94,20 @@ class Store:
                     PRIMARY KEY (customer_id, shortcode)
                 )
             """)
+            # 부품은행 흡수 실패 재큐(2026-07-24). 503(모델 용량)으로 실패한 상위영상은 다음
+            # 수집 때 상위권 밖으로 밀리면 영구 유실될 수 있다 → url당 1행으로 담아 지수 백오프로
+            # 재시도한다. fail_count가 상한을 넘으면 흡수 루프가 스스로 폐기(영구불량 영상 방어).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS bank_retry (
+                    url TEXT PRIMARY KEY,
+                    item_json TEXT NOT NULL,
+                    source TEXT,
+                    fail_count INTEGER NOT NULL DEFAULT 0,
+                    next_retry_at REAL NOT NULL DEFAULT 0,
+                    last_error TEXT,
+                    created_at REAL NOT NULL DEFAULT 0
+                )
+            """)
             # 소스 보강정보 캐시(레퍼런스정보, 2026-07-22) — url당 1행, 채널/댓글/자막
             # 등 외부수집 결과를 캐싱(7일 TTL은 get_enrichment 호출부에서 판단).
             c.execute("""
@@ -1401,6 +1415,60 @@ class Store:
                 "WHERE shortcode=?",
                 (shortcode,),
             )
+
+    # ── 부품은행 흡수 실패 재큐(2026-07-24) — 503으로 놓친 상위영상을 지수 백오프로 재시도 ──
+    # 백오프: 30분·1·2·4·8·16h (2^n), 24h 상한. fail_count>6 넘으면 폐기(영구불량 방어).
+    _BANK_RETRY_MAX = 6
+    _BANK_RETRY_BASE = 1800      # 30분
+    _BANK_RETRY_CAP = 86400      # 24시간
+
+    def bank_retry_upsert(self, url, item_json, source, error, now):
+        """흡수 실패한 url을 재큐에 담거나 fail_count를 올린다(지수 백오프). 상한 초과 시 폐기."""
+        if not url:
+            return
+        with self._conn() as c:
+            row = c.execute("SELECT fail_count FROM bank_retry WHERE url=?", (url,)).fetchone()
+            fc = (row[0] if row else 0) + 1
+            if fc > self._BANK_RETRY_MAX:
+                c.execute("DELETE FROM bank_retry WHERE url=?", (url,))
+                return
+            nxt = now + min(self._BANK_RETRY_BASE * (2 ** (fc - 1)), self._BANK_RETRY_CAP)
+            err = (error or "")[:200]
+            c.execute(
+                "INSERT INTO bank_retry(url,item_json,source,fail_count,next_retry_at,last_error,created_at) "
+                "VALUES(?,?,?,?,?,?,?) "
+                "ON CONFLICT(url) DO UPDATE SET fail_count=?, next_retry_at=?, last_error=?, "
+                "item_json=excluded.item_json",
+                (url, item_json, source, fc, nxt, err, now, fc, nxt, err),
+            )
+
+    def bank_retry_due(self, now, limit=50):
+        """재시도 시점이 된(next_retry_at<=now) 항목의 item(dict) 리스트. url을 항상 채워 돌려준다."""
+        import json as _json
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT url,item_json FROM bank_retry "
+                "WHERE next_retry_at<=? AND fail_count<=? ORDER BY next_retry_at ASC LIMIT ?",
+                (now, self._BANK_RETRY_MAX, limit),
+            ).fetchall()
+        out = []
+        for url, item_json in rows:
+            try:
+                it = _json.loads(item_json)
+                if not isinstance(it, dict):
+                    it = {}
+            except Exception:
+                it = {}
+            it["url"] = it.get("url") or url
+            out.append(it)
+        return out
+
+    def bank_retry_clear(self, url):
+        """성공하면 재큐에서 제거."""
+        if not url:
+            return
+        with self._conn() as c:
+            c.execute("DELETE FROM bank_retry WHERE url=?", (url,))
 
     def extracts_missing_structure(self, limit=100):
         """구조분석이 아직 안 된 대본추출 항목(카테고리 있는 것만 — 카테고리 없으면
