@@ -83,6 +83,16 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 # — 서버에서 실측 후 올릴 수 있도록 env로 노출.
 TTS_MAX_WORKERS = int(os.getenv("TTS_MAX_WORKERS", "3"))
 
+# 유튜브 로컬 릴레이(2026-07-24) — 서버(데이터센터 IP)는 유튜브에 봇차단당해 다운로드가
+# 통째로 막힌다(주거용 IP는 됨, memory youtube-shorts-datacenter-block). 그래서 서버는
+# 유튜브 URL을 yt_relay 큐에 넣고, 사장님 PC의 에이전트가 큐를 폴링해 주거용 IP로 받아
+# 서버에 업로드한다. 서버에서만 켠다(YT_RELAY_ENABLED=1) — 로컬/에이전트는 꺼야
+# 무한루프가 안 난다(에이전트는 _download_ytdlp를 직접 부른다). KEY는 에이전트 인증용.
+YT_RELAY_ENABLED = os.getenv("YT_RELAY_ENABLED", "") == "1"
+YT_RELAY_KEY = os.getenv("YT_RELAY_KEY", "")
+YT_RELAY_DIR = Path(__file__).parent / "data" / "yt_relay"   # 에이전트가 올린 mp4 보관
+YT_RELAY_POLL_TIMEOUT = int(os.getenv("YT_RELAY_POLL_TIMEOUT", "180"))  # 서버측 대기 상한(초)
+
 # 수집 규칙
 WINDOW_HOURS = 48          # 48시간 이내만 랭킹(인스타 — 빠르게 도는 릴스 기준)
 # 유튜브 Shorts는 며칠~몇 주에 걸쳐 조회수가 쌓여 48h는 결과가 너무 적다(실측
