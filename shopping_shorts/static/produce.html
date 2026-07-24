@@ -3184,8 +3184,9 @@ let CAND_SEL  = null;      // 지금 '선택된' 후보의 index(c.index). null�
 // 후보 대본의 예상 발화시간(초) — 자막·보이스 추정과 같은 SYLLABLES_PER_SEC로 계산(공백 제외 글자수÷음절속도).
 // AI PICK 카드의 '길이'는 원본 영상 길이(고정)라, 여기선 '이 대본을 읽으면 나올 영상 길이'를 따로 보여준다.
 function _candSecs(c){
+  const sps = (typeof SYLLABLES_PER_SEC!=='undefined') ? SYLLABLES_PER_SEC : 5.7;   // 슬라이스 테스트(전역 없음) 방어
   const t = (c.script || c.hook || '').replace(/\s/g,'');
-  return t ? Math.max(1, Math.round(t.length / SYLLABLES_PER_SEC)) : 0;
+  return t ? Math.max(1, Math.round(t.length / sps)) : 0;
 }
 // 지금 선택된 후보 index 결정: 명시 선택(CAND_SEL) > recommended > 첫 번째.
 function _candSelIdx(list){
