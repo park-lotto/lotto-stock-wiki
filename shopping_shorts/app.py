@@ -1850,6 +1850,11 @@ def api_mix_result(job_id: str):
     detected = plan.get("detected_type") or _edit_plan._DEFAULT_TYPE
     return {
         "ok": True, "structure": plan["structure"], "beats": beats,
+        # ★P1/P2(2026-07-24): 어느 생성기가 만들었나 + 렌더 전 불변식 위반을 화면에 띄우기 위해
+        # 내보낸다(조용한 폴백·조용한 위반 금지). 없으면 옛 job → 프런트가 경고 안 그린다.
+        "generator": plan.get("generator", ""),
+        "generator_note": plan.get("generator_note", ""),
+        "gate": plan.get("gate") or None,
         "detected_type": detected,
         "detected_type_label": _edit_plan.VIDEO_TYPES.get(detected, {}).get("label", detected),
         "affiliate_target": plan.get("affiliate_target", ""),
