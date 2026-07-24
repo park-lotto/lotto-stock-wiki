@@ -382,6 +382,12 @@ def _vault_call(prompt, schema, max_tries=4):
                 continue
             if key_vault.is_quota_error(e):
                 continue
+            # ★503/과부하는 일시적(2026-07-24 실측: scene_first가 이걸로 죽어 옛 대본으로 폴백,
+            # 30초·7~8컷·대화 개선이 통째로 안 탔다). 포기 대신 잠깐 쉬고 다음 키로 재시도한다.
+            m = str(e)
+            if any(c in m for c in ("503", "UNAVAILABLE", "overloaded", "high demand")):
+                time.sleep(2)
+                continue
             print(f"edit_plan._vault_call: {e!r}", file=sys.stderr)
             return None
     return None
@@ -396,7 +402,7 @@ _SCENE_FIRST_SCHEMA = {
             "story_person": {"type": "string"}, "story_event": {"type": "string"},
             "story_resolution": {"type": "string"}, "cta_line": {"type": "string"},
             "cta_keyword": {"type": "string"},
-            "beats": {"type": "array", "minItems": 5, "items": {
+            "beats": {"type": "array", "minItems": 6, "items": {
                 "type": "object",
                 "properties": {
                     "role": {"type": "string"}, "narration": {"type": "string"},
@@ -429,6 +435,10 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "/ 그래서 지금은 ~' 식으로. 화면에 그 사람·그 순간이 안 보여도 된다 — 이야기는 화자의 "
         "목소리로 흐르고, 장면은 그 밑에 깔리는 먹음직스러운 그림일 뿐이다. '맛있다·진하다·예술이다' "
         "같은 감상 나열은 이야기가 아니다(반려). 누가·무슨 말·왜·그래서·반전이 있어야 한다.\n"
+        "★★구체적 인용 대화 필수: 실제 주고받은 말을 **따옴표로 최소 2번** 넣어라 — "
+        "'남편이 \"밥 없어?\" 하길래' / '그래서 제가 \"이거 먹어봐\" 했더니' / '한 입 먹고 \"이거 "
+        "밖에서 파는 거야?\" 하더라고요' 식으로. 두루뭉실 요약('맛있대요') 말고 그 순간 그 사람이 "
+        "한 말을 그대로. 이 대화가 있고 없고가 탄탄함을 가른다.\n"
         "★장면 붙이기: 각 비트에 seg_id를 2~4개 시간순으로 붙이되, **결정적 행위 비트**(비법 얹기·"
         "붓기·자르기 등)만 그 행위 장면과 정확히 맞춰라. 나머지 이야기 비트는 화면을 설명할 "
         "필요 없이 먹음직스러운 장면을 깔면 된다(대사와 화면이 1:1일 필요 없음).\n"
@@ -449,8 +459,12 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "이제 알았지?'·'저 이거 몰라서 손해 봤잖아요'·'이거 진짜 절대 하지 마세요' 류)로 시작해라. "
         "hook만 세게 써놓고 첫 비트를 '매번 ~하던 참이었거든요'처럼 밋밋하게 열면 실패다. "
         "beats[0]이 곧 그 hook이어야 한다.\n"
-        f"- 전체 나레이션 글자수 합은 약 {char_target}자 내외. 각 비트: role·narration(구어체)·"
-        "seg_ids(2~4)·fit(1~5)·forced(그 장면이 이 말과 안 맞는데 억지로 붙였으면 true).\n"
+        f"- ★★길이를 목표에 맞춰라(짧아도 길어도 실패): 전체 나레이션 글자수 합을 "
+        f"**{int(char_target*0.85)}~{int(char_target*1.15)}자**(목표 {char_target}자) 안에 둬라. "
+        f"이보다 짧으면 빈약해서 반려, **넘치면 영상이 너무 길어져 반려**(★{int(char_target*1.15)}자를 "
+        "절대 넘기지 마라 — 말을 늘리지 말고 핵심만). 비트는 **6~7개**로 나눠라(각 비트 25~40자). "
+        "8개 이상 잘게 쪼개거나 비트마다 길게 늘어놓으면 실패다.\n"
+        "  각 비트: role·narration(구어체)·seg_ids(2~4)·fit(1~5)·forced(그 장면이 이 말과 안 맞는데 억지로면 true).\n"
         "- ★caption_lines: 그 비트 narration을 화면 자막용으로 **2~3어절 호흡 단위**로 끊은 "
         "배열. 수식어는 반드시 뒤 명사와 한 줄에 둬라('만든 사람'을 '만든'|'사람'으로 쪼개지 마라, "
         "'이 소스'·'특제 비법'처럼 관형어+명사는 붙인다). 이어붙이면 narration과 글자가 정확히 "
@@ -461,11 +475,18 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         # 처럼 다음 조각이 앞과 안 맞물리는 어색한 중간 연결어는 금지. 소리내어 읽어도 매끄럽게.
         "- ★비트들을 하나의 이어지는 이야기로 써라 — 각 문장이 앞 문장을 자연스럽게 이어받아야 "
         "한다(뚝뚝 끊긴 조각 나열 금지, 어색한 중간 연결어 금지). 인물을 세웠으면 끝까지 관통.\n"
-        "- ★★스토리 전개 고도화(5비트+ 아크): 같은 길이 안에서 이야기를 촘촘히 전개해라 — "
-        "① 상황·인물 설정(누가·왜) → ② 기대/문제 고조(그래서 어땠는데) → ③ 반전·비하인드"
-        "(근데 알고보니·비법은) → ④ 절정·증거(반응·결과) → ⑤ 해소+CTA. 각 비트가 서로 다른 "
-        "전개 단계를 맡아 이야기가 '깊어지게'(같은 말 반복·단순 특징 나열 금지). 밋밋한 정보 나열이 "
-        "아니라 기승전결이 살아있는 미니드라마로.\n"
+        "- ★★★스토리 전개 고도화(7~8비트 드라마 아크, 30초를 꽉 채워라): 이야기를 촘촘히·극적으로 "
+        "전개해라 — ① 강한 훅(감탄·충격) → ② 상황·인물 설정(누가·왜, 대화 인용) → ③ 기대/시련 고조"
+        "(그래서 어땠는데) → ④ **반전 1**(예상 밖의 전개, '근데 웬걸') → ⑤ 절정·증거(생생한 반응·대화 "
+        "인용) → ⑥ **반전 2/비하인드**(알고보니 이게 비법이었다·의외의 결말) → ⑦ 해소 → ⑧ CTA. "
+        "각 비트가 다른 단계를 맡아 이야기가 '깊어지게'. ★반전은 최소 2번(예상 뒤집기), 매 비트에 "
+        "다음이 궁금한 갈고리를 남겨라.\n"
+        "- ★★재미·극적 재미요소를 살려라(밋밋 반려): 의외성·공감개그(상황에서 피식)·과장된 리액션을 "
+        "대화 인용으로('남편이 \"이거 밖에서 파는 거 아냐?\" 하는 거예요' 류). 오글·억지 개그·말장난은 "
+        "금지 — 진짜 있었던 일처럼 자연스럽게 웃기고 놀랍게.\n"
+        "- ★★은행 부사·수식어를 적극 써라(지금 안 쓰고 있다): 아래 [은행]의 '부사' 부품(예: "
+        "'단 몇 초 만에'·'극도로'·'너무너무'·'막')과 생생한 형용사를 나레이션에 녹여 밋밋한 문장을 "
+        "살려라 — 감각·강도를 부사로 키워라(단, 한 문장에 몰아넣지 말고 자연스럽게).\n"
         + ((bank_context + "\n") if bank_context else "")
         + "출력은 스키마 JSON만.")
     raw = call(prompt, _SCENE_FIRST_SCHEMA)
@@ -553,10 +574,38 @@ def _candidate_quality(beats):
     return 0.6 * tone + 0.4 * fun
 
 
+def _cut_rhythm_penalty(beats):
+    """컷 리듬 감점(0~0.2, 브리프 T6) — 파편화(비트당 클립 과다=짧은 컷 연발)와 전역 반복
+    (같은 seg 재사용=B롤 체인)을 감지한다. T1~T5가 구성을 고쳐도 후보들이 이 축에서 다를 수
+    있어, 추천 선택이 파편·반복 후보를 다시 고르지 않게 하는 안전망. 잘 구성된 후보(비트당
+    클립 ≤ MAX_CLIPS_PER_BEAT·seg 전부 고유)는 0 → 정상 경로 회귀0."""
+    beats = beats or []
+    if not beats:
+        return 0.0
+    seg_ids = []
+    for b in beats:
+        p = (b.get("primary") or {}).get("seg_id")
+        if p:
+            seg_ids.append(p)
+        for a in (b.get("alternates") or []):
+            sid = (a or {}).get("seg_id")
+            if sid:
+                seg_ids.append(sid)
+    clips = len(seg_ids)
+    if clips == 0:
+        return 0.0
+    from shopping_shorts.config import MAX_CLIPS_PER_BEAT
+    avg_clips = clips / len(beats)
+    frag = min(1.0, max(0.0, avg_clips - MAX_CLIPS_PER_BEAT) / MAX_CLIPS_PER_BEAT)
+    repeat = 1.0 - len(set(seg_ids)) / clips     # 고유가 아닌 클립 비중(전역 반복)
+    return round(min(0.2, 0.1 * frag + 0.1 * repeat), 3)
+
+
 def _score_candidate(plan, avoid_hooks=None):
     """후보 추천 점수(0~1): 매칭(fit·억지없음·장면다양성) + 품질(대화체·재미강도). 빈 beats면 0.0.
     avoid_hooks(novelty 감점, belt-and-suspenders): 최근 영상이 쓴 훅 목록. 첫 비트(=훅)가
-    그와 n-gram 겹치면 감점 → 프롬프트 회피를 무시하고 같은 훅을 낸 후보가 추천되는 걸 막는다."""
+    그와 n-gram 겹치면 감점 → 프롬프트 회피를 무시하고 같은 훅을 낸 후보가 추천되는 걸 막는다.
+    컷 리듬 감점(T6): 파편화·전역 반복이 심한 후보를 강등한다."""
     beats = plan.get("beats") or []
     if not beats:
         return 0.0
@@ -571,6 +620,7 @@ def _score_candidate(plan, avoid_hooks=None):
     match = 0.5 * avg_fit + 0.3 * (1 - forced_ratio) + 0.2 * diversity
     quality = _candidate_quality(beats)          # 나레이션 없으면 0 → 매칭점수만(기존 계약 유지)
     score = 0.75 * match + 0.25 * quality
+    score -= _cut_rhythm_penalty(beats)          # T6: 파편·반복 후보 강등(안전망)
     if avoid_hooks:
         hook = beats[0].get("narration") or ""
         overlap = max((_ngram_overlap(hook, h) for h in avoid_hooks), default=0.0)
@@ -962,11 +1012,11 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             if jr:
                 cand["judge"] = jr
                 cand["score"] = round(0.5 * rule_score + 0.5 * jr["total"], 3)
-        # T6 컷리듬/반복 결정적 감점 — judge on/off 둘 다 적용(파편·반복 후보 순위 하락).
-        pen = candidate_judge.cut_rhythm_penalty(plan.get("beats"))
-        if pen:
-            cand["cut_penalty"] = pen
-            cand["score"] = round(max(0.0, cand["score"] - pen), 3)
+        # T6 컷리듬/반복 감점은 _score_candidate(rule_score) 안에서 이미 빠진다 — 여기서 또 빼면
+        # 이중 감점(2026-07-24 병합에서 candidate_judge판+edit_plan판 중복 발견). 관측용으로만 노출.
+        _cp = _cut_rhythm_penalty(plan.get("beats"))
+        if _cp:
+            cand["cut_penalty"] = round(_cp, 3)
         cands.append(cand)
     if cands:
         best = max(range(len(cands)), key=lambda i: cands[i]["score"])

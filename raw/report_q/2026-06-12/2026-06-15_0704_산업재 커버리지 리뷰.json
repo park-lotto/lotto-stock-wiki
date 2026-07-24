@@ -1,0 +1,561 @@
+{
+  "meta": {
+    "date": "2026-06-12",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-15_0704_산업재 커버리지 리뷰.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "이용욱, 배성조",
+    "report_date": "2026.06.12",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "LG에너지솔루션",
+        "code": "373220",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 600000,
+        "tp_prev": 600000,
+        "tp_direction": "flat",
+        "earnings_outlook": "EV 배터리 시장 반등 시 실적 회복 속도 가장 빠를 것으로 기대",
+        "estimate_revision": null,
+        "next_catalyst": "EV/ESS 시장의 서구권 중국 의존도 축소에 따른 한국 배터리 중장기 반사 수혜",
+        "thesis": [
+          "하이니켈에서의 강력한 입지",
+          "폼팩터 다변화(파우치/원통형: 2170, 46-Series/각형)",
+          "보급형 배터리 라인업 추가(고전압-미드니켈, LFP 등) 및 원가 최적화"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "LG에너지솔루션은 1) 하이니켈에서의 강력한 입지와 2) 폼팩터 다변화(파우치/원통형: 2170, 46-Series/각형), 3) 보급형 배터리 라인업 추가(고전압-미드니켈, LFP 등), 4) 원가 최적화(일부 중국 소재 채택 및 라인 최적화 등)를 통해 서구권 내에서도 높은 경쟁 우위를 지속할 것으로 전망"
+      },
+      {
+        "name": "삼성SDI",
+        "code": "006400",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 820000,
+        "tp_prev": 820000,
+        "tp_direction": "flat",
+        "earnings_outlook": "신규 수주 현실화 시 가동률 빠르게 반등 기대",
+        "estimate_revision": null,
+        "next_catalyst": "고객사 다변화(현대기아차 저가 라인업 진입, BMW 차세대 폼팩터, 벤츠 및 VW 수주)",
+        "thesis": [
+          "각형/46-Series 폼팩터에서의 강력한 기술 경쟁력",
+          "고객사 다변화 진행 중",
+          "재무안정성 확보(제한적 투자, 낮은 부채비율, 삼성디스플레이 지분 활용)"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "삼성SDI는 제한된 EV 배터리 고객사(BMW, Audi 중심)가 가장 큰 우려 요인이었으나, 각형/46-Series 폼팩터에서의 강력한 기술 경쟁력을 바탕으로 고객사 다변화되는 중."
+      },
+      {
+        "name": "포스코퓨처엠",
+        "code": "003670",
+        "rating": "Hold",
+        "rating_changed": false,
+        "tp_new": 260000,
+        "tp_prev": 260000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "서구권의 중국 의존도 축소 기조 강화에 따른 수직계열화 가치 부각",
+        "thesis": [
+          "포스코홀딩스를 통한 안정적 리튬 공급",
+          "자체 NCM 전구체 공장 및 CNGR 협력 LFP 양극재 양산 기대",
+          "음극재 사업의 서구권 탈중국 전략 내 유일한 대안"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사의 양극재 사업은 하이니켈/LFP/LMR 등 다양한 라인업을 확보 중. 포스코홀딩스를 통해 안정적인 리튬 공급이 가능하며, 자체 NCM 전구체 공장을 확보했으며, CNGR과의 협력을 통해 LFP 양극재의 성공적 양산도 기대."
+      },
+      {
+        "name": "에코프로비엠",
+        "code": "247540",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 270000,
+        "tp_prev": 270000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "2026년 5월 헝가리 신규 공장 가동에 따른 신규 고객사 확보",
+        "thesis": [
+          "NCM 계열 양극재 중심 거점 확장(헝가리 공장)",
+          "현실적이고 안정적인 전략",
+          "유럽 배터리 업체들의 러브콜 기대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2026년 5월부터 헝가리 신규 공장이 가동되며 2026년 내 신규 고객사 확보 가능성 증가."
+      },
+      {
+        "name": "엘앤에프",
+        "code": "066970",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 240000,
+        "tp_prev": 240000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "비중국권 양극재 업체 중 가장 빠른 LFP 양극재 양산(3Q26 계획)",
+        "thesis": [
+          "테슬라 및 LGES 공급망 내 절대적 점유율",
+          "LGES의 고객사 다변화에 따른 낙수효과",
+          "글로벌 ESS 시장 성장 및 저가형 EV 확대 수혜"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사는 비중국권 양극재 업체 중 가장 빠르게 LFP 양극재 양산(3Q26 계획)에 돌입하는 만큼, 향후 탈중국 LFP 시장 내에서 독보적인 입지를 구축할 것으로 기대됨."
+      },
+      {
+        "name": "솔루스첨단소재",
+        "code": "336370",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 12500,
+        "tp_prev": 12500,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "고객사 확대(24년 말 4개에서 25년 말 8개까지 확장)",
+        "thesis": [
+          "서구권 현지화 장려 및 중국 의존도 축소 정책에 따른 수혜",
+          "신규 고객향 출하 본격화 및 가동률 상승",
+          "2027년 Phase 3 증설"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "솔루스첨단소재의 고객사는 2024년 말 4개에서 2025년 말 8개까지 두 배로 확장됨. 향후 신규 고객향 출하가 본격화되면 현재 공장(Phase 1~2)의 풀가동은 물론, 2027년 Phase 3 증설과 함께 물량도 빠르게 채워질 것으로 판단."
+      },
+      {
+        "name": "SK아이이테크놀로지",
+        "code": "361610",
+        "rating": "Hold",
+        "rating_changed": false,
+        "tp_new": 18000,
+        "tp_prev": 18000,
+        "tp_direction": "down",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "서구권 내 분리막 관련 규제 수위 강화 및 고객사 다변화",
+        "thesis": [
+          "글로벌 분리막 업황의 판가 하락 및 국내 배터리사 가동률 급감",
+          "SK온향 매출 비중 80% 이상으로 인한 캡티브 고객사 부진의 영향",
+          "공격적인 고객사 다변화 시급"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "향후 실적 개선을 위해서는 공격적인 고객사 다변화를 통한 가동률 회복이 시급한 시점으로 판단"
+      },
+      {
+        "name": "성일하이텍",
+        "code": "365340",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 90000,
+        "tp_prev": 90000,
+        "tp_direction": "up",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "폐배터리 발생량 증가에 따른 공급 안정성 확보",
+        "thesis": [
+          "전처리부터 후처리까지 통합 밸류체인 구축",
+          "저급 블랙매스에서의 독보적 수준 회수율 기술력",
+          "배터리 스크랩 비중 확대에 따른 수혜"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "특히 불순물 함량이 높은 저급 블랙매스에서도 독보적인 수준의 회수율을 구현하는 기술력을 보유하고 있어, 경쟁사 대비 우월한 원가 경쟁력을 확보한 것으로 판단."
+      },
+      {
+        "name": "SK이노베이션",
+        "code": "096770",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 190000,
+        "tp_prev": 190000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "SK E&S의 안정적 수익 창출 및 자원개발 자산 가치 재평가",
+        "thesis": [
+          "지정학적 리스크 심화에 따른 고유가 환경 수혜",
+          "원유 수급 안정성 확보 및 트레이딩 역량 강화",
+          "LNG 밸류체인 내재화(업스트림 확보)"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "특히 SK E&S는 국내에서 가장 안정적인 이익을 창출하는 민간 가스발전 업체로, 든든한 캐시카우 역할을 할 것으로 판단."
+      },
+      {
+        "name": "S-Oil",
+        "code": "010950",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 150000,
+        "tp_prev": 150000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "2027년 샤힌 프로젝트 본격 가동",
+        "thesis": [
+          "사우디아람코 기반의 안정적 원유 수급",
+          "글로벌 정유 수급 타이트에 따른 높은 수익성 기대",
+          "TC2C 기반 샤힌 프로젝트의 실적 기여 기대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사는 모회사(사우디아람코)를 기반으로 한 안정적 원유 수급을 바탕으로 현재의 혼란한 상황 속에서도 높은 가동률과 수익성을 이어나갈 것으로 기대."
+      },
+      {
+        "name": "한화솔루션",
+        "code": "009830",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 57000,
+        "tp_prev": 57000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "미국 태양광 시장 가격 반등 및 출하량(Q) 상승 기대",
+        "thesis": [
+          "AI 데이터센터 전력 수요 대응 위한 태양광+ESS 발전 수요 증가",
+          "미국 정부의 에너지 안보 보호무역 정책 강화",
+          "미국 내 견고한 태양광 사업 입지"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "결과적으로 향후 미국 태양광 시장은 출하량(Q)과 가격(P) 상승이 동시에 나타나는 사이클이 도래할 것으로 전망."
+      },
+      {
+        "name": "롯데케미칼",
+        "code": "011170",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 130000,
+        "tp_prev": 130000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "사업 구조 재편에 따른 수익성 효율화",
+        "thesis": [
+          "NCC 스프레드 전쟁 이전 수준 상회",
+          "공급선 다변화를 통한 원가 경쟁력 확보",
+          "전쟁 이후 구조적으로 변화된 업황에 따른 실적 반등 기대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "롯데케미칼은 그간 추진해 온 사업 구조 재편에 따른 수익성 효율화 효과가 서서히 가시화될 것으로 기대."
+      },
+      {
+        "name": "LG화학",
+        "code": "051910",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 470000,
+        "tp_prev": 470000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "전자소재 부문 고부가 포트폴리오(반도체·ESS 소재 및 CCL) 성장",
+        "thesis": [
+          "LG에너지솔루션 및 양극재 부문 바닥 확인 및 턴어라운드",
+          "화학 제품 스프레드 개선",
+          "보유 중인 LG에너지솔루션 지분 활용을 통한 자산가치 재평가"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "LG에너지솔루션과 양극재 부문의 실적은 모두 완연한 바닥을 확인하고 확실한 턴어라운드 구간에 진입한 것으로 판단."
+      },
+      {
+        "name": "SK가스",
+        "code": "018670",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 320000,
+        "tp_prev": 320000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "자회사 울산 GPS 지분 매각을 통한 신사업 투자 및 배당 확대",
+        "thesis": [
+          "발전 자회사의 외형 성장",
+          "글로벌 LPG 트레이딩 부문 견고한 이익",
+          "SK어드밴스드 흑자전환"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "SK가스의 2026년은 1) 고유가 환경 속에서 발전 자회사의 외형 성장과 2) 글로벌 LPG 트레이딩 부문의 견고한 이익 창출, 3) 자회사 SK어드밴스드의 흑자전환에 힘입어 높은 수준의 실적 흐름이 예상됨."
+      },
+      {
+        "name": "한화에어로스페이스",
+        "code": "012450",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 1800000,
+        "tp_prev": 1800000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "스페인 K9, 폴란드 K9 EC3, 사우디 MNG 등 대규모 수주 가시화",
+        "thesis": [
+          "지상방산 수주잔고 약 38조원 기록",
+          "L-SAM 국내 양산 돌입 및 수출 기대",
+          "MCS 매출 비중 확대(보은 스마트팩토리 생산)"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "1Q26 지상방산 수주잔고 약 38조원 기록. 연내 스페인 K9, 폴란드 K9 EC3, 사우디 MNG 협력 사업 등 대규모 수주 가시화 전망"
+      },
+      {
+        "name": "한화시스템",
+        "code": "272210",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 160000,
+        "tp_prev": 160000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "유럽 업체들과의 협력 사업(레오나르도, 딜 디펜스) 및 직수출 기회",
+        "thesis": [
+          "방산 매출 20% 이상 성장 가능",
+          "원가 절감 및 공정 개선을 통한 수익성 개선",
+          "M-SAM-II, L-SAM, 필리조선소 모멘텀"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "올해 방산 매출 20% 이상 성장 가능할 전망. 원가 절감, 공정 개선 등을 통한 수익성 개선세 뚜렷."
+      },
+      {
+        "name": "현대로템",
+        "code": "064350",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 320000,
+        "tp_prev": 320000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "레일솔루션 사업부의 고수익성 대형 해외 프로젝트 본격 생산",
+        "thesis": [
+          "K2 전차 폴란드 EC2 및 국내 물량 생산",
+          "추가 수출 파이프라인(페루, 이라크, 루마니아 등) 기대",
+          "기업가치 저평가 상황"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "레일솔루션 사업부는 내년부터 모로코, LA 등 고수익성의 대형 해외 프로젝트가 본격 생산 국면에 진입하면서 수익성 개선이 가속화될 것으로 전망."
+      },
+      {
+        "name": "한국항공우주",
+        "code": "047810",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 201000,
+        "tp_prev": 201000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "인도네시아 KF-21 수출 계약 성사 여부",
+        "thesis": [
+          "완제기 60대 이상 납품 기대",
+          "KF-21 국내 양산 본격화",
+          "FA-50 추가 수출 파이프라인 유효"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "올해 LAH, FA-50 등 완제기 60대(2025년 15대) 이상 납품을 기대하며 하반기부터는 KF-21 국내 양산이 본격화되며 내수 수익성 개선에도 기여할 전망"
+      },
+      {
+        "name": "LIG디펜스앤에어로스페이스",
+        "code": "079550",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 1050000,
+        "tp_prev": 1050000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "2028년 설비투자와 관련된 매출 발생 및 사우디, 이라크 천궁-II 매출",
+        "thesis": [
+          "중동 전쟁에 따른 대공방어 미사일 쇼티지 상황 수혜",
+          "카타르 등 중동 국가와의 천궁-II 신규 도입 논의",
+          "중장기 이익 성장 가시성 명확"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2028년부터는 현재 진행 중인 설비투자와 관련된 매출이 발생할 전망이며 사우디, 이라크 천궁-II 매출도 본격화될 예정. 중장기 이익 성장 가시성 매우 뚜렷"
+      },
+      {
+        "name": "두산밥캣",
+        "code": "241560",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 80000,
+        "tp_prev": 80000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "북미와 유럽에서의 수요 회복 확인",
+        "thesis": [
+          "멕시코 공장 가동에 따른 원가 절감",
+          "리테일 수요 꾸준한 수준 유지",
+          "북미 딜러망 5% 추가 확보 예상"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "멕시코 공장 생산분은 10% 이상의 원가 절감 효과가 있을 것으로 추정하며 미국 판매량의 7~8%를 차지하는 유럽 공장 생산분을 먼저 대체하면서 관세 절감 효과도 나타날 것으로 전망"
+      },
+      {
+        "name": "HD건설기계",
+        "code": "067270",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 192000,
+        "tp_prev": 192000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "2026년 8월 군산 엔진 공장 파워팩 양산 및 하반기 발전기용 엔진 납품",
+        "thesis": [
+          "가격 인상 및 비용 절감",
+          "신흥 시장 마이닝 수요 강력",
+          "고수익성 엔진 및 AM 사업부 비중 확대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "중장기적으로 고수익성인 동시에 성장 지속성이 높은 엔진 및 AM 사업부의 비중 확대에 주목하며, 합병 법인의 구조적 성장 본격화를 기대"
+      },
+      {
+        "name": "쎄트렉아이",
+        "code": "099320",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 220000,
+        "tp_prev": 220000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "SpaceEye-T 1호기 영상 판매 매출 본격화",
+        "thesis": [
+          "연간 200억원 이상의 SIIS 매출 전망",
+          "추가 영상 계약 수주를 통한 고정비 레버리지 효과",
+          "수출 계약을 통한 수익성 개선"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "자체 위성 SpaceEye-T 1호기의 영상 판매 매출이 본격 발생하면서 연간 200억원 이상의 SIIS 매출 가능할 전망"
+      },
+      {
+        "name": "인텔리안테크",
+        "code": "189300",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 150000,
+        "tp_prev": 150000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "2027년 Oneweb 2세대 위성군 게이트웨이 프로젝트 참여",
+        "thesis": [
+          "기 확보된 수주잔고 및 계절성 효과",
+          "2026년 게이트웨이 매출 1,000억원 이상 전망",
+          "저궤도 위성통신 업체 고객 확보 및 방산 제품 매출 확대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "하반기로 갈수록 게이트웨이 등 기 확보된 수주잔고 및 계절성 효과로 인해 실적 개선세가 뚜렷할 것으로 전망"
+      },
+      {
+        "name": "HD현대중공업",
+        "code": "329180",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 870000,
+        "tp_prev": 870000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "데이터센터용 발전 엔진 수주",
+        "thesis": [
+          "1분기 상선 마진 양호",
+          "힘센엔진 라이선스 경쟁력 확보",
+          "20~22MW급 엔진 캐파 증설 가능성"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사의 힘센엔진은 자체 라이선스를 보유하고 있어 가격 경쟁력(라이선스 Fee를 낼 필요 없음)을 바탕으로 데이터센터향 중속 엔진 시장을 선점해 나갈 것으로 판단"
+      },
+      {
+        "name": "한화오션",
+        "code": "042660",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 175000,
+        "tp_prev": 175000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "캐나다 CPSP 잠수함 사업 수주 추진",
+        "thesis": [
+          "상선 부문 고수익성",
+          "LNG선 평균 인식 선가 상승",
+          "MASGA 펀드 모니터링 필요"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "지난 3월 초 3,600톤급 잠수함 12척 규모로 캐나다 CPSP 잠수함 사업 관련 제안서 제출, 독일 TKMS와 경합 중"
+      },
+      {
+        "name": "삼성중공업",
+        "code": "010140",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 40000,
+        "tp_prev": 40000,
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "Delfin FLNG 등 해양플랜트 수주 본격화",
+        "thesis": [
+          "FDC(플로팅 데이터센터) 모델 공개",
+          "고선가 물량 매출 비중 증가",
+          "환율 상승에 따른 매출 반영 기대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "해양플랜트 수주 모멘텀 본격화. 6월 Delfin FLNG 1호기 수주에 성공했으며 연말까지 Delfin 2호기 발주도 진행될 예정."
+      }
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_0700_(깐부)치킨게임 시작.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "미래에셋증권",
+    "analyst": "김영건",
+    "report_date": "2026.6.9",
+    "stocks": [
+      {
+        "name": "SK하이닉스",
+        "code": "000660",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": "3,800,000원",
+        "tp_prev": "2,700,000원",
+        "tp_direction": "up",
+        "earnings_outlook": {
+          "2Q26F": "매출 88.6조원, 영업이익 70.7조원",
+          "2026F": "매출 375.8조원, 영업이익 299.1조원",
+          "2027F": "매출 544.9조원, 영업이익 434.9조원"
+        },
+        "estimate_revision": "2Q26F/26F/27F DRAM ASP 추정치를 +41%/+188%/+19%(기존 +37%/+184%/+19%)로, NAND는 +55%/+250%/+28%(기존 +45%/+231%/+27%)로 상향한다.",
+        "next_catalyst": "필라델피아 반도체 지수 편입",
+        "thesis": [
+          "빅테크 데이터센터 수주잔고의 가파른 증가와 그에 따른 LTA 계약 체결",
+          "HBM4 본격 공급 및 공급사의 HBM 생산 효율 최적화",
+          "SK그룹의 비메모리 분야 포함 대규모 계약 및 반도체 공정/투자 로드맵 순항"
+        ],
+        "valuation_basis": "글로벌 Peer(MU, Kioxia) 평균 P/B 6.2배 적용",
+        "risk": "메모리 공급사의 HBM 대한 생산 효율 저하 가능성",
+        "supply_comment": "빅테크의 데이터센터 수주잔고 증가 속도가 Capex 증액 속도를 초과하고 있다.",
+        "quote": "동사에 대한 목표주가를 380만원으로 유지한다."
+      }
+    ]
+  }
+}

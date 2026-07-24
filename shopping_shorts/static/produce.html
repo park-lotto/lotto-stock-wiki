@@ -355,7 +355,7 @@
          예전엔 영상마다 📝뽑기/🎬담기를 따로 눌러야 했다 — 이제 카드를 켜두기만 하면(자동담김)
          AI가 그중 완성도 1위 대본을 스스로 골라 보여준다(AI PICK). 담긴 게 없으면 빈 상태. -->
     <section class="panel" data-step="0">
-      <h3>1 · 영상/대본</h3>
+      <h3>1 · 영상/대본출력</h3>
       <div class="sub">쓸 영상만 켜두세요(✓) — AI가 그중 완성도 1위 대본을 골라 보여줍니다.</div>
       <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
         <!-- ◀ 왼쪽: 미리보기(장면 매칭 후) + 재료 그리드 -->
@@ -398,11 +398,12 @@
                pollMix가 화면 붙이기(패널7)로 넘겨준다. #mixStatus/#mixCandidates/#mixReview는
                그 패널7로 옮겨갔다(아래 참조). -->
           <div id="theater" hidden style="margin-top:12px"></div>
+          <div id="matchProgress" class="match-progress" hidden style="margin-top:10px"></div>
         </div>
       </div>
     </section>
     <section class="panel" data-step="1">
-      <h3>3 · 자막 제거</h3>
+      <h3>3 · 고품질 자막제거</h3>
       <div class="hero rise">
         <div class="hero-in">
           <label class="hbar">
@@ -437,7 +438,7 @@
       </div>
     </section>
     <section class="panel" data-step="2">
-      <h3>4 · 음성</h3>
+      <h3>4 · TTS음성</h3>
       <div class="sub">성우 프리셋을 고르면 톤·속도·감도가 한 번에 세팅됩니다. 들어보고 다음으로.</div>
       <button id="openVoiceTune" style="display:none" class="btn-prev" onclick="window.open('/voice_tune','_blank')">🩺 발음교정 작업대 열기</button>
       <label style="display:flex;align-items:center;gap:8px;margin:8px 0;cursor:pointer">
@@ -479,7 +480,7 @@
       <button class="btn-next" style="margin-top:12px;padding:8px 16px" onclick="vpGateNext()">다음 단계 (꾸미기) →</button>
     </section>
     <section class="panel" data-step="3">
-      <h3>5 · 꾸미기</h3>
+      <h3>5 · 자막꾸미기</h3>
       <div class="sub">아래 <b>완성 스타일</b>을 고르면 바로 완성돼요. 실제 장면 위에서 미리보고, 더 손보고 싶으면 <b>직접 다듬기</b>를 펼치세요.</div>
       <!-- 🪞 피팅룸: 좌(큰 미러) + 우(문구·스타일카드·강조·고급) -->
       <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-top:12px">
@@ -725,7 +726,7 @@
       <div id="thumbGallery" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div>
     </section>
     <section class="panel" data-step="5">
-      <h3>7 · SEO</h3>
+      <h3>7 · SEO해시테크</h3>
       <div class="sub">제목·설명·태그를 만들고, 키워드를 유튜브에서 실제로 재서 근거를 붙입니다.</div>
       <div class="seoBar">
         <button class="btn primary" id="seoGenAll" onclick="seoGenerate()">AI로 전체 생성</button>
@@ -735,10 +736,10 @@
       <div id="seoBody" class="seoBody"></div>
     </section>
     <section class="panel" data-step="6">
-      <h3>8 · 완성 · 렌더</h3>
+      <h3>8 · 최종렌더</h3>
       <div class="sub">확정 대본·장면매칭·음성·자막제거 설정을 최종 영상으로 렌더합니다.</div>
       <div id="finalSummary" class="hint" style="margin-bottom:10px"></div>
-      <button class="btn-next" style="padding:12px 22px" onclick="renderFinal()">🎬 최종 렌더</button>
+      <button id="btnFinalRender" class="btn-next" style="padding:12px 22px" onclick="renderFinal()">🎬 최종 렌더</button>
       <div id="finalStatus" class="hint" style="margin-top:10px"></div>
       <div id="finalVideo" style="margin-top:10px"></div>
       <div id="exportBox" style="margin-top:14px"></div>
@@ -750,7 +751,7 @@
          위→아래 한 방향: ① 새 대본 고르기(가로카드, 추천이 이미 선택돼 있음) ② 장면 확인(문장↔화면,
          상세 편집은 접힘) ③ 좌측 레일 미리보기 → 확인되면 "다음(음성)". -->
     <section class="panel" data-step="7">
-      <h3>2 · 화면 붙이기</h3>
+      <h3>2 · 영상대본MIX</h3>
       <div class="sub">대본 후보를 고르고, 문장마다 어떤 화면이 붙는지 확인하세요. 확인되면 왼쪽에서 미리보기가 재생됩니다.</div>
       <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
         <!-- ◀ 좌측 레일: ③ 미리보기(9:16) — 편집안이 뜨면(loadMixReview) 여기가 프리뷰 자리가 된다.
@@ -760,7 +761,7 @@
             <div class="hint" style="margin-bottom:6px">🪞 ③ 미리보기 (9:16)</div>
             <div id="mixPreview"></div>
           </div>
-          <div id="mixPreviewHint" class="hint" style="margin-top:6px">②까지 확인하고 아래 <b>▶ 미리보기 만들기</b>를 누르면 여기서 재생됩니다.</div>
+          <div id="mixPreviewHint" class="hint" style="margin-top:6px">②까지 확인하고 아래 <b>🎬 대본 × 영상 믹스 미리보기</b>를 누르면 여기서 재생됩니다.</div>
         </div>
         <!-- ▶ 우측: ①②③ 순서대로 위→아래 -->
         <div style="flex:1 1 300px;min-width:280px">
@@ -772,7 +773,8 @@
             <summary style="cursor:pointer;font-size:12px;color:var(--sub);font-weight:800">장면 바꾸기 · 전체 보기 ▾</summary>
             <div id="mixReview" style="margin-top:10px"></div>
           </details>
-          <button class="btn-next" style="margin-top:16px;padding:8px 16px" onclick="go(1)">다음 (3 · 음성) →</button>
+          <div id="mixPreviewCta" style="margin-top:16px"></div>
+          <!-- 중복 제거(2026-07-23 사장님): in-card '다음' 버튼은 맨 아래 전역 '다음 →'(#btnNext)와 go(1) 동일 + 라벨(음성)도 오브 재정렬로 stale였음. 하단 전역 nav로 일원화. -->
         </div>
       </div>
     </section>
@@ -822,7 +824,7 @@
 // 패널 인덱스는 물리적으로 안 바뀐다 — jump/go가 매핑을 경유한다. 지금은 오브 8개=물리 패널 8개로
 // 축이 같아졌지만(PANEL_COUNT===STEP_LABELS.length), 되돌리기/작업복원은 계속 PANEL_COUNT를
 // 쓴다 — "패널" 인덱스를 바운드하는 게 맞는 축이라는 원칙은 라벨 개수가 우연히 같아져도 안 바뀐다.
-const STEP_LABELS = ["영상/대본","화면 붙이기","자막제거","음성","꾸미기","썸네일","SEO","완성"];
+const STEP_LABELS = ["영상/대본출력","영상대본MIX","고품질 자막제거","TTS음성","자막꾸미기","썸네일","SEO해시테크","최종렌더"];
 // 표시 오브 → 실제 패널 data-step (매칭=신규 7이 자막제거=1보다 앞에 옴)
 const ORB_TO_PANEL = [0, 7, 1, 2, 3, 4, 5, 6];
 const PANEL_TO_ORB = Object.fromEntries(ORB_TO_PANEL.map((p,o)=>[p,o]));
@@ -2271,7 +2273,16 @@ function _renderMixReviewBody(d){
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
   if(typeof window!=='undefined') window._mixBeats = d.beats || [];   // 조각 전체 보기(paletteStats)가 읽는다 — 실제 쓴 컷 집계용
   const el=document.getElementById('mixReview');
-  el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+renderCoverageSignal(d.beats||[])
+  // ★P1/P2(2026-07-24): 조용한 폴백·불변식 위반을 화면에 띄운다. 예전엔 개선 생성기가 실패해도
+  // 옛 대본이 조용히 나와 "고쳤는데 왜 그대로냐"가 반복됐다 — 이제 왜 그런지 보인다.
+  const _genWarn = (d.generator==='legacy_fallback')
+    ? `<div style="border:1px solid var(--fire);border-radius:10px;padding:10px;margin-bottom:8px;background:rgba(255,90,90,.08);font-size:13px">⚠️ <b>개선 생성기 실패 → 예전 방식 대본</b><div class="hint" style="margin-top:4px">${esc(d.generator_note||'다시 매칭을 권장합니다.')}</div></div>`
+    : '';
+  const _gv = (d.gate && !d.gate.ok) ? (d.gate.violations||[]) : [];
+  const _gateWarn = _gv.length
+    ? `<div style="border:1px solid var(--fire);border-radius:10px;padding:10px;margin-bottom:8px;background:rgba(255,90,90,.06);font-size:13px">🚧 <b>렌더 전 점검에서 걸린 것</b><ul style="margin:6px 0 0 18px;padding:0">${_gv.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`
+    : '';
+  el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+_genWarn+_gateWarn+renderCoverageSignal(d.beats||[])
     +`<button class="btn" style="margin:0 0 8px;padding:5px 12px;font-size:12px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="openPaletteView()" title="소스를 몇 조각으로 나눠 이 영상에 몇 컷 썼는지 썸네일로 봅니다">🔪 조각 전체 보기</button>`
     +`<div id="paletteBox" data-open="0" style="margin-bottom:8px"></div>`
     +(d.beats||[]).map((b,i)=>`
@@ -2286,14 +2297,19 @@ function _renderMixReviewBody(d){
       <div class="scene-sfx" id="sceneSfx${i}">${renderSceneSfx(b, i)}</div>
       <div class="scene-trim" id="sceneTrim${i}">${renderTrimControls(b, i)}</div>
     </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>!b.respined&&b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
-    +`<button id="btnPreview" class="btn-next" style="margin-top:8px;padding:7px 14px" onclick="startPreview()">▶ 미리보기 만들기</button>`
-    +`<button class="btn" style="margin-top:8px;margin-left:8px;padding:7px 14px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="cancelMixReview()" title="이 매칭을 취소하고 소스·대본을 고쳐 처음부터 다시 매칭합니다">✕ 취소하고 다시 매칭</button>`
+    +`<button class="btn" style="margin-top:8px;padding:7px 14px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="cancelMixReview()" title="이 매칭을 취소하고 소스·대본을 고쳐 처음부터 다시 매칭합니다">✕ 취소하고 다시 매칭</button>`
     +`<div class="hint" style="margin-top:6px">미리보기는 <b>왼쪽 화면</b>에 표시됩니다 🪞 · 장면이 안 맞으면 각 문장의 <b>🎞 다른 화면으로 바꾸기</b>로 고치거나, 위 <b>✕ 취소하고 다시 매칭</b>으로 다시 하세요.</div>`
     +`<details id="bankInjectedBox" style="margin-top:10px;font-size:12px"><summary style="cursor:pointer;color:var(--sub)">🏦 이번 대본에 쓴 은행 부품 보기 (검증)</summary><div id="bankInjectedBody" class="hint" style="margin-top:6px">불러오는 중…</div></details>`;
   _loadBankInjected();
+  // 🎬 대본 × 영상 믹스 미리보기 버튼은 접힌 '장면 확인' 안이 아니라 패널의 항상 보이는 자리(#mixPreviewCta)에
+  // 그린다(2026-07-23 사장님: "넘어왔는데 랜더하는 게 없다" — 버튼이 접힌 details에 묻혀 있었다).
+  const _cta=document.getElementById('mixPreviewCta');
+  if(_cta) _cta.innerHTML='<button id="btnPreview" class="btn-next" style="padding:8px 16px" onclick="startPreview()">🎬 대본 × 영상 믹스 미리보기</button>'
+    +'<button class="btn" style="margin-left:8px;padding:8px 14px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="cancelMixReview()" title="이 결과가 마음에 안 들면 소스·대본을 고쳐 처음부터 다시 만듭니다">🔄 마음에 안 들어요 · 다시 만들기</button>'
+    +'<div class="hint" style="margin-top:6px">위 A/B/C에서 대본을 고른 뒤 미리보기 🪞 · 마음에 안 들면 <b>🔄 다시 만들기</b></div>';
   const _pvPanel=document.getElementById('mixPreviewPanel'), _pvBox=document.getElementById('mixPreview');
   if(_pvPanel) _pvPanel.style.display='';
-  if(_pvBox) _pvBox.innerHTML='<div style="aspect-ratio:9/16;width:100%;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:18px"><div style="font-size:34px">🪞</div><div style="font-size:14px;line-height:1.5">오른쪽 <b style="color:var(--accent)">▶ 미리보기 만들기</b>를<br>누르면 <b>여기에서</b> 영상이<br>만들어지는 걸 보실 수 있어요</div></div>';
+  if(_pvBox) _pvBox.innerHTML='<div style="aspect-ratio:9/16;width:100%;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:18px"><div style="font-size:34px">🪞</div><div style="font-size:14px;line-height:1.5">오른쪽 <b style="color:var(--accent)">🎬 대본 × 영상 믹스 미리보기</b>를<br>누르면 <b>여기에서</b> 영상이<br>만들어지는 걸 보실 수 있어요</div></div>';
 }
 // 매칭 결과 취소 → 처음부터 다시(2026-07-20 사장님). 장면이 대사와 안 맞거나 이상하게 나오면
 // 이 매칭 job을 버리고, 소스·대본을 고쳐 "🎬 영상 매칭 시작"을 다시 누를 수 있게 리셋한다.
@@ -2411,13 +2427,12 @@ function _recommendedBbIdx(){
   return best;
 }
 // ★Task 4(2026-07-23) 재구성: 카드마다 있던 5버튼(📝뽑기/🎬담기/⭐메인/✕/정보채우기)을
-// 없애고 썸네일 클릭=✓뱃지 토글 하나로 합쳤다(자동담김). 대본은 더 이상 영상별로 따로
-// "뽑는" 게 아니라, 담긴(useFootage) 재료 중 AI PICK이 스스로 완성도 1위를 고른다
-// (refreshStep0/renderAiPick). 미리보기(previewMaterial)는 남긴다 — 썸네일이 곧 토글
-// 버튼이라 큰 미리보기가 여전히 필요하다면 길게 눌러야 하나, 지금은 클릭=토글로 통일하고
-// 원본 확인은 각 카드의 title(hover)과 결과 쪽 AI PICK 카드가 대신한다.
-// ⭐메인 수동 지정 UI(designateBackbone)도 함께 뺐다 — AI가 항상 자동으로 뼈대를 고른다
-// (_recommendedBbIdx/designateBackbone/collectBackboneIndex는 호출부가 없어 휴면 상태로 남는다).
+// 없애고 썸네일 클릭 하나로 합쳤다(자동담김). 대본은 영상별로 따로 "뽑는" 게 아니라,
+// 담긴(useFootage) 재료 중 AI PICK이 스스로 완성도 1위를 고른다(refreshStep0/renderAiPick).
+// ★Task 7(2026-07-23) 추가: 썸네일 클릭 = pickFootage(그 영상을 AI PICK으로 지정, 담기도
+// 자동 ON) — 어떤 카드가 지금 픽인지 금색 뱃지(.pick/.pickbadge)로 보인다. 빼기는 우상단
+// ✕(hover) = dropFootage. toggleFootage/designateBackbone은 옛 경로로 남겨둔다(현재 호출부
+// 없음 — 테스트·향후 재사용 대비 휴면 유지, collectBackboneIndex는 여전히 라이브 배선).
 function renderPool(){
   const box=document.getElementById('poolList'); if(!box) return;
   const empty=document.getElementById('poolEmpty');
@@ -2427,11 +2442,18 @@ function renderPool(){
     return;
   }
   if(empty) empty.style.display='none';
-  box.innerHTML=HANDOFF.map((it,i)=>`
-    <div class="pool-card${it.useFootage?' on':''}" onclick="toggleFootage(${i})" title="${esc(it.name||('영상 '+(i+1)))}">
-      ${it.thumbnail?`<img src="${it.thumbnail.includes('gstatic.com')?it.thumbnail:('/api/thumb?url='+encodeURIComponent(it.thumbnail))}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">`:''}
-      <span class="badge">${it.useFootage?'✓':''}</span>
-    </div>`).join('');
+  // 🤖 AI PICK 표시(2026-07-23 Task7): 사장님이 직접 지정(bbMain)했으면 그 카드, 아직
+  // 아무도 안 골랐으면 서버 자동선정(window._aiPick.pick_id)과 shortcode가 일치하는 카드에
+  // 금색 뱃지를 붙인다. 클릭=그 영상을 픽으로 지정(pickFootage), ✕=믹스에서 빼기(dropFootage).
+  const _anyPick = HANDOFF.some(h=>h.bbMain);
+  box.innerHTML=HANDOFF.map((it,i)=>{
+    const isPick = it.bbMain || (!_anyPick && it.shortcode && window._aiPick && it.shortcode===window._aiPick.pick_id);
+    return `<div class="pool-card${it.useFootage?' on':''}${isPick?' pick':''}" onclick="pickFootage(${i})" title="${esc(it.name||('영상 '+(i+1)))}">`
+      + (it.thumbnail?`<img src="${it.thumbnail.includes('gstatic.com')?it.thumbnail:('/api/thumb?url='+encodeURIComponent(it.thumbnail))}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">`:'')
+      + (isPick?'<span class="pickbadge">🤖 AI PICK</span>':'<span class="badge">'+(it.useFootage?'✓':'')+'</span>')
+      + `<button class="pool-x" title="빼기" onclick="event.stopPropagation();dropFootage(${i})">✕</button>`
+      + `</div>`;
+  }).join('');
 }
 // ── Task 4(2026-07-23): 자동담김 도착 감지 → AI PICK 또는 빈 상태 ──────────
 // 담긴(useFootage) 재료가 하나라도 있으면 서버(/api/produce/aipick)에 "지금 담긴 것 중
@@ -2440,8 +2462,11 @@ async function refreshStep0(){
   const hasFootage = HANDOFF.some(h=>h.useFootage);
   if(!hasFootage){ renderEmptyState(); return; }
   try{
-    const q = WORK_ID ? ('?work_id='+encodeURIComponent(WORK_ID)) : '';
-    const r = await fetch('/api/produce/aipick'+q);
+    // 사장님이 썸네일을 클릭해 특정 영상을 AI PICK으로 지정(bbMain)했으면 서버에도 강제한다
+    // (안 그러면 완성도 자동선정이 클릭을 덮어씀 — forced가 지정 시 최우선, app.py 참조).
+    const forced = (HANDOFF.find(h=>h.bbMain && h.useFootage)||{}).shortcode || '';
+    const q = '?' + [ WORK_ID?('work_id='+encodeURIComponent(WORK_ID)):'', forced?('forced='+encodeURIComponent(forced)):'' ].filter(Boolean).join('&');
+    const r = await fetch('/api/produce/aipick'+(q==='?'?'':q));
     renderAiPick(await r.json(), hasFootage);
   }catch(e){ renderEmptyState(); }
 }
@@ -2457,6 +2482,9 @@ function renderAiPick(d, hasFootage){
   // "아직 담긴 영상이 없어요"를 ✓체크된 카드가 보이는 화면에 띄우면 모순돼 보인다.
   if(!d || d.pick_id==null){ hasFootage ? renderNoScriptState() : renderEmptyState(); return; }
   window._aiPick = d;
+  // 자동선정 결과(bbMain 미지정 상태)를 왼쪽 레일에도 반영 — 사장님이 아직 안 골랐으면
+  // 서버가 고른 완성도 1위 썸네일에 픽 표시가 붙는다(renderPool의 _anyPick 폴백 로직).
+  if(typeof renderPool==='function') renderPool();
   const t = d.tiles || {}, stc = d.structure || {}, seg = (stc.segments) || [];
   const pm = d.pick_meta || {};
   const hf = (typeof HANDOFF!=='undefined' && HANDOFF[d.pick_index]) || {};
@@ -2516,12 +2544,35 @@ async function startFromAiPick(){
   }
   if(!STATE.script){ alert('대본을 확보하지 못했습니다 — 아래 "✍️ 직접 쓰기"로 입력해 주세요.'); return; }
   refreshFinalPeek(); saveWork();
+  setMatchingUI(true, '매칭 준비 중…');   // ★Task8: 버튼 즉시 before/after 변화 + 패널0 스피너
   playTheater(window._aiPick && window._aiPick.structure);   // 대기시간 동안 원본 구조 해부 연출(Task5)
-  await startProduceMix();
+  try{
+    await startProduceMix();
+  }catch(e){
+    setMatchingUI(false);
+    const mp=document.getElementById('matchProgress');
+    if(mp){ mp.hidden=false; mp.innerHTML='<span>❌ 매칭을 시작하지 못했어요. 다시 시도해 주세요.</span>'; }
+  }
   // ★Task 6: 여기서 곧장 jump(1)하지 않는다 — startProduceMix()는 job만 걸고 바로 돌아온다
   // (매칭은 폴링으로 백그라운드에서 돈다). 즉시 넘어가면 아직 아무것도 없는 빈 패널7만 보인다.
   // 극장(Task5)이 보이는 이 패널(0)에 그대로 머물다가, 매칭이 실제로 끝나면(ready_for_review)
   // pollMix가 화면 붙이기(패널7)로 데려간다.
+}
+// ⚡ 클릭 후 대기 동안 패널0(사용자가 보는 화면)에 "매칭 중" 동적 피드백을 준다.
+// 진짜 단계 진행(#mixStatus·loader.js)은 패널7에 있어 대기 중엔 안 보이므로, 여기서 미러링한다(Task8).
+function setMatchingUI(on, label){
+  const btn=document.querySelector('.aiPickCta');
+  if(btn){
+    if(on){ if(btn.dataset.orig==null) btn.dataset.orig=btn.innerHTML; btn.disabled=true; btn.innerHTML='<span class="skm-spin">🔄</span> 매칭 중…'; }
+    else { btn.disabled=false; if(btn.dataset.orig!=null){ btn.innerHTML=btn.dataset.orig; delete btn.dataset.orig; } }
+  }
+  const mp=document.getElementById('matchProgress'); if(!mp) return;
+  if(on){ mp.hidden=false; updateMatchProgress(label||'매칭 준비 중…'); }
+  else { mp.hidden=true; mp.innerHTML=''; }
+}
+function updateMatchProgress(label){
+  const mp=document.getElementById('matchProgress'); if(!mp||mp.hidden) return;
+  mp.innerHTML='<span class="dot"></span><span>'+ (label||'매칭 중…') +'</span>';
 }
 // ── AI PICK 끝 ──
 // 분석 극장(B, 2026-07-23 Task5) — ⚡ "이대로 만들기 시작" 직후, 매칭 job이 도는 대기시간을
@@ -2638,6 +2689,23 @@ function removeMixUrlRow(btn){
   const rows=wrap.querySelectorAll('.row');
   if(rows.length<=1){ const inp=wrap.querySelector('.mixUrl'); if(inp) inp.value=''; return; }
   btn.closest('.row').remove();
+}
+// 썸네일 클릭 = 이 영상을 AI PICK으로 지정(그 대본이 카드에 뜬다). 담김도 자동 ON.
+function pickFootage(i){
+  if(!HANDOFF[i]) return;
+  HANDOFF.forEach(h=>{ h.bbMain=false; });
+  HANDOFF[i].bbMain=true; HANDOFF[i].useFootage=true;
+  if(typeof syncFootageToMixUrls==='function') syncFootageToMixUrls();
+  renderPool(); saveWork();
+  if(typeof refreshStep0==='function') refreshStep0();
+}
+// ✕ = 이 영상을 믹스에서 뺀다(픽이었으면 픽 해제).
+function dropFootage(i){
+  if(!HANDOFF[i]) return;
+  HANDOFF[i].useFootage=false; HANDOFF[i].bbMain=false;
+  if(typeof syncFootageToMixUrls==='function') syncFootageToMixUrls();
+  renderPool(); saveWork();
+  if(typeof refreshStep0==='function') refreshStep0();
 }
 function toggleFootage(i){
   if(!HANDOFF[i]) return;
@@ -3054,7 +3122,7 @@ async function pollMix(){
   try{
     const d=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
     const st=document.getElementById('mixStatus');
-    if(!d.ok){ if(st) st._sblPipe=null; st.textContent='상태 조회 실패'+(d.error?' — '+d.error:''); clearInterval(MIX_POLL); const th0=document.getElementById('theater'); if(th0) th0.hidden=true; return; }
+    if(!d.ok){ if(st) st._sblPipe=null; st.textContent='상태 조회 실패'+(d.error?' — '+d.error:''); clearInterval(MIX_POLL); const th0=document.getElementById('theater'); if(th0) th0.hidden=true; setMatchingUI(false); return; }
     const _pipe = st ? st._sblPipe : null;
     if(_pipe && d.status!=='failed'){
       // 단계바 진행. ready_for_review=전부 완료, 그 외는 해당 단계로.
@@ -3066,16 +3134,18 @@ async function pollMix(){
     } else if(d.status!=='failed'){
       st.textContent='상태: '+(MIX_LABEL[d.status]||d.status)+(d.error?' — '+d.error:'');   // loader.js 폴백
     }
+    updateMatchProgress(MIX_LABEL[d.status]||d.status);   // ★Task8: 패널0 미러링 — 사용자가 있는 화면에도 같은 단계 표시
     // 극장(Task5) 종료 — 성공/실패 어느 쪽이든 대기 연출은 끝났으니 숨긴다. (commit 7d156f09c에서
     // 이 두 분기가 매칭 완료 신호였다 — 별도 job 상태를 새로 만들지 않고 그대로 재사용한다.)
     if(d.status==='ready_for_review' || d.status==='failed'){
       const th=document.getElementById('theater'); if(th) th.hidden = true;
     }
     if(d.status==='ready_for_review'){
+      setMatchingUI(false);   // ★Task8: 버튼 복원 + 패널0 스피너 정리 — 패널7로 넘어가기 전에
       clearInterval(MIX_POLL); renderCandidates(d.candidates||[]); loadMixReview();
       jump(1);   // 오브 인덱스 1 = 화면 붙이기(매칭, ORB_TO_PANEL[1]=7). Task 6: 매칭 완료 시 자동 이동.
     }
-    if(d.status==='failed'){ if(st) st._sblPipe=null; st.textContent='❌ 매칭 실패'+(d.error?' — '+d.error:''); clearInterval(MIX_POLL); }
+    if(d.status==='failed'){ setMatchingUI(false); if(st) st._sblPipe=null; st.textContent='❌ 매칭 실패'+(d.error?' — '+d.error:''); clearInterval(MIX_POLL); }
   }catch(e){}
 }
 async function loadMixReview(){
@@ -3106,11 +3176,14 @@ function renderCandidates(list){
   if(!list || list.length < 2){ el.innerHTML = ''; return; }
   const LBL = ['A안','B안','C안','D안','E안'];
   el.innerHTML = '<div style="font-size:12px;color:var(--sub);margin-bottom:8px">🧬 새 대본 '
-    + list.length + '개 만들었어요 — 하나만 고르세요</div>'
+    + list.length + '개 만들었어요 — <b style="color:var(--accent)">카드를 눌러 하나를 고르세요</b>(추천이 이미 선택돼 있어요)</div>'
     + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-    + list.map((c,i) => `<div class="cand${c.recommended?' on':''}" onclick="pickCandidate(${c.index})">`
-        + `<div class="cb">${LBL[i]||('후보 '+(i+1))}${c.recommended?'<span class="rec">👍 추천</span>':''}</div>`
-        + `<p>${esc(c.hook||'')}${c.story_person?(' — '+esc(c.story_person)):''}${c.score!=null?` · 점수 ${c.score}`:''}</p>`
+    + list.map((c,i) => `<div class="cand${c.recommended?' on':''}" onclick="pickCandidate(${c.index})" style="cursor:pointer;flex:1 1 260px;min-width:0">`
+        + `<div class="cb">${LBL[i]||('후보 '+(i+1))}${c.recommended?'<span class="rec">👍 추천·선택됨</span>':''}</div>`
+        // 대본 전체 표시(2026-07-24 사장님): A/B/C를 통째로 읽고 비교해 고른다 — 훅 한 줄이 아니라 나레이션 전문.
+        + `<p style="white-space:pre-wrap">${esc(c.script || c.hook || '')}</p>`
+        + `<div style="margin-top:6px;font-size:10px;color:#6b7488">${c.story_person?esc(c.story_person):''}${c.score!=null?(c.story_person?' · ':'')+`점수 ${c.score}`:''}</div>`
+        + `<div class="pickhint" style="font-size:11px;color:var(--sub);margin-top:6px">👆 이 대본으로 고르기</div>`
         + `</div>`).join('')
     + '</div>';
 }
@@ -4060,25 +4133,55 @@ async function sendToCapCut(){
     alert('캡컷 보내기 실패: '+((e&&e.message)||e)+'\n\n대신 「📦 캡컷용 ZIP(수동)」을 받으실 수 있어요.');
   }finally{ renderExport({rendered:true}); }
 }
+// ⚡ 최종 렌더 — 2단계 매칭처럼 동적 피드백: 버튼 스피너 + 진행 박스 + 완성 영상 미리보기 자리(#finalVideo).
+function _finalRenderRestore(msg){
+  const st=document.getElementById('finalStatus'); if(st){ st.className='hint'; st.textContent=msg||''; }
+  const btn=document.getElementById('btnFinalRender'); if(btn){ btn.disabled=false; if(btn.dataset.orig!=null){ btn.innerHTML=btn.dataset.orig; delete btn.dataset.orig; } }
+}
+// ── 최종렌더 진행 동적표시(2026-07-24) — 실제 %가 없어(ffmpeg 진행률 미방출) 경과기반 정직한 추정 ──
+let _rfTimer=null, _rfStart=0;
+function _rfFmt(s){const m=Math.floor(s/60),ss=Math.floor(s%60);return m+':'+String(ss).padStart(2,'0');}
+function _rfTick(){
+  const el=document.getElementById('rfElapsed'), bar=document.getElementById('rfBar');
+  if(!el||!bar) return;
+  const sec=(Date.now()-_rfStart)/1000;
+  el.textContent=_rfFmt(sec);
+  // 추정: 95%까지 지수 근사(완료 신호가 와야 100%). 얼어붙지 않게 매초 살짝 전진.
+  bar.style.width=Math.min(95, 95*(1-Math.exp(-sec/22))).toFixed(0)+'%';
+}
 async function renderFinal(){
   if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); return; }
-  const st=document.getElementById('finalStatus'); st.textContent='⏳ 렌더 시작…';
-  document.getElementById('finalVideo').innerHTML='';
+  const btn=document.getElementById('btnFinalRender');
+  if(btn){ if(btn.dataset.orig==null) btn.dataset.orig=btn.innerHTML; btn.disabled=true; btn.innerHTML='<span class="skm-spin">🔄</span> 렌더 중…'; }
+  const st=document.getElementById('finalStatus'); if(st){ st.className='match-progress'; st.innerHTML='<span class="dot"></span><span>렌더 준비 중…</span>'; }
+  // 렌더 전 '미리보기 자리' — 완성 영상이 여기서 나온다(2단계 미리보기와 동일 연출)
+  document.getElementById('finalVideo').innerHTML=`<div style="aspect-ratio:9/16;max-width:300px;margin-top:10px;border:2px solid var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--sub);text-align:center;padding:20px">
+    <div class="skm-spin" style="font-size:34px">🎬</div>
+    <div id="rfStage" style="font-size:14px;font-weight:800;color:var(--fg)">최종 렌더 준비 중…</div>
+    <div style="width:82%;height:8px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden"><div id="rfBar" style="height:100%;width:2%;background:linear-gradient(90deg,#34e0a1,#17b985);border-radius:6px;transition:width .8s ease"></div></div>
+    <div style="font-size:12px">경과 <b id="rfElapsed">0:00</b> · <span style="opacity:.65">보통 30초~1분</span></div>
+    <div style="font-size:11px;opacity:.6;line-height:1.5">자막 굽고 · 음성 입히고 · 인코딩 중…<br>끝나면 여기서 바로 재생돼요</div>
+  </div>`;
+  _rfStart=Date.now(); clearInterval(_rfTimer); _rfTimer=setInterval(_rfTick,1000); _rfTick();
   await saveHeadcopy();   // 헤드카피 설정을 job에 반영 후 렌더
   const r=await fetch('/api/mix/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:MIX_JOB})});
   const d=await r.json().catch(()=>({ok:false}));
-  if(!r.ok||!d.ok){ st.textContent='❌ 렌더 시작 실패'; return; }
+  if(!r.ok||!d.ok){ _finalRenderRestore('❌ 렌더 시작 실패'); document.getElementById('finalVideo').innerHTML=''; return; }
   MIX_POLL=setInterval(pollFinal,3000); pollFinal();
 }
 async function pollFinal(){
   try{
     const d=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
     const st=document.getElementById('finalStatus');
-    st.textContent='상태: '+(MIX_LABEL[d.status]||d.status)+(d.error?' — '+d.error:'');
-    if(d.status==='done'){ clearInterval(MIX_POLL);
-      document.getElementById('finalVideo').innerHTML=`<video controls src="/api/mix/video/${esc(MIX_JOB)}" style="max-width:360px;border-radius:10px"></video>`;
+    if(d.status!=='done' && d.status!=='failed'){
+      if(st){ st.className='match-progress'; st.innerHTML='<span class="dot"></span><span>'+(MIX_LABEL[d.status]||d.status)+(d.error?' — '+d.error:'')+'</span>'; }
+      const rf=document.getElementById('rfStage'); if(rf) rf.textContent=(MIX_LABEL[d.status]||d.status);   // 박스 안 단계 라벨도 동적 갱신
+    }
+    if(d.status==='done'){ clearInterval(MIX_POLL); clearInterval(_rfTimer);
+      document.getElementById('finalVideo').innerHTML=`<video controls autoplay muted src="/api/mix/video/${esc(MIX_JOB)}" style="max-width:300px;border-radius:12px;margin-top:10px"></video>`;
+      _finalRenderRestore('✅ 렌더 완료 — 완성 영상이 재생됩니다');
       renderExport({rendered:true}); }   // 렌더 완료 → 완성 MP4 다운로드 버튼까지
-    if(d.status==='failed'){ clearInterval(MIX_POLL); }
+    if(d.status==='failed'){ clearInterval(MIX_POLL); clearInterval(_rfTimer); _finalRenderRestore('❌ 렌더 실패'+(d.error?' — '+d.error:'')); }
   }catch(e){}
 }
 
@@ -4336,7 +4439,9 @@ async function suggestThumbTitles(){
   try {
     const r = await fetch('/api/produce/thumb/titles', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({job_id: MIX_JOB}),
+      // ★화면 대본(STATE.script)을 함께 보낸다(2026-07-24). job.given_script는 매칭 시점에
+      //   고정돼, 대본을 새 영상에 맞게 고쳐도 제목이 옛 영상 주제로 나오던 사고를 막는다.
+      body: JSON.stringify({job_id: MIX_JOB, script: (STATE.script || '')}),
     });
     const d = await r.json().catch(() => ({ok: false}));
     if (!r.ok || !d.ok || !(d.titles || []).length){
@@ -4344,7 +4449,15 @@ async function suggestThumbTitles(){
       return;
     }
     THUMB_STATE.title_cands = d.titles;
-    box.innerHTML = '<div class="hint" style="margin-bottom:2px">마음에 드는 제목을 누르면 바로 얹어져요 ↓</div>' +
+    // 대본을 매칭 뒤에 고쳤으면 제목은 새 대본으로 나오지만 영상 나레이션은 아직 옛 대본이다.
+    // 제목만 맞추면 영상↔제목이 또 어긋나니, 재매칭을 권하는 경고를 위에 띄운다.
+    const _warn = d.script_mismatch
+      ? '<div class="hint" style="margin-bottom:6px;color:#ffb454;border:1px solid #7a5a1e;'
+        + 'background:#3a2f14;border-radius:8px;padding:8px 10px;line-height:1.4">'
+        + '⚠️ 대본을 바꾸셨네요. 제목은 <b>새 대본</b>으로 만들었지만, <b>영상 나레이션은 아직 옛 대본</b>이에요. '
+        + '<a href="#" onclick="jump(0);return false" style="color:#ffd08a;font-weight:700">1단계에서 영상 매칭을 다시</a> 해야 영상에도 반영돼요.</div>'
+      : '';
+    box.innerHTML = _warn + '<div class="hint" style="margin-bottom:2px">마음에 드는 제목을 누르면 바로 얹어져요 ↓</div>' +
       d.titles.map((t, i) => {
         const shown = esc(t.text || '').replace(/\n/g, ' / ');   // 줄바꿈은 ' / '로 표시
         return `<button class="tab" onclick="applyThumbTitle(${i})"

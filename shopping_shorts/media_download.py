@@ -39,6 +39,16 @@ def _cookies_arg(url):
     return cookies + extra
 
 
+def _proxy_arg(url):
+    """B안(2026-07-24): 유튜브만 프록시로 보낸다(config.YTDLP_PROXY 설정 시). 서버 데이터센터 IP가
+    유튜브에 봇차단당하는 걸 주거용 프록시로 우회 → PC 릴레이 없이 서버가 직접 받는다. 틱톡·샤오홍슈
+    등은 서버서도 되므로 프록시를 안 태워(대역폭·비용 절약). 미설정이면 [](회귀0)."""
+    u = (url or "").lower()
+    if config.YTDLP_PROXY and ("youtube.com" in u or "youtu.be" in u):
+        return ["--proxy", config.YTDLP_PROXY]
+    return []
+
+
 def _oembed(url):
     """틱톡·유튜브 oEmbed → {thumbnail_url,title,author_name} (무료·무인증). 실패 시 {}.
     yt-dlp가 틱톡에서 자주 깨져(rehydration) 썸네일·작성자를 이걸로 보강한다(2026-07-18 실측)."""
@@ -65,7 +75,7 @@ def probe_grab_meta(url, timeout=40):
     out = {}
     try:
         r = subprocess.run([sys.executable, "-m", "yt_dlp", "-j", "--no-warnings",
-                            *_cookies_arg(url), url],
+                            *_cookies_arg(url), *_proxy_arg(url), url],
                            capture_output=True, text=True, timeout=timeout)
         if r.returncode == 0 and r.stdout.strip():
             d = json.loads(r.stdout)
@@ -117,7 +127,7 @@ def _download_ytdlp(url, dest_dir, max_attempts=3):
     for attempt in range(max_attempts):
         r = subprocess.run(
             [sys.executable, "-m", "yt_dlp", "-f", "mp4/bestvideo+bestaudio/best",
-             "--no-playlist", *_cookies_arg(url), "-o", out, url],
+             "--no-playlist", *_cookies_arg(url), *_proxy_arg(url), "-o", out, url],
             capture_output=True, text=True, timeout=300)
         if r.returncode == 0:
             files = sorted(Path(dest_dir).glob(stem + "*"))
@@ -129,6 +139,34 @@ def _download_ytdlp(url, dest_dir, max_attempts=3):
         if attempt < max_attempts - 1:
             time.sleep(2 * (attempt + 1))   # 2s·4s 백오프 — 틱톡 챌린지/레이트리밋 완화
     raise RuntimeError(f"yt-dlp 실패({url}, {max_attempts}회 시도): {last_err}")
+
+
+def _download_via_relay(url, dest_dir):
+    """유튜브 URL을 로컬 릴레이 큐에 넣고, 사장님 PC 에이전트가 주거용 IP로 받아
+    서버에 올린 mp4를 회수한다(2026-07-24). 서버 데이터센터 IP는 유튜브에 봇차단당하므로
+    직접 yt-dlp는 못 쓴다. 큐잉 후 done될 때까지 폴링(상한=YT_RELAY_POLL_TIMEOUT).
+    에이전트가 안 떠 있거나 시간초과면 명확한 에러를 던진다(믹스는 이 소스만 스킵).
+    ★서버는 파일을 만들지 않고 CPU도 안 쓴다 — 무거운 다운로드는 전부 PC로 오프로드된다."""
+    import shutil
+    from shopping_shorts.store import Store
+    store = Store()
+    req_id = store.enqueue_yt_relay(url)
+    deadline = time.monotonic() + config.YT_RELAY_POLL_TIMEOUT
+    while time.monotonic() < deadline:
+        rec = store.get_yt_relay(req_id)
+        if rec and rec["status"] == "done" and rec["out_path"]:
+            src = Path(rec["out_path"])
+            if not src.exists():
+                raise RuntimeError(f"릴레이 완료 보고했으나 파일 없음: {src}")
+            dst = Path(dest_dir) / src.name
+            if src.resolve() != dst.resolve():
+                shutil.copy2(src, dst)
+            return str(dst), ""
+        if rec and rec["status"] == "failed":
+            raise RuntimeError(f"유튜브 릴레이 실패({url}): {rec.get('error') or '알 수 없음'}")
+        time.sleep(2)
+    raise RuntimeError(
+        f"유튜브 릴레이 시간초과({url}, {config.YT_RELAY_POLL_TIMEOUT}s) — PC 에이전트가 켜져 있나 확인")
 
 
 def _is_direct_video(u):
@@ -169,6 +207,13 @@ def download_any(url, dest_dir):
         return str(download_video(url, Path(dest_dir))), ""
     # 유튜브·틱톡·샤오홍슈는 yt-dlp 무료(2026-07-18 샤오홍슈 실증). 도우인은 쿠키가 필요해
     # 실패할 수 있으나 그때는 yt-dlp가 명확한 에러를 낸다(원클릭 담기 후 제작소 다운로드용).
+    # ★유튜브는 서버(데이터센터 IP)서 봇차단당해 yt-dlp가 통째로 막힌다 → 릴레이가 켜져 있으면
+    # 사장님 PC 에이전트로 오프로드한다(주거용 IP). 로컬/에이전트는 YT_RELAY_ENABLED=0이라
+    # 아래 직접 yt-dlp 경로로 간다(회귀0). 틱톡·샤오홍슈 등은 서버서도 되므로 릴레이 안 탄다.
+    # 우선순위: 프록시(B) > 릴레이(A) > 직접. 프록시가 있으면 서버가 직접 받으므로(아래 _download_ytdlp가
+    # _proxy_arg로 프록시를 붙인다) PC 릴레이를 건너뛴다 — PC 의존 없이 고객 다중 처리 가능.
+    if config.YT_RELAY_ENABLED and not config.YTDLP_PROXY and ("youtube.com" in u or "youtu.be" in u):
+        return _download_via_relay(url, dest_dir)
     if any(s in u for s in ("youtube.com", "youtu.be", "tiktok.com",
                              "xiaohongshu.com", "xhslink.com", "douyin.com",
                              "iesdouyin.com", "rednote.com")):
@@ -191,7 +236,7 @@ def resolve_media_url(platform, video_id, timeout=30):
         r = subprocess.run(
             [sys.executable, "-m", "yt_dlp", "-g", "-f",
              "best[ext=mp4][vcodec!=none][acodec!=none]/best[ext=mp4]/best",
-             "--no-warnings", *_cookies_arg(page), page],
+             "--no-warnings", *_cookies_arg(page), *_proxy_arg(page), page],
             capture_output=True, text=True, encoding="utf-8", timeout=timeout)
     except Exception:
         return ""

@@ -94,6 +94,20 @@ class Store:
                     PRIMARY KEY (customer_id, shortcode)
                 )
             """)
+            # 부품은행 흡수 실패 재큐(2026-07-24). 503(모델 용량)으로 실패한 상위영상은 다음
+            # 수집 때 상위권 밖으로 밀리면 영구 유실될 수 있다 → url당 1행으로 담아 지수 백오프로
+            # 재시도한다. fail_count가 상한을 넘으면 흡수 루프가 스스로 폐기(영구불량 영상 방어).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS bank_retry (
+                    url TEXT PRIMARY KEY,
+                    item_json TEXT NOT NULL,
+                    source TEXT,
+                    fail_count INTEGER NOT NULL DEFAULT 0,
+                    next_retry_at REAL NOT NULL DEFAULT 0,
+                    last_error TEXT,
+                    created_at REAL NOT NULL DEFAULT 0
+                )
+            """)
             # 소스 보강정보 캐시(레퍼런스정보, 2026-07-22) — url당 1행, 채널/댓글/자막
             # 등 외부수집 결과를 캐싱(7일 TTL은 get_enrichment 호출부에서 판단).
             c.execute("""
@@ -581,6 +595,20 @@ class Store:
                     updated_at TEXT NOT NULL
                 )
             """)
+            # ★유튜브 로컬 릴레이 큐(2026-07-24): 서버(데이터센터 IP)는 유튜브 쇼츠 다운로드가
+            # 봇차단이라, 사장님 PC(주거용 IP) 에이전트가 대신 받아 서버로 올린다. 서버는 여기
+            # 요청을 넣고 done될 때까지 폴링한다. 상태: pending→done|failed.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS yt_relay (
+                    req_id TEXT PRIMARY KEY,
+                    url TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'pending',
+                    out_path TEXT,
+                    error TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
             # 기존 DB용 마이그레이션 — mix_jobs 자막제거 필드(2026-07-13).
             # 새 DB는 위 CREATE에 이미 있어 여기선 "이미 존재" 예외를 조용히 넘긴다.
             for col, ddl in (
@@ -874,12 +902,25 @@ class Store:
             c.execute("DELETE FROM removed_channels WHERE username=?", (username,))
 
     def discovered_channels(self):
-        """추가된 발굴 채널 [{name, username, followers, inpock}] (collect union용 메타 형태)."""
+        """추가된 발굴 채널 [{name, username, followers, inpock, added_at}] (collect union용 메타 형태).
+        added_at은 관리페이지 표시용 — collect union 소비자는 이 키를 무시한다(추가 키라 무해)."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT username, name FROM discovered_channels ORDER BY added_at DESC"
+                "SELECT username, name, added_at FROM discovered_channels ORDER BY added_at DESC"
             ).fetchall()
-        return [{"name": r[1] or r[0], "username": r[0], "followers": 0, "inpock": ""} for r in rows]
+        return [{"name": r[1] or r[0], "username": r[0], "followers": 0, "inpock": "",
+                 "added_at": r[2] or ""} for r in rows]
+
+    def instagram_activity_map(self):
+        """reel_history에서 채널별 마지막 활동일·표시명 맵. {norm_username: {"last": iso, "name": str}}.
+        관리페이지가 '이 채널이 최근 영상을 올렸나(활동중)'를 무료로 보여주는 데 쓴다 —
+        Apify 재조회 없이 이미 쌓인 수집이력만 집계. username은 저장 시 소문자 정규화돼 있다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT username, MAX(last_seen) AS last, MAX(name) AS nm "
+                "FROM reel_history GROUP BY username"
+            ).fetchall()
+        return {r[0]: {"last": r[1] or "", "name": r[2] or ""} for r in rows}
 
     def remove_channel(self, username, name=""):
         """죽은 채널을 추적 제외목록에 추가(소프트 삭제). 발굴목록에 있었다면 함께 제거."""
@@ -1065,9 +1106,9 @@ class Store:
 
     def list_seeds(self, platform):
         with self._conn() as c:
-            rows = c.execute("SELECT kind, value FROM platform_seeds WHERE platform=? "
+            rows = c.execute("SELECT kind, value, added_at FROM platform_seeds WHERE platform=? "
                              "ORDER BY added_at ASC, rowid ASC", (platform,)).fetchall()
-        return [{"kind": r[0], "value": r[1]} for r in rows]
+        return [{"kind": r[0], "value": r[1], "added_at": r[2] or ""} for r in rows]
 
     # ── 플랫폼 스코프 스냅샷(가속 계산용) ──
     def save_run_platform(self, platform, run_date, rows):
@@ -1401,6 +1442,60 @@ class Store:
                 "WHERE shortcode=?",
                 (shortcode,),
             )
+
+    # ── 부품은행 흡수 실패 재큐(2026-07-24) — 503으로 놓친 상위영상을 지수 백오프로 재시도 ──
+    # 백오프: 30분·1·2·4·8·16h (2^n), 24h 상한. fail_count>6 넘으면 폐기(영구불량 방어).
+    _BANK_RETRY_MAX = 6
+    _BANK_RETRY_BASE = 1800      # 30분
+    _BANK_RETRY_CAP = 86400      # 24시간
+
+    def bank_retry_upsert(self, url, item_json, source, error, now):
+        """흡수 실패한 url을 재큐에 담거나 fail_count를 올린다(지수 백오프). 상한 초과 시 폐기."""
+        if not url:
+            return
+        with self._conn() as c:
+            row = c.execute("SELECT fail_count FROM bank_retry WHERE url=?", (url,)).fetchone()
+            fc = (row[0] if row else 0) + 1
+            if fc > self._BANK_RETRY_MAX:
+                c.execute("DELETE FROM bank_retry WHERE url=?", (url,))
+                return
+            nxt = now + min(self._BANK_RETRY_BASE * (2 ** (fc - 1)), self._BANK_RETRY_CAP)
+            err = (error or "")[:200]
+            c.execute(
+                "INSERT INTO bank_retry(url,item_json,source,fail_count,next_retry_at,last_error,created_at) "
+                "VALUES(?,?,?,?,?,?,?) "
+                "ON CONFLICT(url) DO UPDATE SET fail_count=?, next_retry_at=?, last_error=?, "
+                "item_json=excluded.item_json",
+                (url, item_json, source, fc, nxt, err, now, fc, nxt, err),
+            )
+
+    def bank_retry_due(self, now, limit=50):
+        """재시도 시점이 된(next_retry_at<=now) 항목의 item(dict) 리스트. url을 항상 채워 돌려준다."""
+        import json as _json
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT url,item_json FROM bank_retry "
+                "WHERE next_retry_at<=? AND fail_count<=? ORDER BY next_retry_at ASC LIMIT ?",
+                (now, self._BANK_RETRY_MAX, limit),
+            ).fetchall()
+        out = []
+        for url, item_json in rows:
+            try:
+                it = _json.loads(item_json)
+                if not isinstance(it, dict):
+                    it = {}
+            except Exception:
+                it = {}
+            it["url"] = it.get("url") or url
+            out.append(it)
+        return out
+
+    def bank_retry_clear(self, url):
+        """성공하면 재큐에서 제거."""
+        if not url:
+            return
+        with self._conn() as c:
+            c.execute("DELETE FROM bank_retry WHERE url=?", (url,))
 
     def extracts_missing_structure(self, limit=100):
         """구조분석이 아직 안 된 대본추출 항목(카테고리 있는 것만 — 카테고리 없으면
@@ -2172,16 +2267,16 @@ class Store:
 
     def pick_spine_for_category(self, category, status="approved", min_sources=3):
         """생성용 스파인 1건 — 승격게이트(status·source_count>=min_sources) 통과 +
-        category가 fit_categories에 포함(fit_categories 비면 범용으로 매칭)되는 것 중
-        perf 최고. 없으면 None. 리더가 게이트를 강제해 미승인·저소스 스파인이 생성에 못 샌다(A1)."""
-        for sp in self.list_spines(status=status):     # perf_score DESC 정렬 보장
-            if (sp.get("source_count") or 0) < min_sources:
-                continue
-            fits = sp.get("fit_categories") or []
-            if category and fits and category not in fits:
-                continue
-            return sp        # 첫 통과 = 최고 perf
-        return None
+        category가 fit_categories에 포함(fit_categories 비면 범용으로 매칭)되는 것 중 **로테이션**.
+        ★2026-07-23(사장님: "매번 같은 스토리"): 예전엔 perf 최고 1개만 뽑아 늘 같은 아크
+        (역발상 경고형 등 깔때기)만 나왔다 → 승인 스파인을 매 호출 랜덤으로 골라 '인물 드라마형'
+        (대화체) 같은 다른 아크도 돌아가며 나오게 한다. 없으면 None."""
+        import random
+        eligible = [sp for sp in self.list_spines(status=status)
+                    if (sp.get("source_count") or 0) >= min_sources
+                    and not (category and (sp.get("fit_categories") or [])
+                             and category not in sp.get("fit_categories"))]
+        return random.choice(eligible) if eligible else None
 
     # --- Phase1: perf/spine 조회·저장 배관 ---
     def list_pattern_sources(self, category_source=None, only_missing_spine=False, limit=1000):
@@ -2702,6 +2797,39 @@ class Store:
                 out["ctas"].append(cta)
         return out
 
+    # ── 유튜브 로컬 릴레이 큐(2026-07-24) ──
+    def enqueue_yt_relay(self, url):
+        """유튜브 다운로드 요청을 큐에 넣고 req_id 반환. PC 에이전트가 받아 처리한다."""
+        import secrets
+        req_id = secrets.token_hex(8)
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute("INSERT INTO yt_relay(req_id, url, status, created_at, updated_at) "
+                      "VALUES(?,?,'pending',?,?)", (req_id, url, now, now))
+        return req_id
+
+    def next_pending_yt_relay(self):
+        """가장 오래된 pending 요청 1건 → {req_id, url}. 없으면 None. 에이전트가 폴링한다."""
+        with self._conn() as c:
+            r = c.execute("SELECT req_id, url FROM yt_relay WHERE status='pending' "
+                          "ORDER BY created_at LIMIT 1").fetchone()
+        return {"req_id": r[0], "url": r[1]} if r else None
+
+    def finish_yt_relay(self, req_id, out_path=None, error=None):
+        """에이전트가 완료(out_path) 또는 실패(error) 보고. status를 done|failed로."""
+        now = datetime.now(timezone.utc).isoformat()
+        st = "done" if out_path else "failed"
+        with self._conn() as c:
+            c.execute("UPDATE yt_relay SET status=?, out_path=?, error=?, updated_at=? WHERE req_id=?",
+                      (st, out_path, error, now, req_id))
+
+    def get_yt_relay(self, req_id):
+        """요청 상태 → {status, out_path, error}. 서버가 done될 때까지 폴링. 없으면 None."""
+        with self._conn() as c:
+            r = c.execute("SELECT status, out_path, error FROM yt_relay WHERE req_id=?",
+                          (req_id,)).fetchone()
+        return {"status": r[0], "out_path": r[1], "error": r[2]} if r else None
+
     def append_bank_usage(self, record, cap=50):
         """생성 순응 job 레코드를 bank_usage_recent 링버퍼에 append(최근 cap개 유지). 반환=현재 리스트."""
         import json
@@ -3038,6 +3166,19 @@ class Store:
                 "SELECT COUNT(DISTINCT ip), COUNT(DISTINCT ua) FROM customer_access "
                 "WHERE customer_id=? AND day>=?", (customer_id, since_day)).fetchone()
         return {"ips": (row[0] or 0), "devices": (row[1] or 0)}
+
+    def prune_activity(self, keep_days=30, now_ts=None):
+        """오래된 활동·접속 로그 정리(2026-07-24) — 두 테이블은 계속 append만 돼 무한증가한다.
+        customer_activity(at=epoch초)·customer_access(day=YYYY-MM-DD)에서 keep_days보다
+        오래된 행을 삭제한다. 반환: (활동삭제수, 접속삭제수). now_ts는 테스트 주입용."""
+        import time as _t
+        now_ts = int(now_ts if now_ts is not None else _t.time())
+        cutoff_ts = now_ts - keep_days * 86400
+        cutoff_day = datetime.fromtimestamp(cutoff_ts, timezone.utc).strftime("%Y-%m-%d")
+        with self._conn() as c:
+            n_act = c.execute("DELETE FROM customer_activity WHERE at < ?", (cutoff_ts,)).rowcount
+            n_acc = c.execute("DELETE FROM customer_access WHERE day < ?", (cutoff_day,)).rowcount
+        return (n_act or 0, n_acc or 0)
 
     def usage_decr(self, customer_id, op, day):
         """(customer_id, op, day) 카운트 -1(0 밑으로 안 감), 감소 후 값 반환. 실패 환불용.

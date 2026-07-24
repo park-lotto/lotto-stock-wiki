@@ -22,7 +22,37 @@ from pathlib import Path
 from PIL import ImageFont
 
 # 출력 규격(숏폼 세로). 소스 해상도가 달라도 여기로 통일해야 concat -c copy가 안전.
-_OUT_W, _OUT_H = 720, 1280
+_OUT_W, _OUT_H = 1080, 1920
+# ★x264 프리셋(2026-07-24): 미리보기는 assemble(fast=True)가 veryfast로 바꿔 6분→~1.5분.
+# 최종은 medium 유지(고화질). 소셜 숏폼은 플랫폼 재인코딩되므로 veryfast도 체감차 거의 없다.
+# ★x264 프리셋(2026-07-24): 기본 medium(최종 고화질). 미리보기는 preview_preset()가
+# veryfast로 낮춰 6분→~1.5분. ★스레드로컬인 이유(오류검사에서 잡음): run_preview와
+# run_render는 각각 BackgroundTasks 스레드에서 돈다 — 모듈 전역이면 미리보기가 켠
+# veryfast가 동시에 도는 **최종 렌더**까지 저화질로 오염시키는 레이스가 난다.
+# assemble 호출 트리는 스레드 내부 분기가 없으므로(실측: 이 모듈에 ThreadPool 없음)
+# 스레드로컬이 정확히 "이 렌더만" 바꾼다.
+import contextlib as _contextlib
+import threading as _threading
+
+_preset_local = _threading.local()
+
+
+def _preset():
+    return getattr(_preset_local, "value", "medium")
+
+
+@_contextlib.contextmanager
+def preview_preset(preset="veryfast"):
+    """이 블록(현재 스레드) 안의 assemble 인코딩만 빠른 프리셋으로. 끝나면 원복."""
+    prev = getattr(_preset_local, "value", None)
+    _preset_local.value = preset
+    try:
+        yield
+    finally:
+        if prev is None:
+            del _preset_local.value
+        else:
+            _preset_local.value = prev
 _FONT_DIR = Path(__file__).parent / "static" / "fonts"
 # 반중복탐지 회피(2026-07-14) — 말 안 해도 항상 적용. 화질 오염 없는(비가역 손상X)
 # 것만 자동화: ①전 비트 기본 크롭+줌(살짝 확대, 원본과 프레임 구도가 달라짐)
@@ -64,8 +94,8 @@ def _base_zoom_vf():
     w, h = int(_OUT_W * _BASE_ZOOM), int(_OUT_H * _BASE_ZOOM)
     return f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={_OUT_W}:{_OUT_H}"
 # 하단 자막 바(원본 소각 자막을 덮는다) + 한 줄 자막 스타일.
-_BAR_H = 300
-_CAP_FONTSIZE = 52      # 짧은 1줄 구절이라 여유 있음 → 키움
+_BAR_H = 450
+_CAP_FONTSIZE = 78      # 짧은 1줄 구절이라 여유 있음 → 키움
 # 자막 리듬 목표: 한 구절 2~3어절, 무자막 없이 빠르게 순차 전환. 핵심은 글자수보다
 # **의미(호흡) 단위** — 수식어(관형어·부사)는 뒤 단어와 붙어 한 호흡이 되어야 한다.
 # 예) "이 방법은 진짜", "자세한 보관비법", "바로 알려드릴게요", "그냥 두지 마세요".
@@ -98,7 +128,7 @@ _CAP_LEAD_MINCHARS = 4  # 연결어미 끊기 최소 글자수(공백 제외). �
 _CAP_OPENER_SUFFIX = ("마다",)
 _CAP_HEAD_MINCHARS = 4  # 머리 단어 앞에서 끊는 최소(앞 구절) 글자수. 짧으면 이어붙임
                         # ("이것 한" 파편 방지, "…일쑤였는데 | 이" 는 앞이 길어 끊김).
-_CAP_WRAP = 13          # 아주 긴 단일 어절 방어용(한 줄 최대 글자수, 720px 안)
+_CAP_WRAP = 19          # 아주 긴 단일 어절 방어용(한 줄 최대 글자수, 1080px 안)
 _CAP_MIN_DUR = 0.25     # 한 구절 최소 표시시간(속도감).
 
 # 한글 폰트 후보(먼저 발견되는 것 사용). repo에 NanumGothic을 번들하므로 서버·로컬
@@ -496,8 +526,9 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
     size = max(10, int(style.get("size") or _CAP_FONTSIZE))
     ypct = style.get("y_pct")
     if ypct is None:
-        # 기존 폴백 "h-text_h-100"의 근사치를 %로 환산(문자 높이는 size*1.2로 근사)
-        ypct = max(0.0, min(100.0, (_OUT_H - 100 - size * 0.6) / _OUT_H * 100.0))
+        # 기존 폴백 "h-text_h-150"의 근사치를 %로 환산(문자 높이는 size*1.2로 근사)
+        # 150 = 1080p 기준 하단 여백(720p 100px ×1.5, 2026-07-24 1080p 업그레이드)
+        ypct = max(0.0, min(100.0, (_OUT_H - 150 - size * 0.6) / _OUT_H * 100.0))
     use_box = bool(style.get("box"))
     # 하단 자막 바 기본 OFF(2026-07-19) — 300px·black@0.82 바가 화면 하단 23%를
     # 덮어 "검정바"로 보인다는 제보. 그림자 자막만으로 가독성 확보. 원본 소각자막을
@@ -588,7 +619,7 @@ def _extend_with_frozen_motion(sub_path, play_out, freeze, out_path):
         "ffmpeg", "-y", "-i", str(sub_path),
         "-vf", f"tpad=stop_mode=clone:stop_duration={freeze:.3f},{_kenburns_vf(total)}",
         "-r", "30", "-an", "-t", f"{total:.3f}",
-        "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out_path),
+        "-c:v", "libx264", "-preset", _preset(), "-pix_fmt", "yuv420p", str(out_path),
     ])
     return out_path
 
@@ -672,7 +703,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 "ffmpeg", "-y", "-ss", f"{start:.3f}", "-t", f"{c['src_dur']:.3f}",
                 "-i", str(src),
                 "-vf", vf_full, "-r", "30", "-an", "-t", f"{play_out:.3f}",
-                "-c:v", "libx264", "-pix_fmt", "yuv420p", str(sub),
+                "-c:v", "libx264", "-preset", _preset(), "-pix_fmt", "yuv420p", str(sub),
             ])
             # 그래도 비면(소스 손상/범위밖) 이 클립만 버린다 — 하나가 미리보기 전체를 죽이지 않게.
             if not sub.exists() or _probe_duration(sub) <= 0.05:
@@ -698,15 +729,15 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                      "-c", "copy", str(beat_video)])
         # 컷어웨이(장면라이브러리 페이즈2-B): 라이브러리 자산을 비트 영상 위에 풀프레임
         # 오버레이. 창=[0, min(자산길이, tts_dur)]. 비트 길이·TTS 오디오 불변 → 자막 t0 싱크
-        # 불변. beat_video는 이미 규격(720x1280)·vf 적용 → 재-vf 없이 오버레이만 얹는다.
+        # 불변. beat_video는 이미 규격(1080x1920)·vf 적용 → 재-vf 없이 오버레이만 얹는다.
         clip = work / f"beat_{idx}.mp4"
         cutaway = (cutaway_paths or {}).get(idx)
         if cutaway:
             asset_dur = _probe_duration(cutaway)
             win = min(asset_dur, tts_dur)
             fc = (
-                f"[1:v]scale=720:1280:force_original_aspect_ratio=increase,"
-                f"crop=720:1280,setpts=PTS-STARTPTS[ov];"
+                f"[1:v]scale={_OUT_W}:{_OUT_H}:force_original_aspect_ratio=increase,"
+                f"crop={_OUT_W}:{_OUT_H},setpts=PTS-STARTPTS[ov];"
                 f"[0:v][ov]overlay=0:0:enable='between(t,0,{win:.3f})'[vout]"
             )
             _run_ffmpeg([
@@ -719,7 +750,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 # 여운(runout): 마지막 비트만 대사 뒤 화면이 더 산다 — 오디오는 tts 길이에서
                 # 자연 종료(무성 여운). 컷어웨이 창(win)은 tts_dur 기준 그대로(여운을 덮지 않음).
                 "-t", f"{tts_dur + runout:.3f}",
-                "-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
+                "-c:v", "libx264", "-preset", _preset(), "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
             ])
         else:
             # 비트 나레이션(tts) 오디오를 얹고 길이를 tts_dur(+마지막 비트는 여운)로 맞춘다.
@@ -734,7 +765,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
         raise RuntimeError("video_assemble: 렌더할 비트가 없습니다")
     concat_txt = work / "concat_mix.txt"
     concat_txt.write_text("".join(f"file '{c.as_posix()}'\n" for c in beat_clips), encoding="utf-8")
-    # 비트 클립들은 이미 동일 설정(720x1280 libx264/aac 30fps)이므로 -c copy로 붙인다
+    # 비트 클립들은 이미 동일 설정(1080x1920 libx264/aac 30fps)이므로 -c copy로 붙인다
     # (재인코딩 concat은 2GB 서버에서 수십 초 → 배포 재시작에 걸려 죽던 원인, 2026-07-12).
     mix_raw = work / "mix_raw.mp4"
     _run_ffmpeg(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat_txt),
@@ -893,7 +924,7 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
     if not any(l.strip() for l in lines):
         return []
     fontref, font_disk_path = _resolve_seg_font(base_style, work, key_prefix)
-    size = max(8, int(base_style.get("size") or 64))
+    size = max(8, int(base_style.get("size") or 96))
     try:
         pil_font = ImageFont.truetype(font_disk_path, size)
     except OSError:
@@ -941,20 +972,20 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
                 f"x={int(run_x)}", f"y={int(line_y)}",
             ]
             if base_style.get("outline"):
-                seg_parts.append(f"borderw={max(1, int(base_style.get('outline_w') or 6))}")
+                seg_parts.append(f"borderw={max(1, int(base_style.get('outline_w') or 9))}")
                 seg_parts.append(f"bordercolor={_hex_to_ff(base_style.get('outline_color'), '0x000000')}")
             if base_style.get("shadow"):
                 # 은은한 드롭 그림자(레퍼런스 자막룩) — 두꺼운 테두리 대신 부드러운 가독성.
                 sc = _hex_to_ff(base_style.get("shadow_color"), "0x000000")
-                sd = max(1, int(base_style.get("shadow_d") or 3))
+                sd = max(1, int(base_style.get("shadow_d") or 5))
                 seg_parts += [f"shadowcolor={sc}@0.55", f"shadowx={sd}", f"shadowy={sd}"]
             if seg_box:
                 bc = _hex_to_ff(seg_box_color, "0x000000")
-                seg_parts += ["box=1", f"boxcolor={bc}@0.90", "boxborderw=8"]
+                seg_parts += ["box=1", f"boxcolor={bc}@0.90", "boxborderw=12"]
             elif base_style.get("box") and not seg_box:
                 bc = _hex_to_ff(base_style.get("box_color"), "0x000000")
                 op = max(0.0, min(1.0, (base_style.get("box_opacity") or 80) / 100.0))
-                pad = max(0, int(base_style.get("box_pad") if base_style.get("box_pad") is not None else 16))
+                pad = max(0, int(base_style.get("box_pad") if base_style.get("box_pad") is not None else 24))
                 seg_parts += ["box=1", f"boxcolor={bc}@{op:.2f}", f"boxborderw={pad}"]
             parts.append(":".join(seg_parts))
             run_x += w
@@ -977,7 +1008,7 @@ def _fixed_drawtext(spec, work, key, default_color="0xFFFFFF"):
         if fpath.exists():
             shutil.copy(fpath, work / f"font_{key}.ttf")
             fontref = f"font_{key}.ttf"
-    size = max(8, int(spec.get("size") or 64))
+    size = max(8, int(spec.get("size") or 96))
     xf = min(1.0, max(0.0, (spec.get("x", 50)) / 100.0))
     yf = min(1.0, max(0.0, (spec.get("y", 14)) / 100.0))
     # 워터마크 등 spec.float가 켜지면 y를 시간표현식으로 만들어 위아래로 은은히 떠다니게 한다
@@ -995,12 +1026,12 @@ def _fixed_drawtext(spec, work, key, default_color="0xFFFFFF"):
     if spec.get("alpha") is not None:
         parts.append(f"alpha={max(0.0, min(1.0, float(spec.get('alpha')))):.2f}")
     if spec.get("outline"):
-        parts.append(f"borderw={max(1, int(spec.get('outline_w') or 6))}")
+        parts.append(f"borderw={max(1, int(spec.get('outline_w') or 9))}")
         parts.append(f"bordercolor={_hex_to_ff(spec.get('outline_color'), '0x000000')}")
     if spec.get("box"):
         bc = _hex_to_ff(spec.get("box_color"), "0x000000")
         op = max(0.0, min(1.0, (spec.get("box_opacity") or 80) / 100.0))
-        pad = max(0, int(spec.get("box_pad") if spec.get("box_pad") is not None else 16))
+        pad = max(0, int(spec.get("box_pad") if spec.get("box_pad") is not None else 24))
         parts += ["box=1", f"boxcolor={bc}@{op:.2f}", f"boxborderw={pad}"]
     return ":".join(parts)
 
@@ -1156,7 +1187,7 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     if not has_bgm and not has_overlay and not has_motion and not has_sfx:
         base_vf = vf
         _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-vf", base_vf, "-r", "30",
-                     "-c:v", "libx264", "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
+                     "-c:v", "libx264", "-preset", _preset(), "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
                     cwd=str(work))
         return str(out_path)
     inputs = ["-i", str(in_video)]
@@ -1202,7 +1233,7 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         amap = "[a]"
     cmd = ["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(fc), "-map", f"[{vcur}]"]
     cmd += (["-map", amap, "-c:a", "aac"] if amap else ["-map", "0:a", "-c:a", "copy"])
-    cmd += ["-r", "30", "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out_path)]
+    cmd += ["-r", "30", "-c:v", "libx264", "-preset", _preset(), "-pix_fmt", "yuv420p", str(out_path)]
     _run_ffmpeg(cmd, cwd=str(work))
     return str(out_path)
 
@@ -1213,7 +1244,9 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, 
     (없으면 생략). 자막제거는 우리 자막을 굽기 전 깨끗한 믹스에 돌려야 우리 자막이
     함께 지워지지 않는다.
     sfx_paths: {beat_idx: media_path} — beat["sfx"]가 붙은 비트의 효과음 경로(컷어웨이와
-    같은 seam). _burn_captions가 position→오프셋을 캡션과 같은 함수로 계산해 amix에 섞는다."""
+    같은 seam). _burn_captions가 position→오프셋을 캡션과 같은 함수로 계산해 amix에 섞는다.
+    ★인코딩 프리셋은 모듈 _X264_PRESET(기본 medium). 미리보기는 호출부(run_preview)가
+    preview_preset() 컨텍스트로 veryfast로 감싼다 — 최종은 그대로 medium 고화질."""
     work = Path(out_path).parent / f"asm_{uuid.uuid4().hex[:8]}"
     work.mkdir(parents=True, exist_ok=True)
     mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=cutaway_paths)

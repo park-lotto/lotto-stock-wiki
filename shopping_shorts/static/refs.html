@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>레퍼런스 채널 관리 · 숏템박스</title>
+<style>
+  :root{
+    --bg:#0a0f0d; --panel:#0f1512; --inset:#0c1210; --line:#1e2a24;
+    --txt:#e6efe9; --sub:#8fa39a; --accent:#37e0bd; --accent2:#2bd4b0;
+    --danger:#e5534b; --good:#37e0bd; --warn:#e0b23a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Malgun Gothic",sans-serif;
+    line-height:1.5}
+  .wrap{max-width:920px;margin:0 auto;padding:28px 20px 80px}
+  a{color:var(--accent);text-decoration:none}
+  .back{font-size:13px;color:var(--sub)}
+  .back:hover{color:var(--accent)}
+  h1{font-size:26px;margin:14px 0 4px;
+    background:linear-gradient(90deg,#dff7f0,var(--accent));-webkit-background-clip:text;
+    background-clip:text;color:transparent}
+  .lead{color:var(--sub);font-size:13.5px;margin:0 0 20px}
+  .tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+  .tab{padding:8px 16px;border:1px solid var(--line);border-radius:10px;background:var(--panel);
+    color:var(--sub);cursor:pointer;font-size:14px;font-weight:600;transition:.15s}
+  .tab:hover{border-color:var(--accent)}
+  .tab.active{background:linear-gradient(180deg,rgba(55,224,189,.18),rgba(55,224,189,.06));
+    border-color:var(--accent);color:var(--txt);box-shadow:0 6px 20px -12px rgba(55,224,189,.6)}
+  .card{background:linear-gradient(180deg,var(--panel),var(--inset));
+    border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+  .card h2{font-size:15px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+  textarea{width:100%;min-height:150px;resize:vertical;background:var(--inset);color:var(--txt);
+    border:1px solid var(--line);border-radius:10px;padding:12px;font-size:14px;
+    font-family:"SFMono-Regular",Consolas,"Malgun Gothic",monospace;line-height:1.7}
+  textarea:focus{outline:none;border-color:var(--accent)}
+  .hint{font-size:12px;color:var(--sub);margin:8px 2px 0}
+  .row{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
+  button.go{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#04120e;
+    border:0;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer}
+  button.go:disabled{opacity:.5;cursor:default}
+  #result{font-size:13.5px;margin-top:12px;min-height:20px}
+  .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:700;margin-right:6px}
+  .pill.add{background:rgba(55,224,189,.16);color:var(--good)}
+  .pill.dup{background:rgba(224,178,58,.16);color:var(--warn)}
+  .pill.fail{background:rgba(229,83,75,.16);color:var(--danger)}
+  .faillist{color:var(--danger);font-size:12.5px;margin-top:6px}
+  .toolbar{display:flex;gap:10px;align-items:center;margin:2px 0 12px;flex-wrap:wrap}
+  .toolbar input{flex:1;min-width:160px;background:var(--inset);color:var(--txt);
+    border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-size:13px}
+  .toolbar input:focus{outline:none;border-color:var(--accent)}
+  .toolbar select{background:var(--inset);color:var(--txt);border:1px solid var(--line);
+    border-radius:9px;padding:8px 10px;font-size:13px;cursor:pointer}
+  .tblwrap{overflow-x:auto}
+  table.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.tbl th,table.tbl td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+  table.tbl th{color:var(--sub);font-weight:600;font-size:12px;text-transform:none;
+    position:sticky;top:0;background:var(--inset)}
+  table.tbl td.num{color:var(--sub);font-variant-numeric:tabular-nums;width:38px}
+  table.tbl td.date{color:var(--sub);font-variant-numeric:tabular-nums;white-space:nowrap}
+  table.tbl .handle{font-weight:600;color:var(--txt)}
+  table.tbl .nm{color:var(--sub);font-size:12px}
+  table.tbl td.ac{white-space:nowrap;font-size:12.5px}
+  td.ac.ac-live{color:var(--good);font-weight:600}
+  td.ac.ac-ok{color:var(--txt)}
+  td.ac.ac-dead{color:var(--danger)}
+  td.ac.ac-none{color:var(--sub)}
+  .src{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:10px;
+    margin-left:6px;vertical-align:middle}
+  .src-excel{background:rgba(123,180,255,.16);color:#7db4ff}
+  .src-manual{background:rgba(55,224,189,.16);color:var(--accent)}
+  table.tbl tr:hover td{background:rgba(55,224,189,.04)}
+  table.tbl td.act{text-align:right;width:72px;white-space:nowrap}
+  .delbtn{display:inline-block;white-space:nowrap;color:var(--danger);cursor:pointer;font-weight:700;
+    border:1px solid transparent;border-radius:6px;padding:3px 10px}
+  .delbtn:hover{border-color:var(--danger);background:rgba(229,83,75,.1)}
+  .empty{color:var(--sub);font-size:13px;padding:8px 2px}
+  .count{color:var(--sub);font-weight:400}
+  .yt-note{background:rgba(224,178,58,.09);border:1px solid rgba(224,178,58,.3);
+    border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--warn);margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">← 레퍼런스 랭킹으로</a>
+  <h1>레퍼런스 채널 관리</h1>
+  <p class="lead">잘 터지는 레퍼런스 계정을 한 번 등록해두면 <b>매 수집마다 자동으로 랭킹에 뜹니다</b>.
+    엑셀 한 열을 복사해 그대로 붙여넣고 「일괄 등록」 하세요. (관리자 전용)</p>
+
+  <div class="tabs">
+    <div class="tab active" data-p="instagram" onclick="switchPlat('instagram',this)">📷 인스타</div>
+    <div class="tab" data-p="tiktok" onclick="switchPlat('tiktok',this)">🎵 틱톡</div>
+    <div class="tab" data-p="youtube" onclick="switchPlat('youtube',this)">▶️ 유튜브</div>
+  </div>
+
+  <div id="ytNote" class="yt-note" style="display:none">
+    ⚠️ 유튜브는 지금 <b>등록만</b> 됩니다 — 채널 기반 수집은 준비 중(Phase 2)이라 아직 랭킹에 반영되지 않습니다.
+  </div>
+
+  <div class="card">
+    <h2>➕ 여러 줄 붙여넣기</h2>
+    <textarea id="box" placeholder=""></textarea>
+    <div class="hint" id="hint"></div>
+    <div class="row">
+      <button class="go" id="goBtn" onclick="bulkRegister()">일괄 등록</button>
+      <div id="result"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📋 현재 등록된 채널 <span class="count" id="listCount"></span></h2>
+    <div class="toolbar">
+      <input id="q" type="text" placeholder="🔍 채널 검색 (핸들·이름)" oninput="renderRows()">
+      <select id="sort" onchange="renderRows()">
+        <option value="active">활동순 (최근 올린 채널 먼저)</option>
+        <option value="added">등록순 (최신)</option>
+        <option value="added_old">등록순 (오래된)</option>
+        <option value="name">이름순 (가나다·ABC)</option>
+      </select>
+    </div>
+    <div class="tblwrap" id="listWrap"><div class="empty">불러오는 중…</div></div>
+  </div>
+</div>
+
+<script>
+let PLAT='instagram';
+const CFG={
+  instagram:{ph:'instagram.com/아이디\ninstagram.com/another_id\n(한 줄에 하나씩 — 프로필 주소)',
+             hint:'인스타 채널(프로필) 주소를 붙여넣으세요. 릴스·게시물 주소는 채널을 못 찾습니다. (비용 0)'},
+  tiktok:{ph:'@salim__mari\n@cleanguru\n(한 줄에 하나씩 — @핸들)',
+          hint:'틱톡 계정 @핸들을 붙여넣으세요. yt-dlp 무료 수집으로 최근 14일 숏폼을 랭킹합니다.'},
+  youtube:{ph:'채널 핸들 또는 URL\n(한 줄에 하나씩)',
+           hint:'유튜브 채널을 등록합니다. 채널 기반 수집은 Phase 2 예정 — 지금은 등록만 보관됩니다.'},
+};
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function switchPlat(p, el){
+  PLAT=p;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('box').placeholder=CFG[p].ph;
+  document.getElementById('hint').textContent=CFG[p].hint;
+  document.getElementById('ytNote').style.display=(p==='youtube')?'block':'none';
+  document.getElementById('result').innerHTML='';
+  loadList();
+}
+
+function parseLines(t){
+  return (t||'').split(/[\r\n]+/).map(s=>s.trim()).filter(Boolean);
+}
+
+// 틱톡/유튜브 계정 핸들 정규화: 앞의 @ 유지가 아니라 저장은 원문, 비교는 소문자.
+async function registerOne(line){
+  if(PLAT==='instagram'){
+    const r=await fetch('/api/reference/register?url='+encodeURIComponent(line),{method:'POST'});
+    let d={}; try{d=await r.json();}catch(e){}
+    if(!r.ok || !d.ok) return {status:'fail', line, reason:(d.error||('HTTP '+r.status))};
+    return {status: d.already?'dup':'add', line};
+  }
+  // 틱톡·유튜브: kind=account 시드. 중복은 등록 전 목록과 대조해 판정(add_seed는 INSERT OR IGNORE).
+  const v=line.replace(/^@+/,'').trim();       // 저장은 @ 없이 핸들만(수집기 tt_fetch가 붙임)
+  if(!v) return {status:'fail', line, reason:'빈 값'};
+  const dup = CUR.has(v.toLowerCase());
+  const r=await fetch('/api/seeds',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({platform:PLAT, kind:'account', value:v})});
+  if(!r.ok) return {status:'fail', line, reason:'HTTP '+r.status};
+  CUR.add(v.toLowerCase());
+  return {status: dup?'dup':'add', line};
+}
+
+let CUR=new Set();   // 현재 플랫폼 등록 핸들(소문자) — 틱톡/유튜브 중복판정용
+async function bulkRegister(){
+  const lines=parseLines(document.getElementById('box').value);
+  const res=document.getElementById('result'), btn=document.getElementById('goBtn');
+  if(!lines.length){ res.innerHTML='<span class="pill fail">줄이 비어 있습니다</span>'; return; }
+  btn.disabled=true; res.textContent='등록 중… (0/'+lines.length+')';
+  await loadCurrentSet();     // 중복판정 기준 최신화
+  let add=0,dup=0; const fails=[];
+  for(let i=0;i<lines.length;i++){
+    const o=await registerOne(lines[i]);
+    if(o.status==='add') add++; else if(o.status==='dup') dup++;
+    else fails.push(o.reason?(esc(o.line)+' — '+esc(o.reason)):esc(o.line));
+    res.textContent='등록 중… ('+(i+1)+'/'+lines.length+')';
+  }
+  let html='<span class="pill add">추가 '+add+'</span>'
+    +'<span class="pill dup">중복 '+dup+'</span>'
+    +'<span class="pill fail">실패 '+fails.length+'</span>';
+  if(fails.length) html+='<div class="faillist">'+fails.join('<br>')+'</div>';
+  res.innerHTML=html;
+  if(add) document.getElementById('box').value='';
+  btn.disabled=false;
+  loadList();
+}
+
+// 틱톡/유튜브 현재 핸들 집합(중복판정용). 인스타는 서버가 already를 직접 알려줘 불필요.
+async function loadCurrentSet(){
+  CUR=new Set();
+  if(PLAT==='instagram') return;
+  try{
+    const d=await (await fetch('/api/seeds?platform='+PLAT)).json();
+    (d.items||[]).filter(s=>s.kind==='account').forEach(s=>CUR.add((s.value||'').toLowerCase()));
+  }catch(e){}
+}
+
+let ITEMS=[];   // 현재 플랫폼 등록목록 [{key, name, added, last, src, followers}]
+function fmtDate(s){ return (s||'').slice(0,10) || '—'; }   // "2026-07-18 12:00:00" → "2026-07-18"
+
+// 마지막 수집영상 날짜 → 활동 라벨(무료, reel_history 기반). ''=수집된 적 없음.
+// d=경과일(정렬키). 작을수록 최근 활동.
+function activity(last){
+  if(!last) return {txt:'수집 전', cls:'ac-none', d:1e9};
+  const t=new Date(String(last).replace(' ','T'));
+  if(isNaN(t.getTime())) return {txt:'—', cls:'ac-none', d:1e9};
+  const d=Math.floor((Date.now()-t.getTime())/86400000);
+  if(d<=2)  return {txt:'🟢 활동중 ('+d+'일 전)', cls:'ac-live', d};
+  if(d<=7)  return {txt:d+'일 전', cls:'ac-ok', d};
+  if(d<=30) return {txt:'🔴 '+d+'일째 잠잠', cls:'ac-dead', d};
+  return {txt:'💤 30일+ 없음', cls:'ac-dead', d};
+}
+
+async function loadList(){
+  const wrap=document.getElementById('listWrap');
+  wrap.innerHTML='<div class="empty">불러오는 중…</div>';
+  try{
+    if(PLAT==='instagram'){
+      // 엑셀 기본채널 + 손등록 통합 + 활동여부(무료). 서버 API가 union·활동 조인.
+      const d=await (await fetch('/api/refs/instagram')).json();
+      ITEMS=(d.items||[]).map(c=>({key:c.username, name:(c.name&&c.name!==c.username)?c.name:'',
+        added:c.added_at||'', last:c.last_active||'', src:c.source||'manual', followers:c.followers||0}));
+    }else{
+      const d=await (await fetch('/api/seeds?platform='+PLAT)).json();
+      ITEMS=(d.items||[]).filter(s=>s.kind==='account').map(s=>({key:s.value, name:'',
+        added:s.added_at||'', last:'', src:'', followers:0}));
+    }
+  }catch(e){ wrap.innerHTML='<div class="empty">목록을 불러오지 못했습니다.</div>'; return; }
+  renderRows();
+}
+
+function renderRows(){
+  const wrap=document.getElementById('listWrap'), cnt=document.getElementById('listCount');
+  const q=(document.getElementById('q').value||'').trim().toLowerCase();
+  const sort=document.getElementById('sort').value;
+  const isIg=(PLAT==='instagram');
+  cnt.textContent=ITEMS.length?('('+ITEMS.length+')'):'';
+  if(!ITEMS.length){ wrap.innerHTML='<div class="empty">아직 등록된 채널이 없습니다. 위에서 붙여넣어 등록하세요.</div>'; return; }
+  let rows=ITEMS.slice();
+  if(q) rows=rows.filter(r=>(r.key+' '+r.name).toLowerCase().includes(q));
+  if(sort==='name') rows.sort((a,b)=>a.key.localeCompare(b.key,'ko'));
+  else if(sort==='added_old') rows.sort((a,b)=>(a.added||'').localeCompare(b.added||''));
+  else if(sort==='active') rows.sort((a,b)=>activity(a.last).d-activity(b.last).d);   // 최근 활동 먼저
+  else rows.sort((a,b)=>(b.added||'').localeCompare(a.added||''));   // added(최신) 기본
+  if(!rows.length){ wrap.innerHTML='<div class="empty">"'+esc(q)+'" 검색 결과가 없습니다.</div>'; return; }
+  const body=rows.map((r,i)=>{
+    const k=esc(r.key).replace(/'/g,"\\'");
+    const badge=isIg ? ' <span class="src src-'+(r.src||'manual')+'">'+(r.src==='excel'?'기본':'등록')+'</span>' : '';
+    const nm=r.name?'<div class="nm">'+esc(r.name)+'</div>':'';
+    const ac=activity(r.last);
+    const actCell=isIg ? '<td class="ac '+ac.cls+'">'+ac.txt+'</td>' : '<td class="ac ac-none">—</td>';
+    return '<tr><td class="num">'+(i+1)+'</td>'
+      +'<td><span class="handle">@'+esc(r.key)+'</span>'+badge+nm+'</td>'
+      +actCell
+      +'<td class="date">'+fmtDate(r.added)+'</td>'
+      +'<td class="act"><span class="delbtn" title="등록 취소" onclick="removeOne(\''+k+'\')">삭제</span></td></tr>';
+  }).join('');
+  const shown = rows.length!==ITEMS.length ? ' <span class="nm">('+rows.length+'개 표시)</span>' : '';
+  wrap.innerHTML='<table class="tbl"><thead><tr><th>#</th><th>채널'+shown
+    +'</th><th>활동</th><th>등록일</th><th></th></tr></thead><tbody>'+body+'</tbody></table>';
+}
+
+async function removeOne(key){
+  if(!confirm('@'+key+' 등록을 취소할까요? (다음 수집부터 제외)')) return;
+  try{
+    if(PLAT==='instagram'){
+      await fetch('/api/prune/remove?username='+encodeURIComponent(key),{method:'POST'});
+    }else{
+      await fetch('/api/seeds',{method:'DELETE',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({platform:PLAT, value:key})});
+    }
+  }catch(e){}
+  loadList();
+}
+
+document.getElementById('box').placeholder=CFG.instagram.ph;
+document.getElementById('hint').textContent=CFG.instagram.hint;
+loadList();
+</script>
+</body>
+</html>

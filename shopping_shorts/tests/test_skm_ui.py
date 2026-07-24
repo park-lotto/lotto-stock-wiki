@@ -45,13 +45,13 @@ def test_produce_links_theme_and_brands():
 # ── Task 2: 오브 단계바 — 라벨 rename + 매칭 단계 삽입 ──────────────
 # (v6 목업 정렬, 2026-07-23 후속) 자막제거가 헤드라인 오브로 복귀 — 8단계.
 def test_orb_labels_and_mapping():
-    assert '"영상/대본"' in HTML and '"화면 붙이기"' in HTML and '"완성"' in HTML
+    assert '"영상/대본출력"' in HTML and '"영상대본MIX"' in HTML and '"최종렌더"' in HTML
     assert "ORB_TO_PANEL" in HTML and "STEP_LABELS" in HTML
     # STEP_LABELS는 정확히 8개, 자막제거 포함(v6 목업과 정렬 — 더는 오브에서 안 빠진다)
     m = re.search(r"const STEP_LABELS\s*=\s*(\[[^\]]*\])", HTML)
     assert m, "STEP_LABELS 선언을 못 찾음"
     labels = json.loads(m.group(1))
-    assert labels == ["영상/대본", "화면 붙이기", "자막제거", "음성", "꾸미기", "썸네일", "SEO", "완성"], labels
+    assert labels == ["영상/대본출력", "영상대본MIX", "고품질 자막제거", "TTS음성", "자막꾸미기", "썸네일", "SEO해시테크", "최종렌더"], labels
 
 
 def test_orb_to_panel_mapping_v6():
@@ -66,7 +66,7 @@ def test_orbbar_class_used():
 
 
 def test_panel0_title_is_video_script_not_studio():
-    assert "1 · 영상/대본" in HTML
+    assert "1 · 영상/대본출력" in HTML
     assert "1 · 제작소" not in HTML
 
 
@@ -145,14 +145,38 @@ def test_footage_on_but_no_pick_state_distinct():
 
 
 def test_pool_card_toggle_only():
-    # renderPool()이 카드 5버튼(뽑기/담기/메인/정보채우기/✕)이 아니라 ✓뱃지 토글만 그린다.
+    # renderPool()이 카드 옛 5버튼(뽑기/담기/메인/정보채우기)을 되살리지 않는다.
+    # ★Task7(2026-07-23): 클릭=pickFootage(AI PICK 지정)로 바뀌었고, 빼기는 ✕(dropFootage) 하나만 남는다.
     start = HTML.index("function renderPool(){")
     end = HTML.index("function previewMaterial")
     body = HTML[start:end]
-    assert "toggleFootage(${i})" in body
+    assert "pickFootage(${i})" in body
+    assert "dropFootage(${i})" in body
     assert "openScriptModal(${i})" not in body
     assert "designateBackbone(${i})" not in body
     assert "removeFootage(${i})" not in body
+
+
+# ── Task 7(2026-07-23): 썸네일에 AI PICK 표시 + 클릭으로 픽 지정 ──────────
+def test_pick_footage_and_drop_footage_wired():
+    assert "function pickFootage(i){" in HTML
+    assert "function dropFootage(i){" in HTML
+    assert "bbMain=true" in HTML  # pickFootage가 지정한 카드를 백본으로 못박는다
+
+
+def test_pool_card_marks_pick_with_badge():
+    assert "pickbadge" in HTML
+    assert ".pool-card.pick" in CSS
+    assert "pickbadge" in CSS
+
+
+def test_refresh_step0_sends_forced_param():
+    # 사장님이 지정한 픽(bbMain)이 있으면 /api/produce/aipick에 forced=로 강제 전달한다.
+    start = HTML.index("async function refreshStep0(){")
+    end = HTML.index("}", HTML.index("catch(e){ renderEmptyState(); }", start))
+    body = HTML[start:end]
+    assert "bbMain" in body
+    assert "forced=" in body
 
 
 # ── Task 5: 분석 극장(B) — ⚡시작 후 대기시간 실시간 해부 연출 ──────────
@@ -290,4 +314,42 @@ def test_render_candidates_uses_v6_cand_markup():
     assert "pickCandidate(" in body   # 기존 배선 유지
     assert "c.index" in body and "c.recommended" in body and "c.hook" in body
     assert "c.story_person" in body and "c.score" in body
+    assert "c.script" in body   # 대본 전체 표시(2026-07-24) — 훅만이 아니라 나레이션 전문
     assert "list.length < 2" in body   # 후보 1개 이하 조기 반환 유지
+
+
+# ── Task 8: ⚡ 클릭 직후 "매칭 중" 동적 피드백 — 패널0(사용자가 보는 화면) ──────────
+def test_match_progress_wired_in_html():
+    assert "setMatchingUI" in HTML
+    assert 'id="matchProgress"' in HTML
+    assert "매칭 중" in HTML
+
+
+def test_match_progress_style_in_css():
+    assert ".match-progress" in CSS
+
+
+def test_start_from_ai_pick_calls_set_matching_ui_before_theater():
+    # 버튼을 누른 즉시(playTheater보다 먼저) before/after 변화 + 스피너가 켜져야 한다.
+    start = HTML.index("async function startFromAiPick(){")
+    end = HTML.index("// ── AI PICK 끝 ──")
+    body = HTML[start:end]
+    assert "setMatchingUI(true" in body
+    assert body.index("setMatchingUI(true") < body.index("playTheater(")
+
+
+def test_poll_mix_mirrors_stage_to_panel0_and_restores_button():
+    start = HTML.index("async function pollMix(")
+    end = HTML.index("async function loadMixReview(")
+    body = HTML[start:end]
+    assert "updateMatchProgress(" in body
+    assert "setMatchingUI(false)" in body
+
+
+def test_set_matching_ui_toggles_button_disabled_state():
+    start = HTML.index("function setMatchingUI(on, label){")
+    end = HTML.index("function updateMatchProgress(label){")
+    body = HTML[start:end]
+    assert "btn.disabled=true" in body
+    assert "btn.disabled=false" in body
+    assert ".aiPickCta" in body

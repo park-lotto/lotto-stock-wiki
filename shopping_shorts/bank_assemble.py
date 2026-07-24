@@ -37,11 +37,41 @@ def spine_charter(spine):
     return head
 
 
-def _sample_bucket(store, bucket, k, rng=random):
-    """승인 부품 상위 perf 풀에서 k개 랜덤 샘플(로테이션). 풀=상위 max(k*_POOL_MULT,_POOL_MIN)개,
-    승인이 k 이하면 전부. perf 상위를 풀로 쓰되 그 안에서 무작위 → 잘된 것 위주로 매번 다르게."""
-    pool = store.list_pattern_items(bucket=bucket, status="approved", order_by="perf",
-                                    limit=max(k * _POOL_MULT, _POOL_MIN))
+_STRONG_HOOK_STARTS = ("와", "헐", "아니", "이거", "이걸", "저 이거", "제가", "여러분")
+_STRONG_HOOK_WORDS = ("대박", "충격", "진짜", "절대", "왜", "몰랐", "후회", "천재", "꿀", "이제 알", "이런 게")
+
+
+def _hook_strength(text):
+    """훅 강도 휴리스틱(2026-07-23 사장님: "훅이 약해, 제일 강한 걸 우선"). 은행에 engagement
+    실측이 없어(perf 대부분 0) 텍스트 신호로 강한 훅을 앞세운다: 강한 오프너로 시작·물음표·
+    감탄·충격/발견 어휘·이모지 = 가점 / 길고 설명체 = 감점."""
+    t = (text or "").strip()
+    if not t:
+        return -99
+    s = 0
+    if t.startswith(_STRONG_HOOK_STARTS):
+        s += 3
+    if "?" in t:
+        s += 2
+    if "!" in t:
+        s += 1
+    s += sum(1 for w in _STRONG_HOOK_WORDS if w in t)
+    if any(e in t for e in ("😱", "🚨", "🔥", "😳", "❗", "🤫")):
+        s += 1
+    if len(t) > 45:          # 너무 긴 설명체 훅 감점
+        s -= 2
+    return s
+
+
+def _sample_bucket(store, bucket, k, rng=random, rank_key=None):
+    """승인 부품 상위 perf 풀에서 k개 랜덤 샘플(로테이션). 승인이 k 이하면 전부.
+    rank_key 주면(훅 강도 등) 넉넉히 뽑아 **강도 상위**에서만 로테이션 → 강한 것 우선+매번 다르게."""
+    limit = max(k * _POOL_MULT, _POOL_MIN)
+    if rank_key:
+        limit = max(limit, k * 10)   # 강도 랭킹용으로 넉넉히
+    pool = store.list_pattern_items(bucket=bucket, status="approved", order_by="perf", limit=limit)
+    if rank_key and len(pool) > k:
+        pool = sorted(pool, key=lambda it: rank_key(it.get("text", "")), reverse=True)[:max(k * 2, 12)]
     if len(pool) <= k:
         return pool
     return rng.sample(pool, k)
@@ -51,15 +81,17 @@ def parts_block(store, k=5, rng=random):
     """STYLE_BUCKETS별 승인부품 k개(상위 perf 풀에서 로테이션 샘플) → 프롬프트 블록. 부품 없으면 ''."""
     lines = []
     for b in STYLE_BUCKETS:
-        items = _sample_bucket(store, b, k, rng=rng)
+        # 훅은 강도 상위에서만 로테이션(약한 설명체 훅 배제) — 사장님 "제일 강한 훅 우선".
+        items = _sample_bucket(store, b, k, rng=rng, rank_key=_hook_strength if b == "hook" else None)
         if not items:
             continue
         texts = ", ".join(_sanitize(it["text"]) for it in items)
         lines.append(f"· {_LABEL.get(b, b)}: {texts}")
     if not lines:
         return ""
-    return ("[승인된 부품 — 이 결·패턴을 참고해 새로 써라. ★그대로 베끼기 금지: 특히 훅·CTA는 "
-            "구조와 리듬만 가져오고 단어·인물·소재는 반드시 우리 것으로 바꿔라(표절·중복 회피).]\n"
+    return ("[승인된 부품 — 이 결·패턴을 살려 써라. ★훅: 후보 3개 중 최소 2개는 여기 훅을 "
+            "거의 그대로(소재 단어만 바꿔) 직접 써라. CTA·나머지는 구조·리듬만 가져오고 단어·인물·"
+            "소재는 우리 것으로. 인명·상표·지명 등 고유명사만 반드시 교체(표절·중복 회피).]\n"
             + "\n".join(lines))
 
 

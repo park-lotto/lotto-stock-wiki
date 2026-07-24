@@ -35,6 +35,7 @@
       { icon: "📚", text: "대본 즐겨찾기",   href: "/library" },
       { icon: "🔎", text: "신규채널 픽업",   href: "/discover" },
       { icon: "🎞️", text: "장면 라이브러리", href: "/scene_library" },
+      { icon: "📋", text: "레퍼런스 채널 관리", href: "/refs", admin: true },
     ] },
     { label: "제작", items: [
       { icon: "🎬", text: "영상 제작소",     href: "/produce" },
@@ -102,6 +103,9 @@
     ".ss-work-del{flex-shrink:0;cursor:pointer;color:var(--sub,#8b98a9);opacity:0;padding:2px 4px;font-size:13px}" +
     ".ss-work:hover .ss-work-del{opacity:.65}" +
     ".ss-work-del:hover{opacity:1;color:#ff6b6b}" +
+    // 데스크톱: 상단 계정 카드에 '⚙️ 내 계정'이 있어 이 메뉴는 중복 → 숨김. 모바일은 카드가
+    // 숨겨지므로(.ss-acct display:none) 이 메뉴를 노출한다(2026-07-24).
+    "@media(min-width:761px){.ss-group-acct{display:none}}" +
     "@media(max-width:760px){body{flex-direction:column}" +
       ".ss-nav{width:100%;border-right:none;border-bottom:1px solid var(--line,#1e2735);display:flex;gap:6px;" +
         "overflow-x:auto;align-items:center;white-space:nowrap;padding:10px 12px}" +
@@ -146,16 +150,20 @@
     html += '<div class="ss-group"><div class="ss-label">' + g.label + "</div>";
     g.items.forEach(function (it) {
       var active = !!it.href && (it.href === path || (it.href === "/" && path === "/"));
-      var cls = "ss-item" + (active ? " active" : "") + (it.href ? "" : " ss-disabled");
+      // 관리자 전용 항목(admin:true)은 기본 숨김으로 렌더 → /api/me가 is_admin이면 아래에서 노출.
+      var cls = "ss-item" + (active ? " active" : "") + (it.href ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "");
+      var hide = it.admin ? ' style="display:none"' : "";
       var onclick = it.href && !active ? ' onclick="location.href=\'' + esc(it.href) + "'\"" : "";
       var payAttr = (it.href ? ' data-ss-href="' + esc(it.href) + '"' : "") + (it.free ? ' data-ss-free="1"' : "");
-      html += '<div class="' + cls + '"' + payAttr + onclick + ">" + it.icon + " " + it.text + "</div>";
+      html += '<div class="' + cls + '"' + payAttr + hide + onclick + ">" + it.icon + " " + it.text + "</div>";
     });
     html += "</div>";
   });
 
-  // 내 계정(유저 자기 설정) — 무료 등급도 접근(data-ss-free). 페이월 잠금 제외.
-  html += '<div class="ss-group"><div class="ss-item" data-ss-href="/account" data-ss-free="1"' +
+  // 내 계정 메뉴 — 데스크톱에선 상단 계정 카드(_accountCard)의 '⚙️ 내 계정'과 중복이라 숨긴다.
+  // 단 모바일(≤760px)에선 그 카드(.ss-acct)가 공간 부족으로 display:none이라, 이 메뉴가 /account·
+  // 로그아웃에 닿는 유일한 통로다 → 모바일에만 노출(ss-item-acct + 아래 @media)(2026-07-24).
+  html += '<div class="ss-group ss-group-acct"><div class="ss-item ss-item-acct" data-ss-href="/account" data-ss-free="1"' +
           ' onclick="location.href=\'/account\'">👤 내 계정</div></div>';
 
   // 테마 토글(민트-블랙 ↔ 화이트-민트). data-theme + localStorage로 전 페이지 공유.
@@ -197,6 +205,14 @@
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (!d || !d.ok) { window.alert("삭제 실패"); return; }
+        // 로컬 draft(sessionStorage)가 방금 지운 작업을 붙들고 있으면 함께 지운다(2026-07-24).
+        // 안 지우면 제작소 재진입 시 _consumeProduceHandoff가 그 draft를 복원→saveWork의
+        // INSERT 폴백으로 되살려, 지운 작업이 1단계로 부활하고 '내 작업'에 다시 뜬다.
+        // URL ?work= 만 보던 기존 가드는 다른 화면에서 삭제할 때 이 draft를 놓쳤다.
+        try {
+          var w = JSON.parse(sessionStorage.getItem("produce_work") || "null");
+          if (w && w.work_id === wid) sessionStorage.removeItem("produce_work");
+        } catch (e) {}
         var open = null;
         try { open = new URLSearchParams(location.search).get("work"); } catch (e) {}
         if (open === wid) { location.href = "/produce?new=1"; return; }
@@ -315,6 +331,8 @@
     var nav = document.querySelector(".ss-nav");
     if (!nav || document.getElementById("ss-acct")) return;
     var admin = !!d.is_admin;
+    // 관리자면 사이드바의 admin 전용 항목(레퍼런스 채널 관리 등)을 노출.
+    if (admin) document.querySelectorAll(".ss-admin-only").forEach(function (e) { e.style.display = ""; });
     var email = escHtml(d.email || "");
     var initial = escHtml((d.email || "?").trim().charAt(0).toUpperCase() || "?");
     var tier, tierColor, sub;

@@ -121,11 +121,13 @@ def _collect_youtube():
     return items
 
 
-def _collect_tiktok():
+def _collect_tiktok(include_paid_keywords=False):
     """틱톡 시드 계정(@handle)들의 최근 영상 → 조회수 기반 랭킹(무료 yt-dlp).
 
-    시드 kind='account'. 계정마다 yt-dlp로 훑어(실패계정은 스킵) 14일 창 내 영상을
-    공통 item으로 만든다. 유튜브와 동일한 지표·저장 구조."""
+    include_paid_keywords=False(기본): **무료 경로만** — 계정 시드(yt-dlp)만 훑는다.
+    키워드 시드 검색은 Apify 건당과금이라 자동 수집에서 뺐다(2026-07-24 "과금 없는 구조").
+    코드는 지우지 않는다 — 관리자가 명시로 켤 때만(True) 돈다.
+    """
     store = Store(DB_PATH)
     seeds = store.list_seeds("tiktok")
     if not seeds:
@@ -140,7 +142,7 @@ def _collect_tiktok():
     # 번역돼 저장됨(UI addSeed). 언어당 tiktok_search_count(기본 50)개. 계정 경로와 같은
     # raw 스키마라 아래 build_tiktok_items로 함께 흘러간다.
     lang_seeds = [s["value"] for s in seeds if s["kind"] in _TIKTOK_LANG_KINDS]
-    if lang_seeds:
+    if include_paid_keywords and lang_seeds:
         count = int(store.get_setting("tiktok_search_count", TIKTOK_SEARCH_COUNT_DEFAULT))
         for kw in lang_seeds:
             raw.extend(tt_search_full(kw, max_results=count))

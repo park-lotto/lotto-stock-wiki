@@ -18,7 +18,7 @@ from shopping_shorts.scene_match import match_scene_assets, match_sfx
 from shopping_shorts import tts
 from shopping_shorts import audio_post
 from shopping_shorts import config
-from shopping_shorts.video_assemble import assemble, _beat_timeline, _probe_duration, _MAX_SLOWMO
+from shopping_shorts.video_assemble import assemble, _beat_timeline, _probe_duration, _MAX_SLOWMO, preview_preset
 from shopping_shorts.motion_assets import resolve_layers, DEFAULT_ASSETS_DIR
 from shopping_shorts.motion_packs import build_plan, load_packs
 from shopping_shorts.vmake_client import remove_subtitles
@@ -29,6 +29,11 @@ from shopping_shorts import pron_corrections
 
 # 모션 자산 폴더(테스트가 monkeypatch로 교체 가능하도록 모듈 상수로 노출)
 MOTION_ASSETS_DIR = DEFAULT_ASSETS_DIR
+
+# ★TTS 고정 시드(2026-07-23 사장님 "왜 매일 달라지나"): 프리셋에 seed가 없으면(대부분) v3가
+# 매 렌더 다른 목소리로 뽑혀 비트마다·날마다 성우가 달라졌다. 고정 시드를 박아 결정성 확보
+# — 튜닝한 톤(stability·style)·모델은 그대로 두고 '매번 달라짐'만 없앤다. 명시 seed는 존중.
+_PINNED_TTS_SEED = 7
 
 
 def _source_video_id(i):
@@ -83,7 +88,8 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     if config.GROQ_API_KEY and n_best < 2:
         n_best = 2
     tts.synthesize_best(natural, str(out_path), n=n_best,
-                        base_seed=prof.get("seed"), ranker=ranker,
+                        base_seed=(prof.get("seed") if prof.get("seed") is not None else _PINNED_TTS_SEED),
+                        ranker=ranker,
                         voice_id=voice_id, voice_settings=settings, speed=speed,
                         model_id=model_id, previous_text=previous_text, next_text=next_text)
     # 비트별 라우드니스 정규화는 실제 ElevenLabs 음성일 때만 — 키 없는 개발용 무음 mock에
@@ -105,14 +111,22 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
     tts_path 있음)는 0원, 갈아끼운 후보(tts_path 키 자체가 없음)만 그 자리에서 합성한다.
     ★파일 실재가 아니라 tts_path '존재'로 판단한다 — 하류 tts_paths도 truthiness로만 보므로
     존재하되 파일이 없는 경우의 처리(별개 관심사)를 이 버그 수정이 바꾸지 않게 한다.
+
+    ★비트별 합성은 서로 독립이라(고유 파일 beat_{beat_idx}.mp3, 이웃텍스트는 인덱스로
+    미리 정해짐 — 앞 비트 오디오에 의존하지 않음) config.TTS_MAX_WORKERS로 bounded
+    ThreadPoolExecutor 병렬 실행한다(2026-07-24, 실처리시간 단축). 순서·값은 순차 실행과
+    동일 — worker는 자기 고유 인덱스 i만 쓰고 공유 가변상태(커서 등)는 없다. 429 방지를
+    위해 무제한 동시성은 금지(ElevenLabs·GROQ-Whisper 랭커 rate limit).
     """
     tts_dir = Path(tts_dir)
     tts_dir.mkdir(parents=True, exist_ok=True)
     total = len(beats)
-    for i, beat in enumerate(beats):
+
+    def _one(i):
+        beat = beats[i]
         out = tts_dir / f"beat_{beat['beat_idx']}.mp3"
         if skip_existing and beat.get("tts_path"):
-            continue
+            return
         synthesize_line(
             beat["narration"], out, voice=voice, beat_role=beat.get("role"),
             beat_index=i, beat_total=total,
@@ -146,6 +160,17 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
                 beat["narration"], words, _ad or 0.0,
                 preset=beat.get("caption_lines"))   # None일 수 있음 → 폴백
 
+    if total == 0:
+        return
+    _t0 = datetime.now(timezone.utc)
+    workers = max(1, min(config.TTS_MAX_WORKERS, total))
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        futures = [ex.submit(_one, i) for i in range(total)]
+        for f in futures:
+            f.result()  # 예외를 여기서 소비 — 숨기지 않고 그대로 전파(run_mix_job이 failed 처리)
+    print(f"[tts] {total}비트 합성 {(datetime.now(timezone.utc) - _t0).total_seconds():.1f}s "
+          f"(workers={workers})", file=sys.stderr)
+
 
 def _refill_beats_to_tts(beats, source_scripts, tts_dir):
     """TTS 후 재보정 — 각 비트 화면(primary+alternates)이 **실 TTS 길이**보다 짧으면 풀에서
@@ -158,6 +183,16 @@ def _refill_beats_to_tts(beats, source_scripts, tts_dir):
         return
     sc = Counter((b.get("primary") or {}).get("video_id")
                  for b in beats if b.get("primary"))
+    # ★전역 used seg(2026-07-23 사장님 "동일 장면 반복 그만"): 모든 비트가 이미 쓴 seg를 모아
+    # fill에 넘겨 비트 사이 반복을 막는다. 비트를 채울 때마다 새로 붙은 seg를 여기 등록한다.
+    used_all = set()
+    for b in beats:
+        p = b.get("primary") or {}
+        if p.get("seg_id"):
+            used_all.add(p["seg_id"])
+        for a in (b.get("alternates") or []):
+            if a.get("seg_id"):
+                used_all.add(a["seg_id"])
     for b in beats:
         tp = b.get("tts_path")
         if not tp:
@@ -173,11 +208,15 @@ def _refill_beats_to_tts(beats, source_scripts, tts_dir):
         mc = 2 if backbone.is_point_beat(b) else None
         try:
             filled = backbone.fill_clips_to_cover(b, source_scripts, src_count=sc, need=td,
-                                                  max_clips=mc)
+                                                  max_clips=mc, avoid_segs=used_all)
         except Exception:
             traceback.print_exc(file=sys.stderr)
             continue
-        b["alternates"] = filled.get("alternates", b.get("alternates"))
+        new_alts = filled.get("alternates", b.get("alternates"))
+        b["alternates"] = new_alts
+        for a in (new_alts or []):        # 새로 붙은 seg를 전역에 등록 → 다음 비트가 안 겹치게
+            if a.get("seg_id"):
+                used_all.add(a["seg_id"])
 
 
 # 콘폼 트리거 임계(초). 이하의 초과분은 켄번즈 홀드(≤0.8s)로 자연 흡수되는 수준이라
@@ -254,19 +293,31 @@ def _prepare_sources(urls, work):
     나머지로 계속한다 — 불량 URL 하나(렌즈 즐겨찾기로 샌 instagram.com/popular/{슬러그} 등)가
     배치 전체를 죽이던 걸 막는다. 근본차단은 lens_discover._is_watchable(입구), 여기는 백스톱.
     video_id는 인덱스 기준(s{i})이라 중간이 빠져도 나머지 매칭에 영향 없다(갭 허용).
-    전부 실패(0개 생존)하면 RuntimeError. skipped=[(url, err), ...]."""
-    video_paths = {}
-    captions = {}
-    skipped = []
-    for i, url in enumerate(urls):
+    전부 실패(0개 생존)하면 RuntimeError. skipped=[(url, err), ...].
+
+    병렬 다운로드(2026-07-24 속도개선 T③) — 아래 '대본 추출(병렬)' 단계와 같은
+    ThreadPoolExecutor 패턴. 예외는 워커 안에서 잡아 (vid, path, caption, err) 튜플로
+    돌려주므로 ex.map이 첫 예외에서 멈추는 일이 없다(소스별 격리 유지)."""
+    def _download_one(item):
+        i, url = item
         vid = _source_video_id(i)
         d = Path(work) / vid
         d.mkdir(parents=True, exist_ok=True)
         try:
             path, caption = download_any(url, str(d))
+            return vid, path, caption, None
         except Exception as e:  # noqa: BLE001 — 소스별 격리가 목적
-            skipped.append((url, str(e)))
             print(f"_prepare_sources: 소스 스킵 — {url}: {e}", file=sys.stderr)
+            return vid, None, None, (url, str(e))
+
+    video_paths = {}
+    captions = {}
+    skipped = []
+    with ThreadPoolExecutor(max_workers=max(1, len(urls))) as ex:
+        results = list(ex.map(_download_one, enumerate(urls)))
+    for vid, path, caption, err in results:
+        if err is not None:
+            skipped.append(err)
             continue
         video_paths[vid] = path
         captions[vid] = caption
@@ -305,7 +356,21 @@ def run_mix_job(job_id, db_path, work_root):
         store.update_mix_job(job_id, status="extracting")
         def _extract(item):
             vid, path = item
-            r = extract_script(path, vid, caption=captions.get(vid, ""))
+            # 캐시 재사용(2026-07-24): 이 소스 대본을 담기/AI PICK/뽑기 때 이미 뽑아
+            # script_extracts에 저장했으면 그대로 쓴다 — Gemini/Whisper 재전사 스킵(속도↑).
+            # ★품질 무해 가드: extract_script와 동일한 {segments(seg_id 포함), full_text} 형태를
+            #   그대로 저장했으므로 동일 데이터다. 단 seg_id가 다 있어야 장면매칭이 성립하므로,
+            #   segments가 비었거나 seg_id 없는 항목이 하나라도 있으면 캐시를 버리고 새로 추출한다.
+            cached = None
+            try:
+                cached = store.get_extract(vid)
+            except Exception:
+                cached = None
+            segs = (cached or {}).get("segments")
+            if segs and all(s.get("seg_id") for s in segs):
+                r = {"segments": segs, "full_text": (cached.get("full_text") or "")}
+            else:
+                r = extract_script(path, vid, caption=captions.get(vid, ""))
             r["video_id"] = vid
             return vid, r
         with ThreadPoolExecutor(max_workers=max(1, len(video_paths))) as ex:
@@ -507,6 +572,7 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
             rec = next((cand for cand in sf["candidates"] if cand["recommended"]),
                        sf["candidates"][0])
             plan = rec["plan"]
+            plan["generator"] = "scene_first"   # ★P1: 어느 생성기가 만들었나(조용한 폴백 금지)
             # 주입 미리보기(2026-07-23): 이 대본에 실제로 들어간 은행 블록을 plan에 실어 리뷰
             # 화면이 '은행이 뭘 댔나'를 눈으로 검증하게 한다(빈 문자열이면 은행 미주입).
             if bank_context:
@@ -526,11 +592,18 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                 except Exception:
                     traceback.print_exc(file=sys.stderr)
         else:
+            # ★P1(2026-07-24): scene_first가 실패하면 예전엔 **조용히** 옛 생성기로 넘어가
+            # 개선(30초·7~8컷·대화·은행훅)이 안 탄 대본이 나왔고, 사장님은 "고쳤는데 왜 그대로냐"로
+            # 겪었다(실측: 503 과부하 → 후보 0 → 폴백). 이제 폴백을 표식으로 남겨 화면에 띄운다.
+            print("scene_first 후보 0 → 옛 생성기로 폴백(개선 미적용)", file=sys.stderr)
             plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
                                    video_type=video_type, given_script=given_script)
+            plan["generator"] = "legacy_fallback"
+            plan["generator_note"] = "장면우선 생성이 실패해 예전 방식으로 만들었습니다(개선 미적용) — 다시 매칭을 권장합니다."
     else:
         plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
                                video_type=video_type, given_script=given_script)
+        plan["generator"] = "legacy"
     # 빈 EDL(추출 전량 실패 또는 파이프라인 중간 전용풀 소진)을 ready_for_review로
     # 오보고하지 않는다 — 성공처럼 보이는 빈 리뷰화면 대신 즉시 실패로 정상 종료
     # (2026-07-12 최종 전체리뷰 Important).
@@ -564,6 +637,20 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 저장(아래) 전에 돌므로 preview·final 렌더 모두 자동 적용. 실패해도 job을 죽이지 않는다.
     try:
         _conform_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron)
+    except Exception:
+        traceback.print_exc(file=sys.stderr)
+
+    # 4.9) ★렌더 직전 불변식 게이트(2026-07-24, P2) — 모든 비트 변형(refill·conform)이 끝난
+    # **최종 plan**만 보고 반복·파편·길이를 잰다. 뒷단계가 앞단계를 되돌려도 여기서 잡혀
+    # 화면에 뜬다(조용한 실패 금지). 순수 계산이라 실패해도 job은 안 죽인다.
+    try:
+        from shopping_shorts import plan_gate
+        plan["gate"] = plan_gate.check_plan(
+            plan.get("beats"), target_seconds,
+            pool_video_count=len({s.get("video_id") for s in (source_scripts or [])
+                                  if s.get("segments")} - {None}))
+        if not plan["gate"]["ok"]:
+            print("plan_gate 위반: " + " / ".join(plan["gate"]["violations"]), file=sys.stderr)
     except Exception:
         traceback.print_exc(file=sys.stderr)
 
@@ -802,11 +889,14 @@ def run_preview(job_id, db_path, work_root):
         # headcopy는 store.py 주석대로 "영상제작 5단계 꾸미기 헤드카피"라 deco={}로 꾸미기를
         # 뺐다면서 헤드카피를 넘기는 건 자기모순이었다. assemble의 기본값이면 우리 자막은 정상으로
         # 굽힌다(라이브 관측: caption_style=None인 job으로 렌더해 자막 정상 확인).
-        assemble(plan, tts_paths, source_video_paths, str(out_path),
-                 clean_fn=None,                      # ← 유료 VMake 건너뜀. 이게 핵심이다.
-                 deco={},                             # ← 꾸미기 없음(4단계 소관)
-                 cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)),
-                 sfx_paths=_resolve_sfx_paths(store, plan, job.get("customer_id", 0)))
+        # ★미리보기는 veryfast로 인코딩(6분→~1.5분) — 확인용이라 화질 조금 낮아도 무방.
+        # 최종 렌더(run_render)는 이 컨텍스트 밖이라 medium 고화질 그대로.
+        with preview_preset():
+            assemble(plan, tts_paths, source_video_paths, str(out_path),
+                     clean_fn=None,                      # ← 유료 VMake 건너뜀. 이게 핵심이다.
+                     deco={},                             # ← 꾸미기 없음(4단계 소관)
+                     cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)),
+                     sfx_paths=_resolve_sfx_paths(store, plan, job.get("customer_id", 0)))
         store.update_mix_job(job_id, preview_status="ready", preview_path=str(out_path))
     except Exception as e:  # noqa: BLE001 — BackgroundTasks라 밖에서 아무도 안 받는다
         traceback.print_exc(file=sys.stderr)

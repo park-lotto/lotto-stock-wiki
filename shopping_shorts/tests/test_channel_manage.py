@@ -11,7 +11,12 @@ def store(tmp_path):
 def test_add_discovered_and_list(store):
     store.add_discovered("newch", "새채널")
     got = store.discovered_channels()
-    assert got == [{"name": "새채널", "username": "newch", "followers": 0, "inpock": ""}]
+    assert len(got) == 1
+    # collect union이 쓰는 핵심 키(2026-07-24: 관리페이지 표시용 added_at 키가 추가됨 —
+    # 추가 키라 collect union은 무시한다. exact 비교 대신 핵심 키만 검증).
+    assert {k: got[0][k] for k in ("name", "username", "followers", "inpock")} == \
+        {"name": "새채널", "username": "newch", "followers": 0, "inpock": ""}
+    assert "added_at" in got[0]  # 관리페이지가 등록일 표시에 쓴다
 
 
 def test_add_discovered_defaults_name_to_username(store):
