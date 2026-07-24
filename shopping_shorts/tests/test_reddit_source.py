@@ -34,3 +34,31 @@ def test_image_post_returns_none():
 def test_selfpost_returns_none():
     url, platform = extract_media_url(_post(url="https://www.reddit.com/r/x/comments/..", domain="self.x"))
     assert url is None and platform is None
+
+
+from shopping_shorts.reddit_source import normalize_children
+
+
+def test_normalize_keeps_only_videos_and_maps_fields():
+    children = [
+        {"data": {"id": "aaa", "title": "wow clip", "ups": 1200, "num_comments": 45,
+                  "created_utc": 1785000000, "permalink": "/r/x/comments/aaa/",
+                  "subreddit": "nextfuckinglevel", "url": "https://www.tiktok.com/@z/video/9",
+                  "is_video": False, "media": None, "thumbnail": "https://thumb/aaa.jpg"}},
+        {"data": {"id": "bbb", "title": "just a photo", "ups": 5, "num_comments": 0,
+                  "created_utc": 1785000000, "permalink": "/r/x/comments/bbb/",
+                  "subreddit": "nextfuckinglevel", "url": "https://i.redd.it/p.jpg",
+                  "domain": "i.redd.it"}},
+    ]
+    items = normalize_children(children, category="테스트")
+    assert len(items) == 1
+    it = items[0]
+    assert it["post_id"] == "aaa"
+    assert it["shortcode"] == "aaa"          # ranking._normalize가 쓰는 키
+    assert it["source"] == "reddit"
+    assert it["media_platform"] == "tiktok"
+    assert it["media_url"] == "https://www.tiktok.com/@z/video/9"
+    assert it["ups"] == 1200
+    assert it["category"] == "테스트"
+    assert it["published_at"].endswith("Z")
+    assert it["permalink"] == "https://www.reddit.com/r/x/comments/aaa/"
