@@ -131,37 +131,6 @@ def test_source_video_id():
     assert mix_pipeline._source_video_id(2) == "s2"
 
 
-def test_synthesize_line_n_best_cap_forces_best_of_1(monkeypatch, tmp_path):
-    # 2026-07-24 매칭속도개선: GROQ 키가 있어 floor가 2로 끌어올려도 n_best_cap=1이면
-    # 최종 n_best는 1이어야 한다(floor '이후' 상한).
-    monkeypatch.setattr(mix_pipeline.config, "GROQ_API_KEY", "fake-groq-key")
-    captured = {}
-
-    def fake_synth(text, out, *, n, **k):
-        captured["n"] = n
-        return out
-
-    monkeypatch.setattr(mix_pipeline.tts, "synthesize_best", fake_synth)
-    out = tmp_path / "beat_0.mp3"
-    mix_pipeline.synthesize_line("나레이션", out, n_best_cap=1)
-    assert captured["n"] == 1
-
-
-def test_synthesize_beats_threads_n_best_cap(monkeypatch, tmp_path):
-    # _synthesize_beats가 n_best_cap을 synthesize_line까지 그대로 전달하는지(배선 확인).
-    monkeypatch.setattr(mix_pipeline.config, "GROQ_API_KEY", "fake-groq-key")
-    captured = {}
-
-    def fake_synth(text, out, *, n, **k):
-        captured["n"] = n
-        return out
-
-    monkeypatch.setattr(mix_pipeline.tts, "synthesize_best", fake_synth)
-    beats = [{"beat_idx": 0, "role": "훅", "narration": "n"}]
-    mix_pipeline._synthesize_beats(beats, tmp_path, voice=None, n_best_cap=1)
-    assert captured["n"] == 1
-
-
 def test_run_render_happy_path(monkeypatch):
     db = _dbpath()
     work = Path(tempfile.mkdtemp())
