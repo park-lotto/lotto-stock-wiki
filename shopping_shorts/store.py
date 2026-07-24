@@ -491,6 +491,14 @@ class Store:
                 )
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_psnap ON platform_snapshots(platform, shortcode, id)")
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS youtube_channel_cache (
+                    seed_value TEXT PRIMARY KEY,
+                    channel_id TEXT,
+                    uploads_playlist TEXT,
+                    resolved_at TEXT
+                )
+            """)
             # 발굴로 찾아 "벤치마크 목록에 추가"한 채널 — collect()가 엑셀 목록과
             # union해 이후 메인 랭킹에도 추적한다(2026-07-12).
             c.execute("""
@@ -1103,6 +1111,21 @@ class Store:
                 "SELECT shortcode FROM saved WHERE customer_id=?", (customer_id,)
             ).fetchall()
         return {r[0] for r in rows}
+
+    def yt_cache_get(self, seed_value):
+        """해석 캐시 조회 → (channel_id, uploads_playlist) 또는 None."""
+        with self._conn() as c:
+            row = c.execute("SELECT channel_id, uploads_playlist FROM youtube_channel_cache "
+                            "WHERE seed_value=?", (seed_value,)).fetchone()
+        return (row[0], row[1]) if row else None
+
+    def yt_cache_put(self, seed_value, channel_id, uploads_playlist):
+        """seed→채널 해석 결과 저장(재해석 시 갱신)."""
+        with self._conn() as c:
+            c.execute("INSERT OR REPLACE INTO youtube_channel_cache"
+                      "(seed_value, channel_id, uploads_playlist, resolved_at) "
+                      "VALUES(?,?,?, datetime('now'))",
+                      (seed_value, channel_id, uploads_playlist))
 
     # ── 플랫폼 발굴 시드(유튜브 키워드/채널, 틱톡 계정) ──
     def add_seed(self, platform, kind, value):
