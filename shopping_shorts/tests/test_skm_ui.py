@@ -314,6 +314,7 @@ def test_render_candidates_uses_v6_cand_markup():
     assert "pickCandidate(" in body   # 기존 배선 유지
     assert "c.index" in body and "c.recommended" in body and "c.hook" in body
     assert "c.story_person" in body and "c.score" in body
+    assert "c.script" in body   # 대본 전체 표시(2026-07-24) — 훅만이 아니라 나레이션 전문
     assert "list.length < 2" in body   # 후보 1개 이하 조기 반환 유지
 
 

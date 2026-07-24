@@ -3178,9 +3178,11 @@ function renderCandidates(list){
   el.innerHTML = '<div style="font-size:12px;color:var(--sub);margin-bottom:8px">🧬 새 대본 '
     + list.length + '개 만들었어요 — <b style="color:var(--accent)">카드를 눌러 하나를 고르세요</b>(추천이 이미 선택돼 있어요)</div>'
     + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-    + list.map((c,i) => `<div class="cand${c.recommended?' on':''}" onclick="pickCandidate(${c.index})" style="cursor:pointer">`
+    + list.map((c,i) => `<div class="cand${c.recommended?' on':''}" onclick="pickCandidate(${c.index})" style="cursor:pointer;flex:1 1 260px;min-width:0">`
         + `<div class="cb">${LBL[i]||('후보 '+(i+1))}${c.recommended?'<span class="rec">👍 추천·선택됨</span>':''}</div>`
-        + `<p>${esc(c.hook||'')}${c.story_person?(' — '+esc(c.story_person)):''}${c.score!=null?` · 점수 ${c.score}`:''}</p>`
+        // 대본 전체 표시(2026-07-24 사장님): A/B/C를 통째로 읽고 비교해 고른다 — 훅 한 줄이 아니라 나레이션 전문.
+        + `<p style="white-space:pre-wrap">${esc(c.script || c.hook || '')}</p>`
+        + `<div style="margin-top:6px;font-size:10px;color:#6b7488">${c.story_person?esc(c.story_person):''}${c.score!=null?(c.story_person?' · ':'')+`점수 ${c.score}`:''}</div>`
         + `<div class="pickhint" style="font-size:11px;color:var(--sub);margin-top:6px">👆 이 대본으로 고르기</div>`
         + `</div>`).join('')
     + '</div>';
