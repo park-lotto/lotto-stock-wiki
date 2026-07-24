@@ -355,7 +355,7 @@
          예전엔 영상마다 📝뽑기/🎬담기를 따로 눌러야 했다 — 이제 카드를 켜두기만 하면(자동담김)
          AI가 그중 완성도 1위 대본을 스스로 골라 보여준다(AI PICK). 담긴 게 없으면 빈 상태. -->
     <section class="panel" data-step="0">
-      <h3>1 · 영상/대본</h3>
+      <h3>1 · 영상/대본출력</h3>
       <div class="sub">쓸 영상만 켜두세요(✓) — AI가 그중 완성도 1위 대본을 골라 보여줍니다.</div>
       <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
         <!-- ◀ 왼쪽: 미리보기(장면 매칭 후) + 재료 그리드 -->
@@ -403,7 +403,7 @@
       </div>
     </section>
     <section class="panel" data-step="1">
-      <h3>3 · 자막 제거</h3>
+      <h3>3 · 고품질 자막제거</h3>
       <div class="hero rise">
         <div class="hero-in">
           <label class="hbar">
@@ -438,7 +438,7 @@
       </div>
     </section>
     <section class="panel" data-step="2">
-      <h3>4 · 음성</h3>
+      <h3>4 · TTS음성</h3>
       <div class="sub">성우 프리셋을 고르면 톤·속도·감도가 한 번에 세팅됩니다. 들어보고 다음으로.</div>
       <button id="openVoiceTune" style="display:none" class="btn-prev" onclick="window.open('/voice_tune','_blank')">🩺 발음교정 작업대 열기</button>
       <label style="display:flex;align-items:center;gap:8px;margin:8px 0;cursor:pointer">
@@ -480,7 +480,7 @@
       <button class="btn-next" style="margin-top:12px;padding:8px 16px" onclick="vpGateNext()">다음 단계 (꾸미기) →</button>
     </section>
     <section class="panel" data-step="3">
-      <h3>5 · 꾸미기</h3>
+      <h3>5 · 자막꾸미기</h3>
       <div class="sub">아래 <b>완성 스타일</b>을 고르면 바로 완성돼요. 실제 장면 위에서 미리보고, 더 손보고 싶으면 <b>직접 다듬기</b>를 펼치세요.</div>
       <!-- 🪞 피팅룸: 좌(큰 미러) + 우(문구·스타일카드·강조·고급) -->
       <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-top:12px">
@@ -726,7 +726,7 @@
       <div id="thumbGallery" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div>
     </section>
     <section class="panel" data-step="5">
-      <h3>7 · SEO</h3>
+      <h3>7 · SEO해시테크</h3>
       <div class="sub">제목·설명·태그를 만들고, 키워드를 유튜브에서 실제로 재서 근거를 붙입니다.</div>
       <div class="seoBar">
         <button class="btn primary" id="seoGenAll" onclick="seoGenerate()">AI로 전체 생성</button>
@@ -736,7 +736,7 @@
       <div id="seoBody" class="seoBody"></div>
     </section>
     <section class="panel" data-step="6">
-      <h3>8 · 완성 · 렌더</h3>
+      <h3>8 · 최종렌더</h3>
       <div class="sub">확정 대본·장면매칭·음성·자막제거 설정을 최종 영상으로 렌더합니다.</div>
       <div id="finalSummary" class="hint" style="margin-bottom:10px"></div>
       <button id="btnFinalRender" class="btn-next" style="padding:12px 22px" onclick="renderFinal()">🎬 최종 렌더</button>
@@ -751,7 +751,7 @@
          위→아래 한 방향: ① 새 대본 고르기(가로카드, 추천이 이미 선택돼 있음) ② 장면 확인(문장↔화면,
          상세 편집은 접힘) ③ 좌측 레일 미리보기 → 확인되면 "다음(음성)". -->
     <section class="panel" data-step="7">
-      <h3>2 · 화면 붙이기</h3>
+      <h3>2 · 영상대본MIX</h3>
       <div class="sub">대본 후보를 고르고, 문장마다 어떤 화면이 붙는지 확인하세요. 확인되면 왼쪽에서 미리보기가 재생됩니다.</div>
       <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
         <!-- ◀ 좌측 레일: ③ 미리보기(9:16) — 편집안이 뜨면(loadMixReview) 여기가 프리뷰 자리가 된다.
@@ -824,7 +824,7 @@
 // 패널 인덱스는 물리적으로 안 바뀐다 — jump/go가 매핑을 경유한다. 지금은 오브 8개=물리 패널 8개로
 // 축이 같아졌지만(PANEL_COUNT===STEP_LABELS.length), 되돌리기/작업복원은 계속 PANEL_COUNT를
 // 쓴다 — "패널" 인덱스를 바운드하는 게 맞는 축이라는 원칙은 라벨 개수가 우연히 같아져도 안 바뀐다.
-const STEP_LABELS = ["영상/대본","화면 붙이기","자막제거","음성","꾸미기","썸네일","SEO","완성"];
+const STEP_LABELS = ["영상/대본출력","영상대본MIX","고품질 자막제거","TTS음성","자막꾸미기","썸네일","SEO해시테크","최종렌더"];
 // 표시 오브 → 실제 패널 data-step (매칭=신규 7이 자막제거=1보다 앞에 옴)
 const ORB_TO_PANEL = [0, 7, 1, 2, 3, 4, 5, 6];
 const PANEL_TO_ORB = Object.fromEntries(ORB_TO_PANEL.map((p,o)=>[p,o]));
