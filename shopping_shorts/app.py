@@ -21,6 +21,7 @@ from shopping_shorts.service import collect, census, generate_missing_drafts, ne
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
 from shopping_shorts.auto_run import run_auto_job, default_stages
+from shopping_shorts import config
 from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI
 from shopping_shorts.frame_extract import (download_video, extract_frames,
@@ -325,6 +326,44 @@ def api_census_status(job_id: str):
     if status == "error":
         return {"ok": True, "status": "error", "error": job["error"] or "실패"}
     return {"ok": True, "status": "done", **(job["result"] or {})}
+
+
+# ── 유튜브 로컬 릴레이(2026-07-24) ── 서버 데이터센터 IP가 유튜브에 봇차단당해, 사장님 PC의
+# 에이전트(youtube_relay_agent.py)가 큐를 폴링→주거용 IP로 다운로드→여기로 업로드한다.
+def _relay_auth_ok(key):
+    """에이전트 인증 — YT_RELAY_KEY 일치. 키 미설정이면 릴레이 자체를 잠근다(항상 거부)."""
+    return bool(config.YT_RELAY_KEY) and hmac.compare_digest(key or "", config.YT_RELAY_KEY)
+
+
+@app.get("/api/yt_relay/next")
+def api_yt_relay_next(key: str = ""):
+    """PC 에이전트가 폴링 — 처리할 pending 유튜브 요청 1건 {req_id, url} 또는 {}."""
+    if not _relay_auth_ok(key):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "인증 실패"})
+    job = Store(DB_PATH).next_pending_yt_relay()
+    return {"ok": True, "job": job}
+
+
+@app.post("/api/yt_relay/deliver/{req_id}")
+async def api_yt_relay_deliver(req_id: str, key: str = Form(""),
+                               file: UploadFile = File(None), error: str = Form("")):
+    """에이전트가 결과 회신 — mp4 업로드(성공) 또는 error 문자열(실패). 파일은
+    YT_RELAY_DIR에 저장하고 store에 done/failed 기록 → 서버 폴링(_download_via_relay)이 회수."""
+    if not _relay_auth_ok(key):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "인증 실패"})
+    store = Store(DB_PATH)
+    if error and not file:
+        store.finish_yt_relay(req_id, error=error[:500])
+        return {"ok": True, "status": "failed"}
+    if not file:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "파일·error 둘 다 없음"})
+    config.YT_RELAY_DIR.mkdir(parents=True, exist_ok=True)
+    ext = (Path(file.filename or "").suffix or ".mp4")
+    out_path = config.YT_RELAY_DIR / (req_id + ext)
+    with open(out_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+    store.finish_yt_relay(req_id, out_path=str(out_path))
+    return {"ok": True, "status": "done"}
 
 
 _VISION_TAG_CAP = 60  # 1회 수집당 새 태깅 상한(비용 가드). 초과분은 다음 수집 때.
