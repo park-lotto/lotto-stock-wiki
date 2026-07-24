@@ -1927,6 +1927,9 @@ def api_mix_status(job_id: str):
             "preview_error": preview_error,
             "clean_status": clean_status,
             "clean_error": clean_error,
+            # 지워진 자막 위치(2026-07-25): 5단계 꾸미기가 자막 자동정렬·'원본 자막 있던 자리' 마커에 쓴다.
+            # 좌표(%)뿐이라 안전 — 소스 경로 등 내부정보는 안 실린다.
+            "clean_regions": job.get("clean_regions"),
             "candidates": candidates}
 
 

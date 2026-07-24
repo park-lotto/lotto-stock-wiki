@@ -490,7 +490,8 @@
             <label style="cursor:pointer;margin-left:6px;color:var(--txt)"><input type="checkbox" id="sceneBg" onchange="toggleSceneBg()"> 실장면 배경</label></div>
           <div id="hcPreview" style="position:relative;width:380px;aspect-ratio:9/16;background:#ffffff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
             <img id="hcPreviewBg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" alt="">
-            <div id="capPreviewText" style="position:absolute;left:50%;transform:translateX(-50%);text-align:center;white-space:pre-wrap;word-break:keep-all;line-height:1.2;z-index:2;pointer-events:none"></div>
+            <div id="capRegionMarker" style="position:absolute;display:none;border:2px dashed rgba(255,255,255,.9);border-radius:6px;background:rgba(255,255,255,.08);z-index:1;pointer-events:none;box-sizing:border-box"><span style="position:absolute;left:50%;top:-9px;transform:translate(-50%,-100%);white-space:nowrap;font-size:10px;font-weight:800;color:#fff;background:rgba(0,0,0,.7);padding:2px 7px;border-radius:10px">원본 자막이 있던 자리</span></div>
+            <div id="capPreviewText" style="position:absolute;left:50%;transform:translate(-50%,-50%);text-align:center;white-space:pre-wrap;word-break:keep-all;line-height:1.2;z-index:2;cursor:move;user-select:none"></div>
             <div id="hcPreviewText" style="position:absolute;transform:translate(-50%,-50%);text-align:center;line-height:1.18;word-break:keep-all;padding:0 6px;cursor:move;user-select:none;z-index:3"></div>
             <div id="extraPreview"></div>
             <img id="ovPreview" style="position:absolute;transform:translate(-50%,-50%);cursor:move;user-select:none;z-index:5;display:none" alt="">
@@ -609,7 +610,9 @@
                 <div style="margin-top:8px;font-size:12px;color:var(--sub)">글씨 크기 <span id="capSizeV">54</span>px
                   <input id="capSize" type="range" min="28" max="96" value="54" oninput="updateCaption()" style="width:100%"></div>
                 <div style="font-size:12px;color:var(--sub)">세로 위치 <span id="capYV">84</span>%
-                  <input id="capY" type="range" min="0" max="100" value="84" oninput="updateCaption()" style="width:100%"></div>
+                  <input id="capY" type="range" min="0" max="100" value="84" oninput="CAP_POS_TOUCHED=true;updateCaption()" style="width:100%"></div>
+                <div class="hint" style="margin-top:4px;font-size:11px">💡 미리보기에서 자막을 <b>드래그</b>하면 원하는 자리로 옮겨져요.</div>
+                <button type="button" id="capResetRegionBtn" class="tab" onclick="resetCapToRegion()" style="display:none;flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;margin-top:6px;white-space:nowrap">↩ 지워진 자막 자리(1번)로 되돌리기</button>
                 <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
                   <input id="capOutline" type="checkbox" checked onchange="updateCaption()"> 외곽선
                   <input id="capOutColor" type="color" value="#000000" oninput="updateCaption()">
@@ -1116,6 +1119,7 @@ function initHeadcopy(){
   renderMyPresets();
   renderHighlightRules();
   bindHCDrag();
+  bindCapDrag();
   // ★복원된 스타일 밀어넣기(C-2 잔여) — 반드시 아래 updateHC/updateCaption **앞**이다.
   // 그것들이 먼저 돌면 빈 DOM 입력칸을 읽어 STATE.headcopy/captionStyle을 기본값으로 덮는다
   // (라이브 실측: 색이 #ffe100→#ff8800으로 죽었다). 여기서 pristine한 STATE로 DOM을 먼저 채우면
@@ -1135,6 +1139,7 @@ function initHeadcopy(){
   renderExtraPreview();
   renderOverlayPreview();
   applyDefaultStyleOnEntry();   // step5 진입 시 1회: 미터치 상태면 기본 스타일+실장면 배경 자동 적용
+  ensureCleanRegions();         // 지워진 자막 자리 표시 + 자막 자동정렬(미터치 시)
   loadBeatsPreview();
   syncMotionPicker();
 }
@@ -1224,6 +1229,12 @@ async function fxPoll(){
 // ── 자막 스타일(나레이션 자막) ──────────────
 let CAP_EFFECT='none';
 let CAP_SHADOW=false;   // 은은한 드롭 그림자(레퍼런스 자막룩). 프리셋이 켬. 두꺼운 테두리 대안.
+// 자막 가로위치(%) — 슬라이더가 아니라 드래그/자동정렬/되돌리기로만 바뀐다. 기본 중앙(50).
+let CAP_X_PCT=50;
+// 지워진 자막영역(자막제거 시 서버가 diff로 구함): {sources:{vid:box}, primary:box}. box=중심x/y·w/h·score(%).
+let CLEAN_REGIONS=null;
+// 사장님이 자막을 직접 드래그로 옮겼나 — true면 '1번 자리' 자동정렬이 그 위치를 덮지 않는다.
+let CAP_POS_TOUCHED=false;
 let PREVIEW_CAP_TEXT='이렇게 자막이 나와요';   // 스텝퍼가 비트별 자막으로 교체
 // ── 🎞 공용 장면 프리뷰 스텝퍼 — 비트마다 프레임+자막 넘겨보기(TTS·검수판 트랙도 재사용) ──
 let BEATS_PREVIEW=[];   // [{i,total,caption}]
@@ -1292,13 +1303,16 @@ function updateCaption(){
     // 검정바(black@0.82)가 깔렸다(2026-07-19 실사고: job 66d120a5897e caption_style.bar=true).
     // 백엔드 기본값을 OFF로 고쳐도 여기서 명시적 true를 보내니 무력했다. 바가 정말
     // 필요한 경우(자막제거 없이 원본 소각자막 덮기)는 별도 UI가 생길 때 다시 노출한다.
-    bar:false, effect:CAP_EFFECT, shadow:CAP_SHADOW, shadow_color:'#000000', shadow_d:3 };
+    bar:false, effect:CAP_EFFECT, shadow:CAP_SHADOW, shadow_color:'#000000', shadow_d:3,
+    // 가로위치(%): 드래그 결과. 백엔드 _caption_drawtexts가 이 값으로 x_center를 잡는다(2026-07-25).
+    x_pct:CAP_X_PCT };
   STATE.captionStyle=cs;
   g('capSizeV').textContent=cs.size; g('capYV').textContent=cs.y_pct;
   const el=g('capPreviewText'); if(!el) return;
   const scale=PREVIEW_W/VIDEO_W;
   el.textContent=PREVIEW_CAP_TEXT;
   el.style.fontFamily=`'${fontCss(cs.font)}',sans-serif`;
+  el.style.left=cs.x_pct+'%';   // 가로 드래그 반영(기본 50% 중앙)
   el.style.top=cs.y_pct+'%'; el.style.transform='translate(-50%,-50%)';
   el.style.color=cs.color; el.style.fontWeight=900;
   // 자막은 무조건 한 줄 — 줄바꿈 금지(nowrap). 폭(0.92) 넘으면 폰트 자동축소로 한 줄에 맞춘다.
@@ -1454,6 +1468,9 @@ function applyConfig(h, c){
   if(c){ // 자막(y 또는 y_pct 둘 다 허용)
     g('capFont').value=c.font; g('capColor').value=c.color; g('capSize').value=c.size;
     g('capY').value=(c.y!=null?c.y:(c.y_pct!=null?c.y_pct:84));
+    // 가로위치 복원: 저장된 스타일에 x_pct가 있으면 그 자리를 되살리고, 자동정렬이 덮지 않게 표시.
+    // 프리셋(x_pct 없음)은 중앙(50)으로 둔다.
+    if(c.x_pct!=null){ CAP_X_PCT=c.x_pct; CAP_POS_TOUCHED=true; } else { CAP_X_PCT=50; }
     g('capOutline').checked=!!c.outline; g('capOutColor').value=c.outline_color||'#000000'; g('capOutW').value=c.outline_w||0;
     g('capBox').checked=!!c.box; g('capBoxColor').value=c.box_color||'#000000'; g('capBoxPad').value=(c.box_pad!=null?c.box_pad:12); g('capBoxOpacity').value=(c.box_opacity!=null?c.box_opacity:80);
     CAP_SHADOW=!!c.shadow;   // 은은한 그림자 프리셋 반영
@@ -1851,6 +1868,56 @@ function bindHCDrag(){
   document.addEventListener('touchmove', move, {passive:true});
   document.addEventListener('mouseup', ()=>drag=false);
   document.addEventListener('touchend', ()=>drag=false);
+}
+// 자막 자유 드래그(가로+세로). 헤드카피(bindHCDrag)와 달리 x·y 둘 다 옮긴다 — 사장님이
+// 지워진 자막 자리로 끌어다 놓거나 피할 수 있게. CAP_X_PCT/capY를 갱신하고 다시 그린다.
+function bindCapDrag(){
+  const pv=document.getElementById('hcPreview'), tx=document.getElementById('capPreviewText');
+  if(!pv||!tx||tx._dragBound) return; tx._dragBound=true;
+  tx.style.cursor='move'; let drag=false;
+  const move=e=>{ if(!drag) return; const r=pv.getBoundingClientRect();
+    const cx=(e.touches?e.touches[0].clientX:e.clientX), cy=(e.touches?e.touches[0].clientY:e.clientY);
+    CAP_X_PCT=Math.round(Math.max(0,Math.min(100,(cx-r.left)/r.width*100)));
+    const y=Math.round(Math.max(0,Math.min(100,(cy-r.top)/r.height*100)));
+    document.getElementById('capY').value=y; CAP_POS_TOUCHED=true; updateCaption(); };
+  tx.addEventListener('mousedown', e=>{drag=true; e.preventDefault();});
+  tx.addEventListener('touchstart', e=>{drag=true;}, {passive:true});
+  document.addEventListener('mousemove', move);
+  document.addEventListener('touchmove', move, {passive:true});
+  document.addEventListener('mouseup', ()=>drag=false);
+  document.addEventListener('touchend', ()=>drag=false);
+}
+// 지워진 자막영역을 미리보기 위에 점선 박스로 그린다(primary=넓고 자주 쓰인 1번 자리).
+function renderErasedRegion(){
+  const m=document.getElementById('capRegionMarker'); if(!m) return;
+  const p=(CLEAN_REGIONS||{}).primary;
+  if(!p){ m.style.display='none'; return; }
+  m.style.left=(p.x_pct-p.w_pct/2)+'%'; m.style.top=(p.y_pct-p.h_pct/2)+'%';
+  m.style.width=p.w_pct+'%'; m.style.height=p.h_pct+'%'; m.style.display='';
+  const btn=document.getElementById('capResetRegionBtn'); if(btn) btn.style.display='';
+}
+// step5 진입 시: 지워진 1번 자리에 자막을 자동 정렬(딸깍). 사장님이 직접 드래그했으면 안 덮는다.
+function applyErasedRegion(){
+  renderErasedRegion();
+  const p=(CLEAN_REGIONS||{}).primary;
+  if(!p || CAP_POS_TOUCHED) return;
+  CAP_X_PCT=Math.round(p.x_pct);
+  document.getElementById('capY').value=Math.round(p.y_pct);
+  updateCaption();
+}
+// 드래그로 옮긴 자막을 다시 1번 자리로. (버튼)
+function resetCapToRegion(){
+  const p=(CLEAN_REGIONS||{}).primary; if(!p) return;
+  CAP_X_PCT=Math.round(p.x_pct);
+  document.getElementById('capY').value=Math.round(p.y_pct);
+  CAP_POS_TOUCHED=false; updateCaption();
+}
+// clean_regions를 아직 못 받았으면 상태 API에서 1회 당겨온다(자막제거 폴러를 안 거치고 5단계로 온 경우).
+async function ensureCleanRegions(){
+  if(CLEAN_REGIONS || !MIX_JOB) { applyErasedRegion(); return; }
+  try{ const d=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
+    if(d && d.clean_regions) CLEAN_REGIONS=d.clean_regions; }catch(e){}
+  applyErasedRegion();
 }
 async function saveHeadcopy(){
   if(!MIX_JOB) return;
@@ -3585,6 +3652,7 @@ async function pollClean(gen,job){
     if(CLEAN_GEN!==gen || MIX_JOB!==job) return;
     if(d.clean_status==='ready'){
       clearInterval(CLEAN_POLL); CLEAN_POLL=null;
+      if(d.clean_regions) CLEAN_REGIONS=d.clean_regions;   // 지워진 자막 자리(5단계 꾸미기가 씀)
       const t=Date.now(), u='/api/produce/mix/clean_thumb/'+encodeURIComponent(job);
       box.innerHTML='<div class="cp-compare">'
         +'<div class="cp-cell"><div class="cp-frame"><img src="'+u+'?kind=original&t='+t+'"><span class="cp-lbl">BEFORE</span></div><div class="cp-cap">원본</div></div>'
