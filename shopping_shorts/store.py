@@ -121,6 +121,15 @@ class Store:
                     created_at TEXT
                 )
             """)
+            # 한→중 소재 번역 캐시(2026-07-24) — ko당 1행, 있으면 재호출 안 함(무과금).
+            # zh 빈 문자열도 저장(번역실패 캐시) — get_translation은 그걸 ""로, 미조회는 None으로 구분.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS translations (
+                    ko TEXT PRIMARY KEY,
+                    zh TEXT,
+                    updated_at TEXT
+                )
+            """)
             # 학습소재 통계용 확장(2026-07-13) — 위키 저장 여부와 무관하게 대본추출된
             # 모든 항목에 구조분석을 백필하기 위한 컬럼.
             # category_source(2026-07-16): 카테고리가 어디서 왔나 — user|gemini|keyword.
@@ -1373,6 +1382,39 @@ class Store:
                     ",".join("?" * len(chunk))
                 for sc, subj, kj in c.execute(q, chunk).fetchall():
                     out[sc] = {"subject": subj or "", "keywords": json.loads(kj or "[]")}
+        return out
+
+    def get_translation(self, ko):
+        """한국어 소재 → 저장된 중국어. 없으면 None, 번역실패로 빈값 저장됐으면 ""."""
+        if not ko:
+            return None
+        with self._conn() as c:
+            row = c.execute("SELECT zh FROM translations WHERE ko=?", (ko,)).fetchone()
+        return None if row is None else (row[0] or "")
+
+    def save_translation(self, ko, zh):
+        """번역 저장(덮어쓰기). zh 빈 문자열도 저장 — 반복 호출 방지."""
+        if not ko:
+            return
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO translations(ko, zh, updated_at) VALUES(?,?,datetime('now')) "
+                "ON CONFLICT(ko) DO UPDATE SET zh=excluded.zh, updated_at=excluded.updated_at",
+                (ko, zh or ""),
+            )
+
+    def translations_map(self, kos):
+        """여러 ko → {ko: zh} (있는 것만). sqlite 변수상한 회피 청크."""
+        keys = [k for k in (kos or []) if k]
+        if not keys:
+            return {}
+        out = {}
+        with self._conn() as c:
+            for i in range(0, len(keys), 400):
+                chunk = keys[i:i + 400]
+                q = "SELECT ko, zh FROM translations WHERE ko IN (%s)" % ",".join("?" * len(chunk))
+                for k, zh in c.execute(q, chunk).fetchall():
+                    out[k] = zh or ""
         return out
 
     def save_candidates(self, shortcode, platform, candidates):
