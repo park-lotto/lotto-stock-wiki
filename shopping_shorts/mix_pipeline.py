@@ -111,14 +111,22 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
     tts_path 있음)는 0원, 갈아끼운 후보(tts_path 키 자체가 없음)만 그 자리에서 합성한다.
     ★파일 실재가 아니라 tts_path '존재'로 판단한다 — 하류 tts_paths도 truthiness로만 보므로
     존재하되 파일이 없는 경우의 처리(별개 관심사)를 이 버그 수정이 바꾸지 않게 한다.
+
+    ★비트별 합성은 서로 독립이라(고유 파일 beat_{beat_idx}.mp3, 이웃텍스트는 인덱스로
+    미리 정해짐 — 앞 비트 오디오에 의존하지 않음) config.TTS_MAX_WORKERS로 bounded
+    ThreadPoolExecutor 병렬 실행한다(2026-07-24, 실처리시간 단축). 순서·값은 순차 실행과
+    동일 — worker는 자기 고유 인덱스 i만 쓰고 공유 가변상태(커서 등)는 없다. 429 방지를
+    위해 무제한 동시성은 금지(ElevenLabs·GROQ-Whisper 랭커 rate limit).
     """
     tts_dir = Path(tts_dir)
     tts_dir.mkdir(parents=True, exist_ok=True)
     total = len(beats)
-    for i, beat in enumerate(beats):
+
+    def _one(i):
+        beat = beats[i]
         out = tts_dir / f"beat_{beat['beat_idx']}.mp3"
         if skip_existing and beat.get("tts_path"):
-            continue
+            return
         synthesize_line(
             beat["narration"], out, voice=voice, beat_role=beat.get("role"),
             beat_index=i, beat_total=total,
@@ -151,6 +159,17 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
             beat["cap_durs"] = caption_sync.phrase_durs_from_words(
                 beat["narration"], words, _ad or 0.0,
                 preset=beat.get("caption_lines"))   # None일 수 있음 → 폴백
+
+    if total == 0:
+        return
+    _t0 = datetime.now(timezone.utc)
+    workers = max(1, min(config.TTS_MAX_WORKERS, total))
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        futures = [ex.submit(_one, i) for i in range(total)]
+        for f in futures:
+            f.result()  # 예외를 여기서 소비 — 숨기지 않고 그대로 전파(run_mix_job이 failed 처리)
+    print(f"[tts] {total}비트 합성 {(datetime.now(timezone.utc) - _t0).total_seconds():.1f}s "
+          f"(workers={workers})", file=sys.stderr)
 
 
 def _refill_beats_to_tts(beats, source_scripts, tts_dir):

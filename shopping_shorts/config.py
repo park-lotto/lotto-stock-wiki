@@ -77,6 +77,12 @@ ELEVENLABS_VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWA
 # ASR 라운드트립 검증(튜닝 작업대) — Whisper로 TTS를 재전사해 오독 탐지. GROQ 우선.
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 
+# 비트별 TTS 합성 동시성(2026-07-24, 2단계 매칭 실처리시간 단축) — 각 비트가 독립
+# 파일(beat_{idx}.mp3)에 쓰고 이웃텍스트도 인덱스로 미리 정해져 있어 병렬 안전.
+# ElevenLabs·GROQ-Whisper 랭커 둘 다 rate limit이 있어 무제한 동시성은 429를 부른다
+# — 서버에서 실측 후 올릴 수 있도록 env로 노출.
+TTS_MAX_WORKERS = int(os.getenv("TTS_MAX_WORKERS", "3"))
+
 # 수집 규칙
 WINDOW_HOURS = 48          # 48시간 이내만 랭킹(인스타 — 빠르게 도는 릴스 기준)
 # 유튜브 Shorts는 며칠~몇 주에 걸쳐 조회수가 쌓여 48h는 결과가 너무 적다(실측
