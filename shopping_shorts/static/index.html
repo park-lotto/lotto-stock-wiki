@@ -263,7 +263,7 @@ function switchPlatform(p, el){
     document.getElementById('refRegister').style.display = 'none';
     document.getElementById('ttMode').style.display = 'none';
     document.getElementById('ttPanel').style.display = 'none';
-    renderTrendCards(p);
+    renderTrendCards();
     return;
   }
   document.getElementById('seedPanel').style.display = (p==='instagram')?'none':'block';
@@ -930,26 +930,28 @@ function _groupBySubject(items){
 }
 // ── 트렌드 검색카드 끝 ──
 
-// 샤오·도우 탭 렌더 — 3플랫폼(인스·유튜·틱톡) 합쳐 소재 카드 랭킹 + 딥링크(중국어).
-async function renderTrendCards(platform){
+// 샤오·도우 탭 공유 뷰 — 인스·유튜·틱톡 상위를 소재로 묶어 랭킹. 카드마다 샤오홍슈+도우인 딥링크 둘 다.
+const TREND_TOP_N = 60;
+async function renderTrendCards(){
   const root = document.getElementById('trendRoot');
   if(!root) return;
   root.innerHTML = '<div class="sm-loading">🔥 트렌드 소재 모으는 중…</div>';
   const plats = ['instagram','youtube','tiktok'];
-  let all = [];
-  for(const p of plats){
+  const lists = await Promise.all(plats.map(async p=>{
     try{
       const d = await (await fetch('/api/reference?platform='+p)).json();
-      (d.items||[]).forEach(i=>{ i.platform = i.platform||p; });
-      all = all.concat(d.items||[]);
-    }catch(e){}
-  }
+      const items = d.items||[];
+      items.forEach(i=>{ i.platform = i.platform||p; });
+      return items;
+    }catch(e){ return []; }
+  }));
+  let all = [].concat(...lists);
   const groups = _groupBySubject(all);
   if(!groups.length){
     root.innerHTML = '<div style="padding:14px;color:var(--sub)">아직 트렌드 소재가 없습니다. 인스타·유튜브·틱톡 탭에서 「지금 수집」을 돌리면 소재가 채워집니다.</div>';
     return;
   }
-  const top = groups.slice(0,60);
+  const top = groups.slice(0, TREND_TOP_N);
   // 번역 조회(캐시히트=즉시). 미스는 빈 문자열 → ko 폴백.
   const zhMap = {};
   await Promise.all(top.map(async g=>{
