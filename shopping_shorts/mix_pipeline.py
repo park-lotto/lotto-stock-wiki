@@ -18,7 +18,7 @@ from shopping_shorts.scene_match import match_scene_assets, match_sfx
 from shopping_shorts import tts
 from shopping_shorts import audio_post
 from shopping_shorts import config
-from shopping_shorts.video_assemble import assemble, _beat_timeline, _probe_duration, _MAX_SLOWMO
+from shopping_shorts.video_assemble import assemble, _beat_timeline, _probe_duration, _MAX_SLOWMO, preview_preset
 from shopping_shorts.motion_assets import resolve_layers, DEFAULT_ASSETS_DIR
 from shopping_shorts.motion_packs import build_plan, load_packs
 from shopping_shorts.vmake_client import remove_subtitles
@@ -889,11 +889,14 @@ def run_preview(job_id, db_path, work_root):
         # headcopy는 store.py 주석대로 "영상제작 5단계 꾸미기 헤드카피"라 deco={}로 꾸미기를
         # 뺐다면서 헤드카피를 넘기는 건 자기모순이었다. assemble의 기본값이면 우리 자막은 정상으로
         # 굽힌다(라이브 관측: caption_style=None인 job으로 렌더해 자막 정상 확인).
-        assemble(plan, tts_paths, source_video_paths, str(out_path),
-                 clean_fn=None,                      # ← 유료 VMake 건너뜀. 이게 핵심이다.
-                 deco={},                             # ← 꾸미기 없음(4단계 소관)
-                 cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)),
-                 sfx_paths=_resolve_sfx_paths(store, plan, job.get("customer_id", 0)))
+        # ★미리보기는 veryfast로 인코딩(6분→~1.5분) — 확인용이라 화질 조금 낮아도 무방.
+        # 최종 렌더(run_render)는 이 컨텍스트 밖이라 medium 고화질 그대로.
+        with preview_preset():
+            assemble(plan, tts_paths, source_video_paths, str(out_path),
+                     clean_fn=None,                      # ← 유료 VMake 건너뜀. 이게 핵심이다.
+                     deco={},                             # ← 꾸미기 없음(4단계 소관)
+                     cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)),
+                     sfx_paths=_resolve_sfx_paths(store, plan, job.get("customer_id", 0)))
         store.update_mix_job(job_id, preview_status="ready", preview_path=str(out_path))
     except Exception as e:  # noqa: BLE001 — BackgroundTasks라 밖에서 아무도 안 받는다
         traceback.print_exc(file=sys.stderr)

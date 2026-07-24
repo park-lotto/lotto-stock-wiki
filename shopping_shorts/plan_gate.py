@@ -13,6 +13,7 @@ from shopping_shorts import config
 
 # 목표 길이의 이 비율보다 짧으면 '빈약'으로 본다(30초 목표에 20초면 0.67 → 위반).
 _SHORT_RATIO = 0.75
+_LONG_RATIO = 1.4          # 목표의 이 배를 넘으면 너무 김(오버슛 방어, 2026-07-24)
 _MIN_BEATS = 5          # 이보다 적으면 이야기가 안 선다(스키마 minItems와 같은 바닥)
 
 
@@ -128,6 +129,9 @@ def check_plan(beats, target_seconds=None, pool_video_count=None):
     secs = round(sum(float(b.get("target_seconds") or 0) for b in beats), 1)
     if target_seconds and secs and secs < target_seconds * _SHORT_RATIO:
         v.append(f"길이가 {secs}초로 목표 {target_seconds}초보다 많이 짧습니다")
+    # ★너무 김(2026-07-24 실사고: 목표30초인데 77초·441자로 오버슛). 대본이 목표의 1.4배 넘으면 반려.
+    if target_seconds and secs and secs > target_seconds * _LONG_RATIO:
+        v.append(f"길이가 {secs}초로 목표 {target_seconds}초보다 너무 깁니다 — 대본을 줄이세요")
 
     return {
         "ok": not v,
