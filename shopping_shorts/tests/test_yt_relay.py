@@ -87,9 +87,11 @@ def test_routing_switch():
     from shopping_shorts import config, media_download as m
     calls = []
     orig_relay, orig_ytdlp = m._download_via_relay, m._download_ytdlp
+    orig_proxy = config.YTDLP_PROXY
     m._download_via_relay = lambda u, d: (calls.append(("relay", u)), ("r", ""))[1]
     m._download_ytdlp = lambda u, d: (calls.append(("ytdlp", u)), ("y", ""))[1]
     try:
+        config.YTDLP_PROXY = ""
         config.YT_RELAY_ENABLED = True
         m.download_any("https://www.youtube.com/watch?v=x", "/t")   # 릴레이
         m.download_any("https://www.tiktok.com/@a/video/1", "/t")   # 서버서도 되니 직접
@@ -98,6 +100,30 @@ def test_routing_switch():
     finally:
         m._download_via_relay, m._download_ytdlp = orig_relay, orig_ytdlp
         config.YT_RELAY_ENABLED = False
+        config.YTDLP_PROXY = orig_proxy
     assert calls == [("relay", "https://www.youtube.com/watch?v=x"),
                      ("ytdlp", "https://www.tiktok.com/@a/video/1"),
                      ("ytdlp", "https://youtu.be/y")]
+
+
+def test_proxy_priority_over_relay():
+    """B안: YTDLP_PROXY 있으면 릴레이(A)를 건너뛰고 서버가 직접(프록시로) 받는다."""
+    from shopping_shorts import config, media_download as m
+    calls = []
+    orig_relay, orig_ytdlp, orig_proxy = m._download_via_relay, m._download_ytdlp, config.YTDLP_PROXY
+    m._download_via_relay = lambda u, d: (calls.append("relay"), ("r", ""))[1]
+    m._download_ytdlp = lambda u, d: (calls.append("ytdlp"), ("y", ""))[1]
+    try:
+        config.YT_RELAY_ENABLED = True
+        config.YTDLP_PROXY = "http://u:p@host:1000"
+        m.download_any("https://youtu.be/a", "/t")     # 프록시 우선 → 직접(내부서 --proxy)
+        assert calls == ["ytdlp"], calls
+        # _proxy_arg: 유튜브만, 프록시 설정 시만
+        assert m._proxy_arg("https://www.youtube.com/watch?v=x") == ["--proxy", "http://u:p@host:1000"]
+        assert m._proxy_arg("https://www.tiktok.com/@a/video/1") == []
+        config.YTDLP_PROXY = ""
+        assert m._proxy_arg("https://youtu.be/x") == []
+    finally:
+        m._download_via_relay, m._download_ytdlp = orig_relay, orig_ytdlp
+        config.YT_RELAY_ENABLED = False
+        config.YTDLP_PROXY = orig_proxy
