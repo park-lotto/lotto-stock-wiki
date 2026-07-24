@@ -31,6 +31,7 @@ from shopping_shorts import script_generate
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
 from shopping_shorts.channels import load_channels, username_from_url
+from shopping_shorts import video_analysis
 from shopping_shorts.video_analysis import (analyze_video, translate_keyword, cn_search_keyword,
                                             cn_search_keyword_vision, judge_same_product)
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
@@ -160,7 +161,7 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
 
 
 _VISION_TAG_CAP = 60  # 1회 수집당 새 태깅 상한(비용 가드). 초과분은 다음 수집 때.
-_TRANSLATE_CAP = 40      # 1회 수집당 새 소재 번역 상한(비용 가드). 초과분은 다음 수집.
+_TRANSLATE_CAP = 40      # 수집직후 백그라운드 소재 번역(_translate_new_subjects, Task3)의 1회 상한. 이 엔드포인트는 안 씀.
 _TRANSLATE_MAXLEN = 40   # 번역 요청 소재 길이 상한(비정상 입력 방어).
 
 
@@ -259,7 +260,6 @@ def api_translate(q: str = ""):
     cached = store.get_translation(ko)
     if cached is not None:
         return {"ok": True, "ko": ko, "zh": cached}
-    from shopping_shorts import video_analysis
     zh = ""
     try:
         zh = (video_analysis.translate_keyword(ko) or {}).get("zh", "") or ""
