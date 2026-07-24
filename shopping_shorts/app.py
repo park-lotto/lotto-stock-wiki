@@ -151,6 +151,7 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
         store.save_last_run(items, collected_at)
         background_tasks.add_task(generate_missing_drafts, next_draft_targets(items, store))
         background_tasks.add_task(_tag_new_items, items)   # 신규 썸네일 비전 태깅(백그라운드)
+        background_tasks.add_task(_translate_new_subjects, items)  # 새 소재 한→중 번역(백그라운드)
         _attach_vision_tags(items, store)                  # 이미 태깅된 것(재수집)은 즉시 실어 보냄
         return {"ok": True, "count": len(items), "items": items,
                 "collected_at": collected_at}
@@ -187,6 +188,30 @@ def _tag_new_items(items):
             store.save_vision_tags(it["shortcode"], tags.get("subject", ""), tags.get("keywords", []))
     if len(todo) > len(capped):
         print(f"[vision_tags] {len(todo) - len(capped)}건 다음 수집으로 미룸(상한 {_VISION_TAG_CAP})")
+
+
+def _translate_new_subjects(items):
+    """수집 직후 백그라운드: 새 vision_subject를 한→중 번역해 translations 캐시에 채운다.
+    이미 번역된 건 skip. 상한(_TRANSLATE_CAP) 초과분은 다음 수집으로 미룬다.
+    비전태그가 먼저 채워져야 subject가 생기므로 1수집 지연은 정상(트렌드는 회차 누적)."""
+    store = Store(DB_PATH)
+    subjects = []
+    seen = set()
+    for it in items:
+        s = (it.get("vision_subject") or "").strip()
+        if s and s not in seen:
+            seen.add(s)
+            subjects.append(s)
+    have = store.translations_map(subjects)
+    todo = [s for s in subjects if s not in have]
+    for s in todo[:_TRANSLATE_CAP]:
+        try:
+            zh = (video_analysis.translate_keyword(s) or {}).get("zh", "") or ""
+        except Exception:
+            zh = ""
+        store.save_translation(s, zh)
+    if len(todo) > _TRANSLATE_CAP:
+        print(f"[translations] {len(todo) - _TRANSLATE_CAP}건 다음 수집으로 미룸(상한 {_TRANSLATE_CAP})")
 
 
 def _attach_vision_tags(items, store=None):

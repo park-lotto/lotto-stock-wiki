@@ -48,3 +48,29 @@ def test_too_long_q_rejected(client):
     c, _ = client
     r = c.get("/api/translate", params={"q": "가" * 100})
     assert r.json()["ok"] is False
+
+
+def test_translate_new_subjects_caps_and_dedups(client):
+    c, app_mod = client
+    st = app_mod.Store(app_mod.DB_PATH)
+    st.save_translation("빵", "面包")   # 이미 번역됨 → 재호출 안 함
+    items = [{"vision_subject": "빵"}, {"vision_subject": "오이"}, {"vision_subject": "감자"}]
+    calls = []
+    def fake_tr(kw, **kw2):
+        calls.append(kw)
+        return {"ko": kw, "zh": kw + "_zh"}
+    with patch("shopping_shorts.video_analysis.translate_keyword", side_effect=fake_tr):
+        app_mod._translate_new_subjects(items)
+    assert "빵" not in calls          # 캐시된 건 skip
+    assert set(calls) == {"오이", "감자"}
+    assert st.get_translation("오이") == "오이_zh"
+
+
+def test_translate_new_subjects_respects_cap(client, monkeypatch):
+    c, app_mod = client
+    monkeypatch.setattr(app_mod, "_TRANSLATE_CAP", 1)
+    items = [{"vision_subject": "a"}, {"vision_subject": "b"}, {"vision_subject": "c"}]
+    with patch("shopping_shorts.video_analysis.translate_keyword",
+               side_effect=lambda kw, **k: {"ko": kw, "zh": kw}) as m:
+        app_mod._translate_new_subjects(items)
+    assert m.call_count == 1          # CAP=1
