@@ -257,6 +257,8 @@
       <div class="ctype active" data-platform="instagram" onclick="switchPlatform('instagram',this)">📷 인스타</div>
       <div class="ctype" data-platform="youtube" onclick="switchPlatform('youtube',this)">▶️ 유튜브</div>
       <div class="ctype" data-platform="tiktok" onclick="switchPlatform('tiktok',this)">🎵 틱톡</div>
+      <div class="ctype" data-platform="xiaohongshu" onclick="switchPlatform('xiaohongshu',this)">📕 샤오홍슈</div>
+      <div class="ctype" data-platform="douyin" onclick="switchPlatform('douyin',this)">🎬 도우인</div>
     </div>
     <div id="seedPanel" style="display:none;margin-bottom:12px">
       <div id="ttMode" style="display:none;margin-bottom:6px">
@@ -336,6 +338,7 @@
       </div>
       <div id="overseasList"></div>
     </div>
+    <div id="trendRoot" style="display:none"></div>
     <div id="channelHistoryWrap"></div>
   </main>
   <div class="modal-bg" id="scriptModal">
@@ -420,6 +423,18 @@ function switchPlatform(p, el){
   updatePlatformCopy(p);
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
+  const isTrend = (p==='xiaohongshu' || p==='douyin');
+  document.getElementById('trendRoot').style.display = isTrend ? 'block' : 'none';
+  document.getElementById('cards').style.display = isTrend ? 'none' : '';
+  if(isTrend){
+    // 트렌드 탭: 인스·틱·유튜 전용 패널·후속호출 전부 건너뛴다.
+    document.getElementById('seedPanel').style.display = 'none';
+    document.getElementById('refRegister').style.display = 'none';
+    document.getElementById('ttMode').style.display = 'none';
+    document.getElementById('ttPanel').style.display = 'none';
+    renderTrendCards();
+    return;
+  }
   document.getElementById('seedPanel').style.display = (p==='instagram')?'none':'block';
   document.getElementById('refRegister').style.display = (p==='instagram')?'block':'none';
   if(p==='instagram') loadRefAdded();
@@ -1320,6 +1335,106 @@ function _fmtDur(s){
   s=Math.round(Number(s)); const m=Math.floor(s/60), ss=s%60;
   return m+':'+String(ss).padStart(2,'0');
 }
+// ── 트렌드 검색카드(2026-07-24) ──────────────────────
+// 인스·틱·유튜 상위 통합에서 소재를 뽑아 샤오·도우 딥링크 카드로. 순수함수는 node 테스트됨.
+const _TREND_STOP = new Set(['만들기','완성','레시피','털기','또','집에서','하는','추천','리뷰','종','신상털기']);
+function _titleKeyword(title){
+  // 제목에서 핵심 명사구 근사: 이모지·해시태그·괄호 제거 후 불용어 밖 최장 토큰.
+  let t = String(title||'').replace(/[#\[\](){}!?~…·|]/g,' ')
+            .replace(/[\u{1F000}-\u{1FFFF}☀-➿]/gu,' ');
+  const toks = t.split(/\s+/).map(s=>s.trim()).filter(Boolean).filter(w=>!_TREND_STOP.has(w));
+  if(!toks.length) return '';
+  return toks.reduce((a,b)=> b.length>=a.length ? b : a, toks[0]);
+}
+function _extractSubject(item){
+  const vs = (item.vision_subject||'').trim();
+  if(vs) return vs;
+  return _titleKeyword(item.title||'');
+}
+function _normSubjectKey(s){
+  return String(s||'').toLowerCase().replace(/\s+/g,'')
+           .replace(/(을|를|이|가|은|는|의|도|에|와|과|만)$/,'');
+}
+function _score(item){
+  const v = item.views;
+  if(v!=null && !isNaN(v)) return Number(v);
+  const l = item.likes;
+  return (l!=null && !isNaN(l)) ? Number(l) : 0;
+}
+function _groupBySubject(items){
+  const map = new Map();
+  for(const it of (items||[])){
+    const subj = _extractSubject(it);
+    if(!subj) continue;
+    const key = _normSubjectKey(subj);
+    if(!key) continue;
+    let g = map.get(key);
+    if(!g){ g = {subjectKo:subj, items:[], platforms:new Set(), maxScore:0}; map.set(key,g); }
+    g.items.push(it);
+    if(it.platform) g.platforms.add(it.platform);
+    g.maxScore = Math.max(g.maxScore, _score(it));
+  }
+  const groups = [...map.values()].map(g=>({
+    subjectKo:g.subjectKo, items:g.items, platforms:[...g.platforms],
+    count:g.items.length, maxScore:g.maxScore,
+  }));
+  groups.sort((a,b)=> b.maxScore - a.maxScore);
+  return groups;
+}
+// ── 트렌드 검색카드 끝 ──
+
+// 샤오·도우 탭 공유 뷰 — 인스·유튜·틱톡 상위를 소재로 묶어 랭킹. 카드마다 샤오홍슈+도우인 딥링크 둘 다.
+const TREND_TOP_N = 60;
+async function renderTrendCards(){
+  const root = document.getElementById('trendRoot');
+  if(!root) return;
+  root.innerHTML = '<div class="sm-loading">🔥 트렌드 소재 모으는 중…</div>';
+  const plats = ['instagram','youtube','tiktok'];
+  const lists = await Promise.all(plats.map(async p=>{
+    try{
+      const d = await (await fetch('/api/reference?platform='+p)).json();
+      const items = d.items||[];
+      items.forEach(i=>{ i.platform = i.platform||p; });
+      return items;
+    }catch(e){ return []; }
+  }));
+  let all = [].concat(...lists);
+  const groups = _groupBySubject(all);
+  if(!groups.length){
+    root.innerHTML = '<div style="padding:14px;color:var(--sub)">아직 트렌드 소재가 없습니다. 인스타·유튜브·틱톡 탭에서 「지금 수집」을 돌리면 소재가 채워집니다.</div>';
+    return;
+  }
+  const top = groups.slice(0, TREND_TOP_N);
+  // 번역 조회(캐시히트=즉시). 미스는 빈 문자열 → ko 폴백.
+  const zhMap = {};
+  await Promise.all(top.map(async g=>{
+    try{ const d = await (await fetch('/api/translate?q='+encodeURIComponent(g.subjectKo))).json();
+         zhMap[g.subjectKo] = (d && d.zh) || ''; }catch(e){ zhMap[g.subjectKo]=''; }
+  }));
+  const PLAT_EMOJI = {instagram:'📷',youtube:'▶️',tiktok:'🎵'};
+  root.innerHTML = '<div class="cards">' + top.map(g=>{
+    const rep = g.items.reduce((a,b)=> _score(b)>_score(a)?b:a, g.items[0]);
+    const zh = zhMap[g.subjectKo]||'';
+    const q = zh || g.subjectKo;   // zh 없으면 ko 폴백
+    const xhs = _lensSearchUrl('xiaohongshu', q);
+    const dy  = _lensSearchUrl('douyin', q);
+    const pbadges = g.platforms.map(p=>PLAT_EMOJI[p]||'').join('');
+    const thumb = rep.thumbnail ? ('/api/thumb?url='+encodeURIComponent(rep.thumbnail)) : '';
+    return `
+    <div class="card">
+      <div class="thumb"><img src="${thumb}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'"></div>
+      <div class="body" style="padding:8px">
+        <div style="font-weight:600">${esc(g.subjectKo)}${zh?` <span style="color:var(--sub);font-weight:400">· ${esc(zh)}</span>`:''}</div>
+        <div style="font-size:11px;color:var(--sub);margin:4px 0">🔥 ${g.count}개 영상에서 터짐 ${pbadges}</div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <a href="${xhs}" target="_blank" rel="noopener" style="text-decoration:none;padding:4px 10px;border-radius:10px;border:1px solid var(--line);color:#ff2442">📕 샤오홍슈</a>
+          <a href="${dy}" target="_blank" rel="noopener" style="text-decoration:none;padding:4px 10px;border-radius:10px;border:1px solid var(--line);color:var(--txt,inherit)">🎬 도우인</a>
+        </div>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
 // 플랫폼별 검색 페이지 URL(search_links.py의 _URL_BUILDERS와 동일). 바로가기+담기용.
 function _lensSearchUrl(platform, kw){
   const q=encodeURIComponent(kw||'');
