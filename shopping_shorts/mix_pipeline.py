@@ -527,6 +527,7 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
             rec = next((cand for cand in sf["candidates"] if cand["recommended"]),
                        sf["candidates"][0])
             plan = rec["plan"]
+            plan["generator"] = "scene_first"   # ★P1: 어느 생성기가 만들었나(조용한 폴백 금지)
             # 주입 미리보기(2026-07-23): 이 대본에 실제로 들어간 은행 블록을 plan에 실어 리뷰
             # 화면이 '은행이 뭘 댔나'를 눈으로 검증하게 한다(빈 문자열이면 은행 미주입).
             if bank_context:
@@ -546,11 +547,18 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                 except Exception:
                     traceback.print_exc(file=sys.stderr)
         else:
+            # ★P1(2026-07-24): scene_first가 실패하면 예전엔 **조용히** 옛 생성기로 넘어가
+            # 개선(30초·7~8컷·대화·은행훅)이 안 탄 대본이 나왔고, 사장님은 "고쳤는데 왜 그대로냐"로
+            # 겪었다(실측: 503 과부하 → 후보 0 → 폴백). 이제 폴백을 표식으로 남겨 화면에 띄운다.
+            print("scene_first 후보 0 → 옛 생성기로 폴백(개선 미적용)", file=sys.stderr)
             plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
                                    video_type=video_type, given_script=given_script)
+            plan["generator"] = "legacy_fallback"
+            plan["generator_note"] = "장면우선 생성이 실패해 예전 방식으로 만들었습니다(개선 미적용) — 다시 매칭을 권장합니다."
     else:
         plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
                                video_type=video_type, given_script=given_script)
+        plan["generator"] = "legacy"
     # 빈 EDL(추출 전량 실패 또는 파이프라인 중간 전용풀 소진)을 ready_for_review로
     # 오보고하지 않는다 — 성공처럼 보이는 빈 리뷰화면 대신 즉시 실패로 정상 종료
     # (2026-07-12 최종 전체리뷰 Important).
@@ -584,6 +592,17 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 저장(아래) 전에 돌므로 preview·final 렌더 모두 자동 적용. 실패해도 job을 죽이지 않는다.
     try:
         _conform_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron)
+    except Exception:
+        traceback.print_exc(file=sys.stderr)
+
+    # 4.9) ★렌더 직전 불변식 게이트(2026-07-24, P2) — 모든 비트 변형(refill·conform)이 끝난
+    # **최종 plan**만 보고 반복·파편·길이를 잰다. 뒷단계가 앞단계를 되돌려도 여기서 잡혀
+    # 화면에 뜬다(조용한 실패 금지). 순수 계산이라 실패해도 job은 안 죽인다.
+    try:
+        from shopping_shorts import plan_gate
+        plan["gate"] = plan_gate.check_plan(plan.get("beats"), target_seconds)
+        if not plan["gate"]["ok"]:
+            print("plan_gate 위반: " + " / ".join(plan["gate"]["violations"]), file=sys.stderr)
     except Exception:
         traceback.print_exc(file=sys.stderr)
 
