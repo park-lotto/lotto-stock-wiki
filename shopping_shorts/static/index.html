@@ -246,6 +246,10 @@
       <h2>레퍼런스 랭킹</h2>
     </div>
     <div class="desc">443개 레퍼런스 채널의 48시간 이내 릴스를 강도별로 랭킹합니다.</div>
+    <div class="ctypes" id="modeTabs" style="margin-bottom:12px">
+      <div class="ctype active" id="modeRanking" onclick="toggleOverseas(false)">🏠 레퍼런스 랭킹</div>
+      <div class="ctype" id="modeOverseas" onclick="toggleOverseas(true)">🌍 해외HOT</div>
+    </div>
     <!-- 플랫폼 전환 토글 숨김(사장님 2026-07-21, 미사용) — 삭제 아님. switchPlatform·PLATFORM
          로직은 보존해 PLATFORM 기본값 instagram으로 랭킹·수집이 계속 동작하고, 되살리려면
          display:none만 지우면 된다. -->
@@ -323,6 +327,14 @@
     <div class="cats" id="cats"></div>
     <div class="cards" id="cards">
       <div class="empty">「지금 수집」을 눌러 시작하세요.</div>
+    </div>
+    <div id="overseasBox" style="display:none">
+      <div class="ctypes" id="overseasCats" style="margin-bottom:10px"></div>
+      <div class="toolbar">
+        <button onclick="updateOverseas()">⚡ 지금 업데이트</button>
+        <span id="overseasStatus" style="color:var(--sub);font-size:12px"></span>
+      </div>
+      <div id="overseasList"></div>
     </div>
     <div id="channelHistoryWrap"></div>
   </main>
@@ -696,6 +708,58 @@ function badgeHTML(i, ctx){
 // (채널명·소재는 oninput이 이미 필터링. 링크만 엔터라는 명시 동작이 필요 — 유료 렌즈 남용 방지.)
 function _looksLikeUrl(q){ return /^\s*https?:\/\//i.test(q||''); }
 function onSearchEnter(v){ if(_looksLikeUrl(v)) traceByUrl((v||'').trim()); }
+const OVERSEAS_CATS = ["전체","주방/레시피","살림/생활꿀템","인테리어","자취템","가전템","뷰티"];
+let overseasFilter = "전체";
+let overseasItems = [];
+
+function toggleOverseas(on){
+  document.getElementById('overseasBox').style.display = on ? 'block' : 'none';
+  document.getElementById('modeOverseas').classList.toggle('active', on);
+  document.getElementById('modeRanking').classList.toggle('active', !on);
+  ['cards','tabs','seedPanel','platformTabs'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.style.display = on ? 'none' : '';
+  });
+  document.querySelectorAll('.toolbar').forEach(t=>{ if(!t.closest('#overseasBox')) t.style.display = on ? 'none' : ''; });
+  if(on){ initOverseasCats(); loadOverseas(); }
+}
+function initOverseasCats(){
+  document.getElementById('overseasCats').innerHTML = OVERSEAS_CATS.map(c=>
+    `<div class="ctype${c===overseasFilter?' active':''}" onclick="setOverseasCat('${c}')">${c}</div>`).join('');
+}
+function setOverseasCat(c){ overseasFilter=c; initOverseasCats(); renderOverseas(); }
+async function loadOverseas(){
+  const d=await (await fetch('/api/overseas/feed')).json();
+  overseasItems=d.items||[]; renderOverseas();
+}
+function renderOverseas(){
+  const rows=overseasItems
+    .filter(i=>overseasFilter==='전체'||i.category===overseasFilter)
+    .map(i=>`<tr>
+      <td>${i.thumbnail?`<img src="${i.thumbnail}" width="64" style="border-radius:6px">`:''}</td>
+      <td><b>${i.grade||'—'}</b><div style="color:var(--sub);font-size:12px">속도 ${Math.round(i.speed||0)}</div></td>
+      <td>${i.category||''}</td>
+      <td style="color:var(--sub);font-size:12px">r/${i.username||''} · ${i.media_platform||'reddit'}</td>
+      <td><a href="${i.media_url||i.url}" target="_blank">원본</a>
+          · <a href="${i.url}" target="_blank">레딧</a></td>
+    </tr>`).join('');
+  document.getElementById('overseasList').innerHTML =
+    '<table style="width:100%;border-collapse:collapse"><thead><tr>'
+    +'<th></th><th>강도</th><th>카테고리</th><th>소스</th><th>링크</th></tr></thead><tbody>'
+    +rows+'</tbody></table>';
+}
+async function updateOverseas(){
+  document.getElementById('overseasStatus').textContent='수집 중…';
+  await fetch('/api/overseas/update');
+  const poll=setInterval(async()=>{
+    const s=await (await fetch('/api/overseas/status')).json();
+    document.getElementById('overseasStatus').textContent=(s.phase||'')+' ('+(s.elapsed||0)+'s)';
+    if(s.status==='done'||s.status==='error'){ clearInterval(poll);
+      document.getElementById('overseasStatus').textContent =
+        s.status==='done' ? `완료 ${s.count}건` : ('오류: '+s.error);
+      loadOverseas(); }
+  },2000);
+}
+
 function render(){
   let items = STATE.items.slice();
   const searching = !!(STATE.q && STATE.q.trim());
