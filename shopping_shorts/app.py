@@ -4327,6 +4327,19 @@ async def _api_login(req: Request):
     return RedirectResponse("/login?e=1", status_code=303)
 
 
+def _notify_new_signup(*, name=None, username=None, phone=None, email=None):
+    """새 회원 가입 → 사장님 텔레그램 알림(승인 재촉). 부가채널이라 절대 요청을 막지 않는다:
+    notify.send_telegram이 무키/네트워크예외를 이미 삼키므로 여기선 얇게 감싸기만."""
+    try:
+        who = (name or "").strip() or (username or "").strip() or "새 회원"
+        parts = [p for p in [phone, email] if p]           # 있는 것만 덧붙임
+        tail = (" · " + " · ".join(parts)) if parts else ""
+        from shopping_shorts import notify
+        notify.send_telegram(f"🆕 새 가입 신청: {who}{tail}\n→ /admin 에서 승인해주세요 (승인 대기중)")
+    except Exception:
+        pass                                                # 알림 실패가 가입을 막으면 안 된다
+
+
 @app.post("/api/signup")
 async def _api_signup(req: Request):
     body = (await req.body()).decode("utf-8", "ignore")
@@ -4342,6 +4355,7 @@ async def _api_signup(req: Request):
                                                      name=name or None, phone=phone or None)
     except ValueError:
         return RedirectResponse("/signup?e=" + urllib.parse.quote("이미 존재하는 아이디입니다"), status_code=303)
+    _notify_new_signup(name=name, username=u, phone=phone)   # 사장님 텔레 알림(무키면 no-op)
     r = RedirectResponse("/", status_code=303)
     _set_session_cookie(r, customer_id)
     return r
@@ -4415,9 +4429,12 @@ def _google_callback(request: Request, code: str = "", state: str = "", error: s
     ident = _google_fetch_identity(code)
     if not ident:
         return RedirectResponse("/login?e=" + urllib.parse.quote("구글 인증에 실패했어요"), status_code=303)
-    cid = Store(DB_PATH).get_or_create_by_google(ident["sub"], ident.get("email"))
+    cid, created = Store(DB_PATH).get_or_create_by_google(
+        ident["sub"], ident.get("email"), return_created=True)
     if cid is None:
         return RedirectResponse("/login?e=" + urllib.parse.quote("계정 생성 실패"), status_code=303)
+    if created:                                              # 신규 구글 가입만 알림(재로그인은 조용히)
+        _notify_new_signup(username="구글", email=ident.get("email"))
     r = RedirectResponse("/", status_code=303)
     _set_session_cookie(r, cid)
     r.delete_cookie("g_state")
@@ -4802,6 +4819,20 @@ def _admin_customers(request: Request):
         # last_seen은 store.list_customers가 이미 넣어줌 → 프론트가 '접속중/N분전' 계산
         out.append(cu)
     return {"ok": True, "customers": out, "settings": st.all_settings()}
+
+
+@app.get("/api/admin/pending")
+def _admin_pending(request: Request):
+    """승인 대기 회원 요약 — 프론트(sidebar.js)가 폴링해 '띠링' 팝업을 띄운다.
+    관리자만 200. 비관리자는 _require_admin이 막아 폴러가 조용히 꺼진다(부하 없음)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    pend = Store(DB_PATH).pending_customers()
+    newest = pend[0] if pend else None                      # id DESC 정렬이라 [0]이 최신
+    return {"ok": True, "count": len(pend),
+            "newest_id": (newest["id"] if newest else 0),
+            "newest": newest, "pending": pend[:20]}          # 팝업 목록은 최근 20건까지
 
 
 @app.post("/api/admin/customer/update")
