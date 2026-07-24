@@ -160,6 +160,8 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
 
 
 _VISION_TAG_CAP = 60  # 1회 수집당 새 태깅 상한(비용 가드). 초과분은 다음 수집 때.
+_TRANSLATE_CAP = 40      # 1회 수집당 새 소재 번역 상한(비용 가드). 초과분은 다음 수집.
+_TRANSLATE_MAXLEN = 40   # 번역 요청 소재 길이 상한(비정상 입력 방어).
 
 
 def _tag_new_items(items):
@@ -241,6 +243,30 @@ def api_generate_drafts(background_tasks: BackgroundTasks):
         return {"ok": True, "count": 0, "message": "더 이상 생성할 항목이 없습니다"}
     background_tasks.add_task(generate_missing_drafts, targets)
     return {"ok": True, "count": len(targets)}
+
+
+@app.get("/api/translate")
+def api_translate(q: str = ""):
+    """트렌드카드용 한→중 소재 번역(캐시 우선). 미스면 translate_keyword 1회 후 저장.
+
+    빈/과다 입력은 zh="" 로 안전 반환(딥링크는 ko 폴백). 캐시 히트는 Gemini 호출 0."""
+    ko = (q or "").strip()
+    if not ko:
+        return {"ok": True, "ko": "", "zh": ""}
+    if len(ko) > _TRANSLATE_MAXLEN:
+        return {"ok": False, "ko": ko, "zh": "", "error": "too_long"}
+    store = Store(DB_PATH)
+    cached = store.get_translation(ko)
+    if cached is not None:
+        return {"ok": True, "ko": ko, "zh": cached}
+    from shopping_shorts import video_analysis
+    zh = ""
+    try:
+        zh = (video_analysis.translate_keyword(ko) or {}).get("zh", "") or ""
+    except Exception:
+        zh = ""
+    store.save_translation(ko, zh)   # 빈 zh도 저장 → 반복 호출 방지
+    return {"ok": True, "ko": ko, "zh": zh}
 
 
 @app.get("/api/reference")
