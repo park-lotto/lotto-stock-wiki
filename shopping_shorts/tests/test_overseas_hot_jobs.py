@@ -31,3 +31,18 @@ def test_start_is_idempotent_while_running(monkeypatch):
     r1 = job.start()
     r2 = job.start()
     assert r1["status"] == "running" and r2["status"] == "running"
+
+
+def test_merge_rotate_dedupes_new_by_shortcode():
+    # 같은 서브레딧이 여러 카테고리에 겹치면 같은 포스트가 중복 수집된다 →
+    # shortcode당 score 최고 1개만 남아야 한다(UI·cap·스냅샷 중복 방지).
+    new = [
+        {"shortcode": "dup", "category": "살림/생활꿀템", "score": 0.2},
+        {"shortcode": "dup", "category": "가전템", "score": 0.9},
+        {"shortcode": "solo", "category": "뷰티", "score": 0.5},
+    ]
+    out = job._merge_rotate([], new, cap=120)
+    ids = [i["shortcode"] for i in out]
+    assert ids.count("dup") == 1 and "solo" in ids
+    dup = next(i for i in out if i["shortcode"] == "dup")
+    assert dup["score"] == 0.9   # score 최고가 남음

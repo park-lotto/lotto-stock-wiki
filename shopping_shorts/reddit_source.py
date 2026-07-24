@@ -6,6 +6,7 @@ RSS엔 업보트 숫자가 없어(제목·시각·원본URL·썸네일만 옴) �
 정렬해준 순위(rank_points)'로 대체한다 — top.rss는 오늘의 상위, rising.rss는 급상승 순.
 순위가 오르면(스냅샷 비교) 그게 곧 가속이라 build_reddit_items의 speed/accel이 그대로 산다.
 stdlib(urllib·xml)만 사용 — 외부 의존성 0."""
+import html
 import re
 import time
 import urllib.request
@@ -85,7 +86,10 @@ def normalize_entries(xml_text, subreddit="", category="", sort="top"):
         pid = _post_id_from(entry_id, permalink)
         if not pid:
             continue
-        content = e.findtext(_ATOM + "content") or ""
+        # Reddit RSS content는 XML+HTML 이중 이스케이프 — ET가 XML 한 겹만 풀어
+        # href/src 안에 &amp;가 남는다. 그대로 두면 서명된 preview.redd.it 썸네일
+        # (?...&s=서명)이 깨진다 → HTML 겹까지 unescape.
+        content = html.unescape(e.findtext(_ATOM + "content") or "")
         media_url, platform = extract_media_url({"url": _first_external_url(content)})
         if not media_url:
             continue  # 이미지/텍스트/갤러리 = 영상 아님 → 제외

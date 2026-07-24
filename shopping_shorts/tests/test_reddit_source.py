@@ -99,3 +99,19 @@ def test_fetch_subreddit_swallows_errors(monkeypatch):
     monkeypatch.setattr(rs, "_http_get", boom)
     monkeypatch.setattr(rs.time, "sleep", lambda *_: None)
     assert rs.fetch_subreddit("x", category="테스트") == []   # 부분실패 허용
+
+
+def test_normalize_entries_html_entity_decoded():
+    # 실제 RSS는 XML+HTML 이중 이스케이프 → 와이어상 &amp;는 XML소스에 &amp;amp;로 온다.
+    # ET가 한 겹, html.unescape가 나머지 겹을 풀어 URL의 &가 온전해야 한다(서명 썸네일).
+    xml = ('<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><entry>'
+           '<title>t</title><id>t3_zz</id>'
+           '<link href="https://www.reddit.com/r/x/comments/zz/t/"/>'
+           '<published>2026-07-25T10:00:00+00:00</published>'
+           '<content type="html">&lt;a href="https://youtu.be/zz?a=1&amp;amp;b=2"&gt;x&lt;/a&gt; '
+           '&lt;img src="https://preview.redd.it/z.jpg?w=108&amp;amp;s=sig"&gt;</content>'
+           '</entry></feed>')
+    it = normalize_entries(xml, subreddit="x")[0]
+    assert it["media_url"] == "https://youtu.be/zz?a=1&b=2"
+    assert it["thumbnail"] == "https://preview.redd.it/z.jpg?w=108&s=sig"
+    assert "&amp;" not in it["thumbnail"] and "&amp;" not in it["media_url"]
