@@ -164,9 +164,17 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
     platform != "instagram"인 경우 댓글 draft/save_last_run(인스타 전용
     캐시)은 건너뛴다 — 유튜브 등은 _collect_youtube가 자체적으로 저장한다.
 
-    platform == "tiktok"이면 키워드검색이 Apify 유료라 남용/비용 가드를 건다:
-    ① 월예산 킬스위치(초과 시 429 budget_exceeded) ② 사용자별 하루 상한
-    (초과 시 429 daily_limit). 통과 후 수집하면 하루카운트 +1, 추정비용 누적.
+    platform == "tiktok"이면 남용 방지 가드를 건다: 사용자별 하루 상한(초과 시
+    429 daily_limit). 통과 후 수집하면 하루카운트 +1.
+
+    ⚠️ 월예산 킬스위치(budget_exceeded)·추정지출 누적(add_tiktok_spend)은
+    2026-07-24부로 건너뛴다 — 키워드검색(Apify 유료)이 옵트인으로 빠져
+    _collect_tiktok()이 기본 include_paid_keywords=False(무료 yt-dlp 계정 시드만)라
+    실제 지출이 없다. 그런데도 예산 게이트가 남아있으면 유령 지출이 쌓여
+    무료 수집조차 budget_exceeded로 막혀버린다(이번 Fix 2 사유). 코드는
+    지우지 않는다 — 나중에 유료 키워드검색을 다시 켤 때 이 블록도 함께
+    되살릴 것(예산 체크 + est 계산 + add_tiktok_spend 복원).
+    daily_limit(일일 횟수 제한)은 비용과 무관한 남용 방지 가드라 계속 유지한다.
 
     ★관리자(사장님 cid0) 전용(2026-07-22) — 수집=크롤 비용이 드는 운영 액션이라
     구독자(pro 포함)에겐 화면·API 모두 막는다. 화면 숨김만으론 pro가 직접 호출 가능."""
@@ -177,12 +185,9 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
         guard = Store(DB_PATH)
         knobs = _tiktok_knobs(guard)
         now = datetime.now(timezone.utc)
-        month, day = now.strftime("%Y-%m"), now.strftime("%Y-%m-%d")
+        day = now.strftime("%Y-%m-%d")
         cid = _cid(request)
-        if guard.tiktok_month_spend(month) >= knobs["month_budget"]:
-            return JSONResponse(status_code=429, content={
-                "ok": False, "error_code": "budget_exceeded",
-                "error": f"이번 달 틱톡 예산(${knobs['month_budget']:.2f})을 다 썼습니다"})
+        # 월예산 킬스위치는 건너뜀 — 위 docstring 참고(유료 검색 꺼져 있어 실지출 없음).
         if guard.tiktok_daily_count(cid, day) >= knobs["daily_limit"]:
             return JSONResponse(status_code=429, content={
                 "ok": False, "error_code": "daily_limit",
@@ -191,11 +196,8 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
         items = collect(platform=platform, limit_channels=limit)
         if platform == "tiktok":
             guard.bump_tiktok_daily(_cid(request), datetime.now(timezone.utc).strftime("%Y-%m-%d"))
-            # 언어 시드 1개 = 1회 검색(그 언어로 search_count개). 지출 = 언어시드수 × 개수 × 단가.
-            n_lang = len([s for s in guard.list_seeds("tiktok") if s["kind"] in _TIKTOK_LANG_KINDS])
-            est = n_lang * knobs["search_count"] * _TIKTOK_COST_PER_ITEM
-            if est:
-                guard.add_tiktok_spend(datetime.now(timezone.utc).strftime("%Y-%m"), est)
+            # 추정지출 누적(add_tiktok_spend)도 건너뜀 — 위 docstring 참고.
+            # 유료를 되살릴 때 함께 복원: est = n_lang × search_count × _TIKTOK_COST_PER_ITEM
         if platform != "instagram":
             _, collected_at = Store(DB_PATH).load_last_run_platform(platform)
             return {"ok": True, "count": len(items), "items": items,
