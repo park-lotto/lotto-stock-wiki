@@ -13,7 +13,8 @@ from shopping_shorts.ranking import build_reddit_items, apply_grades, sort_by
 
 _LOCK = threading.Lock()
 _JOB = {"status": "idle", "phase": "", "count": 0, "error": None, "started": 0.0}
-_CAP = 120   # 피드 최대 유지 개수(로테이션)
+_CAP = 120        # 피드 최대 유지 개수(로테이션)
+_REQ_PAUSE = 2.0  # Reddit RSS 요청 간격 — 연타 시 429(실측)라 매 요청 사이 쉰다
 
 
 def _now():
@@ -35,8 +36,9 @@ def _collect_category(cat, cfg, store):
     raw = []
     for sub in cfg.get("subreddits", []):
         raw += reddit_source.fetch_subreddit(sub, category=cat, sort="rising")
+        time.sleep(_REQ_PAUSE)   # 429 완화 — 매 요청 사이 간격
         raw += reddit_source.fetch_subreddit(sub, category=cat, sort="top")
-        time.sleep(1.0)   # 레이트리밋 완화
+        time.sleep(_REQ_PAUSE)
     # 같은 post_id 중복 제거(rising+top 겹침)
     seen, uniq = set(), []
     for r in raw:
