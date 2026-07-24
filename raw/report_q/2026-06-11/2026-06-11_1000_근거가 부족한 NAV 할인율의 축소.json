@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-11_1000_근거가 부족한 NAV 할인율의 축소.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김도하",
+    "report_date": "2026년 6월 11일",
+    "stocks": [
+      {
+        "name": "삼성생명",
+        "code": "032830",
+        "rating": "Hold(유지)",
+        "rating_changed": false,
+        "tp_new": "312,000원",
+        "tp_prev": "250,000원",
+        "tp_direction": "up",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "NAV 가치 부여에 대한 고민",
+        "thesis": [
+          "삼성생명 주가는 연초 이후(YTD) 134% 상승하여 KOSPI 및 여타 보험주 수익률을 크게 상회함",
+          "최근 한 달 사이 삼성생명이 보유한 삼성전자 지분가치의 NAV 할인율이 대폭 축소된 것으로 관찰됨",
+          "삼성생명의 주가 상승을 설명하기 위해 사업가치의 대폭 증대를 가정하는 것은 비합리적이며, 시장에서 NAV 할인율을 축소 반영했다고 추론함"
+        ],
+        "valuation_basis": "(1)삼성전자로부터의 배당수익과 AOCI 반영분을 제외한 보험사로써의 사업가치를 산출하고, (2)삼성전자의 기대 배당수익과 AOCI 반영분을 감안한 NAV를 55% 할인하여 지분가치를 산출하여 이를 합산함",
+        "risk": "동사는 보유 지분으로부터 발생할 수 있는 비경상 이익(지분 매각익, 특별배당 등)을 다른 이익과 동등한 원칙으로 배분한 전례가 없고, 그런 계획을 밝힌 바도 없음",
+        "supply_comment": null,
+        "quote": "당사는 여전히 NAV 할인율을 축소할 근거가 없다고 판단. 투자 접근 시 NAV 가치 부여에 대한 고민이 최우선으로 필요한 시점임"
+      }
+    ]
+  }
+}

@@ -39,7 +39,7 @@ def test_preview_never_calls_clean_fn(job, monkeypatch):
     seen = {}
 
     def fake_assemble(plan, tts, srcs, out, clean_fn=None, headcopy=None,
-                      caption_style=None, deco=None, cutaway_paths=None):
+                      caption_style=None, deco=None, cutaway_paths=None, sfx_paths=None):
         seen["clean_fn"] = clean_fn
         seen["deco"] = deco
         open(out, "w").write("x")
@@ -66,7 +66,7 @@ def test_preview_does_not_pass_deco_params(job, monkeypatch):
     seen = {}
 
     def fake_assemble(plan, tts, srcs, out, clean_fn=None, headcopy=None,
-                      caption_style=None, deco=None, cutaway_paths=None):
+                      caption_style=None, deco=None, cutaway_paths=None, sfx_paths=None):
         seen.update(headcopy=headcopy, caption_style=caption_style, deco=deco)
         open(out, "w").write("x")
         return out

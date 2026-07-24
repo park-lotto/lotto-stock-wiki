@@ -1,0 +1,28 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_5월 미국 ISM 제조업 부담은 여전히 남아있다.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "최규호",
+    "report_date": "2026년 6월 2일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "5월 미국 ISM 제조업 PMI 54.0",
+      "신규 주문 +2.7",
+      "고용 +2.2",
+      "신규 수출 +2.7",
+      "수입 +2.7",
+      "생산원가 -2.5"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": null,
+    "top_picks": null,
+    "risk": "산업 담당자들은 여전히 미국-이란 전쟁에 따른 비용과 공급망 문제 우려를 지속적으로 언급하고 있으며, 소비자 재고 부족에 따른 일시적인 수요 반등 가능성 또한 고려해야 함.",
+    "quote": "5월 미국 ISM 제조업 PMI는 54.0로 전월대비 1.3 상승. 신규 주문(+2.7)과 고용(+2.2) 등 주요 지표들 전반적으로 개선."
+  }
+}

@@ -83,11 +83,15 @@ def test_hook_single_word_sentence_is_left_alone():
 
 
 def test_existing_adverb_emphasis_still_works():
-    """기존 intonation(부사 앞 쉼표)을 깨뜨리면 안 된다 — 반대편 봉인."""
-    out = _run("이건 진짜 좋아요. 완전 좋아요. 딱 좋아요.", "실용",
+    """트레일링 부사 강조(부사 앞 쉼표)를 깨뜨리면 안 된다 — 반대편 봉인.
+
+    2026-07-21 재판정 — 옛 문장 "이건 진짜 좋아요. 완전 좋아요. 딱 좋아요."는
+    셋 다 intensifier(진짜/완전/딱이 '좋아요'를 직접 수식)라 이제 안 끊는다.
+    부사가 트레일링(구두점 앞)으로 오는 문장으로 바꿔 강조가 살아있음을 봉인한다."""
+    out = _run("이거 완전. 저건 진짜.", "실용",
                {"intonation": {"intensity": 1.0}})
-    assert ", 진짜" in out or ", 완전" in out or ", 딱" in out, \
-        f"부사 강조가 죽었다: {out!r}"
+    assert ", 완전" in out or ", 진짜" in out, \
+        f"트레일링 부사 강조가 죽었다: {out!r}"
 
 
 def test_hook_question_mark_is_preserved_not_flattened():

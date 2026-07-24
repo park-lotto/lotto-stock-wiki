@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-23",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-23_1102_2Q26F Pre 수익성 개선 방향성 확인 구간.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "김용민",
+    "report_date": "2026.07.23",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "한온시스템",
+        "code": "018880",
+        "sector": "자동차",
+        "rating": "BUY",
+        "rating_changed": true,
+        "tp_new": "4,300원",
+        "tp_prev": "4,200원",
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26 매출 3조, 영업이익 1,390억 추정 (컨센서스 1,120억 대비 +24%, OPM 4.6%)",
+        "estimate_revision": "영업이익 추정치 1,390억 (컨센서스 1,120억 대비 +24%, OPM 4.6%)",
+        "next_catalyst": "주요 고객사의 전기차 판매량과 이에 따른 고수익성 매출인식",
+        "thesis": [
+          "1분기 대비 11% 매출 상승으로 인한 고정비 부담 감소",
+          "Mercedes의 2세대 EV 플랫폼 기반 주요 모델(CLA, GLB, GLC) 판매량 호조",
+          "Mercedes향 매출 비중 상승에 따른 전사 OPM 개선"
+        ],
+        "valuation_basis": "Target P/B multiple 1.0x",
+        "risk": "2대주주 한앤코의 풋옵션 및 잔여물량에 대한 부담, 차환발행시 이자비용 증가",
+        "supply_comment": "2대주주 한앤코 (14.3% 보유)의 풋옵션 및 잔여물량에 대한 부담과 차환발행시 이자비용의 증가는 여전히 동사의 수익성 개선세와 별개로 주가 관점에서 리스크.",
+        "quote": "중립의견 이후 주가 하향이 지속되어 저점매수 구간에 도달했다 판단해 투자의견 BUY로 상향."
+      }
+    ]
+  }
+}

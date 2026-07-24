@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-20",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-20_1104_2Q26 Pre 비식품 선방.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "심은주, 고찬결",
+    "report_date": "2026년 7월 20일",
+    "stocks": [
+      {
+        "name": "동원산업",
+        "code": "006040",
+        "sector": "소비내수",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "60,000원",
+        "tp_prev": "72,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "2분기 연결 매출액 및 영업이익은 각각 2조 4,762억원(YoY 5.0%), 1,214억원(YoY -9.2%)으로 추정한다.",
+        "estimate_revision": "목표주가는 추정치 및 멀티플 조정 기인해 6만원으로 하향한다.",
+        "next_catalyst": "해외 저변 확대 위한 방안들의 가시화",
+        "thesis": [
+          "동원산업 별도 손익은 어획량 감소 및 유류 비용 부담 기인해 개선 제한적 전망",
+          "스타키스트는 미국 비우호적 날씨에 따른 재고 축적으로 판매량 감소 및 원가 부담 YoY 감익 예상",
+          "동원홈푸드 및 동원시스템즈는 고객사 확대와 판가 인상 효과로 선방하는 실적 예상"
+        ],
+        "valuation_basis": "12개월 Fwd PER 4배 거래 중으로 밸류에이션 부담은 제한적이나 목표주가는 추정치 및 멀티플 조정 기인해 6만원으로 하향",
+        "risk": "해외 저변 확대 위한 방안들의 지연",
+        "supply_comment": null,
+        "quote": "2분기 연결 매출액 및 영업이익은 각각 2조 4,762억원(YoY 5.0%), 1,214억원(YoY -9.2%)으로 추정한다."
+      }
+    ]
+  }
+}

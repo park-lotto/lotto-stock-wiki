@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-11_0705_Non-China 공급망의 가치, 매수 기회.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "윤재성",
+    "report_date": "2026년 06월 10일",
+    "stocks": [
+      {
+        "name": "OCI홀딩스",
+        "code": "010060",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "550,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "Section 232 발표 및 6~7월 모멘텀",
+        "thesis": [
+          "Non-China 공급망 구축의 핵심 기업으로 미국 내 에너지 안보 관점에서의 수혜 기대",
+          "최근 주가 급락은 펀더먼털보다는 단순한 수급 이슈로 판단됨",
+          "6~7월 풍부한 모멘텀 고려 시 절호의 매수 기회"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "한국 태양광 업체들이 에너지 안보 관점에서 미국의 단기 전력 공급 부족을 해결할 수 있는 Non-China 공급망 구축의 핵심이라는 점을 감안할 때, 이번 한국업체의 주가 급락은 펀더먼털보다는 단순한 주식 수급 이슈로 판단된다.",
+        "quote": "Top Picks는 OCI홀딩스와 한화솔루션이다."
+      },
+      {
+        "name": "한화솔루션",
+        "code": "009830",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "60,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "Section 232 발표 및 6~7월 모멘텀",
+        "thesis": [
+          "더 많은 규모의 AMPC를 수취하며 Non-China 공급망 구축의 핵심으로 평가",
+          "미국 내 단기 전력 공급 부족 해결을 위한 핵심 업체",
+          "주가 급락은 펀더먼털보다는 수급 이슈로 인한 절호의 매수 기회"
+        ],
+        "valuation_basis": "전체 Capa에 대한 GW당 EV 1.1조",
+        "risk": null,
+        "supply_comment": "한화솔루션은 더 많은 규모의 AMPC를 수취함에 불구하고 전체 Capa에 대한 GW당 EV 1.1조로 상대적 저평가 받고 있음을 확인할 수 있었던 거래다.",
+        "quote": "Top Picks는 OCI홀딩스와 한화솔루션이다."
+      }
+    ]
+  }
+}

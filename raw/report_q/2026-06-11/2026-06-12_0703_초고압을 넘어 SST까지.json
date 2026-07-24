@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-12_0703_초고압을 넘어 SST까지.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "IBK투자증권",
+    "analyst": "김태현",
+    "report_date": "2026. 6. 11",
+    "stocks": [
+      {
+        "name": "효성중공업",
+        "code": "298040",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": "4,900,000원",
+        "tp_prev": "4,900,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 연결 기준 매출액 1조 9,091억원(+25.2% yoy), 영업이익 3,245억원(+97.6% yoy)으로 당사 기존 추정치에 부합할 전망이며, 컨센서스(1조 8,172억원/2,876억원)를 상회할 것으로 예상된다.",
+        "estimate_revision": null,
+        "next_catalyst": "고마진 765kv 초고압 변압기 수요 확대와 고체변압기(SST) 시장 진출",
+        "thesis": [
+          "중공업 부문 1분기 이연 물량 반영 및 견조한 실적 흐름 지속",
+          "건설 부문 수익성 개선 및 기저효과 발생",
+          "차세대 변압기인 고체변압기(SST) 시장 진출을 통한 중장기 성장 동력 확보"
+        ],
+        "valuation_basis": null,
+        "risk": "건설 부문 미분양 현장 채권 회수 불확실성 및 대규모 수주 집중 후 신규 수주 규모 감소 가능성",
+        "supply_comment": "전력",
+        "quote": "수주 호조에 기반한 실적 모멘텀이 여전히 유효하다고 판단해 기존 매수 의견과 목표주가 490만원을 유지한다."
+      }
+    ]
+  }
+}

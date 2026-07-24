@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-19_1102_공든 탑에 소나기가 왔다.md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "이현지",
+    "report_date": "2026.07.17",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "롯데관광개발",
+        "code": "032350",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "26,000 원",
+        "tp_prev": null,
+        "tp_direction": "down",
+        "earnings_outlook": "2 분기 매출액은 1,964 억원(+24.6%yoy), 영업이익은 510 억원(+53.9%yoy)으로 시장 컨센서스 부합 전망.",
+        "estimate_revision": "업종 전반적으로 밸류에이션 하향됨에 따라 적용 멀티플을 하향하며 목표주가를 26,000 원으로 9.4% 하향 조정함",
+        "next_catalyst": "VIP 와 Mass 의 고른 성장으로 3 분기 최대 실적 기록할 것으로 전망",
+        "thesis": [
+          "2 분기 드랍액은 7,606 억원(+13.8%yoy)으로 1 분기에 이어 견조한 성장세 지속",
+          "월간 신규 멤버십 순증 꾸준히 높아지며 고객 데이터 확대",
+          "롤링 테이블 확대를 통한 하이롤러 대상 마케팅 강화"
+        ],
+        "valuation_basis": "적용 PER 17배, 27F 지배주주순이익 1240억원 기준",
+        "risk": "문체부의 국내 외국인 전용 카지노의 관광진흥개발기금 부담률 인상 추진",
+        "supply_comment": null,
+        "quote": "견고한 2 분기를 시작으로 하반기에도 안정적 실적 이어갈 것으로 전망하며, 향후 리파이낸싱을 통한 이자비용 축소로 수익성 개선 기대"
+      },
+      {
+        "name": "파라다이스",
+        "code": "034230",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "20,000 원",
+        "tp_prev": null,
+        "tp_direction": "down",
+        "earnings_outlook": "2분기 매출액은 3,162억원(+11.2%yoy), 영업이익은 458억원(+6.9%yoy)으로 시장 컨센서스 소폭 하회 전망",
+        "estimate_revision": "적용 멀티플을 하향하며 목표주가를 20,000 원으로 13.0% 하향 조정",
+        "next_catalyst": "하반기 성수기를 맞이해 다양한 프로모션을 통한 콤프 확대 전략으로 실적 기여 기대",
+        "thesis": [
+          "2분기 드랍액은 2.1조원(+12.2%yoy)으로 처음으로 분기 2조원을 돌파하며 역대 최대 수준 기록",
+          "기타 VIP(+26.5%yoy)와 Mass(+18.0%yoy) 중심으로 두자릿수 성장세",
+          "P-Mass, Mass 중심 가파른 성장 기대"
+        ],
+        "valuation_basis": "적용 PER 18배, 26F 지배주주순이익 1010억원 기준",
+        "risk": "하얏트 리젠시 관련 고정비 부담 지속 및 관광진흥개발기금 부담률 인상 이슈",
+        "supply_comment": null,
+        "quote": "작년 12 월부터 중국 VIP 드랍액이 5 개월 연속 역성장을 기록했지만, 오히려 기타 VIP 와 Mass 성장이 전체 드랍액 성장을 견인하고 있어 하반기에도 인바운드 성장 지속됨에 따른 P-Mass, Mass 중심 가파른 성장 기대"
+      },
+      {
+        "name": "GKL",
+        "code": "114090",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "16,000 원",
+        "tp_prev": null,
+        "tp_direction": "flat",
+        "earnings_outlook": "2 분기 매출액은 1,195 억원(+18.4%yoy), 영업이익은 247 억원(+54.6%yoy)으로 시장 컨센서스 상회 전망",
+        "estimate_revision": null,
+        "next_catalyst": "중국 VIP 중심 빠르게 회복하며 안정적 성장 지속",
+        "thesis": [
+          "2 분기 드랍액은 1.1 조원(+15.1%yoy)으로 팬데믹 이전 수준 회복",
+          "중국(+47.7%yoy)과 기타(+11.9%yoy) VIP 가 두자릿수 성장 기록",
+          "다양한 마케팅 노력들로 실적 개선"
+        ],
+        "valuation_basis": "적용 PER 16배, 26F 지배주주순이익 630억원 기준",
+        "risk": "관광진흥개발기금 부담률 인상 및 복합리조트 부재",
+        "supply_comment": null,
+        "quote": "복합리조트 부재한 점은 아쉽지만, 다양한 마케팅 노력들로 중국 VIP 중심 빠르게 회복하며 안정적 성장 지속하는 점 긍정적"
+      }
+    ]
+  }
+}

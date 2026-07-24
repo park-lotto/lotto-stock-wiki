@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-11_1006_한화그룹 사업 재편 기사 관련 “가능성” 담...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "김용민",
+    "report_date": "2026.06.11",
+    "stocks": [
+      {
+        "name": "한화오션",
+        "code": "042660",
+        "rating": "매수 (M)",
+        "rating_changed": null,
+        "tp_new": "179,000",
+        "tp_prev": "179,000",
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "한화그룹내 사업 포트폴리오의 재편 움직임",
+        "thesis": [
+          "한화임팩트가 최대주주인 한화엔진의 AM 사업 매각 가능성과 이를 활용한 그룹 사업 포트폴리오 재편 가능성",
+          "미국 AI 데이터센터 투자 확대에 따른 가스터빈 및 중속엔진 통합을 통한 발전용 원동기 플랫폼의 전략적 가치",
+          "과거 한화오션 지분 매각을 통한 차익 실현 경험을 보유한 최대주주의 자본 효율화 전략"
+        ],
+        "valuation_basis": null,
+        "risk": "결정된 것은 없으나 사업 포트폴리오 재편 시나리오에 따른 불확실성",
+        "supply_comment": null,
+        "quote": "한화엔진의 AM 사업 매각 가능성에 대한 기사가 나왔다면, 이를 단순히 “캐시카우 사업부의 매각으로 인한 기업가치 저하”라는 접근보다는 “한화임팩트가 최대주주인 회사가 현금을 마련한다면, 이를 활용해 어떤 방식의 사업 포트폴리오 재편을 보일지”에 대한 고민이 필요하다고 판단.",
+        "sector": "조선"
+      }
+    ]
+  }
+}

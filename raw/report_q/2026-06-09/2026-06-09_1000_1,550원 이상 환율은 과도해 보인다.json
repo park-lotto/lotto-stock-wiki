@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_1,550원 이상 환율은 과도해 보인다.md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "박상현",
+    "report_date": "2026-06-09",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "미국 물가 변수",
+      "미 연준의 금리정책",
+      "미국-이란간 협상",
+      "일본 정부의 외환시장 재개입",
+      "외국인의 국내 주식 순매도"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6월 중",
+        "event": "6월 FOMC 회의"
+      },
+      {
+        "date": "2026-06-18",
+        "event": "대미투자특별법 발효"
+      }
+    ],
+    "top_picks": null,
+    "risk": "국내 3고 현상(고금리-고유가-고환율) 리스크, 미국 물가지표 발표에 따른 미 연준의 금리인상 가능성, 미국-이란간 협상 지연 가능성, 대미투자특별법 발효에 따른 달러 수급 우려",
+    "quote": "달러-원 환율 상승을 자극할 수 있는 불안요인이 잠재해 있지만 1,550원 이상의 환율을 다소 과도한 수준으로 판단되며 이란 불확실성 완화 시 달러-원 환율이 1,400원 중후반대로 하락할 것이라는 기존 전망을 유지"
+  }
+}

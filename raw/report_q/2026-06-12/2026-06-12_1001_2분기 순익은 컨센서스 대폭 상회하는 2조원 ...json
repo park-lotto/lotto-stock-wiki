@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-12",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-12_1001_2분기 순익은 컨센서스 대폭 상회하는 2조원 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "최정욱",
+    "report_date": "2026년 6월 12일",
+    "stocks": [
+      {
+        "name": "KB금융",
+        "code": "105560",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "220,000원",
+        "tp_prev": null,
+        "tp_direction": "up",
+        "earnings_outlook": "2분기 추정 순익은 1.97조원으로 YoY 15.0% 증가해 역대 최대의 분기 순익 예상",
+        "estimate_revision": "목표가 상향은 양호한 2분기 순익 전망과 향후 이익추정치 상향에 따른 지속가능ROE 상향 적용 때문",
+        "next_catalyst": "홍콩 ELS 과징금 환입, 하반기 추가 자사주 매입",
+        "thesis": [
+          "2분기 추정 순익 1.97조원으로 지주사 설립 이후 분기 최대 순익 예상",
+          "2분기 CET 1 비율 13.73% 내외로 QoQ 10bp 상승 예상 및 하반기 약 8,500억원 추가 자사주 매입 전망",
+          "홍콩 ELS 과징금 이슈 해소 국면 및 저평가 매력(PBR 0.81배)"
+        ],
+        "valuation_basis": "향후 이익추정치 상향에 따른 지속가능ROE 상향 적용",
+        "risk": null,
+        "supply_comment": "과거 보유 자사주 14.3백만주와 상반기 예정 매입 자사주 7.7백만주 소각으로 상반기에만 총발행주식수가 6.1%나 축소",
+        "quote": "KB금융에 대한 투자의견 매수를 유지하고, 목표주가를 220,000원으로 상향. 목표가 상향은 양호한 2분기 순익 전망과 향후 이익추정치 상향에 따른 지속가능ROE 상향 적용 때문."
+      }
+    ]
+  }
+}

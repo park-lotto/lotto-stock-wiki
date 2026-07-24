@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-23",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-23_1108_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승은",
+    "report_date": "2026.07.23",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "네이버가 월 3,000만 명이 이용하는 'AI 브리핑'에 광고를 정식 도입하며 AI 수익화에 본격적으로 시동을 걸었으며, 4분기에는 AI 탭에도 광고 도입을 목표로 하고 있음"
+      },
+      {
+        "sector": "기타",
+        "stance": null,
+        "reason": "하나금융그룹과 두나무가 원화 스테이블코인 생태계를 공동 조성하고 시장 내 지배적 사업자로 자리매김하겠다는 청사진을 공식 제시함"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "네이버",
+      "하나금융",
+      "두나무"
+    ],
+    "risk": "챗봇 이용자의 77%가 광고가 있는 AI 서비스를 신뢰하지 않는다는 조사 결과가 나오는 만큼, 검색 신뢰와 수익성 간 균형 유지가 향후 과제로 남아 있음",
+    "quote": "AI 답변 밑에 ‘슬쩍 광고’⋯네이버, ‘AI 수익화’ 본격 시동 / 하나금융 “두나무와 원화코인 지배적 사업자 될 것”"
+  }
+}

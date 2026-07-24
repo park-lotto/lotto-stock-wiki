@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_0700_5월 인천공항 수송실적 꺾이지 않는 항공수...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "안도현",
+    "report_date": "2026년 6월 9일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "대한항공",
+        "code": "003490",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "32,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 또한 화물과 환승수요가 하단을 지지하면서 대한항공 실적 추정치를 상향 조정할 예정이다.",
+        "estimate_revision": "상향 조정",
+        "next_catalyst": "화물 운임 상승 및 유럽 노선 환승 수요 흡수",
+        "thesis": [
+          "중동 전쟁 이후 환적 화물 증가로 인한 화물 수송량 증가 전환",
+          "유럽 노선 환승 수요의 인천공항 흡수",
+          "미-중 간 직항 항공편 축소에 따른 국내 FSC 수요 견조"
+        ],
+        "valuation_basis": null,
+        "risk": "원화 절하 상황 및 미주/유럽 항공권 운임 상승에 따른 수요 위축 우려",
+        "supply_comment": "전쟁 이후 항공화물 전반 운임이 30% 이상 상승한 것으로 파악되기 때문에 2분기만 잘 넘기면 대한항공에게는 오히려 기회의 장이 될 수 있다.",
+        "quote": "대한항공에 대해서 현재 주가를 저점으로 매수 접근을 추천한다."
+      },
+      {
+        "name": "진에어",
+        "code": "272450",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "7,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": null,
+        "thesis": null,
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "진에어(272450) BUY I TP 7,000원 I CP 5,310원"
+      }
+    ]
+  }
+}

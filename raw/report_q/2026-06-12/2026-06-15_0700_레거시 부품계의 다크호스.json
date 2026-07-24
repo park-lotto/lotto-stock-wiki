@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-12",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-15_0700_레거시 부품계의 다크호스.md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "권민규",
+    "report_date": "2026.06.12",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "도우인시스",
+        "code": "484120",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "1Q26 기준 매출액 268억원(YoY +61%), 영업이익 18억원(흑자전환, OPM 7%) / '26년 예상 매출액 1,872억원(+34%), 영업이익 121억원(+258%, OPM 7%)",
+        "estimate_revision": null,
+        "next_catalyst": "2Q부터 본격 양산 및 신규 모델(와이드 모델) 추가, 2H26 베트남 신규 공장 착공 및 1H27 가동 예상",
+        "thesis": [
+          "신기술(듀얼 UTG) 도입 및 적용: '26년 하반기 출시되는 일부 고객사의 하이엔드 모델부터 패널 하부에 백 UTG 탑재.",
+          "와이드 모델 출시로 인한 Q 증가: 신규 모델에 의한 Q 증가 효과는 YoY 30% 수준으로 전망.",
+          "Capa 확장 및 신규 고객사 확보: 베트남에 100K/월 Capa 증설 예정으로 1H27 가동 시작 및 글로벌 고객사 추가 확대 기대."
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "현재 국내 81K/월, 베트남 100K/월 Capa 보유 중(연간 약 2000만대 공급 가능).",
+        "quote": "도우인시스는 폴더블 디바이스용 UTG(Ultra Thin Glass)를 가공하는 업체로, 글로벌 최대 Capa와 양산 레퍼런스를 보유하고 있음.",
+        "sector": "IT"
+      }
+    ]
+  }
+}

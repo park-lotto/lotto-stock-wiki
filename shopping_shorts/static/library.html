@@ -3,9 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>대본 즐겨찾기 — 쇼핑쇼츠</title>
+<title>대본 즐겨찾기 — 숏템박스</title>
+<script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <style>
-  :root{--bg:#0a0e14;--panel:#111722;--line:#1e2735;--txt:#e6edf3;--sub:#8b98a9;--accent:#2f81f7;--gold:#ffd76b;}
+  /* 스탁브레인 민트-블랙 투톤(다크 기본). produce.html과 동일 토큰. */
+:root{--bg:#0a0f0d;--panel:#101815;--line:#1e2b26;--txt:#eaf3f0;--sub:#8fa1a0;--accent:#37e0bd;--accent2:#1f9e7a;--fire:#ff6b6b;--ok:#37e0bd;--gold:#f0c453;--inset:#0c1412;--sel-bg:linear-gradient(90deg,#123a30,#0c221c);--sel-fg:#6ff0d6;--grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--hover:#131d19;color-scheme:dark;}
+:root[data-theme="light"]{--bg:#f4faf7;--panel:#ffffff;--line:#d5e6df;--txt:#0f1a16;--sub:#5c726d;--accent:#12b886;--accent2:#0ca678;--fire:#e0524a;--ok:#12b886;--gold:#b8860b;--inset:#eef7f3;--sel-bg:linear-gradient(90deg,#d8f2ea,#eafaf5);--sel-fg:#0a7d66;--grad:linear-gradient(135deg,#19c9ab,#0a8f79);--hover:#eef7f3;color-scheme:light;}
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic',system-ui,sans-serif;display:flex;min-height:100vh}
   .sidebar{width:230px;background:var(--panel);border-right:1px solid var(--line);padding:16px;flex-shrink:0}
@@ -13,13 +16,13 @@
   .menu-group{margin-bottom:18px}
   .menu-group .label{font-size:11px;color:var(--sub);text-transform:uppercase;margin-bottom:8px}
   .menu-item{padding:8px 12px;border-radius:8px;font-size:13px;color:var(--txt);cursor:pointer;margin-bottom:2px}
-  .menu-item.active{background:linear-gradient(90deg,#153a6b,#0d2340);color:#7db4ff}
+  .menu-item.active{background:var(--sel-bg);color:var(--sel-fg)}
   .main{flex:1;padding:28px 36px;overflow:auto}
   .head h2{font-size:24px}
   .desc{color:var(--sub);font-size:13px;margin:6px 0 20px;line-height:1.6}
   .addurl{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:20px}
   .addurl-row{display:flex;gap:8px}
-  .addurl-row input{flex:1;background:#0d131c;border:1px solid var(--line);border-radius:8px;
+  .addurl-row input{flex:1;background:var(--inset);border:1px solid var(--line);border-radius:8px;
     padding:9px 12px;color:var(--txt);font-size:13px;font-family:inherit}
   .addurl-row input:focus{outline:none;border-color:var(--accent)}
   .addurl-row button{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:9px 18px;
@@ -29,7 +32,7 @@
   .addurl-msg.err{color:#ff7b72}
   .addurl-confirm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;
     padding-top:10px;border-top:1px solid var(--line);font-size:13px}
-  .addurl-confirm select{background:#0d131c;border:1px solid var(--line);border-radius:6px;
+  .addurl-confirm select{background:var(--inset);border:1px solid var(--line);border-radius:6px;
     padding:6px 10px;color:var(--txt);font-size:13px;font-family:inherit}
   .addurl-confirm button{border:0;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:700;
     cursor:pointer;font-family:inherit}
@@ -41,7 +44,7 @@
   .toprow{display:flex;gap:18px;align-items:stretch}
   .vid{width:260px;flex-shrink:0;display:flex;flex-direction:column;gap:10px}
   .vid video{width:100%;height:100%;border-radius:10px;background:#000;object-fit:cover}
-  .vid .novid{width:100%;aspect-ratio:9/16;border-radius:10px;background:#0d131c;border:1px dashed var(--line);
+  .vid .novid{width:100%;aspect-ratio:9/16;border-radius:10px;background:var(--inset);border:1px dashed var(--line);
               display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:12px;text-align:center;padding:14px}
   .vid a{font-size:12px;color:var(--accent);text-decoration:none;text-align:center}
   .body{flex:1;min-width:0;max-width:680px;display:flex;flex-direction:column;gap:10px}
@@ -49,13 +52,13 @@
   .info-side .sec-t:first-child{margin-top:0}
   .actions{display:flex;gap:8px;margin-top:auto;padding-top:6px}
   .actions button{flex:1;padding:9px 12px}
-  .learn-status{font-size:11px;color:var(--sub);line-height:1.7;background:#0d131c;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .learn-status{font-size:11px;color:var(--sub);line-height:1.7;background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
   .learn-status b{color:var(--gold);font-weight:600}
   .ch{font-weight:600;font-size:15px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
   .ch .rm{background:none;border:1px solid var(--line);color:var(--sub);font-size:11px;border-radius:6px;padding:3px 8px;cursor:pointer;flex-shrink:0}
   .ch .rm:hover{color:#ff9b9b;border-color:#ff9b9b}
   .meta{font-size:11px;color:var(--sub)}
-  .hook{background:#0d131c;border:1px solid var(--line);border-radius:8px;padding:10px}
+  .hook{background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:10px}
   .hook .type{display:inline-block;background:linear-gradient(90deg,#3a2f0d,#2a2408);border:1px solid #b8860b;color:var(--gold);font-size:11px;padding:2px 8px;border-radius:12px;margin-bottom:6px}
   .hook .line{font-size:14px;font-weight:600;line-height:1.5}
   .why{font-size:12px;color:#9fd0ff;background:#0d1b2e;border-left:2px solid var(--accent);padding:7px 10px;border-radius:4px;line-height:1.5}
@@ -75,12 +78,12 @@
   .devices{display:flex;flex-wrap:wrap;gap:5px}
   .devices span{font-size:11px;color:var(--sub);border:1px solid var(--line);border-radius:12px;padding:2px 8px}
   details summary{cursor:pointer;font-size:12px;color:var(--accent);list-style:none}
-  details .full{background:#0d131c;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:13px;line-height:1.7;white-space:pre-wrap;margin-top:8px}
+  details .full{background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:13px;line-height:1.7;white-space:pre-wrap;margin-top:8px}
   .row{display:flex;gap:8px;margin-top:2px}
   .row button{font-size:12px;color:var(--accent);background:none;border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer}
   .row button:hover{border-color:var(--accent)}
   .empty{color:var(--sub);text-align:center;padding:80px 20px;line-height:1.8}
-  .gen-btn{background:linear-gradient(90deg,#153a6b,#0d2340)!important;border-color:var(--accent)!important;color:#7db4ff!important;font-weight:600}
+  .gen-btn{background:var(--sel-bg)!important;border-color:var(--accent)!important;color:var(--sel-fg)!important;font-weight:600}
   .send-btn.sent{background:linear-gradient(90deg,#1c5a2e,#0d3a1c)!important;border-color:#2ea043!important;color:#7ee0a0!important}
   /* 생성 모달 */
   .gen-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:flex-start;justify-content:center;padding:24px;overflow:auto}
@@ -93,21 +96,21 @@
   .gen-sec{font-size:12px;color:var(--sub);margin:12px 0 8px;text-transform:uppercase}
   .toggles{display:flex;flex-wrap:wrap;gap:8px}
   .elem-row{display:flex;align-items:center;gap:6px}
-  .elem-mode{background:#0d131c;border:1px solid var(--line);border-radius:6px;color:var(--txt);font-size:12px;padding:4px 6px}
-  .toggles label{display:flex;align-items:center;gap:6px;font-size:13px;background:#0d131c;border:1px solid var(--line);border-radius:8px;padding:7px 11px;cursor:pointer}
+  .elem-mode{background:var(--inset);border:1px solid var(--line);border-radius:6px;color:var(--txt);font-size:12px;padding:4px 6px}
+  .toggles label{display:flex;align-items:center;gap:6px;font-size:13px;background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:7px 11px;cursor:pointer}
   .toggles input{accent-color:var(--accent)}
   .modes{display:flex;flex-direction:column;gap:6px;font-size:13px}
   .modes label{display:flex;align-items:center;gap:6px;cursor:pointer}
-  #genTopic{width:100%;margin-top:8px;background:#0d131c;border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--txt);font-size:13px}
+  #genTopic{width:100%;margin-top:8px;background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--txt);font-size:13px}
   .subject-row{margin:6px 0 10px 20px;font-size:13px}
   .subject-row .subj-label{color:var(--sub);margin-right:6px}
-  .subject-row #genSubject{width:70%;background:#0d131c;border:1px solid var(--line);
+  .subject-row #genSubject{width:70%;background:var(--inset);border:1px solid var(--line);
     border-radius:6px;color:var(--txt);padding:6px 10px;font-size:13px}
   .subject-row .subj-hint{color:var(--sub);font-size:11.5px;margin-top:5px}
-  .gen-run{margin-top:16px;width:100%;background:linear-gradient(90deg,#153a6b,#0d2340);border:1px solid var(--accent);color:#7db4ff;font-weight:600;font-size:14px;padding:11px;border-radius:9px;cursor:pointer}
+  .gen-run{margin-top:16px;width:100%;background:var(--sel-bg);border:1px solid var(--accent);color:var(--sel-fg);font-weight:600;font-size:14px;padding:11px;border-radius:9px;cursor:pointer}
   .gen-run:disabled{opacity:.6;cursor:wait}
   .gen-results{margin-top:8px}
-  .draft{background:#0d131c;border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:12px}
+  .draft{background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:12px}
   .draft .dh{font-size:14px;font-weight:700;color:var(--gold);margin-bottom:6px}
   .draft .ds{font-size:13.5px;line-height:1.7;white-space:pre-wrap}
   .draft .da{font-size:11px;color:var(--sub);margin-top:8px;border-top:1px solid var(--line);padding-top:6px}
@@ -115,7 +118,7 @@
   .draft .dtext{width:100%;min-height:90px;background:#0a0e14;border:1px solid var(--line);border-radius:8px;
                 color:var(--txt);font-size:13.5px;line-height:1.7;padding:10px;font-family:inherit;resize:vertical}
   .draft .refine-row{display:flex;gap:6px;margin-top:8px}
-  .draft .refine-row input{flex:1;background:#0d131c;border:1px solid var(--line);border-radius:6px;color:var(--txt);padding:7px 10px;font-size:12.5px}
+  .draft .refine-row input{flex:1;background:var(--inset);border:1px solid var(--line);border-radius:6px;color:var(--txt);padding:7px 10px;font-size:12.5px}
   .draft .refine-row button{font-size:12px;color:var(--accent);background:none;border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer;white-space:nowrap}
   .draft .hist{margin-top:8px;font-size:11.5px;color:var(--sub);cursor:pointer}
   .draft .hist-list{display:none;margin-top:6px;background:#0a0e14;border:1px solid var(--line);border-radius:6px;padding:6px}

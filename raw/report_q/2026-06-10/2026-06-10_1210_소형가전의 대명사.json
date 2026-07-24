@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1210_소형가전의 대명사.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "미래에셋증권",
+    "analyst": "박준서",
+    "report_date": "2026.6.9",
+    "stocks": [
+      {
+        "name": "오아",
+        "code": "342870",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "1Q26 실적은 매출액 254억원(-4.42% QoQ), 영업이익 10억원(-15.55% QoQ)을 기록했다.",
+        "estimate_revision": null,
+        "next_catalyst": "향후 법인 설립 완료와 해외 매출 가시화 시점",
+        "thesis": [
+          "자체 브랜드 기반 중소형가전에서 건강푸드까지 사업 영역을 확장해온 종합 소비재 기업",
+          "네이버, 쿠팡, 카카오 등 주요 플랫폼 데이터를 분석해 소비 트렌드에 맞는 제품을 출시하고, 디자인, 마케팅, 판매 운영까지 자체 수행하는 D2C 기반 제품 기획력 확보",
+          "홍콩 소재 신규 합작법인 설립을 통해 중국·유럽·미국 등 해외 유통 플랫폼 진출 추진"
+        ],
+        "valuation_basis": null,
+        "risk": "중소형가전 및 건강푸드 시장의 경쟁 심화와 원가 변동성",
+        "supply_comment": null,
+        "quote": "동사는 자체 브랜드를 기반으로 중소형가전에서 건강푸드까지 사업 영역을 확장해온 종합 소비재 기업이다."
+      }
+    ]
+  }
+}

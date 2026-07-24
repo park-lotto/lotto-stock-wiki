@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-06-12",
+    "broker": "서울평가정보(주)",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-15_0700_혈관신생 억제 기반 의약품 및 기능성 식품 ...md"
+  },
+  "questionnaire": {
+    "broker": "서울평가정보(주)",
+    "analyst": "이소연",
+    "report_date": "2026.06.11.",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "안지오랩",
+        "code": "251280",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": {
+          "summary": "2026년 매출은 Ob-X 원료 중심의 성장과 기술이전 수익 유지 가능성을 기반으로 전년 대비 제한적 성장 흐름을 나타낼 것으로 전망된다.",
+          "quote": "종합하면, 2026년 매출은 Ob-X 원료 중심의 성장과 기술이전 수익 유지 가능성을 기반으로 전년 대비 제한적 성장 흐름을 나타낼 것으로 전망된다."
+        },
+        "estimate_revision": null,
+        "next_catalyst": "ALS-L1023 임상 3상 결과 및 신규 기술이전 계약 체결",
+        "thesis": [
+          "혈관신생 억제 기술 기반 천연물의약품, 항체의약품, 기능성 식품 개발 전문기업",
+          "습성황반변성 치료제 ALS-L1023 임상 3상 진행 및 한림제약·상명이노베이션 공동개발 협력",
+          "피부 및 세포 투과(SPACE) 펩타이드 플랫폼 기술 확보 및 연구개발 영역 확장"
+        ],
+        "valuation_basis": null,
+        "risk": "신약 후보물질의 임상 단계에 따른 유효성 및 안전성 확인 필요, 기술이전 성과 및 연구개발비 통제 여부에 따른 수익성 변동 가능성",
+        "supply_comment": "Ob-X Premix 원료를 국내외 건강기능식품 업체에 공급하며, 기술이전 및 외부 협력 기반의 사업 구조를 운영함",
+        "quote": "동사는 핵심 후보물질 ALS-L1023의 임상 3상 진행, 유럽 특허 확보, 한림제약에 기술이전 및 투자 유치를 통해 습성황반변성 치료제 개발 기반을 강화하고 있다."
+      }
+    ]
+  }
+}

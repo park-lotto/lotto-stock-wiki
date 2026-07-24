@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-24_1101_전 계열사 고른 손익 개선. 총주주환원율도 5...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "최정욱, 정소영",
+    "report_date": "2026년 7월 24일",
+    "stocks": [
+      {
+        "name": "KB금융",
+        "code": "105560",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "220,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 순익은 YoY 14.6% 증가한 1.99조원을 시현해 컨센서스를 크게 상회했고 우리예상치도 소폭 웃도는 호실적을 기록",
+        "estimate_revision": "증권업수수료와 은행 신탁이익이 전분기보다도 2,500억원이나 추가로 증가하면서 그룹 수수료이익이 1.6조원에 달하는 등 QoQ 17.8%, YoY 56.0% 급증",
+        "next_catalyst": "홍콩 ELS 과징금 환입 발생 및 NIM 개선",
+        "thesis": [
+          "전 계열사의 고른 손익 개선과 증권 부문의 호실적",
+          "총주주환원율 57% 달성 및 자본확충에 따른 이익기여 확대",
+          "일시적 현상으로 판단되는 NIM 하락과 3분기 실적 모멘텀 지속"
+        ],
+        "valuation_basis": "220,000원 유지",
+        "risk": "은행 원화대출 증가에도 그룹 NIM이 5bp 하락한 점",
+        "supply_comment": "올해 1.7조원 증자 실시에 따른 자본확충 영향이 하반기 중 더욱 본격화",
+        "quote": "KB금융에 대한 투자의견 매수와 목표주가 220,000원을 유지."
+      }
+    ]
+  }
+}

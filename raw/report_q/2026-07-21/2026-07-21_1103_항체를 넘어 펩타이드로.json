@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-21_1103_항체를 넘어 펩타이드로.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "홍가혜",
+    "report_date": "2026.07.21",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "삼성바이오로직스",
+        "code": "207940",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "2,000,000",
+        "tp_prev": "2,000,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "'26년 매출 성장률 20-25%, EBITDA 마진 mid-to-high teens를 가이던스로 제시함.",
+        "estimate_revision": null,
+        "next_catalyst": "연내 마무리 목표로 하는 폴리펩타이드 그룹 인수 거래 종결 및 통합 과정",
+        "thesis": [
+          "2.7조원 규모의 폴리펩타이드 인수를 통한 펩타이드 CDMO 진출",
+          "차세대 모달리티(펩타이드) 경쟁력 강화 및 미국·유럽·인도 글로벌 생산거점 확보",
+          "기존 생산시설과 고객 기반을 승계해 인수 직후 매출 기여 및 교차 수주·운영 효율화를 통한 중장기 수익성 개선"
+        ],
+        "valuation_basis": null,
+        "risk": "6공장 및 송도 제3캠퍼스 투자 등 병행되는 대규모 CAPEX로 인한 추가 차입 가능성",
+        "supply_comment": "폴리펩타이드 그룹은 미국·유럽·인도 등 5개국에서 6개의 cGMP 생산거점을 운영 중이며, 1,000개 이상의 펩타이드 의약품 생산 경험 및 글로벌 임상3상 펩타이드 파이프라인의 약 1/3을 확보하고 있음.",
+        "quote": "삼성바이오로직스는 7/20 공시를 통해 약 2.7조원 규모의 스위스 펩타이드 CDMO 업체 폴리펩타이드 그룹(SIX: PPGN) 인수를 발표함."
+      }
+    ],
+    "sector": "바이오"
+  }
+}

@@ -1,0 +1,219 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_Chemicals Monthly Data（2026.6.9일, xls데...md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "황규원",
+    "report_date": "2026.06.09",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "롯데케미칼",
+        "code": "011170",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": 165000,
+        "tp_prev": 165000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 예상 영업이익 361억원, 2026년 2분기 예상 영업이익 △203억원",
+        "estimate_revision": null,
+        "next_catalyst": null,
+        "thesis": [
+          "6월 롯데케미칼㈜ 구조조정 영향 불가피",
+          "6월 롯데케미칼㈜ 순서로 나프타 역래깅 영향 불가피",
+          "2026년 2분기 예상 영업이익 △203억원"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "특히, 5월 말 대한유화㈜를 시작으로, 6월 롯데케미칼㈜, 7월 LG화학㈜ 순서로 영향이 불가피 하다."
+      },
+      {
+        "name": "TKG휴켐스",
+        "code": "069260",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": 28000,
+        "tp_prev": 28000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 예상 영업이익 734억원, 2026년 2분기 예상 영업이익 212억원",
+        "estimate_revision": null,
+        "next_catalyst": null,
+        "thesis": [
+          "2026년 예상 영업이익 734억원",
+          "2026년 2분기 예상 영업이익 212억원"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "▶ 2026년 예상 영업이익 734억원 ▶ 2026년 1분기 영업이익 152억원 ▶ 2026년 2분기 예상 영업이익 212억원"
+      },
+      {
+        "name": "코오롱인더",
+        "code": "120110",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": 83000,
+        "tp_prev": 83000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 예상 영업이익 1,901억원, 2026년 2분기 예상 영업이익 598억원",
+        "estimate_revision": null,
+        "next_catalyst": null,
+        "thesis": [
+          "2026년 예상 영업이익 1,901억원",
+          "2026년 2분기 예상 영업이익 598억원"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "▶ 2026년 예상 영업이익 1,901억원 ▶ 2026년 1분기 영업이익 507억원 ▶ 2026년 2분기 예상 영업이익 598억원"
+      },
+      {
+        "name": "한화솔루션",
+        "code": "009830",
+        "rating": "HOLD",
+        "rating_changed": false,
+        "tp_new": 35900,
+        "tp_prev": 35900,
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 예상 영업이익 1,276억원, 2026년 2분기 예상 영업이익 580억원",
+        "estimate_revision": null,
+        "next_catalyst": null,
+        "thesis": [
+          "2026년 예상 영업이익 1,276억원",
+          "2026년 2분기 예상 영업이익 580억원"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "▶ 2026년 예상 영업이익 1,276억원 ▶ 2026년 1분기 영업이익 926억원 ▶ 2026년 2분기 예상 영업이익 580억원"
+      },
+      {
+        "name": "대한유화",
+        "code": "006650",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": 200000,
+        "tp_prev": 200000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 예상 영업이익 1,085억원, 2026년 2분기 예상 영업이익 396억원",
+        "estimate_revision": null,
+        "next_catalyst": null,
+        "thesis": [
+          "2026년 예상 영업이익 1,085억원",
+          "2026년 2분기 예상 영업이익 396억원",
+          "5월 말 대한유화㈜ 시작으로 나프타 역래깅 영향"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "특히, 5월 말 대한유화㈜를 시작으로, 6월 롯데케미칼㈜, 7월 LG화학㈜ 순서로 영향이 불가피 하다."
+      },
+      {
+        "name": "LG화학",
+        "code": "051910",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": 470000,
+        "tp_prev": 470000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 예상 영업이익 5,029억원, 2026년 2분기 예상 영업이익 3,068억원",
+        "estimate_revision": null,
+        "next_catalyst": null,
+        "thesis": [
+          "2026년 예상 영업이익 5,029억원",
+          "2026년 2분기 예상 영업이익 3,068억원",
+          "7월 LG화학㈜ 나프타 역래깅 영향 불가피"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "특히, 5월 말 대한유화㈜를 시작으로, 6월 롯데케미칼㈜, 7월 LG화학㈜ 순서로 영향이 불가피 하다."
+      },
+      {
+        "name": "SKC",
+        "code": "011790",
+        "rating": "HOLD",
+        "rating_changed": false,
+        "tp_new": 110000,
+        "tp_prev": 110000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 예상 영업이익 △1,104억원, 2026년 2분기 예상 영업이익 △363억원",
+        "estimate_revision": null,
+        "next_catalyst": null,
+        "thesis": [
+          "2026년 예상 영업이익 △1,104억원",
+          "2026년 2분기 예상 영업이익 △363억원"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "▶ 2026년 예상 영업이익 △1,104억원 ▶ 2026년 1분기 영업이익 △287억원 ▶ 2026년 2분기 영업이익 △363억원"
+      },
+      {
+        "name": "금호석유",
+        "code": "011780",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": 180000,
+        "tp_prev": 180000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 예상 영업이익 2,547억원, 2026년 2분기 예상 영업이익 913억원",
+        "estimate_revision": null,
+        "next_catalyst": null,
+        "thesis": [
+          "2026년 예상 영업이익 2,547억원",
+          "2026년 2분기 예상 영업이익 913억원"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "▶ 2026년 예상 영업이익 2,547억원 ▶ 2026년 1분기 영업이익 594억원 ▶ 2026년 2분기 예상 영업이익 913억원"
+      },
+      {
+        "name": "S-Oil",
+        "code": "010950",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": 175000,
+        "tp_prev": 175000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 예상 영업이익 3조 2,058억원, 2026년 2분기 예상 영업이익 1조 3,777억원",
+        "estimate_revision": null,
+        "next_catalyst": null,
+        "thesis": [
+          "2026년 예상 영업이익 3조 2,058억원",
+          "2026년 2분기 예상 영업이익 1조 3,777억원",
+          "샤힌 석화 프로젝트 3~4분기 가동 시작"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "▶ 2026년 예상 영업이익 3조 2,058억원 ▶ 2026년 1분기 영업이익 1조 2,311억원 ▶ 2026년 2분기 예상 영업이익 1조 3,777억원"
+      },
+      {
+        "name": "SK이노베이션",
+        "code": "096770",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": 190000,
+        "tp_prev": 190000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 예상 영업이익 5조 3,893억원, 2026년 2분기 예상 영업이익 2조 4,313억원",
+        "estimate_revision": null,
+        "next_catalyst": null,
+        "thesis": [
+          "2026년 예상 영업이익 5조 3,893억원",
+          "2026년 2분기 예상 영업이익 2조 4,313억원"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "▶ 2026년 예상 영업이익 5조 3,893억원 ▶ 2026년 1분기 영업이익 2조 1,622억원 ▶ 2026년 2분기 예상 영업이익 2조 4,313억원"
+      }
+    ]
+  }
+}

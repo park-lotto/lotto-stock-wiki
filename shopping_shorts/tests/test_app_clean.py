@@ -36,6 +36,39 @@ def test_status_exposes_clean_fields(tmp_path, monkeypatch):
     assert "clean_error" in d
 
 
+def test_stale_cleaning_reports_failed(tmp_path, monkeypatch):
+    # 배포 재시작 등으로 clean BackgroundTask가 죽으면 clean_status='cleaning'이 DB에 영원히
+    # 남아 프론트가 무한 "복원하는 중"에 갇힌다. status GET이 staleness를 보고 failed로 알려
+    # 재시도 UI를 열어야 한다(2026-07-23 실사고).
+    c = _client(tmp_path, monkeypatch)
+    _job_with_plan(c, monkeypatch)
+    appmod.Store(appmod.DB_PATH).update_mix_job("j", clean_status="cleaning", clean_error=None)
+    monkeypatch.setattr(appmod, "_render_is_stale", lambda job: True)   # 죽은 태스크 모사
+    d = c.get("/api/mix/status/j").json()
+    assert d["clean_status"] == "failed"
+    assert d["clean_error"]
+    # DB는 GET이 안 건드린다(응답에서만 알림)
+    assert appmod.Store(appmod.DB_PATH).get_mix_job("j")["clean_status"] == "cleaning"
+
+
+def test_fresh_cleaning_stays_cleaning(tmp_path, monkeypatch):
+    c = _client(tmp_path, monkeypatch)
+    _job_with_plan(c, monkeypatch)
+    appmod.Store(appmod.DB_PATH).update_mix_job("j", clean_status="cleaning", clean_error=None)
+    monkeypatch.setattr(appmod, "_render_is_stale", lambda job: False)  # 아직 진행 중(신선)
+    d = c.get("/api/mix/status/j").json()
+    assert d["clean_status"] == "cleaning"
+
+
+def test_stale_preview_reports_failed(tmp_path, monkeypatch):
+    c = _client(tmp_path, monkeypatch)
+    _job_with_plan(c, monkeypatch)
+    appmod.Store(appmod.DB_PATH).update_mix_job("j", preview_status="rendering")
+    monkeypatch.setattr(appmod, "_render_is_stale", lambda job: True)
+    d = c.get("/api/mix/status/j").json()
+    assert d["preview_status"] == "failed"
+
+
 def test_clean_thumb_clean_404_before_ready(tmp_path, monkeypatch):
     c = _client(tmp_path, monkeypatch)
     _job_with_plan(c, monkeypatch)                    # clean_status 미설정

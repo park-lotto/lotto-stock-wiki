@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-11_1003_우리가 AI RAN 대표주입니다.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김홍식, 이상훈",
+    "report_date": "2026년 06월 11일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "에치에프알",
+        "code": "230240",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "50,000원",
+        "tp_prev": "50,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 매출액 145.2 십억원, 영업이익 (0.4) 십억원, 2027년 매출액 273.5 십억원, 영업이익 50.5 십억원",
+        "estimate_revision": null,
+        "next_catalyst": "AI RAN 사업자 선정 및 무선장비 내수 수요 확장",
+        "thesis": [
+          "HFR은 SKT-노키아의 AI RAN 파트너이자 통신3사 모두 레퍼런스가 있는만큼 어떠한 형태로든 국내 AI RAN 수혜가 예상",
+          "AT&T-에릭슨-후지쯔 3사간 미국내 이해관계 고려시 높은 확률로 AT&T 벤더사로 선정될 전망",
+          "미국과 국내 수요 전망이 명확한데 비해 주가 상승은 부진하여 저평가 국면"
+        ],
+        "valuation_basis": null,
+        "risk": "AWS 주파수 경매가 당초 기대보다 부진하다는 의견과 스페이스 X의 경매 참여의사가 미온적이라는 점",
+        "supply_comment": "후지쯔를 통한 AT&T향 수요 전망 및 국내 주파수 재경매",
+        "quote": "HFR에 대한 투자의견 매수, 목표주가 50,000원을 유지한다.",
+        "sector": "통신"
+      }
+    ]
+  }
+}

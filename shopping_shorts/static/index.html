@@ -3,9 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>쇼핑쇼츠 레퍼런스 랭킹</title>
+<title>숏템박스 레퍼런스 랭킹</title>
+<script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<!-- 세련된 한글 폰트(배지용, 2026-07-22). 실패해도 시스템폰트로 폴백 — 회귀 없음. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
-  :root{--bg:#0a0e14;--panel:#111722;--line:#1e2735;--txt:#e6edf3;--sub:#8b98a9;--accent:#2f81f7;--fire:#ff6b35;}
+  /* 스탁브레인 민트-블랙 투톤(다크 기본). produce.html과 동일 토큰. */
+  :root{--bg:#0a0f0d;--panel:#101815;--line:#1e2b26;--txt:#eaf3f0;--sub:#8fa1a0;
+    --accent:#37e0bd;--accent2:#1f9e7a;--fire:#ff6b6b;--ok:#37e0bd;--gold:#f0c453;
+    --inset:#0c1412;--sel-bg:linear-gradient(90deg,#123a30,#0c221c);--sel-fg:#6ff0d6;
+    --grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--hover:#131d19;color-scheme:dark;}
+  :root[data-theme="light"]{--bg:#f4faf7;--panel:#ffffff;--line:#d5e6df;--txt:#0f1a16;--sub:#5c726d;
+    --accent:#12b886;--accent2:#0ca678;--fire:#e0524a;--ok:#12b886;--gold:#b8860b;
+    --inset:#eef7f3;--sel-bg:linear-gradient(90deg,#d8f2ea,#eafaf5);--sel-fg:#0a7d66;
+    --grad:linear-gradient(135deg,#19c9ab,#0a8f79);--hover:#eef7f3;color-scheme:light;}
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic',system-ui,sans-serif;display:flex;min-height:100vh}
   .sidebar{width:230px;background:var(--panel);border-right:1px solid var(--line);padding:16px;flex-shrink:0}
@@ -13,7 +24,7 @@
   .menu-group{margin-bottom:18px}
   .menu-group .label{font-size:11px;color:var(--sub);text-transform:uppercase;margin-bottom:8px}
   .menu-item{padding:8px 12px;border-radius:8px;font-size:13px;color:var(--txt);cursor:default;margin-bottom:2px}
-  .menu-item.active{background:linear-gradient(90deg,#153a6b,#0d2340);color:#7db4ff}
+  .menu-item.active{background:var(--sel-bg);color:var(--sel-fg)}
   .main{flex:1;padding:28px 36px;overflow:auto}
   .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
   .head h2{font-size:24px}
@@ -25,9 +36,9 @@
   .tab{padding:10px 16px;font-size:13px;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent}
   .tab.active{color:var(--txt);border-bottom-color:var(--accent)}
   .ctypes{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-  .ctype{padding:9px 16px;border:1px solid var(--line);border-radius:10px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;background:#0d131c}
-  .ctype:hover{border-color:var(--accent);color:#7db4ff}
-  .ctype.active{background:linear-gradient(90deg,#153a6b,#0d2340);color:#7db4ff;border-color:var(--accent)}
+  .ctype{padding:9px 16px;border:1px solid var(--line);border-radius:10px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;background:var(--inset)}
+  .ctype:hover{border-color:var(--accent);color:var(--sel-fg)}
+  .ctype.active{background:var(--sel-bg);color:var(--sel-fg);border-color:var(--accent)}
   .cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;min-height:0}
   .cats:empty{margin-bottom:0}
   .cat{padding:6px 12px;border:1px solid var(--line);border-radius:20px;font-size:12px;color:var(--sub);cursor:pointer}
@@ -41,12 +52,42 @@
               width:52px;height:52px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;
               font-size:20px;display:flex;align-items:center;justify-content:center;
               pointer-events:none;border:2px solid rgba(255,255,255,.85)}
+  /* 썸네일 위 직관 배지(2026-07-22 v2) — "대형채널 · 반응 뜨거움" 식 라벨. 통일된 다크 pill+
+     색점으로 어떤 썸네일 위에서도 잘 읽히게. ⭐는 지표 종합 상위(진짜 괜찮은 것). */
+  .ibadge{position:absolute;top:8px;left:8px;z-index:3;pointer-events:none;
+          display:inline-flex;align-items:center;gap:5px;max-width:calc(100% - 16px);
+          font-family:'Pretendard Variable',Pretendard,-apple-system,system-ui,sans-serif;
+          font-size:12px;font-weight:700;line-height:1.1;padding:5px 11px 5px 8px;border-radius:999px;
+          color:#fff;letter-spacing:-.2px;white-space:nowrap;
+          background:rgba(16,16,20,.7);backdrop-filter:blur(8px) saturate(1.3);-webkit-backdrop-filter:blur(8px) saturate(1.3);
+          box-shadow:0 4px 14px rgba(0,0,0,.42),inset 0 0 0 1px rgba(255,255,255,.14);
+          text-shadow:0 1px 2px rgba(0,0,0,.5)}
+  .ibadge .emo{display:inline-block;font-size:13.5px;line-height:1;
+               animation:emoBob 1.5s ease-in-out infinite;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
+  @keyframes emoBob{0%,100%{transform:translateY(0) scale(1)}45%{transform:translateY(-2.5px) scale(1.18)}}
+  .ibadge .lbl{color:currentColor;filter:brightness(1.15)}
+  .ibadge.red{color:#ff6b6b}          /* 뜨는 중(급상승·떡상) */
+  .ibadge.green{color:#a6f078}        /* 반응 좋음(연두) */
+  /* 🎯 진짜 봐야할 것 — 강조: 빨강 채움 pill + 크게 + 맥동 (극소수만) */
+  .ibadge.must{color:#fff;font-weight:800;font-size:12.5px;padding:6px 12px 6px 9px;
+               background:linear-gradient(135deg,#ff4d4d,#d81f1f);text-shadow:none;
+               box-shadow:0 0 0 1.5px rgba(255,150,150,.9),0 4px 16px rgba(255,50,50,.6);
+               animation:mustGlow 1.5s ease-in-out infinite}
+  .ibadge.must .lbl{color:#fff;filter:none}
+  .ibadge.must .emo{animation:emoBob 1.05s ease-in-out infinite}
+  @keyframes mustGlow{0%,100%{box-shadow:0 0 0 1.5px rgba(255,150,150,.85),0 4px 14px rgba(255,50,50,.5)}
+                      50%{box-shadow:0 0 0 2px rgba(255,200,200,1),0 5px 24px rgba(255,50,50,.95)}}
+  .vbadge{position:absolute;bottom:8px;right:8px;z-index:3;pointer-events:none;
+          font-family:'Pretendard Variable',Pretendard,system-ui,sans-serif;
+          font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:-.2px;
+          background:rgba(0,0,0,.62);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.4);
+          backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
   .card .body{padding:12px;flex:1;display:flex;flex-direction:column}
   .card .rank{font-size:12px;color:var(--sub)}
   .card .ch{font-weight:600;font-size:14px;margin:4px 0;display:flex;align-items:center;justify-content:space-between;gap:6px}
   .card .ch .chname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .copy{flex-shrink:0;background:#0d131c;border:1px solid var(--line);color:var(--sub);font-size:12px;padding:4px 7px;border-radius:6px;cursor:pointer;line-height:1}
-  .copy:hover{color:#7db4ff;border-color:#2f81f7}
+  .copy{flex-shrink:0;background:var(--inset);border:1px solid var(--line);color:var(--sub);font-size:12px;padding:4px 7px;border-radius:6px;cursor:pointer;line-height:1}
+  .copy:hover{color:var(--sel-fg);border-color:var(--accent)}
   .copy.copied{background:#2ea043;border-color:#2ea043;color:#fff}
   .stat{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-top:4px}
   .stat b{color:var(--txt)}
@@ -55,9 +96,10 @@
   .links{display:flex;gap:8px;margin-top:10px}
   .links a{font-size:12px;color:var(--accent);text-decoration:none}
   .empty{color:var(--sub);text-align:center;padding:60px;grid-column:1/-1}
-  .btns{display:flex;gap:6px;margin-top:auto;padding-top:10px}
-  .btns button{flex:1;font-size:11px;padding:7px 4px;border-radius:7px;border:1px solid var(--line);background:#0d131c;color:var(--txt);cursor:pointer}
-  .btns button.view{border-color:#2f81f7;color:#7db4ff}
+  .actions{margin-top:auto}   /* 버튼 묶음을 카드 바닥에 고정 → 통계 줄수 달라도 카드마다 버튼 높이 일치 */
+  .btns{display:flex;gap:6px;padding-top:10px}
+  .btns button{flex:1;font-size:11px;padding:7px 4px;border-radius:7px;border:1px solid var(--line);background:var(--inset);color:var(--txt);cursor:pointer}
+  .btns button.view{border-color:var(--accent);color:var(--sel-fg)}
   .btns button.comment{background:linear-gradient(90deg,#7b2ff7,#c22ed0);border:none;color:#fff}
   .btns button.save.saved{background:#2ea043;border-color:#2ea043;color:#fff}
   .script-btn{width:100%;margin-top:6px;padding:8px;border-radius:7px;border:1px solid #b8860b;
@@ -78,13 +120,13 @@
   .modal-head b{font-size:15px}
   .modal-head .x{background:none;border:none;color:var(--sub);font-size:20px;cursor:pointer;padding:0 4px}
   .modal-body{padding:16px 18px;overflow:auto}
-  .sm-full{background:#0d131c;border:1px solid var(--line);border-radius:8px;padding:12px;
+  .sm-full{background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:12px;
            font-size:14px;line-height:1.7;white-space:pre-wrap;color:var(--txt)}
   .sm-sec{display:flex;align-items:center;justify-content:space-between;margin:18px 0 8px}
   .sm-sec b{font-size:13px;color:var(--sub)}
-  .sm-copy{background:#0d131c;border:1px solid var(--line);color:var(--sub);font-size:12px;
+  .sm-copy{background:var(--inset);border:1px solid var(--line);color:var(--sub);font-size:12px;
            padding:5px 10px;border-radius:6px;cursor:pointer}
-  .sm-copy:hover{color:#7db4ff;border-color:var(--accent)}
+  .sm-copy:hover{color:var(--sel-fg);border-color:var(--accent)}
   .sm-copy.done{background:#2ea043;border-color:#2ea043;color:#fff}
   .wiki-save{background:linear-gradient(90deg,#3a2f0d,#2a2408);border:1px solid #b8860b;color:#ffd76b;
              font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;white-space:nowrap}
@@ -128,13 +170,85 @@
     .btns button{font-size:10px;padding:6px 2px}
   }
 </style>
+<style id="rankSkin">
+/* ── 레퍼런스 랭킹 상단 리디자인 (다크 시네마 + 민트 네온, 2026-07-23) ── */
+.main{background:radial-gradient(680px 340px at 18% -40px,rgba(55,224,189,.13),transparent 70%),
+      radial-gradient(520px 300px at 82% -20px,rgba(47,216,230,.08),transparent 70%)}
+/* kicker + title */
+.rk-kicker{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--accent);font-weight:800;margin-bottom:12px}
+.rk-kicker .d{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:rkPulse 2.4s ease-in-out infinite}
+@keyframes rkPulse{0%,100%{opacity:1}50%{opacity:.3}}
+.head{margin-bottom:2px}
+.head h2{font-size:clamp(30px,4.6vw,46px)!important;font-weight:800;letter-spacing:-.03em;line-height:1.05;margin:0;
+  background:linear-gradient(180deg,#ffffff,#a9ecda);-webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 34px rgba(55,224,189,.18)}
+.desc{font-size:15px;max-width:62ch;margin-bottom:22px}
+/* toolbar buttons */
+.toolbar{gap:12px}
+.toolbar button{font-weight:700;border-radius:12px;padding:12px 20px;
+  transition:transform .16s cubic-bezier(.2,.8,.3,1),box-shadow .2s,border-color .2s}
+.toolbar button:hover{transform:translateY(-3px)}
+.toolbar button:active{transform:translateY(-1px)}
+#collectBtn{background:linear-gradient(180deg,#45efc0,#20c596);color:#052018;
+  box-shadow:0 8px 24px -8px rgba(55,224,189,.6),0 0 0 1px rgba(55,224,189,.3) inset}
+#collectBtn:hover{box-shadow:0 14px 34px -8px rgba(55,224,189,.9),0 0 0 1px rgba(140,255,220,.6) inset}
+#censusBtn{background:var(--inset);color:var(--txt);border:1px solid var(--line)}
+#censusBtn:hover{border-color:var(--accent);box-shadow:0 0 0 1px rgba(55,224,189,.4),0 10px 28px -12px rgba(55,224,189,.6)}
+#status{font-variant-numeric:tabular-nums}
+/* system status — 관리자 전용 접이식 패널 */
+#statusBox{margin:2px 0 14px;border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative;
+  background:linear-gradient(180deg,var(--panel),var(--inset))}
+#statusBox::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,#2fd8e6,var(--accent),var(--fire))}
+#statusBox>summary{list-style:none;padding:12px 16px 12px 20px;cursor:pointer;font-size:11.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--sub);font-weight:800;display:flex;align-items:center;gap:8px}
+#statusBox>summary::-webkit-details-marker{display:none}
+#statusBox>summary .live{margin-left:auto;display:inline-flex;align-items:center;gap:6px;color:var(--accent);letter-spacing:.04em;font-weight:700}
+#statusBox>summary .live::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:rkPulse 1.8s infinite}
+#statusBox>summary .chev{transition:transform .2s;color:var(--accent)}
+#statusBox[open]>summary .chev{transform:rotate(180deg)}
+#censusSummary{margin:0!important;padding:2px 18px 15px!important;font-size:13px!important;line-height:1.75!important;color:var(--sub)!important}
+#censusSummary b{color:var(--txt)}
+/* collapsible rows */
+#refRegister,#refTrace{border-radius:12px!important;background:linear-gradient(180deg,var(--panel),var(--inset))!important;transition:border-color .2s,box-shadow .2s}
+#refRegister:hover,#refTrace:hover{border-color:var(--accent)!important;box-shadow:0 8px 26px -14px rgba(55,224,189,.5)}
+#refRegister>summary,#refTrace>summary{font-weight:700;font-size:13px!important}
+/* tabs + sliding underline */
+.tabs{position:relative;gap:4px}
+.tab{font-weight:700;border-radius:9px 9px 0 0;transition:color .2s,background .2s}
+.tab:hover{color:var(--txt);background:rgba(255,255,255,.04)}
+.tab.active{color:var(--accent)!important;border-bottom-color:transparent!important}
+.tab-ink{position:absolute;bottom:-1px;left:0;width:0;height:2.5px;border-radius:3px;background:var(--accent);
+  box-shadow:0 0 12px var(--accent);pointer-events:none;
+  transition:left .28s cubic-bezier(.3,.9,.3,1),width .28s cubic-bezier(.3,.9,.3,1)}
+/* category chips */
+.ctype{border-radius:20px!important;transition:all .18s}
+.ctype:hover{transform:translateY(-1px);box-shadow:0 6px 18px -8px rgba(55,224,189,.5)}
+.ctype.active{background:linear-gradient(180deg,#45efc0,#20c596)!important;color:#052018!important;border-color:transparent!important;
+  box-shadow:0 4px 16px -4px rgba(55,224,189,.6)}
+/* secondary sub-filter (소재) */
+.cat{transition:all .18s}
+.cat:hover{transform:translateY(-1px);color:var(--txt);border-color:var(--accent)}
+.cat.active{background:rgba(55,224,189,.12)!important;color:var(--accent)!important;border-color:var(--accent)!important}
+/* search */
+#rankSearch{max-width:100%!important;border-radius:12px!important;padding:14px 16px!important;font-size:14.5px!important;
+  transition:border-color .2s,box-shadow .2s}
+#rankSearch:focus{outline:none;border-color:var(--accent)!important;
+  box-shadow:0 0 0 1px rgba(55,224,189,.4),0 8px 30px -8px rgba(55,224,189,.45)!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
 </head>
 <body>
   <main class="main">
+    <div class="rk-kicker"><span class="d"></span>숏템탑스 · 레퍼런스 인텔리전스</div>
     <div class="head">
-      <h2>📊 레퍼런스 랭킹</h2>
+      <h2>레퍼런스 랭킹</h2>
     </div>
     <div class="desc">443개 레퍼런스 채널의 48시간 이내 릴스를 강도별로 랭킹합니다.</div>
+    <!-- 플랫폼 전환 토글 숨김(사장님 2026-07-21, 미사용) — 삭제 아님. switchPlatform·PLATFORM
+         로직은 보존해 PLATFORM 기본값 instagram으로 랭킹·수집이 계속 동작하고, 되살리려면
+         display:none만 지우면 된다. -->
     <div class="ctypes" id="platformTabs" style="margin-bottom:12px">
       <div class="ctype active" data-platform="instagram" onclick="switchPlatform('instagram',this)">📷 인스타</div>
       <div class="ctype" data-platform="youtube" onclick="switchPlatform('youtube',this)">▶️ 유튜브</div>
@@ -144,41 +258,57 @@
     </div>
     <div id="seedPanel" style="display:none;margin-bottom:12px">
       <div id="ttMode" style="display:none;margin-bottom:6px">
-        <label style="font-size:12px;color:var(--sub);cursor:pointer"><input type="radio" name="ttmode" value="keyword" checked onclick="ttModeChange()"> 🔎 키워드 검색발굴</label>
-        <label style="font-size:12px;color:var(--sub);cursor:pointer;margin-left:12px"><input type="radio" name="ttmode" value="account" onclick="ttModeChange()"> 🎵 계정 시드</label>
+        <label style="font-size:12px;color:var(--sub);cursor:pointer"><input type="radio" name="ttmode" value="keyword" onclick="ttModeChange()"> 🔎 키워드 검색발굴 (유료 · 현재 꺼짐)</label>
+        <label style="font-size:12px;color:var(--sub);cursor:pointer;margin-left:12px"><input type="radio" name="ttmode" value="account" checked onclick="ttModeChange()"> 🎵 계정 시드</label>
       </div>
-      <input id="seedInput" type="text" placeholder="검색 키워드 (예: 살림꿀팁)" style="padding:8px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)">
-      <select id="seedLang" title="검색 언어(지역) — 한국어면 국내영상, 다른 언어면 그 나라 영상 발굴" style="padding:8px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)">
+      <input id="seedInput" type="text" placeholder="검색 키워드 (예: 살림꿀팁)" style="padding:8px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
+      <select id="seedLang" title="검색 언어(지역) — 한국어면 국내영상, 다른 언어면 그 나라 영상 발굴" style="padding:8px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
         <option value="ko">🇰🇷 한국어</option><option value="en">🇺🇸 영어</option>
         <option value="ja">🇯🇵 일본어</option><option value="zh">🇹🇼 중국어</option><option value="ru">🇷🇺 러시아어</option>
       </select>
       <button onclick="addSeed()">+ 키워드</button>
       <span id="seedHint" style="font-size:11px;color:var(--sub)">한국어 외 언어 선택 시 자동 번역해 등록</span>
       <div id="seedList" style="margin-top:6px;font-size:12px;color:var(--sub)"></div>
-      <div id="ttPanel" style="display:none;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#0d131c">
+      <div id="ttPanel" style="display:none;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
         <div style="font-size:12px;color:var(--sub);margin-bottom:8px">⚙️ 틱톡 키워드검색 설정 <span style="font-size:11px">— Apify 유료($1.70/1,000건). 선택 언어로 검색, 부족하면 다른 언어로 확장</span></div>
-        <label style="font-size:12px;color:var(--sub)">언어당 개수 <input id="ttCount" type="number" min="10" max="200" style="width:64px;padding:4px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)"></label>
-        <label style="font-size:12px;color:var(--sub);margin-left:10px">하루 수집횟수 <input id="ttDaily" type="number" min="1" max="100" style="width:56px;padding:4px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)"></label>
-        <label style="font-size:12px;color:var(--sub);margin-left:10px">월 예산($) <input id="ttBudget" type="number" min="0" step="0.5" style="width:64px;padding:4px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)"></label>
+        <label style="font-size:12px;color:var(--sub)">언어당 개수 <input id="ttCount" type="number" min="10" max="200" style="width:64px;padding:4px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)"></label>
+        <label style="font-size:12px;color:var(--sub);margin-left:10px">하루 수집횟수 <input id="ttDaily" type="number" min="1" max="100" style="width:56px;padding:4px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)"></label>
+        <label style="font-size:12px;color:var(--sub);margin-left:10px">월 예산($) <input id="ttBudget" type="number" min="0" step="0.5" style="width:64px;padding:4px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)"></label>
         <button onclick="saveTtSettings()" style="margin-left:8px">저장</button>
         <div id="ttStatus" style="margin-top:6px;font-size:11px;color:var(--sub)"></div>
       </div>
     </div>
     <div class="toolbar">
-      <button id="collectBtn" onclick="doCollect()">⚡ 지금 수집</button>
+      <button id="collectBtn" onclick="doCollect()" style="display:none">⚡ 지금 수집</button>
+      <button id="censusBtn" onclick="doCensus()" style="display:none" title="전 채널을 긁어 활동성 재판정 — 2일 내 안 올린 채널은 정리, 다시 올린 채널은 부활. 가끔만 누르세요(비용).">🌐 전수조사</button>
       <span id="status" style="color:var(--sub);font-size:12px"></span>
     </div>
-    <details id="refRegister" style="margin:4px 0 12px;border:1px solid var(--line);border-radius:8px;background:#0d131c">
+    <details id="statusBox" open style="display:none">
+      <summary>⚙️ 시스템 상태<span class="live">실시간</span><span class="chev">▾</span></summary>
+      <div id="censusSummary"></div>
+    </details>
+    <details id="refRegister" style="display:none;margin:4px 0 12px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
       <summary id="refSummary" style="padding:9px 12px;cursor:pointer;font-size:12px;color:var(--sub)">➕ 레퍼런스 채널 등록</summary>
       <div style="padding:0 12px 10px">
         <div style="font-size:11px;color:var(--sub);margin-bottom:6px">인스타 <b>채널(프로필) 주소</b>를 붙여넣으면 다음 수집부터 랭킹에 포함 — 엑셀 원본은 안 건드립니다. (릴스·게시물 링크 말고 채널 주소)</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <input id="refUrl" type="text" placeholder="https://www.instagram.com/아이디" onkeydown="if(event.key==='Enter')registerRef()"
-                 style="flex:1;min-width:220px;padding:8px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)">
+                 style="flex:1;min-width:220px;padding:8px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
           <button onclick="registerRef()">등록</button>
         </div>
         <div id="refMsg" style="font-size:11px;color:var(--sub);margin-top:6px"></div>
         <div id="refAdded" style="font-size:12px;color:var(--sub);margin-top:8px"></div>
+      </div>
+    </details>
+    <details id="refTrace" style="margin:4px 0 12px;border:1px solid var(--line);border-radius:8px;background:#0d131c">
+      <summary style="padding:9px 12px;cursor:pointer;font-size:12px;color:var(--sub)">🔗 URL로 레퍼런스 추적 (원본·유사 영상 찾기)</summary>
+      <div style="padding:0 12px 10px">
+        <div style="font-size:11px;color:var(--sub);margin-bottom:6px">해외 영상(유튜브·틱톡·인스타·샤오홍슈) <b>링크</b>를 붙여넣으면, 그 장면으로 <b>구글렌즈</b>가 원본/비슷한 영상을 찾아줍니다 — 채널 등록·수집 없이 바로. 결과는 <b>담기</b>로 소스에 넣을 수 있어요. (SerpApi 월 100회)</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <input id="traceUrl" type="text" placeholder="https://youtube.com/shorts/... 또는 틱톡·인스타 링크" onkeydown="if(event.key==='Enter')traceByUrl()"
+                 style="flex:1;min-width:220px;padding:8px;border-radius:6px;border:1px solid var(--line);background:#0d131c;color:var(--txt)">
+          <button onclick="traceByUrl()">🔍 추적</button>
+        </div>
       </div>
     </details>
     <div class="tabs" id="tabs">
@@ -186,16 +316,18 @@
       <div class="tab" data-tab="speed" title="댓글수 ÷ 경과시간(시간) — 시간당 댓글이 얼마나 빨리 쌓이는지">⚡ 속도</div>
       <div class="tab" data-tab="accel" title="이번 수집 Δ(댓글 증가분) − 직전 수집 Δ — 증가세 자체가 빨라지고 있는지(가속도)">📈 가속</div>
       <div class="tab" data-tab="density" title="댓글수 ÷ 팔로워수 — 팔로워 규모 대비 반응이 얼마나 뜨거운지(작은 채널도 상위권 가능)">💥 참여밀도</div>
+      <span class="tab-ink" id="tabInk"></span>
     </div>
     <div class="ctypes" id="ctypes"></div>
-    <input id="rankSearch" type="text" placeholder="🔍 랭킹 검색 (피자·물총·이케아…)"
-           oninput="setSearch(this.value)"
-           style="width:100%;max-width:360px;margin:8px 0;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:#0d131c;color:var(--txt)">
+    <input id="rankSearch" type="text" placeholder="🔍 숏템검색 — 채널명·소재·링크 (채이홈·피자·인스타링크…)"
+           oninput="setSearch(this.value)" onkeydown="if(event.key==='Enter')onSearchEnter(this.value)"
+           style="width:100%;max-width:420px;margin:8px 0;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
     <div class="cats" id="cats"></div>
     <div class="cards" id="cards">
       <div class="empty">「지금 수집」을 눌러 시작하세요.</div>
     </div>
     <div id="trendRoot" style="display:none"></div>
+    <div id="channelHistoryWrap"></div>
   </main>
   <div class="modal-bg" id="scriptModal">
     <div class="modal-box">
@@ -220,7 +352,7 @@
           <div id="splitList"></div>
           <div style="display:flex;gap:8px">
             <button id="btnMergePick" style="display:none" onclick="mergePicked()">↔ 이어서 하나로 담기</button>
-            <button id="btnTagPicked" style="display:none;background:#2f81f7;border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="tagPicked()">자르고 AI 태그 뽑기</button>
+            <button id="btnTagPicked" style="display:none;background:var(--accent);border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="tagPicked()">자르고 AI 태그 뽑기</button>
           </div>
         </div>
         <div id="paneManual" style="display:none">
@@ -230,7 +362,7 @@
             <button onclick="markScene('end')">⏱ 끝 찍기</button>
           </div>
           <div id="sceneStep1">
-            <button style="background:#2f81f7;border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="runScenePrepare()">✂ 자르고 AI 태그 뽑기</button>
+            <button style="background:var(--accent);border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="runScenePrepare()">✂ 자르고 AI 태그 뽑기</button>
             <div style="font-size:12px;color:#8b98a9;margin-top:6px">자른 뒤 태그 초안이 나옵니다. 확인·수정 후 저장하세요.</div>
           </div>
         </div>
@@ -239,19 +371,44 @@
     </div>
   </div>
 <script>
-// 유형(제작·수익화 방식) = 초보자 탐색 1차축. topics = 그 유형의 세부주제(2차축).
+// 유형(제작·수익화 방식) = 초보자 탐색축. 2026-07-16 백엔드가 '인테리어'+'생활용품'을
+// '홈템'으로 합치면서 세부주제(2차축)가 사라졌다 — 이제 버튼 1개 = 백엔드 카테고리 1개다.
+// ★버튼은 백엔드가 내는 5개 카테고리(홈템/레시피/가전/뷰티/기타)를 전부 덮어야
+//   '전체 = 버튼 합'이 된다. 홈템·기타 버튼이 없던 옛 매핑에선 두 덩어리가 통째로 누락됐다.
 const CTYPES = [
-  {key:"전체",  label:"✨ 전체",       topics:[]},
-  {key:"비법형", label:"🔥 비법·꿀팁형", topics:["인테리어","레시피"]},
-  {key:"제품형", label:"🛒 제품추천형",  topics:["생활용품","가전"]},
-  {key:"혼합형", label:"💄 뷰티(혼합)",  topics:["뷰티"]},
+  {key:"전체",  label:"✨ 전체",        topics:[]},
+  {key:"홈템",   label:"🏠 홈·살림템",   topics:[]},
+  {key:"비법형", label:"🔥 비법·꿀팁형",  topics:[]},
+  {key:"제품형", label:"🛒 제품추천형",   topics:[]},
+  {key:"혼합형", label:"💄 뷰티",        topics:[]},
+  {key:"기타",   label:"📦 기타",        topics:[]},
 ];
-const TOPIC_CTYPE = {인테리어:"비법형",레시피:"비법형",생활용품:"제품형",가전:"제품형",뷰티:"혼합형",기타:"기타"};
+// 백엔드 category(홈템/레시피/가전/뷰티/기타) → 버튼 key. 모든 값이 CTYPES key와 1:1.
+const TOPIC_CTYPE = {홈템:"홈템", 레시피:"비법형", 가전:"제품형", 뷰티:"혼합형", 기타:"기타"};
 let STATE = {items:[], tab:"comments", ctype:"전체", cat:"전체", q:""};
 let PLATFORM='instagram';
-function ttMode(){ const r=document.querySelector('input[name="ttmode"]:checked'); return r?r.value:'keyword'; }
+// ── 플랫폼별 안내문구·지표 툴팁(2026-07-24, 토글 노출 대응) — 인스타 기준 문구를
+// 그대로 두면 틱톡/유튜브(시드계정·키워드+14일창, 조회수기반)에 거짓 설명이 된다. ──
+const DESC_BY_PLATFORM = {
+  instagram: '등록한 레퍼런스 채널의 <b>48시간</b> 이내 릴스를 강도별로 랭킹합니다.',
+  tiktok:    '등록한 <b>시드 계정</b>의 최근 <b>14일</b> 숏폼을 조회수 기반 강도로 랭킹합니다. (무료 수집)',
+  youtube:   '<b>키워드 시드</b>로 발굴한 최근 <b>14일</b> Shorts를 조회수 기반 강도로 랭킹합니다.',
+};
+const TAB_TIP = {
+  instagram: {speed:'댓글수 ÷ 경과시간', density:'댓글수 ÷ 팔로워수'},
+  tiktok:    {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
+  youtube:   {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
+};
+function updatePlatformCopy(p){
+  const descEl=document.querySelector('.desc'); if(descEl) descEl.innerHTML = DESC_BY_PLATFORM[p] || DESC_BY_PLATFORM.instagram;
+  const tip = TAB_TIP[p] || TAB_TIP.instagram;
+  const speedEl=document.querySelector('.tab[data-tab="speed"]'); if(speedEl) speedEl.title = tip.speed;
+  const densityEl=document.querySelector('.tab[data-tab="density"]'); if(densityEl) densityEl.title = tip.density;
+}
+function ttMode(){ const r=document.querySelector('input[name="ttmode"]:checked'); return r?r.value:'account'; }
 function switchPlatform(p, el){
   PLATFORM=p;
+  updatePlatformCopy(p);
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
   const isTrend = (p==='xiaohongshu' || p==='douyin');
@@ -427,6 +584,7 @@ function sortKey(i){
 function matchesSearch(it, q){
   const needle = (q||'').trim().toLowerCase();
   if(!needle) return true;                       // 빈 검색어 = 전체
+  if(_isChannelHit(it, needle)) return true;     // ★채널명/아이디 검색 → 그 채널이면 통과
   // 비전 주제태그가 있으면 그걸 우선 매칭(캡션 무시) — 캡션에 우연히 든 말('빵빵한 사운드')이
   // '빵'에 걸리던 오검을 없앤다(2026-07-19). 태그 없으면(백그라운드 태깅 전) 캡션 백업.
   const hasTags = (it.vision_subject && it.vision_subject.trim())
@@ -437,6 +595,16 @@ function matchesSearch(it, q){
   // 상위어면 하위 종류까지 넓혀 찾는다: "빵"→베이글·식빵, "야채"→가지·오이 (2026-07-18).
   // 하위어(베이글) 검색은 그대로 좁게. 확장어도 각각 단어경계 매칭을 거친다.
   return _expandQuery(needle).some(t => _koreanWordHit(hay, t));
+}
+// 검색어가 채널(아이디/이름)을 가리키나 — 카드의 채널명을 클릭하거나 @아이디를 치면
+// 그 채널의 영상만 뜨게 한다. 비전태그 유무와 무관(2026-07-22).
+// 함수 선언(호이스팅)이라 위 matchesSearch보다 아래 있어도 호출된다 — 또한 검색JS
+// 테스트가 matchesSearch부터 슬라이스해 eval하므로 반드시 그 안(검색 끝 마커 이전)에 둔다.
+function _normUser(u){ return (u||'').trim().replace(/^@/,'').toLowerCase(); }
+function _isChannelHit(it, needle){
+  const n = _normUser(needle);
+  if(!n) return false;
+  return _normUser(it.username).includes(n) || (it.name||'').toLowerCase().includes(needle.trim().toLowerCase());
 }
 // 수량 세는 말 앞에 붙는 한정사 — "여러 가지"·"몇 가지"·"두 가지"는 채소 가지가 아니다.
 var _COUNTER_QUALIFIERS = ['여러','몇','몇몇','각','온갖','수','한','두','세','네',
@@ -511,9 +679,43 @@ function _expandQuery(needle){
 }
 function setSearch(q){ STATE.q = q; render(); }
 // ── 검색 끝 ──
+// 썸네일 배지(2026-07-22) — 조회수=도달규모, 참여밀도=반응, 속도=상승세를 '보이는 항목 안에서의
+// 백분위'로 보고 "소형인데 빠르게" 같은 한줄 판단 라벨을 붙인다. 절대값이 아니라 지금 목록 대비 상대.
+function _pctl(sorted, v){ let lo=0,hi=sorted.length; while(lo<hi){const m=(lo+hi)>>1; if(sorted[m]<=v) lo=m+1; else hi=m;} return sorted.length? lo/sorted.length : 0; }
+function _fmtViews(n){ n=n||0; return n>=10000 ? (n/10000).toFixed(1)+'만' : n.toLocaleString(); }
+function _insight(vr, dr, sr){
+  // 아주 선별적 — 평범한 건 배지 없음(대부분 배지 X). 빨강=뜨는중, 연두=반응 좋음.
+  if(vr<=0.40 && sr>=0.85) return {e:'🚀', t:'SMALL · 떡상中', c:'red'};   // 작은데 빠르게(발굴가치)
+  if(dr>=0.90 && vr<=0.45) return {e:'💎', t:'SMALL · 알짜', c:'green'};   // 작은데 반응 최상
+  if(dr>=0.90 && vr>=0.60) return {e:'🔥', t:'반응 좋음', c:'green'};      // 반응 확실히 좋음
+  if(sr>=0.92)             return {e:'📈', t:'급상승', c:'red'};
+  return null;
+}
+function badgeHTML(i, ctx){
+  const vr=_pctl(ctx.vs, i.views||0), dr=_pctl(ctx.ds, i.density||0), sr=_pctl(ctx.ss, i.speed||0);
+  const b=_insight(vr, dr, sr);
+  let h='';
+  if(b){
+    // 🎯 진짜 봐야할 것: 도달·반응·상승세 종합(반응 가중) 최상위만 — 극소수. 크고 빨갛게 강조.
+    const score = vr*0.35 + dr*0.50 + sr*0.15;
+    const must = score>=0.90;
+    const cls = must ? 'must' : b.c;
+    const emo = must ? '🎯' : b.e;
+    const txt = must ? '진짜 봐야할 것' : b.t;
+    h+=`<span class="ibadge ${cls}"><span class="emo">${emo}</span><span class="lbl">${txt}</span></span>`;
+  }
+  if(i.views) h+=`<span class="vbadge">👁 ${_fmtViews(i.views)}</span>`;
+  return h;
+}
+// 검색창 하나로 채널명·소재·링크 — 링크면 엔터 시 원본·유사 영상 추적으로 보낸다(2026-07-22).
+// (채널명·소재는 oninput이 이미 필터링. 링크만 엔터라는 명시 동작이 필요 — 유료 렌즈 남용 방지.)
+function _looksLikeUrl(q){ return /^\s*https?:\/\//i.test(q||''); }
+function onSearchEnter(v){ if(_looksLikeUrl(v)) traceByUrl((v||'').trim()); }
 function render(){
   let items = STATE.items.slice();
   const searching = !!(STATE.q && STATE.q.trim());
+  const histWrap = document.getElementById("channelHistoryWrap");
+  if(histWrap) histWrap.innerHTML = "";   // 검색/필터 바뀔 때마다 초기화
   // 검색 중엔 카테고리·유형 필터를 무시하고 로드된 전체에서 찾는다(2026-07-18).
   // 왜: "오이" 쳤는데 지금 켠 '비법·꿀팁형' 탭에 없으면 안 잡히던 문제. 검색은 전역이어야 한다.
   if(!searching){
@@ -523,37 +725,87 @@ function render(){
     items = items.filter(i=> matchesSearch(i, STATE.q));
   }
   items.sort((a,b)=> sortKey(b)-sortKey(a));
+  // 배지용 백분위 컨텍스트 — 지금 보이는 항목 기준(정렬·필터 반영)
+  const _bctx={ vs:items.map(i=>i.views||0).sort((a,b)=>a-b),
+                ds:items.map(i=>i.density||0).sort((a,b)=>a-b),
+                ss:items.map(i=>i.speed||0).sort((a,b)=>a-b) };
   const el = document.getElementById("cards");
-  if(!items.length){ el.innerHTML='<div class="empty">결과 없음.</div>'; return; }
+  if(!items.length){
+    el.innerHTML = (searching && _looksLikeUrl(STATE.q))
+      ? '<div class="empty">🔗 링크 감지 — <b>엔터</b>를 누르면 이 영상의 원본·유사 영상을 찾아드려요.</div>'
+      : '<div class="empty">결과 없음.</div>';
+    return;
+  }
   el.innerHTML = items.map((i,idx)=>`
     <div class="card">
       <div class="thumb">
         <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.platform==='youtube'?`onclick="playYoutube(this,'${i.shortcode}')"`:(i.platform==='tiktok'?`onclick="playTiktok(this,'${i.shortcode}')"`:''))} loading="lazy" onerror="this.style.visibility='hidden'">
+        ${badgeHTML(i, _bctx)}
         ${(i.video_url||i.platform==='youtube'||i.platform==='tiktok')?'<span class="play-badge">▶</span>':''}
       </div>
       <div class="body">
         <div class="rank">#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</div>
-        <div class="ch"><span class="chname">${i.name||i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${i.url}', this)">🔗 복사</button></div>
+        <div class="ch"><span class="chname" title="이 채널 영상만 보기(지난 한 달 포함)" style="cursor:pointer" onclick="searchChannel('${esc(i.username||'')}')">${i.name||i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${i.url}', this)">🔗 복사</button></div>
         ${i.followers?`<div class="rank" style="margin:-4px 0 4px">팔로워 ${i.followers.toLocaleString()}</div>`:''}
         ${i.views?`<div class="stat" title="조회수 — 유튜브/틱톡의 핵심 신호(속도·참여율의 기준)"><span>조회수</span><b>${i.views.toLocaleString()}</b></div>`:''}
         <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${i.comments.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>
         <div class="stat" title="댓글수 ÷ 경과시간(시간)"><span>속도(시간당)</span><b>${i.speed.toFixed(1)}</b></div>
         <div class="stat" title="이번 수집 Δ − 직전 수집 Δ (증가세가 빨라지는 중인지)"><span>가속</span><b>${i.accel==null?'—':(i.accel>0?'+':'')+i.accel}</b></div>
         <div class="stat" title="댓글수 ÷ 팔로워수 (팔로워 대비 반응 비율)"><span>참여밀도</span><b>${(i.density*100).toFixed(2)}%</b></div>
-        <div class="btns">
-          <button class="view" onclick="window.open('${i.url}','_blank')">👁 보기</button>
-          <button class="comment" onclick="goComment('${i.shortcode}')">💬 댓글</button>
-          <button class="save" id="save_${i.shortcode}" onclick="toggleMix('${i.shortcode}', this)">📥 담기</button>
-        </div>
-        <button class="script-btn" onclick="extractScript('${i.shortcode}')">📝 대본 추출</button>
-        <button class="script-btn" onclick="showRelated('${i.shortcode}')">🔗 같은 주제</button>
-        <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 렌즈 유사영상</button>
-        <button class="script-btn" onclick="openSceneCut('${i.shortcode}', '${esc(i.video_url||'')}', '${esc(i.category||'')}')">🎞 장면 담기</button>
-        <button class="script-btn" onclick="sendToProduce('${i.shortcode}')" id="send_${i.shortcode}">🎬 제작소로 보내기</button>
         ${i.inpock?`<div style="margin-top:6px"><a href="${i.inpock}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🛒 판매채널</a></div>`:''}
+        <div class="actions">
+          <div class="btns">
+            <button class="view" onclick="window.open('${i.url}','_blank')">👁 보기</button>
+            <button class="comment" onclick="goComment('${i.shortcode}')">💬 댓글</button>
+            <button class="save" id="save_${i.shortcode}" onclick="toggleMix('${i.shortcode}', this)">📥 담기</button>
+          </div>
+          <button class="script-btn" onclick="extractScript('${i.shortcode}')">📝 대본 추출</button>
+          <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 렌즈 유사영상</button>
+          <button class="script-btn" onclick="openSceneCut('${i.shortcode}', '${esc(i.video_url||'')}', '${esc(i.category||'')}')">🎞 장면 담기</button>
+          <button class="script-btn" onclick="sendToProduce('${i.shortcode}')" id="send_${i.shortcode}">🎬 제작소로 보내기</button>
+        </div>
       </div>
     </div>`).join("");
   markSavedButtons();
+  // 채널 모드 감지 — 검색 결과가 한 채널로 수렴하면 그 채널의 '지난 한 달'을 아래에 붙인다.
+  const users = [...new Set(items.map(i=>_normUser(i.username)).filter(Boolean))];
+  if(searching && users.length===1){
+    _renderChannelHistory(users[0], items.map(i=>i.shortcode));
+  }
+}
+// 카드의 채널명 클릭 → 그 채널만(검색어=아이디). matchesSearch가 그 채널을 통과시키고
+// render의 채널모드 감지가 '지난 한 달'을 붙인다.
+function searchChannel(username){
+  if(!username) return;
+  const box=document.getElementById("rankSearch");
+  if(box) box.value = username;
+  setSearch(username);
+}
+async function _renderChannelHistory(username, liveShortcodes){
+  const wrap=document.getElementById("channelHistoryWrap");
+  if(!wrap) return;
+  try{
+    const ex=encodeURIComponent((liveShortcodes||[]).filter(Boolean).join(','));
+    const d=await (await fetch(`/api/channel/history?username=${encodeURIComponent(username)}&exclude=${ex}`)).json();
+    if(!d || !d.ok || !Array.isArray(d.items) || !d.items.length){ wrap.innerHTML=''; return; }
+    const cards = d.items.map(_historyCard).join('');
+    wrap.innerHTML = `<div style="margin:18px 0 8px;padding-top:12px;border-top:1px solid var(--line);color:var(--sub);font-size:13px">📅 지난 한 달 · @${esc(username)} <b style="color:var(--txt)">(${d.items.length})</b> <span style="font-size:11px">— 48시간 창에서 내려간 과거 수집분</span></div><div class="cards">${cards}</div>`;
+    markSavedButtons();
+  }catch(e){ wrap.innerHTML=''; }
+}
+function _historyCard(h){
+  return `<div class="card">
+    <div class="thumb"><img src="${h.thumb?('/api/thumb?url='+encodeURIComponent(h.thumb)):''}" loading="lazy" onerror="this.style.visibility='hidden'"></div>
+    <div class="body">
+      <div class="rank">${esc(h.category||'')} · ${fmtTime(h.last_seen)}</div>
+      <div class="ch"><span class="chname">${esc(h.name||h.username||'')}</span></div>
+      ${h.views?`<div class="stat"><span>조회수</span><b>${(h.views||0).toLocaleString()}</b></div>`:''}
+      <div class="stat"><span>댓글</span><b>${(h.comments||0).toLocaleString()}</b></div>
+      <div class="actions"><div class="btns">
+        <button class="view" onclick="window.open('${h.url}','_blank')">👁 보기</button>
+        <button class="save" id="save_${h.shortcode}" onclick="toggleMix('${h.shortcode}', this)">📥 담기</button>
+      </div></div>
+    </div></div>`;
 }
 function fmtTime(iso){
   // collected_at은 UTC로 저장됨 — 브라우저 로컬시간(한국이면 KST)으로 변환해 표시
@@ -588,9 +840,69 @@ async function doCollect(){
     STATE.items = d.items; st.textContent=`✅ ${d.count}건 수집 (${fmtTime(d.collected_at)})`;
     render();
     if(PLATFORM==='tiktok') loadTtSettings();   // 하루 남은 횟수·지출 갱신
-    else _pollVisionTags(5);                    // 백그라운드 태깅이 채워지는 대로 병합(검색 정확도 승격)
+    else { _pollVisionTags(5); _pollBankIngest(8); }   // 태깅 병합 + 대본은행 자동적재 보고
   }catch(e){ st.textContent="❌ "+e.message; }
   finally{ btn.disabled=false; }
+}
+// 수집 직후 백그라운드로 도는 대본은행 자동적재의 결과를 폴링해 화면에 보고한다.
+// running이면 "분석 중…", done이면 신규/중복 요약. #status 아래 전용 줄에 그린다.
+function _bankIngestEl(){
+  let el=document.getElementById('bankIngest');
+  if(!el){ el=document.createElement('div'); el.id='bankIngest';
+    el.style.cssText='margin-top:6px;font-size:12px;color:var(--sub)';
+    const st=document.getElementById('status'); if(st&&st.parentNode) st.parentNode.insertBefore(el, st.nextSibling); }
+  return el;
+}
+function _sumBuckets(by,keys){ return keys.reduce((s,k)=>s+(by&&by[k]||0),0); }
+function _pct(x){ return (x===null||x===undefined)?'—':Math.round(x*100)+'%'; }
+// 흡수 리포트 + 제미니 검열을 한 패널로. 신호등(🟢🟡🔴) + 3지표 + 경고사유.
+function _renderBankPanel(rep){
+  const by=rep.by_bucket||{};
+  const story=_sumBuckets(by,['conflict','emotion','evidence','spine']);
+  const style=_sumBuckets(by,['adverb','cta','ending','price']);
+  const hook=by.hook||0;
+  let html=`📦 <b>오늘 은행 흡수</b>: 우승영상 ${rep.added_sources||0}편 · 부품 ${rep.added_items||0}개`
+    +` <span style="color:var(--sub)">(훅 ${hook}·스토리구조 ${story}·스타일 ${style})</span>`
+    +(rep.harvested_hooks?` · 훅수확 +${rep.harvested_hooks}`:'')
+    +(rep.skipped_dup?` · 중복 ${rep.skipped_dup} 건너뜀`:'');
+  const a=rep.gemini_audit;
+  if(a){
+    const h=a.health||{};
+    html+=`<br>🤖 <b>제미니 검열 ${h.level||''}</b> `
+      +`성공률 ${_pct(a.success_rate)} (${a.succeeded||0}/${a.attempted||0})`
+      +` · 완성도 ${_pct(a.completeness_rate)}`
+      +` · 훅스팸 ${_pct(a.hook_spam_ratio)}${a.hook_bait?`(차단 ${a.hook_bait})`:''}`;
+    (h.reasons||[]).forEach(r=>{ html+=`<br><span style="color:#c0392b">⚠️ ${r}</span>`; });
+  }
+  const u=rep.usage_audit;
+  if(u && u.n){
+    const uh=u.health||{};
+    const c=u.compliance;
+    html+=`<br>🎬 <b>생성 순응 ${uh.level||''}</b> (최근 ${u.n}편) `
+      +`은행 사용률 ${_pct(u.bank_used_rate)}`
+      +` · 구조순응 ${_pct(u.conformance_pass_rate)}`
+      +` · 표절 ${_pct(u.plagiarism_rate)}`
+      +(u.judge_avg!=null?` · 심사 ${(u.judge_avg*5).toFixed(1)}/5`:'');
+    if(c){ html+=`<br><span style="color:var(--sub)">순응샘플(${c.n}) `
+      +`아크 ${c.arc_avg}/5 · 부품 ${c.flavor_avg}/5`
+      +(c.verbatim_rate?` · 표절 ${_pct(c.verbatim_rate)}`:'')+`</span>`; }
+    (uh.reasons||[]).forEach(r=>{ html+=`<br><span style="color:#c0392b">⚠️ ${r}</span>`; });
+  }
+  return html;
+}
+async function _pollBankIngest(times){
+  if(PLATFORM!=='instagram' || times<=0) return;
+  const el=_bankIngestEl();
+  try{
+    const d=await (await fetch('/api/bank/ingest_report')).json();
+    const rep=(d&&d.report)||{};
+    if(rep.status==='done'){
+      el.innerHTML=_renderBankPanel(rep);
+      return;   // 끝 — 더 폴링 안 함
+    }
+    el.textContent='🏦 대본은행 자동 분석 중… (백그라운드, 잠시 후 결과)';
+  }catch(e){}
+  setTimeout(()=>_pollBankIngest(times-1), 6000);   // 6초 간격 재폴링
 }
 // 수집 후 백그라운드 비전 태깅이 완료되는 대로 /api/reference를 몇 번 다시 읽어
 // STATE.items에 vision_subject·vision_keywords를 병합한다 → 검색이 자동으로 더 정확해진다.
@@ -618,10 +930,64 @@ function _pollVisionTags(times){
     _pollVisionTags(times-1);
   }, wait);
 }
+// 전수조사(센서스) — 팔로워·사망 필터 없이 전 채널을 긁어 활동성(2일 내 업로드) 재판정.
+// 2일 내 안 올린 채널은 정리(dead), 다시 올린 채널은 부활(revived). 비용이 커 가끔만 누른다.
+async function doCensus(){
+  const btn=document.getElementById("censusBtn"), st=document.getElementById("status");
+  const sum=document.getElementById("censusSummary");
+  if(!confirm('전 채널을 긁어 활동성을 재판정합니다. 수십 초~몇 분 걸리고 비용이 듭니다. 진행할까요?')) return;
+  btn.disabled=true; st.textContent="전수조사 접수 중…";
+  // 비동기(2026-07-22): POST는 job_id만 즉시 받고(빠름), 무거운 census는 서버가 뒤에서 돈다.
+  // 상태를 폴링하므로 폴 한 번이 순간 끊겨도 다음 폴에서 이어져 Failed to fetch로 안 죽는다.
+  let jobId;
+  try{
+    const r = await fetch("/api/census", {method:"POST"});
+    const d = await readJson(r);
+    if(!d.ok || !d.job_id) throw new Error(d.error||"실패");
+    jobId = d.job_id;
+  }catch(e){ st.textContent="❌ "+e.message; btn.disabled=false; return; }
+  const t0 = Date.now();
+  let miss = 0;   // 연속 폴 실패(네트워크 순단) — 20회(≈60초) 넘으면 포기
+  const poll = async ()=>{
+    let d;
+    try{
+      const r = await fetch("/api/census/status/"+jobId);
+      d = await readJson(r); miss = 0;
+    }catch(e){
+      if(++miss > 20){ st.textContent="❌ 연결이 계속 끊깁니다. 잠시 후 새로고침하면 결과가 있을 수 있어요."; btn.disabled=false; return; }
+      st.textContent=`전수조사 중… (재연결 ${miss})`; setTimeout(poll, 3000); return;
+    }
+    if(!d || !d.ok){ st.textContent="❌ "+((d&&d.error)||"상태 조회 실패"); btn.disabled=false; return; }
+    if(d.status==="running"){
+      const secs = Math.round((Date.now()-t0)/1000);
+      st.textContent=`전수조사 중… ${secs}s (창 닫아도 서버는 계속 진행)`;
+      setTimeout(poll, 3000); return;
+    }
+    if(d.status==="error"){ st.textContent="❌ "+(d.error||"실패"); btn.disabled=false; return; }
+    // done — 결과 렌더(동기 때와 동일)
+    STATE.items = d.items; st.textContent=`✅ ${d.count}건 (${fmtTime(d.collected_at)})`;
+    setTab('density');   // 전수조사는 영상별 참여밀도순으로 — 소형채널도 안 밀리게
+    const dead = d.dead||[];
+    let html = `<span style="color:var(--txt)">스캔 <b>${d.scanned_n}</b> · 생존 <b style="color:var(--ok)">${d.alive_n}</b> · 사망 <b style="color:var(--fire)">${d.dead_n}</b> · 부활 <b style="color:var(--gold)">${d.revived_n}</b></span>`;
+    if(dead.length){
+      html += `<details style="margin-top:6px"><summary style="cursor:pointer">정리 대상 ${d.dead_n}개</summary>`
+        + `<div style="margin-top:4px">` + dead.map(x=>'@'+esc(x.username)).join(', ') + `</div></details>`;
+    }
+    sum.innerHTML = html;
+    _pollVisionTags(5);   // 백그라운드 비전 태깅 병합(수집과 동일)
+    btn.disabled=false;
+  };
+  setTimeout(poll, 2000);
+}
 async function loadLast(){
   const d = await (await fetch("/api/reference?platform="+PLATFORM)).json();
-  if(d.items?.length){ STATE.items=d.items; render();
-    document.getElementById("status").textContent=`마지막 수집: ${fmtTime(d.collected_at)}`; }
+  STATE.items = d.items || [];   // 결과 없어도 무조건 갈아끼움 — 이전 플랫폼 카드 잔존 방지
+  render();
+  if(STATE.items.length){
+    document.getElementById("status").textContent=`마지막 수집: ${fmtTime(d.collected_at)}`;
+  } else {
+    document.getElementById("status").textContent="아직 수집 결과가 없습니다. (관리자 수집 대기)";
+  }
 }
 function goComment(sc){ location.href = '/outreach?focus=' + encodeURIComponent(sc); }
 async function copyLink(url, btn){
@@ -712,32 +1078,6 @@ function _embedTiktok(el, videoId){
 }
 function playYoutube(img, videoId){ _playViaMedia(img, videoId, 'youtube', _embedYoutube); }
 function playTiktok(img, videoId){ _playViaMedia(img, videoId, 'tiktok', _embedTiktok); }
-// ── 같은 주제 모아보기(2026-07-13) ──────────────────────
-async function showRelated(shortcode){
-  openScript('<div class="sm-loading">⏳ 같은 주제 영상 찾는 중…</div>', '🔗 같은 주제 영상');
-  try{
-    const r = await fetch('/api/related?shortcode='+encodeURIComponent(shortcode));
-    const d = await r.json();
-    if(!d.ok){ document.getElementById('scriptBody').innerHTML='<div class="sm-err">⚠️ 조회 실패</div>'; return; }
-    if(!d.items.length){
-      document.getElementById('scriptBody').innerHTML='<div class="sm-loading">같은 주제로 묶인 다른 영상이 없습니다.<br><small>AI 그룹핑은 수집 시 자동 실행되며, 배치(48시간 창) 안에서만 묶입니다.</small></div>';
-      return;
-    }
-    const PLATFORM_BADGE = {instagram:'📷', youtube:'▶️', tiktok:'🎵'};
-    const h = d.items.map(i=>`
-      <div class="sm-seg" style="display:flex;gap:10px;align-items:flex-start">
-        ${i.thumbnail?`<img src="/api/thumb?url=${encodeURIComponent(i.thumbnail)}" loading="lazy"
-             style="width:64px;height:64px;object-fit:cover;border-radius:6px;flex-shrink:0;background:#000"
-             onerror="this.style.visibility='hidden'">`:''}
-        <div style="min-width:0;flex:1">
-          <div class="t">${PLATFORM_BADGE[i.platform]||''} ${esc(i.name||i.username||'')}</div>
-          <div class="txt">${esc((i.caption||'').slice(0,80))}</div>
-          <button class="view" onclick="window.open('${i.url}','_blank')">👁 보기</button>
-        </div>
-      </div>`).join('');
-    document.getElementById('scriptBody').innerHTML = h;
-  }catch(err){ document.getElementById('scriptBody').innerHTML='<div class="sm-err">⚠️ 네트워크 오류 — 잠시 후 재시도</div>'; }
-}
 // ── 렌즈 유사영상 발굴(2026-07-14) ──────────────────────
 // 재생중/멈춘 <video>의 현재 프레임을 canvas 캡처 → 구글렌즈 → 5플랫폼 유사영상.
 const LENS_PLATFORMS=[
@@ -801,11 +1141,43 @@ async function lensSearch(btn, shortcode){
     // 프레임이 있으면 항상 유튜브를 키워드로 덧댄다(비전이 화면 글자로 제품을 특정하므로
     // 캡션이 없어도 됨). ytLoading=true로 두고 renderLens가 '불러오는 중'을 보여준다.
     LENS_STATE[shortcode]={items, on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
-                           sel:new Set(), shortsOnly:false, ytLoading:true, keyword:'', caption};
+                           sel:new Set(), shortsOnly:false, ytLoading:true, keyword:'', caption,
+                           cnCands:[]};
     renderLens(shortcode);
     fetchLensYt(shortcode, caption, blob);   // ▶️ 유튜브 무료 키워드 자동합류(비동기)
+    fetchLensCnKeywords(shortcode, caption, blob);   // 📕🎬 중국앱 후보 검색어 자동합류(비동기)
   }catch(e){ document.getElementById('scriptBody').innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
 }
+// ── URL 붙여넣기 → 구글렌즈 원본/유사 역추적(2026-07-19) ─── TRACE-START
+// 프레임 캡처 대신 서버가 URL을 받아 중간 프레임을 뽑는다(/api/lens/trace_url). 결과 형태는
+// lensSearch와 동일 → renderLens를 합성 shortcode '__trace__'로 그대로 재활용(담기·필터 공짜).
+async function traceByUrl(urlArg){
+  const inp=document.getElementById('traceUrl');
+  // urlArg가 오면 그걸 쓴다(메인 검색창에서 링크 붙여넣고 엔터). 없으면 전용 입력칸 값.
+  const url=((typeof urlArg==='string' ? urlArg : (inp && inp.value)) || '').trim();
+  if(!url){ if(inp) inp.focus(); return; }
+  openScript('<div class="sm-loading">🔗 원본·유사 영상 추적 중… (10~20초)</div>','🔗 레퍼런스 추적',true);
+  try{
+    const r=await fetch('/api/lens/trace_url',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+    const body=document.getElementById('scriptBody');
+    if(r.status===429){ const d=await r.json(); if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">💰 '+(d.error||'이번 달 렌즈 한도 초과')+'</div>'; return; }
+    const d=await r.json();
+    if(!d.ok){ if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">❌ '+(d.error||'추적 실패')+'</div>'; return; }
+    const items=(d.items||[]);
+    items.forEach(i=>{ i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); });
+    if(!items.length){ if(body) body.innerHTML='<div style="padding:10px;color:var(--sub)">비슷한 영상을 못 찾았어요. 다른 장면이 담긴 링크로 시도해 보세요.</div>'; return; }
+    let saved=new Set();
+    try{ saved=new Set((await (await fetch('/api/mix/basket')).json()).shortcodes||[]); }catch(e){}
+    const tcap=d.caption||'';
+    // 📕🎬 키워드검색 후보는 서버가 프레임 비전으로 만들어 cn_candidates로 내려준다
+    // (caption만으론 cn_search_candidates가 빈 리스트 — 프레임 필수라 서버가 처리).
+    const tcn=(d.cn_candidates||[]).filter(c=>c&&c.zh);
+    LENS_STATE['__trace__']={items, on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
+                             sel:new Set(), shortsOnly:false, ytLoading:false, keyword:'', caption:tcap, cnCands:tcn};
+    renderLens('__trace__');
+  }catch(e){ const body=document.getElementById('scriptBody'); if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
+}
+// ─── TRACE-END
 // 프레임(비전)+캡션으로 유튜브를 키워드 검색해 렌즈 결과에 덧붙인다(무료, 비동기).
 async function fetchLensYt(shortcode, caption, blob){
   try{
@@ -824,6 +1196,23 @@ async function fetchLensYt(shortcode, caption, blob){
   }catch(e){ const st=LENS_STATE[shortcode]; if(st) st.ytLoading=false; }
   const root=document.getElementById('lensRoot');
   if(root && root.dataset.sc===shortcode) renderLens(shortcode);
+}
+// 프레임(비전)으로 중국어 후보 검색어를 받아 '사이트 링크' 버튼으로 그린다.
+// ★무료: Apify로 자동검색하지 않는다. 후보 클릭=그 중국어로 샤오홍슈/도우인 사이트를 열고,
+//   고객은 거기서 유저스크립트 '📥 담기'로 담는다(Apify 비용 0, 비전 후보만 Gemini 무료쿼터).
+async function fetchLensCnKeywords(shortcode, caption, blob){
+  try{
+    const fd=new FormData();
+    if(blob) fd.append('frame', blob, 'f.jpg');
+    if(caption) fd.append('source_caption', caption);
+    const d=await (await fetch('/api/lens/cn/keywords',{method:'POST',body:fd})).json();
+    const st=LENS_STATE[shortcode]; if(!st) return;
+    st.cnCands=(d.candidates||[]).filter(c=>c && c.zh);
+    // 비전 5~15초 사이 사용자가 다른 카드 렌즈를 열었으면 이 모달은 남의 것 → 재렌더 금지
+    // (형제 fetchLensYt와 동일 가드. 안 하면 늦은 응답이 현재 모달을 덮어씀)
+    const root=document.getElementById('lensRoot');
+    if(root && root.dataset.sc===shortcode) renderLens(shortcode);
+  }catch(e){ /* 후보 실패해도 렌즈 나머지는 정상 */ }
 }
 function toggleLensPlatform(shortcode, k){
   const st=LENS_STATE[shortcode]; if(!st) return;
@@ -854,7 +1243,7 @@ async function lensBulkSave(shortcode){
       if(d.in) st.saved.add(it.savesc);
     }catch(e){}
   }
-  if(targets.length) showToast(`✅ ${targets.length}개 담았음 <a href="/collection" style="color:#7db4ff;margin-left:6px">모음집 보기 →</a>`);
+  if(targets.length) showToast(`✅ ${targets.length}개 담았음 <a href="/collection" style="color:var(--sel-fg);margin-left:6px">모음집 보기 →</a>`);
   renderLens(shortcode);
 }
 async function lensBulkDelete(shortcode){
@@ -1017,10 +1406,33 @@ function renderLens(shortcode){
       <button onclick="lensBulkSave('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">📥 선택 담기(${selCount})</button>
       <button onclick="lensBulkDelete('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">🗑 선택 삭제(${selCount})</button>
       ${st.ytLoading?'<span style="color:var(--sub)">▶️ 유튜브 불러오는 중…</span>':''}
+      <a href="/grab" target="_blank" rel="noopener" title="샤오홍슈·도우인·틱톡·인스타 영상에 '📥 담기' 버튼이 안 뜨면 여기서 1회 켜기" style="text-decoration:none;font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--accent);background:#1f6feb1a;color:var(--accent);font-weight:700;margin-left:auto;white-space:nowrap">📥 담기 버튼 켜기</a>
     </div>
+    ${st.cnCands && st.cnCands.length ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)">
+      <div style="font-size:12px;color:var(--sub);margin-bottom:5px">📕🎬🎵📷 비슷한 영상 찾기 — 눌러서 열고, 마음에 들면 📥담기</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${st.cnCands.map(c=>{
+          // 샤오훙슈 검색은 로그아웃 방문자를 로그인으로 막는다(登录后查看搜索结果). 해외판
+          // rednote.com 검색은 같은 결과를 로그인 벽 없이 보여준다(2026-07-19 실측). 빌더·백엔드는
+          // 그대로 두고 '여는 링크'만 _openUrl로 rednote 치환. 도우인은 해외판 없어 그대로.
+          // 샤오홍슈/도우인=중국어(c.zh), 틱톡/인스타=한국어(c.ko)로 연다(플랫폼별 언어).
+          const kw=c.ko||c.zh;
+          const xhs=_openUrl(_lensSearchUrl('xiaohongshu', c.zh)), dy=_lensSearchUrl('douyin', c.zh);
+          const tk=_lensSearchUrl('tiktok', kw), ig=_lensSearchUrl('instagram', kw);
+          const lnk='text-decoration:none;padding:5px 11px;border-radius:10px;border:1px solid var(--line);color:var(--accent);font-size:12px;white-space:nowrap';
+          return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <div style="min-width:120px"><div style="font-size:14px;font-weight:600">${kw}</div>
+              <div style="font-size:11px;color:var(--sub)">${c.zh}</div></div>
+            <a href="${xhs}" target="_blank" rel="noopener" style="${lnk}">📕 샤오홍슈</a>
+            <a href="${dy}" target="_blank" rel="noopener" style="${lnk}">🎬 도우인</a>
+            <a href="${tk}" target="_blank" rel="noopener" style="${lnk}">🎵 틱톡</a>
+            <a href="${ig}" target="_blank" rel="noopener" style="${lnk}">📷 인스타</a></div>`;
+        }).join('')}
+      </div>
+    </div>` : ''}
     ${st.keyword?`<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px;font-size:11px">
       <span style="color:var(--sub)">🔗 다른 플랫폼에서 찾아 담기:</span>
-      ${[['tiktok','🎵 틱톡'],['instagram','📷 인스타'],['xiaohongshu','📕 샤오홍슈'],['douyin','🎬 도우인']].map(([k,lbl])=>
+      ${[['tiktok','🎵 틱톡'],['instagram','📷 인스타']].map(([k,lbl])=>
         `<a href="${_lensSearchUrl(k, st.keyword)}" target="_blank" rel="noopener" style="text-decoration:none;padding:3px 9px;border-radius:10px;border:1px solid var(--line);color:var(--accent)">${lbl}</a>`
       ).join('')}
     </div>`:''}
@@ -1046,12 +1458,57 @@ function renderLens(shortcode){
           <button class="view" onclick="lensPreview('${shortcode}','${i.savesc}')">▶ 미리보기</button>
           <button class="save${isSaved?' saved':''}" onclick="toggleLensSave('${shortcode}','${i.savesc}',this)">${isSaved?'🎬 담김✓':'📥 담기'}</button>
         </div>
-        <div style="margin-top:4px"><a href="${i.url}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🔗 원본 열기</a></div>
+        <div style="margin-top:4px"><a href="${_openUrl(i.url)}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🔗 원본 열기</a></div>
+        <div class="enrich" data-url="${esc(i.url||'')}" data-platform="${esc(plabel||'')}"
+             style="font-size:11px;color:var(--sub);margin-top:6px"></div>
       </div>
     </div>`;
   }).join('') || (st.ytLoading?'<div style="font-size:12px;color:var(--sub);padding:10px">불러오는 중…</div>':'<div style="font-size:12px;color:var(--sub);padding:10px">켠 플랫폼 결과 없음 — 위 🔗 바로가기로 찾아 담으세요</div>');
   box.innerHTML=`<div id="lensRoot" data-sc="${shortcode}">${bar}<div class="cards">${cards}</div></div>`;
   box._lensCurSC=shortcode;
+  const io=new IntersectionObserver((ents)=>{ents.forEach(e=>{ if(e.isIntersecting){ enrichCard(e.target); io.unobserve(e.target);} });},{rootMargin:'100px'});
+  box.querySelectorAll('.enrich').forEach(el=>io.observe(el));
+}
+// 렌즈 카드 하단 정보 슬롯 — 화면에 보이면(IntersectionObserver) lazy 자동조회.
+// 유튜브는 무료(yt-dlp)라 자동, 비유튜브(Apify 유료)는 관리자만 수동버튼으로 채운다.
+async function enrichCard(el){
+  if(el.dataset.done) return;
+  const url=el.dataset.url, pf=(el.dataset.platform||'').toLowerCase();
+  const isYt = pf.includes('유튜브') || url.includes('youtu');
+  if(!isYt){
+    // 비유튜브 실조회는 Apify 유료 → 관리자(customer_id===0)만 버튼 노출. 비관리자는 빈 슬롯.
+    if(window.IS_ADMIN){
+      el.innerHTML=`<button onclick="forceEnrich(this.parentNode)" style="font-size:11px;background:none;border:1px solid var(--sub);color:var(--sub);border-radius:8px;padding:2px 8px;cursor:pointer">ℹ️ 정보 채우기</button>`;
+    }
+    return;
+  }
+  el.dataset.done="1"; el.textContent="…";
+  try{
+    const d=await (await fetch('/api/enrich',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url, platform:'youtube'})})).json();
+    el.innerHTML=renderEnrich(d);
+  }catch(e){ el.textContent=""; el.dataset.done=""; }
+}
+async function forceEnrich(el){
+  const saved = el.innerHTML;
+  el.innerHTML="…";
+  try{
+    const d=await (await fetch('/api/enrich',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url:el.dataset.url, platform:(el.dataset.platform||'').toLowerCase(), force:true})})).json();
+    el.innerHTML=renderEnrich(d);
+  }catch(e){ el.innerHTML=saved; }
+}
+function renderEnrich(d){
+  if(!d || (d.status && d.status!=='ok')){
+    const msg={quota:'정보 없음(쿼터)', no_data:'정보 없음', needs_manual:''}[d&&d.status]||'정보 없음';
+    return msg?`<span style="color:var(--sub)">${msg}</span>`:'';
+  }
+  const ch = d.channel_name?`👤 <a href="${esc(d.channel_url||'#')}" target="_blank" style="color:var(--accent)">${esc(d.channel_name)}</a>${d.subscribers?(' · 구독 '+_fmtCount(d.subscribers)):''}`:'';
+  const stat = [d.views!=null?('👁 '+_fmtCount(d.views)):'', d.likes!=null?('❤ '+_fmtCount(d.likes)):'', d.comment_count!=null?('💬 '+_fmtCount(d.comment_count)):'', d.upload_date?('📅 '+esc((d.upload_date||'').slice(0,10))):''].filter(Boolean).join('  ·  ');
+  const cmts = (d.top_comments||[]).slice(0,5).map(c=>`<div style="margin:2px 0">💬 <b>${esc(c.author)}</b> ${esc((c.text||'').slice(0,120))}</div>`).join('');
+  const cmtBlock = cmts?`<details style="margin-top:4px"><summary style="cursor:pointer">인기 댓글 ${d.top_comments.length}</summary>${cmts}</details>`:'';
+  const capBlock = d.caption?`<details style="margin-top:4px"><summary style="cursor:pointer">원문 캡션</summary><div style="white-space:pre-wrap;margin-top:2px">${esc(d.caption)}</div></details>`:'';
+  return `${ch?('<div>'+ch+'</div>'):''}${stat?('<div style="margin-top:2px">'+stat+'</div>'):''}${cmtBlock}${capBlock}`;
 }
 // 렌즈가 검색에서 이미 받은 메타(조회수·좋아요·채널·길이)를 담을 때 함께 넘긴다. 서버가
 // yt-dlp로 재수집(유튜브 봇차단·샤오홍슈 무oEmbed로 자주 빈값)하기 전에 이 값이 먼저 저장돼
@@ -1071,9 +1528,14 @@ async function toggleLensSave(shortcode, savesc, btn){
       body:JSON.stringify({shortcode:savesc, url:it.url||'', thumbnail:it.thumbnail||'', name:it.title||'', caption:it.title||'', meta:_lensMeta(it)})})).json();
     d.in?st.saved.add(savesc):st.saved.delete(savesc);
     if(btn){ btn.textContent=d.in?'🎬 담김✓':'📥 담기'; btn.classList.toggle('saved', !!d.in); }
-    if(d.in) showToast('✅ 담았음 <a href="/collection" style="color:#7db4ff;margin-left:6px">모음집 보기 →</a>');
+    if(d.in) showToast('✅ 담았음 <a href="/collection" style="color:var(--sel-fg);margin-left:6px">모음집 보기 →</a>');
   }catch(e){ /* 무시 */ }
 }
+// 샤오훙슈 글 링크는 한국(로그아웃) 방문자를 /login으로 튕긴다(저장 url은 깨끗한데 샤오훙슈 서버가
+// 튕기는 것 — 2026-07-19 서버DB·브라우저 실측). 해외판 도메인 rednote.com은 같은 xsec_token으로
+// 로그인 벽 없이 열린다. 그래서 '고객이 여는 원본 열기'만 rednote로 바꾼다. 저장·담기·다운로드용
+// url은 원본(xiaohongshu.com) 그대로 둬야 한다(프레임추출·미디어다운로드가 그 도메인 기대).
+function _openUrl(u){ return String(u||'').replace(/:\/\/(www\.)?xiaohongshu\.com/i,'://www.rednote.com'); }
 // 미리보기 오버레이 — 유튜브는 임베드 재생, 직접 mp4(샤오홍슈 등) 있으면 <video>, 없으면 썸네일+원본안내.
 function _ytId(url){ const m=String(url||'').match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/); return m?m[1]:''; }
 function lensPreview(shortcode, savesc){
@@ -1093,7 +1555,7 @@ function lensPreview(shortcode, savesc){
       <div style="color:var(--sub);font-size:12px;margin-top:6px">이 플랫폼은 인앱 미리보기가 지원되지 않아요 — 원본에서 확인하세요.</div>`;
   }
   const head=`<div style="margin-bottom:10px;font-size:13px">${LENS_PLATFORMS.find(p=>p.k===it.platform)?.label||''} · ${esc((it.title||'').slice(0,90))}</div>`;
-  const foot=`<div style="margin-top:12px"><a href="${it.url}" target="_blank" style="color:var(--accent)">🔗 원본 열기</a></div>`;
+  const foot=`<div style="margin-top:12px"><a href="${_openUrl(it.url)}" target="_blank" style="color:var(--accent)">🔗 원본 열기</a></div>`;
   _openLensOverlay(head+inner+foot);
 }
 function _openLensOverlay(html){
@@ -1116,6 +1578,9 @@ async function sendToProduce(shortcode){
   const it = (STATE.items||[]).find(x=>x.shortcode===shortcode) || {};
   const btn = document.getElementById('send_'+shortcode);
   if(btn){ btn.disabled=true; btn.textContent='⏳ 대본 추출 중… (10~30초)'; }
+  // 진행 중인 전송 수(함수 프로퍼티라 함수 하나로 자기완결). 마지막 하나가 끝날 때만 이동한다(아래).
+  if(typeof sendToProduce._inflight!=='number') sendToProduce._inflight=0;
+  sendToProduce._inflight++;
   let script = '';
   try{
     const r = await fetch('/api/extract_script?shortcode='+encodeURIComponent(shortcode), {method:'POST'});
@@ -1125,10 +1590,23 @@ async function sendToProduce(shortcode){
   const item = {
     url: it.url||'', shortcode: shortcode, name: it.name||it.username||'',
     thumbnail: it.thumbnail||'', caption: it.caption||'', category: it.category||'',
+    play_url: it.play_url||'',   // 제작소 재료 미리보기 인라인 재생용(있을 때만)
     useFootage: true, pickScript: !!script, script: script,
   };
-  try{ sessionStorage.setItem('produce_handoff', JSON.stringify([item])); }catch(e){}
-  location.href = '/produce';
+  // ★덮어쓰지 말고 이어붙인다(2026-07-19). sendToProduce는 대본추출을 await(10~30초)라
+  //   한 카드가 추출 중일 때 다른 카드를 눌러 동시에 두 개를 보낼 수 있다. 매번 [item]으로
+  //   통째 교체하면 나중에 끝난 것만 남아 하나가 사라졌다(라이브 버그). 기존 배열에 누적한다.
+  try{
+    let arr=[]; try{ arr=JSON.parse(sessionStorage.getItem('produce_handoff')||'[]'); }catch(_){}
+    if(!Array.isArray(arr)) arr=[];
+    arr = arr.filter(x=>x && x.shortcode!==shortcode);   // 같은 영상 중복 방지(최신으로 교체)
+    arr.push(item);
+    sessionStorage.setItem('produce_handoff', JSON.stringify(arr));
+  }catch(e){}
+  // ★마지막 전송이 끝날 때만 이동한다. 먼저 끝난 fetch가 바로 이동하면 페이지가 파괴돼
+  //   아직 추출 중인 다른 카드의 콜백이 실행되지 못하고(누적 전에) 통째 사라진다.
+  sendToProduce._inflight--;
+  if(sendToProduce._inflight <= 0){ location.href = '/produce'; }
 }
 async function extractScript(shortcode){
   window._curSC = shortcode;
@@ -1199,7 +1677,7 @@ async function toggleMix(sc, btn){
     setMixBtn(btn, d.in);
     const st = document.getElementById("status");
     if(st) st.textContent = d.in ? `🎬 영상 믹싱에 담김 (총 ${d.count}개)` : `담기취소됨 (총 ${d.count}개)`;
-    if(d.in) showToast('✅ 담았음 <a href="/collection" style="color:#7db4ff;margin-left:6px">모음집 보기 →</a>');
+    if(d.in) showToast('✅ 담았음 <a href="/collection" style="color:var(--sel-fg);margin-left:6px">모음집 보기 →</a>');
   }catch(e){ /* 무시 */ }
 }
 function setMixBtn(btn, inBasket){
@@ -1450,8 +1928,8 @@ function handlePrepareFail(msg, queueInfo){
     box.innerHTML = `
       <div style="font-size:12px;color:#ff9b9b">⚠️ ${queueInfo.pos}/${queueInfo.total}번째 컷(${queueInfo.cutNo}번) 준비 실패 — 지금까지 담음 ${SCENE_QUEUE.saved}개</div>
       <div style="display:flex;gap:8px;margin-top:8px">
-        <button style="background:#0d131c;border:1px solid #1e2735;color:#8b98a9;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="retryQueueItem()">🔁 다시 시도</button>
-        <button style="background:#0d131c;border:1px solid #1e2735;color:#8b98a9;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="skipQueueItem()">⏭ 이 컷 건너뛰고 다음으로</button>
+        <button style="background:var(--inset);border:1px solid #1e2735;color:#8b98a9;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="retryQueueItem()">🔁 다시 시도</button>
+        <button style="background:var(--inset);border:1px solid #1e2735;color:#8b98a9;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="skipQueueItem()">⏭ 이 컷 건너뛰고 다음으로</button>
       </div>`;
   } else {
     box.style.display = 'none';
@@ -1510,33 +1988,33 @@ function showSceneDraft(d, queueInfo){
   // 리뷰 I-2: 큐로 들어온 초안이면 "몇 번 컷 · 몇 개 중 몇 번째 · 지금까지 몇 개 담음"을
   // 보여준다 — 사장님이 지금 몇 번 컷의 초안을 보는지, 몇 개 중 몇 개가 담겼는지 알아야 한다.
   const queueBadge = queueInfo
-    ? `<div style="font-size:12px;color:#7db4ff">📦 ${queueInfo.cutNo}번 컷 — ${queueInfo.pos}/${queueInfo.total}개째 (담음 ${SCENE_QUEUE?SCENE_QUEUE.saved:0}개)</div>`
+    ? `<div style="font-size:12px;color:var(--sel-fg)">📦 ${queueInfo.cutNo}번 컷 — ${queueInfo.pos}/${queueInfo.total}개째 (담음 ${SCENE_QUEUE?SCENE_QUEUE.saved:0}개)</div>`
     : '';
   box.innerHTML = `
     ${queueBadge}
     <div style="font-size:12px;color:#ffd76b">✂ ${d.duration?d.duration.toFixed(1):'?'}초 잘렸습니다. AI 태그 초안을 확인·수정하세요.</div>
-    <input id="scTitle" placeholder="이름 (예: 가루 한스푼)" style="background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
-    <textarea id="scDesc" rows="2" placeholder="화면 설명" style="background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">${(t.scene_desc||'').replace(/</g,'&lt;')}</textarea>
-    <input id="scSubject" placeholder="소재(구체적으로!)" value="${(t.subject||'').replace(/"/g,'&quot;')}" style="background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
-    <select id="scRole" style="background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
+    <input id="scTitle" placeholder="이름 (예: 가루 한스푼)" style="background:var(--inset);color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
+    <textarea id="scDesc" rows="2" placeholder="화면 설명" style="background:var(--inset);color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">${(t.scene_desc||'').replace(/</g,'&lt;')}</textarea>
+    <input id="scSubject" placeholder="소재(구체적으로!)" value="${(t.subject||'').replace(/"/g,'&quot;')}" style="background:var(--inset);color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
+    <select id="scRole" style="background:var(--inset);color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
       <option value="">(역할 없음)</option>${opt(['훅','반전','CTA','비법공개','반응','전환','본문'], t.role)}
     </select>
-    <input id="scTone" placeholder="분위기" value="${(t.tone||'').replace(/"/g,'&quot;')}" style="background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
-    <input id="scKw" placeholder="키워드(콤마)" value="${(t.keywords||[]).join(', ').replace(/"/g,'&quot;')}" style="background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
-    <select id="scMode" style="background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
+    <input id="scTone" placeholder="분위기" value="${(t.tone||'').replace(/"/g,'&quot;')}" style="background:var(--inset);color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
+    <input id="scKw" placeholder="키워드(콤마)" value="${(t.keywords||[]).join(', ').replace(/"/g,'&quot;')}" style="background:var(--inset);color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
+    <select id="scMode" style="background:var(--inset);color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px">
       <option value="cutaway">컷어웨이(삽입)</option><option value="replace">화면교체</option>
     </select>
     <label style="font-size:12px;color:#8b98a9"><input type="checkbox" id="scAudio" checked> 원본 소리 살리기</label>
     <label style="font-size:12px;color:#ffd76b">출처(필수) — 안 고르면 저장이 막힙니다
-      <select id="fOrigin" style="display:block;margin-top:4px;background:#0d1420;color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px;width:100%">
+      <select id="fOrigin" style="display:block;margin-top:4px;background:var(--inset);color:#e6edf3;border:1px solid #1e2735;border-radius:8px;padding:8px;width:100%">
         <option value="">— 고르세요 —</option>
         <option value="짜집기">짜집기(떠도는 조각)</option>
         <option value="촬영원본">촬영원본(그 사람이 찍은 것)</option>
       </select>
     </label>
     <div style="display:flex;gap:8px">
-      <button style="background:#2f81f7;border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="commitScene()">💾 라이브러리에 저장</button>
-      ${queueInfo ? `<button style="background:#0d131c;border:1px solid #1e2735;color:#8b98a9;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="skipQueueItem()">⏭ 건너뛰기</button>` : ''}
+      <button style="background:var(--accent);border:none;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="commitScene()">💾 라이브러리에 저장</button>
+      ${queueInfo ? `<button style="background:var(--inset);border:1px solid #1e2735;color:#8b98a9;border-radius:8px;padding:9px 14px;cursor:pointer" onclick="skipQueueItem()">⏭ 건너뛰기</button>` : ''}
     </div>`;
 }
 
@@ -1603,7 +2081,33 @@ async function commitScene(){
   finally{ btn.disabled = false; btn.textContent = '💾 라이브러리에 저장'; }
 }
 
-renderCtypes(); renderCats(); loadLast(); loadRefAdded();
+renderCtypes(); renderCats(); loadLast(); loadRefAdded(); updatePlatformCopy(PLATFORM);
+
+// ── 관리자(사장님 cid0) 전용 운영버튼(2026-07-22) ──
+// 수집·전수조사·레퍼런스등록은 크롤 비용이 드는 운영 액션이라 관리자만 쓴다.
+// 위 인라인 display:none으로 기본 숨김(구독자 화면 플래시 방지) → cid0일 때만 켠다.
+// 백엔드도 _require_admin으로 막혀 있어 화면을 조작해도 403이라 진짜 관리자 전용이다.
+window.IS_ADMIN=false;
+fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
+  if(d && d.customer_id===0){
+    window.IS_ADMIN=true;
+    ['collectBtn','censusBtn','refRegister','statusBox'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.style.display='';
+    });
+  }
+}).catch(()=>{});
+
+// 탭 밑줄 네온 슬라이드(2026-07-23) — 기존 탭 클릭(setTab)에 얹기만 함. active 클래스는 기존 로직이 토글.
+(function(){
+  var tabs=document.getElementById('tabs'), ink=document.getElementById('tabInk');
+  if(!tabs||!ink) return;
+  function move(){var a=tabs.querySelector('.tab.active');
+    if(a){ink.style.left=a.offsetLeft+'px';ink.style.width=a.offsetWidth+'px';}}
+  tabs.addEventListener('click',function(e){if(e.target.closest('.tab')) requestAnimationFrame(move);});
+  window.addEventListener('resize',move);
+  window.addEventListener('load',move);
+  requestAnimationFrame(move);
+})();
 </script>
 <script src="/sidebar.js?v=2"></script>
 </body>

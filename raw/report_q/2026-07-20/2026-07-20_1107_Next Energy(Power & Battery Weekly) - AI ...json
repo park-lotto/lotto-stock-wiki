@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "date": "2026-07-20",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-20_1107_Next Energy(Power & Battery Weekly) - AI ...md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "황성현",
+    "report_date": "2026.07.20.",
+    "market_direction": null,
+    "macro_vars": [
+      "배터리 주가 변동",
+      "원자력 주가 변동",
+      "AI 전력 수요",
+      "EV 판매량 추이",
+      "전력통계",
+      "원자재 가격(니켈, 코발트, 망간, 리튬, 알루미늄, 구리)",
+      "SMP 추이",
+      "원전 정비일수 및 가동률",
+      "국제유가",
+      "천연가스 가격 및 수요",
+      "석탄 가격 및 재고량"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "SK이노베이션",
+      "Fluence",
+      "BYD",
+      "삼성SDI",
+      "Nuscale",
+      "Centrus",
+      "Cameco",
+      "두산에너빌리티",
+      "LG에너지솔루션",
+      "LG화학",
+      "포스코퓨처엠",
+      "Tesla",
+      "CATL",
+      "폭스바겐",
+      "GM",
+      "BMW",
+      "현대·기아"
+    ],
+    "risk": "미국은 인허가와 계통 문제로 전력 확보 비용이 급격히 증가하고, 한국도 3대 메가프로젝트 추진으로 인해 전력망 투자와 계통 접속 문제가 주요 이슈로 부상할 전망이다.",
+    "quote": "AI 경쟁의 중심이 전력 인프라로 이동하고 있다. 국가별로 미국은 인허가와 계통 문제로 전력 확보 비용이 급격히 증가하는 반면, 중국은 국가 주도의 전력 인프라 구축을 통해 원가 우위를 확대하고 있다. 한국도 3 대 메가프로젝트를 발표하며 전력 인프라 부족에 대한 우려가 커지고 있다."
+  }
+}

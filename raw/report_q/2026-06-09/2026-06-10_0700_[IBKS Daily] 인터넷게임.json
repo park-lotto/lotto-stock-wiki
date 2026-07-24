@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_0700_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이상훈",
+    "report_date": "2026.06.09",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "젠슨 황 엔비디아 CEO와 이해진 네이버 의장은 AI 모델 공동 개발·클라우드 인프라 구축·로보틱스 분야 협력을 3대 축으로 한 전략적 파트너십을 공식화했음"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "오는 10일",
+        "event": "카카오 노조 파업"
+      }
+    ],
+    "top_picks": [
+      "NAVER",
+      "카카오"
+    ],
+    "risk": "본 조사분석자료는 당사 리서치센터에서 신뢰할 만한 자료 및 정보를 바탕으로 작성한 것이나 당사는 그 정확성이나 완전성을 보장할 수 없으며, 과거의 자료를 기초로한 투자참고 자료로서 향후 주가 움직임은 과거의 패턴과 다를 수 있습니다.",
+    "quote": "젠슨 황 엔비디아 CEO와 이해진 네이버 의장은 AI 모델 공동 개발·클라우드 인프라 구축·로보틱스 분야 협력을 3대 축으로 한 전략적 파트너십을 공식화했음"
+  }
+}

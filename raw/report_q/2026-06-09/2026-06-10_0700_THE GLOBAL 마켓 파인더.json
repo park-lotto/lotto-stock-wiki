@@ -1,0 +1,70 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_0700_THE GLOBAL 마켓 파인더.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "문건우, 문남중",
+    "report_date": "2026.06.08",
+    "target_kind": "market",
+    "market_direction": "기술주 차익 실현 매물 출회 및 금리 인상 전망 확대",
+    "macro_vars": [
+      "미국 5월 고용 지표 호조",
+      "중동 지정학적 불확실성 장기화",
+      "연내 금리 인상 전망 확대"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "중국",
+        "stance": "상승",
+        "reason": "석탄(+7.62%), 광통신(+5.23%), 위성(+1.71%), 로봇(+1.44%), 화학(+1.34%) 순으로 상승 마감"
+      },
+      {
+        "sector": "IT",
+        "stance": "하락",
+        "reason": "미국 S&P500 지수 중 반도체 및 반도체 장비(-6.87%), 소프트웨어(-6.78%) 업종이 큰 폭으로 하락"
+      }
+    ],
+    "style": "기술주 차익 실현",
+    "event_calendar": [
+      {
+        "date": "2026.06.01",
+        "event": "중국 5월 제조업 PMI 발표"
+      },
+      {
+        "date": "2026.06.05",
+        "event": "미국 5월 고용 지표 발표"
+      },
+      {
+        "date": "2026.06.15-16",
+        "event": "일본은행(BOJ) 금융정책결정회의"
+      }
+    ],
+    "top_picks": [
+      "Humana Inc",
+      "Hewlett Packard Enterprise Co",
+      "Medtronic PLC",
+      "Cooper Companies Inc",
+      "MGM Resorts International",
+      "Axon Enterprise Inc",
+      "Solventum Corp",
+      "W. R. Berkley Corp",
+      "Old Dominion Freight Line Inc",
+      "Arthur J. Gallagher & Co.",
+      "Coinbase Global Inc",
+      "Ciena Corp",
+      "Cboe Global Markets Inc",
+      "Ford Motor Co",
+      "Broadcom Inc",
+      "Qualcomm Inc",
+      "Intel Corp",
+      "Palantir Technologies Inc",
+      "Lululemon Athletica Inc",
+      "Robinhood Markets Inc"
+    ],
+    "risk": "고용지표 호조 지속이 연내 금리 인상 전망 확대로 연결되며, 기술주 차익 실현 매물 출회가 차주 부담 요인으로 작용할 수 있음",
+    "quote": "“6월 1주차 마켓” 금리 인상 전망 확대에 기술주 차익 실현 매물 출회"
+  }
+}

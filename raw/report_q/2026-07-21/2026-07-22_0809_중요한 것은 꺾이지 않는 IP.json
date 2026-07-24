@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "한국IR협의회 기업리서치센터",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-22_0809_중요한 것은 꺾이지 않는 IP.md"
+  },
+  "questionnaire": {
+    "broker": "한국IR협의회 기업리서치센터",
+    "analyst": "서진경, 이금민",
+    "report_date": "2026.07.21",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "컴투스",
+        "code": "078340",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출 7,020억 원, 영업이익 350억 원(OPM 5.0%), 지배순이익 105억 원 전망",
+        "estimate_revision": null,
+        "next_catalyst": "하반기 대작 〈제우스: 오만의 신〉 출시, 앱마켓 수수료 인하, 야구게임 매출 성장",
+        "thesis": [
+          "성장하는 야구게임 시장의 경쟁력 있는 1위 사업자",
+          "주주환원이 뒷받침하는 하방 방어력",
+          "앱마켓 수수료 인하 최대 수혜"
+        ],
+        "valuation_basis": "2026F PBR은 0.3배로 상장 이후 및 게임 업종 내 최저 수준",
+        "risk": "RPG 부문 매출 둔화 리스크, 미디어 자회사 적자와 영업권 손상 부담, 최대주주 컴투스홀딩스의 재무 부담",
+        "supply_comment": "컴투스홀딩스 외 7인 31.44%, KB자산운용 5.20%",
+        "quote": "시가총액을 상회하는 순금융자산이 주가 하방을 지지하는 가운데, 신작 흥행·야구게임 성장·수수료 인하를 통한 ROE 회복이 저평가 해소의 관건"
+      },
+      {
+        "name": "네오위즈",
+        "code": "095660",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출 4,280억 원, 영업이익 410억 원(OPM 9.6%), 지배순이익 414억 원 전망",
+        "estimate_revision": null,
+        "next_catalyst": "〈P의 거짓〉 차기작 공개 및 시리즈 확장, 차기작 개발 진척",
+        "thesis": [
+          "흥행을 반복하는 검증된 개발 역량",
+          "‘글로벌 IP 게임사’ 재평가 잠재력",
+          "주주환원으로 확인되는 하방 방어력"
+        ],
+        "valuation_basis": "2026F PER 9.4배는 역사적 PER 밴드의 최하단 수준",
+        "risk": "신작 공백과 모멘텀 부재",
+        "supply_comment": "나성균 외 11인 38.08%, Norges Bank 5.24%",
+        "quote": "저평가 해소의 관건은 〈P의 거짓〉 차기작 등 신작 흥행을 통한 이익 반복성 입증 여부로 판단"
+      }
+    ]
+  }
+}

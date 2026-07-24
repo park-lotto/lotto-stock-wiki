@@ -1,0 +1,120 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-21_1106_AIDC, 통신업 성장 신항로.md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "신희철",
+    "report_date": "2026.07.21",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "SK텔레콤",
+        "code": "017670",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "112,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "‘26년 매출액 17조 6,370억원(+3.1% YoY), ‘27년 17조 9,310억원(+1.7% YoY)을 기록할 것으로 전망한다. 이에 따라 ‘26년 영업이익은 1조 8,250억원(+YoY 70.1%, OPM 10.3%), ‘27년 2조 1,780억원(+YoY 19.3%, OPM 12.1%)를 기록하며 이익 성장이 나타날 것이다.",
+        "estimate_revision": null,
+        "next_catalyst": "엔트로픽 IPO 및 지분 가치 상승",
+        "thesis": [
+          "무선통신 매출 및 주주환원 정상화",
+          "AIDC 외형 확대에 따른 B2B 부문 성장 가속화",
+          "엔트로픽 지분가치 상승 기대감"
+        ],
+        "valuation_basis": "EV/EBITDA를 통해 산출된 SK텔레콤의 영업가치와 엔트로픽 지분가치를 합산하여 SOTP 방식을 통해 목표주가를 산출했다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사의 ‘26년 매출액 17조 6,370억원(+3.1% YoY), ‘27년 17조 9,310억원을 기록할 것으로 전망한다."
+      },
+      {
+        "name": "KT",
+        "code": "030200",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "70,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "‘26년 매출액 27조 3,722억원(-3.1% YoY), ‘27년 27조 7,640억원(+1.4% YoY)을 기록할 것으로 전망한다. 이에 따른 ‘26년 영업이익 전망치는 1조 9,970억원(-19.1% YoY, OPM 7.3%), ‘27년 2조 2,170억원(+11.0% YoY, OPM 8.0%)이다.",
+        "estimate_revision": null,
+        "next_catalyst": "AIDC Colocation 수익 확대 및 AI/AX B2B 외형 성장",
+        "thesis": [
+          "일시적 매출 감소, 다만 수익성은 좋아지는 방향",
+          "4년간 약 1조원 자사주 매입 등 주주환원 확대",
+          "AI/AX 등 B2B 부문 외형확대 기대"
+        ],
+        "valuation_basis": "KT 별도의 통신 부문 영업가치는 당사 12개월 선행 EBITDA 전망치 4조 5,800억원에 Target EV/EBITDA 4.0배를 통해 계산했다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사는 ‘26년 매출액 27조 3,722억원(-3.1% YoY), ‘27년 27조 7,640억원(+1.4% YoY)을 기록할 것으로 전망한다."
+      },
+      {
+        "name": "LG유플러스",
+        "code": "032640",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "19,500원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "‘26년 매출액 15조 5,604억원(+0.7% YoY), ‘27년 15조 7,813억원(+1.4% YoY)을 기록할 것으로 전망한다. 이에 따른 ‘26년 영업이익 전망치는 1조 1,124억원(+YoY 26.1%, OPM 7.2%), ‘27년 1조 2,516억원(+YoY 12.4%, OPM 8.0%)이다.",
+        "estimate_revision": null,
+        "next_catalyst": "파주 AIDC 중심 AI 인프라 확대",
+        "thesis": [
+          "영업비용 하락세 본격화에 따른 이익개선 사이클 돌입",
+          "Target 주주환원율 40~60%, ‘26E 주주환원수익률 5.9% 전망",
+          "파주AIDC 중심 AI 인프라 확대"
+        ],
+        "valuation_basis": "12개월 선행 EBITDA에 과거 이익 사이클 상단인 ‘16~17년도 Target EV/EBITDA 4.0배를 적용하여 산출했다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사는 ‘26년 매출액 15조 5,604억원(+0.7% YoY), ‘27년 15조 7,813억원(+1.4% YoY)을 기록할 것으로 전망한다."
+      },
+      {
+        "name": "인텔리안테크",
+        "code": "189300",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "89,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "‘26년 매출액 3,672억원(+14.9% YoY), ‘27년 4,369억원(+19.0% YoY)을 기록하며 가파른 탑라인 성장이 나타날 것으로 판단한다. 영업이익은 각각 300억원(+YoY 151.4%, OPM 8.2%), ‘27년 455억원(+YoY 51.3%, OPM 10.4%)으로 전망한다.",
+        "estimate_revision": null,
+        "next_catalyst": "LEO 위성통신 개화와 함께 FPA, Gateway 사업 확대",
+        "thesis": [
+          "다수 위성사업자와 FPA 개발 진행중",
+          "‘27년 Gateway 매출 고성장 전망",
+          "해상용 VSAT 시장 회복"
+        ],
+        "valuation_basis": "기업가치는 12개월 선행 당기순이익 325억원에 Global Peer 평균 33배를 10% 할인한 30배를 적용하여 계산했다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사는 ‘26년 매출액 3,672억원(+14.9% YoY), ‘27년 4,369억원(+19.0% YoY)을 기록하며 가파른 탑라인 성장이 나타날 것으로 판단한다."
+      },
+      {
+        "name": "쏠리드",
+        "code": "050890",
+        "rating": "NR",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "동사의 ‘26년 실적은 매출액 3,353억원(+13.7% YoY)을 기록할 전망이다. ‘27년 예상 매출액은 3,599억원(+7.3% YoY)으로 탑라인 성장이 지속될 것으로 판단한다.",
+        "estimate_revision": null,
+        "next_catalyst": "미 FCC 주파수 경매에 따른 북미 시장 CAPEX 확충",
+        "thesis": [
+          "DAS 시장의 견조한 성장",
+          "FCC 주파수 경매 재개에 따른 수요 확대",
+          "Open-RAN 시장에서의 Reference 확보"
+        ],
+        "valuation_basis": "과거 역사적 밸류에이션 대비 높은 구간에 위치해 있으며, 글로벌 Peer 업체 대비 상승 룸이 남아있다고 판단.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사의 ‘26년 실적은 매출액 3,353억원(+13.7% YoY)을 기록할 전망이다."
+      }
+    ]
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "스피어",
+      "rating": null,
+      "tp": null,
+      "ts": "08:20",
+      "quote": "스피어, SpaceX 성장의 진짜 수혜주는 소재가 아니라 공급망이다",
+      "sector": "기타"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "지슨",
+      "rating": null,
+      "tp": null,
+      "ts": "08:55",
+      "quote": "지슨, 2분기 흑자 전환…무선백도어 보안 성장 본격화",
+      "sector": "양자보안"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "HLB",
+      "rating": null,
+      "tp": null,
+      "ts": "09:50",
+      "quote": "HLB, 간암 신약 허가 불발 전부터 美 상업화 채비…보험 적용 인력 채용",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성전자",
+      "rating": null,
+      "tp": null,
+      "ts": "09:57",
+      "quote": "삼성 ‘HBM4 성공’ 숨은 주역 “베이스 다이 4나노 공정 선제 도입 주효”",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "코스메카코리아",
+      "rating": null,
+      "tp": null,
+      "ts": "11:10",
+      "quote": "K-뷰티 산업보고서 코스메카코리아 +10% 급등 중",
+      "sector": "화장품미용"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "큐리언트",
+      "rating": null,
+      "tp": null,
+      "ts": "13:03",
+      "quote": "큐리언트 \"美학회서 ADC 비임상 데이터 공개\"",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼천당제약",
+      "rating": null,
+      "tp": null,
+      "ts": "15:10",
+      "quote": "삼천당제약, 美 FDA 임상 면제 확인…다이이찌산쿄와 본계약 착수",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "펩트론",
+      "rating": null,
+      "tp": null,
+      "ts": "16:51",
+      "quote": "펩트론(087010), 오송바이오파크 제2공장 연면적 2.5배 확대 — 건축 변경허가 신청",
+      "sector": "바이오"
+    }
+  ]
+}

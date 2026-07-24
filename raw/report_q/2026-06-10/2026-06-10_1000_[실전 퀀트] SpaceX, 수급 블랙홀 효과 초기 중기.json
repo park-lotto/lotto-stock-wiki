@@ -1,0 +1,63 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_[실전 퀀트] SpaceX, 수급 블랙홀 효과 초기 중기.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "이경수, 이철현",
+    "report_date": "2026.06.10",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "기준금리 3.5~3.75%",
+      "AI 피크아웃 우려",
+      "브로드컴 실적 우려"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": "중립",
+        "reason": "SpaceX의 상장 및 인덱스 편입에 따른 수급 블랙홀 효과 및 오버행 이슈 집중"
+      }
+    ],
+    "style": "수급 중심의 퀀트 전략",
+    "event_calendar": [
+      {
+        "date": "2026.06.12",
+        "event": "SpaceX 상장"
+      },
+      {
+        "date": "2026.06.19경",
+        "event": "러셀1000 및 CRSP 편입"
+      },
+      {
+        "date": "2026.07.07",
+        "event": "나스닥100 편입"
+      },
+      {
+        "date": "2026.08~09월",
+        "event": "Q2 실적 발표 후 락업 해제(최대 30%)"
+      },
+      {
+        "date": "2026.11월",
+        "event": "Q3 실적 발표 후 락업 해제(28% 고정)"
+      },
+      {
+        "date": "2026.12월",
+        "event": "D+180 머스크 포함 잔여 전량 락업 해제"
+      }
+    ],
+    "top_picks": [
+      "SpaceX",
+      "LG에너지솔루션",
+      "Facebook(Meta)",
+      "Apple",
+      "MS",
+      "Nvidia"
+    ],
+    "risk": "상장 초기 극소 유통으로 인한 가격 발견 왜곡 가능성, 락업 해제 시점에 따른 수급 부담,高 금리 환경에서의 적자 밸류에이션 리스크",
+    "quote": "나스닥100 지수 편입된 이후 SpaceX 주가 급등할수록 수급 블랙홀 현상 심해질 것"
+  }
+}

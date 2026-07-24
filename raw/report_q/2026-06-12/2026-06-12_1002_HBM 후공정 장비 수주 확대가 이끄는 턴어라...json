@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-12",
+    "broker": "한국IR협의회",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-12_1002_HBM 후공정 장비 수주 확대가 이끄는 턴어라...md"
+  },
+  "questionnaire": {
+    "broker": "한국IR협의회",
+    "analyst": "이나연, 권지승",
+    "report_date": "2026.06.12",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "제너셈",
+        "code": "217190",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출액은 780억 원(YoY +37.4%), 영업이익은 89억 원(OPM 11.4%)으로 추정",
+        "estimate_revision": null,
+        "next_catalyst": "HBM 후공정 장비 수주 확대 및 하이브리드 본더 내재화",
+        "thesis": [
+          "HBM 후공정 투자 재개와 이연 수요 반영으로 2026년 실적 턴어라운드 전망",
+          "HBM 고단화와 첨단 패키징 확산으로 본딩 전후단 자동화 장비 수요 확대 및 동사의 시장 지배력 강화",
+          "기존 주력 장비의 프리미엄화와 제품 믹스 개선을 통한 수익성 정상화"
+        ],
+        "valuation_basis": "HBM 후공정 장비 Peer와의 상대 P/E 비교 및 동사 자체 P/E 밴드 분석",
+        "risk": "고객사 후공정 투자 집행 시점에 따른 실적 변동성, 신규 장비 양산 검증 및 하이브리드 본더 개발 불확실성",
+        "supply_comment": "1Q26 말 수주잔고는 425억 원으로 전년 말 대비 48.1% 증가",
+        "quote": "HBM 후공정 투자 재개와 이연 수요 반영으로 2026년 실적 턴어라운드 전망. 2026년 매출액은 780억 원(YoY +37.4%), 영업이익은 89억 원(OPM 11.4%)으로 추정되며, 1Q26 말 수주잔고 425억 원에 2Q26 인도 신규 고객향 후공정 장비 및 국내 주요 메모리 고객사향 HBM 관련 장비 수주가 더해지며 외형 회복 가시성 확대"
+      }
+    ],
+    "sector": "반도체"
+  }
+}

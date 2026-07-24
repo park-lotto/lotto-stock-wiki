@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_어두울땐 실적을 켜자.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "미래에셋증권",
+    "analyst": "김영건",
+    "report_date": "2026.6.9",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": "550,000원",
+        "tp_prev": "550,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26F/26F OP 전망치를 각각 98조원/395조원(기존 89조원/371조원)으로 상향한다.",
+        "estimate_revision": "2Q26F/26F DRAM ASP 상승률을 +50%/+279%(기존 +41%/+260%)로, NAND는 +60%/+250%(기존 +45%/+235%)로 상향했다.",
+        "next_catalyst": "2Q26 LPDDR5X(16GB) 가격 상승률은 각각 QoQ +81%내로, UFS(512GB)는 QoQ +80%로 전망된다.",
+        "thesis": [
+          "모바일 DRAM 주도의 가격 상승세 지속",
+          "메모리 가격 상향 및 구조적 변화 반영",
+          "대규모 주주환원 기대감"
+        ],
+        "valuation_basis": "26F P/B 및 P/E 배수는 각각 4.9배, 11.3배로 업종 평균(각각 7.6배, 12.4배)에 미치지 못하는 수준.",
+        "risk": "구매를 지체했던 제조사들이 한 가격 레벨에 적응하며 뒤늦게 상승 반영되는 양상.",
+        "supply_comment": "HBM4 가격 상승 압력으로 작용할 전망이며, 가성 상 구간에서 HBM4 생산을 위해 컨벤셔널 Capa를 희생할 동기가 작기 때문.",
+        "quote": "동사에 대한 목표주가를 55만원으로 유지한다. 2Q26F/26F 이익 전망치를 각각 +9.5%/+6.3% 상향했으나, 주가 괴리율로 고려해 목표가는 변경하지 않았다."
+      }
+    ]
+  }
+}

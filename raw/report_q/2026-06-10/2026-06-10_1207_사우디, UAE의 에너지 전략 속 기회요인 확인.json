@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1207_사우디, UAE의 에너지 전략 속 기회요인 확인.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "키움증권",
+    "analyst": "신대현",
+    "report_date": "2026. 06. 10",
+    "stocks": [
+      {
+        "name": "삼성E&A",
+        "code": "028050",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "67,000원",
+        "tp_prev": "67,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "삼성E&A 키움증권 추정치 변화 Table에 따르면 2026년 연간 매출액은 10,021십억원, 영업이익은 845십억원으로 전년 대비 매출액은 1% 증가, 영업이익은 13% 감소할 것으로 전망됨.",
+        "estimate_revision": "삼성E&A 키움증권 추정치 변화 Table에 따르면 2026년 기존 대비 매출액은 1% 증가, 영업이익은 2% 증가함.",
+        "next_catalyst": "사우디 Fadhili Gas Plant 확장 프로젝트 및 중동 지역의 대규모 가스전/처리 시설 발주",
+        "thesis": [
+          "사우디 Vision 2030 및 원유 수출 확대 전략에 따른 대규모 가스처리 시설 및 가스전 개발 발주 전망",
+          "UAE의 LNG 수출 확대 및 가스전 개발/인프라 투자 증가",
+          "중동 내 EPC 시장 경쟁 완화 및 삼성E&A의 기술적 경쟁 우위(Interface Leading)"
+        ],
+        "valuation_basis": "삼성E&A에 대한 투자의견 Buy와 목표주가 67,000원, 업종 Top Pick을 유지한다.",
+        "risk": "공사비 상승과 규모 커짐에 따른 EPC社의 역량 리스크 및 중동 정세 변화",
+        "supply_comment": "중동 전쟁 이후 사우디, UAE 모두 가스 생산 확대에 나설 것으로 전망되며, 공사비 상승과 규모가 커짐에 따라 삼성E&A 등 실력있는 EPC社의 역할이 중요할 것으로 판단된다.",
+        "quote": "삼성E&A는 Fadhili Gas Plant 확장 프로젝트에서 Interface Leading 업체로서 역할을 하고 있는 만큼 향후 대규모 가스전/처리 시설 발주가 나올 시 수주 확률이 높을 것으로 전망된다."
+      }
+    ]
+  }
+}

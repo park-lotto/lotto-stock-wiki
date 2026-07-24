@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-12",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-15_0700_B2B 사이버보안 전문 회사.md"
+  },
+  "questionnaire": {
+    "broker": "미래에셋증권",
+    "analyst": "임희석",
+    "report_date": "2026.6.11",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "모니터랩",
+        "code": "434480",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "1Q26 매출액 36억원(+6% YoY), 영업손실 7억원(적자지속 YoY)을 기록했다. SaaS 형태의 클라우드 보안 서비스 매출액이 14억원(매출 비중 39%), AIWAF, AISVA, AISWG 등 보안 제품 매출액이 13억원(매출 비중 36%)을 기록했다.",
+        "estimate_revision": null,
+        "next_catalyst": "AI 도입 확대와 클라우드 전환 가속화로 기업의 IT 환경이 복잡해지면서 사이버 공격 위협이 확대되고 있다. 생성형 AI를 활용한 지능형 공격과 랜섬웨어 위협이 고도화되면서 보안 솔루션에 대한 투자 수요도 꾸준히 증가하는 추세다.",
+        "thesis": [
+          "웹방화벽을 기반으로 성장한 사이버보안 전문 기업으로 웹·API 보안, SWG, ZTNA 등 SaaS 기반 보안 서비스를 제공하며 공기업 고객을 확보함",
+          "클라우드 전환과 제로트러스트 확산에 따른 수혜가 기대되며, 일본 등 해외 시장 진출을 통해 성장 동력을 확보하고 있음",
+          "AI 기반 보안 기능 고도화와 SASE 사업 확대에 집중하며 공공·기업 시장의 제로트러스트 도입 확대에 대응 중"
+        ],
+        "valuation_basis": null,
+        "risk": "1Q26 실적 기준 OPM은 -19.5%로 전년 대비 수익성이 악화되었음. 마진 하락은 종업원 급여 부담 증가에 기인함.",
+        "supply_comment": null,
+        "quote": "모니터랩은 웹방화벽을 기반으로 성장한 사이버보안 전문 기업이다. 동사는 웹·API 보안, SWG, ZTNA 등 SaaS 기반 보안 서비스를 SaaS 형태로 제공하며 기업 및 공공 고객을 확보하고 있다.",
+        "sector": "IT"
+      }
+    ]
+  }
+}

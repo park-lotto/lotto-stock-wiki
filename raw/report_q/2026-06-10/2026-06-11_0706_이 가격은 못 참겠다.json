@@ -1,0 +1,99 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-11_0706_이 가격은 못 참겠다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "이기훈",
+    "report_date": "2026년 6월 10일",
+    "stocks": [
+      {
+        "name": "하이브",
+        "code": "352820",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "350,000원",
+        "tp_prev": null,
+        "tp_direction": "down",
+        "earnings_outlook": "2026년 예상 PE 기준 SM 11배, 2027년 예상 PE 기준 하이브 21배는 지난 10년 동안 한 번도 보지 못한 상당한 저평가",
+        "estimate_revision": "목표주가를 350,000원(-13%)으로 하향",
+        "next_catalyst": "8월 재개되는 빅뱅의 20주년 투어 일정",
+        "thesis": [
+          "역사적 저점 마저 30% 이상 하회하는 극단적인 저평가 상황",
+          "2028년 세븐틴/뉴진스/캣츠아이/코르티스의 대규모 투어",
+          "BTS 매출 비중이 높은 하반기 실적 레인지 확보 및 뉴진스 4인조 컴백 가능성"
+        ],
+        "valuation_basis": "2027년 실적 기반 목표 P/E 38배 적용",
+        "risk": "BTS의 분배 비율에 대한 우려",
+        "supply_comment": null,
+        "quote": "하이브는 2026년 세븐틴 전원 입대 및 2028년 완전체 재개로 2027년 실적을 조정하며 목표주가를 350,000원(-13%)으로 하향한다."
+      },
+      {
+        "name": "에스엠",
+        "code": "041510",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "124,000원",
+        "tp_prev": null,
+        "tp_direction": "down",
+        "earnings_outlook": "2026년 예상 PE 기준 SM 11배",
+        "estimate_revision": "목표주가를 124,000원(-11%)으로 하향",
+        "next_catalyst": "서구권 팬덤 확대 및 비핵심 자회사 매각 성과",
+        "thesis": [
+          "주가와 목표 주가와의 괴리가 높아 목표주가 하향",
+          "목표 P/E 기준 22배 적용",
+          "SM 11배는 지난 10년 동안 한 번도 보지 못한 상당한 저평가"
+        ],
+        "valuation_basis": "목표 P/E 기준 22배 적용 및 10% 할인",
+        "risk": "상대적으로 아쉬운 서구권 팬덤의 확대",
+        "supply_comment": null,
+        "quote": "SM은 124,000원(-11%)으로 하향하는데 상대적으로 아쉬운 서구권 팬덤의 확대가 나타나거나 비핵심 자회사 매각이 성과를 내야한다."
+      },
+      {
+        "name": "JYP Ent.",
+        "code": "035900",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "79,000원",
+        "tp_prev": null,
+        "tp_direction": "down",
+        "earnings_outlook": "목표 P/E 기준 22배 적용",
+        "estimate_revision": "목표주가를 79,000원(-12%)으로 하향",
+        "next_catalyst": "스트레이키즈의 군입대 일정 확정",
+        "thesis": [
+          "목표 P/E 기준 22배 적용",
+          "주가와 목표 주가와의 괴리가 높아 목표주가 하향",
+          "중장기적으로 실적이나 밸류에이션 관점에서 유리한 결정 필요"
+        ],
+        "valuation_basis": "목표 P/E 기준 22배 적용 및 10% 할인",
+        "risk": "스트레이키즈의 군입대 일정 미정",
+        "supply_comment": null,
+        "quote": "JYP도 79,000원(-12%)으로 하향하는데 스트레이키즈의 군입대 일정이 정해져야 된다."
+      },
+      {
+        "name": "와이지엔터테인먼트",
+        "code": "122870",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "63,000원",
+        "tp_prev": null,
+        "tp_direction": "down",
+        "earnings_outlook": "목표 P/E 기준 22배 적용",
+        "estimate_revision": "목표주가를 63,000원(-17%)으로 하향",
+        "next_catalyst": "9월 신인 남자 및 내년 데뷔 신인 걸그룹 흥행",
+        "thesis": [
+          "빅뱅이 없는 2027년 기준 10% 할증",
+          "저연차 IP들의 고성장 가능성",
+          "8월 재개되는 빅뱅의 20주년 투어"
+        ],
+        "valuation_basis": "목표 P/E 기준 22배 적용 및 10% 할증",
+        "risk": "재계약 IP가 많지 않음",
+        "supply_comment": null,
+        "quote": "YG의 목표주가는 63,000원(-17%)으로 하향하지만 재계약 IP가 많지 않아 9월 신인 남자 및 내년 데뷔 예정인 신인 걸그룹이 흥행한다면 향후 몇 년간 저연차 IP들의 고성장을 누릴 가능성이 높아 확인 전까지 할증을 적용한다."
+      }
+    ]
+  }
+}

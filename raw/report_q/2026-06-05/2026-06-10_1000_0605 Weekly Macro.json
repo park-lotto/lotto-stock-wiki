@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_0605 Weekly Macro.md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "김유미 / 김정현",
+    "report_date": "2026년 6월 5일",
+    "target_kind": "market",
+    "market_direction": "null",
+    "macro_vars": [
+      "미국 소비자물가(CPI) 및 생산자물가(PPI)",
+      "유럽중앙은행(ECB) 통화정책회의",
+      "국제유가",
+      "글로벌 시장금리"
+    ],
+    "recommended_sectors": [],
+    "style": "null",
+    "event_calendar": [
+      {
+        "date": "6/8",
+        "event": "유로존 6 월 센틱스 투자자기대지수"
+      },
+      {
+        "date": "6/9",
+        "event": "美 5 월 NFIB 소기업낙관지수, 美 4 월 무역수지, 中 5 월 무역수지"
+      },
+      {
+        "date": "6/10",
+        "event": "中 5 월 CPI (YoY), 中 5 월 PPI (YoY), 美 5 월 CPI (MoM), 美 5 월 CPI (YoY), 美 5 월 근원 CPI (MoM), 美 5 월 근원 CPI (YoY)"
+      },
+      {
+        "date": "6/11",
+        "event": "유로존 6 월 ECB 통화정책회의(재융자금리), 美 5 월 PPI (MoM), 美 5 월 PPI (YoY), 美 5 월 근원 PPI (MoM), 美 5 월 근원 PPI (YoY)"
+      },
+      {
+        "date": "6/12",
+        "event": "美 6 월 미시간대 소비자심리지수 (잠정치), 연준위원 발언"
+      }
+    ],
+    "top_picks": null,
+    "risk": "중동 지역의 불확실성 및 국제유가 변동에 따른 통화정책 불확실성",
+    "quote": "다음 주에는 미국의 물가 지표와 유럽중앙은행(ECB)의 통화정책회의에 주목할 필요가 있다."
+  }
+}

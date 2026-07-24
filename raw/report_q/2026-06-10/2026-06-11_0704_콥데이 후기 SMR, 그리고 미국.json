@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-11_0704_콥데이 후기 SMR, 그리고 미국.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유진투자증권",
+    "analyst": "류태환",
+    "report_date": "2026.06.10",
+    "stocks": [
+      {
+        "name": "DL이앤씨",
+        "code": "375500",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": 144000,
+        "tp_prev": 144000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2026E 매출액 7,128억, 영업이익 546억, 2027E 매출액 7,509억, 영업이익 623억",
+        "estimate_revision": null,
+        "next_catalyst": "연말까지 ASME N-Stamp 취득 및 SMR 시장 경쟁력 강화",
+        "thesis": [
+          "주택 부문 원가율 개선과 전사적 비용 효율화를 통한 수익성 중심의 성장 전략",
+          "미국 프로젝트 수행 경험을 바탕으로 SMR 시장 선점 및 신규 프로젝트 수주 기대",
+          "X-energy 프로젝트와 Amazon의 전력 확보 전략을 연결하는 파트너십 구축"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "두산에너빌리티는 X-energy와 Xe-100 16기 규모 기자재 제작 슬롯 예약 계약 체결 및 창원 본사 부지 내 생산시설 건설 중",
+        "quote": "DL이앤씨를 설명하는 핵심 키워드는 ‘SMR’, 그리고 ‘미국’이라고 판단."
+      }
+    ]
+  }
+}

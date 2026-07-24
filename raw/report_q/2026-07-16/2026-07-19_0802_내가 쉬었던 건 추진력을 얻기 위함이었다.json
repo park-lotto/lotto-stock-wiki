@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-19_0802_내가 쉬었던 건 추진력을 얻기 위함이었다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "미래에셋증권",
+    "analyst": "김태형",
+    "report_date": "2026.7.15",
+    "stocks": [
+      {
+        "name": "HD현대일렉트릭",
+        "code": "267260",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "1,300,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "동사의 2026F 연결 실적은 매출액 4조 6,860억원(YoY +14.9%), 영업이익 1조 2,731억원(YoY +27.9%, OPM 27.2%)을 전망한다.",
+        "estimate_revision": null,
+        "next_catalyst": "초고압 변압기와 중저압 차단기 증설을 통해 2030년까지 안정적인 증익이 예상된다.",
+        "thesis": [
+          "초고압 변압기의 절대강자 지위 및 미국 현지 생산에 따른 수익성 우위",
+          "초고압 변압기와 중저압 차단기 증설을 통한 2030년까지 안정적인 증익 전망",
+          "최근 급격한 주가 조정으로 인한 저평가 구간 진입 및 글로벌 경쟁사 대비 월등한 수익성"
+        ],
+        "valuation_basis": "목표주가는 2028F EPS에 타겟 멀티플 33.2배를 부여해 산출했다.",
+        "risk": null,
+        "supply_comment": "동사는 현재 총 5,000억원을 투자해 연간 4,000억원의 추가 매출을 목표로 울산과 알라바마 공장의 2차 증설을 진행 중이다.",
+        "quote": "HD현대일렉트릭에 대해 투자의견 ‘매수’와 목표주가 130만원으로 커버리지를 개시한다."
+      }
+    ],
+    "sector": "전력"
+  }
+}

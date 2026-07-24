@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-12_0700_임상 데이터 기반 플랫폼 사업화 기대.md"
+  },
+  "questionnaire": {
+    "broker": "미래에셋증권",
+    "analyst": "김승민",
+    "report_date": "2026.6.11",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "온코크로스",
+        "code": "382150",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2025년 기준 매출 0(억원), 영업이익 -9(억원), 순이익 -9(억원) 예상",
+        "estimate_revision": null,
+        "next_catalyst": "동사는 온코마스터의 암 환자 장기 추적 데이터에 멀티오믹스 분석 기술을 결합하여 멀티오믹스 기반 디지털 바이오뱅킹(Digital Biobanking) 사업과 정밀의료 플랫폼을 고도화할 예정이다.",
+        "thesis": [
+          "자체 AI 신약개발 플랫폼 RAPTOR AI를 활용하여 발굴한 항암 병용요법 파이프라인 OC-212e에 대해 미국 특허청(USPTO)으로부터 핵심 기술 특허 등록을 완료함.",
+          "RAPTOR AI를 기반으로 도출된 OC-212e 췌장암 병용요법 임상 연구가 ASCO 2026의 초록으로 채택됨.",
+          "지난 4월 정밀의료 플랫폼 기업 온코마스터를 흡수합병하였으며, 대규모 암 환자 유전체 및 장기추적 임상 데이터를 확보하여 디지털 바이오뱅킹 사업을 본격화함."
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "온코크로스는 자체 AI 신약개발 플랫폼 RAPTOR AI를 활용하여 발굴한 항암 병용요법 파이프라인 OC-212e에 대해 미국 특허청(USPTO)으로부터 핵심 기술 특허 등록을 완료하였다.",
+        "sector": "바이오"
+      }
+    ]
+  }
+}

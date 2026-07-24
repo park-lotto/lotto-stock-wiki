@@ -43,7 +43,7 @@ def test_render_reads_stored_cap_durs(tmp_path, monkeypatch):
 
     captured = {}
 
-    def fake_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None, cap_offset=0.0, tail=0.5):
+    def fake_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None, cap_offset=0.0, tail=0.5, cap_lines=None):
         captured["real_durs"] = real_durs
         return []
 
@@ -74,7 +74,7 @@ def test_render_without_asr_passes_none_real_durs(tmp_path, monkeypatch):
 
     captured = {}
 
-    def fake_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None, cap_offset=0.0, tail=0.5):
+    def fake_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None, cap_offset=0.0, tail=0.5, cap_lines=None):
         captured["real_durs"] = real_durs
         return []
 

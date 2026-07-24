@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-12",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-15_0700_Step-UP 준비.md"
+  },
+  "questionnaire": {
+    "broker": "미래에셋증권",
+    "analyst": "정세훈",
+    "report_date": "2026.6.12",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "RF시스템즈",
+        "code": "474610",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "26년 1분기 실적은 매출액 100억원(YoY+50.3%), 영업이익 11억원(YoY+285%), 영업이익률 11.2%를 기록했다.",
+        "estimate_revision": null,
+        "next_catalyst": "천궁-II UAE 물량 관련 매출 반영, 사우디아라비아 물량 본격 반영 예정",
+        "thesis": [
+          "확고한 기술력을 보유한 방산 핵심 부품 제조 기업",
+          "고객사 유도무기 수출 확대에 따른 안테나 조립체 공급 증가",
+          "부제조업체 전환을 통한 외형 성장 및 마진 개선 기대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "RF시스템즈 매출에서 LIG넥스원 매출 비중은 50~60%를 차지하는 만큼 고객사 무기체계 수출 확대는 핵심 부품을 공급하는 동사의 수혜로 이어질 전망이다.",
+        "quote": "RF시스템즈는 유도무기 안테나 조립체/레이다 안테나·하우징/환경제어시스템 등 방산 부품 전문 제조 기업이다."
+      }
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "SK하이닉스",
+      "signal": "bull",
+      "reason": "10나노급 6세대 D램 ‘1c LPDDR6’ 및 차세대 모바일 D램 ‘LPDDR6’ 개발을 통해 온디바이스 AI 시장 경쟁력 강화",
+      "ts": "2026-07-23",
+      "quote": "SK하이닉스, 10나노급 6세대 D램 ‘1c LPDDR6’ 개발...온디바이스 AI 앞장",
+      "sector": "반도체"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "SK하이닉스, 10나노급 6세대 D램 ‘1c LPDDR6’ 개발",
+      "ts": "2026-07-23",
+      "quote": "SK하이닉스, 10나노급 6세대 D램 ‘1c LPDDR6’ 개발...온디바이스 AI 앞장"
+    },
+    {
+      "fact": "SK하이닉스, 차세대 모바일 D램 ‘LPDDR6’ 개발",
+      "ts": "2026-07-23",
+      "quote": "SK하이닉스, 차세대 모바일 D램 ‘LPDDR6’ 개발…온디바이스 AI 겨냥"
+    }
+  ],
+  "quote": "SK하이닉스, 10나노급 6세대 D램 ‘1c LPDDR6’ 개발...온디바이스 AI 앞장"
+}

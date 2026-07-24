@@ -25,8 +25,9 @@ def test_mix_start_passes_subtitle_removal(tmp_path, monkeypatch):
     c = _client(tmp_path, monkeypatch)
     captured = {}
     orig_create = appmod.Store.create_mix_job
-    def spy(self, job_id, urls, target_seconds, structure, subtitle_removal=False):
+    def spy(self, job_id, urls, target_seconds, structure, subtitle_removal=False, **kw):
         captured["sr"] = subtitle_removal
+        captured["cid"] = kw.get("customer_id")   # 유료게이트: 렌더 크레딧 귀속 cid도 전달됨
     monkeypatch.setattr(appmod.Store, "create_mix_job", spy)
     monkeypatch.setattr(appmod, "run_mix_job", lambda *a, **k: None)
     r = c.post("/api/mix/start", json={"urls": ["https://www.instagram.com/reel/AAA111/",

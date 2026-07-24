@@ -1,0 +1,85 @@
+{
+  "reports": [
+    {
+      "broker": "그로스리서치",
+      "stock": "Marvell",
+      "rating": null,
+      "tp": null,
+      "ts": "20:46",
+      "quote": "Marvell(MRVL)은 커스텀 실리콘(컴퓨트)과 스위칭·전광변환·고속 커넥티비티(데이터 이동)까지 AI 인프라 양쪽 모두에 걸쳐 있는 몇 안 되는 기업으로, 향후 3년간 매출이 거의 3배 성장할 것으로 전망됨.",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로스리서치",
+      "stock": "CXMT",
+      "rating": null,
+      "tp": null,
+      "ts": "20:46",
+      "quote": "중국 창신메모리(CXMT)에 PC 브랜드들의 주문이 몰리며 출하 예약이 2027년 말까지 꽉 찬 것으로 전해짐.",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로스리서치",
+      "stock": "해당없음",
+      "rating": null,
+      "tp": null,
+      "ts": "22:10",
+      "quote": "중국의 2분기 GDP 성장률은 전년 동기 대비 4.3%로 2022년 4분기 이후 가장 낮은 수준",
+      "sector": "중국"
+    },
+    {
+      "broker": "그로스리서치",
+      "stock": "해당없음",
+      "rating": null,
+      "tp": null,
+      "ts": "22:58",
+      "quote": "AI 서버의 전력 소모가 증가하면서 랙당 전력반도체 탑재 가치도 빠르게 확대",
+      "sector": "반도체"
+    },
+    {
+      "broker": "모건스탠리",
+      "stock": "Lumentum",
+      "rating": null,
+      "tp": null,
+      "ts": "12:32",
+      "quote": "Scale-out CPO는 Lumentum에 가장 긍정적, Coherent는 트랜시버 감소와 상쇄 가능",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로스리서치",
+      "stock": "GSK",
+      "rating": null,
+      "tp": null,
+      "ts": "13:25",
+      "quote": "GSK는 2023년 Bellus Health를 20억달러에 인수, 핵심 자산은 P2X3 길항제 camlipixant, 임상 3상 부진으로 만성기침 개발을 전면 중단",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로스리서치",
+      "stock": "알테오젠",
+      "rating": null,
+      "tp": null,
+      "ts": "14:31",
+      "quote": "알테오젠의 확장 전략 — 키트루다 SC를 넘어 엔허투·듀피젠트 등으로 포트폴리오 확대",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로스리서치",
+      "stock": "와이엠티",
+      "rating": null,
+      "tp": null,
+      "ts": "16:41",
+      "quote": "유리기판이 왜 게임체인저인가... 기존 플라스틱·실리콘 기판을 유리로 대체한 차세대 소재.",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로스리서치",
+      "stock": "해당없음",
+      "rating": null,
+      "tp": null,
+      "ts": "23:20",
+      "quote": "호르무즈 해협 봉쇄에 이어 홍해까지 차질이 발생하면 공급 충격이 확대될 가능성",
+      "sector": "기타"
+    }
+  ]
+}

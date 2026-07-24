@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-12",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-15_0703_유럽 6세대 전투기 개발 교착 높아지는 KF-2...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "채운샘",
+    "report_date": "2026년 6월 12일",
+    "stocks": [
+      {
+        "name": "한국항공우주",
+        "code": "047810",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "230,000원",
+        "tp_prev": "230,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "120대 내수 양산 종료 이후 추가 성능개량 사업 또는 후속 Block III 논의",
+        "thesis": [
+          "유럽 차세대 전투기(FCAS) 공동개발 사업의 교착으로 인한 비(非)미국산 전투기 수요 증가",
+          "KF-21의 잠재 국가 대상 구매 매력도 상승",
+          "GCAP 등 타 공동개발 사업의 지체로 인한 4.5세대 전투기 플랫폼의 상업성 강화"
+        ],
+        "valuation_basis": null,
+        "risk": "공동개발 사업들의 교착으로 인한 글로벌 전투기 개발 지연 리스크",
+        "supply_comment": null,
+        "quote": "특히 KF-21은 120대 내수 양산 종료 이후 추가 성능개량 사업 또는 후속 Block III 논의로 이어질 가능성이 높다는 점에서 F-35가 아닌 비(非)미국 5세대, 6세대 전투기를 원하는 잠재 국가들에게 구매 매력도가 더욱 높아질 수 있다.",
+        "sector": "방산"
+      }
+    ]
+  }
+}

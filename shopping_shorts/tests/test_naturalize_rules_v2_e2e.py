@@ -71,10 +71,14 @@ def test_full_five_beat_output_locked():
     산출물을 조용히 바꾸면(트램플) 여기서 바이트 단위로 걸린다. 개별 assert보다
     강한 회귀 그물이다(실측: `python -c` 직접 호출로 캡처, 수기 추정 아님)."""
     out = {role: r["text"] for role, r in _run_all().items()}
+    # 2026-07-21 사장님 재판정 — 반전 "완전 다르더라고요"·실용 "딱 돌리면"은
+    # intensifier(부사가 뒤 단어 직접 수식)라 쉼표를 넣지 않는다(옛값엔 "이건, 완전"·
+    # "이렇게, 딱" 쉼표가 있었다). 훅 "…들려있는, 이거!"는 마지막 어절이 punchy
+    # 지시어라 그대로 유지, 실용 "끝!이에요"(conclusion)도 유지.
     assert out["훅"] == "[curious] 와, 요새 해외 인플루언서들 손에 하나씩 들려있는, 이거!"
     assert out["페인포인트"] == "매번 뚜껑 열다가 다 흘리고 닦기도 귀찮지 않나요?"
-    assert out["반전"] == "[whispers] 근데 이건, 완전 다르더라고요…"
-    assert out["실용"] == "뚜껑을 이렇게, 딱 돌리면 끝!이에요…"
+    assert out["반전"] == "[whispers] 근데 이건 완전 다르더라고요…"
+    assert out["실용"] == "뚜껑을 이렇게 딱 돌리면 끝!이에요…"
     assert out["CTA"] == "[excited] 지금 링크에서 확인해보세요…"
 
 
@@ -100,11 +104,13 @@ def test_applied_counts_have_no_phantom_entries():
     정확히 1씩 찍히는지 고정한다 — 스테이지가 겹칠 때 유령 카운트(같은 변화를
     두 번 세는 것)가 생기면 여기서 걸린다."""
     out = _run_all()
+    # 2026-07-21 재판정 — 반전·실용의 intonation은 intensifier 쉼표였다(완전/딱). 이제
+    # 그 쉼표를 안 넣으므로 두 비트에서 intonation 키 자체가 사라진다(_bump 계약대로).
     expect_applied = {
         "훅": {"endings": 1, "fillers": 1, "emotion_arc": 1, "intonation": 1},
         "페인포인트": {"endings": 1},
-        "반전": {"endings": 1, "whisper": 1, "intonation": 1},
-        "실용": {"endings": 1, "conclusion": 1, "intonation": 1},
+        "반전": {"endings": 1, "whisper": 1},
+        "실용": {"endings": 1, "conclusion": 1},
         "CTA": {"endings": 1, "emotion_arc": 1},
     }
     for role, r in out.items():

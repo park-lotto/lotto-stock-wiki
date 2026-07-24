@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-12_0708_[디지털자산] 6월 디지털자산 정책 인사이트.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "최윤영",
+    "report_date": "2026년 6월 9일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "클래리티 법안",
+      "스테이블코인 규제",
+      "토큰화 인프라",
+      "美 행정명령 14405호",
+      "디지털자산기본법"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": null,
+        "reason": "스테이블코인 발행사, 거래소, 디지털자산 수탁기관, 핀테크 결제사업자"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.06.23",
+        "event": "EU 의회 ECON 디지털유로 법안 표결"
+      },
+      {
+        "date": "2026.06.30",
+        "event": "MiCA 전환기 종료"
+      },
+      {
+        "date": "2026.06 예정",
+        "event": "SEC, 디지털자산 전용 규정 패키지 공개"
+      },
+      {
+        "date": "2026.하반기",
+        "event": "국내 디지털자산기본법 입법 재개"
+      }
+    ],
+    "top_picks": [
+      "Circle",
+      "Ripple",
+      "Paxos",
+      "BitGo",
+      "Fidelity Digital Assets",
+      "Coinbase",
+      "Kraken",
+      "Anchorage"
+    ],
+    "risk": "법안 본회의 통과 및 후속 규정 마련 과제, 대통령 거부권 행사 가능성, 제도 변화의 단기적 현실화 한계",
+    "quote": "6월은 주요국의 핵심 입법·규제 일정이 집중되며 하반기 디지털자산 정책 방향을 결정할 분수령이 될 전망입니다."
+  }
+}

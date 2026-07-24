@@ -3,15 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>인스타 소통공간 — 쇼핑쇼츠</title>
+<title>인스타 소통공간 — 숏템박스</title>
+<script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <style>
-  :root{--bg:#0a0e14;--panel:#111722;--line:#1e2735;--txt:#e6edf3;--sub:#8b98a9;--accent:#2f81f7;--ok:#2ea043;}
+  /* 스탁브레인 민트-블랙 투톤(다크 기본). produce.html과 동일 토큰. */
+:root{--bg:#0a0f0d;--panel:#101815;--line:#1e2b26;--txt:#eaf3f0;--sub:#8fa1a0;--accent:#37e0bd;--accent2:#1f9e7a;--fire:#ff6b6b;--ok:#37e0bd;--gold:#f0c453;--inset:#0c1412;--sel-bg:linear-gradient(90deg,#123a30,#0c221c);--sel-fg:#6ff0d6;--grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--hover:#131d19;color-scheme:dark;}
+:root[data-theme="light"]{--bg:#f4faf7;--panel:#ffffff;--line:#d5e6df;--txt:#0f1a16;--sub:#5c726d;--accent:#12b886;--accent2:#0ca678;--fire:#e0524a;--ok:#12b886;--gold:#b8860b;--inset:#eef7f3;--sel-bg:linear-gradient(90deg,#d8f2ea,#eafaf5);--sel-fg:#0a7d66;--grad:linear-gradient(135deg,#19c9ab,#0a8f79);--hover:#eef7f3;color-scheme:light;}
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic',system-ui,sans-serif;display:flex;min-height:100vh}
   .sidebar{width:230px;background:var(--panel);border-right:1px solid var(--line);padding:16px;flex-shrink:0}
   .sidebar h1{font-size:14px;color:var(--sub);margin-bottom:16px}
   .menu-item{padding:8px 12px;border-radius:8px;font-size:13px;margin-bottom:2px;cursor:pointer}
-  .menu-item.active{background:linear-gradient(90deg,#153a6b,#0d2340);color:#7db4ff}
+  .menu-item.active{background:var(--sel-bg);color:var(--sel-fg)}
   .main{flex:1;padding:28px 36px;overflow:auto}
   .head h2{font-size:24px;margin-bottom:6px}
   .desc{color:var(--sub);font-size:13px;margin-bottom:18px}
@@ -32,7 +35,7 @@
   .meta{font-size:12px;color:var(--sub)}
   .ch{font-weight:600;font-size:14px;margin:4px 0}
   .cap{font-size:12px;color:var(--sub);margin:6px 0;max-height:34px;overflow:hidden}
-  .draft{background:#0d131c;border:1px solid var(--line);border-radius:8px;padding:8px;margin:6px 0;font-size:13px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .draft{background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:8px;margin:6px 0;font-size:13px;display:flex;justify-content:space-between;gap:8px;align-items:center}
   .draft button{padding:4px 10px;font-size:11px;flex-shrink:0}
   .row{display:flex;gap:8px;margin-top:auto;padding-top:10px}
   .row button{flex:1}

@@ -1,0 +1,112 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "코스메카코리아",
+      "rating": null,
+      "tp": null,
+      "ts": "08:01",
+      "quote": "코스메카코리아(241710)",
+      "sector": "화장품미용"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "한국콜마",
+      "rating": null,
+      "tp": null,
+      "ts": "08:01",
+      "quote": "한국콜마(161890)",
+      "sector": "화장품미용"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성바이오로직스",
+      "rating": null,
+      "tp": null,
+      "ts": "08:56",
+      "quote": "폴리펩타이드 그룹을 약 2조7000억 원에 인수",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "로킷헬스케어",
+      "rating": null,
+      "tp": null,
+      "ts": "09:11",
+      "quote": "미국 병원은 로킷헬스케어 플랫폼을 활용한 임상·진료·치료 비용을 공식 기록 가능",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "지슨",
+      "rating": null,
+      "tp": null,
+      "ts": "09:11",
+      "quote": "지슨은 AI 기반 상시 무선백도어 탐지 시스템 'Alpha-H'를 대안으로 제시",
+      "sector": "양자보안"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "바이오솔루션",
+      "rating": null,
+      "tp": null,
+      "ts": "09:20",
+      "quote": "바이오솔루션의 주사형 골관절염 세포치료제 '스페로큐어'가 임상 개발 단계에 진입",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "폭스콘",
+      "rating": null,
+      "tp": null,
+      "ts": "09:30",
+      "quote": "폭스콘이 처음으로 SpaceX의 AI 서버 생산을 맡으며 신규 고객 확보에 성공",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LG전자",
+      "rating": null,
+      "tp": null,
+      "ts": "10:48",
+      "quote": "LG전자 600kW급 CDU가 엔비디아 AI 팩토리 DSX 인증 목록에 등재",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "스피어",
+      "rating": null,
+      "tp": null,
+      "ts": "13:06",
+      "quote": "스페이스X에 특수합금 공급망 관리 서비스를 제공하며 초기 개발부터 참여",
+      "sector": "방산"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "코오롱티슈진",
+      "rating": null,
+      "tp": null,
+      "ts": "17:02",
+      "quote": "코오롱티슈진, TG-C 무릎 골관절염 美 임상 3상 탑라인 — 1차 유효성 평가변수 미충족",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "네이버",
+      "rating": null,
+      "tp": null,
+      "ts": "17:32",
+      "quote": "이해진 네이버 이사회 의장과 최수연 대표 등 최고경영진이 이번 주 캐나다 토론토와 미국 실리콘밸리를 방문",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "한국항공우주",
+      "rating": null,
+      "tp": null,
+      "ts": "18:31",
+      "quote": "한화시스템은 KAI 주식 113만여 주를 추가 매수",
+      "sector": "방산"
+    }
+  ]
+}

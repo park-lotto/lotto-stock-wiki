@@ -1,56 +1,4 @@
 {
-  "2026-06-27": {
-    "atoms": {
-      "news": 68,
-      "telegram": 4
-    },
-    "queue_new": 0,
-    "pytest_ok": false
-  },
-  "2026-06-28": {
-    "atoms": {
-      "blog": 6,
-      "news": 36,
-      "telegram": 10
-    },
-    "queue_new": 0,
-    "pytest_ok": false
-  },
-  "2026-06-29": {
-    "atoms": {
-      "news": 67,
-      "report": 47,
-      "telegram": 92
-    },
-    "queue_new": 0,
-    "pytest_ok": false
-  },
-  "2026-06-30": {
-    "atoms": {
-      "news": 71,
-      "report": 51,
-      "telegram": 73
-    },
-    "queue_new": 0,
-    "pytest_ok": false
-  },
-  "2026-07-01": {
-    "atoms": {
-      "news": 46,
-      "telegram": 1
-    },
-    "queue_new": 0,
-    "pytest_ok": false
-  },
-  "2026-07-02": {
-    "atoms": {
-      "blog": 4,
-      "news": 35,
-      "report": 46
-    },
-    "queue_new": 0,
-    "pytest_ok": false
-  },
   "2026-07-06": {
     "atoms": {
       "blog": 16,
@@ -97,6 +45,47 @@
     "pytest_ok": false
   },
   "2026-07-17": {
+    "atoms": {},
+    "queue_new": 0,
+    "pytest_ok": false
+  },
+  "2026-07-18": {
+    "atoms": {},
+    "queue_new": 0,
+    "pytest_ok": false
+  },
+  "2026-07-19": {
+    "atoms": {},
+    "queue_new": 0,
+    "pytest_ok": false
+  },
+  "2026-07-20": {
+    "atoms": {
+      "blog": 20,
+      "news": 187,
+      "report": 77,
+      "telegram": 157,
+      "youtube": 12
+    },
+    "queue_new": 0,
+    "pytest_ok": false
+  },
+  "2026-07-21": {
+    "atoms": {
+      "blog": 10,
+      "news": 179,
+      "telegram": 92,
+      "youtube": 23
+    },
+    "queue_new": 0,
+    "pytest_ok": false
+  },
+  "2026-07-23": {
+    "atoms": {},
+    "queue_new": 0,
+    "pytest_ok": false
+  },
+  "2026-07-24": {
     "atoms": {},
     "queue_new": 0,
     "pytest_ok": false

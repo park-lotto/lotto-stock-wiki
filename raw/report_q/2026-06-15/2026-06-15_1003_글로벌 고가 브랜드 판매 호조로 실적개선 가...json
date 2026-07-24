@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-15",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-15_1003_글로벌 고가 브랜드 판매 호조로 실적개선 가...md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "이상헌, 장호",
+    "report_date": "2026.06.15",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "신세계인터내셔날",
+        "code": "031430",
+        "rating": "NR",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "올해 1분기 실적의 경우 K-IFRS 연결기준 매출액 2,956억원(+15.7% YoY, -14.1% QoQ), 영업이익 347억원(+452.6% YoY, 흑자전환 QoQ)으로 컨센서스를 상회하는 호실적을 기록하였다.",
+        "estimate_revision": null,
+        "next_catalyst": "고가 수입패션 매출증가 본격화에 따른 영업 레버리지 효과",
+        "thesis": [
+          "해외유명브랜드 등 고가 소비 확대에 따른 실적 개선",
+          "수입패션 및 코스메틱 부문의 외형 성장",
+          "자체 브랜드의 경쟁력 회복 및 JAJU 사업부문 매각 효과"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "소비내수",
+        "quote": "백화점의 해외유명브랜드 매출 성장세 등을 고려할 때 올해 동사 고가 수입패션 매출증가가 본격화 되면서 영업 레버리지 효과 등으로 수익성이 대폭적으로 개선될 것이다."
+      }
+    ]
+  }
+}

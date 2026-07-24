@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-20",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-21_0801_2Q26 Preview its so good.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유진투자증권",
+    "analyst": "이해니",
+    "report_date": "2026.07.20",
+    "stocks": [
+      {
+        "name": "아모레퍼시픽",
+        "code": "090430",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "150,000원",
+        "tp_prev": "150,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26E 매출액 1.1조원(+8.7%yoy), 영업이익 975억원(+32.4%yoy), OPM 8.9% 전망.",
+        "estimate_revision": "영업이익 전망치 상향",
+        "next_catalyst": "부진했던 국가와 브랜드들의 턴어라운드와 인큐베이팅 브랜드들의 실적 가시화",
+        "thesis": [
+          "국내 매출 성장률은 하이싱글디짓에 가깝게 성장할 것이며, MBS 채널이 호조세",
+          "북미 시장에서 에스트라의 세자릿수 고성장 및 일리윤/라네즈의 아마존 판매 트래픽 급증",
+          "코스알엑스의 유럽 매출 성장 및 신규 라인(펩타이드) 판매 호조"
+        ],
+        "valuation_basis": "12MF FWD 지배순이익 376십억원에 Target PER 24배 적용",
+        "risk": "중화권 전년대비 20% 내외 역성장 및 설화수 백화점 폐점 영향",
+        "supply_comment": null,
+        "quote": "부진했던 국가와 브랜드들의 턴어라운드와 인큐베이팅 브랜드들의 실적 가시화 기대"
+      }
+    ]
+  }
+}

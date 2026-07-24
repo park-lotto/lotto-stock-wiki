@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-12_0700_Bloom으로 열린 성장, 밸류에이션은 아직 낮...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "손현정, 김고은",
+    "report_date": "2026.06.11",
+    "stocks": [
+      {
+        "name": "산일전기",
+        "code": "062040",
+        "rating": "BUY (M)",
+        "rating_changed": null,
+        "tp_new": "360,000원",
+        "tp_prev": "360,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26E 실적은 매출액 1,643억원(YoY +28.1%), 영업이익 620억원(YoY +34.3%, OPM 37.8%)으로 전망한다. 2026년 매출액은 6,976억원(YoY +39.0%), 영업이익은 2,617억원(YoY +46.5%, OPM 37.5%)으로 추정한다.",
+        "estimate_revision": null,
+        "next_catalyst": "2·3단계 후속 발주 가능성",
+        "thesis": [
+          "Bloom Energy 공식 벤더 진입 및 특수변압기 반복 수주",
+          "신재생·데이터센터·전력망 3개 축 동시 확대",
+          "생산 효율화 및 매출 볼륨 확대에 따른 이익 레버리지"
+        ],
+        "valuation_basis": "현재 주가는 2027F PER 23배, 2028F PER 18배 수준으로 Peer 대비 밸류에이션 부담은 낮음",
+        "risk": null,
+        "supply_comment": "기존 안산 1·2공장은 현재 설비 기준 약 8,000억원 수준의 생산능력을 보유하고 있으며, 운영 효율화 시 최대 1조원까지 대응 가능함. 여기에 154kV 전용 공장이 올해 말 착공, 2028년 본격 양산될 예정",
+        "quote": "Bloom Energy 공식 벤더 진입, 특수변압기 반복 수주, 154kV 제품군 확장을 감안하면 현재 밸류에이션은 성장성과 수익성을 충분히 반영하지 못하고 있다고 판단한다.",
+        "sector": "전력"
+      }
+    ]
+  }
+}

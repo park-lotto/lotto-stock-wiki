@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "date": "2026-07-22",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-22_1106_2026년 7월 넷째 주 전기전자 Weekly.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": [
+      "박희철",
+      "최보영"
+    ],
+    "report_date": "2026/ 7/ 22",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "금 선물",
+      "은 선물",
+      "구리 선물",
+      "원/달러 환율"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "Neutral",
+        "reason": "Tech 섹터의 높은 변동성 지속되며 밸류에이션 부담이 중요하게 작용"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "7/15",
+        "event": "오픈AI, 첫 HW는 스마트 스피커 공개"
+      },
+      {
+        "date": "7/16",
+        "event": "삼성 ‘티타늄 필름’ vs. 애플 ‘G-배리어’ 폴더블 화면 주름 감소 경쟁"
+      },
+      {
+        "date": "7/18",
+        "event": "올해 노트북 OLED 출하량 66% 상승 전망"
+      },
+      {
+        "date": "7/20",
+        "event": "대덕전자, 4970억원 신규 투자 발표"
+      }
+    ],
+    "top_picks": null,
+    "risk": "높은 밸류에이션에 대한 피로도와 전반적인 아시아 테크 불확실성",
+    "quote": "불확실한 구간일수록 밸류에이션과 실적이 기준이 되어줄 수 있다고 판단"
+  }
+}

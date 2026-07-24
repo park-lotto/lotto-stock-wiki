@@ -100,10 +100,11 @@ console.log(JSON.stringify({big: trace(1080,1920), small: trace(270,480)}));
     assert out["small"][1] == pytest.approx(out["big"][1] / 4)
 
 
-def test_draw_scales_font_size_with_canvas():
-    """size는 1080 기준 px — 270px 캔버스에선 1/4로 줄어야 한다."""
-    script = _slice_source() + """
-function fontAt(W){
+def test_draw_font_size_scales_with_canvas_ratio():
+    """grow-to-fill: 크기는 절대 px이 아니라 캔버스 폭에 비례한다 — 270px 캔버스는 1080px의 1/4.
+    (프리뷰 270 == 결과 1080이 같은 비율이라는 핵심 계약. 절대값이 아니라 4배 관계를 잠근다.)"""
+    script = _slice_source() + r"""
+function fontPxAt(W){
   let seen = null;
   const ctx = new Proxy({}, {
     get(t, k){
@@ -116,13 +117,13 @@ function fontAt(W){
   });
   drawThumb(ctx, {width:W, height:W*16/9}, [{text:'A', font:'BMJUA.ttf', size:100,
     color:'#fff', outline:null, box:null, rot:0, x:0.5, y:0.25}], W, W*16/9);
-  return seen;
+  return parseFloat(/(\d+(?:\.\d+)?)px/.exec(seen)[1]);
 }
-console.log(JSON.stringify({big: fontAt(1080), small: fontAt(270)}));
+console.log(JSON.stringify({big: fontPxAt(1080), small: fontPxAt(270)}));
 """
     out = json.loads(_run_node(script))
-    assert "100px" in out["big"]
-    assert "25px" in out["small"]
+    assert out["big"] > 0 and out["small"] > 0
+    assert out["small"] == pytest.approx(out["big"] / 4, rel=1e-3)
 
 
 def test_draw_applies_rotation():
@@ -166,11 +167,11 @@ console.log(n);
     assert int(_run_node(script).strip()) == 3
 
 
-def test_draw_scales_box_padding_with_canvas():
-    """박스 padding도 좌표·폰트와 같은 배율(s)을 타야 한다 —
-    안 타면 270px 프리뷰의 박스 여백이 1080px 결과와 다른 비율로 보인다."""
+def test_draw_scales_box_with_canvas_ratio():
+    """박스(fillRect)도 좌표·폰트와 같은 캔버스 배율을 타야 한다 — 270px 프리뷰의 박스가
+    1080px 결과와 같은 비율이어야 한다. 크기·여백 모두 폭에 비례하므로 박스 높이는 정확히 1/4."""
     script = _slice_source() + """
-function padAt(W){
+function boxHeightAt(W){
   const calls = [];
   const ctx = new Proxy({}, {
     get(t, k){
@@ -181,16 +182,15 @@ function padAt(W){
       return undefined;
     }, set(){ return true; }
   });
-  // size:0 → fillRect의 4번째 인자(height)는 pad*1.2만 남는다 (pad를 순수 격리)
-  drawThumb(ctx, {width:W, height:W*16/9}, [{text:'A', font:'BMJUA.ttf', size:0,
+  drawThumb(ctx, {width:W, height:W*16/9}, [{text:'A', font:'BMJUA.ttf', size:90,
     color:'#fff', outline:null, box:{color:'#000', pad:16, opacity:80}, rot:0, x:0.5, y:0.25}], W, W*16/9);
-  const height = calls[0][3];
-  return height / 1.2;
+  return calls[0][3];   // fillRect height (size + pad*1.2), 둘 다 폭에 비례
 }
-console.log(JSON.stringify({big: padAt(1080), small: padAt(270)}));
+console.log(JSON.stringify({big: boxHeightAt(1080), small: boxHeightAt(270)}));
 """
     out = json.loads(_run_node(script))
-    assert out["small"] == pytest.approx(out["big"] / 4)
+    assert out["big"] > 0 and out["small"] > 0
+    assert out["small"] == pytest.approx(out["big"] / 4, rel=1e-3)
 
 
 def test_draw_scales_outline_width_with_canvas():
@@ -216,6 +216,49 @@ console.log(JSON.stringify({big: lineWidthAt(1080), small: lineWidthAt(270)}));
 """
     out = json.loads(_run_node(script))
     assert out["small"] == pytest.approx(out["big"] / 4)
+
+
+def test_draw_uses_color2_for_second_line():
+    """2색 룩: color2가 있으면 1줄=color, 2줄부터=color2로 그린다(레퍼런스 흰→노랑)."""
+    script = _slice_source() + r"""
+const log = [];
+const ctx = {
+  fillStyle: '', font: '',
+  measureText(){ return {width: 100}; },
+  save(){}, restore(){}, translate(){}, rotate(){}, drawImage(){},
+  clearRect(){}, fillRect(){}, beginPath(){}, strokeText(){},
+  fillText(t){ log.push(this.fillStyle); },
+};
+drawThumb(ctx, {width:1080, height:1920}, [{text:'A\nB', font:'X.ttf', size:80,
+  color:'#ffffff', color2:'#ffe100', outline:null, box:null, rot:0, x:0.5, y:0.14}], 1080, 1920);
+console.log(JSON.stringify(log));
+"""
+    out = json.loads(_run_node(script))
+    assert out == ["#ffffff", "#ffe100"], "1줄은 color, 2줄은 color2여야 한다"
+
+
+def test_apply_title_sets_selected_layer_text():
+    """AI 추천 제목을 누르면(applyThumbTitle) 선택된 레이어의 text가 그 문구로 바뀐다 —
+    줄바꿈(\\n)까지 그대로. renderThumbLayers/Canvas가 화면 갱신을 하도록 외부 의존은 스텁."""
+    script = _slice_source() + r"""
+globalThis.HC_PRESETS = []; globalThis.HC_FONTS = []; globalThis.esc = s => s;
+globalThis.window = {};
+globalThis.document = { getElementById: (id) =>
+  id === 'thumbCanvas' ? null : { set innerHTML(v){}, get innerHTML(){ return ''; } } };
+THUMB_STATE.layers = [{text:'옛문구', font:'X.ttf', size:78, color:'#fff',
+                       outline:null, box:null, rot:0, x:0.5, y:0.16}];
+THUMB_STATE.sel = 0;
+const WANT = '밥솥 빵\n미쳤다';
+THUMB_STATE.title_cands = [{text: WANT, why:'반전'}];
+applyThumbTitle(0);
+const got = THUMB_STATE.layers[0].text;
+// stdout은 ASCII만(Windows cp949 디코딩 회피) — 비교는 node 안에서 끝낸다
+console.log(JSON.stringify({match: got === WANT, hasNewline: got.includes('\n'), len: got.length}));
+"""
+    out = json.loads(_run_node(script))
+    assert out["match"], "추천 제목이 레이어 text로 안 들어갔다"
+    assert out["hasNewline"], "줄바꿈(\\n)이 보존되지 않았다"
+    assert out["len"] == 8   # 밥·솥·공백·빵·\n·미·쳤·다 = 8자
 
 
 def test_draw_restores_rotation_between_layers():

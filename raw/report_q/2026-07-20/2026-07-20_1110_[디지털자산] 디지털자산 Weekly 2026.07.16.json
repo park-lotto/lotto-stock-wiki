@@ -1,0 +1,68 @@
+{
+  "meta": {
+    "date": "2026-07-20",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-20_1110_[디지털자산] 디지털자산 Weekly 2026.07.16.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "최윤영",
+    "report_date": "2026.07.16",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "영국 토큰화 금융시장 로드맵",
+      "디지털자산 2단계 입법",
+      "ECB 디지털유로 파일럿",
+      "일본 금융상품거래법(FIEA) 개정안"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.07.13",
+        "event": "SBI홀딩스와 솔라나재단 합작법인 SBI Solana Global 설립 발표"
+      },
+      {
+        "date": "2026.07.14",
+        "event": "Galaxy Digital, 기관용 대출 프로그램 GOFR 출시"
+      },
+      {
+        "date": "2026.07.14",
+        "event": "정부, 2026년 하반기 경제성장전략 내 디지털자산 2단계 입법 보완 공개"
+      },
+      {
+        "date": "2026.07.14",
+        "event": "ECB, 디지털유로 파일럿 참여기관 36개 선정"
+      },
+      {
+        "date": "2026.07.15",
+        "event": "DTCC, 첫 토큰화 증권 실거래 처리"
+      },
+      {
+        "date": "2026.07.15",
+        "event": "일본 의회, 금융상품거래법(FIEA) 개정안 통과"
+      },
+      {
+        "date": "2026.07.16",
+        "event": "Cantor Fitzgerald와 Securitize, 블록체인 기반 IPO 협력 발표"
+      }
+    ],
+    "top_picks": [
+      "SBI홀딩스",
+      "솔라나재단",
+      "Galaxy Digital",
+      "DTCC",
+      "JPMorgan",
+      "BlackRock",
+      "Goldman Sachs",
+      "Vanguard",
+      "Deutsche Bank",
+      "Revolut",
+      "Cantor Fitzgerald",
+      "Securitize"
+    ],
+    "risk": null,
+    "quote": "DTCC가 별도 신규 자산 발행이 아닌 기존 증권을 온체인으로 전환하는 ‘디지털 트윈’ 방식을 채택하면서, 토큰화가 기존 금융시장 인프라 내에서 확산될 수 있는 경로를 제시"
+  }
+}

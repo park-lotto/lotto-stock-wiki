@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-18_0800_수주 불확실성은 점차 해소될 것.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "키움증권",
+    "analyst": "이한결",
+    "report_date": "2026.7.16",
+    "stocks": [
+      {
+        "name": "현대로템",
+        "code": "064350",
+        "rating": "BUY(Maintain)",
+        "rating_changed": false,
+        "tp_new": "340,000원",
+        "tp_prev": "340,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 매출액 1조 7,384억원(yoy +22.6%), 영업이익 2,407억원(yoy -6.5%, OPM 13.8%)를 달성하며 시장 기대치를 하회할 것으로 전망한다.",
+        "estimate_revision": null,
+        "next_catalyst": "이라크, 페루 전차 사업 본계약 체결 및 폴란드 EC3 사업 논의, 루마니아 차세대 전차 사업 입찰 제안, K2ME 전차 시험 평가 완료",
+        "thesis": [
+          "폴란드 EC2 생산 원활 및 디펜스솔루션 부문 매출 성장 지속",
+          "수주 파이프라인(2H26~27년) 규모가 현재 수주잔고의 3배 이상으로 성장 방향성 명확",
+          "하반기 갈수록 폴란드 EC2 사업의 진행률이 올라오며 수익성 개선 기대"
+        ],
+        "valuation_basis": null,
+        "risk": "중동 전쟁의 영향에 따른 이라크 K2 전차 사업 의사결정 지연 및 폴란드 EC2 생산 초기 국면의 예비비 반영 등 수익성 개선 제한",
+        "supply_comment": "페루와 지난해말 K2 전차 54대, K808 차륜형장갑차 141대를 공급하는 기본계약을 체결한 후 본계약 체결을 위한 협상이 진행 중이다.",
+        "quote": "2H26~27년 수주 파이프라인 규모가 수주잔고의 3배 이상임을 감안할 때 중장기 관점에서 비중확대를 추천한다.",
+        "sector": "방산"
+      }
+    ]
+  }
+}

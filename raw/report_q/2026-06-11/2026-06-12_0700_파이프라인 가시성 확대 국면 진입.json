@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-12_0700_파이프라인 가시성 확대 국면 진입.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "미래에셋증권",
+    "analyst": "김승민",
+    "report_date": "2026.6.11",
+    "stocks": [
+      {
+        "name": "지투지바이오",
+        "code": "456160",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "GB-7001 임상 1상 진입, GB-6002 CSR 수령(26년 연내), GB-5001A CSR 수령(26년 3분기)",
+        "thesis": [
+          "세마글루타이드 기반 장기지속형 제형(GB-7001)의 임상 1상 진입 및 경쟁 우위 확보",
+          "삼성바이오에피스와의 전략적 파트너십을 통한 공동연구 및 기술이전 협력 강화",
+          "치매 치료제 GB-5001A 및 통증 치료제 GB-6002 등 파이프라인의 글로벌 임상 및 사업화 순항"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "삼성바이오에피스와 공동연구 및 라이선스 계약을 체결하여 독점 생산·공급 권한을 유지하며, 추가 기술이전 가능성 보유",
+        "quote": "지투지바이오는 지난 3월 삼성바이오에피스 자회사인 삼성바이오에피스, 에피스넥스랩과 3자 파트너십을 체결했다."
+      }
+    ],
+    "sector": "바이오"
+  }
+}

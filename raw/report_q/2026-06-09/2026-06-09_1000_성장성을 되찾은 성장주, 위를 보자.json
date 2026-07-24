@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_성장성을 되찾은 성장주, 위를 보자.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "이준호",
+    "report_date": "2026년 6월 9일",
+    "stocks": [
+      {
+        "name": "NAVER",
+        "code": "035420",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "400,000원",
+        "tp_prev": null,
+        "tp_direction": "up",
+        "earnings_outlook": "하나증권은 1단계 AI 팩토리 사업의 매출액을 2027년/2028년 7,154억원/1조 8,234억원으로, 영업이익을 1,073억원/2,735억원으로 추정한다.",
+        "estimate_revision": "상향",
+        "next_catalyst": "AI 팩토리 고객사 공개, 수주 확인, 네이버파이낸셜-두나무 합병",
+        "thesis": [
+          "엔비디아와 글로벌 AI 팩토리 공동 구축 사업 추진으로 성장성 확보",
+          "네오클라우드 사업 진출로 국내 및 글로벌 매출 확대 기대",
+          "AI 팩토리 및 디지털자산 신사업을 통한 리레이팅 가능성"
+        ],
+        "valuation_basis": "AI 팩토리 초기 실적이 반영되는 2027년 예상 EPS에 Target Multiple 24배를 적용",
+        "risk": "SPV의 자금 조달 구조, GPU 비용 상승, 초기 가동률 및 수주 잔고 확보 속도",
+        "supply_comment": "1단계 AI 팩토리 사업을 위해 NAVER와 전략적 파트너가 각각 10억달러(1.5조원)을 출자하여 SPV 설립 예정",
+        "quote": "목표주가를 400,000으로 상향, 인터넷 산업 내 Top Pick을 유지하고 강력 매수를 추천한다."
+      }
+    ]
+  }
+}

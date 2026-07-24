@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-12",
+    "broker": "미래에셋증권 리서치센터",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-15_0702_최애의 아이.md"
+  },
+  "questionnaire": {
+    "broker": "미래에셋증권 리서치센터",
+    "analyst": "김나미",
+    "report_date": "2026.6.11",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "코나아이",
+        "code": "052400",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "FY25 연결 매출 3,092억원(+31% YoY)·영업이익 889억원(+166% YoY)·OPM 29%로 창사 이래 최대 실적을 기록했다. 1Q26 연결 매출액은 770억원(+32% YoY), 영업이익 248억원(+95% YoY)을 기록했다.",
+        "estimate_revision": null,
+        "next_catalyst": "글로벌 메탈카드 거래 확대(Chase 온보딩), 지역화폐 기반 스테이블코인·STO 법제화 및 매출 전환",
+        "thesis": [
+          "메탈카드 글로벌 시장 양강 체제 구축 및 고마진 비니어 점유율 확대",
+          "지역화폐 플랫폼의 구조적 우위와 스테이블코인·STO 신사업 옵션 부각",
+          "영업 레버리지 효과를 통한 영업이익률의 고속 개선"
+        ],
+        "valuation_basis": "FY25 PER 8.8배로 국내 디지털자산·핀테크 피어 평균(14.8배) 대비 디스카운트 구간에 위치하며, 신사업 가치가 확인되는 국면에서 리레이팅 가능",
+        "risk": "메탈카드 사업의 소수 글로벌 고객사 집중 리스크, 지역화폐의 중앙정부 예산 변동성, 신사업 입법·제도화 지연 가능성",
+        "supply_comment": "수직 계열화 구조(동사 영업·개발→코나엠 생산·출하)로 마진 보호와 생산 유연성을 동시에 확보하고 있다.",
+        "quote": "메탈카드·지역화폐 동반 성장 확인, 스테이블코인 생태계 인프라로 확장"
+      }
+    ]
+  }
+}

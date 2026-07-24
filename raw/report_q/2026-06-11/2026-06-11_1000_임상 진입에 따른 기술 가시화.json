@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-11_1000_임상 진입에 따른 기술 가시화.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "미래에셋증권",
+    "analyst": "김승민",
+    "report_date": "2026.6.11",
+    "stocks": [
+      {
+        "name": "인투셀",
+        "code": "287840",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "결산기(12월) 매출액(십억원) 2021: 0, 2022: 0, 2023: 2, 2024: 3, 2025: 2; 영업이익(십억원) 2021: -5, 2022: -9, 2023: -17, 2024: -10, 2025: -10",
+        "estimate_revision": null,
+        "next_catalyst": "26년 하반기에는 ESMO에서 ITC-6146RO의 P1 중간 결과 데이터가 공개될 예정이며, 인체 데이터를 기반으로 추가 라이선스 아웃도 기대 중이다.",
+        "thesis": [
+          "자체 개발한 OHPAS 링커 플랫폼과 PMT 기술을 결합하여 선택성을 높인 ADC 플랫폼 기술 보유",
+          "핵심 파이프라인 ITC-6146RO의 임상 진입 및 '25년 FDA/식약처 IND 승인 획득",
+          "삼성바이오에피스와의 협력을 통한 파이프라인 개발 및 기술 신뢰도 확보"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "인투셀의 핵심 경쟁 자산은 자체 개발한 OHPAS 링커 플랫폼과 PMT(Payload Modification Technology) 기술이다.",
+        "sector": "바이오"
+      }
+    ]
+  }
+}

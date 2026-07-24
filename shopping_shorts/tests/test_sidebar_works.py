@@ -100,11 +100,13 @@ def test_current_work_is_marked():
     assert out == "missing", "아무 작업도 안 열었는데 현재 표시가 붙었다"
 
 
-def test_no_fetch_on_other_pages():
-    """다른 페이지에서 제작소 작업 목록을 부를 이유가 없다 — 6개 페이지가 이 파일을 공유한다."""
+def test_works_fetched_on_all_pages():
+    """T6(2026-07-19): 작업 목록을 /produce 전용 → 전 페이지 노출로 바꿨다(설계서 §3-3).
+    어느 화면에서도 진행 중 작업으로 바로 복귀 — 그래서 /library 같은 다른 페이지에서도 fetch한다.
+    (옛 test_no_fetch_on_other_pages를 뒤집은 것: 그땐 /produce에서만 불렀다.)"""
     out = _run("console.log(FETCHED.filter(u=>u.indexOf('/api/produce/works')!==-1).length ? 'fetched' : 'no');",
                harness_override="location.pathname='/library';")
-    assert out == "no"
+    assert out == "fetched"
 
 
 def test_empty_list_does_not_break_nav():
@@ -128,6 +130,39 @@ def test_quoted_script_title_does_not_break_markup():
                  {work_id:'w1', title:'"이거 실화냐?" 협탁이', step:0, job_id:null, updated_at:'2026-07-17T01:00:00+00:00'}]};''')
     assert 'title=""' not in out, "title 속성이 따옴표에서 끊겼다"
     assert "&quot;" in out or "&#34;" in out, "큰따옴표가 이스케이프되지 않았다"
+
+
+def test_work_has_delete_button():
+    """각 작업에 삭제(✕) 버튼이 있어야 지울 수 있다(2026-07-19 사장님 요청)."""
+    out = _run("console.log(JSON.stringify({"
+               "del: _nav.innerHTML.indexOf('ss-work-del') !== -1,"
+               "fn: _nav.innerHTML.indexOf('__ssDelWork') !== -1,"
+               "wid: _nav.innerHTML.indexOf('data-wid=\"w1\"') !== -1}));")
+    assert '"del":true' in out and '"fn":true' in out and '"wid":true' in out, out
+
+
+def test_delete_calls_backend_and_removes_row():
+    """✕ 클릭 → 삭제 API 호출. confirm=true 가정."""
+    out = _run("""
+      window.confirm = function(){ return true; };
+      window.alert = function(){};
+      const before = FETCHED.length;
+      window.__ssDelWork({stopPropagation:function(){}}, 'w1');
+      await new Promise(r=>setTimeout(r,20));
+      console.log(FETCHED.filter(u=>u.indexOf('/api/produce/works/w1/delete')!==-1).length ? 'called' : 'no');
+    """)
+    assert out == "called", f"삭제 API가 안 불렸다: {out}"
+
+
+def test_delete_aborts_when_not_confirmed():
+    """confirm=false면 아무것도 안 한다 — 실수 삭제 방지."""
+    out = _run("""
+      window.confirm = function(){ return false; };
+      window.__ssDelWork({stopPropagation:function(){}}, 'w1');
+      await new Promise(r=>setTimeout(r,20));
+      console.log(FETCHED.filter(u=>u.indexOf('/delete')!==-1).length ? 'called' : 'aborted');
+    """)
+    assert out == "aborted", f"확인 취소했는데 삭제됐다: {out}"
 
 
 def test_angle_brackets_in_title_do_not_become_tags():

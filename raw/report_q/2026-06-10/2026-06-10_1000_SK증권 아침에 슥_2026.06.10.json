@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_SK증권 아침에 슥_2026.06.10.md"
+  },
+  "questionnaire": {
+    "broker": "SK증권",
+    "analyst": null,
+    "report_date": "2026-06-10",
+    "target_kind": "market",
+    "market_direction": "혼조",
+    "macro_vars": [
+      "5월 소비자 물가지수",
+      "원유재고",
+      "ECB 금리 결정"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-06-10",
+        "event": "미 - 5월 소비자 물가지수, 원유재고"
+      }
+    ],
+    "top_picks": null,
+    "risk": "반도체주 약세 및 변동성 확대",
+    "quote": "전일 급반등했던 반도체주가 다시 약세로 돌아서며 기술주 전반에 부담. 미국 기술주 부진과 ECB 금리 결정 경계 속 주요국 증시가 대체로 약세"
+  }
+}

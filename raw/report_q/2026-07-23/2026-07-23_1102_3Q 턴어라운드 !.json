@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-23",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-23_1102_3Q 턴어라운드 !.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "박강호",
+    "report_date": "2026.07.23",
+    "stocks": [
+      {
+        "name": "LG디스플레이",
+        "code": "034220",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "17,000",
+        "tp_prev": "17,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2Q 매출은 5.61조원으로 0.4%(yoy/1.4% qoq) 증가. 3Q26 영업이익(4,359억원)은 턴어라운드(흑자전환 qoq) 예상. 2H26년 영업이익은 8,488억원(+41.6% yoy) 추정.",
+        "estimate_revision": "2026년 2Q 영업이익은 -1,077억원(적지 yoy/적전 qoq), 추정대비 개선",
+        "next_catalyst": "전략 거래선의 신모델 기기에서 점유율(공급 물량) 증가, 고부가 중심(OLED 패널 비중 증가)의 매출 확대",
+        "thesis": [
+          "OLED 포트폴리오 경쟁력 확대 및 수익성 개선 진행",
+          "전략 고객사가 추진한 스마트폰 모델 전략 변화의 수혜",
+          "대형 OLED 패널에서 감가상각비 축소로 수익성 추가 개선"
+        ],
+        "valuation_basis": "2026년 BPS X 목표 P/B 1.4배(실적 호조 평균)",
+        "risk": "반도체 이슈, 지정학 이슈, 원자재 가격 상승 이슈를 포함한 거시경제적 불확실성 및 하반기 수요 불확실성",
+        "supply_comment": "중대형 OLED(TV, 게이밍 모니터) 출하량 증가로 매출 비중은 21%(+5%p qoq), 전사의 OLED 매출 비중은 57%(1%p yoy) 기록",
+        "quote": "3Q26 영업이익(4,359억원)은 턴어라운드(흑자전환 qoq) 예상, OLED 패널(중대형, 모바일)의 경쟁력 확대에 주목할 시기로 판단."
+      }
+    ]
+  }
+}

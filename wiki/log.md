@@ -1,3 +1,10 @@
+- 2026-07-24 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-07-24.md
+- 2026-07-23 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-07-23.md
+- 2026-07-22 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-07-22.md
+- 2026-07-21 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-07-21.md
+- 2026-07-20 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-07-20.md
+- 2026-07-19 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-07-19.md
+- 2026-07-18 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-07-18.md
 - 2026-07-17 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-07-17.md
 > ⚠️ **이 파일은 2026-07-15부로 동결된 아카이브입니다.** 새 기록은 `wiki/log.d/<트랙>.md`에 쓰세요.
 > 여러 세션이 이 파일 맨 위에 동시에 append하면 충돌·유실이 납니다. 합쳐 보기: `py tools/log_view.py --days 7`

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-11_1001_해외 적자 점진적 축소 기대.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "심은주, 고찬결",
+    "report_date": "2026년 6월 11일",
+    "stocks": [
+      {
+        "name": "풀무원",
+        "code": "017810",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "1분기 연결 매출액 및 영업이익은 각각 8,504억원(YoY 7.2%), 190억원(YoY 68.9%)을 시현했다. 2026년 연결 매출액 및 영업이익은 각각 3조 5,449억원(YoY 4.9%), 1,074억원(YoY 15.3%)으로 추정한다.",
+        "estimate_revision": "해외법인 적자는 전년 -160억원→올해 -60억원 내외로 개선을 전망한다.",
+        "next_catalyst": "하반기 갈수록 해외 실적 개선 기대감",
+        "thesis": [
+          "국내 식품 서비스 부문의 두 자리 수 탑라인 성장 및 영업마진 개선",
+          "해외 법인(특히 미국)의 BEP 달성 및 적자 축소 흐름 지속",
+          "일본 법인의 생산기지 통폐합 효과 반영 및 중국 법인의 흑자 기조 유지"
+        ],
+        "valuation_basis": "현 주가는 12개월 Fwd PER 9배(희석 감안) 내외 거래 중이다.",
+        "risk": null,
+        "supply_comment": "소비내수",
+        "quote": "하반기 갈수록 해외 실적 개선 기대감이 주가에 반영될 것으로 기대한다."
+      }
+    ]
+  }
+}

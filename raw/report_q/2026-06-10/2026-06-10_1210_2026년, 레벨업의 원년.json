@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1210_2026년, 레벨업의 원년.md"
+  },
+  "questionnaire": {
+    "broker": "미래에셋증권",
+    "analyst": "박준서",
+    "report_date": "2026.6.9",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "쓰리에이로직스",
+        "code": "177900",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "동사의 2026년 1분기 실적은 매출액 61.3억원(+52% YoY), 영업이익 2.7억원, 당기순이익 4.5억원을 기록하며 흑자전환에 성공했다.",
+        "estimate_revision": null,
+        "next_catalyst": "하반기 공급 물량 확대가 본격화될 경우 추가적인 외형 성장이 가능할 것으로 판단된다. 이에 따라 2026년은 고부가 제품군 중심으로 실적 레벨이 본격적으로 성장하는 구간이 될 것으로 판단한다.",
+        "thesis": [
+          "NFC 반도체 설계 전문 업체로서 NFC Tag IC 매출 성장세 견인",
+          "ESL Dynamic Tag IC, 자동차 디지털키, DPP 등 고부가 제품군 매출 기여 확대",
+          "자동차 디지털키 부문 국내 최대 자동차 제조사의 50개 이상 모델 적용 및 완상차 판매량 증가에 따른 수혜"
+        ],
+        "valuation_basis": null,
+        "risk": "주요 리스크는 2026년 주요 고객사항 ESL 매출 인식, 자동차 디지털키 신규 모델 출하, DPP 양산 전환이 지연될 가능성이다.",
+        "supply_comment": null,
+        "quote": "NFC Tag IC 중심의 실적 턴어라운드는 ESL용 NFC Dynamic Tag IC, 자동차 디지털키 IC, DPP용 듀얼밴드 원칩 Tag 등 고부가 제품군의 매출 기여 확대에 기반한다."
+      }
+    ]
+  }
+}

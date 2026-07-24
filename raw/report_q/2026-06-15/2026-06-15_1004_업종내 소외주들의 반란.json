@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-15",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-15_1004_업종내 소외주들의 반란.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "최정욱, 정소영",
+    "report_date": "2026.6.15",
+    "target_kind": "market",
+    "market_direction": "null",
+    "macro_vars": [
+      "환율",
+      "기준금리",
+      "은행채",
+      "NIM",
+      "시중금리"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": "비중확대",
+        "reason": "주도업종 일변도의 상승세에서 주변주나 소외주로 시장 관심이 확산되는 양상"
+      }
+    ],
+    "style": "중소형종목 PBR Gap 메우기",
+    "event_calendar": null,
+    "top_picks": [
+      "iM금융",
+      "BNK금융"
+    ],
+    "risk": "금리 상승시 건전성 우려 및 추가 대출 규제",
+    "quote": "주도업종 일변도의 상승세에서 주변주나 소외주로 시장 관심이 다소나마 확산되는 양상을 보이는 가운데 이러한 흐름은 더 이어질 것으로 전망. KB금융과 신한지주의 2분기 실적 모멘텀이 타행들을 압도할 것으로 예상되지만 단기적으로는 주가 소외 폭이 더 컸던 중소형종목들의 PBR Gap 메우기 성격 반등세가 좀더 이어질 가능성이 높다고 판단. 은행주에 대한 긍정적 시각은 계속 유지"
+  }
+}

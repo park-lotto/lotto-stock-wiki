@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-12",
+    "broker": "나이스평가정보(주)",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-15_0701_데이터의 흐름에서 AI의 미래까지, 25년 국내...md"
+  },
+  "questionnaire": {
+    "broker": "나이스평가정보(주)",
+    "analyst": "류치선 연구원",
+    "report_date": "2026.06.11.",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "데이터스트림즈",
+        "code": "199150",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출은 328.5억 원(별도기준)이 전망된다.",
+        "estimate_revision": null,
+        "next_catalyst": "공공기관 AI 플랫폼 구축 수주 확대, 말레이시아 합작법인을 통한 동남아 시장 진출, 넥스트I&I와의 공동사업 협력",
+        "thesis": [
+          "국내 유일 풀스택 데이터 패브릭 플랫폼 기술 보유",
+          "AI Transformation 수요 확대에 따른 AI-Ready Data 사업의 고성장",
+          "2년 연속 영업이익 흑자 달성 및 재무구조 개선 지속"
+        ],
+        "valuation_basis": null,
+        "risk": "글로벌 플랫폼의 국내 시장 침투 확대 및 IT 예산 집중화로 인한 중소전문 SW 기업 수주 경쟁 심화",
+        "supply_comment": null,
+        "quote": "데이터스트림즈는 국내 ETL 시장 선두 기업으로 25년 기술 자산 위에 LLM 기반 AI 거버넌스 기술, 해외 합작법인, 컨설팅 전문 파트너십을 새로운 성장 동력으로 더하며, AX 전환 수요가 급증하는 국내외 AI-Ready Data 시장에서 새로운 도약의 기회를 맞이하고 있는 것으로 판단된다."
+      }
+    ]
+  }
+}

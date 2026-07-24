@@ -1,0 +1,147 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-12_0706_끝없는 날개짓 하늘로 미국 데이터센터 시장...md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "조재원",
+    "report_date": "2026년 06월 10일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "OCI홀딩스",
+        "code": "010060",
+        "rating": "BUY(Maintain)",
+        "rating_changed": false,
+        "tp_new": "390,000원",
+        "tp_prev": null,
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 실적은 TerraSus의 부진을 Energy가 만회하는 모양새가 될 전망이다. 4~5월 가동률이 당초 예상을 밑돌면서, 2분기 TerraSus 영업이익은 소폭의 흑자 전환을 예상한다.",
+        "estimate_revision": null,
+        "next_catalyst": "연내 신규 고객사향 공급 계약과 증설 계획 구체화",
+        "thesis": [
+          "폴리실리콘 수요처 지상 태양광 넘어 우주 태양광 및 차세대 반도체 확대",
+          "텍사스 지역 데이터센터 개발 활성화에 따른 재생에너지 사업 수혜",
+          "OCI Energy 2Q26 500MW 태양광 프로젝트 매각 및 자체 발전소 확보"
+        ],
+        "valuation_basis": "TerraSus 적정 가치를 약 4조원(EV/EBITDA 15배)으로 평가",
+        "risk": "4~5월 가동률 당초 예상 하회",
+        "supply_comment": "폴리실리콘 공급망 관련 Wacker, Hemlock 등 비중국 기업들 CAPA 제한적",
+        "quote": "연내에는 신규 고객사향 공급 계약과 증설 계획이 구체화될 것으로 기대한다.",
+        "sector": "신재생"
+      },
+      {
+        "name": "두산에너빌리티",
+        "code": "034020",
+        "rating": "BUY(Maintain)",
+        "rating_changed": true,
+        "tp_new": "130,000원",
+        "tp_prev": "158,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "2026년 신규 수주는 16.3조원(+11%YoY)을 전망한다.",
+        "estimate_revision": null,
+        "next_catalyst": "3Q26 PPA 체결 시 고객사 대규모 SMR 기자재 발주",
+        "thesis": [
+          "데이터센터 On-Site 발전소향 가스터빈 및 스팀터빈 수주 확대",
+          "한미 원전 협력을 통한 미국 대형원전 건설 사업 참여 기회",
+          "SMR 프로젝트 참여 및 한국형 원전 건설 수주 기대"
+        ],
+        "valuation_basis": "WACC 8% 적용 할인, 에너빌리티 부문 영업가치 및 지분 가치 합산",
+        "risk": null,
+        "supply_comment": "글로벌 메이저 가스터빈 3사의 공급 능력 제약",
+        "quote": "가스터빈 수주 가정을 기존 11기에서 16기로 상향했다.",
+        "sector": "원전"
+      },
+      {
+        "name": "한화솔루션",
+        "code": "009830",
+        "rating": "BUY(Maintain)",
+        "rating_changed": false,
+        "tp_new": "60,000원",
+        "tp_prev": null,
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 케미칼 영업이익은 전분기 대비 추가 개선될 전망이다.",
+        "estimate_revision": null,
+        "next_catalyst": "2H26 미국 카터스빌 공장 가동 본격화",
+        "thesis": [
+          "미국 태양광 EPC 및 주택용 에너지 사업향 모듈 공급 확대",
+          "FEOC 규제 강화 이후 구조적인 수급 개선 및 미국 모듈 가격 상승",
+          "미국 내 웨이퍼-셀-모듈 생산 시설 및 비중국 공급망 확보"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "비중국 폴리실리콘 공급망 사전 구축으로 경쟁사 대비 원가 우위 확보",
+        "quote": "2H26부터는 미국 카터스빌 공장 가동이 본격화되면서, 판매량 성장과 AMPC 규모 확대가 동반될 것으로 예상한다.",
+        "sector": "신재생"
+      },
+      {
+        "name": "한전기술",
+        "code": "052690",
+        "rating": "BUY(Maintain)",
+        "rating_changed": true,
+        "tp_new": "185,000원",
+        "tp_prev": "213,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "올해 영업이익 전년 대비 110% 성장한 744억원 전망",
+        "estimate_revision": null,
+        "next_catalyst": "2H26 미국 원전 협력 구체화",
+        "thesis": [
+          "체코 대형원전 매출 인식 본격화 및 신한울 3,4호기 진행률 상승",
+          "한국형 원전 미국 진출 및 팀코리아 수주 타임라인 구체화",
+          "수익성 높은 원자력 매출 비중 상승에 따른 이익 성장"
+        ],
+        "valuation_basis": "Peer 평균 EV/EBITDA(31배)에 10% 할인 적용",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "특히 체코 대형원전 매출액이 1,000억원 이상 반영되면서, 전사 매출액 성장을 견인할 예정이다.",
+        "sector": "원전"
+      },
+      {
+        "name": "한전KPS",
+        "code": "051600",
+        "rating": "BUY(Maintain)",
+        "rating_changed": false,
+        "tp_new": "69,000원",
+        "tp_prev": null,
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 영업이익 1,800억원(+28%YoY) 전망",
+        "estimate_revision": null,
+        "next_catalyst": "2H26 체코 두코바니 5, 6호기 정비 계약 체결",
+        "thesis": [
+          "원자력 계획예방정비 공사 준공 호기 증가에 따른 전사 매출 성장",
+          "고리 2호기 및 새울 3, 4호기 가동으로 인한 원자력 매출 기반 확대",
+          "해외 원전 정비 사업 수주 성과 가시화"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2026년 영업이익 1,800억원(+28%YoY)을 전망한다.",
+        "sector": "원전"
+      },
+      {
+        "name": "포스코인터내셔널",
+        "code": "047050",
+        "rating": "BUY(Maintain)",
+        "rating_changed": false,
+        "tp_new": "80,000원",
+        "tp_prev": null,
+        "tp_direction": "flat",
+        "earnings_outlook": "올해 영업이익 1.38조원(+18%YoY) 전망",
+        "estimate_revision": null,
+        "next_catalyst": "호주 Senex 가스전 증산 및 팜 농장 인수 성과 반영",
+        "thesis": [
+          "호주 Senex 가스전 증산 효과 및 팜 농장 인수 기여",
+          "LNG 터미널 및 발전 사업 이익 개선으로 미얀마 가스전 실적 상쇄",
+          "3개년 주주환원율 50% 이상 약속 및 에너지·핵심 광물 수급 중요성 부각"
+        ],
+        "valuation_basis": null,
+        "risk": "5월부터 약 40% 주가 조정 발생",
+        "supply_comment": null,
+        "quote": "호주 Senex 가스전 증산 효과와 팜 농장 인수 효과가 올해 영업이익 성장에 약 1,700억원을 기여할 예정이다.",
+        "sector": "기타"
+      }
+    ]
+  }
+}

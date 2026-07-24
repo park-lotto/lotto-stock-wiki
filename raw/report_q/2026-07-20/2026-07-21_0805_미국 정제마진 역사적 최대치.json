@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "date": "2026-07-20",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-21_0805_미국 정제마진 역사적 최대치.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "윤재성",
+    "report_date": "2026.07.20",
+    "target_kind": "market",
+    "market_direction": "Overweight",
+    "macro_vars": [
+      "WTI 82.5$(+16%)",
+      "Dubai 76.9$ (+11%)",
+      "정제마진 43.1$(WoW +8.8$)",
+      "유럽 디젤 선물 WoW +13%"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "에너지/화학",
+        "stance": "Overweight",
+        "reason": "정제마진 사상 최대치 경신 및 석유화학 시황 강세"
+      },
+      {
+        "sector": "신재생",
+        "stance": "Overweight",
+        "reason": "First Solar 주가 18년래 최대치 및 Section 232 기대감"
+      }
+    ],
+    "style": "Growth",
+    "event_calendar": [
+      {
+        "date": "2026년 6월 말 이전",
+        "event": "Section 232 조사 결과 발표 예상"
+      },
+      {
+        "date": "2026.07.31",
+        "event": "러시아 디젤 수출 통제 기한"
+      }
+    ],
+    "top_picks": [
+      "S-Oil",
+      "SK이노베이션",
+      "OCI홀딩스",
+      "한화솔루션",
+      "금호석유화학",
+      "효성티앤씨"
+    ],
+    "risk": "WTI 기준 90~100$/bbl 이상에서 주가 상승 동력 약화 가능성, 태양광 설치량 둔화 리스크",
+    "quote": "유가 급등=정유주 흥분 매매'는 수요를 파괴하는 유가에서는 정답이 아님을 명심할 필요."
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-11_0703_현대건설 전환사채 발행결정 코멘트(26.06.09...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "IBK투자증권",
+    "analyst": "조정현",
+    "report_date": "2026. 6. 10",
+    "stocks": [
+      {
+        "name": "현대건설",
+        "code": null,
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "260,000원",
+        "tp_prev": "260,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "전환 가능 시점인 2027년 7월 이후",
+        "thesis": [
+          "0% 금리 조달로 현금 이자비용 부담이 없고, 시가 하락 리픽싱 조항도 없어 주가 하락 시 희석 부담이 확대되는 구조가 아님",
+          "PF 관련 신용보강 규모가 이미 자기자본 대비 높은 구간에 진입한 만큼, 금리 재상승 국면에서의 재무 안정성 확보",
+          "뉴에너지 사업 운영자금 조달 및 대형 정비사업·개발사업 대응에 필요한 신용공여 여력 선제적 확보"
+        ],
+        "valuation_basis": null,
+        "risk": "전환 가능 시점인 2027년 7월 이후에는 주가 수준에 따라 잠재적 오버행으로 인식될 것으로 판단한다.",
+        "supply_comment": "2026년 6월 9일 5,000억원 규모의 무기명식 무보증 사모 전환사채 발행을 결정했다. 납입일은 2026년 7월 7일, 만기일은 2031년 7월 7일이며, 표면이자율과 만기이자율은 모두 0.0%다.",
+        "quote": "이번 CB 발행은 일반적인 주주가치 훼손 이벤트로 해석하기에 제한적이라고 판단한다."
+      }
+    ]
+  }
+}

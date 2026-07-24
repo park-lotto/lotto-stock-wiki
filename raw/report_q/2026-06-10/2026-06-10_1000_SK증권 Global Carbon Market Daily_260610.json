@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "SK securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_SK증권 Global Carbon Market Daily_260610.md"
+  },
+  "questionnaire": {
+    "broker": "SK securities",
+    "analyst": "최관순",
+    "report_date": "2026-06-10",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "유럽 배출권(EUA) 76.2 유로/톤",
+      "영국 배출권(UKA) 55.2 파운드/톤",
+      "미국 배출권(RGGI) 39.1 달러/톤",
+      "미국 배출권(CCA) 32.1 달러/톤",
+      "한국 배출권(KAU) 28,200 원/톤",
+      "중국 배출권(CEA) 82.3 위안/톤",
+      "미국 WTI 원유 88.2 USD/bbl.",
+      "유럽 Brent 원유 92.4 USD/bbl.",
+      "중동 Dubai 원유 84.1 USD/bbl.",
+      "미국 천연가스(NYM HH) 3.1 USD/MMBtu",
+      "유럽 천연가스(ICE Dutch TTF) 48.7 EUR/MWh",
+      "LNG(일본/한국 NYM JKM) 18.9 USD/MMBtu",
+      "석탄(유럽 ICE ARA) 133.0 USD/MT",
+      "석탄(중국 ZCE) 801.4 CNY/MT",
+      "석탄(호주 뉴캐슬) 150.2 USD/MT"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": null,
+    "top_picks": null,
+    "risk": null,
+    "quote": "국제유가, 중동긴장 완화 조짐에 급락…WTI 3.4%↓"
+  }
+}

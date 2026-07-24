@@ -1,0 +1,31 @@
+{
+  "reports": [
+    {
+      "broker": "신한투자증권",
+      "stock": "에스엠",
+      "rating": "null",
+      "tp": "null",
+      "ts": "07:24",
+      "quote": "글로벌 IP+레거시 IP+저연차 IP의 완벽한 콜라보",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "PS 일렉트로닉스",
+      "rating": "Not Rated",
+      "tp": "null",
+      "ts": "07:49",
+      "quote": "AI 서버 사업, 기업가치의 큰 변곡점이 될 전망",
+      "sector": "IT"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "두산밥캣",
+      "rating": "매수",
+      "tp": "83,000원",
+      "ts": "07:53",
+      "quote": "글로벌 건설장비 업황 턴어라운드에 힘입어 외형 성장 전망",
+      "sector": "기타"
+    }
+  ]
+}

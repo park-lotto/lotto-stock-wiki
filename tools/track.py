@@ -21,11 +21,14 @@ ImportError). 그래서 병합에 게이트가 붙는다 — merge_gate.py.
     py tools/track.py list
 """
 import argparse
+import contextlib
 import json
+import os
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -34,6 +37,47 @@ import merge_gate
 
 BRANCH_PREFIX = "track/"
 MAIN_BRANCH = "main"
+
+# 세션 6개가 동시에 finish하면 각자 전체 pytest 게이트를 병렬로 돌려 서로 CPU를 뺏어
+# 전부 기어간다(2026-07-24 실측: 5개 동시 → 20분+ 지연). 게이트는 CPU 포화라 병렬이
+# 오히려 손해 → 한 번에 하나만 돌게 줄 세운다. OS 파일락이라 프로세스가 죽으면 커널이
+# 자동 해제(스테일락 없음). 락은 트랙별이 아니라 **전역 1개**(모든 finish가 같은 파일).
+_FINISH_LOCK = Path(tempfile.gettempdir()) / "stockbrain_track_finish.lock"
+
+
+@contextlib.contextmanager
+def _finish_gate_lock():
+    """finish 전역 직렬화 락. 이미 다른 finish가 게이트 중이면 풀릴 때까지 대기(순번제)."""
+    fh = open(_FINISH_LOCK, "a+")
+    try:
+        if os.name == "nt":
+            import msvcrt
+            waited = False
+            while True:
+                try:
+                    msvcrt.locking(fh.fileno(), msvcrt.LK_NBLCK, 1)
+                    break
+                except OSError:
+                    if not waited:
+                        print("[대기] 다른 트랙이 finish 게이트 중 - 순번 대기(동시 실행이 더 느려서 줄 세운다)...")
+                        waited = True
+                    time.sleep(3)
+        else:
+            import fcntl
+            try:
+                fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except OSError:
+                print("[대기] 다른 트랙이 finish 게이트 중 - 순번 대기...")
+                fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+        yield
+    finally:
+        try:
+            if os.name == "nt":
+                import msvcrt
+                fh.seek(0)
+                msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
+        finally:
+            fh.close()
 
 
 def _sh(cmd, cwd):
@@ -298,24 +342,26 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=3):
     wt = _preflight(name, repo)
     br = branch_name(name)
 
-    for attempt in range(1, attempts + 1):
-        run(["git", "fetch", "origin"], repo)
-        stage = _open_stage(repo, name)
-        try:
-            result = _merge_and_gate(name, repo, stage, br, gate, wt)
-        finally:
-            _close_stage(repo, stage)
+    # ★전역 락: 한 번에 하나의 finish만 게이트를 돈다(동시 pytest는 CPU 포화라 더 느림).
+    with _finish_gate_lock():
+        for attempt in range(1, attempts + 1):
+            run(["git", "fetch", "origin"], repo)
+            stage = _open_stage(repo, name)
+            try:
+                result = _merge_and_gate(name, repo, stage, br, gate, wt)
+            finally:
+                _close_stage(repo, stage)
 
-        if result == "nothing":
-            print(f"\n병합할 것이 없다 (트랙 '{name}'에 새 커밋 없음).")
-            return 0
-        if result == "pushed":
-            _sync_main_folder(repo)
-            _level_track_with_main(name, repo, wt, br)
-            return 0
-        # result == "raced": 다른 트랙이 먼저 병합했다 → 그 위에서 다시
-        print(f"⚠️ 다른 트랙이 먼저 main에 들어왔다. 최신 main 위에서 다시 시도 "
-              f"({attempt}/{attempts})...")
+            if result == "nothing":
+                print(f"\n병합할 것이 없다 (트랙 '{name}'에 새 커밋 없음).")
+                return 0
+            if result == "pushed":
+                _sync_main_folder(repo)
+                _level_track_with_main(name, repo, wt, br)
+                return 0
+            # result == "raced": 다른 트랙이 먼저 병합했다 → 그 위에서 다시
+            print(f"⚠️ 다른 트랙이 먼저 main에 들어왔다. 최신 main 위에서 다시 시도 "
+                  f"({attempt}/{attempts})...")
 
     raise TrackError(
         f"{attempts}번 시도했는데 매번 다른 트랙이 먼저 들어왔다.\n"
