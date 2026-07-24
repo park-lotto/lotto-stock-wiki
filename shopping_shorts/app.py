@@ -152,7 +152,7 @@ def _media_code(url):
 
 
 @app.post("/api/collect")
-def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int | None = None, platform: str = "instagram"):
+def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int | None = None, platform: str = "instagram", category: str | None = None):
     """지금 수집 버튼. limit=채널 수 상한(테스트용). platform=플랫폼(기본 인스타).
 
     댓글 draft 생성(항목당 Gemini 호출, 쿼터 걸리면 62초 대기)은 응답 후
@@ -196,7 +196,7 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
                 "ok": False, "error_code": "daily_limit",
                 "error": f"오늘 틱톡 수집 한도({knobs['daily_limit']}회)를 다 썼습니다"})
     try:
-        items = collect(platform=platform, limit_channels=limit)
+        items = collect(platform=platform, categories=([category] if category else None), limit_channels=limit)
         if platform == "tiktok":
             guard.bump_tiktok_daily(_cid(request), datetime.now(timezone.utc).strftime("%Y-%m-%d"))
             # 추정지출 누적(add_tiktok_spend)도 건너뜀 — 위 docstring 참고.

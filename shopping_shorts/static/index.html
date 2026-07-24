@@ -280,6 +280,16 @@
     </div>
     <div class="toolbar">
       <button id="collectBtn" onclick="doCollect()" style="display:none">⚡ 지금 수집</button>
+      <span id="ytCatBox" style="display:none">
+        <select id="ytCat" style="padding:6px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
+          <option value="홈템">🏠 홈·살림템</option>
+          <option value="비법형">🔥 비법·꿀팁형</option>
+          <option value="제품형">🛒 제품추천형</option>
+          <option value="혼합형">💄 뷰티</option>
+          <option value="기타">📦 기타</option>
+        </select>
+        <button onclick="doCollect(document.getElementById('ytCat').value)">＋ 이 카테고리 수집</button>
+      </span>
       <button id="censusBtn" onclick="doCensus()" style="display:none" title="전 채널을 긁어 활동성 재판정 — 2일 내 안 올린 채널은 정리, 다시 올린 채널은 부활. 가끔만 누르세요(비용).">🌐 전수조사</button>
       <span id="status" style="color:var(--sub);font-size:12px"></span>
     </div>
@@ -427,6 +437,7 @@ function switchPlatform(p, el){
   document.getElementById('refRegister').style.display = (p==='instagram')?'block':'none';
   if(p==='instagram') loadRefAdded();
   document.getElementById('ttMode').style.display = (p==='tiktok')?'block':'none';
+  document.getElementById('ytCatBox').style.display = (p==='youtube')?'inline':'none';
   document.getElementById('ttPanel').style.display = (p==='tiktok' && ttMode()==='keyword')?'block':'none';
   if(p==='tiktok') loadTtSettings();
   ttModeChange();       // 입력 placeholder·언어선택기·설정패널 표시 갱신
@@ -825,11 +836,12 @@ async function readJson(r){
   }
   return r.json();
 }
-async function doCollect(){
+async function doCollect(category){
   const btn=document.getElementById("collectBtn"), st=document.getElementById("status");
   btn.disabled=true; st.textContent="수집 중… (수 분 소요)";
   try{
-    const r = await fetch("/api/collect?platform="+PLATFORM, {method:"POST"});
+    const qs = "/api/collect?platform="+PLATFORM + (category?("&category="+encodeURIComponent(category)):"");
+    const r = await fetch(qs, {method:"POST"});
     const d = await readJson(r);
     if(r.status===429){   // 틱톡 남용/예산 킬스위치
       const label = d.error_code==='budget_exceeded' ? '💰 월 예산 초과' : '🚫 오늘 한도 초과';
