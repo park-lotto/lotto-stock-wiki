@@ -10,6 +10,19 @@ from shopping_shorts.config import YOUTUBE_API_KEYS
 # YouTube URL → video_id 파서
 _YT_ID = re.compile(r"(?:v=|youtu\.be/|/shorts/)([A-Za-z0-9_-]{11})")
 
+_DURATION = re.compile(r"PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?")
+
+
+def _parse_duration_secs(iso):
+    """ISO8601 재생시간(PT#H#M#S) → 초. 빈값/None → None."""
+    if not iso:
+        return None
+    m = _DURATION.fullmatch(iso)
+    if not m:
+        return None
+    h, mnt, s = (int(x) if x else 0 for x in m.groups())
+    return h * 3600 + mnt * 60 + s
+
 def video_id_from_url(url):
     """유튜브 watch/youtu.be/shorts URL → 11자 video_id. 유튜브 아니면 None."""
     if not url:
