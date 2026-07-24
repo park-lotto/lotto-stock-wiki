@@ -382,6 +382,12 @@ def _vault_call(prompt, schema, max_tries=4):
                 continue
             if key_vault.is_quota_error(e):
                 continue
+            # ★503/과부하는 일시적(2026-07-24 실측: scene_first가 이걸로 죽어 옛 대본으로 폴백,
+            # 30초·7~8컷·대화 개선이 통째로 안 탔다). 포기 대신 잠깐 쉬고 다음 키로 재시도한다.
+            m = str(e)
+            if any(c in m for c in ("503", "UNAVAILABLE", "overloaded", "high demand")):
+                time.sleep(2)
+                continue
             print(f"edit_plan._vault_call: {e!r}", file=sys.stderr)
             return None
     return None
@@ -396,7 +402,7 @@ _SCENE_FIRST_SCHEMA = {
             "story_person": {"type": "string"}, "story_event": {"type": "string"},
             "story_resolution": {"type": "string"}, "cta_line": {"type": "string"},
             "cta_keyword": {"type": "string"},
-            "beats": {"type": "array", "minItems": 7, "items": {
+            "beats": {"type": "array", "minItems": 5, "items": {
                 "type": "object",
                 "properties": {
                     "role": {"type": "string"}, "narration": {"type": "string"},
