@@ -9,10 +9,14 @@ _LONG_B = "그래서 베란다에 널어놨더니 며칠 뒤에 멀쩡해져서 
 
 
 def _src():
+    # 조각 5개 — 첫(s0-0)·끝(s0-4)은 인벤토리에서 제외되므로(썸네일·CTA 차단, Task 3) 후보는
+    # 가운데 s0-1/s0-2/s0-3만 참조한다(실제 라이브: 첫·끝 뺀 가운데 장면을 씀).
     return [{"video_id": "s0", "full_text": "원본", "segments": [
+        {"seg_id": "s0-0", "start": 0.0, "end": 1.0, "text": "", "scene_desc": "썸네일"},
         {"seg_id": "s0-1", "start": 1.0, "end": 2.0, "text": "", "scene_desc": "곰팡이"},
         {"seg_id": "s0-2", "start": 2.0, "end": 3.0, "text": "", "scene_desc": "단면"},
-        {"seg_id": "s0-3", "start": 3.0, "end": 5.0, "text": "", "scene_desc": "통풍"}]}]
+        {"seg_id": "s0-3", "start": 3.0, "end": 5.0, "text": "", "scene_desc": "통풍"},
+        {"seg_id": "s0-4", "start": 5.0, "end": 6.0, "text": "", "scene_desc": "CTA"}]}]
 
 
 def _short_batch():

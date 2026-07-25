@@ -192,8 +192,13 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
 
 
 def _sources_is_recipe(sources):
-    """소스 category 다수결이 '레시피'면 True(장면 결 맞춤 분기). 비면 False."""
-    cats = [s.get("category") for s in (sources or []) if s.get("category")]
+    """소스 category 다수결이 '레시피'면 True(장면 결 맞춤 분기). 비면 False.
+    입력이 dict거나 원소가 dict가 아니어도 크래시하지 않는다(fail-open=False) — 실호출은
+    list[dict]지만 일부 경로/테스트가 dict나 비정형을 넘겨도 안전해야 한다."""
+    if isinstance(sources, dict):
+        sources = list(sources.values())
+    cats = [s.get("category") for s in (sources or [])
+            if isinstance(s, dict) and s.get("category")]
     if not cats:
         return False
     return cats.count("레시피") * 2 > len(cats)
