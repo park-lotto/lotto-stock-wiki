@@ -61,6 +61,12 @@ def search_full(keyword, max_results=60, token=None, timeout=180, poll_interval=
             continue
         meta = item.get("videoMeta") or {}
         author = item.get("authorMeta") or {}
+        dur = meta.get("duration")
+        try:
+            dur = int(dur)
+            dur = dur // 1000 if dur > 6000 else dur   # ms로 오면 초로 환산
+        except (TypeError, ValueError):
+            dur = None
         out.append({
             "video_id": vid,
             "url": item.get("webVideoUrl", ""),
@@ -71,5 +77,7 @@ def search_full(keyword, max_results=60, token=None, timeout=180, poll_interval=
             "views": int(item.get("playCount") or 0),
             "likes": int(item.get("diggCount") or 0),
             "comments": int(item.get("commentCount") or 0),
+            "duration": dur,
+            "media_platform": "tiktok",
         })
     return out

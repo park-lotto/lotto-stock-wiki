@@ -70,7 +70,7 @@ def test_search_full_returns_ranking_raw_schema(monkeypatch):
             "diggCount": 8400,
             "commentCount": 210,
             "authorMeta": {"name": "clean_life"},
-            "videoMeta": {"coverUrl": "https://p16-sign.tiktokcdn.com/cover.jpeg"},
+            "videoMeta": {"coverUrl": "https://p16-sign.tiktokcdn.com/cover.jpeg", "duration": 42},
         }]
 
     monkeypatch.setattr(tiktok_search, "_run_with_rotation", fake_run_with_rotation)
@@ -87,6 +87,8 @@ def test_search_full_returns_ranking_raw_schema(monkeypatch):
         "views": 152000,
         "likes": 8400,
         "comments": 210,
+        "duration": 42,
+        "media_platform": "tiktok",
     }]
     assert captured["payload"]["searchQueries"] == ["곰팡이 제거"]
     assert captured["payload"]["resultsPerPage"] == 60
