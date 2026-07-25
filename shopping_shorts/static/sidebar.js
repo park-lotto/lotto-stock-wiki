@@ -144,7 +144,7 @@
   // 로고 클릭 = 홈(/)으로(사장님 2026-07-21) — 커서·title로 클릭 가능함을 알린다.
   // 브랜드 엠블럼(v2, app.py _LOGO_SVG와 동일 도형 — id만 ss- 접두어로 충돌 방지)
   var BRAND_SVG =
-    '<svg width="24" height="24" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템박스" style="flex-shrink:0">' +
+    '<svg width="24" height="24" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템메이커" style="flex-shrink:0">' +
     '<defs><radialGradient id="ssdk" cx="50%" cy="42%" r="65%">' +
     '<stop offset="0" stop-color="#1c2b25"/><stop offset="1" stop-color="#0b120f"/></radialGradient>' +
     '<linearGradient id="ssmg" x1="0" y1="0" x2="1" y2="1">' +
@@ -157,7 +157,7 @@
     '<rect x="20.8" y="32" width="22.4" height="6" rx="2.8" fill="url(#ssmg)"/>' +
     '<rect x="24" y="24" width="16" height="6" rx="2.8" fill="url(#ssgg)"/>' +
     '<path d="M32 13.8l8 8.2H24l8-8.2z" fill="url(#ssgg)"/></svg>';
-  var html = "<h1 onclick=\"location.href='/'\" style=\"cursor:pointer\" title=\"홈으로\">" + BRAND_SVG + " <span class=\"ss-brand\">숏템박스</span></h1>";
+  var html = "<h1 onclick=\"location.href='/'\" style=\"cursor:pointer\" title=\"홈으로\">" + BRAND_SVG + " <span class=\"ss-brand\">숏템메이커</span></h1>";
   NAV.forEach(function (g) {
     html += '<div class="ss-group"><div class="ss-label">' + g.label + "</div>";
     g.items.forEach(function (it) {
