@@ -100,9 +100,15 @@ def _run():
             _JOB.update(status="error", phase="", error=str(e))
 
 
+# 진행 중 재실행 방지 창. 익명 RSS 429 백오프가 켜지면 _run이 배치당 수십 분까지
+# 길어질 수 있어(실측 2026-07-25: 6서브 5.5분·재시도 다수) 겹치면 Reddit 부하가 배가된다.
+# stale 판정을 30분으로 늘려 정상적으로 긴 실행이 중복 트리거되지 않게 한다.
+_RUN_STALE_SEC = 1800
+
+
 def start():
     with _LOCK:
-        if _JOB["status"] == "running" and time.time() - _JOB["started"] < 600:
+        if _JOB["status"] == "running" and time.time() - _JOB["started"] < _RUN_STALE_SEC:
             return {"status": "running", "elapsed": int(time.time() - _JOB["started"])}
         _JOB.update(status="running", phase="시작", count=0, error=None, started=time.time())
     threading.Thread(target=_run, daemon=True).start()

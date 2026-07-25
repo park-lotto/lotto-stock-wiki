@@ -10,8 +10,10 @@
 어느 경로든 build_reddit_items가 소비하는 동일 스키마(ups/num_comments/post_id/…)를
 반환한다. OAuth는 실업보트, RSS는 순위점수를 ups에 담는다."""
 import html
+import os
 import re
 import time
+import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 
@@ -131,10 +133,19 @@ def _fetch_oauth(subreddit, category, sort, limit):
 
 
 # ─────────────────────────── RSS(폴백) ───────────────────────────
+class RateLimited(Exception):
+    """익명 RSS가 429를 반환 — 백오프 후 재시도 대상."""
+
+
 def _http_get(url, timeout=15):
     req = urllib.request.Request(url, headers={"User-Agent": _UA})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return r.read().decode("utf-8")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return r.read().decode("utf-8")
+    except urllib.error.HTTPError as e:
+        if e.code == 429:
+            raise RateLimited(url) from e
+        raise
 
 
 def _post_id_from(entry_id, permalink):
@@ -205,16 +216,38 @@ def _fetch_rss(subreddit, category, sort):
     return normalize_entries(_http_get(url), subreddit=subreddit, category=category, sort=sort)
 
 
+# 익명 RSS 429 백오프 — 데이터센터 IP(AWS)는 Reddit이 익명 요청을 강하게 조여
+# 첫 요청만 통과하고 직후 429가 잦다(실측 2026-07-25: 15/30/45초 간격에도 간헐 429).
+# 영구차단은 아니라 넉넉히 벌려 재시도하면 대부분 통과한다. 일일 크론이 20분 걸려도
+# 무방하므로 429일 때만 긴 백오프로 재시도한다(일반 예외는 짧게).
+# 환경변수로 무재배포 튜닝: REDDIT_RL_RETRIES, REDDIT_RL_BACKOFF(콤마구분 초).
+_RL_RETRIES = int(os.getenv("REDDIT_RL_RETRIES", "3"))
+_RL_BACKOFF = [
+    float(x) for x in os.getenv("REDDIT_RL_BACKOFF", "20,35,50").split(",") if x.strip()
+] or [20.0, 35.0, 50.0]
+
+
 def fetch_subreddit(subreddit, category="", sort="rising", limit=50, retries=2, pause=1.0):
     """서브레딧의 rising/top-day 영상 포스트 정규화 리스트. 실패 시 빈 리스트(부분실패 허용).
 
-    크레덴셜이 있으면 OAuth(JSON·업보트 실값·100 req/분), 없으면 익명 RSS 폴백."""
-    for attempt in range(retries + 1):
+    크레덴셜이 있으면 OAuth(JSON·업보트 실값·100 req/분), 없으면 익명 RSS 폴백.
+    익명 RSS가 429면 긴 백오프(_RL_BACKOFF)로 최대 _RL_RETRIES회 추가 재시도한다."""
+    attempt = 0        # 일반 예외용 카운터
+    rl_attempt = 0     # 429 전용 카운터(일반 예외와 독립)
+    while True:
         try:
             if _has_oauth():
                 return _fetch_oauth(subreddit, category, sort, limit)
             return _fetch_rss(subreddit, category, sort)
+        except RateLimited:
+            # 429 전용: 긴 백오프로 재시도. 소진되면 빈손(부분실패 허용).
+            if rl_attempt >= _RL_RETRIES:
+                return []
+            time.sleep(_RL_BACKOFF[min(rl_attempt, len(_RL_BACKOFF) - 1)])
+            rl_attempt += 1
         except Exception:
-            if attempt < retries:
-                time.sleep(pause * (attempt + 1))
-    return []
+            # 그 외 오류: 짧은 백오프로 retries회까지.
+            if attempt >= retries:
+                return []
+            time.sleep(pause * (attempt + 1))
+            attempt += 1
