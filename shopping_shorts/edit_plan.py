@@ -152,7 +152,7 @@ def _dedup_and_fill(flat, need):
     return uniq
 
 
-def _chronological_respine(beats):
+def _chronological_respine(beats, is_recipe=False):
     """비트의 시각 세그먼트([primary]+alternates)를 소스 시간순으로 재배치한다(2트랙 모델,
     2026-07-19). 나레이션·비트 순서는 그대로 — 화면만 요리 시간순(재료→조리→완성→시식)으로
     흐르게 해 완성↔붓기 핑퐁을 없앤다. 비트당 세그먼트 개수는 보존(길이 커버리지 유지).
@@ -195,8 +195,13 @@ def _chronological_respine(beats):
         flat.extend([dict(s) for s in segs])
     flat = _dedup_and_fill(flat, need=sum(counts))
     # 정렬: (video_id,start) 우선, 동시각이면 얼굴 세그먼트를 뒤로(대체 있을 때 후순위).
-    ordered = sorted(flat, key=lambda s: (s.get("video_id", ""), s.get("start", 0.0),
-                                          _is_face_seg(s.get("scene_desc", ""))))
+    # 레시피면 완성 세그먼트를 조리/기타 뒤로(finish_last) — 완성이 조리 앞에 안 낀다.
+    # 제품(is_recipe=False)이면 finish_last 항상 0 → 기존 (video_id,start,face)와 동일.
+    def _sort_key(s):
+        finish_last = 1 if (is_recipe and s.get("shot_role") == "완성") else 0
+        return (finish_last, s.get("video_id", ""), s.get("start", 0.0),
+                _is_face_seg(s.get("scene_desc", "")))
+    ordered = sorted(flat, key=_sort_key)
     moved, i = {}, 0
     for j, n in zip(movable_idx, counts):
         chunk = ordered[i:i + n]
@@ -220,7 +225,7 @@ def _chronological_respine(beats):
     return out
 
 
-def _validate_and_ground(raw_plan, seg_map, n_alternates, respine=True):
+def _validate_and_ground(raw_plan, seg_map, n_alternates, respine=True, is_recipe=False):
     """모델 EDL의 primary/alternates를 grounding. primary 무효 beat는 드롭,
     alternates 무효 항목은 제거하고 n_alternates개까지만.
 
@@ -250,7 +255,7 @@ def _validate_and_ground(raw_plan, seg_map, n_alternates, respine=True):
             "visual_verb": bool(beat.get("visual_verb", False)),
         })
     if respine:
-        beats_out = _chronological_respine(beats_out)
+        beats_out = _chronological_respine(beats_out, is_recipe=is_recipe)
     return {"structure": raw_plan.get("structure", ""), "beats": beats_out}
 
 
