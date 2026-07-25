@@ -1,3 +1,5 @@
+import urllib.error
+
 from shopping_shorts.reddit_source import extract_media_url, normalize_entries
 import shopping_shorts.reddit_source as rs
 
@@ -101,6 +103,57 @@ def test_fetch_subreddit_swallows_errors(monkeypatch):
     monkeypatch.setattr(rs, "_http_get", boom)
     monkeypatch.setattr(rs.time, "sleep", lambda *_: None)
     assert rs.fetch_subreddit("x", category="테스트") == []   # 부분실패 허용
+
+
+# ── 429 백오프(익명 RSS·데이터센터 IP) ──
+def test_http_get_maps_429_to_ratelimited(monkeypatch):
+    def raise_429(req, timeout=15):
+        raise urllib.error.HTTPError(req.full_url, 429, "Too Many Requests", {}, None)
+    monkeypatch.setattr(rs.urllib.request, "urlopen", raise_429)
+    import pytest
+    with pytest.raises(rs.RateLimited):
+        rs._http_get("https://www.reddit.com/r/x/rising.rss")
+
+
+def test_http_get_non_429_propagates(monkeypatch):
+    def raise_403(req, timeout=15):
+        raise urllib.error.HTTPError(req.full_url, 403, "Forbidden", {}, None)
+    monkeypatch.setattr(rs.urllib.request, "urlopen", raise_403)
+    import pytest
+    with pytest.raises(urllib.error.HTTPError):
+        rs._http_get("https://www.reddit.com/r/x/rising.rss")
+
+
+def test_fetch_subreddit_retries_on_429_then_succeeds(monkeypatch):
+    # 429 두 번 → 세 번째 성공. 백오프 재시도가 실제로 통과시킨다.
+    monkeypatch.setattr(rs, "_has_oauth", lambda: False)
+    monkeypatch.setattr(rs.time, "sleep", lambda *_: None)
+    calls = {"n": 0}
+    def flaky(url, timeout=15):
+        calls["n"] += 1
+        if calls["n"] <= 2:
+            raise rs.RateLimited(url)
+        return _ATOM_XML
+    monkeypatch.setattr(rs, "_http_get", flaky)
+    monkeypatch.setattr(rs, "_RL_RETRIES", 3)
+    monkeypatch.setattr(rs, "_RL_BACKOFF", [0.0, 0.0, 0.0])
+    items = rs.fetch_subreddit("x", category="테스트")
+    assert len(items) == 1 and calls["n"] == 3
+
+
+def test_fetch_subreddit_429_gives_up_after_retries(monkeypatch):
+    # 계속 429면 _RL_RETRIES 소진 후 빈손(무한루프 아님).
+    monkeypatch.setattr(rs, "_has_oauth", lambda: False)
+    monkeypatch.setattr(rs.time, "sleep", lambda *_: None)
+    calls = {"n": 0}
+    def always_429(url, timeout=15):
+        calls["n"] += 1
+        raise rs.RateLimited(url)
+    monkeypatch.setattr(rs, "_http_get", always_429)
+    monkeypatch.setattr(rs, "_RL_RETRIES", 3)
+    monkeypatch.setattr(rs, "_RL_BACKOFF", [0.0, 0.0, 0.0])
+    assert rs.fetch_subreddit("x") == []
+    assert calls["n"] == 4          # 최초 1 + 재시도 3
 
 
 # ── OAuth(권장 경로) ──
