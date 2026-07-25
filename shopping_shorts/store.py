@@ -193,6 +193,7 @@ class Store:
             """)
             # 한→중 소재 번역 캐시(2026-07-24) — ko당 1행, 있으면 재호출 안 함(무과금).
             # zh 빈 문자열도 저장(번역실패 캐시) — get_translation은 그걸 ""로, 미조회는 None으로 구분.
+            # 샤오홍슈·도우인 트렌드 검색카드(/api/translate + 벌크 backfill_cn_keywords)도 이 캐시를 읽는다.
             c.execute("""
                 CREATE TABLE IF NOT EXISTS translations (
                     ko TEXT PRIMARY KEY,
