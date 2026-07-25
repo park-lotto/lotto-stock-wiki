@@ -764,13 +764,14 @@ function renderOverseas(){
       <td>${i.thumbnail?`<img src="${i.thumbnail}" width="64" style="border-radius:6px">`:''}</td>
       <td><b>${i.grade||'—'}</b><div style="color:var(--sub);font-size:12px">속도 ${Math.round(i.speed||0)}</div></td>
       <td>${i.category||''}</td>
+      <td>${i.gap_badge==='🔥선점가능'?'<span style="color:#37e0bd;font-weight:600">🔥선점가능</span>':(i.gap_badge==='이미유입'?'<span style="color:var(--sub)">이미유입</span>':'<span style="color:var(--sub);opacity:.55">'+(i.gap_badge||'미확인')+'</span>')}</td>
       <td style="color:var(--sub);font-size:12px">r/${i.username||''} · ${i.media_platform||'reddit'}</td>
       <td><a href="${i.media_url||i.url}" target="_blank">원본</a>
           · <a href="${i.url}" target="_blank">레딧</a></td>
     </tr>`).join('');
   document.getElementById('overseasList').innerHTML =
     '<table style="width:100%;border-collapse:collapse"><thead><tr>'
-    +'<th></th><th>강도</th><th>카테고리</th><th>소스</th><th>링크</th></tr></thead><tbody>'
+    +'<th></th><th>강도</th><th>카테고리</th><th>선점</th><th>소스</th><th>링크</th></tr></thead><tbody>'
     +rows+'</tbody></table>';
 }
 async function updateOverseas(){
