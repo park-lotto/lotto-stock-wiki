@@ -115,3 +115,19 @@ sudo certbot --apache -d shoppingshorts.duckdns.org --non-interactive --agree-to
 - 비번 변경: `/etc/shopping-shorts.env` 수정 → `sudo systemctl restart shopping-shorts`
 - 로그: `journalctl -u shopping-shorts -f`
 - Apify 계정 4개 로테이션 — 하나 소진되면 자동으로 다음 계정 사용(시작 거부·실행중 소진 둘 다 대응)
+
+## 매일 유튜브 자동수집 타이머 (2026-07-25)
+무료 경로(계정·키워드·카테고리 프리셋)만 매일 1회 자동 수집 → 랭킹·가속 갱신.
+`git pull`로는 systemd 유닛이 설치 안 되니 **서버에 1회 설치**한다(이후 코드 변경은 자동배포로 반영).
+```
+# 서버 시간대 확인(UTC면 OnCalendar을 23:10로, KST면 08:10 그대로)
+timedatectl
+sudo cp deploy/shopping-shorts-collect.service /etc/systemd/system/
+sudo cp deploy/shopping-shorts-collect.timer   /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now shopping-shorts-collect.timer
+# 즉시 1회 테스트: sudo systemctl start shopping-shorts-collect.service
+#            로그: journalctl -u shopping-shorts-collect -n 30
+# 다음 실행시각: systemctl list-timers shopping-shorts-collect.timer
+```
+스크립트 본체 = `scripts/daily_youtube_collect.py`(HTTP 우회, `service.collect("youtube")` 직접).

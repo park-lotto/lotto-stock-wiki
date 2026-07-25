@@ -1,0 +1,148 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "스피어",
+      "rating": null,
+      "tp": null,
+      "ts": "08:20",
+      "quote": "스피어, SpaceX 성장의 진짜 수혜주는 소재가 아니라 공급망이다",
+      "sector": "기타"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "지슨",
+      "rating": null,
+      "tp": null,
+      "ts": "08:55",
+      "quote": "지슨, 2분기 흑자 전환…무선백도어 보안 성장 본격화",
+      "sector": "양자보안"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "HLB",
+      "rating": null,
+      "tp": null,
+      "ts": "09:50",
+      "quote": "HLB, 간암 신약 허가 불발 전부터 美 상업화 채비…보험 적용 인력 채용",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성전자",
+      "rating": null,
+      "tp": null,
+      "ts": "09:57",
+      "quote": "삼성 ‘HBM4 성공’ 숨은 주역 “베이스 다이 4나노 공정 선제 도입 주효”",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "코스메카코리아",
+      "rating": null,
+      "tp": null,
+      "ts": "11:10",
+      "quote": "K-뷰티 산업보고서 '코스메카코리아' +10% 급등 중",
+      "sector": "화장품미용"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LG에너지솔루션",
+      "rating": null,
+      "tp": null,
+      "ts": "12:47",
+      "quote": "中배터리 특허침해’ 칼 빼든 LG엔솔, 美서 소송전",
+      "sector": "2차전지"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "큐리언트",
+      "rating": null,
+      "tp": null,
+      "ts": "13:03",
+      "quote": "큐리언트 '美학회서 ADC 비임상 데이터 공개'",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼천당제약",
+      "rating": null,
+      "tp": null,
+      "ts": "15:10",
+      "quote": "삼천당제약, 美 FDA 임상 면제 확인…다이이찌산쿄와 본계약 착수",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "통신장비 ETF",
+      "rating": null,
+      "tp": null,
+      "ts": "08:32",
+      "quote": "AI 데이터센터의 세 번째 병목은 네트워크",
+      "sector": "통신"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "지슨",
+      "rating": null,
+      "tp": null,
+      "ts": "08:52",
+      "quote": "지슨 '공중화장실 불법촬영 탐지 의무화…신규 시장 열려'",
+      "sector": "양자보안"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성전자",
+      "rating": null,
+      "tp": null,
+      "ts": "08:56",
+      "quote": "삼성전자 'AMD와 공동설계 협업, 업계 최고 성능 HBM4 구현'",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "한화오션",
+      "rating": null,
+      "tp": null,
+      "ts": "09:29",
+      "quote": "한화오션, 美 전략 수송함 공동 개발…마스가 시동",
+      "sector": "조선"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "한미약품",
+      "rating": null,
+      "tp": null,
+      "ts": "10:38",
+      "quote": "한미약품, 미국 ISMB 2026서 자체 AI 플랫폼 'HARP-pSAR' 연구 발표",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "큐리오시스",
+      "rating": null,
+      "tp": null,
+      "ts": "11:43",
+      "quote": "[큐리오시스] 레비티에 이어 머크까지",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SK하이닉스",
+      "rating": null,
+      "tp": null,
+      "ts": "14:50",
+      "quote": "SK하이닉스, 또 쌓는다...온디바이스 AI용 '3D 적층 D램' 개발 시동",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "펩트론",
+      "rating": null,
+      "tp": null,
+      "ts": "16:51",
+      "quote": "펩트론(087010), 오송바이오파크 제2공장 연면적 2.5배 확대 — 건축 변경허가 신청",
+      "sector": "바이오"
+    }
+  ]
+}

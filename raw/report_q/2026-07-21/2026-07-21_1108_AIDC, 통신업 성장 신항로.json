@@ -1,0 +1,99 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-21_1108_AIDC, 통신업 성장 신항로.md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "신희철",
+    "report_date": "2026.07.21",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "SK텔레콤",
+        "code": "017670",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "112,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "동사의 2Q26 매출액 및 영업이익을 각각 4조 3,786억원(-QoQ 0.3%, +0.9% YoY), 5,465억원(+1.7% QoQ, +61.6% YoY, OPM 14.3%)으로 전망한다.",
+        "estimate_revision": null,
+        "next_catalyst": "엔트로픽 IPO 단계 돌입 및 지분가치 상승",
+        "thesis": [
+          "이동통신 매출 및 주주환원 정상화",
+          "AIDC 외형 확대에 따른 B2B 부문 성장 가속화",
+          "엔트로픽 IPO 단계 돌입에 따른 지분가치 상승 기대"
+        ],
+        "valuation_basis": "SOTP Valuation으로 산출. 통신 사업부 영업가치는 12개월 선행 EBITDA 5조 5,340억원에 Target EV/EBITDA 5.0배를 적용",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "SK텔레콤 투자의견을 Buy로 제시하며, 목표주가 112,000원으로 커버리지를 개시한다."
+      },
+      {
+        "name": "KT",
+        "code": "030200",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "70,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "동사의 2Q26 매출액 및 영업이익 전망치는 각각 6조 8,236억원(+0.7% QoQ, -8.1% YoY), 5,687억원(-44.0% YoY, OPM 8.3%)으로 전망한다.",
+        "estimate_revision": null,
+        "next_catalyst": "AICT Company로의 전환 및 B2B 사업 성장",
+        "thesis": [
+          "4년간 약 1조원 자사주 매입 등 주주환원 확대",
+          "AI/AX 등 B2B 부문 외형확대",
+          "인건비 절감 및 영업비용 효율화를 통한 구조적 수익성 개선"
+        ],
+        "valuation_basis": "SOTP 방식. 통신 부문 영업가치는 당사 12개월 선행 EBITDA 전망치 4조 5,800억원에 Target EV/EBITDA 4.0배를 적용",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "KT의 투자의견을 Buy, 목표주가 70,000원(상승여력 30.8%)으로 커버리지를 개시한다."
+      },
+      {
+        "name": "LG유플러스",
+        "code": "032640",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "19,500원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "동사의 2Q26 예상 매출액은 3조 8,688억원(+1.7% QoQ, +0.6% YoY)으로 전망한다. 이에 따른 영업이익 전망치는 3,059억원(+12.4% QoQ, +0.5% YoY)이다.",
+        "estimate_revision": null,
+        "next_catalyst": "파주 AIDC 가동 및 주주환원율 확대",
+        "thesis": [
+          "주주환원 확대(Target 주주환원율 40~60%)",
+          "파주 AIDC 중심 B2B AI 인프라 매출 확대",
+          "‘26년 영업비용 하락세 본격화에 따른 이익개선 사이클 돌입"
+        ],
+        "valuation_basis": "12개월 선행 EBITDA에 과거 이익 사이클 상단인 ‘16~17년도 Target EV/EBITDA 4.0배를 적용",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "LG유플러스의 투자의견을 Buy, 목표주가 19,500원(상승여력 34.4%)으로 커버리지를 개시한다."
+      },
+      {
+        "name": "인텔리안테크",
+        "code": "189300",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "89,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "동사의 2분기 예상 매출액은 841억원(+30.0% QoQ, +12.6% YoY)으로 전망한다. 이에 따라 올해 2분기 동사는 영업이익 44억원(+151.2% YoY, OPM 5.3%)을 기록할 것으로 판단한다.",
+        "estimate_revision": null,
+        "next_catalyst": "LEO 위성통신 서비스 개화 및 게이트웨이 매출 본격화",
+        "thesis": [
+          "주요 LEO 사업자향 FPA 공급 확대",
+          "지상 게이트웨이 안테나를 통한 성장 확대",
+          "해상용 VSAT 시장 회복"
+        ],
+        "valuation_basis": "12개월 선행 당기순이익 325억원에 Global Peer 평균 33배를 10% 할인한 30배 적용",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "인텔리안테크의 투자의견을 Buy로 제시하며, 목표주가 89,000원으로 커버리지를 개시한다."
+      }
+    ]
+  }
+}

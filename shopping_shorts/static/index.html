@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>숏템박스 레퍼런스 랭킹</title>
 <script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<!-- 세련된 한글 폰트(배지용, 2026-07-22). 실패해도 시스템폰트로 폴백 — 회귀 없음. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
   /* 스탁브레인 민트-블랙 투톤(다크 기본). produce.html과 동일 토큰. */
   :root{--bg:#0a0f0d;--panel:#101815;--line:#1e2b26;--txt:#eaf3f0;--sub:#8fa1a0;
@@ -50,19 +52,36 @@
               width:52px;height:52px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;
               font-size:20px;display:flex;align-items:center;justify-content:center;
               pointer-events:none;border:2px solid rgba(255,255,255,.85)}
-  /* 썸네일 위 직관 배지(2026-07-22) — 숫자 대신 "소형인데 빠르게" 같은 한줄 판단 라벨 */
-  .ibadge{position:absolute;top:7px;left:7px;z-index:2;pointer-events:none;
-          font-size:11.5px;font-weight:800;padding:3px 8px;border-radius:7px;color:#fff;
-          box-shadow:0 1px 4px rgba(0,0,0,.45);letter-spacing:-.2px}
-  .ibadge.rising{background:linear-gradient(135deg,#ff4d4f,#ff7a45)}   /* 소형인데 급상승 */
-  .ibadge.proven{background:linear-gradient(135deg,#f5a623,#e8b400);color:#1a1200} /* 대형인데 반응까지 */
-  .ibadge.gem{background:linear-gradient(135deg,#13c2c2,#08979c)}      /* 작은데 알짜 */
-  .ibadge.hot{background:linear-gradient(135deg,#fa541c,#d4380d)}       /* 지금 급상승 */
-  .ibadge.reach{background:rgba(24,90,157,.92)}                        /* 도달 큼 */
-  .ibadge.flat{background:rgba(80,80,90,.9)}                           /* 크지만 반응 평범 */
-  .vbadge{position:absolute;top:7px;right:7px;z-index:2;pointer-events:none;
-          font-size:11px;font-weight:700;padding:2px 7px;border-radius:7px;
-          background:rgba(0,0,0,.62);color:#fff}
+  /* 썸네일 위 직관 배지(2026-07-22 v2) — "대형채널 · 반응 뜨거움" 식 라벨. 통일된 다크 pill+
+     색점으로 어떤 썸네일 위에서도 잘 읽히게. ⭐는 지표 종합 상위(진짜 괜찮은 것). */
+  .ibadge{position:absolute;top:8px;left:8px;z-index:3;pointer-events:none;
+          display:inline-flex;align-items:center;gap:5px;max-width:calc(100% - 16px);
+          font-family:'Pretendard Variable',Pretendard,-apple-system,system-ui,sans-serif;
+          font-size:12px;font-weight:700;line-height:1.1;padding:5px 11px 5px 8px;border-radius:999px;
+          color:#fff;letter-spacing:-.2px;white-space:nowrap;
+          background:rgba(16,16,20,.7);backdrop-filter:blur(8px) saturate(1.3);-webkit-backdrop-filter:blur(8px) saturate(1.3);
+          box-shadow:0 4px 14px rgba(0,0,0,.42),inset 0 0 0 1px rgba(255,255,255,.14);
+          text-shadow:0 1px 2px rgba(0,0,0,.5)}
+  .ibadge .emo{display:inline-block;font-size:13.5px;line-height:1;
+               animation:emoBob 1.5s ease-in-out infinite;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
+  @keyframes emoBob{0%,100%{transform:translateY(0) scale(1)}45%{transform:translateY(-2.5px) scale(1.18)}}
+  .ibadge .lbl{color:currentColor;filter:brightness(1.15)}
+  .ibadge.red{color:#ff6b6b}          /* 뜨는 중(급상승·떡상) */
+  .ibadge.green{color:#a6f078}        /* 반응 좋음(연두) */
+  /* 🎯 진짜 봐야할 것 — 강조: 빨강 채움 pill + 크게 + 맥동 (극소수만) */
+  .ibadge.must{color:#fff;font-weight:800;font-size:12.5px;padding:6px 12px 6px 9px;
+               background:linear-gradient(135deg,#ff4d4d,#d81f1f);text-shadow:none;
+               box-shadow:0 0 0 1.5px rgba(255,150,150,.9),0 4px 16px rgba(255,50,50,.6);
+               animation:mustGlow 1.5s ease-in-out infinite}
+  .ibadge.must .lbl{color:#fff;filter:none}
+  .ibadge.must .emo{animation:emoBob 1.05s ease-in-out infinite}
+  @keyframes mustGlow{0%,100%{box-shadow:0 0 0 1.5px rgba(255,150,150,.85),0 4px 14px rgba(255,50,50,.5)}
+                      50%{box-shadow:0 0 0 2px rgba(255,200,200,1),0 5px 24px rgba(255,50,50,.95)}}
+  .vbadge{position:absolute;bottom:8px;right:8px;z-index:3;pointer-events:none;
+          font-family:'Pretendard Variable',Pretendard,system-ui,sans-serif;
+          font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:-.2px;
+          background:rgba(0,0,0,.62);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.4);
+          backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
   .card .body{padding:12px;flex:1;display:flex;flex-direction:column}
   .card .rank{font-size:12px;color:var(--sub)}
   .card .ch{font-weight:600;font-size:14px;margin:4px 0;display:flex;align-items:center;justify-content:space-between;gap:6px}
@@ -151,25 +170,100 @@
     .btns button{font-size:10px;padding:6px 2px}
   }
 </style>
+<style id="rankSkin">
+/* ── 레퍼런스 랭킹 상단 리디자인 (다크 시네마 + 민트 네온, 2026-07-23) ── */
+.main{background:radial-gradient(680px 340px at 18% -40px,rgba(55,224,189,.13),transparent 70%),
+      radial-gradient(520px 300px at 82% -20px,rgba(47,216,230,.08),transparent 70%)}
+/* kicker + title */
+.rk-kicker{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--accent);font-weight:800;margin-bottom:12px}
+.rk-kicker .d{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:rkPulse 2.4s ease-in-out infinite}
+@keyframes rkPulse{0%,100%{opacity:1}50%{opacity:.3}}
+.head{margin-bottom:2px}
+.head h2{font-size:clamp(30px,4.6vw,46px)!important;font-weight:800;letter-spacing:-.03em;line-height:1.05;margin:0;
+  background:linear-gradient(180deg,#ffffff,#a9ecda);-webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 34px rgba(55,224,189,.18)}
+.desc{font-size:15px;max-width:62ch;margin-bottom:22px}
+/* toolbar buttons */
+.toolbar{gap:12px}
+.toolbar button{font-weight:700;border-radius:12px;padding:12px 20px;
+  transition:transform .16s cubic-bezier(.2,.8,.3,1),box-shadow .2s,border-color .2s}
+.toolbar button:hover{transform:translateY(-3px)}
+.toolbar button:active{transform:translateY(-1px)}
+#collectBtn{background:linear-gradient(180deg,#45efc0,#20c596);color:#052018;
+  box-shadow:0 8px 24px -8px rgba(55,224,189,.6),0 0 0 1px rgba(55,224,189,.3) inset}
+#collectBtn:hover{box-shadow:0 14px 34px -8px rgba(55,224,189,.9),0 0 0 1px rgba(140,255,220,.6) inset}
+#censusBtn{background:var(--inset);color:var(--txt);border:1px solid var(--line)}
+#censusBtn:hover{border-color:var(--accent);box-shadow:0 0 0 1px rgba(55,224,189,.4),0 10px 28px -12px rgba(55,224,189,.6)}
+#status{font-variant-numeric:tabular-nums}
+/* system status — 관리자 전용 접이식 패널 */
+#statusBox{margin:2px 0 14px;border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative;
+  background:linear-gradient(180deg,var(--panel),var(--inset))}
+#statusBox::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,#2fd8e6,var(--accent),var(--fire))}
+#statusBox>summary{list-style:none;padding:12px 16px 12px 20px;cursor:pointer;font-size:11.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--sub);font-weight:800;display:flex;align-items:center;gap:8px}
+#statusBox>summary::-webkit-details-marker{display:none}
+#statusBox>summary .live{margin-left:auto;display:inline-flex;align-items:center;gap:6px;color:var(--accent);letter-spacing:.04em;font-weight:700}
+#statusBox>summary .live::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:rkPulse 1.8s infinite}
+#statusBox>summary .chev{transition:transform .2s;color:var(--accent)}
+#statusBox[open]>summary .chev{transform:rotate(180deg)}
+#censusSummary{margin:0!important;padding:2px 18px 15px!important;font-size:13px!important;line-height:1.75!important;color:var(--sub)!important}
+#censusSummary b{color:var(--txt)}
+/* collapsible rows */
+#refRegister,#refTrace{border-radius:12px!important;background:linear-gradient(180deg,var(--panel),var(--inset))!important;transition:border-color .2s,box-shadow .2s}
+#refRegister:hover,#refTrace:hover{border-color:var(--accent)!important;box-shadow:0 8px 26px -14px rgba(55,224,189,.5)}
+#refRegister>summary,#refTrace>summary{font-weight:700;font-size:13px!important}
+/* tabs + sliding underline */
+.tabs{position:relative;gap:4px}
+.tab{font-weight:700;border-radius:9px 9px 0 0;transition:color .2s,background .2s}
+.tab:hover{color:var(--txt);background:rgba(255,255,255,.04)}
+.tab.active{color:var(--accent)!important;border-bottom-color:transparent!important}
+.tab-ink{position:absolute;bottom:-1px;left:0;width:0;height:2.5px;border-radius:3px;background:var(--accent);
+  box-shadow:0 0 12px var(--accent);pointer-events:none;
+  transition:left .28s cubic-bezier(.3,.9,.3,1),width .28s cubic-bezier(.3,.9,.3,1)}
+/* category chips */
+.ctype{border-radius:20px!important;transition:all .18s}
+.ctype:hover{transform:translateY(-1px);box-shadow:0 6px 18px -8px rgba(55,224,189,.5)}
+.ctype.active{background:linear-gradient(180deg,#45efc0,#20c596)!important;color:#052018!important;border-color:transparent!important;
+  box-shadow:0 4px 16px -4px rgba(55,224,189,.6)}
+/* secondary sub-filter (소재) */
+.cat{transition:all .18s}
+.cat:hover{transform:translateY(-1px);color:var(--txt);border-color:var(--accent)}
+.cat.active{background:rgba(55,224,189,.12)!important;color:var(--accent)!important;border-color:var(--accent)!important}
+/* search */
+#rankSearch{max-width:100%!important;border-radius:12px!important;padding:14px 16px!important;font-size:14.5px!important;
+  transition:border-color .2s,box-shadow .2s}
+#rankSearch:focus{outline:none;border-color:var(--accent)!important;
+  box-shadow:0 0 0 1px rgba(55,224,189,.4),0 8px 30px -8px rgba(55,224,189,.45)!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
 </head>
 <body>
   <main class="main">
+    <div class="rk-kicker"><span class="d"></span>숏템탑스 · 레퍼런스 인텔리전스</div>
     <div class="head">
-      <h2>📊 레퍼런스 랭킹</h2>
+      <h2>레퍼런스 랭킹</h2>
     </div>
     <div class="desc">443개 레퍼런스 채널의 48시간 이내 릴스를 강도별로 랭킹합니다.</div>
+    <div class="ctypes" id="modeTabs" style="margin-bottom:12px">
+      <div class="ctype active" id="modeRanking" onclick="toggleOverseas(false)">🏠 레퍼런스 랭킹</div>
+      <div class="ctype" id="modeOverseas" onclick="toggleOverseas(true)">🌍 해외HOT</div>
+    </div>
     <!-- 플랫폼 전환 토글 숨김(사장님 2026-07-21, 미사용) — 삭제 아님. switchPlatform·PLATFORM
          로직은 보존해 PLATFORM 기본값 instagram으로 랭킹·수집이 계속 동작하고, 되살리려면
          display:none만 지우면 된다. -->
-    <div class="ctypes" id="platformTabs" style="display:none;margin-bottom:12px">
+    <div class="ctypes" id="platformTabs" style="margin-bottom:12px">
       <div class="ctype active" data-platform="instagram" onclick="switchPlatform('instagram',this)">📷 인스타</div>
       <div class="ctype" data-platform="youtube" onclick="switchPlatform('youtube',this)">▶️ 유튜브</div>
       <div class="ctype" data-platform="tiktok" onclick="switchPlatform('tiktok',this)">🎵 틱톡</div>
+      <div class="ctype" data-platform="xiaohongshu" onclick="switchPlatform('xiaohongshu',this)">📕 샤오홍슈</div>
+      <div class="ctype" data-platform="douyin" onclick="switchPlatform('douyin',this)">🎬 도우인</div>
     </div>
     <div id="seedPanel" style="display:none;margin-bottom:12px">
       <div id="ttMode" style="display:none;margin-bottom:6px">
-        <label style="font-size:12px;color:var(--sub);cursor:pointer"><input type="radio" name="ttmode" value="keyword" checked onclick="ttModeChange()"> 🔎 키워드 검색발굴</label>
-        <label style="font-size:12px;color:var(--sub);cursor:pointer;margin-left:12px"><input type="radio" name="ttmode" value="account" onclick="ttModeChange()"> 🎵 계정 시드</label>
+        <label style="font-size:12px;color:var(--sub);cursor:pointer"><input type="radio" name="ttmode" value="keyword" onclick="ttModeChange()"> 🔎 키워드 검색발굴 (유료 · 현재 꺼짐)</label>
+        <label style="font-size:12px;color:var(--sub);cursor:pointer;margin-left:12px"><input type="radio" name="ttmode" value="account" checked onclick="ttModeChange()"> 🎵 계정 시드</label>
       </div>
       <input id="seedInput" type="text" placeholder="검색 키워드 (예: 살림꿀팁)" style="padding:8px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
       <select id="seedLang" title="검색 언어(지역) — 한국어면 국내영상, 다른 언어면 그 나라 영상 발굴" style="padding:8px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
@@ -190,10 +284,23 @@
     </div>
     <div class="toolbar">
       <button id="collectBtn" onclick="doCollect()" style="display:none">⚡ 지금 수집</button>
+      <span id="ytCatBox" style="display:none">
+        <select id="ytCat" style="padding:6px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
+          <option value="홈템">🏠 홈·살림템</option>
+          <option value="비법형">🔥 비법·꿀팁형</option>
+          <option value="제품형">🛒 제품추천형</option>
+          <option value="혼합형">💄 뷰티</option>
+          <option value="기타">📦 기타</option>
+        </select>
+        <button onclick="doCollect(document.getElementById('ytCat').value)">＋ 이 카테고리 수집</button>
+      </span>
       <button id="censusBtn" onclick="doCensus()" style="display:none" title="전 채널을 긁어 활동성 재판정 — 2일 내 안 올린 채널은 정리, 다시 올린 채널은 부활. 가끔만 누르세요(비용).">🌐 전수조사</button>
       <span id="status" style="color:var(--sub);font-size:12px"></span>
     </div>
-    <div id="censusSummary" style="margin:-8px 0 14px;font-size:12px;color:var(--sub)"></div>
+    <details id="statusBox" open style="display:none">
+      <summary>⚙️ 시스템 상태<span class="live">실시간</span><span class="chev">▾</span></summary>
+      <div id="censusSummary"></div>
+    </details>
     <details id="refRegister" style="display:none;margin:4px 0 12px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
       <summary id="refSummary" style="padding:9px 12px;cursor:pointer;font-size:12px;color:var(--sub)">➕ 레퍼런스 채널 등록</summary>
       <div style="padding:0 12px 10px">
@@ -223,6 +330,7 @@
       <div class="tab" data-tab="speed" title="댓글수 ÷ 경과시간(시간) — 시간당 댓글이 얼마나 빨리 쌓이는지">⚡ 속도</div>
       <div class="tab" data-tab="accel" title="이번 수집 Δ(댓글 증가분) − 직전 수집 Δ — 증가세 자체가 빨라지고 있는지(가속도)">📈 가속</div>
       <div class="tab" data-tab="density" title="댓글수 ÷ 팔로워수 — 팔로워 규모 대비 반응이 얼마나 뜨거운지(작은 채널도 상위권 가능)">💥 참여밀도</div>
+      <span class="tab-ink" id="tabInk"></span>
     </div>
     <div class="ctypes" id="ctypes"></div>
     <input id="rankSearch" type="text" placeholder="🔍 숏템검색 — 채널명·소재·링크 (채이홈·피자·인스타링크…)"
@@ -232,6 +340,15 @@
     <div class="cards" id="cards">
       <div class="empty">「지금 수집」을 눌러 시작하세요.</div>
     </div>
+    <div id="overseasBox" style="display:none">
+      <div class="ctypes" id="overseasCats" style="margin-bottom:10px"></div>
+      <div class="toolbar">
+        <button onclick="updateOverseas()">⚡ 지금 업데이트</button>
+        <span id="overseasStatus" style="color:var(--sub);font-size:12px"></span>
+      </div>
+      <div id="overseasList"></div>
+    </div>
+    <div id="trendRoot" style="display:none"></div>
     <div id="channelHistoryWrap"></div>
   </main>
   <div class="modal-bg" id="scriptModal">
@@ -276,25 +393,63 @@
     </div>
   </div>
 <script>
-// 유형(제작·수익화 방식) = 초보자 탐색 1차축. topics = 그 유형의 세부주제(2차축).
+// 유형(제작·수익화 방식) = 초보자 탐색축. 2026-07-16 백엔드가 '인테리어'+'생활용품'을
+// '홈템'으로 합치면서 세부주제(2차축)가 사라졌다 — 이제 버튼 1개 = 백엔드 카테고리 1개다.
+// ★버튼은 백엔드가 내는 5개 카테고리(홈템/레시피/가전/뷰티/기타)를 전부 덮어야
+//   '전체 = 버튼 합'이 된다. 홈템·기타 버튼이 없던 옛 매핑에선 두 덩어리가 통째로 누락됐다.
 const CTYPES = [
-  {key:"전체",  label:"✨ 전체",       topics:[]},
-  {key:"비법형", label:"🔥 비법·꿀팁형", topics:["인테리어","레시피"]},
-  {key:"제품형", label:"🛒 제품추천형",  topics:["생활용품","가전"]},
-  {key:"혼합형", label:"💄 뷰티(혼합)",  topics:["뷰티"]},
+  {key:"전체",  label:"✨ 전체",        topics:[]},
+  {key:"홈템",   label:"🏠 홈·살림템",   topics:[]},
+  {key:"비법형", label:"🔥 비법·꿀팁형",  topics:[]},
+  {key:"제품형", label:"🛒 제품추천형",   topics:[]},
+  {key:"혼합형", label:"💄 뷰티",        topics:[]},
+  {key:"기타",   label:"📦 기타",        topics:[]},
 ];
-const TOPIC_CTYPE = {인테리어:"비법형",레시피:"비법형",생활용품:"제품형",가전:"제품형",뷰티:"혼합형",기타:"기타"};
+// 백엔드 category(홈템/레시피/가전/뷰티/기타) → 버튼 key. 모든 값이 CTYPES key와 1:1.
+const TOPIC_CTYPE = {홈템:"홈템", 레시피:"비법형", 가전:"제품형", 뷰티:"혼합형", 기타:"기타"};
 let STATE = {items:[], tab:"comments", ctype:"전체", cat:"전체", q:""};
 let PLATFORM='instagram';
-function ttMode(){ const r=document.querySelector('input[name="ttmode"]:checked'); return r?r.value:'keyword'; }
+// ── 플랫폼별 안내문구·지표 툴팁(2026-07-24, 토글 노출 대응) — 인스타 기준 문구를
+// 그대로 두면 틱톡/유튜브(시드계정·키워드+14일창, 조회수기반)에 거짓 설명이 된다. ──
+const DESC_BY_PLATFORM = {
+  instagram: '등록한 레퍼런스 채널의 <b>48시간</b> 이내 릴스를 강도별로 랭킹합니다.',
+  tiktok:    '등록한 <b>시드 계정</b>의 최근 <b>14일</b> 숏폼을 조회수 기반 강도로 랭킹합니다. (무료 수집)',
+  youtube:   '<b>키워드 시드</b>로 발굴한 최근 <b>14일</b> Shorts를 조회수 기반 강도로 랭킹합니다.',
+};
+const TAB_TIP = {
+  instagram: {speed:'댓글수 ÷ 경과시간', density:'댓글수 ÷ 팔로워수'},
+  tiktok:    {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
+  youtube:   {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
+};
+function updatePlatformCopy(p){
+  const descEl=document.querySelector('.desc'); if(descEl) descEl.innerHTML = DESC_BY_PLATFORM[p] || DESC_BY_PLATFORM.instagram;
+  const tip = TAB_TIP[p] || TAB_TIP.instagram;
+  const speedEl=document.querySelector('.tab[data-tab="speed"]'); if(speedEl) speedEl.title = tip.speed;
+  const densityEl=document.querySelector('.tab[data-tab="density"]'); if(densityEl) densityEl.title = tip.density;
+}
+function ttMode(){ const r=document.querySelector('input[name="ttmode"]:checked'); return r?r.value:'account'; }
 function switchPlatform(p, el){
   PLATFORM=p;
+  updatePlatformCopy(p);
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
+  const isTrend = (p==='xiaohongshu' || p==='douyin');
+  document.getElementById('trendRoot').style.display = isTrend ? 'block' : 'none';
+  document.getElementById('cards').style.display = isTrend ? 'none' : '';
+  if(isTrend){
+    // 트렌드 탭: 인스·틱·유튜 전용 패널·후속호출 전부 건너뛴다.
+    document.getElementById('seedPanel').style.display = 'none';
+    document.getElementById('refRegister').style.display = 'none';
+    document.getElementById('ttMode').style.display = 'none';
+    document.getElementById('ttPanel').style.display = 'none';
+    renderTrendCards();
+    return;
+  }
   document.getElementById('seedPanel').style.display = (p==='instagram')?'none':'block';
   document.getElementById('refRegister').style.display = (p==='instagram')?'block':'none';
   if(p==='instagram') loadRefAdded();
   document.getElementById('ttMode').style.display = (p==='tiktok')?'block':'none';
+  document.getElementById('ytCatBox').style.display = (p==='youtube')?'inline':'none';
   document.getElementById('ttPanel').style.display = (p==='tiktok' && ttMode()==='keyword')?'block':'none';
   if(p==='tiktok') loadTtSettings();
   ttModeChange();       // 입력 placeholder·언어선택기·설정패널 표시 갱신
@@ -551,20 +706,27 @@ function setSearch(q){ STATE.q = q; render(); }
 // 백분위'로 보고 "소형인데 빠르게" 같은 한줄 판단 라벨을 붙인다. 절대값이 아니라 지금 목록 대비 상대.
 function _pctl(sorted, v){ let lo=0,hi=sorted.length; while(lo<hi){const m=(lo+hi)>>1; if(sorted[m]<=v) lo=m+1; else hi=m;} return sorted.length? lo/sorted.length : 0; }
 function _fmtViews(n){ n=n||0; return n>=10000 ? (n/10000).toFixed(1)+'만' : n.toLocaleString(); }
-function _insight(i, ctx){
-  const vr=_pctl(ctx.vs, i.views||0), dr=_pctl(ctx.ds, i.density||0), sr=_pctl(ctx.ss, i.speed||0);
-  if(vr>=0.70 && dr>=0.60) return {t:'👑 대형인데 반응까지', c:'proven'};   // 도달 크고 반응도 뜨겁다=검증된 히트
-  if(vr<=0.40 && sr>=0.70) return {t:'🚀 소형인데 빠르게 오르는중', c:'rising'}; // 작은데 지금 치고 올라옴
-  if(vr<=0.40 && dr>=0.75) return {t:'💎 작은데 반응 알짜', c:'gem'};       // 작은데 참여밀도 최상
-  if(vr>=0.70 && dr<0.40)  return {t:'📺 크지만 반응은 평범', c:'flat'};    // 도달만 크고 반응 미지근
-  if(sr>=0.85)             return {t:'🔥 지금 급상승', c:'hot'};
-  if(dr>=0.90)             return {t:'💎 참여밀도 최상위', c:'gem'};
-  if(vr>=0.85)             return {t:'📺 도달 큼', c:'reach'};
+function _insight(vr, dr, sr){
+  // 아주 선별적 — 평범한 건 배지 없음(대부분 배지 X). 빨강=뜨는중, 연두=반응 좋음.
+  if(vr<=0.40 && sr>=0.85) return {e:'🚀', t:'SMALL · 떡상中', c:'red'};   // 작은데 빠르게(발굴가치)
+  if(dr>=0.90 && vr<=0.45) return {e:'💎', t:'SMALL · 알짜', c:'green'};   // 작은데 반응 최상
+  if(dr>=0.90 && vr>=0.60) return {e:'🔥', t:'반응 좋음', c:'green'};      // 반응 확실히 좋음
+  if(sr>=0.92)             return {e:'📈', t:'급상승', c:'red'};
   return null;
 }
 function badgeHTML(i, ctx){
-  let h=''; const b=_insight(i, ctx);
-  if(b) h+=`<span class="ibadge ${b.c}">${b.t}</span>`;
+  const vr=_pctl(ctx.vs, i.views||0), dr=_pctl(ctx.ds, i.density||0), sr=_pctl(ctx.ss, i.speed||0);
+  const b=_insight(vr, dr, sr);
+  let h='';
+  if(b){
+    // 🎯 진짜 봐야할 것: 도달·반응·상승세 종합(반응 가중) 최상위만 — 극소수. 크고 빨갛게 강조.
+    const score = vr*0.35 + dr*0.50 + sr*0.15;
+    const must = score>=0.90;
+    const cls = must ? 'must' : b.c;
+    const emo = must ? '🎯' : b.e;
+    const txt = must ? '진짜 봐야할 것' : b.t;
+    h+=`<span class="ibadge ${cls}"><span class="emo">${emo}</span><span class="lbl">${txt}</span></span>`;
+  }
   if(i.views) h+=`<span class="vbadge">👁 ${_fmtViews(i.views)}</span>`;
   return h;
 }
@@ -572,6 +734,72 @@ function badgeHTML(i, ctx){
 // (채널명·소재는 oninput이 이미 필터링. 링크만 엔터라는 명시 동작이 필요 — 유료 렌즈 남용 방지.)
 function _looksLikeUrl(q){ return /^\s*https?:\/\//i.test(q||''); }
 function onSearchEnter(v){ if(_looksLikeUrl(v)) traceByUrl((v||'').trim()); }
+const OVERSEAS_CATS = ["전체","주방/레시피","살림/생활꿀템","인테리어","자취템","가전템","뷰티"];
+let overseasFilter = "전체";
+let overseasItems = [];
+
+let _overseasHidden = [];
+function toggleOverseas(on){
+  document.getElementById('overseasBox').style.display = on ? 'block' : 'none';
+  document.getElementById('modeOverseas').classList.toggle('active', on);
+  document.getElementById('modeRanking').classList.toggle('active', !on);
+  // 랭킹화면(레퍼런스랭킹개편이 재구성)을 통째로 숨긴다 — 하드코딩 id 목록 대신
+  // main의 직계 자식 중 지금 보이는 것만 숨기고, 되돌릴 때 그것만 복원한다.
+  const main = document.querySelector('main');
+  if(on){
+    _overseasHidden = [];
+    if(main) Array.from(main.children).forEach(el=>{
+      if(el.id==='modeTabs' || el.id==='overseasBox') return;
+      if(window.getComputedStyle(el).display !== 'none'){
+        _overseasHidden.push([el, el.style.display]);
+        el.style.display = 'none';
+      }
+    });
+    initOverseasCats(); loadOverseas();
+  } else {
+    _overseasHidden.forEach(([el, prev])=>{ el.style.display = prev; });
+    _overseasHidden = [];
+  }
+}
+function initOverseasCats(){
+  document.getElementById('overseasCats').innerHTML = OVERSEAS_CATS.map(c=>
+    `<div class="ctype${c===overseasFilter?' active':''}" onclick="setOverseasCat('${c}')">${c}</div>`).join('');
+}
+function setOverseasCat(c){ overseasFilter=c; initOverseasCats(); renderOverseas(); }
+async function loadOverseas(){
+  const d=await (await fetch('/api/overseas/feed')).json();
+  overseasItems=d.items||[]; renderOverseas();
+}
+function renderOverseas(){
+  const rows=overseasItems
+    .filter(i=>overseasFilter==='전체'||i.category===overseasFilter)
+    .map(i=>`<tr>
+      <td>${i.thumbnail?`<img src="${i.thumbnail}" width="64" style="border-radius:6px">`:''}</td>
+      <td><b>${i.grade||'—'}</b><div style="color:var(--sub);font-size:12px">속도 ${Math.round(i.speed||0)}</div></td>
+      <td>${i.category||''}</td>
+      <td>${i.gap_badge==='🔥선점가능'?'<span style="color:#37e0bd;font-weight:600">🔥선점가능</span>':(i.gap_badge==='이미유입'?'<span style="color:var(--sub)">이미유입</span>':'<span style="color:var(--sub);opacity:.55">'+(i.gap_badge||'미확인')+'</span>')}</td>
+      <td style="color:var(--sub);font-size:12px">r/${i.username||''} · ${i.media_platform||'reddit'}</td>
+      <td><a href="${i.media_url||i.url}" target="_blank">원본</a>
+          · <a href="${i.url}" target="_blank">레딧</a></td>
+    </tr>`).join('');
+  document.getElementById('overseasList').innerHTML =
+    '<table style="width:100%;border-collapse:collapse"><thead><tr>'
+    +'<th></th><th>강도</th><th>카테고리</th><th>선점</th><th>소스</th><th>링크</th></tr></thead><tbody>'
+    +rows+'</tbody></table>';
+}
+async function updateOverseas(){
+  document.getElementById('overseasStatus').textContent='수집 중…';
+  await fetch('/api/overseas/update');
+  const poll=setInterval(async()=>{
+    const s=await (await fetch('/api/overseas/status')).json();
+    document.getElementById('overseasStatus').textContent=(s.phase||'')+' ('+(s.elapsed||0)+'s)';
+    if(s.status==='done'||s.status==='error'){ clearInterval(poll);
+      document.getElementById('overseasStatus').textContent =
+        s.status==='done' ? `완료 ${s.count}건` : ('오류: '+s.error);
+      loadOverseas(); }
+  },2000);
+}
+
 function render(){
   let items = STATE.items.slice();
   const searching = !!(STATE.q && STATE.q.trim());
@@ -686,11 +914,12 @@ async function readJson(r){
   }
   return r.json();
 }
-async function doCollect(){
+async function doCollect(category){
   const btn=document.getElementById("collectBtn"), st=document.getElementById("status");
   btn.disabled=true; st.textContent="수집 중… (수 분 소요)";
   try{
-    const r = await fetch("/api/collect?platform="+PLATFORM, {method:"POST"});
+    const qs = "/api/collect?platform="+PLATFORM + (category?("&category="+encodeURIComponent(category)):"");
+    const r = await fetch(qs, {method:"POST"});
     const d = await readJson(r);
     if(r.status===429){   // 틱톡 남용/예산 킬스위치
       const label = d.error_code==='budget_exceeded' ? '💰 월 예산 초과' : '🚫 오늘 한도 초과';
@@ -714,9 +943,42 @@ function _bankIngestEl(){
     const st=document.getElementById('status'); if(st&&st.parentNode) st.parentNode.insertBefore(el, st.nextSibling); }
   return el;
 }
-function _fmtBuckets(by){
-  const NM={hook:'훅',ending:'어미',adverb:'부사',cta:'CTA',evidence:'근거',conflict:'갈등',emotion:'감정',price:'가격'};
-  return Object.entries(by||{}).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${NM[k]||k}+${v}`).join('·');
+function _sumBuckets(by,keys){ return keys.reduce((s,k)=>s+(by&&by[k]||0),0); }
+function _pct(x){ return (x===null||x===undefined)?'—':Math.round(x*100)+'%'; }
+// 흡수 리포트 + 제미니 검열을 한 패널로. 신호등(🟢🟡🔴) + 3지표 + 경고사유.
+function _renderBankPanel(rep){
+  const by=rep.by_bucket||{};
+  const story=_sumBuckets(by,['conflict','emotion','evidence','spine']);
+  const style=_sumBuckets(by,['adverb','cta','ending','price']);
+  const hook=by.hook||0;
+  let html=`📦 <b>오늘 은행 흡수</b>: 우승영상 ${rep.added_sources||0}편 · 부품 ${rep.added_items||0}개`
+    +` <span style="color:var(--sub)">(훅 ${hook}·스토리구조 ${story}·스타일 ${style})</span>`
+    +(rep.harvested_hooks?` · 훅수확 +${rep.harvested_hooks}`:'')
+    +(rep.skipped_dup?` · 중복 ${rep.skipped_dup} 건너뜀`:'');
+  const a=rep.gemini_audit;
+  if(a){
+    const h=a.health||{};
+    html+=`<br>🤖 <b>제미니 검열 ${h.level||''}</b> `
+      +`성공률 ${_pct(a.success_rate)} (${a.succeeded||0}/${a.attempted||0})`
+      +` · 완성도 ${_pct(a.completeness_rate)}`
+      +` · 훅스팸 ${_pct(a.hook_spam_ratio)}${a.hook_bait?`(차단 ${a.hook_bait})`:''}`;
+    (h.reasons||[]).forEach(r=>{ html+=`<br><span style="color:#c0392b">⚠️ ${r}</span>`; });
+  }
+  const u=rep.usage_audit;
+  if(u && u.n){
+    const uh=u.health||{};
+    const c=u.compliance;
+    html+=`<br>🎬 <b>생성 순응 ${uh.level||''}</b> (최근 ${u.n}편) `
+      +`은행 사용률 ${_pct(u.bank_used_rate)}`
+      +` · 구조순응 ${_pct(u.conformance_pass_rate)}`
+      +` · 표절 ${_pct(u.plagiarism_rate)}`
+      +(u.judge_avg!=null?` · 심사 ${(u.judge_avg*5).toFixed(1)}/5`:'');
+    if(c){ html+=`<br><span style="color:var(--sub)">순응샘플(${c.n}) `
+      +`아크 ${c.arc_avg}/5 · 부품 ${c.flavor_avg}/5`
+      +(c.verbatim_rate?` · 표절 ${_pct(c.verbatim_rate)}`:'')+`</span>`; }
+    (uh.reasons||[]).forEach(r=>{ html+=`<br><span style="color:#c0392b">⚠️ ${r}</span>`; });
+  }
+  return html;
 }
 async function _pollBankIngest(times){
   if(PLATFORM!=='instagram' || times<=0) return;
@@ -725,10 +987,7 @@ async function _pollBankIngest(times){
     const d=await (await fetch('/api/bank/ingest_report')).json();
     const rep=(d&&d.report)||{};
     if(rep.status==='done'){
-      const bk=_fmtBuckets(rep.by_bucket);
-      el.textContent=`🏦 대본은행 자동적재: 신규 ${rep.added_sources||0}건`
-        +(rep.added_items?` (부품 ${rep.added_items}개${bk?' · '+bk:''})`:'')
-        +(rep.skipped_dup?` · 중복 ${rep.skipped_dup}건 건너뜀`:'');
+      el.innerHTML=_renderBankPanel(rep);
       return;   // 끝 — 더 폴링 안 함
     }
     el.textContent='🏦 대본은행 자동 분석 중… (백그라운드, 잠시 후 결과)';
@@ -812,8 +1071,13 @@ async function doCensus(){
 }
 async function loadLast(){
   const d = await (await fetch("/api/reference?platform="+PLATFORM)).json();
-  if(d.items?.length){ STATE.items=d.items; render();
-    document.getElementById("status").textContent=`마지막 수집: ${fmtTime(d.collected_at)}`; }
+  STATE.items = d.items || [];   // 결과 없어도 무조건 갈아끼움 — 이전 플랫폼 카드 잔존 방지
+  render();
+  if(STATE.items.length){
+    document.getElementById("status").textContent=`마지막 수집: ${fmtTime(d.collected_at)}`;
+  } else {
+    document.getElementById("status").textContent="아직 수집 결과가 없습니다. (관리자 수집 대기)";
+  }
 }
 function goComment(sc){ location.href = '/outreach?focus=' + encodeURIComponent(sc); }
 async function copyLink(url, btn){
@@ -1084,6 +1348,30 @@ async function lensBulkDelete(shortcode){
   st.items=st.items.filter(i=>!sel.has(i.savesc));   // 결과 목록에서 숨김
   st.sel.clear(); renderLens(shortcode);
 }
+// 렌즈 유튜브 결과 = 짜집기 채널들. 그 채널들을 벤치(account 시드)로 등록 → 채널기반 수집에 편입.
+async function lensBenchAllYoutube(shortcode){
+  const st=LENS_STATE[shortcode]; if(!st) return;
+  const urls=(st._shown||[]).filter(i=>i.platform==='youtube').map(i=>i.url).filter(Boolean);
+  if(!urls.length){ showToast('유튜브 결과가 없어요'); return; }
+  showToast(`⏳ 채널 해석 중… (${urls.length}개 영상)`);
+  try{
+    const d=await (await fetch('/api/seeds/from_youtube_videos',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({urls})})).json();
+    if(!d.ok){ showToast('❌ 등록 실패: '+(d.error||'')); return; }
+    showToast(`✅ 벤치 등록 ${d.added}개${d.duplicate?` (이미있음 ${d.duplicate})`:''} <a href="/refs" style="color:var(--sel-fg);margin-left:6px">벤치 보기 →</a>`);
+  }catch(e){ showToast('❌ 등록 실패'); }
+}
+async function lensBenchOne(btn, urlEnc){
+  const url=decodeURIComponent(urlEnc||''); if(!url) return;
+  btn.disabled=true; const orig=btn.textContent; btn.textContent='⏳';
+  try{
+    const d=await (await fetch('/api/seeds/from_youtube_videos',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({urls:[url]})})).json();
+    if(d.ok && d.added){ btn.textContent='✅ 벤치됨'; showToast('✅ 채널 벤치 등록됨'); }
+    else if(d.ok && d.duplicate){ btn.textContent='이미 벤치'; showToast('이미 등록된 채널'); }
+    else { btn.textContent=orig; btn.disabled=false; showToast('❌ 채널 해석 실패'); }
+  }catch(e){ btn.textContent=orig; btn.disabled=false; showToast('❌ 등록 실패'); }
+}
 function _fmtCount(n){
   if(n==null || isNaN(n)) return '';
   n=Number(n);
@@ -1097,6 +1385,120 @@ function _fmtDur(s){
   s=Math.round(Number(s)); const m=Math.floor(s/60), ss=s%60;
   return m+':'+String(ss).padStart(2,'0');
 }
+// ── 트렌드 검색카드(2026-07-24) ──────────────────────
+// 인스·틱·유튜 상위 통합에서 소재를 뽑아 샤오·도우 딥링크 카드로. 순수함수는 node 테스트됨.
+const _TREND_STOP = new Set(['만들기','완성','레시피','털기','또','집에서','하는','추천','리뷰','종','신상털기']);
+function _titleKeyword(title){
+  // 제목에서 핵심 명사구 근사: 이모지·해시태그·괄호 제거 후 불용어 밖 최장 토큰.
+  let t = String(title||'').replace(/[#\[\](){}!?~…·|]/g,' ')
+            .replace(/[\u{1F000}-\u{1FFFF}☀-➿]/gu,' ');
+  const toks = t.split(/\s+/).map(s=>s.trim()).filter(Boolean).filter(w=>!_TREND_STOP.has(w));
+  if(!toks.length) return '';
+  return toks.reduce((a,b)=> b.length>=a.length ? b : a, toks[0]);
+}
+function _extractSubject(item){
+  const vs = (item.vision_subject||'').trim();
+  if(vs) return vs;
+  return _titleKeyword(item.title||'');
+}
+function _normSubjectKey(s){
+  return String(s||'').toLowerCase().replace(/\s+/g,'')
+           .replace(/(을|를|이|가|은|는|의|도|에|와|과|만)$/,'');
+}
+function _score(item){
+  const v = item.views;
+  if(v!=null && !isNaN(v)) return Number(v);
+  const l = item.likes;
+  return (l!=null && !isNaN(l)) ? Number(l) : 0;
+}
+function _groupBySubject(items){
+  const map = new Map();
+  for(const it of (items||[])){
+    const subj = _extractSubject(it);
+    if(!subj) continue;
+    const key = _normSubjectKey(subj);
+    if(!key) continue;
+    let g = map.get(key);
+    if(!g){ g = {subjectKo:subj, items:[], platforms:new Set(), maxScore:0}; map.set(key,g); }
+    g.items.push(it);
+    if(it.platform) g.platforms.add(it.platform);
+    g.maxScore = Math.max(g.maxScore, _score(it));
+  }
+  const groups = [...map.values()].map(g=>({
+    subjectKo:g.subjectKo, items:g.items, platforms:[...g.platforms],
+    count:g.items.length, maxScore:g.maxScore,
+  }));
+  groups.sort((a,b)=> b.maxScore - a.maxScore);
+  return groups;
+}
+// 폴백 B(2026-07-25 사장님 결정): 중국(샤오홍슈·도우인) 딥링크 버튼을 만든다.
+// 번역(zh)이 있으면 정상 링크, 없으면 흐리게+비활성(pointer-events:none) — 한국어를
+// 중국 검색창에 넣는 잘못된 딥링크를 막는다(원안 ko 폴백 폐기). 순수함수라 node 테스트됨.
+function _cnTrendBtn(zh){
+  const base='text-decoration:none;padding:4px 10px;border-radius:10px;border:1px solid var(--line)';
+  return function(label, color, url){
+    if(zh) return `<a href="${url}" target="_blank" rel="noopener" style="${base};color:${color}">${label}</a>`;
+    return `<span class="cn-disabled" title="번역 대기 — 곧 갱신(중국 검색은 중국어 필요)" `
+         + `style="${base};color:var(--sub);opacity:.4;pointer-events:none;cursor:default">${label}</span>`;
+  };
+}
+// ── 트렌드 검색카드 끝 ──
+
+// 샤오·도우 탭 공유 뷰 — 인스·유튜·틱톡 상위를 소재로 묶어 랭킹. 카드마다 샤오홍슈+도우인 딥링크 둘 다.
+const TREND_TOP_N = 60;
+async function renderTrendCards(){
+  const root = document.getElementById('trendRoot');
+  if(!root) return;
+  root.innerHTML = '<div class="sm-loading">🔥 트렌드 소재 모으는 중…</div>';
+  const plats = ['instagram','youtube','tiktok'];
+  const lists = await Promise.all(plats.map(async p=>{
+    try{
+      const d = await (await fetch('/api/reference?platform='+p)).json();
+      const items = d.items||[];
+      items.forEach(i=>{ i.platform = i.platform||p; });
+      return items;
+    }catch(e){ return []; }
+  }));
+  let all = [].concat(...lists);
+  const groups = _groupBySubject(all);
+  if(!groups.length){
+    root.innerHTML = '<div style="padding:14px;color:var(--sub)">아직 트렌드 소재가 없습니다. 인스타·유튜브·틱톡 탭에서 「지금 수집」을 돌리면 소재가 채워집니다.</div>';
+    return;
+  }
+  const top = groups.slice(0, TREND_TOP_N);
+  // 번역 조회(캐시히트=즉시). 미스는 빈 문자열 → ko 폴백.
+  const zhMap = {};
+  await Promise.all(top.map(async g=>{
+    try{ const d = await (await fetch('/api/translate?q='+encodeURIComponent(g.subjectKo))).json();
+         zhMap[g.subjectKo] = (d && d.zh) || ''; }catch(e){ zhMap[g.subjectKo]=''; }
+  }));
+  const PLAT_EMOJI = {instagram:'📷',youtube:'▶️',tiktok:'🎵'};
+  root.innerHTML = '<div class="cards">' + top.map(g=>{
+    const rep = g.items.reduce((a,b)=> _score(b)>_score(a)?b:a, g.items[0]);
+    const zh = zhMap[g.subjectKo]||'';
+    // 폴백 B(2026-07-25 사장님 결정): zh 없으면 한국어를 중국 검색창에 넣어봐야 무의미 →
+    // 샤오홍슈·도우인 버튼을 흐리게+비활성(잘못된 한국어 딥링크 방지). 번역이 채워지면 살아난다.
+    // (원안 ko 폴백 폐기. 벌크 backfill_cn_keywords.py를 돌리면 미스가 줄어 버튼이 산다.)
+    const cnBtn = _cnTrendBtn(zh);
+    const xhs = cnBtn('📕 샤오홍슈', '#ff2442', _lensSearchUrl('xiaohongshu', zh));
+    const dy  = cnBtn('🎬 도우인', 'var(--txt,inherit)', _lensSearchUrl('douyin', zh));
+    const pbadges = g.platforms.map(p=>PLAT_EMOJI[p]||'').join('');
+    const thumb = rep.thumbnail ? ('/api/thumb?url='+encodeURIComponent(rep.thumbnail)) : '';
+    return `
+    <div class="card">
+      <div class="thumb"><img src="${thumb}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'"></div>
+      <div class="body" style="padding:8px">
+        <div style="font-weight:600">${esc(g.subjectKo)}${zh?` <span style="color:var(--sub);font-weight:400">· ${esc(zh)}</span>`:''}</div>
+        <div style="font-size:11px;color:var(--sub);margin:4px 0">🔥 ${g.count}개 영상에서 터짐 ${pbadges}${zh?'':' · <span title="중국 검색은 중국어 번역이 필요합니다">번역 대기</span>'}</div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          ${xhs}
+          ${dy}
+        </div>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
 // 플랫폼별 검색 페이지 URL(search_links.py의 _URL_BUILDERS와 동일). 바로가기+담기용.
 function _lensSearchUrl(platform, kw){
   const q=encodeURIComponent(kw||'');
@@ -1131,6 +1533,7 @@ function renderLens(shortcode){
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="영상 길이 90초 이하(또는 길이 불명)만 표시"><input type="checkbox" ${st.shortsOnly?'checked':''} onclick="toggleLensShorts('${shortcode}')"> 숏폼만</label>
       <button onclick="lensBulkSave('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">📥 선택 담기(${selCount})</button>
       <button onclick="lensBulkDelete('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">🗑 선택 삭제(${selCount})</button>
+      ${(()=>{const nYt=shown.filter(i=>i.platform==='youtube').length; return nYt?`<button onclick="lensBenchAllYoutube('${shortcode}')" title="이 렌즈 결과의 유튜브 채널들(짜집기 채널)을 전부 벤치 리스트에 등록 → 채널기반 수집에 편입" style="${btnCss};border-color:var(--accent);color:var(--accent);font-weight:700">➕ 유튜브 채널 전부 벤치등록(${nYt})</button>`:'';})()}
       ${st.ytLoading?'<span style="color:var(--sub)">▶️ 유튜브 불러오는 중…</span>':''}
       <a href="/grab" target="_blank" rel="noopener" title="샤오홍슈·도우인·틱톡·인스타 영상에 '📥 담기' 버튼이 안 뜨면 여기서 1회 켜기" style="text-decoration:none;font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--accent);background:#1f6feb1a;color:var(--accent);font-weight:700;margin-left:auto;white-space:nowrap">📥 담기 버튼 켜기</a>
     </div>
@@ -1183,13 +1586,59 @@ function renderLens(shortcode){
         <div class="btns">
           <button class="view" onclick="lensPreview('${shortcode}','${i.savesc}')">▶ 미리보기</button>
           <button class="save${isSaved?' saved':''}" onclick="toggleLensSave('${shortcode}','${i.savesc}',this)">${isSaved?'🎬 담김✓':'📥 담기'}</button>
+          ${i.platform==='youtube'?`<button class="view" title="이 채널을 벤치 리스트에 등록(채널기반 수집 편입)" onclick="lensBenchOne(this,'${encodeURIComponent(i.url||'')}')">➕ 벤치</button>`:''}
         </div>
         <div style="margin-top:4px"><a href="${_openUrl(i.url)}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🔗 원본 열기</a></div>
+        <div class="enrich" data-url="${esc(i.url||'')}" data-platform="${esc(plabel||'')}"
+             style="font-size:11px;color:var(--sub);margin-top:6px"></div>
       </div>
     </div>`;
   }).join('') || (st.ytLoading?'<div style="font-size:12px;color:var(--sub);padding:10px">불러오는 중…</div>':'<div style="font-size:12px;color:var(--sub);padding:10px">켠 플랫폼 결과 없음 — 위 🔗 바로가기로 찾아 담으세요</div>');
   box.innerHTML=`<div id="lensRoot" data-sc="${shortcode}">${bar}<div class="cards">${cards}</div></div>`;
   box._lensCurSC=shortcode;
+  const io=new IntersectionObserver((ents)=>{ents.forEach(e=>{ if(e.isIntersecting){ enrichCard(e.target); io.unobserve(e.target);} });},{rootMargin:'100px'});
+  box.querySelectorAll('.enrich').forEach(el=>io.observe(el));
+}
+// 렌즈 카드 하단 정보 슬롯 — 화면에 보이면(IntersectionObserver) lazy 자동조회.
+// 유튜브는 무료(yt-dlp)라 자동, 비유튜브(Apify 유료)는 관리자만 수동버튼으로 채운다.
+async function enrichCard(el){
+  if(el.dataset.done) return;
+  const url=el.dataset.url, pf=(el.dataset.platform||'').toLowerCase();
+  const isYt = pf.includes('유튜브') || url.includes('youtu');
+  if(!isYt){
+    // 비유튜브 실조회는 Apify 유료 → 관리자(customer_id===0)만 버튼 노출. 비관리자는 빈 슬롯.
+    if(window.IS_ADMIN){
+      el.innerHTML=`<button onclick="forceEnrich(this.parentNode)" style="font-size:11px;background:none;border:1px solid var(--sub);color:var(--sub);border-radius:8px;padding:2px 8px;cursor:pointer">ℹ️ 정보 채우기</button>`;
+    }
+    return;
+  }
+  el.dataset.done="1"; el.textContent="…";
+  try{
+    const d=await (await fetch('/api/enrich',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url, platform:'youtube'})})).json();
+    el.innerHTML=renderEnrich(d);
+  }catch(e){ el.textContent=""; el.dataset.done=""; }
+}
+async function forceEnrich(el){
+  const saved = el.innerHTML;
+  el.innerHTML="…";
+  try{
+    const d=await (await fetch('/api/enrich',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url:el.dataset.url, platform:(el.dataset.platform||'').toLowerCase(), force:true})})).json();
+    el.innerHTML=renderEnrich(d);
+  }catch(e){ el.innerHTML=saved; }
+}
+function renderEnrich(d){
+  if(!d || (d.status && d.status!=='ok')){
+    const msg={quota:'정보 없음(쿼터)', no_data:'정보 없음', needs_manual:''}[d&&d.status]||'정보 없음';
+    return msg?`<span style="color:var(--sub)">${msg}</span>`:'';
+  }
+  const ch = d.channel_name?`👤 <a href="${esc(d.channel_url||'#')}" target="_blank" style="color:var(--accent)">${esc(d.channel_name)}</a>${d.subscribers?(' · 구독 '+_fmtCount(d.subscribers)):''}`:'';
+  const stat = [d.views!=null?('👁 '+_fmtCount(d.views)):'', d.likes!=null?('❤ '+_fmtCount(d.likes)):'', d.comment_count!=null?('💬 '+_fmtCount(d.comment_count)):'', d.upload_date?('📅 '+esc((d.upload_date||'').slice(0,10))):''].filter(Boolean).join('  ·  ');
+  const cmts = (d.top_comments||[]).slice(0,5).map(c=>`<div style="margin:2px 0">💬 <b>${esc(c.author)}</b> ${esc((c.text||'').slice(0,120))}</div>`).join('');
+  const cmtBlock = cmts?`<details style="margin-top:4px"><summary style="cursor:pointer">인기 댓글 ${d.top_comments.length}</summary>${cmts}</details>`:'';
+  const capBlock = d.caption?`<details style="margin-top:4px"><summary style="cursor:pointer">원문 캡션</summary><div style="white-space:pre-wrap;margin-top:2px">${esc(d.caption)}</div></details>`:'';
+  return `${ch?('<div>'+ch+'</div>'):''}${stat?('<div style="margin-top:2px">'+stat+'</div>'):''}${cmtBlock}${capBlock}`;
 }
 // 렌즈가 검색에서 이미 받은 메타(조회수·좋아요·채널·길이)를 담을 때 함께 넘긴다. 서버가
 // yt-dlp로 재수집(유튜브 봇차단·샤오홍슈 무oEmbed로 자주 빈값)하기 전에 이 값이 먼저 저장돼
@@ -1762,19 +2211,33 @@ async function commitScene(){
   finally{ btn.disabled = false; btn.textContent = '💾 라이브러리에 저장'; }
 }
 
-renderCtypes(); renderCats(); loadLast(); loadRefAdded();
+renderCtypes(); renderCats(); loadLast(); loadRefAdded(); updatePlatformCopy(PLATFORM);
 
 // ── 관리자(사장님 cid0) 전용 운영버튼(2026-07-22) ──
 // 수집·전수조사·레퍼런스등록은 크롤 비용이 드는 운영 액션이라 관리자만 쓴다.
 // 위 인라인 display:none으로 기본 숨김(구독자 화면 플래시 방지) → cid0일 때만 켠다.
 // 백엔드도 _require_admin으로 막혀 있어 화면을 조작해도 403이라 진짜 관리자 전용이다.
+window.IS_ADMIN=false;
 fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
   if(d && d.customer_id===0){
-    ['collectBtn','censusBtn','refRegister'].forEach(id=>{
+    window.IS_ADMIN=true;
+    ['collectBtn','censusBtn','refRegister','statusBox'].forEach(id=>{
       const el=document.getElementById(id); if(el) el.style.display='';
     });
   }
 }).catch(()=>{});
+
+// 탭 밑줄 네온 슬라이드(2026-07-23) — 기존 탭 클릭(setTab)에 얹기만 함. active 클래스는 기존 로직이 토글.
+(function(){
+  var tabs=document.getElementById('tabs'), ink=document.getElementById('tabInk');
+  if(!tabs||!ink) return;
+  function move(){var a=tabs.querySelector('.tab.active');
+    if(a){ink.style.left=a.offsetLeft+'px';ink.style.width=a.offsetWidth+'px';}}
+  tabs.addEventListener('click',function(e){if(e.target.closest('.tab')) requestAnimationFrame(move);});
+  window.addEventListener('resize',move);
+  window.addEventListener('load',move);
+  requestAnimationFrame(move);
+})();
 </script>
 <script src="/sidebar.js?v=2"></script>
 </body>

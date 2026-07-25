@@ -103,14 +103,19 @@ def test_build_scene_first_plan_recommends_best(monkeypatch):
         {"seg_id": "s0-2", "start": 2.0, "end": 3.0, "text": "", "scene_desc": "단면"},
         {"seg_id": "s0-3", "start": 3.0, "end": 5.0, "text": "", "scene_desc": "통풍"}]}]
 
+    # 나레이션을 목표(20초≈114자) 근처로 채워 ①길이 재생성 게이트가 안 걸리게 한다 —
+    # 이 테스트의 의도는 '길이 동일 시 fit 높은 후보 추천'이다(세션#2 보강과 분리).
+    _long1 = "곰팡이 핀 양파를 봤는데 남편이 이거 먹어도 되냐고 묻길래 통풍만 잘하면 괜찮다고 안심시켰어요"
+    _long2 = "그래서 베란다에 며칠 널어놨더니 멀쩡해져서 남편이 이거 무슨 마법이냐고 깜짝 놀라더라고요 진짜"
+
     def fake_call(prompt, schema, **kw):
         return {"candidates": [
             {"hook": "A", "cta_keyword": "k", "beats": [
-                {"role": "훅", "narration": "곰팡이 보셨죠", "seg_ids": ["s0-1", "s0-2"], "fit": 5, "forced": False},
-                {"role": "cta", "narration": "댓글 남겨요", "seg_ids": ["s0-3"], "fit": 5, "forced": False}]},
+                {"role": "훅", "narration": _long1, "seg_ids": ["s0-1", "s0-2"], "fit": 5, "forced": False},
+                {"role": "cta", "narration": _long2, "seg_ids": ["s0-3"], "fit": 5, "forced": False}]},
             {"hook": "B", "cta_keyword": "k", "beats": [
-                {"role": "훅", "narration": "음", "seg_ids": ["s0-1"], "fit": 2, "forced": True},
-                {"role": "cta", "narration": "음", "seg_ids": ["s0-1"], "fit": 2, "forced": True}]}]}
+                {"role": "훅", "narration": _long1, "seg_ids": ["s0-1"], "fit": 2, "forced": True},
+                {"role": "cta", "narration": _long2, "seg_ids": ["s0-1"], "fit": 2, "forced": True}]}]}
 
     out = edit_plan.build_scene_first_plan(src, "원본대본", 20, n_candidates=2, call=fake_call)
     assert len(out["candidates"]) == 2

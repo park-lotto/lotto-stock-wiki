@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-22_0802_2Q26 Preview 메탈 게인으로 지킨 2분기, 방...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "권지우",
+    "report_date": "2026년 7월 21일",
+    "stocks": [
+      {
+        "name": "풍산",
+        "code": "103140",
+        "rating": "Buy(유지)",
+        "rating_changed": false,
+        "tp_new": "103,000원",
+        "tp_prev": null,
+        "tp_direction": "down",
+        "earnings_outlook": "2Q26 연결 매출액은 1조 6,359억 원(YoY +26.4%, QoQ +28.7%), 영업이익은 872억 원(YoY -6.8%, QoQ -3.3%)으로 컨센서스(819억 원)에 부합할 전망이다.",
+        "estimate_revision": "2026년 실적 추정치 하향",
+        "next_catalyst": "하반기 방산 추가 수주 가시화",
+        "thesis": [
+          "신동 부문은 메탈게인 효과로 2분기 영업이익 선방",
+          "방산 부문은 내수 공급 계약 지연 및 수출 선적 지연으로 매출 이연 발생",
+          "현재 주가는 국내 방산 피어 대비 70% 이상 할인된 수준"
+        ],
+        "valuation_basis": "2026년 실적 추정치 하향과 방산 피어 전반 주가 하락을 반영하여 목표주가 하향",
+        "risk": "메탈게인 효과는 재고 소진 시 기대하기 어려우며, 방산 부문의 회복 시점이 불확실함",
+        "supply_comment": null,
+        "quote": "2Q26 연결 매출액은 1조 6,359억 원(YoY +26.4%, QoQ +28.7%), 영업이익은 872억 원(YoY -6.8%, QoQ -3.3%)으로 컨센서스(819억 원)에 부합할 전망이다."
+      }
+    ]
+  }
+}

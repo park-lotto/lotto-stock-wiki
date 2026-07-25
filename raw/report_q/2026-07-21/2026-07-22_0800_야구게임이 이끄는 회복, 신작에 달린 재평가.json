@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "한국IR협의회",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-22_0800_야구게임이 이끄는 회복, 신작에 달린 재평가.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한국IR협의회",
+    "analyst": "서진경, 이금민",
+    "report_date": "2026.07.21",
+    "stocks": [
+      {
+        "name": "컴투스",
+        "code": "078340",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출 7,020억 원(+0.8% YoY)·영업이익 350억 원(+1,228.8% YoY, OPM 5.0%·+4.6%p)·지배순이익 105억 원 전망",
+        "estimate_revision": null,
+        "next_catalyst": "신작 흥행·야구게임 성장·수수료 인하",
+        "thesis": [
+          "성장하는 야구게임 시장의 경쟁력 있는 1위 사업자",
+          "주주환원이 뒷받침하는 하방 방어력",
+          "앱마켓 수수료 인하 최대 수혜"
+        ],
+        "valuation_basis": "현 PBR 0.3배는 상장 이후 및 게임 업종 내 최저 수준이나, 낮은 ROE(수익성 부진)를 반영한 할인으로 판단.",
+        "risk": "12년차 장수 라이브 게임 〈서머너즈 워〉의 매출 둔화 및 미디어 자회사 관련 영업권 손상 부담",
+        "supply_comment": "게임산업",
+        "quote": "2026F PBR은 0.3배로 상장 이후 및 게임 업종 내 최저 수준이나, 낮은 ROE(수익성 부진)를 반영한 할인으로 판단. 시가총액을 상회하는 순금융자산이 주가 하방을 지지하는 가운데, 신작 흥행·야구게임 성장·수수료 인하를 통한 ROE 회복이 저평가 해소의 관건"
+      }
+    ]
+  }
+}

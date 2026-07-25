@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: 'Malgun Gothic'; src: local('Malgun Gothic'); }
+      @font-face { font-family: 'Apple SD Gothic Neo'; src: local('Apple SD Gothic Neo'); }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 1920px; height: 1080px; overflow: hidden;
+        background: #05070b;
+        font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+      }
+      #root { position: relative; width: 1920px; height: 1080px; }
+
+      #bg {
+        position: absolute; inset: 0;
+        background: radial-gradient(circle at 50% 42%, #121a2b 0%, #0a0e18 55%, #05070b 100%);
+      }
+      #grid {
+        position: absolute; inset: 0; opacity: 0.10;
+        background-image:
+          linear-gradient(#2a3550 1px, transparent 1px),
+          linear-gradient(90deg, #2a3550 1px, transparent 1px);
+        background-size: 96px 96px;
+      }
+
+      .toplabel {
+        position: absolute; top: 96px; left: 0; width: 1920px; text-align: center;
+        color: #8b93a7; font-size: 30px; letter-spacing: 10px; font-weight: 700;
+      }
+
+      .card {
+        position: absolute; width: 250px; height: 340px; border-radius: 22px;
+        background: linear-gradient(160deg, #1b2439, #121a2b);
+        border: 2px solid #2b3a57; box-shadow: 0 24px 60px rgba(0,0,0,.5);
+        overflow: hidden;
+      }
+      .card .thumb {
+        position: absolute; top: 0; left: 0; width: 100%; height: 210px;
+        background: linear-gradient(135deg, #2a3a57, #17233b);
+      }
+      .card .play {
+        position: absolute; top: 78px; left: 96px;
+        width: 0; height: 0; border-style: solid;
+        border-width: 28px 0 28px 46px; border-color: transparent transparent transparent #ffffff;
+        opacity: .92;
+      }
+      .card .hot {
+        position: absolute; top: 16px; right: 16px;
+        background: #ff3b3b; color: #fff; font-size: 20px; font-weight: 800;
+        padding: 6px 14px; border-radius: 999px; letter-spacing: 1px;
+      }
+      .card .bars { position: absolute; bottom: 34px; left: 24px; right: 24px; }
+      .card .bars i { display: block; height: 12px; border-radius: 6px; background: #33405e; margin-bottom: 12px; }
+      .card .bars i:nth-child(2) { width: 70%; }
+
+      #mix {
+        position: absolute; left: 860px; top: 380px; width: 200px; height: 200px; border-radius: 50%;
+        background: radial-gradient(circle at 50% 40%, #ffdd7a, #f5b301 60%, #d68a00 100%);
+        box-shadow: 0 0 70px rgba(245,179,1,.55);
+        display: flex; align-items: center; justify-content: center;
+        color: #3a2600; font-size: 40px; font-weight: 900; letter-spacing: 2px;
+      }
+
+      #doc {
+        position: absolute; left: 810px; top: 320px; width: 300px; height: 380px;
+        border-radius: 18px; background: #f6f8ff; box-shadow: 0 30px 70px rgba(0,0,0,.5);
+      }
+      #doc .head { height: 66px; border-radius: 18px 18px 0 0; background: #f5b301; }
+      #doc .lines { padding: 34px 30px; }
+      #doc .lines i {
+        display: block; height: 16px; border-radius: 8px; background: #c9d2e6; margin-bottom: 22px;
+        transform-origin: left center;
+      }
+      #doc .lines i:nth-child(3) { width: 60%; }
+      #doc .tag { position: absolute; bottom: 26px; left: 30px; color: #2b3a57; font-size: 24px; font-weight: 800; }
+
+      #tlwrap { position: absolute; left: 360px; top: 470px; width: 1200px; }
+      #tlwrap .rail { height: 8px; background: #26324c; border-radius: 4px; }
+      #tlwrap .blocks { position: absolute; top: -34px; left: 0; width: 100%; height: 76px; }
+      .blk { position: absolute; top: 0; height: 76px; border-radius: 12px; box-shadow: 0 10px 28px rgba(0,0,0,.35); }
+
+      .cap {
+        position: absolute; bottom: 150px; left: 0; width: 1920px; text-align: center;
+        color: #ffffff; font-size: 72px; font-weight: 900; letter-spacing: 2px;
+      }
+      .cap b { color: #f5b301; }
+      .step {
+        position: absolute; bottom: 96px; left: 0; width: 1920px; text-align: center;
+        color: #5f6a82; font-size: 28px; font-weight: 700; letter-spacing: 6px;
+      }
+      #done {
+        position: absolute; left: 908px; top: 300px; width: 104px; height: 104px; border-radius: 50%;
+        background: #34e0a1; box-shadow: 0 0 60px rgba(52,224,161,.7);
+      }
+      #done .ck {
+        position: absolute; left: 30px; top: 20px; width: 30px; height: 54px;
+        border: solid #05231a; border-width: 0 12px 12px 0; transform: rotate(43deg);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6"
+         data-width="1920" data-height="1080">
+
+      <div id="bg" class="clip" data-start="0" data-duration="6" data-track-index="0"></div>
+      <div id="grid" class="clip" data-start="0" data-duration="6" data-track-index="1"></div>
+
+      <div id="top" class="toplabel clip" data-start="0" data-duration="2.2" data-track-index="2">지금&nbsp;&nbsp;터진&nbsp;&nbsp;영상</div>
+
+      <div id="card1" class="card clip" data-start="0" data-duration="2.6" data-track-index="3" style="left:470px; top:360px;">
+        <div class="thumb"></div><div class="play"></div><div class="hot">HOT</div><div class="bars"><i></i><i></i></div>
+      </div>
+      <div id="card2" class="card clip" data-start="0" data-duration="2.6" data-track-index="4" style="left:835px; top:360px;">
+        <div class="thumb"></div><div class="play"></div><div class="hot">HOT</div><div class="bars"><i></i><i></i></div>
+      </div>
+      <div id="card3" class="card clip" data-start="0" data-duration="2.6" data-track-index="5" style="left:1200px; top:360px;">
+        <div class="thumb"></div><div class="play"></div><div class="hot">HOT</div><div class="bars"><i></i><i></i></div>
+      </div>
+
+      <div id="mix" class="clip" data-start="1.5" data-duration="1.6" data-track-index="6">MIX</div>
+
+      <div id="doc" class="clip" data-start="2.7" data-duration="1.8" data-track-index="7">
+        <div class="head"></div>
+        <div class="lines"><i></i><i></i><i></i></div>
+        <div class="tag">새 대본</div>
+      </div>
+
+      <div id="tlwrap" class="clip" data-start="4.2" data-duration="1.8" data-track-index="8">
+        <div class="rail"></div>
+        <div class="blocks">
+          <div class="blk" id="blk1" style="left:0px;   width:190px; background:linear-gradient(160deg,#34e0a1,#17b985);"></div>
+          <div class="blk" id="blk2" style="left:220px; width:150px; background:linear-gradient(160deg,#5aa9ff,#2f7fe0);"></div>
+          <div class="blk" id="blk3" style="left:400px; width:230px; background:linear-gradient(160deg,#ffd166,#f5b301);"></div>
+          <div class="blk" id="blk4" style="left:660px; width:170px; background:linear-gradient(160deg,#c58bff,#8a4bff);"></div>
+          <div class="blk" id="blk5" style="left:860px; width:300px; background:linear-gradient(160deg,#34e0a1,#17b985);"></div>
+        </div>
+      </div>
+
+      <div id="done" class="clip" data-start="5.5" data-duration="0.5" data-track-index="9"><div class="ck"></div></div>
+
+      <div class="cap clip" id="cap1" data-start="0"   data-duration="1.5" data-track-index="10">지금 <b>제일 터진</b> 영상 3개</div>
+      <div class="cap clip" id="cap2" data-start="1.5" data-duration="1.2" data-track-index="11"><b>믹스</b>합니다</div>
+      <div class="cap clip" id="cap3" data-start="2.7" data-duration="1.5" data-track-index="12">내 제품 <b>대본을 새로</b></div>
+      <div class="cap clip" id="cap4" data-start="4.2" data-duration="1.8" data-track-index="13">내 영상에 <b>재배치</b></div>
+
+      <div class="step clip" id="st1" data-start="0"   data-duration="1.5" data-track-index="14">STEP 1</div>
+      <div class="step clip" id="st2" data-start="1.5" data-duration="1.2" data-track-index="15">STEP 2</div>
+      <div class="step clip" id="st3" data-start="2.7" data-duration="1.5" data-track-index="16">STEP 3</div>
+      <div class="step clip" id="st4" data-start="4.2" data-duration="1.8" data-track-index="17">STEP 4 · 완성</div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true, defaults: { overwrite: "auto" } });
+
+      // Phase 1 — 카드 3개 등장
+      tl.from("#top", { opacity: 0, y: -20, duration: .4 }, 0);
+      tl.from("#card1", { opacity: 0, x: -120, rotation: -8, duration: .5, ease: "back.out(1.5)" }, 0.15);
+      tl.from("#card2", { opacity: 0, y: 120, duration: .5, ease: "back.out(1.5)" }, 0.30);
+      tl.from("#card3", { opacity: 0, x: 120, rotation: 8, duration: .5, ease: "back.out(1.5)" }, 0.45);
+      tl.from("#cap1", { opacity: 0, y: 30, duration: .4 }, 0.2);
+      tl.from("#st1", { opacity: 0, duration: .4 }, 0.2);
+
+      // Phase 2 — 믹스
+      tl.to("#card1", { x: 490, y: 20, scale: .55, opacity: 0, duration: .55, ease: "power2.in" }, 1.5);
+      tl.to("#card2", { scale: .55, opacity: 0, duration: .55, ease: "power2.in" }, 1.5);
+      tl.to("#card3", { x: -490, y: 20, scale: .55, opacity: 0, duration: .55, ease: "power2.in" }, 1.5);
+      tl.to("#top", { opacity: 0, duration: .3 }, 1.5);
+      tl.fromTo("#mix", { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: .5, ease: "back.out(1.8)" }, 1.75);
+      tl.to("#mix", { scale: 1.08, duration: .2, yoyo: true, repeat: 1, ease: "sine.inOut" }, 2.35);
+      tl.from("#cap2", { opacity: 0, y: 30, duration: .35 }, 1.6);
+      tl.from("#st2", { opacity: 0, duration: .35 }, 1.6);
+
+      // Phase 3 — 새 대본
+      tl.to("#mix", { scale: 0, opacity: 0, duration: .4, ease: "power2.in" }, 2.7);
+      tl.fromTo("#doc", { scale: .4, opacity: 0, y: 40 }, { scale: 1, opacity: 1, y: 0, duration: .5, ease: "back.out(1.6)" }, 2.8);
+      tl.from("#doc .lines i", { scaleX: 0, opacity: 0, duration: .35, stagger: .18, ease: "power2.out" }, 3.15);
+      tl.from("#cap3", { opacity: 0, y: 30, duration: .35 }, 2.8);
+      tl.from("#st3", { opacity: 0, duration: .35 }, 2.8);
+
+      // Phase 4 — 재배치
+      tl.to("#doc", { scale: .5, opacity: 0, y: -40, duration: .4, ease: "power2.in" }, 4.2);
+      tl.from("#tlwrap .rail", { scaleX: 0, transformOrigin: "left center", duration: .4 }, 4.35);
+      tl.from("#tlwrap .blk", { opacity: 0, y: 40, scaleX: .2, duration: .45, stagger: .12, ease: "back.out(1.6)" }, 4.5);
+      tl.from("#cap4", { opacity: 0, y: 30, duration: .35 }, 4.3);
+      tl.from("#st4", { opacity: 0, duration: .35 }, 4.3);
+      tl.fromTo("#done", { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: .4, ease: "back.out(2)" }, 5.5);
+      tl.to("#done", { scale: 1.12, duration: .2, yoyo: true, repeat: 1, ease: "sine.inOut" }, 5.9);
+
+      tl.seek(0);
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

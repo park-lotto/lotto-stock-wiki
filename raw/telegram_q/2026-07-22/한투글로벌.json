@@ -1,0 +1,31 @@
+{
+  "reports": [
+    {
+      "broker": "한투글로벌",
+      "stock": "슈퍼마이크로",
+      "rating": null,
+      "tp": null,
+      "ts": "06:04",
+      "quote": "슈퍼마이크로는 예비 실적 발표에서 수주잔고가 600억 달러를 넘어 사상 최대를 기록했다고 밝힘.",
+      "sector": "IT"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "인텔",
+      "rating": null,
+      "tp": null,
+      "ts": "06:09",
+      "quote": "인텔은 데이터센터그룹(DCG)에서 추가 인력 감축을 실시한다고 밝힌 뒤 주가 8% 넘게 상승.",
+      "sector": "반도체"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "메타",
+      "rating": null,
+      "tp": null,
+      "ts": "07:50",
+      "quote": "메타가 내부 AI 인큐베이터 조직을 통해 OpenRouter와 유사한 AI 모델 라우팅 플랫폼을 개발 중인 것으로 알려짐",
+      "sector": "IT"
+    }
+  ]
+}

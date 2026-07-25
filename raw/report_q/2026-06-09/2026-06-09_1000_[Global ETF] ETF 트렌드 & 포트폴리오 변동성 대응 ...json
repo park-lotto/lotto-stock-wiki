@@ -1,0 +1,91 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_[Global ETF] ETF 트렌드 & 포트폴리오 변동성 대응 ...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "박승진, 신민건",
+    "report_date": "2026.6.8",
+    "target_kind": "market",
+    "market_direction": "중립",
+    "macro_vars": [
+      "5월 CPI",
+      "5월 PPI",
+      "FOMC",
+      "IPO(SpaceX)",
+      "선물·옵션 만기일",
+      "실업률",
+      "고용자수"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "긍정",
+        "reason": "펀더멘털을 기반으로 우선순위에 자리하고 있음"
+      },
+      {
+        "sector": "전력",
+        "stance": "긍정",
+        "reason": "펀더멘털을 기반으로 우선순위에 자리하고 있음"
+      },
+      {
+        "sector": "원전",
+        "stance": "긍정",
+        "reason": "펀더멘털을 기반으로 우선순위에 자리하고 있음"
+      },
+      {
+        "sector": "IT",
+        "stance": "긍정",
+        "reason": "액티브 운용 방식의 CHAT/BAI(AI 액티브)는 확장된 포트폴리오와 유연성을 가지고 있는 투자 고려 대상 종목군"
+      },
+      {
+        "sector": "기타",
+        "stance": "긍정",
+        "reason": "우주항공(ARKX/NASA), 인프라(PAVE), 중소형제조업(AIRR) 모멘텀 유효"
+      }
+    ],
+    "style": "변동성 대응(SPHQ, BTAL 등 활용)",
+    "event_calendar": [
+      {
+        "date": "6/10",
+        "event": "미국 5월 CPI 발표"
+      },
+      {
+        "date": "6/11",
+        "event": "미국 5월 PPI 발표, 한국 선물·옵션 만기일"
+      },
+      {
+        "date": "6/12",
+        "event": "SpaceX IPO"
+      },
+      {
+        "date": "6/16~17",
+        "event": "FOMC"
+      },
+      {
+        "date": "6/18",
+        "event": "미국 선물·옵션 만기일"
+      }
+    ],
+    "top_picks": [
+      "SPHQ",
+      "BTAL",
+      "SMH",
+      "DRAM",
+      "ZAP",
+      "POWR",
+      "URA",
+      "NLR",
+      "CHAT",
+      "BAI",
+      "ARKX",
+      "NASA",
+      "PAVE",
+      "AIRR"
+    ],
+    "risk": "시장 변동성 확대, 차익실현 매물 출회, 고용시장의 양적 확장 흐름에 따른 향후 구매력 약화 및 양극화 가능성",
+    "quote": "변동성 이벤트들이 맞물리는 시점. 펀더멘털과 수급 변수의 영향권: 중장기 포지션과 함께 SPHQ, BTAL 등 변동성 대응 종목의 조합"
+  }
+}

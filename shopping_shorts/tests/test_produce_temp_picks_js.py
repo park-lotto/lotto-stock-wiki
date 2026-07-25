@@ -1,10 +1,18 @@
-"""제작소 — 핸드오프 플래그 보존 + 임시 대본 합침(2026-07-18)."""
+"""제작소 — 핸드오프 플래그 보존 + 임시 대본 합침(2026-07-18).
+
+★2026-07-23 Task 4(숏템메이커 리뉴얼): "우리 시스템으로 믹스" 탭 전체(SCRIPT_MODE_HTML.mix ·
+switchMixSource · loadWikiForMix · mergePicks · genMix · renderDrafts · MIX_ELEMS)를 제거했다.
+이 테스트가 앵커 삼던 mergePicks()와 마커(`// ── 임시 대본 끝 ──`)가 produce.html에서 사라져
+슬라이스 자체가 불가능해졌다 — 스킵(브리프 지시: 같은 커밋에서 삭제/스킵)."""
 import json
 import pathlib
 import shutil
 import subprocess
 
 import pytest
+
+pytestmark = pytest.mark.skip(
+    reason="Task4: mergePicks·믹스탭 UI 제거로 앵커 소실(2026-07-23) — AI PICK 자동담김으로 대체")
 
 PRODUCE_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"
 NODE = shutil.which("node")

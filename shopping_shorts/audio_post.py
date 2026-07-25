@@ -27,6 +27,15 @@ _PACE_TAIL_PAD = 0.08    # 문장 끝 고정 여백(초)
 _PACE_FADE = 0.012       # 가장자리 페이드(초)
 
 
+# 비트별 라우드니스 정규화(2026-07-22). 비트마다 별도 합성한 ElevenLabs 원음 크기가
+# 제각각이라, 정규화 없이 concat하면 최종 나레이션 볼륨이 오르락내리락한다(사장님 청취).
+# EBU R128 single-pass loudnorm으로 모든 비트를 같은 통합 라우드니스로 끌어 맞춘다.
+# I=통합 라우드니스(LUFS)·TP=트루피크 상한(dBTP)·LRA=허용 라우드니스 레인지.
+# 숏폼 보이스 표준값(-16 LUFS). ⚠️ 무음 mock(키 없음)에 걸면 무음 바닥을 끌어올려
+# 노이즈가 되므로 호출부가 실제 키가 있을 때만 켠다(reference_local_tts_silent_mock_trap).
+_LOUDNORM = "loudnorm=I=-16:TP=-1.5:LRA=11"
+
+
 def _pace_filters():
     """앞·중간·뒤 무음 모두 제거 + 끝 고정 여백 + 클릭방지 페이드.
     기존 silence_trim(뒤/중간만)과 달리 start_periods=1로 문장 첫머리 숨까지 잘라
@@ -39,12 +48,17 @@ def _pace_filters():
     ]
 
 
-def post_process(in_path, out_path, tempo=1.0, silence_trim="off", pace_mode=False):
-    """in_path mp3에 속도(tempo)·무음삭제를 적용해 out_path로. 둘 다 no-op이면 in_path 그대로 반환.
+def post_process(in_path, out_path, tempo=1.0, silence_trim="off", pace_mode=False,
+                 loudnorm=False):
+    """in_path mp3에 속도(tempo)·무음삭제·라우드니스 정규화를 적용해 out_path로.
+    전부 no-op이면 in_path 그대로 반환.
 
     tempo: atempo 배율(1.0=변화없음). silence_trim: off/weak/mid/strong.
     pace_mode: True면 속도감 모드 — 앞·중간·뒤 무음을 모두 잘라 문장을 딱 붙이고
-    끝 여백·가장자리 페이드를 얹는다(silence_trim은 무시). 기본 False(하위호환)."""
+    끝 여백·가장자리 페이드를 얹는다(silence_trim은 무시). 기본 False(하위호환).
+    loudnorm: True면 EBU loudnorm을 **마지막 필터**로 얹어 비트별 음성 크기를 같은
+    통합 라우드니스로 맞춘다(볼륨 오르락내리락 제거). 이 필터 하나만 있어도 재인코딩을
+    거치므로 tempo=1.0·silence off인 비트까지 빠짐없이 정규화된다. 기본 False."""
     filters = []
     if tempo and abs(tempo - 1.0) > 1e-3:
         filters.append(f"atempo={tempo:.3f}".rstrip("0").rstrip("."))
@@ -54,6 +68,8 @@ def post_process(in_path, out_path, tempo=1.0, silence_trim="off", pace_mode=Fal
         sf = _silence_filter(silence_trim)
         if sf:
             filters.append(sf)
+    if loudnorm:                          # 속도·무음삭제 뒤 = 최종 출력 기준으로 정규화
+        filters.append(_LOUDNORM)
     if not filters:
         return in_path
     # ffmpeg는 같은 파일을 입력이자 출력으로 쓰지 못한다(in-place 시 입력이 잘려 실패).
@@ -76,6 +92,45 @@ def post_process(in_path, out_path, tempo=1.0, silence_trim="off", pace_mode=Fal
         raise
     if same:
         os.replace(target, str(out_path))
+    return str(out_path)
+
+
+def _audio_dur(path):
+    """ffprobe로 오디오 길이(초). 실패면 0.0."""
+    try:
+        r = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "csv=p=0", str(path)],
+            stdin=subprocess.DEVNULL, capture_output=True, text=True, check=True)
+        return float((r.stdout or "0").strip() or 0.0)
+    except Exception:
+        return 0.0
+
+
+def trim_tail_silence(in_path, out_path, pad=0.08, threshold="-40dB"):
+    """비트 TTS 끝의 자연 무음(호흡·여백)만 잘라 이어붙임을 딱 맞춘다 — 비트 사이 dead-air
+    제거(2026-07-22, 레퍼런스 릴스는 무음 0). **뒤만** 자르고(중간 쉼·문장 리듬은 보존) 아주
+    작은 여백(pad)으로 급함·클릭음 방지. areverse로 앞을 만들어 뒤 무음만 제거 후 되돌린다.
+    ⚠️ 무음 mock(키 없음) 보호: 결과가 입력 대비 과도하게 짧아지면(전부 무음) 원본 유지."""
+    in_dur = _audio_dur(in_path)
+    filt = (f"areverse,silenceremove=start_periods=1:start_threshold={threshold}:"
+            f"start_silence=0.02,areverse,apad=pad_dur={pad}")
+    same = os.path.abspath(str(in_path)) == os.path.abspath(str(out_path))
+    fd, tmp = tempfile.mkstemp(suffix=".mp3", dir=os.path.dirname(os.path.abspath(str(out_path))))
+    os.close(fd)
+    try:
+        subprocess.run(["ffmpeg", "-y", "-i", str(in_path), "-af", filt, "-q:a", "4", tmp],
+                       stdin=subprocess.DEVNULL, capture_output=True, check=True)
+    except Exception:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        return str(in_path)   # 실패해도 원본 그대로(무해)
+    out_dur = _audio_dur(tmp)
+    # mock/오작동 보호: 말이 있는 비트(0.5s+)가 0.3s 미만으로 잘리면 전부 무음이었던 것 → 원본.
+    if in_dur > 0.5 and out_dur < 0.3:
+        os.remove(tmp)
+        return str(in_path)
+    os.replace(tmp, str(out_path))
     return str(out_path)
 
 

@@ -90,3 +90,53 @@ def test_admin_customers_exposes_access_7d(tmp_path, monkeypatch):
     assert r.status_code == 200
     custs = r.json()["customers"]
     assert custs and all("access_7d" in cu and "ips" in cu["access_7d"] for cu in custs)
+
+
+# ── 접속중·활동기록(2026-07-22) ──
+def test_track_activity_last_seen_and_trail(tmp_path, monkeypatch):
+    from shopping_shorts import app as appmod
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    appmod._LASTSEEN_SEEN.clear(); appmod._ACTIVITY_SEEN.clear()
+    s = Store(str(tmp_path / "t.db"))
+    cid = s.create_customer("u", "pw12")
+    appmod._track_activity(cid, "/api/mix/start")
+    row = {c["id"]: c for c in s.list_customers()}[cid]
+    assert row["last_seen"] is not None                 # last_seen 갱신됨
+    act = s.recent_activity(cid)
+    assert act and act[0]["action"] == "영상 제작 시작"   # 트레일 기록됨
+
+
+def test_track_activity_dedups_within_window(tmp_path, monkeypatch):
+    from shopping_shorts import app as appmod
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    appmod._LASTSEEN_SEEN.clear(); appmod._ACTIVITY_SEEN.clear()
+    s = Store(str(tmp_path / "t.db"))
+    cid = s.create_customer("u", "pw12")
+    appmod._track_activity(cid, "/api/grab")
+    appmod._track_activity(cid, "/api/grab")            # 60s 내 같은 액션 → 1건만
+    assert len(s.recent_activity(cid)) == 1
+
+
+def test_track_activity_ignores_unmapped_and_boss(tmp_path, monkeypatch):
+    from shopping_shorts import app as appmod
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    appmod._LASTSEEN_SEEN.clear(); appmod._ACTIVITY_SEEN.clear()
+    s = Store(str(tmp_path / "t.db"))
+    cid = s.create_customer("u", "pw12")
+    appmod._track_activity(cid, "/api/reference/rankings")   # 매핑 안 된 경로 → 로그 안 남김
+    assert s.recent_activity(cid) == []
+    appmod._track_activity(0, "/api/mix/start")              # 사장님(0)은 기록 안 함
+    assert s.recent_activity(0) == []
+
+
+def test_activity_endpoint_admin_only(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    appmod, s = _admin_setup(tmp_path, monkeypatch)
+    cid = s.create_customer("u", "pw12")
+    s.record_activity(cid, "영상 렌더", 1784600000)
+    owner = TestClient(appmod.app, cookies={"dash_auth": _cookie(appmod, 0)})
+    r = owner.get("/api/admin/customer/activity?customer_id=" + str(cid))
+    assert r.status_code == 200 and r.json()["activity"][0]["action"] == "영상 렌더"
+    # 비관리자는 403
+    other = TestClient(appmod.app, cookies={"dash_auth": _cookie(appmod, cid)})
+    assert other.get("/api/admin/customer/activity?customer_id=" + str(cid)).status_code == 403

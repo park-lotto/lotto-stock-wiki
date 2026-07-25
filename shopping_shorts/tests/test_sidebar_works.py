@@ -2,9 +2,11 @@
 
 sidebar.js는 페이지 6개가 공유한다 — 목록 주입이 다른 페이지를 깨면 안 된다.
 """
+import os
 import pathlib
 import shutil
 import subprocess
+import tempfile
 
 import pytest
 
@@ -59,8 +61,17 @@ def _run(body, harness_override=""):
     src = SIDEBAR_JS.read_text(encoding="utf-8")
     js = _HARNESS + harness_override + "\n" + src + "\n"
     js += "(async()=>{ await new Promise(r=>setTimeout(r,0)); \n" + body + "\n})();"
-    r = subprocess.run([NODE, "-e", js], capture_output=True, text=True, timeout=30,
-                       stdin=subprocess.DEVNULL, encoding="utf-8", errors="replace")
+    # node -e 로 인라인하면 js 전체가 명령줄 인자가 돼 Windows 명령줄 길이 한계(~32KB)에 걸린다
+    # — sidebar.js가 커지면 WinError 206으로 죽는다(리눅스 서버는 ARG_MAX가 커서 안 터져 게이트가
+    # 갈렸다). 임시 .js 파일로 넘겨 길이 제한을 없앤다(단언·동작 동일, 전달 방식만 교체).
+    fd, path = tempfile.mkstemp(suffix=".js")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(js)
+        r = subprocess.run([NODE, path], capture_output=True, text=True, timeout=30,
+                           stdin=subprocess.DEVNULL, encoding="utf-8", errors="replace")
+    finally:
+        os.unlink(path)
     assert r.returncode == 0, r.stderr
     return r.stdout.strip()
 

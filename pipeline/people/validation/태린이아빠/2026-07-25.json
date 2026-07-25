@@ -1,0 +1,41 @@
+{
+  "date": "2026-07-25",
+  "hit_rate": null,
+  "mentioned_count": 24,
+  "matched": [],
+  "missed": [
+    "SK하이닉스",
+    "금융",
+    "반도체",
+    "반도체 소부장",
+    "반도체 장비",
+    "방산",
+    "브이엠",
+    "삼성전기",
+    "삼성전자",
+    "소비내수",
+    "신한지주",
+    "에너지",
+    "엔터",
+    "엘에스일렉트릭",
+    "우주",
+    "정유주",
+    "주식 전반",
+    "친환경",
+    "테크",
+    "티에스이",
+    "피에스케이",
+    "피에스케이홀딩스",
+    "해운",
+    "현대자동차"
+  ],
+  "candidates": [],
+  "thresholds": {
+    "mode": "his",
+    "vacuum_pct_max": 35.0,
+    "min_up_count": 1,
+    "require_up_gt_down": true,
+    "require_leader": false,
+    "top_n": 20
+  }
+}

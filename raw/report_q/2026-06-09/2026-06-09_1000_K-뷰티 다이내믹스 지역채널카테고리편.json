@@ -1,0 +1,120 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_K-뷰티 다이내믹스 지역채널카테고리편.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "박종대",
+    "report_date": "2026.06.09",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "에이피알",
+        "code": "278470",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "510,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 매출 YoY 100%, 영업이익 1,704억원(YoY 101%) 추정",
+        "estimate_revision": null,
+        "next_catalyst": "미국 얼타뷰티 계약 종료로 다른 메이저 리테일러 입점 본격화, 2~3분기 월마트/코스트코 입점 확정",
+        "thesis": [
+          "미국/유럽/일본 중심으로 높은 제품 인지도와 온오프라인 채널 확장 전략으로 2026년 성장 여력과 실적 가시성이 높음",
+          "K뷰티 최대 브랜드 업체로서 검증된 온오프라인 마케팅/영업역량 보유",
+          "전방위적인 해외 진출 확대로 실적 추정치 상향 조정 지속"
+        ],
+        "valuation_basis": "목표주가 51만원은 12MF PER 35배를 적용한 수치",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2분기 매출 YoY 100%, 영업이익 1,704억원(YoY 101%) 추정한다. 미국/유럽/일본 중심으로 높은 제품 인지도와 온오프라인 채널 확장 전략으로 2026년 성장 여력과 실적 가기성이 높다."
+      },
+      {
+        "name": "한국콜마",
+        "code": "161890",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "110,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 매출은 YoY 13% 증가하고, 영업이익은 910억원(YoY 24%) 수준이 가능할 전망",
+        "estimate_revision": null,
+        "next_catalyst": "미국/유럽 K뷰티 수출 효과 온전히 흡수 및 해외사업 불확실성 완화",
+        "thesis": [
+          "세계 최대 화장품 기초/자외선차단제 ODM 업체",
+          "해외 사업 불확실성 완화 및 실적 모멘텀 확대",
+          "국내 매출 성장세가 가이던스(YoY 13%)를 훌쩍 넘는 YoY 20% 이상 성장 가능성 제시"
+        ],
+        "valuation_basis": "11만원은 12MF PER 14.5배로 화장품 사업에 적정 PER 17배, HK이노엔 지분율 시가총액을 50% 할인하여 더한 수치",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2분기 매출은 YoY 13% 증가하고, 영업이익은 910억원(YoY 24%) 수준이 가능할 전망이다. 회사는 국내 사업에 대해 기존 가이던스(국내 매출 YoY 13%)를 훌쩍 넘는 YoY 20% 이상 성장 가능성을 제시하며 자신감을 보였다."
+      },
+      {
+        "name": "실리콘투",
+        "code": "257720",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "52,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 매출은 YoY 46%, 영업이익은 757억원(YoY 45%) 수준이 가능할 전망",
+        "estimate_revision": null,
+        "next_catalyst": "유럽/미국 등 주요지역 매출 증가 및 2026년 6월 멕시코 법인 매출 본격화",
+        "thesis": [
+          "최근 K뷰티 유럽 모멘텀 확대의 선봉장 역할",
+          "K뷰티 글로벌 확대의 쇄빙선으로 중남미/중동/CIS 지역 등 높은 중장기 성장 여력 보유",
+          "높은 매출 증가율과 이익 개선에도 불구하고 현재 주가는 12MF PER 7.6배로 지나친 저평가"
+        ],
+        "valuation_basis": "5.2만원은 12MF PER 12배를 적용한 수치",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2분기 매출은 YoY 46%, 영업이익은 757억원(YoY 45%) 수준이 가능할 전망이다. 1분기보다 매출 증가폭이 더 클 것으로 예상되는데, 유럽/미국 등 주요지역 매출이 QoQ 증가 중이고, 중동/아시아 지역 매출 역시 YoY (+) 전환이 예상되기 때문이다."
+      },
+      {
+        "name": "아모레퍼시픽",
+        "code": "090430",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "150,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 북미와 유럽 지역 매출은 각각 YoY 20%, 40% 성장이 예상",
+        "estimate_revision": null,
+        "next_catalyst": "코스알엑스 실적 회복 및 글로벌 지역 확장, 신규 브랜드 진입으로 턴어라운드 본격화",
+        "thesis": [
+          "국내 최대 화장품 브랜드 포트폴리오 기업",
+          "코스알엑스 성장 가속화(고마진 더마 RX라인 매출 비중 상승)",
+          "해외 사업 성장 둔화 우려를 불식시킬 수 있는 높은 성장률 기대"
+        ],
+        "valuation_basis": "15만원은 12MF PER 23배를 적용한 수치",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2분기 북미와 유럽 지역 매출은 각각 YoY 20%, 40% 성장이 예상되고 있다. 해외 사업 라네즈 둔화를 더마(에스트라/일리윤/코스알엑스)로 극복하고 있고, 설화수/아이오페/헤라/이니스프리 등 후속 브랜드 성장률 제고 또한 긍정적이다."
+      },
+      {
+        "name": "코스맥스",
+        "code": "192820",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "240,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 연결 매출은 YoY 19%, 영업이익은 681억원(YoY 12%) 수준으로 추정",
+        "estimate_revision": null,
+        "next_catalyst": "국내 하이드로겔 기저효과 및 국내외 마진 개선",
+        "thesis": [
+          "세계 최대 화장품 ODM 업체",
+          "미국 사업 턴어라운드 및 중국/미국 실적 불확실성 해소",
+          "하반기로 갈수록 기초 확대 효과가 색조 둔화 영향을 상쇄하며 수익성 제고 기대"
+        ],
+        "valuation_basis": "목표주가 24만원 적용(12MF PER 16.5배 내외)",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2분기 연결 매출은 YoY 19%, 영업이익은 681억원(YoY 12%) 수준으로 추정한다. 하반기는 국내 하이드로겔 기저효과를 비롯, 국내외 마진 개선으로 실적 모멘텀이 확대될 가능성이 크다."
+      }
+    ]
+  }
+}

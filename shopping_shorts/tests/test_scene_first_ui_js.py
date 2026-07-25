@@ -89,11 +89,12 @@ def test_render_candidates_and_pick(tmp_path):
     r = _run(tmp_path)
     # 후보 1개 이하는 고를 게 없어 카드를 안 그린다
     assert r["hiddenSingle"] == ""
-    # 후보 3개: 카드 3장, hook·story_person 노출, 추천 카드에만 배지 + accent 테두리
+    # 후보 3개: 카드 3장(v6 .cand), hook·story_person 노출, 추천 카드에만 👍 배지 + .on 민트 테두리
     rendered = r["rendered"]
     assert "훅0" in rendered and "훅1" in rendered and "훅2" in rendered
     assert "화자1" in rendered
-    assert rendered.count(">⭐ 추천<") == 1   # 안내문구에도 "⭐ 추천"이 나오므로 배지 마크업만 센다
+    assert rendered.count("👍 추천") == 1        # 추천 카드에만 배지(v6 <span class="rec">👍 추천</span>)
+    assert 'class="cand on"' in rendered         # 추천 카드는 .on(민트 강조 테두리)
     assert "pickCandidate(1)" in rendered
     # 클릭 → /api/mix/candidate에 job_id/index 전송 → 성공 시 매칭 리뷰 재로드
     calls = [c for c in r["fetchCalls"] if c["url"] == "/api/mix/candidate"]

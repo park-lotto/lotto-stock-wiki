@@ -1,0 +1,81 @@
+{
+  "meta": {
+    "date": "2026-07-23",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-23_1106_미용 에스테틱 2026년 2분기 프리뷰.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "한송협",
+    "report_date": "2026년 2분기",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "파마리서치",
+        "code": "214450",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": "494,000",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 실적 전망: 매출 1,625억 (YoY +16% / QoQ +11%), 영업이익 667억 (YoY +19% / OPM 41%)",
+        "estimate_revision": null,
+        "next_catalyst": "유럽과 화장품 확대",
+        "thesis": [
+          "수출이 성장 견인",
+          "내수 기저와 광고비",
+          "실적 우위"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2Q 실적은 파마리서치가 가장 편하다.",
+        "sector": "화장품미용"
+      },
+      {
+        "name": "휴젤",
+        "code": "145020",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": "378,462",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 실적 전망: 매출 1,300억 (YoY +18% / QoQ +12%), 영업이익 550억 (YoY -3% / OPM 42%)",
+        "estimate_revision": null,
+        "next_catalyst": "3Q 미국 직판",
+        "thesis": [
+          "3Q 미국 직판 개시",
+          "미국 인력과 ESOP",
+          "직판 매출 점진적 확대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "휴젤은 3Q 미국 직판이 시작되는 3Q부터 매출 전환 속도를 확인",
+        "sector": "화장품미용"
+      },
+      {
+        "name": "클래시스",
+        "code": "214150",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": "76,267",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26F 실적 전망: 매출 1,234억 (QoQ +42%), 영업이익 561억 (QoQ +50%), OPM 45.5%",
+        "estimate_revision": "2Q26F는 1Q Review 당시 추정치. 프리뷰 콜 이후 하향 조정 가능성을 열어둘 필요",
+        "next_catalyst": "브라질 정상화 확인",
+        "thesis": [
+          "해외 성장, 국내 둔화",
+          "국내 장비와 소모품",
+          "눈높이 조정"
+        ],
+        "valuation_basis": null,
+        "risk": "국내 장비 리팟 감소를 쿼드세이가 모두 메우지 못함, 국내 소모품 외국인 관광객 증가 효과가 기대에 못 미침, 일본 대형 체인 수주 무산",
+        "supply_comment": null,
+        "quote": "해외 성장은 이어지지만 국내 장비와 소모품이 기대에 못 미친다. 기존 추정치는 낮춰 볼 필요",
+        "sector": "화장품미용"
+      }
+    ]
+  }
+}

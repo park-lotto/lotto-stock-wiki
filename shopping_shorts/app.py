@@ -21,17 +21,21 @@ from shopping_shorts.service import collect, census, generate_missing_drafts, ne
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
 from shopping_shorts.auto_run import run_auto_job, default_stages
+from shopping_shorts import config
 from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI
 from shopping_shorts.frame_extract import (download_video, extract_frames,
                                            extract_frame_at, extract_grid_frames)
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.structure_analyze import analyze_structure
+from shopping_shorts import backbone
+from shopping_shorts.aipick import build_aipick
 from shopping_shorts.categorize import categorize, KEYWORDS as CATEGORY_KEYWORDS
 from shopping_shorts import script_generate
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
-from shopping_shorts.channels import load_channels, username_from_url
+from shopping_shorts.channels import load_channels, username_from_url, merge_tracked
+from shopping_shorts import video_analysis
 from shopping_shorts.video_analysis import (analyze_video, translate_keyword, cn_search_keyword,
                                             cn_search_keyword_vision, judge_same_product,
                                             cn_search_candidates)
@@ -47,11 +51,16 @@ from shopping_shorts import youtube_search
 from shopping_shorts.config import APIFY_TOKENS
 from shopping_shorts.media_download import resolve_media_url, download_any, probe_grab_meta
 from shopping_shorts import edit_plan as _edit_plan
+from shopping_shorts import edit_plan
 from shopping_shorts import voice_presets, audio_post
+from shopping_shorts import pron_corrections
 from shopping_shorts.tts import synthesize_tts
 from shopping_shorts import tts, asr_check
 from shopping_shorts import export_bundle
+from shopping_shorts import qr_svg
 from shopping_shorts import capcut_draft
+from shopping_shorts.youtube_client import enrich_youtube
+from shopping_shorts.youtube_client import channels_from_video_urls as yt_channels_from_videos
 from shopping_shorts.video_assemble import _beat_timeline
 from shopping_shorts.audio_post import detect_edge_silence
 from shopping_shorts.video_assemble import _probe_duration, _effective_dur, _TRIM_FLOOR
@@ -75,6 +84,20 @@ def _seed_voice_presets():
         voice_presets.seed_presets(Store(DB_PATH))
     except Exception:
         pass  # seed 실패가 앱 기동을 막지 않게
+
+
+@app.on_event("startup")
+def _prune_activity_logs():
+    """기동 시 오래된 활동·접속 로그 정리(2026-07-24) — customer_activity/customer_access는
+    append만 돼 무한증가한다. 30일 지난 행을 지워 DB 비대를 막는다(best-effort, 실패 무시).
+    재시작마다 도는 것으로 충분 — 표는 최근 트레일·7일 공유감지에만 쓰여 30일이면 넉넉하다."""
+    try:
+        n_act, n_acc = Store(DB_PATH).prune_activity(keep_days=30)
+        if n_act or n_acc:
+            import sys as _sys
+            print(f"[prune] activity -{n_act}, access -{n_acc}", file=_sys.stderr)
+    except Exception:
+        pass  # 정리 실패가 앱 기동을 막지 않게
 
 
 @app.on_event("startup")
@@ -130,7 +153,7 @@ def _media_code(url):
 
 
 @app.post("/api/collect")
-def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int | None = None, platform: str = "instagram"):
+def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int | None = None, platform: str = "instagram", category: str | None = None):
     """지금 수집 버튼. limit=채널 수 상한(테스트용). platform=플랫폼(기본 인스타).
 
     댓글 draft 생성(항목당 Gemini 호출, 쿼터 걸리면 62초 대기)은 응답 후
@@ -145,9 +168,17 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
     platform != "instagram"인 경우 댓글 draft/save_last_run(인스타 전용
     캐시)은 건너뛴다 — 유튜브 등은 _collect_youtube가 자체적으로 저장한다.
 
-    platform == "tiktok"이면 키워드검색이 Apify 유료라 남용/비용 가드를 건다:
-    ① 월예산 킬스위치(초과 시 429 budget_exceeded) ② 사용자별 하루 상한
-    (초과 시 429 daily_limit). 통과 후 수집하면 하루카운트 +1, 추정비용 누적.
+    platform == "tiktok"이면 남용 방지 가드를 건다: 사용자별 하루 상한(초과 시
+    429 daily_limit). 통과 후 수집하면 하루카운트 +1.
+
+    ⚠️ 월예산 킬스위치(budget_exceeded)·추정지출 누적(add_tiktok_spend)은
+    2026-07-24부로 건너뛴다 — 키워드검색(Apify 유료)이 옵트인으로 빠져
+    _collect_tiktok()이 기본 include_paid_keywords=False(무료 yt-dlp 계정 시드만)라
+    실제 지출이 없다. 그런데도 예산 게이트가 남아있으면 유령 지출이 쌓여
+    무료 수집조차 budget_exceeded로 막혀버린다(이번 Fix 2 사유). 코드는
+    지우지 않는다 — 나중에 유료 키워드검색을 다시 켤 때 이 블록도 함께
+    되살릴 것(예산 체크 + est 계산 + add_tiktok_spend 복원).
+    daily_limit(일일 횟수 제한)은 비용과 무관한 남용 방지 가드라 계속 유지한다.
 
     ★관리자(사장님 cid0) 전용(2026-07-22) — 수집=크롤 비용이 드는 운영 액션이라
     구독자(pro 포함)에겐 화면·API 모두 막는다. 화면 숨김만으론 pro가 직접 호출 가능."""
@@ -158,25 +189,19 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
         guard = Store(DB_PATH)
         knobs = _tiktok_knobs(guard)
         now = datetime.now(timezone.utc)
-        month, day = now.strftime("%Y-%m"), now.strftime("%Y-%m-%d")
+        day = now.strftime("%Y-%m-%d")
         cid = _cid(request)
-        if guard.tiktok_month_spend(month) >= knobs["month_budget"]:
-            return JSONResponse(status_code=429, content={
-                "ok": False, "error_code": "budget_exceeded",
-                "error": f"이번 달 틱톡 예산(${knobs['month_budget']:.2f})을 다 썼습니다"})
+        # 월예산 킬스위치는 건너뜀 — 위 docstring 참고(유료 검색 꺼져 있어 실지출 없음).
         if guard.tiktok_daily_count(cid, day) >= knobs["daily_limit"]:
             return JSONResponse(status_code=429, content={
                 "ok": False, "error_code": "daily_limit",
                 "error": f"오늘 틱톡 수집 한도({knobs['daily_limit']}회)를 다 썼습니다"})
     try:
-        items = collect(platform=platform, limit_channels=limit)
+        items = collect(platform=platform, categories=([category] if category else None), limit_channels=limit)
         if platform == "tiktok":
             guard.bump_tiktok_daily(_cid(request), datetime.now(timezone.utc).strftime("%Y-%m-%d"))
-            # 언어 시드 1개 = 1회 검색(그 언어로 search_count개). 지출 = 언어시드수 × 개수 × 단가.
-            n_lang = len([s for s in guard.list_seeds("tiktok") if s["kind"] in _TIKTOK_LANG_KINDS])
-            est = n_lang * knobs["search_count"] * _TIKTOK_COST_PER_ITEM
-            if est:
-                guard.add_tiktok_spend(datetime.now(timezone.utc).strftime("%Y-%m"), est)
+            # 추정지출 누적(add_tiktok_spend)도 건너뜀 — 위 docstring 참고.
+            # 유료를 되살릴 때 함께 복원: est = n_lang × search_count × _TIKTOK_COST_PER_ITEM
         if platform != "instagram":
             _, collected_at = Store(DB_PATH).load_last_run_platform(platform)
             return {"ok": True, "count": len(items), "items": items,
@@ -186,6 +211,7 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
         store.save_last_run(items, collected_at)
         background_tasks.add_task(generate_missing_drafts, next_draft_targets(items, store))
         background_tasks.add_task(_tag_new_items, items)   # 신규 썸네일 비전 태깅(백그라운드)
+        background_tasks.add_task(_translate_new_subjects, items)  # 새 소재 한→중 번역(백그라운드)
         # 수집→대본은행 자동 적재(2026-07-22): 밀도+속도 상위 표본을 부품으로 분해해 은행에
         # 쌓는다(소스당 Gemini 1콜이라 백그라운드). 결과는 /api/bank/ingest_report로 화면에 보고.
         background_tasks.add_task(_bank_ingest_collected_bg, DB_PATH, items, collected_at)
@@ -200,16 +226,23 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
 
 @app.get("/api/bank/ingest_report")
 def api_bank_ingest_report():
-    """'지금 수집' 후 백그라운드 은행 적재의 최근 결과(수집 화면이 폴링해 보고).
-    아직 한 번도 안 돌았으면 status=none."""
+    """'지금 수집' 후 은행 적재 결과 + 생성 순응 검열(usage_audit)을 함께 보고."""
     import json as _json
-    raw = Store(DB_PATH).get_setting("bank_ingest_last", "")
-    if not raw:
-        return {"ok": True, "report": {"status": "none"}}
-    try:
-        return {"ok": True, "report": _json.loads(raw)}
-    except Exception:
-        return {"ok": True, "report": {"status": "none"}}
+    store = Store(DB_PATH)
+    raw = store.get_setting("bank_ingest_last", "")
+    report = {"status": "none"}
+    if raw:
+        try:
+            report = _json.loads(raw)
+        except Exception:
+            report = {"status": "none"}
+    ua_raw = store.get_setting("bank_usage_audit_last", "")
+    if ua_raw:
+        try:
+            report["usage_audit"] = _json.loads(ua_raw)
+        except Exception:
+            pass
+    return {"ok": True, "report": report}
 
 
 def _apply_activity(records):
@@ -299,7 +332,47 @@ def api_census_status(job_id: str):
     return {"ok": True, "status": "done", **(job["result"] or {})}
 
 
+# ── 유튜브 로컬 릴레이(2026-07-24) ── 서버 데이터센터 IP가 유튜브에 봇차단당해, 사장님 PC의
+# 에이전트(youtube_relay_agent.py)가 큐를 폴링→주거용 IP로 다운로드→여기로 업로드한다.
+def _relay_auth_ok(key):
+    """에이전트 인증 — YT_RELAY_KEY 일치. 키 미설정이면 릴레이 자체를 잠근다(항상 거부)."""
+    return bool(config.YT_RELAY_KEY) and hmac.compare_digest(key or "", config.YT_RELAY_KEY)
+
+
+@app.get("/api/yt_relay/next")
+def api_yt_relay_next(key: str = ""):
+    """PC 에이전트가 폴링 — 처리할 pending 유튜브 요청 1건 {req_id, url} 또는 {}."""
+    if not _relay_auth_ok(key):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "인증 실패"})
+    job = Store(DB_PATH).next_pending_yt_relay()
+    return {"ok": True, "job": job}
+
+
+@app.post("/api/yt_relay/deliver/{req_id}")
+async def api_yt_relay_deliver(req_id: str, key: str = Form(""),
+                               file: UploadFile = File(None), error: str = Form("")):
+    """에이전트가 결과 회신 — mp4 업로드(성공) 또는 error 문자열(실패). 파일은
+    YT_RELAY_DIR에 저장하고 store에 done/failed 기록 → 서버 폴링(_download_via_relay)이 회수."""
+    if not _relay_auth_ok(key):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "인증 실패"})
+    store = Store(DB_PATH)
+    if error and not file:
+        store.finish_yt_relay(req_id, error=error[:500])
+        return {"ok": True, "status": "failed"}
+    if not file:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "파일·error 둘 다 없음"})
+    config.YT_RELAY_DIR.mkdir(parents=True, exist_ok=True)
+    ext = (Path(file.filename or "").suffix or ".mp4")
+    out_path = config.YT_RELAY_DIR / (req_id + ext)
+    with open(out_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+    store.finish_yt_relay(req_id, out_path=str(out_path))
+    return {"ok": True, "status": "done"}
+
+
 _VISION_TAG_CAP = 60  # 1회 수집당 새 태깅 상한(비용 가드). 초과분은 다음 수집 때.
+_TRANSLATE_CAP = 40      # 수집직후 백그라운드 소재 번역(_translate_new_subjects, Task3)의 1회 상한. 이 엔드포인트는 안 씀.
+_TRANSLATE_MAXLEN = 40   # 번역 요청 소재 길이 상한(비정상 입력 방어).
 
 
 def _tag_new_items(items):
@@ -324,6 +397,30 @@ def _tag_new_items(items):
             store.save_vision_tags(it["shortcode"], tags.get("subject", ""), tags.get("keywords", []))
     if len(todo) > len(capped):
         print(f"[vision_tags] {len(todo) - len(capped)}건 다음 수집으로 미룸(상한 {_VISION_TAG_CAP})")
+
+
+def _translate_new_subjects(items):
+    """수집 직후 백그라운드: 새 vision_subject를 한→중 번역해 translations 캐시에 채운다.
+    이미 번역된 건 skip. 상한(_TRANSLATE_CAP) 초과분은 다음 수집으로 미룬다.
+    비전태그가 먼저 채워져야 subject가 생기므로 1수집 지연은 정상(트렌드는 회차 누적)."""
+    store = Store(DB_PATH)
+    subjects = []
+    seen = set()
+    for it in items:
+        s = (it.get("vision_subject") or "").strip()
+        if s and s not in seen:
+            seen.add(s)
+            subjects.append(s)
+    have = store.translations_map(subjects)
+    todo = [s for s in subjects if s not in have]
+    for s in todo[:_TRANSLATE_CAP]:
+        try:
+            zh = (video_analysis.translate_keyword(s) or {}).get("zh", "") or ""
+        except Exception:
+            zh = ""
+        store.save_translation(s, zh)
+    if len(todo) > _TRANSLATE_CAP:
+        print(f"[translations] {len(todo) - _TRANSLATE_CAP}건 다음 수집으로 미룸(상한 {_TRANSLATE_CAP})")
 
 
 def _attach_vision_tags(items, store=None):
@@ -383,6 +480,29 @@ def api_generate_drafts(background_tasks: BackgroundTasks):
     return {"ok": True, "count": len(targets)}
 
 
+@app.get("/api/translate")
+def api_translate(q: str = ""):
+    """트렌드카드용 한→중 소재 번역(캐시 우선). 미스면 translate_keyword 1회 후 저장.
+
+    빈/과다 입력은 zh="" 로 안전 반환(딥링크는 ko 폴백). 캐시 히트는 Gemini 호출 0."""
+    ko = (q or "").strip()
+    if not ko:
+        return {"ok": True, "ko": "", "zh": ""}
+    if len(ko) > _TRANSLATE_MAXLEN:
+        return {"ok": False, "ko": ko, "zh": "", "error": "too_long"}
+    store = Store(DB_PATH)
+    cached = store.get_translation(ko)
+    if cached is not None:
+        return {"ok": True, "ko": ko, "zh": cached}
+    zh = ""
+    try:
+        zh = (video_analysis.translate_keyword(ko) or {}).get("zh", "") or ""
+    except Exception:
+        zh = ""
+    store.save_translation(ko, zh)   # 빈 zh도 저장 → 반복 호출 방지
+    return {"ok": True, "ko": ko, "zh": zh}
+
+
 @app.get("/api/reference")
 def api_reference(platform: str = "instagram"):
     """마지막 수집 결과 반환 (프론트 초기 로드용). platform=플랫폼(기본 인스타)."""
@@ -410,6 +530,33 @@ def api_seeds_add(body: dict):
         return JSONResponse(status_code=422, content={"ok": False, "error": "platform·value 필요"})
     Store(DB_PATH).add_seed(p, (body.get("kind") or "keyword").strip(), v)
     return {"ok": True}
+
+
+@app.post("/api/seeds/from_youtube_videos")
+def api_seeds_from_youtube_videos(body: dict):
+    """렌즈 유사영상 유튜브 결과(영상 URL들) → 소속 채널을 account 시드로 대량 벤치등록.
+    body: {urls:[영상URL,...]}. 같은 채널 1개로, 이미 등록된 채널은 duplicate로 집계.
+    반환: {ok, added, duplicate, channels:[{channel_url, channel_title, dup}]}."""
+    urls = [u for u in (body.get("urls") or []) if isinstance(u, str) and u.strip()]
+    if not urls:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "urls 필요"})
+    channels = yt_channels_from_videos(urls)
+    store = Store(DB_PATH)
+    existing = {(s["value"] or "").lower() for s in store.list_seeds("youtube")
+                if s["kind"] == "account"}
+    added = duplicate = 0
+    out = []
+    for ch in channels:
+        url = ch["channel_url"]
+        dup = url.lower() in existing
+        if dup:
+            duplicate += 1
+        else:
+            store.add_seed("youtube", "account", url)
+            existing.add(url.lower())
+            added += 1
+        out.append({"channel_url": url, "channel_title": ch.get("channel_title", ""), "dup": dup})
+    return {"ok": True, "added": added, "duplicate": duplicate, "channels": out}
 
 
 @app.delete("/api/seeds")
@@ -563,6 +710,40 @@ def api_mix_basket(request: Request):
             "shortcodes": sorted(store.mix_basket_shortcodes(customer_id=cid))}
 
 
+@app.post("/api/enrich")
+def api_enrich(request: Request, body: dict):
+    """레퍼런스(바구니 카드 등)의 소스 링크를 보강정보(채널명·구독자·조회수·인기댓글 등)로
+    채운다. 유튜브는 API 무료쿼터라 누구나 자동 조회+7일 캐시. 비유튜브(틱톡 등)는 실조회가
+    Apify 유료라 기본은 needs_manual만 반환하고, force=true(관리자 전용)일 때만 실조회를
+    시도한다 — 비관리자가 force로 남의 크레딧을 태우지 못하게 게이트(2026-07-22)."""
+    url = (body.get("url") or "").strip()
+    platform = (body.get("platform") or "").lower()
+    force = bool(body.get("force"))
+    if not url:
+        return {"status": "no_data"}
+    store = Store(DB_PATH)
+    cached = store.get_enrichment(url)
+    if cached:
+        return {"ok": True, **cached}
+    now = datetime.utcnow().isoformat()
+    if platform == "youtube" or "youtu" in url:
+        data = enrich_youtube(url)
+        if not data:
+            store.upsert_enrichment(url, platform, {}, "no_data", now)
+            return {"status": "no_data"}
+        if data.get("status") == "quota":
+            return {"status": "quota"}          # 쿼터소진은 캐시하지 않음(다음 시도가 다른 키로 성공할 수 있음)
+        store.upsert_enrichment(url, "youtube", data, "ok", now)
+        return {"ok": True, "status": "ok", **data}
+    if not force:
+        return {"status": "needs_manual"}
+    denied = _require_admin(request)   # 비유튜브 실조회(Apify 유료)는 관리자만
+    if denied:
+        return denied
+    # 비유튜브 force(관리자): Apify 경로 — 현 단계는 미구현 스텁(후속 계획)
+    return {"status": "no_data"}
+
+
 def _err(e):
     """토큰 마스킹 후 500 JSON (수집 계열 공통)."""
     msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
@@ -598,9 +779,15 @@ def _save_discovery_snapshot(store, items):
 
 
 @app.get("/api/discover")
-def api_discover(keyword: str, max_channels: int = 15):
+def api_discover(request: Request, keyword: str, max_channels: int = 15):
     """🔎 채널 발굴 — 카테고리 키워드로 '내가 모르던 채널' 중 최근 48h 댓글이
-    빠르게 쌓이는 릴스를 캐치(기존 랭킹엔진 재사용)."""
+    빠르게 쌓이는 릴스를 캐치(기존 랭킹엔진 재사용).
+
+    ★관리자(사장님 cid0) 전용(2026-07-23) — 검색+릴스수집+프로필 = Apify 유료
+    크롤이라 수집·전수조사와 같은 관리자 가드를 건다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
     keyword = (keyword or "").strip()
     if not keyword:
         return JSONResponse(status_code=422, content={"ok": False, "error": "키워드를 입력하세요"})
@@ -626,10 +813,18 @@ _DISCOVER_CATEGORIES = ["#주방템", "#살림템", "#인테리어", "#자취템
 
 
 @app.get("/api/discover/update")
-def api_discover_update(days: int = 2, max_total: int = 40, accumulate: bool = False):
+def api_discover_update(request: Request, days: int = 2, max_total: int = 40,
+                        accumulate: bool = False):
     """🔄 업데이트 시작(비동기) — 몇 분 걸리는 수집을 백그라운드 스레드로 돌리고
     즉시 반환한다(2026-07-12, 동기처리 시 프론트가 몇 분 멈추고 배포 재시작에
-    응답이 깨지던 문제). 프론트는 /api/discover/status를 폴링해 진행/결과 확인."""
+    응답이 깨지던 문제). 프론트는 /api/discover/status를 폴링해 진행/결과 확인.
+
+    ★관리자(사장님 cid0) 전용(2026-07-23) — 1회에 Apify run 최대 47개(검색6+
+    채널당 릴스run+프로필1)가 도는 유료 크롤. 결과 피드는 전 회원 공유라
+    회원이 눌러야 할 이유도 없다(보기는 /api/discover/feed로 그대로 열림)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
     from shopping_shorts import discover_jobs
     days = max(1, min(int(days), 14))
     max_total = max(10, min(int(max_total), 120))
@@ -652,9 +847,35 @@ def api_discover_feed():
     return {"ok": True, "items": items, "updated_at": updated_at}
 
 
+@app.get("/api/overseas/update")
+def api_overseas_update():
+    """해외HOT 수집 시작(백그라운드). 프론트는 /api/overseas/status 폴링."""
+    from shopping_shorts import overseas_hot_jobs
+    return {"ok": True, **overseas_hot_jobs.start()}
+
+
+@app.get("/api/overseas/status")
+def api_overseas_status():
+    from shopping_shorts import overseas_hot_jobs
+    return {"ok": True, **overseas_hot_jobs.status()}
+
+
+@app.get("/api/overseas/feed")
+def api_overseas_feed():
+    items, updated_at = Store(DB_PATH).load_overseas_feed()
+    return {"ok": True, "items": items, "updated_at": updated_at}
+
+
 @app.post("/api/discover/add")
-def api_discover_add(username: str, name: str = ""):
-    """발굴 채널을 벤치마크 목록에 추가(이후 메인 랭킹에도 추적)."""
+def api_discover_add(request: Request, username: str, name: str = ""):
+    """발굴 채널을 벤치마크 목록에 추가(이후 메인 랭킹에도 추적).
+
+    ★관리자(사장님 cid0) 전용(2026-07-23) — 클릭 자체 비용은 0이지만, 추가된 채널이
+    전 회원 공유 추적목록에 들어가 다음날부터 매일 자동수집(Apify 유료)이 늘어난다.
+    발굴 실행·레퍼런스 URL 등록과 같은 관리자 가드를 건다(피드 보기는 전 회원 유지)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
     Store(DB_PATH).add_discovered(username.strip().lstrip("@"), name)
     return {"ok": True, "username": username}
 
@@ -663,6 +884,42 @@ def api_discover_add(username: str, name: str = ""):
 def api_discover_added():
     """발굴로 추가한 채널 목록."""
     return {"ok": True, "items": Store(DB_PATH).discovered_channels()}
+
+
+@app.get("/api/refs/instagram")
+def api_refs_instagram(request: Request):
+    """관리페이지용 인스타 레퍼런스 통합 목록(2026-07-24) — 엑셀 기본 채널 + 손등록을
+    union(제외 반영)하고 활동여부를 붙인다. **Apify 조회 없음(무료)**: 구독자수는 엑셀에
+    이미 있는 값만, 활동일(last_active)은 수집이력(reel_history)에서. 그래서 사장님이
+    '엑셀에 원래 있던 채널까지 한 표에서, 살아있는지 보고' 관리할 수 있다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    try:
+        excel = load_channels()          # 엑셀 벤치마킹 채널(서버에만 있음 — 로컬은 빈 목록)
+    except Exception:
+        excel = []
+    excel_norm = {store._norm_username(c["username"]) for c in excel}
+    disc = store.discovered_channels()
+    removed = store.removed_usernames()
+    # 관리 목록은 수집비 cap과 무관하게 '등록된 전부'를 보여준다(수집은 별도로 cap 적용).
+    merged = merge_tracked(excel, disc, removed, max_channels=10 ** 9)
+    act = store.instagram_activity_map()
+    added = {store._norm_username(d["username"]): d.get("added_at", "") for d in disc}
+    items = []
+    for ch in merged:
+        u = store._norm_username(ch["username"])
+        a = act.get(u, {})
+        items.append({
+            "username": (ch["username"] or "").lstrip("@"),
+            "name": a.get("name") or ch.get("name") or "",
+            "followers": int(ch.get("followers") or 0),
+            "last_active": a.get("last") or "",   # ""=수집된 적 없음
+            "added_at": added.get(u, ""),
+            "source": "excel" if u in excel_norm else "manual",
+        })
+    return {"ok": True, "items": items}
 
 
 @app.post("/api/reference/register")
@@ -1019,6 +1276,7 @@ def _ingest_pattern_bank(db_path, full_text, url, category):
         pattern_bank.ingest_script(store, full_text, source="wiki", url=url or "",
                                    product_category=category, category_source="user")
         store.auto_approve_style_buckets()
+        store.auto_approve_content_buckets()   # 전개 템플릿(근거·갈등·감정)도 즉시 생성 반영(2026-07-23)
     except Exception as e:  # noqa: BLE001 — 은행 적재 실패는 위키 저장엔 영향 없음
         print(f"pattern_bank ingest 실패: {e}")
 
@@ -1039,9 +1297,22 @@ def _bank_ingest_collected_bg(db_path, items, collected_at):
         {"status": "running", "date": day, "collected_at": collected_at}, ensure_ascii=False))
     try:
         rep = pattern_bank.ingest_collected(store, items)
+        # 훅수확 이관(2026-07-23): 밤4시 크론이 아니라 수집 버튼이 우승작 훅을 즉시 수확한다.
+        try:
+            from shopping_shorts import daily_batch
+            rep["harvested_hooks"] = daily_batch.harvest_hooks(store)
+        except Exception as he:  # noqa: BLE001
+            print(f"bank ingest(harvest_hooks) 실패: {he}")
+            rep["harvested_hooks"] = 0
         store.auto_approve_style_buckets()   # 스타일 부품 즉시 사용가능(위키 적재와 동일)
+        store.auto_approve_content_buckets()   # 전개 템플릿(근거·갈등·감정)도 즉시 생성 반영(2026-07-23)
         rep.update({"status": "done", "date": day, "collected_at": collected_at})
         store.set_setting("bank_ingest_last", _json.dumps(rep, ensure_ascii=False))
+        # 검열은 따로도 저장(패널이 흡수리포트와 분리해 읽기 쉽게).
+        audit = rep.get("gemini_audit")
+        if audit is not None:
+            store.set_setting("gemini_audit_last", _json.dumps(
+                {**audit, "date": day, "collected_at": collected_at}, ensure_ascii=False))
     except Exception as e:  # noqa: BLE001
         print(f"bank ingest(collected) 실패: {e}")
         store.set_setting("bank_ingest_last", _json.dumps(
@@ -1723,19 +1994,40 @@ def api_mix_status(job_id: str):
     if status in _MIX_ACTIVE_STAGES and _render_is_stale(job):
         status = "failed"
         error = "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."
+    # ★clean/preview 단계도 같은 staleness 가드(2026-07-23 실사고). 배포 재시작이 진행 중이던
+    # 2단계 자막제거(clean) BackgroundTask를 죽이면 except가 못 돌아 clean_status='cleaning'이
+    # DB에 영원히 남고, 프론트가 "AI가 자막 영역을 복원하는 중"을 무한 표시한다. status(위)엔 이미
+    # 이 가드가 있었으나 clean/preview에는 없어 같은 사고가 이 단계에서 재발했다. GET이라 DB는
+    # 안 건드리고 응답에서만 failed로 알려 pollClean이 재시도 UI를 연다(_render_is_stale는
+    # updated_at 기반·단계무관, 이미 clean 재실행 가드에서 쓰인다).
+    clean_status, clean_error = job.get("clean_status"), job.get("clean_error")
+    if clean_status == "cleaning" and _render_is_stale(job):
+        clean_status = "failed"
+        clean_error = clean_error or "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."
+    preview_status, preview_error = job.get("preview_status"), job.get("preview_error")
+    if preview_status == "rendering" and _render_is_stale(job):
+        preview_status = "failed"
+        preview_error = preview_error or "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."
     # 장면 우선 대본 모드(2026-07-20, Task7): 후보 요약만 내려준다 — 전체 plan(beats 등)을
     # 실으면 남의 창작물이 새는 것과 같은 노출 문제(§3981)가 나므로 카드 렌더용 필드만 뽑는다.
+    # script(2026-07-24): 후보 대본 '전체 나레이션'은 사장님이 A/B/C를 비교해 고르는 자기 산출물이라
+    # 카드에서 통째로 보여준다 — 소스 plan(컷·seg_ids 등)이 아니라 말할 문장만 이어붙인다(edit_plan §561과 동일).
     candidates = [{"index": i, "score": c.get("score"), "recommended": bool(c.get("recommended")),
                    "hook": (c.get("story") or {}).get("hook", ""),
-                   "story_person": (c.get("story") or {}).get("story_person", "")}
+                   "story_person": (c.get("story") or {}).get("story_person", ""),
+                   "script": " ".join((b.get("narration") or "").strip()
+                                       for b in ((c.get("plan") or {}).get("beats") or [])).strip()}
                   for i, c in enumerate(store.get_mix_candidates(job_id))]
     return {"ok": True, "status": status, "error": error,
             # 1단계 미리보기(2026-07-17): 폴러를 둘로 만들지 않으려고 기존 응답에 얹는다(스펙 §6.3).
             # preview_path는 서버 내부 경로라 안 내보낸다 — 파일은 전용 라우트로만 서빙.
-            "preview_status": job.get("preview_status"),
-            "preview_error": job.get("preview_error"),
-            "clean_status": job.get("clean_status"),
-            "clean_error": job.get("clean_error"),
+            "preview_status": preview_status,
+            "preview_error": preview_error,
+            "clean_status": clean_status,
+            "clean_error": clean_error,
+            # 지워진 자막 위치(2026-07-25): 5단계 꾸미기가 자막 자동정렬·'원본 자막 있던 자리' 마커에 쓴다.
+            # 좌표(%)뿐이라 안전 — 소스 경로 등 내부정보는 안 실린다.
+            "clean_regions": job.get("clean_regions"),
             "candidates": candidates}
 
 
@@ -1755,6 +2047,11 @@ def api_mix_result(job_id: str):
     detected = plan.get("detected_type") or _edit_plan._DEFAULT_TYPE
     return {
         "ok": True, "structure": plan["structure"], "beats": beats,
+        # ★P1/P2(2026-07-24): 어느 생성기가 만들었나 + 렌더 전 불변식 위반을 화면에 띄우기 위해
+        # 내보낸다(조용한 폴백·조용한 위반 금지). 없으면 옛 job → 프런트가 경고 안 그린다.
+        "generator": plan.get("generator", ""),
+        "generator_note": plan.get("generator_note", ""),
+        "gate": plan.get("gate") or None,
         "detected_type": detected,
         "detected_type_label": _edit_plan.VIDEO_TYPES.get(detected, {}).get("label", detected),
         "affiliate_target": plan.get("affiliate_target", ""),
@@ -1996,8 +2293,11 @@ def api_mix_tts_regen(job_id: str, beat_idx: int, body: dict, background_tasks: 
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
-    if job.get("status") in ("rendering", "removing_subtitles"):
-        return JSONResponse(status_code=409, content={"ok": False, "error": "렌더 중에는 재생성할 수 없어요"})
+    # 렌더 단계뿐 아니라 '이 음성으로 전체 생성'(active stage "tts") 등 활성 단계 전부에서 막는다.
+    # 안 막으면 전체생성 백그라운드가 이 비트 새 톤 mp3를 job 기본 보이스로 덮어써 톤 변경이 사라진다
+    # (2026-07-23 진단 — 스크린샷 "전체 음성 생성 중…" 상태에서 톤 바꿔도 적용 안 됨).
+    if job.get("status") in _MIX_ACTIVE_STAGES + ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409, content={"ok": False, "error": "생성·렌더 중에는 재생성할 수 없어요"})
     # job의 voice 스냅샷(model_id·silence_trim·naturalize_profile 등) 위에 UI가 보낸
     # 톤/성우 키만 덮어쓴다 — 통째로 새 dict를 만들면 _voice_params가 나머지를 기본값으로
     # 채워 재생성 비트만 소리가 달라진다("작업대 소리 ≠ 렌더 소리", mix_pipeline._voice_params
@@ -2089,8 +2389,11 @@ _TUNE_CACHE = Path(__file__).parent / "data" / "voice_tune_cache"
 
 
 @app.get("/api/voice-tune/corpus")
-def api_voice_tune_corpus():
+def api_voice_tune_corpus(request: Request):
     """튜닝 작업대 회귀 코퍼스(고정 10줄) — role별 카드로 렌더링."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
     import json as _json
     lines = _json.loads(_TUNE_CORPUS.read_text(encoding="utf-8")) if _TUNE_CORPUS.exists() else []
     return {"lines": lines}
@@ -2099,6 +2402,9 @@ def api_voice_tune_corpus():
 @app.post("/api/voice-tune/preview")
 async def api_voice_tune_preview(req: Request):
     """합성 없이 naturalize만 실행해 변환텍스트를 실시간 미리보기."""
+    denied = _require_admin(req)
+    if denied:
+        return denied
     body = await req.json()
     text = body.get("text", "")
     profile = body.get("profile") or {}
@@ -2115,6 +2421,9 @@ async def api_voice_tune_synth(req: Request):
     일부만 보내던 탓에 작업대는 기본성우(Rachel)·1.0배속·후처리없음으로 합성돼 사장님이
     "튜닝해서 승인한 소리"와 영상 소리가 딴판이었다(2026-07-15 리뷰 S3/S5/S6/S8).
     캐시 키에 nonce를 포함해 '재롤'이 실제로 새 take를 뽑게 한다(S9)."""
+    denied = _require_admin(req)
+    if denied:
+        return denied
     body = await req.json()
     profile = body.get("profile") or {}
     preset_id = body.get("preset_id", "adhoc")
@@ -2147,7 +2456,11 @@ async def api_voice_tune_synth(req: Request):
 
 
 @app.get("/api/voice-tune/audio/{fname}")
-def api_voice_tune_audio(fname: str):
+def api_voice_tune_audio(request: Request, fname: str):
+    # 작업대는 전부 관리자 전용 — 캐시 오디오도 같은 게이트로 일관성 유지(Task5 리뷰 Minor).
+    denied = _require_admin(request)
+    if denied:
+        return denied
     f = _TUNE_CACHE / fname
     if not f.exists():
         return JSONResponse({"error": "not found"}, status_code=404)
@@ -2155,7 +2468,10 @@ def api_voice_tune_audio(fname: str):
 
 
 @app.get("/api/voice-tune/profile/{preset_id}")
-def api_voice_tune_profile_get(preset_id: str):
+def api_voice_tune_profile_get(preset_id: str, request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
     p = Store(DB_PATH).get_voice_preset(preset_id)
     return {"profile": (p or {}).get("naturalize_profile") if p else None}
 
@@ -2163,6 +2479,9 @@ def api_voice_tune_profile_get(preset_id: str):
 @app.post("/api/voice-tune/profile/{preset_id}")
 async def api_voice_tune_profile_save(preset_id: str, req: Request):
     """튜닝 작업대에서 완성한 프로파일을 프리셋에 동결 저장. 없는 preset_id면 작업대 임시 프리셋 생성."""
+    denied = _require_admin(req)
+    if denied:
+        return denied
     body = await req.json()
     store = Store(DB_PATH)
     p = store.get_voice_preset(preset_id)
@@ -2176,6 +2495,112 @@ async def api_voice_tune_profile_save(preset_id: str, req: Request):
     p["naturalize_profile"] = prof
     store.upsert_voice_preset(p)
     return {"ok": True}
+
+
+@app.get("/api/pron/global")
+def api_pron_global_list(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    d = pron_corrections.load(Store(DB_PATH))
+    return {"entries": [{"phrase": k, "respelling": v} for k, v in d.items()]}
+
+
+@app.post("/api/pron/global")
+async def api_pron_global_save(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    phrase = (body.get("phrase") or "").strip()
+    respelling = (body.get("respelling") or "").strip()
+    if not phrase or not respelling or phrase == respelling:
+        return JSONResponse({"error": "구절/재표기가 비었거나 동일합니다"}, status_code=400)
+    store = Store(DB_PATH)
+    d = pron_corrections.load(store)
+    d[phrase] = respelling
+    pron_corrections.save(store, d)
+    return {"ok": True}
+
+
+@app.delete("/api/pron/global/{phrase}")
+def api_pron_global_delete(request: Request, phrase: str):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    d = pron_corrections.load(store)
+    d.pop(phrase, None)
+    pron_corrections.save(store, d)
+    return {"ok": True}
+
+
+@app.post("/api/pron/report")
+async def api_pron_report(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    text = (body.get("text") or "").strip()
+    if not text:
+        return JSONResponse({"error": "문장이 비었습니다"}, status_code=400)
+    comment = (body.get("comment") or "").strip()
+    created_at = datetime.now(timezone.utc).isoformat()
+    rid = Store(DB_PATH).add_pron_report(text, comment, created_at)
+    return {"ok": True, "id": rid}
+
+
+@app.get("/api/pron/reports")
+def api_pron_reports_list(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return {"reports": Store(DB_PATH).list_pron_reports()}
+
+
+@app.post("/api/pron/reports/{report_id}/resolve")
+def api_pron_report_resolve(request: Request, report_id: int):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    Store(DB_PATH).resolve_pron_report(report_id)
+    return {"ok": True}
+
+
+_PRON_SUGGEST_SCHEMA = {
+    "type": "object",
+    "properties": {"suggestions": {"type": "array", "items": {
+        "type": "object",
+        "properties": {"phrase": {"type": "string"}, "respelling": {"type": "string"},
+                       "reason": {"type": "string"}},
+        "required": ["phrase", "respelling"]}}},
+    "required": ["suggestions"],
+}
+
+
+@app.post("/api/pron/suggest")
+async def api_pron_suggest(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    text = (body.get("text") or "").strip()
+    if not text:
+        return {"suggestions": []}
+    prompt = (
+        "다음 한국어 나레이션에서 TTS가 이어발음(연음)·발음을 어색하게 읽을 만한 구절을 찾아라. "
+        "각 구절마다 성우가 자연스럽게 읽도록 소리 나는 대로 다시 쓴 '재표기'를 제시하라. "
+        "예: '좋은데요'→'조은데요', '같이'→'가치'. 원문에 실제로 있는 구절만. 없으면 빈 배열.\n"
+        f"나레이션: {text}\n출력은 스키마 JSON만."
+    )
+    result = edit_plan._vault_call(prompt, _PRON_SUGGEST_SCHEMA)
+    if not result or not isinstance(result.get("suggestions"), list):
+        return {"suggestions": []}
+    # 원문에 실제로 있는 구절만 통과(환각 제거) + no-op 제거.
+    out = [s for s in result["suggestions"]
+           if s.get("phrase") and s.get("respelling")
+           and s["phrase"] in text and s["phrase"] != s["respelling"]]
+    return {"suggestions": out}
 
 
 def _voice_snapshot(store, body):
@@ -2258,6 +2683,54 @@ def api_mix_video(job_id: str, dl: int = 0):
         return FileResponse(job["video_path"], media_type="video/mp4",
                             filename=export_bundle.safe_name(job_id) + ".mp4")
     return FileResponse(job["video_path"])
+
+
+# ── QR '폰으로 보내기' (2026-07-23) ──
+# 흐름: 제작소(로그인됨)에서 /api/share/link/{job} 호출 → 단축링크+QR(SVG) 발급 → 화면에 QR 표시.
+#       폰이 스캔 → /s/{sid}(로그인 불필요, 미들웨어 allowlist) → 영상+카톡공유 버튼.
+@app.get("/api/share/link/{job_id}")
+def api_share_link(job_id: str, request: Request):
+    """완성 영상의 QR용 단축 공유링크+QR SVG 발급(로그인 필요 — 미들웨어 게이트 통과분만 도달)."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
+        return JSONResponse(status_code=404, content={"ok": False, "error": "완성 영상이 없어요"})
+    sid = _share_put(job_id)
+    if PUBLIC_BASE_URL:
+        base = PUBLIC_BASE_URL.rstrip("/")
+    else:
+        proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+        host = request.headers.get("host") or request.url.netloc
+        base = f"{proto}://{host}"
+    url = f"{base}/s/{sid}"
+    try:
+        qr = qr_svg.qr_svg(url)
+    except Exception:
+        qr = ""   # QR 실패해도 링크 텍스트로 폴백(프런트가 복사 UI 제공)
+    return {"ok": True, "url": url, "qr_svg": qr}
+
+
+@app.get("/api/share/v/{sid}")
+def api_share_v(sid: str, dl: int = 0):
+    """단축 id로 영상 스트리밍(로그인 불필요·저장소 조회). allowlist 경로."""
+    job_id = _share_get(sid)
+    if not job_id:
+        return JSONResponse(status_code=403, content={"ok": False, "error": "링크가 만료됐어요"})
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    if dl:
+        return FileResponse(job["video_path"], media_type="video/mp4",
+                            filename=export_bundle.safe_name(job_id) + ".mp4")
+    return FileResponse(job["video_path"], media_type="video/mp4")
+
+
+@app.get("/s/{sid}", response_class=HTMLResponse)
+def share_page(sid: str):
+    """폰이 QR로 여는 모바일 공유 페이지(로그인 불필요). 폰 카톡 네이티브 공유로 전송."""
+    job_id = _share_get(sid)
+    if not job_id:
+        return HTMLResponse(_SHARE_EXPIRED_HTML, status_code=403)
+    return HTMLResponse(_SHARE_PAGE_HTML.replace("__VID__", f"/api/share/v/{sid}"))
 
 
 @app.get("/api/mix/export/{job_id}")
@@ -2397,8 +2870,14 @@ def api_thumb_frames(body: dict):
     # VMake는 이미 탔으니 추가과금 0. 실패하면 아래 폴백 그대로.
     _cvp = job.get("clean_video_path")
     if job.get("clean_status") == "ready" and not (_cvp and Path(_cvp).exists()):
-        if mix_pipeline.assemble_clean_video(job_id, DB_PATH, _MIX_WORK_DIR):
-            job = Store(DB_PATH).get_mix_job(job_id)   # 새 clean_video_path 반영
+        # 자가치유 조립은 ffmpeg를 태운다 — 실패(RuntimeError)나 배포 재시작으로 ffmpeg가
+        # 죽으면(exit 255) 여기서 예외가 그대로 올라가 500이 났다(2026-07-22 실측). 그러면
+        # 아래 preview/최종 폴백을 못 타고 프레임이 아예 안 나온다. 삼키고 폴백으로 넘긴다.
+        try:
+            if mix_pipeline.assemble_clean_video(job_id, DB_PATH, _MIX_WORK_DIR):
+                job = Store(DB_PATH).get_mix_job(job_id)   # 새 clean_video_path 반영
+        except Exception:
+            pass   # 자막 없는 배경을 못 만들면 자막 있는 preview/최종으로라도 프레임을 낸다
     video = None
     for cand in (job.get("clean_video_path"), job.get("preview_path"), job.get("video_path")):
         if cand and Path(cand).exists():
@@ -3004,6 +3483,11 @@ if not _AUTH_ON:
     print("⚠️ [보안] DASH_PASS 미설정 → 인증·유료게이트 OFF(전원 full/admin). "
           "운영이면 DASH_PASS를 반드시 설정하세요.", file=_sys.stderr)
 _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico", "/healthz",
+               "/pay",   # 계좌입금 안내 페이지(공개 — 대기중·비로그인도 결제 안내 봄)
+               "/terms", "/privacy", "/refund",   # 법적 고지(공개 — 비로그인·대기중도 열람)
+               # PWA: 매니페스트는 브라우저가 쿠키 없이(credentials omit) fetch한다 → 공개 필수.
+               "/manifest.webmanifest", "/apple-touch-icon.png",
+               "/icon-192.png", "/icon-512.png", "/icon-maskable-512.png",
                "/insta_fill_comment.user.js",
                # 유저스크립트(insta_fill_comment)가 인스타 탭에서 전송 감지 시 GM_xmlhttpRequest로
                # 완료기록을 POST한다. 인증쿠키 없이 오므로 허용. 마킹은 저위험(되돌리기 가능).
@@ -3076,6 +3560,83 @@ def _set_session_cookie(response, customer_id: int):
                          max_age=_COOKIE_MAX_AGE, httponly=True, samesite="lax")
 
 
+# ── QR '폰으로 보내기' 단축 공유 (2026-07-23) ──
+# PC 웹은 카톡 대화방에 mp4를 직접 못 넣는다(카톡 PC가 파일 붙여넣기 미지원). 그래서 완성 영상의
+# '로그인 없이 열리는' 단기 링크를 QR로 띄운다 → 폰으로 스캔해 폰 카톡 네이티브 공유로 전송.
+# ★URL을 짧게(/s/{8자}) 유지해야 QR이 v3(검증범위) 안에 든다 → 긴 서명토큰 대신 메모리 저장소에
+#   짧은 id→(job,만료)를 담는다. 재기동 시 사라짐 = 24h 만료와 같은 성질(재발급하면 됨). 무상태 필요 없음.
+_SHARE_TTL = 60 * 60 * 24  # 24시간
+_SHARE_STORE: dict = {}    # sid -> (job_id, expiry_ts)
+
+
+def _share_put(job_id: str) -> str:
+    now = int(datetime.now(timezone.utc).timestamp())
+    for k in [k for k, (_, e) in _SHARE_STORE.items() if e < now]:   # 만료 청소(누수 방지)
+        _SHARE_STORE.pop(k, None)
+    sid = secrets.token_urlsafe(6)   # ~8자
+    _SHARE_STORE[sid] = (job_id, now + _SHARE_TTL)
+    return sid
+
+
+def _share_get(sid: str):
+    v = _SHARE_STORE.get(sid)
+    if not v:
+        return None
+    job_id, exp = v
+    if int(datetime.now(timezone.utc).timestamp()) > exp:
+        _SHARE_STORE.pop(sid, None)
+        return None
+    return job_id
+
+
+_SHARE_PAGE_HTML = """<!doctype html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>완성 영상 · 숏템박스</title>
+<style>
+ *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+ body{background:#0d0f12;color:#eef2f6;font-family:-apple-system,"Malgun Gothic",sans-serif;
+      min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px 16px 40px}
+ h1{font-size:19px;font-weight:800;margin:8px 0 4px;letter-spacing:1px}
+ .sub{color:#8b93a7;font-size:13px;margin-bottom:16px}
+ video{width:100%;max-width:420px;border-radius:16px;background:#000;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+ .btns{width:100%;max-width:420px;margin-top:18px;display:flex;flex-direction:column;gap:12px}
+ button,a.dl{font-size:19px;font-weight:800;border:0;border-radius:14px;padding:18px;text-align:center;
+      text-decoration:none;cursor:pointer}
+ #shareBtn{background:#fee500;color:#191600}
+ a.dl{background:#1c2740;color:#dfe7f5}
+ .tip{color:#6b7488;font-size:12px;margin-top:14px;text-align:center;line-height:1.6;max-width:420px}
+</style></head><body>
+ <h1>완성 영상 📱</h1>
+ <div class="sub">아래 버튼으로 카톡·인스타에 바로 보내세요</div>
+ <video src="__VID__" controls playsinline preload="metadata"></video>
+ <div class="btns">
+   <button id="shareBtn">카톡·인스타로 보내기</button>
+   <a class="dl" href="__VID__?dl=1" download>영상 저장(다운로드)</a>
+ </div>
+ <div class="tip">버튼을 누르면 공유창이 떠요. 카톡을 고르고 대화방을 선택하면 전송됩니다.<br>안 뜨면 '영상 저장' 후 갤러리에서 공유하세요.</div>
+<script>
+ const V="__VID__";
+ document.getElementById('shareBtn').addEventListener('click', async ()=>{
+   try{
+     const r=await fetch(V); const b=await r.blob();
+     const f=new File([b],'shopping_short.mp4',{type:'video/mp4'});
+     if(navigator.canShare && navigator.canShare({files:[f]})){
+       await navigator.share({files:[f], title:'완성 영상'}); return;
+     }
+     if(navigator.share){ await navigator.share({title:'완성 영상', url:location.href}); return; }
+     location.href=V+'?dl=1';
+   }catch(e){ if(e && e.name==='AbortError') return; location.href=V+'?dl=1'; }
+ });
+</script></body></html>"""
+
+_SHARE_EXPIRED_HTML = """<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>링크 만료</title><style>body{background:#0d0f12;color:#eef2f6;font-family:-apple-system,"Malgun Gothic",sans-serif;
+min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+h1{font-size:22px;margin-bottom:10px}p{color:#8b93a7;line-height:1.6}</style></head>
+<body><h1>⏱ 링크가 만료됐어요</h1><p>공유 링크는 24시간만 유효해요.<br>제작소에서 QR을 다시 띄워 주세요.</p></body></html>"""
+
+
 # ── 브랜드 토큰 (한 곳에 몰아둔다 — 이름 확정 시 여기 1곳만 교체) ──
 # 이름 5안(ShortsFactory/Reelery/ShopReel/ShortsForge/Vidory) 중 사용자 확정 대기.
 # 지금은 추천안 Reelery 플레이스홀더. 팔레트(민트×블랙)는 sidebar.js 계승·고정.
@@ -3099,22 +3660,33 @@ _GOOGLE_SVG = ('<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6
 
 # 시그니처 심볼(브랜딩 보드 v1, out/브랜딩_CI_숏템탑스.html) — 박스(제작소)에서 랭킹된
 # 아이템이 쌓여 올라오고 맨 위 한 칸만 골드=TOP 인기템. 박스·대량생산·인기를 한 심볼에.
-_LOGO_SVG = (
+_LOGO_SVG = (  # v2 엠블럼(2026-07-23): 다크 디스크+민트 링, 스택 3단(TOP=골드)+상승 화살촉
     '<svg class="sym" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템박스">'
-    '<defs><linearGradient id="lmg" x1="0" y1="0" x2="1" y2="1">'
+    '<defs><radialGradient id="ldk" cx="50%" cy="42%" r="65%">'
+    '<stop offset="0" stop-color="#1c2b25"/><stop offset="1" stop-color="#0b120f"/></radialGradient>'
+    '<linearGradient id="lmg" x1="0" y1="0" x2="1" y2="1">'
     '<stop offset="0" stop-color="#6ff0d6"/><stop offset="1" stop-color="#1f9e7a"/></linearGradient>'
     '<linearGradient id="lgg" x1="0" y1="0" x2="1" y2="1">'
     '<stop offset="0" stop-color="#ffe1a1"/><stop offset="1" stop-color="#f0a93a"/></linearGradient></defs>'
-    '<rect x="4" y="4" width="56" height="56" rx="16" stroke="url(#lmg)" stroke-width="3"/>'
-    '<rect x="16" y="40" width="32" height="8" rx="3" fill="#1f9e7a" opacity=".55"/>'
-    '<rect x="20" y="29" width="24" height="8" rx="3" fill="#6ff0d6" opacity=".9"/>'
-    '<rect x="24" y="18" width="16" height="8" rx="3" fill="url(#lgg)"/>'
-    '<path d="M32 11.5l3 4.5h-6l3-4.5z" fill="url(#lgg)"/></svg>')
+    '<circle cx="32" cy="32" r="29" fill="url(#ldk)"/>'
+    '<circle cx="32" cy="32" r="29" stroke="url(#lmg)" stroke-width="2.4"/>'
+    '<rect x="17.6" y="40" width="28.8" height="6" rx="2.8" fill="#1d8a68"/>'
+    '<rect x="20.8" y="32" width="22.4" height="6" rx="2.8" fill="url(#lmg)"/>'
+    '<rect x="24" y="24" width="16" height="6" rx="2.8" fill="url(#lgg)"/>'
+    '<path d="M32 13.8l8 8.2H24l8-8.2z" fill="url(#lgg)"/></svg>')
+
+
+# 공개 페이지 하단 법적 고지 링크(약관·개인정보·환불). 모든 대문/로그인 푸터에 __LEGAL__로 주입.
+_LEGAL_LINKS = ('<div style="margin-top:8px;font-size:12px">'
+                '<a href="/terms" style="color:#7a9090;text-decoration:none">이용약관</a>'
+                ' · <a href="/privacy" style="color:#7a9090;text-decoration:none">개인정보처리방침</a>'
+                ' · <a href="/refund" style="color:#7a9090;text-decoration:none">환불정책</a></div>')
 
 
 def _fill_brand(s: str) -> str:
     """대문·로그인 템플릿의 브랜드 플레이스홀더를 _BRAND로 채운다(모듈 로드 시 1회)."""
-    return (s.replace("__NAME__", _BRAND["name"])
+    return (s.replace("__LEGAL__", _LEGAL_LINKS)
+             .replace("__NAME__", _BRAND["name"])
              .replace("__NAME_EN__", _BRAND["name_en"])
              .replace("__GLYPH__", _BRAND["glyph"])
              .replace("__TAGLINE__", _BRAND["tagline"])
@@ -3123,9 +3695,27 @@ def _fill_brand(s: str) -> str:
              .replace("__GOOGLE_SVG__", _GOOGLE_SVG))
 
 
+def _with_pay(html: str) -> str:
+    """결제 CTA(__PAY_HREF__/__PAY_LABEL__)를 요청 시점에 채운다 — 설정 pay_url(외부 결제링크)이
+    있으면 '결제하기', 없으면 카톡 문의로 폴백. 설정 변경이 재시작 없이 바로 반영되게 요청마다 읽는다."""
+    st = Store(DB_PATH)
+    pay = (st.get_setting("pay_url", "") or "").strip()
+    bank = (st.get_setting("bank_account", "") or "").strip()
+    kakao = (st.get_setting("contact_kakao", "") or _BRAND.get("kakao") or "/login").strip()
+    # 우선순위: 외부 결제링크(pay_url) > 계좌입금 안내페이지(/pay, 계좌 설정 시) > 카톡 문의
+    if pay:
+        href, label = pay, "💳 결제하기 →"
+    elif bank:
+        href, label = "/pay", "💳 결제 안내"
+    else:
+        href, label = kakao, "카톡으로 문의"
+    return html.replace("__PAY_HREF__", href).replace("__PAY_LABEL__", label)
+
+
 # ── 공개 대문(랜딩) — 비로그인 방문자용. 민트×블랙, 한 페이지(B). ──
 _LANDING_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png">
 <title>__NAME__ — 폰으로 5분, 편집 몰라도 파는 쇼츠 완성</title>
 <link rel=preconnect href="https://fonts.googleapis.com">
 <link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
@@ -3291,13 +3881,13 @@ a{text-decoration:none;color:inherit}
 <div style="color:var(--gold);font-weight:700;font-size:14px">Pro 이용권</div>
 <div class=display style="font-size:34px;margin:6px 0;background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent">가격 문의</div>
 <div style="color:var(--faint);font-size:13px;margin-bottom:16px">전 기능 무제한 · 무제한 제작</div>
-<a href="__KAKAO__" target=_blank rel=noopener style="display:inline-flex;width:100%;justify-content:center;background:var(--gold-grad);color:#3a2600;font-weight:700;font-size:14px;padding:12px;border-radius:12px;text-decoration:none">카톡으로 문의</a></div></div>
+<a href="__PAY_HREF__" target=_blank rel=noopener style="display:inline-flex;width:100%;justify-content:center;background:var(--gold-grad);color:#3a2600;font-weight:700;font-size:14px;padding:12px;border-radius:12px;text-decoration:none">__PAY_LABEL__</a></div></div>
 <div class=reveal style="text-align:center;margin-top:20px"><a href="/pricing" style="color:var(--mint);font-weight:700;font-size:14px">요금 자세히 보기 →</a></div></div>
 <div class="band reveal">
 <h2>손자한테 안 물어봐도 됩니다</h2>
 <p>지금 5분, 무료로 하나 만들어보세요. 구글 계정이면 3초 · 카드 없이 시작.</p>
 <a class=cta href="/login">무료로 시작하기 →</a></div>
-<div class=foot>© __NAME__ · 폰으로 5분, 파는 사람을 위한 AI 쇼츠 제작</div>
+<div class=foot>© __NAME__ · 폰으로 5분, 파는 사람을 위한 AI 쇼츠 제작__LEGAL__</div>
 </div>
 <script>(function(){var rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
 var rev=document.querySelectorAll('.reveal');
@@ -3309,60 +3899,132 @@ var m=document.querySelector('.money');
 if(m){var mo=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.querySelectorAll('[data-to]').forEach(cu);mo.unobserve(e.target);}});},{threshold:.35});mo.observe(m);}
 setTimeout(function(){document.querySelectorAll('.hero [data-to]').forEach(cu);},520);
 })();</script>
+<script>(function(){
+// 런처 v3(2026-07-23): 로그인 링크 → 작은 런처 팝업으로("있어보이게"). 팝업 차단·모바일은 일반 이동 폴백.
+document.addEventListener('click',function(e){
+  var a=e.target.closest?e.target.closest('a[href="/login"]'):null; if(!a) return;
+  if(window.innerWidth<600) return;                 // 모바일·좁은 화면은 팝업 어색 → 그냥 이동
+  var w=window.open('/login','stb_login','width=440,height=800,menubar=no,toolbar=no,location=no,status=no,resizable=yes');
+  if(w){ e.preventDefault(); try{w.focus();}catch(_){}}   // w=null(차단) → preventDefault 안 함 = 기본 이동
+},true);
+})();</script>
 </body></html>"""
 
 
-# ── 로그인 페이지 — 민트×블랙(구조는 기존 유지: 구글버튼+운영자 접이식). ──
+# ── 로그인 페이지 — "프로그램 런처" 연출 v3(2026-07-23 사장님): 엔진 부팅 로그(모듈 로드
+#    타임라인+%카운터+링 스피너) 후 아이디·비번 폼이 메인, 구글은 보조 버튼.
+#    /api/login이 관리자(env)+고객(DB) 둘 다 검증하므로 폼 하나로 충분.
+#    JS 꺼짐/reduced-motion이면 부팅 생략·전부 즉시 표시.
 _LOGIN_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1"><title>__NAME__ 로그인</title>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png"><title>__NAME__ 로그인</title>
 <link rel=preconnect href="https://fonts.googleapis.com">
 <link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel=stylesheet>
 <style>*{box-sizing:border-box}
 body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;word-break:keep-all;
-background:radial-gradient(900px 500px at 80% -10%,rgba(111,240,214,.10),transparent 60%),#0b0f14;
+background:radial-gradient(1000px 560px at 50% -18%,rgba(111,240,214,.11),transparent 62%),
+radial-gradient(700px 420px at 88% 108%,rgba(255,207,111,.05),transparent 55%),#090d10;
 font-family:'Noto Sans KR',system-ui,sans-serif;color:#e8f0ee}
-.box{width:340px;padding:36px 30px;text-align:center}
-.logo{display:flex;align-items:center;justify-content:center;gap:13px;margin-bottom:10px}
-.logo .sym{width:50px;height:50px;flex:none}
-.logo .wm{display:flex;flex-direction:column;line-height:1;text-align:left}
-.logo .nm{font-family:'Black Han Sans',sans-serif;font-size:33px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);-webkit-background-clip:text;background-clip:text;color:transparent}
-.logo .en{font-family:ui-monospace,monospace;font-size:11px;letter-spacing:3.2px;color:#7a9090;margin-top:3px}
-h1{font-size:22px;margin:26px 0 8px;font-weight:700}
-.sub{color:#6ff0d6;font-size:13px;margin-bottom:26px;line-height:1.6}
-.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;
-background:#111722;border:1px solid #1e2735;border-radius:10px;color:#e8f0ee;font-size:15px;
-font-weight:700;cursor:pointer;text-decoration:none}
+.box{width:400px;max-width:calc(100vw - 24px);padding:38px 32px 26px;text-align:center;
+background:linear-gradient(180deg,#101a1c,#0c1214);border:1px solid #1e2b2c;border-radius:24px;
+box-shadow:0 34px 90px rgba(0,0,0,.6),0 0 0 1px rgba(111,240,214,.05) inset;
+animation:cardin .5s ease}
+@keyframes cardin{from{opacity:0;transform:scale(.96) translateY(8px)}}
+.emwrap{position:relative;width:94px;height:94px;margin:0 auto}
+.emwrap .sym{position:absolute;inset:8px;width:78px;height:78px;filter:drop-shadow(0 0 16px rgba(111,240,214,.30))}
+@media (prefers-reduced-motion:no-preference){.emwrap .sym{animation:lpulse 3.2s ease-in-out infinite}}
+@keyframes lpulse{50%{filter:drop-shadow(0 0 30px rgba(111,240,214,.55))}}
+.ring{position:absolute;inset:0;border-radius:50%;border:2px solid transparent;
+border-top-color:#6ff0d6;border-right-color:rgba(111,240,214,.35);opacity:0;transition:opacity .3s}
+body.booting .ring{opacity:1;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.wm{display:flex;flex-direction:column;line-height:1;align-items:center;margin-top:13px}
+.nm{font-family:'Black Han Sans',sans-serif;font-size:31px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.en{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:3.4px;color:#7a9090;margin-top:5px}
+.ver{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:2px;color:#3f5a54;margin-top:9px}
+.boot{max-height:120px;margin:18px 0 2px;transition:opacity .4s ease,max-height .45s ease .2s,margin .45s ease .2s;overflow:hidden;text-align:left}
+.boot.done{opacity:0;max-height:0;margin:0}
+.bhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+.blabel{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:1.6px;color:#47605a}
+.bpct{font-family:ui-monospace,monospace;font-size:12px;color:#6ff0d6}
+.bar{height:5px;background:#0a1210;border:1px solid #1c2a28;border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:99px;transition:width .3s ease;
+background:linear-gradient(90deg,#1f9e7a,#6ff0d6,#1f9e7a);background-size:200% 100%;animation:flow 1.1s linear infinite}
+@keyframes flow{to{background-position:-200% 0}}
+.blog{font-family:ui-monospace,monospace;font-size:11px;line-height:1.75;color:#527068;margin-top:8px;height:58px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
+.blog .ok{color:#49c9a9}.blog .cur{color:#9fe8d6}
+.blog .cur:after{content:'▌';margin-left:2px;animation:blink .7s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+.auth{transition:opacity .5s ease,transform .5s ease}
+body.booting .auth{opacity:0;transform:translateY(12px);pointer-events:none}
+h1{font-size:18px;margin:16px 0 14px;font-weight:700}
+.lform input{width:100%;margin:5px 0;padding:13px 14px;background:#0a1113;border:1px solid #1e2b2c;
+border-radius:11px;color:#e8f0ee;font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s}
+.lform input:focus{border-color:#2f6a5c;box-shadow:0 0 0 3px rgba(111,240,214,.08)}
+.lbtn{width:100%;margin-top:10px;padding:13px;border:0;border-radius:11px;cursor:pointer;
+font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:15px;color:#08110e;
+background:linear-gradient(135deg,#6ff0d6,#1f9e7a);box-shadow:0 6px 22px rgba(31,158,122,.35);
+transition:transform .12s,box-shadow .12s}
+.lbtn:hover{transform:translateY(-1px);box-shadow:0 9px 28px rgba(31,158,122,.45)}
+.or{display:flex;align-items:center;gap:12px;margin:16px 0 10px;color:#3f5050;font-size:11px}
+.or:before,.or:after{content:'';flex:1;height:1px;background:#1a2626}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:11px;
+background:#101820;border:1px solid #1e2735;border-radius:11px;color:#b7c6c2;font-size:13px;
+font-weight:700;cursor:pointer;text-decoration:none;transition:background .15s,border-color .15s}
 .gbtn:hover{background:#16202e;border-color:#2a3647}
-.gbtn svg{width:18px;height:18px}
-.err{color:#e0623d;font-size:12px;margin-top:16px;min-height:14px;line-height:1.6}
-.home{display:block;color:#5f7373;font-size:12px;margin-top:22px;text-decoration:none}
-.home:hover{color:#6ff0d6}
-.atoggle{color:#3f5050;font-size:11px;margin-top:30px;cursor:pointer;background:none;border:0}
-.aform{display:none;margin-top:14px}.aform.show{display:block}
-.aform input{width:100%;margin:5px 0;padding:10px;background:#0a0f16;border:1px solid #1e2735;
-border-radius:8px;color:#eee;font-size:13px}
-.aform button{width:100%;margin-top:8px;padding:10px;background:#16202e;color:#6ff0d6;border:1px solid #2a3647;
-border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}</style></head>
+.gbtn svg{width:16px;height:16px}
+.err{color:#e0623d;font-size:12px;margin-top:13px;min-height:14px;line-height:1.6}
+.home{display:block;color:#5f7373;font-size:12px;margin-top:16px;text-decoration:none}
+.home:hover{color:#6ff0d6}</style></head>
 <body><div class=box>
-<div class=logo>__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></div>
+<div class=emwrap><div class=ring></div>__LOGO_SVG__</div>
+<div class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></div>
+<div class=ver>__NAME_EN__ STUDIO</div>
+<div class=boot id=boot>
+<div class=bhead><span class=blabel>SYSTEM BOOT</span><span class=bpct id=bpct>0%</span></div>
+<div class=bar><i id=bbar></i></div>
+<div class=blog id=blog></div>
+</div>
+<div class=auth>
 <h1>로그인</h1>
-<div class=sub>구글 계정으로 로그인하세요<br>처음이면 <b>무료 체험</b>이 바로 시작돼요</div>
+<form class=lform method=post action=/api/login>
+<input name=user placeholder="아이디 (이메일)" autocomplete=username>
+<input name=pass type=password placeholder=비밀번호 autocomplete=current-password>
+<button class=lbtn>로그인 →</button></form>
+<div class=or>또는</div>
 <a class=gbtn href="/auth/google/login">
 __GOOGLE_SVG__
-Google 계정으로 로그인</a>
+Google 계정으로 계속하기</a>
 <div class=err>__ERR__</div>
 <a class=home href="/">← 홈으로 돌아가기</a>
-<button class=atoggle onclick="document.getElementById('af').classList.toggle('show')">운영자 로그인</button>
-<form class=aform id=af method=post action=/api/login>
-<input name=user placeholder=아이디 autocomplete=username>
-<input name=pass type=password placeholder=비밀번호 autocomplete=current-password>
-<button>운영자 로그인</button></form>
-</div></body></html>"""
+<div style="text-align:center;color:#5f7373">__LEGAL__</div>
+</div>
+</div>
+<script>(function(){
+if(matchMedia('(prefers-reduced-motion:reduce)').matches){document.getElementById('boot').classList.add('done');return;}
+var b=document.body;b.classList.add('booting');
+var bar=document.getElementById('bbar'),pct=document.getElementById('bpct'),lg=document.getElementById('blog');
+var steps=[[9,'코어 부팅'],[24,'AI 엔진 초기화'],[42,'트렌드 데이터 동기화'],[61,'대본 생성 모듈 로드'],[78,'렌더 파이프라인 웜업'],[92,'보안 채널 연결'],[100,'준비 완료']];
+var i=0,shown=0,tk=null;
+function tick(){shown=Math.min(shown+3,steps[Math.min(i,steps.length-1)][0]);pct.textContent=shown+'%';}
+tk=setInterval(tick,40);
+function nx(){
+var cur=lg.querySelector('.cur');if(cur){cur.className='ok';cur.textContent='  ✓ '+cur.dataset.t;}
+if(i>=steps.length){clearInterval(tk);pct.textContent='100%';
+setTimeout(function(){b.classList.remove('booting');document.getElementById('boot').classList.add('done');},260);return;}
+bar.style.width=steps[i][0]+'%';
+var d=document.createElement('div');d.className='cur';d.dataset.t=steps[i][1];d.textContent='  › '+steps[i][1];
+lg.appendChild(d);while(lg.children.length>3)lg.removeChild(lg.firstChild);
+i++;setTimeout(nx,i===steps.length?460:300);}
+setTimeout(nx,160);
+})();</script>
+</body></html>"""
 
 # ── 요금·이용권(상품 상세) — 공개 페이지. 구성·가격은 플레이스홀더(확정 시 값만 교체). ──
 _PRICING_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png">
 <title>__NAME__ — 요금 · 이용권</title>
 <link rel=preconnect href="https://fonts.googleapis.com">
 <link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
@@ -3433,7 +4095,7 @@ a{text-decoration:none;color:inherit}
 <p>먼저 무료로 만들어보고, 마음에 들면 이용권으로 계속. 결제·문의는 카톡으로 간편하게 안내해 드립니다.</p>
 <div class=row>
 <a class="btn pri" href="/login">무료로 시작하기 →</a>
-<a class="btn kko" href="__KAKAO__" target="_blank" rel="noopener">카톡으로 문의하기</a></div></div>
+<a class="btn kko" href="__PAY_HREF__" target="_blank" rel="noopener">__PAY_LABEL__</a></div></div>
 <div class=plans>
 <div class=plan>
 <div class=pt>무료 체험</div>
@@ -3454,7 +4116,7 @@ a{text-decoration:none;color:inherit}
 <li><span class=c>✓</span> 쇼츠 무제한 제작</li>
 <li><span class=c>✓</span> 렌즈·대본·보이스 전부</li>
 <li><span class=c>✓</span> 우선 문의·운영 노하우</li></ul>
-<a class="btn kko" href="__KAKAO__" target="_blank" rel="noopener">카톡으로 문의</a></div></div>
+<a class="btn kko" href="__PAY_HREF__" target="_blank" rel="noopener">__PAY_LABEL__</a></div></div>
 <div class=tbd style="text-align:center">※ 가격·이용권 기간은 확정 후 표기됩니다(현재 플레이스홀더).</div>
 <div class=sec>
 <h2>이용권에 들어있는 것</h2>
@@ -3483,13 +4145,14 @@ a{text-decoration:none;color:inherit}
 <p>구글 계정이면 3초 · 카드 없이 시작. 궁금한 건 카톡으로.</p>
 <div class=row>
 <a class="btn pri" href="/login">무료로 시작하기 →</a>
-<a class="btn kko" href="__KAKAO__" target="_blank" rel="noopener">카톡으로 문의</a></div></div>
-<div class=foot>© __NAME__ · 요금·이용권 안내</div>
+<a class="btn kko" href="__PAY_HREF__" target="_blank" rel="noopener">__PAY_LABEL__</a></div></div>
+<div class=foot>© __NAME__ · 요금·이용권 안내__LEGAL__</div>
 </div></body></html>"""
 
 # ── 내 계정(유저 자기 설정) — 로그인 전용. /api/me로 플랜·한도·연락처를 채운다. ──
 _ACCOUNT_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png">
 <title>__NAME__ — 내 계정</title>
 <link rel=preconnect href="https://fonts.googleapis.com">
 <link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
@@ -3542,9 +4205,9 @@ h1{font-family:'Black Han Sans',sans-serif;font-size:30px;margin:16px 0 22px}
 <div class="card up" id=upCard>
 <h3>이용권</h3>
 <p id=upText>더 쓰고 싶으면 이용권으로 계속 쓸 수 있어요. 결제·문의는 카톡으로 안내해 드립니다.</p>
-<a class="btn kko" id=kkoBtn href="/pricing">카톡으로 문의</a></div>
+<a class="btn kko" id=kkoBtn href="/pricing">__PAY_LABEL__</a></div>
 <form method=post action="/logout"><button type=submit class="btn ghost" style="width:100%">로그아웃</button></form>
-<div class=foot>© __NAME__</div>
+<div class=foot>© __NAME____LEGAL__</div>
 </div>
 <script>(function(){
 function t(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
@@ -3555,10 +4218,11 @@ var b=document.getElementById("planBadge");
 if(d.plan==="pro"){b.className="badge pro";t("planBadge","Pro 이용권");t("planSub","전 기능 무제한");document.getElementById("upCard").classList.add("hide");}
 else if(typeof d.days_left==="number"&&d.days_left>0){b.className="badge trial";t("planBadge","무료 체험");t("planSub","D-"+d.days_left+" 남음");}
 else{b.className="badge free";t("planBadge","무료");t("planSub","레퍼런스 랭킹 열람");}
-var kko=(d.contact&&d.contact.kakao)||"";
+var c=d.contact||{};var pay=(c.pay||"").trim(),kko=(c.kakao||"").trim();
 var btn=document.getElementById("kkoBtn");
-if(/^https?:\\/\\//.test(kko)){btn.href=kko;btn.target="_blank";btn.rel="noopener";}
-else{btn.href="/pricing";}
+if(pay){btn.href=pay;btn.target="_blank";btn.rel="noopener";btn.textContent="💳 결제하기 →";}
+else if(/^https?:\\/\\//.test(kko)){btn.href=kko;btn.target="_blank";btn.rel="noopener";btn.textContent="카톡으로 문의";}
+else{btn.href="/pricing";btn.textContent="카톡으로 문의";}
 }).catch(function(){});
 })();</script>
 </body></html>"""
@@ -3567,6 +4231,7 @@ _LANDING_HTML = _fill_brand(_LANDING_TMPL)
 
 _PENDING_HTML = _fill_brand("""<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png">
 <title>승인 대기중 · __NAME__</title>
 <style>body{font-family:-apple-system,'Malgun Gothic',sans-serif;background:#0f1115;color:#e8eaed;
 margin:0;display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center}
@@ -3575,13 +4240,16 @@ p{color:#9aa0a6;line-height:1.6;font-size:15px}a{display:inline-block;margin-top
 text-decoration:none;font-size:14px}</style></head>
 <body><div class=box><div class=emoji>🙏</div>
 <h1>가입 신청이 접수됐어요</h1>
-<p>운영자 승인 후 이용할 수 있어요.<br>잠시만 기다려 주세요.</p>
-<form method=post action="/logout" style="margin-top:24px"><button type=submit style="background:none;border:0;color:#8ab4f8;font-size:14px;cursor:pointer;text-decoration:none">로그아웃</button></form></div></body></html>""")
+<p>운영자 승인 후 이용할 수 있어요.<br>결제하고 알려주시면 바로 열어드려요.</p>
+<a href="__PAY_HREF__" target=_blank rel=noopener style="display:inline-block;margin-top:22px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);color:#08110e;font-weight:700;padding:12px 24px;border-radius:11px;text-decoration:none;font-size:15px">__PAY_LABEL__</a>
+<form method=post action="/logout" style="margin-top:16px"><button type=submit style="background:none;border:0;color:#8ab4f8;font-size:14px;cursor:pointer;text-decoration:none">로그아웃</button></form>
+<div style="margin-top:20px;color:#5f6773;font-size:12px">__LEGAL__</div></div></body></html>""")
 
 # 로그아웃 확인 화면 — GET /logout이 세션을 안 지우는 대신 이 화면을 준다(CSRF 방어).
 # 실제 로그아웃은 이 폼의 POST만.
 _LOGOUT_CONFIRM_HTML = _fill_brand("""<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png">
 <title>로그아웃 · __NAME__</title>
 <style>body{font-family:-apple-system,'Malgun Gothic',sans-serif;background:#0f1115;color:#e8eaed;
 margin:0;display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center}
@@ -3598,7 +4266,8 @@ _PRICING_HTML = _fill_brand(_PRICING_TMPL)
 _ACCOUNT_HTML = _fill_brand(_ACCOUNT_TMPL)
 
 _SIGNUP_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1"><title>쇼핑쇼츠 가입</title>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png"><title>쇼핑쇼츠 가입</title>
 <style>body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;
 background:#0b0b0e;font-family:system-ui,'Noto Sans KR',sans-serif}
 .box{background:#16161c;border:1px solid #2a2a30;border-radius:14px;padding:32px 28px;width:280px}
@@ -3623,7 +4292,10 @@ a{color:#7db4ff;font-size:12px;text-decoration:none}
 
 
 @app.get("/login", response_class=HTMLResponse)
-def _login_page(e: str = ""):
+def _login_page(request: Request, e: str = ""):
+    # 이미 로그인된 세션이면 홈으로 — 앱 런처(작은 창)가 /login을 직접 열어도 재로그인 강요 안 함.
+    if _AUTH_ON and _verify_session(request.cookies.get("dash_auth", "")) is not None:
+        return RedirectResponse("/", status_code=303)
     if e == "1":
         msg = "아이디 또는 비밀번호가 틀렸습니다"
     elif e:   # 구글 콜백 등에서 온 안내 — XSS 방지 이스케이프
@@ -3649,9 +4321,239 @@ def _logout_do():
     return r
 
 
+# ── 계좌입금 안내 페이지(2026-07-23) — 사장님이 admin에 은행·계좌·예금주 넣으면 자동 표시. ──
+_DEPOSIT_TMPL = _fill_brand("""<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png">
+<title>결제 안내 · __NAME__</title>
+<style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+background:radial-gradient(900px 500px at 50% -15%,rgba(111,240,214,.10),transparent 60%),#090d10;
+font-family:'Noto Sans KR',system-ui,sans-serif;color:#e8f0ee;word-break:keep-all;padding:20px}
+.box{width:440px;max-width:100%;background:linear-gradient(180deg,#101a1c,#0c1214);border:1px solid #1e2b2c;border-radius:22px;padding:34px 28px 26px;box-shadow:0 30px 80px rgba(0,0,0,.55)}
+h1{font-size:20px;margin:0 0 4px;text-align:center}.sub{color:#8aa0a0;font-size:13px;text-align:center;margin-bottom:22px}
+.row{background:#0a1113;border:1px solid #1e2b2c;border-radius:12px;padding:14px 16px;margin:9px 0;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.k{color:#7a9090;font-size:13px;flex:none}.v{font-weight:700;font-size:16px;text-align:right;word-break:break-all}
+.acc .v{font-size:20px;color:#6ff0d6;letter-spacing:.3px}
+.copy{margin-left:10px;background:#16202a;border:1px solid #2a3647;color:#b7c6c2;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;flex:none}
+.copy:hover{border-color:#37e0bd;color:#6ff0d6}
+.note{background:#101c18;border:1px solid #1d3a30;border-radius:12px;padding:14px 16px;margin:16px 0 6px;font-size:13px;line-height:1.7;color:#b9d3c9}
+.note b{color:#6ff0d6}
+.contact{display:flex;gap:10px;margin-top:16px}
+.contact a{flex:1;text-align:center;padding:12px;border-radius:11px;text-decoration:none;font-weight:700;font-size:14px}
+.kko{background:linear-gradient(135deg,#6ff0d6,#1f9e7a);color:#08110e}
+.tel{background:#101820;border:1px solid #1e2735;color:#b7c6c2}
+.home{display:block;text-align:center;color:#5f7373;font-size:12px;margin-top:16px;text-decoration:none}
+.empty{color:#c9a24b;text-align:center;font-size:13px;line-height:1.7;padding:8px 0}</style></head>
+<body><div class=box>
+<h1>💳 결제 안내</h1><div class=sub>__NAME__ 이용권 · 계좌입금</div>
+__BODY__
+<a class=home href="/">← 돌아가기</a>
+</div>
+<script>function cp(t){navigator.clipboard&&navigator.clipboard.writeText(t);var e=event.target;var o=e.textContent;e.textContent='복사됨';setTimeout(function(){e.textContent=o;},1200);}</script>
+</body></html>""")
+
+
+def _deposit_body():
+    """계좌 설정이 있으면 계좌 카드, 없으면 안내문구. 요청 시점에 admin 설정을 읽는다."""
+    st = Store(DB_PATH)
+    bank = (st.get_setting("bank_name", "") or "").strip()
+    acc = (st.get_setting("bank_account", "") or "").strip()
+    holder = (st.get_setting("bank_holder", "") or "").strip()
+    note = (st.get_setting("deposit_note", "") or "").strip()
+    kakao = (st.get_setting("contact_kakao", "") or "").strip()
+    phone = (st.get_setting("contact_phone", "") or "").strip()
+    import html as _h
+    if not acc:
+        return ('<div class=empty>결제 안내가 아직 준비 중이에요.<br>아래로 문의해 주세요.</div>'
+                + _deposit_contact(kakao, phone))
+    rows = ""
+    if bank:
+        rows += f'<div class=row><span class=k>은행</span><span class=v>{_h.escape(bank)}</span></div>'
+    rows += (f'<div class="row acc"><span class=k>계좌번호</span>'
+             f'<span class=v id=acc>{_h.escape(acc)}</span>'
+             f'<button class=copy onclick="cp(document.getElementById(\'acc\').textContent)">복사</button></div>')
+    if holder:
+        rows += f'<div class=row><span class=k>예금주</span><span class=v>{_h.escape(holder)}</span></div>'
+    note_html = (f'<div class=note>{_h.escape(note)}</div>' if note else
+                 '<div class=note>입금 금액·이용권은 아래로 <b>문의</b>해 주세요.<br>'
+                 '입금 후 <b>입금자명</b>을 알려주시면 <b>바로 이용권을 열어드려요.</b></div>')
+    return rows + note_html + _deposit_contact(kakao, phone)
+
+
+def _deposit_contact(kakao, phone):
+    import html as _h
+    if not kakao and not phone:
+        return ""
+    out = '<div class=contact>'
+    if kakao:
+        href = kakao if kakao.startswith("http") else ("https://" + kakao)
+        out += f'<a class=kko href="{_h.escape(href)}" target=_blank rel=noopener>💬 카톡 문의</a>'
+    if phone:
+        out += f'<a class=tel href="tel:{_h.escape(phone)}">📞 {_h.escape(phone)}</a>'
+    return out + '</div>'
+
+
+@app.get("/pay", response_class=HTMLResponse)
+def _deposit_page():
+    """계좌입금 안내(공개). 사장님이 admin에 은행·계좌·예금주 넣으면 표시."""
+    return _DEPOSIT_TMPL.replace("__BODY__", _deposit_body())
+
+
+# ── 법적 고지 문서(공개): 이용약관 · 개인정보처리방침 · 환불정책 ──
+# 서비스명은 브랜드 토큰, 사업자정보는 admin 설정(biz_*)에서 요청 시점에 읽어 채운다.
+# 값이 비면 "(준비 중)"으로 표시 → 사장님이 실제 값을 나중에 admin에서 채워 넣으면 즉시 반영.
+_LEGAL_TMPL = _fill_brand("""<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png">
+<title>__DOCTITLE__ · __NAME__</title>
+<style>*{box-sizing:border-box}body{margin:0;min-height:100vh;
+background:radial-gradient(900px 500px at 50% -15%,rgba(111,240,214,.08),transparent 60%),#090d10;
+font-family:'Noto Sans KR',system-ui,sans-serif;color:#dbe6e3;word-break:keep-all;padding:32px 18px 64px;line-height:1.75}
+.wrap{max-width:760px;margin:0 auto}
+.brand{display:inline-flex;align-items:center;gap:8px;color:#8aa0a0;font-size:14px;margin-bottom:18px;text-decoration:none}
+.brand svg{width:26px;height:26px;flex:none}.brand b{color:#e8f0ee}
+h1{font-size:24px;margin:0 0 4px}.upd{color:#7a9090;font-size:12.5px;margin-bottom:26px}
+h2{font-size:16px;color:#6ff0d6;margin:30px 0 8px;padding-top:6px}
+p,li{font-size:14px;color:#c5d3cf}
+ul{padding-left:20px;margin:8px 0}li{margin:4px 0}
+.biz{margin-top:38px;padding:16px 18px;background:#0c1416;border:1px solid #1c2a2b;border-radius:14px;font-size:13px;color:#9fb2ad;line-height:1.9}
+.biz b{color:#c5d3cf;font-weight:600}
+.nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:30px}
+.nav a{flex:1;min-width:120px;text-align:center;padding:11px;border-radius:11px;text-decoration:none;font-size:13px;font-weight:700;
+background:#101a1c;border:1px solid #1e2b2c;color:#b7c6c2}
+.nav a.on{background:linear-gradient(135deg,#6ff0d6,#1f9e7a);color:#08110e;border-color:transparent}
+.home{display:inline-block;margin-top:20px;color:#5f7373;font-size:13px;text-decoration:none}</style></head>
+<body><div class=wrap>
+<a class=brand href="/">__LOGO_SVG__ <b>__NAME__</b></a>
+<h1>__DOCTITLE__</h1><div class=upd>__UPDATED__</div>
+__BODY__
+__BIZ__
+<div class=nav>__NAV__</div>
+<a class=home href="/">← __NAME__ 홈으로</a>
+</div></body></html>""")
+
+_LEGAL_UPDATED = "시행일 2026-07-23"
+
+def _biz_block():
+    """사업자정보 표시(전자상거래법). admin 설정(biz_*)이 비면 '(준비 중)'."""
+    import html as _h
+    st = Store(DB_PATH)
+    def g(k, d="(준비 중)"):
+        v = (st.get_setting(k, "") or "").strip()
+        return _h.escape(v) if v else d
+    return (
+        '<div class=biz>'
+        f'<b>상호</b> {g("biz_name", _BRAND["name"])} &nbsp;·&nbsp; '
+        f'<b>대표자</b> {g("biz_owner")}<br>'
+        f'<b>사업자등록번호</b> {g("biz_regno")}<br>'
+        f'<b>통신판매업신고</b> {g("biz_sales_no")}<br>'
+        f'<b>주소</b> {g("biz_addr")}<br>'
+        f'<b>문의</b> {g("biz_email")}'
+        '</div>')
+
+def _legal_nav(active: str):
+    items = [("/terms", "이용약관"), ("/privacy", "개인정보처리방침"), ("/refund", "환불정책")]
+    return "".join(
+        f'<a href="{href}"{" class=on" if href == active else ""}>{label}</a>'
+        for href, label in items)
+
+def _legal_page(path: str, title: str, body: str) -> str:
+    return (_LEGAL_TMPL
+            .replace("__DOCTITLE__", title)
+            .replace("__UPDATED__", _LEGAL_UPDATED)
+            .replace("__BODY__", body)
+            .replace("__BIZ__", _biz_block())
+            .replace("__NAV__", _legal_nav(path)))
+
+_TERMS_BODY = f"""
+<p>본 약관은 {_BRAND['name']}(이하 "회사")가 제공하는 AI 쇼츠 제작 서비스(이하 "서비스")의 이용조건과 절차, 회사와 이용자의 권리·의무를 규정합니다.</p>
+<h2>제1조 (서비스 내용)</h2>
+<p>회사는 이용자가 업로드·선택한 소재를 바탕으로 AI가 대본·음성·영상을 생성·편집하는 온라인 이용권 서비스를 제공합니다. 서비스는 이용권(크레딧)에 따라 렌즈·제작(렌더) 등 기능 이용량이 정해집니다.</p>
+<h2>제2조 (이용계약의 성립)</h2>
+<p>이용계약은 이용자가 구글 계정 등으로 가입하고 회사가 이를 승인함으로써 성립합니다. 회사는 운영상·기술상 필요에 따라 가입 승인을 보류하거나 이용을 제한할 수 있습니다.</p>
+<h2>제3조 (이용권과 결제)</h2>
+<ul>
+<li>이용권은 계좌입금 등 회사가 안내하는 방법으로 결제하며, 입금 확인 후 활성화됩니다.</li>
+<li>이용권별 제공 기능·기간·제작 횟수는 서비스 내 안내에 따릅니다.</li>
+<li>환불에 관한 사항은 별도의 <a href="/refund" style="color:#6ff0d6">환불정책</a>을 따릅니다.</li>
+</ul>
+<h2>제4조 (이용자의 의무)</h2>
+<ul>
+<li>이용자는 타인의 저작권·초상권 등 권리를 침해하는 소재를 업로드해서는 안 됩니다. 업로드 소재에 대한 책임은 이용자에게 있습니다.</li>
+<li>불법·음란·타인 비방 등 위법하거나 제3자의 권리를 침해하는 콘텐츠 제작에 서비스를 이용할 수 없습니다.</li>
+<li>계정을 타인과 공유하거나 자동화 수단으로 부정 이용해서는 안 됩니다.</li>
+</ul>
+<h2>제5조 (콘텐츠의 권리)</h2>
+<p>이용자가 서비스로 생성한 결과물의 이용권한은 이용자에게 있습니다. 다만 이용자가 업로드한 소재에 제3자의 권리가 포함된 경우, 그 이용에 대한 책임은 이용자가 부담합니다.</p>
+<h2>제6조 (서비스의 중단·변경)</h2>
+<p>회사는 시스템 점검·교체, 통신 두절, 천재지변 등 부득이한 사유가 있을 때 서비스 제공을 일시 중단할 수 있으며, 이 경우 가능한 범위에서 사전 고지합니다.</p>
+<h2>제7조 (책임의 제한)</h2>
+<p>서비스는 AI 자동 생성 결과물을 제공하며, 결과물의 상업적 성과·정확성·완전성을 보증하지 않습니다. 회사는 이용자가 업로드한 소재로 인한 분쟁, 이용자의 서비스 이용 결과에 대해 법령이 허용하는 범위에서 책임을 지지 않습니다.</p>
+<h2>제8조 (약관의 개정)</h2>
+<p>회사는 관련 법령을 위반하지 않는 범위에서 약관을 개정할 수 있으며, 개정 시 시행일과 개정 내용을 서비스 내에 공지합니다.</p>
+"""
+
+_PRIVACY_BODY = f"""
+<p>{_BRAND['name']}(이하 "회사")는 「개인정보 보호법」 등 관련 법령을 준수하며, 이용자의 개인정보를 다음과 같이 처리합니다.</p>
+<h2>1. 수집하는 개인정보 항목</h2>
+<ul>
+<li>구글 계정 로그인 시: 이메일 주소, 이름(프로필), 계정 식별자</li>
+<li>이용·결제 과정에서: 연락처(전화번호), 입금자명 등 결제 확인에 필요한 정보</li>
+<li>서비스 이용 과정에서 자동 생성: 접속 기록, 이용 내역, 기기·브라우저 정보</li>
+</ul>
+<h2>2. 개인정보의 이용 목적</h2>
+<ul>
+<li>회원 식별 및 로그인 유지, 이용권·결제 관리</li>
+<li>서비스 제공, 이용 문의·고객 응대</li>
+<li>부정 이용 방지 및 서비스 운영·개선</li>
+</ul>
+<h2>3. 보유 및 이용 기간</h2>
+<p>회원 탈퇴 시 또는 수집·이용 목적 달성 시 지체 없이 파기합니다. 다만 관련 법령에 따라 보존이 필요한 경우 해당 기간 동안 보관합니다(예: 전자상거래법상 계약·결제 기록).</p>
+<h2>4. 제3자 제공 및 처리위탁</h2>
+<p>회사는 이용자의 개인정보를 동의 없이 외부에 제공하지 않습니다. 다만 서비스 제공을 위해 아래와 같이 일부 처리를 위탁할 수 있습니다.</p>
+<ul>
+<li>구글(Google): 계정 로그인 인증</li>
+<li>AI·클라우드 인프라 제공사: 대본·음성·영상 생성 처리</li>
+</ul>
+<h2>5. 이용자의 권리</h2>
+<p>이용자는 언제든지 본인의 개인정보를 조회·수정·삭제하거나 처리 정지를 요청할 수 있으며, 회원 탈퇴로 개인정보 삭제를 요청할 수 있습니다.</p>
+<h2>6. 개인정보 보호책임자</h2>
+<p>개인정보 관련 문의는 아래 사업자정보의 문의처로 접수해 주시면 지체 없이 답변·처리합니다.</p>
+"""
+
+_REFUND_BODY = f"""
+<p>{_BRAND['name']}(이하 "회사")의 이용권 결제에 대한 환불 기준은 다음과 같습니다. 본 서비스는 결제 즉시 이용 가능한 <b>디지털 콘텐츠(이용권)</b>입니다.</p>
+<h2>1. 전액 환불 (미사용)</h2>
+<p>결제 후 서비스 기능(렌즈·제작 등)을 <b>한 번도 사용하지 않은 경우</b>, 결제일로부터 <b>7일 이내</b> 요청 시 전액 환불해 드립니다.</p>
+<h2>2. 환불 불가 (사용 개시 후)</h2>
+<p>이용권으로 <b>제작(렌더)·렌즈 등 기능을 1회라도 사용한 경우</b>, 해당 이용권은 디지털 콘텐츠의 특성상 환불이 불가합니다. 이는 「전자상거래법」 제17조제2항에 따라 <b>사용에 의해 재화등의 가치가 현저히 감소한 경우</b>에 해당합니다.</p>
+<h2>3. 회사 귀책 사유</h2>
+<p>서비스 장애 등 회사의 책임 있는 사유로 이용권을 정상적으로 사용하지 못한 경우, 사용하지 못한 분에 대해 환불하거나 이용권을 복구해 드립니다. (제작 실패 시 소진된 이용 횟수는 자동 복구됩니다.)</p>
+<h2>4. 환불 절차</h2>
+<ul>
+<li>환불은 아래 사업자정보의 문의처로 요청해 주세요.</li>
+<li>계좌입금 결제분은 입금하신 계좌로, 요청 확인 후 영업일 기준 3일 이내 환불합니다.</li>
+</ul>
+<p style="color:#8aa0a0;font-size:12.5px;margin-top:14px">※ 본 정책은 관련 법령의 소비자 보호 규정에 우선하지 않으며, 법령과 상충하는 부분은 법령이 정하는 바에 따릅니다.</p>
+"""
+
+
+@app.get("/terms", response_class=HTMLResponse)
+def _terms_page():
+    return _legal_page("/terms", "이용약관", _TERMS_BODY)
+
+@app.get("/privacy", response_class=HTMLResponse)
+def _privacy_page():
+    return _legal_page("/privacy", "개인정보처리방침", _PRIVACY_BODY)
+
+@app.get("/refund", response_class=HTMLResponse)
+def _refund_page():
+    return _legal_page("/refund", "환불정책", _REFUND_BODY)
+
+
 @app.get("/pricing", response_class=HTMLResponse)
 def _pricing_page():
-    return _PRICING_HTML   # 공개 요금·이용권 페이지(비로그인 방문자 포함)
+    return _with_pay(_PRICING_HTML)   # 공개 요금·이용권 페이지(비로그인 방문자 포함) + 결제링크 주입
 
 
 @app.get("/account", response_class=HTMLResponse)
@@ -3688,6 +4590,19 @@ async def _api_login(req: Request):
     return RedirectResponse("/login?e=1", status_code=303)
 
 
+def _notify_new_signup(*, name=None, username=None, phone=None, email=None):
+    """새 회원 가입 → 사장님 텔레그램 알림(승인 재촉). 부가채널이라 절대 요청을 막지 않는다:
+    notify.send_telegram이 무키/네트워크예외를 이미 삼키므로 여기선 얇게 감싸기만."""
+    try:
+        who = (name or "").strip() or (username or "").strip() or "새 회원"
+        parts = [p for p in [phone, email] if p]           # 있는 것만 덧붙임
+        tail = (" · " + " · ".join(parts)) if parts else ""
+        from shopping_shorts import notify
+        notify.send_telegram(f"🆕 새 가입 신청: {who}{tail}\n→ /admin 에서 승인해주세요 (승인 대기중)")
+    except Exception:
+        pass                                                # 알림 실패가 가입을 막으면 안 된다
+
+
 @app.post("/api/signup")
 async def _api_signup(req: Request):
     body = (await req.body()).decode("utf-8", "ignore")
@@ -3703,6 +4618,7 @@ async def _api_signup(req: Request):
                                                      name=name or None, phone=phone or None)
     except ValueError:
         return RedirectResponse("/signup?e=" + urllib.parse.quote("이미 존재하는 아이디입니다"), status_code=303)
+    _notify_new_signup(name=name, username=u, phone=phone)   # 사장님 텔레 알림(무키면 no-op)
     r = RedirectResponse("/", status_code=303)
     _set_session_cookie(r, customer_id)
     return r
@@ -3776,9 +4692,12 @@ def _google_callback(request: Request, code: str = "", state: str = "", error: s
     ident = _google_fetch_identity(code)
     if not ident:
         return RedirectResponse("/login?e=" + urllib.parse.quote("구글 인증에 실패했어요"), status_code=303)
-    cid = Store(DB_PATH).get_or_create_by_google(ident["sub"], ident.get("email"))
+    cid, created = Store(DB_PATH).get_or_create_by_google(
+        ident["sub"], ident.get("email"), return_created=True)
     if cid is None:
         return RedirectResponse("/login?e=" + urllib.parse.quote("계정 생성 실패"), status_code=303)
+    if created:                                              # 신규 구글 가입만 알림(재로그인은 조용히)
+        _notify_new_signup(username="구글", email=ident.get("email"))
     r = RedirectResponse("/", status_code=303)
     _set_session_cookie(r, cid)
     r.delete_cookie("g_state")
@@ -3817,6 +4736,51 @@ def _record_access(customer_id, request):
         pass
 
 
+# 활동 트레일(2026-07-22): 경로→친절한 액션명. 이 목록에 걸리는 요청만 '몇 번 전 뭘 했다'로 남는다.
+# 나머지(단순 조회·정적)는 last_seen(접속중)만 갱신하고 로그엔 안 남긴다.
+_ACTIVITY_MAP = (
+    ("/api/mix/start", "영상 제작 시작"),
+    ("/api/produce/mix/render", "영상 렌더"),
+    ("/api/produce/mix/settings", "제작 설정"),
+    ("/api/grab", "재료 담기"),
+    ("/api/find/analyze", "렌즈 분석"),
+    ("/api/find/candidates", "유사영상 검색"),
+    ("/api/find/translate_keyword", "키워드 번역"),
+    ("/api/produce/extract_from_url", "대본 추출"),
+    ("/api/produce/category", "카테고리 분류"),
+    ("/api/produce/save_to_wiki", "대본 저장"),
+    ("/api/collect", "소스 수집"),
+)
+_LASTSEEN_SEEN = {}   # cid → 마지막 last_seen 기록 epoch(60s 스로틀)
+_ACTIVITY_SEEN = {}   # (cid, action) → 마지막 로그 epoch(60s 중복제거)
+
+
+def _track_activity(customer_id, path):
+    """접속중(last_seen) 갱신 + 의미있는 액션이면 활동 로그. best-effort, 요청 절대 안 막는다.
+    사장님(0)은 항상 온라인이라 굳이 기록 안 함(노이즈)."""
+    if not customer_id:
+        return
+    try:
+        now = int(datetime.now(timezone.utc).timestamp())
+        st = Store(DB_PATH)
+        if now - _LASTSEEN_SEEN.get(customer_id, 0) >= 60:          # last_seen 60s 스로틀
+            st.touch_customer(customer_id, now)
+            if len(_LASTSEEN_SEEN) > 50000:
+                _LASTSEEN_SEEN.clear()
+            _LASTSEEN_SEEN[customer_id] = now
+        for pref, label in _ACTIVITY_MAP:
+            if path.startswith(pref):
+                k = (customer_id, label)
+                if now - _ACTIVITY_SEEN.get(k, 0) >= 60:            # 같은 액션 60s 내 1건만
+                    st.record_activity(customer_id, label, now)
+                    if len(_ACTIVITY_SEEN) > 50000:
+                        _ACTIVITY_SEEN.clear()
+                    _ACTIVITY_SEEN[k] = now
+                break
+    except Exception:
+        pass
+
+
 @app.middleware("http")
 async def _auth_guard(request: Request, call_next):
     if not _AUTH_ON:
@@ -3832,12 +4796,19 @@ async def _auth_guard(request: Request, call_next):
     # 외부인이 /synth를 반복 호출해 ElevenLabs·GROQ 크레딧을 태우고 /profile/{임의id}로
     # voice_presets에 임의 행을 넣을 수 있었다(2026-07-15 리뷰 S7). 운영자는 대시보드
     # 로그인 세션으로 접근한다.
-    if path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/"):
+    # /s/{sid}·/api/share/v/{sid} = QR '폰으로 보내기' 공개경로(단축id 저장소 조회, 로그인 불필요).
+    #   폰이 쿠키 없이 연다. ★/api/share/link(발급)은 여기 없음 → 로그인 게이트 유지(로그인해야 QR 발급).
+    # /api/yt_relay/*는 사장님 PC 릴레이 에이전트가 로그인 쿠키 없이 호출한다(2026-07-24).
+    #   자체 키 인증(_relay_auth_ok: YT_RELAY_KEY)이 있어 로그인 가드는 건너뛴다 — 안 그러면 유튜브 다운로드가 죽는다.
+    if (path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/")
+            or path.startswith("/s/") or path.startswith("/api/share/v/")
+            or path.startswith("/api/yt_relay/")):
         return await call_next(request)
     customer_id = _verify_session(request.cookies.get("dash_auth"))
     if customer_id is not None:
         request.state.customer_id = customer_id
         _record_access(customer_id, request)   # 돌려쓰기 소프트감지(best-effort, 차단 안 함)
+        _track_activity(customer_id, path)     # 접속중·활동기록(best-effort)
         lvl = access_level(customer_id)
         if lvl == "pending":
             # 승인 전 전면 차단. /logout만 통과(로그아웃 가능), /static은 위에서 이미 허용.
@@ -3845,7 +4816,7 @@ async def _auth_guard(request: Request, call_next):
                 return await call_next(request)
             if path.startswith("/api/"):
                 return JSONResponse({"error": "승인 대기중이에요", "level": "pending"}, status_code=403)
-            return HTMLResponse(_PENDING_HTML)
+            return HTMLResponse(_with_pay(_PENDING_HTML))
         # 유료게이트: 로그인은 됐으나 등급이 ranking_only(무료/체험만료)면 유료 경로 차단.
         # 사장님(0)·pro·체험중은 access_level=full이라 안 걸린다. deny-by-default.
         if lvl == "ranking_only" and _ranking_only_blocked(path, request.method):
@@ -3856,7 +4827,7 @@ async def _auth_guard(request: Request, call_next):
     if path.startswith("/api/"):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
     if path in ("/", "/index.html"):
-        return HTMLResponse(_LANDING_HTML)   # 비로그인 방문자 → 공개 대문(랜딩)
+        return HTMLResponse(_with_pay(_LANDING_HTML))   # 비로그인 방문자 → 공개 대문(랜딩) + 결제링크 주입
     if request.method == "GET" and path == "/pricing":
         return await call_next(request)      # 요금·이용권은 비로그인도 열람
     return RedirectResponse("/login")
@@ -3925,7 +4896,11 @@ def _valid_backbone_main(raw, n_urls):
 
 def check_and_count(customer_id, op):
     """유료 op(lens/render/script) 실행 전 호출. 일일 상한 초과면 False(막기),
-    아니면 카운트+1 후 True. 사장님(0)·pro는 높은 상한(limit_{op}_pro)."""
+    아니면 카운트+1 후 True. 관리자=무제한 / pro=limit_{op}_pro / 무료=limit_{op}."""
+    # 관리자(사장님·지정 관리자)는 영상 만들기(render) 무제한 — pro 하루 상한(10)에 안 걸린다.
+    # 렌즈(SerpApi)·대본(Gemini)은 실외부비용이라 관리자도 계량 유지(높은 pro 상한).
+    if op == "render" and _is_admin(customer_id):
+        return True
     st = Store(DB_PATH)
     # 🎁 무료체험 이벤트: 체험 유저의 render는 '오늘' 대신 영구 "trial" 버킷으로 딱 1회.
     #    렌즈·대본은 아래 일반 일일 한도 그대로(사장님이 담기·렌즈 열기를 택함).
@@ -4014,7 +4989,8 @@ def _api_me(request: Request):
         except (TypeError, ValueError):
             return d
     # 계정 패널(2026-07-22): 구글 이메일·이름·가입 며칠째·오늘 사용량.
-    is_admin = (cid == 0)
+    is_admin = _is_admin(cid)   # 사장님(0) + 이메일 화이트리스트(parklotto12) 모두 관리자
+
     email = "관리자" if is_admin else ((cust or {}).get("email") or (cust or {}).get("username") or "")
     name = (cust or {}).get("name") or "" if cust else ""
     # 등급별 실제 크레딧 상한(check_and_count와 동일 규칙) — 패널에 'x/상한' 표시용.
@@ -4048,7 +5024,8 @@ def _api_me(request: Request):
             "limits": {"lens": _lim("limit_lens", 5), "render": _lim("limit_render", 2),
                        "script": _lim("limit_script", 10)},
             "contact": {"kakao": st.get_setting("contact_kakao", ""),
-                        "phone": st.get_setting("contact_phone", "")}}
+                        "phone": st.get_setting("contact_phone", ""),
+                        "pay": st.get_setting("pay_url", "")}}
 
 
 # ── 유료게이트 관리자(사장님 cid0 전용) — 결제 승격·설정 조정 ──
@@ -4056,15 +5033,27 @@ def _api_me(request: Request):
 _ADMIN_EMAILS = {"parklotto12@gmail.com"}
 
 
+def _code_admin(customer_id):
+    """코드로 고정된 관리자 = 사장님(0) 또는 이메일 화이트리스트. UI로 회수 불가(락아웃 방지 바닥)."""
+    if customer_id == 0:
+        return True
+    if not customer_id:
+        return False
+    email = (Store(DB_PATH).get_customer(customer_id) or {}).get("email") or ""
+    return email.lower() in _ADMIN_EMAILS
+
+
 def _is_admin(customer_id):
-    """cid0(사장님) 또는 이메일이 관리자 화이트리스트에 있으면 관리자."""
+    """관리자 = 사장님(0) 또는 이메일 화이트리스트(코드) 또는 사장님이 UI로 지정(customers.admin=1).
+    지정 관리자는 권한이 코드 관리자와 완전히 동일하다."""
     if customer_id == 0:
         return True
     if not customer_id:
         return False
     cust = Store(DB_PATH).get_customer(customer_id)
-    email = (cust or {}).get("email") or ""
-    return email.lower() in _ADMIN_EMAILS
+    if not cust:
+        return False
+    return ((cust.get("email") or "").lower() in _ADMIN_EMAILS) or bool(cust.get("admin"))
 
 
 def _require_admin(request):
@@ -4073,10 +5062,12 @@ def _require_admin(request):
     return None
 
 
-_ADMIN_SETTING_KEYS = {"trial_days", "limit_lens", "limit_render", "limit_script",
+_ADMIN_SETTING_KEYS = {"trial_days", "trial_event_hours", "limit_lens", "limit_render", "limit_script",
                        "limit_lens_pro", "limit_render_pro", "limit_script_pro",
                        "global_cap_lens", "global_cap_render", "global_cap_script",
-                       "contact_kakao", "contact_phone"}
+                       "contact_kakao", "contact_phone", "pay_url",
+                       "bank_name", "bank_account", "bank_holder", "deposit_note",
+                       "biz_name", "biz_owner", "biz_regno", "biz_addr", "biz_sales_no", "biz_email"}
 
 
 @app.get("/api/admin/customers")
@@ -4093,8 +5084,24 @@ def _admin_customers(request: Request):
         cu["usage"] = {op: st.usage_get(cu["id"], op, day) for op in ("lens", "render", "script")}
         cu["access_7d"] = st.access_summary(cu["id"], since7)   # {ips, devices} 최근 7일 고유 수
         cu["is_admin"] = _is_admin(cu["id"])                    # 관리자 배지용
+        cu["code_admin"] = _code_admin(cu["id"])                # 코드 고정 관리자(UI 토글 불가)
+        # last_seen은 store.list_customers가 이미 넣어줌 → 프론트가 '접속중/N분전' 계산
         out.append(cu)
     return {"ok": True, "customers": out, "settings": st.all_settings()}
+
+
+@app.get("/api/admin/pending")
+def _admin_pending(request: Request):
+    """승인 대기 회원 요약 — 프론트(sidebar.js)가 폴링해 '띠링' 팝업을 띄운다.
+    관리자만 200. 비관리자는 _require_admin이 막아 폴러가 조용히 꺼진다(부하 없음)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    pend = Store(DB_PATH).pending_customers()
+    newest = pend[0] if pend else None                      # id DESC 정렬이라 [0]이 최신
+    return {"ok": True, "count": len(pend),
+            "newest_id": (newest["id"] if newest else 0),
+            "newest": newest, "pending": pend[:20]}          # 팝업 목록은 최근 20건까지
 
 
 @app.post("/api/admin/customer/update")
@@ -4127,6 +5134,33 @@ async def _admin_customer_delete(request: Request):
         return JSONResponse({"error": "관리자 계정은 삭제할 수 없어요"}, status_code=400)
     Store(DB_PATH).delete_customer(cid)
     return {"ok": True}
+
+
+@app.post("/api/admin/customer/set_admin")
+async def _admin_customer_set_admin(request: Request):
+    """관리자 지정/회수 — 사장님이 다른 계정에 관리자 권한(관리자와 동일)을 준다.
+    body: {customer_id, admin: bool}. 코드 고정 관리자(사장님·화이트리스트)는 UI로 못 바꾼다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id 필요"}, status_code=400)
+    if _code_admin(cid):
+        return JSONResponse({"error": "고정 관리자는 변경할 수 없어요"}, status_code=400)
+    Store(DB_PATH).set_customer_admin(cid, bool(body.get("admin")))
+    return {"ok": True}
+
+
+@app.get("/api/admin/customer/activity")
+def _admin_customer_activity(request: Request, customer_id: int):
+    """이 고객의 최근 활동(몇 번 전 뭘 했다). admin 전용."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return {"ok": True, "activity": Store(DB_PATH).recent_activity(customer_id, 12)}
 
 
 @app.post("/api/admin/set_plan")
@@ -4713,6 +5747,82 @@ def api_produce_works_delete(request: Request, work_id: str):
     return {"ok": True}
 
 
+# ── AI PICK 사전분석(2026-07-23, 숏템메이커 리뉴얼 Task3) ──────────────
+# 지금 구조에서 "영상제작에 담긴 소스"는 work 단위가 아니라 **고객 단위 버킷**
+# (produce_script_picks, /api/produce/picks와 같은 출처)이다. work_id는 이 시점엔
+# 아직 없을 수도 있고(1단계 첫 진입, WORK_ID=null), 있어도 그 work의 상태에 저장된
+# ⭐메인 지정(있다면)을 읽는 용도로만 쓴다 — 소스 목록 자체는 항상 picks 버킷.
+def _load_work_sources(work_id, cid):
+    """AI PICK용 소스 목록. script_wiki(도서관) 항목 중 '영상제작에 담긴' 것만,
+    backbone/aipick이 기대하는 얇은 필드로 변환한다.
+    ⚠️ views(조회수)는 이 시스템 어디에도 저장되지 않는다(script_wiki 스키마 확인,
+    2026-07-23) — 거짓 수치 대신 항상 None(aipick.build_aipick이 우아하게 폴백).
+    seconds는 whisper 세그먼트(start/end)에서 실측(마지막 세그먼트 end) — 저장 안 됐으면 None.
+    structure는 도서관 저장 시(api_produce_save_to_wiki) 이미 1회 analyze_structure가
+    돌아 캐시돼 있으므로 그대로 실어 aipick.py가 재분석(Gemini 재호출) 없이 재사용하게 한다."""
+    store = Store(DB_PATH)
+    picks = store.produce_pick_shortcodes(customer_id=cid)
+    items = [w for w in store.wiki_list(customer_id=cid) if w["shortcode"] in picks]
+    sources = []
+    for w in items:
+        segs = w.get("segments") or []
+        seconds = round(max((s.get("end", 0) for s in segs), default=0), 1) if segs else None
+        sources.append({
+            "video_id": w["shortcode"],
+            "text": w.get("full_text", ""),
+            "followers": w.get("followers") or None,
+            "comments": w.get("comments") or None,
+            "seconds": seconds,
+            "views": None,
+            "structure": w.get("structure") or None,
+            "source_url": w.get("source_url", ""),
+        })
+    return sources
+
+
+def _build_source_meta(sources):
+    """backbone.score_backbones/pick_backbone이 기대하는 meta = {video_id: {platform,
+    comments, avg_comments}}. avg_comments = 지금 pool(담긴 소스들)의 댓글수 평균 —
+    comments_x_avg 타일("평균 대비 N배")의 기준값."""
+    counted = [s["comments"] for s in sources if s.get("comments") is not None]
+    avg = round(sum(counted) / len(counted), 1) if counted else None
+    meta = {}
+    for s in sources:
+        meta[s["video_id"]] = {
+            "platform": backbone.platform_of(s.get("source_url", "")),
+            "comments": s.get("comments"),
+            "avg_comments": avg,
+        }
+    return meta
+
+
+def _forced_backbone(work_id, cid):
+    """work.state에 사장님이 UI에서 지정한 ⭐메인(있다면)을 읽는다. work_id 없음/남의
+    work/필드 없음이면 None(=자동 선정 폴백, pick_backbone의 기본 동작).
+    프론트(Task4~)가 아직 이 필드를 안 쓰므로 이름은 mix_pipeline의 backbone_main
+    관례를 따르되 shortcode 문자열을 직접 담게 열어둔다(인덱스는 여기선 의미 없음
+    — picks 소스는 url 인덱스가 아니라 shortcode로 식별된다)."""
+    if not work_id:
+        return None
+    w = Store(DB_PATH).get_produce_work(work_id, customer_id=cid)
+    if not w:
+        return None
+    state = w.get("state")
+    if not isinstance(state, dict):
+        return None
+    return state.get("backbone_main") or None
+
+
+@app.get("/api/produce/aipick")
+def api_produce_aipick(request: Request, work_id: str = "", forced: str = ""):
+    """1단계 "AI가 미리 픽 추천" 조회 — 지금 담긴 소스를 pick_backbone/score_backbones/
+    analyze_structure로 사전분석해 프론트 계약 하나로 묶어 반환(build_aipick)."""
+    cid = _cid(request)
+    sources = _load_work_sources(work_id, cid)
+    meta = _build_source_meta(sources)
+    return build_aipick(sources, meta, forced=(forced or _forced_backbone(work_id, cid)) or None)
+
+
 @app.post("/api/produce/mix/start")
 def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, body: dict):
     """2단계 영상믹스 — 확정 대본(given_script)을 소스영상 장면에 매칭하는 job 시작.
@@ -4901,6 +6011,58 @@ def api_produce_mix_trim(job_id: str, body: dict):
             "tail_trim": hit.get("tail_trim", 0.0), "trimmed": hit.get(key, 0.0)}
 
 
+@app.post("/api/produce/mix/{job_id}/shorten")
+def api_produce_mix_shorten(job_id: str, body: dict):
+    """'⏱ 대사가 영상보다 김' 비트의 대사를 화면 예산에 맞게 줄이고 그 비트만 재TTS
+    (2026-07-22 사장님 요청 — 경고만 뜨고 손볼 버튼이 없었다). 뜻·역할·말투 유지 축약
+    (conform_narration: Gemini 실패 시 결정적 폴백). 성공 시 narration·tts·sync_gap 갱신."""
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    if job.get("status") in ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409, content={"ok": False, "error": "렌더 중에는 줄일 수 없어요"})
+    plan = job.get("edit_plan") or {}
+    beats = plan.get("beats") or []
+    try:
+        bi = int(body.get("beat_idx"))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 필요"})
+    hit = next((b for b in beats if b.get("beat_idx") == bi), None)
+    if hit is None:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 범위 밖"})
+    # 화면 예산 = (primary+alternates 구간 합) × 슬로모 상한. 대사를 여기 맞춘다(_conform_beats와 동일).
+    segs = [hit.get("primary")] + list(hit.get("alternates") or [])
+    budget = sum(max(0.0, float(s["end"]) - float(s["start"])) for s in segs if s) * mix_pipeline._MAX_SLOWMO
+    if budget <= 0:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "화면 길이를 알 수 없어요"})
+    new_n = _edit_plan.conform_narration(hit.get("narration", ""), budget)
+    if not new_n or new_n == hit.get("narration"):
+        return {"ok": True, "changed": False, "narration": hit.get("narration", ""),
+                "note": "더 줄일 여지가 없어요(뜻 훼손 없이)"}
+    # 그 비트만 재TTS(렌더와 동일 공유 경로) → 실제 발화초로 sync_gap 재계산.
+    idx = beats.index(hit)
+    out = _MIX_WORK_DIR / job_id / "tts" / f"beat_{hit['beat_idx']}.mp3"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        mix_pipeline.synthesize_line(
+            new_n, out, voice=job.get("voice"), beat_role=hit.get("role"),
+            beat_index=idx, beat_total=len(beats),
+            previous_text=beats[idx - 1]["narration"] if idx > 0 else None,
+            next_text=beats[idx + 1]["narration"] if idx < len(beats) - 1 else None)
+        dur = mix_pipeline._probe_duration(str(out))
+    except Exception as e:  # noqa: BLE001 — 실패해도 원문 유지(불일치 안 만든다)
+        return JSONResponse(status_code=500, content={"ok": False, "error": f"재합성 실패: {e}"})
+    hit["narration"] = new_n
+    hit["caption_lines"] = None                     # 대사 바뀜 → 자막줄 무효(정규식 폴백)
+    hit["tts_path"] = str(out)
+    if dur and dur > 0:
+        hit["target_seconds"] = round(dur, 1)
+        hit["sync_gap"] = round(max(0.0, dur - budget), 2)
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True, "changed": True, "narration": new_n, "sync_gap": hit.get("sync_gap", 0.0)}
+
+
 @app.post("/api/produce/mix/{job_id}/sfx")
 def api_produce_mix_sfx(job_id: str, request: Request, body: dict):
     """검수판에서 비트의 효과음(beat["sfx"])을 제거한다(스펙 §6 — "이 효과음 빼기").
@@ -4922,6 +6084,18 @@ def api_produce_mix_sfx(job_id: str, request: Request, body: dict):
     hit.pop("sfx", None)
     store.update_mix_job(job_id, edit_plan=plan)
     return {"ok": True}
+
+
+@app.get("/api/produce/mix/{job_id}/bank_injected")
+def api_produce_mix_bank_injected(job_id: str):
+    """주입 미리보기(2026-07-23) — 이 대본 생성에 실제로 들어간 은행 블록(스파인·말투·전개)을
+    그대로 돌려준다. '은행이 이번 대본에 뭘 댔나'를 눈으로 검증. 스마트믹스 off거나 은행이
+    비었으면 injected=''(주입 없음)."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    plan = job.get("edit_plan") or {}
+    return {"ok": True, "injected": plan.get("bank_injected", "")}
 
 
 @app.get("/api/produce/mix/poster/{job_id}")
@@ -5632,16 +6806,33 @@ def api_seo_generate(body: dict):
 @app.post("/api/produce/thumb/titles")
 def api_thumb_titles(body: dict):
     """확정 대본으로 썸네일에 얹을 짧은 제목 후보를 뽑는다. DB 기록 안 함(무과금 미리보기 —
-    seo/generate·fx/suggest와 같은 규약). 사장님이 후보를 눌러 레이어에 얹고 다듬는다."""
+    seo/generate·fx/suggest와 같은 규약). 사장님이 후보를 눌러 레이어에 얹고 다듬는다.
+
+    ★화면 대본 우선(2026-07-24 사고): job.given_script는 '영상 매칭(믹스)' 순간에 고정된다.
+    그 뒤 1단계에서 대본을 새 영상에 맞게 고쳐도 job엔 옛 대본이 남아, 제목이 옛 영상 주제로
+    나온다(바나나 팬케이크 영상에 며칠 전 '밥솥 식빵' 제목이 나온 실사고). 그래서 프런트가
+    보내주는 '지금 화면의 대본'(script)을 있으면 우선 쓴다 — 사장님이 보는 것과 제목을 맞춘다.
+    화면 대본이 job 대본과 다르면 script_mismatch=true로 알려, 프런트가 '영상 매칭을 다시
+    해야 나레이션에도 반영된다'고 경고한다(제목만 바꾸면 영상 나레이션↔제목이 또 어긋난다)."""
     job_id = (body.get("job_id") or "").strip()
     job = Store(DB_PATH).get_mix_job(job_id) if job_id else None
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
-    titles = thumb_title.generate(job)
+    screen_script = (body.get("script") or "").strip()
+    job_script = (job.get("given_script") or "").strip()
+    used_script = screen_script or job_script
+    if not used_script:
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": "대본이 비어 있어요 — 1단계에서 대본을 확정하세요"})
+    # 화면 대본으로 제목을 짓되, headcopy/구조는 job 것을 그대로 참고로 둔다(대본이 진실의 축).
+    job_for_titles = dict(job)
+    job_for_titles["given_script"] = used_script
+    mismatch = bool(screen_script and job_script and screen_script != job_script)
+    titles = thumb_title.generate(job_for_titles)
     if titles is None:
         return JSONResponse(status_code=502,
                             content={"ok": False, "error": "제목 생성 실패 — 잠시 후 다시 눌러보세요"})
-    return {"ok": True, "titles": titles}
+    return {"ok": True, "titles": titles, "script_mismatch": mismatch}
 
 
 @app.get("/api/produce/seo/get")
@@ -5819,6 +7010,14 @@ def api_pattern_spine_add(body: dict):
 # 정적 프론트 (마운트는 맨 마지막)
 _STATIC = Path(__file__).parent / "static"
 
+
+# PWA 매니페스트 — StaticFiles의 mimetypes 추측(.webmanifest 미등록 환경=octet-stream)에
+# 맡기지 않고 표준 타입을 명시한다. 마운트보다 먼저 등록돼 우선 매칭.
+@app.get("/manifest.webmanifest", include_in_schema=False)
+def _pwa_manifest():
+    return FileResponse(_STATIC / "manifest.webmanifest",
+                        media_type="application/manifest+json")
+
 # 클린 URL — /library, /mix 등 확장자(.html) 없이 접근. (index는 루트 '/'로 자동)
 # 기존 /xxx.html 경로도 아래 StaticFiles 마운트로 계속 동작(백워드 호환).
 # no-cache: UI 배포 후 브라우저가 옛 HTML을 캐시로 재사용해 "고쳤는데 안 바뀜"이
@@ -5832,6 +7031,36 @@ for _pg in ("discover", "find", "library", "mix", "outreach", "produce", "collec
                                     headers=_NOCACHE)),
         include_in_schema=False,
     )
+
+# 작업대(발음교정 튜닝 워크벤치)는 관리자(customer_id==0) 전용 — 위 클린 URL 루프와
+# 달리 명시 게이트가 필요해 별도 처리한다. "/voice_tune"과 "/voice_tune.html" 둘 다
+# 명시 라우트로 등록해 아래 StaticFiles 마운트(확장자 그대로 서빙)보다 먼저 매칭시킨다
+# — 안 그러면 /voice_tune.html 직접 접근이 게이트 없이 뚫린다(2026-07-22).
+def _voice_tune_page(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return FileResponse(_STATIC / "voice_tune.html", media_type="text/html", headers=_NOCACHE)
+
+
+app.add_api_route("/voice_tune", _voice_tune_page, include_in_schema=False)
+app.add_api_route("/voice_tune.html", _voice_tune_page, include_in_schema=False)
+
+
+# 레퍼런스 채널 통합 관리페이지(2026-07-24) — 관리자(customer_id==0) 전용.
+# 인스타·유튜브·틱톡 레퍼런스 계정을 "엑셀처럼" 여러 줄 붙여넣기로 일괄 등록/관리한다.
+# 등록·목록·삭제는 전부 기존 API 재사용(신규 등록 로직 없음): 인스타=/api/reference/register
+# +/api/discover/added+/api/prune/remove, 틱톡·유튜브=/api/seeds(kind=account). 그래서
+# 이 페이지는 게이트 있는 정적 라우트 하나면 된다(voice_tune과 동일 이유로 mount보다 먼저).
+def _refs_page(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return FileResponse(_STATIC / "refs.html", media_type="text/html", headers=_NOCACHE)
+
+
+app.add_api_route("/refs", _refs_page, include_in_schema=False)
+app.add_api_route("/refs.html", _refs_page, include_in_schema=False)
 
 # ★C-1(2026-07-16 라이브 실증): 위 _NOCACHE는 /produce 등 "클린 URL" 라우트에만 붙는다.
 # /sidebar.js 같은 정적 JS/CSS/HTML은 아래 StaticFiles 마운트가 헤더 없이 그대로 서빙해서

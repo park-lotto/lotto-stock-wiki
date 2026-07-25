@@ -67,7 +67,9 @@ def test_run_clean_sources_no_key_fails(monkeypatch, tmp_path):
     _patch_clean(monkeypatch, [])
     mp.run_clean_sources("j", "db", str(tmp_path))
     assert job["clean_status"] == "failed"
-    assert "VMake" in job["clean_error"]
+    # 사용자 노출 문구엔 벤더명(VMake)이 없어야 한다 — 키 미등록을 알리되 브랜드는 "AI 자막 제거"
+    assert "VMake" not in job["clean_error"]
+    assert job["clean_error"]  # 비어있지 않음(사유는 전달)
 
 
 def test_ensure_clean_sources_skips_cached(monkeypatch, tmp_path):

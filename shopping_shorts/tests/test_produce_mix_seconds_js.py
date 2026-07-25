@@ -3,13 +3,18 @@
 백엔드(Task A)는 이미 인라인 sources를 받도록 완료됨(/api/produce/script/mix, sources 필드).
 이 테스트는 프론트 genMix()가 shortcodes 대신 sources를 보내고, mixSeconds select 값을
 target_seconds로 넘기는지를 실소스 앵커 슬라이스로 검증한다.
-"""
+
+★2026-07-23 Task 4(숏템메이커 리뉴얼): "우리 시스템으로 믹스" 탭과 함께 genMix()를 제거했다
+(AI PICK 자동담김으로 대체 — 대본 조합 UI는 더 이상 없다). 앵커가 사라져 스킵(브리프 지시)."""
 import json
 import pathlib
 import shutil
 import subprocess
 
 import pytest
+
+pytestmark = pytest.mark.skip(
+    reason="Task4: genMix·믹스탭 UI 제거로 앵커 소실(2026-07-23) — AI PICK 자동담김으로 대체")
 
 PRODUCE_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"
 NODE = shutil.which("node")

@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-23",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-23_1101_에피스와 본계약 체결, 잠재된 추가 계약 더 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김선아",
+    "report_date": "2026년 7월 23일",
+    "stocks": [
+      {
+        "name": "인투셀",
+        "code": "287840",
+        "sector": "바이오",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 실적 발표에서 기술료 수익을 확인해 보는 것도 총 계약 규모를 추정하는데 의미가 있을 것 같다.",
+        "estimate_revision": null,
+        "next_catalyst": "SBE303의 임상1상 중간 결과 확인, 추가 후속 계약 가능성",
+        "thesis": [
+          "삼성바이오에피스와의 본계약 체결을 통해 기술이전을 염두한 공동연구개발임이 확인됨",
+          "SBE303 외 나머지 4개의 ADC 신약후보물질에 대한 후속 계약 가능성 확대",
+          "자체 파이프라인 ITC-6146RO의 임상1상 중간 결과 확인을 통한 혁신 가능성 증명"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "이번 계약은 '23년 12월 삼성바이오에피스가 최대 5종 ADC 신약후보물질 발굴 공동연구계약의 후속 계약(본 계약 의미)으로, 현재 글로벌 임상 1상이 진행 중인 SBE303에 대한 물질권리 확보를 목적으로 한다."
+      }
+    ]
+  }
+}

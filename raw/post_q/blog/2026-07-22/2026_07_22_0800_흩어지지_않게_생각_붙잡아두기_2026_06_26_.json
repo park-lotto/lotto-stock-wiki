@@ -1,0 +1,29 @@
+{
+  "target_kind": "market",
+  "market_direction": "bear",
+  "macro_events": [
+    {
+      "fact": "AI 데이터센터 확산에 따른 메모리 가격 급등으로 애플이 소비자 가격 인상 발표",
+      "ts": "2026-06-26",
+      "quote": "AI 데이터센터의 급격한 확대로 메모리와 저장장치 수요가 폭발적으로 증가했다"
+    },
+    {
+      "fact": "IDC, 신형 아이폰의 12GB 램 탑재 등 고사양화 전망",
+      "ts": null,
+      "quote": "시장조사업체 IDC는 앞으로 출시되는 모든 신형 아이폰이 12GB 램(RA..."
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "긍정",
+      "comment": "AI 데이터센터 확대로 인한 메모리 수요 폭발 및 가격 급등"
+    },
+    {
+      "sector": "IT",
+      "stance": "부정",
+      "comment": "부품 원가 상승에 따른 소비자 가격 인상 압박"
+    }
+  ],
+  "quote": "부품 가격 상승을 더 이상 자체적으로 흡수하기 어렵다"
+}

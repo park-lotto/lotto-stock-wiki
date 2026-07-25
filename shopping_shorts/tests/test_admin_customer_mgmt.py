@@ -118,3 +118,58 @@ def test_admin_delete_refuses_admin_account(tmp_path, monkeypatch):
     r = owner.post("/api/admin/customer/delete", json={"customer_id": admin_cid})
     assert r.status_code == 400                              # 관리자 계정 삭제 거부(락아웃 방지)
     assert s.get_customer(admin_cid) is not None
+
+
+# ── /api/me가 이메일 관리자에게 is_admin=true (사이드바 관리페이지 버튼용) ──
+def test_api_me_is_admin_for_email_admin(tmp_path, monkeypatch):
+    s = _setup(tmp_path, monkeypatch)
+    admin_cid = s.create_customer("g_admin", "pw12", email="parklotto12@gmail.com")
+    normal_cid = s.create_customer("g_norm", "pw12", email="x@y.com")
+    ca = TestClient(appmod.app, cookies={"dash_auth": _cookie(admin_cid)})
+    cn = TestClient(appmod.app, cookies={"dash_auth": _cookie(normal_cid)})
+    assert ca.get("/api/me").json()["is_admin"] is True
+    assert cn.get("/api/me").json()["is_admin"] is False
+
+
+# ── 관리자 지정/회수(스텝권한=관리자 동일) ──
+def test_set_customer_admin_grants_is_admin(tmp_path, monkeypatch):
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    s = Store(str(tmp_path / "t.db"))
+    cid = s.create_customer("g_x", "pw12", email="x@y.com")
+    assert appmod._is_admin(cid) is False
+    s.set_customer_admin(cid, True)
+    assert s.get_customer(cid)["admin"] is True
+    assert appmod._is_admin(cid) is True          # 지정 관리자=권한 동일
+    s.set_customer_admin(cid, False)
+    assert appmod._is_admin(cid) is False
+
+
+def test_set_admin_endpoint_and_refuses_code_admin(tmp_path, monkeypatch):
+    s = _setup(tmp_path, monkeypatch)
+    normal = s.create_customer("g_x", "pw12", email="x@y.com")
+    codeadmin = s.create_customer("g_p", "pw12", email="parklotto12@gmail.com")
+    owner = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})
+    # 일반 계정 관리자 지정 성공
+    r = owner.post("/api/admin/customer/set_admin", json={"customer_id": normal, "admin": True})
+    assert r.status_code == 200 and appmod._is_admin(normal) is True
+    # 지정 관리자도 admin API 접근 가능(권한 동일)
+    c2 = TestClient(appmod.app, cookies={"dash_auth": _cookie(normal)})
+    assert c2.get("/api/admin/customers").status_code == 200
+    # 코드 고정 관리자는 UI로 변경 거부
+    r2 = owner.post("/api/admin/customer/set_admin", json={"customer_id": codeadmin, "admin": False})
+    assert r2.status_code == 400
+
+
+# ── 관리자는 하루 렌더 상한(10) 없이 무제한 (2026-07-22 버그픽스) ──
+def test_admin_render_unlimited(tmp_path, monkeypatch):
+    s = _setup(tmp_path, monkeypatch)
+    for i in range(15):                                     # 사장님(0) 15회 다 통과
+        assert appmod.check_and_count(0, "render") is True, f"owner {i}회차"
+    acid = s.create_customer("g_a", "pw12", email="parklotto12@gmail.com")
+    for i in range(15):                                     # 이메일 관리자도 무제한
+        assert appmod.check_and_count(acid, "render") is True, f"admin {i}회차"
+    # 일반 pro는 여전히 10 상한
+    pcid = s.create_customer("g_p", "pw12")
+    s.set_plan(pcid, "pro")
+    passed = sum(1 for _ in range(20) if appmod.check_and_count(pcid, "render"))
+    assert passed == 10                                     # pro=10 유지

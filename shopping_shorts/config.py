@@ -33,6 +33,12 @@ GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 GOOGLE_REDIRECT_URI = os.environ.get(
     "GOOGLE_REDIRECT_URI", "https://shoppingshorts.duckdns.org/auth/google/callback")
 
+# Reddit OAuth(application-only, 해외HOT 발굴 — 익명 RSS rate-limit 회피, 2026-07-25).
+# reddit.com/prefs/apps에서 'script' 앱 생성 → client_id/secret를 .env에 넣으면
+# reddit_source가 oauth.reddit.com(100 req/분)으로 자동 전환. 없으면 익명 RSS 폴백.
+REDDIT_CLIENT_ID = os.environ.get("REDDIT_CLIENT_ID", "")
+REDDIT_CLIENT_SECRET = os.environ.get("REDDIT_CLIENT_SECRET", "")
+
 # Apify
 APIFY_TOKEN = os.environ.get("APIFY_TOKEN", "")
 # 계정 하나가 사용량 소진(월 한도 등)되면 다음 계정으로 자동 로테이션(2026-07-09).
@@ -77,6 +83,27 @@ ELEVENLABS_VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWA
 # ASR 라운드트립 검증(튜닝 작업대) — Whisper로 TTS를 재전사해 오독 탐지. GROQ 우선.
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 
+# 비트별 TTS 합성 동시성(2026-07-24, 2단계 매칭 실처리시간 단축) — 각 비트가 독립
+# 파일(beat_{idx}.mp3)에 쓰고 이웃텍스트도 인덱스로 미리 정해져 있어 병렬 안전.
+# ElevenLabs·GROQ-Whisper 랭커 둘 다 rate limit이 있어 무제한 동시성은 429를 부른다
+# — 서버에서 실측 후 올릴 수 있도록 env로 노출.
+TTS_MAX_WORKERS = int(os.getenv("TTS_MAX_WORKERS", "3"))
+
+# 유튜브 로컬 릴레이(2026-07-24) — 서버(데이터센터 IP)는 유튜브에 봇차단당해 다운로드가
+# 통째로 막힌다(주거용 IP는 됨, memory youtube-shorts-datacenter-block). 그래서 서버는
+# 유튜브 URL을 yt_relay 큐에 넣고, 사장님 PC의 에이전트가 큐를 폴링해 주거용 IP로 받아
+# 서버에 업로드한다. 서버에서만 켠다(YT_RELAY_ENABLED=1) — 로컬/에이전트는 꺼야
+# 무한루프가 안 난다(에이전트는 _download_ytdlp를 직접 부른다). KEY는 에이전트 인증용.
+# B안(주거용 프록시, 2026-07-24) — A안(PC 릴레이)의 "사장님 PC 의존" 한계를 없앤다. 프록시 URL을
+# 넣으면 서버가 직접 유튜브를 그 IP로 받아 PC 없이 24/7·고객 다중 동시 처리된다(업체 무관, 형식
+# http://user:pass@host:port). 우선순위: 프록시 > 릴레이(A) > 직접. 미설정이면 기존 A/직접 그대로(회귀0).
+YTDLP_PROXY = os.getenv("YTDLP_PROXY", "")
+
+YT_RELAY_ENABLED = os.getenv("YT_RELAY_ENABLED", "") == "1"
+YT_RELAY_KEY = os.getenv("YT_RELAY_KEY", "")
+YT_RELAY_DIR = Path(__file__).parent / "data" / "yt_relay"   # 에이전트가 올린 mp4 보관
+YT_RELAY_POLL_TIMEOUT = int(os.getenv("YT_RELAY_POLL_TIMEOUT", "180"))  # 서버측 대기 상한(초)
+
 # 수집 규칙
 WINDOW_HOURS = 48          # 48시간 이내만 랭킹(인스타 — 빠르게 도는 릴스 기준)
 # 유튜브 Shorts는 며칠~몇 주에 걸쳐 조회수가 쌓여 48h는 결과가 너무 적다(실측
@@ -118,6 +145,20 @@ GRADE_THRESHOLDS = [(0.75, "🔥🔥🔥"), (0.5, "🔥🔥"), (0.25, "🔥"), (
 # 소수(9건)만 남아 "표본 많이"와 안 맞음 → 점수 순위 상위를 넓게 뽑는다.
 BANK_INGEST_TOP_N = 100      # 수집 1회당 은행에 담을 상위 표본 수(점수 내림차순)
 BANK_INGEST_MIN_KR = 20      # 캡션 최소 한국어 글자수(부품 추출 가능선 — 짧거나 외국어는 노이즈)
+
+# 백본-베이스 대본 안 개수(2026-07-22): 백본 순서(뼈대)는 고정하고, 그 위에 쓰는 대본을
+# 이만큼 뽑아 심사위원(대본품질·장면싱크·스토리라인)으로 제일 좋은 걸 고른다. 소스당 Gemini
+# 콜이라 3 정도가 균형. 조각 1개만 뽑던 걸 best-of-N + 품질심사로 올린다.
+BACKBONE_DRAFTS_N = 3
+
+# 컷 리듬(2026-07-22 페이블 진단 — job 23a6db67333a: 비트당 6.8컷 0.7~1.5s 파편 뚝뚝 끊김).
+# 화면 채우기(fill)가 짧은 B롤을 무한정 붙이던 걸 막는다: 비트당 클립 상한 + 컷 최소 길이.
+# 모자란 길이는 파편 추가 대신 conform(대사 축약)·홀드로 흡수한다.
+MAX_CLIPS_PER_BEAT = 3        # 한 비트에 넣을 화면 조각 최대 수(적고 길게)
+MIN_SHOT_SECONDS = 1.2       # 컷 하나 최소 길이 — 이보다 짧은 조각은 B롤로 잘 안 쓴다
+# 한 컷을 이보다 오래 안 끈다 — 긴 정지(7초 홀드) 대신 distinct 앵글로 컷(벤치마크 ~1.1초).
+# 렌더가 이 상한으로 세그먼트를 번갈아 재생해 컷 밀도를 만든다(0=끄기·옛 동작).
+MAX_SHOT_SECONDS = 2.2
 
 # 카테고리 (자동 태깅 초기 6분류)
 CATEGORIES = ["인테리어", "레시피", "생활용품", "가전", "뷰티", "기타"]

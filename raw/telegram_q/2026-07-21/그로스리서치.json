@@ -1,7 +1,7 @@
 {
   "reports": [
     {
-      "broker": "그로쓰리서치",
+      "broker": "그로스리서치",
       "stock": "지투지바이오",
       "rating": null,
       "tp": null,
@@ -10,16 +10,16 @@
       "sector": "바이오"
     },
     {
-      "broker": "그로쓰리서치",
+      "broker": "그로스리서치",
       "stock": "CXMT",
       "rating": null,
       "tp": null,
       "ts": "08:25",
-      "quote": "HBM 대신 DDR5 집중 전략",
+      "quote": "HBM 정면 승부보다 범용·모바일 D램 점유율 확대를 통해 시장 침투 전략 채택",
       "sector": "반도체"
     },
     {
-      "broker": "그로쓰리서치",
+      "broker": "그로스리서치",
       "stock": "BMS",
       "rating": null,
       "tp": null,
@@ -28,25 +28,25 @@
       "sector": "바이오"
     },
     {
-      "broker": "그로쓰리서치",
+      "broker": "그로스리서치",
       "stock": "리가켐바이오",
       "rating": null,
       "tp": null,
       "ts": "09:14",
-      "quote": "LCB02A 비임상 유효성·안전성 연구",
+      "quote": "LCB02A 비임상 유효성·안전성 연구, CLDN18.2 양성 진행성 고형암 대상 글로벌 임상 1/2상 디자인",
       "sector": "바이오"
     },
     {
-      "broker": "그로쓰리서치",
+      "broker": "그로스리서치",
       "stock": "씨이랩",
       "rating": null,
       "tp": null,
       "ts": "09:28",
       "quote": "씨이랩이 한국데이터센터에너지효율협회(KDCEA)에 회원사로 가입",
-      "sector": "IT"
+      "sector": "전력"
     },
     {
-      "broker": "그로쓰리서치",
+      "broker": "그로스리서치",
       "stock": "한화오션",
       "rating": null,
       "tp": null,
@@ -55,7 +55,7 @@
       "sector": "조선"
     },
     {
-      "broker": "그로쓰리서치",
+      "broker": "그로스리서치",
       "stock": "삼성전자",
       "rating": null,
       "tp": null,
@@ -64,7 +64,7 @@
       "sector": "로봇"
     },
     {
-      "broker": "그로쓰리서치",
+      "broker": "그로스리서치",
       "stock": "LIG D&A",
       "rating": null,
       "tp": null,
@@ -73,43 +73,16 @@
       "sector": "방산"
     },
     {
-      "broker": "그로쓰리서치",
+      "broker": "그로스리서치",
       "stock": "에임드바이오",
       "rating": null,
       "tp": null,
       "ts": "10:38",
-      "quote": "바이오헤이븐에 기술이전한 FGFR3 표적 ADC ‘AMB302(BHV-1530)’",
+      "quote": "바이오헤이븐에 기술이전한 FGFR3 표적 ADC ‘AMB302(BHV-1530)’ 임상 1상 용량상승시험에서 여러 암종 환자의 종양 크기 감소 확인",
       "sector": "바이오"
     },
     {
-      "broker": "그로쓰리서치",
-      "stock": "지투지바이오",
-      "rating": null,
-      "tp": null,
-      "ts": "10:51",
-      "quote": "의료·바이오 AI 기업 스파이더코어와 플랫폼 구축 계약",
-      "sector": "바이오"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "알테오젠",
-      "rating": null,
-      "tp": null,
-      "ts": "14:32",
-      "quote": "코스닥150 이탈 매도와 코스피200 편입 매수를 합산할 경우, 약 3,600억원의 패시브 자금 순유출 가능성 제기",
-      "sector": "바이오"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "AMD",
-      "rating": null,
-      "tp": null,
-      "ts": "14:58",
-      "quote": "AMD가 연내 첫 랙스케일 AI 시스템 Helios를 출시하며 Microsoft가 신규 고객으로 합류",
-      "sector": "반도체"
-    },
-    {
-      "broker": "그로쓰리서치",
+      "broker": "그로스리서치",
       "stock": "이엔셀",
       "rating": null,
       "tp": null,
@@ -118,31 +91,22 @@
       "sector": "바이오"
     },
     {
-      "broker": "그로쓰리서치",
+      "broker": "그로스리서치",
       "stock": "바이오솔루션",
       "rating": null,
       "tp": null,
       "ts": "15:18",
-      "quote": "바이오솔루션은 환자 본인의 연골세포를 손상 부위에 이식하는 ‘카티라이프’와, 다른 사람의 연골세포를 관절에 주사하는 ‘스페로큐어’를 개발 중",
+      "quote": "소아 늑연골 유래 연골세포를 작은 3차원 구형 조직으로 만들어, 수술 없이 한 번 주사하는 치료제로 개발 중",
       "sector": "바이오"
     },
     {
-      "broker": "그로쓰리서치",
+      "broker": "그로스리서치",
       "stock": "현대로템",
       "rating": null,
       "tp": null,
       "ts": "16:16",
-      "quote": "현대로템, K2 전차 54대, K808 차륜형장갑차 141대 수출 추진",
+      "quote": "K2 전차 54대, K808 차륜형장갑차 141대 총 195대 수출 추진",
       "sector": "방산"
-    },
-    {
-      "broker": "그로쓰리서치",
-      "stock": "두산로보틱스",
-      "rating": null,
-      "tp": null,
-      "ts": "16:34",
-      "quote": "두산로보틱스는 지멘스, 애자일 로봇, 스킬드 AI 등과 함께 도입 평가 진행",
-      "sector": "로봇"
     },
     {
       "broker": "그로쓰리서치",
@@ -152,6 +116,15 @@
       "ts": "17:38",
       "quote": "보유 부지를 활용해 글로벌 빅테크 대상 AI 데이터센터 사업 추진",
       "sector": "전력"
+    },
+    {
+      "broker": "그로스리서치",
+      "stock": "레인보우로보틱스",
+      "rating": null,
+      "tp": null,
+      "ts": "18:01",
+      "quote": "양사가 개발한 4족 보행 로봇 RB-01K를 하반기 육군에 실전 배치",
+      "sector": "로봇"
     }
   ]
 }

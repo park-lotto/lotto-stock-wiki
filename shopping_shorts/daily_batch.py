@@ -185,15 +185,17 @@ def harvest_hooks(store):
 
 
 def run(db_path):
-    """크론 엔트리포인트 — 백필→통계→자동흡수→훅수확→perf재계산→스파인클러스터."""
+    """크론 엔트리포인트 — 유지보수만: 백필→통계→자동흡수(낮에 대본추출된 우승작 청소)→
+    perf재계산→스파인클러스터. ★훅수확은 수집 버튼으로 이관됨(2026-07-23) — 여기서 안 돈다."""
     store = Store(db_path)
     n1 = backfill_structures(store)
     n2 = recompute_element_stats(store)
     n3 = ingest_crawl_winners(store)
-    n6 = harvest_hooks(store)
     n4 = recompute_perf_scores(store)
     n5 = cluster_and_gate_spines(store)
-    print(f"daily_batch: 구조 {n1} · 통계 {n2} · 자동흡수 {n3} · 훅수확 {n6} · perf {n4} · 스파인 {n5}")
+    # 말투(스타일)+전개(내용) 부품 자동승인 — 생성에 바로 실리게(2026-07-23, 내용 주입).
+    n6 = store.auto_approve_style_buckets() + store.auto_approve_content_buckets()
+    print(f"daily_batch: 구조 {n1} · 통계 {n2} · 자동흡수 {n3} · perf {n4} · 스파인 {n5} · 승인 {n6}")
 
 
 if __name__ == "__main__":

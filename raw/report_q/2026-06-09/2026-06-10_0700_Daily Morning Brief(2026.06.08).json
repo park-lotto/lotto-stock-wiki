@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "DAOL투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_0700_Daily Morning Brief(2026.06.08).md"
+  },
+  "questionnaire": {
+    "broker": "DAOL투자증권",
+    "analyst": "김지현",
+    "report_date": "2026. 06. 08",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "Dow (-1.35%), S&P500 (-2.64%), Nasdaq (-4.18%)",
+      "2yr 4.147%(+10.4bp), 10yr 4.53%(+5.7bp)",
+      "JPY 160.29(+0.17%), EUR 1.152(-0.77%), Dollar 100.07(+0.66%)",
+      "WTI $90.54(-2.69%), Brent $93.09(-2.04%)"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6월 5일",
+        "event": "미국 5월 비용급여, 미국 5월 실업률"
+      }
+    ],
+    "top_picks": null,
+    "risk": "미국 고용지표 호조에 따른 금리 인상 가능성 부각, 반도체 및 AI 등 주요 업종 조정 우려, 지정학적 리스크 지속",
+    "quote": "미국 고용지표 호조에 따른 금리 인상 가능성 부각, 반도체 및 AI 등 주요 업종 조정 우려, 지정학적 리스크 지속"
+  }
+}

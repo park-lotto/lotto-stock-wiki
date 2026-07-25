@@ -382,6 +382,12 @@ def _vault_call(prompt, schema, max_tries=4):
                 continue
             if key_vault.is_quota_error(e):
                 continue
+            # ★503/과부하는 일시적(2026-07-24 실측: scene_first가 이걸로 죽어 옛 대본으로 폴백,
+            # 30초·7~8컷·대화 개선이 통째로 안 탔다). 포기 대신 잠깐 쉬고 다음 키로 재시도한다.
+            m = str(e)
+            if any(c in m for c in ("503", "UNAVAILABLE", "overloaded", "high demand")):
+                time.sleep(2)
+                continue
             print(f"edit_plan._vault_call: {e!r}", file=sys.stderr)
             return None
     return None
@@ -396,7 +402,7 @@ _SCENE_FIRST_SCHEMA = {
             "story_person": {"type": "string"}, "story_event": {"type": "string"},
             "story_resolution": {"type": "string"}, "cta_line": {"type": "string"},
             "cta_keyword": {"type": "string"},
-            "beats": {"type": "array", "minItems": 4, "items": {
+            "beats": {"type": "array", "minItems": 6, "items": {
                 "type": "object",
                 "properties": {
                     "role": {"type": "string"}, "narration": {"type": "string"},
@@ -410,22 +416,41 @@ _SCENE_FIRST_SCHEMA = {
 
 
 def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3, call=_vault_call,
-                            bank_context=""):
+                            bank_context="", order_block="", lengthen=False):
     """스토리 헌장 + 장면 팔레트 + 레퍼 구조 → 후보 n개. 각 비트는 seg_ids(2~4 다중컷)로
     장면을 지목한다. 실패 시 []. 헌장이 품질을 담당하므로 별도 검증루프 없음(1콜).
 
     bank_context(P0-2): 부품은행에서 조립한 승인 훅·어미·부사·CTA·스파인 블록(빈 문자열이면
-    미주입=회귀0). 영상 믹스 대본이 매번 같은 훅으로 열리지 않게 로테이션된 부품을 실어준다."""
+    미주입=회귀0). 영상 믹스 대본이 매번 같은 훅으로 열리지 않게 로테이션된 부품을 실어준다.
+    order_block(2026-07-22 백본 통합): 백본 영상의 시간순 장면 뼈대 블록. 빈 문자열이면 무주입.
+    ★스토리·은행·다중컷(rich 품질기계)은 그대로 두고 화면 '순서'만 제약한다 — 별도의 뼈다귀
+    생성기(장면당 한 줄)를 쓰면 스키마에 스토리 필드가 없어 이야기가 원천 불가였다(그날 실사고)."""
     from shopping_shorts import script_generate  # 지연 import(순환 방지)
     char_target = int(target_seconds * _SYLLABLES_PER_SEC)
     prompt = (
         "너는 한국 쇼핑 숏폼(살림·요리) 대본 작가다. 아래 '스토리 헌장'을 반드시 지켜 "
-        f"탄탄한 대본 후보 {n}개를 만들어라. 단, 우리가 가진 장면으로만 말할 수 있게 쓰고, "
-        "각 비트(문장)에 그 말과 어울리는 장면 seg_id를 2~4개 시간순으로 붙여라.\n\n"
-        "[레퍼런스 — 훅·전개·설득구조만 계승(표절 금지), 다국어면 한국어로]\n"
+        f"탄탄한 대본 후보 {n}개를 만들어라.\n"
+        "★★대본은 '화자가 들려주는 짧은 이야기'다(화면 설명문이 아니다). 반드시 대화·사건·"
+        "반전이 있게 써라: 'A가 ~라고 하길래 / 나는 ~했는데 / 그랬더니 ~ / 근데 알고보니 ~(반전) "
+        "/ 그래서 지금은 ~' 식으로. 화면에 그 사람·그 순간이 안 보여도 된다 — 이야기는 화자의 "
+        "목소리로 흐르고, 장면은 그 밑에 깔리는 먹음직스러운 그림일 뿐이다. '맛있다·진하다·예술이다' "
+        "같은 감상 나열은 이야기가 아니다(반려). 누가·무슨 말·왜·그래서·반전이 있어야 한다.\n"
+        "★★구체적 인용 대화 필수: 실제 주고받은 말을 **따옴표로 최소 2번** 넣어라 — "
+        "'남편이 \"밥 없어?\" 하길래' / '그래서 제가 \"이거 먹어봐\" 했더니' / '한 입 먹고 \"이거 "
+        "밖에서 파는 거야?\" 하더라고요' 식으로. 두루뭉실 요약('맛있대요') 말고 그 순간 그 사람이 "
+        "한 말을 그대로. 이 대화가 있고 없고가 탄탄함을 가른다.\n"
+        "★장면 붙이기: 각 비트에 seg_id를 2~4개 시간순으로 붙이되, **결정적 행위 비트**(비법 얹기·"
+        "붓기·자르기 등)만 그 행위 장면과 정확히 맞춰라. 나머지 이야기 비트는 화면을 설명할 "
+        "필요 없이 먹음직스러운 장면을 깔면 된다(대사와 화면이 1:1일 필요 없음).\n"
+        f"★후보 {n}개는 톤을 서로 다르게 해라 — 그중 **딱 하나**는 자연스러운 위트·유머를 "
+        "스토리에 살짝 녹여라(상황에서 피식 나오는 정도·공감개그·가벼운 반전). ⚠️억지 개그·"
+        "썰렁·오글거림·말장난 금지 — 어색하면 안 넣느니만 못하다. 나머지 후보는 진솔하게.\n\n"
+        "[레퍼런스 — ★참고용 흐름 감만. 뼈대를 통째로 차용하지 마라. 훅·전개는 아래 [은행] "
+        "블록의 실제 수집물이 우선이다(레퍼런스보다 은행). 다국어면 한국어로]\n"
         f"{(reference_text or '')[:1500]}\n\n"
         "[우리 장면 팔레트 — 이 seg_id 화면만 쓸 수 있다]\n"
         f"{inventory_text}\n\n"
+        + ((order_block + "\n\n") if order_block else "")
         + script_generate._STORY_RULES_CORE + "\n" + script_generate._STORY_DECLARE + "\n"
         "- ★위 헌장(인과사슬·훅 한방·CTA 미끼·비법 킥 감추기)을 반드시 지켜라 — 장면에 맞추느라 "
         "스토리가 밋밋해지면 실패다. 스토리가 왕, 장면은 그 스토리를 보여줄 그림이다.\n"
@@ -434,14 +459,43 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "이제 알았지?'·'저 이거 몰라서 손해 봤잖아요'·'이거 진짜 절대 하지 마세요' 류)로 시작해라. "
         "hook만 세게 써놓고 첫 비트를 '매번 ~하던 참이었거든요'처럼 밋밋하게 열면 실패다. "
         "beats[0]이 곧 그 hook이어야 한다.\n"
-        f"- 전체 나레이션 글자수 합은 약 {char_target}자 내외. 각 비트: role·narration(구어체)·"
-        "seg_ids(2~4)·fit(1~5)·forced(그 장면이 이 말과 안 맞는데 억지로 붙였으면 true).\n"
+        f"- ★★길이를 목표에 맞춰라(짧아도 길어도 실패): 전체 나레이션 글자수 합을 "
+        f"**{int(char_target*0.85)}~{int(char_target*1.15)}자**(목표 {char_target}자) 안에 둬라. "
+        f"이보다 짧으면 빈약해서 반려, **넘치면 영상이 너무 길어져 반려**(★{int(char_target*1.15)}자를 "
+        "절대 넘기지 마라 — 말을 늘리지 말고 핵심만). 비트는 **6~7개**로 나눠라(각 비트 25~40자). "
+        "8개 이상 잘게 쪼개거나 비트마다 길게 늘어놓으면 실패다.\n"
+        "  각 비트: role·narration(구어체)·seg_ids(2~4)·fit(1~5)·forced(그 장면이 이 말과 안 맞는데 억지로면 true).\n"
         "- ★caption_lines: 그 비트 narration을 화면 자막용으로 **2~3어절 호흡 단위**로 끊은 "
         "배열. 수식어는 반드시 뒤 명사와 한 줄에 둬라('만든 사람'을 '만든'|'사람'으로 쪼개지 마라, "
         "'이 소스'·'특제 비법'처럼 관형어+명사는 붙인다). 이어붙이면 narration과 글자가 정확히 "
         "같아야 한다(단어 추가·삭제 금지, 문장부호 유지).\n"
         "- 화면에 없는 걸 말하지 마라. 같은 seg_id를 여러 비트에서 재사용 금지.\n"
+        # ★비트↔비트 연결(2026-07-22): 문장이 뚝뚝 끊기지 않게 한 편의 글로 흐르게 한다.
+        # 앞 문장을 이어받는 연결(그래서·근데·이때·그랬더니…)로 자연스럽게, 단 '때문에 요즘 우리'
+        # 처럼 다음 조각이 앞과 안 맞물리는 어색한 중간 연결어는 금지. 소리내어 읽어도 매끄럽게.
+        "- ★비트들을 하나의 이어지는 이야기로 써라 — 각 문장이 앞 문장을 자연스럽게 이어받아야 "
+        "한다(뚝뚝 끊긴 조각 나열 금지, 어색한 중간 연결어 금지). 인물을 세웠으면 끝까지 관통.\n"
+        "- ★★★스토리 전개 고도화(7~8비트 드라마 아크, 30초를 꽉 채워라): 이야기를 촘촘히·극적으로 "
+        "전개해라 — ① 강한 훅(감탄·충격) → ② 상황·인물 설정(누가·왜, 대화 인용) → ③ 기대/시련 고조"
+        "(그래서 어땠는데) → ④ **반전 1**(예상 밖의 전개, '근데 웬걸') → ⑤ 절정·증거(생생한 반응·대화 "
+        "인용) → ⑥ **반전 2/비하인드**(알고보니 이게 비법이었다·의외의 결말) → ⑦ 해소 → ⑧ CTA. "
+        "각 비트가 다른 단계를 맡아 이야기가 '깊어지게'. ★반전은 최소 2번(예상 뒤집기), 매 비트에 "
+        "다음이 궁금한 갈고리를 남겨라.\n"
+        "- ★★재미·극적 재미요소를 살려라(밋밋 반려): 의외성·공감개그(상황에서 피식)·과장된 리액션을 "
+        "대화 인용으로('남편이 \"이거 밖에서 파는 거 아냐?\" 하는 거예요' 류). 오글·억지 개그·말장난은 "
+        "금지 — 진짜 있었던 일처럼 자연스럽게 웃기고 놀랍게.\n"
+        "- ★★은행 부사·수식어를 적극 써라(지금 안 쓰고 있다): 아래 [은행]의 '부사' 부품(예: "
+        "'단 몇 초 만에'·'극도로'·'너무너무'·'막')과 생생한 형용사를 나레이션에 녹여 밋밋한 문장을 "
+        "살려라 — 감각·강도를 부사로 키워라(단, 한 문장에 몰아넣지 말고 자연스럽게).\n"
         + ((bank_context + "\n") if bank_context else "")
+        # ①생성측 보강(세션#2): 직전 후보가 전부 목표보다 크게 짧을 때 1회 재생성하며 이 힌트를
+        # 얹는다. 대본 길이 뒤죽박죽의 생성측 뿌리 — 프롬프트가 목표를 지시해도 실제 출력이 짧게
+        # 나온 경우, 길이 하한을 명시하고 비트를 잘게 쪼개지 말고 알차게 채우라고 강제한다.
+        + ((f"- ★★★[길이 재생성] 직전 후보들이 목표보다 크게 짧았다. 이번엔 반드시 전체 "
+            f"나레이션 글자수 합을 **최소 {int(char_target*0.9)}자 이상**(목표 {char_target}자)에 "
+            "맞춰라. 비트는 6~7개로 유지하되(잘게 쪼개지 마라) 각 비트의 이야기를 더 촘촘하게 "
+            "채워라 — 대화 인용을 한 번 더, 반전·구체적 반응·감각 묘사를 보태 각 문장을 알차게.\n")
+           if lengthen else "")
         + "출력은 스키마 JSON만.")
     raw = call(prompt, _SCENE_FIRST_SCHEMA)
     if not raw or not isinstance(raw, dict):
@@ -528,10 +582,54 @@ def _candidate_quality(beats):
     return 0.6 * tone + 0.4 * fun
 
 
-def _score_candidate(plan, avoid_hooks=None):
+def _cut_rhythm_penalty(beats):
+    """컷 리듬 감점(0~0.2, 브리프 T6) — 파편화(비트당 클립 과다=짧은 컷 연발)와 전역 반복
+    (같은 seg 재사용=B롤 체인)을 감지한다. T1~T5가 구성을 고쳐도 후보들이 이 축에서 다를 수
+    있어, 추천 선택이 파편·반복 후보를 다시 고르지 않게 하는 안전망. 잘 구성된 후보(비트당
+    클립 ≤ MAX_CLIPS_PER_BEAT·seg 전부 고유)는 0 → 정상 경로 회귀0."""
+    beats = beats or []
+    if not beats:
+        return 0.0
+    seg_ids = []
+    for b in beats:
+        p = (b.get("primary") or {}).get("seg_id")
+        if p:
+            seg_ids.append(p)
+        for a in (b.get("alternates") or []):
+            sid = (a or {}).get("seg_id")
+            if sid:
+                seg_ids.append(sid)
+    clips = len(seg_ids)
+    if clips == 0:
+        return 0.0
+    from shopping_shorts.config import MAX_CLIPS_PER_BEAT
+    avg_clips = clips / len(beats)
+    frag = min(1.0, max(0.0, avg_clips - MAX_CLIPS_PER_BEAT) / MAX_CLIPS_PER_BEAT)
+    repeat = 1.0 - len(set(seg_ids)) / clips     # 고유가 아닌 클립 비중(전역 반복)
+    return round(min(0.2, 0.1 * frag + 0.1 * repeat), 3)
+
+
+def _length_penalty(beats, target_seconds):
+    """후보 길이가 목표초에서 벗어날수록 감점(2026-07-25 세션#2). 선택이 길이를 무시해 21.3초
+    짜리가 30초 목표에 뽑히던 것(후보 A/B/C 길이 뒤죽박죽)을 막는다. 후보 길이 = 비트별
+    target_seconds 합(≈나레이션 글자수 기준). 목표의 0.9~1.15배는 무감점(약간 넘는 건 conform이
+    흡수) — 벗어나면 편차 비례 감점(최대 0.3). target_seconds 없으면 0(기존 동작 유지)."""
+    if not target_seconds or target_seconds <= 0 or not beats:
+        return 0.0
+    total = sum(float(b.get("target_seconds") or 0.0) for b in beats)
+    if total <= 0:
+        return 0.0
+    ratio = total / target_seconds
+    dev = max(0.0, 0.9 - ratio) + max(0.0, ratio - 1.15)
+    return round(min(0.3, dev), 3)
+
+
+def _score_candidate(plan, avoid_hooks=None, target_seconds=None):
     """후보 추천 점수(0~1): 매칭(fit·억지없음·장면다양성) + 품질(대화체·재미강도). 빈 beats면 0.0.
     avoid_hooks(novelty 감점, belt-and-suspenders): 최근 영상이 쓴 훅 목록. 첫 비트(=훅)가
-    그와 n-gram 겹치면 감점 → 프롬프트 회피를 무시하고 같은 훅을 낸 후보가 추천되는 걸 막는다."""
+    그와 n-gram 겹치면 감점 → 프롬프트 회피를 무시하고 같은 훅을 낸 후보가 추천되는 걸 막는다.
+    컷 리듬 감점(T6): 파편화·전역 반복이 심한 후보를 강등한다.
+    길이 감점(세션#2): target_seconds가 주어지면 목표초에서 벗어난 후보를 강등한다."""
     beats = plan.get("beats") or []
     if not beats:
         return 0.0
@@ -546,6 +644,8 @@ def _score_candidate(plan, avoid_hooks=None):
     match = 0.5 * avg_fit + 0.3 * (1 - forced_ratio) + 0.2 * diversity
     quality = _candidate_quality(beats)          # 나레이션 없으면 0 → 매칭점수만(기존 계약 유지)
     score = 0.75 * match + 0.25 * quality
+    score -= _cut_rhythm_penalty(beats)          # T6: 파편·반복 후보 강등(안전망)
+    score -= _length_penalty(beats, target_seconds)  # 세션#2: 목표초 벗어난 후보 강등
     if avoid_hooks:
         hook = beats[0].get("narration") or ""
         overlap = max((_ngram_overlap(hook, h) for h in avoid_hooks), default=0.0)
@@ -704,8 +804,11 @@ def _bb_rewrite(beats, call=_vault_call):
         f"[{b['beat_idx']}] 화면:{(b.get('primary') or {}).get('scene_desc','')} | 현재대사:{b.get('narration','')}"
         for b in beats)
     prompt = (
-        "아래 비트들은 대사와 화면이 어긋난다. 각 대사를 **뜻과 정보는 유지**하되 화면(scene_desc)에 "
-        "어울리도록 표현만 자연스럽게 고쳐라. 화면에 없는 사실을 지어내지 마라.\n"
+        "아래 비트들은 대사와 화면이 어긋난다. ★스토리가 왕이다 — 화자가 들려주는 이야기 흐름과 "
+        "말투를 그대로 유지해라. 화면묘사문으로 바꾸지 마라('달콤한 향이 퍼지네요' 같은 장면설명 금지). "
+        "대사가 화면과 **정면으로 모순되는 구체적 동작 단어**(예: 화면은 뒤집는데 '썰어')만 그 한 곳을 "
+        "화면과 안 부딪히게 살짝 바꾸거나 빼라. 나머지 이야기 문장은 절대 건드리지 마라. "
+        "화면에 없는 사실 지어내지 마라.\n"
         f"{lines}\n출력은 rewrites 배열의 JSON만.")
     raw = call(prompt, _RECONCILE_SCHEMA)
     if not raw or not isinstance(raw, dict):
@@ -814,48 +917,51 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
     return grounded
 
 
-def _backbone_style_block(bank_context=""):
-    """백본-베이스 대본생성에 실을 '품질 레이어' = 짤드라마 헌장 + 은행 훅·말투 부품.
-    이게 빠지면 백본 흐름만 밋밋하게 따라가 설명체가 나온다(2026-07-22 대본 초기화 실사고)."""
-    from shopping_shorts import script_generate
-    block = script_generate._STORY_RULES_CORE
-    if bank_context:
-        block += "\n\n" + bank_context
-    return block
-
-
-def _backbone_base_candidates(source_scripts, target_seconds, call,
-                              backbone_meta=None, backbone_forced=None, bank_context=""):
-    """백본-베이스 후보 생성(확정스펙 1~3단계): 백본 1개 선정 → 흐름 추출(대사 아님, 뼈대만)
-    → 실제 장면 인벤토리(백본+서브)에 맞춰 100% 우리 대본 생성. build_scene_first_plan이
-    쓰는 raw 후보 형태([{hook, beats:[{seg_ids, narration, role, fit}]}])로 감싼다.
-    ★대본생성에 짤드라마 헌장+은행 부품(style_block)을 실어 밋밋한 설명체를 막는다.
-    백본 못 고르거나(플랫폼·소스 부족) 생성 비면 [](호출부가 레퍼런스-먼저로 폴백)."""
+def _verify_fits(beats):
+    """fit 자기신고 검증(2026-07-22 페이블 점검): fit은 생성 Gemini의 자기채점이라 전부 5/5로
+    나와 — 화면의 '매칭 5/5' 표시, 추천점수의 avg_fit(50%), fit≤2 스왑버튼, fit≤3 약비트
+    재작성이 전부 무력화돼 있었다(banana 실사고: '썰어' 대사에 '뒤집는' 화면이 fit5).
+    행위 증거가 있을 때만 정직하게 깎는다: 나레이션 행위 ≠ 화면 행위(둘 다 검출) → fit≤2.
+    모호하면(행위 미검출) 보류 = 오탐 없음. ping_pong이 스왑으로 고치면 fit=5로 복원된다."""
     from shopping_shorts import backbone
-    bb = backbone.pick_backbone(source_scripts, meta=backbone_meta, forced=backbone_forced)
-    if not bb:
-        return []
-    bb_src = next((s for s in source_scripts if s.get("video_id") == bb), None)
+    for b in beats:
+        if backbone.beat_action_mismatch(b):
+            b["fit"] = min(int(b.get("fit") or 0), 2)
+            b["fit_evidence"] = "action_mismatch"
+    return beats
+
+
+def _backbone_order_block(backbone_video, source_scripts):
+    """백본 영상의 시간순 장면 뼈대 → rich 생성 프롬프트에 넣을 '순서 제약' 블록.
+
+    ★생성기를 갈아끼우지 않는다(2026-07-22 페이블 점검 결론). 예전엔 백본용 뼈다귀 생성기
+    (장면당 narration+seg_id 한 줄, 스토리 필드 없는 스키마)를 따로 만들어 스마트믹스가 그리로
+    빠졌고 — 스키마가 이야기를 표현 못 해 단조·무스토리·은행묻힘이 구조적으로 났다. 이제
+    rich 생성기(_scene_first_candidates: 스토리 선언·짤드라마 헌장·은행·다중컷·사이징)를 그대로
+    쓰고, 백본이 주는 건 이 '화면 순서' 제약 하나다. 백본=순서, rich=대본."""
+    from shopping_shorts import backbone
+    bb_src = next((s for s in (source_scripts or [])
+                   if s.get("video_id") == backbone_video), None)
     if not bb_src:
-        return []
+        return ""
     flow = backbone.backbone_flow(bb_src)
-    inventory = backbone.scene_inventory(source_scripts)
-    bb_beats = backbone.generate_backbone_script(
-        flow, inventory, target_seconds, call=call,
-        style_block=_backbone_style_block(bank_context))
-    if not bb_beats:
-        return []
-    # 백본-베이스는 생성 단계에서 이미 실제 장면(seg_id)에 맞춰 썼으므로 forced=false, fit 높게.
-    # hook은 빈값 — beats[0] 자체가 흐름의 오프너다(_lead_with_hook가 빈 훅이면 무변화).
-    beats = [{"seg_ids": [b["seg_id"]], "narration": b["narration"], "role": "", "fit": 5}
-             for b in bb_beats]
-    return [{"hook": "", "beats": beats}]
+    if not flow:
+        return ""
+    lines = "\n".join(
+        f"  {i+1}. {f.get('seg_id')} [{f.get('action') or '-'}] {f.get('scene_desc', '')}"
+        for i, f in enumerate(flow))
+    return (
+        f"[화면 순서 뼈대 — 백본 영상 {backbone_video}의 시간순 진행]\n{lines}\n"
+        "★화면 진행은 위 뼈대의 시간순을 따르라 — 비트들의 seg_ids가 전체적으로 이 순서를 "
+        "거스르지 않게 배치해라(과정이 뒤로 갔다 앞으로 오는 뒤죽박죽 금지). 다른 영상(서브) "
+        "컷은 흐름에 맞는 자리에 끼워 넣어도 된다. 순서는 뼈대를 따르되, 대사는 헌장대로 "
+        "온전히 하나의 이야기로 써라.")
 
 
 def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                            n_candidates=3, video_type=None, call=None, ping_pong=False,
                            backbone_meta=None, backbone_forced=None, bank_context="",
-                           avoid_hooks=None, backbone_base=False):
+                           avoid_hooks=None, backbone_base=False, judge=False):
     """장면 우선 대본 모드: 팔레트+헌장으로 후보 n개 생성 → 각 EDL grounding·채점 →
     최고 score에 recommended=True. 각 candidate.plan은 build_edit_plan 반환형(하류 렌더 호환).
     후보 0개면 candidates=[](호출부가 기존 build_edit_plan로 폴백).
@@ -872,20 +978,30 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     if not seg_map:
         return {"candidates": [], "detected_type": detected}
     _call = call or _vault_call
-    raws = []
+    # 백본 통합(2026-07-22 페이블 점검): 생성기는 rich 하나만 쓴다. backbone_base면 백본을
+    # 골라 '화면 순서 제약' 블록만 프롬프트에 얹는다 — 스토리·은행·다중컷은 rich가 담당,
+    # 백본은 순서만 담당. (예전 뼈다귀 생성기 분기는 스키마에 스토리 필드가 없어 폐기.)
+    bb_video, order_block = None, ""
     if backbone_base:
-        raws = _backbone_base_candidates(source_scripts, target_seconds, _call,
-                                         backbone_meta=backbone_meta, backbone_forced=backbone_forced,
-                                         bank_context=bank_context)
-    if not raws:
-        raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates,
-                                       call=_call, bank_context=bank_context)
+        from shopping_shorts import backbone
+        bb_video = backbone.pick_backbone(source_scripts, meta=backbone_meta,
+                                          forced=backbone_forced)
+        if bb_video:
+            order_block = _backbone_order_block(bb_video, source_scripts)
     src_texts = [s.get("full_text", "") for s in source_scripts]
-    cands = []
-    for r in raws:
+
+    def _ground_score(raws):
+      if bb_video:
+        for r in raws:
+            r.setdefault("_backbone_video", bb_video)   # 핑퐁 순서고정이 이 백본을 쓴다
+      cands = []
+      for r in raws:
         plan = _ground_candidate(r, seg_map)
         if plan is None:
             continue
+        # fit 정직화(페이블): 행위 불일치 증거가 있으면 자기신고 fit을 깎는다 — 스왑버튼·
+        # 약비트 재작성·추천점수가 실제로 작동. ping_pong이 스왑으로 고치면 5로 복원됨.
+        plan["beats"] = _verify_fits(plan["beats"])
         if ping_pong:
             from shopping_shorts import backbone
             # 1) 행위 매칭(화면-대사 어긋남 + 길이) 2) 백본 순서 고정(과정순서)
@@ -893,20 +1009,57 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 plan["beats"], source_scripts,
                 rewrite_call=lambda bs: _bb_rewrite(bs, _call),
                 trim_call=lambda bs: _bb_trim(bs, _call))
-            bb = backbone.pick_backbone(source_scripts, meta=backbone_meta, forced=backbone_forced)
+            # 이 후보의 백본(순서 뼈대) — 백본-베이스면 후보 자신의 것, 아니면 전역 선정.
+            bb = r.get("_backbone_video") or backbone.pick_backbone(
+                source_scripts, meta=backbone_meta, forced=backbone_forced)
             if bb:
                 plan["beats"] = backbone.order_by_backbone(plan["beats"], bb)
             # 반복장면·한소스 편중 해소: 쓴 클립 재사용 금지 + 덜 쓴 소스 우선 교체
             plan["beats"] = backbone.dedup_and_balance(plan["beats"], source_scripts)
             # 서브 의무삽입: 아예 안 쓰인 소스(s2=0)를 같은 행위로 강제 삽입(dedup으론 못 잡음)
             plan["beats"] = backbone.ensure_sources_used(plan["beats"], source_scripts)
+            # 전역 컷 반복 해소(alternates 포함) + 비트당 클립 상한 → 뚝뚝 끊김·B롤 반복 해소
+            # (dedup_and_balance는 primary만 봐서 B롤 체인이 비트마다 반복됐다, job 실측).
+            plan["beats"] = backbone.dedup_clips_global(plan["beats"], source_scripts)
         plan["detected_type"] = detected
         plan["affiliate_target"] = r.get("story_event", "") or ""
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)
         story = {k: r.get(k, "") for k in
                  ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
-        cands.append({"plan": plan, "story": story,
-                      "score": _score_candidate(plan, avoid_hooks=avoid_hooks), "recommended": False})
+        rule_score = _score_candidate(plan, avoid_hooks=avoid_hooks, target_seconds=target_seconds)
+        cand = {"plan": plan, "story": story, "score": rule_score, "recommended": False}
+        # ★심사위원(사장님 기준: 대본품질·장면싱크·스토리라인) — judge on일 때만(Gemini 콜).
+        # 규칙점수(빠른 계산)와 반반 섞어 최종 순위. 심사 실패는 규칙점수만으로 폴백(무해).
+        from shopping_shorts import candidate_judge
+        if judge:
+            jr = candidate_judge.judge(plan.get("beats"), call=_call)
+            if jr:
+                cand["judge"] = jr
+                cand["score"] = round(0.5 * rule_score + 0.5 * jr["total"], 3)
+        # T6 컷리듬/반복 감점은 _score_candidate(rule_score) 안에서 이미 빠진다 — 여기서 또 빼면
+        # 이중 감점(2026-07-24 병합에서 candidate_judge판+edit_plan판 중복 발견). 관측용으로만 노출.
+        _cp = _cut_rhythm_penalty(plan.get("beats"))
+        if _cp:
+            cand["cut_penalty"] = round(_cp, 3)
+        cands.append(cand)
+      return cands
+
+    raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates,
+                                   call=_call, bank_context=bank_context, order_block=order_block)
+    cands = _ground_score(raws)
+    # ①생성측 보강(세션#2): 후보가 전부 목표보다 크게 짧으면(생성이 목표초 미달) 길이 강화
+    # 힌트로 1회 재생성해 합친다. ②선택 감점(_length_penalty)이 짧은 후보를 강등하므로 병합 후
+    # 채점하면 긴 후보가 자연히 추천된다. 재생성은 '전부 짧을 때만' — 소스 footage 부족이 아니라
+    # 생성 자체가 목표초에 못 미친 경우로 한정(과금 게이트, 1회 상한, 실패해도 기존 후보 유지).
+    if cands and target_seconds and target_seconds > 0:
+        def _cand_secs(c):
+            return sum(float(b.get("target_seconds") or 0.0)
+                       for b in c["plan"].get("beats", []))
+        if max((_cand_secs(c) for c in cands), default=0.0) < 0.85 * target_seconds:
+            raws2 = _scene_first_candidates(
+                inventory, reference_text, target_seconds, n=n_candidates, call=_call,
+                bank_context=bank_context, order_block=order_block, lengthen=True)
+            cands = cands + _ground_score(raws2)
     if cands:
         best = max(range(len(cands)), key=lambda i: cands[i]["score"])
         cands[best]["recommended"] = True
