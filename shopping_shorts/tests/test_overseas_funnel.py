@@ -7,11 +7,17 @@ def test_format_requires_url_and_id():
     assert passes_format({"url": "u", "video_id": ""}) is False
 
 
-def test_relevance_allow_and_block():
-    assert passes_relevance({"title": "kitchen gadget you need"}, ["kitchen", "gadget"]) is True
-    assert passes_relevance({"title": "my dance challenge"}, ["kitchen"]) is False   # 차단어
-    assert passes_relevance({"title": "random vlog"}, ["kitchen"]) is False           # 허용어 없음
-    assert passes_relevance({"title": "厨房神器好物"}, ["厨房", "神器"]) is True       # 중국어 허용어
+def test_relevance_keeps_topical_even_without_exact_keyword():
+    # 실측 2026-07-26: 이 제목들이 "kitchen gadgets" 완전구절이 아니란 이유로 버려졌었다
+    # (반응 24만 포함). 검색으로 주제가 이미 보장되므로 차단어 없으면 살려야 한다.
+    for t in ("New Kitchen Find", "Simple kitchen upgrades always end up being my favorite",
+              "It's a knife, scissors & cutting board all in one", "这个太好用了！"):
+        assert passes_relevance({"title": t}) is True, t
+
+
+def test_relevance_blocks_junk_and_spam():
+    assert passes_relevance({"title": "my dance challenge"}) is False   # 잡영상
+    assert passes_relevance({"title": "giveaway! follow me"}) is False   # 스팸
 
 
 def test_view_ceiling_only_applies_when_views_known():

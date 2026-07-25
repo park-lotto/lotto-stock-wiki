@@ -26,15 +26,15 @@ def passes_shortform(item, max_secs=SHORTFORM_MAX_SECS):
         return True
 
 
-def passes_relevance(item, allow_words):
-    """제목에 카테고리 허용어 ≥1 있고 차단어 없으면 통과. 허용어 대소문자 무시."""
-    title = (item.get("title") or "")
-    low = title.lower()
-    if any(b in low for b in BLOCK_WORDS):
-        return False
-    if not allow_words:
-        return True
-    return any(w.lower() in low for w in allow_words)
+def passes_relevance(item, allow_words=None):
+    """차단어(잡영상·스팸·AI애니)가 제목에 있으면 컷. 그 외는 통과.
+
+    ★주제 적합성은 '그 카테고리 키워드로 검색해 나온 결과'라는 사실이 이미 보장한다.
+    허용어(완전구절) 재매칭을 요구했더니 제목이 "kitchen finds"·"kitchen upgrades"처럼
+    구절과 안 맞는 멀쩡한 꿀템이 74% 버려졌다(실측 2026-07-26, 반응 24만짜리 포함).
+    그래서 허용어 요구는 폐기하고 차단어만 건다. allow_words는 호환용(미사용)."""
+    low = (item.get("title") or "").lower()
+    return not any(b in low for b in BLOCK_WORDS)
 
 
 def under_view_ceiling(item, ceiling=DEFAULT_VIEW_CEILING):
