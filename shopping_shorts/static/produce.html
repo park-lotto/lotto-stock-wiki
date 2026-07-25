@@ -229,6 +229,7 @@
     .cp-fail b{color:#fff}
     /* ── 2단계 자막제거 모션 (M1-M5) ── */
     @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    @keyframes rfBounce{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-7px) scale(1.12)}}
     .rise{animation:rise .28s ease both}
     /* M2 스위치 스프링 */
     .sw-knob{transition:left .25s cubic-bezier(.34,1.56,.64,1),background .25s ease}
@@ -749,10 +750,18 @@
       <h3>8 · 최종렌더</h3>
       <div class="sub">확정 대본·장면매칭·음성·자막제거 설정을 최종 영상으로 렌더합니다.</div>
       <div id="finalSummary" class="hint" style="margin-bottom:10px"></div>
-      <button id="btnFinalRender" class="btn-next" style="padding:12px 22px" onclick="renderFinal()">🎬 최종 렌더</button>
-      <div id="finalStatus" class="hint" style="margin-top:10px"></div>
-      <div id="finalVideo" style="margin-top:10px"></div>
-      <div id="exportBox" style="margin-top:14px"></div>
+      <!-- ◀ 좌: 미리보기(9:16, 2단계 미리보기와 같은 자리 규약) / 우: 렌더 버튼·상태·내보내기 -->
+      <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
+        <div style="flex:0 1 300px;min-width:240px">
+          <div class="hint" style="margin-bottom:6px">🪞 완성 영상 (9:16)</div>
+          <div id="finalVideo"></div>
+        </div>
+        <div style="flex:1 1 320px;min-width:260px">
+          <button id="btnFinalRender" class="btn-next" style="padding:12px 22px" onclick="renderFinal()">🎬 최종 렌더</button>
+          <div id="finalStatus" class="hint" style="margin-top:10px"></div>
+          <div id="exportBox" style="margin-top:14px"></div>
+        </div>
+      </div>
     </section>
 
     <!-- 8) 화면 붙이기(매칭) — Task 6(2026-07-23) 신규. 물리적으로는 꼬리에 붙지만(data-step=7,
@@ -4128,16 +4137,16 @@ async function refreshFinal(){
   // ★이미 렌더된 최종 영상 되살리기(2026-07-21 사장님 제보: 다른 페이지 갔다 오면 영상이 사라짐).
   //   완성 MP4는 서버 job(video_path)에 그대로 남는데, refreshFinal이 렌더상태를 안 봐서 화면에서만
   //   비었었다. 여기서 상태를 조회해 done이면 <video>·완성MP4 버튼을 다시 그린다.
-  if(!MIX_JOB) return;
+  if(!MIX_JOB){ _finalIdleSlot(); return; }
   const fv=document.getElementById('finalVideo');
   if(fv && fv.querySelector('video')){ renderExport({rendered:true}); return; }   // 이미 떠 있으면 버튼만 승격
   try{
     const d=await (await fetch('/api/mix/status/'+encodeURIComponent(MIX_JOB))).json();
     if(d && d.status==='done'){
-      if(fv) fv.innerHTML=`<video controls src="/api/mix/video/${esc(MIX_JOB)}" style="max-width:360px;border-radius:10px"></video>`;
+      if(fv) fv.innerHTML=`<video controls src="/api/mix/video/${esc(MIX_JOB)}" style="max-width:300px;width:100%;border-radius:12px"></video>`;
       renderExport({rendered:true});
-    }
-  }catch(e){}
+    } else { _finalIdleSlot(); }
+  }catch(e){ _finalIdleSlot(); }
 }
 // ── 카톡·공유로 보내기 (Web Share API) — 2026-07-21 사장님 ──
 // 완성 MP4를 파일로 받아 navigator.share에 넘긴다 → 휴대폰이면 OS 공유시트(카톡·인스타 등)가 뜬다.
@@ -4281,16 +4290,30 @@ function _finalRenderRestore(msg){
   const st=document.getElementById('finalStatus'); if(st){ st.className='hint'; st.textContent=msg||''; }
   const btn=document.getElementById('btnFinalRender'); if(btn){ btn.disabled=false; if(btn.dataset.orig!=null){ btn.innerHTML=btn.dataset.orig; delete btn.dataset.orig; } }
 }
-// ── 최종렌더 진행 동적표시(2026-07-24) — 실제 %가 없어(ffmpeg 진행률 미방출) 경과기반 정직한 추정 ──
+// ── 최종렌더 진행 동적표시(2026-07-24, 2026-07-25 개편) ──
+// ⚠️ 게이지는 실제 진행률이 아니다(ffmpeg가 %를 안 준다) — 경과시간 지수 근사.
+//    예전 τ=22s는 50초에 90%를 찍고 얼어 보였다(사장님 제보) → τ=75s로 완만하게(1분 53%·3분 86%·5분 92%).
 let _rfTimer=null, _rfStart=0;
+const _RF_EMOJI=['🎬','✂️','🎙','🎨','📼','✨','🔊','🧵'];   // 매초 순환 — 지루하지 않게
+const _RF_TIPS=['자막 굽는 중…','음성 입히는 중…','장면 이어붙이는 중…','색감 다듬는 중…','인코딩 중…','마지막 손질 중…'];
 function _rfFmt(s){const m=Math.floor(s/60),ss=Math.floor(s%60);return m+':'+String(ss).padStart(2,'0');}
 function _rfTick(){
   const el=document.getElementById('rfElapsed'), bar=document.getElementById('rfBar');
   if(!el||!bar) return;
   const sec=(Date.now()-_rfStart)/1000;
   el.textContent=_rfFmt(sec);
-  // 추정: 95%까지 지수 근사(완료 신호가 와야 100%). 얼어붙지 않게 매초 살짝 전진.
-  bar.style.width=Math.min(95, 95*(1-Math.exp(-sec/22))).toFixed(0)+'%';
+  bar.style.width=Math.min(95, 95*(1-Math.exp(-sec/75))).toFixed(0)+'%';
+  const em=document.getElementById('rfEmoji'); if(em) em.textContent=_RF_EMOJI[Math.floor(sec)%_RF_EMOJI.length];
+  const tip=document.getElementById('rfTip'); if(tip) tip.textContent=_RF_TIPS[Math.floor(sec/4)%_RF_TIPS.length];
+}
+// 렌더 전/후 좌측 빈 슬롯 — 좌측이 미리보기 자리임을 항상 보여준다
+function _finalIdleSlot(){
+  const fv=document.getElementById('finalVideo');
+  if(fv && !fv.querySelector('video') && !document.getElementById('rfBar'))
+    fv.innerHTML=`<div style="aspect-ratio:9/16;max-width:300px;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:20px">
+      <div style="font-size:30px;opacity:.5">🎬</div>
+      <div style="font-size:12px;line-height:1.6">최종 렌더를 누르면<br>완성 영상이 여기서 재생돼요</div>
+    </div>`;
 }
 async function renderFinal(){
   if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); return; }
@@ -4298,12 +4321,14 @@ async function renderFinal(){
   if(btn){ if(btn.dataset.orig==null) btn.dataset.orig=btn.innerHTML; btn.disabled=true; btn.innerHTML='<span class="skm-spin">🔄</span> 렌더 중…'; }
   const st=document.getElementById('finalStatus'); if(st){ st.className='match-progress'; st.innerHTML='<span class="dot"></span><span>렌더 준비 중…</span>'; }
   // 렌더 전 '미리보기 자리' — 완성 영상이 여기서 나온다(2단계 미리보기와 동일 연출)
-  document.getElementById('finalVideo').innerHTML=`<div style="aspect-ratio:9/16;max-width:300px;margin-top:10px;border:2px solid var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--sub);text-align:center;padding:20px">
-    <div class="skm-spin" style="font-size:34px">🎬</div>
-    <div id="rfStage" style="font-size:14px;font-weight:800;color:var(--fg)">최종 렌더 준비 중…</div>
+  document.getElementById('finalVideo').innerHTML=`<div style="aspect-ratio:9/16;max-width:300px;border:2px solid var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--sub);text-align:center;padding:20px">
+    <div id="rfEmoji" style="font-size:38px;animation:rfBounce 1s ease-in-out infinite">🎬</div>
+    <div style="font-size:15px;font-weight:800;color:var(--fg)">숏템메이커 최종 렌더 중</div>
+    <div id="rfStage" style="font-size:12px;color:var(--sub)">준비 중…</div>
     <div style="width:82%;height:8px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden"><div id="rfBar" style="height:100%;width:2%;background:linear-gradient(90deg,#34e0a1,#17b985);border-radius:6px;transition:width .8s ease"></div></div>
-    <div style="font-size:12px">경과 <b id="rfElapsed">0:00</b> · <span style="opacity:.65">보통 30초~1분</span></div>
-    <div style="font-size:11px;opacity:.6;line-height:1.5">자막 굽고 · 음성 입히고 · 인코딩 중…<br>끝나면 여기서 바로 재생돼요</div>
+    <div style="font-size:12px">경과 <b id="rfElapsed">0:00</b> · <span style="opacity:.65">보통 1분~5분</span></div>
+    <div id="rfTip" style="font-size:11px;opacity:.6;line-height:1.5">자막 굽는 중…</div>
+    <div style="font-size:11px;opacity:.45">끝나면 여기서 바로 재생돼요</div>
   </div>`;
   _rfStart=Date.now(); clearInterval(_rfTimer); _rfTimer=setInterval(_rfTick,1000); _rfTick();
   await saveHeadcopy();   // 헤드카피 설정을 job에 반영 후 렌더
