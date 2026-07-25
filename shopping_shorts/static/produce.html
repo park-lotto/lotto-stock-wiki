@@ -473,8 +473,8 @@
               <label><input type="checkbox" id="advBoost" onchange="onAdv()"> Speaker boost</label>
             </div>
           </details>
-          <button onclick="previewVoice()" class="btn-prev" style="padding:8px 14px;margin-right:8px">🎧 이 대본으로 다시 듣기</button>
-          <button onclick="applyVoice()" class="btn-next" style="padding:8px 16px">이 음성으로 전체 생성</button>
+          <button onclick="previewVoice()" class="btn-prev" style="padding:8px 14px;margin-right:8px" title="이 성우·설정으로 대본 일부만 짧게 들어봅니다 (완성본 아님)">🎧 목소리만 미리듣기</button>
+          <button onclick="applyVoice()" class="btn-next" style="padding:8px 16px" title="이 성우로 대본 전체 음성을 만듭니다 — 완성되면 아래 미리보기에서 ▶ 완성본 전체 듣기">이 음성으로 전체 생성</button>
           <div id="voicePreview" style="margin-top:8px"></div>
           </div>
         </div>
@@ -484,7 +484,15 @@
         </div>
       </div>
       </details>
-      <div id="ttsBeats" style="margin-top:14px"></div>
+      <!-- 완성 음성 미리보기 슬롯 — 처음부터 큰 자리를 잡아둔다(생성 후 재생기가 '여기' 나타난다는
+           예고 + 레이아웃 점프 방지). renderTtsBeats()가 같은 자리(왼쪽 프레임+큰 재생버튼)로 채운다. -->
+      <div id="ttsBeats" style="margin-top:14px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
+          <div style="width:220px;aspect-ratio:9/16;border:1px dashed var(--line);border-radius:10px;background:var(--inset);display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;box-sizing:border-box;flex:0 0 auto">
+            <div class="hint">🎬 완성 음성 미리보기 자리<br><br>성우를 고르고 <b>[이 음성으로 전체 생성]</b>을 누르면<br>여기에 <b>▶ 완성본 전체 듣기</b>가 생겨요</div>
+          </div>
+        </div>
+      </div>
       <button class="btn-next" style="margin-top:12px;padding:8px 16px" onclick="vpGateNext()">다음 단계 (꾸미기) →</button>
     </section>
     <section class="panel" data-step="3">
@@ -1994,7 +2002,19 @@ function lenText(t){ t=t||''; const c=t.replace(/\s/g,'').length; return `${t.le
 // 둘 다 살린다. main 쪽은 saveWork() 앞에 HANDOFF 길이 가드가 붙어 있는데, 그걸 그대로 받으면
 // 영상 없이 대본만 확정한 작업이 다시 저장되지 않는다 — 그게 사장님이 잃어버린 구간이다.
 // 가드는 이제 saveWork() 안에 있다(대본만 있어도 저장).
-function onScriptInput(){ const ta=document.getElementById('scriptText'); STATE.script=ta.value; document.getElementById('lenHint').textContent=lenText(STATE.script); refreshFinalPeek(); saveWork(); }
+function onScriptInput(){ const ta=document.getElementById('scriptText'); STATE.script=ta.value; STATE.script_carryover=false; document.getElementById('lenHint').textContent=lenText(STATE.script); refreshFinalPeek(); saveWork(); }
+
+// 이전 작업에서 복원된 대본을 한 번에 지운다 — 새 영상 작업인데 옛 대본이 매칭·제목까지
+// 실려 들어가는 사고(2026-07-25 '책상' 제목)의 원클릭 탈출구. 영상풀은 그대로 둔다.
+function clearCarriedScript(){
+  STATE.script=''; STATE.script_carryover=false;
+  STATE.script_src_idx=null; STATE.script_from_wiki=null;
+  const ta=document.getElementById('scriptText'); if(ta) ta.value='';
+  const lh=document.getElementById('lenHint'); if(lh) lh.textContent=lenText('');
+  refreshFinalPeek(); saveWork();
+  const b=document.getElementById('handoffBanner');
+  if(b) b.innerHTML = '🧹 이전 대본을 지웠어요 — 새 영상에서 📝대본을 뽑거나 직접 쓰세요.';
+}
 function updateLen(){ onScriptInput(); }
 
 // 요소 버튼 목록 — 키는 백엔드 ELEM_KEYS와 일치, 순서만 사용성순.
@@ -2471,17 +2491,29 @@ function _consumeProduceHandoff(){
   sessionStorage.removeItem('produce_handoff');
   sessionStorage.removeItem('produce_mix_urls');
   if(!HANDOFF.length && !savedScript){ renderPool(); return; }   // 받은 것도 복원할 것도 없음
-  if(restored && savedScript){ STATE.script = savedScript; setScriptMode('manual'); }
+  if(restored && savedScript){
+    STATE.script = savedScript; setScriptMode('manual');
+    // ★캐리오버 표시(2026-07-25 실사고): 새 영상을 받아와도 이전 작업의 확정 대본이 그대로
+    //   복원돼, 그 대본이 매칭·썸네일 제목까지 실려 들어간다(새 '걸레' 영상에 옛 '책상' 제목).
+    //   사용자가 이 대본을 직접 손대기 전까지는 "이전 작업 것"임을 기억해 뒀다가,
+    //   새 영상과 섞이는 순간(매칭 시작)에 한 번 확인받는다. 편집하면 내 대본이 된 것 → 해제.
+    STATE.script_carryover = true;
+  }
   const b=document.getElementById('handoffBanner');
   if(b){
     b.style.display='block';
-    b.innerHTML = arrived
-      ? `⭐ 레퍼런스에서 <b>영상 ${arrived}개</b>를 받았어요 (영상풀 총 ${HANDOFF.length}개) — 각 영상에서 📝대본·🎬담기(화면)를 골라주세요.`
+    // 새 영상이 왔는데 옛 대본이 살아 있으면 그 사실을 눈에 보이게 + 한 번에 지우는 버튼.
+    const _carryWarn = (arrived && savedScript)
+      ? `<div style="margin-top:6px;color:#ffb454">⚠️ <b>이전 작업의 대본</b>이 남아 있어요(첫줄: "${(savedScript.split('\n')[0]||'').slice(0,30).replace(/</g,'&lt;')}…"). 새 영상용이 아니면 지우고 시작하세요. `
+        + `<button class="btn" style="padding:3px 10px;margin-left:6px" onclick="clearCarriedScript()">🧹 이전 대본 지우기</button></div>`
+      : '';
+    b.innerHTML = (arrived
+      ? `⭐ 레퍼런스에서 <b>영상 ${arrived}개</b>를 받았어요 (영상풀 총 ${HANDOFF.length}개) — 각 영상에서 📝대본·🎬담기(화면)를 골라주세요.` + _carryWarn
       : (restored
           ? (HANDOFF.length
               ? `↩️ 이어서 작업 중 — 받은 <b>영상 ${HANDOFF.length}개</b>와 상태·대본을 유지했어요.`
               : `↩️ 이어서 작업 중 — <b>확정한 대본</b>을 유지했어요. 영상은 아직 담지 않았습니다.`)
-          : `⭐ 즐겨찾기에서 <b>영상 ${HANDOFF.length}개</b>를 받았어요 — 각 영상에서 📝대본·🎬담기(화면)를 골라주세요. 같은 영상을 둘 다로 써도 됩니다.`);
+          : `⭐ 즐겨찾기에서 <b>영상 ${HANDOFF.length}개</b>를 받았어요 — 각 영상에서 📝대본·🎬담기(화면)를 골라주세요. 같은 영상을 둘 다로 써도 됩니다.`));
   }
   renderPool();
   syncFootageToMixUrls();
@@ -2626,7 +2658,7 @@ async function startFromAiPick(){
     try{
       const d = await (await fetch('/api/produce/picks')).json();
       const it = (d.items||[]).find(w=>w.shortcode===pickId);
-      if(it && it.full_text){ STATE.script = it.full_text; STATE.script_from_wiki = pickId; }
+      if(it && it.full_text){ STATE.script = it.full_text; STATE.script_from_wiki = pickId; STATE.script_carryover=false; }
     }catch(e){}
   }
   if(!STATE.script){ alert('대본을 확보하지 못했습니다 — 아래 "✍️ 직접 쓰기"로 입력해 주세요.'); return; }
@@ -2892,7 +2924,7 @@ async function openScriptModal(i){
     pmPrefillSubject(PM_SHORTCODE);     // shortcode 없으면(직행 URL) 손입력만 열어둔다
   }catch(e){ if(PM_GEN===myGen) document.getElementById('pmResults').innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
 }
-function pmUseRaw(){ STATE.script=PM_BASE_SCRIPT; STATE.script_src_idx=PM_IDX; STATE.script_from_wiki=PM_FROM_WIKI; pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY); saveWork(); }
+function pmUseRaw(){ STATE.script=PM_BASE_SCRIPT; STATE.script_carryover=false; STATE.script_src_idx=PM_IDX; STATE.script_from_wiki=PM_FROM_WIKI; pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY); saveWork(); }
 function pmClose(){ document.getElementById('pmModal').classList.remove('open'); }
 function pmToggleTopic(){
   const mode=document.querySelector('input[name=pmmode]:checked').value;
@@ -2967,7 +2999,7 @@ function pmRenderDrafts(drafts){
   </div>`).join('') || '<div class="hint" style="color:var(--fire)">생성 결과가 비었습니다</div>';
 }
 function pmUseDraft(btn){
-  const t=btn.closest('.draft').querySelector('.dtext'); STATE.script=(t?t.value:'')||'';
+  const t=btn.closest('.draft').querySelector('.dtext'); STATE.script=(t?t.value:'')||''; STATE.script_carryover=false;
   STATE.script_src_idx=PM_IDX;
   STATE.script_from_wiki=PM_FROM_WIKI;   // mix 유래면 shortcode, 뽑기 유래면 null
   pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY);
@@ -3159,6 +3191,14 @@ loadSmartMix();
 
 async function startProduceMix(){
   if(!STATE.script){ alert('1단계에서 대본을 먼저 확정하세요'); return; }
+  // ★옛 대본 캐리오버 게이트(2026-07-25 실사고): 이전 작업에서 복원된 대본을 한 번도 안 고친 채
+  //   새 영상과 매칭하면, 나레이션·썸네일 제목이 전부 옛 영상 주제로 나온다(새 영상에 '6만원대
+  //   책상' 제목). 여기서 한 번 확인받는다 — 편집하거나 새로 뽑으면 이 게이트는 안 걸린다.
+  if(STATE.script_carryover){
+    const first=(STATE.script.split('\n')[0]||'').slice(0,40);
+    if(!confirm(`⚠️ 지금 대본은 이전 작업에서 남은 것이에요.\n\n"${first}…"\n\n이 대본 그대로 매칭할까요?\n(아니오 → 1단계에서 새 영상의 📝대본을 뽑거나 새로 쓰세요)`)) return;
+    STATE.script_carryover=false;   // 확인했으면 이제 내 대본 — 재매칭마다 다시 안 묻는다
+  }
   const urls=collectMixUrls();   // 영상풀 담긴 것 + 입력칸에 남은 것(중복 제거)
   if(urls.length<1){ alert('소스 영상 URL을 1개 이상 입력하세요(확정 또는 🎬담기)'); return; }
   try{ logPick('S3', {picked: 'mix_start', sources: urls, source_n: urls.length}); }catch(e){}
@@ -3931,14 +3971,25 @@ async function applyVoice(){
   const poll=setInterval(async()=>{
     try{
       const d=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
-      if(d.status==='ready_for_review'){ clearInterval(poll); el.textContent='✅ 완료'; renderTtsBeats(); }
+      if(d.status==='ready_for_review'){
+        clearInterval(poll); el.innerHTML='✅ 완료 — 아래 <b>▶ 완성본 전체 듣기</b>로 확인하세요';
+        await renderTtsBeats();
+        // 완성되자마자 재생기가 보이도록 스크롤 — 버튼이 화면 밖이라 못 찾던 문제 보강
+        try{ document.getElementById('ttsBeats').scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(e){}
+      }
       else if(d.status==='failed'){ clearInterval(poll); el.textContent='❌ 실패: '+(d.error||''); }
     }catch(e){ clearInterval(poll); el.textContent='❌ 상태 확인 실패'; }
   },2500);
 }
 async function renderTtsBeats(){
   const el=document.getElementById('ttsBeats');
-  if(!MIX_JOB){ el.innerHTML='<div class="hint" style="margin-top:6px">🎬 2단계 <b>영상 매칭</b>을 완료하면 비트별 음성·길이 맞춤이 여기 표시됩니다. (지금은 프리셋 둘러보기·샘플 미리듣기만 가능)</div>'; return; }
+  // 매칭 전에도 큰 미리보기 자리는 유지한다(처음 상태에서 자리 예약 — 2026-07-25 사장님 요청).
+  if(!MIX_JOB){ el.innerHTML=`
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
+      <div style="width:220px;aspect-ratio:9/16;border:1px dashed var(--line);border-radius:10px;background:var(--inset);display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;box-sizing:border-box;flex:0 0 auto">
+        <div class="hint">🎬 완성 음성 미리보기 자리<br><br>2단계 <b>영상 매칭</b>을 완료하면<br>여기서 완성본을 듣습니다</div>
+      </div>
+    </div>`; return; }
   try{
     const d=await (await fetch('/api/mix/result/'+MIX_JOB)).json();
     if(!d.ok || !(d.beats||[]).length){ el.innerHTML=''; return; }
@@ -3966,18 +4017,22 @@ async function renderTtsBeats(){
     // 영상길이(비트 목표시간 합) vs 음성길이(오디오 실측 합) — 맞춤 힌트로 편집 편의성↑
     VP_BEATS = beats;                 // 전역: 재생기가 cap_segments/cap_durs/cap_offset 읽음
     _vpHeard = _vpHeard || new Set();
+    // ▶전체 재생을 미리보기 프레임 '바로 아래' 큰 버튼으로 — 오른쪽 구석에 있어 못 찾던 문제
+    //   (2026-07-25 사장님)과 '이 대본으로 다시 듣기'와의 혼동을 함께 해소(완성본임을 이름에 명시).
     el.innerHTML=`
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
-        <div style="position:relative;width:180px;aspect-ratio:9/16;background:#000;border-radius:10px;overflow:hidden;flex:0 0 auto">
-          <img id="vpFrame" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
-          <div id="vpCap" style="position:absolute;left:0;right:0;bottom:8%;text-align:center;color:#fff;font-weight:700;font-size:13px;text-shadow:0 2px 4px #000;padding:0 6px"></div>
+        <div style="flex:0 0 auto;width:220px">
+          <div style="position:relative;width:220px;aspect-ratio:9/16;background:#000;border-radius:10px;overflow:hidden">
+            <img id="vpFrame" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
+            <div id="vpCap" style="position:absolute;left:0;right:0;bottom:8%;text-align:center;color:#fff;font-weight:700;font-size:13px;text-shadow:0 2px 4px #000;padding:0 6px"></div>
+          </div>
+          <button onclick="playAllBeats()" class="btn-next" style="display:block;width:220px;margin-top:8px;padding:11px 0;font-size:15px;font-weight:700" title="방금 만든 완성 음성을 처음부터 끝까지 화면과 함께 재생합니다">▶ 완성본 전체 듣기</button>
         </div>
         <div style="flex:1;min-width:220px">
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
             <div><span class="hint">영상 길이</span> <b style="color:var(--accent2)">${vidLen.toFixed(1)}초</b></div>
             <div><span class="hint">음성 길이</span> <b id="voiceLen" style="color:var(--ok)">…</b></div>
             <div id="fitMsg" class="hint">음성 길이 측정 중…</div>
-            <button onclick="playAllBeats()" class="btn-prev" style="padding:6px 12px;margin-left:auto">▶ 전체 재생</button>
           </div>
           ${rows}
         </div>
