@@ -11,11 +11,21 @@ zen-studio~douyin-search-scraper로 재시도 — "iphone" 키워드로 실제 �
 2026-07-18: 렌즈 유사영상 개편으로 채널명·조회수·좋아요·영상길이·숏폼여부 메타 추가.
 이 액터는 TikTok(clockworks) 스키마(itemTitle/text/videoMeta/type)를 따르므로
 authorMeta.name · playCount · diggCount · videoMeta.duration 을 우선 후보로 쓴다."""
+from datetime import datetime, timezone
+
 from shopping_shorts.apify_client import _run_with_rotation
 from shopping_shorts.config import APIFY_TOKENS
 
 _ACTOR = "zen-studio~douyin-search-scraper"
 _SHORT_MAX_SECS = 90   # 이 이하(또는 길이 불명)면 숏폼으로 본다
+
+
+def _iso(unix_ts):
+    """유닉스초 → ISO(UTC). 변환 불가면 빈 문자열."""
+    try:
+        return datetime.fromtimestamp(int(unix_ts), tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    except (TypeError, ValueError, OSError):
+        return ""
 
 
 def _num(v):
@@ -78,5 +88,37 @@ def search(keyword, max_results=10, token=None, timeout=180, poll_interval=5):
             "views": _num(_first(item, ("statistics", "playCount"))),
             "duration": dur,
             "is_short": dur is None or dur <= _SHORT_MAX_SECS,
+        })
+    return out
+
+
+def search_full(keyword, max_results=40, token=None, timeout=180, poll_interval=5):
+    """키워드 → build_overseas_items 스키마 raw dict 리스트. video_id 없는 행 제외.
+    도우인은 조회수(playCount)를 안 주므로 views=0(표시용), 랭킹은 참여로 간다."""
+    tokens = [token] if token else APIFY_TOKENS
+    if not tokens:
+        raise RuntimeError("douyin_search: APIFY_TOKEN이 설정되지 않았습니다")
+    payload = {"keywords": [keyword], "maxResultsPerQuery": max_results, "sort": "general"}
+    items = _run_with_rotation(payload, tokens, timeout, poll_interval, actor=_ACTOR)
+    out = []
+    for item in items:
+        vid = item.get("id")
+        url = item.get("url")
+        if not vid or not url or item.get("type") != "video":
+            continue
+        st = item.get("statistics") or {}
+        out.append({
+            "video_id": str(vid),
+            "title": item.get("itemTitle") or item.get("previewTitle") or item.get("text", ""),
+            "published_at": _iso(item.get("createTime")),
+            "views": _num(st.get("playCount")) or 0,
+            "likes": _num(st.get("diggCount")) or 0,
+            "comments": _num(st.get("commentCount")) or 0,
+            "collects": _num(st.get("collectCount")) or 0,
+            "shares": _num(st.get("shareCount")) or 0,
+            "channel_title": _first(item, ("authorMeta", "nickName"), ("authorMeta", "name")) or "",
+            "thumbnail": (item.get("videoMeta") or {}).get("cover", ""),
+            "url": url,
+            "media_platform": "douyin",
         })
     return out

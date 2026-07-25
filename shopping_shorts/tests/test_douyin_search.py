@@ -92,3 +92,33 @@ def test_search_no_tokens_raises(monkeypatch):
     monkeypatch.setattr(douyin_search, "APIFY_TOKENS", [])
     with pytest.raises(RuntimeError, match="APIFY_TOKEN"):
         douyin_search.search("x")
+
+
+def test_search_full_maps_engagement_schema(monkeypatch):
+    monkeypatch.setattr(douyin_search, "APIFY_TOKENS", ["fake-key"])
+
+    def fake_run(payload, tokens, timeout, poll_interval, actor=None):
+        return [{
+            "url": "https://www.douyin.com/video/999", "type": "video", "id": "999",
+            "itemTitle": "厨房神器", "createTime": 1774442495,
+            "videoMeta": {"cover": "https://c.jpg", "duration": 30},
+            "authorMeta": {"nickName": "홍길동"},
+            "statistics": {"playCount": 0, "diggCount": 800, "commentCount": 50,
+                           "collectCount": 300, "shareCount": 20},
+        }]
+    monkeypatch.setattr(douyin_search, "_run_with_rotation", fake_run)
+
+    out = douyin_search.search_full("厨房神器", max_results=40)
+    assert len(out) == 1
+    r = out[0]
+    assert r["video_id"] == "999" and r["media_platform"] == "douyin"
+    assert r["published_at"] == "2026-03-25T12:41:35Z"   # 1774442495 → ISO(UTC)
+    assert r["likes"] == 800 and r["comments"] == 50 and r["collects"] == 300 and r["shares"] == 20
+    assert r["views"] == 0 and r["channel_title"] == "홍길동" and r["thumbnail"] == "https://c.jpg"
+
+
+def test_search_full_skips_rows_without_id(monkeypatch):
+    monkeypatch.setattr(douyin_search, "APIFY_TOKENS", ["fake-key"])
+    monkeypatch.setattr(douyin_search, "_run_with_rotation",
+                        lambda *a, **k: [{"url": "u", "type": "video", "createTime": 1}])
+    assert douyin_search.search_full("x") == []
