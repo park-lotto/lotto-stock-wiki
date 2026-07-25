@@ -9,12 +9,14 @@ from shopping_shorts.config import DB_PATH
 from shopping_shorts.store import Store
 from shopping_shorts.overseas_seeds import load_seeds
 from shopping_shorts import reddit_source
+from shopping_shorts import gap_check
 from shopping_shorts.ranking import build_reddit_items, apply_grades, sort_by
 
 _LOCK = threading.Lock()
 _JOB = {"status": "idle", "phase": "", "count": 0, "error": None, "started": 0.0}
 _CAP = 120        # 피드 최대 유지 개수(로테이션)
 _REQ_PAUSE = 2.0  # Reddit RSS 요청 간격 — 연타 시 429(실측)라 매 요청 사이 쉰다
+_GAP_CAP = 30     # 선점뱃지 유튜브검색 배치당 상한 — 무료쿼터(search 100유닛/회) 보호
 
 
 def _now():
@@ -75,6 +77,17 @@ def _run():
         all_items = sort_by(all_items, "속도")
         prev, _ = store.load_overseas_feed()
         merged = _merge_rotate(prev, all_items, cap=_CAP)
+        # 선점뱃지 — 아직 미판정인 상위 항목만(쿼터 보호). 기존 뱃지는 유지.
+        with _LOCK:
+            _JOB["phase"] = "선점확인"
+        checked = 0
+        for it in merged:
+            if it.get("gap_badge"):
+                continue
+            if checked >= _GAP_CAP:
+                break
+            it["gap_badge"] = gap_check.gap_badge(it.get("title") or it.get("caption") or "")
+            checked += 1
         store.save_overseas_feed(merged)
         store.save_run_platform(
             "overseas", _now().strftime("%Y-%m-%d %H:%M"),
