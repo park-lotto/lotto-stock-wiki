@@ -27,7 +27,8 @@ def test_ground_ref_returns_real_timecode():
     # 모델이 엉뚱한 start/end를 줘도 인벤토리 값으로 되붙인다
     grounded = edit_plan._ground_ref({"seg_id": "A-1", "start": 999, "end": 999}, seg_map)
     assert grounded == {"video_id": "A", "seg_id": "A-1", "start": 2.0, "end": 5.0,
-                        "scene_desc": "젖은 가방"}  # scene_desc 실림(Task 4 ①: 얼굴정렬용)
+                        "scene_desc": "젖은 가방",  # scene_desc 실림(Task 4 ①: 얼굴정렬용)
+                        "is_key": False, "shot_role": "기타"}  # 앵커 판별용(fail-open 기본)
 
 
 def test_ground_ref_unknown_seg_id_none():
@@ -48,9 +49,9 @@ def test_validate_and_ground_drops_invalid_and_grounds():
     assert len(out["beats"]) == 1  # primary 무효인 beat 드롭
     b = out["beats"][0]
     assert b["primary"] == {"video_id": "A", "seg_id": "A-0", "start": 0.0, "end": 2.0,
-                            "scene_desc": "컵"}
+                            "scene_desc": "컵", "is_key": False, "shot_role": "기타"}
     assert b["alternates"] == [{"video_id": "B", "seg_id": "B-0", "start": 0.0, "end": 3.0,
-                                "scene_desc": "뒤집기"}]  # BAD-1 제거
+                                "scene_desc": "뒤집기", "is_key": False, "shot_role": "기타"}]  # BAD-1 제거
     assert b["visual_verb"] is False  # 스키마에 없으면 False 폴백(fail-open)
 
 

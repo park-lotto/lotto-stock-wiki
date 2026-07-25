@@ -176,15 +176,34 @@ def _apply_anchor_grain(beats, is_recipe=False):
     return out
 
 
-def _dedup_and_fill(flat, need):
+def _seg_key(s):
+    """세그먼트 dedup 키 (video_id, seg_id, start)."""
+    return (s.get("video_id", ""), s.get("seg_id", ""), s.get("start", 0.0))
+
+
+def _dedup_and_fill(flat, need, reserved=None):
     """같은 (video_id,seg_id,start) 중복 제거 후, need 미만이면 가장 긴 세그먼트를
-    시간 이등분 서브슬라이스로 분할해 need개까지 채운다. 환각 없음 — start/end는 코드 계산."""
+    시간 이등분 서브슬라이스로 분할해 need개까지 채운다. 환각 없음 — start/end는 코드 계산.
+
+    reserved: 앵커(머리·꼬리·visual_verb)가 이미 쓰는 seg 키 집합. 여기 든 seg는 movable
+    재배치에서 배제한다 — 머리 앵커가 쓴 화면을 그 다음 비트가 또 물어 2연속 중복이 뜨는 걸
+    막는다(2026-07-26: 머리 앵커 도입이 이 방어를 뚫던 회귀 수정). 기본 None → 기존 동작."""
+    reserved = set(reserved or ())
     seen, uniq = set(), []
     for s in flat:
-        k = (s.get("video_id", ""), s.get("seg_id", ""), s.get("start", 0.0))
+        k = _seg_key(s)
         if k in seen:
             continue
         seen.add(k)
+        if k in reserved:
+            # 앵커가 이미 쓰는 화면 — primary로 그대로 쓰면 2연속 중복이 뜬다. 버리지 말고
+            # 뒤쪽 절반으로 잘라(앵커는 앞쪽) 씨앗으로 남긴다. 너무 짧으면(<1초) 못 쪼개니 스킵.
+            if (s.get("end", 0.0) - s.get("start", 0.0)) >= 1.0:
+                mid = round((s["start"] + s["end"]) / 2, 2)
+                s = dict(s, seg_id=f"{s['seg_id']}#2", start=mid)
+                seen.add(_seg_key(s))
+            else:
+                continue
         uniq.append(s)
     # 부족분을 서브슬라이스로 채움 — 가장 긴 것부터 반으로 쪼갠다.
     while len(uniq) < need:
@@ -236,6 +255,16 @@ def _chronological_respine(beats, is_recipe=False):
         head, body, tail = beats[0], beats[1:-1], beats[-1]
     # visual_verb=True 비트도 앵커. 나머지 movable body만 flat 풀 → dedup → 시간순 재배치.
     movable_idx = [j for j, b in enumerate(body) if not b.get("visual_verb")]
+    anchor_idx = [j for j, b in enumerate(body) if b.get("visual_verb")]
+    # 앵커(머리·꼬리·visual_verb)가 이미 쓰는 seg는 movable 재배치에서 배제 — 앵커 화면을
+    # 그 다음 비트가 또 물어 같은 장면 2연속으로 뜨는 걸 막는다(머리 앵커 도입 회귀 수정).
+    reserved = set()
+    for b in ([head, tail] + [body[j] for j in anchor_idx]):
+        if not b:
+            continue
+        for s in [b.get("primary")] + list(b.get("alternates") or []):
+            if s:
+                reserved.add(_seg_key(s))
     flat, counts = [], []
     for j in movable_idx:
         segs = [body[j]["primary"]] + list(body[j].get("alternates") or [])
@@ -243,7 +272,7 @@ def _chronological_respine(beats, is_recipe=False):
         # 스냅샷 복사: _dedup_and_fill의 서브슬라이스가 제자리 mutation(longest["end"]=mid)하므로
         # 참조로 넣으면 원본 비트의 primary/alternates까지 오염된다(이월 Minor 픽스 1).
         flat.extend([dict(s) for s in segs])
-    flat = _dedup_and_fill(flat, need=sum(counts))
+    flat = _dedup_and_fill(flat, need=sum(counts), reserved=reserved)
     # 정렬: (video_id,start) 우선, 동시각이면 얼굴 세그먼트를 뒤로(대체 있을 때 후순위).
     # 레시피면 완성 세그먼트를 조리/기타 뒤로(finish_last) — 완성이 조리 앞에 안 낀다.
     # 제품(is_recipe=False)이면 finish_last 항상 0 → 기존 (video_id,start,face)와 동일.
