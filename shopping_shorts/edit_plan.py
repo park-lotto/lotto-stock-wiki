@@ -416,7 +416,7 @@ _SCENE_FIRST_SCHEMA = {
 
 
 def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3, call=_vault_call,
-                            bank_context="", order_block=""):
+                            bank_context="", order_block="", lengthen=False):
     """스토리 헌장 + 장면 팔레트 + 레퍼 구조 → 후보 n개. 각 비트는 seg_ids(2~4 다중컷)로
     장면을 지목한다. 실패 시 []. 헌장이 품질을 담당하므로 별도 검증루프 없음(1콜).
 
@@ -488,6 +488,14 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "'단 몇 초 만에'·'극도로'·'너무너무'·'막')과 생생한 형용사를 나레이션에 녹여 밋밋한 문장을 "
         "살려라 — 감각·강도를 부사로 키워라(단, 한 문장에 몰아넣지 말고 자연스럽게).\n"
         + ((bank_context + "\n") if bank_context else "")
+        # ①생성측 보강(세션#2): 직전 후보가 전부 목표보다 크게 짧을 때 1회 재생성하며 이 힌트를
+        # 얹는다. 대본 길이 뒤죽박죽의 생성측 뿌리 — 프롬프트가 목표를 지시해도 실제 출력이 짧게
+        # 나온 경우, 길이 하한을 명시하고 비트를 잘게 쪼개지 말고 알차게 채우라고 강제한다.
+        + ((f"- ★★★[길이 재생성] 직전 후보들이 목표보다 크게 짧았다. 이번엔 반드시 전체 "
+            f"나레이션 글자수 합을 **최소 {int(char_target*0.9)}자 이상**(목표 {char_target}자)에 "
+            "맞춰라. 비트는 6~7개로 유지하되(잘게 쪼개지 마라) 각 비트의 이야기를 더 촘촘하게 "
+            "채워라 — 대화 인용을 한 번 더, 반전·구체적 반응·감각 묘사를 보태 각 문장을 알차게.\n")
+           if lengthen else "")
         + "출력은 스키마 JSON만.")
     raw = call(prompt, _SCENE_FIRST_SCHEMA)
     if not raw or not isinstance(raw, dict):
@@ -980,15 +988,14 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                                           forced=backbone_forced)
         if bb_video:
             order_block = _backbone_order_block(bb_video, source_scripts)
-    raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates,
-                                   call=_call, bank_context=bank_context,
-                                   order_block=order_block)
-    if bb_video:
+    src_texts = [s.get("full_text", "") for s in source_scripts]
+
+    def _ground_score(raws):
+      if bb_video:
         for r in raws:
             r.setdefault("_backbone_video", bb_video)   # 핑퐁 순서고정이 이 백본을 쓴다
-    src_texts = [s.get("full_text", "") for s in source_scripts]
-    cands = []
-    for r in raws:
+      cands = []
+      for r in raws:
         plan = _ground_candidate(r, seg_map)
         if plan is None:
             continue
@@ -1035,6 +1042,24 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         if _cp:
             cand["cut_penalty"] = round(_cp, 3)
         cands.append(cand)
+      return cands
+
+    raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates,
+                                   call=_call, bank_context=bank_context, order_block=order_block)
+    cands = _ground_score(raws)
+    # ①생성측 보강(세션#2): 후보가 전부 목표보다 크게 짧으면(생성이 목표초 미달) 길이 강화
+    # 힌트로 1회 재생성해 합친다. ②선택 감점(_length_penalty)이 짧은 후보를 강등하므로 병합 후
+    # 채점하면 긴 후보가 자연히 추천된다. 재생성은 '전부 짧을 때만' — 소스 footage 부족이 아니라
+    # 생성 자체가 목표초에 못 미친 경우로 한정(과금 게이트, 1회 상한, 실패해도 기존 후보 유지).
+    if cands and target_seconds and target_seconds > 0:
+        def _cand_secs(c):
+            return sum(float(b.get("target_seconds") or 0.0)
+                       for b in c["plan"].get("beats", []))
+        if max((_cand_secs(c) for c in cands), default=0.0) < 0.85 * target_seconds:
+            raws2 = _scene_first_candidates(
+                inventory, reference_text, target_seconds, n=n_candidates, call=_call,
+                bank_context=bank_context, order_block=order_block, lengthen=True)
+            cands = cands + _ground_score(raws2)
     if cands:
         best = max(range(len(cands)), key=lambda i: cands[i]["score"])
         cands[best]["recommended"] = True
