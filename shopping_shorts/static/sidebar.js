@@ -146,23 +146,12 @@
     });
   }
   // 로고 클릭 = 홈(/)으로(사장님 2026-07-21) — 커서·title로 클릭 가능함을 알린다.
-  // 브랜드 엠블럼 — ★소형 솔리드 변형(2026-07-25, 사장님 "로고 잘 안 보이고 임팩트 없다").
-  // app.py _LOGO_SVG(대형)는 다크 디스크 + 민트 링의 '외곽선형'이다. 그런데 사이드바 배경도
-  // 다크라 디스크가 배경에 묻고 0.8px짜리 링만 남아 20px에선 사실상 사라졌다(실제 화면 확인).
-  // → 작은 크기에선 선이 아니라 '면'이 읽힌다. 그래서 반전시켰다:
-  //   민트→오로라로 꽉 찬 디스크 + 그 위에 다크 9:16 화면 + 골드 재생 삼각형.
-  // 대형 로고와 도형 문법(원·세로프레임·골드플레이)은 같아서 같은 브랜드로 읽힌다.
+  // 브랜드 엠블럼 v4 — app.py _LOGO_SVG와 같은 그림(AI 원본 PNG, 배경 투명 전처리).
+  // 사장님 선택: 내가 손으로 짠 SVG 대신 AI 원본 그림을 그대로 쓴다.
+  // 배경이 투명이라 사이드바 패널에 네모로 안 뜬다(직전 문제 해결).
   var BRAND_SVG =
-    '<svg width="28" height="28" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템메이커"' +
-    ' style="flex-shrink:0;filter:drop-shadow(0 0 9px rgba(62,224,191,.55))">' +
-    '<defs><linearGradient id="ssmg" x1="0" y1="0" x2="1" y2="1">' +
-    '<stop offset="0" stop-color="#3ee0bf"/><stop offset="1" stop-color="#8c6ef0"/></linearGradient>' +
-    '<linearGradient id="ssgg" x1="0" y1="0" x2="1" y2="1">' +
-    '<stop offset="0" stop-color="#ffe6ae"/><stop offset="1" stop-color="#facc6b"/></linearGradient></defs>' +
-    '<circle cx="32" cy="32" r="30" fill="url(#ssmg)"/>' +
-    '<rect x="21.5" y="13.5" width="21" height="34" rx="5.2" fill="#070b14"/>' +
-    '<path d="M28.6 22.9l10.6 7.6-10.6 7.6V22.9z" fill="url(#ssgg)"/>' +
-    '<circle cx="32" cy="53.5" r="2.4" fill="#070b14"/></svg>';
+    '<img src="/brand-logo.png" alt="숏템메이커" width="28" height="28"' +
+    ' style="flex-shrink:0;filter:drop-shadow(0 0 9px rgba(62,224,191,.45))" decoding="async">';
   var html = "<h1 onclick=\"location.href='/'\" style=\"cursor:pointer\" title=\"홈으로\">" + BRAND_SVG + " <span class=\"ss-brand\">숏템메이커</span></h1>";
   NAV.forEach(function (g) {
     html += '<div class="ss-group"><div class="ss-label">' + g.label + "</div>";
