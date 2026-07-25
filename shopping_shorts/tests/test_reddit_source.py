@@ -88,17 +88,89 @@ def test_normalize_entries_rank_points_descend():
 
 
 def test_fetch_subreddit_parses_rss(monkeypatch):
+    monkeypatch.setattr(rs, "_has_oauth", lambda: False)   # RSS 폴백 강제
     monkeypatch.setattr(rs, "_http_get", lambda url, timeout=15: _ATOM_XML)
     items = rs.fetch_subreddit("x", category="테스트", sort="rising", limit=50)
     assert len(items) == 1 and items[0]["media_platform"] == "tiktok"
 
 
 def test_fetch_subreddit_swallows_errors(monkeypatch):
+    monkeypatch.setattr(rs, "_has_oauth", lambda: False)
     def boom(url, timeout=15):
         raise RuntimeError("403")
     monkeypatch.setattr(rs, "_http_get", boom)
     monkeypatch.setattr(rs.time, "sleep", lambda *_: None)
     assert rs.fetch_subreddit("x", category="테스트") == []   # 부분실패 허용
+
+
+# ── OAuth(권장 경로) ──
+def test_normalize_children_json_real_upvotes():
+    children = [
+        {"data": {"id": "aaa", "title": "wow", "ups": 5200, "num_comments": 88,
+                  "created_utc": 1785000000, "permalink": "/r/x/comments/aaa/wow/",
+                  "subreddit": "x", "is_video": True,
+                  "media": {"reddit_video": {"fallback_url": "https://v.redd.it/aaa/DASH.mp4"}},
+                  "thumbnail": "https://th/a.jpg"}},
+        {"data": {"id": "bbb", "title": "photo", "ups": 3, "url": "https://i.redd.it/p.jpg"}},
+    ]
+    items = rs.normalize_children(children, category="테스트")
+    assert len(items) == 1                       # 이미지 제외
+    it = items[0]
+    assert it["ups"] == 5200 and it["num_comments"] == 88   # 실업보트
+    assert it["media_platform"] == "reddit"
+    assert it["media_url"] == "https://v.redd.it/aaa/DASH.mp4"
+    assert it["permalink"] == "https://www.reddit.com/r/x/comments/aaa/wow/"
+    assert it["shortcode"] == "aaa" and it["category"] == "테스트"
+
+
+def test_oauth_token_cached(monkeypatch):
+    calls = {"n": 0}
+
+    class _Resp:
+        def raise_for_status(self): pass
+        def json(self): return {"access_token": "TOK", "expires_in": 3600}
+
+    def fake_post(url, **kw):
+        calls["n"] += 1
+        return _Resp()
+
+    monkeypatch.setattr(rs.requests, "post", fake_post)
+    rs._TOKEN.update(token=None, exp=0.0)
+    assert rs._oauth_token() == "TOK"
+    assert rs._oauth_token() == "TOK"      # 캐시 재사용
+    assert calls["n"] == 1                  # POST 1번만
+
+
+def test_fetch_oauth_parses_json(monkeypatch):
+    monkeypatch.setattr(rs, "_oauth_token", lambda: "TOK")
+
+    class _Resp:
+        def raise_for_status(self): pass
+        def json(self):
+            return {"data": {"children": [
+                {"data": {"id": "zz", "title": "t", "ups": 999, "num_comments": 4,
+                          "created_utc": 1785000000, "permalink": "/r/x/comments/zz/t/",
+                          "subreddit": "x", "url": "https://www.tiktok.com/@z/video/1"}}]}}
+
+    captured = {}
+
+    def fake_get(url, **kw):
+        captured["url"] = url
+        return _Resp()
+
+    monkeypatch.setattr(rs.requests, "get", fake_get)
+    items = rs._fetch_oauth("x", "테스트", "top", 50)
+    assert "oauth.reddit.com/r/x/top" in captured["url"]
+    assert len(items) == 1 and items[0]["ups"] == 999 and items[0]["media_platform"] == "tiktok"
+
+
+def test_fetch_subreddit_uses_oauth_when_creds(monkeypatch):
+    monkeypatch.setattr(rs, "_has_oauth", lambda: True)
+    monkeypatch.setattr(rs, "_fetch_oauth",
+                        lambda sub, cat, sort, limit: [{"shortcode": "oauth"}])
+    monkeypatch.setattr(rs, "_fetch_rss",
+                        lambda *a, **k: (_ for _ in ()).throw(AssertionError("RSS 타면 안됨")))
+    assert rs.fetch_subreddit("x", sort="top")[0]["shortcode"] == "oauth"
 
 
 def test_normalize_entries_html_entity_decoded():

@@ -33,6 +33,12 @@ GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 GOOGLE_REDIRECT_URI = os.environ.get(
     "GOOGLE_REDIRECT_URI", "https://shoppingshorts.duckdns.org/auth/google/callback")
 
+# Reddit OAuth(application-only, 해외HOT 발굴 — 익명 RSS rate-limit 회피, 2026-07-25).
+# reddit.com/prefs/apps에서 'script' 앱 생성 → client_id/secret를 .env에 넣으면
+# reddit_source가 oauth.reddit.com(100 req/분)으로 자동 전환. 없으면 익명 RSS 폴백.
+REDDIT_CLIENT_ID = os.environ.get("REDDIT_CLIENT_ID", "")
+REDDIT_CLIENT_SECRET = os.environ.get("REDDIT_CLIENT_SECRET", "")
+
 # Apify
 APIFY_TOKEN = os.environ.get("APIFY_TOKEN", "")
 # 계정 하나가 사용량 소진(월 한도 등)되면 다음 계정으로 자동 로테이션(2026-07-09).

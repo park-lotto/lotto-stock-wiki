@@ -1,20 +1,26 @@
-"""Reddit 공개 RSS(.rss)로 서브레딧 top/rising 영상 포스트를 무료 수집 → 정규화 dict.
+"""Reddit에서 서브레딧 top/rising 영상 포스트를 수집 → 정규화 dict. 두 경로:
 
-익명 .json은 2024년 이후 403 Blocked라 RSS(Atom)를 쓴다(실측 2026-07-25: .json은 403,
-.rss는 정상). TikTok 무료 키워드검색이 없는 공백을 Reddit '정찰'이 메꾼다.
-RSS엔 업보트 숫자가 없어(제목·시각·원본URL·썸네일만 옴) 랭킹 신호는 'Reddit이 이미
-정렬해준 순위(rank_points)'로 대체한다 — top.rss는 오늘의 상위, rising.rss는 급상승 순.
-순위가 오르면(스냅샷 비교) 그게 곧 가속이라 build_reddit_items의 speed/accel이 그대로 산다.
-stdlib(urllib·xml)만 사용 — 외부 의존성 0."""
+1) **OAuth(application-only)** — REDDIT_CLIENT_ID/SECRET가 있으면 oauth.reddit.com JSON.
+   업보트·댓글 실데이터가 오고 rate-limit이 100 req/분이라 배치가 안정적이다(권장).
+2) **익명 RSS(.rss) 폴백** — 크레덴셜이 없으면 공개 Atom 피드. 익명 .json은 2024년
+   이후 403 Blocked라 RSS를 쓴다(실측 2026-07-25). RSS엔 업보트가 없어 랭킹 신호를
+   Reddit 순위(rank_points)로 대체하고, 익명 rate-limit이 낮아 배치가 429로 자주
+   빈손이 된다(실측) — 그래서 OAuth가 권장 경로다.
+
+어느 경로든 build_reddit_items가 소비하는 동일 스키마(ups/num_comments/post_id/…)를
+반환한다. OAuth는 실업보트, RSS는 순위점수를 ups에 담는다."""
 import html
 import re
 import time
 import urllib.request
 import xml.etree.ElementTree as ET
 
+import requests
+from shopping_shorts.config import REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET
+
 _ATOM = "{http://www.w3.org/2005/Atom}"
 _IMG_EXT = (".jpg", ".jpeg", ".png", ".gif", ".webp")
-# RSS는 브라우저 UA에서 정상 응답(실측). 봇틱한 UA는 .json처럼 막힐 여지가 있어 브라우저로.
+# 브라우저 UA(실측: RSS는 브라우저 UA에서 정상). OAuth는 UA에 앱명이 권장되나 무방.
 _UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
        "(KHTML, like Gecko) Chrome/126.0 Safari/537.36")
 
@@ -42,6 +48,89 @@ def extract_media_url(post):
     return None, None
 
 
+# ─────────────────────────── OAuth(권장) ───────────────────────────
+_TOKEN = {"token": None, "exp": 0.0}
+
+
+def _has_oauth():
+    return bool(REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET)
+
+
+def _oauth_token():
+    """application-only 액세스토큰(client_credentials). 만료 60s 전까지 캐시 재사용."""
+    now = time.time()
+    if _TOKEN["token"] and now < _TOKEN["exp"] - 60:
+        return _TOKEN["token"]
+    resp = requests.post(
+        "https://www.reddit.com/api/v1/access_token",
+        auth=(REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET),
+        data={"grant_type": "client_credentials"},
+        headers={"User-Agent": _UA}, timeout=15)
+    resp.raise_for_status()
+    d = resp.json()
+    _TOKEN["token"] = d["access_token"]
+    _TOKEN["exp"] = now + int(d.get("expires_in", 3600))
+    return _TOKEN["token"]
+
+
+def _iso(unix_ts):
+    if not unix_ts:
+        return ""
+    from datetime import datetime, timezone
+    return datetime.fromtimestamp(int(unix_ts), tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def normalize_children(children, category=""):
+    """oauth.reddit.com JSON의 listing children → 영상 포스트만 정규화 dict 리스트.
+
+    RSS와 동일 스키마 + 업보트/댓글 실값. thumbnail은 preview URL이 &amp; 이스케이프된
+    경우가 있어 unescape한다."""
+    out = []
+    for ch in children or []:
+        p = ch.get("data") or {}
+        pid = str(p.get("id") or "")
+        if not pid:
+            continue
+        media_url, platform = extract_media_url(p)
+        if not media_url:
+            continue
+        thumb = p.get("thumbnail") or ""
+        if thumb in ("self", "default", "nsfw", "spoiler", "image"):
+            thumb = ""
+        out.append({
+            "source": "reddit",
+            "post_id": pid,
+            "shortcode": pid,
+            "subreddit": p.get("subreddit", ""),
+            "title": p.get("title", ""),
+            "permalink": "https://www.reddit.com" + (p.get("permalink") or ""),
+            "media_url": media_url,
+            "media_platform": platform,
+            "thumbnail": html.unescape(thumb),
+            "ups": int(p.get("ups") or 0),
+            "num_comments": int(p.get("num_comments") or 0),
+            "published_at": _iso(p.get("created_utc")),
+            "category": category,
+        })
+    return out
+
+
+def _fetch_oauth(subreddit, category, sort, limit):
+    """oauth.reddit.com JSON — 업보트 실데이터. rate-limit 100 req/분."""
+    tok = _oauth_token()
+    if sort == "top":
+        path = "/r/%s/top?t=day&limit=%d" % (subreddit, limit)
+    else:
+        path = "/r/%s/%s?limit=%d" % (subreddit, sort, limit)
+    resp = requests.get(
+        "https://oauth.reddit.com" + path,
+        headers={"Authorization": "bearer " + tok, "User-Agent": _UA}, timeout=15)
+    resp.raise_for_status()
+    children = (resp.json().get("data") or {}).get("children") or []
+    return normalize_children(children, category=category)
+
+
+# ─────────────────────────── RSS(폴백) ───────────────────────────
 def _http_get(url, timeout=15):
     req = urllib.request.Request(url, headers={"User-Agent": _UA})
     with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -74,8 +163,7 @@ def normalize_entries(xml_text, subreddit="", category="", sort="top"):
 
     반환 dict 키: source, post_id, shortcode(=post_id), subreddit, title, permalink,
     media_url, media_platform, thumbnail, ups(=rank_points), num_comments(=0),
-    published_at, category, rss_sort. ups는 RSS에 업보트가 없어 순위점수로 대체
-    (상단일수록 높음) — build_reddit_items가 이 값을 upvote처럼 소비한다."""
+    published_at, category, rss_sort. ups는 RSS에 업보트가 없어 순위점수로 대체."""
     root = ET.fromstring(xml_text)
     out = []
     for idx, e in enumerate(root.findall(_ATOM + "entry")):
@@ -86,9 +174,8 @@ def normalize_entries(xml_text, subreddit="", category="", sort="top"):
         pid = _post_id_from(entry_id, permalink)
         if not pid:
             continue
-        # Reddit RSS content는 XML+HTML 이중 이스케이프 — ET가 XML 한 겹만 풀어
-        # href/src 안에 &amp;가 남는다. 그대로 두면 서명된 preview.redd.it 썸네일
-        # (?...&s=서명)이 깨진다 → HTML 겹까지 unescape.
+        # RSS content는 XML+HTML 이중 이스케이프 — ET가 XML 한 겹만 풀어 &amp;가 남는다.
+        # 그대로면 서명 썸네일(?...&s=서명)이 깨져 → HTML 겹까지 unescape.
         content = html.unescape(e.findtext(_ATOM + "content") or "")
         media_url, platform = extract_media_url({"url": _first_external_url(content)})
         if not media_url:
@@ -112,16 +199,21 @@ def normalize_entries(xml_text, subreddit="", category="", sort="top"):
     return out
 
 
+def _fetch_rss(subreddit, category, sort):
+    suffix = "top.rss?t=day" if sort == "top" else "%s.rss" % sort
+    url = "https://www.reddit.com/r/%s/%s" % (subreddit, suffix)
+    return normalize_entries(_http_get(url), subreddit=subreddit, category=category, sort=sort)
+
+
 def fetch_subreddit(subreddit, category="", sort="rising", limit=50, retries=2, pause=1.0):
     """서브레딧의 rising/top-day 영상 포스트 정규화 리스트. 실패 시 빈 리스트(부분실패 허용).
 
-    sort='top'→ top.rss?t=day(오늘 상위), 그 외→ {sort}.rss(rising 등). limit은 RSS가
-    무시하지만 시그니처 호환 위해 유지."""
-    suffix = "top.rss?t=day" if sort == "top" else "%s.rss" % sort
-    url = "https://www.reddit.com/r/%s/%s" % (subreddit, suffix)
+    크레덴셜이 있으면 OAuth(JSON·업보트 실값·100 req/분), 없으면 익명 RSS 폴백."""
     for attempt in range(retries + 1):
         try:
-            return normalize_entries(_http_get(url), subreddit=subreddit, category=category, sort=sort)
+            if _has_oauth():
+                return _fetch_oauth(subreddit, category, sort, limit)
+            return _fetch_rss(subreddit, category, sort)
         except Exception:
             if attempt < retries:
                 time.sleep(pause * (attempt + 1))
