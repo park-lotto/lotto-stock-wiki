@@ -43,15 +43,28 @@ def _source_video_id(i):
     return f"s{i}"
 
 
+# 성우 미선택(2단계 미리보기 등) 기본 성우 = 미나·표현(kr-mina-expressive, 2026-07-25 사장님 확정).
+# 예전 기본은 config.ELEVENLABS_VOICE_ID(Rachel=영어 성우)라 성우를 고르기 전 미리보기가
+# 영어 성우로 한국어를 읽었다. 값은 assets/voice_presets.json의 kr-mina-expressive 스냅샷.
+_DEFAULT_VOICE = {
+    "preset_id": "kr-mina-expressive",
+    "voice_id": "aiUUgjHa4mpHf6UenZuf",
+    "model_id": "eleven_v3",
+    "settings": {"stability": 0.35, "similarity_boost": 0.78, "style": 0.4},
+    "speed": 1.6,
+    "silence_trim": "mid",
+}
+
+
 def _voice_params(voice):
     """job의 voice 스냅샷(dict|None) → (voice_id, voice_settings, speed, extra_tempo,
-    silence_trim, naturalize_profile, model_id, pace_mode). voice 없으면 전부 기본값(config
-    기본 성우, 속도 1.0, 무음삭제 off, naturalize_profile None → naturalize()가 자체 기본값 사용,
-    pace_mode False → 속도감 다듬기 없음 = 옛 동작).
+    silence_trim, naturalize_profile, model_id, pace_mode). voice 없으면 _DEFAULT_VOICE
+    (미나·표현) 기본값. naturalize_profile None → naturalize()가 자체 기본값 사용,
+    pace_mode False → 속도감 다듬기 없음 = 옛 동작.
 
     스냅샷은 /api/mix/voice가 프리셋에서 통째로 복사해 넣는다 — naturalize_profile·model_id가
     빠지면 튜닝 작업대에서 동결한 값이 렌더에 도달하지 못한다(2026-07-15 whole-branch 리뷰 S1/S8)."""
-    v = voice or {}
+    v = voice or _DEFAULT_VOICE
     speed = v.get("speed", 1.0)
     extra_tempo = speed / 1.2 if speed > 1.2 else 1.0  # 1.2 초과분만 atempo로
     return (v.get("voice_id"), v.get("settings"), speed, extra_tempo,
