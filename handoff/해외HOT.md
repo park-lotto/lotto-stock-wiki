@@ -1,70 +1,40 @@
 # 해외HOT 발굴 — 핸드오프
 
-- 갱신: 2026-07-25 (회사PC) / 트랙: 해외HOT (병합 후 폴더 유지)
+- 갱신: 2026-07-26 (집PC) / 트랙: 해외HOT (병합 후 폴더 유지)
 
-## 현재 상태 — 라이브 완결 ✅
-해외HOT "완료 0건" 근본해결 후 **라이브 피드에 꿀템 영상 80건 실제 수집** 확인.
+## 현재 상태 — Apify 발굴전환 라이브 완결 ✅
+레딧 발굴을 **틱톡 + CN(샤오홍슈·도우인) Apify 발굴**로 전면 전환. main 병합·서버 배포 완료.
 
-- **429 근본원인** = AWS 데이터센터 IP를 Reddit이 익명 RSS에서 막음(계정나이 아님, about.json으로 확정).
-- **해결1: 주거용 프록시** — Webshare 로테이팅. `REDDIT_PROXY` env로 RSS(urllib)·OAuth(requests) 둘 다 경유.
-  서버 실측: 4연속 200(429 소멸). **서버 .env에 이미 설정됨**(REDDIT_PROXY=...@p.webshare.io:80).
-- **해결2: 시드 교체** — 기존 시드(gadgets/GifRecipes/cooking/SkincareAddiction)는 사진 중심이라 영상0.
-  영상 실측으로 재선정: 주방=Kitchenhacks, 살림꿀템=INEEEEDIT, 인테리어/DIY=ArtisanVideos,
-  가전/도구=SpecializedTools+GadgetGifs, 만족감/제품=oddlysatisfying+SatisfyingAsFuck,
-  신기템/바이럴=BeAmazed+nextfuckinglevel.
-- **안전망: 429 백오프** — 프록시 실패 대비 RateLimited 재시도(env REDDIT_RL_RETRIES/BACKOFF).
+- **왜 전환**: 레딧 틈새 서브의 hot은 "틱톡 바이럴 원본/선점"과 불일치 → 잡탕(80건 중 76건 일반바이럴,
+  꿀템 카테고리 0). 무료 발굴경로(틱톡 tiktok:tag broken·Creative Center gated·CN 검색추출기 없음)는
+  전부 벽 확인 → Apify 유료로 결정(사장님 승인).
+- **재활용**: `apify_client`(토큰17개 `/etc/shopping-shorts.env`) · `tiktok_search.search_full` ·
+  `gap_check` · store/job/폴링/🌍탭. 신규: CN `search_full`2개 · `build_overseas_items`(참여속도 랭킹) ·
+  `overseas_funnel`(형식·관련성·안터진상한) · job 재작성 · 카드 UI.
+- **랭킹 = 참여속도**: CN은 조회수를 안 줌(실측: 도우인 playCount=0, 샤오홍슈 view필드 없음) →
+  랭킹 기준을 **(좋아요+댓글+수집+공유)/경과h** 로 통일(세 플랫폼 좋아요 자릿수 유사). 조회수는 표시용.
+- **깔때기**: STAGE0 쿼리(유료 40/카테고리/플랫폼) → 형식·관련성·안터진상한(무료) → 참여속도 랭킹 →
+  dedup → 생존자만 gap_check(쿼터보호). 폐기 카테고리(옛 레딧) 자동퇴출 가드 있음(셀프힐링).
+- **실측 라이브(2026-07-26)**: 39건, 6카테고리 골고루(가전14·인테리어6·뷰티6·정리5·주방4·살림4),
+  전부 tiktok/douyin/xiaohongshu. 옛 레딧 잡탕 퇴출 완료.
 
-## 실측 근거
-- 서버 실서비스 _run(): proxy_on=True, **count=80**, 86초. (원본 186 → 중복제거·영상필터·_CAP 로테이션 후 80)
-- 커밋: e068cff18(프록시) + 4fc51a174(시드) → origin/main 9a5bd670c 병합·배포 완료.
-- 테스트 25/25 통과. 서버 HEAD 9a5bd670c, 새 시드·프록시 env 반영 확인.
+## 검증 상태
+- 신규 유닛테스트 전부 통과(seeds3·build_overseas3·douyin2·xhs2·funnel4·gap2·job4). 전체게이트 통과(기준선 11건 무관).
+- 라이브 실수집 1회 성공(949초/39건). **주의**: `/api/*`·`/`는 로그인 게이트라 익명 curl은 401/랜딩(정상).
+- 서버 Apify 토큰 17개 `/etc/shopping-shorts.env`(systemd EnvironmentFile). 앱 config는 여기서 env 로드.
 
-## 수집 내용 / 한계
-- 수집 = 메타데이터(제목·영상URL(v.redd.it)·썸네일·순위점수). **영상 파일 다운로드는 [재편집] 단계 별도.**
-- 영상 플랫폼 = 전부 v.redd.it(틱톡 바이럴의 레딧 재업로드본). tiktok.com 원본 링크는 아님.
+## ⏭ 다음 (Phase 2 — 남은 것)
+1. **CN 선점뱃지 = 현재 "미확인"** — `gap_check` 번역이 CN 중국어제목→한국어가 안 돼(translate_keyword
+   방향이 KO→ZH로 추정) 안전하게 미확인 처리 중. ZH→KO 번역경로 붙이면 CN도 🔥선점 판정 가능.
+   (거짓 선점 방지 위해 번역결과에 한글 없으면 미확인 반환하도록 구현돼 있음 — Task7)
+2. **관련성/생존율 튜닝** — 시드 키워드(overseas_seeds.json)·차단어(overseas_funnel.BLOCK_WORDS)·
+   조회수상한(DEFAULT_VIEW_CEILING=300만) 라이브 며칠 보고 조정.
+3. **가속(accel) 정착** — 참여 Δ의 Δ는 2회+ 스냅샷부터 성립. 매일 수집 누적되면 급상승 신호 강화.
+4. **Phase 3** — 생존자 yt-dlp 다운로드 → [재편집] → mix 파이프라인 연결.
 
-## ⏭ 집에서 이어서 (다음 작업)
-1. **육안 확인**: shoppingshorts.duckdns.org 해외HOT 탭 → "지금 업데이트" → 80건·카테고리 필터 확인.
-2. **가전/도구 카테고리 영상 보강** — SpecializedTools(2)·GadgetGifs(0)로 약함. 대체 서브 발굴 필요.
-3. **[재편집]→제작소 연결(Phase 3)** — v.redd.it mp4 다운로드 → mix 파이프라인 투입.
-4. (선택) tiktok.com 원본 링크가 필요하면 별도 소스(틱톡 해시태그) 검토. overseas_seeds.json seed_accounts 비어있음.
-
-설계 docs/superpowers/specs/2026-07-24-해외HOT발굴-design.md
-메모리 reference_reddit_anon_rss_datacenter_429
-
----
-
-## 🧠 CN(샤오홍슈/도우인) 발굴 설계 — 브레인스토밍 (2026-07-25, 미완·집에서 이어감)
-
-**목표 재정의**: "아직 한국 사람이 안 가져온 중국 최신템(선점)". 원본(자막 없는 깔끔본)이면 좋고
-자막 있어도 OK(소프트 조건). 원본 찾는 이유 = **깔끔함 + 선점효과**.
-
-**핵심 통찰**:
-- 자막 박힌 유통본 = "이미 터진 검증 신호"(노이즈 아님). 선점 vs 검증은 트레이드오프.
-- 선점 = "인기"가 아니라 **"가속(급상승)"** 문제. 막 튀는 초기(라이징)일수록 리포스트·자막 덜 붙어
-  자연히 깔끔한 원본 확률↑ → 선점 로직 하나가 깔끔함도 어느 정도 같이 해결.
-
-**발굴 로직 4층**(② ③은 기존 자산 재활용, ①만 신규 난제):
-1. **수집** — 도우인/샤오홍슈 최신·급상승 꿀템 영상.
-2. **선점 게이트 ★** — 한국 유튜브쇼츠·릴스·네이버에 이미 있나 검색 → 없으면 "미선점✅".
-   = Reddit 해외HOT의 `gap_check`(선점뱃지) 로직 재활용(이미 라이브).
-3. **자막 뱃지(소프트)** — 하드섭 검출(자막제거 트랙 검출부 재활용). 자막없음=깔끔°/있음=검증°.
-   필터 아니라 뱃지·가중치. 제작 시 자막 있으면 자막제거로 원본화.
-4. **랭킹** — 미선점 × 가속 × 신선도, 깔끔 원본 가점.
-
-**필터 위치 전략**:
-- **검색 전(쿼리)** = 비용·관련성 결정. 꿀템 카테고리 해시태그(好物/神器/家居好物/厨房神器 등)
-  + 최신순 + maxItems. 과하게 좁히면 선점템 놓치고 물량 마름 → **카테고리급이 스윗스팟**.
-- **검색 후** = 무료 게이트(관련성·선점·중복·품질·랭킹)로 깐깐히. 여긴 촘촘해도 공짜.
-- 돈 드는 다운로드·자막제거·편집은 **생존자(50~150건)에만**.
-
-**비용(Apify)**: 틱톡 발굴액터 ~$1.70/1000건 + 월플랫폼($5무료→$49→$499). **과금은 긁은 raw 기준
-(걸러도 환불X)** → maxItems·타겟해시태그로 앞단에서 줄이는 게 절약. 기존방침 "Apify금지"라
-CN만 예외로 열지가 판단포인트. 무료경로(A해시태그 yt-dlp / B热榜 프록시스크레이프 / C크리에이터 폴링)
-먼저 probe 후 벽이면 Apify 권장.
-
-**추정 생존율(미실측)**: 1000 → 관련성 20~40% → 선점 30~50% → 품질 → 실사용 50~150건.
-
-**⏭ 다음 스텝**: ①수집 경로(A/B/C) 결정 → **소규모 테스트(꿀템 해시태그 1~2개, 최신 100건)로
-실제 관련성·생존율 측정** → 되는 경로 확정 → 설계문서(docs/superpowers/specs/…CN발굴-design.md) →
-writing-plans. (Apify 여부는 무료 probe 결과 보고 결정)
+## 파일
+설계 `docs/superpowers/specs/2026-07-26-해외HOT-Apify발굴전환-design.md`
+계획 `docs/superpowers/plans/2026-07-26-해외HOT-Apify발굴전환.md`
+핵심코드 `overseas_hot_jobs.py`·`overseas_funnel.py`·`ranking.build_overseas_items`·
+`douyin_search.search_full`·`xiaohongshu_search.search_full`·`gap_check.gap_badge(translate=)`·
+`static/index.html`(renderOverseas 카드)·`overseas_seeds.json`
