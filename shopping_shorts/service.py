@@ -4,14 +4,16 @@ from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from shopping_shorts.config import (DB_PATH, WINDOW_HOURS, DRAFT_BATCH_SIZE, MAX_CHANNELS,
-                                    YOUTUBE_WINDOW_HOURS, YOUTUBE_MAX_PER_KW)
-from shopping_shorts.channels import load_channels, merge_tracked
+                                    YOUTUBE_WINDOW_HOURS, YOUTUBE_MAX_PER_KW,
+                                    DEAD_AFTER_DAYS, CENSUS_RESULTS_PER_CHANNEL)
+from shopping_shorts.channels import load_channels, merge_tracked, select_tracked
 from shopping_shorts.apify_client import fetch_reels
 from shopping_shorts.ranking import build_items, build_youtube_items, build_tiktok_items, apply_grades
 from shopping_shorts.store import Store
 from shopping_shorts.comment_gen import generate as _gen_comments
 from shopping_shorts import ai_categorize, topic_grouper
-from shopping_shorts.youtube_client import search_shorts as yt_search
+from shopping_shorts.youtube_client import search_shorts as yt_search, fetch_channel_shorts as yt_fetch_channel
+from shopping_shorts.youtube_category_presets import preset_keywords
 from shopping_shorts.tiktok_client import fetch_account_videos as tt_fetch
 from shopping_shorts.tiktok_search import search_full as tt_search_full
 
@@ -86,28 +88,47 @@ def generate_missing_drafts(items):
         list(pool.map(_generate_one, items))
 
 
-def _collect_youtube():
-    """유튜브 키워드 시드로 인기 Shorts 발굴 → 조회수 기반 랭킹.
+def _collect_youtube(categories=None):
+    """유튜브 카테고리 프리셋 + 수동 키워드 시드(발굴) + 계정 시드(채널기반) → 조회수 랭킹.
 
-    시드의 kind = 언어코드(ko/en/ja/zh/ru). 언어별로 묶어 각 언어·지역으로
-    검색(regionCode 편향 → 외국영상 혼입 방지). 예전 kind="keyword" 시드는 ko로 취급."""
+    categories=None → 프리셋 전 카테고리 union(전체 딸깍) / ["혼합형"] → 그 카테고리만.
+    프리셋은 lang=ko로 검색. 수동 키워드 시드(kind=언어코드)·계정 시드는 항상 함께 수집.
+    세 경로 raw를 video_id로 중복제거 후 공통 파이프라인."""
     store = Store(DB_PATH)
     seeds = store.list_seeds("youtube")
-    if not seeds:
-        return []
-    # 언어별 키워드 묶음 (kind가 언어코드가 아니면 ko)
     _LANGS = {"ko", "en", "ja", "zh", "ru"}
     by_lang = {}
+    accounts = []
     for s in seeds:
-        lang = s["kind"] if s["kind"] in _LANGS else "ko"
-        by_lang.setdefault(lang, []).append(s["value"])
+        if s["kind"] == "account":
+            accounts.append(s["value"])
+        else:
+            lang = s["kind"] if s["kind"] in _LANGS else "ko"
+            by_lang.setdefault(lang, []).append(s["value"])
     now = datetime.now(timezone.utc)
     after = (now - timedelta(hours=YOUTUBE_WINDOW_HOURS)).strftime("%Y-%m-%dT%H:%M:%SZ")
     raw = []
+    # 카테고리 프리셋(한국어) — 딸깍 수집의 핵심
+    preset = preset_keywords(categories)
+    if preset:
+        raw.extend(yt_search(preset, after, max_per_kw=YOUTUBE_MAX_PER_KW, lang="ko"))
+    # 수동 키워드 시드(언어별)
     for lang, kws in by_lang.items():
         raw.extend(yt_search(kws, after, max_per_kw=YOUTUBE_MAX_PER_KW, lang=lang))
+    # 계정 시드(채널기반)
+    for acc in accounts:
+        raw.extend(yt_fetch_channel(acc, cache_get=store.yt_cache_get,
+                                    cache_put=store.yt_cache_put))
+    # video_id 중복제거(프리셋·수동·계정 겹칠 수 있음) — 첫 등장 우선
+    seen, deduped = set(), []
+    for r in raw:
+        vid = r.get("video_id")
+        if not vid or vid in seen:
+            continue
+        seen.add(vid)
+        deduped.append(r)
     items = build_youtube_items(
-        raw,
+        deduped,
         prev_base=lambda sc: store.prev_base_platform("youtube", sc),
         prev_delta=lambda sc: store.prev_delta_platform("youtube", sc),
         now=now, window_hours=YOUTUBE_WINDOW_HOURS,
@@ -120,11 +141,13 @@ def _collect_youtube():
     return items
 
 
-def _collect_tiktok():
+def _collect_tiktok(include_paid_keywords=False):
     """틱톡 시드 계정(@handle)들의 최근 영상 → 조회수 기반 랭킹(무료 yt-dlp).
 
-    시드 kind='account'. 계정마다 yt-dlp로 훑어(실패계정은 스킵) 14일 창 내 영상을
-    공통 item으로 만든다. 유튜브와 동일한 지표·저장 구조."""
+    include_paid_keywords=False(기본): **무료 경로만** — 계정 시드(yt-dlp)만 훑는다.
+    키워드 시드 검색은 Apify 건당과금이라 자동 수집에서 뺐다(2026-07-24 "과금 없는 구조").
+    코드는 지우지 않는다 — 관리자가 명시로 켤 때만(True) 돈다.
+    """
     store = Store(DB_PATH)
     seeds = store.list_seeds("tiktok")
     if not seeds:
@@ -139,7 +162,7 @@ def _collect_tiktok():
     # 번역돼 저장됨(UI addSeed). 언어당 tiktok_search_count(기본 50)개. 계정 경로와 같은
     # raw 스키마라 아래 build_tiktok_items로 함께 흘러간다.
     lang_seeds = [s["value"] for s in seeds if s["kind"] in _TIKTOK_LANG_KINDS]
-    if lang_seeds:
+    if include_paid_keywords and lang_seeds:
         count = int(store.get_setting("tiktok_search_count", TIKTOK_SEARCH_COUNT_DEFAULT))
         for kw in lang_seeds:
             raw.extend(tt_search_full(kw, max_results=count))
@@ -157,7 +180,7 @@ def _collect_tiktok():
     return items
 
 
-def collect(platform="instagram", limit_channels=None):
+def collect(platform="instagram", categories=None, limit_channels=None):
     """1회 수집 실행 → 지표·등급 채워진 항목 리스트 반환 + DB 저장.
 
     platform: "instagram"(기본, 엑셀 채널 기반) | "youtube"(키워드 시드 기반,
@@ -167,7 +190,7 @@ def collect(platform="instagram", limit_channels=None):
     호출해야 한다.
     """
     if platform == "youtube":
-        return _collect_youtube()
+        return _collect_youtube(categories)
     if platform == "tiktok":
         return _collect_tiktok()
     if platform != "instagram":
@@ -175,12 +198,13 @@ def collect(platform="instagram", limit_channels=None):
 
     channels = load_channels()
 
-    # 발굴/등록 채널을 엑셀 목록과 union하고 죽은(추적제외) 채널은 뺀다. 손으로
-    # 등록/발굴한 채널이 cap(수집비 상한)에서 엑셀 꼬리보다 우선 살아남는다
-    # (2026-07-18). 엑셀 원본은 안 건드리는 소프트 관리 — 제외/추가 모두 DB에서만.
+    # 활동성 선별(2026-07-22): 생존+측정대기만 긁고 사망(센서스 판정)·수동제거는 뺀다.
+    # 팔로워 컷 없음. 센서스 전(활동테이블 빈 상태)엔 전원 측정대기라 전 채널 = 초기 안전동작.
+    # 엑셀 원본은 안 건드리는 소프트 관리 — 제외/추가/사망 모두 DB에서만.
     _store = Store(DB_PATH)
-    channels = merge_tracked(channels, _store.discovered_channels(),
-                             _store.removed_usernames())
+    channels = select_tracked(channels, _store.discovered_channels(),
+                              removed=_store.removed_usernames(),
+                              dead=_store.dead_usernames())
 
     if limit_channels:
         channels = channels[:limit_channels]
@@ -225,3 +249,89 @@ def collect(platform="instagram", limit_channels=None):
     ])
     _export_csv(all_items, run_date)  # 날짜별 CSV 아카이브
     return all_items
+
+
+def _norm_u(username):
+    return (username or "").strip().lstrip("@").lower()
+
+
+def _record_activity(seen, username, item, reel):
+    """센서스에서 본 릴스 1건으로 채널 활동레코드 갱신(채널당 최고 점수 + 최신 시각)."""
+    u = _norm_u(username)
+    views = item.get("views") or 0
+    comments = item.get("comments") or 0
+    density = (comments / views) if views > 0 else 0.0   # 참여밀도(조회 없으면 0)
+    age = item.get("age_hours") or 0
+    recency = max(0.0, 1 - age / (DEAD_AFTER_DAYS * 24))  # 최근일수록 1
+    score = density * (1 + recency)
+    ts = reel.get("timestamp")
+    cur = seen.get(u)
+    if cur is None:
+        seen[u] = {"username": username, "alive": True, "last_post_at": ts,
+                   "engagement_density": density, "activity_score": score}
+        return
+    if score > cur["activity_score"]:
+        cur["activity_score"] = score
+        cur["engagement_density"] = density
+    if ts and (not cur["last_post_at"] or ts > cur["last_post_at"]):
+        cur["last_post_at"] = ts
+
+
+def census():
+    """전수 센서스(2026-07-22) — 전 채널(팔로워/사망 필터 없음)을 긁어 활동성 판정.
+
+    최근 DEAD_AFTER_DAYS일 내 릴스를 반환한 채널 = 생존, 0건 = 사망. 전체 랭킹과
+    사망목록을 즉시 돌려주고, DB에 반영할 활동레코드(activity_records)도 함께 반환한다
+    — 호출부(app.py)가 이걸 background로 upsert해 "정리를 뒤에서" 처리한다. 하드삭제 없음.
+    Apify 실패 시 예외는 호출부로 전파(활동테이블 미갱신 → 사망 오판 안 함)."""
+    store = Store(DB_PATH)
+    excel = load_channels()
+    # 마스터 = 엑셀 전체 ∪ 발굴/등록, 수동제거만 제외. 사망 채널도 포함해 재확인(=부활 기회).
+    master = select_tracked(excel, store.discovered_channels(),
+                            removed=store.removed_usernames(), dead=set())
+    meta_by_user = {c["username"]: c for c in master}
+    usernames = list(meta_by_user.keys())
+
+    reels = fetch_reels(usernames, results_per_channel=CENSUS_RESULTS_PER_CHANNEL,
+                        only_newer_than=f"{DEAD_AFTER_DAYS} days")
+
+    now = datetime.now(timezone.utc)
+    all_items = []
+    seen_alive = {}   # 정규화 username -> 활동레코드
+    for r in reels:
+        user = r.get("ownerUsername") or r.get("username")
+        meta = meta_by_user.get(user)
+        if not meta:
+            continue
+        items = build_items([r], meta, prev_comments=store.prev_comments,
+                            prev_delta=store.prev_delta, now=now,
+                            window_hours=DEAD_AFTER_DAYS * 24)
+        for it in items:
+            # 전수조사 참여밀도 = (좋아요+댓글)/조회수 (영상별). build_items의 기본
+            # density는 댓글÷팔로워인데 릴스 스크래퍼엔 팔로워가 없어 전부 0이 된다
+            # → 조회수 기준으로 덮어써야 소형채널도 밀도로 상위에 오른다.
+            v = it.get("views") or 0
+            it["density"] = ((it.get("likes") or 0) + (it.get("comments") or 0)) / v if v else 0.0
+            all_items.append(it)
+            _record_activity(seen_alive, meta["username"], it, r)
+    apply_grades(all_items)
+    # 채널당 상한이 아니라 영상별 참여밀도 내림차순 → 소형채널의 뜨거운 영상이 안 밀린다.
+    all_items.sort(key=lambda i: i.get("density") or 0.0, reverse=True)
+
+    alive_norm = set(seen_alive.keys())
+    dead_channels = [c for c in master if _norm_u(c["username"]) not in alive_norm]
+    prior_dead = store.dead_usernames()
+    revived_n = sum(1 for u in alive_norm if u in prior_dead)
+
+    activity_records = list(seen_alive.values()) + [
+        {"username": c["username"], "alive": False} for c in dead_channels]
+
+    return {
+        "items": all_items,
+        "dead": dead_channels,
+        "activity_records": activity_records,
+        "scanned_n": len(usernames),
+        "alive_n": len(alive_norm),
+        "dead_n": len(dead_channels),
+        "revived_n": revived_n,
+    }

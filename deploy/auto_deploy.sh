@@ -31,8 +31,10 @@ try:
         # updated_at은 파이썬 ISO형('...T...+00:00')이라 SQLite 표준형(공백구분)과
         # 문자열 비교하면 'T'>' '로 항상 크게 나와 좀비 가드가 무력화된다(실측 2026-07-19).
         # datetime(updated_at)로 정규화해야 시각 비교가 맞다.
+        # ★2026-07-24: 최종 렌더(status)뿐 아니라 **미리보기(preview_status='rendering')**도
+        #   본다 — 예전엔 preview를 안 봐서 재시작이 미리보기 ffmpeg를 계속 죽였다(사장님 실측).
         "SELECT COUNT(*) FROM mix_jobs "
-        "WHERE status IN ('rendering','removing_subtitles') "
+        "WHERE (status IN ('rendering','removing_subtitles') OR preview_status='rendering') "
         "AND datetime(updated_at) > datetime('now','-30 minutes')").fetchone()[0]
     sys.exit(0 if n > 0 else 1)   # exit 0 = 살아있는 렌더 있음 → 배포 연기
 except Exception as e:

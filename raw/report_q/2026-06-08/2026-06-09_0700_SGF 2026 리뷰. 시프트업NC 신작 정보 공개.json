@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_0700_SGF 2026 리뷰. 시프트업NC 신작 정보 공개.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "이준호",
+    "report_date": "2026년 6월 8일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "NC",
+        "code": "036570",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "420,000원",
+        "tp_prev": "320,000",
+        "tp_direction": "up",
+        "earnings_outlook": "출시 이후 올해 매출 2,010억원을 유지한다.",
+        "estimate_revision": null,
+        "next_catalyst": "아이온2 글로벌 9월 출시, 길드워3 향후 베타 테스트 일정 및 출시일 확정",
+        "thesis": [
+          "아이온2 글로벌의 출시일이 9월로 확정됨",
+          "자회사 아레나넷의 길드워3 정보 공개",
+          "한국/대만 출시 경험을 바탕으로 성공적인 사용자 확보 예상"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "NC는 [아이온2 글로벌]의 정보를 공개, 출시일을 9월로 확정했다. 스팀/퍼플 동시 출시 예정이며 출시일이 기존 예상과 동일하기에 추정치 변경은 없다.",
+        "sector": "기타"
+      },
+      {
+        "name": "시프트업",
+        "code": "462870",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "45,000원",
+        "tp_prev": "60,000",
+        "tp_direction": "down",
+        "earnings_outlook": "스텔라 블레이드는 이미 누적 판매량 450만장 이상으로 추정된다.",
+        "estimate_revision": null,
+        "next_catalyst": "스텔라 블레이드: 블러드 레인 2028년 출시 예정",
+        "thesis": [
+          "신작 스텔라 블레이드: 블러드 레인 트레일러 최초 공개",
+          "전작 대비 확장된 스케일과 액션 경험 제공",
+          "시프트업 직접 퍼블리싱을 통한 PC/콘솔 동시 출시"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "시프트업은 [스텔라 블레이드: 블러드 레인]을 최초 공개했으며 NC는 [아이온2 글로벌]과 자회사 아레나넷이 개발하는 [길드워3]를 최초 공개했다.",
+        "sector": "기타"
+      }
+    ]
+  }
+}

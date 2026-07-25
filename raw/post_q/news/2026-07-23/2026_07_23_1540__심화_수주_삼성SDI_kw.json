@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성SDI",
+      "signal": "neutral",
+      "reason": null,
+      "ts": "2026-07-21",
+      "quote": "삼성SDI(006400) 7월 2주차 리포트",
+      "sector": "2차전지"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "삼성SDI 7월 2주차 리포트 발행",
+      "ts": "2026-07-21",
+      "quote": "삼성SDI(006400) 7월 2주차 리포트 (데일리바이트(DAILY BYTE), 07-21 02:39)"
+    }
+  ],
+  "quote": "삼성SDI(006400) 7월 2주차 리포트 (데일리바이트(DAILY BYTE), 07-21 02:39)"
+}

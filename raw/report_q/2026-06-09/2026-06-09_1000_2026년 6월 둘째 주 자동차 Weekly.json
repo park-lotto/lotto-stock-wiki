@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_2026년 6월 둘째 주 자동차 Weekly.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "김광식, 최보영",
+    "report_date": "2026/06/09",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "5월 미국 신차 판매: 148만 대(YoY +0.6%), YTD -5%",
+      "USMCA: 북미산 부품 75%→82%·미국/캐나다산 40%→50% 상향 요구",
+      "LG에너지솔루션 미국 정부에 상호관세 환급 신청"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "자동차",
+        "stance": null,
+        "reason": "HEV/플릿 수요로 연내 첫 YoY 성장"
+      },
+      {
+        "sector": "2차전지",
+        "stance": null,
+        "reason": "1Q ESS 출하량 YoY LGES: +253%, SDI: +34%. 하반기 국내 업체 출하 물량, 점유율 상승 기대"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "테슬라",
+      "현대차",
+      "기아",
+      "LG에너지솔루션",
+      "삼성SDI"
+    ],
+    "risk": "USMCA 원가 압력 우려",
+    "quote": "5월 미국 신차 판매: 148만 대(YoY +0.6%), YTD -5%. HEV/플릿 수요로 연내 첫 YoY 성장 - USMCA: 북미산 부품 75%→82%·미국/캐나다산 40%→50% 상향 요구, 원가 압력 우려 - 테슬라 로보택시: 무인 운영 오스틴 전역 확대, 본격적 증분 v15 재설계 이후 26년말 본격화 - 1Q ESS 출하량 YoY LGES: +253%, SDI: +34%. 하반기 국내 업체 출하 물량, 점유율 상승 기대 - LG에너지솔루션 미국 정부에 상호관세 환급 신청. 환급금 규모 1천억원 이상, 절차 90일 소요 전망"
+  }
+}

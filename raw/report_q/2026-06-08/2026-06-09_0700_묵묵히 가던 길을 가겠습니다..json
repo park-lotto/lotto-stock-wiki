@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_0700_묵묵히 가던 길을 가겠습니다..md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "김회재",
+    "report_date": "2026.06.01(월)~06.05(금)",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "방송미디어통신위원회 26년 하반기 정책연구 30건 추진",
+      "FAST(광고 기반 무료 스트리밍) 생태계 육성 논의",
+      "미국 OTT 번들링 시장 변화"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "통신/미디어",
+        "stance": "중립",
+        "reason": "컨텐츠 성과는 좋으나, 티빙의 개인정보 유출 등 주변 환경은 여전히 비우호적"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6/5",
+        "event": "NFLX <참교육> 공개"
+      },
+      {
+        "date": "6/22",
+        "event": "tvN <내일도 출근!> 공개"
+      },
+      {
+        "date": "6/26",
+        "event": "SBS <김부장> 공개"
+      },
+      {
+        "date": "6/26",
+        "event": "NFLX <맨 끝줄 소년> 공개"
+      }
+    ],
+    "top_picks": [
+      "콘텐트리중앙",
+      "스튜디오드래곤",
+      "SBS",
+      "CJ ENM",
+      "제일기획",
+      "이노션",
+      "스카이라이프",
+      "LG 헬로비전",
+      "CJ CGV"
+    ],
+    "risk": "티빙의 개인정보 유출, 유료방송 수익성 악화, OTT 경쟁 심화",
+    "quote": "컨텐츠 성과는 좋으나, 티빙의 개인정보 유출 등 주변 환경은 여전히 비우호적"
+  }
+}

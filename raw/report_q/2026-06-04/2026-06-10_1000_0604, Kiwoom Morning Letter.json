@@ -1,0 +1,61 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "Kiwoom",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_0604, Kiwoom Morning Letter.md"
+  },
+  "questionnaire": {
+    "broker": "Kiwoom",
+    "analyst": null,
+    "report_date": "2026/6/4",
+    "target_kind": "market",
+    "market_direction": "Neutral",
+    "macro_vars": [
+      "KOSPI: 8,801.49",
+      "KOSDAQ: 1,026.03",
+      "달러/원 환율: 1,535.14",
+      "미국 국채(10년): 4.495%",
+      "WTI: 96.02$"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "전력",
+        "stance": "Strong",
+        "reason": "AI發 전력 슈퍼사이클로 인한 영토 확장"
+      },
+      {
+        "sector": "조선",
+        "stance": "Neutral",
+        "reason": "미국 해군 함정 구조물 생산 가능성 언급 및 수출 계약"
+      }
+    ],
+    "style": "중립",
+    "event_calendar": [
+      {
+        "date": "6.02",
+        "event": "한국 CPI"
+      },
+      {
+        "date": "6.03",
+        "event": "미국 ADP 비농업고용"
+      },
+      {
+        "date": "6.04",
+        "event": "한국 외환보유고"
+      },
+      {
+        "date": "6.05",
+        "event": "한국 경상수지"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "현대차",
+      "한화에어로스페이스",
+      "LG전자"
+    ],
+    "risk": "중동 지정학적 리스크 심화, 인플레이션 우려, 고유가 지속",
+    "quote": "2일(화) 코스피는 장 초반 사상 처음 8,900선을 돌파했으나 하락 전환 후 반등 상승 마감"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-25_0805_이제 주도주는 무선 기지국 업체입니다.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김홍식",
+    "report_date": "2026.7.24",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "데이터센터 수요 둔화",
+      "5G 트래픽 증가",
+      "미국 FCC 어퍼 C밴드 경매"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "통신",
+        "stance": "Overweight",
+        "reason": "AI 기지국 관련주로 인식되며 실적/배당 정상화 기대"
+      },
+      {
+        "sector": "IT",
+        "stance": "Overweight",
+        "reason": "피지컬 AI가 IT 수요를 견인할 가능성"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2027년초 예상",
+        "event": "미국 어퍼 C밴드 주파수 경매"
+      },
+      {
+        "date": "2027년 1분기",
+        "event": "장비 수주"
+      }
+    ],
+    "top_picks": [
+      "SKT",
+      "KMW",
+      "HFR",
+      "RFHIC"
+    ],
+    "risk": "데이터센터 수요 둔화에 대한 우려",
+    "quote": "이젠 고주파수에 특화된 핵심 장비주 KMW/HFR/RFHIC에 집중 투자할 필요가 있겠다."
+  }
+}

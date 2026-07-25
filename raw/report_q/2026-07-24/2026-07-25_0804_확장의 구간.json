@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-25_0804_확장의 구간.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "한유정",
+    "report_date": "2026년 07월 24일",
+    "stocks": [
+      {
+        "name": "달바글로벌",
+        "code": "483650",
+        "rating": "Buy",
+        "rating_changed": true,
+        "tp_new": "290,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연결 매출액은 7,790억원(+49.9% YoY), 영업이익은 1,632억원(+60.8% YoY)으로 추정한다.",
+        "estimate_revision": null,
+        "next_catalyst": "2026년부터 북미와 유럽의 기여가 본격적으로 확대될 전망이다.",
+        "thesis": [
+          "미스트에서 비(非)미스트로 넓어지는 제품 포트폴리오",
+          "북미·유럽 중심으로 확장되는 성장 지역과 유통망",
+          "신규 성장원을 확보하는 과정에서의 수익성 부담은 점검 필요"
+        ],
+        "valuation_basis": "12개월 선행 EPS 11,443원에 Target PER 25.5배를 적용해 산출했다.",
+        "risk": "신규 거래선의 매출 증가 속도가 예상보다 더디거나, 채널 다변화를 위해 판촉 및 유통 비용을 공격적으로 집행할 경우 러시아의 매출 성장률과 수익성이 동시에 추정치를 하회할 수 있다.",
+        "supply_comment": "달바글로벌은 2024년 7월 사명을 비모뉴먼트에서 달바글로벌로 변경했고, 2025년 5월 유가증권시장에 상장했다.",
+        "quote": "투자의견 BUY, 목표주가 290,000원으로 커버리지 개시"
+      }
+    ]
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-22_0807_항공기 공급 Shortage 장기화.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "안도현",
+    "report_date": "2026년 7월 21일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "대한항공",
+        "code": "003490",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "41,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "향후 항공화물 운임 높은 수준 유지",
+        "thesis": [
+          "여객 수요가 인바운드로 확산되는 FSC의 경우 매크로 환경 변화에도 수요 변동성이 크지 않았고, 노선 공급이 제한적인 상황에서의 운임 결정력이 높아지면서 극단적인 상황에서의 수익성 방어도 가능했다.",
+          "대한항공의 항공화물 중 장기계약 비중이 상승하면서(30% 이상 비중 추정), 스팟성 화물에 대한 운임 협상력도 제고되었기 때문에 향후 항공화물 운임은 높은 수준에서 유지될 전망이다.",
+          "AI/반도체/데이터센터 등 여러 Capex 투자 사이클에서 항공화물의 필요성은 더욱 부각될 전망이다."
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "한국발 장거리, 한국발 항공화물 수요가 공급을 초과하는 국면이 지속될 예정",
+        "quote": "결론적으로 한국발 장거리, 한국발 항공화물 수요가 공급을 초과하는 국면이 지속될 예정이고, 대한항공을 최선호주로 제시한다."
+      },
+      {
+        "name": "진에어",
+        "code": "272450",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "7,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": null,
+        "thesis": [
+          "항공기 공급 Shortage 장기화"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "항공기 공급 Shortage 장기화"
+      }
+    ]
+  }
+}

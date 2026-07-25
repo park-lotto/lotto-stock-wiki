@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-22_0808_[ESG & Transition] 통키[通 Keys] Transitio...md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "박세연",
+    "report_date": "2026년 7월 21일",
+    "target_kind": "market",
+    "market_direction": "완만한 상승 흐름",
+    "macro_vars": [
+      "EU ETS 정책",
+      "REPowerEU 탄소배출권 매각",
+      "미·이란 지정학적 리스크",
+      "에너지 가격"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "신재생",
+        "stance": "중립",
+        "reason": "EU의 중장기 탄소 감축 목표와 CBAM·ETS 적용 범위 확대 기조는 유지되고 있어 구조적인 배출권 수요 확대 요인은 유효함"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.07.16",
+        "event": "대만 연기금, 기후 인프라 투자 운용사 선정"
+      },
+      {
+        "date": "2026.07.17",
+        "event": "Nuveen·CalSTRS, 청정 인프라에 20억달러 투자 약정"
+      },
+      {
+        "date": "2026.07.17",
+        "event": "트럼프 행정부, 국가안보 내세워 해상풍력 사업 제동"
+      },
+      {
+        "date": "2026.07.18",
+        "event": "EU, 기업 탄소배출 감축 속도 늦추는 ETS 개편안 제시"
+      },
+      {
+        "date": "2026.07.19",
+        "event": "중동 긴장 고조에 국제유가 90달러 돌파"
+      }
+    ],
+    "top_picks": null,
+    "risk": "ETS 개편안으로 인한 단기적인 공급 확대 우려",
+    "quote": "금주는 실수요가 하단 지지하는 가운데 에너지 가격의 상승 가능성으로 완만한 상승 흐름을 전망합니다."
+  }
+}

@@ -181,11 +181,16 @@ def test_store_script_roundtrip(tmp_path):
     assert got["extracted_at"]
 
 
-def test_unauthenticated_page_redirects_to_login(monkeypatch):
+def test_unauthenticated_root_serves_landing(monkeypatch):
+    # 비로그인 GET / 는 공개 대문(랜딩)을 200으로 준다(로그인 리다이렉트 아님, 2026-07-20 변경).
     client = _client_with_auth(monkeypatch)
     r = client.get("/", follow_redirects=False)
-    assert r.status_code in (302, 303, 307)
-    assert r.headers["location"] == "/login"
+    assert r.status_code == 200
+    assert app_module._BRAND["name"] in r.text
+    # 대문 외 보호 페이지는 여전히 /login 으로 리다이렉트한다.
+    r2 = client.get("/produce.html", follow_redirects=False)
+    assert r2.status_code in (302, 303, 307)
+    assert r2.headers["location"] == "/login"
 
 
 def test_login_wrong_password_redirects_with_error(monkeypatch):

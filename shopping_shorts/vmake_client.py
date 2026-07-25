@@ -47,7 +47,7 @@ def remove_subtitles(video_path, api_key, out_path, poll_timeout=1200):
     MT_AI_POLL_* 환경변수로 관리한다(기본 최대 ~1h).
     """
     if not api_key:
-        raise ValueError("VMake API 키가 등록되지 않았습니다")
+        raise ValueError("AI 자막 제거 API 키가 등록되지 않았습니다")
     ak, sk = _split_key(api_key)
     client = _client(ak, sk)
     result = client.run_task(
@@ -58,8 +58,8 @@ def remove_subtitles(video_path, api_key, out_path, poll_timeout=1200):
     # 성공: dict에 output_urls. 실패: {"error":..., "skill_status":"failed", "detail":...}
     if isinstance(result, dict) and result.get("error"):
         detail = result.get("detail") or result.get("error")
-        raise RuntimeError(f"VMake 자막제거 실패: {detail}")
+        raise RuntimeError(f"AI 자막 제거 실패: {detail}")
     urls = (result or {}).get("output_urls") or []
     if not urls:
-        raise RuntimeError(f"VMake 결과 URL이 비었습니다: {result}")
+        raise RuntimeError(f"AI 자막 제거 결과가 비었습니다: {result}")
     return _download(urls[0], out_path)

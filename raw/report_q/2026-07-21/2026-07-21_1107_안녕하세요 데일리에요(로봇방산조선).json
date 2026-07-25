@@ -1,0 +1,72 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "Eugene Investment & Securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-21_1107_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "Eugene Investment & Securities",
+    "analyst": "양승윤",
+    "report_date": "07/20",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "물류센터 화재",
+      "리튬배터리 화재 안전성",
+      "에스토니아 천궁 수출",
+      "한미 조선협력센터 출범"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "쿠팡 물류센터 화재로 인한 물류·제조 현장 내 로봇 안전성 관리 기준 강화 가능성"
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "에스토니아 향 천궁 수출 예비승인 요청 확인, 대공 무기 체계 유럽 시장 확장 주목"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "한미 조선협력센터 출범 및 미국 해양 산업 투자 유치, 조선소 생산성 향상 기대"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "23일",
+        "event": "김정관 산업부 장관, 한미 조선협력센터(KUSPC) 개소식 참석"
+      }
+    ],
+    "top_picks": [
+      "쿠팡",
+      "한국선급",
+      "현대차",
+      "기아",
+      "두산로보틱스",
+      "그리드 다이내믹스",
+      "삼현",
+      "유일로보틱스",
+      "삼성웰스토리",
+      "엔비디아",
+      "블랙스톤",
+      "퓨트로닉",
+      "한화",
+      "KAI",
+      "LIG D&A",
+      "에어버스 헬리콥터스",
+      "보잉",
+      "안두릴",
+      "록히드마틴",
+      "HD현대",
+      "HD현대중공업",
+      "한화오션",
+      "핀칸티에리",
+      "양밍"
+    ],
+    "risk": "리튬배터리 기반 로봇의 화재 안전성 문제 부각",
+    "quote": "향후 물류 및 제조 현장 내 로봇 안전성 관리 기준 엄격해질 가능성."
+  }
+}

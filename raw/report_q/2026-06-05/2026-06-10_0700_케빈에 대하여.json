@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_0700_케빈에 대하여.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "이정훈",
+    "report_date": "2026.06.04",
+    "target_kind": "market",
+    "market_direction": "중립",
+    "macro_vars": [
+      "연준 대차대조표 축소",
+      "커뮤니케이션 방식 변화",
+      "인플레이션 목표 체제 변화",
+      "AI 생산성 향상",
+      "실질 금리",
+      "재무부 정책 공조"
+    ],
+    "recommended_sectors": null,
+    "style": "기타",
+    "event_calendar": [
+      {
+        "date": "2026.06",
+        "event": "워시의 첫 FOMC"
+      },
+      {
+        "date": "2026.08",
+        "event": "잭슨홀 미팅"
+      }
+    ],
+    "top_picks": null,
+    "risk": [
+      "인플레이션이 2% 위에 머물 경우 정책 변화 가능성",
+      "연준 프레임워크 변경 과정에서의 시장 변동성",
+      "AI 생산성 향상으로 인한 실질 금리 상승 압력"
+    ],
+    "quote": "케빈 워시의 연준에서는 베센트 재무장관의 발언에도 귀를 기울일 필요성이 높아질 것으로 예상된다."
+  }
+}

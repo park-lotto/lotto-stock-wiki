@@ -1,0 +1,68 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "DAOL",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_0700_Daily Morning Brief(2026.06.09).md"
+  },
+  "questionnaire": {
+    "broker": "DAOL",
+    "analyst": "jeehyun12@daolfn.com",
+    "report_date": "09 Jun. 2026",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "미국채 2yr 4.162%(+1.5bp)",
+      "미국채 10yr 4.562%(+3.2bp)",
+      "JPY 160.16(-0.08%)",
+      "EUR 1.153(+0.10%)",
+      "Dollar 99.98(-0.09%)",
+      "WTI $91.3(+0.84%)",
+      "Brent $94.25(+1.25%)"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": null,
+        "reason": "AI 팩토리 구축 및 메모리 공동개발"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "삼성중공업 아프리카 지역 선주와 3조6536억원 규모 FLNG 본계약"
+      },
+      {
+        "sector": "자동차",
+        "stance": null,
+        "reason": "현대차그룹과 엔비디아 AI 데이터센터 프로젝트 협력 및 자율주행, 피지컬 AI 분야 협력 강화"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6월 8일",
+        "event": "수도권 건설현장 '올스톱'…레미콘 파업 '불응'에 공정 차질 현실화"
+      },
+      {
+        "date": "6월 9일",
+        "event": "한국 1분기(잠정) GDP 발표"
+      }
+    ],
+    "top_picks": [
+      "SK하이닉스",
+      "삼성중공업",
+      "현대차",
+      "엔비디아",
+      "한국타이어",
+      "네이버",
+      "엔씨소프트",
+      "제주항공",
+      "메리츠증권",
+      "한화",
+      "애큐온캐피탈",
+      "한학생명",
+      "바이칼인베스트먼트"
+    ],
+    "risk": "중동 긴장 완화에 따른 유가 등락 및 건설현장 레미콘 파업",
+    "quote": "미국 증시는 이스라엘-이란 간 긴장 완화에 따른 투자심리 개선과 전 거래일 급락에 따른 저가 매수세 유입에 힘입어 기술주 및 반도체주 위주 상승"
+  }
+}

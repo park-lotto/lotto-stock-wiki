@@ -1,0 +1,26 @@
+{
+  "target_kind": "insight",
+  "leading_sectors": [],
+  "stance": [
+    {
+      "target": "시장",
+      "view": "부정",
+      "ts": "2026-07-24",
+      "quote": "한번 무너지기 시작하면 가차없이 밀어버린다."
+    },
+    {
+      "target": "전닉",
+      "view": "중립",
+      "ts": "2026-07-24",
+      "quote": "혹시... 그게 진짜 전닉으로 죽는 결과를 가져오는건..."
+    }
+  ],
+  "methods": [
+    {
+      "rule": "시장 대응",
+      "quote": "시야를 넓게 ..."
+    }
+  ],
+  "stocks_mentioned": [],
+  "quote": "시장은 우리에게 쉽게 주지 않았다."
+}

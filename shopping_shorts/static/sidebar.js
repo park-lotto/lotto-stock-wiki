@@ -2,6 +2,32 @@
    기존에 페이지마다 <aside class="sidebar">를 손으로 복붙하다 항목이 제각각
    드리프트되고 mix 페이지엔 아예 없던 문제를 하나로 통일(2026-07-13). */
 (function () {
+  // 런처 v3 팝업 핸드오프(2026-07-23): 이 창이 로그인 팝업(name=stb_login)이고 열어준 부모가
+  // 살아있으면 = 로그인 성공으로 /(홈)가 뜬 것 → 부모를 홈으로 보내고 팝업을 닫는다.
+  // 작은 런처 창(바로가기 --window-size)으로 열렸다가 로그인했으면 넓게 키운다(막히면 무시).
+  // (try/catch·프로퍼티 접근만 — 테스트 하네스 미니 DOM에도 안전)
+  try {
+    if (window.name === "stb_login" && window.opener && !window.opener.closed) {
+      window.opener.location.href = "/";
+      window.close();
+      return;
+    }
+    if (window.outerWidth && window.outerWidth < 700) {
+      try { window.resizeTo(1500, 950); } catch (_) {}
+    }
+  } catch (_) {}
+  // PWA 부트스트랩 — 앱 페이지 전체(사이드바 포함 페이지)에 매니페스트·아이콘을 주입.
+  // 페이지마다 <head>를 손대면 드리프트되므로 여기 한 곳에서(공개 대문·로그인은 app.py가 직접).
+  // (setAttribute 대신 프로퍼티 할당 — 테스트 하네스의 미니 DOM에도 안전)
+  if (!document.querySelector('link[rel="manifest"]')) {
+    var _mf = document.createElement("link"); _mf.rel = "manifest"; _mf.href = "/manifest.webmanifest";
+    var _tc = document.createElement("meta"); _tc.name = "theme-color"; _tc.content = "#0c1411";
+    var _fi = document.createElement("link"); _fi.rel = "icon"; _fi.href = "/favicon.ico";
+    var _at = document.createElement("link"); _at.rel = "apple-touch-icon"; _at.href = "/apple-touch-icon.png";
+    document.head.appendChild(_mf); document.head.appendChild(_tc);
+    document.head.appendChild(_fi); document.head.appendChild(_at);
+  }
+
   var NAV = [
     { label: "리서치", items: [
       { icon: "📊", text: "레퍼런스 랭킹",   href: "/", free: true },
@@ -9,6 +35,7 @@
       { icon: "📚", text: "대본 즐겨찾기",   href: "/library" },
       { icon: "🔎", text: "신규채널 픽업",   href: "/discover" },
       { icon: "🎞️", text: "장면 라이브러리", href: "/scene_library" },
+      { icon: "📋", text: "레퍼런스 채널 관리", href: "/refs", admin: true },
     ] },
     { label: "제작", items: [
       { icon: "🎬", text: "영상 제작소",     href: "/produce" },
@@ -25,14 +52,35 @@
 
   var css =
     "body{display:flex;min-height:100vh;margin:0}" +
-    ".ss-nav{width:230px;background:var(--panel,#111722);border-right:1px solid var(--line,#1e2735);" +
-      "padding:16px;flex-shrink:0;box-sizing:border-box;font-family:'Malgun Gothic',system-ui,sans-serif}" +
-    ".ss-nav h1{font-size:16px;font-weight:800;margin:0 0 16px}" +
+    ".ss-nav{width:270px;background:var(--panel,#111722);border-right:1px solid var(--line,#1e2735);" +
+      "padding:20px 18px;flex-shrink:0;box-sizing:border-box;font-family:'Malgun Gothic',system-ui,sans-serif}" +
+    // 메인 로고 = 크고 눈에 띄게(사장님 2026-07-21). 26px·900·자간압축으로 존재감을 준다.
+    ".ss-nav h1{font-size:26px;font-weight:900;letter-spacing:-.5px;margin:2px 0 16px;display:flex;align-items:center;gap:7px}" +
+    // 계정 패널(2026-07-22) — 로고 바로 아래. 구글아이디·등급·오늘 사용량·가입일·로그아웃.
+    ".ss-acct{margin:0 0 16px;background:var(--inset,#0c1412);border:1px solid var(--line,#1e2735);border-radius:14px;padding:14px 14px 12px}" +
+    ".ss-acct-top{display:flex;align-items:center;gap:11px}" +
+    ".ss-acct-av{width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#08110e;background:var(--grad,linear-gradient(135deg,#6ff0d6,#1f9e7a))}" +
+    ".ss-acct-id{min-width:0;flex:1}" +
+    ".ss-acct-email{font-size:13.5px;font-weight:700;color:var(--txt,#e6edf3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}" +
+    ".ss-acct-badge{display:inline-block;margin-top:4px;font-size:11px;font-weight:800;border:1px solid;border-radius:6px;padding:1px 8px}" +
+    ".ss-acct-sub{font-size:12px;color:var(--sub,#8b98a9);margin:9px 2px 0;line-height:1.4}" +
+    ".ss-acct-usage{margin-top:11px;padding-top:10px;border-top:1px solid var(--line,#1e2735)}" +
+    ".ss-acct-usage-h{font-size:10.5px;color:var(--sub,#8b98a9);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}" +
+    ".ss-acct-u{display:flex;justify-content:space-between;font-size:12.5px;color:var(--txt,#e6edf3);padding:2px 2px}" +
+    ".ss-acct-u b{color:var(--sel-fg,#6ff0d6);font-weight:700}" +
+    ".ss-acct-since{font-size:11px;color:var(--sub,#8b98a9);margin-top:9px;text-align:right}" +
+    ".ss-acct-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}" +
+    ".ss-acct-link{flex:1 1 0;white-space:nowrap;text-align:center;font-size:12px;color:var(--txt,#e6edf3);text-decoration:none;padding:8px 4px;border:1px solid var(--line,#1e2735);border-radius:8px;background:var(--panel,#111722)}" +
+    ".ss-acct-link.wide{flex-basis:100%}" +
+    ".ss-acct-link:hover{border-color:var(--accent,#37e0bd);color:var(--sel-fg,#6ff0d6)}" +
     // 브랜드 텍스트만 민트 그라디언트(이모지는 제외 — text-fill:transparent가 이모지 글리프까지 비운다)
-    ".ss-brand{background:var(--grad,linear-gradient(135deg,#6ff0d6,#1f9e7a));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}" +
-    ".ss-group{margin-bottom:18px}" +
-    ".ss-label{font-size:11px;color:var(--sel-fg,#6ff0d6);text-transform:uppercase;margin-bottom:8px}" +
-    ".ss-item{padding:10px 12px;border-radius:8px;font-size:14px;color:var(--txt,#e6edf3);cursor:pointer;margin-bottom:2px}" +
+    // + 은은한 민트 글로우로 강조(drop-shadow는 clip:text에서도 글자 외곽에 먹는다).
+    ".ss-brand{background:var(--grad,linear-gradient(135deg,#6ff0d6,#1f9e7a));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;filter:drop-shadow(0 0 12px rgba(55,224,189,.35))}" +
+    // 카테고리 = 박스로 시각 구분 + 크게(사장님 2026-07-21). 그룹을 inset 카드로 감싸고
+    // 라벨은 카드 헤더처럼, 항목은 15px·굵게로 키워 눈에 잘 띄고 누르기 쉽게.
+    ".ss-group{margin-bottom:14px;background:var(--inset,#0c1412);border:1px solid var(--line,#1e2735);border-radius:12px;padding:9px 9px 7px}" +
+    ".ss-label{font-size:12px;color:var(--sel-fg,#6ff0d6);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin:3px 6px 9px}" +
+    ".ss-item{padding:12px 13px;border-radius:9px;font-size:16px;font-weight:600;color:var(--txt,#e6edf3);cursor:pointer;margin-bottom:4px}" +
     ".ss-item.ss-disabled{cursor:default;opacity:.45}" +
     // 선택/활성 표면 = 민트 토큰(--sel-bg/--sel-fg). 아직 토큰이 없는 페이지도 폴백으로 민트가 뜬다.
     ".ss-item.active{background:var(--sel-bg,linear-gradient(90deg,#123a30,#0c221c));color:var(--sel-fg,#6ff0d6)}" +
@@ -55,13 +103,29 @@
     ".ss-work-del{flex-shrink:0;cursor:pointer;color:var(--sub,#8b98a9);opacity:0;padding:2px 4px;font-size:13px}" +
     ".ss-work:hover .ss-work-del{opacity:.65}" +
     ".ss-work-del:hover{opacity:1;color:#ff6b6b}" +
+    // 데스크톱: 상단 계정 카드에 '⚙️ 내 계정'이 있어 이 메뉴는 중복 → 숨김. 모바일은 카드가
+    // 숨겨지므로(.ss-acct display:none) 이 메뉴를 노출한다(2026-07-24).
+    "@media(min-width:761px){.ss-group-acct{display:none}}" +
     "@media(max-width:760px){body{flex-direction:column}" +
       ".ss-nav{width:100%;border-right:none;border-bottom:1px solid var(--line,#1e2735);display:flex;gap:6px;" +
         "overflow-x:auto;align-items:center;white-space:nowrap;padding:10px 12px}" +
-      ".ss-nav h1{margin:0 8px 0 0;flex-shrink:0}" +
-      ".ss-group{margin:0;display:flex;gap:6px;align-items:center}" +
+      ".ss-acct{display:none}" +   // 모바일 가로바엔 계정카드 공간이 없다 → /account로
+      ".ss-nav h1{margin:0 8px 0 0;flex-shrink:0;font-size:19px}" +
+      ".ss-group{margin:0;padding:0;background:none;border:none;display:flex;gap:6px;align-items:center}" +
       ".ss-label{display:none}" +
       ".ss-item{margin:0;padding:6px 10px;flex-shrink:0;font-size:12px}}";
+  // 버튼 쿠션감(전역, 2026-07-24) — 누르면 쏙 눌렸다 통통 튀어나옴. 사장님 선택 '쿠션' 프리셋.
+  // 자체 transition 없는 주버튼(.btn-next/.btn-prev/.tab/.cta-shine 등)엔 풀 적용. 자체
+  // transition을 가진 버튼은 페이지 규칙(클래스>요소)이 우선이라 배경 트랜지션을 안 밟고
+  // :active 누름 스케일만 얹힌다(회귀 없음). sidebar.js 로드 페이지(제작 워크플로 9종) 공통.
+  css +=
+    "button,.btn,.btn-next,.btn-prev,.tab,.cta,.cta-shine,[role=button]{" +
+      "transition:transform .34s cubic-bezier(.22,1.4,.4,1)}" +
+    "button:active,.btn:active,.btn-next:active,.btn-prev:active,.tab:active,.cta:active,.cta-shine:active,[role=button]:active{" +
+      "transform:scale(.94) translateY(1px);transition-duration:.05s;transition-timing-function:ease-out}" +
+    "@media(prefers-reduced-motion:reduce){" +
+      "button,.btn,.btn-next,.btn-prev,.tab,.cta,.cta-shine,[role=button]{transition:none}" +
+      "button:active,.btn:active,.btn-next:active,.btn-prev:active,.tab:active,.cta:active,.cta-shine:active,[role=button]:active{transform:none;filter:brightness(1.12)}}";
   var style = document.createElement("style");
   style.textContent = css;
   document.head.appendChild(style);
@@ -77,18 +141,42 @@
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
     });
   }
-  var html = "<h1>🛍️ <span class=\"ss-brand\">쇼핑쇼츠</span></h1>";
+  // 로고 클릭 = 홈(/)으로(사장님 2026-07-21) — 커서·title로 클릭 가능함을 알린다.
+  // 브랜드 엠블럼(v2, app.py _LOGO_SVG와 동일 도형 — id만 ss- 접두어로 충돌 방지)
+  var BRAND_SVG =
+    '<svg width="24" height="24" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템박스" style="flex-shrink:0">' +
+    '<defs><radialGradient id="ssdk" cx="50%" cy="42%" r="65%">' +
+    '<stop offset="0" stop-color="#1c2b25"/><stop offset="1" stop-color="#0b120f"/></radialGradient>' +
+    '<linearGradient id="ssmg" x1="0" y1="0" x2="1" y2="1">' +
+    '<stop offset="0" stop-color="#6ff0d6"/><stop offset="1" stop-color="#1f9e7a"/></linearGradient>' +
+    '<linearGradient id="ssgg" x1="0" y1="0" x2="1" y2="1">' +
+    '<stop offset="0" stop-color="#ffe1a1"/><stop offset="1" stop-color="#f0a93a"/></linearGradient></defs>' +
+    '<circle cx="32" cy="32" r="29" fill="url(#ssdk)"/>' +
+    '<circle cx="32" cy="32" r="29" stroke="url(#ssmg)" stroke-width="2.4"/>' +
+    '<rect x="17.6" y="40" width="28.8" height="6" rx="2.8" fill="#1d8a68"/>' +
+    '<rect x="20.8" y="32" width="22.4" height="6" rx="2.8" fill="url(#ssmg)"/>' +
+    '<rect x="24" y="24" width="16" height="6" rx="2.8" fill="url(#ssgg)"/>' +
+    '<path d="M32 13.8l8 8.2H24l8-8.2z" fill="url(#ssgg)"/></svg>';
+  var html = "<h1 onclick=\"location.href='/'\" style=\"cursor:pointer\" title=\"홈으로\">" + BRAND_SVG + " <span class=\"ss-brand\">숏템박스</span></h1>";
   NAV.forEach(function (g) {
     html += '<div class="ss-group"><div class="ss-label">' + g.label + "</div>";
     g.items.forEach(function (it) {
       var active = !!it.href && (it.href === path || (it.href === "/" && path === "/"));
-      var cls = "ss-item" + (active ? " active" : "") + (it.href ? "" : " ss-disabled");
+      // 관리자 전용 항목(admin:true)은 기본 숨김으로 렌더 → /api/me가 is_admin이면 아래에서 노출.
+      var cls = "ss-item" + (active ? " active" : "") + (it.href ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "");
+      var hide = it.admin ? ' style="display:none"' : "";
       var onclick = it.href && !active ? ' onclick="location.href=\'' + esc(it.href) + "'\"" : "";
       var payAttr = (it.href ? ' data-ss-href="' + esc(it.href) + '"' : "") + (it.free ? ' data-ss-free="1"' : "");
-      html += '<div class="' + cls + '"' + payAttr + onclick + ">" + it.icon + " " + it.text + "</div>";
+      html += '<div class="' + cls + '"' + payAttr + hide + onclick + ">" + it.icon + " " + it.text + "</div>";
     });
     html += "</div>";
   });
+
+  // 내 계정 메뉴 — 데스크톱에선 상단 계정 카드(_accountCard)의 '⚙️ 내 계정'과 중복이라 숨긴다.
+  // 단 모바일(≤760px)에선 그 카드(.ss-acct)가 공간 부족으로 display:none이라, 이 메뉴가 /account·
+  // 로그아웃에 닿는 유일한 통로다 → 모바일에만 노출(ss-item-acct + 아래 @media)(2026-07-24).
+  html += '<div class="ss-group ss-group-acct"><div class="ss-item ss-item-acct" data-ss-href="/account" data-ss-free="1"' +
+          ' onclick="location.href=\'/account\'">👤 내 계정</div></div>';
 
   // 테마 토글(민트-블랙 ↔ 화이트-민트). data-theme + localStorage로 전 페이지 공유.
   // 최종 FOUC 방지는 각 페이지 <head> 인라인 스니펫이 하고(렌더 전 실행), 여기선 라벨 동기화만.
@@ -129,6 +217,14 @@
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (!d || !d.ok) { window.alert("삭제 실패"); return; }
+        // 로컬 draft(sessionStorage)가 방금 지운 작업을 붙들고 있으면 함께 지운다(2026-07-24).
+        // 안 지우면 제작소 재진입 시 _consumeProduceHandoff가 그 draft를 복원→saveWork의
+        // INSERT 폴백으로 되살려, 지운 작업이 1단계로 부활하고 '내 작업'에 다시 뜬다.
+        // URL ?work= 만 보던 기존 가드는 다른 화면에서 삭제할 때 이 draft를 놓쳤다.
+        try {
+          var w = JSON.parse(sessionStorage.getItem("produce_work") || "null");
+          if (w && w.work_id === wid) sessionStorage.removeItem("produce_work");
+        } catch (e) {}
         var open = null;
         try { open = new URLSearchParams(location.search).get("work"); } catch (e) {}
         if (open === wid) { location.href = "/produce?new=1"; return; }
@@ -212,13 +308,22 @@
   window.__ssShowPaywall = _pwModal;
   function _pwBanner(daysLeft) {
     if (document.getElementById("ss-pw-banner")) return;
-    var b = document.createElement("div");
-    b.id = "ss-pw-banner";
-    b.style.cssText = "position:sticky;top:0;z-index:9999;background:linear-gradient(90deg,#153a6b,#0d2340);color:#cfe4ff;padding:8px 14px;font-size:13px;text-align:center;font-family:system-ui,sans-serif";
-    b.innerHTML = "🎁 무료 체험 <b style='font-size:15px'>D-" + daysLeft + "</b> · 결제하면 계속 쓸 수 있어요";
     var nav = document.querySelector(".ss-nav");
-    if (nav && nav.nextSibling) document.body.insertBefore(b, nav.nextSibling);
-    else document.body.appendChild(b);
+    if (!nav) return;
+    // 카톡 문의로 연결(admin 연락처의 kakao가 URL이면 새 탭, 아니면 안내 모달 폴백).
+    var kakao = (_pw.contact && _pw.contact.kakao) || "";
+    var isUrl = /^https?:\/\//.test(kakao);
+    var b = document.createElement(isUrl ? "a" : "div");
+    b.id = "ss-pw-banner";
+    if (isUrl) { b.href = kakao; b.target = "_blank"; b.rel = "noopener"; }
+    // 좌측 사이드바 맨 아래 배치.
+    b.style.cssText = "display:block;margin:14px 10px 12px;padding:11px 13px;border-radius:12px;" +
+      "background:linear-gradient(135deg,#153a6b,#0d2340);border:1px solid #244a7a;color:#cfe4ff;" +
+      "font-size:12.5px;line-height:1.5;text-align:left;cursor:pointer;text-decoration:none;font-family:system-ui,sans-serif";
+    b.innerHTML = "🎁 무료 체험 <b style='font-size:14px;color:#fff'>D-" + daysLeft + "</b><br>" +
+      "<span style='color:#9fc4f0'>결제하면 계속 써요 · <b style='color:#ffd97a'>카톡 문의 →</b></span>";
+    if (!isUrl) b.onclick = function () { _pwModal(); };
+    nav.appendChild(b);   // 사이드바 콘텐츠 맨 아래
   }
   function _pwLockSidebar() {
     document.querySelectorAll(".ss-item[data-ss-href]:not([data-ss-free])").forEach(function (el) {
@@ -228,10 +333,55 @@
       el.innerHTML = el.innerHTML + ' <span class="ss-lock">🔒</span>';
     });
   }
+  // 계정 패널(2026-07-22) — 로고 바로 아래. 구글아이디·등급·오늘 사용량·가입일·로그아웃.
+  window.__ssLogout = function () {
+    fetch("/logout", { method: "POST" })
+      .then(function () { location.href = "/login"; })
+      .catch(function () { location.href = "/login"; });
+  };
+  function _accountCard(d) {
+    var nav = document.querySelector(".ss-nav");
+    if (!nav || document.getElementById("ss-acct")) return;
+    var admin = !!d.is_admin;
+    // 관리자면 사이드바의 admin 전용 항목(레퍼런스 채널 관리 등)을 노출.
+    if (admin) document.querySelectorAll(".ss-admin-only").forEach(function (e) { e.style.display = ""; });
+    var email = escHtml(d.email || "");
+    var initial = escHtml((d.email || "?").trim().charAt(0).toUpperCase() || "?");
+    var tier, tierColor, sub;
+    if (admin) { tier = "관리자"; tierColor = "#ffd97a"; sub = "전 기능 · 무제한"; }
+    else if (d.plan === "pro") { tier = "프로"; tierColor = "#6ff0d6"; sub = "전 기능 이용중"; }
+    else if (d.level === "pending") { tier = "승인대기"; tierColor = "#ffa94d"; sub = "승인 후 이용 가능해요"; }
+    else if (typeof d.days_left === "number" && d.days_left > 0) { tier = "체험 D-" + d.days_left; tierColor = "#7db4ff"; sub = "만료 후엔 랭킹만 열려요"; }
+    else { tier = "무료"; tierColor = "#8b98a9"; sub = "랭킹 열람만 가능해요"; }
+    var usage = "";
+    if (d.usage && d.usage_limits) {
+      var rows = [["렌즈", "lens"], ["영상", "render"], ["대본", "script"]].map(function (p) {
+        var u = d.usage[p[1]], lim = d.usage_limits[p[1]];
+        return '<div class="ss-acct-u"><span>' + p[0] + '</span><b>' + u + (lim != null ? " / " + lim : "") + "</b></div>";
+      }).join("");
+      usage = '<div class="ss-acct-usage"><div class="ss-acct-usage-h">오늘 사용량</div>' + rows + "</div>";
+    }
+    var member = (typeof d.member_days === "number") ? '<div class="ss-acct-since">가입 ' + d.member_days + "일째</div>" : "";
+    var card = document.createElement("div");
+    card.id = "ss-acct"; card.className = "ss-acct";
+    card.innerHTML =
+      '<div class="ss-acct-top"><div class="ss-acct-av">' + initial + "</div>" +
+        '<div class="ss-acct-id"><div class="ss-acct-email" title="' + email + '">' + email + "</div>" +
+          '<div class="ss-acct-badge" style="color:' + tierColor + ";border-color:" + tierColor + '">' + escHtml(tier) + "</div></div></div>" +
+      '<div class="ss-acct-sub">' + escHtml(sub) + "</div>" + usage + member +
+      '<div class="ss-acct-links">' +
+        (admin ? '<a href="/admin" target="_blank" rel="noopener" class="ss-acct-link wide" style="color:#ffd97a;border-color:#5a4a1e">🔐 관리페이지</a>' : '') +
+        '<a href="/account" class="ss-acct-link">⚙️ 내 계정</a>' +
+        '<a href="#" class="ss-acct-link" onclick="window.__ssLogout();return false">↩ 로그아웃</a></div>';
+    var h1 = nav.querySelector("h1");
+    if (h1 && h1.nextSibling) nav.insertBefore(card, h1.nextSibling);
+    else nav.insertBefore(card, nav.firstChild);
+  }
   function initPaywall() {
     fetch("/api/me").then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
       if (!d) return;
       _pw.level = d.level; _pw.contact = d.contact || {};
+      _accountCard(d);   // 로고 아래 계정 패널
       if (d.level === "ranking_only") _pwLockSidebar();
       else if (typeof d.days_left === "number" && d.days_left >= 0 && d.plan !== "pro") _pwBanner(d.days_left);
     }).catch(function () {});
@@ -245,15 +395,105 @@
     });
   };
 
+  // ── 새 회원 가입 알림 — 관리자 페이지 어디서나 '띠링' + 팝업 (2026-07-24) ──
+  // /api/admin/pending 을 폴링한다. 관리자만 200 → 폴러 유지, 비관리자는 첫 응답이 비-200이라
+  // 조용히 꺼진다(부하·노출 없음). 새 가입(newest_id 증가)이 감지되면 소리+토스트.
+  var _SS_SEEN_KEY = "ss_signup_last_seen";     // 마지막으로 본 최신 가입 id(localStorage) — 새로고침 넘어 유지
+  var _ssAudioCtx = null;
+
+  function _ssDing() {
+    // Web Audio로 '띠링띠링' 2연음 — 오디오 파일 없이 생성. 자동재생 정책에 막히면 조용히 실패(토스트는 뜸).
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      if (!_ssAudioCtx) _ssAudioCtx = new AC();
+      if (_ssAudioCtx.state === "suspended") { try { _ssAudioCtx.resume(); } catch (e) {} }
+      var t0 = _ssAudioCtx.currentTime;
+      [0, 0.18].forEach(function (off) {            // 두 번 '띠링'
+        var o = _ssAudioCtx.createOscillator(), g = _ssAudioCtx.createGain();
+        o.type = "sine";
+        o.frequency.setValueAtTime(1318, t0 + off);          // E6
+        o.frequency.setValueAtTime(1760, t0 + off + 0.08);   // A6 (살짝 올려 '띠링' 느낌)
+        g.gain.setValueAtTime(0.0001, t0 + off);
+        g.gain.exponentialRampToValueAtTime(0.25, t0 + off + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + off + 0.16);
+        o.connect(g); g.connect(_ssAudioCtx.destination);
+        o.start(t0 + off); o.stop(t0 + off + 0.17);
+      });
+    } catch (e) {}
+  }
+
+  function _ssToast(newest, count) {
+    if (!document.body) return;
+    var box = document.getElementById("ssSignupToasts");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "ssSignupToasts";
+      box.style.cssText = "position:fixed;top:16px;right:16px;z-index:99999;display:flex;flex-direction:column;gap:10px;max-width:340px;font-family:system-ui,sans-serif";
+      document.body.appendChild(box);
+    }
+    var who = (newest && (newest.name || newest.username)) || "새 회원";
+    var sub = (newest && (newest.phone || newest.email)) || "";
+    var card = document.createElement("div");
+    card.style.cssText = "background:#0c1411;color:#e9f5ee;border:1px solid #1f6f4f;border-left:4px solid #2fd18a;border-radius:12px;padding:14px 16px;box-shadow:0 8px 28px rgba(0,0,0,.45);cursor:pointer;animation:ssSlideIn .25s ease";
+    card.innerHTML =
+      '<div style="font-size:13px;font-weight:800;color:#2fd18a;margin-bottom:4px">🆕 새 회원 가입 신청' +
+      (count > 1 ? ' <span style="color:#9fd">· 대기 ' + count + '명</span>' : '') + '</div>' +
+      '<div style="font-size:15px;font-weight:700">' + _ssEsc(who) + '</div>' +
+      (sub ? '<div style="font-size:12px;color:#9db;margin-top:2px">' + _ssEsc(sub) + '</div>' : '') +
+      '<div style="font-size:12px;color:#7fd6a8;margin-top:8px;font-weight:700">클릭 → 승인하러 가기 →</div>';
+    card.onclick = function () { location.href = "/admin"; };
+    box.appendChild(card);
+    setTimeout(function () { try { card.style.transition = "opacity .4s"; card.style.opacity = "0"; setTimeout(function () { card.remove(); }, 400); } catch (e) {} }, 12000);
+    if (!document.getElementById("ssSignupKf")) {
+      var st = document.createElement("style"); st.id = "ssSignupKf";
+      st.textContent = "@keyframes ssSlideIn{from{transform:translateX(30px);opacity:0}to{transform:none;opacity:1}}";
+      document.head.appendChild(st);
+    }
+  }
+
+  function _ssEsc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+
+  function initSignupAlert() {
+    // 브라우저 밖(테스트 하네스 등)에선 조용히 꺼진다 — localStorage·fetch 없으면 no-op(스크립트 안 깬다).
+    if (typeof window === "undefined" || !window.localStorage) return;
+    var _f = window.fetch || (typeof fetch === "function" ? fetch : null);
+    if (!_f) return;
+    var firstRun = true;
+    function tick() {
+      _f("/api/admin/pending", { headers: { "Accept": "application/json" } })
+        .then(function (r) { if (!r.ok) throw new Error("not-admin"); return r.json(); })
+        .then(function (d) {
+          if (!d || !d.ok) return;
+          var newestId = d.newest_id || 0;
+          var seen = parseInt(window.localStorage.getItem(_SS_SEEN_KEY) || "0", 10) || 0;
+          if (firstRun && seen === 0) {
+            // 첫 방문(기록 없음): 기존 대기자로 시끄럽게 울리지 않는다. 기준선만 잡는다.
+            window.localStorage.setItem(_SS_SEEN_KEY, String(newestId));
+          } else if (newestId > seen) {
+            _ssDing();
+            _ssToast(d.newest, d.count);
+            window.localStorage.setItem(_SS_SEEN_KEY, String(newestId));
+          }
+          firstRun = false;
+          setTimeout(tick, 25000);                  // 관리자면 25초마다 계속
+        })
+        .catch(function () { /* 비관리자/에러 → 폴러 정지(재시도 안 함) */ });
+    }
+    tick();
+  }
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", mount);
     document.addEventListener("DOMContentLoaded", __ssPaintTheme);
     document.addEventListener("DOMContentLoaded", mountWorks);
     document.addEventListener("DOMContentLoaded", initPaywall);
+    document.addEventListener("DOMContentLoaded", initSignupAlert);
   } else {
     mount();
     __ssPaintTheme();
     mountWorks();
     initPaywall();
+    initSignupAlert();
   }
 })();

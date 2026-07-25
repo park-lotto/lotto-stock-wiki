@@ -1,0 +1,226 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"> 
+ <html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:x="urn:schemas-microsoft-com:office:excel"
+xmlns="http://www.w3.org/TR/REC-html40">
+	<HEAD>
+		<title>리포트서머리</title>
+		<meta name="CODE_LANGUAGE" Content="C#">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<style type="text/css">
+			td { FONT: 11px '맑은 고딕'; COLOR: #333333; border-top:none;border-bottom:0.5pt solid rgb(209,209,209);}
+			br {mso-data-placement:same-cell;}
+			body { PADDING-RIGHT: 0px; PADDING-LEFT: 0px; PADDING-BOTTOM: 0px; MARGIN: 0px; FONT: 9pt '맑은 고딕'; PADDING-TOP: 0px }
+			form { PADDING-RIGHT: 0px; PADDING-LEFT: 0px; PADDING-BOTTOM: 0px; MARGIN: 0px; FONT: 9pt '맑은 고딕'; PADDING-TOP: 0px }
+			.title{font:bold 14pt 'HY견고딕';color:rgb(47,71,107)}
+			.hd { font: bold 9pt '맑은 고딕'; color: rgb(53,91,157); height: 30px; background-color: rgb(247,247,247); text-align: center;border-top:1px rgb(47,71,107) solid}
+			.strdeg{mso-width-source:userset;width:80px;height: 24px;text-align: left}
+			.pre_recomm{mso-width-source:userset;width:80px;height: 24px;text-align: left}
+			.recomm{width:80px;height: 24px;text-align: left}
+			.brk{mso-width-source:userset;width:110px;height: 24px;text-align: left}
+			.cmp,.ind{mso-width-source:userset;width:90px;height: 24px;text-align: left}
+			.strprc{mso-width-source:userset;width:60px;height: 24px;text-align: right}
+			.pre_targer_prc{mso-width-source:userset;width:60px;height: 24px;text-align: right}
+			.close_prc{mso-width-source:userset;width:80px;height: 24px;text-align: right}
+			.comment{width:500px;height: 49px;}
+			.comment2{width:450px;height: 49px;}
+			.rpt_title{width:275px;height:24px;text-align: left}
+			.img0{width:20px;height:30px;line-height:30px;font-size:11pt;font-family:'HY견고딕';font-weight:bold;color:rgb(101,102,102)}
+			.img1{width:20px;height:30px;line-height:30px;font-size:7pt;font-family:'맑은 고딕';color:rgb(254,1,10)}
+			.img2{width:20px;height:30px;line-height:30px;font-size:11pt;font-family:'맑은 고딕';font-weight:bold;color:rgb(14,152,15)}
+			.img3{width:20px;height:30px;line-height:30px;font-size:7pt;font-family:'맑은 고딕';color:rgb(52,101,254)}
+			.img4{width:20px;height:30px;line-height:30px;font-size:9pt;font-family:'맑은 고딕';font-weight:bold;color:rgb(254,1,10)}
+			@page
+	            {mso-header-data:"&R리포트서머리";
+	            mso-footer-data:"Page &P of &N";
+	            margin:.5in 0in .4in 0in;
+	            mso-header-margin:.31in;
+	            mso-footer-margin:.2in;
+	            mso-page-orientation:landscape;}
+		</style>
+    <!--[if gte mso 9]><xml>
+       <x:ExcelWorkbook>
+        <x:ExcelWorksheets>
+         <x:ExcelWorksheet>
+          <x:Name>WiseReport ReportSummary</x:Name>
+          <x:WorksheetOptions>
+            <x:FreezePanes/>
+            <x:FrozenNoSplit/>
+            <x:SplitHorizontal>5</x:SplitHorizontal>
+            <x:TopRowBottomPane>5</x:TopRowBottomPane>
+            <x:ActivePane>2</x:ActivePane>
+            <x:DoNotDisplayGridlines/>
+            <x:Print>
+                <x:PaperSizeIndex>9</x:PaperSizeIndex>
+                <x:Scale>90</x:Scale> 
+                <x:ValidPrinterInfo/>
+            </x:Print>
+          </x:WorksheetOptions>
+         </x:ExcelWorksheet>
+        </x:ExcelWorksheets>
+       </x:ExcelWorkbook>
+      </xml><![endif]-->
+	</HEAD>
+	<body bottomMargin="0" leftMargin="0" topMargin="0" rightMargin="0">
+         
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-C8B2QNTM16"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-C8B2QNTM16');
+</script>
+
+		<form method="post" action="./summaryexcel.aspx?cn=&amp;fmt=2&amp;ee=20260724&amp;sortCol=&amp;sortTyp=" id="Form1">
+<div class="aspNetHidden">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwULLTE5ODc1MjczMzhkZK1uVmb2cGLVvIQ+lHb37TlJRESJ" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['Form1'];
+if (!theForm) {
+    theForm = document.Form1;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<script src="/WebResource.axd?d=EnHdU53b5uA6lKGq8bLJgCXexEBiKJSTKiXq84RtXnNu7LDCmV1KxyTtwXgDEBhZaJdTNK9Rr5w1-1BOBKBccwQcrBs1&amp;t=638286403360000000" type="text/javascript"></script>
+
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="3E16E249" />
+	<input type="hidden" name="__SCROLLPOSITIONX" id="__SCROLLPOSITIONX" value="0" />
+	<input type="hidden" name="__SCROLLPOSITIONY" id="__SCROLLPOSITIONY" value="0" />
+	<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+	<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+</div>
+        <div id="ind_excel">
+                <table style="border-collapse:collapse;table-layout:fixed;mso-width-source:userset;width:1100px">
+                     <col style='mso-width-source:userset;width:90px'>
+                     <col style='mso-width-source:userset;width:90px'>                     
+                     <col style='mso-width-source:userset;width:25px'>
+                     <col style='mso-width-source:userset;width:80px'>
+                     <col style='mso-width-source:userset;width:90px'>
+					<col style='mso-width-source:userset;width:275px'>
+                     <col style='mso-width-source:userset;width:450px'>
+				    <tr>
+					    <td colspan="7" height="30" align="center" class="title">산업리포트 요약(2026.07.24)</td>
+				    </tr>
+                    <tr>
+                        <td class="hd">기관명/작성자</td>
+                        <td class="hd">산업명</td>                        
+                        <td class="hd" colspan="2">투자의견</td>
+                        <td class="hd">이전의견</td>
+						<td class="hd">제목</td>
+                        <td class="hd">요약</td>
+                    </tr>
+                    <tr>
+                        <td colspan="7" style="height: 1px;border-bottom:1px solid rgb(209,209,209)"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">KB증권</font><br/>최용현</td>
+                        <td class="ind"><font color="rgb(53,91,157)">철강</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">Positive</td>
+						<td class="rpt_title">국내 데이터센터 구축에 따른 철강 수요 증가 기대</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 국내 데이터센터 구축에 따른 철강 수요 증가 기대 <br/><span class="comment_text">▶</span> H형강의 사용량 늘어날 것으로 예상 <br/><span class="comment_text">▶</span> 철강 업황도 반등 국면 </td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">한국투자증권</font><br/>김명주</td>
+                        <td class="ind"><font color="rgb(53,91,157)">화장품</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">비중확대</td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">화장품 Bi-weekly: Charts of week: 양호한 미국, 반전의 중국</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 지난 주 Review: 시장 반등에도 화장품 섹터는 아쉬운 흐름<br/><span class="comment_text">▶</span> 이번주 관심 종목: LG생활건강과 코스맥스</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">KB증권</font><br/>김동원,이창민,강다현</td>
+                        <td class="ind"><font color="rgb(53,91,157)">반도체와반도체장비</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">Positive</td>
+						<td class="rpt_title">아이폰 성장 사이클 진입</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 애플 리스 프로그램 (Apple Upgrade): 고가 아이폰 판매 증가, 교체 수요의 구조적 전환 기대 <br/><span class="comment_text">▶</span> 메모리 공급 제약 속 프리미엄 전략 강화 선회, 2027년 아이폰 출하량 사상 최대 전망</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>김홍식,이상훈</td>
+                        <td class="ind"><font color="rgb(53,91,157)">무선통신서비스</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">통신 서비스/장비 Weekly - 이제 주도주는 무선 기지국 업체입니다</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 2026년 이익 및 배당 조기 정상화/AI 기지국 및 데이터센터 사업 확장 기대감 고조, 올해 AI 국책 사업자 선정 가능성도 긍정적<br/><span class="comment_text">▶</span> 2분기 실적 호전주, 2026년 높은 이익 성장 전망, 저 PBR/저 PER 관련주, 26년 DPS 성장/27년 자사주 소각 규모 증가 예상<br/><span class="comment_text">▶</span> 주가 상승 폭 낮아 주가 반등 예상, 단 인건비 재차 증가하고 배당 정체될 것이라 탄력적인 상승은 어려울 듯</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>이준호</td>
+                        <td class="ind"><font color="rgb(53,91,157)">게임엔터테인먼트</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">실적 시즌 전 주요 사항, 역시 크래프톤과 엔씨</td>
+                        <td class="comment2"><span class="comment_text">▶</span> Top Pick: 크래프톤, NC 유지<br/><span class="comment_text">▶</span> 시프트업/네오위즈: 현재 주가는 진짜 바닥<br/><span class="comment_text">▶</span> 넷마블: 추정치 하향의 막바지</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>유재선</td>
+                        <td class="ind"><font color="rgb(53,91,157)">복합유틸리티</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">유틸리티 Weekly-사우디와 미국의 123 협정</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 국회 53일 만에 정상화…AI·반도체용 ‘PPA법’ 논의 본격화<br/><span class="comment_text">▶</span> 발전사업허가 후 1년 내 망이용신청 않으면 접속권 상실<br/><span class="comment_text">▶</span> 호르무즈 긴장 고조에 LNG 운송 차질…글로벌 가스가격 재 상승</td>
+                    </tr>
+                    
+                    <!--tr style="height:5px; border:0px;">
+                        <td colspan="7" style="border-bottom:0px solid rgb(209,209,209)"></td>
+                    </tr-->
+				    <tr>
+                        <td colspan="7" style="height:96px;border-bottom:0px solid rgb(209,209,209)"><img alt="" src="https://www.wisereport.co.kr/wisereport/summary/images/excel_footer.png"/></td>
+				    </tr>
+			    </table>
+            </div>
+    
+
+<script type="text/javascript">
+//<![CDATA[
+
+theForm.oldSubmit = theForm.submit;
+theForm.submit = WebForm_SaveScrollPositionSubmit;
+
+theForm.oldOnSubmit = theForm.onsubmit;
+theForm.onsubmit = WebForm_SaveScrollPositionOnSubmit;
+//]]>
+</script>
+</form>
+	</body>
+</HTML>
+

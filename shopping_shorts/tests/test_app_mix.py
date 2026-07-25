@@ -80,11 +80,13 @@ def test_mix_adjust_regrounds_from_inventory(monkeypatch, tmp_path):
         {"beat_idx": 0, "role": "훅", "narration": "n", "target_seconds": 2,
          "primary": {"video_id": "s0", "seg_id": "s0-0", "start": 0.0, "end": 2.0},
          "alternates": [], "effect": "cut"}], "plagiarism_flags": []}, status="ready_for_review")
-    # beat0의 primary를 s0-1로 교체 — start/end는 서버가 인벤토리에서 되붙여야 함
+    # beat0의 primary를 s0-1로 교체 — start/end/scene_desc는 서버가 인벤토리에서 되붙여야 함
+    # (scene_desc는 _ground_ref가 실어준다, 2026-07-20 ① visual_verb 앵커 태스크에서 추가 —
+    #  얼굴정렬·리컨사일이 grounded primary의 scene_desc를 읽으므로 adjust 리그라운딩도 실어야 일관)
     r = client.post("/api/mix/adjust", json={"job_id": "j2", "beat_idx": 0, "video_id": "s0", "seg_id": "s0-1"})
     assert r.status_code == 200
     plan = store.get_mix_job("j2")["edit_plan"]
-    assert plan["beats"][0]["primary"] == {"video_id": "s0", "seg_id": "s0-1", "start": 2.0, "end": 4.0}
+    assert plan["beats"][0]["primary"] == {"video_id": "s0", "seg_id": "s0-1", "start": 2.0, "end": 4.0, "scene_desc": "d"}
 
 
 def test_mix_adjust_invalid_beat_idx_returns_404(monkeypatch, tmp_path):
@@ -139,6 +141,17 @@ def test_produce_mix_start_accepts_single_url(monkeypatch, tmp_path):
     assert r.status_code == 200
     jid = r.json()["job_id"]
     assert store.get_mix_job(jid)["urls"] == [_U0]
+
+
+def test_produce_mix_start_charges_render(monkeypatch, tmp_path):
+    """제작소 2단계도 render 크레딧을 과금한다(2026-07-20 E) — 안 그러면 이 흐름으로
+    하루 상한·전역 상한을 통째로 우회한다. 과금 표식 render_charge_day가 job에 찍혀
+    /api/mix/start와 동일하게 실패 시 자동 환불도 걸린다."""
+    client, store = _client(monkeypatch, tmp_path)
+    r = client.post("/api/produce/mix/start",
+                    json={"script": "테스트 대본", "urls": [_U0, _U1], "target_seconds": 20})
+    assert r.status_code == 200
+    assert store.get_mix_job(r.json()["job_id"]).get("render_charge_day")  # 과금됨
 
 
 def test_produce_mix_start_rejects_empty_urls(monkeypatch, tmp_path):
@@ -281,8 +294,9 @@ def test_run_mix_job_refunds_render_credit_on_failure(monkeypatch, tmp_path):
 
 
 def test_run_mix_job_does_not_refund_uncharged_job(monkeypatch, tmp_path):
-    """★리뷰 B 회귀방지: render_charge_day가 없는 job(produce 2단계·auto_run — 과금 안 함)은
-    실패해도 환불하지 않는다. 안 그러면 전역 카운터를 갉아 다른 유저의 정당한 과금을 상쇄한다."""
+    """★리뷰 B 회귀방지: render_charge_day가 없는 job(auto_run 배치 — 과금 안 함)은
+    실패해도 환불하지 않는다. 안 그러면 전역 카운터를 갉아 다른 유저의 정당한 과금을 상쇄한다.
+    (2026-07-20 E부터 produce 2단계는 과금하므로 이 미과금 경로는 auto_run뿐이다.)"""
     from shopping_shorts import mix_pipeline
     db = str(tmp_path / "t.db")
     store = Store(db)

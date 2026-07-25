@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_0700_(매크로 따라잡기) 견조한 미국 고용, 높아진 환율 변...md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "김유미 / 김정현",
+    "report_date": "2026년 6월 8일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "미국 고용보고서(비농업부문 고용)",
+      "실업률",
+      "미국 국채금리",
+      "달러화",
+      "원·달러 환율",
+      "국제유가",
+      "인플레이션",
+      "경상수지",
+      "자본수지"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026년 6월 중순",
+        "event": "월드컵 개막"
+      },
+      {
+        "date": "2026년 6월",
+        "event": "6월 FOMC"
+      }
+    ],
+    "top_picks": null,
+    "risk": "중동발 지정학적 리스크, 미국 CPI와 FOMC를 앞둔 정책 불확실성, 외국인 주식 순매도세, 장기실업자 및 영구 실직자 증가",
+    "quote": "미국 금리와 달러화 상승, 중동발 지정학적 리스크, 외국인 주식 순매도세가 맞물리면서 원·달러 환율의 상승 압력이 확대되고 있으며, 미국 CPI 와 FOMC 를 앞두고 단기적으로 환율 변동성도 커질 가능성이 있다."
+  }
+}

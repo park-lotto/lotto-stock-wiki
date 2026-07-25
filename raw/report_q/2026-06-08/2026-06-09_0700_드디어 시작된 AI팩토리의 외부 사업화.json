@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_0700_드디어 시작된 AI팩토리의 외부 사업화.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김소혜, 김나우",
+    "report_date": "2026년 6월 8일",
+    "stocks": [
+      {
+        "name": "NAVER",
+        "code": null,
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 300000,
+        "tp_prev": 300000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2030년 이후 연간 매출 가이던스 약 40 조 원, 마진 20% 대 제시. 27년 하반기부터 관련 사업으로 약 1~2조 원 매출 기여 예상",
+        "estimate_revision": null,
+        "next_catalyst": "앵커 고객 계약 클로징 및 27년 실적 기여 현실화",
+        "thesis": [
+          "엔비디아와의 협력을 계기로 본격적인 AI팩토리 사업의 외부 사업화 시작",
+          "신사업은 장기계약으로 락인하면 안정적인 ARR이 발생하는 구조이며 마진 개선 기대",
+          "AI팩토리 매출 비중 확대에 따른 클라우드 인프라 사업자 멀티플 적용 가능성"
+        ],
+        "valuation_basis": "인터넷 플랫폼 피어 그룹이 아닌 클라우드 인프라 사업자(코어위브, 에퀴닉스 등) 멀티플 혼합 적용 가능성",
+        "risk": null,
+        "supply_comment": "초기 200MW에 대해 네이버 10억 달러, 전략적 파트너 10억 달러 출자 및 이후 SPV 등 외부펀딩 조달 예정",
+        "quote": "이번 사업 제휴 발표는, 멀티플을 올릴만한 이슈가 없어 제한적인 박스권 추세에 머물렀던 상황에서 중장기 실적 모멘텀과 멀티플이 동시에 올라갈 수 있는 이슈라고 봄"
+      }
+    ]
+  }
+}

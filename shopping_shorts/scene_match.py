@@ -11,6 +11,7 @@
 import copy
 
 from . import edit_plan
+from .scene_assets import _ROLES   # 효과음 role 통제어휘(§3.2 방어적 재검증)
 
 _ALLOWED_ORIGIN = ("짜집기", "촬영원본")
 
@@ -121,3 +122,46 @@ def _pick_role_asset(pool, narration):
         text = (a.get("subject") or "") + " " + " ".join(a.get("keywords") or [])
         return sum(1 for w in text.split() if w and w in narration)
     return sorted(pool, key=lambda a: (-overlap(a), -a["id"]))[0]
+
+
+# ── 효과음(sfx) 역할 매칭 (스펙 §3) ─────────────────────────────
+# 클립 역할패스(_role_pass)와 알고리즘이 거의 같으나 **중복 허용**(used 세트 없음)이 유일한 차이.
+# 조건분기를 넣느니 짧은 함수로 분리한다(YAGNI·단순성, 스펙 §3.4).
+
+_SFX_POSITION = {"hook": "first"}   # 명시 안 된 역할은 전부 "last"(기본값이 안전측)
+
+
+def _sfx_position(beat_role):
+    """비트 안 효과음 타점 이름. hook은 첫 세그먼트("first"), 나머지는 마지막("last").
+    실제 몇 초인지는 렌더(_burn_captions)가 계산한다 — 여기선 위치 이름만."""
+    return _SFX_POSITION.get(beat_role, "last")
+
+
+def _sfx_candidates(assets):
+    """효과음 후보 = asset_type이 sfx이고 role이 통제어휘(scene_assets._ROLES) 안인 것.
+    표절 게이트(source_origin)는 적용 안 함 — 소리 파일이라 검사 대상이 다름(§3.2)."""
+    return [a for a in assets
+            if a.get("asset_type") == "sfx" and a.get("role") in _ROLES]
+
+
+def match_sfx(plan, assets):
+    """비트 역할 → 효과음 역할 결정적 매칭. Gemini 0회. plan을 복사해 반환.
+    beat["sfx"] = {asset_id, match_type:"role", position}. 클립 컷어웨이(beat["cutaway"])와
+    다른 키라 한 비트가 장면짤+효과음을 동시에 가질 수 있다. **중복 허용**(같은 효과음이
+    여러 비트에 배치 가능) — used 세트가 없는 게 클립 역할패스와의 유일한 차이(§3.4)."""
+    plan = copy.deepcopy(plan)
+    cands = _sfx_candidates(assets)
+    by_role = {}
+    for a in cands:
+        by_role.setdefault(a["role"], []).append(a)
+    for beat in plan["beats"]:
+        compatible = _ROLE_FALLBACK.get(beat.get("role") or "")
+        if not compatible:
+            continue   # 이 비트 역할은 효과음 자리가 아님 → 빈 채로
+        pool = [a for role in compatible for a in by_role.get(role, [])]   # 중복 허용
+        if not pool:
+            continue
+        chosen = _pick_role_asset(pool, beat.get("narration") or "")
+        beat["sfx"] = {"asset_id": chosen["id"], "match_type": "role",
+                       "position": _sfx_position(beat.get("role"))}
+    return plan

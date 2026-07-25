@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "알파벳",
+      "signal": "neutral",
+      "reason": "2026년 2분기 실적 및 컨퍼런스 콜에 대한 심층 분석 리포트로, 전반적인 기업 성과를 다룸",
+      "ts": "2026-07-23",
+      "quote": "알파벳(Alphabet) Q2 2026 실적 & 컨콜 심층 분석",
+      "sector": "IT"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "알파벳 2026년 2분기 실적 및 컨퍼런스 콜 발표",
+      "ts": "2026-07-23",
+      "quote": "알파벳(Alphabet) Q2 2026 실적 & 컨콜 심층 분석"
+    }
+  ],
+  "quote": "알파벳(Alphabet) Q2 2026 실적 & 컨콜 심층 분석 | Smoking Dart 인텔리전스"
+}

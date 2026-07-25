@@ -139,6 +139,62 @@ def test_detect_subject_strips_whitespace(monkeypatch):
     assert script_generate.detect_subject("대본") == "물때 청소"
 
 
+def test_story_charter_story_first_and_hook_priority():
+    # 사장님 요구(2026-07-20): 가장 중요한 건 스토리라인 + 훅에 핵심 우선배치.
+    core = script_generate._STORY_RULES_CORE
+    assert "가장 중요한 건 스토리라인" in core
+    assert "훅 원칙" in core and "가장 강력한 한 방" in core
+
+
+def test_story_charter_recipe_sensory_expressions():
+    # 요리 소재는 감각 표현으로 살린다 — 라이브러리 예시가 헌장에 주입돼 있어야.
+    core = script_generate._STORY_RULES_CORE
+    for w in ("촉촉하게", "윤기 좌르륵", "몽실몽실", "노릇노릇"):
+        assert w in core
+    assert "요리·음식 소재가 아니면 이 항목은 무시" in core  # 비요리 오남용 방지
+
+
+def test_gen_and_mix_prompts_carry_story_charter():
+    assert "가장 중요한 건 스토리라인" in script_generate._GEN_PROMPT
+    assert "가장 중요한 건 스토리라인" in script_generate._MIX_PROMPT
+
+
+def test_story_charter_recipe_curiosity_hides_the_kick():
+    # 사장님 지적(2026-07-20): 레시피는 '어떻게 만드는지' 궁금하게 = 비법 숨김+킥 한스푼.
+    # 방법을 다 까발리면 CTA가 죽는다 — 헌장에 킥 숨김 원칙이 있어야.
+    core = script_generate._STORY_RULES_CORE
+    assert "킥" in core and "레시피/비법 궁금증" in core
+    assert "다 밝히지" in core or "까발리면" in core   # 방법 전부 공개 금지
+    # 믹스·생성·리파인 전 경로에 주입되는지
+    assert "킥" in script_generate._MIX_PROMPT
+    assert "킥" in script_generate._REWRITE_PROMPT
+
+
+def test_refine_rewrite_injects_story_charter(monkeypatch):
+    # ★재작성 경로 구멍 메움: 예전엔 리파인에 스토리 헌장이 안 걸려 대본이 빈약해졌다.
+    h = {}
+    _capture_prompt(monkeypatch, h)
+    script_generate.refine_draft_rewrite("원본 대본", "스토리라인 더 탄탄하게")
+    assert "가장 중요한 건 스토리라인" in h["p"]
+    assert "훅 원칙" in h["p"]
+
+
+def test_all_format_prompts_have_no_stray_braces():
+    """헌장·감각표현 라이브러리에 { } 가 섞이면 .format()이 KeyError로 터진다 —
+    각 프롬프트가 정상 kwargs로 포맷되는지(=중괄호 오염 없음) 확인."""
+    script_generate._GEN_PROMPT.format(full_text="t", elems="e", topic_line="x", n=1, bank="")
+    script_generate._MIX_PROMPT.format(sources="s", seconds=20, words=46, n=1, bank="")
+    script_generate._REWRITE_PROMPT.format(script="s", instruction="i")
+    script_generate._PARTIAL_PROMPT.format(script="s", selected="sel", instruction="i")
+    script_generate._FIX_PROMPT.format(script="s", instruction="i", words=46)
+
+
+def test_edit_plan_prompts_exclude_face_closeups():
+    from shopping_shorts import edit_plan
+    assert "얼굴 클로즈업 배제" in edit_plan._PROMPT
+    assert "얼굴 클로즈업 배제" in edit_plan._SCRIPTED_PROMPT
+
+
 def _capture_prompt(mp, holder):
     """generate_content에 들어간 prompt를 holder['p']에 담고 정상 JSON 반환하도록 배선."""
     mp.setattr(script_generate.key_vault, "get_live_keys_cascade", lambda group: [])

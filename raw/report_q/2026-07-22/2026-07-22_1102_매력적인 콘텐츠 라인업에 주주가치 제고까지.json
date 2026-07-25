@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-22",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-22_1102_매력적인 콘텐츠 라인업에 주주가치 제고까지.md"
+  },
+  "questionnaire": {
+    "broker": "DS투자증권",
+    "analyst": "장지혜",
+    "report_date": "2026.07.22",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "NEW",
+        "code": "160550",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "26년 1-6월 누적 국내 박스오피스는 5,790억원(+42% YoY), 관객수 5,704만명(+34% YoY)으로 회복세",
+        "estimate_revision": null,
+        "next_catalyst": "8/27 임시주총을 열고 자본준비금의 감소 및 이익잉여금 전입 안건을 상정하겠다고 공시",
+        "thesis": [
+          "26년 상반기 한국 영화 콘텐츠 경쟁력 상승과 관객 경험 긍정적",
+          "NEW의 투자/배급 영화 라인업 5편에 대한 흥행 기대감",
+          "콘텐츠 흥행에서 나아가 이익잉여금 전입으로 자사주 취득 및 배당 재원 확보를 통한 주주가치 제고"
+        ],
+        "valuation_basis": null,
+        "risk": "콘텐츠 업종 전반 주가 약세와 동반해 YTD -51% 하락",
+        "supply_comment": null,
+        "quote": "동사의 주요 영화/드라마 콘텐츠 흥행에 따른 실적 성장과 이러한 주주가치 제고 노력이 더해져 주가 반등 기대"
+      }
+    ]
+  }
+}

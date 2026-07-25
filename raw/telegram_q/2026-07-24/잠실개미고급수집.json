@@ -1,0 +1,45 @@
+{
+  "stocks": [
+    {
+      "name": "Intel",
+      "signal": "bull",
+      "reason": "FY2Q26 earnings exceeded expectations with strong revenue growth driven by AI demand and improvements in fab yield and cycle time.",
+      "ts": "05:26",
+      "quote": "Intel FY2Q26 실적발표 (After: +11.13%)",
+      "sector": "반도체"
+    },
+    {
+      "name": "삼성전자",
+      "signal": "bull",
+      "reason": "AMD's HBM4 supply contract is imminent, and the company is strengthening its foundry and HBM collaboration with AMD.",
+      "ts": "18:39",
+      "quote": "AMD-삼성전자 HBM4 본계약 임박 — AMD ‘헬리오스’ 양산 선언, 삼성 파운드리 수장 급파",
+      "sector": "반도체"
+    },
+    {
+      "name": "AMD",
+      "signal": "bull",
+      "reason": "Announcement of the mass production of the 'Helios' AI server rack and near-finalization of an HBM4 supply contract with Samsung Electronics.",
+      "ts": "18:39",
+      "quote": "AMD 헬리오스 양산 선언 — 3Q26 말부터 출하 예정",
+      "sector": "반도체"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "Morgan Stanley suggests that the sell-off in US memory stocks creates a compelling entry point.",
+      "ts": "04:55",
+      "quote": "Morgan Stanley : Selloff of US memory stocks creates a compelling entry point"
+    },
+    {
+      "fact": "Google Cloud's revenue growth rate is accelerating.",
+      "ts": "11:25",
+      "quote": "구글 클라우드의 매출 성장률이 가속화되고 있음이 재차 확인되었습니다"
+    },
+    {
+      "fact": "Current stock market decline is attributed to geopolitical issues, specifically tensions in the Red Sea.",
+      "ts": "15:10",
+      "quote": "오늘의 하락이 전쟁 때문이라는 판단과 전제가 있다면 액션 플랜은 조금 더 명확해집니다"
+    }
+  ]
+}

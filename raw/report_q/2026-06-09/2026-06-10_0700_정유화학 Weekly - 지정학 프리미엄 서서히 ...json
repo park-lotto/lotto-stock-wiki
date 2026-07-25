@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_0700_정유화학 Weekly - 지정학 프리미엄 서서히 ...md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "황성현",
+    "report_date": "2026.06.09.",
+    "target_kind": "market",
+    "market_direction": "하락 전망",
+    "macro_vars": [
+      "국제유가 19% 하락",
+      "지정학 프리미엄 소멸",
+      "미중 정상회담 후 지정학 불확실성 완화",
+      "미국 원유 재고 800만 배럴 감소"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": "하방 압력",
+        "reason": "1) UAE 의 독자 증산(2027 년 목표 500 만 b/d), 2) 사우디의 점유율 확보를 위한 OPEC 추가 증산 발표 가능성, 3) 미국 등 Non-OPEC 공급 증가, 4) 수요 부진으로 국제유가는 하방 압력을 받을 전망이다."
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.06.10",
+        "event": "트럼프 대통령, 이란과 합의 예정"
+      }
+    ],
+    "top_picks": null,
+    "risk": "헤즈볼라-이스라엘 긴장은 구조적으로 해소되지 않았으며, 국지적 충돌이 재발할 경우 유가 변동성이 일시적으로 확대될 수 있다.",
+    "quote": "미중 정상회담 이후 중국의 개입이 시작된 이상 지정학 프리미엄은 서서히 소멸될 전망이다."
+  }
+}

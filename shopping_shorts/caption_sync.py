@@ -14,10 +14,11 @@ def _norm(tok):
     return _strip_punct(tok)
 
 
-def phrase_durs_from_words(narration, words, total_dur):
+def phrase_durs_from_words(narration, words, total_dur, preset=None):
     """narration의 각 자막 구절 표시시간 리스트(초) 반환. len == 구절 수, 합 ≈ total_dur.
-    ASR 정렬 신뢰도 미달이면 None(호출부가 글자수 폴백)."""
-    segs = _caption_segments(narration)
+    ASR 정렬 신뢰도 미달이면 None(호출부가 글자수 폴백).
+    preset: AI가 끊어준 자막 줄 — 렌더와 같은 경계를 써야 cap_durs 개수가 어긋나지 않는다."""
+    segs = _caption_segments(narration, preset=preset)
     if not segs or not words or total_dur <= 0:
         return None
 

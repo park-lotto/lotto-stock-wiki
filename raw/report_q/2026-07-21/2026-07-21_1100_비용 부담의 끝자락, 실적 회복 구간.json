@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-21_1100_비용 부담의 끝자락, 실적 회복 구간.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "손현정",
+    "report_date": "2026.07.21",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "롯데웰푸드",
+        "code": "280360",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "140,000원",
+        "tp_prev": "140,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26": "연결 매출액 1조 1,217억원(YoY +5.4%), 영업이익 466억원(YoY +35.8%, OPM 4.2%)",
+          "2026_annual": "연결 매출액 4조 4,534억원(YoY +5.6%), 영업이익 1,944억원(YoY +77.5%, OPM 4.4%)"
+        },
+        "estimate_revision": "컨센서스 부합 전망",
+        "next_catalyst": "하반기 카카오 투입단가 하락 순차 반영 및 희망퇴직/ERP 관련 비용 완화",
+        "thesis": [
+          "국내 신제품과 신성장 채널 판매 확대, 인도·카자흐스탄 중심의 해외 성장",
+          "저수익 SKU 축소와 구매·물류 효율화, 채널 믹스 개선을 통한 수익성 정상화",
+          "하반기 해외 법인 가격 인상 효과 확대 및 비용 구조 개선"
+        ],
+        "valuation_basis": "2027년 예상 EPS에 Target PER 9배 적용",
+        "risk": "높은 카카오 투입단가와 환율, 포장재 가격 부담",
+        "supply_comment": null,
+        "quote": "국내 비용 구조 개선과 인도 중심의 해외 성장, 하반기 원가 부담 완화를 감안해 2027년 예상 EPS에 Target PER 9배를 적용한 목표주가 140,000원을 제시하며 커버리지를 재개한다."
+      }
+    ],
+    "sector": "소비내수"
+  }
+}

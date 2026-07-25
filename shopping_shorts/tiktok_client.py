@@ -7,6 +7,7 @@
 import json
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 
 
@@ -19,12 +20,8 @@ def _account_url(username):
     return f"https://www.tiktok.com/@{u}"
 
 
-def fetch_account_videos(username, limit=30, timeout=120):
-    """틱톡 계정의 최근 영상 → 원시 dict 리스트. 실패(비공개·삭제·차단) 시 빈 리스트.
-
-    반환 dict: video_id, url, channel_title, title, thumbnail(''), published_at(ISO),
-    views, likes, comments — build_tiktok_items가 그대로 소비.
-    """
+def _fetch_once(username, limit, timeout):
+    """yt-dlp 1회 실행 → 원시 dict 리스트. 실패(비공개·삭제·차단) 시 빈 리스트."""
     url = _account_url(username)
     try:
         r = subprocess.run(
@@ -61,3 +58,20 @@ def fetch_account_videos(username, limit=30, timeout=120):
             "comments": int(e.get("comment_count") or 0),
         })
     return out
+
+
+def fetch_account_videos(username, limit=30, timeout=120):
+    """틱톡 계정의 최근 영상 → 원시 dict 리스트. 실패(비공개·삭제·차단) 시 빈 리스트.
+
+    반환 dict: video_id, url, channel_title, title, thumbnail(''), published_at(ISO),
+    views, likes, comments — build_tiktok_items가 그대로 소비.
+    """
+    # yt-dlp 채널목록은 간헐적으로 빈 응답을 준다(2026-07-24 실측) — 짧게 재시도한다.
+    # 끝내 비면 그 채널만 건너뛰고 빈 리스트(전체 수집은 계속 — 부분실패 허용).
+    for attempt in range(3):
+        vids = _fetch_once(username, limit, timeout)
+        if vids:
+            return vids
+        if attempt < 2:
+            time.sleep(1.5 * (attempt + 1))
+    return []

@@ -1,5 +1,6 @@
 node_modules/
 .env
+/cookies/
 out/*.mp4
 out/*.pdf
 out/*.png

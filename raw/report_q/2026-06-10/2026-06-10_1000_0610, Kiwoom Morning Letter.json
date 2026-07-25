@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "Kiwoom",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_0610, Kiwoom Morning Letter.md"
+  },
+  "questionnaire": {
+    "broker": "Kiwoom",
+    "analyst": null,
+    "report_date": "2026/6/10",
+    "target_kind": "market",
+    "market_direction": "bullish",
+    "macro_vars": [
+      "KOSPI 8,096.93",
+      "KOSDAQ 967.81",
+      "달러/원 1,530.87",
+      "WTI 88.20"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "상승",
+        "reason": "미국 반도체주 중심 훈풍과 저가 매수세 유입"
+      },
+      {
+        "sector": "전력",
+        "stance": "상승",
+        "reason": "AI 데이터센터 수요 지속에 따른 전력기기 시장 확대 기대"
+      },
+      {
+        "sector": "바이오",
+        "stance": "상승",
+        "reason": "글로벌 CDMO 수주 확대 및 생산 거점 다변화"
+      }
+    ],
+    "style": "가치주로의 순환매",
+    "event_calendar": [
+      {
+        "date": "6.10",
+        "event": "미국 CPI 발표"
+      },
+      {
+        "date": "6.11",
+        "event": "한국 실업률, 미국 PPI, 유로 ECB 정책금리"
+      },
+      {
+        "date": "6.12",
+        "event": "미국 미시간대 소비자심리지수"
+      }
+    ],
+    "top_picks": [
+      "SK하이닉스",
+      "삼성전자",
+      "현대차",
+      "현대모비스"
+    ],
+    "risk": "중동발 지정학적 리스크 및 인플레이션 경계감",
+    "quote": "9일(화) 코스피는 전장 대비 상승 출발 후 장 후반 상승폭을 키우며 급등(KOSPI 8.18%, KOSDAQ 6.19%)."
+  }
+}

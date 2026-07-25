@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: 'Malgun Gothic'; src: local('Malgun Gothic'); }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #070406;
+        font-family: "Malgun Gothic", sans-serif; }
+      #root { position: relative; width: 1920px; height: 1080px; }
+      #bg { position: absolute; inset: 0;
+        background: radial-gradient(circle at 30% 45%, #241016 0%, #140a10 50%, #070406 100%); }
+      #grid { position: absolute; inset: 0; opacity: .07;
+        background-image: linear-gradient(#5a2a3a 1px, transparent 1px), linear-gradient(90deg, #5a2a3a 1px, transparent 1px);
+        background-size: 96px 96px; }
+
+      .toplabel { position: absolute; top: 92px; left: 0; width: 1920px; text-align: center;
+        color: #ff6b6b; font-size: 34px; letter-spacing: 12px; font-weight: 900; }
+
+      #ringwrap { position: absolute; left: 300px; top: 300px; width: 520px; height: 520px; }
+      #ringsvg { position: absolute; inset: 0; transform: rotate(-90deg); }
+      .ringlabel { position: absolute; left: 0; top: 205px; width: 520px; text-align: center;
+        color: #ffd24a; font-size: 74px; font-weight: 900; }
+      .ringsub { position: absolute; left: 0; top: 300px; width: 520px; text-align: center;
+        color: #cfd6e6; font-size: 30px; font-weight: 800; letter-spacing: 3px; }
+
+      .pill {
+        position: absolute; left: 1010px; width: 640px; height: 104px; border-radius: 18px;
+        display: flex; align-items: center; gap: 22px; padding: 0 30px;
+        background: linear-gradient(160deg, #1e1420, #17101a);
+        border: 2px solid #4a2a3c; box-shadow: 0 16px 40px rgba(0,0,0,.5);
+        color: #f4ecf0; font-size: 36px; font-weight: 800;
+      }
+      .pill .ck { flex: 0 0 auto; width: 46px; height: 46px; border-radius: 50%;
+        background: #f5b301; position: relative; }
+      .pill .ck:after { content: ""; position: absolute; left: 15px; top: 10px;
+        width: 12px; height: 22px; border: solid #3a2600; border-width: 0 6px 6px 0; transform: rotate(43deg); }
+      .pill b { color: #ffd24a; }
+
+      .cap { position: absolute; bottom: 120px; left: 0; width: 1920px; text-align: center;
+        color: #fff; font-size: 62px; font-weight: 900; letter-spacing: 2px; }
+      .cap b { color: #ff5252; }
+      .sub { position: absolute; bottom: 62px; left: 0; width: 1920px; text-align: center;
+        color: #ff8a8a; font-size: 32px; font-weight: 800; letter-spacing: 4px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920" data-height="1080">
+
+      <div id="bg" class="clip" data-start="0" data-duration="6" data-track-index="0"></div>
+      <div id="grid" class="clip" data-start="0" data-duration="6" data-track-index="1"></div>
+
+      <div class="toplabel clip" id="toplabel" data-start="0" data-duration="6" data-track-index="2">1기 &nbsp;·&nbsp; 한정 모집</div>
+
+      <svg id="ringsvg" class="clip" data-start="0.2" data-duration="5.8" data-track-index="3"
+           style="left:300px; top:300px; width:520px; height:520px;" viewBox="0 0 520 520" fill="none">
+        <circle cx="260" cy="260" r="230" stroke="#3a2030" stroke-width="26" />
+      </svg>
+      <svg id="ringfgsvg" class="clip" data-start="0.2" data-duration="5.8" data-track-index="4"
+           style="position:absolute; left:300px; top:300px; width:520px; height:520px; transform:rotate(-90deg);" viewBox="0 0 520 520" fill="none">
+        <circle id="ringfg" cx="260" cy="260" r="230" stroke="#ff4d4d" stroke-width="26" stroke-linecap="round"
+                pathLength="1" style="stroke-dasharray:1; stroke-dashoffset:0; filter: drop-shadow(0 0 10px rgba(255,77,77,.6));" />
+      </svg>
+      <div class="ringlabel clip" id="ringlabel" data-start="0.4" data-duration="5.6" data-track-index="5" style="left:300px; top:505px;">몇 시간만</div>
+      <div class="ringsub clip" id="ringsub" data-start="0.4" data-duration="5.6" data-track-index="6" style="left:300px; top:600px;">모집 마감 임박</div>
+
+      <div class="pill clip" id="pill1" data-start="1.0" data-duration="5.0" data-track-index="7" style="top:250px;">
+        <span class="ck"></span><span>비법 영상 <b>전부 무료</b></span>
+      </div>
+      <div class="pill clip" id="pill2" data-start="1.5" data-duration="4.5" data-track-index="8" style="top:378px;">
+        <span class="ck"></span><span>다음 프로그램 <b>1기 할인가</b></span>
+      </div>
+      <div class="pill clip" id="pill3" data-start="2.0" data-duration="4.0" data-track-index="9" style="top:506px;">
+        <span class="ck"></span><span>1기 전용 <b>커뮤니티방</b></span>
+      </div>
+      <div class="pill clip" id="pill4" data-start="2.5" data-duration="3.5" data-track-index="10" style="top:634px;">
+        <span class="ck"></span><span>매일 진화 · <b>평생 반영</b></span>
+      </div>
+
+      <div class="cap clip" id="cap" data-start="3.4" data-duration="2.6" data-track-index="11">1기, 딱 <b>한정 인원</b>만</div>
+      <div class="sub clip" id="sub" data-start="3.9" data-duration="2.1" data-track-index="12">지금 놓치면, 없습니다</div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true, defaults: { overwrite: "auto" } });
+
+      tl.from("#toplabel", { opacity: 0, y: -16, duration: .5 }, 0);
+      tl.from("#ringsvg", { opacity: 0, scale: .7, transformOrigin: "center", duration: .5 }, 0.2);
+      tl.from("#ringfgsvg", { opacity: 0, duration: .4 }, 0.3);
+      // 링 소진 (시간 줄어듦)
+      tl.to("#ringfg", { strokeDashoffset: 0.78, duration: 4.6, ease: "none" }, 0.5);
+      tl.from("#ringlabel", { opacity: 0, scale: .8, transformOrigin: "center", duration: .4 }, 0.5);
+      tl.from("#ringsub", { opacity: 0, duration: .4 }, 0.6);
+
+      // 혜택 스택 슬라이드인
+      ["#pill1","#pill2","#pill3","#pill4"].forEach((sel, i) => {
+        tl.from(sel, { opacity: 0, x: 80, duration: .45, ease: "back.out(1.4)" }, 1.0 + i*0.5);
+      });
+
+      tl.from("#cap", { opacity: 0, y: 30, duration: .45 }, 3.4);
+      tl.from("#sub", { opacity: 0, y: 20, duration: .4 }, 3.9);
+      // 마감 긴박 — 링라벨 깜빡
+      tl.to("#ringlabel", { opacity: 0.35, duration: .35, yoyo: true, repeat: 3, ease: "sine.inOut" }, 4.2);
+
+      tl.seek(0);
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

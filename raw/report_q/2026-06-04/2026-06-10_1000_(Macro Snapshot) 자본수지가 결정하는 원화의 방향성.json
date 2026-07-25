@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_(Macro Snapshot) 자본수지가 결정하는 원화의 방향성.md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "김유미",
+    "report_date": "2026년 6월 4일",
+    "target_kind": "market",
+    "market": {
+      "market_direction": "원/달러 환율 상승 압력 지속",
+      "macro_vars": [
+        "중동 지역 지정학적 불확실성",
+        "국제유가 및 미국 국채금리 상승",
+        "달러 강세",
+        "외국인 주식 순매도세",
+        "경상수지 흑자",
+        "자본수지 유출"
+      ],
+      "recommended_sectors": null,
+      "style": "자본수지 중심의 시장 구조 변화",
+      "event_calendar": null,
+      "top_picks": null,
+      "risk": "외국인 주식 자금 유출 지속 및 자본수지 대규모 유출",
+      "quote": "최근 환율 결정 구조가 경상수지 중심에서 자본수지 중심으로 변화하고 있다는 점을 고려하면, 외국인 주식 수급의 개선 여부가 단기적으로 원/달러 환율의 방향성을 결정하는 핵심 변수로 작용할 것으로 보인다."
+    }
+  }
+}

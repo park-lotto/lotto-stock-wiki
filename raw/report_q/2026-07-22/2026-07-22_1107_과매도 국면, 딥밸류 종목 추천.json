@@ -1,0 +1,123 @@
+{
+  "meta": {
+    "date": "2026-07-22",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-22_1107_과매도 국면, 딥밸류 종목 추천.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": [
+      "박혜진",
+      "권용수"
+    ],
+    "report_date": "2026.07.15",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "키움증권",
+        "code": "039490",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "540,000",
+        "tp_prev": "540,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 순이익 컨센서스 소폭 상회 전망. 브로커리지 M/S 하락에도 거래대금 증가를 바탕으로 호실적 기록 전망. IB 수익 견조 및 트레이딩 수익 호조 예상",
+        "estimate_revision": null,
+        "next_catalyst": "브로커리지 점유율 유의미한 회복세",
+        "thesis": [
+          "브로커리지 점유율 하락에도 거래대금 증가로 호실적 기록",
+          "ECM, DCM 부진에도 견조한 M&A와 PF를 중심으로 IB 수익 견조",
+          "주식시장 호조에 따른 평가이익 반영 및 ETF LP 수익 호조"
+        ],
+        "valuation_basis": "PBR 1배 내외로 하락",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2분기 순이익 컨센서스 소폭 상회 전망. 브로커리지 M/S 하락에도 거래대금 증가를 바탕으로 호실적 기록 전망."
+      },
+      {
+        "name": "한국금융지주",
+        "code": "071050",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "335,000",
+        "tp_prev": "335,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 순이익 컨센서스 6,995억원을 12% 상회할 전망. 2분기 순이익은 1분기 대비 감소 불가피",
+        "estimate_revision": null,
+        "next_catalyst": "외국인 대상 DMA 서비스에 따른 브로커리지 점유율 상승",
+        "thesis": [
+          "최근 5년간 브로커리지 점유율이 상승한 유일한 대형사",
+          "외국인 대상 DMA 서비스 경쟁력 보유",
+          "커버리지 가운데 가장 높은 ROE 예상 및 PBR 0.96x 수준의 투자매력"
+        ],
+        "valuation_basis": "26E PBR 0.96x로 커버리지 평균 1.08x 하회",
+        "risk": "1분기 대비 트레이딩 수익 감소 불가피",
+        "supply_comment": null,
+        "quote": "2분기 순이익은 컨센서스 6,995억원을 12% 상회할 것으로 전망."
+      },
+      {
+        "name": "NH투자증권",
+        "code": "005940",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "45,000",
+        "tp_prev": "45,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 순이익 컨센서스 3,905억원을 20% 상회할 전망",
+        "estimate_revision": null,
+        "next_catalyst": "견조한 이익흐름 및 높은 배당수익률(5.9%)",
+        "thesis": [
+          "브로커리지 수수료수익 사상 최대치 경신 예정",
+          "랩, 펀드 등 투자형 상품 판매 호조",
+          "배당수익률 5.9% 상승으로 변동성 장세에서 안전한 대안"
+        ],
+        "valuation_basis": "26E PBR 1배까지 하락",
+        "risk": "상품운용손익 1분기 대비 감소 예상",
+        "supply_comment": null,
+        "quote": "2 분기 순이익 컨센서스 20% 상회 전망. 브로커리지 사상 최대 경신, 랩과 펀드 등 투자형 상품 판매 호조로 자산관리 부문도 견조"
+      },
+      {
+        "name": "미래에셋증권",
+        "code": "006800",
+        "rating": "Buy",
+        "rating_changed": true,
+        "tp_new": "62,000",
+        "tp_prev": "62,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 순이익 컨센서스 1.15조원을 5.8% 상회할 전망",
+        "estimate_revision": null,
+        "next_catalyst": "Space X 평가이익 1.47조원 반영",
+        "thesis": [
+          "Space X 주가 상승에 따른 대규모 평가이익 반영",
+          "브로커리지 점유율 1위",
+          "적정 PBR 2.3x 대비 낮은 주가로 매수 구간 진입"
+        ],
+        "valuation_basis": "지속 가능한 ROE 감안 시 적정 PBR 2.3x로 추정",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2분기 순이익 컨센서스 5.8% 상회 전망. Space X 주가, 6월말 기준 공모가 상회해 평가이익 1.47조원 반영"
+      },
+      {
+        "name": "삼성증권",
+        "code": "016360",
+        "rating": "Buy",
+        "rating_changed": true,
+        "tp_new": "148,000",
+        "tp_prev": "148,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 순이익 컨센서스 소폭 상회 전망",
+        "estimate_revision": null,
+        "next_catalyst": "투자의견 상향 조정(Marketperform에서 Buy로)",
+        "thesis": [
+          "브로커리지 부문 IBKR 효과로 실적 개선",
+          "주가 하락으로 인한 괴리율 확대 반영",
+          "두나무 지분 취득을 통한 가상자산 사업 확대 추진"
+        ],
+        "valuation_basis": "주가하락으로 괴리율 확대",
+        "risk": "IB 수익 평년 수준 하회",
+        "supply_comment": null,
+        "quote": "삼성증권은 주가하락으로 괴리율 확대되어 투자의견을 Marketperform에서 Buy로 상향 조정한다."
+      }
+    ]
+  }
+}
