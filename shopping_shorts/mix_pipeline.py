@@ -191,6 +191,14 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
           f"(workers={workers})", file=sys.stderr)
 
 
+def _sources_is_recipe(sources):
+    """소스 category 다수결이 '레시피'면 True(장면 결 맞춤 분기). 비면 False."""
+    cats = [s.get("category") for s in (sources or []) if s.get("category")]
+    if not cats:
+        return False
+    return cats.count("레시피") * 2 > len(cats)
+
+
 def _refill_beats_to_tts(beats, source_scripts, tts_dir):
     """TTS 후 재보정 — 각 비트 화면(primary+alternates)이 **실 TTS 길이**보다 짧으면 풀에서
     같은 소스 우선 B롤을 더 붙인다. 추정≠실제로 생긴 틈이 렌더에서 프리즈/슬로우로 새는 걸
@@ -391,6 +399,9 @@ def run_mix_job(job_id, db_path, work_root):
             else:
                 r = extract_script(path, vid, caption=captions.get(vid, ""))
             r["video_id"] = vid
+            # category(ai_categorize가 script_extracts.category에 저장) 전달 → 장면 결 맞춤(is_recipe) 분기용.
+            # cached는 위에서 이미 조회했다(segments가 못써도 category 컬럼은 실려온다).
+            r["category"] = (cached or {}).get("category")
             return vid, r
         with ThreadPoolExecutor(max_workers=max(1, len(video_paths))) as ex:
             extracts = dict(ex.map(_extract, video_paths.items()))
@@ -588,6 +599,8 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     reference_text: scene_first일 때 스타일·구조를 계승할 레퍼런스 대본(보통 given_script 재활용)."""
     # 3) 통합 EDL
     store.update_mix_job(job_id, status="planning")
+    # 소스 다수결이 레시피면 화면을 요리 시간순으로 재배치(장면 결 맞춤) — build_edit_plan 경로에 전달.
+    is_recipe = _sources_is_recipe(source_scripts)
     if scene_first:
         from shopping_shorts.edit_plan import build_scene_first_plan
         # 부품은행 주입(P0-2): 설정 bank_enabled=1일 때만 승인 훅·어미·부사·CTA·스파인을 조립해
@@ -650,12 +663,14 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
             # 겪었다(실측: 503 과부하 → 후보 0 → 폴백). 이제 폴백을 표식으로 남겨 화면에 띄운다.
             print("scene_first 후보 0 → 옛 생성기로 폴백(개선 미적용)", file=sys.stderr)
             plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
-                                   video_type=video_type, given_script=given_script)
+                                   video_type=video_type, given_script=given_script,
+                                   is_recipe=is_recipe)
             plan["generator"] = "legacy_fallback"
             plan["generator_note"] = "장면우선 생성이 실패해 예전 방식으로 만들었습니다(개선 미적용) — 다시 매칭을 권장합니다."
     else:
         plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
-                               video_type=video_type, given_script=given_script)
+                               video_type=video_type, given_script=given_script,
+                               is_recipe=is_recipe)
         plan["generator"] = "legacy"
     # 빈 EDL(추출 전량 실패 또는 파이프라인 중간 전용풀 소진)을 ready_for_review로
     # 오보고하지 않는다 — 성공처럼 보이는 빈 리뷰화면 대신 즉시 실패로 정상 종료

@@ -911,7 +911,8 @@ def _reconcile_weak_beats(beats, call=_vault_call):
 
 
 def build_edit_plan(source_scripts, target_seconds, structure="template", video_type=None,
-                    n_alternates=2, max_retries=4, quota_sleep=8, given_script=None):
+                    n_alternates=2, max_retries=4, quota_sleep=8, given_script=None,
+                    is_recipe=False):
     """소스 대본들 → 그라운딩·표절검사된 EDL(설계 §3-2). 실패 시 빈 EDL.
 
     video_type이 None이면 detect_video_type()으로 자동 판별한다(설계 §3-1).
@@ -947,7 +948,7 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
     if raw is None:
         return empty
     raw.setdefault("structure", structure)
-    grounded = _validate_and_ground(raw, seg_map, n_alternates)
+    grounded = _validate_and_ground(raw, seg_map, n_alternates, is_recipe=is_recipe)
     grounded["beats"] = _reconcile_weak_beats(grounded["beats"])
     # 각 비트 target_seconds는 나레이션 글자수 기준으로 재계산(실제 렌더 길이 =
     # 나레이션 읽는 시간 ≈ 글자수÷_SYLLABLES_PER_SEC초). UI 표시 초와 실제 길이가 어긋나지 않게.
