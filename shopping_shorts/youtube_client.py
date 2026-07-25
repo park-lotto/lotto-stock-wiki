@@ -30,6 +30,12 @@ def video_id_from_url(url):
     m = _YT_ID.search(url)
     return m.group(1) if m else None
 
+def _short_thumb(video_id):
+    """쇼츠(≤60초)의 세로(9:16) 썸네일 URL. API 기본(high=hqdefault)은 480x360 가로라
+    세로 카드(인스타·틱톡과 동일 틀)에 안 맞는다. oardefault=원본비율(쇼츠는 720x1280 세로)."""
+    return f"https://i.ytimg.com/vi/{video_id}/oardefault.jpg" if video_id else ""
+
+
 _SEARCH_URL = "https://www.googleapis.com/youtube/v3/search"
 _VIDEOS_URL = "https://www.googleapis.com/youtube/v3/videos"
 _CHANNELS_URL = "https://www.googleapis.com/youtube/v3/channels"
@@ -103,7 +109,7 @@ def _search_page(kw, published_after_iso, max_per_kw, tok, region="KR", lang="ko
             "video_id": vid, "channel_id": sn.get("channelId"),
             "channel_title": sn.get("channelTitle"),
             "title": sn.get("title"), "description": sn.get("description"),
-            "thumbnail": ((sn.get("thumbnails") or {}).get("high") or {}).get("url", ""),
+            "thumbnail": _short_thumb(vid),
             "published_at": sn.get("publishedAt"),
         })
     return r.status_code, items
@@ -248,7 +254,7 @@ def fetch_channel_shorts(seed, max_videos=50, cache_get=None, cache_put=None):
                 "channel_title": sn.get("channelTitle"),
                 "title": sn.get("title"),
                 "description": sn.get("description"),
-                "thumbnail": ((sn.get("thumbnails") or {}).get("high") or {}).get("url", ""),
+                "thumbnail": _short_thumb(it.get("id")),
                 "published_at": sn.get("publishedAt"),
                 "views": int(st.get("viewCount") or 0),
                 "likes": int(st.get("likeCount") or 0),

@@ -109,7 +109,7 @@ def test_fetch_channel_shorts_schema_and_60s_filter(monkeypatch):
     assert it["video_id"] == "short1"
     assert it["channel_id"] == "UCx" and it["channel_title"] == "살림TV"
     assert it["views"] == 5000 and it["likes"] == 200 and it["comments"] == 15
-    assert it["thumbnail"] == "http://t/short1.jpg"
+    assert it["thumbnail"] == "https://i.ytimg.com/vi/short1/oardefault.jpg"  # 세로 쇼츠 썸네일
     assert it["published_at"] == "2026-07-24T00:00:00Z"
     # 캐시 히트라 channels.list(해석) 호출 없음
     assert not any("channels" in u for u in seen)
