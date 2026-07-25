@@ -4672,13 +4672,14 @@ async function suggestThumbTitles(){
       return;
     }
     THUMB_STATE.title_cands = d.titles;
-    // 대본을 매칭 뒤에 고쳤으면 제목은 새 대본으로 나오지만 영상 나레이션은 아직 옛 대본이다.
-    // 제목만 맞추면 영상↔제목이 또 어긋나니, 재매칭을 권하는 경고를 위에 띄운다.
+    // 제목은 '지금 영상(고른 대본)' 기준으로 만든다(2026-07-26). 그러니 매칭 뒤 1단계 대본을
+    // 고쳤어도 제목은 영상과 일치한다 — 다만 고친 1단계 내용은 아직 영상에 안 들어갔음을 알린다.
     const _warn = d.script_mismatch
       ? '<div class="hint" style="margin-bottom:6px;color:#ffb454;border:1px solid #7a5a1e;'
         + 'background:#3a2f14;border-radius:8px;padding:8px 10px;line-height:1.4">'
-        + '⚠️ 대본을 바꾸셨네요. 제목은 <b>새 대본</b>으로 만들었지만, <b>영상 나레이션은 아직 옛 대본</b>이에요. '
-        + '<a href="#" onclick="jump(0);return false" style="color:#ffd08a;font-weight:700">1단계에서 영상 매칭을 다시</a> 해야 영상에도 반영돼요.</div>'
+        + '⚠️ 1단계 대본을 고치셨네요. 제목은 <b>지금 영상</b> 기준으로 맞춰 만들었어요. '
+        + '고친 <b>1단계 내용을 영상에도 넣으려면</b> '
+        + '<a href="#" onclick="jump(0);return false" style="color:#ffd08a;font-weight:700">영상 매칭을 다시</a> 하세요.</div>'
       : '';
     box.innerHTML = _warn + '<div class="hint" style="margin-bottom:2px">마음에 드는 제목을 누르면 바로 얹어져요 ↓</div>' +
       d.titles.map((t, i) => {
