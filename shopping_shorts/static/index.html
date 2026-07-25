@@ -2344,6 +2344,23 @@ fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
   window.addEventListener('load',move);
   requestAnimationFrame(move);
 })();
+// #refTrace 딥링크(2026-07-25) — 제작소 "렌즈로 찾기"가 /#refTrace로 보내는데, 대상이 접힌
+// <details>라 아무 일도 안 일어나 레퍼런스 랭킹과 똑같아 보였다(사장님 제보). 해시가 오면
+// 펼치고 스크롤+입력 포커스+테두리 강조로 "여기가 렌즈"임을 보여준다.
+(function(){
+  function openTrace(){
+    if(location.hash!=='#refTrace') return;
+    var d=document.getElementById('refTrace'); if(!d) return;
+    d.open=true;
+    d.scrollIntoView({behavior:'smooth',block:'center'});
+    d.style.borderColor='var(--accent)';
+    d.style.boxShadow='0 0 0 3px rgba(55,224,189,.25)';
+    setTimeout(function(){ d.style.boxShadow=''; },2500);
+    var inp=document.getElementById('traceUrl'); if(inp) setTimeout(function(){ inp.focus(); },400);
+  }
+  window.addEventListener('hashchange',openTrace);
+  openTrace();
+})();
 </script>
 <script src="/sidebar.js?v=2"></script>
 </body>
