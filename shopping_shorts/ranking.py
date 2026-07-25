@@ -292,3 +292,58 @@ def build_reddit_items(raw, prev_base, prev_delta, now=None, window_hours=48):
             "title": r.get("title", ""),
         })
     return items
+
+
+def build_overseas_items(raw, prev_base, prev_delta, now=None, window_hours=336):
+    """해외HOT 다중플랫폼(틱톡/도우인/샤오홍슈) raw → 공통 item.
+
+    CN(도우인·샤오홍슈)은 조회수를 안 줘서(2026-07-26 실측) 랭킹 기준을 '참여'로 통일한다:
+    base = 좋아요+댓글+수집+공유, speed = base/경과h. views는 표시용(없으면 0).
+    platform은 raw.media_platform 보존(gap 번역분기·UI 뱃지용). window 336h=14일."""
+    now = now or datetime.now(timezone.utc)
+    items = []
+    for r in raw:
+        ts = r.get("published_at")
+        if not ts:
+            continue
+        age = hours_since(ts, now=now)
+        if age > window_hours or age < 0:
+            continue
+        likes = int(r.get("likes") or 0)
+        comments = int(r.get("comments") or 0)
+        collects = int(r.get("collects") or 0)
+        shares = int(r.get("shares") or 0)
+        views = int(r.get("views") or 0)
+        base = likes + comments + collects + shares
+        sc = r.get("video_id") or ""
+        prev = prev_base(sc)
+        is_new = prev is None
+        delta = base if is_new else base - prev
+        prev_d = prev_delta(sc)
+        accel = None if prev_d is None else delta - prev_d
+        items.append({
+            "platform": r.get("media_platform") or "tiktok",
+            "shortcode": sc,
+            "name": r.get("channel_title"),
+            "username": r.get("channel_title"),
+            "inpock": "",
+            "followers": None,
+            "thumbnail": r.get("thumbnail", ""),
+            "video_url": "",
+            "url": r.get("url", ""),
+            "comments": comments,
+            "likes": likes,
+            "collects": collects,
+            "shares": shares,
+            "views": views,
+            "base_count": base,
+            "age_hours": round(age, 1),
+            "delta": delta,
+            "is_new": is_new,
+            "accel": accel,
+            "speed": base / age if age > 0 else float(base),
+            "density": (collects + shares) / base if base else 0.0,
+            "category": r.get("category") or "",
+            "caption": r.get("title", ""),
+        })
+    return items
