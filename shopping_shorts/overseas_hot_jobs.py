@@ -81,6 +81,10 @@ def _run():
             all_items += _collect_category(cat, cfg, store)
         all_items = sort_by(all_items, "속도")
         prev, _ = store.load_overseas_feed()
+        # 현재 시드에 없는 카테고리(폐기된 레딧 만족감/신기템 등)는 퇴출 — 소스·카테고리
+        # 개편 시 옛 데이터가 피드에 눌러앉아 잡탕이 되는 걸 막는다(셀프힐링).
+        valid_cats = set(load_seeds().keys())
+        prev = [i for i in prev if i.get("category") in valid_cats]
         merged = _merge_rotate(prev, all_items, cap=_CAP)
         # 선점뱃지 — 아직 미판정인 상위 항목만(쿼터 보호). 기존 뱃지는 유지.
         with _LOCK:

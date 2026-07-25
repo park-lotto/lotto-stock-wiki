@@ -33,6 +33,36 @@ def test_run_collects_ranks_and_saves(monkeypatch, tmp_path):
     assert items[0]["gap_badge"] == "🔥선점가능"
 
 
+def test_run_purges_stale_categories(monkeypatch, tmp_path):
+    # 폐기된 소스/카테고리(옛 레딧 만족감/신기템)가 피드에 눌러앉지 않고 퇴출돼야 한다.
+    now = datetime(2026, 7, 26, 12, 0, tzinfo=timezone.utc)
+    db = str(tmp_path / "t.db")
+    from shopping_shorts.store import Store
+    Store(db).save_overseas_feed([
+        {"shortcode": "old1", "platform": "reddit", "category": "만족감/제품", "score": 0.9,
+         "base_count": 0, "delta": 0, "gap_badge": "🔥선점가능"},
+    ])
+
+    def fake_tt(kw, max_results=40):
+        return [{"video_id": "tt_new", "title": kw + " kitchen", "published_at": "2026-07-25T12:00:00Z",
+                 "views": 100000, "likes": 500, "comments": 10, "collects": 0, "shares": 0,
+                 "channel_title": "a", "thumbnail": "", "url": "https://tt", "media_platform": "tiktok"}]
+
+    monkeypatch.setattr(job.tiktok_search, "search_full", fake_tt)
+    monkeypatch.setattr(job.douyin_search, "search_full", lambda kw, max_results=40: [])
+    monkeypatch.setattr(job.xiaohongshu_search, "search_full", lambda kw, max_results=40: [])
+    monkeypatch.setattr(job.gap_check, "gap_badge", lambda title, **kw: "🔥선점가능")
+    monkeypatch.setattr(job, "load_seeds", lambda: {"주방/레시피": {"tiktok": ["kitchen"], "cn": []}})
+    monkeypatch.setattr(job, "DB_PATH", db)
+    monkeypatch.setattr(job, "_now", lambda: now)
+
+    job._run()
+    items, _ = Store(db).load_overseas_feed()
+    cats = {it.get("category") for it in items}
+    assert "만족감/제품" not in cats, "폐기 카테고리는 퇴출돼야 한다"
+    assert cats == {"주방/레시피"}
+
+
 def test_start_is_idempotent_while_running(monkeypatch):
     monkeypatch.setattr(job, "_run", lambda: __import__("time").sleep(0.2))
     job._JOB.update(status="idle", started=0.0)
