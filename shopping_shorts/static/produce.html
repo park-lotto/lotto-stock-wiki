@@ -472,8 +472,8 @@
               <label><input type="checkbox" id="advBoost" onchange="onAdv()"> Speaker boost</label>
             </div>
           </details>
-          <button onclick="previewVoice()" class="btn-prev" style="padding:8px 14px;margin-right:8px">🎧 이 대본으로 다시 듣기</button>
-          <button onclick="applyVoice()" class="btn-next" style="padding:8px 16px">이 음성으로 전체 생성</button>
+          <button onclick="previewVoice()" class="btn-prev" style="padding:8px 14px;margin-right:8px" title="이 성우·설정으로 대본 일부만 짧게 들어봅니다 (완성본 아님)">🎧 목소리만 미리듣기</button>
+          <button onclick="applyVoice()" class="btn-next" style="padding:8px 16px" title="이 성우로 대본 전체 음성을 만듭니다 — 완성되면 아래 미리보기에서 ▶ 완성본 전체 듣기">이 음성으로 전체 생성</button>
           <div id="voicePreview" style="margin-top:8px"></div>
           </div>
         </div>
@@ -483,7 +483,15 @@
         </div>
       </div>
       </details>
-      <div id="ttsBeats" style="margin-top:14px"></div>
+      <!-- 완성 음성 미리보기 슬롯 — 처음부터 큰 자리를 잡아둔다(생성 후 재생기가 '여기' 나타난다는
+           예고 + 레이아웃 점프 방지). renderTtsBeats()가 같은 자리(왼쪽 프레임+큰 재생버튼)로 채운다. -->
+      <div id="ttsBeats" style="margin-top:14px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
+          <div style="width:220px;aspect-ratio:9/16;border:1px dashed var(--line);border-radius:10px;background:var(--inset);display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;box-sizing:border-box;flex:0 0 auto">
+            <div class="hint">🎬 완성 음성 미리보기 자리<br><br>성우를 고르고 <b>[이 음성으로 전체 생성]</b>을 누르면<br>여기에 <b>▶ 완성본 전체 듣기</b>가 생겨요</div>
+          </div>
+        </div>
+      </div>
       <button class="btn-next" style="margin-top:12px;padding:8px 16px" onclick="vpGateNext()">다음 단계 (꾸미기) →</button>
     </section>
     <section class="panel" data-step="3">
@@ -3954,14 +3962,25 @@ async function applyVoice(){
   const poll=setInterval(async()=>{
     try{
       const d=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
-      if(d.status==='ready_for_review'){ clearInterval(poll); el.textContent='✅ 완료'; renderTtsBeats(); }
+      if(d.status==='ready_for_review'){
+        clearInterval(poll); el.innerHTML='✅ 완료 — 아래 <b>▶ 완성본 전체 듣기</b>로 확인하세요';
+        await renderTtsBeats();
+        // 완성되자마자 재생기가 보이도록 스크롤 — 버튼이 화면 밖이라 못 찾던 문제 보강
+        try{ document.getElementById('ttsBeats').scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(e){}
+      }
       else if(d.status==='failed'){ clearInterval(poll); el.textContent='❌ 실패: '+(d.error||''); }
     }catch(e){ clearInterval(poll); el.textContent='❌ 상태 확인 실패'; }
   },2500);
 }
 async function renderTtsBeats(){
   const el=document.getElementById('ttsBeats');
-  if(!MIX_JOB){ el.innerHTML='<div class="hint" style="margin-top:6px">🎬 2단계 <b>영상 매칭</b>을 완료하면 비트별 음성·길이 맞춤이 여기 표시됩니다. (지금은 프리셋 둘러보기·샘플 미리듣기만 가능)</div>'; return; }
+  // 매칭 전에도 큰 미리보기 자리는 유지한다(처음 상태에서 자리 예약 — 2026-07-25 사장님 요청).
+  if(!MIX_JOB){ el.innerHTML=`
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
+      <div style="width:220px;aspect-ratio:9/16;border:1px dashed var(--line);border-radius:10px;background:var(--inset);display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;box-sizing:border-box;flex:0 0 auto">
+        <div class="hint">🎬 완성 음성 미리보기 자리<br><br>2단계 <b>영상 매칭</b>을 완료하면<br>여기서 완성본을 듣습니다</div>
+      </div>
+    </div>`; return; }
   try{
     const d=await (await fetch('/api/mix/result/'+MIX_JOB)).json();
     if(!d.ok || !(d.beats||[]).length){ el.innerHTML=''; return; }
@@ -3989,18 +4008,22 @@ async function renderTtsBeats(){
     // 영상길이(비트 목표시간 합) vs 음성길이(오디오 실측 합) — 맞춤 힌트로 편집 편의성↑
     VP_BEATS = beats;                 // 전역: 재생기가 cap_segments/cap_durs/cap_offset 읽음
     _vpHeard = _vpHeard || new Set();
+    // ▶전체 재생을 미리보기 프레임 '바로 아래' 큰 버튼으로 — 오른쪽 구석에 있어 못 찾던 문제
+    //   (2026-07-25 사장님)과 '이 대본으로 다시 듣기'와의 혼동을 함께 해소(완성본임을 이름에 명시).
     el.innerHTML=`
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
-        <div style="position:relative;width:180px;aspect-ratio:9/16;background:#000;border-radius:10px;overflow:hidden;flex:0 0 auto">
-          <img id="vpFrame" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
-          <div id="vpCap" style="position:absolute;left:0;right:0;bottom:8%;text-align:center;color:#fff;font-weight:700;font-size:13px;text-shadow:0 2px 4px #000;padding:0 6px"></div>
+        <div style="flex:0 0 auto;width:220px">
+          <div style="position:relative;width:220px;aspect-ratio:9/16;background:#000;border-radius:10px;overflow:hidden">
+            <img id="vpFrame" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
+            <div id="vpCap" style="position:absolute;left:0;right:0;bottom:8%;text-align:center;color:#fff;font-weight:700;font-size:13px;text-shadow:0 2px 4px #000;padding:0 6px"></div>
+          </div>
+          <button onclick="playAllBeats()" class="btn-next" style="display:block;width:220px;margin-top:8px;padding:11px 0;font-size:15px;font-weight:700" title="방금 만든 완성 음성을 처음부터 끝까지 화면과 함께 재생합니다">▶ 완성본 전체 듣기</button>
         </div>
         <div style="flex:1;min-width:220px">
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
             <div><span class="hint">영상 길이</span> <b style="color:var(--accent2)">${vidLen.toFixed(1)}초</b></div>
             <div><span class="hint">음성 길이</span> <b id="voiceLen" style="color:var(--ok)">…</b></div>
             <div id="fitMsg" class="hint">음성 길이 측정 중…</div>
-            <button onclick="playAllBeats()" class="btn-prev" style="padding:6px 12px;margin-left:auto">▶ 전체 재생</button>
           </div>
           ${rows}
         </div>
