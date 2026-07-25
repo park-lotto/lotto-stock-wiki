@@ -463,6 +463,46 @@ def api_reference(platform: str = "instagram"):
     return {"ok": True, "items": items, "collected_at": collected_at}
 
 
+@app.get("/api/reference/cn_trend")
+def api_reference_cn_trend():
+    """샤오홍슈·도우인 트렌드 검색카드(2026-07-25). 샤오홍슈·도우인은 크롤 자동수집이
+    불가(로그인 벽·서명요구)라 긁지 않고 '무엇을 검색하면 터진 게 나오는지'만 준다:
+    인스타·틱톡·유튜브 랭킹 상위 영상의 비전 주제(vision_subject)를 강도순으로 카드화하고,
+    캐시된 중국어 번역(cn_keyword_cache)을 실어 딥링크 버튼을 만든다.
+
+    ★100% 무료: 이 엔드포인트는 크롤·번역 API를 호출하지 않는다(이미 저장된 랭킹+캐시만
+    읽음). 번역은 scripts/backfill_cn_keywords.py가 미리 채운다.
+
+    폴백 B(2026-07-25): 캐시 미스로 zh가 비면 그 카드의 중국 플랫폼 버튼을 프론트가
+    흐리게/비활성 처리한다 — 한국어를 중국 검색창에 그대로 넣는 잘못된 딥링크 방지."""
+    store = Store(DB_PATH)
+    seen = set()
+    cards = []
+    for platform in ("instagram", "tiktok", "youtube"):
+        if platform == "instagram":
+            items, _ = store.load_last_run()
+        else:
+            items, _ = store.load_last_run_platform(platform)
+        _attach_vision_tags(items, store)
+        for it in items:
+            subj = (it.get("vision_subject") or "").strip()
+            if not subj or subj in seen:
+                continue
+            seen.add(subj)
+            cards.append({
+                "subject": subj,
+                "thumbnail": it.get("thumbnail", ""),
+                "url": it.get("url", ""),
+                "platform": platform,
+                "strength": it.get("views") or it.get("comments") or 0,
+            })
+    zh_map = store.cn_keyword_map([c["subject"] for c in cards])
+    for c in cards:
+        c["zh"] = zh_map.get(c["subject"], "")   # 캐시 미스 → "" → 프론트 폴백 B
+    cards.sort(key=lambda c: c["strength"], reverse=True)
+    return {"ok": True, "cards": cards}
+
+
 @app.get("/api/seeds")
 def api_seeds(platform: str = "youtube"):
     """플랫폼별 시드(키워드/채널 등) 목록."""
@@ -3407,8 +3447,10 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 # 메서드 무관 무료(로그인 폼 POST 등) — 전부 정확 경로.
 _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout"}
 # GET만 무료(레퍼런스 랭킹 '조회') — POST/PUT 등 데이터변경은 같은 경로여도 차단.
-_FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/api/thumb", "/api/video",
+_FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/api/reference/cn_trend",
+                   "/api/thumb", "/api/video",
                    "/api/channel/history"}   # 채널 히스토리='지난 한 달' 조회 = 랭킹 열람의 연장(무료 허용)
+                   # cn_trend=이미 저장된 랭킹+캐시만 읽는 무과금 조회 → 랭킹 열람의 연장(무료)
 # 경계있는 prefix만(과다매칭 방지 — 트레일링 슬래시).
 _FREE_PREFIX = ("/static/", "/auth/google/")
 

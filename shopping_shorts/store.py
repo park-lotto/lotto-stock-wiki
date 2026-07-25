@@ -191,6 +191,18 @@ class Store:
                     created_at TEXT
                 )
             """)
+            # 한국어 소재 키워드 → 중국어 검색어 캐시(2026-07-25) — 샤오홍슈·도우인 트렌드
+            # 검색카드용. 중국 플랫폼은 중국어 검색이 필수라 한국어 소재(ko)를 미리 번역해
+            # 캐시해둔다. 같은 소재의 반복 번역(Gemini 호출)을 막는다. 채우는 건
+            # scripts/backfill_cn_keywords.py(무과금 배치). 캐시 미스면 프론트가 중국
+            # 플랫폼 버튼을 흐리게 처리(폴백 B) — 잘못된 한국어 딥링크 방지.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS cn_keyword_cache (
+                    ko TEXT PRIMARY KEY,
+                    zh TEXT,
+                    created_at TEXT
+                )
+            """)
             # 학습소재 통계용 확장(2026-07-13) — 위키 저장 여부와 무관하게 대본추출된
             # 모든 항목에 구조분석을 백필하기 위한 컬럼.
             # category_source(2026-07-16): 카테고리가 어디서 왔나 — user|gemini|keyword.
@@ -1928,6 +1940,43 @@ class Store:
                     ",".join("?" * len(chunk))
                 for sc, subj, kj in c.execute(q, chunk).fetchall():
                     out[sc] = {"subject": subj or "", "keywords": json.loads(kj or "[]")}
+        return out
+
+    def save_cn_keyword(self, ko, zh):
+        """한국어 소재 → 중국어 검색어 캐시 저장(덮어쓰기). 트렌드 검색카드용."""
+        ko = (ko or "").strip()
+        if not ko:
+            return
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO cn_keyword_cache(ko, zh, created_at) VALUES(?,?,datetime('now')) "
+                "ON CONFLICT(ko) DO UPDATE SET zh=excluded.zh, created_at=excluded.created_at",
+                (ko, (zh or "").strip()),
+            )
+
+    def get_cn_keyword(self, ko):
+        """캐시된 중국어 검색어. 없으면 None(캐시 미스 → 프론트 폴백 B)."""
+        ko = (ko or "").strip()
+        if not ko:
+            return None
+        with self._conn() as c:
+            row = c.execute("SELECT zh FROM cn_keyword_cache WHERE ko=?", (ko,)).fetchone()
+        return (row[0] or "") if row else None
+
+    def cn_keyword_map(self, ko_list):
+        """여러 한국어 소재 → {ko: zh} (캐시에 zh가 있는 것만). 읽기 결합용."""
+        kos = [k.strip() for k in (ko_list or []) if k and k.strip()]
+        if not kos:
+            return {}
+        out = {}
+        with self._conn() as c:
+            for i in range(0, len(kos), 400):
+                chunk = kos[i:i + 400]
+                q = "SELECT ko, zh FROM cn_keyword_cache WHERE ko IN (%s)" % \
+                    ",".join("?" * len(chunk))
+                for ko, zh in c.execute(q, chunk).fetchall():
+                    if zh:
+                        out[ko] = zh
         return out
 
     def save_candidates(self, shortcode, platform, candidates):
