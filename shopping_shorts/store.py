@@ -628,6 +628,18 @@ class Store:
                     updated_at TEXT NOT NULL
                 )
             """)
+            # 수집 비동기 잡(2026-07-25): 200채널 Apify를 HTTP 요청 안에서 동기로 돌리면
+            # 40분 걸려 게이트웨이 타임아웃 500이 난다. census와 같은 job 패턴으로 분리.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS collect_jobs (
+                    job_id TEXT PRIMARY KEY,
+                    status TEXT NOT NULL,
+                    result_json TEXT,
+                    error TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
             # ★유튜브 로컬 릴레이 큐(2026-07-24): 서버(데이터센터 IP)는 유튜브 쇼츠 다운로드가
             # 봇차단이라, 사장님 PC(주거용 IP) 에이전트가 대신 받아 서버로 올린다. 서버는 여기
             # 요청을 넣고 done될 때까지 폴링한다. 상태: pending→done|failed.
@@ -2626,6 +2638,36 @@ class Store:
         vals.append(job_id)
         with self._conn() as c:
             c.execute(f"UPDATE census_jobs SET {', '.join(cols)} WHERE job_id=?", tuple(vals))
+
+    # ── 수집 비동기 잡(2026-07-25) — census 잡과 동일 구조, 테이블만 분리 ──
+    def create_collect_job(self, job_id):
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute("INSERT INTO collect_jobs(job_id, status, created_at, updated_at) "
+                      "VALUES(?,?,?,?)", (job_id, "running", now, now))
+
+    def get_collect_job(self, job_id):
+        with self._conn() as c:
+            row = c.execute("SELECT job_id, status, result_json, error, created_at, updated_at "
+                            "FROM collect_jobs WHERE job_id=?", (job_id,)).fetchone()
+        if not row:
+            return None
+        return {"job_id": row[0], "status": row[1],
+                "result": json.loads(row[2]) if row[2] else None,
+                "error": row[3], "created_at": row[4], "updated_at": row[5]}
+
+    def update_collect_job(self, job_id, status=None, result=None, error=None):
+        cols, vals = [], []
+        if status is not None:
+            cols.append("status=?"); vals.append(status)
+        if result is not None:
+            cols.append("result_json=?"); vals.append(json.dumps(result, ensure_ascii=False))
+        if error is not None:
+            cols.append("error=?"); vals.append(error)
+        cols.append("updated_at=?"); vals.append(datetime.now(timezone.utc).isoformat())
+        vals.append(job_id)
+        with self._conn() as c:
+            c.execute(f"UPDATE collect_jobs SET {', '.join(cols)} WHERE job_id=?", tuple(vals))
 
     # ── 6단계 SEO 키워드 측정 캐시(2026-07-17) ──
     # job이 아니라 전역이다 — 키워드 측정치는 어느 영상이 쟀든 같은 값이고,

@@ -196,32 +196,78 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
             return JSONResponse(status_code=429, content={
                 "ok": False, "error_code": "daily_limit",
                 "error": f"오늘 틱톡 수집 한도({knobs['daily_limit']}회)를 다 썼습니다"})
+    # ★비동기(2026-07-25): 200채널 Apify를 요청 안에서 동기로 돌리면 ~40분 걸려
+    # 게이트웨이 타임아웃 500이 난다(인스타 지금수집이 안 되던 근본원인). census와
+    # 같은 job 패턴으로 접수만 하고 job_id를 즉시 돌려준 뒤 실제 수집은 백그라운드에서.
+    # 프론트는 /api/collect/status/{job_id}를 폴링해 진행/결과를 받는다.
+    job_id = uuid.uuid4().hex[:12]
+    Store(DB_PATH).create_collect_job(job_id)
+    background_tasks.add_task(_run_collect_job, job_id, platform, category, limit, _cid(request))
+    return {"ok": True, "job_id": job_id, "async": True}
+
+
+def _run_collect_job(job_id, platform, category, limit, cid):
+    """background: collect() 실행 → (인스타)last_run 저장 → 결과를 job에 담아 done.
+    실패는 민감정보 마스킹 후 error로 기록. 프론트는 status 폴링으로 결과/에러를 받는다."""
+    store = Store(DB_PATH)
     try:
-        items = collect(platform=platform, categories=([category] if category else None), limit_channels=limit)
-        if platform == "tiktok":
-            guard.bump_tiktok_daily(_cid(request), datetime.now(timezone.utc).strftime("%Y-%m-%d"))
-            # 추정지출 누적(add_tiktok_spend)도 건너뜀 — 위 docstring 참고.
-            # 유료를 되살릴 때 함께 복원: est = n_lang × search_count × _TIKTOK_COST_PER_ITEM
-        if platform != "instagram":
-            _, collected_at = Store(DB_PATH).load_last_run_platform(platform)
-            return {"ok": True, "count": len(items), "items": items,
-                    "collected_at": collected_at}
-        collected_at = datetime.now(timezone.utc).isoformat()
-        store = Store(DB_PATH)
-        store.save_last_run(items, collected_at)
-        background_tasks.add_task(generate_missing_drafts, next_draft_targets(items, store))
-        background_tasks.add_task(_tag_new_items, items)   # 신규 썸네일 비전 태깅(백그라운드)
-        background_tasks.add_task(_translate_new_subjects, items)  # 새 소재 한→중 번역(백그라운드)
-        # 수집→대본은행 자동 적재(2026-07-22): 밀도+속도 상위 표본을 부품으로 분해해 은행에
-        # 쌓는다(소스당 Gemini 1콜이라 백그라운드). 결과는 /api/bank/ingest_report로 화면에 보고.
-        background_tasks.add_task(_bank_ingest_collected_bg, DB_PATH, items, collected_at)
-        _attach_vision_tags(items, store)                  # 이미 태깅된 것(재수집)은 즉시 실어 보냄
-        return {"ok": True, "count": len(items), "items": items,
-                "collected_at": collected_at}
+        items = collect(platform=platform,
+                        categories=([category] if category else None), limit_channels=limit)
     except Exception as e:
         import re
         msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
-        return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+        store.update_collect_job(job_id, status="error", error=msg)
+        return
+    try:
+        if platform == "tiktok":
+            store.bump_tiktok_daily(cid, datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+        if platform != "instagram":
+            _, collected_at = store.load_last_run_platform(platform)
+        else:
+            collected_at = datetime.now(timezone.utc).isoformat()
+            store.save_last_run(items, collected_at)
+            _attach_vision_tags(items, store)              # 이미 태깅된 것(재수집)은 즉시 실어 보냄
+        payload = {"count": len(items), "items": items, "collected_at": collected_at}
+        store.update_collect_job(job_id, status="done", result=payload)
+    except Exception as e:
+        import re
+        msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
+        store.update_collect_job(job_id, status="error", error=msg)
+        return
+    # done 이후 느린 인스타 후속(초안·비전태깅·번역·대본은행) — 실패해도 결과엔 영향 없음(삼킨다).
+    if platform == "instagram":
+        try:
+            generate_missing_drafts(next_draft_targets(items, store))
+            _tag_new_items(items)
+            _translate_new_subjects(items)
+            _bank_ingest_collected_bg(DB_PATH, items, collected_at)
+        except Exception:
+            pass
+
+
+_COLLECT_STALE_MIN = 60   # Apify 200채널이 오래 걸려 census(20)보다 넉넉히
+
+
+@app.get("/api/collect/status/{job_id}")
+def api_collect_status(job_id: str):
+    """수집 잡 상태/결과 폴링. running/done/error. done이면 count·items·collected_at 포함."""
+    job = Store(DB_PATH).get_collect_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    status = job["status"]
+    if status == "running":
+        try:
+            age_min = (datetime.now(timezone.utc)
+                       - datetime.fromisoformat(job["updated_at"])).total_seconds() / 60
+        except Exception:
+            age_min = 0
+        if age_min > _COLLECT_STALE_MIN:
+            return {"ok": True, "status": "error",
+                    "error": "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."}
+        return {"ok": True, "status": "running"}
+    if status == "error":
+        return {"ok": True, "status": "error", "error": job["error"] or "실패"}
+    return {"ok": True, "status": "done", **(job["result"] or {})}
 
 
 @app.get("/api/bank/ingest_report")
