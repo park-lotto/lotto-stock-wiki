@@ -6880,25 +6880,38 @@ def api_thumb_titles(body: dict):
     """확정 대본으로 썸네일에 얹을 짧은 제목 후보를 뽑는다. DB 기록 안 함(무과금 미리보기 —
     seo/generate·fx/suggest와 같은 규약). 사장님이 후보를 눌러 레이어에 얹고 다듬는다.
 
-    ★화면 대본 우선(2026-07-24 사고): job.given_script는 '영상 매칭(믹스)' 순간에 고정된다.
-    그 뒤 1단계에서 대본을 새 영상에 맞게 고쳐도 job엔 옛 대본이 남아, 제목이 옛 영상 주제로
-    나온다(바나나 팬케이크 영상에 며칠 전 '밥솥 식빵' 제목이 나온 실사고). 그래서 프런트가
-    보내주는 '지금 화면의 대본'(script)을 있으면 우선 쓴다 — 사장님이 보는 것과 제목을 맞춘다.
-    화면 대본이 job 대본과 다르면 script_mismatch=true로 알려, 프런트가 '영상 매칭을 다시
-    해야 나레이션에도 반영된다'고 경고한다(제목만 바꾸면 영상 나레이션↔제목이 또 어긋난다)."""
+    ★영상 대본(edit_plan) 우선(2026-07-26 사고): 제목은 '영상이 실제로 말하는 것'과 맞아야 한다.
+    장면 우선 대본 모드(2026-07-20~)에선 후보를 고르면 그 후보의 나레이션이 edit_plan에 박히고
+    영상은 그걸로 만들어진다. 반면 job.given_script/화면 대본(STATE.script)은 1단계 원본으로
+    남고, 후보가 소스영상에서 생성되므로 영상과 무관해진다(세탁 영상에 '다이소 큐티클' 네일
+    제목이 나온 실사고). 그래서 edit_plan의 나레이션(=고른 후보=영상이 말하는 대본)을 최우선으로
+    쓴다. edit_plan이 없으면(구 흐름) 예전대로 화면 대본→원본 대본으로 폴백한다.
+
+    2026-07-24 선행 사고(바나나 팬케이크에 '밥솥 식빵' 제목)도 이 규칙이 포섭한다: 제목이 늘
+    '지금 영상(edit_plan)'을 따라가므로 옛 원본이 새지 않는다. 화면 대본이 영상 대본과 다르면
+    script_mismatch=true로 알려 프런트가 '1단계 내용을 반영하려면 영상 매칭을 다시'라고 안내한다."""
     job_id = (body.get("job_id") or "").strip()
     job = Store(DB_PATH).get_mix_job(job_id) if job_id else None
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     screen_script = (body.get("script") or "").strip()
     job_script = (job.get("given_script") or "").strip()
-    used_script = screen_script or job_script
+    # 영상이 실제로 말하는 대본 = 고른 후보(edit_plan)의 beat 나레이션을 이어붙인 것.
+    plan_script = " ".join(
+        (b.get("narration") or "").strip()
+        for b in ((job.get("edit_plan") or {}).get("beats") or [])
+    ).strip()
+    used_script = plan_script or screen_script or job_script
     if not used_script:
         return JSONResponse(status_code=422, content={
             "ok": False, "error": "대본이 비어 있어요 — 1단계에서 대본을 확정하세요"})
-    # 화면 대본으로 제목을 짓되, headcopy/구조는 job 것을 그대로 참고로 둔다(대본이 진실의 축).
+    # 제목은 영상 대본(edit_plan)으로 짓되, headcopy/구조는 job 것을 그대로 참고로 둔다(대본이 진실의 축).
     job_for_titles = dict(job)
     job_for_titles["given_script"] = used_script
+    # 경고는 '1단계 대본을 매칭 후 고쳤는가'를 본다 = 화면 대본 vs 원본(job) 대본(2026-07-24 규약).
+    # edit_plan 나레이션은 원본의 리라이트라 화면 대본과 늘 달라서, 그걸로 비교하면 매번 오탐이 뜬다.
+    # 제목은 이미 edit_plan(영상)으로 지어 영상과 일치하므로, 이 경고는 순수히 '네 1단계 수정은
+    # 영상에 아직 안 들어갔다'는 안내다(같으면=안 고쳤으면 안 뜬다 → 정상 흐름은 조용하다).
     mismatch = bool(screen_script and job_script and screen_script != job_script)
     titles = thumb_title.generate(job_for_titles)
     if titles is None:
