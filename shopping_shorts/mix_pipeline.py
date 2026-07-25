@@ -53,6 +53,9 @@ _DEFAULT_VOICE = {
     "settings": {"stability": 0.35, "similarity_boost": 0.78, "style": 0.4},
     "speed": 1.6,
     "silence_trim": "mid",
+    # 컷편집 빠른 느낌(2026-07-25 사장님): 4단계 UI 기본(⚡속도감 모드 체크)과 동일하게
+    # 미리보기 기본도 무음 컷·타이트 이음을 켠다 — 안 켜면 미리보기만 늘어져 들린다.
+    "pace_mode": True,
 }
 
 
