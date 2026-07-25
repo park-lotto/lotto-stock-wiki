@@ -1431,6 +1431,17 @@ function _groupBySubject(items){
   groups.sort((a,b)=> b.maxScore - a.maxScore);
   return groups;
 }
+// 폴백 B(2026-07-25 사장님 결정): 중국(샤오홍슈·도우인) 딥링크 버튼을 만든다.
+// 번역(zh)이 있으면 정상 링크, 없으면 흐리게+비활성(pointer-events:none) — 한국어를
+// 중국 검색창에 넣는 잘못된 딥링크를 막는다(원안 ko 폴백 폐기). 순수함수라 node 테스트됨.
+function _cnTrendBtn(zh){
+  const base='text-decoration:none;padding:4px 10px;border-radius:10px;border:1px solid var(--line)';
+  return function(label, color, url){
+    if(zh) return `<a href="${url}" target="_blank" rel="noopener" style="${base};color:${color}">${label}</a>`;
+    return `<span class="cn-disabled" title="번역 대기 — 곧 갱신(중국 검색은 중국어 필요)" `
+         + `style="${base};color:var(--sub);opacity:.4;pointer-events:none;cursor:default">${label}</span>`;
+  };
+}
 // ── 트렌드 검색카드 끝 ──
 
 // 샤오·도우 탭 공유 뷰 — 인스·유튜·틱톡 상위를 소재로 묶어 랭킹. 카드마다 샤오홍슈+도우인 딥링크 둘 다.
@@ -1465,9 +1476,12 @@ async function renderTrendCards(){
   root.innerHTML = '<div class="cards">' + top.map(g=>{
     const rep = g.items.reduce((a,b)=> _score(b)>_score(a)?b:a, g.items[0]);
     const zh = zhMap[g.subjectKo]||'';
-    const q = zh || g.subjectKo;   // zh 없으면 ko 폴백
-    const xhs = _lensSearchUrl('xiaohongshu', q);
-    const dy  = _lensSearchUrl('douyin', q);
+    // 폴백 B(2026-07-25 사장님 결정): zh 없으면 한국어를 중국 검색창에 넣어봐야 무의미 →
+    // 샤오홍슈·도우인 버튼을 흐리게+비활성(잘못된 한국어 딥링크 방지). 번역이 채워지면 살아난다.
+    // (원안 ko 폴백 폐기. 벌크 backfill_cn_keywords.py를 돌리면 미스가 줄어 버튼이 산다.)
+    const cnBtn = _cnTrendBtn(zh);
+    const xhs = cnBtn('📕 샤오홍슈', '#ff2442', _lensSearchUrl('xiaohongshu', zh));
+    const dy  = cnBtn('🎬 도우인', 'var(--txt,inherit)', _lensSearchUrl('douyin', zh));
     const pbadges = g.platforms.map(p=>PLAT_EMOJI[p]||'').join('');
     const thumb = rep.thumbnail ? ('/api/thumb?url='+encodeURIComponent(rep.thumbnail)) : '';
     return `
@@ -1475,10 +1489,10 @@ async function renderTrendCards(){
       <div class="thumb"><img src="${thumb}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'"></div>
       <div class="body" style="padding:8px">
         <div style="font-weight:600">${esc(g.subjectKo)}${zh?` <span style="color:var(--sub);font-weight:400">· ${esc(zh)}</span>`:''}</div>
-        <div style="font-size:11px;color:var(--sub);margin:4px 0">🔥 ${g.count}개 영상에서 터짐 ${pbadges}</div>
+        <div style="font-size:11px;color:var(--sub);margin:4px 0">🔥 ${g.count}개 영상에서 터짐 ${pbadges}${zh?'':' · <span title="중국 검색은 중국어 번역이 필요합니다">번역 대기</span>'}</div>
         <div style="display:flex;gap:6px;margin-top:6px">
-          <a href="${xhs}" target="_blank" rel="noopener" style="text-decoration:none;padding:4px 10px;border-radius:10px;border:1px solid var(--line);color:#ff2442">📕 샤오홍슈</a>
-          <a href="${dy}" target="_blank" rel="noopener" style="text-decoration:none;padding:4px 10px;border-radius:10px;border:1px solid var(--line);color:var(--txt,inherit)">🎬 도우인</a>
+          ${xhs}
+          ${dy}
         </div>
       </div>
     </div>`;
