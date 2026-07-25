@@ -75,7 +75,9 @@
     ".ss-acct-link:hover{border-color:var(--accent,#37e0bd);color:var(--sel-fg,#6ff0d6)}" +
     // 브랜드 텍스트만 민트 그라디언트(이모지는 제외 — text-fill:transparent가 이모지 글리프까지 비운다)
     // + 은은한 민트 글로우로 강조(drop-shadow는 clip:text에서도 글자 외곽에 먹는다).
-    ".ss-brand{background:var(--grad,linear-gradient(135deg,#6ff0d6,#1f9e7a));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;filter:drop-shadow(0 0 12px rgba(55,224,189,.35))}" +
+    /* 워드마크 v3(2026-07-25): 민트→오로라 + 끝에 골드 마침점. app.py .brand .nm과 같은 규칙 */
+    ".ss-brand{letter-spacing:-.3px;background:linear-gradient(135deg,#3ee0bf 0%,#7fe9d8 42%,#8c6ef0 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;filter:drop-shadow(0 0 12px rgba(62,224,191,.35))}" +
+    ".ss-brand::after{content:'.';background:none;-webkit-text-fill-color:#facc6b;color:#facc6b;filter:none;margin-left:1px}" +
     // 카테고리 = 박스로 시각 구분 + 크게(사장님 2026-07-21). 그룹을 inset 카드로 감싸고
     // 라벨은 카드 헤더처럼, 항목은 15px·굵게로 키워 눈에 잘 띄고 누르기 쉽게.
     ".ss-group{margin-bottom:14px;background:var(--inset,#0c1412);border:1px solid var(--line,#1e2735);border-radius:12px;padding:9px 9px 7px}" +
@@ -142,21 +144,21 @@
     });
   }
   // 로고 클릭 = 홈(/)으로(사장님 2026-07-21) — 커서·title로 클릭 가능함을 알린다.
-  // 브랜드 엠블럼(v2, app.py _LOGO_SVG와 동일 도형 — id만 ss- 접두어로 충돌 방지)
+  // 브랜드 엠블럼(v3, app.py _LOGO_SVG와 동일 도형 — id만 ss- 접두어로 충돌 방지)
+  // 세로 9:16 프레임 + 골드 재생 삼각형 + 홈닷. 24px에서 읽히도록 요소 4개로 제한.
   var BRAND_SVG =
-    '<svg width="24" height="24" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템메이커" style="flex-shrink:0">' +
-    '<defs><radialGradient id="ssdk" cx="50%" cy="42%" r="65%">' +
-    '<stop offset="0" stop-color="#1c2b25"/><stop offset="1" stop-color="#0b120f"/></radialGradient>' +
+    '<svg width="20" height="20" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템메이커" style="flex-shrink:0">' +
+    '<defs><radialGradient id="ssdk" cx="50%" cy="38%" r="70%">' +
+    '<stop offset="0" stop-color="#17223c"/><stop offset="1" stop-color="#070b14"/></radialGradient>' +
     '<linearGradient id="ssmg" x1="0" y1="0" x2="1" y2="1">' +
-    '<stop offset="0" stop-color="#6ff0d6"/><stop offset="1" stop-color="#1f9e7a"/></linearGradient>' +
+    '<stop offset="0" stop-color="#3ee0bf"/><stop offset="1" stop-color="#8c6ef0"/></linearGradient>' +
     '<linearGradient id="ssgg" x1="0" y1="0" x2="1" y2="1">' +
-    '<stop offset="0" stop-color="#ffe1a1"/><stop offset="1" stop-color="#f0a93a"/></linearGradient></defs>' +
+    '<stop offset="0" stop-color="#ffe6ae"/><stop offset="1" stop-color="#facc6b"/></linearGradient></defs>' +
     '<circle cx="32" cy="32" r="29" fill="url(#ssdk)"/>' +
-    '<circle cx="32" cy="32" r="29" stroke="url(#ssmg)" stroke-width="2.4"/>' +
-    '<rect x="17.6" y="40" width="28.8" height="6" rx="2.8" fill="#1d8a68"/>' +
-    '<rect x="20.8" y="32" width="22.4" height="6" rx="2.8" fill="url(#ssmg)"/>' +
-    '<rect x="24" y="24" width="16" height="6" rx="2.8" fill="url(#ssgg)"/>' +
-    '<path d="M32 13.8l8 8.2H24l8-8.2z" fill="url(#ssgg)"/></svg>';
+    '<circle cx="32" cy="32" r="29" stroke="url(#ssmg)" stroke-width="2.6"/>' +
+    '<rect x="23" y="15" width="18" height="31" rx="4.4" stroke="url(#ssmg)" stroke-width="2.6"/>' +
+    '<path d="M29.2 24.1l9.4 6.4-9.4 6.4V24.1z" fill="url(#ssgg)"/>' +
+    '<circle cx="32" cy="51.5" r="2.2" fill="url(#ssgg)"/></svg>';
   var html = "<h1 onclick=\"location.href='/'\" style=\"cursor:pointer\" title=\"홈으로\">" + BRAND_SVG + " <span class=\"ss-brand\">숏템메이커</span></h1>";
   NAV.forEach(function (g) {
     html += '<div class="ss-group"><div class="ss-label">' + g.label + "</div>";
