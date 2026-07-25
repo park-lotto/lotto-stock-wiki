@@ -1348,6 +1348,30 @@ async function lensBulkDelete(shortcode){
   st.items=st.items.filter(i=>!sel.has(i.savesc));   // 결과 목록에서 숨김
   st.sel.clear(); renderLens(shortcode);
 }
+// 렌즈 유튜브 결과 = 짜집기 채널들. 그 채널들을 벤치(account 시드)로 등록 → 채널기반 수집에 편입.
+async function lensBenchAllYoutube(shortcode){
+  const st=LENS_STATE[shortcode]; if(!st) return;
+  const urls=(st._shown||[]).filter(i=>i.platform==='youtube').map(i=>i.url).filter(Boolean);
+  if(!urls.length){ showToast('유튜브 결과가 없어요'); return; }
+  showToast(`⏳ 채널 해석 중… (${urls.length}개 영상)`);
+  try{
+    const d=await (await fetch('/api/seeds/from_youtube_videos',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({urls})})).json();
+    if(!d.ok){ showToast('❌ 등록 실패: '+(d.error||'')); return; }
+    showToast(`✅ 벤치 등록 ${d.added}개${d.duplicate?` (이미있음 ${d.duplicate})`:''} <a href="/refs" style="color:var(--sel-fg);margin-left:6px">벤치 보기 →</a>`);
+  }catch(e){ showToast('❌ 등록 실패'); }
+}
+async function lensBenchOne(btn, urlEnc){
+  const url=decodeURIComponent(urlEnc||''); if(!url) return;
+  btn.disabled=true; const orig=btn.textContent; btn.textContent='⏳';
+  try{
+    const d=await (await fetch('/api/seeds/from_youtube_videos',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({urls:[url]})})).json();
+    if(d.ok && d.added){ btn.textContent='✅ 벤치됨'; showToast('✅ 채널 벤치 등록됨'); }
+    else if(d.ok && d.duplicate){ btn.textContent='이미 벤치'; showToast('이미 등록된 채널'); }
+    else { btn.textContent=orig; btn.disabled=false; showToast('❌ 채널 해석 실패'); }
+  }catch(e){ btn.textContent=orig; btn.disabled=false; showToast('❌ 등록 실패'); }
+}
 function _fmtCount(n){
   if(n==null || isNaN(n)) return '';
   n=Number(n);
@@ -1495,6 +1519,7 @@ function renderLens(shortcode){
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="영상 길이 90초 이하(또는 길이 불명)만 표시"><input type="checkbox" ${st.shortsOnly?'checked':''} onclick="toggleLensShorts('${shortcode}')"> 숏폼만</label>
       <button onclick="lensBulkSave('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">📥 선택 담기(${selCount})</button>
       <button onclick="lensBulkDelete('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">🗑 선택 삭제(${selCount})</button>
+      ${(()=>{const nYt=shown.filter(i=>i.platform==='youtube').length; return nYt?`<button onclick="lensBenchAllYoutube('${shortcode}')" title="이 렌즈 결과의 유튜브 채널들(짜집기 채널)을 전부 벤치 리스트에 등록 → 채널기반 수집에 편입" style="${btnCss};border-color:var(--accent);color:var(--accent);font-weight:700">➕ 유튜브 채널 전부 벤치등록(${nYt})</button>`:'';})()}
       ${st.ytLoading?'<span style="color:var(--sub)">▶️ 유튜브 불러오는 중…</span>':''}
       <a href="/grab" target="_blank" rel="noopener" title="샤오홍슈·도우인·틱톡·인스타 영상에 '📥 담기' 버튼이 안 뜨면 여기서 1회 켜기" style="text-decoration:none;font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--accent);background:#1f6feb1a;color:var(--accent);font-weight:700;margin-left:auto;white-space:nowrap">📥 담기 버튼 켜기</a>
     </div>
@@ -1547,6 +1572,7 @@ function renderLens(shortcode){
         <div class="btns">
           <button class="view" onclick="lensPreview('${shortcode}','${i.savesc}')">▶ 미리보기</button>
           <button class="save${isSaved?' saved':''}" onclick="toggleLensSave('${shortcode}','${i.savesc}',this)">${isSaved?'🎬 담김✓':'📥 담기'}</button>
+          ${i.platform==='youtube'?`<button class="view" title="이 채널을 벤치 리스트에 등록(채널기반 수집 편입)" onclick="lensBenchOne(this,'${encodeURIComponent(i.url||'')}')">➕ 벤치</button>`:''}
         </div>
         <div style="margin-top:4px"><a href="${_openUrl(i.url)}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🔗 원본 열기</a></div>
         <div class="enrich" data-url="${esc(i.url||'')}" data-platform="${esc(plabel||'')}"

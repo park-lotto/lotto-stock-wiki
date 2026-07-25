@@ -60,6 +60,7 @@ from shopping_shorts import export_bundle
 from shopping_shorts import qr_svg
 from shopping_shorts import capcut_draft
 from shopping_shorts.youtube_client import enrich_youtube
+from shopping_shorts.youtube_client import channels_from_video_urls as yt_channels_from_videos
 from shopping_shorts.video_assemble import _beat_timeline
 from shopping_shorts.audio_post import detect_edge_silence
 from shopping_shorts.video_assemble import _probe_duration, _effective_dur, _TRIM_FLOOR
@@ -529,6 +530,33 @@ def api_seeds_add(body: dict):
         return JSONResponse(status_code=422, content={"ok": False, "error": "platform·value 필요"})
     Store(DB_PATH).add_seed(p, (body.get("kind") or "keyword").strip(), v)
     return {"ok": True}
+
+
+@app.post("/api/seeds/from_youtube_videos")
+def api_seeds_from_youtube_videos(body: dict):
+    """렌즈 유사영상 유튜브 결과(영상 URL들) → 소속 채널을 account 시드로 대량 벤치등록.
+    body: {urls:[영상URL,...]}. 같은 채널 1개로, 이미 등록된 채널은 duplicate로 집계.
+    반환: {ok, added, duplicate, channels:[{channel_url, channel_title, dup}]}."""
+    urls = [u for u in (body.get("urls") or []) if isinstance(u, str) and u.strip()]
+    if not urls:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "urls 필요"})
+    channels = yt_channels_from_videos(urls)
+    store = Store(DB_PATH)
+    existing = {(s["value"] or "").lower() for s in store.list_seeds("youtube")
+                if s["kind"] == "account"}
+    added = duplicate = 0
+    out = []
+    for ch in channels:
+        url = ch["channel_url"]
+        dup = url.lower() in existing
+        if dup:
+            duplicate += 1
+        else:
+            store.add_seed("youtube", "account", url)
+            existing.add(url.lower())
+            added += 1
+        out.append({"channel_url": url, "channel_title": ch.get("channel_title", ""), "dup": dup})
+    return {"ok": True, "added": added, "duplicate": duplicate, "channels": out}
 
 
 @app.delete("/api/seeds")
