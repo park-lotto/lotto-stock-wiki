@@ -8,7 +8,7 @@ from shopping_shorts.config import (DB_PATH, WINDOW_HOURS, DRAFT_BATCH_SIZE, MAX
                                     DEAD_AFTER_DAYS, CENSUS_RESULTS_PER_CHANNEL)
 from shopping_shorts.channels import load_channels, merge_tracked, select_tracked
 from shopping_shorts.apify_client import fetch_reels
-from shopping_shorts.ranking import build_items, build_youtube_items, build_tiktok_items, apply_grades
+from shopping_shorts.ranking import build_items, build_youtube_items, build_tiktok_items, apply_grades, aggregate_channels
 from shopping_shorts.store import Store
 from shopping_shorts.comment_gen import generate as _gen_comments
 from shopping_shorts import ai_categorize, topic_grouper
@@ -34,6 +34,39 @@ def _export_csv(items, run_date):
         w.writeheader()
         w.writerows(items)
     return path
+
+
+import re as _re
+_SEED_CH_ID = _re.compile(r"/channel/(UC[A-Za-z0-9_-]{6,})")
+
+
+def youtube_channel_board(sort="views"):
+    """등록된 유튜브 채널(account 시드)을 최근 랭킹 지표와 조인한 리더보드.
+
+    레퍼런스 랭킹처럼 조회수·속도·참여율(density)·가속으로 정렬. 각 채널의 지표는
+    최근 수집(last_run)에서 그 채널이 올린 영상들을 집계한 것(ranking.aggregate_channels).
+    최근 영상이 없는 채널은 0 지표 + collected=False(수집대기)로 함께 나온다.
+    sort: 'views'|'speed'|'density'|'accel'|'count'."""
+    store = Store(DB_PATH)
+    items, collected_at = store.load_last_run_platform("youtube")
+    agg = {r["channel_id"]: r for r in aggregate_channels(items)}
+    rows = []
+    for s in store.list_seeds("youtube"):
+        if s["kind"] != "account":
+            continue
+        m = _SEED_CH_ID.search(s["value"] or "")
+        cid = m.group(1) if m else None
+        base = {"channel_id": cid, "channel_url": s["value"], "added_at": s.get("added_at", ""),
+                "name": "", "video_count": 0, "views": 0, "speed": 0, "density": 0.0,
+                "accel": 0, "grade": "—", "thumbnail": "", "collected": False}
+        if cid and cid in agg:
+            base.update(agg[cid])
+            base["collected"] = True
+        rows.append(base)
+    key = {"views": "views", "speed": "speed", "density": "density",
+           "accel": "accel", "count": "video_count"}.get(sort, "views")
+    rows.sort(key=lambda x: (x.get(key) or 0), reverse=True)
+    return {"channels": rows, "collected_at": collected_at, "total": len(rows)}
 
 
 def next_draft_targets(items, store, limit=DRAFT_BATCH_SIZE):

@@ -510,13 +510,23 @@ async function loadSeeds(){
   const d=await (await fetch('/api/seeds?platform='+PLATFORM)).json();
   const el=document.getElementById('seedList');
   const items=d.items||[];
-  el.innerHTML = items.length ? items.map(s=>{
+  // 유튜브는 등록 채널(account)이 수백 개라 URL을 다 뿌리면 화면을 덮는다(2026-07-25).
+  // account는 칩 대신 "채널 N개 · 지표 보기" 요약으로 접고, 키워드 시드만 칩으로 남긴다.
+  const accounts = items.filter(s=>s.kind==='account');
+  const chips = (PLATFORM==='youtube') ? items.filter(s=>s.kind!=='account') : items;
+  const chipHtml = chips.map(s=>{
     const isLang = TT_LANG_KINDS.includes(s.kind);   // 틱톡 언어 시드 = 비용 대상
     return `<span class="${(PLATFORM==='tiktok'&&isLang)?'ttkw':''}" style="display:inline-block;background:#1a2230;border-radius:12px;padding:2px 8px;margin:2px 4px 0 0">
        ${LANGLABEL[s.kind]||''} ${s.value}
        <span style="cursor:pointer;color:#e0623d" onclick="removeSeed('${s.value.replace(/'/g,"\\'")}')">✕</span>
      </span>`;
-  }).join('') : '키워드 없음';
+  }).join('');
+  const ytSummary = (PLATFORM==='youtube' && accounts.length)
+    ? `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:2px 0 4px">
+         <span style="background:#132a1e;border:1px solid #1f9d55;border-radius:12px;padding:3px 10px;font-size:12px">📺 등록 채널 <b>${accounts.length}</b>개</span>
+         <button onclick="openChannelBoard('views')" style="font-size:12px;padding:4px 12px;border-radius:8px;border:1px solid var(--accent);background:#1f6feb1a;color:var(--accent);font-weight:700;cursor:pointer">📊 채널 지표·관리 열기</button>
+       </div>` : '';
+  el.innerHTML = (ytSummary + chipHtml) || '키워드 없음';
   if(PLATFORM==='tiktok') renderTtStatus();
   // 유튜브 + 틱톡 키워드모드에서 언어 선택기 노출(계정 모드는 ttModeChange가 숨김)
   const showLang = (PLATFORM==='youtube') || ttKeywordMode();
@@ -544,6 +554,43 @@ async function addSeed(){
 async function removeSeed(v){
   await fetch('/api/seeds',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:PLATFORM,value:v})});
   loadSeeds();
+}
+// 등록 채널 리더보드 — 레퍼런스 랭킹식 지표(조회수·속도·참여율·가속)로 정렬·관리(2026-07-25).
+let CH_BOARD_SORT='views';
+async function openChannelBoard(sort){
+  CH_BOARD_SORT=sort||CH_BOARD_SORT;
+  openScript('<div class="sm-loading">채널 지표 불러오는 중…</div>','📊 등록 채널 지표·관리',true);
+  await renderChannelBoard();
+}
+async function renderChannelBoard(){
+  let d;
+  try{ d=await (await fetch('/api/youtube/channels?sort='+CH_BOARD_SORT)).json(); }
+  catch(e){ document.getElementById('scriptBody').innerHTML='<div style="padding:10px">불러오기 실패</div>'; return; }
+  const box=document.getElementById('scriptBody'); if(!box) return;
+  const rows=d.channels||[];
+  const SORTS=[['views','조회수'],['speed','속도'],['density','참여율'],['accel','가속'],['count','영상수']];
+  const btnbar=SORTS.map(([k,l])=>`<span onclick="CH_BOARD_SORT='${k}';renderChannelBoard()" style="cursor:pointer;padding:4px 12px;margin:2px;border-radius:12px;font-size:12px;border:1px solid var(--line);background:${CH_BOARD_SORT===k?'#1f6feb33':'transparent'};font-weight:${CH_BOARD_SORT===k?700:400}">${l}</span>`).join('');
+  const fmt=n=>{n=Number(n||0); if(n>=1e8)return (n/1e8).toFixed(1).replace(/\.0$/,'')+'억'; if(n>=1e4)return (n/1e4).toFixed(1).replace(/\.0$/,'')+'만'; return n.toLocaleString();};
+  const head=`<div style="position:sticky;top:0;background:var(--panel);padding:6px 0;z-index:1">
+    <div style="font-size:12px;color:var(--sub);margin-bottom:4px">총 <b>${d.total}</b>개 채널 · 지표=최근 수집(${(d.collected_at||'').slice(0,10)}) 기준 · 정렬:</div>
+    <div>${btnbar}</div></div>`;
+  const list=rows.map((r,idx)=>{
+    const wait = r.collected ? '' : '<span style="color:var(--sub);font-size:10px">수집대기</span>';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)">
+      <span style="width:26px;color:var(--sub);font-size:12px">${idx+1}</span>
+      <img src="${r.thumbnail||''}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'" style="width:44px;height:44px;object-fit:cover;border-radius:6px;background:#1a2230">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.grade||''} <a href="${r.channel_url}" target="_blank" style="color:inherit;text-decoration:none">${esc(r.name||r.channel_id||'')}</a> ${wait}</div>
+        <div style="font-size:11px;color:var(--sub)">👁 ${fmt(r.views)} · ⚡속도 ${fmt(r.speed)} · 💬참여 ${(r.density*100||0).toFixed(1)}% · 📈가속 ${fmt(r.accel)} · 🎬${r.video_count}</div>
+      </div>
+      <span title="이 채널 벤치에서 제거" onclick="removeChannelFromBoard('${(r.channel_url||'').replace(/'/g,"\\\\'")}')" style="cursor:pointer;color:#e0623d;font-size:16px;padding:0 6px">✕</span>
+    </div>`;
+  }).join('') || '<div style="padding:10px;color:var(--sub)">등록 채널 없음</div>';
+  box.innerHTML=`<div>${head}${list}</div>`;
+}
+async function removeChannelFromBoard(url){
+  await fetch('/api/seeds',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:'youtube',value:url})});
+  renderChannelBoard(); loadSeeds();
 }
 let TT_KNOBS={search_count:50,daily_limit:10,month_budget:5.0};
 async function loadTtSettings(){
