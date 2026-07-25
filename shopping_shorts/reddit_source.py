@@ -18,7 +18,16 @@ import urllib.request
 import xml.etree.ElementTree as ET
 
 import requests
-from shopping_shorts.config import REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET
+from shopping_shorts.config import (
+    REDDIT_CLIENT_ID,
+    REDDIT_CLIENT_SECRET,
+    REDDIT_PROXY,
+)
+
+
+def _proxies():
+    """requests용 proxies dict. REDDIT_PROXY 없으면 None(직결)."""
+    return {"http": REDDIT_PROXY, "https": REDDIT_PROXY} if REDDIT_PROXY else None
 
 _ATOM = "{http://www.w3.org/2005/Atom}"
 _IMG_EXT = (".jpg", ".jpeg", ".png", ".gif", ".webp")
@@ -67,7 +76,7 @@ def _oauth_token():
         "https://www.reddit.com/api/v1/access_token",
         auth=(REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET),
         data={"grant_type": "client_credentials"},
-        headers={"User-Agent": _UA}, timeout=15)
+        headers={"User-Agent": _UA}, timeout=15, proxies=_proxies())
     resp.raise_for_status()
     d = resp.json()
     _TOKEN["token"] = d["access_token"]
@@ -126,7 +135,8 @@ def _fetch_oauth(subreddit, category, sort, limit):
         path = "/r/%s/%s?limit=%d" % (subreddit, sort, limit)
     resp = requests.get(
         "https://oauth.reddit.com" + path,
-        headers={"Authorization": "bearer " + tok, "User-Agent": _UA}, timeout=15)
+        headers={"Authorization": "bearer " + tok, "User-Agent": _UA},
+        timeout=15, proxies=_proxies())
     resp.raise_for_status()
     children = (resp.json().get("data") or {}).get("children") or []
     return normalize_children(children, category=category)
@@ -137,10 +147,18 @@ class RateLimited(Exception):
     """익명 RSS가 429를 반환 — 백오프 후 재시도 대상."""
 
 
+def _opener():
+    """REDDIT_PROXY가 있으면 프록시 경유 opener, 없으면 기본 opener."""
+    if REDDIT_PROXY:
+        return urllib.request.build_opener(
+            urllib.request.ProxyHandler({"http": REDDIT_PROXY, "https": REDDIT_PROXY}))
+    return urllib.request.build_opener()
+
+
 def _http_get(url, timeout=15):
     req = urllib.request.Request(url, headers={"User-Agent": _UA})
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
+        with _opener().open(req, timeout=timeout) as r:
             return r.read().decode("utf-8")
     except urllib.error.HTTPError as e:
         if e.code == 429:

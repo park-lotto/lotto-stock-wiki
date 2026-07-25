@@ -796,7 +796,7 @@ function badgeHTML(i, ctx){
 // (채널명·소재는 oninput이 이미 필터링. 링크만 엔터라는 명시 동작이 필요 — 유료 렌즈 남용 방지.)
 function _looksLikeUrl(q){ return /^\s*https?:\/\//i.test(q||''); }
 function onSearchEnter(v){ if(_looksLikeUrl(v)) traceByUrl((v||'').trim()); }
-const OVERSEAS_CATS = ["전체","주방/레시피","살림/생활꿀템","인테리어","자취템","가전템","뷰티"];
+const OVERSEAS_CATS = ["전체","주방/레시피","살림/생활꿀템","인테리어/DIY","가전/도구","만족감/제품","신기템/바이럴"];
 let overseasFilter = "전체";
 let overseasItems = [];
 

@@ -3676,7 +3676,7 @@ _GOOGLE_SVG = ('<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6
 #       icon-maskable-512(안전영역 65% + 다크 배경 채움)
 # ⚠️ /brand-logo.png 는 로그인 화면에서도 보여야 하므로 _AUTH_ALLOW에 넣어뒀다.
 _LOGO_SVG = ('<img class="sym" src="/brand-logo.png" alt="숏템메이커" '
-             'width="96" height="96" decoding="async">')
+             'width="128" height="128" decoding="async">')
 
 
 # 공개 페이지 하단 법적 고지 링크(약관·개인정보·환불). 모든 대문/로그인 푸터에 __LEGAL__로 주입.
@@ -3734,7 +3734,7 @@ a{text-decoration:none;color:inherit}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
 .brand{display:flex;align-items:center;gap:10px}
 /* 심볼은 글자보다 크면 무거워 보인다(사장님 2026-07-25) — 워드마크 22px 대비 27px로 낮췄다 */
-.brand .sym{width:27px;height:27px;flex:none;animation:floaty 4s ease-in-out infinite}
+.brand .sym{width:44px;height:44px;flex:none;animation:floaty 4s ease-in-out infinite}
 .brand .wm{display:flex;flex-direction:column;line-height:1}
 /* 워드마크 v3(2026-07-25): 민트→오로라 그라데이션 + 끝에 골드 마침점(브랜드 포인트).
    ::after 는 background-clip:text를 상속해 투명해지니 text-fill-color를 되돌려 금색을 살린다. */
@@ -3943,7 +3943,7 @@ box-shadow:0 34px 90px rgba(0,0,0,.6),0 0 0 1px rgba(111,240,214,.05) inset;
 animation:cardin .5s ease}
 @keyframes cardin{from{opacity:0;transform:scale(.96) translateY(8px)}}
 .emwrap{position:relative;width:94px;height:94px;margin:0 auto}
-.emwrap .sym{position:absolute;inset:8px;width:62px;height:62px;filter:drop-shadow(0 0 16px rgba(62,224,191,.30))}
+.emwrap .sym{position:absolute;inset:8px;width:88px;height:88px;filter:drop-shadow(0 0 16px rgba(62,224,191,.30))}
 @media (prefers-reduced-motion:no-preference){.emwrap .sym{animation:lpulse 3.2s ease-in-out infinite}}
 @keyframes lpulse{50%{filter:drop-shadow(0 0 30px rgba(111,240,214,.55))}}
 .ring{position:absolute;inset:0;border-radius:50%;border:2px solid transparent;
@@ -4055,7 +4055,7 @@ a{text-decoration:none;color:inherit}
 .wrap{max-width:1000px;margin:0 auto;padding:0 24px}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
 .brand{display:flex;align-items:center;gap:10px}
-.brand .sym{width:27px;height:27px;flex:none}
+.brand .sym{width:44px;height:44px;flex:none}
 .brand .wm{display:flex;flex-direction:column;line-height:1}
 /* 워드마크 v3(2026-07-25): 민트→오로라 그라데이션 + 끝에 골드 마침점(브랜드 포인트).
    ::after 는 background-clip:text를 상속해 투명해지니 text-fill-color를 되돌려 금색을 살린다. */
@@ -4189,7 +4189,7 @@ a{text-decoration:none;color:inherit}
 .wrap{max-width:520px;margin:0 auto;padding:0 22px}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
 .brand{display:flex;align-items:center;gap:10px}
-.brand .sym{width:25px;height:25px;flex:none}
+.brand .sym{width:38px;height:38px;flex:none}
 .brand .nm{font-family:'Black Han Sans',sans-serif;font-size:20px;letter-spacing:-.4px;
   background:linear-gradient(135deg,#3ee0bf 0%,#7fe9d8 42%,#8c6ef0 100%);
   -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}

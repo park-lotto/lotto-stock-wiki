@@ -10,4 +10,5 @@ def load_seeds():
         return json.load(f)
 
 
-CATEGORIES = ["주방/레시피", "살림/생활꿀템", "인테리어", "자취템", "가전템", "뷰티"]
+# JSON 키에서 파생 — 시드 카테고리를 바꿔도 코드 수정 없이 동기 유지(드리프트 방지).
+CATEGORIES = list(load_seeds().keys())

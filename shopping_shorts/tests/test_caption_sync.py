@@ -19,12 +19,12 @@ def test_len_matches_segments_and_sums_total():
 
 def test_caption_follows_voice_not_charcount():
     # 두 구절, 두번째가 글자수는 적지만 실제로는 늦게(2.0초) 시작 → 첫 구절이 길어야.
-    # (narr는 _caption_segments가 실제로 2구절로 쪼개는 문장으로 선택:
-    #  '이거 때문에 대박'은 3어절/9자 이하라 _CAP_TARGET·_CAP_MAX_WORDS 안에 들어가
-    #  1구절로 합쳐져 버려 이 테스트의 전제(두 구절)를 깬다 — 실측 후 교체.)
-    narr = "이거 진짜 완전 대박"
+    # (narr는 _caption_segments가 실제로 2구절로 쪼개는 문장으로 선택. 2026-07-25 어절
+    #  상한을 14/4로 키운 뒤 짧은 문장은 1구절로 합쳐지므로, 6어절 문장으로 교체해 전제
+    #  유지: "이거 진짜 완전 대박이라서 | 다들 놀랐어요".)
+    narr = "이거 진짜 완전 대박이라서 다들 놀랐어요"
     words = [_w("이거", 0.0, 0.3), _w("진짜", 0.3, 0.6), _w("완전", 0.6, 1.0),
-             _w("대박", 2.0, 2.5)]
+             _w("대박이라서", 1.0, 1.9), _w("다들", 2.0, 2.2), _w("놀랐어요", 2.2, 2.5)]
     durs = cs.phrase_durs_from_words(narr, words, 2.5)
     segs = _caption_segments(narr)
     assert len(segs) == 2

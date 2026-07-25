@@ -38,6 +38,10 @@ GOOGLE_REDIRECT_URI = os.environ.get(
 # reddit_source가 oauth.reddit.com(100 req/분)으로 자동 전환. 없으면 익명 RSS 폴백.
 REDDIT_CLIENT_ID = os.environ.get("REDDIT_CLIENT_ID", "")
 REDDIT_CLIENT_SECRET = os.environ.get("REDDIT_CLIENT_SECRET", "")
+# 주거용 프록시(Webshare 로테이팅 등). 서버 데이터센터 IP는 Reddit 익명 RSS가 429로
+# 막혀 완료0건이 났다(실측 2026-07-25). 프록시 경유하면 주거용 IP라 200이 안정적으로 온다.
+# 형식: http://user:pass@host:port  (없으면 직결). RSS(urllib)·OAuth(requests) 둘 다 적용.
+REDDIT_PROXY = os.getenv("REDDIT_PROXY", "")
 
 # Apify
 APIFY_TOKEN = os.environ.get("APIFY_TOKEN", "")
