@@ -2,7 +2,7 @@
   "주방/레시피":   {"tiktok": ["kitchen gadgets", "kitchen hacks"], "cn": ["厨房神器", "厨房好物"]},
   "살림/생활꿀템": {"tiktok": ["home gadgets", "cleaning hacks"],  "cn": ["生活好物", "居家好物"]},
   "인테리어/DIY":  {"tiktok": ["diy home", "room makeover"],       "cn": ["家居改造", "手工DIY"]},
-  "가전/도구":     {"tiktok": ["cool gadgets", "useful tools"],    "cn": ["神器", "工具"]},
+  "가전/도구":     {"tiktok": ["cool gadgets", "kitchen appliances"], "cn": ["小家电", "电器好物"]},
   "뷰티/셀프케어": {"tiktok": ["beauty hacks", "skincare tips"],   "cn": ["美妆好物", "护肤"]},
   "정리/수납":     {"tiktok": ["organization hacks", "storage"],   "cn": ["收纳神器", "整理"]}
 }

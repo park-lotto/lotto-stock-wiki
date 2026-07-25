@@ -22,3 +22,16 @@ def test_view_ceiling_only_applies_when_views_known():
 
 def test_block_words_present():
     assert "dance" in BLOCK_WORDS and "prank" in BLOCK_WORDS
+
+
+def test_relevance_blocks_cn_ai_cartoon_spam():
+    # 가전/도구에 섞여오던 AI 픽사풍 카툰(#动画创作工具 #动漫) 차단(실측 2026-07-26)
+    assert passes_relevance({"title": "#动画创作工具 #动漫 #益智动画"}, ["小家电", "电器好物"]) is False
+
+
+def test_shortform_filter():
+    from shopping_shorts.overseas_funnel import passes_shortform
+    assert passes_shortform({"duration": 57}) is True      # 숏폼
+    assert passes_shortform({"duration": 181}) is False     # 롱폼 컷
+    assert passes_shortform({"duration": None}) is True     # 길이불명은 통과
+    assert passes_shortform({"duration": 120}) is True      # 경계값 통과

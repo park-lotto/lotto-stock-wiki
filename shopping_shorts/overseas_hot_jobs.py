@@ -58,6 +58,7 @@ def _collect_category(cat, cfg, store):
     # STAGE 1·2·상한: 형식·관련성·안터진
     kept = [r for r in raw
             if overseas_funnel.passes_format(r)
+            and overseas_funnel.passes_shortform(r)
             and overseas_funnel.passes_relevance(r, allow)
             and overseas_funnel.under_view_ceiling(r)]
     for r in kept:

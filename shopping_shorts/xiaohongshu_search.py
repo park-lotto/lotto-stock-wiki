@@ -144,5 +144,6 @@ def search_full(keyword, max_results=40, token=None, timeout=180, poll_interval=
             "thumbnail": _cover(item, video),
             "url": url,
             "media_platform": "xiaohongshu",
+            "duration": _duration_secs(item, video),
         })
     return out

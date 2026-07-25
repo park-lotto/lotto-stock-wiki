@@ -120,5 +120,6 @@ def search_full(keyword, max_results=40, token=None, timeout=180, poll_interval=
             "thumbnail": (item.get("videoMeta") or {}).get("cover", ""),
             "url": url,
             "media_platform": "douyin",
+            "duration": _duration_secs(item),
         })
     return out
