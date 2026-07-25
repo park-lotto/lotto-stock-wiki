@@ -632,7 +632,10 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                                     # (예전엔 backbone_base일 때만이라, 서버에 backbone_base 미설정 →
                                     # 심사가 통째로 꺼져 제일 탄탄한 후보를 못 골랐다. 사장님 지적).
                                     judge=(backbone_base or ping_pong
-                                           or store.get_setting("bank_enabled", "") == "1"))
+                                           or store.get_setting("bank_enabled", "") == "1"),
+                                    # 주경로 앵커 dedup+레시피 grain 발동(Task8) — is_recipe는
+                                    # 위(603줄)서 소스 다수결로 이미 계산됨.
+                                    is_recipe=is_recipe)
         if sf["candidates"]:
             store.set_mix_candidates(job_id, sf["candidates"])
             rec = next((cand for cand in sf["candidates"] if cand["recommended"]),

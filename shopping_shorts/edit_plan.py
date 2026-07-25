@@ -88,7 +88,12 @@ def _ground_ref(ref, seg_map):
     if not seg:
         return None
     return {"video_id": seg["video_id"], "seg_id": sid, "start": seg["start"], "end": seg["end"],
-            "scene_desc": seg.get("scene_desc", "")}
+            "scene_desc": seg.get("scene_desc", ""),
+            # is_key(피처데모 앵커)·shot_role(조리/완성 결)을 grounded primary/alternate에 실어
+            # 나른다 — scene_first 주경로의 _apply_anchor_grain(앵커 dedup·레시피 grain)이 이 값을
+            # 읽는다. seg_map(_build_inventory)이 이미 보존하므로 여기서 그대로 통과시킨다.
+            "is_key": bool(seg.get("is_key")),
+            "shot_role": seg.get("shot_role") or "기타"}
 
 
 _FACE_TOKENS = ("얼굴", "정면", "셀카", "자기소개", "말하는 사람", "脸", "人物", "正面", "自拍")
@@ -123,6 +128,51 @@ def _dedup_anchors(anchors, top_n=4):
         out.append(a)
         if len(out) >= top_n:
             break
+    return out
+
+
+def _apply_anchor_grain(beats, is_recipe=False):
+    """scene_first 주경로(build_scene_first_plan→_ground_candidate)용 앵커 dedup + 레시피 grain.
+    순수함수 — 입력 비트를 제자리 변형하지 않고 새 리스트를 반환한다.
+
+    이 경로는 _chronological_respine(레거시/폴백)을 안 쓴다 — 그래서 is_key 앵커 중복 제거와
+    레시피 완성-후치(grain)가 라이브에서 발동 안 됐다(2026-07-26 Task8, 다크피처 배선).
+
+    ① 앵커 dedup (is_recipe와 무관, 항상): primary.is_key인 비트를 모아 _dedup_anchors로
+       장점(scene_desc 요지)별 상위 top_n만 채택한다. 채택 안 된 중복 앵커 비트는 **드롭하지
+       않고**(나레이션 보존), 대체(alternate)가 있으면 첫 대체를 primary로 승격해 같은 장점샷이
+       두 번 primary로 안 뜨게 한다. 대체가 없으면 그대로 둔다.
+    ② 레시피 grain (is_recipe=True일 때만): movable 비트(첫·마지막 제외) 중 shot_role=="완성"을
+       비-완성 뒤로 안정정렬한다(완성이 조리 앞에 안 낀다). 첫/마지막 비트는 앵커로 고정.
+       ★ping_pong일 땐 백본이 순서를 소유하므로 호출부가 is_recipe=False로 넘겨 grain은 끈다
+       (dedup은 순서를 안 바꾸므로 항상 돌아도 안전) — build_scene_first_plan 참조.
+    """
+    if not beats or len(beats) < 2:
+        return [dict(b) for b in beats]
+    # ── ① 앵커 dedup (항상) ──────────────────────────────────────────────
+    anchor_beats = [b for b in beats if (b.get("primary") or {}).get("is_key")]
+    kept_ids = {(a.get("primary") or {}).get("seg_id")
+                for a in _dedup_anchors([b["primary"] for b in anchor_beats], top_n=4)}
+    out = []
+    for b in beats:
+        nb = dict(b)
+        p = nb.get("primary") or {}
+        if p.get("is_key") and p.get("seg_id") not in kept_ids:
+            alts = list(nb.get("alternates") or [])
+            if alts:                       # 중복 앵커 → 첫 대체를 primary로 승격(비트 유지)
+                nb["primary"] = alts[0]
+                nb["alternates"] = alts[1:]
+        out.append(nb)
+    # ── ② 레시피 grain (is_recipe일 때만, movable에 한해) ─────────────────
+    if is_recipe and len(out) >= 3:
+        head, body, tail = out[0], out[1:-1], out[-1]
+        # 안정정렬: 완성(1)을 비-완성(0) 뒤로. 파이썬 sorted는 stable이라 나머지 상대순서 보존.
+        body = sorted(body, key=lambda b: 1 if (b.get("primary") or {}).get("shot_role") == "완성" else 0)
+        out = [head] + body + [tail]
+    # beat_idx가 있으면 재부여(순서 이동 반영).
+    for i, b in enumerate(out):
+        if "beat_idx" in b:
+            b["beat_idx"] = i
     return out
 
 
@@ -1009,7 +1059,8 @@ def _backbone_order_block(backbone_video, source_scripts):
 def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                            n_candidates=3, video_type=None, call=None, ping_pong=False,
                            backbone_meta=None, backbone_forced=None, bank_context="",
-                           avoid_hooks=None, backbone_base=False, judge=False):
+                           avoid_hooks=None, backbone_base=False, judge=False,
+                           is_recipe=False):
     """장면 우선 대본 모드: 팔레트+헌장으로 후보 n개 생성 → 각 EDL grounding·채점 →
     최고 score에 recommended=True. 각 candidate.plan은 build_edit_plan 반환형(하류 렌더 호환).
     후보 0개면 candidates=[](호출부가 기존 build_edit_plan로 폴백).
@@ -1050,6 +1101,10 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         # fit 정직화(페이블): 행위 불일치 증거가 있으면 자기신고 fit을 깎는다 — 스왑버튼·
         # 약비트 재작성·추천점수가 실제로 작동. ping_pong이 스왑으로 고치면 5로 복원됨.
         plan["beats"] = _verify_fits(plan["beats"])
+        # 앵커 dedup(항상) + 레시피 grain(비-핑퐁일 때만) — 주경로 배선(Task8).
+        # ping_pong이면 백본이 순서를 소유하므로 grain 리오더는 끄고(is_recipe=False),
+        # dedup(순서 불변, primary→alternate 스왑만)만 남긴다. 백본은 과정순서를 이미 처리한다.
+        plan["beats"] = _apply_anchor_grain(plan["beats"], is_recipe=(is_recipe and not ping_pong))
         if ping_pong:
             from shopping_shorts import backbone
             # 1) 행위 매칭(화면-대사 어긋남 + 길이) 2) 백본 순서 고정(과정순서)
