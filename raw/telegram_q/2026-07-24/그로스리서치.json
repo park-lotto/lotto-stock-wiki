@@ -20,6 +20,24 @@
     },
     {
       "broker": "그로쓰리서치",
+      "stock": "삼성전자",
+      "rating": null,
+      "tp": null,
+      "ts": "09:00",
+      "quote": "이재용·정의선, 젠슨 황 주도 글로벌 AI 리더모임 자문위원 위촉",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "오픈AI",
+      "rating": null,
+      "tp": null,
+      "ts": "09:06",
+      "quote": "오픈AI, 美 조지아에 44조원 AI 데이터센터 짓는다",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
       "stock": "HLB",
       "rating": null,
       "tp": null,
@@ -34,6 +52,15 @@
       "tp": null,
       "ts": "09:57",
       "quote": "삼성 ‘HBM4 성공’ 숨은 주역 “베이스 다이 4나노 공정 선제 도입 주효”",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "화통",
+      "rating": null,
+      "tp": null,
+      "ts": "10:13",
+      "quote": "SpaceX 자체 생산에도 끄떡없다…대만 위성 PCB 공급망 수혜 지속",
       "sector": "반도체"
     },
     {
@@ -60,7 +87,7 @@
       "rating": null,
       "tp": null,
       "ts": "13:03",
-      "quote": "큐리언트 '美학회서 ADC 비임상 데이터 공개'",
+      "quote": "큐리언트 \"美학회서 ADC 비임상 데이터 공개\"",
       "sector": "바이오"
     },
     {
@@ -74,20 +101,11 @@
     },
     {
       "broker": "그로쓰리서치",
-      "stock": "통신장비 ETF",
-      "rating": null,
-      "tp": null,
-      "ts": "08:32",
-      "quote": "AI 데이터센터의 세 번째 병목은 네트워크",
-      "sector": "통신"
-    },
-    {
-      "broker": "그로쓰리서치",
       "stock": "지슨",
       "rating": null,
       "tp": null,
       "ts": "08:52",
-      "quote": "지슨 '공중화장실 불법촬영 탐지 의무화…신규 시장 열려'",
+      "quote": "지슨 \"공중화장실 불법촬영 탐지 의무화…신규 시장 열려\"",
       "sector": "양자보안"
     },
     {
@@ -96,7 +114,7 @@
       "rating": null,
       "tp": null,
       "ts": "08:56",
-      "quote": "삼성전자 'AMD와 공동설계 협업, 업계 최고 성능 HBM4 구현'",
+      "quote": "삼성전자 \"AMD와 공동설계 협업, 업계 최고 성능 HBM4 구현\"",
       "sector": "반도체"
     },
     {
@@ -107,6 +125,15 @@
       "ts": "09:29",
       "quote": "한화오션, 美 전략 수송함 공동 개발…마스가 시동",
       "sector": "조선"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "TSMC",
+      "rating": null,
+      "tp": null,
+      "ts": "09:32",
+      "quote": "TSMC, 퀄컴·테슬라 수요 겹치며 3나노 주문 2027년까지 풀가동",
+      "sector": "반도체"
     },
     {
       "broker": "그로쓰리서치",
@@ -133,6 +160,15 @@
       "tp": null,
       "ts": "14:50",
       "quote": "SK하이닉스, 또 쌓는다...온디바이스 AI용 '3D 적층 D램' 개발 시동",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "AMD",
+      "rating": null,
+      "tp": null,
+      "ts": "14:56",
+      "quote": "AMD, MI455X 공개…HBM4 432GB로 Nvidia Rubin 정면 승부",
       "sector": "반도체"
     },
     {
