@@ -23,7 +23,12 @@ class FakeResponse:
 
     def raise_for_status(self):
         if self.status_code >= 400:
-            raise requests.HTTPError(f"{self.status_code} error")
+            # 실제 requests처럼 예외에 응답을 붙인다 — _run_with_rotation이
+            # e.response.status_code로 로테이션 여부를 가르므로 이게 없으면
+            # 프로덕션(403 재발생)을 재현하지 못한다(2026-07-25).
+            err = requests.HTTPError(f"{self.status_code} error")
+            err.response = self
+            raise err
 
 
 def _token_from_headers(headers):
@@ -91,6 +96,38 @@ def test_fetch_reels_rotates_on_start_rejection(monkeypatch):
     assert post_calls == ["tok1", "tok2"]
     # 성공한 토큰(tok2, index 1)이 영구 저장되어 다음 호출은 여기서 시작한다.
     assert apify_client._load_key_index() == 1
+
+
+def test_fetch_reels_rotates_on_403_monthly_limit(monkeypatch):
+    """FREE 계정이 월 $5 한도를 넘기면 유료 렌탈 액터(apidojo)가 403
+    'Monthly usage hard limit exceeded'를 뱉는다(2026-07-25 실측 실사고). 403은
+    시작 거부(런 미생성=무과금)이므로 401/402/429와 똑같이 다음 토큰으로
+    로테이션해야 한다 — 안 그러면 아직 예산이 남은 STARTER 토큰을 써보지도 못하고
+    인스타 '지금 수집'이 통째로 403으로 즉사한다."""
+    monkeypatch.setattr(apify_client, "APIFY_TOKENS", ["free-maxed", "starter-ok"])
+    post_calls = []
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        token = _token_from_headers(headers)
+        post_calls.append(token)
+        if token == "free-maxed":
+            return FakeResponse(403, {"error": {"type": "platform-feature-disabled",
+                                                "message": "Monthly usage hard limit exceeded"}})
+        return FakeResponse(200, {"data": {"id": "run-starter", "status": "SUCCEEDED",
+                                            "defaultDatasetId": "ds-starter"}})
+
+    def fake_get(url, headers=None, timeout=None):
+        assert _is_dataset_url(url)
+        return FakeResponse(200, [{"id": "reel-from-starter"}])
+
+    monkeypatch.setattr(apify_client.requests, "post", fake_post)
+    monkeypatch.setattr(apify_client.requests, "get", fake_get)
+
+    items = apify_client.fetch_reels(["user1"], poll_interval=0.01, timeout=5)
+
+    assert len(items) == 1 and items[0]["ownerUsername"] == "user1"  # starter가 준 릴 1개
+    assert post_calls == ["free-maxed", "starter-ok"]   # 403에서 멈추지 않고 넘어감
+    assert apify_client._load_key_index() == 1           # 성공 토큰 저장
 
 
 def test_fetch_reels_rotates_on_mid_run_failure(monkeypatch):

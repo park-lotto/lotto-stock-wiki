@@ -1025,8 +1025,17 @@ async function doCollect(category){
     // 완료까지 상태를 폴링한다 — 진행배너(_cpShowRunning 타이머)가 경과초를 계속 센다.
     let res = d;
     if(d.async && d.job_id){ res = await _pollCollect(d.job_id); }
-    STATE.items = res.items; st.textContent=`✅ ${res.count}건 수집 (${fmtTime(res.collected_at)})`;
-    _cpDone(`✅ ${res.count}건 수집 완료 (${fmtTime(res.collected_at)})`);
+    STATE.items = res.items;
+    if((res.count||0)===0){
+      // 0건은 성공처럼 보이면 안 된다(2026-07-25): Apify 전 계정이 월 한도(403)로
+      // 소진되면 채널 수집이 조용히 빈 리스트가 돼 여기로 온다 — 새 릴스가 없어서인지
+      // 한도 때문인지 사장님이 구분할 수 있게 경고로 띄우고 「다시 시도」를 남긴다.
+      st.textContent='⚠️ 0건 수집 — 새 릴스가 없거나 Apify 한도 상태를 확인하세요';
+      _cpFail('⚠️ 수집 결과 0건','새로 올라온 릴스가 없을 수 있어요. 계속 0건이면 Apify 계정 월 사용량(한도)을 확인해 주세요.');
+    }else{
+      st.textContent=`✅ ${res.count}건 수집 (${fmtTime(res.collected_at)})`;
+      _cpDone(`✅ ${res.count}건 수집 완료 (${fmtTime(res.collected_at)})`);
+    }
     render();
     if(PLATFORM==='tiktok') loadTtSettings();   // 하루 남은 횟수·지출 갱신
     else { _pollVisionTags(5); _pollBankIngest(8); }   // 태깅 병합 + 대본은행 자동적재 보고
