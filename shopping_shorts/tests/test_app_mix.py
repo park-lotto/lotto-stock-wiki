@@ -83,10 +83,13 @@ def test_mix_adjust_regrounds_from_inventory(monkeypatch, tmp_path):
     # beat0의 primary를 s0-1로 교체 — start/end/scene_desc는 서버가 인벤토리에서 되붙여야 함
     # (scene_desc는 _ground_ref가 실어준다, 2026-07-20 ① visual_verb 앵커 태스크에서 추가 —
     #  얼굴정렬·리컨사일이 grounded primary의 scene_desc를 읽으므로 adjust 리그라운딩도 실어야 일관)
+    # is_key·shot_role도 _ground_ref가 실어준다(2026-07-26 Task8, scene_first 앵커 dedup·grain
+    #  주경로 배선) — 입력 세그에 없으면 기본 False/"기타". adjust 리그라운딩도 같은 함수라 일관.
     r = client.post("/api/mix/adjust", json={"job_id": "j2", "beat_idx": 0, "video_id": "s0", "seg_id": "s0-1"})
     assert r.status_code == 200
     plan = store.get_mix_job("j2")["edit_plan"]
-    assert plan["beats"][0]["primary"] == {"video_id": "s0", "seg_id": "s0-1", "start": 2.0, "end": 4.0, "scene_desc": "d"}
+    assert plan["beats"][0]["primary"] == {"video_id": "s0", "seg_id": "s0-1", "start": 2.0, "end": 4.0,
+                                           "scene_desc": "d", "is_key": False, "shot_role": "기타"}
 
 
 def test_mix_adjust_invalid_beat_idx_returns_404(monkeypatch, tmp_path):

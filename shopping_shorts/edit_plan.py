@@ -56,7 +56,10 @@ def _build_inventory(source_scripts):
     lines = []
     for script in source_scripts:
         vid = script.get("video_id", "")
-        for seg in script.get("segments", []):
+        segs = script.get("segments", [])
+        # 첫·마지막 세그먼트 제외(CTA·썸네일 박제 차단) — 3개 이상일 때만(2개↓면 삭제 안 함).
+        usable = segs[1:-1] if len(segs) >= 3 else segs
+        for seg in usable:
             sid = seg["seg_id"]
             length = round(seg["end"] - seg["start"], 2)
             seg_map[sid] = {
@@ -64,6 +67,8 @@ def _build_inventory(source_scripts):
                 "start": seg["start"], "end": seg["end"],
                 "text": seg.get("text", ""), "scene_desc": seg.get("scene_desc", ""),
                 "action": seg.get("action"),
+                "is_key": bool(seg.get("is_key")),
+                "shot_role": seg.get("shot_role") or "기타",
             }
             _act = seg.get("action")
             _act_s = f" | 행위:{_act}" if _act else ""
@@ -83,7 +88,12 @@ def _ground_ref(ref, seg_map):
     if not seg:
         return None
     return {"video_id": seg["video_id"], "seg_id": sid, "start": seg["start"], "end": seg["end"],
-            "scene_desc": seg.get("scene_desc", "")}
+            "scene_desc": seg.get("scene_desc", ""),
+            # is_key(피처데모 앵커)·shot_role(조리/완성 결)을 grounded primary/alternate에 실어
+            # 나른다 — scene_first 주경로의 _apply_anchor_grain(앵커 dedup·레시피 grain)이 이 값을
+            # 읽는다. seg_map(_build_inventory)이 이미 보존하므로 여기서 그대로 통과시킨다.
+            "is_key": bool(seg.get("is_key")),
+            "shot_role": seg.get("shot_role") or "기타"}
 
 
 _FACE_TOKENS = ("얼굴", "정면", "셀카", "자기소개", "말하는 사람", "脸", "人物", "正面", "自拍")
@@ -95,15 +105,105 @@ def _is_face_seg(scene_desc):
     return any(t.lower() in s for t in _FACE_TOKENS)
 
 
-def _dedup_and_fill(flat, need):
+def _claim_key(scene_desc):
+    """장점 요지 근사 키 — scene_desc의 2글자 이상 토큰 정렬 집합.
+    같은 장점을 다른 말로 쓴 컷(넓어 그릇 가득 / 넓어 접시 가득)을 근접시키기 위한 근사."""
+    import re
+    toks = [t for t in re.split(r"[\s,·]+", (scene_desc or "")) if len(t) >= 2]
+    return tuple(sorted(set(toks)))
+
+
+def _dedup_anchors(anchors, top_n=4):
+    """is_key 앵커를 장점(scene_desc 요지)별로 묶어 중복 제거, 강한 순 상위 top_n개.
+    같은 장점은 첫 등장(선명 가정)만 남긴다. 순수함수."""
+    seen_tokens = []   # 이미 채택한 장점들의 토큰 집합
+    out = []
+    for a in anchors:
+        key = set(_claim_key(a.get("scene_desc", "")))
+        # 기존 채택 장점과 토큰이 과반 겹치면 같은 장점으로 보고 스킵.
+        dup = any(key and len(key & prev) / max(1, len(key)) >= 0.5 for prev in seen_tokens)
+        if dup:
+            continue
+        seen_tokens.append(key)
+        out.append(a)
+        if len(out) >= top_n:
+            break
+    return out
+
+
+def _apply_anchor_grain(beats, is_recipe=False):
+    """scene_first 주경로(build_scene_first_plan→_ground_candidate)용 앵커 dedup + 레시피 grain.
+    순수함수 — 입력 비트를 제자리 변형하지 않고 새 리스트를 반환한다.
+
+    이 경로는 _chronological_respine(레거시/폴백)을 안 쓴다 — 그래서 is_key 앵커 중복 제거와
+    레시피 완성-후치(grain)가 라이브에서 발동 안 됐다(2026-07-26 Task8, 다크피처 배선).
+
+    ① 앵커 dedup (is_recipe와 무관, 항상): primary.is_key인 비트를 모아 _dedup_anchors로
+       장점(scene_desc 요지)별 상위 top_n만 채택한다. 채택 안 된 중복 앵커 비트는 **드롭하지
+       않고**(나레이션 보존), 대체(alternate)가 있으면 첫 대체를 primary로 승격해 같은 장점샷이
+       두 번 primary로 안 뜨게 한다. 대체가 없으면 그대로 둔다.
+    ② 레시피 grain (is_recipe=True일 때만): movable 비트(첫·마지막 제외) 중 shot_role=="완성"을
+       비-완성 뒤로 안정정렬한다(완성이 조리 앞에 안 낀다). 첫/마지막 비트는 앵커로 고정.
+       ★ping_pong일 땐 백본이 순서를 소유하므로 호출부가 is_recipe=False로 넘겨 grain은 끈다
+       (dedup은 순서를 안 바꾸므로 항상 돌아도 안전) — build_scene_first_plan 참조.
+    """
+    if not beats or len(beats) < 2:
+        return [dict(b) for b in beats]
+    # ── ① 앵커 dedup (항상) ──────────────────────────────────────────────
+    anchor_beats = [b for b in beats if (b.get("primary") or {}).get("is_key")]
+    kept_ids = {(a.get("primary") or {}).get("seg_id")
+                for a in _dedup_anchors([b["primary"] for b in anchor_beats], top_n=4)}
+    out = []
+    for b in beats:
+        nb = dict(b)
+        p = nb.get("primary") or {}
+        if p.get("is_key") and p.get("seg_id") not in kept_ids:
+            alts = list(nb.get("alternates") or [])
+            if alts:                       # 중복 앵커 → 첫 대체를 primary로 승격(비트 유지)
+                nb["primary"] = alts[0]
+                nb["alternates"] = alts[1:]
+        out.append(nb)
+    # ── ② 레시피 grain (is_recipe일 때만, movable에 한해) ─────────────────
+    if is_recipe and len(out) >= 3:
+        head, body, tail = out[0], out[1:-1], out[-1]
+        # 안정정렬: 완성(1)을 비-완성(0) 뒤로. 파이썬 sorted는 stable이라 나머지 상대순서 보존.
+        body = sorted(body, key=lambda b: 1 if (b.get("primary") or {}).get("shot_role") == "완성" else 0)
+        out = [head] + body + [tail]
+    # beat_idx가 있으면 재부여(순서 이동 반영).
+    for i, b in enumerate(out):
+        if "beat_idx" in b:
+            b["beat_idx"] = i
+    return out
+
+
+def _seg_key(s):
+    """세그먼트 dedup 키 (video_id, seg_id, start)."""
+    return (s.get("video_id", ""), s.get("seg_id", ""), s.get("start", 0.0))
+
+
+def _dedup_and_fill(flat, need, reserved=None):
     """같은 (video_id,seg_id,start) 중복 제거 후, need 미만이면 가장 긴 세그먼트를
-    시간 이등분 서브슬라이스로 분할해 need개까지 채운다. 환각 없음 — start/end는 코드 계산."""
+    시간 이등분 서브슬라이스로 분할해 need개까지 채운다. 환각 없음 — start/end는 코드 계산.
+
+    reserved: 앵커(머리·꼬리·visual_verb)가 이미 쓰는 seg 키 집합. 여기 든 seg는 movable
+    재배치에서 배제한다 — 머리 앵커가 쓴 화면을 그 다음 비트가 또 물어 2연속 중복이 뜨는 걸
+    막는다(2026-07-26: 머리 앵커 도입이 이 방어를 뚫던 회귀 수정). 기본 None → 기존 동작."""
+    reserved = set(reserved or ())
     seen, uniq = set(), []
     for s in flat:
-        k = (s.get("video_id", ""), s.get("seg_id", ""), s.get("start", 0.0))
+        k = _seg_key(s)
         if k in seen:
             continue
         seen.add(k)
+        if k in reserved:
+            # 앵커가 이미 쓰는 화면 — primary로 그대로 쓰면 2연속 중복이 뜬다. 버리지 말고
+            # 뒤쪽 절반으로 잘라(앵커는 앞쪽) 씨앗으로 남긴다. 너무 짧으면(<1초) 못 쪼개니 스킵.
+            if (s.get("end", 0.0) - s.get("start", 0.0)) >= 1.0:
+                mid = round((s["start"] + s["end"]) / 2, 2)
+                s = dict(s, seg_id=f"{s['seg_id']}#2", start=mid)
+                seen.add(_seg_key(s))
+            else:
+                continue
         uniq.append(s)
     # 부족분을 서브슬라이스로 채움 — 가장 긴 것부터 반으로 쪼갠다.
     while len(uniq) < need:
@@ -121,11 +221,14 @@ def _dedup_and_fill(flat, need):
     return uniq
 
 
-def _chronological_respine(beats):
+def _chronological_respine(beats, is_recipe=False):
     """비트의 시각 세그먼트([primary]+alternates)를 소스 시간순으로 재배치한다(2트랙 모델,
     2026-07-19). 나레이션·비트 순서는 그대로 — 화면만 요리 시간순(재료→조리→완성→시식)으로
     흐르게 해 완성↔붓기 핑퐁을 없앤다. 비트당 세그먼트 개수는 보존(길이 커버리지 유지).
 
+    ★머리(첫/훅) 비트도 앵커로 고정한다(2026-07-25) — 모델이 훅에 고른 '최고 장면'이
+    시간순 재배치에 안 밀리게. 단 비트가 3개 미만이면 머리·꼬리를 둘 다 빼면 body가 비므로
+    짧을 땐 꼬리만 고정(기존 동작).
     ★꼬리(마지막) 비트는 앵커로 고정한다(② 엔딩 딴 영상 버그, 2026-07-20). 전역정렬은
     (video_id,start)로 소스를 뭉치므로, 재분배 시 마지막 비트엔 항상 '가장 큰 video_id
     소스의 늦은 세그먼트'가 떨어진다 — 그게 완성/히어로 컷이라는 보장이 없고 딴 소스(에어프라이어
@@ -144,9 +247,24 @@ def _chronological_respine(beats):
     if not beats:
         return beats
     # 꼬리 비트는 respine 대상에서 제외(앵커) — 모델이 고른 화면 그대로.
-    body, tail = beats[:-1], beats[-1]
+    # ★훅(첫 비트)도 앵커: 모델이 훅에 고른 '최고 장면'이 시간순 재배치에 안 밀리게 고정.
+    if len(beats) < 3:
+        # 머리·꼬리를 둘 다 앵커로 빼면 body가 빌 수 있어, 짧으면 꼬리만 고정(기존 동작).
+        head, body, tail = None, beats[:-1], beats[-1]
+    else:
+        head, body, tail = beats[0], beats[1:-1], beats[-1]
     # visual_verb=True 비트도 앵커. 나머지 movable body만 flat 풀 → dedup → 시간순 재배치.
     movable_idx = [j for j, b in enumerate(body) if not b.get("visual_verb")]
+    anchor_idx = [j for j, b in enumerate(body) if b.get("visual_verb")]
+    # 앵커(머리·꼬리·visual_verb)가 이미 쓰는 seg는 movable 재배치에서 배제 — 앵커 화면을
+    # 그 다음 비트가 또 물어 같은 장면 2연속으로 뜨는 걸 막는다(머리 앵커 도입 회귀 수정).
+    reserved = set()
+    for b in ([head, tail] + [body[j] for j in anchor_idx]):
+        if not b:
+            continue
+        for s in [b.get("primary")] + list(b.get("alternates") or []):
+            if s:
+                reserved.add(_seg_key(s))
     flat, counts = [], []
     for j in movable_idx:
         segs = [body[j]["primary"]] + list(body[j].get("alternates") or [])
@@ -154,10 +272,15 @@ def _chronological_respine(beats):
         # 스냅샷 복사: _dedup_and_fill의 서브슬라이스가 제자리 mutation(longest["end"]=mid)하므로
         # 참조로 넣으면 원본 비트의 primary/alternates까지 오염된다(이월 Minor 픽스 1).
         flat.extend([dict(s) for s in segs])
-    flat = _dedup_and_fill(flat, need=sum(counts))
+    flat = _dedup_and_fill(flat, need=sum(counts), reserved=reserved)
     # 정렬: (video_id,start) 우선, 동시각이면 얼굴 세그먼트를 뒤로(대체 있을 때 후순위).
-    ordered = sorted(flat, key=lambda s: (s.get("video_id", ""), s.get("start", 0.0),
-                                          _is_face_seg(s.get("scene_desc", ""))))
+    # 레시피면 완성 세그먼트를 조리/기타 뒤로(finish_last) — 완성이 조리 앞에 안 낀다.
+    # 제품(is_recipe=False)이면 finish_last 항상 0 → 기존 (video_id,start,face)와 동일.
+    def _sort_key(s):
+        finish_last = 1 if (is_recipe and s.get("shot_role") == "완성") else 0
+        return (finish_last, s.get("video_id", ""), s.get("start", 0.0),
+                _is_face_seg(s.get("scene_desc", "")))
+    ordered = sorted(flat, key=_sort_key)
     moved, i = {}, 0
     for j, n in zip(movable_idx, counts):
         chunk = ordered[i:i + n]
@@ -174,12 +297,14 @@ def _chronological_respine(beats):
         moved[j] = nb           # ④ fit 덮어쓰기 삭제 — 모델 fit 그대로 보존
     # movable은 재배치본, 앵커(visual_verb·빈chunk)는 원본 그대로.
     out = [moved[j] if j in moved else dict(b) for j, b in enumerate(body)]
+    if head is not None:
+        out.insert(0, dict(head))   # 훅 앵커 — 모델이 고른 화면 그대로(respined 아님)
     # 꼬리: 앵커 — 세그먼트·fit 모두 모델이 고른 그대로(respined 아님).
     out.append(dict(tail))
     return out
 
 
-def _validate_and_ground(raw_plan, seg_map, n_alternates, respine=True):
+def _validate_and_ground(raw_plan, seg_map, n_alternates, respine=True, is_recipe=False):
     """모델 EDL의 primary/alternates를 grounding. primary 무효 beat는 드롭,
     alternates 무효 항목은 제거하고 n_alternates개까지만.
 
@@ -209,7 +334,7 @@ def _validate_and_ground(raw_plan, seg_map, n_alternates, respine=True):
             "visual_verb": bool(beat.get("visual_verb", False)),
         })
     if respine:
-        beats_out = _chronological_respine(beats_out)
+        beats_out = _chronological_respine(beats_out, is_recipe=is_recipe)
     return {"structure": raw_plan.get("structure", ""), "beats": beats_out}
 
 
@@ -865,7 +990,8 @@ def _reconcile_weak_beats(beats, call=_vault_call):
 
 
 def build_edit_plan(source_scripts, target_seconds, structure="template", video_type=None,
-                    n_alternates=2, max_retries=4, quota_sleep=8, given_script=None):
+                    n_alternates=2, max_retries=4, quota_sleep=8, given_script=None,
+                    is_recipe=False):
     """소스 대본들 → 그라운딩·표절검사된 EDL(설계 §3-2). 실패 시 빈 EDL.
 
     video_type이 None이면 detect_video_type()으로 자동 판별한다(설계 §3-1).
@@ -901,7 +1027,7 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
     if raw is None:
         return empty
     raw.setdefault("structure", structure)
-    grounded = _validate_and_ground(raw, seg_map, n_alternates)
+    grounded = _validate_and_ground(raw, seg_map, n_alternates, is_recipe=is_recipe)
     grounded["beats"] = _reconcile_weak_beats(grounded["beats"])
     # 각 비트 target_seconds는 나레이션 글자수 기준으로 재계산(실제 렌더 길이 =
     # 나레이션 읽는 시간 ≈ 글자수÷_SYLLABLES_PER_SEC초). UI 표시 초와 실제 길이가 어긋나지 않게.
@@ -962,7 +1088,8 @@ def _backbone_order_block(backbone_video, source_scripts):
 def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                            n_candidates=3, video_type=None, call=None, ping_pong=False,
                            backbone_meta=None, backbone_forced=None, bank_context="",
-                           avoid_hooks=None, backbone_base=False, judge=False):
+                           avoid_hooks=None, backbone_base=False, judge=False,
+                           is_recipe=False):
     """장면 우선 대본 모드: 팔레트+헌장으로 후보 n개 생성 → 각 EDL grounding·채점 →
     최고 score에 recommended=True. 각 candidate.plan은 build_edit_plan 반환형(하류 렌더 호환).
     후보 0개면 candidates=[](호출부가 기존 build_edit_plan로 폴백).
@@ -1003,6 +1130,10 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         # fit 정직화(페이블): 행위 불일치 증거가 있으면 자기신고 fit을 깎는다 — 스왑버튼·
         # 약비트 재작성·추천점수가 실제로 작동. ping_pong이 스왑으로 고치면 5로 복원됨.
         plan["beats"] = _verify_fits(plan["beats"])
+        # 앵커 dedup(항상) + 레시피 grain(비-핑퐁일 때만) — 주경로 배선(Task8).
+        # ping_pong이면 백본이 순서를 소유하므로 grain 리오더는 끄고(is_recipe=False),
+        # dedup(순서 불변, primary→alternate 스왑만)만 남긴다. 백본은 과정순서를 이미 처리한다.
+        plan["beats"] = _apply_anchor_grain(plan["beats"], is_recipe=(is_recipe and not ping_pong))
         if ping_pong:
             from shopping_shorts import backbone
             # 1) 행위 매칭(화면-대사 어긋남 + 길이) 2) 백본 순서 고정(과정순서)

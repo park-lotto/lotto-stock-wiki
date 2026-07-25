@@ -43,6 +43,8 @@ _RESPONSE_SCHEMA = {
                     "scene_desc": {"type": "string"},
                     "action": {"type": "string", "enum": action_dict.ACTION_VOCAB + ["없음"]},
                     "has_effect": {"type": "boolean"},
+                    "is_key": {"type": "boolean"},
+                    "shot_role": {"type": "string", "enum": ["조리", "완성", "기타"]},
                 },
                 "required": ["start", "end", "text", "scene_desc"],
             },
@@ -84,6 +86,13 @@ _PROMPT = """이 영상을 보고 시간 순서대로 세그먼트로 나눠 대
   큰 텍스트 애니메이션이 박혀 있어 **깨끗한 요리/제품 원본이 아닌** 조각이면 true. 평범하게
   촬영된 요리/손동작/완성샷이면 false. (우리가 B롤로 재사용할 때 이물감이 생기는 조각을
   걸러내려는 것 — 확실할 때만 true, 애매하면 false.)
+- is_key: 이 구간이 **제품/도구의 기능·성능·장점·효과를 화면으로 실증**하거나(넓다·크다·쏙
+  들어간다·때가 빠진다를 실제 행동/결과로 보여줌), 요리·살림의 **핵심 방법을 손동작으로 보여주는**
+  구간이면 true. 단순 도입 상황·인물 등장·감상·완성 인사·CTA·링크유도면 false. (원본 제작자가
+  "이 대사에 이 장면"으로 맞춰둔 실증 페어를 골라내려는 것 — 대사가 기능을 설명하며 화면이 그걸
+  보여주면 true. 애매하면 false.)
+- shot_role: 화면의 성격. 손이 재료/도구를 다루는 과정이면 "조리", 완성된 결과물이 화면 주인공이면
+  "완성", 그 외(인물·배경·인사 등)면 "기타". (레시피 소재의 화면 결 맞춤 배치에 쓴다.)
 
 full_text에는 모든 세그먼트의 text를 순서대로 이어붙여라. 맨 앞 훅부터 한 단어도 빠짐없이
 완전히 이어붙이고, 다른 텍스트는 없이 JSON만 출력."""
@@ -104,6 +113,8 @@ def _assign_seg_ids(video_id, raw_segments):
             "scene_desc": seg.get("scene_desc", ""),
             "action": raw_action,  # str 동사 or None
             "has_effect": bool(seg.get("has_effect")),  # 원본 효과 박힘 → B롤 제외용
+            "is_key": bool(seg.get("is_key")),           # 기능·장점 실증 앵커 (fail-open False)
+            "shot_role": seg.get("shot_role") or "기타", # 조리/완성/기타 (fail-open 기타)
         })
     return out
 

@@ -98,10 +98,14 @@ def test_score_prefers_high_fit_low_forced():
 
 
 def test_build_scene_first_plan_recommends_best(monkeypatch):
+    # 조각 5개 — 첫(s0-0)·끝(s0-4)은 인벤토리에서 제외(썸네일·CTA 차단, Task 3). 후보는
+    # 가운데 s0-1/s0-2/s0-3만 참조하므로 살아있다(실제 라이브 패턴).
     src = [{"video_id": "s0", "full_text": "원본", "segments": [
+        {"seg_id": "s0-0", "start": 0.0, "end": 1.0, "text": "", "scene_desc": "썸네일"},
         {"seg_id": "s0-1", "start": 1.0, "end": 2.0, "text": "", "scene_desc": "곰팡이"},
         {"seg_id": "s0-2", "start": 2.0, "end": 3.0, "text": "", "scene_desc": "단면"},
-        {"seg_id": "s0-3", "start": 3.0, "end": 5.0, "text": "", "scene_desc": "통풍"}]}]
+        {"seg_id": "s0-3", "start": 3.0, "end": 5.0, "text": "", "scene_desc": "통풍"},
+        {"seg_id": "s0-4", "start": 5.0, "end": 6.0, "text": "", "scene_desc": "CTA"}]}]
 
     # 나레이션을 목표(20초≈114자) 근처로 채워 ①길이 재생성 게이트가 안 걸리게 한다 —
     # 이 테스트의 의도는 '길이 동일 시 fit 높은 후보 추천'이다(세션#2 보강과 분리).
