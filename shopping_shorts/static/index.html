@@ -169,6 +169,19 @@
     .stat{font-size:11px}
     .btns button{font-size:10px;padding:6px 2px}
   }
+  /* ── 해외HOT 카드 그리드 (2026-07-26) ── */
+  .ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+  .ov-card{background:var(--card,#181b22);border:1px solid var(--line,#262b36);border-radius:12px;overflow:hidden;text-decoration:none;color:inherit;display:flex;flex-direction:column;transition:border-color .15s,transform .1s}
+  .ov-card:hover{border-color:#37e0bd;transform:translateY(-2px)}
+  .ov-thumb{position:relative;aspect-ratio:9/12;background:#0b0d11;display:flex;align-items:center;justify-content:center}
+  .ov-thumb img{width:100%;height:100%;object-fit:cover}
+  .ov-noimg{color:#4a5162;font-size:26px}
+  .ov-plat{position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.72);color:#fff;font-size:10px;padding:2px 6px;border-radius:5px}
+  .ov-gap{position:absolute;right:6px;top:6px;background:rgba(0,0,0,.6);color:#cfd6e4;font-size:10px;padding:2px 6px;border-radius:5px}
+  .ov-gap-hot{background:#0d3b33;color:#37e0bd;font-weight:600}
+  .ov-meta{padding:8px 9px 10px}
+  .ov-title{font-size:12.5px;line-height:1.35;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:34px}
+  .ov-sub{margin-top:6px;color:var(--sub,#8b94a7);font-size:11px}
 </style>
 <style id="rankSkin">
 /* ── 레퍼런스 랭킹 상단 리디자인 (다크 시네마 + 민트 네온, 2026-07-23) ── */
@@ -796,7 +809,7 @@ function badgeHTML(i, ctx){
 // (채널명·소재는 oninput이 이미 필터링. 링크만 엔터라는 명시 동작이 필요 — 유료 렌즈 남용 방지.)
 function _looksLikeUrl(q){ return /^\s*https?:\/\//i.test(q||''); }
 function onSearchEnter(v){ if(_looksLikeUrl(v)) traceByUrl((v||'').trim()); }
-const OVERSEAS_CATS = ["전체","주방/레시피","살림/생활꿀템","인테리어/DIY","가전/도구","만족감/제품","신기템/바이럴"];
+const OVERSEAS_CATS = ["전체","주방/레시피","살림/생활꿀템","인테리어/DIY","가전/도구","뷰티/셀프케어","정리/수납"];
 let overseasFilter = "전체";
 let overseasItems = [];
 
@@ -835,19 +848,27 @@ async function loadOverseas(){
 function renderOverseas(){
   const rows=overseasItems
     .filter(i=>overseasFilter==='전체'||i.category===overseasFilter)
-    .map(i=>`<tr>
-      <td>${i.thumbnail?`<img src="${i.thumbnail}" width="64" style="border-radius:6px">`:''}</td>
-      <td><b>${i.grade||'—'}</b><div style="color:var(--sub);font-size:12px">속도 ${Math.round(i.speed||0)}</div></td>
-      <td>${i.category||''}</td>
-      <td>${i.gap_badge==='🔥선점가능'?'<span style="color:#37e0bd;font-weight:600">🔥선점가능</span>':(i.gap_badge==='이미유입'?'<span style="color:var(--sub)">이미유입</span>':'<span style="color:var(--sub);opacity:.55">'+(i.gap_badge||'미확인')+'</span>')}</td>
-      <td style="color:var(--sub);font-size:12px">r/${i.username||''} · ${i.media_platform||'reddit'}</td>
-      <td><a href="${i.media_url||i.url}" target="_blank">원본</a>
-          · <a href="${i.url}" target="_blank">레딧</a></td>
-    </tr>`).join('');
+    .map(i=>{
+      const gap = i.gap_badge==='🔥선점가능'
+        ? '<span class="ov-gap ov-gap-hot">🔥선점가능</span>'
+        : (i.gap_badge==='이미유입' ? '<span class="ov-gap">이미유입</span>' : '');
+      const metric = (i.views||0)>0
+        ? ('조회 ' + ((i.views>=10000)?(Math.round(i.views/1000)/10)+'만':i.views))
+        : ('반응 ' + (i.base_count||0));
+      const thumb = i.thumbnail
+        ? `<img src="/api/thumb?url=${encodeURIComponent(i.thumbnail)}" loading="lazy">`
+        : '<div class="ov-noimg">▶</div>';
+      const title = (i.caption||i.title||'').replace(/</g,'&lt;');
+      return `<a class="ov-card" href="${i.url||'#'}" target="_blank" rel="noopener">
+        <div class="ov-thumb">${thumb}<span class="ov-plat">${i.media_platform||i.platform||''}</span>${gap}</div>
+        <div class="ov-meta">
+          <div class="ov-title">${title}</div>
+          <div class="ov-sub">${metric} · 속도 ${Math.round(i.speed||0)} · <b>${i.grade||'—'}</b></div>
+        </div></a>`;
+    }).join('');
   document.getElementById('overseasList').innerHTML =
-    '<table style="width:100%;border-collapse:collapse"><thead><tr>'
-    +'<th></th><th>강도</th><th>카테고리</th><th>선점</th><th>소스</th><th>링크</th></tr></thead><tbody>'
-    +rows+'</tbody></table>';
+    rows ? `<div class="ov-grid">${rows}</div>`
+         : '<div class="empty">아직 수집된 영상이 없어요 — "지금 업데이트"를 눌러주세요.</div>';
 }
 async function updateOverseas(){
   document.getElementById('overseasStatus').textContent='수집 중…';
