@@ -100,6 +100,32 @@ def _is_face_seg(scene_desc):
     return any(t.lower() in s for t in _FACE_TOKENS)
 
 
+def _claim_key(scene_desc):
+    """장점 요지 근사 키 — scene_desc의 2글자 이상 토큰 정렬 집합.
+    같은 장점을 다른 말로 쓴 컷(넓어 그릇 가득 / 넓어 접시 가득)을 근접시키기 위한 근사."""
+    import re
+    toks = [t for t in re.split(r"[\s,·]+", (scene_desc or "")) if len(t) >= 2]
+    return tuple(sorted(set(toks)))
+
+
+def _dedup_anchors(anchors, top_n=4):
+    """is_key 앵커를 장점(scene_desc 요지)별로 묶어 중복 제거, 강한 순 상위 top_n개.
+    같은 장점은 첫 등장(선명 가정)만 남긴다. 순수함수."""
+    seen_tokens = []   # 이미 채택한 장점들의 토큰 집합
+    out = []
+    for a in anchors:
+        key = set(_claim_key(a.get("scene_desc", "")))
+        # 기존 채택 장점과 토큰이 과반 겹치면 같은 장점으로 보고 스킵.
+        dup = any(key and len(key & prev) / max(1, len(key)) >= 0.5 for prev in seen_tokens)
+        if dup:
+            continue
+        seen_tokens.append(key)
+        out.append(a)
+        if len(out) >= top_n:
+            break
+    return out
+
+
 def _dedup_and_fill(flat, need):
     """같은 (video_id,seg_id,start) 중복 제거 후, need 미만이면 가장 긴 세그먼트를
     시간 이등분 서브슬라이스로 분할해 need개까지 채운다. 환각 없음 — start/end는 코드 계산."""
