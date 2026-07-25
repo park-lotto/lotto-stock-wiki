@@ -118,8 +118,10 @@ def test_proxy_priority_over_relay():
         config.YTDLP_PROXY = "http://u:p@host:1000"
         m.download_any("https://youtu.be/a", "/t")     # 프록시 우선 → 직접(내부서 --proxy)
         assert calls == ["ytdlp"], calls
-        # _proxy_arg: 유튜브만, 프록시 설정 시만
-        assert m._proxy_arg("https://www.youtube.com/watch?v=x") == ["--proxy", "http://u:p@host:1000"]
+        # _proxy_arg: 유튜브만, 프록시 설정 시만. 프록시 URL + 재시도 보강 플래그 포함.
+        ya = m._proxy_arg("https://www.youtube.com/watch?v=x")
+        assert ya[:2] == ["--proxy", "http://u:p@host:1000"]
+        assert "--retries" in ya and "--extractor-retries" in ya
         assert m._proxy_arg("https://www.tiktok.com/@a/video/1") == []
         config.YTDLP_PROXY = ""
         assert m._proxy_arg("https://youtu.be/x") == []

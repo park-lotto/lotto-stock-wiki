@@ -1,0 +1,11 @@
+[Unit]
+Description=매일 유튜브 자동수집 타이머(아침 08:10 KST)
+
+[Timer]
+# 서버 시간대 기준. KST(Asia/Seoul)로 매일 08:10 실행 — 장 시작 전 신선한 랭킹.
+OnCalendar=*-*-* 08:10:00
+Persistent=true
+# 부팅/중단으로 놓친 실행은 다음 부팅 때 1회 보충(Persistent).
+
+[Install]
+WantedBy=timers.target

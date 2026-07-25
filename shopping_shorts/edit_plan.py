@@ -416,7 +416,7 @@ _SCENE_FIRST_SCHEMA = {
 
 
 def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3, call=_vault_call,
-                            bank_context="", order_block=""):
+                            bank_context="", order_block="", lengthen=False):
     """스토리 헌장 + 장면 팔레트 + 레퍼 구조 → 후보 n개. 각 비트는 seg_ids(2~4 다중컷)로
     장면을 지목한다. 실패 시 []. 헌장이 품질을 담당하므로 별도 검증루프 없음(1콜).
 
@@ -488,6 +488,14 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "'단 몇 초 만에'·'극도로'·'너무너무'·'막')과 생생한 형용사를 나레이션에 녹여 밋밋한 문장을 "
         "살려라 — 감각·강도를 부사로 키워라(단, 한 문장에 몰아넣지 말고 자연스럽게).\n"
         + ((bank_context + "\n") if bank_context else "")
+        # ①생성측 보강(세션#2): 직전 후보가 전부 목표보다 크게 짧을 때 1회 재생성하며 이 힌트를
+        # 얹는다. 대본 길이 뒤죽박죽의 생성측 뿌리 — 프롬프트가 목표를 지시해도 실제 출력이 짧게
+        # 나온 경우, 길이 하한을 명시하고 비트를 잘게 쪼개지 말고 알차게 채우라고 강제한다.
+        + ((f"- ★★★[길이 재생성] 직전 후보들이 목표보다 크게 짧았다. 이번엔 반드시 전체 "
+            f"나레이션 글자수 합을 **최소 {int(char_target*0.9)}자 이상**(목표 {char_target}자)에 "
+            "맞춰라. 비트는 6~7개로 유지하되(잘게 쪼개지 마라) 각 비트의 이야기를 더 촘촘하게 "
+            "채워라 — 대화 인용을 한 번 더, 반전·구체적 반응·감각 묘사를 보태 각 문장을 알차게.\n")
+           if lengthen else "")
         + "출력은 스키마 JSON만.")
     raw = call(prompt, _SCENE_FIRST_SCHEMA)
     if not raw or not isinstance(raw, dict):
@@ -601,11 +609,27 @@ def _cut_rhythm_penalty(beats):
     return round(min(0.2, 0.1 * frag + 0.1 * repeat), 3)
 
 
-def _score_candidate(plan, avoid_hooks=None):
+def _length_penalty(beats, target_seconds):
+    """후보 길이가 목표초에서 벗어날수록 감점(2026-07-25 세션#2). 선택이 길이를 무시해 21.3초
+    짜리가 30초 목표에 뽑히던 것(후보 A/B/C 길이 뒤죽박죽)을 막는다. 후보 길이 = 비트별
+    target_seconds 합(≈나레이션 글자수 기준). 목표의 0.9~1.15배는 무감점(약간 넘는 건 conform이
+    흡수) — 벗어나면 편차 비례 감점(최대 0.3). target_seconds 없으면 0(기존 동작 유지)."""
+    if not target_seconds or target_seconds <= 0 or not beats:
+        return 0.0
+    total = sum(float(b.get("target_seconds") or 0.0) for b in beats)
+    if total <= 0:
+        return 0.0
+    ratio = total / target_seconds
+    dev = max(0.0, 0.9 - ratio) + max(0.0, ratio - 1.15)
+    return round(min(0.3, dev), 3)
+
+
+def _score_candidate(plan, avoid_hooks=None, target_seconds=None):
     """후보 추천 점수(0~1): 매칭(fit·억지없음·장면다양성) + 품질(대화체·재미강도). 빈 beats면 0.0.
     avoid_hooks(novelty 감점, belt-and-suspenders): 최근 영상이 쓴 훅 목록. 첫 비트(=훅)가
     그와 n-gram 겹치면 감점 → 프롬프트 회피를 무시하고 같은 훅을 낸 후보가 추천되는 걸 막는다.
-    컷 리듬 감점(T6): 파편화·전역 반복이 심한 후보를 강등한다."""
+    컷 리듬 감점(T6): 파편화·전역 반복이 심한 후보를 강등한다.
+    길이 감점(세션#2): target_seconds가 주어지면 목표초에서 벗어난 후보를 강등한다."""
     beats = plan.get("beats") or []
     if not beats:
         return 0.0
@@ -621,6 +645,7 @@ def _score_candidate(plan, avoid_hooks=None):
     quality = _candidate_quality(beats)          # 나레이션 없으면 0 → 매칭점수만(기존 계약 유지)
     score = 0.75 * match + 0.25 * quality
     score -= _cut_rhythm_penalty(beats)          # T6: 파편·반복 후보 강등(안전망)
+    score -= _length_penalty(beats, target_seconds)  # 세션#2: 목표초 벗어난 후보 강등
     if avoid_hooks:
         hook = beats[0].get("narration") or ""
         overlap = max((_ngram_overlap(hook, h) for h in avoid_hooks), default=0.0)
@@ -963,15 +988,14 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                                           forced=backbone_forced)
         if bb_video:
             order_block = _backbone_order_block(bb_video, source_scripts)
-    raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates,
-                                   call=_call, bank_context=bank_context,
-                                   order_block=order_block)
-    if bb_video:
+    src_texts = [s.get("full_text", "") for s in source_scripts]
+
+    def _ground_score(raws):
+      if bb_video:
         for r in raws:
             r.setdefault("_backbone_video", bb_video)   # 핑퐁 순서고정이 이 백본을 쓴다
-    src_texts = [s.get("full_text", "") for s in source_scripts]
-    cands = []
-    for r in raws:
+      cands = []
+      for r in raws:
         plan = _ground_candidate(r, seg_map)
         if plan is None:
             continue
@@ -1002,7 +1026,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)
         story = {k: r.get(k, "") for k in
                  ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
-        rule_score = _score_candidate(plan, avoid_hooks=avoid_hooks)
+        rule_score = _score_candidate(plan, avoid_hooks=avoid_hooks, target_seconds=target_seconds)
         cand = {"plan": plan, "story": story, "score": rule_score, "recommended": False}
         # ★심사위원(사장님 기준: 대본품질·장면싱크·스토리라인) — judge on일 때만(Gemini 콜).
         # 규칙점수(빠른 계산)와 반반 섞어 최종 순위. 심사 실패는 규칙점수만으로 폴백(무해).
@@ -1018,6 +1042,24 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         if _cp:
             cand["cut_penalty"] = round(_cp, 3)
         cands.append(cand)
+      return cands
+
+    raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates,
+                                   call=_call, bank_context=bank_context, order_block=order_block)
+    cands = _ground_score(raws)
+    # ①생성측 보강(세션#2): 후보가 전부 목표보다 크게 짧으면(생성이 목표초 미달) 길이 강화
+    # 힌트로 1회 재생성해 합친다. ②선택 감점(_length_penalty)이 짧은 후보를 강등하므로 병합 후
+    # 채점하면 긴 후보가 자연히 추천된다. 재생성은 '전부 짧을 때만' — 소스 footage 부족이 아니라
+    # 생성 자체가 목표초에 못 미친 경우로 한정(과금 게이트, 1회 상한, 실패해도 기존 후보 유지).
+    if cands and target_seconds and target_seconds > 0:
+        def _cand_secs(c):
+            return sum(float(b.get("target_seconds") or 0.0)
+                       for b in c["plan"].get("beats", []))
+        if max((_cand_secs(c) for c in cands), default=0.0) < 0.85 * target_seconds:
+            raws2 = _scene_first_candidates(
+                inventory, reference_text, target_seconds, n=n_candidates, call=_call,
+                bank_context=bank_context, order_block=order_block, lengthen=True)
+            cands = cands + _ground_score(raws2)
     if cands:
         best = max(range(len(cands)), key=lambda i: cands[i]["score"])
         cands[best]["recommended"] = True

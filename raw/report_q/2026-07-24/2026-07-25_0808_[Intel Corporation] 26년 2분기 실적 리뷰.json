@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-25_0808_[Intel Corporation] 26년 2분기 실적 리뷰.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "IBK투자증권",
+    "analyst": "김운호",
+    "report_date": "2026. 7. 24",
+    "stocks": [
+      {
+        "name": "Intel Corporation",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": {
+          "2Q26": {
+            "sales": "$16.1B(YoY +25.4%, QoQ +18.4%)",
+            "EPS": "$0.42"
+          },
+          "3Q26_guidance": {
+            "sales": "$15.8B~$16.8B",
+            "EPS": "$0.38"
+          }
+        },
+        "estimate_revision": "26년 2분기 실적과 3분기 예상 실적 모두 시장 기대치를 상회",
+        "next_catalyst": "Agent AI로 거듭날 것",
+        "thesis": [
+          "CCPG(Client Computing & Physical AI Group) 부문은 부품가격 상승에도 수요는 견조, AI PC와 Edge AI 모멘텀 지속",
+          "DCAI(Datacenter & AI) 부문은 YoY 성장률 역대 최고 수준, AI 수요로 인한 CPU 용량 확대 및 LTA 추가 확보",
+          "Foundry 부문은 수율 개선과 투자 싸이클에 힘입어 공급 증가, 18A-P risk production 시작"
+        ],
+        "valuation_basis": null,
+        "risk": "Foundry 부문 영업이익 -$2.1B(적자지속)",
+        "supply_comment": "과거 GPU/HBM 중심의 투자에서 CPU/DRAM/NAND로 방향 전환이 진행 중",
+        "quote": "26년 2분기 실적과 3분기 예상 실적 모두 시장 기대치를 상회"
+      }
+    ]
+  }
+}

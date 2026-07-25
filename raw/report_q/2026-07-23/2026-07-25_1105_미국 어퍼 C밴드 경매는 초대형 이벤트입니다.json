@@ -1,0 +1,85 @@
+{
+  "meta": {
+    "date": "2026-07-23",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-25_1105_미국 어퍼 C밴드 경매는 초대형 이벤트입니다.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김홍식",
+    "report_date": "2026년 7월 23일",
+    "target_kind": "sector",
+    "sector_name": "통신 장비",
+    "sector_view": "비중확대",
+    "thesis": [
+      "미국 어퍼 C밴드 경매 일정 확정 및 2027년 본격 투자 전망",
+      "미지의 주파수 투자 개시, 글로벌 AI RAN/피지컬 AI 붐 촉진",
+      "국내 무선통신장비주 2차 상승 진입 가능성"
+    ],
+    "timeline": [
+      "2026년 6월: AWS 3밴드 65MHz 경매 시작",
+      "2027년 1분기: 장비 수주 예상",
+      "2027년 2분기: 매출 발생 예상",
+      "2028년 초까지: 국내 무선통신장비주 주가 상승 지속 판단"
+    ],
+    "top_picks": [
+      {
+        "name": "쏠리드",
+        "reason": "Top Picks",
+        "tp": "30,000원"
+      },
+      {
+        "name": "알에프에이치아이씨",
+        "reason": "Top Picks",
+        "tp": "150,000원"
+      },
+      {
+        "name": "LIG아큐버",
+        "reason": "Top Picks",
+        "tp": "80,000원"
+      },
+      {
+        "name": "케이엠더블유",
+        "reason": "Top Picks 및 적극 매수 추천",
+        "tp": "50,000원"
+      },
+      {
+        "name": "아이씨티케이",
+        "reason": "Top Picks",
+        "tp": "60,000원"
+      },
+      {
+        "name": "우리넷",
+        "reason": "Top Picks",
+        "tp": "25,000원"
+      },
+      {
+        "name": "RF머트리얼즈",
+        "reason": "Top Picks",
+        "tp": "150,000원"
+      },
+      {
+        "name": "오이솔루션",
+        "reason": "Top Picks",
+        "tp": "60,000원"
+      },
+      {
+        "name": "유비쿼스",
+        "reason": "Top Picks",
+        "tp": "22,000원"
+      },
+      {
+        "name": "에치에프알",
+        "reason": "Top Picks 및 적극 매수 추천",
+        "tp": "50,000원"
+      },
+      {
+        "name": "세나테크놀로지",
+        "reason": "Top Picks",
+        "tp": "80,000원"
+      }
+    ],
+    "risk": "코스닥 시장 급락과 미국 광통신 관련주 하락 영향",
+    "quote": "국내 무선통신장비주 억울한 주가 급락 기록, 2차 상승 진입 시 무섭게 오를 수도"
+  }
+}

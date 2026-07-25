@@ -13,7 +13,7 @@ def _setup(monkeypatch, insta_items, subj_map, zh_map):
     monkeypatch.setattr(app_module.Store, "vision_tags_map",
                         lambda self, codes: {c: {"subject": subj_map[c], "keywords": []}
                                              for c in codes if c in subj_map})
-    monkeypatch.setattr(app_module.Store, "cn_keyword_map", lambda self, kos: dict(zh_map))
+    monkeypatch.setattr(app_module.Store, "translations_map", lambda self, kos: dict(zh_map))
     return TestClient(app_module.app)
 
 

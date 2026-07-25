@@ -529,6 +529,11 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
         # 기존 폴백 "h-text_h-150"의 근사치를 %로 환산(문자 높이는 size*1.2로 근사)
         # 150 = 1080p 기준 하단 여백(720p 100px ×1.5, 2026-07-24 1080p 업그레이드)
         ypct = max(0.0, min(100.0, (_OUT_H - 150 - size * 0.6) / _OUT_H * 100.0))
+    # 자막 가로 위치(%): UI 드래그 결과가 style.x_pct로 온다. 미지정이면 종전대로 중앙(50).
+    # 예전엔 아래 _segmented_drawtext 호출에 50이 하드코딩돼, 미리보기로 옮겨도 최종 렌더는
+    # 항상 중앙이었다(2026-07-25 배선). 0~100 클램프.
+    xpct = style.get("x_pct")
+    xpct = 50.0 if xpct is None else max(0.0, min(100.0, float(xpct)))
     use_box = bool(style.get("box"))
     # 하단 자막 바 기본 OFF(2026-07-19) — 300px·black@0.82 바가 화면 하단 23%를
     # 덮어 "검정바"로 보인다는 제보. 그림자 자막만으로 가독성 확보. 원본 소각자막을
@@ -558,7 +563,7 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
         t += d
         end = (dur + tail if i == len(segs) - 1 else t) + t0 + cap_offset
         seg_parts = _segmented_drawtext(
-            seg, style, work, f"cap_{idx}_{i}", 50, ypct,
+            seg, style, work, f"cap_{idx}_{i}", xpct, ypct,
             highlight_rules=style.get("highlight_rules"), default_color="0xFFFFFF",
             single_line=True,   # 자막은 무조건 한 줄(폭 넘으면 폰트 자동축소)
         )
@@ -1036,6 +1041,16 @@ def _fixed_drawtext(spec, work, key, default_color="0xFFFFFF"):
     return ":".join(parts)
 
 
+def _default_headcopy_enable(timeline):
+    """명시 enable(hook_only 팩)이 없을 때의 기본(2026-07-25) — 헤드카피를 **마지막 비트 시작
+    전까지**만 노출해 끝의 CTA 자막과 두 줄로 겹치지 않게 한다(job 57ec653ba579: 상단 헤드카피
+    + 하단 CTA 충돌). 비트가 2개 미만이면 제한하지 않는다(None=기존 전체표시)."""
+    if not timeline or len(timeline) < 2:
+        return None
+    last_t0 = float(timeline[-1]["t0"])
+    return f"lte(t,{last_t0:.2f})"
+
+
 def _headcopy_drawtext_parts(hc, work, enable=None):
     """헤드카피 drawtext 필터 리스트 — _segmented_drawtext 래퍼(기본색 오렌지).
     hc['highlight_rules']가 있으면 단어별 강조, 없으면 세그먼트 1개(기존과 동일).
@@ -1135,6 +1150,9 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     if headcopy and (headcopy.get("text") or "").strip():
         # enable 없으면 전체 표시(기존). 팩이 hook_only면 렌더 파생값 _headcopy_enable이 온다.
         hc_enable = ((deco or {}).get("motion") or {}).get("_headcopy_enable")
+        if not hc_enable:
+            # 명시 enable 없으면 끝 비트(CTA)와 겹치지 않게 마지막 비트 전까지만(2026-07-25).
+            hc_enable = _default_headcopy_enable(timeline)
         filters.extend(_headcopy_drawtext_parts(headcopy, work, enable=hc_enable))
     # 꾸미기 장식(deco): 추가 텍스트(여러 개) + 워터마크 닉네임. 모두 고정 drawtext.
     deco = deco or {}

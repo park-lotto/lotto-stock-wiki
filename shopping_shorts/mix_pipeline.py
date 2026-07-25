@@ -22,10 +22,13 @@ from shopping_shorts.video_assemble import assemble, _beat_timeline, _probe_dura
 from shopping_shorts.motion_assets import resolve_layers, DEFAULT_ASSETS_DIR
 from shopping_shorts.motion_packs import build_plan, load_packs
 from shopping_shorts.vmake_client import remove_subtitles
+from shopping_shorts import sub_region
 from shopping_shorts.narration_naturalize import naturalize, merge_profile
 from shopping_shorts import asr_check
 from shopping_shorts import caption_sync
 from shopping_shorts import pron_corrections
+from shopping_shorts import backbone
+from shopping_shorts import plan_gate
 
 # 모션 자산 폴더(테스트가 monkeypatch로 교체 가능하도록 모듈 상수로 노출)
 MOTION_ASSETS_DIR = DEFAULT_ASSETS_DIR
@@ -520,6 +523,40 @@ def _record_bank_usage(store, snapshot, bank_context, rec, candidates,
     store.set_setting("bank_usage_audit_last", _json.dumps(agg, ensure_ascii=False))
 
 
+_MAX_REPICK = 3
+# 재픽으로 고칠 수 있는 위반의 신호어(생성 영역=길이·비트수는 제외). plan_gate가 내는
+# 사람이 읽는 위반 문자열에 이 조각이 들어있으면 재픽 대상으로 본다.
+_REPICKABLE_HINTS = ("이어지는 구간", "같은 장면", "잘게 쪼개진", "1개만 사용", "믹스가 안")
+
+
+def _has_repickable(gate):
+    return any(any(h in v for h in _REPICKABLE_HINTS) for v in (gate.get("violations") or []))
+
+
+def _run_gate_correction(plan, source_scripts, target_seconds):
+    """게이트 검사→재픽 루프. 위반이 재픽 가능하면 통과할 때까지 재픽(상한 _MAX_REPICK).
+    재픽이 무변화면 즉시 종료(수렴). 최종 gate를 plan["gate"]에 항상 저장 —
+    프론트가 역할별로(관리자=경고/일반=숨김) 표시한다. 순수·무과금·나레이션 불변."""
+    pool_ct = len({s.get("video_id") for s in (source_scripts or [])
+                   if s.get("segments")} - {None})
+    beats = plan.get("beats")
+    gate = plan_gate.check_plan(beats, target_seconds, pool_video_count=pool_ct)
+    rounds = 0
+    while rounds < _MAX_REPICK and _has_repickable(gate):
+        new_beats = backbone.repick_for_gate(beats, source_scripts, gate)
+        if new_beats == beats:
+            break   # 더 못 고침 → 종료(잔여 위반은 §4 마감이 처리)
+        beats = new_beats
+        rounds += 1
+        gate = plan_gate.check_plan(beats, target_seconds, pool_video_count=pool_ct)
+    plan["beats"] = beats
+    plan["gate"] = gate
+    plan["repick_rounds"] = rounds
+    if not gate["ok"]:
+        print("plan_gate 잔여 위반(재픽 %d회 후): " % rounds
+              + " / ".join(gate["violations"]), file=sys.stderr)
+
+
 def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, video_type, work,
                   given_script=None, voice=None, customer_id=0,
                   scene_first=False, reference_text="", ping_pong=False,
@@ -640,17 +677,11 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     except Exception:
         traceback.print_exc(file=sys.stderr)
 
-    # 4.9) ★렌더 직전 불변식 게이트(2026-07-24, P2) — 모든 비트 변형(refill·conform)이 끝난
-    # **최종 plan**만 보고 반복·파편·길이를 잰다. 뒷단계가 앞단계를 되돌려도 여기서 잡혀
-    # 화면에 뜬다(조용한 실패 금지). 순수 계산이라 실패해도 job은 안 죽인다.
+    # 4.9) ★게이트 교정 루프(2026-07-25) — 최종 plan(refill·conform 뒤)을 보고 위반이면
+    # 통과할 때까지 재픽(상한 3). 경고만 하던 관문을 '통과시키는 관문'으로. 순수·무과금·
+    # 나레이션 불변. 실패해도 job은 안 죽인다(순수 계산).
     try:
-        from shopping_shorts import plan_gate
-        plan["gate"] = plan_gate.check_plan(
-            plan.get("beats"), target_seconds,
-            pool_video_count=len({s.get("video_id") for s in (source_scripts or [])
-                                  if s.get("segments")} - {None}))
-        if not plan["gate"]["ok"]:
-            print("plan_gate 위반: " + " / ".join(plan["gate"]["violations"]), file=sys.stderr)
+        _run_gate_correction(plan, source_scripts, target_seconds)
     except Exception:
         traceback.print_exc(file=sys.stderr)
 
@@ -762,10 +793,14 @@ def _resolve_sfx_paths(store, plan, customer_id):
 
 
 def _clean_one(item, key, work):
-    """소스 하나를 VMake로 청소 → (video_id, 클린경로). ThreadPool 워커용(DB 미접근)."""
+    """소스 하나를 VMake로 청소 → (video_id, 클린경로, 지워진자막박스|None). ThreadPool 워커용(DB 미접근).
+    청소 직후 원본↔클린을 diff해 '어디가 지워졌나'를 그 자리에서 구한다 — VMake는 좌표를 안 주지만
+    우리가 before/after를 둘 다 쥐고 있어 계산 가능하다(best-effort, 실패해도 None으로 청소는 성공)."""
     vid, src = item
     out = str(Path(work) / f"clean_src_{vid}.mp4")
-    return vid, remove_subtitles(src, key, out_path=out)
+    clean_path = remove_subtitles(src, key, out_path=out)
+    region = sub_region.detect_erased_region(src, clean_path, work)
+    return vid, clean_path, region
 
 
 def _ensure_clean_sources(store, job, job_id, work, key):
@@ -773,13 +808,22 @@ def _ensure_clean_sources(store, job, job_id, work, key):
     각 스레드는 remove_subtitles만 하고 경로를 반환 → DB 저장은 취합 후 메인에서 1회(경합 없음)."""
     source_map = _resolve_sources(job, Path(work))
     cached = dict(job.get("clean_sources") or {})
+    # 지워진 자막영역: 소스별 박스 맵 + 1등(primary). 이미 있으면 이어붙인다(재청소 안 한 소스는 유지).
+    regions = dict((job.get("clean_regions") or {}).get("sources") or {})
     todo = [(vid, src) for vid, src in source_map.items()
             if not (cached.get(vid) and Path(cached[vid]).exists())]
     if todo:
         with ThreadPoolExecutor(max_workers=len(todo)) as ex:
-            for vid, out in ex.map(lambda t: _clean_one(t, key, work), todo):
+            for vid, out, region in ex.map(lambda t: _clean_one(t, key, work), todo):
                 cached[vid] = out
-        store.update_mix_job(job_id, clean_sources=cached)
+                if region:
+                    regions[vid] = region
+                else:
+                    regions.pop(vid, None)   # 이 소스엔 지속 변화 없음(원본에 자막 없었음)
+        # 넓고 자주 쓰인 위치를 1번으로 — 소스마다 자막 위치가 달라도 대표 한 자리를 고른다.
+        primary = sub_region.pick_primary(list(regions.values()))
+        store.update_mix_job(job_id, clean_sources=cached,
+                             clean_regions={"sources": regions, "primary": primary})
     return cached
 
 

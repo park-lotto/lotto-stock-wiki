@@ -35,6 +35,7 @@ from shopping_shorts import script_generate
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
 from shopping_shorts.channels import load_channels, username_from_url, merge_tracked
+from shopping_shorts import video_analysis
 from shopping_shorts.video_analysis import (analyze_video, translate_keyword, cn_search_keyword,
                                             cn_search_keyword_vision, judge_same_product,
                                             cn_search_candidates)
@@ -59,6 +60,7 @@ from shopping_shorts import export_bundle
 from shopping_shorts import qr_svg
 from shopping_shorts import capcut_draft
 from shopping_shorts.youtube_client import enrich_youtube
+from shopping_shorts.youtube_client import channels_from_video_urls as yt_channels_from_videos
 from shopping_shorts.video_assemble import _beat_timeline
 from shopping_shorts.audio_post import detect_edge_silence
 from shopping_shorts.video_assemble import _probe_duration, _effective_dur, _TRIM_FLOOR
@@ -151,7 +153,7 @@ def _media_code(url):
 
 
 @app.post("/api/collect")
-def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int | None = None, platform: str = "instagram"):
+def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int | None = None, platform: str = "instagram", category: str | None = None):
     """지금 수집 버튼. limit=채널 수 상한(테스트용). platform=플랫폼(기본 인스타).
 
     댓글 draft 생성(항목당 Gemini 호출, 쿼터 걸리면 62초 대기)은 응답 후
@@ -195,7 +197,7 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
                 "ok": False, "error_code": "daily_limit",
                 "error": f"오늘 틱톡 수집 한도({knobs['daily_limit']}회)를 다 썼습니다"})
     try:
-        items = collect(platform=platform, limit_channels=limit)
+        items = collect(platform=platform, categories=([category] if category else None), limit_channels=limit)
         if platform == "tiktok":
             guard.bump_tiktok_daily(_cid(request), datetime.now(timezone.utc).strftime("%Y-%m-%d"))
             # 추정지출 누적(add_tiktok_spend)도 건너뜀 — 위 docstring 참고.
@@ -209,6 +211,7 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
         store.save_last_run(items, collected_at)
         background_tasks.add_task(generate_missing_drafts, next_draft_targets(items, store))
         background_tasks.add_task(_tag_new_items, items)   # 신규 썸네일 비전 태깅(백그라운드)
+        background_tasks.add_task(_translate_new_subjects, items)  # 새 소재 한→중 번역(백그라운드)
         # 수집→대본은행 자동 적재(2026-07-22): 밀도+속도 상위 표본을 부품으로 분해해 은행에
         # 쌓는다(소스당 Gemini 1콜이라 백그라운드). 결과는 /api/bank/ingest_report로 화면에 보고.
         background_tasks.add_task(_bank_ingest_collected_bg, DB_PATH, items, collected_at)
@@ -368,6 +371,8 @@ async def api_yt_relay_deliver(req_id: str, key: str = Form(""),
 
 
 _VISION_TAG_CAP = 60  # 1회 수집당 새 태깅 상한(비용 가드). 초과분은 다음 수집 때.
+_TRANSLATE_CAP = 40      # 수집직후 백그라운드 소재 번역(_translate_new_subjects, Task3)의 1회 상한. 이 엔드포인트는 안 씀.
+_TRANSLATE_MAXLEN = 40   # 번역 요청 소재 길이 상한(비정상 입력 방어).
 
 
 def _tag_new_items(items):
@@ -392,6 +397,30 @@ def _tag_new_items(items):
             store.save_vision_tags(it["shortcode"], tags.get("subject", ""), tags.get("keywords", []))
     if len(todo) > len(capped):
         print(f"[vision_tags] {len(todo) - len(capped)}건 다음 수집으로 미룸(상한 {_VISION_TAG_CAP})")
+
+
+def _translate_new_subjects(items):
+    """수집 직후 백그라운드: 새 vision_subject를 한→중 번역해 translations 캐시에 채운다.
+    이미 번역된 건 skip. 상한(_TRANSLATE_CAP) 초과분은 다음 수집으로 미룬다.
+    비전태그가 먼저 채워져야 subject가 생기므로 1수집 지연은 정상(트렌드는 회차 누적)."""
+    store = Store(DB_PATH)
+    subjects = []
+    seen = set()
+    for it in items:
+        s = (it.get("vision_subject") or "").strip()
+        if s and s not in seen:
+            seen.add(s)
+            subjects.append(s)
+    have = store.translations_map(subjects)
+    todo = [s for s in subjects if s not in have]
+    for s in todo[:_TRANSLATE_CAP]:
+        try:
+            zh = (video_analysis.translate_keyword(s) or {}).get("zh", "") or ""
+        except Exception:
+            zh = ""
+        store.save_translation(s, zh)
+    if len(todo) > _TRANSLATE_CAP:
+        print(f"[translations] {len(todo) - _TRANSLATE_CAP}건 다음 수집으로 미룸(상한 {_TRANSLATE_CAP})")
 
 
 def _attach_vision_tags(items, store=None):
@@ -451,6 +480,29 @@ def api_generate_drafts(background_tasks: BackgroundTasks):
     return {"ok": True, "count": len(targets)}
 
 
+@app.get("/api/translate")
+def api_translate(q: str = ""):
+    """트렌드카드용 한→중 소재 번역(캐시 우선). 미스면 translate_keyword 1회 후 저장.
+
+    빈/과다 입력은 zh="" 로 안전 반환(딥링크는 ko 폴백). 캐시 히트는 Gemini 호출 0."""
+    ko = (q or "").strip()
+    if not ko:
+        return {"ok": True, "ko": "", "zh": ""}
+    if len(ko) > _TRANSLATE_MAXLEN:
+        return {"ok": False, "ko": ko, "zh": "", "error": "too_long"}
+    store = Store(DB_PATH)
+    cached = store.get_translation(ko)
+    if cached is not None:
+        return {"ok": True, "ko": ko, "zh": cached}
+    zh = ""
+    try:
+        zh = (video_analysis.translate_keyword(ko) or {}).get("zh", "") or ""
+    except Exception:
+        zh = ""
+    store.save_translation(ko, zh)   # 빈 zh도 저장 → 반복 호출 방지
+    return {"ok": True, "ko": ko, "zh": zh}
+
+
 @app.get("/api/reference")
 def api_reference(platform: str = "instagram"):
     """마지막 수집 결과 반환 (프론트 초기 로드용). platform=플랫폼(기본 인스타)."""
@@ -468,13 +520,15 @@ def api_reference_cn_trend():
     """샤오홍슈·도우인 트렌드 검색카드(2026-07-25). 샤오홍슈·도우인은 크롤 자동수집이
     불가(로그인 벽·서명요구)라 긁지 않고 '무엇을 검색하면 터진 게 나오는지'만 준다:
     인스타·틱톡·유튜브 랭킹 상위 영상의 비전 주제(vision_subject)를 강도순으로 카드화하고,
-    캐시된 중국어 번역(cn_keyword_cache)을 실어 딥링크 버튼을 만든다.
+    캐시된 중국어 번역(translations 캐시)을 실어 딥링크 버튼을 만든다.
 
     ★100% 무료: 이 엔드포인트는 크롤·번역 API를 호출하지 않는다(이미 저장된 랭킹+캐시만
-    읽음). 번역은 scripts/backfill_cn_keywords.py가 미리 채운다.
+    읽음). 번역은 수집훅 _translate_new_subjects / 벌크 scripts/backfill_cn_keywords.py가
+    미리 채운다(캐시 히트만 사용).
 
-    폴백 B(2026-07-25): 캐시 미스로 zh가 비면 그 카드의 중국 플랫폼 버튼을 프론트가
-    흐리게/비활성 처리한다 — 한국어를 중국 검색창에 그대로 넣는 잘못된 딥링크 방지."""
+    폴백 B(2026-07-25): 캐시 미스(또는 번역실패로 빈값)로 zh가 비면 그 카드의 중국 플랫폼
+    버튼을 프론트가 흐리게/비활성 처리한다 — 한국어를 중국 검색창에 그대로 넣는 잘못된
+    딥링크 방지."""
     store = Store(DB_PATH)
     seen = set()
     cards = []
@@ -496,9 +550,9 @@ def api_reference_cn_trend():
                 "platform": platform,
                 "strength": it.get("views") or it.get("comments") or 0,
             })
-    zh_map = store.cn_keyword_map([c["subject"] for c in cards])
+    zh_map = store.translations_map([c["subject"] for c in cards])
     for c in cards:
-        c["zh"] = zh_map.get(c["subject"], "")   # 캐시 미스 → "" → 프론트 폴백 B
+        c["zh"] = zh_map.get(c["subject"], "")   # 미스/번역실패 → "" → 프론트 폴백 B
     cards.sort(key=lambda c: c["strength"], reverse=True)
     return {"ok": True, "cards": cards}
 
@@ -518,6 +572,33 @@ def api_seeds_add(body: dict):
         return JSONResponse(status_code=422, content={"ok": False, "error": "platform·value 필요"})
     Store(DB_PATH).add_seed(p, (body.get("kind") or "keyword").strip(), v)
     return {"ok": True}
+
+
+@app.post("/api/seeds/from_youtube_videos")
+def api_seeds_from_youtube_videos(body: dict):
+    """렌즈 유사영상 유튜브 결과(영상 URL들) → 소속 채널을 account 시드로 대량 벤치등록.
+    body: {urls:[영상URL,...]}. 같은 채널 1개로, 이미 등록된 채널은 duplicate로 집계.
+    반환: {ok, added, duplicate, channels:[{channel_url, channel_title, dup}]}."""
+    urls = [u for u in (body.get("urls") or []) if isinstance(u, str) and u.strip()]
+    if not urls:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "urls 필요"})
+    channels = yt_channels_from_videos(urls)
+    store = Store(DB_PATH)
+    existing = {(s["value"] or "").lower() for s in store.list_seeds("youtube")
+                if s["kind"] == "account"}
+    added = duplicate = 0
+    out = []
+    for ch in channels:
+        url = ch["channel_url"]
+        dup = url.lower() in existing
+        if dup:
+            duplicate += 1
+        else:
+            store.add_seed("youtube", "account", url)
+            existing.add(url.lower())
+            added += 1
+        out.append({"channel_url": url, "channel_title": ch.get("channel_title", ""), "dup": dup})
+    return {"ok": True, "added": added, "duplicate": duplicate, "channels": out}
 
 
 @app.delete("/api/seeds")
@@ -805,6 +886,25 @@ def api_discover_status():
 def api_discover_feed():
     """마지막 발굴 피드 반환(새로고침 시 복원 — 특히 누적 모드)."""
     items, updated_at = Store(DB_PATH).load_discovery_feed()
+    return {"ok": True, "items": items, "updated_at": updated_at}
+
+
+@app.get("/api/overseas/update")
+def api_overseas_update():
+    """해외HOT 수집 시작(백그라운드). 프론트는 /api/overseas/status 폴링."""
+    from shopping_shorts import overseas_hot_jobs
+    return {"ok": True, **overseas_hot_jobs.start()}
+
+
+@app.get("/api/overseas/status")
+def api_overseas_status():
+    from shopping_shorts import overseas_hot_jobs
+    return {"ok": True, **overseas_hot_jobs.status()}
+
+
+@app.get("/api/overseas/feed")
+def api_overseas_feed():
+    items, updated_at = Store(DB_PATH).load_overseas_feed()
     return {"ok": True, "items": items, "updated_at": updated_at}
 
 
@@ -1967,6 +2067,9 @@ def api_mix_status(job_id: str):
             "preview_error": preview_error,
             "clean_status": clean_status,
             "clean_error": clean_error,
+            # 지워진 자막 위치(2026-07-25): 5단계 꾸미기가 자막 자동정렬·'원본 자막 있던 자리' 마커에 쓴다.
+            # 좌표(%)뿐이라 안전 — 소스 경로 등 내부정보는 안 실린다.
+            "clean_regions": job.get("clean_regions"),
             "candidates": candidates}
 
 

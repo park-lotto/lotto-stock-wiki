@@ -1,0 +1,8 @@
+{
+  "주방/레시피": {"subreddits": ["GifRecipes", "foodhacks", "cooking"], "seed_accounts": []},
+  "살림/생활꿀템": {"subreddits": ["lifehacks", "CleaningTips", "BuyItForLife"], "seed_accounts": []},
+  "인테리어": {"subreddits": ["InteriorDesign", "CozyPlaces"], "seed_accounts": []},
+  "자취템": {"subreddits": ["organization", "simpleliving"], "seed_accounts": []},
+  "가전템": {"subreddits": ["gadgets", "BuyItForLife", "tiktokmademebuyit"], "seed_accounts": []},
+  "뷰티": {"subreddits": ["SkincareAddiction", "MakeupAddiction", "beauty"], "seed_accounts": []}
+}

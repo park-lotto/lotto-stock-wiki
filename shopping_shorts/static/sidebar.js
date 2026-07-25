@@ -114,6 +114,18 @@
       ".ss-group{margin:0;padding:0;background:none;border:none;display:flex;gap:6px;align-items:center}" +
       ".ss-label{display:none}" +
       ".ss-item{margin:0;padding:6px 10px;flex-shrink:0;font-size:12px}}";
+  // 버튼 쿠션감(전역, 2026-07-24) — 누르면 쏙 눌렸다 통통 튀어나옴. 사장님 선택 '쿠션' 프리셋.
+  // 자체 transition 없는 주버튼(.btn-next/.btn-prev/.tab/.cta-shine 등)엔 풀 적용. 자체
+  // transition을 가진 버튼은 페이지 규칙(클래스>요소)이 우선이라 배경 트랜지션을 안 밟고
+  // :active 누름 스케일만 얹힌다(회귀 없음). sidebar.js 로드 페이지(제작 워크플로 9종) 공통.
+  css +=
+    "button,.btn,.btn-next,.btn-prev,.tab,.cta,.cta-shine,[role=button]{" +
+      "transition:transform .34s cubic-bezier(.22,1.4,.4,1)}" +
+    "button:active,.btn:active,.btn-next:active,.btn-prev:active,.tab:active,.cta:active,.cta-shine:active,[role=button]:active{" +
+      "transform:scale(.94) translateY(1px);transition-duration:.05s;transition-timing-function:ease-out}" +
+    "@media(prefers-reduced-motion:reduce){" +
+      "button,.btn,.btn-next,.btn-prev,.tab,.cta,.cta-shine,[role=button]{transition:none}" +
+      "button:active,.btn:active,.btn-next:active,.btn-prev:active,.tab:active,.cta:active,.cta-shine:active,[role=button]:active{transform:none;filter:brightness(1.12)}}";
   var style = document.createElement("style");
   style.textContent = css;
   document.head.appendChild(style);

@@ -400,6 +400,52 @@ def dedup_clips_global(beats, pool_sources, max_clips=None):
     return out
 
 
+def repick_for_gate(beats, pool_sources, gate):
+    """게이트 위반(연속·반복·파편)을 재픽으로 교정한다(2026-07-25). 원본 mutate 안 함,
+    Gemini·IO 없음, 나레이션·tts_path 불변. 후보 없으면 그 위반은 그대로 둠(호출부 루프가
+    new_beats==beats 로 수렴 판정해 종료).
+
+    ★핵심: primary 비트 간 연속(is_continuous)을 여기서 처음으로 끊는다 —
+    dedup_clips_global은 alternates만 봤고, dedup_and_balance는 seg_id 중복만 봐서
+    's0-4→s0-5'처럼 고유하지만 인접한 primary 연속이 샜다(job 57ec653ba579 실사고).
+    포인트 비트 primary는 결정적 장면이라 불가침 — 런에 끼면 반대쪽(앞 비트)을 바꾼다."""
+    out = [dict(b) for b in beats]
+    src_count = Counter(_vid_of(b.get("primary")) for b in out if b.get("primary"))
+    used = {(b.get("primary") or {}).get("seg_id") for b in out}
+    used |= {a.get("seg_id") for b in out for a in (b.get("alternates") or [])}
+    used.discard(None)
+    for i in range(1, len(out)):
+        prev_p = out[i - 1].get("primary") or {}
+        cur_p = out[i].get("primary") or {}
+        if not is_continuous(prev_p, cur_p):
+            continue
+        # 포인트 비트 primary는 불가침 → 앞 비트를 바꿔 연속을 깬다(앞이 포인트면 어쩔 수 없이 뒤).
+        target = i - 1 if (is_point_beat(out[i]) and not is_point_beat(out[i - 1])) else i
+        tb = out[target]
+        anchor = out[target - 1].get("primary") if target > 0 else None
+        action = segment_action(tb.get("primary") or {}) or \
+            action_dict.tag_action(tb.get("narration", ""))
+        cands = [c for c in (pick_clips_for_action(action, pool_sources) if action else [])
+                 if c.get("seg_id") not in used and not is_continuous(anchor, c)]
+        if not cands:
+            cands = [c for c in _broll_segs(pool_sources, src_count, used)
+                     if not is_continuous(anchor, c)]
+        if not cands:
+            continue   # 대체 후보 없음 → 그대로(수렴)
+        cands.sort(key=lambda c: (src_count.get(_vid_of(c), 0), -_seg_dur(c)))  # 미사용소스·긴컷 우선
+        old_sid = (tb.get("primary") or {}).get("seg_id")
+        pick = cands[0]
+        if old_sid:
+            used.discard(old_sid)
+        used.add(pick.get("seg_id"))
+        src_count[_vid_of(pick)] += 1
+        tb["primary"] = pick
+    # 반복·파편·alternates 연속은 기존 dedup 재적용(테스트된 로직 재사용).
+    out = dedup_and_balance(out, pool_sources)
+    out = dedup_clips_global(out, pool_sources)
+    return out
+
+
 # 백본 가능 플랫폼 = 한글 대본이 있는 것만(인스타·유튜브). 나머지(샤오홍슈·도우인 등)=서브 전용.
 _BACKBONE_PLATFORMS = {"instagram", "youtube"}
 

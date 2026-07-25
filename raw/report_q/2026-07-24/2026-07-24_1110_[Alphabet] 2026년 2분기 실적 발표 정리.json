@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-24_1110_[Alphabet] 2026년 2분기 실적 발표 정리.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026. 7. 23",
+    "stocks": [
+      {
+        "name": "Alphabet",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 2분기 매출액: $119.8B (YoY +24.2%, QoQ +9.0%), 영업이익: $40.8B (YoY +30.4%, QoQ +2.7%), 당기순이익: $112.2B (YoY +297.9%, QoQ +79.3%)",
+        "estimate_revision": "2026년 연간 Capex 전망치는 기존 $180B~$190B에서 $195B~$205B로 상향 조정함.",
+        "next_catalyst": "Gemini 3.5 Pro 테스트, Gemini 4 개발 및 사전 학습, 2027년 TPU 매출 본격화",
+        "thesis": [
+          "매출, 영업이익, 당기순이익 모두 시장 컨센서스를 상회함",
+          "AI 인프라 투자 확대를 통한 시장 기회 확보 및 수익률 창출 전망",
+          "구글 클라우드의 강력한 AI 솔루션 수요 및 수주 잔고 증가세"
+        ],
+        "valuation_basis": null,
+        "risk": "Capex 확대에 따른 단기적 현금흐름 압박 및 마진 부담, 기술 인프라 투자 증가로 인한 감가상각비와 데이터센터 운용 비용 증가",
+        "supply_comment": "공급 제약 환경 속에서 내부 용량을 확충하는 동안 3분기에는 타사 용량 활용을 확대할 예정임.",
+        "quote": "2026년 2분기 알파벳(Alphabet)의 매출액은 $119.8B로 전년동기 대비 24.2% 증가한 수치를 기록함."
+      }
+    ],
+    "sector": "IT"
+  }
+}

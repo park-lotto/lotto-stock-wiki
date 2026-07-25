@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_0700_경제 - AI로 분석한 케빈 워시, 그는 정말 매인가.md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "방인성(PhD)",
+    "report_date": "2026.06.08",
+    "target_kind": "market",
+    "market_direction": "중립",
+    "macro_vars": [
+      "미 10년물 국채금리 4.5%",
+      "미 30년물 국채금리 5%",
+      "연방기금금리",
+      "절사평균(Trimmed Mean) PCE",
+      "총요소생산성(TFP)",
+      "AI 인플레이션 영향"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": "중립",
+        "reason": "케빈 워시 신임 의장 체제하의 통화정책 불확실성 증대 및 포워드 가이던스 폐기 예고"
+      }
+    ],
+    "style": "매크로 분석",
+    "event_calendar": [
+      {
+        "date": "2026.05",
+        "event": "케빈 워시 연방준비제도 제17대 의장 취임"
+      }
+    ],
+    "top_picks": null,
+    "risk": "케빈 워시 체제하의 포워드 가이던스 폐기와 '거친 회의'로 인한 시장 정책 불확실성 증폭",
+    "quote": "결론적으로 워시는 '공개 발언의 매파이자 심의 발언의 실용주의자'다. 시장이 두려워해야 할 것은 그가 매파라는 사실보다, 그가 언제 비둘기로 전환할지 시장이 예측하기 어렵다는 사실이다."
+  }
+}

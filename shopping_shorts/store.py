@@ -191,16 +191,14 @@ class Store:
                     created_at TEXT
                 )
             """)
-            # 한국어 소재 키워드 → 중국어 검색어 캐시(2026-07-25) — 샤오홍슈·도우인 트렌드
-            # 검색카드용. 중국 플랫폼은 중국어 검색이 필수라 한국어 소재(ko)를 미리 번역해
-            # 캐시해둔다. 같은 소재의 반복 번역(Gemini 호출)을 막는다. 채우는 건
-            # scripts/backfill_cn_keywords.py(무과금 배치). 캐시 미스면 프론트가 중국
-            # 플랫폼 버튼을 흐리게 처리(폴백 B) — 잘못된 한국어 딥링크 방지.
+            # 한→중 소재 번역 캐시(2026-07-24) — ko당 1행, 있으면 재호출 안 함(무과금).
+            # zh 빈 문자열도 저장(번역실패 캐시) — get_translation은 그걸 ""로, 미조회는 None으로 구분.
+            # 샤오홍슈·도우인 트렌드 검색카드(/api/reference/cn_trend)도 이 캐시를 읽는다.
             c.execute("""
-                CREATE TABLE IF NOT EXISTS cn_keyword_cache (
+                CREATE TABLE IF NOT EXISTS translations (
                     ko TEXT PRIMARY KEY,
                     zh TEXT,
-                    created_at TEXT
+                    updated_at TEXT
                 )
             """)
             # 학습소재 통계용 확장(2026-07-13) — 위키 저장 여부와 무관하게 대본추출된
@@ -503,6 +501,14 @@ class Store:
                 )
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_psnap ON platform_snapshots(platform, shortcode, id)")
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS youtube_channel_cache (
+                    seed_value TEXT PRIMARY KEY,
+                    channel_id TEXT,
+                    uploads_playlist TEXT,
+                    resolved_at TEXT
+                )
+            """)
             # 발굴로 찾아 "벤치마크 목록에 추가"한 채널 — collect()가 엑셀 목록과
             # union해 이후 메인 랭킹에도 추적한다(2026-07-12).
             c.execute("""
@@ -537,6 +543,14 @@ class Store:
             # 발굴 피드(누적 모드 시 유지) — 단일행 JSON.
             c.execute("""
                 CREATE TABLE IF NOT EXISTS discovery_feed (
+                    id INTEGER PRIMARY KEY CHECK (id = 1),
+                    items_json TEXT NOT NULL,
+                    updated_at TEXT
+                )
+            """)
+            # 해외HOT 발굴 피드 — discovery_feed와 동일한 단일행 JSON 패턴(2026-07-25).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS overseas_feed (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
                     items_json TEXT NOT NULL,
                     updated_at TEXT
@@ -660,6 +674,10 @@ class Store:
                 ("clean_sources_json", "TEXT"),
                 ("clean_status", "TEXT"),   # null|cleaning|ready|failed
                 ("clean_error", "TEXT"),
+                # 지워진 자막 영역(2026-07-25). 자막제거 시 원본↔클린 프레임 diff로 구한
+                # '어디가 지워졌나' 박스. clean_regions_json={"sources":{vid:box},"primary":box}.
+                # box={x_pct,y_pct(중심),w_pct,h_pct,score}. 5단계 꾸미기가 자막 자동정렬·마커에 쓴다.
+                ("clean_regions_json", "TEXT"),
                 # 유료게이트(2026-07-19): 이 job의 렌더 크레딧을 낸 고객 — 실패 시 환불 귀속.
                 ("customer_id", "INTEGER NOT NULL DEFAULT 0"),
                 # render 크레딧을 과금한 날(YYYY-MM-DD, UTC). 비어있으면 '과금 안 함'.
@@ -909,6 +927,24 @@ class Store:
             return [], None
         return json.loads(row[0]), row[1]
 
+    # ── 해외HOT 발굴 피드 — discovery_feed와 동일한 단일행 JSON 패턴(2026-07-25) ──
+    def save_overseas_feed(self, items):
+        with self._conn() as c:
+            c.execute("CREATE TABLE IF NOT EXISTS overseas_feed(id INTEGER PRIMARY KEY, items_json TEXT, updated_at TEXT)")
+            c.execute(
+                "INSERT INTO overseas_feed(id, items_json, updated_at) VALUES(1, ?, datetime('now')) "
+                "ON CONFLICT(id) DO UPDATE SET items_json=excluded.items_json, updated_at=excluded.updated_at",
+                (json.dumps(items, ensure_ascii=False),),
+            )
+
+    def load_overseas_feed(self):
+        with self._conn() as c:
+            c.execute("CREATE TABLE IF NOT EXISTS overseas_feed(id INTEGER PRIMARY KEY, items_json TEXT, updated_at TEXT)")
+            row = c.execute("SELECT items_json, updated_at FROM overseas_feed WHERE id=1").fetchone()
+        if not row:
+            return [], None
+        return json.loads(row[0]), row[1]
+
     # ── 발굴/정리 채널 관리(2026-07-12) ──
     def add_discovered(self, username, name=""):
         """발굴 채널을 벤치마크 목록에 추가(중복 시 이름 갱신). 제외목록에 있었다면 해제."""
@@ -1115,6 +1151,21 @@ class Store:
                 "SELECT shortcode FROM saved WHERE customer_id=?", (customer_id,)
             ).fetchall()
         return {r[0] for r in rows}
+
+    def yt_cache_get(self, seed_value):
+        """해석 캐시 조회 → (channel_id, uploads_playlist) 또는 None."""
+        with self._conn() as c:
+            row = c.execute("SELECT channel_id, uploads_playlist FROM youtube_channel_cache "
+                            "WHERE seed_value=?", (seed_value,)).fetchone()
+        return (row[0], row[1]) if row else None
+
+    def yt_cache_put(self, seed_value, channel_id, uploads_playlist):
+        """seed→채널 해석 결과 저장(재해석 시 갱신)."""
+        with self._conn() as c:
+            c.execute("INSERT OR REPLACE INTO youtube_channel_cache"
+                      "(seed_value, channel_id, uploads_playlist, resolved_at) "
+                      "VALUES(?,?,?, datetime('now'))",
+                      (seed_value, channel_id, uploads_playlist))
 
     # ── 플랫폼 발굴 시드(유튜브 키워드/채널, 틱톡 계정) ──
     def add_seed(self, platform, kind, value):
@@ -1942,41 +1993,37 @@ class Store:
                     out[sc] = {"subject": subj or "", "keywords": json.loads(kj or "[]")}
         return out
 
-    def save_cn_keyword(self, ko, zh):
-        """한국어 소재 → 중국어 검색어 캐시 저장(덮어쓰기). 트렌드 검색카드용."""
-        ko = (ko or "").strip()
+    def get_translation(self, ko):
+        """한국어 소재 → 저장된 중국어. 없으면 None, 번역실패로 빈값 저장됐으면 ""."""
+        if not ko:
+            return None
+        with self._conn() as c:
+            row = c.execute("SELECT zh FROM translations WHERE ko=?", (ko,)).fetchone()
+        return None if row is None else (row[0] or "")
+
+    def save_translation(self, ko, zh):
+        """번역 저장(덮어쓰기). zh 빈 문자열도 저장 — 반복 호출 방지."""
         if not ko:
             return
         with self._conn() as c:
             c.execute(
-                "INSERT INTO cn_keyword_cache(ko, zh, created_at) VALUES(?,?,datetime('now')) "
-                "ON CONFLICT(ko) DO UPDATE SET zh=excluded.zh, created_at=excluded.created_at",
-                (ko, (zh or "").strip()),
+                "INSERT INTO translations(ko, zh, updated_at) VALUES(?,?,datetime('now')) "
+                "ON CONFLICT(ko) DO UPDATE SET zh=excluded.zh, updated_at=excluded.updated_at",
+                (ko, zh or ""),
             )
 
-    def get_cn_keyword(self, ko):
-        """캐시된 중국어 검색어. 없으면 None(캐시 미스 → 프론트 폴백 B)."""
-        ko = (ko or "").strip()
-        if not ko:
-            return None
-        with self._conn() as c:
-            row = c.execute("SELECT zh FROM cn_keyword_cache WHERE ko=?", (ko,)).fetchone()
-        return (row[0] or "") if row else None
-
-    def cn_keyword_map(self, ko_list):
-        """여러 한국어 소재 → {ko: zh} (캐시에 zh가 있는 것만). 읽기 결합용."""
-        kos = [k.strip() for k in (ko_list or []) if k and k.strip()]
-        if not kos:
+    def translations_map(self, kos):
+        """여러 ko → {ko: zh} (있는 것만). sqlite 변수상한 회피 청크."""
+        keys = [k for k in (kos or []) if k]
+        if not keys:
             return {}
         out = {}
         with self._conn() as c:
-            for i in range(0, len(kos), 400):
-                chunk = kos[i:i + 400]
-                q = "SELECT ko, zh FROM cn_keyword_cache WHERE ko IN (%s)" % \
-                    ",".join("?" * len(chunk))
-                for ko, zh in c.execute(q, chunk).fetchall():
-                    if zh:
-                        out[ko] = zh
+            for i in range(0, len(keys), 400):
+                chunk = keys[i:i + 400]
+                q = "SELECT ko, zh FROM translations WHERE ko IN (%s)" % ",".join("?" * len(chunk))
+                for k, zh in c.execute(q, chunk).fetchall():
+                    out[k] = zh or ""
         return out
 
     def save_candidates(self, shortcode, platform, candidates):
@@ -2449,7 +2496,7 @@ class Store:
                 "preview_status, preview_path, preview_error, "
                 "thumbnail_json, seo_json, "
                 "clean_sources_json, clean_status, clean_error, customer_id, render_charge_day, "
-                "scene_first, backbone_main "
+                "scene_first, backbone_main, clean_regions_json "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -2478,6 +2525,7 @@ class Store:
             "render_charge_day": row[31],
             "scene_first": bool(row[32]),
             "backbone_main": row[33],
+            "clean_regions": json.loads(row[34]) if row[34] else None,
         }
 
     def update_mix_job(self, job_id, **fields):
@@ -2519,6 +2567,10 @@ class Store:
             cols.append("clean_sources_json=?")
             vals.append(json.dumps(fields["clean_sources"], ensure_ascii=False)
                         if fields["clean_sources"] else None)
+        if "clean_regions" in fields:
+            cols.append("clean_regions_json=?")
+            vals.append(json.dumps(fields["clean_regions"], ensure_ascii=False)
+                        if fields["clean_regions"] else None)
         for k, col in (("extract", "extract_json"), ("edit_plan", "edit_plan_json")):
             if k in fields:
                 cols.append(f"{col}=?")

@@ -12,7 +12,8 @@ from shopping_shorts.ranking import build_items, build_youtube_items, build_tikt
 from shopping_shorts.store import Store
 from shopping_shorts.comment_gen import generate as _gen_comments
 from shopping_shorts import ai_categorize, topic_grouper
-from shopping_shorts.youtube_client import search_shorts as yt_search
+from shopping_shorts.youtube_client import search_shorts as yt_search, fetch_channel_shorts as yt_fetch_channel
+from shopping_shorts.youtube_category_presets import preset_keywords
 from shopping_shorts.tiktok_client import fetch_account_videos as tt_fetch
 from shopping_shorts.tiktok_search import search_full as tt_search_full
 
@@ -87,28 +88,47 @@ def generate_missing_drafts(items):
         list(pool.map(_generate_one, items))
 
 
-def _collect_youtube():
-    """유튜브 키워드 시드로 인기 Shorts 발굴 → 조회수 기반 랭킹.
+def _collect_youtube(categories=None):
+    """유튜브 카테고리 프리셋 + 수동 키워드 시드(발굴) + 계정 시드(채널기반) → 조회수 랭킹.
 
-    시드의 kind = 언어코드(ko/en/ja/zh/ru). 언어별로 묶어 각 언어·지역으로
-    검색(regionCode 편향 → 외국영상 혼입 방지). 예전 kind="keyword" 시드는 ko로 취급."""
+    categories=None → 프리셋 전 카테고리 union(전체 딸깍) / ["혼합형"] → 그 카테고리만.
+    프리셋은 lang=ko로 검색. 수동 키워드 시드(kind=언어코드)·계정 시드는 항상 함께 수집.
+    세 경로 raw를 video_id로 중복제거 후 공통 파이프라인."""
     store = Store(DB_PATH)
     seeds = store.list_seeds("youtube")
-    if not seeds:
-        return []
-    # 언어별 키워드 묶음 (kind가 언어코드가 아니면 ko)
     _LANGS = {"ko", "en", "ja", "zh", "ru"}
     by_lang = {}
+    accounts = []
     for s in seeds:
-        lang = s["kind"] if s["kind"] in _LANGS else "ko"
-        by_lang.setdefault(lang, []).append(s["value"])
+        if s["kind"] == "account":
+            accounts.append(s["value"])
+        else:
+            lang = s["kind"] if s["kind"] in _LANGS else "ko"
+            by_lang.setdefault(lang, []).append(s["value"])
     now = datetime.now(timezone.utc)
     after = (now - timedelta(hours=YOUTUBE_WINDOW_HOURS)).strftime("%Y-%m-%dT%H:%M:%SZ")
     raw = []
+    # 카테고리 프리셋(한국어) — 딸깍 수집의 핵심
+    preset = preset_keywords(categories)
+    if preset:
+        raw.extend(yt_search(preset, after, max_per_kw=YOUTUBE_MAX_PER_KW, lang="ko"))
+    # 수동 키워드 시드(언어별)
     for lang, kws in by_lang.items():
         raw.extend(yt_search(kws, after, max_per_kw=YOUTUBE_MAX_PER_KW, lang=lang))
+    # 계정 시드(채널기반)
+    for acc in accounts:
+        raw.extend(yt_fetch_channel(acc, cache_get=store.yt_cache_get,
+                                    cache_put=store.yt_cache_put))
+    # video_id 중복제거(프리셋·수동·계정 겹칠 수 있음) — 첫 등장 우선
+    seen, deduped = set(), []
+    for r in raw:
+        vid = r.get("video_id")
+        if not vid or vid in seen:
+            continue
+        seen.add(vid)
+        deduped.append(r)
     items = build_youtube_items(
-        raw,
+        deduped,
         prev_base=lambda sc: store.prev_base_platform("youtube", sc),
         prev_delta=lambda sc: store.prev_delta_platform("youtube", sc),
         now=now, window_hours=YOUTUBE_WINDOW_HOURS,
@@ -160,7 +180,7 @@ def _collect_tiktok(include_paid_keywords=False):
     return items
 
 
-def collect(platform="instagram", limit_channels=None):
+def collect(platform="instagram", categories=None, limit_channels=None):
     """1회 수집 실행 → 지표·등급 채워진 항목 리스트 반환 + DB 저장.
 
     platform: "instagram"(기본, 엑셀 채널 기반) | "youtube"(키워드 시드 기반,
@@ -170,7 +190,7 @@ def collect(platform="instagram", limit_channels=None):
     호출해야 한다.
     """
     if platform == "youtube":
-        return _collect_youtube()
+        return _collect_youtube(categories)
     if platform == "tiktok":
         return _collect_tiktok()
     if platform != "instagram":

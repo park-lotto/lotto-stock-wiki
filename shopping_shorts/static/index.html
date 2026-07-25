@@ -246,6 +246,10 @@
       <h2>레퍼런스 랭킹</h2>
     </div>
     <div class="desc">443개 레퍼런스 채널의 48시간 이내 릴스를 강도별로 랭킹합니다.</div>
+    <div class="ctypes" id="modeTabs" style="margin-bottom:12px">
+      <div class="ctype active" id="modeRanking" onclick="toggleOverseas(false)">🏠 레퍼런스 랭킹</div>
+      <div class="ctype" id="modeOverseas" onclick="toggleOverseas(true)">🌍 해외HOT</div>
+    </div>
     <!-- 플랫폼 전환 토글 숨김(사장님 2026-07-21, 미사용) — 삭제 아님. switchPlatform·PLATFORM
          로직은 보존해 PLATFORM 기본값 instagram으로 랭킹·수집이 계속 동작하고, 되살리려면
          display:none만 지우면 된다. -->
@@ -253,6 +257,8 @@
       <div class="ctype active" data-platform="instagram" onclick="switchPlatform('instagram',this)">📷 인스타</div>
       <div class="ctype" data-platform="youtube" onclick="switchPlatform('youtube',this)">▶️ 유튜브</div>
       <div class="ctype" data-platform="tiktok" onclick="switchPlatform('tiktok',this)">🎵 틱톡</div>
+      <div class="ctype" data-platform="xiaohongshu" onclick="switchPlatform('xiaohongshu',this)">📕 샤오홍슈</div>
+      <div class="ctype" data-platform="douyin" onclick="switchPlatform('douyin',this)">🎬 도우인</div>
     </div>
     <div id="seedPanel" style="display:none;margin-bottom:12px">
       <div id="ttMode" style="display:none;margin-bottom:6px">
@@ -278,6 +284,16 @@
     </div>
     <div class="toolbar">
       <button id="collectBtn" onclick="doCollect()" style="display:none">⚡ 지금 수집</button>
+      <span id="ytCatBox" style="display:none">
+        <select id="ytCat" style="padding:6px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
+          <option value="홈템">🏠 홈·살림템</option>
+          <option value="비법형">🔥 비법·꿀팁형</option>
+          <option value="제품형">🛒 제품추천형</option>
+          <option value="혼합형">💄 뷰티</option>
+          <option value="기타">📦 기타</option>
+        </select>
+        <button onclick="doCollect(document.getElementById('ytCat').value)">＋ 이 카테고리 수집</button>
+      </span>
       <button id="censusBtn" onclick="doCensus()" style="display:none" title="전 채널을 긁어 활동성 재판정 — 2일 내 안 올린 채널은 정리, 다시 올린 채널은 부활. 가끔만 누르세요(비용).">🌐 전수조사</button>
       <span id="status" style="color:var(--sub);font-size:12px"></span>
     </div>
@@ -324,6 +340,15 @@
     <div class="cards" id="cards">
       <div class="empty">「지금 수집」을 눌러 시작하세요.</div>
     </div>
+    <div id="overseasBox" style="display:none">
+      <div class="ctypes" id="overseasCats" style="margin-bottom:10px"></div>
+      <div class="toolbar">
+        <button onclick="updateOverseas()">⚡ 지금 업데이트</button>
+        <span id="overseasStatus" style="color:var(--sub);font-size:12px"></span>
+      </div>
+      <div id="overseasList"></div>
+    </div>
+    <div id="trendRoot" style="display:none"></div>
     <div id="channelHistoryWrap"></div>
   </main>
   <div class="modal-bg" id="scriptModal">
@@ -368,14 +393,20 @@
     </div>
   </div>
 <script>
-// 유형(제작·수익화 방식) = 초보자 탐색 1차축. topics = 그 유형의 세부주제(2차축).
+// 유형(제작·수익화 방식) = 초보자 탐색축. 2026-07-16 백엔드가 '인테리어'+'생활용품'을
+// '홈템'으로 합치면서 세부주제(2차축)가 사라졌다 — 이제 버튼 1개 = 백엔드 카테고리 1개다.
+// ★버튼은 백엔드가 내는 5개 카테고리(홈템/레시피/가전/뷰티/기타)를 전부 덮어야
+//   '전체 = 버튼 합'이 된다. 홈템·기타 버튼이 없던 옛 매핑에선 두 덩어리가 통째로 누락됐다.
 const CTYPES = [
-  {key:"전체",  label:"✨ 전체",       topics:[]},
-  {key:"비법형", label:"🔥 비법·꿀팁형", topics:["인테리어","레시피"]},
-  {key:"제품형", label:"🛒 제품추천형",  topics:["생활용품","가전"]},
-  {key:"혼합형", label:"💄 뷰티(혼합)",  topics:["뷰티"]},
+  {key:"전체",  label:"✨ 전체",        topics:[]},
+  {key:"홈템",   label:"🏠 홈·살림템",   topics:[]},
+  {key:"비법형", label:"🔥 비법·꿀팁형",  topics:[]},
+  {key:"제품형", label:"🛒 제품추천형",   topics:[]},
+  {key:"혼합형", label:"💄 뷰티",        topics:[]},
+  {key:"기타",   label:"📦 기타",        topics:[]},
 ];
-const TOPIC_CTYPE = {인테리어:"비법형",레시피:"비법형",생활용품:"제품형",가전:"제품형",뷰티:"혼합형",기타:"기타"};
+// 백엔드 category(홈템/레시피/가전/뷰티/기타) → 버튼 key. 모든 값이 CTYPES key와 1:1.
+const TOPIC_CTYPE = {홈템:"홈템", 레시피:"비법형", 가전:"제품형", 뷰티:"혼합형", 기타:"기타"};
 let STATE = {items:[], tab:"comments", ctype:"전체", cat:"전체", q:""};
 let PLATFORM='instagram';
 // ── 플랫폼별 안내문구·지표 툴팁(2026-07-24, 토글 노출 대응) — 인스타 기준 문구를
@@ -402,10 +433,23 @@ function switchPlatform(p, el){
   updatePlatformCopy(p);
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
+  const isTrend = (p==='xiaohongshu' || p==='douyin');
+  document.getElementById('trendRoot').style.display = isTrend ? 'block' : 'none';
+  document.getElementById('cards').style.display = isTrend ? 'none' : '';
+  if(isTrend){
+    // 트렌드 탭: 인스·틱·유튜 전용 패널·후속호출 전부 건너뛴다.
+    document.getElementById('seedPanel').style.display = 'none';
+    document.getElementById('refRegister').style.display = 'none';
+    document.getElementById('ttMode').style.display = 'none';
+    document.getElementById('ttPanel').style.display = 'none';
+    renderTrendCards();
+    return;
+  }
   document.getElementById('seedPanel').style.display = (p==='instagram')?'none':'block';
   document.getElementById('refRegister').style.display = (p==='instagram')?'block':'none';
   if(p==='instagram') loadRefAdded();
   document.getElementById('ttMode').style.display = (p==='tiktok')?'block':'none';
+  document.getElementById('ytCatBox').style.display = (p==='youtube')?'inline':'none';
   document.getElementById('ttPanel').style.display = (p==='tiktok' && ttMode()==='keyword')?'block':'none';
   if(p==='tiktok') loadTtSettings();
   ttModeChange();       // 입력 placeholder·언어선택기·설정패널 표시 갱신
@@ -690,6 +734,72 @@ function badgeHTML(i, ctx){
 // (채널명·소재는 oninput이 이미 필터링. 링크만 엔터라는 명시 동작이 필요 — 유료 렌즈 남용 방지.)
 function _looksLikeUrl(q){ return /^\s*https?:\/\//i.test(q||''); }
 function onSearchEnter(v){ if(_looksLikeUrl(v)) traceByUrl((v||'').trim()); }
+const OVERSEAS_CATS = ["전체","주방/레시피","살림/생활꿀템","인테리어","자취템","가전템","뷰티"];
+let overseasFilter = "전체";
+let overseasItems = [];
+
+let _overseasHidden = [];
+function toggleOverseas(on){
+  document.getElementById('overseasBox').style.display = on ? 'block' : 'none';
+  document.getElementById('modeOverseas').classList.toggle('active', on);
+  document.getElementById('modeRanking').classList.toggle('active', !on);
+  // 랭킹화면(레퍼런스랭킹개편이 재구성)을 통째로 숨긴다 — 하드코딩 id 목록 대신
+  // main의 직계 자식 중 지금 보이는 것만 숨기고, 되돌릴 때 그것만 복원한다.
+  const main = document.querySelector('main');
+  if(on){
+    _overseasHidden = [];
+    if(main) Array.from(main.children).forEach(el=>{
+      if(el.id==='modeTabs' || el.id==='overseasBox') return;
+      if(window.getComputedStyle(el).display !== 'none'){
+        _overseasHidden.push([el, el.style.display]);
+        el.style.display = 'none';
+      }
+    });
+    initOverseasCats(); loadOverseas();
+  } else {
+    _overseasHidden.forEach(([el, prev])=>{ el.style.display = prev; });
+    _overseasHidden = [];
+  }
+}
+function initOverseasCats(){
+  document.getElementById('overseasCats').innerHTML = OVERSEAS_CATS.map(c=>
+    `<div class="ctype${c===overseasFilter?' active':''}" onclick="setOverseasCat('${c}')">${c}</div>`).join('');
+}
+function setOverseasCat(c){ overseasFilter=c; initOverseasCats(); renderOverseas(); }
+async function loadOverseas(){
+  const d=await (await fetch('/api/overseas/feed')).json();
+  overseasItems=d.items||[]; renderOverseas();
+}
+function renderOverseas(){
+  const rows=overseasItems
+    .filter(i=>overseasFilter==='전체'||i.category===overseasFilter)
+    .map(i=>`<tr>
+      <td>${i.thumbnail?`<img src="${i.thumbnail}" width="64" style="border-radius:6px">`:''}</td>
+      <td><b>${i.grade||'—'}</b><div style="color:var(--sub);font-size:12px">속도 ${Math.round(i.speed||0)}</div></td>
+      <td>${i.category||''}</td>
+      <td>${i.gap_badge==='🔥선점가능'?'<span style="color:#37e0bd;font-weight:600">🔥선점가능</span>':(i.gap_badge==='이미유입'?'<span style="color:var(--sub)">이미유입</span>':'<span style="color:var(--sub);opacity:.55">'+(i.gap_badge||'미확인')+'</span>')}</td>
+      <td style="color:var(--sub);font-size:12px">r/${i.username||''} · ${i.media_platform||'reddit'}</td>
+      <td><a href="${i.media_url||i.url}" target="_blank">원본</a>
+          · <a href="${i.url}" target="_blank">레딧</a></td>
+    </tr>`).join('');
+  document.getElementById('overseasList').innerHTML =
+    '<table style="width:100%;border-collapse:collapse"><thead><tr>'
+    +'<th></th><th>강도</th><th>카테고리</th><th>선점</th><th>소스</th><th>링크</th></tr></thead><tbody>'
+    +rows+'</tbody></table>';
+}
+async function updateOverseas(){
+  document.getElementById('overseasStatus').textContent='수집 중…';
+  await fetch('/api/overseas/update');
+  const poll=setInterval(async()=>{
+    const s=await (await fetch('/api/overseas/status')).json();
+    document.getElementById('overseasStatus').textContent=(s.phase||'')+' ('+(s.elapsed||0)+'s)';
+    if(s.status==='done'||s.status==='error'){ clearInterval(poll);
+      document.getElementById('overseasStatus').textContent =
+        s.status==='done' ? `완료 ${s.count}건` : ('오류: '+s.error);
+      loadOverseas(); }
+  },2000);
+}
+
 function render(){
   let items = STATE.items.slice();
   const searching = !!(STATE.q && STATE.q.trim());
@@ -804,11 +914,12 @@ async function readJson(r){
   }
   return r.json();
 }
-async function doCollect(){
+async function doCollect(category){
   const btn=document.getElementById("collectBtn"), st=document.getElementById("status");
   btn.disabled=true; st.textContent="수집 중… (수 분 소요)";
   try{
-    const r = await fetch("/api/collect?platform="+PLATFORM, {method:"POST"});
+    const qs = "/api/collect?platform="+PLATFORM + (category?("&category="+encodeURIComponent(category)):"");
+    const r = await fetch(qs, {method:"POST"});
     const d = await readJson(r);
     if(r.status===429){   // 틱톡 남용/예산 킬스위치
       const label = d.error_code==='budget_exceeded' ? '💰 월 예산 초과' : '🚫 오늘 한도 초과';
@@ -1237,6 +1348,30 @@ async function lensBulkDelete(shortcode){
   st.items=st.items.filter(i=>!sel.has(i.savesc));   // 결과 목록에서 숨김
   st.sel.clear(); renderLens(shortcode);
 }
+// 렌즈 유튜브 결과 = 짜집기 채널들. 그 채널들을 벤치(account 시드)로 등록 → 채널기반 수집에 편입.
+async function lensBenchAllYoutube(shortcode){
+  const st=LENS_STATE[shortcode]; if(!st) return;
+  const urls=(st._shown||[]).filter(i=>i.platform==='youtube').map(i=>i.url).filter(Boolean);
+  if(!urls.length){ showToast('유튜브 결과가 없어요'); return; }
+  showToast(`⏳ 채널 해석 중… (${urls.length}개 영상)`);
+  try{
+    const d=await (await fetch('/api/seeds/from_youtube_videos',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({urls})})).json();
+    if(!d.ok){ showToast('❌ 등록 실패: '+(d.error||'')); return; }
+    showToast(`✅ 벤치 등록 ${d.added}개${d.duplicate?` (이미있음 ${d.duplicate})`:''} <a href="/refs" style="color:var(--sel-fg);margin-left:6px">벤치 보기 →</a>`);
+  }catch(e){ showToast('❌ 등록 실패'); }
+}
+async function lensBenchOne(btn, urlEnc){
+  const url=decodeURIComponent(urlEnc||''); if(!url) return;
+  btn.disabled=true; const orig=btn.textContent; btn.textContent='⏳';
+  try{
+    const d=await (await fetch('/api/seeds/from_youtube_videos',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({urls:[url]})})).json();
+    if(d.ok && d.added){ btn.textContent='✅ 벤치됨'; showToast('✅ 채널 벤치 등록됨'); }
+    else if(d.ok && d.duplicate){ btn.textContent='이미 벤치'; showToast('이미 등록된 채널'); }
+    else { btn.textContent=orig; btn.disabled=false; showToast('❌ 채널 해석 실패'); }
+  }catch(e){ btn.textContent=orig; btn.disabled=false; showToast('❌ 등록 실패'); }
+}
 function _fmtCount(n){
   if(n==null || isNaN(n)) return '';
   n=Number(n);
@@ -1250,6 +1385,106 @@ function _fmtDur(s){
   s=Math.round(Number(s)); const m=Math.floor(s/60), ss=s%60;
   return m+':'+String(ss).padStart(2,'0');
 }
+// ── 트렌드 검색카드(2026-07-24) ──────────────────────
+// 인스·틱·유튜 상위 통합에서 소재를 뽑아 샤오·도우 딥링크 카드로. 순수함수는 node 테스트됨.
+const _TREND_STOP = new Set(['만들기','완성','레시피','털기','또','집에서','하는','추천','리뷰','종','신상털기']);
+function _titleKeyword(title){
+  // 제목에서 핵심 명사구 근사: 이모지·해시태그·괄호 제거 후 불용어 밖 최장 토큰.
+  let t = String(title||'').replace(/[#\[\](){}!?~…·|]/g,' ')
+            .replace(/[\u{1F000}-\u{1FFFF}☀-➿]/gu,' ');
+  const toks = t.split(/\s+/).map(s=>s.trim()).filter(Boolean).filter(w=>!_TREND_STOP.has(w));
+  if(!toks.length) return '';
+  return toks.reduce((a,b)=> b.length>=a.length ? b : a, toks[0]);
+}
+function _extractSubject(item){
+  const vs = (item.vision_subject||'').trim();
+  if(vs) return vs;
+  return _titleKeyword(item.title||'');
+}
+function _normSubjectKey(s){
+  return String(s||'').toLowerCase().replace(/\s+/g,'')
+           .replace(/(을|를|이|가|은|는|의|도|에|와|과|만)$/,'');
+}
+function _score(item){
+  const v = item.views;
+  if(v!=null && !isNaN(v)) return Number(v);
+  const l = item.likes;
+  return (l!=null && !isNaN(l)) ? Number(l) : 0;
+}
+function _groupBySubject(items){
+  const map = new Map();
+  for(const it of (items||[])){
+    const subj = _extractSubject(it);
+    if(!subj) continue;
+    const key = _normSubjectKey(subj);
+    if(!key) continue;
+    let g = map.get(key);
+    if(!g){ g = {subjectKo:subj, items:[], platforms:new Set(), maxScore:0}; map.set(key,g); }
+    g.items.push(it);
+    if(it.platform) g.platforms.add(it.platform);
+    g.maxScore = Math.max(g.maxScore, _score(it));
+  }
+  const groups = [...map.values()].map(g=>({
+    subjectKo:g.subjectKo, items:g.items, platforms:[...g.platforms],
+    count:g.items.length, maxScore:g.maxScore,
+  }));
+  groups.sort((a,b)=> b.maxScore - a.maxScore);
+  return groups;
+}
+// ── 트렌드 검색카드 끝 ──
+
+// 샤오·도우 탭 공유 뷰 — 인스·유튜·틱톡 상위를 소재로 묶어 랭킹. 카드마다 샤오홍슈+도우인 딥링크 둘 다.
+const TREND_TOP_N = 60;
+async function renderTrendCards(){
+  const root = document.getElementById('trendRoot');
+  if(!root) return;
+  root.innerHTML = '<div class="sm-loading">🔥 트렌드 소재 모으는 중…</div>';
+  const plats = ['instagram','youtube','tiktok'];
+  const lists = await Promise.all(plats.map(async p=>{
+    try{
+      const d = await (await fetch('/api/reference?platform='+p)).json();
+      const items = d.items||[];
+      items.forEach(i=>{ i.platform = i.platform||p; });
+      return items;
+    }catch(e){ return []; }
+  }));
+  let all = [].concat(...lists);
+  const groups = _groupBySubject(all);
+  if(!groups.length){
+    root.innerHTML = '<div style="padding:14px;color:var(--sub)">아직 트렌드 소재가 없습니다. 인스타·유튜브·틱톡 탭에서 「지금 수집」을 돌리면 소재가 채워집니다.</div>';
+    return;
+  }
+  const top = groups.slice(0, TREND_TOP_N);
+  // 번역 조회(캐시히트=즉시). 미스는 빈 문자열 → ko 폴백.
+  const zhMap = {};
+  await Promise.all(top.map(async g=>{
+    try{ const d = await (await fetch('/api/translate?q='+encodeURIComponent(g.subjectKo))).json();
+         zhMap[g.subjectKo] = (d && d.zh) || ''; }catch(e){ zhMap[g.subjectKo]=''; }
+  }));
+  const PLAT_EMOJI = {instagram:'📷',youtube:'▶️',tiktok:'🎵'};
+  root.innerHTML = '<div class="cards">' + top.map(g=>{
+    const rep = g.items.reduce((a,b)=> _score(b)>_score(a)?b:a, g.items[0]);
+    const zh = zhMap[g.subjectKo]||'';
+    const q = zh || g.subjectKo;   // zh 없으면 ko 폴백
+    const xhs = _lensSearchUrl('xiaohongshu', q);
+    const dy  = _lensSearchUrl('douyin', q);
+    const pbadges = g.platforms.map(p=>PLAT_EMOJI[p]||'').join('');
+    const thumb = rep.thumbnail ? ('/api/thumb?url='+encodeURIComponent(rep.thumbnail)) : '';
+    return `
+    <div class="card">
+      <div class="thumb"><img src="${thumb}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'"></div>
+      <div class="body" style="padding:8px">
+        <div style="font-weight:600">${esc(g.subjectKo)}${zh?` <span style="color:var(--sub);font-weight:400">· ${esc(zh)}</span>`:''}</div>
+        <div style="font-size:11px;color:var(--sub);margin:4px 0">🔥 ${g.count}개 영상에서 터짐 ${pbadges}</div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <a href="${xhs}" target="_blank" rel="noopener" style="text-decoration:none;padding:4px 10px;border-radius:10px;border:1px solid var(--line);color:#ff2442">📕 샤오홍슈</a>
+          <a href="${dy}" target="_blank" rel="noopener" style="text-decoration:none;padding:4px 10px;border-radius:10px;border:1px solid var(--line);color:var(--txt,inherit)">🎬 도우인</a>
+        </div>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
 // 플랫폼별 검색 페이지 URL(search_links.py의 _URL_BUILDERS와 동일). 바로가기+담기용.
 function _lensSearchUrl(platform, kw){
   const q=encodeURIComponent(kw||'');
@@ -1284,6 +1519,7 @@ function renderLens(shortcode){
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="영상 길이 90초 이하(또는 길이 불명)만 표시"><input type="checkbox" ${st.shortsOnly?'checked':''} onclick="toggleLensShorts('${shortcode}')"> 숏폼만</label>
       <button onclick="lensBulkSave('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">📥 선택 담기(${selCount})</button>
       <button onclick="lensBulkDelete('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">🗑 선택 삭제(${selCount})</button>
+      ${(()=>{const nYt=shown.filter(i=>i.platform==='youtube').length; return nYt?`<button onclick="lensBenchAllYoutube('${shortcode}')" title="이 렌즈 결과의 유튜브 채널들(짜집기 채널)을 전부 벤치 리스트에 등록 → 채널기반 수집에 편입" style="${btnCss};border-color:var(--accent);color:var(--accent);font-weight:700">➕ 유튜브 채널 전부 벤치등록(${nYt})</button>`:'';})()}
       ${st.ytLoading?'<span style="color:var(--sub)">▶️ 유튜브 불러오는 중…</span>':''}
       <a href="/grab" target="_blank" rel="noopener" title="샤오홍슈·도우인·틱톡·인스타 영상에 '📥 담기' 버튼이 안 뜨면 여기서 1회 켜기" style="text-decoration:none;font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--accent);background:#1f6feb1a;color:var(--accent);font-weight:700;margin-left:auto;white-space:nowrap">📥 담기 버튼 켜기</a>
     </div>
@@ -1336,6 +1572,7 @@ function renderLens(shortcode){
         <div class="btns">
           <button class="view" onclick="lensPreview('${shortcode}','${i.savesc}')">▶ 미리보기</button>
           <button class="save${isSaved?' saved':''}" onclick="toggleLensSave('${shortcode}','${i.savesc}',this)">${isSaved?'🎬 담김✓':'📥 담기'}</button>
+          ${i.platform==='youtube'?`<button class="view" title="이 채널을 벤치 리스트에 등록(채널기반 수집 편입)" onclick="lensBenchOne(this,'${encodeURIComponent(i.url||'')}')">➕ 벤치</button>`:''}
         </div>
         <div style="margin-top:4px"><a href="${_openUrl(i.url)}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🔗 원본 열기</a></div>
         <div class="enrich" data-url="${esc(i.url||'')}" data-platform="${esc(plabel||'')}"

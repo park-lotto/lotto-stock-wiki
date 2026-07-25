@@ -1,9 +1,10 @@
-"""저장된 소재 주제(vision_tags.subject)를 중국어 검색어로 미리 번역해 캐시한다 —
-샤오홍슈·도우인 트렌드 검색카드 백필(2026-07-25).
+"""저장된 소재 주제(vision_tags.subject)를 중국어 검색어로 미리 번역해 translations 캐시에
+채운다 — 샤오홍슈·도우인 트렌드 검색카드 벌크 백필(2026-07-25).
 
-트렌드 검색카드 엔드포인트(/api/reference/cn_trend)는 크롤·번역을 호출하지 않고 캐시만
-읽는다(무과금·즉시). 그래서 소재가 새로 쌓일 때마다 이 배치를 돌려 cn_keyword_cache를
-미리 채워둔다. 이미 캐시에 있는 소재는 건너뛴다(재실행 안전·무과금).
+수집훅 _translate_new_subjects는 매 수집마다 새 소재만(상한 있음) 번역한다. 이 스크립트는
+이미 쌓인 모든 소재를 한 번에 채우는 벌크 배치다. 트렌드 검색카드 엔드포인트
+(/api/reference/cn_trend)는 크롤·번역을 호출하지 않고 캐시만 읽으므로(무과금·즉시),
+미리 채워둘수록 카드 버튼이 산다. 이미 캐시에 있는 소재는 건너뛴다(재실행 안전).
 
 캐시 미스가 남으면 프론트가 그 카드의 중국 플랫폼 버튼을 흐리게 처리한다(폴백 B) —
 이 배치를 돌리면 미스가 줄어 버튼이 살아난다.
@@ -29,7 +30,7 @@ def backfill(limit=None):
         subjects = [r[0].strip() for r in c.execute(
             "SELECT DISTINCT subject FROM vision_tags WHERE subject IS NOT NULL AND subject!=''"
         ).fetchall() if r[0] and r[0].strip()]
-    cached = store.cn_keyword_map(subjects)   # 이미 zh 있는 것
+    cached = store.translations_map(subjects)   # 이미 캐시된 것(빈값=번역실패 포함)
     todo = [s for s in subjects if s not in cached]
     if limit:
         todo = todo[:limit]
@@ -37,12 +38,12 @@ def backfill(limit=None):
     done = 0
     for i, subj in enumerate(todo, 1):
         zh = (translate_keyword(subj).get("zh") or "").strip()
+        store.save_translation(subj, zh)   # 빈 zh도 저장 → 반복 호출 방지(수집훅과 동일)
         if zh:
-            store.save_cn_keyword(subj, zh)
             done += 1
             print(f"  [{i}/{len(todo)}] {subj} → {zh}")
         else:
-            print(f"  [{i}/{len(todo)}] {subj} 번역 비어 — 스킵(다음 실행에 재시도)")
+            print(f"  [{i}/{len(todo)}] {subj} 번역 비어 — 빈값 캐시(폴백 B로 표시)")
     print(f"완료: {done}건 번역·캐시됨.")
     return done
 
