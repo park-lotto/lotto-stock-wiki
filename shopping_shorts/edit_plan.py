@@ -601,11 +601,27 @@ def _cut_rhythm_penalty(beats):
     return round(min(0.2, 0.1 * frag + 0.1 * repeat), 3)
 
 
-def _score_candidate(plan, avoid_hooks=None):
+def _length_penalty(beats, target_seconds):
+    """후보 길이가 목표초에서 벗어날수록 감점(2026-07-25 세션#2). 선택이 길이를 무시해 21.3초
+    짜리가 30초 목표에 뽑히던 것(후보 A/B/C 길이 뒤죽박죽)을 막는다. 후보 길이 = 비트별
+    target_seconds 합(≈나레이션 글자수 기준). 목표의 0.9~1.15배는 무감점(약간 넘는 건 conform이
+    흡수) — 벗어나면 편차 비례 감점(최대 0.3). target_seconds 없으면 0(기존 동작 유지)."""
+    if not target_seconds or target_seconds <= 0 or not beats:
+        return 0.0
+    total = sum(float(b.get("target_seconds") or 0.0) for b in beats)
+    if total <= 0:
+        return 0.0
+    ratio = total / target_seconds
+    dev = max(0.0, 0.9 - ratio) + max(0.0, ratio - 1.15)
+    return round(min(0.3, dev), 3)
+
+
+def _score_candidate(plan, avoid_hooks=None, target_seconds=None):
     """후보 추천 점수(0~1): 매칭(fit·억지없음·장면다양성) + 품질(대화체·재미강도). 빈 beats면 0.0.
     avoid_hooks(novelty 감점, belt-and-suspenders): 최근 영상이 쓴 훅 목록. 첫 비트(=훅)가
     그와 n-gram 겹치면 감점 → 프롬프트 회피를 무시하고 같은 훅을 낸 후보가 추천되는 걸 막는다.
-    컷 리듬 감점(T6): 파편화·전역 반복이 심한 후보를 강등한다."""
+    컷 리듬 감점(T6): 파편화·전역 반복이 심한 후보를 강등한다.
+    길이 감점(세션#2): target_seconds가 주어지면 목표초에서 벗어난 후보를 강등한다."""
     beats = plan.get("beats") or []
     if not beats:
         return 0.0
@@ -621,6 +637,7 @@ def _score_candidate(plan, avoid_hooks=None):
     quality = _candidate_quality(beats)          # 나레이션 없으면 0 → 매칭점수만(기존 계약 유지)
     score = 0.75 * match + 0.25 * quality
     score -= _cut_rhythm_penalty(beats)          # T6: 파편·반복 후보 강등(안전망)
+    score -= _length_penalty(beats, target_seconds)  # 세션#2: 목표초 벗어난 후보 강등
     if avoid_hooks:
         hook = beats[0].get("narration") or ""
         overlap = max((_ngram_overlap(hook, h) for h in avoid_hooks), default=0.0)
@@ -1002,7 +1019,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)
         story = {k: r.get(k, "") for k in
                  ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
-        rule_score = _score_candidate(plan, avoid_hooks=avoid_hooks)
+        rule_score = _score_candidate(plan, avoid_hooks=avoid_hooks, target_seconds=target_seconds)
         cand = {"plan": plan, "story": story, "score": rule_score, "recommended": False}
         # ★심사위원(사장님 기준: 대본품질·장면싱크·스토리라인) — judge on일 때만(Gemini 콜).
         # 규칙점수(빠른 계산)와 반반 섞어 최종 순위. 심사 실패는 규칙점수만으로 폴백(무해).
