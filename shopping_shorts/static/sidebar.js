@@ -56,7 +56,7 @@
       "padding:20px 18px;flex-shrink:0;box-sizing:border-box;font-family:'Malgun Gothic',system-ui,sans-serif}" +
     // 메인 로고 = 크고 눈에 띄게(사장님 2026-07-21). 26px·900·자간압축으로 존재감을 준다.
     // 가운데 정렬(사장님 2026-07-25) — 로고는 사이드바 폭의 중앙에 놓는다.
-    ".ss-nav h1{font-size:26px;font-weight:900;letter-spacing:-.5px;margin:6px 0 18px;display:flex;align-items:center;justify-content:center;gap:8px}" +
+    ".ss-nav h1{font-size:26px;font-weight:900;letter-spacing:-.5px;margin:8px 0 20px;display:flex;align-items:center;justify-content:center;gap:8px}" +
     // 계정 패널(2026-07-22) — 로고 바로 아래. 구글아이디·등급·오늘 사용량·가입일·로그아웃.
     ".ss-acct{margin:0 0 16px;background:var(--inset,#0c1412);border:1px solid var(--line,#1e2735);border-radius:14px;padding:14px 14px 12px}" +
     ".ss-acct-top{display:flex;align-items:center;gap:11px}" +
@@ -150,7 +150,7 @@
   // 사장님 선택: 내가 손으로 짠 SVG 대신 AI 원본 그림을 그대로 쓴다.
   // 배경이 투명이라 사이드바 패널에 네모로 안 뜬다(직전 문제 해결).
   var BRAND_SVG =
-    '<img src="/brand-logo.png" alt="숏템메이커" width="28" height="28"' +
+    '<img src="/brand-logo.png" alt="숏템메이커" width="44" height="44"' +
     ' style="flex-shrink:0;filter:drop-shadow(0 0 9px rgba(62,224,191,.45))" decoding="async">';
   var html = "<h1 onclick=\"location.href='/'\" style=\"cursor:pointer\" title=\"홈으로\">" + BRAND_SVG + " <span class=\"ss-brand\">숏템메이커</span></h1>";
   NAV.forEach(function (g) {
