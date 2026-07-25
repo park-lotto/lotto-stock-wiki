@@ -3112,7 +3112,10 @@ _ALLOWED_THUMB_HOSTS = ("cdninstagram.com", "fbcdn.net", "ytimg.com",
                         "ggpht.com", "tiktokcdn.com", "tiktokcdn-us.com",
                         # 샤오훙슈(rednote) 커버 CDN — lens/grab로 담은 영상 썸네일.
                         # 없으면 /api/thumb가 400→제작소 재료 카드에서 샤오훙슈 썸네일만 안 뜸(실측 2026-07-19).
-                        "xhscdn.com")
+                        "xhscdn.com",
+                        # 도우인 커버 CDN(pN-sign.douyinpic.com) — 해외HOT 도우인 카드 썸네일.
+                        # 없으면 도우인 카드가 검게 깨짐(실측 2026-07-26).
+                        "douyinpic.com")
 _ALLOWED_VIDEO_HOSTS = ("cdninstagram.com", "fbcdn.net")
 
 
@@ -3130,6 +3133,8 @@ def api_thumb(url: str):
         ref = "https://www.xiaohongshu.com/"
     elif "tiktokcdn" in url:
         ref = "https://www.tiktok.com/"
+    elif "douyinpic.com" in url:
+        ref = "https://www.douyin.com/"
     try:
         r = requests.get(url, timeout=15, headers={
             "User-Agent": "Mozilla/5.0",
