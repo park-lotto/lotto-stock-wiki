@@ -55,7 +55,8 @@
     ".ss-nav{width:270px;background:var(--panel,#111722);border-right:1px solid var(--line,#1e2735);" +
       "padding:20px 18px;flex-shrink:0;box-sizing:border-box;font-family:'Malgun Gothic',system-ui,sans-serif}" +
     // 메인 로고 = 크고 눈에 띄게(사장님 2026-07-21). 26px·900·자간압축으로 존재감을 준다.
-    ".ss-nav h1{font-size:26px;font-weight:900;letter-spacing:-.5px;margin:2px 0 16px;display:flex;align-items:center;gap:7px}" +
+    // 가운데 정렬(사장님 2026-07-25) — 로고는 사이드바 폭의 중앙에 놓는다.
+    ".ss-nav h1{font-size:26px;font-weight:900;letter-spacing:-.5px;margin:6px 0 18px;display:flex;align-items:center;justify-content:center;gap:8px}" +
     // 계정 패널(2026-07-22) — 로고 바로 아래. 구글아이디·등급·오늘 사용량·가입일·로그아웃.
     ".ss-acct{margin:0 0 16px;background:var(--inset,#0c1412);border:1px solid var(--line,#1e2735);border-radius:14px;padding:14px 14px 12px}" +
     ".ss-acct-top{display:flex;align-items:center;gap:11px}" +
@@ -76,7 +77,7 @@
     // 브랜드 텍스트만 민트 그라디언트(이모지는 제외 — text-fill:transparent가 이모지 글리프까지 비운다)
     // + 은은한 민트 글로우로 강조(drop-shadow는 clip:text에서도 글자 외곽에 먹는다).
     /* 워드마크 v3(2026-07-25): 민트→오로라 + 끝에 골드 마침점. app.py .brand .nm과 같은 규칙 */
-    ".ss-brand{letter-spacing:-.3px;background:linear-gradient(135deg,#3ee0bf 0%,#7fe9d8 42%,#8c6ef0 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;filter:drop-shadow(0 0 12px rgba(62,224,191,.35))}" +
+    ".ss-brand{letter-spacing:-.3px;background:linear-gradient(135deg,#3ee0bf 0%,#a8f2e4 40%,#a78bff 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;filter:drop-shadow(0 0 14px rgba(62,224,191,.55))}" +
     ".ss-brand::after{content:'.';background:none;-webkit-text-fill-color:#facc6b;color:#facc6b;filter:none;margin-left:1px}" +
     // 카테고리 = 박스로 시각 구분 + 크게(사장님 2026-07-21). 그룹을 inset 카드로 감싸고
     // 라벨은 카드 헤더처럼, 항목은 15px·굵게로 키워 눈에 잘 띄고 누르기 쉽게.
@@ -112,7 +113,8 @@
       ".ss-nav{width:100%;border-right:none;border-bottom:1px solid var(--line,#1e2735);display:flex;gap:6px;" +
         "overflow-x:auto;align-items:center;white-space:nowrap;padding:10px 12px}" +
       ".ss-acct{display:none}" +   // 모바일 가로바엔 계정카드 공간이 없다 → /account로
-      ".ss-nav h1{margin:0 8px 0 0;flex-shrink:0;font-size:19px}" +
+      // 모바일 가로바에선 가운데정렬을 되돌린다(옆으로 메뉴가 붙는 자리라 왼쪽 고정)
+      ".ss-nav h1{margin:0 8px 0 0;flex-shrink:0;font-size:19px;justify-content:flex-start}" +
       ".ss-group{margin:0;padding:0;background:none;border:none;display:flex;gap:6px;align-items:center}" +
       ".ss-label{display:none}" +
       ".ss-item{margin:0;padding:6px 10px;flex-shrink:0;font-size:12px}}";
@@ -144,21 +146,23 @@
     });
   }
   // 로고 클릭 = 홈(/)으로(사장님 2026-07-21) — 커서·title로 클릭 가능함을 알린다.
-  // 브랜드 엠블럼(v3, app.py _LOGO_SVG와 동일 도형 — id만 ss- 접두어로 충돌 방지)
-  // 세로 9:16 프레임 + 골드 재생 삼각형 + 홈닷. 24px에서 읽히도록 요소 4개로 제한.
+  // 브랜드 엠블럼 — ★소형 솔리드 변형(2026-07-25, 사장님 "로고 잘 안 보이고 임팩트 없다").
+  // app.py _LOGO_SVG(대형)는 다크 디스크 + 민트 링의 '외곽선형'이다. 그런데 사이드바 배경도
+  // 다크라 디스크가 배경에 묻고 0.8px짜리 링만 남아 20px에선 사실상 사라졌다(실제 화면 확인).
+  // → 작은 크기에선 선이 아니라 '면'이 읽힌다. 그래서 반전시켰다:
+  //   민트→오로라로 꽉 찬 디스크 + 그 위에 다크 9:16 화면 + 골드 재생 삼각형.
+  // 대형 로고와 도형 문법(원·세로프레임·골드플레이)은 같아서 같은 브랜드로 읽힌다.
   var BRAND_SVG =
-    '<svg width="20" height="20" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템메이커" style="flex-shrink:0">' +
-    '<defs><radialGradient id="ssdk" cx="50%" cy="38%" r="70%">' +
-    '<stop offset="0" stop-color="#17223c"/><stop offset="1" stop-color="#070b14"/></radialGradient>' +
-    '<linearGradient id="ssmg" x1="0" y1="0" x2="1" y2="1">' +
+    '<svg width="28" height="28" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템메이커"' +
+    ' style="flex-shrink:0;filter:drop-shadow(0 0 9px rgba(62,224,191,.55))">' +
+    '<defs><linearGradient id="ssmg" x1="0" y1="0" x2="1" y2="1">' +
     '<stop offset="0" stop-color="#3ee0bf"/><stop offset="1" stop-color="#8c6ef0"/></linearGradient>' +
     '<linearGradient id="ssgg" x1="0" y1="0" x2="1" y2="1">' +
     '<stop offset="0" stop-color="#ffe6ae"/><stop offset="1" stop-color="#facc6b"/></linearGradient></defs>' +
-    '<circle cx="32" cy="32" r="29" fill="url(#ssdk)"/>' +
-    '<circle cx="32" cy="32" r="29" stroke="url(#ssmg)" stroke-width="2.6"/>' +
-    '<rect x="23" y="15" width="18" height="31" rx="4.4" stroke="url(#ssmg)" stroke-width="2.6"/>' +
-    '<path d="M29.2 24.1l9.4 6.4-9.4 6.4V24.1z" fill="url(#ssgg)"/>' +
-    '<circle cx="32" cy="51.5" r="2.2" fill="url(#ssgg)"/></svg>';
+    '<circle cx="32" cy="32" r="30" fill="url(#ssmg)"/>' +
+    '<rect x="21.5" y="13.5" width="21" height="34" rx="5.2" fill="#070b14"/>' +
+    '<path d="M28.6 22.9l10.6 7.6-10.6 7.6V22.9z" fill="url(#ssgg)"/>' +
+    '<circle cx="32" cy="53.5" r="2.4" fill="#070b14"/></svg>';
   var html = "<h1 onclick=\"location.href='/'\" style=\"cursor:pointer\" title=\"홈으로\">" + BRAND_SVG + " <span class=\"ss-brand\">숏템메이커</span></h1>";
   NAV.forEach(function (g) {
     html += '<div class="ss-group"><div class="ss-label">' + g.label + "</div>";
