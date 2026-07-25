@@ -3644,7 +3644,7 @@ _BRAND = {
     "name": "숏템메이커",          # 확정(2026-07-20). 한글 주 + 영문 보조 락업.
     "name_en": "SHOTEMMAKER",     # 영문 CI(보조). 로고에 한글 밑 소문자 스페이싱으로.
     "glyph": "📦",
-    "tagline": "폰으로 5분, 편집 몰라도 팔리는 쇼츠가 완성됩니다",
+    "tagline": "쇼핑쇼츠, 이제 10분만에",   # 한줄문구(사장님 2026-07-25 확정)
     # 공개 페이지의 '카톡 문의' 링크(오픈채팅/채널 URL). 비면 /login으로 폴백 — 값만 넣으면 연결.
     "kakao": "",
 }
@@ -3660,7 +3660,7 @@ _GOOGLE_SVG = ('<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6
 
 # 시그니처 심볼 v3(2026-07-25, 숏템메이커 개명과 함께) — '박스'가 이름에서 빠졌으니 모티프도
 # 바꿨다. 세로 프레임은 정확히 9:16(18×32 유닛)=숏폼 그 자체, 그 안의 골드 재생 삼각형=완성된
-# 영상, 아래 골드 닷=폰 홈버튼("폰으로 5분" 태그라인을 도형으로 되받는다). 링은 민트→오로라
+# 영상, 아래 골드 닷=폰 홈버튼(폰으로 만든다는 걸 도형으로 되받는다). 링은 민트→오로라
 # (UI리뉴얼 theme.css --mint #3ee0bf / --aurora #8c6ef0)로 갈아 새 테마와 한 몸이 되게 했다.
 # ★24px(사이드바)에서도 읽히게 요소를 4개로 묶었다 — 잔가지(스파크·스택)는 의도적으로 버렸다.
 _LOGO_SVG = (
@@ -3718,7 +3718,7 @@ def _with_pay(html: str) -> str:
 _LANDING_TMPL = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png">
-<title>__NAME__ — 폰으로 5분, 편집 몰라도 파는 쇼츠 완성</title>
+<title>__NAME__ — 쇼핑쇼츠, 이제 10분만에</title>
 <link rel=preconnect href="https://fonts.googleapis.com">
 <link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel=stylesheet>
@@ -3732,7 +3732,8 @@ a{text-decoration:none;color:inherit}
 .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
 .brand{display:flex;align-items:center;gap:10px}
-.brand .sym{width:34px;height:34px;flex:none;animation:floaty 4s ease-in-out infinite}
+/* 심볼은 글자보다 크면 무거워 보인다(사장님 2026-07-25) — 워드마크 22px 대비 27px로 낮췄다 */
+.brand .sym{width:27px;height:27px;flex:none;animation:floaty 4s ease-in-out infinite}
 .brand .wm{display:flex;flex-direction:column;line-height:1}
 /* 워드마크 v3(2026-07-25): 민트→오로라 그라데이션 + 끝에 골드 마침점(브랜드 포인트).
    ::after 는 background-clip:text를 상속해 투명해지니 text-fill-color를 되돌려 금색을 살린다. */
@@ -3766,7 +3767,7 @@ a{text-decoration:none;color:inherit}
 .sec{padding:50px 0}
 .sec h2{text-align:center;font-size:clamp(24px,3.4vw,30px);font-weight:900;margin-bottom:8px}
 .sec .lead{text-align:center;color:var(--muted);margin-bottom:36px}
-/* PAIN — 기존 3~5시간 vs 숏템메이커 5분 */
+/* PAIN — 기존 3~5시간 vs 숏템메이커 10분 */
 .vs{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:stretch;max-width:860px;margin:0 auto}
 .vs .col{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px 24px}
 .vs .col.new{border-color:rgba(111,240,214,.35);box-shadow:0 0 0 1px rgba(111,240,214,.12) inset}
@@ -3821,8 +3822,8 @@ a{text-decoration:none;color:inherit}
 <a class=brand href="/">__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></a>
 <span style="display:flex;gap:10px;align-items:center"><a class=login href="/pricing">요금</a><a class="login go" href="/login">로그인</a></span></div>
 <div class=hero>
-<span class="badge rise r1">생각 0 · 편집 0 · 딱 5분</span>
-<h1 class="display rise r2">머리 쓸 필요 없어요.<br>시키는 대로 <span class=hl>딸깍</span>, 5분이면 끝.</h1>
+<span class="badge rise r1">생각 0 · 편집 0 · 딱 10분</span>
+<h1 class="display rise r2">머리 쓸 필요 없어요.<br>시키는 대로 <span class=hl>딸깍</span>, 10분이면 끝.</h1>
 <p class="sub rise r3">쇼츠 하나 만들려고 3~5시간씩 붙잡고 계셨죠? 이제 뭘 팔지 고민할 것도 없어요. 지금 제일 잘 팔리는 걸 짚어주면 딸깍 — 대본·영상·목소리·자막까지 AI가 알아서. 60대도, 컴맹도 그대로 됩니다.</p>
 <div class="row rise r4">
 <a class=cta href="/login">무료로 시작하기 →</a>
@@ -3852,27 +3853,27 @@ a{text-decoration:none;color:inherit}
 <li><span class=m>✓</span> 마음에 안 들면 다시 딸깍</li>
 <li><span class=m>✓</span> 바로 올릴 세로 쇼츠 완성</li>
 <li><span class=m>✓</span> 생각도, 손도 안 씀</li></ul>
-<div class=time>5분</div><div class=tl>고르고 딸깍, 그게 전부</div></div></div></div>
+<div class=time>10분</div><div class=tl>고르고 딸깍, 그게 전부</div></div></div></div>
 <div class=sec><div class="money reveal">
 <div class=k>이 시간이면, 몇 개나?</div>
 <h2>같은 반나절에 60개.<br>나 대신 팔러 나갑니다.</h2>
 <div class=big>
-<div class=m><div class=n><span data-to=60>0</span><span class=u>배</span></div><div class=lbl>기존보다 빠르게<br>(3~5시간 → 5분)</div></div>
+<div class=m><div class=n><span data-to=24>0</span><span class=u>배</span></div><div class=lbl>기존보다 빠르게<br>(3~5시간 → 10분)</div></div>
 <div class=m><div class=n><span data-to=10>0</span><span class=u>개</span></div><div class=lbl>하루 30분이면<br>손 안 대고</div></div>
 <div class=m><div class=n><span data-to=300>0</span><span class=u>개</span></div><div class=lbl>한 달이면<br>자동으로 쌓임</div></div></div>
 <div class=note>영상 하나에 <b>내 판매·제휴 링크</b>가 붙습니다. 자는 동안에도 쇼츠가 대신 팔아주는 구조 — 많이 찍어낼수록 유리합니다.</div></div></div>
 <div class=sec>
 <h2 class=reveal>딱 세 번이면 끝나요</h2>
-<div class="lead reveal">기획도 편집도 없이, 완성까지 5분</div>
+<div class="lead reveal">기획도 편집도 없이, 완성까지 10분</div>
 <div class=steps>
 <div class="step reveal"><div class=n>1</div><h3>고민은 안 해요</h3><p>지금 실시간 제일 잘 팔리는 걸 짚어줍니다. 검증된 1등을 그대로 벤치마킹 — 뭘 팔지 정할 필요도 없어요.</p></div>
 <div class="step reveal d1"><div class=n>2</div><h3>딸깍 한 번</h3><p>대본·장면·목소리·자막을 AI가 알아서 붙입니다. 손댈 게 없어요.</p></div>
-<div class="step reveal d2"><div class=n>3</div><h3>5분 뒤 완성</h3><p>바로 올릴 수 있는 세로 쇼츠가 나옵니다. 마음에 안 들면 다시 딸깍.</p></div></div></div>
+<div class="step reveal d2"><div class=n>3</div><h3>10분 뒤 완성</h3><p>바로 올릴 수 있는 세로 쇼츠가 나옵니다. 마음에 안 들면 다시 딸깍.</p></div></div></div>
 <div class=sec>
 <h2 class=reveal>왜 __NAME__인가</h2>
 <div class="lead reveal">파는 사람이 진짜 필요한 것만</div>
 <div class=feat>
-<div class="card reveal"><span class=ic>⏱️</span><div><h3>5분이면 완성</h3><p>기획·촬영·편집으로 반나절 쓰던 걸, 고르고 딸깍하면 5분 만에 끝냅니다.</p></div></div>
+<div class="card reveal"><span class=ic>⏱️</span><div><h3>10분이면 완성</h3><p>기획·촬영·편집으로 반나절 쓰던 걸, 고르고 딸깍하면 10분 만에 끝냅니다.</p></div></div>
 <div class="card reveal d1"><span class=ic>📱</span><div><h3>폰으로도 된다</h3><p>PC도 프로그램 설치도 필요 없어요. 손 안의 폰에서 손가락 몇 번이면 됩니다.</p></div></div>
 <div class="card reveal"><span class=ic>👆</span><div><h3>딸깍 하나면 자동</h3><p>대본·장면·목소리·자막을 전부 AI가. 컴맹이어도, 60대여도 첫날부터 바로 완성합니다.</p></div></div>
 <div class="card reveal d1"><span class=ic>🔥</span><div><h3>지금 뜨는 걸 짚어줌</h3><p>뭘 만들지 고민할 필요 없어요. 실시간 제일 잘 팔리는 걸 골라줘서 검증된 1등만 벤치마킹합니다.</p></div></div></div></div>
@@ -3894,9 +3895,9 @@ a{text-decoration:none;color:inherit}
 <div class=reveal style="text-align:center;margin-top:20px"><a href="/pricing" style="color:var(--mint);font-weight:700;font-size:14px">요금 자세히 보기 →</a></div></div>
 <div class="band reveal">
 <h2>손자한테 안 물어봐도 됩니다</h2>
-<p>지금 5분, 무료로 하나 만들어보세요. 구글 계정이면 3초 · 카드 없이 시작.</p>
+<p>지금 10분, 무료로 하나 만들어보세요. 구글 계정이면 3초 · 카드 없이 시작.</p>
 <a class=cta href="/login">무료로 시작하기 →</a></div>
-<div class=foot>© __NAME__ · 폰으로 5분, 파는 사람을 위한 AI 쇼츠 제작__LEGAL__</div>
+<div class=foot>© __NAME__ · 쇼핑쇼츠, 이제 10분만에__LEGAL__</div>
 </div>
 <script>(function(){var rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
 var rev=document.querySelectorAll('.reveal');
@@ -3941,7 +3942,7 @@ box-shadow:0 34px 90px rgba(0,0,0,.6),0 0 0 1px rgba(111,240,214,.05) inset;
 animation:cardin .5s ease}
 @keyframes cardin{from{opacity:0;transform:scale(.96) translateY(8px)}}
 .emwrap{position:relative;width:94px;height:94px;margin:0 auto}
-.emwrap .sym{position:absolute;inset:8px;width:78px;height:78px;filter:drop-shadow(0 0 16px rgba(111,240,214,.30))}
+.emwrap .sym{position:absolute;inset:8px;width:62px;height:62px;filter:drop-shadow(0 0 16px rgba(62,224,191,.30))}
 @media (prefers-reduced-motion:no-preference){.emwrap .sym{animation:lpulse 3.2s ease-in-out infinite}}
 @keyframes lpulse{50%{filter:drop-shadow(0 0 30px rgba(111,240,214,.55))}}
 .ring{position:absolute;inset:0;border-radius:50%;border:2px solid transparent;
@@ -4053,7 +4054,7 @@ a{text-decoration:none;color:inherit}
 .wrap{max-width:1000px;margin:0 auto;padding:0 24px}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
 .brand{display:flex;align-items:center;gap:10px}
-.brand .sym{width:34px;height:34px;flex:none}
+.brand .sym{width:27px;height:27px;flex:none}
 .brand .wm{display:flex;flex-direction:column;line-height:1}
 /* 워드마크 v3(2026-07-25): 민트→오로라 그라데이션 + 끝에 골드 마침점(브랜드 포인트).
    ::after 는 background-clip:text를 상속해 투명해지니 text-fill-color를 되돌려 금색을 살린다. */
@@ -4153,7 +4154,7 @@ a{text-decoration:none;color:inherit}
 <h2>먼저 써본 분들</h2>
 <div class=lead>(후기 자리 — 실제 후기로 교체 예정)</div>
 <div class=revs>
-<div class=rev><p>"편집 하나도 몰랐는데 하루에 몇 개씩 만들어요. 이게 5분이면 된다는 게 신기합니다."</p><div class=who>— 준비 중</div></div>
+<div class=rev><p>"편집 하나도 몰랐는데 하루에 몇 개씩 만들어요. 이게 10분이면 된다는 게 신기합니다."</p><div class=who>— 준비 중</div></div>
 <div class=rev><p>"뭘 만들지 고민이 제일 힘들었는데, 잘 팔리는 걸 짚어주니 그냥 딸깍만 하면 돼요."</p><div class=who>— 준비 중</div></div></div></div>
 <div class=sec>
 <h2>자주 묻는 질문</h2>
@@ -4187,7 +4188,7 @@ a{text-decoration:none;color:inherit}
 .wrap{max-width:520px;margin:0 auto;padding:0 22px}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
 .brand{display:flex;align-items:center;gap:10px}
-.brand .sym{width:32px;height:32px;flex:none}
+.brand .sym{width:25px;height:25px;flex:none}
 .brand .nm{font-family:'Black Han Sans',sans-serif;font-size:20px;letter-spacing:-.4px;
   background:linear-gradient(135deg,#3ee0bf 0%,#7fe9d8 42%,#8c6ef0 100%);
   -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}

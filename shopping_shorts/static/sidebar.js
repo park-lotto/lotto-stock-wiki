@@ -147,7 +147,7 @@
   // 브랜드 엠블럼(v3, app.py _LOGO_SVG와 동일 도형 — id만 ss- 접두어로 충돌 방지)
   // 세로 9:16 프레임 + 골드 재생 삼각형 + 홈닷. 24px에서 읽히도록 요소 4개로 제한.
   var BRAND_SVG =
-    '<svg width="24" height="24" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템메이커" style="flex-shrink:0">' +
+    '<svg width="20" height="20" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템메이커" style="flex-shrink:0">' +
     '<defs><radialGradient id="ssdk" cx="50%" cy="38%" r="70%">' +
     '<stop offset="0" stop-color="#17223c"/><stop offset="1" stop-color="#070b14"/></radialGradient>' +
     '<linearGradient id="ssmg" x1="0" y1="0" x2="1" y2="1">' +
