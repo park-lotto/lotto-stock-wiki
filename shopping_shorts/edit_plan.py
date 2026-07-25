@@ -56,7 +56,10 @@ def _build_inventory(source_scripts):
     lines = []
     for script in source_scripts:
         vid = script.get("video_id", "")
-        for seg in script.get("segments", []):
+        segs = script.get("segments", [])
+        # 첫·마지막 세그먼트 제외(CTA·썸네일 박제 차단) — 3개 이상일 때만(2개↓면 삭제 안 함).
+        usable = segs[1:-1] if len(segs) >= 3 else segs
+        for seg in usable:
             sid = seg["seg_id"]
             length = round(seg["end"] - seg["start"], 2)
             seg_map[sid] = {
@@ -64,6 +67,8 @@ def _build_inventory(source_scripts):
                 "start": seg["start"], "end": seg["end"],
                 "text": seg.get("text", ""), "scene_desc": seg.get("scene_desc", ""),
                 "action": seg.get("action"),
+                "is_key": bool(seg.get("is_key")),
+                "shot_role": seg.get("shot_role") or "기타",
             }
             _act = seg.get("action")
             _act_s = f" | 행위:{_act}" if _act else ""
