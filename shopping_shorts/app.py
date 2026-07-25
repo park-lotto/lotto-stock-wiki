@@ -3658,22 +3658,24 @@ _GOOGLE_SVG = ('<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6
                '-6.3 0-11.6-3.8-13.5-9.1l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>')
 
 
-# 시그니처 심볼(브랜딩 보드 v1, out/브랜딩_CI_숏템탑스.html) — 박스(제작소)에서 랭킹된
-# 아이템이 쌓여 올라오고 맨 위 한 칸만 골드=TOP 인기템. 박스·대량생산·인기를 한 심볼에.
-_LOGO_SVG = (  # v2 엠블럼(2026-07-23): 다크 디스크+민트 링, 스택 3단(TOP=골드)+상승 화살촉
+# 시그니처 심볼 v3(2026-07-25, 숏템메이커 개명과 함께) — '박스'가 이름에서 빠졌으니 모티프도
+# 바꿨다. 세로 프레임은 정확히 9:16(18×32 유닛)=숏폼 그 자체, 그 안의 골드 재생 삼각형=완성된
+# 영상, 아래 골드 닷=폰 홈버튼("폰으로 5분" 태그라인을 도형으로 되받는다). 링은 민트→오로라
+# (UI리뉴얼 theme.css --mint #3ee0bf / --aurora #8c6ef0)로 갈아 새 테마와 한 몸이 되게 했다.
+# ★24px(사이드바)에서도 읽히게 요소를 4개로 묶었다 — 잔가지(스파크·스택)는 의도적으로 버렸다.
+_LOGO_SVG = (
     '<svg class="sym" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템메이커">'
-    '<defs><radialGradient id="ldk" cx="50%" cy="42%" r="65%">'
-    '<stop offset="0" stop-color="#1c2b25"/><stop offset="1" stop-color="#0b120f"/></radialGradient>'
+    '<defs><radialGradient id="ldk" cx="50%" cy="38%" r="70%">'
+    '<stop offset="0" stop-color="#17223c"/><stop offset="1" stop-color="#070b14"/></radialGradient>'
     '<linearGradient id="lmg" x1="0" y1="0" x2="1" y2="1">'
-    '<stop offset="0" stop-color="#6ff0d6"/><stop offset="1" stop-color="#1f9e7a"/></linearGradient>'
+    '<stop offset="0" stop-color="#3ee0bf"/><stop offset="1" stop-color="#8c6ef0"/></linearGradient>'
     '<linearGradient id="lgg" x1="0" y1="0" x2="1" y2="1">'
-    '<stop offset="0" stop-color="#ffe1a1"/><stop offset="1" stop-color="#f0a93a"/></linearGradient></defs>'
+    '<stop offset="0" stop-color="#ffe6ae"/><stop offset="1" stop-color="#facc6b"/></linearGradient></defs>'
     '<circle cx="32" cy="32" r="29" fill="url(#ldk)"/>'
-    '<circle cx="32" cy="32" r="29" stroke="url(#lmg)" stroke-width="2.4"/>'
-    '<rect x="17.6" y="40" width="28.8" height="6" rx="2.8" fill="#1d8a68"/>'
-    '<rect x="20.8" y="32" width="22.4" height="6" rx="2.8" fill="url(#lmg)"/>'
-    '<rect x="24" y="24" width="16" height="6" rx="2.8" fill="url(#lgg)"/>'
-    '<path d="M32 13.8l8 8.2H24l8-8.2z" fill="url(#lgg)"/></svg>')
+    '<circle cx="32" cy="32" r="29" stroke="url(#lmg)" stroke-width="2.6"/>'
+    '<rect x="23" y="15" width="18" height="31" rx="4.4" stroke="url(#lmg)" stroke-width="2.6"/>'
+    '<path d="M29.2 24.1l9.4 6.4-9.4 6.4V24.1z" fill="url(#lgg)"/>'
+    '<circle cx="32" cy="51.5" r="2.2" fill="url(#lgg)"/></svg>')
 
 
 # 공개 페이지 하단 법적 고지 링크(약관·개인정보·환불). 모든 대문/로그인 푸터에 __LEGAL__로 주입.
@@ -3732,8 +3734,15 @@ a{text-decoration:none;color:inherit}
 .brand{display:flex;align-items:center;gap:10px}
 .brand .sym{width:34px;height:34px;flex:none;animation:floaty 4s ease-in-out infinite}
 .brand .wm{display:flex;flex-direction:column;line-height:1}
-.brand .nm{font-family:'Black Han Sans',sans-serif;font-size:22px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-.brand .en{font-family:ui-monospace,monospace;font-size:9px;letter-spacing:2.4px;color:var(--faint);margin-top:2px}
+/* 워드마크 v3(2026-07-25): 민트→오로라 그라데이션 + 끝에 골드 마침점(브랜드 포인트).
+   ::after 는 background-clip:text를 상속해 투명해지니 text-fill-color를 되돌려 금색을 살린다. */
+.brand .nm{font-family:'Black Han Sans',sans-serif;font-size:22px;letter-spacing:-.4px;
+  background:linear-gradient(135deg,#3ee0bf 0%,#7fe9d8 42%,#8c6ef0 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  -webkit-text-fill-color:transparent;filter:drop-shadow(0 0 10px rgba(62,224,191,.32))}
+.brand .nm::after{content:'.';background:none;-webkit-text-fill-color:#facc6b;color:#facc6b;
+  filter:none;margin-left:1px}
+.brand .en{font-family:ui-monospace,monospace;font-size:9px;letter-spacing:2.8px;color:#4c8f85;margin-top:3px}
 .nav .login{color:var(--txt);font-size:15.5px;font-weight:700;padding:7px 12px;border-radius:9px}
 .nav .login:hover{color:var(--mint);background:rgba(111,240,214,.08)}
 .nav .login.go{color:#062018;background:var(--grad)}
@@ -3940,8 +3949,13 @@ border-top-color:#6ff0d6;border-right-color:rgba(111,240,214,.35);opacity:0;tran
 body.booting .ring{opacity:1;animation:spin .9s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .wm{display:flex;flex-direction:column;line-height:1;align-items:center;margin-top:13px}
-.nm{font-family:'Black Han Sans',sans-serif;font-size:31px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);-webkit-background-clip:text;background-clip:text;color:transparent}
-.en{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:3.4px;color:#7a9090;margin-top:5px}
+/* 로그인 락업 — 브랜드가 가장 크게 보이는 자리. 워드마크 v3 동일 규칙(민트→오로라+골드 마침점) */
+.nm{font-family:'Black Han Sans',sans-serif;font-size:31px;letter-spacing:-.6px;
+  background:linear-gradient(135deg,#3ee0bf 0%,#7fe9d8 42%,#8c6ef0 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  -webkit-text-fill-color:transparent;filter:drop-shadow(0 0 14px rgba(62,224,191,.34))}
+.nm::after{content:'.';background:none;-webkit-text-fill-color:#facc6b;color:#facc6b;filter:none;margin-left:2px}
+.en{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:3.8px;color:#4c8f85;margin-top:6px}
 .ver{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:2px;color:#3f5a54;margin-top:9px}
 .boot{max-height:120px;margin:18px 0 2px;transition:opacity .4s ease,max-height .45s ease .2s,margin .45s ease .2s;overflow:hidden;text-align:left}
 .boot.done{opacity:0;max-height:0;margin:0}
@@ -4041,8 +4055,15 @@ a{text-decoration:none;color:inherit}
 .brand{display:flex;align-items:center;gap:10px}
 .brand .sym{width:34px;height:34px;flex:none}
 .brand .wm{display:flex;flex-direction:column;line-height:1}
-.brand .nm{font-family:'Black Han Sans',sans-serif;font-size:22px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-.brand .en{font-family:ui-monospace,monospace;font-size:9px;letter-spacing:2.4px;color:var(--faint);margin-top:2px}
+/* 워드마크 v3(2026-07-25): 민트→오로라 그라데이션 + 끝에 골드 마침점(브랜드 포인트).
+   ::after 는 background-clip:text를 상속해 투명해지니 text-fill-color를 되돌려 금색을 살린다. */
+.brand .nm{font-family:'Black Han Sans',sans-serif;font-size:22px;letter-spacing:-.4px;
+  background:linear-gradient(135deg,#3ee0bf 0%,#7fe9d8 42%,#8c6ef0 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  -webkit-text-fill-color:transparent;filter:drop-shadow(0 0 10px rgba(62,224,191,.32))}
+.brand .nm::after{content:'.';background:none;-webkit-text-fill-color:#facc6b;color:#facc6b;
+  filter:none;margin-left:1px}
+.brand .en{font-family:ui-monospace,monospace;font-size:9px;letter-spacing:2.8px;color:#4c8f85;margin-top:3px}
 .nav a.top{color:var(--muted);font-size:14px;font-weight:600}.nav a.top:hover{color:var(--mint)}
 .hero{text-align:center;max-width:700px;margin:0 auto;padding:52px 0 36px}
 .eyebrow{font-size:12px;letter-spacing:.2em;color:var(--mint);font-weight:700;margin-bottom:14px}
@@ -4167,7 +4188,10 @@ a{text-decoration:none;color:inherit}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
 .brand{display:flex;align-items:center;gap:10px}
 .brand .sym{width:32px;height:32px;flex:none}
-.brand .nm{font-family:'Black Han Sans',sans-serif;font-size:20px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand .nm{font-family:'Black Han Sans',sans-serif;font-size:20px;letter-spacing:-.4px;
+  background:linear-gradient(135deg,#3ee0bf 0%,#7fe9d8 42%,#8c6ef0 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.brand .nm::after{content:'.';background:none;-webkit-text-fill-color:#facc6b;color:#facc6b;margin-left:1px}
 .nav .back{color:var(--muted);font-size:14px;font-weight:600}.nav .back:hover{color:var(--mint)}
 h1{font-family:'Black Han Sans',sans-serif;font-size:30px;margin:16px 0 22px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:16px}
