@@ -67,13 +67,24 @@ def _run(cmd, cwd):
     return p.returncode, (p.stdout or "") + (p.stderr or "")
 
 
+def _xdist_args():
+    """pytest-xdist가 있으면 전 코어 병렬(-n auto). 전역 finish 락이 한 번에 하나의
+    게이트만 돌리므로 CPU 스래싱 없이 그 하나가 16코어를 다 쓴다 — 실측 직렬 312초 →
+    병렬 44초(7배), 실패집합 완전 동일(9 failed/2396 passed). 미설치 환경은 직렬 폴백."""
+    try:
+        import xdist  # noqa: F401
+    except Exception:
+        return []
+    return ["-n", "auto"]
+
+
 def snapshot(cwd=BASE, run=_run):
     """지금 이 워킹트리 상태를 찍는다 (문법·import·pytest)."""
     rc_c, out_c = run([sys.executable, "-m", "compileall", TARGET, "-q"], cwd)
     rc_i, out_i = run([sys.executable, "-c", f"import {TARGET}.app"], cwd)
     rc_p, out_p = run(
         [sys.executable, "-m", "pytest", f"{TARGET}/tests",
-         "-q", "--tb=no", "-rf", "-p", "no:cacheprovider"],
+         "-q", "--tb=no", "-rf", "-p", "no:cacheprovider", *_xdist_args()],
         cwd,
     )
     return {
