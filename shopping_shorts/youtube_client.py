@@ -263,6 +263,51 @@ def fetch_channel_shorts(seed, max_videos=50, cache_get=None, cache_put=None):
     return out
 
 
+# 영상 URL → video_id (watch?v= / youtu.be/ / shorts/ / embed/)
+_VIDEO_ID_RE = re.compile(
+    r"(?:youtu\.be/|youtube\.com/(?:watch\?(?:.*&)?v=|shorts/|embed/))([A-Za-z0-9_-]+)")
+
+
+def _video_id_from_url(url):
+    """유튜브 영상 URL에서 video_id 추출. 비유튜브/파싱실패 → None."""
+    if not url:
+        return None
+    m = _VIDEO_ID_RE.search(url)
+    return m.group(1) if m else None
+
+
+def channels_from_video_urls(urls):
+    """유튜브 영상 URL 리스트 → 소속 채널 [{channel_id, channel_title, channel_url}].
+
+    같은 채널은 1개로(첫 등장 순서 보존). videos.list(part=snippet, id=배치50)로
+    channelId·channelTitle을 해석한다(0 units는 아니고 videos.list 1회/배치).
+    비유튜브 URL·해석실패는 조용히 건너뛴다. 유튜브 영상이 하나도 없으면 API 호출 없이 []."""
+    vids, seen_vid = [], set()
+    for u in urls or []:
+        vid = _video_id_from_url(u)
+        if vid and vid not in seen_vid:
+            seen_vid.add(vid)
+            vids.append(vid)
+    if not vids:
+        return []
+    out, seen_ch = [], set()
+    for i in range(0, len(vids), 50):                      # videos.list 상한 50
+        chunk = vids[i:i + 50]
+        vd, _ = _first_ok(_VIDEOS_URL, {"part": "snippet", "id": ",".join(chunk)})
+        for it in ((vd or {}).get("items") or []):
+            sn = it.get("snippet") or {}
+            cid = sn.get("channelId")
+            if not cid or cid in seen_ch:
+                continue
+            seen_ch.add(cid)
+            out.append({
+                "channel_id": cid,
+                "channel_title": sn.get("channelTitle") or "",
+                "channel_url": f"https://www.youtube.com/channel/{cid}",
+            })
+    return out
+
+
 def enrich_youtube(url):
     """유튜브 URL → 채널·지표·인기댓글·캡션 통합 dict. 유튜브 아니면 None,
     쿼터소진(전 키 403) 시 {"status": "quota"}.
