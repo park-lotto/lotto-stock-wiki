@@ -437,13 +437,21 @@ function switchPlatform(p, el){
   document.getElementById('trendRoot').style.display = isTrend ? 'block' : 'none';
   document.getElementById('cards').style.display = isTrend ? 'none' : '';
   if(isTrend){
-    // 트렌드 탭: 인스·틱·유튜 전용 패널·후속호출 전부 건너뛴다.
-    document.getElementById('seedPanel').style.display = 'none';
-    document.getElementById('refRegister').style.display = 'none';
-    document.getElementById('ttMode').style.display = 'none';
-    document.getElementById('ttPanel').style.display = 'none';
+    // 트렌드 탭: 수집은 인스·틱·유튜에서만 한다(중국앱은 크롤 불가). 그래서 여기선
+    // 수집버튼·수집상태·전수조사·시스템상태·등록패널을 전부 숨기고 renderTrendCards의
+    // '🔄 새로고침'만 쓴다. 안 숨기면 '0건 수집'처럼 의미없는 표시가 남아 혼란(2026-07-25).
+    ['seedPanel','refRegister','ttMode','ttPanel','collectBtn','ytCatBox','censusBtn','statusBox'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.style.display='none';
+    });
+    const _st=document.getElementById('status'); if(_st) _st.textContent='';
     renderTrendCards();
     return;
+  }
+  // 트렌드 탭에서 돌아오면 숨겼던 관리자 운영버튼을 복원(비관리자는 원래 숨김 유지).
+  if(window.IS_ADMIN){
+    ['collectBtn','censusBtn','statusBox'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.style.display='';
+    });
   }
   document.getElementById('seedPanel').style.display = (p==='instagram')?'none':'block';
   document.getElementById('refRegister').style.display = (p==='instagram')?'block':'none';
@@ -1461,8 +1469,13 @@ async function renderTrendCards(){
   }));
   let all = [].concat(...lists);
   const groups = _groupBySubject(all);
+  // 트렌드 탭 전용 안내+새로고침 바 — 이 탭은 수집을 안 하고(중국앱 크롤 불가) 인스·틱·유튜
+  // 랭킹에서 소재를 뽑아 보여준다. '새로고침'은 그 최신 랭킹을 다시 읽어 카드를 다시 그린다.
+  const _hdr = '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
+    + '<button onclick="renderTrendCards()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt);cursor:pointer">🔄 트렌드 새로고침</button>'
+    + '<span style="font-size:11px;color:var(--sub)">인스타·유튜브·틱톡에서 「지금 수집」한 랭킹으로 만든 트렌드입니다 — 이 탭엔 별도 수집이 없어요.</span></div>';
   if(!groups.length){
-    root.innerHTML = '<div style="padding:14px;color:var(--sub)">아직 트렌드 소재가 없습니다. 인스타·유튜브·틱톡 탭에서 「지금 수집」을 돌리면 소재가 채워집니다.</div>';
+    root.innerHTML = _hdr + '<div style="padding:14px;color:var(--sub)">아직 트렌드 소재가 없습니다. 인스타·유튜브·틱톡 탭에서 「지금 수집」을 돌리면 소재가 채워집니다.</div>';
     return;
   }
   const top = groups.slice(0, TREND_TOP_N);
@@ -1473,7 +1486,7 @@ async function renderTrendCards(){
          zhMap[g.subjectKo] = (d && d.zh) || ''; }catch(e){ zhMap[g.subjectKo]=''; }
   }));
   const PLAT_EMOJI = {instagram:'📷',youtube:'▶️',tiktok:'🎵'};
-  root.innerHTML = '<div class="cards">' + top.map(g=>{
+  root.innerHTML = _hdr + '<div class="cards">' + top.map(g=>{
     const rep = g.items.reduce((a,b)=> _score(b)>_score(a)?b:a, g.items[0]);
     const zh = zhMap[g.subjectKo]||'';
     // 폴백 B(2026-07-25 사장님 결정): zh 없으면 한국어를 중국 검색창에 넣어봐야 무의미 →
