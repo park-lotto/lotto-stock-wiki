@@ -82,9 +82,39 @@ def harvest(top_n=30, dry=False):
             "added": added, "csv": buf.getvalue()}
 
 
+def harvest_from_ranking(dry=False):
+    """저장된 last_run 랭킹에서 유니크 채널을 뽑아 등록(API/쿼터 0회).
+
+    build_youtube_items가 username=channel_id를 이미 담아 저장하므로 재검색 없이
+    수백 개 채널을 무료로 수확한다. 검색 기반 harvest보다 우선 쓰는 게 좋다."""
+    store = Store(DB_PATH)
+    items, _ = store.load_last_run_platform("youtube")
+    existing = {(s["value"] or "").lower() for s in store.list_seeds("youtube")
+                if s["kind"] == "account"}
+    seen, added = set(), 0
+    for i in items:
+        cid = i.get("username")
+        if not cid or cid in seen:
+            continue
+        seen.add(cid)
+        url = f"https://www.youtube.com/channel/{cid}"
+        if url.lower() in existing:
+            continue
+        if not dry:
+            store.add_seed("youtube", "account", url)
+            existing.add(url.lower())
+        added += 1
+    return {"unique": len(seen), "added": added}
+
+
 def main(argv):
     top_n = 30
     dry = "--dry" in argv
+    if "--from-ranking" in argv:
+        r = harvest_from_ranking(dry=dry)
+        print(f"[harvest] 저장 랭킹에서 수확{' (DRY)' if dry else ''}: "
+              f"유니크 {r['unique']}개 · {'등록예정' if dry else '신규등록'} {r['added']}개")
+        return 0
     for a in argv:
         if a.isdigit():
             top_n = int(a)

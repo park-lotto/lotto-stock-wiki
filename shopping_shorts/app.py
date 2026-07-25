@@ -17,7 +17,7 @@ import requests
 from fastapi import BackgroundTasks, FastAPI, Request, UploadFile, File, Form
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
-from shopping_shorts.service import collect, census, generate_missing_drafts, next_draft_targets
+from shopping_shorts.service import collect, census, generate_missing_drafts, next_draft_targets, youtube_channel_board
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
 from shopping_shorts.auto_run import run_auto_job, default_stages
@@ -530,6 +530,12 @@ def api_seeds_add(body: dict):
         return JSONResponse(status_code=422, content={"ok": False, "error": "platform·value 필요"})
     Store(DB_PATH).add_seed(p, (body.get("kind") or "keyword").strip(), v)
     return {"ok": True}
+
+
+@app.get("/api/youtube/channels")
+def api_youtube_channels(sort: str = "views"):
+    """등록 유튜브 채널 리더보드(레퍼런스 랭킹식 지표: 조회수·속도·참여율·가속)."""
+    return {"ok": True, **youtube_channel_board(sort=sort)}
 
 
 @app.post("/api/seeds/from_youtube_videos")
