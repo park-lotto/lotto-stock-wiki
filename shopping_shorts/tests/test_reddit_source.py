@@ -106,19 +106,26 @@ def test_fetch_subreddit_swallows_errors(monkeypatch):
 
 
 # ── 429 백오프(익명 RSS·데이터센터 IP) ──
+class _FakeOpener:
+    def __init__(self, exc):
+        self._exc = exc
+    def open(self, req, timeout=15):
+        raise self._exc
+
+
 def test_http_get_maps_429_to_ratelimited(monkeypatch):
-    def raise_429(req, timeout=15):
-        raise urllib.error.HTTPError(req.full_url, 429, "Too Many Requests", {}, None)
-    monkeypatch.setattr(rs.urllib.request, "urlopen", raise_429)
+    exc = urllib.error.HTTPError(
+        "https://www.reddit.com/r/x/rising.rss", 429, "Too Many Requests", {}, None)
+    monkeypatch.setattr(rs, "_opener", lambda: _FakeOpener(exc))
     import pytest
     with pytest.raises(rs.RateLimited):
         rs._http_get("https://www.reddit.com/r/x/rising.rss")
 
 
 def test_http_get_non_429_propagates(monkeypatch):
-    def raise_403(req, timeout=15):
-        raise urllib.error.HTTPError(req.full_url, 403, "Forbidden", {}, None)
-    monkeypatch.setattr(rs.urllib.request, "urlopen", raise_403)
+    exc = urllib.error.HTTPError(
+        "https://www.reddit.com/r/x/rising.rss", 403, "Forbidden", {}, None)
+    monkeypatch.setattr(rs, "_opener", lambda: _FakeOpener(exc))
     import pytest
     with pytest.raises(urllib.error.HTTPError):
         rs._http_get("https://www.reddit.com/r/x/rising.rss")
@@ -154,6 +161,23 @@ def test_fetch_subreddit_429_gives_up_after_retries(monkeypatch):
     monkeypatch.setattr(rs, "_RL_BACKOFF", [0.0, 0.0, 0.0])
     assert rs.fetch_subreddit("x") == []
     assert calls["n"] == 4          # 최초 1 + 재시도 3
+
+
+# ── 프록시(주거용 IP) ──
+def test_proxies_none_when_unset(monkeypatch):
+    monkeypatch.setattr(rs, "REDDIT_PROXY", "")
+    assert rs._proxies() is None
+
+
+def test_proxies_dict_when_set(monkeypatch):
+    monkeypatch.setattr(rs, "REDDIT_PROXY", "http://u:p@host:80")
+    assert rs._proxies() == {"http": "http://u:p@host:80", "https": "http://u:p@host:80"}
+
+
+def test_opener_uses_proxy_handler_when_set(monkeypatch):
+    monkeypatch.setattr(rs, "REDDIT_PROXY", "http://u:p@host:80")
+    op = rs._opener()
+    assert any(isinstance(h, rs.urllib.request.ProxyHandler) for h in op.handlers)
 
 
 # ── OAuth(권장 경로) ──
