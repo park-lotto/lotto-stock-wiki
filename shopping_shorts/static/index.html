@@ -196,6 +196,7 @@
 #censusBtn{background:var(--inset);color:var(--txt);border:1px solid var(--line)}
 #censusBtn:hover{border-color:var(--accent);box-shadow:0 0 0 1px rgba(55,224,189,.4),0 10px 28px -12px rgba(55,224,189,.6)}
 #status{font-variant-numeric:tabular-nums}
+@keyframes cpSpin{to{transform:rotate(360deg)}}
 /* system status — 관리자 전용 접이식 패널 */
 #statusBox{margin:2px 0 14px;border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative;
   background:linear-gradient(180deg,var(--panel),var(--inset))}
@@ -296,6 +297,12 @@
       </span>
       <button id="censusBtn" onclick="doCensus()" style="display:none" title="전 채널을 긁어 활동성 재판정 — 2일 내 안 올린 채널은 정리, 다시 올린 채널은 부활. 가끔만 누르세요(비용).">🌐 전수조사</button>
       <span id="status" style="color:var(--sub);font-size:12px"></span>
+    </div>
+    <!-- 수집 진행/결과 배너(2026-07-25) — 작은 회색 status는 놓치기 쉬워 큰 배너로 상태를 확실히 보인다. -->
+    <div id="collectProgress" style="display:none;margin:2px 0 12px;padding:12px 16px;border-radius:12px;font-size:14px;border:1px solid var(--line);background:var(--inset);display:none;align-items:center;gap:12px">
+      <span id="cpSpin" style="display:inline-block;width:18px;height:18px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:cpSpin .8s linear infinite"></span>
+      <div style="flex:1"><div id="cpMsg" style="font-weight:600">수집 중…</div><div id="cpSub" style="font-size:12px;color:var(--sub);margin-top:2px"></div></div>
+      <button id="cpRetry" onclick="doCollect(window._lastCollectCat)" style="display:none;padding:5px 12px;border-radius:8px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer">다시 시도</button>
     </div>
     <details id="statusBox" open style="display:none">
       <summary>⚙️ 시스템 상태<span class="live">실시간</span><span class="chev">▾</span></summary>
@@ -440,7 +447,7 @@ function switchPlatform(p, el){
     // 트렌드 탭: 수집은 인스·틱·유튜에서만 한다(중국앱은 크롤 불가). 그래서 여기선
     // 수집버튼·수집상태·전수조사·시스템상태·등록패널을 전부 숨기고 renderTrendCards의
     // '🔄 새로고침'만 쓴다. 안 숨기면 '0건 수집'처럼 의미없는 표시가 남아 혼란(2026-07-25).
-    ['seedPanel','refRegister','ttMode','ttPanel','collectBtn','ytCatBox','censusBtn','statusBox'].forEach(id=>{
+    ['seedPanel','refRegister','ttMode','ttPanel','collectBtn','ytCatBox','censusBtn','statusBox','collectProgress'].forEach(id=>{
       const el=document.getElementById(id); if(el) el.style.display='none';
     });
     const _st=document.getElementById('status'); if(_st) _st.textContent='';
@@ -969,9 +976,36 @@ async function readJson(r){
   }
   return r.json();
 }
+// 수집 진행 배너 헬퍼(2026-07-25) — 수집은 수 분짜리 요청이라 진행상태를 크게 보여야
+// "검색 중인지/실패인지" 사장님이 안다. 경과 초를 세고, 실패는 원인별로 안내한다.
+let _cpTimer=null;
+function _cpEls(){ return {box:document.getElementById('collectProgress'),
+  spin:document.getElementById('cpSpin'), msg:document.getElementById('cpMsg'),
+  sub:document.getElementById('cpSub'), retry:document.getElementById('cpRetry')}; }
+function _cpShowRunning(){
+  const e=_cpEls(); if(!e.box) return;
+  e.box.style.display='flex'; e.spin.style.display='inline-block'; e.retry.style.display='none';
+  e.msg.textContent='🔄 수집 중… 0초 경과';
+  e.sub.textContent='채널을 훑는 중이라 수 분 걸릴 수 있어요 — 이 창을 닫지 말고 기다려 주세요.';
+  const t0=Date.now();
+  clearInterval(_cpTimer);
+  _cpTimer=setInterval(()=>{ const s=Math.round((Date.now()-t0)/1000); e.msg.textContent=`🔄 수집 중… ${s}초 경과`; }, 1000);
+}
+function _cpDone(msg){
+  const e=_cpEls(); if(!e.box) return; clearInterval(_cpTimer);
+  e.spin.style.display='none'; e.retry.style.display='none'; e.msg.textContent=msg;
+  e.sub.textContent='';
+  setTimeout(()=>{ if(e.box && e.msg.textContent===msg) e.box.style.display='none'; }, 6000);
+}
+function _cpFail(msg, sub){
+  const e=_cpEls(); if(!e.box) return; clearInterval(_cpTimer);
+  e.box.style.display='flex'; e.spin.style.display='none'; e.msg.textContent=msg;
+  e.sub.textContent=sub||''; e.retry.style.display='inline-block';
+}
 async function doCollect(category){
+  window._lastCollectCat = category;   // '다시 시도' 버튼이 같은 조건으로 재호출
   const btn=document.getElementById("collectBtn"), st=document.getElementById("status");
-  btn.disabled=true; st.textContent="수집 중… (수 분 소요)";
+  btn.disabled=true; st.textContent="수집 중…"; _cpShowRunning();
   try{
     const qs = "/api/collect?platform="+PLATFORM + (category?("&category="+encodeURIComponent(category)):"");
     const r = await fetch(qs, {method:"POST"});
@@ -979,14 +1013,26 @@ async function doCollect(category){
     if(r.status===429){   // 틱톡 남용/예산 킬스위치
       const label = d.error_code==='budget_exceeded' ? '💰 월 예산 초과' : '🚫 오늘 한도 초과';
       st.textContent = `${label} — ${d.error||''}`;
-      return;
+      _cpFail(label, d.error||''); return;
+    }
+    if(r.status===502 || r.status===503 || r.status===504){
+      // 게이트웨이/재시작 — 배포로 서버가 잠깐 죽었을 때 자주 뜬다.
+      st.textContent="⚠️ 서버 재시작 중";
+      _cpFail('⚠️ 서버가 잠깐 재시작 중이에요', '배포 반영 중일 수 있어요 — 1~2분 뒤 「다시 시도」를 눌러 주세요.'); return;
     }
     if(!d.ok) throw new Error(d.error||"실패");
     STATE.items = d.items; st.textContent=`✅ ${d.count}건 수집 (${fmtTime(d.collected_at)})`;
+    _cpDone(`✅ ${d.count}건 수집 완료 (${fmtTime(d.collected_at)})`);
     render();
     if(PLATFORM==='tiktok') loadTtSettings();   // 하루 남은 횟수·지출 갱신
     else { _pollVisionTags(5); _pollBankIngest(8); }   // 태깅 병합 + 대본은행 자동적재 보고
-  }catch(e){ st.textContent="❌ "+e.message; }
+  }catch(e){
+    st.textContent="❌ "+e.message;
+    // 네트워크 끊김(fetch 자체 실패)=배포 재시작/연결 끊김일 가능성이 크다 → 재시도 안내.
+    const neterr = (e instanceof TypeError) || /Failed to fetch|NetworkError|network/i.test(e.message||'');
+    if(neterr) _cpFail('⚠️ 서버 연결이 끊겼어요', '수집 도중 서버가 재시작(배포)됐을 수 있어요 — 1~2분 뒤 「다시 시도」를 눌러 주세요. (수집이 서버에서 이미 끝났다면 「마지막 수집」 시각이 갱신돼 있을 수 있어요)');
+    else _cpFail('❌ 수집 실패', e.message);
+  }
   finally{ btn.disabled=false; }
 }
 // 수집 직후 백그라운드로 도는 대본은행 자동적재의 결과를 폴링해 화면에 보고한다.
