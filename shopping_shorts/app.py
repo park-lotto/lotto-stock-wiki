@@ -3591,7 +3591,7 @@ def _share_get(sid: str):
 
 _SHARE_PAGE_HTML = """<!doctype html><html lang="ko"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>완성 영상 · 숏템박스</title>
+<title>완성 영상 · 숏템메이커</title>
 <style>
  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
  body{background:#0d0f12;color:#eef2f6;font-family:-apple-system,"Malgun Gothic",sans-serif;
@@ -3641,8 +3641,8 @@ h1{font-size:22px;margin-bottom:10px}p{color:#8b93a7;line-height:1.6}</style></h
 # 이름 5안(ShortsFactory/Reelery/ShopReel/ShortsForge/Vidory) 중 사용자 확정 대기.
 # 지금은 추천안 Reelery 플레이스홀더. 팔레트(민트×블랙)는 sidebar.js 계승·고정.
 _BRAND = {
-    "name": "숏템박스",          # 확정(2026-07-20). 한글 주 + 영문 보조 락업.
-    "name_en": "SHOTEMBOX",     # 영문 CI(보조). 로고에 한글 밑 소문자 스페이싱으로.
+    "name": "숏템메이커",          # 확정(2026-07-20). 한글 주 + 영문 보조 락업.
+    "name_en": "SHOTEMMAKER",     # 영문 CI(보조). 로고에 한글 밑 소문자 스페이싱으로.
     "glyph": "📦",
     "tagline": "폰으로 5분, 편집 몰라도 팔리는 쇼츠가 완성됩니다",
     # 공개 페이지의 '카톡 문의' 링크(오픈채팅/채널 URL). 비면 /login으로 폴백 — 값만 넣으면 연결.
@@ -3661,7 +3661,7 @@ _GOOGLE_SVG = ('<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6
 # 시그니처 심볼(브랜딩 보드 v1, out/브랜딩_CI_숏템탑스.html) — 박스(제작소)에서 랭킹된
 # 아이템이 쌓여 올라오고 맨 위 한 칸만 골드=TOP 인기템. 박스·대량생산·인기를 한 심볼에.
 _LOGO_SVG = (  # v2 엠블럼(2026-07-23): 다크 디스크+민트 링, 스택 3단(TOP=골드)+상승 화살촉
-    '<svg class="sym" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템박스">'
+    '<svg class="sym" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템메이커">'
     '<defs><radialGradient id="ldk" cx="50%" cy="42%" r="65%">'
     '<stop offset="0" stop-color="#1c2b25"/><stop offset="1" stop-color="#0b120f"/></radialGradient>'
     '<linearGradient id="lmg" x1="0" y1="0" x2="1" y2="1">'
@@ -3757,7 +3757,7 @@ a{text-decoration:none;color:inherit}
 .sec{padding:50px 0}
 .sec h2{text-align:center;font-size:clamp(24px,3.4vw,30px);font-weight:900;margin-bottom:8px}
 .sec .lead{text-align:center;color:var(--muted);margin-bottom:36px}
-/* PAIN — 기존 3~5시간 vs 숏템박스 5분 */
+/* PAIN — 기존 3~5시간 vs 숏템메이커 5분 */
 .vs{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:stretch;max-width:860px;margin:0 auto}
 .vs .col{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px 24px}
 .vs .col.new{border-color:rgba(111,240,214,.35);box-shadow:0 0 0 1px rgba(111,240,214,.12) inset}
@@ -3836,7 +3836,7 @@ a{text-decoration:none;color:inherit}
 <li><span class=m>✕</span> 겨우 하나 올리면 진이 빠짐</li></ul>
 <div class=time>3~5시간</div><div class=tl>영상 하나에 반나절, 머리는 지끈</div></div>
 <div class=arrow>→</div>
-<div class="col new reveal d1"><div class=tag>숏템박스</div>
+<div class="col new reveal d1"><div class=tag>숏템메이커</div>
 <ul>
 <li><span class=m>✓</span> 지금 제일 잘 팔리는 걸 짚어줌 (고민 0)</li>
 <li><span class=m>✓</span> 딸깍 — 대본·장면·목소리·자막 자동</li>
