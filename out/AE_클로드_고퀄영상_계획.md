@@ -34,8 +34,8 @@ aerender 헤드리스 렌더 → 프레임 읽고 검수 → 수정 → 재렌�
 | RAM | 31.9 GB | ✅ 충분 (AE 권장 32GB) |
 | GPU | NVIDIA RTX 3060 | ✅ 충분 |
 | C: 여유 | 621 GB | ✅ 충분 |
-| Adobe CC | **미설치** | ⚠️ 1단계에서 결제·설치 |
-| aerender.exe | **없음** | ⚠️ AE 설치 시 자동 포함 |
+| Adobe CC | ✅ **설치 완료** (After Effects 2026) | 월간 구독 ₩46,200 |
+| aerender.exe | ✅ `...\Support Fileserender.exe` v26.3x87 | 실행·렌더 확인 |
 
 > 참고(사실 기록): 앞선 코드 데모는 `--use-angle=swiftshader` 즉 **소프트웨어 렌더러**로 돌아
 > RTX 3060을 전혀 안 썼습니다. 이 계획의 판단을 바꾸진 않지만, 코드 경로를 보조로 남길 경우
@@ -56,7 +56,8 @@ aerender 헤드리스 렌더 → 프레임 읽고 검수 → 수정 → 재렌�
   → **헤드리스가 아님.** 사장님은 AE를 켜고 패널만 열어두면 됨
 - 이미 되는 것: 컴포지션 · 텍스트/도형/솔리드/**카메라**/널 레이어 · **키프레임** ·
   **익스프레션** · 마스크 · **2D/3D 전환** · 블렌드 모드 · 트랙 매트 · 복제/삭제 · 배치 속성
-- **`run-script` 툴 = 임의 ExtendScript 실행 가능** → 템플릿 .aep 조작의 길이 열려 있음
+- ⚠️ **`run-script`는 임의 실행이 아니라 화이트리스트 20개 전용**(2026-07-25 실측 정정)
+  → 우리가 브리지에 **`executeScript` 케이스를 추가**해 해결함
 - ❌ **렌더 툴은 없음** → aerender는 별도로 붙여야 함
 
 **(B) 상용 — Higgsfield MCP Bridge** (사장님이 보내주신 영상 `ZsS7ULEcMSI`)
@@ -71,7 +72,7 @@ aerender 헤드리스 렌더 → 프레임 읽고 검수 → 수정 → 재렌�
 | 용도 | 수단 |
 |---|---|
 | 프로젝트 생성·수정 | **after-effects-mcp** (MCP 툴 호출) |
-| 템플릿 .aep 치환 등 고급 조작 | 같은 MCP의 **`run-script`**로 ExtendScript 주입 |
+| 템플릿 .aep 치환 등 고급 조작 | **브리지에 추가한 `executeScript`** (파일 프로토콜로 .jsx 주입) |
 | 렌더 | `aerender.exe -project X.aep -comp "Main" -output out.mov` (**직접 붙임**) |
 | 검수 | 렌더 결과 → ffmpeg 프레임 추출 → Claude가 이미지로 읽음 |
 
@@ -110,7 +111,38 @@ aerender 헤드리스 렌더 → 프레임 읽고 검수 → 수정 → 재렌�
 
 ## 4. 페이즈
 
-### P0 — **무료 체험판**으로 "Claude 손이 닿는가"만 확인 (30분, 비용 0원)
+## ✅ P0 결과 — 전부 통과 (2026-07-25 실측)
+
+**"Claude가 AE를 조종할 수 있는가" = 예. 실렌더 픽셀까지 확인 완료.**
+
+| # | 미지수 | 결과 | 증거 |
+|---|---|---|---|
+| ① | 모달 대화상자로 멈춤 | ✅ 방어 확보 | `app.beginSuppressDialogs()` + `close(DO_NOT_SAVE_CHANGES)`로 해결. **억제 없이 `app.open()` 하면 실제로 멈춤** — 모든 스크립트에 필수 |
+| ② | aerender 실행 | ✅ 통과 | `aerender version 26.3x87`, exit 0, 렌더 산출 |
+| ③ | **템플릿 `.aep` 열기·치환·저장** | ✅ **통과** | `p0.aep` 열기 → 텍스트 2개 치환 → `p0_swapped.aep` 저장 → 렌더 → 육안 확인 |
+| ④ | 한글 폰트 | ✅ **통과** | Bold/Regular 구분·원화(₩)·가운뎃점(·) 전부 정상 렌더 |
+
+**증거물**: 바탕화면 `AE_한글렌더_검증.png`, `AE_템플릿치환_검증.png`
+
+### 실측으로 확정된 운영 규칙 (다음 세션이 반드시 알아야 할 것)
+
+1. **`run-script` MCP 툴은 화이트리스트 20개 전용** — 임의 스크립트 실행이 아니다.
+   → 그래서 브리지(`mcp-bridge-auto.jsx`)에 **`executeScript` 케이스를 직접 추가**했다.
+   소스: `C:\Users\TheRose\tools\after-effects-mcp` (build/·src/ 양쪽 패치됨)
+2. **브리지 프로토콜 — MCP 툴 없이 파일로 직접 호출 가능**
+   - 명령: `C:\Users\TheRose\Documents\ae-mcp-bridge\ae_command.json`
+     `{"command":"executeScript","args":{"file":"...jsx"},"status":"pending"}`
+   - 결과: 같은 폴더 `ae_mcp_result.json` (2~3초)
+3. **한글 폰트는 PostScript명으로** — `MalgunGothic` ✅ / `Malgun Gothic` ❌ (공백 오류)
+4. **aerender 템플릿명은 한글판 기준** — `"최고 설정"` / `"손실 없음"`
+   (영문 `"Best Settings"`는 존재하지 않아 오류)
+5. **브리지 스크립트를 고치면 AE에서 패널을 닫았다 다시 열어야** 반영된다
+6. **Program Files 복사는 관리자 권한 필요** — `install-bridge`가 실패했는데도 "성공"이라 출력했다.
+   반드시 파일 존재를 직접 확인할 것
+
+---
+
+### P0 — (완료) 아래는 당시 계획 원문 · 결과는 위 ✅ 섹션 참조
 
 **AE의 퀄리티는 검증 대상이 아닙니다.** 이미 증명된 도구입니다.
 P0에서 볼 것은 오직 **"Claude가 AE를 조종할 수 있는가"** 하나입니다.
