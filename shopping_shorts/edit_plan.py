@@ -157,6 +157,9 @@ def _chronological_respine(beats):
     2026-07-19). 나레이션·비트 순서는 그대로 — 화면만 요리 시간순(재료→조리→완성→시식)으로
     흐르게 해 완성↔붓기 핑퐁을 없앤다. 비트당 세그먼트 개수는 보존(길이 커버리지 유지).
 
+    ★머리(첫/훅) 비트도 앵커로 고정한다(2026-07-25) — 모델이 훅에 고른 '최고 장면'이
+    시간순 재배치에 안 밀리게. 단 비트가 3개 미만이면 머리·꼬리를 둘 다 빼면 body가 비므로
+    짧을 땐 꼬리만 고정(기존 동작).
     ★꼬리(마지막) 비트는 앵커로 고정한다(② 엔딩 딴 영상 버그, 2026-07-20). 전역정렬은
     (video_id,start)로 소스를 뭉치므로, 재분배 시 마지막 비트엔 항상 '가장 큰 video_id
     소스의 늦은 세그먼트'가 떨어진다 — 그게 완성/히어로 컷이라는 보장이 없고 딴 소스(에어프라이어
@@ -175,7 +178,12 @@ def _chronological_respine(beats):
     if not beats:
         return beats
     # 꼬리 비트는 respine 대상에서 제외(앵커) — 모델이 고른 화면 그대로.
-    body, tail = beats[:-1], beats[-1]
+    # ★훅(첫 비트)도 앵커: 모델이 훅에 고른 '최고 장면'이 시간순 재배치에 안 밀리게 고정.
+    if len(beats) < 3:
+        # 머리·꼬리를 둘 다 앵커로 빼면 body가 빌 수 있어, 짧으면 꼬리만 고정(기존 동작).
+        head, body, tail = None, beats[:-1], beats[-1]
+    else:
+        head, body, tail = beats[0], beats[1:-1], beats[-1]
     # visual_verb=True 비트도 앵커. 나머지 movable body만 flat 풀 → dedup → 시간순 재배치.
     movable_idx = [j for j, b in enumerate(body) if not b.get("visual_verb")]
     flat, counts = [], []
@@ -205,6 +213,8 @@ def _chronological_respine(beats):
         moved[j] = nb           # ④ fit 덮어쓰기 삭제 — 모델 fit 그대로 보존
     # movable은 재배치본, 앵커(visual_verb·빈chunk)는 원본 그대로.
     out = [moved[j] if j in moved else dict(b) for j, b in enumerate(body)]
+    if head is not None:
+        out.insert(0, dict(head))   # 훅 앵커 — 모델이 고른 화면 그대로(respined 아님)
     # 꼬리: 앵커 — 세그먼트·fit 모두 모델이 고른 그대로(respined 아님).
     out.append(dict(tail))
     return out
