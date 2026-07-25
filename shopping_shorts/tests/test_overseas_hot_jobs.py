@@ -3,18 +3,24 @@ from datetime import datetime, timezone
 
 
 def test_run_collects_ranks_and_saves(monkeypatch, tmp_path):
-    now = datetime(2026, 7, 25, 12, 0, tzinfo=timezone.utc)
-    published = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    now = datetime(2026, 7, 26, 12, 0, tzinfo=timezone.utc)
+    published = "2026-07-25T12:00:00Z"
 
-    def fake_fetch(subreddit, category="", sort="rising", **kw):
-        return [{"source": "reddit", "post_id": subreddit + sort, "shortcode": subreddit + sort,
-                 "subreddit": subreddit, "title": "t", "permalink": "https://p",
-                 "media_url": "https://m", "media_platform": "tiktok", "thumbnail": "",
-                 "ups": 500, "num_comments": 10, "published_at": published, "category": category}]
+    def fake_tt(kw, max_results=40):
+        return [{"video_id": "tt_" + kw, "title": kw + " kitchen gadget", "published_at": published,
+                 "views": 500000, "likes": 900, "comments": 30, "collects": 0, "shares": 0,
+                 "channel_title": "a", "thumbnail": "", "url": "https://tt", "media_platform": "tiktok"}]
+    def fake_dy(kw, max_results=40):
+        return [{"video_id": "dy_" + kw, "title": kw, "published_at": published,
+                 "views": 0, "likes": 800, "comments": 20, "collects": 300, "shares": 10,
+                 "channel_title": "b", "thumbnail": "", "url": "https://dy", "media_platform": "douyin"}]
 
-    monkeypatch.setattr(job.reddit_source, "fetch_subreddit", fake_fetch)
+    monkeypatch.setattr(job.tiktok_search, "search_full", fake_tt)
+    monkeypatch.setattr(job.douyin_search, "search_full", fake_dy)
+    monkeypatch.setattr(job.xiaohongshu_search, "search_full", lambda kw, max_results=40: [])
     monkeypatch.setattr(job.gap_check, "gap_badge", lambda title, **kw: "🔥선점가능")
-    monkeypatch.setattr(job, "load_seeds", lambda: {"뷰티": {"subreddits": ["beauty"], "seed_accounts": []}})
+    monkeypatch.setattr(job, "load_seeds",
+                        lambda: {"주방/레시피": {"tiktok": ["kitchen"], "cn": ["厨房"]}})
     monkeypatch.setattr(job, "DB_PATH", str(tmp_path / "t.db"))
     monkeypatch.setattr(job, "_now", lambda: now)
 
@@ -22,9 +28,9 @@ def test_run_collects_ranks_and_saves(monkeypatch, tmp_path):
     from shopping_shorts.store import Store
     items, _ = Store(str(tmp_path / "t.db")).load_overseas_feed()
     assert items, "피드에 항목이 저장돼야 한다"
-    assert all("grade" in it and "category" in it for it in items)
-    assert items[0]["category"] == "뷰티"
-    assert items[0]["gap_badge"] == "🔥선점가능"   # 선점뱃지 부여됨
+    assert all("grade" in it and it.get("category") == "주방/레시피" for it in items)
+    assert {it["platform"] for it in items} == {"tiktok", "douyin"}
+    assert items[0]["gap_badge"] == "🔥선점가능"
 
 
 def test_start_is_idempotent_while_running(monkeypatch):

@@ -8,15 +8,16 @@ from datetime import datetime, timezone
 from shopping_shorts.config import DB_PATH
 from shopping_shorts.store import Store
 from shopping_shorts.overseas_seeds import load_seeds
-from shopping_shorts import reddit_source
-from shopping_shorts import gap_check
-from shopping_shorts.ranking import build_reddit_items, apply_grades, sort_by
+from shopping_shorts import tiktok_search, douyin_search, xiaohongshu_search
+from shopping_shorts import gap_check, overseas_funnel
+from shopping_shorts.ranking import build_overseas_items, apply_grades, sort_by
 
 _LOCK = threading.Lock()
 _JOB = {"status": "idle", "phase": "", "count": 0, "error": None, "started": 0.0}
-_CAP = 120        # 피드 최대 유지 개수(로테이션)
-_REQ_PAUSE = 2.0  # Reddit RSS 요청 간격 — 연타 시 429(실측)라 매 요청 사이 쉰다
-_GAP_CAP = 30     # 선점뱃지 유튜브검색 배치당 상한 — 무료쿼터(search 100유닛/회) 보호
+_CAP = 120          # 피드 최대 유지 개수(로테이션)
+_PER_KEYWORD = 40   # 카테고리·플랫폼·키워드당 수집 상한(=과금단위)
+_REQ_PAUSE = 0.5    # Apify 호출 간 간격
+_GAP_CAP = 40       # 선점검색 배치당 상한(유튜브 무료쿼터 보호) — 생존자 상위만
 
 
 def _now():
@@ -44,21 +45,25 @@ def _merge_rotate(prev, new, cap):
 
 
 def _collect_category(cat, cfg, store):
+    allow = list(cfg.get("tiktok", [])) + list(cfg.get("cn", []))
     raw = []
-    for sub in cfg.get("subreddits", []):
-        raw += reddit_source.fetch_subreddit(sub, category=cat, sort="rising")
-        time.sleep(_REQ_PAUSE)   # 429 완화 — 매 요청 사이 간격
-        raw += reddit_source.fetch_subreddit(sub, category=cat, sort="top")
+    for kw in cfg.get("tiktok", []):
+        raw += tiktok_search.search_full(kw, max_results=_PER_KEYWORD)
         time.sleep(_REQ_PAUSE)
-    # 같은 post_id 중복 제거(rising+top 겹침)
-    seen, uniq = set(), []
-    for r in raw:
-        if r["post_id"] in seen:
-            continue
-        seen.add(r["post_id"])
-        uniq.append(r)
-    items = build_reddit_items(
-        uniq,
+    for kw in cfg.get("cn", []):
+        raw += douyin_search.search_full(kw, max_results=_PER_KEYWORD)
+        time.sleep(_REQ_PAUSE)
+        raw += xiaohongshu_search.search_full(kw, max_results=_PER_KEYWORD)
+        time.sleep(_REQ_PAUSE)
+    # STAGE 1·2·상한: 형식·관련성·안터진
+    kept = [r for r in raw
+            if overseas_funnel.passes_format(r)
+            and overseas_funnel.passes_relevance(r, allow)
+            and overseas_funnel.under_view_ceiling(r)]
+    for r in kept:
+        r["category"] = cat   # 시드 카테고리 고정
+    items = build_overseas_items(
+        kept,
         prev_base=lambda sc: store.prev_base_platform("overseas", sc),
         prev_delta=lambda sc: store.prev_delta_platform("overseas", sc),
         now=_now(),
@@ -86,7 +91,9 @@ def _run():
                 continue
             if checked >= _GAP_CAP:
                 break
-            it["gap_badge"] = gap_check.gap_badge(it.get("title") or it.get("caption") or "")
+            is_cn = it.get("platform") in ("douyin", "xiaohongshu")
+            it["gap_badge"] = gap_check.gap_badge(
+                it.get("caption") or it.get("title") or "", translate=is_cn)
             checked += 1
         store.save_overseas_feed(merged)
         store.save_run_platform(

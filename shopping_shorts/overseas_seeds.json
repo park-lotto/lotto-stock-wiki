@@ -1,8 +1,8 @@
 {
-  "주방/레시피": {"subreddits": ["Kitchenhacks"], "seed_accounts": []},
-  "살림/생활꿀템": {"subreddits": ["INEEEEDIT"], "seed_accounts": []},
-  "인테리어/DIY": {"subreddits": ["ArtisanVideos"], "seed_accounts": []},
-  "가전/도구": {"subreddits": ["SpecializedTools", "GadgetGifs"], "seed_accounts": []},
-  "만족감/제품": {"subreddits": ["oddlysatisfying", "SatisfyingAsFuck"], "seed_accounts": []},
-  "신기템/바이럴": {"subreddits": ["BeAmazed", "nextfuckinglevel"], "seed_accounts": []}
+  "주방/레시피":   {"tiktok": ["kitchen gadgets", "kitchen hacks"], "cn": ["厨房神器", "厨房好物"]},
+  "살림/생활꿀템": {"tiktok": ["home gadgets", "cleaning hacks"],  "cn": ["生活好物", "居家好物"]},
+  "인테리어/DIY":  {"tiktok": ["diy home", "room makeover"],       "cn": ["家居改造", "手工DIY"]},
+  "가전/도구":     {"tiktok": ["cool gadgets", "useful tools"],    "cn": ["神器", "工具"]},
+  "뷰티/셀프케어": {"tiktok": ["beauty hacks", "skincare tips"],   "cn": ["美妆好物", "护肤"]},
+  "정리/수납":     {"tiktok": ["organization hacks", "storage"],   "cn": ["收纳神器", "整理"]}
 }

@@ -10,3 +10,6 @@ def test_overseas_entry_present():
     assert "/api/overseas/update" in html
     assert "renderOverseas" in html
     assert "toggleOverseas" in html
+    # 카드 UI 재설계 (2026-07-26): 표가 아닌 카드 그리드로 렌더
+    assert "ov-grid" in html
+    assert "ov-card" in html

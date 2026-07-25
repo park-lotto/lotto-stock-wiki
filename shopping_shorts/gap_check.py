@@ -15,14 +15,23 @@ def _has_korean(text):
     return bool(_HANGUL.search(text or ""))
 
 
-def gap_badge(title, min_korean=1):
+def gap_badge(title, min_korean=1, translate=False):
     """제목 → '🔥선점가능' | '이미유입' | '미확인'.
 
-    유튜브 검색 결과 제목 중 한글 포함이 min_korean개 이상이면 이미유입으로 본다.
-    빈 제목·검색 실패(쿼터 소진 등)는 '미확인'."""
+    translate=True면(CN 영상) 제목을 한국어로 번역해 검색한다 — 중국어 제목 그대로면
+    한글 재편집본을 못 찾아 거짓 '선점가능'이 나온다. 번역결과에 한글이 없으면(빈값·방향반대)
+    검색 무의미 → '미확인'."""
     q = (title or "").strip()
     if not q:
         return "미확인"
+    if translate:
+        from shopping_shorts import video_analysis
+        try:
+            q = (video_analysis.translate_keyword(q) or "").strip()
+        except Exception:
+            q = ""
+        if not _has_korean(q):
+            return "미확인"
     try:
         results = youtube_search.search(q, max_results=10)
     except Exception:
