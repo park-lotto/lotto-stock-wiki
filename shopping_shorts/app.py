@@ -74,7 +74,7 @@ from shopping_shorts import bank_assemble
 from shopping_shorts import thumb_title
 import uuid
 
-app = FastAPI(title="쇼핑쇼츠 레퍼런스 랭킹")
+app = FastAPI(title="숏템메이커 레퍼런스 랭킹")   # /docs 노출 제목 — 브랜드 통일(2026-07-25)
 
 
 @app.on_event("startup")
@@ -3493,6 +3493,7 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                "/terms", "/privacy", "/refund",   # 법적 고지(공개 — 비로그인·대기중도 열람)
                # PWA: 매니페스트는 브라우저가 쿠키 없이(credentials omit) fetch한다 → 공개 필수.
                "/manifest.webmanifest", "/apple-touch-icon.png",
+               "/brand-logo.png",   # 로고(로그인·대문 락업) — 비로그인 화면에도 떠야 한다
                "/icon-192.png", "/icon-512.png", "/icon-maskable-512.png",
                "/insta_fill_comment.user.js",
                # 유저스크립트(insta_fill_comment)가 인스타 탭에서 전송 감지 시 GM_xmlhttpRequest로
@@ -3664,24 +3665,18 @@ _GOOGLE_SVG = ('<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6
                '-6.3 0-11.6-3.8-13.5-9.1l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>')
 
 
-# 시그니처 심볼 v3(2026-07-25, 숏템메이커 개명과 함께) — '박스'가 이름에서 빠졌으니 모티프도
-# 바꿨다. 세로 프레임은 정확히 9:16(18×32 유닛)=숏폼 그 자체, 그 안의 골드 재생 삼각형=완성된
-# 영상, 아래 골드 닷=폰 홈버튼(폰으로 만든다는 걸 도형으로 되받는다). 링은 민트→오로라
-# (UI리뉴얼 theme.css --mint #3ee0bf / --aurora #8c6ef0)로 갈아 새 테마와 한 몸이 되게 했다.
-# ★24px(사이드바)에서도 읽히게 요소를 4개로 묶었다 — 잔가지(스파크·스택)는 의도적으로 버렸다.
-_LOGO_SVG = (
-    '<svg class="sym" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템메이커">'
-    '<defs><radialGradient id="ldk" cx="50%" cy="38%" r="70%">'
-    '<stop offset="0" stop-color="#17223c"/><stop offset="1" stop-color="#070b14"/></radialGradient>'
-    '<linearGradient id="lmg" x1="0" y1="0" x2="1" y2="1">'
-    '<stop offset="0" stop-color="#3ee0bf"/><stop offset="1" stop-color="#8c6ef0"/></linearGradient>'
-    '<linearGradient id="lgg" x1="0" y1="0" x2="1" y2="1">'
-    '<stop offset="0" stop-color="#ffe6ae"/><stop offset="1" stop-color="#facc6b"/></linearGradient></defs>'
-    '<circle cx="32" cy="32" r="29" fill="url(#ldk)"/>'
-    '<circle cx="32" cy="32" r="29" stroke="url(#lmg)" stroke-width="2.6"/>'
-    '<rect x="23" y="15" width="18" height="31" rx="4.4" stroke="url(#lmg)" stroke-width="2.6"/>'
-    '<path d="M29.2 24.1l9.4 6.4-9.4 6.4V24.1z" fill="url(#lgg)"/>'
-    '<circle cx="32" cy="51.5" r="2.2" fill="url(#lgg)"/></svg>')
+# 시그니처 심볼 v4(2026-07-25) — ★사장님 선택: AI(nano-banana-pro) 생성 원본 그림을 그대로 쓴다.
+# 모티프 = 쇼핑 바구니 안에 카메라 셔터+재생 원반이 담긴 형태(=담아서 영상으로 만든다).
+# 앞서 내가 손으로 SVG를 짜서 밀어붙였는데 임팩트가 없었다. 사장님이 AI 원본을 골랐고,
+# 내가 벡터로 재작도한 버전도 "원본이 좋다"고 해서 원본 픽셀을 유지한다.
+#   전처리(scratchpad/make_icons.py): 네 모서리 flood fill로 '바깥 배경만' 투명화.
+#   ★전역 색상매칭으로 지우면 바구니 몸통(#0d1424)이 배경과 거의 같아 구멍이 뚫린다 → 연결영역만.
+#   그 뒤 그림 bbox로 크롭 + 여백 12% 정사각 패딩 → 1024 마스터에서 각 크기 LANCZOS 리샘플.
+# 파일: static/brand-logo.png(96) · favicon.ico(16/32/48) · apple-touch-icon(180) · icon-192/512 ·
+#       icon-maskable-512(안전영역 65% + 다크 배경 채움)
+# ⚠️ /brand-logo.png 는 로그인 화면에서도 보여야 하므로 _AUTH_ALLOW에 넣어뒀다.
+_LOGO_SVG = ('<img class="sym" src="/brand-logo.png" alt="숏템메이커" '
+             'width="96" height="96" decoding="async">')
 
 
 # 공개 페이지 하단 법적 고지 링크(약관·개인정보·환불). 모든 대문/로그인 푸터에 __LEGAL__로 주입.
@@ -4298,7 +4293,7 @@ _ACCOUNT_HTML = _fill_brand(_ACCOUNT_TMPL)
 
 _SIGNUP_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
-<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png"><title>쇼핑쇼츠 가입</title>
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png"><title>숏템메이커 가입</title>
 <style>body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;
 background:#0b0b0e;font-family:system-ui,'Noto Sans KR',sans-serif}
 .box{background:#16161c;border:1px solid #2a2a30;border-radius:14px;padding:32px 28px;width:280px}
@@ -4311,7 +4306,7 @@ a{color:#7db4ff;font-size:12px;text-decoration:none}
 .err{color:#e74c3c;font-size:12px;text-align:center;margin-top:10px;min-height:14px}
 .foot{text-align:center;margin-top:14px}</style></head>
 <body><form class=box method=post action=/api/signup>
-<h1>🛍️ 쇼핑쇼츠 가입</h1>
+<h1>🛍️ 숏템메이커 가입</h1>
 <input name=user placeholder=아이디(영문/숫자) autocomplete=username autofocus>
 <input name=name placeholder=이름 autocomplete=name>
 <input name=phone placeholder="전화번호(010-0000-0000)" autocomplete=tel>
