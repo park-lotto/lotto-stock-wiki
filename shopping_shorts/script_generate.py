@@ -162,7 +162,7 @@ _STORY_DECLARE = """- 각 초안에 반드시 채워라: story_person(주인공 
 
 
 _GEN_PROMPT = """너는 한국 쇼핑 숏폼(살림·요리·인테리어) 대본 작가다. 아래 'S급 원본 대본'의
-검증된 구조를 빌려, 20초 분량(약 45~70단어)의 새 대본 초안 {n}개를 만들어라.
+검증된 구조를 빌려, 약 {seconds}초 분량(대략 {words}단어)의 새 대본 초안 {n}개를 만들어라.
 
 [S급 원본 대본]
 {full_text}
@@ -219,14 +219,14 @@ def _mix_source_block(sources):
     return "\n\n".join(lines)
 
 
-def generate_mix(sources, target_seconds=20, n=3, max_key_tries=3, bank_context=""):
+def generate_mix(sources, target_seconds=30, n=3, max_key_tries=3, bank_context=""):
     """여러 S급 대본(각 {name, full_text, structure})의 강점을 조합해 새 대본 초안 리스트.
     우리믹스(Feature B) 모드. 소스 2개 미만이거나 무키면 []."""
     sources = [s for s in (sources or []) if (s.get("full_text") or "").strip()]
     if not comment_gen.SHORTS_GEMINI_KEYS or len(sources) < 2:
         return []
     n = max(1, min(int(n or 3), 5))
-    seconds = max(5, min(int(target_seconds or 20), 90))
+    seconds = max(5, min(int(target_seconds or 30), 90))
     words = max(15, round(seconds * 2.3))
     prompt = _MIX_PROMPT.format(sources=_mix_source_block(sources[:3]), seconds=seconds, words=words, n=n,
                                 bank=("\n\n" + bank_context) if bank_context else "")
@@ -294,9 +294,11 @@ def generate_variations(structure, full_text, elem_modes, category_lookup, mode=
             "주제: 아래 원본의 '소재'를 그대로 유지한 리메이크다. 원본의 제품·사실·장면·정보는 "
             "바꾸지 말고, 표현(훅 문장·어휘·문장 순서·말투)만 새로 써서 원문을 그대로 베끼지 않게 "
             "(중복 회피) 리라이트하라. 없던 내용이나 다른 제품을 지어내지 마라." + subj_line)
+    seconds = 30
+    words = max(15, round(seconds * 2.3))
     prompt = _GEN_PROMPT.format(
         full_text=full_text[:3000], elems=_elem_lines(structure or {}, elem_modes, category_lookup),
-        topic_line=topic_line, n=n,
+        topic_line=topic_line, n=n, seconds=seconds, words=words,
         bank=("\n\n" + bank_context) if bank_context else "")
     for _ in range(max_key_tries):
         key, ki = comment_gen._current_key_and_idx()
