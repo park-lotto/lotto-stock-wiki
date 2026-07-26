@@ -5880,6 +5880,13 @@ def _load_work_sources(work_id, cid):
             "views": None,
             "structure": w.get("structure") or None,
             "source_url": w.get("source_url", ""),
+            # ★이름·썸네일·카테고리를 서버가 직접 실어 보낸다(2026-07-26 사고). 안 실으면 pick_meta가
+            #   비어, 프론트가 HANDOFF[pick_index]로 이름·썸네일을 추측한다 — 바구니 순서가 서버
+            #   sources 순서와 어긋나면 '살림홈 숫자에 엉뚱한 영상 썸네일'처럼 카드가 자기모순이 된다.
+            #   pick의 숫자와 썸네일이 항상 같은 영상에서 나오게 하려면 여기서 실어야 한다.
+            "name": w.get("name") or "",
+            "thumbnail": w.get("thumbnail") or "",
+            "category": w.get("category") or "",
         })
     return sources
 

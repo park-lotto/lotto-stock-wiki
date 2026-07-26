@@ -39,6 +39,23 @@ def test_build_aipick_engagement_rate_none_without_followers():
     assert out["tiles"]["engagement_rate"] is None
 
 
+def test_build_aipick_pick_meta_matches_pick_identity():
+    """pick_meta의 이름·썸네일은 '고른 그 영상'에서 나와야 한다 — 숫자(tiles)와 다른 영상이
+    섞이면(프론트 HANDOFF 오정렬) '살림홈 숫자에 엉뚱한 썸네일' 카드가 된다(2026-07-26 사고)."""
+    sources = [
+        {"video_id": "a", "text": "훅...결과...", "followers": 120000, "comments": 6585,
+         "name": "살림홈", "thumbnail": "socks.jpg"},
+        {"video_id": "b", "text": "짧은", "followers": 300, "comments": 1,
+         "name": "다른채널", "thumbnail": "other.jpg"},
+    ]
+    out = build_aipick(sources, {})
+    assert out["pick_id"] == "a"
+    # 숫자와 이름·썸네일이 같은 영상(a)에서 나온다
+    assert out["tiles"]["comments"] == 6585
+    assert out["pick_meta"]["title"] == "살림홈"
+    assert out["pick_meta"]["thumbnail"] == "socks.jpg"
+
+
 def test_build_aipick_respects_forced():
     sources = [{"video_id": "a", "text": "x", "comments": 50}, {"video_id": "b", "text": "y", "comments": 1}]
     out = build_aipick(sources, {}, forced="b")
