@@ -140,15 +140,60 @@ def avoid_block(store, limit=6):
             "매 영상이 똑같이 열리면 안 된다)]\n" + "\n".join(parts))
 
 
+def _source_views(src):
+    """pattern_source row의 perf에서 조회수(없으면 0). list_pattern_sources는 perf를 이미 디코드해 준다."""
+    perf = src.get("perf") or {}
+    try:
+        return int(perf.get("views") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def winners_block(store, category, k=2, max_chars=420):
+    """검증된 우승 대본을 few-shot 예시로(2026-07-26). 스파인은 '뼈대'만 주는데, 여기에
+    실제 조회수 높았던 원본 대본 전문을 통째로 보여줘 Gemini가 말투·호흡·디테일까지 흉내내게
+    한다. 같은 카테고리 우승작 우선, 부족하면 전체 상위로 채운다. 없으면 ''(회귀0)."""
+    try:
+        srcs = store.list_pattern_sources(limit=1000)
+    except Exception:
+        return ""
+    def _ok(s):
+        t = (s.get("full_text") or "").strip()
+        return len(t) >= 40
+    pool = [s for s in srcs if _ok(s)]
+    if not pool:
+        return ""
+    same = [s for s in pool if category and s.get("product_category") == category]
+    same.sort(key=_source_views, reverse=True)
+    rest = [s for s in pool if s not in same]
+    rest.sort(key=_source_views, reverse=True)
+    picked = (same + rest)[:k]
+    if not picked:
+        return ""
+    lines = []
+    for i, s in enumerate(picked, 1):
+        t = _sanitize(s.get("full_text", "").strip())
+        if len(t) > max_chars:
+            t = t[:max_chars] + "…"
+        v = _source_views(s)
+        vtxt = f"(조회수 {v:,})" if v else ""
+        lines.append(f"[우승 예시 {i} {vtxt}]\n{t}")
+    return ("[★검증된 우승 대본 — 실제로 터진 대본 전문이다. 뼈대(스파인)를 지키되, 아래 "
+            "예시의 '말투·호흡·구체적 디테일·감정선'을 배워서 그 느낌으로 써라(문장을 그대로 "
+            "베끼지 말고 우리 소재로 새로. 특히 훅의 강도와 구어체 리듬을 흡수해라)]\n"
+            + "\n\n".join(lines))
+
+
 def assemble_bank_context(store, category, k=5):
-    """스파인 charter + 부품 top-k 합본. 둘 다 없으면 ''(호출부는 빈 문자열이면
+    """스파인 charter + 부품 top-k + ★우승 대본 few-shot 합본. 없으면 ''(호출부는 빈 문자열이면
     기존 헌장만 써서 회귀0)."""
     # ★category 비어도(자동유형 경로는 video_type=None→"") 스파인을 건너뛰지 마라(2026-07-23
     # 실측 버그: `if category`가 falsy라 pick을 아예 안 불러 승인 스파인 4개가 죽어 있었다).
     # pick_spine_for_category(None)은 fit_categories 없는 범용 스파인을 perf 최고로 반환한다.
     spine = store.pick_spine_for_category(category or None)
-    # 스파인(아크) + 말투(parts_block) + ★전개 패턴(content_block, 2026-07-23) 3층 주입.
-    blocks = [x for x in (spine_charter(spine), parts_block(store, k), content_block(store)) if x]
+    # 스파인(아크) + 말투(parts_block) + 전개 패턴(content_block) + ★우승대본 few-shot(2026-07-26) 4층 주입.
+    blocks = [x for x in (spine_charter(spine), parts_block(store, k), content_block(store),
+                          winners_block(store, category)) if x]
     return "\n\n".join(blocks)
 
 
