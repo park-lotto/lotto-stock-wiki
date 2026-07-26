@@ -2613,9 +2613,12 @@ function renderAiPick(d, hasFootage){
   const _who = `<div class="aipick-who">${_thumb?`<img class="th" src="${_thumb.includes('gstatic.com')?_thumb:('/api/thumb?url='+encodeURIComponent(_thumb))}" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">`:'<div class="th"></div>'}<div><div class="nm">${esc(_name)}</div>${_sub?`<div class="sub">${esc(_sub)}</div>`:''}</div></div>`;
   const _tiles = [];
   if(t.views!=null) _tiles.push(`<div class="stt"><div class="v hot">${fmtNum(t.views)}</div><div class="k">조회수</div>${t.views_x_followers!=null?`<div class="x">팔로워의 ${t.views_x_followers}배 🔥</div>`:''}</div>`);
-  if(t.comments!=null) _tiles.push(`<div class="stt"><div class="v">${Number(t.comments).toLocaleString()}</div><div class="k">댓글</div>${t.comments_x_avg!=null?`<div class="x mint">평균의 ${t.comments_x_avg}배</div>`:''}</div>`);
-  if(t.engagement_rank!=null) _tiles.push(`<div class="stt"><div class="v mint">${t.engagement_rank}위</div><div class="k">참여밀도</div></div>`);
-  if(t.seconds!=null) _tiles.push(`<div class="stt"><div class="v">${t.seconds}초</div><div class="k">길이</div></div>`);
+  if(t.comments!=null) _tiles.push(`<div class="stt"><div class="v">${Number(t.comments).toLocaleString()}</div><div class="k">댓글</div></div>`);
+  // 참여밀도 = 댓글÷팔로워×100(실측·고정) — 앱 전체 공통 정의(index/discover/collection/library와
+  // 동일). 예전 AI PICK만 '참여밀도 N위'(동어반복)·'평균의 N배'(바구니 평균이라 매번 흔들림)로
+  // 어긋나 있던 걸 진짜 값으로 교체(2026-07-26).
+  if(t.engagement_rate!=null) _tiles.push(`<div class="stt"><div class="v mint">${t.engagement_rate}%</div><div class="k">참여밀도</div><div class="x">팔로워 대비 댓글</div></div>`);
+  if(t.seconds!=null) _tiles.push(`<div class="stt"><div class="v">${t.seconds}초</div><div class="k">원본 길이</div></div>`);
   const _tags = [];
   if(stc.hook_type) _tags.push(`<span class="tag t1">🎙 ${esc(stc.hook_type)} 훅</span>`);
   (stc.devices||[]).forEach(dv=>_tags.push(`<span class="tag t2">👥 ${esc(dv)}</span>`));
