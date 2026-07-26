@@ -2845,9 +2845,20 @@ function renderEmptyState(){
 // 직접 쓰기 경로(SCRIPT_MODE_HTML.manual)는 그대로 열어둔다.
 function renderNoScriptState(){
   const el = document.getElementById('aiPick'); if(!el) return;
+  // ★"대본 뽑기" 버튼 복구(2026-07-26). Task4 재구성에서 카드별 📝뽑기 버튼을 없애고
+  //   자동 AI PICK으로 대체했는데, AI PICK 소스는 도서관(script_wiki)에 저장된 담김 영상만
+  //   본다(app.py _load_work_sources). 새로 담은 영상은 도서관에 분석본이 없어 이 폴백으로
+  //   오는데, 문구는 "뽑거나"라면서 정작 뽑기 버튼이 없어 직접입력밖에 못 하는 막다른 길이었다.
+  //   담긴 영상마다 openScriptModal(i)(=/api/produce/extract_from_url) 버튼을 다시 단다.
+  const picks = HANDOFF.map((h,i)=>({h,i})).filter(x=>x.h && x.h.useFootage && x.h.url);
+  const extractBtns = picks.map(({h,i})=>
+    `<button type="button" class="cta-shine" onclick="openScriptModal(${i})">📝 ${esc((h.name||('영상 '+(i+1))).slice(0,22))} 대본 뽑기</button>`
+  ).join('');
   el.innerHTML = `
     <div class="skm-card empty">
       <h2>담긴 영상의 대본을 아직 분석하지 못했어요 — 대본을 뽑거나 직접 쓸 수 있어요.</h2>
+      ${extractBtns?`<div class="empty-cta">${extractBtns}</div>
+      <div class="hint" style="text-align:center;margin:12px 0 4px;color:var(--sub)">또는 아래에 직접 입력하세요</div>`:''}
       <div id="scriptModeBody">${SCRIPT_MODE_HTML.manual()}</div>
     </div>`;
   refreshFinalPeek();
