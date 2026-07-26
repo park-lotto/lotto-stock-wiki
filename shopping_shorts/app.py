@@ -5863,6 +5863,10 @@ def _load_work_sources(work_id, cid):
     store = Store(DB_PATH)
     picks = store.produce_pick_shortcodes(customer_id=cid)
     items = [w for w in store.wiki_list(customer_id=cid) if w["shortcode"] in picks]
+    # 댓글수는 '지금' 값(reel_history 최신 크롤)을 우선 쓴다 — 도서관 스냅샷(script_wiki.comments)은
+    # 저장 순간에 박제돼, 저장 후 댓글이 늘면 AI PICK만 옛 숫자를 보여준다(재료카드와 불일치,
+    # 참여밀도도 옛 기준). 최신값이 없으면(30일 지나 정리 등) 도서관 스냅샷으로 폴백(2026-07-26).
+    fresh = store.latest_comments([w["shortcode"] for w in items])
     sources = []
     for w in items:
         segs = w.get("segments") or []
@@ -5871,7 +5875,7 @@ def _load_work_sources(work_id, cid):
             "video_id": w["shortcode"],
             "text": w.get("full_text", ""),
             "followers": w.get("followers") or None,
-            "comments": w.get("comments") or None,
+            "comments": fresh.get(w["shortcode"], w.get("comments")) or None,
             "seconds": seconds,
             "views": None,
             "structure": w.get("structure") or None,
