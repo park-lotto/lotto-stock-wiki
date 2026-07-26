@@ -98,6 +98,24 @@ def test_autoload_existing_wiki_item_only_gets_picked(monkeypatch, tmp_path):
     assert code in store.produce_pick_shortcodes(customer_id=0)
 
 
+def test_pick_remove_takes_video_out_of_aipick_sources(monkeypatch, tmp_path):
+    """✕(dropFootage)로 뺀 영상은 AI PICK 후보에서 즉시 빠진다.
+    2026-07-26 사장님 제보: 자동적재 이후 담김이 서버에도 쌓이는데 ✕가 클라만 고쳐서
+    뺀 영상이 계속 카드에 남았다. remove는 멱등이어야 한다(toggle이면 두 번째에 되살아난다)."""
+    client, store = _client(monkeypatch, tmp_path)
+    calls = []
+    _stub_extract(monkeypatch, calls, "정리 꿀팁 원본 대본")
+
+    code = client.post("/api/produce/autoload",
+                       json={"items": [{"url": URL}]}).json()["results"][0]["shortcode"]
+    assert app_module._load_work_sources("", 0)          # 담긴 상태 = 후보 있음
+
+    for _ in range(2):                                    # 두 번 눌러도 되살아나지 않는다
+        assert client.post("/api/produce/picks/remove", json={"shortcode": code}).status_code == 200
+        assert code not in store.produce_pick_shortcodes(customer_id=0)
+    assert app_module._load_work_sources("", 0) == []     # AI PICK 후보에서 사라졌다
+
+
 def test_produce_pick_add_is_idempotent(tmp_path):
     """produce_pick_add는 두 번 불러도 빼지 않는다(toggle을 쓰면 두 번째에 사라진다)."""
     store = Store(tmp_path / "t.db")
