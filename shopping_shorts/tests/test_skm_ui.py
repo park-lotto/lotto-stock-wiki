@@ -281,6 +281,8 @@ def test_revert_work_restores_matching_panel_step7(tmp_path):
     const PANEL_COUNT = 8;
     let cur = 0, MIX_JOB = null;
     function canGoNext(){ return true; }
+    // revertWork도 게이트 판정을 stepLocked() 하나에 위임한다(2026-07-26) — 소스와 동일 스텁.
+    function stepLocked(i){ if(i === 7) return false; return i >= 1 && !!MIX_JOB && !canGoNext(); }
     function setScriptMode(){}
     function renderPool(){}
     function syncFootageToMixUrls(){}

@@ -2391,7 +2391,7 @@ function revertWork(){
   renderPool(); syncFootageToMixUrls(); refreshFinalPeek();
   const st = w.step;
   cur = (typeof st === 'number' && st >= 0 && st < PANEL_COUNT) ? st : cur;
-  if(cur > 0 && MIX_JOB && !canGoNext()) cur = 0;   // 미리보기 미확인이면 1단계로(게이트 규약 유지)
+  if(stepLocked(cur)) cur = 0;   // 게이트 판정은 stepLocked() 하나로(패널7 예외 포함, 위 _restoreWork 주석)
   renderSteps(); showPanel(); refreshNextBtn();
   saveWork();   // 되돌린 상태를 새 현재로 저장(_pushWork가 스냅샷 체인을 전진 → 다시 누르면 원상복귀)
 }
@@ -2445,7 +2445,12 @@ async function _restoreWork(workId){
   }
   const st = d.step;
   cur = (typeof st === 'number' && st >= 0 && st < PANEL_COUNT) ? st : 0;
-  if(cur > 0 && MIX_JOB && !canGoNext()) cur = 0;   // 미리보기 미확인이면 1단계로 되돌린다
+  // ★게이트는 stepLocked() 하나로만 판정한다(2026-07-26 사장님 제보 "새로고침하면 2단계로
+  //   되돌아온다"). 예전엔 여기서 `cur>0 && MIX_JOB && !canGoNext()`를 직접 다시 썼는데,
+  //   그 식은 stepLocked()의 **패널7 예외를 모른다** — 매칭·대본후보·미리보기를 "만드는"
+  //   자리가 바로 패널7이라, 미리보기를 아직 안 만든 사람은 새로고침할 때마다 그 자리에서
+  //   1단계로 쫓겨났다(다른 페이지 갔다 와도 동일). 판정을 두 군데 쓰면 반드시 갈라진다.
+  if(stepLocked(cur)) cur = 0;
   renderSteps(); showPanel(); refreshNextBtn();
   // ★편집안(#mixReview)·미리보기 <video>를 되살린다(2026-07-19). 게이트 재동기(위)가 PREVIEW_STATUS를
   //   서버 job에서 이미 읽어 맞췄다 — _restoreMixContext는 그 값을 안 건드리고 화면만 다시 그린다.
