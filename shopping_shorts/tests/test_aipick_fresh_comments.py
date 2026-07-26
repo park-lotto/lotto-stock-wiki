@@ -43,7 +43,10 @@ def test_aipick_source_uses_fresh_comments_over_snapshot(tmp_path, monkeypatch):
     sources = app_module._load_work_sources(None, LEGACY_CUSTOMER_ID)
     src = next(x for x in sources if x["video_id"] == "SOCKS")
     assert src["comments"] == 15430, "도서관 박제(6585)가 아니라 최신 크롤(15430)을 써야 한다"
-    assert src["seconds"] == 33.0   # 원본 길이(=마지막 whisper 세그먼트 end)도 그대로
+    assert src["seconds"] == 33.0   # 원본 길이(=마지막 세그먼트 end)도 그대로
+    # 서버가 이름·썸네일을 실어야 카드 숫자와 썸네일이 같은 영상이 된다(프론트 HANDOFF 추측 방지).
+    assert src["name"] == "살림홈"
+    assert "thumbnail" in src and "category" in src
 
 
 def test_aipick_source_falls_back_to_snapshot_when_no_history(tmp_path, monkeypatch):
