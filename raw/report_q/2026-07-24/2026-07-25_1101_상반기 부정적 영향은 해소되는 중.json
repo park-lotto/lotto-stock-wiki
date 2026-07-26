@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-25_1101_상반기 부정적 영향은 해소되는 중.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "김성래, 김예인",
+    "report_date": "2026년 7월 24일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "현대차",
+        "code": "005380",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "760,000원",
+        "tp_prev": "760,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q 매출액 49.2조원(+1.9% YoY), 영업이익 2.85조원(-20.7% YoY), OPM 5.8% 기록",
+        "estimate_revision": "매출액은 추정치 상회, 영업이익은 하회",
+        "next_catalyst": "엘란트라, 투싼 및 GV80 HEV 등 HEV 중심 물량 확대, 아이오닉3 판매 확대",
+        "thesis": [
+          "상반기 부정적 영향은 공급 차질 해소 및 비용 부담 완화로 해소되는 중",
+          "하반기 HEV 중심의 신차 효과 가시화 및 판매 믹스 개선 기대",
+          "소프트뱅크 풋옵션 행사로 인한 BD 지분 증가 및 RMAC 활용 상용화 가속화"
+        ],
+        "valuation_basis": "주당 영업가치와 BD 지분가치의 합으로 산출",
+        "risk": "글로벌 수요 둔화 및 협력사 화재에 따른 물량 차질, 고수익 차종 물량 차질에 따른 믹스 악화",
+        "supply_comment": "엔진밸브 공급 차질 및 공급 차질은 해소된 상황",
+        "quote": "동사는 글로벌 완성차 수요 둔화와 협력사 화재에 따른 물량 차질에도 2Q 매출액이 시장 기대치를 상회한 49.2조원(+1.9% 이하 YoY) 기록."
+      }
+    ],
+    "sector": "자동차"
+  }
+}

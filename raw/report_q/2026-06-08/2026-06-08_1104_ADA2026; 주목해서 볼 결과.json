@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-08_1104_ADA2026; 주목해서 볼 결과.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "정희령",
+    "report_date": "2026/06/08",
+    "stocks": [
+      {
+        "name": "한미약품",
+        "code": null,
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "700,000",
+        "tp_prev": "700,000",
+        "tp_direction": "flat",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "LA-UCN2 파이프라인 기술이전 기대감",
+        "thesis": [
+          "LA-UCN2 전임상 데이터에서 단독 및 비마그루맙 병용 효과 확인",
+          "비마그루맙 병용 요법을 통해 기존 비만치료제의 근감소 부작용 해소 가능성 확인",
+          "대사 질환 주력 기업들의 연구 개발 결과에 따른 다수의 딜 체결 시장 환경"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "기술이전 기대감 존재하는 한미약품의 HM17321 파이프라인에 주목",
+        "sector": "바이오"
+      }
+    ]
+  }
+}

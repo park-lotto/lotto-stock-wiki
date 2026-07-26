@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-26_1101_실적 및 업황 대비 매력적인 밸류에이션 구간.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS투자증권",
+    "analyst": "김대성",
+    "report_date": "2026.07.24",
+    "stocks": [
+      {
+        "name": "한국카본",
+        "code": "017960",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "50,000원",
+        "tp_prev": "59,000원",
+        "tp_direction": "down",
+        "earnings_outlook": {
+          "2Q26_Pre": "매출액 2,501억원(이하 YoY +8.1%), 영업이익 505억원(+59.7%, OPM 20.2%)을 전망"
+        },
+        "estimate_revision": "영업이익 추정치 하향",
+        "next_catalyst": "중국향 SB(2차 방벽) 물량 확대, 미국 및 일본향 보냉재 납품 기회, 방산 소재 물량 확대",
+        "thesis": [
+          "6년만에 영업이익률 20% 달성 전망",
+          "LNG선 호황에 따른 수주 잔고 확대 및 신조선가 상승에 따른 판가 인상 기대",
+          "방산 부문 천궁-II 매출 확대 및 미국 법인 27년 매출 발생 기대"
+        ],
+        "valuation_basis": "업종 전반인 멀티플 하락을 반영해 Target PER 16배를 적용",
+        "risk": "미-이란 지정학적 리스크로 인한 원자재 가격 상승",
+        "supply_comment": "LNG선 호황에 따라 다시 확대될 수주 잔고",
+        "quote": "업종 전반인 멀티플 하락을 반영해 Target PER 16배를 적용하고 목표주가를 50,000원으로 하향 조정하지만 중국향 SB(2차 방벽) 물량 확대, 미국 및 일본향 보냉재 납품 기회, 방산 소재 물량 확대 등 리레이팅 요인는 충분하다. 투자의견 매수를 유지한다.",
+        "sector": "조선"
+      }
+    ]
+  }
+}

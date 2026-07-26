@@ -1,6 +1,7 @@
 {
   "leading_sectors": [
-    "반도체"
+    "반도체",
+    "에너지"
   ],
   "stance": [
     {
@@ -14,7 +15,7 @@
   "stocks_mentioned": [
     {
       "name": "SK하닉",
-      "comment": "변동성이 심해진 상태",
+      "comment": "최근 주가 변동성이 매우 높은 상황임을 언급함",
       "ts": "00:04",
       "quote": "SK하닉 변동성 근황😭",
       "sector": "반도체"

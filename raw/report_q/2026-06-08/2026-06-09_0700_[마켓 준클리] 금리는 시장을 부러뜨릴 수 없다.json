@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_0700_[마켓 준클리] 금리는 시장을 부러뜨릴 수 없다.md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "김준영",
+    "report_date": "2026-06-08",
+    "target_kind": "market",
+    "market_direction": "중립",
+    "macro_vars": [
+      "미국 10년물 금리",
+      "비농업 일자리",
+      "연준의 금리 인상 스탠스",
+      "원달러 환율"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "은행",
+        "stance": "주목",
+        "reason": "금리 상승과 양호한 실질 성장률이 금융주의 방어주 역할에 힘을 실어줄 것"
+      }
+    ],
+    "style": "주도주 중심의 조정",
+    "event_calendar": [],
+    "top_picks": null,
+    "risk": "연준의 스탠스 전환(금리 인상이 한번에 그치지 않고 추세적으로 지속되거나, 경기 모멘텀이 부러질 수 있다는 우려)",
+    "quote": "금리 인상은 1회에 그칠 가능성이 크고 서비스 및 AI 중심 경제의 금리 민감도는 낮아 추세를 꺾긴 어렵다"
+  }
+}

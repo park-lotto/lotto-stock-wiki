@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_0700_0608(월) - 과열 청구서.md"
+  },
+  "questionnaire": {
+    "broker": "DS투자증권",
+    "analyst": "양형모",
+    "report_date": "2026.06.08",
+    "target_kind": "market",
+    "market_direction": "단기 조정 시나리오",
+    "macro_vars": [
+      "연준 인하 기대 소멸 및 인상 베팅 강화",
+      "고용 지표",
+      "유가",
+      "금리",
+      "달러"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "필수소비재·헬스케어·보험·결제",
+        "stance": "방어",
+        "reason": "순수 디펜시브로의 이동"
+      }
+    ],
+    "style": "스타일 로테이션을 동반한 변동성 조정",
+    "event_calendar": [
+      {
+        "date": "2026.07",
+        "event": "기업 실적 성장 등 촉매 도래"
+      }
+    ],
+    "top_picks": [
+      "Broadcom",
+      "NVIDIA",
+      "xAI",
+      "SpaceX",
+      "MSFT",
+      "Apple",
+      "ExxonMobil",
+      "Berkshire Hathaway",
+      "P&G",
+      "Coca-Cola",
+      "Johnson & Johnson",
+      "Walmart",
+      "Mastercard",
+      "Eli Lilly",
+      "Visa",
+      "Progressive",
+      "Union Pacific",
+      "Chubb",
+      "Welltower",
+      "Micron Technology",
+      "AMD",
+      "Tesla",
+      "Intel",
+      "Meta Platforms",
+      "Lam Research",
+      "Oracle",
+      "Amazon.com"
+    ],
+    "risk": "고용 데이터 내부 약세, AI 수익화 의문에 따른 고평가 멀티플 압축",
+    "quote": "시장 내부가 좁아지고 있다. 단기 조정 후 V자 반등을 전제로 강한 Buy를 제시해왔다. 그러나 이번은 매크로와 펀더멘털이 겹친 복합 국면이라, 즉각적 V자 반등을 단정하기는 어렵다."
+  }
+}

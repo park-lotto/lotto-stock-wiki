@@ -1,0 +1,120 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-26_0806_실적 시즌 전 주요 사항, 역시 크래프톤과 엔...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "이준호",
+    "report_date": "2026년 7월 24일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "크래프톤",
+        "code": "259960",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "460,000원",
+        "tp_prev": "420,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2분기 영업이익 4,337억원(+76.2%YoY, -22.8%QoQ, OPM 33.6%)으로 높아진 컨센서스를 상회할 전망이다. 2분기 PC 매출액은 4,560억원(+107.6%YoY, +25.3%QoQ)으로 추정한다. 2분기 모바일 매출액은 5,122억원(+19.8%YoY, -27.1%QoQ)으로 추정한다.",
+        "estimate_revision": "상향",
+        "next_catalyst": "8월 게임스컴에서 신작 5개 정보 공개 및 2027년부터 신작 출시 사이클",
+        "thesis": [
+          "PUBG PC의 성장과 서브노티카2의 초기 성과가 반영된 견조한 실적",
+          "현재 12MF PER 9배로 과도한 저평가 구간",
+          "8월 게임스컴을 통한 5개의 신작 라인업 공개 및 미래 출시 사이클 기대"
+        ],
+        "valuation_basis": "12MF PER 9배",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "크래프톤은 2분기 영업이익 4,337억원(+76.2%YoY, -22.8%QoQ, OPM 33.6%)으로 높아진 컨센서스를 상회할 전망이다."
+      },
+      {
+        "name": "NC",
+        "code": "036570",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "420,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 영업이익 1,345억원(+792.0%YoY, +18.7%QoQ)으로 높아진 컨센서스에 부합할 전망이다. 2분기 PC/콘솔 부문 매출액은 3,330억원(+263.1%YoY, +4.6%QoQ)으로 예상한다.",
+        "estimate_revision": "상향",
+        "next_catalyst": "9월 30일 아이온2 글로벌 얼리 억세스 및 9월 도쿄게임쇼 신작 공개",
+        "thesis": [
+          "아이온2 글로벌 및 신작 라인업을 통한 글로벌 시장 성장 전망",
+          "리니지 클래식의 BM 업데이트 성과",
+          "12MF PER 10배로 과도한 저평가 구간"
+        ],
+        "valuation_basis": "12MF PER 10배",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "NC는 2분기 영업이익 1,345억원(+792.0%YoY, +18.7%QoQ)으로 높아진 컨센서스에 부합할 전망이다."
+      },
+      {
+        "name": "시프트업",
+        "code": "462870",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "45,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 영업이익 331억원(-51.5%YoY, +53.8%QoQ, OPM 57.3%)으로 컨센서스를 상회하는 실적을 기록할 전망이다. 2분기 승리의 여신: 니케 매출은 457억원(+1.3%YoY, +39.8%QoQ)으로 추정한다.",
+        "estimate_revision": null,
+        "next_catalyst": "4분기 프로젝트 스피릿 정보 공개",
+        "thesis": [
+          "승리의 여신: 니케의 3.5주년 업데이트로 전년 대비 큰 폭의 성장",
+          "스텔라 블레이드의 안정적 판매량 및 하반기 스위치2 출시 예정",
+          "차기작 정보 공개 미반영된 바닥 구간"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "시프트업은 2분기 영업이익 331억원(-51.5%YoY, +53.8%QoQ, OPM 57.3%)으로 컨센서스를 상회하는 실적을 기록할 전망이다."
+      },
+      {
+        "name": "네오위즈",
+        "code": "095660",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "36,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "컨센서스와 기존 추정치를 소폭 하회하는 실적이 예상된다.",
+        "estimate_revision": null,
+        "next_catalyst": "2027년 다수의 신작 정보 공개",
+        "thesis": [
+          "브라운더스트2와 웹보드 게임의 견조한 이익",
+          "PC/콘솔 6종 라인업 및 기존 영업 가치 미반영 구간",
+          "2027년 다수의 신작 공개와 함께 주가 상승 전망"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "네오위즈는 컨센서스와 기존 추정치를 소폭 하회는 실적이 예상된다."
+      },
+      {
+        "name": "넷마블",
+        "code": "251270",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "60,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 영업이익 778억원(-23.1%YoY, +22.8%QoQ, OPM 10.8%)으로 컨센서스를 하회할 전망이다.",
+        "estimate_revision": "하향",
+        "next_catalyst": "상반기 신작의 대규모 업데이트를 통한 반등 및 9월 이후 신작 정보 공개",
+        "thesis": [
+          "상반기 출시작(일곱 개의 대죄: Origin 등)의 성과 미흡",
+          "마케팅비 증가로 인한 컨센서스 하회",
+          "이번 2분기 실적발표를 기점으로 추정치 조정 마무리 예상"
+        ],
+        "valuation_basis": null,
+        "risk": "상반기 신작 기대 이하 성과로 인한 지속적인 추정치 하향",
+        "supply_comment": null,
+        "quote": "넷마블은 2분기 영업이익 778억원(-23.1%YoY, +22.8%QoQ, OPM 10.8%)으로 컨센서스를 하회할 전망이다."
+      }
+    ]
+  }
+}

@@ -1,9 +1,4 @@
 {
-  "2026-07-07": {
-    "atoms": {},
-    "queue_new": 0,
-    "pytest_ok": false
-  },
   "2026-07-09": {
     "atoms": {
       "telegram": 72,
@@ -86,6 +81,11 @@
       "youtube": 12
     },
     "queue_new": 3,
+    "pytest_ok": false
+  },
+  "2026-07-26": {
+    "atoms": {},
+    "queue_new": 0,
     "pytest_ok": false
   }
 }
