@@ -854,6 +854,34 @@ def _trim_to_budget(narration, char_target):
     return new if (new and new != narration) else None
 
 
+def _conform_overflow_beats(beats, target_seconds, conform=None):
+    """후보 총 나레이션이 목표초를 넘으면(>1.15배) 각 비트를 목표 발화초에 맞게 압축한다.
+    _length_penalty 주석이 약속한 'conform 흡수'의 실제 배선(2026-07-26). conform은 주입
+    가능(테스트용) — 기본은 conform_narration. 총량이 예산 이내면 원본 그대로(무변경)."""
+    if not beats or not target_seconds or target_seconds <= 0:
+        return beats
+    def _clen(s):
+        return len("".join((s or "").split()))
+    total_chars = sum(_clen(b.get("narration", "")) for b in beats)
+    budget = target_seconds * _SYLLABLES_PER_SEC
+    if total_chars <= budget * 1.15:
+        return beats                      # 예산 이내 → 무변경(회귀0)
+    conform = conform or conform_narration
+    # 비트별 목표초 = 그 비트의 현재 글자 비중 × 전체 목표초 (긴 비트가 더 줄어든다)
+    out = []
+    for b in beats:
+        nb = dict(b)
+        cur = _clen(b.get("narration", ""))
+        if cur and total_chars > 0:
+            beat_target_sec = target_seconds * (cur / total_chars)
+            new_narr = conform(b.get("narration", ""), beat_target_sec)
+            if new_narr and _clen(new_narr) < cur:
+                nb["narration"] = new_narr
+                nb["target_seconds"] = round(max(1.5, _clen(new_narr) / _SYLLABLES_PER_SEC), 1)
+        out.append(nb)
+    return out
+
+
 _TYPE_SCHEMA = {
     "type": "object",
     "properties": {"video_type": {"type": "string"}},
@@ -1138,6 +1166,9 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         # ping_pong이면 백본이 순서를 소유하므로 grain 리오더는 끄고(is_recipe=False),
         # dedup(순서 불변, primary→alternate 스왑만)만 남긴다. 백본은 과정순서를 이미 처리한다.
         plan["beats"] = _apply_anchor_grain(plan["beats"], is_recipe=(is_recipe and not ping_pong))
+        # 초과 흡수(Task11): 총 나레이션이 목표초를 넘으면 각 비트를 conform으로 줄인다.
+        # _length_penalty 주석이 약속한 실제 배선 — 채점 전에 적용해 감점이 콘폼된 길이를 본다.
+        plan["beats"] = _conform_overflow_beats(plan["beats"], target_seconds)
         if ping_pong:
             from shopping_shorts import backbone
             # 1) 행위 매칭(화면-대사 어긋남 + 길이) 2) 백본 순서 고정(과정순서)
