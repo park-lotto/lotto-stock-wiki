@@ -141,7 +141,15 @@ def test_footage_on_but_no_pick_state_distinct():
     assert "renderNoScriptState" in HTML
     assert "담긴 영상의 대본을 아직 분석하지 못했어요" in HTML
     # refreshStep0이 hasFootage를 renderAiPick에 넘겨 null-pick 분기를 가른다.
-    assert "renderAiPick(await r.json(), hasFootage)" in HTML
+    # (2026-07-26 자동적재로 응답을 변수 d에 받게 바뀌었다 — 옛 한 줄 리터럴 대신 계약만 검사)
+    assert "renderAiPick(d, hasFootage)" in HTML
+    # ★자동적재는 refreshStep0을 다시 부르지 않는다 — 상호 재귀가 무한루프 사고의 원인이었다.
+    _step0 = HTML[HTML.index("async function refreshStep0(){"):HTML.index("function fmtNum(")]
+    # 선언줄과 주석(//)은 뺀 '실행되는 코드'에서만 자기호출을 찾는다.
+    _body = [ln for ln in _step0.splitlines()[1:] if not ln.strip().startswith("//")]
+    assert not any("refreshStep0(" in ln for ln in _body), \
+        "refreshStep0이 자기 자신을 다시 부른다(2026-07-26 무한루프 사고의 형태)"
+    assert "_autoloadTried" in _step0, "자동적재 1회 래치가 없다"
 
 
 def test_pool_card_toggle_only():
