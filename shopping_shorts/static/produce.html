@@ -2682,9 +2682,49 @@ function renderPool(){
 // ── Task 4(2026-07-23): 자동담김 도착 감지 → AI PICK 또는 빈 상태 ──────────
 // 담긴(useFootage) 재료가 하나라도 있으면 서버(/api/produce/aipick)에 "지금 담긴 것 중
 // 완성도 1위가 뭐야"를 묻는다. 없으면 조회 없이 바로 빈 상태(불필요한 요청 방지).
+// ── B안(2026-07-26): 담긴 영상 대본 자동 추출 → AI PICK 카드가 관리자·사용자 동일하게 뜬다 ──
+// 관리자만 카드가 떴던 건 그 영상이 도서관에 저장돼 있어서다. B안은 도서관을 안 건드리고
+// (사장님 모델: 대본 즐겨찾기=본인이 고른 것만) 담긴 영상의 원본 대본을 **작업 안에만**
+// 캐시한다(HANDOFF[i].full_text). 서버 _load_work_sources가 이 작업-로컬 대본을 AI PICK
+// 소스로 병합해 build_aipick이 카드를 만든다. 그 뒤 '이대로 만들기 시작'은 기존대로 뼈대+
+// 부품은행으로 새 대본을 생성한다(추출≠생성).
+let _extractingSet = new Set();   // 지금 추출 중인 url (중복요청 방지)
+let _extractFailedSet = new Set();  // 추출 실패 url (무한재시도 방지 — 폴백의 수동 '뽑기'로)
+async function ensureScriptsForFootage(){
+  const need = HANDOFF.filter(h=>h && h.useFootage && h.url && !(h.full_text||'').trim()
+                && !_extractingSet.has(h.url) && !_extractFailedSet.has(h.url));
+  if(!need.length) return;
+  need.forEach(h=>_extractingSet.add(h.url));
+  renderExtractingState();
+  for(const it of need){
+    try{
+      const r = await fetch('/api/produce/extract_from_url', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({url:it.url, shortcode:it.shortcode||undefined, category:it.category||undefined,
+          caption:it.caption||undefined, name:it.name||undefined})});
+      const d = await r.json();
+      if(d && d.ok && (d.full_text||'').trim()){
+        it.full_text = d.full_text;
+        it.structure = d.structure || it.structure || null;
+        if(d.category) it.category = d.category;
+      } else { _extractFailedSet.add(it.url); }   // 실패(다운로드/한도 등) → 폴백의 수동 뽑기로 안내
+    }catch(e){ _extractFailedSet.add(it.url); }
+    _extractingSet.delete(it.url);
+  }
+  await _pushWork();   // ★서버 work.state에 대본을 먼저 반영(디바운스 우회) → 아래 aipick이 즉시 읽는다
+  refreshStep0();
+}
+function renderExtractingState(){
+  const el = document.getElementById('aiPick'); if(!el) return;
+  el.innerHTML = `<div class="skm-card empty"><h2>⏳ 담긴 영상의 대본을 분석하고 있어요…</h2>
+    <div class="hint" style="text-align:center;color:var(--sub);margin-top:8px">영상당 10~30초 — 끝나면 완성도 1위 대본을 골라 보여줍니다.</div></div>`;
+}
 async function refreshStep0(){
   const hasFootage = HANDOFF.some(h=>h.useFootage);
   if(!hasFootage){ renderEmptyState(); return; }
+  // B안: 담긴 영상 중 대본 없는 게 있으면 자동 추출한다. 추출 중이면 그 상태를 보여주고
+  // 끝난 뒤(ensureScriptsForFootage가 다시 refreshStep0 호출) 카드를 그린다.
+  const pending = HANDOFF.some(h=>h && h.useFootage && h.url && !(h.full_text||'').trim() && !_extractFailedSet.has(h.url));
+  if(pending){ ensureScriptsForFootage(); return; }
   try{
     // 사장님이 썸네일을 클릭해 특정 영상을 AI PICK으로 지정(bbMain)했으면 서버에도 강제한다
     // (안 그러면 완성도 자동선정이 클릭을 덮어씀 — forced가 지정 시 최우선, app.py 참조).

@@ -5894,6 +5894,44 @@ def _load_work_sources(work_id, cid):
             "thumbnail": w.get("thumbnail") or "",
             "category": w.get("category") or "",
         })
+    # ── B안(2026-07-26): 작업(work)에 담긴 영상의 원본 대본을 AI PICK 소스로 병합 ──
+    # 관리자만 카드가 떴던 건 그 영상이 도서관(script_wiki)에 저장돼 있어서다. 도서관을 안 건드리고
+    # (사장님 모델: 대본 즐겨찾기=본인이 직접 담은 것만 유지) 제작소에서 담기만 하면 카드가 뜨게 한다.
+    # 클라(produce.html ensureScriptsForFootage)가 담기 시 extract_from_url로 원본 대본을 뽑아
+    # work.state.handoff[i].full_text/structure에 캐시한다 → 여기서 그걸 읽어 소스로 변환한다.
+    # 도서관 항목과 dedup(도서관 우선). 대본(full_text) 없는 담김은 건너뛴다(카드 대상 아님).
+    seen = {s["video_id"] for s in sources}
+    seen_urls = {s.get("source_url") for s in sources if s.get("source_url")}
+    if work_id:
+        w = store.get_produce_work(work_id, customer_id=cid)
+        state = w.get("state") if isinstance(w, dict) else None
+        handoff = state.get("handoff", []) if isinstance(state, dict) else []
+        for h in handoff:
+            if not isinstance(h, dict) or not h.get("useFootage"):
+                continue
+            text = (h.get("full_text") or "").strip()
+            if not text:
+                continue
+            url = h.get("url") or ""
+            vid = h.get("shortcode") or hashlib.sha1(url.encode()).hexdigest()[:12]
+            if vid in seen or (url and url in seen_urls):
+                continue
+            seen.add(vid)
+            if url:
+                seen_urls.add(url)
+            sources.append({
+                "video_id": vid,
+                "text": text,
+                "followers": h.get("followers") or None,
+                "comments": h.get("comments") or None,
+                "seconds": None,
+                "views": None,
+                "structure": h.get("structure") or None,
+                "source_url": url,
+                "name": h.get("name") or "",
+                "thumbnail": h.get("thumbnail") or "",
+                "category": h.get("category") or "",
+            })
     return sources
 
 
