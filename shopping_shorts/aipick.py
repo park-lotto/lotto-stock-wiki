@@ -63,21 +63,24 @@ def build_aipick(sources, meta, forced=None):
         return {"pick_id": None, "pick_index": -1, "tiles": {}, "structure": {}, "candidates": [], "pick_meta": {}}
     meta = meta or {}
     scored = score_backbones(sources, meta)                 # [{video_id,coverage,engagement,score}] score desc
-    ranks = {r["video_id"]: i + 1 for i, r in enumerate(scored)}
     pick_id = pick_backbone(sources, meta, forced=forced)    # forced(⭐메인) 우선
     idx = next((i for i, s in enumerate(sources) if str(s.get("video_id")) == str(pick_id)), 0)
     pick = sources[idx]
-    m = meta.get(str(pick_id), {})
     views, followers = pick.get("views"), pick.get("followers")
     # comments는 항상 pick(소스)에 이미 실려 있다(_load_work_sources가 키 자체를
-    # 빠짐없이 채운다, 값은 None일 수 있어도) — m.get("comments") 기본값은 도달 불가라 제거.
-    comments, avg = pick.get("comments"), m.get("avg_comments")
+    # 빠짐없이 채운다, 값은 None일 수 있어도).
+    comments = pick.get("comments")
+    # ★진짜 값만 낸다(2026-07-26 사장님: 지표가 매번 바뀌고 추정 같다).
+    #   폐기: comments_x_avg = comments/'지금 바구니 평균' → 소스를 담고 뺄 때마다 배수가
+    #         흔들려 벤치마크로 무의미(순환참조). engagement_rank = AI PICK은 정의상 최고점이라
+    #         거의 항상 '1위'인 동어반복 + 점수가 재조합커버리지 지배라 '참여밀도'와도 어긋남.
+    #   대체: engagement_rate = 댓글/팔로워 — 소스 자체의 고정 실측치(=진짜 참여율). 조회수는
+    #         이 시스템에 저장 안 돼(항상 None) views_x_followers는 사실상 안 뜬다(그대로 둔다).
     tiles = {
         "views": views,
         "views_x_followers": round(views / followers, 1) if views and followers else None,
         "comments": comments,
-        "comments_x_avg": round(comments / avg, 1) if comments and avg else None,
-        "engagement_rank": ranks.get(str(pick_id), 1),
+        "engagement_rate": round(comments / followers * 100, 1) if comments and followers else None,
         "seconds": pick.get("seconds"),
     }
     # 도서관(script_wiki) 저장 시 analyze_structure가 이미 1회 돌아 structure_json에

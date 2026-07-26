@@ -5859,8 +5859,9 @@ def _load_work_sources(work_id, cid):
 
 def _build_source_meta(sources):
     """backbone.score_backbones/pick_backbone이 기대하는 meta = {video_id: {platform,
-    comments, avg_comments}}. avg_comments = 지금 pool(담긴 소스들)의 댓글수 평균 —
-    comments_x_avg 타일("평균 대비 N배")의 기준값."""
+    comments, avg_comments}}. avg_comments(바구니 평균)는 폐기된 comments_x_avg 타일의
+    기준값이었다(2026-07-26 진짜값 전환으로 타일 제거) — score_backbones는 comments만 읽으므로
+    지금은 참고용으로만 남겨둔다(제거해도 무방)."""
     counted = [s["comments"] for s in sources if s.get("comments") is not None]
     avg = round(sum(counted) / len(counted), 1) if counted else None
     meta = {}

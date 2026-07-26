@@ -10,9 +10,33 @@ def test_build_aipick_picks_top_and_tiles():
     out = build_aipick(sources, meta)
     assert out["pick_id"] in ("a", "b")
     assert out["tiles"]["comments"] is not None
-    assert out["tiles"]["engagement_rank"] == 1
+    # 진짜 값만(2026-07-26): 동어반복 rank·바구니평균 배수 폐기, 참여율(댓글/팔로워)로 교체.
+    assert "engagement_rank" not in out["tiles"]
+    assert "comments_x_avg" not in out["tiles"]
+    assert "engagement_rate" in out["tiles"]
     assert isinstance(out["candidates"], list) and len(out["candidates"]) == 2
     assert isinstance(out["pick_meta"], dict) and "title" in out["pick_meta"]
+
+
+def test_build_aipick_engagement_rate_is_comments_over_followers():
+    """참여율 = 댓글/팔로워*100 — 소스 자체 실측치라 다른 소스를 담고 빼도 안 흔들린다(고정값)."""
+    sources = [
+        {"video_id": "a", "text": "훅...결과...", "followers": 120000, "comments": 6585, "seconds": 33},
+        {"video_id": "b", "text": "짧은 대본", "followers": 300, "comments": 5, "seconds": 18},
+    ]
+    out = build_aipick(sources, {})
+    # pick='a'(재조합·참여 최고점). 6585/120000*100 = 5.48 → 5.5
+    assert out["pick_id"] == "a"
+    assert out["tiles"]["engagement_rate"] == 5.5
+    # 소스 b만 있어도 a의 참여율은 그 소스 값 그대로 — 바구니 구성과 무관(고정).
+    out_a_only = build_aipick([sources[0]], {})
+    assert out_a_only["tiles"]["engagement_rate"] == 5.5
+
+
+def test_build_aipick_engagement_rate_none_without_followers():
+    """팔로워가 없으면 참여율은 None(거짓수치 대신 타일 숨김) — 프론트가 우아하게 폴백."""
+    out = build_aipick([{"video_id": "a", "text": "x", "comments": 50}], {})
+    assert out["tiles"]["engagement_rate"] is None
 
 
 def test_build_aipick_respects_forced():
