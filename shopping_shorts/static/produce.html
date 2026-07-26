@@ -4902,7 +4902,8 @@ function _bootRestore(){
   // 아래 _consumeProduceHandoff가 sessionStorage에서 직전 작업의 WORK_ID까지 되살리므로(구멍 1
   // 수정의 대가), 신호 없이 오면 "+ 새 작업"이 **직전 작업을 열고 이후 저장이 그걸 덮어쓴다**.
   // 사장님이 제보한 "작업물이 지워진다"가 정확히 그 형태다(최종 whole-branch 리뷰 C-1).
-  if(sp.get('new')){
+  const isNew = sp.get('new');
+  if(isNew){
     clearWork();
     // ★URL에서 new를 지운다. 안 지우면 이 화면에서 새로고침할 때마다 또 새 작업이 생겨
     // cad0e7b0이 막은 "매 로드마다 작업 복제"가 반대 방향으로 되살아난다.
@@ -4914,11 +4915,34 @@ function _bootRestore(){
     //   "✓ 저장됨" 표시 + 복원 직후 첫 편집도 되돌릴 수 있게 한다. (여기서 시드 = 슬라이스 테스트 불간섭)
     //   Promise.resolve: _restoreWork가 프라미스가 아니어도(테스트 스텁) .then이 안전. 시더는 있을 때만.
     Promise.resolve(_restoreWork(wid)).then(()=>{ if(typeof _seedSaveBaseline==='function') _seedSaveBaseline(); });
-  } else {
-    // sessionStorage 경로(_consumeProduceHandoff)는 끝에서 saveWork()를 부른다 → _pushWork가
-    //   기준선(_lastCommitted)을 자동으로 잡는다. 별도 시드 불필요.
+  } else if(isNew){
+    // + 새 작업: clearWork 후 빈 새 작업. 계정싱크를 타면 직전 작업을 도로 불러와 hijack한다(C-1 재발).
     _consumeProduceHandoff();
+  } else {
+    // 계정 크로스기기 싱크(2026-07-26): 그냥 /produce면 로컬 복원 후, 빈 기기일 때만 계정 최신작업 로드.
+    _bootAccountLatestOrLocal();
   }
+}
+// 계정 크로스기기 싱크(2026-07-26 사장님 요청). ★_bootRestore 슬라이스(테스트 하네스: def~호출)
+// 안에 들도록 여기(_bootRestore 정의 뒤·호출 앞)에 둔다.
+//  1) 로컬(진행중 작업/방금 보낸 재료)을 먼저 **동기** 복원 — 새로고침 연속성(cad0e7b0)과
+//     _bootRestore 직후 WORK_ID를 읽는 코드/테스트 계약을 지키려면 반드시 동기여야 한다.
+//  2) 로컬이 완전히 빈 기기(새 브라우저/탭)일 때만, 계정에서 최근 편집한 작업을 서버에서
+//     이어받는다(빈 새 탭을 열면 모바일에서 하던 게 뜬다). 로컬 있으면 유지 → 덮어쓰기·핑퐁·유실 0.
+//  * 로컬이 있는데 다른 기기 작업으로 바꾸려면 ?work=<id>(내 작업 목록)로 명시적으로 연다.
+async function _bootAccountLatestOrLocal(){
+  _consumeProduceHandoff();                        // 로컬 복원(동기) — 연속성 우선
+  if(WORK_ID
+     || (typeof HANDOFF!=='undefined' && HANDOFF && HANDOFF.length)
+     || (typeof STATE!=='undefined' && STATE && STATE.script)) return;   // 로컬 있음 → 유지
+  try{
+    const d=await (await fetch('/api/produce/works')).json();            // updated_at DESC → [0]=최신
+    const latest=(d && d.ok && d.works && d.works.length) ? d.works[0] : null;
+    if(latest && latest.work_id){
+      await _restoreWork(latest.work_id);                                // 빈 기기 → 계정 최신작업 이어받기
+      if(typeof _seedSaveBaseline==='function') _seedSaveBaseline();
+    }
+  }catch(e){}                                                            // fetch 실패/무네트워크 → 빈 상태 유지
 }
 _bootRestore();
 refreshFinalPeek();
