@@ -4895,31 +4895,6 @@ function initThumb(){
 }
 // ── 썸네일 끝 ────────────────────────────────────────────────
 
-// 계정 크로스기기 싱크(2026-07-26 사장님 요청): ?work=·?new 없이 그냥 /produce로 왔을 때,
-// 이 기기의 로컬(sessionStorage) 작업 대신 "계정에서 가장 최근 편집한 작업"을 서버에서 불러온다
-// — 모바일에서 하던 게 PC를 열면 그대로 이어지게. (전엔 기기별 sessionStorage라 영영 안 맞았다)
-//  · 방금 이 기기에서 "제작소로 보내기"한 재료(produce_handoff)가 있으면 그게 우선(기기 의도).
-//  · 계정 최신이 이 기기 로컬과 "다른" 작업일 때만 불러온다(=다른 기기에서 더 최근 편집).
-//    같은 작업이거나 서버에 없으면 로컬 복원(새로고침 연속성 유지).
-//  · 유실 0: 밀려난 작업도 서버(내 작업 목록·?work=)에 그대로 남고, _restoreWork는 saveWork를
-//    안 불러 updated_at을 안 바꾼다 → "열기만 해도 최신이 뒤바뀌는" 핑퐁이 없다.
-async function _bootAccountLatestOrLocal(){
-  let fresh=null; try{ fresh=JSON.parse(sessionStorage.getItem('produce_handoff')||'null'); }catch(e){}
-  if(fresh && fresh.length){ _consumeProduceHandoff(); return; }   // 방금 이 기기에서 보낸 재료 우선
-  let localWid=null;
-  try{ localWid=(JSON.parse(sessionStorage.getItem('produce_work')||'null')||{}).work_id || null; }catch(e){}
-  let latest=null;
-  try{
-    const d=await (await fetch('/api/produce/works')).json();     // updated_at DESC → [0]=최신
-    if(d && d.ok && d.works && d.works.length) latest=d.works[0];
-  }catch(e){}
-  if(latest && latest.work_id && latest.work_id !== localWid){
-    await _restoreWork(latest.work_id);                           // 다른 기기의 더 최근 작업 이어받기
-    if(typeof _seedSaveBaseline==='function') _seedSaveBaseline();
-  } else {
-    _consumeProduceHandoff();                                     // 로컬이 최신/서버에 없음 → 로컬 복원
-  }
-}
 // ?work=<id>로 들어왔으면 서버 작업파일에서, 아니면 기존대로 sessionStorage에서 복원.
 function _bootRestore(){
   const sp = new URLSearchParams(location.search);
@@ -4927,7 +4902,8 @@ function _bootRestore(){
   // 아래 _consumeProduceHandoff가 sessionStorage에서 직전 작업의 WORK_ID까지 되살리므로(구멍 1
   // 수정의 대가), 신호 없이 오면 "+ 새 작업"이 **직전 작업을 열고 이후 저장이 그걸 덮어쓴다**.
   // 사장님이 제보한 "작업물이 지워진다"가 정확히 그 형태다(최종 whole-branch 리뷰 C-1).
-  if(sp.get('new')){
+  const isNew = sp.get('new');
+  if(isNew){
     clearWork();
     // ★URL에서 new를 지운다. 안 지우면 이 화면에서 새로고침할 때마다 또 새 작업이 생겨
     // cad0e7b0이 막은 "매 로드마다 작업 복제"가 반대 방향으로 되살아난다.
@@ -4939,12 +4915,34 @@ function _bootRestore(){
     //   "✓ 저장됨" 표시 + 복원 직후 첫 편집도 되돌릴 수 있게 한다. (여기서 시드 = 슬라이스 테스트 불간섭)
     //   Promise.resolve: _restoreWork가 프라미스가 아니어도(테스트 스텁) .then이 안전. 시더는 있을 때만.
     Promise.resolve(_restoreWork(wid)).then(()=>{ if(typeof _seedSaveBaseline==='function') _seedSaveBaseline(); });
+  } else if(isNew){
+    // + 새 작업: clearWork 후 빈 새 작업. 계정싱크를 타면 직전 작업을 도로 불러와 hijack한다(C-1 재발).
+    _consumeProduceHandoff();
   } else {
-    // 계정 크로스기기 싱크(2026-07-26): 그냥 /produce로 오면 이 기기 로컬 대신 계정 최신작업을
-    //   불러온다(모바일→PC 자동 이어받기). 서버에 없거나 로컬이 최신이면 _consumeProduceHandoff로
-    //   떨어져 기존 동작(끝에서 saveWork→기준선 자동 시드) 그대로다.
+    // 계정 크로스기기 싱크(2026-07-26): 그냥 /produce면 로컬 복원 후, 빈 기기일 때만 계정 최신작업 로드.
     _bootAccountLatestOrLocal();
   }
+}
+// 계정 크로스기기 싱크(2026-07-26 사장님 요청). ★_bootRestore 슬라이스(테스트 하네스: def~호출)
+// 안에 들도록 여기(_bootRestore 정의 뒤·호출 앞)에 둔다.
+//  1) 로컬(진행중 작업/방금 보낸 재료)을 먼저 **동기** 복원 — 새로고침 연속성(cad0e7b0)과
+//     _bootRestore 직후 WORK_ID를 읽는 코드/테스트 계약을 지키려면 반드시 동기여야 한다.
+//  2) 로컬이 완전히 빈 기기(새 브라우저/탭)일 때만, 계정에서 최근 편집한 작업을 서버에서
+//     이어받는다(빈 새 탭을 열면 모바일에서 하던 게 뜬다). 로컬 있으면 유지 → 덮어쓰기·핑퐁·유실 0.
+//  * 로컬이 있는데 다른 기기 작업으로 바꾸려면 ?work=<id>(내 작업 목록)로 명시적으로 연다.
+async function _bootAccountLatestOrLocal(){
+  _consumeProduceHandoff();                        // 로컬 복원(동기) — 연속성 우선
+  if(WORK_ID
+     || (typeof HANDOFF!=='undefined' && HANDOFF && HANDOFF.length)
+     || (typeof STATE!=='undefined' && STATE && STATE.script)) return;   // 로컬 있음 → 유지
+  try{
+    const d=await (await fetch('/api/produce/works')).json();            // updated_at DESC → [0]=최신
+    const latest=(d && d.ok && d.works && d.works.length) ? d.works[0] : null;
+    if(latest && latest.work_id){
+      await _restoreWork(latest.work_id);                                // 빈 기기 → 계정 최신작업 이어받기
+      if(typeof _seedSaveBaseline==='function') _seedSaveBaseline();
+    }
+  }catch(e){}                                                            // fetch 실패/무네트워크 → 빈 상태 유지
 }
 _bootRestore();
 refreshFinalPeek();

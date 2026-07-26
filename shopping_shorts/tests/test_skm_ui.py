@@ -357,12 +357,14 @@ def test_set_matching_ui_toggles_button_disabled_state():
 
 @pytest.mark.skipif(not shutil.which("node"), reason="node 필요")
 def test_boot_account_latest_or_local_cross_device_sync(tmp_path):
-    """계정 크로스기기 싱크(2026-07-26): ?work=·?new 없이 그냥 /produce로 왔을 때
-    _bootAccountLatestOrLocal이 (A)방금 이 기기에서 보낸 재료 우선 (B)계정 최신이 다른 작업이면
-    이어받기 (C)같은 작업이면 로컬유지 (D)로컬 없으면 계정 최신 자동 (E)서버에 없으면 로컬복원
-    을 정확히 고르는지 node로 실제 실행해 검증한다(모바일→PC 자동 이어받기의 핵심)."""
+    """계정 크로스기기 싱크(2026-07-26): 그냥 /produce로 왔을 때 _bootAccountLatestOrLocal은
+    (1) 로컬(진행중 작업/보낸 재료)을 **먼저 동기 복원**해 새로고침 연속성을 지키고,
+    (2) 로컬이 **완전히 빈 기기(새 브라우저/탭)일 때만** 계정 최신작업을 서버에서 이어받는다
+        (모바일→새 PC탭 자동로드). 로컬이 있으면 절대 덮지 않는다(유실·핑퐁 0).
+    로컬이 있는데 다른 기기 작업으로 바꾸려면 ?work=<id>로 명시적으로 연다.
+    node로 실제 실행해 5경우를 고정한다."""
     start = HTML.index("async function _bootAccountLatestOrLocal(){")
-    end = HTML.index("// ?work=<id>로 들어왔으면", start)
+    end = HTML.index("_bootRestore();", start)      # 함수는 _bootRestore 호출 직전에 정의됨
     body = HTML[start:end]
 
     def run(ss, works):
@@ -373,8 +375,16 @@ def test_boot_account_latest_or_local_cross_device_sync(tmp_path):
             "const sessionStorage={getItem:k=> (k in _SS)?_SS[k]:null};\n"
             "const _WORKS=" + json.dumps(works) + ";\n"
             "global.fetch=async()=>({json:async()=>({ok:true,works:_WORKS})});\n"
-            "function _consumeProduceHandoff(){calls.push('consume');}\n"
-            "async function _restoreWork(id){calls.push('restore:'+id);}\n"
+            "let HANDOFF=[]; let WORK_ID=null; const STATE={script:''};\n"
+            # 실제 _consumeProduceHandoff처럼 로컬(handoff/produce_work)을 복원해 WORK_ID/HANDOFF를 세운다.
+            "function _consumeProduceHandoff(){\n"
+            "  calls.push('consume');\n"
+            "  let h=null; try{ h=JSON.parse(_SS.produce_handoff||'null'); }catch(e){}\n"
+            "  let w=null; try{ w=JSON.parse(_SS.produce_work||'null'); }catch(e){}\n"
+            "  if(h && h.length) HANDOFF=h.slice();\n"
+            "  if(w){ WORK_ID=w.work_id||null; if(w.handoff) HANDOFF=w.handoff; if(w.script) STATE.script=w.script; }\n"
+            "}\n"
+            "async function _restoreWork(id){ calls.push('restore:'+id); }\n"
             "function _seedSaveBaseline(){}\n"
             + body +
             "\n(async()=>{await _bootAccountLatestOrLocal();"
@@ -389,16 +399,16 @@ def test_boot_account_latest_or_local_cross_device_sync(tmp_path):
         return json.loads(out.stdout.strip().splitlines()[-1])
 
     def pw(wid):   # produce_work sessionStorage 값(진행중 작업)
-        return json.dumps({"work_id": wid, "handoff": [{"url": "x"}]})
+        return json.dumps({"work_id": wid, "script": "x", "handoff": [{"url": "x"}]})
 
-    # (A) 방금 이 기기에서 "제작소로 보내기"한 재료가 있으면 계정 최신 있어도 그게 우선
+    # (A) 방금 이 기기에서 보낸 재료 + 로컬작업 → 로컬 복원으로 유지(계정 최신 안 덮음)
     assert run({"produce_handoff": json.dumps([{"url": "a"}]), "produce_work": pw("B")},
                [{"work_id": "A"}]) == ["consume"]
-    # (B) 로컬은 B, 계정 최신은 A(다름=다른 기기서 더 최근) → A 이어받기
-    assert run({"produce_work": pw("B")}, [{"work_id": "A"}, {"work_id": "B"}]) == ["restore:A"]
-    # (C) 로컬 A == 계정 최신 A → 로컬 유지(새로고침 연속성)
+    # (B) 로컬작업 B 있음, 계정 최신 A(다름) → 로컬 유지(덮지 않음). 바꾸려면 ?work=로.
+    assert run({"produce_work": pw("B")}, [{"work_id": "A"}, {"work_id": "B"}]) == ["consume"]
+    # (C) 로컬 A == 계정 최신 A → 로컬 유지
     assert run({"produce_work": pw("A")}, [{"work_id": "A"}]) == ["consume"]
-    # (D) 로컬 작업 없음(새 기기/브라우저) → 계정 최신 자동 로드
-    assert run({}, [{"work_id": "A"}]) == ["restore:A"]
-    # (E) 서버에 작업 없음 → 로컬 복원(폴백)
-    assert run({"produce_work": pw("B")}, []) == ["consume"]
+    # (D) 로컬 완전히 빈 기기(새 브라우저/탭) → 계정 최신작업 자동 이어받기(모바일→PC)
+    assert run({}, [{"work_id": "A"}]) == ["consume", "restore:A"]
+    # (E) 빈 기기 + 서버에도 작업 없음 → 빈 상태 유지(폴백)
+    assert run({}, []) == ["consume"]
