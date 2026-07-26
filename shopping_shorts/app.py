@@ -5941,6 +5941,133 @@ def api_produce_aipick(request: Request, work_id: str = "", forced: str = ""):
     return build_aipick(sources, meta, forced=(forced or _forced_backbone(work_id, cid)) or None)
 
 
+# ── 담긴 영상 자동 대본적재(2026-07-26) ─────────────────────────────────
+# 왜 필요한가: AI PICK 소스는 script_wiki(도서관) ∩ produce_script_picks(담김)이고
+# 둘 다 customer_id로 스코핑된다(_load_work_sources). 관리자는 도서관이 차 있어 카드가
+# 뜨지만 신규 고객은 도서관이 0건 → 교집합 공집합 → pick_id=None → 폴백 화면.
+# 도서관/즐겨찾기는 계정별 독립이 정책이므로(공유 안 함) **그 고객 도서관에 자동으로
+# 적재**해서 관리자와 같은 화면을 만든다.
+#
+# ★사고 재발 방지 4종(2026-07-26 무한루프·크레딧 소모 사고, revert cb8c0fa1d):
+#   ① 래치는 DB에(produce_autoload) — 클라 메모리·HANDOFF 객체에 두면 배열 재대입으로 증발
+#   ② 추출 전에 선(先)래치 — 타임아웃·재시작에도 시도 흔적이 남는다
+#   ③ full_text가 비면 저장하지 않고 실패로 확정 — segments만 있는 저장은 "대본 없음"이
+#      영구 캐시돼 클라가 계속 미추출로 오인한다(인스타 릴스 실패의 정체)
+#   ④ 호출당 건수 상한 + 시도 횟수 상한 — 최악의 경우에도 소모가 유한하다
+_AUTOLOAD_MAX_PER_CALL = 4      # 한 번 호출로 새로 태울 수 있는 영상 수
+_AUTOLOAD_MAX_ATTEMPTS = 1      # shortcode당 자동추출 총 시도 횟수(넘으면 영구 스킵)
+
+
+@app.post("/api/produce/autoload")
+def api_produce_autoload(request: Request, body: dict):
+    """담긴 영상 중 이 고객 도서관에 없는 것을 자동으로 대본추출→도서관 적재→담기까지 한다.
+    body: {items:[{url, shortcode?, video_url?, name?, thumbnail?, caption?, category?,
+                   followers?, comments?}]}
+    반환: {ok, results:[{shortcode, status}], added} — status: already|added|skipped_latched|
+          failed_download|failed_empty|failed_limit.
+    ⚠️ 이 엔드포인트는 **자기 자신이나 프론트 재귀를 유발하지 않는다**. 프론트는 페이지
+       로드당 1회만 부르고, 응답 뒤 aipick을 딱 한 번 다시 조회한다."""
+    cid = _cid(request)
+    items = [i for i in (body.get("items") or []) if (i or {}).get("url")]
+    if not items:
+        return {"ok": True, "results": [], "added": 0}
+    store = Store(DB_PATH)
+    have = {w["shortcode"] for w in store.wiki_list(customer_id=cid)}
+    results, added, burned = [], 0, 0
+
+    codes = [(i.get("shortcode") or "").strip()
+             or hashlib.sha1((i.get("url") or "").strip().encode()).hexdigest()[:12] for i in items]
+    tried = store.autoload_attempts(codes)
+
+    for item, code in zip(items, codes):
+        url = (item.get("url") or "").strip()
+        # ① 이미 도서관에 있으면 추출 없이 '담기'만 보장한다(교집합 통과에 둘 다 필요).
+        if code in have:
+            store.produce_pick_add(code, customer_id=cid)
+            results.append({"shortcode": code, "status": "already"})
+            continue
+        # ② DB 래치 — 한 번 실패한 영상은 다시 태우지 않는다(무한루프 차단의 핵심)
+        if tried.get(code, 0) >= _AUTOLOAD_MAX_ATTEMPTS:
+            results.append({"shortcode": code, "status": "skipped_latched"})
+            continue
+        # ③ 호출당 상한 — 남은 건 다음 진입에서(그때도 상한이 걸린다)
+        if burned >= _AUTOLOAD_MAX_PER_CALL:
+            results.append({"shortcode": code, "status": "skipped_cap"})
+            continue
+        if _ssrf_guard(*[u for u in (url, item.get("video_url")) if u]):
+            results.append({"shortcode": code, "status": "failed_download"})
+            continue
+
+        cached = store.get_extract(code)
+        script = None
+        if cached and (cached.get("full_text") or "").strip():
+            script = {"full_text": cached.get("full_text", ""), "segments": cached.get("segments") or []}
+            category = item.get("category") or cached.get("category") or None
+            structure = cached.get("structure")
+        else:
+            # 캐시미스 → 실제 Gemini 비용. 크레딧 확인 후 태운다(실패 시 환불).
+            if _global_over_cap("script") or not check_and_count(cid, "script"):
+                results.append({"shortcode": code, "status": "failed_limit"})
+                continue
+            global_incr_and_alert("script")
+            burned += 1
+            store.autoload_mark_attempt(code)     # ★추출 전에 래치
+            ok = False
+            try:
+                work_dir = _FIND_TMP_DIR / hashlib.sha1(code.encode()).hexdigest()[:16]
+                try:
+                    video_path, dl_caption = download_any(item.get("video_url") or url, str(work_dir))
+                except Exception as e:  # noqa: BLE001 — 다운로드 실패(만료·비공개·차단)
+                    store.autoload_mark_error(code, str(e))
+                    results.append({"shortcode": code, "status": "failed_download"})
+                    continue
+                try:
+                    result = extract_script(video_path, code,
+                                            caption=(item.get("caption") or dl_caption or ""))
+                except Exception as e:  # noqa: BLE001
+                    store.autoload_mark_error(code, str(e))
+                    results.append({"shortcode": code, "status": "failed_download"})
+                    continue
+                # ★full_text가 비면 저장하지 않는다 — 저장하면 "빈 대본"이 캐시로 굳어
+                #   다음부터 캐시히트로 영원히 빈값을 돌려준다(사고 당시 실제 증상).
+                if not (result.get("full_text") or "").strip():
+                    store.autoload_mark_error(code, "전사 결과 없음(음성 없음·자막 불가)")
+                    results.append({"shortcode": code, "status": "failed_empty"})
+                    continue
+                category = item.get("category") or categorize(item.get("name") or "",
+                                                              item.get("caption") or "") or None
+                script = {"full_text": result.get("full_text", ""),
+                          "segments": result.get("segments") or []}
+                store.save_script(code, script, category=category)
+                ok = True
+                structure = None
+            finally:
+                if not ok:
+                    refund_credit(cid, "script")
+
+        if not structure:
+            try:
+                structure = analyze_structure(script.get("full_text", "")) or None
+            except Exception:  # noqa: BLE001 — 구조분석 실패해도 적재는 성공시킨다
+                structure = None
+        store.save_to_wiki({
+            "shortcode": code,
+            "name": item.get("name"),
+            "category": category,
+            "url": url,
+            "followers": item.get("followers") or 0,
+            "comments": item.get("comments") or 0,
+            "density": item.get("density") or 0.0,
+            "thumbnail": item.get("thumbnail") or "",
+        }, script, structure, customer_id=cid)
+        if structure:
+            store.save_extract_structure(code, structure)
+        store.produce_pick_add(code, customer_id=cid)   # ★도서관+담기 둘 다 있어야 AI PICK이 뜬다
+        added += 1
+        results.append({"shortcode": code, "status": "added"})
+    return {"ok": True, "results": results, "added": added}
+
+
 @app.post("/api/produce/mix/start")
 def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, body: dict):
     """2단계 영상믹스 — 확정 대본(given_script)을 소스영상 장면에 매칭하는 job 시작.

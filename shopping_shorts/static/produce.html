@@ -2691,8 +2691,52 @@ async function refreshStep0(){
     const forced = (HANDOFF.find(h=>h.bbMain && h.useFootage)||{}).shortcode || '';
     const q = '?' + [ WORK_ID?('work_id='+encodeURIComponent(WORK_ID)):'', forced?('forced='+encodeURIComponent(forced)):'' ].filter(Boolean).join('&');
     const r = await fetch('/api/produce/aipick'+(q==='?'?'':q));
-    renderAiPick(await r.json(), hasFootage);
+    let d = await r.json();
+    // ★담긴 영상 자동 대본적재(2026-07-26): 신규 고객은 도서관이 비어 pick_id가 항상 null이라
+    //   관리자와 다른 폴백 화면만 봤다(AI PICK 소스 = 도서관 ∩ 담김, 둘 다 계정별).
+    //   여기서 딱 한 번 서버에 자동적재를 맡기고, 끝나면 aipick을 딱 한 번만 다시 읽는다.
+    //   ⚠️ 절대 refreshStep0()을 다시 부르지 마라 — 예전 구현이 ensureScriptsForFootage()와
+    //      상호 재귀를 만들어 무한루프로 크레딧을 태웠다(2026-07-26 사고, revert cb8c0fa1d).
+    //      래치(_autoloadTried)는 fetch 전에 세우고, 진짜 방어선은 서버 DB(produce_autoload)다.
+    if((!d || d.pick_id==null) && !_autoloadTried){
+      _autoloadTried = true;
+      renderAutoloadingState();
+      const got = await autoloadFootageScripts();
+      if(got){
+        try{ d = await (await fetch('/api/produce/aipick'+(q==='?'?'':q))).json(); }catch(e){}
+      }
+    }
+    renderAiPick(d, hasFootage);
   }catch(e){ renderEmptyState(); }
+}
+// 페이지 로드당 1회 래치(모듈 변수) — HANDOFF 배열이 통째로 재대입돼도 이 값은 안 날아간다.
+// 그게 사고의 핵심이었다: 성공 표시를 HANDOFF 객체 필드에 두면 _restoreWork가 덮어 지운다.
+let _autoloadTried = false;
+// 담긴 영상을 서버에 넘겨 "대본추출 → 내 도서관 적재 → 담기"까지 한 번에 시킨다.
+// 서버가 이미 있는 것/한 번 실패한 것/상한 초과를 알아서 거른다(app.py api_produce_autoload).
+async function autoloadFootageScripts(){
+  const items = HANDOFF.filter(h=>h.useFootage && h.url).map(h=>({
+    url: h.url, video_url: h.video_url||'', shortcode: h.shortcode||'', name: h.name||'',
+    thumbnail: h.thumbnail||'', caption: h.caption||'', category: h.category||'',
+    followers: h.followers||0, comments: h.comments||0,
+  }));
+  if(!items.length) return false;
+  try{
+    const r = await fetch('/api/produce/autoload', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({items}) });
+    const d = await r.json();
+    // added(신규 적재) 또는 already(이미 도서관에 있어 담기만 보장)가 하나라도 있으면 재조회 가치가 있다.
+    return !!(d && (d.added > 0 || (d.results||[]).some(x=>x.status==='already')));
+  }catch(e){ return false; }
+}
+// 자동적재가 도는 동안 보여줄 과도 상태 — 폴백 안내를 먼저 띄웠다가 곧 카드로 바뀌면
+// 사용자가 "에러가 났다가 고쳐졌나?"로 읽는다. 분석 중임을 명시한다.
+function renderAutoloadingState(){
+  const el=document.getElementById('aiPick'); if(!el) return;
+  el.innerHTML = `<div class="skm-card empty">
+      <h2><span class="skm-spin">🔄</span> 담은 영상의 대본을 분석하고 있어요</h2>
+      <div class="hint" style="text-align:center;color:var(--sub)">처음 담은 영상은 30초~1분쯤 걸립니다. 끝나면 AI PICK 카드가 나타나요.</div>
+    </div>`;
 }
 // 조회수·댓글 등 큰 숫자를 "240만"/"1.2억" 식으로 축약(v6 목업 표기와 동일).
 function fmtNum(n){ n=Number(n)||0; if(n>=1e8) return (n/1e8).toFixed(n%1e8?1:0)+'억'; if(n>=1e4) return (n/1e4).toFixed(n%1e4>=1000?1:0)+'만'; return n.toLocaleString(); }
