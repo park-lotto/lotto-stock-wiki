@@ -27,6 +27,24 @@ def test_winners_block_ranks_by_views_and_prefers_category(tmp_path):
     assert "레시피 대본" not in block
 
 
+def test_winners_block_same_category_only_no_cross_contamination(tmp_path):
+    """다른 카테고리 우승작은 절대 안 섞인다(청양고추 오염 방지). 같은 카테고리 없으면 ''."""
+    s = Store(str(tmp_path / "t.db"))
+    # 레시피 소스에 고유 sentinel 토큰(지시문엔 없는 단어)을 심어 오염 여부를 검사
+    s.add_pattern_source("insta", "u1", "레시피 ZZQSENTINEL 대본 " * 5, product_category="레시피",
+                         perf={"views": 999999})
+    # 홈템 우승작이 하나도 없다 → 레시피로 채우지 말고 아예 비워야 한다
+    assert BA.winners_block(s, "홈템") == ""
+    # 카테고리 불명(빈 값)이면 오염 위험 → 무주입
+    assert BA.winners_block(s, "") == ""
+    assert BA.winners_block(s, None) == ""
+    # 홈템 우승작을 넣으면 그것만 나온다(레시피 sentinel은 절대 안 섞임)
+    s.add_pattern_source("insta", "u2", "홈템 주방 대본 " * 5, product_category="홈템",
+                         perf={"views": 100})
+    block = BA.winners_block(s, "홈템")
+    assert "홈템 주방" in block and "ZZQSENTINEL" not in block
+
+
 def test_winners_block_braces_sanitized(tmp_path):
     s = Store(str(tmp_path / "t.db"))
     s.add_pattern_source("insta", "u", "대본 {price}원 " * 5, product_category="홈템",
