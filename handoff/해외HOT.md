@@ -1,6 +1,20 @@
 # 해외HOT 발굴 — 핸드오프
 
-- 갱신: 2026-07-26 (집PC) / 트랙: 해외HOT (병합 후 폴더 유지)
+- 갱신: 2026-07-26 (집PC→사무실 이어감) / 트랙: 해외HOT (병합 후 폴더 유지)
+
+## ⏭ 사무실서 이어서 — 무료 Playwright 크롤 전환 (다음 큰 작업)
+**결정: Apify로 채우던 발굴을 무료 Playwright 크롤로 교체. 매일 headless로 대량 상시 수집. 토큰0·Apify0.**
+설계문서: `docs/superpowers/specs/2026-07-26-해외HOT-무료Playwright크롤전환-design.md` (먼저 읽기)
+
+- **실측 완료(집IP)**: 로그인·봇차단 없이 검색크롤 됨 — TikTok `/search/video?q=` ✅ / Instagram
+  `/explore/tags/태그/` ✅(**조회수까지**) / 샤오홍슈 `rednote.com/search_result?keyword=&type=video` ✅ / 도우인 ❌(로그인, 모바일인증 후).
+- **크롤 2모드**: ①해시태그/검색어 발굴(넓게) ②소스채널 마이닝(발굴서 나온 좋은 계정 등록→매일 그 채널 직접 크롤=선점 최상).
+- **★Phase 0 스파이크(제일 먼저)**: 서버=데이터센터 IP라 막힐 수 있음(Reddit 전례). 서버에 Playwright+chromium 설치→
+  TikTok/IG/XHS 서버 실크롤 확인→막히면 Webshare 프록시(REDDIT_PROXY) 경유. 인스타 채널릴스도 로그인없이 되는지 확인.
+- Phase1 크롤러모듈 `playwright_crawl.py` → Phase2 파이프라인(Apify수집 OFF) → Phase3 systemd 매일 → Phase4 도우인.
+- **정리**: 현 픽업 5개(Apify분) 삭제 OK(픽업 기능=수동URL+렌즈는 유지).
+
+---
 
 ## 현재 상태 — Apify 발굴전환 라이브 완결 ✅
 레딧 발굴을 **틱톡 + CN(샤오홍슈·도우인) Apify 발굴**로 전면 전환. main 병합·서버 배포 완료.
