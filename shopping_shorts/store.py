@@ -1384,6 +1384,13 @@ class Store:
             )
             return True
 
+    def produce_pick_remove(self, shortcode, customer_id=LEGACY_CUSTOMER_ID):
+        """'빼기'만 하는 멱등 버전. 없으면 조용히 넘어간다(토글처럼 되살리지 않는다).
+        ✕로 뺀 영상이 서버 담김 버킷에 남으면 AI PICK이 그 영상을 계속 후보로 본다."""
+        with self._conn() as c:
+            c.execute("DELETE FROM produce_script_picks WHERE customer_id=? AND shortcode=?",
+                      (customer_id, shortcode))
+
     def autoload_attempts(self, shortcodes):
         """{shortcode: 지금까지 자동적재를 시도한 횟수}. 미시도는 키 없음."""
         scs = [s for s in dict.fromkeys(shortcodes or []) if s]

@@ -5739,6 +5739,19 @@ def api_produce_picks_toggle(request: Request, body: dict):
     return {"ok": True, "picked": picked}
 
 
+@app.post("/api/produce/picks/remove")
+def api_produce_picks_remove(request: Request, body: dict):
+    """영상제작 목록에서 빼기(멱등). body: {shortcode}.
+    ★왜 toggle로 안 하나: 이미 빠져 있는 걸 toggle하면 오히려 **다시 담긴다**.
+      1단계 ✕(dropFootage)는 '무조건 빼기'라 멱등이어야 한다 — 자동적재(2026-07-26)
+      이후로는 담김이 서버에도 쌓이므로, 클라에서만 빼면 AI PICK이 뺀 영상을 계속 쓴다."""
+    sc = (body.get("shortcode") or "").strip()
+    if not sc:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "shortcode 필요"})
+    Store(DB_PATH).produce_pick_remove(sc, customer_id=_cid(request))
+    return {"ok": True}
+
+
 @app.get("/api/produce/picks")
 def api_produce_picks(request: Request):
     """영상제작에 담긴 도서관 대본(전체 데이터). 우리믹스 탭 기본 목록."""

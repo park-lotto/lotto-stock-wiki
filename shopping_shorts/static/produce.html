@@ -2981,12 +2981,26 @@ function pickFootage(i){
   renderPool(); saveWork();
   if(typeof refreshStep0==='function') refreshStep0();
 }
-// ✕ = 이 영상을 믹스에서 뺀다(픽이었으면 픽 해제).
-function dropFootage(i){
-  if(!HANDOFF[i]) return;
-  HANDOFF[i].useFootage=false; HANDOFF[i].bbMain=false;
+// ✕ = 이 영상을 재료에서 **아주 뺀다**(카드도 사라진다).
+// ★2026-07-26 사장님 제보 "x버튼 누르면 영상 소스 삭제가 안 됨": 예전엔 useFootage만
+//   false로 바꿔 ✓만 지워지고 카드는 그대로 남았다 — 누른 사람 눈엔 아무 일도 안 난 것.
+//   ✕는 "빼기"가 아니라 "삭제"로 읽히므로 배열에서 실제로 제거한다.
+// ★서버에서도 빼야 한다: 자동적재(2026-07-26) 이후 담김은 서버 버킷(produce_script_picks)에도
+//   쌓인다. 클라에서만 지우면 AI PICK이 방금 뺀 영상을 계속 후보로 본다(_load_work_sources).
+async function dropFootage(i){
+  const it = HANDOFF[i];
+  if(!it) return;
+  HANDOFF.splice(i, 1);
   if(typeof syncFootageToMixUrls==='function') syncFootageToMixUrls();
-  renderPool(); saveWork();
+  renderPool(); saveWork();            // 화면은 즉시 반응(카드가 바로 사라진다)
+  // ★서버 제거를 기다린 뒤에 AI PICK을 다시 읽는다 — 안 기다리면 아직 지워지기 전 상태를
+  //   읽어 방금 뺀 영상이 카드에 그대로 남는다(누른 사람 눈엔 "삭제가 안 된" 것).
+  if(it.shortcode){
+    try{
+      await fetch('/api/produce/picks/remove', {method:'POST',
+        headers:{'Content-Type':'application/json'}, body: JSON.stringify({shortcode: it.shortcode})});
+    }catch(e){}
+  }
   if(typeof refreshStep0==='function') refreshStep0();
 }
 function toggleFootage(i){
