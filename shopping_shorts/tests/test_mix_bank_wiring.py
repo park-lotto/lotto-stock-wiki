@@ -49,11 +49,11 @@ def test_parts_block_small_bank_uses_all(tmp_path):
     assert got == {"훅0", "훅1", "훅2"}   # k보다 적으면 전부(샘플 안 함)
 
 
-# ---- 2026-07-26 단순화: scene_first 프롬프트는 은행을 주입하지 않는다(완전 OFF) ----
-# 제약 과적재 열화 대응 — 은행 부품/스파인/우승few-shot 주입을 프롬프트에서 제거.
-# 은행 데이터·배선은 보존하되 이 경로에선 주입만 끈다(재도입은 edit_plan 프롬프트에 bank_context 재부착).
+# ---- 2026-07-27: scene_first 프롬프트에 은행 '우수 라인'(parts_block)을 '양념'으로 재주입 ----
+# 레버1(07-26)에서 전면 OFF했다가, 백본-A믹스 설계에서 parts만 되살림(spine/winners/avoid는 계속 OFF).
+# 프롬프트가 "거의 그대로 금지, 감각만 참고·변형"으로 감싸 드리프트 없이 창의 표현만 활용.
 
-def test_scene_first_ignores_bank_context():
+def test_scene_first_injects_bank_parts():
     box = {}
 
     def fake_call(prompt, schema, **kw):
@@ -62,7 +62,7 @@ def test_scene_first_ignores_bank_context():
 
     edit_plan._scene_first_candidates("[s0-0] 화면:x", "ref", 20, call=fake_call,
                                       bank_context="[승인된 부품]\n· 훅: 로테이션된새훅")
-    assert "로테이션된새훅" not in box["prompt"]   # 은행 OFF — 주입 안 함
+    assert "로테이션된새훅" in box["prompt"]   # 은행 parts 재주입(참고·변형 양념)
 
 
 def test_scene_first_no_bank_leaves_prompt_clean():

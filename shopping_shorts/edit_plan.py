@@ -646,6 +646,11 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "- 억지 개그·오글·말장난·설명체 나열('이렇게 하세요' 나열)·어색한 번역투 금지.\n"
         "- 각 후보에 hook, story_person(주인공 1명), story_event(사건 한 줄), story_resolution(결말 한 줄), "
         "cta_line(마지막 CTA 문장 그대로), cta_keyword(댓글 키워드, 없으면 빈 문자열)를 채워라.\n"
+        # 은행 parts_block(승인 훅·부사·어미·CTA) 재주입(2026-07-27) — ★"거의 그대로"가 아니라
+        # 감각만 참고·변형. 드리프트 유발분(avoid·winners·spine)은 mix_pipeline에서 이미 제외.
+        + ((f"[참고 표현 은행 — 검증된 좋은 훅·부사·어미·CTA 감각. ★뼈대가 아니라 '양념'이다: "
+            "이 표현들의 리듬·감각만 참고해 우리 소재·흐름에 맞게 창의적으로 변형해라(거의 그대로 "
+            f"베끼기 금지)]\n{bank_context}\n") if bank_context else "")
         + ((f"- [길이 보강] 직전 후보가 목표보다 짧았다. 이번엔 나레이션 합 최소 {lo}자 이상으로 "
             "각 비트의 이야기(상황·대화·반응)를 더 촘촘히 채워라.\n") if lengthen else "")
         + "\n출력은 스키마 JSON만.")
@@ -1128,15 +1133,20 @@ def _backbone_order_block(backbone_video, source_scripts):
     flow = backbone.backbone_flow(bb_src)
     if not flow:
         return ""
-    lines = "\n".join(
-        f"  {i+1}. {f.get('seg_id')} [{f.get('action') or '-'}] {f.get('scene_desc', '')}"
-        for i, f in enumerate(flow))
+    def _line(i, f):
+        base = f"  {i+1}. {f.get('seg_id')} [{f.get('action') or '-'}] {f.get('scene_desc', '')}"
+        t = (f.get('text') or '').strip()
+        return base + (f"  (원본대사: {t})" if t else "")
+    lines = "\n".join(_line(i, f) for i, f in enumerate(flow))
     return (
-        f"[화면 순서 뼈대 — 백본 영상 {backbone_video}의 시간순 진행]\n{lines}\n"
-        "★화면 진행은 위 뼈대의 시간순을 따르라 — 비트들의 seg_ids가 전체적으로 이 순서를 "
-        "거스르지 않게 배치해라(과정이 뒤로 갔다 앞으로 오는 뒤죽박죽 금지). 다른 영상(서브) "
-        "컷은 흐름에 맞는 자리에 끼워 넣어도 된다. 순서는 뼈대를 따르되, 대사는 헌장대로 "
-        "온전히 하나의 이야기로 써라.")
+        f"[백본 흐름 — 메인영상 {backbone_video}의 시간순 전개(장면 순서 + 원본 대사 흐름)]\n{lines}\n"
+        "★이 흐름을 '스토리 전개'로 삼아 **창의적으로 변형**해 따라가라 — 순서·전개는 계승하되 "
+        "문장은 우리 것으로 새로(원본 대사 베끼기 절대 금지, 같은 뜻 다른 구어체로 패러프레이즈).\n"
+        "★화면 순서는 위 뼈대를 따르라(과정이 앞뒤로 튀는 뒤죽박죽 금지). 단 다른 영상(서브) 컷은 이렇게 활용:\n"
+        "  · 교체(Replace): A의 어떤 장면보다 서브에 같은 의미의 더 직관적·자극적 컷이 있으면 그 자리에 "
+        "바꿔 넣고, 그 컷의 동작을 대사에 그대로 반영해라.\n"
+        "  · 삽입(Insert): A에 없는 새 정보·리액션(주변인 반응·인증·비법)이 서브에 있으면 흐름 중간에 "
+        "끼우고, 문두에 접착어(\"알고 보니\"·\"보시는 것처럼\"·\"이럴 땐\")를 붙여 자연스럽게 이어라.")
 
 
 def build_scene_first_plan(source_scripts, reference_text, target_seconds,
@@ -1210,6 +1220,10 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             # 전역 컷 반복 해소(alternates 포함) + 비트당 클립 상한 → 뚝뚝 끊김·B롤 반복 해소
             # (dedup_and_balance는 primary만 봐서 B롤 체인이 비트마다 반복됐다, job 실측).
             plan["beats"] = backbone.dedup_clips_global(plan["beats"], source_scripts)
+            # 영상 차별화(2026-07-27, 최종 단계): 훅(첫 비트)=비-A 소스 최고장면 / CTA(끝)=중간
+            # 소스 클립(원본 엔딩 회피). 화면만 재배정(narration 불변) → 다른 후처리 뒤에 마지막으로.
+            plan["beats"] = backbone.swap_hook_cta_for_differentiation(
+                plan["beats"], bb, source_scripts)
         plan["detected_type"] = detected
         plan["affiliate_target"] = r.get("story_event", "") or ""
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)

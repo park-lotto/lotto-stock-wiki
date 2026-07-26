@@ -623,14 +623,12 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
         if store.get_setting("bank_enabled", "") == "1":
             try:
                 from shopping_shorts import bank_assemble
-                # 은행(로테이션 부품·스파인) + novelty 회피블록(최근 쓴 훅·인물·CTA)을 함께 주입.
-                # 회피는 은행과 같은 스위치로 켠다 — 켜면 매 영상이 다른 훅으로 열리게 밀어준다.
-                _blocks = [bank_assemble.assemble_bank_context(store, video_type or ""),
-                           bank_assemble.avoid_block(store)]
-                bank_context = "\n\n".join(x for x in _blocks if x)
+                # 2026-07-27: 은행 '창의적 우수 라인'만(parts_block=승인 훅·부사·어미·CTA 감각) 재주입.
+                # 제외: spine(A 백본 흐름이 대신)·winners few-shot(타제품 소재 오염)·avoid novelty
+                # (매번 제품에서 밀어내던 드리프트 주범). parts는 프롬프트에서 '양념(참고·변형)'으로 쓴다.
+                bank_context = bank_assemble.parts_block(store)
                 bank_snapshot = bank_assemble.bank_usage_snapshot(store, video_type or "")  # 생성 순응 검열용
-                # 프롬프트 회피를 무시하고 같은 훅을 낸 후보를 추천단계에서도 감점(belt-and-suspenders).
-                avoid_hooks = store.recent_script_usage()["hooks"] or None
+                avoid_hooks = None    # novelty OFF — 회피 감점 제거(드리프트 차단)
             except Exception:
                 traceback.print_exc(file=sys.stderr)
         sf = build_scene_first_plan(source_scripts, reference_text, target_seconds,
