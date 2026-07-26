@@ -299,10 +299,10 @@
       <span id="status" style="color:var(--sub);font-size:12px"></span>
     </div>
     <!-- 수집 진행/결과 배너(2026-07-25) — 작은 회색 status는 놓치기 쉬워 큰 배너로 상태를 확실히 보인다. -->
-    <div id="collectProgress" style="display:none;margin:2px 0 12px;padding:12px 16px;border-radius:12px;font-size:14px;border:1px solid var(--line);background:var(--inset);display:none;align-items:center;gap:12px">
-      <span id="cpSpin" style="display:inline-block;width:18px;height:18px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:cpSpin .8s linear infinite"></span>
-      <div style="flex:1"><div id="cpMsg" style="font-weight:600">수집 중…</div><div id="cpSub" style="font-size:12px;color:var(--sub);margin-top:2px"></div></div>
-      <button id="cpRetry" onclick="doCollect(window._lastCollectCat)" style="display:none;padding:5px 12px;border-radius:8px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer">다시 시도</button>
+    <div id="collectProgress" style="display:none;margin:4px 0 8px;padding:6px 10px;border-radius:8px;font-size:12px;align-items:center;gap:8px;color:var(--sub)">
+      <span id="cpSpin" style="display:inline-block;width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:cpSpin .8s linear infinite"></span>
+      <div style="flex:1"><span id="cpMsg">수집 중…</span><span id="cpSub" style="margin-left:6px;color:var(--sub)"></span></div>
+      <button id="cpRetry" onclick="doCollect(window._lastCollectCat)" style="display:none;padding:3px 10px;border-radius:6px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;font-size:11px">다시 시도</button>
     </div>
     <details id="statusBox" open style="display:none">
       <summary>⚙️ 시스템 상태<span class="live">실시간</span><span class="chev">▾</span></summary>
