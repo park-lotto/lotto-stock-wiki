@@ -18,6 +18,7 @@ def test_filters_to_five_video_platforms(monkeypatch):
         {"link": "https://en.wikipedia.org/wiki/X", "title": "wiki", "thumbnail": "t6", "source": "Wikipedia"},
         {"link": "https://www.pinterest.com/pin/1", "title": "pin", "thumbnail": "t7", "source": "Pinterest"},
     ]
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEYS", ["fake"])
     monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
     monkeypatch.setattr(lens_discover.requests, "get", lambda *a, **k: _fake_response(matches))
 
@@ -34,6 +35,7 @@ def test_youtu_be_and_xhslink_and_iesdouyin(monkeypatch):
         {"link": "https://xhslink.com/xxx", "title": "x", "thumbnail": "b", "source": "RED"},
         {"link": "https://www.iesdouyin.com/share/video/1", "title": "d", "thumbnail": "c", "source": "抖音"},
     ]
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEYS", ["fake"])
     monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
     monkeypatch.setattr(lens_discover.requests, "get", lambda *a, **k: _fake_response(matches))
     out = lens_discover.search_similar_videos("https://ex.com/f.jpg")
@@ -50,6 +52,7 @@ def test_excludes_tiktok_discover_search_pages(monkeypatch):
         {"link": "https://www.tiktok.com/tag/potato", "title": "tag", "thumbnail": "t", "source": "TikTok"},
         {"link": "https://www.tiktok.com/search?q=x", "title": "s", "thumbnail": "t", "source": "TikTok"},
     ]
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEYS", ["fake"])
     monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
     monkeypatch.setattr(lens_discover.requests, "get", lambda *a, **k: _fake_response(matches))
     out = lens_discover.search_similar_videos("https://ex.com/f.jpg")
@@ -69,6 +72,7 @@ def test_excludes_instagram_non_permalink_pages(monkeypatch):
         {"link": "https://www.instagram.com/some_user/", "title": "prof", "thumbnail": "t", "source": "Instagram"},
         {"link": "https://www.instagram.com/p/CyXyZ00/", "title": "post", "thumbnail": "t", "source": "Instagram"},
     ]
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEYS", ["fake"])
     monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
     monkeypatch.setattr(lens_discover.requests, "get", lambda *a, **k: _fake_response(matches))
     out = lens_discover.search_similar_videos("https://ex.com/f.jpg")
@@ -81,6 +85,7 @@ def test_requests_type_visual_matches(monkeypatch):
     생략한다(2026-07-14 라이브 실측: type 없으면 0개, type=visual_matches면 60개).
     항상 type=visual_matches를 명시해야 결과가 온다 — 이 파라미터 누락이 '유사영상
     못 찾음' 버그의 원인이었다."""
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEYS", ["fake"])
     monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
     captured = {}
 
@@ -102,6 +107,7 @@ def test_retries_when_lens_returns_no_results_then_succeeds(monkeypatch):
     """google_lens는 갓 호스팅된 이미지에 첫 호출 때 'hasn't returned any results'로
     빈 응답을 주고, 잠시 후 재호출하면 결과를 준다(2026-07-14 실측: 같은 URL이 0개→60개).
     이 일시적 빈 결과에 대해 재시도해야 사용자가 매번 '못 찾음'을 안 본다."""
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEYS", ["fake"])
     monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
     monkeypatch.setattr(lens_discover.time, "sleep", lambda s: None)  # 테스트 대기 제거
     calls = {"n": 0}
@@ -209,13 +215,57 @@ def test_upload_frame_none_when_both_fail(monkeypatch):
     assert lens_discover.upload_frame(b"x") is None
 
 
+def test_rotates_to_next_key_when_first_exhausted(monkeypatch):
+    """첫 키가 월 한도 소진(429)이면 두 번째 키로 넘어가 결과를 받는다."""
+    matches = [{"link": "https://www.youtube.com/watch?v=abc", "title": "y",
+                "thumbnail": "t1", "source": "YouTube"}]
+    used = []
+
+    class R:
+        def __init__(self, status, payload):
+            self.status_code = status
+            self._payload = payload
+        def raise_for_status(self):
+            if self.status_code >= 400:
+                import requests as _rq
+                raise _rq.HTTPError("boom")
+        def json(self):
+            return self._payload
+
+    def fake_get(url, params=None, timeout=None):
+        used.append(params["api_key"])
+        if params["api_key"] == "k1":
+            return R(429, {"error": "Your account has run out of searches."})
+        return R(200, {"visual_matches": matches})
+
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEYS", ["k1", "k2"])
+    monkeypatch.setattr(lens_discover.requests, "get", fake_get)
+
+    out = lens_discover.search_similar_videos("https://ex.com/f.jpg")
+    assert [i["platform"] for i in out] == ["youtube"]
+    assert used == ["k1", "k2"]   # 첫 키 소진 → 둘째 키로 전환
+
+
+def test_all_keys_exhausted_returns_empty(monkeypatch):
+    """모든 키가 소진이면 빈 결과(크래시 없이)."""
+    class R:
+        status_code = 429
+        def raise_for_status(self): pass
+        def json(self): return {"error": "ran out of searches"}
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEYS", ["k1", "k2"])
+    monkeypatch.setattr(lens_discover.requests, "get", lambda *a, **k: R())
+    assert lens_discover.search_similar_videos("https://ex.com/f.jpg") == []
+
+
 def test_no_key_returns_empty(monkeypatch):
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEYS", [])
     monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "")
     assert lens_discover.search_similar_videos("https://ex.com/f.jpg") == []
 
 
 def test_request_failure_returns_empty(monkeypatch):
     import requests as _rq
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEYS", ["fake"])
     monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
     def boom(*a, **k): raise _rq.RequestException("net")
     monkeypatch.setattr(lens_discover.requests, "get", boom)
@@ -230,6 +280,7 @@ def test_request_failure_returns_empty(monkeypatch):
 def test_match_true_when_title_contains_source_keyword(monkeypatch):
     matches = [{"link": "https://www.youtube.com/watch?v=abc",
                 "title": "다이소 꿀템 정리박스 추천", "thumbnail": "t1", "source": "YouTube"}]
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEYS", ["fake"])
     monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
     monkeypatch.setattr(lens_discover.requests, "get", lambda *a, **k: _fake_response(matches))
     out = lens_discover.search_similar_videos("https://ex.com/f.jpg", source_caption="다이소 신상 정리박스 꿀템")
@@ -239,6 +290,7 @@ def test_match_true_when_title_contains_source_keyword(monkeypatch):
 def test_match_false_when_no_keyword_overlap(monkeypatch):
     matches = [{"link": "https://www.youtube.com/watch?v=abc",
                 "title": "감자 크로켓 레시피", "thumbnail": "t1", "source": "YouTube"}]
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEYS", ["fake"])
     monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
     monkeypatch.setattr(lens_discover.requests, "get", lambda *a, **k: _fake_response(matches))
     out = lens_discover.search_similar_videos("https://ex.com/f.jpg", source_caption="다이소 신상 정리박스 꿀템")
@@ -248,6 +300,7 @@ def test_match_false_when_no_keyword_overlap(monkeypatch):
 def test_match_none_when_no_source_caption(monkeypatch):
     matches = [{"link": "https://www.youtube.com/watch?v=abc",
                 "title": "아무 제목", "thumbnail": "t1", "source": "YouTube"}]
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEYS", ["fake"])
     monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
     monkeypatch.setattr(lens_discover.requests, "get", lambda *a, **k: _fake_response(matches))
     out = lens_discover.search_similar_videos("https://ex.com/f.jpg")

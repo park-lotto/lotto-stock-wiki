@@ -76,8 +76,17 @@ YOUTUBE_API_KEYS = [
 # SerpApi(Google Lens 엔진) — 제품 정확 명칭 확인용(2026-07-10). 어제는 "구매처
 # 찾기"(쇼핑링크 노출)로 잘못 썼다가 삭제했는데, 오늘은 용도를 바꿔서 프레임을
 # 역검색한 결과로 정확한 제품명(브랜드+모델)을 추론해 검색 키워드 정밀도를
-# 높이는 데 재사용한다. 유료 API라 로테이션 풀 없이 단일 키.
-SERPAPI_KEY = os.environ.get("SERPAPI_KEY", "")
+# 높이는 데 재사용한다.
+# 무료 플랜은 계정당 월 100회뿐이라 소진되면 렌즈검색이 통째로 막힌다(429). 그래서
+# _N 넘버링 풀로 로테이션한다(2026-07-26, Gemini/YouTube와 동일 패턴) — 한 키가 월
+# 한도를 소진하면 다음 키로 자동 전환. 키가 모자라면 .env에 SERPAPI_KEY_3, _4… 계속 추가.
+_SERPAPI_MAX = 30
+SERPAPI_KEYS = [
+    v for i in range(1, _SERPAPI_MAX + 1)
+    if (v := os.environ.get("SERPAPI_KEY" if i == 1 else f"SERPAPI_KEY_{i}", ""))
+]
+# 하위호환: 기존 코드가 참조하던 단일 키(=풀의 첫 키). 로테이션은 SERPAPI_KEYS를 쓴다.
+SERPAPI_KEY = SERPAPI_KEYS[0] if SERPAPI_KEYS else ""
 
 # ElevenLabs TTS(영상 믹싱 기능④, 2026-07-12) — 새 나레이션 음성 생성. Gemini와
 # 무관한 별도 API라 전용/공유 키풀 규칙과 무관(단일 키). 미설정이면 개발용 무음 fallback.
