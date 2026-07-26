@@ -584,15 +584,17 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "이제 알았지?'·'저 이거 몰라서 손해 봤잖아요'·'이거 진짜 절대 하지 마세요' 류)로 시작해라. "
         "hook만 세게 써놓고 첫 비트를 '매번 ~하던 참이었거든요'처럼 밋밋하게 열면 실패다. "
         "beats[0]이 곧 그 hook이어야 한다.\n"
-        f"- ★★길이를 목표에 맞춰라(짧아도 길어도 실패): 전체 나레이션 글자수 합을 "
-        f"**{int(char_target*0.85)}~{int(char_target*1.15)}자**(목표 {char_target}자) 안에 둬라. "
-        f"이보다 짧으면 빈약해서 반려, **넘치면 영상이 너무 길어져 반려**(★{int(char_target*1.15)}자를 "
-        f"절대 넘기지 마라 — 말을 늘리지 말고 핵심만). 비트는 **6~7개**로 나눠라(각 비트 "
-        f"**{max(12, int(char_target*0.85//6.5))}~{int(char_target*1.15//6)}자**, "
-        f"6~7비트를 다 합쳐 위 총량 안에 들어와야 한다 — 비트마다 길면 총량이 터진다). "
-        "8개 이상 잘게 쪼개거나 비트마다 길게 늘어놓으면 실패다.\n"
-        "  ★따옴표 대화는 넣되 **짧은 한마디로**('밥 없어?'·'이거 뭐야?' 식) — 대화를 길게 늘여 "
-        "총 글자수를 넘기지 마라. 대화가 길이를 잡아먹으면 서술을 줄여서라도 총량을 지켜라.\n"
+        f"- ★★★길이는 목표 {char_target}자(약 {target_seconds}초)에 **정확히** 맞춰라. 전체 나레이션 "
+        f"글자수 합이 **{int(char_target*0.9)}~{int(char_target*1.1)}자** 안에 반드시 들어와야 한다.\n"
+        f"  ⚠️가장 흔한 실패 = **너무 짧게 쓰는 것**이다(대부분 목표의 절반밖에 안 쓴다). "
+        f"{int(char_target*0.9)}자보다 짧으면 이야기가 빈약해 **무조건 반려** — 대화 인용·반전·구체적 "
+        f"반응·감각 묘사를 더 넣어 {char_target}자를 반드시 채워라. 반대로 {int(char_target*1.1)}자를 "
+        f"넘겨도 반려.\n"
+        f"  ★비트는 6~7개로 나누되 **6~7비트의 글자수 합 = {char_target}자**가 되게 고르게 배분해라: "
+        f"비트가 6개면 각 비트 약 {char_target//6}자, 7개면 각 약 {char_target//7}자. 한 비트를 "
+        f"20자 밑으로 쓰면 총량이 모자라 반려된다(각 비트를 알차게 채워라).\n"
+        "  ★따옴표 대화는 그 순간 실제로 오간 말을 살려 넣되 자연스러운 길이로 — 대화·서술 어느 쪽도 "
+        "억지로 줄이지 마라. 총량이 모자라면 오히려 이야기를 더 촘촘히 채워라.\n"
         "  각 비트: role·narration(구어체)·seg_ids(2~4)·fit(1~5)·forced(그 장면이 이 말과 안 맞는데 억지로면 true).\n"
         "- ★caption_lines: 그 비트 narration을 화면 자막용으로 **3~4어절 호흡 단위**로 끊은 "
         "배열(너무 잘게 쪼개면 화면에서 문장이 뚝뚝 끊겨 보인다 — 한 호흡에 3~4어절씩 넉넉히). "
@@ -1222,7 +1224,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         def _cand_secs(c):
             return sum(float(b.get("target_seconds") or 0.0)
                        for b in c["plan"].get("beats", []))
-        if max((_cand_secs(c) for c in cands), default=0.0) < 0.85 * target_seconds:
+        if max((_cand_secs(c) for c in cands), default=0.0) < 0.92 * target_seconds:
             raws2 = _scene_first_candidates(
                 inventory, reference_text, target_seconds, n=n_candidates, call=_call,
                 bank_context=bank_context, order_block=order_block, lengthen=True)
