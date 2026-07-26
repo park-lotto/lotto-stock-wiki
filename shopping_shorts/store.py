@@ -182,6 +182,22 @@ class Store:
                     extracted_at TEXT
                 )
             """)
+            # 담긴 영상 자동 대본적재의 '시도 래치'(2026-07-26) — shortcode당 1행.
+            # ★이 표가 있는 이유: 예전 자동추출은 성공/실패를 클라이언트 메모리와
+            #   HANDOFF 객체 필드에만 남겼다. HANDOFF는 _restoreWork 등에서 배열 통째로
+            #   재대입되므로 그 표시가 통째로 날아가고 → 다시 '미추출'로 보여 재추출 →
+            #   무한 루프로 AI 크레딧을 태웠다(2026-07-26 실사고, revert cb8c0fa1d).
+            #   그래서 시도 횟수를 **DB에** 남긴다. 계정 무관(shortcode 전역)인 이유:
+            #   전사가 안 되는 영상은 누가 담아도 안 되기 때문 — 고객마다 다시 태울 이유가 없다.
+            #   script_extracts에 못 두는 이유: 다운로드 자체가 실패하면 그 표에 행이 아예 안 생긴다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS produce_autoload (
+                    shortcode TEXT PRIMARY KEY,
+                    attempts INTEGER NOT NULL DEFAULT 0,
+                    last_error TEXT,
+                    updated_at TEXT
+                )
+            """)
             # 랭킹 검색용 썸네일 비전 주제태그(2026-07-19) — shortcode당 1행, 있으면 재호출 안 함(무과금).
             c.execute("""
                 CREATE TABLE IF NOT EXISTS vision_tags (
@@ -1349,6 +1365,55 @@ class Store:
                 (customer_id, shortcode),
             )
             return True
+
+    def produce_pick_add(self, shortcode, customer_id=LEGACY_CUSTOMER_ID):
+        """'담기'만 하는 멱등 버전(토글 아님). 이미 담겨 있으면 아무것도 안 하고 False.
+        ⚠️ 자동적재는 절대 produce_pick_toggle을 쓰면 안 된다 — 이미 담긴 걸 두 번째
+        호출에서 **빼버려** AI PICK이 사라진다(교집합에서 탈락, app.py _load_work_sources)."""
+        with self._conn() as c:
+            exists = c.execute(
+                "SELECT 1 FROM produce_script_picks WHERE customer_id=? AND shortcode=?",
+                (customer_id, shortcode),
+            ).fetchone()
+            if exists:
+                return False
+            c.execute(
+                "INSERT INTO produce_script_picks(customer_id, shortcode, added_at) "
+                "VALUES(?,?, datetime('now'))",
+                (customer_id, shortcode),
+            )
+            return True
+
+    def autoload_attempts(self, shortcodes):
+        """{shortcode: 지금까지 자동적재를 시도한 횟수}. 미시도는 키 없음."""
+        scs = [s for s in dict.fromkeys(shortcodes or []) if s]
+        if not scs:
+            return {}
+        ph = ",".join("?" * len(scs))
+        with self._conn() as c:
+            rows = c.execute(
+                f"SELECT shortcode, attempts FROM produce_autoload WHERE shortcode IN ({ph})", scs
+            ).fetchall()
+        return {r[0]: r[1] or 0 for r in rows}
+
+    def autoload_mark_attempt(self, shortcode):
+        """추출을 **시작하기 전에** 시도 횟수를 올린다(선(先)래치).
+        나중에 올리면 타임아웃·프로세스 재시작으로 표시가 안 남아 재시도 루프가 산다."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO produce_autoload(shortcode, attempts, updated_at) "
+                "VALUES(?,1,datetime('now')) ON CONFLICT(shortcode) DO UPDATE SET "
+                "attempts=produce_autoload.attempts+1, updated_at=datetime('now')",
+                (shortcode,),
+            )
+
+    def autoload_mark_error(self, shortcode, error):
+        """실패 사유 기록(진단용). attempts는 이미 선래치에서 올라가 있다."""
+        with self._conn() as c:
+            c.execute(
+                "UPDATE produce_autoload SET last_error=?, updated_at=datetime('now') "
+                "WHERE shortcode=?", ((error or "")[:300], shortcode),
+            )
 
     def produce_pick_shortcodes(self, customer_id=LEGACY_CUSTOMER_ID):
         """영상제작에 담긴 도서관 대본 shortcode 집합."""
