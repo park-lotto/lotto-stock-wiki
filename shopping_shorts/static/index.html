@@ -366,6 +366,11 @@
         <button onclick="updateOverseas()">⚡ 지금 업데이트</button>
         <span id="overseasStatus" style="color:var(--sub);font-size:12px"></span>
       </div>
+      <div id="overseasPickup" style="display:none;margin:8px 0;padding:10px;border:1px solid var(--line);border-radius:8px;background:#0d131c">
+        <div style="font-size:12px;color:var(--sub);margin-bottom:6px">🖐 픽업 — 무료로 고른 틱톡 URL 붙여넣기(줄바꿈/콤마 구분) → 고른 것만 Apify로 담김</div>
+        <textarea id="pickupUrls" rows="3" placeholder="https://www.tiktok.com/@.../video/..." style="width:100%;box-sizing:border-box;padding:8px;border-radius:6px;border:1px solid var(--line);background:#0b0d11;color:var(--txt);font-size:12px"></textarea>
+        <div style="margin-top:6px"><button onclick="addPickup()">➕ 픽업 담기</button> <span id="pickupStatus" style="font-size:12px;color:var(--sub)"></span></div>
+      </div>
       <div id="overseasList"></div>
     </div>
     <div id="trendRoot" style="display:none"></div>
@@ -809,7 +814,7 @@ function badgeHTML(i, ctx){
 // (채널명·소재는 oninput이 이미 필터링. 링크만 엔터라는 명시 동작이 필요 — 유료 렌즈 남용 방지.)
 function _looksLikeUrl(q){ return /^\s*https?:\/\//i.test(q||''); }
 function onSearchEnter(v){ if(_looksLikeUrl(v)) traceByUrl((v||'').trim()); }
-const OVERSEAS_CATS = ["전체","주방/레시피","살림/생활꿀템","인테리어/DIY","가전/도구","뷰티/셀프케어","정리/수납"];
+const OVERSEAS_CATS = ["전체","🖐 픽업","주방/레시피","살림/생활꿀템","인테리어/DIY","가전/도구","뷰티/셀프케어","정리/수납"];
 let overseasFilter = "전체";
 let overseasItems = [];
 
@@ -830,11 +835,25 @@ function toggleOverseas(on){
         el.style.display = 'none';
       }
     });
+    document.getElementById('overseasPickup').style.display = window.IS_ADMIN ? 'block' : 'none';
     initOverseasCats(); loadOverseas();
   } else {
     _overseasHidden.forEach(([el, prev])=>{ el.style.display = prev; });
     _overseasHidden = [];
   }
+}
+async function addPickup(){
+  const box=document.getElementById('pickupUrls'); const t=(box.value||'').trim();
+  const s=document.getElementById('pickupStatus');
+  if(!t){ s.textContent='URL을 붙여넣어 주세요'; return; }
+  s.textContent='담는 중… (Apify 픽업)';
+  try{
+    const r=await (await fetch('/api/overseas/pickup',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t})})).json();
+    if(r.ok){ s.textContent='✅ '+r.added+'개 담김'; box.value='';
+      overseasFilter='🖐 픽업'; initOverseasCats(); await loadOverseas(); }
+    else { s.textContent='오류: '+(r.error||'실패'); }
+  }catch(e){ s.textContent='오류: '+e; }
 }
 function initOverseasCats(){
   document.getElementById('overseasCats').innerHTML = OVERSEAS_CATS.map(c=>

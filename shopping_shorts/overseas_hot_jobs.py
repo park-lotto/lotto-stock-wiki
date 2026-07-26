@@ -18,6 +18,7 @@ _CAP = 120          # 피드 최대 유지 개수(로테이션)
 _PER_KEYWORD = 40   # 카테고리·플랫폼·키워드당 수집 상한(=과금단위)
 _REQ_PAUSE = 0.5    # Apify 호출 간 간격
 _GAP_CAP = 40       # 선점검색 배치당 상한(유튜브 무료쿼터 보호) — 생존자 상위만
+PICKUP_CATEGORY = "🖐 픽업"   # 무료크롤+판단으로 고른 걸 수동 URL로 픽업하는 카테고리
 
 
 def _now():
@@ -84,7 +85,7 @@ def _run():
         prev, _ = store.load_overseas_feed()
         # 현재 시드에 없는 카테고리(폐기된 레딧 만족감/신기템 등)는 퇴출 — 소스·카테고리
         # 개편 시 옛 데이터가 피드에 눌러앉아 잡탕이 되는 걸 막는다(셀프힐링).
-        valid_cats = set(load_seeds().keys())
+        valid_cats = set(load_seeds().keys()) | {PICKUP_CATEGORY}
         prev = [i for i in prev if i.get("category") in valid_cats]
         merged = _merge_rotate(prev, all_items, cap=_CAP)
         # 선점뱃지 — 아직 미판정인 상위 항목만(쿼터 보호). 기존 뱃지는 유지.
@@ -132,3 +133,30 @@ def status():
         return {"status": _JOB["status"], "phase": _JOB["phase"], "count": _JOB["count"],
                 "error": _JOB["error"],
                 "elapsed": int(time.time() - _JOB["started"]) if _JOB["started"] else 0}
+
+
+def add_pickup(urls):
+    """무료크롤로 고른 틱톡 URL들을 Apify로 풀데이터 픽업 → '픽업' 카테고리로 피드에 병합·저장.
+
+    수동 선택이라 신선도 창(14일)에 안 걸리게 window를 크게 두고, 픽업은 랭킹 점수로
+    밀려나지 않게 cap을 넉넉히 준다. 반환: 실제 추가된 건수."""
+    store = Store(DB_PATH)
+    raw = tiktok_search.fetch_urls(urls)
+    for r in raw:
+        r["category"] = PICKUP_CATEGORY
+    items = build_overseas_items(
+        raw,
+        prev_base=lambda sc: store.prev_base_platform("overseas", sc),
+        prev_delta=lambda sc: store.prev_delta_platform("overseas", sc),
+        now=_now(),
+        window_hours=24 * 3650,   # 수동 픽업은 오래된 것도 허용(신선도 필터 우회)
+    )
+    items = apply_grades(items)
+    for it in items:
+        it["gap_badge"] = gap_check.gap_badge(it.get("caption") or it.get("title") or "")
+    prev, _ = store.load_overseas_feed()
+    valid_cats = set(load_seeds().keys()) | {PICKUP_CATEGORY}
+    prev = [i for i in prev if i.get("category") in valid_cats]
+    merged = _merge_rotate(prev, items, cap=_CAP + len(items))
+    store.save_overseas_feed(merged)
+    return len(items)

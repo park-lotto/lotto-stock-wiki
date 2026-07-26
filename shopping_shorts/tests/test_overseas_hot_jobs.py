@@ -84,3 +84,21 @@ def test_merge_rotate_dedupes_new_by_shortcode():
     assert ids.count("dup") == 1 and "solo" in ids
     dup = next(i for i in out if i["shortcode"] == "dup")
     assert dup["score"] == 0.9   # score 최고가 남음
+
+
+def test_add_pickup_saves_to_pickup_category(monkeypatch, tmp_path):
+    now = datetime(2026, 7, 26, 12, 0, tzinfo=timezone.utc)
+    monkeypatch.setattr(job.tiktok_search, "fetch_urls", lambda urls: [
+        {"video_id": "p1", "title": "kitchen gadget", "published_at": "2020-01-01T00:00:00Z",
+         "views": 100, "likes": 50, "comments": 5, "collects": 0, "shares": 0,
+         "channel_title": "a", "thumbnail": "", "url": "https://tt/p1", "media_platform": "tiktok"}])
+    monkeypatch.setattr(job.gap_check, "gap_badge", lambda t, **k: "🔥선점가능")
+    monkeypatch.setattr(job, "load_seeds", lambda: {"주방/레시피": {"tiktok": ["kitchen"], "cn": []}})
+    monkeypatch.setattr(job, "DB_PATH", str(tmp_path / "t.db"))
+    monkeypatch.setattr(job, "_now", lambda: now)
+    added = job.add_pickup(["https://tt/p1"])
+    assert added == 1
+    from shopping_shorts.store import Store
+    items, _ = Store(str(tmp_path / "t.db")).load_overseas_feed()
+    assert items[0]["category"] == job.PICKUP_CATEGORY   # 픽업 카테고리로 저장
+    assert items[0]["shortcode"] == "p1"                  # 2020년(오래된)도 window 우회로 생존

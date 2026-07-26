@@ -918,6 +918,29 @@ def api_overseas_feed():
     return {"ok": True, "items": items, "updated_at": updated_at}
 
 
+@app.post("/api/overseas/pickup")
+def api_overseas_pickup(request: Request, body: dict):
+    """무료크롤로 고른 틱톡 URL을 '픽업' 카테고리로 담는다(관리자 전용, Apify postURLs 픽업).
+
+    body: {"urls": [...]} 또는 {"text": "줄바꿈/콤마로 구분한 URL들"}. 지정 URL만 과금."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import overseas_hot_jobs
+    raw = body.get("urls") or body.get("text") or ""
+    if isinstance(raw, str):
+        urls = [u for u in re.split(r"[\s,]+", raw) if u.startswith("http")]
+    else:
+        urls = [u for u in raw if isinstance(u, str) and u.startswith("http")]
+    if not urls:
+        return {"ok": False, "error": "URL이 없어요"}
+    try:
+        added = overseas_hot_jobs.add_pickup(urls)
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+    return {"ok": True, "added": added}
+
+
 @app.post("/api/discover/add")
 def api_discover_add(request: Request, username: str, name: str = ""):
     """발굴 채널을 벤치마크 목록에 추가(이후 메인 랭킹에도 추적).
