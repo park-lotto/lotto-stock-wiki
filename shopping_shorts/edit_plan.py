@@ -587,8 +587,12 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         f"- ★★길이를 목표에 맞춰라(짧아도 길어도 실패): 전체 나레이션 글자수 합을 "
         f"**{int(char_target*0.85)}~{int(char_target*1.15)}자**(목표 {char_target}자) 안에 둬라. "
         f"이보다 짧으면 빈약해서 반려, **넘치면 영상이 너무 길어져 반려**(★{int(char_target*1.15)}자를 "
-        "절대 넘기지 마라 — 말을 늘리지 말고 핵심만). 비트는 **6~7개**로 나눠라(각 비트 25~40자). "
+        f"절대 넘기지 마라 — 말을 늘리지 말고 핵심만). 비트는 **6~7개**로 나눠라(각 비트 "
+        f"**{max(12, int(char_target*0.85//6.5))}~{int(char_target*1.15//6)}자**, "
+        f"6~7비트를 다 합쳐 위 총량 안에 들어와야 한다 — 비트마다 길면 총량이 터진다). "
         "8개 이상 잘게 쪼개거나 비트마다 길게 늘어놓으면 실패다.\n"
+        "  ★따옴표 대화는 넣되 **짧은 한마디로**('밥 없어?'·'이거 뭐야?' 식) — 대화를 길게 늘여 "
+        "총 글자수를 넘기지 마라. 대화가 길이를 잡아먹으면 서술을 줄여서라도 총량을 지켜라.\n"
         "  각 비트: role·narration(구어체)·seg_ids(2~4)·fit(1~5)·forced(그 장면이 이 말과 안 맞는데 억지로면 true).\n"
         "- ★caption_lines: 그 비트 narration을 화면 자막용으로 **3~4어절 호흡 단위**로 끊은 "
         "배열(너무 잘게 쪼개면 화면에서 문장이 뚝뚝 끊겨 보인다 — 한 호흡에 3~4어절씩 넉넉히). "
@@ -848,6 +852,34 @@ def _trim_to_budget(narration, char_target):
             words = [w for w in words if w != filler]
     new = " ".join(words).strip()
     return new if (new and new != narration) else None
+
+
+def _conform_overflow_beats(beats, target_seconds, conform=None):
+    """후보 총 나레이션이 목표초를 넘으면(>1.15배) 각 비트를 목표 발화초에 맞게 압축한다.
+    _length_penalty 주석이 약속한 'conform 흡수'의 실제 배선(2026-07-26). conform은 주입
+    가능(테스트용) — 기본은 conform_narration. 총량이 예산 이내면 원본 그대로(무변경)."""
+    if not beats or not target_seconds or target_seconds <= 0:
+        return beats
+    def _clen(s):
+        return len("".join((s or "").split()))
+    total_chars = sum(_clen(b.get("narration", "")) for b in beats)
+    budget = target_seconds * _SYLLABLES_PER_SEC
+    if total_chars <= budget * 1.15:
+        return beats                      # 예산 이내 → 무변경(회귀0)
+    conform = conform or conform_narration
+    # 비트별 목표초 = 그 비트의 현재 글자 비중 × 전체 목표초 (긴 비트가 더 줄어든다)
+    out = []
+    for b in beats:
+        nb = dict(b)
+        cur = _clen(b.get("narration", ""))
+        if cur and total_chars > 0:
+            beat_target_sec = target_seconds * (cur / total_chars)
+            new_narr = conform(b.get("narration", ""), beat_target_sec)
+            if new_narr and _clen(new_narr) < cur:
+                nb["narration"] = new_narr
+                nb["target_seconds"] = round(max(1.5, _clen(new_narr) / _SYLLABLES_PER_SEC), 1)
+        out.append(nb)
+    return out
 
 
 _TYPE_SCHEMA = {
@@ -1134,6 +1166,9 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         # ping_pong이면 백본이 순서를 소유하므로 grain 리오더는 끄고(is_recipe=False),
         # dedup(순서 불변, primary→alternate 스왑만)만 남긴다. 백본은 과정순서를 이미 처리한다.
         plan["beats"] = _apply_anchor_grain(plan["beats"], is_recipe=(is_recipe and not ping_pong))
+        # 초과 흡수(Task11): 총 나레이션이 목표초를 넘으면 각 비트를 conform으로 줄인다.
+        # _length_penalty 주석이 약속한 실제 배선 — 채점 전에 적용해 감점이 콘폼된 길이를 본다.
+        plan["beats"] = _conform_overflow_beats(plan["beats"], target_seconds)
         if ping_pong:
             from shopping_shorts import backbone
             # 1) 행위 매칭(화면-대사 어긋남 + 길이) 2) 백본 순서 고정(과정순서)
