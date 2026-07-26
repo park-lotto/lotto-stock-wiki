@@ -24,6 +24,33 @@
     .head{margin-bottom:8px}
     .head h2{margin:0;font-size:22px}
     .head .desc{color:var(--sub);font-size:13px;margin-top:4px}
+    /* 📂 내 작업목록 버튼 + 모달 (2026-07-26 크로스기기 싱크) */
+    .workBtns{display:flex;gap:8px;flex-wrap:wrap}
+    .workBtn{background:var(--panel);border:1px solid var(--line);color:var(--txt);font-size:13px;font-weight:600;
+      padding:8px 14px;border-radius:9px;cursor:pointer;white-space:nowrap}
+    .workBtn:hover{border-color:var(--accent);color:var(--accent)}
+    #worksBg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;
+      align-items:flex-start;justify-content:center;padding:24px;overflow:auto}
+    #worksBg.on{display:flex}
+    .worksBox{background:var(--panel);border:1px solid var(--line);border-radius:14px;width:100%;max-width:560px;
+      padding:20px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+    .worksBox h3{margin:0 0 4px;font-size:17px}
+    .worksBox .wsub{color:var(--sub);font-size:12px;margin-bottom:14px}
+    .wsList{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow:auto}
+    .wsRow{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;
+      padding:11px 12px;cursor:pointer;background:var(--bg)}
+    .wsRow:hover{border-color:var(--accent)}
+    .wsRow.cur{border-color:var(--accent);background:var(--sel-bg)}
+    .wsMain{flex:1;min-width:0}
+    .wsTitle{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .wsMeta{font-size:11px;color:var(--sub);margin-top:3px}
+    .wsBadge{flex:none;font-size:11px;font-weight:700;color:var(--accent);background:var(--sel-bg);
+      border-radius:6px;padding:3px 8px}
+    .wsDel{flex:none;background:none;border:1px solid var(--line);color:var(--sub);font-size:12px;
+      border-radius:6px;padding:5px 8px;cursor:pointer}
+    .wsDel:hover{border-color:var(--fire);color:var(--fire)}
+    .wsClose{margin-top:14px;width:100%;background:var(--bg);border:1px solid var(--line);color:var(--txt);
+      font-size:13px;padding:9px;border-radius:9px;cursor:pointer}
 
     /* T8: 저장 상태 + 되돌리기 — "지금 저장됐다"를 상시 보여 60대 신뢰감 */
     .saveBar{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin:0 0 4px;min-height:24px;font-size:13px}
@@ -336,12 +363,33 @@
   <div class="aurora-bg"></div>
   <main class="main">
     <div class="head">
-      <h2>🛠 숏템메이커</h2>
-      <div class="desc">레퍼런스 대본으로 시작해 영상·음성·꾸미기·SEO까지 한 번에 만듭니다.</div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div>
+          <h2>🛠 숏템메이커</h2>
+          <div class="desc">레퍼런스 대본으로 시작해 영상·음성·꾸미기·SEO까지 한 번에 만듭니다.</div>
+        </div>
+        <!-- 📂 내 작업목록 — 계정에 저장된 모든 작업(PC·모바일 공통)을 열어 이어서 한다.
+             서버는 이미 계정별로 작업을 갖고 있는데(GET /api/produce/works) 이걸 여는 화면이
+             없어 각 기기가 자기 sessionStorage의 마지막 작업만 봤다(2026-07-26 크로스기기 싱크 수정). -->
+        <div class="workBtns">
+          <button type="button" class="workBtn" onclick="openWorksModal()" title="이 계정에 저장된 모든 작업을 봅니다 — 어느 기기에서 만든 것이든 여기서 이어서 하세요.">📂 내 작업목록</button>
+          <button type="button" class="workBtn" onclick="location.href='/produce?new=1'" title="지금 것을 저장해 두고 빈 새 작업을 시작합니다.">＋ 새 작업</button>
+        </div>
+      </div>
     </div>
 
     <!-- 즐겨찾기에서 "영상제작으로 보내기"로 넘어왔을 때 표시(핸드오프 확인 배너) -->
     <div id="handoffBanner" style="display:none;background:var(--sel-bg);border:1px solid var(--accent);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--sel-fg)"></div>
+
+    <!-- 📂 내 작업목록 모달 — GET /api/produce/works(계정별)로 채운다. 클릭하면 ?work=<id>로 이동. -->
+    <div id="worksBg" onclick="if(event.target===this)closeWorksModal()">
+      <div class="worksBox">
+        <h3>📂 내 작업목록</h3>
+        <div class="wsub">이 계정에 저장된 작업이에요 — PC·모바일 어디서 만든 것이든 눌러서 이어서 하세요.</div>
+        <div class="wsList" id="wsList"><div class="wsMeta">불러오는 중…</div></div>
+        <button type="button" class="wsClose" onclick="closeWorksModal()">닫기</button>
+      </div>
+    </div>
 
     <!-- T8: 저장 상태 상시 표시 + 되돌리기(직전 저장 스냅샷 복원) -->
     <div class="saveBar">
@@ -2273,6 +2321,63 @@ function saveWork(){
   _workTimer = setTimeout(_pushWork, 1000);                                      // 서버는 디바운스
 }
 function clearWork(){ try{ sessionStorage.removeItem('produce_work'); }catch(e){} }
+
+// ── 📂 내 작업목록 (2026-07-26 크로스기기 싱크) ───────────────────────────
+// 서버는 이미 계정별로 작업을 저장한다(GET /api/produce/works). 이걸 여는 화면이 없어
+// 각 기기가 자기 sessionStorage의 마지막 작업만 봤고, 그래서 PC·모바일이 서로 다른 작업을
+// 보여 "기록이 안 맞는다"가 났다. 여기서 목록을 열어 같은 작업을 어느 기기에서든 이어서 한다.
+function _wsWhen(iso){
+  if(!iso) return '';
+  try{
+    const t = new Date(iso).getTime(); if(isNaN(t)) return '';
+    const m = Math.floor((Date.now()-t)/60000);
+    if(m < 1) return '방금';
+    if(m < 60) return m+'분 전';
+    const h = Math.floor(m/60); if(h < 24) return h+'시간 전';
+    const d = Math.floor(h/24); if(d < 7) return d+'일 전';
+    const dt = new Date(iso); return (dt.getMonth()+1)+'/'+dt.getDate();
+  }catch(e){ return ''; }
+}
+async function openWorksModal(){
+  const bg = document.getElementById('worksBg'); if(!bg) return;
+  bg.classList.add('on');
+  const list = document.getElementById('wsList');
+  list.innerHTML = '<div class="wsMeta">불러오는 중…</div>';
+  let works = [];
+  try{
+    const d = await (await fetch('/api/produce/works')).json();
+    works = (d && d.ok && Array.isArray(d.works)) ? d.works : [];
+  }catch(e){ list.innerHTML = '<div class="wsMeta">목록을 불러오지 못했어요.</div>'; return; }
+  if(!works.length){ list.innerHTML = '<div class="wsMeta">아직 저장된 작업이 없어요. 영상을 담고 진행하면 여기에 쌓입니다.</div>'; return; }
+  list.innerHTML = works.map(w => {
+    const cur = (typeof WORK_ID !== 'undefined' && w.work_id === WORK_ID);
+    const title = (w.title && w.title.trim()) ? esc(w.title.trim()) : '제목 없음 (대본 미작성)';
+    const step = (typeof w.step === 'number') ? (w.step+1) : 1;
+    const when = _wsWhen(w.updated_at);
+    return '<div class="wsRow'+(cur?' cur':'')+'" onclick="openWork(\''+esc(w.work_id)+'\')">'
+      + '<div class="wsMain"><div class="wsTitle">'+title+(cur?' · <span style="color:var(--accent)">지금 작업</span>':'')+'</div>'
+      + '<div class="wsMeta">'+when+(when?' · ':'')+'단계 '+step+'/8</div></div>'
+      + '<span class="wsBadge">'+step+'/8</span>'
+      + '<button class="wsDel" onclick="event.stopPropagation();deleteWork(\''+esc(w.work_id)+'\',this)">삭제</button>'
+      + '</div>';
+  }).join('');
+}
+function closeWorksModal(){ const bg=document.getElementById('worksBg'); if(bg) bg.classList.remove('on'); }
+function openWork(wid){
+  if(typeof WORK_ID !== 'undefined' && wid === WORK_ID){ closeWorksModal(); return; }  // 이미 이 작업
+  location.href = '/produce?work=' + encodeURIComponent(wid);
+}
+async function deleteWork(wid, btn){
+  if(!confirm('이 작업을 목록에서 지울까요? (되돌릴 수 없어요)')) return;
+  try{
+    const d = await (await fetch('/api/produce/works/'+encodeURIComponent(wid)+'/delete', {method:'POST'})).json();
+    if(d && d.ok){
+      const row = btn.closest('.wsRow'); if(row) row.remove();
+      const list = document.getElementById('wsList');
+      if(list && !list.querySelector('.wsRow')) list.innerHTML = '<div class="wsMeta">저장된 작업이 없어요.</div>';
+    } else { alert('삭제하지 못했어요.'); }
+  }catch(e){ alert('삭제하지 못했어요.'); }
+}
 // T8: 직전 저장 스냅샷으로 되돌린다. 복원 범위 = 스냅샷이 담는 것(대본·영상풀·단계).
 // 새 저장 형식을 발명하지 않는다 — 검증된 _restoreWork의 하이드레이션을 그대로 미러링한다(§_workState 주석).
 function revertWork(){
