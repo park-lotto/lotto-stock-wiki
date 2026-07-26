@@ -12,6 +12,9 @@ AI 크레딧을 태웠다(revert cb8c0fa1d).
   ③ 한 번 실패한 영상은 **다시 추출하지 않는다**(DB 래치) ← 무한루프 차단의 핵심
   ④ 이미 도서관에 있는 영상은 추출 없이 담기만 보장한다
 """
+import hashlib
+from pathlib import Path
+
 from fastapi.testclient import TestClient
 from shopping_shorts import app as app_module
 from shopping_shorts.store import Store
@@ -24,12 +27,17 @@ def _client(monkeypatch, tmp_path):
     monkeypatch.setattr(app_module, "DB_PATH", db)
     monkeypatch.setattr(app_module, "_AUTH_ON", False)
     monkeypatch.setattr(app_module, "analyze_structure", lambda text: None)
+    monkeypatch.setattr(app_module, "_WIKI_MEDIA_DIR", tmp_path / "media")
     return TestClient(app_module.app), Store(db)
 
 
 def _stub_extract(monkeypatch, calls, full_text):
-    monkeypatch.setattr(app_module, "download_any",
-                        lambda url, dest_dir: ("/fake/video.mp4", "캡션"))
+    def _fake_download(url, dest_dir):
+        Path(dest_dir).mkdir(parents=True, exist_ok=True)
+        p = Path(dest_dir) / "video.mp4"
+        p.write_bytes(b"fake-mp4-bytes")
+        return str(p), "캡션"
+    monkeypatch.setattr(app_module, "download_any", _fake_download)
 
     def _fake(video_path, code, caption=""):
         calls.append(code)
@@ -53,6 +61,25 @@ def test_autoload_puts_script_in_both_wiki_and_picks(monkeypatch, tmp_path):
     assert code in store.produce_pick_shortcodes(customer_id=0)
     # 교집합이 실제로 채워졌으니 AI PICK이 소스를 본다.
     assert app_module._load_work_sources("", 0)
+
+
+def test_autoload_saves_video_permanently(monkeypatch, tmp_path):
+    """2026-07-26 실사고 회귀방지: autoload로 담긴 영상은 /api/wiki/video가 서빙할 수 있게
+    _WIKI_MEDIA_DIR에 mp4가 영구보관돼야 한다(누락 시 대본만 저장돼 도서관에서
+    "원본 영상 없음"으로 뜬다 — DB엔 있는데 파일만 없는 상태)."""
+    client, store = _client(monkeypatch, tmp_path)
+    calls = []
+    _stub_extract(monkeypatch, calls, "정리 꿀팁 원본 대본")
+
+    d = client.post("/api/produce/autoload", json={"items": [{"url": URL}]}).json()
+    code = d["results"][0]["shortcode"]
+
+    hashed = hashlib.sha1(code.encode()).hexdigest()[:16]
+    media_file = (tmp_path / "media") / f"{hashed}.mp4"
+    assert media_file.exists(), "autoload가 도서관 DB엔 저장했지만 원본 mp4를 영구보관하지 않았다"
+
+    r = client.get(f"/api/wiki/video?shortcode={code}")
+    assert r.status_code == 200
 
 
 def test_autoload_empty_transcript_is_not_saved(monkeypatch, tmp_path):

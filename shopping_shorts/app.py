@@ -6036,6 +6036,8 @@ def api_produce_autoload(request: Request, body: dict):
             results.append({"shortcode": code, "status": "failed_download"})
             continue
 
+        work_dir = _FIND_TMP_DIR / hashlib.sha1(code.encode()).hexdigest()[:16]
+        video_path = None
         cached = store.get_extract(code)
         script = None
         if cached and (cached.get("full_text") or "").strip():
@@ -6052,7 +6054,6 @@ def api_produce_autoload(request: Request, body: dict):
             store.autoload_mark_attempt(code)     # ★추출 전에 래치
             ok = False
             try:
-                work_dir = _FIND_TMP_DIR / hashlib.sha1(code.encode()).hexdigest()[:16]
                 try:
                     video_path, dl_caption = download_any(item.get("video_url") or url, str(work_dir))
                 except Exception as e:  # noqa: BLE001 — 다운로드 실패(만료·비공개·차단)
@@ -6088,6 +6089,27 @@ def api_produce_autoload(request: Request, body: dict):
                 structure = analyze_structure(script.get("full_text", "")) or None
             except Exception:  # noqa: BLE001 — 구조분석 실패해도 적재는 성공시킨다
                 structure = None
+
+        # 원본 영상 영구보관(도서관 인라인 재생용) — /api/wiki/save·/api/produce/save_to_wiki와
+        # 동일 로직. 캐시 히트로 video_path가 비어 있으면(대본만 캐시되고 영상은 없던 경우)
+        # 여기서 재다운로드한다. 실패해도 대본·구조는 저장(치명적 아님, 2026-07-26 발견:
+        # 이 블록이 누락돼 있어 autoload로 담긴 영상이 전부 "원본 영상 없음"으로 떴었다).
+        hashed = hashlib.sha1(code.encode()).hexdigest()[:16]
+        media_target = _WIKI_MEDIA_DIR / f"{hashed}.mp4"
+        if not media_target.exists():
+            src = video_path
+            if src is None:
+                try:
+                    src, _dl_caption = download_any(item.get("video_url") or url, str(work_dir))
+                except Exception:
+                    src = None
+            if src and Path(src).exists():
+                try:
+                    _WIKI_MEDIA_DIR.mkdir(parents=True, exist_ok=True)
+                    shutil.copy(str(src), str(media_target))
+                except Exception:
+                    pass
+
         store.save_to_wiki({
             "shortcode": code,
             "name": item.get("name"),
