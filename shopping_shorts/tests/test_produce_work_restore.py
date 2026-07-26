@@ -27,6 +27,9 @@ const PANEL_COUNT = 8;
 let cur = 0, MIX_JOB = null, WORK_ID = null, PREVIEW_STATUS = null;
 let STYLE_TOUCHED = false, PENDING_STYLE_RESTORE = false;   // 꾸미기 스타일 복원 플래그(C-2 잔여)
 function canGoNext(){ return PREVIEW_STATUS === 'ready' || PREVIEW_STATUS === 'failed'; }
+// _restoreWork의 게이트 재동기는 stepLocked() 하나만 본다(2026-07-26) — 소스와 동일 스텁.
+// 패널7(화면 붙이기=매칭)은 미리보기를 '만드는' 자리라 게이트 예외다.
+function stepLocked(i){ if(i === 7) return false; return i >= 1 && !!MIX_JOB && !canGoNext(); }
 let NEXT_DISABLED = null;
 // !!(...): 실제 코드의 `b.disabled = gated`는 DOM boolean IDL 프로퍼티라 대입 시 ToBoolean으로
 // 강제변환된다(null → false). 이 스텁은 DOM이 아닌 평범한 변수라 그 강제변환을 흉내낸다 —
