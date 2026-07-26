@@ -148,7 +148,10 @@ def test_pool_card_toggle_only():
     # renderPool()이 카드 옛 5버튼(뽑기/담기/메인/정보채우기)을 되살리지 않는다.
     # ★Task7(2026-07-23): 클릭=pickFootage(AI PICK 지정)로 바뀌었고, 빼기는 ✕(dropFootage) 하나만 남는다.
     start = HTML.index("function renderPool(){")
-    end = HTML.index("function previewMaterial")
+    # ★renderPool 본문만 자른다(바로 다음 함수 refreshStep0까지). 예전엔 previewMaterial까지
+    #   넓게 잘라 renderNoScriptState의 정당한 openScriptModal(${i}) 뽑기버튼까지 오검출했다
+    #   (2026-07-26 대본뽑기 버튼 복구). 이 테스트의 계약은 "renderPool이 옛 5버튼을 안 되살린다"뿐.
+    end = HTML.index("async function refreshStep0")
     body = HTML[start:end]
     assert "pickFootage(${i})" in body
     assert "dropFootage(${i})" in body
