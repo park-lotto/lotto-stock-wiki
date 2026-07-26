@@ -182,6 +182,8 @@
   .ov-meta{padding:8px 9px 10px}
   .ov-title{font-size:12.5px;line-height:1.35;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:34px}
   .ov-sub{margin-top:6px;color:var(--sub,#8b94a7);font-size:11px}
+  .ov-lens{margin-top:8px;width:100%;padding:5px;font-size:11px;border:1px solid var(--line,#262b36);border-radius:6px;background:#0d131c;color:#37e0bd;cursor:pointer}
+  .ov-lens:hover{border-color:#37e0bd;background:#0d3b33}
 </style>
 <style id="rankSkin">
 /* ── 레퍼런스 랭킹 상단 리디자인 (다크 시네마 + 민트 네온, 2026-07-23) ── */
@@ -883,6 +885,7 @@ function renderOverseas(){
         <div class="ov-meta">
           <div class="ov-title">${title}</div>
           <div class="ov-sub">${metric} · 속도 ${Math.round(i.speed||0)} · <b>${i.grade||'—'}</b></div>
+          <button class="ov-lens" data-u="${i.url||''}" onclick="event.preventDefault();event.stopPropagation();traceByUrl(this.dataset.u)">🔎 같은영상 찾기</button>
         </div></a>`;
     }).join('');
   document.getElementById('overseasList').innerHTML =
