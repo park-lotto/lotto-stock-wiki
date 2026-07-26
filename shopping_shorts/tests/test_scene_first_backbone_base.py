@@ -33,8 +33,8 @@ def test_backbone_base_uses_rich_generator_with_order_block():
     p = seen["prompt"]
     assert "화면 순서 뼈대" in p and "BB-1" in p and "BB-2" in p   # 백본 순서 제약
     assert p.index("BB-1 [자르다]") < p.index("BB-2 [올리다]")      # 시간순 나열
-    assert "짤드라마" in p                                         # rich 스토리 헌장 그대로
-    assert "[은행 훅] 이거 실화냐" in p                             # 은행 부품 주입 그대로
+    assert "스파인" in p                                           # rich 스토리 생성(5단계 스파인) 그대로
+    assert "[은행 훅] 이거 실화냐" not in p                         # 은행 OFF(2026-07-26 단순화) — 주입 안 함
     # rich 스키마(스토리 필드·다중컷)로 생성 — 뼈다귀 스키마(beats+seg_id 단일) 회귀 방지.
     cand_props = seen["schema"]["properties"]["candidates"]["items"]["properties"]
     assert "story_person" in cand_props and "hook" in cand_props

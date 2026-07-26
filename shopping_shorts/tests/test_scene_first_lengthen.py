@@ -43,7 +43,7 @@ def test_regenerates_when_all_candidates_short():
 
     def fake_call(prompt, schema, **kw):
         calls["n"] += 1
-        if "[길이 재생성]" in prompt:      # 보강 힌트가 실제 프롬프트에 얹혔는지
+        if "[길이 보강]" in prompt:      # 보강 힌트가 실제 프롬프트에 얹혔는지(2026-07-26 마커 개명)
             calls["lengthen_seen"] = True
             return _long_batch()
         return _short_batch()

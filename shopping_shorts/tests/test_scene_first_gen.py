@@ -2,8 +2,9 @@ from shopping_shorts import edit_plan
 
 
 def _fake_call(prompt, schema, **kw):
-    # 프롬프트에 헌장·팔레트가 실렸는지 + 후보 형태 반환
-    assert "스토리라인" in prompt and "[s0-0]" in prompt and "레퍼" in prompt
+    # 프롬프트에 이야기 지침·팔레트·제품(레퍼런스)이 실렸는지 + 후보 형태 반환
+    # (2026-07-26 단순화: '스토리 헌장'→'이야기체 5단계 스파인'으로 교체)
+    assert "이야기" in prompt and "[s0-0]" in prompt and "원본대본" in prompt
     return {"candidates": [{
         "hook": "양파 이렇게 두지 마세요",
         "story_person": "살림고수", "story_event": "썩는 양파 발견",
