@@ -12,6 +12,7 @@ from pathlib import Path
 
 from shopping_shorts.store import Store
 from shopping_shorts.media_download import download_any
+from shopping_shorts import script_extract
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC, build_edit_plan, conform_narration
 from shopping_shorts.scene_match import match_scene_assets, match_sfx
@@ -401,6 +402,11 @@ def run_mix_job(job_id, db_path, work_root):
             segs = (cached or {}).get("segments")
             if segs and all(s.get("seg_id") for s in segs):
                 r = {"segments": segs, "full_text": (cached.get("full_text") or "")}
+                # 무자막 소스 특장점(2026-07-26): 캐시엔 최상위 필드가 없을 수 있으므로
+                # 세그별 product_benefits로 집계 폴백. 이 필드 추가 전 캐시는 빈 리스트 —
+                # full_text도 비었다면 그 소스는 예전처럼 화면 재료로만 쓰인다(무해).
+                r["product_benefits"] = (script_extract._norm_benefits(
+                    cached.get("product_benefits")) or script_extract._collect_benefits(segs))
             else:
                 r = extract_script(path, vid, caption=captions.get(vid, ""))
             r["video_id"] = vid

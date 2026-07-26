@@ -77,7 +77,8 @@ def test_scene_first_no_bank_leaves_prompt_clean():
 def test_build_scene_first_plan_threads_bank(monkeypatch):
     box = {}
 
-    def fake_candidates(inv, ref, secs, n=3, call=None, bank_context="", order_block=""):
+    # **kw: 호출부가 새 kwarg(lengthen·benefits_block 등)를 넘겨도 이 가짜가 안 깨지게.
+    def fake_candidates(inv, ref, secs, n=3, call=None, bank_context="", order_block="", **kw):
         box["bank"] = bank_context
         return []
 

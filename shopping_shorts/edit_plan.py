@@ -47,6 +47,17 @@ _DEFAULT_TYPE = "product_reveal"
 _SYLLABLES_PER_SEC = 5.7
 
 
+def _seg_benefits(seg):
+    """세그먼트의 product_benefits → 문장 리스트(fail-open []). list/str 모두 허용.
+    무자막 소스(text 빈칸)에서 대본이 쓸 수 있는 유일한 언어 재료라 여기서 흘리면 안 된다."""
+    raw = (seg or {}).get("product_benefits")
+    if not raw:
+        return []
+    if isinstance(raw, str):
+        raw = [raw]
+    return [t.strip() for t in raw if isinstance(t, str) and t.strip()]
+
+
 def _build_inventory(source_scripts):
     """소스 대본들 → (seg_map, prompt_block).
 
@@ -69,11 +80,17 @@ def _build_inventory(source_scripts):
                 "action": seg.get("action"),
                 "is_key": bool(seg.get("is_key")),
                 "shot_role": seg.get("shot_role") or "기타",
+                "product_benefits": _seg_benefits(seg),
             }
             _act = seg.get("action")
             _act_s = f" | 행위:{_act}" if _act else ""
+            # 무자막 소스는 '말:'이 빈칸이라 이 라인만 보면 대본이 특장점을 녹일 재료가 없다.
+            # 화면→특장점 문장을 라인에 실어 라이브 scene_first 경로도 쓰게 한다(2026-07-26).
+            _ben = _seg_benefits(seg)
+            _ben_s = f" | 특장점:{' / '.join(_ben[:2])}" if _ben else ""
             lines.append(
-                f"[{sid}] ({length}s) 화면:{seg.get('scene_desc','')} | 말:{seg.get('text','')}{_act_s}"
+                f"[{sid}] ({length}s) 화면:{seg.get('scene_desc','')} | 말:{seg.get('text','')}"
+                f"{_act_s}{_ben_s}"
             )
     return seg_map, "\n".join(lines)
 
@@ -540,8 +557,41 @@ _SCENE_FIRST_SCHEMA = {
 }
 
 
+def _source_benefits_block(source_scripts):
+    """소스별 product_benefits → 프롬프트 블록(무자막 소스용). 전부 비면 빈 문자열=무주입.
+
+    무자막 해외영상(2026-07-26)은 full_text·text가 0자라 레퍼런스에도 팔레트 '말:' 칸에도
+    언어 재료가 없다 — 화면에서 뽑은 특장점만이 유일한 재료다. 이 블록이 없으면 대본이
+    "무슨 제품인지"를 모르고 감상만 쓴다(실측: 전동수납장 소스가 화면 재료로만 쓰였다)."""
+    lines = []
+    for i, s in enumerate(source_scripts or [], 1):
+        raw = s.get("product_benefits")
+        if isinstance(raw, str):
+            raw = [raw]
+        bens = [t.strip() for t in (raw or []) if isinstance(t, str) and t.strip()]
+        if not bens:
+            bens = _collect_seg_benefits(s.get("segments"))
+        if bens:
+            lines.append(f"- 소스{i}: " + " / ".join(bens[:4]))
+    if not lines:
+        return ""
+    return ("[제품 특장점 — 화면으로 확인된 사실. ★자막 없는 소스라 대사가 비어도 이 장점을 "
+            "우리 말(스토리)로 반드시 녹여라. 없는 기능은 지어내지 마라]\n" + "\n".join(lines))
+
+
+def _collect_seg_benefits(segments):
+    """세그먼트별 특장점 집계(순서 보존 중복제거) — 소스 최상위 필드가 없는 캐시용 폴백."""
+    out = []
+    for seg in segments or []:
+        for b in _seg_benefits(seg):
+            if b not in out:
+                out.append(b)
+    return out
+
+
 def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3, call=_vault_call,
-                            bank_context="", order_block="", lengthen=False):
+                            bank_context="", order_block="", lengthen=False,
+                            benefits_block=""):
     """스토리 헌장 + 장면 팔레트 + 레퍼 구조 → 후보 n개. 각 비트는 seg_ids(2~4 다중컷)로
     장면을 지목한다. 실패 시 []. 헌장이 품질을 담당하므로 별도 검증루프 없음(1콜).
 
@@ -575,6 +625,7 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         f"{(reference_text or '')[:1500]}\n\n"
         "[우리 장면 팔레트 — 이 seg_id 화면만 쓸 수 있다]\n"
         f"{inventory_text}\n\n"
+        + ((benefits_block + "\n\n") if benefits_block else "")
         + ((order_block + "\n\n") if order_block else "")
         + script_generate._STORY_RULES_CORE + "\n" + script_generate._STORY_DECLARE + "\n"
         "- ★위 헌장(인과사슬·훅 한방·CTA 미끼·비법 킥 감추기)을 반드시 지켜라 — 장면에 맞추느라 "
@@ -1211,8 +1262,11 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         cands.append(cand)
       return cands
 
+    # 무자막 소스 특장점 블록(2026-07-26): 전부 비면 빈 문자열=무주입(회귀0).
+    benefits_block = _source_benefits_block(source_scripts)
     raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates,
-                                   call=_call, bank_context=bank_context, order_block=order_block)
+                                   call=_call, bank_context=bank_context, order_block=order_block,
+                                   benefits_block=benefits_block)
     cands = _ground_score(raws)
     # ①생성측 보강(세션#2): 후보가 전부 목표보다 크게 짧으면(생성이 목표초 미달) 길이 강화
     # 힌트로 1회 재생성해 합친다. ②선택 감점(_length_penalty)이 짧은 후보를 강등하므로 병합 후
@@ -1225,7 +1279,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         if max((_cand_secs(c) for c in cands), default=0.0) < 0.85 * target_seconds:
             raws2 = _scene_first_candidates(
                 inventory, reference_text, target_seconds, n=n_candidates, call=_call,
-                bank_context=bank_context, order_block=order_block, lengthen=True)
+                bank_context=bank_context, order_block=order_block, lengthen=True,
+                benefits_block=benefits_block)
             cands = cands + _ground_score(raws2)
     if cands:
         best = max(range(len(cands)), key=lambda i: cands[i]["score"])

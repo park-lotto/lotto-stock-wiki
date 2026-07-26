@@ -45,11 +45,13 @@ _RESPONSE_SCHEMA = {
                     "has_effect": {"type": "boolean"},
                     "is_key": {"type": "boolean"},
                     "shot_role": {"type": "string", "enum": ["조리", "완성", "기타"]},
+                    "product_benefits": {"type": "array", "items": {"type": "string"}},
                 },
                 "required": ["start", "end", "text", "scene_desc"],
             },
         },
         "full_text": {"type": "string"},
+        "product_benefits": {"type": "array", "items": {"type": "string"}},
     },
     "required": ["segments", "full_text"],
 }
@@ -93,9 +95,40 @@ _PROMPT = """이 영상을 보고 시간 순서대로 세그먼트로 나눠 대
   보여주면 true. 애매하면 false.)
 - shot_role: 화면의 성격. 손이 재료/도구를 다루는 과정이면 "조리", 완성된 결과물이 화면 주인공이면
   "완성", 그 외(인물·배경·인사 등)면 "기타". (레시피 소재의 화면 결 맞춤 배치에 쓴다.)
+- product_benefits: **자막도 나레이션도 없어도** 그 구간 화면만 보고 이 제품/도구의 **특장점을
+  한국어 문장 1~2개**로 뽑아라(예: "터치 한 번에 자동으로 열린다", "좁은 틈에 쏙 들어가 공간을
+  아낀다", "고급스러운 마감"). 요리·살림 소재면 방법 설명 대신 **결과의 매력**을 적어라(예:
+  "겉은 바삭 속은 촉촉하게 나온다"). 화면이 특장점을 안 보여주는 구간(인물 등장·인사·배경)이면
+  빈 배열. **추측으로 없는 기능을 만들지 마라** — 화면에 실제로 보이는 것만.
+
+★ 최상위 product_benefits: 위 구간별 특장점을 모아 **이 영상이 파는 제품/결과물의 핵심 특장점
+2~3개**를 한국어 문장으로 정리해라. 자막이 하나도 없는 영상이라 text가 전부 빈칸이 되더라도
+이 필드는 **반드시 채워라** — 이게 없으면 이 영상은 대본 재료로 못 쓰인다.
 
 full_text에는 모든 세그먼트의 text를 순서대로 이어붙여라. 맨 앞 훅부터 한 단어도 빠짐없이
 완전히 이어붙이고, 다른 텍스트는 없이 JSON만 출력."""
+
+
+def _norm_benefits(raw):
+    """모델이 준 특장점 → 문장 리스트로 정규화(순수함수, fail-open).
+    필드 없음/None → []. 문장 하나(str)로 줘도 리스트로 감싼다(스키마는 배열이지만 모델이
+    가끔 문자열로 준다 — 무자막 소스를 살리는 유일한 재료라 여기서 흘리면 안 된다)."""
+    if not raw:
+        return []
+    if isinstance(raw, str):
+        raw = [raw]
+    return [s.strip() for s in raw if isinstance(s, str) and s.strip()]
+
+
+def _collect_benefits(segments):
+    """세그먼트별 product_benefits → 소스 단위 집계(순서 보존 중복제거, 순수함수).
+    무자막 영상은 full_text가 0자라 이 집계가 대본 생성의 유일한 언어 재료다."""
+    out = []
+    for seg in segments or []:
+        for b in _norm_benefits(seg.get("product_benefits")):
+            if b not in out:
+                out.append(b)
+    return out
 
 
 def _assign_seg_ids(video_id, raw_segments):
@@ -115,6 +148,8 @@ def _assign_seg_ids(video_id, raw_segments):
             "has_effect": bool(seg.get("has_effect")),  # 원본 효과 박힘 → B롤 제외용
             "is_key": bool(seg.get("is_key")),           # 기능·장점 실증 앵커 (fail-open False)
             "shot_role": seg.get("shot_role") or "기타", # 조리/완성/기타 (fail-open 기타)
+            # 무자막 소스용 화면→특장점 문장 (fail-open []) — text가 빈칸이어도 대본 재료가 된다.
+            "product_benefits": _norm_benefits(seg.get("product_benefits")),
         })
     return out
 
@@ -173,9 +208,14 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 ),
             )
             data = json.loads(resp.text)
+            segments = _assign_seg_ids(video_id, data.get("segments", []))
+            # 소스 단위 특장점: 모델의 최상위 요약을 우선하고, 없으면 세그별 집계로 폴백.
+            # 무자막 영상(full_text 0자)이 대본 생성에서 통째로 빠지던 것을 막는 재료다.
+            benefits = _norm_benefits(data.get("product_benefits")) or _collect_benefits(segments)
             return {
-                "segments": _assign_seg_ids(video_id, data.get("segments", [])),
+                "segments": segments,
                 "full_text": data.get("full_text", ""),
+                "product_benefits": benefits,
             }
         except Exception as e:
             m = str(e)
