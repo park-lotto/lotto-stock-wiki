@@ -353,3 +353,52 @@ def test_set_matching_ui_toggles_button_disabled_state():
     assert "btn.disabled=true" in body
     assert "btn.disabled=false" in body
     assert ".aiPickCta" in body
+
+
+@pytest.mark.skipif(not shutil.which("node"), reason="node 필요")
+def test_boot_account_latest_or_local_cross_device_sync(tmp_path):
+    """계정 크로스기기 싱크(2026-07-26): ?work=·?new 없이 그냥 /produce로 왔을 때
+    _bootAccountLatestOrLocal이 (A)방금 이 기기에서 보낸 재료 우선 (B)계정 최신이 다른 작업이면
+    이어받기 (C)같은 작업이면 로컬유지 (D)로컬 없으면 계정 최신 자동 (E)서버에 없으면 로컬복원
+    을 정확히 고르는지 node로 실제 실행해 검증한다(모바일→PC 자동 이어받기의 핵심)."""
+    start = HTML.index("async function _bootAccountLatestOrLocal(){")
+    end = HTML.index("// ?work=<id>로 들어왔으면", start)
+    body = HTML[start:end]
+
+    def run(ss, works):
+        driver = (
+            "'use strict';\n"
+            "const calls=[];\n"
+            "const _SS=" + json.dumps(ss) + ";\n"
+            "const sessionStorage={getItem:k=> (k in _SS)?_SS[k]:null};\n"
+            "const _WORKS=" + json.dumps(works) + ";\n"
+            "global.fetch=async()=>({json:async()=>({ok:true,works:_WORKS})});\n"
+            "function _consumeProduceHandoff(){calls.push('consume');}\n"
+            "async function _restoreWork(id){calls.push('restore:'+id);}\n"
+            "function _seedSaveBaseline(){}\n"
+            + body +
+            "\n(async()=>{await _bootAccountLatestOrLocal();"
+            "console.log(JSON.stringify(calls));})();\n"
+        )
+        js = tmp_path / "t.js"
+        js.write_text(driver, encoding="utf-8")
+        out = subprocess.run(["node", str(js)], capture_output=True, text=True,
+                             encoding="utf-8", errors="replace",
+                             stdin=subprocess.DEVNULL, timeout=30)
+        assert out.returncode == 0, out.stderr
+        return json.loads(out.stdout.strip().splitlines()[-1])
+
+    def pw(wid):   # produce_work sessionStorage 값(진행중 작업)
+        return json.dumps({"work_id": wid, "handoff": [{"url": "x"}]})
+
+    # (A) 방금 이 기기에서 "제작소로 보내기"한 재료가 있으면 계정 최신 있어도 그게 우선
+    assert run({"produce_handoff": json.dumps([{"url": "a"}]), "produce_work": pw("B")},
+               [{"work_id": "A"}]) == ["consume"]
+    # (B) 로컬은 B, 계정 최신은 A(다름=다른 기기서 더 최근) → A 이어받기
+    assert run({"produce_work": pw("B")}, [{"work_id": "A"}, {"work_id": "B"}]) == ["restore:A"]
+    # (C) 로컬 A == 계정 최신 A → 로컬 유지(새로고침 연속성)
+    assert run({"produce_work": pw("A")}, [{"work_id": "A"}]) == ["consume"]
+    # (D) 로컬 작업 없음(새 기기/브라우저) → 계정 최신 자동 로드
+    assert run({}, [{"work_id": "A"}]) == ["restore:A"]
+    # (E) 서버에 작업 없음 → 로컬 복원(폴백)
+    assert run({"produce_work": pw("B")}, []) == ["consume"]

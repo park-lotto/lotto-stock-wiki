@@ -4895,6 +4895,31 @@ function initThumb(){
 }
 // ── 썸네일 끝 ────────────────────────────────────────────────
 
+// 계정 크로스기기 싱크(2026-07-26 사장님 요청): ?work=·?new 없이 그냥 /produce로 왔을 때,
+// 이 기기의 로컬(sessionStorage) 작업 대신 "계정에서 가장 최근 편집한 작업"을 서버에서 불러온다
+// — 모바일에서 하던 게 PC를 열면 그대로 이어지게. (전엔 기기별 sessionStorage라 영영 안 맞았다)
+//  · 방금 이 기기에서 "제작소로 보내기"한 재료(produce_handoff)가 있으면 그게 우선(기기 의도).
+//  · 계정 최신이 이 기기 로컬과 "다른" 작업일 때만 불러온다(=다른 기기에서 더 최근 편집).
+//    같은 작업이거나 서버에 없으면 로컬 복원(새로고침 연속성 유지).
+//  · 유실 0: 밀려난 작업도 서버(내 작업 목록·?work=)에 그대로 남고, _restoreWork는 saveWork를
+//    안 불러 updated_at을 안 바꾼다 → "열기만 해도 최신이 뒤바뀌는" 핑퐁이 없다.
+async function _bootAccountLatestOrLocal(){
+  let fresh=null; try{ fresh=JSON.parse(sessionStorage.getItem('produce_handoff')||'null'); }catch(e){}
+  if(fresh && fresh.length){ _consumeProduceHandoff(); return; }   // 방금 이 기기에서 보낸 재료 우선
+  let localWid=null;
+  try{ localWid=(JSON.parse(sessionStorage.getItem('produce_work')||'null')||{}).work_id || null; }catch(e){}
+  let latest=null;
+  try{
+    const d=await (await fetch('/api/produce/works')).json();     // updated_at DESC → [0]=최신
+    if(d && d.ok && d.works && d.works.length) latest=d.works[0];
+  }catch(e){}
+  if(latest && latest.work_id && latest.work_id !== localWid){
+    await _restoreWork(latest.work_id);                           // 다른 기기의 더 최근 작업 이어받기
+    if(typeof _seedSaveBaseline==='function') _seedSaveBaseline();
+  } else {
+    _consumeProduceHandoff();                                     // 로컬이 최신/서버에 없음 → 로컬 복원
+  }
+}
 // ?work=<id>로 들어왔으면 서버 작업파일에서, 아니면 기존대로 sessionStorage에서 복원.
 function _bootRestore(){
   const sp = new URLSearchParams(location.search);
@@ -4915,9 +4940,10 @@ function _bootRestore(){
     //   Promise.resolve: _restoreWork가 프라미스가 아니어도(테스트 스텁) .then이 안전. 시더는 있을 때만.
     Promise.resolve(_restoreWork(wid)).then(()=>{ if(typeof _seedSaveBaseline==='function') _seedSaveBaseline(); });
   } else {
-    // sessionStorage 경로(_consumeProduceHandoff)는 끝에서 saveWork()를 부른다 → _pushWork가
-    //   기준선(_lastCommitted)을 자동으로 잡는다. 별도 시드 불필요.
-    _consumeProduceHandoff();
+    // 계정 크로스기기 싱크(2026-07-26): 그냥 /produce로 오면 이 기기 로컬 대신 계정 최신작업을
+    //   불러온다(모바일→PC 자동 이어받기). 서버에 없거나 로컬이 최신이면 _consumeProduceHandoff로
+    //   떨어져 기존 동작(끝에서 saveWork→기준선 자동 시드) 그대로다.
+    _bootAccountLatestOrLocal();
   }
 }
 _bootRestore();
