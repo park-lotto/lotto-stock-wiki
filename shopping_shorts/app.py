@@ -128,7 +128,19 @@ _TIKTOK_COST_PER_ITEM = 0.0017
 _TIKTOK_LANG_KINDS = {"ko", "en", "ja", "zh", "ru"}   # 키워드 시드의 언어코드 kind
 
 # ── 렌즈(SerpApi Google Lens) 유사영상 발굴 (2026-07-14) ──
-_LENS_MONTH_LIMIT_DEFAULT = 100   # SerpApi 무료 100회/월
+_LENS_MONTH_LIMIT_PER_KEY = 100   # SerpApi 무료 계정당 100회/월
+
+
+def _lens_month_limit(store):
+    """이번 달 렌즈 월 상한. 설정(lens_month_limit)이 있으면 그 값, 없으면 SerpApi 키
+    개수 × 100(무료 계정당 100회/월). 키가 소진되면 다음 키로 로테이션(lens_discover)되므로
+    키를 추가하면 한도도 자동으로 늘어야 한다(2026-07-26: 2번째 키를 넣어도 한도가 100
+    고정이라 101번째부터 막히던 문제 — 키 개수에 맞춰 자동 스케일)."""
+    from shopping_shorts.config import SERPAPI_KEYS
+    override = store.get_setting("lens_month_limit", "")
+    if override:
+        return int(override)
+    return _LENS_MONTH_LIMIT_PER_KEY * max(1, len(SERPAPI_KEYS))
 
 
 def _tiktok_knobs(store):
@@ -3210,7 +3222,7 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
     store = Store(DB_PATH)
     now = datetime.now(timezone.utc)
     month = now.strftime("%Y-%m")
-    limit = int(store.get_setting("lens_month_limit", _LENS_MONTH_LIMIT_DEFAULT))
+    limit = _lens_month_limit(store)
     if store.lens_month_count(month) >= limit:
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "lens_limit",
@@ -3298,7 +3310,7 @@ def api_lens_trace_url(request: Request, body: dict):
         return blocked
     store = Store(DB_PATH)
     month = datetime.now(timezone.utc).strftime("%Y-%m")
-    limit = int(store.get_setting("lens_month_limit", _LENS_MONTH_LIMIT_DEFAULT))
+    limit = _lens_month_limit(store)
     if store.lens_month_count(month) >= limit:
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "lens_limit",
