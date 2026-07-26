@@ -1358,6 +1358,22 @@ class Store:
             ).fetchall()
         return {r[0] for r in rows}
 
+    def latest_comments(self, shortcodes):
+        """reel_history(최신 크롤)의 shortcode별 '지금' 댓글수 → {shortcode: comments}.
+        script_wiki.comments는 도서관 저장 순간에 박제돼(save_to_wiki) 이후 안 늘어난다 —
+        AI PICK이 옛 스냅샷 대신 최신 실측 댓글을 쓰게 하려는 오버레이용(2026-07-26 사장님:
+        재료카드 15,430 ↔ AI PICK 6,585 불일치). reel_history에 없으면(30일 지나 정리됐거나
+        수집 이력 없음) 키 자체를 안 담아, 호출부가 도서관 스냅샷으로 폴백하게 한다."""
+        scs = [s for s in dict.fromkeys(shortcodes or []) if s]   # 중복 제거·빈값 제외
+        if not scs:
+            return {}
+        ph = ",".join("?" * len(scs))
+        with self._conn() as c:
+            rows = c.execute(
+                f"SELECT shortcode, comments FROM reel_history WHERE shortcode IN ({ph})", scs
+            ).fetchall()
+        return {r[0]: r[1] for r in rows if r[1] is not None}
+
     def save_last_run(self, items, collected_at):
         """마지막 수집 결과 전체(items + 시각)를 저장. 단일 행 덮어쓰기.
         + 수집분을 reel_history에 누적(shortcode upsert)해 48h 창에서 내려가도
