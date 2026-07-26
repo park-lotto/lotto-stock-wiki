@@ -152,24 +152,22 @@ def _source_views(src):
 def winners_block(store, category, k=2, max_chars=420):
     """검증된 우승 대본을 few-shot 예시로(2026-07-26). 스파인은 '뼈대'만 주는데, 여기에
     실제 조회수 높았던 원본 대본 전문을 통째로 보여줘 Gemini가 말투·호흡·디테일까지 흉내내게
-    한다. 같은 카테고리 우승작 우선, 부족하면 전체 상위로 채운다. 없으면 ''(회귀0)."""
+    한다. ★같은 카테고리 우승작만 쓴다(2026-07-26 사고: 부족분을 타 카테고리로 채웠더니
+    레시피 우승작의 '청양고추' 훅 소재가 홈템 영상에 새어들어 훅-본문이 따로 노는 C안이 나왔다).
+    카테고리 매칭 우승작이 없으면 아예 안 준다(''=회귀0, 오염보다 무주입이 낫다)."""
+    if not category:
+        return ""   # 카테고리 불명이면 타 카테고리 오염 위험 → 무주입
     try:
         srcs = store.list_pattern_sources(limit=1000)
     except Exception:
         return ""
-    def _ok(s):
-        t = (s.get("full_text") or "").strip()
-        return len(t) >= 40
-    pool = [s for s in srcs if _ok(s)]
-    if not pool:
+    same = [s for s in srcs
+            if s.get("product_category") == category
+            and len((s.get("full_text") or "").strip()) >= 40]
+    if not same:
         return ""
-    same = [s for s in pool if category and s.get("product_category") == category]
     same.sort(key=_source_views, reverse=True)
-    rest = [s for s in pool if s not in same]
-    rest.sort(key=_source_views, reverse=True)
-    picked = (same + rest)[:k]
-    if not picked:
-        return ""
+    picked = same[:k]
     lines = []
     for i, s in enumerate(picked, 1):
         t = _sanitize(s.get("full_text", "").strip())
@@ -178,9 +176,12 @@ def winners_block(store, category, k=2, max_chars=420):
         v = _source_views(s)
         vtxt = f"(조회수 {v:,})" if v else ""
         lines.append(f"[우승 예시 {i} {vtxt}]\n{t}")
-    return ("[★검증된 우승 대본 — 실제로 터진 대본 전문이다. 뼈대(스파인)를 지키되, 아래 "
-            "예시의 '말투·호흡·구체적 디테일·감정선'을 배워서 그 느낌으로 써라(문장을 그대로 "
-            "베끼지 말고 우리 소재로 새로. 특히 훅의 강도와 구어체 리듬을 흡수해라)]\n"
+    return ("[★검증된 우승 대본 — 이 카테고리에서 실제로 터진 대본 전문이다. 뼈대(스파인)를 "
+            "지키되, 아래 예시의 '말투·호흡·구어체 리듬·감정선'만 배워서 그 느낌으로 써라.\n"
+            "  ⚠️절대 규칙: 예시의 **소재·소품·제품명·특정 단어(예: 특정 식재료·브랜드)는 "
+            "절대 가져오지 마라**. 오직 우리 영상의 소재로만 써라 — 예시가 '청양고추' 얘기여도 "
+            "우리 영상이 주방 가림막이면 청양고추는 한 글자도 넣지 마라. 훅의 '강도와 리듬'만 "
+            "흡수하고 소재는 100% 우리 것.]\n"
             + "\n\n".join(lines))
 
 
