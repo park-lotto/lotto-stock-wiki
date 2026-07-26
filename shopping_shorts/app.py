@@ -5880,8 +5880,21 @@ def _load_work_sources(work_id, cid):
     structure는 도서관 저장 시(api_produce_save_to_wiki) 이미 1회 analyze_structure가
     돌아 캐시돼 있으므로 그대로 실어 aipick.py가 재분석(Gemini 재호출) 없이 재사용하게 한다."""
     store = Store(DB_PATH)
-    picks = store.produce_pick_shortcodes(customer_id=cid)
-    items = [w for w in store.wiki_list(customer_id=cid) if w["shortcode"] in picks]
+    # ★후보는 '이 작업(work)에 담긴 영상'으로 한정한다(2026-07-26 사고). 예전엔 계정 전체
+    #   produce_pick_shortcodes(cid)를 후보로 써서, 이 work과 무관한 옛 도서관픽(참여율 높은
+    #   다른 영상)이 AI PICK 1위로 떴다("담은 2개와 무관한 홈테리어픽"). work.state['handoff']가
+    #   이 작업의 재료 목록이므로 그 shortcode로 좁힌다. work_id 없거나 handoff가 비면(옛 경로)
+    #   계정 전체 픽으로 폴백(회귀0).
+    codes = None
+    if work_id:
+        work = store.get_produce_work(work_id, customer_id=cid)
+        if work and isinstance(work.get("state"), dict):
+            handoff = work["state"].get("handoff") or []
+            codes = {e.get("shortcode") for e in handoff
+                     if isinstance(e, dict) and e.get("shortcode")}
+    if not codes:
+        codes = store.produce_pick_shortcodes(customer_id=cid)
+    items = [w for w in store.wiki_list(customer_id=cid) if w["shortcode"] in codes]
     # 댓글수는 '지금' 값(reel_history 최신 크롤)을 우선 쓴다 — 도서관 스냅샷(script_wiki.comments)은
     # 저장 순간에 박제돼, 저장 후 댓글이 늘면 AI PICK만 옛 숫자를 보여준다(재료카드와 불일치,
     # 참여밀도도 옛 기준). 최신값이 없으면(30일 지나 정리 등) 도서관 스냅샷으로 폴백(2026-07-26).

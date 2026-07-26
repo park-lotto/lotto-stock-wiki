@@ -49,6 +49,39 @@ def test_aipick_source_uses_fresh_comments_over_snapshot(tmp_path, monkeypatch):
     assert "thumbnail" in src and "category" in src
 
 
+def test_aipick_scopes_to_work_handoff_not_account_picks(tmp_path, monkeypatch):
+    """AI PICK 후보는 '이 작업(work)에 담긴 영상'(state.handoff)으로 한정된다 —
+    계정 전체 produce_picks에 섞인 무관한 옛 도서관픽은 후보에서 빠진다(2026-07-26 사고)."""
+    monkeypatch.setattr(app_module, "DB_PATH", tmp_path / "t.db")
+    s = Store(tmp_path / "t.db")
+    for sc in ("INWORK", "OLDPICK"):
+        s.save_to_wiki({"shortcode": sc, "username": "u", "name": sc, "category": "홈템",
+                        "url": f"https://insta/{sc}", "followers": 1000, "comments": 10,
+                        "thumbnail": ""},
+                       {"full_text": f"{sc} 대본", "segments": [{"end": 20.0}]}, {})
+    # 둘 다 계정 전체 '담기'엔 들어가 있다(옛 경로가 이 둘을 후보로 봤다)
+    s.produce_pick_toggle("INWORK")
+    s.produce_pick_toggle("OLDPICK")
+    # 그러나 이 work의 재료(handoff)는 INWORK 하나뿐
+    s.upsert_produce_work("W1", {"handoff": [{"shortcode": "INWORK", "useFootage": True}]})
+
+    sources = app_module._load_work_sources("W1", LEGACY_CUSTOMER_ID)
+    ids = {x["video_id"] for x in sources}
+    assert ids == {"INWORK"}, f"work 담긴 영상만 후보여야 한다(옛 OLDPICK 제외): {ids}"
+
+
+def test_aipick_falls_back_to_account_picks_when_no_work(tmp_path, monkeypatch):
+    """work_id가 없으면(옛 경로) 계정 전체 담기로 폴백한다(회귀0)."""
+    monkeypatch.setattr(app_module, "DB_PATH", tmp_path / "t.db")
+    s = Store(tmp_path / "t.db")
+    s.save_to_wiki({"shortcode": "PK", "username": "u", "name": "PK", "category": "홈템",
+                    "url": "https://insta/PK", "followers": 1000, "comments": 10, "thumbnail": ""},
+                   {"full_text": "대본", "segments": [{"end": 20.0}]}, {})
+    s.produce_pick_toggle("PK")
+    sources = app_module._load_work_sources("", LEGACY_CUSTOMER_ID)
+    assert {x["video_id"] for x in sources} == {"PK"}
+
+
 def test_aipick_source_falls_back_to_snapshot_when_no_history(tmp_path, monkeypatch):
     """최신 크롤 이력이 없으면 도서관 스냅샷 댓글로 폴백한다(값이 사라지지 않는다)."""
     monkeypatch.setattr(app_module, "DB_PATH", tmp_path / "t.db")
