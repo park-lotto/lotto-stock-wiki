@@ -3577,6 +3577,12 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                # 세션쿠키를 검증해 고객을 식별한다(_cid 폴백이 legacy라 여기선 직접 검증). 미들웨어
                # 401을 피해 친절한 팝업 응답을 주려고 allowlist에 둔다.
                "/grab", "/api/grab", "/grab.user.js", "/grab_logic.js",
+               # 공용 좌측 네비 JS(2026-07-26): 모든 페이지가 <script src="/sidebar.js">로 사이드바를
+               # 주입한다. 루트('/')에서 서빙돼 _FREE_PREFIX('/static/')에 안 걸려서, 무료(ranking_only)
+               # 등급은 402·비로그인은 307로 막혀 사이드바(카테고리 메뉴)가 통째로 안 떴다(라이브 실증:
+               # 무료 계정 홈PC에서 랭킹은 뜨는데 좌측 네비가 없음). 네비 링크만 그리는 무해한 JS이고
+               # 잠긴 메뉴 클릭은 그 목적지 게이트가 여전히 막으므로 공개 허용.
+               "/sidebar.js",
                # 구글 OAuth: 로그인 전(세션 없음)에 접근해야 하는 공개 경로.
                "/auth/google/login", "/auth/google/callback")
 _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
