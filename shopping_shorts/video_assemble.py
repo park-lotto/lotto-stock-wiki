@@ -329,9 +329,45 @@ def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None, max_s
                 last["src_dur"] += real_ext
                 last["out_dur"] += real_ext
                 shortfall -= real_ext
-        # 2순위(★멈춤·슬로우 없음, 2026-07-20 사장님 확정): 그래도 모자라면 실영상을 '한 장면
-        #   더 붙여' 채운다. 비트 세그먼트를 순환하며 새 클립(1배속)으로 이어붙인다 — 릴을
-        #   앞에서부터 다시 재생(루프)해서라도 화면은 진짜로 움직인다. 슬로모/정지프레임 금지.
+        # 2순위(★뒤에서 채우기, 2026-07-27 사장님: "같은 장면 반복 말고, 조금 미스 나도
+        #   뒤 실프레임으로 자연스럽게"): 예전엔 seg["start"]로 되감아 재생해 같은 장면이
+        #   2~3번 되풀이돼 보였다. 대신 각 소스 릴의 '아직 안 튼 뒷부분'을 이어서 소비한다 —
+        #   릴은 배정 구간보다 훨씬 길어(구간 2초 vs 릴 30초) 뒤에 실프레임이 남아있다.
+        #   소스별로 지금까지 소비한 최대 지점(head)부터 앞으로만 밀며 새 클립을 붙이므로
+        #   같은 창을 다시 틀지 않는다. 배정 구간 [start,end]은 벗어나지만 새 프레임이라
+        #   되풀이보다 자연스럽다. 모든 소스가 각자 끝까지 소진돼야만 3순위 홀드로.
+        # 2a: 소스 릴의 '아직 안 튼 뒷부분'을 앞으로만 밀며 소비 → 같은 창을 다시 안 튼다.
+        #   소스별 head(지금까지 소비한 최대 지점)부터 src 총길이까지 새 클립을 붙인다.
+        #   릴이 배정 구간보다 길면(흔함) 여기서 대부분 채워져 되풀이가 사라진다.
+        if src_durs:
+            head = {}
+            for cl in clips:
+                end = cl["start"] + cl["src_dur"]
+                if end > head.get(cl["video_id"], 0.0):
+                    head[cl["video_id"]] = end
+            chunk = max_shot if (max_shot and max_shot > eps) else shortfall
+            guard = 0
+            while shortfall > eps and guard < 2000:
+                guard += 1
+                progressed = False
+                for seg in segments:
+                    if shortfall <= eps:
+                        break
+                    vid = seg["video_id"]
+                    h = head.get(vid, seg["end"])
+                    avail = src_durs.get(vid, 0.0) - h
+                    if avail <= eps:
+                        continue
+                    take = min(avail, chunk, shortfall)
+                    clips.append({"video_id": vid, "start": h,
+                                  "src_dur": take, "out_dur": take})
+                    head[vid] = h + take
+                    shortfall -= take
+                    progressed = True
+                if not progressed:
+                    break
+        # 2b: 소스 뒤까지 다 소진돼도 모자라면(짧은 릴), 슬로모/정지 대신 실영상 루프로 채운다
+        #   (2026-07-20 사장님 "멈춤·슬로우 없음"). 되풀이는 남지만 이건 뒤가 진짜 없는 극단뿐.
         guard = 0
         while shortfall > eps and guard < 500:
             guard += 1
