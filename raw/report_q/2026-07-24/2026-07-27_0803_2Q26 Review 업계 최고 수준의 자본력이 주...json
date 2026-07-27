@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-27_0803_2Q26 Review 업계 최고 수준의 자본력이 주...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "김지영",
+    "report_date": "2026/07/24",
+    "stocks": [
+      {
+        "name": "KB금융",
+        "code": "105560",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "210,000원",
+        "tp_prev": "210,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "KB금융의 2026년 2분기 당기순이익(연결, 지배기업지분기준) 1조9,922억원으로 전분기 및 전년동기대비 각각 5.3%, 14.6% 증가했으며, 교보증권 예상을 6.4% 상회함.",
+        "estimate_revision": null,
+        "next_catalyst": "1) 2026년 상반기 교보증권 예상을 상회하는 견조한 실적 시현을 바탕으로 2026년 연간 실적 개선이 전망되는 가운데, 2) 하반기 기준금리 인상에 따른 견조한 NIM 흐름에 따른 이자수익 시현이 기대되고, 3) 업계 최고 수준의 CET-1 비율에서 알 수 있듯이 안정적인 자본관리가 여전히 돋보이기 때문.",
+        "thesis": [
+          "1) 2026년 상반기 견조한 실적을 바탕으로 연간 실적 개선 전망",
+          "2) 하반기 기준금리 인상에 따른 견조한 NIM 흐름 및 이자수익 시현 기대",
+          "3) 업계 최고 수준의 CET-1 비율을 통한 안정적인 자본관리"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "KB금융에 대해 투자의견 매수와 목표주가 21만원을 유지하며, 업종내 Top picks를 유지함."
+      }
+    ]
+  }
+}

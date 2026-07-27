@@ -1,0 +1,70 @@
+{
+  "date": "2026-07-27",
+  "steps": {
+    "STEP1 sync+ingest": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-07-27T07:00:02.381815"
+    },
+    "STEP2 pending": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-07-27T07:01:57.004512"
+    },
+    "STEP3 report_ingest": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-07-27T07:07:17.566395"
+    },
+    "STEP3.5 telegram": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-07-27T07:07:21.261607"
+    },
+    "STEP3.6 blog": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-07-27T07:07:23.183820"
+    },
+    "STEP3.7 youtube": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-07-27T07:07:25.090972"
+    },
+    "STEP3.8 news": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-07-27T07:11:33.384273"
+    },
+    "STEP3.9 event_merge": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-07-27T07:11:34.753227"
+    },
+    "STEP4.5 sector_map": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-07-27T07:11:35.098498"
+    },
+    "STEP4.6 backfill_sector": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-07-27T07:11:38.635522"
+    },
+    "STEP5 wiki_update": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-07-27T07:11:39.325751"
+    },
+    "STEP6 health": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-07-27T07:11:48.208075"
+    },
+    "STEP7 brain_snapshot": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-07-27T07:11:48.733846"
+    }
+  }
+}

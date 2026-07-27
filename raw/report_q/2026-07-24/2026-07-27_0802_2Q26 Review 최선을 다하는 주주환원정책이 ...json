@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-27_0802_2Q26 Review 최선을 다하는 주주환원정책이 ...md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "김지영",
+    "report_date": "2026-07-24",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "JB금융지주",
+        "code": "175330",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "38,000원",
+        "tp_prev": "38000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 연결당기순이익 2,196억원, QoQ 32.2%↑, YoY 5.7%↑",
+        "estimate_revision": null,
+        "next_catalyst": "견조한 실적 및 안정적인 BIS비율 관리를 통해 그 동안 지속해 온 적극적인 주주환원정책",
+        "thesis": [
+          "2026년 2분기 분기별 역대 최고치를 갱신하면서 연간 실적 개선이 전망됨",
+          "견조한 실적 및 안정적인 BIS비율 관리를 통해 그 동안 지속해 온 적극적인 주주환원정책이 2026년에도 어김없이 기대할 수 있음",
+          "자본시장 호조에 따른 비이자이익 개선 및 견조한 대출자산 증가로 인한 이자이익 증가"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "JB금융지주에 대해 투자의견 매수와 목표주가 38000원을 유지함. 1) 2026년 2분기 분기별 역대 최고치를 갱신하면서 연간 실적 개선이 전망되는 가운데, 2) 견조한 실적 및 안정적인 BIS비율 관리를 통해 그 동안 지속해 온 적극적인 주주환원정책이 2026년에도 어김없이 기대할 수 있다는 점에 JB금융지주의 매력적인 투자포인트이기 때문."
+      }
+    ]
+  }
+}

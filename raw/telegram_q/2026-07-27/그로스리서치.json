@@ -1,0 +1,13 @@
+{
+  "reports": [
+    {
+      "broker": "그로스리서치",
+      "stock": "네이버",
+      "rating": null,
+      "tp": null,
+      "ts": "07:59",
+      "quote": "네이버, 엔비디아(NVIDIA Corporation)를 대상으로 한 제3자배정 유상증자 이사회 결의(7/24)",
+      "sector": "IT"
+    }
+  ]
+}

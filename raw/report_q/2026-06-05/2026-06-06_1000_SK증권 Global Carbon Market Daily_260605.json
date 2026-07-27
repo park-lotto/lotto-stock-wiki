@@ -18,23 +18,18 @@
       {
         "sector": "기타",
         "stance": null,
-        "reason": "국제유가, 이스라엘·레바논 휴전합의에 반락…WTI 3%↓"
-      },
-      {
-        "sector": "기타",
-        "stance": null,
-        "reason": "일상 속 온실가스 감축, 배출권거래제에 활용한다"
-      },
-      {
-        "sector": "기타",
-        "stance": null,
-        "reason": "中 1분기 배출량 2% 증가…재생에너지 늘고 ‘버려지는 전력’도 늘어"
+        "reason": "탄소배출권 및 에너지 가격 동향 리포트"
       }
     ],
     "style": null,
-    "event_calendar": null,
+    "event_calendar": [
+      {
+        "date": "2026-06-05",
+        "event": "Global Carbon Daily 발간"
+      }
+    ],
     "top_picks": null,
     "risk": null,
-    "quote": "국제유가, 이스라엘·레바논 휴전합의에 반락…WTI 3%↓, 일상 속 온실가스 감축, 배출권거래제에 활용한다, 中 1분기 배출량 2% 증가…재생에너지 늘고 ‘버려지는 전력’도 늘어"
+    "quote": "국제유가, 이스라엘·레바논 휴전합의에 반락…WTI 3%↓"
   }
 }
