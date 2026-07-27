@@ -612,6 +612,7 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     store.update_mix_job(job_id, status="planning")
     # 소스 다수결이 레시피면 화면을 요리 시간순으로 재배치(장면 결 맞춤) — build_edit_plan 경로에 전달.
     is_recipe = _sources_is_recipe(source_scripts)
+    _rec_cands = None   # 후보목록(카드) — conform 뒤 재저장해 카드=TTS 일치시키려고 잡아둔다
     if scene_first:
         from shopping_shorts.edit_plan import build_scene_first_plan
         # 부품은행 주입(P0-2): 설정 bank_enabled=1일 때만 승인 훅·어미·부사·CTA·스파인을 조립해
@@ -647,6 +648,7 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                                     is_recipe=is_recipe)
         if sf["candidates"]:
             store.set_mix_candidates(job_id, sf["candidates"])
+            _rec_cands = sf["candidates"]   # conform 뒤 재저장용(카드=TTS 일치)
             rec = next((cand for cand in sf["candidates"] if cand["recommended"]),
                        sf["candidates"][0])
             plan = rec["plan"]
@@ -728,6 +730,12 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     except Exception:
         traceback.print_exc(file=sys.stderr)
 
+    # ★카드=TTS 일치(2026-07-27 실사고 "대본이랑 TTS가 다르게 나온다"): 추천 후보는 위에서
+    #   _conform_beats/_refill로 나레이션이 재작성됐는데, candidates_json(카드가 읽는 것)은
+    #   conform 전 스냅샷이라 카드 대본과 실제 말하는 TTS가 어긋났다. plan은 추천후보 plan과 같은
+    #   객체(in-place 변경 반영)이므로 후보목록을 다시 저장해 카드가 '실제 말할 문장'을 보이게 한다.
+    if _rec_cands:
+        store.set_mix_candidates(job_id, _rec_cands)
     store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
 
 
