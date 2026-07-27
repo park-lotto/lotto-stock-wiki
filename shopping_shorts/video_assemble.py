@@ -35,15 +35,18 @@ import contextlib as _contextlib
 import threading as _threading
 
 _preset_local = _threading.local()
-# CRF(화질): 낮을수록 고화질. 최종은 18(원본에 가깝게), 미리보기는 28(빠르고 작게).
+# CRF(화질): 낮을수록 고화질. 최종은 16(원본에 아주 가깝게), 미리보기는 28(빠르고 작게).
 # ★CRF 미지정 시 libx264 기본이 23이라 최종도 흐릿하고, 자막 오버레이 재인코딩으로 세대손실이
 #   더 쌓였다(2026-07-27 사장님: "최종이 원본보다 안 좋다"). 프리셋과 같은 스레드로컬로 둬
-#   미리보기(veryfast/28)와 최종(medium/18)이 서로 오염되지 않게 한다.
-_FINAL_CRF, _PREVIEW_CRF = "18", "28"
+#   미리보기(veryfast/28)와 최종(slow/16)이 서로 오염되지 않게 한다.
+#   2026-07-27 2차 상향: 18→16 + medium→slow(같은 CRF에서 압축효율↑=디테일 더 보존). 최종만
+#   느려지고(미리보기는 veryfast 유지) 화질이 원본에 더 붙는다. 용량 크면 17~18로 되돌린다.
+_FINAL_CRF, _PREVIEW_CRF = "16", "28"
+_FINAL_PRESET = "slow"
 
 
 def _preset():
-    return getattr(_preset_local, "value", "medium")
+    return getattr(_preset_local, "value", _FINAL_PRESET)
 
 
 def _crf():
