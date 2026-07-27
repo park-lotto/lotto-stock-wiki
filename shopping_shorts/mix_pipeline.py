@@ -4,6 +4,7 @@ run_mix_job: 다운로드→대본추출(병렬)→EDL생성→TTS까지 진행�
 run_render: 사용자가 확인 후 최종 ffmpeg 렌더 → done.
 각 단계에서 mix_jobs.status를 갱신하고, 예외는 status='failed'+error로 잡는다.
 """
+import hashlib
 import sys
 import traceback
 from concurrent.futures import ThreadPoolExecutor
@@ -120,6 +121,16 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     return natural
 
 
+def _beat_tts_path(tts_dir, beat):
+    """비트 TTS 파일 경로 — 파일명을 나레이션 '내용 해시'로 키잉한다(2026-07-27 실사고:
+    B로 만들고 A로 바꾸면 자막은 A인데 음성은 B였다). 예전엔 beat_{idx}.mp3로 후보끼리
+    파일명을 공유해, B 렌더가 그 파일을 B 음성으로 덮어쓴 뒤 A는 skip_existing으로 재합성을
+    건너뛰어 B 음성을 그대로 재생했다. 내용 해시를 넣으면 대본이 다른 후보는 파일도 달라 절대
+    안 섞이고(A는 A파일, B는 B파일), 같은 대본은 그대로 재사용(0원)된다."""
+    key = hashlib.md5((beat.get("narration") or "").encode("utf-8")).hexdigest()[:10]
+    return str(Path(tts_dir) / f"beat_{beat['beat_idx']}_{key}.mp3")
+
+
 def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron=None):
     """비트별로 synthesize_line 호출. beat['tts_path']를 채운다.
     연속성(previous_text/next_text)은 인접 비트의 '원문'(naturalize 전) narration을 쓴다
@@ -144,8 +155,10 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
 
     def _one(i):
         beat = beats[i]
-        out = tts_dir / f"beat_{beat['beat_idx']}.mp3"
-        if skip_existing and beat.get("tts_path"):
+        out = Path(_beat_tts_path(tts_dir, beat))
+        # 이 비트의 '현재 대본'에 해당하는 파일이 이미 있으면(=같은 후보·같은 대본) 재합성 스킵.
+        # tts_path가 다른 이름을 가리키거나(후보 스위치) 파일이 없으면 새로 합성한다.
+        if skip_existing and beat.get("tts_path") == str(out) and out.exists():
             return
         synthesize_line(
             beat["narration"], out, voice=voice, beat_role=beat.get("role"),
