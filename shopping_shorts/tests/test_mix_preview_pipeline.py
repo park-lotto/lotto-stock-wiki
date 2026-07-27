@@ -21,8 +21,15 @@ def job(tmp_path, monkeypatch):
     db = str(tmp_path / "t.db")
     store = Store(db)
     store.create_mix_job("J1", ["https://x/1"], 20, "template")
-    plan = {"beats": [{"beat_idx": 0, "tts_path": str(tmp_path / "a.mp3"),
-                       "primary": {"video_id": "v1", "start": 0, "end": 2}}]}
+    # 추천 후보 상태 재현: 비트가 '내용해시' tts_path를 갖고 그 파일이 실재해야 skip_existing이
+    # 재합성 없이 넘어간다(2026-07-27 TTS 파일명 내용해시 키잉). narration도 있어야 한다.
+    beat = {"beat_idx": 0, "narration": "미리보기 비트",
+            "primary": {"video_id": "v1", "start": 0, "end": 2}}
+    tts_dir = pathlib.Path(str(tmp_path / "work")) / "J1" / "tts"
+    tts_dir.mkdir(parents=True, exist_ok=True)
+    beat["tts_path"] = mix_pipeline._beat_tts_path(tts_dir, beat)
+    open(beat["tts_path"], "w").write("m")
+    plan = {"beats": [beat]}
     store.update_mix_job("J1", edit_plan=plan, status="ready_for_review")
     monkeypatch.setattr(mix_pipeline, "_resolve_sources",
                         lambda job, work: {"v1": str(tmp_path / "v1.mp4")})
