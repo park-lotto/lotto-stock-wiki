@@ -22,7 +22,10 @@ def test_beat_tts_applies_naturalize_and_continuity(monkeypatch, tmp_path):
     assert seen[0]["text"] == "N:첫째"           # naturalize 적용됨
     assert seen[0]["next"] == "둘째"             # 다음 비트 원문이 next_text
     assert seen[1]["prev"] == "첫째"             # 이전 비트 원문이 previous_text
-    assert beats[0]["tts_path"].endswith("beat_0.mp3")
+    import os
+    # 파일명은 내용해시 키잉(beat_0_{hash}.mp3) — 후보 스위치 시 음성 교차오염 방지(2026-07-27)
+    assert os.path.basename(beats[0]["tts_path"]).startswith("beat_0_")
+    assert beats[0]["tts_path"].endswith(".mp3")
 
 
 def test_voice_snapshot_profile_reaches_render(monkeypatch, tmp_path):
