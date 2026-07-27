@@ -1596,6 +1596,21 @@ class Store:
         data["category_source"] = row[5]
         return data
 
+    def get_reel_meta(self, shortcode):
+        """reel_history의 이 영상 최신 메타(name·category·url·thumb·comments·views).
+        AI PICK 소스가 도서관(script_wiki)에 없는 '넘어온 영상'을 script_extracts로
+        후보에 넣을 때, 이름·썸네일·댓글수를 여기서 채운다(2026-07-27). 없으면 None."""
+        with self._conn() as c:
+            r = c.execute(
+                "SELECT name, category, url, thumb, comments, views "
+                "FROM reel_history WHERE shortcode=? ORDER BY last_seen DESC LIMIT 1",
+                (shortcode,),
+            ).fetchone()
+        if not r:
+            return None
+        return {"name": r[0], "category": r[1], "url": r[2],
+                "thumb": r[3], "comments": r[4], "views": r[5]}
+
     def save_extract_structure(self, shortcode, structure):
         """대본추출 항목에 구조분석 결과를 채운다(2026-07-13, 학습소재 통계 백필용)."""
         with self._conn() as c:

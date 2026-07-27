@@ -149,3 +149,25 @@ def test_produce_pick_add_is_idempotent(tmp_path):
     assert store.produce_pick_add("XYZ", customer_id=7) is True
     assert store.produce_pick_add("XYZ", customer_id=7) is False
     assert "XYZ" in store.produce_pick_shortcodes(customer_id=7)
+
+
+def test_aipick_includes_handoff_video_not_in_library(monkeypatch, tmp_path):
+    """회귀(2026-07-27 실측 사고): '넘어온 영상(handoff)'이 도서관(script_wiki)에 저장 안
+    됐어도 script_extracts에 추출본이 있으면 AI PICK 후보에 남아야 한다.
+
+    예전엔 `items = wiki_list(cid) ∩ handoff`로 좁혀, 도서관에 없는 영상(실측: '홈스텐다드')이
+    통째로 탈락하고 도서관 즐겨찾기(금손여신·살림홈)만 뽑혀 "도서관 것만 AI PICK"이 됐다.
+    이제 도서관에 없으면 script_extracts+reel_history에서 끌어와 후보로 넣는다."""
+    _, store = _client(monkeypatch, tmp_path)
+    # 도서관에 저장된 영상(즐겨찾기)
+    store.save_to_wiki({"shortcode": "LIB1", "name": "살림홈", "category": "홈템"},
+                       {"full_text": "도서관 대본", "segments": []}, {}, customer_id=0)
+    # 도서관엔 없지만 추출본만 있는 '넘어온 영상'
+    store.save_script("NEW1", {"full_text": "새로 넘어온 영상 대본", "segments": []}, category="홈템")
+    # 두 영상을 담은 작업(handoff = 넘어온 영상 목록)
+    wid = store.upsert_produce_work(
+        None, {"handoff": [{"shortcode": "NEW1"}, {"shortcode": "LIB1"}]}, customer_id=0)
+
+    ids = {s["video_id"] for s in app_module._load_work_sources(wid, 0)}
+    assert "NEW1" in ids   # ★핵심: 도서관에 없어도 후보에 남는다
+    assert "LIB1" in ids

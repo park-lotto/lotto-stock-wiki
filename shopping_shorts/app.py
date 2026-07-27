@@ -5883,8 +5883,33 @@ def api_produce_works_delete(request: Request, work_id: str):
 # (produce_script_picks, /api/produce/picks와 같은 출처)이다. work_id는 이 시점엔
 # 아직 없을 수도 있고(1단계 첫 진입, WORK_ID=null), 있어도 그 work의 상태에 저장된
 # ⭐메인 지정(있다면)을 읽는 용도로만 쓴다 — 소스 목록 자체는 항상 picks 버킷.
+def _extract_as_source_item(store, shortcode):
+    """도서관(script_wiki)에 없는 '넘어온 영상'을 AI PICK 후보로 쓰기 위한 얇은 item.
+    script_extracts(전역 추출 캐시)에 대본이 있으면 그걸 본문으로, 이름·썸네일·댓글수는
+    reel_history 최신 메타에서 채운다. 추출조차 없으면 None(=진짜 후보 불가). _wiki_row와
+    같은 키 형태를 돌려줘 _load_work_sources의 소스 빌더가 그대로 처리한다(2026-07-27)."""
+    ex = store.get_extract(shortcode)
+    if not ex:
+        return None
+    reel = store.get_reel_meta(shortcode) or {}
+    return {
+        "shortcode": shortcode,
+        "name": reel.get("name") or "",
+        "category": ex.get("category") or reel.get("category") or "",
+        "source_url": reel.get("url") or "",
+        "full_text": ex.get("full_text", ""),
+        "segments": ex.get("segments") or [],
+        "structure": ex.get("structure") or {},
+        "followers": None,
+        "comments": reel.get("comments"),
+        "density": None,
+        "saved_at": None,
+        "thumbnail": reel.get("thumb") or "",
+    }
+
+
 def _load_work_sources(work_id, cid):
-    """AI PICK용 소스 목록. script_wiki(도서관) 항목 중 '영상제작에 담긴' 것만,
+    """AI PICK용 소스 목록. '영상제작에 담긴(handoff)' 영상 전부 — 도서관에 있으면 그 행을,
     backbone/aipick이 기대하는 얇은 필드로 변환한다.
     ⚠️ views(조회수)는 이 시스템 어디에도 저장되지 않는다(script_wiki 스키마 확인,
     2026-07-23) — 거짓 수치 대신 항상 None(aipick.build_aipick이 우아하게 폴백).
@@ -5902,11 +5927,25 @@ def _load_work_sources(work_id, cid):
         work = store.get_produce_work(work_id, customer_id=cid)
         if work and isinstance(work.get("state"), dict):
             handoff = work["state"].get("handoff") or []
-            codes = {e.get("shortcode") for e in handoff
-                     if isinstance(e, dict) and e.get("shortcode")}
+            # 순서 보존(핸드오프 순서 = 재료 바구니 순서 → pick 카드의 이름·썸네일 정합).
+            codes = [e.get("shortcode") for e in handoff
+                     if isinstance(e, dict) and e.get("shortcode")]
     if not codes:
-        codes = store.produce_pick_shortcodes(customer_id=cid)
-    items = [w for w in store.wiki_list(customer_id=cid) if w["shortcode"] in codes]
+        codes = list(store.produce_pick_shortcodes(customer_id=cid))
+    # ★후보 = '넘어온 영상(handoff)' 전부. 예전엔 wiki_list(도서관) ∩ codes로 좁혀,
+    #   도서관에 저장 안 된 영상은 후보에서 통째로 탈락했다(2026-07-27 실측 사고:
+    #   넘어온 3개 중 도서관에 없던 '홈스텐다드'가 빠지고, 도서관 즐겨찾기인 금손여신·
+    #   살림홈만 남아 "도서관 것만 AI PICK"). 이제 도서관에 없으면 script_extracts(전역
+    #   추출 캐시)+reel_history에서 끌어와, 저장 여부와 무관하게 넘어온 영상이 곧 후보다.
+    items = []
+    seen = set()
+    for sc in codes:
+        if sc in seen:
+            continue
+        seen.add(sc)
+        w = store.get_wiki_item(sc, customer_id=cid) or _extract_as_source_item(store, sc)
+        if w:
+            items.append(w)
     # 댓글수는 '지금' 값(reel_history 최신 크롤)을 우선 쓴다 — 도서관 스냅샷(script_wiki.comments)은
     # 저장 순간에 박제돼, 저장 후 댓글이 늘면 AI PICK만 옛 숫자를 보여준다(재료카드와 불일치,
     # 참여밀도도 옛 기준). 최신값이 없으면(30일 지나 정리 등) 도서관 스냅샷으로 폴백(2026-07-26).
