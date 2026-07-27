@@ -35,17 +35,28 @@ import contextlib as _contextlib
 import threading as _threading
 
 _preset_local = _threading.local()
+# CRF(화질): 낮을수록 고화질. 최종은 18(원본에 가깝게), 미리보기는 28(빠르고 작게).
+# ★CRF 미지정 시 libx264 기본이 23이라 최종도 흐릿하고, 자막 오버레이 재인코딩으로 세대손실이
+#   더 쌓였다(2026-07-27 사장님: "최종이 원본보다 안 좋다"). 프리셋과 같은 스레드로컬로 둬
+#   미리보기(veryfast/28)와 최종(medium/18)이 서로 오염되지 않게 한다.
+_FINAL_CRF, _PREVIEW_CRF = "18", "28"
 
 
 def _preset():
     return getattr(_preset_local, "value", "medium")
 
 
+def _crf():
+    return getattr(_preset_local, "crf", _FINAL_CRF)
+
+
 @_contextlib.contextmanager
-def preview_preset(preset="veryfast"):
-    """이 블록(현재 스레드) 안의 assemble 인코딩만 빠른 프리셋으로. 끝나면 원복."""
+def preview_preset(preset="veryfast", crf=_PREVIEW_CRF):
+    """이 블록(현재 스레드) 안의 assemble 인코딩만 빠른 프리셋·낮은 화질로. 끝나면 원복."""
     prev = getattr(_preset_local, "value", None)
+    prev_crf = getattr(_preset_local, "crf", None)
     _preset_local.value = preset
+    _preset_local.crf = crf
     try:
         yield
     finally:
@@ -53,6 +64,11 @@ def preview_preset(preset="veryfast"):
             del _preset_local.value
         else:
             _preset_local.value = prev
+        if prev_crf is None:
+            if hasattr(_preset_local, "crf"):
+                del _preset_local.crf
+        else:
+            _preset_local.crf = prev_crf
 _FONT_DIR = Path(__file__).parent / "static" / "fonts"
 # 반중복탐지 회피(2026-07-14) — 말 안 해도 항상 적용. 화질 오염 없는(비가역 손상X)
 # 것만 자동화: ①전 비트 기본 크롭+줌(살짝 확대, 원본과 프레임 구도가 달라짐)
@@ -672,7 +688,7 @@ def _extend_with_frozen_motion(sub_path, play_out, freeze, out_path):
         "ffmpeg", "-y", "-i", str(sub_path),
         "-vf", f"tpad=stop_mode=clone:stop_duration={freeze:.3f},{_kenburns_vf(total)}",
         "-r", "30", "-an", "-t", f"{total:.3f}",
-        "-c:v", "libx264", "-preset", _preset(), "-pix_fmt", "yuv420p", str(out_path),
+        "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), "-pix_fmt", "yuv420p", str(out_path),
     ])
     return out_path
 
@@ -756,7 +772,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 "ffmpeg", "-y", "-ss", f"{start:.3f}", "-t", f"{c['src_dur']:.3f}",
                 "-i", str(src),
                 "-vf", vf_full, "-r", "30", "-an", "-t", f"{play_out:.3f}",
-                "-c:v", "libx264", "-preset", _preset(), "-pix_fmt", "yuv420p", str(sub),
+                "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), "-pix_fmt", "yuv420p", str(sub),
             ])
             # 그래도 비면(소스 손상/범위밖) 이 클립만 버린다 — 하나가 미리보기 전체를 죽이지 않게.
             if not sub.exists() or _probe_duration(sub) <= 0.05:
@@ -803,7 +819,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 # 여운(runout): 마지막 비트만 대사 뒤 화면이 더 산다 — 오디오는 tts 길이에서
                 # 자연 종료(무성 여운). 컷어웨이 창(win)은 tts_dur 기준 그대로(여운을 덮지 않음).
                 "-t", f"{tts_dur + runout:.3f}",
-                "-c:v", "libx264", "-preset", _preset(), "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
+                "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
             ])
         else:
             # 비트 나레이션(tts) 오디오를 얹고 길이를 tts_dur(+마지막 비트는 여운)로 맞춘다.
@@ -1253,7 +1269,7 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     if not has_bgm and not has_overlay and not has_motion and not has_sfx:
         base_vf = vf
         _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-vf", base_vf, "-r", "30",
-                     "-c:v", "libx264", "-preset", _preset(), "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
+                     "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
                     cwd=str(work))
         return str(out_path)
     inputs = ["-i", str(in_video)]
@@ -1299,7 +1315,7 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         amap = "[a]"
     cmd = ["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(fc), "-map", f"[{vcur}]"]
     cmd += (["-map", amap, "-c:a", "aac"] if amap else ["-map", "0:a", "-c:a", "copy"])
-    cmd += ["-r", "30", "-c:v", "libx264", "-preset", _preset(), "-pix_fmt", "yuv420p", str(out_path)]
+    cmd += ["-r", "30", "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), "-pix_fmt", "yuv420p", str(out_path)]
     _run_ffmpeg(cmd, cwd=str(work))
     return str(out_path)
 
