@@ -129,8 +129,14 @@ def _download_ytdlp(url, dest_dir, max_attempts=3):
     stem = Path(out).stem.split('.')[0]
     last_err = ""
     for attempt in range(max_attempts):
+        # ★화질 천장(2026-07-27 사장님 "원본 동일"): 예전 -f "mp4/..."는 mp4(progressive
+        #   단일 스트림)를 먼저 잡아 유튜브에서 720p·360p 저화질을 받았다(원본이 고화질이어도).
+        #   최고 해상도 영상+음성을 따로 받아 mp4로 머지한다 — 이래야 원본 해상도가 천장이 된다.
+        #   (틱톡 등 분리 스트림이 없으면 best 단일로 폴백; 그 best는 보통 원본 해상도다.)
         r = subprocess.run(
-            [sys.executable, "-m", "yt_dlp", "-f", "mp4/bestvideo+bestaudio/best",
+            [sys.executable, "-m", "yt_dlp",
+             "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
+             "--merge-output-format", "mp4",
              "--no-playlist", *_cookies_arg(url), *_proxy_arg(url), "-o", out, url],
             capture_output=True, text=True, timeout=300)
         if r.returncode == 0:
