@@ -494,8 +494,10 @@
         <input type="checkbox" id="noVoice" onchange="onNoVoice()"> <b>자막/음성 없이 진행</b>
         <span class="hint">켜면 TTS·자막 없이 영상만 내보냅니다</span>
       </label>
-      <details open style="margin:8px 0">
-        <summary style="cursor:pointer;font-weight:600">🎙 보이스 선택 (눌러서 접기)</summary>
+      <!-- 기본 접힘(2026-07-27 사장님): 1단계에서 이미 기본 성우로 완성돼 이 단계가 '빈 성우선택'으로
+           보이던 문제 — 완성본(아래 #ttsBeats)이 앞에 오고, 목소리를 바꿀 사람만 펼치게 한다. -->
+      <details style="margin:8px 0">
+        <summary style="cursor:pointer;font-weight:600">🎙 목소리 바꾸기 <span style="font-weight:400;color:var(--sub)">— 이미 기본 성우로 완성됐어요. 바꾸려면 눌러서 펼치기</span></summary>
       <div id="voiceUI" style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin-top:8px">
         <!-- ◀ 좌: 미리듣기·설정 (성우를 고르면 나타난다). 우측 성우카드와 나란히 — 스크롤 없이 한 화면 -->
         <div style="flex:1 1 300px;min-width:280px;position:sticky;top:8px">
