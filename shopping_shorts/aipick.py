@@ -98,6 +98,12 @@ def build_aipick(sources, meta, forced=None):
         }
     return {"pick_id": pick_id, "pick_index": idx, "tiles": tiles,
             "structure": structure, "candidates": [{"video_id": r["video_id"], "score": r["score"]} for r in scored],
+            # ★pick의 원본 대본을 같이 실어 보낸다(2026-07-27 사장님 제보 "대본을 확보하지 못했습니다").
+            #   프론트(startFromAiPick)는 예전에 /api/produce/picks(도서관 담김 버킷)에서만 대본을
+            #   찾았는데, AI PICK 소스가 도서관 교차를 벗어나 script_extracts/reel에서도 오게 되면서
+            #   도서관에 없는 영상이 픽되면 대본을 못 찾아 막다른 알럿이 떴다. 숫자·이름·썸네일과
+            #   같은 출처에서 대본도 내려줘야 카드와 대본이 어긋나지 않는다(pick_meta와 같은 이유).
+            "pick_text": pick.get("text") or "",
             "pick_meta": {
                 "title": pick.get("title") or pick.get("name"),
                 "category": pick.get("category"),

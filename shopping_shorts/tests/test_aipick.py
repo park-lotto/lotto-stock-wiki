@@ -112,3 +112,25 @@ def test_build_aipick_structure_full_approx_sec_distributes_by_duration(monkeypa
     # 2s/5s=40%, 3s/5s=60% — 비트 수 균등(50/50)이 아니라 실제 길이 비례여야 함
     assert abs(segs[0]["pct"] - 40) < 0.5
     assert abs(segs[1]["pct"] - 60) < 0.5
+
+
+def test_build_aipick_ships_pick_text(monkeypatch):
+    """★2026-07-27 사장님 제보 "대본을 확보하지 못했습니다": AI PICK 응답에 pick의 원본
+    대본이 실려야 한다. 안 실으면 프론트가 도서관(/api/produce/picks)에서만 찾는데,
+    AI PICK 소스가 도서관 교차를 벗어난 뒤로는 도서관에 없는 영상이 픽될 수 있어
+    '이대로 만들기 시작'이 막다른 알럿으로 끝난다."""
+    from shopping_shorts import aipick as _aipick
+    monkeypatch.setattr(_aipick, "analyze_structure", lambda text: None)
+    sources = [{"video_id": "V1", "text": "정리 꿀팁 원본 대본입니다.", "comments": 100,
+                "source_url": "https://www.instagram.com/reel/V1/"}]
+    d = _aipick.build_aipick(sources, {"V1": {"platform": "instagram", "comments": 100}})
+    assert d["pick_id"] == "V1"
+    assert d["pick_text"] == "정리 꿀팁 원본 대본입니다."
+
+
+def test_build_aipick_pick_text_empty_when_no_sources():
+    """소스가 없으면 pick_id=None이고 대본도 없다(프론트가 '먼저 AI PICK…'으로 막는다)."""
+    from shopping_shorts import aipick as _aipick
+    d = _aipick.build_aipick([], {})
+    assert d["pick_id"] is None
+    assert not d.get("pick_text")
