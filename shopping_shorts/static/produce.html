@@ -556,7 +556,8 @@
             <label style="cursor:pointer;margin-left:6px;color:var(--txt)"><input type="checkbox" id="sceneBg" onchange="toggleSceneBg()"> 실장면 배경</label></div>
           <div id="hcPreview" style="position:relative;width:380px;aspect-ratio:9/16;background:#ffffff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
             <img id="hcPreviewBg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" alt="">
-            <div id="capRegionMarker" style="position:absolute;display:none;border:2px dashed rgba(255,255,255,.9);border-radius:6px;background:rgba(255,255,255,.08);z-index:1;pointer-events:none;box-sizing:border-box"><span style="position:absolute;left:50%;top:-9px;transform:translate(-50%,-100%);white-space:nowrap;font-size:10px;font-weight:800;color:#fff;background:rgba(0,0,0,.7);padding:2px 7px;border-radius:10px">원본 자막이 있던 자리</span></div>
+<!-- 2026-07-27 사장님: "원본 자막이 있던 자리" 점선 박스 제거(필요 없음). 자동 정렬
+                 (applyErasedRegion)과 '다시 그 자리로' 버튼은 그대로 — 표시만 뺀 것. -->
             <div id="capPreviewText" style="position:absolute;left:50%;transform:translate(-50%,-50%);text-align:center;white-space:pre-wrap;word-break:keep-all;line-height:1.2;z-index:2;cursor:move;user-select:none"></div>
             <div id="hcPreviewText" style="position:absolute;transform:translate(-50%,-50%);text-align:center;line-height:1.18;word-break:keep-all;padding:0 6px;cursor:move;user-select:none;z-index:3"></div>
             <div id="extraPreview"></div>
@@ -1961,13 +1962,11 @@ function bindCapDrag(){
   document.addEventListener('mouseup', ()=>drag=false);
   document.addEventListener('touchend', ()=>drag=false);
 }
-// 지워진 자막영역을 미리보기 위에 점선 박스로 그린다(primary=넓고 자주 쓰인 1번 자리).
+// 지워진 자막영역(primary=넓고 자주 쓰인 1번 자리)이 있으면 '다시 그 자리로' 버튼만 연다.
+// ★2026-07-27 사장님 요청으로 점선 박스 표시(capRegionMarker)는 제거했다 — 미리보기를
+//   가려서 필요 없다고 하셨다. 위치 정보 자체는 자동 정렬에 계속 쓴다(applyErasedRegion).
 function renderErasedRegion(){
-  const m=document.getElementById('capRegionMarker'); if(!m) return;
-  const p=(CLEAN_REGIONS||{}).primary;
-  if(!p){ m.style.display='none'; return; }
-  m.style.left=(p.x_pct-p.w_pct/2)+'%'; m.style.top=(p.y_pct-p.h_pct/2)+'%';
-  m.style.width=p.w_pct+'%'; m.style.height=p.h_pct+'%'; m.style.display='';
+  if(!(CLEAN_REGIONS||{}).primary) return;
   const btn=document.getElementById('capResetRegionBtn'); if(btn) btn.style.display='';
 }
 // step5 진입 시: 지워진 1번 자리에 자막을 자동 정렬(딸깍). 사장님이 직접 드래그했으면 안 덮는다.
