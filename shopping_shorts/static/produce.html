@@ -2813,7 +2813,14 @@ async function startFromAiPick(){
   const pickId = window._aiPick && window._aiPick.pick_id;
   if(!pickId){ alert('먼저 AI PICK이 고른 영상이 있어야 합니다.'); return; }
   if(!STATE.script){
-    try{
+    // ★1순위: AI PICK이 준 대본(pick_text) — 카드의 숫자·이름과 같은 출처라 절대 어긋나지 않는다.
+    //   2026-07-27 사장님 제보 "대본을 확보하지 못했습니다": 예전엔 아래 도서관 조회만 있었는데,
+    //   AI PICK 소스가 도서관 교차를 벗어나면서 도서관에 없는 영상이 픽되면 막다른 알럿이 떴다.
+    const pt = (window._aiPick && window._aiPick.pick_text || '').trim();
+    if(pt){ STATE.script = pt; STATE.script_from_wiki = pickId; STATE.script_carryover=false; }
+  }
+  if(!STATE.script){
+    try{   // 2순위(구페이로드 호환): 도서관 담김 버킷에서 찾는다
       const d = await (await fetch('/api/produce/picks')).json();
       const it = (d.items||[]).find(w=>w.shortcode===pickId);
       if(it && it.full_text){ STATE.script = it.full_text; STATE.script_from_wiki = pickId; STATE.script_carryover=false; }
