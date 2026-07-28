@@ -86,6 +86,54 @@ def test_merge_rotate_dedupes_new_by_shortcode():
     assert dup["score"] == 0.9   # score 최고가 남음
 
 
+def test_collect_category_uses_playwright_crawl_when_xhs_scraper_set(monkeypatch):
+    monkeypatch.setattr(job.config, "XHS_SCRAPER", "playwright")
+    monkeypatch.setattr(job.douyin_search, "search_full", lambda kw, max_results=40: [])
+    monkeypatch.setattr(job.xiaohongshu_search, "search_full",
+                        lambda kw, max_results=40: (_ for _ in ()).throw(AssertionError("Apify 경로가 불렸다")))
+    called = {}
+
+    def fake_pw(kw, max_results=40):
+        called["kw"] = kw
+        return []
+
+    monkeypatch.setattr(job.playwright_crawl, "search_full", fake_pw)
+
+    class FakeStore:
+        def prev_base_platform(self, *a, **k):
+            return None
+
+        def prev_delta_platform(self, *a, **k):
+            return None
+
+    job._collect_category("주방/레시피", {"tiktok": [], "cn": ["厨房神器"]}, FakeStore())
+    assert called["kw"] == "厨房神器"
+
+
+def test_collect_category_uses_apify_by_default(monkeypatch):
+    monkeypatch.setattr(job.config, "XHS_SCRAPER", "apify")
+    monkeypatch.setattr(job.douyin_search, "search_full", lambda kw, max_results=40: [])
+    monkeypatch.setattr(job.playwright_crawl, "search_full",
+                        lambda kw, max_results=40: (_ for _ in ()).throw(AssertionError("playwright 경로가 불렸다")))
+    called = {}
+
+    def fake_apify(kw, max_results=40):
+        called["kw"] = kw
+        return []
+
+    monkeypatch.setattr(job.xiaohongshu_search, "search_full", fake_apify)
+
+    class FakeStore:
+        def prev_base_platform(self, *a, **k):
+            return None
+
+        def prev_delta_platform(self, *a, **k):
+            return None
+
+    job._collect_category("주방/레시피", {"tiktok": [], "cn": ["厨房神器"]}, FakeStore())
+    assert called["kw"] == "厨房神器"
+
+
 def test_add_pickup_saves_to_pickup_category(monkeypatch, tmp_path):
     now = datetime(2026, 7, 26, 12, 0, tzinfo=timezone.utc)
     monkeypatch.setattr(job.tiktok_search, "fetch_urls", lambda urls: [

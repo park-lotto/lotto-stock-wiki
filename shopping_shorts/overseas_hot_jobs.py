@@ -5,10 +5,11 @@ import threading
 import time
 from datetime import datetime, timezone
 
+from shopping_shorts import config
 from shopping_shorts.config import DB_PATH
 from shopping_shorts.store import Store
 from shopping_shorts.overseas_seeds import load_seeds
-from shopping_shorts import tiktok_search, douyin_search, xiaohongshu_search
+from shopping_shorts import tiktok_search, douyin_search, xiaohongshu_search, playwright_crawl
 from shopping_shorts import gap_check, overseas_funnel
 from shopping_shorts.ranking import build_overseas_items, apply_grades, sort_by
 
@@ -54,7 +55,10 @@ def _collect_category(cat, cfg, store):
     for kw in cfg.get("cn", []):
         raw += douyin_search.search_full(kw, max_results=_PER_KEYWORD)
         time.sleep(_REQ_PAUSE)
-        raw += xiaohongshu_search.search_full(kw, max_results=_PER_KEYWORD)
+        if config.XHS_SCRAPER == "playwright":
+            raw += playwright_crawl.search_full(kw, max_results=_PER_KEYWORD)
+        else:
+            raw += xiaohongshu_search.search_full(kw, max_results=_PER_KEYWORD)
         time.sleep(_REQ_PAUSE)
     # STAGE 1·2·상한: 형식·관련성·안터진
     kept = [r for r in raw
