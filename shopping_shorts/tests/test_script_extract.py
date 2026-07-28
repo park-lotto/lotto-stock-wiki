@@ -22,6 +22,25 @@ def test_assign_seg_ids_tolerates_missing_fields():
     assert out[0]["scene_desc"] == ""
 
 
+def test_assign_seg_ids_accepts_motion_map(monkeypatch):
+    from shopping_shorts import script_extract as se
+    raw_segments = [
+        {"start": 0.0, "end": 1.0, "text": "훅", "scene_desc": "손이 상자를 연다"},
+        {"start": 1.0, "end": 3.0, "text": "본문", "scene_desc": "제품을 든다"},
+    ]
+    motion_map = {"vid-0": "PEAK", "vid-1": None}
+    out = se._assign_seg_ids("vid", raw_segments, motion_map=motion_map)
+    assert out[0]["motion_level"] == "PEAK"
+    assert out[1]["motion_level"] is None
+
+
+def test_assign_seg_ids_motion_map_optional_defaults_none():
+    from shopping_shorts import script_extract as se
+    raw_segments = [{"start": 0.0, "end": 1.0, "text": "", "scene_desc": ""}]
+    out = se._assign_seg_ids("vid", raw_segments)
+    assert out[0]["motion_level"] is None
+
+
 def test_extract_script_maps_gemini_response(monkeypatch):
     # Gemini 업로드/생성 전체를 가짜로 대체
     class FakeResp:

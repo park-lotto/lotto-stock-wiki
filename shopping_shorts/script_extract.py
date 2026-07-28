@@ -131,15 +131,18 @@ def _collect_benefits(segments):
     return out
 
 
-def _assign_seg_ids(video_id, raw_segments):
-    """모델이 준 세그먼트 목록에 seg_id 부여 + 숫자 필드 float 캐스팅(순수함수)."""
+def _assign_seg_ids(video_id, raw_segments, motion_map=None):
+    """모델이 준 세그먼트 목록에 seg_id 부여 + 숫자 필드 float 캐스팅(순수함수).
+    motion_map({seg_id: level|None})이 오면 그 값을 motion_level로 싣는다(P2, 2026-07-29)."""
     out = []
+    motion_map = motion_map or {}
     for n, seg in enumerate(raw_segments):
         raw_action = seg.get("action")
         if raw_action in (None, "", "없음") or raw_action not in action_dict.ACTION_VOCAB:
             raw_action = action_dict.tag_action(f"{seg.get('text', '')} {seg.get('scene_desc', '')}")
+        sid = f"{video_id}-{n}"
         out.append({
-            "seg_id": f"{video_id}-{n}",
+            "seg_id": sid,
             "start": float(seg.get("start") or 0.0),
             "end": float(seg.get("end") or 0.0),
             "text": seg.get("text", ""),
@@ -150,6 +153,7 @@ def _assign_seg_ids(video_id, raw_segments):
             "shot_role": seg.get("shot_role") or "기타", # 조리/완성/기타 (fail-open 기타)
             # 무자막 소스용 화면→특장점 문장 (fail-open []) — text가 빈칸이어도 대본 재료가 된다.
             "product_benefits": _norm_benefits(seg.get("product_benefits")),
+            "motion_level": motion_map.get(sid),  # scene_cut 매핑 결과 or None(정보없음, fail-open)
         })
     return out
 
