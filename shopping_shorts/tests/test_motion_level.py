@@ -30,24 +30,26 @@ def test_cut_motion_empty_cut_is_low_energy_zero():
     assert res[0]["energy"] == 0.0 and res[0]["peak_frame"] == 10
 
 
-def test_pick_hook_start_uses_peak_then_override_clamped():
+def test_pick_hook_start_peak_plus_delta_clamped():
     from shopping_shorts import video_assemble as va
-    # 자동: 피크 시각으로 이동하되 끝-min_tail로 클램프
-    assert va.pick_hook_start(0.0, 5.0, peak_time=2.0, override=None, min_tail=1.0) == 2.0
-    assert va.pick_hook_start(0.0, 5.0, peak_time=4.8, override=None, min_tail=1.0) == 4.0  # 끝 클램프
-    # 오버라이드가 피크를 이긴다
-    assert va.pick_hook_start(0.0, 5.0, peak_time=2.0, override=3.0, min_tail=1.0) == 3.0
-    # 윈도우가 좁으면(≤min_tail) 원위치
-    assert va.pick_hook_start(0.0, 0.8, peak_time=0.5, override=None, min_tail=1.0) == 0.0
-    # 아무 것도 없으면 원위치
-    assert va.pick_hook_start(1.0, 5.0, peak_time=None, override=None) == 1.0
-    # 시작보다 앞선 후보는 시작으로 클램프
-    assert va.pick_hook_start(2.0, 6.0, peak_time=1.0, override=None, min_tail=1.0) == 2.0
+    # 자동: 피크로 이동(delta 0)
+    assert va.pick_hook_start(0.0, 5.0, base_time=2.0, delta=0.0, min_tail=1.0) == 2.0
+    # 미세조정: 피크 + delta
+    assert va.pick_hook_start(0.0, 5.0, base_time=2.0, delta=0.4, min_tail=1.0) == 2.4
+    assert abs(va.pick_hook_start(0.0, 5.0, base_time=2.0, delta=-0.6, min_tail=1.0) - 1.4) < 1e-9
+    # 끝-min_tail로 클램프
+    assert va.pick_hook_start(0.0, 5.0, base_time=2.0, delta=5.0, min_tail=1.0) == 4.0
+    # 시작으로 클램프(뒤로 너무 당김)
+    assert va.pick_hook_start(2.0, 6.0, base_time=2.0, delta=-5.0, min_tail=1.0) == 2.0
+    # 윈도우 좁으면 원위치
+    assert va.pick_hook_start(0.0, 0.8, base_time=0.5, delta=0.0, min_tail=1.0) == 0.0
+    # base None이면 시작 기준
+    assert va.pick_hook_start(1.0, 5.0, base_time=None, delta=0.0) == 1.0
 
 
-def test_hook_override_reads_state_shapes():
+def test_hook_delta_reads_state_shapes():
     from shopping_shorts import video_assemble as va
-    assert va._hook_override({"hook_inpoint": 2.5}) == 2.5
-    assert va._hook_override({"state": {"hook_inpoint": 3.5}}) == 3.5
-    assert va._hook_override({}) is None
-    assert va._hook_override(None) is None
+    assert va._hook_delta({"hook_inpoint_delta": 0.4}) == 0.4
+    assert va._hook_delta({"state": {"hook_inpoint_delta": -0.2}}) == -0.2
+    assert va._hook_delta({}) == 0.0
+    assert va._hook_delta(None) == 0.0
