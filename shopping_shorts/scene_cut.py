@@ -129,21 +129,44 @@ def cut_motion(cuts, motion, lo_q=0.5, hi_q=0.85):
     return out
 
 
-def frame_motion(path):
+def frame_motion(path, ss=None, to=None):
     """ffmpeg 1패스로 프레임별 시간차 모션(signalstats YDIF) → {frame_no: energy}.
-    YDIF=인접 프레임 루마 평균차 = 화면이 얼마나 바뀌었나(모션 프록시). Gemini/DB 무관 순수 IO."""
-    fps = video_fps(path)
-    r = subprocess.run(
-        ["ffmpeg", "-v", "info", "-i", str(path),
-         "-vf", "signalstats,metadata=print:key=lavfi.signalstats.YDIF",
-         "-vsync", "vfr", "-f", "null", "-"],
-        capture_output=True, text=True, check=False, stdin=subprocess.DEVNULL)
+    YDIF=인접 프레임 루마 평균차 = 화면이 얼마나 바뀌었나(모션 프록시). Gemini/DB 무관 순수 IO.
+    ss/to(초)를 주면 그 구간만 분석(비용 한정, P1 지연계산용). frame_no는 ss 기준 0부터."""
+    cmd = ["ffmpeg", "-v", "info"]
+    if ss is not None:
+        cmd += ["-ss", f"{max(0.0, ss):.3f}"]
+    if to is not None:
+        cmd += ["-to", f"{to:.3f}"]
+    cmd += ["-i", str(path),
+            "-vf", "signalstats,metadata=print:key=lavfi.signalstats.YDIF",
+            "-vsync", "vfr", "-f", "null", "-"]
+    r = subprocess.run(cmd, capture_output=True, text=True, check=False,
+                       stdin=subprocess.DEVNULL)
     out = {}
     frame_no = 0
     for m in _YDIF_RE.findall(r.stderr):
         out[frame_no] = float(m)
         frame_no += 1
     return out
+
+
+def peak_time_in_window(path, start, end, min_tail=1.0):
+    """[start,end) 구간에서 모션 피크(YDIF 최대) 시각(초, 소스 절대)을 찾는다.
+    3초 훅 자동 In-Point용. 피크가 너무 끝이라 남는 재생이 min_tail보다 짧으면 그만큼 당긴다.
+    윈도우가 짧거나(≤min_tail) 프레임이 없으면 start 그대로. 실패해도 예외 없이 start 반환."""
+    try:
+        if end - start <= min_tail:
+            return start
+        fps = video_fps(path)
+        motion = frame_motion(path, ss=start, to=end)   # frame_no는 start 기준 0부터
+        if not motion:
+            return start
+        peak_local = max(motion, key=lambda f: motion[f])   # 프레임 번호(로컬)
+        peak_t = start + peak_local / fps
+        return max(start, min(peak_t, end - min_tail))
+    except Exception:
+        return start
 
 
 def detect_cuts(path, threshold=DEFAULT_THRESHOLD, min_seconds=MIN_SECONDS):
