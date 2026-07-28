@@ -24,6 +24,16 @@ def test_parse_publish_time_unrecognized_returns_empty():
     assert pc._parse_publish_time("알수없음") == ""
 
 
+def test_parse_publish_time_yesterday_with_clock():
+    now = datetime(2026, 7, 29, 12, 0, tzinfo=timezone.utc)
+    assert pc._parse_publish_time("昨天 23:51", now=now) == "2026-07-28T23:51:00Z"
+
+
+def test_parse_publish_time_today_with_clock():
+    now = datetime(2026, 7, 29, 12, 0, tzinfo=timezone.utc)
+    assert pc._parse_publish_time("今天 08:05", now=now) == "2026-07-29T08:05:00Z"
+
+
 def _note(note_id, media_type="video", display_title="厨房神器", xsec="tok123",
           liked="1200", comments="30", collected="90", shared="7",
           nickname="살림요정", cover="https://cover.jpg", pub_text="07-20",
