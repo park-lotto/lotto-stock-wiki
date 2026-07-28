@@ -1,8 +1,35 @@
 # 트랙: AI픽자동적재 — 핸드오프
 
-최종 갱신: 2026-07-28 (사무실 PC) · 브랜치 `track/AI픽자동적재`
+최종 갱신: 2026-07-29 새벽 · 브랜치 `track/AI픽자동적재`
 
-## 오늘 라이브로 나간 것 (전부 `origin/main` 반영 완료)
+## ✅ 2026-07-29 — 인스타 수집 Playwright+세션로그인 프로덕션 전환 완료
+
+**`INSTAGRAM_SCRAPER=playwright`가 라이브 서버에 켜져 있다.** Apify 완전 대체.
+
+- 실제 서버 192채널 전수 수집 결과: **ok 187 · not_found 5 · login_wall 0 · error 0**,
+  19.1분 소요(Apify 28분보다 빠르고 403 위험 0). 병합 커밋 `31eb54bcf`.
+- 세션 확보 방법(중요 — 만료 시 재사용): `scripts/instagram_setup_session.py`(Playwright
+  직접 로그인)는 **폐기됨** — Meta가 CDP 자동화 자체를 감지해 로그인 제출 시점에 캡차로
+  막는다(stealth·`--disable-blink-features=AutomationControlled` 다 써도 안 뚫림).
+  **`scripts/instagram_cookies_from_browser.py`를 대신 쓴다** — Firefox에 정상 로그인 후
+  `browser_cookie3`로 로컬 쿠키 직접 추출(로그인 자체에 자동화 흔적이 없어 캡차 회피).
+  Chrome/Edge는 앱 바운드 암호화로 막힘, **Firefox만 됨**.
+- 세션 만료 시 재발급 절차:
+  1. Firefox에서 해당 인스타 부계정 재로그인
+  2. `.venv\Scripts\python.exe scripts\instagram_cookies_from_browser.py --browser firefox`
+  3. `scp` 로 `/home/ubuntu/instagram_session.json`에 덮어쓰기(600권한 유지)
+  4. `sudo systemctl restart shopping-shorts` (세션 파일은 프로세스 시작 시 1회 로드되므로
+     재시작 필요 없을 수도 있음 — 매 요청마다 `storage_state` 경로를 새로 읽는지 확인)
+- 목록(clips_connection) 응답엔 taken_at·video_versions·caption이 없어서, pk로
+  `/api/v1/media/{pk}/info/`(구 REST 모양, `X-IG-App-ID: 936619743392459` 헤더)를
+  한 번 더 호출해 보충한다(`instagram_playwright._fetch_reel_detail`).
+- **되돌리는 법**: `/etc/shopping-shorts.env`에서 `INSTAGRAM_SCRAPER=apify`로 바꾸고
+  `sudo systemctl restart shopping-shorts`. 코드 revert 불필요.
+
+상세 경위: `docs/superpowers/specs/2026-07-29-인스타-세션로그인-B안-design.md`("실측 결과" 섹션)
+/ [[project_인스타수집_세션로그인]]
+
+## 이전에 라이브로 나간 것
 
 | # | 내용 | 커밋 |
 |---|---|---|
@@ -11,40 +38,16 @@
 | 3 | 새로고침해도 매칭 단계 유지 — 게이트 판정을 `stepLocked()` 하나로 단일화 | `867ebef62` |
 | 4 | 자막꾸미기 "원본 자막이 있던 자리" 점선 박스 제거 | `e6183e2b3` |
 | 5 | AI PICK "대본을 확보하지 못했습니다" 해소 — `pick_text`를 응답에 실어 보냄 | `eed0cf6f7` |
-| 6 | **인스타 수집 Playwright 전환(코드 전체, 8커밋)** | `4a7f322d5`..`43c2109a2` |
+| 6 | 인스타 수집 Playwright 전환(코드) | `4a7f322d5`..`43c2109a2` |
 
-⚠️ 6번은 **코드만 배포됐고 아직 안 쓰인다.** `INSTAGRAM_SCRAPER` 기본값이 `apify`라
-라이브 수집 경로는 예전 그대로다. 켜는 건 아래 게이트를 통과한 뒤다.
+## ⏭ 남은 것 (급하지 않음)
 
-## ⏭ 지금 막힌 곳 — 여기서 이어서 시작하면 된다
-
-**2026-07-29 갱신 — B안(세션 로그인) 로컬 검증 성공. 서버 배포·진짜 10채널 게이트만 남았다.**
-
-`scripts/instagram_setup_session.py`(Playwright 직접 로그인)는 **폐기** — 사람이 직접 타이핑해도
-로그인 제출 시점에 Meta가 CDP(자동화) 자체를 감지해 캡차로 막았다(stealth·
-AutomationControlled 껐어도 안 뚫림). 대신 `scripts/instagram_cookies_from_browser.py`
-(Firefox에 정상 로그인 → `browser_cookie3`로 로컬 쿠키 직접 추출)로 전환해 **성공**.
-Chrome/Edge는 앱 바운드 암호화로 막힘 — Firefox만 됨. 상세: 위 설계문서 "실측 결과" 섹션.
-
-로컬에서 실제로 검증 완료:
-- 세션 로그인 상태 확인(로그인전용 데이터 응답에 포함됨, `login_wall` 없음)
-- 인스타 웹의 GraphQL 통합으로 파서가 깨져있던 것 별도로 발견·수정
-  (`extract_reel_nodes` 신 응답 모양 지원 + `pk`로 `/api/v1/media/{pk}/info/` 직접 호출해
-  taken_at·video_versions 보충)
-- 5채널 스파이크: nike·gymshark·zara·starbucks `ok`(top3 전부 정확), homeinon·salimhome
-  `not_found`(릴스 없는 계정으로 보임). **채널당 평균 5초**(Apify 8.4초보다 빠름)
-
-**다음 할 일**:
-1. `scripts/instagram_session.json`(로컬, git비추적)을 서버로 옮기기
-   (`scp ... ubuntu@3.39.179.148:/home/ubuntu/instagram_session.json`, 600권한)
-2. 서버에 `playwright-stealth` 설치 필요(로컬 `.venv`엔 있음, 서버엔 아직 — playwright 자체와
-   동일하게 requirements.txt엔 안 넣고 수동 `pip install`)
-3. 서버에서 `INSTAGRAM_SESSION_PATH=/home/ubuntu/instagram_session.json`으로
-   **실제 등록된 레퍼런스 채널 목록**(브랜드 테스트계정 아님)으로 10채널 게이트
-   (10채널 실측 문서의 재시도 명령 패턴과 동일하게 `_scrape_one_playwright` 직접 호출)
-4. 성공률 8/10 이상이면 `INSTAGRAM_SCRAPER=playwright` 전환
-5. Firefox 세션은 언젠가 만료된다 — 만료 시 `instagram_cookies_from_browser.py` 재실행
-   (Firefox에서 재로그인 필요할 수 있음)
+- 동시성 미구현 — 채널마다 크로미움을 새로 띄운다(`INSTAGRAM_PW_CONTEXTS` 죽은 설정).
+  19.1분/192채널이 이미 Apify보다 빠르므로 지금은 급하지 않다. 필요해지면 컨텍스트 재사용.
+- `finish` 게이트가 `test_mix_naturalize.py::test_beat_tts_applies_naturalize_and_continuity`
+  flaky로 2번 튕겼다(인스타 코드와 무관 — 재현하면 있다 없다 함, 3번째 재시도로 통과함).
+  **다른 트랙 작업 시 이 테스트가 또 튕기면 flaky로 알고 재시도할 것**, 원인 미규명이라
+  근본수정은 별도 작업.
 
 **구 A안(프록시) 기록은 아래 유지 — 참고용, 지금은 안 쓴다.**
 
