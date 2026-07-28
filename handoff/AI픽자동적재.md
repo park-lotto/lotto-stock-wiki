@@ -18,7 +18,35 @@
 
 ## ⏭ 지금 막힌 곳 — 여기서 이어서 시작하면 된다
 
-**인스타 Playwright 전환이 프록시에서 막혔다.**
+**2026-07-29 갱신 — B안(세션 로그인) 로컬 검증 성공. 서버 배포·진짜 10채널 게이트만 남았다.**
+
+`scripts/instagram_setup_session.py`(Playwright 직접 로그인)는 **폐기** — 사람이 직접 타이핑해도
+로그인 제출 시점에 Meta가 CDP(자동화) 자체를 감지해 캡차로 막았다(stealth·
+AutomationControlled 껐어도 안 뚫림). 대신 `scripts/instagram_cookies_from_browser.py`
+(Firefox에 정상 로그인 → `browser_cookie3`로 로컬 쿠키 직접 추출)로 전환해 **성공**.
+Chrome/Edge는 앱 바운드 암호화로 막힘 — Firefox만 됨. 상세: 위 설계문서 "실측 결과" 섹션.
+
+로컬에서 실제로 검증 완료:
+- 세션 로그인 상태 확인(로그인전용 데이터 응답에 포함됨, `login_wall` 없음)
+- 인스타 웹의 GraphQL 통합으로 파서가 깨져있던 것 별도로 발견·수정
+  (`extract_reel_nodes` 신 응답 모양 지원 + `pk`로 `/api/v1/media/{pk}/info/` 직접 호출해
+  taken_at·video_versions 보충)
+- 5채널 스파이크: nike·gymshark·zara·starbucks `ok`(top3 전부 정확), homeinon·salimhome
+  `not_found`(릴스 없는 계정으로 보임). **채널당 평균 5초**(Apify 8.4초보다 빠름)
+
+**다음 할 일**:
+1. `scripts/instagram_session.json`(로컬, git비추적)을 서버로 옮기기
+   (`scp ... ubuntu@3.39.179.148:/home/ubuntu/instagram_session.json`, 600권한)
+2. 서버에 `playwright-stealth` 설치 필요(로컬 `.venv`엔 있음, 서버엔 아직 — playwright 자체와
+   동일하게 requirements.txt엔 안 넣고 수동 `pip install`)
+3. 서버에서 `INSTAGRAM_SESSION_PATH=/home/ubuntu/instagram_session.json`으로
+   **실제 등록된 레퍼런스 채널 목록**(브랜드 테스트계정 아님)으로 10채널 게이트
+   (10채널 실측 문서의 재시도 명령 패턴과 동일하게 `_scrape_one_playwright` 직접 호출)
+4. 성공률 8/10 이상이면 `INSTAGRAM_SCRAPER=playwright` 전환
+5. Firefox 세션은 언젠가 만료된다 — 만료 시 `instagram_cookies_from_browser.py` 재실행
+   (Firefox에서 재로그인 필요할 수 있음)
+
+**구 A안(프록시) 기록은 아래 유지 — 참고용, 지금은 안 쓴다.**
 
 서버 준비는 전부 끝났다:
 - playwright 1.61.0 + 크로미움 설치 완료, `example.com` 접속으로 구동 확인 ✅

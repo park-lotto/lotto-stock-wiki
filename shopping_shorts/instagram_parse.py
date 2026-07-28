@@ -89,20 +89,38 @@ def parse_reel_node(node, username):
 
 
 def extract_reel_nodes(payload):
-    """인스타 응답 → 릴스 노드 리스트. 모르는 모양이면 []."""
+    """인스타 응답 → 릴스 노드 리스트. 모르는 모양이면 [].
+
+    두 응답 모양을 다 받는다:
+    - 구 REST({"items": [...]}) — 2026-07-28 당시 관찰된 모양.
+    - 신 GraphQL(data.xdt_api__v1__clips__user__connection_v2.edges[].node.media) —
+      2026-07-29 실측: 인스타 웹이 /api/graphql로 통합되며 이 모양으로 바뀌었다.
+      ⚠️ 이 목록 응답엔 taken_at·video_versions가 없다 — instagram_playwright가 pk로
+      /api/v1/media/{pk}/info/를 한 번 더 불러 보충한다(그 응답도 구 REST 모양이라
+      이 함수를 그대로 재사용한다).
+    """
     if not isinstance(payload, dict):
         return []
     items = payload.get("items")
-    if not isinstance(items, list):
-        return []
-    out = []
-    for it in items:
-        if not isinstance(it, dict):
-            continue
-        # 항목이 {"media": {...}}로 한 겹 싸여 오는 응답 모양이 있다.
-        node = it.get("media") if isinstance(it.get("media"), dict) else it
-        out.append(node)
-    return out
+    if isinstance(items, list):
+        out = []
+        for it in items:
+            if not isinstance(it, dict):
+                continue
+            # 항목이 {"media": {...}}로 한 겹 싸여 오는 응답 모양이 있다.
+            node = it.get("media") if isinstance(it.get("media"), dict) else it
+            out.append(node)
+        return out
+    conn = (payload.get("data") or {}).get("xdt_api__v1__clips__user__connection_v2")
+    edges = (conn or {}).get("edges")
+    if isinstance(edges, list):
+        out = []
+        for edge in edges:
+            media = ((edge or {}).get("node") or {}).get("media")
+            if isinstance(media, dict):
+                out.append(media)
+        return out
+    return []
 
 
 def classify_channel_result(nodes, page_url, error):

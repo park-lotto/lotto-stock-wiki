@@ -82,6 +82,25 @@ def test_extract_reel_nodes_unknown_shape_returns_empty():
     assert extract_reel_nodes({}) == []
 
 
+def test_extract_reel_nodes_from_graphql_clips_connection_shape():
+    """2026-07-29 실측: 인스타가 /api/graphql로 통합된 뒤의 목록 응답 모양.
+    ⚠️ 이 모양엔 taken_at·video_versions가 없다 — instagram_playwright가 pk로
+    /api/v1/media/{pk}/info/를 한 번 더 불러 보충한다(그 응답은 구 REST 모양이라
+    이 함수로 다시 파싱된다 — 별도 파서 불필요)."""
+    payload = {
+        "data": {
+            "xdt_api__v1__clips__user__connection_v2": {
+                "edges": [
+                    {"node": {"media": {"code": "G1", "like_count": 10}}},
+                    {"node": {"media": {"code": "G2", "like_count": 20}}},
+                ],
+                "page_info": {},
+            }
+        }
+    }
+    assert [n["code"] for n in extract_reel_nodes(payload)] == ["G1", "G2"]
+
+
 from shopping_shorts.instagram_parse import classify_channel_result
 
 
