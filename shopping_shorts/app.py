@@ -294,7 +294,9 @@ def api_collect_status(job_id: str):
         if age_min > _COLLECT_STALE_MIN:
             return {"ok": True, "status": "error",
                     "error": "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."}
-        return {"ok": True, "status": "running"}
+        # ★진행률(2026-07-28): result_json에 채널마다 쓰인 phase 페이로드를 running 응답에도
+        # 실어야 화면이 읽는다 — 전엔 여기서 누락돼 화면에 아무 변화가 없었다.
+        return {"ok": True, "status": "running", "result": job["result"]}
     if status == "error":
         return {"ok": True, "status": "error", "error": job["error"] or "실패"}
     return {"ok": True, "status": "done", **(job["result"] or {})}

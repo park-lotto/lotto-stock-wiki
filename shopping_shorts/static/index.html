@@ -1100,6 +1100,18 @@ async function _pollCollect(jobId){
     let d;
     try{ d = await (await fetch("/api/collect/status/"+jobId)).json(); }
     catch(e){ continue; }   // 일시적 네트워크 오류는 계속 폴링
+    // ★수집 진행률(2026-07-28): 서버가 채널마다 result에 부분 payload를 쓴다.
+    //   예전엔 표시가 없어 50분간 화면이 그대로였고 "멈췄다"고 판단해 취소하는 일이 있었다.
+    if (d && d.result && d.result.phase === 'collecting') {
+      const t = d.result.tally || {};
+      const blocked = (t.login_wall || 0) + (t.error || 0);
+      const el = document.getElementById('collectProgress');
+      if (el) {
+        el.style.display = '';
+        el.textContent = `채널 ${d.result.done}/${d.result.total} · ${d.result.items_so_far}건 수집`
+          + (blocked ? ` · 건너뜀 ${blocked}` : '');
+      }
+    }
     if(d.status==='done') return d;
     if(d.status==='error') throw new Error(d.error||"수집 실패");
   }
