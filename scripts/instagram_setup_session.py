@@ -32,7 +32,14 @@ def setup():
     with sync_playwright() as p:
         # ⚠️ --start-maximized + no_viewport 조합은 Windows에서 창이 화면 밖/포커스
         # 문제로 안 보이다 죽는 사례가 있었다(2026-07-29). 고정 뷰포트로 단순화.
-        browser = p.chromium.launch(headless=False)
+        # --disable-blink-features=AutomationControlled: 로그인은 사람이 직접 타이핑하는데도
+        # 제출 시점에 캡차가 떴다(2026-07-29 실사고) — 즉 타이핑 패턴 문제가 아니라
+        # CDP(크롬 원격제어 프로토콜)로 붙어 있다는 것 자체가 감지된 것. stealth의 JS
+        # 패치(navigator.webdriver 등)보다 더 낮은 레벨에서 그 흔적을 지운다.
+        browser = p.chromium.launch(
+            headless=False,
+            args=["--disable-blink-features=AutomationControlled"],
+        )
         ctx = browser.new_context(viewport={"width": 1280, "height": 900})
         # 2026-07-29 실사고: 스텔스 없이 로그인 시도 시 Meta가 자동화 브라우저로 감지해
         # /auth_platform/recaptcha/로 튕겼다(navigator.webdriver 등 자동화 흔적 때문).
