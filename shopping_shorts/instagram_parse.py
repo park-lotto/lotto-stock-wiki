@@ -103,3 +103,19 @@ def extract_reel_nodes(payload):
         node = it.get("media") if isinstance(it.get("media"), dict) else it
         out.append(node)
     return out
+
+
+def classify_channel_result(nodes, page_url, error):
+    """채널 1개의 수집 결과를 4가지로 분류한다.
+
+    왜 나누나: "실패 30건"만으로는 부계정(로그인 세션)이 필요한지 알 수 없다.
+    로그인벽이면 부계정으로 뚫리고, 비공개·삭제면 부계정으로도 안 된다.
+    이 분류의 집계가 B안 도입 판단의 근거다(설계문서 참조).
+    """
+    if error:
+        return "error"
+    if nodes:
+        return "ok"
+    if "/accounts/login" in (page_url or ""):
+        return "login_wall"
+    return "not_found"

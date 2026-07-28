@@ -80,3 +80,25 @@ def test_extract_reel_nodes_from_media_wrapper_shape():
 def test_extract_reel_nodes_unknown_shape_returns_empty():
     assert extract_reel_nodes({"data": {"something_else": 1}}) == []
     assert extract_reel_nodes({}) == []
+
+
+from shopping_shorts.instagram_parse import classify_channel_result
+
+
+def test_classify_ok_when_nodes_found():
+    assert classify_channel_result([{"code": "A"}], "https://www.instagram.com/u/reels/", None) == "ok"
+
+
+def test_classify_login_wall_by_redirect():
+    """인스타가 막으면 /accounts/login/ 으로 튕긴다 — 이게 부계정 필요 신호다."""
+    assert classify_channel_result(
+        [], "https://www.instagram.com/accounts/login/?next=/u/reels/", None) == "login_wall"
+
+
+def test_classify_error_takes_priority_over_empty():
+    assert classify_channel_result([], "https://www.instagram.com/u/reels/", "Timeout") == "error"
+
+
+def test_classify_not_found_when_empty_without_error():
+    """비공개·삭제 계정 — 로그인벽과 구분해야 한다(부계정을 붙여도 안 되는 쪽)."""
+    assert classify_channel_result([], "https://www.instagram.com/u/reels/", None) == "not_found"
