@@ -71,6 +71,17 @@ INSTAGRAM_PW_CONTEXTS = int(os.getenv("INSTAGRAM_PW_CONTEXTS", "5"))
 # 채널 1개 처리 상한(ms). 넘으면 그 채널만 error로 접고 다음으로 간다(전체가 죽지 않게).
 INSTAGRAM_PW_TIMEOUT_MS = int(os.getenv("INSTAGRAM_PW_TIMEOUT_MS", "20000"))
 
+# ── 샤오홍슈(해외HOT 발굴) 수집 경로 선택(2026-07-29) ──
+# Apify 검색은 유료(rednote-search-scraper). 로그인 세션(storage_state)으로 서버 직결
+# 무료 크롤이 실측 확인됨(Phase 0). 롤백 대비 환경변수로 즉시 전환 가능하게 둔다.
+# ★기본값은 apify — 라이브 검증 전 병합만으로 경로가 바뀌면 안 된다.
+XHS_SCRAPER = os.getenv("XHS_SCRAPER", "apify")   # apify | playwright
+
+# 로그인 세션 쿠키 파일(Playwright storage_state). 서버에만 존재(git 비추적, 600권한).
+# 없으면 playwright 경로가 조용히 빈 리스트를 반환한다(전체 수집이 죽지 않게).
+REDNOTE_SESSION_PATH = os.getenv("REDNOTE_SESSION_PATH", "/home/ubuntu/rednote_session.json")
+XHS_PW_TIMEOUT_MS = int(os.getenv("XHS_PW_TIMEOUT_MS", "25000"))
+
 # 댓글 draft 생성 전용 Gemini 키 풀 — 주식위키 본체(pipeline.atoms.key_vault)의
 # 공유 풀과 완전히 분리(2026-07-09). 공유 풀은 인제스트·브리핑 등 다른 작업과
 # 하루 종일 같이 소모돼 예고 없이 소진되는 사고가 있었음 — 쇼핑쇼츠는 이 전용
