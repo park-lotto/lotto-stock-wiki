@@ -30,8 +30,10 @@
 내 크롤이 된 건 **집=주거용 IP**. **서버=AWS 데이터센터 IP**라 막힐 수 있음(Reddit 전례). 그리고 현 Playwright는
 대화형 MCP라, 상시엔 **서버에 Playwright+Chromium 설치** 필요.
 - [x] 서버에 `pip install playwright && playwright install chromium`(의존성 포함). — 완료(인스타 전환 작업 때 설치됨, 공용).
-- [x] **샤오홍슈(rednote) — ✅ Phase 0 완료(2026-07-29). 로그인 세션으로 서버 직결 그대로 뚫림.**
-- [x] **TikTok — ❌ 슬라이더 캡차로 막힘(2026-07-29 실측). 별도 세션 인계 대상.**
+- [x] **샤오홍슈(rednote) — ✅ Phase 0 완료(2026-07-29). 로그인 세션으로 서버 직결 그대로 뚫림.
+      Phase 1(`playwright_crawl.py`)도 이어서 완료 — 단위테스트 통과, 라이브 E2E 재확인은 handoff 참고.**
+- [x] **TikTok — ❌ 확정 종결(2026-07-29). headless=False·집터널·스텔스패치 3가지 전부 실패 —
+      Apify(`tiktok_search.py`) 유지로 결론. 아래 "❌ TikTok" 절 갱신.**
 - [ ] 도우인 — 손 안 댐(원래도 모바일인증 필요, 2026-07-26 기록 그대로).
 - [ ] Instagram 서버 실크롤 — 미착수(참고: 인스타 프록시 코드에 버그 있음, 아래 부수발견).
 
@@ -81,16 +83,16 @@ Playwright MCP 브라우저**(실제 디스플레이 있는 세션)였고, **헤
 HTML은 75KB 정도 로드되는데 실제 비디오 카드가 안 실림. 원인 미확인(스크롤 트리거 필요/API 별도 차단/
 세션·쿠키 필요 등 여러 가설 미검증 상태).
 
-**다음 세션에서 시도해볼 것(우선순위)**:
-1. **headless=False**(진짜 GUI 브라우저)로 서버에서 캡차가 그래도 뜨는지 확인 — headless 플래그 자체가
-   TikTok 탐지 트리거일 가능성 있음(XVFB 등 가상디스플레이로 headless지만 GUI인 척 하는 방법도 있음).
-2. 사람이 **캡차를 한 번 수동으로 풀고** 그 브라우저 컨텍스트(storage_state)를 재사용하는 방식 —
-   XHS와 같은 패턴. 캡차 통과 후 세션이 재사용 가능한지가 관건(TikTok은 세션 단위가 아니라 매 요청마다
-   재검증할 수도 있음 — 미검증).
-3. 집터널 경유 시 "결과 0건"의 원인 파고들기 — `page.mouse.wheel`로 스크롤 트리거, 네트워크 탭
-   (`browser_network_requests`)으로 실제 검색 API 호출이 나가는지·응답 코드 확인.
-4. 그래도 안 되면 **TikTok은 계속 Apify(`tiktok_search.py`, `clockworks~tiktok-scraper`)로 유지** —
-   XHS만 무료 크롤로 바꾸고 TikTok/도우인은 유료로 남기는 하이브리드가 현실적 대안.
+**실측 결과(2026-07-29, 후속 세션) — 3가지 다 실패, 여기서 종결**:
+1. **headless=False(Xvfb 가상디스플레이) 실측 → 캡차 여전.** headless 플래그가 원인이라는 가설 기각.
+2. 캡차 수동 통과는 **시도 안 함** — 3번 결과(IP를 집으로 바꿔도 API가 조용히 빈 응답)를 보면 자동화
+   핑거프린트/서명 파라미터 문제로 보여, 캡차 하나 넘긴다고 풀릴 문제가 아니라고 판단해 우선순위를 내림.
+3. **집터널 경유 "0건" 원인 파악 → 캡차는 안 뜨지만 검색 API(`/api/search/item/full/`)가 status 200·
+   본문 길이 0로 응답.** 조용한 소프트블록. `navigator.webdriver` 은닉 등 기본 스텔스 패치를 추가해도
+   동일 — IP·헤드리스·기초 스텔스 어느 것도 원인이 아니고, msToken/X-Bogus 같은 서명된 요청 파라미터나
+   더 깊은 디바이스 핑거프린트가 막고 있는 것으로 추정.
+4. **결론(확정): TikTok은 계속 Apify(`tiktok_search.py`, `clockworks~tiktok-scraper`)로 유지.**
+   XHS만 무료 크롤로 바꾸고 TikTok/도우인은 유료로 남기는 하이브리드로 확정 — 더 이상 이 경로를 파지 않는다.
 
 ### 도우인 — 미착수
 2026-07-26 기록 그대로: 로그인 벽(QR/휴대폰 인증) 확인만 되고 아무 시도 안 함. 계속 Apify(`douyin_search.py`) 사용.
@@ -104,14 +106,19 @@ HTML은 75KB 정도 로드되는데 실제 비디오 카드가 안 실림. 원�
 참고해서 `username`/`password` 분리부터 재검증할 것.
 
 ## Phase 1~4 (하이브리드로 조정 — XHS만 무료크롤, TikTok/도우인은 Apify 유지)
-1. **크롤러 모듈** `playwright_crawl.py`: 우선 **샤오홍슈만** 구현(검색 URL → `storage_state` 세션 로드 →
-   스크롤 → `/search_result/<id>?xsec_token=` 패턴 카드 추출 → 스키마). TikTok/도우인은 캡차·로그인벽
-   해결 전까지 Apify 그대로 둔다(코드 안 건드림).
+1. **크롤러 모듈** `playwright_crawl.py` — ✅ 완료(2026-07-29). 검색 URL → `storage_state` 세션 로드 →
+   `/api/sns/web/v1/search/notes` 응답 JSON 가로채기(DOM/스크롤 파싱 아님, 리스트 응답만으로 충분했음)
+   → build_overseas_items 스키마. 단위테스트 통과. TikTok/도우인은 코드 안 건드림(Apify 유지 확정).
 2. **파이프라인**: XHS 크롤 → overseas_funnel → build_overseas_items → store. `overseas_hot_jobs`에서
-   **샤오홍슈만** Apify 경로 OFF, TikTok/도우인은 그대로 유지(플랫폼별 분기 필요).
+   `config.XHS_SCRAPER` 분기로 **샤오홍슈만** Apify↔playwright 전환(기본 apify, 롤백 스위치) — ✅ 완료.
+   TikTok/도우인은 그대로 Apify.
 3. **상시 스케줄**: systemd 타이머 매일(6~12h). 세션 만료 시 실패 알림(텔레그램 등) — 조용히 0건 나는 것 방지.
-4. **소스채널**: `overseas_seeds.json`에 seed_accounts → 채널 마이닝(XHS 우선 적용).
-5. **TikTok/도우인**: 위 "다음 세션에서 시도해볼 것" 참고해 별도 세션에서 이어감.
+   **미착수** — 아직 XHS_SCRAPER를 playwright로 라이브 전환 전이라 우선순위 아님.
+4. **소스채널**: `overseas_seeds.json`에 seed_accounts → 채널 마이닝(XHS 우선 적용). 미착수.
+5. **TikTok·도우인**: TikTok은 3가지 시도 후 Apify 유지로 확정 종결(위 "❌ TikTok" 절). 도우인은 미착수.
+6. **라이브 전환 전 남은 것**: `search_full` 실제 서버 E2E가 재요청 시 0건이 관측됨(handoff 참고 —
+   레퍼런스랭킹 세션과의 세션 파일 경합 가능성, 원인 미확정). 안정적으로 데이터 나오는 것 재확인 후
+   `XHS_SCRAPER=playwright`로 서버 env 플립.
 
 ## 참고 — 검증된 추출 로직(TikTok, 이미 성공)
 `a[href*="/video/"]` 순회 → `@author/video/id` 파싱 → 카드 컨테이너 innerText에서 좋아요/제목.

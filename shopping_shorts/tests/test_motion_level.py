@@ -53,3 +53,30 @@ def test_hook_delta_reads_state_shapes():
     assert va._hook_delta({"state": {"hook_inpoint_delta": -0.2}}) == -0.2
     assert va._hook_delta({}) == 0.0
     assert va._hook_delta(None) == 0.0
+
+
+def test_map_segments_to_motion_levels_max_overlap():
+    from shopping_shorts import scene_cut as sc
+    # 컷: A[0,10) LOW, B[10,30) PEAK, C[30,50) MED (프레임 단위, fps=10 가정)
+    cuts_labeled = [
+        {"start": 0, "end": 10, "level": "LOW", "peak_frame": 5, "energy": 1.0},
+        {"start": 10, "end": 30, "level": "PEAK", "peak_frame": 20, "energy": 99.0},
+        {"start": 30, "end": 50, "level": "MED", "peak_frame": 35, "energy": 40.0},
+    ]
+    fps = 10.0
+    # seg1: 0.0~0.9s(프레임 0~9) → 전부 컷A(LOW) 안에 있음
+    segs = [{"seg_id": "v-0", "start": 0.0, "end": 0.9},
+            # seg2: 0.8~2.2s → 프레임 8~22, 컷A(8,9)=2프레임 vs 컷B(10~22)=13프레임 → B(PEAK) 교집합 최대
+            {"seg_id": "v-1", "start": 0.8, "end": 2.2},
+            # seg3: 컷 범위 밖(음수 없음, fps*5.5=55 → 컷C 밖) → None
+            {"seg_id": "v-2", "start": 5.5, "end": 6.0}]
+    out = sc.map_segments_to_motion_levels(segs, cuts_labeled, fps)
+    assert out["v-0"] == "LOW"
+    assert out["v-1"] == "PEAK"
+    assert out["v-2"] is None
+
+
+def test_map_segments_to_motion_levels_empty_cuts_returns_none_for_all():
+    from shopping_shorts import scene_cut as sc
+    segs = [{"seg_id": "v-0", "start": 0.0, "end": 1.0}]
+    assert sc.map_segments_to_motion_levels(segs, [], 30.0) == {"v-0": None}
