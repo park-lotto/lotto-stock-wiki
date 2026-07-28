@@ -30,20 +30,27 @@ SESSION_PATH = os.path.join(os.path.dirname(__file__), "instagram_session.json")
 
 def setup():
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False, args=["--start-maximized"])
-        ctx = browser.new_context(no_viewport=True)
+        # ⚠️ --start-maximized + no_viewport 조합은 Windows에서 창이 화면 밖/포커스
+        # 문제로 안 보이다 죽는 사례가 있었다(2026-07-29). 고정 뷰포트로 단순화.
+        browser = p.chromium.launch(headless=False)
+        ctx = browser.new_context(viewport={"width": 1280, "height": 900})
         # 2026-07-29 실사고: 스텔스 없이 로그인 시도 시 Meta가 자동화 브라우저로 감지해
         # /auth_platform/recaptcha/로 튕겼다(navigator.webdriver 등 자동화 흔적 때문).
         # navigator.webdriver·plugins·languages 등을 정상 브라우저처럼 위장해 재시도.
         Stealth().apply_stealth_sync(ctx)
         page = ctx.new_page()
-        page.goto("https://www.instagram.com/accounts/login/")
+        page.goto("https://www.instagram.com/accounts/login/", wait_until="domcontentloaded")
 
         print("=" * 50)
-        print("브라우저가 열렸습니다.")
+        print(f"브라우저가 열렸습니다. (페이지 제목: {page.title()!r})")
+        print("창이 안 보이면 작업 표시줄에서 Chromium 아이콘을 찾아 클릭하세요.")
         print("인스타 계정으로 로그인 후(2단계 인증 포함) Enter를 누르세요.")
         print("=" * 50)
         input("로그인 완료 후 Enter > ")
+
+        if page.is_closed():
+            print("[!] 브라우저 창이 이미 닫혀 있습니다 - 다시 실행해주세요.")
+            return
 
         page.goto("https://www.instagram.com/")
         page.wait_for_timeout(3000)
