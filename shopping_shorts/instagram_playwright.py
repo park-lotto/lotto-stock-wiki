@@ -26,6 +26,10 @@ LAST_TALLY = {"ok": 0, "login_wall": 0, "not_found": 0, "error": 0}
 # 응답만 JSON으로 읽는다(이미지·폰트 등 나머지는 무시).
 _REEL_API_HINTS = ("/api/v1/clips/user/", "/api/v1/feed/reels_media", "/graphql")
 
+# 인스타 웹 클라이언트가 자기 자신도 쓰는 공개 앱ID(비밀 아님 — 오랫동안 커뮤니티에 널리
+# 알려진 값). /api/v1/media/{pk}/info/ 같은 REST 엔드포인트를 직접 부를 때 필요하다.
+_IG_APP_ID = "936619743392459"
+
 
 def _scrape_one_playwright(username):
     """채널 1개 → (nodes, page_url, error). 브라우저를 실제로 띄우는 유일한 함수.
@@ -68,11 +72,44 @@ def _scrape_one_playwright(username):
                       wait_until="domcontentloaded")
             page.wait_for_timeout(2500)          # 릴스 목록 XHR이 도착할 여유
             final_url = page.url
+
+            # 목록 응답(clips_connection)엔 taken_at·video_versions가 없다(2026-07-29 실측).
+            # 실제로 쓰일 상위 N개만 pk로 media info REST를 한 번씩 더 불러 보충한다.
+            for media in captured[:config.RESULTS_PER_CHANNEL]:
+                if "taken_at" in media:
+                    continue
+                pk = media.get("pk")
+                if not pk:
+                    continue
+                detail = _fetch_reel_detail(ctx, pk)
+                if detail:
+                    media["taken_at"] = detail.get("taken_at")
+                    media["video_versions"] = detail.get("video_versions")
+
             ctx.close()
             browser.close()
         return captured, final_url, None
     except Exception as e:                        # noqa: BLE001 — 채널 하나의 실패로 전체가 죽지 않게
         return [], url, str(e)[:200]
+
+
+def _fetch_reel_detail(ctx, pk):
+    """pk(숫자 media id)로 /api/v1/media/{pk}/info/를 직접 호출해 taken_at·video_versions를 얻는다.
+
+    이 REST 엔드포인트는 구 응답 모양({"items": [...]})이라 extract_reel_nodes를 그대로
+    재사용한다. 페이지를 새로 열어 응답을 가로채는 것보다 훨씬 빠르고, 요청한 미디어 자체만
+    정확히 돌아온다(2026-07-29 실측 — /reel/{code}/ 페이지를 열어 가로채는 방식은 유저의
+    다른 최근 게시물이 섞여 와 발행시각이 틀리게 나왔다). 실패해도 None — 목록 값(썸네일·
+    통계)만으로 항목 자체는 계속 쓸 수 있다."""
+    try:
+        resp = ctx.request.get(
+            f"https://www.instagram.com/api/v1/media/{pk}/info/",
+            headers={"X-IG-App-ID": _IG_APP_ID},
+        )
+        nodes = extract_reel_nodes(resp.json())
+        return nodes[0] if nodes else None
+    except Exception:      # noqa: BLE001
+        return None
 
 
 def fetch_reels(usernames, on_progress=None, _scrape_one=None):

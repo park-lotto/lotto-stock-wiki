@@ -38,14 +38,22 @@ _LOADERS = {
     "firefox": browser_cookie3.firefox,
 }
 
+# Playwright의 storage_state가 허용하는 최대값(kMaxCookieExpiresDateInSeconds, 서기 9999년).
+# 2026-07-29 실측: 이 PC의 Firefox(cookies.sqlite moz_cookies.expiry)가 초가 아니라
+# 밀리초 단위로 저장돼 있어 그대로 넘기면 "Cookie should have a valid expires" 에러가 났다.
+_MAX_EXPIRES_SECONDS = 253402300799
+
 
 def _to_playwright_cookie(c):
+    expires = c.expires if c.expires else -1
+    if expires > _MAX_EXPIRES_SECONDS:
+        expires = expires / 1000
     return {
         "name": c.name,
         "value": c.value,
         "domain": c.domain,
         "path": c.path or "/",
-        "expires": c.expires if c.expires else -1,
+        "expires": expires,
         "httpOnly": bool(getattr(c, "_rest", {}).get("HTTPOnly")),
         "secure": bool(c.secure),
         "sameSite": "Lax",
