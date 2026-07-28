@@ -90,7 +90,8 @@ scratch_pw.txt
 scripts/.kiwoom_token_cache.json
 scripts/.kis_token_cache.json
 scripts/.*_token_cache.json
-scripts/instagram_session.json  # 인스타 로그인 쿠키(storage_state) — 실계정 세션이라 git 비추적
+# 인스타 로그인 쿠키(storage_state) — 실계정 세션이라 git 비추적
+scripts/instagram_session.json
 
 # 사용자 런타임 편집/백업 (배포로 덮이면 안 됨)
 pipeline/sector_custom.json

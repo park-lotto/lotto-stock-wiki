@@ -42,9 +42,13 @@ def setup():
 
         page.goto("https://www.instagram.com/")
         page.wait_for_timeout(3000)
-        current_url = page.url
-        if "login" in current_url:
-            print(f"[!] 아직 로그인 화면입니다(URL: {current_url}) - 세션을 저장하지 않습니다.")
+        # URL만으로는 로그인 여부를 못 가른다 — 비로그인 상태에서도 /accounts/login/으로
+        # 안 튕기고 그냥 홈에 머무는 경우가 실측됨(2026-07-29, anon 쿠키 7개만 저장돼
+        # 세션이 무효였던 실사고). 실제 인증 쿠키(sessionid) 존재로 판정한다.
+        cookie_names = {c["name"] for c in ctx.cookies()}
+        if "sessionid" not in cookie_names:
+            print(f"[!] 로그인이 안 된 상태입니다(sessionid 쿠키 없음, URL: {page.url}) "
+                  "- 세션을 저장하지 않습니다. 다시 실행해 로그인을 마친 뒤 Enter를 누르세요.")
             browser.close()
             return
 
