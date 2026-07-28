@@ -34,6 +34,7 @@ def _scrape_one_playwright(username):
     이 세 가지만 있으면 판정할 수 있어, 테스트에서 통째로 대체하기 쉽다.
     """
     from playwright.sync_api import sync_playwright   # 지연 import — 미설치 환경에서 모듈 로드가 죽지 않게
+    from playwright_stealth import Stealth   # navigator.webdriver 등 자동화 흔적 위장(2026-07-29 실사고)
 
     url = f"https://www.instagram.com/{username}/reels/"
     captured = []
@@ -49,6 +50,7 @@ def _scrape_one_playwright(username):
         with sync_playwright() as p:
             browser = p.chromium.launch(**launch_kw)
             ctx = browser.new_context(**ctx_kw)
+            Stealth().apply_stealth_sync(ctx)
             page = ctx.new_page()
 
             def _on_response(resp):

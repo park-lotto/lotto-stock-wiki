@@ -23,6 +23,7 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 from playwright.sync_api import sync_playwright  # noqa: E402
+from playwright_stealth import Stealth  # noqa: E402
 
 SESSION_PATH = os.path.join(os.path.dirname(__file__), "instagram_session.json")
 
@@ -31,6 +32,10 @@ def setup():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False, args=["--start-maximized"])
         ctx = browser.new_context(no_viewport=True)
+        # 2026-07-29 실사고: 스텔스 없이 로그인 시도 시 Meta가 자동화 브라우저로 감지해
+        # /auth_platform/recaptcha/로 튕겼다(navigator.webdriver 등 자동화 흔적 때문).
+        # navigator.webdriver·plugins·languages 등을 정상 브라우저처럼 위장해 재시도.
+        Stealth().apply_stealth_sync(ctx)
         page = ctx.new_page()
         page.goto("https://www.instagram.com/accounts/login/")
 
