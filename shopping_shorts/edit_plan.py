@@ -61,7 +61,7 @@ def _seg_benefits(seg):
 def _build_inventory(source_scripts):
     """소스 대본들 → (seg_map, prompt_block).
 
-    seg_map: {seg_id: {video_id, seg_id, start, end, text, scene_desc}}
+    seg_map: {seg_id: {video_id, seg_id, start, end, text, scene_desc, motion_level}}
     prompt_block: 모델 프롬프트에 넣을 세그먼트 인벤토리 텍스트(seg_id로만 지목하게)."""
     seg_map = {}
     lines = []
@@ -81,6 +81,7 @@ def _build_inventory(source_scripts):
                 "is_key": bool(seg.get("is_key")),
                 "shot_role": seg.get("shot_role") or "기타",
                 "product_benefits": _seg_benefits(seg),
+                "motion_level": seg.get("motion_level"),
             }
             _act = seg.get("action")
             _act_s = f" | 행위:{_act}" if _act else ""
@@ -88,9 +89,14 @@ def _build_inventory(source_scripts):
             # 화면→특장점 문장을 라인에 실어 라이브 scene_first 경로도 쓰게 한다(2026-07-26).
             _ben = _seg_benefits(seg)
             _ben_s = f" | 특장점:{' / '.join(_ben[:2])}" if _ben else ""
+            # motion_level은 scene_desc와 별개 필드로만 노출 — scene_desc 문자열 자체에 섞으면
+            # _claim_key(아래)의 토큰화가 오염돼 무관한 세그먼트끼리 "PEAK" 토큰을 공유해
+            # 앵커 dedup(_dedup_anchors)이 엉뚱하게 합쳐진다. 반드시 별도 suffix로만 붙인다.
+            _ml = seg.get("motion_level")
+            _ml_s = f" | 모션:{_ml}" if _ml else ""
             lines.append(
                 f"[{sid}] ({length}s) 화면:{seg.get('scene_desc','')} | 말:{seg.get('text','')}"
-                f"{_act_s}{_ben_s}"
+                f"{_act_s}{_ben_s}{_ml_s}"
             )
     return seg_map, "\n".join(lines)
 
