@@ -10,6 +10,7 @@ build_edit_plan(Gemini 콜)은 Task 4에서 추가.
 """
 
 import json
+import re
 import sys
 import time
 
@@ -803,12 +804,49 @@ _BANNED_PHRASES = (
 )
 
 
+def _common_prefix_len(a, b):
+    n = 0
+    for ca, cb in zip(a, b):
+        if ca != cb:
+            break
+        n += 1
+    return n
+
+
+def _banned_phrase_fuzzy_hit(beats, tail_tolerance=2):
+    """금지어의 활용형(어미만 바뀐 변형) 탐지 — 정확일치(아래)가 놓치는 '쾌적하게'→'쾌적한'
+    같은 경우를 잡는다(2026-07-29 실측: 실제 생성에서 새어나온 사례).
+
+    n-gram Jaccard를 먼저 검토했으나 계산해보니 부적합했다: 임계를 낮추면 '신세계'가
+    무관한 단어 '세계'에도 오탐(둘 다 겹침비율 0.5~0.67대로 비슷하거나 더 높음)하고,
+    올리면 정작 잡으려던 변형이 안 걸린다. 한국어 활용형은 어간(앞)이 고정되고 어미(뒤)만
+    바뀌므로 **접두 일치**가 원리에 더 맞다: 끝 tail_tolerance자 이내만 다르고 나머지
+    앞부분이 정확히 같은 어절을 찾는다. 공백 있는 복합구(예: '완벽 해결')는 단일 어절의
+    활용형 문제가 아니라 정확일치만으로 충분해 대상에서 뺌. 2자 이하 금지어(예: '꿀템')도
+    뺌 — 접두 1자만 요구하면 오탐이 너무 커진다(예: '꿀템' vs 무관한 '꿀피부').
+    ⚠️'꿀템'→'꿀팁' 같은 동의어(어간 자체가 다름)는 이 방식으로도 못 잡는다 — 그건
+    _BANNED_PHRASES에 직접 추가해야 한다(오탐 없이 잡을 방법이 없음)."""
+    text = " ".join((b.get("narration") or "") for b in (beats or []))
+    words = [w for w in re.split(r"[^가-힣]+", text) if w]
+    for phrase in _BANNED_PHRASES:
+        if " " in phrase or len(phrase) < 3:
+            continue
+        need = max(len(phrase) - tail_tolerance, 2)
+        for w in words:
+            if len(w) >= need and _common_prefix_len(phrase, w) >= need:
+                return True
+    return False
+
+
 def _banned_phrase_hit(beats):
     """AI/상세페이지 문투 금지어(2026-07-29 사장님 확정, 실측 A/B/C 후보가 반복 사용한 상투어)
     포함 여부. 하나라도 있으면 True → _score_candidate가 0점으로 반려한다. 프롬프트로만
-    막으면 간헐적으로 새는데(실측: 추천작이 오히려 위반) 채점에서 강제로 걸러야 새지 않는다."""
+    막으면 간헐적으로 새는데(실측: 추천작이 오히려 위반) 채점에서 강제로 걸러야 새지 않는다.
+    정확일치 + 활용형 퍼지매칭(_banned_phrase_fuzzy_hit) 둘 다 검사한다."""
     text = " ".join((b.get("narration") or "") for b in (beats or []))
-    return any(p in text for p in _BANNED_PHRASES)
+    if any(p in text for p in _BANNED_PHRASES):
+        return True
+    return _banned_phrase_fuzzy_hit(beats)
 
 
 def _length_penalty(beats, target_seconds):

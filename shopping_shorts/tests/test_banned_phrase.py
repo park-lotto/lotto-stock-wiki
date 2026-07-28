@@ -31,3 +31,21 @@ def test_score_candidate_zero_when_banned_phrase_present():
 def test_score_candidate_nonzero_for_same_shape_without_banned_phrase():
     plan = {"beats": [_beat("화장실 꿉꿉함, 이 무선 실링팬 하나로 한 방에 잡았어요.")]}
     assert edit_plan._score_candidate(plan) > 0.0
+
+
+def test_banned_phrase_hit_true_for_inflected_variant():
+    # 2026-07-29 실측: 정확일치는 '쾌적하게'만 잡고 '쾌적한'은 놓쳤다(실제 후보에서 발견).
+    beats = [_beat("공기가 도니까 이제야 쾌적한 느낌이 드네요.")]
+    assert edit_plan._banned_phrase_hit(beats) is True
+
+
+def test_banned_phrase_fuzzy_false_for_unrelated_word_sharing_suffix():
+    # '신세계'와 어간이 다른 무관한 단어('세계')까지 오탐하면 안 된다.
+    beats = [_beat("이 제품은 세계 여러 나라에서 팔린다고 하더라고요.")]
+    assert edit_plan._banned_phrase_hit(beats) is False
+
+
+def test_banned_phrase_fuzzy_false_for_short_banned_phrase_synonym():
+    # '꿀템'의 동의어('꿀팁')는 어간 자체가 달라 퍼지매칭으로도 못 잡는 게 맞다(오탐 방지 우선).
+    beats = [_beat("여름 꿀팁이 궁금하면 댓글 남겨주세요.")]
+    assert edit_plan._banned_phrase_hit(beats) is False
