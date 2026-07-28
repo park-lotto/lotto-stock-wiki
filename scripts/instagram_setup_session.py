@@ -14,8 +14,15 @@ IP 품질이 아니라 로그인 여부였다. 실제 계정으로 수동 로그
 ⚠️ 계정은 정지될 수 있다 — 재사용 가능한 부계정으로 로그인할 것(사장님 확인: 계정 여유 있음).
 """
 import os
+import sys
+import traceback
 
-from playwright.sync_api import sync_playwright
+# cmd.exe 기본 코드페이지(cp949 등)에서 이모지·화살표 출력 시 UnicodeEncodeError로
+# 스크립트가 조용히 죽고 브라우저만 자동으로 닫히는 문제 방지(2026-07-29 실사고).
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+from playwright.sync_api import sync_playwright  # noqa: E402
 
 SESSION_PATH = os.path.join(os.path.dirname(__file__), "instagram_session.json")
 
@@ -31,21 +38,26 @@ def setup():
         print("브라우저가 열렸습니다.")
         print("인스타 계정으로 로그인 후(2단계 인증 포함) Enter를 누르세요.")
         print("=" * 50)
-        input("로그인 완료 후 Enter ▶ ")
+        input("로그인 완료 후 Enter > ")
 
         page.goto("https://www.instagram.com/")
         page.wait_for_timeout(3000)
         current_url = page.url
         if "login" in current_url:
-            print(f"⚠️ 아직 로그인 화면입니다(URL: {current_url}) — 세션을 저장하지 않습니다.")
+            print(f"[!] 아직 로그인 화면입니다(URL: {current_url}) - 세션을 저장하지 않습니다.")
             browser.close()
             return
 
         ctx.storage_state(path=SESSION_PATH)
-        print(f"✅ 세션 저장 완료: {SESSION_PATH}")
+        print(f"[OK] 세션 저장 완료: {SESSION_PATH}")
         print("다음: 이 파일을 서버로 옮기고 INSTAGRAM_SESSION_PATH 환경변수로 지정하세요.")
         browser.close()
 
 
 if __name__ == "__main__":
-    setup()
+    try:
+        setup()
+    except Exception:
+        # 브라우저가 말없이 닫히는 것처럼 보이는 문제 방지 - 원인을 화면에 그대로 남긴다.
+        traceback.print_exc()
+        input("\n에러 발생. 위 내용을 확인하고 Enter로 종료 > ")
