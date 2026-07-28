@@ -96,6 +96,20 @@ _FIXTURE_HTML_LOGIN_WALL = """<html><body><script>
 window.__INITIAL_STATE__={"user":{"loggedIn":false,"notes":[[{"id":"","noteCard":{"displayTitle":"t","interactInfo":{"likedCount":"5"},"cover":{},"user":{"nickname":""},"noteId":"","xsecToken":""},"xsecToken":""}]]}};
 </script></body></html>"""
 
+# 좋아요 축약 표기("1.2만"류) fixture — 실측은 순수 숫자 문자열만 봤지만, int(raw)가 이런
+# 값에 크래시→0으로 뭉개지면 고참여 노트가 랭킹에서 유령처럼 사라진다(코드리뷰 지적). 순수
+# 숫자 케이스만 있던 기존 fixture에 축약 표기 케이스를 추가한다.
+_FIXTURE_HTML_ABBREVIATED_LIKES = """<html><body><script>
+window.__INITIAL_STATE__={"user":{"loggedIn":true,"notes":[[{"id":"6a68b29000000000010336d5","noteCard":{"displayTitle":"popular","interactInfo":{"likedCount":"1.2만"},"cover":{"infoList":[{"url":"http://img1"}]},"user":{"nickname":"n"},"noteId":"6a68b29000000000010336d5","xsecToken":"T"},"xsecToken":"T"}],[]]}};
+</script></body></html>"""
+
+# 노트 제목/닉네임 문자열 값 안에 영어 단어 "undefined"가 그대로 들어있는 fixture(해외용
+# rednote라 영어 캡션이 섞일 수 있다) — \bundefined\b 전체치환이었다면 이 문자열이 null로
+# 깨졌을 것. 콜론 바로 뒤(따옴표 없이)의 JS undefined 리터럴만 치환하는 정규식으로 고쳤다.
+_FIXTURE_HTML_UNDEFINED_IN_STRING = """<html><body><script>
+window.__INITIAL_STATE__={"user":{"loggedIn":true,"notes":[[{"id":"6a68b29000000000010336d5","noteCard":{"displayTitle":"my undefined behavior review","interactInfo":{"likedCount":"3"},"cover":{"infoList":[{"url":"http://img1"}]},"user":{"nickname":"undefined_fan"},"noteId":"6a68b29000000000010336d5","xsecToken":"T"},"xsecToken":"T"}],[]],"pwaAddDesktopPrompt":undefined}};
+</script></body></html>"""
+
 
 def test_extract_state_survives_js_undefined_literal():
     # window.__INITIAL_STATE__는 유효한 JSON이 아니라 JS 리터럴(undefined 포함)이 섞여있다.
@@ -118,3 +132,33 @@ def test_extract_notes_flattens_paginated_structure_and_maps_fields():
 def test_is_logged_in_false_flags_login_wall():
     data = xhp._extract_state_from_html(_FIXTURE_HTML_LOGIN_WALL)
     assert data["user"]["loggedIn"] is False
+
+
+def test_abbreviated_like_count_does_not_silently_collapse_to_zero():
+    # "1.2만" 같은 축약 표기는 int(raw)에 크래시한다 — None으로 구분되어야지, 그냥 0으로
+    # 뭉개져 고참여 노트가 조회수 0짜리처럼 랭킹에서 사라지면 안 된다.
+    assert xhp._num("1.2만") is None
+    assert xhp._likes_from_interact_info({"likedCount": "1.2만"}) is None
+    # 순수 숫자 문자열(실측된 실제 형식)은 여전히 정상 파싱된다(회귀 확인).
+    assert xhp._num("5") == 5
+    assert xhp._likes_from_interact_info({"likedCount": "5"}) == 5
+
+    data = xhp._extract_state_from_html(_FIXTURE_HTML_ABBREVIATED_LIKES)
+    notes = xhp._notes_from_state(data)
+    assert notes[0]["likes"] is None   # "값 없음"과 "진짜 0"을 구분 — fetch_notes에서만 0으로 접는다
+    items = xhp.fetch_notes(["https://www.rednote.com/user/profile/popular"],
+                             _scrape_one=lambda u: ([notes[0]], u, None))
+    assert items[0]["likes"] == 0   # 최종 스키마는 항상 int — None은 여기서만 0으로 접힌다
+
+
+def test_undefined_english_word_inside_string_value_is_not_corrupted():
+    # \bundefined\b 전체치환이었다면 이 타이틀/닉네임의 "undefined"까지 null로 깨졌을 것.
+    # 콜론 뒤 JS리터럴 위치의 undefined만 치환하는 정규식으로 고쳐 문자열 값은 그대로 보존된다.
+    data = xhp._extract_state_from_html(_FIXTURE_HTML_UNDEFINED_IN_STRING)
+    assert data is not None
+    notes = xhp._notes_from_state(data)
+    assert notes[0]["title"] == "my undefined behavior review"
+    note_card_user = data["user"]["notes"][0][0]["noteCard"]["user"]
+    assert note_card_user["nickname"] == "undefined_fan"
+    # 실측된 실제 undefined 리터럴(pwaAddDesktopPrompt)은 여전히 null로 정상 치환·파싱된다(회귀).
+    assert data["user"]["pwaAddDesktopPrompt"] is None

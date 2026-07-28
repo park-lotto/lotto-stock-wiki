@@ -37,8 +37,12 @@ from shopping_shorts import config
 
 LAST_TALLY = {"ok": 0, "login_wall": 0, "not_found": 0, "error": 0}
 
-_UNDEFINED_RE = re.compile(r"\bundefined\b")
 _STATE_KEY = "window.__INITIAL_STATE__="
+# JS 값 위치(콜론 뒤, 콤마/닫는괄호 앞)의 undefined 토큰만 null로 치환한다. \bundefined\b로
+# 블롭 전체를 훑으면 안 된다 — 노트 제목·닉네임 문자열 안에 영어 단어 "undefined"가 들어있어도
+# (해외용 rednote라 영어 캡션이 섞일 수 있다) 그것까지 null로 깨진다. 콜론 바로 뒤(공백만 허용,
+# 따옴표 없음)에 오는 경우만 실제 JS undefined 리터럴이다 — 문자열 값은 항상 콜론 뒤에 "가 온다.
+_UNDEFINED_VALUE_RE = re.compile(r":\s*undefined\s*([,}])")
 
 
 def _profile_username(url):
@@ -85,7 +89,7 @@ def _extract_state_from_html(html):
     if end is None:
         return None
     raw = html[start:end]
-    raw = _UNDEFINED_RE.sub("null", raw)
+    raw = _UNDEFINED_VALUE_RE.sub(r": null\1", raw)
     try:
         return json.loads(raw)
     except ValueError:
@@ -112,12 +116,23 @@ def _thumbnail_from_cover(cover):
     return cover.get("urlDefault") or cover.get("urlPre") or ""
 
 
-def _likes_from_interact_info(interact_info):
-    raw = (interact_info or {}).get("likedCount")
+def _num(v):
+    """정수 변환 가능하면 int, 아니면 None(xiaohongshu_search._num과 동일 로직 — 코드베이스
+    관례 재사용). likedCount가 항상 순수 숫자 문자열("5")이라는 보장이 없다 — 실측은 순수
+    숫자만 봤지만, 인기 노트는 "1.2만"류 축약 표기로 올 수 있다(실측된 리스크, 가정 아님:
+    이전엔 int(raw)가 그런 값에 ValueError를 던지고 그냥 0으로 뭉개져, 정작 랭킹이 가장
+    잡아야 할 고참여 노트가 likes=0으로 조용히 사라졌다). None으로 반환해 "파싱 실패(값 불명)"과
+    "실제 좋아요 0"을 구분한다 — 최종 스키마 조립 시점(fetch_notes)에서만 or 0으로 접는다."""
+    if isinstance(v, bool):
+        return None
     try:
-        return int(raw)
+        return int(float(v))
     except (TypeError, ValueError):
-        return 0
+        return None
+
+
+def _likes_from_interact_info(interact_info):
+    return _num((interact_info or {}).get("likedCount"))
 
 
 def _note_url(note_id, xsec_token):
