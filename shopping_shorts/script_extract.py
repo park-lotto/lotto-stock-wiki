@@ -163,7 +163,8 @@ def _boundary_hint(video_path):
     ffmpeg 실감지라 Gemini 자율 분할보다 세분화가 보장된다(실측: 99.8초 영상 5→18조각).
     실패(ffmpeg 오류)면 ("", [], 0.0) — 호출부가 경계 없는 기존 프롬프트로 폴백.
     cuts·fps를 같이 반환하는 이유(P2, 2026-07-29): 모션레벨 계산(_compute_motion_map)이
-    같은 detect_cuts 결과를 재사용해 ffmpeg 컷 검출을 영상당 1회로 줄인다(중복 호출 방지)."""
+    같은 detect_cuts 결과를 재사용해 detect_cuts 중복 호출을 없앤다(frame_motion은
+    모션레벨 계산에서 별도로 1회 더 돈다 — 전체 ffmpeg 비용이 0이 되는 게 아니다)."""
     try:
         fps = scene_cut.video_fps(video_path)
         cuts = scene_cut.detect_cuts(video_path, threshold=0.3)
