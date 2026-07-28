@@ -41,3 +41,10 @@ def under_view_ceiling(item, ceiling=DEFAULT_VIEW_CEILING):
     """조회수가 상한 이하여야 '아직 안 터진'. 조회수 0/미제공(CN)은 통과(상한 판단 불가)."""
     v = int(item.get("views") or 0)
     return v == 0 or v <= ceiling
+
+
+def passes_caption_clutter(item):
+    """큰 자막/텍스트 오버레이가 썸네일 대부분을 가리면 컷(video_analysis.text_level_vision 판정).
+    비전판정은 비용이 들어 상위 생존자에게만 적용되므로, 아직 판정 안 된 항목(text_level 없음)은
+    통과시킨다(과필터 방지 — duration 길이불명 통과와 동일 철학)."""
+    return item.get("text_level") != "heavy"

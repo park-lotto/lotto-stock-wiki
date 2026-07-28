@@ -235,3 +235,86 @@ def test_analyze_video_all_keys_exhausted_returns_empty(monkeypatch, tmp_path):
 
     result = video_analysis.analyze_video(video_path, caption="test")
     assert result == {"keywords": {"ko": [], "en": [], "zh": [], "ja": [], "ru": []}, "category": ""}
+
+
+def test_text_level_vision_returns_level(monkeypatch):
+    monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", ["fake-key"])
+    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["fake-key"])
+
+    class FakeModels:
+        def generate_content(self, **kw):
+            class R: text = '{"text_level": "heavy"}'
+            return R()
+
+    class FakeClient:
+        models = FakeModels()
+
+    monkeypatch.setattr(video_analysis, "_client_for_key", lambda key: FakeClient())
+
+    assert video_analysis.text_level_vision(b"fakeimg") == {"text_level": "heavy"}
+
+
+def test_text_level_vision_no_keys_returns_empty(monkeypatch):
+    monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", [])
+    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", [])
+    assert video_analysis.text_level_vision(b"fakeimg") == {}
+
+
+def test_text_level_vision_no_image_returns_empty(monkeypatch):
+    monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", ["fake-key"])
+    assert video_analysis.text_level_vision(None) == {}
+
+
+def test_text_level_vision_invalid_level_returns_empty(monkeypatch):
+    monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", ["fake-key"])
+    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["fake-key"])
+
+    class FakeModels:
+        def generate_content(self, **kw):
+            class R: text = '{"text_level": "unknown"}'
+            return R()
+
+    class FakeClient:
+        models = FakeModels()
+
+    monkeypatch.setattr(video_analysis, "_client_for_key", lambda key: FakeClient())
+    assert video_analysis.text_level_vision(b"img") == {}
+
+
+def test_fetch_thumb_bytes_uses_rednote_referer_for_xhs_cdn(monkeypatch):
+    captured = {}
+
+    class FakeResp:
+        content = b"imgdata"
+
+        def raise_for_status(self):
+            pass
+
+    def fake_get(url, timeout, headers):
+        captured["headers"] = headers
+        return FakeResp()
+
+    monkeypatch.setattr("requests.get", fake_get)
+
+    result = video_analysis.fetch_thumb_bytes("http://sns-webpic-qc.xhscdn.com/foo.jpg")
+    assert result == b"imgdata"
+    assert captured["headers"]["Referer"] == "https://www.rednote.com/"
+
+
+def test_fetch_thumb_bytes_uses_instagram_referer_by_default(monkeypatch):
+    captured = {}
+
+    class FakeResp:
+        content = b"imgdata"
+
+        def raise_for_status(self):
+            pass
+
+    def fake_get(url, timeout, headers):
+        captured["headers"] = headers
+        return FakeResp()
+
+    monkeypatch.setattr("requests.get", fake_get)
+
+    video_analysis.fetch_thumb_bytes("http://scontent.cdninstagram.com/foo.jpg")
+    assert captured["headers"]["Referer"] == "https://www.instagram.com/"
