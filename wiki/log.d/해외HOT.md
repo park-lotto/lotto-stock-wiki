@@ -8,3 +8,8 @@
 - 2026-07-26 (집→사무실): **무료 Playwright 검색크롤 실측 성공** — 틱톡·인스타(조회수까지!)·샤오홍슈 로그인없이 긁힘,
   도우인만 로그인. PoC(무료크롤36→판단5→Apify픽업5) 성공. **다음: 무료크롤 전환**(2모드=해시태그발굴+소스채널마이닝,
   매일 headless, 토큰0·Apify0). Phase0 서버 데이터센터IP 스파이크부터. 설계 `docs/superpowers/specs/2026-07-26-해외HOT-무료Playwright크롤전환-design.md`.
+- 2026-07-29 (사무실, Phase0 서버 스파이크): **샤오홍슈 ✅ 완료** — 막힌 원인이 IP가 아니라 로그인이었음
+  (도메인도 rednote.com이어야 함, xiaohongshu.com은 비중국 IP 전체 지역차단이라 집IP도 막힘). QR로그인→
+  storage_state 세션 파일(서버 저장)로 헤드리스+데이터센터IP 직결 그대로 뚫림, 프록시·집PC터널 불필요.
+  **TikTok ❌ 슬라이더캡차**로 막힘(집터널 태워도 결과 0건) — 별도 세션 인계, 당분간 Apify 유지.
+  부수발견: `instagram_playwright.py` 프록시 자격증명 임베드 버그(별도 기록). 상세 `handoff/해외HOT.md`.
