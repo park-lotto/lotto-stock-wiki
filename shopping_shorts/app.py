@@ -41,6 +41,7 @@ from shopping_shorts.video_analysis import (analyze_video, translate_keyword, cn
                                             cn_search_candidates)
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
+from shopping_shorts import coupang_partners
 from shopping_shorts import mix_pipeline
 from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, retype_mix_job,
                                           _source_video_id, resynth_tts_job, resynth_one_beat,
@@ -2146,7 +2147,57 @@ def api_mix_result(job_id: str):
         # 검수판(Task4) — scene_match.py가 채운 미채택 제안(threshold 미달)을 그대로 넘긴다.
         # {beat_idx, asset_id, score}[]. 자동배치(cutaway)는 이미 beats[].cutaway에 있다.
         "asset_suggestions": plan.get("asset_suggestions") or [],
+        # 쿠팡 연결(2026-07-28) — 이미 고른 상품이 있으면 그대로, 없으면 검색 링크만.
+        # affiliate_target(팔 제품 이름)이 뜨는 그 자리에서 바로 상품을 확정한다.
+        "product": job.get("product"),
+        "coupang_search_url": coupang_partners.search_url(plan.get("affiliate_target", "")),
+        "partners_link_page": coupang_partners.PARTNERS_LINK_PAGE,
     }
+
+
+@app.post("/api/mix/product")
+def api_mix_product(body: dict):
+    """이 영상이 연결할 쿠팡 상품 저장/해제(승인 전 수동 흐름) — 사장님이 쿠팡
+    검색결과에서 고른 상품 URL(또는 파트너스에서 만든 추적 링크)을 붙여넣는다."""
+    job_id = (body.get("job_id") or "").strip()
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id) if job_id else None
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    if body.get("clear"):
+        store.set_mix_product(job_id, None)
+        return {"ok": True, "product": None, "final_link": ""}
+    try:
+        product = coupang_partners.build_product(
+            keyword=body.get("keyword", ""), url=body.get("url", ""),
+            name=body.get("name", ""), partner_url=body.get("partner_url", ""),
+            memo=body.get("memo", ""),
+        )
+    except ValueError as e:
+        return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
+    # 등록완료 체크는 저장할 때마다 초기화하지 않는다 — 링크만 고쳤는데 "인포크에
+    # 이미 올렸다"는 사실이 지워지면 사장님이 중복 등록하게 된다.
+    prev = job.get("product") or {}
+    product["inpock_registered"] = bool(
+        body.get("inpock_registered", prev.get("inpock_registered", False)))
+    store.set_mix_product(job_id, product)
+    return {"ok": True, "product": product,
+            "final_link": coupang_partners.final_link(product),
+            "description_block": coupang_partners.description_block(product)}
+
+
+@app.get("/api/mix/product/{job_id}")
+def api_mix_product_get(job_id: str):
+    """SEO 설명란·최종렌더 단계가 "인포크에 넣을 링크"와 설명 블록을 꺼내 쓴다."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    product = job.get("product")
+    return {"ok": True, "product": product,
+            "final_link": coupang_partners.final_link(product),
+            "description_block": coupang_partners.description_block(product),
+            "partners_link_page": coupang_partners.PARTNERS_LINK_PAGE,
+            "inpock_page": coupang_partners.INPOCK_PAGE}
 
 
 @app.post("/api/mix/retype")
