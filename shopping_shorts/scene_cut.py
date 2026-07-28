@@ -185,3 +185,23 @@ def detect_cuts(path, threshold=DEFAULT_THRESHOLD, min_seconds=MIN_SECONDS):
     floor = round(min_seconds * fps)
     return [(bounds[i], bounds[i + 1]) for i in range(len(bounds) - 1)
             if bounds[i + 1] - bounds[i] >= floor]
+
+
+def map_segments_to_motion_levels(segments, cuts_labeled, fps):
+    """세그먼트 리스트 + cut_motion() 출력(컷별 {start,end,level,...} 프레임단위) + fps
+    → {seg_id: level|None}. 교집합(프레임 겹침) 최대인 컷의 level을 채택.
+    겹치는 컷이 없으면(seg가 컷 범위 밖) None. 순수 함수(테스트 대상)."""
+    out = {}
+    for seg in segments:
+        sid = seg.get("seg_id")
+        s_a = seg.get("start", 0.0) * fps
+        s_b = seg.get("end", 0.0) * fps
+        best_level, best_overlap = None, 0.0
+        for cut in cuts_labeled:
+            c_a, c_b = cut.get("start", 0), cut.get("end", 0)
+            overlap = min(s_b, c_b) - max(s_a, c_a)
+            if overlap > best_overlap:
+                best_overlap = overlap
+                best_level = cut.get("level")
+        out[sid] = best_level
+    return out
