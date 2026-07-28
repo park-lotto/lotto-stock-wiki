@@ -89,15 +89,61 @@ def test_boundary_hint_formats_seconds(monkeypatch):
     monkeypatch.setattr(script_extract.scene_cut, "video_fps", lambda p: 30.0)
     monkeypatch.setattr(script_extract.scene_cut, "detect_cuts",
                         lambda p, threshold=0.3: [(0, 108), (108, 255), (255, 363)])
-    hint = script_extract._boundary_hint("dummy.mp4")
+    hint, cuts, fps = script_extract._boundary_hint("dummy.mp4")
     assert "3.6" in hint and "8.5" in hint   # 108/30=3.6, 255/30=8.5
+    assert cuts == [(0, 108), (108, 255), (255, 363)]
+    assert fps == 30.0
 
 
 def test_boundary_hint_fail_open(monkeypatch):
     from shopping_shorts import script_extract
     def boom(*a, **k): raise RuntimeError("ffmpeg 없음")
     monkeypatch.setattr(script_extract.scene_cut, "detect_cuts", boom)
-    assert script_extract._boundary_hint("dummy.mp4") == ""   # 실패=빈 문자열
+    hint, cuts, fps = script_extract._boundary_hint("dummy.mp4")
+    assert hint == "" and cuts == [] and fps == 0.0
+
+
+def test_extract_script_computes_motion_map(monkeypatch):
+    from shopping_shorts import script_extract
+
+    class FakeResp:
+        text = ('{"segments": [{"start": 0, "end": 1, "text": "훅", "scene_desc": "손"}, '
+                '{"start": 1, "end": 3, "text": "본문", "scene_desc": "제품"}], '
+                '"full_text": "훅본문"}')
+
+    class FakeFiles:
+        def upload(self, **k): return object()
+        def get(self, **k):
+            class S: name = "ACTIVE"
+            class F:
+                state = S()
+                name = "f"
+            return F()
+        def delete(self, **k): pass
+
+    class FakeModels:
+        def generate_content(self, **k): return FakeResp()
+
+    class FakeClient:
+        files = FakeFiles()
+        models = FakeModels()
+
+    monkeypatch.setattr(script_extract, "SHORTS_GEMINI_KEYS", ["dummy"])
+    monkeypatch.setattr(script_extract.comment_gen, "_current_key_and_idx", lambda: ("k", 0))
+    monkeypatch.setattr(script_extract.comment_gen, "_client_for_key", lambda key: FakeClient())
+    monkeypatch.setattr(script_extract, "_wait_until_active", lambda c, f: f)
+    monkeypatch.setattr("builtins.open", lambda *a, **k: io.BytesIO(b"fake"))
+
+    # scene_cut(ffmpeg) 3함수 모킹: 컷 2개(0~30프레임 LOW, 30~90프레임 PEAK), fps=30
+    monkeypatch.setattr(script_extract.scene_cut, "video_fps", lambda p: 30.0)
+    monkeypatch.setattr(script_extract.scene_cut, "detect_cuts", lambda p, **kw: [(0, 30), (30, 90)])
+    monkeypatch.setattr(script_extract.scene_cut, "frame_motion", lambda p, **kw: {0: 1.0, 30: 99.0, 60: 40.0})
+
+    out = script_extract.extract_script("/fake.mp4", "vidX", caption="cap")
+    # seg0[0,1)→프레임0~30 → 컷(0,30) 전체겹침 vs 컷(30,90) 0겹침 → LOW
+    assert out["segments"][0]["motion_level"] == "LOW"
+    # seg1[1,3)→프레임30~90 → 컷(30,90)과 전체겹침 → PEAK
+    assert out["segments"][1]["motion_level"] == "PEAK"
 
 
 def test_prompt_scene_desc_accuracy_guard():

@@ -159,18 +159,38 @@ def _assign_seg_ids(video_id, raw_segments, motion_map=None):
 
 
 def _boundary_hint(video_path):
-    """scene_cut 실제 장면전환 경계 → "약 3.6초, 8.5초, …" 힌트 문자열.
+    """scene_cut 실제 장면전환 경계 → (힌트문자열, cuts, fps).
     ffmpeg 실감지라 Gemini 자율 분할보다 세분화가 보장된다(실측: 99.8초 영상 5→18조각).
-    실패(ffmpeg 오류·컷 0/1개)면 빈 문자열 — 호출부가 경계 없는 기존 프롬프트로 폴백."""
+    실패(ffmpeg 오류)면 ("", [], 0.0) — 호출부가 경계 없는 기존 프롬프트로 폴백.
+    cuts·fps를 같이 반환하는 이유(P2, 2026-07-29): 모션레벨 계산(_compute_motion_map)이
+    같은 detect_cuts 결과를 재사용해 ffmpeg 컷 검출을 영상당 1회로 줄인다(중복 호출 방지)."""
     try:
         fps = scene_cut.video_fps(video_path)
         cuts = scene_cut.detect_cuts(video_path, threshold=0.3)
     except Exception:
-        return ""
+        return "", [], 0.0
     if not fps or len(cuts) < 2:
-        return ""
+        return "", cuts, fps
     secs = [round(a / fps, 1) for a, _ in cuts if a > 0]
-    return ", ".join(f"{s}초" for s in secs)
+    return ", ".join(f"{s}초" for s in secs), cuts, fps
+
+
+def _compute_motion_map(video_path, cuts, fps, raw_segments, video_id):
+    """detect_cuts 결과(cuts,fps 재사용) + 추출된 세그먼트(아직 seg_id 없음) + video_path
+    → {seg_id: level|None}. ffmpeg로 프레임모션을 재고 seg별 교집합 최대 컷의 레벨을 매핑.
+    cuts가 비었거나 어떤 예외든 fail-open(빈 dict, 전부 motion_level=None)."""
+    try:
+        if not cuts or not fps:
+            return {}
+        motion = scene_cut.frame_motion(video_path)
+        if not motion:
+            return {}
+        cuts_labeled = scene_cut.cut_motion(cuts, motion)
+        tmp_segs = [{"seg_id": f"{video_id}-{n}", "start": s.get("start", 0.0), "end": s.get("end", 0.0)}
+                    for n, s in enumerate(raw_segments)]
+        return scene_cut.map_segments_to_motion_levels(tmp_segs, cuts_labeled, fps)
+    except Exception:
+        return {}
 
 
 def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=8):
@@ -188,8 +208,9 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
     다른 모델이라 앞 모델의 혼잡과 무관하다."""
     if not SHORTS_GEMINI_KEYS:
         raise RuntimeError("script_extract: SHORTS_GEMINI_KEY가 설정되지 않았습니다")
+    boundary_hint, _cuts, _fps = _boundary_hint(video_path)
     prompt = _PROMPT.format(caption=caption or "(캡션 없음)",
-                            boundaries=_boundary_hint(video_path) or "(감지 실패 — 화면·주제 변화로 판단)")
+                            boundaries=boundary_hint or "(감지 실패 — 화면·주제 변화로 판단)")
     model = _MODEL
     primary_503 = 0
 
@@ -212,7 +233,8 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 ),
             )
             data = json.loads(resp.text)
-            segments = _assign_seg_ids(video_id, data.get("segments", []))
+            motion_map = _compute_motion_map(video_path, _cuts, _fps, data.get("segments", []), video_id)
+            segments = _assign_seg_ids(video_id, data.get("segments", []), motion_map=motion_map)
             # 소스 단위 특장점: 모델의 최상위 요약을 우선하고, 없으면 세그별 집계로 폴백.
             # 무자막 영상(full_text 0자)이 대본 생성에서 통째로 빠지던 것을 막는 재료다.
             benefits = _norm_benefits(data.get("product_benefits")) or _collect_benefits(segments)
