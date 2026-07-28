@@ -76,6 +76,99 @@ def extract_poster(path, frame_no, fps, out_path):
     return out_path if out_path.exists() else None
 
 
+# ── 모션 레벨(P1, 2026-07-28) ─────────────────────────────────────────
+# 컷별 시간차 모션에너지를 재고, 상대 컷오프로 LOW/MED/PEAK를 매긴다. PEAK 컷은
+# 3초 훅 후보(In-Point 자동)로 쓴다. 절대값이 아니라 '이 영상 안에서의 상대'로 보는
+# 이유: 조명·해상도·코덱에 따라 절대 에너지가 크게 달라 고정 임계는 못 쓴다.
+_YDIF_RE = re.compile(r"lavfi\.signalstats\.YDIF=([\d.]+)")
+
+
+def _percentile(sorted_vals, q):
+    """0~1 분위수(선형보간). sorted_vals는 오름차순, 비어있으면 0.0."""
+    if not sorted_vals:
+        return 0.0
+    if len(sorted_vals) == 1:
+        return float(sorted_vals[0])
+    pos = q * (len(sorted_vals) - 1)
+    lo = int(pos)
+    frac = pos - lo
+    hi = min(lo + 1, len(sorted_vals) - 1)
+    return float(sorted_vals[lo]) * (1 - frac) + float(sorted_vals[hi]) * frac
+
+
+def motion_thresholds(values, lo_q=0.5, hi_q=0.85):
+    """프레임 모션값들 → (lo, hi) 컷오프. lo 미만=LOW, hi 이상=PEAK, 사이=MED.
+    분포 기반(분위수)이라 영상마다 자동 적응. 순수 함수(테스트 대상)."""
+    s = sorted(float(v) for v in values)
+    return _percentile(s, lo_q), _percentile(s, hi_q)
+
+
+def level_of(energy, lo, hi):
+    """모션값 하나 → 'LOW'|'MED'|'PEAK'. 순수 함수."""
+    if energy >= hi:
+        return "PEAK"
+    if energy < lo:
+        return "LOW"
+    return "MED"
+
+
+def cut_motion(cuts, motion, lo_q=0.5, hi_q=0.85):
+    """컷 목록 + {frame_no: energy} → 컷별 {level, peak_frame, energy}.
+    컷 대표값=구간 내 최대 에너지(그 컷이 얼마나 격한가), peak_frame=최대 프레임.
+    임계는 전체 프레임 분포에서 한 번만 잡아 컷끼리 상대비교. 순수 함수(테스트 대상)."""
+    lo, hi = motion_thresholds(motion.values(), lo_q, hi_q)
+    out = []
+    for (a, b) in cuts:
+        frames = [(f, motion[f]) for f in motion if a <= f < b]
+        if frames:
+            peak_frame, peak_e = max(frames, key=lambda x: x[1])
+        else:
+            peak_frame, peak_e = a, 0.0
+        out.append({"start": a, "end": b, "peak_frame": peak_frame,
+                    "energy": round(peak_e, 3), "level": level_of(peak_e, lo, hi)})
+    return out
+
+
+def frame_motion(path, ss=None, to=None):
+    """ffmpeg 1패스로 프레임별 시간차 모션(signalstats YDIF) → {frame_no: energy}.
+    YDIF=인접 프레임 루마 평균차 = 화면이 얼마나 바뀌었나(모션 프록시). Gemini/DB 무관 순수 IO.
+    ss/to(초)를 주면 그 구간만 분석(비용 한정, P1 지연계산용). frame_no는 ss 기준 0부터."""
+    cmd = ["ffmpeg", "-v", "info"]
+    if ss is not None:
+        cmd += ["-ss", f"{max(0.0, ss):.3f}"]
+    if to is not None:
+        cmd += ["-to", f"{to:.3f}"]
+    cmd += ["-i", str(path),
+            "-vf", "signalstats,metadata=print:key=lavfi.signalstats.YDIF",
+            "-vsync", "vfr", "-f", "null", "-"]
+    r = subprocess.run(cmd, capture_output=True, text=True, check=False,
+                       stdin=subprocess.DEVNULL)
+    out = {}
+    frame_no = 0
+    for m in _YDIF_RE.findall(r.stderr):
+        out[frame_no] = float(m)
+        frame_no += 1
+    return out
+
+
+def peak_time_in_window(path, start, end, min_tail=1.0):
+    """[start,end) 구간에서 모션 피크(YDIF 최대) 시각(초, 소스 절대)을 찾는다.
+    3초 훅 자동 In-Point용. 피크가 너무 끝이라 남는 재생이 min_tail보다 짧으면 그만큼 당긴다.
+    윈도우가 짧거나(≤min_tail) 프레임이 없으면 start 그대로. 실패해도 예외 없이 start 반환."""
+    try:
+        if end - start <= min_tail:
+            return start
+        fps = video_fps(path)
+        motion = frame_motion(path, ss=start, to=end)   # frame_no는 start 기준 0부터
+        if not motion:
+            return start
+        peak_local = max(motion, key=lambda f: motion[f])   # 프레임 번호(로컬)
+        peak_t = start + peak_local / fps
+        return max(start, min(peak_t, end - min_tail))
+    except Exception:
+        return start
+
+
 def detect_cuts(path, threshold=DEFAULT_THRESHOLD, min_seconds=MIN_SECONDS):
     """컷 경계를 프레임 번호로. 반환 (start_frame, end_frame) — end는 미포함.
 

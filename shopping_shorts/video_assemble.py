@@ -696,11 +696,58 @@ def _extend_with_frozen_motion(sub_path, play_out, freeze, out_path):
     return out_path
 
 
+# ── 3초 훅 In-Point 자동(P1, 2026-07-28) ──────────────────────────────
+_MIN_HOOK_TAIL = 1.0  # 훅 클립이 최소 이만큼은 남아야(피크가 끝이라도) — 잘린 훅 방지
+
+
+def pick_hook_start(orig_start, orig_end, base_time, delta=0.0, min_tail=_MIN_HOOK_TAIL):
+    """훅 시작점 결정(순수·테스트대상). base_time(자동 모션피크)에 delta(초, UI가 ±0.2씩
+    누적한 미세조정)를 더해 [orig_start, orig_end-min_tail]로 클램프. base_time None이면
+    orig_start 기준. 윈도우가 좁으면(≤min_tail) orig_start."""
+    if orig_end - orig_start <= min_tail:
+        return orig_start
+    base = base_time if base_time is not None else orig_start
+    return max(orig_start, min(base + (delta or 0.0), orig_end - min_tail))
+
+
+def _hook_delta(work):
+    """work.state의 훅 미세조정 오프셋(초). UI [◀0.2s][0.2s▶]가 누적. 없으면 0.0."""
+    try:
+        st = work.get("state") if isinstance(work, dict) and "state" in work else work
+        v = (st or {}).get("hook_inpoint_delta")
+        return float(v) if v is not None else 0.0
+    except Exception:
+        return 0.0
+
+
+def _apply_hook_inpoint(edit_plan, source_video_paths, work):
+    """훅 비트(beats[0]) primary.start를 모션 피크(자동) + UI delta로 이동(P1).
+    소스 밖/윈도우 좁음/실패 시 무변경(렌더 안 죽인다). peak_at·hook_delta를 primary에 실어
+    프리뷰 UI가 현재 시작점·미세조정을 표시·조절하게 한다."""
+    try:
+        from shopping_shorts import scene_cut as _sc
+        beats = edit_plan.get("beats") or []
+        if not beats:
+            return
+        prim = (beats[0] or {}).get("primary")
+        if not prim or prim.get("video_id") not in source_video_paths:
+            return
+        a, b = float(prim["start"]), float(prim["end"])
+        peak_t = _sc.peak_time_in_window(source_video_paths[prim["video_id"]], a, b)
+        delta = _hook_delta(work)
+        prim["hook_peak_at"] = round(peak_t, 3)
+        prim["hook_delta"] = round(delta, 3)
+        prim["start"] = pick_hook_start(a, b, peak_t, delta)
+    except Exception:
+        pass
+
+
 def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=None):
     """각 비트를 [소스영상+TTS]로 렌더(우리 자막 없음) → concat → mix_raw.mp4 경로.
     자막을 굽지 않으므로 이후 VMake 자막제거가 우리 자막을 지우지 않는다.
     -vf는 우리 자막 vf가 아니라 규격 통일용 base(scale/crop)만 쓴다.
     반중복탐지 회피(항상 자동): 훅·반전 비트는 켄번즈 줌, 나머지는 기본 크롭+줌."""
+    _apply_hook_inpoint(edit_plan, source_video_paths, work)  # 훅 시작점 자동/오버라이드(P1)
     important = _important_beat_indices(edit_plan["beats"])
     beat_clips = []
     # 소스 실제 길이 캐시(2026-07-19). 약한 매칭이 소스 밖 구간(예: 60초 릴에 155초)을 잡으면
