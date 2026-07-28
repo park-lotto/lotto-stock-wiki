@@ -18,7 +18,24 @@
 
 ## ⏭ 지금 막힌 곳 — 여기서 이어서 시작하면 된다
 
-**인스타 Playwright 전환이 프록시에서 막혔다.**
+**2026-07-29 갱신 — B안(세션 로그인) 코드 반영, 실측 대기 중.**
+
+같은 날 샤오홍슈(rednote)에서 "막힌 건 IP가 아니라 로그인 여부"가 실측 확인돼([[project_해외HOT_발굴]])
+인스타에도 같은 패턴을 이식했다(계정 여유 있음 확인, 사장님 승인 2026-07-29).
+
+- `config.INSTAGRAM_SESSION_PATH` 신규, `instagram_playwright.py`가 세션 있으면 프록시보다
+  우선 사용 (`docs/superpowers/specs/2026-07-29-인스타-세션로그인-B안-design.md`)
+- `scripts/instagram_setup_session.py` 신규 — 로컬 수동 로그인 → `storage_state` 저장
+- **아직 실제 로그인·1채널 스파이크 검증 전.** 다음 사람(또는 이 세션 계속)이 할 일:
+  1. 로컬에서 `python scripts/instagram_setup_session.py` 실행 → 부계정으로 수동 로그인 →
+     `scripts/instagram_session.json` 생성 확인
+  2. 서버로 옮기기(`scp ... ubuntu@3.39.179.148:/home/ubuntu/instagram_session.json`, 600권한)
+  3. 서버에서 `INSTAGRAM_SESSION_PATH=/home/ubuntu/instagram_session.json`으로 1채널 테스트
+     (10채널 실측 문서의 재시도 명령 패턴과 동일하게 `_scrape_one_playwright` 직접 호출)
+  4. `ok` 나오면 10채널 게이트 → 8/10 이상이면 `INSTAGRAM_SCRAPER=playwright` 전환
+  5. 안 되면(인스타는 자동화 탐지가 더 세서 다를 수 있음) B안도 폐기 → Apify 유지로 확정
+
+**구 A안(프록시) 기록은 아래 유지 — 참고용, 우선순위는 B안이 먼저.**
 
 서버 준비는 전부 끝났다:
 - playwright 1.61.0 + 크로미움 설치 완료, `example.com` 접속으로 구동 확인 ✅

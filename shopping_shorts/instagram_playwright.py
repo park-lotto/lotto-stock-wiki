@@ -11,6 +11,8 @@ service.py는 어느 쪽을 쓰든 하류가 무변경이다.
 
 테스트는 _scrape_one을 주입해 브라우저 없이 돈다(test_instagram_playwright.py).
 """
+import os
+
 from shopping_shorts import config
 from shopping_shorts.instagram_parse import (
     classify_channel_result, extract_reel_nodes, parse_reel_node,
@@ -37,7 +39,11 @@ def _scrape_one_playwright(username):
     captured = []
     launch_kw = {"headless": True}
     ctx_kw = {}
-    if config.INSTAGRAM_PROXY:
+    # 세션(storage_state)이 있으면 그걸로 로그인 상태 직결한다 — 샤오홍슈에서 검증된 대로
+    # 프록시 없이도 되므로 프록시보다 우선한다. 없으면 기존 경로(프록시/직결)로 폴백.
+    if config.INSTAGRAM_SESSION_PATH and os.path.exists(config.INSTAGRAM_SESSION_PATH):
+        ctx_kw["storage_state"] = config.INSTAGRAM_SESSION_PATH
+    elif config.INSTAGRAM_PROXY:
         ctx_kw["proxy"] = {"server": config.INSTAGRAM_PROXY}
     try:
         with sync_playwright() as p:

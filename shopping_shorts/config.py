@@ -66,6 +66,14 @@ INSTAGRAM_SCRAPER = os.getenv("INSTAGRAM_SCRAPER", "apify")   # apify | playwrig
 # 미설정이면 직결(로컬 개발용).
 INSTAGRAM_PROXY = os.getenv("INSTAGRAM_PROXY", "")
 
+# 로그인 세션 쿠키 파일(Playwright storage_state) — 2026-07-29 샤오홍슈(rednote)에서
+# 검증된 B안: 서버 IP 차단의 실제 원인이 IP 품질이 아니라 로그인 여부였다(10채널 게이트에서
+# 비로그인 접근이 4.5초 만에 로그인벽으로 즉시 튕김). 세션이 있으면 프록시 없이 데이터센터
+# IP 직결로도 통과하는지가 이 파일의 존재 여부로 갈린다. scripts/instagram_setup_session.py로
+# 로컬에서 수동 로그인 후 생성 → 서버로 옮긴다(git 비추적, 600권한).
+# 없으면 기존 경로(프록시 또는 직결)로 조용히 폴백한다.
+INSTAGRAM_SESSION_PATH = os.getenv("INSTAGRAM_SESSION_PATH", "")
+
 # 동시에 여는 브라우저 컨텍스트 수. 크로미움은 메모리를 먹으므로 서버 여유를 보고 조정한다.
 INSTAGRAM_PW_CONTEXTS = int(os.getenv("INSTAGRAM_PW_CONTEXTS", "5"))
 # 채널 1개 처리 상한(ms). 넘으면 그 채널만 error로 접고 다음으로 간다(전체가 죽지 않게).
