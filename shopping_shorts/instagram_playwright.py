@@ -73,8 +73,9 @@ def _scrape_one_playwright(username):
             page.wait_for_timeout(2500)          # 릴스 목록 XHR이 도착할 여유
             final_url = page.url
 
-            # 목록 응답(clips_connection)엔 taken_at·video_versions가 없다(2026-07-29 실측).
-            # 실제로 쓰일 상위 N개만 pk로 media info REST를 한 번씩 더 불러 보충한다.
+            # 목록 응답(clips_connection)엔 taken_at·video_versions·caption이 없다
+            # (2026-07-29 실측). 실제로 쓰일 상위 N개만 pk로 media info REST를 한 번씩
+            # 더 불러 보충한다.
             for media in captured[:config.RESULTS_PER_CHANNEL]:
                 if "taken_at" in media:
                     continue
@@ -85,6 +86,7 @@ def _scrape_one_playwright(username):
                 if detail:
                     media["taken_at"] = detail.get("taken_at")
                     media["video_versions"] = detail.get("video_versions")
+                    media["caption"] = detail.get("caption")
 
             ctx.close()
             browser.close()
