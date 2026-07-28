@@ -1105,10 +1105,13 @@ async function _pollCollect(jobId){
     if (d && d.result && d.result.phase === 'collecting') {
       const t = d.result.tally || {};
       const blocked = (t.login_wall || 0) + (t.error || 0);
-      const el = document.getElementById('collectProgress');
-      if (el) {
-        el.style.display = '';
-        el.textContent = `채널 ${d.result.done}/${d.result.total} · ${d.result.items_so_far}건 수집`
+      // ★2026-07-28 수정: #collectProgress는 cpSpin/cpMsg/cpSub/cpRetry 자식 4개를 가진
+      // 컨테이너다 — 여기에 textContent를 직접 쓰면 자식이 전부 지워져 이후 _cpDone/_cpFail이
+      // e.spin.style.display에서 null 참조 에러를 낸다. cpMsg 자식에만 써야 한다.
+      const e = _cpEls();
+      if (e.box) {
+        e.box.style.display = 'flex';
+        e.msg.textContent = `채널 ${d.result.done}/${d.result.total} · ${d.result.items_so_far}건 수집`
           + (blocked ? ` · 건너뜀 ${blocked}` : '');
       }
     }

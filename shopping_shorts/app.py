@@ -273,9 +273,19 @@ def _run_collect_job(job_id, platform, category, limit, cid):
             pass
 
 
-# Playwright 경로는 채널마다 진행률을 써서 updated_at이 갱신된다 — 진짜로 멈춘 경우만
-# stale로 잡히게 짧게 둔다(2026-07-28). Apify 시절엔 갱신이 아예 없어 60분이 필요했다.
-_COLLECT_STALE_MIN = 15
+# playwright 경로는 채널마다 진행률을 써서 updated_at이 갱신된다 — 진짜로 멈춘 경우만
+# stale로 잡히게 짧게 둔다(2026-07-28). apify 경로는 on_progress 콜백이 없어
+# update_collect_job(done)이 완료 시점까지 한 번도 안 불린다 — updated_at이 생성 시각에
+# 고정되므로 짧은 임계값을 쓰면 정상 진행 중인 수집(실측 28분 소요)이 중단으로 오판된다.
+# 반드시 config.INSTAGRAM_SCRAPER 값으로 분기할 것 — 하나로 합치면 이 회귀가 재발한다.
+_COLLECT_STALE_MIN_PLAYWRIGHT = 15
+_COLLECT_STALE_MIN_APIFY = 60
+
+
+def _collect_stale_min() -> int:
+    if config.INSTAGRAM_SCRAPER == "playwright":
+        return _COLLECT_STALE_MIN_PLAYWRIGHT
+    return _COLLECT_STALE_MIN_APIFY
 
 
 @app.get("/api/collect/status/{job_id}")
@@ -291,7 +301,7 @@ def api_collect_status(job_id: str):
                        - datetime.fromisoformat(job["updated_at"])).total_seconds() / 60
         except Exception:
             age_min = 0
-        if age_min > _COLLECT_STALE_MIN:
+        if age_min > _collect_stale_min():
             return {"ok": True, "status": "error",
                     "error": "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."}
         # ★진행률(2026-07-28): result_json에 채널마다 쓰인 phase 페이로드를 running 응답에도

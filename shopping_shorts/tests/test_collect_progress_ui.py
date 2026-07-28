@@ -17,3 +17,17 @@ def test_ui_shows_done_over_total():
     # "result.total"로 맞췄다(검증 의도=진행 카운트 렌더링은 그대로 유지).
     assert "items_so_far" in HTML and "result.total" in HTML, \
         "진행 카운트(37/200 · N건)를 화면에 안 그린다"
+
+
+def test_progress_does_not_overwrite_collect_progress_container():
+    """★2026-07-28 회귀: #collectProgress는 cpSpin/cpMsg/cpSub/cpRetry 자식 4개를 가진
+    컨테이너다. textContent/innerHTML을 여기 직접 대입하면 자식이 전부 삭제돼
+    이후 _cpDone/_cpFail이 e.spin.style.display에서 null 참조로 죽는다.
+    진행률은 반드시 자식(cpMsg 등)에 써야 한다.
+    """
+    import re
+    for bad in (
+        r"getElementById\(['\"]collectProgress['\"]\)\s*\.\s*textContent\s*=",
+        r"getElementById\(['\"]collectProgress['\"]\)\s*\.\s*innerHTML\s*=",
+    ):
+        assert not re.search(bad, HTML), f"collectProgress 컨테이너에 직접 대입: {bad}"
