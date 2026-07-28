@@ -54,6 +54,23 @@ APIFY_TOKENS = [
 ]
 APIFY_ACTOR = "apify~instagram-reel-scraper"  # actor id (~ 형식)
 
+# ── 인스타 수집 경로 선택(2026-07-28) ──
+# Apify는 성공해도 28분이 걸리고 403 Forbidden으로 통째로 죽는 사례가 이틀 새 2건이었다
+# (서버 collect_jobs 실측). Playwright + 주거용 프록시로 대체하되, 라이브 대시보드가
+# 인스타 수집에 묶여 있으므로 **환경변수 하나로 즉시 되돌릴 수 있게** 둔다.
+# ★기본값은 apify다 — 검증 전 병합만으로 라이브 경로가 바뀌면 안 된다.
+INSTAGRAM_SCRAPER = os.getenv("INSTAGRAM_SCRAPER", "apify")   # apify | playwright
+
+# 인스타 전용 주거용 프록시(형식은 REDDIT_PROXY와 동일: http://user:pass@host:port).
+# 서버 데이터센터 IP로 직접 긁으면 인스타가 막는다 — Reddit이 429로 막혔던 것과 같은 이유.
+# 미설정이면 직결(로컬 개발용).
+INSTAGRAM_PROXY = os.getenv("INSTAGRAM_PROXY", "")
+
+# 동시에 여는 브라우저 컨텍스트 수. 크로미움은 메모리를 먹으므로 서버 여유를 보고 조정한다.
+INSTAGRAM_PW_CONTEXTS = int(os.getenv("INSTAGRAM_PW_CONTEXTS", "5"))
+# 채널 1개 처리 상한(ms). 넘으면 그 채널만 error로 접고 다음으로 간다(전체가 죽지 않게).
+INSTAGRAM_PW_TIMEOUT_MS = int(os.getenv("INSTAGRAM_PW_TIMEOUT_MS", "20000"))
+
 # 댓글 draft 생성 전용 Gemini 키 풀 — 주식위키 본체(pipeline.atoms.key_vault)의
 # 공유 풀과 완전히 분리(2026-07-09). 공유 풀은 인제스트·브리핑 등 다른 작업과
 # 하루 종일 같이 소모돼 예고 없이 소진되는 사고가 있었음 — 쇼핑쇼츠는 이 전용
