@@ -2526,9 +2526,12 @@ function _renderMixReviewBody(d){
   // 그린다(2026-07-23 사장님: "넘어왔는데 랜더하는 게 없다" — 버튼이 접힌 details에 묻혀 있었다).
   const _cta=document.getElementById('mixPreviewCta');
   // 🎯 3초 훅 미세조정(P1): 백엔드가 훅 시작을 모션 피크로 자동 이동한다. 여기서 0.2초씩 앞/뒤로 override.
+  // ★라벨은 인라인 계산(외부함수 _fmtHookDelta 의존 금지 — 리프레시 회귀테스트가 함수 부분집합만 평가).
+  const _hd=(STATE.hook_inpoint_delta||0);
+  const _hdLabel=_hd>0?('+'+_hd.toFixed(1)+'s'):(_hd<0?(_hd.toFixed(1)+'s'):'0.0s');
   const _hookAdj='<div id="hookAdjust" style="margin-top:8px;font-size:13px;opacity:.92">🎯 훅 시작점: '
     +'<button type="button" onclick="nudgeHook(-1)" style="padding:3px 9px;margin:0 3px">◀ 0.2초</button>'
-    +'<span id="hookDeltaLabel" style="display:inline-block;min-width:44px;text-align:center;font-weight:600">'+_fmtHookDelta()+'</span>'
+    +'<span id="hookDeltaLabel" style="display:inline-block;min-width:44px;text-align:center;font-weight:600">'+_hdLabel+'</span>'
     +'<button type="button" onclick="nudgeHook(1)" style="padding:3px 9px;margin:0 3px">0.2초 ▶</button>'
     +'<span style="opacity:.6"> (모션 피크 자동, 조정 후 다시 미리보기)</span></div>';
   if(_cta) _cta.innerHTML='<button id="btnPreview" class="btn-next" style="padding:8px 16px" onclick="startPreview()">🎬 대본 × 영상 믹스 미리보기</button>'+_hookAdj
