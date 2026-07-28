@@ -190,7 +190,9 @@ def detect_cuts(path, threshold=DEFAULT_THRESHOLD, min_seconds=MIN_SECONDS):
 def map_segments_to_motion_levels(segments, cuts_labeled, fps):
     """세그먼트 리스트 + cut_motion() 출력(컷별 {start,end,level,...} 프레임단위) + fps
     → {seg_id: level|None}. 교집합(프레임 겹침) 최대인 컷의 level을 채택.
-    겹치는 컷이 없으면(seg가 컷 범위 밖) None. 순수 함수(테스트 대상)."""
+    겹치는 컷이 없으면(seg가 컷 범위 밖) None. 동률(overlap 동일)이면 cuts_labeled에서
+    먼저 나온 컷(보통 시간순 앞쪽)을 채택. 호출자는 seg_id가 유일함을 보장해야 한다
+    (중복 seg_id는 뒤 항목이 덮어씀). 순수 함수(테스트 대상)."""
     out = {}
     for seg in segments:
         sid = seg.get("seg_id")
