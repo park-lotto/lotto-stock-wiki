@@ -134,6 +134,60 @@ def test_collect_category_uses_apify_by_default(monkeypatch):
     assert called["kw"] == "厨房神器"
 
 
+def test_annotate_text_level_marks_items_up_to_cap(monkeypatch):
+    monkeypatch.setattr(job.video_analysis, "fetch_thumb_bytes", lambda url, timeout=15: b"img")
+    calls = []
+
+    def fake_vision(img):
+        calls.append(1)
+        return {"text_level": "heavy"}
+
+    monkeypatch.setattr(job.video_analysis, "text_level_vision", fake_vision)
+
+    items = [{"shortcode": f"p{i}", "thumbnail": "http://x"} for i in range(5)]
+    job._annotate_text_level(items, cap=2)
+
+    assert len(calls) == 2                          # 상한만큼만 비전판정
+    assert items[0]["text_level"] == "heavy"
+    assert "text_level" not in items[4]              # 상한 초과분은 판정 안 됨(통과 취급)
+
+
+def test_collect_category_filters_out_heavy_text_thumbnails(monkeypatch):
+    monkeypatch.setattr(job.douyin_search, "search_full", lambda kw, max_results=40: [])
+    monkeypatch.setattr(job.xiaohongshu_search, "search_full", lambda kw, max_results=40: [])
+
+    def fake_tt(kw, max_results=40):
+        return [
+            {"video_id": "clean1", "title": "kitchen gadget", "published_at": "2026-07-25T12:00:00Z",
+             "views": 1000, "likes": 10, "comments": 1, "collects": 0, "shares": 0,
+             "channel_title": "a", "thumbnail": "http://x/clean.jpg", "url": "https://tt/clean",
+             "media_platform": "tiktok"},
+            {"video_id": "cluttered1", "title": "kitchen gadget 2", "published_at": "2026-07-25T12:00:00Z",
+             "views": 1000, "likes": 10, "comments": 1, "collects": 0, "shares": 0,
+             "channel_title": "b", "thumbnail": "http://x/cluttered.jpg", "url": "https://tt/cluttered",
+             "media_platform": "tiktok"},
+        ]
+    monkeypatch.setattr(job.tiktok_search, "search_full", fake_tt)
+    monkeypatch.setattr(job.video_analysis, "fetch_thumb_bytes", lambda url, timeout=15: url.encode())
+
+    def fake_vision(img):
+        return {"text_level": "heavy" if b"cluttered" in img else "none"}
+
+    monkeypatch.setattr(job.video_analysis, "text_level_vision", fake_vision)
+
+    class FakeStore:
+        def prev_base_platform(self, *a, **k):
+            return None
+
+        def prev_delta_platform(self, *a, **k):
+            return None
+
+    items = job._collect_category("주방/레시피", {"tiktok": ["kitchen"], "cn": []}, FakeStore())
+
+    shortcodes = {i["shortcode"] for i in items}
+    assert shortcodes == {"clean1"}                  # 자막 많은 cluttered1은 걸러짐
+
+
 def test_add_pickup_saves_to_pickup_category(monkeypatch, tmp_path):
     now = datetime(2026, 7, 26, 12, 0, tzinfo=timezone.utc)
     monkeypatch.setattr(job.tiktok_search, "fetch_urls", lambda urls: [

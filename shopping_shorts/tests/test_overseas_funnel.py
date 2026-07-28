@@ -41,3 +41,11 @@ def test_shortform_filter():
     assert passes_shortform({"duration": 181}) is False     # 롱폼 컷
     assert passes_shortform({"duration": None}) is True     # 길이불명은 통과
     assert passes_shortform({"duration": 120}) is True      # 경계값 통과
+
+
+def test_caption_clutter_filter():
+    from shopping_shorts.overseas_funnel import passes_caption_clutter
+    assert passes_caption_clutter({"text_level": "heavy"}) is False   # 큰 자막이 화면 대부분 가림
+    assert passes_caption_clutter({"text_level": "light"}) is True
+    assert passes_caption_clutter({"text_level": "none"}) is True
+    assert passes_caption_clutter({}) is True   # 아직 비전판정 안 된 항목은 통과(과필터 방지)
