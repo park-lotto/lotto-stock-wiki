@@ -29,3 +29,14 @@ def test_dedup_caps_top_n():
 
 def test_dedup_empty():
     assert edit_plan._dedup_anchors([], top_n=4) == []
+
+
+def test_dedup_anchors_unaffected_by_motion_level_field():
+    from shopping_shorts.edit_plan import _dedup_anchors
+    # 서로 다른 장점(그릇/서랍)인데 motion_level만 같은 값(PEAK) — 겹침으로 오판되면 안 됨
+    anchors = [
+        {"scene_desc": "그릇 가득 넓은 용량", "motion_level": "PEAK"},
+        {"scene_desc": "서랍 부드럽게 열림", "motion_level": "PEAK"},
+    ]
+    out = _dedup_anchors(anchors, top_n=4)
+    assert len(out) == 2  # 둘 다 살아남아야 함(motion_level은 dedup 키에 안 섞임)
