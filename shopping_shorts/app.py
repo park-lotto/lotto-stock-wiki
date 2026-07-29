@@ -1037,8 +1037,29 @@ def _known_usernames(store):
 
 
 # 발굴은 "최근 이틀 영상수"를 세야 해서 채널당 상한을 넉넉히(메인 랭킹의 3보다 큼).
+# 경로 선택은 discover_jobs와 동일 킬스위치(config.INSTAGRAM_SCRAPER)를 공유(2026-07-30).
 def _discover_fetch(usernames):
+    from shopping_shorts import config
+    if config.INSTAGRAM_SCRAPER == "playwright":
+        from shopping_shorts import instagram_playwright
+        return instagram_playwright.fetch_reels(usernames)
     return fetch_reels(usernames, results_per_channel=12, only_newer_than="2 days")
+
+
+def _discover_search_fn():
+    from shopping_shorts import config
+    if config.INSTAGRAM_SCRAPER == "playwright":
+        from shopping_shorts import instagram_playwright
+        return instagram_playwright.search_channels
+    return instagram_search.search_channels
+
+
+def _discover_profiles_fn():
+    from shopping_shorts import config
+    if config.INSTAGRAM_SCRAPER == "playwright":
+        from shopping_shorts import instagram_playwright
+        return instagram_playwright.fetch_profiles
+    return fetch_profiles
 
 
 def _save_discovery_snapshot(store, items):
@@ -1070,8 +1091,8 @@ def api_discover(request: Request, keyword: str, max_channels: int = 15):
     try:
         items = discovery.discover(
             keyword, known=_known_usernames(store),
-            search_fn=instagram_search.search_channels, fetch_reels_fn=_discover_fetch,
-            profiles_fn=fetch_profiles,
+            search_fn=_discover_search_fn(), fetch_reels_fn=_discover_fetch,
+            profiles_fn=_discover_profiles_fn(),
             prev_comments=store.prev_comments, prev_delta=store.prev_delta,
             max_channels=max_channels,
         )

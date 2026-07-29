@@ -1,6 +1,8 @@
 """발굴 '업데이트'를 백그라운드 스레드로 실행 + 진행상황 폴링(2026-07-12).
 
-업데이트는 Apify를 여러 번(검색 6 + 릴스수집 + 프로필) 돌려 수 분 걸린다.
+업데이트는 검색 6 + 릴스수집 + 프로필을 돌려 수 분 걸린다(경로에 따라
+Apify 또는 무료 Playwright, 2026-07-30 config.INSTAGRAM_SCRAPER로 분기 —
+릴스수집과 동일 킬스위치를 공유해 한 군데서 apify↔playwright 전환).
 동기로 처리하면 (1) 프론트가 몇 분 멈춘 것처럼 보이고 (2) 그 사이 서버가
 재시작되면 HTTP 응답 자체가 HTML 에러로 깨진다. 그래서 시작만 걸고(job)
 프론트가 상태를 폴링하게 한다. 단일 워커(uvicorn 기본) 기준 모듈 전역
@@ -13,10 +15,33 @@ from concurrent.futures import ThreadPoolExecutor
 from shopping_shorts.config import DB_PATH
 from shopping_shorts.store import Store
 from shopping_shorts.channels import load_channels
-from shopping_shorts.apify_client import fetch_reels, fetch_profiles
+from shopping_shorts import config
+from shopping_shorts.apify_client import fetch_reels as _apify_fetch_reels
+from shopping_shorts.apify_client import fetch_profiles as _apify_fetch_profiles
+from shopping_shorts import instagram_playwright
 from shopping_shorts import discovery, instagram_search
 
 CATEGORIES = ["#주방템", "#살림템", "#인테리어", "#자취템", "#생활꿀템", "#뷰티템"]
+
+
+def _search_fn():
+    """검색 경로 선택 — config.INSTAGRAM_SCRAPER를 따른다(릴스수집과 동일 킬스위치).
+    playwright(기본, 무료 해시태그 탐색) / apify(유료 키워드검색)."""
+    if config.INSTAGRAM_SCRAPER == "playwright":
+        return instagram_playwright.search_channels
+    return instagram_search.search_channels
+
+
+def _fetch_reels_fn(usernames, per, days):
+    if config.INSTAGRAM_SCRAPER == "playwright":
+        return instagram_playwright.fetch_reels(usernames)
+    return _apify_fetch_reels(usernames, results_per_channel=per, only_newer_than=f"{days} days")
+
+
+def _profiles_fn():
+    if config.INSTAGRAM_SCRAPER == "playwright":
+        return instagram_playwright.fetch_profiles
+    return _apify_fetch_profiles
 
 _LOCK = threading.Lock()
 _JOB = {"status": "idle", "phase": "", "count": 0, "items": [],
@@ -33,16 +58,17 @@ def _known_usernames(store):
 
 
 def _parallel_fetch(usernames, per, days, chunk=40, workers=3):
-    """채널 릴스 수집을 40개씩 병렬 청크로 — 순차(청크마다 Apify run 대기)보다 빠름."""
+    """채널 릴스 수집을 40개씩 병렬 청크로 — 순차(청크마다 Apify run 대기)보다 빠름.
+    playwright 경로는 세션 하나를 여러 스레드가 동시에 열면 충돌 위험이 있어(브라우저
+    프로세스 자원 경합) 청크 병렬 없이 그대로 한 번에 돈다(2026-07-30)."""
+    if config.INSTAGRAM_SCRAPER == "playwright":
+        return _fetch_reels_fn(usernames, per, days)
     chunks = [usernames[i:i + chunk] for i in range(0, len(usernames), chunk)] or [[]]
     if len(chunks) == 1:
-        return fetch_reels(chunks[0], results_per_channel=per, only_newer_than=f"{days} days")
+        return _fetch_reels_fn(chunks[0], per, days)
     out = []
     with ThreadPoolExecutor(max_workers=min(workers, len(chunks))) as pool:
-        for res in pool.map(
-            lambda c: fetch_reels(c, results_per_channel=per, only_newer_than=f"{days} days"),
-            chunks,
-        ):
+        for res in pool.map(lambda c: _fetch_reels_fn(c, per, days), chunks):
             out.extend(res)
     return out
 
@@ -54,9 +80,9 @@ def _run(days, max_total, accumulate):
         _JOB["phase"] = "검색"
         items = discovery.discover_multi(
             CATEGORIES, known=_known_usernames(store),
-            search_fn=instagram_search.search_channels,
+            search_fn=_search_fn(),
             fetch_reels_fn=lambda us: _parallel_fetch(us, per, days),
-            profiles_fn=fetch_profiles,
+            profiles_fn=_profiles_fn(),
             prev_comments=store.prev_comments, prev_delta=store.prev_delta,
             window_hours=days * 24, max_channels_per=per, max_total=max_total,
         )
