@@ -5,13 +5,15 @@ from datetime import datetime, timezone, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from shopping_shorts.config import (DB_PATH, WINDOW_HOURS, DRAFT_BATCH_SIZE, MAX_CHANNELS,
                                     YOUTUBE_WINDOW_HOURS, YOUTUBE_MAX_PER_KW,
-                                    DEAD_AFTER_DAYS, CENSUS_RESULTS_PER_CHANNEL)
+                                    DEAD_AFTER_DAYS, CENSUS_RESULTS_PER_CHANNEL,
+                                    XIAOHONGSHU_WINDOW_HOURS)
 from shopping_shorts.channels import load_channels, merge_tracked, select_tracked
 from shopping_shorts.apify_client import fetch_reels
 from shopping_shorts import config
 from shopping_shorts.instagram_playwright import fetch_reels as _pw_fetch_reels
 from shopping_shorts.instagram_playwright import LAST_TALLY as _PW_TALLY
-from shopping_shorts.ranking import build_items, build_youtube_items, build_tiktok_items, apply_grades, aggregate_channels
+from shopping_shorts.ranking import (build_items, build_youtube_items, build_tiktok_items,
+                                     build_overseas_items, apply_grades, aggregate_channels)
 from shopping_shorts.store import Store
 from shopping_shorts.comment_gen import generate as _gen_comments
 from shopping_shorts import ai_categorize, topic_grouper
@@ -19,6 +21,7 @@ from shopping_shorts.youtube_client import search_shorts as yt_search, fetch_cha
 from shopping_shorts.youtube_category_presets import preset_keywords
 from shopping_shorts.tiktok_client import fetch_account_videos as tt_fetch
 from shopping_shorts.tiktok_search import search_full as tt_search_full
+from shopping_shorts.xiaohongshu_playwright import fetch_notes as _xhs_fetch_notes
 
 TIKTOK_SEARCH_COUNT_DEFAULT = 50   # 언어당 fetch 개수(설정 tiktok_search_count로 오버라이드)
 _TIKTOK_LANG_KINDS = {"ko", "en", "ja", "zh", "ru"}   # 키워드 시드의 언어코드 kind
@@ -216,6 +219,32 @@ def _collect_tiktok(include_paid_keywords=False):
     return items
 
 
+def _collect_xiaohongshu():
+    """샤오홍슈 레퍼런스 채널(프로필 URL 시드)의 최근 48h 노트 → 참여기반 랭킹(무료 크롤).
+
+    build_overseas_items를 window_hours=48로 재사용 — 해외HOT과 랭킹 공식 공유(view-less,
+    base=좋아요+댓글+수집+공유). 로그인 세션 재사용, 프록시 불필요(2026-07-29 검증)."""
+    store = Store(DB_PATH)
+    seeds = store.list_seeds("xiaohongshu")
+    urls = [s["value"] for s in seeds if s["kind"] == "account"]
+    if not urls:
+        return []
+    now = datetime.now(timezone.utc)
+    raw = _xhs_fetch_notes(urls)
+    items = build_overseas_items(
+        raw,
+        prev_base=lambda sc: store.prev_base_platform("xiaohongshu", sc),
+        prev_delta=lambda sc: store.prev_delta_platform("xiaohongshu", sc),
+        now=now, window_hours=XIAOHONGSHU_WINDOW_HOURS,
+    )
+    apply_grades(items)
+    run_date = now.strftime("%Y-%m-%d %H:%M")
+    store.save_run_platform("xiaohongshu", run_date,
+                            [{"shortcode": i["shortcode"], "base": i["base_count"], "delta": i["delta"]} for i in items])
+    store.save_last_run_platform("xiaohongshu", items, now.isoformat())
+    return items
+
+
 LAST_COLLECT_TALLY = {}
 # 마지막 인스타 수집의 채널 분류 집계(app.py가 job 결과에 담는다). apify 경로면 빈 dict.
 
@@ -235,6 +264,8 @@ def collect(platform="instagram", categories=None, limit_channels=None, on_progr
         return _collect_youtube(categories)
     if platform == "tiktok":
         return _collect_tiktok()
+    if platform == "xiaohongshu":
+        return _collect_xiaohongshu()
     if platform != "instagram":
         return []   # 미구현 플랫폼이 인스타 Apify 스크레이프로 흘러들지 않게
 
