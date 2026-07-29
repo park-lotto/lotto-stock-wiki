@@ -45,9 +45,10 @@ def under_view_ceiling(item, ceiling=DEFAULT_VIEW_CEILING):
 
 def passes_caption_clutter(item):
     """큰 자막/텍스트 오버레이가 썸네일 대부분을 가리면 컷(video_analysis.text_level_vision 판정).
-    2026-07-29부터 생존자 전부를 판정한다(캐시로 재호출만 방지) — 그래도 판정 자체가
-    실패했거나(fetch 실패·vision 응답 없음) 아직 캐시에 없는 항목은 text_level이 비어
-    있을 수 있으므로, 그런 항목은 통과시킨다(과필터 방지 — duration 길이불명 통과와 동일 철학)."""
+
+    현재 해외HOT 파이프라인에서는 미사용(2026-07-29) — 실측(반응 1만+ 29건 중 자막없음
+    0건)에서 heavy 대부분이 인기 영상이라 여기서 컷하면 손해였다. 판정(text_level)은
+    계속 매기되, 거르는 건 화면 "자막 없는 것만" 토글로 옮겼다. 함수·테스트는 유지."""
     return item.get("text_level") != "heavy"
 
 
@@ -57,7 +58,7 @@ CAPTION_RANK = {"none": 0, "light": 1}
 def caption_rank(item):
     """자막 적을수록 앞(0=none, 1=light, 2=heavy·미판정).
 
-    해외HOT 정렬 1차 키. 자막이 많은 썸네일은 내용도 지저분한 경우가 많다는
-    관측(2026-07-29)에서 출발 — 자막 없는 원본 소스를 목록 위로 올린다.
-    미판정을 2로 두는 건 '모르는 것을 light보다 앞세우지 않기' 위해서다."""
+    정렬 1차키로는 미사용(2026-07-29 되돌림 — 실측에서 인기 영상을 밀어냈다).
+    화면 필터·뱃지용으로만 쓴다. 미판정을 2로 두는 건 '모르는 것을 light보다
+    앞세우지 않기' 위해서다."""
     return CAPTION_RANK.get(item.get("text_level"), 2)

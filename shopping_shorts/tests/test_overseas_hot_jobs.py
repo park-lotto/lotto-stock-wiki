@@ -167,7 +167,9 @@ def test_annotate_text_level_marks_all_items(monkeypatch, tmp_path):
     assert items[4]["text_level"] == "heavy"
 
 
-def test_collect_category_filters_out_heavy_text_thumbnails(monkeypatch):
+def test_collect_category_keeps_heavy_text_thumbnails(monkeypatch):
+    """2026-07-29: heavy 컷 해제 — text_level은 매기되 목록엔 둘 다 남아야 한다
+    (실측: 반응 1만+ 29건 중 자막없음 0건, heavy 컷하면 인기 영상이 통째로 밀려남)."""
     monkeypatch.setattr(job.douyin_search, "search_full", lambda kw, max_results=40: [])
     monkeypatch.setattr(job.xiaohongshu_search, "search_full", lambda kw, max_results=40: [])
 
@@ -206,7 +208,10 @@ def test_collect_category_filters_out_heavy_text_thumbnails(monkeypatch):
     items = job._collect_category("주방/레시피", {"tiktok": ["kitchen"], "cn": []}, FakeStore())
 
     shortcodes = {i["shortcode"] for i in items}
-    assert shortcodes == {"clean1"}                  # 자막 많은 cluttered1은 걸러짐
+    assert shortcodes == {"clean1", "cluttered1"}      # 컷 없음 — 둘 다 남는다
+    by_sc = {i["shortcode"]: i for i in items}
+    assert by_sc["clean1"]["text_level"] == "none"
+    assert by_sc["cluttered1"]["text_level"] == "heavy"  # 판정은 계속 매겨짐
 
 
 def test_collect_category_skips_tiktok_when_disabled(monkeypatch):
@@ -344,14 +349,15 @@ def test_annotate_skips_when_no_thumbnail(monkeypatch, tmp_path):
     assert "text_level" not in items[0]
 
 
-def test_merge_rotate_puts_clean_thumbnails_first():
-    """자막 없는 항목이 점수 높은 자막 항목보다 앞에 온다."""
+def test_merge_rotate_sorts_by_score_regardless_of_caption(monkeypatch):
+    """2026-07-29 되돌림: 정렬은 score 내림차순 단독 — 자막등급은 더 이상 1차키가 아니다
+    (실측: 반응 1만+ 29건 중 자막없음 0건 → 자막등급 1차키가 인기 영상을 밀어냈다)."""
     new = [
         {"shortcode": "dirty", "score": 0.9, "text_level": "light"},
         {"shortcode": "clean", "score": 0.1, "text_level": "none"},
     ]
     out = job._merge_rotate([], new, cap=10)
-    assert [i["shortcode"] for i in out] == ["clean", "dirty"]
+    assert [i["shortcode"] for i in out] == ["dirty", "clean"]
 
 
 def test_merge_rotate_sorts_by_score_within_same_caption_rank():
@@ -363,12 +369,12 @@ def test_merge_rotate_sorts_by_score_within_same_caption_rank():
     assert [i["shortcode"] for i in out] == ["hi", "lo"]
 
 
-def test_run_e2e_caches_by_video_id_and_sorts_clean_first(monkeypatch, tmp_path):
+def test_run_e2e_caches_by_video_id_and_sorts_by_score(monkeypatch, tmp_path):
     """C1·C2 회귀 테스트 — 실제 크롤러 계약(video_id)으로 raw를 주고 _run()을 통째로
     돌려서, 저장된 최종 피드에 (1) text_level이 실제로 실려 있고 (2) 캐시가 shortcode가
-    아니라 video_id로 맞아 재판정을 안 하고 (3) 자막 없는 항목이 자막 있는 고득점
-    항목보다 앞에 오는지 확인한다. C1(캐시 키 None)이나 C2(text_level 소실) 중
-    하나라도 재발하면 이 테스트가 반드시 깨진다."""
+    아니라 video_id로 맞아 재판정을 안 하고 (3) score 높은 항목이 앞에 오는지(2026-07-29
+    되돌림 — 자막등급이 아니라 인기순) 확인한다. C1(캐시 키 None)이나 C2(text_level
+    소실) 중 하나라도 재발하면 이 테스트가 반드시 깨진다."""
     now = datetime(2026, 7, 26, 12, 0, tzinfo=timezone.utc)
     db = str(tmp_path / "t.db")
     published = "2026-07-25T12:00:00Z"
@@ -416,9 +422,9 @@ def test_run_e2e_caches_by_video_id_and_sorts_clean_first(monkeypatch, tmp_path)
     assert store.get_thumb_text_level("light_high_score") == "light"
     assert store.get_thumb_text_level("clean_low_score") == "none"
 
-    # (3) 자막 없는 저득점 항목이 자막 있는 고득점 항목보다 앞에 온다.
+    # (3) score 높은 항목(자막 있어도)이 앞에 온다 — 2026-07-29 인기순 복귀.
     order = [it["shortcode"] for it in items]
-    assert order.index("clean_low_score") < order.index("light_high_score")
+    assert order.index("light_high_score") < order.index("clean_low_score")
 
     # (4) 재수집해도 캐시가 맞아 비전을 다시 안 부른다(쿼터 보호, C1의 목적).
     vision_calls.clear()
@@ -426,11 +432,55 @@ def test_run_e2e_caches_by_video_id_and_sorts_clean_first(monkeypatch, tmp_path)
     assert vision_calls == [], "캐시가 맞으면 재수집에서 비전을 다시 부르면 안 된다"
 
 
-def test_merge_rotate_cap_keeps_clean_ones():
-    """상한으로 자를 때도 자막 없는 것이 살아남는다."""
+def test_run_annotates_all_feed_items_including_stale_prev(monkeypatch, tmp_path):
+    """구멍메우기 회귀(2026-07-29): 옛 prev 항목(이번 크롤에 안 걸린 것)도 _run() 후
+    피드 전체가 text_level을 갖고 있어야 한다. 안 그러면 화면 '자막없음만' 토글을
+    켰을 때 미판정 옛 항목이 통째로 사라진다(실측: 120건 중 50건 미판정)."""
+    from shopping_shorts.store import Store
+    now = datetime(2026, 7, 26, 12, 0, tzinfo=timezone.utc)
+    db = str(tmp_path / "t.db")
+    published = "2026-07-25T12:00:00Z"
+
+    # 이번 크롤과 무관한 옛 피드 항목 — text_level이 없다.
+    Store(db).save_overseas_feed([
+        {"shortcode": "stale_old", "platform": "tiktok", "category": "주방/레시피",
+         "score": 0.05, "base_count": 0, "delta": 0, "thumbnail": "http://x/stale.jpg"},
+    ])
+
+    def fake_tt(kw, max_results=40):
+        return [
+            {"video_id": "new1", "title": kw + " gadget", "published_at": published,
+             "views": 1000, "likes": 10, "comments": 1, "collects": 0, "shares": 0,
+             "channel_title": "a", "thumbnail": "http://x/new.jpg", "url": "https://tt/a",
+             "media_platform": "tiktok"},
+        ]
+
+    monkeypatch.setattr(job.tiktok_search, "search_full", fake_tt)
+    monkeypatch.setattr(job.douyin_search, "search_full", lambda kw, max_results=40: [])
+    monkeypatch.setattr(job.xiaohongshu_search, "search_full", lambda kw, max_results=40: [])
+    monkeypatch.setattr(job.gap_check, "gap_badge", lambda title, **kw: "🔥선점가능")
+    monkeypatch.setattr(job.video_analysis, "fetch_thumb_bytes", lambda url, timeout=15: url.encode())
+    monkeypatch.setattr(job.video_analysis, "text_level_vision", lambda img: {"text_level": "none"})
+    monkeypatch.setattr(job, "load_seeds",
+                        lambda: {"주방/레시피": {"tiktok": ["kitchen"], "cn": []}})
+    monkeypatch.setattr(job, "DB_PATH", db)
+    monkeypatch.setattr(job, "_now", lambda: now)
+
+    job._run()
+    store = Store(db)
+    items, _ = store.load_overseas_feed()
+    assert items, "피드가 비어있으면 안 된다"
+    missing = [it["shortcode"] for it in items if not it.get("text_level")]
+    assert not missing, f"판정 안 된 항목이 남아있으면 안 된다: {missing}"
+    by_sc = {it["shortcode"]: it for it in items}
+    assert by_sc["stale_old"]["text_level"] == "none"   # 옛 항목도 판정됨
+
+
+def test_merge_rotate_cap_keeps_high_score_ones():
+    """상한으로 자를 때 score 높은 게 남는다(2026-07-29: 자막없음 우선 폐기)."""
     new = [
         {"shortcode": "d1", "score": 0.9, "text_level": "light"},
         {"shortcode": "c1", "score": 0.1, "text_level": "none"},
     ]
     out = job._merge_rotate([], new, cap=1)
-    assert [i["shortcode"] for i in out] == ["c1"]
+    assert [i["shortcode"] for i in out] == ["d1"]
