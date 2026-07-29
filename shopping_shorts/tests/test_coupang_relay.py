@@ -100,3 +100,13 @@ def test_relay_status_hides_token(client):
     d = client.get("/api/coupang/relay/status").json()
     assert d["mode"] == "relay" and d["configured"] is True
     assert TOKEN not in str(d)
+
+
+def test_relay_paths_bypass_login_gate(client, monkeypatch):
+    """★릴레이는 로그인 쿠키가 없다 — 로그인 게이트에 걸리면 도우미가 일감을 못 받는다.
+
+    (토큰 검사는 엔드포인트 안에서 하므로 게이트를 열어도 안전하다: 틀린 토큰은 403.)"""
+    r = client.get("/api/coupang/relay/next", params={"token": TOKEN, "wait": 1})
+    assert r.status_code != 401, "로그인 게이트가 릴레이를 막고 있다"
+    r2 = client.get("/api/coupang/relay/status")
+    assert r2.status_code != 401
