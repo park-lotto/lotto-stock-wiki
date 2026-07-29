@@ -23,6 +23,9 @@ coupang_partners.search_products()가 승인 전엔 items=[]만 돌려주므로(
 실패하면 예외를 던지지 않고 `ok:False + notice`로 접는다 — 이 기능이 죽어도 기존 수동
 흐름(검색 링크 새 탭 + URL 붙여넣기)이 그대로 남아 있어야 한다.
 """
+import os
+import threading
+import time
 import urllib.parse
 
 from shopping_shorts import config, coupang_partners
@@ -116,6 +119,34 @@ def _proxy_arg(raw):
     return proxy
 
 
+# 소프트 차단 문구 — 쿠팡은 과하게 두들기면 403이 아니라 **200에 이 안내**를 준다
+# (2026-07-29 실측: 몇 분 새 15회쯤 검색하자 발동. 몇 분 쉬면 풀린다). 이걸 "결과 없음"으로
+# 뭉뚱그리면 사장님이 검색어를 계속 바꿔가며 더 두들기게 되므로 따로 알려준다.
+_SOFT_BLOCK = "사용권한이 제한된"
+
+# 같은 키워드를 연달아 누르면 크롤을 다시 돌지 않는다 — 두들길수록 차단이 빨라진다.
+_CACHE_TTL_SEC = 600
+_cache = {}
+_cache_lock = threading.Lock()
+# 크롤 사이 최소 간격(초). 사람이 상품 고르는 속도엔 걸리지 않는다.
+_MIN_INTERVAL_SEC = 3.0
+_last_call = [0.0]
+
+
+def _cached(key):
+    with _cache_lock:
+        hit = _cache.get(key)
+        if hit and time.time() - hit[0] < _CACHE_TTL_SEC:
+            return hit[1]
+        _cache.pop(key, None)
+    return None
+
+
+def _remember(key, value):
+    with _cache_lock:
+        _cache[key] = (time.time(), value)
+
+
 def search(keyword, limit=None, timeout_ms=None):
     """키워드 → 상품 후보. 실패해도 예외 없이 ok:False로 접는다(수동 흐름 보존)."""
     kw = (keyword or "").strip()
@@ -129,30 +160,51 @@ def search(keyword, limit=None, timeout_ms=None):
 
     limit = limit or config.COUPANG_SEARCH_LIMIT
     timeout_ms = timeout_ms or config.COUPANG_SEARCH_TIMEOUT_MS
+
+    cache_key = f"{kw}|{limit}"
+    hit = _cached(cache_key)
+    if hit is not None:
+        return dict(hit, cached=True)
+
     try:
         from playwright.sync_api import sync_playwright
     except Exception:
         return {"ok": False, "items": [], "search_url": search_link, "source": "crawl",
                 "notice": "Playwright가 설치되어 있지 않습니다"}
 
+    # 연속 호출 간격을 벌린다 — 몰아치면 쿠팡이 소프트 차단을 건다(실측).
+    gap = _MIN_INTERVAL_SEC - (time.monotonic() - _last_call[0])
+    if gap > 0:
+        time.sleep(gap)
+    _last_call[0] = time.monotonic()
+
     proxy = _proxy_arg(config.COUPANG_PROXY)
+    # ★브라우저 프로필을 파일로 유지한다 — 매번 새 프로필로 들어가면 쿠키(PCID)가 없는
+    # 생판 처음 온 손님이라 차단 임계가 훨씬 낮다. 재방문 사용자로 보이게 한다.
+    profile = config.COUPANG_PROFILE_DIR or os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".coupang_profile")
+    launch = dict(
+        # ★headless=False가 필수다 — 헤드리스는 403으로 막힌다(실측).
+        # 서버에서는 xvfb-run으로 가상 디스플레이를 붙여 띄운다.
+        headless=False, channel="chrome", proxy=proxy,
+        locale="ko-KR", viewport={"width": 1366, "height": 900},
+        args=["--no-sandbox", "--disable-dev-shm-usage",
+              "--disable-blink-features=AutomationControlled"],
+    )
+    body_text, status = "", 0
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(
-                # ★headless=False가 필수다 — 헤드리스는 403으로 막힌다(실측).
-                # 서버에서는 xvfb-run으로 가상 디스플레이를 붙여 띄운다.
-                headless=False,
-                channel="chrome",
-                proxy=proxy,
-                args=["--no-sandbox", "--disable-dev-shm-usage",
-                      "--disable-blink-features=AutomationControlled"],
-            )
+            ctx = p.chromium.launch_persistent_context(profile, **launch)
             try:
-                ctx = browser.new_context(
-                    locale="ko-KR", viewport={"width": 1366, "height": 900},
-                    extra_http_headers={"Accept-Language": "ko-KR,ko;q=0.9"},
-                )
-                page = ctx.new_page()
+                page = ctx.pages[0] if ctx.pages else ctx.new_page()
+                # 검색 URL로 곧장 들어가지 않는다 — 홈을 한 번 밟아 쿠키를 받고 나서
+                # 검색으로 가는 게 사람의 동선이다(그리고 차단이 덜 걸린다).
+                try:
+                    page.goto("https://www.coupang.com/", wait_until="domcontentloaded",
+                              timeout=timeout_ms)
+                    page.wait_for_timeout(900)
+                except Exception:
+                    pass
                 resp = page.goto(search_link, wait_until="domcontentloaded",
                                  timeout=timeout_ms)
                 status = resp.status if resp else 0
@@ -162,18 +214,26 @@ def search(keyword, limit=None, timeout_ms=None):
                 except Exception:
                     pass
                 raw = page.evaluate(_EXTRACT_JS, limit)
+                if not raw:
+                    body_text = page.inner_text("body")[:500]
             finally:
-                browser.close()
+                ctx.close()
     except Exception as exc:
         return {"ok": False, "items": [], "search_url": search_link, "source": "crawl",
                 "notice": f"쿠팡 검색 실패: {type(exc).__name__}"}
 
     items = parse_items(raw, limit=limit)
     if not items:
-        # 403(Access Denied)이면 IP가 막힌 것 — 주거용 프록시가 필요하다는 뜻이다.
-        blocked = status == 403
+        if status == 403:
+            # IP 자체가 막힌 것 — 해외 IP(데이터센터든 주거용이든)면 여기로 온다.
+            notice = "쿠팡이 이 IP를 막았습니다 — 한국 IP에서 실행해야 합니다"
+        elif _SOFT_BLOCK in body_text:
+            notice = "쿠팡이 잠시 요청을 제한했습니다 — 몇 분 뒤 다시 시도하세요"
+        else:
+            notice = "검색 결과를 찾지 못했습니다"
         return {"ok": False, "items": [], "search_url": search_link, "source": "crawl",
-                "notice": ("쿠팡이 이 IP를 막았습니다 — 주거용 프록시(COUPANG_PROXY)가 "
-                           "필요합니다" if blocked else "검색 결과를 찾지 못했습니다")}
-    return {"ok": True, "items": items, "search_url": search_link, "source": "crawl",
-            "notice": ""}
+                "notice": notice}
+    out = {"ok": True, "items": items, "search_url": search_link, "source": "crawl",
+           "notice": ""}
+    _remember(cache_key, out)
+    return out
