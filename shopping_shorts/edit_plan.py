@@ -1412,21 +1412,21 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     if not seg_map:
         return {"candidates": [], "detected_type": detected}
     _call = call or _vault_call
-    # ★장면 스파인 먼저(2026-07-29 사장님): 카테고리 감지 → 그 카테고리 스파인 슬롯 순서로
-    # 태깅된 장면을 먼저 배치(장면 순서 확정) → 그 순서를 대본 생성에 하드 제약(order_block)으로
-    # 넣는다. 대본이 장면을 끌고다니던 narration-first를 뒤집어 '장면이 운전대'를 잡게 한다.
+    # 화면 순서 뼈대(order_block)를 두 모드로 정한다:
+    #  ★기본 경로(backbone_base off = 라이브 기본): 장면 스파인 먼저(2026-07-29 사장님).
+    #    카테고리 감지 → 그 카테고리 스파인 슬롯 순서로 태깅된 장면을 먼저 배치(장면 순서 확정)
+    #    → 대본 생성에 하드 제약으로 넣어 narration-first를 뒤집는다('장면이 운전대').
+    #  백본 모드(backbone_base on, opt-in): 특정 백본 영상의 시간순을 순서 뼈대로 쓴다(기존 동작 보존).
     # 설계: docs/superpowers/specs/2026-07-29-장면스파인-먼저-재설계-design.md
-    scene_spine = _build_scene_spine(seg_map, detected)
-    order_block = _spine_order_block(scene_spine)
-    # 백본 통합(2026-07-22): 스파인을 못 만들었을 때(태깅이 역할과 전혀 안 맞는 옛 소스)만
-    # 예전 백본 순서 블록으로 폴백한다 — 스파인이 있으면 그게 순서를 소유한다.
-    bb_video = None
+    bb_video, order_block = None, ""
     if backbone_base:
         from shopping_shorts import backbone
         bb_video = backbone.pick_backbone(source_scripts, meta=backbone_meta,
                                           forced=backbone_forced)
-        if bb_video and not order_block:
+        if bb_video:
             order_block = _backbone_order_block(bb_video, source_scripts)
+    else:
+        order_block = _spine_order_block(_build_scene_spine(seg_map, detected))
     src_texts = [s.get("full_text", "") for s in source_scripts]
 
     def _ground_score(raws):

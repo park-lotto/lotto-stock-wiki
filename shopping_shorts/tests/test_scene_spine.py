@@ -92,3 +92,26 @@ def test_spine_block_renders_fixed_order():
 
 def test_spine_block_empty_when_no_spine():
     assert ep._spine_order_block([]) == ""
+
+
+# ── ⑤ 기본 경로(backbone_base off)가 스파인 블록을 실제로 주입한다 ──────────
+def test_default_path_injects_spine_block():
+    """라이브 기본 경로: 카테고리(recipe) 스파인이 생성 프롬프트에 순서 고정으로 실려야."""
+    sources = [{"video_id": "s1", "full_text": "본문", "segments": [
+        {"seg_id": "s1-0", "start": 0, "end": 2, "text": "인트로", "scene_desc": "인트로", "shot_role": "기타"},
+        {"seg_id": "s1-1", "start": 2, "end": 4, "text": "재료", "scene_desc": "재료 붓기", "shot_role": "사용중"},
+        {"seg_id": "s1-2", "start": 4, "end": 6, "text": "완성", "scene_desc": "완성 접시",
+         "shot_role": "완성", "is_key": True},
+        {"seg_id": "s1-3", "start": 6, "end": 8, "text": "끝", "scene_desc": "인사", "shot_role": "기타"}]}]
+    seen = {}
+
+    def _cap(prompt, schema):
+        seen["prompt"] = prompt
+        return {"candidates": [{"hook": "h", "beats": [
+            {"role": "훅", "narration": "완성부터 보여드릴게요", "seg_ids": ["s1-2"], "fit": 5}]}]}
+    ep.build_scene_first_plan(sources, "ref", 20, n_candidates=1, call=_cap,
+                              video_type="recipe", backbone_base=False)
+    p = seen["prompt"]
+    assert "장면 스파인" in p and "고정" in p    # 스파인 순서 고정 제약 주입
+    assert "완성훅" in p                         # recipe 첫 슬롯
+    assert "화면 순서 뼈대" not in p             # 백본 블록은 안 쓴다(기본 경로)
