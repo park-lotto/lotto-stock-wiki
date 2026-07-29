@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_0700_Re-NEWable Weekly [6월 2주차].md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "조혜빈",
+    "report_date": "2026. 06. 08",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "데이터센터발 전력 수요 확대",
+      "계통 및 저장 제약 완화",
+      "미국 재생에너지 정책",
+      "클린에너지 투자",
+      "미국 가스터빈 리드타임 적체"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "신재생",
+        "stance": null,
+        "reason": "데이터센터 전력 수요 증가에 맞춰 계통 및 저장 제약이 점진적으로 완화되는 국면"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "10월",
+        "event": "부산 미음산단 MS 데이터센터 착공 예정"
+      }
+    ],
+    "top_picks": null,
+    "risk": "미국 내 재생에너지 정책 및 인허가 문제, 대중국 수입 규제 강화, 가스터빈 공급난",
+    "quote": "데이터센터 전력 수요 증가에 맞춰 계통 및 저장 제약이 점진적으로 완화되는 국면으로 판단됨"
+  }
+}

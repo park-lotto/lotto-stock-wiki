@@ -30,6 +30,12 @@ def video_id_from_url(url):
     m = _YT_ID.search(url)
     return m.group(1) if m else None
 
+def _short_thumb(video_id):
+    """쇼츠(≤60초)의 세로(9:16) 썸네일 URL. API 기본(high=hqdefault)은 480x360 가로라
+    세로 카드(인스타·틱톡과 동일 틀)에 안 맞는다. oardefault=원본비율(쇼츠는 720x1280 세로)."""
+    return f"https://i.ytimg.com/vi/{video_id}/oardefault.jpg" if video_id else ""
+
+
 _SEARCH_URL = "https://www.googleapis.com/youtube/v3/search"
 _VIDEOS_URL = "https://www.googleapis.com/youtube/v3/videos"
 _CHANNELS_URL = "https://www.googleapis.com/youtube/v3/channels"
@@ -103,7 +109,7 @@ def _search_page(kw, published_after_iso, max_per_kw, tok, region="KR", lang="ko
             "video_id": vid, "channel_id": sn.get("channelId"),
             "channel_title": sn.get("channelTitle"),
             "title": sn.get("title"), "description": sn.get("description"),
-            "thumbnail": ((sn.get("thumbnails") or {}).get("high") or {}).get("url", ""),
+            "thumbnail": _short_thumb(vid),
             "published_at": sn.get("publishedAt"),
         })
     return r.status_code, items
@@ -248,11 +254,56 @@ def fetch_channel_shorts(seed, max_videos=50, cache_get=None, cache_put=None):
                 "channel_title": sn.get("channelTitle"),
                 "title": sn.get("title"),
                 "description": sn.get("description"),
-                "thumbnail": ((sn.get("thumbnails") or {}).get("high") or {}).get("url", ""),
+                "thumbnail": _short_thumb(it.get("id")),
                 "published_at": sn.get("publishedAt"),
                 "views": int(st.get("viewCount") or 0),
                 "likes": int(st.get("likeCount") or 0),
                 "comments": int(st.get("commentCount") or 0),
+            })
+    return out
+
+
+# 영상 URL → video_id (watch?v= / youtu.be/ / shorts/ / embed/)
+_VIDEO_ID_RE = re.compile(
+    r"(?:youtu\.be/|youtube\.com/(?:watch\?(?:.*&)?v=|shorts/|embed/))([A-Za-z0-9_-]+)")
+
+
+def _video_id_from_url(url):
+    """유튜브 영상 URL에서 video_id 추출. 비유튜브/파싱실패 → None."""
+    if not url:
+        return None
+    m = _VIDEO_ID_RE.search(url)
+    return m.group(1) if m else None
+
+
+def channels_from_video_urls(urls):
+    """유튜브 영상 URL 리스트 → 소속 채널 [{channel_id, channel_title, channel_url}].
+
+    같은 채널은 1개로(첫 등장 순서 보존). videos.list(part=snippet, id=배치50)로
+    channelId·channelTitle을 해석한다(0 units는 아니고 videos.list 1회/배치).
+    비유튜브 URL·해석실패는 조용히 건너뛴다. 유튜브 영상이 하나도 없으면 API 호출 없이 []."""
+    vids, seen_vid = [], set()
+    for u in urls or []:
+        vid = _video_id_from_url(u)
+        if vid and vid not in seen_vid:
+            seen_vid.add(vid)
+            vids.append(vid)
+    if not vids:
+        return []
+    out, seen_ch = [], set()
+    for i in range(0, len(vids), 50):                      # videos.list 상한 50
+        chunk = vids[i:i + 50]
+        vd, _ = _first_ok(_VIDEOS_URL, {"part": "snippet", "id": ",".join(chunk)})
+        for it in ((vd or {}).get("items") or []):
+            sn = it.get("snippet") or {}
+            cid = sn.get("channelId")
+            if not cid or cid in seen_ch:
+                continue
+            seen_ch.add(cid)
+            out.append({
+                "channel_id": cid,
+                "channel_title": sn.get("channelTitle") or "",
+                "channel_url": f"https://www.youtube.com/channel/{cid}",
             })
     return out
 

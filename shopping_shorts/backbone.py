@@ -270,15 +270,19 @@ def generate_backbone_script(flow, inventory, target_seconds, call=None, style_b
 
 
 def backbone_flow(backbone_source):
-    """백본 '흐름' 뼈대 = 순서대로 [{seg_id, action, scene_desc, seconds}]. 대사(narration) 없음.
-    새 대본이 이 흐름(순서·행위·대략 길이)을 따르되 문장은 우리 것으로 쓴다(카피 아님)."""
+    """백본 '흐름' 뼈대 = 순서대로 [{seg_id, action, scene_desc, seconds, text}].
+    text = A 원본 대사/자막 gist(있으면). 새 대본이 이 흐름(순서·행위·**스토리 전개**)을
+    창의적으로 변형해 따르되 문장은 우리 것으로 쓴다(카피 아님, 2026-07-27 흐름계승).
+    무자막 소스는 text가 빈 문자열 — 그땐 scene_desc/action이 흐름 역할."""
     flow = []
     for seg in backbone_source.get("segments") or []:
+        gist = (seg.get("text") or seg.get("narration") or seg.get("caption") or "").strip()
         flow.append({
             "seg_id": seg.get("seg_id"),
             "action": segment_action(seg),
             "scene_desc": seg.get("scene_desc", ""),
             "seconds": round((seg.get("end", 0) - seg.get("start", 0)), 2),
+            "text": gist[:60],
         })
     return flow
 
@@ -397,6 +401,52 @@ def dedup_clips_global(beats, pool_sources, max_clips=None):
                 prev = repl
         nb["alternates"] = new_alts
         out.append(nb)
+    return out
+
+
+def repick_for_gate(beats, pool_sources, gate):
+    """게이트 위반(연속·반복·파편)을 재픽으로 교정한다(2026-07-25). 원본 mutate 안 함,
+    Gemini·IO 없음, 나레이션·tts_path 불변. 후보 없으면 그 위반은 그대로 둠(호출부 루프가
+    new_beats==beats 로 수렴 판정해 종료).
+
+    ★핵심: primary 비트 간 연속(is_continuous)을 여기서 처음으로 끊는다 —
+    dedup_clips_global은 alternates만 봤고, dedup_and_balance는 seg_id 중복만 봐서
+    's0-4→s0-5'처럼 고유하지만 인접한 primary 연속이 샜다(job 57ec653ba579 실사고).
+    포인트 비트 primary는 결정적 장면이라 불가침 — 런에 끼면 반대쪽(앞 비트)을 바꾼다."""
+    out = [dict(b) for b in beats]
+    src_count = Counter(_vid_of(b.get("primary")) for b in out if b.get("primary"))
+    used = {(b.get("primary") or {}).get("seg_id") for b in out}
+    used |= {a.get("seg_id") for b in out for a in (b.get("alternates") or [])}
+    used.discard(None)
+    for i in range(1, len(out)):
+        prev_p = out[i - 1].get("primary") or {}
+        cur_p = out[i].get("primary") or {}
+        if not is_continuous(prev_p, cur_p):
+            continue
+        # 포인트 비트 primary는 불가침 → 앞 비트를 바꿔 연속을 깬다(앞이 포인트면 어쩔 수 없이 뒤).
+        target = i - 1 if (is_point_beat(out[i]) and not is_point_beat(out[i - 1])) else i
+        tb = out[target]
+        anchor = out[target - 1].get("primary") if target > 0 else None
+        action = segment_action(tb.get("primary") or {}) or \
+            action_dict.tag_action(tb.get("narration", ""))
+        cands = [c for c in (pick_clips_for_action(action, pool_sources) if action else [])
+                 if c.get("seg_id") not in used and not is_continuous(anchor, c)]
+        if not cands:
+            cands = [c for c in _broll_segs(pool_sources, src_count, used)
+                     if not is_continuous(anchor, c)]
+        if not cands:
+            continue   # 대체 후보 없음 → 그대로(수렴)
+        cands.sort(key=lambda c: (src_count.get(_vid_of(c), 0), -_seg_dur(c)))  # 미사용소스·긴컷 우선
+        old_sid = (tb.get("primary") or {}).get("seg_id")
+        pick = cands[0]
+        if old_sid:
+            used.discard(old_sid)
+        used.add(pick.get("seg_id"))
+        src_count[_vid_of(pick)] += 1
+        tb["primary"] = pick
+    # 반복·파편·alternates 연속은 기존 dedup 재적용(테스트된 로직 재사용).
+    out = dedup_and_balance(out, pool_sources)
+    out = dedup_clips_global(out, pool_sources)
     return out
 
 
@@ -561,6 +611,57 @@ def _visual_segs_of(pool_sources, vid, min_shot=None):
                 segs.append(c)
     segs.sort(key=lambda c: (-_visual_score(c), -_seg_dur(c)))
     return segs
+
+
+def _middle_source_clip(pool_sources, exclude=None):
+    """어느 소스든 '중간' 세그먼트(각 소스 첫·끝 제외) 중 비주얼 최상 클립.
+    CTA 화면용 — 원본 엔딩(원작자 CTA·워터마크 오염)을 피한다. 없으면 None."""
+    exclude = exclude or set()
+    best = None
+    for s in (pool_sources or []):
+        segs = [seg for seg in (s.get("segments") or []) if _seg_dur(seg) >= 1.0]
+        if len(segs) < 3:
+            continue
+        for seg in segs[1:-1]:                       # 첫·끝 제외 = 중간
+            c = dict(seg)
+            c["video_id"] = s.get("video_id")
+            if c.get("seg_id") in exclude:
+                continue
+            if best is None or _visual_score(c) > _visual_score(best):
+                best = c
+    return best
+
+
+def swap_hook_cta_for_differentiation(beats, backbone_video, pool_sources):
+    """영상 차별화(사장님 2026-07-27, 아주 중요): 화면만 재배정(narration 불변).
+    ① 훅(첫 비트) 화면 = 백본(A)이 아닌 **다른 소스의 가장 강렬한 장면** → 원본과 달라 보이게.
+    ② CTA(마지막 비트) 화면 = 원본 엔딩 대신 **중간 소스 클립** → 원작자 CTA·워터마크 회피.
+    소스가 부족하면 해당 항목 무변경(억지 교체 안 함). 순수함수(새 리스트 반환)."""
+    if not beats or len(beats) < 2:
+        return beats
+    out = [dict(b) for b in beats]
+    used = {(b.get("primary") or {}).get("seg_id") for b in out}
+    # ① 훅 = 비-A 소스 비주얼 최고 장면
+    non_bb_vids = [s.get("video_id") for s in (pool_sources or [])
+                   if s.get("segments") and s.get("video_id") and s.get("video_id") != backbone_video]
+    if non_bb_vids:
+        cands = []
+        for vid in dict.fromkeys(non_bb_vids):       # 소스 순서 유지 dedup
+            cands += _visual_segs_of(pool_sources, vid)
+        cands.sort(key=lambda c: (-_visual_score(c), -_seg_dur(c)))
+        fresh = next((c for c in cands if c.get("seg_id") not in used), None)
+        if fresh:
+            out[0] = dict(out[0])
+            out[0]["primary"] = fresh
+            out[0]["hook_visual_swapped"] = True
+            used.add(fresh.get("seg_id"))
+    # ② CTA = 중간 소스 클립(원본 엔딩 회피)
+    mid = _middle_source_clip(pool_sources, exclude=used)
+    if mid:
+        out[-1] = dict(out[-1])
+        out[-1]["primary"] = mid
+        out[-1]["cta_visual_swapped"] = True
+    return out
 
 
 def ensure_sources_used(beats, pool_sources):

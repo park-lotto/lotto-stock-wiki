@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-26_1101_이익 감소는 일시적, 매출 고성장은 지속.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김성래, 김예인",
+    "report_date": "2026년 7월 24일",
+    "stocks": [
+      {
+        "name": "현대글로비스",
+        "code": "086280",
+        "rating": "Buy(유지)",
+        "rating_changed": false,
+        "tp_new": "380,000원",
+        "tp_prev": "370,000원",
+        "tp_direction": "up",
+        "earnings_outlook": {
+          "summary": "2Q 동사 매출액은 8.7조원(+15.8%, 이하 YoY), 영업이익은 4,950억원(-8.1%)을 기록.",
+          "details": "해외물류 2.3조원(+11.2%), 벌크운송 4,616억원(+56.8%), CKD 3.54조원(+16.2%) 기록. 물류부문 이익 1,918억원(-5.9%), PCTC 이익 1,309억원(-34.6%) 반영"
+        },
+        "estimate_revision": {
+          "summary": "매출액(FY1) 31,675 -> 33,637 (6.2%), 영업이익(FY1) 2,118 -> 2,190 (3.4%)",
+          "quote": "매출액(FY1) 31,675 33,637 6.2 / 영업이익(FY1) 2,118 2,190 3.4"
+        },
+        "next_catalyst": "하반기 증익 가시성 및 BD 지분가치 증가",
+        "thesis": [
+          "PCTC 고운임 비계열 물량 증가 및 선대운영 합리화에 따른 하반기 증익 전환",
+          "해외물류 부문 컨테이너 시황 강세에 따른 하반기 이익 점진적 개선",
+          "BD 지분가치 증가 및 RMAC을 통한 Atlas 상용화 개발 진척 등 지분가치 상승 모멘텀"
+        ],
+        "valuation_basis": "AVG of (Target PER * EPS + Target PBR * BPS)",
+        "risk": "PCTC 부문 유가 상승 및 물류 부문 컨테이너 시황 변동",
+        "supply_comment": null,
+        "quote": "이익 감소영향은 개선되고 매출은 고성장하는 ’27년 증익 기대감"
+      }
+    ]
+  }
+}

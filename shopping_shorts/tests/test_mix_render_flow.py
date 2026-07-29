@@ -18,8 +18,19 @@ def _statuses(store):
     return [u["status"] for u in store.updates if "status" in u]
 
 
+def _ready_beat(tmp_path, job_id="j"):
+    """추천 후보 상태의 비트 하나 — 내용해시 tts_path + 실재 파일이라 run_render의
+    skip_existing이 재합성 없이 넘어간다(2026-07-27 TTS 파일명 내용해시 키잉)."""
+    import pathlib
+    beat = {"beat_idx": 0, "narration": "렌더 비트"}
+    d = pathlib.Path(str(tmp_path)) / job_id / "tts"; d.mkdir(parents=True, exist_ok=True)
+    beat["tts_path"] = mp._beat_tts_path(d, beat)
+    open(beat["tts_path"], "w").write("m")
+    return beat
+
+
 def test_render_off_uses_original_sources(monkeypatch, tmp_path):
-    job = {"job_id": "j", "urls": ["u"], "edit_plan": {"beats": [{"beat_idx": 0, "tts_path": "t"}]},
+    job = {"job_id": "j", "urls": ["u"], "edit_plan": {"beats": [_ready_beat(tmp_path)]},
            "subtitle_removal": False}
     store = FakeStore(job)
     monkeypatch.setattr(mp, "Store", lambda p: store)
@@ -38,7 +49,7 @@ def test_render_off_uses_original_sources(monkeypatch, tmp_path):
 
 
 def test_render_on_uses_clean_sources(monkeypatch, tmp_path):
-    job = {"job_id": "j", "urls": ["u"], "edit_plan": {"beats": [{"beat_idx": 0, "tts_path": "t"}]},
+    job = {"job_id": "j", "urls": ["u"], "edit_plan": {"beats": [_ready_beat(tmp_path)]},
            "subtitle_removal": True}
     store = FakeStore(job)
     monkeypatch.setattr(mp, "Store", lambda p: store)
@@ -62,7 +73,7 @@ def test_render_on_uses_clean_sources(monkeypatch, tmp_path):
 
 
 def test_render_on_no_key_fails(monkeypatch, tmp_path):
-    job = {"job_id": "j", "urls": ["u"], "edit_plan": {"beats": [{"beat_idx": 0, "tts_path": "t"}]},
+    job = {"job_id": "j", "urls": ["u"], "edit_plan": {"beats": [_ready_beat(tmp_path)]},
            "subtitle_removal": True}
     store = FakeStore(job)
     monkeypatch.setattr(mp, "Store", lambda p: store)

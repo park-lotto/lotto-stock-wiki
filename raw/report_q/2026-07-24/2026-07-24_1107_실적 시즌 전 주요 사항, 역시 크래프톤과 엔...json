@@ -1,0 +1,120 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-24_1107_실적 시즌 전 주요 사항, 역시 크래프톤과 엔...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "이준호",
+    "report_date": "2026년 7월 24일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "크래프톤",
+        "code": "259960",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "460,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "크래프톤은 2분기 영업이익 4,337억원(+76.2%YoY, -22.8%QoQ, OPM 33.6%)으로 높아진 컨센서스를 상회할 전망이다.",
+        "estimate_revision": "상향",
+        "next_catalyst": "8월 게임스컴 신작 정보 공개(NO LAW, 프로젝트 제타, 에이지 트위스터, 타래: 언바운드, PUBG 스튜디오 미공개)",
+        "thesis": [
+          "기존 서비스 라인업의 기대 이상의 성과 지속",
+          "PUBG PC의 높은 트래픽 기반 수익화",
+          "신작 출시 사이클 도래"
+        ],
+        "valuation_basis": "현재 크래프톤/NC의 12MF PER은 9배/10배로 과도한 저평가 구간",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "크래프톤은 2분기 영업이익 4,337억원(+76.2%YoY, -22.8%QoQ, OPM 33.6%)으로 높아진 컨센서스를 상회할 전망이다."
+      },
+      {
+        "name": "NC",
+        "code": "036570",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "420,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "NC는 2분기 영업이익 1,345억원(+792.0%YoY, +18.7%QoQ)으로 높아진 컨센서스에 부합할 전망이다.",
+        "estimate_revision": "상향",
+        "next_catalyst": "9월 30일 아이온2 글로벌 얼리 억세스 및 9월 도쿄게임쇼 신작 공개",
+        "thesis": [
+          "아이온2 및 리니지 클래식의 견조한 성과",
+          "신작 라인업(아이온2 글로벌, 호라이즌 스틸 프론티어즈, 길드워3)을 통한 글로벌 시장 성장",
+          "과도한 저평가 구간"
+        ],
+        "valuation_basis": "현재 크래프톤/NC의 12MF PER은 9배/10배로 과도한 저평가 구간",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "NC는 2분기 영업이익 1,345억원(+792.0%YoY, +18.7%QoQ)으로 높아진 컨센서스에 부합할 전망이다."
+      },
+      {
+        "name": "네오위즈",
+        "code": "095660",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "36,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "네오위즈는 컨센서스와 기존 추정치를 소폭 하회는 실적이 예상된다.",
+        "estimate_revision": null,
+        "next_catalyst": "2027년 다수의 신작 정보 공개",
+        "thesis": [
+          "브라운더스트2와 웹보드 게임의 견조한 이익",
+          "PC/콘솔 6종 라인업 및 기존 영업 가치 미반영",
+          "2027년 신작 정보 공개 기대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "네오위즈는 컨센서스와 기존 추정치를 소폭 하회는 실적이 예상된다."
+      },
+      {
+        "name": "시프트업",
+        "code": "462870",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "45,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "시프트업은 2분기 영업이익 331억원(-51.5%YoY, +53.8%QoQ, OPM 57.3%)으로 컨센서스를 상회하는 실적을 기록할 전망이다.",
+        "estimate_revision": null,
+        "next_catalyst": "4분기 프로젝트 스피릿 정보 공개",
+        "thesis": [
+          "승리의 여신: 니케의 3.5주년 업데이트 효과",
+          "스텔라 블레이드 출시 2주년 후에도 안정적인 판매량 유지",
+          "신작 기대감 미반영"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "시프트업은 2분기 영업이익 331억원(-51.5%YoY, +53.8%QoQ, OPM 57.3%)으로 컨센서스를 상회하는 실적을 기록할 전망이다."
+      },
+      {
+        "name": "넷마블",
+        "code": "251270",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "60,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "넷마블은 2분기 영업이익 778억원(-23.1%YoY, +22.8%QoQ, OPM 10.8%)으로 컨센서스를 하회할 전망이다.",
+        "estimate_revision": "하향",
+        "next_catalyst": "하반기 신작의 서프라이즈 및 대규모 업데이트",
+        "thesis": [
+          "상반기 출시작(일곱 개의 대죄: Origin, 몬길: STAR DIVE) 성과 부진",
+          "2분기 실적발표를 기점으로 추정치 조정 마무리 예상",
+          "다작을 통한 매출 창출 및 PLC 관리 역량 증명 필요"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "넷마블은 2분기 영업이익 778억원(-23.1%YoY, +22.8%QoQ, OPM 10.8%)으로 컨센서스를 하회할 전망이다."
+      }
+    ]
+  }
+}

@@ -54,22 +54,48 @@ def search_full(keyword, max_results=60, token=None, timeout=180, poll_interval=
         "shouldDownloadAvatars": False,
     }
     items = _run_with_rotation(payload, tokens, timeout, poll_interval, actor=_ACTOR)
-    out = []
-    for item in items:
-        vid = str(item.get("id") or "")
-        if not vid:
-            continue
-        meta = item.get("videoMeta") or {}
-        author = item.get("authorMeta") or {}
-        out.append({
-            "video_id": vid,
-            "url": item.get("webVideoUrl", ""),
-            "channel_title": author.get("name", ""),
-            "title": item.get("text", ""),
-            "thumbnail": meta.get("coverUrl") or meta.get("originalCoverUrl", ""),
-            "published_at": item.get("createTimeISO", ""),
-            "views": int(item.get("playCount") or 0),
-            "likes": int(item.get("diggCount") or 0),
-            "comments": int(item.get("commentCount") or 0),
-        })
-    return out
+    return [d for d in (_normalize(it) for it in items) if d]
+
+
+def _normalize(item):
+    """clockworks 원시 item → build_overseas_items/build_tiktok_items 스키마 dict.
+    video_id(id) 없으면 None(랭킹 키 없음)."""
+    vid = str(item.get("id") or "")
+    if not vid:
+        return None
+    meta = item.get("videoMeta") or {}
+    author = item.get("authorMeta") or {}
+    dur = meta.get("duration")
+    try:
+        dur = int(dur)
+        dur = dur // 1000 if dur > 6000 else dur   # ms로 오면 초로 환산
+    except (TypeError, ValueError):
+        dur = None
+    return {
+        "video_id": vid,
+        "url": item.get("webVideoUrl", ""),
+        "channel_title": author.get("name", ""),
+        "title": item.get("text", ""),
+        "thumbnail": meta.get("coverUrl") or meta.get("originalCoverUrl", ""),
+        "published_at": item.get("createTimeISO", ""),
+        "views": int(item.get("playCount") or 0),
+        "likes": int(item.get("diggCount") or 0),
+        "comments": int(item.get("commentCount") or 0),
+        "duration": dur,
+        "media_platform": "tiktok",
+    }
+
+
+def fetch_urls(urls, token=None, timeout=240, poll_interval=5):
+    """틱톡 영상 URL 리스트 → build_overseas_items 스키마 raw dict 리스트(postURLs 픽업).
+    무료 크롤로 고른 것만 Apify로 풀데이터 픽업할 때 쓴다(검색 스크랩과 달리 지정 URL만 과금)."""
+    urls = [u for u in (urls or []) if u]
+    if not urls:
+        return []
+    tokens = [token] if token else APIFY_TOKENS
+    if not tokens:
+        raise RuntimeError("tiktok_search: APIFY_TOKEN이 설정되지 않았습니다")
+    payload = {"postURLs": urls, "shouldDownloadCovers": False,
+               "shouldDownloadVideos": False, "shouldDownloadAvatars": False}
+    items = _run_with_rotation(payload, tokens, timeout, poll_interval, actor=_ACTOR)
+    return [d for d in (_normalize(it) for it in items) if d]

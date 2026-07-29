@@ -101,9 +101,9 @@ def test_mix_tab_removed():
 
 def test_aipick_and_emptystate_present():
     assert "renderAiPick" in HTML and "renderEmptyState" in HTML
-    assert "이 뼈대로 완전 새로운 대본을 만듭니다" in HTML
+    assert "이 백본으로 새 대본" in HTML and "3안" in HTML
     assert "아직 담긴 영상이 없어요" in HTML
-    assert "이대로 만들기 시작" in HTML          # ⚡ CTA
+    assert "이 백본으로 대본 3안 만들기" in HTML          # ⚡ CTA
     assert 'class="cta-shine"' in HTML or "'cta-shine'" in HTML
 
 
@@ -141,14 +141,25 @@ def test_footage_on_but_no_pick_state_distinct():
     assert "renderNoScriptState" in HTML
     assert "담긴 영상의 대본을 아직 분석하지 못했어요" in HTML
     # refreshStep0이 hasFootage를 renderAiPick에 넘겨 null-pick 분기를 가른다.
-    assert "renderAiPick(await r.json(), hasFootage)" in HTML
+    # (2026-07-26 자동적재로 응답을 변수 d에 받게 바뀌었다 — 옛 한 줄 리터럴 대신 계약만 검사)
+    assert "renderAiPick(d, hasFootage)" in HTML
+    # ★자동적재는 refreshStep0을 다시 부르지 않는다 — 상호 재귀가 무한루프 사고의 원인이었다.
+    _step0 = HTML[HTML.index("async function refreshStep0(){"):HTML.index("function fmtNum(")]
+    # 선언줄과 주석(//)은 뺀 '실행되는 코드'에서만 자기호출을 찾는다.
+    _body = [ln for ln in _step0.splitlines()[1:] if not ln.strip().startswith("//")]
+    assert not any("refreshStep0(" in ln for ln in _body), \
+        "refreshStep0이 자기 자신을 다시 부른다(2026-07-26 무한루프 사고의 형태)"
+    assert "_autoloadTried" in _step0, "자동적재 1회 래치가 없다"
 
 
 def test_pool_card_toggle_only():
     # renderPool()이 카드 옛 5버튼(뽑기/담기/메인/정보채우기)을 되살리지 않는다.
     # ★Task7(2026-07-23): 클릭=pickFootage(AI PICK 지정)로 바뀌었고, 빼기는 ✕(dropFootage) 하나만 남는다.
     start = HTML.index("function renderPool(){")
-    end = HTML.index("function previewMaterial")
+    # ★renderPool 본문만 자른다(바로 다음 함수 refreshStep0까지). 예전엔 previewMaterial까지
+    #   넓게 잘라 renderNoScriptState의 정당한 openScriptModal(${i}) 뽑기버튼까지 오검출했다
+    #   (2026-07-26 대본뽑기 버튼 복구). 이 테스트의 계약은 "renderPool이 옛 5버튼을 안 되살린다"뿐.
+    end = HTML.index("async function refreshStep0")
     body = HTML[start:end]
     assert "pickFootage(${i})" in body
     assert "dropFootage(${i})" in body
@@ -270,6 +281,8 @@ def test_revert_work_restores_matching_panel_step7(tmp_path):
     const PANEL_COUNT = 8;
     let cur = 0, MIX_JOB = null;
     function canGoNext(){ return true; }
+    // revertWork도 게이트 판정을 stepLocked() 하나에 위임한다(2026-07-26) — 소스와 동일 스텁.
+    function stepLocked(i){ if(i === 7) return false; return i >= 1 && !!MIX_JOB && !canGoNext(); }
     function setScriptMode(){}
     function renderPool(){}
     function syncFootageToMixUrls(){}
@@ -353,3 +366,62 @@ def test_set_matching_ui_toggles_button_disabled_state():
     assert "btn.disabled=true" in body
     assert "btn.disabled=false" in body
     assert ".aiPickCta" in body
+
+
+@pytest.mark.skipif(not shutil.which("node"), reason="node 필요")
+def test_boot_account_latest_or_local_cross_device_sync(tmp_path):
+    """계정 크로스기기 싱크(2026-07-26): 그냥 /produce로 왔을 때 _bootAccountLatestOrLocal은
+    (1) 로컬(진행중 작업/보낸 재료)을 **먼저 동기 복원**해 새로고침 연속성을 지키고,
+    (2) 로컬이 **완전히 빈 기기(새 브라우저/탭)일 때만** 계정 최신작업을 서버에서 이어받는다
+        (모바일→새 PC탭 자동로드). 로컬이 있으면 절대 덮지 않는다(유실·핑퐁 0).
+    로컬이 있는데 다른 기기 작업으로 바꾸려면 ?work=<id>로 명시적으로 연다.
+    node로 실제 실행해 5경우를 고정한다."""
+    start = HTML.index("async function _bootAccountLatestOrLocal(){")
+    end = HTML.index("_bootRestore();", start)      # 함수는 _bootRestore 호출 직전에 정의됨
+    body = HTML[start:end]
+
+    def run(ss, works):
+        driver = (
+            "'use strict';\n"
+            "const calls=[];\n"
+            "const _SS=" + json.dumps(ss) + ";\n"
+            "const sessionStorage={getItem:k=> (k in _SS)?_SS[k]:null};\n"
+            "const _WORKS=" + json.dumps(works) + ";\n"
+            "global.fetch=async()=>({json:async()=>({ok:true,works:_WORKS})});\n"
+            "let HANDOFF=[]; let WORK_ID=null; const STATE={script:''};\n"
+            # 실제 _consumeProduceHandoff처럼 로컬(handoff/produce_work)을 복원해 WORK_ID/HANDOFF를 세운다.
+            "function _consumeProduceHandoff(){\n"
+            "  calls.push('consume');\n"
+            "  let h=null; try{ h=JSON.parse(_SS.produce_handoff||'null'); }catch(e){}\n"
+            "  let w=null; try{ w=JSON.parse(_SS.produce_work||'null'); }catch(e){}\n"
+            "  if(h && h.length) HANDOFF=h.slice();\n"
+            "  if(w){ WORK_ID=w.work_id||null; if(w.handoff) HANDOFF=w.handoff; if(w.script) STATE.script=w.script; }\n"
+            "}\n"
+            "async function _restoreWork(id){ calls.push('restore:'+id); }\n"
+            "function _seedSaveBaseline(){}\n"
+            + body +
+            "\n(async()=>{await _bootAccountLatestOrLocal();"
+            "console.log(JSON.stringify(calls));})();\n"
+        )
+        js = tmp_path / "t.js"
+        js.write_text(driver, encoding="utf-8")
+        out = subprocess.run(["node", str(js)], capture_output=True, text=True,
+                             encoding="utf-8", errors="replace",
+                             stdin=subprocess.DEVNULL, timeout=30)
+        assert out.returncode == 0, out.stderr
+        return json.loads(out.stdout.strip().splitlines()[-1])
+
+    def pw(wid):   # produce_work sessionStorage 값(진행중 작업)
+        return json.dumps({"work_id": wid, "script": "x", "handoff": [{"url": "x"}]})
+
+    # (A) 방금 이 기기에서 보낸 재료 + 로컬작업 → 로컬 복원으로 유지(계정 최신 안 덮음)
+    assert run({"produce_handoff": json.dumps([{"url": "a"}]), "produce_work": pw("B")},
+               [{"work_id": "A"}]) == ["consume"]
+    # (B) 로컬작업 B 있음, 계정 최신 A(다름) → 로컬 유지(덮지 않음). 바꾸려면 ?work=로.
+    assert run({"produce_work": pw("B")}, [{"work_id": "A"}, {"work_id": "B"}]) == ["consume"]
+    # (C) 로컬 A == 계정 최신 A → 로컬 유지
+    assert run({"produce_work": pw("A")}, [{"work_id": "A"}]) == ["consume"]
+    # (D) 로컬 완전히 빈 기기(새 브라우저/탭) → 계정 최신작업 자동 이어받기(모바일→PC)
+    assert run({}, [{"work_id": "A"}]) == ["consume", "restore:A"]
+    # (E) 빈 기기 + 서버에도 작업 없음 → 빈 상태 유지(폴백)
+    assert run({}, []) == ["consume"]

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-26_1105_[Alphabet] 2026년 2분기 실적 발표 정리.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026. 7. 23",
+    "stocks": [
+      {
+        "name": "Alphabet",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 2분기 매출액: $119.8B (YoY +24.2%, QoQ +9.0%), 영업이익: $40.8B (YoY +30.4%, QoQ +2.7%), 당기순이익: $112.2B (YoY +297.9%, QoQ +79.3%)",
+        "estimate_revision": "2026년 연간 Capex 전망치는 기존 $180B~$190B에서 $195B~$205B로 상향 조정함",
+        "next_catalyst": "Gemini 3.5 Pro 테스트 및 차세대 모델(Gemini 4) 개발",
+        "thesis": [
+          "매출, 영업이익, 당기순이익 모두 시장 컨센서스를 상회함",
+          "구글 클라우드의 수주 잔고(Backlog)는 2분기 $514B를 달성했으며 전분기 대비 $50B 증가함",
+          "Capex 확대를 통해 AI 시장의 기회를 활용하고 매력적인 수익률을 창출할 것으로 전망함"
+        ],
+        "valuation_basis": null,
+        "risk": "Capex 증가로 인한 FCF 마이너스 전환 및 단기적인 현금흐름 압박, 감가상각비와 데이터센터 운용 비용 증가",
+        "supply_comment": "공급 제약 환경 속에서 내부 용량을 확충하는 동안 3분기에는 타사 용량 활용을 확대할 예정임",
+        "quote": "이번 분기 Capex의 대부분은 인공지능(AI) 투자 지원을 위한 기술 인프라에 사용되었으며, 약 60%는 서버에, 40%는 데이터센터 및 네트워킹 장비에 투자가 집행됨."
+      }
+    ]
+  }
+}

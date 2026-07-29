@@ -136,6 +136,10 @@ const STEP_LABELS = ['대본','화면 붙이기','TTS','꾸미기','썸네일','
 // (오브 라벨 수)와는 다른 축이다.
 const PANEL_COUNT = 8;
 function canGoNext(){ return PREVIEW_STATUS === 'ready' || PREVIEW_STATUS === 'failed'; }
+// ★_restoreWork의 게이트 재동기는 stepLocked() 하나만 본다(2026-07-26). 예전엔 복원 쪽이
+// canGoNext로 게이트를 **다시 구현**해 패널7 예외를 몰랐고, 매칭 화면에서 새로고침하면
+// 1단계로 쫓겨났다(사장님 제보). 소스와 동일 구현을 스텁한다.
+function stepLocked(i){ if(i === 7) return false; return i >= 1 && !!MIX_JOB && !canGoNext(); }
 function refreshNextBtn(){}
 function renderSteps(){}
 function showPanel(){}
@@ -210,6 +214,14 @@ def test_restore_renders_preview_and_step_but_gate_relocks(js_restore):
         '/api/mix/result/': {{ok:true, beats:{beats}, asset_suggestions:[]}} }};
       await _restoreWork('w-3');
       r.gate = {{cur}};
+      // ④ step7(화면 붙이기=매칭) + rendering(미확인) → 게이트 예외라 그 자리를 지킨다
+      reset();
+      RESPONSES = {{ '/api/produce/works/': {{ok:true, step:7, job_id:'job-9',
+          state:{{handoff:[{{url:'u'}}], script:'대본'}}, settings:{{}}}},
+        '/api/mix/status/': {{ok:true, preview_status:'rendering'}},
+        '/api/mix/result/': {{ok:true, beats:{beats}, asset_suggestions:[]}} }};
+      await _restoreWork('w-4');
+      r.match = {{cur}};
       console.log(JSON.stringify(r));
     """)
     assert '"s0":{"cur":0,"video":true,"review":true}' in out, (
@@ -217,3 +229,6 @@ def test_restore_renders_preview_and_step_but_gate_relocks(js_restore):
     assert '"s2":{"cur":2}' in out, f"②2단계 복원 실패 — 1단계로 떨어진다(증상2): {out}"
     assert '"gate":{"cur":0}' in out, (
         f"③미리보기 미확인인데 2단계로 복원됐다 — 유료 자막제거 게이트 우회: {out}")
+    assert '"match":{"cur":7}' in out, (
+        f"④매칭(화면 붙이기) 화면에서 새로고침했더니 1단계로 쫓겨났다 — 미리보기를 '만드는' "
+        f"자리라 게이트 예외인데 복원 쪽이 게이트를 다시 구현해 예외를 몰랐다(2026-07-26 제보): {out}")

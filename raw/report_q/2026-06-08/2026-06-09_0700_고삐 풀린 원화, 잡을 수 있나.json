@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_0700_고삐 풀린 원화, 잡을 수 있나.md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "박상현",
+    "report_date": "2026-06-08",
+    "target_kind": "market",
+    "market_direction": "null",
+    "macro_vars": [
+      "달러-원 환율",
+      "미국 연준 금리인상 기대감",
+      "미국 증시 조정",
+      "유가",
+      "외국인 국내 주식 순매도"
+    ],
+    "recommended_sectors": null,
+    "style": "null",
+    "event_calendar": [
+      {
+        "date": "5월",
+        "event": "미국 고용지표 발표"
+      }
+    ],
+    "top_picks": null,
+    "risk": "반도체 주가를 중심으로 한 글로벌 증시 조정, 미국 5월 소비자물가에 대한 경계감, 미국-이란간 종전 협상 불확실성 지속, 외국인의 국내 주식 순매도에 따른 수급 우려",
+    "quote": "금주: 고삐 풀린 원화를 제어할 재료가 부재"
+  }
+}

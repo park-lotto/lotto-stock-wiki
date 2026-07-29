@@ -2,8 +2,9 @@ from shopping_shorts import edit_plan
 
 
 def _fake_call(prompt, schema, **kw):
-    # 프롬프트에 헌장·팔레트가 실렸는지 + 후보 형태 반환
-    assert "스토리라인" in prompt and "[s0-0]" in prompt and "레퍼" in prompt
+    # 프롬프트에 이야기 지침·팔레트·제품(레퍼런스)이 실렸는지 + 후보 형태 반환
+    # (2026-07-26 단순화: '스토리 헌장'→'이야기체 5단계 스파인'으로 교체)
+    assert "이야기" in prompt and "[s0-0]" in prompt and "원본대본" in prompt
     return {"candidates": [{
         "hook": "양파 이렇게 두지 마세요",
         "story_person": "살림고수", "story_event": "썩는 양파 발견",
@@ -98,19 +99,28 @@ def test_score_prefers_high_fit_low_forced():
 
 
 def test_build_scene_first_plan_recommends_best(monkeypatch):
+    # 조각 5개 — 첫(s0-0)·끝(s0-4)은 인벤토리에서 제외(썸네일·CTA 차단, Task 3). 후보는
+    # 가운데 s0-1/s0-2/s0-3만 참조하므로 살아있다(실제 라이브 패턴).
     src = [{"video_id": "s0", "full_text": "원본", "segments": [
+        {"seg_id": "s0-0", "start": 0.0, "end": 1.0, "text": "", "scene_desc": "썸네일"},
         {"seg_id": "s0-1", "start": 1.0, "end": 2.0, "text": "", "scene_desc": "곰팡이"},
         {"seg_id": "s0-2", "start": 2.0, "end": 3.0, "text": "", "scene_desc": "단면"},
-        {"seg_id": "s0-3", "start": 3.0, "end": 5.0, "text": "", "scene_desc": "통풍"}]}]
+        {"seg_id": "s0-3", "start": 3.0, "end": 5.0, "text": "", "scene_desc": "통풍"},
+        {"seg_id": "s0-4", "start": 5.0, "end": 6.0, "text": "", "scene_desc": "CTA"}]}]
+
+    # 나레이션을 목표(20초≈114자) 근처로 채워 ①길이 재생성 게이트가 안 걸리게 한다 —
+    # 이 테스트의 의도는 '길이 동일 시 fit 높은 후보 추천'이다(세션#2 보강과 분리).
+    _long1 = "곰팡이 핀 양파를 봤는데 남편이 이거 먹어도 되냐고 묻길래 통풍만 잘하면 괜찮다고 안심시켰어요"
+    _long2 = "그래서 베란다에 며칠 널어놨더니 멀쩡해져서 남편이 이거 무슨 마법이냐고 깜짝 놀라더라고요 진짜"
 
     def fake_call(prompt, schema, **kw):
         return {"candidates": [
             {"hook": "A", "cta_keyword": "k", "beats": [
-                {"role": "훅", "narration": "곰팡이 보셨죠", "seg_ids": ["s0-1", "s0-2"], "fit": 5, "forced": False},
-                {"role": "cta", "narration": "댓글 남겨요", "seg_ids": ["s0-3"], "fit": 5, "forced": False}]},
+                {"role": "훅", "narration": _long1, "seg_ids": ["s0-1", "s0-2"], "fit": 5, "forced": False},
+                {"role": "cta", "narration": _long2, "seg_ids": ["s0-3"], "fit": 5, "forced": False}]},
             {"hook": "B", "cta_keyword": "k", "beats": [
-                {"role": "훅", "narration": "음", "seg_ids": ["s0-1"], "fit": 2, "forced": True},
-                {"role": "cta", "narration": "음", "seg_ids": ["s0-1"], "fit": 2, "forced": True}]}]}
+                {"role": "훅", "narration": _long1, "seg_ids": ["s0-1"], "fit": 2, "forced": True},
+                {"role": "cta", "narration": _long2, "seg_ids": ["s0-1"], "fit": 2, "forced": True}]}]}
 
     out = edit_plan.build_scene_first_plan(src, "원본대본", 20, n_candidates=2, call=fake_call)
     assert len(out["candidates"]) == 2

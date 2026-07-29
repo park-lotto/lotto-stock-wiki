@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "NH투자증권, 대신증권 Research Center",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-08_1104_롤러코스터 증시, 편안한 배당매력에 주목.md"
+  },
+  "questionnaire": {
+    "broker": "NH투자증권, 대신증권 Research Center",
+    "analyst": [
+      "박혜진",
+      "권용수RA"
+    ],
+    "report_date": "2026.06.05",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "NH투자증권",
+        "code": "005940",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "45,000",
+        "tp_prev": "45,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "추세가 지속된다면 동사의 2분기 브로커리지 수수료수익은 1분기 대비 27.6% 증가한 5,104억원 기록 전망",
+        "estimate_revision": "null",
+        "next_catalyst": "2026년 연간실적으로 높아진 배당매력, 낮아진 멀티플",
+        "thesis": [
+          "최근 조정으로 낮아진 주가로 배당수익률 5.7%까지 상승",
+          "IMA 사업 강화 및 리테일 신용공여 활용을 위한 4,000억원 유상증자 결정",
+          "2분기 일평균 거래대금 증가에 따른 브로커리지 수수료수익 확대"
+        ],
+        "valuation_basis": "2026년 예상 PBR 1.09x까지 하락, 목표주가 45,000원 유지",
+        "risk": "최근 금리변동성 확대되어 트레이딩수익이 관건",
+        "supply_comment": "동사는 지난 6월 2일 농협금융지주 3자배정 4,000억원 유상증자 결의. 증자목적은 IMA 사업역량 강화 및 리테일 신용공여 한도 확대.",
+        "quote": "우수한 ‘26년 연간실적으로 높아진 배당매력, 그리고 낮아진 멀티플이 긍정적"
+      }
+    ]
+  }
+}

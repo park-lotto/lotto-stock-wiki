@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "SK securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-08_1104_SK증권 Global Carbon Market Daily_260608.md"
+  },
+  "questionnaire": {
+    "broker": "SK securities",
+    "analyst": "최관순",
+    "report_date": "2026-06-08",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "유럽 배출권 가격: 76.9 유로/톤",
+      "미국 WTI 원유: 90.5 USD/bbl.",
+      "유럽 Brent 원유: 93.1 USD/bbl.",
+      "중동 Dubai 원유: 85.5 USD/bbl.",
+      "미국 NYM HH 천연가스: 3.2 USD/MMBtu",
+      "유럽 ICE Dutch TTF 천연가스: 48.5 EUR/MWh",
+      "일본/한국 NYM JKM LNG: 18.8 USD/MMBtu",
+      "유럽 ICE ARA 석탄: 134.0 USD/MT",
+      "중국 ZCE 석탄: 961.8 CNY/MT",
+      "호주 뉴캐슬 석탄: 148.8 USD/MT"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "KRBN",
+      "KEUA",
+      "KCCA",
+      "GRN",
+      "SOL 유럽탄소배출권",
+      "SOL 글로벌탄소배출권",
+      "KODEX 유럽탄소배출권",
+      "HANARO 글로벌탄소배출권"
+    ],
+    "risk": "국제유가, 중동 긴장완화 기대감에 하락…WTI 2.7%↓",
+    "quote": "국제유가, 중동 긴장완화 기대감에 하락…WTI 2.7%↓"
+  }
+}

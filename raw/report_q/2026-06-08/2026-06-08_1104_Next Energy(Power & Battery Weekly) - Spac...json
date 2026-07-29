@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-08_1104_Next Energy(Power & Battery Weekly) - Spac...md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "황성현",
+    "report_date": "2026.06.08",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "KOSPI ▼0.3",
+      "KRX 2차전지 ▼10.4",
+      "KRX 유틸리티 ▼6.3"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "전력",
+        "stance": "긍정",
+        "reason": "우주 데이터센터 100GW 시나리오 현실화 시 비중국 전체 캐파가 추가 수요를 충족하지 못해 풀가동 수렴 전망"
+      },
+      {
+        "sector": "신재생",
+        "stance": "긍정",
+        "reason": "미국 AD/CVD 확정 예상 및 중국의 태양광 제조장비 수출통제로 Non-China 공급망 프리미엄 확대"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026년 3분기",
+        "event": "한화솔루션 카터스빌 공장 양산"
+      },
+      {
+        "date": "2026년 7월",
+        "event": "AD/CVD 최종 판결"
+      }
+    ],
+    "top_picks": [
+      "한화솔루션",
+      "OCI 홀딩스"
+    ],
+    "risk": "스타쉽 12 차 발사 중 엔진 결함과 블루오리진 폭발 등 여러 사고로 투자 센티먼트 위축",
+    "quote": "이번 SpaceX IPO 로 시장은 우주 태양광 수요의 현실성을 재확인할 것으로 예상되며, 당사는 개별 발사 이벤트에 따른 주가 하락을 매수 기회로 활용하길 추천한다."
+  }
+}

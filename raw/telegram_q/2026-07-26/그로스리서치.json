@@ -1,0 +1,49 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "피에스케이홀딩스",
+      "rating": null,
+      "tp": null,
+      "ts": "15:51",
+      "quote": "이번 주 포커스: 피에스케이홀딩스, HBM4와 첨단 패키징 성장의 동시 수혜",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성바이오로직스",
+      "rating": null,
+      "tp": null,
+      "ts": "17:38",
+      "quote": "삼성바이오로직스, 2.7조원 규모 폴리펩타이드 인수, 펩타이드 CDMO 본격 진출",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "코오롱티슈진",
+      "rating": null,
+      "tp": null,
+      "ts": "17:38",
+      "quote": "코오롱티슈진, TG-C 미국 임상 3상 1차 평가지표 미충족 10월 추가 결과 주목",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "알테오젠",
+      "rating": null,
+      "tp": null,
+      "ts": "17:38",
+      "quote": "알테오젠, 유럽 특허 승소·미국 특허 리스크 완화, 7월 31일 본안 소송 변수",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "HLB",
+      "rating": null,
+      "tp": null,
+      "ts": "17:38",
+      "quote": "HLB, 리라푸그라티닙 FDA 레이트사이클 미팅 순항 9월 허가 결정 예정",
+      "sector": "바이오"
+    }
+  ]
+}

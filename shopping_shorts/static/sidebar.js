@@ -55,7 +55,8 @@
     ".ss-nav{width:270px;background:var(--panel,#111722);border-right:1px solid var(--line,#1e2735);" +
       "padding:20px 18px;flex-shrink:0;box-sizing:border-box;font-family:'Malgun Gothic',system-ui,sans-serif}" +
     // 메인 로고 = 크고 눈에 띄게(사장님 2026-07-21). 26px·900·자간압축으로 존재감을 준다.
-    ".ss-nav h1{font-size:26px;font-weight:900;letter-spacing:-.5px;margin:2px 0 16px;display:flex;align-items:center;gap:7px}" +
+    // 가운데 정렬(사장님 2026-07-25) — 로고는 사이드바 폭의 중앙에 놓는다.
+    ".ss-nav h1{font-size:26px;font-weight:900;letter-spacing:-.5px;margin:8px 0 20px;display:flex;align-items:center;justify-content:center;gap:8px}" +
     // 계정 패널(2026-07-22) — 로고 바로 아래. 구글아이디·등급·오늘 사용량·가입일·로그아웃.
     ".ss-acct{margin:0 0 16px;background:var(--inset,#0c1412);border:1px solid var(--line,#1e2735);border-radius:14px;padding:14px 14px 12px}" +
     ".ss-acct-top{display:flex;align-items:center;gap:11px}" +
@@ -75,7 +76,9 @@
     ".ss-acct-link:hover{border-color:var(--accent,#37e0bd);color:var(--sel-fg,#6ff0d6)}" +
     // 브랜드 텍스트만 민트 그라디언트(이모지는 제외 — text-fill:transparent가 이모지 글리프까지 비운다)
     // + 은은한 민트 글로우로 강조(drop-shadow는 clip:text에서도 글자 외곽에 먹는다).
-    ".ss-brand{background:var(--grad,linear-gradient(135deg,#6ff0d6,#1f9e7a));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;filter:drop-shadow(0 0 12px rgba(55,224,189,.35))}" +
+    /* 워드마크 v3(2026-07-25): 민트→오로라 + 끝에 골드 마침점. app.py .brand .nm과 같은 규칙 */
+    ".ss-brand{letter-spacing:-.3px;background:linear-gradient(135deg,#3ee0bf 0%,#a8f2e4 40%,#a78bff 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;filter:drop-shadow(0 0 14px rgba(62,224,191,.55))}" +
+    ".ss-brand::after{content:'.';background:none;-webkit-text-fill-color:#facc6b;color:#facc6b;filter:none;margin-left:1px}" +
     // 카테고리 = 박스로 시각 구분 + 크게(사장님 2026-07-21). 그룹을 inset 카드로 감싸고
     // 라벨은 카드 헤더처럼, 항목은 15px·굵게로 키워 눈에 잘 띄고 누르기 쉽게.
     ".ss-group{margin-bottom:14px;background:var(--inset,#0c1412);border:1px solid var(--line,#1e2735);border-radius:12px;padding:9px 9px 7px}" +
@@ -110,10 +113,23 @@
       ".ss-nav{width:100%;border-right:none;border-bottom:1px solid var(--line,#1e2735);display:flex;gap:6px;" +
         "overflow-x:auto;align-items:center;white-space:nowrap;padding:10px 12px}" +
       ".ss-acct{display:none}" +   // 모바일 가로바엔 계정카드 공간이 없다 → /account로
-      ".ss-nav h1{margin:0 8px 0 0;flex-shrink:0;font-size:19px}" +
+      // 모바일 가로바에선 가운데정렬을 되돌린다(옆으로 메뉴가 붙는 자리라 왼쪽 고정)
+      ".ss-nav h1{margin:0 8px 0 0;flex-shrink:0;font-size:19px;justify-content:flex-start}" +
       ".ss-group{margin:0;padding:0;background:none;border:none;display:flex;gap:6px;align-items:center}" +
       ".ss-label{display:none}" +
       ".ss-item{margin:0;padding:6px 10px;flex-shrink:0;font-size:12px}}";
+  // 버튼 쿠션감(전역, 2026-07-24) — 누르면 쏙 눌렸다 통통 튀어나옴. 사장님 선택 '쿠션' 프리셋.
+  // 자체 transition 없는 주버튼(.btn-next/.btn-prev/.tab/.cta-shine 등)엔 풀 적용. 자체
+  // transition을 가진 버튼은 페이지 규칙(클래스>요소)이 우선이라 배경 트랜지션을 안 밟고
+  // :active 누름 스케일만 얹힌다(회귀 없음). sidebar.js 로드 페이지(제작 워크플로 9종) 공통.
+  css +=
+    "button,.btn,.btn-next,.btn-prev,.tab,.cta,.cta-shine,[role=button]{" +
+      "transition:transform .34s cubic-bezier(.22,1.4,.4,1)}" +
+    "button:active,.btn:active,.btn-next:active,.btn-prev:active,.tab:active,.cta:active,.cta-shine:active,[role=button]:active{" +
+      "transform:scale(.94) translateY(1px);transition-duration:.05s;transition-timing-function:ease-out}" +
+    "@media(prefers-reduced-motion:reduce){" +
+      "button,.btn,.btn-next,.btn-prev,.tab,.cta,.cta-shine,[role=button]{transition:none}" +
+      "button:active,.btn:active,.btn-next:active,.btn-prev:active,.tab:active,.cta:active,.cta-shine:active,[role=button]:active{transform:none;filter:brightness(1.12)}}";
   var style = document.createElement("style");
   style.textContent = css;
   document.head.appendChild(style);
@@ -130,22 +146,13 @@
     });
   }
   // 로고 클릭 = 홈(/)으로(사장님 2026-07-21) — 커서·title로 클릭 가능함을 알린다.
-  // 브랜드 엠블럼(v2, app.py _LOGO_SVG와 동일 도형 — id만 ss- 접두어로 충돌 방지)
+  // 브랜드 엠블럼 v4 — app.py _LOGO_SVG와 같은 그림(AI 원본 PNG, 배경 투명 전처리).
+  // 사장님 선택: 내가 손으로 짠 SVG 대신 AI 원본 그림을 그대로 쓴다.
+  // 배경이 투명이라 사이드바 패널에 네모로 안 뜬다(직전 문제 해결).
   var BRAND_SVG =
-    '<svg width="24" height="24" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템박스" style="flex-shrink:0">' +
-    '<defs><radialGradient id="ssdk" cx="50%" cy="42%" r="65%">' +
-    '<stop offset="0" stop-color="#1c2b25"/><stop offset="1" stop-color="#0b120f"/></radialGradient>' +
-    '<linearGradient id="ssmg" x1="0" y1="0" x2="1" y2="1">' +
-    '<stop offset="0" stop-color="#6ff0d6"/><stop offset="1" stop-color="#1f9e7a"/></linearGradient>' +
-    '<linearGradient id="ssgg" x1="0" y1="0" x2="1" y2="1">' +
-    '<stop offset="0" stop-color="#ffe1a1"/><stop offset="1" stop-color="#f0a93a"/></linearGradient></defs>' +
-    '<circle cx="32" cy="32" r="29" fill="url(#ssdk)"/>' +
-    '<circle cx="32" cy="32" r="29" stroke="url(#ssmg)" stroke-width="2.4"/>' +
-    '<rect x="17.6" y="40" width="28.8" height="6" rx="2.8" fill="#1d8a68"/>' +
-    '<rect x="20.8" y="32" width="22.4" height="6" rx="2.8" fill="url(#ssmg)"/>' +
-    '<rect x="24" y="24" width="16" height="6" rx="2.8" fill="url(#ssgg)"/>' +
-    '<path d="M32 13.8l8 8.2H24l8-8.2z" fill="url(#ssgg)"/></svg>';
-  var html = "<h1 onclick=\"location.href='/'\" style=\"cursor:pointer\" title=\"홈으로\">" + BRAND_SVG + " <span class=\"ss-brand\">숏템박스</span></h1>";
+    '<img src="/brand-logo.png" alt="숏템메이커" width="44" height="44"' +
+    ' style="flex-shrink:0;filter:drop-shadow(0 0 9px rgba(62,224,191,.45))" decoding="async">';
+  var html = "<h1 onclick=\"location.href='/'\" style=\"cursor:pointer\" title=\"홈으로\">" + BRAND_SVG + " <span class=\"ss-brand\">숏템메이커</span></h1>";
   NAV.forEach(function (g) {
     html += '<div class="ss-group"><div class="ss-label">' + g.label + "</div>";
     g.items.forEach(function (it) {

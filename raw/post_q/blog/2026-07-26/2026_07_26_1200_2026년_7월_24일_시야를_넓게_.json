@@ -1,0 +1,13 @@
+{
+  "target_kind": "market",
+  "market_direction": "bear",
+  "macro_events": [
+    {
+      "fact": "코스피 10시 30분을 기점으로 급락",
+      "ts": "2026-07-24 10:30",
+      "quote": "코스피도 10시 30분을 기점으로 갑자기 아래로 쏟아졌고... 코스닥도 마찬가지였다."
+    }
+  ],
+  "sectors_mentioned": [],
+  "quote": "한번 무너지기 시작하면 가차없이 밀어버린다."
+}

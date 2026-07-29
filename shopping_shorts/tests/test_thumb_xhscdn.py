@@ -18,6 +18,15 @@ def test_xhscdn_allowed():
         assert app_module._reject_cdn_proxy(u, ALLOWED) is False, u
 
 
+def test_douyinpic_allowed():
+    # 도우인 커버 CDN(pN-sign.douyinpic.com) — 해외HOT 도우인 카드 썸네일(2026-07-26 실측)
+    for u in (
+        "https://p3-sign.douyinpic.com/tos-cn-i-dy/3a73f3711c8f49609b52e615f796",
+        "https://p9-sign.douyinpic.com/tos-cn-i-0813/o8AgyRZfe1iLBCAiCdBkvpiiAK",
+    ):
+        assert app_module._reject_cdn_proxy(u, ALLOWED) is False, u
+
+
 def test_other_known_hosts_still_allowed():
     for u in (
         "https://scontent-lax7-1.cdninstagram.com/v/t51/x.jpg",

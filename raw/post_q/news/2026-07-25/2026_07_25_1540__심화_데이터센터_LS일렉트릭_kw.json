@@ -1,0 +1,29 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "LS ELECTRIC",
+      "signal": "bull",
+      "reason": "LG유플러스와 AI 데이터센터 전력 인프라 및 차세대 직류(DC) 전력 기술 공동 개발 협력",
+      "ts": "2026-07-22",
+      "quote": "LS일렉·LG유플, 차세대 AI 데이터센터 전력 인프라 개발 맞손",
+      "sector": "전력"
+    },
+    {
+      "name": "LG유플러스",
+      "signal": "bull",
+      "reason": "LS ELECTRIC과 AI 데이터센터 전력 인프라 및 800V DC 표준 선점 위한 기술 개발 협력",
+      "ts": "2026-07-22",
+      "quote": "LS일렉트릭, LG유플러스와 AI 데이터센터 전력 인프라 맞손…800V DC 표준 선점 추진",
+      "sector": "통신"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "LS ELECTRIC과 LG유플러스가 AI 데이터센터 전력 인프라 및 직류 전력 기술 공동 개발을 위한 협력 체결",
+      "ts": "2026-07-22",
+      "quote": "LG유플러스-LS일렉트릭, 차세대 AI 데이터센터 직류 전력 인프라 공동 개발"
+    }
+  ],
+  "quote": "LS일렉트릭, LG유플러스와 AI 데이터센터 전력 인프라 맞손…800V DC 표준 선점 추진"
+}

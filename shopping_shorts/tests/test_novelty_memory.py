@@ -93,7 +93,8 @@ def test_plan_and_tts_records_usage(tmp_path, monkeypatch):
     assert "시어머니" in rec["persons"] and "보관법" in rec["ctas"]
 
 
-def test_plan_and_tts_injects_avoid_when_enabled(tmp_path, monkeypatch):
+def test_plan_and_tts_no_avoid_even_when_bank_enabled(tmp_path, monkeypatch):
+    # 2026-07-27: novelty(avoid) 완전 OFF — 은행은 parts_block(우수 라인)만 주입, 회피블록 미주입.
     store = Store(str(tmp_path / "t.db"))
     store.set_setting("bank_enabled", "1")
     store.record_script_usage("옛날에쓴훅", "옛인물", "옛키")
@@ -102,7 +103,7 @@ def test_plan_and_tts_injects_avoid_when_enabled(tmp_path, monkeypatch):
     _wire(monkeypatch, box)
     mp._plan_and_tts(store, "j", [{"full_text": "x"}], 20, "free", None, tmp_path / "w",
                      scene_first=True, reference_text="ref")
-    assert "옛날에쓴훅" in box["bank"]   # 회피블록이 프롬프트 컨텍스트에 실림
+    assert "옛날에쓴훅" not in box.get("bank", "")   # 회피(novelty) 미주입 — 드리프트 차단
 
 
 def test_plan_and_tts_no_avoid_when_disabled(tmp_path, monkeypatch):

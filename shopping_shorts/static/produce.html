@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>🛠 숏템메이커 · 숏템박스</title>
+  <title>🛠 제작소 · 숏템메이커</title>
   <!-- FOUC 방지: 저장된 테마를 렌더 전에 즉시 반영(sidebar.js는 body 주입이라 늦음) -->
   <script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   <style>
@@ -24,6 +24,33 @@
     .head{margin-bottom:8px}
     .head h2{margin:0;font-size:22px}
     .head .desc{color:var(--sub);font-size:13px;margin-top:4px}
+    /* 📂 내 작업목록 버튼 + 모달 (2026-07-26 크로스기기 싱크) */
+    .workBtns{display:flex;gap:8px;flex-wrap:wrap}
+    .workBtn{background:var(--panel);border:1px solid var(--line);color:var(--txt);font-size:13px;font-weight:600;
+      padding:8px 14px;border-radius:9px;cursor:pointer;white-space:nowrap}
+    .workBtn:hover{border-color:var(--accent);color:var(--accent)}
+    #worksBg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;
+      align-items:flex-start;justify-content:center;padding:24px;overflow:auto}
+    #worksBg.on{display:flex}
+    .worksBox{background:var(--panel);border:1px solid var(--line);border-radius:14px;width:100%;max-width:560px;
+      padding:20px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+    .worksBox h3{margin:0 0 4px;font-size:17px}
+    .worksBox .wsub{color:var(--sub);font-size:12px;margin-bottom:14px}
+    .wsList{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow:auto}
+    .wsRow{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;
+      padding:11px 12px;cursor:pointer;background:var(--bg)}
+    .wsRow:hover{border-color:var(--accent)}
+    .wsRow.cur{border-color:var(--accent);background:var(--sel-bg)}
+    .wsMain{flex:1;min-width:0}
+    .wsTitle{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .wsMeta{font-size:11px;color:var(--sub);margin-top:3px}
+    .wsBadge{flex:none;font-size:11px;font-weight:700;color:var(--accent);background:var(--sel-bg);
+      border-radius:6px;padding:3px 8px}
+    .wsDel{flex:none;background:none;border:1px solid var(--line);color:var(--sub);font-size:12px;
+      border-radius:6px;padding:5px 8px;cursor:pointer}
+    .wsDel:hover{border-color:var(--fire);color:var(--fire)}
+    .wsClose{margin-top:14px;width:100%;background:var(--bg);border:1px solid var(--line);color:var(--txt);
+      font-size:13px;padding:9px;border-radius:9px;cursor:pointer}
 
     /* T8: 저장 상태 + 되돌리기 — "지금 저장됐다"를 상시 보여 60대 신뢰감 */
     .saveBar{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin:0 0 4px;min-height:24px;font-size:13px}
@@ -229,6 +256,7 @@
     .cp-fail b{color:#fff}
     /* ── 2단계 자막제거 모션 (M1-M5) ── */
     @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    @keyframes rfBounce{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-7px) scale(1.12)}}
     .rise{animation:rise .28s ease both}
     /* M2 스위치 스프링 */
     .sw-knob{transition:left .25s cubic-bezier(.34,1.56,.64,1),background .25s ease}
@@ -335,12 +363,33 @@
   <div class="aurora-bg"></div>
   <main class="main">
     <div class="head">
-      <h2>🛠 숏템메이커</h2>
-      <div class="desc">레퍼런스 대본으로 시작해 영상·음성·꾸미기·SEO까지 한 번에 만듭니다.</div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div>
+          <h2>🛠 숏템메이커</h2>
+          <div class="desc">레퍼런스 대본으로 시작해 영상·음성·꾸미기·SEO까지 한 번에 만듭니다.</div>
+        </div>
+        <!-- 📂 내 작업목록 — 계정에 저장된 모든 작업(PC·모바일 공통)을 열어 이어서 한다.
+             서버는 이미 계정별로 작업을 갖고 있는데(GET /api/produce/works) 이걸 여는 화면이
+             없어 각 기기가 자기 sessionStorage의 마지막 작업만 봤다(2026-07-26 크로스기기 싱크 수정). -->
+        <div class="workBtns">
+          <button type="button" class="workBtn" onclick="openWorksModal()" title="이 계정에 저장된 모든 작업을 봅니다 — 어느 기기에서 만든 것이든 여기서 이어서 하세요.">📂 내 작업목록</button>
+          <button type="button" class="workBtn" onclick="location.href='/produce?new=1'" title="지금 것을 저장해 두고 빈 새 작업을 시작합니다.">＋ 새 작업</button>
+        </div>
+      </div>
     </div>
 
     <!-- 즐겨찾기에서 "영상제작으로 보내기"로 넘어왔을 때 표시(핸드오프 확인 배너) -->
     <div id="handoffBanner" style="display:none;background:var(--sel-bg);border:1px solid var(--accent);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--sel-fg)"></div>
+
+    <!-- 📂 내 작업목록 모달 — GET /api/produce/works(계정별)로 채운다. 클릭하면 ?work=<id>로 이동. -->
+    <div id="worksBg" onclick="if(event.target===this)closeWorksModal()">
+      <div class="worksBox">
+        <h3>📂 내 작업목록</h3>
+        <div class="wsub">이 계정에 저장된 작업이에요 — PC·모바일 어디서 만든 것이든 눌러서 이어서 하세요.</div>
+        <div class="wsList" id="wsList"><div class="wsMeta">불러오는 중…</div></div>
+        <button type="button" class="wsClose" onclick="closeWorksModal()">닫기</button>
+      </div>
+    </div>
 
     <!-- T8: 저장 상태 상시 표시 + 되돌리기(직전 저장 스냅샷 복원) -->
     <div class="saveBar">
@@ -445,8 +494,10 @@
         <input type="checkbox" id="noVoice" onchange="onNoVoice()"> <b>자막/음성 없이 진행</b>
         <span class="hint">켜면 TTS·자막 없이 영상만 내보냅니다</span>
       </label>
-      <details open style="margin:8px 0">
-        <summary style="cursor:pointer;font-weight:600">🎙 보이스 선택 (눌러서 접기)</summary>
+      <!-- 기본 접힘(2026-07-27 사장님): 1단계에서 이미 기본 성우로 완성돼 이 단계가 '빈 성우선택'으로
+           보이던 문제 — 완성본(아래 #ttsBeats)이 앞에 오고, 목소리를 바꿀 사람만 펼치게 한다. -->
+      <details style="margin:8px 0">
+        <summary style="cursor:pointer;font-weight:600">🎙 목소리 바꾸기 <span style="font-weight:400;color:var(--sub)">— 이미 기본 성우로 완성됐어요. 바꾸려면 눌러서 펼치기</span></summary>
       <div id="voiceUI" style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin-top:8px">
         <!-- ◀ 좌: 미리듣기·설정 (성우를 고르면 나타난다). 우측 성우카드와 나란히 — 스크롤 없이 한 화면 -->
         <div style="flex:1 1 300px;min-width:280px;position:sticky;top:8px">
@@ -472,8 +523,8 @@
               <label><input type="checkbox" id="advBoost" onchange="onAdv()"> Speaker boost</label>
             </div>
           </details>
-          <button onclick="previewVoice()" class="btn-prev" style="padding:8px 14px;margin-right:8px">🎧 이 대본으로 다시 듣기</button>
-          <button onclick="applyVoice()" class="btn-next" style="padding:8px 16px">이 음성으로 전체 생성</button>
+          <button onclick="previewVoice()" class="btn-prev" style="padding:8px 14px;margin-right:8px" title="이 성우·설정으로 대본 일부만 짧게 들어봅니다 (완성본 아님)">🎧 목소리만 미리듣기</button>
+          <button onclick="applyVoice()" class="btn-next" style="padding:8px 16px" title="이 성우로 대본 전체 음성을 만듭니다 — 완성되면 아래 미리보기에서 ▶ 완성본 전체 듣기">이 음성으로 전체 생성</button>
           <div id="voicePreview" style="margin-top:8px"></div>
           </div>
         </div>
@@ -483,7 +534,15 @@
         </div>
       </div>
       </details>
-      <div id="ttsBeats" style="margin-top:14px"></div>
+      <!-- 완성 음성 미리보기 슬롯 — 처음부터 큰 자리를 잡아둔다(생성 후 재생기가 '여기' 나타난다는
+           예고 + 레이아웃 점프 방지). renderTtsBeats()가 같은 자리(왼쪽 프레임+큰 재생버튼)로 채운다. -->
+      <div id="ttsBeats" style="margin-top:14px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
+          <div style="width:220px;aspect-ratio:9/16;border:1px dashed var(--line);border-radius:10px;background:var(--inset);display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;box-sizing:border-box;flex:0 0 auto">
+            <div class="hint">🎬 완성 음성 미리보기 자리<br><br>성우를 고르고 <b>[이 음성으로 전체 생성]</b>을 누르면<br>여기에 <b>▶ 완성본 전체 듣기</b>가 생겨요</div>
+          </div>
+        </div>
+      </div>
       <button class="btn-next" style="margin-top:12px;padding:8px 16px" onclick="vpGateNext()">다음 단계 (꾸미기) →</button>
     </section>
     <section class="panel" data-step="3">
@@ -497,7 +556,9 @@
             <label style="cursor:pointer;margin-left:6px;color:var(--txt)"><input type="checkbox" id="sceneBg" onchange="toggleSceneBg()"> 실장면 배경</label></div>
           <div id="hcPreview" style="position:relative;width:380px;aspect-ratio:9/16;background:#ffffff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
             <img id="hcPreviewBg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" alt="">
-            <div id="capPreviewText" style="position:absolute;left:50%;transform:translateX(-50%);text-align:center;white-space:pre-wrap;word-break:keep-all;line-height:1.2;z-index:2;pointer-events:none"></div>
+<!-- 2026-07-27 사장님: "원본 자막이 있던 자리" 점선 박스 제거(필요 없음). 자동 정렬
+                 (applyErasedRegion)과 '다시 그 자리로' 버튼은 그대로 — 표시만 뺀 것. -->
+            <div id="capPreviewText" style="position:absolute;left:50%;transform:translate(-50%,-50%);text-align:center;white-space:pre-wrap;word-break:keep-all;line-height:1.2;z-index:2;cursor:move;user-select:none"></div>
             <div id="hcPreviewText" style="position:absolute;transform:translate(-50%,-50%);text-align:center;line-height:1.18;word-break:keep-all;padding:0 6px;cursor:move;user-select:none;z-index:3"></div>
             <div id="extraPreview"></div>
             <img id="ovPreview" style="position:absolute;transform:translate(-50%,-50%);cursor:move;user-select:none;z-index:5;display:none" alt="">
@@ -616,7 +677,9 @@
                 <div style="margin-top:8px;font-size:12px;color:var(--sub)">글씨 크기 <span id="capSizeV">54</span>px
                   <input id="capSize" type="range" min="28" max="96" value="54" oninput="updateCaption()" style="width:100%"></div>
                 <div style="font-size:12px;color:var(--sub)">세로 위치 <span id="capYV">84</span>%
-                  <input id="capY" type="range" min="0" max="100" value="84" oninput="updateCaption()" style="width:100%"></div>
+                  <input id="capY" type="range" min="0" max="100" value="84" oninput="CAP_POS_TOUCHED=true;updateCaption()" style="width:100%"></div>
+                <div class="hint" style="margin-top:4px;font-size:11px">💡 미리보기에서 자막을 <b>드래그</b>하면 원하는 자리로 옮겨져요.</div>
+                <button type="button" id="capResetRegionBtn" class="tab" onclick="resetCapToRegion()" style="display:none;flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;margin-top:6px;white-space:nowrap">↩ 지워진 자막 자리(1번)로 되돌리기</button>
                 <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
                   <input id="capOutline" type="checkbox" checked onchange="updateCaption()"> 외곽선
                   <input id="capOutColor" type="color" value="#000000" oninput="updateCaption()">
@@ -746,10 +809,21 @@
       <h3>8 · 최종렌더</h3>
       <div class="sub">확정 대본·장면매칭·음성·자막제거 설정을 최종 영상으로 렌더합니다.</div>
       <div id="finalSummary" class="hint" style="margin-bottom:10px"></div>
-      <button id="btnFinalRender" class="btn-next" style="padding:12px 22px" onclick="renderFinal()">🎬 최종 렌더</button>
-      <div id="finalStatus" class="hint" style="margin-top:10px"></div>
-      <div id="finalVideo" style="margin-top:10px"></div>
-      <div id="exportBox" style="margin-top:14px"></div>
+      <!-- 인포크링크 등록 대기(2026-07-28) — 쿠팡 링크는 영상에 안 들어간다. 완성 후
+           인포크링크(링크인바이오)에 버튼으로 올리는 게 마지막 할 일이라 여기 둔다. -->
+      <div id="inpockBox" style="margin-bottom:12px"></div>
+      <!-- ◀ 좌: 미리보기(9:16, 2단계 미리보기와 같은 자리 규약) / 우: 렌더 버튼·상태·내보내기 -->
+      <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
+        <div style="flex:0 1 300px;min-width:240px">
+          <div class="hint" style="margin-bottom:6px">🪞 완성 영상 (9:16)</div>
+          <div id="finalVideo"></div>
+        </div>
+        <div style="flex:1 1 320px;min-width:260px">
+          <button id="btnFinalRender" class="btn-next" style="padding:12px 22px" onclick="renderFinal()">🎬 최종 렌더</button>
+          <div id="finalStatus" class="hint" style="margin-top:10px"></div>
+          <div id="exportBox" style="margin-top:14px"></div>
+        </div>
+      </div>
     </section>
 
     <!-- 8) 화면 붙이기(매칭) — Task 6(2026-07-23) 신규. 물리적으로는 꼬리에 붙지만(data-step=7,
@@ -775,6 +849,9 @@
           <div id="mixStatus" class="hint"></div>
           <div style="font-size:13px;font-weight:800;margin:8px 0 6px">① 새 대본 고르기</div>
           <div id="mixCandidates"></div>
+          <!-- 쿠팡 연결(2026-07-28) — 접힌 '장면 확인'(#mixReview) 안에 넣으면 묻힌다.
+               #mixPreviewCta와 같은 규약으로 패널의 항상 보이는 자리에 둔다. -->
+          <div id="coupangSlot" style="margin-top:14px"></div>
           <div style="font-size:13px;font-weight:800;margin:16px 0 6px">② 장면 확인</div>
           <details id="matchSceneDetails">
             <summary style="cursor:pointer;font-size:12px;color:var(--sub);font-weight:800">장면 바꾸기 · 전체 보기 ▾</summary>
@@ -886,7 +963,7 @@ function initMatch(){
     const cands = document.getElementById('mixCandidates'); if(cands) cands.innerHTML = '';
     const rev = document.getElementById('mixReview'); if(rev) rev.innerHTML = '';
     const st = document.getElementById('mixStatus');
-    if(st) st.textContent = '아직 매칭을 시작하지 않았어요 — 1단계에서 ⚡ 이대로 만들기 시작을 눌러주세요.';
+    if(st) st.textContent = '아직 매칭을 시작하지 않았어요 — 1단계에서 ⚡ 이 백본으로 대본 3안 만들기를 눌러주세요.';
     return;
   }
   // 매칭 진행/완료 중 — 이미 그려진 게 있으면(폴링·자동전환이 이미 채웠다) 손대지 않는다.
@@ -1055,7 +1132,11 @@ function renderSeo(){
        <div class="sub">추천 제목 (클릭하면 선택)</div><ol class="cands">${cands}</ol>`) +
     seoCard('description','영상 설명',
       `<textarea id="seoDesc" rows="6"
-                 oninput="SEO.description=this.value; seoSave()">${seoEsc(SEO.description)}</textarea>`) +
+                 oninput="SEO.description=this.value; seoSave()">${seoEsc(SEO.description)}</textarea>
+       <div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap">
+         <button class="mini" onclick="seoAppendCoupang()">🛒 쿠팡 링크 + 고지문구 붙이기</button>
+         <span id="seoCoupangMsg" class="sub"></span>
+       </div>`) +
     seoCard('tags',`태그 (${(SEO.tags||[]).length})`,
       `<div class="chips">${tags}</div>
        <div class="tagAdd">
@@ -1085,6 +1166,28 @@ function seoTagDel(i){
   if(!SEO || !Array.isArray(SEO.tags)) return;
   SEO.tags.splice(i, 1);
   renderSeo(); seoSave();
+}
+
+// 설명란에 쿠팡 상품 링크 + 공정위 대가성 고지문구를 덧붙인다(2026-07-28).
+// AI 생성 결과를 자동으로 건드리지 않고 버튼으로 둔 이유: seoGenerate가 설명을
+// 다시 만들 때마다 자동 삽입분이 사라지거나 두 번 붙는 사고가 나기 때문이다.
+async function seoAppendCoupang(){
+  const msg=document.getElementById('seoCoupangMsg');
+  const set=(t,color)=>{ if(msg){ msg.textContent=t; msg.style.color=color||''; } };
+  if(!MIX_JOB){ set('2단계 영상 매칭을 먼저 하세요','var(--fire)'); return; }
+  let d;
+  try{ d=await (await fetch('/api/mix/product/'+encodeURIComponent(MIX_JOB))).json(); }
+  catch(e){ set('네트워크 오류','var(--fire)'); return; }
+  if(!d || !d.ok || !d.product){ set('연결할 쿠팡 상품이 없습니다 — 2단계 편집안에서 지정하세요','var(--fire)'); return; }
+  const block=d.description_block||'';
+  if(!block){ set('링크가 비어 있습니다','var(--fire)'); return; }
+  const cur=(SEO && SEO.description) || '';
+  if(cur.indexOf(d.final_link)>=0){ set('이미 들어있습니다'); return; }
+  SEO.description = cur ? (cur.replace(/\s+$/,'') + '\n\n' + block) : block;
+  const ta=document.getElementById('seoDesc'); if(ta) ta.value=SEO.description;
+  seoSave();
+  set(d.product.partner_url ? '붙였습니다' : '붙였습니다 — ⚠️ 파트너스 추적 링크가 아니라 수수료가 안 붙습니다',
+      d.product.partner_url ? 'var(--ok)' : 'var(--fire)');
 }
 
 function seoTagAdd(){
@@ -1123,6 +1226,7 @@ function initHeadcopy(){
   renderMyPresets();
   renderHighlightRules();
   bindHCDrag();
+  bindCapDrag();
   // ★복원된 스타일 밀어넣기(C-2 잔여) — 반드시 아래 updateHC/updateCaption **앞**이다.
   // 그것들이 먼저 돌면 빈 DOM 입력칸을 읽어 STATE.headcopy/captionStyle을 기본값으로 덮는다
   // (라이브 실측: 색이 #ffe100→#ff8800으로 죽었다). 여기서 pristine한 STATE로 DOM을 먼저 채우면
@@ -1142,6 +1246,7 @@ function initHeadcopy(){
   renderExtraPreview();
   renderOverlayPreview();
   applyDefaultStyleOnEntry();   // step5 진입 시 1회: 미터치 상태면 기본 스타일+실장면 배경 자동 적용
+  ensureCleanRegions();         // 지워진 자막 자리 표시 + 자막 자동정렬(미터치 시)
   loadBeatsPreview();
   syncMotionPicker();
 }
@@ -1231,6 +1336,12 @@ async function fxPoll(){
 // ── 자막 스타일(나레이션 자막) ──────────────
 let CAP_EFFECT='none';
 let CAP_SHADOW=false;   // 은은한 드롭 그림자(레퍼런스 자막룩). 프리셋이 켬. 두꺼운 테두리 대안.
+// 자막 가로위치(%) — 슬라이더가 아니라 드래그/자동정렬/되돌리기로만 바뀐다. 기본 중앙(50).
+let CAP_X_PCT=50;
+// 지워진 자막영역(자막제거 시 서버가 diff로 구함): {sources:{vid:box}, primary:box}. box=중심x/y·w/h·score(%).
+let CLEAN_REGIONS=null;
+// 사장님이 자막을 직접 드래그로 옮겼나 — true면 '1번 자리' 자동정렬이 그 위치를 덮지 않는다.
+let CAP_POS_TOUCHED=false;
 let PREVIEW_CAP_TEXT='이렇게 자막이 나와요';   // 스텝퍼가 비트별 자막으로 교체
 // ── 🎞 공용 장면 프리뷰 스텝퍼 — 비트마다 프레임+자막 넘겨보기(TTS·검수판 트랙도 재사용) ──
 let BEATS_PREVIEW=[];   // [{i,total,caption}]
@@ -1299,13 +1410,16 @@ function updateCaption(){
     // 검정바(black@0.82)가 깔렸다(2026-07-19 실사고: job 66d120a5897e caption_style.bar=true).
     // 백엔드 기본값을 OFF로 고쳐도 여기서 명시적 true를 보내니 무력했다. 바가 정말
     // 필요한 경우(자막제거 없이 원본 소각자막 덮기)는 별도 UI가 생길 때 다시 노출한다.
-    bar:false, effect:CAP_EFFECT, shadow:CAP_SHADOW, shadow_color:'#000000', shadow_d:3 };
+    bar:false, effect:CAP_EFFECT, shadow:CAP_SHADOW, shadow_color:'#000000', shadow_d:3,
+    // 가로위치(%): 드래그 결과. 백엔드 _caption_drawtexts가 이 값으로 x_center를 잡는다(2026-07-25).
+    x_pct:CAP_X_PCT };
   STATE.captionStyle=cs;
   g('capSizeV').textContent=cs.size; g('capYV').textContent=cs.y_pct;
   const el=g('capPreviewText'); if(!el) return;
   const scale=PREVIEW_W/VIDEO_W;
   el.textContent=PREVIEW_CAP_TEXT;
   el.style.fontFamily=`'${fontCss(cs.font)}',sans-serif`;
+  el.style.left=cs.x_pct+'%';   // 가로 드래그 반영(기본 50% 중앙)
   el.style.top=cs.y_pct+'%'; el.style.transform='translate(-50%,-50%)';
   el.style.color=cs.color; el.style.fontWeight=900;
   // 자막은 무조건 한 줄 — 줄바꿈 금지(nowrap). 폭(0.92) 넘으면 폰트 자동축소로 한 줄에 맞춘다.
@@ -1461,6 +1575,9 @@ function applyConfig(h, c){
   if(c){ // 자막(y 또는 y_pct 둘 다 허용)
     g('capFont').value=c.font; g('capColor').value=c.color; g('capSize').value=c.size;
     g('capY').value=(c.y!=null?c.y:(c.y_pct!=null?c.y_pct:84));
+    // 가로위치 복원: 저장된 스타일에 x_pct가 있으면 그 자리를 되살리고, 자동정렬이 덮지 않게 표시.
+    // 프리셋(x_pct 없음)은 중앙(50)으로 둔다.
+    if(c.x_pct!=null){ CAP_X_PCT=c.x_pct; CAP_POS_TOUCHED=true; } else { CAP_X_PCT=50; }
     g('capOutline').checked=!!c.outline; g('capOutColor').value=c.outline_color||'#000000'; g('capOutW').value=c.outline_w||0;
     g('capBox').checked=!!c.box; g('capBoxColor').value=c.box_color||'#000000'; g('capBoxPad').value=(c.box_pad!=null?c.box_pad:12); g('capBoxOpacity').value=(c.box_opacity!=null?c.box_opacity:80);
     CAP_SHADOW=!!c.shadow;   // 은은한 그림자 프리셋 반영
@@ -1859,6 +1976,54 @@ function bindHCDrag(){
   document.addEventListener('mouseup', ()=>drag=false);
   document.addEventListener('touchend', ()=>drag=false);
 }
+// 자막 자유 드래그(가로+세로). 헤드카피(bindHCDrag)와 달리 x·y 둘 다 옮긴다 — 사장님이
+// 지워진 자막 자리로 끌어다 놓거나 피할 수 있게. CAP_X_PCT/capY를 갱신하고 다시 그린다.
+function bindCapDrag(){
+  const pv=document.getElementById('hcPreview'), tx=document.getElementById('capPreviewText');
+  if(!pv||!tx||tx._dragBound) return; tx._dragBound=true;
+  tx.style.cursor='move'; let drag=false;
+  const move=e=>{ if(!drag) return; const r=pv.getBoundingClientRect();
+    const cx=(e.touches?e.touches[0].clientX:e.clientX), cy=(e.touches?e.touches[0].clientY:e.clientY);
+    CAP_X_PCT=Math.round(Math.max(0,Math.min(100,(cx-r.left)/r.width*100)));
+    const y=Math.round(Math.max(0,Math.min(100,(cy-r.top)/r.height*100)));
+    document.getElementById('capY').value=y; CAP_POS_TOUCHED=true; updateCaption(); };
+  tx.addEventListener('mousedown', e=>{drag=true; e.preventDefault();});
+  tx.addEventListener('touchstart', e=>{drag=true;}, {passive:true});
+  document.addEventListener('mousemove', move);
+  document.addEventListener('touchmove', move, {passive:true});
+  document.addEventListener('mouseup', ()=>drag=false);
+  document.addEventListener('touchend', ()=>drag=false);
+}
+// 지워진 자막영역(primary=넓고 자주 쓰인 1번 자리)이 있으면 '다시 그 자리로' 버튼만 연다.
+// ★2026-07-27 사장님 요청으로 점선 박스 표시(capRegionMarker)는 제거했다 — 미리보기를
+//   가려서 필요 없다고 하셨다. 위치 정보 자체는 자동 정렬에 계속 쓴다(applyErasedRegion).
+function renderErasedRegion(){
+  if(!(CLEAN_REGIONS||{}).primary) return;
+  const btn=document.getElementById('capResetRegionBtn'); if(btn) btn.style.display='';
+}
+// step5 진입 시: 지워진 1번 자리에 자막을 자동 정렬(딸깍). 사장님이 직접 드래그했으면 안 덮는다.
+function applyErasedRegion(){
+  renderErasedRegion();
+  const p=(CLEAN_REGIONS||{}).primary;
+  if(!p || CAP_POS_TOUCHED) return;
+  CAP_X_PCT=Math.round(p.x_pct);
+  document.getElementById('capY').value=Math.round(p.y_pct);
+  updateCaption();
+}
+// 드래그로 옮긴 자막을 다시 1번 자리로. (버튼)
+function resetCapToRegion(){
+  const p=(CLEAN_REGIONS||{}).primary; if(!p) return;
+  CAP_X_PCT=Math.round(p.x_pct);
+  document.getElementById('capY').value=Math.round(p.y_pct);
+  CAP_POS_TOUCHED=false; updateCaption();
+}
+// clean_regions를 아직 못 받았으면 상태 API에서 1회 당겨온다(자막제거 폴러를 안 거치고 5단계로 온 경우).
+async function ensureCleanRegions(){
+  if(CLEAN_REGIONS || !MIX_JOB) { applyErasedRegion(); return; }
+  try{ const d=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
+    if(d && d.clean_regions) CLEAN_REGIONS=d.clean_regions; }catch(e){}
+  applyErasedRegion();
+}
 async function saveHeadcopy(){
   if(!MIX_JOB) return;
   try{ await fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -1918,7 +2083,19 @@ function lenText(t){ t=t||''; const c=t.replace(/\s/g,'').length; return `${t.le
 // 둘 다 살린다. main 쪽은 saveWork() 앞에 HANDOFF 길이 가드가 붙어 있는데, 그걸 그대로 받으면
 // 영상 없이 대본만 확정한 작업이 다시 저장되지 않는다 — 그게 사장님이 잃어버린 구간이다.
 // 가드는 이제 saveWork() 안에 있다(대본만 있어도 저장).
-function onScriptInput(){ const ta=document.getElementById('scriptText'); STATE.script=ta.value; document.getElementById('lenHint').textContent=lenText(STATE.script); refreshFinalPeek(); saveWork(); }
+function onScriptInput(){ const ta=document.getElementById('scriptText'); STATE.script=ta.value; STATE.script_carryover=false; document.getElementById('lenHint').textContent=lenText(STATE.script); refreshFinalPeek(); saveWork(); }
+
+// 이전 작업에서 복원된 대본을 한 번에 지운다 — 새 영상 작업인데 옛 대본이 매칭·제목까지
+// 실려 들어가는 사고(2026-07-25 '책상' 제목)의 원클릭 탈출구. 영상풀은 그대로 둔다.
+function clearCarriedScript(){
+  STATE.script=''; STATE.script_carryover=false;
+  STATE.script_src_idx=null; STATE.script_from_wiki=null;
+  const ta=document.getElementById('scriptText'); if(ta) ta.value='';
+  const lh=document.getElementById('lenHint'); if(lh) lh.textContent=lenText('');
+  refreshFinalPeek(); saveWork();
+  const b=document.getElementById('handoffBanner');
+  if(b) b.innerHTML = '🧹 이전 대본을 지웠어요 — 새 영상에서 📝대본을 뽑거나 직접 쓰세요.';
+}
 function updateLen(){ onScriptInput(); }
 
 // 요소 버튼 목록 — 키는 백엔드 ELEM_KEYS와 일치, 순서만 사용성순.
@@ -2128,7 +2305,8 @@ function _workState(){
   // work_id를 같이 넣는 이유(구멍 1): _consumeProduceHandoff가 끝에서 saveWork()를 무조건 부르는데
   // WORK_ID를 되살리지 않으면 **제작소를 열 때마다 같은 작업이 새 작업으로 복제된다**.
   return {handoff:HANDOFF, script:STATE.script||'', script_src_idx:STATE.script_src_idx,
-          script_from_wiki:STATE.script_from_wiki, step:cur, work_id:WORK_ID};
+          script_from_wiki:STATE.script_from_wiki, step:cur, work_id:WORK_ID,
+          hook_inpoint_delta:(STATE.hook_inpoint_delta||0)};   // 3초 훅 미세조정(P1, 서버 render가 읽음)
 }
 async function _pushWork(){
   // 디바운스가 끝난 시점의 **최신** 상태를 보낸다(예약 시점의 스냅샷이 아니다).
@@ -2177,6 +2355,63 @@ function saveWork(){
   _workTimer = setTimeout(_pushWork, 1000);                                      // 서버는 디바운스
 }
 function clearWork(){ try{ sessionStorage.removeItem('produce_work'); }catch(e){} }
+
+// ── 📂 내 작업목록 (2026-07-26 크로스기기 싱크) ───────────────────────────
+// 서버는 이미 계정별로 작업을 저장한다(GET /api/produce/works). 이걸 여는 화면이 없어
+// 각 기기가 자기 sessionStorage의 마지막 작업만 봤고, 그래서 PC·모바일이 서로 다른 작업을
+// 보여 "기록이 안 맞는다"가 났다. 여기서 목록을 열어 같은 작업을 어느 기기에서든 이어서 한다.
+function _wsWhen(iso){
+  if(!iso) return '';
+  try{
+    const t = new Date(iso).getTime(); if(isNaN(t)) return '';
+    const m = Math.floor((Date.now()-t)/60000);
+    if(m < 1) return '방금';
+    if(m < 60) return m+'분 전';
+    const h = Math.floor(m/60); if(h < 24) return h+'시간 전';
+    const d = Math.floor(h/24); if(d < 7) return d+'일 전';
+    const dt = new Date(iso); return (dt.getMonth()+1)+'/'+dt.getDate();
+  }catch(e){ return ''; }
+}
+async function openWorksModal(){
+  const bg = document.getElementById('worksBg'); if(!bg) return;
+  bg.classList.add('on');
+  const list = document.getElementById('wsList');
+  list.innerHTML = '<div class="wsMeta">불러오는 중…</div>';
+  let works = [];
+  try{
+    const d = await (await fetch('/api/produce/works')).json();
+    works = (d && d.ok && Array.isArray(d.works)) ? d.works : [];
+  }catch(e){ list.innerHTML = '<div class="wsMeta">목록을 불러오지 못했어요.</div>'; return; }
+  if(!works.length){ list.innerHTML = '<div class="wsMeta">아직 저장된 작업이 없어요. 영상을 담고 진행하면 여기에 쌓입니다.</div>'; return; }
+  list.innerHTML = works.map(w => {
+    const cur = (typeof WORK_ID !== 'undefined' && w.work_id === WORK_ID);
+    const title = (w.title && w.title.trim()) ? esc(w.title.trim()) : '제목 없음 (대본 미작성)';
+    const step = (typeof w.step === 'number') ? (w.step+1) : 1;
+    const when = _wsWhen(w.updated_at);
+    return '<div class="wsRow'+(cur?' cur':'')+'" onclick="openWork(\''+esc(w.work_id)+'\')">'
+      + '<div class="wsMain"><div class="wsTitle">'+title+(cur?' · <span style="color:var(--accent)">지금 작업</span>':'')+'</div>'
+      + '<div class="wsMeta">'+when+(when?' · ':'')+'단계 '+step+'/8</div></div>'
+      + '<span class="wsBadge">'+step+'/8</span>'
+      + '<button class="wsDel" onclick="event.stopPropagation();deleteWork(\''+esc(w.work_id)+'\',this)">삭제</button>'
+      + '</div>';
+  }).join('');
+}
+function closeWorksModal(){ const bg=document.getElementById('worksBg'); if(bg) bg.classList.remove('on'); }
+function openWork(wid){
+  if(typeof WORK_ID !== 'undefined' && wid === WORK_ID){ closeWorksModal(); return; }  // 이미 이 작업
+  location.href = '/produce?work=' + encodeURIComponent(wid);
+}
+async function deleteWork(wid, btn){
+  if(!confirm('이 작업을 목록에서 지울까요? (되돌릴 수 없어요)')) return;
+  try{
+    const d = await (await fetch('/api/produce/works/'+encodeURIComponent(wid)+'/delete', {method:'POST'})).json();
+    if(d && d.ok){
+      const row = btn.closest('.wsRow'); if(row) row.remove();
+      const list = document.getElementById('wsList');
+      if(list && !list.querySelector('.wsRow')) list.innerHTML = '<div class="wsMeta">저장된 작업이 없어요.</div>';
+    } else { alert('삭제하지 못했어요.'); }
+  }catch(e){ alert('삭제하지 못했어요.'); }
+}
 // T8: 직전 저장 스냅샷으로 되돌린다. 복원 범위 = 스냅샷이 담는 것(대본·영상풀·단계).
 // 새 저장 형식을 발명하지 않는다 — 검증된 _restoreWork의 하이드레이션을 그대로 미러링한다(§_workState 주석).
 function revertWork(){
@@ -2186,11 +2421,12 @@ function revertWork(){
   STATE.script = w.script || '';
   STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
   STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;
+  STATE.hook_inpoint_delta = (typeof w.hook_inpoint_delta === 'number') ? w.hook_inpoint_delta : 0;  // 훅 미세조정 복원(P1)
   if(STATE.script) setScriptMode('manual');
   renderPool(); syncFootageToMixUrls(); refreshFinalPeek();
   const st = w.step;
   cur = (typeof st === 'number' && st >= 0 && st < PANEL_COUNT) ? st : cur;
-  if(cur > 0 && MIX_JOB && !canGoNext()) cur = 0;   // 미리보기 미확인이면 1단계로(게이트 규약 유지)
+  if(stepLocked(cur)) cur = 0;   // 게이트 판정은 stepLocked() 하나로(패널7 예외 포함, 위 _restoreWork 주석)
   renderSteps(); showPanel(); refreshNextBtn();
   saveWork();   // 되돌린 상태를 새 현재로 저장(_pushWork가 스냅샷 체인을 전진 → 다시 누르면 원상복귀)
 }
@@ -2207,6 +2443,7 @@ async function _restoreWork(workId){
   STATE.script = w.script || '';
   STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
   STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;
+  STATE.hook_inpoint_delta = (typeof w.hook_inpoint_delta === 'number') ? w.hook_inpoint_delta : 0;  // 훅 미세조정 복원(P1)
   if(STATE.script) setScriptMode('manual');
   renderPool(); syncFootageToMixUrls(); refreshFinalPeek();
   // Task4: 서버복원 경로도 AI PICK/빈 상태를 다시 계산한다. typeof 가드 — 이 함수를 앵커
@@ -2244,7 +2481,12 @@ async function _restoreWork(workId){
   }
   const st = d.step;
   cur = (typeof st === 'number' && st >= 0 && st < PANEL_COUNT) ? st : 0;
-  if(cur > 0 && MIX_JOB && !canGoNext()) cur = 0;   // 미리보기 미확인이면 1단계로 되돌린다
+  // ★게이트는 stepLocked() 하나로만 판정한다(2026-07-26 사장님 제보 "새로고침하면 2단계로
+  //   되돌아온다"). 예전엔 여기서 `cur>0 && MIX_JOB && !canGoNext()`를 직접 다시 썼는데,
+  //   그 식은 stepLocked()의 **패널7 예외를 모른다** — 매칭·대본후보·미리보기를 "만드는"
+  //   자리가 바로 패널7이라, 미리보기를 아직 안 만든 사람은 새로고침할 때마다 그 자리에서
+  //   1단계로 쫓겨났다(다른 페이지 갔다 와도 동일). 판정을 두 군데 쓰면 반드시 갈라진다.
+  if(stepLocked(cur)) cur = 0;
   renderSteps(); showPanel(); refreshNextBtn();
   // ★편집안(#mixReview)·미리보기 <video>를 되살린다(2026-07-19). 게이트 재동기(위)가 PREVIEW_STATUS를
   //   서버 job에서 이미 읽어 맞췄다 — _restoreMixContext는 그 값을 안 건드리고 화면만 다시 그린다.
@@ -2276,19 +2518,245 @@ async function _loadBankInjected(){
       +'<div class="hint" style="margin-top:4px">↑ AI가 이 대본을 쓸 때 참고한 은행 부품입니다(훅·어미·CTA=말투 / 근거·갈등·감정=전개 / 아크=스파인).</div>';
   }catch(e){ box.textContent='불러오기 실패'; }
 }
+// ── 쿠팡 연결(2026-07-28) ─────────────────────────────── COUPANG-START
+// 편집안이 뽑은 affiliate_target(이 영상이 팔 제품)을 검색어로 써서 쿠팡 검색을
+// 새 탭으로 열고, 고른 상품 URL을 여기서 job에 저장한다. 파트너스 오픈API는
+// 최종승인(판매실적) 전이라 자동 검색·딥링크 생성은 아직 못 한다 — 수동 흐름.
+// ★링크는 영상에 안 들어간다. 여기서 "무엇을 팔지"만 확정하고, 실제 링크는
+//   7단계 SEO 설명란과 8단계 인포크 등록에서 꺼내 쓴다.
+let COUPANG={target:'',search_url:'',partners_page:'',product:null,editing:false,
+              results:[],opened:false,autoFor:null,chips:null};
+function renderCoupangSlot(d){
+  COUPANG.target=d.affiliate_target||'';
+  COUPANG.search_url=d.coupang_search_url||'';
+  COUPANG.partners_page=d.partners_link_page||'';
+  COUPANG.product=d.product||null;
+  COUPANG.editing=false;
+  const slot=document.getElementById('coupangSlot');
+  if(!slot) return;
+  // 팔 제품을 못 잡은 영상(레시피·정보성)엔 크게 그리지 않는다 — 대신 한 줄짜리 문을
+  // 남긴다. 예전엔 통째로 안 그려서 "쿠팡 붙이는 데가 어디냐"가 됐다(2026-07-29 사장님).
+  if(!COUPANG.target && !COUPANG.product && !COUPANG.opened){
+    slot.innerHTML=`<div class="hint" style="cursor:pointer" onclick="coupangOpen()">
+      🛒 <b style="color:var(--accent)">쿠팡 상품 연결하기</b> — 이 영상에 팔 상품을 붙이려면 누르세요</div>`;
+    return;
+  }
+  slot.innerHTML=`<div id="coupangBox" style="border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--inset)">${coupangInner()}</div>`;
+  // ★자동으로 찾는다 — 사장님이 버튼을 누를 이유가 없다. 이미 확정된 상품이 있으면 안 건드린다.
+  // 같은 검색어로는 한 번만 — 이 함수는 믹스 결과를 새로 그릴 때마다 불리므로,
+  // 가드가 없으면 화면 갱신마다 쿠팡을 두들겨 소프트 차단에 걸린다(실측된 함정).
+  const kw=(COUPANG.target||'').trim();
+  if(!COUPANG.product && kw && COUPANG.autoFor!==kw){ COUPANG.autoFor=kw; COUPANG.chips=null; coupangCrawl(); }
+}
+// 제품을 못 잡은 영상에서 "쿠팡 상품 연결하기"를 눌렀을 때 — 폼을 펼친다.
+function coupangOpen(){ COUPANG.opened=true; renderCoupangSlot({
+  affiliate_target:COUPANG.target, coupang_search_url:COUPANG.search_url,
+  partners_link_page:COUPANG.partners_page, product:COUPANG.product}); }
+function coupangInner(){
+  const p=COUPANG.editing?null:COUPANG.product;
+  const head=`<div style="font-size:13px;color:var(--sub);display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      🔗 쿠팡 연결 대상: <b style="color:var(--txt)">${esc(COUPANG.target||(COUPANG.product&&COUPANG.product.keyword)||'—')}</b>
+      ${COUPANG.search_url?`<a href="${esc(COUPANG.search_url)}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">🔍 쿠팡에서 검색 ↗</a>`:''}
+    </div>`;
+  if(p){
+    const final=p.partner_url||p.url;
+    return head+`<div style="margin-top:8px;font-size:13px">
+      ✅ <b>${esc(p.name||p.keyword||'선택한 상품')}</b>
+      ${p.product_id?`<span class="hint">· ${esc(p.product_id)}</span>`:''}
+      ${p.partner_url
+        ? '<span style="color:var(--ok)"> · 파트너스 링크 ✓</span>'
+        : '<span style="color:var(--fire)"> · 파트너스 링크 없음 (수수료 미적립)</span>'}
+      <div style="word-break:break-all;color:var(--accent);margin-top:4px;font-size:12px">${esc(final)}</div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        ${p.partner_url?'':`<button class="btn-next" style="padding:6px 12px;font-size:12px" onclick="coupangMakeLink()">🔗 파트너스에서 링크 만들기</button>`}
+        <button class="btn-prev" style="padding:6px 12px;font-size:12px" onclick="coupangCopy()">📋 링크 복사</button>
+        <button class="btn-prev" style="padding:6px 12px;font-size:12px" onclick="coupangEdit()">수정</button>
+        <button class="btn-prev" style="padding:6px 12px;font-size:12px" onclick="coupangSave({clear:true})">해제</button>
+      </div></div>`;
+  }
+  return head+coupangForm();
+}
+function coupangForm(){
+  const p=COUPANG.product||{};
+  const inp='width:100%;margin-bottom:5px;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px;font-size:12px';
+  return `<div style="margin-top:8px">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+      <input id="cpQuery" style="flex:1;min-width:150px;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 8px;font-size:12px"
+             placeholder="검색어(고쳐서 다시 찾기)" value="${esc((COUPANG.product&&COUPANG.product.keyword)||COUPANG.target||'')}"
+             onkeydown="if(event.key==='Enter'){event.preventDefault();coupangCrawl();}">
+      <button class="btn-prev" style="padding:6px 12px;font-size:12px" onclick="coupangCrawl()">🔄 다시 찾기</button>
+      <button class="btn-prev" style="padding:6px 12px;font-size:12px" onclick="coupangLens()"
+              title="영상 화면을 역검색해 브랜드·모델까지 찾아냅니다(유료 조회라 누를 때만 돕니다)">🔍 화면으로 정확히</button>
+      <span id="cpSearchMsg" class="hint"></span>
+    </div>
+    <div id="cpChips"></div>
+    <div id="cpResults"></div>
+    <div class="hint" style="margin-bottom:5px">찾기가 막히면(또는 원하는 게 안 나오면) 위 검색 링크에서 상품을 고른 뒤 주소창 URL을 붙여넣으세요.
+      ${COUPANG.partners_page?`파트너스 추적 링크는 <a href="${esc(COUPANG.partners_page)}" target="_blank" rel="noopener" style="color:var(--accent)">파트너스 링크 만들기 ↗</a>에서 생성해 아래 칸에.`:''}</div>
+    <input id="cpUrl" style="${inp}" placeholder="쿠팡 상품 URL (https://www.coupang.com/vp/products/...)" value="${esc(p.url||'')}">
+    <input id="cpName" style="${inp}" placeholder="상품명 (선택 — 설명란·인포크 버튼 이름으로 씁니다)" value="${esc(p.name||COUPANG.target||'')}">
+    <input id="cpPartner" style="${inp}" placeholder="파트너스 추적 링크 (선택 — https://link.coupang.com/...)" value="${esc(p.partner_url||'')}">
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn-next" style="padding:7px 14px;font-size:12px" onclick="coupangSave()">저장</button>
+      <span id="cpMsg" class="hint" style="color:var(--fire)"></span>
+    </div></div>`;
+}
+// 상품 찾기(크롤, 2026-07-29) — 서버가 헤드풀 크롬으로 쿠팡 검색결과를 긁어 카드로 준다.
+// 쿠팡은 데이터센터 IP·헤드리스를 막으므로 서버에 주거용 프록시가 붙어 있어야 뜬다.
+// 실패하면 조용히 안내만 띄우고 아래 수동 붙여넣기 칸이 그대로 남는다.
+// 검색어 다듬기 — affiliate_target은 서술형("갈라진 프린팅 수선")일 때가 많아 그대로 넣으면
+// 엉뚱한 상품이 나온다. 대본까지 읽혀 "살 만한 상품명"으로 바꾸고, 후보는 칩으로 놓는다.
+async function coupangSuggest(){
+  if(COUPANG.chips) return COUPANG.chips;
+  const script=(typeof STATE!=='undefined' && STATE && STATE.script)||'';
+  try{
+    const r=await fetch('/api/coupang/suggest',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({target:COUPANG.target||'',script:script})});
+    const d=await r.json().catch(()=>({}));
+    COUPANG.chips=(d.queries||[]).filter(Boolean);
+  }catch(e){ COUPANG.chips=[]; }
+  if(!COUPANG.chips.length && COUPANG.target) COUPANG.chips=[COUPANG.target];
+  return COUPANG.chips;
+}
+function renderCoupangChips(active){
+  const el=document.getElementById('cpChips');
+  if(!el) return;
+  const chips=COUPANG.chips||[];
+  el.innerHTML=chips.length<2 ? '' :
+    `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center">
+      <span class="hint">검색어:</span>`+chips.map(c=>`<button class="${c===active?'btn-next':'btn-prev'}"
+        style="padding:4px 10px;font-size:12px;border-radius:999px"
+        title="${esc(c)}"
+        onclick="coupangCrawl(${JSON.stringify(c).replace(/"/g,'&quot;')})">${esc(c.length>16?c.slice(0,15)+'…':c)}</button>`).join('')+`</div>`;
+}
+async function coupangCrawl(forced){
+  const msg=document.getElementById('cpSearchMsg');
+  const box=document.getElementById('cpResults');
+  const field=document.getElementById('cpQuery');
+  let q=(forced||'').trim();
+  if(!q){
+    // 자동 진입(사장님이 아무것도 안 건드린 상태)이면 AI가 다듬은 첫 검색어를 쓴다.
+    const typed=((field||{}).value||'').trim();
+    if(!typed || typed===COUPANG.target){
+      if(msg){ msg.style.color='var(--sub)'; msg.textContent='검색어 다듬는 중…'; }
+      const chips=await coupangSuggest();
+      q=chips[0]||typed||COUPANG.target||'';
+    } else { q=typed; }
+  }
+  if(field && q) field.value=q;
+  renderCoupangChips(q);
+  if(!q){ if(msg) msg.textContent='검색어를 넣으세요'; return; }
+  if(msg){ msg.style.color='var(--sub)'; msg.textContent='쿠팡 검색 중… (10~30초)'; }
+  if(box) box.innerHTML='';
+  try{
+    const r=await fetch('/api/coupang/search?q='+encodeURIComponent(q));
+    const d=await r.json().catch(()=>({ok:false,notice:'응답 파싱 실패'}));
+    if(!d.ok||!(d.items||[]).length){
+      if(msg){ msg.style.color='var(--fire)'; msg.textContent=d.notice||'결과 없음 — 아래에 URL을 직접 붙여넣으세요'; }
+      return;
+    }
+    COUPANG.results=d.items;
+    if(msg){ msg.style.color='var(--sub)'; msg.textContent=d.items.length+'개 — 클릭하면 이 영상의 상품으로 확정됩니다'; }
+    if(box) box.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:10px;max-height:340px;overflow-y:auto">`
+      + d.items.map((it,i)=>`<div onclick="coupangPick(${i})" title="${esc(it.name)}"
+           style="cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--bg)">
+          <img src="${esc(it.image)}" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:contain;border-radius:6px;background:#fff">
+          <div style="font-size:11px;line-height:1.35;margin-top:4px;max-height:44px;overflow:hidden">${esc(it.name)}</div>
+          <div style="font-size:12px;font-weight:700;margin-top:3px">${esc(it.price||'')}</div>
+          <div class="hint" style="font-size:10px">${esc(it.rating||'')}${it.is_ad?' · 광고':''}</div>
+        </div>`).join('')+`</div>`;
+  }catch(e){ if(msg){ msg.style.color='var(--fire)'; msg.textContent='네트워크 오류'; } }
+}
+// 🔍 화면으로 정확히 — 영상 프레임을 역검색해 브랜드·모델까지 찾는다(유료라 누를 때만).
+// 찾아낸 이름은 칩 맨 앞에 꽂고 그걸로 바로 재검색한다. 못 찾으면 지금 결과를 그대로 둔다.
+async function coupangLens(){
+  const msg=document.getElementById('cpSearchMsg');
+  if(!MIX_JOB){ if(msg){ msg.style.color='var(--fire)'; msg.textContent='먼저 영상을 담아야 합니다'; } return; }
+  if(msg){ msg.style.color='var(--sub)'; msg.textContent='화면 역검색 중… (20~40초)'; }
+  try{
+    const r=await fetch('/api/coupang/lens',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({job_id:MIX_JOB})});
+    const d=await r.json().catch(()=>({ok:false}));
+    if(!d.ok||!d.name){
+      if(msg){ msg.style.color='var(--fire)'; msg.textContent=d.error||'화면에서 상품을 못 찾았습니다'; }
+      return;
+    }
+    COUPANG.chips=[d.name].concat((COUPANG.chips||[]).filter(c=>c!==d.name));
+    coupangCrawl(d.name);
+  }catch(e){ if(msg){ msg.style.color='var(--fire)'; msg.textContent='네트워크 오류'; } }
+}
+// 카드 클릭 = 상품 확정. 입력칸을 채운 뒤 곧바로 저장한다(클릭 한 번으로 끝나게).
+function coupangPick(i){
+  const it=(COUPANG.results||[])[i]; if(!it) return;
+  const url=document.getElementById('cpUrl'), name=document.getElementById('cpName');
+  if(url) url.value=it.url;
+  if(name) name.value=it.name;
+  coupangSave();
+}
+// 🔗 파트너스에서 링크 만들기 — 상품 URL을 클립보드에 담고 파트너스 링크 생성화면을 연다.
+// 승인 전엔 딥링크 API를 못 쓰므로(파트너스 최종승인 필요) 사람이 붙여넣는 수밖에 없다.
+// 그 "복사 → 파트너스 열기 → 붙여넣기" 중 앞 두 단계를 없앤다.
+async function coupangMakeLink(){
+  const p=COUPANG.product; if(!p) return;
+  let copied=false;
+  try{ await navigator.clipboard.writeText(p.url||''); copied=true; }catch(e){}
+  window.open(COUPANG.partners_page||'https://partners.coupang.com/#affiliate/ws/link',
+              '_blank','noopener');
+  const box=document.getElementById('coupangBox');
+  if(box){
+    const tip=document.createElement('div');
+    tip.className='hint'; tip.style.marginTop='6px'; tip.style.color='var(--accent)';
+    tip.textContent=(copied?'상품 URL을 복사했습니다 — ':'상품 URL을 직접 복사하세요 — ')
+      +'파트너스 창에 붙여넣어 링크를 만든 뒤, [수정]의 "파트너스 추적 링크" 칸에 저장하세요.';
+    box.appendChild(tip);
+  }
+}
+function coupangEdit(){ COUPANG.editing=true; redrawCoupang(); }
+function redrawCoupang(){ const el=document.getElementById('coupangBox'); if(el) el.innerHTML=coupangInner(); }
+function coupangCopy(){
+  const p=COUPANG.product; if(!p) return;
+  try{ navigator.clipboard.writeText(p.partner_url||p.url||''); }catch(e){}
+}
+async function coupangSave(opts){
+  opts=opts||{};
+  const msg=document.getElementById('cpMsg');
+  const body={job_id:MIX_JOB, clear:!!opts.clear};
+  if(!opts.clear){
+    body.url=((document.getElementById('cpUrl')||{}).value||'').trim();
+    body.name=((document.getElementById('cpName')||{}).value||'').trim();
+    body.partner_url=((document.getElementById('cpPartner')||{}).value||'').trim();
+    body.keyword=COUPANG.target;
+    // 파트너스 링크만 있어도 저장 가능 — 그게 최종 링크라 원본 상품 URL이 없어도 된다.
+    if(!body.url && body.partner_url) body.url=body.partner_url;
+    if(!body.url){ if(msg) msg.textContent='상품 URL을 넣으세요'; return; }
+  }
+  try{
+    const r=await fetch('/api/mix/product',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await r.json().catch(()=>({ok:false,error:'응답 파싱 실패'}));
+    if(!r.ok||!d.ok){ if(msg) msg.textContent=d.error||'저장 실패'; return; }
+    COUPANG.product=d.product; COUPANG.editing=false; redrawCoupang();
+  }catch(e){ if(msg) msg.textContent='네트워크 오류'; }
+}
+// ── 쿠팡 연결 끝 ── COUPANG-END
+
 function _renderMixReviewBody(d){
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
   if(typeof window!=='undefined') window._mixBeats = d.beats || [];   // 조각 전체 보기(paletteStats)가 읽는다 — 실제 쓴 컷 집계용
   const el=document.getElementById('mixReview');
   // ★P1/P2(2026-07-24): 조용한 폴백·불변식 위반을 화면에 띄운다. 예전엔 개선 생성기가 실패해도
   // 옛 대본이 조용히 나와 "고쳤는데 왜 그대로냐"가 반복됐다 — 이제 왜 그런지 보인다.
-  const _genWarn = (d.generator==='legacy_fallback')
+  // ★게이트/생성기 경고는 관리자(cid0)만 본다(2026-07-25) — 일반 사용자는 기술 경고 대신
+  // 최선안을 조용히 받는다(백엔드는 gate를 항상 저장, 표시만 역할로 게이팅).
+  // typeof 가드: 이 함수는 node 테스트에서도 실행돼 window가 없을 수 있다(ReferenceError 방지).
+  const _isAdmin = (typeof window !== 'undefined') && window.IS_ADMIN;
+  const _genWarn = (_isAdmin && d.generator==='legacy_fallback')
     ? `<div style="border:1px solid var(--fire);border-radius:10px;padding:10px;margin-bottom:8px;background:rgba(255,90,90,.08);font-size:13px">⚠️ <b>개선 생성기 실패 → 예전 방식 대본</b><div class="hint" style="margin-top:4px">${esc(d.generator_note||'다시 매칭을 권장합니다.')}</div></div>`
     : '';
-  const _gv = (d.gate && !d.gate.ok) ? (d.gate.violations||[]) : [];
+  const _gv = (_isAdmin && d.gate && !d.gate.ok) ? (d.gate.violations||[]) : [];
   const _gateWarn = _gv.length
     ? `<div style="border:1px solid var(--fire);border-radius:10px;padding:10px;margin-bottom:8px;background:rgba(255,90,90,.06);font-size:13px">🚧 <b>렌더 전 점검에서 걸린 것</b><ul style="margin:6px 0 0 18px;padding:0">${_gv.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`
     : '';
+  renderCoupangSlot(d);   // 접힌 '장면 확인' 밖(#coupangSlot)에 그린다 — 묻히면 아무도 못 본다
   el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+_genWarn+_gateWarn+renderCoverageSignal(d.beats||[])
     +`<button class="btn" style="margin:0 0 8px;padding:5px 12px;font-size:12px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="openPaletteView()" title="소스를 몇 조각으로 나눠 이 영상에 몇 컷 썼는지 썸네일로 봅니다">🔪 조각 전체 보기</button>`
     +`<div id="paletteBox" data-open="0" style="margin-bottom:8px"></div>`
@@ -2311,7 +2779,16 @@ function _renderMixReviewBody(d){
   // 🎬 대본 × 영상 믹스 미리보기 버튼은 접힌 '장면 확인' 안이 아니라 패널의 항상 보이는 자리(#mixPreviewCta)에
   // 그린다(2026-07-23 사장님: "넘어왔는데 랜더하는 게 없다" — 버튼이 접힌 details에 묻혀 있었다).
   const _cta=document.getElementById('mixPreviewCta');
-  if(_cta) _cta.innerHTML='<button id="btnPreview" class="btn-next" style="padding:8px 16px" onclick="startPreview()">🎬 대본 × 영상 믹스 미리보기</button>'
+  // 🎯 3초 훅 미세조정(P1): 백엔드가 훅 시작을 모션 피크로 자동 이동한다. 여기서 0.2초씩 앞/뒤로 override.
+  // ★라벨은 인라인 계산(외부함수 _fmtHookDelta 의존 금지 — 리프레시 회귀테스트가 함수 부분집합만 평가).
+  const _hd=(STATE.hook_inpoint_delta||0);
+  const _hdLabel=_hd>0?('+'+_hd.toFixed(1)+'s'):(_hd<0?(_hd.toFixed(1)+'s'):'0.0s');
+  const _hookAdj='<div id="hookAdjust" style="margin-top:8px;font-size:13px;opacity:.92">🎯 훅 시작점: '
+    +'<button type="button" onclick="nudgeHook(-1)" style="padding:3px 9px;margin:0 3px">◀ 0.2초</button>'
+    +'<span id="hookDeltaLabel" style="display:inline-block;min-width:44px;text-align:center;font-weight:600">'+_hdLabel+'</span>'
+    +'<button type="button" onclick="nudgeHook(1)" style="padding:3px 9px;margin:0 3px">0.2초 ▶</button>'
+    +'<span style="opacity:.6"> (모션 피크 자동, 조정 후 다시 미리보기)</span></div>';
+  if(_cta) _cta.innerHTML='<button id="btnPreview" class="btn-next" style="padding:8px 16px" onclick="startPreview()">🎬 대본 × 영상 믹스 미리보기</button>'+_hookAdj
     +'<button class="btn" style="margin-left:8px;padding:8px 14px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="cancelMixReview()" title="이 결과가 마음에 안 들면 소스·대본을 고쳐 처음부터 다시 만듭니다">🔄 마음에 안 들어요 · 다시 만들기</button>'
     +'<div class="hint" style="margin-top:6px">위 A/B/C에서 대본을 고른 뒤 미리보기 🪞 · 마음에 안 들면 <b>🔄 다시 만들기</b></div>';
   const _pvPanel=document.getElementById('mixPreviewPanel'), _pvBox=document.getElementById('mixPreview');
@@ -2391,17 +2868,29 @@ function _consumeProduceHandoff(){
   sessionStorage.removeItem('produce_handoff');
   sessionStorage.removeItem('produce_mix_urls');
   if(!HANDOFF.length && !savedScript){ renderPool(); return; }   // 받은 것도 복원할 것도 없음
-  if(restored && savedScript){ STATE.script = savedScript; setScriptMode('manual'); }
+  if(restored && savedScript){
+    STATE.script = savedScript; setScriptMode('manual');
+    // ★캐리오버 표시(2026-07-25 실사고): 새 영상을 받아와도 이전 작업의 확정 대본이 그대로
+    //   복원돼, 그 대본이 매칭·썸네일 제목까지 실려 들어간다(새 '걸레' 영상에 옛 '책상' 제목).
+    //   사용자가 이 대본을 직접 손대기 전까지는 "이전 작업 것"임을 기억해 뒀다가,
+    //   새 영상과 섞이는 순간(매칭 시작)에 한 번 확인받는다. 편집하면 내 대본이 된 것 → 해제.
+    STATE.script_carryover = true;
+  }
   const b=document.getElementById('handoffBanner');
   if(b){
     b.style.display='block';
-    b.innerHTML = arrived
-      ? `⭐ 레퍼런스에서 <b>영상 ${arrived}개</b>를 받았어요 (영상풀 총 ${HANDOFF.length}개) — 각 영상에서 📝대본·🎬담기(화면)를 골라주세요.`
+    // 새 영상이 왔는데 옛 대본이 살아 있으면 그 사실을 눈에 보이게 + 한 번에 지우는 버튼.
+    const _carryWarn = (arrived && savedScript)
+      ? `<div style="margin-top:6px;color:#ffb454">⚠️ <b>이전 작업의 대본</b>이 남아 있어요(첫줄: "${(savedScript.split('\n')[0]||'').slice(0,30).replace(/</g,'&lt;')}…"). 새 영상용이 아니면 지우고 시작하세요. `
+        + `<button class="btn" style="padding:3px 10px;margin-left:6px" onclick="clearCarriedScript()">🧹 이전 대본 지우기</button></div>`
+      : '';
+    b.innerHTML = (arrived
+      ? `⭐ 레퍼런스에서 <b>영상 ${arrived}개</b>를 받았어요 (영상풀 총 ${HANDOFF.length}개) — 각 영상에서 📝대본·🎬담기(화면)를 골라주세요.` + _carryWarn
       : (restored
           ? (HANDOFF.length
               ? `↩️ 이어서 작업 중 — 받은 <b>영상 ${HANDOFF.length}개</b>와 상태·대본을 유지했어요.`
               : `↩️ 이어서 작업 중 — <b>확정한 대본</b>을 유지했어요. 영상은 아직 담지 않았습니다.`)
-          : `⭐ 즐겨찾기에서 <b>영상 ${HANDOFF.length}개</b>를 받았어요 — 각 영상에서 📝대본·🎬담기(화면)를 골라주세요. 같은 영상을 둘 다로 써도 됩니다.`);
+          : `⭐ 즐겨찾기에서 <b>영상 ${HANDOFF.length}개</b>를 받았어요 — 각 영상에서 📝대본·🎬담기(화면)를 골라주세요. 같은 영상을 둘 다로 써도 됩니다.`));
   }
   renderPool();
   syncFootageToMixUrls();
@@ -2468,14 +2957,94 @@ function renderPool(){
 async function refreshStep0(){
   const hasFootage = HANDOFF.some(h=>h.useFootage);
   if(!hasFootage){ renderEmptyState(); return; }
+  // ★레이스 차단(2026-07-29 사장님 "담기하면 엉뚱한 8개 소스 비교, 새로고침해야 맞음"):
+  //   saveWork()는 서버 저장을 1초 디바운스한다(setTimeout _pushWork). 근데 담기(pickFootage) 직후
+  //   여기서 바로 aipick을 부르면, 서버 work.state.handoff가 아직 옛것(또는 빈값)이라
+  //   _load_work_sources가 '계정 전체 담김픽'으로 폴백해 이 작업과 무관한 옛 소스가 뜬다.
+  //   aipick 조회 전에 밀린 저장을 즉시 서버로 밀어넣어 handoff·WORK_ID를 확정한 뒤 읽는다.
+  if(_workTimer){ clearTimeout(_workTimer); _workTimer = null; }
+  try{ await _pushWork(); }catch(e){}
   try{
     // 사장님이 썸네일을 클릭해 특정 영상을 AI PICK으로 지정(bbMain)했으면 서버에도 강제한다
     // (안 그러면 완성도 자동선정이 클릭을 덮어씀 — forced가 지정 시 최우선, app.py 참조).
     const forced = (HANDOFF.find(h=>h.bbMain && h.useFootage)||{}).shortcode || '';
     const q = '?' + [ WORK_ID?('work_id='+encodeURIComponent(WORK_ID)):'', forced?('forced='+encodeURIComponent(forced)):'' ].filter(Boolean).join('&');
     const r = await fetch('/api/produce/aipick'+(q==='?'?'':q));
-    renderAiPick(await r.json(), hasFootage);
+    let d = await r.json();
+    // ★담긴 영상 자동 대본적재(2026-07-26): 신규 고객은 도서관이 비어 pick_id가 항상 null이라
+    //   관리자와 다른 폴백 화면만 봤다(AI PICK 소스 = 도서관 ∩ 담김, 둘 다 계정별).
+    //   여기서 딱 한 번 서버에 자동적재를 맡기고, 끝나면 aipick을 딱 한 번만 다시 읽는다.
+    //   ⚠️ 절대 refreshStep0()을 다시 부르지 마라 — 예전 구현이 ensureScriptsForFootage()와
+    //      상호 재귀를 만들어 무한루프로 크레딧을 태웠다(2026-07-26 사고, revert cb8c0fa1d).
+    //      래치(_autoloadTried)는 fetch 전에 세우고, 진짜 방어선은 서버 DB(produce_autoload)다.
+    if((!d || d.pick_id==null) && !_autoloadTried){
+      _autoloadTried = true;
+      const total = HANDOFF.filter(h=>h.useFootage && h.url).length;
+      renderAutoloadingState(total);
+      const got = await autoloadAllFootage();     // ★여러 배치로 전부 분석(Task 1)
+      if(got.analyzed){
+        try{ d = await (await fetch('/api/produce/aipick'+(q==='?'?'':q))).json(); }catch(e){}
+      }
+    }
+    renderAiPick(d, hasFootage);
   }catch(e){ renderEmptyState(); }
+}
+// 페이지 로드당 1회 래치(모듈 변수) — HANDOFF 배열이 통째로 재대입돼도 이 값은 안 날아간다.
+// 그게 사고의 핵심이었다: 성공 표시를 HANDOFF 객체 필드에 두면 _restoreWork가 덮어 지운다.
+let _autoloadTried = false;
+// 담긴 영상을 서버에 넘겨 "대본추출 → 내 도서관 적재 → 담기"까지 한 번에 시킨다.
+// 서버가 이미 있는 것/한 번 실패한 것/상한 초과를 알아서 거른다(app.py api_produce_autoload).
+async function autoloadFootageScripts(){
+  const items = HANDOFF.filter(h=>h.useFootage && h.url).map(h=>({
+    url: h.url, video_url: h.video_url||'', shortcode: h.shortcode||'', name: h.name||'',
+    thumbnail: h.thumbnail||'', caption: h.caption||'', category: h.category||'',
+    followers: h.followers||0, comments: h.comments||0,
+  }));
+  if(!items.length) return false;
+  try{
+    const r = await fetch('/api/produce/autoload', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({items}) });
+    const d = await r.json();
+    // added(신규 적재) 또는 already(이미 도서관에 있어 담기만 보장)가 하나라도 있으면 재조회 가치가 있다.
+    return !!(d && (d.added > 0 || (d.results||[]).some(x=>x.status==='already')));
+  }catch(e){ return false; }
+}
+// P1(2026-07-29): 담긴 소스 전부를 여러 배치로 끝까지 분석한다. 서버는 호출당 4개 상한
+// (_AUTOLOAD_MAX_PER_CALL)이라 5개 이상이면 skipped_cap이 남는데, 그럴 때만 한 번 더 부른다.
+// ★유한 반복(최대 3배치=12개). refreshStep0을 재귀로 부르지 않는다(2026-07-26 사고 방지).
+async function autoloadAllFootage(){
+  let added=0, already=0, failed=[];
+  for(let batch=0; batch<3; batch++){
+    const items = HANDOFF.filter(h=>h.useFootage && h.url).map(h=>({
+      url: h.url, video_url: h.video_url||'', shortcode: h.shortcode||'', name: h.name||'',
+      thumbnail: h.thumbnail||'', caption: h.caption||'', category: h.category||'',
+      followers: h.followers||0, comments: h.comments||0,
+    }));
+    if(!items.length) break;
+    let d;
+    try{
+      const r = await fetch('/api/produce/autoload', {
+        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({items}) });
+      d = await r.json();
+    }catch(e){ break; }
+    const results = (d && d.results) || [];
+    added += (d && d.added) || 0;
+    already += results.filter(x=>x.status==='already').length;
+    failed.push(...results.filter(x=>/^failed_/.test(x.status)).map(x=>x.shortcode));
+    // 상한에 걸려 못 태운 게 남았을 때만 다음 배치. 없으면 끝.
+    if(!results.some(x=>x.status==='skipped_cap')) break;
+  }
+  return { added, already, failed, analyzed: (added>0 || already>0) };
+}
+// 자동적재가 도는 동안 보여줄 과도 상태 — 폴백 안내를 먼저 띄웠다가 곧 카드로 바뀌면
+// 사용자가 "에러가 났다가 고쳐졌나?"로 읽는다. 분석 중임을 명시한다.
+function renderAutoloadingState(total){
+  const el=document.getElementById('aiPick'); if(!el) return;
+  const n = Number(total)||0;
+  el.innerHTML = `<div class="skm-card empty">
+      <h2><span class="skm-spin">🔄</span> 담은 영상 ${n?('<b>'+n+'개</b> '):''}대본을 분석하고 있어요</h2>
+      <div class="hint" style="text-align:center;color:var(--sub)">처음 담은 영상은 30초~1분쯤 걸립니다. 끝나면 AI PICK 카드가 나타나요.</div>
+    </div>`;
 }
 // 조회수·댓글 등 큰 숫자를 "240만"/"1.2억" 식으로 축약(v6 목업 표기와 동일).
 function fmtNum(n){ n=Number(n)||0; if(n>=1e8) return (n/1e8).toFixed(n%1e8?1:0)+'억'; if(n>=1e4) return (n/1e4).toFixed(n%1e4>=1000?1:0)+'만'; return n.toLocaleString(); }
@@ -2483,6 +3052,41 @@ function fmtNum(n){ n=Number(n)||0; if(n>=1e8) return (n/1e8).toFixed(n%1e8?1:0)
 // ⚠️ views/views_x_followers는 저장소에 조회수 자체가 없어 항상 null(app.py 주석 확인) —
 // null인 타일은 아예 렌더하지 않는다("null배" 노출 금지). structure.segments가 비면([])
 // 스트립 없이 우아하게 넘어간다.
+// candidate.video_id → HANDOFF 인덱스(=pickFootage 인자). video_id는 shortcode와 같다
+// (renderPool의 pick 매칭도 it.shortcode===pick_id로 판별 — 같은 키 체계).
+function _candIdxInHandoff(vid){
+  return HANDOFF.findIndex(h=>h && (h.shortcode===vid || h.video_id===vid));
+}
+// 🎬 소스 구조 비교(A, 2026-07-29): 담긴 소스들의 비트구조·설득장치를 나란히 카드로 펼쳐,
+// 사장님이 백본으로 쓸 영상을 눈으로 비교해 고르게 한다. 카드 클릭 = 기존 pickFootage(백본 지정
+// +저장+AI PICK 재조회). structure가 null인 소스(캐시 없음)는 "분석 전"으로 표시 — 클릭하면
+// 그 영상이 픽이 되며 서버가 분석한다(build_aipick pick 경로의 analyze_structure 폴백).
+function renderCompareCards(d){
+  const cands = (d && d.candidates) || [];
+  if(cands.length < 2) return '';   // 1개면 비교할 게 없다
+  const pickId = d.pick_id;
+  const cards = cands.map(c=>{
+    const hi = _candIdxInHandoff(c.video_id);
+    const hf = HANDOFF[hi] || {};
+    const isPick = c.video_id === pickId;
+    const thumb = c.thumbnail || hf.thumbnail || '';
+    const name = c.name || hf.name || '영상';
+    const st = c.structure;
+    const strip = (st && st.segments && st.segments.length)
+      ? `<div class="strip mini">${st.segments.map(s=>`<div class="seg" style="flex:${s.pct};background:${s.color}"></div>`).join('')}</div>`
+      : `<div class="cmp-nostruct">분석 전 — 클릭하면 분석</div>`;
+    const tags = [];
+    if(st && st.hook_type) tags.push(`<span class="tag t1">🎙 ${esc(st.hook_type)}</span>`);
+    (st && st.devices || []).slice(0,2).forEach(dv=>tags.push(`<span class="tag t2">${esc(dv)}</span>`));
+    return `<div class="cmp-card${isPick?' pick':''}" ${hi>=0?`onclick="pickFootage(${hi})"`:''} title="${esc(name)}">
+        ${isPick?'<span class="cmp-badge">🤖 백본</span>':'<span class="cmp-pickhint">⭐ 이걸로 선택</span>'}
+        <div class="cmp-top">${thumb?`<img src="${thumb.includes('gstatic.com')?thumb:('/api/thumb?url='+encodeURIComponent(thumb))}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">`:'<div class="cmp-th-ph"></div>'}<div class="cmp-nm">${esc(name)}</div></div>
+        ${strip}
+        <div class="cmp-tags">${tags.join('')}</div>
+      </div>`;
+  }).join('');
+  return `<div class="cmp-wrap"><div class="cmp-title">🎬 소스 구조 비교 · 백본으로 쓸 영상을 고르세요</div><div class="cmp-grid">${cards}</div></div>`;
+}
 function renderAiPick(d, hasFootage){
   // pick_id==null은 두 경우가 다르다: 담긴 재료가 아예 없으면(hasFootage=false) 빈 상태,
   // 재료는 담겨 있는데 그 대본을 아직 분석 못 했으면(hasFootage=true) 별도 안내 —
@@ -2501,9 +3105,12 @@ function renderAiPick(d, hasFootage){
   const _who = `<div class="aipick-who">${_thumb?`<img class="th" src="${_thumb.includes('gstatic.com')?_thumb:('/api/thumb?url='+encodeURIComponent(_thumb))}" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">`:'<div class="th"></div>'}<div><div class="nm">${esc(_name)}</div>${_sub?`<div class="sub">${esc(_sub)}</div>`:''}</div></div>`;
   const _tiles = [];
   if(t.views!=null) _tiles.push(`<div class="stt"><div class="v hot">${fmtNum(t.views)}</div><div class="k">조회수</div>${t.views_x_followers!=null?`<div class="x">팔로워의 ${t.views_x_followers}배 🔥</div>`:''}</div>`);
-  if(t.comments!=null) _tiles.push(`<div class="stt"><div class="v">${Number(t.comments).toLocaleString()}</div><div class="k">댓글</div>${t.comments_x_avg!=null?`<div class="x mint">평균의 ${t.comments_x_avg}배</div>`:''}</div>`);
-  if(t.engagement_rank!=null) _tiles.push(`<div class="stt"><div class="v mint">${t.engagement_rank}위</div><div class="k">참여밀도</div></div>`);
-  if(t.seconds!=null) _tiles.push(`<div class="stt"><div class="v">${t.seconds}초</div><div class="k">길이</div></div>`);
+  if(t.comments!=null) _tiles.push(`<div class="stt"><div class="v">${Number(t.comments).toLocaleString()}</div><div class="k">댓글</div></div>`);
+  // 참여밀도 = 댓글÷팔로워×100(실측·고정) — 앱 전체 공통 정의(index/discover/collection/library와
+  // 동일). 예전 AI PICK만 '참여밀도 N위'(동어반복)·'평균의 N배'(바구니 평균이라 매번 흔들림)로
+  // 어긋나 있던 걸 진짜 값으로 교체(2026-07-26).
+  if(t.engagement_rate!=null) _tiles.push(`<div class="stt"><div class="v mint">${t.engagement_rate}%</div><div class="k">참여밀도</div><div class="x">팔로워 대비 댓글</div></div>`);
+  if(t.seconds!=null) _tiles.push(`<div class="stt"><div class="v">${t.seconds}초</div><div class="k">원본 길이</div></div>`);
   const _tags = [];
   if(stc.hook_type) _tags.push(`<span class="tag t1">🎙 ${esc(stc.hook_type)} 훅</span>`);
   (stc.devices||[]).forEach(dv=>_tags.push(`<span class="tag t2">👥 ${esc(dv)}</span>`));
@@ -2519,8 +3126,9 @@ function renderAiPick(d, hasFootage){
       <div class="stats">${_tiles.join('')}</div>
       ${_why}
       ${strip}
-      <div class="newline">✨ 이 뼈대로 완전 새로운 대본을 만듭니다</div>
-      <button class="cta-shine aiPickCta" onclick="startFromAiPick()">⚡ 이대로 만들기 시작</button>
+      ${renderCompareCards(d)}
+      <div class="newline">✨ 이 백본으로 새 대본 <b>3안</b>을 만들어 드려요 — 골라서 바로 믹스</div>
+      <button class="cta-shine aiPickCta" onclick="startFromAiPick()">⚡ 이 백본으로 대본 3안 만들기</button>
       <details style="margin-top:10px">
         <summary style="cursor:pointer;font-size:12px;color:var(--sub);font-weight:800">🔁 다른 대본 보기 · ✍️ 직접 쓰기</summary>
         <div style="margin-top:10px">
@@ -2543,10 +3151,17 @@ async function startFromAiPick(){
   const pickId = window._aiPick && window._aiPick.pick_id;
   if(!pickId){ alert('먼저 AI PICK이 고른 영상이 있어야 합니다.'); return; }
   if(!STATE.script){
-    try{
+    // ★1순위: AI PICK이 준 대본(pick_text) — 카드의 숫자·이름과 같은 출처라 절대 어긋나지 않는다.
+    //   2026-07-27 사장님 제보 "대본을 확보하지 못했습니다": 예전엔 아래 도서관 조회만 있었는데,
+    //   AI PICK 소스가 도서관 교차를 벗어나면서 도서관에 없는 영상이 픽되면 막다른 알럿이 떴다.
+    const pt = (window._aiPick && window._aiPick.pick_text || '').trim();
+    if(pt){ STATE.script = pt; STATE.script_from_wiki = pickId; STATE.script_carryover=false; }
+  }
+  if(!STATE.script){
+    try{   // 2순위(구페이로드 호환): 도서관 담김 버킷에서 찾는다
       const d = await (await fetch('/api/produce/picks')).json();
       const it = (d.items||[]).find(w=>w.shortcode===pickId);
-      if(it && it.full_text){ STATE.script = it.full_text; STATE.script_from_wiki = pickId; }
+      if(it && it.full_text){ STATE.script = it.full_text; STATE.script_from_wiki = pickId; STATE.script_carryover=false; }
     }catch(e){}
   }
   if(!STATE.script){ alert('대본을 확보하지 못했습니다 — 아래 "✍️ 직접 쓰기"로 입력해 주세요.'); return; }
@@ -2625,9 +3240,20 @@ function renderEmptyState(){
 // 직접 쓰기 경로(SCRIPT_MODE_HTML.manual)는 그대로 열어둔다.
 function renderNoScriptState(){
   const el = document.getElementById('aiPick'); if(!el) return;
+  // ★"대본 뽑기" 버튼 복구(2026-07-26). Task4 재구성에서 카드별 📝뽑기 버튼을 없애고
+  //   자동 AI PICK으로 대체했는데, AI PICK 소스는 도서관(script_wiki)에 저장된 담김 영상만
+  //   본다(app.py _load_work_sources). 새로 담은 영상은 도서관에 분석본이 없어 이 폴백으로
+  //   오는데, 문구는 "뽑거나"라면서 정작 뽑기 버튼이 없어 직접입력밖에 못 하는 막다른 길이었다.
+  //   담긴 영상마다 openScriptModal(i)(=/api/produce/extract_from_url) 버튼을 다시 단다.
+  const picks = HANDOFF.map((h,i)=>({h,i})).filter(x=>x.h && x.h.useFootage && x.h.url);
+  const extractBtns = picks.map(({h,i})=>
+    `<button type="button" class="cta-shine" onclick="openScriptModal(${i})">📝 ${esc((h.name||('영상 '+(i+1))).slice(0,22))} 대본 뽑기</button>`
+  ).join('');
   el.innerHTML = `
     <div class="skm-card empty">
       <h2>담긴 영상의 대본을 아직 분석하지 못했어요 — 대본을 뽑거나 직접 쓸 수 있어요.</h2>
+      ${extractBtns?`<div class="empty-cta">${extractBtns}</div>
+      <div class="hint" style="text-align:center;margin:12px 0 4px;color:var(--sub)">또는 아래에 직접 입력하세요</div>`:''}
       <div id="scriptModeBody">${SCRIPT_MODE_HTML.manual()}</div>
     </div>`;
   refreshFinalPeek();
@@ -2706,12 +3332,26 @@ function pickFootage(i){
   renderPool(); saveWork();
   if(typeof refreshStep0==='function') refreshStep0();
 }
-// ✕ = 이 영상을 믹스에서 뺀다(픽이었으면 픽 해제).
-function dropFootage(i){
-  if(!HANDOFF[i]) return;
-  HANDOFF[i].useFootage=false; HANDOFF[i].bbMain=false;
+// ✕ = 이 영상을 재료에서 **아주 뺀다**(카드도 사라진다).
+// ★2026-07-26 사장님 제보 "x버튼 누르면 영상 소스 삭제가 안 됨": 예전엔 useFootage만
+//   false로 바꿔 ✓만 지워지고 카드는 그대로 남았다 — 누른 사람 눈엔 아무 일도 안 난 것.
+//   ✕는 "빼기"가 아니라 "삭제"로 읽히므로 배열에서 실제로 제거한다.
+// ★서버에서도 빼야 한다: 자동적재(2026-07-26) 이후 담김은 서버 버킷(produce_script_picks)에도
+//   쌓인다. 클라에서만 지우면 AI PICK이 방금 뺀 영상을 계속 후보로 본다(_load_work_sources).
+async function dropFootage(i){
+  const it = HANDOFF[i];
+  if(!it) return;
+  HANDOFF.splice(i, 1);
   if(typeof syncFootageToMixUrls==='function') syncFootageToMixUrls();
-  renderPool(); saveWork();
+  renderPool(); saveWork();            // 화면은 즉시 반응(카드가 바로 사라진다)
+  // ★서버 제거를 기다린 뒤에 AI PICK을 다시 읽는다 — 안 기다리면 아직 지워지기 전 상태를
+  //   읽어 방금 뺀 영상이 카드에 그대로 남는다(누른 사람 눈엔 "삭제가 안 된" 것).
+  if(it.shortcode){
+    try{
+      await fetch('/api/produce/picks/remove', {method:'POST',
+        headers:{'Content-Type':'application/json'}, body: JSON.stringify({shortcode: it.shortcode})});
+    }catch(e){}
+  }
   if(typeof refreshStep0==='function') refreshStep0();
 }
 function toggleFootage(i){
@@ -2812,7 +3452,7 @@ async function openScriptModal(i){
     pmPrefillSubject(PM_SHORTCODE);     // shortcode 없으면(직행 URL) 손입력만 열어둔다
   }catch(e){ if(PM_GEN===myGen) document.getElementById('pmResults').innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
 }
-function pmUseRaw(){ STATE.script=PM_BASE_SCRIPT; STATE.script_src_idx=PM_IDX; STATE.script_from_wiki=PM_FROM_WIKI; pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY); saveWork(); }
+function pmUseRaw(){ STATE.script=PM_BASE_SCRIPT; STATE.script_carryover=false; STATE.script_src_idx=PM_IDX; STATE.script_from_wiki=PM_FROM_WIKI; pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY); saveWork(); }
 function pmClose(){ document.getElementById('pmModal').classList.remove('open'); }
 function pmToggleTopic(){
   const mode=document.querySelector('input[name=pmmode]:checked').value;
@@ -2887,7 +3527,7 @@ function pmRenderDrafts(drafts){
   </div>`).join('') || '<div class="hint" style="color:var(--fire)">생성 결과가 비었습니다</div>';
 }
 function pmUseDraft(btn){
-  const t=btn.closest('.draft').querySelector('.dtext'); STATE.script=(t?t.value:'')||'';
+  const t=btn.closest('.draft').querySelector('.dtext'); STATE.script=(t?t.value:'')||''; STATE.script_carryover=false;
   STATE.script_src_idx=PM_IDX;
   STATE.script_from_wiki=PM_FROM_WIKI;   // mix 유래면 shortcode, 뽑기 유래면 null
   pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY);
@@ -3079,6 +3719,14 @@ loadSmartMix();
 
 async function startProduceMix(){
   if(!STATE.script){ alert('1단계에서 대본을 먼저 확정하세요'); return; }
+  // ★옛 대본 캐리오버 게이트(2026-07-25 실사고): 이전 작업에서 복원된 대본을 한 번도 안 고친 채
+  //   새 영상과 매칭하면, 나레이션·썸네일 제목이 전부 옛 영상 주제로 나온다(새 영상에 '6만원대
+  //   책상' 제목). 여기서 한 번 확인받는다 — 편집하거나 새로 뽑으면 이 게이트는 안 걸린다.
+  if(STATE.script_carryover){
+    const first=(STATE.script.split('\n')[0]||'').slice(0,40);
+    if(!confirm(`⚠️ 지금 대본은 이전 작업에서 남은 것이에요.\n\n"${first}…"\n\n이 대본 그대로 매칭할까요?\n(아니오 → 1단계에서 새 영상의 📝대본을 뽑거나 새로 쓰세요)`)) return;
+    STATE.script_carryover=false;   // 확인했으면 이제 내 대본 — 재매칭마다 다시 안 묻는다
+  }
   const urls=collectMixUrls();   // 영상풀 담긴 것 + 입력칸에 남은 것(중복 제거)
   if(urls.length<1){ alert('소스 영상 URL을 1개 이상 입력하세요(확정 또는 🎬담기)'); return; }
   try{ logPick('S3', {picked: 'mix_start', sources: urls, source_n: urls.length}); }catch(e){}
@@ -3106,6 +3754,7 @@ async function startProduceMix(){
     clearInterval(PREVIEW_POLL); PREVIEW_POLL=null; ++PREVIEW_GEN;
     PREVIEW_STATUS=null;
     MIX_JOB=d.job_id;
+    CAND_SEL=null;   // 새 매칭 = 아직 아무 후보도 손 안 댐 → 추천이 선택 기본값(옛 job의 선택 잔상 제거)
     // ★새 job을 서버 작업파일에 즉시 남긴다(2026-07-19). 안 남기면 새로고침 시 _restoreWork가
     //   job_id=null을 읽어 미리보기·편집안이 통째로 사라진다(사장님 제보). 게이트는 복원 후에도
     //   서버 preview_status를 다시 읽어 canGoNext()로 잠그므로 미리보기 우회 위험은 없다.
@@ -3177,32 +3826,85 @@ async function loadMixReview(){
 // 백엔드(Task6)는 이미 추천 후보(recommended)의 plan을 edit_plan에 자동세팅해두므로 이 카드가
 // 없어도 매칭은 동작한다 — 이건 그 자동선택을 사장님이 눈으로 보고 다른 후보로 바꿀 수 있게 하는 UI다.
 // 후보가 1개 이하(폴백 등으로 build_scene_first_plan이 후보를 못 만든 경우 포함)면 고를 게 없어 숨긴다.
+const CAND_LBL = ['A안','B안','C안','D안','E안'];
+let CAND_LIST = [];        // 마지막으로 그린 후보 목록(pickCandidate가 다시 그릴 때 재사용)
+let CAND_SEL  = null;      // 지금 '선택된' 후보의 index(c.index). null이면 recommended를 따른다.
+// 후보 대본의 예상 발화시간(초) — 자막·보이스 추정과 같은 SYLLABLES_PER_SEC로 계산(공백 제외 글자수÷음절속도).
+// AI PICK 카드의 '길이'는 원본 영상 길이(고정)라, 여기선 '이 대본을 읽으면 나올 영상 길이'를 따로 보여준다.
+function _candSecs(c){
+  const sps = (typeof SYLLABLES_PER_SEC!=='undefined') ? SYLLABLES_PER_SEC : 5.7;   // 슬라이스 테스트(전역 없음) 방어
+  const t = (c.script || c.hook || '').replace(/\s/g,'');
+  return t ? Math.max(1, Math.round(t.length / sps)) : 0;
+}
+// 지금 선택된 후보 index 결정: 명시 선택(CAND_SEL) > recommended > 첫 번째.
+function _candSelIdx(list){
+  if(CAND_SEL!=null && list.some(c=>c.index===CAND_SEL)) return CAND_SEL;
+  const rec = list.find(c=>c.recommended);
+  return rec ? rec.index : (list[0] ? list[0].index : null);
+}
+// index(c.index) → 'B안' 라벨(리스트 내 위치 기준).
+function _candLabelOf(list, idx){
+  const pos = (list||[]).findIndex(c=>c.index===idx);
+  return pos>=0 ? (CAND_LBL[pos] || ('후보 '+(pos+1))) : '';
+}
+// 왼쪽 미리보기 영역(#mixPreviewHint)에도 '지금 무슨 대본으로 만드는지' 알린다. phase='switching'이면 바꾸는 중.
+function _syncPreviewCandHint(label, phase){
+  const h = document.getElementById('mixPreviewHint');
+  if(!h) return;
+  const base = '②까지 확인하고 아래 <b>🎬 대본 × 영상 믹스 미리보기</b>를 누르면 여기서 재생됩니다.';
+  const tag = !label ? '' : (phase==='switching'
+    ? `<div style="color:var(--accent);font-weight:800;margin-bottom:6px">🔄 <b>${esc(label)}</b> 대본으로 바꾸는 중…</div>`
+    : `<div style="color:var(--accent);font-weight:800;margin-bottom:6px">🎬 <b>${esc(label)}</b> 대본으로 미리보기를 만들어요</div>`);
+  h.innerHTML = tag + base;
+}
 function renderCandidates(list){
   const el = document.getElementById('mixCandidates');
   if(!el) return;
-  if(!list || list.length < 2){ el.innerHTML = ''; return; }
-  const LBL = ['A안','B안','C안','D안','E안'];
+  if(!list || list.length < 2){ el.innerHTML = ''; CAND_LIST = []; return; }
+  CAND_LIST = list;
+  const selIdx = _candSelIdx(list);
   el.innerHTML = '<div style="font-size:12px;color:var(--sub);margin-bottom:8px">🧬 새 대본 '
     + list.length + '개 만들었어요 — <b style="color:var(--accent)">카드를 눌러 하나를 고르세요</b>(추천이 이미 선택돼 있어요)</div>'
+    // ★지금 어떤 대본으로 미리보기를 만드는지 항상 보이는 상태줄(2026-07-25 사장님: "체크가 됐는지 모르겠다").
+    + `<div id="candStatus" style="font-size:12px;font-weight:800;margin-bottom:8px;padding:6px 10px;border-radius:8px;background:rgba(62,224,191,.10);border:1px solid rgba(62,224,191,.35);color:var(--accent)">🎬 지금 <b>${_candLabelOf(list,selIdx)}</b> 대본으로 미리보기를 만들어요</div>`
     + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-    + list.map((c,i) => `<div class="cand${c.recommended?' on':''}" onclick="pickCandidate(${c.index})" style="cursor:pointer;flex:1 1 260px;min-width:0">`
-        + `<div class="cb">${LBL[i]||('후보 '+(i+1))}${c.recommended?'<span class="rec">👍 추천·선택됨</span>':''}</div>`
+    + list.map((c,i) => {
+        const on = (c.index===selIdx);
+        const badge = (c.recommended && on) ? '<span class="rec">👍 추천 · 선택됨</span>'
+                    : on ? '<span class="rec">✅ 선택됨</span>'
+                    : c.recommended ? '<span class="rec" style="background:linear-gradient(135deg,#c9d3e6,#8b97b0);color:#1a2233">👍 추천</span>'
+                    : '';
         // 대본 전체 표시(2026-07-24 사장님): A/B/C를 통째로 읽고 비교해 고른다 — 훅 한 줄이 아니라 나레이션 전문.
-        + `<p style="white-space:pre-wrap">${esc(c.script || c.hook || '')}</p>`
-        + `<div style="margin-top:6px;font-size:10px;color:#6b7488">${c.story_person?esc(c.story_person):''}${c.score!=null?(c.story_person?' · ':'')+`점수 ${c.score}`:''}</div>`
-        + `<div class="pickhint" style="font-size:11px;color:var(--sub);margin-top:6px">👆 이 대본으로 고르기</div>`
-        + `</div>`).join('')
+        return `<div class="cand${on?' on':''}" onclick="pickCandidate(${c.index})" style="cursor:pointer;flex:1 1 260px;min-width:0">`
+          + `<div class="cb">${CAND_LBL[i]||('후보 '+(i+1))}${badge}</div>`
+          + `<p style="white-space:pre-wrap">${esc(c.script || c.hook || '')}</p>`
+          // ⏱ 예상 영상시간(2026-07-25 사장님): 이 대본을 읽으면 나올 영상 길이 — A/B/C 아래마다.
+          + `<div style="margin-top:6px;font-size:11px;color:var(--accent2);font-weight:800">⏱ 예상 영상시간 약 ${_candSecs(c)}초</div>`
+          + `<div style="margin-top:3px;font-size:10px;color:#6b7488">${c.story_person?esc(c.story_person):''}${c.score!=null?(c.story_person?' · ':'')+`점수 ${c.score}`:''}</div>`
+          + `<div class="pickhint" style="font-size:11px;color:${on?'var(--accent)':'var(--sub)'};margin-top:6px">${on?'✅ 이 대본으로 만드는 중':'👆 이 대본으로 고르기'}</div>`
+          + `</div>`;
+      }).join('')
     + '</div>';
+  _syncPreviewCandHint(_candLabelOf(list, selIdx));
 }
 // 후보 클릭 → 그 후보의 plan을 edit_plan으로 세팅(/api/mix/candidate) → 매칭 리뷰 다시 로드.
 async function pickCandidate(idx){
   if(!MIX_JOB) return;
+  const prev = CAND_SEL;
+  CAND_SEL = idx;                     // 낙관적: 클릭 즉시 선택 박스·라벨을 그 카드로 옮긴다(체크가 됐는지 바로 보인다)
+  renderCandidates(CAND_LIST);
+  const lbl = _candLabelOf(CAND_LIST, idx);
+  _syncPreviewCandHint(lbl, 'switching');
+  const cs = document.getElementById('candStatus'); if(cs) cs.innerHTML = `🔄 <b>${esc(lbl)}</b> 대본으로 바꾸는 중…`;
   try{
     const r = await (await fetch('/api/mix/candidate', {method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({job_id: MIX_JOB, index: idx})})).json();
-    if(!r.ok){ alert(r.error || '후보 전환 실패'); return; }
-  }catch(e){ alert('네트워크 오류'); return; }
+    if(!r.ok){ alert(r.error || '후보 전환 실패'); CAND_SEL = prev; renderCandidates(CAND_LIST); return; }
+  }catch(e){ alert('네트워크 오류'); CAND_SEL = prev; renderCandidates(CAND_LIST); return; }
   loadMixReview();   // edit_plan이 바뀌었다 = 새 매칭과 동일하게 취급(미리보기 게이트도 다시 잠긴다)
+  _syncPreviewCandHint(lbl);   // loadMixReview가 편집안을 다시 그려도 미리보기 힌트는 지금 대본을 가리킨다
+  const cs2 = document.getElementById('candStatus');   // '바꾸는 중' → 정착 메시지로(loadMixReview는 후보를 다시 안 그린다)
+  if(cs2) cs2.innerHTML = `🎬 지금 <b>${esc(lbl)}</b> 대본으로 미리보기를 만들어요`;
 }
 // ─── CANDIDATES-END
 
@@ -3503,6 +4205,18 @@ function refreshNextBtn(){
   b.title = gated ? stepLockMsg() : '';
 }
 
+// 🎯 3초 훅 미세조정(P1): 백엔드가 훅 시작을 모션 피크로 자동 이동. 여기서 0.2초씩 앞/뒤 override를
+// 누적해 work.state.hook_inpoint_delta에 저장하고, 다시 미리보기를 돌려 반영한다.
+function _fmtHookDelta(){
+  const d=STATE.hook_inpoint_delta||0;
+  return d>0?('+'+d.toFixed(1)+'s'):(d<0?(d.toFixed(1)+'s'):'0.0s');
+}
+function nudgeHook(dir){
+  STATE.hook_inpoint_delta=Math.round(((STATE.hook_inpoint_delta||0)+dir*0.2)*100)/100;
+  const lbl=document.getElementById('hookDeltaLabel'); if(lbl) lbl.textContent=_fmtHookDelta();
+  saveWork();          // 서버 저장(다음 render가 읽는다)
+  startPreview();      // 훅 이동 반영해 재생성
+}
 async function startPreview(){
   const box = document.getElementById('mixPreview');
   const btn = document.getElementById('btnPreview');
@@ -3592,6 +4306,7 @@ async function pollClean(gen,job){
     if(CLEAN_GEN!==gen || MIX_JOB!==job) return;
     if(d.clean_status==='ready'){
       clearInterval(CLEAN_POLL); CLEAN_POLL=null;
+      if(d.clean_regions) CLEAN_REGIONS=d.clean_regions;   // 지워진 자막 자리(5단계 꾸미기가 씀)
       const t=Date.now(), u='/api/produce/mix/clean_thumb/'+encodeURIComponent(job);
       box.innerHTML='<div class="cp-compare">'
         +'<div class="cp-cell"><div class="cp-frame"><img src="'+u+'?kind=original&t='+t+'"><span class="cp-lbl">BEFORE</span></div><div class="cp-cap">원본</div></div>'
@@ -3796,14 +4511,25 @@ async function applyVoice(){
   const poll=setInterval(async()=>{
     try{
       const d=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
-      if(d.status==='ready_for_review'){ clearInterval(poll); el.textContent='✅ 완료'; renderTtsBeats(); }
+      if(d.status==='ready_for_review'){
+        clearInterval(poll); el.innerHTML='✅ 완료 — 아래 <b>▶ 완성본 전체 듣기</b>로 확인하세요';
+        await renderTtsBeats();
+        // 완성되자마자 재생기가 보이도록 스크롤 — 버튼이 화면 밖이라 못 찾던 문제 보강
+        try{ document.getElementById('ttsBeats').scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(e){}
+      }
       else if(d.status==='failed'){ clearInterval(poll); el.textContent='❌ 실패: '+(d.error||''); }
     }catch(e){ clearInterval(poll); el.textContent='❌ 상태 확인 실패'; }
   },2500);
 }
 async function renderTtsBeats(){
   const el=document.getElementById('ttsBeats');
-  if(!MIX_JOB){ el.innerHTML='<div class="hint" style="margin-top:6px">🎬 2단계 <b>영상 매칭</b>을 완료하면 비트별 음성·길이 맞춤이 여기 표시됩니다. (지금은 프리셋 둘러보기·샘플 미리듣기만 가능)</div>'; return; }
+  // 매칭 전에도 큰 미리보기 자리는 유지한다(처음 상태에서 자리 예약 — 2026-07-25 사장님 요청).
+  if(!MIX_JOB){ el.innerHTML=`
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
+      <div style="width:220px;aspect-ratio:9/16;border:1px dashed var(--line);border-radius:10px;background:var(--inset);display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;box-sizing:border-box;flex:0 0 auto">
+        <div class="hint">🎬 완성 음성 미리보기 자리<br><br>2단계 <b>영상 매칭</b>을 완료하면<br>여기서 완성본을 듣습니다</div>
+      </div>
+    </div>`; return; }
   try{
     const d=await (await fetch('/api/mix/result/'+MIX_JOB)).json();
     if(!d.ok || !(d.beats||[]).length){ el.innerHTML=''; return; }
@@ -3831,18 +4557,22 @@ async function renderTtsBeats(){
     // 영상길이(비트 목표시간 합) vs 음성길이(오디오 실측 합) — 맞춤 힌트로 편집 편의성↑
     VP_BEATS = beats;                 // 전역: 재생기가 cap_segments/cap_durs/cap_offset 읽음
     _vpHeard = _vpHeard || new Set();
+    // ▶전체 재생을 미리보기 프레임 '바로 아래' 큰 버튼으로 — 오른쪽 구석에 있어 못 찾던 문제
+    //   (2026-07-25 사장님)과 '이 대본으로 다시 듣기'와의 혼동을 함께 해소(완성본임을 이름에 명시).
     el.innerHTML=`
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
-        <div style="position:relative;width:180px;aspect-ratio:9/16;background:#000;border-radius:10px;overflow:hidden;flex:0 0 auto">
-          <img id="vpFrame" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
-          <div id="vpCap" style="position:absolute;left:0;right:0;bottom:8%;text-align:center;color:#fff;font-weight:700;font-size:13px;text-shadow:0 2px 4px #000;padding:0 6px"></div>
+        <div style="flex:0 0 auto;width:220px">
+          <div style="position:relative;width:220px;aspect-ratio:9/16;background:#000;border-radius:10px;overflow:hidden">
+            <img id="vpFrame" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
+            <div id="vpCap" style="position:absolute;left:0;right:0;bottom:8%;text-align:center;color:#fff;font-weight:700;font-size:13px;text-shadow:0 2px 4px #000;padding:0 6px"></div>
+          </div>
+          <button onclick="playAllBeats()" class="btn-next" style="display:block;width:220px;margin-top:8px;padding:11px 0;font-size:15px;font-weight:700" title="방금 만든 완성 음성을 처음부터 끝까지 화면과 함께 재생합니다">▶ 완성본 전체 듣기</button>
         </div>
         <div style="flex:1;min-width:220px">
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
             <div><span class="hint">영상 길이</span> <b style="color:var(--accent2)">${vidLen.toFixed(1)}초</b></div>
             <div><span class="hint">음성 길이</span> <b id="voiceLen" style="color:var(--ok)">…</b></div>
             <div id="fitMsg" class="hint">음성 길이 측정 중…</div>
-            <button onclick="playAllBeats()" class="btn-prev" style="padding:6px 12px;margin-left:auto">▶ 전체 재생</button>
           </div>
           ${rows}
         </div>
@@ -3992,9 +4722,57 @@ function playAllBeats(){
 }
 
 // ── 8단계 최종검수·렌더 ──────────────
+// 인포크링크 등록 대기(2026-07-28) — 등록 자체는 인포크에 공개 API가 없어 아직
+// 수동이다. 여기선 최종 링크를 꺼내주고 "올렸다" 여부만 job에 기록한다.
+async function refreshInpock(){
+  const el=document.getElementById('inpockBox');
+  if(!el) return;
+  if(!MIX_JOB){ el.innerHTML=''; return; }
+  let d;
+  try{ d=await (await fetch('/api/mix/product/'+encodeURIComponent(MIX_JOB))).json(); }
+  catch(e){ el.innerHTML='<div class="hint" style="color:var(--fire)">상품 정보 로드 실패</div>'; return; }
+  const p=(d&&d.ok)?d.product:null;
+  if(!p){
+    el.innerHTML='<div class="hint">🛒 연결할 쿠팡 상품이 없습니다 — 2단계 편집안 검토에서 지정하면 여기에 등록용 링크가 뜹니다.</div>';
+    return;
+  }
+  el.innerHTML=`<div style="border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--inset)">
+    <div style="font-weight:600;margin-bottom:6px">📦 인포크링크 등록 대기</div>
+    <div style="font-size:13px">${esc(p.name||p.keyword||'상품')}
+      ${p.partner_url
+        ? '<span style="color:var(--ok)"> · 파트너스 링크 ✓</span>'
+        : '<span style="color:var(--fire)"> · 파트너스 링크 없음 — 이대로 올리면 수수료가 안 붙습니다</span>'}</div>
+    <div style="word-break:break-all;color:var(--accent);font-size:12px;margin:6px 0">${esc(d.final_link||'')}</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn-prev" style="padding:7px 13px;font-size:12px" onclick="inpockCopy()">📋 링크 복사</button>
+      <a class="btn-prev" style="padding:7px 13px;font-size:12px;text-decoration:none" target="_blank" rel="noopener"
+         href="${esc(d.inpock_page||'https://link.inpock.co.kr')}">인포크링크 열기 ↗</a>
+      <label style="font-size:13px;display:flex;gap:6px;align-items:center;cursor:pointer">
+        <input type="checkbox" ${p.inpock_registered?'checked':''} onchange="markInpock(this.checked)"> 등록 완료
+      </label>
+    </div>
+    <div class="hint" style="margin-top:8px">영상 설명란·고정댓글에는 인포크 프로필 링크 하나만 넣고, 상품은 인포크 안에서 관리합니다.
+      대가성 고지문구는 7단계 SEO 설명란의 <b>🛒 쿠팡 링크 + 고지문구 붙이기</b>로 넣으세요.</div>
+  </div>`;
+  window._inpockLink=d.final_link||'';
+}
+function inpockCopy(){ try{ navigator.clipboard.writeText(window._inpockLink||''); }catch(e){} }
+async function markInpock(checked){
+  if(!MIX_JOB) return;
+  try{
+    const d=await (await fetch('/api/mix/product/'+encodeURIComponent(MIX_JOB))).json();
+    if(!d || !d.ok || !d.product) return;
+    const p=d.product;
+    await fetch('/api/mix/product',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({job_id:MIX_JOB, url:p.url, name:p.name, partner_url:p.partner_url,
+                           keyword:p.keyword, memo:p.memo, inpock_registered:checked})});
+  }catch(e){}
+}
+
 async function refreshFinal(){
   const s=document.getElementById('finalSummary');
   if(!s) return;
+  refreshInpock();
   s.innerHTML = MIX_JOB
     ? `대본 ${lenText(STATE.script)} · 자막제거 ${STATE.subtitleRemoval?'ON':'OFF'} · job ${esc(MIX_JOB)}`
     : '⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.';
@@ -4002,16 +4780,16 @@ async function refreshFinal(){
   // ★이미 렌더된 최종 영상 되살리기(2026-07-21 사장님 제보: 다른 페이지 갔다 오면 영상이 사라짐).
   //   완성 MP4는 서버 job(video_path)에 그대로 남는데, refreshFinal이 렌더상태를 안 봐서 화면에서만
   //   비었었다. 여기서 상태를 조회해 done이면 <video>·완성MP4 버튼을 다시 그린다.
-  if(!MIX_JOB) return;
+  if(!MIX_JOB){ _finalIdleSlot(); return; }
   const fv=document.getElementById('finalVideo');
   if(fv && fv.querySelector('video')){ renderExport({rendered:true}); return; }   // 이미 떠 있으면 버튼만 승격
   try{
     const d=await (await fetch('/api/mix/status/'+encodeURIComponent(MIX_JOB))).json();
     if(d && d.status==='done'){
-      if(fv) fv.innerHTML=`<video controls src="/api/mix/video/${esc(MIX_JOB)}" style="max-width:360px;border-radius:10px"></video>`;
+      if(fv) fv.innerHTML=`<video controls src="/api/mix/video/${esc(MIX_JOB)}" style="max-width:300px;width:100%;border-radius:12px"></video>`;
       renderExport({rendered:true});
-    }
-  }catch(e){}
+    } else { _finalIdleSlot(); }
+  }catch(e){ _finalIdleSlot(); }
 }
 // ── 카톡·공유로 보내기 (Web Share API) — 2026-07-21 사장님 ──
 // 완성 MP4를 파일로 받아 navigator.share에 넘긴다 → 휴대폰이면 OS 공유시트(카톡·인스타 등)가 뜬다.
@@ -4155,16 +4933,30 @@ function _finalRenderRestore(msg){
   const st=document.getElementById('finalStatus'); if(st){ st.className='hint'; st.textContent=msg||''; }
   const btn=document.getElementById('btnFinalRender'); if(btn){ btn.disabled=false; if(btn.dataset.orig!=null){ btn.innerHTML=btn.dataset.orig; delete btn.dataset.orig; } }
 }
-// ── 최종렌더 진행 동적표시(2026-07-24) — 실제 %가 없어(ffmpeg 진행률 미방출) 경과기반 정직한 추정 ──
+// ── 최종렌더 진행 동적표시(2026-07-24, 2026-07-25 개편) ──
+// ⚠️ 게이지는 실제 진행률이 아니다(ffmpeg가 %를 안 준다) — 경과시간 지수 근사.
+//    예전 τ=22s는 50초에 90%를 찍고 얼어 보였다(사장님 제보) → τ=75s로 완만하게(1분 53%·3분 86%·5분 92%).
 let _rfTimer=null, _rfStart=0;
+const _RF_EMOJI=['🎬','✂️','🎙','🎨','📼','✨','🔊','🧵'];   // 매초 순환 — 지루하지 않게
+const _RF_TIPS=['자막 굽는 중…','음성 입히는 중…','장면 이어붙이는 중…','색감 다듬는 중…','인코딩 중…','마지막 손질 중…'];
 function _rfFmt(s){const m=Math.floor(s/60),ss=Math.floor(s%60);return m+':'+String(ss).padStart(2,'0');}
 function _rfTick(){
   const el=document.getElementById('rfElapsed'), bar=document.getElementById('rfBar');
   if(!el||!bar) return;
   const sec=(Date.now()-_rfStart)/1000;
   el.textContent=_rfFmt(sec);
-  // 추정: 95%까지 지수 근사(완료 신호가 와야 100%). 얼어붙지 않게 매초 살짝 전진.
-  bar.style.width=Math.min(95, 95*(1-Math.exp(-sec/22))).toFixed(0)+'%';
+  bar.style.width=Math.min(95, 95*(1-Math.exp(-sec/75))).toFixed(0)+'%';
+  const em=document.getElementById('rfEmoji'); if(em) em.textContent=_RF_EMOJI[Math.floor(sec)%_RF_EMOJI.length];
+  const tip=document.getElementById('rfTip'); if(tip) tip.textContent=_RF_TIPS[Math.floor(sec/4)%_RF_TIPS.length];
+}
+// 렌더 전/후 좌측 빈 슬롯 — 좌측이 미리보기 자리임을 항상 보여준다
+function _finalIdleSlot(){
+  const fv=document.getElementById('finalVideo');
+  if(fv && !fv.querySelector('video') && !document.getElementById('rfBar'))
+    fv.innerHTML=`<div style="aspect-ratio:9/16;max-width:300px;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:20px">
+      <div style="font-size:30px;opacity:.5">🎬</div>
+      <div style="font-size:12px;line-height:1.6">최종 렌더를 누르면<br>완성 영상이 여기서 재생돼요</div>
+    </div>`;
 }
 async function renderFinal(){
   if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); return; }
@@ -4172,12 +4964,14 @@ async function renderFinal(){
   if(btn){ if(btn.dataset.orig==null) btn.dataset.orig=btn.innerHTML; btn.disabled=true; btn.innerHTML='<span class="skm-spin">🔄</span> 렌더 중…'; }
   const st=document.getElementById('finalStatus'); if(st){ st.className='match-progress'; st.innerHTML='<span class="dot"></span><span>렌더 준비 중…</span>'; }
   // 렌더 전 '미리보기 자리' — 완성 영상이 여기서 나온다(2단계 미리보기와 동일 연출)
-  document.getElementById('finalVideo').innerHTML=`<div style="aspect-ratio:9/16;max-width:300px;margin-top:10px;border:2px solid var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--sub);text-align:center;padding:20px">
-    <div class="skm-spin" style="font-size:34px">🎬</div>
-    <div id="rfStage" style="font-size:14px;font-weight:800;color:var(--fg)">최종 렌더 준비 중…</div>
+  document.getElementById('finalVideo').innerHTML=`<div style="aspect-ratio:9/16;max-width:300px;border:2px solid var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--sub);text-align:center;padding:20px">
+    <div id="rfEmoji" style="font-size:38px;animation:rfBounce 1s ease-in-out infinite">🎬</div>
+    <div style="font-size:15px;font-weight:800;color:var(--fg)">숏템메이커 최종 렌더 중</div>
+    <div id="rfStage" style="font-size:12px;color:var(--sub)">준비 중…</div>
     <div style="width:82%;height:8px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden"><div id="rfBar" style="height:100%;width:2%;background:linear-gradient(90deg,#34e0a1,#17b985);border-radius:6px;transition:width .8s ease"></div></div>
-    <div style="font-size:12px">경과 <b id="rfElapsed">0:00</b> · <span style="opacity:.65">보통 30초~1분</span></div>
-    <div style="font-size:11px;opacity:.6;line-height:1.5">자막 굽고 · 음성 입히고 · 인코딩 중…<br>끝나면 여기서 바로 재생돼요</div>
+    <div style="font-size:12px">경과 <b id="rfElapsed">0:00</b> · <span style="opacity:.65">보통 1분~5분</span></div>
+    <div id="rfTip" style="font-size:11px;opacity:.6;line-height:1.5">자막 굽는 중…</div>
+    <div style="font-size:11px;opacity:.45">끝나면 여기서 바로 재생돼요</div>
   </div>`;
   _rfStart=Date.now(); clearInterval(_rfTimer); _rfTimer=setInterval(_rfTick,1000); _rfTick();
   await saveHeadcopy();   // 헤드카피 설정을 job에 반영 후 렌더
@@ -4466,13 +5260,14 @@ async function suggestThumbTitles(){
       return;
     }
     THUMB_STATE.title_cands = d.titles;
-    // 대본을 매칭 뒤에 고쳤으면 제목은 새 대본으로 나오지만 영상 나레이션은 아직 옛 대본이다.
-    // 제목만 맞추면 영상↔제목이 또 어긋나니, 재매칭을 권하는 경고를 위에 띄운다.
+    // 제목은 '지금 영상(고른 대본)' 기준으로 만든다(2026-07-26). 그러니 매칭 뒤 1단계 대본을
+    // 고쳤어도 제목은 영상과 일치한다 — 다만 고친 1단계 내용은 아직 영상에 안 들어갔음을 알린다.
     const _warn = d.script_mismatch
       ? '<div class="hint" style="margin-bottom:6px;color:#ffb454;border:1px solid #7a5a1e;'
         + 'background:#3a2f14;border-radius:8px;padding:8px 10px;line-height:1.4">'
-        + '⚠️ 대본을 바꾸셨네요. 제목은 <b>새 대본</b>으로 만들었지만, <b>영상 나레이션은 아직 옛 대본</b>이에요. '
-        + '<a href="#" onclick="jump(0);return false" style="color:#ffd08a;font-weight:700">1단계에서 영상 매칭을 다시</a> 해야 영상에도 반영돼요.</div>'
+        + '⚠️ 1단계 대본을 고치셨네요. 제목은 <b>지금 영상</b> 기준으로 맞춰 만들었어요. '
+        + '고친 <b>1단계 내용을 영상에도 넣으려면</b> '
+        + '<a href="#" onclick="jump(0);return false" style="color:#ffd08a;font-weight:700">영상 매칭을 다시</a> 하세요.</div>'
       : '';
     box.innerHTML = _warn + '<div class="hint" style="margin-bottom:2px">마음에 드는 제목을 누르면 바로 얹어져요 ↓</div>' +
       d.titles.map((t, i) => {
@@ -4692,7 +5487,8 @@ function _bootRestore(){
   // 아래 _consumeProduceHandoff가 sessionStorage에서 직전 작업의 WORK_ID까지 되살리므로(구멍 1
   // 수정의 대가), 신호 없이 오면 "+ 새 작업"이 **직전 작업을 열고 이후 저장이 그걸 덮어쓴다**.
   // 사장님이 제보한 "작업물이 지워진다"가 정확히 그 형태다(최종 whole-branch 리뷰 C-1).
-  if(sp.get('new')){
+  const isNew = sp.get('new');
+  if(isNew){
     clearWork();
     // ★URL에서 new를 지운다. 안 지우면 이 화면에서 새로고침할 때마다 또 새 작업이 생겨
     // cad0e7b0이 막은 "매 로드마다 작업 복제"가 반대 방향으로 되살아난다.
@@ -4704,11 +5500,34 @@ function _bootRestore(){
     //   "✓ 저장됨" 표시 + 복원 직후 첫 편집도 되돌릴 수 있게 한다. (여기서 시드 = 슬라이스 테스트 불간섭)
     //   Promise.resolve: _restoreWork가 프라미스가 아니어도(테스트 스텁) .then이 안전. 시더는 있을 때만.
     Promise.resolve(_restoreWork(wid)).then(()=>{ if(typeof _seedSaveBaseline==='function') _seedSaveBaseline(); });
-  } else {
-    // sessionStorage 경로(_consumeProduceHandoff)는 끝에서 saveWork()를 부른다 → _pushWork가
-    //   기준선(_lastCommitted)을 자동으로 잡는다. 별도 시드 불필요.
+  } else if(isNew){
+    // + 새 작업: clearWork 후 빈 새 작업. 계정싱크를 타면 직전 작업을 도로 불러와 hijack한다(C-1 재발).
     _consumeProduceHandoff();
+  } else {
+    // 계정 크로스기기 싱크(2026-07-26): 그냥 /produce면 로컬 복원 후, 빈 기기일 때만 계정 최신작업 로드.
+    _bootAccountLatestOrLocal();
   }
+}
+// 계정 크로스기기 싱크(2026-07-26 사장님 요청). ★_bootRestore 슬라이스(테스트 하네스: def~호출)
+// 안에 들도록 여기(_bootRestore 정의 뒤·호출 앞)에 둔다.
+//  1) 로컬(진행중 작업/방금 보낸 재료)을 먼저 **동기** 복원 — 새로고침 연속성(cad0e7b0)과
+//     _bootRestore 직후 WORK_ID를 읽는 코드/테스트 계약을 지키려면 반드시 동기여야 한다.
+//  2) 로컬이 완전히 빈 기기(새 브라우저/탭)일 때만, 계정에서 최근 편집한 작업을 서버에서
+//     이어받는다(빈 새 탭을 열면 모바일에서 하던 게 뜬다). 로컬 있으면 유지 → 덮어쓰기·핑퐁·유실 0.
+//  * 로컬이 있는데 다른 기기 작업으로 바꾸려면 ?work=<id>(내 작업 목록)로 명시적으로 연다.
+async function _bootAccountLatestOrLocal(){
+  _consumeProduceHandoff();                        // 로컬 복원(동기) — 연속성 우선
+  if(WORK_ID
+     || (typeof HANDOFF!=='undefined' && HANDOFF && HANDOFF.length)
+     || (typeof STATE!=='undefined' && STATE && STATE.script)) return;   // 로컬 있음 → 유지
+  try{
+    const d=await (await fetch('/api/produce/works')).json();            // updated_at DESC → [0]=최신
+    const latest=(d && d.ok && d.works && d.works.length) ? d.works[0] : null;
+    if(latest && latest.work_id){
+      await _restoreWork(latest.work_id);                                // 빈 기기 → 계정 최신작업 이어받기
+      if(typeof _seedSaveBaseline==='function') _seedSaveBaseline();
+    }
+  }catch(e){}                                                            // fetch 실패/무네트워크 → 빈 상태 유지
 }
 _bootRestore();
 refreshFinalPeek();

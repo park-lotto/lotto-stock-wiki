@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-08_1104_ROE와 RoRWA의 동반 개선.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "김도하",
+    "report_date": "2026.06.08",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "KB금융",
+        "code": "105560",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "226,000원",
+        "tp_prev": "210,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "KB금융의 2026년 수정 EPS 증가율은 은행지주 중 가장 높은 22% YoY로 추정된다.",
+        "estimate_revision": "ROE 추정치 상향과 BPS 증가로 목표주가를 상향합니다.",
+        "next_catalyst": "2027년 상반기 중 10bp대의 CET1비율 상승도 기대된다. 이때 주주환원 여력은 5,000억원 수준 증가할 것으로 추정되며, 연간 환원율은 60% 중반으로 상승할 수 있다.",
+        "thesis": [
+          "ROE와 RoRWA의 동반 상승",
+          "자사주 매입 및 소각에 따른 BPS 증가",
+          "대형주 중 가장 높은 RoRWA와 잘 분산된 계열사 구성"
+        ],
+        "valuation_basis": "ROE 추정치 상향에 따라 목표 PBR을 1.2배로 부여하였고, 이익 추정치 상향과 주식소 감소에 따른 BPS 증가를 반영하면서 목표주가를 226,000원으로 8% 상향하였다.",
+        "risk": "생산적 금융의 투자 부문 집행으로 발생하는 RWA에 따른 RoRWA 희석 위험",
+        "supply_comment": null,
+        "quote": "KB금융을 은행업종 내 최선호주로 유지한다. ROE 추정치 상향에 따라 목표 PBR을 1.2배로 부여하였고, 이익 추정치 상향과 주식소 감소에 따른 BPS 증가를 반영하면서 목표주가를 226,000원으로 8% 상향하였다."
+      },
+      {
+        "name": "신한지주",
+        "code": "055550",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "137,000원",
+        "tp_prev": "132,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2026년 수수료이익이 25% YoY 증가하면서 영업이익 증가(+11% YoY)에 기여할 전망이다.",
+        "estimate_revision": "BPS 증가로 목표주가를 상향합니다.",
+        "next_catalyst": "증권사의 손익 정상화 국면과 업종의 호조가 맞물린 상황",
+        "thesis": [
+          "증권 자회사의 손익 정상화",
+          "Value up ver.2 발표에 따른 주주환원율 상승",
+          "업종 호조와 맞물린 자회사 정상화"
+        ],
+        "valuation_basis": "목표 PBR 0.98배에 이익 추정치의 상향과 주식수 감소에 따른 BPS 증가를 반영하면서 목표주가를 137,000원으로 4% 상향하였다.",
+        "risk": "카드사의 점유율 측면에서의 경쟁력 약화",
+        "supply_comment": null,
+        "quote": "신한지주를 차선호주로 제시합니다. BPS 증가로 목표주가를 상향합니다. 증권 자회사의 손익 정상화 국면과 업종의 호조가 맞물린 상황을 긍정적으로 평가하며, 주주환원수익률의 가파른 상승도 기대됩니다."
+      },
+      {
+        "name": "BNK금융지주",
+        "code": "138930",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "25,500원",
+        "tp_prev": "24,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "이자 및 수수료이익의 증가로 지배순이익이 2026년 8%, 2027년 6% 증가할 것으로 추정되며, 수정 EPS는 동기간 각각 11%, 10% 증가할 전망이다.",
+        "estimate_revision": "ROE 추정치 상향과 BPS 증가로 목표주가를 상향합니다.",
+        "next_catalyst": "2027년 주주환원율 50%에 선형적으로 도달 및 은행지주 중 가장 가파른 환원 증가",
+        "thesis": [
+          "은행지주 중 가장 가파른 환원 확대",
+          "비은행 계열사 손익 비중 확대",
+          "이자 및 수수료이익 증가에 따른 이익 성장"
+        ],
+        "valuation_basis": "마진 개선 기대로 ROE 추정치가 상향되며 목표 PBR을 0.66배로 부여하였고, 이익 추정치 상향과 주식수 감소에 따른 BPS 증가를 반영하며 목표주가를 25,500원으로 6% 상향하였다.",
+        "risk": "지주의 대손비용률 개선 유지 필요",
+        "supply_comment": null,
+        "quote": "BNK금융지주를 차선호주로 제시합니다. ROE 추정치 상향과 BPS 증가로 목표주가를 상향합니다. 손익 전망치의 개선에도 불구하고 주가는 저평가되며 주주환원 수익률이 2027년 9%까지 높아졌습니다."
+      }
+    ]
+  }
+}

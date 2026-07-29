@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-08_1104_Kiwoom ETF Weekly (0608).md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "김진영, 조호준",
+    "report_date": "2026년 6월 8일",
+    "target_kind": "market",
+    "market_direction": "조정",
+    "macro_vars": [
+      "ECB 6월 통화정책위원회",
+      "미국 CPI/PPI",
+      "중국 CPI/PPI",
+      "한국 분기 경제성장률"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "조정 후 AI 사이클 지속",
+        "reason": "주말 새 트럼프 대통령이 정부 차원의 AI 지분 투자를 검토한다는 소식과 구글/메타 등 빅테크의 대규모 AI 투자 소식 등이 이어진 만큼 이번 조정을 AI 사이클 정점 논의로 연결 짓기 이르다고 판단"
+      }
+    ],
+    "style": "중립/조정",
+    "event_calendar": [
+      {
+        "date": "6/8~12",
+        "event": "애플 WWDC 2026"
+      },
+      {
+        "date": "6/9~11",
+        "event": "PCIM 유럽 2026"
+      },
+      {
+        "date": "6/11",
+        "event": "한국 코스피 200·코스닥 150 정기변경, 선물·옵션 동시만기일"
+      },
+      {
+        "date": "6/12",
+        "event": "스페이스 X 나스닥 상장"
+      }
+    ],
+    "top_picks": null,
+    "risk": "주 후반 브로드컴 실적 가이던스 기대치 하회, 고용지표 호조에 따른 금리인하 기대 소멸 등이 차익실현 빌미를 제공하며 하락 전환",
+    "quote": "주말 새 트럼프 대통령이 정부 차원의 AI 지분 투자를 검토한다는 소식과 구글/메타 등 빅테크의 대규모 AI 투자 소식 등이 이어진 만큼 이번 조정을 AI 사이클 정점 논의로 연결 짓기 이르다고 판단."
+  }
+}

@@ -83,13 +83,14 @@ def test_recommended_plan_does_not_resynthesize(job, monkeypatch):
     """추천 후보(이미 TTS 있음)는 미리보기가 재합성하지 않는다(재과금 0)."""
     db, work, store, synth_calls = job
     # 이미 TTS가 붙은 plan(=추천 edit_plan 상태)을 넣고, 그 mp3 파일이 실재하게 만든다.
+    # ★내용 해시 파일명(_beat_tts_path)으로 둬야 skip_existing이 재사용으로 인정한다(2026-07-27).
     import pathlib
-    p0 = pathlib.Path(work); p0.mkdir(parents=True, exist_ok=True)
-    a0, a1 = str(p0 / "b0.mp3"), str(p0 / "b1.mp3")
-    open(a0, "w").write("mp3"); open(a1, "w").write("mp3")
     plan = _tts_less_candidate_plan()
-    plan["beats"][0]["tts_path"] = a0
-    plan["beats"][1]["tts_path"] = a1
+    tts_dir = pathlib.Path(work) / "J1" / "tts"; tts_dir.mkdir(parents=True, exist_ok=True)
+    for b in plan["beats"]:
+        p = mix_pipeline._beat_tts_path(tts_dir, b)
+        open(p, "w").write("mp3")
+        b["tts_path"] = p
     store.update_mix_job("J1", edit_plan=plan)
 
     monkeypatch.setattr(mix_pipeline, "assemble",
@@ -107,13 +108,40 @@ def test_synthesize_beats_skip_existing(tmp_path, monkeypatch):
                         lambda n, out, **k: (synth.append(str(n)), open(out, "w").write("m"))[0])
     monkeypatch.setattr(mix_pipeline.asr_check, "transcribe_words", lambda p: None)
 
-    have = tmp_path / "have.mp3"; have.write_text("m")
+    tts_dir = tmp_path / "tts"; tts_dir.mkdir(parents=True, exist_ok=True)
     beats = [
-        {"beat_idx": 0, "narration": "이미 있음", "tts_path": str(have)},
+        {"beat_idx": 0, "narration": "이미 있음"},
         {"beat_idx": 1, "narration": "합성 필요"},  # tts_path 없음
     ]
-    mix_pipeline._synthesize_beats(beats, tmp_path / "tts", voice=None, skip_existing=True)
+    # 비트0은 '현재 대본'의 해시 파일이 실재하고 tts_path도 그것을 가리켜야 스킵된다(새 계약).
+    have = mix_pipeline._beat_tts_path(tts_dir, beats[0]); open(have, "w").write("m")
+    beats[0]["tts_path"] = have
+    mix_pipeline._synthesize_beats(beats, tts_dir, voice=None, skip_existing=True)
 
     assert synth == ["합성 필요"], f"skip_existing이 이미 있는 비트를 재합성했거나 놓쳤다: {synth!r}"
-    assert beats[0]["tts_path"] == str(have), "기존 tts_path가 바뀌었다"
+    assert beats[0]["tts_path"] == have, "기존 tts_path가 바뀌었다"
     assert beats[1].get("tts_path"), "빠진 비트가 합성되지 않았다"
+
+
+def test_candidate_switch_does_not_reuse_other_candidate_audio(tmp_path, monkeypatch):
+    """★회귀(2026-07-27): B로 만든 뒤 A로 바꾸면 자막=A인데 음성=B였다. 파일명이 beat_idx
+    공유라 B가 덮어쓴 파일을 A가 skip_existing으로 재사용했기 때문. 내용해시 파일명이면
+    대본이 다른 A는 B와 다른 파일이라 B 음성을 절대 재사용하지 않고 자기 대본으로 합성한다."""
+    synth = []
+    monkeypatch.setattr(mix_pipeline, "synthesize_line",
+                        lambda n, out, **k: (synth.append(str(n)), open(out, "w").write("m"))[0])
+    monkeypatch.setattr(mix_pipeline.asr_check, "transcribe_words", lambda p: None)
+    tts_dir = tmp_path / "tts"
+
+    # 파일명은 대본 내용에 종속 — 같은 beat_idx라도 A/B 대본이면 파일이 다르다
+    b_beat = {"beat_idx": 0, "narration": "B안 대본"}
+    a_beat = {"beat_idx": 0, "narration": "A안 대본"}
+    assert mix_pipeline._beat_tts_path(tts_dir, b_beat) != mix_pipeline._beat_tts_path(tts_dir, a_beat)
+
+    # B 먼저 합성(파일 생김) → A로 스위치: A는 tts_path가 B파일을 가리켜도 대본이 달라 재합성
+    mix_pipeline._synthesize_beats([b_beat], tts_dir, voice=None, skip_existing=True)
+    a_beat["tts_path"] = b_beat["tts_path"]     # 스위치로 옛 후보 경로가 딸려온 상황 재현
+    mix_pipeline._synthesize_beats([a_beat], tts_dir, voice=None, skip_existing=True)
+
+    assert synth == ["B안 대본", "A안 대본"], f"A가 B 음성을 재사용했다: {synth!r}"
+    assert a_beat["tts_path"] == mix_pipeline._beat_tts_path(tts_dir, a_beat)  # A 자기 파일

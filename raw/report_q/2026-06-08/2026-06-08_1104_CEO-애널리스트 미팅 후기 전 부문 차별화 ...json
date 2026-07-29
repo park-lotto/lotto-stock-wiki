@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-08_1104_CEO-애널리스트 미팅 후기 전 부문 차별화 ...md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "장민지",
+    "report_date": "2026/06/08",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "롯데쇼핑",
+        "code": "023530",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "200,000원",
+        "tp_prev": "200,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "백화점 사업부의 내수 및 외국인 매출 성장과 대형마트의 회복세가 맞물리며 실적 모멘텀이 가시화될 구간으로 판단",
+        "estimate_revision": null,
+        "next_catalyst": "백화점 외국인 집객 차별화 및 핵심 점포 리뉴얼, 대형마트 홈플러스 반사 수혜 및 해외 확장, 이커머스 수익성 중심 전략",
+        "thesis": [
+          "백화점 부문은 외국인 집객 차별화(롯데 투어리스트 멤버십 카드 등)와 핵심 점포 리뉴얼을 통한 매출 성장 지속 기대",
+          "대형마트는 홈플러스 37개 점포 추가 폐점에 따른 반사 수혜 및 해외 점포 확대에 따른 실적 개선 기대",
+          "이커머스는 저수익 카테고리 축소 및 RMN 광고 매출 성장 등 흑자 전환을 목표로 수익성 중심 전략 진행"
+        ],
+        "valuation_basis": "12MF EPS에 Target P/E 15.2x를 적용하여 산출",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "투자의견 Buy 유지 및 목표주가 200,000원 유지. 목표주가는 12MF EPS에 Target P/E 15.2x를 적용하여 산출. 백화점 사업부의 내수 및 외국인 매출 성장과 대형마트의 회복세가 맞물리며 실적 모멘텀이 가시화될 구간으로 판단"
+      }
+    ]
+  }
+}

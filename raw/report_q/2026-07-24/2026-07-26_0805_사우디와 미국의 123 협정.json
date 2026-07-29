@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-26_0805_사우디와 미국의 123 협정.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "유재선",
+    "report_date": "2026.07.24",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "WTI 87.7달러/배럴",
+      "미국 천연가스 2.9달러/mmbtu",
+      "아시아 LNG 현물 22.0달러/mmbtu",
+      "호주산 유연탄 130.9달러/톤",
+      "원/달러 환율 1,477.4원"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "원전",
+        "stance": "기대감 유효",
+        "reason": "123 협정 발효 시 사우디향 원전 수출 가능성 증가 및 기자재 밸류체인 기대감"
+      },
+      {
+        "sector": "신재생",
+        "stance": "부정적",
+        "reason": "태양광 경쟁입찰 상한가격 인하 및 RPS 제도 폐지 불확실성으로 긍정적 결과 기대 어려움"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.08",
+        "event": "자가소비용 재생에너지 발전설비 인증서(REGO) 발급·거래 시범사업 추진"
+      },
+      {
+        "date": "2026.11",
+        "event": "SMR 사전검토제 시행"
+      }
+    ],
+    "top_picks": [
+      "한국전력",
+      "SK이터닉스"
+    ],
+    "risk": "지정학적 리스크 확산 및 미국 의회의 반발, 에너지 가격 상승에 따른 원가 부담",
+    "quote": "예멘 후티 해상 봉쇄 참여로 원유 물류 차질 우려가 현실화되면서 에너지 가격이 빠르게 강세로 전환되었다."
+  }
+}

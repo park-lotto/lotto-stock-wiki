@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-27_0800_이익 감소는 일시적, 매출 고성장은 지속.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": [
+      "김성래",
+      "김예인"
+    ],
+    "report_date": "2026년 7월 24일",
+    "stocks": [
+      {
+        "name": "현대글로비스",
+        "code": "086280",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 380000,
+        "tp_prev": 370000,
+        "tp_direction": "up",
+        "earnings_outlook": "2Q 동사 매출액은 8.7조원(+15.8%, 이하 YoY), 영업이익은 4,950억원(-8.1%)을 기록.",
+        "estimate_revision": "매출액(FY1) 31,675 십억원 -> 33,637 십억원, 영업이익(FY1) 2,118 십억원 -> 2,190 십억원",
+        "next_catalyst": "BD 지분가치 증가에 대한 기대감, RMAC을 통한 Atlas 상용화 개발 진척도 가속화",
+        "thesis": [
+          "이익 감소는 일시적이며 하반기 증익으로 전환 전망",
+          "PCTC 선대운영 합리화 및 고중량 운송 사업 확대",
+          "소프트뱅크의 풋옵션 행사에 따른 BD 지분 증가 및 밸류 상승"
+        ],
+        "valuation_basis": "AVG of (Target PER * EPS + Target PBR * BPS)",
+        "risk": "컨테이너 시황 약세 지속 및 PCTC 중동 전쟁 유가 상승분 반영",
+        "supply_comment": "극동발 수출 등 PCTC 수요 대비 선복은 여전히 부족한 상황",
+        "quote": "이익 감소영향은 개선되고 매출은 고성장하는 ’27년 증익 기대감"
+      }
+    ],
+    "sector": "자동차"
+  }
+}

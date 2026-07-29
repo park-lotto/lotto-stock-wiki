@@ -1,0 +1,26 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "LS일렉트릭",
+      "signal": "bull",
+      "reason": "HVDC 국산화 선도 및 AI 시대 핵심 송전방식 사업 확대",
+      "ts": null,
+      "quote": "HVDC 국산화 앞장···LS일렉트릭, 에너지 고속도로 정조준",
+      "sector": "전력"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "HVDC 변압기 사업이 AI 시대 핵심 송전방식으로 주목받음",
+      "ts": "04-27 07:00",
+      "quote": "‘AI시대의 핵심 송전방식’ HVDC 변압기 사업 주목"
+    },
+    {
+      "fact": "LS일렉트릭이 HVDC 국산화 및 에너지 고속도로 사업을 정조준함",
+      "ts": "02-06 08:00",
+      "quote": "[리포트] HVDC 국산화 앞장···LS일렉트릭, 에너지 고속도로 정조준"
+    }
+  ],
+  "quote": "‘AI시대의 핵심 송전방식’ HVDC 변압기 사업 주목, [리포트] HVDC 국산화 앞장···LS일렉트릭, 에너지 고속도로 정조준"
+}

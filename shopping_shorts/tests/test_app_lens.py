@@ -319,3 +319,17 @@ def test_lens_cn_search_survives_one_actor_error(tmp_path, monkeypatch):
     c = TestClient(appmod.app)
     d = c.post("/api/lens/cn/search", data={"keyword": "土豆片"}).json()
     assert d["count"] == 1 and d["items"][0]["platform"] == "douyin"
+
+
+def test_lens_month_limit_scales_with_keys(tmp_path, monkeypatch):
+    """렌즈 월 한도 = 키 개수 × 100(무료 계정당). 설정 override 있으면 그 값."""
+    s = Store(str(tmp_path / "t.db"))
+    import shopping_shorts.config as cfg
+    monkeypatch.setattr(cfg, "SERPAPI_KEYS", ["k1"])
+    assert appmod._lens_month_limit(s) == 100
+    monkeypatch.setattr(cfg, "SERPAPI_KEYS", ["k1", "k2"])
+    assert appmod._lens_month_limit(s) == 200          # 2번째 키 넣으면 자동 200
+    monkeypatch.setattr(cfg, "SERPAPI_KEYS", [])
+    assert appmod._lens_month_limit(s) == 100          # 키 0개여도 최소 100
+    s.set_setting("lens_month_limit", "50")
+    assert appmod._lens_month_limit(s) == 50            # 설정 override 우선

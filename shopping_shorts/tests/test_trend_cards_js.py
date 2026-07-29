@@ -27,6 +27,10 @@ _DRIVER = r"""
     {vision_subject:'', title:'', caption:'', views:100, platform:'instagram'},
   ];
   const groups = _groupBySubject(items);
+  // 폴백 B: zh 있으면 <a href=검색URL>, 없으면 비활성 <span>(딥링크 없음).
+  const urlHit = 'https://www.xiaohongshu.com/search_result?keyword='+encodeURIComponent('凉拌黄瓜');
+  const btnHit = _cnTrendBtn('凉拌黄瓜')('📕','#f00', urlHit);
+  const btnMiss = _cnTrendBtn('')('📕','#f00', '#');
   console.log(JSON.stringify({
     diso: groups.find(g=>g.subjectKo==='다이소 신상'),
     bagel: !!groups.find(g=>g.subjectKo && g.subjectKo.indexOf('베이글')>=0),
@@ -34,6 +38,8 @@ _DRIVER = r"""
     firstIsDiso: groups[0].subjectKo==='다이소 신상',
     likesFallback: _score({likes:200}),
     viewsWins: _score({views:5, likes:9999}),
+    hitIsLink: btnHit.indexOf('<a href=')>=0 && btnHit.indexOf('%E5')>=0,   // 중국어 인코딩 URL 포함
+    missIsDisabled: btnMiss.indexOf('pointer-events:none')>=0 && btnMiss.indexOf('<a href=')<0,
   }));
 })();
 """
@@ -53,3 +59,5 @@ def test_trend_card_functions():
     assert r["firstIsDiso"] is True
     assert r["likesFallback"] == 200
     assert r["viewsWins"] == 5
+    assert r["hitIsLink"] is True        # 번역 있으면 딥링크 <a>
+    assert r["missIsDisabled"] is True   # 번역 없으면 비활성(폴백 B) — ko 딥링크 안 만듦

@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_0700_5월 미국 고용 부정할 수 없는 견고함.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "위재현",
+    "report_date": "2026/06/08",
+    "target_kind": "market",
+    "market_direction": "안정적인 고용시장",
+    "macro_vars": [
+      "비농업 신규 고용 +17.2만명",
+      "실업률 4.3% (3개월 연속 유지)",
+      "27주 이상 장기 실업자 비중 27.5%",
+      "경제활동참가율"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6월",
+        "event": "월드컵 진행"
+      }
+    ],
+    "top_picks": null,
+    "risk": "장기 실업자 비중 확대 및 AI 관련 해고 증가",
+    "quote": "헤드라인 지표가 균형 수준을 3개월 이상 상회하고 있는 점은 안정적인 고용시장을 시사한다."
+  }
+}

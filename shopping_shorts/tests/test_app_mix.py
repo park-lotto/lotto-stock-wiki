@@ -51,10 +51,11 @@ def test_mix_result_includes_video_type(monkeypatch, tmp_path):
                    "alternates": [], "effect": "cut"}],
         "plagiarism_flags": []})
     body = client.get("/api/mix/result/jv").json()
-    assert body["detected_type"] == "recipe_secret"
-    assert "비밀비법형" in body["detected_type_label"]
+    # 장면스파인 재설계: 옛 key recipe_secret은 recipe로 정규화돼 표시된다.
+    assert body["detected_type"] == "recipe"
+    assert "요리" in body["detected_type_label"]
     assert body["affiliate_target"] == "소금"
-    assert any(t["key"] == "product_reveal" for t in body["video_types"])
+    assert any(t["key"] == "generic" for t in body["video_types"])
 
 
 def test_mix_retype_valid_and_invalid(monkeypatch, tmp_path):
@@ -83,10 +84,13 @@ def test_mix_adjust_regrounds_from_inventory(monkeypatch, tmp_path):
     # beat0의 primary를 s0-1로 교체 — start/end/scene_desc는 서버가 인벤토리에서 되붙여야 함
     # (scene_desc는 _ground_ref가 실어준다, 2026-07-20 ① visual_verb 앵커 태스크에서 추가 —
     #  얼굴정렬·리컨사일이 grounded primary의 scene_desc를 읽으므로 adjust 리그라운딩도 실어야 일관)
+    # is_key·shot_role도 _ground_ref가 실어준다(2026-07-26 Task8, scene_first 앵커 dedup·grain
+    #  주경로 배선) — 입력 세그에 없으면 기본 False/"기타". adjust 리그라운딩도 같은 함수라 일관.
     r = client.post("/api/mix/adjust", json={"job_id": "j2", "beat_idx": 0, "video_id": "s0", "seg_id": "s0-1"})
     assert r.status_code == 200
     plan = store.get_mix_job("j2")["edit_plan"]
-    assert plan["beats"][0]["primary"] == {"video_id": "s0", "seg_id": "s0-1", "start": 2.0, "end": 4.0, "scene_desc": "d"}
+    assert plan["beats"][0]["primary"] == {"video_id": "s0", "seg_id": "s0-1", "start": 2.0, "end": 4.0,
+                                           "scene_desc": "d", "is_key": False, "shot_role": "기타"}
 
 
 def test_mix_adjust_invalid_beat_idx_returns_404(monkeypatch, tmp_path):
@@ -190,7 +194,7 @@ def test_extract_from_url_extracts_without_last_run(monkeypatch, tmp_path):
     /api/extract_script는 last_run 조회라 실패하던 실버그(2026-07-14) 대응 엔드포인트."""
     client, store = _client(monkeypatch, tmp_path)
     monkeypatch.setattr(app_module, "download_any", lambda url, d: ("/tmp/x.mp4", "캡션"))
-    monkeypatch.setattr(app_module, "extract_script",
+    monkeypatch.setattr(app_module, "extract_auto",
                         lambda path, code, caption="": {"full_text": "감자 대본", "segments": []})
     r = client.post("/api/produce/extract_from_url",
                     json={"url": "https://www.instagram.com/p/OLD/", "shortcode": "OLD1"})
@@ -204,7 +208,7 @@ def test_extract_from_url_caches_by_shortcode(monkeypatch, tmp_path):
     calls = {"dl": 0}
     def fake_dl(url, d): calls["dl"] += 1; return ("/tmp/x.mp4", "")
     monkeypatch.setattr(app_module, "download_any", fake_dl)
-    monkeypatch.setattr(app_module, "extract_script",
+    monkeypatch.setattr(app_module, "extract_auto",
                         lambda path, code, caption="": {"full_text": "T", "segments": []})
     body = {"url": "https://insta/p/X", "shortcode": "SC1"}
     assert client.post("/api/produce/extract_from_url", json=body).json()["full_text"] == "T"
@@ -237,7 +241,7 @@ def test_extract_from_url_charges_script_credit_on_miss_not_hit(monkeypatch, tmp
     (이전엔 script가 미배선이라 무제한 — /api/me·admin은 캡된 척했다)."""
     client, store = _client(monkeypatch, tmp_path)
     monkeypatch.setattr(app_module, "download_any", lambda url, d: ("/tmp/x.mp4", ""))
-    monkeypatch.setattr(app_module, "extract_script",
+    monkeypatch.setattr(app_module, "extract_auto",
                         lambda path, code, caption="": {"full_text": "T", "segments": []})
     body = {"url": "https://insta/p/SC", "shortcode": "SCA"}
     day = _today()
@@ -266,7 +270,7 @@ def test_extract_from_url_blocks_when_script_daily_exhausted(monkeypatch, tmp_pa
     client, store = _client(monkeypatch, tmp_path)
     store.set_setting("limit_script_pro", 0)   # cid0=pro → pro 상한 0으로 강제 소진
     monkeypatch.setattr(app_module, "download_any", lambda url, d: ("/tmp/x.mp4", ""))
-    monkeypatch.setattr(app_module, "extract_script",
+    monkeypatch.setattr(app_module, "extract_auto",
                         lambda path, code, caption="": {"full_text": "T", "segments": []})
     r = client.post("/api/produce/extract_from_url",
                     json={"url": "https://insta/p/Q", "shortcode": "QQ"})

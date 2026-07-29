@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-07-23",
+    "broker": "Daishin 증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-26_1107_비이성적 주가 하락.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "Daishin 증권",
+    "analyst": "류형근",
+    "report_date": "2026.07.22",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "rating": "Buy",
+        "rating_changed": null,
+        "tp_new": "560,000원",
+        "tp_prev": "560,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "3Q26 범용 DRAM과 NAND 가격은 전분기 대비 20% 초중반, 10% 중후반 상승 전망",
+        "estimate_revision": null,
+        "next_catalyst": "LTA의 확산 및 사이클 Duration 연장 효과",
+        "thesis": [
+          "약육강식의 시대 속 공급업계의 맞춤형 가격 전략 실효성 입증",
+          "Legacy 반도체 수급 불균형에 따른 가격 상승",
+          "LTA 확산을 통한 AI 사이클 내 안정적 메모리 공급망 구축"
+        ],
+        "valuation_basis": null,
+        "risk": "비이성적 주가 하락",
+        "supply_comment": "공급 부족의 환경에서 고객별, 응용처별 가격 전략 차별화 및 LTA를 통한 선행적 Capa 운영 강화",
+        "quote": "3Q26 범용 DRAM과 NAND 가격은 전분기 대비 20% 초중반, 10% 중후반 상승 전망 (글로벌 기준). 공급업계별 기저 부담이 상이한 만큼, 가격 상승률에는 편차가 있을 수 있으나, 시장이 초점을 둬야 하는 부분은 “공급업계의 맞춤형 가격 전략이 재차 그 실효성을 증명할 것”이라는 점."
+      },
+      {
+        "name": "SK하이닉스",
+        "code": "000660",
+        "rating": "Buy",
+        "rating_changed": null,
+        "tp_new": "3,900,000원",
+        "tp_prev": "3,900,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "3Q26 범용 DRAM과 NAND 가격은 전분기 대비 20% 초중반, 10% 중후반 상승 전망",
+        "estimate_revision": null,
+        "next_catalyst": "LTA의 확산 및 사이클 Duration 연장 효과",
+        "thesis": [
+          "약육강식의 시대 속 공급업계의 맞춤형 가격 전략 실효성 입증",
+          "Legacy 반도체 수급 불균형에 따른 가격 상승",
+          "LTA 확산을 통한 AI 사이클 내 안정적 메모리 공급망 구축"
+        ],
+        "valuation_basis": null,
+        "risk": "비이성적 주가 하락",
+        "supply_comment": "공급 부족의 환경에서 고객별, 응용처별 가격 전략 차별화 및 LTA를 통한 선행적 Capa 운영 강화",
+        "quote": "3Q26 범용 DRAM과 NAND 가격은 전분기 대비 20% 초중반, 10% 중후반 상승 전망 (글로벌 기준). 공급업계별 기저 부담이 상이한 만큼, 가격 상승률에는 편차가 있을 수 있으나, 시장이 초점을 둬야 하는 부분은 “공급업계의 맞춤형 가격 전략이 재차 그 실효성을 증명할 것”이라는 점."
+      }
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+[Unit]
+Description=Shopping Shorts Job Worker (독립워커 - 배포 재시작에 안 죽는 긴 작업 실행기)
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/lotto-stock-wiki
+EnvironmentFile=/etc/shopping-shorts.env
+ExecStart=/usr/bin/python3 -m shopping_shorts.worker
+Restart=always
+RestartSec=5
+# 재시작 시 진행 중 작업을 최대 30분 기다린다(믹스 렌더가 길다)
+TimeoutStopSec=1800
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

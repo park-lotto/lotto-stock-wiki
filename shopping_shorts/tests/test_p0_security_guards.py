@@ -134,10 +134,31 @@ def test_save_to_wiki_checks_video_url_too(monkeypatch, tmp_path):
 def _mix_client(monkeypatch, tmp_path):
     db = tmp_path / "t.db"
     monkeypatch.setattr(app_module, "DB_PATH", db)
-    scheduled = []
-    monkeypatch.setattr(app_module, "run_render",
-                        lambda *a, **k: scheduled.append(a))
-    return TestClient(app_module.app), Store(db), scheduled
+    store = Store(db)
+
+    # 2026-07-29 독립워커 전환: app.py는 이제 run_render를 직접 예약하지 않고
+    # Store(DB_PATH).enqueue("render", {"job_id": job_id})로 큐에 넣는다(실행은
+    # 별도 워커 프로세스). '예약됐는가'는 job_queue의 render 항목 수로 센다 —
+    # 검증하는 계약(더블클릭해도 한 번만)은 그대로다.
+    class _Scheduled:
+        def __len__(self):
+            with store._conn() as c:
+                return c.execute(
+                    "SELECT COUNT(*) FROM job_queue WHERE task='render'"
+                ).fetchone()[0]
+
+        def __bool__(self):
+            return len(self) > 0
+
+        def __eq__(self, other):
+            if other == []:
+                return len(self) == 0
+            return NotImplemented
+
+        def __repr__(self):
+            return f"<render queue count={len(self)}>"
+
+    return TestClient(app_module.app), store, _Scheduled()
 
 
 def _ready_job(store, job_id="jr"):

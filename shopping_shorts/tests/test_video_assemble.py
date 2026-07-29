@@ -62,9 +62,11 @@ def test_caption_segments_empty():
 
 def test_caption_segments_splits_into_short_phrases():
     # 어절 기준 짧은 구절. 각 구절은 공백 제외 글자수가 목표 근처(1줄), 줄바꿈 없음.
-    segs = va._caption_segments("오이 사자마자 냉장고에 넣으셨나요?")
+    # (2026-07-25: 짧은 문장은 14자 안에 1구절로 들어갈 수 있어 긴 문장으로 '쪼개짐'을 검증.)
+    src = "오이는 사자마자 바로 냉장고에 넣어야 다들 신선하게 오래 먹더라고요"
+    segs = va._caption_segments(src)
     assert len(segs) >= 2                       # 한 덩어리로 안 뭉침
-    assert " ".join(segs) == "오이 사자마자 냉장고에 넣으셨나요?"  # 어절 순서·내용 보존
+    assert " ".join(segs) == src                # 어절 순서·내용 보존
     for s in segs:
         assert "\n" not in s                    # 짧은 1줄
         assert len(s.replace(" ", "")) <= va._CAP_WRAP  # 화면 밖으로 안 나감
@@ -92,20 +94,24 @@ def test_caption_segments_max_words_cap():
     assert " ".join(segs) == "가 나 다 라 마 바 사 아"        # 내용 보존
 
 
-def test_caption_segments_ref_rhythm_2to3_words():
-    # 레퍼런스 리듬: 2~3어절 단위(너무 잘게 쪼개지 않음). 어절 상한은 지킨다.
+def test_caption_segments_ref_rhythm_not_too_fine():
+    # 리듬: 3~4어절 단위(2026-07-25 상향). 너무 잘게 쪼개지 않고 어절 상한은 지킨다.
     segs = va._caption_segments("저도 오이를 냉장고에 넣어도 꼭 두 세개씩 물러서 버렸거든요")
-    assert 3 <= len(segs) <= 5                               # 적당히 뭉침(잘게X)
-    assert all(len(s.split()) <= va._CAP_MAX_WORDS for s in segs)
+    assert 1 <= len(segs) <= 3                               # 적당히 뭉침(잘게X — 옛 3~5→2~3)
+    # 진짜 제약은 화면폭(_CAP_WRAP)이다 — 어절 상한은 세그먼트化 중의 소프트 리밋이고,
+    # 고아 꼬리·의존명사 병합은 폭만 지키면 상한을 한 어절 넘길 수 있다(의도된 동작).
+    assert all(len(s.replace(" ", "")) <= va._CAP_WRAP for s in segs)
 
 
 def test_caption_segments_no_dangling_modifier():
-    # 수식어(관형어·부사)가 구절 끝에 홀로 남지 않는다("며칠 안"|"됐는데" 방지).
+    # 수식어(관형어·부사)가 구절 끝에 홀로 남지 않는다.
     segs = va._caption_segments("분명 사온 지 며칠 안 됐는데 물러지고 곰팡이 펴서")
     for s in segs:
         assert s.split()[-1] not in va._CAP_HEAD            # 머리 단어로 안 끝남
-    # "며칠 안 됐는데"가 한 덩어리로 붙었는지
-    assert any("며칠 안" in s and "됐는데" in s for s in segs)
+    # 부정 "안"이 서술어와 붙는다("안 됐는데" — "안"이 홀로/뒤에 떨어지지 않음).
+    # (2026-07-25: 어절 상한 상향으로 "며칠 안 됐는데" 3어절 통짜 그룹핑은 앞 어절이 먼저
+    #  채워 갈릴 수 있으나, 부정+서술어 결합이라는 핵심 불변식은 지킨다.)
+    assert any("안 됐는데" in s for s in segs)
 
 
 def test_caption_segments_modifier_leads_next_phrase():
@@ -137,7 +143,9 @@ def test_caption_segments_time_adverb_opener_breaks_first():
     # 끊겨 한 박자를 열고, 뒤 '수식어+명사'가 온전히 묶여야 한다("빵 달라는 아이").
     segs = va._caption_segments("아침마다 빵 달라는 아이, 아무 식빵이나 좋아하는 우리 아이")
     # 끝 쉼표는 표시용으로 제거됨(2026-07-21) → "빵 달라는 아이"
-    assert segs == ["아침마다", "빵 달라는 아이", "아무 식빵이나", "좋아하는 우리 아이"], segs
+    # 2026-07-25: 어절 상한 14/4 + 쉼표 끊김으로 "아무 식빵이나 좋아하는 우리 아이"가 한
+    # 호흡으로 묶인다("우리 아이"가 안 갈림 — 고아 꼬리 병합). …마다 끊김·아이 비고아는 유지.
+    assert segs == ["아침마다", "빵 달라는 아이", "아무 식빵이나 좋아하는 우리 아이"], segs
     assert not any(s.startswith("아이") for s in segs)   # 아이가 다음 구절 머리로 안 떨어짐
 
 
@@ -711,3 +719,24 @@ def test_explicit_effect_none_stays_hard_cut(tmp_path):
     style = {"effect": "none", "size": 50, "y_pct": 84, "box": False, "bar": False}
     draws = va._caption_drawtexts("하드 컷 자막", 2.0, tmp_path, 0, style=style)
     assert "alpha=" not in ",".join(draws)
+
+
+def test_plan_fills_from_source_tail_not_replay():
+    """회귀(2026-07-27 사장님 "같은 장면 반복 말고 뒤에서 채우기"): 마지막 클립 소스의 꼬리가
+    모자라도, 다른 소스(A)에 안 튼 뒷부분이 있으면 그걸 앞으로 밀며 소비한다 — 되감아 재생(루프)
+    하지 않는다. A는 배정 구간이 [0,1]뿐이지만 소스는 30초라, 채움은 1초 이후 실프레임이어야 한다."""
+    import shopping_shorts.video_assemble as va
+    segs = [{"video_id": "A", "start": 0.0, "end": 1.0},
+            {"video_id": "B", "start": 0.0, "end": 1.0}]
+    clips = va._plan_beat_clips(segs, tts_dur=8.0, src_durs={"A": 30.0, "B": 1.5})
+    assert abs(sum(c["out_dur"] for c in clips) - 8.0) < 0.05
+    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips)   # 슬로모 0
+    # ★핵심: A의 재생이 배정 구간 끝(1.0)을 넘어 뒷부분 실프레임까지 갔다 = 되감기 아님
+    a_max_end = max((c["start"] + c["src_dur"] for c in clips if c["video_id"] == "A"), default=0.0)
+    assert a_max_end > 1.0 + 1e-6
+    for c in clips:                                                      # 유출 0
+        assert c["start"] + c["src_dur"] <= src_durs_of(c["video_id"]) + 1e-9
+
+
+def src_durs_of(vid):
+    return {"A": 30.0, "B": 1.5}[vid]

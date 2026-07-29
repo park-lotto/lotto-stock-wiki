@@ -1,0 +1,32 @@
+{
+  "stocks": [
+    {
+      "name": "GOOGL",
+      "signal": "bull",
+      "reason": "컴퓨팅 및 클라우드 투자가 AGI를 위한 장기적인 성장의 핵심이며, 현재 공급 제약이 오히려 강한 수요와 모멘텀을 방증하고 있음.",
+      "ts": "00:24",
+      "quote": "we will continue to invest as long as we see an attractive return on that investment",
+      "sector": "IT"
+    },
+    {
+      "name": "삼양식품",
+      "signal": "bull",
+      "reason": "3분기 미국 매출 이연 및 밀양2공장 가동률 상승으로 실적 성장이 지속될 전망이며, 성장성 대비 2027년 예상 PER 10배는 저평가 구간임.",
+      "ts": "03:52",
+      "quote": "2026년 연결 매출액은 3조 972억원(YoY +31.7%), 영업이익은 7,256억원(YoY +38.4%, OPM 23.4%)으로 추정.",
+      "sector": "소비내수"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "구글 경영진은 데이터 센터 및 인프라 투자를 위한 비용 부담이 있지만, 이를 AGI를 위한 필수적인 장기 투자로 간주함.",
+      "ts": "00:24",
+      "quote": "significant increase in our investments in technical infrastructure will continue to put pressure...in the form of higher depreciation expense and related data center operations costs"
+    },
+    {
+      "fact": "삼양식품은 3분기 미국향 매출 및 밀양2공장 가동에 힘입어 분기 연결 매출 8,000억원 상회 전망.",
+      "ts": "03:52",
+      "quote": "3Q26에는 미국향 매출 이연분과 밀양2공장 가동률 상승이 반영되며 분기 연결 매출액이 8,000억원을 상회할 것."
+    }
+  ]
+}

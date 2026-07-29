@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>숏템박스 레퍼런스 랭킹</title>
+<title>숏템메이커 레퍼런스 랭킹</title>
 <script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <!-- 세련된 한글 폰트(배지용, 2026-07-22). 실패해도 시스템폰트로 폴백 — 회귀 없음. -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
@@ -169,6 +169,23 @@
     .stat{font-size:11px}
     .btns button{font-size:10px;padding:6px 2px}
   }
+  /* ── 해외HOT 카드 그리드 (2026-07-26) ── */
+  .ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+  .ov-card{background:var(--card,#181b22);border:1px solid var(--line,#262b36);border-radius:12px;overflow:hidden;text-decoration:none;color:inherit;display:flex;flex-direction:column;transition:border-color .15s,transform .1s}
+  .ov-card:hover{border-color:#37e0bd;transform:translateY(-2px)}
+  .ov-thumb{position:relative;aspect-ratio:9/12;background:#0b0d11;display:flex;align-items:center;justify-content:center}
+  .ov-thumb img{width:100%;height:100%;object-fit:cover}
+  .ov-noimg{color:#4a5162;font-size:26px}
+  .ov-plat{position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.72);color:#fff;font-size:10px;padding:2px 6px;border-radius:5px}
+  .ov-gap{position:absolute;right:6px;top:6px;background:rgba(0,0,0,.6);color:#cfd6e4;font-size:10px;padding:2px 6px;border-radius:5px}
+  .ov-gap-hot{background:#0d3b33;color:#37e0bd;font-weight:600}
+  .ov-textbadge{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.6);color:#cfd6e4;font-size:10px;padding:2px 6px;border-radius:5px}
+  .ov-textbadge-none{background:#0d3b33;color:#37e0bd;font-weight:600}
+  .ov-meta{padding:8px 9px 10px}
+  .ov-title{font-size:12.5px;line-height:1.35;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:34px}
+  .ov-sub{margin-top:6px;color:var(--sub,#8b94a7);font-size:11px}
+  .ov-lens{margin-top:8px;width:100%;padding:5px;font-size:11px;border:1px solid var(--line,#262b36);border-radius:6px;background:#0d131c;color:#37e0bd;cursor:pointer}
+  .ov-lens:hover{border-color:#37e0bd;background:#0d3b33}
 </style>
 <style id="rankSkin">
 /* ── 레퍼런스 랭킹 상단 리디자인 (다크 시네마 + 민트 네온, 2026-07-23) ── */
@@ -196,6 +213,7 @@
 #censusBtn{background:var(--inset);color:var(--txt);border:1px solid var(--line)}
 #censusBtn:hover{border-color:var(--accent);box-shadow:0 0 0 1px rgba(55,224,189,.4),0 10px 28px -12px rgba(55,224,189,.6)}
 #status{font-variant-numeric:tabular-nums}
+@keyframes cpSpin{to{transform:rotate(360deg)}}
 /* system status — 관리자 전용 접이식 패널 */
 #statusBox{margin:2px 0 14px;border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative;
   background:linear-gradient(180deg,var(--panel),var(--inset))}
@@ -241,11 +259,15 @@
 </head>
 <body>
   <main class="main">
-    <div class="rk-kicker"><span class="d"></span>숏템탑스 · 레퍼런스 인텔리전스</div>
+    <div class="rk-kicker"><span class="d"></span>숏템메이커 · 레퍼런스 인텔리전스</div>
     <div class="head">
       <h2>레퍼런스 랭킹</h2>
     </div>
     <div class="desc">443개 레퍼런스 채널의 48시간 이내 릴스를 강도별로 랭킹합니다.</div>
+    <div class="ctypes" id="modeTabs" style="margin-bottom:12px">
+      <div class="ctype active" id="modeRanking" onclick="toggleOverseas(false)">🏠 레퍼런스 랭킹</div>
+      <div class="ctype" id="modeOverseas" onclick="toggleOverseas(true)">🌍 해외HOT</div>
+    </div>
     <!-- 플랫폼 전환 토글 숨김(사장님 2026-07-21, 미사용) — 삭제 아님. switchPlatform·PLATFORM
          로직은 보존해 PLATFORM 기본값 instagram으로 랭킹·수집이 계속 동작하고, 되살리려면
          display:none만 지우면 된다. -->
@@ -278,10 +300,43 @@
         <div id="ttStatus" style="margin-top:6px;font-size:11px;color:var(--sub)"></div>
       </div>
     </div>
+    <div id="xhsDiscoverPanel" style="display:none;margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
+      <button onclick="xhsDiscover(this)">🔍 잘하는 계정 발굴</button>
+      <label style="font-size:12px;color:var(--sub);margin-left:10px;cursor:pointer" title="켜면 창을 닫아도 서버가 주기적으로 발굴해 누적을 계속 쌓습니다. 끄면 멈춥니다. (해외HOT 수집 중엔 자동으로 건너뜀)">
+        <input type="checkbox" id="xhsAutoLoop" onchange="xhsAutoLoopToggle(this)"> ⏱ 백그라운드 자동 발굴(<span id="xhsAutoMin">45</span>분마다, 창 닫아도 계속)
+      </label>
+      <span id="xhsAutoState" style="font-size:11px;color:#2e7d32;margin-left:6px"></span>
+      <div style="font-size:11px;color:var(--sub);margin-top:4px">카테고리별로 반응 좋은 계정을 모아옵니다 (무료 검색). 자주 돌릴수록 '몇 번 관측됐나'가 쌓여 정확해져요. 매일 새벽 상위 계정은 자동 등록. [담기]로 추가, [삭제]는 영구 제외.</div>
+      <div id="xhsSortBar" style="display:none;margin-top:8px;font-size:12px">
+        <span style="color:var(--sub)">정렬:</span>
+        <button class="xhsSortBtn" data-sort="appear_count" onclick="xhsSortBy('appear_count',this)" title="여러 번 검색에 반복해서 뜨는 계정일수록 위로 — 우연 1회를 걸러냄">🔁 자주 뜸(관측횟수)</button>
+        <button class="xhsSortBtn" data-sort="engagement_sum" onclick="xhsSortBy('engagement_sum',this)">참여 합계</button>
+        <button class="xhsSortBtn" data-sort="avg_engagement" onclick="xhsSortBy('avg_engagement',this)">노트당 평균</button>
+        <button class="xhsSortBtn" data-sort="note_count" onclick="xhsSortBy('note_count',this)">노트 수</button>
+        <button onclick="xhsFollowerRate(this)" title="계정마다 프로필을 크롤해 팔로워를 받아 '참여 ÷ 팔로워'(참여율)로 정렬 — 구독자 적은데 반응 터지는 알짜를 위로. 느립니다(계정마다 크롤).">👥 팔로워 대비(참여율)</button>
+      </div>
+      <div id="xhsDiscoverList" style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
+    </div>
     <div class="toolbar">
       <button id="collectBtn" onclick="doCollect()" style="display:none">⚡ 지금 수집</button>
+      <span id="ytCatBox" style="display:none">
+        <select id="ytCat" style="padding:6px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
+          <option value="홈템">🏠 홈·살림템</option>
+          <option value="비법형">🔥 비법·꿀팁형</option>
+          <option value="제품형">🛒 제품추천형</option>
+          <option value="혼합형">💄 뷰티</option>
+          <option value="기타">📦 기타</option>
+        </select>
+        <button onclick="doCollect(document.getElementById('ytCat').value)">＋ 이 카테고리 수집</button>
+      </span>
       <button id="censusBtn" onclick="doCensus()" style="display:none" title="전 채널을 긁어 활동성 재판정 — 2일 내 안 올린 채널은 정리, 다시 올린 채널은 부활. 가끔만 누르세요(비용).">🌐 전수조사</button>
       <span id="status" style="color:var(--sub);font-size:12px"></span>
+    </div>
+    <!-- 수집 진행/결과 배너(2026-07-25) — 작은 회색 status는 놓치기 쉬워 큰 배너로 상태를 확실히 보인다. -->
+    <div id="collectProgress" style="display:none;margin:2px 0 12px;padding:12px 16px;border-radius:12px;font-size:14px;border:1px solid var(--line);background:var(--inset);display:none;align-items:center;gap:12px">
+      <span id="cpSpin" style="display:inline-block;width:18px;height:18px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:cpSpin .8s linear infinite"></span>
+      <div style="flex:1"><div id="cpMsg" style="font-weight:600">수집 중…</div><div id="cpSub" style="font-size:12px;color:var(--sub);margin-top:2px"></div></div>
+      <button id="cpRetry" onclick="doCollect(window._lastCollectCat)" style="display:none;padding:5px 12px;border-radius:8px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer">다시 시도</button>
     </div>
     <details id="statusBox" open style="display:none">
       <summary>⚙️ 시스템 상태<span class="live">실시간</span><span class="chev">▾</span></summary>
@@ -312,7 +367,7 @@
       </div>
     </details>
     <div class="tabs" id="tabs">
-      <div class="tab active" data-tab="comments" title="댓글 수 그대로 정렬">📊 전체</div>
+      <div class="tab active" data-tab="comments" title="오늘 늘어난 조회수(직전 수집 대비 증가분) 순 — 매일 순위가 바뀝니다">📊 전체</div>
       <div class="tab" data-tab="speed" title="댓글수 ÷ 경과시간(시간) — 시간당 댓글이 얼마나 빨리 쌓이는지">⚡ 속도</div>
       <div class="tab" data-tab="accel" title="이번 수집 Δ(댓글 증가분) − 직전 수집 Δ — 증가세 자체가 빨라지고 있는지(가속도)">📈 가속</div>
       <div class="tab" data-tab="density" title="댓글수 ÷ 팔로워수 — 팔로워 규모 대비 반응이 얼마나 뜨거운지(작은 채널도 상위권 가능)">💥 참여밀도</div>
@@ -325,6 +380,20 @@
     <div class="cats" id="cats"></div>
     <div class="cards" id="cards">
       <div class="empty">「지금 수집」을 눌러 시작하세요.</div>
+    </div>
+    <div id="overseasBox" style="display:none">
+      <div class="ctypes" id="overseasCats" style="margin-bottom:10px"></div>
+      <div class="ctypes" id="overseasCleanToggle" style="margin-bottom:10px"></div>
+      <div class="toolbar">
+        <button onclick="updateOverseas()">⚡ 지금 업데이트</button>
+        <span id="overseasStatus" style="color:var(--sub);font-size:12px"></span>
+      </div>
+      <div id="overseasPickup" style="display:none;margin:8px 0;padding:10px;border:1px solid var(--line);border-radius:8px;background:#0d131c">
+        <div style="font-size:12px;color:var(--sub);margin-bottom:6px">🖐 픽업 — 무료로 고른 틱톡 URL 붙여넣기(줄바꿈/콤마 구분) → 고른 것만 Apify로 담김</div>
+        <textarea id="pickupUrls" rows="3" placeholder="https://www.tiktok.com/@.../video/..." style="width:100%;box-sizing:border-box;padding:8px;border-radius:6px;border:1px solid var(--line);background:#0b0d11;color:var(--txt);font-size:12px"></textarea>
+        <div style="margin-top:6px"><button onclick="addPickup()">➕ 픽업 담기</button> <span id="pickupStatus" style="font-size:12px;color:var(--sub)"></span></div>
+      </div>
+      <div id="overseasList"></div>
     </div>
     <div id="trendRoot" style="display:none"></div>
     <div id="channelHistoryWrap"></div>
@@ -393,11 +462,13 @@ const DESC_BY_PLATFORM = {
   instagram: '등록한 레퍼런스 채널의 <b>48시간</b> 이내 릴스를 강도별로 랭킹합니다.',
   tiktok:    '등록한 <b>시드 계정</b>의 최근 <b>14일</b> 숏폼을 조회수 기반 강도로 랭킹합니다. (무료 수집)',
   youtube:   '<b>키워드 시드</b>로 발굴한 최근 <b>14일</b> Shorts를 조회수 기반 강도로 랭킹합니다.',
+  xiaohongshu: '등록한 <b>샤오홍슈 채널</b>의 최근 <b>48시간</b> 이내 노트를 참여도 기반 강도로 랭킹합니다. (무료 수집)',
 };
 const TAB_TIP = {
   instagram: {speed:'댓글수 ÷ 경과시간', density:'댓글수 ÷ 팔로워수'},
   tiktok:    {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
   youtube:   {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
+  xiaohongshu: {speed:'(좋아요+댓글+수집+공유) ÷ 경과시간', density:'(수집+공유) ÷ (좋아요+댓글+수집+공유)'},
 };
 function updatePlatformCopy(p){
   const descEl=document.querySelector('.desc'); if(descEl) descEl.innerHTML = DESC_BY_PLATFORM[p] || DESC_BY_PLATFORM.instagram;
@@ -411,28 +482,166 @@ function switchPlatform(p, el){
   updatePlatformCopy(p);
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
-  const isTrend = (p==='xiaohongshu' || p==='douyin');
+  const isTrend = (p==='douyin');
   document.getElementById('trendRoot').style.display = isTrend ? 'block' : 'none';
   document.getElementById('cards').style.display = isTrend ? 'none' : '';
   if(isTrend){
-    // 트렌드 탭: 인스·틱·유튜 전용 패널·후속호출 전부 건너뛴다.
-    document.getElementById('seedPanel').style.display = 'none';
-    document.getElementById('refRegister').style.display = 'none';
-    document.getElementById('ttMode').style.display = 'none';
-    document.getElementById('ttPanel').style.display = 'none';
+    // 트렌드 탭: 수집은 인스·틱·유튜에서만 한다(중국앱은 크롤 불가). 그래서 여기선
+    // 수집버튼·수집상태·전수조사·시스템상태·등록패널을 전부 숨기고 renderTrendCards의
+    // '🔄 새로고침'만 쓴다. 안 숨기면 '0건 수집'처럼 의미없는 표시가 남아 혼란(2026-07-25).
+    ['seedPanel','refRegister','ttMode','ttPanel','collectBtn','ytCatBox','censusBtn','statusBox','collectProgress'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.style.display='none';
+    });
+    const _st=document.getElementById('status'); if(_st) _st.textContent='';
     renderTrendCards();
     return;
+  }
+  // 트렌드 탭에서 돌아오면 숨겼던 관리자 운영버튼을 복원(비관리자는 원래 숨김 유지).
+  if(window.IS_ADMIN){
+    ['collectBtn','censusBtn','statusBox'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.style.display='';
+    });
   }
   document.getElementById('seedPanel').style.display = (p==='instagram')?'none':'block';
   document.getElementById('refRegister').style.display = (p==='instagram')?'block':'none';
   if(p==='instagram') loadRefAdded();
   document.getElementById('ttMode').style.display = (p==='tiktok')?'block':'none';
+  document.getElementById('ytCatBox').style.display = (p==='youtube')?'inline':'none';
   document.getElementById('ttPanel').style.display = (p==='tiktok' && ttMode()==='keyword')?'block':'none';
   if(p==='tiktok') loadTtSettings();
+  const _xd=document.getElementById('xhsDiscoverPanel');
+  if(_xd){
+    const showXhs = (p==='xiaohongshu' && window.IS_ADMIN);
+    _xd.style.display = showXhs?'block':'none';
+    if(showXhs){ xhsAutoLoopRestore(); xhsLoadLatest(); }
+    else if(_xhsAutoTimer){ clearInterval(_xhsAutoTimer); _xhsAutoTimer=null; }  // 딴 탭 가면 반복 정지
+  }
   ttModeChange();       // 입력 placeholder·언어선택기·설정패널 표시 갱신
   if(p!=='instagram') loadSeeds();
   loadLast();          // 기존 초기 로드 함수 — platform 반영하도록 아래 수정
 }
+// ── 샤오홍슈 계정 발굴 리더보드(2026-07-29) ──
+function _xhsEsc(s){ return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+async function xhsLoadLatest(){   // 페이지 재진입 시 마지막 결과(캐시)를 크롤 없이 복원
+  try{
+    const r=await fetch('/api/xhs/latest'); const d=await r.json();
+    if(d.ok && d.items && d.items.length){
+      window._xhsItems = d.items;
+      document.getElementById('xhsSortBar').style.display='';
+      renderXhsList();
+    }
+  }catch(e){}
+}
+async function xhsDiscover(btn, silent){
+  const box=document.getElementById('xhsDiscoverList');
+  if(btn){ btn.disabled=true; btn.textContent='🔍 발굴 중… (검색 도는 중, 잠시)'; }
+  if(!silent) box.innerHTML='<span style="font-size:12px;color:var(--sub)">발굴 중…</span>';
+  try{
+    const r=await fetch('/api/xhs/discover');
+    const d=await r.json();
+    if(!d.ok){ if(!silent) box.innerHTML='⚠ '+(d.error||'발굴 실패'); return; }
+    if(!d.items.length){ box.innerHTML='<span style="font-size:12px;color:var(--sub)">발굴된 계정이 없어요 (검색 결과 부족·author id 없음).</span>'; document.getElementById('xhsSortBar').style.display='none'; return; }
+    window._xhsItems = d.items;
+    document.getElementById('xhsSortBar').style.display='';
+    renderXhsList();
+  }catch(e){ box.innerHTML='⚠ '+e; }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='🔍 잘하는 계정 발굴'; } }
+}
+let _xhsSort='engagement_sum';   // 종합점수 대신 지표별로 각각 정렬 — 사장님이 버튼으로 선택
+function xhsSortBy(key, btn){
+  _xhsSort=key;
+  document.querySelectorAll('.xhsSortBtn').forEach(b=>b.style.fontWeight = (b===btn?'700':'400'));
+  renderXhsList();
+}
+function renderXhsList(){
+  const items=(window._xhsItems||[]).slice().sort((a,b)=>(b[_xhsSort]||0)-(a[_xhsSort]||0));
+  document.getElementById('xhsDiscoverList').innerHTML = items.map(xhsCard).join('');
+  document.querySelectorAll('.xhsSortBtn').forEach(b=>b.style.fontWeight = (b.dataset.sort===_xhsSort?'700':'400'));
+}
+// ── 백그라운드 자동 발굴(서버가 창 닫아도 계속 돎, 토글로 멈춤) ──
+let _xhsAutoTimer = null;   // (호환용 — 이제 서버가 돌린다)
+async function xhsAutoLoopToggle(cb){
+  const on = cb.checked;
+  const state=document.getElementById('xhsAutoState');
+  state.textContent='…';
+  try{
+    const r=await fetch('/api/xhs/auto',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({on})});
+    const d=await r.json();
+    document.getElementById('xhsAutoMin').textContent = d.interval_min||45;
+    state.textContent = d.on ? `● 백그라운드 자동 발굴 켜짐 (서버가 ${d.interval_min}분마다, 창 닫아도 계속)` : '';
+  }catch(e){ state.textContent='⚠ '+e; cb.checked=!on; }
+}
+async function xhsAutoLoopRestore(){       // 탭 진입 시 서버 상태로 토글 복원
+  try{
+    const r=await fetch('/api/xhs/auto'); const d=await r.json();
+    const cb=document.getElementById('xhsAutoLoop'); if(cb) cb.checked=!!d.on;
+    document.getElementById('xhsAutoMin').textContent = d.interval_min||45;
+    document.getElementById('xhsAutoState').textContent = d.on ? `● 백그라운드 자동 발굴 켜짐 (서버가 ${d.interval_min}분마다, 창 닫아도 계속)` : '';
+  }catch(e){}
+}
+async function xhsFollowerRate(btn){
+  const items = window._xhsItems||[];
+  if(!items.length){ return; }
+  const old = btn.textContent; btn.disabled=true;
+  btn.textContent='👥 팔로워 조회 중… (계정마다 크롤, 좀 걸려요)';
+  try{
+    const urls = items.slice(0,25).map(a=>a.profile_url);
+    const r=await fetch('/api/xhs/followers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({profile_urls:urls})});
+    const d=await r.json();
+    if(!d.ok){ alert(d.error||'팔로워 조회 실패'); return; }
+    items.forEach(a=>{
+      const f = d.followers[a.userid] || 0;
+      a.follower = f;
+      a.engagement_rate = f>0 ? a.engagement_sum/f : 0;   // 참여 ÷ 팔로워 = 알짜 지표
+    });
+    _xhsSort='engagement_rate';
+    renderXhsList();
+  }catch(e){ alert('오류: '+e); }
+  finally{ btn.disabled=false; btn.textContent=old; }
+}
+function xhsCard(a){
+  const cats=(a.categories||[]).map(_xhsEsc).join(', ');
+  const badge = a.is_registered
+    ? '<span style="font-size:11px;color:#2e7d32">✅ 담김</span>'
+    : `<button onclick="xhsAdopt('${encodeURIComponent(a.profile_url)}','${_xhsEsc(a.userid)}',this)">담기</button>`;
+  const thumb = a.sample_thumbnail
+    ? `<img src="${_xhsEsc(a.sample_thumbnail)}" style="width:100%;height:110px;object-fit:cover;border-radius:6px" referrerpolicy="no-referrer">` : '';
+  return `<div style="border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg)" data-uid="${_xhsEsc(a.userid)}">
+    ${thumb}
+    <div style="font-weight:600;margin-top:6px">${_xhsEsc(a.nickname)||'(이름없음)'}</div>
+    <div style="font-size:11px;color:var(--sub)">${cats}</div>
+    ${(a.appear_count>1)?`<div style="font-size:11px;color:#2e7d32;margin-top:3px">🔁 ${a.appear_count}번 관측${a.appear_days>1?` · ${a.appear_days}일`:''}</div>`:''}
+    <div style="font-size:12px;margin-top:4px">참여 ${a.engagement_sum.toLocaleString()} · 노트 ${a.note_count} · 평균 ${a.avg_engagement.toLocaleString()}</div>
+    ${(a.follower!==undefined)?`<div style="font-size:11px;color:#1565c0;margin-top:2px">👥 팔로워 ${a.follower.toLocaleString()} · 참여율 ${(a.engagement_rate*100).toFixed(1)}%</div>`:''}
+    <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
+      <a href="${_xhsEsc(a.profile_url)}" target="_blank" rel="noreferrer" style="font-size:11px">프로필↗</a>
+      ${badge}
+      <button onclick="xhsBlacklist('${_xhsEsc(a.userid)}','${encodeURIComponent(a.profile_url)}',this)" style="margin-left:auto;color:#c62828">삭제</button>
+    </div>
+  </div>`;
+}
+async function xhsAdopt(profileUrlEnc, uid, btn){
+  btn.disabled=true;
+  try{
+    const r=await fetch('/api/xhs/adopt',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({profile_url:decodeURIComponent(profileUrlEnc), userid:uid})});
+    const d=await r.json();
+    if(d.ok){ btn.outerHTML='<span style="font-size:11px;color:#2e7d32">✅ 담김</span>'; }
+    else{ btn.disabled=false; alert(d.reason==='blacklisted'?'삭제(제외)한 계정입니다.':'담기 실패'); }
+  }catch(e){ btn.disabled=false; alert('담기 오류: '+e); }
+}
+async function xhsBlacklist(uid, profileUrlEnc, btn){
+  if(!confirm('이 계정을 영구 제외할까요? 발굴·자동등록에서 다시 안 뜹니다.')) return;
+  btn.disabled=true;
+  try{
+    const r=await fetch('/api/xhs/blacklist',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({userid:uid, profile_url:decodeURIComponent(profileUrlEnc)})});
+    const d=await r.json();
+    if(d.ok){ const card=btn.closest('[data-uid]'); if(card) card.remove(); }
+    else{ btn.disabled=false; alert('삭제 실패'); }
+  }catch(e){ btn.disabled=false; alert('삭제 오류: '+e); }
+}
+
 // ── 레퍼런스 채널 URL 등록(2026-07-18) — 인스타 URL을 붙여넣어 discovered에 추가 ──
 async function registerRef(){
   const inp=document.getElementById('refUrl'), msg=document.getElementById('refMsg');
@@ -478,6 +687,8 @@ function ttModeChange(){
     document.getElementById('seedLang').style.display = kw?'':'none';
     document.getElementById('seedHint').style.display = kw?'':'none';
     if(kw) document.getElementById('seedHint').textContent='선택 언어로 검색 — 한국어가 부족하면 영어 등 다른 언어로 확장';
+  } else if(PLATFORM==='xiaohongshu' && si){
+    si.placeholder = '샤오홍슈 프로필 URL (예: https://www.rednote.com/user/profile/아이디)';
   } else if(si){
     si.placeholder = '검색 키워드 (예: 살림꿀팁)';
   }
@@ -487,13 +698,23 @@ async function loadSeeds(){
   const d=await (await fetch('/api/seeds?platform='+PLATFORM)).json();
   const el=document.getElementById('seedList');
   const items=d.items||[];
-  el.innerHTML = items.length ? items.map(s=>{
+  // 유튜브는 등록 채널(account)이 수백 개라 URL을 다 뿌리면 화면을 덮는다(2026-07-25).
+  // account는 칩 대신 "채널 N개 · 지표 보기" 요약으로 접고, 키워드 시드만 칩으로 남긴다.
+  const accounts = items.filter(s=>s.kind==='account');
+  const chips = (PLATFORM==='youtube') ? items.filter(s=>s.kind!=='account') : items;
+  const chipHtml = chips.map(s=>{
     const isLang = TT_LANG_KINDS.includes(s.kind);   // 틱톡 언어 시드 = 비용 대상
     return `<span class="${(PLATFORM==='tiktok'&&isLang)?'ttkw':''}" style="display:inline-block;background:#1a2230;border-radius:12px;padding:2px 8px;margin:2px 4px 0 0">
        ${LANGLABEL[s.kind]||''} ${s.value}
        <span style="cursor:pointer;color:#e0623d" onclick="removeSeed('${s.value.replace(/'/g,"\\'")}')">✕</span>
      </span>`;
-  }).join('') : '키워드 없음';
+  }).join('');
+  const ytSummary = (PLATFORM==='youtube' && accounts.length)
+    ? `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:2px 0 4px">
+         <span style="background:#132a1e;border:1px solid #1f9d55;border-radius:12px;padding:3px 10px;font-size:12px">📺 등록 채널 <b>${accounts.length}</b>개</span>
+         <button onclick="openChannelBoard('views')" style="font-size:12px;padding:4px 12px;border-radius:8px;border:1px solid var(--accent);background:#1f6feb1a;color:var(--accent);font-weight:700;cursor:pointer">📊 채널 지표·관리 열기</button>
+       </div>` : '';
+  el.innerHTML = (ytSummary + chipHtml) || '키워드 없음';
   if(PLATFORM==='tiktok') renderTtStatus();
   // 유튜브 + 틱톡 키워드모드에서 언어 선택기 노출(계정 모드는 ttModeChange가 숨김)
   const showLang = (PLATFORM==='youtube') || ttKeywordMode();
@@ -521,6 +742,45 @@ async function addSeed(){
 async function removeSeed(v){
   await fetch('/api/seeds',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:PLATFORM,value:v})});
   loadSeeds();
+}
+// 등록 채널 리더보드 — 레퍼런스 랭킹식 지표(조회수·속도·참여율·가속)로 정렬·관리(2026-07-25).
+let CH_BOARD_SORT='fitness';  // 이 보드는 유튜브 전용(/api/youtube/channels) → 지울 후보(적합도낮음)가 위로 오게 기본 오름차순
+async function openChannelBoard(sort){
+  CH_BOARD_SORT=sort||CH_BOARD_SORT;
+  openScript('<div class="sm-loading">채널 지표 불러오는 중…</div>','📊 등록 채널 지표·관리',true);
+  await renderChannelBoard();
+}
+async function renderChannelBoard(){
+  let d;
+  try{ d=await (await fetch('/api/youtube/channels?sort='+CH_BOARD_SORT)).json(); }
+  catch(e){ document.getElementById('scriptBody').innerHTML='<div style="padding:10px">불러오기 실패</div>'; return; }
+  const box=document.getElementById('scriptBody'); if(!box) return;
+  const rows=d.channels||[];
+  const SORTS=[['fitness','쇼핑적합도'],['views','조회수'],['speed','속도'],['density','참여율'],['accel','가속'],['count','영상수']];
+  const btnbar=SORTS.map(([k,l])=>`<span onclick="CH_BOARD_SORT='${k}';renderChannelBoard()" style="cursor:pointer;padding:4px 12px;margin:2px;border-radius:12px;font-size:12px;border:1px solid var(--line);background:${CH_BOARD_SORT===k?'#1f6feb33':'transparent'};font-weight:${CH_BOARD_SORT===k?700:400}">${l}</span>`).join('');
+  const fmt=n=>{n=Number(n||0); if(n>=1e8)return (n/1e8).toFixed(1).replace(/\.0$/,'')+'억'; if(n>=1e4)return (n/1e4).toFixed(1).replace(/\.0$/,'')+'만'; return n.toLocaleString();};
+  const head=`<div style="position:sticky;top:0;background:var(--panel);padding:6px 0;z-index:1">
+    <div style="font-size:12px;color:var(--sub);margin-bottom:4px">총 <b>${d.total}</b>개 채널 · 지표=최근 수집(${(d.collected_at||'').slice(0,10)}) 기준 · 정렬:</div>
+    <div>${btnbar}</div></div>`;
+  const list=rows.map((r,idx)=>{
+    const wait = r.collected ? '' : '<span style="color:var(--sub);font-size:10px">수집대기</span>';
+    const fitPct = Math.round((r.fitness||0)*100);
+    const fitColor = fitPct>=80 ? '#3fb950' : (fitPct>=40 ? '#d29922' : '#f85149');
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)">
+      <span style="width:26px;color:var(--sub);font-size:12px">${idx+1}</span>
+      <img src="${r.thumbnail||''}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'" style="width:44px;height:44px;object-fit:cover;border-radius:6px;background:#1a2230">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.grade||''} <a href="${r.channel_url}" target="_blank" style="color:inherit;text-decoration:none">${esc(r.name||r.channel_id||'')}</a> ${wait}</div>
+        <div style="font-size:11px;color:var(--sub)"><span style="color:${fitColor};font-weight:700">🛒 적합도 ${fitPct}%</span> · 👁 ${fmt(r.views)} · ⚡속도 ${fmt(r.speed)} · 💬참여 ${(r.density*100||0).toFixed(1)}% · 📈가속 ${fmt(r.accel)} · 🎬${r.video_count}</div>
+      </div>
+      <span title="이 채널 벤치에서 제거" onclick="removeChannelFromBoard('${(r.channel_url||'').replace(/'/g,"\\\\'")}')" style="cursor:pointer;color:#e0623d;font-size:16px;padding:0 6px">✕</span>
+    </div>`;
+  }).join('') || '<div style="padding:10px;color:var(--sub)">등록 채널 없음</div>';
+  box.innerHTML=`<div>${head}${list}</div>`;
+}
+async function removeChannelFromBoard(url){
+  await fetch('/api/seeds',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:'youtube',value:url})});
+  renderChannelBoard(); loadSeeds();
 }
 let TT_KNOBS={search_count:50,daily_limit:10,month_budget:5.0};
 async function loadTtSettings(){
@@ -566,14 +826,23 @@ function renderCats(){
   el.innerHTML = ["전체", ...topics].map(c =>
     `<div class="cat ${c===STATE.cat?'active':''}" onclick="setCat('${c}')">${c}</div>`).join("");
 }
-function setCtype(k){ STATE.ctype=k; STATE.cat="전체"; renderCtypes(); renderCats(); render(); }
-function setCat(c){ STATE.cat=c; renderCats(); render(); }
+// 카테고리를 누르면 채널 보기에서 빠져나온다(2026-07-28 사장님 제보) — 그대로 두면
+// "그 채널 안에서 카테고리만 바뀌는" 상태라 전체 목록으로 돌아갈 길이 없었다.
+// silent:true = 아래에서 어차피 render()를 부르므로 두 번 그리지 않는다.
+function setCtype(k){ exitChannelView({silent:true}); STATE.ctype=k; STATE.cat="전체"; renderCtypes(); renderCats(); render(); }
+function setCat(c){ exitChannelView({silent:true}); STATE.cat=c; renderCats(); render(); }
 function setTab(t){ STATE.tab=t; document.querySelectorAll('.tab').forEach(x=>
   x.classList.toggle('active', x.dataset.tab===t)); render(); }
 document.querySelectorAll('.tab').forEach(x=> x.onclick=()=>setTab(x.dataset.tab));
 
+// ★'전체' 탭 정렬 = 오늘 증가분(delta) — 2026-07-29 변경.
+// 왜: 예전엔 누적 댓글수로 세워서 같은 영상이 며칠째 같은 자리에 박혀 있었다(사장님 실제 제보).
+//   누적값은 쌓이기만 하니 상위가 구조적으로 고착된다. 매 수집마다 새로 계산되는 delta
+//   (이번 조회수 − 직전 조회수, ranking.py의 5개 플랫폼 빌더 전부에 있음)를 쓰면
+//   "오늘 가장 많이 오른 영상"이 위로 올라와 매일 순서가 실제로 바뀐다.
+//   ?? 폴백: delta 없는 옛 캐시 items가 섞여도 예전 기준(누적 댓글수)으로 자연히 되돌아간다.
 function sortKey(i){
-  return {comments:i.comments, speed:i.speed, accel:(i.accel??-1), density:i.density}[STATE.tab] || 0;
+  return {comments:(i.delta ?? i.comments), speed:i.speed, accel:(i.accel??-1), density:i.density}[STATE.tab] || 0;
 }
 // 랭킹 검색(2026-07-18, 개선 2026-07-18) — 한국어 단어경계 인식 부분일치.
 // 왜: 단순 substring은 "가지"가 "들어가지"(동사)·"2가지"(수량)·"여러 가지"에 다 걸려
@@ -677,8 +946,51 @@ function _expandQuery(needle){
   const kids = TAXONOMY[needle];
   return kids ? [needle].concat(kids) : [needle];
 }
-function setSearch(q){ STATE.q = q; render(); }
+function setSearch(q){
+  // 사장님이 검색창을 직접 고치면 더 이상 '채널 보기'가 아니다 — 표시만 내린다.
+  // 여기서 히스토리까지 걷어내면(history.back → popstate → 입력칸 비움) 지금
+  // 치고 있는 글자가 날아간다. 그래서 플래그만 내리고 히스토리는 그대로 둔다.
+  if(CHANNEL_VIEW && q !== CHANNEL_VIEW) CHANNEL_VIEW = null;
+  STATE.q = q; render();
+}
+
+// ── 채널 보기 나가기(2026-07-28) ─── CHANNELVIEW-START
+// 채널명 클릭 = 검색어에 아이디를 넣는 것(searchChannel)이라, 카테고리를 눌러도
+// 검색어가 남아 "그 채널 안에서 카테고리만 바뀌는" 상태가 됐다. 사장님 제보:
+// "위쪽 전체·홈살림 등 카테고리를 누르면 (전체 목록으로) 다시 가게 해줘".
+// 검색어를 비우고 입력칸까지 되돌린다. 지울 게 없으면 render()도 안 부른다
+// (일반 검색 중 카테고리를 눌렀을 뿐인데 검색어가 날아가면 그것도 사고다 —
+//  그래서 '채널 보기 중'일 때만 지운다).
+let CHANNEL_VIEW = null;   // 채널 보기 중인 username(아니면 null)
+function isChannelMode(){ return !!CHANNEL_VIEW; }
+function exitChannelView(opts){
+  opts = opts || {};
+  if(!CHANNEL_VIEW) return false;
+  CHANNEL_VIEW = null;
+  STATE.q = "";
+  const box=document.getElementById("rankSearch");
+  if(box) box.value = "";
+  const wrap=document.getElementById("channelHistoryWrap");
+  if(wrap) wrap.innerHTML = "";
+  // 카테고리 클릭 등으로 나갈 땐 진입할 때 쌓은 히스토리 항목도 걷어낸다 —
+  // 안 그러면 사장님이 뒤로가기를 눌렀을 때 아무 일도 안 일어나는 헛클릭이 된다.
+  // (뒤로가기로 들어온 경우엔 브라우저가 이미 걷어낸 뒤라 부르면 한 칸 더 나간다.)
+  if(!opts.fromPopstate){ try{ history.back(); }catch(e){} }
+  if(!opts.silent) render();
+  return true;
+}
+// 뒤로가기로 채널 보기에서 빠져나온다. 진입할 때 히스토리 항목을 하나 쌓고,
+// popstate에서 되돌린다. ★URL은 안 바꾼다(같은 주소로 pushState) — 주소에
+// 채널을 박으면 새로고침해도 채널 화면이 되살아나는데, 사장님이 원한 건
+// "새로고침하면 이전(전체) 화면으로"다.
+// ─── CHANNELVIEW-END
 // ── 검색 끝 ──
+// ★popstate 배선은 '검색 끝' 밖에 둔다 — test_ranking_search_js가 matchesSearch~'검색 끝'
+//   구간을 node로 잘라 돌리는데, window가 없는 그 하네스에서 addEventListener가 터진다.
+window.addEventListener('popstate', function(){
+  // 우리가 쌓은 항목에서 빠져나왔다 = 채널 보기 종료. 이미 나갔으면 no-op.
+  exitChannelView({fromPopstate:true});
+});
 // 썸네일 배지(2026-07-22) — 조회수=도달규모, 참여밀도=반응, 속도=상승세를 '보이는 항목 안에서의
 // 백분위'로 보고 "소형인데 빠르게" 같은 한줄 판단 라벨을 붙인다. 절대값이 아니라 지금 목록 대비 상대.
 function _pctl(sorted, v){ let lo=0,hi=sorted.length; while(lo<hi){const m=(lo+hi)>>1; if(sorted[m]<=v) lo=m+1; else hi=m;} return sorted.length? lo/sorted.length : 0; }
@@ -711,6 +1023,163 @@ function badgeHTML(i, ctx){
 // (채널명·소재는 oninput이 이미 필터링. 링크만 엔터라는 명시 동작이 필요 — 유료 렌즈 남용 방지.)
 function _looksLikeUrl(q){ return /^\s*https?:\/\//i.test(q||''); }
 function onSearchEnter(v){ if(_looksLikeUrl(v)) traceByUrl((v||'').trim()); }
+const OVERSEAS_CATS = ["전체","🖐 픽업","주방/레시피","살림/생활꿀템","인테리어/DIY","가전/도구","뷰티/셀프케어","정리/수납"];
+let overseasFilter = "전체";
+let overseasCleanOnly = false;
+let overseasItems = [];
+
+let _overseasHidden = [];
+function toggleOverseas(on){
+  document.getElementById('overseasBox').style.display = on ? 'block' : 'none';
+  document.getElementById('modeOverseas').classList.toggle('active', on);
+  document.getElementById('modeRanking').classList.toggle('active', !on);
+  // 랭킹화면(레퍼런스랭킹개편이 재구성)을 통째로 숨긴다 — 하드코딩 id 목록 대신
+  // main의 직계 자식 중 지금 보이는 것만 숨기고, 되돌릴 때 그것만 복원한다.
+  const main = document.querySelector('main');
+  if(on){
+    _overseasHidden = [];
+    if(main) Array.from(main.children).forEach(el=>{
+      if(el.id==='modeTabs' || el.id==='overseasBox') return;
+      if(window.getComputedStyle(el).display !== 'none'){
+        _overseasHidden.push([el, el.style.display]);
+        el.style.display = 'none';
+      }
+    });
+    document.getElementById('overseasPickup').style.display = window.IS_ADMIN ? 'block' : 'none';
+    initOverseasCats(); renderOverseasCleanToggle(); loadOverseas(); resumeOverseasStatusIfRunning();
+  } else {
+    _overseasHidden.forEach(([el, prev])=>{ el.style.display = prev; });
+    _overseasHidden = [];
+  }
+}
+async function addPickup(){
+  const box=document.getElementById('pickupUrls'); const t=(box.value||'').trim();
+  const s=document.getElementById('pickupStatus');
+  if(!t){ s.textContent='URL을 붙여넣어 주세요'; return; }
+  s.textContent='담는 중… (Apify 픽업)';
+  try{
+    const r=await (await fetch('/api/overseas/pickup',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t})})).json();
+    if(r.ok){ s.textContent='✅ '+r.added+'개 담김'; box.value='';
+      overseasFilter='🖐 픽업'; initOverseasCats(); await loadOverseas(); }
+    else { s.textContent='오류: '+(r.error||'실패'); }
+  }catch(e){ s.textContent='오류: '+e; }
+}
+function initOverseasCats(){
+  document.getElementById('overseasCats').innerHTML = OVERSEAS_CATS.map(c=>
+    `<div class="ctype${c===overseasFilter?' active':''}" onclick="setOverseasCat('${c}')">${c}</div>`).join('');
+}
+function setOverseasCat(c){ overseasFilter=c; initOverseasCats(); renderOverseas(); }
+// 정렬 두 갈래(2026-07-29): 서버가 주는 순서는 score(속도·가속·밀도 종합)라 "지금 뜨는 중"을
+// 잡는 데 맞지만, 사장님이 기대한 "인기순"과는 다르다(실측: 반응 28만이 3위, 반응 8이 9위).
+// 어느 쪽이 맞는지는 쓰는 목적에 달렸으므로 고르게 둔다 — 기본은 기존 동작(score) 유지.
+const OVERSEAS_SORTS = [
+  {key:'score',    label:'🔥 뜨는 중'},
+  {key:'reaction', label:'❤️ 반응 많은 순'},
+];
+let overseasSort = 'score';
+function renderOverseasCleanToggle(){
+  const sorts = OVERSEAS_SORTS.map(s=>
+    `<div class="ctype${overseasSort===s.key?' active':''}" onclick="setOverseasSort('${s.key}')">${s.label}</div>`).join('');
+  document.getElementById('overseasCleanToggle').innerHTML = sorts +
+    `<div class="ctype${overseasCleanOnly?' active':''}" onclick="toggleOverseasCleanOnly()">✨ 자막 없는 것만</div>`;
+}
+function setOverseasSort(k){
+  overseasSort = k;
+  renderOverseasCleanToggle();
+  renderOverseas();
+}
+function toggleOverseasCleanOnly(){
+  overseasCleanOnly = !overseasCleanOnly;
+  renderOverseasCleanToggle();
+  renderOverseas();
+}
+async function loadOverseas(){
+  const d=await (await fetch('/api/overseas/feed')).json();
+  overseasItems=d.items||[]; renderOverseas();
+}
+function renderOverseas(){
+  const filtered = overseasItems
+    .filter(i=>overseasFilter==='전체'||i.category===overseasFilter)
+    .filter(i=>!overseasCleanOnly || i.text_level==='none');
+  // 서버 순서(score)를 기본으로 두고, '반응 많은 순'일 때만 다시 세운다.
+  // filtered는 .filter()가 만든 새 배열이라 여기서 정렬해도 overseasItems 원본 순서는 그대로다
+  // (원본을 정렬하면 '뜨는 중'으로 돌아왔을 때 서버 순서를 잃는다).
+  if(overseasSort==='reaction'){
+    filtered.sort((a,b)=>(b.base_count||0)-(a.base_count||0));
+  }
+  const rows=filtered
+    .map(i=>{
+      const gap = i.gap_badge==='🔥선점가능'
+        ? '<span class="ov-gap ov-gap-hot">🔥선점가능</span>'
+        : (i.gap_badge==='이미유입' ? '<span class="ov-gap">이미유입</span>' : '');
+      const textBadge = i.text_level==='none'
+        ? '<span class="ov-textbadge ov-textbadge-none">✨ 자막없음</span>'
+        : (i.text_level==='heavy' ? '<span class="ov-textbadge">💬 자막많음</span>' : '');
+      const metric = (i.views||0)>0
+        ? ('조회 ' + ((i.views>=10000)?(Math.round(i.views/1000)/10)+'만':i.views))
+        : ('반응 ' + (i.base_count||0));
+      const thumb = i.thumbnail
+        ? `<img src="/api/thumb?url=${encodeURIComponent(i.thumbnail)}" loading="lazy">`
+        : '<div class="ov-noimg">▶</div>';
+      const title = (i.caption||i.title||'').replace(/</g,'&lt;');
+      return `<a class="ov-card" href="${i.url||'#'}" target="_blank" rel="noopener">
+        <div class="ov-thumb">${thumb}<span class="ov-plat">${i.media_platform||i.platform||''}</span>${gap}${textBadge}</div>
+        <div class="ov-meta">
+          <div class="ov-title">${title}</div>
+          <div class="ov-sub">${metric} · 속도 ${Math.round(i.speed||0)} · <b>${i.grade||'—'}</b></div>
+          <button class="ov-lens" data-u="${i.url||''}" onclick="event.preventDefault();event.stopPropagation();traceByUrl(this.dataset.u)">🔎 같은영상 찾기</button>
+        </div></a>`;
+    }).join('');
+  const emptyMsg = (overseasCleanOnly && overseasItems.length)
+    ? '자막 없는 영상이 없어요 — 토글을 꺼보세요.'
+    : '아직 수집된 영상이 없어요 — "지금 업데이트"를 눌러주세요.';
+  document.getElementById('overseasList').innerHTML =
+    rows ? `<div class="ov-grid">${rows}</div>`
+         : `<div class="empty">${emptyMsg}</div>`;
+}
+// 카테고리·탭을 오갈 때 진행률 표시가 끊겨 "멈춘 것처럼" 보이던 문제(2026-07-29) —
+// 실제 수집은 카테고리와 무관한 단일 백그라운드 작업이라 서버는 안 멈춘다. 폴링 타이머를
+// 전역 싱글턴으로 두고, 화면을 다시 볼 때(resumeOverseasStatusIfRunning) 진행 중이면 이어붙인다.
+let _overseasPollTimer = null;
+// 큐 상태(대기순번·실패)를 우선 반영하고, 없으면 기존 phase·count·elapsed 문구로 폴백한다
+// (독립워커-작업큐 Task5, 2026-07-29). queue가 없는 옛 상태값도 그대로 동작해야 한다.
+function _overseasStatusText(s){
+  const q = s.queue;
+  if(q && q.state === 'queued'){
+    return q.position > 0 ? `앞에 ${q.position}개 대기 중` : '곧 시작합니다';
+  }
+  if(q && q.state === 'failed'){
+    return `실패했습니다 — 다시 눌러주세요 (${q.error||s.error||'알 수 없는 오류'})`;
+  }
+  return (s.phase||'') + ' (' + (s.elapsed||0) + 's)';
+}
+function _startOverseasPoll(){
+  if(_overseasPollTimer) return;   // 이미 폴링 중이면 중복 시작 안 함
+  _overseasPollTimer = setInterval(async()=>{
+    const s=await (await fetch('/api/overseas/status')).json();
+    document.getElementById('overseasStatus').textContent=_overseasStatusText(s);
+    if(s.status==='done'||s.status==='error'){ clearInterval(_overseasPollTimer); _overseasPollTimer=null;
+      document.getElementById('overseasStatus').textContent =
+        s.status==='done' ? `완료 ${s.count}건` : ('오류: '+s.error);
+      loadOverseas(); }
+  },2000);
+}
+async function updateOverseas(){
+  document.getElementById('overseasStatus').textContent='수집 중…';
+  await fetch('/api/overseas/update');
+  _startOverseasPoll();
+}
+async function resumeOverseasStatusIfRunning(){
+  try{
+    const s=await (await fetch('/api/overseas/status')).json();
+    if(s.status==='running'){
+      document.getElementById('overseasStatus').textContent=_overseasStatusText(s);
+      _startOverseasPoll();
+    }
+  }catch(e){ /* 상태 조회 실패는 조용히 무시 — 다음 진입 때 다시 시도 */ }
+}
+
 function render(){
   let items = STATE.items.slice();
   const searching = !!(STATE.q && STATE.q.trim());
@@ -747,8 +1216,8 @@ function render(){
         <div class="rank">#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</div>
         <div class="ch"><span class="chname" title="이 채널 영상만 보기(지난 한 달 포함)" style="cursor:pointer" onclick="searchChannel('${esc(i.username||'')}')">${i.name||i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${i.url}', this)">🔗 복사</button></div>
         ${i.followers?`<div class="rank" style="margin:-4px 0 4px">팔로워 ${i.followers.toLocaleString()}</div>`:''}
-        ${i.views?`<div class="stat" title="조회수 — 유튜브/틱톡의 핵심 신호(속도·참여율의 기준)"><span>조회수</span><b>${i.views.toLocaleString()}</b></div>`:''}
-        <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${i.comments.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>
+        ${i.views?`<div class="stat" title="조회수 — 옆의 +숫자는 직전 수집 대비 증가분(= '전체' 탭 정렬 기준)"><span>조회수</span><b>${i.views.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>`:''}
+        <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${i.comments.toLocaleString()}${i.views?'':` <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span>`}</b></div>
         <div class="stat" title="댓글수 ÷ 경과시간(시간)"><span>속도(시간당)</span><b>${i.speed.toFixed(1)}</b></div>
         <div class="stat" title="이번 수집 Δ − 직전 수집 Δ (증가세가 빨라지는 중인지)"><span>가속</span><b>${i.accel==null?'—':(i.accel>0?'+':'')+i.accel}</b></div>
         <div class="stat" title="댓글수 ÷ 팔로워수 (팔로워 대비 반응 비율)"><span>참여밀도</span><b>${(i.density*100).toFixed(2)}%</b></div>
@@ -779,6 +1248,12 @@ function searchChannel(username){
   if(!username) return;
   const box=document.getElementById("rankSearch");
   if(box) box.value = username;
+  // 히스토리 항목을 하나 쌓아 브라우저 뒤로가기로 나갈 수 있게 한다(2026-07-28).
+  // 같은 채널을 다시 눌러도 쌓지 않는다 — 뒤로가기를 여러 번 눌러야 나가는 꼴이 된다.
+  if(CHANNEL_VIEW !== username){
+    CHANNEL_VIEW = username;
+    try{ history.pushState({ssChannel: username}, "", location.href); }catch(e){}
+  }
   setSearch(username);
 }
 async function _renderChannelHistory(username, liveShortcodes){
@@ -825,24 +1300,106 @@ async function readJson(r){
   }
   return r.json();
 }
-async function doCollect(){
+// 수집 진행 배너 헬퍼(2026-07-25) — 수집은 수 분짜리 요청이라 진행상태를 크게 보여야
+// "검색 중인지/실패인지" 사장님이 안다. 경과 초를 세고, 실패는 원인별로 안내한다.
+let _cpTimer=null;
+function _cpEls(){ return {box:document.getElementById('collectProgress'),
+  spin:document.getElementById('cpSpin'), msg:document.getElementById('cpMsg'),
+  sub:document.getElementById('cpSub'), retry:document.getElementById('cpRetry')}; }
+function _cpShowRunning(){
+  const e=_cpEls(); if(!e.box) return;
+  e.box.style.display='flex'; e.spin.style.display='inline-block'; e.retry.style.display='none';
+  e.msg.textContent='🔄 수집 중… 0초 경과';
+  e.sub.textContent='채널을 훑는 중이라 수 분 걸릴 수 있어요 — 이 창을 닫지 말고 기다려 주세요.';
+  const t0=Date.now();
+  clearInterval(_cpTimer);
+  _cpTimer=setInterval(()=>{ const s=Math.round((Date.now()-t0)/1000); e.msg.textContent=`🔄 수집 중… ${s}초 경과`; }, 1000);
+}
+function _cpDone(msg){
+  const e=_cpEls(); if(!e.box) return; clearInterval(_cpTimer);
+  e.spin.style.display='none'; e.retry.style.display='none'; e.msg.textContent=msg;
+  e.sub.textContent='';
+  setTimeout(()=>{ if(e.box && e.msg.textContent===msg) e.box.style.display='none'; }, 6000);
+}
+function _cpFail(msg, sub){
+  const e=_cpEls(); if(!e.box) return; clearInterval(_cpTimer);
+  e.box.style.display='flex'; e.spin.style.display='none'; e.msg.textContent=msg;
+  e.sub.textContent=sub||''; e.retry.style.display='inline-block';
+}
+async function doCollect(category){
+  window._lastCollectCat = category;   // '다시 시도' 버튼이 같은 조건으로 재호출
   const btn=document.getElementById("collectBtn"), st=document.getElementById("status");
-  btn.disabled=true; st.textContent="수집 중… (수 분 소요)";
+  btn.disabled=true; st.textContent="수집 중…"; _cpShowRunning();
   try{
-    const r = await fetch("/api/collect?platform="+PLATFORM, {method:"POST"});
+    const qs = "/api/collect?platform="+PLATFORM + (category?("&category="+encodeURIComponent(category)):"");
+    const r = await fetch(qs, {method:"POST"});
     const d = await readJson(r);
     if(r.status===429){   // 틱톡 남용/예산 킬스위치
       const label = d.error_code==='budget_exceeded' ? '💰 월 예산 초과' : '🚫 오늘 한도 초과';
       st.textContent = `${label} — ${d.error||''}`;
-      return;
+      _cpFail(label, d.error||''); return;
+    }
+    if(r.status===502 || r.status===503 || r.status===504){
+      // 게이트웨이/재시작 — 배포로 서버가 잠깐 죽었을 때 자주 뜬다.
+      st.textContent="⚠️ 서버 재시작 중";
+      _cpFail('⚠️ 서버가 잠깐 재시작 중이에요', '배포 반영 중일 수 있어요 — 1~2분 뒤 「다시 시도」를 눌러 주세요.'); return;
     }
     if(!d.ok) throw new Error(d.error||"실패");
-    STATE.items = d.items; st.textContent=`✅ ${d.count}건 수집 (${fmtTime(d.collected_at)})`;
+    // 비동기(2026-07-25): 수집이 오래 걸려(200채널 Apify ~수십분) 서버가 job_id만 즉시 준다.
+    // 완료까지 상태를 폴링한다 — 진행배너(_cpShowRunning 타이머)가 경과초를 계속 센다.
+    let res = d;
+    if(d.async && d.job_id){ res = await _pollCollect(d.job_id); }
+    STATE.items = res.items;
+    if((res.count||0)===0){
+      // 0건은 성공처럼 보이면 안 된다(2026-07-25): Apify 전 계정이 월 한도(403)로
+      // 소진되면 채널 수집이 조용히 빈 리스트가 돼 여기로 온다 — 새 릴스가 없어서인지
+      // 한도 때문인지 사장님이 구분할 수 있게 경고로 띄우고 「다시 시도」를 남긴다.
+      st.textContent='⚠️ 0건 수집 — 새 릴스가 없거나 Apify 한도 상태를 확인하세요';
+      _cpFail('⚠️ 수집 결과 0건','새로 올라온 릴스가 없을 수 있어요. 계속 0건이면 Apify 계정 월 사용량(한도)을 확인해 주세요.');
+    }else{
+      st.textContent=`✅ ${res.count}건 수집 (${fmtTime(res.collected_at)})`;
+      _cpDone(`✅ ${res.count}건 수집 완료 (${fmtTime(res.collected_at)})`);
+    }
     render();
     if(PLATFORM==='tiktok') loadTtSettings();   // 하루 남은 횟수·지출 갱신
     else { _pollVisionTags(5); _pollBankIngest(8); }   // 태깅 병합 + 대본은행 자동적재 보고
-  }catch(e){ st.textContent="❌ "+e.message; }
+  }catch(e){
+    st.textContent="❌ "+e.message;
+    // 네트워크 끊김(fetch 자체 실패)=배포 재시작/연결 끊김일 가능성이 크다 → 재시도 안내.
+    const neterr = (e instanceof TypeError) || /Failed to fetch|NetworkError|network/i.test(e.message||'');
+    if(neterr) _cpFail('⚠️ 서버 연결이 끊겼어요', '수집 도중 서버가 재시작(배포)됐을 수 있어요 — 1~2분 뒤 「다시 시도」를 눌러 주세요. (수집이 서버에서 이미 끝났다면 「마지막 수집」 시각이 갱신돼 있을 수 있어요)');
+    else _cpFail('❌ 수집 실패', e.message);
+  }
   finally{ btn.disabled=false; }
+}
+// 수집 비동기 잡 폴링 — done이면 {count,items,collected_at} 반환, error면 throw.
+// 3초 간격, 최대 60분(서버 stale 가드와 동일). 진행배너는 _cpShowRunning 타이머가 계속 센다.
+async function _pollCollect(jobId){
+  const deadline = Date.now() + 60*60*1000;
+  while(Date.now() < deadline){
+    await new Promise(r=>setTimeout(r, 3000));
+    let d;
+    try{ d = await (await fetch("/api/collect/status/"+jobId)).json(); }
+    catch(e){ continue; }   // 일시적 네트워크 오류는 계속 폴링
+    // ★수집 진행률(2026-07-28): 서버가 채널마다 result에 부분 payload를 쓴다.
+    //   예전엔 표시가 없어 50분간 화면이 그대로였고 "멈췄다"고 판단해 취소하는 일이 있었다.
+    if (d && d.result && d.result.phase === 'collecting') {
+      const t = d.result.tally || {};
+      const blocked = (t.login_wall || 0) + (t.error || 0);
+      // ★2026-07-28 수정: #collectProgress는 cpSpin/cpMsg/cpSub/cpRetry 자식 4개를 가진
+      // 컨테이너다 — 여기에 textContent를 직접 쓰면 자식이 전부 지워져 이후 _cpDone/_cpFail이
+      // e.spin.style.display에서 null 참조 에러를 낸다. cpMsg 자식에만 써야 한다.
+      const e = _cpEls();
+      if (e.box) {
+        e.box.style.display = 'flex';
+        e.msg.textContent = `채널 ${d.result.done}/${d.result.total} · ${d.result.items_so_far}건 수집`
+          + (blocked ? ` · 건너뜀 ${blocked}` : '');
+      }
+    }
+    if(d.status==='done') return d;
+    if(d.status==='error') throw new Error(d.error||"수집 실패");
+  }
+  throw new Error("수집이 너무 오래 걸립니다 — 잠시 후 「마지막 수집」 시각을 확인해 주세요");
 }
 // 수집 직후 백그라운드로 도는 대본은행 자동적재의 결과를 폴링해 화면에 보고한다.
 // running이면 "분석 중…", done이면 신규/중복 요약. #status 아래 전용 줄에 그린다.
@@ -1258,6 +1815,30 @@ async function lensBulkDelete(shortcode){
   st.items=st.items.filter(i=>!sel.has(i.savesc));   // 결과 목록에서 숨김
   st.sel.clear(); renderLens(shortcode);
 }
+// 렌즈 유튜브 결과 = 짜집기 채널들. 그 채널들을 벤치(account 시드)로 등록 → 채널기반 수집에 편입.
+async function lensBenchAllYoutube(shortcode){
+  const st=LENS_STATE[shortcode]; if(!st) return;
+  const urls=(st._shown||[]).filter(i=>i.platform==='youtube').map(i=>i.url).filter(Boolean);
+  if(!urls.length){ showToast('유튜브 결과가 없어요'); return; }
+  showToast(`⏳ 채널 해석 중… (${urls.length}개 영상)`);
+  try{
+    const d=await (await fetch('/api/seeds/from_youtube_videos',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({urls})})).json();
+    if(!d.ok){ showToast('❌ 등록 실패: '+(d.error||'')); return; }
+    showToast(`✅ 벤치 등록 ${d.added}개${d.duplicate?` (이미있음 ${d.duplicate})`:''} <a href="/refs" style="color:var(--sel-fg);margin-left:6px">벤치 보기 →</a>`);
+  }catch(e){ showToast('❌ 등록 실패'); }
+}
+async function lensBenchOne(btn, urlEnc){
+  const url=decodeURIComponent(urlEnc||''); if(!url) return;
+  btn.disabled=true; const orig=btn.textContent; btn.textContent='⏳';
+  try{
+    const d=await (await fetch('/api/seeds/from_youtube_videos',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({urls:[url]})})).json();
+    if(d.ok && d.added){ btn.textContent='✅ 벤치됨'; showToast('✅ 채널 벤치 등록됨'); }
+    else if(d.ok && d.duplicate){ btn.textContent='이미 벤치'; showToast('이미 등록된 채널'); }
+    else { btn.textContent=orig; btn.disabled=false; showToast('❌ 채널 해석 실패'); }
+  }catch(e){ btn.textContent=orig; btn.disabled=false; showToast('❌ 등록 실패'); }
+}
 function _fmtCount(n){
   if(n==null || isNaN(n)) return '';
   n=Number(n);
@@ -1317,6 +1898,17 @@ function _groupBySubject(items){
   groups.sort((a,b)=> b.maxScore - a.maxScore);
   return groups;
 }
+// 폴백 B(2026-07-25 사장님 결정): 중국(샤오홍슈·도우인) 딥링크 버튼을 만든다.
+// 번역(zh)이 있으면 정상 링크, 없으면 흐리게+비활성(pointer-events:none) — 한국어를
+// 중국 검색창에 넣는 잘못된 딥링크를 막는다(원안 ko 폴백 폐기). 순수함수라 node 테스트됨.
+function _cnTrendBtn(zh){
+  const base='text-decoration:none;padding:4px 10px;border-radius:10px;border:1px solid var(--line)';
+  return function(label, color, url){
+    if(zh) return `<a href="${url}" target="_blank" rel="noopener" style="${base};color:${color}">${label}</a>`;
+    return `<span class="cn-disabled" title="번역 대기 — 곧 갱신(중국 검색은 중국어 필요)" `
+         + `style="${base};color:var(--sub);opacity:.4;pointer-events:none;cursor:default">${label}</span>`;
+  };
+}
 // ── 트렌드 검색카드 끝 ──
 
 // 샤오·도우 탭 공유 뷰 — 인스·유튜·틱톡 상위를 소재로 묶어 랭킹. 카드마다 샤오홍슈+도우인 딥링크 둘 다.
@@ -1336,8 +1928,13 @@ async function renderTrendCards(){
   }));
   let all = [].concat(...lists);
   const groups = _groupBySubject(all);
+  // 트렌드 탭 전용 안내+새로고침 바 — 이 탭은 수집을 안 하고(중국앱 크롤 불가) 인스·틱·유튜
+  // 랭킹에서 소재를 뽑아 보여준다. '새로고침'은 그 최신 랭킹을 다시 읽어 카드를 다시 그린다.
+  const _hdr = '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
+    + '<button onclick="renderTrendCards()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt);cursor:pointer">🔄 트렌드 새로고침</button>'
+    + '<span style="font-size:11px;color:var(--sub)">인스타·유튜브·틱톡에서 「지금 수집」한 랭킹으로 만든 트렌드입니다 — 이 탭엔 별도 수집이 없어요.</span></div>';
   if(!groups.length){
-    root.innerHTML = '<div style="padding:14px;color:var(--sub)">아직 트렌드 소재가 없습니다. 인스타·유튜브·틱톡 탭에서 「지금 수집」을 돌리면 소재가 채워집니다.</div>';
+    root.innerHTML = _hdr + '<div style="padding:14px;color:var(--sub)">아직 트렌드 소재가 없습니다. 인스타·유튜브·틱톡 탭에서 「지금 수집」을 돌리면 소재가 채워집니다.</div>';
     return;
   }
   const top = groups.slice(0, TREND_TOP_N);
@@ -1348,12 +1945,15 @@ async function renderTrendCards(){
          zhMap[g.subjectKo] = (d && d.zh) || ''; }catch(e){ zhMap[g.subjectKo]=''; }
   }));
   const PLAT_EMOJI = {instagram:'📷',youtube:'▶️',tiktok:'🎵'};
-  root.innerHTML = '<div class="cards">' + top.map(g=>{
+  root.innerHTML = _hdr + '<div class="cards">' + top.map(g=>{
     const rep = g.items.reduce((a,b)=> _score(b)>_score(a)?b:a, g.items[0]);
     const zh = zhMap[g.subjectKo]||'';
-    const q = zh || g.subjectKo;   // zh 없으면 ko 폴백
-    const xhs = _lensSearchUrl('xiaohongshu', q);
-    const dy  = _lensSearchUrl('douyin', q);
+    // 폴백 B(2026-07-25 사장님 결정): zh 없으면 한국어를 중국 검색창에 넣어봐야 무의미 →
+    // 샤오홍슈·도우인 버튼을 흐리게+비활성(잘못된 한국어 딥링크 방지). 번역이 채워지면 살아난다.
+    // (원안 ko 폴백 폐기. 벌크 backfill_cn_keywords.py를 돌리면 미스가 줄어 버튼이 산다.)
+    const cnBtn = _cnTrendBtn(zh);
+    const xhs = cnBtn('📕 샤오홍슈', '#ff2442', _lensSearchUrl('xiaohongshu', zh));
+    const dy  = cnBtn('🎬 도우인', 'var(--txt,inherit)', _lensSearchUrl('douyin', zh));
     const pbadges = g.platforms.map(p=>PLAT_EMOJI[p]||'').join('');
     const thumb = rep.thumbnail ? ('/api/thumb?url='+encodeURIComponent(rep.thumbnail)) : '';
     return `
@@ -1361,10 +1961,10 @@ async function renderTrendCards(){
       <div class="thumb"><img src="${thumb}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'"></div>
       <div class="body" style="padding:8px">
         <div style="font-weight:600">${esc(g.subjectKo)}${zh?` <span style="color:var(--sub);font-weight:400">· ${esc(zh)}</span>`:''}</div>
-        <div style="font-size:11px;color:var(--sub);margin:4px 0">🔥 ${g.count}개 영상에서 터짐 ${pbadges}</div>
+        <div style="font-size:11px;color:var(--sub);margin:4px 0">🔥 ${g.count}개 영상에서 터짐 ${pbadges}${zh?'':' · <span title="중국 검색은 중국어 번역이 필요합니다">번역 대기</span>'}</div>
         <div style="display:flex;gap:6px;margin-top:6px">
-          <a href="${xhs}" target="_blank" rel="noopener" style="text-decoration:none;padding:4px 10px;border-radius:10px;border:1px solid var(--line);color:#ff2442">📕 샤오홍슈</a>
-          <a href="${dy}" target="_blank" rel="noopener" style="text-decoration:none;padding:4px 10px;border-radius:10px;border:1px solid var(--line);color:var(--txt,inherit)">🎬 도우인</a>
+          ${xhs}
+          ${dy}
         </div>
       </div>
     </div>`;
@@ -1405,6 +2005,7 @@ function renderLens(shortcode){
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="영상 길이 90초 이하(또는 길이 불명)만 표시"><input type="checkbox" ${st.shortsOnly?'checked':''} onclick="toggleLensShorts('${shortcode}')"> 숏폼만</label>
       <button onclick="lensBulkSave('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">📥 선택 담기(${selCount})</button>
       <button onclick="lensBulkDelete('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">🗑 선택 삭제(${selCount})</button>
+      ${(()=>{const nYt=shown.filter(i=>i.platform==='youtube').length; return nYt?`<button onclick="lensBenchAllYoutube('${shortcode}')" title="이 렌즈 결과의 유튜브 채널들(짜집기 채널)을 전부 벤치 리스트에 등록 → 채널기반 수집에 편입" style="${btnCss};border-color:var(--accent);color:var(--accent);font-weight:700">➕ 유튜브 채널 전부 벤치등록(${nYt})</button>`:'';})()}
       ${st.ytLoading?'<span style="color:var(--sub)">▶️ 유튜브 불러오는 중…</span>':''}
       <a href="/grab" target="_blank" rel="noopener" title="샤오홍슈·도우인·틱톡·인스타 영상에 '📥 담기' 버튼이 안 뜨면 여기서 1회 켜기" style="text-decoration:none;font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--accent);background:#1f6feb1a;color:var(--accent);font-weight:700;margin-left:auto;white-space:nowrap">📥 담기 버튼 켜기</a>
     </div>
@@ -1457,6 +2058,7 @@ function renderLens(shortcode){
         <div class="btns">
           <button class="view" onclick="lensPreview('${shortcode}','${i.savesc}')">▶ 미리보기</button>
           <button class="save${isSaved?' saved':''}" onclick="toggleLensSave('${shortcode}','${i.savesc}',this)">${isSaved?'🎬 담김✓':'📥 담기'}</button>
+          ${i.platform==='youtube'?`<button class="view" title="이 채널을 벤치 리스트에 등록(채널기반 수집 편입)" onclick="lensBenchOne(this,'${encodeURIComponent(i.url||'')}')">➕ 벤치</button>`:''}
         </div>
         <div style="margin-top:4px"><a href="${_openUrl(i.url)}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🔗 원본 열기</a></div>
         <div class="enrich" data-url="${esc(i.url||'')}" data-platform="${esc(plabel||'')}"
@@ -2107,6 +2709,23 @@ fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
   window.addEventListener('resize',move);
   window.addEventListener('load',move);
   requestAnimationFrame(move);
+})();
+// #refTrace 딥링크(2026-07-25) — 제작소 "렌즈로 찾기"가 /#refTrace로 보내는데, 대상이 접힌
+// <details>라 아무 일도 안 일어나 레퍼런스 랭킹과 똑같아 보였다(사장님 제보). 해시가 오면
+// 펼치고 스크롤+입력 포커스+테두리 강조로 "여기가 렌즈"임을 보여준다.
+(function(){
+  function openTrace(){
+    if(location.hash!=='#refTrace') return;
+    var d=document.getElementById('refTrace'); if(!d) return;
+    d.open=true;
+    d.scrollIntoView({behavior:'smooth',block:'center'});
+    d.style.borderColor='var(--accent)';
+    d.style.boxShadow='0 0 0 3px rgba(55,224,189,.25)';
+    setTimeout(function(){ d.style.boxShadow=''; },2500);
+    var inp=document.getElementById('traceUrl'); if(inp) setTimeout(function(){ inp.focus(); },400);
+  }
+  window.addEventListener('hashchange',openTrace);
+  openTrace();
 })();
 </script>
 <script src="/sidebar.js?v=2"></script>
