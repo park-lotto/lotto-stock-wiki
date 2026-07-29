@@ -106,6 +106,12 @@ def test_collect_category_uses_playwright_crawl_when_xhs_scraper_set(monkeypatch
         def prev_delta_platform(self, *a, **k):
             return None
 
+        def get_thumb_text_level(self, *a, **k):
+            return None
+
+        def save_thumb_text_level(self, *a, **k):
+            pass
+
     job._collect_category("주방/레시피", {"tiktok": [], "cn": ["厨房神器"]}, FakeStore())
     assert called["kw"] == "厨房神器"
 
@@ -130,11 +136,20 @@ def test_collect_category_uses_apify_by_default(monkeypatch):
         def prev_delta_platform(self, *a, **k):
             return None
 
+        def get_thumb_text_level(self, *a, **k):
+            return None
+
+        def save_thumb_text_level(self, *a, **k):
+            pass
+
     job._collect_category("주방/레시피", {"tiktok": [], "cn": ["厨房神器"]}, FakeStore())
     assert called["kw"] == "厨房神器"
 
 
-def test_annotate_text_level_marks_items_up_to_cap(monkeypatch):
+def test_annotate_text_level_marks_all_items(monkeypatch, tmp_path):
+    # 2026-07-29: 상한(_TEXT_CLUTTER_CAP) 폐기 — 생존자 전부를 판정해야 한다.
+    from shopping_shorts.store import Store
+    st = Store(str(tmp_path / "t.db"))
     monkeypatch.setattr(job.video_analysis, "fetch_thumb_bytes", lambda url, timeout=15: b"img")
     calls = []
 
@@ -145,11 +160,11 @@ def test_annotate_text_level_marks_items_up_to_cap(monkeypatch):
     monkeypatch.setattr(job.video_analysis, "text_level_vision", fake_vision)
 
     items = [{"shortcode": f"p{i}", "thumbnail": "http://x"} for i in range(5)]
-    job._annotate_text_level(items, cap=2)
+    job._annotate_text_level(items, st)
 
-    assert len(calls) == 2                          # 상한만큼만 비전판정
+    assert len(calls) == 5                          # 전부 판정
     assert items[0]["text_level"] == "heavy"
-    assert "text_level" not in items[4]              # 상한 초과분은 판정 안 됨(통과 취급)
+    assert items[4]["text_level"] == "heavy"
 
 
 def test_collect_category_filters_out_heavy_text_thumbnails(monkeypatch):
@@ -182,6 +197,12 @@ def test_collect_category_filters_out_heavy_text_thumbnails(monkeypatch):
         def prev_delta_platform(self, *a, **k):
             return None
 
+        def get_thumb_text_level(self, *a, **k):
+            return None
+
+        def save_thumb_text_level(self, *a, **k):
+            pass
+
     items = job._collect_category("주방/레시피", {"tiktok": ["kitchen"], "cn": []}, FakeStore())
 
     shortcodes = {i["shortcode"] for i in items}
@@ -202,6 +223,12 @@ def test_collect_category_skips_tiktok_when_disabled(monkeypatch):
         def prev_delta_platform(self, *a, **k):
             return None
 
+        def get_thumb_text_level(self, *a, **k):
+            return None
+
+        def save_thumb_text_level(self, *a, **k):
+            pass
+
     job._collect_category("주방/레시피", {"tiktok": ["kitchen"], "cn": []}, FakeStore())  # 예외 없으면 통과
 
 
@@ -218,6 +245,12 @@ def test_collect_category_skips_douyin_when_disabled(monkeypatch):
 
         def prev_delta_platform(self, *a, **k):
             return None
+
+        def get_thumb_text_level(self, *a, **k):
+            return None
+
+        def save_thumb_text_level(self, *a, **k):
+            pass
 
     job._collect_category("주방/레시피", {"tiktok": [], "cn": ["厨房神器"]}, FakeStore())  # 예외 없으면 통과
 
@@ -238,3 +271,70 @@ def test_add_pickup_saves_to_pickup_category(monkeypatch, tmp_path):
     items, _ = Store(str(tmp_path / "t.db")).load_overseas_feed()
     assert items[0]["category"] == job.PICKUP_CATEGORY   # 픽업 카테고리로 저장
     assert items[0]["shortcode"] == "p1"                  # 2020년(오래된)도 window 우회로 생존
+
+
+def _mk(sc, thumb="https://t/x.jpg"):
+    return {"shortcode": sc, "thumbnail": thumb}
+
+
+def test_annotate_judges_every_item_not_just_first_15(monkeypatch, tmp_path):
+    """상한 폐기 — 20개를 주면 20개 다 판정돼야 한다(옛 _TEXT_CLUTTER_CAP=15 회귀)."""
+    from shopping_shorts.store import Store
+    st = Store(str(tmp_path / "t.db"))
+    monkeypatch.setattr(job.video_analysis, "fetch_thumb_bytes", lambda u: b"img")
+    monkeypatch.setattr(job.video_analysis, "text_level_vision", lambda b: {"text_level": "none"})
+
+    items = [_mk(f"s{i}") for i in range(20)]
+    job._annotate_text_level(items, st)
+    assert all(i["text_level"] == "none" for i in items)
+
+
+def test_annotate_uses_cache_and_skips_vision(monkeypatch, tmp_path):
+    """캐시에 있으면 비전을 부르지 않는다(쿼터 보호)."""
+    from shopping_shorts.store import Store
+    st = Store(str(tmp_path / "t.db"))
+    st.save_thumb_text_level("s1", "light")
+    calls = []
+    monkeypatch.setattr(job.video_analysis, "fetch_thumb_bytes", lambda u: b"img")
+    monkeypatch.setattr(job.video_analysis, "text_level_vision",
+                        lambda b: calls.append(1) or {"text_level": "none"})
+
+    items = [_mk("s1")]
+    job._annotate_text_level(items, st)
+    assert items[0]["text_level"] == "light"   # 캐시값이 이긴다
+    assert calls == [], "캐시 적중 시 비전 호출이 없어야 한다"
+
+
+def test_annotate_saves_new_judgement_to_cache(monkeypatch, tmp_path):
+    from shopping_shorts.store import Store
+    st = Store(str(tmp_path / "t.db"))
+    monkeypatch.setattr(job.video_analysis, "fetch_thumb_bytes", lambda u: b"img")
+    monkeypatch.setattr(job.video_analysis, "text_level_vision", lambda b: {"text_level": "heavy"})
+
+    job._annotate_text_level([_mk("s1")], st)
+    assert st.get_thumb_text_level("s1") == "heavy"
+
+
+def test_annotate_does_not_cache_failure(monkeypatch, tmp_path):
+    """판정 실패는 저장 안 한다 — 다음 수집에서 재시도돼야 한다."""
+    from shopping_shorts.store import Store
+    st = Store(str(tmp_path / "t.db"))
+    monkeypatch.setattr(job.video_analysis, "fetch_thumb_bytes", lambda u: b"img")
+    monkeypatch.setattr(job.video_analysis, "text_level_vision", lambda b: {})
+
+    items = [_mk("s1")]
+    job._annotate_text_level(items, st)
+    assert "text_level" not in items[0]
+    assert st.get_thumb_text_level("s1") is None
+
+
+def test_annotate_skips_when_no_thumbnail(monkeypatch, tmp_path):
+    from shopping_shorts.store import Store
+    st = Store(str(tmp_path / "t.db"))
+    monkeypatch.setattr(job.video_analysis, "fetch_thumb_bytes", lambda u: None)
+    monkeypatch.setattr(job.video_analysis, "text_level_vision",
+                        lambda b: {"text_level": "none"})
+
+    items = [_mk("s1", thumb="")]
+    job._annotate_text_level(items, st)
+    assert "text_level" not in items[0]
