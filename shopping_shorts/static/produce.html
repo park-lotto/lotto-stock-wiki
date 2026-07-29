@@ -963,7 +963,7 @@ function initMatch(){
     const cands = document.getElementById('mixCandidates'); if(cands) cands.innerHTML = '';
     const rev = document.getElementById('mixReview'); if(rev) rev.innerHTML = '';
     const st = document.getElementById('mixStatus');
-    if(st) st.textContent = '아직 매칭을 시작하지 않았어요 — 1단계에서 ⚡ 이대로 만들기 시작을 눌러주세요.';
+    if(st) st.textContent = '아직 매칭을 시작하지 않았어요 — 1단계에서 ⚡ 이 백본으로 대본 3안 만들기를 눌러주세요.';
     return;
   }
   // 매칭 진행/완료 중 — 이미 그려진 게 있으면(폴링·자동전환이 이미 채웠다) 손대지 않는다.
@@ -3080,8 +3080,8 @@ function renderAiPick(d, hasFootage){
       ${_why}
       ${strip}
       ${renderCompareCards(d)}
-      <div class="newline">✨ 이 뼈대로 완전 새로운 대본을 만듭니다</div>
-      <button class="cta-shine aiPickCta" onclick="startFromAiPick()">⚡ 이대로 만들기 시작</button>
+      <div class="newline">✨ 이 백본으로 새 대본 <b>3안</b>을 만들어 드려요 — 골라서 바로 믹스</div>
+      <button class="cta-shine aiPickCta" onclick="startFromAiPick()">⚡ 이 백본으로 대본 3안 만들기</button>
       <details style="margin-top:10px">
         <summary style="cursor:pointer;font-size:12px;color:var(--sub);font-weight:800">🔁 다른 대본 보기 · ✍️ 직접 쓰기</summary>
         <div style="margin-top:10px">

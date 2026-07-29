@@ -101,9 +101,9 @@ def test_mix_tab_removed():
 
 def test_aipick_and_emptystate_present():
     assert "renderAiPick" in HTML and "renderEmptyState" in HTML
-    assert "이 뼈대로 완전 새로운 대본을 만듭니다" in HTML
+    assert "이 백본으로 새 대본" in HTML and "3안" in HTML
     assert "아직 담긴 영상이 없어요" in HTML
-    assert "이대로 만들기 시작" in HTML          # ⚡ CTA
+    assert "이 백본으로 대본 3안 만들기" in HTML          # ⚡ CTA
     assert 'class="cta-shine"' in HTML or "'cta-shine'" in HTML
 
 
