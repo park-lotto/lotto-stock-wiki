@@ -2879,6 +2879,41 @@ function fmtNum(n){ n=Number(n)||0; if(n>=1e8) return (n/1e8).toFixed(n%1e8?1:0)
 // ⚠️ views/views_x_followers는 저장소에 조회수 자체가 없어 항상 null(app.py 주석 확인) —
 // null인 타일은 아예 렌더하지 않는다("null배" 노출 금지). structure.segments가 비면([])
 // 스트립 없이 우아하게 넘어간다.
+// candidate.video_id → HANDOFF 인덱스(=pickFootage 인자). video_id는 shortcode와 같다
+// (renderPool의 pick 매칭도 it.shortcode===pick_id로 판별 — 같은 키 체계).
+function _candIdxInHandoff(vid){
+  return HANDOFF.findIndex(h=>h && (h.shortcode===vid || h.video_id===vid));
+}
+// 🎬 소스 구조 비교(A, 2026-07-29): 담긴 소스들의 비트구조·설득장치를 나란히 카드로 펼쳐,
+// 사장님이 백본으로 쓸 영상을 눈으로 비교해 고르게 한다. 카드 클릭 = 기존 pickFootage(백본 지정
+// +저장+AI PICK 재조회). structure가 null인 소스(캐시 없음)는 "분석 전"으로 표시 — 클릭하면
+// 그 영상이 픽이 되며 서버가 분석한다(build_aipick pick 경로의 analyze_structure 폴백).
+function renderCompareCards(d){
+  const cands = (d && d.candidates) || [];
+  if(cands.length < 2) return '';   // 1개면 비교할 게 없다
+  const pickId = d.pick_id;
+  const cards = cands.map(c=>{
+    const hi = _candIdxInHandoff(c.video_id);
+    const hf = HANDOFF[hi] || {};
+    const isPick = c.video_id === pickId;
+    const thumb = c.thumbnail || hf.thumbnail || '';
+    const name = c.name || hf.name || '영상';
+    const st = c.structure;
+    const strip = (st && st.segments && st.segments.length)
+      ? `<div class="strip mini">${st.segments.map(s=>`<div class="seg" style="flex:${s.pct};background:${s.color}"></div>`).join('')}</div>`
+      : `<div class="cmp-nostruct">분석 전 — 클릭하면 분석</div>`;
+    const tags = [];
+    if(st && st.hook_type) tags.push(`<span class="tag t1">🎙 ${esc(st.hook_type)}</span>`);
+    (st && st.devices || []).slice(0,2).forEach(dv=>tags.push(`<span class="tag t2">${esc(dv)}</span>`));
+    return `<div class="cmp-card${isPick?' pick':''}" ${hi>=0?`onclick="pickFootage(${hi})"`:''} title="${esc(name)}">
+        ${isPick?'<span class="cmp-badge">🤖 백본</span>':'<span class="cmp-pickhint">⭐ 이걸로 선택</span>'}
+        <div class="cmp-top">${thumb?`<img src="${thumb.includes('gstatic.com')?thumb:('/api/thumb?url='+encodeURIComponent(thumb))}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">`:'<div class="cmp-th-ph"></div>'}<div class="cmp-nm">${esc(name)}</div></div>
+        ${strip}
+        <div class="cmp-tags">${tags.join('')}</div>
+      </div>`;
+  }).join('');
+  return `<div class="cmp-wrap"><div class="cmp-title">🎬 소스 구조 비교 · 백본으로 쓸 영상을 고르세요</div><div class="cmp-grid">${cards}</div></div>`;
+}
 function renderAiPick(d, hasFootage){
   // pick_id==null은 두 경우가 다르다: 담긴 재료가 아예 없으면(hasFootage=false) 빈 상태,
   // 재료는 담겨 있는데 그 대본을 아직 분석 못 했으면(hasFootage=true) 별도 안내 —
@@ -2918,6 +2953,7 @@ function renderAiPick(d, hasFootage){
       <div class="stats">${_tiles.join('')}</div>
       ${_why}
       ${strip}
+      ${renderCompareCards(d)}
       <div class="newline">✨ 이 뼈대로 완전 새로운 대본을 만듭니다</div>
       <button class="cta-shine aiPickCta" onclick="startFromAiPick()">⚡ 이대로 만들기 시작</button>
       <details style="margin-top:10px">
