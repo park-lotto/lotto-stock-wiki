@@ -16,7 +16,7 @@ from shopping_shorts import service
 def main():
     t0 = time.time()
     try:
-        items = service.collect(platform="youtube")
+        items = service.collect(platform="youtube", seed_only=True)
     except Exception as e:  # noqa: BLE001 — 크론이 죽어도 서비스는 무사, 로그만 남긴다
         print(f"[daily_youtube_collect] 실패: {e!r}", file=sys.stderr)
         return 1

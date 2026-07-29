@@ -128,12 +128,18 @@ def generate_missing_drafts(items):
         list(pool.map(_generate_one, items))
 
 
-def _collect_youtube(categories=None):
+def _collect_youtube(categories=None, seed_only=False):
     """유튜브 카테고리 프리셋 + 수동 키워드 시드(발굴) + 계정 시드(채널기반) → 조회수 랭킹.
 
     categories=None → 프리셋 전 카테고리 union(전체 딸깍) / ["혼합형"] → 그 카테고리만.
     프리셋은 lang=ko로 검색. 수동 키워드 시드(kind=언어코드)·계정 시드는 항상 함께 수집.
-    세 경로 raw를 video_id로 중복제거 후 공통 파이프라인."""
+    세 경로 raw를 video_id로 중복제거 후 공통 파이프라인.
+
+    seed_only=True면 등록 계정 시드만 쓴다(2026-07-29).
+    왜: preset/by_lang 키워드 검색은 조회수 높은 국내 쇼츠를 주제 무관하게 끌어와
+    랭킹의 절반을 '기타'(연예·이슈 클립)로 채웠다. 매일 도는 자동 수집에서는 이 경로를 끄고,
+    새 채널 발굴이 필요한 수동 '지금 수집'에서만 켠다.
+    덤: fetch_channel_shorts는 ≤60초 필터가 내장돼 있어 쇼츠만 남는다."""
     store = Store(DB_PATH)
     seeds = store.list_seeds("youtube")
     _LANGS = {"ko", "en", "ja", "zh", "ru"}
@@ -148,13 +154,14 @@ def _collect_youtube(categories=None):
     now = datetime.now(timezone.utc)
     after = (now - timedelta(hours=YOUTUBE_WINDOW_HOURS)).strftime("%Y-%m-%dT%H:%M:%SZ")
     raw = []
-    # 카테고리 프리셋(한국어) — 딸깍 수집의 핵심
-    preset = preset_keywords(categories)
-    if preset:
-        raw.extend(yt_search(preset, after, max_per_kw=YOUTUBE_MAX_PER_KW, lang="ko"))
-    # 수동 키워드 시드(언어별)
-    for lang, kws in by_lang.items():
-        raw.extend(yt_search(kws, after, max_per_kw=YOUTUBE_MAX_PER_KW, lang=lang))
+    if not seed_only:
+        # 카테고리 프리셋(한국어) — 딸깍 수집의 핵심
+        preset = preset_keywords(categories)
+        if preset:
+            raw.extend(yt_search(preset, after, max_per_kw=YOUTUBE_MAX_PER_KW, lang="ko"))
+        # 수동 키워드 시드(언어별)
+        for lang, kws in by_lang.items():
+            raw.extend(yt_search(kws, after, max_per_kw=YOUTUBE_MAX_PER_KW, lang=lang))
     # 계정 시드(채널기반)
     for acc in accounts:
         raw.extend(yt_fetch_channel(acc, cache_get=store.yt_cache_get,
@@ -338,7 +345,7 @@ LAST_COLLECT_TALLY = {}
 # 마지막 인스타 수집의 채널 분류 집계(app.py가 job 결과에 담는다). apify 경로면 빈 dict.
 
 
-def collect(platform="instagram", categories=None, limit_channels=None, on_progress=None):
+def collect(platform="instagram", categories=None, limit_channels=None, on_progress=None, seed_only=False):
     """1회 수집 실행 → 지표·등급 채워진 항목 리스트 반환 + DB 저장.
 
     platform: "instagram"(기본, 엑셀 채널 기반) | "youtube"(키워드 시드 기반,
@@ -350,7 +357,7 @@ def collect(platform="instagram", categories=None, limit_channels=None, on_progr
     호출된다(수집이 도는지 화면에 보여주기 위함). Apify 경로는 진행률을 알 수 없어 무시된다.
     """
     if platform == "youtube":
-        return _collect_youtube(categories)
+        return _collect_youtube(categories, seed_only=seed_only)
     if platform == "tiktok":
         return _collect_tiktok()
     if platform == "xiaohongshu":
