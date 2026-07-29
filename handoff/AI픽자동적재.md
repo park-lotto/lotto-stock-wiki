@@ -14,12 +14,30 @@
   **`scripts/instagram_cookies_from_browser.py`를 대신 쓴다** — Firefox에 정상 로그인 후
   `browser_cookie3`로 로컬 쿠키 직접 추출(로그인 자체에 자동화 흔적이 없어 캡차 회피).
   Chrome/Edge는 앱 바운드 암호화로 막힘, **Firefox만 됨**.
-- 세션 만료 시 재발급 절차:
-  1. Firefox에서 해당 인스타 부계정 재로그인
-  2. `.venv\Scripts\python.exe scripts\instagram_cookies_from_browser.py --browser firefox`
-  3. `scp` 로 `/home/ubuntu/instagram_session.json`에 덮어쓰기(600권한 유지)
-  4. `sudo systemctl restart shopping-shorts` (세션 파일은 프로세스 시작 시 1회 로드되므로
-     재시작 필요 없을 수도 있음 — 매 요청마다 `storage_state` 경로를 새로 읽는지 확인)
+### 🔑 세션 만료 시 재발급 절차 (그대로 복사해서 쓰면 됨)
+
+증상: 수집 tally에 `login_wall`이 다시 나타나기 시작하면 세션 만료 신호.
+
+```
+① Firefox에서 인스타 부계정(수집에 쓰던 그 계정)으로 instagram.com 재로그인
+
+② 로컬 PC 명령 프롬프트:
+cd "C:\Users\CH\Desktop\로또의 주식\.tracks\AI픽자동적재"
+"C:\Users\CH\Desktop\로또의 주식\.venv\Scripts\python.exe" scripts\instagram_cookies_from_browser.py --browser firefox
+   → "[OK] firefox에서 세션 쿠키 저장 완료: ...\scripts\instagram_session.json" 확인
+
+③ 서버로 덮어쓰기 (경로 그대로 — 파일명 안 바꿈):
+scp -i "C:\Users\CH\crawling_bot_client\LightsailDefaultKey-ap-northeast-2.pem" ^
+  "C:\Users\CH\Desktop\로또의 주식\.tracks\AI픽자동적재\scripts\instagram_session.json" ^
+  ubuntu@3.39.179.148:/home/ubuntu/instagram_session.json
+ssh -i "C:\Users\CH\crawling_bot_client\LightsailDefaultKey-ap-northeast-2.pem" ubuntu@3.39.179.148 ^
+  "chmod 600 /home/ubuntu/instagram_session.json"
+```
+
+**④ 서비스 재시작 불필요.** `INSTAGRAM_SESSION_PATH`는 시작 시 1번만 읽히지만, 그 경로의
+**파일 내용은 Playwright가 채널 스크레이프마다(`browser.new_context(storage_state=경로)`)
+매번 새로 읽는다** — 같은 파일명으로 덮어쓰기만 하면 다음 수집부터 바로 새 세션이 적용된다
+(2026-07-29 코드 확인, `instagram_playwright.py:52,58`). 경로 자체를 바꿀 때만 재시작 필요.
 - 목록(clips_connection) 응답엔 taken_at·video_versions·caption이 없어서, pk로
   `/api/v1/media/{pk}/info/`(구 REST 모양, `X-IG-App-ID: 936619743392459` 헤더)를
   한 번 더 호출해 보충한다(`instagram_playwright._fetch_reel_detail`).
