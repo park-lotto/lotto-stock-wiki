@@ -23,22 +23,144 @@ from shopping_shorts.config import SHORTS_GEMINI_KEYS
 _REQUIRED_ROLES = ["훅", "페인포인트", "반전", "실용", "CTA"]
 
 # 영상 유형별 대본 전략 레지스트리(설계 §2·§3-1) — 유형 추가 = 항목 하나 추가.
+# 장면 스파인 먼저 재설계(2026-07-29): 카테고리마다 label(화면표시)·strategy(말투)에 더해
+# spine(슬롯 순서 배열)을 둔다. 각 슬롯은 {slot 이름, roles(허용 shot_role), key(is_key 선호)}.
+# _build_scene_spine이 이 순서대로 태깅된 장면을 배치 → 대본이 그 순서를 따른다.
+# 설계: docs/superpowers/specs/2026-07-29-장면스파인-먼저-재설계-design.md
 VIDEO_TYPES = {
-    "recipe_secret": {
-        "label": "🍳 비밀비법형",
-        "strategy": "이 영상은 레시피/살림팁 '비밀비법형'이다. 핵심 재료·비법을 절대 이름으로 "
-                    "밝히지 마라 — '이것', '집에 있는 이거', '한 스푼'처럼 감춰서 궁금하게 "
-                    "만들어라. 마지막 CTA 비트는 반드시 '댓글에 [키워드] 남겨주시면 "
-                    "알려드릴게요' 형태로 궁금증→댓글을 유도해라.",
+    "recipe": {
+        "label": "🍳 요리/식품",
+        "strategy": "이 영상은 레시피/살림팁이다. 핵심 재료·비법을 절대 이름으로 밝히지 마라 — "
+                    "'이것', '집에 있는 이거', '한 스푼'처럼 감춰서 궁금하게 만들어라. 마지막 "
+                    "CTA 비트는 '댓글에 [키워드] 남겨주시면 알려드릴게요'로 궁금증→댓글을 유도해라.",
+        "spine": [
+            {"slot": "완성훅", "roles": ["완성"], "key": True},
+            {"slot": "재료", "roles": ["사용중", "기타"]},
+            {"slot": "과정", "roles": ["사용중"]},
+            {"slot": "완성샷", "roles": ["완성"]},
+            {"slot": "CTA", "roles": ["기타", "완성"]},
+        ],
     },
-    "product_reveal": {
-        "label": "🛍️ 상품형",
-        "strategy": "이 영상은 제품을 직접 소개하는 '상품형'이다. 제품명·정보를 명확히 "
-                    "보여줘라. 마지막 CTA 비트는 '댓글에 [키워드] 남겨주시면 구매링크 "
-                    "보내드릴게요' 형태로 구매 전환을 유도해라.",
+    "kitchen_tool": {
+        "label": "🧰 살림템/주방",
+        "strategy": "이 영상은 살림템/주방도구다. 도구가 문제를 어떻게 해결하는지 기능을 화면으로 "
+                    "실증해 보여줘라. 마지막 CTA는 '댓글에 [키워드] 남겨주시면 구매링크 보내드릴게요'.",
+        "spine": [
+            {"slot": "실물훅", "roles": ["완성"], "key": True},
+            {"slot": "문제상황", "roles": ["문제", "기타"]},
+            {"slot": "기능실증", "roles": ["사용중"], "key": True},
+            {"slot": "결과", "roles": ["after", "완성"]},
+            {"slot": "CTA", "roles": ["기타", "완성"]},
+        ],
+    },
+    "beauty": {
+        "label": "💄 뷰티",
+        "strategy": "이 영상은 뷰티템이다. 완성된 룩·발색을 먼저 보여주고 before→after 대비로 효과를 "
+                    "각인시켜라. 마지막 CTA는 '댓글에 [키워드] 남겨주시면 알려드릴게요'.",
+        "spine": [
+            {"slot": "완성룩훅", "roles": ["완성", "after"], "key": True},
+            {"slot": "before", "roles": ["before", "문제"]},
+            {"slot": "사용", "roles": ["사용중"]},
+            {"slot": "after대비", "roles": ["after", "완성"]},
+            {"slot": "CTA", "roles": ["기타", "완성"]},
+        ],
+    },
+    "cleaning": {
+        "label": "🧼 청소/생활",
+        "strategy": "이 영상은 청소/생활템이다. 더러운 before로 훅을 열고 사용→깨끗한 after 반전으로 "
+                    "임팩트를 줘라. 마지막 CTA는 '댓글에 [키워드] 남겨주시면 구매링크 보내드릴게요'.",
+        "spine": [
+            {"slot": "before훅", "roles": ["before", "문제"], "key": True},
+            {"slot": "사용", "roles": ["사용중"]},
+            {"slot": "after", "roles": ["after", "완성"], "key": True},
+            {"slot": "반전강조", "roles": ["after", "완성"]},
+            {"slot": "CTA", "roles": ["기타", "완성"]},
+        ],
+    },
+    "generic": {
+        "label": "✨ 범용",
+        "strategy": "이 영상은 제품/결과물을 소개한다. 가장 센 장면으로 훅을 열고 핵심을 실증한 뒤 "
+                    "결과를 보여줘라. 마지막 CTA는 '댓글에 [키워드] 남겨주시면 보내드릴게요'.",
+        "spine": [
+            {"slot": "강한장면훅", "roles": ["완성", "after"], "key": True},
+            {"slot": "핵심실증", "roles": ["사용중"], "key": True},
+            {"slot": "결과", "roles": ["완성", "after"]},
+            {"slot": "CTA", "roles": ["기타", "완성"]},
+        ],
     },
 }
-_DEFAULT_TYPE = "product_reveal"
+_DEFAULT_TYPE = "generic"
+
+# 옛 캐시/job 호환(fail-open): 예전 key를 새 key로 흡수한다.
+_VIDEO_TYPE_ALIASES = {"recipe_secret": "recipe", "product_reveal": "generic"}
+
+
+def _normalize_video_type(vt):
+    """임의 video_type 문자열 → 유효한 VIDEO_TYPES key. 옛 key는 에일리어스, 미지값은 기본."""
+    if vt in VIDEO_TYPES:
+        return vt
+    vt = _VIDEO_TYPE_ALIASES.get(vt)
+    return vt if vt in VIDEO_TYPES else _DEFAULT_TYPE
+
+
+def _build_scene_spine(seg_map, video_type):
+    """태깅된 장면(seg_map)을 카테고리 spine 슬롯 순서로 배치한다(장면 순서 확정).
+
+    반환: [{slot, seg_id, scene_desc}, ...] — 슬롯 순서 그대로. 대본 생성이 이 순서를 고정으로 받는다.
+    - 각 슬롯은 요구 roles(shot_role)·key(is_key 선호)에 맞는 seg를 인벤토리에서 뽑는다.
+    - 이미 쓴 seg는 재사용 안 함(중복 화면 방지). 슬롯에 맞는 게 없으면 그 슬롯은 건너뛴다
+      (빈 슬롯로 렌더가 깨지지 않게 — 뒤 슬롯이 이어 채운다).
+    - 빈 인벤토리·미지 카테고리는 안전 폴백(크래시 금지)."""
+    if not seg_map:
+        return []
+    vt = _normalize_video_type(video_type)
+    spine_tmpl = VIDEO_TYPES[vt].get("spine") or VIDEO_TYPES[_DEFAULT_TYPE]["spine"]
+    used = set()
+    out = []
+
+    def _pick(roles, want_key):
+        # 1순위: 역할 일치 + (key 선호 시) is_key. 2순위: 역할만. 3순위: 아무 미사용 seg.
+        cands = [s for sid, s in seg_map.items() if sid not in used]
+        if not cands:
+            return None
+        pref = [s for s in cands if (s.get("shot_role") in roles)]
+        if want_key:
+            keyed = [s for s in pref if s.get("is_key")]
+            if keyed:
+                return min(keyed, key=lambda s: s.get("start", 0))
+        if pref:
+            return min(pref, key=lambda s: s.get("start", 0))
+        return None  # 역할 불일치면 이 슬롯은 비운다(아무거나 억지로 안 넣는다)
+
+    for slot in spine_tmpl:
+        seg = _pick(slot.get("roles", []), slot.get("key", False))
+        if seg is None:
+            continue
+        used.add(seg["seg_id"])
+        out.append({"slot": slot["slot"], "seg_id": seg["seg_id"],
+                    "scene_desc": seg.get("scene_desc", "")})
+    # 슬롯 대부분이 비어도(태깅이 역할과 안 맞아도) 최소 CTA 슬롯엔 남은 장면 하나를 채워
+    # 렌더가 완전히 비지 않게 한다. 아무것도 못 채웠으면 시간순 첫 장면 하나라도.
+    if not out:
+        first = min(seg_map.values(), key=lambda s: s.get("start", 0))
+        out = [{"slot": spine_tmpl[-1]["slot"], "seg_id": first["seg_id"],
+                "scene_desc": first.get("scene_desc", "")}]
+    elif out[-1]["slot"] != spine_tmpl[-1]["slot"]:
+        # 마지막 슬롯(CTA)이 못 채워졌으면 마지막 배치 슬롯을 CTA로 승격(끝=CTA 보장)
+        out[-1] = {**out[-1], "slot": spine_tmpl[-1]["slot"]}
+    return out
+
+
+def _spine_order_block(spine):
+    """스파인(고정 슬롯 순서+장면)을 대본 생성 프롬프트용 하드 제약 블록으로 렌더."""
+    if not spine:
+        return ""
+    lines = ["[장면 스파인 — 이 순서·장면은 고정이다. 순서를 바꾸지 마라]"]
+    for i, b in enumerate(spine, 1):
+        lines.append(f"{i}. [{b['slot']}] {b['seg_id']} · 화면:{b.get('scene_desc','')}")
+    lines.append("★위 슬롯 순서대로 비트를 만들고, 각 비트 seg_ids는 해당 슬롯의 장면을 쓴다. "
+                 "장면에 안 보이는 걸 지어내지 말고 그 화면에 맞는 멘트만 써라. CTA는 마지막 슬롯에만.")
+    return "\n".join(lines)
 
 # 한글 1글자 ≈ 1음절이므로 "글자수 ÷ 이 값"이 실제 발화 시간(초)이다.
 # 2026-07-17 성우 14명을 서버에서 실합성해 측정한 값(음절÷발화초). 성우별 speed는 이 값에
@@ -1067,8 +1189,7 @@ def detect_video_type(source_scripts, max_retries=3, quota_sleep=8):
                 ),
             )
             raw = json.loads(resp.text)
-            vt = raw.get("video_type")
-            return vt if vt in VIDEO_TYPES else _DEFAULT_TYPE
+            return _normalize_video_type(raw.get("video_type"))  # 옛 key도 새 key로 흡수
         except Exception as e:
             m = str(e)
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
@@ -1181,19 +1302,18 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
     seg_map, inventory = _build_inventory(source_scripts)
     if not seg_map:
         return {"structure": structure, "beats": [], "plagiarism_flags": [],
-                "detected_type": video_type or _DEFAULT_TYPE, "affiliate_target": ""}
+                "detected_type": _normalize_video_type(video_type), "affiliate_target": ""}
 
     scripted = bool(given_script and given_script.strip())
     if scripted:
-        video_type = video_type if video_type in VIDEO_TYPES else _DEFAULT_TYPE
+        video_type = _normalize_video_type(video_type)  # 옛 key 흡수
         n_alternates = _SCRIPTED_N_ALT
         prompt = _SCRIPTED_PROMPT.format(
             given_script=given_script.strip()[:4000], inventory=inventory, n_alternates=n_alternates)
     else:
         if video_type is None:
             video_type = detect_video_type(source_scripts)
-        if video_type not in VIDEO_TYPES:
-            video_type = _DEFAULT_TYPE
+        video_type = _normalize_video_type(video_type)  # 옛 key 흡수(감지값·인자 모두)
         prompt = _PROMPT.format(
             target_seconds=target_seconds, inventory=inventory, n_alternates=n_alternates,
             char_target=int(target_seconds * _SYLLABLES_PER_SEC),
@@ -1287,13 +1407,17 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     맞춰 100% 우리 대본을 생성한다(없는 장면 요구 차단 → 소스에 클립 없어도 천장 없음). 백본을
     못 고르거나 생성이 비면 조용히 레퍼런스-먼저로 폴백(회귀0)."""
     seg_map, inventory = _build_inventory(source_scripts)
-    detected = video_type or (detect_video_type(source_scripts) if source_scripts else _DEFAULT_TYPE)
+    detected = _normalize_video_type(
+        video_type or (detect_video_type(source_scripts) if source_scripts else _DEFAULT_TYPE))
     if not seg_map:
         return {"candidates": [], "detected_type": detected}
     _call = call or _vault_call
-    # 백본 통합(2026-07-22 페이블 점검): 생성기는 rich 하나만 쓴다. backbone_base면 백본을
-    # 골라 '화면 순서 제약' 블록만 프롬프트에 얹는다 — 스토리·은행·다중컷은 rich가 담당,
-    # 백본은 순서만 담당. (예전 뼈다귀 생성기 분기는 스키마에 스토리 필드가 없어 폐기.)
+    # 화면 순서 뼈대(order_block)를 두 모드로 정한다:
+    #  ★기본 경로(backbone_base off = 라이브 기본): 장면 스파인 먼저(2026-07-29 사장님).
+    #    카테고리 감지 → 그 카테고리 스파인 슬롯 순서로 태깅된 장면을 먼저 배치(장면 순서 확정)
+    #    → 대본 생성에 하드 제약으로 넣어 narration-first를 뒤집는다('장면이 운전대').
+    #  백본 모드(backbone_base on, opt-in): 특정 백본 영상의 시간순을 순서 뼈대로 쓴다(기존 동작 보존).
+    # 설계: docs/superpowers/specs/2026-07-29-장면스파인-먼저-재설계-design.md
     bb_video, order_block = None, ""
     if backbone_base:
         from shopping_shorts import backbone
@@ -1301,6 +1425,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                                           forced=backbone_forced)
         if bb_video:
             order_block = _backbone_order_block(bb_video, source_scripts)
+    else:
+        order_block = _spine_order_block(_build_scene_spine(seg_map, detected))
     src_texts = [s.get("full_text", "") for s in source_scripts]
 
     def _ground_score(raws):

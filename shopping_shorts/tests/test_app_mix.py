@@ -51,10 +51,11 @@ def test_mix_result_includes_video_type(monkeypatch, tmp_path):
                    "alternates": [], "effect": "cut"}],
         "plagiarism_flags": []})
     body = client.get("/api/mix/result/jv").json()
-    assert body["detected_type"] == "recipe_secret"
-    assert "비밀비법형" in body["detected_type_label"]
+    # 장면스파인 재설계: 옛 key recipe_secret은 recipe로 정규화돼 표시된다.
+    assert body["detected_type"] == "recipe"
+    assert "요리" in body["detected_type_label"]
     assert body["affiliate_target"] == "소금"
-    assert any(t["key"] == "product_reveal" for t in body["video_types"])
+    assert any(t["key"] == "generic" for t in body["video_types"])
 
 
 def test_mix_retype_valid_and_invalid(monkeypatch, tmp_path):

@@ -19,10 +19,14 @@ def test_assign_seg_ids_defaults_faillopen():
 
 def test_assign_seg_ids_preserves_iskey():
     raw = [{"start": 0, "end": 2, "text": "a", "scene_desc": "s",
-            "is_key": True, "shot_role": "조리"}]
+            "is_key": True, "shot_role": "완성"}]
     out = script_extract._assign_seg_ids("vid", raw)
     assert out[0]["is_key"] is True
-    assert out[0]["shot_role"] == "조리"
+    assert out[0]["shot_role"] == "완성"
+    # 장면스파인 재설계: 옛 값 '조리'는 새 어휘 '사용중'으로 마이그레이션된다(fail-open).
+    out2 = script_extract._assign_seg_ids("vid", [{"start": 0, "end": 2, "text": "a",
+                                                   "scene_desc": "s", "shot_role": "조리"}])
+    assert out2[0]["shot_role"] == "사용중"
 
 
 def test_prompt_mentions_iskey():

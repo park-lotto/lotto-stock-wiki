@@ -2262,7 +2262,8 @@ def api_mix_result(job_id: str):
                       "tts_preview_url": f"/api/mix/tts/{job_id}/{b['beat_idx']}",
                       "cap_segments": video_assemble._caption_segments(
                           b.get("narration", ""), preset=b.get("caption_lines"))})
-    detected = plan.get("detected_type") or _edit_plan._DEFAULT_TYPE
+    # 옛 job(recipe_secret 등)도 새 key로 정규화해 라벨·드롭다운이 어긋나지 않게(fail-open).
+    detected = _edit_plan._normalize_video_type(plan.get("detected_type"))
     return {
         "ok": True, "structure": plan["structure"], "beats": beats,
         # ★P1/P2(2026-07-24): 어느 생성기가 만들었나 + 렌더 전 불변식 위반을 화면에 띄우기 위해
@@ -2461,8 +2462,12 @@ def api_mix_product_get(job_id: str):
 def api_mix_retype(background_tasks: BackgroundTasks, body: dict):
     """사용자가 감지된 영상 유형을 바꾸면 저장된 extract로 EDL+TTS 재생성(재다운로드 없음)."""
     job_id = body.get("job_id"); video_type = body.get("video_type")
-    if video_type not in _edit_plan.VIDEO_TYPES:
+    # 옛 key(recipe_secret 등)로 저장된 job·구버전 클라이언트도 받아 새 key로 흡수(fail-open).
+    # 진짜 미지값만 거른다(빈 문자열/None은 normalize가 기본형으로 떨어뜨리므로 명시 검사).
+    if not video_type or (video_type not in _edit_plan.VIDEO_TYPES
+                          and video_type not in _edit_plan._VIDEO_TYPE_ALIASES):
         return JSONResponse(status_code=422, content={"ok": False, "error": "알 수 없는 영상 유형"})
+    video_type = _edit_plan._normalize_video_type(video_type)
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("extract"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "재생성할 데이터 없음"})

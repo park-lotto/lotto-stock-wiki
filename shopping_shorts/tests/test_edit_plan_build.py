@@ -42,7 +42,8 @@ def test_build_edit_plan_grounds_and_flags(monkeypatch):
     assert out["beats"][0]["primary"]["end"] == 2.0
     # 표절: beat1 narration "안 흘러요"가 소스 full_text와 동일 → flag
     assert any(f["beat_idx"] == 1 for f in out["plagiarism_flags"])
-    assert out["detected_type"] == "product_reveal"
+    # 장면스파인 재설계(2026-07-29): 옛 key product_reveal은 generic으로 흡수된다.
+    assert out["detected_type"] == "generic"
     assert out["affiliate_target"] == "소금"
 
 
@@ -56,7 +57,7 @@ def test_build_edit_plan_structure_locked_to_input(monkeypatch):
     out = edit_plan.build_edit_plan(_scripts(), target_seconds=5, structure="template",
                                      video_type="recipe_secret")
     assert out["structure"] == "template"
-    assert out["detected_type"] == "recipe_secret"
+    assert out["detected_type"] == "recipe"   # 옛 key recipe_secret → recipe 흡수
 
 
 def test_build_edit_plan_exhausted_returns_empty(monkeypatch):
@@ -65,7 +66,7 @@ def test_build_edit_plan_exhausted_returns_empty(monkeypatch):
     out = edit_plan.build_edit_plan(_scripts(), target_seconds=5, structure="template",
                                      video_type="product_reveal")
     assert out == {"structure": "template", "beats": [], "plagiarism_flags": [],
-                    "detected_type": "product_reveal", "affiliate_target": ""}
+                    "detected_type": "generic", "affiliate_target": ""}
 
 
 def test_build_edit_plan_auto_detects_when_type_not_given(monkeypatch):
@@ -77,14 +78,14 @@ def test_build_edit_plan_auto_detects_when_type_not_given(monkeypatch):
     _fake_gemini(monkeypatch, payload)
     monkeypatch.setattr(edit_plan, "detect_video_type", lambda scripts: "recipe_secret")
     out = edit_plan.build_edit_plan(_scripts(), target_seconds=5, structure="template")
-    assert out["detected_type"] == "recipe_secret"
+    assert out["detected_type"] == "recipe"   # 감지값(옛 key)도 새 key로 흡수
 
 
 def test_detect_video_type_returns_valid_key(monkeypatch):
     payload = json.dumps({"video_type": "recipe_secret"})
     _fake_gemini(monkeypatch, payload)
     result = edit_plan.detect_video_type(_scripts())
-    assert result == "recipe_secret"
+    assert result == "recipe"   # 옛 key → 새 key 정규화 반환
 
 
 def test_detect_video_type_invalid_key_falls_back_to_default(monkeypatch):

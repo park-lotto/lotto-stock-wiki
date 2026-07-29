@@ -44,7 +44,8 @@ _RESPONSE_SCHEMA = {
                     "action": {"type": "string", "enum": action_dict.ACTION_VOCAB + ["없음"]},
                     "has_effect": {"type": "boolean"},
                     "is_key": {"type": "boolean"},
-                    "shot_role": {"type": "string", "enum": ["조리", "완성", "기타"]},
+                    "shot_role": {"type": "string",
+                                  "enum": ["before", "사용중", "after", "완성", "문제", "기타"]},
                     "product_benefits": {"type": "array", "items": {"type": "string"}},
                 },
                 "required": ["start", "end", "text", "scene_desc"],
@@ -93,8 +94,13 @@ _PROMPT = """이 영상을 보고 시간 순서대로 세그먼트로 나눠 대
   구간이면 true. 단순 도입 상황·인물 등장·감상·완성 인사·CTA·링크유도면 false. (원본 제작자가
   "이 대사에 이 장면"으로 맞춰둔 실증 페어를 골라내려는 것 — 대사가 기능을 설명하며 화면이 그걸
   보여주면 true. 애매하면 false.)
-- shot_role: 화면의 성격. 손이 재료/도구를 다루는 과정이면 "조리", 완성된 결과물이 화면 주인공이면
-  "완성", 그 외(인물·배경·인사 등)면 "기타". (레시피 소재의 화면 결 맞춤 배치에 쓴다.)
+- shot_role: 화면의 성격을 하나 골라라(장면 스파인 슬롯 배치에 쓴다):
+  · "before" = 사용 전/문제 있는 상태(더러움·부스스한 룩·엉킴 등)
+  · "사용중" = 손이 재료/도구를 다루는 과정(조리·바르기·닦기·조립)
+  · "after"  = 사용 후 개선된 상태(before와 대비되는 깨끗/완성 룩)
+  · "완성"   = 완성된 결과물이 화면 주인공(완성 요리·완성품 클로즈업)
+  · "문제"   = 문제 상황을 보여주는 장면(불편·한계 부각)
+  · "기타"   = 그 외(인물 등장·배경·인사·CTA)
 - product_benefits: **자막도 나레이션도 없어도** 그 구간 화면만 보고 이 제품/도구의 **특장점을
   한국어 문장 1~2개**로 뽑아라(예: "터치 한 번에 자동으로 열린다", "좁은 틈에 쏙 들어가 공간을
   아낀다", "고급스러운 마감"). 요리·살림 소재면 방법 설명 대신 **결과의 매력**을 적어라(예:
@@ -118,6 +124,18 @@ def _norm_benefits(raw):
     if isinstance(raw, str):
         raw = [raw]
     return [s.strip() for s in raw if isinstance(s, str) and s.strip()]
+
+
+# 장면 스파인(2026-07-29): shot_role 확장어휘. 옛 추출본('조리')은 '사용중'으로 흡수하고,
+# 알 수 없는 값은 '기타'로 떨어뜨린다(fail-open — 스파인 배치가 크래시 없이 돈다).
+_SHOT_ROLE_VOCAB = {"before", "사용중", "after", "완성", "문제", "기타"}
+_SHOT_ROLE_ALIASES = {"조리": "사용중"}
+
+
+def _norm_shot_role(raw):
+    if raw in _SHOT_ROLE_VOCAB:
+        return raw
+    return _SHOT_ROLE_ALIASES.get(raw, "기타")
 
 
 def _collect_benefits(segments):
@@ -150,7 +168,7 @@ def _assign_seg_ids(video_id, raw_segments, motion_map=None):
             "action": raw_action,  # str 동사 or None
             "has_effect": bool(seg.get("has_effect")),  # 원본 효과 박힘 → B롤 제외용
             "is_key": bool(seg.get("is_key")),           # 기능·장점 실증 앵커 (fail-open False)
-            "shot_role": seg.get("shot_role") or "기타", # 조리/완성/기타 (fail-open 기타)
+            "shot_role": _norm_shot_role(seg.get("shot_role")),  # 확장어휘, 옛값 매핑(fail-open 기타)
             # 무자막 소스용 화면→특장점 문장 (fail-open []) — text가 빈칸이어도 대본 재료가 된다.
             "product_benefits": _norm_benefits(seg.get("product_benefits")),
             "motion_level": motion_map.get(sid),  # scene_cut 매핑 결과 or None(정보없음, fail-open)
