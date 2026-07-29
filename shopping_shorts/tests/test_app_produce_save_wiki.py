@@ -28,7 +28,7 @@ def test_save_to_wiki_by_url_extracts_original_and_relearns(monkeypatch, tmp_pat
 
     def _fake_extract(video_path, code, caption=""):
         return {"full_text": "생선 굽기 꿀팁 대본(원본)", "segments": []}
-    monkeypatch.setattr(app_module, "extract_script", _fake_extract)
+    monkeypatch.setattr(app_module, "extract_auto", _fake_extract)
 
     relearned = []
     monkeypatch.setattr(app_module, "_relearn_category",
