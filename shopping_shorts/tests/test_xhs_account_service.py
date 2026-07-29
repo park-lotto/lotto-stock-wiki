@@ -18,6 +18,27 @@ def _wire(monkeypatch, tmp_path, notes):
     return db
 
 
+def test_discovery_accumulation_counts_distinct_days(tmp_path):
+    s = Store(str(tmp_path / "t.db"))
+    acc = [{"userid": "u1", "engagement_sum": 100, "note_count": 3, "nickname": "A"}]
+    s.xhs_discovery_record("2026-07-29", acc)
+    s.xhs_discovery_record("2026-07-29", acc)   # 같은 날 재발굴 → 1일로 셈(덮어씀)
+    s.xhs_discovery_record("2026-07-30", [{"userid": "u1", "engagement_sum": 50,
+                                           "note_count": 2, "nickname": "A"}])
+    stats = s.xhs_discovery_stats()
+    assert stats["u1"]["appear_days"] == 2          # 29·30 = 이틀
+    assert stats["u1"]["cum_engagement"] == 150     # 100(29 최종) + 50(30)
+    assert stats["u1"]["last_seen"] == "2026-07-30"
+
+
+def test_discover_attaches_accumulation(monkeypatch, tmp_path):
+    notes = [_note("u1", "A", 5), _note("u1", "A", 5)]
+    _wire(monkeypatch, tmp_path, notes)
+    out = service.discover_xiaohongshu_accounts()
+    assert out[0]["appear_days"] == 1               # 첫 발굴 = 1일
+    assert out[0]["cum_engagement"] == out[0]["engagement_sum"]
+
+
 def test_search_fn_follows_xhs_scraper_config(monkeypatch):
     # 기본(apify)이면 유료 검색, playwright면 무료 크롤 검색을 고른다.
     from shopping_shorts import xiaohongshu_search, playwright_crawl

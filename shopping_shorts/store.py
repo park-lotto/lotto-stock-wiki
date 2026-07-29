@@ -529,6 +529,18 @@ class Store:
                 )
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_psnap ON platform_snapshots(platform, shortcode, id)")
+            # 샤오홍슈 계정 발굴 누적 로그(2026-07-29) — 하루 1행/계정(같은날 재발굴은 덮어씀).
+            # '며칠째 반복해서 뜨나'(appear_days)로 우연 1회를 검증된 계정과 구분한다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS xhs_discovery_log (
+                    userid TEXT NOT NULL,
+                    run_date TEXT NOT NULL,
+                    engagement_sum INTEGER,
+                    note_count INTEGER,
+                    nickname TEXT,
+                    PRIMARY KEY (userid, run_date)
+                )
+            """)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS youtube_channel_cache (
                     seed_value TEXT PRIMARY KEY,
@@ -1235,6 +1247,25 @@ class Store:
     def xhs_blacklist_list(self):
         return {s["value"] for s in self.list_seeds("xiaohongshu")
                 if s["kind"] == "xhs_blacklist"}
+
+    # ── 계정 발굴 누적(며칠째 반복해서 뜨나) ──
+    def xhs_discovery_record(self, run_date, accounts):
+        """오늘 발굴된 계정들을 누적 로그에 기록. 같은 날 재발굴은 덮어씀(하루 1회로 셈)."""
+        with self._conn() as c:
+            c.executemany(
+                "INSERT OR REPLACE INTO xhs_discovery_log"
+                "(userid, run_date, engagement_sum, note_count, nickname) VALUES(?,?,?,?,?)",
+                [(a["userid"], run_date, int(a.get("engagement_sum") or 0),
+                  int(a.get("note_count") or 0), a.get("nickname") or "") for a in accounts])
+
+    def xhs_discovery_stats(self):
+        """userid → {appear_days(등장 일수), cum_engagement(누적 참여합), last_seen}."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT userid, COUNT(DISTINCT run_date), SUM(engagement_sum), MAX(run_date) "
+                "FROM xhs_discovery_log GROUP BY userid").fetchall()
+        return {r[0]: {"appear_days": r[1], "cum_engagement": int(r[2] or 0),
+                       "last_seen": r[3] or ""} for r in rows}
 
     # ── 플랫폼 스코프 스냅샷(가속 계산용) ──
     def save_run_platform(self, platform, run_date, rows):

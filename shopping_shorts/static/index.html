@@ -303,9 +303,10 @@
       <span style="font-size:11px;color:var(--sub);margin-left:8px">카테고리별로 반응 좋은 계정을 모아옵니다 (무료 검색). 매일 새벽 상위 계정은 자동 등록됩니다. [담기]로 레퍼런스에 추가, [삭제]는 영구 제외.</span>
       <div id="xhsSortBar" style="display:none;margin-top:8px;font-size:12px">
         <span style="color:var(--sub)">정렬:</span>
+        <button class="xhsSortBtn" data-sort="appear_days" onclick="xhsSortBy('appear_days',this)" title="여러 날 반복해서 뜨는 계정일수록 위로 — 우연 1회를 걸러냄">🔁 자주 뜸(누적일)</button>
         <button class="xhsSortBtn" data-sort="engagement_sum" onclick="xhsSortBy('engagement_sum',this)">참여 합계</button>
         <button class="xhsSortBtn" data-sort="avg_engagement" onclick="xhsSortBy('avg_engagement',this)">노트당 평균</button>
-        <button class="xhsSortBtn" data-sort="note_count" onclick="xhsSortBy('note_count',this)">노트 수(자주 뜸)</button>
+        <button class="xhsSortBtn" data-sort="note_count" onclick="xhsSortBy('note_count',this)">노트 수</button>
       </div>
       <div id="xhsDiscoverList" style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
     </div>
@@ -545,6 +546,7 @@ function xhsCard(a){
     ${thumb}
     <div style="font-weight:600;margin-top:6px">${_xhsEsc(a.nickname)||'(이름없음)'}</div>
     <div style="font-size:11px;color:var(--sub)">${cats}</div>
+    ${(a.appear_days>1)?`<div style="font-size:11px;color:#2e7d32;margin-top:3px">🔁 ${a.appear_days}일째 반복 등장</div>`:''}
     <div style="font-size:12px;margin-top:4px">참여 ${a.engagement_sum.toLocaleString()} · 노트 ${a.note_count} · 평균 ${a.avg_engagement.toLocaleString()}</div>
     <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
       <a href="${_xhsEsc(a.profile_url)}" target="_blank" rel="noreferrer" style="font-size:11px">프로필↗</a>
