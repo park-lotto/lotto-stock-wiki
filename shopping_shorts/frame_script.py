@@ -151,7 +151,7 @@ _TAGS_SCHEMA = {
 }
 
 
-def extract_script_frames(video_path, video_id, caption="", *,
+def extract_script_frames(video_path, video_id, caption="", *, _no_classic=False,
                           get_boundaries=None, extract_frame_at=None,
                           extract_audio=None, transcribe_words=None, tag_frames=None):
     """B1 조립기: 영상 통째 업로드 없이 {segments, full_text, product_benefits} 반환.
@@ -203,6 +203,12 @@ def extract_script_frames(video_path, video_id, caption="", *,
             frame_paths.append(fp)
 
     tags = tag_frames(frame_paths, caption, segs) or []
+    # 태깅이 실패(빈 태그: 제미니 503 과부하 등)면 장면 설명이 전부 비어 매칭이 망가진다.
+    # 이땐 검증된 기존 추출(extract_script, 503 폴백모델 내장)로 넘겨 품질을 지킨다(2026-07-29 실측:
+    # gemini 503 spike 때 프레임태깅이 죄다 실패했다). _no_classic=True면 폴백 안 함(테스트/재귀방지).
+    if not tags and not _no_classic:
+        from shopping_shorts import script_extract
+        return script_extract.extract_script(video_path, video_id, caption=caption)
     merged = merge_frame_tags(segs, tags)
     segments = script_extract._assign_seg_ids(video_id, merged)
     return {

@@ -117,6 +117,21 @@ def test_extract_script_frames_no_cuts_returns_empty(tmp_path):
     assert out["segments"] == [] and out["full_text"] == ""
 
 
+def test_extract_script_frames_empty_tags_falls_back_to_classic(monkeypatch):
+    """제미니 프레임태깅이 빈 태그(503 과부하 등)면 검증된 기존 추출로 폴백 — 장면설명 빈 대본 방지."""
+    from shopping_shorts import script_extract
+    monkeypatch.setattr(script_extract, "extract_script",
+                        lambda vp, vid, caption="": {"segments": [{"seg_id": "c-0"}],
+                                                     "full_text": "클래식", "product_benefits": []})
+    out = fs.extract_script_frames(
+        "v.mp4", "s1", get_boundaries=lambda p: [0.0, 2.0, 4.0],
+        extract_frame_at=lambda *a: "x", extract_audio=lambda *a: a[-1],
+        transcribe_words=lambda m: None,
+        tag_frames=lambda *a: [])          # 태깅 실패
+    assert out["full_text"] == "클래식"    # 폴백됨
+    assert out["segments"][0]["seg_id"] == "c-0"
+
+
 def test_extract_script_frames_no_audio_fail_open(tmp_path):
     """전사 None(키없음)이어도 크래시 없이 프레임 태깅만 — text 빈칸."""
     out = fs.extract_script_frames(
