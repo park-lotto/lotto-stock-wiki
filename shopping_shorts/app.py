@@ -767,6 +767,80 @@ def _start_xhs_bg_discover_loop():
     threading.Thread(target=_loop, daemon=True).start()
 
 
+@app.get("/api/discover/instagram")
+def api_ig_discover(min_posts: int = 2):
+    """인스타 '카테고리별 잘하는 계정' 리더보드(참여도=좋아요+댓글 합산, 2026-07-30, xhs 패턴 동일).
+    무료 로그인세션 크롤(Playwright) — 인스타 릴스 수집과 같은 세션을 쓰므로
+    수집이 도는 중이면 세션 경합으로 0건이 나올 수 있다(발굴 실패 메시지로 안내)."""
+    try:
+        return {"ok": True, "items": service.discover_instagram_accounts(min_posts=min_posts)}
+    except Exception:
+        return JSONResponse(status_code=200, content={"ok": False,
+            "error": "발굴 실패(크롤이 막혔거나 인스타 수집과 세션이 겹쳤을 수 있어요). 잠시 후 다시 눌러보세요."})
+
+
+@app.post("/api/discover/instagram/adopt")
+def api_ig_discover_adopt(body: dict):
+    """[담기] — 발굴 계정을 레퍼런스 추적목록(discovered_channels)에 등록.
+    body: {username, full_name}."""
+    username = (body.get("username") or "").strip()
+    if not username:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "username 필요"})
+    return service.adopt_instagram_discovery_account(username, full_name=body.get("full_name") or "")
+
+
+@app.post("/api/discover/instagram/blacklist")
+def api_ig_discover_blacklist(body: dict):
+    """[삭제] — 추적목록 제거 + 영구 블랙리스트. body: {username}."""
+    username = (body.get("username") or "").strip()
+    if not username:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "username 필요"})
+    return service.blacklist_instagram_discovery_account(username)
+
+
+@app.get("/api/discover/instagram/latest")
+def api_ig_discover_latest():
+    """마지막 인스타 발굴 결과(캐시)를 크롤 없이 반환."""
+    return {"ok": True, **service.cached_instagram_discovery()}
+
+
+@app.get("/api/discover/instagram/auto")
+def api_ig_discover_auto_get():
+    """백그라운드 자동 발굴 on/off 상태 + 주기."""
+    on = Store(DB_PATH).get_setting("ig_discovery_bg_auto", "off") == "on"
+    return {"ok": True, "on": on, "interval_min": config.XIAOHONGSHU_BG_INTERVAL_MIN}
+
+
+@app.post("/api/discover/instagram/auto")
+def api_ig_discover_auto_set(body: dict):
+    """백그라운드 자동 발굴 켜기/끄기. body: {on: bool}."""
+    on = bool(body.get("on"))
+    Store(DB_PATH).set_setting("ig_discovery_bg_auto", "on" if on else "off")
+    return {"ok": True, "on": on, "interval_min": config.XIAOHONGSHU_BG_INTERVAL_MIN}
+
+
+@app.on_event("startup")
+def _start_ig_bg_discover_loop():
+    """서버 백그라운드 발굴 루프 — DB 설정 'ig_discovery_bg_auto'가 on이면 주기적으로
+    발굴해 누적(ig_discovery_log)을 쌓는다(xhs 백그라운드 루프와 동일 패턴, 2026-07-30).
+    등록은 안 하고 누적만 쌓는다(등록은 daily_batch가 하루 1회, 킬스위치 필요)."""
+    import threading, time as _t, sys as _sys
+
+    def _loop():
+        interval = max(5, config.XIAOHONGSHU_BG_INTERVAL_MIN) * 60
+        while True:
+            _t.sleep(interval)
+            try:
+                if Store(DB_PATH).get_setting("ig_discovery_bg_auto", "off") != "on":
+                    continue
+                n = len(service.discover_instagram_accounts())   # 누적만 쌓음(등록 X)
+                print(f"[ig_discovery_bg] 발굴 누적 {n}계정", file=_sys.stderr)
+            except Exception as e:              # noqa: BLE001 — 루프가 죽지 않게
+                print(f"[ig_discovery_bg] skip: {e}", file=_sys.stderr)
+
+    threading.Thread(target=_loop, daemon=True).start()
+
+
 @app.get("/api/related")
 def api_related(shortcode: str, platform: str = "instagram"):
     """"같은 주제 모아보기" — 같은 topic_group인 다른 영상들 반환(2026-07-13).

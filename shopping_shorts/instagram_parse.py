@@ -148,7 +148,11 @@ def extract_hashtag_search_items(payload):
 
 
 def parse_hashtag_search_item(item):
-    """해시태그 검색 게시물 1개 → 발굴용 dict. user/username 없으면 None."""
+    """해시태그 검색 게시물 1개 → 발굴용 dict. user/username 없으면 None.
+
+    like_count/comment_count/play_count는 SERP 자체엔 없고(실측), 상위 표본만
+    instagram_playwright._fetch_reel_detail로 보강된 뒤 이 키들이 채워져 들어온다
+    (2026-07-30, 참여도 기반 발굴 정렬을 위함). 없으면 0."""
     if not isinstance(item, dict):
         return None
     user = item.get("user") or {}
@@ -164,6 +168,9 @@ def parse_hashtag_search_item(item):
         "code": code,
         "url": f"https://www.instagram.com/p/{code}/" if code else "",
         "taken_at": _iso(item.get("taken_at")),
+        "like_count": _int(item.get("like_count")),
+        "comment_count": _int(item.get("comment_count")),
+        "play_count": _int(item.get("play_count")),
     }
 
 

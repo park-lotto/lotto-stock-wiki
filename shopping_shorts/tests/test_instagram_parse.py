@@ -164,6 +164,23 @@ def test_parse_hashtag_search_item_fills_discovery_fields():
     assert d["is_verified"] is True
     assert d["url"] == "https://www.instagram.com/p/AbCdEf1/"
     assert d["taken_at"]  # ISO 문자열로 채워짐
+    # SERP 원본엔 참여도가 없다 — instagram_playwright가 media info REST로 보강한 뒤
+    # like_count/comment_count/play_count가 이 딕셔너리에 채워져 들어온다(2026-07-30).
+    assert d["like_count"] == 0
+    assert d["comment_count"] == 0
+    assert d["play_count"] == 0
+
+
+def test_parse_hashtag_search_item_reads_engagement_when_enriched():
+    """상세조회로 보강된 뒤(2026-07-30)의 형태 — like_count 등이 items[i]에 얹혀 온다."""
+    enriched = dict(extract_hashtag_search_items(_SERP_PAYLOAD)[0])
+    enriched["like_count"] = 34623
+    enriched["comment_count"] = 6680
+    enriched["play_count"] = 4786371
+    d = parse_hashtag_search_item(enriched)
+    assert d["like_count"] == 34623
+    assert d["comment_count"] == 6680
+    assert d["play_count"] == 4786371
 
 
 def test_parse_hashtag_search_item_without_username_returns_none():

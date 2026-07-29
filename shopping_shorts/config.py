@@ -107,6 +107,10 @@ XIAOHONGSHU_BG_ENABLED = os.getenv("XIAOHONGSHU_BG_ENABLED", "true").lower() == 
 # 늘어나 랭킹 노이즈가 커지는 걸 막는다. 켜려면 XIAOHONGSHU_AUTO_DISCOVER처럼 true로.
 INSTAGRAM_AUTO_DISCOVER = os.getenv("INSTAGRAM_AUTO_DISCOVER", "false").lower() == "true"
 INSTAGRAM_AUTO_TOP_N = int(os.getenv("INSTAGRAM_AUTO_TOP_N", "10"))
+# 해시태그 탐색 SERP엔 좋아요·댓글수가 없어(실측), 상위 표본만 media info REST를
+# 한 번씩 더 불러 참여도를 보강한다(2026-07-30). 전량 조회하면 태그당 요청이 커져
+# 느려지고 차단 위험도 커지므로 상위 N개만(태그당 24개 안팎 중 상위).
+INSTAGRAM_DISCOVERY_DETAIL_TOP_N = int(os.getenv("INSTAGRAM_DISCOVERY_DETAIL_TOP_N", "15"))
 
 # ── 샤오홍슈(해외HOT 발굴) 수집 경로 선택(2026-07-29) ──
 # Apify 검색은 유료(rednote-search-scraper). 로그인 세션(storage_state)으로 서버 직결
