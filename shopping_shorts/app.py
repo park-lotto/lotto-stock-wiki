@@ -2267,6 +2267,60 @@ def api_coupang_search(q: str = "", limit: int = 0):
     return got
 
 
+# job_id → 렌즈가 찾아낸 제품명. SerpApi가 프레임당 1콜이라 같은 영상에서 두 번
+# 누르면 과금이 두 번 난다 — 프로세스 메모리 캐시로 막는다(재시작하면 비는 게 맞다).
+_COUPANG_LENS_CACHE = {}
+
+
+@app.post("/api/coupang/lens")
+def api_coupang_lens(body: dict):
+    """★유료 경로 — 사장님이 '화면으로 정확히 찾기'를 눌렀을 때만 돈다.
+
+    대본 글자만 읽으면 "슬라임 재료" 수준에서 멈춘다. 영상 프레임을 Google Lens로
+    역검색하면 브랜드·모델까지 좁혀진다(product_identify, 2026-07-10부터 제품찾기
+    화면이 쓰던 그 경로 재사용). SerpApi는 프레임당 1콜이라 **job당 1회만** 돌고
+    결과는 mix_jobs에 남긴다 — 같은 영상에서 두 번 누르면 캐시를 준다."""
+    job_id = (body.get("job_id") or "").strip()
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id) if job_id else None
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    cached = _COUPANG_LENS_CACHE.get(job_id)
+    if cached and not body.get("force"):
+        return {"ok": True, "name": cached, "cached": True}
+
+    work = _MIX_WORK_DIR / job_id
+    try:
+        src = _resolve_sources(job, work)[_source_video_id(0)]
+    except Exception:
+        return {"ok": False, "name": "", "error": "소스 영상을 찾지 못했습니다"}
+    # ★프레임은 _FIND_TMP_DIR 아래로 뽑는다 — /api/find/frame/이 그 폴더만 서빙하고,
+    # SerpApi가 우리 서버로 이미지를 받으러 오므로 공개 URL이어야 한다(로그인 예외 경로).
+    work_id = f"coupang_{job_id}"
+    lens_dir = _FIND_TMP_DIR / work_id
+    try:
+        frames = frame_extract.extract_frames(src, lens_dir, max_frames=6)
+    except Exception as e:  # noqa: BLE001 — 유료 경로 앞단에서 죽어도 화면은 살아야 한다
+        return {"ok": False, "name": "", "error": f"프레임 추출 실패: {type(e).__name__}"}
+    if not frames:
+        return {"ok": False, "name": "", "error": "프레임을 뽑지 못했습니다"}
+
+    urls = [f"{PUBLIC_BASE_URL}/api/find/frame/{work_id}/{p.name}" for p in frames]
+    try:
+        lines = fetch_lens_lines(urls)
+        plan = job.get("edit_plan") or {}
+        name = identify_product_from_lines(
+            lines, category=plan.get("detected_type", ""),
+            caption=(plan.get("affiliate_target") or ""))
+    except Exception as e:  # noqa: BLE001
+        return {"ok": False, "name": "", "error": f"렌즈 실패: {type(e).__name__}"}
+    if not name:
+        return {"ok": False, "name": "",
+                "error": "화면에서 상품을 특정하지 못했습니다 — 검색어를 직접 고쳐보세요"}
+    _COUPANG_LENS_CACHE[job_id] = name   # 같은 영상에서 또 누르면 과금 없이 돌려준다
+    return {"ok": True, "name": name, "cached": False}
+
+
 @app.post("/api/coupang/suggest")
 def api_coupang_suggest(body: dict):
     """대본 + 연결 대상 → 쿠팡에 칠 만한 상품명 후보.
