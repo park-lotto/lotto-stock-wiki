@@ -1021,13 +1021,31 @@ def _length_penalty(beats, target_seconds):
     return round(min(0.3, dev), 3)
 
 
-def _score_candidate(plan, avoid_hooks=None, target_seconds=None):
+def _plagiarism_penalty(beats, source_full_texts, threshold=0.5, n=6):
+    """표절 감점(2026-07-30): _plagiarism_flags와 같은 n-gram 겹침 계산을 채점에도 반영한다.
+    이제까지는 겹침을 감지해 리뷰 화면에 경고 배지만 띄우고(app.py) 점수에는 안 반영했다 —
+    _banned_phrase_hit이 겪은 것과 같은 구멍(2026-07-29 주석: '프롬프트로만 막으면 간헐적으로
+    새는데 채점에서 강제로 걸러야 새지 않는다')이 표절에도 그대로 있었다. 겹침은 금지어처럼
+    이분법이 아니라 연속값이라 즉시 0점 대신 초과분 비례 감점(최대 0.3, _length_penalty와
+    동일 상한)으로 다룬다 — 짧은 흔한 표현까지 억울하게 0점 처리되는 걸 피한다."""
+    if not source_full_texts or not beats:
+        return 0.0
+    worst = 0.0
+    for beat in beats:
+        narration = beat.get("narration", "")
+        for source_text in source_full_texts:
+            worst = max(worst, _ngram_overlap(narration, source_text, n))
+    return round(min(0.3, max(0.0, worst - threshold)), 3)
+
+
+def _score_candidate(plan, avoid_hooks=None, target_seconds=None, source_full_texts=None):
     """후보 추천 점수(0~1): 매칭(fit·억지없음·장면다양성) + 품질(대화체·재미강도). 빈 beats면 0.0.
     avoid_hooks(novelty 감점, belt-and-suspenders): 최근 영상이 쓴 훅 목록. 첫 비트(=훅)가
     그와 n-gram 겹치면 감점 → 프롬프트 회피를 무시하고 같은 훅을 낸 후보가 추천되는 걸 막는다.
     컷 리듬 감점(T6): 파편화·전역 반복이 심한 후보를 강등한다.
     길이 감점(세션#2): target_seconds가 주어지면 목표초에서 벗어난 후보를 강등한다.
-    금지어 반려(2026-07-29): 상세페이지 상투어가 하나라도 있으면 무조건 0점."""
+    금지어 반려(2026-07-29): 상세페이지 상투어가 하나라도 있으면 무조건 0점.
+    표절 감점(2026-07-30): source_full_texts가 주어지면 원문 n-gram 겹침 초과분만큼 감점."""
     beats = plan.get("beats") or []
     if not beats:
         return 0.0
@@ -1046,6 +1064,7 @@ def _score_candidate(plan, avoid_hooks=None, target_seconds=None):
     score = 0.75 * match + 0.25 * quality
     score -= _cut_rhythm_penalty(beats)          # T6: 파편·반복 후보 강등(안전망)
     score -= _length_penalty(beats, target_seconds)  # 세션#2: 목표초 벗어난 후보 강등
+    score -= _plagiarism_penalty(beats, source_full_texts)  # 2026-07-30: 원문 베끼기 강등
     if avoid_hooks:
         hook = beats[0].get("narration") or ""
         overlap = max((_ngram_overlap(hook, h) for h in avoid_hooks), default=0.0)
@@ -1385,15 +1404,33 @@ def _backbone_order_block(backbone_video, source_scripts):
         t = (f.get('text') or '').strip()
         return base + (f"  (원본대사: {t})" if t else "")
     lines = "\n".join(_line(i, f) for i, f in enumerate(flow))
+    sub_vids = [s.get("video_id") for s in (source_scripts or [])
+                if s.get("video_id") and s.get("video_id") != backbone_video and s.get("segments")]
+    sub_block = ("(이 영상엔 서브 소스가 없다 — 위 백본 흐름만 따르면 된다.)" if not sub_vids
+                 else f"서브 소스: {', '.join(sub_vids)} — **이 목록의 소스 각각을 최소 한 번씩은 "
+                      "화면에 등장시켜라**(하나도 안 쓰인 채로 끝내지 마라).")
     return (
         f"[백본 흐름 — 메인영상 {backbone_video}의 시간순 전개(장면 순서 + 원본 대사 흐름)]\n{lines}\n"
         "★이 흐름을 '스토리 전개'로 삼아 **창의적으로 변형**해 따라가라 — 순서·전개는 계승하되 "
-        "문장은 우리 것으로 새로(원본 대사 베끼기 절대 금지, 같은 뜻 다른 구어체로 패러프레이즈).\n"
-        "★화면 순서는 위 뼈대를 따르라(과정이 앞뒤로 튀는 뒤죽박죽 금지). 단 다른 영상(서브) 컷은 이렇게 활용:\n"
-        "  · 교체(Replace): A의 어떤 장면보다 서브에 같은 의미의 더 직관적·자극적 컷이 있으면 그 자리에 "
-        "바꿔 넣고, 그 컷의 동작을 대사에 그대로 반영해라.\n"
-        "  · 삽입(Insert): A에 없는 새 정보·리액션(주변인 반응·인증·비법)이 서브에 있으면 흐름 중간에 "
-        "끼우고, 문두에 접착어(\"알고 보니\"·\"보시는 것처럼\"·\"이럴 땐\")를 붙여 자연스럽게 이어라.")
+        "문장은 우리 것으로 새로 써라(원본 대사 베끼기 절대 금지, 같은 뜻 다른 구어체로 패러프레이즈).\n"
+        "  (BAD) 원본대사가 \"엄마가 옆에서 보더니 진짜 곱네 하시더라고요\"인데 이 문장을 "
+        "그대로/거의 그대로 옮겨쓰기.\n"
+        "  (GOOD) 같은 장면·같은 뜻이지만 다른 표현: \"엄마가 딱 보시더니 놀라시더라니까요\".\n"
+        f"★서브 소스 식별: 아래 인벤토리에서 seg_id가 위 흐름의 '{backbone_video}-숫자' 형식이 "
+        f"**아닌** 항목은 전부 다른 영상(서브) 컷이다. {sub_block} 화면 순서는 위 뼈대(백본)를 "
+        "따르되(과정이 앞뒤로 튀는 뒤죽박죽 금지), 서브 컷은 이렇게 적극 활용해라(안 쓰면 후보가 "
+        "단조로워지고 서브 소스가 통째로 낭비된다):\n"
+        "  · 교체(Replace): 백본의 어떤 장면보다 서브에 같은 의미의 더 직관적·자극적 컷이 있으면 "
+        "그 자리에 바꿔 넣고, 그 컷의 동작을 대사에 그대로 반영해라.\n"
+        "    (예) 백본 장면이 '손으로 대충 문지름'인데 서브에 같은 의미의 '거품 풍성하게 닦아내는' "
+        "더 직관적 컷이 있으면 그 서브 컷으로 교체.\n"
+        "  · 삽입(Insert): 백본에 없는 새 정보·리액션(주변인 반응·인증·비법)이 서브에 있으면 흐름 "
+        "중간에 끼우고, 문두에 접착어(\"알고 보니\"·\"보시는 것처럼\"·\"이럴 땐\")를 붙여 자연스럽게 "
+        "이어라. ★서브 컷의 동작이 백본 흐름과 안 맞아도 좋다 — 그럴 땐 특정 동작을 지목하지 않는 "
+        "리액션/감상 문장(\"이거 보고 진짜 놀랐잖아요\" 류)을 그 화면에 얹어라(행위 나레이션 강제 "
+        "금지 — 화면·대사가 안 맞는 것보다 낫다).\n"
+        "  · ★후보마다 위 서브 소스 목록 전부(적어도 하나씩)를 화면에 반영해라 — 후보 3개 다 백본 "
+        "장면만 그대로 따라가거나, 서브 소스 일부만 쓰고 나머지를 버리면 안 된다.")
 
 
 def build_scene_first_plan(source_scripts, reference_text, target_seconds,
@@ -1482,7 +1519,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)
         story = {k: r.get(k, "") for k in
                  ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
-        rule_score = _score_candidate(plan, avoid_hooks=avoid_hooks, target_seconds=target_seconds)
+        rule_score = _score_candidate(plan, avoid_hooks=avoid_hooks, target_seconds=target_seconds,
+                                       source_full_texts=src_texts)
         cand = {"plan": plan, "story": story, "score": rule_score, "recommended": False}
         # ★심사위원(사장님 기준: 대본품질·장면싱크·스토리라인) — judge on일 때만(Gemini 콜).
         # 규칙점수(빠른 계산)와 반반 섞어 최종 순위. 심사 실패는 규칙점수만으로 폴백(무해).

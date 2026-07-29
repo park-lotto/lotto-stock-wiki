@@ -44,3 +44,21 @@ def test_score_no_penalty_for_fresh_hook():
     plan = _plan(["완전 새로운 신선한 오프닝 문장이에요", "이거 하나면 끝"], fit=5)
     assert edit_plan._score_candidate(plan, avoid_hooks=["전혀 다른 옛날 훅 문구"]) \
         == edit_plan._score_candidate(plan)
+
+
+def test_score_penalizes_plagiarized_narration():
+    # 표절 감점(2026-07-30): _plagiarism_flags가 감지하는 것과 같은 원문 베끼기를
+    # 채점에도 반영한다 — 감지만 되고 점수는 안 깎이면 표절 후보가 그대로 추천된다(실사고).
+    src = ["엄마가 옆에서 보더니 진짜 곱네 하시더라고요 이거 하나면 끝이더라구요"]
+    copied = _plan(["엄마가 옆에서 보더니 진짜 곱네 하시더라고요 이거 하나면 끝이더라구요"], fit=5)
+    original = _plan(["처음엔 반신반의했는데 써보니까 확 달라지더라고요"], fit=5)
+    assert (edit_plan._score_candidate(copied, source_full_texts=src)
+            < edit_plan._score_candidate(original, source_full_texts=src))
+
+
+def test_score_no_plagiarism_penalty_below_threshold():
+    # 짧게 겹치는 흔한 표현(임계 이하)까지 벌점 주면 정상 후보가 억울하게 깎인다.
+    src = ["오늘도 화창한 날씨네요 준비물을 챙겨서 나가봅시다 즐거운 하루 되세요"]
+    plan = _plan(["써보니까 확 달라지더라고요"], fit=5)
+    assert (edit_plan._score_candidate(plan, source_full_texts=src)
+            == edit_plan._score_candidate(plan))

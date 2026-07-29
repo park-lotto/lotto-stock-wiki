@@ -60,6 +60,26 @@ def test_backbone_order_block_empty_when_backbone_missing():
     assert edit_plan._backbone_order_block("BB", []) == ""
 
 
+def test_backbone_order_block_has_replace_insert_guard():
+    """교체/삽입 지시가 예시 없는 추상 문장뿐이면 실사용에서 잘 안 지켜졌다(2026-07-30 실사고:
+    3영상 중 백본만 거의 다 들어가고 서브는 버려짐). 구체적 BAD/GOOD 예시 + 서브 소스 식별
+    규칙 + 서브 목록 명시 + '전부 최소 한 번씩' 강제 지시가 있는지 고정."""
+    block = edit_plan._backbone_order_block("BB", _SOURCES)
+    assert "(BAD)" in block and "(GOOD)" in block          # 패러프레이즈 구체 예시
+    assert "서브 소스 식별" in block                          # seg_id 접두사로 서브 구분 규칙
+    assert "서브 소스: S1" in block                          # 서브 소스를 이름으로 콕 집어줌
+    assert "각각을 최소 한 번씩" in block                      # 서브소스 전부 커버 강제(1개만 X)
+    assert "리액션/감상 문장" in block                        # 행위 안 맞아도 쓸 수 있는 대안 제시
+
+
+def test_backbone_order_block_no_sub_sources_note():
+    """서브 소스가 없는 단일 소스 영상이면 서브 강제 문구 대신 안내만."""
+    solo = [_SOURCES[0]]   # 백본(BB)만
+    block = edit_plan._backbone_order_block("BB", solo)
+    assert "서브 소스가 없다" in block
+    assert "각각을 최소 한 번씩" not in block
+
+
 def test_judge_picks_best_candidate():
     # rich 생성이 후보 2개를 주면 심사위원(대본품질·장면싱크·스토리라인)이 최고를 추천한다.
     def _call(prompt, schema):
