@@ -97,13 +97,16 @@
   .links a{font-size:12px;color:var(--accent);text-decoration:none}
   .empty{color:var(--sub);text-align:center;padding:60px;grid-column:1/-1}
   .actions{margin-top:auto}   /* 버튼 묶음을 카드 바닥에 고정 → 통계 줄수 달라도 카드마다 버튼 높이 일치 */
-  .btns{display:flex;gap:6px;padding-top:10px}
-  .btns button{flex:1;font-size:11px;padding:7px 4px;border-radius:7px;border:1px solid var(--line);background:var(--inset);color:var(--txt);cursor:pointer}
+  /* 2026-07-30: 영상보기·댓글소통·즐겨찾기·숏템파워검색 4개를 2×2 격자로(사장님 지시).
+     보기/댓글/담기 → 영상보기/댓글소통/즐겨찾기로 글자수 늘어(2자→4자) 한 줄 3칸이 좁아
+     grid 2열로 전환, script-btn(숏템파워검색)도 이 grid의 4번째 칸으로 편입. */
+  .btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding-top:10px}
+  .btns button{font-size:11px;padding:7px 4px;border-radius:7px;border:1px solid var(--line);background:var(--inset);color:var(--txt);cursor:pointer;white-space:nowrap}
   .btns button.view{border-color:var(--accent);color:var(--sel-fg)}
   .btns button.comment{background:linear-gradient(90deg,#7b2ff7,#c22ed0);border:none;color:#fff}
   .btns button.save.saved{background:#2ea043;border-color:#2ea043;color:#fff}
-  .script-btn{width:100%;margin-top:6px;padding:8px;border-radius:7px;border:1px solid #b8860b;
-              background:linear-gradient(90deg,#3a2f0d,#2a2408);color:#ffd76b;font-size:12px;cursor:pointer}
+  .btns .script-btn{margin-top:0;padding:7px 4px;border-radius:7px;border:1px solid #b8860b;
+              background:linear-gradient(90deg,#3a2f0d,#2a2408);color:#ffd76b;font-size:11px;cursor:pointer}
   .script-btn:hover{background:linear-gradient(90deg,#4a3d10,#352d0a)}
   .script-btn:disabled{opacity:.6;cursor:wait}
   /* 대본 모달 */
@@ -1342,11 +1345,11 @@ function render(){
         ${i.inpock?`<div style="margin-top:6px"><a href="${i.inpock}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🛒 판매채널</a></div>`:''}
         <div class="actions">
           <div class="btns">
-            <button class="view" onclick="window.open('${i.url}','_blank')">👁 보기</button>
-            <button class="comment" onclick="goComment('${i.shortcode}')">💬 댓글</button>
-            <button class="save" id="save_${i.shortcode}" onclick="toggleMix('${i.shortcode}', this)">📥 담기</button>
+            <button class="view" onclick="window.open('${i.url}','_blank')">👁 영상보기</button>
+            <button class="comment" onclick="goComment('${i.shortcode}')">💬 댓글소통</button>
+            <button class="save" id="save_${i.shortcode}" onclick="toggleMix('${i.shortcode}', this)">📥 즐겨찾기</button>
+            <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 숏템파워검색</button>
           </div>
-          <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 렌즈 유사영상</button>
         </div>
       </div>
     </div>`).join("");
