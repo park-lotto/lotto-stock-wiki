@@ -1,6 +1,6 @@
 """샤오홍슈 계정 발굴 오케스트레이션(service) — 담기·삭제(블랙리스트)·자동등록·is_registered.
 설계: docs/superpowers/specs/2026-07-29-샤오홍슈-계정발굴-design.md"""
-from shopping_shorts import service
+from shopping_shorts import service, config
 from shopping_shorts.store import Store
 
 
@@ -16,6 +16,15 @@ def _wire(monkeypatch, tmp_path, notes):
     monkeypatch.setattr(service.xiaohongshu_search, "search_full", lambda kw: notes)
     monkeypatch.setattr(service.overseas_seeds, "load_seeds", lambda: {"주방": {"cn": ["kw1"]}})
     return db
+
+
+def test_search_fn_follows_xhs_scraper_config(monkeypatch):
+    # 기본(apify)이면 유료 검색, playwright면 무료 크롤 검색을 고른다.
+    from shopping_shorts import xiaohongshu_search, playwright_crawl
+    monkeypatch.setattr(config, "XHS_SCRAPER", "apify")
+    assert service._xhs_search_fn() is xiaohongshu_search.search_full
+    monkeypatch.setattr(config, "XHS_SCRAPER", "playwright")
+    assert service._xhs_search_fn() is playwright_crawl.search_full
 
 
 def test_discover_then_adopt_marks_registered(monkeypatch, tmp_path):

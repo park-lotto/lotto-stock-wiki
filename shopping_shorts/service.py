@@ -250,13 +250,23 @@ def _collect_xiaohongshu():
 # 설계: docs/superpowers/specs/2026-07-29-샤오홍슈-계정발굴-design.md
 # 검색 발굴(포스트)을 작성자별로 집계해 '잘하는 계정'을 모아준다 → 레퍼런스에 등록.
 
+def _xhs_search_fn():
+    """발굴 검색 경로 선택 — 해외HOT과 동일하게 config.XHS_SCRAPER를 따른다.
+    playwright(기본, 무료 로그인세션 크롤) / apify(유료). 서버 기본이 playwright라
+    발굴도 공짜로 돈다. 둘 다 search_full(keyword)→노트 리스트로 인터페이스 동일."""
+    if getattr(config, "XHS_SCRAPER", "apify") == "playwright":
+        from shopping_shorts import playwright_crawl
+        return playwright_crawl.search_full
+    return xiaohongshu_search.search_full
+
+
 def discover_xiaohongshu_accounts(min_notes=2):
     """계정 발굴 리더보드. 블랙리스트 제외, 이미 등록된 계정은 is_registered=True."""
     store = Store(DB_PATH)
     blacklist = store.xhs_blacklist_list()
     registered = {s["value"] for s in store.list_seeds("xiaohongshu") if s["kind"] == "account"}
     accounts = xiaohongshu_discovery.discover_accounts(
-        xiaohongshu_search.search_full, overseas_seeds.load_seeds(),
+        _xhs_search_fn(), overseas_seeds.load_seeds(),
         min_notes=min_notes, blacklist=blacklist)
     for a in accounts:
         a["is_registered"] = a["profile_url"] in registered
