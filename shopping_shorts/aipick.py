@@ -116,6 +116,8 @@ def build_aipick(sources, meta, forced=None):
             "name": src.get("title") or src.get("name") or "",
             "thumbnail": src.get("thumbnail") or src.get("thumb") or "",
             "structure": _structure_view(src.get("structure")) if src.get("structure") else None,
+            # ★원문 보기(2026-07-29): 카드 클릭 전에 백본 후보 3개 대본을 미리 읽어보게.
+            "text": src.get("text") or "",
         })
     return {"pick_id": pick_id, "pick_index": idx, "tiles": tiles,
             "structure": structure, "candidates": cand_out,
