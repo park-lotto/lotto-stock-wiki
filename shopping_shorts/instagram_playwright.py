@@ -155,7 +155,8 @@ def _search_hashtag_playwright(tag):
 
             page.on("response", _on_response)
             page.goto(url, timeout=config.INSTAGRAM_PW_TIMEOUT_MS, wait_until="domcontentloaded")
-            page.wait_for_timeout(3500)     # SERP graphql 응답 도착 여유(실측 3~4초)
+            page.wait_for_timeout(5000)     # SERP graphql 응답 도착 여유 — 3.5초는 서버
+            # 재실측(2026-07-30)에서 0/24건으로 불안정했다, 5초는 3회 연속 24건 안정.
             ctx.close()
             browser.close()
         return captured, None
