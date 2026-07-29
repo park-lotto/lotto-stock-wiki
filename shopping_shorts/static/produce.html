@@ -2524,7 +2524,8 @@ async function _loadBankInjected(){
 // 최종승인(판매실적) 전이라 자동 검색·딥링크 생성은 아직 못 한다 — 수동 흐름.
 // ★링크는 영상에 안 들어간다. 여기서 "무엇을 팔지"만 확정하고, 실제 링크는
 //   7단계 SEO 설명란과 8단계 인포크 등록에서 꺼내 쓴다.
-let COUPANG={target:'',search_url:'',partners_page:'',product:null,editing:false};
+let COUPANG={target:'',search_url:'',partners_page:'',product:null,editing:false,
+              results:[],opened:false,autoFor:null};
 function renderCoupangSlot(d){
   COUPANG.target=d.affiliate_target||'';
   COUPANG.search_url=d.coupang_search_url||'';
@@ -2533,10 +2534,24 @@ function renderCoupangSlot(d){
   COUPANG.editing=false;
   const slot=document.getElementById('coupangSlot');
   if(!slot) return;
-  // 팔 제품이 없는 영상(레시피·정보성)엔 아무것도 안 그린다.
-  slot.innerHTML=(!COUPANG.target && !COUPANG.product) ? ''
-    : `<div id="coupangBox" style="border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--inset)">${coupangInner()}</div>`;
+  // 팔 제품을 못 잡은 영상(레시피·정보성)엔 크게 그리지 않는다 — 대신 한 줄짜리 문을
+  // 남긴다. 예전엔 통째로 안 그려서 "쿠팡 붙이는 데가 어디냐"가 됐다(2026-07-29 사장님).
+  if(!COUPANG.target && !COUPANG.product && !COUPANG.opened){
+    slot.innerHTML=`<div class="hint" style="cursor:pointer" onclick="coupangOpen()">
+      🛒 <b style="color:var(--accent)">쿠팡 상품 연결하기</b> — 이 영상에 팔 상품을 붙이려면 누르세요</div>`;
+    return;
+  }
+  slot.innerHTML=`<div id="coupangBox" style="border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--inset)">${coupangInner()}</div>`;
+  // ★자동으로 찾는다 — 사장님이 버튼을 누를 이유가 없다. 이미 확정된 상품이 있으면 안 건드린다.
+  // 같은 검색어로는 한 번만 — 이 함수는 믹스 결과를 새로 그릴 때마다 불리므로,
+  // 가드가 없으면 화면 갱신마다 쿠팡을 두들겨 소프트 차단에 걸린다(실측된 함정).
+  const kw=(COUPANG.target||'').trim();
+  if(!COUPANG.product && kw && COUPANG.autoFor!==kw){ COUPANG.autoFor=kw; coupangCrawl(); }
 }
+// 제품을 못 잡은 영상에서 "쿠팡 상품 연결하기"를 눌렀을 때 — 폼을 펼친다.
+function coupangOpen(){ COUPANG.opened=true; renderCoupangSlot({
+  affiliate_target:COUPANG.target, coupang_search_url:COUPANG.search_url,
+  partners_link_page:COUPANG.partners_page, product:COUPANG.product}); }
 function coupangInner(){
   const p=COUPANG.editing?null:COUPANG.product;
   const head=`<div style="font-size:13px;color:var(--sub);display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -2565,9 +2580,10 @@ function coupangForm(){
   const inp='width:100%;margin-bottom:5px;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px;font-size:12px';
   return `<div style="margin-top:8px">
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-      <button class="btn-next" style="padding:7px 14px;font-size:12px" onclick="coupangCrawl()">🔎 쿠팡에서 상품 찾기</button>
-      <input id="cpQuery" style="flex:1;min-width:140px;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 8px;font-size:12px"
-             placeholder="검색어" value="${esc((COUPANG.product&&COUPANG.product.keyword)||COUPANG.target||'')}">
+      <input id="cpQuery" style="flex:1;min-width:150px;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 8px;font-size:12px"
+             placeholder="검색어(고쳐서 다시 찾기)" value="${esc((COUPANG.product&&COUPANG.product.keyword)||COUPANG.target||'')}"
+             onkeydown="if(event.key==='Enter'){event.preventDefault();coupangCrawl();}">
+      <button class="btn-prev" style="padding:6px 12px;font-size:12px" onclick="coupangCrawl()">🔄 다시 찾기</button>
       <span id="cpSearchMsg" class="hint"></span>
     </div>
     <div id="cpResults"></div>
