@@ -27,3 +27,8 @@
   개발할 거니 지금은 빼줘" → `OVERSEAS_TIKTOK_ENABLED`/`OVERSEAS_DOUYIN_ENABLED` 토글 추가, 서버는 둘 다
   false로 설정(샤오홍슈만 운영). 부수: 탭 전환 시 진행률 표시 끊기던 UI버그도 수정. 전부 TDD+실측 검증
   후 `finish`로 main 병합. 회사에서 이어감 — 서버 env 수동설정값은 `handoff/해외HOT.md` 상단 참고.
+
+## 2026-07-29 (회사)
+- 해외HOT **자막 없는 썸네일 우선 정렬 라이브**(SDD 5태스크). 판정을 앞 15개→생존자 전부로 넓히고 `thumb_text_level` 캐시로 Gemini 재호출 차단, 정렬을 `(자막등급, -score)`로.
+- ★최종 whole-branch 리뷰가 Critical 3건 적발: 캐시 키가 `shortcode`/`video_id` 불일치로 항상 None, `build_overseas_items`가 `text_level`을 안 실어 정렬 무효, 테스트가 손수 주입한 가짜 계약을 검증(37건 초록인데 실동작 0%). 수정 후 E2E 회귀테스트로 못박음.
+- 인스타 랭킹의 CN 원본 찾기는 **구글 렌즈로 불가 확정**(실측 5건 → CN 0건). Apify 경로 부활 여부는 사장님 비용 판단.

@@ -152,3 +152,57 @@ OVERSEAS_DOUYIN_ENABLED=false   # 기본값 true인데 서버는 꺼둠 — 도�
 핵심코드 `overseas_hot_jobs.py`·`overseas_funnel.py`·`ranking.build_overseas_items`·
 `douyin_search.search_full`·`xiaohongshu_search.search_full`·`gap_check.gap_badge(translate=)`·
 `static/index.html`(renderOverseas 카드)·`overseas_seeds.json`
+
+---
+
+## ✅ 2026-07-29 (회사) — 자막 없는 썸네일 우선 정렬, 라이브 배포 완료
+
+**한 줄**: 해외HOT 목록에서 썸네일에 자막이 없는 영상이 위로 온다. 사장님 관측("자막 많으면 내용도 지저분")에서 출발.
+
+- 설계: `docs/superpowers/specs/2026-07-29-해외HOT-자막없는썸네일우선-design.md`
+- 계획: `docs/superpowers/plans/2026-07-29-해외HOT-자막없는썸네일우선.md` (5태스크 TDD, SDD로 실행)
+- 커밋: `a6894cc5e`(캐시테이블) → `279d079d3`(caption_rank) → `3f8233021`(전수판정) → `20452c559`(정렬) → `c5cbffd98`(최종리뷰 수정). finish 게이트 통과 → main 병합.
+
+**바뀐 것**
+| | 전 | 후 |
+|---|---|---|
+| 자막 판정 대상 | 수집순 앞 15개(`_TEXT_CLUTTER_CAP`) | **생존자 전부** + `thumb_text_level` 캐시 |
+| 정렬 | `score` 단독 | **`(caption_rank, -score)`** — none→light→(heavy·미판정) |
+| `heavy` | 컷 | 컷 유지(변경 없음) |
+| 프론트 | — | **미변경**(서버 순서를 그대로 그림) |
+
+**★가장 중요한 교훈 — 테스트 37건이 초록인데 기능은 0% 동작이었다**
+개별 태스크 리뷰 4건이 전부 통과한 뒤, **최종 whole-branch 리뷰가 Critical 3건**을 잡았다:
+- **C1** `_annotate_text_level`이 `it.get("shortcode")`를 봤는데 **크롤러 raw dict의 키는 `video_id`**다
+  (`shortcode`는 나중에 `ranking.build_overseas_items`가 만든다). → 캐시 키가 항상 `None` →
+  조회도 저장도 안 됨. 상한을 없앤 상태라 **매 수집마다 전량 재판정**(Gemini 폭증).
+- **C2** `build_overseas_items`가 만드는 item dict에 **`text_level` 필드가 없어** 값이 그 자리에서 소실.
+  → `caption_rank`가 전부 2 → **정렬 변경이 화면에 아무 영향 없음**.
+- **C3** 테스트가 `shortcode`·`text_level`을 **손으로 주입한 dict**를 써서 실제 호출 계약과 달랐다.
+  그래서 두 기능이 0% 동작인데 37건 green.
+
+→ 수정 후 **가짜 크롤러 raw(실제 키 `video_id`) → `_run()` → 저장된 피드**를 검증하는 E2E 회귀
+테스트를 넣었다(`test_run_e2e_caches_by_video_id_and_sorts_clean_first`). 수정을 하나씩 되돌려
+**실제로 실패하는지 확인**했다. 이 테스트가 C1·C2 재발을 막는 유일한 장치다.
+**교훈: 픽스처가 주입하는 키를 실제 호출자가 정말 넣는지 grep으로 확인할 것**(memory `feedback_harness_invented_contract`).
+
+**⏭ 다음에 볼 것**
+- **첫 수집 실측이 필수다.** 진행표시에 `수집·자막판정 신규N·캐시M`이 뜬다.
+  1회차는 신규가 크고 **2회차부터 캐시가 커야 정상**. 안 그러면 캐시가 또 안 먹는 것이다.
+- **★미결정(사장님 판단 대기) — 상한 120과 1차 정렬키의 충돌**: `caption_rank`가 1차 키라
+  자막 없는 항목이 `_CAP=120`을 넘으면 **자막 있는 항목은 점수와 무관하게 목록에서 사라진다**.
+  사장님 선택은 "light는 뒤로 밀기(컷 아님)"였으므로 의도와 어긋날 수 있다. 선택지:
+  A. 그대로 / B. 자리 나누기(none 100칸·나머지 20칸, 의도에 가장 가까움) / C. 점수 가산점.
+  현재 **A로 배포**됨 — 첫 회차 목록 보고 결정하면 된다.
+- `_JOB["phase"]` 카운터는 카테고리별 최신값이지 잡 전체 누적이 아니다(진행표시용으론 충분).
+- 2부(인스타 랭킹의 CN 원본 찾기)는 **렌즈로 불가 확정** — 아래 절 참고.
+
+## ❌ 2026-07-29 — 인스타 랭킹의 CN 원본 찾기: 구글 렌즈로는 불가 (실측)
+사장님 요구: "인스타 랭킹에 뜬(국내서 이미 터진) 영상의 깨끗한 원본을 찾아달라."
+서버에서 제품형 인스타 영상 5건에 렌즈(SerpApi)를 실제로 돌렸다(4건 성공, 1건 이미지 업로드 실패):
+- 결과 플랫폼: **유튜브 17 / 인스타 16 / 틱톡 5 — 샤오홍슈·도우인 0건.**
+- 구글이 CN 플랫폼을 인덱싱하지 않으므로 렌즈로는 원리상 안 된다.
+- **이건 이미 `handoff/렌즈유사영상.md`에 기록돼 있던 사실이다**(렌즈 CN 0건, 샤·도 40개는
+  `/api/lens/cn`이 Apify로 긁던 것). 기록을 흘려서 42원을 더 썼다 — **먼저 핸드오프를 검색할 것.**
+- 유일한 길은 `/api/lens/cn`(Gemini로 제품명 추출 → Apify 샤오홍슈 키워드 검색) 부활인데,
+  **2026-07-19에 사장님이 Apify 과금 때문에 직접 끈 경로**다. 되살릴지는 비용 판단 — 별도 안건.
