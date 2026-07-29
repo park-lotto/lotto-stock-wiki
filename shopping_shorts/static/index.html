@@ -317,6 +317,22 @@
       </div>
       <div id="xhsDiscoverList" style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
     </div>
+    <div id="igDiscoverPanel" style="display:none;margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
+      <button onclick="igDiscover(this)">🔍 신규 채널 발굴 (해시태그, 무료)</button>
+      <label style="font-size:12px;color:var(--sub);margin-left:10px;cursor:pointer" title="켜면 창을 닫아도 서버가 주기적으로 발굴해 누적을 계속 쌓습니다. 끄면 멈춥니다.">
+        <input type="checkbox" id="igAutoLoop" onchange="igAutoLoopToggle(this)"> ⏱ 백그라운드 자동 발굴(<span id="igAutoMin">45</span>분마다, 창 닫아도 계속)
+      </label>
+      <span id="igAutoState" style="font-size:11px;color:#2e7d32;margin-left:6px"></span>
+      <div style="font-size:11px;color:var(--sub);margin-top:4px">카테고리별 해시태그로 반응 좋은 계정을 모아옵니다 (무료 로그인세션 크롤). 자주 돌릴수록 '몇 번 관측됐나'가 쌓여 정확해져요. [담기]로 실제 추적목록에 등록, [삭제]는 영구 제외.</div>
+      <div id="igSortBar" style="display:none;margin-top:8px;font-size:12px">
+        <span style="color:var(--sub)">정렬:</span>
+        <button class="igSortBtn" data-sort="engagement_sum" onclick="igSortBy('engagement_sum',this)">참여 합계</button>
+        <button class="igSortBtn" data-sort="avg_engagement" onclick="igSortBy('avg_engagement',this)">게시물당 평균</button>
+        <button class="igSortBtn" data-sort="post_count" onclick="igSortBy('post_count',this)">게시물 수</button>
+        <button class="igSortBtn" data-sort="appear_count" onclick="igSortBy('appear_count',this)" title="여러 번 검색에 반복해서 뜨는 계정일수록 위로 — 우연 1회를 걸러냄">🔁 자주 뜸(관측횟수)</button>
+      </div>
+      <div id="igDiscoverList" style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
+    </div>
     <div class="toolbar">
       <button id="collectBtn" onclick="doCollect()" style="display:none">⚡ 지금 수집</button>
       <span id="ytCatBox" style="display:none">
@@ -516,6 +532,12 @@ function switchPlatform(p, el){
     if(showXhs){ xhsAutoLoopRestore(); xhsLoadLatest(); }
     else if(_xhsAutoTimer){ clearInterval(_xhsAutoTimer); _xhsAutoTimer=null; }  // 딴 탭 가면 반복 정지
   }
+  const _igd=document.getElementById('igDiscoverPanel');
+  if(_igd){
+    const showIg = (p==='instagram' && window.IS_ADMIN);
+    _igd.style.display = showIg?'block':'none';
+    if(showIg){ igAutoLoopRestore(); igLoadLatest(); }
+  }
   ttModeChange();       // 입력 placeholder·언어선택기·설정패널 표시 갱신
   if(p!=='instagram') loadSeeds();
   loadLast();          // 기존 초기 로드 함수 — platform 반영하도록 아래 수정
@@ -638,6 +660,102 @@ async function xhsBlacklist(uid, profileUrlEnc, btn){
       body:JSON.stringify({userid:uid, profile_url:decodeURIComponent(profileUrlEnc)})});
     const d=await r.json();
     if(d.ok){ const card=btn.closest('[data-uid]'); if(card) card.remove(); }
+    else{ btn.disabled=false; alert('삭제 실패'); }
+  }catch(e){ btn.disabled=false; alert('삭제 오류: '+e); }
+}
+// ── 인스타 계정 발굴 리더보드(2026-07-30, xhs 패턴 동일 — 참여도=좋아요+댓글) ──
+function _igEsc(s){ return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+async function igLoadLatest(){   // 페이지 재진입 시 마지막 결과(캐시)를 크롤 없이 복원
+  try{
+    const r=await fetch('/api/discover/instagram/latest'); const d=await r.json();
+    if(d.ok && d.items && d.items.length){
+      window._igItems = d.items;
+      document.getElementById('igSortBar').style.display='';
+      renderIgList();
+    }
+  }catch(e){}
+}
+async function igDiscover(btn, silent){
+  const box=document.getElementById('igDiscoverList');
+  if(btn){ btn.disabled=true; btn.textContent='🔍 발굴 중… (검색 도는 중, 잠시)'; }
+  if(!silent) box.innerHTML='<span style="font-size:12px;color:var(--sub)">발굴 중…</span>';
+  try{
+    const r=await fetch('/api/discover/instagram');
+    const d=await r.json();
+    if(!d.ok){ if(!silent) box.innerHTML='⚠ '+(d.error||'발굴 실패'); return; }
+    if(!d.items.length){ box.innerHTML='<span style="font-size:12px;color:var(--sub)">발굴된 계정이 없어요 (검색 결과 부족).</span>'; document.getElementById('igSortBar').style.display='none'; return; }
+    window._igItems = d.items;
+    document.getElementById('igSortBar').style.display='';
+    renderIgList();
+  }catch(e){ box.innerHTML='⚠ '+e; }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='🔍 신규 채널 발굴 (해시태그, 무료)'; } }
+}
+let _igSort='engagement_sum';
+function igSortBy(key, btn){
+  _igSort=key;
+  document.querySelectorAll('.igSortBtn').forEach(b=>b.style.fontWeight = (b===btn?'700':'400'));
+  renderIgList();
+}
+function renderIgList(){
+  const items=(window._igItems||[]).slice().sort((a,b)=>(b[_igSort]||0)-(a[_igSort]||0));
+  document.getElementById('igDiscoverList').innerHTML = items.map(igCard).join('');
+  document.querySelectorAll('.igSortBtn').forEach(b=>b.style.fontWeight = (b.dataset.sort===_igSort?'700':'400'));
+}
+// ── 백그라운드 자동 발굴(서버가 창 닫아도 계속 돎, 토글로 멈춤) ──
+async function igAutoLoopToggle(cb){
+  const on = cb.checked;
+  const state=document.getElementById('igAutoState');
+  state.textContent='…';
+  try{
+    const r=await fetch('/api/discover/instagram/auto',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({on})});
+    const d=await r.json();
+    document.getElementById('igAutoMin').textContent = d.interval_min||45;
+    state.textContent = d.on ? `● 백그라운드 자동 발굴 켜짐 (서버가 ${d.interval_min}분마다, 창 닫아도 계속)` : '';
+  }catch(e){ state.textContent='⚠ '+e; cb.checked=!on; }
+}
+async function igAutoLoopRestore(){       // 탭 진입 시 서버 상태로 토글 복원
+  try{
+    const r=await fetch('/api/discover/instagram/auto'); const d=await r.json();
+    const cb=document.getElementById('igAutoLoop'); if(cb) cb.checked=!!d.on;
+    document.getElementById('igAutoMin').textContent = d.interval_min||45;
+    document.getElementById('igAutoState').textContent = d.on ? `● 백그라운드 자동 발굴 켜짐 (서버가 ${d.interval_min}분마다, 창 닫아도 계속)` : '';
+  }catch(e){}
+}
+function igCard(a){
+  const cats=(a.categories||[]).map(_igEsc).join(', ');
+  const badge = a.is_registered
+    ? '<span style="font-size:11px;color:#2e7d32">✅ 담김</span>'
+    : `<button onclick="igAdopt('${_igEsc(a.username)}','${_igEsc(a.full_name)}',this)">담기</button>`;
+  return `<div style="border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg)" data-uname="${_igEsc(a.username)}">
+    <div style="font-weight:600">${_igEsc(a.full_name)||'@'+_igEsc(a.username)}${a.is_verified?' ✔️':''}</div>
+    <div style="font-size:11px;color:var(--sub)">@${_igEsc(a.username)} · ${cats}</div>
+    ${(a.appear_count>1)?`<div style="font-size:11px;color:#2e7d32;margin-top:3px">🔁 ${a.appear_count}번 관측${a.appear_days>1?` · ${a.appear_days}일`:''}</div>`:''}
+    <div style="font-size:12px;margin-top:4px">참여 ${a.engagement_sum.toLocaleString()} · 게시물 ${a.post_count} · 평균 ${a.avg_engagement.toLocaleString()}</div>
+    <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
+      <a href="${_igEsc(a.profile_url)}" target="_blank" rel="noreferrer" style="font-size:11px">프로필↗</a>
+      ${badge}
+      <button onclick="igBlacklist('${_igEsc(a.username)}',this)" style="margin-left:auto;color:#c62828">삭제</button>
+    </div>
+  </div>`;
+}
+async function igAdopt(username, fullName, btn){
+  btn.disabled=true;
+  try{
+    const r=await fetch('/api/discover/instagram/adopt',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username, full_name:fullName})});
+    const d=await r.json();
+    if(d.ok){ btn.outerHTML='<span style="font-size:11px;color:#2e7d32">✅ 담김</span>'; }
+    else{ btn.disabled=false; alert(d.reason==='blacklisted'?'삭제(제외)한 계정입니다.':'담기 실패'); }
+  }catch(e){ btn.disabled=false; alert('담기 오류: '+e); }
+}
+async function igBlacklist(username, btn){
+  if(!confirm('이 계정을 영구 제외할까요? 발굴·자동등록에서 다시 안 뜹니다.')) return;
+  btn.disabled=true;
+  try{
+    const r=await fetch('/api/discover/instagram/blacklist',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username})});
+    const d=await r.json();
+    if(d.ok){ const card=btn.closest('[data-uname]'); if(card) card.remove(); }
     else{ btn.disabled=false; alert('삭제 실패'); }
   }catch(e){ btn.disabled=false; alert('삭제 오류: '+e); }
 }
