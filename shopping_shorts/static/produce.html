@@ -2568,6 +2568,7 @@ function coupangInner(){
         : '<span style="color:var(--fire)"> · 파트너스 링크 없음 (수수료 미적립)</span>'}
       <div style="word-break:break-all;color:var(--accent);margin-top:4px;font-size:12px">${esc(final)}</div>
       <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        ${p.partner_url?'':`<button class="btn-next" style="padding:6px 12px;font-size:12px" onclick="coupangMakeLink()">🔗 파트너스에서 링크 만들기</button>`}
         <button class="btn-prev" style="padding:6px 12px;font-size:12px" onclick="coupangCopy()">📋 링크 복사</button>
         <button class="btn-prev" style="padding:6px 12px;font-size:12px" onclick="coupangEdit()">수정</button>
         <button class="btn-prev" style="padding:6px 12px;font-size:12px" onclick="coupangSave({clear:true})">해제</button>
@@ -2691,6 +2692,24 @@ function coupangPick(i){
   if(url) url.value=it.url;
   if(name) name.value=it.name;
   coupangSave();
+}
+// 🔗 파트너스에서 링크 만들기 — 상품 URL을 클립보드에 담고 파트너스 링크 생성화면을 연다.
+// 승인 전엔 딥링크 API를 못 쓰므로(파트너스 최종승인 필요) 사람이 붙여넣는 수밖에 없다.
+// 그 "복사 → 파트너스 열기 → 붙여넣기" 중 앞 두 단계를 없앤다.
+async function coupangMakeLink(){
+  const p=COUPANG.product; if(!p) return;
+  let copied=false;
+  try{ await navigator.clipboard.writeText(p.url||''); copied=true; }catch(e){}
+  window.open(COUPANG.partners_page||'https://partners.coupang.com/#affiliate/ws/link',
+              '_blank','noopener');
+  const box=document.getElementById('coupangBox');
+  if(box){
+    const tip=document.createElement('div');
+    tip.className='hint'; tip.style.marginTop='6px'; tip.style.color='var(--accent)';
+    tip.textContent=(copied?'상품 URL을 복사했습니다 — ':'상품 URL을 직접 복사하세요 — ')
+      +'파트너스 창에 붙여넣어 링크를 만든 뒤, [수정]의 "파트너스 추적 링크" 칸에 저장하세요.';
+    box.appendChild(tip);
+  }
 }
 function coupangEdit(){ COUPANG.editing=true; redrawCoupang(); }
 function redrawCoupang(){ const el=document.getElementById('coupangBox'); if(el) el.innerHTML=coupangInner(); }
