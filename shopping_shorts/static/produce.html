@@ -809,6 +809,9 @@
       <h3>8 · 최종렌더</h3>
       <div class="sub">확정 대본·장면매칭·음성·자막제거 설정을 최종 영상으로 렌더합니다.</div>
       <div id="finalSummary" class="hint" style="margin-bottom:10px"></div>
+      <!-- 인포크링크 등록 대기(2026-07-28) — 쿠팡 링크는 영상에 안 들어간다. 완성 후
+           인포크링크(링크인바이오)에 버튼으로 올리는 게 마지막 할 일이라 여기 둔다. -->
+      <div id="inpockBox" style="margin-bottom:12px"></div>
       <!-- ◀ 좌: 미리보기(9:16, 2단계 미리보기와 같은 자리 규약) / 우: 렌더 버튼·상태·내보내기 -->
       <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
         <div style="flex:0 1 300px;min-width:240px">
@@ -846,6 +849,9 @@
           <div id="mixStatus" class="hint"></div>
           <div style="font-size:13px;font-weight:800;margin:8px 0 6px">① 새 대본 고르기</div>
           <div id="mixCandidates"></div>
+          <!-- 쿠팡 연결(2026-07-28) — 접힌 '장면 확인'(#mixReview) 안에 넣으면 묻힌다.
+               #mixPreviewCta와 같은 규약으로 패널의 항상 보이는 자리에 둔다. -->
+          <div id="coupangSlot" style="margin-top:14px"></div>
           <div style="font-size:13px;font-weight:800;margin:16px 0 6px">② 장면 확인</div>
           <details id="matchSceneDetails">
             <summary style="cursor:pointer;font-size:12px;color:var(--sub);font-weight:800">장면 바꾸기 · 전체 보기 ▾</summary>
@@ -1126,7 +1132,11 @@ function renderSeo(){
        <div class="sub">추천 제목 (클릭하면 선택)</div><ol class="cands">${cands}</ol>`) +
     seoCard('description','영상 설명',
       `<textarea id="seoDesc" rows="6"
-                 oninput="SEO.description=this.value; seoSave()">${seoEsc(SEO.description)}</textarea>`) +
+                 oninput="SEO.description=this.value; seoSave()">${seoEsc(SEO.description)}</textarea>
+       <div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap">
+         <button class="mini" onclick="seoAppendCoupang()">🛒 쿠팡 링크 + 고지문구 붙이기</button>
+         <span id="seoCoupangMsg" class="sub"></span>
+       </div>`) +
     seoCard('tags',`태그 (${(SEO.tags||[]).length})`,
       `<div class="chips">${tags}</div>
        <div class="tagAdd">
@@ -1156,6 +1166,28 @@ function seoTagDel(i){
   if(!SEO || !Array.isArray(SEO.tags)) return;
   SEO.tags.splice(i, 1);
   renderSeo(); seoSave();
+}
+
+// 설명란에 쿠팡 상품 링크 + 공정위 대가성 고지문구를 덧붙인다(2026-07-28).
+// AI 생성 결과를 자동으로 건드리지 않고 버튼으로 둔 이유: seoGenerate가 설명을
+// 다시 만들 때마다 자동 삽입분이 사라지거나 두 번 붙는 사고가 나기 때문이다.
+async function seoAppendCoupang(){
+  const msg=document.getElementById('seoCoupangMsg');
+  const set=(t,color)=>{ if(msg){ msg.textContent=t; msg.style.color=color||''; } };
+  if(!MIX_JOB){ set('2단계 영상 매칭을 먼저 하세요','var(--fire)'); return; }
+  let d;
+  try{ d=await (await fetch('/api/mix/product/'+encodeURIComponent(MIX_JOB))).json(); }
+  catch(e){ set('네트워크 오류','var(--fire)'); return; }
+  if(!d || !d.ok || !d.product){ set('연결할 쿠팡 상품이 없습니다 — 2단계 편집안에서 지정하세요','var(--fire)'); return; }
+  const block=d.description_block||'';
+  if(!block){ set('링크가 비어 있습니다','var(--fire)'); return; }
+  const cur=(SEO && SEO.description) || '';
+  if(cur.indexOf(d.final_link)>=0){ set('이미 들어있습니다'); return; }
+  SEO.description = cur ? (cur.replace(/\s+$/,'') + '\n\n' + block) : block;
+  const ta=document.getElementById('seoDesc'); if(ta) ta.value=SEO.description;
+  seoSave();
+  set(d.product.partner_url ? '붙였습니다' : '붙였습니다 — ⚠️ 파트너스 추적 링크가 아니라 수수료가 안 붙습니다',
+      d.product.partner_url ? 'var(--ok)' : 'var(--fire)');
 }
 
 function seoTagAdd(){
@@ -2486,6 +2518,90 @@ async function _loadBankInjected(){
       +'<div class="hint" style="margin-top:4px">↑ AI가 이 대본을 쓸 때 참고한 은행 부품입니다(훅·어미·CTA=말투 / 근거·갈등·감정=전개 / 아크=스파인).</div>';
   }catch(e){ box.textContent='불러오기 실패'; }
 }
+// ── 쿠팡 연결(2026-07-28) ─────────────────────────────── COUPANG-START
+// 편집안이 뽑은 affiliate_target(이 영상이 팔 제품)을 검색어로 써서 쿠팡 검색을
+// 새 탭으로 열고, 고른 상품 URL을 여기서 job에 저장한다. 파트너스 오픈API는
+// 최종승인(판매실적) 전이라 자동 검색·딥링크 생성은 아직 못 한다 — 수동 흐름.
+// ★링크는 영상에 안 들어간다. 여기서 "무엇을 팔지"만 확정하고, 실제 링크는
+//   7단계 SEO 설명란과 8단계 인포크 등록에서 꺼내 쓴다.
+let COUPANG={target:'',search_url:'',partners_page:'',product:null,editing:false};
+function renderCoupangSlot(d){
+  COUPANG.target=d.affiliate_target||'';
+  COUPANG.search_url=d.coupang_search_url||'';
+  COUPANG.partners_page=d.partners_link_page||'';
+  COUPANG.product=d.product||null;
+  COUPANG.editing=false;
+  const slot=document.getElementById('coupangSlot');
+  if(!slot) return;
+  // 팔 제품이 없는 영상(레시피·정보성)엔 아무것도 안 그린다.
+  slot.innerHTML=(!COUPANG.target && !COUPANG.product) ? ''
+    : `<div id="coupangBox" style="border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--inset)">${coupangInner()}</div>`;
+}
+function coupangInner(){
+  const p=COUPANG.editing?null:COUPANG.product;
+  const head=`<div style="font-size:13px;color:var(--sub);display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      🔗 쿠팡 연결 대상: <b style="color:var(--txt)">${esc(COUPANG.target||(COUPANG.product&&COUPANG.product.keyword)||'—')}</b>
+      ${COUPANG.search_url?`<a href="${esc(COUPANG.search_url)}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">🔍 쿠팡에서 검색 ↗</a>`:''}
+    </div>`;
+  if(p){
+    const final=p.partner_url||p.url;
+    return head+`<div style="margin-top:8px;font-size:13px">
+      ✅ <b>${esc(p.name||p.keyword||'선택한 상품')}</b>
+      ${p.product_id?`<span class="hint">· ${esc(p.product_id)}</span>`:''}
+      ${p.partner_url
+        ? '<span style="color:var(--ok)"> · 파트너스 링크 ✓</span>'
+        : '<span style="color:var(--fire)"> · 파트너스 링크 없음 (수수료 미적립)</span>'}
+      <div style="word-break:break-all;color:var(--accent);margin-top:4px;font-size:12px">${esc(final)}</div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn-prev" style="padding:6px 12px;font-size:12px" onclick="coupangCopy()">📋 링크 복사</button>
+        <button class="btn-prev" style="padding:6px 12px;font-size:12px" onclick="coupangEdit()">수정</button>
+        <button class="btn-prev" style="padding:6px 12px;font-size:12px" onclick="coupangSave({clear:true})">해제</button>
+      </div></div>`;
+  }
+  return head+coupangForm();
+}
+function coupangForm(){
+  const p=COUPANG.product||{};
+  const inp='width:100%;margin-bottom:5px;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px;font-size:12px';
+  return `<div style="margin-top:8px">
+    <div class="hint" style="margin-bottom:5px">위 검색 링크에서 상품을 고른 뒤 주소창 URL을 붙여넣으세요.
+      ${COUPANG.partners_page?`파트너스 추적 링크는 <a href="${esc(COUPANG.partners_page)}" target="_blank" rel="noopener" style="color:var(--accent)">파트너스 링크 만들기 ↗</a>에서 생성해 아래 칸에.`:''}</div>
+    <input id="cpUrl" style="${inp}" placeholder="쿠팡 상품 URL (https://www.coupang.com/vp/products/...)" value="${esc(p.url||'')}">
+    <input id="cpName" style="${inp}" placeholder="상품명 (선택 — 설명란·인포크 버튼 이름으로 씁니다)" value="${esc(p.name||COUPANG.target||'')}">
+    <input id="cpPartner" style="${inp}" placeholder="파트너스 추적 링크 (선택 — https://link.coupang.com/...)" value="${esc(p.partner_url||'')}">
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn-next" style="padding:7px 14px;font-size:12px" onclick="coupangSave()">저장</button>
+      <span id="cpMsg" class="hint" style="color:var(--fire)"></span>
+    </div></div>`;
+}
+function coupangEdit(){ COUPANG.editing=true; redrawCoupang(); }
+function redrawCoupang(){ const el=document.getElementById('coupangBox'); if(el) el.innerHTML=coupangInner(); }
+function coupangCopy(){
+  const p=COUPANG.product; if(!p) return;
+  try{ navigator.clipboard.writeText(p.partner_url||p.url||''); }catch(e){}
+}
+async function coupangSave(opts){
+  opts=opts||{};
+  const msg=document.getElementById('cpMsg');
+  const body={job_id:MIX_JOB, clear:!!opts.clear};
+  if(!opts.clear){
+    body.url=((document.getElementById('cpUrl')||{}).value||'').trim();
+    body.name=((document.getElementById('cpName')||{}).value||'').trim();
+    body.partner_url=((document.getElementById('cpPartner')||{}).value||'').trim();
+    body.keyword=COUPANG.target;
+    // 파트너스 링크만 있어도 저장 가능 — 그게 최종 링크라 원본 상품 URL이 없어도 된다.
+    if(!body.url && body.partner_url) body.url=body.partner_url;
+    if(!body.url){ if(msg) msg.textContent='상품 URL을 넣으세요'; return; }
+  }
+  try{
+    const r=await fetch('/api/mix/product',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await r.json().catch(()=>({ok:false,error:'응답 파싱 실패'}));
+    if(!r.ok||!d.ok){ if(msg) msg.textContent=d.error||'저장 실패'; return; }
+    COUPANG.product=d.product; COUPANG.editing=false; redrawCoupang();
+  }catch(e){ if(msg) msg.textContent='네트워크 오류'; }
+}
+// ── 쿠팡 연결 끝 ── COUPANG-END
+
 function _renderMixReviewBody(d){
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
   if(typeof window!=='undefined') window._mixBeats = d.beats || [];   // 조각 전체 보기(paletteStats)가 읽는다 — 실제 쓴 컷 집계용
@@ -2503,6 +2619,7 @@ function _renderMixReviewBody(d){
   const _gateWarn = _gv.length
     ? `<div style="border:1px solid var(--fire);border-radius:10px;padding:10px;margin-bottom:8px;background:rgba(255,90,90,.06);font-size:13px">🚧 <b>렌더 전 점검에서 걸린 것</b><ul style="margin:6px 0 0 18px;padding:0">${_gv.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`
     : '';
+  renderCoupangSlot(d);   // 접힌 '장면 확인' 밖(#coupangSlot)에 그린다 — 묻히면 아무도 못 본다
   el.innerHTML='<h3 style="font-size:15px">편집안(장면 매칭)</h3>'+_genWarn+_gateWarn+renderCoverageSignal(d.beats||[])
     +`<button class="btn" style="margin:0 0 8px;padding:5px 12px;font-size:12px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="openPaletteView()" title="소스를 몇 조각으로 나눠 이 영상에 몇 컷 썼는지 썸네일로 봅니다">🔪 조각 전체 보기</button>`
     +`<div id="paletteBox" data-open="0" style="margin-bottom:8px"></div>`
@@ -4396,9 +4513,57 @@ function playAllBeats(){
 }
 
 // ── 8단계 최종검수·렌더 ──────────────
+// 인포크링크 등록 대기(2026-07-28) — 등록 자체는 인포크에 공개 API가 없어 아직
+// 수동이다. 여기선 최종 링크를 꺼내주고 "올렸다" 여부만 job에 기록한다.
+async function refreshInpock(){
+  const el=document.getElementById('inpockBox');
+  if(!el) return;
+  if(!MIX_JOB){ el.innerHTML=''; return; }
+  let d;
+  try{ d=await (await fetch('/api/mix/product/'+encodeURIComponent(MIX_JOB))).json(); }
+  catch(e){ el.innerHTML='<div class="hint" style="color:var(--fire)">상품 정보 로드 실패</div>'; return; }
+  const p=(d&&d.ok)?d.product:null;
+  if(!p){
+    el.innerHTML='<div class="hint">🛒 연결할 쿠팡 상품이 없습니다 — 2단계 편집안 검토에서 지정하면 여기에 등록용 링크가 뜹니다.</div>';
+    return;
+  }
+  el.innerHTML=`<div style="border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--inset)">
+    <div style="font-weight:600;margin-bottom:6px">📦 인포크링크 등록 대기</div>
+    <div style="font-size:13px">${esc(p.name||p.keyword||'상품')}
+      ${p.partner_url
+        ? '<span style="color:var(--ok)"> · 파트너스 링크 ✓</span>'
+        : '<span style="color:var(--fire)"> · 파트너스 링크 없음 — 이대로 올리면 수수료가 안 붙습니다</span>'}</div>
+    <div style="word-break:break-all;color:var(--accent);font-size:12px;margin:6px 0">${esc(d.final_link||'')}</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn-prev" style="padding:7px 13px;font-size:12px" onclick="inpockCopy()">📋 링크 복사</button>
+      <a class="btn-prev" style="padding:7px 13px;font-size:12px;text-decoration:none" target="_blank" rel="noopener"
+         href="${esc(d.inpock_page||'https://link.inpock.co.kr')}">인포크링크 열기 ↗</a>
+      <label style="font-size:13px;display:flex;gap:6px;align-items:center;cursor:pointer">
+        <input type="checkbox" ${p.inpock_registered?'checked':''} onchange="markInpock(this.checked)"> 등록 완료
+      </label>
+    </div>
+    <div class="hint" style="margin-top:8px">영상 설명란·고정댓글에는 인포크 프로필 링크 하나만 넣고, 상품은 인포크 안에서 관리합니다.
+      대가성 고지문구는 7단계 SEO 설명란의 <b>🛒 쿠팡 링크 + 고지문구 붙이기</b>로 넣으세요.</div>
+  </div>`;
+  window._inpockLink=d.final_link||'';
+}
+function inpockCopy(){ try{ navigator.clipboard.writeText(window._inpockLink||''); }catch(e){} }
+async function markInpock(checked){
+  if(!MIX_JOB) return;
+  try{
+    const d=await (await fetch('/api/mix/product/'+encodeURIComponent(MIX_JOB))).json();
+    if(!d || !d.ok || !d.product) return;
+    const p=d.product;
+    await fetch('/api/mix/product',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({job_id:MIX_JOB, url:p.url, name:p.name, partner_url:p.partner_url,
+                           keyword:p.keyword, memo:p.memo, inpock_registered:checked})});
+  }catch(e){}
+}
+
 async function refreshFinal(){
   const s=document.getElementById('finalSummary');
   if(!s) return;
+  refreshInpock();
   s.innerHTML = MIX_JOB
     ? `대본 ${lenText(STATE.script)} · 자막제거 ${STATE.subtitleRemoval?'ON':'OFF'} · job ${esc(MIX_JOB)}`
     : '⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.';

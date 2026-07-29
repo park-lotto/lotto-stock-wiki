@@ -409,7 +409,8 @@ class Store:
                     fx_path TEXT,
                     scene_first INTEGER NOT NULL DEFAULT 0,
                     candidates_json TEXT,
-                    backbone_main INTEGER
+                    backbone_main INTEGER,
+                    product_json TEXT
                 )
             """)
             c.execute("""
@@ -719,6 +720,10 @@ class Store:
                 # urls 인덱스(0-based). None=자동 선정(인스타/유튜브·댓글수 규칙). run_mix_job이
                 # 이 인덱스를 추출 소스의 video_id로 풀어 backbone_forced로 넘긴다.
                 ("backbone_main", "INTEGER"),
+                # 쿠팡 연결 상품(2026-07-28) — 이 영상이 팔 상품 1건(링크·파트너스
+                # 추적링크·인포크 등록여부). 링크는 영상에 안 들어가고 SEO 설명란·
+                # 인포크링크 등록에서만 꺼내 쓴다.
+                ("product_json", "TEXT"),
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -2611,7 +2616,7 @@ class Store:
                 "preview_status, preview_path, preview_error, "
                 "thumbnail_json, seo_json, "
                 "clean_sources_json, clean_status, clean_error, customer_id, render_charge_day, "
-                "scene_first, backbone_main, clean_regions_json "
+                "scene_first, backbone_main, clean_regions_json, product_json "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -2641,7 +2646,21 @@ class Store:
             "scene_first": bool(row[32]),
             "backbone_main": row[33],
             "clean_regions": json.loads(row[34]) if row[34] else None,
+            "product": json.loads(row[35]) if row[35] else None,
         }
+
+    def set_mix_product(self, job_id, product):
+        """이 영상이 연결할 쿠팡 상품 1건 저장(None이면 해제, 2026-07-28).
+
+        update_mix_job 화이트리스트를 안 거치고 전용 메서드로 둔다 — 상품은
+        job 상태(status)와 무관하게 매칭 검토 중에도, 최종렌더 뒤에도 고칠 수
+        있어야 하고, 그 자리들이 update_mix_job을 부르는 흐름과 다르다."""
+        with self._conn() as c:
+            c.execute(
+                "UPDATE mix_jobs SET product_json=?, updated_at=? WHERE job_id=?",
+                (json.dumps(product, ensure_ascii=False) if product else None,
+                 datetime.now(timezone.utc).isoformat(), job_id),
+            )
 
     def update_mix_job(self, job_id, **fields):
         """status/error/extract/edit_plan/video_path 갱신(+updated_at). 객체는 JSON 직렬화."""
