@@ -442,11 +442,13 @@ const DESC_BY_PLATFORM = {
   instagram: '등록한 레퍼런스 채널의 <b>48시간</b> 이내 릴스를 강도별로 랭킹합니다.',
   tiktok:    '등록한 <b>시드 계정</b>의 최근 <b>14일</b> 숏폼을 조회수 기반 강도로 랭킹합니다. (무료 수집)',
   youtube:   '<b>키워드 시드</b>로 발굴한 최근 <b>14일</b> Shorts를 조회수 기반 강도로 랭킹합니다.',
+  xiaohongshu: '등록한 <b>샤오홍슈 채널</b>의 최근 <b>48시간</b> 이내 노트를 참여도 기반 강도로 랭킹합니다. (무료 수집)',
 };
 const TAB_TIP = {
   instagram: {speed:'댓글수 ÷ 경과시간', density:'댓글수 ÷ 팔로워수'},
   tiktok:    {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
   youtube:   {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
+  xiaohongshu: {speed:'(좋아요+댓글+수집+공유) ÷ 경과시간', density:'(수집+공유) ÷ (좋아요+댓글+수집+공유)'},
 };
 function updatePlatformCopy(p){
   const descEl=document.querySelector('.desc'); if(descEl) descEl.innerHTML = DESC_BY_PLATFORM[p] || DESC_BY_PLATFORM.instagram;
@@ -460,7 +462,7 @@ function switchPlatform(p, el){
   updatePlatformCopy(p);
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
-  const isTrend = (p==='xiaohongshu' || p==='douyin');
+  const isTrend = (p==='douyin');
   document.getElementById('trendRoot').style.display = isTrend ? 'block' : 'none';
   document.getElementById('cards').style.display = isTrend ? 'none' : '';
   if(isTrend){
@@ -536,6 +538,8 @@ function ttModeChange(){
     document.getElementById('seedLang').style.display = kw?'':'none';
     document.getElementById('seedHint').style.display = kw?'':'none';
     if(kw) document.getElementById('seedHint').textContent='선택 언어로 검색 — 한국어가 부족하면 영어 등 다른 언어로 확장';
+  } else if(PLATFORM==='xiaohongshu' && si){
+    si.placeholder = '샤오홍슈 프로필 URL (예: https://www.rednote.com/user/profile/아이디)';
   } else if(si){
     si.placeholder = '검색 키워드 (예: 살림꿀팁)';
   }
