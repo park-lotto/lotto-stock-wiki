@@ -12,7 +12,9 @@
 import json
 import re
 
-_MODEL = "gemini-2.5-flash"
+# gemini-2.5-flash는 신규 키에 404("no longer available to new users", 2026-07-29 서버 실측).
+# 레포의 가벼운 텍스트 작업들이 쓰는 모델과 맞춘다.
+_MODEL = "gemini-3.1-flash-lite"
 
 _PROMPT = """너는 한국 쇼핑 검색 도우미다. 아래 쇼츠 대본과 '연결 대상'을 읽고,
 이 영상을 본 사람이 **실제로 사려고 쿠팡 검색창에 칠 상품명**을 2~3개 만들어라.
