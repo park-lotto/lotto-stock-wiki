@@ -140,3 +140,10 @@ shopping_shorts/motion/.render_tmp/
 # 2026-07-17 실사고: 썸네일 트랙이 add -A로 1줄짜리를 커밋 -> 배포 순간 서버 로그가 1줄로 덮임.
 # 서버에서 _weather_calib_append가 파일을 알아서 다시 만든다(makedirs+append).
 /output/weather_calib/
+
+# 로그인 세션 쿠키(비밀) — 절대 커밋 금지
+xhs_state.json
+douyin_state.json
+scratch_*.py
+xhs_spike_*.png
+xhs_login.py
