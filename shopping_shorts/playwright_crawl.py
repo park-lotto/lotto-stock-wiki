@@ -130,6 +130,9 @@ def _parse_note(entry, now=None):
         "collects": _num(interact.get("collected_count")),
         "shares": _num(interact.get("shared_count")),
         "channel_title": (nc.get("user") or {}).get("nickname", ""),
+        "channel_id": str((nc.get("user") or {}).get("user_id")
+                          or (nc.get("user") or {}).get("userId") or ""),  # 계정 발굴·프로필URL용
+
         "thumbnail": (nc.get("cover") or {}).get("url_default", ""),
         "url": url,
         "media_platform": "xiaohongshu",

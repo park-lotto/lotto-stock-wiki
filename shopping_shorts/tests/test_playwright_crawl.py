@@ -68,6 +68,7 @@ def test_parse_search_response_maps_real_schema():
         "collects": 90,
         "shares": 7,
         "channel_title": "살림요정",
+        "channel_id": "u1",   # 계정 발굴·프로필URL 조립용(user.user_id)
         "thumbnail": "https://cover.jpg",
         "url": "https://www.rednote.com/search_result/abc123?xsec_token=tok123&type=video",
         "media_platform": "xiaohongshu",
