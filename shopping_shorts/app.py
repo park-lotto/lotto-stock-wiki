@@ -718,6 +718,12 @@ def api_xhs_followers(body: dict):
             "error": "팔로워 조회 실패(크롤이 막혔을 수 있어요). 잠시 후 다시."})
 
 
+@app.get("/api/xhs/latest")
+def api_xhs_latest():
+    """마지막 발굴 결과(캐시)를 크롤 없이 반환 — 다른 페이지 갔다 와도 바로 다시 띄운다."""
+    return {"ok": True, **service.cached_xiaohongshu_accounts()}
+
+
 @app.get("/api/xhs/auto")
 def api_xhs_auto_get():
     """백그라운드 자동 발굴 on/off 상태 + 주기."""

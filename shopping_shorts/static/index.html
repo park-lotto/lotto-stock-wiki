@@ -513,7 +513,7 @@ function switchPlatform(p, el){
   if(_xd){
     const showXhs = (p==='xiaohongshu' && window.IS_ADMIN);
     _xd.style.display = showXhs?'block':'none';
-    if(showXhs){ xhsAutoLoopRestore(); }
+    if(showXhs){ xhsAutoLoopRestore(); xhsLoadLatest(); }
     else if(_xhsAutoTimer){ clearInterval(_xhsAutoTimer); _xhsAutoTimer=null; }  // 딴 탭 가면 반복 정지
   }
   ttModeChange();       // 입력 placeholder·언어선택기·설정패널 표시 갱신
@@ -522,6 +522,16 @@ function switchPlatform(p, el){
 }
 // ── 샤오홍슈 계정 발굴 리더보드(2026-07-29) ──
 function _xhsEsc(s){ return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+async function xhsLoadLatest(){   // 페이지 재진입 시 마지막 결과(캐시)를 크롤 없이 복원
+  try{
+    const r=await fetch('/api/xhs/latest'); const d=await r.json();
+    if(d.ok && d.items && d.items.length){
+      window._xhsItems = d.items;
+      document.getElementById('xhsSortBar').style.display='';
+      renderXhsList();
+    }
+  }catch(e){}
+}
 async function xhsDiscover(btn, silent){
   const box=document.getElementById('xhsDiscoverList');
   if(btn){ btn.disabled=true; btn.textContent='🔍 발굴 중… (검색 도는 중, 잠시)'; }
