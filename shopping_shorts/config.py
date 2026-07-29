@@ -230,3 +230,16 @@ CATEGORIES = ["인테리어", "레시피", "생활용품", "가전", "뷰티", "
 # media_download.py는 빈 값이면 --cookies 없이(기존처럼) 시도해 회귀가 없다.
 YTDLP_COOKIES_YOUTUBE = os.environ.get("YTDLP_COOKIES_YOUTUBE", "")
 YTDLP_COOKIES_TIKTOK = os.environ.get("YTDLP_COOKIES_TIKTOK", "")
+
+# ── 쿠팡 상품검색 크롤(2026-07-29) ──
+# 파트너스 오픈API는 최종 승인(실판매 실적) 회원만 발급 → 승인 전 대체 경로.
+# ★실측: 쿠팡(Akamai)은 데이터센터 IP와 헤드리스를 둘 다 막는다. 서버 직결도,
+# Webshare 데이터센터 플랜(YTDLP_PROXY)도 403이었다. 통과한 유일한 조합은
+# **주거용 IP + 헤드풀 real Chrome**. 그래서 프록시는 반드시 residential이어야 한다.
+# 미설정이면 직결(주거용 IP인 로컬 개발 PC에서만 통함).
+COUPANG_PROXY = os.getenv("COUPANG_PROXY", "")
+# 기본 꺼둔다 — 프록시 검증 전에 켜지면 사장님 화면에 매번 실패 배너가 뜬다.
+COUPANG_SEARCH_ENABLED = os.getenv("COUPANG_SEARCH_ENABLED", "0") not in ("", "0", "false", "False")
+COUPANG_SEARCH_LIMIT = int(os.getenv("COUPANG_SEARCH_LIMIT", "24"))
+# 브라우저를 띄우고 검색결과가 그려질 때까지의 상한(ms).
+COUPANG_SEARCH_TIMEOUT_MS = int(os.getenv("COUPANG_SEARCH_TIMEOUT_MS", "45000"))

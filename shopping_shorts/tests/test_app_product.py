@@ -106,3 +106,30 @@ def test_product_survives_other_job_updates(monkeypatch, tmp_path):
     client.post("/api/mix/product", json={"job_id": "j7", "url": _PRODUCT_URL})
     store.update_mix_job("j7", status="done", video_path="/tmp/x.mp4")
     assert store.get_mix_job("j7")["product"]["product_id"] == "1234567890"
+
+
+# ── 상품 찾기(크롤) 엔드포인트(2026-07-29) ──
+
+def test_coupang_search_endpoint_returns_items(monkeypatch, tmp_path):
+    """화면 카드가 쓰는 계약 — items가 그대로 통과한다."""
+    from shopping_shorts import coupang_search
+    monkeypatch.setattr(coupang_search, "search", lambda q, limit=None: {
+        "ok": True, "items": [{"product_id": "1", "name": "집게", "url": _PRODUCT_URL,
+                               "image": "", "price": "9,900원", "rating": "(3)",
+                               "rocket": True, "is_ad": False}],
+        "search_url": "https://www.coupang.com/np/search?q=x", "source": "crawl", "notice": ""})
+    client, _ = _client(monkeypatch, tmp_path)
+    d = client.get("/api/coupang/search", params={"q": "실리콘 집게"}).json()
+    assert d["ok"] is True and d["items"][0]["price"] == "9,900원"
+
+
+def test_coupang_search_failure_is_200_not_500(monkeypatch, tmp_path):
+    """★크롤이 막혀도 200 + ok:False다 — 화면이 수동 붙여넣기로 조용히 되돌아가야 한다."""
+    from shopping_shorts import coupang_search
+    monkeypatch.setattr(coupang_search, "search", lambda q, limit=None: {
+        "ok": False, "items": [], "search_url": "https://www.coupang.com/np/search?q=x",
+        "source": "crawl", "notice": "쿠팡이 이 IP를 막았습니다"})
+    client, _ = _client(monkeypatch, tmp_path)
+    r = client.get("/api/coupang/search", params={"q": "실리콘 집게"})
+    assert r.status_code == 200
+    assert r.json()["ok"] is False and r.json()["notice"]

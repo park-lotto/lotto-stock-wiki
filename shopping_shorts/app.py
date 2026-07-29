@@ -2216,6 +2216,18 @@ def api_mix_product(body: dict):
             "description_block": coupang_partners.description_block(product)}
 
 
+@app.get("/api/coupang/search")
+def api_coupang_search(q: str = "", limit: int = 0):
+    """키워드 → 쿠팡 상품 후보 카드(승인 전 크롤 경로).
+
+    ★async가 아니라 def다 — 안에서 Playwright **sync** API를 쓰므로 이벤트 루프
+    스레드에서 돌면 죽는다(FastAPI가 def 핸들러를 워커 스레드로 돌려준다).
+    실패해도 200 + ok:False로 돌려준다 — 화면은 이때 기존 수동 흐름(검색 링크
+    새 탭 + URL 붙여넣기)으로 조용히 되돌아간다."""
+    from shopping_shorts import coupang_search
+    return coupang_search.search(q, limit=limit or None)
+
+
 @app.get("/api/mix/product/{job_id}")
 def api_mix_product_get(job_id: str):
     """SEO 설명란·최종렌더 단계가 "인포크에 넣을 링크"와 설명 블록을 꺼내 쓴다."""
