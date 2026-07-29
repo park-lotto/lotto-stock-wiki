@@ -126,3 +126,10 @@ def test_identify_product_no_gemini_keys_returns_empty(monkeypatch):
                          lambda url, **kw: [{"source": "s", "title": "t"}])
 
     assert product_identify.identify_product(["https://x.com/f1.jpg"]) == ""
+
+
+def test_prompt_main_product_vs_background_prop_guard():
+    """배경 소품·동물에 낚여 주 제품을 오인하는 것을 막는 지시가 프롬프트에 있는지(2026-07-29 실사고)."""
+    p = product_identify._PROMPT
+    assert "배경 소품" in p
+    assert "동물" in p
