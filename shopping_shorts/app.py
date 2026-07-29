@@ -1110,21 +1110,25 @@ _DISCOVER_CATEGORIES = ["#주방템", "#살림템", "#인테리어", "#자취템
 
 @app.get("/api/discover/update")
 def api_discover_update(request: Request, days: int = 2, max_total: int = 40,
-                        accumulate: bool = False):
+                        accumulate: bool = False, auto_register: bool = False):
     """🔄 업데이트 시작(비동기) — 몇 분 걸리는 수집을 백그라운드 스레드로 돌리고
     즉시 반환한다(2026-07-12, 동기처리 시 프론트가 몇 분 멈추고 배포 재시작에
     응답이 깨지던 문제). 프론트는 /api/discover/status를 폴링해 진행/결과 확인.
 
-    ★관리자(사장님 cid0) 전용(2026-07-23) — 1회에 Apify run 최대 47개(검색6+
-    채널당 릴스run+프로필1)가 도는 유료 크롤. 결과 피드는 전 회원 공유라
-    회원이 눌러야 할 이유도 없다(보기는 /api/discover/feed로 그대로 열림)."""
+    ★관리자(사장님 cid0) 전용(2026-07-23) — 무료 Playwright 경로 기본(2026-07-30,
+    config.INSTAGRAM_SCRAPER)이라 과금 걱정은 없지만, 여전히 몇 분~1시간대 크롤이라
+    관리자 가드는 유지. 결과 피드는 전 회원 공유라 회원이 눌러야 할 이유도 없다
+    (보기는 /api/discover/feed로 그대로 열림). max_total 상한 300(2026-07-30 확대,
+    기존 120 — 무료 전환 후 채널당 크롤이 아무리 늘어도 과금이 안 붙어 상향 가능해짐).
+    auto_register=True면 발굴 전부를 사람 확인 없이 discovered_channels에 자동 등록
+    (매일 07시 크론 전용 — 화면 수동 버튼은 기본 false로 [목록추가] 확인 후 등록)."""
     denied = _require_admin(request)
     if denied:
         return denied
     from shopping_shorts import discover_jobs
     days = max(1, min(int(days), 14))
-    max_total = max(10, min(int(max_total), 120))
-    st = discover_jobs.start(days, max_total, accumulate)
+    max_total = max(10, min(int(max_total), 300))
+    st = discover_jobs.start(days, max_total, accumulate, auto_register=auto_register)
     return {"ok": True, **st, "categories": _DISCOVER_CATEGORIES,
             "days": days, "accumulate": accumulate}
 

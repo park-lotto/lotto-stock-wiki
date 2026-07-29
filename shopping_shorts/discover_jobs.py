@@ -45,7 +45,7 @@ def _profiles_fn():
 
 _LOCK = threading.Lock()
 _JOB = {"status": "idle", "phase": "", "count": 0, "items": [],
-        "error": None, "started": 0.0}
+        "error": None, "started": 0.0, "registered": 0}
 
 
 def _known_usernames(store):
@@ -73,11 +73,14 @@ def _parallel_fetch(usernames, per, days, chunk=40, workers=3):
     return out
 
 
-def _run(days, max_total, accumulate):
+def _run(days, max_total, accumulate, auto_register=False):
     store = Store(DB_PATH)
     per = 12 if max_total <= 40 else 18
     try:
         _JOB["phase"] = "검색"
+        # playwright 경로는 검색도 로컬 브라우저라 병렬 시 자원경합으로 일부 태그가
+        # 조용히 0건 남(2026-07-30 실측) — 순차(1)로 강제. apify는 기존처럼 병렬(6).
+        search_workers = 1 if config.INSTAGRAM_SCRAPER == "playwright" else 6
         items = discovery.discover_multi(
             CATEGORIES, known=_known_usernames(store),
             search_fn=_search_fn(),
@@ -85,6 +88,7 @@ def _run(days, max_total, accumulate):
             profiles_fn=_profiles_fn(),
             prev_comments=store.prev_comments, prev_delta=store.prev_delta,
             window_hours=days * 24, max_channels_per=per, max_total=max_total,
+            search_workers=search_workers,
         )
         if accumulate:
             prev, _ = store.load_discovery_feed()
@@ -99,29 +103,42 @@ def _run(days, max_total, accumulate):
             [{"shortcode": i["shortcode"], "username": i["username"],
               "comments": i["comments"], "delta": i["delta"]} for i in items],
         )
+        registered = 0
+        if auto_register:
+            # 발굴 전부를 자동으로 레퍼런스 추적목록에 등록(2026-07-30) — 사람이
+            # "목록추가"를 안 눌러도 다음 레퍼런스랭킹 수집(09시)부터 바로 잡히게.
+            # discover()가 이미 known(기존 추적목록) 제외 후 검색한 결과라 전부 신규다.
+            for it in items:
+                uname = it.get("username")
+                if uname:
+                    store.add_discovered(uname, name=it.get("name") or uname)
+                    registered += 1
         with _LOCK:
-            _JOB.update(status="done", phase="완료", count=len(items), items=items, error=None)
+            _JOB.update(status="done", phase="완료", count=len(items), items=items,
+                       error=None, registered=registered)
     except Exception as e:
         msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
         with _LOCK:
             _JOB.update(status="error", phase="", error=msg)
 
 
-def start(days, max_total, accumulate):
+def start(days, max_total, accumulate, auto_register=False):
     """업데이트 시작. 이미 실행 중이면 그 상태 반환(중복 방지)."""
     with _LOCK:
         if _JOB["status"] == "running" and time.time() - _JOB["started"] < 600:
             return {"status": "running", "elapsed": int(time.time() - _JOB["started"])}
         _JOB.update(status="running", phase="시작", count=0, items=[],
-                    error=None, started=time.time())
-    threading.Thread(target=_run, args=(days, max_total, accumulate), daemon=True).start()
+                    error=None, started=time.time(), registered=0)
+    threading.Thread(target=_run, args=(days, max_total, accumulate, auto_register),
+                     daemon=True).start()
     return {"status": "running", "elapsed": 0}
 
 
 def status(include_items=True):
     with _LOCK:
         s = {"status": _JOB["status"], "phase": _JOB["phase"], "count": _JOB["count"],
-             "error": _JOB["error"], "elapsed": int(time.time() - _JOB["started"]) if _JOB["started"] else 0}
+             "error": _JOB["error"], "registered": _JOB.get("registered", 0),
+             "elapsed": int(time.time() - _JOB["started"]) if _JOB["started"] else 0}
         if include_items and _JOB["status"] == "done":
             s["items"] = _JOB["items"]
     return s

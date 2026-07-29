@@ -1,0 +1,12 @@
+[Unit]
+Description=인스타 신규채널 발굴 타이머(매일 07:00 KST — 09시 레퍼런스랭킹 수집보다 2시간 먼저)
+
+[Timer]
+# 서버 시간대 기준. KST(Asia/Seoul)로 매일 07:00 실행 — 발굴+자동등록을 끝내고
+# 09:00 shopping-shorts-instagram-collect가 새 계정까지 포함해서 수집하게 한다.
+OnCalendar=*-*-* 07:00:00
+Persistent=true
+# 부팅/중단으로 놓친 실행은 다음 부팅 때 1회 보충(Persistent).
+
+[Install]
+WantedBy=timers.target
