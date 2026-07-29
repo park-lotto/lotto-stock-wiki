@@ -268,14 +268,15 @@ def discover_xiaohongshu_accounts(min_notes=2):
     accounts = xiaohongshu_discovery.discover_accounts(
         _xhs_search_fn(), overseas_seeds.load_seeds(),
         min_notes=min_notes, blacklist=blacklist)
-    # 누적 기록(며칠째 반복해서 뜨나) — 오늘치를 남기고, 과거 누적치를 각 계정에 붙인다.
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    store.xhs_discovery_record(today, accounts)
+    # 누적 기록(관측 기반) — 이번 발굴을 append하고, 과거 누적치를 각 계정에 붙인다.
+    run_ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")
+    store.xhs_discovery_record(run_ts, accounts)
     stats = store.xhs_discovery_stats()
     for a in accounts:
         a["is_registered"] = a["profile_url"] in registered
         st = stats.get(a["userid"], {})
-        a["appear_days"] = st.get("appear_days", 1)          # 등장 일수(오늘 포함)
+        a["appear_count"] = st.get("appear_count", 1)        # 관측 횟수(자주 돌수록↑)
+        a["appear_days"] = st.get("appear_days", 1)          # 등장 일수
         a["cum_engagement"] = st.get("cum_engagement", a["engagement_sum"])  # 누적 참여합
     return accounts
 

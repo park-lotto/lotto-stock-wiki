@@ -300,10 +300,14 @@
     </div>
     <div id="xhsDiscoverPanel" style="display:none;margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
       <button onclick="xhsDiscover(this)">🔍 잘하는 계정 발굴</button>
-      <span style="font-size:11px;color:var(--sub);margin-left:8px">카테고리별로 반응 좋은 계정을 모아옵니다 (무료 검색). 매일 새벽 상위 계정은 자동 등록됩니다. [담기]로 레퍼런스에 추가, [삭제]는 영구 제외.</span>
+      <label style="font-size:12px;color:var(--sub);margin-left:10px;cursor:pointer" title="켜두면 화면이 열려있는 동안 주기적으로 발굴을 반복해 누적을 빨리 쌓습니다. 끄면 멈춥니다. (해외HOT 수집 중엔 자동으로 건너뜀)">
+        <input type="checkbox" id="xhsAutoLoop" onchange="xhsAutoLoopToggle()"> ⏱ 자동 반복(<span id="xhsAutoMin">20</span>분마다)
+      </label>
+      <span id="xhsAutoState" style="font-size:11px;color:#2e7d32;margin-left:6px"></span>
+      <div style="font-size:11px;color:var(--sub);margin-top:4px">카테고리별로 반응 좋은 계정을 모아옵니다 (무료 검색). 자주 돌릴수록 '몇 번 관측됐나'가 쌓여 정확해져요. 매일 새벽 상위 계정은 자동 등록. [담기]로 추가, [삭제]는 영구 제외.</div>
       <div id="xhsSortBar" style="display:none;margin-top:8px;font-size:12px">
         <span style="color:var(--sub)">정렬:</span>
-        <button class="xhsSortBtn" data-sort="appear_days" onclick="xhsSortBy('appear_days',this)" title="여러 날 반복해서 뜨는 계정일수록 위로 — 우연 1회를 걸러냄">🔁 자주 뜸(누적일)</button>
+        <button class="xhsSortBtn" data-sort="appear_count" onclick="xhsSortBy('appear_count',this)" title="여러 번 검색에 반복해서 뜨는 계정일수록 위로 — 우연 1회를 걸러냄">🔁 자주 뜸(관측횟수)</button>
         <button class="xhsSortBtn" data-sort="engagement_sum" onclick="xhsSortBy('engagement_sum',this)">참여 합계</button>
         <button class="xhsSortBtn" data-sort="avg_engagement" onclick="xhsSortBy('avg_engagement',this)">노트당 평균</button>
         <button class="xhsSortBtn" data-sort="note_count" onclick="xhsSortBy('note_count',this)">노트 수</button>
@@ -502,21 +506,26 @@ function switchPlatform(p, el){
   document.getElementById('ttPanel').style.display = (p==='tiktok' && ttMode()==='keyword')?'block':'none';
   if(p==='tiktok') loadTtSettings();
   const _xd=document.getElementById('xhsDiscoverPanel');
-  if(_xd) _xd.style.display = (p==='xiaohongshu' && window.IS_ADMIN)?'block':'none';
+  if(_xd){
+    const showXhs = (p==='xiaohongshu' && window.IS_ADMIN);
+    _xd.style.display = showXhs?'block':'none';
+    if(showXhs){ xhsAutoLoopRestore(); }
+    else if(_xhsAutoTimer){ clearInterval(_xhsAutoTimer); _xhsAutoTimer=null; }  // 딴 탭 가면 반복 정지
+  }
   ttModeChange();       // 입력 placeholder·언어선택기·설정패널 표시 갱신
   if(p!=='instagram') loadSeeds();
   loadLast();          // 기존 초기 로드 함수 — platform 반영하도록 아래 수정
 }
 // ── 샤오홍슈 계정 발굴 리더보드(2026-07-29) ──
 function _xhsEsc(s){ return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-async function xhsDiscover(btn){
+async function xhsDiscover(btn, silent){
   const box=document.getElementById('xhsDiscoverList');
   if(btn){ btn.disabled=true; btn.textContent='🔍 발굴 중… (검색 도는 중, 잠시)'; }
-  box.innerHTML='<span style="font-size:12px;color:var(--sub)">발굴 중…</span>';
+  if(!silent) box.innerHTML='<span style="font-size:12px;color:var(--sub)">발굴 중…</span>';
   try{
     const r=await fetch('/api/xhs/discover');
     const d=await r.json();
-    if(!d.ok){ box.innerHTML='⚠ '+(d.error||'발굴 실패'); return; }
+    if(!d.ok){ if(!silent) box.innerHTML='⚠ '+(d.error||'발굴 실패'); return; }
     if(!d.items.length){ box.innerHTML='<span style="font-size:12px;color:var(--sub)">발굴된 계정이 없어요 (검색 결과 부족·author id 없음).</span>'; document.getElementById('xhsSortBar').style.display='none'; return; }
     window._xhsItems = d.items;
     document.getElementById('xhsSortBar').style.display='';
@@ -535,6 +544,28 @@ function renderXhsList(){
   document.getElementById('xhsDiscoverList').innerHTML = items.map(xhsCard).join('');
   document.querySelectorAll('.xhsSortBtn').forEach(b=>b.style.fontWeight = (b.dataset.sort===_xhsSort?'700':'400'));
 }
+// ── 자동 반복 발굴(화면 열려있는 동안만, 토글로 멈춤) — 서버 백그라운드 스레드 없이 안전 ──
+const _XHS_AUTO_MIN = 20;                 // 반복 주기(분) — 너무 잦으면 크롤 부하·차단 위험
+let _xhsAutoTimer = null;
+function xhsAutoLoopToggle(){
+  const on = document.getElementById('xhsAutoLoop').checked;
+  localStorage.setItem('xhsAutoLoop', on?'1':'0');
+  const state=document.getElementById('xhsAutoState');
+  if(_xhsAutoTimer){ clearInterval(_xhsAutoTimer); _xhsAutoTimer=null; }
+  if(on){
+    state.textContent='● 자동 반복 켜짐 (이 창 열려있는 동안)';
+    xhsDiscover(null, true);              // 켜면 바로 한 번
+    _xhsAutoTimer = setInterval(()=>xhsDiscover(null, true), _XHS_AUTO_MIN*60*1000);
+  } else {
+    state.textContent='';
+  }
+}
+function xhsAutoLoopRestore(){            // 페이지 로드/탭 진입 시 이전 설정 복원
+  const m=document.getElementById('xhsAutoMin'); if(m) m.textContent=_XHS_AUTO_MIN;
+  if(localStorage.getItem('xhsAutoLoop')==='1'){
+    const cb=document.getElementById('xhsAutoLoop'); if(cb){ cb.checked=true; xhsAutoLoopToggle(); }
+  }
+}
 function xhsCard(a){
   const cats=(a.categories||[]).map(_xhsEsc).join(', ');
   const badge = a.is_registered
@@ -546,7 +577,7 @@ function xhsCard(a){
     ${thumb}
     <div style="font-weight:600;margin-top:6px">${_xhsEsc(a.nickname)||'(이름없음)'}</div>
     <div style="font-size:11px;color:var(--sub)">${cats}</div>
-    ${(a.appear_days>1)?`<div style="font-size:11px;color:#2e7d32;margin-top:3px">🔁 ${a.appear_days}일째 반복 등장</div>`:''}
+    ${(a.appear_count>1)?`<div style="font-size:11px;color:#2e7d32;margin-top:3px">🔁 ${a.appear_count}번 관측${a.appear_days>1?` · ${a.appear_days}일`:''}</div>`:''}
     <div style="font-size:12px;margin-top:4px">참여 ${a.engagement_sum.toLocaleString()} · 노트 ${a.note_count} · 평균 ${a.avg_engagement.toLocaleString()}</div>
     <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
       <a href="${_xhsEsc(a.profile_url)}" target="_blank" rel="noreferrer" style="font-size:11px">프로필↗</a>
