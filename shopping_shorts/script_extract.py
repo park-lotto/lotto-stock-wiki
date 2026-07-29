@@ -294,3 +294,34 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 except Exception:
                     pass
     return dict(_EMPTY)
+
+
+def _frame_flag_on():
+    """frame_extract_enabled 설정 조회(실패·미설정 → False, fail-safe로 기존추출)."""
+    try:
+        from shopping_shorts.store import Store
+        from shopping_shorts.config import DB_PATH
+        return Store(DB_PATH).get_setting("frame_extract_enabled", "") == "1"
+    except Exception:
+        return False
+
+
+def extract_auto(video_path, video_id, caption="", *, use_frames=None,
+                 _frames_fn=None, _classic_fn=None):
+    """추출 디스패처(2026-07-29): 플래그 켜지면 B1 프레임추출, 아니면 기존 영상추출.
+    1단계 모든 추출 호출부가 이걸 쓰면 플래그 하나로 전 경로가 B1으로 전환된다.
+    B1이 빈 결과(컷 감지 실패 등)면 기존 추출로 폴백 — 빈 대본 금지.
+    use_frames=None이면 설정을 읽는다. _frames_fn/_classic_fn은 테스트 주입용."""
+    if use_frames is None:
+        use_frames = _frame_flag_on()
+    classic = _classic_fn or extract_script
+    if not use_frames:
+        return classic(video_path, video_id, caption=caption)
+    frames = _frames_fn
+    if frames is None:
+        from shopping_shorts import frame_script
+        frames = frame_script.extract_script_frames
+    r = frames(video_path, video_id, caption=caption)
+    if not (r or {}).get("segments"):
+        return classic(video_path, video_id, caption=caption)
+    return r

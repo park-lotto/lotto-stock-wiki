@@ -194,7 +194,7 @@ def test_extract_from_url_extracts_without_last_run(monkeypatch, tmp_path):
     /api/extract_script는 last_run 조회라 실패하던 실버그(2026-07-14) 대응 엔드포인트."""
     client, store = _client(monkeypatch, tmp_path)
     monkeypatch.setattr(app_module, "download_any", lambda url, d: ("/tmp/x.mp4", "캡션"))
-    monkeypatch.setattr(app_module, "extract_script",
+    monkeypatch.setattr(app_module, "extract_auto",
                         lambda path, code, caption="": {"full_text": "감자 대본", "segments": []})
     r = client.post("/api/produce/extract_from_url",
                     json={"url": "https://www.instagram.com/p/OLD/", "shortcode": "OLD1"})
@@ -208,7 +208,7 @@ def test_extract_from_url_caches_by_shortcode(monkeypatch, tmp_path):
     calls = {"dl": 0}
     def fake_dl(url, d): calls["dl"] += 1; return ("/tmp/x.mp4", "")
     monkeypatch.setattr(app_module, "download_any", fake_dl)
-    monkeypatch.setattr(app_module, "extract_script",
+    monkeypatch.setattr(app_module, "extract_auto",
                         lambda path, code, caption="": {"full_text": "T", "segments": []})
     body = {"url": "https://insta/p/X", "shortcode": "SC1"}
     assert client.post("/api/produce/extract_from_url", json=body).json()["full_text"] == "T"
@@ -241,7 +241,7 @@ def test_extract_from_url_charges_script_credit_on_miss_not_hit(monkeypatch, tmp
     (이전엔 script가 미배선이라 무제한 — /api/me·admin은 캡된 척했다)."""
     client, store = _client(monkeypatch, tmp_path)
     monkeypatch.setattr(app_module, "download_any", lambda url, d: ("/tmp/x.mp4", ""))
-    monkeypatch.setattr(app_module, "extract_script",
+    monkeypatch.setattr(app_module, "extract_auto",
                         lambda path, code, caption="": {"full_text": "T", "segments": []})
     body = {"url": "https://insta/p/SC", "shortcode": "SCA"}
     day = _today()
@@ -270,7 +270,7 @@ def test_extract_from_url_blocks_when_script_daily_exhausted(monkeypatch, tmp_pa
     client, store = _client(monkeypatch, tmp_path)
     store.set_setting("limit_script_pro", 0)   # cid0=pro → pro 상한 0으로 강제 소진
     monkeypatch.setattr(app_module, "download_any", lambda url, d: ("/tmp/x.mp4", ""))
-    monkeypatch.setattr(app_module, "extract_script",
+    monkeypatch.setattr(app_module, "extract_auto",
                         lambda path, code, caption="": {"full_text": "T", "segments": []})
     r = client.post("/api/produce/extract_from_url",
                     json={"url": "https://insta/p/Q", "shortcode": "QQ"})

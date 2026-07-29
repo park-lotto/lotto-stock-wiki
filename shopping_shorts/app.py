@@ -27,7 +27,7 @@ from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI
 from shopping_shorts.frame_extract import (download_video, extract_frames,
                                            extract_frame_at, extract_grid_frames)
-from shopping_shorts.script_extract import extract_script
+from shopping_shorts.script_extract import extract_script, extract_auto
 from shopping_shorts.structure_analyze import analyze_structure
 from shopping_shorts import backbone
 from shopping_shorts.aipick import build_aipick
@@ -1289,7 +1289,7 @@ def api_extract_script(request: Request, shortcode: str):
             return JSONResponse(status_code=500, content={"ok": False, "error": msg})
 
         try:
-            result = extract_script(video_path, code, caption=item.get("caption", ""))
+            result = extract_auto(video_path, code, caption=item.get("caption", ""))
         except Exception as e:
             msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
             return JSONResponse(status_code=500, content={"ok": False, "error": msg})
@@ -1457,7 +1457,7 @@ def api_produce_extract_from_url(request: Request, body: dict, background_tasks:
                 "ok": False, "error": f"영상 다운로드 실패(URL 만료·비공개·프로필주소 가능): {msg}"})
         caption = (body.get("caption") or dl_caption or "")
         try:
-            result = extract_script(video_path, code, caption=caption)
+            result = extract_auto(video_path, code, caption=caption)
         except Exception as e:  # noqa: BLE001
             msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
             return JSONResponse(status_code=500, content={"ok": False, "error": msg})
@@ -1569,7 +1569,7 @@ def api_wiki_save(request: Request, shortcode: str, background_tasks: Background
         except (requests.RequestException, RuntimeError) as e:
             msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
             return JSONResponse(status_code=502, content={"ok": False, "error": f"영상 다운로드 실패(URL 만료 가능): {msg}"})
-        script = extract_script(video_path, code, caption=item.get("caption", ""))
+        script = extract_auto(video_path, code, caption=item.get("caption", ""))
         if not script.get("full_text") and not script.get("segments"):
             return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패 — 잠시 후 재시도"})
         store.save_script(code, script, category=item.get("category"))
@@ -1648,7 +1648,7 @@ def api_produce_save_to_wiki(request: Request, body: dict, background_tasks: Bac
                 "ok": False, "error": f"영상 다운로드 실패(URL 만료·비공개 가능): {msg}"})
         caption = body.get("caption") or dl_caption or ""
         try:
-            result = extract_script(video_path, code, caption=caption)
+            result = extract_auto(video_path, code, caption=caption)
         except Exception as e:  # noqa: BLE001
             msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
             return JSONResponse(status_code=500, content={"ok": False, "error": msg})
@@ -6422,7 +6422,7 @@ def api_produce_autoload(request: Request, body: dict):
                     results.append({"shortcode": code, "status": "failed_download"})
                     continue
                 try:
-                    result = extract_script(video_path, code,
+                    result = extract_auto(video_path, code,
                                             caption=(item.get("caption") or dl_caption or ""))
                 except Exception as e:  # noqa: BLE001
                     store.autoload_mark_error(code, str(e))
