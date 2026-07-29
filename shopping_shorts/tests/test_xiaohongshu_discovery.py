@@ -57,6 +57,23 @@ def test_notes_without_userid_dropped():
     assert out == []
 
 
+def test_one_keyword_failing_does_not_kill_run():
+    # 한 키워드 검색이 예외를 던져도(브라우저 닫힘 등) 되는 키워드는 결과가 나와야 한다.
+    seeds = {"주방": {"cn": ["good", "boom"]}}
+    def flaky(kw):
+        if kw == "boom":
+            raise RuntimeError("Target page closed")
+        return [_note("u1", "A", 5), _note("u1", "A", 5)]
+    out = disc.discover_accounts(flaky, seeds, min_notes=1)
+    assert [a["userid"] for a in out] == ["u1"]
+
+
+def test_all_keywords_failing_returns_empty_not_raises():
+    def dead(kw):
+        raise RuntimeError("closed")
+    assert disc.discover_accounts(dead, _SEEDS, min_notes=1) == []
+
+
 def test_representative_sample_is_best_note():
     notes = {"kw1": [_note("u1", "A", likes=1, url="weak", thumb="wt"),
                      _note("u1", "A", likes=99, url="strong", thumb="st")]}
