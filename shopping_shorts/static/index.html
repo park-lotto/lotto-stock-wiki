@@ -1053,9 +1053,24 @@ function initOverseasCats(){
     `<div class="ctype${c===overseasFilter?' active':''}" onclick="setOverseasCat('${c}')">${c}</div>`).join('');
 }
 function setOverseasCat(c){ overseasFilter=c; initOverseasCats(); renderOverseas(); }
+// 정렬 두 갈래(2026-07-29): 서버가 주는 순서는 score(속도·가속·밀도 종합)라 "지금 뜨는 중"을
+// 잡는 데 맞지만, 사장님이 기대한 "인기순"과는 다르다(실측: 반응 28만이 3위, 반응 8이 9위).
+// 어느 쪽이 맞는지는 쓰는 목적에 달렸으므로 고르게 둔다 — 기본은 기존 동작(score) 유지.
+const OVERSEAS_SORTS = [
+  {key:'score',    label:'🔥 뜨는 중'},
+  {key:'reaction', label:'❤️ 반응 많은 순'},
+];
+let overseasSort = 'score';
 function renderOverseasCleanToggle(){
-  document.getElementById('overseasCleanToggle').innerHTML =
+  const sorts = OVERSEAS_SORTS.map(s=>
+    `<div class="ctype${overseasSort===s.key?' active':''}" onclick="setOverseasSort('${s.key}')">${s.label}</div>`).join('');
+  document.getElementById('overseasCleanToggle').innerHTML = sorts +
     `<div class="ctype${overseasCleanOnly?' active':''}" onclick="toggleOverseasCleanOnly()">✨ 자막 없는 것만</div>`;
+}
+function setOverseasSort(k){
+  overseasSort = k;
+  renderOverseasCleanToggle();
+  renderOverseas();
 }
 function toggleOverseasCleanOnly(){
   overseasCleanOnly = !overseasCleanOnly;
@@ -1070,6 +1085,12 @@ function renderOverseas(){
   const filtered = overseasItems
     .filter(i=>overseasFilter==='전체'||i.category===overseasFilter)
     .filter(i=>!overseasCleanOnly || i.text_level==='none');
+  // 서버 순서(score)를 기본으로 두고, '반응 많은 순'일 때만 다시 세운다.
+  // filtered는 .filter()가 만든 새 배열이라 여기서 정렬해도 overseasItems 원본 순서는 그대로다
+  // (원본을 정렬하면 '뜨는 중'으로 돌아왔을 때 서버 순서를 잃는다).
+  if(overseasSort==='reaction'){
+    filtered.sort((a,b)=>(b.base_count||0)-(a.base_count||0));
+  }
   const rows=filtered
     .map(i=>{
       const gap = i.gap_badge==='🔥선점가능'
