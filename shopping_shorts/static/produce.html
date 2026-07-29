@@ -2623,7 +2623,8 @@ function renderCoupangChips(active){
     `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center">
       <span class="hint">검색어:</span>`+chips.map(c=>`<button class="${c===active?'btn-next':'btn-prev'}"
         style="padding:4px 10px;font-size:12px;border-radius:999px"
-        onclick="coupangCrawl(${JSON.stringify(c).replace(/"/g,'&quot;')})">${esc(c)}</button>`).join('')+`</div>`;
+        title="${esc(c)}"
+        onclick="coupangCrawl(${JSON.stringify(c).replace(/"/g,'&quot;')})">${esc(c.length>16?c.slice(0,15)+'…':c)}</button>`).join('')+`</div>`;
 }
 async function coupangCrawl(forced){
   const msg=document.getElementById('cpSearchMsg');
