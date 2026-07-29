@@ -101,6 +101,13 @@ XIAOHONGSHU_AUTO_TOP_N = int(os.getenv("XIAOHONGSHU_AUTO_TOP_N", "10"))
 XIAOHONGSHU_BG_INTERVAL_MIN = int(os.getenv("XIAOHONGSHU_BG_INTERVAL_MIN", "45"))
 XIAOHONGSHU_BG_ENABLED = os.getenv("XIAOHONGSHU_BG_ENABLED", "true").lower() == "true"  # 마스터 킬스위치
 
+# 인스타 계정 발굴 자동등록(2026-07-30) — daily_batch(매일 새벽 1회)가 해시태그 탐색
+# 발굴 상위 N 계정을 레퍼런스(discovered_channels)에 자동 등록. 무료(로그인 세션 재사용,
+# instagram_discovery.py). 기본 꺼둠 — 실측(해시태그 시드팩 적합도) 전에 자동으로 계정이
+# 늘어나 랭킹 노이즈가 커지는 걸 막는다. 켜려면 XIAOHONGSHU_AUTO_DISCOVER처럼 true로.
+INSTAGRAM_AUTO_DISCOVER = os.getenv("INSTAGRAM_AUTO_DISCOVER", "false").lower() == "true"
+INSTAGRAM_AUTO_TOP_N = int(os.getenv("INSTAGRAM_AUTO_TOP_N", "10"))
+
 # ── 샤오홍슈(해외HOT 발굴) 수집 경로 선택(2026-07-29) ──
 # Apify 검색은 유료(rednote-search-scraper). 로그인 세션(storage_state)으로 서버 직결
 # 무료 크롤이 실측 확인됨(Phase 0). 롤백 대비 환경변수로 즉시 전환 가능하게 둔다.

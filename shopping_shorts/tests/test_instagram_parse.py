@@ -121,3 +121,52 @@ def test_classify_error_takes_priority_over_empty():
 def test_classify_not_found_when_empty_without_error():
     """비공개·삭제 계정 — 로그인벽과 구분해야 한다(부계정을 붙여도 안 되는 쪽)."""
     assert classify_channel_result([], "https://www.instagram.com/u/reels/", None) == "not_found"
+
+
+# ── 해시태그 탐색 발굴(2026-07-30) — 서버 실측: /explore/tags/{tag}/ 진입 시
+# xdt_fbsearch__top_serp_graphql 응답에 게시물+작성자가 실린다(로그인벽 없음). ──
+from shopping_shorts.instagram_parse import extract_hashtag_search_items, parse_hashtag_search_item
+
+_SERP_PAYLOAD = {
+    "data": {
+        "xdt_fbsearch__top_serp_graphql": {
+            "edges": [
+                {"node": {"__typename": "XDTTopSerpMediaGridUnit", "items": [
+                    {"pk": "123", "code": "AbCdEf1", "taken_at": 1699873401,
+                     "user": {"pk": "5954695110", "username": "casa.geraldine",
+                              "full_name": "Geraldine Stauche", "is_verified": True}},
+                    {"pk": "456", "code": "GhIjKl2", "taken_at": 1699873500,
+                     "user": {"pk": "111", "username": "nouser_missing_pk"}},
+                ]}},
+            ]
+        }
+    }
+}
+
+
+def test_extract_hashtag_search_items_reads_serp_edges():
+    items = extract_hashtag_search_items(_SERP_PAYLOAD)
+    assert len(items) == 2
+    assert items[0]["code"] == "AbCdEf1"
+
+
+def test_extract_hashtag_search_items_unknown_shape_returns_empty():
+    assert extract_hashtag_search_items({"data": {}}) == []
+    assert extract_hashtag_search_items({}) == []
+    assert extract_hashtag_search_items(None) == []
+
+
+def test_parse_hashtag_search_item_fills_discovery_fields():
+    items = extract_hashtag_search_items(_SERP_PAYLOAD)
+    d = parse_hashtag_search_item(items[0])
+    assert d["username"] == "casa.geraldine"
+    assert d["full_name"] == "Geraldine Stauche"
+    assert d["is_verified"] is True
+    assert d["url"] == "https://www.instagram.com/p/AbCdEf1/"
+    assert d["taken_at"]  # ISO 문자열로 채워짐
+
+
+def test_parse_hashtag_search_item_without_username_returns_none():
+    assert parse_hashtag_search_item({"pk": "1", "user": {}}) is None
+    assert parse_hashtag_search_item({}) is None
+    assert parse_hashtag_search_item(None) is None
