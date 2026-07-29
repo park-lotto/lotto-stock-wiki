@@ -60,6 +60,16 @@ def test_discover_endpoint_guards_when_overseas_running(monkeypatch):
     assert body["ok"] is False and "해외HOT" in body["error"]
 
 
+def test_discover_caches_last_result(monkeypatch, tmp_path):
+    notes = [_note("u1", "A", 5), _note("u1", "A", 5)]
+    _wire(monkeypatch, tmp_path, notes)
+    assert service.cached_xiaohongshu_accounts()["items"] == []   # 아직 없음
+    out = service.discover_xiaohongshu_accounts()
+    cached = service.cached_xiaohongshu_accounts()
+    assert [a["userid"] for a in cached["items"]] == [a["userid"] for a in out]
+    assert cached["at"]                                            # 갱신 시각 있음
+
+
 def test_search_fn_follows_xhs_scraper_config(monkeypatch):
     # 기본(apify)이면 유료 검색, playwright면 무료 크롤을 인기순(general)으로 고른다.
     from shopping_shorts import xiaohongshu_search, playwright_crawl

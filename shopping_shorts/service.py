@@ -280,7 +280,24 @@ def discover_xiaohongshu_accounts(min_notes=2):
         a["appear_count"] = st.get("appear_count", 1)        # 관측 횟수(자주 돌수록↑)
         a["appear_days"] = st.get("appear_days", 1)          # 등장 일수
         a["cum_engagement"] = st.get("cum_engagement", a["engagement_sum"])  # 누적 참여합
+    # 마지막 결과를 캐시 — 다른 페이지 갔다 와도 크롤 없이 바로 다시 띄운다(백그라운드도 갱신).
+    import json as _json
+    store.set_setting("xhs_last_result", _json.dumps(
+        {"at": run_ts, "items": accounts}, ensure_ascii=False))
     return accounts
+
+
+def cached_xiaohongshu_accounts():
+    """마지막 발굴 결과(캐시) — 크롤 없이 읽는다. 없으면 {'items': []}."""
+    import json as _json
+    raw = Store(DB_PATH).get_setting("xhs_last_result", "")
+    if not raw:
+        return {"at": "", "items": []}
+    try:
+        d = _json.loads(raw)
+        return {"at": d.get("at", ""), "items": d.get("items", [])}
+    except Exception:
+        return {"at": "", "items": []}
 
 
 def adopt_xiaohongshu_account(profile_url, userid=None):
