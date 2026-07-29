@@ -828,6 +828,24 @@ class Store:
                     resolved INTEGER DEFAULT 0
                 )
             """)
+            # 독립워커 작업큐(2026-07-29) — 긴 작업(믹스·해외HOT 수집)을 서버 프로세스 밖으로
+            # 뺀다. 예전엔 BackgroundTasks라 배포의 systemctl restart가 진행 중 작업을
+            # SIGKILL했다(2026-07-29 실측: 하루에 수집 1건·믹스 1건 사망).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS job_queue (
+                    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                    task         TEXT NOT NULL,
+                    args_json    TEXT NOT NULL,
+                    state        TEXT NOT NULL,
+                    error        TEXT,
+                    created_at   TEXT NOT NULL,
+                    claimed_at   TEXT,
+                    heartbeat_at TEXT,
+                    finished_at  TEXT
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_job_queue_state "
+                      "ON job_queue(state, id)")
             self._migrate_personal_tables(c)
             self._ensure_paywall_schema(c)
 
@@ -3590,6 +3608,32 @@ class Store:
                 (row[0], platform, shortcode),
             ).fetchall()
         return [{"platform": r[0], "shortcode": r[1]} for r in rows]
+
+    # ── 독립워커 작업큐(2026-07-29) ──
+    def enqueue(self, task, args):
+        """작업을 대기열에 넣고 큐 id를 반환한다."""
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO job_queue(task, args_json, state, created_at) "
+                "VALUES(?,?, 'queued', datetime('now'))",
+                (task, json.dumps(args, ensure_ascii=False)))
+            return cur.lastrowid
+
+    def claim_next(self):
+        """가장 오래된 대기 작업 하나를 원자적으로 'running'으로 바꾸고 돌려준다.
+
+        UPDATE ... RETURNING 한 문장이라 워커가 여러 개여도 같은 작업을 두 번 집지 않는다
+        (SQLite 3.35+ 필요, 서버 3.45 실측 확인). 없으면 None."""
+        with self._conn() as c:
+            row = c.execute(
+                "UPDATE job_queue SET state='running', "
+                "       claimed_at=datetime('now'), heartbeat_at=datetime('now') "
+                " WHERE id = (SELECT id FROM job_queue WHERE state='queued' "
+                "             ORDER BY id LIMIT 1) "
+                "RETURNING id, task, args_json").fetchone()
+            if not row:
+                return None
+            return {"id": row[0], "task": row[1], "args": json.loads(row[2])}
 
     # ── 렌더 포인트 원장(2026-07-17, 자동매칭 고급효과 엔진 Task1) ──
     # 잔액 컬럼을 따로 두지 않고 delta 누적합으로 계산하는 원장(ledger) 방식.
