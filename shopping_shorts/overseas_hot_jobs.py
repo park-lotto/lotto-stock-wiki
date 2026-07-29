@@ -67,12 +67,14 @@ def _annotate_text_level(items, cap):
 def _collect_category(cat, cfg, store):
     allow = list(cfg.get("tiktok", [])) + list(cfg.get("cn", []))
     raw = []
-    for kw in cfg.get("tiktok", []):
-        raw += tiktok_search.search_full(kw, max_results=_PER_KEYWORD)
-        time.sleep(_REQ_PAUSE)
+    if config.OVERSEAS_TIKTOK_ENABLED:
+        for kw in cfg.get("tiktok", []):
+            raw += tiktok_search.search_full(kw, max_results=_PER_KEYWORD)
+            time.sleep(_REQ_PAUSE)
     for kw in cfg.get("cn", []):
-        raw += douyin_search.search_full(kw, max_results=_PER_KEYWORD)
-        time.sleep(_REQ_PAUSE)
+        if config.OVERSEAS_DOUYIN_ENABLED:
+            raw += douyin_search.search_full(kw, max_results=_PER_KEYWORD)
+            time.sleep(_REQ_PAUSE)
         if config.XHS_SCRAPER == "playwright":
             raw += playwright_crawl.search_full(kw, max_results=_PER_KEYWORD)
         else:
