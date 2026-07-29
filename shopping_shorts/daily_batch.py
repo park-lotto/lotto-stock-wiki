@@ -195,7 +195,22 @@ def run(db_path):
     n5 = cluster_and_gate_spines(store)
     # 말투(스타일)+전개(내용) 부품 자동승인 — 생성에 바로 실리게(2026-07-23, 내용 주입).
     n6 = store.auto_approve_style_buckets() + store.auto_approve_content_buckets()
-    print(f"daily_batch: 구조 {n1} · 통계 {n2} · 자동흡수 {n3} · perf {n4} · 스파인 {n5} · 승인 {n6}")
+    n7 = _auto_register_xiaohongshu()
+    print(f"daily_batch: 구조 {n1} · 통계 {n2} · 자동흡수 {n3} · perf {n4} · 스파인 {n5} · 승인 {n6} · 샤홍발굴 {n7}")
+
+
+def _auto_register_xiaohongshu():
+    """샤오홍슈 계정 발굴 상위 N 자동등록(킬스위치·실패격리). 등록 수 반환."""
+    from shopping_shorts import config
+    if not getattr(config, "XIAOHONGSHU_AUTO_DISCOVER", False):
+        return 0
+    try:
+        from shopping_shorts import service
+        added = service.auto_register_xiaohongshu(top_n=config.XIAOHONGSHU_AUTO_TOP_N)
+        return len(added)
+    except Exception as e:  # 발굴 실패(Apify 오류 등)가 배치 전체를 막지 않게
+        print(f"daily_batch: 샤홍 발굴 자동등록 스킵 — {e}")
+        return 0
 
 
 if __name__ == "__main__":

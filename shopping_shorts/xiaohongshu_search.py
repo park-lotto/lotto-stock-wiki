@@ -141,6 +141,8 @@ def search_full(keyword, max_results=40, token=None, timeout=180, poll_interval=
             "collects": _num(_first(eng, "collected_count", "collectedCount")) or 0,
             "shares": _num(_first(eng, "shared_count", "sharedCount")) or 0,
             "channel_title": _first(item, ("author", "nickname"), ("author", "name")) or "",
+            "channel_id": str(_first(item, ("author", "userid"), ("author", "user_id"),
+                                     ("author", "id")) or ""),  # 프로필URL 조립·계정 발굴 집계용
             "thumbnail": _cover(item, video),
             "url": url,
             "media_platform": "xiaohongshu",

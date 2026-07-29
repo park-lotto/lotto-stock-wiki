@@ -661,6 +661,32 @@ def api_seeds_remove(body: dict):
     return {"ok": True}
 
 
+# ── 샤오홍슈 계정 발굴(리더보드·담기·삭제) ──
+@app.get("/api/xhs/discover")
+def api_xhs_discover(min_notes: int = 2):
+    """샤오홍슈 '카테고리별 잘하는 계정' 리더보드. 검색발굴을 작성자별 집계·참여도순.
+    블랙리스트 제외, is_registered로 이미 담긴 계정 표시."""
+    return {"ok": True, "items": service.discover_xiaohongshu_accounts(min_notes=min_notes)}
+
+
+@app.post("/api/xhs/adopt")
+def api_xhs_adopt(body: dict):
+    """[담기] — 발굴 계정을 레퍼런스 계정 시드로 등록. body: {profile_url, userid}."""
+    url = (body.get("profile_url") or "").strip()
+    if not url:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "profile_url 필요"})
+    return service.adopt_xiaohongshu_account(url, userid=body.get("userid"))
+
+
+@app.post("/api/xhs/blacklist")
+def api_xhs_blacklist(body: dict):
+    """[삭제] — 계정 시드 제거 + 영구 블랙리스트. body: {userid, profile_url}."""
+    uid = (str(body.get("userid") or "")).strip()
+    if not uid:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "userid 필요"})
+    return service.blacklist_xiaohongshu_account(uid, profile_url=body.get("profile_url"))
+
+
 @app.get("/api/related")
 def api_related(shortcode: str, platform: str = "instagram"):
     """"같은 주제 모아보기" — 같은 topic_group인 다른 영상들 반환(2026-07-13).

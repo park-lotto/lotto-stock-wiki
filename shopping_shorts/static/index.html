@@ -298,6 +298,11 @@
         <div id="ttStatus" style="margin-top:6px;font-size:11px;color:var(--sub)"></div>
       </div>
     </div>
+    <div id="xhsDiscoverPanel" style="display:none;margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
+      <button onclick="xhsDiscover(this)">🔍 잘하는 계정 발굴</button>
+      <span style="font-size:11px;color:var(--sub);margin-left:8px">카테고리별 참여도 상위 계정을 모아옵니다 (Apify 검색·유료). 매일 새벽 상위 계정은 자동 등록됩니다. [담기]로 레퍼런스에 추가, [삭제]는 영구 제외.</span>
+      <div id="xhsDiscoverList" style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
+    </div>
     <div class="toolbar">
       <button id="collectBtn" onclick="doCollect()" style="display:none">⚡ 지금 수집</button>
       <span id="ytCatBox" style="display:none">
@@ -489,10 +494,68 @@ function switchPlatform(p, el){
   document.getElementById('ytCatBox').style.display = (p==='youtube')?'inline':'none';
   document.getElementById('ttPanel').style.display = (p==='tiktok' && ttMode()==='keyword')?'block':'none';
   if(p==='tiktok') loadTtSettings();
+  const _xd=document.getElementById('xhsDiscoverPanel');
+  if(_xd) _xd.style.display = (p==='xiaohongshu' && window.IS_ADMIN)?'block':'none';
   ttModeChange();       // 입력 placeholder·언어선택기·설정패널 표시 갱신
   if(p!=='instagram') loadSeeds();
   loadLast();          // 기존 초기 로드 함수 — platform 반영하도록 아래 수정
 }
+// ── 샤오홍슈 계정 발굴 리더보드(2026-07-29) ──
+function _xhsEsc(s){ return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+async function xhsDiscover(btn){
+  const box=document.getElementById('xhsDiscoverList');
+  if(btn){ btn.disabled=true; btn.textContent='🔍 발굴 중… (검색 도는 중, 잠시)'; }
+  box.innerHTML='<span style="font-size:12px;color:var(--sub)">발굴 중…</span>';
+  try{
+    const r=await fetch('/api/xhs/discover');
+    const d=await r.json();
+    if(!d.ok){ box.innerHTML='⚠ '+(d.error||'발굴 실패'); return; }
+    if(!d.items.length){ box.innerHTML='<span style="font-size:12px;color:var(--sub)">발굴된 계정이 없어요 (검색 결과 부족·author id 없음).</span>'; return; }
+    box.innerHTML = d.items.map(xhsCard).join('');
+  }catch(e){ box.innerHTML='⚠ '+e; }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='🔍 잘하는 계정 발굴'; } }
+}
+function xhsCard(a){
+  const cats=(a.categories||[]).map(_xhsEsc).join(', ');
+  const badge = a.is_registered
+    ? '<span style="font-size:11px;color:#2e7d32">✅ 담김</span>'
+    : `<button onclick="xhsAdopt('${encodeURIComponent(a.profile_url)}','${_xhsEsc(a.userid)}',this)">담기</button>`;
+  const thumb = a.sample_thumbnail
+    ? `<img src="${_xhsEsc(a.sample_thumbnail)}" style="width:100%;height:110px;object-fit:cover;border-radius:6px" referrerpolicy="no-referrer">` : '';
+  return `<div style="border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg)" data-uid="${_xhsEsc(a.userid)}">
+    ${thumb}
+    <div style="font-weight:600;margin-top:6px">${_xhsEsc(a.nickname)||'(이름없음)'}</div>
+    <div style="font-size:11px;color:var(--sub)">${cats}</div>
+    <div style="font-size:12px;margin-top:4px">참여 ${a.engagement_sum.toLocaleString()} · 노트 ${a.note_count} · 평균 ${a.avg_engagement.toLocaleString()}</div>
+    <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
+      <a href="${_xhsEsc(a.profile_url)}" target="_blank" rel="noreferrer" style="font-size:11px">프로필↗</a>
+      ${badge}
+      <button onclick="xhsBlacklist('${_xhsEsc(a.userid)}','${encodeURIComponent(a.profile_url)}',this)" style="margin-left:auto;color:#c62828">삭제</button>
+    </div>
+  </div>`;
+}
+async function xhsAdopt(profileUrlEnc, uid, btn){
+  btn.disabled=true;
+  try{
+    const r=await fetch('/api/xhs/adopt',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({profile_url:decodeURIComponent(profileUrlEnc), userid:uid})});
+    const d=await r.json();
+    if(d.ok){ btn.outerHTML='<span style="font-size:11px;color:#2e7d32">✅ 담김</span>'; }
+    else{ btn.disabled=false; alert(d.reason==='blacklisted'?'삭제(제외)한 계정입니다.':'담기 실패'); }
+  }catch(e){ btn.disabled=false; alert('담기 오류: '+e); }
+}
+async function xhsBlacklist(uid, profileUrlEnc, btn){
+  if(!confirm('이 계정을 영구 제외할까요? 발굴·자동등록에서 다시 안 뜹니다.')) return;
+  btn.disabled=true;
+  try{
+    const r=await fetch('/api/xhs/blacklist',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({userid:uid, profile_url:decodeURIComponent(profileUrlEnc)})});
+    const d=await r.json();
+    if(d.ok){ const card=btn.closest('[data-uid]'); if(card) card.remove(); }
+    else{ btn.disabled=false; alert('삭제 실패'); }
+  }catch(e){ btn.disabled=false; alert('삭제 오류: '+e); }
+}
+
 // ── 레퍼런스 채널 URL 등록(2026-07-18) — 인스타 URL을 붙여넣어 discovered에 추가 ──
 async function registerRef(){
   const inp=document.getElementById('refUrl'), msg=document.getElementById('refMsg');

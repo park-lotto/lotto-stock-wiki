@@ -1,0 +1,65 @@
+"""샤오홍슈 계정 발굴 오케스트레이션(service) — 담기·삭제(블랙리스트)·자동등록·is_registered.
+설계: docs/superpowers/specs/2026-07-29-샤오홍슈-계정발굴-design.md"""
+from shopping_shorts import service
+from shopping_shorts.store import Store
+
+
+def _note(uid, nick, likes=0):
+    return {"channel_id": uid, "channel_title": nick, "likes": likes,
+            "comments": 0, "collects": 0, "shares": 0, "url": "u", "thumbnail": "t"}
+
+
+def _wire(monkeypatch, tmp_path, notes):
+    db = str(tmp_path / "t.db")
+    Store(db)  # 초기화
+    monkeypatch.setattr(service, "DB_PATH", db)
+    monkeypatch.setattr(service.xiaohongshu_search, "search_full", lambda kw: notes)
+    monkeypatch.setattr(service.overseas_seeds, "load_seeds", lambda: {"주방": {"cn": ["kw1"]}})
+    return db
+
+
+def test_discover_then_adopt_marks_registered(monkeypatch, tmp_path):
+    notes = [_note("u1", "A", 5), _note("u1", "A", 5), _note("u2", "B", 3), _note("u2", "B", 3)]
+    _wire(monkeypatch, tmp_path, notes)
+
+    out = service.discover_xiaohongshu_accounts()
+    assert {a["userid"] for a in out} == {"u1", "u2"}
+    assert all(not a["is_registered"] for a in out)
+
+    top = out[0]
+    r = service.adopt_xiaohongshu_account(top["profile_url"], userid=top["userid"])
+    assert r["ok"]
+    # 담은 뒤 다시 발굴하면 is_registered=True
+    out2 = {a["userid"]: a for a in service.discover_xiaohongshu_accounts()}
+    assert out2[top["userid"]]["is_registered"]
+
+
+def test_blacklist_excludes_from_discovery_and_blocks_adopt(monkeypatch, tmp_path):
+    notes = [_note("u1", "A", 5), _note("u1", "A", 5), _note("bad", "쓰레기", 9), _note("bad", "쓰레기", 9)]
+    _wire(monkeypatch, tmp_path, notes)
+
+    service.blacklist_xiaohongshu_account("bad", profile_url="https://www.rednote.com/user/profile/bad")
+    out = service.discover_xiaohongshu_accounts()
+    assert [a["userid"] for a in out] == ["u1"]   # bad 영구 제외
+
+    # 블랙리스트 계정은 담기도 거부
+    r = service.adopt_xiaohongshu_account("https://www.rednote.com/user/profile/bad", userid="bad")
+    assert not r["ok"] and r["reason"] == "blacklisted"
+
+
+def test_auto_register_adds_top_n_excluding_blacklist(monkeypatch, tmp_path):
+    notes = [_note("hi", "H", 50), _note("hi", "H", 50),
+             _note("mid", "M", 10), _note("mid", "M", 10),
+             _note("bad", "X", 99), _note("bad", "X", 99)]
+    db = _wire(monkeypatch, tmp_path, notes)
+    service.blacklist_xiaohongshu_account("bad")
+
+    added = service.auto_register_xiaohongshu(top_n=10)
+    accounts = {s["value"] for s in Store(db).list_seeds("xiaohongshu") if s["kind"] == "account"}
+    assert "https://www.rednote.com/user/profile/hi" in accounts
+    assert "https://www.rednote.com/user/profile/mid" in accounts
+    assert "https://www.rednote.com/user/profile/bad" not in accounts   # 블랙리스트 제외
+    assert len(added) == 2
+
+    # 재실행하면 이미 등록돼 추가 0(멱등)
+    assert service.auto_register_xiaohongshu(top_n=10) == []

@@ -92,6 +92,11 @@ XIAOHONGSHU_SESSION_PATH = os.getenv(
 XIAOHONGSHU_PW_TIMEOUT_MS = int(os.getenv("XIAOHONGSHU_PW_TIMEOUT_MS", "20000"))
 XIAOHONGSHU_WINDOW_HOURS = int(os.getenv("XIAOHONGSHU_WINDOW_HOURS", "48"))
 
+# 계정 발굴 자동등록(2026-07-29) — daily_batch(매일 새벽 1회)가 발굴 상위 N 계정을
+# 레퍼런스에 자동 등록. 발굴은 Apify 검색(과금) → 킬스위치로 끌 수 있게 둔다.
+XIAOHONGSHU_AUTO_DISCOVER = os.getenv("XIAOHONGSHU_AUTO_DISCOVER", "true").lower() == "true"
+XIAOHONGSHU_AUTO_TOP_N = int(os.getenv("XIAOHONGSHU_AUTO_TOP_N", "10"))
+
 # ── 샤오홍슈(해외HOT 발굴) 수집 경로 선택(2026-07-29) ──
 # Apify 검색은 유료(rednote-search-scraper). 로그인 세션(storage_state)으로 서버 직결
 # 무료 크롤이 실측 확인됨(Phase 0). 롤백 대비 환경변수로 즉시 전환 가능하게 둔다.
