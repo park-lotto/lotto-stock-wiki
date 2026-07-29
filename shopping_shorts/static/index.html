@@ -300,7 +300,13 @@
     </div>
     <div id="xhsDiscoverPanel" style="display:none;margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
       <button onclick="xhsDiscover(this)">🔍 잘하는 계정 발굴</button>
-      <span style="font-size:11px;color:var(--sub);margin-left:8px">카테고리별 참여도 상위 계정을 모아옵니다 (Apify 검색·유료). 매일 새벽 상위 계정은 자동 등록됩니다. [담기]로 레퍼런스에 추가, [삭제]는 영구 제외.</span>
+      <span style="font-size:11px;color:var(--sub);margin-left:8px">카테고리별로 반응 좋은 계정을 모아옵니다 (무료 검색). 매일 새벽 상위 계정은 자동 등록됩니다. [담기]로 레퍼런스에 추가, [삭제]는 영구 제외.</span>
+      <div id="xhsSortBar" style="display:none;margin-top:8px;font-size:12px">
+        <span style="color:var(--sub)">정렬:</span>
+        <button class="xhsSortBtn" data-sort="engagement_sum" onclick="xhsSortBy('engagement_sum',this)">참여 합계</button>
+        <button class="xhsSortBtn" data-sort="avg_engagement" onclick="xhsSortBy('avg_engagement',this)">노트당 평균</button>
+        <button class="xhsSortBtn" data-sort="note_count" onclick="xhsSortBy('note_count',this)">노트 수(자주 뜸)</button>
+      </div>
       <div id="xhsDiscoverList" style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
     </div>
     <div class="toolbar">
@@ -510,10 +516,23 @@ async function xhsDiscover(btn){
     const r=await fetch('/api/xhs/discover');
     const d=await r.json();
     if(!d.ok){ box.innerHTML='⚠ '+(d.error||'발굴 실패'); return; }
-    if(!d.items.length){ box.innerHTML='<span style="font-size:12px;color:var(--sub)">발굴된 계정이 없어요 (검색 결과 부족·author id 없음).</span>'; return; }
-    box.innerHTML = d.items.map(xhsCard).join('');
+    if(!d.items.length){ box.innerHTML='<span style="font-size:12px;color:var(--sub)">발굴된 계정이 없어요 (검색 결과 부족·author id 없음).</span>'; document.getElementById('xhsSortBar').style.display='none'; return; }
+    window._xhsItems = d.items;
+    document.getElementById('xhsSortBar').style.display='';
+    renderXhsList();
   }catch(e){ box.innerHTML='⚠ '+e; }
   finally{ if(btn){ btn.disabled=false; btn.textContent='🔍 잘하는 계정 발굴'; } }
+}
+let _xhsSort='engagement_sum';   // 종합점수 대신 지표별로 각각 정렬 — 사장님이 버튼으로 선택
+function xhsSortBy(key, btn){
+  _xhsSort=key;
+  document.querySelectorAll('.xhsSortBtn').forEach(b=>b.style.fontWeight = (b===btn?'700':'400'));
+  renderXhsList();
+}
+function renderXhsList(){
+  const items=(window._xhsItems||[]).slice().sort((a,b)=>(b[_xhsSort]||0)-(a[_xhsSort]||0));
+  document.getElementById('xhsDiscoverList').innerHTML = items.map(xhsCard).join('');
+  document.querySelectorAll('.xhsSortBtn').forEach(b=>b.style.fontWeight = (b.dataset.sort===_xhsSort?'700':'400'));
 }
 function xhsCard(a){
   const cats=(a.categories||[]).map(_xhsEsc).join(', ');
