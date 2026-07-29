@@ -2938,6 +2938,13 @@ function renderPool(){
 async function refreshStep0(){
   const hasFootage = HANDOFF.some(h=>h.useFootage);
   if(!hasFootage){ renderEmptyState(); return; }
+  // ★레이스 차단(2026-07-29 사장님 "담기하면 엉뚱한 8개 소스 비교, 새로고침해야 맞음"):
+  //   saveWork()는 서버 저장을 1초 디바운스한다(setTimeout _pushWork). 근데 담기(pickFootage) 직후
+  //   여기서 바로 aipick을 부르면, 서버 work.state.handoff가 아직 옛것(또는 빈값)이라
+  //   _load_work_sources가 '계정 전체 담김픽'으로 폴백해 이 작업과 무관한 옛 소스가 뜬다.
+  //   aipick 조회 전에 밀린 저장을 즉시 서버로 밀어넣어 handoff·WORK_ID를 확정한 뒤 읽는다.
+  if(_workTimer){ clearTimeout(_workTimer); _workTimer = null; }
+  try{ await _pushWork(); }catch(e){}
   try{
     // 사장님이 썸네일을 클릭해 특정 영상을 AI PICK으로 지정(bbMain)했으면 서버에도 강제한다
     // (안 그러면 완성도 자동선정이 클릭을 덮어씀 — forced가 지정 시 최우선, app.py 참조).
