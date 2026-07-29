@@ -37,8 +37,10 @@ def _merge_rotate(prev, new, cap):
     discovery.merge_feeds는 username(=서브레딧)으로 병합해 서브레딧당 1행으로
     붕괴하므로 재사용 불가 — 발굴은 포스트 단위여야 한다.
 
-    정렬은 1차 자막등급(자막 없는 것이 앞), 2차 score 내림차순이다(2026-07-29).
-    상한 cap으로 자를 때도 같은 기준이라 자막 없는 항목이 우선 살아남는다."""
+    정렬은 score 내림차순 단독이다(2026-07-29 되돌림). 자막등급을 1차 정렬키로 썼더니
+    실측(반응 1만+ 29건 중 자막없음 0건)에서 인기 영상이 죄다 밀려났다 — 사장님 결정으로
+    인기순 복귀, "자막 없는 것만" 보기는 화면 토글로 옮겼다(overseas_funnel.caption_rank는
+    화면 필터·뱃지용으로 계속 씀)."""
     best = {}
     for i in new:
         sc = i.get("shortcode")
@@ -46,8 +48,7 @@ def _merge_rotate(prev, new, cap):
             best[sc] = i
     new_keys = set(best)
     out = list(best.values()) + [i for i in prev if i.get("shortcode") not in new_keys]
-    return sorted(out, key=lambda i: (overseas_funnel.caption_rank(i),
-                                      -(i.get("score") or 0)))[:cap]
+    return sorted(out, key=lambda i: i.get("score") or 0, reverse=True)[:cap]
 
 
 def _annotate_text_level(items, store):
@@ -63,6 +64,8 @@ def _annotate_text_level(items, store):
     (overseas_funnel.passes_caption_clutter가 통과시켜 과필터를 막고, 다음 수집에서 재시도)."""
     judged = cached = 0
     for it in items:
+        if it.get("text_level"):
+            continue
         # 이 시점의 it는 크롤러 raw dict 그대로다(build_overseas_items 전) —
         # crawler는 "shortcode"가 아니라 "video_id" 키로 넣는다(playwright_crawl.py 등).
         # shortcode는 나중에 ranking.build_overseas_items가 video_id로부터 만든다.
@@ -111,9 +114,10 @@ def _collect_category(cat, cfg, store):
             and overseas_funnel.passes_shortform(r)
             and overseas_funnel.passes_relevance(r, allow)
             and overseas_funnel.under_view_ceiling(r)]
-    # STAGE 3: 자막(텍스트 오버레이) 판정 — 생존자 전부를 보고(캐시로 증분), 자막 과다는 컷
+    # STAGE 3: 자막(텍스트 오버레이) 판정 — 생존자 전부를 보고(캐시로 증분) text_level만 매긴다.
+    # 컷은 안 한다(2026-07-29 해제) — 실측(반응 1만+ 29건 중 자막없음 0건)에서 heavy 대부분이
+    # 인기 영상이라 여기서 걸러내면 손해였다. 판정 결과는 화면 토글·뱃지로만 쓴다.
     kept = _annotate_text_level(kept, store)
-    kept = [r for r in kept if overseas_funnel.passes_caption_clutter(r)]
     for r in kept:
         r["category"] = cat   # 시드 카테고리 고정
     items = build_overseas_items(
@@ -140,6 +144,9 @@ def _run():
         valid_cats = set(load_seeds().keys()) | {PICKUP_CATEGORY}
         prev = [i for i in prev if i.get("category") in valid_cats]
         merged = _merge_rotate(prev, all_items, cap=_CAP)
+        # 옛 피드 항목은 크롤을 안 거쳐 판정 기회가 없다 — 화면 토글이 제대로 걸리려면
+        # 목록에 남은 것 전부가 판정돼 있어야 한다(2026-07-29). 캐시가 있으니 증분이다.
+        merged = _annotate_text_level(merged, store)
         # 선점뱃지 — 아직 미판정인 상위 항목만(쿼터 보호). 기존 뱃지는 유지.
         with _LOCK:
             _JOB["phase"] = "선점확인"
