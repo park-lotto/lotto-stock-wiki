@@ -207,6 +207,17 @@ class Store:
                     created_at TEXT
                 )
             """)
+            # 해외HOT 썸네일 자막등급 캐시(2026-07-29) — shortcode당 1행.
+            # 생존자 전부를 비전판정하게 넓히면서 Gemini 쿼터를 지키려고 둔다
+            # (쿼터 소진으로 검열 성공률 29%까지 떨어진 전례: gemini_audit.py).
+            # 판정 실패는 저장하지 않는다 — 다음 수집에서 재시도돼야 한다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS thumb_text_level (
+                    shortcode  TEXT PRIMARY KEY,
+                    level      TEXT,
+                    created_at TEXT
+                )
+            """)
             # 한→중 소재 번역 캐시(2026-07-24) — ko당 1행, 있으면 재호출 안 함(무과금).
             # zh 빈 문자열도 저장(번역실패 캐시) — get_translation은 그걸 ""로, 미조회는 None으로 구분.
             # 샤오홍슈·도우인 트렌드 검색카드(/api/translate + 벌크 backfill_cn_keywords)도 이 캐시를 읽는다.
@@ -2105,6 +2116,24 @@ class Store:
         if not row:
             return None
         return {"subject": row[0] or "", "keywords": json.loads(row[1] or "[]")}
+
+    def save_thumb_text_level(self, shortcode, level):
+        """썸네일 자막등급('none'|'light'|'heavy') 저장(덮어쓰기)."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO thumb_text_level(shortcode, level, created_at) "
+                "VALUES(?,?,datetime('now')) ON CONFLICT(shortcode) DO UPDATE SET "
+                "level=excluded.level, created_at=excluded.created_at",
+                (shortcode, level),
+            )
+
+    def get_thumb_text_level(self, shortcode):
+        """저장된 자막등급. 판정된 적 없으면 None."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT level FROM thumb_text_level WHERE shortcode=?", (shortcode,)
+            ).fetchone()
+        return row[0] if row else None
 
     def vision_tags_map(self, shortcodes):
         """여러 shortcode → {shortcode: {subject, keywords}} (있는 것만). 읽기 결합용."""

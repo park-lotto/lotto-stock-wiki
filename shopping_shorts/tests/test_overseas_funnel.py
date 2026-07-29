@@ -49,3 +49,17 @@ def test_caption_clutter_filter():
     assert passes_caption_clutter({"text_level": "light"}) is True
     assert passes_caption_clutter({"text_level": "none"}) is True
     assert passes_caption_clutter({}) is True   # 아직 비전판정 안 된 항목은 통과(과필터 방지)
+
+
+def test_caption_rank_orders_none_first():
+    from shopping_shorts.overseas_funnel import caption_rank
+    assert caption_rank({"text_level": "none"}) == 0
+    assert caption_rank({"text_level": "light"}) == 1
+    assert caption_rank({"text_level": "heavy"}) == 2
+
+
+def test_caption_rank_unjudged_goes_last():
+    """판정 없는 항목(비전 실패·썸네일 없음)은 light보다 뒤."""
+    from shopping_shorts.overseas_funnel import caption_rank
+    assert caption_rank({}) == 2
+    assert caption_rank({"text_level": None}) == 2

@@ -345,5 +345,9 @@ def build_overseas_items(raw, prev_base, prev_delta, now=None, window_hours=336)
             "density": (collects + shares) / base if base else 0.0,
             "category": r.get("category") or "",
             "caption": r.get("title", ""),
+            # _annotate_text_level(overseas_hot_jobs.py)이 raw dict에 붙인 판정을
+            # item으로 옮겨 싣는다 — 여기서 안 옮기면 caption_rank가 항상 미판정으로
+            # 보여 정렬이 no-op이 된다(2026-07-29 Critical 2).
+            "text_level": r.get("text_level"),
         })
     return items

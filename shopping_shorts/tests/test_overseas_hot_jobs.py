@@ -106,6 +106,12 @@ def test_collect_category_uses_playwright_crawl_when_xhs_scraper_set(monkeypatch
         def prev_delta_platform(self, *a, **k):
             return None
 
+        def get_thumb_text_level(self, *a, **k):
+            return None
+
+        def save_thumb_text_level(self, *a, **k):
+            pass
+
     job._collect_category("주방/레시피", {"tiktok": [], "cn": ["厨房神器"]}, FakeStore())
     assert called["kw"] == "厨房神器"
 
@@ -130,11 +136,20 @@ def test_collect_category_uses_apify_by_default(monkeypatch):
         def prev_delta_platform(self, *a, **k):
             return None
 
+        def get_thumb_text_level(self, *a, **k):
+            return None
+
+        def save_thumb_text_level(self, *a, **k):
+            pass
+
     job._collect_category("주방/레시피", {"tiktok": [], "cn": ["厨房神器"]}, FakeStore())
     assert called["kw"] == "厨房神器"
 
 
-def test_annotate_text_level_marks_items_up_to_cap(monkeypatch):
+def test_annotate_text_level_marks_all_items(monkeypatch, tmp_path):
+    # 2026-07-29: 상한(_TEXT_CLUTTER_CAP) 폐기 — 생존자 전부를 판정해야 한다.
+    from shopping_shorts.store import Store
+    st = Store(str(tmp_path / "t.db"))
     monkeypatch.setattr(job.video_analysis, "fetch_thumb_bytes", lambda url, timeout=15: b"img")
     calls = []
 
@@ -144,12 +159,12 @@ def test_annotate_text_level_marks_items_up_to_cap(monkeypatch):
 
     monkeypatch.setattr(job.video_analysis, "text_level_vision", fake_vision)
 
-    items = [{"shortcode": f"p{i}", "thumbnail": "http://x"} for i in range(5)]
-    job._annotate_text_level(items, cap=2)
+    items = [{"video_id": f"p{i}", "thumbnail": "http://x"} for i in range(5)]
+    job._annotate_text_level(items, st)
 
-    assert len(calls) == 2                          # 상한만큼만 비전판정
+    assert len(calls) == 5                          # 전부 판정
     assert items[0]["text_level"] == "heavy"
-    assert "text_level" not in items[4]              # 상한 초과분은 판정 안 됨(통과 취급)
+    assert items[4]["text_level"] == "heavy"
 
 
 def test_collect_category_filters_out_heavy_text_thumbnails(monkeypatch):
@@ -182,6 +197,12 @@ def test_collect_category_filters_out_heavy_text_thumbnails(monkeypatch):
         def prev_delta_platform(self, *a, **k):
             return None
 
+        def get_thumb_text_level(self, *a, **k):
+            return None
+
+        def save_thumb_text_level(self, *a, **k):
+            pass
+
     items = job._collect_category("주방/레시피", {"tiktok": ["kitchen"], "cn": []}, FakeStore())
 
     shortcodes = {i["shortcode"] for i in items}
@@ -202,6 +223,12 @@ def test_collect_category_skips_tiktok_when_disabled(monkeypatch):
         def prev_delta_platform(self, *a, **k):
             return None
 
+        def get_thumb_text_level(self, *a, **k):
+            return None
+
+        def save_thumb_text_level(self, *a, **k):
+            pass
+
     job._collect_category("주방/레시피", {"tiktok": ["kitchen"], "cn": []}, FakeStore())  # 예외 없으면 통과
 
 
@@ -218,6 +245,12 @@ def test_collect_category_skips_douyin_when_disabled(monkeypatch):
 
         def prev_delta_platform(self, *a, **k):
             return None
+
+        def get_thumb_text_level(self, *a, **k):
+            return None
+
+        def save_thumb_text_level(self, *a, **k):
+            pass
 
     job._collect_category("주방/레시피", {"tiktok": [], "cn": ["厨房神器"]}, FakeStore())  # 예외 없으면 통과
 
@@ -238,3 +271,166 @@ def test_add_pickup_saves_to_pickup_category(monkeypatch, tmp_path):
     items, _ = Store(str(tmp_path / "t.db")).load_overseas_feed()
     assert items[0]["category"] == job.PICKUP_CATEGORY   # 픽업 카테고리로 저장
     assert items[0]["shortcode"] == "p1"                  # 2020년(오래된)도 window 우회로 생존
+
+
+def _mk(sc, thumb="https://t/x.jpg"):
+    # _annotate_text_level은 _collect_category의 kept(크롤러 raw dict)를 받는다 —
+    # 이 시점엔 아직 "shortcode"가 없고 크롤러가 실제로 주는 키는 "video_id"다
+    # (playwright_crawl.py 등). shortcode를 넣으면 캐시가 항상 미스하는데도
+    # 초록이 되는 발명된 계약이라 이 픽스처는 video_id를 쓴다(2026-07-29 Critical 3).
+    return {"video_id": sc, "thumbnail": thumb}
+
+
+def test_annotate_judges_every_item_not_just_first_15(monkeypatch, tmp_path):
+    """상한 폐기 — 20개를 주면 20개 다 판정돼야 한다(옛 _TEXT_CLUTTER_CAP=15 회귀)."""
+    from shopping_shorts.store import Store
+    st = Store(str(tmp_path / "t.db"))
+    monkeypatch.setattr(job.video_analysis, "fetch_thumb_bytes", lambda u: b"img")
+    monkeypatch.setattr(job.video_analysis, "text_level_vision", lambda b: {"text_level": "none"})
+
+    items = [_mk(f"s{i}") for i in range(20)]
+    job._annotate_text_level(items, st)
+    assert all(i["text_level"] == "none" for i in items)
+
+
+def test_annotate_uses_cache_and_skips_vision(monkeypatch, tmp_path):
+    """캐시에 있으면 비전을 부르지 않는다(쿼터 보호)."""
+    from shopping_shorts.store import Store
+    st = Store(str(tmp_path / "t.db"))
+    st.save_thumb_text_level("s1", "light")
+    calls = []
+    monkeypatch.setattr(job.video_analysis, "fetch_thumb_bytes", lambda u: b"img")
+    monkeypatch.setattr(job.video_analysis, "text_level_vision",
+                        lambda b: calls.append(1) or {"text_level": "none"})
+
+    items = [_mk("s1")]
+    job._annotate_text_level(items, st)
+    assert items[0]["text_level"] == "light"   # 캐시값이 이긴다
+    assert calls == [], "캐시 적중 시 비전 호출이 없어야 한다"
+
+
+def test_annotate_saves_new_judgement_to_cache(monkeypatch, tmp_path):
+    from shopping_shorts.store import Store
+    st = Store(str(tmp_path / "t.db"))
+    monkeypatch.setattr(job.video_analysis, "fetch_thumb_bytes", lambda u: b"img")
+    monkeypatch.setattr(job.video_analysis, "text_level_vision", lambda b: {"text_level": "heavy"})
+
+    job._annotate_text_level([_mk("s1")], st)
+    assert st.get_thumb_text_level("s1") == "heavy"
+
+
+def test_annotate_does_not_cache_failure(monkeypatch, tmp_path):
+    """판정 실패는 저장 안 한다 — 다음 수집에서 재시도돼야 한다."""
+    from shopping_shorts.store import Store
+    st = Store(str(tmp_path / "t.db"))
+    monkeypatch.setattr(job.video_analysis, "fetch_thumb_bytes", lambda u: b"img")
+    monkeypatch.setattr(job.video_analysis, "text_level_vision", lambda b: {})
+
+    items = [_mk("s1")]
+    job._annotate_text_level(items, st)
+    assert "text_level" not in items[0]
+    assert st.get_thumb_text_level("s1") is None
+
+
+def test_annotate_skips_when_no_thumbnail(monkeypatch, tmp_path):
+    from shopping_shorts.store import Store
+    st = Store(str(tmp_path / "t.db"))
+    monkeypatch.setattr(job.video_analysis, "fetch_thumb_bytes", lambda u: None)
+    monkeypatch.setattr(job.video_analysis, "text_level_vision",
+                        lambda b: {"text_level": "none"})
+
+    items = [_mk("s1", thumb="")]
+    job._annotate_text_level(items, st)
+    assert "text_level" not in items[0]
+
+
+def test_merge_rotate_puts_clean_thumbnails_first():
+    """자막 없는 항목이 점수 높은 자막 항목보다 앞에 온다."""
+    new = [
+        {"shortcode": "dirty", "score": 0.9, "text_level": "light"},
+        {"shortcode": "clean", "score": 0.1, "text_level": "none"},
+    ]
+    out = job._merge_rotate([], new, cap=10)
+    assert [i["shortcode"] for i in out] == ["clean", "dirty"]
+
+
+def test_merge_rotate_sorts_by_score_within_same_caption_rank():
+    new = [
+        {"shortcode": "lo", "score": 0.2, "text_level": "none"},
+        {"shortcode": "hi", "score": 0.8, "text_level": "none"},
+    ]
+    out = job._merge_rotate([], new, cap=10)
+    assert [i["shortcode"] for i in out] == ["hi", "lo"]
+
+
+def test_run_e2e_caches_by_video_id_and_sorts_clean_first(monkeypatch, tmp_path):
+    """C1·C2 회귀 테스트 — 실제 크롤러 계약(video_id)으로 raw를 주고 _run()을 통째로
+    돌려서, 저장된 최종 피드에 (1) text_level이 실제로 실려 있고 (2) 캐시가 shortcode가
+    아니라 video_id로 맞아 재판정을 안 하고 (3) 자막 없는 항목이 자막 있는 고득점
+    항목보다 앞에 오는지 확인한다. C1(캐시 키 None)이나 C2(text_level 소실) 중
+    하나라도 재발하면 이 테스트가 반드시 깨진다."""
+    now = datetime(2026, 7, 26, 12, 0, tzinfo=timezone.utc)
+    db = str(tmp_path / "t.db")
+    published = "2026-07-25T12:00:00Z"
+
+    def fake_tt(kw, max_results=40):
+        return [
+            {"video_id": "light_high_score", "title": kw + " gadget A", "published_at": published,
+             "views": 1000, "likes": 900, "comments": 90, "collects": 0, "shares": 0,
+             "channel_title": "a", "thumbnail": "http://x/light.jpg", "url": "https://tt/a",
+             "media_platform": "tiktok"},
+            {"video_id": "clean_low_score", "title": kw + " gadget B", "published_at": published,
+             "views": 1000, "likes": 10, "comments": 1, "collects": 0, "shares": 0,
+             "channel_title": "b", "thumbnail": "http://x/clean.jpg", "url": "https://tt/b",
+             "media_platform": "tiktok"},
+        ]
+
+    vision_calls = []
+
+    def fake_vision(img):
+        vision_calls.append(img)
+        return {"text_level": "light" if b"light" in img else "none"}
+
+    monkeypatch.setattr(job.tiktok_search, "search_full", fake_tt)
+    monkeypatch.setattr(job.douyin_search, "search_full", lambda kw, max_results=40: [])
+    monkeypatch.setattr(job.xiaohongshu_search, "search_full", lambda kw, max_results=40: [])
+    monkeypatch.setattr(job.gap_check, "gap_badge", lambda title, **kw: "🔥선점가능")
+    monkeypatch.setattr(job.video_analysis, "fetch_thumb_bytes", lambda url, timeout=15: url.encode())
+    monkeypatch.setattr(job.video_analysis, "text_level_vision", fake_vision)
+    monkeypatch.setattr(job, "load_seeds",
+                        lambda: {"주방/레시피": {"tiktok": ["kitchen"], "cn": []}})
+    monkeypatch.setattr(job, "DB_PATH", db)
+    monkeypatch.setattr(job, "_now", lambda: now)
+
+    job._run()
+    from shopping_shorts.store import Store
+    store = Store(db)
+    items, _ = store.load_overseas_feed()
+    by_sc = {it["shortcode"]: it for it in items}
+
+    # (1) text_level이 build_overseas_items를 거쳐도 살아 있어야 한다(C2).
+    assert by_sc["light_high_score"]["text_level"] == "light"
+    assert by_sc["clean_low_score"]["text_level"] == "none"
+
+    # (2) 캐시가 video_id로 맞았는지 — store에 video_id 키로 저장돼 있어야 한다(C1).
+    assert store.get_thumb_text_level("light_high_score") == "light"
+    assert store.get_thumb_text_level("clean_low_score") == "none"
+
+    # (3) 자막 없는 저득점 항목이 자막 있는 고득점 항목보다 앞에 온다.
+    order = [it["shortcode"] for it in items]
+    assert order.index("clean_low_score") < order.index("light_high_score")
+
+    # (4) 재수집해도 캐시가 맞아 비전을 다시 안 부른다(쿼터 보호, C1의 목적).
+    vision_calls.clear()
+    job._run()
+    assert vision_calls == [], "캐시가 맞으면 재수집에서 비전을 다시 부르면 안 된다"
+
+
+def test_merge_rotate_cap_keeps_clean_ones():
+    """상한으로 자를 때도 자막 없는 것이 살아남는다."""
+    new = [
+        {"shortcode": "d1", "score": 0.9, "text_level": "light"},
+        {"shortcode": "c1", "score": 0.1, "text_level": "none"},
+    ]
+    out = job._merge_rotate([], new, cap=1)
+    assert [i["shortcode"] for i in out] == ["c1"]

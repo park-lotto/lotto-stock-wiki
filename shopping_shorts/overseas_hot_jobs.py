@@ -19,7 +19,6 @@ _CAP = 120          # 피드 최대 유지 개수(로테이션)
 _PER_KEYWORD = 40   # 카테고리·플랫폼·키워드당 수집 상한(=과금단위)
 _REQ_PAUSE = 0.5    # Apify 호출 간 간격
 _GAP_CAP = 40       # 선점검색 배치당 상한(유튜브 무료쿼터 보호) — 생존자 상위만
-_TEXT_CLUTTER_CAP = 15   # 카테고리·키워드당 자막판정 상한(Gemini 비전쿼터 보호) — 생존자 상위만
 PICKUP_CATEGORY = "🖐 픽업"   # 무료크롤+판단으로 고른 걸 수동 URL로 픽업하는 카테고리
 
 
@@ -29,14 +28,17 @@ def _now():
 
 def _merge_rotate(prev, new, cap):
     """post_id(shortcode) 단위 병합 — 새 데이터가 이기고(최신 지표), 겹치지 않는
-    이전 항목은 유지. 병합 후 score 내림차순 상위 cap개만(성과 낮은 것 자연 탈락).
+    이전 항목은 유지. 병합 후 자막등급 우선, 같은 등급 내 score 내림차순 상위 cap개만(성과 낮은 것 자연 탈락).
 
     new 내부도 shortcode로 dedup한다 — 같은 서브레딧이 여러 카테고리 시드에 겹치면
     (예: BuyItForLife ∈ 살림·가전) 같은 포스트가 카테고리별로 중복 수집되므로,
     shortcode당 score 최고 1개만 남긴다.
 
     discovery.merge_feeds는 username(=서브레딧)으로 병합해 서브레딧당 1행으로
-    붕괴하므로 재사용 불가 — 발굴은 포스트 단위여야 한다."""
+    붕괴하므로 재사용 불가 — 발굴은 포스트 단위여야 한다.
+
+    정렬은 1차 자막등급(자막 없는 것이 앞), 2차 score 내림차순이다(2026-07-29).
+    상한 cap으로 자를 때도 같은 기준이라 자막 없는 항목이 우선 살아남는다."""
     best = {}
     for i in new:
         sc = i.get("shortcode")
@@ -44,23 +46,46 @@ def _merge_rotate(prev, new, cap):
             best[sc] = i
     new_keys = set(best)
     out = list(best.values()) + [i for i in prev if i.get("shortcode") not in new_keys]
-    return sorted(out, key=lambda i: i.get("score") or 0, reverse=True)[:cap]
+    return sorted(out, key=lambda i: (overseas_funnel.caption_rank(i),
+                                      -(i.get("score") or 0)))[:cap]
 
 
-def _annotate_text_level(items, cap):
-    """생존자 상위 cap개 썸네일만 봐서 text_level(자막 오버레이 정도)을 매긴다(비전쿼터 보호).
-    상한 넘는 항목·판정 실패 항목은 text_level이 안 붙어 overseas_funnel.passes_caption_clutter가
-    통과시킨다(과필터 방지)."""
-    checked = 0
+def _annotate_text_level(items, store):
+    """생존자 **전부**의 썸네일을 봐서 text_level(자막 오버레이 정도)을 매긴다.
+
+    2026-07-29 변경: 예전엔 앞 cap(=15)개만 봤는데, 이 시점의 items는 아직
+    score가 없어(build_overseas_items 전) '상위'가 아니라 그냥 수집순 앞 15개였다.
+    판정 안 된 항목은 자막 여부를 모르니 정렬에서 줄을 세울 수 없어 상한을 없앴다.
+    대신 shortcode 캐시로 재판정을 막아 Gemini 쿼터를 지킨다 — 피드는 _merge_rotate로
+    유지되므로 매 수집에서 새로 들어온 것만 실제로 비전을 탄다.
+
+    판정 실패·썸네일 없음은 text_level을 안 붙이고 캐시에도 안 남긴다
+    (overseas_funnel.passes_caption_clutter가 통과시켜 과필터를 막고, 다음 수집에서 재시도)."""
+    judged = cached = 0
     for it in items:
-        if checked >= cap:
-            break
+        # 이 시점의 it는 크롤러 raw dict 그대로다(build_overseas_items 전) —
+        # crawler는 "shortcode"가 아니라 "video_id" 키로 넣는다(playwright_crawl.py 등).
+        # shortcode는 나중에 ranking.build_overseas_items가 video_id로부터 만든다.
+        # 여기서 shortcode만 보면 항상 None이라 캐시가 100% 미스한다(2026-07-29 Critical 1).
+        sc = it.get("shortcode") or it.get("video_id")
+        hit = store.get_thumb_text_level(sc) if sc else None
+        if hit:
+            it["text_level"] = hit
+            cached += 1
+            continue
         img = video_analysis.fetch_thumb_bytes(it.get("thumbnail"))
-        if img:
-            result = video_analysis.text_level_vision(img)
-            if result.get("text_level"):
-                it["text_level"] = result["text_level"]
-        checked += 1
+        if not img:
+            continue
+        level = video_analysis.text_level_vision(img).get("text_level")
+        if level:
+            it["text_level"] = level
+            judged += 1
+            if sc:
+                store.save_thumb_text_level(sc, level)
+    # 카테고리마다 호출되므로 "수집" 단계 표시를 지우지 않고 판정 카운트만 갱신한다
+    # (예전엔 phase="자막판정..."으로 통째로 덮어써 락도 없고 마지막 카테고리 값만 남았다).
+    with _LOCK:
+        _JOB["phase"] = f"수집·자막판정 신규{judged}·캐시{cached}"
     return items
 
 
@@ -86,8 +111,8 @@ def _collect_category(cat, cfg, store):
             and overseas_funnel.passes_shortform(r)
             and overseas_funnel.passes_relevance(r, allow)
             and overseas_funnel.under_view_ceiling(r)]
-    # STAGE 3: 자막(텍스트 오버레이) 판정 — 상위 생존자만 비전으로 보고, 자막 과다는 컷
-    kept = _annotate_text_level(kept, _TEXT_CLUTTER_CAP)
+    # STAGE 3: 자막(텍스트 오버레이) 판정 — 생존자 전부를 보고(캐시로 증분), 자막 과다는 컷
+    kept = _annotate_text_level(kept, store)
     kept = [r for r in kept if overseas_funnel.passes_caption_clutter(r)]
     for r in kept:
         r["category"] = cat   # 시드 카테고리 고정
