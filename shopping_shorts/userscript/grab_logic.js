@@ -59,7 +59,13 @@
   // 담는 오작동/혼동을 막고, 카드마다 있는 버튼만 쓰게 한다. 단일 영상 페이지에선 다시 보인다.
   function syncFloat() {
     var f = document.getElementById("ss-grab-btn");
-    if (f) f.style.display = document.querySelector(".ss-card-grab") ? "none" : "";
+    // 단일 영상 페이지에선 아래 '더 보기' 그리드에 카드버튼이 생겨도 플로팅(=본 영상 담기)을 남긴다.
+    if (f) f.style.display = (document.querySelector(".ss-card-grab") && !isSinglePost()) ? "none" : "";
+  }
+
+  // 지금 보고 있는 게 '단일 영상/게시물' 페이지인가 (인스타 /p/·/reel/, 틱톡 /video/ 등)
+  function isSinglePost() {
+    return /\/(p|reel|reels|video)\/[^/]+/.test(location.pathname);
   }
 
   // 검색·탐색 '그리드' 페이지에서만 카드 버튼을 붙인다. 단일 영상 페이지에선 관련영상 카드가
@@ -120,13 +126,21 @@
   // ── 카드별 버튼(앵커형): 틱톡·인스타 검색 그리드 ──
   // 틱톡 카드=a[href*="/video/"], 인스타 카드=a[href*="/p/"]·"/reel/". 카드가 <a>라서
   // note-item 방식과 달리 앵커 '안'에 버튼을 넣고, 클릭 시 이동을 막는다(2026-07-19 틱톡·인스타 실측).
+  // ★인스타는 URL만으로 그리드를 못 가른다(2026-07-29 실측): 렌즈 검색으로 들어오는 화면이
+  //   /explore/search/keyword/ 뿐 아니라 해시태그(/explore/tags/), 계정 프로필(/{id}/),
+  //   릴스 탭(/{id}/reels/) 등 제각각이라 isGridPage()가 전부 false가 돼 버튼이 안 붙었다.
+  //   → URL 대신 '화면 모양'으로 판단한다: 카드 크기(120px+) 게시물 앵커가 3개 이상 = 그리드.
+  //   단일 게시물 페이지는 아래 '더 보기' 그리드가 있어도 isSinglePost()로 제외해 플로팅을 남긴다.
   function addAnchorCardBtns() {
-    if (!isGridPage()) return;
     var links = document.querySelectorAll('a[href*="/video/"], a[href*="/p/"], a[href*="/reel/"]');
-    for (var i = 0; i < links.length; i++) {
-      var a = links[i];
-      var r = a.getBoundingClientRect();
-      if (r.width < 120 || r.height < 120) continue;   // 카드 크기 썸네일 링크만(작은 링크 제외)
+    var big = [];
+    for (var k = 0; k < links.length; k++) {
+      var rr = links[k].getBoundingClientRect();
+      if (rr.width >= 120 && rr.height >= 120) big.push(links[k]);
+    }
+    if (!isGridPage() && !(big.length >= 3 && !isSinglePost())) return;
+    for (var i = 0; i < big.length; i++) {
+      var a = big[i];
       if (a.getAttribute("data-ssgrab")) continue;      // 중복 방지
       a.setAttribute("data-ssgrab", "1");
       if (getComputedStyle(a).position === "static") a.style.position = "relative";
@@ -134,8 +148,9 @@
       b.className = "ss-card-grab";
       b.textContent = "📥";
       b.title = "이 영상 담기";
+      // 인스타·틱톡은 카드 '오른쪽 위'에 자체 릴스/재생 배지가 있어 겹친다 → 왼쪽 위에 붙인다.
       b.style.cssText =
-        "position:absolute;top:8px;right:8px;z-index:99999;background:#1f6feb;color:#fff;" +
+        "position:absolute;top:8px;left:8px;z-index:99999;background:#1f6feb;color:#fff;" +
         "border:none;border-radius:16px;width:34px;height:34px;font-size:16px;" +
         "box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer";
       (function (a) {
