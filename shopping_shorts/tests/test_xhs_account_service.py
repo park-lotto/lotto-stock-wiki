@@ -18,25 +18,35 @@ def _wire(monkeypatch, tmp_path, notes):
     return db
 
 
-def test_discovery_accumulation_counts_distinct_days(tmp_path):
+def test_discovery_accumulation_counts_observations(tmp_path):
     s = Store(str(tmp_path / "t.db"))
-    acc = [{"userid": "u1", "engagement_sum": 100, "note_count": 3, "nickname": "A"}]
-    s.xhs_discovery_record("2026-07-29", acc)
-    s.xhs_discovery_record("2026-07-29", acc)   # 같은 날 재발굴 → 1일로 셈(덮어씀)
-    s.xhs_discovery_record("2026-07-30", [{"userid": "u1", "engagement_sum": 50,
-                                           "note_count": 2, "nickname": "A"}])
+    def acc(e): return [{"userid": "u1", "engagement_sum": e, "note_count": 3, "nickname": "A"}]
+    s.xhs_discovery_record("2026-07-29T10:00:00", acc(100))
+    s.xhs_discovery_record("2026-07-29T10:00:00", acc(100))  # 같은 타임스탬프(=같은 발굴) → 1관측(멱등)
+    s.xhs_discovery_record("2026-07-29T14:00:00", acc(50))   # 같은 날 다른 발굴 → 별개 관측
+    s.xhs_discovery_record("2026-07-30T09:00:00", acc(30))   # 다음 날
     stats = s.xhs_discovery_stats()
-    assert stats["u1"]["appear_days"] == 2          # 29·30 = 이틀
-    assert stats["u1"]["cum_engagement"] == 150     # 100(29 최종) + 50(30)
-    assert stats["u1"]["last_seen"] == "2026-07-30"
+    assert stats["u1"]["appear_count"] == 3         # 관측 3회(자주 돌수록↑)
+    assert stats["u1"]["appear_days"] == 2          # 달력상 이틀
+    assert stats["u1"]["cum_engagement"] == 180     # 100+50+30
+    assert stats["u1"]["last_seen"] == "2026-07-30T09:00:00"
 
 
 def test_discover_attaches_accumulation(monkeypatch, tmp_path):
     notes = [_note("u1", "A", 5), _note("u1", "A", 5)]
     _wire(monkeypatch, tmp_path, notes)
     out = service.discover_xiaohongshu_accounts()
-    assert out[0]["appear_days"] == 1               # 첫 발굴 = 1일
+    assert out[0]["appear_count"] == 1              # 첫 발굴 = 1관측
     assert out[0]["cum_engagement"] == out[0]["engagement_sum"]
+
+
+def test_discover_endpoint_guards_when_overseas_running(monkeypatch):
+    import json
+    from shopping_shorts import app, overseas_hot_jobs
+    monkeypatch.setattr(overseas_hot_jobs, "status", lambda: {"status": "running"})
+    resp = app.api_xhs_discover()          # 해외HOT 수집중이면 발굴 건너뜀
+    body = json.loads(resp.body)
+    assert body["ok"] is False and "해외HOT" in body["error"]
 
 
 def test_search_fn_follows_xhs_scraper_config(monkeypatch):

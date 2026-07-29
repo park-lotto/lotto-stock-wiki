@@ -1248,24 +1248,26 @@ class Store:
         return {s["value"] for s in self.list_seeds("xiaohongshu")
                 if s["kind"] == "xhs_blacklist"}
 
-    # ── 계정 발굴 누적(며칠째 반복해서 뜨나) ──
-    def xhs_discovery_record(self, run_date, accounts):
-        """오늘 발굴된 계정들을 누적 로그에 기록. 같은 날 재발굴은 덮어씀(하루 1회로 셈)."""
+    # ── 계정 발굴 누적(관측 기반: 돌릴 때마다 1관측 → 자주 돌리면 빨리 검증) ──
+    def xhs_discovery_record(self, run_ts, accounts):
+        """이번 발굴을 누적 로그에 append. run_ts는 매 발굴마다 다른 타임스탬프라
+        같은 계정이라도 발굴 1회 = 1행(관측)으로 쌓인다(같은 날 여러 번도 각각 셈)."""
         with self._conn() as c:
             c.executemany(
                 "INSERT OR REPLACE INTO xhs_discovery_log"
                 "(userid, run_date, engagement_sum, note_count, nickname) VALUES(?,?,?,?,?)",
-                [(a["userid"], run_date, int(a.get("engagement_sum") or 0),
+                [(a["userid"], run_ts, int(a.get("engagement_sum") or 0),
                   int(a.get("note_count") or 0), a.get("nickname") or "") for a in accounts])
 
     def xhs_discovery_stats(self):
-        """userid → {appear_days(등장 일수), cum_engagement(누적 참여합), last_seen}."""
+        """userid → {appear_count(관측 횟수), appear_days(등장 일수), cum_engagement, last_seen}."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT userid, COUNT(DISTINCT run_date), SUM(engagement_sum), MAX(run_date) "
+                "SELECT userid, COUNT(*), COUNT(DISTINCT substr(run_date,1,10)), "
+                "SUM(engagement_sum), MAX(run_date) "
                 "FROM xhs_discovery_log GROUP BY userid").fetchall()
-        return {r[0]: {"appear_days": r[1], "cum_engagement": int(r[2] or 0),
-                       "last_seen": r[3] or ""} for r in rows}
+        return {r[0]: {"appear_count": r[1], "appear_days": r[2],
+                       "cum_engagement": int(r[3] or 0), "last_seen": r[4] or ""} for r in rows}
 
     # ── 플랫폼 스코프 스냅샷(가속 계산용) ──
     def save_run_platform(self, platform, run_date, rows):

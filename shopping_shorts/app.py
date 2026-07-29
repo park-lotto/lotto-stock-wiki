@@ -666,6 +666,12 @@ def api_seeds_remove(body: dict):
 def api_xhs_discover(min_notes: int = 2):
     """샤오홍슈 '카테고리별 잘하는 계정' 리더보드. 검색발굴을 작성자별 집계·참여도순.
     블랙리스트 제외, is_registered로 이미 담긴 계정 표시."""
+    # 경합 가드: 해외HOT 수집이 도는 중이면 같은 로그인 세션을 다퉈 조용히 0건 위험 →
+    # 아예 안 돌리고 잠시 후로 안내(무료 크롤끼리 세션 공유, 2026-07-29 실측).
+    from shopping_shorts import overseas_hot_jobs
+    if overseas_hot_jobs.status().get("status") == "running":
+        return JSONResponse(status_code=200, content={"ok": False,
+            "error": "지금 해외HOT 수집이 도는 중이라 발굴을 건너뛰었어요(세션이 겹치면 0건). 수집이 끝나면 다시 눌러주세요."})
     try:
         return {"ok": True, "items": service.discover_xiaohongshu_accounts(min_notes=min_notes)}
     except Exception as e:
