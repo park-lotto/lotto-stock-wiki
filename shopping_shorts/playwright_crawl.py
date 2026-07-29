@@ -156,23 +156,31 @@ _SORT_ORDER = "time_descending"    # 페이지 UI 정렬탭(最新)을 못 찾�
                                     # 기본 "general"은 인기순이라 몇 달 전 글이 섞여 "선점" 목적에 안 맞음.
 
 
-def _force_time_descending(route, request):
-    """검색 API 요청 body의 sort를 time_descending으로 바꿔치기(서명은 안 건드림, 실측상 통과됨)."""
-    if _SEARCH_API_HINT in request.url and request.method == "POST":
-        try:
-            import json
-            body = json.loads(request.post_data or "{}")
-            body["sort"] = _SORT_ORDER
-            route.continue_(post_data=json.dumps(body))
-            return
-        except Exception:      # noqa: BLE001 — 파싱 실패 시 원본 그대로 보냄(인기순 폴백)
-            pass
-    route.continue_()
+def _make_sort_forcer(sort_order):
+    """요청 body의 sort를 sort_order로 바꿔치기하는 route 핸들러를 만든다(서명은 안 건드림).
+    time_descending=최신순(해외HOT 선점용), general=인기순(발굴용, 샤오홍슈 기본)."""
+    def _force(route, request):
+        if _SEARCH_API_HINT in request.url and request.method == "POST":
+            try:
+                import json
+                body = json.loads(request.post_data or "{}")
+                body["sort"] = sort_order
+                route.continue_(post_data=json.dumps(body))
+                return
+            except Exception:      # noqa: BLE001 — 파싱 실패 시 원본 그대로(기본 general 폴백)
+                pass
+        route.continue_()
+    return _force
 
 
-def _crawl_xiaohongshu(keyword, session_path, timeout_ms):
-    """실제 브라우저를 띄우는 유일한 함수. 세션 로드 → 검색 페이지 방문(최신순 강제) →
-    검색 API 응답 JSON들을 캡처해 리스트로 반환. 테스트는 이 함수를 주입 대체한다."""
+def _force_time_descending(route, request):   # 하위호환(기존 참조 보존)
+    return _make_sort_forcer(_SORT_ORDER)(route, request)
+
+
+def _crawl_xiaohongshu(keyword, session_path, timeout_ms, sort=_SORT_ORDER):
+    """실제 브라우저를 띄우는 유일한 함수. 세션 로드 → 검색 페이지 방문 → 검색 API 응답
+    JSON들을 캡처해 리스트로 반환. sort=time_descending(최신,해외HOT) / general(인기,발굴).
+    테스트는 이 함수를 주입 대체한다."""
     from playwright.sync_api import sync_playwright   # 지연 import — 미설치 환경 보호
 
     captured = []
@@ -190,7 +198,7 @@ def _crawl_xiaohongshu(keyword, session_path, timeout_ms):
         browser = p.chromium.launch(headless=True)
         ctx = browser.new_context(storage_state=session_path)
         page = ctx.new_page()
-        page.route(f"**{_SEARCH_API_HINT}*", _force_time_descending)
+        page.route(f"**{_SEARCH_API_HINT}*", _make_sort_forcer(sort))
         page.on("response", _on_response)
         page.goto(url, timeout=timeout_ms, wait_until="domcontentloaded")
         for _ in range(20):     # 응답 도착까지 폴링(고정 대기보다 라이브 실측상 더 안정적이었음)
@@ -202,15 +210,17 @@ def _crawl_xiaohongshu(keyword, session_path, timeout_ms):
     return captured
 
 
-def search_full(keyword, max_results=40, session_path=None, timeout_ms=None, _crawl=None):
+def search_full(keyword, max_results=40, session_path=None, timeout_ms=None, _crawl=None,
+                sort=None):
     """xiaohongshu_search.search_full과 동일 계약. 세션 파일이 없으면 빈 리스트
-    (만료·미설정으로 전체 수집이 죽지 않게)."""
+    (만료·미설정으로 전체 수집이 죽지 않게).
+    sort=None이면 _SORT_ORDER(최신순, 해외HOT 기본). 발굴은 sort='general'(인기순)로 부른다."""
     session_path = session_path or config.REDNOTE_SESSION_PATH
     if not session_path or not os.path.exists(session_path):
         return []
     timeout_ms = timeout_ms or config.XHS_PW_TIMEOUT_MS
     crawl = _crawl or _crawl_xiaohongshu
-    responses = crawl(keyword, session_path, timeout_ms)
+    responses = crawl(keyword, session_path, timeout_ms, sort or _SORT_ORDER)
     seen = set()
     out = []
     for body in responses:

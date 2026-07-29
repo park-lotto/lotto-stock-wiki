@@ -119,11 +119,23 @@ def test_parse_search_response_handles_empty_data():
     assert pc._parse_search_response(None) == []
 
 
+def test_sort_forcer_rewrites_body_sort():
+    # 발굴은 general(인기순), 해외HOT은 time_descending으로 body.sort를 바꿔치기.
+    captured = {}
+    class _Req:
+        url = "https://x/api/sns/web/v1/search/notes?..."; method = "POST"; post_data = '{"keyword":"k"}'
+    class _Route:
+        def continue_(self, post_data=None): captured["post_data"] = post_data
+    import json
+    pc._make_sort_forcer("general")(_Route(), _Req())
+    assert json.loads(captured["post_data"])["sort"] == "general"
+
+
 def test_search_full_uses_injected_crawl_and_dedups(monkeypatch, tmp_path):
     session_file = tmp_path / "session.json"
     session_file.write_text("{}")
 
-    def fake_crawl(keyword, session_path, timeout_ms):
+    def fake_crawl(keyword, session_path, timeout_ms, sort=None):
         assert keyword == "厨房神器"
         assert session_path == str(session_file)
         return [
@@ -141,7 +153,7 @@ def test_search_full_respects_max_results(monkeypatch, tmp_path):
     session_file = tmp_path / "session.json"
     session_file.write_text("{}")
 
-    def fake_crawl(keyword, session_path, timeout_ms):
+    def fake_crawl(keyword, session_path, timeout_ms, sort=None):
         return [{"data": {"items": [_note(str(i)) for i in range(10)]}}]
 
     out = pc.search_full("kw", max_results=3, session_path=str(session_file), _crawl=fake_crawl)

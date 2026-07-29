@@ -61,12 +61,17 @@ def test_discover_endpoint_guards_when_overseas_running(monkeypatch):
 
 
 def test_search_fn_follows_xhs_scraper_config(monkeypatch):
-    # 기본(apify)이면 유료 검색, playwright면 무료 크롤 검색을 고른다.
+    # 기본(apify)이면 유료 검색, playwright면 무료 크롤을 인기순(general)으로 고른다.
     from shopping_shorts import xiaohongshu_search, playwright_crawl
     monkeypatch.setattr(config, "XHS_SCRAPER", "apify")
     assert service._xhs_search_fn() is xiaohongshu_search.search_full
+
     monkeypatch.setattr(config, "XHS_SCRAPER", "playwright")
-    assert service._xhs_search_fn() is playwright_crawl.search_full
+    calls = {}
+    monkeypatch.setattr(playwright_crawl, "search_full",
+                        lambda kw, sort=None: calls.update(kw=kw, sort=sort) or [])
+    service._xhs_search_fn()("厨房神器")
+    assert calls == {"kw": "厨房神器", "sort": "general"}   # 발굴은 인기순
 
 
 def test_discover_then_adopt_marks_registered(monkeypatch, tmp_path):

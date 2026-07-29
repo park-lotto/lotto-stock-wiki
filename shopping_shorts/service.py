@@ -256,7 +256,9 @@ def _xhs_search_fn():
     발굴도 공짜로 돈다. 둘 다 search_full(keyword)→노트 리스트로 인터페이스 동일."""
     if getattr(config, "XHS_SCRAPER", "apify") == "playwright":
         from shopping_shorts import playwright_crawl
-        return playwright_crawl.search_full
+        # 발굴은 인기순(sort='general', 샤오홍슈 기본)으로 검색 → '진짜 볼 것'을 재료로 삼는다.
+        # (해외HOT은 time_descending 선점용이라 여기서만 general로 가른다.)
+        return lambda kw: playwright_crawl.search_full(kw, sort="general")
     return xiaohongshu_search.search_full
 
 
