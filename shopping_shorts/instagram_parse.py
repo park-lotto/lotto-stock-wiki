@@ -123,6 +123,50 @@ def extract_reel_nodes(payload):
     return []
 
 
+def extract_hashtag_search_items(payload):
+    """해시태그 탐색(/explore/tags/{tag}/) 응답 → 게시물 노드 리스트(2026-07-30 계정발굴).
+
+    인스타는 탐색 페이지 진입 시 graphql로 xdt_fbsearch__top_serp_graphql을 불러
+    해시태그 검색결과(SERP)를 채운다(실측, 로그인벽 없음). edges[].node.items[]가
+    게시물이고, 각 항목의 user 필드에 발굴 대상 계정(pk/username/full_name)이 있다.
+    모르는 모양이면 [] — 한 페이지 파싱 실패가 다른 태그 발굴을 막지 않는다."""
+    if not isinstance(payload, dict):
+        return []
+    try:
+        edges = payload["data"]["xdt_fbsearch__top_serp_graphql"]["edges"]
+    except (KeyError, TypeError):
+        return []
+    if not isinstance(edges, list):
+        return []
+    out = []
+    for edge in edges:
+        node = (edge or {}).get("node") or {}
+        items = node.get("items")
+        if isinstance(items, list):
+            out.extend(it for it in items if isinstance(it, dict))
+    return out
+
+
+def parse_hashtag_search_item(item):
+    """해시태그 검색 게시물 1개 → 발굴용 dict. user/username 없으면 None."""
+    if not isinstance(item, dict):
+        return None
+    user = item.get("user") or {}
+    username = user.get("username")
+    if not username:
+        return None
+    code = item.get("code") or ""
+    return {
+        "username": username,
+        "full_name": user.get("full_name") or "",
+        "is_verified": bool(user.get("is_verified")),
+        "pk": item.get("pk") or "",
+        "code": code,
+        "url": f"https://www.instagram.com/p/{code}/" if code else "",
+        "taken_at": _iso(item.get("taken_at")),
+    }
+
+
 def classify_channel_result(nodes, page_url, error):
     """채널 1개의 수집 결과를 4가지로 분류한다.
 

@@ -541,6 +541,17 @@ class Store:
                     PRIMARY KEY (userid, run_date)
                 )
             """)
+            # 인스타 계정 발굴 누적 로그(2026-07-30) — 하루 1행/계정(같은날 재발굴은 덮어씀).
+            # xhs_discovery_log와 동일 패턴. 인스타 SERP엔 참여도가 없어 appear_count만 쌓는다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS ig_discovery_log (
+                    username TEXT NOT NULL,
+                    run_date TEXT NOT NULL,
+                    appear_count INTEGER,
+                    full_name TEXT,
+                    PRIMARY KEY (username, run_date)
+                )
+            """)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS youtube_channel_cache (
                     seed_value TEXT PRIMARY KEY,
@@ -1292,6 +1303,33 @@ class Store:
                 "FROM xhs_discovery_log GROUP BY userid").fetchall()
         return {r[0]: {"appear_count": r[1], "appear_days": r[2],
                        "cum_engagement": int(r[3] or 0), "last_seen": r[4] or ""} for r in rows}
+
+    # ── 인스타 계정 발굴 블랙리스트(사장님이 쳐낸 계정 영구 제외) ──
+    # platform_seeds 재사용: platform="instagram", kind="ig_blacklist", value=username(소문자).
+    def ig_blacklist_add(self, username):
+        self.add_seed("instagram", "ig_blacklist", str(username).lower())
+
+    def ig_blacklist_list(self):
+        return {s["value"] for s in self.list_seeds("instagram")
+                if s["kind"] == "ig_blacklist"}
+
+    # ── 인스타 계정 발굴 누적(관측 기반) — xhs_discovery_record/stats와 동일 패턴 ──
+    def ig_discovery_record(self, run_ts, accounts):
+        with self._conn() as c:
+            c.executemany(
+                "INSERT OR REPLACE INTO ig_discovery_log"
+                "(username, run_date, appear_count, full_name) VALUES(?,?,?,?)",
+                [(a["username"].lower(), run_ts, int(a.get("appear_count") or 0),
+                  a.get("full_name") or "") for a in accounts])
+
+    def ig_discovery_stats(self):
+        """username(소문자) → {appear_count(누적 관측), appear_days(등장 일수), last_seen}."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT username, SUM(appear_count), COUNT(DISTINCT substr(run_date,1,10)), "
+                "MAX(run_date) FROM ig_discovery_log GROUP BY username").fetchall()
+        return {r[0]: {"appear_count": r[1] or 0, "appear_days": r[2],
+                       "last_seen": r[3] or ""} for r in rows}
 
     # ── 플랫폼 스코프 스냅샷(가속 계산용) ──
     def save_run_platform(self, platform, run_date, rows):

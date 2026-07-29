@@ -19,7 +19,8 @@ import os
 
 from shopping_shorts import config
 from shopping_shorts.instagram_parse import (
-    classify_channel_result, extract_reel_nodes, parse_reel_node,
+    classify_channel_result, extract_hashtag_search_items, extract_reel_nodes,
+    parse_hashtag_search_item, parse_reel_node,
 )
 
 # 마지막 실행의 분류 집계 — 호출부(service/app)가 job 결과에 담아 화면·보고에 쓴다.
@@ -116,6 +117,67 @@ def _fetch_reel_detail(ctx, pk):
         return nodes[0] if nodes else None
     except Exception:      # noqa: BLE001
         return None
+
+
+def _search_hashtag_playwright(tag):
+    """해시태그 1개 → (게시물 dict 리스트, error). 계정발굴 전용(2026-07-30).
+
+    /explore/tags/{tag}/ 진입 시 인스타가 자체적으로 부르는
+    xdt_fbsearch__top_serp_graphql 응답을 가로챈다(실측: 로그인벽 없이 세션
+    재사용, 서버직결 성공 — hashtag당 게시물 20여개·고유계정 20개 안팎).
+    _scrape_one_playwright와 같은 세션·스텔스 설정을 그대로 쓴다.
+    """
+    from playwright.sync_api import sync_playwright
+    from playwright_stealth import Stealth
+
+    url = f"https://www.instagram.com/explore/tags/{tag}/"
+    captured = []
+    launch_kw = {"headless": True, "args": ["--disable-blink-features=AutomationControlled"]}
+    ctx_kw = {}
+    if config.INSTAGRAM_SESSION_PATH and os.path.exists(config.INSTAGRAM_SESSION_PATH):
+        ctx_kw["storage_state"] = config.INSTAGRAM_SESSION_PATH
+    elif config.INSTAGRAM_PROXY:
+        ctx_kw["proxy"] = {"server": config.INSTAGRAM_PROXY}
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(**launch_kw)
+            ctx = browser.new_context(**ctx_kw)
+            Stealth().apply_stealth_sync(ctx)
+            page = ctx.new_page()
+
+            def _on_response(resp):
+                if "graphql" not in resp.url:
+                    return
+                try:
+                    captured.extend(extract_hashtag_search_items(resp.json()))
+                except Exception:      # noqa: BLE001 — JSON 아니거나 모양 다르면 무시
+                    pass
+
+            page.on("response", _on_response)
+            page.goto(url, timeout=config.INSTAGRAM_PW_TIMEOUT_MS, wait_until="domcontentloaded")
+            page.wait_for_timeout(3500)     # SERP graphql 응답 도착 여유(실측 3~4초)
+            ctx.close()
+            browser.close()
+        return captured, None
+    except Exception as e:                  # noqa: BLE001 — 태그 하나 실패가 전체를 죽이지 않게
+        return [], str(e)[:200]
+
+
+def search_hashtag(tag, _search_one=None):
+    """해시태그 1개 → 발굴용 게시물 dict 리스트(파싱 완료, 10키 아님 — discovery 전용 스키마).
+
+    _search_one: 테스트 주입용(브라우저 없이). 기본은 실제 Playwright.
+    """
+    search = _search_one or _search_hashtag_playwright
+    raw_items, error = search(tag)
+    if error:
+        return []
+    out = []
+    for it in raw_items:
+        parsed = parse_hashtag_search_item(it)
+        if parsed:
+            out.append(parsed)
+    return out
 
 
 def fetch_reels(usernames, on_progress=None, _scrape_one=None):

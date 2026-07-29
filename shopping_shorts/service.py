@@ -24,6 +24,8 @@ from shopping_shorts.tiktok_client import fetch_account_videos as tt_fetch
 from shopping_shorts.tiktok_search import search_full as tt_search_full
 from shopping_shorts.xiaohongshu_playwright import fetch_notes as _xhs_fetch_notes
 from shopping_shorts import xiaohongshu_search, xiaohongshu_discovery, overseas_seeds
+from shopping_shorts.instagram_playwright import search_hashtag as _ig_search_hashtag
+from shopping_shorts import instagram_discovery
 
 TIKTOK_SEARCH_COUNT_DEFAULT = 50   # 언어당 fetch 개수(설정 tiktok_search_count로 오버라이드)
 _TIKTOK_LANG_KINDS = {"ko", "en", "ja", "zh", "ru"}   # 키워드 시드의 언어코드 kind
@@ -350,6 +352,88 @@ def auto_register_xiaohongshu(top_n=10, min_notes=2):
             continue
         store.add_seed("xiaohongshu", "account", a["profile_url"])
         added.append(a["profile_url"])
+    return added
+
+
+def _ig_hashtags_by_category():
+    """overseas_seeds.json의 tiktok 키워드(공백 자연어)를 인스타 해시태그(붙여쓰기)로
+    변환 — 별도 시드파일 없이 기존 카테고리 팩과 동기 유지(2026-07-30)."""
+    out = {}
+    for cat, packs in overseas_seeds.load_seeds().items():
+        tags = [(kw or "").replace(" ", "").lower() for kw in (packs or {}).get("tiktok", [])]
+        out[cat] = [t for t in tags if t]
+    return out
+
+
+def discover_instagram_accounts(min_appear=2):
+    """인스타 계정 발굴 리더보드(해시태그 탐색, 2026-07-30). 블랙리스트 제외,
+    이미 등록된 계정은 is_registered=True."""
+    store = Store(DB_PATH)
+    blacklist = store.ig_blacklist_list()
+    # 인스타 실제 추적 대상은 discovered_channels(엑셀과 union되는 테이블) —
+    # 샤오홍슈처럼 platform_seeds가 아니다(2026-07-30, channels.select_tracked 참고).
+    registered = {d["username"].lower() for d in store.discovered_channels()}
+    accounts = instagram_discovery.discover_accounts(
+        _ig_search_hashtag, _ig_hashtags_by_category(),
+        min_appear=min_appear, blacklist=blacklist)
+    run_ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")
+    store.ig_discovery_record(run_ts, accounts)
+    stats = store.ig_discovery_stats()
+    for a in accounts:
+        a["is_registered"] = a["username"].lower() in registered
+        st = stats.get(a["username"].lower(), {})
+        a["cum_appear_count"] = st.get("appear_count", a["appear_count"])
+        a["appear_days"] = st.get("appear_days", 1)
+    if accounts:
+        import json as _json
+        store.set_setting("ig_discovery_last_result", _json.dumps(
+            {"at": run_ts, "items": accounts}, ensure_ascii=False))
+    return accounts
+
+
+def cached_instagram_discovery():
+    """마지막 인스타 발굴 결과(캐시) — 크롤 없이 읽는다. 없으면 {'items': []}."""
+    import json as _json
+    raw = Store(DB_PATH).get_setting("ig_discovery_last_result", "")
+    if not raw:
+        return {"at": "", "items": []}
+    try:
+        d = _json.loads(raw)
+        return {"at": d.get("at", ""), "items": d.get("items", [])}
+    except Exception:
+        return {"at": "", "items": []}
+
+
+def adopt_instagram_discovery_account(username, full_name=""):
+    """[담기] — discovered_channels(엑셀과 union되는 실제 추적 목록)에 등록.
+    블랙리스트면 거부. 채널 릴스 자체(fetch_reels)는 다음 collect("instagram")부터 포함된다."""
+    store = Store(DB_PATH)
+    if username.lower() in store.ig_blacklist_list():
+        return {"ok": False, "reason": "blacklisted"}
+    store.add_discovered(username, name=full_name or username)
+    return {"ok": True}
+
+
+def blacklist_instagram_discovery_account(username):
+    """[삭제] — 추적목록 제거 + 영구 블랙리스트(자동등록·발굴 재등장 차단)."""
+    store = Store(DB_PATH)
+    store.remove_channel(username)
+    store.ig_blacklist_add(username)
+    return {"ok": True}
+
+
+def auto_register_instagram(top_n=10, min_appear=2):
+    """매일: 발굴 상위 N 계정을 레퍼런스(discovered_channels)에 자동 등록
+    (블랙리스트·기등록 제외). 등록 username 리스트 반환."""
+    store = Store(DB_PATH)
+    added = []
+    for a in discover_instagram_accounts(min_appear=min_appear):
+        if len(added) >= top_n:
+            break
+        if a.get("is_registered"):
+            continue
+        store.add_discovered(a["username"], name=a.get("full_name") or a["username"])
+        added.append(a["username"])
     return added
 
 
