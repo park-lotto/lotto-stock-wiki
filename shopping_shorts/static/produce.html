@@ -2564,7 +2564,14 @@ function coupangForm(){
   const p=COUPANG.product||{};
   const inp='width:100%;margin-bottom:5px;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px;font-size:12px';
   return `<div style="margin-top:8px">
-    <div class="hint" style="margin-bottom:5px">위 검색 링크에서 상품을 고른 뒤 주소창 URL을 붙여넣으세요.
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+      <button class="btn-next" style="padding:7px 14px;font-size:12px" onclick="coupangCrawl()">🔎 쿠팡에서 상품 찾기</button>
+      <input id="cpQuery" style="flex:1;min-width:140px;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 8px;font-size:12px"
+             placeholder="검색어" value="${esc((COUPANG.product&&COUPANG.product.keyword)||COUPANG.target||'')}">
+      <span id="cpSearchMsg" class="hint"></span>
+    </div>
+    <div id="cpResults"></div>
+    <div class="hint" style="margin-bottom:5px">찾기가 막히면(또는 원하는 게 안 나오면) 위 검색 링크에서 상품을 고른 뒤 주소창 URL을 붙여넣으세요.
       ${COUPANG.partners_page?`파트너스 추적 링크는 <a href="${esc(COUPANG.partners_page)}" target="_blank" rel="noopener" style="color:var(--accent)">파트너스 링크 만들기 ↗</a>에서 생성해 아래 칸에.`:''}</div>
     <input id="cpUrl" style="${inp}" placeholder="쿠팡 상품 URL (https://www.coupang.com/vp/products/...)" value="${esc(p.url||'')}">
     <input id="cpName" style="${inp}" placeholder="상품명 (선택 — 설명란·인포크 버튼 이름으로 씁니다)" value="${esc(p.name||COUPANG.target||'')}">
@@ -2573,6 +2580,43 @@ function coupangForm(){
       <button class="btn-next" style="padding:7px 14px;font-size:12px" onclick="coupangSave()">저장</button>
       <span id="cpMsg" class="hint" style="color:var(--fire)"></span>
     </div></div>`;
+}
+// 상품 찾기(크롤, 2026-07-29) — 서버가 헤드풀 크롬으로 쿠팡 검색결과를 긁어 카드로 준다.
+// 쿠팡은 데이터센터 IP·헤드리스를 막으므로 서버에 주거용 프록시가 붙어 있어야 뜬다.
+// 실패하면 조용히 안내만 띄우고 아래 수동 붙여넣기 칸이 그대로 남는다.
+async function coupangCrawl(){
+  const msg=document.getElementById('cpSearchMsg');
+  const box=document.getElementById('cpResults');
+  const q=((document.getElementById('cpQuery')||{}).value||'').trim();
+  if(!q){ if(msg) msg.textContent='검색어를 넣으세요'; return; }
+  if(msg){ msg.style.color='var(--sub)'; msg.textContent='쿠팡 검색 중… (10~30초)'; }
+  if(box) box.innerHTML='';
+  try{
+    const r=await fetch('/api/coupang/search?q='+encodeURIComponent(q));
+    const d=await r.json().catch(()=>({ok:false,notice:'응답 파싱 실패'}));
+    if(!d.ok||!(d.items||[]).length){
+      if(msg){ msg.style.color='var(--fire)'; msg.textContent=d.notice||'결과 없음 — 아래에 URL을 직접 붙여넣으세요'; }
+      return;
+    }
+    COUPANG.results=d.items;
+    if(msg){ msg.style.color='var(--sub)'; msg.textContent=d.items.length+'개 — 클릭하면 이 영상의 상품으로 확정됩니다'; }
+    if(box) box.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:10px;max-height:340px;overflow-y:auto">`
+      + d.items.map((it,i)=>`<div onclick="coupangPick(${i})" title="${esc(it.name)}"
+           style="cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--bg)">
+          <img src="${esc(it.image)}" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:contain;border-radius:6px;background:#fff">
+          <div style="font-size:11px;line-height:1.35;margin-top:4px;max-height:44px;overflow:hidden">${esc(it.name)}</div>
+          <div style="font-size:12px;font-weight:700;margin-top:3px">${esc(it.price||'')}</div>
+          <div class="hint" style="font-size:10px">${esc(it.rating||'')}${it.is_ad?' · 광고':''}</div>
+        </div>`).join('')+`</div>`;
+  }catch(e){ if(msg){ msg.style.color='var(--fire)'; msg.textContent='네트워크 오류'; } }
+}
+// 카드 클릭 = 상품 확정. 입력칸을 채운 뒤 곧바로 저장한다(클릭 한 번으로 끝나게).
+function coupangPick(i){
+  const it=(COUPANG.results||[])[i]; if(!it) return;
+  const url=document.getElementById('cpUrl'), name=document.getElementById('cpName');
+  if(url) url.value=it.url;
+  if(name) name.value=it.name;
+  coupangSave();
 }
 function coupangEdit(){ COUPANG.editing=true; redrawCoupang(); }
 function redrawCoupang(){ const el=document.getElementById('coupangBox'); if(el) el.innerHTML=coupangInner(); }
@@ -2879,6 +2923,41 @@ function fmtNum(n){ n=Number(n)||0; if(n>=1e8) return (n/1e8).toFixed(n%1e8?1:0)
 // ⚠️ views/views_x_followers는 저장소에 조회수 자체가 없어 항상 null(app.py 주석 확인) —
 // null인 타일은 아예 렌더하지 않는다("null배" 노출 금지). structure.segments가 비면([])
 // 스트립 없이 우아하게 넘어간다.
+// candidate.video_id → HANDOFF 인덱스(=pickFootage 인자). video_id는 shortcode와 같다
+// (renderPool의 pick 매칭도 it.shortcode===pick_id로 판별 — 같은 키 체계).
+function _candIdxInHandoff(vid){
+  return HANDOFF.findIndex(h=>h && (h.shortcode===vid || h.video_id===vid));
+}
+// 🎬 소스 구조 비교(A, 2026-07-29): 담긴 소스들의 비트구조·설득장치를 나란히 카드로 펼쳐,
+// 사장님이 백본으로 쓸 영상을 눈으로 비교해 고르게 한다. 카드 클릭 = 기존 pickFootage(백본 지정
+// +저장+AI PICK 재조회). structure가 null인 소스(캐시 없음)는 "분석 전"으로 표시 — 클릭하면
+// 그 영상이 픽이 되며 서버가 분석한다(build_aipick pick 경로의 analyze_structure 폴백).
+function renderCompareCards(d){
+  const cands = (d && d.candidates) || [];
+  if(cands.length < 2) return '';   // 1개면 비교할 게 없다
+  const pickId = d.pick_id;
+  const cards = cands.map(c=>{
+    const hi = _candIdxInHandoff(c.video_id);
+    const hf = HANDOFF[hi] || {};
+    const isPick = c.video_id === pickId;
+    const thumb = c.thumbnail || hf.thumbnail || '';
+    const name = c.name || hf.name || '영상';
+    const st = c.structure;
+    const strip = (st && st.segments && st.segments.length)
+      ? `<div class="strip mini">${st.segments.map(s=>`<div class="seg" style="flex:${s.pct};background:${s.color}"></div>`).join('')}</div>`
+      : `<div class="cmp-nostruct">분석 전 — 클릭하면 분석</div>`;
+    const tags = [];
+    if(st && st.hook_type) tags.push(`<span class="tag t1">🎙 ${esc(st.hook_type)}</span>`);
+    (st && st.devices || []).slice(0,2).forEach(dv=>tags.push(`<span class="tag t2">${esc(dv)}</span>`));
+    return `<div class="cmp-card${isPick?' pick':''}" ${hi>=0?`onclick="pickFootage(${hi})"`:''} title="${esc(name)}">
+        ${isPick?'<span class="cmp-badge">🤖 백본</span>':'<span class="cmp-pickhint">⭐ 이걸로 선택</span>'}
+        <div class="cmp-top">${thumb?`<img src="${thumb.includes('gstatic.com')?thumb:('/api/thumb?url='+encodeURIComponent(thumb))}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">`:'<div class="cmp-th-ph"></div>'}<div class="cmp-nm">${esc(name)}</div></div>
+        ${strip}
+        <div class="cmp-tags">${tags.join('')}</div>
+      </div>`;
+  }).join('');
+  return `<div class="cmp-wrap"><div class="cmp-title">🎬 소스 구조 비교 · 백본으로 쓸 영상을 고르세요</div><div class="cmp-grid">${cards}</div></div>`;
+}
 function renderAiPick(d, hasFootage){
   // pick_id==null은 두 경우가 다르다: 담긴 재료가 아예 없으면(hasFootage=false) 빈 상태,
   // 재료는 담겨 있는데 그 대본을 아직 분석 못 했으면(hasFootage=true) 별도 안내 —
@@ -2918,6 +2997,7 @@ function renderAiPick(d, hasFootage){
       <div class="stats">${_tiles.join('')}</div>
       ${_why}
       ${strip}
+      ${renderCompareCards(d)}
       <div class="newline">✨ 이 뼈대로 완전 새로운 대본을 만듭니다</div>
       <button class="cta-shine aiPickCta" onclick="startFromAiPick()">⚡ 이대로 만들기 시작</button>
       <details style="margin-top:10px">

@@ -134,3 +134,32 @@ def test_build_aipick_pick_text_empty_when_no_sources():
     d = _aipick.build_aipick([], {})
     assert d["pick_id"] is None
     assert not d.get("pick_text")
+
+
+def test_build_aipick_candidates_carry_structure_and_meta(monkeypatch):
+    """★소스 구조 비교(A, 2026-07-29): 사장님이 3개를 나란히 보고 백본을 고르려면 candidates에
+    각 소스의 이름·썸네일·(캐시된)구조가 실려야 한다. 캐시 있는 소스는 structure를 그대로,
+    캐시 없는 소스는 structure=None(프론트가 '분석 전'으로 표시). 여기서 새 Gemini 호출은 없다."""
+    from shopping_shorts import aipick as _aipick
+    # pick 경로의 폴백 분석이 테스트를 오염시키지 않게 비활성(캐시만 검증).
+    monkeypatch.setattr(_aipick, "analyze_structure", lambda *a, **k: {})
+    cached = {"beats": [{"label": "훅", "approx_sec": "0-2"},
+                        {"label": "결과", "approx_sec": "2-5"}],
+              "target_seconds": 5, "hook_type": "권위인용", "devices": ["주변인물"]}
+    sources = [
+        {"video_id": "a", "text": "x", "comments": 500, "followers": 1000,
+         "name": "살림홈", "thumbnail": "a.jpg", "structure": cached},
+        {"video_id": "b", "text": "y", "comments": 5, "followers": 1000,
+         "name": "다른채널", "thumbnail": "b.jpg"},   # 구조 캐시 없음
+    ]
+    out = _aipick.build_aipick(sources, {})
+    cby = {c["video_id"]: c for c in out["candidates"]}
+    assert set(cby) == {"a", "b"}
+    # 캐시 있는 a: 이름·썸네일·구조(뷰) 다 실림
+    assert cby["a"]["name"] == "살림홈" and cby["a"]["thumbnail"] == "a.jpg"
+    assert cby["a"]["structure"] and cby["a"]["structure"]["hook_type"] == "권위인용"
+    assert cby["a"]["structure"]["devices"] == ["주변인물"]
+    assert abs(sum(s["pct"] for s in cby["a"]["structure"]["segments"]) - 100) < 0.5
+    # 캐시 없는 b: structure=None(프론트 '분석 전'), 이름·썸네일은 그대로
+    assert cby["b"]["structure"] is None
+    assert cby["b"]["name"] == "다른채널" and cby["b"]["thumbnail"] == "b.jpg"

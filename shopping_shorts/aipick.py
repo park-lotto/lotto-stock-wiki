@@ -58,6 +58,19 @@ def _beats_to_segments(beats, target_seconds):
     return segs
 
 
+def _structure_view(struct_raw):
+    """analyze_structure 원형(beats/hook_type/devices) → 프론트 카드용 뷰. 빈 입력이면 {}."""
+    struct_raw = struct_raw or {}
+    if not struct_raw:
+        return {}
+    return {
+        "segments": _beats_to_segments(struct_raw.get("beats") or [],
+                                       struct_raw.get("target_seconds") or 0),
+        "hook_type": struct_raw.get("hook_type", ""),
+        "devices": struct_raw.get("devices", []),
+    }
+
+
 def build_aipick(sources, meta, forced=None):
     if not sources:
         return {"pick_id": None, "pick_index": -1, "tiles": {}, "structure": {}, "candidates": [], "pick_meta": {}}
@@ -88,16 +101,24 @@ def build_aipick(sources, meta, forced=None):
     # Gemini를 다시 태우면 비용·지연이 크고, 재분석 결과가 매번 달라질 수도 있다.
     # 캐시가 없을 때만(source 딕셔너리에 'structure' 키 자체가 없거나 빈 dict) 새로 분석.
     struct_raw = pick.get("structure") or analyze_structure(pick.get("text", "")) or {}
-    structure = {}
-    if struct_raw:
-        structure = {
-            "segments": _beats_to_segments(struct_raw.get("beats") or [],
-                                            struct_raw.get("target_seconds") or 0),
-            "hook_type": struct_raw.get("hook_type", ""),
-            "devices": struct_raw.get("devices", []),
-        }
+    structure = _structure_view(struct_raw)
+    # ★소스 구조 비교(A, 2026-07-29): 사장님이 담긴 3개를 나란히 비교해 백본을 직접 고를 수 있게
+    #   candidates에 각 소스의 **캐시된** 구조를 함께 싣는다. 캐시 없는 소스는 structure=None(프론트
+    #   가 "분석 전"으로 표시) — 여기서 analyze_structure를 새로 태우지 않는다(전 소스 Gemini 재호출
+    #   = 비용·지연 폭증). pick은 위에서 이미 폴백 분석을 거쳤고, autoload·도서관 저장분은 캐시가 있다.
+    _by_id = {str(s.get("video_id")): s for s in sources}
+    cand_out = []
+    for r in scored:
+        vid = str(r["video_id"])
+        src = _by_id.get(vid) or {}
+        cand_out.append({
+            "video_id": r["video_id"], "score": r["score"],
+            "name": src.get("title") or src.get("name") or "",
+            "thumbnail": src.get("thumbnail") or src.get("thumb") or "",
+            "structure": _structure_view(src.get("structure")) if src.get("structure") else None,
+        })
     return {"pick_id": pick_id, "pick_index": idx, "tiles": tiles,
-            "structure": structure, "candidates": [{"video_id": r["video_id"], "score": r["score"]} for r in scored],
+            "structure": structure, "candidates": cand_out,
             # ★pick의 원본 대본을 같이 실어 보낸다(2026-07-27 사장님 제보 "대본을 확보하지 못했습니다").
             #   프론트(startFromAiPick)는 예전에 /api/produce/picks(도서관 담김 버킷)에서만 대본을
             #   찾았는데, AI PICK 소스가 도서관 교차를 벗어나 script_extracts/reel에서도 오게 되면서
