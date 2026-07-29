@@ -1346,10 +1346,7 @@ function render(){
             <button class="comment" onclick="goComment('${i.shortcode}')">💬 댓글</button>
             <button class="save" id="save_${i.shortcode}" onclick="toggleMix('${i.shortcode}', this)">📥 담기</button>
           </div>
-          <button class="script-btn" onclick="extractScript('${i.shortcode}')">📝 대본 추출</button>
           <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 렌즈 유사영상</button>
-          <button class="script-btn" onclick="openSceneCut('${i.shortcode}', '${esc(i.video_url||'')}', '${esc(i.category||'')}')">🎞 장면 담기</button>
-          <button class="script-btn" onclick="sendToProduce('${i.shortcode}')" id="send_${i.shortcode}">🎬 제작소로 보내기</button>
         </div>
       </div>
     </div>`).join("");
