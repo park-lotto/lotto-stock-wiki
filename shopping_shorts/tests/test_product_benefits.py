@@ -145,7 +145,8 @@ def test_build_inventory_no_benefits_unchanged():
     segs = [_seg("s1-0", 0, 1), _seg("s1-1", 1, 3, text="말소리", desc="컵"),
             _seg("s1-2", 3, 5)]
     _, block = edit_plan._build_inventory([_script("s1", segs)])
-    assert block == "[s1-1] (2s) 화면:컵 | 말:말소리"
+    # 훅 비주얼(2026-07-29): 역할(shot_role 기본 '기타')·실증(is_key 기본 N)이 별도 suffix로 붙는다.
+    assert block == "[s1-1] (2s) 화면:컵 | 말:말소리 | 역할:기타 | 실증:N"
 
 
 # ── ③-b 소스 단위 특장점 블록 (프롬프트 주입) ─────────────────────────────

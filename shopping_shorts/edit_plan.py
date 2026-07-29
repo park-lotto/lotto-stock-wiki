@@ -95,9 +95,14 @@ def _build_inventory(source_scripts):
             # 앵커 dedup(_dedup_anchors)이 엉뚱하게 합쳐진다. 반드시 별도 suffix로만 붙인다.
             _ml = seg.get("motion_level")
             _ml_s = f" | 모션:{_ml}" if _ml else ""
+            # 훅 비주얼(2026-07-29): 추출이 영상 보고 태깅한 shot_role(완성/조리/기타)·is_key(핵심
+            # 실증)를 라인에 노출 → 훅 규칙이 '완성/실증' 장면을 첫 화면으로 고르게 한다.
+            # ★scene_desc 문자열엔 절대 안 섞는다(_claim_key 토큰 오염) — 모션처럼 별도 suffix로만.
+            _role_s = f" | 역할:{seg.get('shot_role') or '기타'}"
+            _key_s = f" | 실증:{'Y' if seg.get('is_key') else 'N'}"
             lines.append(
                 f"[{sid}] ({length}s) 화면:{seg.get('scene_desc','')} | 말:{seg.get('text','')}"
-                f"{_act_s}{_ben_s}{_ml_s}"
+                f"{_act_s}{_ben_s}{_ml_s}{_role_s}{_key_s}"
             )
     return seg_map, "\n".join(lines)
 
@@ -652,6 +657,11 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "  (GOOD) \"냄새가 싹 빠지니까 화장실 문 열 때마다 풍기던 그 꿉꿉한 냄새가 아예 안 나요.\"\n\n"
         + "[대본 뼈대 — 5단계 스파인]\n"
         "- ① 훅(0~3초): 스크롤을 멈추는 강한 한 방. 아래 훅 4패턴 중 이 소재에 가장 맞는 하나로.\n"
+        # 훅 비주얼(2026-07-29 사장님): 첫 화면이 '우유 붓기·재료 계량' 같은 준비동작이면 스크롤이
+        # 안 멈춘다. 인벤토리의 역할:완성·실증:Y를 첫 화면으로 당긴다(훅만 시간순 예외).
+        "  ★훅 비트(beats[0])의 seg_ids는 인벤토리에서 '역할:완성' 또는 '실증:Y'인 장면을 "
+        "최우선으로 골라라. 준비동작·계량(재료 붓기·무게 재기·빈 그릇) 장면으로 훅을 열지 마라. "
+        "완성/절정 장면이 영상 뒤쪽에 있어도 첫 화면으로 당겨라(훅은 시간순을 깨도 된다).\n"
         "- ② 문제·상황: 누가 어떤 불편/상황을 겪었는지(구체적 인물·장면).\n"
         "- ③ 해결·전개: 이 제품이 그걸 어떻게 해결하는지(핵심 장점을 이야기로). 주변인 대화 인용 1회(\"...\").\n"
         "- ④ 결과: 달라진 결과를 생생하게(비포→애프터).\n"
