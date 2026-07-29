@@ -14,6 +14,7 @@ from shopping_shorts.instagram_playwright import fetch_reels as _pw_fetch_reels
 from shopping_shorts.instagram_playwright import LAST_TALLY as _PW_TALLY
 from shopping_shorts.ranking import (build_items, build_youtube_items, build_tiktok_items,
                                      build_overseas_items, apply_grades, aggregate_channels)
+from shopping_shorts.channel_fitness import channel_fitness
 from shopping_shorts.store import Store
 from shopping_shorts.comment_gen import generate as _gen_comments
 from shopping_shorts import ai_categorize, topic_grouper
@@ -57,22 +58,33 @@ def youtube_channel_board(sort="views"):
     store = Store(DB_PATH)
     items, collected_at = store.load_last_run_platform("youtube")
     agg = {r["channel_id"]: r for r in aggregate_channels(items)}
+    fit = channel_fitness(items)  # 채널명(name/username) → {total, good, other, fitness}
     rows = []
     for s in store.list_seeds("youtube"):
         if s["kind"] != "account":
             continue
         m = _SEED_CH_ID.search(s["value"] or "")
         cid = m.group(1) if m else None
-        base = {"channel_id": cid, "channel_url": s["value"], "added_at": s.get("added_at", ""),
+        base = {"channel_id": cid, "channel_url": s["value"], "seed_url": s["value"],
+                "added_at": s.get("added_at", ""),
                 "name": "", "video_count": 0, "views": 0, "speed": 0, "density": 0.0,
-                "accel": 0, "grade": "—", "thumbnail": "", "collected": False}
+                "accel": 0, "grade": "—", "thumbnail": "", "collected": False,
+                "fitness": 0.0, "good": 0, "other": 0}
         if cid and cid in agg:
             base.update(agg[cid])
             base["collected"] = True
+        f = fit.get(base.get("name")) if base.get("name") else None
+        if f:
+            base["fitness"] = f["fitness"]
+            base["good"] = f["good"]
+            base["other"] = f["other"]
         rows.append(base)
     key = {"views": "views", "speed": "speed", "density": "density",
            "accel": "accel", "count": "video_count"}.get(sort, "views")
-    rows.sort(key=lambda x: (x.get(key) or 0), reverse=True)
+    reverse = True
+    if sort == "fitness":
+        key, reverse = "fitness", False  # 지울 후보(적합도 낮음)가 위로
+    rows.sort(key=lambda x: (x.get(key) or 0), reverse=reverse)
     return {"channels": rows, "collected_at": collected_at, "total": len(rows)}
 
 

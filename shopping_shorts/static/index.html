@@ -744,7 +744,7 @@ async function removeSeed(v){
   loadSeeds();
 }
 // 등록 채널 리더보드 — 레퍼런스 랭킹식 지표(조회수·속도·참여율·가속)로 정렬·관리(2026-07-25).
-let CH_BOARD_SORT='views';
+let CH_BOARD_SORT='fitness';  // 이 보드는 유튜브 전용(/api/youtube/channels) → 지울 후보(적합도낮음)가 위로 오게 기본 오름차순
 async function openChannelBoard(sort){
   CH_BOARD_SORT=sort||CH_BOARD_SORT;
   openScript('<div class="sm-loading">채널 지표 불러오는 중…</div>','📊 등록 채널 지표·관리',true);
@@ -756,7 +756,7 @@ async function renderChannelBoard(){
   catch(e){ document.getElementById('scriptBody').innerHTML='<div style="padding:10px">불러오기 실패</div>'; return; }
   const box=document.getElementById('scriptBody'); if(!box) return;
   const rows=d.channels||[];
-  const SORTS=[['views','조회수'],['speed','속도'],['density','참여율'],['accel','가속'],['count','영상수']];
+  const SORTS=[['fitness','쇼핑적합도'],['views','조회수'],['speed','속도'],['density','참여율'],['accel','가속'],['count','영상수']];
   const btnbar=SORTS.map(([k,l])=>`<span onclick="CH_BOARD_SORT='${k}';renderChannelBoard()" style="cursor:pointer;padding:4px 12px;margin:2px;border-radius:12px;font-size:12px;border:1px solid var(--line);background:${CH_BOARD_SORT===k?'#1f6feb33':'transparent'};font-weight:${CH_BOARD_SORT===k?700:400}">${l}</span>`).join('');
   const fmt=n=>{n=Number(n||0); if(n>=1e8)return (n/1e8).toFixed(1).replace(/\.0$/,'')+'억'; if(n>=1e4)return (n/1e4).toFixed(1).replace(/\.0$/,'')+'만'; return n.toLocaleString();};
   const head=`<div style="position:sticky;top:0;background:var(--panel);padding:6px 0;z-index:1">
@@ -764,12 +764,14 @@ async function renderChannelBoard(){
     <div>${btnbar}</div></div>`;
   const list=rows.map((r,idx)=>{
     const wait = r.collected ? '' : '<span style="color:var(--sub);font-size:10px">수집대기</span>';
+    const fitPct = Math.round((r.fitness||0)*100);
+    const fitColor = fitPct>=80 ? '#3fb950' : (fitPct>=40 ? '#d29922' : '#f85149');
     return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)">
       <span style="width:26px;color:var(--sub);font-size:12px">${idx+1}</span>
       <img src="${r.thumbnail||''}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'" style="width:44px;height:44px;object-fit:cover;border-radius:6px;background:#1a2230">
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.grade||''} <a href="${r.channel_url}" target="_blank" style="color:inherit;text-decoration:none">${esc(r.name||r.channel_id||'')}</a> ${wait}</div>
-        <div style="font-size:11px;color:var(--sub)">👁 ${fmt(r.views)} · ⚡속도 ${fmt(r.speed)} · 💬참여 ${(r.density*100||0).toFixed(1)}% · 📈가속 ${fmt(r.accel)} · 🎬${r.video_count}</div>
+        <div style="font-size:11px;color:var(--sub)"><span style="color:${fitColor};font-weight:700">🛒 적합도 ${fitPct}%</span> · 👁 ${fmt(r.views)} · ⚡속도 ${fmt(r.speed)} · 💬참여 ${(r.density*100||0).toFixed(1)}% · 📈가속 ${fmt(r.accel)} · 🎬${r.video_count}</div>
       </div>
       <span title="이 채널 벤치에서 제거" onclick="removeChannelFromBoard('${(r.channel_url||'').replace(/'/g,"\\\\'")}')" style="cursor:pointer;color:#e0623d;font-size:16px;padding:0 6px">✕</span>
     </div>`;
