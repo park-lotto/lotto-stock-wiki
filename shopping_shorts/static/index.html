@@ -675,8 +675,11 @@ function renderCats(){
   el.innerHTML = ["전체", ...topics].map(c =>
     `<div class="cat ${c===STATE.cat?'active':''}" onclick="setCat('${c}')">${c}</div>`).join("");
 }
-function setCtype(k){ STATE.ctype=k; STATE.cat="전체"; renderCtypes(); renderCats(); render(); }
-function setCat(c){ STATE.cat=c; renderCats(); render(); }
+// 카테고리를 누르면 채널 보기에서 빠져나온다(2026-07-28 사장님 제보) — 그대로 두면
+// "그 채널 안에서 카테고리만 바뀌는" 상태라 전체 목록으로 돌아갈 길이 없었다.
+// silent:true = 아래에서 어차피 render()를 부르므로 두 번 그리지 않는다.
+function setCtype(k){ exitChannelView({silent:true}); STATE.ctype=k; STATE.cat="전체"; renderCtypes(); renderCats(); render(); }
+function setCat(c){ exitChannelView({silent:true}); STATE.cat=c; renderCats(); render(); }
 function setTab(t){ STATE.tab=t; document.querySelectorAll('.tab').forEach(x=>
   x.classList.toggle('active', x.dataset.tab===t)); render(); }
 document.querySelectorAll('.tab').forEach(x=> x.onclick=()=>setTab(x.dataset.tab));
@@ -786,8 +789,51 @@ function _expandQuery(needle){
   const kids = TAXONOMY[needle];
   return kids ? [needle].concat(kids) : [needle];
 }
-function setSearch(q){ STATE.q = q; render(); }
+function setSearch(q){
+  // 사장님이 검색창을 직접 고치면 더 이상 '채널 보기'가 아니다 — 표시만 내린다.
+  // 여기서 히스토리까지 걷어내면(history.back → popstate → 입력칸 비움) 지금
+  // 치고 있는 글자가 날아간다. 그래서 플래그만 내리고 히스토리는 그대로 둔다.
+  if(CHANNEL_VIEW && q !== CHANNEL_VIEW) CHANNEL_VIEW = null;
+  STATE.q = q; render();
+}
+
+// ── 채널 보기 나가기(2026-07-28) ─── CHANNELVIEW-START
+// 채널명 클릭 = 검색어에 아이디를 넣는 것(searchChannel)이라, 카테고리를 눌러도
+// 검색어가 남아 "그 채널 안에서 카테고리만 바뀌는" 상태가 됐다. 사장님 제보:
+// "위쪽 전체·홈살림 등 카테고리를 누르면 (전체 목록으로) 다시 가게 해줘".
+// 검색어를 비우고 입력칸까지 되돌린다. 지울 게 없으면 render()도 안 부른다
+// (일반 검색 중 카테고리를 눌렀을 뿐인데 검색어가 날아가면 그것도 사고다 —
+//  그래서 '채널 보기 중'일 때만 지운다).
+let CHANNEL_VIEW = null;   // 채널 보기 중인 username(아니면 null)
+function isChannelMode(){ return !!CHANNEL_VIEW; }
+function exitChannelView(opts){
+  opts = opts || {};
+  if(!CHANNEL_VIEW) return false;
+  CHANNEL_VIEW = null;
+  STATE.q = "";
+  const box=document.getElementById("rankSearch");
+  if(box) box.value = "";
+  const wrap=document.getElementById("channelHistoryWrap");
+  if(wrap) wrap.innerHTML = "";
+  // 카테고리 클릭 등으로 나갈 땐 진입할 때 쌓은 히스토리 항목도 걷어낸다 —
+  // 안 그러면 사장님이 뒤로가기를 눌렀을 때 아무 일도 안 일어나는 헛클릭이 된다.
+  // (뒤로가기로 들어온 경우엔 브라우저가 이미 걷어낸 뒤라 부르면 한 칸 더 나간다.)
+  if(!opts.fromPopstate){ try{ history.back(); }catch(e){} }
+  if(!opts.silent) render();
+  return true;
+}
+// 뒤로가기로 채널 보기에서 빠져나온다. 진입할 때 히스토리 항목을 하나 쌓고,
+// popstate에서 되돌린다. ★URL은 안 바꾼다(같은 주소로 pushState) — 주소에
+// 채널을 박으면 새로고침해도 채널 화면이 되살아나는데, 사장님이 원한 건
+// "새로고침하면 이전(전체) 화면으로"다.
+// ─── CHANNELVIEW-END
 // ── 검색 끝 ──
+// ★popstate 배선은 '검색 끝' 밖에 둔다 — test_ranking_search_js가 matchesSearch~'검색 끝'
+//   구간을 node로 잘라 돌리는데, window가 없는 그 하네스에서 addEventListener가 터진다.
+window.addEventListener('popstate', function(){
+  // 우리가 쌓은 항목에서 빠져나왔다 = 채널 보기 종료. 이미 나갔으면 no-op.
+  exitChannelView({fromPopstate:true});
+});
 // 썸네일 배지(2026-07-22) — 조회수=도달규모, 참여밀도=반응, 속도=상승세를 '보이는 항목 안에서의
 // 백분위'로 보고 "소형인데 빠르게" 같은 한줄 판단 라벨을 붙인다. 절대값이 아니라 지금 목록 대비 상대.
 function _pctl(sorted, v){ let lo=0,hi=sorted.length; while(lo<hi){const m=(lo+hi)>>1; if(sorted[m]<=v) lo=m+1; else hi=m;} return sorted.length? lo/sorted.length : 0; }
@@ -994,6 +1040,12 @@ function searchChannel(username){
   if(!username) return;
   const box=document.getElementById("rankSearch");
   if(box) box.value = username;
+  // 히스토리 항목을 하나 쌓아 브라우저 뒤로가기로 나갈 수 있게 한다(2026-07-28).
+  // 같은 채널을 다시 눌러도 쌓지 않는다 — 뒤로가기를 여러 번 눌러야 나가는 꼴이 된다.
+  if(CHANNEL_VIEW !== username){
+    CHANNEL_VIEW = username;
+    try{ history.pushState({ssChannel: username}, "", location.href); }catch(e){}
+  }
   setSearch(username);
 }
 async function _renderChannelHistory(username, liveShortcodes){
