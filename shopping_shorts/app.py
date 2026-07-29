@@ -718,6 +718,49 @@ def api_xhs_followers(body: dict):
             "error": "팔로워 조회 실패(크롤이 막혔을 수 있어요). 잠시 후 다시."})
 
 
+@app.get("/api/xhs/auto")
+def api_xhs_auto_get():
+    """백그라운드 자동 발굴 on/off 상태 + 주기."""
+    on = Store(DB_PATH).get_setting("xhs_bg_auto", "off") == "on"
+    return {"ok": True, "on": on, "interval_min": config.XIAOHONGSHU_BG_INTERVAL_MIN}
+
+
+@app.post("/api/xhs/auto")
+def api_xhs_auto_set(body: dict):
+    """백그라운드 자동 발굴 켜기/끄기. body: {on: bool}. 켜면 창을 닫아도 서버가
+    주기적으로 발굴해 누적을 쌓는다(해외HOT 수집 중엔 자동 건너뜀)."""
+    on = bool(body.get("on"))
+    Store(DB_PATH).set_setting("xhs_bg_auto", "on" if on else "off")
+    return {"ok": True, "on": on, "interval_min": config.XIAOHONGSHU_BG_INTERVAL_MIN}
+
+
+@app.on_event("startup")
+def _start_xhs_bg_discover_loop():
+    """서버 백그라운드 발굴 루프 — DB 설정 'xhs_bg_auto'가 on이면 주기적으로 발굴해
+    누적(xhs_discovery_log)을 쌓는다. 창이 닫혀 있어도 돈다. 해외HOT 수집 중이면 건너뛰어
+    세션 경합을 피하고, 발굴은 등록은 안 하고 누적만 쌓는다(등록은 daily_batch가 하루 1회)."""
+    if not getattr(config, "XIAOHONGSHU_BG_ENABLED", False):
+        return
+    import threading, time as _t, sys as _sys
+
+    def _loop():
+        interval = max(5, config.XIAOHONGSHU_BG_INTERVAL_MIN) * 60
+        while True:
+            _t.sleep(interval)
+            try:
+                if Store(DB_PATH).get_setting("xhs_bg_auto", "off") != "on":
+                    continue
+                from shopping_shorts import overseas_hot_jobs
+                if overseas_hot_jobs.status().get("status") == "running":
+                    continue  # 세션 경합 회피 — 다음 주기에 다시 시도
+                n = len(service.discover_xiaohongshu_accounts())   # 누적만 쌓음(등록 X)
+                print(f"[xhs_bg] 발굴 누적 {n}계정", file=_sys.stderr)
+            except Exception as e:              # noqa: BLE001 — 루프가 죽지 않게
+                print(f"[xhs_bg] skip: {e}", file=_sys.stderr)
+
+    threading.Thread(target=_loop, daemon=True).start()
+
+
 @app.get("/api/related")
 def api_related(shortcode: str, platform: str = "instagram"):
     """"같은 주제 모아보기" — 같은 topic_group인 다른 영상들 반환(2026-07-13).
