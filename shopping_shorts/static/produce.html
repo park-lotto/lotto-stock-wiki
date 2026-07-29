@@ -2895,9 +2895,10 @@ async function refreshStep0(){
     //      래치(_autoloadTried)는 fetch 전에 세우고, 진짜 방어선은 서버 DB(produce_autoload)다.
     if((!d || d.pick_id==null) && !_autoloadTried){
       _autoloadTried = true;
-      renderAutoloadingState();
-      const got = await autoloadFootageScripts();
-      if(got){
+      const total = HANDOFF.filter(h=>h.useFootage && h.url).length;
+      renderAutoloadingState(total);
+      const got = await autoloadAllFootage();     // ★여러 배치로 전부 분석(Task 1)
+      if(got.analyzed){
         try{ d = await (await fetch('/api/produce/aipick'+(q==='?'?'':q))).json(); }catch(e){}
       }
     }
@@ -2924,12 +2925,40 @@ async function autoloadFootageScripts(){
     return !!(d && (d.added > 0 || (d.results||[]).some(x=>x.status==='already')));
   }catch(e){ return false; }
 }
+// P1(2026-07-29): 담긴 소스 전부를 여러 배치로 끝까지 분석한다. 서버는 호출당 4개 상한
+// (_AUTOLOAD_MAX_PER_CALL)이라 5개 이상이면 skipped_cap이 남는데, 그럴 때만 한 번 더 부른다.
+// ★유한 반복(최대 3배치=12개). refreshStep0을 재귀로 부르지 않는다(2026-07-26 사고 방지).
+async function autoloadAllFootage(){
+  let added=0, already=0, failed=[];
+  for(let batch=0; batch<3; batch++){
+    const items = HANDOFF.filter(h=>h.useFootage && h.url).map(h=>({
+      url: h.url, video_url: h.video_url||'', shortcode: h.shortcode||'', name: h.name||'',
+      thumbnail: h.thumbnail||'', caption: h.caption||'', category: h.category||'',
+      followers: h.followers||0, comments: h.comments||0,
+    }));
+    if(!items.length) break;
+    let d;
+    try{
+      const r = await fetch('/api/produce/autoload', {
+        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({items}) });
+      d = await r.json();
+    }catch(e){ break; }
+    const results = (d && d.results) || [];
+    added += (d && d.added) || 0;
+    already += results.filter(x=>x.status==='already').length;
+    failed.push(...results.filter(x=>/^failed_/.test(x.status)).map(x=>x.shortcode));
+    // 상한에 걸려 못 태운 게 남았을 때만 다음 배치. 없으면 끝.
+    if(!results.some(x=>x.status==='skipped_cap')) break;
+  }
+  return { added, already, failed, analyzed: (added>0 || already>0) };
+}
 // 자동적재가 도는 동안 보여줄 과도 상태 — 폴백 안내를 먼저 띄웠다가 곧 카드로 바뀌면
 // 사용자가 "에러가 났다가 고쳐졌나?"로 읽는다. 분석 중임을 명시한다.
-function renderAutoloadingState(){
+function renderAutoloadingState(total){
   const el=document.getElementById('aiPick'); if(!el) return;
+  const n = Number(total)||0;
   el.innerHTML = `<div class="skm-card empty">
-      <h2><span class="skm-spin">🔄</span> 담은 영상의 대본을 분석하고 있어요</h2>
+      <h2><span class="skm-spin">🔄</span> 담은 영상 ${n?('<b>'+n+'개</b> '):''}대본을 분석하고 있어요</h2>
       <div class="hint" style="text-align:center;color:var(--sub)">처음 담은 영상은 30초~1분쯤 걸립니다. 끝나면 AI PICK 카드가 나타나요.</div>
     </div>`;
 }
