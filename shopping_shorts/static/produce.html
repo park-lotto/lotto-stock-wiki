@@ -2584,6 +2584,8 @@ function coupangForm(){
              placeholder="검색어(고쳐서 다시 찾기)" value="${esc((COUPANG.product&&COUPANG.product.keyword)||COUPANG.target||'')}"
              onkeydown="if(event.key==='Enter'){event.preventDefault();coupangCrawl();}">
       <button class="btn-prev" style="padding:6px 12px;font-size:12px" onclick="coupangCrawl()">🔄 다시 찾기</button>
+      <button class="btn-prev" style="padding:6px 12px;font-size:12px" onclick="coupangLens()"
+              title="영상 화면을 역검색해 브랜드·모델까지 찾아냅니다(유료 조회라 누를 때만 돕니다)">🔍 화면으로 정확히</button>
       <span id="cpSearchMsg" class="hint"></span>
     </div>
     <div id="cpChips"></div>
@@ -2662,6 +2664,24 @@ async function coupangCrawl(forced){
           <div style="font-size:12px;font-weight:700;margin-top:3px">${esc(it.price||'')}</div>
           <div class="hint" style="font-size:10px">${esc(it.rating||'')}${it.is_ad?' · 광고':''}</div>
         </div>`).join('')+`</div>`;
+  }catch(e){ if(msg){ msg.style.color='var(--fire)'; msg.textContent='네트워크 오류'; } }
+}
+// 🔍 화면으로 정확히 — 영상 프레임을 역검색해 브랜드·모델까지 찾는다(유료라 누를 때만).
+// 찾아낸 이름은 칩 맨 앞에 꽂고 그걸로 바로 재검색한다. 못 찾으면 지금 결과를 그대로 둔다.
+async function coupangLens(){
+  const msg=document.getElementById('cpSearchMsg');
+  if(!MIX_JOB){ if(msg){ msg.style.color='var(--fire)'; msg.textContent='먼저 영상을 담아야 합니다'; } return; }
+  if(msg){ msg.style.color='var(--sub)'; msg.textContent='화면 역검색 중… (20~40초)'; }
+  try{
+    const r=await fetch('/api/coupang/lens',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({job_id:MIX_JOB})});
+    const d=await r.json().catch(()=>({ok:false}));
+    if(!d.ok||!d.name){
+      if(msg){ msg.style.color='var(--fire)'; msg.textContent=d.error||'화면에서 상품을 못 찾았습니다'; }
+      return;
+    }
+    COUPANG.chips=[d.name].concat((COUPANG.chips||[]).filter(c=>c!==d.name));
+    coupangCrawl(d.name);
   }catch(e){ if(msg){ msg.style.color='var(--fire)'; msg.textContent='네트워크 오류'; } }
 }
 // 카드 클릭 = 상품 확정. 입력칸을 채운 뒤 곧바로 저장한다(클릭 한 번으로 끝나게).
