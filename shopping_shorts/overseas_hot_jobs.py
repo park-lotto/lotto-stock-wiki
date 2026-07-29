@@ -179,11 +179,20 @@ _RUN_STALE_SEC = 1800
 
 
 def start():
+    """수집을 큐에 넣는다. 실제 실행은 독립워커가 한다(2026-07-29).
+
+    예전엔 여기서 threading.Thread를 띄웠는데, 그 스레드가 FastAPI 서버 프로세스 안에
+    있어서 배포의 systemctl restart에 SIGKILL됐다(실측: 16:03 시작 → 16:09 배포에 사망).
+    이제 서버가 죽어도 워커가 계속 돈다."""
+    store = Store(DB_PATH)
+    q = store.queue_status("overseas")
+    if q and q["state"] in ("queued", "running"):
+        with _LOCK:
+            elapsed = int(time.time() - _JOB["started"]) if _JOB["started"] else 0
+        return {"status": "running", "elapsed": elapsed}
     with _LOCK:
-        if _JOB["status"] == "running" and time.time() - _JOB["started"] < _RUN_STALE_SEC:
-            return {"status": "running", "elapsed": int(time.time() - _JOB["started"])}
-        _JOB.update(status="running", phase="시작", count=0, error=None, started=time.time())
-    threading.Thread(target=_run, daemon=True).start()
+        _JOB.update(status="running", phase="대기 중", count=0, error=None, started=time.time())
+    store.enqueue("overseas", {})
     return {"status": "running", "elapsed": 0}
 
 

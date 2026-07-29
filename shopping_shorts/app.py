@@ -2143,7 +2143,7 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
                                   customer_id=cid,
                                   render_charge_day=("trial" if _is_trial(cid) else _today_utc()),
                                   scene_first=scene_first)
-    background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
+    Store(DB_PATH).enqueue("mix", {"job_id": job_id})
     return {"ok": True, "job_id": job_id}
 
 
@@ -2466,7 +2466,7 @@ def api_mix_retype(background_tasks: BackgroundTasks, body: dict):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("extract"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "재생성할 데이터 없음"})
-    background_tasks.add_task(retype_mix_job, job_id, video_type, DB_PATH, _MIX_WORK_DIR)
+    Store(DB_PATH).enqueue("retype", {"job_id": job_id, "video_type": video_type})
     return {"ok": True}
 
 
@@ -2564,7 +2564,7 @@ def api_mix_render(background_tasks: BackgroundTasks, body: dict):
     if job.get("status") in ("rendering", "removing_subtitles") and not _render_is_stale(job):
         return {"ok": True, "status": job["status"]}
     store.update_mix_job(job_id, status="rendering", error=None)
-    background_tasks.add_task(run_render, job_id, DB_PATH, _MIX_WORK_DIR)
+    Store(DB_PATH).enqueue("render", {"job_id": job_id})
     return {"ok": True, "status": "rendering"}
 
 
@@ -2611,7 +2611,7 @@ def api_produce_mix_preview(background_tasks: BackgroundTasks, body: dict):
     # run_preview가 두 번 예약되고 ffmpeg 두 개가 같은 work/preview.mp4에 쓴다 —
     # 잘린 mp4가 'ready'로 게이트를 통과할 수 있다(TOCTOU).
     store.update_mix_job(job_id, preview_status="rendering", preview_error=None)
-    background_tasks.add_task(run_preview, job_id, DB_PATH, _MIX_WORK_DIR)
+    Store(DB_PATH).enqueue("preview", {"job_id": job_id})
     return {"ok": True, "status": "rendering"}
 
 
@@ -2638,7 +2638,7 @@ def api_produce_mix_clean(background_tasks: BackgroundTasks, body: dict):
         return {"ok": True, "status": "cleaning"}       # 더블클릭 — VMake를 두 번 안 돌린다
     # 'cleaning'을 여기서 동기 기록(응답 전) — run 안에서 쓰면 이중예약된다(preview 라우트 주석 참조)
     store.update_mix_job(job_id, clean_status="cleaning", clean_error=None)
-    background_tasks.add_task(run_clean_sources, job_id, DB_PATH, _MIX_WORK_DIR)
+    Store(DB_PATH).enqueue("clean", {"job_id": job_id})
     return {"ok": True, "status": "cleaning"}
 
 
@@ -6531,7 +6531,7 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
                                   customer_id=cid,
                                   render_charge_day=("trial" if _is_trial(cid) else _today_utc()),
                                   backbone_main=backbone_main)
-    background_tasks.add_task(run_mix_job, job_id, DB_PATH, _MIX_WORK_DIR)
+    Store(DB_PATH).enqueue("mix", {"job_id": job_id})
     return {"ok": True, "job_id": job_id}
 
 
