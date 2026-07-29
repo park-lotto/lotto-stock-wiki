@@ -240,3 +240,47 @@ OVERSEAS_DOUYIN_ENABLED=false   # 기본값 true인데 서버는 꺼둠 — 도�
 120에 근접하면 그때 B(자리 나누기)를 검토하면 된다.
 
 **미판정 50건**은 이전 수집분(판정 전 시대 항목)이라 자연히 밀려 있다. 로테이션으로 교체된다.
+
+---
+
+## 2026-07-29 (회사) — 독립워커 작업큐 배포 완료
+
+### 무엇을 왜
+긴 작업(믹스 렌더·프리뷰·해외HOT 수집)이 FastAPI `BackgroundTasks`로 **서버 프로세스 안에서**
+돌아서, 3분 크론 배포가 `systemctl restart shopping-shorts`를 하는 순간 **조용히 죽었다**
+(2026-07-29 하루 3건 실사고). 옛 가드는 mix_jobs의 `rendering` 상태만 봐서 해외HOT 수집과
+믹스 매칭 단계는 그물에 안 걸렸다.
+
+### 무엇을 했나
+`job_queue` 테이블 + **별도 systemd 서비스 `shopping-shorts-worker`**로 실행을 분리했다.
+서버는 이제 큐에 넣기만 한다 → **서버는 언제 재시작해도 안전**, 워커만 진행 중이면 재시작 연기.
+
+- `store.py`: `job_queue` 테이블 + `enqueue/claim_next/heartbeat/finish/reap_stale/queue_status`
+  (원자적 claim은 SQLite `UPDATE ... RETURNING`, 서버 3.45.1 확인)
+- `worker.py`(신규): 6개 태스크(render·preview·overseas 등) 디스패치, 30초 heartbeat 스레드,
+  모든 예외를 삼켜 워커 자체는 안 죽는다
+- `deploy/shopping-shorts-worker.service`: `Restart=always`, `TimeoutStopSec=1800`
+- `deploy/auto_deploy.sh`: 가드를 `job_queue` 기준으로 교체. **배포를 통째로 미루지 않고**
+  (`exit 0` → `WORKER_BUSY=1`) 서버는 재시작하고 워커 재시작만 연기.
+  ★좀비 가드: heartbeat 2분 미갱신이면 죽은 워커로 보고 안 미룬다(죽은 job이 배포를 영영
+  막는 게 이 repo 최악 사고).
+
+### ★리뷰가 잡은 Critical 1건
+`start()`가 **서버 프로세스의** `_JOB`을 running으로 세팅했는데 `_run()`은 **워커 프로세스**에서
+돈다 → 서버 쪽 상태가 영원히 running에 고착, `app.py:672/708/754` 가드가 **샤오홍슈 발굴을
+서버 재시작 전까지 통째로 막을** 뻔했다. `status()`가 `job_queue`를 읽도록 고쳐 해소.
+**프로세스가 갈리면 모듈 전역변수는 공유되지 않는다** — 이 전환에서 가장 밟기 쉬운 함정.
+
+### 실측 검증 (라이브 서버)
+```
+워커 설치 후 enqueue('overseas') → qid=1 state=running, Gemini 판정 실제 진행
+★sudo systemctl restart shopping-shorts  → 워커 PID 3863930 그대로, state 여전히 running,
+  heartbeat 09:27:36 → 09:28:36 갱신됨   = 서버 재시작이 작업을 못 죽인다(이 작업의 목적 달성)
+배포 가드 라이브 실행 → busy_count 1, exit 0 = 워커 재시작 연기 정상 판정
+```
+
+### 남은 것 / 주의
+- 아직 큐로 안 옮긴 짧은 백그라운드 작업들이 있다(설계 §범위: 긴 것 둘만 먼저). 필요해지면
+  같은 패턴으로 `TASKS`에 추가하면 된다.
+- **모션레벨훅 트랙도 같은 A안을 시작하려 했다** — 워커는 해외HOT 트랙이 이미 만들어 라이브에
+  올렸으니 중복 구현하지 말 것.
