@@ -45,8 +45,9 @@ def under_view_ceiling(item, ceiling=DEFAULT_VIEW_CEILING):
 
 def passes_caption_clutter(item):
     """큰 자막/텍스트 오버레이가 썸네일 대부분을 가리면 컷(video_analysis.text_level_vision 판정).
-    비전판정은 비용이 들어 상위 생존자에게만 적용되므로, 아직 판정 안 된 항목(text_level 없음)은
-    통과시킨다(과필터 방지 — duration 길이불명 통과와 동일 철학)."""
+    2026-07-29부터 생존자 전부를 판정한다(캐시로 재호출만 방지) — 그래도 판정 자체가
+    실패했거나(fetch 실패·vision 응답 없음) 아직 캐시에 없는 항목은 text_level이 비어
+    있을 수 있으므로, 그런 항목은 통과시킨다(과필터 방지 — duration 길이불명 통과와 동일 철학)."""
     return item.get("text_level") != "heavy"
 
 

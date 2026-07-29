@@ -63,7 +63,11 @@ def _annotate_text_level(items, store):
     (overseas_funnel.passes_caption_clutter가 통과시켜 과필터를 막고, 다음 수집에서 재시도)."""
     judged = cached = 0
     for it in items:
-        sc = it.get("shortcode")
+        # 이 시점의 it는 크롤러 raw dict 그대로다(build_overseas_items 전) —
+        # crawler는 "shortcode"가 아니라 "video_id" 키로 넣는다(playwright_crawl.py 등).
+        # shortcode는 나중에 ranking.build_overseas_items가 video_id로부터 만든다.
+        # 여기서 shortcode만 보면 항상 None이라 캐시가 100% 미스한다(2026-07-29 Critical 1).
+        sc = it.get("shortcode") or it.get("video_id")
         hit = store.get_thumb_text_level(sc) if sc else None
         if hit:
             it["text_level"] = hit
@@ -78,7 +82,10 @@ def _annotate_text_level(items, store):
             judged += 1
             if sc:
                 store.save_thumb_text_level(sc, level)
-    _JOB["phase"] = f"자막판정 신규{judged}·캐시{cached}"
+    # 카테고리마다 호출되므로 "수집" 단계 표시를 지우지 않고 판정 카운트만 갱신한다
+    # (예전엔 phase="자막판정..."으로 통째로 덮어써 락도 없고 마지막 카테고리 값만 남았다).
+    with _LOCK:
+        _JOB["phase"] = f"수집·자막판정 신규{judged}·캐시{cached}"
     return items
 
 
