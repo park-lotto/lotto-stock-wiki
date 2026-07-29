@@ -19,6 +19,7 @@ produce.html의 **실제 소스**를 앵커로 잘라 Node로 실행한다(test_
 import pathlib
 import shutil
 import subprocess
+import tempfile
 
 import pytest
 
@@ -142,10 +143,17 @@ def _run(js, body):
     # CommonJS라 top-level await를 못 쓴다. IIFE로 우회한다.
     wrapped = (js + "\n(async () => {\n" + body
                + "\n})().catch(e => { console.error(e && e.stack || String(e)); process.exit(1); });")
-    r = subprocess.run([NODE, "-e", wrapped],
-                        capture_output=True, text=True, timeout=30,
-                        encoding="utf-8",
-                        stdin=subprocess.DEVNULL)
+    # ★`node -e wrapped`로 넘기지 않는다 — 슬라이스한 JS가 커지면 윈도우 명령줄 상한
+    # (32KB)을 넘겨 FileNotFoundError [WinError 206]으로 죽는다(2026-07-29 실측:
+    # produce.html에 쿠팡 검색 UI가 붙자 이 파일 3건이 동시에 깨졌다). 파일로 넘기면
+    # 길이 제한이 사라진다.
+    with tempfile.TemporaryDirectory() as td:
+        script = pathlib.Path(td) / "case.js"
+        script.write_text(wrapped, encoding="utf-8")
+        r = subprocess.run([NODE, str(script)],
+                            capture_output=True, text=True, timeout=30,
+                            encoding="utf-8",
+                            stdin=subprocess.DEVNULL)
     assert r.returncode == 0, r.stderr
     return r.stdout.strip()
 
