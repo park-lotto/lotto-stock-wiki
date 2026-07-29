@@ -69,8 +69,14 @@ INSTAGRAM_PROXY = os.getenv("INSTAGRAM_PROXY", "")
 # 로그인 세션 쿠키 파일(Playwright storage_state) — 2026-07-29 샤오홍슈(rednote)에서
 # 검증된 B안: 서버 IP 차단의 실제 원인이 IP 품질이 아니라 로그인 여부였다(10채널 게이트에서
 # 비로그인 접근이 4.5초 만에 로그인벽으로 즉시 튕김). 세션이 있으면 프록시 없이 데이터센터
-# IP 직결로도 통과하는지가 이 파일의 존재 여부로 갈린다. scripts/instagram_setup_session.py로
-# 로컬에서 수동 로그인 후 생성 → 서버로 옮긴다(git 비추적, 600권한).
+# IP 직결로도 통과하는지가 이 파일의 존재 여부로 갈린다.
+# ★생성 방법: scripts/instagram_setup_session.py(Playwright 직접 로그인)는 폐기됨 —
+# Meta가 로그인 제출 시점에 CDP 자동화를 감지해 캡차로 막는다. 대신
+# scripts/instagram_cookies_from_browser.py로 Firefox에 정상 로그인한 뒤 그 브라우저의
+# 쿠키를 직접 추출한다(Chrome/Edge는 앱 바운드 암호화로 막힘). 서버로 옮긴다(git 비추적,
+# 600권한) — 같은 경로에 덮어쓰기만 하면 재시작 없이 다음 수집부터 반영됨
+# (storage_state는 채널 스크레이프마다 파일을 새로 읽는다, instagram_playwright.py 참고).
+# 절차 전체: handoff/AI픽자동적재.md "세션 만료 시 재발급 절차".
 # 없으면 기존 경로(프록시 또는 직결)로 조용히 폴백한다.
 INSTAGRAM_SESSION_PATH = os.getenv("INSTAGRAM_SESSION_PATH", "")
 
