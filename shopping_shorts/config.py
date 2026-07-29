@@ -255,3 +255,18 @@ COUPANG_SEARCH_ENABLED = os.getenv("COUPANG_SEARCH_ENABLED", "0") not in ("", "0
 COUPANG_SEARCH_LIMIT = int(os.getenv("COUPANG_SEARCH_LIMIT", "24"))
 # 브라우저를 띄우고 검색결과가 그려질 때까지의 상한(ms).
 COUPANG_SEARCH_TIMEOUT_MS = int(os.getenv("COUPANG_SEARCH_TIMEOUT_MS", "45000"))
+
+# ── 쿠팡 검색 릴레이(2026-07-29) ──
+# 서버엔 한국 출구가 없어 쿠팡을 못 긁는다(독일 주거용 프록시도 403 — 실측).
+# 그래서 사장님 PC가 서버로 나와 일감을 받아 대신 검색한다. 자세한 이유는 coupang_relay.py.
+#   local  = 이 프로세스가 직접 크롤(로컬 개발 PC용)
+#   relay  = 대기열에 넣고 릴레이(사장님 PC)의 답을 기다린다(서버용)
+COUPANG_SEARCH_MODE = os.getenv("COUPANG_SEARCH_MODE", "local")   # local | relay
+# 릴레이 인증 토큰. ★비어 있으면 릴레이 엔드포인트를 아예 닫는다 —
+# 빈 토큰이 통과하면 아무나 검색결과를 밀어넣을 수 있다.
+COUPANG_RELAY_TOKEN = os.getenv("COUPANG_RELAY_TOKEN", "")
+# 릴레이 답을 기다리는 상한(초). 넘으면 접고 수동 흐름 안내를 돌려준다.
+COUPANG_RELAY_WAIT_SEC = int(os.getenv("COUPANG_RELAY_WAIT_SEC", "60"))
+# 크롬 프로필 폴더(쿠키·PCID 유지). 매번 새 프로필로 들어가면 '처음 온 손님'이라
+# 차단 임계가 훨씬 낮다. 비우면 레포 안 .coupang_profile 를 쓴다(git 비추적).
+COUPANG_PROFILE_DIR = os.getenv("COUPANG_PROFILE_DIR", "")

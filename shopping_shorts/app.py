@@ -2250,8 +2250,57 @@ def api_coupang_search(q: str = "", limit: int = 0):
     스레드에서 돌면 죽는다(FastAPI가 def 핸들러를 워커 스레드로 돌려준다).
     실패해도 200 + ok:False로 돌려준다 — 화면은 이때 기존 수동 흐름(검색 링크
     새 탭 + URL 붙여넣기)으로 조용히 되돌아간다."""
-    from shopping_shorts import coupang_search
-    return coupang_search.search(q, limit=limit or None)
+    from shopping_shorts import coupang_partners, coupang_relay, coupang_search
+    if config.COUPANG_SEARCH_MODE != "relay":
+        return coupang_search.search(q, limit=limit or None)
+    # 릴레이 모드 — 서버는 한국 IP가 없어 직접 못 긁는다(coupang_relay.py 참고).
+    kw = (q or "").strip()
+    manual = {"ok": False, "items": [], "source": "relay",
+              "search_url": coupang_partners.search_url(kw)}
+    if not kw:
+        return dict(manual, search_url="", notice="검색어가 비어있습니다")
+    got = coupang_relay.QUEUE.submit(kw, limit or config.COUPANG_SEARCH_LIMIT,
+                                     config.COUPANG_RELAY_WAIT_SEC)
+    if got is None:
+        return dict(manual, notice="검색 도우미(사장님 PC)가 응답하지 않습니다 — "
+                                   "아래에 상품 URL을 직접 붙여넣으세요")
+    return got
+
+
+@app.get("/api/coupang/relay/next")
+def api_coupang_relay_next(token: str = "", wait: int = 25):
+    """릴레이(사장님 PC)가 일감을 받아가는 롱폴링 창구. 없으면 job:null."""
+    from shopping_shorts import coupang_relay
+    if not config.COUPANG_RELAY_TOKEN or token != config.COUPANG_RELAY_TOKEN:
+        return JSONResponse(status_code=403, content={"ok": False, "error": "토큰 불일치"})
+    job = coupang_relay.QUEUE.take(max(1, min(wait, 55)))
+    if job is None:
+        return {"ok": True, "job": None}
+    return {"ok": True, "job": {"id": job.id, "q": job.q, "limit": job.limit}}
+
+
+@app.post("/api/coupang/relay/result")
+def api_coupang_relay_result(body: dict):
+    """릴레이가 로컬에서 긁어온 결과를 되돌려준다 — 기다리던 웹 요청이 이걸 받는다."""
+    from shopping_shorts import coupang_relay
+    if not config.COUPANG_RELAY_TOKEN or body.get("token") != config.COUPANG_RELAY_TOKEN:
+        return JSONResponse(status_code=403, content={"ok": False, "error": "토큰 불일치"})
+    payload = {"ok": bool(body.get("ok")), "items": body.get("items") or [],
+               "search_url": body.get("search_url") or "", "source": "relay",
+               "notice": body.get("notice") or ""}
+    delivered = coupang_relay.QUEUE.complete((body.get("id") or "").strip(), payload)
+    # 이미 타임아웃으로 접힌 요청이면 delivered=False — 릴레이 잘못이 아니니 200으로 알린다.
+    return {"ok": True, "delivered": delivered}
+
+
+@app.get("/api/coupang/relay/status")
+def api_coupang_relay_status():
+    """화면·운영이 "PC가 붙어 있나"를 볼 수 있게. 토큰은 안 드러낸다."""
+    from shopping_shorts import coupang_relay
+    st = coupang_relay.QUEUE.status()
+    st["mode"] = config.COUPANG_SEARCH_MODE
+    st["configured"] = bool(config.COUPANG_RELAY_TOKEN)
+    return st
 
 
 @app.get("/api/mix/product/{job_id}")
