@@ -699,6 +699,25 @@ def api_xhs_blacklist(body: dict):
     return service.blacklist_xiaohongshu_account(uid, profile_url=body.get("profile_url"))
 
 
+@app.post("/api/xhs/followers")
+def api_xhs_followers(body: dict):
+    """[팔로워 대비] — 주어진 프로필들의 팔로워 수를 크롤해 {userid: follower}로 반환.
+    계정마다 프로필 1회 크롤이라 느리고 세션을 점유 → 해외HOT 수집 중이면 거부.
+    body: {profile_urls: [...]}  (프론트가 상위 N개만 보냄)."""
+    from shopping_shorts import overseas_hot_jobs, xiaohongshu_playwright
+    if overseas_hot_jobs.status().get("status") == "running":
+        return JSONResponse(status_code=200, content={"ok": False,
+            "error": "해외HOT 수집 중이라 팔로워 조회를 건너뛰었어요. 수집이 끝나면 다시 눌러주세요."})
+    urls = [u for u in (body.get("profile_urls") or []) if isinstance(u, str) and u.strip()][:25]
+    if not urls:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "profile_urls 필요"})
+    try:
+        return {"ok": True, "followers": xiaohongshu_playwright.fetch_follower_counts(urls)}
+    except Exception:
+        return JSONResponse(status_code=200, content={"ok": False,
+            "error": "팔로워 조회 실패(크롤이 막혔을 수 있어요). 잠시 후 다시."})
+
+
 @app.get("/api/related")
 def api_related(shortcode: str, platform: str = "instagram"):
     """"같은 주제 모아보기" — 같은 topic_group인 다른 영상들 반환(2026-07-13).
