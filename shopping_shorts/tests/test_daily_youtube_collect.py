@@ -12,7 +12,10 @@ def test_main_collects_youtube_free_path(monkeypatch):
     rc = dyc.main()
     assert rc == 0
     assert calls["platform"] == "youtube"   # 인스타(유료) 아님
-    assert calls["seed_only"] is True        # 자동 수집은 키워드 검색 경로를 끈다(2026-07-29)
+    # 2026-07-29: seed_only는 구현돼 있으나 아직 켜지 않는다.
+    # 미등록 우량 채널을 시드에 먼저 넣기 전에 켜면 수집량이 급감한다(설계 §T3 → §T4 순서).
+    # register_good_youtube_channels.py 실행 후 True로 바꾸고 이 단언도 True로 뒤집는다.
+    assert calls["seed_only"] is False
 
 
 def test_main_survives_exception(monkeypatch):
