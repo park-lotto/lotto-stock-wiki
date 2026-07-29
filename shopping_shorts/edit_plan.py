@@ -1137,9 +1137,15 @@ def _bb_trim(beats, call=_vault_call):
 
 
 def _reconcile_weak_beats(beats, call=_vault_call):
-    """앵커(respined 아님)이면서 fit<=3인 비트의 나레이션만 화면(scene_desc)에 맞게
-    1회 Gemini 호출로 미세수정. 대상 0개면 호출 없이 그대로. 실패 시 원문 유지(fail-open)."""
-    weak = [b for b in beats if not b.get("respined") and 0 < int(b.get("fit") or 0) <= 3]
+    """앵커(respined 아님)이면서 fit<=3 **또는 forced=True**인 비트의 나레이션만 화면(scene_desc)에
+    맞게 1회 Gemini 호출로 미세수정. 대상 0개면 호출 없이 그대로. 실패 시 원문 유지(fail-open).
+
+    ★2026-07-29(사장님 '장면 안 맞는 대본'): 예전엔 fit<=3만 잡아, 모델이 fit=4를 주면서 forced=True
+    (장면이 말과 안 맞는데 억지로 붙임)로 표시한 비트가 재작성에서 빠져나갔다. forced는 모델이 스스로
+    '억지'라고 인정한 명시 신호이므로 fit 점수와 무관하게 반드시 화면에 맞춰 고친다."""
+    weak = [b for b in beats
+            if not b.get("respined")
+            and ((0 < int(b.get("fit") or 0) <= 3) or bool(b.get("forced")))]
     if not weak:
         return beats
     lines = "\n".join(
