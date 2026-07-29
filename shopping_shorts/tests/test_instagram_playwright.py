@@ -69,3 +69,49 @@ def test_empty_input_returns_empty_without_calling_scraper():
     called = []
     ipw.fetch_reels([], _scrape_one=lambda u: called.append(u) or _fake_ok(u))
     assert called == []
+
+
+# ── search_channels: instagram_search.search_channels(Apify)와 동일 계약의
+# 무료 어댑터(2026-07-30, "신규채널 픽업" discover.html 전환용) ──
+def test_search_channels_shape_via_monkeypatch(monkeypatch):
+    def _fake_search_hashtag(tag):
+        assert tag == "주방템"   # "#주방템" → "#" 제거된 순수 태그로 전달
+        return [{"username": "chef_a", "full_name": "Chef A", "is_verified": True,
+                 "url": "https://www.instagram.com/p/X/", "like_count": 10}]
+    monkeypatch.setattr(ipw, "search_hashtag", _fake_search_hashtag)
+    out = ipw.search_channels("#주방템")
+    assert out == [{"username": "chef_a", "url": "https://www.instagram.com/p/X/",
+                    "title": "Chef A", "thumbnail": ""}]
+
+
+def test_search_channels_empty_keyword_returns_empty(monkeypatch):
+    called = []
+    monkeypatch.setattr(ipw, "search_hashtag", lambda tag: called.append(tag) or [])
+    assert ipw.search_channels("") == []
+    assert ipw.search_channels("#") == []
+    assert called == []
+
+
+def test_search_channels_respects_max_results(monkeypatch):
+    monkeypatch.setattr(ipw, "search_hashtag",
+                        lambda tag: [{"username": f"u{i}"} for i in range(10)])
+    out = ipw.search_channels("주방템", max_results=3)
+    assert len(out) == 3
+
+
+# ── fetch_profiles: apify_client.fetch_profiles(유료)와 동일 계약의 무료 어댑터 ──
+def test_fetch_profiles_maps_to_apify_compatible_shape():
+    def _fake_fetch_all(usernames):
+        return {u.lower(): {"followers": 100, "posts": 5, "full_name": f"Name {u}"} for u in usernames}
+    out = ipw.fetch_profiles(["@Chef_A", "chef_b"], _fetch_all=_fake_fetch_all)
+    assert out == {
+        "chef_a": {"followers": 100, "posts": 5, "full_name": "Name Chef_A"},
+        "chef_b": {"followers": 100, "posts": 5, "full_name": "Name chef_b"},
+    }
+
+
+def test_fetch_profiles_empty_input_returns_empty():
+    called = []
+    out = ipw.fetch_profiles([], _fetch_all=lambda us: called.append(us) or {})
+    assert out == {}
+    assert called == []

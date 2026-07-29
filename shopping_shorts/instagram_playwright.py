@@ -221,3 +221,101 @@ def fetch_reels(usernames, on_progress=None, _scrape_one=None):
     LAST_TALLY.clear()
     LAST_TALLY.update(tally)
     return items
+
+
+def fetch_profiles(usernames, _fetch_all=None):
+    """apify_client.fetch_profiles(유료)와 동일 계약의 무료 대체(2026-07-30).
+
+    {username소문자: {followers, posts, full_name}} 반환 — discover_jobs.py의
+    profiles_fn 주입 지점을 코드 변경 없이 그대로 쓸 수 있게 한다. 프로필 페이지
+    (/{username}/) 진입 시 인스타가 자체 호출하는 graphql user 응답에
+    follower_count/media_count/full_name이 그대로 있다(실측). 브라우저 1개를
+    열어 계정마다 새 탭만 여닫는다(브라우저 재시작 오버헤드 회피 — 발굴 채널은
+    보통 ≤40개라 순차라도 탭 재사용이면 충분히 빠르다, 실측 계정당 ~3~4초).
+    한 계정 실패는 그 계정만 빠뜨리고 나머지는 계속(발굴 부가 데이터라
+    fetch_reels_fn과 달리 실패해도 전체를 죽이면 안 된다, discovery._safe_profiles 참고).
+    """
+    names = [(u or "").strip().lstrip("@") for u in (usernames or [])]
+    names = [u for u in names if u]
+    if not names:
+        return {}
+    fetch_all = _fetch_all or _fetch_profiles_playwright
+    return fetch_all(names)
+
+
+def _fetch_profiles_playwright(usernames):
+    from playwright.sync_api import sync_playwright
+    from playwright_stealth import Stealth
+
+    launch_kw = {"headless": True, "args": ["--disable-blink-features=AutomationControlled"]}
+    ctx_kw = {}
+    if config.INSTAGRAM_SESSION_PATH and os.path.exists(config.INSTAGRAM_SESSION_PATH):
+        ctx_kw["storage_state"] = config.INSTAGRAM_SESSION_PATH
+    elif config.INSTAGRAM_PROXY:
+        ctx_kw["proxy"] = {"server": config.INSTAGRAM_PROXY}
+    out = {}
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(**launch_kw)
+            ctx = browser.new_context(**ctx_kw)
+            Stealth().apply_stealth_sync(ctx)
+            for uname in usernames:
+                captured = {}
+                page = ctx.new_page()
+
+                def _on_response(resp, captured=captured):
+                    if "graphql" not in resp.url:
+                        return
+                    try:
+                        d = resp.json().get("data") or {}
+                        u = d.get("user")
+                        if isinstance(u, dict) and u.get("username"):
+                            captured["user"] = u
+                    except Exception:      # noqa: BLE001
+                        pass
+
+                page.on("response", _on_response)
+                try:
+                    page.goto(f"https://www.instagram.com/{uname}/",
+                              timeout=config.INSTAGRAM_PW_TIMEOUT_MS, wait_until="domcontentloaded")
+                    page.wait_for_timeout(3000)
+                except Exception:      # noqa: BLE001 — 계정 하나 실패가 전체를 죽이지 않게
+                    pass
+                page.close()
+                u = captured.get("user")
+                if u:
+                    out[uname.lower()] = {"followers": int(u.get("follower_count") or 0),
+                                          "posts": int(u.get("media_count") or 0),
+                                          "full_name": u.get("full_name") or ""}
+            ctx.close()
+            browser.close()
+    except Exception:      # noqa: BLE001 — 브라우저 자체가 안 뜨는 등 전체 실패면 빈 dict
+        return out
+    return out
+
+
+def search_channels(keyword, max_results=30, **_ignored):
+    """instagram_search.search_channels(Apify 유료)와 동일 계약의 무료 대체(2026-07-30).
+
+    [{"username","url","title","thumbnail"}, ...] 형태로 맞춰 discovery.py/discover_jobs.py의
+    search_fn 주입 지점을 코드 변경 없이 그대로 쓸 수 있게 한다("신규채널 픽업" 화면
+    discover.html은 이 어댑터 하나로 무료 전환된다). keyword는 "#주방템"처럼 #이 붙어
+    올 수 있어(_DISCOVER_CATEGORIES) 해시태그 탐색 URL엔 그대로(#은 인코딩됨), 순수
+    태그 문자열 전달이 필요한 search_hashtag엔 #을 떼고 넘긴다. **_ignored로 Apify
+    전용 파라미터(token/timeout/poll_interval/max_pages)를 조용히 무시 — 같은 자리에
+    끼워도 TypeError가 안 나게.
+    한글 해시태그 실측(2026-07-30): #주방템·#살림템·#인테리어 전부 24건 안정적으로 캡처,
+    영문과 동일하게 로그인벽 없음."""
+    tag = (keyword or "").lstrip("#").strip()
+    if not tag:
+        return []
+    items = search_hashtag(tag)
+    out = []
+    for it in items[:max_results]:
+        out.append({
+            "username": it["username"],
+            "url": it.get("url") or "",
+            "title": it.get("full_name") or "",
+            "thumbnail": "",   # SERP 응답엔 프레임 썸네일이 없다(실측) — 카드 썸네일은 빈 값으로 폴백
+        })
+    return out
