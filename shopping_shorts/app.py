@@ -5086,9 +5086,12 @@ async def _auth_guard(request: Request, call_next):
     #   폰이 쿠키 없이 연다. ★/api/share/link(발급)은 여기 없음 → 로그인 게이트 유지(로그인해야 QR 발급).
     # /api/yt_relay/*는 사장님 PC 릴레이 에이전트가 로그인 쿠키 없이 호출한다(2026-07-24).
     #   자체 키 인증(_relay_auth_ok: YT_RELAY_KEY)이 있어 로그인 가드는 건너뛴다 — 안 그러면 유튜브 다운로드가 죽는다.
+    # /api/coupang/relay/*도 같은 이유다(2026-07-29) — 쿠팡은 한국 IP가 아니면 막아서
+    #   사장님 PC의 도우미가 로그인 쿠키 없이 폴링한다. 엔드포인트가 자체 토큰
+    #   (COUPANG_RELAY_TOKEN)을 검사하고, 토큰이 비어 있으면 스스로 403으로 닫는다.
     if (path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/")
             or path.startswith("/s/") or path.startswith("/api/share/v/")
-            or path.startswith("/api/yt_relay/")):
+            or path.startswith("/api/yt_relay/") or path.startswith("/api/coupang/relay/")):
         return await call_next(request)
     customer_id = _verify_session(request.cookies.get("dash_auth"))
     if customer_id is not None:
