@@ -3635,6 +3635,55 @@ class Store:
                 return None
             return {"id": row[0], "task": row[1], "args": json.loads(row[2])}
 
+    def heartbeat(self, qid):
+        """워커가 살아있다는 신호. 30초마다 찍는다 — 멈추면 reap_stale이 죽은 걸로 본다."""
+        with self._conn() as c:
+            c.execute("UPDATE job_queue SET heartbeat_at=datetime('now') WHERE id=?", (qid,))
+
+    def finish(self, qid, ok, error=None):
+        """작업 종료 기록. ok=False면 error를 남겨 화면이 '실패 — 다시 시도'를 띄운다."""
+        with self._conn() as c:
+            c.execute(
+                "UPDATE job_queue SET state=?, error=?, finished_at=datetime('now') WHERE id=?",
+                ("done" if ok else "failed", None if ok else (error or "알 수 없는 오류"), qid))
+
+    def reap_stale(self, minutes=2):
+        """heartbeat가 minutes분 넘게 안 뛴 running을 failed로 정리하고 개수를 반환한다.
+
+        워커가 SIGKILL로 죽으면 heartbeat가 멈춘다 — 그걸 잡아 화면에 실패를 알린다.
+        (예전엔 조용히 멈춰 '되고 있나?'를 알 수 없었다, 2026-07-29 실사고)"""
+        with self._conn() as c:
+            cur = c.execute(
+                "UPDATE job_queue SET state='failed', error='워커가 중단됐습니다', "
+                "       finished_at=datetime('now') "
+                " WHERE state='running' "
+                "   AND (heartbeat_at IS NULL "
+                "        OR datetime(heartbeat_at) < datetime('now', ?))",
+                (f"-{int(minutes)} minutes",))
+            return cur.rowcount
+
+    def queue_status(self, task, args_match=None):
+        """이 작업의 큐 상태. position=내 앞에 있는 queued/running 개수(화면 대기순번).
+
+        같은 task+args가 여러 번 큐에 들어갔으면 가장 최근 것을 본다."""
+        with self._conn() as c:
+            if args_match is None:
+                row = c.execute(
+                    "SELECT id, state, error FROM job_queue WHERE task=? "
+                    "ORDER BY id DESC LIMIT 1", (task,)).fetchone()
+            else:
+                row = c.execute(
+                    "SELECT id, state, error FROM job_queue "
+                    " WHERE task=? AND args_json=? ORDER BY id DESC LIMIT 1",
+                    (task, json.dumps(args_match, ensure_ascii=False))).fetchone()
+            if not row:
+                return None
+            qid, state, error = row
+            ahead = c.execute(
+                "SELECT COUNT(*) FROM job_queue "
+                " WHERE id < ? AND state IN ('queued','running')", (qid,)).fetchone()[0]
+            return {"id": qid, "state": state, "position": ahead, "error": error}
+
     # ── 렌더 포인트 원장(2026-07-17, 자동매칭 고급효과 엔진 Task1) ──
     # 잔액 컬럼을 따로 두지 않고 delta 누적합으로 계산하는 원장(ledger) 방식.
     # points.py가 이 두 메서드만 통해 테이블에 접근한다(SQL은 store.py에 캡슐화).
