@@ -400,6 +400,10 @@ def run_mix_job(job_id, db_path, work_root):
 
         # 2) 대본 추출(병렬)
         store.update_mix_job(job_id, status="extracting")
+        # 프레임 태깅 추출전환(B1, 2026-07-29): 켜면 영상 통째 업로드 대신 파이썬 컷+프레임+오디오
+        # 전사로 추출한다(느림·PROCESSING실패 근본해소). 기본 off=회귀0. 실측 후 승격.
+        # 설계: docs/superpowers/specs/2026-07-29-프레임태깅-추출전환-design.md
+        _use_frames = store.get_setting("frame_extract_enabled", "") == "1"
         def _extract(item):
             vid, path = item
             # 캐시 재사용(2026-07-24): 이 소스 대본을 담기/AI PICK/뽑기 때 이미 뽑아
@@ -420,6 +424,12 @@ def run_mix_job(job_id, db_path, work_root):
                 # full_text도 비었다면 그 소스는 예전처럼 화면 재료로만 쓰인다(무해).
                 r["product_benefits"] = (script_extract._norm_benefits(
                     cached.get("product_benefits")) or script_extract._collect_benefits(segs))
+            elif _use_frames:
+                from shopping_shorts import frame_script
+                r = frame_script.extract_script_frames(path, vid, caption=captions.get(vid, ""))
+                # 프레임 경로가 세그먼트를 못 만들면(컷 감지 실패 등) 기존 영상추출로 폴백 — 빈 결과 금지.
+                if not r.get("segments"):
+                    r = extract_script(path, vid, caption=captions.get(vid, ""))
             else:
                 r = extract_script(path, vid, caption=captions.get(vid, ""))
             r["video_id"] = vid
