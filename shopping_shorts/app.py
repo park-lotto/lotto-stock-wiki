@@ -2267,6 +2267,18 @@ def api_coupang_search(q: str = "", limit: int = 0):
     return got
 
 
+@app.post("/api/coupang/suggest")
+def api_coupang_suggest(body: dict):
+    """대본 + 연결 대상 → 쿠팡에 칠 만한 상품명 후보.
+
+    편집안의 affiliate_target은 서술형("갈라진 프린팅 수선")일 때가 많아 그대로 검색하면
+    엉뚱한 게 나온다(2026-07-29 사장님 캡처: 자수 패치·고양이 패치가 잔뜩). 실패하면
+    타깃 그대로 돌려주므로 화면은 어차피 검색을 진행할 수 있다."""
+    from shopping_shorts import coupang_query
+    qs = coupang_query.suggest((body.get("target") or ""), (body.get("script") or ""))
+    return {"ok": True, "queries": qs}
+
+
 @app.get("/api/coupang/relay/next")
 def api_coupang_relay_next(token: str = "", wait: int = 25):
     """릴레이(사장님 PC)가 일감을 받아가는 롱폴링 창구. 없으면 job:null."""
