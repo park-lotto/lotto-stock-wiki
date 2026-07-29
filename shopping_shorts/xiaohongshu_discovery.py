@@ -37,7 +37,13 @@ def discover_accounts(search_fn, seeds_by_category, min_notes=2,
     accounts = {}
     for cat, packs in seeds_by_category.items():
         for kw in (packs or {}).get(keyword_field, []) or []:
-            for note in search_fn(kw) or []:
+            try:
+                notes = search_fn(kw) or []
+            except Exception:
+                # 한 키워드 검색 실패(브라우저 닫힘·차단·타임아웃 등)가 전체 발굴을
+                # 죽이지 않게 건너뛴다. 되는 키워드만큼은 결과를 낸다(부분 성공).
+                continue
+            for note in notes:
                 uid = str(note.get("channel_id") or "")
                 if not uid or uid in bl:
                     continue  # userid 없으면 계정 집계 불가(닉네임은 바뀔 수 있어 키로 못 씀)

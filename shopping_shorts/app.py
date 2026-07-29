@@ -666,7 +666,13 @@ def api_seeds_remove(body: dict):
 def api_xhs_discover(min_notes: int = 2):
     """샤오홍슈 '카테고리별 잘하는 계정' 리더보드. 검색발굴을 작성자별 집계·참여도순.
     블랙리스트 제외, is_registered로 이미 담긴 계정 표시."""
-    return {"ok": True, "items": service.discover_xiaohongshu_accounts(min_notes=min_notes)}
+    try:
+        return {"ok": True, "items": service.discover_xiaohongshu_accounts(min_notes=min_notes)}
+    except Exception as e:
+        # 발굴 실패(무료 크롤 브라우저 닫힘·해외HOT 수집과 세션 경합 등)를 500이 아니라
+        # 프론트가 이해할 JSON으로 돌려준다. 프론트는 이 메시지를 그대로 띄운다.
+        return JSONResponse(status_code=200, content={"ok": False,
+            "error": "발굴 실패(크롤이 막혔거나 해외HOT 수집과 겹쳤을 수 있어요). 잠시 후 다시 눌러보세요."})
 
 
 @app.post("/api/xhs/adopt")
