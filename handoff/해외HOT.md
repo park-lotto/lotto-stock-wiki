@@ -1,34 +1,106 @@
 # 해외HOT 발굴 — 핸드오프
 
-- 갱신: 2026-07-29 / 트랙: 해외HOT (병합 후 폴더 유지)
+- 갱신: 2026-07-29 밤 (집→회사 인계) / 트랙: 해외HOT (병합 후 폴더 유지)
 
-## ✅ 샤오홍슈(rednote) — Phase 0 완료, Phase 1(크롤러 코드) 착수 가능
-**결론: 프록시도 집PC 상시크롤도 필요 없다. 서버 직결 + 로그인 세션(storage_state)만 있으면 끝.**
-막힌 게 IP인 줄 알고 프록시·집PC 리버스터널까지 팠는데 헛다리였고, 진짜 원인은 **로그인 여부**였음
-(도메인도 `xiaohongshu.com`이 아니라 `rednote.com`이어야 함 — 본토 도메인은 비중국 IP 자체를 지역차단함,
-집IP로 터널 태워도 막히는 걸로 확인). QR로 실제 계정 로그인 → `storageState()` 쿠키 88개를 서버
-`/home/ubuntu/rednote_session.json`(600권한, git비추적)에 저장 → 서버 헤드리스가 그 세션으로 재접속하면
-데이터센터 IP 그대로 검색결과(제목·작성자·날짜·좋아요) 정상 로드 확인됨(2026-07-29).
+## 🏢 다음 세션(회사)이 여기부터 읽으면 됨 — 오늘 배포된 것 4개 + 현재 서버 상태
 
-- 상세 실측·재현코드·주의사항(세션 만료·노트링크 패턴 변경 등): 설계문서
+**오늘 집에서 커밋·배포한 것(시간순, 전부 `.tracks/해외HOT`에서 TDD로 작업 후 `finish`로 main 병합)**:
+1. **샤오홍슈 무료 크롤러 Phase 1** — `shopping_shorts/playwright_crawl.py` 신규. 로그인 세션으로
+   검색 API 직접 호출, Apify 안 씀.
+2. **검색 정렬 최신순 강제** — 기본 인기순(general)이던 걸 요청 body의 `sort`를 `time_descending`으로
+   가로채기(route 인터셉트)로 바꿔치기. 서명검증이 이 필드는 안 잠가서 통과됨(실측 확인). "昨天/今天
+   HH:MM" 날짜 형식 파싱 추가.
+3. **썸네일 자막(텍스트오버레이) 필터** — `video_analysis.text_level_vision`(Gemini 비전, 기존
+   비전태그 인프라 재사용) + `overseas_funnel.passes_caption_clutter`. 부수 수정: `fetch_thumb_bytes`가
+   인스타 전용 Referer만 있어 샤오홍슈 CDN(xhscdn.com)에서 전부 403 나던 버그도 같이 고침
+   (`_referer_for` 도메인별 분기).
+4. **틱톡·도우인 켜기/끄기 스위치** — `config.OVERSEAS_TIKTOK_ENABLED`/`OVERSEAS_DOUYIN_ENABLED`
+   (기본 true). 틱톡은 캡차로 무료전환 포기 확정, 도우인은 미착수 — 둘 다 재개발 전까지 "지금
+   업데이트"가 불필요한 Apify 비용을 안 쓰게 껐다.
+5. **탭 전환 시 진행률 표시 이어보이기** — `static/index.html`. 수집 자체는 카테고리 무관 단일
+   백그라운드 작업이라 서버는 안 멈추는데, 폴링이 "지금 업데이트" 클릭 시에만 시작돼 탭 갔다오면
+   화면엔 표시가 없어 멈춘 것처럼 보이던 문제. `resumeOverseasStatusIfRunning` 추가.
+
+**⚠️ 서버(`/etc/shopping-shorts.env`)에 직접 설정한 값 — git에 없음, 코드 기본값과 다름**:
+```
+XHS_SCRAPER=playwright          # 기본값 apify인데 서버는 켜둠 — 샤오홍슈 무료크롤 라이브 사용 중
+OVERSEAS_TIKTOK_ENABLED=false   # 기본값 true인데 서버는 꺼둠 — 틱톡 발굴 비활성
+OVERSEAS_DOUYIN_ENABLED=false   # 기본값 true인데 서버는 꺼둠 — 도우인 발굴 비활성
+```
+백업 `/etc/shopping-shorts.env.bak-20260729`(오늘 변경 전 상태). 이 세 값을 되돌리려면 저 세 줄을
+지우거나 값을 바꾸고 `sudo systemctl restart shopping-shorts`.
+
+**즉 지금 "🌍 해외HOT → 지금 업데이트"를 누르면**: 6카테고리 전부 **샤오홍슈만** 무료로 돌고(최신순
++ 자막적은 것 위주), 틱톡·도우인은 안 돈다. Apify 비용 0.
+
+**⏭ 다음에 할 만한 것**:
+- 도우인도 XHS처럼 무료 로그인세션 크롤 시도해볼 수 있는지 조사(미착수, 원래 모바일인증 벽만 확인됨).
+- 소스채널 마이닝(②모드, 좋은 계정 등록→매일 직접 크롤) — 설계는 있었지만 구현 안 됨.
+- 상시 자동 스케줄(systemd 타이머) — 아직 수동 "지금 업데이트"만 있음.
+- 인스타 `/explore/tags/`도 반복요청 소프트블록 관측됨(별도, 손 안 댐).
+- `_TEXT_CLUTTER_CAP=15`·`_PER_KEYWORD=40`·정렬강제 방식 전부 실측 하루치라 며칠 더 보고 튜닝 필요.
+
+---
+
+## ✅ 샤오홍슈(rednote) 발굴 — Phase 0·Phase 1 코드 완료, 라이브 E2E 재확인만 남음
+**Phase 0 결론(이전 세션)**: 프록시도 집PC 상시크롤도 필요 없다. 서버 직결 + 로그인 세션(storage_state)만
+있으면 끝(도메인은 `rednote.com`, `xiaohongshu.com`은 지역차단). 세션 `/home/ubuntu/rednote_session.json`
+(600권한, git비추적) — **레퍼런스 랭킹(계정등록) 쪽 `xiaohongshu_playwright.py` 작업과 세션을 공유**하니
+만료 시 양쪽 다 영향받는다는 점 계속 유효.
+
+**Phase 1(이번 세션, 2026-07-29) — 완료**: `shopping_shorts/playwright_crawl.py` 신규.
+- 검색 API `webapi.rednote.com/api/sns/web/v1/search/notes` 응답 JSON을 가로채는 방식(DOM 파싱 안 함,
+  인스타 크롤과 동일 원칙). 실측 스키마: `note_card.type`(video/normal 필터) · `display_title`(title 없는
+  경우 있음) · `interact_info.{liked,comment,collected,shared}_count`(문자열 숫자) · `user.nickname` ·
+  `cover.url_default` · `corner_tag_info[type=publish_time].text`(날짜, 3형식 혼재: "X小时前"/"MM-DD"/
+  "YYYY-MM-DD") · `xsec_token`. **duration·정확한 타임스탬프는 리스트 응답에 없음** — duration=None 고정
+  (`overseas_funnel.passes_shortform`이 길이불명 통과시켜 문제 없음), 날짜는 파싱해 근사(MM-DD류는 정오
+  UTC로 근사 — 14일 신선도 창이 오래된 오차를 어차피 걸러냄).
+- 광고 슬롯(`model_type != "note"`, id가 `uuid#타임스탬프` 형식)·이미지 노트(`type=normal`)는 제외.
+- `overseas_hot_jobs.py`에 `config.XHS_SCRAPER` 분기 배선(`"playwright"`면 새 모듈, 기본 `"apify"`는
+  기존 경로 그대로 — 롤백 스위치, 인스타 전환 때 쓴 패턴 재사용).
+- 단위테스트 12+2개 전부 통과(`test_playwright_crawl.py`, `test_overseas_hot_jobs.py`의 분기 테스트 2개).
+  전체 스위트 회귀 없음(13 fail은 기존 베이스라인, 내 변경 파일과 무관 확인).
+
+**✅ 라이브 E2E 재확인 완료(2026-07-29, 다른 세션들 종료 후) — 원인은 세션 경합이 맞았다.**
+옆세션(레퍼런스랭킹)이 켜져 있는 동안엔 `search_full("厨房神器")`가 0건을 반복했는데, 그 세션이
+멈춘 뒤 같은 호출을 재시도하니 **첫 시도부터 실 데이터 15건 정상 수신**(제목·좋아요·채널명·날짜
+전부 정상, "6a5d8eea..." 항목은 발행시각까지 `2026-07-26T17:29:19Z`로 정확히 파싱돼 상대시간
+파싱 경로도 검증됨). `/home/ubuntu/rednote_session.json`을 **레퍼런스랭킹 세션과 발굴 세션이
+동시에 쓰면 서로 방해**한다는 뜻 — 크롤러 로직 결함이 아니었다.
+- **운영 시 주의**: 두 기능(해외HOT 발굴 / 레퍼런스랭킹 계정수집)이 같은 세션 파일을 쓰는 한,
+  **동시 실행을 피해야 한다**(스케줄 시간을 겹치지 않게 하거나, 장기적으로는 세션 파일을 용도별로
+  분리하는 것 고려). 상시 스케줄(systemd 타이머) 설계 시 이 제약을 반영할 것.
+- **다음**: `XHS_SCRAPER=playwright`로 서버 env 플립은 여러 카테고리·여러 키워드로 한 번 더 돌려보고
+  안정성 확인한 뒤 사장님 승인받고 진행. 코드·파서는 이제 신뢰 가능한 상태.
+
+- 상세 실측·재현코드·주의사항: 설계문서
   `docs/superpowers/specs/2026-07-26-해외HOT-무료Playwright크롤전환-design.md`의 "✅ 샤오홍슈" 절 참고.
-- **다음(Phase 1)**: `playwright_crawl.py`에 샤오홍슈 크롤러부터 구현 — 검색 URL → 세션 로드 → 스크롤 →
-  `/search_result/<id>?xsec_token=` 패턴 카드 추출 → build_overseas_items 스키마. `overseas_hot_jobs`에서
-  샤오홍슈만 Apify 경로 OFF(TikTok/도우인은 유지, 아래 참고).
 
-## ⏭ TikTok — 다음 세션에서 이어갈 것 (별도 조사 필요, 샤오홍슈와 묶지 말 것)
-**증상: 서버 헤드리스 직결 시 매번 슬라이더 캡차("Drag the slider to fit the puzzle")로 막힘.** 로그인
-문제가 아니라 자동화 탐지라 샤오홍슈처럼 세션 파일로 해결되는 성질이 아님. 2026-07-26에 "TikTok 됐다"고
-기록한 건 **로컬 GUI 브라우저(집IP)** 기준이고, **서버·헤드리스로는 이번이 처음 테스트**했음 — 안 됐음.
-집PC 리버스 SSH 터널(`ssh -R 1080` → 서버가 socks5://localhost:1080 경유) 태우면 캡차는 안 뜨는데
-대신 **검색결과가 0건**(원인 미확인 — 스크롤 트리거 필요/API 별도 차단 등 가설만 있고 미검증).
+## ❌ TikTok 발굴(키워드/해시태그) — 3가지 방법 전부 막힘, Apify 유지로 결론
+**주의: 이건 "레퍼런스랭킹의 틱톡 계정수집"(`tiktok_client.fetch_account_videos`, yt-dlp, 무료·이미 라이브)과
+완전히 다른 기능이다.** 계정 하나 넣고 그 영상 목록 긁는 건 이미 무료로 잘 된다 — 캡차 문제는 **키워드/
+해시태그로 아직 모르는 새 영상을 찾는(발굴) 검색 경로만** 해당.
 
-**다음 세션 시도 순서** (설계문서 "❌ TikTok" 절에 상세):
-1. `headless=False` 또는 가상디스플레이로 캡차 여부 재확인(headless 플래그 자체가 탐지 트리거일 수 있음)
-2. 캡차 사람이 한 번 수동으로 풀고 그 세션(storage_state) 재사용 시도 — 단 TikTok은 세션 단위가 아니라
-   매 요청 재검증할 수도 있어 통할지 미지수
-3. 집터널 "0건" 원인 파기 — `browser_network_requests`로 실제 검색 API 호출·응답코드 확인, 스크롤 트리거
-4. 그래도 안 되면 **TikTok은 Apify(`tiktok_search.py`) 유지** — 샤오홍슈만 무료크롤 전환하는 하이브리드로 확정
+2026-07-29에 서버에서 3가지를 실측했고 전부 진짜 데이터를 못 받았다:
+1. **서버 직결 + `headless=False`(Xvfb 가상디스플레이)**: 캡차 여전(`headless` 플래그가 원인이 아님을 반증).
+2. **집IP 리버스 SSH 터널**(`socks5://127.0.0.1:1080`, IP는 `1.234.137.87`로 확인): 페이지엔 캡차가 뜨는데
+   검색 API(`/api/search/item/full/`)는 **status 200·본문 길이 0**(조용한 소프트블록 — IP를 바꿔도 안 뚫림).
+3. **위 터널 + 스텔스 패치**(`navigator.webdriver` 은닉, `--disable-blink-features=AutomationControlled`):
+   동일하게 캡차 + 빈 응답.
+
+**결론: IP 평판만의 문제가 아니라 서명된 요청 파라미터(msToken/X-Bogus류)나 더 정교한 디바이스
+핑거프린트로 막는 것으로 보임 — Playwright 설정 몇 개로 뚫을 수준이 아니다.** 사람이 캡차를 수동으로
+풀고 세션 재사용하는 방법은 시도 안 함(TikTok은 세션 단위가 아니라 매 요청 재검증할 수 있다는 사전
+경고가 있었고, 위 3가지 실패로 볼 때 성공 가능성이 낮다고 판단). **TikTok 발굴은 Apify(`tiktok_search.py`)
+유지로 확정** — 무료 전환은 샤오홍슈만.
+
+## 🔍 인스타 `/explore/tags/` 발굴 — 첫 요청은 성공, 반복하면 조용히 막힘(2026-07-29 관측)
+설계문서 Phase 0(2026-07-26)에서 로컬 GUI로 성공했다던 것과 별개로, **서버 데이터센터 IP + headless**로
+첫 요청은 완전히 성공했다: 로그인벽 없음, `graphql` 응답에 실제 영상 노드(캡션·커버 URL 등)가 정상 포함.
+그런데 곧이어 같은/다른 해시태그로 재요청하니 **로그인벽도 없고 HTML도 똑같이 로드되는데 media-info
+쿼리 자체가 응답에서 빠짐**(조용한 소프트블록, TikTok의 명시적 캡차와는 다른 패턴). 요청 간격을 넉넉히
+띄우면 되는지는 미확인 — 다음에 이어볼 때 딜레이를 두고 재확인할 것. 아직 크롤러 코드는 없음(탐색만).
 
 ## 도우인 — 미착수
 2026-07-26 그대로: 로그인 벽(QR/휴대폰 인증) 확인만 되고 미시도. 계속 Apify(`douyin_search.py`) 사용.

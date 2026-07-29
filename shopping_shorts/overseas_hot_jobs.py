@@ -5,11 +5,12 @@ import threading
 import time
 from datetime import datetime, timezone
 
+from shopping_shorts import config
 from shopping_shorts.config import DB_PATH
 from shopping_shorts.store import Store
 from shopping_shorts.overseas_seeds import load_seeds
-from shopping_shorts import tiktok_search, douyin_search, xiaohongshu_search
-from shopping_shorts import gap_check, overseas_funnel
+from shopping_shorts import tiktok_search, douyin_search, xiaohongshu_search, playwright_crawl
+from shopping_shorts import gap_check, overseas_funnel, video_analysis
 from shopping_shorts.ranking import build_overseas_items, apply_grades, sort_by
 
 _LOCK = threading.Lock()
@@ -18,6 +19,7 @@ _CAP = 120          # 피드 최대 유지 개수(로테이션)
 _PER_KEYWORD = 40   # 카테고리·플랫폼·키워드당 수집 상한(=과금단위)
 _REQ_PAUSE = 0.5    # Apify 호출 간 간격
 _GAP_CAP = 40       # 선점검색 배치당 상한(유튜브 무료쿼터 보호) — 생존자 상위만
+_TEXT_CLUTTER_CAP = 15   # 카테고리·키워드당 자막판정 상한(Gemini 비전쿼터 보호) — 생존자 상위만
 PICKUP_CATEGORY = "🖐 픽업"   # 무료크롤+판단으로 고른 걸 수동 URL로 픽업하는 카테고리
 
 
@@ -45,16 +47,38 @@ def _merge_rotate(prev, new, cap):
     return sorted(out, key=lambda i: i.get("score") or 0, reverse=True)[:cap]
 
 
+def _annotate_text_level(items, cap):
+    """생존자 상위 cap개 썸네일만 봐서 text_level(자막 오버레이 정도)을 매긴다(비전쿼터 보호).
+    상한 넘는 항목·판정 실패 항목은 text_level이 안 붙어 overseas_funnel.passes_caption_clutter가
+    통과시킨다(과필터 방지)."""
+    checked = 0
+    for it in items:
+        if checked >= cap:
+            break
+        img = video_analysis.fetch_thumb_bytes(it.get("thumbnail"))
+        if img:
+            result = video_analysis.text_level_vision(img)
+            if result.get("text_level"):
+                it["text_level"] = result["text_level"]
+        checked += 1
+    return items
+
+
 def _collect_category(cat, cfg, store):
     allow = list(cfg.get("tiktok", [])) + list(cfg.get("cn", []))
     raw = []
-    for kw in cfg.get("tiktok", []):
-        raw += tiktok_search.search_full(kw, max_results=_PER_KEYWORD)
-        time.sleep(_REQ_PAUSE)
+    if config.OVERSEAS_TIKTOK_ENABLED:
+        for kw in cfg.get("tiktok", []):
+            raw += tiktok_search.search_full(kw, max_results=_PER_KEYWORD)
+            time.sleep(_REQ_PAUSE)
     for kw in cfg.get("cn", []):
-        raw += douyin_search.search_full(kw, max_results=_PER_KEYWORD)
-        time.sleep(_REQ_PAUSE)
-        raw += xiaohongshu_search.search_full(kw, max_results=_PER_KEYWORD)
+        if config.OVERSEAS_DOUYIN_ENABLED:
+            raw += douyin_search.search_full(kw, max_results=_PER_KEYWORD)
+            time.sleep(_REQ_PAUSE)
+        if config.XHS_SCRAPER == "playwright":
+            raw += playwright_crawl.search_full(kw, max_results=_PER_KEYWORD)
+        else:
+            raw += xiaohongshu_search.search_full(kw, max_results=_PER_KEYWORD)
         time.sleep(_REQ_PAUSE)
     # STAGE 1·2·상한: 형식·관련성·안터진
     kept = [r for r in raw
@@ -62,6 +86,9 @@ def _collect_category(cat, cfg, store):
             and overseas_funnel.passes_shortform(r)
             and overseas_funnel.passes_relevance(r, allow)
             and overseas_funnel.under_view_ceiling(r)]
+    # STAGE 3: 자막(텍스트 오버레이) 판정 — 상위 생존자만 비전으로 보고, 자막 과다는 컷
+    kept = _annotate_text_level(kept, _TEXT_CLUTTER_CAP)
+    kept = [r for r in kept if overseas_funnel.passes_caption_clutter(r)]
     for r in kept:
         r["category"] = cat   # 시드 카테고리 고정
     items = build_overseas_items(

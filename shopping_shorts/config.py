@@ -66,6 +66,20 @@ INSTAGRAM_SCRAPER = os.getenv("INSTAGRAM_SCRAPER", "apify")   # apify | playwrig
 # 미설정이면 직결(로컬 개발용).
 INSTAGRAM_PROXY = os.getenv("INSTAGRAM_PROXY", "")
 
+# 로그인 세션 쿠키 파일(Playwright storage_state) — 2026-07-29 샤오홍슈(rednote)에서
+# 검증된 B안: 서버 IP 차단의 실제 원인이 IP 품질이 아니라 로그인 여부였다(10채널 게이트에서
+# 비로그인 접근이 4.5초 만에 로그인벽으로 즉시 튕김). 세션이 있으면 프록시 없이 데이터센터
+# IP 직결로도 통과하는지가 이 파일의 존재 여부로 갈린다.
+# ★생성 방법: scripts/instagram_setup_session.py(Playwright 직접 로그인)는 폐기됨 —
+# Meta가 로그인 제출 시점에 CDP 자동화를 감지해 캡차로 막는다. 대신
+# scripts/instagram_cookies_from_browser.py로 Firefox에 정상 로그인한 뒤 그 브라우저의
+# 쿠키를 직접 추출한다(Chrome/Edge는 앱 바운드 암호화로 막힘). 서버로 옮긴다(git 비추적,
+# 600권한) — 같은 경로에 덮어쓰기만 하면 재시작 없이 다음 수집부터 반영됨
+# (storage_state는 채널 스크레이프마다 파일을 새로 읽는다, instagram_playwright.py 참고).
+# 절차 전체: handoff/AI픽자동적재.md "세션 만료 시 재발급 절차".
+# 없으면 기존 경로(프록시 또는 직결)로 조용히 폴백한다.
+INSTAGRAM_SESSION_PATH = os.getenv("INSTAGRAM_SESSION_PATH", "")
+
 # 동시에 여는 브라우저 컨텍스트 수. 크로미움은 메모리를 먹으므로 서버 여유를 보고 조정한다.
 INSTAGRAM_PW_CONTEXTS = int(os.getenv("INSTAGRAM_PW_CONTEXTS", "5"))
 # 채널 1개 처리 상한(ms). 넘으면 그 채널만 error로 접고 다음으로 간다(전체가 죽지 않게).
@@ -77,6 +91,23 @@ XIAOHONGSHU_SESSION_PATH = os.getenv(
     "XIAOHONGSHU_SESSION_PATH", "/home/ubuntu/rednote_session.json")
 XIAOHONGSHU_PW_TIMEOUT_MS = int(os.getenv("XIAOHONGSHU_PW_TIMEOUT_MS", "20000"))
 XIAOHONGSHU_WINDOW_HOURS = int(os.getenv("XIAOHONGSHU_WINDOW_HOURS", "48"))
+
+# ── 샤오홍슈(해외HOT 발굴) 수집 경로 선택(2026-07-29) ──
+# Apify 검색은 유료(rednote-search-scraper). 로그인 세션(storage_state)으로 서버 직결
+# 무료 크롤이 실측 확인됨(Phase 0). 롤백 대비 환경변수로 즉시 전환 가능하게 둔다.
+# ★기본값은 apify — 라이브 검증 전 병합만으로 경로가 바뀌면 안 된다.
+XHS_SCRAPER = os.getenv("XHS_SCRAPER", "apify")   # apify | playwright
+
+# 로그인 세션 쿠키 파일(Playwright storage_state). 서버에만 존재(git 비추적, 600권한).
+# 없으면 playwright 경로가 조용히 빈 리스트를 반환한다(전체 수집이 죽지 않게).
+REDNOTE_SESSION_PATH = os.getenv("REDNOTE_SESSION_PATH", "/home/ubuntu/rednote_session.json")
+XHS_PW_TIMEOUT_MS = int(os.getenv("XHS_PW_TIMEOUT_MS", "25000"))
+
+# 틱톡/도우인 발굴 플랫폼별 켜기·끄기(2026-07-29). 틱톡 무료전환은 캡차로 막혀 Apify
+# 유지 확정됐고, 도우인은 미착수 상태 — 둘 다 재개발 전까지 끄고 샤오홍슈만 돌리기 위함.
+# 기본값 true(끄기 전 상태 유지) — 서버 env로 끔.
+OVERSEAS_TIKTOK_ENABLED = os.getenv("OVERSEAS_TIKTOK_ENABLED", "true").lower() == "true"
+OVERSEAS_DOUYIN_ENABLED = os.getenv("OVERSEAS_DOUYIN_ENABLED", "true").lower() == "true"
 
 # 댓글 draft 생성 전용 Gemini 키 풀 — 주식위키 본체(pipeline.atoms.key_vault)의
 # 공유 풀과 완전히 분리(2026-07-09). 공유 풀은 인제스트·브리핑 등 다른 작업과
