@@ -188,6 +188,40 @@ def test_collect_category_filters_out_heavy_text_thumbnails(monkeypatch):
     assert shortcodes == {"clean1"}                  # 자막 많은 cluttered1은 걸러짐
 
 
+def test_collect_category_skips_tiktok_when_disabled(monkeypatch):
+    monkeypatch.setattr(job.config, "OVERSEAS_TIKTOK_ENABLED", False)
+    monkeypatch.setattr(job.tiktok_search, "search_full",
+                        lambda kw, max_results=40: (_ for _ in ()).throw(AssertionError("틱톡이 불렸다")))
+    monkeypatch.setattr(job.douyin_search, "search_full", lambda kw, max_results=40: [])
+    monkeypatch.setattr(job.xiaohongshu_search, "search_full", lambda kw, max_results=40: [])
+
+    class FakeStore:
+        def prev_base_platform(self, *a, **k):
+            return None
+
+        def prev_delta_platform(self, *a, **k):
+            return None
+
+    job._collect_category("주방/레시피", {"tiktok": ["kitchen"], "cn": []}, FakeStore())  # 예외 없으면 통과
+
+
+def test_collect_category_skips_douyin_when_disabled(monkeypatch):
+    monkeypatch.setattr(job.config, "OVERSEAS_DOUYIN_ENABLED", False)
+    monkeypatch.setattr(job.tiktok_search, "search_full", lambda kw, max_results=40: [])
+    monkeypatch.setattr(job.douyin_search, "search_full",
+                        lambda kw, max_results=40: (_ for _ in ()).throw(AssertionError("도우인이 불렸다")))
+    monkeypatch.setattr(job.xiaohongshu_search, "search_full", lambda kw, max_results=40: [])
+
+    class FakeStore:
+        def prev_base_platform(self, *a, **k):
+            return None
+
+        def prev_delta_platform(self, *a, **k):
+            return None
+
+    job._collect_category("주방/레시피", {"tiktok": [], "cn": ["厨房神器"]}, FakeStore())  # 예외 없으면 통과
+
+
 def test_add_pickup_saves_to_pickup_category(monkeypatch, tmp_path):
     now = datetime(2026, 7, 26, 12, 0, tzinfo=timezone.utc)
     monkeypatch.setattr(job.tiktok_search, "fetch_urls", lambda urls: [

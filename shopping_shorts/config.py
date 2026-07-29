@@ -82,6 +82,12 @@ XHS_SCRAPER = os.getenv("XHS_SCRAPER", "apify")   # apify | playwright
 REDNOTE_SESSION_PATH = os.getenv("REDNOTE_SESSION_PATH", "/home/ubuntu/rednote_session.json")
 XHS_PW_TIMEOUT_MS = int(os.getenv("XHS_PW_TIMEOUT_MS", "25000"))
 
+# 틱톡/도우인 발굴 플랫폼별 켜기·끄기(2026-07-29). 틱톡 무료전환은 캡차로 막혀 Apify
+# 유지 확정됐고, 도우인은 미착수 상태 — 둘 다 재개발 전까지 끄고 샤오홍슈만 돌리기 위함.
+# 기본값 true(끄기 전 상태 유지) — 서버 env로 끔.
+OVERSEAS_TIKTOK_ENABLED = os.getenv("OVERSEAS_TIKTOK_ENABLED", "true").lower() == "true"
+OVERSEAS_DOUYIN_ENABLED = os.getenv("OVERSEAS_DOUYIN_ENABLED", "true").lower() == "true"
+
 # 댓글 draft 생성 전용 Gemini 키 풀 — 주식위키 본체(pipeline.atoms.key_vault)의
 # 공유 풀과 완전히 분리(2026-07-09). 공유 풀은 인제스트·브리핑 등 다른 작업과
 # 하루 종일 같이 소모돼 예고 없이 소진되는 사고가 있었음 — 쇼핑쇼츠는 이 전용
