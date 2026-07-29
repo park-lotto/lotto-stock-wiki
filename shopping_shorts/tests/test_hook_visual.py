@@ -30,3 +30,34 @@ def test_prompt_has_hook_visual_rule():
     assert "역할:완성" in src
     assert "준비동작" in src
     assert "시간순" in src
+
+
+def test_reconcile_catches_forced_beats_even_if_fit_high():
+    """★2026-07-29 억지매칭: forced=True면 fit이 높아도 화면에 맞게 재작성 대상이어야 한다."""
+    calls = {"n": 0}
+    def fake_call(prompt, schema):
+        calls["n"] += 1
+        # 프롬프트에 forced 비트가 들어왔는지로 대상 선정을 검증
+        assert "억지대사" in prompt
+        return {"rewrites": [{"beat_idx": 1, "narration": "고친대사"}]}
+    beats = [
+        {"beat_idx": 0, "narration": "정상", "fit": 5, "forced": False,
+         "primary": {"scene_desc": "완성"}},
+        {"beat_idx": 1, "narration": "억지대사", "fit": 4, "forced": True,   # fit 높지만 forced
+         "primary": {"scene_desc": "우유붓기"}},
+    ]
+    out = ep._reconcile_weak_beats(beats, call=fake_call)
+    assert calls["n"] == 1                       # forced 비트 때문에 호출됨(예전엔 fit>3라 스킵)
+    assert out[1]["narration"] == "고친대사"     # 재작성 반영
+
+
+def test_reconcile_skips_when_all_good():
+    """fit 높고 forced 아니면 호출 없이 원문 유지(불필요한 Gemini 호출 방지)."""
+    called = {"n": 0}
+    def fake_call(p, s):
+        called["n"] += 1
+        return {"rewrites": []}
+    beats = [{"beat_idx": 0, "narration": "정상", "fit": 5, "forced": False,
+              "primary": {"scene_desc": "완성"}}]
+    out = ep._reconcile_weak_beats(beats, call=fake_call)
+    assert called["n"] == 0 and out[0]["narration"] == "정상"
