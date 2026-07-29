@@ -162,3 +162,95 @@ def test_undefined_english_word_inside_string_value_is_not_corrupted():
     assert note_card_user["nickname"] == "undefined_fan"
     # 실측된 실제 undefined 리터럴(pwaAddDesktopPrompt)은 여전히 null로 정상 치환·파싱된다(회귀).
     assert data["user"]["pwaAddDesktopPrompt"] is None
+
+
+# ── 도메인 정규화(2026-07-29 코드리뷰 발견 버그 수정) ──────────────────────────────
+# xiaohongshu.com은 비중국 IP를 지역차단한다(Phase 0 스파이크에서 실측 — 한국 가정용
+# 레지덴셜 IP로도 완전 차단, 프록시/평판 문제가 아니라 하드 지역 게이트). rednote.com은
+# 같은 앱/데이터를 국제용 도메인으로 서빙하고 저장된 로그인 세션으로 정상 크롤된다.
+# refs.html은 관리자에게 rednote.com URL을 붙여넣으라고 안내하지만, 강제하진 않는다 —
+# 한국 관리자가 "샤오홍슈"를 검색하면 앱의 원래/네이티브 도메인인 xiaohongshu.com 링크를
+# 자연스럽게 마주치거나 복사할 수 있다. 그 경우 크롤이 조용히 지역차단으로 실패한다.
+def test_normalize_profile_url_rewrites_www_xiaohongshu_to_rednote():
+    url = xhp._normalize_profile_url("https://www.xiaohongshu.com/user/profile/abc123")
+    assert url == "https://www.rednote.com/user/profile/abc123"
+
+
+def test_normalize_profile_url_rewrites_bare_xiaohongshu_without_www():
+    url = xhp._normalize_profile_url("https://xiaohongshu.com/user/profile/abc123")
+    assert url == "https://rednote.com/user/profile/abc123"
+
+
+def test_normalize_profile_url_is_case_insensitive():
+    url = xhp._normalize_profile_url("https://WWW.XIAOHONGSHU.COM/user/profile/abc123")
+    assert "rednote.com" in url.lower()
+    assert "xiaohongshu" not in url.lower()
+
+
+def test_normalize_profile_url_leaves_rednote_untouched():
+    url = xhp._normalize_profile_url("https://www.rednote.com/user/profile/abc123")
+    assert url == "https://www.rednote.com/user/profile/abc123"
+
+
+def test_normalize_profile_url_leaves_unrelated_url_untouched():
+    # 도메인이 xiaohongshu.com이 아니면(예: 빈 값, 다른 사이트) 손대지 않는다.
+    assert xhp._normalize_profile_url("") == ""
+    assert xhp._normalize_profile_url("https://example.com/foo") == "https://example.com/foo"
+
+
+def test_scrape_one_playwright_navigates_to_normalized_rednote_url(monkeypatch):
+    """xiaohongshu.com URL을 넣어도 실제 page.goto()는 rednote.com으로 불려야 한다.
+    실브라우저는 띄우지 않는다 — playwright.sync_api.sync_playwright 자체를 목으로 교체한다
+    (_scrape_one_playwright가 함수 내부에서 매 호출마다 지연 import하므로, 호출 시점에
+    playwright.sync_api 모듈의 sync_playwright 속성만 바꿔두면 새로 import될 때 목이 잡힌다)."""
+    captured = {}
+
+    class _FakePage:
+        def goto(self, url, **kw):
+            captured["url"] = url
+
+        def wait_for_timeout(self, ms):
+            pass
+
+        def content(self):
+            return "<html><body>no state here</body></html>"
+
+        @property
+        def url(self):
+            return captured.get("url", "")
+
+    class _FakeContext:
+        def new_page(self):
+            return _FakePage()
+
+        def close(self):
+            pass
+
+    class _FakeBrowser:
+        def new_context(self, **kw):
+            return _FakeContext()
+
+        def close(self):
+            pass
+
+    class _FakeChromium:
+        def launch(self, **kw):
+            return _FakeBrowser()
+
+    class _FakePlaywright:
+        chromium = _FakeChromium()
+
+    class _FakeContextManager:
+        def __enter__(self):
+            return _FakePlaywright()
+
+        def __exit__(self, *a):
+            return False
+
+    monkeypatch.setattr("playwright.sync_api.sync_playwright", lambda: _FakeContextManager())
+
+    xhp._scrape_one_playwright("https://www.xiaohongshu.com/user/profile/abc123")
+
+    assert "url" in captured, "page.goto()가 호출되지 않았다"
+    assert "rednote.com" in captured["url"]
+    assert "xiaohongshu.com" not in captured["url"]

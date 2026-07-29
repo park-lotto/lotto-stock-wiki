@@ -44,6 +44,22 @@ _STATE_KEY = "window.__INITIAL_STATE__="
 # 따옴표 없음)에 오는 경우만 실제 JS undefined 리터럴이다 — 문자열 값은 항상 콜론 뒤에 "가 온다.
 _UNDEFINED_VALUE_RE = re.compile(r":\s*undefined\s*([,}])")
 
+# xiaohongshu.com(중국 내수용 원 도메인)은 비중국 IP를 지역차단한다 — Phase 0 스파이크에서
+# 실측 확인됨(한국 가정용 레지덴셜 IP로도 완전 차단, 프록시/IP평판 문제가 아니라 하드 지역
+# 게이트). rednote.com은 같은 앱/데이터를 국제용 도메인으로 서빙하고 저장된 로그인 세션으로
+# 정상 크롤된다. refs.html은 관리자에게 rednote.com URL을 붙여넣으라고 안내하지만 강제하진
+# 않는다 — "샤오홍슈"를 검색한 한국 관리자가 앱의 원래/네이티브 도메인인 xiaohongshu.com
+# 링크를 자연스럽게 마주치거나 복사해 등록할 수 있다. 그러면 크롤이 조용히 지역차단으로
+# 실패하므로, page.goto() 직전에 반드시 도메인을 정규화한다.
+_XIAOHONGSHU_DOMAIN_RE = re.compile(r"://(www\.)?xiaohongshu\.com", re.IGNORECASE)
+
+
+def _normalize_profile_url(url):
+    """xiaohongshu.com(www 유무·대소문자 무관) → rednote.com. 그 외 URL은 그대로 둔다."""
+    if not url:
+        return url
+    return _XIAOHONGSHU_DOMAIN_RE.sub(lambda m: f"://{m.group(1) or ''}rednote.com", url)
+
 
 def _profile_username(url):
     """프로필 URL에서 표시용 계정 식별자 추출(URL 마지막 path segment, 쿼리스트링 제외)."""
@@ -182,12 +198,13 @@ def _scrape_one_playwright(profile_url):
     """계정 1개 → (notes, page_url, error). 브라우저를 실제로 띄우는 유일한 함수."""
     from playwright.sync_api import sync_playwright   # 지연 import — 미설치 환경에서 모듈 로드가 죽지 않게
 
+    nav_url = _normalize_profile_url(profile_url)
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
             ctx = browser.new_context(storage_state=config.XIAOHONGSHU_SESSION_PATH)
             page = ctx.new_page()
-            page.goto(profile_url, timeout=config.XIAOHONGSHU_PW_TIMEOUT_MS,
+            page.goto(nav_url, timeout=config.XIAOHONGSHU_PW_TIMEOUT_MS,
                       wait_until="domcontentloaded")
             page.wait_for_timeout(3500)         # SSR 노트 그리드가 채워질 여유
             final_url = page.url
