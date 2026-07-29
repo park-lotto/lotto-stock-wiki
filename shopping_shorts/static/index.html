@@ -367,7 +367,7 @@
       </div>
     </details>
     <div class="tabs" id="tabs">
-      <div class="tab active" data-tab="comments" title="댓글 수 그대로 정렬">📊 전체</div>
+      <div class="tab active" data-tab="comments" title="오늘 늘어난 조회수(직전 수집 대비 증가분) 순 — 매일 순위가 바뀝니다">📊 전체</div>
       <div class="tab" data-tab="speed" title="댓글수 ÷ 경과시간(시간) — 시간당 댓글이 얼마나 빨리 쌓이는지">⚡ 속도</div>
       <div class="tab" data-tab="accel" title="이번 수집 Δ(댓글 증가분) − 직전 수집 Δ — 증가세 자체가 빨라지고 있는지(가속도)">📈 가속</div>
       <div class="tab" data-tab="density" title="댓글수 ÷ 팔로워수 — 팔로워 규모 대비 반응이 얼마나 뜨거운지(작은 채널도 상위권 가능)">💥 참여밀도</div>
@@ -833,8 +833,14 @@ function setTab(t){ STATE.tab=t; document.querySelectorAll('.tab').forEach(x=>
   x.classList.toggle('active', x.dataset.tab===t)); render(); }
 document.querySelectorAll('.tab').forEach(x=> x.onclick=()=>setTab(x.dataset.tab));
 
+// ★'전체' 탭 정렬 = 오늘 증가분(delta) — 2026-07-29 변경.
+// 왜: 예전엔 누적 댓글수로 세워서 같은 영상이 며칠째 같은 자리에 박혀 있었다(사장님 실제 제보).
+//   누적값은 쌓이기만 하니 상위가 구조적으로 고착된다. 매 수집마다 새로 계산되는 delta
+//   (이번 조회수 − 직전 조회수, ranking.py의 5개 플랫폼 빌더 전부에 있음)를 쓰면
+//   "오늘 가장 많이 오른 영상"이 위로 올라와 매일 순서가 실제로 바뀐다.
+//   ?? 폴백: delta 없는 옛 캐시 items가 섞여도 예전 기준(누적 댓글수)으로 자연히 되돌아간다.
 function sortKey(i){
-  return {comments:i.comments, speed:i.speed, accel:(i.accel??-1), density:i.density}[STATE.tab] || 0;
+  return {comments:(i.delta ?? i.comments), speed:i.speed, accel:(i.accel??-1), density:i.density}[STATE.tab] || 0;
 }
 // 랭킹 검색(2026-07-18, 개선 2026-07-18) — 한국어 단어경계 인식 부분일치.
 // 왜: 단순 substring은 "가지"가 "들어가지"(동사)·"2가지"(수량)·"여러 가지"에 다 걸려
@@ -1208,8 +1214,8 @@ function render(){
         <div class="rank">#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</div>
         <div class="ch"><span class="chname" title="이 채널 영상만 보기(지난 한 달 포함)" style="cursor:pointer" onclick="searchChannel('${esc(i.username||'')}')">${i.name||i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${i.url}', this)">🔗 복사</button></div>
         ${i.followers?`<div class="rank" style="margin:-4px 0 4px">팔로워 ${i.followers.toLocaleString()}</div>`:''}
-        ${i.views?`<div class="stat" title="조회수 — 유튜브/틱톡의 핵심 신호(속도·참여율의 기준)"><span>조회수</span><b>${i.views.toLocaleString()}</b></div>`:''}
-        <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${i.comments.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>
+        ${i.views?`<div class="stat" title="조회수 — 옆의 +숫자는 직전 수집 대비 증가분(= '전체' 탭 정렬 기준)"><span>조회수</span><b>${i.views.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>`:''}
+        <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${i.comments.toLocaleString()}${i.views?'':` <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span>`}</b></div>
         <div class="stat" title="댓글수 ÷ 경과시간(시간)"><span>속도(시간당)</span><b>${i.speed.toFixed(1)}</b></div>
         <div class="stat" title="이번 수집 Δ − 직전 수집 Δ (증가세가 빨라지는 중인지)"><span>가속</span><b>${i.accel==null?'—':(i.accel>0?'+':'')+i.accel}</b></div>
         <div class="stat" title="댓글수 ÷ 팔로워수 (팔로워 대비 반응 비율)"><span>참여밀도</span><b>${(i.density*100).toFixed(2)}%</b></div>
