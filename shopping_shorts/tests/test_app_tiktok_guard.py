@@ -17,7 +17,7 @@ def _client(tmp_path, monkeypatch):
     db = str(tmp_path / "t.db")
     monkeypatch.setattr(appmod, "DB_PATH", db)
     # 실제 Apify/수집을 타지 않게 collect를 스텁 — 가드/누적만 검증
-    monkeypatch.setattr(appmod, "collect", lambda platform="instagram", categories=None, limit_channels=None: [])
+    monkeypatch.setattr(appmod, "collect", lambda platform="instagram", categories=None, limit_channels=None, on_progress=None: [])
     return TestClient(appmod.app), db
 
 

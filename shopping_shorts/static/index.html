@@ -838,7 +838,7 @@ function toggleOverseas(on){
       }
     });
     document.getElementById('overseasPickup').style.display = window.IS_ADMIN ? 'block' : 'none';
-    initOverseasCats(); loadOverseas();
+    initOverseasCats(); loadOverseas(); resumeOverseasStatusIfRunning();
   } else {
     _overseasHidden.forEach(([el, prev])=>{ el.style.display = prev; });
     _overseasHidden = [];
@@ -892,17 +892,34 @@ function renderOverseas(){
     rows ? `<div class="ov-grid">${rows}</div>`
          : '<div class="empty">아직 수집된 영상이 없어요 — "지금 업데이트"를 눌러주세요.</div>';
 }
-async function updateOverseas(){
-  document.getElementById('overseasStatus').textContent='수집 중…';
-  await fetch('/api/overseas/update');
-  const poll=setInterval(async()=>{
+// 카테고리·탭을 오갈 때 진행률 표시가 끊겨 "멈춘 것처럼" 보이던 문제(2026-07-29) —
+// 실제 수집은 카테고리와 무관한 단일 백그라운드 작업이라 서버는 안 멈춘다. 폴링 타이머를
+// 전역 싱글턴으로 두고, 화면을 다시 볼 때(resumeOverseasStatusIfRunning) 진행 중이면 이어붙인다.
+let _overseasPollTimer = null;
+function _startOverseasPoll(){
+  if(_overseasPollTimer) return;   // 이미 폴링 중이면 중복 시작 안 함
+  _overseasPollTimer = setInterval(async()=>{
     const s=await (await fetch('/api/overseas/status')).json();
     document.getElementById('overseasStatus').textContent=(s.phase||'')+' ('+(s.elapsed||0)+'s)';
-    if(s.status==='done'||s.status==='error'){ clearInterval(poll);
+    if(s.status==='done'||s.status==='error'){ clearInterval(_overseasPollTimer); _overseasPollTimer=null;
       document.getElementById('overseasStatus').textContent =
         s.status==='done' ? `완료 ${s.count}건` : ('오류: '+s.error);
       loadOverseas(); }
   },2000);
+}
+async function updateOverseas(){
+  document.getElementById('overseasStatus').textContent='수집 중…';
+  await fetch('/api/overseas/update');
+  _startOverseasPoll();
+}
+async function resumeOverseasStatusIfRunning(){
+  try{
+    const s=await (await fetch('/api/overseas/status')).json();
+    if(s.status==='running'){
+      document.getElementById('overseasStatus').textContent=(s.phase||'수집 중…')+' ('+(s.elapsed||0)+'s)';
+      _startOverseasPoll();
+    }
+  }catch(e){ /* 상태 조회 실패는 조용히 무시 — 다음 진입 때 다시 시도 */ }
 }
 
 function render(){
@@ -1100,6 +1117,21 @@ async function _pollCollect(jobId){
     let d;
     try{ d = await (await fetch("/api/collect/status/"+jobId)).json(); }
     catch(e){ continue; }   // 일시적 네트워크 오류는 계속 폴링
+    // ★수집 진행률(2026-07-28): 서버가 채널마다 result에 부분 payload를 쓴다.
+    //   예전엔 표시가 없어 50분간 화면이 그대로였고 "멈췄다"고 판단해 취소하는 일이 있었다.
+    if (d && d.result && d.result.phase === 'collecting') {
+      const t = d.result.tally || {};
+      const blocked = (t.login_wall || 0) + (t.error || 0);
+      // ★2026-07-28 수정: #collectProgress는 cpSpin/cpMsg/cpSub/cpRetry 자식 4개를 가진
+      // 컨테이너다 — 여기에 textContent를 직접 쓰면 자식이 전부 지워져 이후 _cpDone/_cpFail이
+      // e.spin.style.display에서 null 참조 에러를 낸다. cpMsg 자식에만 써야 한다.
+      const e = _cpEls();
+      if (e.box) {
+        e.box.style.display = 'flex';
+        e.msg.textContent = `채널 ${d.result.done}/${d.result.total} · ${d.result.items_so_far}건 수집`
+          + (blocked ? ` · 건너뜀 ${blocked}` : '');
+      }
+    }
     if(d.status==='done') return d;
     if(d.status==='error') throw new Error(d.error||"수집 실패");
   }

@@ -14,7 +14,7 @@ def _client(tmp_path, monkeypatch):
     monkeypatch.setattr(appmod, "DB_PATH", db)
     recorded = {}
 
-    def fake_collect(platform="instagram", categories=None, limit_channels=None):
+    def fake_collect(platform="instagram", categories=None, limit_channels=None, on_progress=None):
         recorded["platform"] = platform
         recorded["categories"] = categories
         recorded["limit_channels"] = limit_channels

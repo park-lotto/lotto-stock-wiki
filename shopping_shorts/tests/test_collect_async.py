@@ -19,7 +19,7 @@ def test_collect_job_store_crud(tmp_path):
 def _client(tmp_path, monkeypatch, items):
     monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "a.db"))
     monkeypatch.setattr(appmod, "collect",
-                        lambda platform="instagram", categories=None, limit_channels=None: items)
+                        lambda platform="instagram", categories=None, limit_channels=None, on_progress=None: items)
     return TestClient(appmod.app)
 
 
@@ -36,7 +36,7 @@ def test_collect_returns_job_then_status_done(tmp_path, monkeypatch):
 
 def test_collect_status_error_on_collect_failure(tmp_path, monkeypatch):
     monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "b.db"))
-    def boom(platform="instagram", categories=None, limit_channels=None):
+    def boom(platform="instagram", categories=None, limit_channels=None, on_progress=None):
         raise RuntimeError("apify token=SECRET fail")
     monkeypatch.setattr(appmod, "collect", boom)
     c = TestClient(appmod.app)

@@ -8,6 +8,9 @@ from shopping_shorts.config import (DB_PATH, WINDOW_HOURS, DRAFT_BATCH_SIZE, MAX
                                     DEAD_AFTER_DAYS, CENSUS_RESULTS_PER_CHANNEL)
 from shopping_shorts.channels import load_channels, merge_tracked, select_tracked
 from shopping_shorts.apify_client import fetch_reels
+from shopping_shorts import config
+from shopping_shorts.instagram_playwright import fetch_reels as _pw_fetch_reels
+from shopping_shorts.instagram_playwright import LAST_TALLY as _PW_TALLY
 from shopping_shorts.ranking import build_items, build_youtube_items, build_tiktok_items, apply_grades, aggregate_channels
 from shopping_shorts.store import Store
 from shopping_shorts.comment_gen import generate as _gen_comments
@@ -213,7 +216,11 @@ def _collect_tiktok(include_paid_keywords=False):
     return items
 
 
-def collect(platform="instagram", categories=None, limit_channels=None):
+LAST_COLLECT_TALLY = {}
+# 마지막 인스타 수집의 채널 분류 집계(app.py가 job 결과에 담는다). apify 경로면 빈 dict.
+
+
+def collect(platform="instagram", categories=None, limit_channels=None, on_progress=None):
     """1회 수집 실행 → 지표·등급 채워진 항목 리스트 반환 + DB 저장.
 
     platform: "instagram"(기본, 엑셀 채널 기반) | "youtube"(키워드 시드 기반,
@@ -221,6 +228,8 @@ def collect(platform="instagram", categories=None, limit_channels=None):
     limit_channels: 테스트/절약용 채널 수 상한 (None=전체). 댓글 draft 생성은
     포함하지 않음 — 호출부(app.py)가 generate_missing_drafts()를 별도로(백그라운드)
     호출해야 한다.
+    on_progress(done, total, items_so_far, tally): 인스타+Playwright 경로에서만 채널마다
+    호출된다(수집이 도는지 화면에 보여주기 위함). Apify 경로는 진행률을 알 수 없어 무시된다.
     """
     if platform == "youtube":
         return _collect_youtube(categories)
@@ -245,7 +254,17 @@ def collect(platform="instagram", categories=None, limit_channels=None):
     meta_by_user = {c["username"]: c for c in channels}
     usernames = list(meta_by_user.keys())
 
-    reels = fetch_reels(usernames)  # 전체 채널 릴스 원본
+    # ── 스크레이퍼 선택(2026-07-28) ──
+    # Apify는 성공해도 28분, 403으로 통째로 죽는 사례 2건(서버 collect_jobs 실측).
+    # Playwright 경로는 채널별 실패 격리 + 진행률 보고가 된다. 라이브가 이 수집에
+    # 묶여 있으므로 환경변수 하나로 즉시 되돌릴 수 있게 분기로 남긴다.
+    global LAST_COLLECT_TALLY
+    if config.INSTAGRAM_SCRAPER == "playwright":
+        reels = _pw_fetch_reels(usernames, on_progress=on_progress)
+        LAST_COLLECT_TALLY = dict(_PW_TALLY)
+    else:
+        reels = fetch_reels(usernames)      # 전체 채널 릴스 원본(Apify)
+        LAST_COLLECT_TALLY = {}
 
     store = Store(DB_PATH)
     now = datetime.now(timezone.utc)

@@ -17,6 +17,7 @@ import requests
 from fastapi import BackgroundTasks, FastAPI, Request, UploadFile, File, Form
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
+from shopping_shorts import service
 from shopping_shorts.service import collect, census, generate_missing_drafts, next_draft_targets, youtube_channel_board
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
@@ -221,11 +222,24 @@ def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int 
 
 def _run_collect_job(job_id, platform, category, limit, cid):
     """background: collect() 실행 → (인스타)last_run 저장 → 결과를 job에 담아 done.
-    실패는 민감정보 마스킹 후 error로 기록. 프론트는 status 폴링으로 결과/에러를 받는다."""
+    실패는 민감정보 마스킹 후 error로 기록. 프론트는 status 폴링으로 결과/에러를 받는다.
+
+    ★진행률(2026-07-28): 채널마다 result_json에 부분 payload를 쓴다. 예전엔 아무것도
+    안 써서 50분간 화면이 그대로였고 사장님이 "멈췄다"고 판단해 취소했다(실사고).
+    스키마 변경 없이 기존 폴링 경로에 그대로 실린다.
+    """
     store = Store(DB_PATH)
+
+    def _on_progress(done, total, items_so_far, tally):
+        store.update_collect_job(job_id, result={
+            "phase": "collecting", "done": done, "total": total,
+            "items_so_far": items_so_far, "tally": tally,
+        })
+
     try:
         items = collect(platform=platform,
-                        categories=([category] if category else None), limit_channels=limit)
+                        categories=([category] if category else None),
+                        limit_channels=limit, on_progress=_on_progress)
     except Exception as e:
         import re
         msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
@@ -240,7 +254,9 @@ def _run_collect_job(job_id, platform, category, limit, cid):
             collected_at = datetime.now(timezone.utc).isoformat()
             store.save_last_run(items, collected_at)
             _attach_vision_tags(items, store)              # 이미 태깅된 것(재수집)은 즉시 실어 보냄
-        payload = {"count": len(items), "items": items, "collected_at": collected_at}
+        # tally(채널별 성공/로그인벽/오류)를 결과에 남긴다 — 부계정(B안) 도입 판단 근거.
+        payload = {"count": len(items), "items": items, "collected_at": collected_at,
+                   "tally": dict(getattr(service, "LAST_COLLECT_TALLY", {}) or {})}
         store.update_collect_job(job_id, status="done", result=payload)
     except Exception as e:
         import re
@@ -258,7 +274,19 @@ def _run_collect_job(job_id, platform, category, limit, cid):
             pass
 
 
-_COLLECT_STALE_MIN = 60   # Apify 200채널이 오래 걸려 census(20)보다 넉넉히
+# playwright 경로는 채널마다 진행률을 써서 updated_at이 갱신된다 — 진짜로 멈춘 경우만
+# stale로 잡히게 짧게 둔다(2026-07-28). apify 경로는 on_progress 콜백이 없어
+# update_collect_job(done)이 완료 시점까지 한 번도 안 불린다 — updated_at이 생성 시각에
+# 고정되므로 짧은 임계값을 쓰면 정상 진행 중인 수집(실측 28분 소요)이 중단으로 오판된다.
+# 반드시 config.INSTAGRAM_SCRAPER 값으로 분기할 것 — 하나로 합치면 이 회귀가 재발한다.
+_COLLECT_STALE_MIN_PLAYWRIGHT = 15
+_COLLECT_STALE_MIN_APIFY = 60
+
+
+def _collect_stale_min() -> int:
+    if config.INSTAGRAM_SCRAPER == "playwright":
+        return _COLLECT_STALE_MIN_PLAYWRIGHT
+    return _COLLECT_STALE_MIN_APIFY
 
 
 @app.get("/api/collect/status/{job_id}")
@@ -274,10 +302,12 @@ def api_collect_status(job_id: str):
                        - datetime.fromisoformat(job["updated_at"])).total_seconds() / 60
         except Exception:
             age_min = 0
-        if age_min > _COLLECT_STALE_MIN:
+        if age_min > _collect_stale_min():
             return {"ok": True, "status": "error",
                     "error": "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."}
-        return {"ok": True, "status": "running"}
+        # ★진행률(2026-07-28): result_json에 채널마다 쓰인 phase 페이로드를 running 응답에도
+        # 실어야 화면이 읽는다 — 전엔 여기서 누락돼 화면에 아무 변화가 없었다.
+        return {"ok": True, "status": "running", "result": job["result"]}
     if status == "error":
         return {"ok": True, "status": "error", "error": job["error"] or "실패"}
     return {"ok": True, "status": "done", **(job["result"] or {})}
