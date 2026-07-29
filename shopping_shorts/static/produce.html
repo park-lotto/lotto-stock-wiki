@@ -3083,14 +3083,23 @@ function renderCompareCards(d){
     (st && st.devices || []).slice(0,2).forEach(dv=>tags.push(`<span class="tag t2">${esc(dv)}</span>`));
     // 썸네일 클릭 = 미리보기 재생(previewMaterial 재사용, play_url 있으면 인라인 재생 —
     // 인스타·틱톡·샤오홍슈 전부 소스에 play_url이 붙어있으면 동일하게 재생됨).
-    // 카드 전체 클릭은 그대로 pickFootage(백본 지정) — 썸네일·원문보기 버튼만 stopPropagation.
+    // 카드 전체 클릭은 그대로 pickFootage(백본 지정) — 썸네일·버튼만 stopPropagation.
+    // ★재생 아이콘 없이 썸네일 hover 커서만으론 클릭 가능한지 안 보인다(2026-07-30 사장님
+    //   제보 "미리보기가 왜 없나" — 실제론 붙어있었는데 발견을 못 함). 썸네일에 항상 보이는
+    //   ▶ 배지 + 원문보기와 짝맞춘 버튼을 추가해 명시적으로 드러낸다.
     const canPreview = hi>=0 && (hf.play_url || thumb);
     return `<div class="cmp-card${isPick?' pick':''}" ${hi>=0?`onclick="pickFootage(${hi})"`:''} title="${esc(name)}">
         ${isPick?'<span class="cmp-badge">🤖 백본</span>':'<span class="cmp-pickhint">⭐ 이걸로 선택</span>'}
-        <div class="cmp-top"${canPreview?` onclick="event.stopPropagation();previewMaterial(${hi})" style="cursor:pointer"`:''}>${thumb?`<img src="${thumb.includes('gstatic.com')?thumb:('/api/thumb?url='+encodeURIComponent(thumb))}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">`:'<div class="cmp-th-ph"></div>'}<div class="cmp-nm">${esc(name)}</div></div>
+        <div class="cmp-top"${canPreview?` onclick="event.stopPropagation();previewMaterial(${hi})" style="cursor:pointer"`:''}>
+          <div class="cmp-thumbwrap">${thumb?`<img src="${thumb.includes('gstatic.com')?thumb:('/api/thumb?url='+encodeURIComponent(thumb))}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">`:'<div class="cmp-th-ph"></div>'}${canPreview?'<span class="cmp-play">▶</span>':''}</div>
+          <div class="cmp-nm">${esc(name)}</div>
+        </div>
         ${strip}
         <div class="cmp-tags">${tags.join('')}</div>
-        <button type="button" class="cmp-scriptbtn" onclick="event.stopPropagation();showCandidateScript(${ci})">📄 원문 보기</button>
+        <div class="cmp-btnrow">
+          ${canPreview?`<button type="button" class="cmp-scriptbtn" onclick="event.stopPropagation();previewMaterial(${hi})">▶ 미리보기</button>`:''}
+          <button type="button" class="cmp-scriptbtn" onclick="event.stopPropagation();showCandidateScript(${ci})">📄 원문 보기</button>
+        </div>
       </div>`;
   }).join('');
   return `<div class="cmp-wrap"><div class="cmp-title">🎬 소스 구조 비교 · 백본으로 쓸 영상을 고르세요</div><div class="cmp-grid">${cards}</div></div>`;
