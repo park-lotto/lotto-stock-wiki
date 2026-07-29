@@ -313,6 +313,7 @@
         <button class="xhsSortBtn" data-sort="engagement_sum" onclick="xhsSortBy('engagement_sum',this)">참여 합계</button>
         <button class="xhsSortBtn" data-sort="avg_engagement" onclick="xhsSortBy('avg_engagement',this)">노트당 평균</button>
         <button class="xhsSortBtn" data-sort="note_count" onclick="xhsSortBy('note_count',this)">노트 수</button>
+        <button onclick="xhsFollowerRate(this)" title="계정마다 프로필을 크롤해 팔로워를 받아 '참여 ÷ 팔로워'(참여율)로 정렬 — 구독자 적은데 반응 터지는 알짜를 위로. 느립니다(계정마다 크롤).">👥 팔로워 대비(참여율)</button>
       </div>
       <div id="xhsDiscoverList" style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
     </div>
@@ -569,6 +570,26 @@ function xhsAutoLoopRestore(){            // 페이지 로드/탭 진입 시 이
     const cb=document.getElementById('xhsAutoLoop'); if(cb){ cb.checked=true; xhsAutoLoopToggle(); }
   }
 }
+async function xhsFollowerRate(btn){
+  const items = window._xhsItems||[];
+  if(!items.length){ return; }
+  const old = btn.textContent; btn.disabled=true;
+  btn.textContent='👥 팔로워 조회 중… (계정마다 크롤, 좀 걸려요)';
+  try{
+    const urls = items.slice(0,25).map(a=>a.profile_url);
+    const r=await fetch('/api/xhs/followers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({profile_urls:urls})});
+    const d=await r.json();
+    if(!d.ok){ alert(d.error||'팔로워 조회 실패'); return; }
+    items.forEach(a=>{
+      const f = d.followers[a.userid] || 0;
+      a.follower = f;
+      a.engagement_rate = f>0 ? a.engagement_sum/f : 0;   // 참여 ÷ 팔로워 = 알짜 지표
+    });
+    _xhsSort='engagement_rate';
+    renderXhsList();
+  }catch(e){ alert('오류: '+e); }
+  finally{ btn.disabled=false; btn.textContent=old; }
+}
 function xhsCard(a){
   const cats=(a.categories||[]).map(_xhsEsc).join(', ');
   const badge = a.is_registered
@@ -582,6 +603,7 @@ function xhsCard(a){
     <div style="font-size:11px;color:var(--sub)">${cats}</div>
     ${(a.appear_count>1)?`<div style="font-size:11px;color:#2e7d32;margin-top:3px">🔁 ${a.appear_count}번 관측${a.appear_days>1?` · ${a.appear_days}일`:''}</div>`:''}
     <div style="font-size:12px;margin-top:4px">참여 ${a.engagement_sum.toLocaleString()} · 노트 ${a.note_count} · 평균 ${a.avg_engagement.toLocaleString()}</div>
+    ${(a.follower!==undefined)?`<div style="font-size:11px;color:#1565c0;margin-top:2px">👥 팔로워 ${a.follower.toLocaleString()} · 참여율 ${(a.engagement_rate*100).toFixed(1)}%</div>`:''}
     <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
       <a href="${_xhsEsc(a.profile_url)}" target="_blank" rel="noreferrer" style="font-size:11px">프로필↗</a>
       ${badge}

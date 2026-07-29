@@ -54,6 +54,25 @@ def _note(note_id, media_type="video", display_title="厨房神器", xsec="tok12
     }
 
 
+def test_xhs_follower_count_from_interactions():
+    from shopping_shorts import xiaohongshu_playwright as xp
+    # 2026-07-29 서버 실측 구조: user.userPageData.result.interactions[type=fans].count
+    user = {"userPageData": {"result": {"interactions": [
+        {"type": "follows", "count": "10"},
+        {"type": "fans", "name": "Followers", "count": "232964"},
+        {"type": "interaction", "count": "999"}]}}}
+    assert xp._follower_count(user) == 232964
+    assert xp._follower_count({}) == 0            # 없으면 0(가짜숫자 안 만듦)
+
+
+def test_xhs_fetch_follower_counts_keys_by_userid():
+    from shopping_shorts import xiaohongshu_playwright as xp
+    fake = {"https://www.rednote.com/user/profile/u1": (500, None),
+            "https://www.rednote.com/user/profile/u2": (0, "err")}
+    out = xp.fetch_follower_counts(list(fake), _scrape_one=lambda url: fake[url])
+    assert out == {"u1": 500, "u2": 0}
+
+
 def test_parse_search_response_maps_real_schema():
     now = datetime(2026, 7, 29, 12, 0, tzinfo=timezone.utc)
     body = {"data": {"items": [_note("abc123")]}}

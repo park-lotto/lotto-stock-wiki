@@ -223,6 +223,64 @@ def _scrape_one_playwright(profile_url):
         return [], profile_url, str(e)[:200]
 
 
+def _follower_count(user_state):
+    """프로필 state["user"]에서 팔로워(fans) 수를 뽑는다. 경로가 버전마다 userPageData.result /
+    userInfo 아래로 갈려 둘 다 훑는다 — interactions 배열의 type=="fans".count (2026-07-29 서버 실측)."""
+    for c in [(user_state.get("userPageData") or {}).get("result") or {},
+              user_state.get("userPageData") or {},
+              user_state.get("userInfo") or {}, user_state]:
+        inter = (c or {}).get("interactions")
+        if isinstance(inter, list):
+            for it in inter:
+                if isinstance(it, dict) and it.get("type") == "fans":
+                    try:
+                        return int(str(it.get("count") or "0").replace(",", ""))
+                    except (ValueError, TypeError):
+                        return 0
+    return 0
+
+
+def _userid_from_url(url):
+    return (url or "").rstrip("/").split("/")[-1].split("?")[0]
+
+
+def _scrape_follower_playwright(profile_url):
+    """프로필 1개 → (follower_count, error). 노트는 안 받고 팔로워만 — 노트 그리드 로딩을
+    기다릴 필요 없어 fetch_notes보다 가볍다(2초)."""
+    from playwright.sync_api import sync_playwright
+    nav_url = _normalize_profile_url(profile_url)
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            ctx = browser.new_context(storage_state=config.XIAOHONGSHU_SESSION_PATH)
+            page = ctx.new_page()
+            page.goto(nav_url, timeout=config.XIAOHONGSHU_PW_TIMEOUT_MS,
+                      wait_until="domcontentloaded")
+            page.wait_for_timeout(2000)
+            html = page.content()
+            ctx.close()
+            browser.close()
+        data = _extract_state_from_html(html)
+        user = (data or {}).get("user") or {}
+        return _follower_count(user), None
+    except Exception as e:                        # noqa: BLE001
+        return 0, str(e)[:200]
+
+
+def fetch_follower_counts(profile_urls, _scrape_one=None):
+    """프로필 URL들 → {userid: follower_count}. 계정마다 프로필 1회 크롤(느림·세션 점유).
+    _scrape_one: 테스트 주입용. 발굴 리더보드의 '팔로워 대비'(참여율) 계산에 쓴다."""
+    scrape = _scrape_one or _scrape_follower_playwright
+    out = {}
+    for url in (profile_urls or []):
+        url = (url or "").strip()
+        if not url:
+            continue
+        follower, _err = scrape(url)
+        out[_userid_from_url(url)] = int(follower or 0)
+    return out
+
+
 def fetch_notes(profile_urls, on_progress=None, _scrape_one=None):
     """profile_urls → build_overseas_items 스키마 raw dict 리스트.
 
