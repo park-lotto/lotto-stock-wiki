@@ -28,14 +28,17 @@ def _now():
 
 def _merge_rotate(prev, new, cap):
     """post_id(shortcode) 단위 병합 — 새 데이터가 이기고(최신 지표), 겹치지 않는
-    이전 항목은 유지. 병합 후 score 내림차순 상위 cap개만(성과 낮은 것 자연 탈락).
+    이전 항목은 유지. 병합 후 자막등급 우선, 같은 등급 내 score 내림차순 상위 cap개만(성과 낮은 것 자연 탈락).
 
     new 내부도 shortcode로 dedup한다 — 같은 서브레딧이 여러 카테고리 시드에 겹치면
     (예: BuyItForLife ∈ 살림·가전) 같은 포스트가 카테고리별로 중복 수집되므로,
     shortcode당 score 최고 1개만 남긴다.
 
     discovery.merge_feeds는 username(=서브레딧)으로 병합해 서브레딧당 1행으로
-    붕괴하므로 재사용 불가 — 발굴은 포스트 단위여야 한다."""
+    붕괴하므로 재사용 불가 — 발굴은 포스트 단위여야 한다.
+
+    정렬은 1차 자막등급(자막 없는 것이 앞), 2차 score 내림차순이다(2026-07-29).
+    상한 cap으로 자를 때도 같은 기준이라 자막 없는 항목이 우선 살아남는다."""
     best = {}
     for i in new:
         sc = i.get("shortcode")
@@ -43,7 +46,8 @@ def _merge_rotate(prev, new, cap):
             best[sc] = i
     new_keys = set(best)
     out = list(best.values()) + [i for i in prev if i.get("shortcode") not in new_keys]
-    return sorted(out, key=lambda i: i.get("score") or 0, reverse=True)[:cap]
+    return sorted(out, key=lambda i: (overseas_funnel.caption_rank(i),
+                                      -(i.get("score") or 0)))[:cap]
 
 
 def _annotate_text_level(items, store):

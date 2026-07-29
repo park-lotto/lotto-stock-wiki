@@ -338,3 +338,32 @@ def test_annotate_skips_when_no_thumbnail(monkeypatch, tmp_path):
     items = [_mk("s1", thumb="")]
     job._annotate_text_level(items, st)
     assert "text_level" not in items[0]
+
+
+def test_merge_rotate_puts_clean_thumbnails_first():
+    """자막 없는 항목이 점수 높은 자막 항목보다 앞에 온다."""
+    new = [
+        {"shortcode": "dirty", "score": 0.9, "text_level": "light"},
+        {"shortcode": "clean", "score": 0.1, "text_level": "none"},
+    ]
+    out = job._merge_rotate([], new, cap=10)
+    assert [i["shortcode"] for i in out] == ["clean", "dirty"]
+
+
+def test_merge_rotate_sorts_by_score_within_same_caption_rank():
+    new = [
+        {"shortcode": "lo", "score": 0.2, "text_level": "none"},
+        {"shortcode": "hi", "score": 0.8, "text_level": "none"},
+    ]
+    out = job._merge_rotate([], new, cap=10)
+    assert [i["shortcode"] for i in out] == ["hi", "lo"]
+
+
+def test_merge_rotate_cap_keeps_clean_ones():
+    """상한으로 자를 때도 자막 없는 것이 살아남는다."""
+    new = [
+        {"shortcode": "d1", "score": 0.9, "text_level": "light"},
+        {"shortcode": "c1", "score": 0.1, "text_level": "none"},
+    ]
+    out = job._merge_rotate([], new, cap=1)
+    assert [i["shortcode"] for i in out] == ["c1"]
