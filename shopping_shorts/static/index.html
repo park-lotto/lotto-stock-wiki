@@ -1816,7 +1816,7 @@ async function lensSearch(btn, shortcode){
     // 프레임이 있으면 항상 유튜브를 키워드로 덧댄다(비전이 화면 글자로 제품을 특정하므로
     // 캡션이 없어도 됨). ytLoading=true로 두고 renderLens가 '불러오는 중'을 보여준다.
     LENS_STATE[shortcode]={items, on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
-                           sel:new Set(), shortsOnly:false, ytLoading:true, keyword:'', caption,
+                           sel:new Set(), shortsOnly:false, foreignOnly:false, ytLoading:true, keyword:'', caption,
                            cnCands:[]};
     renderLens(shortcode);
     fetchLensYt(shortcode, caption, blob);   // ▶️ 유튜브 무료 키워드 자동합류(비동기)
@@ -1848,7 +1848,7 @@ async function traceByUrl(urlArg){
     // (caption만으론 cn_search_candidates가 빈 리스트 — 프레임 필수라 서버가 처리).
     const tcn=(d.cn_candidates||[]).filter(c=>c&&c.zh);
     LENS_STATE['__trace__']={items, on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
-                             sel:new Set(), shortsOnly:false, ytLoading:false, keyword:'', caption:tcap, cnCands:tcn};
+                             sel:new Set(), shortsOnly:false, foreignOnly:false, ytLoading:false, keyword:'', caption:tcap, cnCands:tcn};
     renderLens('__trace__');
   }catch(e){ const body=document.getElementById('scriptBody'); if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
 }
@@ -1896,6 +1896,15 @@ function toggleLensPlatform(shortcode, k){
 function toggleLensShorts(shortcode){
   const st=LENS_STATE[shortcode]; if(!st) return;
   st.shortsOnly=!st.shortsOnly; renderLens(shortcode);
+}
+// 원본영상 찾을 때 국내 짜집기 채널 제외용(2026-07-30). 채널명·국가 정보가 없어(SerpApi
+// Google Lens 응답 자체가 title만 준다) 제목에 한글 유무로 근사 판별 — 제목에 한글이 하나도
+// 없으면 해외(원본 후보)로 간주. 완벽하진 않다(한글 캡션을 붙인 해외채널은 걸러짐)지만
+// "원본을 해외에서 찾는다"는 실제 사용 맥락에 맞는 실용적 근사치다.
+const _HANGUL_RE=/[가-힣]/;
+function toggleLensForeign(shortcode){
+  const st=LENS_STATE[shortcode]; if(!st) return;
+  st.foreignOnly=!st.foreignOnly; renderLens(shortcode);
 }
 function toggleLensSelect(shortcode, savesc){
   const st=LENS_STATE[shortcode]; if(!st) return;
@@ -2109,9 +2118,10 @@ function renderLens(shortcode){
     const n=st.items.filter(i=>i.platform===p.k).length;
     return `<span onclick="toggleLensPlatform('${shortcode}','${p.k}')" style="cursor:pointer;display:inline-block;padding:3px 10px;margin:2px;border-radius:12px;font-size:11px;border:1px solid var(--line);background:${active?'#1f6feb33':'transparent'};opacity:${active?1:0.4}">${p.label} ${ytBusy?'…':n}</span>`;
   }).join('');
-  // 필터: 켠 플랫폼 + (숏폼만이면) is_short!==false. 길이불명(null/undefined)은 남긴다.
+  // 필터: 켠 플랫폼 + (숏폼만이면) is_short!==false + (해외만이면) 제목에 한글 없음.
   let shown=st.items.filter(i=>st.on.has(i.platform));
   if(st.shortsOnly) shown=shown.filter(i=>i.is_short!==false);
+  if(st.foreignOnly) shown=shown.filter(i=>!_HANGUL_RE.test(i.title||''));
   st._shown=shown;
   const selCount=shown.filter(i=>st.sel.has(i.savesc)).length;
   const allSel=shown.length>0 && selCount===shown.length;
@@ -2121,6 +2131,7 @@ function renderLens(shortcode){
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px;font-size:11px">
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px"><input type="checkbox" ${allSel?'checked':''} onclick="lensSelectAll('${shortcode}')"> 전체선택</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="영상 길이 90초 이하(또는 길이 불명)만 표시"><input type="checkbox" ${st.shortsOnly?'checked':''} onclick="toggleLensShorts('${shortcode}')"> 숏폼만</label>
+      <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="제목에 한글이 없는 결과만 표시 — 원본(해외) 영상 찾을 때. 채널명이 아닌 제목 기준 근사치라 완벽하진 않음"><input type="checkbox" ${st.foreignOnly?'checked':''} onclick="toggleLensForeign('${shortcode}')"> 🌍 해외만</label>
       <button onclick="lensBulkSave('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">📥 선택 담기(${selCount})</button>
       <button onclick="lensBulkDelete('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">🗑 선택 삭제(${selCount})</button>
       ${(()=>{const nYt=shown.filter(i=>i.platform==='youtube').length; return nYt?`<button onclick="lensBenchAllYoutube('${shortcode}')" title="이 렌즈 결과의 유튜브 채널들(짜집기 채널)을 전부 벤치 리스트에 등록 → 채널기반 수집에 편입" style="${btnCss};border-color:var(--accent);color:var(--accent);font-weight:700">➕ 유튜브 채널 전부 벤치등록(${nYt})</button>`:'';})()}
