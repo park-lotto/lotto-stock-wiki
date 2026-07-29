@@ -91,6 +91,7 @@
   <div class="tabs">
     <div class="tab active" data-p="instagram" onclick="switchPlat('instagram',this)">📷 인스타</div>
     <div class="tab" data-p="tiktok" onclick="switchPlat('tiktok',this)">🎵 틱톡</div>
+    <div class="tab" data-p="xiaohongshu" onclick="switchPlat('xiaohongshu',this)">📕 샤오홍슈</div>
     <div class="tab" data-p="youtube" onclick="switchPlat('youtube',this)">▶️ 유튜브</div>
   </div>
 
@@ -130,6 +131,8 @@ const CFG={
              hint:'인스타 채널(프로필) 주소를 붙여넣으세요. 릴스·게시물 주소는 채널을 못 찾습니다. (비용 0)'},
   tiktok:{ph:'@salim__mari\n@cleanguru\n(한 줄에 하나씩 — @핸들)',
           hint:'틱톡 계정 @핸들을 붙여넣으세요. yt-dlp 무료 수집으로 최근 14일 숏폼을 랭킹합니다.'},
+  xiaohongshu:{ph:'https://www.rednote.com/user/profile/아이디\n(한 줄에 하나씩 — 프로필 주소)',
+               hint:'샤오홍슈 프로필 주소를 붙여넣으세요. 로그인 세션 기반 무료 수집으로 최근 48시간 노트를 랭킹합니다.'},
   youtube:{ph:'채널 핸들 또는 URL\n(한 줄에 하나씩)',
            hint:'유튜브 채널을 등록합니다. 채널 기반 수집은 Phase 2 예정 — 지금은 등록만 보관됩니다.'},
 };

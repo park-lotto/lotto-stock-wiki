@@ -85,6 +85,13 @@ INSTAGRAM_PW_CONTEXTS = int(os.getenv("INSTAGRAM_PW_CONTEXTS", "5"))
 # 채널 1개 처리 상한(ms). 넘으면 그 채널만 error로 접고 다음으로 간다(전체가 죽지 않게).
 INSTAGRAM_PW_TIMEOUT_MS = int(os.getenv("INSTAGRAM_PW_TIMEOUT_MS", "20000"))
 
+# 샤오홍슈 레퍼런스 채널 크롤(2026-07-29) — 로그인 세션 재사용, 서버 직결(프록시 불필요,
+# Phase 0 스파이크 검증 완료). 세션 만료 시 수동 재로그인 → 이 경로에 storageState() 재저장.
+XIAOHONGSHU_SESSION_PATH = os.getenv(
+    "XIAOHONGSHU_SESSION_PATH", "/home/ubuntu/rednote_session.json")
+XIAOHONGSHU_PW_TIMEOUT_MS = int(os.getenv("XIAOHONGSHU_PW_TIMEOUT_MS", "20000"))
+XIAOHONGSHU_WINDOW_HOURS = int(os.getenv("XIAOHONGSHU_WINDOW_HOURS", "48"))
+
 # ── 샤오홍슈(해외HOT 발굴) 수집 경로 선택(2026-07-29) ──
 # Apify 검색은 유료(rednote-search-scraper). 로그인 세션(storage_state)으로 서버 직결
 # 무료 크롤이 실측 확인됨(Phase 0). 롤백 대비 환경변수로 즉시 전환 가능하게 둔다.
