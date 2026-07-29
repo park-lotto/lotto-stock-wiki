@@ -100,7 +100,10 @@ def _client_for_key(key):
     return _client_cache[key]
 
 
-def _wait_until_active(client, file_obj, max_wait_s=60, poll_interval=2):
+def _wait_until_active(client, file_obj, max_wait_s=180, poll_interval=2):
+    # 대기 상한 180초(2026-07-29): 예전 60초는 조급해서 '조금 느린' 영상(길거나·제미니가 잠깐
+    # 붐빌 때)이 준비 전에 실패로 던져져 빈 추출→대본이 짧아졌다(5a8e089d 10초 실사고). 제미니는
+    # 재업로드해도 다시 PROCESSING부터라 조급하게 끊는 이득이 없다 — 실제 준비될 때까지 기다린다.
     waited = 0
     state = file_obj.state.name
     while state == "PROCESSING" and waited < max_wait_s:
