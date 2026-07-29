@@ -846,6 +846,12 @@ class Store:
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_job_queue_state "
                       "ON job_queue(state, id)")
+            # 진행상황(phase·count) 실어보내기(2026-07-29 Critical fix) — 서버·워커가 별개
+            # 프로세스라 워커 안의 phase/count가 서버에 안 보였다. 큐에 실어 넘긴다.
+            try:
+                c.execute("ALTER TABLE job_queue ADD COLUMN progress TEXT")
+            except sqlite3.OperationalError:
+                pass  # 이미 존재
             self._migrate_personal_tables(c)
             self._ensure_paywall_schema(c)
 
@@ -3635,10 +3641,18 @@ class Store:
                 return None
             return {"id": row[0], "task": row[1], "args": json.loads(row[2])}
 
-    def heartbeat(self, qid):
-        """워커가 살아있다는 신호. 30초마다 찍는다 — 멈추면 reap_stale이 죽은 걸로 본다."""
+    def heartbeat(self, qid, progress=None):
+        """워커가 살아있다는 신호. 30초마다 찍는다 — 멈추면 reap_stale이 죽은 걸로 본다.
+
+        progress(JSON 문자열)를 주면 함께 갱신 — 화면 진행문구(phase·count)가
+        서버 프로세스 재조회 없이 큐를 통해 넘어온다(2026-07-29). 안 주면 하트비트만."""
         with self._conn() as c:
-            c.execute("UPDATE job_queue SET heartbeat_at=datetime('now') WHERE id=?", (qid,))
+            if progress is None:
+                c.execute("UPDATE job_queue SET heartbeat_at=datetime('now') WHERE id=?", (qid,))
+            else:
+                c.execute(
+                    "UPDATE job_queue SET heartbeat_at=datetime('now'), progress=? WHERE id=?",
+                    (progress, qid))
 
     def finish(self, qid, ok, error=None):
         """작업 종료 기록. ok=False면 error를 남겨 화면이 '실패 — 다시 시도'를 띄운다."""
@@ -3669,20 +3683,21 @@ class Store:
         with self._conn() as c:
             if args_match is None:
                 row = c.execute(
-                    "SELECT id, state, error FROM job_queue WHERE task=? "
+                    "SELECT id, state, error, progress, claimed_at FROM job_queue WHERE task=? "
                     "ORDER BY id DESC LIMIT 1", (task,)).fetchone()
             else:
                 row = c.execute(
-                    "SELECT id, state, error FROM job_queue "
+                    "SELECT id, state, error, progress, claimed_at FROM job_queue "
                     " WHERE task=? AND args_json=? ORDER BY id DESC LIMIT 1",
                     (task, json.dumps(args_match, ensure_ascii=False))).fetchone()
             if not row:
                 return None
-            qid, state, error = row
+            qid, state, error, progress, claimed_at = row
             ahead = c.execute(
                 "SELECT COUNT(*) FROM job_queue "
                 " WHERE id < ? AND state IN ('queued','running')", (qid,)).fetchone()[0]
-            return {"id": qid, "state": state, "position": ahead, "error": error}
+            return {"id": qid, "state": state, "position": ahead, "error": error,
+                    "progress": progress, "claimed_at": claimed_at}
 
     # ── 렌더 포인트 원장(2026-07-17, 자동매칭 고급효과 엔진 Task1) ──
     # 잔액 컬럼을 따로 두지 않고 delta 누적합으로 계산하는 원장(ledger) 방식.

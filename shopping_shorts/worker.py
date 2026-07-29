@@ -33,6 +33,15 @@ TASKS = {
     "overseas": lambda a: overseas_hot_jobs._run(),
 }
 
+# 진행 문구(phase·count)를 큐로 실어 보내는 리더 — 워커 프로세스 안에서만 읽을 수 있다
+# (서버 프로세스의 같은 이름 전역변수는 별개 메모리다, 2026-07-29 Critical fix).
+PROGRESS_READERS = {
+    # 워커 프로세스 안에서는 이 _JOB이 '진짜'다 — 서버 프로세스 것과는 별개다.
+    "overseas": lambda: json.dumps(
+        {"phase": overseas_hot_jobs._JOB["phase"], "count": overseas_hot_jobs._JOB["count"]},
+        ensure_ascii=False),
+}
+
 
 def run_one(store):
     """대기 작업 하나를 실행한다. 처리했으면 True, 큐가 비었으면 False.
@@ -45,9 +54,16 @@ def run_one(store):
     stop = threading.Event()
 
     def _beat():
+        reader = PROGRESS_READERS.get(task)
         while not stop.wait(HEARTBEAT_SEC):
+            progress = None
+            if reader is not None:
+                try:
+                    progress = reader()
+                except Exception:
+                    log.exception("progress 읽기 실패 qid=%s task=%s", qid, task)
             try:
-                store.heartbeat(qid)
+                store.heartbeat(qid, progress)
             except Exception:
                 log.exception("heartbeat 실패 qid=%s", qid)
 

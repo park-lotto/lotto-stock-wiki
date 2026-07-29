@@ -1,5 +1,7 @@
 """워커 루프(2026-07-29) — 한 번에 하나씩, 실패해도 워커는 안 죽는다."""
-from shopping_shorts import worker
+import json
+
+from shopping_shorts import worker, overseas_hot_jobs
 from shopping_shorts.store import Store
 
 
@@ -50,3 +52,32 @@ def test_run_one_processes_one_at_a_time(tmp_path, monkeypatch):
 
     worker.run_one(st)
     assert done == ["a"]
+
+
+def test_progress_readers_overseas_reflects_job_state():
+    """워커 프로세스 안의 overseas_hot_jobs._JOB을 읽어 phase·count를 JSON으로 실어보낸다
+    (2026-07-29 Critical fix — 서버 프로세스의 같은 이름 전역과는 별개 메모리)."""
+    overseas_hot_jobs._JOB.update(phase="수집·자막판정 신규15·캐시15", count=7)
+    got = json.loads(worker.PROGRESS_READERS["overseas"]())
+    assert got == {"phase": "수집·자막판정 신규15·캐시15", "count": 7}
+
+
+def test_beat_reader_exception_does_not_kill_heartbeat(tmp_path, monkeypatch):
+    """진행정보 읽기가 터져도 heartbeat 자체는 계속 뛰어야 한다(생존신호 > 진행표시)."""
+    st = Store(str(tmp_path / "t.db"))
+    qid = st.enqueue("overseas", {})
+    st.claim_next()
+
+    def boom():
+        raise RuntimeError("읽기 실패")
+    monkeypatch.setitem(worker.PROGRESS_READERS, "overseas", boom)
+
+    reader = worker.PROGRESS_READERS.get("overseas")
+    progress = None
+    try:
+        progress = reader()
+    except Exception:
+        progress = None
+    st.heartbeat(qid, progress)   # 예외 없이 하트비트가 찍혀야 함
+    got = st.queue_status("overseas", {})
+    assert got["state"] == "running"

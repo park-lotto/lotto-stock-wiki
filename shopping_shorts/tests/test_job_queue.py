@@ -96,3 +96,31 @@ def test_queue_status_position_counts_ahead(tmp_path):
 def test_queue_status_none_when_absent(tmp_path):
     st = Store(str(tmp_path / "t.db"))
     assert st.queue_status("mix", {"job_id": "없음"}) is None
+
+
+def test_heartbeat_with_progress_updates_queue_status(tmp_path):
+    """progress(JSON 문자열)를 넘기면 queue_status에 그대로 실린다(2026-07-29)."""
+    st = Store(str(tmp_path / "t.db"))
+    qid = st.enqueue("overseas", {})
+    st.claim_next()
+    st.heartbeat(qid, '{"phase": "수집", "count": 3}')
+    got = st.queue_status("overseas", {})
+    assert got["progress"] == '{"phase": "수집", "count": 3}'
+
+
+def test_heartbeat_without_progress_arg_still_works(tmp_path):
+    """기존 호출부(worker.py 다른 task들)는 인자 없이 heartbeat(qid)를 부른다 — 호환 유지."""
+    st = Store(str(tmp_path / "t.db"))
+    qid = st.enqueue("mix", {"job_id": "j1"})
+    st.claim_next()
+    st.heartbeat(qid)   # 예외 없이 동작해야 함
+    got = st.queue_status("mix", {"job_id": "j1"})
+    assert got["progress"] is None
+
+
+def test_queue_status_includes_claimed_at(tmp_path):
+    st = Store(str(tmp_path / "t.db"))
+    qid = st.enqueue("overseas", {})
+    st.claim_next()
+    got = st.queue_status("overseas", {})
+    assert got["claimed_at"]
