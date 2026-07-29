@@ -32,3 +32,5 @@
 - 해외HOT **자막 없는 썸네일 우선 정렬 라이브**(SDD 5태스크). 판정을 앞 15개→생존자 전부로 넓히고 `thumb_text_level` 캐시로 Gemini 재호출 차단, 정렬을 `(자막등급, -score)`로.
 - ★최종 whole-branch 리뷰가 Critical 3건 적발: 캐시 키가 `shortcode`/`video_id` 불일치로 항상 None, `build_overseas_items`가 `text_level`을 안 실어 정렬 무효, 테스트가 손수 주입한 가짜 계약을 검증(37건 초록인데 실동작 0%). 수정 후 E2E 회귀테스트로 못박음.
 - 인스타 랭킹의 CN 원본 찾기는 **구글 렌즈로 불가 확정**(실측 5건 → CN 0건). Apify 경로 부활 여부는 사장님 비용 판단.
+- **독립워커 작업큐 라이브**(SDD 7태스크). `job_queue` + systemd `shopping-shorts-worker`로 긴 작업을 서버 프로세스 밖으로 분리 — 배포 재시작이 믹스·해외HOT 수집을 죽이던 문제 해소. 실측: 서버 재시작해도 워커 PID·running 상태·heartbeat 그대로.
+- ★리뷰 Critical: `start()`가 서버 프로세스 `_JOB`을 세팅해 상태가 영구 running 고착 → 샤오홍슈 발굴이 막힐 뻔. **프로세스가 갈리면 전역변수는 안 공유된다.**
