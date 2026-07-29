@@ -313,6 +313,22 @@ def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None, max_s
                     break                          # 전 세그 소진 → shortfall 정책으로
                 continue
             take = min(avail, max_shot, tts_dur - filled)
+            # ★깜빡임 방지(2026-07-29 사장님 "0.몇초마다 두서없이 바뀌어 눈아프고 집중안됨"):
+            #   min_clip 미만 컷 금지. 실측(75f41e558957.mp4)에서 0.47~0.63초 컷이 수두룩했던 건
+            #   이 라운드로빈이 세그 잔량(avail)이 짧아도 그대로 뱉었기 때문 — min_clip 파라미터가
+            #   여기서 안 쓰였다. 잔량이 min_clip 미만이면 (a)min_clip 이상 낼 수 있는 다른 세그로
+            #   전환, (b)그런 세그가 없으면 루프를 끝내 아래 shortfall(마지막 클립을 실프레임으로
+            #   연장, 되풀이 없음)이 이어받게 한다. 단 남은 나레이션 자체가 min_clip 미만이면
+            #   그 자투리는 새 tiny컷 대신 shortfall로 흡수.
+            if take < min_clip - eps:
+                if tts_dur - filled < min_clip - eps:
+                    break
+                j = next((k for k in range(len(segments))
+                          if segments[k]["end"] - pos[k] >= min_clip - eps), -1)
+                if j < 0:
+                    break
+                i = j; seg = segments[i]
+                take = min(seg["end"] - pos[i], max_shot, tts_dur - filled)
             clips.append({"video_id": seg["video_id"], "start": pos[i],
                           "src_dur": take, "out_dur": take})
             pos[i] += take
