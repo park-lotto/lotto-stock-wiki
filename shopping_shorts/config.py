@@ -96,6 +96,10 @@ XIAOHONGSHU_WINDOW_HOURS = int(os.getenv("XIAOHONGSHU_WINDOW_HOURS", "48"))
 # 레퍼런스에 자동 등록. 발굴은 Apify 검색(과금) → 킬스위치로 끌 수 있게 둔다.
 XIAOHONGSHU_AUTO_DISCOVER = os.getenv("XIAOHONGSHU_AUTO_DISCOVER", "true").lower() == "true"
 XIAOHONGSHU_AUTO_TOP_N = int(os.getenv("XIAOHONGSHU_AUTO_TOP_N", "10"))
+# 서버 백그라운드 발굴 루프 주기(분) — 창을 닫아도 서버가 계속 발굴해 누적을 쌓는다.
+# 켜기/끄기는 DB 설정 'xhs_bg_auto'(UI 토글)로, 여기 값은 주기·마스터 스위치.
+XIAOHONGSHU_BG_INTERVAL_MIN = int(os.getenv("XIAOHONGSHU_BG_INTERVAL_MIN", "45"))
+XIAOHONGSHU_BG_ENABLED = os.getenv("XIAOHONGSHU_BG_ENABLED", "true").lower() == "true"  # 마스터 킬스위치
 
 # ── 샤오홍슈(해외HOT 발굴) 수집 경로 선택(2026-07-29) ──
 # Apify 검색은 유료(rednote-search-scraper). 로그인 세션(storage_state)으로 서버 직결

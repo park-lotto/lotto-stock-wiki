@@ -302,8 +302,8 @@
     </div>
     <div id="xhsDiscoverPanel" style="display:none;margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
       <button onclick="xhsDiscover(this)">🔍 잘하는 계정 발굴</button>
-      <label style="font-size:12px;color:var(--sub);margin-left:10px;cursor:pointer" title="켜두면 화면이 열려있는 동안 주기적으로 발굴을 반복해 누적을 빨리 쌓습니다. 끄면 멈춥니다. (해외HOT 수집 중엔 자동으로 건너뜀)">
-        <input type="checkbox" id="xhsAutoLoop" onchange="xhsAutoLoopToggle()"> ⏱ 자동 반복(<span id="xhsAutoMin">20</span>분마다)
+      <label style="font-size:12px;color:var(--sub);margin-left:10px;cursor:pointer" title="켜면 창을 닫아도 서버가 주기적으로 발굴해 누적을 계속 쌓습니다. 끄면 멈춥니다. (해외HOT 수집 중엔 자동으로 건너뜀)">
+        <input type="checkbox" id="xhsAutoLoop" onchange="xhsAutoLoopToggle(this)"> ⏱ 백그라운드 자동 발굴(<span id="xhsAutoMin">45</span>분마다, 창 닫아도 계속)
       </label>
       <span id="xhsAutoState" style="font-size:11px;color:#2e7d32;margin-left:6px"></span>
       <div style="font-size:11px;color:var(--sub);margin-top:4px">카테고리별로 반응 좋은 계정을 모아옵니다 (무료 검색). 자주 돌릴수록 '몇 번 관측됐나'가 쌓여 정확해져요. 매일 새벽 상위 계정은 자동 등록. [담기]로 추가, [삭제]는 영구 제외.</div>
@@ -548,27 +548,26 @@ function renderXhsList(){
   document.getElementById('xhsDiscoverList').innerHTML = items.map(xhsCard).join('');
   document.querySelectorAll('.xhsSortBtn').forEach(b=>b.style.fontWeight = (b.dataset.sort===_xhsSort?'700':'400'));
 }
-// ── 자동 반복 발굴(화면 열려있는 동안만, 토글로 멈춤) — 서버 백그라운드 스레드 없이 안전 ──
-const _XHS_AUTO_MIN = 20;                 // 반복 주기(분) — 너무 잦으면 크롤 부하·차단 위험
-let _xhsAutoTimer = null;
-function xhsAutoLoopToggle(){
-  const on = document.getElementById('xhsAutoLoop').checked;
-  localStorage.setItem('xhsAutoLoop', on?'1':'0');
+// ── 백그라운드 자동 발굴(서버가 창 닫아도 계속 돎, 토글로 멈춤) ──
+let _xhsAutoTimer = null;   // (호환용 — 이제 서버가 돌린다)
+async function xhsAutoLoopToggle(cb){
+  const on = cb.checked;
   const state=document.getElementById('xhsAutoState');
-  if(_xhsAutoTimer){ clearInterval(_xhsAutoTimer); _xhsAutoTimer=null; }
-  if(on){
-    state.textContent='● 자동 반복 켜짐 (이 창 열려있는 동안)';
-    xhsDiscover(null, true);              // 켜면 바로 한 번
-    _xhsAutoTimer = setInterval(()=>xhsDiscover(null, true), _XHS_AUTO_MIN*60*1000);
-  } else {
-    state.textContent='';
-  }
+  state.textContent='…';
+  try{
+    const r=await fetch('/api/xhs/auto',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({on})});
+    const d=await r.json();
+    document.getElementById('xhsAutoMin').textContent = d.interval_min||45;
+    state.textContent = d.on ? `● 백그라운드 자동 발굴 켜짐 (서버가 ${d.interval_min}분마다, 창 닫아도 계속)` : '';
+  }catch(e){ state.textContent='⚠ '+e; cb.checked=!on; }
 }
-function xhsAutoLoopRestore(){            // 페이지 로드/탭 진입 시 이전 설정 복원
-  const m=document.getElementById('xhsAutoMin'); if(m) m.textContent=_XHS_AUTO_MIN;
-  if(localStorage.getItem('xhsAutoLoop')==='1'){
-    const cb=document.getElementById('xhsAutoLoop'); if(cb){ cb.checked=true; xhsAutoLoopToggle(); }
-  }
+async function xhsAutoLoopRestore(){       // 탭 진입 시 서버 상태로 토글 복원
+  try{
+    const r=await fetch('/api/xhs/auto'); const d=await r.json();
+    const cb=document.getElementById('xhsAutoLoop'); if(cb) cb.checked=!!d.on;
+    document.getElementById('xhsAutoMin').textContent = d.interval_min||45;
+    document.getElementById('xhsAutoState').textContent = d.on ? `● 백그라운드 자동 발굴 켜짐 (서버가 ${d.interval_min}분마다, 창 닫아도 계속)` : '';
+  }catch(e){}
 }
 async function xhsFollowerRate(btn){
   const items = window._xhsItems||[];

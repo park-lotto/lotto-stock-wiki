@@ -40,6 +40,17 @@ def test_discover_attaches_accumulation(monkeypatch, tmp_path):
     assert out[0]["cum_engagement"] == out[0]["engagement_sum"]
 
 
+def test_xhs_auto_toggle_persists(monkeypatch, tmp_path):
+    from shopping_shorts import app
+    db = str(tmp_path / "t.db"); Store(db)
+    monkeypatch.setattr(app, "DB_PATH", db)
+    assert app.api_xhs_auto_get()["on"] is False          # 기본 꺼짐(안전)
+    app.api_xhs_auto_set({"on": True})
+    assert app.api_xhs_auto_get()["on"] is True
+    app.api_xhs_auto_set({"on": False})
+    assert app.api_xhs_auto_get()["on"] is False
+
+
 def test_discover_endpoint_guards_when_overseas_running(monkeypatch):
     import json
     from shopping_shorts import app, overseas_hot_jobs
