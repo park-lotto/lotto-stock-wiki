@@ -42,7 +42,7 @@ def _stub_extract(monkeypatch, calls, full_text):
     def _fake(video_path, code, caption=""):
         calls.append(code)
         return {"full_text": full_text, "segments": []}
-    monkeypatch.setattr(app_module, "extract_script", _fake)
+    monkeypatch.setattr(app_module, "extract_auto", _fake)
 
 
 def test_autoload_puts_script_in_both_wiki_and_picks(monkeypatch, tmp_path):
