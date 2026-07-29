@@ -148,3 +148,25 @@ sudo systemctl enable --now shopping-shorts-instagram-collect.timer
 ```
 스크립트 본체 = `scripts/daily_instagram_collect.py`(HTTP 우회, `service.collect("instagram")` 직접).
 세션쿠키 만료 시 재발급 절차: handoff/AI픽자동적재.md "세션 만료 시 재발급 절차" 참고.
+
+## 인스타 신규채널 발굴 타이머 (2026-07-30)
+"신규채널 픽업"(discover.html) 화면의 카테고리별(#주방템·#살림템·#인테리어·#자취템·
+#생활꿀템·#뷰티템) 검색→릴스수집→팔로워조회를 매일 07:00 KST 자동 실행 후, 발굴 전부를
+사람 확인 없이 `discovered_channels`에 자동 등록한다(사장님 지시, 2026-07-30). 09:00
+인스타 자동수집(`shopping-shorts-instagram-collect.timer`)보다 2시간 앞서 돌아,
+새로 발굴된 채널이 그날 09시 레퍼런스랭킹 수집부터 바로 반영되게 순서를 맞췄다.
+무료 Playwright 경로(`INSTAGRAM_SCRAPER=playwright`, 릴스수집과 동일 킬스위치) —
+과금 없음. max_total=300(기존 화면 기본 40, 상한 120에서 대폭 확대).
+```
+sudo cp deploy/shopping-shorts-instagram-discover.service /etc/systemd/system/
+sudo cp deploy/shopping-shorts-instagram-discover.timer   /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now shopping-shorts-instagram-discover.timer
+# 즉시 1회 테스트: sudo systemctl start shopping-shorts-instagram-discover.service
+#            로그: journalctl -u shopping-shorts-instagram-discover -n 30
+# 다음 실행시각: systemctl list-timers shopping-shorts-instagram-discover.timer
+```
+스크립트 본체 = `scripts/daily_instagram_discover.py`(HTTP 우회, `discover_jobs._run(..., auto_register=True)` 직접).
+⚠️ 소요시간이 김(300개 × 릴스수집+프로필조회, 실측 6채널=99초 → 300개는 대략 40~80분대
+예상, 07시~09시 사이 2시간 여유). 최초 배포 후 1회는 반드시 수동 테스트로 07~09시
+사이에 끝나는지 실측 확인할 것.

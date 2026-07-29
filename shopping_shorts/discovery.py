@@ -134,12 +134,18 @@ def discover(keyword, known, *, search_fn, fetch_reels_fn, profiles_fn=None,
 
 def discover_multi(keywords, known, *, search_fn, fetch_reels_fn, profiles_fn=None,
                    prev_comments, prev_delta, now=None, window_hours=48,
-                   max_channels_per=12, max_total=40):
+                   max_channels_per=12, max_total=40, search_workers=6):
     """여러 카테고리를 한 번에 → "업데이트" 한 번으로 새 채널들이 랭킹으로 정렬돼
     올라오게(2026-07-12). 카테고리 검색은 병렬로 돌려 전체 소요시간을 가장 느린
     한 카테고리 수준으로 줄인다(순차로 돌면 6개 합이 몇 분 걸려 서버 재시작에
-    걸려 죽던 문제, 2026-07-12). 릴스 수집·프로필은 각각 1회만 호출."""
-    with ThreadPoolExecutor(max_workers=min(6, len(keywords) or 1)) as pool:
+    걸려 죽던 문제, 2026-07-12). 릴스 수집·프로필은 각각 1회만 호출.
+
+    search_workers: 검색 동시성 상한(기본 6=기존 동작 그대로, Apify는 계정별
+    HTTP라 병렬이 안전). search_fn이 Playwright처럼 로컬 브라우저를 여는 경우
+    search_workers=1로 순차 실행해야 한다 — 2026-07-30 실측: 6개 동시 실행 시
+    브라우저 자원 경합으로 일부 태그가 조용히 0건이 났다(에러 없이, 세션이나
+    CPU 스케줄링 경합으로 추정)."""
+    with ThreadPoolExecutor(max_workers=min(search_workers, len(keywords) or 1)) as pool:
         results = list(pool.map(search_fn, keywords))  # 입력 순서 보존
     known_n = {_norm(k) for k in known}
     seen = set()
