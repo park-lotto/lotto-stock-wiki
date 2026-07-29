@@ -3061,11 +3061,14 @@ function _candIdxInHandoff(vid){
 // 사장님이 백본으로 쓸 영상을 눈으로 비교해 고르게 한다. 카드 클릭 = 기존 pickFootage(백본 지정
 // +저장+AI PICK 재조회). structure가 null인 소스(캐시 없음)는 "분석 전"으로 표시 — 클릭하면
 // 그 영상이 픽이 되며 서버가 분석한다(build_aipick pick 경로의 analyze_structure 폴백).
+let _cmpTexts = [];   // renderCompareCards가 채움 — showCandidateScript(ci)가 참조(원문에 따옴표/줄바꿈이
+                       // 섞여 있어 onclick 속성에 직접 못 심는다, 인덱스로 참조)
 function renderCompareCards(d){
   const cands = (d && d.candidates) || [];
   if(cands.length < 2) return '';   // 1개면 비교할 게 없다
+  _cmpTexts = cands.map(c=>c.text||'');
   const pickId = d.pick_id;
-  const cards = cands.map(c=>{
+  const cards = cands.map((c,ci)=>{
     const hi = _candIdxInHandoff(c.video_id);
     const hf = HANDOFF[hi] || {};
     const isPick = c.video_id === pickId;
@@ -3078,14 +3081,27 @@ function renderCompareCards(d){
     const tags = [];
     if(st && st.hook_type) tags.push(`<span class="tag t1">🎙 ${esc(st.hook_type)}</span>`);
     (st && st.devices || []).slice(0,2).forEach(dv=>tags.push(`<span class="tag t2">${esc(dv)}</span>`));
+    // 썸네일 클릭 = 미리보기 재생(previewMaterial 재사용, play_url 있으면 인라인 재생 —
+    // 인스타·틱톡·샤오홍슈 전부 소스에 play_url이 붙어있으면 동일하게 재생됨).
+    // 카드 전체 클릭은 그대로 pickFootage(백본 지정) — 썸네일·원문보기 버튼만 stopPropagation.
+    const canPreview = hi>=0 && (hf.play_url || thumb);
     return `<div class="cmp-card${isPick?' pick':''}" ${hi>=0?`onclick="pickFootage(${hi})"`:''} title="${esc(name)}">
         ${isPick?'<span class="cmp-badge">🤖 백본</span>':'<span class="cmp-pickhint">⭐ 이걸로 선택</span>'}
-        <div class="cmp-top">${thumb?`<img src="${thumb.includes('gstatic.com')?thumb:('/api/thumb?url='+encodeURIComponent(thumb))}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">`:'<div class="cmp-th-ph"></div>'}<div class="cmp-nm">${esc(name)}</div></div>
+        <div class="cmp-top"${canPreview?` onclick="event.stopPropagation();previewMaterial(${hi})" style="cursor:pointer"`:''}>${thumb?`<img src="${thumb.includes('gstatic.com')?thumb:('/api/thumb?url='+encodeURIComponent(thumb))}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">`:'<div class="cmp-th-ph"></div>'}<div class="cmp-nm">${esc(name)}</div></div>
         ${strip}
         <div class="cmp-tags">${tags.join('')}</div>
+        <button type="button" class="cmp-scriptbtn" onclick="event.stopPropagation();showCandidateScript(${ci})">📄 원문 보기</button>
       </div>`;
   }).join('');
   return `<div class="cmp-wrap"><div class="cmp-title">🎬 소스 구조 비교 · 백본으로 쓸 영상을 고르세요</div><div class="cmp-grid">${cards}</div></div>`;
+}
+// 백본 후보 원문 대본 보기(2026-07-29 사장님 요청) — 어떤 소스를 백본으로 쓸지 읽고 고르게.
+function showCandidateScript(ci){
+  const text = (_cmpTexts[ci] || '').trim();
+  const body = text
+    ? `<div style="white-space:pre-wrap;line-height:1.6;font-size:13px;max-height:56vh;overflow-y:auto;text-align:left;color:var(--txt)">${esc(text)}</div>`
+    : `<div style="color:var(--sub);font-size:13px">아직 이 영상의 대본이 추출되지 않았어요 — 카드를 클릭해 백본으로 지정하면 서버가 분석합니다.</div>`;
+  _openMaterialOverlay(`<div style="font-size:13px;margin-bottom:10px;font-weight:800;color:var(--txt)">📄 원본 대본</div>${body}`);
 }
 function renderAiPick(d, hasFootage){
   // pick_id==null은 두 경우가 다르다: 담긴 재료가 아예 없으면(hasFootage=false) 빈 상태,

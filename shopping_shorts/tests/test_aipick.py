@@ -163,3 +163,5 @@ def test_build_aipick_candidates_carry_structure_and_meta(monkeypatch):
     # 캐시 없는 b: structure=None(프론트 '분석 전'), 이름·썸네일은 그대로
     assert cby["b"]["structure"] is None
     assert cby["b"]["name"] == "다른채널" and cby["b"]["thumbnail"] == "b.jpg"
+    # ★원문 보기(2026-07-29): 카드 클릭 전에 원본 대본을 읽을 수 있어야 하므로 text가 실려야 한다.
+    assert cby["a"]["text"] == "x" and cby["b"]["text"] == "y"

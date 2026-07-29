@@ -142,6 +142,8 @@
 .cmp-tags .tag{ font-size:10px; padding:2px 8px; border-radius:99px; font-weight:900; border:1px solid; }
 .cmp-tags .tag.t1{ border-color:#facc6b; color:#facc6b; background:rgba(250,204,107,.08); }
 .cmp-tags .tag.t2{ border-color:#3ee0bf; color:#3ee0bf; background:rgba(62,224,191,.08); }
+.cmp-scriptbtn{ display:block; width:100%; margin-top:8px; padding:5px 0; font-size:10px; font-weight:800; color:#b7c2d6; background:rgba(255,255,255,.04); border:1px solid #3a4a60; border-radius:8px; cursor:pointer; }
+.cmp-scriptbtn:hover{ border-color:#3ee0bf; color:#3ee0bf; }
 
 /* ── 화면 붙이기(매칭) 후보·장면 카드 (v6 final-mock-v6.html 이식) ── */
 .seqno{ display:inline-grid; place-items:center; width:22px; height:22px; border-radius:50%; background:linear-gradient(135deg,#7df5db,#14b8a6); color:#04201b; font-size:12px; font-weight:900; margin-right:7px; }
