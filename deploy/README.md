@@ -131,3 +131,20 @@ sudo systemctl enable --now shopping-shorts-collect.timer
 # 다음 실행시각: systemctl list-timers shopping-shorts-collect.timer
 ```
 스크립트 본체 = `scripts/daily_youtube_collect.py`(HTTP 우회, `service.collect("youtube")` 직접).
+
+## 인스타 자동수집 타이머 (2026-07-29)
+Playwright 무료 경로(세션쿠키+서버직결, `INSTAGRAM_SCRAPER=playwright`)로 하루 3회(09/15/21시 KST)
+자동 수집 → 랭킹·가속 갱신. 서버에 이미 `/etc/shopping-shorts.env`의 `INSTAGRAM_SCRAPER=playwright`와
+`INSTAGRAM_SESSION_PATH=/home/ubuntu/instagram_session.json`이 설정돼 있어야 무료 경로로 돈다
+(비어 있으면 기본값 apify=유료로 폴백하니 배포 전 서버 env를 확인).
+```
+sudo cp deploy/shopping-shorts-instagram-collect.service /etc/systemd/system/
+sudo cp deploy/shopping-shorts-instagram-collect.timer   /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now shopping-shorts-instagram-collect.timer
+# 즉시 1회 테스트: sudo systemctl start shopping-shorts-instagram-collect.service
+#            로그: journalctl -u shopping-shorts-instagram-collect -n 30
+# 다음 실행시각: systemctl list-timers shopping-shorts-instagram-collect.timer
+```
+스크립트 본체 = `scripts/daily_instagram_collect.py`(HTTP 우회, `service.collect("instagram")` 직접).
+세션쿠키 만료 시 재발급 절차: handoff/AI픽자동적재.md "세션 만료 시 재발급 절차" 참고.
