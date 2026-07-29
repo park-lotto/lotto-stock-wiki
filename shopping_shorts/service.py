@@ -365,9 +365,9 @@ def _ig_hashtags_by_category():
     return out
 
 
-def discover_instagram_accounts(min_appear=2):
-    """인스타 계정 발굴 리더보드(해시태그 탐색, 2026-07-30). 블랙리스트 제외,
-    이미 등록된 계정은 is_registered=True."""
+def discover_instagram_accounts(min_posts=2):
+    """인스타 계정 발굴 리더보드(해시태그 탐색, 참여도=좋아요+댓글 합산, 2026-07-30).
+    블랙리스트 제외, 이미 등록된 계정은 is_registered=True."""
     store = Store(DB_PATH)
     blacklist = store.ig_blacklist_list()
     # 인스타 실제 추적 대상은 discovered_channels(엑셀과 union되는 테이블) —
@@ -375,15 +375,16 @@ def discover_instagram_accounts(min_appear=2):
     registered = {d["username"].lower() for d in store.discovered_channels()}
     accounts = instagram_discovery.discover_accounts(
         _ig_search_hashtag, _ig_hashtags_by_category(),
-        min_appear=min_appear, blacklist=blacklist)
+        min_posts=min_posts, blacklist=blacklist)
     run_ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")
     store.ig_discovery_record(run_ts, accounts)
     stats = store.ig_discovery_stats()
     for a in accounts:
         a["is_registered"] = a["username"].lower() in registered
         st = stats.get(a["username"].lower(), {})
-        a["cum_appear_count"] = st.get("appear_count", a["appear_count"])
-        a["appear_days"] = st.get("appear_days", 1)
+        a["appear_count"] = st.get("appear_count", 1)        # 관측 횟수(자주 돌수록↑)
+        a["appear_days"] = st.get("appear_days", 1)          # 등장 일수
+        a["cum_engagement"] = st.get("cum_engagement", a["engagement_sum"])  # 누적 참여합
     if accounts:
         import json as _json
         store.set_setting("ig_discovery_last_result", _json.dumps(
@@ -422,12 +423,12 @@ def blacklist_instagram_discovery_account(username):
     return {"ok": True}
 
 
-def auto_register_instagram(top_n=10, min_appear=2):
+def auto_register_instagram(top_n=10, min_posts=2):
     """매일: 발굴 상위 N 계정을 레퍼런스(discovered_channels)에 자동 등록
     (블랙리스트·기등록 제외). 등록 username 리스트 반환."""
     store = Store(DB_PATH)
     added = []
-    for a in discover_instagram_accounts(min_appear=min_appear):
+    for a in discover_instagram_accounts(min_posts=min_posts):
         if len(added) >= top_n:
             break
         if a.get("is_registered"):

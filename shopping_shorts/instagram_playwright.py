@@ -157,6 +157,20 @@ def _search_hashtag_playwright(tag):
             page.goto(url, timeout=config.INSTAGRAM_PW_TIMEOUT_MS, wait_until="domcontentloaded")
             page.wait_for_timeout(5000)     # SERP graphql 응답 도착 여유 — 3.5초는 서버
             # 재실측(2026-07-30)에서 0/24건으로 불안정했다, 5초는 3회 연속 24건 안정.
+
+            # SERP 응답엔 좋아요·댓글수가 없다(실측) — 릴스수집과 같은 media info REST를
+            # 상위 표본만 한 번씩 더 불러 참여도를 보강한다(2026-07-30, 샤오홍슈 발굴처럼
+            # 참여도 기반 정렬을 하려면 필수 — 등장횟수만으로는 신호가 약하다는 지적 반영).
+            for it in captured[:config.INSTAGRAM_DISCOVERY_DETAIL_TOP_N]:
+                pk = it.get("pk")
+                if not pk:
+                    continue
+                detail = _fetch_reel_detail(ctx, pk)
+                if detail:
+                    it["like_count"] = detail.get("like_count")
+                    it["comment_count"] = detail.get("comment_count")
+                    it["play_count"] = detail.get("play_count")
+
             ctx.close()
             browser.close()
         return captured, None
@@ -165,7 +179,7 @@ def _search_hashtag_playwright(tag):
 
 
 def search_hashtag(tag, _search_one=None):
-    """해시태그 1개 → 발굴용 게시물 dict 리스트(파싱 완료, 10키 아님 — discovery 전용 스키마).
+    """해시태그 1개 → 발굴용 게시물 dict 리스트(파싱 완료, 참여도 포함 — discovery 전용 스키마).
 
     _search_one: 테스트 주입용(브라우저 없이). 기본은 실제 Playwright.
     """
