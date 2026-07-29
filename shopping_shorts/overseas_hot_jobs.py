@@ -1,6 +1,7 @@
 """해외HOT 발굴 백그라운드 잡 — discover_jobs 패턴 복제. 카테고리 시드팩을 순회하며
 Reddit rising+top을 무료 수집 → build_reddit_items+apply_grades → 병합·로테이션 →
 Store.save_overseas_feed. 단일 워커 전역상태로 진행폴링."""
+import json
 import threading
 import time
 from datetime import datetime, timezone
@@ -179,19 +180,62 @@ _RUN_STALE_SEC = 1800
 
 
 def start():
+    """수집을 큐에 넣는다. 실제 실행은 독립워커가 한다(2026-07-29).
+
+    예전엔 여기서 threading.Thread를 띄웠는데, 그 스레드가 FastAPI 서버 프로세스 안에
+    있어서 배포의 systemctl restart에 SIGKILL됐다(실측: 16:03 시작 → 16:09 배포에 사망).
+    이제 서버가 죽어도 워커가 계속 돈다."""
+    store = Store(DB_PATH)
+    q = store.queue_status("overseas")
+    if q and q["state"] in ("queued", "running"):
+        with _LOCK:
+            elapsed = int(time.time() - _JOB["started"]) if _JOB["started"] else 0
+        return {"status": "running", "elapsed": elapsed}
     with _LOCK:
-        if _JOB["status"] == "running" and time.time() - _JOB["started"] < _RUN_STALE_SEC:
-            return {"status": "running", "elapsed": int(time.time() - _JOB["started"])}
-        _JOB.update(status="running", phase="시작", count=0, error=None, started=time.time())
-    threading.Thread(target=_run, daemon=True).start()
+        _JOB.update(status="running", phase="대기 중", count=0, error=None, started=time.time())
+    store.enqueue("overseas", {})
     return {"status": "running", "elapsed": 0}
 
 
 def status():
-    with _LOCK:
-        return {"status": _JOB["status"], "phase": _JOB["phase"], "count": _JOB["count"],
-                "error": _JOB["error"],
-                "elapsed": int(time.time() - _JOB["started"]) if _JOB["started"] else 0}
+    """큐(DB)를 본다. 서버·워커가 별개 프로세스라 메모리 _JOB은 서버 쪽에서 못 믿는다(2026-07-29).
+
+    반환 키는 기존 계약 그대로 유지하고 queue만 더한다 — 프론트가 status/phase/count/elapsed를 쓴다."""
+    store = Store(DB_PATH)
+    q = store.queue_status("overseas")
+
+    if not q or q["state"] == "done":
+        return {"status": "idle", "phase": "", "count": 0, "error": None, "elapsed": 0,
+                "queue": q}
+
+    if q["state"] == "failed":
+        return {"status": "error", "phase": "", "count": 0, "error": q["error"],
+                "elapsed": 0, "queue": q}
+
+    elapsed = 0
+    if q.get("claimed_at"):
+        try:
+            claimed = datetime.strptime(q["claimed_at"], "%Y-%m-%d %H:%M:%S").replace(
+                tzinfo=timezone.utc)
+            elapsed = max(0, int((_now() - claimed).total_seconds()))
+        except (ValueError, TypeError):
+            elapsed = 0
+
+    if q["state"] == "queued":
+        return {"status": "running", "phase": "대기 중", "count": 0, "error": None,
+                "elapsed": elapsed, "queue": q}
+
+    # running — progress JSON을 파싱해 phase·count를 채운다(파싱 실패는 안전한 기본값).
+    phase, count = "진행 중", 0
+    if q.get("progress"):
+        try:
+            p = json.loads(q["progress"])
+            phase = p.get("phase") or phase
+            count = p.get("count") or 0
+        except (ValueError, TypeError):
+            pass
+    return {"status": "running", "phase": phase, "count": count, "error": None,
+            "elapsed": elapsed, "queue": q}
 
 
 def add_pickup(urls):

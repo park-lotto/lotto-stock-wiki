@@ -828,6 +828,30 @@ class Store:
                     resolved INTEGER DEFAULT 0
                 )
             """)
+            # 독립워커 작업큐(2026-07-29) — 긴 작업(믹스·해외HOT 수집)을 서버 프로세스 밖으로
+            # 뺀다. 예전엔 BackgroundTasks라 배포의 systemctl restart가 진행 중 작업을
+            # SIGKILL했다(2026-07-29 실측: 하루에 수집 1건·믹스 1건 사망).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS job_queue (
+                    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                    task         TEXT NOT NULL,
+                    args_json    TEXT NOT NULL,
+                    state        TEXT NOT NULL,
+                    error        TEXT,
+                    created_at   TEXT NOT NULL,
+                    claimed_at   TEXT,
+                    heartbeat_at TEXT,
+                    finished_at  TEXT
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_job_queue_state "
+                      "ON job_queue(state, id)")
+            # 진행상황(phase·count) 실어보내기(2026-07-29 Critical fix) — 서버·워커가 별개
+            # 프로세스라 워커 안의 phase/count가 서버에 안 보였다. 큐에 실어 넘긴다.
+            try:
+                c.execute("ALTER TABLE job_queue ADD COLUMN progress TEXT")
+            except sqlite3.OperationalError:
+                pass  # 이미 존재
             self._migrate_personal_tables(c)
             self._ensure_paywall_schema(c)
 
@@ -3590,6 +3614,90 @@ class Store:
                 (row[0], platform, shortcode),
             ).fetchall()
         return [{"platform": r[0], "shortcode": r[1]} for r in rows]
+
+    # ── 독립워커 작업큐(2026-07-29) ──
+    def enqueue(self, task, args):
+        """작업을 대기열에 넣고 큐 id를 반환한다."""
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO job_queue(task, args_json, state, created_at) "
+                "VALUES(?,?, 'queued', datetime('now'))",
+                (task, json.dumps(args, ensure_ascii=False)))
+            return cur.lastrowid
+
+    def claim_next(self):
+        """가장 오래된 대기 작업 하나를 원자적으로 'running'으로 바꾸고 돌려준다.
+
+        UPDATE ... RETURNING 한 문장이라 워커가 여러 개여도 같은 작업을 두 번 집지 않는다
+        (SQLite 3.35+ 필요, 서버 3.45 실측 확인). 없으면 None."""
+        with self._conn() as c:
+            row = c.execute(
+                "UPDATE job_queue SET state='running', "
+                "       claimed_at=datetime('now'), heartbeat_at=datetime('now') "
+                " WHERE id = (SELECT id FROM job_queue WHERE state='queued' "
+                "             ORDER BY id LIMIT 1) "
+                "RETURNING id, task, args_json").fetchone()
+            if not row:
+                return None
+            return {"id": row[0], "task": row[1], "args": json.loads(row[2])}
+
+    def heartbeat(self, qid, progress=None):
+        """워커가 살아있다는 신호. 30초마다 찍는다 — 멈추면 reap_stale이 죽은 걸로 본다.
+
+        progress(JSON 문자열)를 주면 함께 갱신 — 화면 진행문구(phase·count)가
+        서버 프로세스 재조회 없이 큐를 통해 넘어온다(2026-07-29). 안 주면 하트비트만."""
+        with self._conn() as c:
+            if progress is None:
+                c.execute("UPDATE job_queue SET heartbeat_at=datetime('now') WHERE id=?", (qid,))
+            else:
+                c.execute(
+                    "UPDATE job_queue SET heartbeat_at=datetime('now'), progress=? WHERE id=?",
+                    (progress, qid))
+
+    def finish(self, qid, ok, error=None):
+        """작업 종료 기록. ok=False면 error를 남겨 화면이 '실패 — 다시 시도'를 띄운다."""
+        with self._conn() as c:
+            c.execute(
+                "UPDATE job_queue SET state=?, error=?, finished_at=datetime('now') WHERE id=?",
+                ("done" if ok else "failed", None if ok else (error or "알 수 없는 오류"), qid))
+
+    def reap_stale(self, minutes=2):
+        """heartbeat가 minutes분 넘게 안 뛴 running을 failed로 정리하고 개수를 반환한다.
+
+        워커가 SIGKILL로 죽으면 heartbeat가 멈춘다 — 그걸 잡아 화면에 실패를 알린다.
+        (예전엔 조용히 멈춰 '되고 있나?'를 알 수 없었다, 2026-07-29 실사고)"""
+        with self._conn() as c:
+            cur = c.execute(
+                "UPDATE job_queue SET state='failed', error='워커가 중단됐습니다', "
+                "       finished_at=datetime('now') "
+                " WHERE state='running' "
+                "   AND (heartbeat_at IS NULL "
+                "        OR datetime(heartbeat_at) < datetime('now', ?))",
+                (f"-{int(minutes)} minutes",))
+            return cur.rowcount
+
+    def queue_status(self, task, args_match=None):
+        """이 작업의 큐 상태. position=내 앞에 있는 queued/running 개수(화면 대기순번).
+
+        같은 task+args가 여러 번 큐에 들어갔으면 가장 최근 것을 본다."""
+        with self._conn() as c:
+            if args_match is None:
+                row = c.execute(
+                    "SELECT id, state, error, progress, claimed_at FROM job_queue WHERE task=? "
+                    "ORDER BY id DESC LIMIT 1", (task,)).fetchone()
+            else:
+                row = c.execute(
+                    "SELECT id, state, error, progress, claimed_at FROM job_queue "
+                    " WHERE task=? AND args_json=? ORDER BY id DESC LIMIT 1",
+                    (task, json.dumps(args_match, ensure_ascii=False))).fetchone()
+            if not row:
+                return None
+            qid, state, error, progress, claimed_at = row
+            ahead = c.execute(
+                "SELECT COUNT(*) FROM job_queue "
+                " WHERE id < ? AND state IN ('queued','running')", (qid,)).fetchone()[0]
+            return {"id": qid, "state": state, "position": ahead, "error": error,
+                    "progress": progress, "claimed_at": claimed_at}
 
     # ── 렌더 포인트 원장(2026-07-17, 자동매칭 고급효과 엔진 Task1) ──
     # 잔액 컬럼을 따로 두지 않고 delta 누적합으로 계산하는 원장(ledger) 방식.

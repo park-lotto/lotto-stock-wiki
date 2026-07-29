@@ -1,5 +1,6 @@
 import shopping_shorts.overseas_hot_jobs as job
 from datetime import datetime, timezone
+from shopping_shorts.store import Store
 
 
 def test_run_collects_ranks_and_saves(monkeypatch, tmp_path):
@@ -474,6 +475,107 @@ def test_run_annotates_all_feed_items_including_stale_prev(monkeypatch, tmp_path
     assert not missing, f"판정 안 된 항목이 남아있으면 안 된다: {missing}"
     by_sc = {it["shortcode"]: it for it in items}
     assert by_sc["stale_old"]["text_level"] == "none"   # 옛 항목도 판정됨
+
+
+def test_status_ignores_memory_and_uses_queue(monkeypatch, tmp_path):
+    """서버·워커가 별개 프로세스라 status()는 큐(DB)만 봐야 한다 — 메모리 _JOB을
+    엉뚱한 값으로 오염시켜 놓아도 큐 기준 결과가 나와야 한다(2026-07-29 Critical)."""
+    db = str(tmp_path / "t.db")
+    monkeypatch.setattr(job, "DB_PATH", db)
+    job._JOB.update(status="running", phase="가짜 진행중", count=999)  # 오염
+    st = Store(db)
+    st.enqueue("overseas", {})
+    st.claim_next()
+    st.finish(st.queue_status("overseas")["id"], True)   # 큐는 done
+
+    s = job.status()
+    assert s["status"] == "idle"   # 메모리(running)가 아니라 큐(done)를 따라야 함
+
+
+def test_status_idle_when_no_queue_row(monkeypatch, tmp_path):
+    monkeypatch.setattr(job, "DB_PATH", str(tmp_path / "t.db"))
+    s = job.status()
+    assert s["status"] == "idle"
+
+
+def test_status_idle_unblocks_app_guard_after_done(monkeypatch, tmp_path):
+    """이번 Critical의 핵심 — 큐가 done이면 app.py의 running 가드가 풀려야
+    샤오홍슈 발굴(/api/xhs/discover 등)이 다시 열린다."""
+    db = str(tmp_path / "t.db")
+    monkeypatch.setattr(job, "DB_PATH", db)
+    st = Store(db)
+    st.enqueue("overseas", {})
+    st.claim_next()
+    st.finish(st.queue_status("overseas")["id"], True)
+
+    s = job.status()
+    assert s.get("status") != "running"
+
+
+def test_status_error_when_queue_failed(monkeypatch, tmp_path):
+    db = str(tmp_path / "t.db")
+    monkeypatch.setattr(job, "DB_PATH", db)
+    st = Store(db)
+    st.enqueue("overseas", {})
+    st.claim_next()
+    st.finish(st.queue_status("overseas")["id"], False, "터졌음")
+
+    s = job.status()
+    assert s["status"] == "error"
+    assert s["error"] == "터졌음"
+
+
+def test_status_queued_shows_waiting_phase(monkeypatch, tmp_path):
+    db = str(tmp_path / "t.db")
+    monkeypatch.setattr(job, "DB_PATH", db)
+    Store(db).enqueue("overseas", {})   # claim 안 함 — 아직 queued
+
+    s = job.status()
+    assert s["status"] == "running"
+    assert s["phase"] == "대기 중"
+    assert s["queue"]["state"] == "queued"
+
+
+def test_status_running_parses_progress_json(monkeypatch, tmp_path):
+    db = str(tmp_path / "t.db")
+    monkeypatch.setattr(job, "DB_PATH", db)
+    st = Store(db)
+    qid = st.enqueue("overseas", {})
+    st.claim_next()
+    st.heartbeat(qid, '{"phase": "수집·자막판정 신규3·캐시2", "count": 5}')
+
+    s = job.status()
+    assert s["status"] == "running"
+    assert s["phase"] == "수집·자막판정 신규3·캐시2"
+    assert s["count"] == 5
+
+
+def test_status_running_broken_progress_json_falls_back_safely(monkeypatch, tmp_path):
+    db = str(tmp_path / "t.db")
+    monkeypatch.setattr(job, "DB_PATH", db)
+    st = Store(db)
+    qid = st.enqueue("overseas", {})
+    st.claim_next()
+    st.heartbeat(qid, "이건 JSON이 아니다{{{")
+
+    s = job.status()
+    assert s["status"] == "running"
+    assert s["phase"] == "진행 중"
+    assert s["count"] == 0
+
+
+def test_status_keeps_all_existing_keys(monkeypatch, tmp_path):
+    """기존 반환 키(status/phase/count/error/elapsed)를 하나도 빼면 안 된다 —
+    프론트와 app.py 가드 3곳이 쓴다."""
+    db = str(tmp_path / "t.db")
+    monkeypatch.setattr(job, "DB_PATH", db)
+    st = Store(db)
+    qid = st.enqueue("overseas", {})
+    st.claim_next()
+
+    s = job.status()
+    for key in ("status", "phase", "count", "error", "elapsed"):
+        assert key in s
 
 
 def test_merge_rotate_cap_keeps_high_score_ones():
