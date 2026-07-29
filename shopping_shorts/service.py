@@ -281,9 +281,11 @@ def discover_xiaohongshu_accounts(min_notes=2):
         a["appear_days"] = st.get("appear_days", 1)          # 등장 일수
         a["cum_engagement"] = st.get("cum_engagement", a["engagement_sum"])  # 누적 참여합
     # 마지막 결과를 캐시 — 다른 페이지 갔다 와도 크롤 없이 바로 다시 띄운다(백그라운드도 갱신).
-    import json as _json
-    store.set_setting("xhs_last_result", _json.dumps(
-        {"at": run_ts, "items": accounts}, ensure_ascii=False))
+    # ★빈 결과(크롤 실패·세션 경합 0건)는 저장하지 않는다 — 이전 좋은 캐시를 지우면 안 됨.
+    if accounts:
+        import json as _json
+        store.set_setting("xhs_last_result", _json.dumps(
+            {"at": run_ts, "items": accounts}, ensure_ascii=False))
     return accounts
 
 

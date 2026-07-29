@@ -70,6 +70,16 @@ def test_discover_caches_last_result(monkeypatch, tmp_path):
     assert cached["at"]                                            # 갱신 시각 있음
 
 
+def test_empty_discovery_does_not_wipe_cache(monkeypatch, tmp_path):
+    db = _wire(monkeypatch, tmp_path, [_note("u1", "A", 5), _note("u1", "A", 5)])
+    service.discover_xiaohongshu_accounts()                      # 좋은 결과 캐시됨
+    assert service.cached_xiaohongshu_accounts()["items"]
+    monkeypatch.setattr(service.xiaohongshu_search, "search_full", lambda kw: [])  # 이제 0건
+    monkeypatch.setattr(config, "XHS_SCRAPER", "apify")
+    service.discover_xiaohongshu_accounts()                      # 빈 결과
+    assert service.cached_xiaohongshu_accounts()["items"]        # 이전 캐시 유지(안 지워짐)
+
+
 def test_search_fn_follows_xhs_scraper_config(monkeypatch):
     # 기본(apify)이면 유료 검색, playwright면 무료 크롤을 인기순(general)으로 고른다.
     from shopping_shorts import xiaohongshu_search, playwright_crawl
