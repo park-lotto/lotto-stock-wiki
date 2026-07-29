@@ -22,6 +22,7 @@ from shopping_shorts.youtube_category_presets import preset_keywords
 from shopping_shorts.tiktok_client import fetch_account_videos as tt_fetch
 from shopping_shorts.tiktok_search import search_full as tt_search_full
 from shopping_shorts.xiaohongshu_playwright import fetch_notes as _xhs_fetch_notes
+from shopping_shorts import xiaohongshu_search, xiaohongshu_discovery, overseas_seeds
 
 TIKTOK_SEARCH_COUNT_DEFAULT = 50   # 언어당 fetch 개수(설정 tiktok_search_count로 오버라이드)
 _TIKTOK_LANG_KINDS = {"ko", "en", "ja", "zh", "ru"}   # 키워드 시드의 언어코드 kind
@@ -243,6 +244,55 @@ def _collect_xiaohongshu():
                             [{"shortcode": i["shortcode"], "base": i["base_count"], "delta": i["delta"]} for i in items])
     store.save_last_run_platform("xiaohongshu", items, now.isoformat())
     return items
+
+
+# ── 샤오홍슈 계정 발굴(리더보드·담기·삭제·자동등록) ──
+# 설계: docs/superpowers/specs/2026-07-29-샤오홍슈-계정발굴-design.md
+# 검색 발굴(포스트)을 작성자별로 집계해 '잘하는 계정'을 모아준다 → 레퍼런스에 등록.
+
+def discover_xiaohongshu_accounts(min_notes=2):
+    """계정 발굴 리더보드. 블랙리스트 제외, 이미 등록된 계정은 is_registered=True."""
+    store = Store(DB_PATH)
+    blacklist = store.xhs_blacklist_list()
+    registered = {s["value"] for s in store.list_seeds("xiaohongshu") if s["kind"] == "account"}
+    accounts = xiaohongshu_discovery.discover_accounts(
+        xiaohongshu_search.search_full, overseas_seeds.load_seeds(),
+        min_notes=min_notes, blacklist=blacklist)
+    for a in accounts:
+        a["is_registered"] = a["profile_url"] in registered
+    return accounts
+
+
+def adopt_xiaohongshu_account(profile_url, userid=None):
+    """[담기] — 레퍼런스 계정 시드로 등록. 블랙리스트면 거부."""
+    store = Store(DB_PATH)
+    if userid and str(userid) in store.xhs_blacklist_list():
+        return {"ok": False, "reason": "blacklisted"}
+    store.add_seed("xiaohongshu", "account", profile_url)
+    return {"ok": True}
+
+
+def blacklist_xiaohongshu_account(userid, profile_url=None):
+    """[삭제] — 계정 시드 제거 + 영구 블랙리스트(자동등록·발굴 재등장 차단)."""
+    store = Store(DB_PATH)
+    if profile_url:
+        store.remove_seed("xiaohongshu", profile_url)
+    store.xhs_blacklist_add(userid)
+    return {"ok": True}
+
+
+def auto_register_xiaohongshu(top_n=10, min_notes=2):
+    """매일: 발굴 상위 N 계정을 레퍼런스에 자동 등록(블랙리스트·기등록 제외). 등록 URL 리스트 반환."""
+    store = Store(DB_PATH)
+    added = []
+    for a in discover_xiaohongshu_accounts(min_notes=min_notes):
+        if len(added) >= top_n:
+            break
+        if a.get("is_registered"):
+            continue
+        store.add_seed("xiaohongshu", "account", a["profile_url"])
+        added.append(a["profile_url"])
+    return added
 
 
 LAST_COLLECT_TALLY = {}

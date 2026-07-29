@@ -131,7 +131,7 @@ def test_search_full_maps_engagement_schema(monkeypatch):
             "title": "厨房好物", "timestamp": 1779088572,
             "video": {"url_720p": "https://v.mp4", "duration_seconds": 25},
             "images": [{"url": "https://cover.jpg"}], "cover_image_index": 0,
-            "author": {"nickname": "김철수"},
+            "author": {"userid": "u_kim", "nickname": "김철수"},
             "engagement": {"liked_count": 300, "comments_count": 12,
                            "collected_count": 90, "shared_count": 7},
         }]
@@ -144,6 +144,7 @@ def test_search_full_maps_engagement_schema(monkeypatch):
     assert r["published_at"] == "2026-05-18T07:16:12Z"   # 1779088572 → ISO(UTC)
     assert r["likes"] == 300 and r["comments"] == 12 and r["collects"] == 90 and r["shares"] == 7
     assert r["views"] == 0 and r["channel_title"] == "김철수" and r["thumbnail"] == "https://cover.jpg"
+    assert r["channel_id"] == "u_kim"   # 계정 발굴 집계·프로필URL 조립용(author.userid)
 
 
 def test_search_full_skips_non_video(monkeypatch):

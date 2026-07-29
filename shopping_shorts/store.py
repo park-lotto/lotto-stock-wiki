@@ -1216,6 +1216,15 @@ class Store:
                              "ORDER BY added_at ASC, rowid ASC", (platform,)).fetchall()
         return [{"kind": r[0], "value": r[1], "added_at": r[2] or ""} for r in rows]
 
+    # ── 샤오홍슈 계정 발굴 블랙리스트(사장님이 쳐낸 계정 영구 제외) ──
+    # platform_seeds 재사용: platform="xiaohongshu", kind="xhs_blacklist", value=userid.
+    def xhs_blacklist_add(self, userid):
+        self.add_seed("xiaohongshu", "xhs_blacklist", str(userid))
+
+    def xhs_blacklist_list(self):
+        return {s["value"] for s in self.list_seeds("xiaohongshu")
+                if s["kind"] == "xhs_blacklist"}
+
     # ── 플랫폼 스코프 스냅샷(가속 계산용) ──
     def save_run_platform(self, platform, run_date, rows):
         with self._conn() as c:
