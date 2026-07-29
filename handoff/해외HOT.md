@@ -1,6 +1,46 @@
 # 해외HOT 발굴 — 핸드오프
 
-- 갱신: 2026-07-29 (이어받은 세션) / 트랙: 해외HOT (병합 후 폴더 유지)
+- 갱신: 2026-07-29 밤 (집→회사 인계) / 트랙: 해외HOT (병합 후 폴더 유지)
+
+## 🏢 다음 세션(회사)이 여기부터 읽으면 됨 — 오늘 배포된 것 4개 + 현재 서버 상태
+
+**오늘 집에서 커밋·배포한 것(시간순, 전부 `.tracks/해외HOT`에서 TDD로 작업 후 `finish`로 main 병합)**:
+1. **샤오홍슈 무료 크롤러 Phase 1** — `shopping_shorts/playwright_crawl.py` 신규. 로그인 세션으로
+   검색 API 직접 호출, Apify 안 씀.
+2. **검색 정렬 최신순 강제** — 기본 인기순(general)이던 걸 요청 body의 `sort`를 `time_descending`으로
+   가로채기(route 인터셉트)로 바꿔치기. 서명검증이 이 필드는 안 잠가서 통과됨(실측 확인). "昨天/今天
+   HH:MM" 날짜 형식 파싱 추가.
+3. **썸네일 자막(텍스트오버레이) 필터** — `video_analysis.text_level_vision`(Gemini 비전, 기존
+   비전태그 인프라 재사용) + `overseas_funnel.passes_caption_clutter`. 부수 수정: `fetch_thumb_bytes`가
+   인스타 전용 Referer만 있어 샤오홍슈 CDN(xhscdn.com)에서 전부 403 나던 버그도 같이 고침
+   (`_referer_for` 도메인별 분기).
+4. **틱톡·도우인 켜기/끄기 스위치** — `config.OVERSEAS_TIKTOK_ENABLED`/`OVERSEAS_DOUYIN_ENABLED`
+   (기본 true). 틱톡은 캡차로 무료전환 포기 확정, 도우인은 미착수 — 둘 다 재개발 전까지 "지금
+   업데이트"가 불필요한 Apify 비용을 안 쓰게 껐다.
+5. **탭 전환 시 진행률 표시 이어보이기** — `static/index.html`. 수집 자체는 카테고리 무관 단일
+   백그라운드 작업이라 서버는 안 멈추는데, 폴링이 "지금 업데이트" 클릭 시에만 시작돼 탭 갔다오면
+   화면엔 표시가 없어 멈춘 것처럼 보이던 문제. `resumeOverseasStatusIfRunning` 추가.
+
+**⚠️ 서버(`/etc/shopping-shorts.env`)에 직접 설정한 값 — git에 없음, 코드 기본값과 다름**:
+```
+XHS_SCRAPER=playwright          # 기본값 apify인데 서버는 켜둠 — 샤오홍슈 무료크롤 라이브 사용 중
+OVERSEAS_TIKTOK_ENABLED=false   # 기본값 true인데 서버는 꺼둠 — 틱톡 발굴 비활성
+OVERSEAS_DOUYIN_ENABLED=false   # 기본값 true인데 서버는 꺼둠 — 도우인 발굴 비활성
+```
+백업 `/etc/shopping-shorts.env.bak-20260729`(오늘 변경 전 상태). 이 세 값을 되돌리려면 저 세 줄을
+지우거나 값을 바꾸고 `sudo systemctl restart shopping-shorts`.
+
+**즉 지금 "🌍 해외HOT → 지금 업데이트"를 누르면**: 6카테고리 전부 **샤오홍슈만** 무료로 돌고(최신순
++ 자막적은 것 위주), 틱톡·도우인은 안 돈다. Apify 비용 0.
+
+**⏭ 다음에 할 만한 것**:
+- 도우인도 XHS처럼 무료 로그인세션 크롤 시도해볼 수 있는지 조사(미착수, 원래 모바일인증 벽만 확인됨).
+- 소스채널 마이닝(②모드, 좋은 계정 등록→매일 직접 크롤) — 설계는 있었지만 구현 안 됨.
+- 상시 자동 스케줄(systemd 타이머) — 아직 수동 "지금 업데이트"만 있음.
+- 인스타 `/explore/tags/`도 반복요청 소프트블록 관측됨(별도, 손 안 댐).
+- `_TEXT_CLUTTER_CAP=15`·`_PER_KEYWORD=40`·정렬강제 방식 전부 실측 하루치라 며칠 더 보고 튜닝 필요.
+
+---
 
 ## ✅ 샤오홍슈(rednote) 발굴 — Phase 0·Phase 1 코드 완료, 라이브 E2E 재확인만 남음
 **Phase 0 결론(이전 세션)**: 프록시도 집PC 상시크롤도 필요 없다. 서버 직결 + 로그인 세션(storage_state)만
