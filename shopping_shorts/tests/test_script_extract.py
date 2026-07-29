@@ -150,3 +150,11 @@ def test_prompt_scene_desc_accuracy_guard():
     from shopping_shorts import script_extract
     p = script_extract._PROMPT
     assert "주 대상" in p and "정확" in p
+
+
+def test_prompt_main_product_vs_background_prop_guard():
+    """배경 소품·동물에 낚여 주 제품을 오인하는 것을 막는 지시가 프롬프트에 있는지(2026-07-29 실사고)."""
+    from shopping_shorts import script_extract
+    p = script_extract._PROMPT
+    assert "배경 소품" in p
+    assert "동물" in p
