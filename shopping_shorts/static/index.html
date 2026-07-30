@@ -1857,7 +1857,7 @@ async function lensSearch(btn, shortcode){
     // 프레임이 있으면 항상 유튜브를 키워드로 덧댄다(비전이 화면 글자로 제품을 특정하므로
     // 캡션이 없어도 됨). ytLoading=true로 두고 renderLens가 '불러오는 중'을 보여준다.
     LENS_STATE[shortcode]={items, on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
-                           sel:new Set(), shortsOnly:false, foreignOnly:false, ytLoading:true, keyword:'', caption,
+                           sel:new Set(), shortsOnly:false, foreignOnly:false, videoOnly:true, hideOfftopic:false, ytLoading:true, keyword:'', caption,
                            cnCands:[]};
     renderLens(shortcode);
     fetchLensYt(shortcode, caption, blob);   // ▶️ 유튜브 무료 키워드 자동합류(비동기)
@@ -1889,7 +1889,7 @@ async function traceByUrl(urlArg){
     // (caption만으론 cn_search_candidates가 빈 리스트 — 프레임 필수라 서버가 처리).
     const tcn=(d.cn_candidates||[]).filter(c=>c&&c.zh);
     LENS_STATE['__trace__']={items, on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
-                             sel:new Set(), shortsOnly:false, foreignOnly:false, ytLoading:false, keyword:'', caption:tcap, cnCands:tcn};
+                             sel:new Set(), shortsOnly:false, foreignOnly:false, videoOnly:true, hideOfftopic:false, ytLoading:false, keyword:'', caption:tcap, cnCands:tcn};
     renderLens('__trace__');
   }catch(e){ const body=document.getElementById('scriptBody'); if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
 }
@@ -1946,6 +1946,22 @@ const _HANGUL_RE=/[가-힣]/;
 function toggleLensForeign(shortcode){
   const st=LENS_STATE[shortcode]; if(!st) return;
   st.foreignOnly=!st.foreignOnly; renderLens(shortcode);
+}
+// 🎬 영상만 — 인스타 카드뉴스(사진·카러셀) 가리기(2026-07-30 사장님 제보 "카드뉴스가 많다").
+// 판정은 서버 lens_discover.is_photo_post가 URL 경로로 한다(/p/=사진 후보, /reel·/tv=영상).
+// 렌즈 응답에 동영상 여부 필드가 없고 인스타 실조회는 Apify 유료라 이게 유일한 공짜 신호다.
+// ★기본 켜짐 — 다만 /p/에도 옛 동영상 게시물이 있어 끌 수 있게 뒀다(하드 제외 아님).
+function toggleLensVideoOnly(shortcode){
+  const st=LENS_STATE[shortcode]; if(!st) return;
+  st.videoOnly=!st.videoOnly; renderLens(shortcode);
+}
+// ⚠️ 다른주제 숨기기 — match===false(소재 키워드가 제목에 하나도 없음)를 가린다.
+// 렌즈는 시각 유사도만 보므로 '파란 비누'가 전혀 다른 게시물에 걸리는 일이 생긴다.
+// ★기본 꺼짐 — 교차언어(중국·영어 제목)는 키워드 매칭이 안 돼 False가 나오므로,
+// 켜면 원본(해외) 후보까지 같이 사라질 수 있다. 그래서 opt-in.
+function toggleLensOfftopic(shortcode){
+  const st=LENS_STATE[shortcode]; if(!st) return;
+  st.hideOfftopic=!st.hideOfftopic; renderLens(shortcode);
 }
 function toggleLensSelect(shortcode, savesc){
   const st=LENS_STATE[shortcode]; if(!st) return;
@@ -2163,6 +2179,11 @@ function renderLens(shortcode){
   let shown=st.items.filter(i=>st.on.has(i.platform));
   if(st.shortsOnly) shown=shown.filter(i=>i.is_short!==false);
   if(st.foreignOnly) shown=shown.filter(i=>!_HANGUL_RE.test(i.title||''));
+  // 카드뉴스(인스타 /p/) 가리기 — 서버가 준 is_photo만 본다(undefined면 통과 = 옛 결과 안전).
+  if(st.videoOnly!==false) shown=shown.filter(i=>i.is_photo!==true);
+  if(st.hideOfftopic) shown=shown.filter(i=>i.match!==false);
+  const nPhoto=st.items.filter(i=>st.on.has(i.platform) && i.is_photo===true).length;
+  const nOff=st.items.filter(i=>st.on.has(i.platform) && i.match===false).length;
   st._shown=shown;
   const selCount=shown.filter(i=>st.sel.has(i.savesc)).length;
   const allSel=shown.length>0 && selCount===shown.length;
@@ -2173,6 +2194,8 @@ function renderLens(shortcode){
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px"><input type="checkbox" ${allSel?'checked':''} onclick="lensSelectAll('${shortcode}')"> 전체선택</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="영상 길이 90초 이하(또는 길이 불명)만 표시"><input type="checkbox" ${st.shortsOnly?'checked':''} onclick="toggleLensShorts('${shortcode}')"> 숏폼만</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="제목에 한글이 없는 결과만 표시 — 원본(해외) 영상 찾을 때. 채널명이 아닌 제목 기준 근사치라 완벽하진 않음"><input type="checkbox" ${st.foreignOnly?'checked':''} onclick="toggleLensForeign('${shortcode}')"> 🌍 해외만</label>
+      <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="인스타 카드뉴스(사진·카러셀 게시물)를 가립니다. URL이 /p/면 사진으로 봅니다 — 렌즈 응답에 동영상 여부가 없어서 쓰는 근사치라, 드물게 /p/로 올라간 옛 동영상도 같이 가려집니다(끄면 다시 보임)"><input type="checkbox" ${st.videoOnly!==false?'checked':''} onclick="toggleLensVideoOnly('${shortcode}')"> 🎬 영상만${nPhoto?` <span style="color:var(--sub)">(카드뉴스 ${nPhoto})</span>`:''}</label>
+      <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="소재 키워드가 제목에 하나도 없는 결과(⚠️다른주제?)를 가립니다. 렌즈는 시각 유사도만 보기 때문에 엉뚱한 게시물이 섞입니다. ⚠️중국어·영어 제목은 키워드가 안 맞아 원본(해외) 후보까지 사라질 수 있어 기본 꺼짐"><input type="checkbox" ${st.hideOfftopic?'checked':''} onclick="toggleLensOfftopic('${shortcode}')"> ⚠️ 다른주제 숨기기${nOff?` <span style="color:var(--sub)">(${nOff})</span>`:''}</label>
       <button onclick="lensBulkSave('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">📥 선택 담기(${selCount})</button>
       <button onclick="lensBulkDelete('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">🗑 선택 삭제(${selCount})</button>
       ${(()=>{const nYt=shown.filter(i=>i.platform==='youtube').length; return nYt?`<button onclick="lensBenchAllYoutube('${shortcode}')" title="이 렌즈 결과의 유튜브 채널들(짜집기 채널)을 전부 벤치 리스트에 등록 → 채널기반 수집에 편입" style="${btnCss};border-color:var(--accent);color:var(--accent);font-weight:700">➕ 유튜브 채널 전부 벤치등록(${nYt})</button>`:'';})()}
