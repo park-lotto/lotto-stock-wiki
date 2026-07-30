@@ -7,11 +7,21 @@
   다음 조회 시 랭킹·가속(delta)이 갱신돼 있음.
 config.INSTAGRAM_SCRAPER가 playwright면 무료(세션쿠키+서버직결), apify면 유료 —
 이 스크립트는 값을 강제하지 않고 서버 env(/etc/shopping-shorts.env) 설정을 그대로 따른다.
+
+★2026-07-30 수정: service.collect()는 snapshots 테이블(delta 이력용)만 갱신하고,
+화면(/api/reference)이 읽는 last_run 캐시(store.save_last_run)는 건드리지 않는다 —
+그 캐시는 원래 웹 UI "지금 수집" 버튼 경로(app.py _run_collect_job)에서만 채워졌다.
+그 결과 크론이 매일 정상 수집해도 화면 랭킹·"마지막 수집" 시각이 갱신되지 않는
+버그가 있었다(실측: 크론은 09/15/21시 계속 성공했는데 화면은 마지막 수동수집
+시각에 멈춰 있었음). 크론도 같은 캐시를 갱신하도록 save_last_run 호출을 추가한다.
 """
 import sys
 import time
+from datetime import datetime, timezone
 
 from shopping_shorts import service
+from shopping_shorts.config import DB_PATH
+from shopping_shorts.store import Store
 
 
 def main():
@@ -21,6 +31,8 @@ def main():
     except Exception as e:  # noqa: BLE001 — 크론이 죽어도 서비스는 무사, 로그만 남긴다
         print(f"[daily_instagram_collect] 실패: {e!r}", file=sys.stderr)
         return 1
+    collected_at = datetime.now(timezone.utc).isoformat()
+    Store(DB_PATH).save_last_run(items, collected_at)
     print(f"[daily_instagram_collect] {len(items)}건 수집 · {time.time() - t0:.1f}s")
     return 0
 
