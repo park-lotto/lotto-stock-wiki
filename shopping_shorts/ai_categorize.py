@@ -101,15 +101,27 @@ def _classify_batch(batch, max_key_tries=3):
 
 def reclassify(items, batch_size=_BATCH):
     """items의 'category'를 AI(캡션)로 덮어쓴다(in-place). 변경 건수 반환.
-    키 미설정이면 0(키워드 결과 유지). 배치 단위 실패는 해당 배치만 폴백."""
+    키 미설정이면 0(키워드 결과 유지). 배치 단위 실패는 해당 배치만 폴백.
+
+    ★캡션 없는 항목은 아예 AI에 보내지 않는다(2026-07-30). 429 회피로 수집이 캡션을
+    안 담게 되자, 근거가 채널명뿐인 항목까지 AI에 물어보고 그 '기타' 판정이 상류의
+    폴백(발굴 태그·과거 이력 카테고리)을 덮어써서 랭킹이 다시 기타로 뒤덮였다
+    (실측: 289건 중 277건 → 폴백 적용 후에도 248건). 판단 근거가 없으면 묻지 않는 게 맞고,
+    Gemini 호출도 그만큼 준다.
+    ★AI가 '기타'를 줘도 기존 값이 '기타'가 아니면 덮지 않는다 — 폴백으로 얻은 정보를
+    '모르겠다'가 지우는 일을 막는다."""
     if not comment_gen.SHORTS_GEMINI_KEYS or not items:
         return 0
-    enum = list(enumerate(items))
+    enum = [(i, it) for i, it in enumerate(items) if (it.get("caption") or "").strip()]
     changed = 0
     for start in range(0, len(enum), batch_size):
         out = _classify_batch(enum[start:start + batch_size])
         for idx, cat in out.items():
-            if cat in _CATS and 0 <= idx < len(items) and items[idx].get("category") != cat:
-                items[idx]["category"] = cat
-                changed += 1
+            if cat not in _CATS or not (0 <= idx < len(items)):
+                continue
+            cur = items[idx].get("category")
+            if cat == cur or (cat == "기타" and cur and cur != "기타"):
+                continue
+            items[idx]["category"] = cat
+            changed += 1
     return changed
