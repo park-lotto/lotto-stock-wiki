@@ -2322,6 +2322,96 @@ def api_mix_candidate(body: dict):
     return {"ok": True}
 
 
+def _clone_mix_work_sources(src_job, new_job, n_urls):
+    """복제본 work 폴더에 **소스 mp4만** 옮겨 붙인다(2026-07-30).
+
+    _resolve_sources(mix_pipeline)는 work/{sN}/*.mp4를 **찾기만** 하고 없으면 다운로드하지
+    않는다 — 그래서 복제본에 소스를 안 깔면 '소스 영상을 하나도 찾지 못했습니다'로 죽는다.
+    소스는 읽기 전용 입력이라 하드링크면 충분하다(디스크 0바이트). 같은 볼륨이 아니거나
+    OS가 거부하면 복사로 내려간다.
+
+    ⚠️ tts/preview/final/seg_thumbs는 **일부러 안 가져온다** — 복제본은 다른 대본으로 새로
+    만드는 것이라 그 산출물이 섞이면 옛 영상이 새 작업의 결과처럼 보인다(덮어쓰기 사고의 재료).
+    """
+    src_dir, dst_dir = _MIX_WORK_DIR / src_job, _MIX_WORK_DIR / new_job
+    copied = 0
+    for i in range(n_urls):
+        vid = f"s{i}"
+        s = src_dir / vid
+        if not s.is_dir():
+            continue
+        (dst_dir / vid).mkdir(parents=True, exist_ok=True)
+        for mp4 in s.glob("*.mp4"):
+            target = dst_dir / vid / mp4.name
+            if target.exists():
+                continue
+            try:
+                os.link(str(mp4), str(target))       # 하드링크(같은 볼륨) — 디스크 안 먹는다
+            except OSError:
+                shutil.copy2(str(mp4), str(target))  # 다른 볼륨·미지원 FS면 복사
+            copied += 1
+    return copied
+
+
+@app.post("/api/mix/candidate/clone")
+def api_mix_candidate_clone(request: Request, body: dict):
+    """고른 후보를 **별도 작업으로 복제**한다 — 대본 3개를 3편으로 다 뽑기 위한 경로.
+
+    사장님 요청(2026-07-30): "이 화면에 대본이 3개인데 3개 다 만들고 싶다".
+    같은 job에서 후보만 바꿔 렌더하면 출력이 work/{job_id}/final.mp4 **고정 경로**라
+    (mix_pipeline.run_render) 다음 렌더가 앞 영상을 덮어쓴다. 그래서 후보별로 job을 갈라
+    각자 자기 final.mp4를 갖게 한다.
+
+    재매칭(/api/produce/mix/start)과 다른 점: 대본을 **다시 생성하지 않는다**. 지금 화면의
+    A/B/C를 그대로 물려주므로 사장님이 고른 그 문장이 그대로 영상이 된다.
+    """
+    job_id = (body.get("job_id") or "").strip()
+    try:
+        idx = int(body.get("index"))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "후보 번호가 필요합니다"})
+    store = Store(DB_PATH)
+    src = store.get_mix_job(job_id)
+    if not src:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    cands = store.get_mix_candidates(job_id)
+    if not cands or not (0 <= idx < len(cands)):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "후보 없음"})
+    # 유료게이트(2026-07-20 E와 동일): 복제본도 결국 렌더로 돈이 나간다. 여기서 안 걸면
+    # "후보 복제"가 하루 상한·전역 상한을 통째로 우회하는 뒷문이 된다.
+    cid = getattr(request.state, "customer_id", 0)
+    if _global_over_cap("render"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "global_limit",
+            "error": "지금 영상 만들기 이용이 많아요. 잠시 후 다시 시도해 주세요."})
+    if not check_and_count(cid, "render"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "daily_limit",
+            "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
+    global_incr_and_alert("render")
+    urls = src.get("urls") or []
+    new_id = uuid.uuid4().hex[:12]
+    store.create_mix_job(new_id, urls, src.get("target_seconds") or 30,
+                         src.get("structure") or "free",
+                         subtitle_removal=bool(src.get("subtitle_removal")),
+                         given_script=src.get("given_script"),
+                         script_structure=src.get("script_structure"),
+                         customer_id=cid,
+                         render_charge_day=("trial" if _is_trial(cid) else _today_utc()),
+                         scene_first=bool(src.get("scene_first")),
+                         backbone_main=src.get("backbone_main"))
+    _clone_mix_work_sources(job_id, new_id, len(urls))
+    # 후보 목록을 그대로 물려준다 — 복제본에서도 A/B/C를 비교·전환할 수 있다(또 복제도 가능).
+    store.set_mix_candidates(new_id, cands)
+    plan = cands[idx]["plan"]
+    plan["candidate_index"] = idx
+    # status는 'ready_for_review' — 매칭(run_mix_job)을 다시 돌리지 않는다. 대본·컷이 이미
+    # 정해져 있으므로 큐에 넣지 않고 바로 리뷰/미리보기/렌더로 갈 수 있는 상태로 만든다.
+    store.update_mix_job(new_id, edit_plan=plan, status="ready_for_review",
+                         voice=src.get("voice"), deco=src.get("deco"))
+    return {"ok": True, "job_id": new_id}
+
+
 @app.post("/api/settings/vmake_key")
 def api_set_vmake_key(body: dict):
     key = (body.get("key") or "").strip()
