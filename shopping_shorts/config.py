@@ -110,7 +110,15 @@ INSTAGRAM_AUTO_TOP_N = int(os.getenv("INSTAGRAM_AUTO_TOP_N", "10"))
 # 해시태그 탐색 SERP엔 좋아요·댓글수가 없어(실측), 상위 표본만 media info REST를
 # 한 번씩 더 불러 참여도를 보강한다(2026-07-30). 전량 조회하면 태그당 요청이 커져
 # 느려지고 차단 위험도 커지므로 상위 N개만(태그당 24개 안팎 중 상위).
-INSTAGRAM_DISCOVERY_DETAIL_TOP_N = int(os.getenv("INSTAGRAM_DISCOVERY_DETAIL_TOP_N", "15"))
+# 발굴에서 참여도(좋아요·댓글)를 보충하려고 media info REST를 부르는 게시물 수(태그당).
+# 15 → 6으로 낮춤(2026-07-30): 태그를 20개로 늘리면 15×20=300건이 되어 수집 REST와 합쳐
+# 429를 만든다. 참여도는 상위 몇 건만 있어도 계정 순위가 갈린다.
+INSTAGRAM_DISCOVERY_DETAIL_TOP_N = int(os.getenv("INSTAGRAM_DISCOVERY_DETAIL_TOP_N", "6"))
+
+# 릴스 수집에서 채널마다 media info REST를 더 부를지(발행시각·직접mp4·캡션 보충).
+# 기본 꺼짐 — 발행시각은 shortcode에서 계산하고(instagram_parse.shortcode_to_timestamp)
+# 나머지는 담을 때 해결한다. 이 왕복이 2026-07-30 429 사고의 주범이었다.
+INSTAGRAM_REEL_DETAIL = os.getenv("INSTAGRAM_REEL_DETAIL", "") in ("1", "true", "True")
 
 # ── 샤오홍슈(해외HOT 발굴) 수집 경로 선택(2026-07-29) ──
 # Apify 검색은 유료(rednote-search-scraper). 로그인 세션(storage_state)으로 서버 직결

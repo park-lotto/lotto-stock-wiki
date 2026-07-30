@@ -1387,6 +1387,26 @@ _SCENE_ASSETS_DIR = Path(__file__).parent / "data" / "scene_assets"  # 장면 �
 _THUMB_DIR = Path(__file__).parent / "data" / "thumbs"   # 5단계 썸네일 프레임·산출물
 
 
+def _download_item_video(item, work_dir):
+    """수집 항목(item) → 영상 파일 경로. video_url이 없으면 릴스 페이지에서 받는다.
+
+    2026-07-30부터 수집이 직접 mp4(video_versions)를 안 담는다 — 그걸 채우려고 릴스마다
+    media info REST를 부르던 게 429의 주범이었다(instagram_playwright 주석 참고). 대신
+    실제로 필요할 때(담기·대본추출) 릴스 페이지 URL로 한 건만 받는다. 옛 항목엔 아직
+    video_url이 남아 있으므로 있으면 그대로 쓴다(빠르다).
+    """
+    url = (item.get("video_url") or "").strip()
+    if url:
+        return download_video(url, work_dir)
+    page = (item.get("url") or "").strip()
+    if not page and item.get("shortcode"):
+        page = f"https://www.instagram.com/reel/{item['shortcode']}/"
+    if not page:
+        raise RuntimeError("영상 주소가 없습니다 — 재수집 필요")
+    path, _caption = download_any(page, str(work_dir))
+    return path
+
+
 @app.post("/api/extract_script")
 def api_extract_script(request: Request, shortcode: str):
     """카드 영상 1개 → 대본(세그먼트+전체텍스트) 온디맨드 추출. 캐시 우선.
@@ -1423,17 +1443,16 @@ def api_extract_script(request: Request, shortcode: str):
     global_incr_and_alert("script")
     ok = False
     try:
-        video_url = item.get("video_url")
-        if not video_url:
-            return JSONResponse(status_code=422, content={"ok": False, "error": "video_url 없음 — 재수집 필요"})
+        # video_url이 비어 있으면 릴스 페이지에서 받는다(2026-07-30 — 수집이 더 이상
+        # 직접 mp4를 담지 않는다, _download_item_video 주석 참고).
         # DB(수집분) 유래라 직접 입력은 아니지만, 오염된 수집물이 내부망을 찌르지 않게 같이 막는다.
-        blocked = _ssrf_guard(video_url)
+        blocked = _ssrf_guard(*[u for u in (item.get("video_url"), item.get("url")) if u])
         if blocked:
             return blocked
 
         work_dir = _FIND_TMP_DIR / hashlib.sha1(code.encode()).hexdigest()[:16]
         try:
-            video_path = download_video(video_url, work_dir)
+            video_path = _download_item_video(item, work_dir)
         except (requests.RequestException, RuntimeError) as e:
             msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
             return JSONResponse(status_code=502, content={"ok": False, "error": f"영상 다운로드 실패(URL 만료 가능) — 재수집 필요: {msg}"})
@@ -1714,11 +1733,8 @@ def api_wiki_save(request: Request, shortcode: str, background_tasks: Background
 
     script = store.get_script(code)
     if not script:                      # 아직 대본추출 안 했으면 즉석 추출
-        video_url = item.get("video_url")
-        if not video_url:
-            return JSONResponse(status_code=422, content={"ok": False, "error": "video_url 없음 — 재수집 필요"})
         try:
-            video_path = download_video(video_url, work_dir)
+            video_path = _download_item_video(item, work_dir)
         except (requests.RequestException, RuntimeError) as e:
             msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
             return JSONResponse(status_code=502, content={"ok": False, "error": f"영상 다운로드 실패(URL 만료 가능): {msg}"})
@@ -1731,9 +1747,9 @@ def api_wiki_save(request: Request, shortcode: str, background_tasks: Background
     media_target = _WIKI_MEDIA_DIR / f"{hashed}.mp4"
     if not media_target.exists():
         src = video_path
-        if src is None and item.get("video_url"):
+        if src is None:
             try:
-                src = download_video(item["video_url"], work_dir)
+                src = _download_item_video(item, work_dir)
             except Exception:
                 src = None
         if src and Path(src).exists():

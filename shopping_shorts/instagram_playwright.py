@@ -79,19 +79,27 @@ def _scrape_one_playwright(username):
             final_url = page.url
 
             # 목록 응답(clips_connection)엔 taken_at·video_versions·caption이 없다
-            # (2026-07-29 실측). 실제로 쓰일 상위 N개만 pk로 media info REST를 한 번씩
-            # 더 불러 보충한다.
-            for media in captured[:config.RESULTS_PER_CHANNEL]:
-                if "taken_at" in media:
-                    continue
-                pk = media.get("pk")
-                if not pk:
-                    continue
-                detail = _fetch_reel_detail(ctx, pk)
-                if detail:
-                    media["taken_at"] = detail.get("taken_at")
-                    media["video_versions"] = detail.get("video_versions")
-                    media["caption"] = detail.get("caption")
+            # (2026-07-29 실측). 예전엔 상위 N개마다 media info REST를 한 번씩 더 불러
+            # 보충했는데, 채널 219개 × 3건 = 하루 650건이 되면서 **429의 주범**이 됐다
+            # (2026-07-30 실사고: 429로 taken_at이 비자 ranking이 릴스를 통째로 버려
+            # 수집 결과가 80건으로 급감). 이제 발행시각은 shortcode에서 계산하므로
+            # (instagram_parse.shortcode_to_timestamp) 이 왕복이 필요 없다.
+            #   - caption: 랭킹 표시에 필수 아님. 담을 때 다운로드가 같이 가져온다.
+            #   - video_versions(직접 mp4): 담는 시점에 릴스 페이지 URL로 받는다
+            #     (media_download.download_any가 instagram.com 페이지를 처리한다).
+            # 켜야 할 일이 생기면 config.INSTAGRAM_REEL_DETAIL=1 (기본 꺼짐).
+            if config.INSTAGRAM_REEL_DETAIL:
+                for media in captured[:config.RESULTS_PER_CHANNEL]:
+                    if "taken_at" in media:
+                        continue
+                    pk = media.get("pk")
+                    if not pk:
+                        continue
+                    detail = _fetch_reel_detail(ctx, pk)
+                    if detail:
+                        media["taken_at"] = detail.get("taken_at")
+                        media["video_versions"] = detail.get("video_versions")
+                        media["caption"] = detail.get("caption")
 
             ctx.close()
             browser.close()

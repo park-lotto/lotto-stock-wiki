@@ -11,6 +11,52 @@ from datetime import datetime, timezone
 
 _TEN_KEYS_NUM = ("commentsCount", "likesCount", "videoViewCount")
 
+# ── shortcode → 발행시각 (네트워크 호출 0, 2026-07-30) ─────────────────────────
+# 인스타 media id(pk)의 상위 비트가 밀리초 타임스탬프다. shortcode는 그 pk를 아래
+# 64진 알파벳으로 인코딩한 것이라, **shortcode만으로 발행시각을 정확히 복원**할 수 있다.
+#
+# 왜 중요한가: 릴스 목록(clips) 응답엔 taken_at이 없어서 릴스마다
+# /api/v1/media/{pk}/info/를 한 번 더 불러 시각을 보충해왔다(하루 950건). 그게 429의
+# 주범이었고, 429가 나면 시각이 비어 ranking.build_items의 `if not ts: continue`가
+# 릴스를 통째로 버려 **수집 결과가 조용히 1/3로 줄었다**(2026-07-30 실사고: ok 214인데
+# 결과 80건). 이 함수로 그 왕복을 전부 없앤다.
+#
+# 상수 검증(2026-07-30): 그날 수집된 실데이터 6건의 실제 taken_at과 대조해 6/6이
+# 아래 상수로 일치했다(잔차는 저장된 age_hours가 0.1시간 반올림이라 생긴 것).
+_SC_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+_SC_EPOCH_MS = 1314220021721        # pk 상위비트의 기준시각(2011-08-24 UTC 근방)
+
+
+def shortcode_to_pk(shortcode):
+    """인스타 shortcode → media pk(정수). 알파벳 밖 문자가 섞이면 None."""
+    n = 0
+    for ch in (shortcode or ""):
+        i = _SC_ALPHABET.find(ch)
+        if i < 0:
+            return None
+        n = n * 64 + i
+    return n or None
+
+
+def shortcode_to_timestamp(shortcode):
+    """인스타 shortcode → 발행시각 ISO 문자열(UTC). 못 풀면 None.
+
+    범위를 벗어난 값(2010년 이전·현재+1일 초과)은 None을 돌려준다 — 인코딩이 바뀌었는데
+    엉뚱한 시각으로 조용히 통과해 랭킹이 오염되는 게 최악이다. 차라리 비워서 기존
+    `if not ts: continue`에 걸리게 둔다."""
+    pk = shortcode_to_pk(shortcode)
+    if not pk:
+        return None
+    ms = (pk >> 23) + _SC_EPOCH_MS
+    try:
+        dt = datetime.fromtimestamp(ms / 1000.0, tz=timezone.utc)
+    except (ValueError, OverflowError, OSError):
+        return None
+    now = datetime.now(timezone.utc)
+    if dt.year < 2010 or (dt - now).total_seconds() > 86400:
+        return None
+    return dt.isoformat().replace("+00:00", "Z")
+
 
 def _first(d, *names, default=None):
     """여러 후보 키 중 먼저 존재하는 값. 인스타는 같은 값을 여러 이름으로 준다."""
@@ -77,7 +123,9 @@ def parse_reel_node(node, username):
     return {
         "shortcode": code,
         "url": f"https://www.instagram.com/reel/{code}/",
-        "timestamp": _iso(_first(node, "taken_at", "taken_at_timestamp", "device_timestamp")),
+        # 응답에 taken_at이 있으면 그걸 쓰고, 없으면 shortcode에서 복원한다(REST 왕복 0).
+        "timestamp": (_iso(_first(node, "taken_at", "taken_at_timestamp", "device_timestamp"))
+                      or shortcode_to_timestamp(code)),
         "caption": _caption_text(node),
         "commentsCount": _int(_first(node, "comment_count", "commentCount", default=0)),
         "likesCount": _int(_first(node, "like_count", "likeCount", default=0)),
