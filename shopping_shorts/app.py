@@ -511,6 +511,13 @@ def api_reference(platform: str = "instagram"):
         items, collected_at = store.load_last_run()
     else:
         items, collected_at = store.load_last_run_platform(platform)
+    # 🚫 영구차단(2026-07-30) — 카드의 차단 버튼이 넣은 removed_channels를 여기서 걸러낸다.
+    # 수집(merge_tracked)도 같은 목록을 보지만, 이미 저장된 last_run에는 남아 있어
+    # 차단 후 새로고침·업데이트 때 다시 뜨는 걸 막으려면 이 조회 경로에서도 잘라야 한다.
+    blocked = store.removed_usernames()
+    if blocked:
+        items = [i for i in items
+                 if (i.get("username") or "").strip().lstrip("@").lower() not in blocked]
     _attach_vision_tags(items, store)   # 백그라운드로 채워진 주제태그를 실어 보냄(검색 정확도 승격)
     return {"ok": True, "items": items, "collected_at": collected_at}
 
@@ -990,15 +997,22 @@ def api_prune_scan():
 
 
 @app.post("/api/prune/remove")
-def api_prune_remove(username: str, name: str = ""):
-    """죽은 채널 추적 제외(소프트 삭제 — 엑셀 원본 미변경, 복구 가능)."""
+def api_prune_remove(request: Request, username: str, name: str = ""):
+    """죽은 채널 추적 제외(소프트 삭제 — 엑셀 원본 미변경, 복구 가능).
+    랭킹 카드의 🚫 차단 버튼도 이 경로를 쓴다 → 전체 사용자에게 영향 가는 운영 액션이라 관리자만."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
     Store(DB_PATH).remove_channel(username.strip().lstrip("@"), name)
     return {"ok": True, "username": username}
 
 
 @app.post("/api/prune/restore")
-def api_prune_restore(username: str):
-    """추적 제외 해제(되돌리기)."""
+def api_prune_restore(request: Request, username: str):
+    """추적 제외 해제(되돌리기). 차단 해제도 같은 경로 → 관리자만."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
     Store(DB_PATH).restore_channel(username.strip().lstrip("@"))
     return {"ok": True, "username": username}
 
