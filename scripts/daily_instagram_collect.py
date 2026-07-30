@@ -26,6 +26,13 @@ from shopping_shorts.store import Store
 
 def main():
     t0 = time.time()
+    # ★렌더 양보(2026-07-30): 최종렌더가 도는 중이면 이번 회차를 건너뛴다.
+    # 1GB·2vCPU 서버에서 ffmpeg와 Playwright가 겹치면 swap으로 밀려 렌더가 8분+로
+    # 기어간다(실측 load average 11.76 / swap 1204MB). 다음 회차(6시간 뒤)에 돌면 되고,
+    # 수집은 누적이라 한 번 건너뛰어도 데이터가 사라지지 않는다.
+    if Store(DB_PATH).heavy_job_active():
+        print("[daily_instagram_collect] 렌더/믹스 진행 중 — 이번 회차 스킵(다음 타이머에 수집)")
+        return 0
     try:
         items = service.collect(platform="instagram")
     except Exception as e:  # noqa: BLE001 — 크론이 죽어도 서비스는 무사, 로그만 남긴다

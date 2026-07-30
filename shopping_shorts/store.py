@@ -3683,6 +3683,23 @@ class Store:
                 continue
         return False
 
+    # 렌더/믹스가 도는 동안 무거운 자동크롤을 양보시키는 판정(2026-07-30).
+    # 왜: 1GB·2vCPU 서버에서 ffmpeg와 Playwright(브라우저)가 겹치면 메모리가 모자라
+    # swap으로 밀리고 렌더가 기어간다(실측 13:21 load average 11.76 / swap 1204MB,
+    # 최종렌더 8분+). 크롤을 없애는 게 아니라 **순서를 양보**시킨다 — 다음 주기에 돈다.
+    _HEAVY_TASKS = ("render", "mix", "retype", "preview", "clean")
+
+    def heavy_job_active(self):
+        """렌더 계열 작업이 지금 돌고 있거나 대기 중이면 True.
+        queued까지 보는 이유: 곧 시작할 렌더 앞에서 크롤이 먼저 자리를 잡으면
+        렌더가 그 크롤이 끝날 때까지 밀린다(양보의 취지가 사라진다)."""
+        ph = ",".join("?" * len(self._HEAVY_TASKS))
+        with self._conn() as c:
+            n = c.execute(
+                f"SELECT COUNT(*) FROM job_queue WHERE task IN ({ph}) "
+                "AND state IN ('queued','running')", self._HEAVY_TASKS).fetchone()[0]
+        return n > 0
+
     def claim_next(self):
         """가장 오래된 대기 작업 하나를 원자적으로 'running'으로 바꾸고 돌려준다.
 
