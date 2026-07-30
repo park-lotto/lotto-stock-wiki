@@ -220,3 +220,84 @@ def test_vault_call_tries_next_key_after_dead_one(monkeypatch):
     monkeypatch.setattr(kv, "get_client_for_key",
                         lambda key: type("C", (), {"models": _Models(key)})())
     assert edit_plan._vault_call("prompt", {}) == {"ok": True}
+
+
+# ── 7. 긴 비트 분할(2026-07-30 백테스트: 55자 초과 26개 중 15개가 2문장) ──
+def _beat(role, narr, n_alts=2, **kw):
+    return dict({"beat_idx": 0, "role": role, "narration": narr,
+                 "caption_lines": ["옛", "줄"],
+                 "primary": {"seg_id": "s0-0"},
+                 "alternates": [{"seg_id": f"s0-{i + 1}"} for i in range(n_alts)]}, **kw)
+
+
+def test_long_two_sentence_beat_is_split_not_truncated():
+    """★문장을 지우지 않는다 — 그 문장들이 오히려 가장 좋은 글이었다."""
+    a = "제빵기로 반죽했더니 찰기가 장난 아닌 거 있죠?"
+    b = "오븐에 넣었더니 향긋한 냄새가 온 집안에 확 퍼지더라구요."
+    beats = [_beat("훅", "커피 버리지 마세요", n_alts=0),
+             _beat("해결", f"{a} {b}", n_alts=2),
+             _beat("CTA", "댓글 남겨주세요", n_alts=0)]
+    out = edit_plan._fix_beat_structure(beats)
+    narrs = [x["narration"] for x in out]
+    assert a in narrs and b in narrs, "두 문장이 각자 자기 비트를 가져야 한다"
+    assert len(out) == 4, f"비트가 하나 늘어야 한다: {narrs}"
+    # 쪼갠 비트는 서로 다른 화면을 쓴다(같은 컷 반복이면 나눈 의미가 없다).
+    i = narrs.index(a)
+    assert out[i]["primary"]["seg_id"] != out[i + 1]["primary"]["seg_id"]
+    assert out[i]["caption_lines"] is None and out[i + 1]["caption_lines"] is None
+
+
+def test_single_sentence_long_beat_is_not_split():
+    """문장이 하나면 나눌 경계가 없다 — 그대로 둔다."""
+    one = "가" * 80
+    beats = [_beat("훅", "훅", n_alts=0), _beat("해결", one, n_alts=2)]
+    out = edit_plan._fix_beat_structure(beats)
+    assert [x["narration"] for x in out] == ["훅", one]
+
+
+def test_no_split_when_only_one_clip():
+    """컷이 하나면 나눠도 같은 화면이 두 번 나와 반복으로 보인다 → 그대로 둔다."""
+    two = "앞 문장이 충분히 길어서 오십오자를 넘기게 만든다 그렇지요. 뒤 문장도 이어집니다."
+    beats = [_beat("훅", "훅", n_alts=0), _beat("해결", two, n_alts=0)]
+    assert len(edit_plan._fix_beat_structure(beats)) == 2
+
+
+def test_hook_and_cta_are_never_split():
+    """훅·CTA를 쪼개면 첫 임팩트와 마무리가 깨진다."""
+    two = "앞 문장이 충분히 길어서 오십오자를 넘기게 만든다 그렇지요. 뒤 문장도 이어집니다."
+    beats = [_beat("훅", two, n_alts=2), _beat("CTA", two, n_alts=2)]
+    out = edit_plan._fix_beat_structure(beats)
+    assert len(out) == 2, "훅·CTA는 분할 대상이 아니다"
+
+
+def test_split_renumbers_beat_idx():
+    a, b = "앞 문장이 아주 길어서 오십오자를 확실히 넘기도록 만든다.", "뒤 문장도 이어집니다."
+    beats = [_beat("훅", "훅", n_alts=0), _beat("해결", f"{a} {b}", n_alts=2),
+             _beat("CTA", "댓글 남겨주세요", n_alts=0)]
+    out = edit_plan._fix_beat_structure(beats)
+    assert [x["beat_idx"] for x in out] == list(range(len(out)))
+
+
+def test_conform_cannot_reintroduce_banmal_cta():
+    """★실측 회귀(2026-07-30): _ground_candidate에서 CTA 반말을 고쳐도, 그 뒤 도는
+    _conform_overflow_beats(길이 압축)가 '남겨주세요'를 '남겨줘'로 되돌려 그대로 나갔다.
+    압축 뒤에도 구조 교정이 걸리는지 못 박는다."""
+    beats = [{"beat_idx": 0, "role": "훅", "narration": "훅 문장",
+              "primary": {"seg_id": "a"}, "alternates": []},
+             {"beat_idx": 1, "role": "CTA", "narration": "궁금하면 댓글에 필요 남겨줘",
+              "primary": {"seg_id": "b"}, "alternates": []}]
+    # conform이 반말로 압축한 직후 상태를 그대로 넣어도 교정돼야 한다(멱등 확인).
+    out = edit_plan._fix_beat_structure(beats)
+    assert out[-1]["narration"].endswith("남겨주세요")
+    # 두 번 불러도 망가지지 않는다(_ground_candidate + conform 뒤 두 번 호출된다).
+    again = edit_plan._fix_beat_structure(out)
+    assert again[-1]["narration"].endswith("남겨주세요")
+    assert len(again) == len(out)
+
+
+def test_conform_path_is_followed_by_structure_fix():
+    """배선 확인 — conform 호출 뒤에 _fix_beat_structure가 있어야 한다."""
+    import inspect
+    src = inspect.getsource(edit_plan.build_scene_first_plan)
+    i = src.index("_conform_overflow_beats")
+    assert "_fix_beat_structure" in src[i:i + 600], "압축 뒤 교정이 빠졌다 — 반말 CTA가 되돌아온다"

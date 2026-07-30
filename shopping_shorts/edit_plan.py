@@ -1031,6 +1031,52 @@ def _is_cta(beat):
     return any(k.lower() in role.lower() for k in _CTA_ROLES)
 
 
+_LONG_BEAT_CHARS = 55       # 이보다 길고 문장이 2개 이상이면 화면을 나눈다
+
+
+def _split_long_beats(beats):
+    """한 비트에 문장이 여러 개 몰린 것을 **문장 경계로 쪼개** 화면을 나눈다(2026-07-30).
+
+    ★왜 자르지 않고 쪼개나: 백테스트 실측(v3 30건)에서 55자 초과 비트 26개 중 15개가
+      2문장이었는데, 그 문장들이 오히려 **가장 좋은 글**이었다 —
+      "…찰기가 장난 아닌 거 있죠? / …향긋한 냄새가 온 집안에 확 퍼지더라구요."
+      사장님이 원한 어미·감각어가 다 들어 있다. 문제는 글이 아니라 **화면 1개에 문장 2개**가
+      붙는 구조다. 그래서 문장을 지우거나 줄이지 않고, 비트를 나눠 각 문장에 자기 화면을 준다.
+
+    나눌 재료: 비트마다 primary + alternates(추가 컷)가 있다. 컷이 2개 이상일 때만 쪼갠다
+    (컷이 하나면 나눠도 같은 화면이 두 번 나와 반복으로 보인다 → 그대로 둔다).
+    CTA·훅은 짧아서 대상이 거의 없지만, 쪼개면 흐름이 깨지므로 명시적으로 제외한다.
+    """
+    out = []
+    for b in beats:
+        narr = (b.get("narration") or "").strip()
+        alts = list(b.get("alternates") or [])
+        sents = [s for s in re.split(r"(?<=[.!?])\s+", narr) if s.strip()]
+        if (len(narr) <= _LONG_BEAT_CHARS or len(sents) < 2 or not alts
+                or _is_cta(b) or not out):          # not out = 첫 비트(훅)는 건드리지 않는다
+            # 못 쪼개는 긴 비트라도 자막줄은 무효화한다 — 모델이 준 줄이 길면 자막이 화면을
+            # 덮는다. None이면 3~4어절 규칙으로 다시 끊긴다(2026-07-30, 분할 도입 전부터의 처방).
+            if len(narr) > _LONG_BEAT_CHARS:
+                b["caption_lines"] = None
+            out.append(b)
+            continue
+        # 문장을 앞/뒤 두 덩어리로(2문장이면 1:1, 3문장이면 2:1).
+        half = (len(sents) + 1) // 2
+        head, tail = " ".join(sents[:half]).strip(), " ".join(sents[half:]).strip()
+        if not head or not tail:
+            out.append(b)
+            continue
+        # 컷도 나눈다: 앞 비트 = primary + alternates 앞쪽 / 뒤 비트 = 남은 첫 컷을 primary로.
+        k = max(1, len(alts) // 2)
+        first = dict(b, narration=head, caption_lines=None, alternates=alts[:k - 1] if k > 1 else [],
+                     target_seconds=round(max(1.5, len(head) / _SYLLABLES_PER_SEC), 1))
+        second = dict(b, narration=tail, caption_lines=None, primary=alts[k - 1],
+                      alternates=alts[k:],
+                      target_seconds=round(max(1.5, len(tail) / _SYLLABLES_PER_SEC), 1))
+        out.extend([first, second])
+    return out
+
+
 def _fix_beat_structure(beats):
     """모델이 자주 어기는 **구조** 세 가지를 코드에서 바로잡는다(2026-07-30).
 
@@ -1061,10 +1107,8 @@ def _fix_beat_structure(beats):
             last["narration"] = narr.rstrip(" .!?")[: -len(a)] + b
             last["caption_lines"] = None        # 문장이 바뀌었으니 옛 자막줄은 무효
             break
-    # ③ 과장된 비트는 자막줄만 무효화(자막이 3~4어절 규칙으로 다시 끊긴다).
-    for b in beats:
-        if len((b.get("narration") or "")) > 55:
-            b["caption_lines"] = None
+    # ③ 긴 비트는 **문장 경계로 쪼개** 화면을 나눈다(문장은 안 지운다).
+    beats = _split_long_beats(beats)
     # beat_idx 재부여(① 재배치로 어긋났을 수 있다 — 하류가 이 값으로 TTS·자막을 매칭한다).
     for i, b in enumerate(beats):
         b["beat_idx"] = i
@@ -1665,6 +1709,11 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         # 초과 흡수(Task11): 총 나레이션이 목표초를 넘으면 각 비트를 conform으로 줄인다.
         # _length_penalty 주석이 약속한 실제 배선 — 채점 전에 적용해 감점이 콘폼된 길이를 본다.
         plan["beats"] = _conform_overflow_beats(plan["beats"], target_seconds)
+        # ★압축 뒤에 구조 교정을 한 번 더(2026-07-30). conform_narration이 길이를 줄이면서
+        #   존댓말을 반말로 압축한다 — 실측: CTA "…남겨주세요"가 "…남겨줘"로 바뀌어 나갔다
+        #   (_ground_candidate에서 이미 교정했는데 그 뒤 conform이 되돌린 것). 멱등이라
+        #   두 번 불러도 무해하고, 압축으로 짧아진 비트는 분할 대상에서 자연히 빠진다.
+        plan["beats"] = _fix_beat_structure(plan["beats"])
         if ping_pong:
             from shopping_shorts import backbone
             # 1) 행위 매칭(화면-대사 어긋남 + 길이) 2) 백본 순서 고정(과정순서)
