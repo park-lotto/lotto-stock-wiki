@@ -4,6 +4,7 @@ run_mix_job: 다운로드→대본추출(병렬)→EDL생성→TTS까지 진행�
 run_render: 사용자가 확인 후 최종 ffmpeg 렌더 → done.
 각 단계에서 mix_jobs.status를 갱신하고, 예외는 status='failed'+error로 잡는다.
 """
+import hashlib
 import sys
 import traceback
 from concurrent.futures import ThreadPoolExecutor
@@ -12,6 +13,7 @@ from pathlib import Path
 
 from shopping_shorts.store import Store
 from shopping_shorts.media_download import download_any
+from shopping_shorts import script_extract
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC, build_edit_plan, conform_narration
 from shopping_shorts.scene_match import match_scene_assets, match_sfx
@@ -119,6 +121,16 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     return natural
 
 
+def _beat_tts_path(tts_dir, beat):
+    """비트 TTS 파일 경로 — 파일명을 나레이션 '내용 해시'로 키잉한다(2026-07-27 실사고:
+    B로 만들고 A로 바꾸면 자막은 A인데 음성은 B였다). 예전엔 beat_{idx}.mp3로 후보끼리
+    파일명을 공유해, B 렌더가 그 파일을 B 음성으로 덮어쓴 뒤 A는 skip_existing으로 재합성을
+    건너뛰어 B 음성을 그대로 재생했다. 내용 해시를 넣으면 대본이 다른 후보는 파일도 달라 절대
+    안 섞이고(A는 A파일, B는 B파일), 같은 대본은 그대로 재사용(0원)된다."""
+    key = hashlib.md5((beat.get("narration") or "").encode("utf-8")).hexdigest()[:10]
+    return str(Path(tts_dir) / f"beat_{beat['beat_idx']}_{key}.mp3")
+
+
 def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron=None):
     """비트별로 synthesize_line 호출. beat['tts_path']를 채운다.
     연속성(previous_text/next_text)은 인접 비트의 '원문'(naturalize 전) narration을 쓴다
@@ -143,8 +155,10 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
 
     def _one(i):
         beat = beats[i]
-        out = tts_dir / f"beat_{beat['beat_idx']}.mp3"
-        if skip_existing and beat.get("tts_path"):
+        out = Path(_beat_tts_path(tts_dir, beat))
+        # 이 비트의 '현재 대본'에 해당하는 파일이 이미 있으면(=같은 후보·같은 대본) 재합성 스킵.
+        # tts_path가 다른 이름을 가리키거나(후보 스위치) 파일이 없으면 새로 합성한다.
+        if skip_existing and beat.get("tts_path") == str(out) and out.exists():
             return
         synthesize_line(
             beat["narration"], out, voice=voice, beat_role=beat.get("role"),
@@ -189,6 +203,19 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
             f.result()  # 예외를 여기서 소비 — 숨기지 않고 그대로 전파(run_mix_job이 failed 처리)
     print(f"[tts] {total}비트 합성 {(datetime.now(timezone.utc) - _t0).total_seconds():.1f}s "
           f"(workers={workers})", file=sys.stderr)
+
+
+def _sources_is_recipe(sources):
+    """소스 category 다수결이 '레시피'면 True(장면 결 맞춤 분기). 비면 False.
+    입력이 dict거나 원소가 dict가 아니어도 크래시하지 않는다(fail-open=False) — 실호출은
+    list[dict]지만 일부 경로/테스트가 dict나 비정형을 넘겨도 안전해야 한다."""
+    if isinstance(sources, dict):
+        sources = list(sources.values())
+    cats = [s.get("category") for s in (sources or [])
+            if isinstance(s, dict) and s.get("category")]
+    if not cats:
+        return False
+    return cats.count("레시피") * 2 > len(cats)
 
 
 def _refill_beats_to_tts(beats, source_scripts, tts_dir):
@@ -373,6 +400,10 @@ def run_mix_job(job_id, db_path, work_root):
 
         # 2) 대본 추출(병렬)
         store.update_mix_job(job_id, status="extracting")
+        # 프레임 태깅 추출전환(B1, 2026-07-29): 켜면 영상 통째 업로드 대신 파이썬 컷+프레임+오디오
+        # 전사로 추출한다(느림·PROCESSING실패 근본해소). 기본 off=회귀0. 실측 후 승격.
+        # 설계: docs/superpowers/specs/2026-07-29-프레임태깅-추출전환-design.md
+        _use_frames = store.get_setting("frame_extract_enabled", "") == "1"
         def _extract(item):
             vid, path = item
             # 캐시 재사용(2026-07-24): 이 소스 대본을 담기/AI PICK/뽑기 때 이미 뽑아
@@ -388,9 +419,23 @@ def run_mix_job(job_id, db_path, work_root):
             segs = (cached or {}).get("segments")
             if segs and all(s.get("seg_id") for s in segs):
                 r = {"segments": segs, "full_text": (cached.get("full_text") or "")}
+                # 무자막 소스 특장점(2026-07-26): 캐시엔 최상위 필드가 없을 수 있으므로
+                # 세그별 product_benefits로 집계 폴백. 이 필드 추가 전 캐시는 빈 리스트 —
+                # full_text도 비었다면 그 소스는 예전처럼 화면 재료로만 쓰인다(무해).
+                r["product_benefits"] = (script_extract._norm_benefits(
+                    cached.get("product_benefits")) or script_extract._collect_benefits(segs))
+            elif _use_frames:
+                from shopping_shorts import frame_script
+                r = frame_script.extract_script_frames(path, vid, caption=captions.get(vid, ""))
+                # 프레임 경로가 세그먼트를 못 만들면(컷 감지 실패 등) 기존 영상추출로 폴백 — 빈 결과 금지.
+                if not r.get("segments"):
+                    r = extract_script(path, vid, caption=captions.get(vid, ""))
             else:
                 r = extract_script(path, vid, caption=captions.get(vid, ""))
             r["video_id"] = vid
+            # category(ai_categorize가 script_extracts.category에 저장) 전달 → 장면 결 맞춤(is_recipe) 분기용.
+            # cached는 위에서 이미 조회했다(segments가 못써도 category 컬럼은 실려온다).
+            r["category"] = (cached or {}).get("category")
             return vid, r
         with ThreadPoolExecutor(max_workers=max(1, len(video_paths))) as ex:
             extracts = dict(ex.map(_extract, video_paths.items()))
@@ -588,6 +633,9 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     reference_text: scene_first일 때 스타일·구조를 계승할 레퍼런스 대본(보통 given_script 재활용)."""
     # 3) 통합 EDL
     store.update_mix_job(job_id, status="planning")
+    # 소스 다수결이 레시피면 화면을 요리 시간순으로 재배치(장면 결 맞춤) — build_edit_plan 경로에 전달.
+    is_recipe = _sources_is_recipe(source_scripts)
+    _rec_cands = None   # 후보목록(카드) — conform 뒤 재저장해 카드=TTS 일치시키려고 잡아둔다
     if scene_first:
         from shopping_shorts.edit_plan import build_scene_first_plan
         # 부품은행 주입(P0-2): 설정 bank_enabled=1일 때만 승인 훅·어미·부사·CTA·스파인을 조립해
@@ -599,14 +647,12 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
         if store.get_setting("bank_enabled", "") == "1":
             try:
                 from shopping_shorts import bank_assemble
-                # 은행(로테이션 부품·스파인) + novelty 회피블록(최근 쓴 훅·인물·CTA)을 함께 주입.
-                # 회피는 은행과 같은 스위치로 켠다 — 켜면 매 영상이 다른 훅으로 열리게 밀어준다.
-                _blocks = [bank_assemble.assemble_bank_context(store, video_type or ""),
-                           bank_assemble.avoid_block(store)]
-                bank_context = "\n\n".join(x for x in _blocks if x)
+                # 2026-07-27: 은행 '창의적 우수 라인'만(parts_block=승인 훅·부사·어미·CTA 감각) 재주입.
+                # 제외: spine(A 백본 흐름이 대신)·winners few-shot(타제품 소재 오염)·avoid novelty
+                # (매번 제품에서 밀어내던 드리프트 주범). parts는 프롬프트에서 '양념(참고·변형)'으로 쓴다.
+                bank_context = bank_assemble.parts_block(store)
                 bank_snapshot = bank_assemble.bank_usage_snapshot(store, video_type or "")  # 생성 순응 검열용
-                # 프롬프트 회피를 무시하고 같은 훅을 낸 후보를 추천단계에서도 감점(belt-and-suspenders).
-                avoid_hooks = store.recent_script_usage()["hooks"] or None
+                avoid_hooks = None    # novelty OFF — 회피 감점 제거(드리프트 차단)
             except Exception:
                 traceback.print_exc(file=sys.stderr)
         sf = build_scene_first_plan(source_scripts, reference_text, target_seconds,
@@ -619,9 +665,13 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                                     # (예전엔 backbone_base일 때만이라, 서버에 backbone_base 미설정 →
                                     # 심사가 통째로 꺼져 제일 탄탄한 후보를 못 골랐다. 사장님 지적).
                                     judge=(backbone_base or ping_pong
-                                           or store.get_setting("bank_enabled", "") == "1"))
+                                           or store.get_setting("bank_enabled", "") == "1"),
+                                    # 주경로 앵커 dedup+레시피 grain 발동(Task8) — is_recipe는
+                                    # 위(603줄)서 소스 다수결로 이미 계산됨.
+                                    is_recipe=is_recipe)
         if sf["candidates"]:
             store.set_mix_candidates(job_id, sf["candidates"])
+            _rec_cands = sf["candidates"]   # conform 뒤 재저장용(카드=TTS 일치)
             rec = next((cand for cand in sf["candidates"] if cand["recommended"]),
                        sf["candidates"][0])
             plan = rec["plan"]
@@ -650,12 +700,14 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
             # 겪었다(실측: 503 과부하 → 후보 0 → 폴백). 이제 폴백을 표식으로 남겨 화면에 띄운다.
             print("scene_first 후보 0 → 옛 생성기로 폴백(개선 미적용)", file=sys.stderr)
             plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
-                                   video_type=video_type, given_script=given_script)
+                                   video_type=video_type, given_script=given_script,
+                                   is_recipe=is_recipe)
             plan["generator"] = "legacy_fallback"
             plan["generator_note"] = "장면우선 생성이 실패해 예전 방식으로 만들었습니다(개선 미적용) — 다시 매칭을 권장합니다."
     else:
         plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
-                               video_type=video_type, given_script=given_script)
+                               video_type=video_type, given_script=given_script,
+                               is_recipe=is_recipe)
         plan["generator"] = "legacy"
     # 빈 EDL(추출 전량 실패 또는 파이프라인 중간 전용풀 소진)을 ready_for_review로
     # 오보고하지 않는다 — 성공처럼 보이는 빈 리뷰화면 대신 즉시 실패로 정상 종료
@@ -701,6 +753,12 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     except Exception:
         traceback.print_exc(file=sys.stderr)
 
+    # ★카드=TTS 일치(2026-07-27 실사고 "대본이랑 TTS가 다르게 나온다"): 추천 후보는 위에서
+    #   _conform_beats/_refill로 나레이션이 재작성됐는데, candidates_json(카드가 읽는 것)은
+    #   conform 전 스냅샷이라 카드 대본과 실제 말하는 TTS가 어긋났다. plan은 추천후보 plan과 같은
+    #   객체(in-place 변경 반영)이므로 후보목록을 다시 저장해 카드가 '실제 말할 문장'을 보이게 한다.
+    if _rec_cands:
+        store.set_mix_candidates(job_id, _rec_cands)
     store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
 
 

@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-22",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-27_0806_[ESG & Transition] 국내 주식 위탁운용사 책...md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "박세연, 김예인",
+    "report_date": "2026년 7월 22일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "2025~2026년 세 차례 상법 개정",
+      "밸류업 프로그램"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026년 7월 말",
+        "event": "자산운용사·연기금 68개사 이행점검 보고서 제출"
+      },
+      {
+        "date": "2026년 하반기",
+        "event": "국민연금 국내 주식 위탁운용사 실사 진행"
+      },
+      {
+        "date": "매년 12월",
+        "event": "스튜어드십 코드 홈페이지 기관별 이행 수준 공개"
+      }
+    ],
+    "top_picks": null,
+    "risk": "형식적 보고에 그친 운용사는 향후 비교공시와 국민연금 실사를 통해 평판·위탁 리스크에 노출될 가능성이 크다.",
+    "quote": "국내 주식 위탁운용사 책임투자 이행보고와 하반기 실사 대응 포인트"
+  }
+}

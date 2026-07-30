@@ -1,0 +1,34 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "LG에너지솔루션",
+      "signal": "bull",
+      "reason": "ESS용 LFP 배터리 본격 양산 및 공급망 다변화",
+      "ts": "2026-07-25",
+      "quote": "LG엔솔·GM 합작 얼티엄셀즈, 美서 ESS용 LFP 배터리 본격 양산",
+      "sector": "2차전지"
+    },
+    {
+      "name": "엘앤에프",
+      "signal": "bull",
+      "reason": "LG에너지솔루션의 LFP 공급망 전환 전략에 따른 협력",
+      "ts": "2026-02-12",
+      "quote": "LG엔솔, 中 중심 LFP 공급망 전환 시사…엘앤에프와 협력",
+      "sector": "2차전지"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "LG엔솔·GM 합작 얼티엄셀즈, 미국 내 ESS용 LFP 배터리 생산 시작",
+      "ts": "2026-07-08",
+      "quote": "LG엔솔·GM 합작 얼티엄셀즈, 美서 ESS용 LFP 배터리 본격 양산"
+    },
+    {
+      "fact": "LG엔솔, LFP 공급망 다변화 추진 및 엘앤에프와 협력",
+      "ts": "2026-02-12",
+      "quote": "LG엔솔, 中 중심 LFP 공급망 전환 시사…엘앤에프와 협력"
+    }
+  ],
+  "quote": "LG엔솔·GM 합작 얼티엄셀즈, 美서 ESS용 LFP 배터리 본격 양산"
+}

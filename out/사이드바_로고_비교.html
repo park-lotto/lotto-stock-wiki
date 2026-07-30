@@ -1,0 +1,104 @@
+<meta charset="utf-8">
+<title>사이드바 로고 — 이전 vs 이후</title>
+<style>
+  body{margin:0;background:#0a0f0d;color:#eaf3f0;font-family:system-ui,'Malgun Gothic',sans-serif;padding:34px 24px 60px}
+  .wrap{max-width:920px;margin:0 auto}
+  h1{font-size:19px;margin:0 0 6px}
+  .lead{color:#8fa1a0;font-size:13px;margin:0 0 26px;line-height:1.65}
+  .cols{display:flex;gap:22px;flex-wrap:wrap}
+  .col{flex:1;min-width:270px}
+  .tag{font-size:12px;font-weight:800;margin-bottom:9px;letter-spacing:.3px}
+  .bad{color:#ff8f8f} .good{color:#3ee0bf}
+
+  /* 실제 사이드바 배경·패널색 그대로 (static/*.html :root) */
+  .side{background:#101815;border:1px solid #1e2b26;border-radius:12px;padding:14px 16px 20px;width:100%}
+  .side h1{font-size:26px;font-weight:900;letter-spacing:-.5px;margin:6px 0 18px;
+           display:flex;align-items:center;gap:8px}
+  .side.now h1{justify-content:center}
+  .brandtxt{background:linear-gradient(135deg,#3ee0bf 0%,#a8f2e4 40%,#a78bff 100%);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    color:transparent;filter:drop-shadow(0 0 14px rgba(62,224,191,.55));letter-spacing:-.3px}
+  .brandtxt::after{content:'.';background:none;-webkit-text-fill-color:#facc6b;color:#facc6b;filter:none;margin-left:1px}
+  .old .brandtxt{background:linear-gradient(135deg,#3ee0bf 0%,#7fe9d8 42%,#8c6ef0 100%);
+                 filter:drop-shadow(0 0 12px rgba(62,224,191,.35))}
+  .grp{background:#0c1412;border:1px solid #1e2b26;border-radius:9px;padding:9px 11px;margin-top:10px}
+  .lbl{font-size:10.5px;color:#5f7a74;letter-spacing:.5px;margin-bottom:6px}
+  .it{font-size:13.5px;padding:5px 0;color:#c8d8d3}
+  .it.on{color:#3ee0bf;font-weight:700}
+  .note{font-size:12px;color:#8fa1a0;margin-top:12px;line-height:1.6}
+  .zoom{margin-top:26px;display:flex;gap:26px;align-items:flex-end;flex-wrap:wrap}
+  .z{text-align:center} .z div{font-size:11px;color:#5f7a74;margin-top:7px;font-family:ui-monospace,monospace}
+</style>
+<div class="wrap">
+  <h1>사이드바 로고 — 왜 안 보였나, 어떻게 고쳤나</h1>
+  <p class="lead">
+    배경색은 <b>실제 사이드바 값(<code>#101815</code>)</b>을 그대로 썼습니다.
+    문제는 크기가 아니라 <b>구조</b>였습니다 — 다크 디스크가 다크 배경에 묻어
+    <b>0.8px짜리 민트 링만</b> 남았습니다. 작은 크기에선 선이 아니라 <b>면</b>이 읽힙니다.
+  </p>
+
+  <div class="cols">
+    <div class="col">
+      <div class="tag bad">✕ 이전 — 외곽선형 20px, 왼쪽 정렬</div>
+      <div class="side old">
+        <h1>
+          <svg width="20" height="20" viewBox="0 0 64 64" fill="none" style="flex-shrink:0">
+            <defs><radialGradient id="odk" cx="50%" cy="38%" r="70%"><stop offset="0" stop-color="#17223c"/><stop offset="1" stop-color="#070b14"/></radialGradient>
+            <linearGradient id="omg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3ee0bf"/><stop offset="1" stop-color="#8c6ef0"/></linearGradient>
+            <linearGradient id="ogg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe6ae"/><stop offset="1" stop-color="#facc6b"/></linearGradient></defs>
+            <circle cx="32" cy="32" r="29" fill="url(#odk)"/><circle cx="32" cy="32" r="29" stroke="url(#omg)" stroke-width="2.6"/>
+            <rect x="23" y="15" width="18" height="31" rx="4.4" stroke="url(#omg)" stroke-width="2.6"/>
+            <path d="M29.2 24.1l9.4 6.4-9.4 6.4V24.1z" fill="url(#ogg)"/><circle cx="32" cy="51.5" r="2.2" fill="url(#ogg)"/>
+          </svg>
+          <span class="brandtxt">숏템메이커</span>
+        </h1>
+        <div class="grp"><div class="lbl">리서치</div>
+          <div class="it on">📊 레퍼런스 랭킹</div><div class="it">⭐ 영상 즐겨찾기</div><div class="it">📄 대본 즐겨찾기</div></div>
+      </div>
+      <p class="note">심볼이 회색 얼룩처럼 보이고, 왼쪽에 붙어 무게중심이 한쪽으로 쏠립니다.</p>
+    </div>
+
+    <div class="col">
+      <div class="tag good">✓ 이후 — 솔리드 28px, 가운데 정렬</div>
+      <div class="side now">
+        <h1>
+          <svg width="28" height="28" viewBox="0 0 64 64" fill="none" style="flex-shrink:0;filter:drop-shadow(0 0 9px rgba(62,224,191,.55))">
+            <defs><linearGradient id="nmg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3ee0bf"/><stop offset="1" stop-color="#8c6ef0"/></linearGradient>
+            <linearGradient id="ngg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe6ae"/><stop offset="1" stop-color="#facc6b"/></linearGradient></defs>
+            <circle cx="32" cy="32" r="30" fill="url(#nmg)"/>
+            <rect x="21.5" y="13.5" width="21" height="34" rx="5.2" fill="#070b14"/>
+            <path d="M28.6 22.9l10.6 7.6-10.6 7.6V22.9z" fill="url(#ngg)"/>
+            <circle cx="32" cy="53.5" r="2.4" fill="#070b14"/>
+          </svg>
+          <span class="brandtxt">숏템메이커</span>
+        </h1>
+        <div class="grp"><div class="lbl">리서치</div>
+          <div class="it on">📊 레퍼런스 랭킹</div><div class="it">⭐ 영상 즐겨찾기</div><div class="it">📄 대본 즐겨찾기</div></div>
+      </div>
+      <p class="note">
+        민트→오로라로 <b>꽉 찬 디스크</b> + 다크 9:16 화면 + 골드 재생 삼각형.
+        도형 문법(원·세로프레임·골드플레이)은 큰 로고와 같아 <b>같은 브랜드로 읽힙니다</b> —
+        작은 크기용 반전 변형입니다. 글로우도 0.35 → 0.55로 올렸습니다.
+      </p>
+    </div>
+  </div>
+
+  <div class="zoom">
+    <div class="z">
+      <svg width="72" height="72" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="30" fill="url(#nmg)"/><rect x="21.5" y="13.5" width="21" height="34" rx="5.2" fill="#070b14"/><path d="M28.6 22.9l10.6 7.6-10.6 7.6V22.9z" fill="url(#ngg)"/><circle cx="32" cy="53.5" r="2.4" fill="#070b14"/></svg>
+      <div>72 (확대 확인용)</div>
+    </div>
+    <div class="z">
+      <svg width="28" height="28" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="30" fill="url(#nmg)"/><rect x="21.5" y="13.5" width="21" height="34" rx="5.2" fill="#070b14"/><path d="M28.6 22.9l10.6 7.6-10.6 7.6V22.9z" fill="url(#ngg)"/><circle cx="32" cy="53.5" r="2.4" fill="#070b14"/></svg>
+      <div>28 (실제 사이드바)</div>
+    </div>
+    <div class="z">
+      <svg width="20" height="20" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="30" fill="url(#nmg)"/><rect x="21.5" y="13.5" width="21" height="34" rx="5.2" fill="#070b14"/><path d="M28.6 22.9l10.6 7.6-10.6 7.6V22.9z" fill="url(#ngg)"/><circle cx="32" cy="53.5" r="2.4" fill="#070b14"/></svg>
+      <div>20 (모바일 바)</div>
+    </div>
+    <div class="z">
+      <svg width="16" height="16" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="30" fill="url(#nmg)"/><rect x="21.5" y="13.5" width="21" height="34" rx="5.2" fill="#070b14"/><path d="M28.6 22.9l10.6 7.6-10.6 7.6V22.9z" fill="url(#ngg)"/><circle cx="32" cy="53.5" r="2.4" fill="#070b14"/></svg>
+      <div>16 (파비콘)</div>
+    </div>
+  </div>
+</div>

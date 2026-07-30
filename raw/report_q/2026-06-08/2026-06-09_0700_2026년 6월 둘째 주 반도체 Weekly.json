@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_0700_2026년 6월 둘째 주 반도체 Weekly.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "교보증권",
+    "analyst": "최보영",
+    "report_date": "2026/06/08",
+    "market_direction": null,
+    "macro_vars": [
+      "구글 850억 달러 유증",
+      "브로드컴 가이던스 실망",
+      "미국 고용 호조에 따른 금리 인상 가능성",
+      "대만 5월 IT 업체 매출액 YoY 상승"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "견조",
+        "reason": "CSP, PC OEM 등 전방위 메모리 LTA 계약이 체결 중"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6/8",
+        "event": "WWDC26 개최"
+      },
+      {
+        "date": "6/11",
+        "event": "FOMC 회의"
+      },
+      {
+        "date": "6/24",
+        "event": "마이크론 실적"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "TSMC",
+      "난야",
+      "폭스콘"
+    ],
+    "risk": "Vera CPU SOCAMM 노이즈 및 브로드컴 가이던스 실망으로 인한 테크 주가 급락",
+    "quote": "CSP, PC OEM 등 전방위 메모리 LTA 계약이 체결 중인 상황으로 업황은 여전히 견조하다 판단"
+  }
+}

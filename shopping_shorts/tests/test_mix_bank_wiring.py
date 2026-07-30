@@ -49,9 +49,11 @@ def test_parts_block_small_bank_uses_all(tmp_path):
     assert got == {"훅0", "훅1", "훅2"}   # k보다 적으면 전부(샘플 안 함)
 
 
-# ---- P0-2: scene_first 프롬프트에 은행 주입 ----
+# ---- 2026-07-27: scene_first 프롬프트에 은행 '우수 라인'(parts_block)을 '양념'으로 재주입 ----
+# 레버1(07-26)에서 전면 OFF했다가, 백본-A믹스 설계에서 parts만 되살림(spine/winners/avoid는 계속 OFF).
+# 프롬프트가 "거의 그대로 금지, 감각만 참고·변형"으로 감싸 드리프트 없이 창의 표현만 활용.
 
-def test_scene_first_injects_bank_context():
+def test_scene_first_injects_bank_parts():
     box = {}
 
     def fake_call(prompt, schema, **kw):
@@ -60,7 +62,7 @@ def test_scene_first_injects_bank_context():
 
     edit_plan._scene_first_candidates("[s0-0] 화면:x", "ref", 20, call=fake_call,
                                       bank_context="[승인된 부품]\n· 훅: 로테이션된새훅")
-    assert "로테이션된새훅" in box["prompt"]
+    assert "로테이션된새훅" in box["prompt"]   # 은행 parts 재주입(참고·변형 양념)
 
 
 def test_scene_first_no_bank_leaves_prompt_clean():
@@ -77,7 +79,8 @@ def test_scene_first_no_bank_leaves_prompt_clean():
 def test_build_scene_first_plan_threads_bank(monkeypatch):
     box = {}
 
-    def fake_candidates(inv, ref, secs, n=3, call=None, bank_context="", order_block=""):
+    # **kw: 호출부가 새 kwarg(lengthen·benefits_block 등)를 넘겨도 이 가짜가 안 깨지게.
+    def fake_candidates(inv, ref, secs, n=3, call=None, bank_context="", order_block="", **kw):
         box["bank"] = bank_context
         return []
 

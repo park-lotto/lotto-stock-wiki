@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_0700_LO 가이던스 달성, 그러나 아직 몇 발 더 남...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김선아",
+    "report_date": "2026년 06월 08일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "한미약품",
+        "code": "128940",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "710,000원",
+        "tp_prev": "640,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2026년 매출액 1,698.1십억원, 영업이익 259.6십억원 / 2027년 매출액 2,043.2십억원, 영업이익 382.6십억원",
+        "estimate_revision": "sonefpeglutide의 가치는 6,527억원으로 산정하였다. 에피노페그듀타이드는 최근 경쟁사의 긍정적인 P2상 결과를 고려하여 할인 조정하고, HM17321은 sonefpeglutide를 통한 동사의 L/O 협상력(병용임상 옵션 가능성 추가)을 고려하여 상향 조정하였다.",
+        "next_catalyst": "HM15275(삼중작용제), HM17321(근육증가), 선천성 고인슐린혈증 치료제와 같은 후보물질의 연내 추가 L/O 가능성 및 HM17321 데이터 공개",
+        "thesis": [
+          "Lilly향 소네페글루타이드 기술이전(L/O) 계약 체결",
+          "다수의 잠재 파트너와 기본적인 term sheet이 확정된 수준의 파이프라인 보유",
+          "HM17321, HM15275 등 추가 기술이전 기대감"
+        ],
+        "valuation_basis": "sonefpeglutide 가치(6,527억원), HM15275 가치(927.4억원), HM17321 가치(426.6억원), 에피노페그듀타이드 가치(296.5억원)를 포함한 적정 기업가치 9,077.3억원 산정, Target EV/EBITDA는 15배 적용",
+        "risk": null,
+        "supply_comment": "바이오",
+        "quote": "L/O를 연간 가이던스로 내세운 자신감을 보아, 다수의 잠재 파트너와 기본적인 term sheet은 확정된 수준의 파이프라인이 여러 개인 상황으로 짐작된다."
+      }
+    ]
+  }
+}

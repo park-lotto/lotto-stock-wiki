@@ -43,11 +43,16 @@ _RESPONSE_SCHEMA = {
                     "scene_desc": {"type": "string"},
                     "action": {"type": "string", "enum": action_dict.ACTION_VOCAB + ["없음"]},
                     "has_effect": {"type": "boolean"},
+                    "is_key": {"type": "boolean"},
+                    "shot_role": {"type": "string",
+                                  "enum": ["before", "사용중", "after", "완성", "문제", "기타"]},
+                    "product_benefits": {"type": "array", "items": {"type": "string"}},
                 },
                 "required": ["start", "end", "text", "scene_desc"],
             },
         },
         "full_text": {"type": "string"},
+        "product_benefits": {"type": "array", "items": {"type": "string"}},
     },
     "required": ["segments", "full_text"],
 }
@@ -77,6 +82,11 @@ _PROMPT = """이 영상을 보고 시간 순서대로 세그먼트로 나눠 대
 - scene_desc: 그 구간 화면에 무엇이 보이는지 짧게(제품/행동/구도). 화면 속 **주 대상을
   정확히** 적어라 — 헷갈리는 물체를 다른 것으로 단정하지 마라(예: 양파를 참외로, 무를 감자로
   오인 금지). 확실치 않으면 색·형태로만 묘사하고 엉뚱한 이름을 붙이지 마라.
+  ★주 제품 판별: 이 영상이 파는/보여주는 **주 제품**은 영상 전체에서 **반복적으로 클로즈업되거나
+  손에 들려 사용되는 물건**이다. 화면 한구석에 잠깐 보이는 **배경 소품(인형·장식품 등)이나
+  프레임 안의 진짜 동물·사람**은 맥락일 뿐 제품이 아니다 — 이런 것에 낚여 "강아지 선풍기"처럼
+  실제 제품과 무관한 이름을 지어내지 마라. 예: 손에 들고 사용 중인 선풍기 옆에 강아지 인형이나
+  진짜 강아지가 보여도, 주 제품은 여전히 "선풍기"다.
 - action: 그 구간의 주요 손동작을 하나 골라라(당기다·붓다·바르다·펴다·자르다·섞다·닦다·
   누르다·끼우다·열다·담다·닫다). 해당 없으면 "없음".
 - has_effect: 그 구간에 **원본 제작자가 넣은 지울 수 없는 시각 효과**가 있으면 true. 즉
@@ -84,43 +94,127 @@ _PROMPT = """이 영상을 보고 시간 순서대로 세그먼트로 나눠 대
   큰 텍스트 애니메이션이 박혀 있어 **깨끗한 요리/제품 원본이 아닌** 조각이면 true. 평범하게
   촬영된 요리/손동작/완성샷이면 false. (우리가 B롤로 재사용할 때 이물감이 생기는 조각을
   걸러내려는 것 — 확실할 때만 true, 애매하면 false.)
+- is_key: 이 구간이 **제품/도구의 기능·성능·장점·효과를 화면으로 실증**하거나(넓다·크다·쏙
+  들어간다·때가 빠진다를 실제 행동/결과로 보여줌), 요리·살림의 **핵심 방법을 손동작으로 보여주는**
+  구간이면 true. 단순 도입 상황·인물 등장·감상·완성 인사·CTA·링크유도면 false. (원본 제작자가
+  "이 대사에 이 장면"으로 맞춰둔 실증 페어를 골라내려는 것 — 대사가 기능을 설명하며 화면이 그걸
+  보여주면 true. 애매하면 false.)
+- shot_role: 화면의 성격을 하나 골라라(장면 스파인 슬롯 배치에 쓴다):
+  · "before" = 사용 전/문제 있는 상태(더러움·부스스한 룩·엉킴 등)
+  · "사용중" = 손이 재료/도구를 다루는 과정(조리·바르기·닦기·조립)
+  · "after"  = 사용 후 개선된 상태(before와 대비되는 깨끗/완성 룩)
+  · "완성"   = 완성된 결과물이 화면 주인공(완성 요리·완성품 클로즈업)
+  · "문제"   = 문제 상황을 보여주는 장면(불편·한계 부각)
+  · "기타"   = 그 외(인물 등장·배경·인사·CTA)
+- product_benefits: **자막도 나레이션도 없어도** 그 구간 화면만 보고 이 제품/도구의 **특장점을
+  한국어 문장 1~2개**로 뽑아라(예: "터치 한 번에 자동으로 열린다", "좁은 틈에 쏙 들어가 공간을
+  아낀다", "고급스러운 마감"). 요리·살림 소재면 방법 설명 대신 **결과의 매력**을 적어라(예:
+  "겉은 바삭 속은 촉촉하게 나온다"). 화면이 특장점을 안 보여주는 구간(인물 등장·인사·배경)이면
+  빈 배열. **추측으로 없는 기능을 만들지 마라** — 화면에 실제로 보이는 것만.
+
+★ 최상위 product_benefits: 위 구간별 특장점을 모아 **이 영상이 파는 제품/결과물의 핵심 특장점
+2~3개**를 한국어 문장으로 정리해라. 자막이 하나도 없는 영상이라 text가 전부 빈칸이 되더라도
+이 필드는 **반드시 채워라** — 이게 없으면 이 영상은 대본 재료로 못 쓰인다.
 
 full_text에는 모든 세그먼트의 text를 순서대로 이어붙여라. 맨 앞 훅부터 한 단어도 빠짐없이
 완전히 이어붙이고, 다른 텍스트는 없이 JSON만 출력."""
 
 
-def _assign_seg_ids(video_id, raw_segments):
-    """모델이 준 세그먼트 목록에 seg_id 부여 + 숫자 필드 float 캐스팅(순수함수)."""
+def _norm_benefits(raw):
+    """모델이 준 특장점 → 문장 리스트로 정규화(순수함수, fail-open).
+    필드 없음/None → []. 문장 하나(str)로 줘도 리스트로 감싼다(스키마는 배열이지만 모델이
+    가끔 문자열로 준다 — 무자막 소스를 살리는 유일한 재료라 여기서 흘리면 안 된다)."""
+    if not raw:
+        return []
+    if isinstance(raw, str):
+        raw = [raw]
+    return [s.strip() for s in raw if isinstance(s, str) and s.strip()]
+
+
+# 장면 스파인(2026-07-29): shot_role 확장어휘. 옛 추출본('조리')은 '사용중'으로 흡수하고,
+# 알 수 없는 값은 '기타'로 떨어뜨린다(fail-open — 스파인 배치가 크래시 없이 돈다).
+_SHOT_ROLE_VOCAB = {"before", "사용중", "after", "완성", "문제", "기타"}
+_SHOT_ROLE_ALIASES = {"조리": "사용중"}
+
+
+def _norm_shot_role(raw):
+    if raw in _SHOT_ROLE_VOCAB:
+        return raw
+    return _SHOT_ROLE_ALIASES.get(raw, "기타")
+
+
+def _collect_benefits(segments):
+    """세그먼트별 product_benefits → 소스 단위 집계(순서 보존 중복제거, 순수함수).
+    무자막 영상은 full_text가 0자라 이 집계가 대본 생성의 유일한 언어 재료다."""
     out = []
+    for seg in segments or []:
+        for b in _norm_benefits(seg.get("product_benefits")):
+            if b not in out:
+                out.append(b)
+    return out
+
+
+def _assign_seg_ids(video_id, raw_segments, motion_map=None):
+    """모델이 준 세그먼트 목록에 seg_id 부여 + 숫자 필드 float 캐스팅(순수함수).
+    motion_map({seg_id: level|None})이 오면 그 값을 motion_level로 싣는다(P2, 2026-07-29)."""
+    out = []
+    motion_map = motion_map or {}
     for n, seg in enumerate(raw_segments):
         raw_action = seg.get("action")
         if raw_action in (None, "", "없음") or raw_action not in action_dict.ACTION_VOCAB:
             raw_action = action_dict.tag_action(f"{seg.get('text', '')} {seg.get('scene_desc', '')}")
+        sid = f"{video_id}-{n}"
         out.append({
-            "seg_id": f"{video_id}-{n}",
+            "seg_id": sid,
             "start": float(seg.get("start") or 0.0),
             "end": float(seg.get("end") or 0.0),
             "text": seg.get("text", ""),
             "scene_desc": seg.get("scene_desc", ""),
             "action": raw_action,  # str 동사 or None
             "has_effect": bool(seg.get("has_effect")),  # 원본 효과 박힘 → B롤 제외용
+            "is_key": bool(seg.get("is_key")),           # 기능·장점 실증 앵커 (fail-open False)
+            "shot_role": _norm_shot_role(seg.get("shot_role")),  # 확장어휘, 옛값 매핑(fail-open 기타)
+            # 무자막 소스용 화면→특장점 문장 (fail-open []) — text가 빈칸이어도 대본 재료가 된다.
+            "product_benefits": _norm_benefits(seg.get("product_benefits")),
+            "motion_level": motion_map.get(sid),  # scene_cut 매핑 결과 or None(정보없음, fail-open)
         })
     return out
 
 
 def _boundary_hint(video_path):
-    """scene_cut 실제 장면전환 경계 → "약 3.6초, 8.5초, …" 힌트 문자열.
+    """scene_cut 실제 장면전환 경계 → (힌트문자열, cuts, fps).
     ffmpeg 실감지라 Gemini 자율 분할보다 세분화가 보장된다(실측: 99.8초 영상 5→18조각).
-    실패(ffmpeg 오류·컷 0/1개)면 빈 문자열 — 호출부가 경계 없는 기존 프롬프트로 폴백."""
+    실패(ffmpeg 오류)면 ("", [], 0.0) — 호출부가 경계 없는 기존 프롬프트로 폴백.
+    cuts·fps를 같이 반환하는 이유(P2, 2026-07-29): 모션레벨 계산(_compute_motion_map)이
+    같은 detect_cuts 결과를 재사용해 detect_cuts 중복 호출을 없앤다(frame_motion은
+    모션레벨 계산에서 별도로 1회 더 돈다 — 전체 ffmpeg 비용이 0이 되는 게 아니다)."""
     try:
         fps = scene_cut.video_fps(video_path)
         cuts = scene_cut.detect_cuts(video_path, threshold=0.3)
     except Exception:
-        return ""
+        return "", [], 0.0
     if not fps or len(cuts) < 2:
-        return ""
+        return "", cuts, fps
     secs = [round(a / fps, 1) for a, _ in cuts if a > 0]
-    return ", ".join(f"{s}초" for s in secs)
+    return ", ".join(f"{s}초" for s in secs), cuts, fps
+
+
+def _compute_motion_map(video_path, cuts, fps, raw_segments, video_id):
+    """detect_cuts 결과(cuts,fps 재사용) + 추출된 세그먼트(아직 seg_id 없음) + video_path
+    → {seg_id: level|None}. ffmpeg로 프레임모션을 재고 seg별 교집합 최대 컷의 레벨을 매핑.
+    cuts가 비었거나 어떤 예외든 fail-open(빈 dict, 전부 motion_level=None)."""
+    try:
+        if not cuts or not fps:
+            return {}
+        motion = scene_cut.frame_motion(video_path)
+        if not motion:
+            return {}
+        cuts_labeled = scene_cut.cut_motion(cuts, motion)
+        tmp_segs = [{"seg_id": f"{video_id}-{n}", "start": s.get("start", 0.0), "end": s.get("end", 0.0)}
+                    for n, s in enumerate(raw_segments)]
+        return scene_cut.map_segments_to_motion_levels(tmp_segs, cuts_labeled, fps)
+    except Exception:
+        return {}
 
 
 def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=8):
@@ -138,8 +232,9 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
     다른 모델이라 앞 모델의 혼잡과 무관하다."""
     if not SHORTS_GEMINI_KEYS:
         raise RuntimeError("script_extract: SHORTS_GEMINI_KEY가 설정되지 않았습니다")
+    boundary_hint, _cuts, _fps = _boundary_hint(video_path)
     prompt = _PROMPT.format(caption=caption or "(캡션 없음)",
-                            boundaries=_boundary_hint(video_path) or "(감지 실패 — 화면·주제 변화로 판단)")
+                            boundaries=boundary_hint or "(감지 실패 — 화면·주제 변화로 판단)")
     model = _MODEL
     primary_503 = 0
 
@@ -162,9 +257,15 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 ),
             )
             data = json.loads(resp.text)
+            motion_map = _compute_motion_map(video_path, _cuts, _fps, data.get("segments", []), video_id)
+            segments = _assign_seg_ids(video_id, data.get("segments", []), motion_map=motion_map)
+            # 소스 단위 특장점: 모델의 최상위 요약을 우선하고, 없으면 세그별 집계로 폴백.
+            # 무자막 영상(full_text 0자)이 대본 생성에서 통째로 빠지던 것을 막는 재료다.
+            benefits = _norm_benefits(data.get("product_benefits")) or _collect_benefits(segments)
             return {
-                "segments": _assign_seg_ids(video_id, data.get("segments", [])),
+                "segments": segments,
                 "full_text": data.get("full_text", ""),
+                "product_benefits": benefits,
             }
         except Exception as e:
             m = str(e)
@@ -198,3 +299,34 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 except Exception:
                     pass
     return dict(_EMPTY)
+
+
+def _frame_flag_on():
+    """frame_extract_enabled 설정 조회(실패·미설정 → False, fail-safe로 기존추출)."""
+    try:
+        from shopping_shorts.store import Store
+        from shopping_shorts.config import DB_PATH
+        return Store(DB_PATH).get_setting("frame_extract_enabled", "") == "1"
+    except Exception:
+        return False
+
+
+def extract_auto(video_path, video_id, caption="", *, use_frames=None,
+                 _frames_fn=None, _classic_fn=None):
+    """추출 디스패처(2026-07-29): 플래그 켜지면 B1 프레임추출, 아니면 기존 영상추출.
+    1단계 모든 추출 호출부가 이걸 쓰면 플래그 하나로 전 경로가 B1으로 전환된다.
+    B1이 빈 결과(컷 감지 실패 등)면 기존 추출로 폴백 — 빈 대본 금지.
+    use_frames=None이면 설정을 읽는다. _frames_fn/_classic_fn은 테스트 주입용."""
+    if use_frames is None:
+        use_frames = _frame_flag_on()
+    classic = _classic_fn or extract_script
+    if not use_frames:
+        return classic(video_path, video_id, caption=caption)
+    frames = _frames_fn
+    if frames is None:
+        from shopping_shorts import frame_script
+        frames = frame_script.extract_script_frames
+    r = frames(video_path, video_id, caption=caption)
+    if not (r or {}).get("segments"):
+        return classic(video_path, video_id, caption=caption)
+    return r

@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "date": "2026-07-23",
+    "broker": "Eugene Investment & Securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-25_1107_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "Eugene Investment & Securities",
+    "analyst": "양승윤",
+    "report_date": "07/22",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "삼성, CES 2027 휴머노이드 데모 모델 공개 추진, 삼성·LGD 로봇 디스플레이 선보여, 뉴로메카 협동로봇, HD현대로보틱스 IPO 탄력 등"
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "국산 무인수상정 해검 해외수출 추진, LIG D&A 페루 중남미 사무소 개소, 말레이시아 방공 사업, KAI 영 훈련기 수주전략 등"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "HD현대중공업 사우디 호위함 현지화, 삼성중공업 S&L와 FSMR 상용화 등"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "삼성전자",
+      "삼성디스플레이",
+      "뉴로메카",
+      "디아이씨",
+      "HD현대로보틱스",
+      "LIG넥스원",
+      "KAI",
+      "HD현대중공업",
+      "삼성중공업"
+    ],
+    "risk": null,
+    "quote": "테슬라 2Q 어닝콜에서 옵티머스에 대해 다음과 같이 업데이트. 1세대 생산라인을 설치 중이며 올해 후반기 양산 개시 기대. 옵티머스 생산 램프업은 일반적인 S-curve를 따르겠지만, 초기 구간은 매우 길고 평탄할 가능성이 높음. 신뢰성을 갖춘 설계 확보와 로봇 부품 공급망 구축의 어려움을 확인."
+  }
+}

@@ -5,22 +5,25 @@
     "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_1000_ESG snapshot.md"
   },
   "questionnaire": {
-    "target_kind": "market",
     "broker": "SK증권",
     "analyst": null,
     "report_date": "2026-06-05",
+    "target_kind": "market",
     "market_direction": null,
-    "macro_vars": [],
-    "recommended_sectors": [],
+    "macro_vars": [
+      "2026년 기업지배구조 보고서 제출 완료",
+      "코스피 829사 2026년 기업지배구조 보고서 제출"
+    ],
+    "recommended_sectors": null,
     "style": null,
     "event_calendar": [
       {
         "date": "2026-06-01",
-        "event": "코스피 829사가 2026년 기업지배구조 보고서 제출 완료"
+        "event": "2026년 기업지배구조 보고서 제출"
       }
     ],
     "top_picks": null,
     "risk": null,
-    "quote": "지난 6월1일까지 코스피 829사가 2026년 기업지배구조 보고서 제출을 완료했음"
+    "quote": "지난 6월1일까지 코스피 829사가 2026년 기업지배구조 보고서를 제출 완료했음"
   }
 }

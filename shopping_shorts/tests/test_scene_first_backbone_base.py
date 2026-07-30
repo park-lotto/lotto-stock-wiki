@@ -31,10 +31,10 @@ def test_backbone_base_uses_rich_generator_with_order_block():
     res = edit_plan.build_scene_first_plan(_SOURCES, "ref", 20, n_candidates=1, call=_cap,
                                            backbone_base=True, bank_context="[은행 훅] 이거 실화냐")
     p = seen["prompt"]
-    assert "화면 순서 뼈대" in p and "BB-1" in p and "BB-2" in p   # 백본 순서 제약
+    assert "백본 흐름" in p and "BB-1" in p and "BB-2" in p        # 백본 순서 제약(2026-07-27 헤더 개명)
     assert p.index("BB-1 [자르다]") < p.index("BB-2 [올리다]")      # 시간순 나열
-    assert "짤드라마" in p                                         # rich 스토리 헌장 그대로
-    assert "[은행 훅] 이거 실화냐" in p                             # 은행 부품 주입 그대로
+    assert "스파인" in p                                           # rich 스토리 생성(5단계 스파인) 그대로
+    assert "[은행 훅] 이거 실화냐" in p                             # 은행 parts 재주입(2026-07-27 우수라인 양념)
     # rich 스키마(스토리 필드·다중컷)로 생성 — 뼈다귀 스키마(beats+seg_id 단일) 회귀 방지.
     cand_props = seen["schema"]["properties"]["candidates"]["items"]["properties"]
     assert "story_person" in cand_props and "hook" in cand_props
@@ -58,6 +58,26 @@ def test_backbone_base_off_has_no_order_block():
 def test_backbone_order_block_empty_when_backbone_missing():
     assert edit_plan._backbone_order_block("없는영상", _SOURCES) == ""
     assert edit_plan._backbone_order_block("BB", []) == ""
+
+
+def test_backbone_order_block_has_replace_insert_guard():
+    """교체/삽입 지시가 예시 없는 추상 문장뿐이면 실사용에서 잘 안 지켜졌다(2026-07-30 실사고:
+    3영상 중 백본만 거의 다 들어가고 서브는 버려짐). 구체적 BAD/GOOD 예시 + 서브 소스 식별
+    규칙 + 서브 목록 명시 + '전부 최소 한 번씩' 강제 지시가 있는지 고정."""
+    block = edit_plan._backbone_order_block("BB", _SOURCES)
+    assert "(BAD)" in block and "(GOOD)" in block          # 패러프레이즈 구체 예시
+    assert "서브 소스 식별" in block                          # seg_id 접두사로 서브 구분 규칙
+    assert "서브 소스: S1" in block                          # 서브 소스를 이름으로 콕 집어줌
+    assert "각각을 최소 한 번씩" in block                      # 서브소스 전부 커버 강제(1개만 X)
+    assert "리액션/감상 문장" in block                        # 행위 안 맞아도 쓸 수 있는 대안 제시
+
+
+def test_backbone_order_block_no_sub_sources_note():
+    """서브 소스가 없는 단일 소스 영상이면 서브 강제 문구 대신 안내만."""
+    solo = [_SOURCES[0]]   # 백본(BB)만
+    block = edit_plan._backbone_order_block("BB", solo)
+    assert "서브 소스가 없다" in block
+    assert "각각을 최소 한 번씩" not in block
 
 
 def test_judge_picks_best_candidate():

@@ -1,0 +1,83 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-08_1104_0608(월) - 과열 청구서.md"
+  },
+  "questionnaire": {
+    "broker": "DS투자증권",
+    "analyst": "양형모",
+    "report_date": "2026.06.08",
+    "target_kind": "market",
+    "market_direction": "단기 조정 후 V자 반등을 전제로 강한 Buy를 제시해왔으나, 매크로와 펀더멘털이 겹친 복합 국면으로 즉각적 V자 반등을 단정하기 어려움",
+    "macro_vars": [
+      "연준 인하 기대",
+      "고용",
+      "금리",
+      "달러",
+      "유가",
+      "전쟁",
+      "밸류에이션"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "필수소비재",
+        "stance": "방어",
+        "reason": "순수 디펜시브로의 이동"
+      },
+      {
+        "sector": "헬스케어",
+        "stance": "방어",
+        "reason": "순수 디펜시브로의 이동"
+      },
+      {
+        "sector": "보험",
+        "stance": "방어",
+        "reason": "순수 디펜시브로의 이동"
+      },
+      {
+        "sector": "결제",
+        "stance": "방어",
+        "reason": "순수 디펜시브로의 이동"
+      }
+    ],
+    "style": "디레버리징",
+    "event_calendar": [
+      {
+        "date": "7월",
+        "event": "기업 실적 성장 등 촉매 도래"
+      }
+    ],
+    "top_picks": [
+      "Broadcom",
+      "NVIDIA",
+      "xAI",
+      "SpaceX",
+      "Microsoft",
+      "애플",
+      "엑슨모빌",
+      "버크셔 해서웨이",
+      "P&G",
+      "코카콜라",
+      "존슨앤드존슨",
+      "월마트",
+      "마스터카드",
+      "일라이릴리",
+      "비자",
+      "프로그레시브",
+      "유니온퍼시픽",
+      "처브",
+      "웰타워",
+      "마이크론",
+      "AMD",
+      "테슬라",
+      "Intel",
+      "Meta Platforms",
+      "Lam Research",
+      "Oracle",
+      "Amazon.com"
+    ],
+    "risk": "밸류에이션 부담, 매크로 변수(연준 금리 인상), AI 수익성 의문",
+    "quote": "단기 조정 후 V자 반등을 전제로 강한 Buy를 제시해왔다. 그러나 이번은 매크로와 펀더멘털이 겹친 복합 국면이라, 즉각적 V자 반등을 단정하기는 어렵다."
+  }
+}

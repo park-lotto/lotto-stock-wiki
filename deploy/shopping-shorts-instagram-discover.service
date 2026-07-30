@@ -1,0 +1,11 @@
+[Unit]
+Description=Shopping Shorts 인스타 신규채널 발굴(무료 Playwright 경로, 자동등록)
+After=network.target shopping-shorts.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/lotto-stock-wiki
+EnvironmentFile=/etc/shopping-shorts.env
+# 앱과 동일한 파이썬/모듈 경로. discover_jobs가 config.DB_PATH(모듈 기준 고정)에 씀.
+ExecStart=/usr/bin/python3 -m scripts.daily_instagram_discover

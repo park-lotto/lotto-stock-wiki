@@ -10,11 +10,21 @@
 2026-07-18: 렌즈 유사영상 개편으로 채널명·좋아요·조회수·영상길이·숏폼여부 메타 추가.
 실제 액터 응답의 정확한 필드명을 라이브로 확인하지 못해 여러 후보 경로를 방어적으로
 훑고, 없으면 빈칸/None으로 둔다(그 칸만 표시 안 됨). url/title/thumbnail은 기존과 동일."""
+from datetime import datetime, timezone
+
 from shopping_shorts.apify_client import _run_with_rotation
 from shopping_shorts.config import APIFY_TOKENS
 
 _ACTOR = "zen-studio~rednote-search-scraper"
 _SHORT_MAX_SECS = 90   # 이 이하(또는 길이 불명)면 숏폼으로 본다
+
+
+def _iso(unix_ts):
+    """유닉스초 → ISO(UTC). 변환 불가면 빈 문자열."""
+    try:
+        return datetime.fromtimestamp(int(unix_ts), tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    except (TypeError, ValueError, OSError):
+        return ""
 
 
 def _num(v):
@@ -100,5 +110,42 @@ def search(keyword, max_results=10, token=None, timeout=180, poll_interval=5):
                                  ("engagement", "viewed_count"))),
             "duration": dur,
             "is_short": dur is None or dur <= _SHORT_MAX_SECS,
+        })
+    return out
+
+
+def search_full(keyword, max_results=40, token=None, timeout=180, poll_interval=5):
+    """키워드 → build_overseas_items 스키마 raw dict. 영상 노트만, video_id 없으면 제외.
+    샤오홍슈는 조회수 필드가 없어 views=0(표시용), 랭킹은 참여로 간다."""
+    tokens = [token] if token else APIFY_TOKENS
+    if not tokens:
+        raise RuntimeError("xiaohongshu_search: APIFY_TOKEN이 설정되지 않았습니다")
+    payload = {"keywords": [keyword], "maxResults": max_results,
+               "noteType": "video", "topUpFromOtherSorts": False}
+    items = _run_with_rotation(payload, tokens, timeout, poll_interval, actor=_ACTOR)
+    out = []
+    for item in items:
+        vid = item.get("id")
+        url = item.get("url")
+        video = item.get("video") or {}
+        if not vid or not url or item.get("type") != "video" or not video.get("url_720p"):
+            continue
+        eng = item.get("engagement") or {}
+        out.append({
+            "video_id": str(vid),
+            "title": item.get("title") or item.get("desc", ""),
+            "published_at": _iso(item.get("timestamp")),
+            "views": 0,
+            "likes": _num(_first(eng, "liked_count", "likedCount")) or 0,
+            "comments": _num(_first(eng, "comments_count", "commentsCount", "comment_count")) or 0,
+            "collects": _num(_first(eng, "collected_count", "collectedCount")) or 0,
+            "shares": _num(_first(eng, "shared_count", "sharedCount")) or 0,
+            "channel_title": _first(item, ("author", "nickname"), ("author", "name")) or "",
+            "channel_id": str(_first(item, ("author", "userid"), ("author", "user_id"),
+                                     ("author", "id")) or ""),  # 프로필URL 조립·계정 발굴 집계용
+            "thumbnail": _cover(item, video),
+            "url": url,
+            "media_platform": "xiaohongshu",
+            "duration": _duration_secs(item, video),
         })
     return out

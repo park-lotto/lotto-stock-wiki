@@ -23,8 +23,9 @@ def test_visual_verb_beat_anchored_not_respined():
     assert verb_beat["narration"] == "결대로 찢어진다"
     assert verb_beat["primary"]["start"] == 2.0        # 모델이 고른 그대로
     assert verb_beat.get("respined") is not True        # 앵커 = respined 아님
-    # 나머지 body(훅·실용)만 시간순 재배치, cta는 꼬리 앵커
-    assert out[0]["primary"]["start"] == 8.0 and out[2]["primary"]["start"] == 10.0
+    # 머리(훅) 앵커 고정 / 나머지 movable(실용)만 시간순, cta는 꼬리 앵커
+    assert out[0]["primary"]["start"] == 10.0           # 머리(훅) 앵커 고정
+    assert out[2]["primary"]["start"] == 8.0            # 실용(movable)
     assert out[-1]["primary"]["start"] == 6.0           # 꼬리 앵커 고정
 
 
@@ -47,9 +48,11 @@ def test_missing_visual_verb_key_treated_as_movable():
               "primary": {"video_id": "A", "seg_id": "A-5", "start": 5.0, "end": 6.0,
                           "scene_desc": ""}, "alternates": [], "fit": 1}]
     out = _chronological_respine(beats)
-    # body(a,b) 시간순 재배치 → 2.0, 9.0 / cta 앵커 5.0
-    assert [b["primary"]["start"] for b in out] == [2.0, 9.0, 5.0]
-    assert out[0]["respined"] is True and out[1]["respined"] is True
+    # 머리(a) 앵커 9.0 고정 / 중간 movable(b) 2.0 / cta 꼬리 앵커 5.0
+    assert [b["primary"]["start"] for b in out] == [9.0, 2.0, 5.0]
+    # 머리·꼬리는 앵커(respined 아님), 중간 body(b)만 respined
+    assert out[0].get("respined") is not True and out[1]["respined"] is True
+    assert out[-1].get("respined") is not True
 
 
 def test_all_body_visual_verb_only_tail_movable_pool_empty():

@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-27_0803_상반기 부정적 영향은 해소되는 중.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "김성래, 김예인",
+    "report_date": "2026년 7월 24일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "현대차",
+        "code": "005380",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "760,000원",
+        "tp_prev": "760,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26_revenue": "49.2조원",
+          "2Q26_op_profit": "2.85조원",
+          "2Q26_opm": "5.8%"
+        },
+        "estimate_revision": {
+          "revenue_forecast": "192,984 십억 원",
+          "op_profit_forecast": "11,517 십억 원"
+        },
+        "next_catalyst": "8월 RMAC 활용한 Atlas 상용화 개발 진척도, '27년 신차 사이클",
+        "thesis": [
+          "상반기 발생했던 공급 차질 해소 및 수익성 부담 요인 점진적 완화",
+          "하반기 엘란트라, 투싼, GV80 HEV 등 신차 확대에 따른 믹스 개선 및 판매량 증가 기대",
+          "소프트뱅크 풋옵션 행사에 따른 HMG Global 간접 지분 증가 및 RMAC 중심의 로봇 양산 개발 가속화"
+        ],
+        "valuation_basis": "주당 영업가치와 BD 지분가치 합산 반영",
+        "risk": "글로벌 완성차 수요 둔화 지속 및 원자재가 변동",
+        "supply_comment": "엔진밸브 공급 차질에 따른 제네시스 등 일부 고수익 차종 물량 차질 발생",
+        "quote": "글로벌 수요 저성장 우려는 지속되겠으나, 상반기 발생되었던 공급 차질은 해소된 상황이고, 하반기 수익성 부담 요인 또한 점진적으로 완화될 것으로 전망."
+      }
+    ],
+    "sector": "자동차"
+  }
+}

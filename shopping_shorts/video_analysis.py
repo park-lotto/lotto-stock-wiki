@@ -100,7 +100,10 @@ def _client_for_key(key):
     return _client_cache[key]
 
 
-def _wait_until_active(client, file_obj, max_wait_s=60, poll_interval=2):
+def _wait_until_active(client, file_obj, max_wait_s=180, poll_interval=2):
+    # 대기 상한 180초(2026-07-29): 예전 60초는 조급해서 '조금 느린' 영상(길거나·제미니가 잠깐
+    # 붐빌 때)이 준비 전에 실패로 던져져 빈 추출→대본이 짧아졌다(5a8e089d 10초 실사고). 제미니는
+    # 재업로드해도 다시 PROCESSING부터라 조급하게 끊는 이득이 없다 — 실제 준비될 때까지 기다린다.
     waited = 0
     state = file_obj.state.name
     while state == "PROCESSING" and waited < max_wait_s:
@@ -348,15 +351,75 @@ def subject_tags_vision(image_bytes, caption, max_retries=3, quota_sleep=8):
     return {}
 
 
+_TEXT_LEVEL_PROMPT = """이 이미지는 SNS 숏폼 영상의 썸네일이다. 화면에 박힌 글자(제목·자막·설명
+텍스트)가 원본 장면(제품·사람·배경)을 얼마나 가리는지 판단하라.
+- none: 화면에 텍스트가 거의/전혀 없음
+- light: 작은 워터마크·짧은 자막 정도, 원본 장면이 잘 보임
+- heavy: 큰 제목 텍스트·자막이 화면 상당 부분을 가려 원본 장면이 잘 안 보임
+JSON만: {"text_level": "none"|"light"|"heavy"}"""
+
+_TEXT_LEVEL_SCHEMA = {
+    "type": "object",
+    "properties": {"text_level": {"type": "string", "enum": ["none", "light", "heavy"]}},
+    "required": ["text_level"],
+}
+
+
+def text_level_vision(image_bytes, max_retries=3, quota_sleep=8):
+    """썸네일 이미지 → 자막/텍스트 오버레이 정도 {"text_level": "none"|"light"|"heavy"}.
+    해외HOT 발굴에서 자막 없는 원본 소스 영상만 골라내기 위한 판정(2026-07-29). 실패·키없음 시 {}
+    (overseas_funnel.passes_caption_clutter가 판정없는 항목은 통과시키므로 과필터 안 됨)."""
+    if not image_bytes or not SHORTS_GEMINI_KEYS:
+        return {}
+    for attempt in range(max_retries):
+        key, idx = comment_gen._current_key_and_idx()
+        if key is None:
+            return {}
+        try:
+            client = _client_for_key(key)
+            resp = client.models.generate_content(
+                model=_TRANSLATE_MODEL,  # flash-lite — 썸네일 1장이라 가벼운 모델로 충분
+                contents=[_TEXT_LEVEL_PROMPT, types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=_TEXT_LEVEL_SCHEMA,
+                ),
+            )
+            data = json.loads(resp.text)
+            level = (data.get("text_level") or "").strip()
+            if level not in ("none", "light", "heavy"):
+                return {}
+            return {"text_level": level}
+        except Exception as e:
+            if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
+                comment_gen._mark_key_exhausted(idx)
+                continue
+            if key_vault.is_quota_error(e):
+                time.sleep(quota_sleep)
+                continue
+            if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
+                time.sleep((attempt + 1) * 5)
+                continue
+            return {}
+    return {}
+
+
+def _referer_for(url):
+    """CDN 핫링크 차단 우회용 Referer. xhscdn(샤오홍슈)은 인스타 Referer로는 막힌다(2026-07-29 실측)."""
+    if "xhscdn.com" in url or "rednote.com" in url:
+        return "https://www.rednote.com/"
+    return "https://www.instagram.com/"
+
+
 def fetch_thumb_bytes(url, timeout=15):
-    """썸네일 URL → 이미지 bytes. 인스타 CDN 핫링크 차단 우회 헤더 포함. 실패 시 None."""
+    """썸네일 URL → 이미지 bytes. 인스타/샤오홍슈 CDN 핫링크 차단 우회 헤더 포함. 실패 시 None."""
     if not url:
         return None
     try:
         import requests
         r = requests.get(url, timeout=timeout, headers={
             "User-Agent": "Mozilla/5.0",
-            "Referer": "https://www.instagram.com/",
+            "Referer": _referer_for(url),
         })
         r.raise_for_status()
         return r.content

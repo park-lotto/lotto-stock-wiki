@@ -14,13 +14,16 @@ git fetch origin main --quiet 2>>"$LOG" || { echo "$(date '+%F %T') fetch실패"
 LOCAL=$(git rev-parse HEAD); REMOTE=$(git rev-parse origin/main)
 [ "$LOCAL" = "$REMOTE" ] && exit 0
 echo "$(date '+%F %T') 새커밋 ${LOCAL:0:7}->${REMOTE:0:7} 배포시작" >>"$LOG"
-# [2026-07-19] 렌더 중 배포 연기: 최종 렌더는 shopping-shorts 프로세스 내 백그라운드 작업이라
-# systemctl restart가 진행 중 렌더를 SIGKILL한다(job status가 'rendering'에 얼어붙어 UI 무한 '렌더 중').
-# 들어온 변경이 shopping_shorts/를 건드려(=재시작 유발) 살아있는 렌더가 있으면 이번 배포를 통째로
-# 미루고 다음 크론(3분)에 재시도한다. dashboard/scripts만 바뀐 배포는 여기 안 걸림(렌더 무관).
-# ★좀비 가드: 30분 넘게 status 안 바뀐 렌더는 죽은 것으로 보고 미루지 않는다 — 안 그러면 죽은 job
-#   하나가 모든 배포를 영영 막는다(배포 멈춤은 이 repo 역사상 최악 사고, 9번 규칙 참고).
-# ★DB 읽기 실패도 '렌더 없음'(exit 1)으로 처리 = 배포 진행이 안전(멈춤보다 낫다).
+# [2026-07-29 독립워커] 긴 작업(믹스·해외HOT 수집)이 전부 job_queue를 거치고, 실행은 서버가
+# 아니라 별도 systemd 서비스(shopping-shorts-worker)가 한다. 그래서 판정이 단순해졌다:
+#   - 서버(shopping-shorts)는 안에 긴 작업이 없으므로 **언제든 재시작해도 안전** → 배포를 안 미룬다.
+#   - 워커만 진행 중인 작업이 있으면 재시작을 미룬다(다음 크론 3분 뒤 재시도).
+# 예전 가드(2026-07-19)는 mix_jobs의 rendering 상태만 봐서, 해외HOT 수집(프로세스 메모리에만
+# 있었음)과 믹스 매칭 단계가 그물에 안 걸렸다 — 배포가 그걸 죽였다(2026-07-29 하루 3건 실사고).
+# ★좀비 가드: heartbeat는 워커가 30초마다 찍는다. 2분 넘게 안 뛰면 죽은 워커로 보고 안 미룬다
+#   (죽은 job 하나가 배포를 영영 막는 게 이 repo 역사상 최악 사고, 9번 규칙 참고).
+# ★DB 읽기 실패도 '진행 중 없음'(exit 1)으로 처리 = 배포 진행이 안전(멈춤보다 낫다).
+WORKER_BUSY=0
 DEPLOY_CHANGED=$(git diff --name-only "$LOCAL" origin/main)
 if echo "$DEPLOY_CHANGED" | grep -qE '^shopping_shorts/'; then
   if python3 - <<'PY' 2>>"$LOG"
@@ -28,22 +31,20 @@ import sqlite3, sys
 try:
     con = sqlite3.connect("/home/ubuntu/lotto-stock-wiki/shopping_shorts/data/reference.db", timeout=5)
     n = con.execute(
-        # updated_at은 파이썬 ISO형('...T...+00:00')이라 SQLite 표준형(공백구분)과
-        # 문자열 비교하면 'T'>' '로 항상 크게 나와 좀비 가드가 무력화된다(실측 2026-07-19).
-        # datetime(updated_at)로 정규화해야 시각 비교가 맞다.
-        # ★2026-07-24: 최종 렌더(status)뿐 아니라 **미리보기(preview_status='rendering')**도
-        #   본다 — 예전엔 preview를 안 봐서 재시작이 미리보기 ffmpeg를 계속 죽였다(사장님 실측).
-        "SELECT COUNT(*) FROM mix_jobs "
-        "WHERE (status IN ('rendering','removing_subtitles') OR preview_status='rendering') "
-        "AND datetime(updated_at) > datetime('now','-30 minutes')").fetchone()[0]
-    sys.exit(0 if n > 0 else 1)   # exit 0 = 살아있는 렌더 있음 → 배포 연기
+        # heartbeat_at은 SQLite datetime('now') 표준형(공백구분)으로 저장된다 —
+        # 파이썬 ISO형('...T...')과 섞이면 문자열 비교가 깨지므로 datetime()으로 정규화한다
+        # (2026-07-19에 그 함정을 한 번 밟았다).
+        "SELECT COUNT(*) FROM job_queue "
+        "WHERE state='running' "
+        "AND datetime(heartbeat_at) > datetime('now','-2 minutes')").fetchone()[0]
+    sys.exit(0 if n > 0 else 1)   # exit 0 = 진행 중 작업 있음 → 워커 재시작만 연기
 except Exception as e:
-    print("render_check 오류(배포진행): %r" % e)
+    print("queue_check 오류(배포진행): %r" % e)
     sys.exit(1)
 PY
   then
-    echo "$(date '+%F %T') 렌더 중 → shopping_shorts 배포 연기(다음 크론 재시도) ${REMOTE:0:7}" >>"$LOG"
-    exit 0
+    WORKER_BUSY=1
+    echo "$(date '+%F %T') 작업 진행 중 → worker 재시작만 연기(서버는 재시작) ${REMOTE:0:7}" >>"$LOG"
   fi
 fi
 # [2026-07-16] pull --ff-only → reset --hard: 서버는 main의 '거울'이지 작업 사본이 아니다.
@@ -61,6 +62,13 @@ if git reset --hard origin/main >>"$LOG" 2>&1; then
   fi
   if echo "$CHANGED" | grep -qE '^shopping_shorts/'; then
     sudo systemctl restart shopping-shorts >>"$LOG" 2>&1 && echo "$(date '+%F %T') shopping-shorts 재시작완료 $(git rev-parse --short HEAD)" >>"$LOG"
+    # 워커는 진행 중 작업이 있으면 건너뛴다 — 재시작하면 그 작업이 죽는다(이 전환의 목적).
+    # 건너뛰어도 다음 크론(3분)이 다시 시도하므로, 작업이 끝나는 대로 새 코드로 갈아탄다.
+    if [ "$WORKER_BUSY" = "0" ]; then
+      sudo systemctl restart shopping-shorts-worker >>"$LOG" 2>&1 && echo "$(date '+%F %T') worker 재시작완료 $(git rev-parse --short HEAD)" >>"$LOG"
+    else
+      echo "$(date '+%F %T') worker 재시작 연기(작업 진행 중) $(git rev-parse --short HEAD)" >>"$LOG"
+    fi
   fi
   if ! echo "$CHANGED" | grep -qE '^dashboard/|^scripts/|^shopping_shorts/'; then
     echo "$(date '+%F %T') 코드변경없음(데이터/문서만) 재시작생략 $(git rev-parse --short HEAD)" >>"$LOG"

@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-08_1104_고삐 풀린 원화, 잡을 수 있나.md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "박상현",
+    "report_date": "2026-06-08",
+    "target_kind": "market",
+    "market_direction": "달러 강세 및 원화 약세",
+    "macro_vars": [
+      "미국-이란간 종전 협상 교착상태",
+      "5월 고용지표 서프라이즈",
+      "미 연준 금리인상 기대감 강화",
+      "미국 증시 조정",
+      "외국인의 대규모 주식순매도",
+      "글로벌 주요국 국채 금리 반등"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-06-08",
+        "event": "HI FX Brief 발간"
+      }
+    ],
+    "top_picks": null,
+    "risk": "반도체 주가 조정을 중심으로 한 글로벌 증시 조정(위험자산 선호 심리 약화), 미국 5월 소비자물가에 대한 경계감, 미국-이란간 종전 협상 불확실성 지속, 외국인의 국내 주식 순매도",
+    "quote": "금주 달러-원 환율 밴드는 1,530~1,590원으로 예상함"
+  }
+}

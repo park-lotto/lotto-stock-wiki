@@ -182,12 +182,39 @@ class Store:
                     extracted_at TEXT
                 )
             """)
+            # 담긴 영상 자동 대본적재의 '시도 래치'(2026-07-26) — shortcode당 1행.
+            # ★이 표가 있는 이유: 예전 자동추출은 성공/실패를 클라이언트 메모리와
+            #   HANDOFF 객체 필드에만 남겼다. HANDOFF는 _restoreWork 등에서 배열 통째로
+            #   재대입되므로 그 표시가 통째로 날아가고 → 다시 '미추출'로 보여 재추출 →
+            #   무한 루프로 AI 크레딧을 태웠다(2026-07-26 실사고, revert cb8c0fa1d).
+            #   그래서 시도 횟수를 **DB에** 남긴다. 계정 무관(shortcode 전역)인 이유:
+            #   전사가 안 되는 영상은 누가 담아도 안 되기 때문 — 고객마다 다시 태울 이유가 없다.
+            #   script_extracts에 못 두는 이유: 다운로드 자체가 실패하면 그 표에 행이 아예 안 생긴다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS produce_autoload (
+                    shortcode TEXT PRIMARY KEY,
+                    attempts INTEGER NOT NULL DEFAULT 0,
+                    last_error TEXT,
+                    updated_at TEXT
+                )
+            """)
             # 랭킹 검색용 썸네일 비전 주제태그(2026-07-19) — shortcode당 1행, 있으면 재호출 안 함(무과금).
             c.execute("""
                 CREATE TABLE IF NOT EXISTS vision_tags (
                     shortcode TEXT PRIMARY KEY,
                     subject TEXT,
                     keywords_json TEXT,
+                    created_at TEXT
+                )
+            """)
+            # 해외HOT 썸네일 자막등급 캐시(2026-07-29) — shortcode당 1행.
+            # 생존자 전부를 비전판정하게 넓히면서 Gemini 쿼터를 지키려고 둔다
+            # (쿼터 소진으로 검열 성공률 29%까지 떨어진 전례: gemini_audit.py).
+            # 판정 실패는 저장하지 않는다 — 다음 수집에서 재시도돼야 한다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS thumb_text_level (
+                    shortcode  TEXT PRIMARY KEY,
+                    level      TEXT,
                     created_at TEXT
                 )
             """)
@@ -393,7 +420,8 @@ class Store:
                     fx_path TEXT,
                     scene_first INTEGER NOT NULL DEFAULT 0,
                     candidates_json TEXT,
-                    backbone_main INTEGER
+                    backbone_main INTEGER,
+                    product_json TEXT
                 )
             """)
             c.execute("""
@@ -501,6 +529,31 @@ class Store:
                 )
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_psnap ON platform_snapshots(platform, shortcode, id)")
+            # 샤오홍슈 계정 발굴 누적 로그(2026-07-29) — 하루 1행/계정(같은날 재발굴은 덮어씀).
+            # '며칠째 반복해서 뜨나'(appear_days)로 우연 1회를 검증된 계정과 구분한다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS xhs_discovery_log (
+                    userid TEXT NOT NULL,
+                    run_date TEXT NOT NULL,
+                    engagement_sum INTEGER,
+                    note_count INTEGER,
+                    nickname TEXT,
+                    PRIMARY KEY (userid, run_date)
+                )
+            """)
+            # 인스타 계정 발굴 누적 로그(2026-07-30) — 하루 1행/계정(같은날 재발굴은 덮어씀).
+            # xhs_discovery_log와 동일 패턴(참여도=좋아요+댓글 합산). media info REST 보강으로
+            # 상위 표본은 실제 좋아요·댓글수를 얻을 수 있다는 걸 확인해 engagement_sum으로 교체.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS ig_discovery_log (
+                    username TEXT NOT NULL,
+                    run_date TEXT NOT NULL,
+                    engagement_sum INTEGER,
+                    post_count INTEGER,
+                    full_name TEXT,
+                    PRIMARY KEY (username, run_date)
+                )
+            """)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS youtube_channel_cache (
                     seed_value TEXT PRIMARY KEY,
@@ -628,6 +681,18 @@ class Store:
                     updated_at TEXT NOT NULL
                 )
             """)
+            # 수집 비동기 잡(2026-07-25): 200채널 Apify를 HTTP 요청 안에서 동기로 돌리면
+            # 40분 걸려 게이트웨이 타임아웃 500이 난다. census와 같은 job 패턴으로 분리.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS collect_jobs (
+                    job_id TEXT PRIMARY KEY,
+                    status TEXT NOT NULL,
+                    result_json TEXT,
+                    error TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
             # ★유튜브 로컬 릴레이 큐(2026-07-24): 서버(데이터센터 IP)는 유튜브 쇼츠 다운로드가
             # 봇차단이라, 사장님 PC(주거용 IP) 에이전트가 대신 받아 서버로 올린다. 서버는 여기
             # 요청을 넣고 done될 때까지 폴링한다. 상태: pending→done|failed.
@@ -691,6 +756,10 @@ class Store:
                 # urls 인덱스(0-based). None=자동 선정(인스타/유튜브·댓글수 규칙). run_mix_job이
                 # 이 인덱스를 추출 소스의 video_id로 풀어 backbone_forced로 넘긴다.
                 ("backbone_main", "INTEGER"),
+                # 쿠팡 연결 상품(2026-07-28) — 이 영상이 팔 상품 1건(링크·파트너스
+                # 추적링크·인포크 등록여부). 링크는 영상에 안 들어가고 SEO 설명란·
+                # 인포크링크 등록에서만 꺼내 쓴다.
+                ("product_json", "TEXT"),
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -772,6 +841,30 @@ class Store:
                     resolved INTEGER DEFAULT 0
                 )
             """)
+            # 독립워커 작업큐(2026-07-29) — 긴 작업(믹스·해외HOT 수집)을 서버 프로세스 밖으로
+            # 뺀다. 예전엔 BackgroundTasks라 배포의 systemctl restart가 진행 중 작업을
+            # SIGKILL했다(2026-07-29 실측: 하루에 수집 1건·믹스 1건 사망).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS job_queue (
+                    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                    task         TEXT NOT NULL,
+                    args_json    TEXT NOT NULL,
+                    state        TEXT NOT NULL,
+                    error        TEXT,
+                    created_at   TEXT NOT NULL,
+                    claimed_at   TEXT,
+                    heartbeat_at TEXT,
+                    finished_at  TEXT
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_job_queue_state "
+                      "ON job_queue(state, id)")
+            # 진행상황(phase·count) 실어보내기(2026-07-29 Critical fix) — 서버·워커가 별개
+            # 프로세스라 워커 안의 phase/count가 서버에 안 보였다. 큐에 실어 넘긴다.
+            try:
+                c.execute("ALTER TABLE job_queue ADD COLUMN progress TEXT")
+            except sqlite3.OperationalError:
+                pass  # 이미 존재
             self._migrate_personal_tables(c)
             self._ensure_paywall_schema(c)
 
@@ -1183,6 +1276,64 @@ class Store:
                              "ORDER BY added_at ASC, rowid ASC", (platform,)).fetchall()
         return [{"kind": r[0], "value": r[1], "added_at": r[2] or ""} for r in rows]
 
+    # ── 샤오홍슈 계정 발굴 블랙리스트(사장님이 쳐낸 계정 영구 제외) ──
+    # platform_seeds 재사용: platform="xiaohongshu", kind="xhs_blacklist", value=userid.
+    def xhs_blacklist_add(self, userid):
+        self.add_seed("xiaohongshu", "xhs_blacklist", str(userid))
+
+    def xhs_blacklist_list(self):
+        return {s["value"] for s in self.list_seeds("xiaohongshu")
+                if s["kind"] == "xhs_blacklist"}
+
+    # ── 계정 발굴 누적(관측 기반: 돌릴 때마다 1관측 → 자주 돌리면 빨리 검증) ──
+    def xhs_discovery_record(self, run_ts, accounts):
+        """이번 발굴을 누적 로그에 append. run_ts는 매 발굴마다 다른 타임스탬프라
+        같은 계정이라도 발굴 1회 = 1행(관측)으로 쌓인다(같은 날 여러 번도 각각 셈)."""
+        with self._conn() as c:
+            c.executemany(
+                "INSERT OR REPLACE INTO xhs_discovery_log"
+                "(userid, run_date, engagement_sum, note_count, nickname) VALUES(?,?,?,?,?)",
+                [(a["userid"], run_ts, int(a.get("engagement_sum") or 0),
+                  int(a.get("note_count") or 0), a.get("nickname") or "") for a in accounts])
+
+    def xhs_discovery_stats(self):
+        """userid → {appear_count(관측 횟수), appear_days(등장 일수), cum_engagement, last_seen}."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT userid, COUNT(*), COUNT(DISTINCT substr(run_date,1,10)), "
+                "SUM(engagement_sum), MAX(run_date) "
+                "FROM xhs_discovery_log GROUP BY userid").fetchall()
+        return {r[0]: {"appear_count": r[1], "appear_days": r[2],
+                       "cum_engagement": int(r[3] or 0), "last_seen": r[4] or ""} for r in rows}
+
+    # ── 인스타 계정 발굴 블랙리스트(사장님이 쳐낸 계정 영구 제외) ──
+    # platform_seeds 재사용: platform="instagram", kind="ig_blacklist", value=username(소문자).
+    def ig_blacklist_add(self, username):
+        self.add_seed("instagram", "ig_blacklist", str(username).lower())
+
+    def ig_blacklist_list(self):
+        return {s["value"] for s in self.list_seeds("instagram")
+                if s["kind"] == "ig_blacklist"}
+
+    # ── 인스타 계정 발굴 누적(참여도 기반) — xhs_discovery_record/stats와 동일 패턴 ──
+    def ig_discovery_record(self, run_ts, accounts):
+        with self._conn() as c:
+            c.executemany(
+                "INSERT OR REPLACE INTO ig_discovery_log"
+                "(username, run_date, engagement_sum, post_count, full_name) VALUES(?,?,?,?,?)",
+                [(a["username"].lower(), run_ts, int(a.get("engagement_sum") or 0),
+                  int(a.get("post_count") or 0), a.get("full_name") or "") for a in accounts])
+
+    def ig_discovery_stats(self):
+        """username(소문자) → {appear_count(관측 횟수), appear_days(등장 일수), cum_engagement, last_seen}."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT username, COUNT(*), COUNT(DISTINCT substr(run_date,1,10)), "
+                "SUM(engagement_sum), MAX(run_date) "
+                "FROM ig_discovery_log GROUP BY username").fetchall()
+        return {r[0]: {"appear_count": r[1], "appear_days": r[2],
+                       "cum_engagement": int(r[3] or 0), "last_seen": r[4] or ""} for r in rows}
+
     # ── 플랫폼 스코프 스냅샷(가속 계산용) ──
     def save_run_platform(self, platform, run_date, rows):
         with self._conn() as c:
@@ -1338,6 +1489,62 @@ class Store:
             )
             return True
 
+    def produce_pick_add(self, shortcode, customer_id=LEGACY_CUSTOMER_ID):
+        """'담기'만 하는 멱등 버전(토글 아님). 이미 담겨 있으면 아무것도 안 하고 False.
+        ⚠️ 자동적재는 절대 produce_pick_toggle을 쓰면 안 된다 — 이미 담긴 걸 두 번째
+        호출에서 **빼버려** AI PICK이 사라진다(교집합에서 탈락, app.py _load_work_sources)."""
+        with self._conn() as c:
+            exists = c.execute(
+                "SELECT 1 FROM produce_script_picks WHERE customer_id=? AND shortcode=?",
+                (customer_id, shortcode),
+            ).fetchone()
+            if exists:
+                return False
+            c.execute(
+                "INSERT INTO produce_script_picks(customer_id, shortcode, added_at) "
+                "VALUES(?,?, datetime('now'))",
+                (customer_id, shortcode),
+            )
+            return True
+
+    def produce_pick_remove(self, shortcode, customer_id=LEGACY_CUSTOMER_ID):
+        """'빼기'만 하는 멱등 버전. 없으면 조용히 넘어간다(토글처럼 되살리지 않는다).
+        ✕로 뺀 영상이 서버 담김 버킷에 남으면 AI PICK이 그 영상을 계속 후보로 본다."""
+        with self._conn() as c:
+            c.execute("DELETE FROM produce_script_picks WHERE customer_id=? AND shortcode=?",
+                      (customer_id, shortcode))
+
+    def autoload_attempts(self, shortcodes):
+        """{shortcode: 지금까지 자동적재를 시도한 횟수}. 미시도는 키 없음."""
+        scs = [s for s in dict.fromkeys(shortcodes or []) if s]
+        if not scs:
+            return {}
+        ph = ",".join("?" * len(scs))
+        with self._conn() as c:
+            rows = c.execute(
+                f"SELECT shortcode, attempts FROM produce_autoload WHERE shortcode IN ({ph})", scs
+            ).fetchall()
+        return {r[0]: r[1] or 0 for r in rows}
+
+    def autoload_mark_attempt(self, shortcode):
+        """추출을 **시작하기 전에** 시도 횟수를 올린다(선(先)래치).
+        나중에 올리면 타임아웃·프로세스 재시작으로 표시가 안 남아 재시도 루프가 산다."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO produce_autoload(shortcode, attempts, updated_at) "
+                "VALUES(?,1,datetime('now')) ON CONFLICT(shortcode) DO UPDATE SET "
+                "attempts=produce_autoload.attempts+1, updated_at=datetime('now')",
+                (shortcode,),
+            )
+
+    def autoload_mark_error(self, shortcode, error):
+        """실패 사유 기록(진단용). attempts는 이미 선래치에서 올라가 있다."""
+        with self._conn() as c:
+            c.execute(
+                "UPDATE produce_autoload SET last_error=?, updated_at=datetime('now') "
+                "WHERE shortcode=?", ((error or "")[:300], shortcode),
+            )
+
     def produce_pick_shortcodes(self, customer_id=LEGACY_CUSTOMER_ID):
         """영상제작에 담긴 도서관 대본 shortcode 집합."""
         with self._conn() as c:
@@ -1345,6 +1552,22 @@ class Store:
                 "SELECT shortcode FROM produce_script_picks WHERE customer_id=?", (customer_id,)
             ).fetchall()
         return {r[0] for r in rows}
+
+    def latest_comments(self, shortcodes):
+        """reel_history(최신 크롤)의 shortcode별 '지금' 댓글수 → {shortcode: comments}.
+        script_wiki.comments는 도서관 저장 순간에 박제돼(save_to_wiki) 이후 안 늘어난다 —
+        AI PICK이 옛 스냅샷 대신 최신 실측 댓글을 쓰게 하려는 오버레이용(2026-07-26 사장님:
+        재료카드 15,430 ↔ AI PICK 6,585 불일치). reel_history에 없으면(30일 지나 정리됐거나
+        수집 이력 없음) 키 자체를 안 담아, 호출부가 도서관 스냅샷으로 폴백하게 한다."""
+        scs = [s for s in dict.fromkeys(shortcodes or []) if s]   # 중복 제거·빈값 제외
+        if not scs:
+            return {}
+        ph = ",".join("?" * len(scs))
+        with self._conn() as c:
+            rows = c.execute(
+                f"SELECT shortcode, comments FROM reel_history WHERE shortcode IN ({ph})", scs
+            ).fetchall()
+        return {r[0]: r[1] for r in rows if r[1] is not None}
 
     def save_last_run(self, items, collected_at):
         """마지막 수집 결과 전체(items + 시각)를 저장. 단일 행 덮어쓰기.
@@ -1495,6 +1718,21 @@ class Store:
         data["structure_analyzed_at"] = row[4]
         data["category_source"] = row[5]
         return data
+
+    def get_reel_meta(self, shortcode):
+        """reel_history의 이 영상 최신 메타(name·category·url·thumb·comments·views).
+        AI PICK 소스가 도서관(script_wiki)에 없는 '넘어온 영상'을 script_extracts로
+        후보에 넣을 때, 이름·썸네일·댓글수를 여기서 채운다(2026-07-27). 없으면 None."""
+        with self._conn() as c:
+            r = c.execute(
+                "SELECT name, category, url, thumb, comments, views "
+                "FROM reel_history WHERE shortcode=? ORDER BY last_seen DESC LIMIT 1",
+                (shortcode,),
+            ).fetchone()
+        if not r:
+            return None
+        return {"name": r[0], "category": r[1], "url": r[2],
+                "thumb": r[3], "comments": r[4], "views": r[5]}
 
     def save_extract_structure(self, shortcode, structure):
         """대본추출 항목에 구조분석 결과를 채운다(2026-07-13, 학습소재 통계 백필용)."""
@@ -1976,6 +2214,24 @@ class Store:
         if not row:
             return None
         return {"subject": row[0] or "", "keywords": json.loads(row[1] or "[]")}
+
+    def save_thumb_text_level(self, shortcode, level):
+        """썸네일 자막등급('none'|'light'|'heavy') 저장(덮어쓰기)."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO thumb_text_level(shortcode, level, created_at) "
+                "VALUES(?,?,datetime('now')) ON CONFLICT(shortcode) DO UPDATE SET "
+                "level=excluded.level, created_at=excluded.created_at",
+                (shortcode, level),
+            )
+
+    def get_thumb_text_level(self, shortcode):
+        """저장된 자막등급. 판정된 적 없으면 None."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT level FROM thumb_text_level WHERE shortcode=?", (shortcode,)
+            ).fetchone()
+        return row[0] if row else None
 
     def vision_tags_map(self, shortcodes):
         """여러 shortcode → {shortcode: {subject, keywords}} (있는 것만). 읽기 결합용."""
@@ -2496,7 +2752,7 @@ class Store:
                 "preview_status, preview_path, preview_error, "
                 "thumbnail_json, seo_json, "
                 "clean_sources_json, clean_status, clean_error, customer_id, render_charge_day, "
-                "scene_first, backbone_main, clean_regions_json "
+                "scene_first, backbone_main, clean_regions_json, product_json "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -2526,7 +2782,21 @@ class Store:
             "scene_first": bool(row[32]),
             "backbone_main": row[33],
             "clean_regions": json.loads(row[34]) if row[34] else None,
+            "product": json.loads(row[35]) if row[35] else None,
         }
+
+    def set_mix_product(self, job_id, product):
+        """이 영상이 연결할 쿠팡 상품 1건 저장(None이면 해제, 2026-07-28).
+
+        update_mix_job 화이트리스트를 안 거치고 전용 메서드로 둔다 — 상품은
+        job 상태(status)와 무관하게 매칭 검토 중에도, 최종렌더 뒤에도 고칠 수
+        있어야 하고, 그 자리들이 update_mix_job을 부르는 흐름과 다르다."""
+        with self._conn() as c:
+            c.execute(
+                "UPDATE mix_jobs SET product_json=?, updated_at=? WHERE job_id=?",
+                (json.dumps(product, ensure_ascii=False) if product else None,
+                 datetime.now(timezone.utc).isoformat(), job_id),
+            )
 
     def update_mix_job(self, job_id, **fields):
         """status/error/extract/edit_plan/video_path 갱신(+updated_at). 객체는 JSON 직렬화."""
@@ -2626,6 +2896,36 @@ class Store:
         vals.append(job_id)
         with self._conn() as c:
             c.execute(f"UPDATE census_jobs SET {', '.join(cols)} WHERE job_id=?", tuple(vals))
+
+    # ── 수집 비동기 잡(2026-07-25) — census 잡과 동일 구조, 테이블만 분리 ──
+    def create_collect_job(self, job_id):
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute("INSERT INTO collect_jobs(job_id, status, created_at, updated_at) "
+                      "VALUES(?,?,?,?)", (job_id, "running", now, now))
+
+    def get_collect_job(self, job_id):
+        with self._conn() as c:
+            row = c.execute("SELECT job_id, status, result_json, error, created_at, updated_at "
+                            "FROM collect_jobs WHERE job_id=?", (job_id,)).fetchone()
+        if not row:
+            return None
+        return {"job_id": row[0], "status": row[1],
+                "result": json.loads(row[2]) if row[2] else None,
+                "error": row[3], "created_at": row[4], "updated_at": row[5]}
+
+    def update_collect_job(self, job_id, status=None, result=None, error=None):
+        cols, vals = [], []
+        if status is not None:
+            cols.append("status=?"); vals.append(status)
+        if result is not None:
+            cols.append("result_json=?"); vals.append(json.dumps(result, ensure_ascii=False))
+        if error is not None:
+            cols.append("error=?"); vals.append(error)
+        cols.append("updated_at=?"); vals.append(datetime.now(timezone.utc).isoformat())
+        vals.append(job_id)
+        with self._conn() as c:
+            c.execute(f"UPDATE collect_jobs SET {', '.join(cols)} WHERE job_id=?", tuple(vals))
 
     # ── 6단계 SEO 키워드 측정 캐시(2026-07-17) ──
     # job이 아니라 전역이다 — 키워드 측정치는 어느 영상이 쟀든 같은 값이고,
@@ -3355,6 +3655,90 @@ class Store:
                 (row[0], platform, shortcode),
             ).fetchall()
         return [{"platform": r[0], "shortcode": r[1]} for r in rows]
+
+    # ── 독립워커 작업큐(2026-07-29) ──
+    def enqueue(self, task, args):
+        """작업을 대기열에 넣고 큐 id를 반환한다."""
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO job_queue(task, args_json, state, created_at) "
+                "VALUES(?,?, 'queued', datetime('now'))",
+                (task, json.dumps(args, ensure_ascii=False)))
+            return cur.lastrowid
+
+    def claim_next(self):
+        """가장 오래된 대기 작업 하나를 원자적으로 'running'으로 바꾸고 돌려준다.
+
+        UPDATE ... RETURNING 한 문장이라 워커가 여러 개여도 같은 작업을 두 번 집지 않는다
+        (SQLite 3.35+ 필요, 서버 3.45 실측 확인). 없으면 None."""
+        with self._conn() as c:
+            row = c.execute(
+                "UPDATE job_queue SET state='running', "
+                "       claimed_at=datetime('now'), heartbeat_at=datetime('now') "
+                " WHERE id = (SELECT id FROM job_queue WHERE state='queued' "
+                "             ORDER BY id LIMIT 1) "
+                "RETURNING id, task, args_json").fetchone()
+            if not row:
+                return None
+            return {"id": row[0], "task": row[1], "args": json.loads(row[2])}
+
+    def heartbeat(self, qid, progress=None):
+        """워커가 살아있다는 신호. 30초마다 찍는다 — 멈추면 reap_stale이 죽은 걸로 본다.
+
+        progress(JSON 문자열)를 주면 함께 갱신 — 화면 진행문구(phase·count)가
+        서버 프로세스 재조회 없이 큐를 통해 넘어온다(2026-07-29). 안 주면 하트비트만."""
+        with self._conn() as c:
+            if progress is None:
+                c.execute("UPDATE job_queue SET heartbeat_at=datetime('now') WHERE id=?", (qid,))
+            else:
+                c.execute(
+                    "UPDATE job_queue SET heartbeat_at=datetime('now'), progress=? WHERE id=?",
+                    (progress, qid))
+
+    def finish(self, qid, ok, error=None):
+        """작업 종료 기록. ok=False면 error를 남겨 화면이 '실패 — 다시 시도'를 띄운다."""
+        with self._conn() as c:
+            c.execute(
+                "UPDATE job_queue SET state=?, error=?, finished_at=datetime('now') WHERE id=?",
+                ("done" if ok else "failed", None if ok else (error or "알 수 없는 오류"), qid))
+
+    def reap_stale(self, minutes=2):
+        """heartbeat가 minutes분 넘게 안 뛴 running을 failed로 정리하고 개수를 반환한다.
+
+        워커가 SIGKILL로 죽으면 heartbeat가 멈춘다 — 그걸 잡아 화면에 실패를 알린다.
+        (예전엔 조용히 멈춰 '되고 있나?'를 알 수 없었다, 2026-07-29 실사고)"""
+        with self._conn() as c:
+            cur = c.execute(
+                "UPDATE job_queue SET state='failed', error='워커가 중단됐습니다', "
+                "       finished_at=datetime('now') "
+                " WHERE state='running' "
+                "   AND (heartbeat_at IS NULL "
+                "        OR datetime(heartbeat_at) < datetime('now', ?))",
+                (f"-{int(minutes)} minutes",))
+            return cur.rowcount
+
+    def queue_status(self, task, args_match=None):
+        """이 작업의 큐 상태. position=내 앞에 있는 queued/running 개수(화면 대기순번).
+
+        같은 task+args가 여러 번 큐에 들어갔으면 가장 최근 것을 본다."""
+        with self._conn() as c:
+            if args_match is None:
+                row = c.execute(
+                    "SELECT id, state, error, progress, claimed_at FROM job_queue WHERE task=? "
+                    "ORDER BY id DESC LIMIT 1", (task,)).fetchone()
+            else:
+                row = c.execute(
+                    "SELECT id, state, error, progress, claimed_at FROM job_queue "
+                    " WHERE task=? AND args_json=? ORDER BY id DESC LIMIT 1",
+                    (task, json.dumps(args_match, ensure_ascii=False))).fetchone()
+            if not row:
+                return None
+            qid, state, error, progress, claimed_at = row
+            ahead = c.execute(
+                "SELECT COUNT(*) FROM job_queue "
+                " WHERE id < ? AND state IN ('queued','running')", (qid,)).fetchone()[0]
+            return {"id": qid, "state": state, "position": ahead, "error": error,
+                    "progress": progress, "claimed_at": claimed_at}
 
     # ── 렌더 포인트 원장(2026-07-17, 자동매칭 고급효과 엔진 Task1) ──
     # 잔액 컬럼을 따로 두지 않고 delta 누적합으로 계산하는 원장(ledger) 방식.

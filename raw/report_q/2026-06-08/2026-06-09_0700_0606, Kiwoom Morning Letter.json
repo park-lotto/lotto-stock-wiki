@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "Kiwoom",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_0700_0606, Kiwoom Morning Letter.md"
+  },
+  "questionnaire": {
+    "broker": "Kiwoom",
+    "analyst": null,
+    "report_date": "2026/6/8",
+    "target_kind": "market",
+    "market_direction": "bearish",
+    "macro_vars": [
+      "KOSPI -5.54%",
+      "KOSDAQ -4.50%",
+      "달러/원 환율 1,558.14",
+      "미국 국채 10년물 4.530%",
+      "미국 5월 비농업 고용자수 17.2만명"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "negative",
+        "reason": "AI 반도체 매출 가이던스 상향 부재 및 기술주 전반의 차익실현 매물"
+      }
+    ],
+    "style": "bearish",
+    "event_calendar": [
+      {
+        "date": "6.05",
+        "event": "한국 경상수지"
+      },
+      {
+        "date": "6.08",
+        "event": "일본 GDP"
+      },
+      {
+        "date": "6.09",
+        "event": "한국 GDP"
+      },
+      {
+        "date": "6.10",
+        "event": "미국 CPI"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "테슬라",
+      "엔비디아",
+      "브로드컴"
+    ],
+    "risk": "미국 고용지표 호조에 따른 연준의 금리 인상 가능성 및 중동 지정학적 리스크",
+    "quote": "5일(금) 코스피는 환율 급등과 반도체주 약세로 급락해 8,160대로 마감(KOSPI -5.54%, KOSDAQ -4.50%)."
+  }
+}

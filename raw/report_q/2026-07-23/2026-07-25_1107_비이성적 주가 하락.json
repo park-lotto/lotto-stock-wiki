@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-07-23",
+    "broker": "Daishin 증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-25_1107_비이성적 주가 하락.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "Daishin 증권",
+    "analyst": "류형근",
+    "report_date": "2026.07.22",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "560,000원",
+        "tp_prev": "560,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "3Q26 범용 DRAM과 NAND 가격은 전분기 대비 20% 초중반, 10% 중후반 상승 전망",
+        "estimate_revision": null,
+        "next_catalyst": "LTA의 확산 및 사이클 Duration 연장 효과",
+        "thesis": [
+          "공급업계의 맞춤형 가격 전략 실효성 증명",
+          "Legacy 반도체 수급 불균형에 따른 가격 강세",
+          "고객사와의 파트너십 강화를 통한 LTA 계약 확대"
+        ],
+        "valuation_basis": null,
+        "risk": "비이성적 주가 하락 및 시장의 단기 가격 상승에 대한 오해",
+        "supply_comment": "공급 부족 환경에서 고객별, 응용처별 가격 전략 차별화 및 LTA를 통한 공급망 안정화",
+        "quote": "메모리반도체 가격은 더 날카롭고, 지속력 있게 형성. 매수의견 유지."
+      },
+      {
+        "name": "SK하이닉스",
+        "code": "000660",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "3,900,000원",
+        "tp_prev": "3,900,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "3Q26 범용 DRAM과 NAND 가격은 전분기 대비 20% 초중반, 10% 중후반 상승 전망",
+        "estimate_revision": null,
+        "next_catalyst": "LTA의 확산 및 사이클 Duration 연장 효과",
+        "thesis": [
+          "공급업계의 맞춤형 가격 전략 실효성 증명",
+          "Legacy 반도체 수급 불균형에 따른 가격 강세",
+          "고객사와의 파트너십 강화를 통한 LTA 계약 확대"
+        ],
+        "valuation_basis": null,
+        "risk": "비이성적 주가 하락 및 시장의 단기 가격 상승에 대한 오해",
+        "supply_comment": "공급 부족 환경에서 고객별, 응용처별 가격 전략 차별화 및 LTA를 통한 공급망 안정화",
+        "quote": "메모리반도체 가격은 더 날카롭고, 지속력 있게 형성. 매수의견 유지."
+      }
+    ]
+  }
+}

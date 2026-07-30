@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-26_1103_의심은 접어두고 매수로 대응할 시점.md"
+  },
+  "questionnaire": {
+    "broker": "DS투자증권",
+    "analyst": "안주원",
+    "report_date": "2026.07.24",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "SGC에너지",
+        "code": "005090",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": 83000,
+        "tp_prev": 83000,
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "quote": "2분기 실적은 매출액 5,770억원(-6.7% YoY)과 영업이익 448억원(+31.9% YoY)을 달성했다.",
+          "details": "2분기 매출액 5,770억원(-6.7% YoY), 영업이익 448억원(+31.9% YoY). 발전부문은 SMP 가격 상승으로 매출액과 영업이익이 각각 전년동기대비 7%, 61% 증가함."
+        },
+        "estimate_revision": null,
+        "next_catalyst": "1차 데이터센터 사업 본계약 체결 및 수주 공개",
+        "thesis": [
+          "SMP 가격 상승에 따른 발전부문의 견조한 이익 개선",
+          "데이터센터 사업 진출을 통한 발전자산 활용도 증대 및 성장성 확보",
+          "신규 LNG 발전소 추진 등 데이터센터 연계 사업 확장성"
+        ],
+        "valuation_basis": "2026F EPS 2,289원에 Target PER 36.6배를 적용하여 산출 (국내 주요 경쟁사 26F 평균 PER대비 할인)",
+        "risk": "건설부문의 중동 플랜트 프로젝트 지정학적 리스크로 인한 공사 지연",
+        "supply_comment": null,
+        "quote": "SGC에너지도 과거 단순 전력 판매에서 데이터센터 사업을 통해 성장성이 높은 산업에 진출하며 보유하고 있는 발전자산의 활용도가 높아질 수 있고 신규 발전소 추진도 가능해졌다."
+      }
+    ]
+  }
+}

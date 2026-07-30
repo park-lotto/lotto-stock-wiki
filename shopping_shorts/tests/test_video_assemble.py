@@ -719,3 +719,24 @@ def test_explicit_effect_none_stays_hard_cut(tmp_path):
     style = {"effect": "none", "size": 50, "y_pct": 84, "box": False, "bar": False}
     draws = va._caption_drawtexts("하드 컷 자막", 2.0, tmp_path, 0, style=style)
     assert "alpha=" not in ",".join(draws)
+
+
+def test_plan_fills_from_source_tail_not_replay():
+    """회귀(2026-07-27 사장님 "같은 장면 반복 말고 뒤에서 채우기"): 마지막 클립 소스의 꼬리가
+    모자라도, 다른 소스(A)에 안 튼 뒷부분이 있으면 그걸 앞으로 밀며 소비한다 — 되감아 재생(루프)
+    하지 않는다. A는 배정 구간이 [0,1]뿐이지만 소스는 30초라, 채움은 1초 이후 실프레임이어야 한다."""
+    import shopping_shorts.video_assemble as va
+    segs = [{"video_id": "A", "start": 0.0, "end": 1.0},
+            {"video_id": "B", "start": 0.0, "end": 1.0}]
+    clips = va._plan_beat_clips(segs, tts_dur=8.0, src_durs={"A": 30.0, "B": 1.5})
+    assert abs(sum(c["out_dur"] for c in clips) - 8.0) < 0.05
+    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips)   # 슬로모 0
+    # ★핵심: A의 재생이 배정 구간 끝(1.0)을 넘어 뒷부분 실프레임까지 갔다 = 되감기 아님
+    a_max_end = max((c["start"] + c["src_dur"] for c in clips if c["video_id"] == "A"), default=0.0)
+    assert a_max_end > 1.0 + 1e-6
+    for c in clips:                                                      # 유출 0
+        assert c["start"] + c["src_dur"] <= src_durs_of(c["video_id"]) + 1e-9
+
+
+def src_durs_of(vid):
+    return {"A": 30.0, "B": 1.5}[vid]

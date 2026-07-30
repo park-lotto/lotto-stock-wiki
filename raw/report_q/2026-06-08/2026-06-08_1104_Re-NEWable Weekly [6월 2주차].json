@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-08_1104_Re-NEWable Weekly [6월 2주차].md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "조혜빈",
+    "report_date": "2026. 06. 08",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "데이터센터발 전력 수요 확대",
+      "미국 재생에너지 정책 전원별 양상(풍력-국방부 안보심사/태양광-USTR 추가관세)",
+      "IEA 클린에너지 투자 전망",
+      "가스터빈 리드타임 적체(평균 5년)"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "신재생",
+        "stance": null,
+        "reason": "데이터센터 전력 수요 증가에 맞춰 계통 및 저장 제약이 점진적으로 완화되는 국면"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026. 10",
+        "event": "MS 부산 AI 데이터센터 착공 예정"
+      }
+    ],
+    "top_picks": [
+      "한화솔루션",
+      "OCI홀딩스",
+      "SK 이터닉스",
+      "HD현대 에너지솔루션",
+      "씨에스윈드",
+      "LS마린솔루션",
+      "SK 오션플랜트"
+    ],
+    "risk": "미국 무역대표부(USTR)의 강제노동 기반 Section 301 추가관세 신규 제안 및 국방부의 풍력 프로젝트 안보 영향평가 중단으로 인한 개발 지연",
+    "quote": "데이터센터 전력 수요 증가에 맞춰 계통 및 저장 제약이 점진적으로 완화되는 국면으로 판단됨"
+  }
+}

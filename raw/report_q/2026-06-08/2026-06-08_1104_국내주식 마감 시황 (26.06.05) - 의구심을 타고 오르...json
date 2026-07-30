@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-08_1104_국내주식 마감 시황 (26.06.05) - 의구심을 타고 오르...md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "유안타증권",
+    "analyst": "이재원, 김세빈",
+    "report_date": "2026.06.05",
+    "market_direction": "하락",
+    "macro_vars": [
+      "미국 주식시장 혼조(S&P500 +0.4%, NASDAQ -0.09%)",
+      "원/달러 환율 1,540원 상회"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "금융",
+        "stance": "상승",
+        "reason": "순환매 장세로 인한 상승"
+      },
+      {
+        "sector": "증권",
+        "stance": "상승",
+        "reason": "순환매 장세로 인한 상승"
+      },
+      {
+        "sector": "IT",
+        "stance": "상승",
+        "reason": "기판(삼성전기 +2.4%) 상승"
+      }
+    ],
+    "style": "순환매 장세",
+    "event_calendar": [
+      {
+        "date": "2026.06.05",
+        "event": "KOSPI, KOSDAQ 각각 5.5%, 4.5% 하락"
+      },
+      {
+        "date": "7월",
+        "event": "실적 발표"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "삼성전기",
+      "마이크론",
+      "샌디스크",
+      "브로드컴",
+      "엔비디아"
+    ],
+    "risk": "메모리 고점론, 브로드컴 가이던스 상향 폭 부진, 엔비디아 차세대 플랫폼 메모리 탑재량 감소 우려",
+    "quote": "AI Cycle 추세적 하락 전환 판단하지 않음. KOSPI RSI(14일) 과매수 구간 진입 및 5월 종목 쏠림에 따른 PER 중심 상승에 따른 단기 노이즈이자 차익실현 명분에 불과."
+  }
+}

@@ -89,9 +89,16 @@ def parts_block(store, k=5, rng=random):
         lines.append(f"· {_LABEL.get(b, b)}: {texts}")
     if not lines:
         return ""
-    return ("[승인된 부품 — 이 결·패턴을 살려 써라. ★훅: 후보 3개 중 최소 2개는 여기 훅을 "
-            "거의 그대로(소재 단어만 바꿔) 직접 써라. CTA·나머지는 구조·리듬만 가져오고 단어·인물·"
-            "소재는 우리 것으로. 인명·상표·지명 등 고유명사만 반드시 교체(표절·중복 회피).]\n"
+    return ("[승인된 부품 — 이 결·패턴을 살려 써라. ★훅은 초반 3초가 승부처다. 후보 3개의 "
+            "훅을 아래 3가지로 '서로 다르게' 만들어라(같은 틀 복제 금지):\n"
+            "  ① 벤치마킹형 — 위 승인훅이 '왜 통했는지'(호기심·경고·반전 등 심리 트리거)만 "
+            "가져와 우리 소재로 새로 써라. 문장을 그대로 베끼지 마라.\n"
+            "  ② 트렌드·반전형 — 이 카테고리의 지금 유행 어조를 반영해라(예: '다이소 가면 이건 "
+            "꼭 사와' 뿐 아니라 '이건 진짜 사지마' 같은 반전형도). 뻔한 정공법 대신 반전·금기로 열어라.\n"
+            "  ③ 신선·임팩트형 — 은행에 얽매이지 말고 3초 안에 스크롤을 멈출 가장 강한 훅을 "
+            "자유롭게 창작해라.\n"
+            "CTA·나머지 부품은 구조·리듬만 가져오고 단어·인물·소재는 우리 것으로. "
+            "인명·상표·지명 등 고유명사는 반드시 교체(표절·중복 회피).]\n"
             + "\n".join(lines))
 
 
@@ -133,15 +140,61 @@ def avoid_block(store, limit=6):
             "매 영상이 똑같이 열리면 안 된다)]\n" + "\n".join(parts))
 
 
+def _source_views(src):
+    """pattern_source row의 perf에서 조회수(없으면 0). list_pattern_sources는 perf를 이미 디코드해 준다."""
+    perf = src.get("perf") or {}
+    try:
+        return int(perf.get("views") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def winners_block(store, category, k=2, max_chars=420):
+    """검증된 우승 대본을 few-shot 예시로(2026-07-26). 스파인은 '뼈대'만 주는데, 여기에
+    실제 조회수 높았던 원본 대본 전문을 통째로 보여줘 Gemini가 말투·호흡·디테일까지 흉내내게
+    한다. ★같은 카테고리 우승작만 쓴다(2026-07-26 사고: 부족분을 타 카테고리로 채웠더니
+    레시피 우승작의 '청양고추' 훅 소재가 홈템 영상에 새어들어 훅-본문이 따로 노는 C안이 나왔다).
+    카테고리 매칭 우승작이 없으면 아예 안 준다(''=회귀0, 오염보다 무주입이 낫다)."""
+    if not category:
+        return ""   # 카테고리 불명이면 타 카테고리 오염 위험 → 무주입
+    try:
+        srcs = store.list_pattern_sources(limit=1000)
+    except Exception:
+        return ""
+    same = [s for s in srcs
+            if s.get("product_category") == category
+            and len((s.get("full_text") or "").strip()) >= 40]
+    if not same:
+        return ""
+    same.sort(key=_source_views, reverse=True)
+    picked = same[:k]
+    lines = []
+    for i, s in enumerate(picked, 1):
+        t = _sanitize(s.get("full_text", "").strip())
+        if len(t) > max_chars:
+            t = t[:max_chars] + "…"
+        v = _source_views(s)
+        vtxt = f"(조회수 {v:,})" if v else ""
+        lines.append(f"[우승 예시 {i} {vtxt}]\n{t}")
+    return ("[★검증된 우승 대본 — 이 카테고리에서 실제로 터진 대본 전문이다. 뼈대(스파인)를 "
+            "지키되, 아래 예시의 '말투·호흡·구어체 리듬·감정선'만 배워서 그 느낌으로 써라.\n"
+            "  ⚠️절대 규칙: 예시의 **소재·소품·제품명·특정 단어(예: 특정 식재료·브랜드)는 "
+            "절대 가져오지 마라**. 오직 우리 영상의 소재로만 써라 — 예시가 '청양고추' 얘기여도 "
+            "우리 영상이 주방 가림막이면 청양고추는 한 글자도 넣지 마라. 훅의 '강도와 리듬'만 "
+            "흡수하고 소재는 100% 우리 것.]\n"
+            + "\n\n".join(lines))
+
+
 def assemble_bank_context(store, category, k=5):
-    """스파인 charter + 부품 top-k 합본. 둘 다 없으면 ''(호출부는 빈 문자열이면
+    """스파인 charter + 부품 top-k + ★우승 대본 few-shot 합본. 없으면 ''(호출부는 빈 문자열이면
     기존 헌장만 써서 회귀0)."""
     # ★category 비어도(자동유형 경로는 video_type=None→"") 스파인을 건너뛰지 마라(2026-07-23
     # 실측 버그: `if category`가 falsy라 pick을 아예 안 불러 승인 스파인 4개가 죽어 있었다).
     # pick_spine_for_category(None)은 fit_categories 없는 범용 스파인을 perf 최고로 반환한다.
     spine = store.pick_spine_for_category(category or None)
-    # 스파인(아크) + 말투(parts_block) + ★전개 패턴(content_block, 2026-07-23) 3층 주입.
-    blocks = [x for x in (spine_charter(spine), parts_block(store, k), content_block(store)) if x]
+    # 스파인(아크) + 말투(parts_block) + 전개 패턴(content_block) + ★우승대본 few-shot(2026-07-26) 4층 주입.
+    blocks = [x for x in (spine_charter(spine), parts_block(store, k), content_block(store),
+                          winners_block(store, category)) if x]
     return "\n\n".join(blocks)
 
 

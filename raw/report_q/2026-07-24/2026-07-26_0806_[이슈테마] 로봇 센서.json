@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-26_0806_[이슈테마] 로봇 센서.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "권명준",
+    "report_date": "2026.07.24",
+    "target_kind": "sector",
+    "sector_name": "로봇",
+    "sector_view": null,
+    "thesis": [
+      "로봇 수요 확대: 인건비 상승 및 고령화로 인한 서비스 로봇 수요 지속적 확대 기대",
+      "AI와 Multi modal 융합: 시각과 촉각 데이터의 AI 분석을 통한 행동 연결 기술 확대 기대",
+      "규모의 경제효과 및 소형화: 대량 양산에 따른 부품 가격 하락과 이를 통한 시장 성장 선순환"
+    ],
+    "timeline": [],
+    "top_picks": [
+      {
+        "name": "나무가",
+        "reason": "3D Depth Sensing 기술 보유",
+        "tp": null
+      },
+      {
+        "name": "로보티즈",
+        "reason": "센서 내장형 액추에이터 기업",
+        "tp": null
+      },
+      {
+        "name": "에이딘로보틱스",
+        "reason": "정밀 힘토크센서 개발, 비접촉 센싱 구조로 상용화",
+        "tp": null
+      },
+      {
+        "name": "알에스오토메이션",
+        "reason": "로봇 관절용 광학식 엔코더 국산화 기업",
+        "tp": null
+      }
+    ],
+    "risk": null,
+    "quote": "휴머노이드 로봇 산업 성장에 대한 관심 증가로 로봇 센서에 대한 관심이 상향될 것으로 기대된다."
+  }
+}

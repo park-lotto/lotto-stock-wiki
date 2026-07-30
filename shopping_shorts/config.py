@@ -38,6 +38,10 @@ GOOGLE_REDIRECT_URI = os.environ.get(
 # reddit_source가 oauth.reddit.com(100 req/분)으로 자동 전환. 없으면 익명 RSS 폴백.
 REDDIT_CLIENT_ID = os.environ.get("REDDIT_CLIENT_ID", "")
 REDDIT_CLIENT_SECRET = os.environ.get("REDDIT_CLIENT_SECRET", "")
+# 주거용 프록시(Webshare 로테이팅 등). 서버 데이터센터 IP는 Reddit 익명 RSS가 429로
+# 막혀 완료0건이 났다(실측 2026-07-25). 프록시 경유하면 주거용 IP라 200이 안정적으로 온다.
+# 형식: http://user:pass@host:port  (없으면 직결). RSS(urllib)·OAuth(requests) 둘 다 적용.
+REDDIT_PROXY = os.getenv("REDDIT_PROXY", "")
 
 # Apify
 APIFY_TOKEN = os.environ.get("APIFY_TOKEN", "")
@@ -49,6 +53,81 @@ APIFY_TOKENS = [
     if (t := os.environ.get("APIFY_TOKEN" if i == 1 else f"APIFY_TOKEN_{i}", ""))
 ]
 APIFY_ACTOR = "apify~instagram-reel-scraper"  # actor id (~ 형식)
+
+# ── 인스타 수집 경로 선택(2026-07-28) ──
+# Apify는 성공해도 28분이 걸리고 403 Forbidden으로 통째로 죽는 사례가 이틀 새 2건이었다
+# (서버 collect_jobs 실측). Playwright + 주거용 프록시로 대체하되, 라이브 대시보드가
+# 인스타 수집에 묶여 있으므로 **환경변수 하나로 즉시 되돌릴 수 있게** 둔다.
+# ★기본값은 apify다 — 검증 전 병합만으로 라이브 경로가 바뀌면 안 된다.
+INSTAGRAM_SCRAPER = os.getenv("INSTAGRAM_SCRAPER", "apify")   # apify | playwright
+
+# 인스타 전용 주거용 프록시(형식은 REDDIT_PROXY와 동일: http://user:pass@host:port).
+# 서버 데이터센터 IP로 직접 긁으면 인스타가 막는다 — Reddit이 429로 막혔던 것과 같은 이유.
+# 미설정이면 직결(로컬 개발용).
+INSTAGRAM_PROXY = os.getenv("INSTAGRAM_PROXY", "")
+
+# 로그인 세션 쿠키 파일(Playwright storage_state) — 2026-07-29 샤오홍슈(rednote)에서
+# 검증된 B안: 서버 IP 차단의 실제 원인이 IP 품질이 아니라 로그인 여부였다(10채널 게이트에서
+# 비로그인 접근이 4.5초 만에 로그인벽으로 즉시 튕김). 세션이 있으면 프록시 없이 데이터센터
+# IP 직결로도 통과하는지가 이 파일의 존재 여부로 갈린다.
+# ★생성 방법: scripts/instagram_setup_session.py(Playwright 직접 로그인)는 폐기됨 —
+# Meta가 로그인 제출 시점에 CDP 자동화를 감지해 캡차로 막는다. 대신
+# scripts/instagram_cookies_from_browser.py로 Firefox에 정상 로그인한 뒤 그 브라우저의
+# 쿠키를 직접 추출한다(Chrome/Edge는 앱 바운드 암호화로 막힘). 서버로 옮긴다(git 비추적,
+# 600권한) — 같은 경로에 덮어쓰기만 하면 재시작 없이 다음 수집부터 반영됨
+# (storage_state는 채널 스크레이프마다 파일을 새로 읽는다, instagram_playwright.py 참고).
+# 절차 전체: handoff/AI픽자동적재.md "세션 만료 시 재발급 절차".
+# 없으면 기존 경로(프록시 또는 직결)로 조용히 폴백한다.
+INSTAGRAM_SESSION_PATH = os.getenv("INSTAGRAM_SESSION_PATH", "")
+
+# 동시에 여는 브라우저 컨텍스트 수. 크로미움은 메모리를 먹으므로 서버 여유를 보고 조정한다.
+INSTAGRAM_PW_CONTEXTS = int(os.getenv("INSTAGRAM_PW_CONTEXTS", "5"))
+# 채널 1개 처리 상한(ms). 넘으면 그 채널만 error로 접고 다음으로 간다(전체가 죽지 않게).
+INSTAGRAM_PW_TIMEOUT_MS = int(os.getenv("INSTAGRAM_PW_TIMEOUT_MS", "20000"))
+
+# 샤오홍슈 레퍼런스 채널 크롤(2026-07-29) — 로그인 세션 재사용, 서버 직결(프록시 불필요,
+# Phase 0 스파이크 검증 완료). 세션 만료 시 수동 재로그인 → 이 경로에 storageState() 재저장.
+XIAOHONGSHU_SESSION_PATH = os.getenv(
+    "XIAOHONGSHU_SESSION_PATH", "/home/ubuntu/rednote_session.json")
+XIAOHONGSHU_PW_TIMEOUT_MS = int(os.getenv("XIAOHONGSHU_PW_TIMEOUT_MS", "20000"))
+XIAOHONGSHU_WINDOW_HOURS = int(os.getenv("XIAOHONGSHU_WINDOW_HOURS", "48"))
+
+# 계정 발굴 자동등록(2026-07-29) — daily_batch(매일 새벽 1회)가 발굴 상위 N 계정을
+# 레퍼런스에 자동 등록. 발굴은 Apify 검색(과금) → 킬스위치로 끌 수 있게 둔다.
+XIAOHONGSHU_AUTO_DISCOVER = os.getenv("XIAOHONGSHU_AUTO_DISCOVER", "true").lower() == "true"
+XIAOHONGSHU_AUTO_TOP_N = int(os.getenv("XIAOHONGSHU_AUTO_TOP_N", "10"))
+# 서버 백그라운드 발굴 루프 주기(분) — 창을 닫아도 서버가 계속 발굴해 누적을 쌓는다.
+# 켜기/끄기는 DB 설정 'xhs_bg_auto'(UI 토글)로, 여기 값은 주기·마스터 스위치.
+XIAOHONGSHU_BG_INTERVAL_MIN = int(os.getenv("XIAOHONGSHU_BG_INTERVAL_MIN", "45"))
+XIAOHONGSHU_BG_ENABLED = os.getenv("XIAOHONGSHU_BG_ENABLED", "true").lower() == "true"  # 마스터 킬스위치
+
+# 인스타 계정 발굴 자동등록(2026-07-30) — daily_batch(매일 새벽 1회)가 해시태그 탐색
+# 발굴 상위 N 계정을 레퍼런스(discovered_channels)에 자동 등록. 무료(로그인 세션 재사용,
+# instagram_discovery.py). 기본 꺼둠 — 실측(해시태그 시드팩 적합도) 전에 자동으로 계정이
+# 늘어나 랭킹 노이즈가 커지는 걸 막는다. 켜려면 XIAOHONGSHU_AUTO_DISCOVER처럼 true로.
+INSTAGRAM_AUTO_DISCOVER = os.getenv("INSTAGRAM_AUTO_DISCOVER", "false").lower() == "true"
+INSTAGRAM_AUTO_TOP_N = int(os.getenv("INSTAGRAM_AUTO_TOP_N", "10"))
+# 해시태그 탐색 SERP엔 좋아요·댓글수가 없어(실측), 상위 표본만 media info REST를
+# 한 번씩 더 불러 참여도를 보강한다(2026-07-30). 전량 조회하면 태그당 요청이 커져
+# 느려지고 차단 위험도 커지므로 상위 N개만(태그당 24개 안팎 중 상위).
+INSTAGRAM_DISCOVERY_DETAIL_TOP_N = int(os.getenv("INSTAGRAM_DISCOVERY_DETAIL_TOP_N", "15"))
+
+# ── 샤오홍슈(해외HOT 발굴) 수집 경로 선택(2026-07-29) ──
+# Apify 검색은 유료(rednote-search-scraper). 로그인 세션(storage_state)으로 서버 직결
+# 무료 크롤이 실측 확인됨(Phase 0). 롤백 대비 환경변수로 즉시 전환 가능하게 둔다.
+# ★기본값은 apify — 라이브 검증 전 병합만으로 경로가 바뀌면 안 된다.
+XHS_SCRAPER = os.getenv("XHS_SCRAPER", "apify")   # apify | playwright
+
+# 로그인 세션 쿠키 파일(Playwright storage_state). 서버에만 존재(git 비추적, 600권한).
+# 없으면 playwright 경로가 조용히 빈 리스트를 반환한다(전체 수집이 죽지 않게).
+REDNOTE_SESSION_PATH = os.getenv("REDNOTE_SESSION_PATH", "/home/ubuntu/rednote_session.json")
+XHS_PW_TIMEOUT_MS = int(os.getenv("XHS_PW_TIMEOUT_MS", "25000"))
+
+# 틱톡/도우인 발굴 플랫폼별 켜기·끄기(2026-07-29). 틱톡 무료전환은 캡차로 막혀 Apify
+# 유지 확정됐고, 도우인은 미착수 상태 — 둘 다 재개발 전까지 끄고 샤오홍슈만 돌리기 위함.
+# 기본값 true(끄기 전 상태 유지) — 서버 env로 끔.
+OVERSEAS_TIKTOK_ENABLED = os.getenv("OVERSEAS_TIKTOK_ENABLED", "true").lower() == "true"
+OVERSEAS_DOUYIN_ENABLED = os.getenv("OVERSEAS_DOUYIN_ENABLED", "true").lower() == "true"
 
 # 댓글 draft 생성 전용 Gemini 키 풀 — 주식위키 본체(pipeline.atoms.key_vault)의
 # 공유 풀과 완전히 분리(2026-07-09). 공유 풀은 인제스트·브리핑 등 다른 작업과
@@ -72,8 +151,17 @@ YOUTUBE_API_KEYS = [
 # SerpApi(Google Lens 엔진) — 제품 정확 명칭 확인용(2026-07-10). 어제는 "구매처
 # 찾기"(쇼핑링크 노출)로 잘못 썼다가 삭제했는데, 오늘은 용도를 바꿔서 프레임을
 # 역검색한 결과로 정확한 제품명(브랜드+모델)을 추론해 검색 키워드 정밀도를
-# 높이는 데 재사용한다. 유료 API라 로테이션 풀 없이 단일 키.
-SERPAPI_KEY = os.environ.get("SERPAPI_KEY", "")
+# 높이는 데 재사용한다.
+# 무료 플랜은 계정당 월 100회뿐이라 소진되면 렌즈검색이 통째로 막힌다(429). 그래서
+# _N 넘버링 풀로 로테이션한다(2026-07-26, Gemini/YouTube와 동일 패턴) — 한 키가 월
+# 한도를 소진하면 다음 키로 자동 전환. 키가 모자라면 .env에 SERPAPI_KEY_3, _4… 계속 추가.
+_SERPAPI_MAX = 30
+SERPAPI_KEYS = [
+    v for i in range(1, _SERPAPI_MAX + 1)
+    if (v := os.environ.get("SERPAPI_KEY" if i == 1 else f"SERPAPI_KEY_{i}", ""))
+]
+# 하위호환: 기존 코드가 참조하던 단일 키(=풀의 첫 키). 로테이션은 SERPAPI_KEYS를 쓴다.
+SERPAPI_KEY = SERPAPI_KEYS[0] if SERPAPI_KEYS else ""
 
 # ElevenLabs TTS(영상 믹싱 기능④, 2026-07-12) — 새 나레이션 음성 생성. Gemini와
 # 무관한 별도 API라 전용/공유 키풀 규칙과 무관(단일 키). 미설정이면 개발용 무음 fallback.
@@ -169,3 +257,31 @@ CATEGORIES = ["인테리어", "레시피", "생활용품", "가전", "뷰티", "
 # media_download.py는 빈 값이면 --cookies 없이(기존처럼) 시도해 회귀가 없다.
 YTDLP_COOKIES_YOUTUBE = os.environ.get("YTDLP_COOKIES_YOUTUBE", "")
 YTDLP_COOKIES_TIKTOK = os.environ.get("YTDLP_COOKIES_TIKTOK", "")
+
+# ── 쿠팡 상품검색 크롤(2026-07-29) ──
+# 파트너스 오픈API는 최종 승인(실판매 실적) 회원만 발급 → 승인 전 대체 경로.
+# ★실측: 쿠팡(Akamai)은 데이터센터 IP와 헤드리스를 둘 다 막는다. 서버 직결도,
+# Webshare 데이터센터 플랜(YTDLP_PROXY)도 403이었다. 통과한 유일한 조합은
+# **주거용 IP + 헤드풀 real Chrome**. 그래서 프록시는 반드시 residential이어야 한다.
+# 미설정이면 직결(주거용 IP인 로컬 개발 PC에서만 통함).
+COUPANG_PROXY = os.getenv("COUPANG_PROXY", "")
+# 기본 꺼둔다 — 프록시 검증 전에 켜지면 사장님 화면에 매번 실패 배너가 뜬다.
+COUPANG_SEARCH_ENABLED = os.getenv("COUPANG_SEARCH_ENABLED", "0") not in ("", "0", "false", "False")
+COUPANG_SEARCH_LIMIT = int(os.getenv("COUPANG_SEARCH_LIMIT", "24"))
+# 브라우저를 띄우고 검색결과가 그려질 때까지의 상한(ms).
+COUPANG_SEARCH_TIMEOUT_MS = int(os.getenv("COUPANG_SEARCH_TIMEOUT_MS", "45000"))
+
+# ── 쿠팡 검색 릴레이(2026-07-29) ──
+# 서버엔 한국 출구가 없어 쿠팡을 못 긁는다(독일 주거용 프록시도 403 — 실측).
+# 그래서 사장님 PC가 서버로 나와 일감을 받아 대신 검색한다. 자세한 이유는 coupang_relay.py.
+#   local  = 이 프로세스가 직접 크롤(로컬 개발 PC용)
+#   relay  = 대기열에 넣고 릴레이(사장님 PC)의 답을 기다린다(서버용)
+COUPANG_SEARCH_MODE = os.getenv("COUPANG_SEARCH_MODE", "local")   # local | relay
+# 릴레이 인증 토큰. ★비어 있으면 릴레이 엔드포인트를 아예 닫는다 —
+# 빈 토큰이 통과하면 아무나 검색결과를 밀어넣을 수 있다.
+COUPANG_RELAY_TOKEN = os.getenv("COUPANG_RELAY_TOKEN", "")
+# 릴레이 답을 기다리는 상한(초). 넘으면 접고 수동 흐름 안내를 돌려준다.
+COUPANG_RELAY_WAIT_SEC = int(os.getenv("COUPANG_RELAY_WAIT_SEC", "60"))
+# 크롬 프로필 폴더(쿠키·PCID 유지). 매번 새 프로필로 들어가면 '처음 온 손님'이라
+# 차단 임계가 훨씬 낮다. 비우면 레포 안 .coupang_profile 를 쓴다(git 비추적).
+COUPANG_PROFILE_DIR = os.getenv("COUPANG_PROFILE_DIR", "")

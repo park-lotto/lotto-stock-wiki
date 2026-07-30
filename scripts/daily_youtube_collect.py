@@ -16,6 +16,12 @@ from shopping_shorts import service
 def main():
     t0 = time.time()
     try:
+        # ⚠️ seed_only는 아직 켜지 않는다 (2026-07-29).
+        # 켜면 키워드 경로가 빠져 '등록된 계정 시드'만 남는데, 랭킹에 등장하는 채널 715개 중
+        # 시드에 등록된 건 464개뿐이다. 미등록 우량 채널을 먼저 시드에 넣지 않고 켜면
+        # 수집량이 급감한다(설계 §T3이 §T4보다 먼저인 이유).
+        # 켜는 순서: scripts/register_good_youtube_channels.py 실행 → 시드 보강 확인
+        #            → 여기를 seed_only=True 로 → 1회 수집 후 '기타' 비율 실측(목표 20% 미만).
         items = service.collect(platform="youtube")
     except Exception as e:  # noqa: BLE001 — 크론이 죽어도 서비스는 무사, 로그만 남긴다
         print(f"[daily_youtube_collect] 실패: {e!r}", file=sys.stderr)

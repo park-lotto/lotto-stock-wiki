@@ -8,7 +8,8 @@ import re
 import time
 import requests
 from urllib.parse import urlparse
-from shopping_shorts.config import SERPAPI_KEY
+from shopping_shorts import serpapi_client
+from shopping_shorts.config import SERPAPI_KEY, SERPAPI_KEYS
 
 _LENS_ENDPOINT = "https://serpapi.com/search"
 _IMGUR_ENDPOINT = "https://api.imgur.com/3/image"
@@ -144,8 +145,8 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
     장르는 같지만 다른 주제인 결과가 섞이는 문제(2026-07-14 실측)를 프론트에서
     표시용으로 구분하기 위함 — 결과를 제거하진 않는다(교차언어 플랫폼은 매칭 불가라
     False가 나올 수 있어 하드 필터링하면 회수율이 떨어짐)."""
-    key = api_key or SERPAPI_KEY
-    if not key:
+    keys = [api_key] if api_key else (SERPAPI_KEYS or ([SERPAPI_KEY] if SERPAPI_KEY else []))
+    if not keys:
         return []
     keywords = _extract_keywords(source_caption)
     # 파라미터가 결과를 좌우한다(2026-07-14 라이브 실측, 6프레임 대조):
@@ -153,21 +154,36 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
     #   type 없는 기본 all모드 + hl=ko&country=kr → 모든 프레임 59~60개 ✅
     # 즉 type=visual_matches를 넣으면 오히려 깨진다. all모드 응답의 visual_matches를 쓴다.
     # 로케일(hl=ko&country=kr)은 한국 콘텐츠 매칭에 필요. 드물게 첫 호출이 비면 재시도.
-    params = {"engine": "google_lens",
-              "hl": "ko", "country": "kr", "url": image_url, "api_key": key}
+    #
+    # 키 로테이션(2026-07-26): 현재 키가 월 무료한도(100회)를 소진하면(429 등) 다음
+    # 키로 넘어간다. 소진이 아닌 진짜 빈 결과("no results")는 같은 키로 재시도(_MAX_ATTEMPTS)
+    # 해야 하므로, 인덱싱 재시도는 키별 안쪽 루프로 돈다.
     matches = []
-    for attempt in range(_MAX_ATTEMPTS):
-        try:
-            r = requests.get(_LENS_ENDPOINT, params=params, timeout=timeout)
-            r.raise_for_status()
-            data = r.json()
-        except requests.RequestException:
-            return []
-        matches = data.get("visual_matches") or []
-        if matches:
-            break
-        if attempt < _MAX_ATTEMPTS - 1:
-            time.sleep(_RETRY_SLEEP)   # 인덱싱 대기 후 재시도
+    for key in keys:
+        params = {"engine": "google_lens",
+                  "hl": "ko", "country": "kr", "url": image_url, "api_key": key}
+        exhausted = False
+        for attempt in range(_MAX_ATTEMPTS):
+            try:
+                r = requests.get(_LENS_ENDPOINT, params=params, timeout=timeout)
+                data = r.json()
+            except (requests.RequestException, ValueError):
+                return []
+            if serpapi_client.is_exhausted(getattr(r, "status_code", 200), data):
+                exhausted = True   # 이 키 소진 → 바깥 루프에서 다음 키로
+                break
+            try:
+                r.raise_for_status()
+            except requests.RequestException:
+                return []
+            matches = data.get("visual_matches") or []
+            if matches:
+                break
+            if attempt < _MAX_ATTEMPTS - 1:
+                time.sleep(_RETRY_SLEEP)   # 인덱싱 대기 후 재시도
+        if exhausted:
+            continue                       # 다음 키로
+        break                              # 이 키로 처리 완료(결과 유무 무관)
     out = []
     for m in matches:
         platform = _platform_of(m.get("link"))
