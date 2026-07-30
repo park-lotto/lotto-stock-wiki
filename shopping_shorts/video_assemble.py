@@ -23,9 +23,7 @@ from PIL import ImageFont
 
 # 출력 규격(숏폼 세로). 소스 해상도가 달라도 여기로 통일해야 concat -c copy가 안전.
 _OUT_W, _OUT_H = 1080, 1920
-# ★x264 프리셋(2026-07-24): 미리보기는 assemble(fast=True)가 veryfast로 바꿔 6분→~1.5분.
-# 최종은 medium 유지(고화질). 소셜 숏폼은 플랫폼 재인코딩되므로 veryfast도 체감차 거의 없다.
-# ★x264 프리셋(2026-07-24): 기본 medium(최종 고화질). 미리보기는 preview_preset()가
+# ★x264 프리셋: 기본 medium(최종). 미리보기는 preview_preset()가
 # veryfast로 낮춰 6분→~1.5분. ★스레드로컬인 이유(오류검사에서 잡음): run_preview와
 # run_render는 각각 BackgroundTasks 스레드에서 돈다 — 모듈 전역이면 미리보기가 켠
 # veryfast가 동시에 도는 **최종 렌더**까지 저화질로 오염시키는 레이스가 난다.
@@ -41,8 +39,15 @@ _preset_local = _threading.local()
 #   미리보기(veryfast/28)와 최종(slow/16)이 서로 오염되지 않게 한다.
 #   2026-07-27 2차 상향: 18→16 + medium→slow(같은 CRF에서 압축효율↑=디테일 더 보존). 최종만
 #   느려지고(미리보기는 veryfast 유지) 화질이 원본에 더 붙는다. 용량 크면 17~18로 되돌린다.
+#
+# ★2026-07-30 slow→medium 되돌림(사장님 지시 — 최종렌더 8~10분 체감).
+#   preset은 "얼마나 오래 고민해 압축하나"이고 화질 목표는 CRF가 정한다 — CRF 16을 그대로
+#   두므로 x264는 같은 품질을 노리고 인코딩한다. 차이는 **속도와 용량**에 나타난다:
+#   medium은 1.5~2배 빠르고 파일이 10~20% 커진다. 07-27의 화질 상향분은 CRF 18→16이
+#   대부분이고 그건 유지된다. 소셜 업로드는 플랫폼이 재인코딩하므로 체감차는 더 줄어든다.
+#   ⚠️ 되돌릴 땐 이 한 줄만 "slow"로 바꾸면 된다(용량이 문제면 CRF 17~18이 먼저다).
 _FINAL_CRF, _PREVIEW_CRF = "16", "28"
-_FINAL_PRESET = "slow"
+_FINAL_PRESET = "medium"
 
 
 def _preset():
