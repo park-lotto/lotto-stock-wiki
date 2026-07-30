@@ -5212,6 +5212,18 @@ async function _loadThumbFrames(){
       + ' — <a href="#" onclick="jump(0);return false" style="color:var(--accent2);font-weight:700">1단계에서 영상 매칭 확인 →</a>';
     return;
   }
+  // ★프레임이 그대로면 다시 그리지 않는다(2026-07-30) — 아래에서 5단계 진입마다 서버에
+  // 물어보게 바꿨기 때문에, 매번 다시 그리면 사장님이 고른 프레임이 0번으로 리셋된다.
+  // URL에 ?v={video_sig}가 붙으므로 배경 영상(자막제거본 등)이 바뀌면 URL이 달라져 갱신된다.
+  const _prevUrls = (THUMB_STATE.frames || []).map(f => f.url).join('|');
+  const _nextUrls = d.frames.map(f => f.url).join('|');
+  const _box = document.getElementById('thumbFrames');
+  if (_prevUrls && _prevUrls === _nextUrls && _box && _box.children.length){
+    THUMB_STATE.frames = d.frames;
+    document.getElementById('thumbFrameCount').textContent = `(${d.frames.length}개)`;
+    hintEl.textContent = '';
+    return;                                  // 선택 유지
+  }
   THUMB_STATE.frames = d.frames;
   document.getElementById('thumbFrameCount').textContent = `(${d.frames.length}개)`;
   document.getElementById('thumbFramesHint').textContent = '';
@@ -5554,7 +5566,13 @@ function initThumb(){
     const gal = document.getElementById('thumbGallery'); if (gal) gal.innerHTML = '';
   }
   if (typeof MIX_JOB !== 'undefined' && MIX_JOB) THUMB_STATE.job = MIX_JOB;
-  if (!THUMB_STATE.frames.length) loadThumbFrames();           // 프레임은 이미 있으면 재요청 안 함
+  // ★진입마다 서버에 물어본다(2026-07-30). 예전엔 `if(!frames.length)`로 막았는데, 그게
+  // "자막제거 했는데 자막 있는 프레임이 뜬다"의 주범이었다: 자막제거 전에 5단계를 한 번 열면
+  // preview(자막 있음) 프레임이 THUMB_STATE에 들어가고, 그 뒤 2·3단계에서 자막제거를 해도
+  // 같은 페이지 세션에서는 다시 안 물어봐서 옛 프레임이 계속 떠 있었다(서버는 물어보면
+  // 자막제거본에서 다시 뽑아준다 — 실측 확인). 재추출 판단은 서버가 video_sig로 이미 하므로
+  // (같으면 저장된 목록만 돌려준다) 이 호출은 싸고, 프론트의 중복 캐시가 틀린 계층이었다.
+  loadThumbFrames();
   renderThumbLayers();
 }
 // ── 썸네일 끝 ────────────────────────────────────────────────
