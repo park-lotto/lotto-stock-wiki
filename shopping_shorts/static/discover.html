@@ -26,9 +26,11 @@
   .opt{font-size:12px;color:var(--sub);display:flex;align-items:center;gap:5px}
   .opt select{background:var(--inset);border:1px solid var(--line);border-radius:7px;color:var(--txt);padding:7px 8px;font-size:12px}
   .opt input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent)}
-  .mtabs{display:flex;gap:8px;border-bottom:1px solid var(--line);margin:6px 0 14px}
-  .mtab{padding:8px 14px;font-size:13px;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent}
+  .mtabs{display:flex;gap:8px;border-bottom:1px solid var(--line);margin:6px 0 14px;overflow-x:auto;scrollbar-width:thin}
+  .mtab{padding:8px 14px;font-size:13px;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;flex:0 0 auto}
   .mtab.active{color:var(--txt);border-bottom-color:var(--accent)}
+  /* 지표탭(전체·속도·가속·참여밀도)과 단순정렬탭(댓글·팔로워·조회수) 사이 구분선 — index.html과 동일 */
+  .tab-div{flex:0 0 auto;align-self:center;width:1px;height:18px;background:var(--line);margin:0 8px}
   .cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
   .cat{padding:7px 14px;border:1px solid var(--line);border-radius:20px;font-size:13px;color:var(--sub);cursor:pointer}
   .cat:hover{border-color:var(--accent);color:var(--txt)}
@@ -50,12 +52,50 @@
               width:52px;height:52px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;
               font-size:20px;display:flex;align-items:center;justify-content:center;
               pointer-events:none;border:2px solid rgba(255,255,255,.85)}
+  /* ── 썸네일 위 직관 배지 · 복사 · 차단 : index.html(레퍼런스 랭킹)과 동일 규격 ── */
+  .ibadge{position:absolute;top:8px;left:8px;z-index:3;pointer-events:none;
+          display:inline-flex;align-items:center;gap:5px;max-width:calc(100% - 16px);
+          font-family:'Pretendard Variable',Pretendard,-apple-system,system-ui,sans-serif;
+          font-size:12px;font-weight:700;line-height:1.1;padding:5px 11px 5px 8px;border-radius:999px;
+          color:#fff;letter-spacing:-.2px;white-space:nowrap;
+          background:rgba(16,16,20,.7);backdrop-filter:blur(8px) saturate(1.3);-webkit-backdrop-filter:blur(8px) saturate(1.3);
+          box-shadow:0 4px 14px rgba(0,0,0,.42),inset 0 0 0 1px rgba(255,255,255,.14);
+          text-shadow:0 1px 2px rgba(0,0,0,.5)}
+  .ibadge .emo{display:inline-block;font-size:13.5px;line-height:1;
+               animation:emoBob 1.5s ease-in-out infinite;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
+  @keyframes emoBob{0%,100%{transform:translateY(0) scale(1)}45%{transform:translateY(-2.5px) scale(1.18)}}
+  .ibadge .lbl{color:currentColor;filter:brightness(1.15)}
+  .ibadge.red{color:#ff6b6b}
+  .ibadge.green{color:#a6f078}
+  .ibadge.must{color:#fff;font-weight:800;font-size:12.5px;padding:6px 12px 6px 9px;
+               background:linear-gradient(135deg,#ff4d4d,#d81f1f);text-shadow:none;
+               box-shadow:0 0 0 1.5px rgba(255,150,150,.9),0 4px 16px rgba(255,50,50,.6);
+               animation:mustGlow 1.5s ease-in-out infinite}
+  .ibadge.must .lbl{color:#fff;filter:none}
+  .ibadge.must .emo{animation:emoBob 1.05s ease-in-out infinite}
+  @keyframes mustGlow{0%,100%{box-shadow:0 0 0 1.5px rgba(255,150,150,.85),0 4px 14px rgba(255,50,50,.5)}
+                      50%{box-shadow:0 0 0 2px rgba(255,200,200,1),0 5px 24px rgba(255,50,50,.95)}}
+  .vbadge{position:absolute;bottom:8px;right:8px;z-index:3;pointer-events:none;
+          font-family:'Pretendard Variable',Pretendard,system-ui,sans-serif;
+          font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:-.2px;
+          background:rgba(0,0,0,.62);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.4);
+          backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
   .card .body{padding:12px;flex:1;display:flex;flex-direction:column}
-  .card .rank{font-size:12px;color:var(--sub)}
-  .card .ch{font-weight:600;font-size:14px;margin:4px 0}
+  .card .rank{font-size:12px;color:var(--sub);display:flex;align-items:center;gap:6px}
+  .card .ch{font-weight:600;font-size:14px;margin:4px 0;display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .card .ch .chname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .copy{flex-shrink:0;background:var(--inset);border:1px solid var(--line);color:var(--sub);font-size:12px;padding:4px 7px;border-radius:6px;cursor:pointer;line-height:1}
+  .copy:hover{color:var(--sel-fg);border-color:var(--accent)}
+  .copy.copied{background:#2ea043;border-color:#2ea043;color:#fff}
+  /* 🚫 차단 = 관리자 전용. body.is-admin일 때만 뜬다(구독자 화면 플래시 방지) */
+  .blockbtn{display:none;flex-shrink:0;background:var(--inset);border:1px solid var(--line);color:var(--sub);
+    font-size:11px;padding:3px 7px;border-radius:6px;cursor:pointer;line-height:1;margin-left:auto}
+  .blockbtn:hover{color:#fff;background:#da3633;border-color:#da3633}
+  body.is-admin .blockbtn{display:inline-block}
   .stat{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-top:4px}
   .stat b{color:var(--txt)}
   .grade{font-size:14px}
+  .delta-up{color:var(--fire)}
   .btns{display:flex;gap:6px;margin-top:auto;padding-top:10px}
   .btns button{flex:1;font-size:11px;padding:7px 4px;border-radius:7px;border:1px solid var(--line);background:var(--inset);color:var(--txt);cursor:pointer}
   .btns button.view{border-color:var(--accent);color:var(--sel-fg)}
@@ -129,7 +169,14 @@
         <div class="mtab" data-mt="speed" onclick="setMTab('speed')" title="댓글수 ÷ 경과시간">⚡ 속도</div>
         <div class="mtab" data-mt="accel" onclick="setMTab('accel')" title="이번 Δ − 직전 Δ (증가세 가속)">📈 가속</div>
         <div class="mtab" data-mt="density" onclick="setMTab('density')" title="댓글수 ÷ 팔로워수">💥 참여밀도</div>
+        <span class="tab-div"></span>
+        <div class="mtab" data-mt="rawcomments" onclick="setMTab('rawcomments')" title="댓글 수가 많은 순 (절대값)">💬 댓글순</div>
+        <div class="mtab" data-mt="followers" onclick="setMTab('followers')" title="채널 팔로워(구독자)가 많은 순">👥 팔로워순</div>
+        <div class="mtab" data-mt="views" onclick="setMTab('views')" title="조회수가 많은 순">👁 조회수순</div>
       </div>
+      <input id="dsearch" type="text" placeholder="🔍 숏템검색 — 채널명·소재 (채이홈·피자…)"
+             oninput="setDSearch(this.value)"
+             style="width:100%;max-width:420px;margin:0 0 10px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
       <div class="cats" id="dfilter">
         <div class="cat active" data-f="all" onclick="setFilter('all')">전체</div>
         <div class="cat" data-f="hot" onclick="setFilter('hot')" title="종합등급 🔥🔥🔥">🔥 핫채널</div>
@@ -161,7 +208,7 @@ function setTab(t){
   if(t==='prune') loadRemoved();
 }
 const thumb = u => u ? '/api/thumb?url='+encodeURIComponent(u) : '';
-let DSTATE = {items:[], tab:'comments', days:2, filter:'all'};
+let DSTATE = {items:[], tab:'comments', days:2, filter:'all', q:''};
 const NEW_FOLLOWER_MAX = 10000;                 // 팔로워 1만 미만 = 뉴(신흥)
 const isHot = i => (i.grade||'') === '🔥🔥🔥';    // 종합등급 최상 = 핫
 const isNew = i => (i.followers||0) > 0 && (i.followers||0) < NEW_FOLLOWER_MAX;
@@ -189,9 +236,83 @@ function setMTab(t){
   document.querySelectorAll('.mtab').forEach(x=>x.classList.toggle('active',x.dataset.mt===t));
   renderDiscover();
 }
+// 정렬키 — 레퍼런스 랭킹(index.html sortKey)과 같은 규칙(2026-07-30).
+// '전체'는 오늘 증가분(delta) 기준: 누적값으로 세우면 같은 영상이 며칠째 같은 자리에 박힌다.
+// ?? 폴백으로 delta 없는 옛 피드는 자연히 누적 댓글수 기준으로 되돌아간다.
 function dSortKey(i){
-  return {comments:i.comments, speed:i.speed, accel:(i.accel??-1), density:i.density}[DSTATE.tab] || 0;
+  return {comments:(i.delta ?? i.comments), speed:i.speed, accel:(i.accel??-1), density:i.density,
+          rawcomments:(i.comments||0), followers:(i.followers||0), views:(i.views||0)}[DSTATE.tab] || 0;
 }
+// ── 숏템검색(채널명·아이디·카테고리·캡션) ────────────────────────────
+// index.html의 검색은 비전 주제태그·한국어 단어경계까지 보지만, 발굴 피드 항목엔
+// 비전태그가 아직 없어(태깅은 수집분에만 돈다) 여기선 텍스트 부분일치로 맞춘다.
+function _normUser(u){ return (u||'').trim().replace(/^@/,'').toLowerCase(); }
+function dMatches(i, q){
+  const n=(q||'').trim().toLowerCase();
+  if(!n) return true;
+  if(_normUser(i.username).includes(_normUser(n))) return true;     // @아이디 / 채널명 클릭
+  return [(i.name||''),(i.category||''),(i.caption||'')].join(' ').toLowerCase().includes(n);
+}
+function setDSearch(v){ DSTATE.q=v||''; renderDiscover(); }
+// 카드의 채널명 클릭 → 그 채널만(검색어=아이디). index.html searchChannel과 같은 동작.
+function dSearchChannel(username){
+  if(!username) return;
+  const box=document.getElementById('dsearch');
+  if(box) box.value=username;
+  setDSearch(username);
+}
+// ── 썸네일 배지 — index.html badgeHTML과 동일 규칙(지금 보이는 목록 안에서의 백분위) ──
+function _pctl(sorted, v){ let lo=0,hi=sorted.length; while(lo<hi){const m=(lo+hi)>>1; if(sorted[m]<=v) lo=m+1; else hi=m;} return sorted.length? lo/sorted.length : 0; }
+function _fmtViews(n){ n=n||0; return n>=10000 ? (n/10000).toFixed(1)+'만' : n.toLocaleString(); }
+function _insight(vr, dr, sr){
+  if(vr<=0.40 && sr>=0.85) return {e:'🚀', t:'SMALL · 떡상中', c:'red'};
+  if(dr>=0.90 && vr<=0.45) return {e:'💎', t:'SMALL · 알짜', c:'green'};
+  if(dr>=0.90 && vr>=0.60) return {e:'🔥', t:'반응 좋음', c:'green'};
+  if(sr>=0.92)             return {e:'📈', t:'급상승', c:'red'};
+  return null;
+}
+function badgeHTML(i, ctx){
+  const vr=_pctl(ctx.vs, i.views||0), dr=_pctl(ctx.ds, i.density||0), sr=_pctl(ctx.ss, i.speed||0);
+  const b=_insight(vr, dr, sr);
+  let h='';
+  if(b){
+    const must = (vr*0.35 + dr*0.50 + sr*0.15) >= 0.90;
+    h+=`<span class="ibadge ${must?'must':b.c}"><span class="emo">${must?'🎯':b.e}</span><span class="lbl">${must?'진짜 봐야할 것':b.t}</span></span>`;
+  }
+  if(i.views) h+=`<span class="vbadge">👁 ${_fmtViews(i.views)}</span>`;
+  return h;
+}
+// ── 🔗 릴스 링크 복사 (index.html copyLink과 동일) ──
+async function copyLink(url, btn){
+  try{ await navigator.clipboard.writeText(url); }
+  catch(e){ const t=document.createElement('textarea'); t.value=url; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+  const old=btn.textContent;
+  btn.textContent='✓ 복사됨'; btn.classList.add('copied');
+  setTimeout(()=>{ btn.textContent=old; btn.classList.remove('copied'); }, 1200);
+}
+// ── 🚫 채널 영구차단(관리자 전용) — 레퍼런스 랭킹과 같은 removed_channels를 쓴다 ──
+// 차단하면 발굴목록(discovered_channels)에서도 지워지고, 다음 발굴 known 제외에 걸려
+// 다시 안 올라온다. 복구는 '🧹 죽은 채널 정리' 탭의 「추적 제외됨」에서.
+const BLOCKED = new Set();
+async function blockChannel(username, name, btn){
+  const u=_normUser(username);
+  if(!u){ alert('채널 아이디를 알 수 없어 차단할 수 없습니다.'); return; }
+  if(!confirm(`@${u} 채널을 영구 차단할까요?\n\n지금 화면에서 바로 사라지고, 다음 발굴·업데이트에도 올라오지 않습니다.\n(🧹 죽은 채널 정리 탭 「추적 제외됨」에서 되돌릴 수 있습니다)`)) return;
+  if(btn){ btn.disabled=true; btn.textContent='차단 중…'; }
+  try{
+    const r=await fetch(`/api/prune/remove?username=${encodeURIComponent(u)}&name=${encodeURIComponent(name||u)}`,{method:'POST'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    BLOCKED.add(u);
+    DSTATE.items = DSTATE.items.filter(i=> _normUser(i.username)!==u);
+    renderDiscover();
+  }catch(e){
+    alert('차단 실패: '+e.message);
+    if(btn){ btn.disabled=false; btn.textContent='🚫 차단'; }
+  }
+}
+fetch('/api/prune/removed').then(r=>r.ok?r.json():null).then(d=>{
+  if(d && d.ok && Array.isArray(d.items)){ d.items.forEach(x=>BLOCKED.add(_normUser(x.username))); renderDiscover(); }
+}).catch(()=>{});
 
 async function runUpdate(){
   const btn=document.getElementById('updateBtn'), st=document.getElementById('ustatus');
@@ -256,33 +377,45 @@ function playInline(img){
   v.onerror=()=>{ v.replaceWith(img); img.title='영상 URL 만료 — 🔄 업데이트 후 재생 가능'; };
   img.replaceWith(v);
 }
+const _dEsc = s => String(s??'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
 function renderDiscover(items){
   if(items) DSTATE.items = items;
   const el=document.getElementById('dcards');
-  const list = DSTATE.items.slice().filter(passFilter).sort((a,b)=>dSortKey(b)-dSortKey(a));
+  let list = DSTATE.items.slice();
+  if(BLOCKED.size) list = list.filter(i=> !BLOCKED.has(_normUser(i.username)));  // 차단 채널은 항상 가린다
+  const searching = !!(DSTATE.q && DSTATE.q.trim());
+  // 검색 중엔 핫/뉴 필터를 무시하고 로드된 전체에서 찾는다(index.html render와 같은 규칙).
+  list = searching ? list.filter(i=>dMatches(i, DSTATE.q)) : list.filter(passFilter);
+  list.sort((a,b)=>dSortKey(b)-dSortKey(a));
   if(!list.length){ el.innerHTML='<div class="empty">결과 없음.</div>'; return; }
   el.innerHTML = _renderDiscoverCards(list);
   revealAdmin();   // 목록추가 버튼(.admin-only)은 렌더 후 관리자에게만 노출(피드 렌더가 /api/me보다 늦어도 안전)
 }
 function _renderDiscoverCards(list){
+  // 배지용 백분위 컨텍스트 — 지금 보이는 항목 기준(정렬·필터 반영). index.html _bctx와 동일.
+  const ctx={ vs:list.map(i=>i.views||0).sort((a,b)=>a-b),
+              ds:list.map(i=>i.density||0).sort((a,b)=>a-b),
+              ss:list.map(i=>i.speed||0).sort((a,b)=>a-b) };
   return list.map((i,idx)=>`
     <div class="card">
       <div class="badges">${isHot(i)?'<span class="badge hot">🔥 핫</span>':''}${isNew(i)?'<span class="badge new">🆕 뉴</span>':''}</div>
       <div class="thumb">
         <img src="${thumb(i.thumbnail)}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':''} loading="lazy" onerror="this.style.visibility='hidden'">
+        ${badgeHTML(i, ctx)}
         ${i.video_url?'<span class="play-badge">▶</span>':''}
       </div>
       <div class="body">
-        <div class="rank">#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</div>
-        <div class="ch">@${i.username} <span class="grade">${i.grade||''}</span></div>
+        <div class="rank"><span>#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</span><button class="blockbtn" title="이 채널을 영구 차단 — 지금 바로 가리고, 다음 발굴·업데이트에도 안 올라옵니다" onclick="blockChannel('${_dEsc(i.username)}','${_dEsc(i.name)}',this)">🚫 차단</button></div>
+        <div class="ch"><span class="chname" title="이 채널 영상만 보기" style="cursor:pointer" onclick="dSearchChannel('${_dEsc(i.username)}')">@${i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${_dEsc(i.url)}', this)">🔗 복사</button></div>
         <div class="rank" style="margin:-2px 0 4px">구독자 ${(i.followers||0).toLocaleString()} · 최근${DSTATE.days||2}일 ${i.recent_count||0}개</div>
-        <div class="stat"><span>댓글</span><b>${(i.comments||0).toLocaleString()} <span style="color:var(--fire)">${i.is_new?'신규':'+'+i.delta}</span></b></div>
-        <div class="stat"><span>속도(시간당)</span><b>${(i.speed||0).toFixed(1)}</b></div>
-        <div class="stat"><span>가속</span><b>${i.accel==null?'—':(i.accel>0?'+':'')+i.accel}</b></div>
-        <div class="stat"><span>참여밀도</span><b>${((i.density||0)*100).toFixed(2)}%</b></div>
+        ${i.views?`<div class="stat" title="조회수 — 도달 규모"><span>조회수</span><b>${i.views.toLocaleString()}</b></div>`:''}
+        <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${(i.comments||0).toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>
+        <div class="stat" title="댓글수 ÷ 경과시간(시간)"><span>속도(시간당)</span><b>${(i.speed||0).toFixed(1)}</b></div>
+        <div class="stat" title="이번 Δ − 직전 Δ (증가세가 빨라지는 중인지)"><span>가속</span><b>${i.accel==null?'—':(i.accel>0?'+':'')+i.accel}</b></div>
+        <div class="stat" title="댓글수 ÷ 팔로워수 (팔로워 대비 반응 비율)"><span>참여밀도</span><b>${((i.density||0)*100).toFixed(2)}%</b></div>
         <div class="btns">
-          <button class="view" onclick="window.open('${i.url}','_blank')">👁 보기</button>
-          <button class="add admin-only" id="add_${i.username}" style="display:none" onclick="addChannel('${i.username}',this)">➕ 목록추가</button>
+          <button class="view" onclick="window.open('${_dEsc(i.url)}','_blank')">👁 보기</button>
+          <button class="add admin-only" id="add_${i.username}" style="display:none" onclick="addChannel('${_dEsc(i.username)}',this)">➕ 목록추가</button>
         </div>
       </div>
     </div>`).join("");
@@ -353,6 +486,7 @@ function revealAdmin(){ if(window.IS_ADMIN) document.querySelectorAll('.admin-on
 fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
   if(d && d.customer_id===0){
     window.IS_ADMIN=true;
+    document.body.classList.add('is-admin');   // 카드의 🚫 차단 버튼을 CSS로 켠다(재렌더 불필요)
     revealAdmin();
   }else{
     document.getElementById('dstatus').textContent='저장된 발굴 피드를 볼 수 있습니다. (새 채널 발굴·목록추가는 관리자 전용)';
