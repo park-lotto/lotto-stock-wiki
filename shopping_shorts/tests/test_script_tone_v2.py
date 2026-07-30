@@ -142,3 +142,37 @@ def test_candidate_quality_joins_beats_as_sentences():
 def inspect_source(fn):
     import inspect
     return inspect.getsource(fn)
+
+
+# ── 5. 구조 교정(2026-07-30 백테스트로 드러난 결함) ────────────────────
+def test_cta_moved_to_last():
+    """★실측 job d01f6567: CTA 뒤에 '보충' 비트가 붙어 영상이 CTA로 안 끝났다."""
+    beats = [{"beat_idx": 0, "role": "훅", "narration": "훅"},
+             {"beat_idx": 1, "role": "CTA", "narration": "댓글에 '커피' 남겨주세요"},
+             {"beat_idx": 2, "role": "보충", "narration": "끈 달아 걸어두면 됩니다"}]
+    out = edit_plan._fix_beat_structure(beats)
+    assert edit_plan._is_cta(out[-1]), "CTA가 마지막이어야 한다"
+    assert [b["beat_idx"] for b in out] == [0, 1, 2], "재배치 후 beat_idx를 다시 매겨야 한다"
+
+
+def test_cta_already_last_is_untouched():
+    beats = [{"beat_idx": 0, "role": "훅", "narration": "훅"},
+             {"beat_idx": 1, "role": "CTA", "narration": "댓글 남겨주세요"}]
+    assert [b["role"] for b in edit_plan._fix_beat_structure(beats)] == ["훅", "CTA"]
+
+
+def test_banmal_cta_is_fixed():
+    """★실측 job e9e74aea/b3959fbc: CTA가 '남겨줘'로 반말이 됐다(존댓말 톤 깨짐)."""
+    beats = [{"beat_idx": 0, "role": "훅", "narration": "훅"},
+             {"beat_idx": 1, "role": "CTA", "narration": "비법 궁금하면 댓글에 커피 남겨줘"}]
+    out = edit_plan._fix_beat_structure(beats)
+    assert out[-1]["narration"].endswith("남겨주세요")
+
+
+def test_long_beat_drops_stale_caption_lines():
+    """긴 비트는 자막줄을 무효화해 3~4어절 규칙으로 다시 끊기게 한다(문장은 안 지운다)."""
+    long_n = "가" * 60
+    beats = [{"beat_idx": 0, "role": "해결", "narration": long_n, "caption_lines": ["옛", "줄"]}]
+    out = edit_plan._fix_beat_structure(beats)
+    assert out[0]["caption_lines"] is None
+    assert out[0]["narration"] == long_n, "이야기를 깨는 절단은 하지 않는다"

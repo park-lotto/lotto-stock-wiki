@@ -725,7 +725,7 @@ def _collect_seg_benefits(segments):
 
 def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3, call=_vault_call,
                             bank_context="", order_block="", lengthen=False,
-                            benefits_block="", tone_boost=False):
+                            benefits_block="", tone_boost=False, engine=None, engine_seed=0):
     """스토리 헌장 + 장면 팔레트 + 레퍼 구조 → 후보 n개. 각 비트는 seg_ids(2~4 다중컷)로
     장면을 지목한다. 실패 시 []. 헌장이 품질을 담당하므로 별도 검증루프 없음(1콜).
 
@@ -889,6 +889,9 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
             "문제·결과 비트는 반드시 '~하는 거 있죠?/~하더라구요/~하지 않나요?' 중 하나로 끝내고, "
             "오감 형용사·의태어를 4개 이상 문장 안에 녹여라. '너무·정말·진짜'로 때우지 마라.\n")
            if tone_boost else "")
+        # 엔진 버전별 추가 블록(2026-07-30). v2는 빈 문자열 = 현재 프롬프트 그대로(회귀0).
+        # v3부터 백테스트 은행 few-shot이 여기로 들어간다.
+        + _engine_extra(engine, engine_seed)
         + "\n출력은 스키마 JSON만.")
     raw = call(prompt, _SCENE_FIRST_SCHEMA)
     if not raw or not isinstance(raw, dict):
@@ -898,6 +901,16 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
 
 _STRONG_OPENER_TOKENS = ("와 ", "와,", "아니", "이거", "이걸", "저 이거", "헐", "대박",
                          "세상에", "이런", "저만")
+
+
+def _engine_extra(engine, seed=0):
+    """엔진 버전이 얹는 추가 프롬프트 블록(script_engine).
+    부가기능이라 실패해도 대본 생성을 죽이지 않는다 — 빈 문자열이면 v2와 동일."""
+    try:
+        from shopping_shorts import script_engine
+        return script_engine.get(engine).extra_rules(seed=seed)
+    except Exception:
+        return ""
 
 
 def _hook_opener(hook):
@@ -978,7 +991,61 @@ def _ground_candidate(cand, seg_map, structure="free"):
         })
     if not beats_out:
         return None
+    beats_out = _fix_beat_structure(beats_out)
     return {"structure": structure, "beats": beats_out}
+
+
+# CTA로 인식하는 role 표기(모델이 한글·영문을 섞어 쓴다).
+_CTA_ROLES = ("cta", "CTA", "씨티에이", "행동유도")
+# 반말 종결 → 존댓말(2026-07-30 실측: CTA가 "댓글에 커피 남겨줘"로 나온 건이 있었다).
+_BANMAL_FIX = [("남겨줘", "남겨주세요"), ("달아줘", "달아주세요"), ("써줘", "써주세요"),
+               ("해줘", "해주세요"), ("눌러줘", "눌러주세요"), ("봐줘", "봐주세요"),
+               ("해봐", "해보세요"), ("가봐", "가보세요"), ("써봐", "써보세요")]
+
+
+def _is_cta(beat):
+    role = (beat.get("role") or "")
+    return any(k.lower() in role.lower() for k in _CTA_ROLES)
+
+
+def _fix_beat_structure(beats):
+    """모델이 자주 어기는 **구조** 세 가지를 코드에서 바로잡는다(2026-07-30).
+
+    프롬프트에 문장을 더 넣어 고치려 하지 않는다 — 이 파일엔 '제약 과적재로 ★17개가
+    충돌했다'는 이력이 있고, 실제로 오늘 감각어 지시를 강화하자 어미가 무너졌다.
+    지킬 수 있는 건 코드가 지킨다.
+
+    ① CTA는 마지막이어야 한다 — 실측(job d01f6567)에서 CTA 뒤에 '보충' 비트가 붙어
+       영상이 CTA로 안 끝났다. CTA 비트를 맨 뒤로 옮긴다(내용은 안 건드림).
+    ② CTA 반말 금지 — "댓글에 커피 남겨줘"가 나왔다. 존댓말로 교정한다.
+    ③ 비트 하나에 문장을 몰아넣지 않는다 — 55자 넘고 문장이 2개 이상이면 한 문장만
+       남기고 뒤는 다음 비트로 넘기지 않는다(장면·seg 배정이 틀어지므로). 대신 **자르지 않고**
+       그대로 두되, 자막줄(caption_lines)만 무효화해 자막이 규칙대로 다시 끊기게 한다.
+       ※ 길이 자체는 프롬프트·재생성이 담당한다. 여기서 문장을 지우면 이야기가 깨진다.
+    """
+    if not beats:
+        return beats
+    # ① CTA 뒤에 다른 비트가 있으면 CTA를 맨 뒤로.
+    cta_idx = [i for i, b in enumerate(beats) if _is_cta(b)]
+    if cta_idx and cta_idx[-1] != len(beats) - 1:
+        i = cta_idx[-1]
+        beats = beats[:i] + beats[i + 1:] + [beats[i]]
+    # ② 마지막(=CTA 자리) 비트의 반말 종결 교정. 존댓말 톤 일관.
+    last = beats[-1]
+    narr = last.get("narration") or ""
+    for a, b in _BANMAL_FIX:
+        if narr.rstrip(" .!?").endswith(a):
+            last["narration"] = narr.rstrip(" .!?")[: -len(a)] + b
+            last["caption_lines"] = None        # 문장이 바뀌었으니 옛 자막줄은 무효
+            break
+    # ③ 과장된 비트는 자막줄만 무효화(자막이 3~4어절 규칙으로 다시 끊긴다).
+    for b in beats:
+        if len((b.get("narration") or "")) > 55:
+            b["caption_lines"] = None
+    # beat_idx 재부여(① 재배치로 어긋났을 수 있다 — 하류가 이 값으로 TTS·자막을 매칭한다).
+    for i, b in enumerate(beats):
+        b["beat_idx"] = i
+    return beats
 
 
 # 말투 게이트 임계(2026-07-30). 이 아래면 '옆에서 썰 푸는' 맛이 안 난다고 본다.
@@ -1521,7 +1588,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                            n_candidates=3, video_type=None, call=None, ping_pong=False,
                            backbone_meta=None, backbone_forced=None, bank_context="",
                            avoid_hooks=None, backbone_base=False, judge=False,
-                           is_recipe=False):
+                           is_recipe=False, engine=None):
     """장면 우선 대본 모드: 팔레트+헌장으로 후보 n개 생성 → 각 EDL grounding·채점 →
     최고 score에 recommended=True. 각 candidate.plan은 build_edit_plan 반환형(하류 렌더 호환).
     후보 0개면 candidates=[](호출부가 기존 build_edit_plan로 폴백).
@@ -1626,7 +1693,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     benefits_block = _source_benefits_block(source_scripts)
     raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates,
                                    call=_call, bank_context=bank_context, order_block=order_block,
-                                   benefits_block=benefits_block)
+                                   benefits_block=benefits_block, engine=engine)
     cands = _ground_score(raws)
     # ①생성측 보강(세션#2): 후보가 전부 목표보다 크게 짧으면(생성이 목표초 미달) 길이 강화
     # 힌트로 1회 재생성해 합친다. ②선택 감점(_length_penalty)이 짧은 후보를 강등하므로 병합 후
@@ -1640,7 +1707,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             raws2 = _scene_first_candidates(
                 inventory, reference_text, target_seconds, n=n_candidates, call=_call,
                 bank_context=bank_context, order_block=order_block, lengthen=True,
-                benefits_block=benefits_block)
+                benefits_block=benefits_block, engine=engine, engine_seed=1)
             cands = cands + _ground_score(raws2)
     # ★말투 게이트(2026-07-30 사장님 승인). 후보가 **전부** 밋밋하면 1회만 다시 뽑아 합친다.
     # 위 길이 재생성과 같은 규율: 전부 미달일 때만(과금 게이트) · 1회 상한 · 실패해도 기존 유지.
@@ -1650,7 +1717,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         raws3 = _scene_first_candidates(
             inventory, reference_text, target_seconds, n=n_candidates, call=_call,
             bank_context=bank_context, order_block=order_block, tone_boost=True,
-            benefits_block=benefits_block)
+            benefits_block=benefits_block, engine=engine, engine_seed=2)
         cands = cands + _ground_score(raws3)
     if cands:
         best = max(range(len(cands)), key=lambda i: cands[i]["score"])
