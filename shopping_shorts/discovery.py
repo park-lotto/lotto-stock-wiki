@@ -76,6 +76,7 @@ def _rank_reels(reels, prev_comments, prev_delta, now, window_hours, profiles=No
         for it in built:
             it["discovered"] = True
             it["followers"] = followers
+            it["bio"] = prof.get("biography") or ""   # 카테고리 약한 보조신호(추가 호출 0)
             it["recent_count"] = counts.get(owner.lower(), 0)
         items.extend(built)
     items = _one_per_channel(items)  # 채널 단위 — 채널당 대표 릴스 1개
@@ -150,12 +151,14 @@ def discover_multi(keywords, known, *, search_fn, fetch_reels_fn, profiles_fn=No
     known_n = {_norm(k) for k in known}
     seen = set()
     targets = []
-    for cands in results:
+    found_by = {}          # username소문자 → 이 채널을 찾아낸 해시태그(카테고리 힌트)
+    for keyword, cands in zip(keywords, results):
         for u in new_usernames(cands, known_n | seen, max_channels=max_channels_per):
             n = _norm(u)
             if n in seen:
                 continue
             seen.add(n)
+            found_by[n] = keyword
             targets.append(u)
             if len(targets) >= max_total:
                 break
@@ -165,7 +168,12 @@ def discover_multi(keywords, known, *, search_fn, fetch_reels_fn, profiles_fn=No
         return []
     reels = fetch_reels_fn(targets)
     profiles = _safe_profiles(profiles_fn, reels)
-    return _rank_reels(reels, prev_comments, prev_delta, now, window_hours, profiles)
+    items = _rank_reels(reels, prev_comments, prev_delta, now, window_hours, profiles)
+    # 어느 태그에서 나온 채널인지 항목에 실어 보낸다(2026-07-30) — 자동등록이 이걸
+    # 카테고리로 쓴다. 신규 채널은 이력도 캡션도 없어 '기타'로만 들어오던 문제.
+    for it in items:
+        it["discover_tag"] = found_by.get(_norm(it.get("username")), "")
+    return items
 
 
 def merge_feeds(prev, new, cap=None, now=None, ttl_days=None):

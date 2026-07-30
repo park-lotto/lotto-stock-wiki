@@ -571,6 +571,13 @@ class Store:
                     added_at TEXT
                 )
             """)
+            # 발굴 당시 해시태그에서 유추한 카테고리(2026-07-30). 신규 채널은 과거 이력도
+            # 캡션도 없어 전부 '기타'로 들어왔는데, 애초에 #주방템·#자취요리 같은 태그로
+            # 찾아낸 채널이라 그 태그가 곧 카테고리 힌트다(추가 크롤 없이 얻는 정보).
+            try:
+                c.execute("ALTER TABLE discovered_channels ADD COLUMN category TEXT")
+            except sqlite3.OperationalError:
+                pass  # 이미 존재
             # "영상 안 올라오는" 죽은 채널 — 엑셀 원본은 안 건드리고 여기에 넣어
             # collect()가 추적에서 제외한다(소프트 삭제, 복구 가능, 2026-07-12).
             c.execute("""
@@ -1039,13 +1046,17 @@ class Store:
         return json.loads(row[0]), row[1]
 
     # ── 발굴/정리 채널 관리(2026-07-12) ──
-    def add_discovered(self, username, name=""):
-        """발굴 채널을 벤치마크 목록에 추가(중복 시 이름 갱신). 제외목록에 있었다면 해제."""
+    def add_discovered(self, username, name="", category=""):
+        """발굴 채널을 벤치마크 목록에 추가(중복 시 이름 갱신). 제외목록에 있었다면 해제.
+
+        category: 발굴 태그에서 유추한 카테고리(2026-07-30). 이미 값이 있으면 덮지 않는다
+        — 먼저 붙은 판정이 대개 그 채널을 찾아낸 태그라 더 정확하고, 사람이 고친 값도 지켜야 한다."""
         with self._conn() as c:
             c.execute(
-                "INSERT INTO discovered_channels(username, name, added_at) "
-                "VALUES(?,?,datetime('now')) ON CONFLICT(username) DO UPDATE SET name=excluded.name",
-                (username, name or username),
+                "INSERT INTO discovered_channels(username, name, added_at, category) "
+                "VALUES(?,?,datetime('now'),?) ON CONFLICT(username) DO UPDATE SET "
+                "name=excluded.name, category=COALESCE(NULLIF(category,''), excluded.category)",
+                (username, name or username, category or ""),
             )
             c.execute("DELETE FROM removed_channels WHERE username=?", (username,))
 
@@ -1054,10 +1065,11 @@ class Store:
         added_at은 관리페이지 표시용 — collect union 소비자는 이 키를 무시한다(추가 키라 무해)."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT username, name, added_at FROM discovered_channels ORDER BY added_at DESC"
+                "SELECT username, name, added_at, COALESCE(category,'') "
+                "FROM discovered_channels ORDER BY added_at DESC"
             ).fetchall()
         return [{"name": r[1] or r[0], "username": r[0], "followers": 0, "inpock": "",
-                 "added_at": r[2] or ""} for r in rows]
+                 "added_at": r[2] or "", "category": r[3]} for r in rows]
 
     def instagram_activity_map(self):
         """reel_history에서 채널별 '가장 최근 새 영상' 시각·표시명 맵. {norm_username: {"last": iso, "name": str}}.

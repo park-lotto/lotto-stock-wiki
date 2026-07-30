@@ -16,6 +16,7 @@ service.py는 어느 쪽을 쓰든 하류가 무변경이다.
 테스트는 _scrape_one을 주입해 브라우저 없이 돈다(test_instagram_playwright.py).
 """
 import os
+from contextlib import contextmanager
 
 from shopping_shorts import config
 from shopping_shorts.instagram_parse import (
@@ -106,6 +107,32 @@ def _scrape_one_playwright(username):
         return captured, final_url, None
     except Exception as e:                        # noqa: BLE001 — 채널 하나의 실패로 전체가 죽지 않게
         return [], url, str(e)[:200]
+
+
+@contextmanager
+def _detail_context():
+    """세션·스텔스가 적용된 Playwright 컨텍스트 하나(REST 몇 건만 부를 때 쓴다).
+
+    스크레이프 본류와 달리 페이지를 열지 않고 ctx.request로 REST만 부르는 용도 —
+    카테고리 백필처럼 '캡션 1건만' 필요한 작업이 브라우저를 통째로 돌리지 않게 한다."""
+    from playwright.sync_api import sync_playwright
+    from playwright_stealth import Stealth
+
+    ctx_kw = {}
+    if config.INSTAGRAM_SESSION_PATH and os.path.exists(config.INSTAGRAM_SESSION_PATH):
+        ctx_kw["storage_state"] = config.INSTAGRAM_SESSION_PATH
+    elif config.INSTAGRAM_PROXY:
+        ctx_kw["proxy"] = {"server": config.INSTAGRAM_PROXY}
+    with sync_playwright() as p:
+        browser = p.chromium.launch(
+            headless=True, args=["--disable-blink-features=AutomationControlled"])
+        ctx = browser.new_context(**ctx_kw)
+        Stealth().apply_stealth_sync(ctx)
+        try:
+            yield ctx
+        finally:
+            ctx.close()
+            browser.close()
 
 
 def _fetch_reel_detail(ctx, pk):
@@ -294,7 +321,12 @@ def _fetch_profiles_playwright(usernames):
                 if u:
                     out[uname.lower()] = {"followers": int(u.get("follower_count") or 0),
                                           "posts": int(u.get("media_count") or 0),
-                                          "full_name": u.get("full_name") or ""}
+                                          "full_name": u.get("full_name") or "",
+                                          # 소개글 — 같은 응답에 들어 있어 추가 호출이 없다.
+                                          # 카테고리 판정의 **약한 보조 신호**로만 쓴다:
+                                          # 여러 분야를 함께 다루는 채널이 많다는 사장님 지적
+                                          # (2026-07-30) → 해시태그·캡션이 없을 때만 참고.
+                                          "biography": u.get("biography") or ""}
             ctx.close()
             browser.close()
     except Exception:      # noqa: BLE001 — 브라우저 자체가 안 뜨는 등 전체 실패면 빈 dict

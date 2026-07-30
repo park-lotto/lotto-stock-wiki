@@ -20,6 +20,7 @@ from shopping_shorts.apify_client import fetch_reels as _apify_fetch_reels
 from shopping_shorts.apify_client import fetch_profiles as _apify_fetch_profiles
 from shopping_shorts import instagram_playwright
 from shopping_shorts import discovery, instagram_search
+from shopping_shorts.categorize import categorize, category_of_hashtag
 
 # 발굴 입구 = 이 해시태그 목록이 전부다. 6개일 때 픽업이 21곳밖에 안 나온 게
 # 발단(2026-07-30) — 태그당 SERP 24건 → known 제외 → 최근 릴스 필터를 거치면
@@ -60,6 +61,22 @@ def _profiles_fn():
 _LOCK = threading.Lock()
 _JOB = {"status": "idle", "phase": "", "count": 0, "items": [],
         "error": None, "started": 0.0, "registered": 0}
+
+
+def _channel_category(item):
+    """발굴 채널 카테고리 — 해시태그가 1순위, 소개글은 보조(2026-07-30).
+
+    태그는 "이 채널을 어디서 찾았나"라 근거가 분명하다. 소개글은 여러 분야를 같이
+    다루는 채널이 많아 신호가 약하므로(사장님 지적) 태그로 못 정할 때만 본다.
+    둘 다 안 되면 빈 문자열 — 틀린 카테고리를 다느니 비워두는 게 낫다."""
+    tag_cat = category_of_hashtag(item.get("discover_tag"))
+    if tag_cat:
+        return tag_cat
+    bio = (item.get("bio") or "").strip()
+    if not bio:
+        return ""
+    guess = categorize(item.get("name") or "", bio)
+    return "" if guess == "기타" else guess
 
 
 def _known_usernames(store):
@@ -132,7 +149,11 @@ def _run(days, max_total, accumulate, auto_register=False):
             for it in items:
                 uname = it.get("username")
                 if uname:
-                    store.add_discovered(uname, name=it.get("name") or uname)
+                    # 찾아낸 해시태그를 카테고리로 물려준다(2026-07-30) — 신규 채널은
+                    # 과거 이력도 캡션도 없어 랭킹에서 전부 '기타'로 보이던 문제.
+                    store.add_discovered(
+                        uname, name=it.get("name") or uname,
+                        category=_channel_category(it))
                     registered += 1
         with _LOCK:
             _JOB.update(status="done", phase="완료", count=len(items), items=items,
