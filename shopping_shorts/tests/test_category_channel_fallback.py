@@ -36,3 +36,33 @@ def test_채널_카테고리도_없으면_기타():
     assert _category_of(meta, {"caption": ""}) == "기타"
     meta2 = dict(meta, category="   ")      # 공백만 있는 값도 없는 것으로 친다
     assert _category_of(meta2, {"caption": ""}) == "기타"
+
+
+# ── AI 재분류가 폴백을 덮지 않는지(2026-07-30 실사고) ────────────────────────
+from unittest.mock import patch                                    # noqa: E402
+from shopping_shorts import ai_categorize                          # noqa: E402
+
+
+def test_reclassify_skips_items_without_caption():
+    """캡션 없는 항목은 AI에 보내지 않는다 — 근거 없는 '기타'가 폴백을 덮었다."""
+    items = [{"category": "홈템", "caption": ""},          # 폴백으로 채워진 항목
+             {"category": "기타", "caption": "요리 레시피"}]
+    sent = {}
+
+    def fake_batch(batch, **kw):
+        sent["idxs"] = [i for i, _ in batch]
+        return {i: "레시피" for i, _ in batch}
+
+    with patch.object(ai_categorize.comment_gen, "SHORTS_GEMINI_KEYS", ["k"]), \
+         patch.object(ai_categorize, "_classify_batch", fake_batch):
+        ai_categorize.reclassify(items)
+    assert sent["idxs"] == [1], "캡션 없는 0번이 AI로 갔다"
+    assert items[0]["category"] == "홈템", "폴백이 덮였다"
+
+
+def test_reclassify_ai_기타는_기존값을_지우지_않는다():
+    items = [{"category": "홈템", "caption": "무언가"}]
+    with patch.object(ai_categorize.comment_gen, "SHORTS_GEMINI_KEYS", ["k"]), \
+         patch.object(ai_categorize, "_classify_batch", lambda b, **kw: {0: "기타"}):
+        ai_categorize.reclassify(items)
+    assert items[0]["category"] == "홈템"
