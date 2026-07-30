@@ -636,7 +636,18 @@ _SCRIPTED_PROMPT = """너는 숏폼 쇼핑 영상 편집 감독이다. **나레�
 - 출력은 스키마 JSON만."""
 
 
-def _vault_call(prompt, schema, max_tries=4):
+def _is_dead_key_error(e):
+    """이 키는 다시 써도 안 되는가(권한 거부·인증 실패·무효 키).
+
+    key_vault의 is_account_disabled_error는 '계정 정지' 문구만 보므로
+    'Your project has been denied access'(403 PERMISSION_DENIED)를 못 잡는다 —
+    2026-07-30 실측에서 이게 대본 생성 전체를 포기시키던 뿌리였다."""
+    m = str(e)
+    return any(t in m for t in ("PERMISSION_DENIED", "UNAUTHENTICATED",
+                                "API_KEY_INVALID", "API key not valid"))
+
+
+def _vault_call(prompt, schema, max_tries=8):
     """key_vault 캐스케이드 예비키풀로 JSON 생성 호출 → raw dict. 무키/실패면 None.
 
     build_edit_plan이 comment_gen 전용키(1개, 쉽게 소진) 대신 배치된 예비키를
@@ -657,6 +668,18 @@ def _vault_call(prompt, schema, max_tries=4):
                 key_vault.mark_exhausted(key_vault._owner_group(key) or "general", key)
                 continue
             if key_vault.is_quota_error(e):
+                continue
+            # ★죽은 키(403 권한거부·401 인증실패·무효키)는 **다음 키로 넘어간다**(2026-07-30).
+            #   예전엔 이 셋이 위 분류 어디에도 안 걸려 아래 `return None`으로 떨어졌다 —
+            #   라운드로빈이 죽은 키 하나를 집는 순간 **대본 생성이 통째로 포기**되고 호출부는
+            #   옛 생성기로 조용히 폴백했다(실측 2026-07-30: 캐스케이드 14키 중 12키가 멀쩡한데
+            #   403 키 하나 때문에 백테스트가 절반씩 실패). 키를 죽은 것으로 표시해 다음부터
+            #   아예 안 뽑히게 하고, 지금 호출은 다음 키로 계속한다.
+            if _is_dead_key_error(e):
+                try:
+                    key_vault.mark_exhausted(key_vault._owner_group(key) or "general", key)
+                except Exception:
+                    pass
                 continue
             # ★503/과부하는 일시적(2026-07-24 실측: scene_first가 이걸로 죽어 옛 대본으로 폴백,
             # 30초·7~8컷·대화 개선이 통째로 안 탔다). 포기 대신 잠깐 쉬고 다음 키로 재시도한다.

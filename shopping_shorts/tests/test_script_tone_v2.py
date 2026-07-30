@@ -176,3 +176,47 @@ def test_long_beat_drops_stale_caption_lines():
     out = edit_plan._fix_beat_structure(beats)
     assert out[0]["caption_lines"] is None
     assert out[0]["narration"] == long_n, "이야기를 깨는 절단은 하지 않는다"
+
+
+# ── 6. 죽은 키로 대본 생성이 통째로 포기되던 버그(2026-07-30 실측) ──────
+def test_dead_key_errors_are_recognized():
+    """★403 '권한 거부'가 분류에서 새서 _vault_call이 다음 키로 안 넘어가고 포기했다.
+
+    실측: 캐스케이드 14키 중 12키가 멀쩡한데 403 키 하나 때문에 백테스트가 절반씩 실패.
+    라이브에서도 그 키를 집으면 대본 생성이 죽고 옛 생성기로 조용히 폴백됐다.
+    """
+    real = Exception("403 PERMISSION_DENIED. {'error': {'code': 403, "
+                     "'message': 'Your project has been denied access.', "
+                     "'status': 'PERMISSION_DENIED'}}")
+    assert edit_plan._is_dead_key_error(real)
+    assert edit_plan._is_dead_key_error(Exception("401 UNAUTHENTICATED"))
+    assert edit_plan._is_dead_key_error(Exception("API key not valid"))
+
+
+def test_transient_errors_are_not_dead_keys():
+    """일시적 오류(503·429)를 죽은 키로 표시하면 멀쩡한 키를 영구히 버린다."""
+    assert not edit_plan._is_dead_key_error(Exception("503 UNAVAILABLE overloaded"))
+    assert not edit_plan._is_dead_key_error(Exception("429 RESOURCE_EXHAUSTED"))
+
+
+def test_vault_call_tries_next_key_after_dead_one(monkeypatch):
+    """죽은 키 뒤에 살아있는 키가 있으면 결과를 받아내야 한다(포기 금지)."""
+    kv = edit_plan.key_vault
+    monkeypatch.setattr(kv, "get_live_keys_cascade", lambda g: ["DEAD", "LIVE"])
+    monkeypatch.setattr(kv, "mark_exhausted", lambda *a, **k: None)
+    monkeypatch.setattr(kv, "_owner_group", lambda k: "general", raising=False)
+
+    class _Models:
+        def __init__(self, key):
+            self.key = key
+
+        def generate_content(self, **kw):
+            if self.key == "DEAD":
+                raise Exception("403 PERMISSION_DENIED. denied access")
+            class R:
+                text = '{"ok": true}'
+            return R()
+
+    monkeypatch.setattr(kv, "get_client_for_key",
+                        lambda key: type("C", (), {"models": _Models(key)})())
+    assert edit_plan._vault_call("prompt", {}) == {"ok": True}
