@@ -914,6 +914,32 @@ def api_saved(request: Request):
     return {"ok": True, "saved": sorted(store.saved_set(customer_id=_cid(request)))}
 
 
+def _enqueue_prewarm(store, shortcode, url, *, caption="", customer_id="0", category=None):
+    """담긴 영상의 사전분석(추출+구조분석)을 워커 큐에 걸어 제작소 1단계 로딩을 없앤다
+    (2026-07-30, 설계 `2026-07-29-추출속도-3종묶음-design.md` §2①).
+
+    여기서 걸러야 하는 것들(큐를 더럽히지 않는다):
+      · URL 없음 — 워커가 다운로드할 게 없다.
+      · 이미 유효 캐시 — 예열할 이유가 없다(제미니 재과금 방지).
+      · 같은 shortcode가 이미 큐에 있음 — 담기취소·재담기 연타로 중복 적재 방지.
+    래치·크레딧·일일상한은 워커 쪽 `prewarm.run_prewarm`이 최종 판단한다(서버는 얇게).
+    실패는 조용히 — 예열이 안 걸려도 제작소가 그때 추출하므로 기능은 그대로다."""
+    try:
+        if not (shortcode and (url or "").strip()):
+            return False
+        cached = store.get_extract(shortcode)
+        if cached and (cached.get("full_text") or "").strip():
+            return False
+        if store.queue_has_pending("prewarm", "shortcode", shortcode):
+            return False
+        store.enqueue("prewarm", {"shortcode": shortcode, "url": url, "caption": caption,
+                                  "customer_id": str(customer_id), "category": category})
+        return True
+    except Exception as e:  # noqa: BLE001 — 예열 실패는 담기를 막지 않는다
+        print(f"prewarm enqueue 실패(무해) {shortcode}: {e}", file=sys.stderr)
+        return False
+
+
 @app.post("/api/mix/basket/toggle")
 def api_mix_basket_toggle(request: Request, body: dict, background_tasks: BackgroundTasks):
     """영상 믹싱 바구니 담기/담기취소 토글. body: {shortcode, url, thumbnail, name, caption}.
@@ -945,6 +971,7 @@ def api_mix_basket_toggle(request: Request, body: dict, background_tasks: Backgr
                 store.mix_basket_set_meta(sc, customer_id=cid, meta=clean)
         if url and _grab_platform(url):
             background_tasks.add_task(_enrich_grab, url, sc, cid)
+        _enqueue_prewarm(store, sc, url, caption=body.get("caption") or "", customer_id=cid)
     return {"ok": True, "in": in_basket, "count": len(store.mix_basket_shortcodes(customer_id=cid))}
 
 
@@ -5920,6 +5947,7 @@ def api_grab(request: Request, background_tasks: BackgroundTasks,
         sc, url=url, thumbnail=thumbnail or "", name=(title or "")[:120],
         caption=(title or "")[:200], customer_id=cid)
     background_tasks.add_task(_enrich_grab, url, sc, cid)   # 썸네일·조회수 등 보강
+    _enqueue_prewarm(Store(DB_PATH), sc, url, caption=(title or "")[:200], customer_id=cid)
     return _grab_popup_html(True, "영상 즐겨찾기에 담겼어요!" if added else "이미 담겨 있어요",
                             f"{platform} · 왼쪽 ⭐영상 즐겨찾기에서 확인")
 

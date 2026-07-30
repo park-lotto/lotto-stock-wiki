@@ -3666,6 +3666,23 @@ class Store:
                 (task, json.dumps(args, ensure_ascii=False)))
             return cur.lastrowid
 
+    def queue_has_pending(self, task, key, value):
+        """이 task 큐에 args_json[key]==value 인 미완료(queued|running) 작업이 있나?
+        담기 연타·담기취소 후 재담기로 같은 영상 예열이 여러 번 쌓이는 것을 막는다
+        (2026-07-30). args_json은 자유 형식이라 SQL로 뒤지지 않고 파싱해 비교한다 —
+        큐가 짧게 유지되는(작업당 즉시 소비) 구조라 비용이 문제되지 않는다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT args_json FROM job_queue WHERE task=? AND state IN ('queued','running')",
+                (task,)).fetchall()
+        for (raw,) in rows:
+            try:
+                if (json.loads(raw or "{}") or {}).get(key) == value:
+                    return True
+            except Exception:  # noqa: BLE001 — 깨진 args는 없는 것으로 본다
+                continue
+        return False
+
     def claim_next(self):
         """가장 오래된 대기 작업 하나를 원자적으로 'running'으로 바꾸고 돌려준다.
 

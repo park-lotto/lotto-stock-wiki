@@ -12,7 +12,7 @@ import logging
 import threading
 import time
 
-from shopping_shorts import mix_pipeline, overseas_hot_jobs
+from shopping_shorts import mix_pipeline, overseas_hot_jobs, prewarm
 from shopping_shorts.config import DB_PATH
 from shopping_shorts.store import Store
 
@@ -31,6 +31,12 @@ TASKS = {
     "preview":  lambda a: mix_pipeline.run_preview(a["job_id"], DB_PATH, _MIX_WORK_DIR),
     "clean":    lambda a: mix_pipeline.run_clean_sources(a["job_id"], DB_PATH, _MIX_WORK_DIR),
     "overseas": lambda a: overseas_hot_jobs._run(),
+    # 담기 시 사전분석 예열(2026-07-30) — 제작소 1단계 로딩 제거용. 실패해도 무해하다
+    # (run_prewarm이 예외를 안 던지고 상태 문자열만 돌려준다).
+    "prewarm":  lambda a: prewarm.run_prewarm(
+        a.get("shortcode"), a.get("url"), caption=a.get("caption") or "",
+        customer_id=a.get("customer_id") or "0", video_url=a.get("video_url") or "",
+        category=a.get("category")),
 }
 
 # 진행 문구(phase·count)를 큐로 실어 보내는 리더 — 워커 프로세스 안에서만 읽을 수 있다
