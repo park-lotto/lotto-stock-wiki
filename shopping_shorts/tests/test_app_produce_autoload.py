@@ -171,3 +171,132 @@ def test_aipick_includes_handoff_video_not_in_library(monkeypatch, tmp_path):
     ids = {s["video_id"] for s in app_module._load_work_sources(wid, 0)}
     assert "NEW1" in ids   # ★핵심: 도서관에 없어도 후보에 남는다
     assert "LIB1" in ids
+
+
+# ── 동시 추출(2026-07-30) ────────────────────────────────────────────
+# 배경: 1단계 대기의 정체는 우리 CPU가 아니라 제미니 업로드·처리 응답이다. 순차로 돌리면
+# 그 대기가 영상 수만큼 더해졌다(3개=3배). 동시에 올리면 총 시간이 '가장 느린 1개'로 수렴.
+# 여기서 못 박는 계약: 실제로 겹쳐 돈다 / 동시 상한을 넘지 않는다 / 순차 때의 계약(순서·
+# 상한·환불·부분실패 격리)이 그대로 유지된다.
+def _urls(n):
+    return [{"url": f"https://www.instagram.com/reel/CONC{i}/", "name": f"n{i}"} for i in range(n)]
+
+
+def test_autoload_runs_extracts_concurrently(monkeypatch, tmp_path):
+    """추출이 겹쳐 돈다 — 순차면 최대 동시 관측치가 1이라 실패한다."""
+    import threading
+    client, _ = _client(monkeypatch, tmp_path)
+
+    def _fake_download(url, dest_dir):
+        Path(dest_dir).mkdir(parents=True, exist_ok=True)
+        p = Path(dest_dir) / "video.mp4"
+        p.write_bytes(b"x")
+        return str(p), ""
+    monkeypatch.setattr(app_module, "download_any", _fake_download)
+
+    live, peak, lock = [0], [0], threading.Lock()
+    start = threading.Barrier(3, timeout=5)   # 3개가 동시에 도달해야 통과 — 순차면 timeout
+
+    def _fake(video_path, code, caption=""):
+        with lock:
+            live[0] += 1
+            peak[0] = max(peak[0], live[0])
+        start.wait()                          # ★순차 실행이면 여기서 BrokenBarrier/timeout
+        with lock:
+            live[0] -= 1
+        return {"full_text": f"대본 {code}", "segments": []}
+    monkeypatch.setattr(app_module, "extract_auto", _fake)
+
+    r = client.post("/api/produce/autoload", json={"items": _urls(3)})
+    assert r.status_code == 200
+    assert r.json()["added"] == 3
+    assert peak[0] == 3, f"동시 실행이 아니다(최대 동시 {peak[0]})"
+
+
+def test_autoload_respects_worker_cap(monkeypatch, tmp_path):
+    """동시 상한을 넘지 않는다 — 제미니 429가 몰리면 오히려 느려지고 키가 소진된다."""
+    import threading
+    monkeypatch.setattr(app_module, "_AUTOLOAD_MAX_WORKERS", 2)
+    monkeypatch.setattr(app_module, "_AUTOLOAD_MAX_PER_CALL", 4)
+    client, _ = _client(monkeypatch, tmp_path)
+
+    def _fake_download(url, dest_dir):
+        Path(dest_dir).mkdir(parents=True, exist_ok=True)
+        p = Path(dest_dir) / "video.mp4"
+        p.write_bytes(b"x")
+        return str(p), ""
+    monkeypatch.setattr(app_module, "download_any", _fake_download)
+
+    live, peak, lock = [0], [0], threading.Lock()
+
+    def _fake(video_path, code, caption=""):
+        with lock:
+            live[0] += 1
+            peak[0] = max(peak[0], live[0])
+        import time as _t
+        _t.sleep(0.05)
+        with lock:
+            live[0] -= 1
+        return {"full_text": "대본", "segments": []}
+    monkeypatch.setattr(app_module, "extract_auto", _fake)
+
+    r = client.post("/api/produce/autoload", json={"items": _urls(4)})
+    assert r.status_code == 200
+    assert peak[0] <= 2, f"동시 상한 초과({peak[0]})"
+
+
+def test_autoload_partial_failure_is_isolated(monkeypatch, tmp_path):
+    """한 영상이 실패해도 나머지는 적재된다 + 결과 순서가 요청 순서와 같다."""
+    client, store = _client(monkeypatch, tmp_path)
+
+    def _fake_download(url, dest_dir):
+        Path(dest_dir).mkdir(parents=True, exist_ok=True)
+        p = Path(dest_dir) / "video.mp4"
+        p.write_bytes(b"x")
+        return str(p), ""
+    monkeypatch.setattr(app_module, "download_any", _fake_download)
+
+    def _fake(video_path, code, caption=""):
+        if code.endswith("bad") or "CONC1" in str(video_path):
+            raise RuntimeError("추출 실패")
+        return {"full_text": "대본", "segments": []}
+
+    items = _urls(3)
+    codes = [hashlib.sha1(i["url"].encode()).hexdigest()[:12] for i in items]
+    fail_code = codes[1]
+
+    def _fake2(video_path, code, caption=""):
+        if code == fail_code:
+            raise RuntimeError("추출 실패")
+        return {"full_text": "대본", "segments": []}
+    monkeypatch.setattr(app_module, "extract_auto", _fake2)
+
+    r = client.post("/api/produce/autoload", json={"items": items})
+    assert r.status_code == 200
+    d = r.json()
+    got = {x["shortcode"]: x["status"] for x in d["results"]}
+    assert d["added"] == 2
+    assert got[fail_code] != "added"
+    assert [x["shortcode"] for x in d["results"]] == codes   # 요청 순서 유지
+    # 실패한 영상은 래치가 걸려 다시 안 태운다(무한루프 차단 계약 유지)
+    assert store.autoload_attempts([fail_code]).get(fail_code, 0) >= 1
+
+
+def test_autoload_cached_items_skip_cap_and_credit(monkeypatch, tmp_path):
+    """캐시 히트(담기 예열이 채운 경우)는 호출당 상한도 크레딧도 쓰지 않는다."""
+    monkeypatch.setattr(app_module, "_AUTOLOAD_MAX_PER_CALL", 1)
+    client, store = _client(monkeypatch, tmp_path)
+    items = _urls(3)
+    for i in items:                     # 3개 모두 미리 캐시에 넣어둔다
+        code = hashlib.sha1(i["url"].encode()).hexdigest()[:12]
+        store.save_script(code, {"full_text": "예열된 대본", "segments": []})
+
+    def _boom(*a, **k):
+        raise AssertionError("캐시가 있는데 추출을 태웠다")
+    monkeypatch.setattr(app_module, "extract_auto", _boom)
+    monkeypatch.setattr(app_module, "download_any",
+                        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("no net")))
+
+    r = client.post("/api/produce/autoload", json={"items": items})
+    assert r.status_code == 200
+    assert r.json()["added"] == 3        # 상한 1이어도 캐시 3건은 다 통과
