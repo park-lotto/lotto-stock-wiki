@@ -15,6 +15,13 @@ from shopping_shorts import service
 
 def main():
     t0 = time.time()
+    # ★렌더 양보(2026-07-30) — 유튜브 수집은 API라 가볍지만, 렌더가 도는 1GB 서버에선
+    # 파이썬 프로세스 하나도 swap을 밀어낸다. 하루 1회라 다음 회차로 미뤄도 무해.
+    from shopping_shorts.config import DB_PATH
+    from shopping_shorts.store import Store
+    if Store(DB_PATH).heavy_job_active():
+        print("[daily_youtube_collect] 렌더/믹스 진행 중 — 이번 회차 스킵")
+        return 0
     try:
         # ⚠️ seed_only는 아직 켜지 않는다 (2026-07-29).
         # 켜면 키워드 경로가 빠져 '등록된 계정 시드'만 남는데, 랭킹에 등장하는 채널 715개 중

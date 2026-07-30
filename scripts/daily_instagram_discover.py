@@ -18,6 +18,13 @@ DAYS = 2          # 최근 이틀 이내 릴스만 발굴 대상(기존 화면 �
 
 def main():
     t0 = time.time()
+    # ★렌더 양보(2026-07-30) — 발굴은 태그마다 Playwright를 띄워 제일 무겁다.
+    # 렌더 중이면 건너뛴다(누적이라 한 회차 스킵은 손실이 아니다).
+    from shopping_shorts.config import DB_PATH
+    from shopping_shorts.store import Store
+    if Store(DB_PATH).heavy_job_active():
+        print("[daily_instagram_discover] 렌더/믹스 진행 중 — 이번 회차 스킵")
+        return 0
     with discover_jobs._LOCK:
         discover_jobs._JOB.update(status="running", phase="시작", count=0, items=[],
                                   error=None, started=t0, registered=0)

@@ -766,6 +766,8 @@ def _start_xhs_bg_discover_loop():
                 from shopping_shorts import overseas_hot_jobs
                 if overseas_hot_jobs.status().get("status") == "running":
                     continue  # 세션 경합 회피 — 다음 주기에 다시 시도
+                if Store(DB_PATH).heavy_job_active():
+                    continue  # ★렌더 양보(2026-07-30) — ffmpeg와 겹치면 서버가 swap으로 밀린다
                 n = len(service.discover_xiaohongshu_accounts())   # 누적만 쌓음(등록 X)
                 print(f"[xhs_bg] 발굴 누적 {n}계정", file=_sys.stderr)
             except Exception as e:              # noqa: BLE001 — 루프가 죽지 않게
@@ -840,6 +842,8 @@ def _start_ig_bg_discover_loop():
             try:
                 if Store(DB_PATH).get_setting("ig_discovery_bg_auto", "off") != "on":
                     continue
+                if Store(DB_PATH).heavy_job_active():
+                    continue  # ★렌더 양보(2026-07-30) — Playwright는 브라우저라 메모리가 크다
                 n = len(service.discover_instagram_accounts())   # 누적만 쌓음(등록 X)
                 print(f"[ig_discovery_bg] 발굴 누적 {n}계정", file=_sys.stderr)
             except Exception as e:              # noqa: BLE001 — 루프가 죽지 않게
