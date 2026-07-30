@@ -66,3 +66,22 @@ def test_bg_loops_call_the_gate():
     from pathlib import Path
     src = (Path(__file__).resolve().parents[1] / "app.py").read_text(encoding="utf-8")
     assert src.count("heavy_job_active") >= 2
+
+
+# ── 최종렌더 프리셋(2026-07-30 slow→medium) ──────────────────────────
+def test_final_preset_is_medium_and_crf_kept():
+    """속도는 preset으로 낮추고 화질 목표(CRF 16)는 유지한다는 계약을 못 박는다.
+    CRF가 함께 올라가면(=숫자 커지면) 화질이 실제로 떨어지므로 같이 검사한다."""
+    from shopping_shorts import video_assemble as va
+    assert va._FINAL_PRESET == "medium"
+    assert va._FINAL_CRF == "16"
+    assert va._preset() == "medium"          # 스레드로컬 미설정 시 기본값
+
+
+def test_preview_still_veryfast():
+    """미리보기는 계속 veryfast/28 — 최종 프리셋 변경이 미리보기를 느리게 만들지 않는다."""
+    from shopping_shorts import video_assemble as va
+    with va.preview_preset():
+        assert va._preset() == "veryfast"
+        assert va._crf() == "28"
+    assert va._preset() == "medium"          # 컨텍스트 벗어나면 복귀(오염 없음)
