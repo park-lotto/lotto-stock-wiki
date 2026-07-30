@@ -42,7 +42,27 @@ class Store:
         #     소규모(지인 판매) 스케일에선 허용. 필요 시 요청스코프 캐시로 별도 최적화.
 
     def _conn(self):
-        return sqlite3.connect(self.db_path)
+        """DB 연결 — **동시 처리의 바닥**(2026-07-30).
+
+        예전엔 기본 모드(journal_mode=delete)라 **쓰기 한 건이 DB 파일 전체를 잠갔다**.
+        워커가 1개일 때는 티가 안 났지만, 워커를 늘리면 곧바로 `database is locked`가
+        터져 "고객이 동시에 제작"이 불가능했다(실측: journal_mode delete).
+
+        - WAL: 읽기와 쓰기가 서로를 막지 않는다(쓰기끼리는 여전히 직렬, 그건 정상).
+          파일 속성이라 한 번 켜면 이후 모든 연결에 유지된다 — 매번 걸어도 무해.
+        - busy_timeout 15초: 쓰기 경합 시 즉시 실패하지 말고 기다린다(기본 5초는
+          렌더가 진행상황을 자주 쓰는 상황에서 짧았다).
+        - synchronous=NORMAL: WAL에서 안전하면서 fsync 횟수를 줄인다(swap 상시 서버에서
+          디스크 대기가 병목이었다).
+        """
+        c = sqlite3.connect(self.db_path, timeout=15.0)
+        try:
+            c.execute("PRAGMA journal_mode=WAL")
+            c.execute("PRAGMA synchronous=NORMAL")
+            c.execute("PRAGMA busy_timeout=15000")
+        except sqlite3.Error:
+            pass       # 파일 잠깐 잠겨 PRAGMA가 튕겨도 연결 자체는 쓴다
+        return c
 
     def _init_schema(self):
         with self._conn() as c:
@@ -866,6 +886,18 @@ class Store:
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_job_queue_state "
                       "ON job_queue(state, id)")
+            # 동시 처리(2026-07-30): 누구 작업인지(owner)와 우선순위(prio)를 기록한다.
+            #   owner  — 계정별 공평 분배용. FIFO만 쓰면 한 사람이 5건을 밀어넣는 순간
+            #            나머지 고객이 그 뒤에 줄서서 굶는다("누가 쓰면 느려지는" 원인).
+            #   prio   — 낮을수록 먼저. 고객이 기다리는 작업(렌더·믹스)이 배경 보조작업
+            #            (예열·수집)보다 앞선다. 예전엔 id순이라 예열이 남의 렌더를 밀었다.
+            for _col, _ddl in (("owner", "TEXT"), ("prio", "INTEGER")):
+                try:
+                    c.execute(f"ALTER TABLE job_queue ADD COLUMN {_col} {_ddl}")
+                except sqlite3.OperationalError:
+                    pass
+            c.execute("CREATE INDEX IF NOT EXISTS idx_job_queue_pick "
+                      "ON job_queue(state, prio, id)")
             # 진행상황(phase·count) 실어보내기(2026-07-29 Critical fix) — 서버·워커가 별개
             # 프로세스라 워커 안의 phase/count가 서버에 안 보였다. 큐에 실어 넘긴다.
             try:
@@ -3687,13 +3719,43 @@ class Store:
         return [{"platform": r[0], "shortcode": r[1]} for r in rows]
 
     # ── 독립워커 작업큐(2026-07-29) ──
-    def enqueue(self, task, args):
-        """작업을 대기열에 넣고 큐 id를 반환한다."""
+    # 고객이 화면 앞에서 기다리는 작업 = 0(먼저), 배경 보조작업 = 10(나중).
+    # 예전엔 큐가 id순이라 누가 영상 5개를 담으면 예열 5건이 남의 렌더를 앞질렀다(2026-07-30).
+    TASK_PRIO = {"render": 0, "mix": 0, "retype": 0, "preview": 0, "clean": 0,
+                 "prewarm": 10, "overseas": 20}
+
+    def _owner_of(self, task, args):
+        """이 작업이 누구 것인가(계정별 공평 분배용). 못 알아내면 None(제한 없음).
+
+        args에 customer_id가 있으면 그걸 쓰고, 믹스 계열은 job_id로 mix_jobs를 뒤진다."""
+        own = args.get("customer_id") if isinstance(args, dict) else None
+        if own not in (None, ""):
+            return str(own)
+        job_id = (args or {}).get("job_id") if isinstance(args, dict) else None
+        if not job_id:
+            return None
+        try:
+            with self._conn() as c:
+                row = c.execute("SELECT customer_id FROM mix_jobs WHERE job_id=?",
+                                (job_id,)).fetchone()
+            return str(row[0]) if row and row[0] is not None else None
+        except sqlite3.Error:
+            return None
+
+    def enqueue(self, task, args, owner=None, prio=None):
+        """작업을 대기열에 넣고 큐 id를 반환한다.
+
+        owner/prio를 안 주면 task와 args에서 알아낸다 — 호출부를 전부 고치지 않아도
+        공평 분배·우선순위가 적용되게(2026-07-30)."""
+        if owner is None:
+            owner = self._owner_of(task, args if isinstance(args, dict) else {})
+        if prio is None:
+            prio = self.TASK_PRIO.get(task, 5)
         with self._conn() as c:
             cur = c.execute(
-                "INSERT INTO job_queue(task, args_json, state, created_at) "
-                "VALUES(?,?, 'queued', datetime('now'))",
-                (task, json.dumps(args, ensure_ascii=False)))
+                "INSERT INTO job_queue(task, args_json, state, created_at, owner, prio) "
+                "VALUES(?,?, 'queued', datetime('now'), ?, ?)",
+                (task, json.dumps(args, ensure_ascii=False), owner, int(prio)))
             return cur.lastrowid
 
     def queue_has_pending(self, task, key, value):
@@ -3736,11 +3798,20 @@ class Store:
         UPDATE ... RETURNING 한 문장이라 워커가 여러 개여도 같은 작업을 두 번 집지 않는다
         (SQLite 3.35+ 필요, 서버 3.45 실측 확인). 없으면 None."""
         with self._conn() as c:
+            # 계정별 공평 분배(2026-07-30): **이미 처리 중인 작업이 있는 계정은 건너뛴다.**
+            # 순수 FIFO였을 때는 한 고객이 5건을 밀어넣으면 뒤에 온 고객이 그게 다 끝날
+            # 때까지 굶었다("누가 쓰면 느려지는" 진짜 원인 — 서버 크기 문제가 아니다).
+            # 워커가 N개면 서로 다른 계정 N명이 동시에 진행된다.
+            # owner가 NULL인 옛 작업·소유자 불명 작업은 제한 없이 집는다(하위호환).
             row = c.execute(
                 "UPDATE job_queue SET state='running', "
                 "       claimed_at=datetime('now'), heartbeat_at=datetime('now') "
-                " WHERE id = (SELECT id FROM job_queue WHERE state='queued' "
-                "             ORDER BY id LIMIT 1) "
+                " WHERE id = (SELECT q.id FROM job_queue q "
+                "             WHERE q.state='queued' "
+                "               AND (q.owner IS NULL OR q.owner NOT IN "
+                "                    (SELECT owner FROM job_queue "
+                "                      WHERE state='running' AND owner IS NOT NULL)) "
+                "             ORDER BY COALESCE(q.prio, 5), q.id LIMIT 1) "
                 "RETURNING id, task, args_json").fetchone()
             if not row:
                 return None
