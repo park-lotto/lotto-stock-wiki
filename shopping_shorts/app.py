@@ -1067,6 +1067,7 @@ def _known_usernames(store):
         known |= {c["username"] for c in load_channels()}
     except Exception:
         pass  # 엑셀 경로 없음(로컬) — 발굴은 계속 동작
+    known |= store.removed_usernames()   # 🚫 차단 채널 = 재발굴 금지(discover_jobs와 동일)
     return known
 
 
@@ -1176,8 +1177,16 @@ def api_discover_status():
 
 @app.get("/api/discover/feed")
 def api_discover_feed():
-    """마지막 발굴 피드 반환(새로고침 시 복원 — 특히 누적 모드)."""
-    items, updated_at = Store(DB_PATH).load_discovery_feed()
+    """마지막 발굴 피드 반환(새로고침 시 복원 — 특히 누적 모드).
+    🚫 영구차단(2026-07-30): 카드의 차단 버튼이 넣은 removed_channels를 걸러낸다.
+    다음 발굴은 known 제외로 안 담지만, 이미 저장된 피드에는 남아 있어 여기서도 잘라야
+    차단 후 새로고침에 다시 뜨지 않는다(/api/reference와 같은 처리)."""
+    store = Store(DB_PATH)
+    items, updated_at = store.load_discovery_feed()
+    blocked = store.removed_usernames()
+    if blocked:
+        items = [i for i in items
+                 if (i.get("username") or "").strip().lstrip("@").lower() not in blocked]
     return {"ok": True, "items": items, "updated_at": updated_at}
 
 

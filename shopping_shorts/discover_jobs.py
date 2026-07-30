@@ -68,6 +68,10 @@ def _known_usernames(store):
         known |= {c["username"] for c in load_channels()}
     except Exception:
         pass
+    # 🚫 영구차단(2026-07-30): 차단 채널은 '이미 아는 채널'로 취급해 재발굴을 막는다.
+    # 차단만 하고 목록추가는 안 한 채널은 discovered에도 엑셀에도 없어서, 이게 없으면
+    # 다음 업데이트에 다시 올라온다.
+    known |= store.removed_usernames()
     return known
 
 
