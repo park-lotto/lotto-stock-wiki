@@ -147,6 +147,31 @@ def test_merge_feeds_accumulates_and_updates():
     assert len(out) == 3              # 누적(a,b,c)
 
 
+def test_merge_feeds_ttl_drops_channels_not_seen_for_3_days():
+    now = datetime(2026, 7, 30, 9, 0, tzinfo=timezone.utc)
+    prev = [
+        {"username": "old", "comments": 99,      # 4일 전 마지막 관측 → 만료
+         "last_seen": (now - timedelta(days=4)).isoformat()},
+        {"username": "recent", "comments": 1,    # 1일 전 → 보존
+         "last_seen": (now - timedelta(days=1)).isoformat()},
+    ]
+    new = [{"username": "fresh", "comments": 5}]
+    out = discovery.merge_feeds(prev, new, now=now, ttl_days=3)
+    assert [i["username"] for i in out] == ["fresh", "recent"]
+    assert out[0]["last_seen"] == now.isoformat()   # 이번에 잡힌 채널은 시각 갱신
+
+
+def test_merge_feeds_ttl_refreshes_last_seen_when_seen_again():
+    now = datetime(2026, 7, 30, 9, 0, tzinfo=timezone.utc)
+    prev = [{"username": "a", "comments": 1,
+             "last_seen": (now - timedelta(days=4)).isoformat()}]
+    out = discovery.merge_feeds(prev, [{"username": "A", "comments": 7}],
+                                now=now, ttl_days=3)
+    # 만료 직전이라도 이번 발굴에 다시 잡혔으면 살아남고 시계가 리셋된다
+    assert len(out) == 1 and out[0]["comments"] == 7
+    assert out[0]["last_seen"] == now.isoformat()
+
+
 def test_find_inactive_flags_channels_with_no_reels():
     channels = [
         {"name": "살아있음", "username": "alive"},

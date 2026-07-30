@@ -168,22 +168,52 @@ def discover_multi(keywords, known, *, search_fn, fetch_reels_fn, profiles_fn=No
     return _rank_reels(reels, prev_comments, prev_delta, now, window_hours, profiles)
 
 
-def merge_feeds(prev, new, cap=None):
+def merge_feeds(prev, new, cap=None, now=None, ttl_days=None):
     """누적 모드 — 이전 발굴 피드에 새 결과를 채널 단위로 합친다(2026-07-12).
     같은 채널(username)은 새 데이터로 갱신(최신 지표), 나머지 이전 채널은 유지.
     새로 발굴된 채널이 위로 오도록 new 먼저, 그 뒤 겹치지 않는 prev.
 
+    ttl_days 지정 시 **마지막으로 발굴에 잡힌 시점(last_seen)에서 그 일수만큼만
+    보존**하고 넘긴 채널은 떨어뜨린다(2026-07-30, 사장님 지시 "채널은 누적개념으로
+    3일간 보존"). 매 병합에서 new에 들어온 채널은 last_seen이 now로 갱신되므로,
+    계속 잡히는 채널은 계속 남고 3일간 한 번도 안 잡힌 채널만 빠진다. last_seen이
+    없는 옛 항목은 이번 실행 시각으로 간주해 한 번은 살려둔다(마이그레이션).
+
     cap 지정 시 병합 후 댓글수(comments) 내림차순 상위 cap개만 남긴다(2026-07-13
     — 매일 누적만 하고 트리밍이 없어 무한정 커지던 문제 해결. 댓글수 낮은
     채널이 자연스럽게 밀려서 빠지는 로테이션 효과)."""
+    now = now or datetime.now(timezone.utc)
+    stamp = now.isoformat()
     new_keys = {(_norm(i.get("username"))) for i in new}
-    out = list(new)
+    out = []
+    for i in new:
+        i = dict(i)
+        i["last_seen"] = stamp
+        out.append(i)
     for i in prev:
-        if _norm(i.get("username")) not in new_keys:
-            out.append(i)
+        if _norm(i.get("username")) in new_keys:
+            continue
+        if ttl_days and _age_days(i.get("last_seen"), now, default=0.0) > ttl_days:
+            continue
+        i = dict(i)
+        i.setdefault("last_seen", stamp)
+        out.append(i)
     if cap:
         out = sorted(out, key=lambda i: i.get("comments") or 0, reverse=True)[:cap]
     return out
+
+
+def _age_days(last_seen, now, default=0.0):
+    """last_seen(ISO 문자열) → now까지 경과 일수. 없거나 못 읽으면 default."""
+    if not last_seen:
+        return default
+    try:
+        dt = datetime.fromisoformat(str(last_seen))
+    except (ValueError, TypeError):
+        return default
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return (now - dt).total_seconds() / 86400.0
 
 
 def find_inactive(channels, active_usernames):
