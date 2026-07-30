@@ -5566,7 +5566,7 @@ def access_level(customer_id, now=None):
     """customer_id → "full"(전기능) | "ranking_only"(랭킹만) | "pending"(승인대기, 전면차단).
     규칙: 사장님(0)=full / 계정없음=ranking_only / 미승인(approved_at NULL)=pending /
     plan=pro=full / 체험중(now<full_access_until)=full / 그 외 ranking_only."""
-    if customer_id == 0:
+    if _as_cid(customer_id) == 0:           # "0"(문자열)로 와도 사장님 (2026-07-30)
         return "full"                       # 사장님 = 영구 pro+admin
     cust = Store(DB_PATH).get_customer(customer_id)
     if not cust:
@@ -5590,7 +5590,7 @@ def access_level(customer_id, now=None):
 
 def _is_trial(customer_id, now=None):
     """무료체험 이벤트 중인가 = 미승인(approved_at None) AND 체험창(trial_ends_at) 안. 사장님(0) 제외."""
-    if customer_id == 0:
+    if _as_cid(customer_id) == 0:
         return False
     cust = Store(DB_PATH).get_customer(customer_id)
     if not cust or cust.get("approved_at") is not None:
@@ -5622,6 +5622,17 @@ def _valid_backbone_main(raw, n_urls):
     return idx if 0 <= idx < n_urls else None
 
 
+def _as_cid(customer_id):
+    """customer_id를 정수로 정규화. 숫자로 못 바꾸면 원값 그대로(비교만 실패하게).
+
+    호출 경로가 섞여 있다 — 쿠키·큐 args는 문자열("0"), 내부 호출은 int(0). 등급 판정을
+    `== 0`으로 하던 곳이 문자열을 무료 등급으로 떨궈 사고가 났다(2026-07-30)."""
+    try:
+        return int(customer_id)
+    except (TypeError, ValueError):
+        return customer_id
+
+
 def check_and_count(customer_id, op):
     """유료 op(lens/render/script) 실행 전 호출. 일일 상한 초과면 False(막기),
     아니면 카운트+1 후 True. 관리자=무제한 / pro=limit_{op}_pro / 무료=limit_{op}."""
@@ -5637,7 +5648,12 @@ def check_and_count(customer_id, op):
             return False
         st.usage_incr(customer_id, "render", "trial")
         return True
-    is_paid = (customer_id == 0) or (st.get_customer(customer_id) or {}).get("plan") == "pro"
+    # ★customer_id는 호출 경로에 따라 int 0 또는 문자열 "0"으로 온다(2026-07-30 실사고).
+    #   `customer_id == 0`만 보면 문자열 "0"이 False가 돼 **사장님 계정이 무료 등급으로 계산**됐다
+    #   → limit_script 10건. 예열(prewarm)은 customer_id를 문자열로 넘기므로, 하루 10건을 넘는
+    #   순간 담긴 영상의 대본 예열이 전부 skipped_limit로 조용히 스킵됐다(실측: 3개 담았는데
+    #   유튜브 2개만 대본이 생기고 인스타·샤오홍슈는 0.03초 만에 done 처리).
+    is_paid = (_as_cid(customer_id) == 0) or (st.get_customer(customer_id) or {}).get("plan") == "pro"
     if is_paid:
         key, dflt = f"limit_{op}_pro", _CREDIT_PRO_DEFAULTS.get(op, 100)
     else:
@@ -5763,7 +5779,7 @@ _ADMIN_EMAILS = {"parklotto12@gmail.com"}
 
 def _code_admin(customer_id):
     """코드로 고정된 관리자 = 사장님(0) 또는 이메일 화이트리스트. UI로 회수 불가(락아웃 방지 바닥)."""
-    if customer_id == 0:
+    if _as_cid(customer_id) == 0:
         return True
     if not customer_id:
         return False
@@ -5774,7 +5790,7 @@ def _code_admin(customer_id):
 def _is_admin(customer_id):
     """관리자 = 사장님(0) 또는 이메일 화이트리스트(코드) 또는 사장님이 UI로 지정(customers.admin=1).
     지정 관리자는 권한이 코드 관리자와 완전히 동일하다."""
-    if customer_id == 0:
+    if _as_cid(customer_id) == 0:
         return True
     if not customer_id:
         return False
