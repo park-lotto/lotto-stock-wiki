@@ -16,6 +16,7 @@ from pathlib import Path
 import requests
 from fastapi import BackgroundTasks, FastAPI, Request, UploadFile, File, Form
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse, Response
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from shopping_shorts import service
 from shopping_shorts.service import collect, census, generate_missing_drafts, next_draft_targets, youtube_channel_board
@@ -77,6 +78,14 @@ from shopping_shorts import thumb_title
 import uuid
 
 app = FastAPI(title="숏템메이커 레퍼런스 랭킹")   # /docs 노출 제목 — 브랜드 통일(2026-07-25)
+
+# 응답 gzip 압축(2026-07-30) — 유튜브 랭킹이 느리게 뜨던 직접 원인.
+# /api/reference?platform=youtube 응답이 **3.34MB**였다(6,113건, 인스타는 0.30MB/289건).
+# nginx는 gzip on이지만 gzip_types가 주석 처리돼 있어 application/json은 그대로 나갔다
+# (서버 /etc/nginx/nginx.conf:53 실측). nginx 설정을 손으로 고치면 git에 안 남아
+# 다음 배포 때 사라지므로, 앱에서 압축한다. JSON은 보통 8~10배 줄어든다.
+# minimum_size: 작은 응답은 압축이 오히려 손해라 1KB 미만은 그대로 보낸다.
+app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 
 @app.on_event("startup")
