@@ -21,6 +21,20 @@ def grade_from_scores(score):
     return "—"
 
 
+def _category_of(meta, reel):
+    """항목 카테고리 — 캡션 우선, 없으면 **채널 카테고리**(2026-07-30).
+
+    캡션은 릴스 상세 REST에서만 오는데, 그 호출이 429의 주범이라 껐다
+    (instagram_playwright 주석). 캡션이 비면 categorize가 거의 전부 '기타'를 돌려주므로
+    (실측: 289건 중 277건), 채널이 과거에 어떤 카테고리였는지를 meta['category']로 받아
+    폴백한다. 카테고리는 릴스보다 채널의 성질에 가까워서 이쪽이 오히려 안정적이다.
+    캡션이 있으면 종전대로 캡션 판정을 우선한다(개별 릴스가 더 정확할 때가 있다)."""
+    guess = categorize(meta.get("name"), reel.get("caption", ""))
+    if guess == "기타":
+        return (meta.get("category") or "").strip() or guess
+    return guess
+
+
 def build_items(reels, meta, prev_comments, prev_delta, now=None, window_hours=48):
     """reel 원본 + 채널메타 → 지표 채워진 항목 리스트 (48h 이내만).
 
@@ -61,7 +75,7 @@ def build_items(reels, meta, prev_comments, prev_delta, now=None, window_hours=4
             "accel": accel,
             "speed": comments / age if age > 0 else float(comments),
             "density": (comments / followers) if followers else 0.0,
-            "category": categorize(meta.get("name"), r.get("caption", "")),
+            "category": _category_of(meta, r),
             "caption": r.get("caption", ""),
         })
     return items

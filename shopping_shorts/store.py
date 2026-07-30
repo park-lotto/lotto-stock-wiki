@@ -1155,6 +1155,24 @@ class Store:
             rows = c.execute("SELECT username FROM channel_activity WHERE alive=1").fetchall()
         return {r[0] for r in rows}
 
+    def channel_categories(self):
+        """{username소문자: 대표 카테고리} — 그 채널 릴스에 가장 많이 붙었던 카테고리.
+
+        캡션 없이 수집하게 되면서(429 회피, 2026-07-30) 릴스마다 카테고리를 판정할
+        근거가 사라졌다. 카테고리는 사실상 채널의 성질이므로 과거 이력에서 최빈값을
+        뽑아 폴백으로 쓴다. '기타'는 후보에서 뺀다 — 폴백의 목적이 '기타' 탈출이다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT LOWER(username), category, COUNT(*) FROM reel_history "
+                "WHERE category IS NOT NULL AND category NOT IN ('', '기타') "
+                "GROUP BY LOWER(username), category"
+            ).fetchall()
+        best = {}
+        for user, cat, n in rows:
+            if user not in best or n > best[user][1]:
+                best[user] = (cat, n)
+        return {u: cat for u, (cat, _n) in best.items()}
+
     def prev_comments(self, shortcode):
         """가장 최근에 기록된 이 영상의 댓글수. 없으면 None."""
         with self._conn() as c:

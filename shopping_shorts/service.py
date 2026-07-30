@@ -478,6 +478,15 @@ def collect(platform="instagram", categories=None, limit_channels=None, on_progr
     meta_by_user = {c["username"]: c for c in channels}
     usernames = list(meta_by_user.keys())
 
+    # 채널 대표 카테고리 주입(2026-07-30) — 캡션 없이 수집하게 되면서 릴스 단위 판정이
+    # 거의 '기타'로 떨어졌다(실측 289건 중 277건). 과거 이력의 최빈 카테고리를 meta에
+    # 실어 ranking._category_of가 폴백으로 쓰게 한다. 엑셀 메타에 category가 이미
+    # 있으면 그걸 존중한다(사람이 정한 값이 우선).
+    _chan_cats = Store(DB_PATH).channel_categories()
+    for _u, _m in meta_by_user.items():
+        if not (_m.get("category") or "").strip():
+            _m["category"] = _chan_cats.get((_u or "").lower().lstrip("@"), "")
+
     # ── 스크레이퍼 선택(2026-07-28) ──
     # Apify는 성공해도 28분, 403으로 통째로 죽는 사례 2건(서버 collect_jobs 실측).
     # Playwright 경로는 채널별 실패 격리 + 진행률 보고가 된다. 라이브가 이 수집에
