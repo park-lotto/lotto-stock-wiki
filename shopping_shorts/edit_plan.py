@@ -725,7 +725,7 @@ def _collect_seg_benefits(segments):
 
 def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3, call=_vault_call,
                             bank_context="", order_block="", lengthen=False,
-                            benefits_block=""):
+                            benefits_block="", tone_boost=False):
     """스토리 헌장 + 장면 팔레트 + 레퍼 구조 → 후보 n개. 각 비트는 seg_ids(2~4 다중컷)로
     장면을 지목한다. 실패 시 []. 헌장이 품질을 담당하므로 별도 검증루프 없음(1콜).
 
@@ -806,11 +806,22 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "- ★비트는 6~7개로 나누고 위 5단계를 이 비트들에 배분해라(②문제·③해결은 각각 1~2비트로 늘려도 됨). "
         "각 비트 role에 어느 단계인지 적어라(예: '훅'·'문제'·'해결'·'결과'·'CTA').\n"
         "- ★beats[0].narration이 곧 훅이다 — 위 훅 패턴대로 강하게 열어라. hook 필드에도 같은 문장을 넣어라.\n"
-        "- ★문장은 짧게: 한 문장은 공백 포함 25자 내외(최대 35자)로 끊어라. 이유·결과·기능·감상을 "
-        "한 문장에 다 담지 말고 [행동 1문장] → [반응 1문장]으로 쪼개라.\n"
-        "  (BAD) \"남편이 이거 설치해주더니 진짜 신세계라고 말하면서 화장실만 가면 땀범벅인 가족 위해 "
-        "무선 실링팬 하나 장만했어요.\"(61자, 한 문장에 다 욱여넣음)\n"
-        "  (GOOD) \"남편이 화장실만 들어갔다 오면 땀을 뻘뻘 흘리더라고요. 참다못해 이걸 붙여줬는데...\"\n"
+        # 2026-07-30(사장님 확정, v2): 예전 규칙 "한 문장 25자(최대 35자)"는 '스펙 욱여넣기'를
+        # 막으려 넣었는데 반대편으로 넘어가 **모든 비트가 25자 단문 1개**가 됐다(실측: 후보 9개
+        # 전량이 '~했어요/~네요'로 끊기는 스타카토). 게다가 '~하는 거 있죠?/~하더라구요'류는
+        # 앞 절("쿠키인 줄 알았는데")이 필요해 25자 안에 물리적으로 안 들어간다 —
+        # 길이 규칙이 어미 규칙을 이기고 있었다. → 역할별로 길이를 다르게 준다.
+        "- ★문장 길이는 **역할마다 다르다**(한 가지 상한을 전 비트에 걸지 마라):\n"
+        "  · 훅(beats[0])과 CTA(마지막 비트): 12~20자로 **짧고 세게**. 여기서 길어지면 "
+        "첫 1초 스크롤이 안 멈춘다.\n"
+        "  · 문제·해결·결과 비트: 25~50자. 앞 문장을 받아 이어지게 풀어 써라. "
+        "이 구간이 짧으면 말맛이 죽고 광고 문구처럼 된다.\n"
+        "  (BAD) \"공기 순환도 되고 습기도 잡고 냄새도 없애줘서 삶의 질이 올라갔어요.\" "
+        "(기능 나열을 한 문장에 욱여넣음 — 길이가 아니라 **나열**이 문제다)\n"
+        "  (BAD) \"방마다 쿠키가 있네요. 커피향이 나서 물어봤어요. 방향제래요.\" "
+        "(전부 25자 단문 — 문장끼리 안 이어져 스타카토로 끊긴다)\n"
+        "  (GOOD) \"친구 집에 갔더니 방마다 쿠키가 놓여 있는 거예요. 향이 하도 좋아서 어디서 "
+        "샀냐고 물었거든요. 근데 그게 커피 찌꺼기로 만든 거라지 뭐예요.\"\n"
         "- 각 비트: role·narration(구어체)·seg_ids(2~4개 시간순)·fit(1~5)·forced(장면이 말과 안 맞는데 억지면 true).\n"
         "- 선택한 seg_id 화면의 동작을 narration에 반영해라(화면과 말이 따로 놀지 않게). 화면에 없는 걸 "
         "말하지 마라. 같은 seg_id를 여러 비트에서 재사용 금지.\n"
@@ -820,18 +831,48 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         # 2026-07-29(사장님 확정): 실측 후보가 '~했어요/~네요'만 반복해 광고처럼 밋밋. 옆에서 썰 푸는
         # 생생한 이야기체 어미를 강제한다(tone_score의 '어미 단조' 감점과 맞물림). 은행 재도입 없이
         # 프롬프트에서 직접 요구 — 은행 통째 주입은 드리프트로 OFF(2026-07-26)라 어미만 콕 집는다.
-        "- ★말투는 '옆에서 썰 푸는' 생생한 이야기체다. 문장 끝을 "
-        "'~더라고요·~거든요·~더니·~있죠?·~잖아요·~더라니까요' 같은 구어 어미로 변주해라. "
-        "'~했어요·~네요·~해요'만 단조롭게 반복하면 광고처럼 밋밋해진다 — "
-        "★한 후보 안에서 어미가 최소 3종류는 섞이게, 특히 훅과 결과엔 '~더라고요/~있죠?'류로 몰입을 줘라.\n"
+        # 2026-07-30(v2): 이 지시는 07-29부터 있었는데 실측 후보 9개 전량이 여전히 '~했어요'만
+        # 반복했다. 검사(tone_score.ending_diversity)가 '끝 2음절'만 봐서 세요/네요/어요/래요를
+        # 서로 다른 어미로 세는 바람에 전부 '~요'인데도 통과했기 때문. → 지시를 세기가 아니라
+        # **판정 가능한 형태**로 바꾼다(몇 종류·무엇을 금지·어디에 반드시).
+        "- ★말투는 '옆에서 썰 푸는' 생생한 이야기체다. 다음 어미를 적극 써라: "
+        "'~하는 거 있죠?·~하더라구요·~하지 않나요?·~거든요·~잖아요·~더니·~라지 뭐예요·~더라니까요'.\n"
+        "  · ★한 후보 안에서 **서로 다른 어미가 4종류 이상** 나와야 한다. "
+        "'했어요/네요/해요/어요'처럼 밋밋한 평서 종결은 **전체 문장의 절반을 넘기지 마라**.\n"
+        "  · ★같은 어미를 연속 두 문장에 쓰지 마라(바로 스타카토로 들린다).\n"
+        "  · ★문제·결과 비트에는 '~하는 거 있죠?/~하더라구요/~하지 않나요?' 중 최소 하나를 반드시 써라.\n"
+        "  · 문장끼리 이어지게 접속을 붙여라('근데 그게'·'그래서'·'하도 ~해서'·'~했더니'). "
+        "각 문장이 홀로 서 있으면 광고 문구처럼 들린다.\n"
         # 2026-07-29(사장님 확정): 은행 버킷엔 형용사가 없어(훅/어미/부사/CTA/가격) — 부사는 은행이
         # 대고 형용사는 프롬프트로 보강한다. 밋밋한 '좋아요/편해요' 대신 오감이 그려지는 감각 형용사로.
-        "- ★부사·형용사를 적극 써서 장면이 눈앞에 그려지게 해라. 밋밋한 '좋아요·편해요·빨라요' 대신 "
-        "감각이 살아있는 형용사(쫀득한·꾸덕한·보들보들한·시원한·바삭한·묵직한 등)와 "
-        "생동감 부사(진짜·확·싹·뻘뻘·꽁꽁·순식간에 등)를 소재에 맞게 골라 써라 — 단, 나열 말고 "
-        "행동·감정 문장 안에 자연스럽게 녹여라.\n"
+        # 2026-07-30(v2 사장님 "감각어를 풍부하게"): 07-29 지시로는 실측 5건 중 형용사가
+        # 0~3개뿐이었고 부사는 대부분 '너무·정말·진짜'(=감각어가 아니라 강조어)였다.
+        # → 개수를 명시하고, 강조어를 **금지어로** 못 박고, 오감별 예시를 준다(tone_score의
+        #   감각어 밀도 점수와 짝).
+        "- ★감각어를 풍부하게 — 장면이 눈앞에 그려지고 냄새·촉감까지 느껴지게 써라.\n"
+        "  · ★한 대본에 **감각어 4개 이상**(서로 다른 말로). 훅·문제·해결·결과에 골고루 뿌려라.\n"
+        "  · 오감별로 골라 써라 — 식감(쫀득한·꾸덕한·바삭한·촉촉한·폭신한·고소한) / "
+        "촉감·온도(시원한·따끈한·포근한·묵직한·보송한) / 냄새(향긋한·은은한·눅눅한·꿉꿉한·쿰쿰한) / "
+        "모습(뽀얀·노릇노릇·반짝) / 동작 의태어(뚝딱·싹·확·뻘뻘·꽁꽁·사르르·순식간에·바짝).\n"
+        "  · ★'너무·정말·진짜·완전·엄청'은 감각어가 아니라 그냥 세기만 올리는 말이다. "
+        "**한 대본에 2번을 넘기지 마라.** 이걸로 때우지 말고 위의 구체적 감각어로 바꿔라.\n"
+        "    (BAD) \"향이 정말 너무 좋아요.\"  (GOOD) \"문 열 때마다 향긋한 커피 냄새가 확 퍼져요.\"\n"
+        "    (BAD) \"진짜 부드러워요.\"        (GOOD) \"칼 대니까 사르르 갈라질 만큼 폭신해요.\"\n"
+        "  · 단, 나열하지 말고 행동·감정 문장 안에 자연스럽게 녹여라.\n"
         f"- 길이: 전체 나레이션 글자수 합을 {lo}~{hi}자(약 {target_seconds}초)에 맞춰라(목표이지 기계적 컷 아님). "
         "너무 짧으면 이야기가 빈약하니 상황·대화를 더 채워라.\n"
+        # 2026-07-30(v2): 감각어 지시를 강화했더니 이번엔 **어미가 무너졌다**(실측 d01f6567:
+        # 감각어 1→3인데 문장이 전부 네요/해보세요/퍼져요로 회귀, tone 1.00→0.67). 요구가
+        # 여럿이면 모델이 하나를 놓친다 → 순위를 명시하고 제출 전 자가점검을 시킨다.
+        "\n[★제출 전 자가점검 — 후보마다 아래를 전부 만족하는지 확인하고, 하나라도 어기면 고쳐서 내라]\n"
+        "  1) (최우선) 어미: 서로 다른 어미 4종류 이상 / '~했어요·~네요·~해요'류가 절반 이하 / "
+        "같은 어미 연속 없음 / 문제·결과에 '~하는 거 있죠?·~하더라구요·~하지 않나요?' 중 최소 1개.\n"
+        "  2) 감각어 4개 이상(서로 다른 말) — 단 1)을 깨면서까지 넣지 마라. "
+        "감각어는 문장 **안**에 넣는 것이지 어미를 바꾸는 게 아니다.\n"
+        "  3) '너무·정말·진짜·완전·엄청' 합쳐서 2번 이하.\n"
+        "  4) 훅은 12~20자, 본문 비트는 25~50자, CTA는 12~20자.\n"
+        "  5) 문장끼리 접속으로 이어짐(각 문장이 홀로 서 있지 않음).\n"
+        "  6) 존댓말 톤 일관(반말 종결 금지 — 'OO 남겨줘' 같은 CTA 반말 금지).\n"
         "- 억지 개그·오글·말장난·설명체 나열('이렇게 하세요' 나열)·어색한 번역투 금지.\n"
         "- 각 후보에 hook, story_person(주인공 1명), story_event(사건 한 줄), story_resolution(결말 한 줄), "
         "cta_line(마지막 CTA 문장 그대로), cta_keyword(댓글 키워드, 없으면 빈 문자열)를 채워라.\n"
@@ -842,6 +883,12 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
             f"베끼기 금지)]\n{bank_context}\n") if bank_context else "")
         + ((f"- [길이 보강] 직전 후보가 목표보다 짧았다. 이번엔 나레이션 합 최소 {lo}자 이상으로 "
             "각 비트의 이야기(상황·대화·반응)를 더 촘촘히 채워라.\n") if lengthen else "")
+        # 말투 게이트가 '후보 전부 밋밋'으로 판정해 재생성할 때만 붙는 교정 지시(2026-07-30).
+        + (("- ★[말투 보강] 직전 후보들이 전부 밋밋했다(어미가 '~했어요/~네요'로 단조롭거나 "
+            "감각어가 없었다). 이번엔 위 자가점검 1)어미와 2)감각어를 **최우선**으로 지켜라: "
+            "문제·결과 비트는 반드시 '~하는 거 있죠?/~하더라구요/~하지 않나요?' 중 하나로 끝내고, "
+            "오감 형용사·의태어를 4개 이상 문장 안에 녹여라. '너무·정말·진짜'로 때우지 마라.\n")
+           if tone_boost else "")
         + "\n출력은 스키마 JSON만.")
     raw = call(prompt, _SCENE_FIRST_SCHEMA)
     if not raw or not isinstance(raw, dict):
@@ -864,6 +911,26 @@ def _hook_opener(hook):
     return h.split(".")[0].strip()
 
 
+def _dup_key(s):
+    """중복 판정용 정규화 — 따옴표·문장부호·공백을 걷어낸 글자만 남긴다."""
+    return re.sub(r"[^가-힣0-9A-Za-z]", "", s or "")
+
+
+def _is_same_opening(opener, narration, prefix=8):
+    """opener가 narration과 '사실상 같은 말'인가.
+
+    ★완전 일치(substring)만 보면 안 된다(2026-07-30 실사고): 모델이 hook 필드엔
+      '친구가 이거 보더니 곱네 하더라고요', beats[0]엔 '친구가 이거 보더니 "진짜 곱네"
+      하더라고요'처럼 **미세하게 다르게** 쓰면 중복 판정을 빠져나가 훅이 두 번 붙었다.
+    → 부호·공백을 지운 뒤 포함관계를 보고, 그래도 아니면 앞 prefix자가 같은지 본다."""
+    a, b = _dup_key(opener), _dup_key(narration)
+    if not a or not b:
+        return False
+    if a in b or b in a:
+        return True
+    return len(a) >= prefix and len(b) >= prefix and a[:prefix] == b[:prefix]
+
+
 def _lead_with_hook(narration, hook):
     """beats[0]이 강한 오프너로 안 열리면 hook 앞절을 붙여 강제로 세게 연다(2026-07-21).
     이미 강해 보이면(오프너 토큰 시작 or 앞 12자에 ?/!) 그대로 둔다(중복 방지)."""
@@ -872,7 +939,7 @@ def _lead_with_hook(narration, hook):
     if n.startswith(_STRONG_OPENER_TOKENS) or "?" in head or "!" in head:
         return n
     opener = _hook_opener(hook)
-    if not opener or opener in n:
+    if not opener or _is_same_opening(opener, n):
         return n
     return f"{opener} {n}"
 
@@ -914,13 +981,30 @@ def _ground_candidate(cand, seg_map, structure="free"):
     return {"structure": structure, "beats": beats_out}
 
 
+# 말투 게이트 임계(2026-07-30). 이 아래면 '옆에서 썰 푸는' 맛이 안 난다고 본다.
+# 실측 기준: 목표 톤을 낸 후보는 1.00, 어미가 무너진 후보는 0.67·감각어 부족은 0.93이었다.
+_TONE_GATE = 0.8
+
+
+def _cand_tone(cand):
+    """grounding된 후보의 순수 말투 점수(0~1) — 어미 유형 다양성·감각어 밀도.
+    _candidate_quality는 fun까지 섞은 값이라, 게이트는 말투만 따로 본다."""
+    from shopping_shorts import tone_score
+    beats = (cand.get("plan") or {}).get("beats") or []
+    text = "\n".join((b.get("narration") or "").strip() for b in beats).strip()
+    return tone_score.score_conversational(text)["score"] if text else 0.0
+
+
 def _candidate_quality(beats):
     """후보 대본의 품질(0~1) — 대화체(tone)·재미강도(fun, D14). 전 비트 나레이션을 이어
     tone_score로 재는 순수 계산(Gemini 없음). 나레이션이 비면 0(매칭점수만으로 판정).
     P1: scene_first는 헌장 1콜이라 위키생성의 _verify_and_fix 품질정렬을 못 받았다 — 추천
     선택에 품질을 직접 넣어 '말투 좋고 재미장치 있는' 후보가 추천되게 한다."""
     from shopping_shorts import tone_score
-    text = " ".join((b.get("narration") or "").strip() for b in beats).strip()
+    # ★비트 경계를 줄바꿈으로 잇는다(2026-07-30). 공백으로 이으면 나레이션에 마침표가 없는
+    #   후보(실측: 07-30 job e9e74aea)가 tone_score에서 **한 문장**으로 세어져 어미 다양성이
+    #   무조건 1.0으로 통과했다 — 밋밋해도 만점. tone_score._sentences는 \n도 문장 경계로 본다.
+    text = "\n".join((b.get("narration") or "").strip() for b in beats).strip()
     if not text:
         return 0.0
     tone = tone_score.score_conversational(text)["score"]         # 0~1(문어체·AI냄새·어미단조 감점)
@@ -1558,6 +1642,16 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 bank_context=bank_context, order_block=order_block, lengthen=True,
                 benefits_block=benefits_block)
             cands = cands + _ground_score(raws2)
+    # ★말투 게이트(2026-07-30 사장님 승인). 후보가 **전부** 밋밋하면 1회만 다시 뽑아 합친다.
+    # 위 길이 재생성과 같은 규율: 전부 미달일 때만(과금 게이트) · 1회 상한 · 실패해도 기존 유지.
+    # 없으면 감점이 순위표 노릇만 해서 3개가 다 밋밋할 때 그중 최선이 그대로 나간다
+    # (실측 07-30: tone 0.67짜리가 추천으로 나갔다). 합친 뒤 아래 best 선택이 알아서 고른다.
+    if cands and max(_cand_tone(c) for c in cands) < _TONE_GATE:
+        raws3 = _scene_first_candidates(
+            inventory, reference_text, target_seconds, n=n_candidates, call=_call,
+            bank_context=bank_context, order_block=order_block, tone_boost=True,
+            benefits_block=benefits_block)
+        cands = cands + _ground_score(raws3)
     if cands:
         best = max(range(len(cands)), key=lambda i: cands[i]["score"])
         cands[best]["recommended"] = True

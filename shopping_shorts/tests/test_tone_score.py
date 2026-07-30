@@ -42,7 +42,17 @@ def test_empty_is_zero():
 
 
 def test_ending_diversity_monotonic():
-    assert tone_score.ending_diversity("해요. 봐요. 가요.") > \
+    """⚠️ 2026-07-30(v2): 기준이 '끝 2음절'에서 **어미 유형**으로 바뀌었다.
+
+    옛 테스트는 "해요/봐요/가요" > "합니다×3"을 기대했는데, 새 기준으로는 앞의 셋도
+    전부 밋밋한 평서(PLAIN) 한 종류라 **똑같이 단조롭다** — 그게 이 수정의 핵심이다
+    (사장님 제보: "다 ~했어요로 끊긴다"를 옛 지표가 '다양하다'고 판정했다).
+    그래서 비교 대상을 '진짜로 어미를 섞은 대본'으로 바꾼다.
+    """
+    varied = "그냥 버리지 마세요. 걸려 있는 거 있죠? 만든 거라지 뭐예요. 향이 퍼지더라구요."
+    assert tone_score.ending_diversity(varied) > \
+           tone_score.ending_diversity("해요. 봐요. 가요.")
+    assert tone_score.ending_diversity("해요. 봐요. 가요.") == \
            tone_score.ending_diversity("합니다. 합니다. 합니다.")
 
 
