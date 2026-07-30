@@ -115,6 +115,34 @@ def _base_zoom_vf():
 # 하단 자막 바(원본 소각 자막을 덮는다) + 한 줄 자막 스타일.
 _BAR_H = 450
 _CAP_FONTSIZE = 78      # 짧은 1줄 구절이라 여유 있음 → 키움
+
+# ★꾸미기 UI가 쓰는 기준 폭(produce.html의 VIDEO_W). 미리보기·썸네일은 자막/헤드카피 px를
+#   **이 폭 기준**으로 축소해 그린다(scale = PREVIEW_W/VIDEO_W).
+_UI_REF_W = 720
+
+
+def _ui_px(v, default, zero_ok=False):
+    """꾸미기 화면에서 온 px 값을 출력 해상도로 환산한다(2026-07-30 사장님 제보:
+    "썸네일 비율보다 실제 렌더 자막이 더 작게 나온다").
+
+    뿌리: 2026-07-24 f08c18aec가 출력을 720x1280 → 1080x1920으로 올리면서 **내부 기본값은
+    전부 ×1.5** 했지만(_CAP_FONTSIZE 52→78, size 64→96, outline_w 6→9, shadow_d 3→5,
+    box_pad 16→24, _BAR_H 300→450) **UI에서 넘어온 값은 환산하지 않았고**, 프론트의
+    VIDEO_W도 720에 남았다. 그래서 사장님이 슬라이더로 정한 크기는 미리보기에선 720폭
+    기준으로 커 보이고 실제 렌더에선 1080폭에 그려져 정확히 720/1080=67%로 작아졌다.
+
+    → UI 값만 ×(_OUT_W/_UI_REF_W). **기본값은 이미 1080 기준이라 환산하지 않는다**
+      (여기서 같이 곱하면 기본값이 1.5배 더 커지는 이중 확대가 된다).
+
+    zero_ok: box_pad처럼 0이 "여백 없음"이라는 뜻인 값은 True(0을 기본값으로 안 되돌린다).
+    나머지(size·outline_w·shadow_d)는 종전 `or` 의미대로 0/None이면 기본값.
+    """
+    if v is None or v == "" or (not zero_ok and not v):
+        return default
+    try:
+        return int(round(float(v) * _OUT_W / _UI_REF_W))
+    except (TypeError, ValueError):
+        return default
 # 자막 리듬 목표: 한 구절 2~3어절, 무자막 없이 빠르게 순차 전환. 핵심은 글자수보다
 # **의미(호흡) 단위** — 수식어(관형어·부사)는 뒤 단어와 붙어 한 호흡이 되어야 한다.
 # 예) "이 방법은 진짜", "자세한 보관비법", "바로 알려드릴게요", "그냥 두지 마세요".
@@ -606,7 +634,7 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
         return []
     style = style or {}
     durs = _caption_durations(segs, dur, real_durs=real_durs)
-    size = max(10, int(style.get("size") or _CAP_FONTSIZE))
+    size = max(10, _ui_px(style.get("size"), _CAP_FONTSIZE))
     ypct = style.get("y_pct")
     if ypct is None:
         # 기존 폴백 "h-text_h-150"의 근사치를 %로 환산(문자 높이는 size*1.2로 근사)
@@ -1059,7 +1087,7 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
     if not any(l.strip() for l in lines):
         return []
     fontref, font_disk_path = _resolve_seg_font(base_style, work, key_prefix)
-    size = max(8, int(base_style.get("size") or 96))
+    size = max(8, _ui_px(base_style.get("size"), 96))
     try:
         pil_font = ImageFont.truetype(font_disk_path, size)
     except OSError:
@@ -1107,12 +1135,12 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
                 f"x={int(run_x)}", f"y={int(line_y)}",
             ]
             if base_style.get("outline"):
-                seg_parts.append(f"borderw={max(1, int(base_style.get('outline_w') or 9))}")
+                seg_parts.append(f"borderw={max(1, _ui_px(base_style.get('outline_w'), 9))}")
                 seg_parts.append(f"bordercolor={_hex_to_ff(base_style.get('outline_color'), '0x000000')}")
             if base_style.get("shadow"):
                 # 은은한 드롭 그림자(레퍼런스 자막룩) — 두꺼운 테두리 대신 부드러운 가독성.
                 sc = _hex_to_ff(base_style.get("shadow_color"), "0x000000")
-                sd = max(1, int(base_style.get("shadow_d") or 5))
+                sd = max(1, _ui_px(base_style.get("shadow_d"), 5))
                 seg_parts += [f"shadowcolor={sc}@0.55", f"shadowx={sd}", f"shadowy={sd}"]
             if seg_box:
                 bc = _hex_to_ff(seg_box_color, "0x000000")
@@ -1120,7 +1148,7 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
             elif base_style.get("box") and not seg_box:
                 bc = _hex_to_ff(base_style.get("box_color"), "0x000000")
                 op = max(0.0, min(1.0, (base_style.get("box_opacity") or 80) / 100.0))
-                pad = max(0, int(base_style.get("box_pad") if base_style.get("box_pad") is not None else 24))
+                pad = max(0, _ui_px(base_style.get("box_pad"), 24, zero_ok=True))
                 seg_parts += ["box=1", f"boxcolor={bc}@{op:.2f}", f"boxborderw={pad}"]
             parts.append(":".join(seg_parts))
             run_x += w
@@ -1143,7 +1171,7 @@ def _fixed_drawtext(spec, work, key, default_color="0xFFFFFF"):
         if fpath.exists():
             shutil.copy(fpath, work / f"font_{key}.ttf")
             fontref = f"font_{key}.ttf"
-    size = max(8, int(spec.get("size") or 96))
+    size = max(8, _ui_px(spec.get("size"), 96))
     xf = min(1.0, max(0.0, (spec.get("x", 50)) / 100.0))
     yf = min(1.0, max(0.0, (spec.get("y", 14)) / 100.0))
     # 워터마크 등 spec.float가 켜지면 y를 시간표현식으로 만들어 위아래로 은은히 떠다니게 한다
@@ -1161,12 +1189,12 @@ def _fixed_drawtext(spec, work, key, default_color="0xFFFFFF"):
     if spec.get("alpha") is not None:
         parts.append(f"alpha={max(0.0, min(1.0, float(spec.get('alpha')))):.2f}")
     if spec.get("outline"):
-        parts.append(f"borderw={max(1, int(spec.get('outline_w') or 9))}")
+        parts.append(f"borderw={max(1, _ui_px(spec.get('outline_w'), 9))}")
         parts.append(f"bordercolor={_hex_to_ff(spec.get('outline_color'), '0x000000')}")
     if spec.get("box"):
         bc = _hex_to_ff(spec.get("box_color"), "0x000000")
         op = max(0.0, min(1.0, (spec.get("box_opacity") or 80) / 100.0))
-        pad = max(0, int(spec.get("box_pad") if spec.get("box_pad") is not None else 24))
+        pad = max(0, _ui_px(spec.get("box_pad"), 24, zero_ok=True))
         parts += ["box=1", f"boxcolor={bc}@{op:.2f}", f"boxborderw={pad}"]
     return ":".join(parts)
 

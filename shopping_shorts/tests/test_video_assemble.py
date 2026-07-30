@@ -353,13 +353,19 @@ def test_segmented_drawtext_base_color_kept_alongside_highlight(tmp_path):
 # ── Task 2: _headcopy_drawtext_parts/_caption_drawtexts 리팩터 회귀 가드 ──
 
 def test_headcopy_drawtext_no_highlight_matches_single_block(tmp_path):
-    """highlight_rules 없는 hc는 세그먼트 1개(폭측정 x좌표 무관하게 fontcolor/폰트 등 필드는 기존과 동일)."""
+    """highlight_rules 없는 hc는 세그먼트 1개(폭측정 x좌표 무관하게 fontcolor/폰트 등 필드는 기존과 동일).
+
+    ⚠️ 2026-07-30: px 값(size·outline_w)은 이제 **UI 기준폭(720) → 출력폭(1080) 환산**을
+    거친다(_ui_px). 예전엔 UI값이 그대로 나가서 실제 렌더 자막이 미리보기의 67%로 작았다
+    (사장님 제보). 색·폰트 등 비-px 필드는 종전 그대로다.
+    """
     hc = {"text": "테스트 문구", "font": "", "color": "#FF8800", "size": 60,
           "x": 50, "y": 14, "outline": True, "outline_color": "#000000", "outline_w": 7}
     dt = va._headcopy_drawtext_parts(hc, tmp_path)[0]
     assert dt is not None
     assert "fontcolor=0xFF8800" in dt
-    assert "borderw=7" in dt
+    assert f"borderw={round(7 * va._OUT_W / va._UI_REF_W)}" in dt
+    assert f"fontsize={round(60 * va._OUT_W / va._UI_REF_W)}" in dt
     assert "bordercolor=0x000000" in dt
 
 

@@ -1214,7 +1214,13 @@ function seoCopyYoutube(){
 }
 
 // ── 5단계 꾸미기(헤드카피 디자인) ──────────────
-const PREVIEW_W=380, VIDEO_W=720;   // 미리보기↔실영상 스케일 (서버 _OUT_W=720과 일치 — 안 맞으면 렌더 글자가 프리뷰보다 커진다)
+// 미리보기↔실영상 스케일. VIDEO_W는 **UI가 px을 말하는 기준 폭**이지 출력 해상도가 아니다.
+// ⚠️ 여기를 1080(현재 _OUT_W)으로 "맞추지" 마라 — 서버가 이미 video_assemble._ui_px로
+//    UI값 × (_OUT_W/_UI_REF_W=720) 환산을 한다. 1080으로 바꾸면 미리보기 글자만 작아지고
+//    실제 렌더는 그대로라 다시 어긋난다. 둘은 반드시 같은 값이어야 한다(720 ↔ _UI_REF_W).
+// 이력: 2026-07-24 f08c18aec가 출력을 720→1080으로 올릴 때 이 값과 UI값 환산을 빠뜨려
+//       실제 렌더 자막이 미리보기의 67%로 나왔다(2026-07-30 수정).
+const PREVIEW_W=380, VIDEO_W=720;
 function initHeadcopy(){
   const t=document.getElementById('hcText');
   // 헤드카피는 빈칸으로 시작한다. 내가 입력한 값(STATE.headcopy.text)만 복원하고,
