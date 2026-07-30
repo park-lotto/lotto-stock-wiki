@@ -1,0 +1,26 @@
+[Unit]
+# 워커 여러 개를 띄우기 위한 템플릿 유닛(2026-07-30).
+#   systemctl enable --now shopping-shorts-worker@1 shopping-shorts-worker@2 ...
+# store.claim_next()가 UPDATE..RETURNING 원자적이라 같은 작업을 두 번 집지 않고,
+# 계정별 공평 분배(owner)까지 들어가 있어 서로 다른 고객 N명이 동시에 처리된다.
+# ⚠️ 전제: DB가 WAL 모드여야 한다(store._conn이 매 연결에서 켠다). WAL 없이 워커를
+#    늘리면 'database is locked'가 터진다 — 실측으로 확인된 선행조건.
+Description=Shopping Shorts Job Worker %i (동시 처리용 복제 워커)
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/lotto-stock-wiki
+EnvironmentFile=/etc/shopping-shorts.env
+# 인코딩 스레드 상한 — 코어를 워커들이 나눠 갖게 한다(미설정이면 제한 없음).
+# 예: 4코어 + 워커 3개면 FFMPEG_THREADS=1~2가 적당.
+ExecStart=/usr/bin/python3 -m shopping_shorts.worker
+Restart=always
+RestartSec=5
+TimeoutStopSec=1800
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

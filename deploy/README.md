@@ -170,3 +170,32 @@ sudo systemctl enable --now shopping-shorts-instagram-discover.timer
 ⚠️ 소요시간이 김(300개 × 릴스수집+프로필조회, 실측 6채널=99초 → 300개는 대략 40~80분대
 예상, 07시~09시 사이 2시간 여유). 최초 배포 후 1회는 반드시 수동 테스트로 07~09시
 사이에 끝나는지 실측 확인할 것.
+
+## 동시 처리(고객이 겹쳐도 안 느리게) — 2026-07-30
+
+한 명이 제작하는 동안 다른 고객이 기다리던 구조를 없앴다. 순서대로 적용한다.
+
+```
+① DB WAL — 코드에 들어감(store._conn이 매 연결에서 PRAGMA journal_mode=WAL).
+   ⚠️ 이게 없으면 워커를 늘리는 순간 'database is locked'가 터진다(실측 선행조건).
+
+② 워커 복제 — 템플릿 유닛으로 원하는 개수만큼:
+   sudo cp deploy/shopping-shorts-worker@.service /etc/systemd/system/
+   sudo systemctl daemon-reload
+   sudo systemctl enable --now shopping-shorts-worker@1 shopping-shorts-worker@2 shopping-shorts-worker@3
+   (기존 shopping-shorts-worker.service는 그대로 둬도 되고, 템플릿으로 갈아타면 stop/disable)
+
+③ ffmpeg 스레드 상한 — /etc/shopping-shorts.env 에 추가:
+   FFMPEG_THREADS=2        # 4코어 + 워커 3개 기준. 미설정이면 제한 없음(=기존 동작)
+
+④ 확인:
+   systemctl list-units 'shopping-shorts-worker*'
+   sqlite3 없이: python3 -c "import sqlite3;print(sqlite3.connect('shopping_shorts/data/reference.db').execute('pragma journal_mode').fetchone())"
+```
+
+**공평 분배**: `job_queue.owner`(계정) + `prio`(우선순위)가 붙었다. 한 계정은 동시에 1건만
+처리되고, 고객이 기다리는 작업(render·mix)이 배경작업(prewarm·overseas)보다 먼저 나간다.
+즉 워커 N개면 **서로 다른 고객 N명**이 동시에 진행된다(같은 고객이 큐를 독점하지 못한다).
+
+**서버 사이징**(실측 기준): 렌더 1건당 ffmpeg 약 0.7코어, 병목은 메모리(2GB에서 swap 상시).
+동시 3~4명이면 4 vCPU / 8GB가 최소선.
