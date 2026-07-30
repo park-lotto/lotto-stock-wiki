@@ -384,3 +384,40 @@ def test_floor_is_wired_in_generation():
     import inspect
     src = inspect.getsource(edit_plan.build_scene_first_plan)
     assert "qualified" in src and "_TONE_GATE" in src, "하한이 배선되지 않았다"
+
+
+# ── 10. 분할 부작용 차단(2026-07-30 실물 확인) ─────────────────────────
+def test_no_fragment_beats_from_split():
+    """★실측 v6: 인용문을 쪼개 '진짜 맛있겠다'(7자)·'입가에 미소가 번지네'(11자)
+    파편 비트가 생겨 화면이 뚝 끊겼다. 양쪽이 최소 길이를 넘을 때만 나눈다."""
+    quote = "밀가루 없이 바나나 계란만 넣었더니 아이가 무슨 냄새냐며 달려와요. 진짜 맛있겠다"
+    beats = [_beat("훅", "훅", n_alts=0), _beat("해결", quote, n_alts=2),
+             _beat("CTA", "댓글 남겨주세요", n_alts=0)]
+    out = edit_plan._fix_beat_structure(beats)
+    assert all(len(x["narration"]) >= edit_plan._MIN_SPLIT_CHARS or "훅" in x["role"]
+               or edit_plan._is_cta(x) for x in out), \
+        f"파편 비트가 생겼다: {[(len(x['narration']), x['narration']) for x in out]}"
+
+
+def test_split_respects_max_beats():
+    """비트가 상한을 넘게 늘어나면 화면이 스타카토가 된다(실측: 6~7 지시인데 10개까지)."""
+    long2 = "앞 문장이 충분히 길어서 오십오자를 확실히 넘기도록 만들어 둡니다. 뒤 문장도 충분히 깁니다요."
+    beats = [_beat("훅", "훅", n_alts=0)]
+    beats += [_beat(f"해결{i}", long2, n_alts=2) for i in range(6)]
+    beats += [_beat("CTA", "댓글 남겨주세요", n_alts=0)]
+    out = edit_plan._fix_beat_structure(beats)
+    assert len(out) <= edit_plan._MAX_BEATS, f"비트가 {len(out)}개로 늘었다"
+
+
+def test_longest_beat_is_split_first():
+    """분할 예산이 한 개뿐이면 가장 긴 비트를 먼저 나눈다."""
+    short2 = "앞 문장이 오십오자를 살짝 넘기도록 적당히 길게 써 둡니다요. 뒤 문장입니다요."
+    long2 = ("앞 문장이 아주아주 길어서 백자에 가깝게 늘려서 확실하게 가장 긴 비트가 되도록 "
+             "만들어 둡니다요. 뒤 문장도 충분히 길게 이어서 씁니다요.")
+    beats = [_beat("훅", "훅", n_alts=0), _beat("A", short2, n_alts=2),
+             _beat("B", long2, n_alts=2), _beat("C", short2, n_alts=2),
+             _beat("D", short2, n_alts=2), _beat("E", short2, n_alts=2),
+             _beat("CTA", "댓글 남겨주세요", n_alts=0)]
+    out = edit_plan._fix_beat_structure(beats)          # 7개 → 여유 1개
+    assert len(out) == 8
+    assert sum(1 for x in out if x["role"] == "B") == 2, "가장 긴 B가 나뉘어야 한다"

@@ -1032,6 +1032,10 @@ def _is_cta(beat):
 
 
 _LONG_BEAT_CHARS = 55       # 이보다 길고 문장이 2개 이상이면 화면을 나눈다
+# 쪼갠 뒤 양쪽이 이보다 짧으면 나누지 않는다 — 파편 비트(7~11자)가 화면을 뚝 끊는다.
+_MIN_SPLIT_CHARS = 18
+# 분할로 비트가 무한정 늘면 화면이 스타카토가 된다(실측 v6: 6~7 지시인데 10개까지 늘었다).
+_MAX_BEATS = 8
 
 
 def _split_long_beats(beats):
@@ -1048,9 +1052,23 @@ def _split_long_beats(beats):
     CTA·훅은 짧아서 대상이 거의 없지만, 쪼개면 흐름이 깨지므로 명시적으로 제외한다.
     """
     out = []
-    for b in beats:
+    # 분할 여유 = 상한까지 몇 개 더 늘릴 수 있나. 다 쓰면 더 안 쪼갠다(긴 순서대로 우선).
+    room = max(0, _MAX_BEATS - len(beats))
+    if room:
+        # 가장 긴 비트부터 분할 예산을 준다 — 제일 급한 것부터 나눈다.
+        order = sorted(range(len(beats)),
+                       key=lambda i: -len((beats[i].get("narration") or "")))
+        allow = set(order[:room])
+    else:
+        allow = set()
+    for idx, b in enumerate(beats):
         narr = (b.get("narration") or "").strip()
         alts = list(b.get("alternates") or [])
+        if idx not in allow:                    # 예산 밖 = 이번엔 안 나눈다
+            if len(narr) > _LONG_BEAT_CHARS:
+                b["caption_lines"] = None
+            out.append(b)
+            continue
         sents = [s for s in re.split(r"(?<=[.!?])\s+", narr) if s.strip()]
         if (len(narr) <= _LONG_BEAT_CHARS or len(sents) < 2 or not alts
                 or _is_cta(b) or not out):          # not out = 첫 비트(훅)는 건드리지 않는다
@@ -1063,7 +1081,11 @@ def _split_long_beats(beats):
         # 문장을 앞/뒤 두 덩어리로(2문장이면 1:1, 3문장이면 2:1).
         half = (len(sents) + 1) // 2
         head, tail = " ".join(sents[:half]).strip(), " ".join(sents[half:]).strip()
-        if not head or not tail:
+        # ★최소 길이 가드(2026-07-30 실물 확인). 인용문을 문장 경계로 쪼개면 "진짜 맛있겠다"(7자),
+        #   "입가에 미소가 번지네"(11자) 같은 **파편 비트**가 생겨 화면이 뚝 끊긴다(실측 v6).
+        #   양쪽이 다 최소 길이를 넘을 때만 나눈다 — 아니면 붙여둔 채 자막줄만 무효화한다.
+        if not head or not tail or min(len(head), len(tail)) < _MIN_SPLIT_CHARS:
+            b["caption_lines"] = None
             out.append(b)
             continue
         # 컷도 나눈다: 앞 비트 = primary + alternates 앞쪽 / 뒤 비트 = 남은 첫 컷을 primary로.
