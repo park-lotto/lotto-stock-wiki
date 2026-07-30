@@ -6496,6 +6496,10 @@ def api_produce_aipick(request: Request, work_id: str = "", forced: str = ""):
 #   ④ 호출당 건수 상한 + 시도 횟수 상한 — 최악의 경우에도 소모가 유한하다
 _AUTOLOAD_MAX_PER_CALL = 4      # 한 번 호출로 새로 태울 수 있는 영상 수
 _AUTOLOAD_MAX_ATTEMPTS = 1      # shortcode당 자동추출 총 시도 횟수(넘으면 영구 스킵)
+# 동시에 추출할 영상 수(2026-07-30). 대기의 정체가 제미니 응답이라 동시에 올리면 총 시간이
+# '가장 느린 1개'로 수렴한다. 다만 무제한으로 올리면 제미니 429가 몰려 오히려 느려지고 키가
+# 소진되므로 3으로 묶는다(_AUTOLOAD_MAX_PER_CALL=4와는 다른 축 — 그건 '총 몇 개').
+_AUTOLOAD_MAX_WORKERS = 3
 
 
 @app.post("/api/produce/autoload")
@@ -6519,90 +6523,101 @@ def api_produce_autoload(request: Request, body: dict):
              or hashlib.sha1((i.get("url") or "").strip().encode()).hexdigest()[:12] for i in items]
     tried = store.autoload_attempts(codes)
 
-    for item, code in zip(items, codes):
+    # ★3단계 구조(2026-07-30 동시화). 예전엔 영상들을 순차로 돌려 제미니 대기가 그대로
+    #   더해졌다(3개면 3배). 대기의 정체는 우리 CPU가 아니라 **제미니 업로드·처리 응답**
+    #   (script_extract가 영상을 통째로 올리고 _wait_until_active로 폴링)이라, 동시에 올리면
+    #   대기가 겹쳐 총 시간이 '가장 느린 1개'로 수렴한다. 2단계 믹스는 이미 이렇게 병렬이다
+    #   (mix_pipeline의 ThreadPoolExecutor) — 1단계만 순차로 남아 있었다.
+    #   A) 게이트·크레딧(순차) → B) 다운로드·추출·구조분석(병렬) → C) DB 쓰기(순차)
+    #   왜 이렇게 가르나: 게이트(래치·호출당 상한·크레딧)는 순서가 있어야 상한이 정확하고,
+    #   SQLite 쓰기를 여러 스레드에서 하면 락 경합이 난다. 오래 걸리는 네트워크 대기만 겹친다.
+    slots = [None] * len(items)      # 결과를 원래 순서대로 채운다(프론트가 순서를 신뢰한다)
+    todo = []                        # 병렬로 돌릴 항목만
+
+    # ── A) 게이트 (순차) ─────────────────────────────────────────
+    for i, (item, code) in enumerate(zip(items, codes)):
         url = (item.get("url") or "").strip()
         # ① 이미 도서관에 있으면 추출 없이 '담기'만 보장한다(교집합 통과에 둘 다 필요).
         if code in have:
             store.produce_pick_add(code, customer_id=cid)
-            results.append({"shortcode": code, "status": "already"})
+            slots[i] = {"shortcode": code, "status": "already"}
             continue
         # ② DB 래치 — 한 번 실패한 영상은 다시 태우지 않는다(무한루프 차단의 핵심)
         if tried.get(code, 0) >= _AUTOLOAD_MAX_ATTEMPTS:
-            results.append({"shortcode": code, "status": "skipped_latched"})
-            continue
-        # ③ 호출당 상한 — 남은 건 다음 진입에서(그때도 상한이 걸린다)
-        if burned >= _AUTOLOAD_MAX_PER_CALL:
-            results.append({"shortcode": code, "status": "skipped_cap"})
+            slots[i] = {"shortcode": code, "status": "skipped_latched"}
             continue
         if _ssrf_guard(*[u for u in (url, item.get("video_url")) if u]):
-            results.append({"shortcode": code, "status": "failed_download"})
+            slots[i] = {"shortcode": code, "status": "failed_download"}
             continue
 
-        work_dir = _FIND_TMP_DIR / hashlib.sha1(code.encode()).hexdigest()[:16]
-        video_path = None
         cached = store.get_extract(code)
-        script = None
         if cached and (cached.get("full_text") or "").strip():
-            script = {"full_text": cached.get("full_text", ""), "segments": cached.get("segments") or []}
-            category = item.get("category") or cached.get("category") or None
-            structure = cached.get("structure")
-        else:
-            # 캐시미스 → 실제 Gemini 비용. 크레딧 확인 후 태운다(실패 시 환불).
-            if _global_over_cap("script") or not check_and_count(cid, "script"):
-                results.append({"shortcode": code, "status": "failed_limit"})
-                continue
-            global_incr_and_alert("script")
-            burned += 1
-            store.autoload_mark_attempt(code)     # ★추출 전에 래치
-            ok = False
-            try:
-                try:
-                    video_path, dl_caption = download_any(item.get("video_url") or url, str(work_dir))
-                except Exception as e:  # noqa: BLE001 — 다운로드 실패(만료·비공개·차단)
-                    store.autoload_mark_error(code, str(e))
-                    results.append({"shortcode": code, "status": "failed_download"})
-                    continue
-                try:
-                    result = extract_auto(video_path, code,
-                                            caption=(item.get("caption") or dl_caption or ""))
-                except Exception as e:  # noqa: BLE001
-                    store.autoload_mark_error(code, str(e))
-                    results.append({"shortcode": code, "status": "failed_download"})
-                    continue
-                # ★full_text가 비면 저장하지 않는다 — 저장하면 "빈 대본"이 캐시로 굳어
-                #   다음부터 캐시히트로 영원히 빈값을 돌려준다(사고 당시 실제 증상).
-                if not (result.get("full_text") or "").strip():
-                    store.autoload_mark_error(code, "전사 결과 없음(음성 없음·자막 불가)")
-                    results.append({"shortcode": code, "status": "failed_empty"})
-                    continue
-                category = item.get("category") or categorize(item.get("name") or "",
-                                                              item.get("caption") or "") or None
-                script = {"full_text": result.get("full_text", ""),
-                          "segments": result.get("segments") or []}
-                store.save_script(code, script, category=category)
-                ok = True
-                structure = None
-            finally:
-                if not ok:
-                    refund_credit(cid, "script")
+            # 캐시 히트 — 제미니 비용도 상한도 안 쓴다(담기 예열이 채워둔 경우가 이것).
+            todo.append({"i": i, "item": item, "code": code, "url": url, "charged": False,
+                         "script": {"full_text": cached.get("full_text", ""),
+                                    "segments": cached.get("segments") or []},
+                         "category": item.get("category") or cached.get("category") or None,
+                         "structure": cached.get("structure")})
+            continue
+        # ③ 호출당 상한 — 캐시미스(=실제 제미니 비용)에만 센다. 남은 건 다음 진입에서.
+        if burned >= _AUTOLOAD_MAX_PER_CALL:
+            slots[i] = {"shortcode": code, "status": "skipped_cap"}
+            continue
+        # 캐시미스 → 실제 Gemini 비용. 크레딧 확인 후 태운다(실패 시 C단계에서 환불).
+        if _global_over_cap("script") or not check_and_count(cid, "script"):
+            slots[i] = {"shortcode": code, "status": "failed_limit"}
+            continue
+        global_incr_and_alert("script")
+        burned += 1
+        store.autoload_mark_attempt(code)     # ★추출 전에 래치
+        todo.append({"i": i, "item": item, "code": code, "url": url, "charged": True,
+                     "script": None, "category": None, "structure": None})
 
-        if not structure:
+    # ── B) 네트워크 대기 구간 (병렬) ──────────────────────────────
+    # ⚠️ 이 함수 안에서 DB에 쓰지 않는다 — 결과만 dict에 담아 C단계가 쓴다.
+    def _fetch(e):
+        item, code = e["item"], e["code"]
+        work_dir = _FIND_TMP_DIR / hashlib.sha1(code.encode()).hexdigest()[:16]
+        e["video_path"] = None
+        if e["script"] is None:                      # 캐시미스 → 다운로드+추출
             try:
-                structure = analyze_structure(script.get("full_text", "")) or None
+                e["video_path"], dl_caption = download_any(
+                    item.get("video_url") or e["url"], str(work_dir))
+            except Exception as ex:  # noqa: BLE001 — 만료·비공개·차단
+                e["status"], e["error"] = "failed_download", str(ex)
+                return e
+            try:
+                result = extract_auto(e["video_path"], code,
+                                      caption=(item.get("caption") or dl_caption or ""))
+            except Exception as ex:  # noqa: BLE001
+                e["status"], e["error"] = "failed_download", str(ex)
+                return e
+            # ★full_text가 비면 저장하지 않는다 — 저장하면 "빈 대본"이 캐시로 굳어
+            #   다음부터 캐시히트로 영원히 빈값을 돌려준다(사고 당시 실제 증상).
+            if not (result.get("full_text") or "").strip():
+                e["status"] = "failed_empty"
+                e["error"] = "전사 결과 없음(음성 없음·자막 불가)"
+                return e
+            e["category"] = item.get("category") or categorize(
+                item.get("name") or "", item.get("caption") or "") or None
+            e["script"] = {"full_text": result.get("full_text", ""),
+                           "segments": result.get("segments") or []}
+            e["save_script"] = True                  # C단계가 캐시에 저장
+        if not e["structure"]:
+            try:
+                e["structure"] = analyze_structure(e["script"].get("full_text", "")) or None
             except Exception:  # noqa: BLE001 — 구조분석 실패해도 적재는 성공시킨다
-                structure = None
-
-        # 원본 영상 영구보관(도서관 인라인 재생용) — /api/wiki/save·/api/produce/save_to_wiki와
-        # 동일 로직. 캐시 히트로 video_path가 비어 있으면(대본만 캐시되고 영상은 없던 경우)
-        # 여기서 재다운로드한다. 실패해도 대본·구조는 저장(치명적 아님, 2026-07-26 발견:
-        # 이 블록이 누락돼 있어 autoload로 담긴 영상이 전부 "원본 영상 없음"으로 떴었다).
-        hashed = hashlib.sha1(code.encode()).hexdigest()[:16]
-        media_target = _WIKI_MEDIA_DIR / f"{hashed}.mp4"
+                e["structure"] = None
+        # 원본 영상 영구보관(도서관 인라인 재생용) — /api/wiki/save와 동일 로직. 캐시 히트로
+        # video_path가 비어 있으면(대본만 캐시되고 영상은 없던 경우) 여기서 재다운로드한다.
+        # 실패해도 대본·구조는 저장(2026-07-26: 이 블록 누락으로 "원본 영상 없음"이었다).
+        media_target = _WIKI_MEDIA_DIR / f"{hashlib.sha1(code.encode()).hexdigest()[:16]}.mp4"
         if not media_target.exists():
-            src = video_path
+            src = e["video_path"]
             if src is None:
                 try:
-                    src, _dl_caption = download_any(item.get("video_url") or url, str(work_dir))
+                    src, _dl_caption = download_any(item.get("video_url") or e["url"],
+                                                    str(work_dir))
                 except Exception:
                     src = None
             if src and Path(src).exists():
@@ -6611,22 +6626,46 @@ def api_produce_autoload(request: Request, body: dict):
                     shutil.copy(str(src), str(media_target))
                 except Exception:
                     pass
+        e["status"] = "added"
+        return e
 
+    if todo:
+        # 동시 3개 상한: 제미니 429(쿼터)가 한꺼번에 몰리면 오히려 느려지고 키가 소진된다.
+        # 호출당 상한(_AUTOLOAD_MAX_PER_CALL=4)과 별개로 '동시에 몇 개'를 제한한다.
+        with ThreadPoolExecutor(max_workers=min(_AUTOLOAD_MAX_WORKERS, len(todo))) as ex:
+            done = list(ex.map(_fetch, todo))
+    else:
+        done = []
+
+    # ── C) DB 쓰기 (순차) ────────────────────────────────────────
+    for e in done:
+        code, item = e["code"], e["item"]
+        if e["status"] != "added":
+            if e.get("error"):
+                store.autoload_mark_error(code, e["error"])
+            if e["charged"]:
+                refund_credit(cid, "script")         # 실패는 환불
+            slots[e["i"]] = {"shortcode": code, "status": e["status"]}
+            continue
+        if e.get("save_script"):
+            store.save_script(code, e["script"], category=e["category"])
         store.save_to_wiki({
             "shortcode": code,
             "name": item.get("name"),
-            "category": category,
-            "url": url,
+            "category": e["category"],
+            "url": e["url"],
             "followers": item.get("followers") or 0,
             "comments": item.get("comments") or 0,
             "density": item.get("density") or 0.0,
             "thumbnail": item.get("thumbnail") or "",
-        }, script, structure, customer_id=cid)
-        if structure:
-            store.save_extract_structure(code, structure)
+        }, e["script"], e["structure"], customer_id=cid)
+        if e["structure"]:
+            store.save_extract_structure(code, e["structure"])
         store.produce_pick_add(code, customer_id=cid)   # ★도서관+담기 둘 다 있어야 AI PICK이 뜬다
         added += 1
-        results.append({"shortcode": code, "status": "added"})
+        slots[e["i"]] = {"shortcode": code, "status": "added"}
+
+    results = [s for s in slots if s]
     return {"ok": True, "results": results, "added": added}
 
 
