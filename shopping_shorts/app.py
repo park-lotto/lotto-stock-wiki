@@ -3586,7 +3586,14 @@ def api_thumb_frames(body: dict):
         if old.name not in new_names:
             old.unlink(missing_ok=True)
 
-    frames = [{"url": f"/api/produce/thumb/file/{job_id}/{p.name}", "ts": round(ts, 2)}
+    # ★캐시버스터 ?v=(2026-07-30) — grid_{i:02d}.jpg는 n=10 고정의 **결정적 파일명**이라
+    # 재추출이 같은 파일을 덮어쓴다. api_thumb_file(FileResponse)은 Cache-Control을 안 붙이므로
+    # (실측: last-modified·etag만) 브라우저가 재검증 없이 옛 이미지를 그대로 보여줄 수 있다 →
+    # "자막제거 했는데 자막 있는 프레임이 뜬다"(사장님 제보 2026-07-30). 배경 영상이 바뀌면
+    # video_sig가 바뀌므로 URL도 바뀌어 브라우저가 새로 받는다. 같은 화면의 자막제거
+    # BEFORE/AFTER 썸네일은 이미 ?t=Date.now()로 캐시를 깨고 있었는데 여기만 빠져 있었다.
+    _bust = video_sig.replace(":", "-")
+    frames = [{"url": f"/api/produce/thumb/file/{job_id}/{p.name}?v={_bust}", "ts": round(ts, 2)}
               for p, ts in pairs]
     thumb["frames"] = frames
     thumb["video_sig"] = video_sig
@@ -3609,7 +3616,11 @@ def api_thumb_file(job_id: str, name: str):
     # 파일이 아니라 디렉터리라 FileResponse가 RuntimeError를 던져 잡히지 않고 500이 나간다.
     if not path.is_file():
         return JSONResponse(status_code=404, content={"ok": False})
-    return FileResponse(str(path))
+    # no-cache = "쓰기 전에 반드시 재검증"(no-store 아님 — etag가 같으면 304로 싸게 끝난다).
+    # 파일명이 결정적(grid_00.jpg)이라 재추출이 같은 이름을 덮어쓰는데, Cache-Control이 없으면
+    # 브라우저가 휴리스틱 캐시로 옛 이미지를 재검증 없이 내보낸다(2026-07-30 자막제거 제보).
+    # 위 ?v= 캐시버스터와 이중 방어 — 버스터가 안 붙은 옛 URL(DB에 저장된 frames)도 살린다.
+    return FileResponse(str(path), headers={"Cache-Control": "no-cache"})
 
 
 @app.post("/api/produce/thumb/save")
