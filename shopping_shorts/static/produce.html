@@ -5186,6 +5186,18 @@ async function loadThumbFrames(){
   THUMB_LOADING = true;
   try {
     await _loadThumbFrames();
+  } catch (e) {
+    // ★"프레임을 가끔 못 불러온다"의 뿌리(2026-07-30 실측). 예전엔 catch가 없어서 fetch가
+    // reject되면 예외가 그냥 위로 던져지고 안내문이 초기 정적 문구 '프레임을 불러오는 중…'에
+    // 영구 고착됐다 — 다시 시도할 방법도 없었다.
+    // 언제 reject되나: 서버 재시작 순간 연결이 끊길 때. 배포 크론(deploy/auto_deploy.sh)이
+    // 3분마다 돌아 새 커밋마다 재시작하므로 세션이 여러 개면 하루에 수십 번 발생한다
+    // (실측 2026-07-30 14:21:03·14:21:22 두 번 연달아 재시작 → 그 사이 요청은 서버 로그에
+    //  아예 안 남았고 5xx도 0건이었다 = 서버 도달 전에 끊김).
+    // discover.html은 이미 같은 이유로 fetchJSON에 '재시작 중일 수 있음+재시도'를 넣어뒀다.
+    const hintEl = document.getElementById('thumbFramesHint');
+    if (hintEl) hintEl.innerHTML = '⚠️ 프레임을 못 불러왔어요 (서버가 잠시 재시작 중일 수 있어요). '
+      + '<a href="#" onclick="loadThumbFrames();return false" style="color:var(--accent2);font-weight:700">↻ 다시 시도</a>';
   } finally {
     THUMB_LOADING = false;
   }
@@ -5201,11 +5213,30 @@ async function _loadThumbFrames(){
     document.getElementById('thumbFrames').innerHTML = '';
     return;
   }
-  const r = await fetch('/api/produce/thumb/frames', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({job_id: MIX_JOB}),
-  });
-  const d = await r.json().catch(() => ({ok: false}));
+  // 서버 재시작(배포 크론 3분)은 몇 초면 끝난다 → 조용히 두 번 재시도하면 사장님은 실패를
+  // 볼 일이 거의 없다. 재시작 중엔 fetch가 reject되거나 JSON 아닌 에러페이지가 오므로 둘 다
+  // 재시도 사유로 본다. 2번 다 실패하면 예외를 던져 위 catch가 '↻ 다시 시도'를 띄운다.
+  let d = null;
+  for (let attempt = 0; attempt < 3; attempt++){
+    if (attempt) {
+      hintEl.textContent = `프레임을 불러오는 중… (서버 재시작 대기 ${attempt}/2)`;
+      await new Promise(res => setTimeout(res, 2500));
+    }
+    try {
+      const r = await fetch('/api/produce/thumb/frames', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({job_id: MIX_JOB}),
+      });
+      // JSON 파싱 실패도 재시도 사유다 — 재시작 중엔 프록시가 HTML 에러페이지를 준다.
+      // (예전엔 .catch(()=>({ok:false}))로 삼켜 '프레임 추출 실패'라는 엉뚱한 안내가 떴다.)
+      // ★content-type 헤더를 보지 않는다: 판별은 r.json()이 이미 해주고, 헤더에 의존하면
+      // Response가 아닌 객체(테스트 하네스의 fetch 스텁 등)에서 TypeError로 죽는다.
+      d = await r.json();
+      break;
+    } catch (e) {
+      if (attempt === 2) throw e;      // 마지막 시도까지 실패 → 위 catch로
+    }
+  }
   if (!d.ok){
     // job은 있는데 서버가 거절(영상 미완성 등) — 원문 에러에 갈 곳까지 얹는다.
     hintEl.innerHTML = (d.error || '프레임 추출 실패')
