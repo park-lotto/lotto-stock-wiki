@@ -3782,7 +3782,18 @@ async function startProduceMix(){
     // scene_first(2026-07-20, Task7): 장면 우선 대본 모드 — 팔레트+헌장으로 후보 n개를 만들어
     // 가장 잘 맞는 것을 추천한다. 기본 ON(요청서 §4). 후보 UI는 pollMix가 ready_for_review에서 그린다.
     const _bbIdx=collectBackboneIndex(urls);
-    const _mixBody={script:STATE.script, urls, target_seconds:30, scene_first:true};
+    // ★자막제거 설정을 새 job에 물려준다(2026-07-30 사장님 제보: "3단계 자막제거를 했는데
+    //   최종 렌더에 자막이 그대로. 백본 바꾸고 1단계부터 다시 한 거라 그런지").
+    //   서버 실측(job 125c74e5abff): subtitle_removal=0·clean_status=None — 자막제거를
+    //   아예 안 돌렸다. 뿌리는 여기였다:
+    //     재매칭 = **새 job**인데 이 payload에 subtitle_removal이 없어 서버 기본값 False로
+    //     생성된다 → 그런데 브라우저의 STATE.subtitleRemoval은 true로 남아 있고
+    //     refreshSub()가 체크박스를 켜진 채로 그린다 → 사장님은 이미 켜져 있으니 안 건드림
+    //     → onchange가 안 떠서 onSubToggle()의 /api/produce/mix/settings가 **한 번도 안 불림**
+    //     → 화면은 "켜짐", job은 0. 렌더가 job을 읽으므로 원본 자막이 그대로 남는다.
+    //   2462줄의 복원 경로 주석(꺼진 줄 알았는데 몰래 과금)과 같은 계열의 반대 방향 사고다.
+    const _mixBody={script:STATE.script, urls, target_seconds:30, scene_first:true,
+                    subtitle_removal: !!STATE.subtitleRemoval};
     if(_bbIdx>=0) _mixBody.backbone_main=_bbIdx;   // ⭐메인 지정 시에만(없으면 서버 자동 선정)
     const r=await fetch('/api/produce/mix/start',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify(_mixBody)});
@@ -4416,6 +4427,16 @@ function refreshSub(){
   const cb=document.getElementById('subToggle'); if(cb) cb.checked=STATE.subtitleRemoval;
   const s=document.getElementById('subState');
   if(s) s.textContent = MIX_JOB ? '' : '⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.';
+  // ★방어심층(2026-07-30): 화면에 켜졌다고 그린 값을 job에도 확실히 박는다.
+  //   위 체크박스는 STATE를 그대로 비추는데, job을 만드는 경로가 여럿이라(재매칭·후보 복제 등)
+  //   어느 하나라도 이 값을 안 실으면 "화면은 켜짐 / job은 꺼짐"이 조용히 생기고 렌더에
+  //   원본 자막이 남는다. 여기서 한 번 더 맞춰두면 어느 경로로 왔든 3단계를 보는 순간 일치한다.
+  //   같은 값이면 서버는 그대로 덮어쓰므로 무해(멱등)하고, 화면에 보이는 것과 같은 값이라
+  //   '몰래 켜짐'도 아니다.
+  if(MIX_JOB){
+    fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({job_id:MIX_JOB, subtitle_removal: !!STATE.subtitleRemoval})}).catch(()=>{});
+  }
   // 실결과가 이미 떠 있으면 데모 숨김, 아니면 데모(쇼케이스) 노출 — 페이지가 비지 않게.
   const sc=document.getElementById('cleanShowcase'), cp=document.getElementById('cleanPreview');
   if(sc) sc.style.display = (cp && cp.innerHTML.trim()) ? 'none' : '';
