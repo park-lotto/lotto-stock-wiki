@@ -1792,6 +1792,14 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             benefits_block=benefits_block, engine=engine, engine_seed=2)
         cands = cands + _ground_score(raws3)
     if cands:
-        best = max(range(len(cands)), key=lambda i: cands[i]["score"])
+        # ★말투 하한(2026-07-30). 최종 score는 0.75×매칭 + 0.25×품질이고 품질 안에서 말투가
+        #   0.6이라, 말투가 최종 점수의 **15%**뿐이다 → tone 0.4짜리와 1.0짜리의 점수 차이가
+        #   0.09에 불과해 매칭 점수 차이에 쉽게 뒤집힌다. 실측(95건 중 27건 약함)에서 평서과다
+        #   19건·생생어미0 13건이 그대로 추천으로 나갔다.
+        #   → 매칭 가중치는 건드리지 않고, **기준을 넘는 후보가 하나라도 있으면 그 안에서만**
+        #     고른다. 전부 미달이면 종전대로(폴백) — 재료가 빈약한 소재에서 후보를 잃지 않는다.
+        qualified = [i for i, c in enumerate(cands) if _cand_tone(c) >= _TONE_GATE]
+        pool = qualified or range(len(cands))
+        best = max(pool, key=lambda i: cands[i]["score"])
         cands[best]["recommended"] = True
     return {"candidates": cands, "detected_type": detected}
