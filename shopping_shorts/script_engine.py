@@ -107,7 +107,12 @@ ENGINES = {
     "v3": Engine("v3", "v2 + 백테스트 은행 few-shot", use_bank=True),
 }
 
-DEFAULT = os.getenv("SCRIPT_ENGINE", "v2")
+# 기본 엔진(2026-07-30 사장님 승인으로 v2 → v3). 백테스트 근거:
+#   같은 fixture 30건 대 30건에서 tone<0.8(불량) 10건 → 4건, 최저 0.33 → 0.53.
+#   평균차 +0.075는 반복 편차(0.19~0.23)보다 작아 단독으론 결론 불가였지만,
+#   불량 건수와 최저값은 편차로 설명되지 않았다 → 은행은 상단을 올리기보다 **바닥을 올린다**.
+# 되돌리려면 서버 환경변수 SCRIPT_ENGINE=v2 (코드 배포 없이 즉시 롤백).
+DEFAULT = os.getenv("SCRIPT_ENGINE", "v3")
 
 
 def get(name=None):

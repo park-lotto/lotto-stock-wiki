@@ -301,3 +301,86 @@ def test_conform_path_is_followed_by_structure_fix():
     src = inspect.getsource(edit_plan.build_scene_first_plan)
     i = src.index("_conform_overflow_beats")
     assert "_fix_beat_structure" in src[i:i + 600], "압축 뒤 교정이 빠졌다 — 반말 CTA가 되돌아온다"
+
+
+# ── 8. 엔진 기본값 v3(2026-07-30 사장님 승인) ──────────────────────────
+def test_default_engine_is_v3_with_bank():
+    """기본 엔진이 은행을 실제로 주입해야 한다 — 켰다고 해놓고 무주입이면 무의미하다."""
+    from shopping_shorts import script_engine as se
+    eng = se.get()                      # 인자 없음 = 라이브 기본 경로
+    assert eng.name == "v3" and eng.use_bank
+
+
+def test_default_engine_injects_nonempty_block():
+    """배포된 은행 파일로 실제 프롬프트 블록이 만들어지는가(빈 파일이면 실패)."""
+    from shopping_shorts import script_engine as se
+    block = se.get().extra_rules()
+    assert "참고 부품" in block, "은행이 비어 프롬프트에 아무것도 안 실린다"
+    assert "베끼" in block, "그대로 베끼기 금지 문구가 빠지면 드리프트가 재발한다"
+
+
+def test_engine_can_be_rolled_back_by_name():
+    """v2로 되돌리면 무주입 — 서버 환경변수만으로 즉시 롤백 가능해야 한다."""
+    from shopping_shorts import script_engine as se
+    assert se.get("v2").extra_rules() == ""
+
+
+def test_generation_uses_default_engine(monkeypatch):
+    """★배선 확인: build_scene_first_plan이 engine 인자 없이 불려도 은행이 프롬프트에 실린다.
+    (하네스가 계약을 발명하지 않도록 실제 프롬프트 문자열을 붙잡아 확인한다)"""
+    seen = {}
+
+    def fake_call(prompt, schema, **kw):
+        seen["prompt"] = prompt
+        return {"candidates": []}
+
+    seg = {"s0-0": {"video_id": "s0", "seg_id": "s0-0", "start": 0.0, "end": 2.0,
+                    "text": "", "scene_desc": "", "motion_level": "MED"}}
+    monkeypatch.setattr(edit_plan, "_build_inventory", lambda s: (seg, "인벤토리"))
+    monkeypatch.setattr(edit_plan, "_vault_call", fake_call)
+    edit_plan.build_scene_first_plan([{"video_id": "s0", "segments": [], "full_text": "x"}],
+                                     "제품 설명", 30, n_candidates=3)
+    assert "참고 부품" in seen.get("prompt", ""), "기본 경로에 은행이 안 실린다"
+
+
+# ── 9. 말투 하한 — 밋밋한 후보가 추천으로 나가는 것 차단(2026-07-30) ────
+def _mk_cand(narrs, score):
+    return {"plan": {"beats": [{"narration": n} for n in narrs]},
+            "score": score, "recommended": False}
+
+
+def _pick(cands):
+    """build_scene_first_plan 말미의 추천 선택 로직과 동일한 판정."""
+    qualified = [i for i, c in enumerate(cands) if edit_plan._cand_tone(c) >= edit_plan._TONE_GATE]
+    pool = qualified or range(len(cands))
+    return max(pool, key=lambda i: cands[i]["score"])
+
+
+_FLAT = ["이걸 샀어요.", "좋아요.", "만족해요.", "추천해요."]
+_VIVID = ["방마다 쿠키가 걸려 있는 거 있죠?", "커피 찌꺼기로 만든 거라지 뭐예요.",
+          "향긋한 냄새가 확 퍼지더라구요.", "보송해진 게 느껴지거든요."]
+
+
+def test_vivid_candidate_wins_even_with_lower_score():
+    """★핵심: 말투가 최종 점수의 15%뿐이라 밋밋한 후보가 이기던 것을 막는다."""
+    cands = [_mk_cand(_FLAT, 0.90), _mk_cand(_VIVID, 0.70)]
+    assert _pick(cands) == 1, "기준을 넘는 후보가 있으면 그 안에서 골라야 한다"
+
+
+def test_score_still_decides_among_qualified():
+    """기준을 넘는 후보가 여럿이면 종전 점수대로 고른다(매칭을 버리지 않는다)."""
+    cands = [_mk_cand(_VIVID, 0.70), _mk_cand(_VIVID, 0.95)]
+    assert _pick(cands) == 1
+
+
+def test_falls_back_when_all_below_floor():
+    """전부 미달이면 후보를 잃지 않고 종전대로 최고점을 고른다(재료 빈약한 소재 방어)."""
+    cands = [_mk_cand(_FLAT, 0.60), _mk_cand(_FLAT, 0.85)]
+    assert _pick(cands) == 1
+
+
+def test_floor_is_wired_in_generation():
+    """배선 확인 — 추천 선택에 하한이 실제로 걸려 있는가."""
+    import inspect
+    src = inspect.getsource(edit_plan.build_scene_first_plan)
+    assert "qualified" in src and "_TONE_GATE" in src, "하한이 배선되지 않았다"
