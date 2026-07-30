@@ -21,7 +21,21 @@ from shopping_shorts.apify_client import fetch_profiles as _apify_fetch_profiles
 from shopping_shorts import instagram_playwright
 from shopping_shorts import discovery, instagram_search
 
-CATEGORIES = ["#주방템", "#살림템", "#인테리어", "#자취템", "#생활꿀템", "#뷰티템"]
+# 발굴 입구 = 이 해시태그 목록이 전부다. 6개일 때 픽업이 21곳밖에 안 나온 게
+# 발단(2026-07-30) — 태그당 SERP 24건 → known 제외 → 최근 릴스 필터를 거치면
+# 태그 하나가 실제로 남기는 신규 채널은 서너 곳뿐이라, 입구를 넓히는 게 가장
+# 직접적인 레버다. 20개로 확장(사장님 지시). ⚠️playwright 경로는 태그를 순차로
+# 도므로(자원경합 회피, search_workers=1) 소요시간이 태그 수에 비례한다.
+CATEGORIES = [
+    "#주방템", "#살림템", "#인테리어", "#자취템", "#생활꿀템", "#뷰티템",
+    "#자취요리", "#원룸인테리어", "#주방살림", "#청소템", "#정리수납", "#수납템",
+    "#가성비템", "#쿠팡추천", "#쿠팡템", "#다이소추천", "#다이소템",
+    "#육아템", "#캠핑템", "#반려견용품",
+]
+
+# 누적 모드에서 채널을 며칠간 보존할지(마지막으로 발굴에 잡힌 시점 기준).
+# 3일간 한 번도 다시 안 잡힌 채널은 피드에서 빠진다(2026-07-30 사장님 지시).
+FEED_TTL_DAYS = 3
 
 
 def _search_fn():
@@ -92,11 +106,14 @@ def _run(days, max_total, accumulate, auto_register=False):
         )
         if accumulate:
             prev, _ = store.load_discovery_feed()
-            # cap=max_total: 매일 신규후보(new)가 우선 배치되고, 합친 뒤 댓글수
-            # 기준 상위 max_total개만 남긴다(2026-07-13) — 예전엔 무한 누적만 하고
-            # 트리밍이 없어 계속 커지기만 했음. 이제 성과(댓글수) 낮은 채널이
-            # 자연스럽게 밀려나 빠지는 로테이션 효과가 생긴다.
-            items = discovery.merge_feeds(prev, items, cap=max_total)
+            # 누적 상한 = max_total × 보존일수(2026-07-30). 예전엔 cap=max_total이라
+            # "3일 보존"을 켜도 하루치 정원을 넘는 순간 어제 채널이 댓글수에 밀려
+            # 즉시 잘려나가 보존이 무의미했다. 이제 하루치 정원 × 3일만큼 자리를
+            # 주고, 그 안에서 (1) 3일 지난 채널은 TTL로 (2) 자리가 모자라면 댓글수
+            # 낮은 순으로 빠진다.
+            items = discovery.merge_feeds(prev, items,
+                                          cap=max_total * FEED_TTL_DAYS,
+                                          ttl_days=FEED_TTL_DAYS)
         store.save_discovery_feed(items)
         store.save_run(
             time.strftime("%Y-%m-%d %H:%M"),
