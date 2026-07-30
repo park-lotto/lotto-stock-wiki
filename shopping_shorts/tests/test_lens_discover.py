@@ -26,7 +26,9 @@ def test_filters_to_five_video_platforms(monkeypatch):
 
     platforms = [i["platform"] for i in out]
     assert platforms == ["youtube", "tiktok", "instagram", "xiaohongshu", "douyin"]
-    assert out[0] == {"platform": "youtube", "url": "https://www.youtube.com/watch?v=abc", "title": "yt", "thumbnail": "t1", "match": None}
+    # is_photo(카드뉴스 후보) 추가 2026-07-30 — 프론트 '🎬 영상만' 토글이 이 키를 본다.
+    assert out[0] == {"platform": "youtube", "url": "https://www.youtube.com/watch?v=abc",
+                      "title": "yt", "thumbnail": "t1", "match": None, "is_photo": False}
 
 
 def test_youtu_be_and_xhslink_and_iesdouyin(monkeypatch):
@@ -307,3 +309,38 @@ def test_match_none_when_no_source_caption(monkeypatch):
     assert out[0]["match"] is None
     out2 = lens_discover.search_similar_videos("https://ex.com/f.jpg", source_caption="   ")
     assert out2[0]["match"] is None
+
+
+# ── 카드뉴스(사진 게시물) 표시 — 사장님 제보 2026-07-30 "인스타 카드뉴스가 많다" ──
+# 렌즈 응답엔 동영상 여부 필드가 없고 인스타 실조회는 Apify 유료 → URL 경로가 유일한 공짜 신호.
+def test_is_photo_post_flags_instagram_p_only():
+    from shopping_shorts.lens_discover import is_photo_post
+    assert is_photo_post("instagram", "https://www.instagram.com/p/DAbc123/") is True
+    assert is_photo_post("instagram", "https://instagram.com/p/Xy_9-z/?igsh=abc") is True
+    # /reel·/reels·/tv = 영상 확정 → 가리지 않는다
+    assert is_photo_post("instagram", "https://www.instagram.com/reel/DAbc123/") is False
+    assert is_photo_post("instagram", "https://www.instagram.com/reels/DAbc123/") is False
+    assert is_photo_post("instagram", "https://www.instagram.com/tv/DAbc123/") is False
+    # 인스타 외 플랫폼은 판정하지 않는다(틱톡 사진첩은 _is_watchable이 입구에서 거른다)
+    assert is_photo_post("youtube", "https://www.youtube.com/shorts/abc") is False
+    assert is_photo_post("tiktok", "https://www.tiktok.com/@a/video/123") is False
+    assert is_photo_post("instagram", "") is False
+
+
+def test_search_similar_videos_attaches_is_photo(monkeypatch):
+    """결과 항목마다 is_photo가 실려야 프론트 '🎬 영상만' 토글이 동작한다."""
+    from shopping_shorts import lens_discover
+
+    class _R:
+        status_code = 200
+        def json(self):
+            return {"visual_matches": [
+                {"link": "https://www.instagram.com/p/AAA111/", "title": "카드뉴스", "thumbnail": "t1"},
+                {"link": "https://www.instagram.com/reel/BBB222/", "title": "릴스", "thumbnail": "t2"},
+            ]}
+        def raise_for_status(self):
+            return None
+
+    monkeypatch.setattr(lens_discover.requests, "get", lambda *a, **k: _R())
+    out = lens_discover.search_similar_videos("http://img/x.jpg", api_key="k")
+    assert [i["is_photo"] for i in out] == [True, False]

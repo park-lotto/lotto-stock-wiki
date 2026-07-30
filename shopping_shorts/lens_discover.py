@@ -136,6 +136,25 @@ def _is_watchable(platform, link):
     return True   # 유튜브·중국플랫폼은 그대로(대부분 개별 콘텐츠)
 
 
+def is_photo_post(platform, link):
+    """영상이 아닐 가능성이 높은 게시물인가(카드뉴스·사진·카러셀). 확정이 아니라 '후보'다.
+
+    사장님 제보(2026-07-30): 렌즈 결과에 인스타 카드뉴스(사진 여러 장)가 많이 섞인다.
+    렌즈 visual_matches에는 동영상 여부 필드가 없고(모듈 최상단 주석), 인스타 실조회는
+    Apify 유료라 결과마다 확인할 수 없다. 그래서 **URL 경로**라는 공짜 신호를 쓴다:
+      /reel·/reels·/tv = 영상 확정 → False
+      /p/              = 사진·카러셀이 대부분 → True (요즘 인스타는 영상을 reel로 보낸다)
+    ⚠️ /p/에도 옛 동영상 게시물이 있어 완벽하지 않다 → 프론트에서 '하드 제외'가 아니라
+    끌 수 있는 토글(기본 켜짐)로 쓴다. 인스타 외 플랫폼은 판정하지 않는다(False):
+    틱톡 사진첩(/photo/)은 _is_watchable이 이미 입구에서 거른다."""
+    if platform != "instagram":
+        return False
+    path = urlparse(link or "").path.lower()
+    if re.search(r"/(?:reel|reels|tv)/", path):
+        return False
+    return "/p/" in path
+
+
 def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=None):
     """공개 이미지 URL → [{platform, url, title, thumbnail, match}]. 5개 동영상 플랫폼만.
     키 없음·호출 실패 시 [].
@@ -196,5 +215,7 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
             "title": title,
             "thumbnail": m.get("thumbnail", ""),
             "match": _title_matches(keywords, title),
+            # 카드뉴스(사진) 후보 표시 — 프론트의 '🎬 영상만' 토글이 이걸로 가린다.
+            "is_photo": is_photo_post(platform, m.get("link")),
         })
     return out
