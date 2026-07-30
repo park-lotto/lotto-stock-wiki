@@ -2817,6 +2817,20 @@ function cancelMixReview(){
 // 새로고침 복원: 편집안+미리보기를 다시 그린다. 매칭 결과가 없으면(만들다 만 job) 조용히 빠진다 —
 // 저장된 단계/게이트는 위에서 이미 맞춰졌다.
 async function _restoreMixContext(){
+  // ★대본 후보 카드 복원(2026-07-30 사장님 "완료까지 갔다 오면 대본 생성된 게 다 리셋된다").
+  //   리셋이 아니라 **표시 누락**이었다: 후보는 job_id별로 DB에 그대로 남아 있는데(mix_pipeline의
+  //   set_mix_candidates), 새 매칭 경로(pollMix)만 renderCandidates를 부르고 이 복원 경로엔
+  //   빠져 있어 A/B/C 카드가 화면에서만 사라졌다. 데이터·선택은 멀쩡했다.
+  //   ⚠️ 편집안(_renderMixReviewBody)보다 **먼저** 그린다 — 후보 카드가 편집안 위에 있으므로
+  //      순서가 뒤집히면 스크롤 위치가 튄다.
+  try{
+    const s = await (await fetch('/api/mix/status/'+encodeURIComponent(MIX_JOB))).json();
+    if(s && s.ok && s.candidates && s.candidates.length){
+      // 서버가 기억하는 선택을 되살린다. null이면 renderCandidates가 recommended를 따른다.
+      CAND_SEL = (typeof s.selected_index === 'number') ? s.selected_index : null;
+      renderCandidates(s.candidates);
+    }
+  }catch(e){}   // 후보 복원 실패는 부가기능 — 편집안·미리보기 복원을 막지 않는다.
   let d=null;
   try{ d = await (await fetch('/api/mix/result/'+encodeURIComponent(MIX_JOB))).json(); }catch(e){}
   if(!d || !d.ok) return;

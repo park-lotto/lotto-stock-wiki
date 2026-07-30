@@ -2312,7 +2312,13 @@ def api_mix_candidate(body: dict):
     cands = store.get_mix_candidates(job_id)
     if not cands or not (0 <= idx < len(cands)):
         return JSONResponse(status_code=404, content={"ok": False, "error": "후보 없음"})
-    store.update_mix_job(job_id, edit_plan=cands[idx]["plan"])
+    plan = cands[idx]["plan"]
+    # ★고른 후보를 plan에 새긴다(2026-07-30 사장님 "완료 갔다 오면 대본이 리셋된다").
+    #   후보 자체는 job_id별로 DB에 남아 있는데(set_mix_candidates), 복원 경로가 "지금 무엇을
+    #   골랐나"를 알 길이 없어 카드를 다시 그릴 수 없었다. 컬럼 추가 없이 edit_plan(JSON)에
+    #   실어 마이그레이션 없이 복원한다 — 렌더는 이 키를 안 읽으므로 무해.
+    plan["candidate_index"] = idx
+    store.update_mix_job(job_id, edit_plan=plan)
     return {"ok": True}
 
 
@@ -2401,6 +2407,9 @@ def api_mix_status(job_id: str):
             # 지워진 자막 위치(2026-07-25): 5단계 꾸미기가 자막 자동정렬·'원본 자막 있던 자리' 마커에 쓴다.
             # 좌표(%)뿐이라 안전 — 소스 경로 등 내부정보는 안 실린다.
             "clean_regions": job.get("clean_regions"),
+            # 지금 고른 후보(2026-07-30). 다른 단계 갔다 돌아온 복원 경로가 카드를 원래 선택 상태로
+            # 다시 그리는 데 쓴다. 아직 아무것도 안 골랐으면 None → 프론트가 recommended를 따른다.
+            "selected_index": (job.get("edit_plan") or {}).get("candidate_index"),
             "candidates": candidates}
 
 
