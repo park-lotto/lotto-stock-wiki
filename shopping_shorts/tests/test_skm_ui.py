@@ -101,9 +101,13 @@ def test_mix_tab_removed():
 
 def test_aipick_and_emptystate_present():
     assert "renderAiPick" in HTML and "renderEmptyState" in HTML
-    assert "이 백본으로 새 대본" in HTML and "3안" in HTML
+    # 2026-07-30: 고객 화면에서 '백본'이라는 내부 용어를 없애고 '메인 영상'으로 통일(사장님 지시).
+    # 문구가 바뀌어도 이 테스트의 취지(AI PICK 카드 + ⚡CTA가 화면에 있다)는 그대로다.
+    assert "이 메인 영상으로 새 대본" in HTML and "3안" in HTML
     assert "아직 담긴 영상이 없어요" in HTML
-    assert "이 백본으로 대본 3안 만들기" in HTML          # ⚡ CTA
+    assert "이 메인 영상으로 대본 3안 만들기" in HTML          # ⚡ CTA
+    # 내부 용어가 고객 브라우저로 다시 새지 않게 못 박는다(HTML·CSS는 클라이언트로 내려간다).
+    assert "백본" not in HTML
     assert 'class="cta-shine"' in HTML or "'cta-shine'" in HTML
 
 
