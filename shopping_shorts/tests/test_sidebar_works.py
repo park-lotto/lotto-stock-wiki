@@ -1,4 +1,4 @@
-"""사이드바 작업 목록 — 영상 제작소 아래에 내 작업이 뜬다(스펙 §4.4).
+"""사이드바 작업 목록 — 숏템 제작소 아래에 내 작업이 뜬다(스펙 §4.4).
 
 sidebar.js는 페이지 6개가 공유한다 — 목록 주입이 다른 페이지를 깨면 안 된다.
 """
@@ -121,14 +121,14 @@ def test_works_fetched_on_all_pages():
 
 
 def test_empty_list_does_not_break_nav():
-    out = _run("console.log(_nav.innerHTML.indexOf('영상 제작소') !== -1 ? 'nav-ok' : 'nav-broken');",
+    out = _run("console.log(_nav.innerHTML.indexOf('숏템 제작소') !== -1 ? 'nav-ok' : 'nav-broken');",
                harness_override="WORKS_RESPONSE = {ok:true, works:[]};")
     assert out == "nav-ok"
 
 
 def test_fetch_failure_does_not_break_nav():
     """서버가 죽어도 사이드바는 살아 있어야 한다 — 이건 6개 페이지의 유일한 네비게이션이다."""
-    out = _run("console.log(_nav.innerHTML.indexOf('영상 제작소') !== -1 ? 'nav-ok' : 'nav-broken');",
+    out = _run("console.log(_nav.innerHTML.indexOf('숏템 제작소') !== -1 ? 'nav-ok' : 'nav-broken');",
                harness_override="WORKS_RESPONSE = 'throw';")
     assert out == "nav-ok"
 

@@ -37,7 +37,7 @@
       { icon: "📋", text: "레퍼런스 채널 관리", href: "/refs", admin: true },
     ] },
     { label: "제작", items: [
-      { icon: "🎬", text: "영상 제작소",     href: "/produce" },
+      { icon: "🎬", text: "숏템 제작소",     href: "/produce" },
     ] },
     { label: "소통", items: [
       { icon: "💬", text: "인스타 소통공간", href: "/outreach" },
