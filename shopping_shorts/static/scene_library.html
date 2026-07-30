@@ -203,7 +203,7 @@ async function loadScenes(){
   try{
     const d = await (await fetch('/api/scene/list?'+q)).json();
     SCENES = d.items||[];
-    if(!SCENES.length){ el.innerHTML='<div class="empty">아직 저장한 장면이 없습니다.<br>레퍼런스 랭킹·영상 제작소에서 구간을 잘라 담아보세요.</div>'; return; }
+    if(!SCENES.length){ el.innerHTML='<div class="empty">아직 저장한 장면이 없습니다.<br>레퍼런스 랭킹·숏템 제작소에서 구간을 잘라 담아보세요.</div>'; return; }
     el.innerHTML = SCENES.map(renderCard).join('');
   }catch(e){ el.innerHTML='<div class="empty">불러오기 실패 — 새로고침 해주세요.</div>'; }
 }
