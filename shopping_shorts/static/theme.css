@@ -122,7 +122,7 @@
 .why .tag{ font-size:11px; padding:4px 10px; border-radius:99px; font-weight:900; border:1px solid; }
 .why .tag.t1{ border-color:#facc6b; color:#facc6b; background:rgba(250,204,107,.08); }
 .why .tag.t2{ border-color:#3ee0bf; color:#3ee0bf; background:rgba(62,224,191,.08); }
-/* 🎬 소스 구조 비교(A, 2026-07-29) — 담긴 소스들을 나란히 비교해 백본을 직접 고른다. */
+/* 🎬 소스 구조 비교(A, 2026-07-29) — 담긴 소스들을 나란히 비교해 메인을 직접 고른다. */
 .cmp-wrap{ margin-top:12px; }
 .cmp-title{ font-size:12px; font-weight:900; color:#8b97b0; margin-bottom:8px; }
 .cmp-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; }
