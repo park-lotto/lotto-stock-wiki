@@ -51,6 +51,7 @@ def backfill(limit=None, platform="instagram"):
     # → 태그를 채운 김에 그 태그로 카테고리를 다시 매기고 화면 캐시에 반영한다.
     #   (수집 경로도 같은 동작: daily_instagram_collect / app._run_collect_job)
     changed = vision_tagging.recategorize_by_vision(items, DB_PATH)
+    changed += vision_tagging.apply_channel_category(items, DB_PATH)   # 태그 없는 것만 채널지정으로
     if changed:
         # collected_at은 그대로 둔다 — 새로 수집한 게 아니라 같은 수집분을 다시 분류한 것이라
         # '마지막 수집' 시각을 속이면 안 된다.

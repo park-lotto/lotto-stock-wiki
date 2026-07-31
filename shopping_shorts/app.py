@@ -279,7 +279,9 @@ def _run_collect_job(job_id, platform, category, limit, cid):
             generate_missing_drafts(next_draft_targets(items, store))
             _tag_new_items(items)
             # 비전태그로 카테고리 재분류 → 화면 캐시에 반영(크론 경로와 같은 동작).
-            if vision_tagging.recategorize_by_vision(items, DB_PATH):
+            _changed = vision_tagging.recategorize_by_vision(items, DB_PATH)
+            _changed += vision_tagging.apply_channel_category(items, DB_PATH)
+            if _changed:
                 store.save_last_run(items, collected_at)
             _translate_new_subjects(items)
             _bank_ingest_collected_bg(DB_PATH, items, collected_at)
@@ -471,6 +473,10 @@ async def api_yt_relay_deliver(req_id: str, key: str = Form(""),
     store.finish_yt_relay(req_id, out_path=str(out_path))
     return {"ok": True, "status": "done"}
 
+
+# 채널에 못 박을 수 있는 카테고리 = categorize()의 topic 어휘와 1:1(2026-07-31).
+# 여기 없는 값이 들어오면 화면 필터(TOPIC_CTYPE)에서 매핑이 없어 어느 버튼에도 안 뜬다.
+_PINNABLE_CATEGORIES = ("홈템", "레시피", "가전", "뷰티", "기타")
 
 _VISION_TAG_CAP = 60  # 1회 수집당 새 태깅 상한(비용 가드). 초과분은 다음 수집 때.
 _TRANSLATE_CAP = 40      # 수집직후 백그라운드 소재 번역(_translate_new_subjects, Task3)의 1회 상한. 이 엔드포인트는 안 씀.
@@ -1274,6 +1280,7 @@ def api_refs_instagram(request: Request):
     merged = merge_tracked(excel, disc, removed, max_channels=10 ** 9)
     act = store.instagram_activity_map()
     added = {store._norm_username(d["username"]): d.get("added_at", "") for d in disc}
+    pinned = store.channel_category_map()
     items = []
     for ch in merged:
         u = store._norm_username(ch["username"])
@@ -1285,8 +1292,25 @@ def api_refs_instagram(request: Request):
             "last_active": a.get("last") or "",   # ""=수집된 적 없음
             "added_at": added.get(u, ""),
             "source": "excel" if u in excel_norm else "manual",
+            "category": pinned.get(u, ""),      # 사람이 지정한 것만(빈값=자동판정)
         })
     return {"ok": True, "items": items}
+
+
+@app.post("/api/refs/category")
+def api_refs_set_category(request: Request, username: str, category: str = ""):
+    """채널 카테고리 지정/해제(관리자 전용, 2026-07-31).
+    category 빈값이면 해제 → 자동판정으로 되돌아간다.
+    ★이 값은 비전태그가 없는 영상에만 적용되는 **폴백**이다(vision_tagging 주석 참조)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    cat = (category or "").strip()
+    if cat and cat not in _PINNABLE_CATEGORIES:
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": f"알 수 없는 카테고리: {cat}"})
+    Store(DB_PATH).set_channel_category(username, cat)
+    return {"ok": True, "username": username, "category": cat}
 
 
 @app.post("/api/reference/register")

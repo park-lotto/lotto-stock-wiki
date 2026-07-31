@@ -82,3 +82,30 @@ def recategorize_by_vision(items, db_path):
             it["category"] = new
             changed += 1
     return changed
+
+
+def apply_channel_category(items, db_path):
+    """사람이 지정한 채널 카테고리를 **비전태그가 없는 항목에만** 적용한다. 바뀐 건수 반환.
+
+    ★폴백이지 덮어쓰기가 아니다(2026-07-31). 우선순위:
+        1) 비전태그(영상별 신호)  ← recategorize_by_vision이 이미 적용
+        2) 사람이 지정한 채널 카테고리  ← 여기
+        3) 자동판정(채널명 키워드)  ← 손 안 댐
+    채널 지정이 1)을 이기면 그 채널이 올린 다른 장르 영상까지 한 카테고리로 몰려
+    애초 문제('레시피 안에 홈템')로 되돌아간다. 그래서 태그 있는 항목은 건드리지 않는다.
+    호출부는 recategorize_by_vision **뒤에** 부른다."""
+    store = Store(db_path)
+    pinned = store.channel_category_map()
+    if not pinned:
+        return 0
+    tmap = store.vision_tags_map([it.get("shortcode") for it in items])
+    changed = 0
+    for it in items:
+        tag = tmap.get(it.get("shortcode"))
+        if tag and vision_text(tag):
+            continue                       # 영상별 신호가 있으면 그쪽이 이긴다
+        want = pinned.get((it.get("username") or "").strip().lstrip("@").lower())
+        if want and want != it.get("category"):
+            it["category"] = want
+            changed += 1
+    return changed
