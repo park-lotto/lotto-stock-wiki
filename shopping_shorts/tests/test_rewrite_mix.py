@@ -201,6 +201,57 @@ def test_rewrite_mix_runs_even_when_backbone_is_on():
     assert "원본이 하던 말을 우리 말로 바꿔 쓴다" in seen["p"]
 
 
+def test_build_scene_first_plan_uses_gemini_slot_order_with_no_duplicate_screens():
+    """build_scene_first_plan이 _pick_timeline이 아니라 _pick_slot_groups를 쓰는지 확인한다
+    (Task5: 화면 순서를 소스순서+시간순 강제가 아니라 Gemini 판단으로 정한다).
+
+    fake_call이 스키마로 분기한다 — order 스키마(_SLOT_SEQ_SCHEMA)로 물으면 두 소스를
+    교차하는 순서(order 응답)를, 대본/후보 스키마로 물으면 후보 candidates 응답을 준다.
+    _pick_timeline이었다면 소스 a 전부 → 소스 b 전부 순서로 강제됐을 것이나, 여기서는
+    order 응답이 b-0을 a-1보다 앞에 오도록 일부러 교차시켜, 실제로 그 순서가 tl_groups에
+    반영됐는지(=_pick_timeline이 아니라 _pick_slot_groups가 쓰였는지)를 간접 확인한다.
+
+    핵심 검증은 사장님이 실측한 화면중복 버그의 재발 방지: 최종 plan['beats']의
+    primary.seg_id에 중복이 없어야 한다.
+    """
+    calls = {"order": 0, "script": 0}
+
+    def fake_call(prompt, schema):
+        if schema.get("required") == ["order"]:
+            calls["order"] += 1
+            # 소스를 교차하는 순서(단순 a전부→b전부가 아님) — 실제로 반영되는지 확인용.
+            return {"order": ["b-0", "a-0", "a-1", "b-1"]}
+        calls["script"] += 1
+        return {"candidates": [{"hook": "h", "beats": [
+            {"role": "훅", "narration": "첫 줄", "seg_ids": ["a-0"], "fit": 5},
+            {"role": "스토리", "narration": "둘째 줄", "seg_ids": ["a-0"], "fit": 5},
+            {"role": "CTA", "narration": "셋째 줄", "seg_ids": ["a-0"], "fit": 5},
+        ]}]}
+
+    sources = [
+        {"video_id": "a", "full_text": "본문A", "segments": [
+            {"seg_id": "a-0", "start": 0, "end": 2, "text": "가나다요",
+             "scene_desc": "주방A1", "change": "가나다", "shot_role": "사용중"},
+            {"seg_id": "a-1", "start": 2, "end": 4, "text": "라마바요",
+             "scene_desc": "주방A2", "change": "라마바", "shot_role": "사용중"},
+        ]},
+        {"video_id": "b", "full_text": "본문B", "segments": [
+            {"seg_id": "b-0", "start": 0, "end": 2, "text": "사아자요",
+             "scene_desc": "주방B1", "change": "사아자", "shot_role": "사용중"},
+            {"seg_id": "b-1", "start": 2, "end": 4, "text": "차카타요",
+             "scene_desc": "주방B2", "change": "차카타", "shot_role": "사용중"},
+        ]},
+    ]
+
+    result = ep.build_scene_first_plan(sources, "ref", 8, n_candidates=1, call=fake_call)
+
+    assert calls["order"] >= 1     # _pick_slot_groups가 실제로 _call을 order 스키마로 불렀다
+    plan = result["candidates"][0]["plan"]
+    seg_ids = [b["primary"]["seg_id"] for b in plan["beats"]]
+    assert len(seg_ids) == len(set(seg_ids))          # 핵심: 화면 중복 없음
+    assert set(seg_ids) <= {"a-0", "a-1", "b-0", "b-1"}
+
+
 def test_clip_matching_the_words_comes_first():
     """말에 맞는 컷을 비트 안에서 앞으로 올린다(사장님: 태깅이 맞으면 가져오면 되잖아)."""
     sm = _sm([("v-0", "", 2.0), ("v-1", "", 2.0)])

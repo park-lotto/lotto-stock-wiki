@@ -42,6 +42,8 @@ def test_regenerates_when_all_candidates_short():
     calls = {"n": 0, "lengthen_seen": False}
 
     def fake_call(prompt, schema, **kw):
+        if schema.get("required") == ["order"]:     # Task5: _pick_slot_groups의 순서질의(회귀0 대상 아님)
+            return {"order": []}
         calls["n"] += 1
         if "[길이 보강]" in prompt:      # 보강 힌트가 실제 프롬프트에 얹혔는지(2026-07-26 마커 개명)
             calls["lengthen_seen"] = True
@@ -61,6 +63,8 @@ def test_no_regeneration_when_length_ok():
     calls = {"n": 0}
 
     def fake_call(prompt, schema, **kw):
+        if schema.get("required") == ["order"]:     # Task5: _pick_slot_groups의 순서질의(회귀0 대상 아님)
+            return {"order": []}
         calls["n"] += 1
         return _long_batch()          # 목표 근처 길이
 

@@ -2198,7 +2198,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     #   리라이트 믹스가 **아예 안 돌았다**(오프라인 검증을 백본 꺼진 상태로만 해서 못 봤다).
     #   원본 타임라인을 뼈대로 쓰는 것이 백본(한 영상의 시간순을 뼈대로)의 상위 개념이므로
     #   리라이트가 되면 그걸 쓰고, 재료가 모자라 못 만들 때만 백본/덩어리로 내려간다.
-    tl_groups = _pick_timeline(seg_map, target_seconds) if REWRITE_MIX else []
+    tl_groups = _pick_slot_groups(seg_map, target_seconds, call=_call) if REWRITE_MIX else []
     if tl_groups:
         order_block = _rewrite_block(tl_groups)
         if backbone_base:
