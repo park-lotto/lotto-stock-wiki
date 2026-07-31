@@ -476,7 +476,7 @@ async def api_yt_relay_deliver(req_id: str, key: str = Form(""),
 
 # 채널에 못 박을 수 있는 카테고리 = categorize()의 topic 어휘와 1:1(2026-07-31).
 # 여기 없는 값이 들어오면 화면 필터(TOPIC_CTYPE)에서 매핑이 없어 어느 버튼에도 안 뜬다.
-_PINNABLE_CATEGORIES = ("홈템", "레시피", "가전", "뷰티", "기타")
+_PINNABLE_CATEGORIES = ("홈템", "레시피", "뷰티", "기타")   # 2026-07-31 가전→홈템 병합
 
 _VISION_TAG_CAP = 60  # 1회 수집당 새 태깅 상한(비용 가드). 초과분은 다음 수집 때.
 _TRANSLATE_CAP = 40      # 수집직후 백그라운드 소재 번역(_translate_new_subjects, Task3)의 1회 상한. 이 엔드포인트는 안 씀.
