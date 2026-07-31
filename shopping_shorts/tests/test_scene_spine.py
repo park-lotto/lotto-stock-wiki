@@ -95,8 +95,13 @@ def test_spine_block_empty_when_no_spine():
 
 
 # ── ⑤ 기본 경로(backbone_base off)가 스파인 블록을 실제로 주입한다 ──────────
-def test_default_path_injects_spine_block():
-    """라이브 기본 경로: 카테고리(recipe) 스파인이 생성 프롬프트에 순서 고정으로 실려야."""
+def test_default_path_injects_block_mix_then_spine_fallback():
+    """라이브 기본 경로(2026-07-31~): **덩어리 믹스**(훅/스토리/CTA 연속 구간 + 글자수 예산)가
+    프롬프트에 실린다. 옛 스파인 블록은 덩어리를 못 만들 때의 폴백이다.
+
+    바뀐 이유: 스파인은 "이 순서 고정"이라고 말만 하고 지켰는지 **검사하지 않아** 매번
+    다르게 나왔다. 덩어리 믹스는 화면 배정을 코드가 강제한다(_assign_blocks).
+    """
     sources = [{"video_id": "s1", "full_text": "본문", "segments": [
         {"seg_id": "s1-0", "start": 0, "end": 2, "text": "인트로", "scene_desc": "인트로", "shot_role": "기타"},
         {"seg_id": "s1-1", "start": 2, "end": 4, "text": "재료", "scene_desc": "재료 붓기", "shot_role": "사용중"},
@@ -112,6 +117,5 @@ def test_default_path_injects_spine_block():
     ep.build_scene_first_plan(sources, "ref", 20, n_candidates=1, call=_cap,
                               video_type="recipe", backbone_base=False)
     p = seen["prompt"]
-    assert "장면 스파인" in p and "고정" in p    # 스파인 순서 고정 제약 주입
-    assert "완성훅" in p                         # recipe 첫 슬롯
+    assert "화면은 이미 정해졌다" in p and "자 이내로 써라" in p   # 덩어리 + 글자수 예산
     assert "화면 순서 뼈대" not in p             # 백본 블록은 안 쓴다(기본 경로)

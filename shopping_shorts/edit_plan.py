@@ -10,6 +10,7 @@ build_edit_plan(Gemini 콜)은 Task 4에서 추가.
 """
 
 import json
+import os
 import re
 import sys
 import time
@@ -161,6 +162,163 @@ def _spine_order_block(spine):
     lines.append("★위 슬롯 순서대로 비트를 만들고, 각 비트 seg_ids는 해당 슬롯의 장면을 쓴다. "
                  "장면에 안 보이는 걸 지어내지 말고 그 화면에 맞는 멘트만 써라. CTA는 마지막 슬롯에만.")
     return "\n".join(lines)
+
+# ── 덩어리 믹스(2026-07-31 사장님 지시) ──────────────────────────────────────
+# "믹스할 때 완전 뒤죽박죽으로 하지 마라. 1~3개 영상에서 훅이 좋은 부분을 쭉 이어서
+#  가져오고 그 장면에 맞게 대본을 넣고 / 스토리 부분에서 좋은 영상 가져와서 넣고 /
+#  CTA 부분 괜찮은 영상 가져와서 넣고. 단순하게."
+#
+# 왜 이게 두더지를 끝내나: 지금까지는 비트마다 여기저기서 조각을 긁어모아 붙였고,
+# 모자라면 렌더가 아무 데나 때웠다(video_assemble:445-471). 화면을 **먼저 연속 덩어리로
+# 확정**하면 (1) 화면이 튀지 않고 (2) 각 덩어리가 몇 초인지 알기 때문에 대사 길이를
+# 초 단위로 못박을 수 있다 → 부족분 자체가 생기지 않는다.
+BLOCK_MIX = os.getenv("BLOCK_MIX", "1") == "1"   # 0이면 옛 스파인 경로(즉시 롤백)
+
+# 덩어리별 역할 우선순위(shot_role). 앞에 있을수록 좋다.
+_BLOCK_ROLES = {
+    "훅": ("문제", "before", "완성"),
+    "스토리": ("사용중", "before", "after"),
+    "CTA": ("완성", "after"),
+}
+
+
+def _seg_seq(sid):
+    """'vid-12' → ('vid', 12). 형식이 아니면 (sid, 0)."""
+    vid, _, n = (sid or "").rpartition("-")
+    return (vid, int(n)) if vid and n.isdigit() else (sid, 0)
+
+
+def _contiguous_runs(segs):
+    """같은 소스 안에서 번호가 이어지는 구간 묶음 → [[seg,...], ...] (사장님 '쭉 이어서')."""
+    runs, cur = [], []
+    for s in sorted(segs, key=lambda s: _seg_seq(s["seg_id"])):
+        v, n = _seg_seq(s["seg_id"])
+        if cur:
+            pv, pn = _seg_seq(cur[-1]["seg_id"])
+            if v != pv or n != pn + 1:
+                runs.append(cur); cur = []
+        cur.append(s)
+    if cur:
+        runs.append(cur)
+    return runs
+
+
+def _secs(segs):
+    return sum(max(0.0, float(s.get("end") or 0) - float(s.get("start") or 0)) for s in segs)
+
+
+def _pick_run(runs, roles, want, used, max_cuts=3, prefer_late=False):
+    """원하는 길이(want초)에 가장 잘 맞으면서 역할이 어울리는 연속 구간을 고른다.
+
+    점수 = 역할 일치 → **액션(변화) 포함** → 길이 부족분. 이미 쓴 seg는 뺀다.
+    max_cuts: 컷 수 상한(2026-07-31 사장님 "30초면 6컷 정도, 액션 장면은 잘게 쪼개지 마라").
+    반환: [seg,...] (want나 max_cuts를 채우면 멈춘다)."""
+    best, best_key = [], None
+    for run in runs:
+        free = [s for s in run if s["seg_id"] not in used]
+        if not free:
+            continue
+        for sub in _contiguous_runs(free):        # 쓴 걸 빼면 끊길 수 있다 → 다시 이어붙임
+            hit = sum(1 for s in sub if s.get("shot_role") in roles) / max(1, len(sub))
+            act = sum(1 for s in sub if (s.get("change") or "").strip()) / max(1, len(sub))
+            # ★'컷'의 단위 = 세그먼트가 아니라 **원본에서 이어지는 구간 통째**(2026-07-31 실측).
+            #   이 소재는 원본 컷이 0.6~1.7초라 세그먼트를 6개로 끊으니 총 6.7초밖에 안 나왔다
+            #   (대본 예산이 7자/21자/9자). 원본에서 연속이면 이어 붙여도 화면이 안 튀고
+            #   액션도 안 쪼개진다 → want(초)를 채울 때까지 이어 간다. max_cuts는 폭주 방지용.
+            take, acc = [], 0.0
+            for s in sub:
+                take.append(s)
+                acc += _secs([s])
+                if acc >= want or len(take) >= max_cuts:
+                    break
+            # CTA는 소재 뒤쪽(완성·마무리)에서 가져와야 마무리처럼 보인다 → 늦은 구간 우대.
+            late = -_seg_seq(take[-1]["seg_id"])[1] if prefer_late else 0
+            key = (-round(hit, 2), late, -round(act, 2), abs(acc - want))
+            if best_key is None or key < best_key:
+                best, best_key = take, key
+    return best
+
+
+def _build_scene_blocks(seg_map, target_seconds):
+    """화면을 훅/스토리/CTA **세 덩어리**로 먼저 확정한다. 각 덩어리는 연속 구간.
+
+    반환: [{"name": 훅|스토리|CTA, "segs": [seg,...], "secs": float}, ...]
+    비면 [] (호출부가 옛 경로로 폴백)."""
+    if not seg_map:
+        return []
+    runs = _contiguous_runs(list(seg_map.values()))
+    want = {"훅": max(2.5, target_seconds * 0.15),
+            "스토리": max(6.0, target_seconds * 0.6),
+            "CTA": max(2.5, target_seconds * 0.2)}
+    # 폭주 방지 상한만 둔다. 실제 컷 수는 want(초)를 채우면 멈춘다 — 원본 컷이 짧은 소재
+    # (0.6~1.7초)에서 개수로 끊으면 총 길이가 턱없이 모자란다(실측 6.7초).
+    cuts = {"훅": 6, "CTA": 6, "스토리": 20}
+    used, out = set(), []
+    # 훅(앞) → CTA(뒤) → 스토리(남은 가운데). 스토리를 먼저 잡으면 재료를 다 먹어 CTA가
+    # 빈다(실측). CTA는 prefer_late로 **소재 뒤쪽**에서 가져와 마무리처럼 보이게 한다.
+    for name in ("훅", "CTA", "스토리"):
+        segs = _pick_run(runs, _BLOCK_ROLES[name], want[name], used,
+                         max_cuts=cuts[name], prefer_late=(name == "CTA"))
+        if not segs:
+            continue
+        used.update(s["seg_id"] for s in segs)
+        out.append({"name": name, "segs": segs, "secs": round(_secs(segs), 1)})
+    order = {"훅": 0, "스토리": 1, "CTA": 2}
+    out.sort(key=lambda b: order[b["name"]])
+    return out
+
+
+def _blocks_order_block(blocks):
+    """확정된 세 덩어리를 대본 프롬프트용 블록으로. 덩어리마다 **글자수 예산**을 준다."""
+    if not blocks:
+        return ""
+    lines = ["[★화면은 이미 정해졌다 — 이 세 덩어리 순서로 간다. 바꾸지 마라]",
+             "각 덩어리의 화면을 보고 **그 화면에 맞는 대사**를 써라. 화면에 없는 건 말하지 마라."]
+    for i, b in enumerate(blocks, 1):
+        budget = int(b["secs"] * _SYLLABLES_PER_SEC)
+        lines.append(f"\n{i}) {b['name']} 덩어리 — {b['secs']}초, **{budget}자 이내로 써라**")
+        for s in b["segs"]:
+            chg = (s.get("change") or "").strip()
+            lines.append(f"   · {s['seg_id']} 화면:{(s.get('scene_desc') or '')[:40]}"
+                         + (f" | 변화:{chg[:40]}" if chg else ""))
+    lines.append("\n★글자수를 넘기면 화면이 모자라 엉뚱한 장면이 깔린다. 예산 안에서 끝내라.")
+    # 2026-07-31 사장님: "액션 있는 장면 부분은 원대본과 다른 대사로 써라."
+    lines.append("★액션(변화)이 있는 컷에는 **원본이 하던 말을 그대로 옮기지 말고** 그 동작을 "
+                 "네 말로 새로 살려 써라. 무슨 일이 일어나는지는 화면 그대로, 표현만 새로.")
+    lines.append("★한 컷을 여러 문장으로 잘게 쪼개지 마라 — 컷 하나에 한 호흡으로 간다.")
+    return "\n".join(lines)
+
+
+def _assign_blocks(beats, blocks):
+    """모델이 뭘 골랐든 **화면은 확정된 덩어리 순서대로** 다시 배정한다(2026-07-31).
+
+    ★왜 코드가 강제하나: 프롬프트로 "이 순서 고정"이라고 말만 하고 지켰는지 검사하지
+      않아서(옛 _spine_order_block) 매번 다르게 나왔다. 말은 모델 것, 화면은 코드 것.
+    비트 배분: 첫 비트=훅 덩어리, 마지막 비트=CTA 덩어리, 가운데=스토리 덩어리."""
+    if not beats or not blocks:
+        return beats
+    by = {b["name"]: list(b["segs"]) for b in blocks}
+    mid = [b for b in beats[1:-1]] if len(beats) >= 3 else []
+    groups = [(beats[:1], by.get("훅") or by.get("스토리") or [])]
+    if mid:
+        groups.append((mid, by.get("스토리") or []))
+    if len(beats) >= 2:
+        groups.append((beats[-1:], by.get("CTA") or by.get("스토리") or []))
+    for grp, segs in groups:
+        if not grp or not segs:
+            continue
+        # 비트별 대사 길이 비율대로 덩어리 안의 컷을 나눠 준다(긴 대사에 긴 화면).
+        weights = [max(1, len((b.get("narration") or "").strip())) for b in grp]
+        total_w = sum(weights)
+        pos = 0
+        for k, (b, w) in enumerate(zip(grp, weights)):
+            n = len(segs) - pos if k == len(grp) - 1 else max(1, round(len(segs) * w / total_w))
+            chunk = segs[pos:pos + n] or segs[-1:]
+            pos += n
+            b["primary"] = dict(chunk[0])
+            b["alternates"] = [dict(s) for s in chunk[1:]]
+    return beats
+
 
 # 한글 1글자 ≈ 1음절이므로 "글자수 ÷ 이 값"이 실제 발화 시간(초)이다.
 # 2026-07-17 성우 14명을 서버에서 실합성해 측정한 값(음절÷발화초). 성우별 speed는 이 값에
@@ -1799,7 +1957,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     #    → 대본 생성에 하드 제약으로 넣어 narration-first를 뒤집는다('장면이 운전대').
     #  백본 모드(backbone_base on, opt-in): 특정 백본 영상의 시간순을 순서 뼈대로 쓴다(기존 동작 보존).
     # 설계: docs/superpowers/specs/2026-07-29-장면스파인-먼저-재설계-design.md
-    bb_video, order_block = None, ""
+    bb_video, order_block, blocks = None, "", []
     if backbone_base:
         from shopping_shorts import backbone
         bb_video = backbone.pick_backbone(source_scripts, meta=backbone_meta,
@@ -1807,7 +1965,13 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         if bb_video:
             order_block = _backbone_order_block(bb_video, source_scripts)
     else:
-        order_block = _spine_order_block(_build_scene_spine(seg_map, detected))
+        # ★덩어리 믹스(2026-07-31 사장님): 훅/스토리/CTA 세 덩어리를 연속 구간으로 먼저 확정.
+        #   화면이 먼저 정해지므로 덩어리 초 → 글자수 예산을 대본에 줄 수 있고,
+        #   배정도 코드가 강제한다(_assign_blocks) — 옛 스파인은 "고정이다"라고 말만 하고
+        #   지켰는지 검사하지 않아 매번 다르게 나왔다. BLOCK_MIX=0으로 즉시 롤백.
+        blocks = _build_scene_blocks(seg_map, target_seconds) if BLOCK_MIX else []
+        order_block = (_blocks_order_block(blocks) if blocks
+                       else _spine_order_block(_build_scene_spine(seg_map, detected)))
     src_texts = [s.get("full_text", "") for s in source_scripts]
 
     def _ground_score(raws):
@@ -1819,6 +1983,9 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         plan = _ground_candidate(r, seg_map)
         if plan is None:
             continue
+        # ★화면은 확정된 덩어리 순서대로 코드가 배정한다(말은 모델 것, 화면은 코드 것).
+        if blocks:
+            plan["beats"] = _assign_blocks(plan["beats"], blocks)
         # fit 정직화(페이블): 행위 불일치 증거가 있으면 자기신고 fit을 깎는다 — 스왑버튼·
         # 약비트 재작성·추천점수가 실제로 작동. ping_pong이 스왑으로 고치면 5로 복원됨.
         plan["beats"] = _verify_fits(plan["beats"])
