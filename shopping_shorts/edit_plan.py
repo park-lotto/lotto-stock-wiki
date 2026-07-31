@@ -1034,9 +1034,19 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=6):
         if have >= need or not b.get("primary"):
             continue
         home = (b["primary"] or {}).get("video_id")
-        # 같은 소스 → 다른 소스 순으로, 아직 안 쓴 것부터.
+        # ★말이 통하는 장면부터 채운다(2026-07-31 2차).
+        #   1차 수정은 "같은 소스·앞순서"로만 골라서, 결국 video_assemble의 땜질
+        #   (:445-471 = 릴의 안 쓴 뒷부분 아무 데나)을 edit_plan 단계로 앞당긴 것뿐이었다.
+        #   실측: "요리할 때마다 닦는 게 진짜"에 스티커 정지컷, "스티커까지 붙이니까"에
+        #   실리콘 도구 컷. → 나레이션과 '변화:'·'화면:' 문구가 겹치는 장면을 먼저 쓴다.
+        words = {w for w in _claim_key(b.get("narration") or "")}
+
+        def _rel(s):
+            txt = f"{s.get('change') or ''} {s.get('scene_desc') or ''}"
+            return len(words & set(_claim_key(txt)))
+
         pool = sorted(seg_map.values(),
-                      key=lambda s: (s.get("video_id") != home, s.get("start") or 0))
+                      key=lambda s: (-_rel(s), s.get("video_id") != home, s.get("start") or 0))
         alts = list(b.get("alternates") or [])
         for s in pool:
             if have >= need or len(alts) >= max_alts:
