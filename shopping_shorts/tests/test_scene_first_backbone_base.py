@@ -28,8 +28,15 @@ def test_backbone_base_uses_rich_generator_with_order_block():
     def _cap(prompt, schema):
         seen["prompt"], seen["schema"] = prompt, schema
         return _RICH
+    # ★옛 경로 전용(2026-07-31): 리라이트 믹스가 켜져 있으면 그쪽이 순서 뼈대를 소유한다
+    #   (원본 타임라인 = 백본의 상위 개념). 백본 블록은 리라이트가 재료 부족으로 못 만들 때의
+    #   폴백이 됐다. 이 테스트는 그 폴백 동작을 계속 지킨다.
+    import pytest as _pytest
+    _mp = _pytest.MonkeyPatch()
+    _mp.setattr(edit_plan, "REWRITE_MIX", False)
     res = edit_plan.build_scene_first_plan(_SOURCES, "ref", 20, n_candidates=1, call=_cap,
                                            backbone_base=True, bank_context="[은행 훅] 이거 실화냐")
+    _mp.undo()
     p = seen["prompt"]
     assert "백본 흐름" in p and "BB-1" in p and "BB-2" in p        # 백본 순서 제약(2026-07-27 헤더 개명)
     assert p.index("BB-1 [자르다]") < p.index("BB-2 [올리다]")      # 시간순 나열
