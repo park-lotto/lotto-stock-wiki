@@ -342,8 +342,16 @@ def _pick_timeline(seg_map, target_seconds):
         by_vid.setdefault(s.get("video_id"), []).append(s)
     order = sorted(by_vid, key=lambda v: -len(by_vid[v]))     # 재료 많은 소스부터
     picked, acc = [], 0.0
-    for vid in order:
-        for s in sorted(by_vid[vid], key=lambda s: _seg_seq(s["seg_id"])[1]):
+    for k, vid in enumerate(order):
+        segs = sorted(by_vid[vid], key=lambda s: _seg_seq(s["seg_id"])[1])
+        # ★소스 전환 구멍 막기(2026-07-31 사장님 "막 섞으면 CTA 화면이 맨 앞으로 갈 수 있잖아").
+        #   소스 안 순서는 코드가 지키지만, A를 다 쓰고 B를 이어 붙이면 **A의 마무리 화면이
+        #   우리 영상 한가운데** 온다. 마지막 소스가 아니면 꼬리의 '완성' 컷을 잘라낸다 —
+        #   마무리처럼 보이는 그림은 끝에서만 나와야 한다.
+        if k < len(order) - 1:
+            while segs and segs[-1].get("shot_role") in ("완성", "after"):
+                segs.pop()
+        for s in segs:
             if acc >= target_seconds:
                 break
             picked.append(s)
