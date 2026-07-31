@@ -90,7 +90,8 @@ def test_mix_adjust_regrounds_from_inventory(monkeypatch, tmp_path):
     assert r.status_code == 200
     plan = store.get_mix_job("j2")["edit_plan"]
     assert plan["beats"][0]["primary"] == {"video_id": "s0", "seg_id": "s0-1", "start": 2.0, "end": 4.0,
-                                           "scene_desc": "d", "is_key": False, "shot_role": "기타"}
+                                           "scene_desc": "d", "change": "", "is_key": False,
+                                           "shot_role": "기타"}
 
 
 def test_mix_adjust_invalid_beat_idx_returns_404(monkeypatch, tmp_path):
