@@ -28,6 +28,7 @@ from shopping_shorts import sub_region
 from shopping_shorts.narration_naturalize import naturalize, merge_profile
 from shopping_shorts import asr_check
 from shopping_shorts import caption_sync
+from shopping_shorts import tts_timestamps
 from shopping_shorts import pron_corrections
 from shopping_shorts import backbone
 from shopping_shorts import plan_gate
@@ -39,6 +40,22 @@ MOTION_ASSETS_DIR = DEFAULT_ASSETS_DIR
 # 매 렌더 다른 목소리로 뽑혀 비트마다·날마다 성우가 달라졌다. 고정 시드를 박아 결정성 확보
 # — 튜닝한 톤(stability·style)·모델은 그대로 두고 '매번 달라짐'만 없앤다. 명시 seed는 존중.
 _PINNED_TTS_SEED = 7
+
+
+def _beat_words(mp3_path, dur=None):
+    """자막 싱크용 단어 타임스탬프. TTS가 준 것을 먼저 쓰고, 없으면 ASR로 폴백한다(2026-07-31).
+
+    ①TTS 타임스탬프 — 우리가 보낸 원문 그대로의 시각이라 맞출 대상이 없다(정렬 실패 없음).
+    ②ASR 폴백 — 옛 경로. ELEVENLABS_TIMESTAMPS를 끄거나, 그 엔드포인트가 죽었거나,
+      키 없는 무음 mock일 때 여기로 온다. 폴백을 남겨두는 이유는 그 세 경우에도
+      자막이 글자수 추정으로 떨어지지 않게 하기 위해서다.
+    ★asr_check를 모듈 속성으로 부른다 — 테스트가 mix_pipeline.asr_check를 monkeypatch 한다.
+    """
+    words = tts_timestamps.words_from_mp3(mp3_path)
+    if words:
+        # 합성 뒤 audio_post가 배속·무음트림으로 파일을 고쳤을 수 있다 → 최종 길이로 되맞춤.
+        return tts_timestamps.rescale(words, dur)
+    return asr_check.transcribe_words(mp3_path)
 
 
 def _source_video_id(i):
@@ -187,7 +204,7 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
             beat["target_seconds"] = round(_ad, 1)
         # 자막 타이밍용: 실제 말한 워드 시각으로 구절 표시시간 계산(실패/키없음 → 미설정=폴백).
         beat["cap_durs"] = None
-        words = asr_check.transcribe_words(str(out))
+        words = _beat_words(str(out), _ad)
         if words:
             beat["cap_durs"] = caption_sync.phrase_durs_from_words(
                 beat["narration"], words, _ad or 0.0,
@@ -324,7 +341,7 @@ def _conform_beats(beats, tts_dir, *, voice, global_pron=None):
         # 못 봐 오차가 커서 실측으로 둔다(2026-07-21). 실측 실패 시에만 추정 폴백.
         beat["target_seconds"] = round(new_dur, 1) if new_dur and new_dur > 0 \
             else round(max(1.5, len(new_n.strip()) / _SYLLABLES_PER_SEC), 1)
-        words = asr_check.transcribe_words(str(out))
+        words = _beat_words(str(out), new_dur)
         if words:
             beat["cap_durs"] = caption_sync.phrase_durs_from_words(new_n, words, new_dur)
         beat["sync_gap"] = round(max(0.0, new_dur - budget), 2)
@@ -1127,10 +1144,16 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
         beat["tts_path"] = str(out)
         beat["voice_override"] = voice_override
         beat["cap_durs"] = None
-        words = asr_check.transcribe_words(str(out))
+        # ★probe를 밖으로 뺐으니 예외를 흡수해야 한다 — 예전엔 words가 있을 때만 불렸다.
+        #   길이를 몰라도(None) 되맞춤만 건너뛰고 나머지는 그대로 돈다.
+        try:
+            _rdur = _probe_duration(str(out))
+        except Exception:      # noqa: BLE001 — 길이 측정 실패로 재합성을 죽이지 않는다
+            _rdur = None
+        words = _beat_words(str(out), _rdur)
         if words:
             beat["cap_durs"] = caption_sync.phrase_durs_from_words(
-                beat["narration"], words, _probe_duration(str(out)),
+                beat["narration"], words, _rdur or 0.0,
                 preset=beat.get("caption_lines"))
         # 완료 신호: 단조 증가 버전. 프론트가 이 값 변화를 폴링해 '재합성 끝'을 안다
         # (mp3는 같은 경로/URL이라 겉으론 구분이 안 되므로 — 고정 4초 추측을 이 신호로 대체).
