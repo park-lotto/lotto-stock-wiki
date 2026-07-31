@@ -417,6 +417,14 @@ def run_mix_job(job_id, db_path, work_root):
             except Exception:
                 cached = None
             segs = (cached or {}).get("segments")
+            # ★스키마 승격(2026-07-31): change('사물이 무엇이 됐나') 필드가 생기기 전 캐시는
+            #   영상의 진짜 포인트(갈라지다→매끈해지다·튀다·모찌처럼 늘어난다)를 하나도 안 갖고
+            #   있다. 그대로 쓰면 도서관에 쌓인 옛 영상만 영원히 옛 품질로 남아 "어떤 건 되고
+            #   어떤 건 안 되네"가 반복된다 → 필드 자체가 없으면 옛 스키마로 보고 다시 뽑는다.
+            #   영상당 딱 한 번(재추출 결과가 캐시를 덮어씀). 값이 빈 문자열인 건 모델이 '변화
+            #   없음'이라 판단한 정상 결과이므로 재추출하지 않는다(키 유무로만 판별).
+            if segs and not any("change" in s for s in segs):
+                segs = None
             if segs and all(s.get("seg_id") for s in segs):
                 r = {"segments": segs, "full_text": (cached.get("full_text") or "")}
                 # 무자막 소스 특장점(2026-07-26): 캐시엔 최상위 필드가 없을 수 있으므로
