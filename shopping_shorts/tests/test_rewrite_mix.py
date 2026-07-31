@@ -263,4 +263,32 @@ def test_prompt_forbids_repeating_the_hook():
 def test_empty_inventory_is_safe():
     assert ep._pick_timeline({}, 30) == []
     assert ep._rewrite_block([]) == ""
+
+
+def test_assign_timeline_called_once_never_duplicates():
+    """_assign_timeline이 grounding 직후 딱 한 번만 불리면(재호출 없음), n==len(groups)가
+    항상 성립하므로 화면 중복이 구조적으로 생길 수 없다 — split이 비트를 늘리지 않는지 검증.
+
+    group idx 2(v-2, v-3)는 v-2 텍스트가 문장을 안 끝내(_ends_sentence False) 다음 컷과
+    한 세트로 묶인다 — 이래야 _assign_timeline이 그 비트에 real alternates(v-3)를 채워
+    (구)_split_long_beats의 분할 조건("컷이 2개 이상")을 실제로 태운다."""
+    sm = _sm([("v-0", "가나다요", 2.0), ("v-1", "라마바요", 2.0),
+              ("v-2", "사이참깨", 1.5), ("v-3", "사아자요", 2.0),
+              ("v-4", "차카타요", 2.0)])
+    g = ep._pick_timeline(sm, 30)
+    assert len(g) == 4
+    long_narr = ("이 냄비는 정말 놀라울 정도로 열전도가 빠르고 코팅이 오래 가서 만족스럽습니다. "
+                 "게다가 손잡이까지 안 뜨거워서 요리할 때 진짜 편하더라고요.")
+    beats = [
+        {"narration": "첫줄", "beat_idx": 0, "primary": {"seg_id": "v-0"}, "alternates": []},
+        {"narration": "둘째줄", "beat_idx": 1, "primary": {"seg_id": "v-1"}, "alternates": []},
+        {"narration": long_narr, "beat_idx": 2, "primary": {"seg_id": "v-2"},
+         "alternates": [{"seg_id": "v-2b"}]},
+        {"narration": "넷째줄", "beat_idx": 3, "primary": {"seg_id": "v-4"}, "alternates": []},
+    ]
+    ep._assign_timeline(beats, g)
+    beats = ep._fix_beat_structure(beats)   # split이 더는 개수를 안 늘려야 한다
+    assert len(beats) == 4                  # 불변식: 그룹 개수와 항상 같다
+    seg_ids = [b["primary"]["seg_id"] for b in beats]
+    assert len(seg_ids) == len(set(seg_ids))
     assert ep._assign_timeline([], []) == []
