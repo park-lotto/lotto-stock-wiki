@@ -30,10 +30,19 @@ def test_blocks_are_hook_story_cta_in_order():
     assert [x["name"] for x in b] == ["훅", "스토리", "CTA"]
 
 
-def test_each_block_is_contiguous():
-    for blk in ep._build_scene_blocks(_demo(), 30):
-        nums = [ep._seg_seq(s["seg_id"])[1] for s in blk["segs"]]
-        assert nums == list(range(nums[0], nums[0] + len(nums))), blk["name"]
+def test_blocks_are_made_of_whole_context_chunks():
+    """블록 = 맥락 덩어리들의 연결. 덩어리 중간에서 자르지 않는다(사장님: 맥락이 바뀌는
+    구간까지를 소스로 쓴다). 그래서 블록 하나가 여러 연속 구간으로 이뤄질 수 있다."""
+    sm = _demo()
+    chunks = {tuple(s["seg_id"] for s in c) for c in ep._context_runs(list(sm.values()))}
+    for blk in ep._build_scene_blocks(sm, 30):
+        got = [s["seg_id"] for s in blk["segs"]]
+        # 블록의 seg 목록이 통째 덩어리들의 이어붙임인지 — 앞에서부터 덩어리 단위로 소비된다
+        i = 0
+        while i < len(got):
+            match = next((c for c in chunks if tuple(got[i:i + len(c)]) == c), None)
+            assert match, (blk["name"], got[i:])
+            i += len(match)
 
 
 def test_no_segment_used_twice():

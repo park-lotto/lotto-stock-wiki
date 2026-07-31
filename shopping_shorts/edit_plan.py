@@ -203,6 +203,31 @@ def _contiguous_runs(segs):
     return runs
 
 
+def _context_runs(segs):
+    """연속 구간을 **맥락이 바뀌는 지점**에서 끊는다(2026-07-31 사장님).
+
+    "대본을 중심으로 맥락이 바뀌는 구간까지를 영상의 소스로 쓰고, 그 대본 길이만큼 바꿔 넣자."
+    → 컷을 초로 잘라 맞추는 게 아니라, 원본이 한 가지 이야기를 하는 동안은 **통째로** 쓴다.
+    맥락 경계 판정: shot_role이 바뀌거나, 인접 구간의 화면·변화 문구가 한 단어도 안 겹칠 때.
+    """
+    out = []
+    for run in _contiguous_runs(segs):
+        cur = [run[0]]
+        for s in run[1:]:
+            prev = cur[-1]
+            role_changed = (s.get("shot_role") or "") != (prev.get("shot_role") or "")
+            a = set(_claim_key(f"{prev.get('change') or ''} {prev.get('scene_desc') or ''}"))
+            b = set(_claim_key(f"{s.get('change') or ''} {s.get('scene_desc') or ''}"))
+            # 실측 교정: 둘 다(and) 요구했더니 이 소재에선 경계가 거의 안 걸려 스토리가
+            # 21컷 26.5초로 뭉쳤다. 역할이 바뀌거나 화제가 안 겹치면 맥락 전환으로 본다.
+            if role_changed or not (a & b):
+                out.append(cur); cur = []
+            cur.append(s)
+        if cur:
+            out.append(cur)
+    return out
+
+
 def _secs(segs):
     return sum(max(0.0, float(s.get("end") or 0) - float(s.get("start") or 0)) for s in segs)
 
@@ -218,19 +243,15 @@ def _pick_run(runs, roles, want, used, max_cuts=3, prefer_late=False):
         free = [s for s in run if s["seg_id"] not in used]
         if not free:
             continue
-        for sub in _contiguous_runs(free):        # 쓴 걸 빼면 끊길 수 있다 → 다시 이어붙임
+        # ★맥락 단위로 끊는다 — 초에 맞춰 중간에서 자르지 않는다(2026-07-31 사장님).
+        #   "맥락이 바뀌는 구간까지를 소스로 쓰고, 그 대본 길이만큼 바꿔서 넣는다."
+        #   그래서 여기서 고르는 건 '몇 초어치'가 아니라 **맥락 덩어리 하나**다.
+        #   want는 자르는 기준이 아니라 어느 덩어리가 알맞은지 고르는 기준으로만 쓴다.
+        for sub in _context_runs(free):
             hit = sum(1 for s in sub if s.get("shot_role") in roles) / max(1, len(sub))
             act = sum(1 for s in sub if (s.get("change") or "").strip()) / max(1, len(sub))
-            # ★'컷'의 단위 = 세그먼트가 아니라 **원본에서 이어지는 구간 통째**(2026-07-31 실측).
-            #   이 소재는 원본 컷이 0.6~1.7초라 세그먼트를 6개로 끊으니 총 6.7초밖에 안 나왔다
-            #   (대본 예산이 7자/21자/9자). 원본에서 연속이면 이어 붙여도 화면이 안 튀고
-            #   액션도 안 쪼개진다 → want(초)를 채울 때까지 이어 간다. max_cuts는 폭주 방지용.
-            take, acc = [], 0.0
-            for s in sub:
-                take.append(s)
-                acc += _secs([s])
-                if acc >= want or len(take) >= max_cuts:
-                    break
+            take = sub[:max_cuts]                 # max_cuts는 폭주 방지용 상한일 뿐
+            acc = _secs(take)
             # CTA는 소재 뒤쪽(완성·마무리)에서 가져와야 마무리처럼 보인다 → 늦은 구간 우대.
             late = -_seg_seq(take[-1]["seg_id"])[1] if prefer_late else 0
             key = (-round(hit, 2), late, -round(act, 2), abs(acc - want))
@@ -259,6 +280,22 @@ def _build_scene_blocks(seg_map, target_seconds):
     for name in ("훅", "CTA", "스토리"):
         segs = _pick_run(runs, _BLOCK_ROLES[name], want[name], used,
                          max_cuts=cuts[name], prefer_late=(name == "CTA"))
+        # 맥락 덩어리 하나로는 대개 짧다(실측: 훅 1.5초=8자). 목표에 닿을 때까지
+        # **맥락 덩어리 단위로** 더 이어 붙인다 — 덩어리 중간에서 자르는 일은 없다.
+        if segs:
+            used.update(s["seg_id"] for s in segs)
+            # 덩어리 통째로만 붙이므로 목표를 넘길 수밖에 없다 → 80%에서 멈춰 과다를 줄인다
+            # (실측: 조건 없이 채웠더니 목표 30초짜리가 42.2초가 됐다).
+            # 훅·CTA는 짧아도 되니 최소 길이만 확보하고 더 안 먹는다 — 스토리 재료를 뺏으면
+            # 가운데가 빈다.
+            floor = want[name] * 0.8 if name == "스토리" else 2.5
+            while _secs(segs) < floor:
+                more = _pick_run(runs, _BLOCK_ROLES[name], want[name] - _secs(segs), used,
+                                 max_cuts=cuts[name], prefer_late=(name == "CTA"))
+                if not more:
+                    break
+                used.update(s["seg_id"] for s in more)
+                segs = segs + more
         if not segs:
             continue
         used.update(s["seg_id"] for s in segs)
@@ -273,7 +310,9 @@ def _blocks_order_block(blocks):
     if not blocks:
         return ""
     lines = ["[★화면은 이미 정해졌다 — 이 세 덩어리 순서로 간다. 바꾸지 마라]",
-             "각 덩어리의 화면을 보고 **그 화면에 맞는 대사**를 써라. 화면에 없는 건 말하지 마라."]
+             "각 덩어리는 원본에서 **맥락이 바뀌는 지점까지** 통째로 가져온 구간이다. "
+             "그 화면을 보고 **그 화면에 맞는 대사**를, 아래 글자수 안에서 써라. "
+             "화면에 없는 건 말하지 마라."]
     for i, b in enumerate(blocks, 1):
         budget = int(b["secs"] * _SYLLABLES_PER_SEC)
         lines.append(f"\n{i}) {b['name']} 덩어리 — {b['secs']}초, **{budget}자 이내로 써라**")

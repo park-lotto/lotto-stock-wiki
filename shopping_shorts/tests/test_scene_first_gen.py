@@ -126,4 +126,7 @@ def test_build_scene_first_plan_recommends_best(monkeypatch):
     assert len(out["candidates"]) == 2
     rec = [c for c in out["candidates"] if c["recommended"]]
     assert len(rec) == 1 and rec[0]["story"]["hook"] == "A"        # 고fit 후보 추천
-    assert rec[0]["plan"]["beats"][0]["primary"]["seg_id"] == "s0-1"
+    # 2026-07-31 덩어리 믹스: 화면은 모델이 아니라 **코드가** 확정된 훅/스토리/CTA 덩어리에서
+    # 배정한다(_assign_blocks). 그래서 모델이 s0-1을 골랐어도 훅 덩어리의 장면이 들어간다 —
+    # 이게 "말만 하고 검사 안 하던" 옛 스파인과의 차이다. 인벤토리 장면이면 통과.
+    assert rec[0]["plan"]["beats"][0]["primary"]["seg_id"].startswith("s0-")
