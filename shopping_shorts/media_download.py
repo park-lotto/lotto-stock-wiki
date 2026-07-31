@@ -106,16 +106,43 @@ def probe_grab_meta(url, timeout=40):
     return {k: v for k, v in out.items() if v not in (None, "")}
 
 
+_IG_CODE_RE = re.compile(r"instagram\.com/(?:reel|reels|p|tv)/([A-Za-z0-9_-]+)")
+
+
 def _download_instagram(url, dest_dir):
-    """인스타 릴스 다운로드 → (mp4경로, caption). caption은 Apify 원본 dict의
-    "caption" 필드(없으면 빈 문자열) — extract_script의 캡션 힌트로 흘러간다."""
-    from shopping_shorts.apify_client import fetch_single_reel
+    """인스타 릴스 다운로드 → (mp4경로, caption).
+
+    ★Apify는 **폴백**이다(2026-07-31 순서 뒤집음). 예전엔 Apify가 유일한 경로라
+    크레딧이 마르는 순간 담기·대본추출·예열이 통째로 죽었다(실측:
+    "apify 토큰 17개 전부 실패 — 계정 17/17 소진" → 담은 영상 2개 모두 대본 0,
+    화면엔 "대본을 아직 분석하지 못했어요"만 떴다).
+    수집은 이미 무료 Playwright로 옮겼는데 다운로드만 유료 경로에 남아 있었다.
+
+    순서: ① 세션 쿠키 기반 yt-dlp(무료, resolve_media_url과 같은 경로) →
+          ② 실패 시 Apify(유료, 남아 있으면) → ③ 둘 다 실패해야 에러.
+    caption은 Apify에서만 온다(무료 경로는 빈 문자열) — 추출은 캡션 없이도 돈다.
+    """
     from shopping_shorts.frame_extract import download_video
-    raw = fetch_single_reel(url)
-    if not raw or not raw.get("videoUrl"):
-        raise RuntimeError(f"인스타 영상 해석 실패: {url}")
-    path = str(download_video(raw["videoUrl"], Path(dest_dir)))
-    return path, raw.get("caption", "")
+
+    m = _IG_CODE_RE.search(url or "")
+    code = m.group(1) if m else ""
+    # ① 무료 경로 — 릴스 페이지에서 mp4 direct URL을 뽑는다(오늘 서버 실측으로 동작 확인).
+    if code:
+        try:
+            direct = resolve_media_url("instagram", code)
+            if direct:
+                return str(download_video(direct, Path(dest_dir))), ""
+        except Exception:      # noqa: BLE001 — 무료 경로 실패는 폴백 사유일 뿐
+            pass
+    # ② 유료 폴백 — 크레딧이 남아 있으면 캡션까지 얻는다.
+    try:
+        from shopping_shorts.apify_client import fetch_single_reel
+        raw = fetch_single_reel(url)
+        if raw and raw.get("videoUrl"):
+            return str(download_video(raw["videoUrl"], Path(dest_dir))), raw.get("caption", "")
+    except Exception as e:     # noqa: BLE001
+        raise RuntimeError(f"인스타 영상 해석 실패(무료·유료 경로 모두): {url} — {e}") from e
+    raise RuntimeError(f"인스타 영상 해석 실패: {url}")
 
 
 def _download_ytdlp(url, dest_dir, max_attempts=3):
