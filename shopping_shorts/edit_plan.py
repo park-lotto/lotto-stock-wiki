@@ -926,6 +926,22 @@ _STRONG_OPENER_TOKENS = ("와 ", "와,", "아니", "이거", "이걸", "저 이�
                          "세상에", "이런", "저만")
 
 
+
+def _engine_seed(reference_text):
+    """은행 부품 회전용 씨앗 — 소재(reference_text)마다 다른 조각이 뽑히게 한다(2026-07-31).
+
+    ★왜 필요한가: script_engine._bank_block 주석은 "매번 다른 조각이 보이도록 seed로
+      회전시킨다"고 적혀 있는데 **본 호출의 seed가 늘 0**이라 회전이 실제로 안 됐다.
+      그래서 밥솥 요리든 비누든 모든 소재에 같은 감각어 6개(꿉꿉·보송·순식간·뚝딱·사르르·촉촉)만
+      실려 나갔다(2026-07-31 실측). 소재 텍스트 해시를 쓰면 **소재마다 다르되 같은 소재는
+      항상 같은** 조각이 나와 백테스트 재현성도 유지된다(난수 금지).
+    """
+    import hashlib
+    h = hashlib.md5((reference_text or "").encode("utf-8")).hexdigest()
+    return int(h[:6], 16) % 97
+
+
+
 def _engine_extra(engine, seed=0):
     """엔진 버전이 얹는 추가 프롬프트 블록(script_engine).
     부가기능이라 실패해도 대본 생성을 죽이지 않는다 — 빈 문자열이면 v2와 동일."""
@@ -1140,6 +1156,19 @@ def _fix_beat_structure(beats):
 # 말투 게이트 임계(2026-07-30). 이 아래면 '옆에서 썰 푸는' 맛이 안 난다고 본다.
 # 실측 기준: 목표 톤을 낸 후보는 1.00, 어미가 무너진 후보는 0.67·감각어 부족은 0.93이었다.
 _TONE_GATE = 0.8
+
+
+# 감각어 하한(2026-07-31). 프롬프트 목표는 4개지만 실측 평균이 1.9개라 4로 잡으면 후보가
+# 거의 다 탈락해 하한이 무의미해진다. 3으로 두면 "있는 것 중 감각어가 많은 쪽"을 실제로 고른다.
+_SENSORY_FLOOR = 3
+
+
+def _cand_sensory(cand):
+    """후보 대본의 감각어 개수(오감 형용사·의태어, 중복 제외)."""
+    from shopping_shorts import tone_score
+    beats = (cand.get("plan") or {}).get("beats") or []
+    text = "\n".join((b.get("narration") or "").strip() for b in beats).strip()
+    return tone_score.sensory_profile(text)["count"] if text else 0
 
 
 def _cand_tone(cand):
@@ -1787,7 +1816,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     benefits_block = _source_benefits_block(source_scripts)
     raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates,
                                    call=_call, bank_context=bank_context, order_block=order_block,
-                                   benefits_block=benefits_block, engine=engine)
+                                   benefits_block=benefits_block, engine=engine,
+                                   engine_seed=_engine_seed(reference_text))
     cands = _ground_score(raws)
     # ①생성측 보강(세션#2): 후보가 전부 목표보다 크게 짧으면(생성이 목표초 미달) 길이 강화
     # 힌트로 1회 재생성해 합친다. ②선택 감점(_length_penalty)이 짧은 후보를 강등하므로 병합 후
@@ -1801,7 +1831,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             raws2 = _scene_first_candidates(
                 inventory, reference_text, target_seconds, n=n_candidates, call=_call,
                 bank_context=bank_context, order_block=order_block, lengthen=True,
-                benefits_block=benefits_block, engine=engine, engine_seed=1)
+                benefits_block=benefits_block, engine=engine,
+                engine_seed=_engine_seed(reference_text) + 1)
             cands = cands + _ground_score(raws2)
     # ★말투 게이트(2026-07-30 사장님 승인). 후보가 **전부** 밋밋하면 1회만 다시 뽑아 합친다.
     # 위 길이 재생성과 같은 규율: 전부 미달일 때만(과금 게이트) · 1회 상한 · 실패해도 기존 유지.
@@ -1811,7 +1842,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         raws3 = _scene_first_candidates(
             inventory, reference_text, target_seconds, n=n_candidates, call=_call,
             bank_context=bank_context, order_block=order_block, tone_boost=True,
-            benefits_block=benefits_block, engine=engine, engine_seed=2)
+            benefits_block=benefits_block, engine=engine,
+            engine_seed=_engine_seed(reference_text) + 2)
         cands = cands + _ground_score(raws3)
     if cands:
         # ★말투 하한(2026-07-30). 최종 score는 0.75×매칭 + 0.25×품질이고 품질 안에서 말투가
@@ -1820,7 +1852,15 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         #   19건·생생어미0 13건이 그대로 추천으로 나갔다.
         #   → 매칭 가중치는 건드리지 않고, **기준을 넘는 후보가 하나라도 있으면 그 안에서만**
         #     고른다. 전부 미달이면 종전대로(폴백) — 재료가 빈약한 소재에서 후보를 잃지 않는다.
-        qualified = [i for i, c in enumerate(cands) if _cand_tone(c) >= _TONE_GATE]
+        # ★감각어 하한도 함께(2026-07-31). 프롬프트는 "감각어 4개 이상"을 요구하는데 실측
+        #   평균은 1.9개였다 — 지시만으로는 안 지켜진다. 은행에 감각어를 6개→14개로 늘리고
+        #   소재마다 다른 조각을 보여줘도 사용량은 그대로였다(v7 2.2 → v8 1.9, 노이즈 범위).
+        #   반면 말투는 '하한'을 세우자 불량이 10건→0건이 됐다(2026-07-30). 같은 방법을 쓴다.
+        #   ★단계적으로 완화한다: 둘 다 넘는 후보 → 말투만 넘는 후보 → 전부(폴백).
+        #   재료가 빈약한 소재에서 후보를 잃지 않으면서, 여유가 있을 때만 감각어를 요구한다.
+        toned = [i for i, c in enumerate(cands) if _cand_tone(c) >= _TONE_GATE]
+        rich = [i for i in toned if _cand_sensory(cands[i]) >= _SENSORY_FLOOR]
+        qualified = rich or toned
         pool = qualified or range(len(cands))
         best = max(pool, key=lambda i: cands[i]["score"])
         cands[best]["recommended"] = True

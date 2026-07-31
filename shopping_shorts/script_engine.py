@@ -18,6 +18,7 @@
     cfg = script_engine.get("v3")
     prompt += cfg.extra_rules(bank)      # 빈 문자열이면 무주입
 """
+import hashlib
 import io
 import json
 import os
@@ -60,7 +61,14 @@ def save_bank(bank, path=None):
     return p
 
 
-def _bank_block(bank, per_bucket=6, seed=0):
+# 버킷별로 몇 조각을 실을지(2026-07-31). 감각어·어미는 단어 수준이라 많이 실어도 프롬프트가
+# 안 무거워지고, 오히려 적게 실으면 **같은 표현만 반복**된다(실측: 감각어 35개 중 6개만 실려
+# 모든 소재에 '꿉꿉·보송·순식간·뚝딱·사르르·촉촉'이 똑같이 나갔다 — 밥솥 요리든 비누든).
+# 훅·스토리·감정·놀람은 문장 단위라 많이 실으면 베끼기·드리프트 위험이 커져 적게 유지한다.
+_PER_BUCKET = {"adverb": 14, "ending": 12, "surprise": 6, "emotion": 5, "hook": 5, "story": 4}
+
+
+def _bank_block(bank, per_bucket=None, seed=0):
     """은행 → 프롬프트 few-shot 블록. 비면 빈 문자열(무주입).
 
     ★'뼈대'가 아니라 '양념'으로 쓴다 — 기존 부품은행이 2026-07-26에 꺼진 이유가
@@ -72,8 +80,14 @@ def _bank_block(bank, per_bucket=6, seed=0):
         items = [x for x in (bank.get(b) or []) if x]
         if not items:
             continue
-        k = len(items)
-        pick = [items[(seed + i) % k] for i in range(min(per_bucket, k))]
+        n = per_bucket if per_bucket is not None else _PER_BUCKET.get(b, 6)
+        # ★해시 기반 결정적 셔플(2026-07-31). 예전엔 `seed*7 % len(items)`로 시작점만 옮겼는데,
+        #   7이 항목수(35)의 약수라 **오프셋이 5가지뿐**이었다 — seed 56과 61이 같은 조각을
+        #   뽑았다(실측). 곱셈 창 이동은 항목수와 배수가 얽히면 이렇게 조용히 무너진다.
+        #   항목마다 (seed, 버킷, 항목) 해시로 정렬하면 seed가 1만 달라도 조합이 완전히 바뀌고,
+        #   같은 seed면 항상 같다(난수 금지 — 백테스트 재현성 유지).
+        pick = sorted(items, key=lambda x: hashlib.md5(
+            f"{seed}|{b}|{x}".encode("utf-8")).hexdigest())[:n]
         lines.append(f"  · {BUCKET_LABEL[b]}: " + " / ".join(f'"{x}"' for x in pick))
     if not lines:
         return ""
