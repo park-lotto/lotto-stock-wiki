@@ -176,6 +176,15 @@ SERPAPI_KEY = SERPAPI_KEYS[0] if SERPAPI_KEYS else ""
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY", "")
 ELEVENLABS_VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")  # 기본 voice(Rachel)
 
+# 자막 싱크용 타임스탬프를 TTS에서 직접 받는다(2026-07-31). 원래는 우리가 만든 mp3를
+# GROQ Whisper로 **다시 전사**해 단어시각을 얻었는데(asr_check.transcribe_words),
+# ElevenLabs가 /with-timestamps로 같은 값을 추가비용 없이 준다. 이점 셋:
+#   ①비트마다 있던 GROQ 왕복 제거(렌더시간·GROQ 비용) ②정렬실패 폴백 소멸
+#   (ASR은 숫자·영어·발음교정 단어에서 어긋나 _MIN_MATCH_RATIO 미달→글자수비례로 강등)
+#   ③GROQ 키가 없거나 죽어도 자막이 추정으로 안 떨어짐.
+# 끄면 예전(ASR) 동작 그대로. 실패 시엔 켜져 있어도 일반 엔드포인트→ASR로 2단 폴백한다.
+ELEVENLABS_TIMESTAMPS = os.getenv("ELEVENLABS_TIMESTAMPS", "1") not in ("0", "false", "False")
+
 # ASR 라운드트립 검증(튜닝 작업대) — Whisper로 TTS를 재전사해 오독 탐지. GROQ 우선.
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 
