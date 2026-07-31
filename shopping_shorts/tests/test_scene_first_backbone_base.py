@@ -33,7 +33,9 @@ def test_backbone_base_uses_rich_generator_with_order_block():
     p = seen["prompt"]
     assert "백본 흐름" in p and "BB-1" in p and "BB-2" in p        # 백본 순서 제약(2026-07-27 헤더 개명)
     assert p.index("BB-1 [자르다]") < p.index("BB-2 [올리다]")      # 시간순 나열
-    assert "스파인" in p                                           # rich 스토리 생성(5단계 스파인) 그대로
+    # 2026-07-31: '5단계 스파인' 강제는 걷어냈다(후보 3개가 같은 구조로 나오는 원인).
+    # 지키려던 것은 "뼈다귀가 아니라 이야기로 생성한다"이므로 그걸 직접 확인한다.
+    assert "[이야기]" in p
     assert "[은행 훅] 이거 실화냐" in p                             # 은행 parts 재주입(2026-07-27 우수라인 양념)
     # rich 스키마(스토리 필드·다중컷)로 생성 — 뼈다귀 스키마(beats+seg_id 단일) 회귀 방지.
     cand_props = seen["schema"]["properties"]["candidates"]["items"]["properties"]
