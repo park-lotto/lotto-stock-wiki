@@ -239,6 +239,11 @@ def resolve_media_url(platform, video_id, timeout=30):
     page = {
         "youtube": f"https://www.youtube.com/watch?v={video_id}",
         "tiktok": f"https://www.tiktok.com/@x/video/{video_id}",
+        # 인스타 추가(2026-07-30): 수집이 더 이상 직접 mp4(video_versions)를 담지 않는다
+        # — 그걸 채우던 릴스 상세 REST가 429의 주범이었다. 그 결과 랭킹 카드 썸네일의
+        # 인라인 재생이 사라졌으므로(video_url이 비어 onclick이 안 붙음), **볼 때 그 자리에서**
+        # 해석한다. 하루 950건 긁던 것을 사람이 실제로 누른 몇 건으로 바꾸는 셈이다.
+        "instagram": f"https://www.instagram.com/reel/{video_id}/",
     }.get(platform)
     if not page:
         return ""

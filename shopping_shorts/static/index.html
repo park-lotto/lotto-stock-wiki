@@ -1344,7 +1344,7 @@ function render(){
   el.innerHTML = items.map((i,idx)=>`
     <div class="card">
       <div class="thumb">
-        <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.platform==='youtube'?`onclick="playYoutube(this,'${i.shortcode}')"`:(i.platform==='tiktok'?`onclick="playTiktok(this,'${i.shortcode}')"`:''))} loading="lazy" onerror="this.style.visibility='hidden'">
+        <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.platform==='youtube'?`onclick="playYoutube(this,'${i.shortcode}')"`:(i.platform==='tiktok'?`onclick="playTiktok(this,'${i.shortcode}')"`:((i.platform||PLATFORM)==='instagram'?`onclick="playInstagram(this,'${i.shortcode}')"`:'')))} loading="lazy" onerror="this.style.visibility='hidden'">
         ${badgeHTML(i, _bctx)}
         ${(i.video_url||i.platform==='youtube'||i.platform==='tiktok')?'<span class="play-badge">▶</span>':''}
       </div>
@@ -1794,6 +1794,14 @@ function _embedTiktok(el, videoId){
 }
 function playYoutube(img, videoId){ _playViaMedia(img, videoId, 'youtube', _embedYoutube); }
 function playTiktok(img, videoId){ _playViaMedia(img, videoId, 'tiktok', _embedTiktok); }
+// 인스타 인라인 재생(2026-07-30 복구) — 수집이 직접 mp4를 안 담게 되면서(429 회피) 썸네일
+// 클릭 재생이 사라졌다. 이제 **누른 그 순간** /api/media로 mp4를 해석해 재생한다.
+// 해석 실패(비공개·삭제·차단)면 원본 릴스를 새 탭으로 연다 — 인스타는 iframe embed가
+// 로그인벽에 걸려 우리 화면 안 재생이 안 되기 때문(유튜브·틱톡과 다른 점).
+function _embedInstagram(el, shortcode){
+  try{ window.open('https://www.instagram.com/reel/'+shortcode+'/', '_blank', 'noopener'); }catch(e){}
+}
+function playInstagram(img, shortcode){ _playViaMedia(img, shortcode, 'instagram', _embedInstagram); }
 // ── 렌즈 유사영상 발굴(2026-07-14) ──────────────────────
 // 재생중/멈춘 <video>의 현재 프레임을 canvas 캡처 → 구글렌즈 → 5플랫폼 유사영상.
 const LENS_PLATFORMS=[
