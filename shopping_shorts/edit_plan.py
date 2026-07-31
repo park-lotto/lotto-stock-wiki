@@ -2215,6 +2215,14 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         #   20건 중 9건이 CTA끝X였다(기본 설정 측정에선 0건이라 여태 안 보였다).
         #   _ground_candidate·conform 뒤에 이미 걸어둔 것과 같은 교정을 여기서 한 번 더 건다(멱등).
         plan["beats"] = _fix_beat_structure(plan["beats"])
+        # ★리라이트 믹스는 화면을 **맨 마지막에 다시 못박는다**(2026-07-31 실측 job e288f2f0c387).
+        #   _assign_timeline을 grounding 직후에만 걸었더니, 라이브(핑퐁 ON)에서 그 뒤의
+        #   order_by_backbone·dedup_and_balance·ensure_sources_used·dedup_clips_global·
+        #   swap_hook_cta_for_differentiation이 화면을 다시 뒤섞어 원본 순서가 사라졌다
+        #   (실측: 한 비트에 s0-1·s1-7·s1-13이 섞이고 s1-7이 두 비트에 중복).
+        #   말은 저 단계들이 다듬게 두고, **화면 순서만** 원본으로 되돌린다.
+        if tl_groups:
+            plan["beats"] = _assign_timeline(plan["beats"], tl_groups)
         plan["detected_type"] = detected
         plan["affiliate_target"] = r.get("story_event", "") or ""
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)

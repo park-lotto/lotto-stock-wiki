@@ -111,6 +111,25 @@ def test_reworded_line_is_not_flagged():
     assert not beats[0].get("offtopic")
 
 
+def test_reassign_is_idempotent_and_restores_order():
+    """핑퐁 후처리가 화면을 뒤섞어도 마지막에 다시 걸면 원본 순서로 돌아온다(멱등).
+
+    실측(job e288f2f0c387): grounding 직후에만 걸었더니 order_by_backbone·dedup_*·
+    swap_hook_cta가 화면을 다시 섞어 한 비트에 s0-1·s1-7·s1-13이 뒤엉켰다.
+    """
+    sm = _sm([("v-0", "가나다요", 2.0), ("v-1", "라마바요", 2.0), ("v-2", "사아자요", 2.0)])
+    g = ep._pick_timeline(sm, 30)
+    beats = [{"narration": "첫줄", "primary": {"seg_id": "v-0"}, "alternates": []},
+             {"narration": "둘째줄", "primary": {"seg_id": "v-1"}, "alternates": []},
+             {"narration": "셋째줄", "primary": {"seg_id": "v-2"}, "alternates": []}]
+    ep._assign_timeline(beats, g)
+    first = [b["primary"]["seg_id"] for b in beats]
+    # 후처리가 화면을 뒤섞은 상황을 흉내
+    beats[0]["primary"], beats[2]["primary"] = beats[2]["primary"], beats[0]["primary"]
+    ep._assign_timeline(beats, g)
+    assert [b["primary"]["seg_id"] for b in beats] == first
+
+
 def test_empty_inventory_is_safe():
     assert ep._pick_timeline({}, 30) == []
     assert ep._rewrite_block([]) == ""
