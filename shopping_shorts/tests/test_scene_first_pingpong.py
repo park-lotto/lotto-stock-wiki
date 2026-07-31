@@ -17,7 +17,15 @@ def _fake_call(prompt, schema):
         {"seg_ids": ["BB-1"], "narration": "바나나 썰어 넣고", "fit": 5, "role": "방법"}]}]}
 
 
-def test_pingpong_on_swaps_mismatched_screen():
+def test_pingpong_on_swaps_mismatched_screen(monkeypatch):
+    """★옛 경로(리라이트 믹스 off) 전용이다(2026-07-31).
+
+    리라이트 믹스에서는 **말이 그 화면에서 나온 말**이라 화면 스왑이 필요 없고, 오히려
+    코드가 못박은 원본 순서를 깬다(실측 job e288f2f0c387: 핑퐁 후처리가 화면을 다시
+    뒤섞어 한 비트에 s0-1·s1-7·s1-13이 엉켰다). 그래서 새 경로는 마지막에 화면을 원본
+    순서로 되돌린다. 이 테스트는 그 이전 경로의 스왑 동작을 계속 지킨다.
+    """
+    monkeypatch.setattr(edit_plan, "REWRITE_MIX", False)
     res = edit_plan.build_scene_first_plan(_SOURCES, "레퍼런스", 20, n_candidates=1,
                                            call=_fake_call, ping_pong=True)
     beat = res["candidates"][0]["plan"]["beats"][0]
