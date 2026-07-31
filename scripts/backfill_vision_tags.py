@@ -8,10 +8,12 @@
 """
 import argparse
 import sys
+from collections import Counter
 
 from shopping_shorts.config import DB_PATH, SHORTS_GEMINI_KEYS
 from shopping_shorts.store import Store
 from shopping_shorts import video_analysis
+from shopping_shorts import vision_tagging
 
 
 def backfill(limit=None, platform="instagram"):
@@ -20,9 +22,9 @@ def backfill(limit=None, platform="instagram"):
         return 0
     store = Store(DB_PATH)
     if platform == "instagram":
-        items, _ = store.load_last_run()
+        items, collected_at = store.load_last_run()
     else:
-        items, _ = store.load_last_run_platform(platform)
+        items, collected_at = store.load_last_run_platform(platform)
     have = store.vision_tags_map([it.get("shortcode") for it in items])
     todo = [it for it in items if it.get("shortcode") and it.get("shortcode") not in have
             and it.get("thumbnail")]
@@ -43,6 +45,20 @@ def backfill(limit=None, platform="instagram"):
         else:
             print(f"  [{i}/{len(todo)}] {it['shortcode'][-14:]} 태그 비어 — 스킵")
     print(f"완료: {done}건 태깅됨.")
+
+    # ★태깅만 하면 카테고리는 그대로다(2026-07-31). 비전태그는 원래 '검색'만 썼고
+    # 분류기는 캡션을 보는데, 그 캡션이 429 회피(상세조회 off)로 100% 비어 있다.
+    # → 태그를 채운 김에 그 태그로 카테고리를 다시 매기고 화면 캐시에 반영한다.
+    #   (수집 경로도 같은 동작: daily_instagram_collect / app._run_collect_job)
+    changed = vision_tagging.recategorize_by_vision(items, DB_PATH)
+    if changed:
+        # collected_at은 그대로 둔다 — 새로 수집한 게 아니라 같은 수집분을 다시 분류한 것이라
+        # '마지막 수집' 시각을 속이면 안 된다.
+        if platform == "instagram":
+            store.save_last_run(items, collected_at)
+        else:
+            store.save_last_run_platform(platform, items, collected_at)
+    print(f"카테고리 재분류: {changed}건 변경 · 분포 {dict(Counter(i.get('category') for i in items).most_common())}")
     return done
 
 
