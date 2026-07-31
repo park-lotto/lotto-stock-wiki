@@ -2309,11 +2309,17 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     # 힌트로 1회 재생성해 합친다. ②선택 감점(_length_penalty)이 짧은 후보를 강등하므로 병합 후
     # 채점하면 긴 후보가 자연히 추천된다. 재생성은 '전부 짧을 때만' — 소스 footage 부족이 아니라
     # 생성 자체가 목표초에 못 미친 경우로 한정(과금 게이트, 1회 상한, 실패해도 기존 후보 유지).
-    if cands and target_seconds and target_seconds > 0:
+    # ★리라이트 믹스는 목표초가 아니라 **세트 총 길이**가 상한이다(2026-07-31).
+    #   재료가 22초치뿐인데 목표가 30초면 아무리 다시 뽑아도 못 채운다 — 그대로 두면 매번
+    #   Gemini를 한 번 더 부르고(과금) 후보가 6개로 불어난다(사장님 "대본이 6개?").
+    len_goal = target_seconds
+    if tl_groups:
+        len_goal = min(target_seconds, sum(_secs(g) for g in tl_groups))
+    if cands and len_goal and len_goal > 0:
         def _cand_secs(c):
             return sum(float(b.get("target_seconds") or 0.0)
                        for b in c["plan"].get("beats", []))
-        if max((_cand_secs(c) for c in cands), default=0.0) < 0.92 * target_seconds:
+        if max((_cand_secs(c) for c in cands), default=0.0) < 0.92 * len_goal:
             raws2 = _scene_first_candidates(
                 inventory, reference_text, target_seconds, n=n_candidates, call=_call,
                 bank_context=bank_context, order_block=order_block, lengthen=True,
