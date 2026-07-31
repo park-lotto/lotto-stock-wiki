@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "date": "2026-07-30",
+    "broker": "eugenefn",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-30_1107_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "eugenefn",
+    "analyst": "양승윤",
+    "report_date": "07/29",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "미국의 중국산 로봇 규제",
+      "다목적무인차량 아리온스멧 군 전력화",
+      "LNGC 신조 수요 전망 상향"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "미국 FCC의 중국산 로봇 규제로 인한 미국 로봇 공급망 강화 기대 및 개발 부담 발생 가능성"
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "한화에어로스페이스의 아리온스멧 군 다목적무인차량 공식 선정"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "GTT의 2035년까지 LNGC 신조 수요 전망치 상향(550척)"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "8월",
+        "event": "아리온스멧 양산 계약"
+      }
+    ],
+    "top_picks": [
+      "엔젤로보틱스",
+      "테솔로",
+      "뉴로메카",
+      "KAI",
+      "한화에어로스페이스",
+      "록히드마틴",
+      "디노티시아",
+      "STX엔진",
+      "HD현대중공업",
+      "GTT",
+      "핀칸티에리"
+    ],
+    "risk": "로봇 산업의 경우 미국 규제로 인한 로봇 접근성 약화 및 SW 개발 부담 발생 가능성, 조선 산업의 경우 중동 분쟁 등이 선박 건조 일정에 미칠 영향 존재",
+    "quote": "미국 FCC가 중국산 신규 휴머노이드·사족보행 로봇과 연결형 전력 인버터 수입을 금지. 중국은 강하게 반발. 미국에서는 미국 로봇 공급망을 강화할 계기로 평가. 한편 미국이 더 싸고 좋은 로봇 접근성을 잃을 수 있다는 지적도. 로봇 SW 개발에 부담 가능성."
+  }
+}

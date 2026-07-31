@@ -1,0 +1,61 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "Kiwoom",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_0700_0605, Kiwoom Morning Letter.md"
+  },
+  "questionnaire": {
+    "broker": "Kiwoom",
+    "analyst": null,
+    "report_date": "2026.06.05",
+    "target_kind": "market",
+    "market_direction": "하락",
+    "macro_vars": [
+      "중동 긴장 재고조",
+      "환율 급등",
+      "미국 반도체주 하락",
+      "중동 리스크"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "하락",
+        "reason": "브로드컴 실적 쇼크 및 AI 랠리 주도 기업들의 차익실현 매물 출회"
+      },
+      {
+        "sector": "전력",
+        "stance": "상승",
+        "reason": "데이터센터 전력 수요 급증에 따른 슈퍼사이클"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6.04",
+        "event": "한국 외환보유고"
+      },
+      {
+        "date": "6.05",
+        "event": "한국 경상수지, 미국 비농업 고용자수 변동, 실업률, 유로 GDP (YoY)"
+      },
+      {
+        "date": "6.08",
+        "event": "일본 GDP (QoQ)"
+      },
+      {
+        "date": "6.09",
+        "event": "한국 GDP (YoY), 미국 무역수지, 기존주택매매 (MoM), 중국 수출/수입 (YoY)"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "현대차",
+      "브로드컴",
+      "마이크론",
+      "AMD"
+    ],
+    "risk": "중동 지정학적 리스크 완화 여부 및 미국 고용 지표 부진에 따른 연준 추가 긴축 우려",
+    "quote": "4일(목) 코스피는 중동 긴장 재고조와 환율 급등으로 하락함(KOSPI -1.84%, KOSDAQ 2.31%)."
+  }
+}

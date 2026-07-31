@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "한국IR협의회",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_공연·MD 중심의 글로벌 IP 수익화 확대.md"
+  },
+  "questionnaire": {
+    "broker": "한국IR협의회",
+    "analyst": "채윤석",
+    "report_date": "2026.06.04",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "JYP Ent.",
+        "code": "035900",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연결 실적은 매출액 8,980억원(+9.3%, yoy), 영업이익 1,796억원(+15.7%, yoy)으로 전망.",
+        "estimate_revision": null,
+        "next_catalyst": "서구권 대형 공연 확대, MD 사업 내재화 및 캐릭터 IP 확장",
+        "thesis": [
+          "서구권 대형 공연 확대를 통한 공연 수익성 강화",
+          "MD 사업 내재화와 캐릭터 IP 확장에 따른 이익 구조 개선",
+          "과거 PER Band 하단에 위치한 밸류에이션 매력도"
+        ],
+        "valuation_basis": "2026년 추정 실적 기준 PER 14.2x",
+        "risk": "동사 앨범 판매량은 2023년 정점 이후 감소하고 있음",
+        "supply_comment": "음반 제작에 투입된 비용은 콘텐츠 제작비로 분류되며, 국내 유통은 드림어스컴퍼니, 일본은 Sony Music과 Warner Japan, 해외는 Republic Records(UMG 산하)와의 파트너십을 통해 글로벌 유통 체계를 갖추고 있다.",
+        "quote": "JYP Ent.의 주가는 2020년 이후 PER Band 13.0x ~ 56.0x 수준에서 형성. 2026년 추정 실적 기준 동사의 밸류에이션 수준은 PER 14.2x로, 과거 PER Band 하단에 위치함."
+      }
+    ]
+  }
+}

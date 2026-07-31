@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-05\\2026-06-05_0700_[Digital Issue Scan] 바이낸스, 미국 주식·ETF 거래...md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "심수빈",
+    "report_date": "2026년 06월 02일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "RWA(토큰화 주식) 시장 성장",
+      "가상자산과 전통금융 간 경계 약화"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": "중립",
+        "reason": "바이낸스의 미국 주식·ETF 거래 서비스 출시 및 주식 토큰화 시장 참여로 인한 온체인 금융 관심 증대"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6월 1일",
+        "event": "바이낸스 미국 주식·ETF 거래 서비스 출시"
+      },
+      {
+        "date": "6월 4일",
+        "event": "바이낸스 주식대차(FPSL) 서비스 제공 시작 예정"
+      }
+    ],
+    "top_picks": [
+      "바이낸스",
+      "로빈후드",
+      "ONDO"
+    ],
+    "risk": "bStocks와 관련한 기초 주식 보유비율, 수탁기관, 배당·의결권 처리 방식 등 세부 구조가 아직 공개되지 않음",
+    "quote": "가상자산 최대 중앙화 거래소인 바이낸스가 주식 토큰화 시장에 참여한다는 점에서 온체인 금융에 대한 관심은 재차 높아질 것으로 예상. 가상자산과 전통금융으로 구분되던 경계가 약화되고 있다는 점을 보여주기 때문"
+  }
+}

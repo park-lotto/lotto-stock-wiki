@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_웨이퍼 워피지로 인한 메모리 반도체 수율 저...md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "박준영, 김나우",
+    "report_date": "2026년 6월 2일",
+    "target_kind": "sector",
+    "sector_name": "반도체",
+    "sector_view": "Positive",
+    "thesis": [
+      "메모리 반도체 산업 내 웨이퍼 워피지 현상과 수율 저하 문제 지속",
+      "HBM4 고도화 및 3D NAND 고단화로 인한 응력 누적 및 워피지 심화",
+      "웨이퍼 워피지 해결을 위한 BSD(Back Side Deposition) 장비의 중요성 증대"
+    ],
+    "timeline": [
+      "HBM4 및 3D NAND 공정 도입에 따른 BSD 장비 수요 증가",
+      "NAND 기준 2.5~3K당 1대, DRAM/HBM 기준 5~7K당 1대 수준의 수요 전망"
+    ],
+    "top_picks": null,
+    "risk": [
+      "다이 박형화 및 I/O 수 증가에 따른 구조적 취약성",
+      "박막 적층 수 증가에 따른 응력 누적 가속화"
+    ],
+    "quote": "웨이퍼 워피지로 인한 메모리 반도체 수율 저하와 BSD(Back Side Deposition) 장비의 중요성"
+  }
+}

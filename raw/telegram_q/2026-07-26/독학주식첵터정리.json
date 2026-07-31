@@ -3,7 +3,7 @@
     {
       "name": "삼성전자",
       "signal": "neutral",
-      "reason": "내일 관심테마 반도체 섹터 종목",
+      "reason": "반도체 테마 포함 종목",
       "ts": "22:10",
       "quote": "삼성전자",
       "sector": "반도체"
@@ -11,7 +11,7 @@
     {
       "name": "SK하이닉스",
       "signal": "neutral",
-      "reason": "내일 관심테마 반도체 섹터 종목",
+      "reason": "반도체 테마 포함 종목",
       "ts": "22:10",
       "quote": "SK하이닉스",
       "sector": "반도체"
@@ -19,7 +19,7 @@
     {
       "name": "SK스퀘어",
       "signal": "neutral",
-      "reason": "내일 관심테마 반도체 섹터 종목",
+      "reason": "반도체 테마 포함 종목",
       "ts": "22:10",
       "quote": "SK스퀘어",
       "sector": "반도체"
@@ -27,7 +27,7 @@
     {
       "name": "한미반도체",
       "signal": "neutral",
-      "reason": "내일 관심테마 반도체 섹터 종목",
+      "reason": "반도체 테마 포함 종목",
       "ts": "22:10",
       "quote": "한미반도체",
       "sector": "반도체"
@@ -35,7 +35,7 @@
     {
       "name": "제주반도체",
       "signal": "neutral",
-      "reason": "내일 관심테마 반도체 섹터 종목",
+      "reason": "반도체 테마 포함 종목",
       "ts": "22:10",
       "quote": "제주반도체",
       "sector": "반도체"
@@ -43,7 +43,7 @@
     {
       "name": "파두",
       "signal": "neutral",
-      "reason": "내일 관심테마 반도체 섹터 종목",
+      "reason": "반도체 테마 포함 종목",
       "ts": "22:10",
       "quote": "파두",
       "sector": "반도체"
@@ -51,7 +51,7 @@
     {
       "name": "한화비전",
       "signal": "neutral",
-      "reason": "내일 관심테마 반도체 섹터 종목",
+      "reason": "반도체 테마 포함 종목",
       "ts": "22:10",
       "quote": "한화비전",
       "sector": "반도체"
@@ -59,7 +59,7 @@
     {
       "name": "코스모로보틱스",
       "signal": "neutral",
-      "reason": "내일 관심테마 로봇 섹터 종목",
+      "reason": "로봇 테마 포함 종목",
       "ts": "22:10",
       "quote": "코스모로보틱스",
       "sector": "로봇"
@@ -67,7 +67,7 @@
     {
       "name": "티엑스알로보틱스",
       "signal": "neutral",
-      "reason": "내일 관심테마 로봇 섹터 종목",
+      "reason": "로봇 테마 포함 종목",
       "ts": "22:10",
       "quote": "티엑스알로보틱스",
       "sector": "로봇"
@@ -75,7 +75,7 @@
     {
       "name": "삼현",
       "signal": "neutral",
-      "reason": "내일 관심테마 로봇 섹터 종목",
+      "reason": "로봇 테마 포함 종목",
       "ts": "22:10",
       "quote": "삼현",
       "sector": "로봇"
@@ -83,7 +83,7 @@
     {
       "name": "아이로보틱스",
       "signal": "neutral",
-      "reason": "내일 관심테마 로봇 섹터 종목",
+      "reason": "로봇 테마 포함 종목",
       "ts": "22:10",
       "quote": "아이로보틱스",
       "sector": "로봇"
@@ -91,7 +91,7 @@
     {
       "name": "에브리봇",
       "signal": "neutral",
-      "reason": "내일 관심테마 로봇 섹터 종목",
+      "reason": "로봇 테마 포함 종목",
       "ts": "22:10",
       "quote": "에브리봇",
       "sector": "로봇"
@@ -99,7 +99,7 @@
     {
       "name": "아진엑스텍",
       "signal": "neutral",
-      "reason": "내일 관심테마 로봇 섹터 종목",
+      "reason": "로봇 테마 포함 종목",
       "ts": "22:10",
       "quote": "아진엑스텍",
       "sector": "로봇"
@@ -107,7 +107,7 @@
     {
       "name": "레인보우로보틱스",
       "signal": "neutral",
-      "reason": "내일 관심테마 로봇 섹터 종목",
+      "reason": "로봇 테마 포함 종목",
       "ts": "22:10",
       "quote": "레인보우로보틱스",
       "sector": "로봇"
@@ -115,7 +115,7 @@
     {
       "name": "에스피지",
       "signal": "neutral",
-      "reason": "내일 관심테마 로봇 섹터 종목",
+      "reason": "로봇 테마 포함 종목",
       "ts": "22:10",
       "quote": "에스피지",
       "sector": "로봇"
@@ -123,7 +123,7 @@
     {
       "name": "클로봇",
       "signal": "neutral",
-      "reason": "내일 관심테마 로봇 섹터 종목",
+      "reason": "로봇 테마 포함 종목",
       "ts": "22:10",
       "quote": "클로봇",
       "sector": "로봇"
@@ -131,7 +131,7 @@
     {
       "name": "로보스타",
       "signal": "neutral",
-      "reason": "내일 관심테마 로봇 섹터 종목",
+      "reason": "로봇 테마 포함 종목",
       "ts": "22:10",
       "quote": "로보스타",
       "sector": "로봇"
@@ -139,7 +139,7 @@
     {
       "name": "케이엔알시스템",
       "signal": "neutral",
-      "reason": "내일 관심테마 로봇 섹터 종목",
+      "reason": "로봇 테마 포함 종목",
       "ts": "22:10",
       "quote": "케이엔알시스템",
       "sector": "로봇"
@@ -147,7 +147,7 @@
     {
       "name": "한국피아이엠",
       "signal": "neutral",
-      "reason": "내일 관심테마 로봇 섹터 종목",
+      "reason": "로봇 테마 포함 종목",
       "ts": "22:10",
       "quote": "한국피아이엠",
       "sector": "로봇"
@@ -155,7 +155,7 @@
     {
       "name": "씨메스로보틱스",
       "signal": "neutral",
-      "reason": "내일 관심테마 로봇 섹터 종목",
+      "reason": "로봇 테마 포함 종목",
       "ts": "22:10",
       "quote": "씨메스로보틱스",
       "sector": "로봇"
@@ -163,7 +163,7 @@
     {
       "name": "SK이터닉스",
       "signal": "neutral",
-      "reason": "내일 관심테마 신재생에너지 섹터 종목",
+      "reason": "신재생에너지 테마 포함 종목",
       "ts": "22:10",
       "quote": "SK이터닉스",
       "sector": "신재생"
@@ -171,7 +171,7 @@
     {
       "name": "SK오션플랜트",
       "signal": "neutral",
-      "reason": "내일 관심테마 신재생에너지 섹터 종목",
+      "reason": "신재생에너지 테마 포함 종목",
       "ts": "22:10",
       "quote": "SK오션플랜트",
       "sector": "신재생"
@@ -179,7 +179,7 @@
     {
       "name": "HD현대에너지",
       "signal": "neutral",
-      "reason": "내일 관심테마 신재생에너지 섹터 종목",
+      "reason": "신재생에너지 테마 포함 종목",
       "ts": "22:10",
       "quote": "HD현대에너지",
       "sector": "신재생"
@@ -187,7 +187,7 @@
     {
       "name": "OCI홀딩스",
       "signal": "neutral",
-      "reason": "내일 관심테마 신재생에너지 섹터 종목",
+      "reason": "신재생에너지 테마 포함 종목",
       "ts": "22:10",
       "quote": "OCI홀딩스",
       "sector": "신재생"
@@ -195,7 +195,7 @@
     {
       "name": "대명에너지",
       "signal": "neutral",
-      "reason": "내일 관심테마 신재생에너지 섹터 종목",
+      "reason": "신재생에너지 테마 포함 종목",
       "ts": "22:10",
       "quote": "대명에너지",
       "sector": "신재생"
@@ -203,7 +203,7 @@
     {
       "name": "한화솔루션",
       "signal": "neutral",
-      "reason": "내일 관심테마 신재생에너지 섹터 종목",
+      "reason": "신재생에너지 테마 포함 종목",
       "ts": "22:10",
       "quote": "한화솔루션",
       "sector": "신재생"
@@ -211,7 +211,7 @@
     {
       "name": "다스코",
       "signal": "neutral",
-      "reason": "내일 관심테마 신재생에너지 섹터 종목",
+      "reason": "신재생에너지 테마 포함 종목",
       "ts": "22:10",
       "quote": "다스코",
       "sector": "신재생"
@@ -219,7 +219,7 @@
     {
       "name": "에스에너지",
       "signal": "neutral",
-      "reason": "내일 관심테마 신재생에너지 섹터 종목",
+      "reason": "신재생에너지 테마 포함 종목",
       "ts": "22:10",
       "quote": "에스에너지",
       "sector": "신재생"
@@ -227,7 +227,7 @@
     {
       "name": "SDN",
       "signal": "neutral",
-      "reason": "내일 관심테마 신재생에너지 섹터 종목",
+      "reason": "신재생에너지 테마 포함 종목",
       "ts": "22:10",
       "quote": "SDN",
       "sector": "신재생"
@@ -235,7 +235,7 @@
     {
       "name": "가온전선",
       "signal": "neutral",
-      "reason": "내일 관심테마 전력 섹터 종목",
+      "reason": "전력 테마 포함 종목",
       "ts": "22:10",
       "quote": "가온전선",
       "sector": "전력"
@@ -243,7 +243,7 @@
     {
       "name": "대원전선",
       "signal": "neutral",
-      "reason": "내일 관심테마 전력 섹터 종목",
+      "reason": "전력 테마 포함 종목",
       "ts": "22:10",
       "quote": "대원전선",
       "sector": "전력"
@@ -251,7 +251,7 @@
     {
       "name": "대한전선",
       "signal": "neutral",
-      "reason": "내일 관심테마 전력 섹터 종목",
+      "reason": "전력 테마 포함 종목",
       "ts": "22:10",
       "quote": "대한전선",
       "sector": "전력"
@@ -259,7 +259,7 @@
     {
       "name": "LS ELECTRIC",
       "signal": "neutral",
-      "reason": "내일 관심테마 전력 섹터 종목",
+      "reason": "전력 테마 포함 종목",
       "ts": "22:10",
       "quote": "LS ELECTRIC",
       "sector": "전력"
@@ -267,7 +267,7 @@
     {
       "name": "지엔씨에너지",
       "signal": "neutral",
-      "reason": "내일 관심테마 전력 섹터 종목",
+      "reason": "전력 테마 포함 종목",
       "ts": "22:10",
       "quote": "지엔씨에너지",
       "sector": "전력"
@@ -275,7 +275,7 @@
     {
       "name": "LS에코에너지",
       "signal": "neutral",
-      "reason": "내일 관심테마 전력 섹터 종목",
+      "reason": "전력 테마 포함 종목",
       "ts": "22:10",
       "quote": "LS에코에너지",
       "sector": "전력"
@@ -283,7 +283,7 @@
     {
       "name": "효성중공업",
       "signal": "neutral",
-      "reason": "내일 관심테마 전력 섹터 종목",
+      "reason": "전력 테마 포함 종목",
       "ts": "22:10",
       "quote": "효성중공업",
       "sector": "전력"
@@ -291,7 +291,7 @@
     {
       "name": "일진전기",
       "signal": "neutral",
-      "reason": "내일 관심테마 전력 섹터 종목",
+      "reason": "전력 테마 포함 종목",
       "ts": "22:10",
       "quote": "일진전기",
       "sector": "전력"
@@ -299,7 +299,7 @@
     {
       "name": "산일전기",
       "signal": "neutral",
-      "reason": "내일 관심테마 전력 섹터 종목",
+      "reason": "전력 테마 포함 종목",
       "ts": "22:10",
       "quote": "산일전기",
       "sector": "전력"
@@ -307,7 +307,7 @@
     {
       "name": "제룡전기",
       "signal": "neutral",
-      "reason": "내일 관심테마 전력 섹터 종목",
+      "reason": "전력 테마 포함 종목",
       "ts": "22:10",
       "quote": "제룡전기",
       "sector": "전력"
@@ -315,7 +315,7 @@
     {
       "name": "일승",
       "signal": "neutral",
-      "reason": "내일 관심테마 조선기자재 섹터 종목",
+      "reason": "조선기자재 테마 포함 종목",
       "ts": "22:10",
       "quote": "일승",
       "sector": "조선"
@@ -323,7 +323,7 @@
     {
       "name": "현대힘스",
       "signal": "neutral",
-      "reason": "내일 관심테마 조선기자재 섹터 종목",
+      "reason": "조선기자재 테마 포함 종목",
       "ts": "22:10",
       "quote": "현대힘스",
       "sector": "조선"
@@ -331,23 +331,15 @@
     {
       "name": "삼영엠텍",
       "signal": "neutral",
-      "reason": "내일 관심테마 조선기자재 섹터 종목",
+      "reason": "조선기자재 테마 포함 종목",
       "ts": "22:10",
       "quote": "삼영엠텍",
       "sector": "조선"
     },
     {
-      "name": "SK오션플랜드",
-      "signal": "neutral",
-      "reason": "내일 관심테마 조선기자재 섹터 종목",
-      "ts": "22:10",
-      "quote": "SK오션플랜드",
-      "sector": "조선"
-    },
-    {
       "name": "오리엔탈정공",
       "signal": "neutral",
-      "reason": "내일 관심테마 조선기자재 섹터 종목",
+      "reason": "조선기자재 테마 포함 종목",
       "ts": "22:10",
       "quote": "오리엔탈정공",
       "sector": "조선"
@@ -355,7 +347,7 @@
     {
       "name": "흥구석유",
       "signal": "neutral",
-      "reason": "내일 관심테마 헷지테마 종목",
+      "reason": "헷지테마 포함 종목",
       "ts": "22:10",
       "quote": "흥구석유",
       "sector": "기타"
@@ -363,7 +355,7 @@
     {
       "name": "한국석유",
       "signal": "neutral",
-      "reason": "내일 관심테마 헷지테마 종목",
+      "reason": "헷지테마 포함 종목",
       "ts": "22:10",
       "quote": "한국석유",
       "sector": "기타"
@@ -371,7 +363,7 @@
     {
       "name": "중앙에너비스",
       "signal": "neutral",
-      "reason": "내일 관심테마 헷지테마 종목",
+      "reason": "헷지테마 포함 종목",
       "ts": "22:10",
       "quote": "중앙에너비스",
       "sector": "기타"
@@ -379,7 +371,7 @@
     {
       "name": "한탑",
       "signal": "neutral",
-      "reason": "내일 관심테마 헷지테마 종목",
+      "reason": "헷지테마 포함 종목",
       "ts": "22:10",
       "quote": "한탑",
       "sector": "기타"
@@ -387,7 +379,7 @@
     {
       "name": "고려산업",
       "signal": "neutral",
-      "reason": "내일 관심테마 헷지테마 종목",
+      "reason": "헷지테마 포함 종목",
       "ts": "22:10",
       "quote": "고려산업",
       "sector": "기타"
@@ -395,7 +387,7 @@
     {
       "name": "미래생명자원",
       "signal": "neutral",
-      "reason": "내일 관심테마 헷지테마 종목",
+      "reason": "헷지테마 포함 종목",
       "ts": "22:10",
       "quote": "미래생명자원",
       "sector": "기타"
@@ -403,7 +395,7 @@
     {
       "name": "한일사료",
       "signal": "neutral",
-      "reason": "내일 관심테마 헷지테마 종목",
+      "reason": "헷지테마 포함 종목",
       "ts": "22:10",
       "quote": "한일사료",
       "sector": "기타"
@@ -411,7 +403,7 @@
     {
       "name": "대주산업",
       "signal": "neutral",
-      "reason": "내일 관심테마 헷지테마 종목",
+      "reason": "헷지테마 포함 종목",
       "ts": "22:10",
       "quote": "대주산업",
       "sector": "기타"
@@ -419,7 +411,7 @@
     {
       "name": "STX그린로지스",
       "signal": "neutral",
-      "reason": "내일 관심테마 헷지테마 종목",
+      "reason": "헷지테마 포함 종목",
       "ts": "22:10",
       "quote": "STX그린로지스",
       "sector": "기타"
@@ -427,7 +419,7 @@
     {
       "name": "흥아해운",
       "signal": "neutral",
-      "reason": "내일 관심테마 헷지테마 종목",
+      "reason": "헷지테마 포함 종목",
       "ts": "22:10",
       "quote": "흥아해운",
       "sector": "기타"
@@ -435,7 +427,7 @@
   ],
   "news_items": [
     {
-      "fact": "中 CXMT, 상하이 증시 상장",
+      "fact": "중국 CXMT 상하이 증시 상장",
       "ts": "22:10",
       "quote": "中 CXMT, 상하이 증시 상장"
     },

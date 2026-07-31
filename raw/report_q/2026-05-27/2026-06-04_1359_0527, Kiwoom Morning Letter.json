@@ -1,0 +1,73 @@
+{
+  "meta": {
+    "date": "2026-05-27",
+    "broker": "Kiwoom",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_0527, Kiwoom Morning Letter.md"
+  },
+  "questionnaire": {
+    "broker": "Kiwoom",
+    "analyst": null,
+    "report_date": "2026-05-27",
+    "target_kind": "market",
+    "market_direction": "bullish",
+    "macro_vars": [
+      "국고채 금리 하락",
+      "달러/원 환율 하락",
+      "미·이란 종전 양해각서 체결 기대",
+      "지정학적 리스크 완화"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "비중확대",
+        "reason": "AI 메모리 수요 확대 및 데이터센터 투자 확대에 따른 수혜"
+      },
+      {
+        "sector": "자동차",
+        "stance": "비중확대",
+        "reason": "실적 개선 및 전기·전자, 운송장비·부품 업종의 강세"
+      }
+    ],
+    "style": "성장주 중심의 강세",
+    "event_calendar": [
+      {
+        "date": "5.26",
+        "event": "미국 CB 소비자신뢰지수"
+      },
+      {
+        "date": "5.28",
+        "event": "한국 금리 결정"
+      },
+      {
+        "date": "5.28",
+        "event": "미국 근원 PCE 물가지수(MoM)"
+      },
+      {
+        "date": "5.28",
+        "event": "미국 GDP(QoQ)"
+      },
+      {
+        "date": "5.28",
+        "event": "미국 내구재 주문(MoM)"
+      },
+      {
+        "date": "5.29",
+        "event": "한국 산업생산"
+      },
+      {
+        "date": "5.29",
+        "event": "일본 실업률"
+      },
+      {
+        "date": "5.29",
+        "event": "독일 CPI(YoY)"
+      }
+    ],
+    "top_picks": [
+      "SK하이닉스",
+      "삼성전자"
+    ],
+    "risk": "이란 휴전 합의 위반 가능성에 따른 지정학적 긴장 고조 및 공급 불안",
+    "quote": "26일(화) 코스피는 강세 출발 후 장중 최고치를 경신하며 8,000선을 돌파함"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-30",
+    "broker": "KYOBO 교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-31_0804_2Q26 Review 본업인 주택에 관심을 갖자.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "KYOBO 교보증권",
+    "analyst": "이상호",
+    "report_date": "2026/7/30",
+    "stocks": [
+      {
+        "name": "GS건설",
+        "code": "006360",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "34,000원",
+        "tp_prev": "34,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "GS건설의 2026년 2분기 연결 매출액 2.8조원 (YoY -13.0%), 영업이익 914억원 (YoY -43.6%)을 기록. 매출액 컨센서스 부합수준, 영업이익 컨센서스 대폭 하회.",
+        "estimate_revision": "동사는 하반기에 예상되는 비용을 미리 반영하는 기조를 유지할 것 예상. 이에 플랜트의 GPM 개선속도는 당초 예상보다 더디며 8%대 예상. 그리고 판관비율도 소폭 높아질 것 전망.",
+        "next_catalyst": "GS그룹의 데이터센터 건설 계획 및 투프라스 SAF(5억불), 오만 등 하반기 플랜트 수주 기대.",
+        "thesis": [
+          "건축주택 부문의 신규수주가 연간 가이던스 12조원 중 72% 수준인 8.6조원을 달성하며 실적을 견인 중",
+          "건축주택 부문의 믹스 개선과 준공 정산이익 효과로 GPM 17.6% 기록",
+          "총 2.4GW 규모의 데이터센터 프로젝트 착공 및 자이C&A를 통한 물량 소화 기대"
+        ],
+        "valuation_basis": "2027E 조정 BPS 63,869원에 Target PBR 0.54배(과거 4개년 중상단 P/B) 적용",
+        "risk": "플랜트 부문의 SRF 소각 운영비용 등 비용 선반영 기조 지속 및 GPM 개선 지연",
+        "supply_comment": null,
+        "quote": "GS건설에 대해 투자의견 Buy, 목표주가 34,000원 유지. 상반기 주택 신규수주는 연간 가이던스 건축주택 12조원 중 72% 수준인 8.6조원 수준 달성."
+      }
+    ]
+  }
+}

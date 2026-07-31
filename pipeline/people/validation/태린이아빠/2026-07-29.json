@@ -1,0 +1,39 @@
+{
+  "date": "2026-07-29",
+  "hit_rate": null,
+  "mentioned_count": 22,
+  "matched": [],
+  "missed": [
+    "ESS",
+    "NAVER",
+    "SK하이닉스",
+    "금융",
+    "대덕전자",
+    "두산",
+    "미국 시장",
+    "미국 증시",
+    "반도체",
+    "반도체 소부장",
+    "삼성전기",
+    "삼성전자",
+    "원익IPS",
+    "중국",
+    "테스",
+    "티엘비",
+    "피에스케이",
+    "피지컬 AI",
+    "하나마이크론",
+    "한화오션",
+    "헬스케어",
+    "현대차"
+  ],
+  "candidates": [],
+  "thresholds": {
+    "mode": "his",
+    "vacuum_pct_max": 35.0,
+    "min_up_count": 1,
+    "require_up_gt_down": true,
+    "require_leader": false,
+    "top_n": 20
+  }
+}

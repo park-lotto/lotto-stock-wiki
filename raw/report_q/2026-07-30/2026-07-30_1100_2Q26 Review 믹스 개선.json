@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-30",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-30_1100_2Q26 Review 믹스 개선.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "조혜빈",
+    "report_date": "2026/7/30",
+    "stocks": [
+      {
+        "name": "한화솔루션",
+        "code": "009830",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "43,000원",
+        "tp_prev": null,
+        "tp_direction": "down",
+        "earnings_outlook": "한화솔루션은 2Q26 매출액 4조 5,826억원(+47.0% YoY, 이하 YoY), 영업이익 3,065억원(+200.2%, OPM 6.7%)을 기록하며 컨센서스(1,697억원)를 81% 상회.",
+        "estimate_revision": "한화솔루션은 2Q26 매출액 4조 5,826억원(+47.0% YoY, 이하 YoY), 영업이익 3,065억원(+200.2%, OPM 6.7%)을 기록하며 컨센서스(1,697억원)를 81% 상회.",
+        "next_catalyst": "3Q는 모듈 출하 확대 및 카터스빌 셀 가동에 따라 AMPC가 2,420억원으로 증가할 것으로 추정",
+        "thesis": [
+          "영업이익 컨센서스 +81% 상회",
+          "미국 내 잉곳부터 모듈까지 일관생산 체제와 비중국산 원재료 조달 역량을 바탕으로 FEOC 규제에 따른 점유율 확대 기대",
+          "12MF EV/EBITDA는 8.9배에 불과, 바텀피싱 접근이 유효"
+        ],
+        "valuation_basis": "SOTP 산출 시 신재생 부문에 12MF EV/EBITDA 11.7배를 적용.",
+        "risk": "상호관세 노출과 주요 고객의 계약 취소 등 개별 리스크가 반영됨.",
+        "supply_comment": "미국 내 잉곳부터 모듈까지 일관생산이 가능하고, 카터스빌 셀 가동을 통해 DCA 요건까지 충족.",
+        "quote": "SOTP 산출 시 신재생 부문에 12MF EV/EBITDA 11.7배를 적용. Peer 멀티플 하락 반영에 따른 목표주가 하향."
+      }
+    ]
+  }
+}

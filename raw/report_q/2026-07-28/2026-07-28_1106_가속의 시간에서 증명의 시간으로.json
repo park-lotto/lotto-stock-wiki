@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-07-28",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-28_1106_가속의 시간에서 증명의 시간으로.md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "손인준",
+    "report_date": "2026.07.28",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "rating": "STRONG BUY",
+        "rating_changed": "유지",
+        "tp_new": "560,000원",
+        "tp_prev": "560,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2027년 HBM 영업이익은 85조원(+539%YoY)을 기록할 전망이다. 3Q26 메모리 가격 협상도 여전히 순조롭게 진행되고 있다.",
+        "estimate_revision": "영업이익(26E) 389,750 ▼, 영업이익(27E) 638,293 ▼",
+        "next_catalyst": "내년 초 차기 3개년 정책 발표로 이어지며 특별배당·자사주 매입 확대 기대",
+        "thesis": [
+          "대규모 주주환원 정책에 따른 주주가치 제고",
+          "AI 가속기 업체들의 메모리 확보 경쟁 심화와 HBM 사양 다변화",
+          "Broadcom과의 5년간 $200B 규모 LTA 및 파운드리/패키징 턴키 비즈니스 부각"
+        ],
+        "valuation_basis": "수정EPS(원) 56,420(26F), 93,377(27F) 및 2027년 HBM Blended ASP 상승 반영",
+        "risk": "메모리 사이클의 가격 상승률 둔화 및 매크로 불확실성",
+        "supply_comment": "선단 파운드리와 첨단 패키징 Capa가 확대되는 속도를 HBM 공급이 따라가지 못하면서 AI 가속기 업체들의 메모리 확보 경쟁이 심화되고 있다.",
+        "quote": "LTA는 메모리 수요의 장기 가시성을 높이는 동시에 Foundry/LSI의 가동률 상승과 적자 축소를 앞당기는 계기가 될 전망이다."
+      },
+      {
+        "name": "SK하이닉스",
+        "code": "000660",
+        "rating": "STRONG BUY",
+        "rating_changed": "유지",
+        "tp_new": "3,700,000원",
+        "tp_prev": "3,700,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 영업이익 264.1조원(+457%YoY), 2027년 영업이익 448.0조원(+70%YoY) 전망",
+        "estimate_revision": "영업이익(26E) 264,084 ▼, 영업이익(27E) 447,990 ▼",
+        "next_catalyst": "4Q26 추가적인 주주환원 정책 발표",
+        "thesis": [
+          "구속력 있는 LTA 확대로 인한 장기 실적 가시성 확보",
+          "HBM4 및 HBM4E 등 핵심 고객사와의 기술 파트너십 강화",
+          "급격한 실적 성장에 따른 주주환원 확대"
+        ],
+        "valuation_basis": "2027년 HBM Blended ASP +114% 상승 및 차세대 HBM 장기 공급",
+        "risk": "메모리 가격 사이클의 피크아웃 우려 및 글로벌 투자 환경 변화",
+        "supply_comment": "SK하이닉스의 2027년 HBM Capa Mix는 약 35%로 업계 평균인 28%를 상회할 것으로 보인다.",
+        "quote": "LTA와 주주환원이 맞물리며 나타날 우려 완화"
+      }
+    ]
+  }
+}

@@ -1,13 +1,94 @@
 {
   "reports": [
     {
-      "broker": "그로스리서치",
-      "stock": "네이버",
+      "broker": "그로쓰리서치",
+      "stock": "한미반도체",
       "rating": null,
       "tp": null,
-      "ts": "07:59",
-      "quote": "네이버, 엔비디아(NVIDIA Corporation)를 대상으로 한 제3자배정 유상증자 이사회 결의(7/24)",
+      "ts": "08:00",
+      "quote": "한미반도체: 글로벌 TC 본더 1위로 로직·칩렛·HBM 첨단 패키징 수요 확대 수혜",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "HPSP",
+      "rating": null,
+      "tp": null,
+      "ts": "08:00",
+      "quote": "HPSP: 선단공정 수율을 높이는 고압수소어닐링 장비의 독점적 경쟁력 보유",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "파크시스템스",
+      "rating": null,
+      "tp": null,
+      "ts": "08:00",
+      "quote": "파크시스템스: 인텔 협력 레퍼런스와 전·후공정용 AFM 계측 장비를 기반으로 수주 가능성 부각",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성전기",
+      "rating": null,
+      "tp": null,
+      "ts": "09:05",
+      "quote": "삼성전기, 약 2.25조원 규모 장기계약 확보",
       "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "셀트리온",
+      "rating": null,
+      "tp": null,
+      "ts": "09:18",
+      "quote": "셀트리온, 2분기 매출 1.4조로 역대 최대…영업이익 4518억원",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "코스메카코리아",
+      "rating": null,
+      "tp": null,
+      "ts": "09:31",
+      "quote": "K-뷰티 산업보고서 '코스메카코리아' +10% 급등 중",
+      "sector": "화장품미용"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "이엔셀",
+      "rating": null,
+      "tp": null,
+      "ts": "10:00",
+      "quote": "이엔셀: 줄기세포 기반 항노화 사업 확대",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "알지노믹스",
+      "rating": null,
+      "tp": null,
+      "ts": "10:00",
+      "quote": "알지노믹스: RNA 플랫폼과 재생의료 결합",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "ISC",
+      "rating": null,
+      "tp": null,
+      "ts": "13:25",
+      "quote": "ISC, 빅테크와 장기공급계약 추진…내년 LTA 비중 50% 전망",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "한화오션",
+      "rating": null,
+      "tp": null,
+      "ts": "14:14",
+      "quote": "한화오션 2Q26 영업이익 7,361억원…분기 최대 실적 경신",
+      "sector": "조선"
     }
   ]
 }

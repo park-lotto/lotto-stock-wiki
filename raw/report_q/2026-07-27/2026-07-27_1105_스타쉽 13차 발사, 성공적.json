@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "date": "2026-07-27",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-27_1105_스타쉽 13차 발사, 성공적.md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "정의훈",
+    "report_date": "2026.07.27",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.07.25",
+        "event": "스타십 13번째 시험비행 성공"
+      },
+      {
+        "date": "한 달 이내",
+        "event": "14차 시험비행 발사 예정"
+      }
+    ],
+    "top_picks": [
+      "스페이스X",
+      "아마존 카이퍼"
+    ],
+    "risk": "착수용 랜딩번에서 필요한 엔진 일부가 점화되지 않아 계획보다 다소 빠른 속도로 수면에 닿은 점은 개선 과제로 남았다.",
+    "quote": "12 차 비행에서 문제가 됐던 항목들이 사실상 모두 개선된 만큼, 스타십 개발은 시험 단계에서 운용 단계로 넘어가는 변곡점에 다가서고 있다."
+  }
+}

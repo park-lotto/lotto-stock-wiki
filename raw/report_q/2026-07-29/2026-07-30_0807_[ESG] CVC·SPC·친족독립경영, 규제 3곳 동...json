@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "date": "2026-07-29",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-30_0807_[ESG] CVC·SPC·친족독립경영, 규제 3곳 동...md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "박세연, 김예인",
+    "report_date": "2026년 07월 29일",
+    "target_kind": "market",
+    "market_direction": "null",
+    "macro_vars": [
+      "공정거래위원회 시행령 개정(CVC·SPC·친족독립경영)",
+      "상법 개정(자사주 소각)",
+      "지주사 NAV 할인율 축소"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": "null",
+        "reason": "지주사 전반의 규제 환경 변화 및 지배구조 투명성 제고"
+      }
+    ],
+    "style": "null",
+    "event_calendar": [
+      {
+        "date": "2026년 7월 23일 ~ 9월 1일",
+        "event": "공정위 시행령 개정 입법예고"
+      },
+      {
+        "date": "2027년 3월",
+        "event": "정기주총"
+      },
+      {
+        "date": "2027년 9월 6일",
+        "event": "상법상 자사주 소각 시한"
+      }
+    ],
+    "top_picks": [
+      "LS그룹"
+    ],
+    "risk": "규제 편입에 따른 컴플라이언스 비용 증가 및 내부거래 감시망 편입",
+    "quote": "공정거래위원회의 이번 시행령 개정안은 CVC·SPC·친족독립경영 3 대 규제 공백을 정조준했습니다. 실적 영향은 제한적이나 상법 개정과 맞물려 지주사 NAV 할인율 축소의 밸류업 촉매로 작용할 전망입니다."
+  }
+}

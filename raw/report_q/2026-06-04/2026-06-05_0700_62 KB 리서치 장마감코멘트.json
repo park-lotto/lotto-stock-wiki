@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "KB증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-05\\2026-06-05_0700_62 KB 리서치 장마감코멘트.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "KB증권",
+    "analyst": [
+      "임정은",
+      "태윤선",
+      "김상엽"
+    ],
+    "report_date": "2026년 6월 2일 (화)",
+    "market_direction": "혼조세",
+    "macro_vars": [
+      "KOSPI 8,801pt",
+      "KOSDAQ 1,026pt",
+      "원달러 환율 1,510원대",
+      "5월 소비자물가 전년대비 3.1% 상승"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "보험",
+        "stance": "강세",
+        "reason": "금리 상승 수혜 기대"
+      },
+      {
+        "sector": "은행",
+        "stance": "강세",
+        "reason": "금리 상승 수혜 기대"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6월 3일",
+        "event": "전국동시지방선거"
+      },
+      {
+        "date": "6월 1일~4일",
+        "event": "GTC 타이베이 2026"
+      },
+      {
+        "date": "6월 2일~5일",
+        "event": "대만 컴퓨텍스 2026"
+      }
+    ],
+    "top_picks": [
+      "두산로보틱스",
+      "SK텔레콤",
+      "삼성전자",
+      "삼성생명",
+      "SK스퀘어"
+    ],
+    "risk": "관련주의 단기 변동성 지속 가능성",
+    "quote": "내일은 전국동시지방선거로 국내 증시 휴장. 젠슨 황 CEO 효과가 이어지는 가운데, GTC와 컴퓨텍스 등 금주 AI 관련 이벤트가 집중되며 관련주의 단기 변동성은 지속될 가능성이 있음"
+  }
+}

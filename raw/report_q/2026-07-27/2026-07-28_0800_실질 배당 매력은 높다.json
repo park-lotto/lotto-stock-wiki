@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-27",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-28_0800_실질 배당 매력은 높다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김도하",
+    "report_date": "2026년 7월 27일",
+    "stocks": [
+      {
+        "name": "우리금융지주",
+        "code": "316140",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "43,000원",
+        "tp_prev": "43,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 지배주주 순이익은 1조 46억원(+7% YoY)로 컨센서스를 8% 상회.",
+        "estimate_revision": "상향",
+        "next_catalyst": "8월 중 주식교환 및 신주상장, 하반기 추가 자사주 매입",
+        "thesis": [
+          "지배 순익 기대치 상회 및 본질 실적 예상 부합",
+          "실질 배당 매력 및 중장기 주주환원율 50% 목표",
+          "자사주 매입 규모 상향 및 신주상장 예정"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "2027년 1월까지 매입할 자사주 규모를 1,500억원으로 발표. 하반기 1,300억원, 내년 초 200억원으로 추정치를 상향함.",
+        "quote": "향후 1 년의 세후 배당수익률이 5%대로 기대돼 여전히 실질 배당 매력이 높은 것으로 판단합니다."
+      }
+    ]
+  }
+}

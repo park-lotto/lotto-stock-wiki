@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_변화의 기로에 서있는 패널 비즈니스.md"
+  },
+  "questionnaire": {
+    "target_kind": "sector",
+    "broker": "IBK투자증권",
+    "analyst": "강민구",
+    "report_date": "2026. 6. 4",
+    "sector_name": "IT/디스플레이",
+    "sector_view": null,
+    "thesis": [
+      "주요 디스플레이 제조사들이 유리 기반 첨단 패키지 및 광 인터커넥터 기업으로 변모 중",
+      "Set 불황 및 메모리 반도체 가격 상승으로 인한 SmartPhone/Tablet PC 출하량 위축",
+      "디스플레이와 광통신 제품의 공정 유사성에 기반한 신사업(유리기판, 광통신 등) 진출"
+    ],
+    "timeline": [
+      "2026년 SmartPhone 출하량 전년대비 13.9% 감소 전망"
+    ],
+    "top_picks": [
+      {
+        "name": "AUO",
+        "reason": "Micro LED 생산 경험과 그룹 내 계열사 시너지를 기반으로 광통신 모듈 사업 진출",
+        "tp": null
+      },
+      {
+        "name": "BOE",
+        "reason": "Corning과 유리기판, 광통신, 패로브스카이트 분야 협업 및 AI Chip Packaging 진출 기대",
+        "tp": null
+      }
+    ],
+    "risk": "중화권 패널사의 지속적인 실적 부진 및 국내 패널사의 경우 계열사간 사업영역 조정 이슈",
+    "quote": "주요 디스플레이 제조사들이 유리 기반 첨단 패키지 및 광 인터커넥터 기업으로 변모하고 있다."
+  }
+}

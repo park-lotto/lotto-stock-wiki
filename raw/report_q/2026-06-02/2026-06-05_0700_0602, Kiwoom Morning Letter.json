@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "Kiwoom",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-05\\2026-06-05_0700_0602, Kiwoom Morning Letter.md"
+  },
+  "questionnaire": {
+    "broker": "Kiwoom",
+    "analyst": null,
+    "report_date": "2026/6/2",
+    "target_kind": "market",
+    "market_direction": "bullish",
+    "macro_vars": [
+      "KOSPI 8,788.38 (+3.68%)",
+      "KOSDAQ 1,050.03 (-2.30%)",
+      "달러/원 1,513.17",
+      "국제유가(WTI) 92.16",
+      "한국 국고채(3년) 3.790%"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "Overweight",
+        "reason": "엔비디아의 국내 메모리 탑재 발언 및 반도체 수출 호조가 상승을 견인"
+      },
+      {
+        "sector": "자동차",
+        "stance": "Overweight",
+        "reason": "현대차·기아의 생산 실적 유지 및 수출 견인"
+      }
+    ],
+    "style": "Growth",
+    "event_calendar": [
+      {
+        "date": "6.01",
+        "event": "한국 수출입동향 YoY"
+      },
+      {
+        "date": "6.01",
+        "event": "제조업 PMI"
+      },
+      {
+        "date": "6.02",
+        "event": "한국 CPI"
+      },
+      {
+        "date": "6.03",
+        "event": "미국 ADP 비농업고용"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "현대차",
+      "기아"
+    ],
+    "risk": "미국-이란 협상 중단 우려에 따른 지정학적 불확실성 및 유가 상승에 따른 인플레이션 우려",
+    "quote": "1일(월) 코스피는 사상 처음 8,780대에서 마감하며 종가 기준 최고치 경신(KOSPI 3.68%, KOSDAQ -2.30%)."
+  }
+}

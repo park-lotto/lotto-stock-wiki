@@ -1,0 +1,71 @@
+{
+  "meta": {
+    "date": "2026-07-27",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-27_1108_안녕하세요 위클리에요(로봇방산조선항공...md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "양승윤",
+    "report_date": "2026.07.27",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "중동 지정학 리스크",
+      "유가 및 항공유 급등",
+      "공급망 규제(NDAA, GUARD Act)",
+      "조선업 한-미 협력(MASGA)"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "미국 내 중국산 로봇 규제 본격화(NDAA, GUARD Act)로 인한 한국 등 동맹국 공급망 기대"
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "록히드마틴 등 미국 방산 기업 2Q26 호실적 및 글로벌 강력한 수요 확인"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "한-미 조선협력센터(KUSPC) 출범 및 MASGA 본격화"
+      },
+      {
+        "sector": "항공",
+        "stance": null,
+        "reason": "중동 지정학 리스크에 따른 항공유 급등 및 비용 상승"
+      },
+      {
+        "sector": "기타",
+        "stance": null,
+        "reason": "홍해 봉쇄 현실화에 따른 해운 탱커 톤마일 수요 및 운임 강세 전망"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026/07/20~2026/07/26",
+        "event": "Weekly 주간 시장 이슈 및 산업 동향 리포트"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "현대차",
+      "엔비디아",
+      "한국항공우주",
+      "LIG넥스원",
+      "록히드마틴",
+      "HD현대",
+      "한화",
+      "삼성중공업",
+      "한화오션",
+      "대한항공",
+      "HMM",
+      "팬오션"
+    ],
+    "risk": "중동 지정학 리스크 확대, 항공유 등 에너지 가격 변동성 확대, 생산 능력 및 공급망 병목",
+    "quote": "중동 리스크와 정유설비 차질로 항공유 가격은 다시 급등. 반면 항공화물 운임은 4주 연속 조정 국면 지속. 항공사별 유가 상승분의 운임 전가력에 따라 수익성 차별화가 확대될 전망."
+  }
+}

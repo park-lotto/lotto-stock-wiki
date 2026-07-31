@@ -1,0 +1,26 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "LS일렉트릭",
+      "signal": "bull",
+      "reason": "HVDC 기술을 기반으로 한 에너지 고속도로 사업 역량 강화",
+      "ts": "2026-02-02",
+      "quote": "LS일렉, HVDC 기반 ‘에너지 고속도로’ 사업 역량 과시",
+      "sector": "전력"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "직류송전(HVDC) 기술 관련 보도",
+      "ts": "2026-07-30",
+      "quote": "직류송전(HVDC)"
+    },
+    {
+      "fact": "LS일렉트릭, HVDC 기반 에너지 고속도로 사업 역량 과시",
+      "ts": "2026-02-02",
+      "quote": "LS일렉, HVDC 기반 ‘에너지 고속도로’ 사업 역량 과시"
+    }
+  ],
+  "quote": "LS일렉, HVDC 기반 ‘에너지 고속도로’ 사업 역량 과시"
+}

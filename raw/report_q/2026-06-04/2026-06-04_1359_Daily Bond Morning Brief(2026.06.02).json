@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "DAOL 다올투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_Daily Bond Morning Brief(2026.06.02).md"
+  },
+  "questionnaire": {
+    "broker": "DAOL 다올투자증권",
+    "analyst": "김지현",
+    "report_date": "02 Jun. 2026",
+    "target_kind": "market",
+    "market_direction": "null",
+    "macro_vars": [
+      "2yr 4.033%(+2.9bp)",
+      "10yr 4.453%(+1.8bp)",
+      "JPY 159.66(+0.24%)",
+      "EUR 1.163(-0.24%)",
+      "Dollar 99.17(+0.23%)",
+      "WTI $92.16(+5.49%)",
+      "Brent $95.44(+3.68%)"
+    ],
+    "recommended_sectors": [],
+    "style": "null",
+    "event_calendar": [
+      {
+        "date": "6월 1일",
+        "event": "한국 5월 수출/입"
+      },
+      {
+        "date": "6월 1일",
+        "event": "미국 5월 ISM 제조업 지수"
+      },
+      {
+        "date": "6월 2일",
+        "event": "한국 5월 소비자물가지수"
+      },
+      {
+        "date": "6월 2일",
+        "event": "미국 4월 JOLTS 구인건수"
+      }
+    ],
+    "top_picks": [
+      "엔비디아",
+      "SK하이닉스",
+      "현대차",
+      "현대모비스",
+      "태광그룹",
+      "씨어스",
+      "오스코텍",
+      "네이버",
+      "롯데관광개발"
+    ],
+    "risk": "null",
+    "quote": "Dow (+0.09%), S&P500 (+0.26%), Nasdaq (+0.42%)"
+  }
+}

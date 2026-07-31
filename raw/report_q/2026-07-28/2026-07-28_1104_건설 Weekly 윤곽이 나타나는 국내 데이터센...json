@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "date": "2026-07-28",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-28_1104_건설 Weekly 윤곽이 나타나는 국내 데이터센...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": [
+      "김승준",
+      "하민호"
+    ],
+    "report_date": "2026.7.28",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "수급",
+      "매매가",
+      "전세가",
+      "실적발표",
+      "원자력 협정"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "전력",
+        "stance": "비중확대",
+        "reason": "AI데이터센터 투자 수요 증가"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-07-28",
+        "event": "대우건설 실적발표"
+      },
+      {
+        "date": "2026-07-29",
+        "event": "GS건설/삼성물산 실적발표"
+      },
+      {
+        "date": "2026-07-30",
+        "event": "DL이앤씨 실적발표"
+      },
+      {
+        "date": "2026-07-31",
+        "event": "현대건설 실적발표"
+      }
+    ],
+    "top_picks": [
+      "GS건설"
+    ],
+    "risk": "재건(해외EPC), 원전, 주택 등은 여전히 시간이 필요하다.",
+    "quote": "전반적으로 우호적이지 못한 환경 속에서 하반기 나타날 수 있는 상승 재료는 데이터센터다. 특히 GS그룹의 동해 AI데이터센터 관련 뉴스(인허가, 자금조달) 등이 나타날 것으로 보고, 관련 종목으로 GS건설을 TOP PICK으로 추천한다."
+  }
+}

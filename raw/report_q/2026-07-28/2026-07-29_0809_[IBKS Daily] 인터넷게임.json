@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "date": "2026-07-28",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-29_0809_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.07.28",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "NC AI, 피지컬 AI '월드모델' 전담 조직 신설하며 콘텐츠 AX와 피지컬 AI를 양대 축으로 하는 AI 사업 확장"
+      },
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "네이버가 엔비디아와 10억달러 유상증자 계약, 브룩필드와 최대 90억달러 사전 계약을 체결하며 1GW급 글로벌 AI 팩토리 구축 자금 조달"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "NC",
+      "NAVER"
+    ],
+    "risk": null,
+    "quote": "NC AI, 피지컬 AI '월드모델' 전담조직 신설…콘텐츠 AX와 병행, 혼자는 못 짓는 AI 팩토리… 네이버, 100억달러 승부수"
+  }
+}

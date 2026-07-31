@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-28",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-29_0802_4분기 추가 자사주의 가능성도 열려있다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김도하",
+    "report_date": "2026년 07월 28일",
+    "stocks": [
+      {
+        "name": "iM금융지주",
+        "code": "139130",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "25,000원",
+        "tp_prev": "25,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "iM금융지주의 2Q26 지배주주 순익은 1,411억원(-9% YoY)으로 당사 추정치와 컨센서스를 5% 이상 하회하는 부진한 실적을 기록.",
+        "estimate_revision": "당사의 기존 추정인 ‘하반기 매입 350억원’을 소폭 상향한 것.",
+        "next_catalyst": "4분기 추가 자사주 매입의 여지",
+        "thesis": [
+          "4분기 추가 자사주 매입 가능성",
+          "비과세 구간 동안 연간 DPS 완만하게 증가 및 자사주 비중 확대 예상",
+          "실질 배당 매력 및 낮은 valuation(12mf PBR 0.43X)"
+        ],
+        "valuation_basis": "12mf PBR 0.43X",
+        "risk": "은행과 증권의 시장성 손익 악화",
+        "supply_comment": "iM금융지주는 3분기 자사주 매입 300억원(매입기간 7.28일~10.28일)을 결정.",
+        "quote": "iM금융지주는 컨센서스를 5% 이상 하회하는 부진한 실적을 기록했습니다. 주로 은행과 증권의 시장성 손익 악화에 기인합니다. 4 분기 추가 자사주 매입의 가능성은 열려있습니다."
+      }
+    ]
+  }
+}

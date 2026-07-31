@@ -1,0 +1,22 @@
+{
+  "reports": [
+    {
+      "broker": "한투글로벌",
+      "stock": "아마존",
+      "rating": null,
+      "tp": null,
+      "ts": "05:15",
+      "quote": "아마존 FY2Q 실적 컨센 소폭 상회, FY3Q26 가이던스 기대치 하회 단, AWS 매출이 +36.7% YoY 성장하며 컨센(+31%) 상회",
+      "sector": "IT"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "애플",
+      "rating": null,
+      "tp": null,
+      "ts": "06:44",
+      "quote": "애플 FY3Q 실적 기대치 소폭 상회. 단, FY4Q 가이던스가 기대에 미치지 못해 시간외에서 약 -7% 하락",
+      "sector": "IT"
+    }
+  ]
+}

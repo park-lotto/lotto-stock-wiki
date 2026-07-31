@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-27",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-27_1105_2Q26 Re 과도기적 성장의 모순.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "김용민",
+    "report_date": "2026.07.27",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "기아",
+        "code": "000270",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "190,000원",
+        "tp_prev": "190,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 매출 33조, 영업이익 2.6조 기록. 글로벌 BEV 판매량 11만 대 (+88.4% yoy) 기록.",
+        "estimate_revision": "단기 이익의 급격한 개선은 힘들지만, 격화되는 시장 경쟁 속에서 글로벌 경쟁사 대비 입지를 강화하고 있는 것 또한 사실.",
+        "next_catalyst": "유럽시장의 본격적인 BEV 판매 확대가 지속될 경우, 이익의 관점에서 OPM 희석에 대한 우려를 시장 점유율 확대가 상쇄해줄 수 있는 시장 여건 필요.",
+        "thesis": [
+          "글로벌 BEV 판매량 2Q26 11만 대(+88.4% yoy) 기록하며 성장 중.",
+          "미국시장 대당 인센티브 +400불 yoy, 유럽시장 +1,000유로 yoy 상승하며 감익 효과 발생.",
+          "자동차부문 FY26F Target P/E multiple 9x 유지."
+        ],
+        "valuation_basis": "자동차부문 FY26F Target P/E multiple 9x를 유지하며 목표주가 산정.",
+        "risk": "전사 OPM을 훼손하는 믹스 악화 및 완성차 본업의 유기적인 수익성 비약적 개선 부재.",
+        "supply_comment": null,
+        "quote": "단기 이익의 급격한 개선은 힘들지만, 격화되는 시장 경쟁 속에서 글로벌 경쟁사 대비 입지를 강화하고 있는 것 또한 사실. 자동차부문 FY26F Target P/E multiple 9x를 유지하며 목표주가 변동 없음."
+      }
+    ]
+  }
+}

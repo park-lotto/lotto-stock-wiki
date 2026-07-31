@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_0602, 미 증시, 미-이란 협상 노이즈에도, 지표 호조...md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "한지영, 유지윤",
+    "report_date": "2026년 6월 2일",
+    "target_kind": "market",
+    "market_direction": "소폭 상승",
+    "macro_vars": [
+      "유가",
+      "미국 금리",
+      "5월 미국 ISM 제조업 PMI",
+      "미-이란 휴전 협상"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "비중 확대",
+        "reason": "AI 내러티브 및 엔비디아 효과"
+      },
+      {
+        "sector": "IT",
+        "stance": "비중 확대",
+        "reason": "AI 인프라 수요 개선 및 하드웨어 쏠림 현상"
+      },
+      {
+        "sector": "기타",
+        "stance": "분할 매수",
+        "reason": "펀더멘털과 무관하게 소외된 실적주(증권, 전력기기, 조선, 백화점 등)에 대한 바벨 전략"
+      }
+    ],
+    "style": "멀티플 주도 국면",
+    "event_calendar": [
+      {
+        "date": "차주",
+        "event": "트럼프 휴전 연장 체결 예정"
+      }
+    ],
+    "top_picks": [
+      "엔비디아",
+      "HPE",
+      "삼성전자",
+      "LG전자",
+      "한미약품"
+    ],
+    "risk": "미-이란 협상 결렬에 따른 유가 및 금리 급등, 소수 주도주로의 수급 쏠림에 따른 변동성",
+    "quote": "미 증시, 미-이란 협상 노이즈에도, 지표 호조, 엔비디아 효과 등으로 소폭 상승"
+  }
+}

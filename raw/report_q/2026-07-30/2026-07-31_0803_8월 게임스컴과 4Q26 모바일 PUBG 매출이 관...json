@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-30",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-31_0803_8월 게임스컴과 4Q26 모바일 PUBG 매출이 관...md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "김동우",
+    "report_date": "2026/7/30",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "크래프톤",
+        "code": "259960",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "390,000원",
+        "tp_prev": "390,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 매출은 1.29조원(YoY +94.9%, QoQ -5.9%, ADK 연결 편입 반영), 영업이익은 4,109억원(YoY +67.0%)로 컨센서스(매출 1.2조원, 영익 3,750억원) 상회.",
+        "estimate_revision": "글로벌 유저 시연을 통해 신작 게임성에 대한 긍정적 평가가 형성되고, 출시 시기가 구체화될 경우 2027년 이익 추정치 상향 기대",
+        "next_catalyst": "8월 게임스컴 및 2H26 웰메이드 모드 2종 출시",
+        "thesis": [
+          "2Q26 PUBG IP의 PC/콘솔 MAU YoY +20% 성장",
+          "PUBG 장르 확장 및 신작 라인업(Subnautica 2, 딩컴 투게더 등) 출시 가시화",
+          "UGC 생태계 고도화를 통한 지속적인 확장 기조 유지"
+        ],
+        "valuation_basis": null,
+        "risk": "4Q25 모바일 매출에서 보였던 부정적 계절성과 PUBG IP에 대한 의존도",
+        "supply_comment": null,
+        "quote": "2Q26 매출은 1.29조원(YoY +94.9%, QoQ -5.9%, ADK 연결 편입 반영), 영업이익은 4,109억원(YoY +67.0%)로 컨센서스(매출 1.2조원, 영익 3,750억원) 상회."
+      }
+    ]
+  }
+}

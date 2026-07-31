@@ -11,25 +11,29 @@
     "target_kind": "market",
     "market_direction": null,
     "macro_vars": [
-      "코스피 지수 전일 종가 기준 8,801",
-      "코스닥 지수 전일 종가 기준 1,026",
-      "미국 DOW 지수 50,687",
-      "미국 NASDAQ 지수 26,854"
+      "한국 코스피 8,801 시가총액 6,992조원",
+      "미국 DOW 50,687",
+      "미국 NASDAQ 26,854"
     ],
     "recommended_sectors": [
       {
         "sector": "IT",
         "stance": null,
-        "reason": "젠슨 황 엔비디아 CEO와 김택진 NC 대표의 만남을 통한 피지컬 AI 협력 논의 가능성"
+        "reason": "젠슨 황 엔비디아 CEO의 방한과 김택진 NC 대표 만남 예정으로 피지컬 AI 분야 협력 논의 가능성"
       },
       {
         "sector": "로봇",
         "stance": null,
-        "reason": "국내 게임사들의 한화·포스코·현대로템 등과 협력하여 피지컬 AI 기반 로봇 두뇌 개발 추진"
+        "reason": "국내 게임사들의 한화·포스코·현대로템과 협력을 통한 피지컬 AI 기반 로봇 두뇌 개발 추진"
       }
     ],
     "style": null,
-    "event_calendar": null,
+    "event_calendar": [
+      {
+        "date": "2026.06.01",
+        "event": "젠슨 황 엔비디아 CEO 방한 및 김택진 NC 대표 만남"
+      }
+    ],
     "top_picks": [
       "NAVER",
       "카카오",
@@ -52,6 +56,6 @@
       "데브시스터즈"
     ],
     "risk": null,
-    "quote": "국내 게임사들이 피지컬 AI 분야에서 주목받는 이유는 수년간 인기 게임을 만들고 운영하면서 축적한 3차원(3D) 가상환경 구현 역량과 데이터 때문임"
+    "quote": "국내 게임사들이 한화·포스코·현대로템 등과 손잡고 피지컬 AI 기반 로봇 두뇌 개발에 나서고 있음"
   }
 }

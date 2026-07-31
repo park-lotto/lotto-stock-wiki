@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-30",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-31_0800_2Q26 Review 믹스 개선.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "조혜빈",
+    "report_date": "2026/7/30",
+    "stocks": [
+      {
+        "name": "한화솔루션",
+        "code": "009830",
+        "rating": "유지",
+        "rating_changed": false,
+        "tp_new": "43,000원",
+        "tp_prev": "null",
+        "tp_direction": "down",
+        "earnings_outlook": "한화솔루션은 2Q26 매출액 4조 5,826억원(+47.0% YoY, 이하 YoY), 영업이익 3,065억원(+200.2%, OPM 6.7%)을 기록하며 컨센서스(1,697억원)를 81% 상회.",
+        "estimate_revision": "한화솔루션 연간 실적 추정 변동에 따라 2026E 영업이익 변경 전 709.1십억원에서 변경 후 893.7십억원으로 상향",
+        "next_catalyst": "3Q는 모듈 출하 확대 및 카터스빌 셀 가동에 따라 AMPC가 2,420억원으로 증가할 것으로 추정. 3Q 출하 2.5GW와 카터스빌 램프업이 실적으로 확인될 경우 밸류에이션 재평가가 가능할 전망.",
+        "thesis": [
+          "신재생 부문, 개발자산 매각 및 주택용 비중 확대에 따른 ASP 상승으로 실적 개선 견인",
+          "미국 내 잉곳부터 모듈까지 일관생산 체제와 비중국산 원재료 조달 역량을 바탕으로 FEOC 규제에 따른 점유율 확대 기대",
+          "12MF EV/EBITDA는 8.9배에 불과, 바텀피싱 접근이 유효"
+        ],
+        "valuation_basis": "SOTP 산출 시 신재생 부문에 12MF EV/EBITDA 11.7배를 적용. Peer 멀티플 하락 반영에 따른 목표주가 하향",
+        "risk": "상호관세 노출 및 주요 고객의 계약 취소 등 개별 리스크",
+        "supply_comment": "모듈 출하는 기후 영향에 따른 EPC향 반입 지연으로 1.3GW로 감소",
+        "quote": "SOTP 산출 시 신재생 부문에 12MF EV/EBITDA 11.7배를 적용. Peer 멀티플 하락 반영에 따른 목표주가 하향.",
+        "sector": "신재생"
+      }
+    ]
+  }
+}

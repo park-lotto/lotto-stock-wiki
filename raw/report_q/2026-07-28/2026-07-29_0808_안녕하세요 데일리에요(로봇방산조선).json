@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "date": "2026-07-28",
+    "broker": "Eugene Investment & Securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-29_0808_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "Eugene Investment & Securities",
+    "analyst": "Yang Seung-yoon",
+    "report_date": "2024-07-27",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "중국 휴머노이드 기업 애지봇의 홍콩 IPO 절차 공식 개시 및 로봇 누적 출하량 증가"
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "한화에어로스페이스의 매출액 2.5% 이상 규모 상품공급 기본계약 체결 및 하반기 수주 기대"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "중국의 선박 엔진 내재화 추세 강화 및 한국 업체들의 고부가 친환경·DF엔진 경쟁력 강조"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "07-27",
+        "event": "로봇/방산/조선 주요 뉴스 및 업데이트"
+      }
+    ],
+    "top_picks": [
+      "케이엔알시스템",
+      "AJ네트웍스",
+      "로보티즈",
+      "디든로보틱스",
+      "모비어스",
+      "엑스와이지",
+      "제너럴리스트",
+      "애지봇",
+      "유니트리",
+      "한화에어로스페이스",
+      "대한항공",
+      "엠브라에르",
+      "한화그룹",
+      "KAI",
+      "LIG넥스원",
+      "L3Harris",
+      "대한조선",
+      "HD현대중공업",
+      "대선조선",
+      "SB선보",
+      "한화오션"
+    ],
+    "risk": null,
+    "quote": "범용 저속엔진 경쟁은 심화되나, 고부가 친환경·DF엔진은 한국 업체 경쟁력이 여전히 남아 있음."
+  }
+}

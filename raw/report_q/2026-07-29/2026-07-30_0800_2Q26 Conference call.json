@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-29",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-30_0800_2Q26 Conference call.md"
+  },
+  "questionnaire": {
+    "broker": "SK증권",
+    "analyst": "한동희",
+    "report_date": "2026-07-29",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "SK하이닉스",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 매출액 79,319십억원, 영업이익 60,542십억원, 순이익 93,820십억원. 영업이익률 76%, 지배순이익률 118%. 2Q26 DRAM 46 조원, NAND 14 조원, OPM DRAM 79%, NAND 69% 추정",
+        "estimate_revision": null,
+        "next_catalyst": "HBM4 양산 출하 시작 및 하반기 본격 확대, 1c 기반 소캠 2 공급 본격화",
+        "thesis": [
+          "AI 인프라 투자 확대 수요 강세 및 공급 타이트 지속",
+          "HBM4 및 차세대 고용량 제품을 통한 기술 리더십 확보",
+          "중장기 공급 안정성을 위한 핵심 고객사와의 다년계약(LTA) 진행"
+        ],
+        "valuation_basis": null,
+        "risk": "전력 등 물리적 제약으로 인한 개별 프로젝트의 다소 변동 가능성 및 공급 제약 완화 시점의 불확실성",
+        "supply_comment": "HBM, AI 향 서버 메모리 첨단 공정 난이도 증가, 리드타임으로 수급 환경 단기로 개선 어려움. 상당기간 동안 타이트한 수급 전망",
+        "quote": "하반기 출하 증가, 믹스 제고 동반으로 성장 더욱 가속화. 수요 강세 지속. 타이트한 수급 여건 상당기간 지속 불가피"
+      }
+    ]
+  }
+}

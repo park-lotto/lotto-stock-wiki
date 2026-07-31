@@ -1,0 +1,25 @@
+{
+  "target_kind": "sector",
+  "sector_name": "조선",
+  "sector_view": "긍정",
+  "points": [
+    "LNG선 수주 훈풍으로 인한 조선주 전반의 강세"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "HD한국조선해양",
+      "comment": "LNG선 훈풍으로 인해 급등함",
+      "ts": "07-30 00:57",
+      "quote": "LNG선 훈풍 탄 조선주…HD한국조선해양 급등",
+      "sector": "조선"
+    }
+  ],
+  "events": [
+    {
+      "fact": "LNG선 관련 조선주 주가 상승",
+      "ts": "07-30 00:57",
+      "quote": "LNG선 훈풍 탄 조선주…HD한국조선해양 급등"
+    }
+  ],
+  "quote": "LNG선 훈풍 탄 조선주…HD한국조선해양 급등"
+}

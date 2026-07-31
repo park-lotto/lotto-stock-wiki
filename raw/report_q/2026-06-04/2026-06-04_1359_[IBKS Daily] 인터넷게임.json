@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.06.04",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "젠슨 황 엔비디아 CEO가 김택진 NC 대표와 만날 예정으로 피지컬 AI 협력 논의 가능성"
+      },
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "국내 게임사들이 한화·포스코·현대로템 등과 손잡고 피지컬 AI 기반 로봇 두뇌 개발 중"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "NC",
+      "크래프톤",
+      "넷마블",
+      "시프트업",
+      "펄어비스",
+      "카카오게임즈",
+      "더블유게임즈",
+      "웹젠",
+      "NHN",
+      "컴투스",
+      "네오위즈",
+      "데브시스터즈"
+    ],
+    "risk": null,
+    "quote": "젠슨 황, 엔씨 김택진도 만난다...피지컬 AI 협력 논의 가능성",
+    "sector_comment": "IT/게임"
+  }
+}

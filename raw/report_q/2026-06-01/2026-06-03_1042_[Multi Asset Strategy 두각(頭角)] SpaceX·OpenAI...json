@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "date": "2026-06-01",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_[Multi Asset Strategy 두각(頭角)] SpaceX·OpenAI...md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "김용구",
+    "report_date": "1 June, 2026",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "미국 IPO/유상증자 합산 금액",
+      "미국 신용융자/시가총액 비중",
+      "민간 금융수지/명목 GDP 상대비율",
+      "S&P500 지수"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026년 6/12일",
+        "event": "SpaceX 상장"
+      },
+      {
+        "date": "2026년 2~3분기",
+        "event": "Discord 상장 예정"
+      },
+      {
+        "date": "2026년 9월",
+        "event": "OpenAI 상장 예정"
+      },
+      {
+        "date": "2026년 10월",
+        "event": "Anthropic 상장 예정"
+      },
+      {
+        "date": "2026년 하반기",
+        "event": "Databricks, Canva 상장 예정"
+      }
+    ],
+    "top_picks": [
+      "SpaceX",
+      "OpenAI",
+      "Anthropic",
+      "Discord",
+      "Databricks",
+      "Canva"
+    ],
+    "risk": "시장 일각에선 초대형 IPO가 기존 AI 밸류체인 대표주에 대한 수급/유동성 블랙홀 유발과 증시 조정 및 버블 붕괴의 트리거가 될 것이란 우려를 제기",
+    "quote": "하반기 S&P500 지수가 초대형 IPO의 가세에 힘입어 마디 지수대 8천Pt선 안착을 모색하는 역사적 신고가 경신 랠리를 지속할 공산이 크다 보는 이유"
+  }
+}

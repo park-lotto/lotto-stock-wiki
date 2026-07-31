@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-30",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-31_0800_아쉬운 실적, AI 데이터센터 가시화 여부가 ...md"
+  },
+  "questionnaire": {
+    "broker": "미래에셋증권",
+    "analyst": "김기룡",
+    "report_date": "2026.7.30",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "GS건설",
+        "code": "006360",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "49,000원",
+        "tp_prev": "49,000원",
+        "tp_direction": "null",
+        "earnings_outlook": "2026년 2분기, GS건설 연결 실적은 매출액 2.78조원(-13.0%, YoY), 영업이익 913억원(-43.6%, YoY)으로 시장 예상치(영업이익 1,147억원, 1개월 기준)를 20% 하회했다.",
+        "estimate_revision": "영업이익, 시장 예상치 20% 하회",
+        "next_catalyst": "AI 데이터센터 건설 참여 가능성 및 베트남 닌투언 2호(팀코리아) 참여를 통한 첫 해외 원전 사업 진출 가시성 확대",
+        "thesis": [
+          "주택 분상세 및 분기 실적 기반 마련",
+          "AI 데이터센터 참여 기대감 유효",
+          "해외 원전 사업 진출 가시성 확대"
+        ],
+        "valuation_basis": "Target PBR 0.8x",
+        "risk": "주택 부문 프로젝트 예상 손실 500억원 및 판관비 대손 1,000억원 반영",
+        "supply_comment": null,
+        "quote": "GS건설에 대한 투자의견 매수 및 목표주가 49,000원(Target PBR 0.8x)을 유지한다.",
+        "sector": "기타"
+      }
+    ]
+  }
+}

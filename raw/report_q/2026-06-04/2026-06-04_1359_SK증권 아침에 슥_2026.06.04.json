@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_SK증권 아침에 슥_2026.06.04.md"
+  },
+  "questionnaire": {
+    "broker": "SK증권",
+    "analyst": null,
+    "report_date": "2026-06-04",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "중동 정세 불안",
+      "미국 실업수당청구건수",
+      "미국 관세 재개 움직임",
+      "AI 성장 전망",
+      "유가·국채금리 상승"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "강세",
+        "reason": "AI 성장 전망에 대한 낙관론 및 반도체 강세 지속"
+      },
+      {
+        "sector": "IT",
+        "stance": "상승",
+        "reason": "기술주 강세"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-06-04",
+        "event": "지방선거 휴장"
+      }
+    ],
+    "top_picks": null,
+    "risk": "중동 정세 불안, 미국·이란 분쟁 지속, 추가 관세 부담에 따른 투자심리 위축",
+    "quote": "중동 정세 불안에 하락 마감, 이란의 쿠웨이트 공격에 유가·국채금리 상승, 반도체 강세 지속, 미국 관세 재개 움직임에 하락 마감, 기술주 강세에 상승 마감, AI 성장 전망에 대한 낙관론으로 광학·반도체주 강세, 미국·이란 분쟁 지속, 추가 관세 부담에 투자심리 위축"
+  }
+}

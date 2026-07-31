@@ -1,0 +1,52 @@
+{
+  "market_direction": "급반등",
+  "macro_events": [
+    {
+      "fact": "마이크로소프트 2분기 실적 발표 (예상 상회)",
+      "ts": "23:50",
+      "quote": "오늘 반등의 주인공은 '마이크로소프트(MSFT)' 네요. 현재 15% 넘게 상승 중인데 2008년 10월 13일(+18.6%) 이후 가장 큰 폭의 일간 상승률입니다."
+    },
+    {
+      "fact": "일본 외환당국 엔화 매수 개입",
+      "ts": "06:23",
+      "quote": "THE JAPANESE GOVERNMENT AND THE BANK OF JAPAN INTERVENED IN THE FOREX MARKET, WITH U.S. AUTHORITIES ALSO CONDUCTING A RATE CHECK - NIKKEI"
+    },
+    {
+      "fact": "미국 2분기 GDP 성장률 1.5% 기록",
+      "ts": "07:41",
+      "quote": "미국 상무부는 미국의 2분기 GDP 성장률 속보치를 공개. 헤드라인 수치는 전기대비 연율 환산 기준 1.5% 성장해 지난 1분기 성장률이자 시장 예상, 2.1%를 0.6%p 하회."
+    },
+    {
+      "fact": "6월 PCE 가격지수 전년 대비 3.7% 상승",
+      "ts": "07:41",
+      "quote": "6월 PCE 가격지수는 1년 전에 비해 3.7% 상승했으며 전달 대비로는 0.1% 하락."
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "강세",
+      "comment": "실적 호조와 수급 우려 완화로 시장 상승을 주도함"
+    },
+    {
+      "sector": "IT",
+      "stance": "혼조",
+      "comment": "마이크로소프트는 급등했으나 메타와 구글은 실적 실망감과 구조적 우려로 하락"
+    },
+    {
+      "sector": "소비내수",
+      "stance": "혼조",
+      "comment": "스타벅스, 치폴레는 실적 호조로 상승했으나 크록스는 실적 부진으로 하락"
+    },
+    {
+      "sector": "바이오",
+      "stance": "혼조",
+      "comment": "브리스톨 마이어스 스큅은 상승했으나 텔러닥 헬스는 가이던스 하향으로 급락"
+    },
+    {
+      "sector": "기타",
+      "stance": "혼조",
+      "comment": "금융, 산업재, 에너지는 소폭 상승했고 정유주 PBF 에너지는 급등"
+    }
+  ]
+}

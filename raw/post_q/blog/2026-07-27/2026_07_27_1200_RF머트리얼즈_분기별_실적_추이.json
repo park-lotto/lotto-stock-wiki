@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "RF머트리얼즈",
+      "signal": "neutral",
+      "reason": "분기별 실적 추이 공개",
+      "ts": "2026-07-27",
+      "quote": "RF머트리얼즈 분기별 실적 추이",
+      "sector": "반도체"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "RF머트리얼즈의 분기별 실적 추이가 공개됨",
+      "ts": "2026-07-27",
+      "quote": "RF머트리얼즈 분기별 실적 추이"
+    }
+  ],
+  "quote": "RF머트리얼즈 분기별 실적 추이"
+}

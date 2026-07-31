@@ -1,0 +1,41 @@
+{
+  "date": "2026-07-27",
+  "hit_rate": null,
+  "mentioned_count": 24,
+  "matched": [],
+  "missed": [
+    "2차전지",
+    "NAVER",
+    "SK하이닉스",
+    "국내 증시",
+    "기술주",
+    "대덕전자",
+    "미국 시장",
+    "미국 증시",
+    "반도체",
+    "반도체 소부장",
+    "반도체 장비",
+    "삼성전자",
+    "원익IPS",
+    "정유주",
+    "친환경",
+    "친환경 섹터",
+    "코스닥",
+    "테스",
+    "티엘비",
+    "피에스케이",
+    "하나마이크론",
+    "하드웨어",
+    "한화오션",
+    "현대차"
+  ],
+  "candidates": [],
+  "thresholds": {
+    "mode": "his",
+    "vacuum_pct_max": 35.0,
+    "min_up_count": 1,
+    "require_up_gt_down": true,
+    "require_leader": false,
+    "top_n": 20
+  }
+}
