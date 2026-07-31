@@ -23,6 +23,27 @@ import sys
 import traceback
 
 
+
+def _live_kwargs():
+    """★라이브(mix_pipeline)가 build_scene_first_plan에 실제로 넘기는 인자를 그대로 만든다.
+
+    2026-07-31 실사고: 이 하네스가 기본값(핑퐁·백본·은행 OFF)으로만 돌아서 **라이브와 다른
+    경로**를 재고 있었다. 같은 소재가 라이브 경로에선 67~94자, 기본 경로에선 157~185자로
+    나왔다 — 그동안의 지표가 사장님이 받는 대본을 대표하지 못했다.
+    설정값은 서버가 아니라 로컬 DB에서 읽히므로, 서버와 같게 강제로 켜서 맞춘다.
+    """
+    from shopping_shorts import bank_assemble
+    from shopping_shorts.store import Store
+    from shopping_shorts.config import DB_PATH
+    bank_context = ""
+    try:
+        bank_context = bank_assemble.parts_block(Store(DB_PATH))
+    except Exception:
+        bank_context = ""      # 로컬 DB가 비면 은행 블록 없이 — 나머지 경로는 그대로 검증된다
+    return {"ping_pong": True, "backbone_base": True, "judge": True,
+            "bank_context": bank_context}
+
+
 def _txt(rec):
     return "\n".join(n for _, n in (rec or {}).get("beats", []) if n)
 
@@ -31,13 +52,14 @@ def _key(job_id, run):
     return f"{job_id}#{run}"
 
 
-def generate(fixtures, out_path, retries=4, only_missing=True, engine=None, repeat=1):
+def generate(fixtures, out_path, retries=4, only_missing=True, engine=None, repeat=1, live=False):
     """fixture × repeat회 실제 생성. 키는 'job_id#run'이라 반복분이 각각 남는다.
 
     retries: 키풀에 403/쿼터 소진 키가 섞여 빈 결과가 나온다(실측). 볼트 로테이션에 맡겨 재시도.
     only_missing: 이미 있는 (job, run)은 건너뛴다 — 중단 후 이어서 돌릴 수 있고 과금을 아낀다.
     """
     from shopping_shorts.edit_plan import build_scene_first_plan
+    kw = _live_kwargs() if live else {}
     try:
         done = {r["key"]: r for r in json.load(io.open(out_path, encoding="utf-8"))}
     except Exception:
@@ -52,7 +74,7 @@ def generate(fixtures, out_path, retries=4, only_missing=True, engine=None, repe
                 try:
                     sf = build_scene_first_plan(src, j.get("given_script") or "",
                                                 j.get("target_seconds") or 30,
-                                                n_candidates=3, engine=engine)
+                                                n_candidates=3, engine=engine, **kw)
                 except Exception:
                     traceback.print_exc()
                     continue
@@ -61,7 +83,8 @@ def generate(fixtures, out_path, retries=4, only_missing=True, engine=None, repe
                     continue
                 rec = next((c for c in cands if c.get("recommended")), cands[0])
                 done[k] = {
-                    "key": k, "job_id": j["job_id"], "run": run, "engine": engine or "v2",
+                    "key": k, "job_id": j["job_id"], "run": run, "engine": engine or "v3",
+                    "live": bool(live),
                     "topic": (j.get("given_script") or "")[:40],
                     "beats": [(b.get("role", ""), (b.get("narration") or "").strip())
                               for b in (rec.get("plan") or {}).get("beats") or []]}
@@ -169,6 +192,8 @@ def main():
     ap.add_argument("--engine", default=None, help="엔진 버전(v2/v3…)")
     ap.add_argument("--repeat", type=int, default=1, help="fixture당 생성 횟수(편차 흡수)")
     ap.add_argument("--batch", type=int, default=0, help="한 번에 돌릴 fixture 수(0=전부)")
+    ap.add_argument("--live", action="store_true",
+                    help="라이브와 동일한 파이프라인 인자로 생성(핑퐁·백본·은행·심사)")
     ap.add_argument("--offset", type=int, default=0, help="배치 시작 위치")
     a = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
@@ -178,8 +203,10 @@ def main():
     fx = json.load(io.open(a.args[0], encoding="utf-8"))
     if a.batch:
         fx = fx[a.offset:a.offset + a.batch]
-    print(f"백테스트 — 엔진 {a.engine or 'v2'} · fixture {len(fx)}건 × {a.repeat}회")
-    generate(fx, a.args[1], only_missing=not a.all, engine=a.engine, repeat=a.repeat)
+    print(f"백테스트 — 엔진 {a.engine or 'v3'} · fixture {len(fx)}건 × {a.repeat}회"
+          + ("  [라이브 설정: 핑퐁·백본·은행·심사 ON]" if a.live else "  [기본 설정]"))
+    generate(fx, a.args[1], only_missing=not a.all, engine=a.engine, repeat=a.repeat,
+             live=a.live)
     print()
     report(a.args[1], a.args[2] if len(a.args) > 2 else None)
 

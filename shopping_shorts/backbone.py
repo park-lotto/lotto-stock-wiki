@@ -541,7 +541,8 @@ def order_by_backbone(beats, backbone_video):
     return out
 
 
-def ping_pong_reconcile(beats, pool_sources, rewrite_call=None, max_rounds=2, trim_call=None):
+def ping_pong_reconcile(beats, pool_sources, rewrite_call=None, max_rounds=2,
+                        trim_call=None, min_total_chars=0):
     """핑퐁(대본↔장면 왕복). 매 라운드:
       1) action 불일치 비트 찾기(fit 안 믿음 — beat_action_mismatch).
       2) 각 비트: 같은 행위 클립이 풀에 있으면 **화면 스왑**(장면 쪽), 없으면 재작성 대기(대본 쪽).
@@ -587,6 +588,18 @@ def ping_pong_reconcile(beats, pool_sources, rewrite_call=None, max_rounds=2, tr
             trims = trim_call(over) or {}
         except Exception:
             trims = {}
+        # ★전체 길이 하한(2026-07-31). 비트마다 "화면보다 말이 길다"고 깎다 보면 소스가 짧을 때
+        #   **대본 전체가 쪼그라든다** — 실측(라이브 설정 백테스트 20건): 목표 30초(150~185자)인데
+        #   62~106자가 다수였고, 사장님 제보 job은 20초 소스 1개로 11초 대본이 나왔다.
+        #   말이 화면을 조금 넘는 것보다 영상이 절반으로 주는 게 훨씬 나쁘다. 게다가 렌더 단계의
+        #   _refill_beats_to_tts가 **실 TTS 길이에 맞춰 화면을 늘려주므로** 넘침은 거기서 흡수된다.
+        #   → 트림을 다 적용했을 때 총량이 하한 밑으로 내려가면 **아예 적용하지 않는다**.
+        if trims and min_total_chars:
+            def _clen(s):
+                return len("".join((s or "").split()))
+            after = sum(_clen(trims.get(b.get("beat_idx")) or b.get("narration", "")) for b in out)
+            if after < min_total_chars:
+                trims = {}          # 화면 맞추기보다 이야기 길이를 지킨다
         for b in out:
             bi = b.get("beat_idx")
             if bi in trims and trims[bi]:
