@@ -33,9 +33,25 @@ def test_pingpong_on_swaps_mismatched_screen(monkeypatch):
     assert beat.get("action_fixed") is True
 
 
-def test_pingpong_off_leaves_screen():
+def test_pingpong_off_leaves_screen(monkeypatch):
+    """옛 경로: 핑퐁이 꺼져 있으면 모델이 고른 화면을 그대로 둔다.
+
+    ★리라이트 믹스(2026-07-31)에서는 핑퐁과 무관하게 **말에 맞는 컷이 앞으로 온다** —
+    "바나나 썰어 넣고"에는 '바나나 써는' 클립(S1-9)이 붙는다. 그게 사장님이 요청한
+    "대본 핵심 단어와 원본 태깅이 맞으면 그 컷을 가져와라"이므로 여기선 옛 경로만 검증한다.
+    """
+    monkeypatch.setattr(edit_plan, "REWRITE_MIX", False)
     res = edit_plan.build_scene_first_plan(_SOURCES, "레퍼런스", 20, n_candidates=1,
                                            call=_fake_call, ping_pong=False)
     beat = res["candidates"][0]["plan"]["beats"][0]
     assert beat["primary"]["seg_id"] == "BB-1"        # 기본: 원래 화면 그대로
+
+
+def test_rewrite_mix_pulls_the_matching_clip(monkeypatch):
+    """새 경로: 핑퐁 없이도 말에 맞는 컷(바나나 써는)이 앞으로 온다."""
+    monkeypatch.setattr(edit_plan, "REWRITE_MIX", True)
+    res = edit_plan.build_scene_first_plan(_SOURCES, "레퍼런스", 20, n_candidates=1,
+                                           call=_fake_call, ping_pong=False)
+    beat = res["candidates"][0]["plan"]["beats"][0]
+    assert beat["primary"]["seg_id"] == "S1-9"
     assert beat.get("action_fixed") is None

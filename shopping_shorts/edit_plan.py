@@ -351,6 +351,12 @@ def _pick_timeline(seg_map, target_seconds):
         if k < len(order) - 1:
             while segs and segs[-1].get("shot_role") in ("완성", "after"):
                 segs.pop()
+        # ★반대 방향도 막는다(2026-07-31 실측 job fd8bd0f2a5c1): 두 번째 이후 소스의 **도입부**
+        #   (문제·before = 더러운 상태)가 우리 영상 후반에 끼면 "깔끔하게 유지" 대사에
+        #   "조리대에 기름때가 지저분하다" 화면이 붙는다. 문제 화면은 앞에서만 나와야 한다.
+        if k > 0:
+            while segs and segs[0].get("shot_role") in ("문제", "before"):
+                segs.pop(0)
         for s in segs:
             if acc >= target_seconds:
                 break
@@ -408,10 +414,43 @@ def _assign_timeline(beats, groups):
         lo = i * len(groups) // n
         hi = max(lo + 1, (i + 1) * len(groups) // n)
         chunk = [s for g in groups[lo:hi] for s in g] or groups[min(lo, len(groups) - 1)]
+        chunk = _order_clips_by_words(b.get("narration") or "", chunk)
         b["primary"] = dict(chunk[0])
         b["alternates"] = [dict(s) for s in chunk[1:]]
         _flag_offtopic(b, chunk)
     return beats
+
+
+def _stems(txt):
+    """조사·어미를 털어낸 근사 어간 집합('기름이'와 '기름'이 같게 잡히도록 앞 2글자)."""
+    return {t[:2] for t in _claim_key(txt or "")}
+
+
+def _order_clips_by_words(narration, segs):
+    """비트 안에서 **그 말에 맞는 컷을 앞으로** 올린다(2026-07-31 사장님).
+
+    "우리 대본에 핵심 단어를 태깅했잖아. 이 장면에 있는 게 원본 태깅이랑 맞으면
+     가져오는 게 힘든 건가?" → 안 힘들다. 구간마다 화면·변화 문구가 이미 있으니
+     낱말이 겹치는 컷을 먼저 보여주면 된다. 그동안은 이 비교를 딴소리 검사에만 썼다.
+
+    실측(job fd8bd0f2a5c1): [5] "물티슈로 쓱 닦아도 끝!"에 s0-3(설치)이 먼저 오고
+    s0-5(물티슈로 닦는 모습)가 두 번째라, 말할 때 화면은 아크릴판을 들고 있었다.
+    또 [4] "깔끔하게 유지"에 s0-1(기름때가 지저분하게 묻어있다)이 붙었다.
+
+    비트 안 순서만 바꾼다(비트 사이 원본 시간순은 그대로) — 겹치는 낱말이 없으면
+    원래 순서를 유지한다(안정 정렬).
+    """
+    if len(segs) < 2:
+        return segs
+    want = _stems(narration)
+    if not want:
+        return segs
+
+    def _hit(s):
+        return len(want & _stems(f"{s.get('change') or ''} {s.get('scene_desc') or ''} "
+                                f"{s.get('text') or ''}"))
+
+    return sorted(segs, key=lambda s: -_hit(s))     # 파이썬 정렬은 안정 → 동점은 원순서
 
 
 def _flag_offtopic(beat, segs):
@@ -425,9 +464,6 @@ def _flag_offtopic(beat, segs):
       (표현을 바꿔 쓰라고 했으니 '많이 겹쳐야' 한다고는 보지 않는다. 0겹침만 잡는다.)
     """
     # 조사·어미가 붙어 낱말이 그대로는 안 겹친다("기름이" vs "기름") → 앞 2글자로 비교.
-    def _stems(txt):
-        return {t[:2] for t in _claim_key(txt)}
-
     ours = _stems(beat.get("narration") or "")
     theirs = set()
     for s in segs:

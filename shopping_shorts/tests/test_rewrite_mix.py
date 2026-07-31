@@ -151,6 +151,38 @@ def test_rewrite_mix_runs_even_when_backbone_is_on():
     assert "원본이 하던 말을 우리 말로 바꿔 쓴다" in seen["p"]
 
 
+def test_clip_matching_the_words_comes_first():
+    """말에 맞는 컷을 비트 안에서 앞으로 올린다(사장님: 태깅이 맞으면 가져오면 되잖아)."""
+    sm = _sm([("v-0", "", 2.0), ("v-1", "", 2.0)])
+    sm["v-0"]["change"] = "가림막을 벽에 설치한다"
+    sm["v-1"]["change"] = "물티슈로 표면을 닦아낸다"
+    got = ep._order_clips_by_words("물티슈로 쓱 닦아도 끝이에요",
+                                   [sm["v-0"], sm["v-1"]])
+    assert got[0]["seg_id"] == "v-1"
+
+
+def test_clip_order_kept_when_nothing_matches():
+    sm = _sm([("v-0", "", 2.0), ("v-1", "", 2.0)])
+    got = ep._order_clips_by_words("전혀 다른 이야기", [sm["v-0"], sm["v-1"]])
+    assert [s["seg_id"] for s in got] == ["v-0", "v-1"]
+
+
+def test_later_source_intro_problem_shots_are_dropped():
+    """두 번째 소스의 도입부(문제·before=더러운 상태)가 후반에 끼면 안 된다."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("a-1", "라마바요", 2.0),
+              ("b-0", "사아자요", 2.0), ("b-1", "차카타요", 2.0)])
+    sm["b-0"]["shot_role"] = "문제"
+    ids = [s["seg_id"] for g in ep._pick_timeline(sm, 30) for s in g]
+    assert "b-0" not in ids and "b-1" in ids
+
+
+def test_first_source_keeps_its_intro():
+    sm = _sm([("a-0", "가나다요", 2.0), ("a-1", "라마바요", 2.0)])
+    sm["a-0"]["shot_role"] = "문제"
+    ids = [s["seg_id"] for g in ep._pick_timeline(sm, 30) for s in g]
+    assert "a-0" in ids
+
+
 def test_empty_inventory_is_safe():
     assert ep._pick_timeline({}, 30) == []
     assert ep._rewrite_block([]) == ""
