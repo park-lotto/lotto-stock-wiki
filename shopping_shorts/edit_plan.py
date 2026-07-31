@@ -377,6 +377,54 @@ def _pick_timeline(seg_map, target_seconds):
     return groups
 
 
+_SLOT_SEQ_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "order": {"type": "array", "items": {"type": "string"}},
+    },
+    "required": ["order"],
+}
+
+
+def _slot_seq_prompt(seg_map):
+    lines = ["아래는 두 영상에서 뽑은 장면 조각들이다. 각 조각의 역할(무슨 내용인지)을 보고,",
+             "하나의 자연스러운 스토리로 이어지도록 순서를 정하라. 같은 제품이라도 두 영상이",
+             "서로 다른 훅·전개를 가질 수 있으니, 소스에 얽매이지 말고 내용 흐름으로 판단하라.",
+             "모든 조각을 반드시 한 번씩만 써라 — 순서만 정하고 빼거나 지어내지 마라."]
+    for sid, s in seg_map.items():
+        lines.append(f"- [{sid}] {s.get('shot_role', '')} · {s.get('scene_desc', '')} "
+                      f"· 원본 대사: {s.get('text', '')}")
+    lines.append("\n반드시 JSON {\"order\": [seg_id, ...]} 형식으로만 답하라.")
+    return "\n".join(lines)
+
+
+def _pick_slot_sequence(seg_map, target_seconds=None, call=None):
+    """두 영상의 태깅 조각을 Gemini 1회 호출로 스토리 순서로 정렬한다(2026-08-01).
+
+    _pick_timeline(소스순서+시간순 강제 이어붙이기)을 대체 — 두 영상의 서사가 다르면
+    억지로 이어붙던 문제를 없앤다. 모델이 모르는 seg_id를 지어내면 버리고, 실제 seg_map에
+    있는데 모델이 빠뜨린 것은 원래 순서(입력 순서)대로 뒤에 이어붙인다(fail-open).
+    call이 없거나 실패(None 반환)하면 원본 시간순(dict 삽입 순서)으로 폴백한다."""
+    if not seg_map:
+        return []
+    caller = call or _vault_call
+    resp = caller(_slot_seq_prompt(seg_map), _SLOT_SEQ_SCHEMA)
+    order = (resp or {}).get("order") if isinstance(resp, dict) else None
+    if not order:
+        return [dict(s) for s in seg_map.values()]
+    seen = set()
+    out = []
+    for sid in order:
+        if sid in seg_map and sid not in seen:
+            out.append(dict(seg_map[sid]))
+            seen.add(sid)
+    for sid, s in seg_map.items():          # 모델이 빠뜨린 것 뒤에 보충
+        if sid not in seen:
+            out.append(dict(s))
+            seen.add(sid)
+    return out
+
+
 def _rewrite_block(groups):
     """고른 구간들을 '이 자리에서 하던 말을 우리 말로 바꿔 써라' 프롬프트 블록으로."""
     if not groups:

@@ -17,6 +17,43 @@ def _sm(spec):
     return m
 
 
+def test_pick_slot_sequence_returns_all_segments_once():
+    """Gemini가 고른 순서가 무엇이든, 입력된 seg_id 전부가 정확히 한 번씩 나와야 한다."""
+    sm = _sm([("v0-1", "가나다요", 2.0), ("v0-2", "라마바요", 2.0),
+              ("v1-1", "사아자요", 2.0), ("v1-2", "차카타요", 2.0)])
+
+    def fake_call(prompt, schema):
+        # Gemini 응답 흉내: 소스를 교차하는 순서
+        return {"order": ["v1-1", "v0-1", "v1-2", "v0-2"]}
+
+    seq = ep._pick_slot_sequence(sm, call=fake_call)
+    ids = [s["seg_id"] for s in seq]
+    assert sorted(ids) == sorted(sm.keys())
+    assert ids == ["v1-1", "v0-1", "v1-2", "v0-2"]
+
+
+def test_pick_slot_sequence_drops_unknown_ids_from_model():
+    """모델이 없는 seg_id를 지어내면 그 항목만 버리고 나머지는 순서 유지."""
+    sm = _sm([("v0-1", "가나다요", 2.0), ("v0-2", "라마바요", 2.0)])
+
+    def fake_call(prompt, schema):
+        return {"order": ["v0-1", "v9-99", "v0-2"]}
+
+    seq = ep._pick_slot_sequence(sm, call=fake_call)
+    assert [s["seg_id"] for s in seq] == ["v0-1", "v0-2"]
+
+
+def test_pick_slot_sequence_falls_back_when_call_fails():
+    """Gemini 호출이 실패(None 반환)하면 _pick_timeline과 동등한 폴백(시간순 이어붙이기)으로."""
+    sm = _sm([("v0-1", "가나다요", 2.0), ("v0-2", "라마바요", 2.0)])
+
+    def fake_call(prompt, schema):
+        return None
+
+    seq = ep._pick_slot_sequence(sm, call=fake_call)
+    assert [s["seg_id"] for s in seq] == ["v0-1", "v0-2"]
+
+
 def test_ends_sentence_uses_korean_endings():
     assert ep._ends_sentence("잔소리 들었는데 설치해놨더라고요")
     assert ep._ends_sentence("확 줄어든 거 있죠?")
