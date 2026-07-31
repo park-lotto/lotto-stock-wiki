@@ -67,6 +67,30 @@ def test_beat_count_mismatch_is_safe():
     assert beats[0]["primary"]["seg_id"] == "v-0"      # 앞에서부터 순서대로
 
 
+def test_source_order_is_preserved_within_a_source():
+    """소스 안에서는 원본 시간순 그대로 — CTA 화면이 앞으로 튈 수 없다."""
+    sm = _sm([("v-0", "가나다요", 2.0), ("v-1", "라마바요", 2.0), ("v-2", "사아자요", 2.0)])
+    ids = [s["seg_id"] for g in ep._pick_timeline(sm, 30) for s in g]
+    assert ids == ["v-0", "v-1", "v-2"]
+
+
+def test_trailing_ending_shots_of_non_final_source_are_dropped():
+    """A를 다 쓰고 B를 붙이면 A의 마무리 화면이 한가운데 온다 → 꼬리의 완성컷은 잘라낸다."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("a-1", "라마바요", 2.0), ("a-2", "완성이요", 2.0),
+              ("b-0", "사아자요", 2.0)])
+    sm["a-2"]["shot_role"] = "완성"
+    ids = [s["seg_id"] for g in ep._pick_timeline(sm, 30) for s in g]
+    assert "a-2" not in ids and "b-0" in ids
+
+
+def test_final_source_keeps_its_ending_shot():
+    """마지막 소스의 완성컷은 남긴다 — 마무리는 끝에서 나와야 한다."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("a-1", "완성이요", 2.0)])
+    sm["a-1"]["shot_role"] = "완성"
+    ids = [s["seg_id"] for g in ep._pick_timeline(sm, 30) for s in g]
+    assert "a-1" in ids
+
+
 def test_empty_inventory_is_safe():
     assert ep._pick_timeline({}, 30) == []
     assert ep._rewrite_block([]) == ""
