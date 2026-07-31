@@ -123,7 +123,9 @@ def test_build_scene_first_plan_recommends_best(monkeypatch):
                 {"role": "cta", "narration": _long2, "seg_ids": ["s0-1"], "fit": 2, "forced": True}]}]}
 
     out = edit_plan.build_scene_first_plan(src, "원본대본", 20, n_candidates=2, call=fake_call)
-    assert len(out["candidates"]) == 2
+    # 2026-07-31: 길이·말투 하한에 미달하면 후보를 더 뽑아 붙인다(재생성). 가짜 call은 늘
+    # 같은 후보를 주므로 개수가 늘 수 있다 — 여기서 지킬 것은 '추천이 하나'이지 개수가 아니다.
+    assert len(out["candidates"]) >= 2
     rec = [c for c in out["candidates"] if c["recommended"]]
     assert len(rec) == 1 and rec[0]["story"]["hook"] == "A"        # 고fit 후보 추천
     # 2026-07-31 덩어리 믹스: 화면은 모델이 아니라 **코드가** 확정된 훅/스토리/CTA 덩어리에서

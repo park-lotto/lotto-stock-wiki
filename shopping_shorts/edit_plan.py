@@ -397,7 +397,12 @@ def _rewrite_block(groups):
     lines.append(f"\n★비트를 **정확히 {len(groups)}개** 만들어라 — i번째 비트가 위 i번 세트다. "
                  "비트의 seg_ids에는 그 세트의 seg_id를 넣어라(순서를 바꾸지 마라).")
     lines.append("★원본 문장을 그대로 베끼지 마라. 같은 사건을 다른 말로 써라.")
-    lines.append("★1번은 훅이다 — 스크롤이 멈추게 세게. 마지막 비트는 CTA(댓글 유도)로 끝내라.")
+    # 2026-07-31 실측(사장님 "대본이 후킹 중복"): 첫 세트에 훅 문장을 2~3개 몰아 썼다 —
+    # A안 "놀라시나요?"+"피곤하시죠?", C안 "깨지 마세요"+"놀라 깨시나요?"+"일어나지 마세요!".
+    # 같은 말을 다른 표현으로 반복하는 것도 중복이다.
+    lines.append("★1번은 훅이다 — **한 문장으로** 스크롤이 멈추게 세게. 같은 뜻을 두 번 "
+                 "말하지 마라(질문을 연달아 던지거나 '~하지 마세요'를 반복하지 마라). "
+                 "마지막 비트는 CTA(댓글 유도)로 끝내라.")
     lines.append("★원본이 무음인 자리는 화면에 보이는 것만 말해라. 없는 걸 지어내지 마라.")
     return "\n".join(lines)
 
@@ -1325,7 +1330,7 @@ def _lead_with_hook(narration, hook):
     return f"{opener} {n}"
 
 
-def _ground_candidate(cand, seg_map, structure="free"):
+def _ground_candidate(cand, seg_map, structure="free", lead_hook=True):
     """후보 비트(narration + seg_ids 다중컷)를 build_edit_plan 반환형 EDL로 grounding.
     seg_ids[0]=primary, 나머지=alternates(연속재생). start/end/scene_desc는 코드가 되붙인다.
     primary 무효 비트는 드롭. 유효 비트 0개면 None.
@@ -1345,7 +1350,11 @@ def _ground_candidate(cand, seg_map, structure="free"):
                 seen.add(g["seg_id"])
         narration = beat.get("narration", "")
         cap_lines = beat.get("caption_lines") or None
-        if not beats_out:                       # 첫 유효 비트 = 훅 자리
+        # ★리라이트 믹스에선 얹지 않는다(2026-07-31 사장님 "대본이 후킹 중복").
+        #   첫 세트가 이미 훅 자리이고 모델이 그 자리 대사를 쓴 상태라, hook 필드를 덧붙이면
+        #   같은 말이 두 번 나온다 — 실측 B안: "카페에 두면 다들 어디서 샀냐고 물어봐요"
+        #   뒤에 "카페에 두면 다들 어디서 샀냐고 물어보고"가 그대로 이어졌다.
+        if lead_hook and not beats_out:          # 첫 유효 비트 = 훅 자리
             new_narr = _lead_with_hook(narration, hook)
             if new_narr != narration:           # 훅을 얹었으면 옛 자막줄은 무효(정규식 폴백)
                 cap_lines = None
@@ -2202,7 +2211,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             r.setdefault("_backbone_video", bb_video)   # 핑퐁 순서고정이 이 백본을 쓴다
       cands = []
       for r in raws:
-        plan = _ground_candidate(r, seg_map)
+        plan = _ground_candidate(r, seg_map, lead_hook=not tl_groups)
         if plan is None:
             continue
         # ★화면은 원본 시간순 그대로 코드가 배정한다(리라이트 믹스).
@@ -2300,11 +2309,17 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     # 힌트로 1회 재생성해 합친다. ②선택 감점(_length_penalty)이 짧은 후보를 강등하므로 병합 후
     # 채점하면 긴 후보가 자연히 추천된다. 재생성은 '전부 짧을 때만' — 소스 footage 부족이 아니라
     # 생성 자체가 목표초에 못 미친 경우로 한정(과금 게이트, 1회 상한, 실패해도 기존 후보 유지).
-    if cands and target_seconds and target_seconds > 0:
+    # ★리라이트 믹스는 목표초가 아니라 **세트 총 길이**가 상한이다(2026-07-31).
+    #   재료가 22초치뿐인데 목표가 30초면 아무리 다시 뽑아도 못 채운다 — 그대로 두면 매번
+    #   Gemini를 한 번 더 부르고(과금) 후보가 6개로 불어난다(사장님 "대본이 6개?").
+    len_goal = target_seconds
+    if tl_groups:
+        len_goal = min(target_seconds, sum(_secs(g) for g in tl_groups))
+    if cands and len_goal and len_goal > 0:
         def _cand_secs(c):
             return sum(float(b.get("target_seconds") or 0.0)
                        for b in c["plan"].get("beats", []))
-        if max((_cand_secs(c) for c in cands), default=0.0) < 0.92 * target_seconds:
+        if max((_cand_secs(c) for c in cands), default=0.0) < 0.92 * len_goal:
             raws2 = _scene_first_candidates(
                 inventory, reference_text, target_seconds, n=n_candidates, call=_call,
                 bank_context=bank_context, order_block=order_block, lengthen=True,
