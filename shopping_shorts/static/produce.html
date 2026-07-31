@@ -3948,7 +3948,7 @@ function _syncPreviewCandHint(label, phase){
 // weak_sources로 내려준다 — 조용히 A영상으로만 만들어지는 걸 사장님이 모르는 게 문제였다.
 function showWeakSources(weak){
   const el = document.getElementById('mixCandidates');
-  if(!el) return;
+  if(!el || !el.dataset) return;
   if(!weak || !weak.length){ el.dataset.weak=''; return; }
   const txt = weak.map(w => `${w.n}번 영상(${w.coverage!=null?Math.round(w.coverage*100)+'%':'거의 없음'})`).join(', ');
   el.dataset.weak = '<div style="margin-bottom:8px;padding:8px 10px;border-radius:8px;'
@@ -3964,7 +3964,8 @@ function renderCandidates(list){
   if(!list || list.length < 2){ el.innerHTML = ''; CAND_LIST = []; return; }
   CAND_LIST = list;
   const selIdx = _candSelIdx(list);
-  el.innerHTML = (el.dataset.weak || '')      // 빈약 소스 경고(있을 때만)
+  // dataset이 없는 환경(테스트 스텁)도 있으므로 방어적으로 읽는다.
+  el.innerHTML = ((el.dataset && el.dataset.weak) || '')   // 빈약 소스 경고(있을 때만)
     + '<div style="font-size:12px;color:var(--sub);margin-bottom:8px">🧬 새 대본 '
     + list.length + '개 만들었어요 — <b style="color:var(--accent)">카드를 눌러 하나를 고르세요</b>(추천이 이미 선택돼 있어요)</div>'
     // ★지금 어떤 대본으로 미리보기를 만드는지 항상 보이는 상태줄(2026-07-25 사장님: "체크가 됐는지 모르겠다").
