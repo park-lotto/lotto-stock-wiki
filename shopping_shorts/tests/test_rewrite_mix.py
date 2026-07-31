@@ -183,6 +183,33 @@ def test_first_source_keeps_its_intro():
     assert "a-0" in ids
 
 
+def test_rewrite_mix_does_not_prepend_hook_again():
+    """★후킹 중복 차단(2026-07-31 사장님). 리라이트 믹스는 첫 세트가 이미 훅 자리라
+    hook 필드를 덧붙이면 같은 말이 두 번 나온다(실측 B안: '카페에 두면 다들 어디서
+    샀냐고 물어봐요' 뒤에 같은 문장이 그대로 이어짐)."""
+    sm = _sm([("v-0", "카페에 두면 다들 어디서 샀냐고 물어봐요", 2.0)])
+    cand = {"hook": "이거 카페에 두면 다들 어디서 샀냐고 물어봐요",
+            "beats": [{"role": "훅", "narration": "다들 어디서 샀냐고 물어보더라고요",
+                       "seg_ids": ["v-0"], "fit": 5}]}
+    plan = ep._ground_candidate(cand, sm, lead_hook=False)
+    assert plan["beats"][0]["narration"] == "다들 어디서 샀냐고 물어보더라고요"
+
+
+def test_legacy_path_still_leads_with_hook():
+    sm = _sm([("v-0", "본문", 2.0)])
+    cand = {"hook": "이거 진짜 물건이에요",
+            "beats": [{"role": "훅", "narration": "그래서 써봤는데요",
+                       "seg_ids": ["v-0"], "fit": 5}]}
+    plan = ep._ground_candidate(cand, sm, lead_hook=True)
+    assert plan["beats"][0]["narration"].startswith("이거 진짜 물건이에요")
+
+
+def test_prompt_forbids_repeating_the_hook():
+    sm = _sm([("v-0", "기름이 튀었거든요", 2.0)])
+    txt = ep._rewrite_block(ep._pick_timeline(sm, 30))
+    assert "한 문장으로" in txt and "두 번 말하지 마라" in txt
+
+
 def test_empty_inventory_is_safe():
     assert ep._pick_timeline({}, 30) == []
     assert ep._rewrite_block([]) == ""
