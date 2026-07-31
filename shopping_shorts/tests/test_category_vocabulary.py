@@ -29,7 +29,8 @@ def test_categories_endpoint_returns_controlled_vocabulary(monkeypatch, tmp_path
     assert d["ok"] is True
     cats = set(d["categories"])
     # categorize.py의 KEYWORDS 키 — 통제 어휘 실측(브리프 §통제 어휘)
-    assert {"홈템", "레시피", "가전", "뷰티"} <= cats  # 2026-07-16: 인테리어+생활용품 → 홈템
+    assert {"홈템", "레시피", "뷰티"} <= cats   # 2026-07-16 인테리어+생활용품→홈템, 2026-07-31 가전→홈템
+    assert "가전" not in cats, "합친 어휘가 통제 목록에 남아 있으면 어휘가 갈라진다"
 
 
 def test_categories_endpoint_includes_db_values_not_in_keywords(monkeypatch, tmp_path):
@@ -75,10 +76,10 @@ def test_update_extract_category_does_not_touch_structure(tmp_path):
     st.save_script("ABC", {"full_text": "본문", "segments": []}, category="기타")
     st.save_extract_structure("ABC", {"hook": "질문형"})
 
-    st.update_extract_category("ABC", "가전")
+    st.update_extract_category("ABC", "뷰티")
 
     saved = st.get_extract("ABC")
-    assert saved["category"] == "가전"
+    assert saved["category"] == "뷰티"
     assert saved["structure"] == {"hook": "질문형"}
 
 
@@ -131,19 +132,19 @@ def test_cache_hit_does_not_call_analyze_structure_synchronously(monkeypatch, tm
 # ---------------------------------------------------------------------------
 
 def test_category_correction_endpoint_persists_and_preserves_original_text(monkeypatch, tmp_path):
-    """이미 category='레시피'로 저장된 행에 '가전' 교정 요청 →
-    script_extracts.category가 '가전'이 되고 script_json(원본 텍스트)은 byte-identical 유지(C-1 회귀가드)."""
+    """이미 category='레시피'로 저장된 행에 '뷰티' 교정 요청 →
+    script_extracts.category가 '뷰티'가 되고 script_json(원본 텍스트)은 byte-identical 유지(C-1 회귀가드)."""
     client, st = _client(monkeypatch, tmp_path)
     original = {"full_text": "감자전 만드는 법, 아주 자세한 원본 대본입니다.",
                 "segments": [{"text": "감자전 만드는 법", "start": 0.0, "end": 1.2}]}
     st.save_script("ABC", original, category="레시피")
 
-    r = client.post("/api/produce/category", json={"shortcode": "ABC", "category": "가전"})
+    r = client.post("/api/produce/category", json={"shortcode": "ABC", "category": "뷰티"})
     assert r.status_code == 200, r.text
-    assert r.json() == {"ok": True, "shortcode": "ABC", "category": "가전"}
+    assert r.json() == {"ok": True, "shortcode": "ABC", "category": "뷰티"}
 
     saved = st.get_extract("ABC")
-    assert saved["category"] == "가전"
+    assert saved["category"] == "뷰티"
     assert saved["full_text"] == original["full_text"]
     assert saved["segments"] == original["segments"]
 

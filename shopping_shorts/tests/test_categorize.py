@@ -12,7 +12,8 @@ def test_beauty():
     assert categorize("뷰티템 추천", "") == "뷰티"
 
 def test_appliance():
-    assert categorize("가전 리뷰", "최신 로봇청소기 언박싱") == "가전"
+    # 2026-07-31 가전→홈템 병합: 가전 소재도 홈템으로 들어온다
+    assert categorize("가전 리뷰", "최신 로봇청소기 언박싱") == "홈템"
 
 def test_hometem_from_household_side():
     # 옛 '생활용품'도 같은 홈템 — 양쪽 키워드를 다 흡수해야 한다
@@ -57,11 +58,10 @@ def test_ctype_mapping():
     # 홈템=혼합형: 병합 전 인테리어(비법형)·생활용품(제품형)이 정반대였다
     assert ctype_of("홈템") == "혼합형"
     assert ctype_of("레시피") == "비법형"
-    assert ctype_of("가전") == "제품형"
     assert ctype_of("뷰티") == "혼합형"
     assert ctype_of("기타") == "기타"
 
 
 def test_classify_returns_both_axes():
     out = classify("가전 리뷰", "최신 로봇청소기 언박싱")
-    assert out == {"topic": "가전", "ctype": "제품형"}
+    assert out == {"topic": "홈템", "ctype": "혼합형"}
