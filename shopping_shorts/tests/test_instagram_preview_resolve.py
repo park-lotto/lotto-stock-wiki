@@ -52,3 +52,12 @@ def test_both_pages_show_loading_while_resolving():
     for name in ("index.html", "discover.html"):
         html = (pathlib.Path(media_download.__file__).parent / "static" / name).read_text(encoding="utf-8")
         assert "영상 불러오는 중" in html, f"{name}에 로딩 표시가 없다"
+
+
+def test_play_badge_shown_for_instagram_cards():
+    """배지(▶)가 없으면 눌러도 되는 곳인지 몰라 '안 된다'로 보인다(2026-07-31 제보).
+    배선 조건과 배지 조건이 어긋나 있었다 — 클릭은 붙는데 표시만 없었다."""
+    idx = (pathlib.Path(media_download.__file__).parent / "static" / "index.html").read_text(encoding="utf-8")
+    dis = (pathlib.Path(media_download.__file__).parent / "static" / "discover.html").read_text(encoding="utf-8")
+    assert "(i.platform||PLATFORM)==='instagram')?'<span class=\"play-badge\">" in idx
+    assert "(i.video_url||i.shortcode)?'<span class=\"play-badge\">" in dis

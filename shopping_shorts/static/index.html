@@ -1346,7 +1346,7 @@ function render(){
       <div class="thumb">
         <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.platform==='youtube'?`onclick="playYoutube(this,'${i.shortcode}')"`:(i.platform==='tiktok'?`onclick="playTiktok(this,'${i.shortcode}')"`:((i.platform||PLATFORM)==='instagram'?`onclick="playInstagram(this,'${i.shortcode}')"`:'')))} loading="lazy" onerror="this.style.visibility='hidden'">
         ${badgeHTML(i, _bctx)}
-        ${(i.video_url||i.platform==='youtube'||i.platform==='tiktok')?'<span class="play-badge">▶</span>':''}
+        ${(i.video_url||i.platform==='youtube'||i.platform==='tiktok'||(i.platform||PLATFORM)==='instagram')?'<span class="play-badge">▶</span>':''}
       </div>
       <div class="body">
         <div class="rank"><span>#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</span><button class="blockbtn" title="이 채널을 영구 차단 — 지금 바로 가리고, 다음 수집·업데이트에도 안 올라옵니다" onclick="blockChannel('${esc(i.username||'')}','${esc(i.name||'')}',this)">🚫 차단</button></div>
