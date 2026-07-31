@@ -25,11 +25,17 @@ def test_inventory_exposes_shot_role_and_is_key():
     assert "역할" not in seg_map["v1-2"]["scene_desc"]
 
 
-def test_prompt_has_hook_visual_rule():
+def test_prompt_focuses_on_action_not_hook_recipe():
+    """2026-07-31 사장님 지시로 훅 비주얼 규칙(역할:완성 우선·준비동작 금지)은 걷어냈다.
+
+    규칙을 쌓을수록 서로 이겨서(감각어↑→어미 붕괴→훅 중복) 도돌이표가 됐기 때문.
+    대신 '중요한 액션(변화)에 집중하고 그 seg_id를 붙여라'만 남긴다 —
+    인벤토리는 역할/실증을 그대로 노출하므로 모델이 필요하면 스스로 쓴다(위 테스트).
+    """
     src = inspect.getsource(ep._scene_first_candidates)
-    assert "역할:완성" in src
-    assert "준비동작" in src
-    assert "시간순" in src
+    assert "중요한 액션" in src and "변화:" in src
+    assert "역할:완성" not in src          # 훅 화면을 규칙으로 못박지 않는다
+    assert "5단계" not in src              # 스파인 강제도 제거
 
 
 def test_reconcile_catches_forced_beats_even_if_fit_high():
