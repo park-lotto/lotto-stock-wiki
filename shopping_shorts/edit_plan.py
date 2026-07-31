@@ -305,6 +305,106 @@ def _build_scene_blocks(seg_map, target_seconds):
     return out
 
 
+# ── 리라이트 믹스(2026-07-31, 레퍼런스 프로그램 역분석 결과) ─────────────────
+# 레퍼런스 완성품을 프레임으로 뜯어보니 자기 자막이 **그 순간 원본 자막을 바꿔 말한 것**이었다:
+#   "밖에 나가지 마세요"→"쿨링패치 그냥 버렸나요" / "변하는데"→"말랑말랑 젤리 같아요"
+#   "거품처럼 나오더니"→"이거 뿌리는 순간" / "만드는 방법은"→"신기한 슬라임 완성"
+# 즉 **원본 타임라인을 뼈대로 두고 문장만 갈아끼운다.** 화면을 새로 찾을 필요가 없다 —
+# 원본이 이미 그 말에 그 화면을 붙여놨기 때문이다. 우리는 반대로 대본을 새로 쓰고 화면을
+# 찾아 붙여서, 못 찾으면 어긋나고 모자라면 때웠다(며칠간의 두더지 잡기).
+REWRITE_MIX = os.getenv("REWRITE_MIX", "1") == "1"   # 0이면 옛 경로(덩어리/스파인)
+_MIN_LINE_SECS = 1.2      # 이보다 짧은 구간은 옆과 합친다(한 줄이 3자짜리가 되는 걸 막는다)
+# 문장이 끝났다고 볼 종결(한국어 구어 자막은 마침표가 자주 없다 → 어미로 판정).
+_SENT_END = ("요", "다", "죠", "네", "까", "군", "걸", "야", "임", "함", "죠?", "래요", "거든요")
+
+
+def _ends_sentence(text):
+    """원본 자막 한 조각이 **문장을 끝냈나**. 구두점이 없어도 종결어미로 판정한다."""
+    t = (text or "").strip().rstrip("…~")
+    if not t:
+        return False
+    if t[-1] in ".!?。":
+        return True
+    return t.rstrip("!?.").endswith(_SENT_END)
+
+
+def _pick_timeline(seg_map, target_seconds):
+    """쓸 구간을 **원본 시간순 그대로** 고른다(레퍼런스 방식).
+
+    - 가장 재료가 많은 소스를 뼈대로 삼아 시간순으로 담는다(원본 편집 리듬을 그대로 탄다).
+    - 목표에 못 미치면 다른 소스의 구간을 이어 붙인다(레퍼런스도 소스를 오간다).
+    - 너무 짧은 구간은 옆과 합쳐 한 줄이 지나치게 짧아지지 않게 한다.
+    반환: [[seg,...], ...] — 바깥 리스트가 '한 줄'이 붙을 단위."""
+    if not seg_map:
+        return []
+    by_vid = {}
+    for s in seg_map.values():
+        by_vid.setdefault(s.get("video_id"), []).append(s)
+    order = sorted(by_vid, key=lambda v: -len(by_vid[v]))     # 재료 많은 소스부터
+    picked, acc = [], 0.0
+    for vid in order:
+        for s in sorted(by_vid[vid], key=lambda s: _seg_seq(s["seg_id"])[1]):
+            if acc >= target_seconds:
+                break
+            picked.append(s)
+            acc += _secs([s])
+        if acc >= target_seconds:
+            break
+    # ★한 세트 = 원본 대사 **한 문장이 시작해서 끝나는 장면까지**(2026-07-31 사장님).
+    #   시간으로 끊으면 문장 중간에서 화면이 갈려 말과 그림이 어긋난다. 원본이 한 문장을
+    #   말하는 동안 쓴 화면 전부가 한 덩어리다 — 그 자리에 우리 문장 하나를 갈아끼운다.
+    groups, cur = [], []
+    for s in picked:
+        cur.append(s)
+        if _ends_sentence(s.get("text")) and _secs(cur) >= _MIN_LINE_SECS:
+            groups.append(cur); cur = []
+    if cur:
+        (groups[-1].extend(cur) if groups else groups.append(cur))
+    return groups
+
+
+def _rewrite_block(groups):
+    """고른 구간들을 '이 자리에서 하던 말을 우리 말로 바꿔 써라' 프롬프트 블록으로."""
+    if not groups:
+        return ""
+    lines = ["[★대사를 새로 지어내지 마라 — 이 자리에서 원본이 하던 말을 우리 말로 바꿔 쓴다]",
+             "아래는 우리가 쓸 구간을 시간순으로 나열한 것이다. 화면은 이미 정해졌다.",
+             "각 줄마다 **그 자리의 원본 대사와 화면**을 보고, 같은 내용을 **다른 표현으로** "
+             "새로 써라. 사건·순서·의미는 원본 그대로, 말맛만 우리 것으로."]
+    for i, g in enumerate(groups, 1):
+        secs = round(_secs(g), 1)
+        budget = max(6, int(secs * _SYLLABLES_PER_SEC))
+        said = " ".join((s.get("text") or "").strip() for s in g).strip()
+        seen = " / ".join(((s.get("change") or s.get("scene_desc") or "").strip())[:34]
+                          for s in g)
+        lines.append(f"\n{i}. [{g[0]['seg_id']}] {secs}초 · **{budget}자 이내**")
+        lines.append(f"   화면: {seen}")
+        lines.append(f"   원본이 한 말: {said or '(무음)'}")
+    lines.append(f"\n★비트를 **정확히 {len(groups)}개** 만들어라 — i번째 비트가 위 i번 세트다. "
+                 "비트의 seg_ids에는 그 세트의 seg_id를 넣어라(순서를 바꾸지 마라).")
+    lines.append("★원본 문장을 그대로 베끼지 마라. 같은 사건을 다른 말로 써라.")
+    lines.append("★1번은 훅이다 — 스크롤이 멈추게 세게. 마지막 비트는 CTA(댓글 유도)로 끝내라.")
+    lines.append("★원본이 무음인 자리는 화면에 보이는 것만 말해라. 없는 걸 지어내지 마라.")
+    return "\n".join(lines)
+
+
+def _assign_timeline(beats, groups):
+    """화면을 **원본 시간순 그대로** 코드가 배정한다(모델이 뭘 골랐든 무시).
+
+    비트 수와 구간 수가 달라도 앞에서부터 순서대로 나눠 준다 — 순서가 곧 원본 순서라
+    말과 화면이 어긋날 수가 없다."""
+    if not beats or not groups:
+        return beats
+    n = len(beats)
+    for i, b in enumerate(beats):
+        lo = i * len(groups) // n
+        hi = max(lo + 1, (i + 1) * len(groups) // n)
+        chunk = [s for g in groups[lo:hi] for s in g] or groups[min(lo, len(groups) - 1)]
+        b["primary"] = dict(chunk[0])
+        b["alternates"] = [dict(s) for s in chunk[1:]]
+    return beats
+
+
 def _blocks_order_block(blocks):
     """확정된 세 덩어리를 대본 프롬프트용 블록으로. 덩어리마다 **글자수 예산**을 준다."""
     if not blocks:
@@ -1996,7 +2096,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     #    → 대본 생성에 하드 제약으로 넣어 narration-first를 뒤집는다('장면이 운전대').
     #  백본 모드(backbone_base on, opt-in): 특정 백본 영상의 시간순을 순서 뼈대로 쓴다(기존 동작 보존).
     # 설계: docs/superpowers/specs/2026-07-29-장면스파인-먼저-재설계-design.md
-    bb_video, order_block, blocks = None, "", []
+    bb_video, order_block, blocks, tl_groups = None, "", [], []
     if backbone_base:
         from shopping_shorts import backbone
         bb_video = backbone.pick_backbone(source_scripts, meta=backbone_meta,
@@ -2008,9 +2108,15 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         #   화면이 먼저 정해지므로 덩어리 초 → 글자수 예산을 대본에 줄 수 있고,
         #   배정도 코드가 강제한다(_assign_blocks) — 옛 스파인은 "고정이다"라고 말만 하고
         #   지켰는지 검사하지 않아 매번 다르게 나왔다. BLOCK_MIX=0으로 즉시 롤백.
-        blocks = _build_scene_blocks(seg_map, target_seconds) if BLOCK_MIX else []
-        order_block = (_blocks_order_block(blocks) if blocks
-                       else _spine_order_block(_build_scene_spine(seg_map, detected)))
+        # ★리라이트 믹스가 최우선(2026-07-31): 원본 타임라인을 뼈대로 두고 문장만 갈아끼운다.
+        #   화면 매칭이 애초에 필요 없어진다 — 레퍼런스 프로그램이 실제로 쓰는 방식.
+        tl_groups = _pick_timeline(seg_map, target_seconds) if REWRITE_MIX else []
+        if tl_groups:
+            order_block = _rewrite_block(tl_groups)
+        else:
+            blocks = _build_scene_blocks(seg_map, target_seconds) if BLOCK_MIX else []
+            order_block = (_blocks_order_block(blocks) if blocks
+                           else _spine_order_block(_build_scene_spine(seg_map, detected)))
     src_texts = [s.get("full_text", "") for s in source_scripts]
 
     def _ground_score(raws):
@@ -2022,8 +2128,10 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         plan = _ground_candidate(r, seg_map)
         if plan is None:
             continue
-        # ★화면은 확정된 덩어리 순서대로 코드가 배정한다(말은 모델 것, 화면은 코드 것).
-        if blocks:
+        # ★화면은 원본 시간순 그대로 코드가 배정한다(리라이트 믹스).
+        if tl_groups:
+            plan["beats"] = _assign_timeline(plan["beats"], tl_groups)
+        elif blocks:
             plan["beats"] = _assign_blocks(plan["beats"], blocks)
         # fit 정직화(페이블): 행위 불일치 증거가 있으면 자기신고 fit을 깎는다 — 스왑버튼·
         # 약비트 재작성·추천점수가 실제로 작동. ping_pong이 스왑으로 고치면 5로 복원됨.
