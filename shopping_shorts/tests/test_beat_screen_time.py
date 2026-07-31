@@ -62,6 +62,16 @@ def test_reuses_when_inventory_exhausted():
     assert ep._beat_screen_secs(b) > 1.0        # 뭐라도 더 붙었다
 
 
+def test_prefers_scene_that_matches_the_narration():
+    """말이 통하는 장면부터 채운다 — 아무 컷이나 채우면 렌더 땜질을 앞당긴 것뿐이다."""
+    sm = _seg_map(4)
+    sm["A-3"]["change"] = "기름때가 물에 씻겨나간다"
+    b = _beat("A-0", 3.0, sm)
+    b["narration"] = "기름때가 물로 싹 씻겨나가요"
+    ep._fill_beat_screen_time([b], sm)
+    assert b["alternates"][0]["seg_id"] == "A-3"
+
+
 def test_prompt_states_the_duration_rule():
     import inspect
     src = inspect.getsource(ep._scene_first_candidates)
