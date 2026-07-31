@@ -410,7 +410,34 @@ def _assign_timeline(beats, groups):
         chunk = [s for g in groups[lo:hi] for s in g] or groups[min(lo, len(groups) - 1)]
         b["primary"] = dict(chunk[0])
         b["alternates"] = [dict(s) for s in chunk[1:]]
+        _flag_offtopic(b, chunk)
     return beats
+
+
+def _flag_offtopic(beat, segs):
+    """이 자리의 **결**과 우리 문장이 겹치는지 검사한다(2026-07-31 사장님).
+
+    "문장으로 소스를 끊어내는 건데, 그 화면에 전혀 다른 대본이 들어가고 있는 거 아니야?
+     그 장면엔 그 대본의 결이 들어가야 하잖아."
+    → 프롬프트로 요구만 하고 확인을 안 하면 지켜지는지 알 수 없다(며칠간 반복된 실패 패턴).
+      우리 문장과 [그 자리 원본 대사 + 화면 + 변화]의 낱말이 **하나도 안 겹치면** 딴소리로
+      보고 fit을 깎고 forced를 세운다 — 하류의 약비트 재작성·스왑·추천 점수가 그때 반응한다.
+      (표현을 바꿔 쓰라고 했으니 '많이 겹쳐야' 한다고는 보지 않는다. 0겹침만 잡는다.)
+    """
+    # 조사·어미가 붙어 낱말이 그대로는 안 겹친다("기름이" vs "기름") → 앞 2글자로 비교.
+    def _stems(txt):
+        return {t[:2] for t in _claim_key(txt)}
+
+    ours = _stems(beat.get("narration") or "")
+    theirs = set()
+    for s in segs:
+        theirs |= _stems(" ".join(
+            [s.get("text") or "", s.get("change") or "", s.get("scene_desc") or ""]))
+    if ours and theirs and not (ours & theirs):
+        beat["fit"] = min(int(beat.get("fit") or 5), 2)
+        beat["forced"] = True
+        beat["offtopic"] = True
+    return beat
 
 
 def _blocks_order_block(blocks):

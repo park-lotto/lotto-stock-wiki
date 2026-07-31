@@ -91,6 +91,26 @@ def test_final_source_keeps_its_ending_shot():
     assert "a-1" in ids
 
 
+def test_offtopic_line_is_flagged():
+    """그 자리의 결과 한 낱말도 안 겹치면 딴소리로 표시한다(fit↓·forced)."""
+    sm = _sm([("v-0", "기름이 사방으로 튀어서 힘들었거든요", 2.0)])
+    g = ep._pick_timeline(sm, 30)
+    beats = [{"narration": "강아지 산책 정말 즐거워요", "fit": 5,
+              "primary": {"seg_id": "v-0"}, "alternates": []}]
+    ep._assign_timeline(beats, g)
+    assert beats[0].get("offtopic") and beats[0]["fit"] <= 2 and beats[0]["forced"]
+
+
+def test_reworded_line_is_not_flagged():
+    """표현을 바꿔 쓰라고 했으니 많이 겹칠 필요는 없다 — 결만 이어지면 통과."""
+    sm = _sm([("v-0", "기름이 사방으로 튀어서 힘들었거든요", 2.0)])
+    g = ep._pick_timeline(sm, 30)
+    beats = [{"narration": "요리할 때마다 기름 때문에 스트레스였죠", "fit": 5,
+              "primary": {"seg_id": "v-0"}, "alternates": []}]
+    ep._assign_timeline(beats, g)
+    assert not beats[0].get("offtopic")
+
+
 def test_empty_inventory_is_safe():
     assert ep._pick_timeline({}, 30) == []
     assert ep._rewrite_block([]) == ""
