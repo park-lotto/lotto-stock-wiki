@@ -434,7 +434,7 @@ function _renderDiscoverCards(list){
       <div class="thumb">
         <img src="${thumb(i.thumbnail)}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.shortcode?`onclick="playInstagram(this,'${i.shortcode}')"`:'')} loading="lazy" onerror="this.style.visibility='hidden'">
         ${badgeHTML(i, ctx)}
-        ${i.video_url?'<span class="play-badge">▶</span>':''}
+        ${(i.video_url||i.shortcode)?'<span class="play-badge">▶</span>':''}
       </div>
       <div class="body">
         <div class="rank"><span>#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</span><button class="blockbtn" title="이 채널을 영구 차단 — 지금 바로 가리고, 다음 발굴·업데이트에도 안 올라옵니다" onclick="blockChannel('${_dEsc(i.username)}','${_dEsc(i.name)}',this)">🚫 차단</button></div>
