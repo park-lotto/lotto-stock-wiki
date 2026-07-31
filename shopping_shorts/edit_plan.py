@@ -840,6 +840,10 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "[장면과 대사]\n"
         "- 각 비트에 그 대사가 실제로 보이는 seg_id를 붙여라(2~4개, 시간순). 인벤토리에 없는 "
         "seg_id 금지, 같은 seg_id 재사용 금지.\n"
+        # 2026-07-31 실측: 개수만 요구했더니 1.3초짜리 컷 하나로도 통과해 말 31.9초 vs
+        # 화면 13.8초가 됐고, 모자란 만큼 뒤 클립이 당겨져 영상 전체가 밀렸다.
+        "- ★붙인 컷들의 **길이 합이 그 대사를 읽는 시간 이상**이어야 한다(괄호 안 초를 더해 봐라). "
+        "짧은 컷 하나만 붙이면 화면이 모자라 뒤 장면이 당겨지고 영상 전체가 어긋난다.\n"
         "- ★중요한 액션에 집중해라 — 인벤토리 '변화:' 칸이 이 영상이 눈으로 증명할 수 있는 "
         "사실이다. 그 순간을 대본의 중심에 놓고, 그 말을 하는 비트엔 그 seg_id를 맨 앞에 둬라. "
         "화면에 없는 걸 말하지 마라.\n"
@@ -989,7 +993,74 @@ def _ground_candidate(cand, seg_map, structure="free"):
         return None
     beats_out = _ensure_cta_beat(beats_out, cand)
     beats_out = _fix_beat_structure(beats_out)
+    beats_out = _fill_beat_screen_time(beats_out, seg_map)
     return {"structure": structure, "beats": beats_out}
+
+
+def _beat_screen_secs(beat):
+    """이 비트에 붙은 클립 길이의 합(초)."""
+    tot = 0.0
+    for s in [beat.get("primary")] + list(beat.get("alternates") or []):
+        if s and s.get("end") is not None and s.get("start") is not None:
+            tot += max(0.0, float(s["end"]) - float(s["start"]))
+    return tot
+
+
+def _fill_beat_screen_time(beats, seg_map, max_alts=6):
+    """비트마다 **화면 길이 합 ≥ 대사 읽는 시간**이 되게 컷을 더 붙인다(2026-07-31).
+
+    ★왜 필요한가 — 실측(job 61a2678a8e03, 사장님 영상 육안 검증):
+      계획서상으론 6비트 중 5비트가 화면과 정확히 맞았는데 **실제 영상은 어긋났다**.
+      비트별 말 길이 합 31.9초 vs 붙인 화면 길이 합 13.8초(절반 이하)였고,
+      CTA는 7.9초를 말하는데 화면이 1.5초뿐이었다. 모자란 화면을 렌더가 다음 클립으로
+      메우면서 밀림이 누적돼, 16초 "투명해서 답답하지 않아요"에 계란 붓는 팬(다음 비트의
+      화면)이 걸렸다. 프롬프트는 seg_ids를 "2~4개"로 **개수만** 요구해서 1.3초짜리 컷
+      하나로도 통과했다 — 대본을 아무리 고쳐도 이건 안 고쳐진다.
+
+    붙일 컷은 **아직 안 쓴 것** 중에서 고른다(같은 소스 영상 우선 = 결이 안 튄다).
+    인벤토리가 동나면 그때만 재사용을 허용한다 — 같은 화면이 두 번 나오는 게
+    엉뚱한 화면이 걸리는 것보다 낫다.
+    """
+    if not beats:
+        return beats
+    used = set()
+    for b in beats:
+        for s in [b.get("primary")] + list(b.get("alternates") or []):
+            if s and s.get("seg_id"):
+                used.add(s["seg_id"])
+    for b in beats:
+        need = float(b.get("target_seconds") or 0)
+        have = _beat_screen_secs(b)
+        if have >= need or not b.get("primary"):
+            continue
+        home = (b["primary"] or {}).get("video_id")
+        # 같은 소스 → 다른 소스 순으로, 아직 안 쓴 것부터.
+        pool = sorted(seg_map.values(),
+                      key=lambda s: (s.get("video_id") != home, s.get("start") or 0))
+        alts = list(b.get("alternates") or [])
+        for s in pool:
+            if have >= need or len(alts) >= max_alts:
+                break
+            sid = s.get("seg_id")
+            if not sid or sid in used:
+                continue
+            g = _ground_ref({"seg_id": sid}, seg_map)
+            if not g:
+                continue
+            alts.append(g)
+            used.add(sid)
+            have += max(0.0, float(g["end"]) - float(g["start"]))
+        if have < need:                     # 인벤토리 소진 → 재사용 허용(빈 화면보다 낫다)
+            for s in pool:
+                if have >= need or len(alts) >= max_alts:
+                    break
+                g = _ground_ref({"seg_id": s.get("seg_id")}, seg_map)
+                if not g or g["seg_id"] == (b["primary"] or {}).get("seg_id"):
+                    continue
+                alts.append(g)
+                have += max(0.0, float(g["end"]) - float(g["start"]))
+        b["alternates"] = alts
+    return beats
 
 
 # CTA로 인식하는 role 표기(모델이 한글·영문을 섞어 쓴다).
