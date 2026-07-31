@@ -20,6 +20,7 @@ import time
 from datetime import datetime, timezone
 
 from shopping_shorts import service
+from shopping_shorts import vision_tagging
 from shopping_shorts.config import DB_PATH
 from shopping_shorts.store import Store
 
@@ -40,6 +41,22 @@ def main():
         return 1
     collected_at = datetime.now(timezone.utc).isoformat()
     Store(DB_PATH).save_last_run(items, collected_at)
+
+    # ★후속: 비전태깅 + 그 태그로 재분류(2026-07-31).
+    # 이 스크립트가 웹 엔드포인트(app._run_collect_job)를 대체하면서 거기 배선돼 있던
+    # 후속 처리가 통째로 빠졌다 — 실측: vision_tags가 2026-07-30 10:41(마지막 수동수집)
+    # 이후 0건 증가. 게다가 캡션이 100% 비어(429 회피로 상세조회 off) 분류가 채널명만
+    # 보게 돼 카테고리가 무너졌다. 태깅→재분류를 여기서 잇는다.
+    # 실패해도 수집 결과는 이미 저장돼 있으므로 삼킨다(더 나빠지지 않는다).
+    try:
+        tagged = vision_tagging.tag_new_items(items, DB_PATH)
+        changed = vision_tagging.recategorize_by_vision(items, DB_PATH)
+        if changed:
+            Store(DB_PATH).save_last_run(items, collected_at)   # 바뀐 category를 화면 캐시에 반영
+        print(f"[daily_instagram_collect] 비전태깅 {tagged}건 · 카테고리 재분류 {changed}건")
+    except Exception as e:  # noqa: BLE001
+        print(f"[daily_instagram_collect] 후속(비전태깅/재분류) 실패: {e!r}", file=sys.stderr)
+
     print(f"[daily_instagram_collect] {len(items)}건 수집 · {time.time() - t0:.1f}s")
     return 0
 
