@@ -201,6 +201,7 @@ def _build_inventory(source_scripts):
                 "start": seg["start"], "end": seg["end"],
                 "text": seg.get("text", ""), "scene_desc": seg.get("scene_desc", ""),
                 "action": seg.get("action"),
+                "change": (seg.get("change") or "").strip(),
                 "is_key": bool(seg.get("is_key")),
                 "shot_role": seg.get("shot_role") or "기타",
                 "product_benefits": _seg_benefits(seg),
@@ -208,6 +209,12 @@ def _build_inventory(source_scripts):
             }
             _act = seg.get("action")
             _act_s = f" | 행위:{_act}" if _act else ""
+            # ★변화(2026-07-31): 사물이 주어인 상태변화·감각 한 줄. 손동작(행위)과 별개 칸이다 —
+            #   레퍼런스 실측에서 영상의 진짜 포인트("갈라지다→매끈해지다", "튀는 걸 막아준다",
+            #   "모찌처럼 늘어난다")가 전부 여기 속하는데 행위 어휘 30개는 사람 손동작뿐이라
+            #   하나도 못 담았다. 옛 추출본엔 필드가 없어 ""라 이 칸이 통째로 빠진다(회귀 없음).
+            _chg = (seg.get("change") or "").strip()
+            _chg_s = f" | 변화:{_chg}" if _chg else ""
             # 무자막 소스는 '말:'이 빈칸이라 이 라인만 보면 대본이 특장점을 녹일 재료가 없다.
             # 화면→특장점 문장을 라인에 실어 라이브 scene_first 경로도 쓰게 한다(2026-07-26).
             _ben = _seg_benefits(seg)
@@ -224,7 +231,7 @@ def _build_inventory(source_scripts):
             _key_s = f" | 실증:{'Y' if seg.get('is_key') else 'N'}"
             lines.append(
                 f"[{sid}] ({length}s) 화면:{seg.get('scene_desc','')} | 말:{seg.get('text','')}"
-                f"{_act_s}{_ben_s}{_ml_s}{_role_s}{_key_s}"
+                f"{_act_s}{_chg_s}{_ben_s}{_ml_s}{_role_s}{_key_s}"
             )
     return seg_map, "\n".join(lines)
 
@@ -244,6 +251,9 @@ def _ground_ref(ref, seg_map):
             # 나른다 — scene_first 주경로의 _apply_anchor_grain(앵커 dedup·레시피 grain)이 이 값을
             # 읽는다. seg_map(_build_inventory)이 이미 보존하므로 여기서 그대로 통과시킨다.
             "is_key": bool(seg.get("is_key")),
+            # 변화(2026-07-31)도 실어 나른다 — _dedup_anchors가 "같은 물건에 일어난 다른 일"을
+            # 구분하는 근거다. 없으면 뚜껑 열다/닫다가 scene_desc 토큰만 같아 한 컷으로 접혔다.
+            "change": (seg.get("change") or "").strip(),
             "shot_role": seg.get("shot_role") or "기타"}
 
 
@@ -267,15 +277,22 @@ def _claim_key(scene_desc):
 def _dedup_anchors(anchors, top_n=4):
     """is_key 앵커를 장점(scene_desc 요지)별로 묶어 중복 제거, 강한 순 상위 top_n개.
     같은 장점은 첫 등장(선명 가정)만 남긴다. 순수함수."""
-    seen_tokens = []   # 이미 채택한 장점들의 토큰 집합
+    def _ov(x, y):
+        return bool(x) and len(x & y) / max(1, len(x)) >= 0.5
+
+    seen_tokens = []   # 이미 채택한 [(장면 토큰, 변화 토큰)]
     out = []
     for a in anchors:
         key = set(_claim_key(a.get("scene_desc", "")))
-        # 기존 채택 장점과 토큰이 과반 겹치면 같은 장점으로 보고 스킵.
-        dup = any(key and len(key & prev) / max(1, len(key)) >= 0.5 for prev in seen_tokens)
+        # ★변화(2026-07-31)를 두 번째 축으로 둔다 — 한 문자열로 합치면 scene_desc 토큰이
+        #   수적으로 이겨서 "기름이 튄다"와 "가림막이 막아준다"가 여전히 접혔다(실측).
+        #   장면이 겹쳐도 **일어난 일이 다르면 다른 앵커**다. 둘 다 겹칠 때만 중복.
+        chg = set(_claim_key(a.get("change", "")))
+        dup = any(_ov(key, pk) and (_ov(chg, pc) or not (chg or pc))
+                  for pk, pc in seen_tokens)
         if dup:
             continue
-        seen_tokens.append(key)
+        seen_tokens.append((key, chg))
         out.append(a)
         if len(out) >= top_n:
             break
@@ -779,6 +796,18 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "  3) 주변 반응 — 가족·지인이 보인 실제 반응(말 한마디 인용으로).\n\n"
         "[우리 장면 팔레트 — 이 seg_id 화면만 쓸 수 있다]\n"
         f"{inventory_text}\n\n"
+        # ★2026-07-31(사장님): "레퍼런스 채널은 대본의 중요 행동을 반드시 화면과 일치시키는데
+        #   우리는 계속 못 한다." 실측 레퍼 3편의 뼈대가 전부 '변화'였다 —
+        #   갈라짐→닦음→매끈함 / 튐→막아줌→헹굼 / 밀가루→모찌 촉감.
+        #   인벤토리에 '변화:' 칸을 새로 실었으니, 대본을 그 변화들에서 **거꾸로** 짜게 한다.
+        + "[★화면 일치 — 이걸 어기면 대본이 아무리 좋아도 반려다]\n"
+        "- 위 인벤토리에서 '변화:' 칸이 채워진 줄을 먼저 모아라. 그게 이 영상이 **눈으로 증명할 수 "
+        "있는 사실**의 전부다. 대본의 ②문제·③해결·④결과는 반드시 그 변화들 중에서 골라 써라.\n"
+        "- 변화를 말하는 비트는 **그 변화가 적힌 바로 그 seg_id**를 seg_ids 맨 앞에 놓아라. "
+        "말은 '기름이 안 튄다'인데 화면은 요리 클로즈업이면 안 된다.\n"
+        "- 화면에 없는 변화는 지어내지 마라. 인벤토리에 '변화:'가 하나도 없으면 그때만 "
+        "화면(scene_desc)과 특장점으로 대신한다.\n"
+        "- 변화가 여러 개면 **화면에 보이는 순서(비포→처치→애프터)** 그대로 이야기를 진행해라.\n\n"
         + ((benefits_block + "\n\n") if benefits_block else "")
         + ((order_block + "\n\n") if order_block else "")
         # ★2026-07-27 과삭제 복구: 레버1이 스토리 강제를 전부 걷어내 대본이 '기능 자막 나열'로

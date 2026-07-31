@@ -42,6 +42,11 @@ _RESPONSE_SCHEMA = {
                     "text": {"type": "string"},
                     "scene_desc": {"type": "string"},
                     "action": {"type": "string", "enum": action_dict.ACTION_VOCAB + ["없음"]},
+                    # ★2026-07-31: 손동작(action)만으론 영상의 진짜 포인트가 안 남는다.
+                    #   실측 레퍼런스 3편의 포인트가 전부 사물이 주어인 변화/감각이었다:
+                    #   "프린팅이 갈라지다→매끈해지다" / "양념이 튀다·가림막이 막아주다" /
+                    #   "촉감이 모찌같다". ACTION_VOCAB 30개는 전부 사람 손동작이라 하나도 못 담는다.
+                    "change": {"type": "string"},
                     "has_effect": {"type": "boolean"},
                     "is_key": {"type": "boolean"},
                     "shot_role": {"type": "string",
@@ -89,6 +94,13 @@ _PROMPT = """이 영상을 보고 시간 순서대로 세그먼트로 나눠 대
   진짜 강아지가 보여도, 주 제품은 여전히 "선풍기"다.
 - action: 그 구간의 주요 손동작을 하나 골라라(당기다·붓다·바르다·펴다·자르다·섞다·닦다·
   누르다·끼우다·열다·담다·닫다). 해당 없으면 "없음".
+- change: ★이 구간에서 **화면 속 사물에 무슨 일이 일어났는지** 한국어 한 줄로 적어라.
+  손이 무엇을 했는지(action)가 아니라 **사물이 어떻게 됐는지**다 — 주어가 사물이어야 한다.
+  · 상태 변화: "프린팅이 쩍쩍 갈라져 있다" / "크랙이 사라지고 매끈해졌다" / "양념이 사방으로 튄다"
+  · 기능 확인: "가림막이 튀는 기름을 막아준다" / "물로 쓱 헹구니 바로 닦인다" / "흔들어도 고정돼 있다"
+  · 감각·재질: "손으로 늘리니 모찌처럼 쭉 늘어난다" / "표면이 보송보송해 보인다"
+  변화도 감각도 안 보이는 구간(인물 등장·인사·배경·CTA)이면 빈 문자열.
+  ★화면에 실제로 보이는 것만. 안 보이는 효능을 지어내지 마라.
 - has_effect: 그 구간에 **원본 제작자가 넣은 지울 수 없는 시각 효과**가 있으면 true. 즉
   화면 전환효과·줌인아웃 연출·분할화면·강한 색보정/필터·스티커/이모지/그래픽 오버레이·
   큰 텍스트 애니메이션이 박혀 있어 **깨끗한 요리/제품 원본이 아닌** 조각이면 true. 평범하게
@@ -171,6 +183,9 @@ def _assign_seg_ids(video_id, raw_segments, motion_map=None):
             "text": seg.get("text", ""),
             "scene_desc": seg.get("scene_desc", ""),
             "action": raw_action,  # str 동사 or None
+            # 사물이 주어인 변화·감각 한 줄(2026-07-31). 옛 추출본엔 없어서 ""로 떨어진다(fail-open)
+            # — 하류(_build_inventory)가 빈 값이면 그 칸을 통째로 생략하므로 회귀 없음.
+            "change": (seg.get("change") or "").strip(),
             "has_effect": bool(seg.get("has_effect")),  # 원본 효과 박힘 → B롤 제외용
             "is_key": bool(seg.get("is_key")),           # 기능·장점 실증 앵커 (fail-open False)
             "shot_role": _norm_shot_role(seg.get("shot_role")),  # 확장어휘, 옛값 매핑(fail-open 기타)
