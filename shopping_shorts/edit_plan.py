@@ -430,6 +430,13 @@ def _pick_slot_sequence(seg_map, target_seconds=None, call=None):
     return out
 
 
+def _pick_slot_groups(seg_map, target_seconds=None, call=None):
+    """_pick_slot_sequence로 순서를 정하고 _group_by_sentence로 세트를 묶은 최종 결과.
+    build_scene_first_plan이 _pick_timeline 대신 부르는 진입점."""
+    picked = _pick_slot_sequence(seg_map, target_seconds=target_seconds, call=call)
+    return _group_by_sentence(picked)
+
+
 def _rewrite_block(groups):
     """고른 구간들을 '이 자리에서 하던 말을 우리 말로 바꿔 써라' 프롬프트 블록으로."""
     if not groups:

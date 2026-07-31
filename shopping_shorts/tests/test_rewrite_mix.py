@@ -54,6 +54,19 @@ def test_pick_slot_sequence_falls_back_when_call_fails():
     assert [s["seg_id"] for s in seq] == ["v0-1", "v0-2"]
 
 
+def test_pick_slot_sequence_groups_by_sentence():
+    """_pick_slot_sequence 결과도 _pick_timeline과 같은 문장 단위 그룹으로 묶여야 한다."""
+    sm = _sm([("v0-1", "가나다요", 2.0), ("v0-2", "라마바요", 2.0),
+              ("v1-1", "사아자요", 2.0)])
+
+    def fake_call(prompt, schema):
+        return {"order": ["v0-1", "v1-1", "v0-2"]}
+
+    groups = ep._pick_slot_groups(sm, call=fake_call)
+    ids = [[s["seg_id"] for s in g] for g in groups]
+    assert ids == [["v0-1"], ["v1-1"], ["v0-2"]]   # 각자 "요"로 끝나는 문장 → 세트 하나씩
+
+
 def test_ends_sentence_uses_korean_endings():
     assert ep._ends_sentence("잔소리 들었는데 설치해놨더라고요")
     assert ep._ends_sentence("확 줄어든 거 있죠?")
