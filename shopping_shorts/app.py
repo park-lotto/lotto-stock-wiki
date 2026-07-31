@@ -22,6 +22,7 @@ from shopping_shorts import service
 from shopping_shorts.service import collect, census, generate_missing_drafts, next_draft_targets, youtube_channel_board
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.store import Store
+from shopping_shorts import vision_tagging
 from shopping_shorts.auto_run import run_auto_job, default_stages
 from shopping_shorts import config
 from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
@@ -277,6 +278,9 @@ def _run_collect_job(job_id, platform, category, limit, cid):
         try:
             generate_missing_drafts(next_draft_targets(items, store))
             _tag_new_items(items)
+            # 비전태그로 카테고리 재분류 → 화면 캐시에 반영(크론 경로와 같은 동작).
+            if vision_tagging.recategorize_by_vision(items, DB_PATH):
+                store.save_last_run(items, collected_at)
             _translate_new_subjects(items)
             _bank_ingest_collected_bg(DB_PATH, items, collected_at)
         except Exception:
@@ -474,27 +478,11 @@ _TRANSLATE_MAXLEN = 40   # 번역 요청 소재 길이 상한(비정상 입력 �
 
 
 def _tag_new_items(items):
-    """신규(태그 없는) 아이템 썸네일을 Gemini 비전 태깅해 vision_tags에 저장.
-    shortcode로 캐시하므로 재수집 땐 재호출 안 함. 상한 초과분은 다음 수집으로 미룬다.
-    실패(키 없음·썸네일 다운로드 실패)는 그냥 건너뜀 — 그 아이템은 캡션 백업으로 검색된다."""
-    try:
-        from shopping_shorts import video_analysis
-    except Exception:
-        return
-    store = Store(DB_PATH)
-    have = store.vision_tags_map([it.get("shortcode") for it in items])
-    todo = [it for it in items if it.get("shortcode") and it.get("shortcode") not in have
-            and it.get("thumbnail")]
-    capped = todo[:_VISION_TAG_CAP]
-    for it in capped:
-        img = video_analysis.fetch_thumb_bytes(it.get("thumbnail"))
-        if not img:
-            continue
-        tags = video_analysis.subject_tags_vision(img, it.get("caption", ""))
-        if tags and (tags.get("subject") or tags.get("keywords")):
-            store.save_vision_tags(it["shortcode"], tags.get("subject", ""), tags.get("keywords", []))
-    if len(todo) > len(capped):
-        print(f"[vision_tags] {len(todo) - len(capped)}건 다음 수집으로 미룸(상한 {_VISION_TAG_CAP})")
+    """신규(태그 없는) 아이템 썸네일을 Gemini 비전 태깅 → vision_tags 저장.
+    본체는 vision_tagging 모듈에 있다(2026-07-31) — systemd 타이머 수집 스크립트도
+    같은 코드를 써야 해서 분리했다. 여기 두면 크론이 FastAPI 앱을 통째로 import해야 한다."""
+    # cap을 넘겨준다 — _VISION_TAG_CAP이 여전히 이 앱의 노브다(테스트가 이걸 monkeypatch한다).
+    vision_tagging.tag_new_items(items, DB_PATH, cap=_VISION_TAG_CAP)
 
 
 def _translate_new_subjects(items):
