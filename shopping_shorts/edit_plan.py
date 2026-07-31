@@ -364,9 +364,14 @@ def _pick_timeline(seg_map, target_seconds):
             acc += _secs([s])
         if acc >= target_seconds:
             break
-    # ★한 세트 = 원본 대사 **한 문장이 시작해서 끝나는 장면까지**(2026-07-31 사장님).
-    #   시간으로 끊으면 문장 중간에서 화면이 갈려 말과 그림이 어긋난다. 원본이 한 문장을
-    #   말하는 동안 쓴 화면 전부가 한 덩어리다 — 그 자리에 우리 문장 하나를 갈아끼운다.
+    return _group_by_sentence(picked)
+
+
+def _group_by_sentence(picked):
+    """seg 리스트를 '원본 대사 한 문장이 시작~끝나는 구간'으로 묶는다(2026-07-31 사장님).
+
+    _pick_timeline과 _pick_slot_sequence 둘 다 이 그룹핑을 재사용한다 — 세트 정의는
+    화면을 어떤 순서로 고르든(시간순이든 Gemini 판단이든) 동일해야 하기 때문."""
     groups, cur = [], []
     for s in picked:
         cur.append(s)
