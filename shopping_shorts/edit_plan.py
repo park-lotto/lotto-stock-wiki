@@ -1030,6 +1030,7 @@ def _ground_candidate(cand, seg_map, structure="free"):
         })
     if not beats_out:
         return None
+    beats_out = _ensure_cta_beat(beats_out, cand)
     beats_out = _fix_beat_structure(beats_out)
     return {"structure": structure, "beats": beats_out}
 
@@ -1045,6 +1046,36 @@ _BANMAL_FIX = [("남겨줘", "남겨주세요"), ("달아줘", "달아주세요"
 def _is_cta(beat):
     role = (beat.get("role") or "")
     return any(k.lower() in role.lower() for k in _CTA_ROLES)
+
+
+def _ensure_cta_beat(beats, cand):
+    """CTA 비트가 없으면 후보의 cta_line으로 만들어 붙인다(2026-07-31).
+
+    ★왜 코드가 보장하나: 라이브 경로(백본 시간순 고정) 실측에서 **20건 중 9건에 CTA 비트가
+      아예 없었다**. 파이프라인이 지우는 게 아니라 모델이 처음부터 안 만든다 — 백본이 20초
+      소스의 장면 순서를 고정하니 마무리 장면이 없어 '결과'에서 끝내버린다.
+      프롬프트엔 이미 CTA가 필수라고 적혀 있고(지시로는 안 지켜졌다), 스키마엔 cta_line이
+      따로 있으니 그걸 쓴다. 댓글 유도가 빠지면 영상의 목적 자체가 사라진다.
+
+    화면은 마지막 비트의 컷을 재사용한다 — 새 장면을 지어낼 수 없고, CTA는 보통 마무리
+    화면 위에 얹히는 자리다. cta_line이 비면 아무것도 하지 않는다(억지 생성 금지).
+    """
+    if not beats or any(_is_cta(b) for b in beats):
+        return beats
+    line = (cand.get("cta_line") or "").strip()
+    if not line:
+        return beats
+    last = beats[-1]
+    src = (last.get("alternates") or [None])[-1] or last.get("primary")
+    if not src:
+        return beats
+    beats = list(beats) + [{
+        "beat_idx": len(beats), "role": "CTA", "narration": line, "caption_lines": None,
+        "target_seconds": round(max(1.5, len(line) / _SYLLABLES_PER_SEC), 1),
+        "primary": src, "alternates": [], "effect": "cut",
+        "fit": int(last.get("fit") or 0), "forced": False,
+    }]
+    return beats
 
 
 _LONG_BEAT_CHARS = 55       # 이보다 길고 문장이 2개 이상이면 화면을 나눈다
@@ -1771,7 +1802,10 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             plan["beats"] = backbone.ping_pong_reconcile(
                 plan["beats"], source_scripts,
                 rewrite_call=lambda bs: _bb_rewrite(bs, _call),
-                trim_call=lambda bs: _bb_trim(bs, _call))
+                trim_call=lambda bs: _bb_trim(bs, _call),
+                # 트림이 대본을 목표의 75% 밑으로 깎으면 아예 적용하지 않는다(2026-07-31).
+                # 넘치는 화면은 렌더의 _refill_beats_to_tts가 클립을 더 붙여 흡수한다.
+                min_total_chars=int((target_seconds or 0) * _SYLLABLES_PER_SEC * 0.75))
             # 이 후보의 백본(순서 뼈대) — 백본-베이스면 후보 자신의 것, 아니면 전역 선정.
             bb = r.get("_backbone_video") or backbone.pick_backbone(
                 source_scripts, meta=backbone_meta, forced=backbone_forced)
@@ -1788,6 +1822,12 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             # 소스 클립(원본 엔딩 회피). 화면만 재배정(narration 불변) → 다른 후처리 뒤에 마지막으로.
             plan["beats"] = backbone.swap_hook_cta_for_differentiation(
                 plan["beats"], bb, source_scripts)
+        # ★핑퐁 후처리 뒤 구조 재교정(2026-07-31). 위 backbone 단계들(order_by_backbone·
+        #   dedup_and_balance·ensure_sources_used·swap_hook_cta_for_differentiation)이
+        #   비트 순서를 다시 짜면서 **CTA가 마지막이 아니게 된다** — 라이브 설정 백테스트에서
+        #   20건 중 9건이 CTA끝X였다(기본 설정 측정에선 0건이라 여태 안 보였다).
+        #   _ground_candidate·conform 뒤에 이미 걸어둔 것과 같은 교정을 여기서 한 번 더 건다(멱등).
+        plan["beats"] = _fix_beat_structure(plan["beats"])
         plan["detected_type"] = detected
         plan["affiliate_target"] = r.get("story_event", "") or ""
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)
