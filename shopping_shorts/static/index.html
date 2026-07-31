@@ -1761,12 +1761,25 @@ function playInline(img){
 }
 // 유튜브/틱톡: 우리가 뽑은 mp4 direct URL로 재생(same-origin canvas 캡처 가능).
 // mp4 확보 실패(비공개·지역차단) 시 기존 embed(iframe)로 폴백 — 재생은 되게(캡처만 불가).
+// 해석에 수 초~수십 초 걸린다(yt-dlp) — 표시가 없으면 "눌러도 아무 반응 없다"가 된다
+// (2026-07-31 사장님 제보). 기다리는 동안 오버레이를 띄운다.
+function _thumbLoading(box){
+  if(!box) return null;
+  const d=document.createElement('div');
+  d.textContent='⏳ 영상 불러오는 중…';
+  d.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;'
+    +'background:rgba(0,0,0,.55);color:#fff;font-size:12px;border-radius:8px;z-index:3';
+  if(getComputedStyle(box).position==='static') box.style.position='relative';
+  box.appendChild(d); return d;
+}
 async function _playViaMedia(img, videoId, platform, embedFn){
   if(!videoId) return;
   const box=img.parentElement;
   const badge=box && box.querySelector('.play-badge'); if(badge) badge.remove();
+  const _load=_thumbLoading(box);
   try{
     const d=await (await fetch(`/api/media?platform=${platform}&id=${encodeURIComponent(videoId)}`)).json();
+    if(_load) _load.remove();
     if(d.ok && d.url){
       const v=document.createElement('video');
       v.src=d.url; v.controls=true; v.autoplay=true; v.playsInline=true;
@@ -1776,6 +1789,7 @@ async function _playViaMedia(img, videoId, platform, embedFn){
       img.replaceWith(v); return;
     }
   }catch(e){}
+  if(_load) _load.remove();
   embedFn(img, videoId);
 }
 function _embedYoutube(el, videoId){

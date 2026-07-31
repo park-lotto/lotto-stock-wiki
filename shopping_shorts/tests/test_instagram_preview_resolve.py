@@ -39,3 +39,16 @@ def test_card_wires_instagram_click():
     assert "function playInstagram" in html
     # 유튜브·틱톡 배선은 그대로 남아 있어야 한다
     assert "playYoutube(this," in html and "playTiktok(this," in html
+
+
+def test_discover_page_also_wires_instagram_preview():
+    """신규채널 픽업(discover.html)은 별도 파일이라 배선이 빠져 있었다(2026-07-31 제보)."""
+    d = (pathlib.Path(media_download.__file__).parent / "static" / "discover.html").read_text(encoding="utf-8")
+    assert "function playInstagram" in d and "playInstagram(this," in d
+
+
+def test_both_pages_show_loading_while_resolving():
+    """해석에 수 초~수십 초 걸린다 — 표시가 없으면 '눌러도 반응 없음'으로 보인다."""
+    for name in ("index.html", "discover.html"):
+        html = (pathlib.Path(media_download.__file__).parent / "static" / name).read_text(encoding="utf-8")
+        assert "영상 불러오는 중" in html, f"{name}에 로딩 표시가 없다"

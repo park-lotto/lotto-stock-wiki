@@ -377,6 +377,38 @@ function playInline(img){
   v.onerror=()=>{ v.replaceWith(img); img.title='영상 URL 만료 — 🔄 업데이트 후 재생 가능'; };
   img.replaceWith(v);
 }
+// 인스타 인라인 재생(2026-07-31) — 수집이 직접 mp4를 안 담게 되면서(429 회피) video_url이
+// 비었고, 이 화면은 그 값이 있어야만 클릭이 붙어 미리보기가 통째로 사라졌다. 이제 누른
+// 순간 /api/media가 릴스 페이지에서 mp4를 해석한다(수 초~수십 초) — **기다리는 동안 표시가
+// 없으면 눌러도 반응 없는 걸로 보이므로** 로딩 오버레이를 먼저 띄운다.
+function _dLoading(box){
+  if(!box) return null;
+  const d=document.createElement('div');
+  d.textContent='⏳ 영상 불러오는 중…';
+  d.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;'
+    +'background:rgba(0,0,0,.55);color:#fff;font-size:12px;border-radius:8px;z-index:3';
+  if(getComputedStyle(box).position==='static') box.style.position='relative';
+  box.appendChild(d); return d;
+}
+async function playInstagram(img, shortcode){
+  if(!shortcode) return;
+  const box=img.parentElement;
+  const badge=box && box.querySelector('.play-badge'); if(badge) badge.remove();
+  const load=_dLoading(box);
+  try{
+    const d=await (await fetch('/api/media?platform=instagram&id='+encodeURIComponent(shortcode))).json();
+    if(load) load.remove();
+    if(d.ok && d.url){
+      const v=document.createElement('video');
+      v.src=d.url; v.controls=true; v.autoplay=true; v.playsInline=true;
+      v.setAttribute('playsinline',''); v.className='thumb-video';
+      // 인스타는 iframe 재생이 로그인벽이라 화면 안 재생이 안 된다 → 실패 시 원본 새 탭
+      v.onerror=()=>{ v.replaceWith(img); window.open('https://www.instagram.com/reel/'+shortcode+'/','_blank','noopener'); };
+      img.replaceWith(v); return;
+    }
+  }catch(e){ if(load) load.remove(); }
+  window.open('https://www.instagram.com/reel/'+shortcode+'/','_blank','noopener');
+}
 const _dEsc = s => String(s??'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
 function renderDiscover(items){
   if(items) DSTATE.items = items;
@@ -400,7 +432,7 @@ function _renderDiscoverCards(list){
     <div class="card">
       <div class="badges">${isHot(i)?'<span class="badge hot">🔥 핫</span>':''}${isNew(i)?'<span class="badge new">🆕 뉴</span>':''}</div>
       <div class="thumb">
-        <img src="${thumb(i.thumbnail)}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':''} loading="lazy" onerror="this.style.visibility='hidden'">
+        <img src="${thumb(i.thumbnail)}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.shortcode?`onclick="playInstagram(this,'${i.shortcode}')"`:'')} loading="lazy" onerror="this.style.visibility='hidden'">
         ${badgeHTML(i, ctx)}
         ${i.video_url?'<span class="play-badge">▶</span>':''}
       </div>
