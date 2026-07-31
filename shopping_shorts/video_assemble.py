@@ -57,6 +57,29 @@ _FINAL_PRESET = "medium"
 _FFMPEG_THREADS = int(os.getenv("FFMPEG_THREADS", "0") or 0)
 
 
+# ── 중간 산출물은 "빠르게", 최종 1회만 "품질"(2026-07-31 렌더 단축) ──────────────
+# 지금까지 서브클립·비트클립까지 전부 최종 품질(CRF 16 · medium)로 인코딩했다. 그런데
+# 자막 번인(_burn_captions)이 어차피 전체를 **다시** 인코딩하므로, 중간 결과의 압축률에
+# 공들이는 시간은 그대로 버려진다. 화질을 정하는 건 마지막 패스다.
+#   중간 = veryfast · CRF 14 → 인코딩 시간이 크게 줄고(세대손실은 CRF 14라 사실상 무시),
+#   최종 = 기존 그대로(preset medium · CRF 16) → 산출물 화질 목표 불변.
+# ⚠️ 중간 파일이 조금 커진다(CRF 14). 디스크가 빠듯하면 _MID_CRF를 16으로 올려라.
+# 되돌리기: MID_PRESET=medium MID_CRF=16 (환경변수) — 코드 수정 없이 원복된다.
+_MID_PRESET = os.getenv("MID_PRESET", "veryfast")
+_MID_CRF = os.getenv("MID_CRF", "14")
+
+
+def _mid_preset():
+    """중간 패스 preset — 미리보기 모드처럼 전체 preset이 낮춰진 경우엔 그걸 따른다."""
+    cur = getattr(_preset_local, "value", None)
+    return cur if cur else _MID_PRESET
+
+
+def _mid_crf():
+    cur = getattr(_preset_local, "crf", None)
+    return cur if cur else _MID_CRF
+
+
 def _threads_args():
     """['-threads','N'] 또는 [] — 인코딩 명령에 끼워 넣는다."""
     return ["-threads", str(_FFMPEG_THREADS)] if _FFMPEG_THREADS > 0 else []
@@ -752,7 +775,7 @@ def _extend_with_frozen_motion(sub_path, play_out, freeze, out_path):
         "ffmpeg", "-y", "-i", str(sub_path),
         "-vf", f"tpad=stop_mode=clone:stop_duration={freeze:.3f},{_kenburns_vf(total)}",
         "-r", "30", "-an", "-t", f"{total:.3f}",
-        "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(out_path),
+        "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(out_path),
     ])
     return out_path
 
@@ -883,7 +906,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 "ffmpeg", "-y", "-ss", f"{start:.3f}", "-t", f"{c['src_dur']:.3f}",
                 "-i", str(src),
                 "-vf", vf_full, "-r", "30", "-an", "-t", f"{play_out:.3f}",
-                "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(sub),
+                "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(sub),
             ])
             # 그래도 비면(소스 손상/범위밖) 이 클립만 버린다 — 하나가 미리보기 전체를 죽이지 않게.
             if not sub.exists() or _probe_duration(sub) <= 0.05:
@@ -930,7 +953,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 # 여운(runout): 마지막 비트만 대사 뒤 화면이 더 산다 — 오디오는 tts 길이에서
                 # 자연 종료(무성 여운). 컷어웨이 창(win)은 tts_dur 기준 그대로(여운을 덮지 않음).
                 "-t", f"{tts_dur + runout:.3f}",
-                "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), *_threads_args(), "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
+                "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
             ])
         else:
             # 비트 나레이션(tts) 오디오를 얹고 길이를 tts_dur(+마지막 비트는 여운)로 맞춘다.
