@@ -117,5 +117,8 @@ def test_default_path_injects_block_mix_then_spine_fallback():
     ep.build_scene_first_plan(sources, "ref", 20, n_candidates=1, call=_cap,
                               video_type="recipe", backbone_base=False)
     p = seen["prompt"]
-    assert "화면은 이미 정해졌다" in p and "자 이내로 써라" in p   # 덩어리 + 글자수 예산
+    # 2026-07-31 최종: 기본 경로 = **리라이트 믹스**(원본 타임라인 뼈대 + 문장만 갈아끼우기).
+    # 덩어리 믹스(BLOCK_MIX)와 옛 스파인은 그 뒤 폴백이다.
+    assert "원본이 하던 말을 우리 말로 바꿔 쓴다" in p
+    assert "원본이 한 말:" in p and "자 이내" in p       # 그 자리의 원본 대사 + 글자수 예산
     assert "화면 순서 뼈대" not in p             # 백본 블록은 안 쓴다(기본 경로)
