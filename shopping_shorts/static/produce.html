@@ -3308,18 +3308,44 @@ function renderNoScriptState(){
 // 재료 썸네일 클릭 → 미리보기 오버레이(2026-07-19 사장님 요청). 재생소스(play_url)가 있으면
 // 인라인 재생, 없으면(대부분 grab/즐겨찾기 유래) 큰 이미지 + 원본에서 보기. 원본은 한국에서
 // 로그인벽 없는 rednote.com로 연다(렌즈링크도메인과 동일 규칙).
+// 인스타 코드 추출 — play_url이 없을 때 그 자리에서 mp4를 해석하기 위해 필요(2026-07-31).
+function _igCodeOf(url){
+  const m = String(url||'').match(/instagram\.com\/(?:reel|reels|p|tv)\/([A-Za-z0-9_-]+)/);
+  return m ? m[1] : '';
+}
+// play_url이 비어 있으면 /api/media로 해석해 오버레이 안 <video>를 채운다.
+// 수집이 더 이상 직접 mp4를 담지 않게 되면서(429 회피) 인스타 재료가 전부
+// "인앱 재생 소스가 없어요"로 떨어졌다 — 랭킹 카드와 같은 방식으로 살린다.
+async function _fillMaterialVideo(code){
+  const slot=document.getElementById('matVideoSlot');
+  if(!slot) return;
+  try{
+    const d=await (await fetch('/api/media?platform=instagram&id='+encodeURIComponent(code))).json();
+    if(!document.getElementById('matVideoSlot')) return;      // 그새 닫혔으면 그만
+    if(d.ok && d.url){
+      slot.innerHTML=`<video src="${d.url}" controls autoplay playsinline referrerpolicy="no-referrer" `
+        +`style="max-width:100%;max-height:66vh;border-radius:8px;background:#000"></video>`;
+      return;
+    }
+  }catch(e){}
+  slot.innerHTML='<div style="color:var(--sub);font-size:12px">재생 소스를 못 찾았어요 — 아래 원본에서 확인하세요.</div>';
+}
 function previewMaterial(i){
   const it=HANDOFF[i]; if(!it) return;
   const rednote=String(it.url||'').replace(/:\/\/(www\.)?xiaohongshu\.com/i,'://www.rednote.com');
+  const igCode = it.play_url ? '' : _igCodeOf(it.url);
   const media = it.play_url
     ? `<video src="${esc(it.play_url)}" controls autoplay playsinline referrerpolicy="no-referrer" style="max-width:100%;max-height:66vh;border-radius:8px;background:#000"></video>`
-    : `${it.thumbnail?`<img src="/api/thumb?url=${encodeURIComponent(it.thumbnail)}" referrerpolicy="no-referrer" style="max-width:100%;max-height:66vh;border-radius:8px;background:#000" onerror="this.style.visibility='hidden'">`:''}
-       <div style="color:var(--sub);font-size:12px;margin-top:8px">이 영상은 인앱 재생 소스가 없어요 — 원본에서 확인하세요.</div>`;
+    : (igCode
+      ? `<div id="matVideoSlot" style="color:var(--sub);font-size:12px;min-height:120px;display:flex;align-items:center;justify-content:center">⏳ 영상 불러오는 중…</div>`
+      : `${it.thumbnail?`<img src="/api/thumb?url=${encodeURIComponent(it.thumbnail)}" referrerpolicy="no-referrer" style="max-width:100%;max-height:66vh;border-radius:8px;background:#000" onerror="this.style.visibility='hidden'">`:''}
+       <div style="color:var(--sub);font-size:12px;margin-top:8px">이 영상은 인앱 재생 소스가 없어요 — 원본에서 확인하세요.</div>`);
   _openMaterialOverlay(`<div style="text-align:center">
       <div style="font-size:13px;margin-bottom:10px;color:var(--txt)">📹 ${esc((it.name||('영상 '+(i+1))).slice(0,80))}</div>
       ${media}
       ${rednote?`<div style="margin-top:12px"><a href="${esc(rednote)}" target="_blank" style="color:var(--accent)">🔗 원본에서 보기 ↗</a></div>`:''}
     </div>`);
+  if(igCode) _fillMaterialVideo(igCode);      // 오버레이를 먼저 띄우고 비동기로 채운다
 }
 function _openMaterialOverlay(html){
   let o=document.getElementById('matOverlay');
