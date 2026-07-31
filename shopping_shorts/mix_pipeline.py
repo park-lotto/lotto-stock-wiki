@@ -5,6 +5,7 @@ run_render: 사용자가 확인 후 최종 ffmpeg 렌더 → done.
 각 단계에서 mix_jobs.status를 갱신하고, 예외는 status='failed'+error로 잡는다.
 """
 import hashlib
+import subprocess
 import sys
 import traceback
 from concurrent.futures import ThreadPoolExecutor
@@ -347,6 +348,37 @@ def _conform_beats(beats, tts_dir, *, voice, global_pron=None):
         beat["sync_gap"] = round(max(0.0, new_dur - budget), 2)
 
 
+# 추출이 영상의 이만큼도 구간화하지 못하면 '빈약'으로 본다(2026-07-31).
+# 실측: 21초 영상이 2구간 7.4초(35%)로 나와 재료로 못 썼는데 화면엔 표시가 없었다.
+_MIN_COVERAGE = 0.55
+
+
+def _video_seconds(path):
+    """소스 영상 실제 길이(초). 못 재면 None(판정 생략 = 무해)."""
+    try:
+        out = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "default=nw=1:nk=1", str(path)],
+            capture_output=True, text=True, timeout=20)
+        return float((out.stdout or "").strip())
+    except Exception:
+        return None
+
+
+def _extract_coverage(r, path):
+    """추출 구간이 영상의 몇 %를 덮었나. 판정 불가면 None.
+
+    ★왜 '구간 개수'가 아니라 커버리지인가: 컷이 긴 영상은 구간이 적어도 정상이다.
+      실패는 '영상 대부분이 구간으로 안 잡힌' 경우다(2026-07-31 job 8226822c5b09).
+    """
+    dur = _video_seconds(path)
+    if not dur or dur <= 0:
+        return None
+    covered = sum(max(0.0, float(s.get("end") or 0) - float(s.get("start") or 0))
+                  for s in (r.get("segments") or []))
+    return min(1.0, covered / dur)
+
+
 def _prepare_sources(urls, work):
     """소스 URL들을 플랫폼 무관하게 다운로드 → ({video_id: mp4경로}, {video_id: caption}, skipped).
     caption은 인스타 소스만 채워짐(download_any가 (path, caption) 튜플 반환) — 유튜브/틱톡은
@@ -457,6 +489,22 @@ def run_mix_job(job_id, db_path, work_root):
                     r = extract_script(path, vid, caption=captions.get(vid, ""))
             else:
                 r = extract_script(path, vid, caption=captions.get(vid, ""))
+            # ★조용한 추출 실패 잡기(2026-07-31 사장님: "실제 영상은 20초가 넘는데 추출이
+            #   실패한 거라 사용자는 알 수가 없다"). 실측 job 8226822c5b09: 21초짜리 B영상이
+            #   2구간 7.4초로 뭉쳐 나와 재료가 사실상 없었고, 화면엔 아무 표시도 없어서
+            #   "왜 A로만 만들어졌지?"로만 보였다. → 커버리지를 재서 낮으면 한 번 다시 뽑고,
+            #   그래도 낮으면 결과에 표시를 남겨 상류가 사장님께 알릴 수 있게 한다.
+            cov = _extract_coverage(r, path)
+            if cov is not None and cov < _MIN_COVERAGE:
+                r2 = extract_script(path, vid, caption=captions.get(vid, ""))
+                cov2 = _extract_coverage(r2, path)
+                if cov2 is None or cov2 > (cov or 0):
+                    r, cov = r2, cov2
+            r["coverage"] = cov
+            r["weak_extract"] = bool(cov is not None and cov < _MIN_COVERAGE)
+            if r["weak_extract"]:
+                print(f"[extract] ⚠️ {vid} 추출 빈약 — 영상의 {cov:.0%}만 구간화됨"
+                      f"(구간 {len(r.get('segments') or [])}개). 재료로 거의 못 쓴다.", flush=True)
             r["video_id"] = vid
             # category(ai_categorize가 script_extracts.category에 저장) 전달 → 장면 결 맞춤(is_recipe) 분기용.
             # cached는 위에서 이미 조회했다(segments가 못써도 category 컬럼은 실려온다).

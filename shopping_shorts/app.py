@@ -2528,7 +2528,21 @@ def api_mix_status(job_id: str):
                    "script": " ".join((b.get("narration") or "").strip()
                                        for b in ((c.get("plan") or {}).get("beats") or [])).strip()}
                   for i, c in enumerate(store.get_mix_candidates(job_id))]
+    # ★추출이 조용히 실패한 소스를 알린다(2026-07-31 사장님: "실제 영상은 20초가 넘는데
+    #   추출이 실패한 거라 사용자는 알 수가 없다"). 실측 job 8226822c5b09: 21초 영상이
+    #   2구간 7.4초로 나와 재료가 없었는데 화면엔 표시가 없어 "왜 A로만?"으로만 보였다.
+    #   mix_pipeline이 커버리지를 재서 weak_extract를 심어둔다 — 여기선 소스 번호만 내보낸다
+    #   (원본 URL·경로는 안 싣는다: 아래 candidates 주석과 같은 노출 원칙).
+    weak = []
+    try:
+        for i, (vid, ex) in enumerate(sorted((job.get("extract") or {}).items()), 1):
+            if isinstance(ex, dict) and ex.get("weak_extract"):
+                cov = ex.get("coverage")
+                weak.append({"n": i, "coverage": round(cov, 2) if cov is not None else None})
+    except Exception:
+        weak = []
     return {"ok": True, "status": status, "error": error,
+            "weak_sources": weak,
             # 1단계 미리보기(2026-07-17): 폴러를 둘로 만들지 않으려고 기존 응답에 얹는다(스펙 §6.3).
             # preview_path는 서버 내부 경로라 안 내보낸다 — 파일은 전용 라우트로만 서빙.
             "preview_status": preview_status,
