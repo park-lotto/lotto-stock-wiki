@@ -227,6 +227,17 @@ class Store:
                     created_at TEXT
                 )
             """)
+            # 사람이 지정한 채널 카테고리(2026-07-31) — username당 1행.
+            # 자동판정이 못 미치는 채널을 사장님이 직접 못 박는 자리다. 다만 **덮어쓰기가
+            # 아니라 폴백**이다: 비전태그(영상별 신호)가 있으면 그쪽이 이긴다. 채널 고정이
+            # 이기면 그 채널이 올린 다른 장르 영상까지 한 카테고리로 몰려 원래 문제로 돌아간다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS channel_categories (
+                    username TEXT PRIMARY KEY,
+                    category TEXT,
+                    set_at TEXT
+                )
+            """)
             # 해외HOT 썸네일 자막등급 캐시(2026-07-29) — shortcode당 1행.
             # 생존자 전부를 비전판정하게 넓히면서 Gemini 쿼터를 지키려고 둔다
             # (쿼터 소진으로 검열 성공률 29%까지 떨어진 전례: gemini_audit.py).
@@ -1145,6 +1156,28 @@ class Store:
                 "SELECT username, name, removed_at FROM removed_channels ORDER BY removed_at DESC"
             ).fetchall()
         return [{"username": r[0], "name": r[1], "removed_at": r[2]} for r in rows]
+
+    # ── 사람이 지정한 채널 카테고리(2026-07-31) ──
+    def set_channel_category(self, username, category):
+        """채널 카테고리 지정. category가 빈값이면 지정 해제(자동판정으로 되돌림)."""
+        u = self._norm_username(username)
+        if not u:
+            return
+        with self._conn() as c:
+            if not (category or "").strip():
+                c.execute("DELETE FROM channel_categories WHERE username=?", (u,))
+                return
+            c.execute(
+                "INSERT INTO channel_categories(username, category, set_at) "
+                "VALUES(?,?,datetime('now')) ON CONFLICT(username) DO UPDATE SET "
+                "category=excluded.category, set_at=excluded.set_at",
+                (u, category.strip()))
+
+    def channel_category_map(self):
+        """{username(정규화): category}. 지정된 것만."""
+        with self._conn() as c:
+            rows = c.execute("SELECT username, category FROM channel_categories").fetchall()
+        return {r[0]: r[1] for r in rows if r[1]}
 
     # ── 채널 활동성(2026-07-22) — 센서스가 채우는 자동 선별 레이어 ──
     @staticmethod

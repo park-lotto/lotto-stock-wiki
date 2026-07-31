@@ -112,3 +112,40 @@ def test_cron_script_calls_tagging_and_recategorize(tmp_path, monkeypatch):
 
     assert cron.main() == 0
     assert called.get("tag") and called.get("recat"), "크론이 후속(태깅·재분류)을 안 부른다"
+
+
+# ── 채널 카테고리 지정(2026-07-31) — 폴백이지 덮어쓰기가 아니다 ───────────
+def test_channel_pin_applies_when_no_vision_tag(db):
+    """태그 없는 영상은 사장님이 못 박은 채널 카테고리를 따른다."""
+    Store(db).set_channel_category("chan_a", "가전")
+    items = [{"shortcode": "P1", "username": "chan_a", "name": "채널", "category": "기타"}]
+    assert vision_tagging.apply_channel_category(items, db) == 1
+    assert items[0]["category"] == "가전"
+
+
+def test_vision_tag_beats_channel_pin(db):
+    """★핵심 규칙: 화면분석이 있으면 채널 지정을 이긴다.
+    채널 고정이 이기면 그 채널의 다른 장르 영상까지 몰려 애초 문제로 되돌아간다."""
+    s = Store(db)
+    s.set_channel_category("chan_a", "가전")
+    s.save_vision_tags("P2", "감자조림", ["요리", "반찬"])
+    items = [{"shortcode": "P2", "username": "chan_a", "name": "채널", "category": "레시피"}]
+    assert vision_tagging.apply_channel_category(items, db) == 0   # 손 안 댐
+    assert items[0]["category"] == "레시피"
+
+
+def test_pin_unset_returns_to_auto(db):
+    """지정 해제하면 폴백이 사라진다(자동판정으로 되돌아감)."""
+    s = Store(db)
+    s.set_channel_category("chan_a", "가전")
+    s.set_channel_category("chan_a", "")
+    items = [{"shortcode": "P3", "username": "chan_a", "name": "채널", "category": "기타"}]
+    assert vision_tagging.apply_channel_category(items, db) == 0
+    assert items[0]["category"] == "기타"
+
+
+def test_pin_matches_username_case_and_at_insensitively(db):
+    Store(db).set_channel_category("@ChanB", "뷰티")
+    items = [{"shortcode": "P4", "username": "chanb", "name": "채널", "category": "기타"}]
+    assert vision_tagging.apply_channel_category(items, db) == 1
+    assert items[0]["category"] == "뷰티"

@@ -51,6 +51,7 @@ def main():
     try:
         tagged = vision_tagging.tag_new_items(items, DB_PATH)
         changed = vision_tagging.recategorize_by_vision(items, DB_PATH)
+        changed += vision_tagging.apply_channel_category(items, DB_PATH)   # 태그 없는 것만 채널지정으로
         if changed:
             Store(DB_PATH).save_last_run(items, collected_at)   # 바뀐 category를 화면 캐시에 반영
         print(f"[daily_instagram_collect] 비전태깅 {tagged}건 · 카테고리 재분류 {changed}건")

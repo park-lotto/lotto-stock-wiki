@@ -79,6 +79,10 @@
   .count{color:var(--sub);font-weight:400}
   .yt-note{background:rgba(224,178,58,.09);border:1px solid rgba(224,178,58,.3);
     border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--warn);margin-bottom:12px}
+  .tbl td.cat{white-space:nowrap}
+  .catsel{background:var(--inset,#0c1412);color:inherit;border:1px solid var(--line,#1e2b26);
+          border-radius:6px;padding:3px 6px;font-size:12px;cursor:pointer}
+  .catsel.pinned{border-color:var(--accent,#37e0bd);color:var(--accent,#37e0bd);font-weight:700}
 </style>
 </head>
 <body>
@@ -230,7 +234,8 @@ async function loadList(){
       // 엑셀 기본채널 + 손등록 통합 + 활동여부(무료). 서버 API가 union·활동 조인.
       const d=await (await fetch('/api/refs/instagram')).json();
       ITEMS=(d.items||[]).map(c=>({key:c.username, name:(c.name&&c.name!==c.username)?c.name:'',
-        added:c.added_at||'', last:c.last_active||'', src:c.source||'manual', followers:c.followers||0}));
+        added:c.added_at||'', last:c.last_active||'', src:c.source||'manual', followers:c.followers||0,
+        category:c.category||''}));
     }else{
       const d=await (await fetch('/api/seeds?platform='+PLAT)).json();
       ITEMS=(d.items||[]).filter(s=>s.kind==='account').map(s=>({key:s.value, name:'',
@@ -260,15 +265,44 @@ function renderRows(){
     const nm=r.name?'<div class="nm">'+esc(r.name)+'</div>':'';
     const ac=activity(r.last);
     const actCell=isIg ? '<td class="ac '+ac.cls+'">'+ac.txt+'</td>' : '<td class="ac ac-none">—</td>';
+    const catCell=isIg ? '<td class="cat">'+catSelect(k, r.category)+'</td>' : '<td class="cat">—</td>';
     return '<tr><td class="num">'+(i+1)+'</td>'
       +'<td><span class="handle">@'+esc(r.key)+'</span>'+badge+nm+'</td>'
+      +catCell
       +actCell
       +'<td class="date">'+fmtDate(r.added)+'</td>'
       +'<td class="act"><span class="delbtn" title="등록 취소" onclick="removeOne(\''+k+'\')">삭제</span></td></tr>';
   }).join('');
   const shown = rows.length!==ITEMS.length ? ' <span class="nm">('+rows.length+'개 표시)</span>' : '';
   wrap.innerHTML='<table class="tbl"><thead><tr><th>#</th><th>채널'+shown
-    +'</th><th>활동</th><th>등록일</th><th></th></tr></thead><tbody>'+body+'</tbody></table>';
+    +'</th><th title="비워두면 자동판정. 지정하면 그 채널의 영상 중 화면분석(비전태그)이 없는 것만 이 카테고리로 들어갑니다">카테고리</th>'
+    +'<th>활동</th><th>등록일</th><th></th></tr></thead><tbody>'+body+'</tbody></table>';
+}
+
+// ── 채널 카테고리 지정(2026-07-31) ──────────────────────────────
+// 자동판정(채널명 키워드)이 못 미치는 채널을 사장님이 직접 못 박는 자리.
+// ★덮어쓰기가 아니라 폴백이다: 화면분석(비전태그)이 있는 영상은 그쪽이 이긴다.
+// 채널 지정이 이기면 그 채널의 다른 장르 영상까지 한 카테고리로 몰려 원래 문제로 돌아간다.
+const PIN_CATS=[['','자동'],['홈템','홈템'],['레시피','레시피'],['가전','가전'],['뷰티','뷰티'],['기타','기타']];
+function catSelect(key, cur){
+  const opts=PIN_CATS.map(([v,l])=>'<option value="'+v+'"'+(v===(cur||'')?' selected':'')+'>'+l+'</option>').join('');
+  // 채널명을 onchange 문자열에 끼워넣지 않는다 — 따옴표 중첩 이스케이프가 깨지기 쉽고
+  // 실제로 한 번 깨져서 스크립트 전체가 파싱 실패했다(2026-07-31). data-key로 넘긴다.
+  return '<select class="catsel'+((cur||'')?' pinned':'')+'" data-key="'+esc(key)+'" onchange="setCat(this)">'+opts+'</select>';
+}
+async function setCat(sel){
+  const key=sel.dataset.key, val=sel.value;
+  sel.disabled=true;
+  try{
+    const r=await fetch('/api/refs/category?username='+encodeURIComponent(key)+'&category='+encodeURIComponent(val),{method:'POST'});
+    const d=await r.json().catch(()=>({ok:false}));
+    if(!d.ok) throw new Error(d.error||('HTTP '+r.status));
+    sel.classList.toggle('pinned', !!val);
+    const it=ITEMS.find(x=>x.key===key); if(it) it.category=val;   // 다시 그릴 때 유지
+  }catch(e){
+    alert('카테고리 저장 실패: '+e.message);
+    const it=ITEMS.find(x=>x.key===key); sel.value=(it&&it.category)||'';
+  }finally{ sel.disabled=false; }
 }
 
 async function removeOne(key){
