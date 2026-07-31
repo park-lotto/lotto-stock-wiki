@@ -2132,7 +2132,19 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     #  백본 모드(backbone_base on, opt-in): 특정 백본 영상의 시간순을 순서 뼈대로 쓴다(기존 동작 보존).
     # 설계: docs/superpowers/specs/2026-07-29-장면스파인-먼저-재설계-design.md
     bb_video, order_block, blocks, tl_groups = None, "", [], []
-    if backbone_base:
+    # ★리라이트 믹스는 **백본 여부와 무관하게** 먼저 시도한다(2026-07-31 실측 job 52f64c62b3ef).
+    #   처음엔 backbone_base가 꺼진 분기에만 넣었는데, 라이브 설정이 backbone_base_enabled=1이라
+    #   리라이트 믹스가 **아예 안 돌았다**(오프라인 검증을 백본 꺼진 상태로만 해서 못 봤다).
+    #   원본 타임라인을 뼈대로 쓰는 것이 백본(한 영상의 시간순을 뼈대로)의 상위 개념이므로
+    #   리라이트가 되면 그걸 쓰고, 재료가 모자라 못 만들 때만 백본/덩어리로 내려간다.
+    tl_groups = _pick_timeline(seg_map, target_seconds) if REWRITE_MIX else []
+    if tl_groups:
+        order_block = _rewrite_block(tl_groups)
+        if backbone_base:
+            from shopping_shorts import backbone
+            bb_video = backbone.pick_backbone(source_scripts, meta=backbone_meta,
+                                              forced=backbone_forced)   # 핑퐁이 참조한다
+    elif backbone_base:
         from shopping_shorts import backbone
         bb_video = backbone.pick_backbone(source_scripts, meta=backbone_meta,
                                           forced=backbone_forced)
@@ -2143,15 +2155,9 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         #   화면이 먼저 정해지므로 덩어리 초 → 글자수 예산을 대본에 줄 수 있고,
         #   배정도 코드가 강제한다(_assign_blocks) — 옛 스파인은 "고정이다"라고 말만 하고
         #   지켰는지 검사하지 않아 매번 다르게 나왔다. BLOCK_MIX=0으로 즉시 롤백.
-        # ★리라이트 믹스가 최우선(2026-07-31): 원본 타임라인을 뼈대로 두고 문장만 갈아끼운다.
-        #   화면 매칭이 애초에 필요 없어진다 — 레퍼런스 프로그램이 실제로 쓰는 방식.
-        tl_groups = _pick_timeline(seg_map, target_seconds) if REWRITE_MIX else []
-        if tl_groups:
-            order_block = _rewrite_block(tl_groups)
-        else:
-            blocks = _build_scene_blocks(seg_map, target_seconds) if BLOCK_MIX else []
-            order_block = (_blocks_order_block(blocks) if blocks
-                           else _spine_order_block(_build_scene_spine(seg_map, detected)))
+        blocks = _build_scene_blocks(seg_map, target_seconds) if BLOCK_MIX else []
+        order_block = (_blocks_order_block(blocks) if blocks
+                       else _spine_order_block(_build_scene_spine(seg_map, detected)))
     src_texts = [s.get("full_text", "") for s in source_scripts]
 
     def _ground_score(raws):

@@ -130,6 +130,27 @@ def test_reassign_is_idempotent_and_restores_order():
     assert [b["primary"]["seg_id"] for b in beats] == first
 
 
+def test_rewrite_mix_runs_even_when_backbone_is_on():
+    """★라이브는 backbone_base_enabled=1이다(2026-07-31 서버 실조회).
+
+    처음엔 backbone_base가 꺼진 분기에만 넣어서 라이브에서 리라이트 믹스가 아예 안 돌았다
+    (실측 job 52f64c62b3ef: 훅에 s1-13·s1-4·s1-14가 뒤엉키고 s0-5가 두 비트에 중복).
+    """
+    seen = {}
+
+    def _cap(prompt, schema):
+        seen["p"] = prompt
+        return {"candidates": [{"hook": "h", "beats": [
+            {"role": "훅", "narration": "새 문장", "seg_ids": ["v-0"], "fit": 5}]}]}
+
+    sources = [{"video_id": "v", "full_text": "본문", "segments": [
+        {"seg_id": f"v-{i}", "start": i * 2, "end": i * 2 + 2, "text": "기름이 튀었거든요",
+         "scene_desc": "주방", "change": "기름이 튄다", "shot_role": "사용중"} for i in range(5)]}]
+    ep.build_scene_first_plan(sources, "ref", 20, n_candidates=1, call=_cap,
+                              backbone_base=True)
+    assert "원본이 하던 말을 우리 말로 바꿔 쓴다" in seen["p"]
+
+
 def test_empty_inventory_is_safe():
     assert ep._pick_timeline({}, 30) == []
     assert ep._rewrite_block([]) == ""
