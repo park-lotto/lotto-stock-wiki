@@ -191,3 +191,39 @@ def test_judge_logs_when_no_key(monkeypatch, caplog):
     with caplog.at_level("INFO"):
         assert tag_qa_frames._judge(["a.jpg"], [(0, {"scene_desc": "x"})]) == []
     assert any("키가 없다" in r.message for r in caplog.records)
+
+
+# ── 측정 못 함은 조용하면 안 된다 (2026-08-01 확대 실측 교훈) ────────
+
+def test_측정_못_한_이유가_로그로_남는다(caplog):
+    """★확대 실측 30회 중 21회가 측정 실패였는데 로그가 한 줄도 없었다.
+    frame_score가 안 붙었을 때 '왜'를 물을 수 없으면 그 지표는 있으나 마나다.
+    None을 주는 세 갈래 전부 이유를 남겨야 한다."""
+    import logging
+    segs = [_seg(i) for i in range(3)]
+
+    with caplog.at_level(logging.INFO, logger=F.log.name):
+        # ①대조할 세그가 없다
+        assert F.spot_check({"segments": []}, "/v.mp4", "/tmp",
+                            _frames_fn=_frames_ok, _judge_fn=lambda p, k: []) is None
+        # ②프레임을 한 장도 못 뽑았다
+        assert F.spot_check({"segments": segs}, "/v.mp4", "/tmp",
+                            _frames_fn=lambda *a: ([], []), _judge_fn=lambda p, k: []) is None
+        # ③쓸 수 있는 판정이 0건이다
+        assert F.spot_check({"segments": segs}, "/v.mp4", "/tmp",
+                            _frames_fn=_frames_ok, _judge_fn=lambda p, k: []) is None
+
+    msgs = [r.message for r in caplog.records]
+    assert len(msgs) == 3, f"세 갈래가 각각 한 줄씩 남아야 한다: {msgs}"
+    assert all("측정 못 함" in m for m in msgs), msgs
+
+
+def test_정상_측정은_로그를_안_남긴다(caplog):
+    """담기마다 도는 경로라 성공까지 떠들면 로그가 쓸모없어진다."""
+    import logging
+    with caplog.at_level(logging.INFO, logger=F.log.name):
+        out = F.spot_check({"segments": [_seg(i) for i in range(3)]}, "/v.mp4", "/tmp",
+                           _frames_fn=_frames_ok,
+                           _judge_fn=lambda p, k: [_v(i + 1, "맞음") for i in range(len(k))])
+    assert out["frame_score"] == 1.0
+    assert not caplog.records, [r.message for r in caplog.records]
