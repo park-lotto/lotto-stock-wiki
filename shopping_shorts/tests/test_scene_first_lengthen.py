@@ -53,9 +53,12 @@ def test_regenerates_when_all_candidates_short():
     out = edit_plan.build_scene_first_plan(_src(), "원본대본", 20, n_candidates=2, call=fake_call)
     assert calls["n"] == 2                              # 최초 생성 + 재생성 1회
     assert calls["lengthen_seen"] is True               # 재생성 프롬프트에 힌트 주입
-    assert len(out["candidates"]) == 3                  # 짧은 후보 2 + 긴 후보 1 병합
+    # ★2026-08-01: 병합은 **고르기 위한** 것이라 사람에게 내보내는 개수는 n_candidates까지만
+    #   자른다(사장님 "대본이 왜 4개야?"). 재생성 자체(calls["n"]==2)와 긴 후보가 추천으로
+    #   살아남는 것은 그대로 — 잘려나가면 재생성이 무의미해지므로 추천은 항상 남긴다.
+    assert len(out["candidates"]) == 2                  # 상한 = n_candidates
     rec = [c for c in out["candidates"] if c["recommended"]]
-    assert len(rec) == 1 and rec[0]["story"]["hook"] == "LONG"   # 긴 후보 추천
+    assert len(rec) == 1 and rec[0]["story"]["hook"] == "LONG"   # 긴 후보 추천(잘리지 않음)
 
 
 def test_no_regeneration_when_length_ok():
@@ -71,3 +74,26 @@ def test_no_regeneration_when_length_ok():
     out = edit_plan.build_scene_first_plan(_src(), "원본대본", 20, n_candidates=2, call=fake_call)
     assert calls["n"] == 1                              # 재생성 없음
     assert len(out["candidates"]) == 1
+
+
+def test_cap_keeps_recommended_even_when_it_scores_low():
+    """재생성분이 상한에 밀려 잘리더라도 **추천 후보는 반드시 남는다**.
+
+    자르기가 단순 점수 상위 N이면, 재생성으로 얻은 긴 후보가 점수에서 밀릴 때
+    추천이 통째로 사라진다(추천 없는 후보목록 = 화면이 아무것도 못 고른다).
+    """
+    calls = {"n": 0}
+
+    def fake_call(prompt, schema, **kw):
+        if schema.get("required") == ["order"]:
+            return {"order": []}
+        calls["n"] += 1
+        if "[길이 보강]" in prompt:
+            return _long_batch()
+        return _short_batch()
+
+    out = edit_plan.build_scene_first_plan(_src(), "원본대본", 20, n_candidates=1,
+                                           call=fake_call)
+    assert len(out["candidates"]) == 1
+    rec = [c for c in out["candidates"] if c["recommended"]]
+    assert len(rec) == 1 and rec[0]["story"]["hook"] == "LONG"

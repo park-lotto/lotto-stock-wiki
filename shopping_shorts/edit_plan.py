@@ -2540,4 +2540,12 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         pool = qualified or range(len(cands))
         best = max(pool, key=lambda i: cands[i]["score"])
         cands[best]["recommended"] = True
+        # ★내보내는 후보는 n_candidates개까지만(2026-08-01 사장님 "대본이 왜 4개야?").
+        #   위 재생성(길이·말투)은 **고르기 위해** 후보를 더 뽑는 장치다 — 합쳐놓고 그중
+        #   최선을 고르는 게 목적이지, 사람에게 6개를 늘어놓는 게 목적이 아니었다.
+        #   그래서 선택 로직(합치기·하한·best)은 그대로 두고, **화면에 나가는 개수만** 자른다.
+        #   추천 후보는 점수와 무관하게 반드시 남긴다(잘려나가면 추천이 사라진다).
+        keep = sorted(range(len(cands)), key=lambda i: (i != best, -cands[i]["score"]))
+        keep = sorted(keep[:max(1, n_candidates)])      # 원래 순서(A/B/C)를 유지해 보여준다
+        cands = [cands[i] for i in keep]
     return {"candidates": cands, "detected_type": detected}
