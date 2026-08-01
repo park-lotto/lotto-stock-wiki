@@ -100,6 +100,24 @@ def test_ping_pong_noop_when_all_match():
     assert out == beats
 
 
+def test_ping_pong_reconcile_does_not_assign_same_clip_to_two_beats():
+    # 두 비트 모두 '자르다'가 필요한데 풀에 '자르다' 클립이 1개뿐 →
+    # dedup 없으면 두 비트가 독립적으로 같은 clips[0]을 골라 화면이 중복된다(실사고 8226822c5b09).
+    beats = [
+        {"beat_idx": 0, "narration": "바나나 썰어 넣고",
+         "primary": {"seg_id": "BB-1", "scene_desc": "뒤집는", "action": "뒤집다", "video_id": "BB"}},
+        {"beat_idx": 1, "narration": "사과도 썰어서",
+         "primary": {"seg_id": "BB-2", "scene_desc": "뒤집는", "action": "뒤집다", "video_id": "BB"}},
+    ]
+    pool = [{"video_id": "S1", "segments": [_seg("S1-9", scene_desc="써는", action="자르다")]}]
+    out = backbone.ping_pong_reconcile(beats, pool, rewrite_call=lambda bs: {})
+    seg_ids_from_swap = [b["primary"]["seg_id"] for b in out if b.get("action_fixed")]
+    assert len(seg_ids_from_swap) == len(set(seg_ids_from_swap))
+    # 정확히 하나만 스왑되고(클립 1개뿐), 나머지 하나는 재작성 대기로 빠져야 한다.
+    assert len(seg_ids_from_swap) == 1
+    assert sum(1 for b in out if b.get("need_rewrite")) == 1
+
+
 def test_narration_seconds_from_syllables():
     # 한국어 초당 5.7음절 → 57자면 약 10초
     s = backbone.narration_seconds("가" * 57)

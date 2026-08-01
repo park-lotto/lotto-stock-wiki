@@ -364,9 +364,16 @@ def _pick_timeline(seg_map, target_seconds):
             acc += _secs([s])
         if acc >= target_seconds:
             break
-    # ★한 세트 = 원본 대사 **한 문장이 시작해서 끝나는 장면까지**(2026-07-31 사장님).
-    #   시간으로 끊으면 문장 중간에서 화면이 갈려 말과 그림이 어긋난다. 원본이 한 문장을
-    #   말하는 동안 쓴 화면 전부가 한 덩어리다 — 그 자리에 우리 문장 하나를 갈아끼운다.
+    return _group_by_sentence(picked)
+
+
+def _group_by_sentence(picked):
+    """seg 리스트를 '원본 대사 한 문장이 시작~끝나는 구간'으로 묶는다(2026-07-31 사장님).
+
+    _pick_timeline과 _build_source_sentence_sets(→_pick_slot_groups) 둘 다 이 그룹핑을
+    재사용한다 — 세트 정의는 화면을 어떤 순서로 고르든(시간순이든 Gemini 판단이든)
+    동일해야 하기 때문. 단 _build_source_sentence_sets는 **소스별로 따로** 호출해
+    다른 소스와 섞이지 않게 한다(2026-08-01, F1 수정)."""
     groups, cur = [], []
     for s in picked:
         cur.append(s)
@@ -375,6 +382,162 @@ def _pick_timeline(seg_map, target_seconds):
     if cur:
         (groups[-1].extend(cur) if groups else groups.append(cur))
     return groups
+
+
+_SET_SEQ_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "order": {"type": "array", "items": {"type": "string"}},
+    },
+    "required": ["order"],
+}
+
+
+def _build_source_sentence_sets(seg_map):
+    """seg_map을 **소스별 시간순으로 먼저** 문장세트로 묶는다(2026-08-01, F1/F2 재설계).
+
+    옛 _pick_slot_sequence는 Gemini에게 seg 낱개를 자유 재정렬시킨 *뒤에* 문장으로 묶었다
+    (_pick_slot_groups: seq → group). 그런데 _group_by_sentence는 "리스트에서 옆에 붙은
+    seg는 같은 원본 문장이다"를 전제로 한다 — 옛 _pick_timeline(소스별 시간순)에서는 항상
+    참이었지만, Gemini가 소스를 넘나들며 자유 재정렬한 리스트에서는 거짓이 될 수 있다
+    (예: [a1, b3, a2] — a1+a2가 원래 한 문장인데 사이에 b3가 끼면 그룹핑이
+    [a1, b3]를 한 세트로 묶어버린다 = 서로 다른 소스가 섞인 프랑켄 문장).
+
+    그래서 순서를 뒤집는다: 그룹핑을 **먼저**, 소스별로 각자 자기 시간순 안에서만 한다
+    (다른 소스와 절대 안 섞는다) → Gemini에게는 다 만들어진 세트를 어떤 순서로/얼마나
+    쓸지만 묻는다(_pick_slot_groups). 이러면 세트 내부는 항상 한 소스만 담겨 프랑켄
+    문장이 구조적으로 불가능하다(세트끼리 소스가 섞이는 건 허용 — 그건 완성된 문장
+    두 개를 나란히 놓는 것뿐이라 문제 없음).
+
+    반환: [{"set_id": str, "video_id": str, "segs": [seg,...], "secs": float}, ...]
+    set_id는 세트의 첫 seg_id를 그대로 쓴다(Gemini 프롬프트에서 참조할 식별자로 충분하고,
+    seg_id 자체가 이미 사람이 읽을 수 있는 값이라 별도 채번이 필요 없다)."""
+    by_vid = {}
+    for s in seg_map.values():
+        by_vid.setdefault(s.get("video_id"), []).append(s)
+    sets = []
+    for vid in by_vid:
+        segs = sorted(by_vid[vid], key=lambda s: _seg_seq(s["seg_id"])[1])
+        for g in _group_by_sentence(segs):
+            sets.append({"set_id": g[0]["seg_id"], "video_id": vid, "segs": g,
+                         "secs": round(_secs(g), 1)})
+    return sets
+
+
+def _set_seq_prompt(sets, target_seconds):
+    lines = ["아래는 두 영상에서 뽑은 '한 문장이 시작~끝나는' 장면 세트들이다. 각 세트의 "
+             "역할(무슨 내용인지)을 보고, 하나의 자연스러운 스토리로 이어지도록 몇 개를 "
+             "고를지와 순서를 정하라. 같은 제품이라도 두 영상이 서로 다른 훅·전개를 가질 "
+             "수 있으니, 소스에 얽매이지 말고 내용 흐름으로 판단하라.",
+             f"목표 영상 길이는 약 {target_seconds}초다 — 총 길이가 거기 가깝게 되도록 "
+             "필요한 세트만 골라 순서를 정하라. 전부 다 쓸 필요는 없다.",
+             "세트 하나는 통째로 쓰거나 안 쓰거나만 가능하다 — 세트를 쪼개거나 "
+             "세트 안 순서를 바꾸거나 지어내지 마라."]
+    for st in sets:
+        segs = st["segs"]
+        said = " ".join((s.get("text") or "").strip() for s in segs).strip()
+        desc = " / ".join((s.get("scene_desc") or "").strip() for s in segs)
+        lines.append(f"- [{st['set_id']}] {st['secs']}초 · {desc} · 원본 대사: {said}")
+    lines.append("\n반드시 JSON {\"order\": [set_id, ...]} 형식으로만 답하라.")
+    return "\n".join(lines)
+
+
+def _filter_misplaced_sets(chosen):
+    """Gemini가 고른 세트 순서에도 _pick_timeline과 같은 상식 가드를 건다(F5, 2026-08-01).
+
+    _pick_timeline은 '완성 컷은 끝에서만, 문제 컷은 앞에서만'을 코드로 강제하지만, 그건
+    Gemini 실패 시의 폴백 경로에만 붙어 있었다. Gemini가 정상 응답을 준 경로(_pick_slot_groups
+    의 주력 경로)는 _set_seq_prompt로 "부탁"만 하고 코드 검증이 없었다 — 응답이 형식상
+    유효하면(order가 알려진 set_id로만 구성) 완성 세트가 중간에 끼든 문제 세트가 뒤에
+    끼든 그대로 통과됐다. 이건 이 파일이 이미 배운 교훈(_flag_offtopic 등: 프롬프트로
+    요구만 하고 코드로 확인 안 하면 지켜지는지 알 수 없다)과 같은 실패 패턴이라, 소스
+    인덱스 대신 시퀀스 위치로 같은 두 규칙을 재적용한다.
+
+    세트 단위 판정은 _pick_timeline의 비대칭 검사를 그대로 옮긴다 — 완성/after는
+    세트의 **마지막 seg**로, 문제/before는 세트의 **첫 seg**로 본다(세트=한 문장이 시작~
+    끝나는 구간이므로, 그 문장이 어디로 마무리되는지/어디서 시작하는지가 세트가 화면으로
+    보여주는 결말/도입을 가장 잘 대표한다). 걸리면 옮기지 않고 그냥 뺀다(_pick_timeline이
+    pop으로 잘라내는 것과 같은 단순함 — 억지로 재배치하면 왜 거기 있는지 설명이 더 꼬인다).
+
+    ★판정을 좁힌 이유(2026-08-01 실측): 처음엔 "마지막 seg가 완성/after"만 보고 잘랐는데,
+    `after`는 한 영상 안에서 여러 번 나온다 — 실측 소스(lens_youtube_1f60rye)의 세트 roles가
+    `after·사용중·문제·사용중·문제·사용중·after`라 중간 세트인데도 끝세트로 몰려 잘렸고,
+    그 소스의 세트가 **전부** 사라져 **두 영상을 담았는데 한 영상만 나가는** 결과가 됐다
+    (4세트 → 2세트, 길이도 반토막 나 길이 재생성이 후보를 4개로 불렸다).
+    그래서 끝세트는 **마지막 seg가 `완성`**(강한 신호)이거나 **세트 전체가 완성/after**일
+    때만으로 좁힌다. 도입세트도 같은 비대칭으로 `문제` 또는 전체가 문제/before일 때만.
+    """
+    n = len(chosen)
+    keep = []
+    for i, st in enumerate(chosen):
+        segs = st["segs"]
+        if not segs:
+            continue
+        roles = [s.get("shot_role") for s in segs]
+        is_ending = roles[-1] == "완성" or all(r in ("완성", "after") for r in roles)
+        is_opening = roles[0] == "문제" or all(r in ("문제", "before") for r in roles)
+        if i != n - 1 and is_ending:
+            continue
+        if i != 0 and is_opening:
+            continue
+        keep.append(st)
+    return keep
+
+
+# 슬롯 소스 태그(2026-08-01, 폴백 가시화) — _pick_slot_groups가 어느 경로로 결과를
+# 만들었는지 표시한다. 이 파일 스타일대로 enum 대신 평범한 문자열 상수로 정의한다
+# (shot_role의 "완성"/"after" 등과 같은 선례).
+SLOT_SOURCE_GEMINI = "gemini"                          # Gemini 응답을 그대로 사용
+SLOT_SOURCE_FALLBACK_EMPTY_ORDER = "fallback_empty_order"        # Gemini 응답에 유효한 세트가 0개
+SLOT_SOURCE_FALLBACK_FILTERED_EMPTY = "fallback_filtered_empty"  # F5 필터가 고른 세트를 전부 제거
+SLOT_SOURCE_EMPTY_INPUT = "empty_input"                # seg_map/sets 자체가 비어 애초에 할 게 없었음
+
+
+def _pick_slot_groups(seg_map, target_seconds=None, call=None):
+    """소스별로 먼저 확정한 문장세트(_build_source_sentence_sets)를 Gemini에게 주고,
+    스토리에 맞는 세트만 골라 순서를 정하게 한다(2026-08-01, F1/F2/F3 재설계).
+
+    build_scene_first_plan이 _pick_timeline 대신 부르는 진입점. 반환은
+    (groups, slot_source) 튜플(2026-08-01, 폴백 가시화 — 사장님 지적: 폴백이 조용히
+    일어나면 품질이 눈에 안 띄게 깎여도 알 방법이 없다) — groups는 _pick_timeline과
+    동일한 [[seg,...], ...], slot_source는 어느 경로로 만들어졌는지 나타내는 문자열
+    (SLOT_SOURCE_* 상수 중 하나). 하류(_rewrite_block/_assign_timeline)는 groups의
+    seg dict만 읽으므로 세트 메타(set_id 등)는 반환 전에 벗겨낸다.
+
+    Gemini가 세트 일부만 고르면(예산 안에서) 그 서브셋을 그대로 존중한다 — 옛
+    _pick_slot_sequence처럼 안 고른 걸 뒤에 강제로 보충하지 않는다(그러면 예산을 준 의미가
+    없어진다). 응답이 비었거나(order 없음) 알 수 없는 id만 있어 유효한 세트가 0개면,
+    안전장치 없는 전체 이어붙이기 대신 **_pick_timeline로 직접 폴백**한다 — 완성/문제
+    컷 트리밍과 target_seconds 캡을 이미 갖춘, 검증된 경로다(slot_source는
+    fallback_empty_order).
+
+    Gemini가 유효한 세트를 골랐더라도 그 순서를 그대로 믿지 않는다(F5, 2026-08-01) —
+    _filter_misplaced_sets로 완성/문제 컷 위치를 다시 검증한다. 이 필터가 전부 걸러내면
+    (골랐던 세트가 전부 규칙 위반) 마찬가지로 _pick_timeline 폴백으로 떨어진다
+    (slot_source는 fallback_filtered_empty). seg_map/sets가 애초에 비어 있으면
+    Gemini를 부르지도 못했다는 뜻이라 별도 태그(empty_input)를 쓴다."""
+    if not seg_map:
+        return [], SLOT_SOURCE_EMPTY_INPUT
+    sets = _build_source_sentence_sets(seg_map)
+    if not sets:
+        return [], SLOT_SOURCE_EMPTY_INPUT
+    caller = call or _vault_call
+    resp = caller(_set_seq_prompt(sets, target_seconds), _SET_SEQ_SCHEMA)
+    order = (resp or {}).get("order") if isinstance(resp, dict) else None
+    by_id = {st["set_id"]: st for st in sets}
+    chosen = []
+    seen = set()
+    if order:
+        for sid in order:
+            if sid in by_id and sid not in seen:
+                chosen.append(by_id[sid])
+                seen.add(sid)
+    if not chosen:
+        return _pick_timeline(seg_map, target_seconds), SLOT_SOURCE_FALLBACK_EMPTY_ORDER
+    chosen = _filter_misplaced_sets(chosen)
+    if not chosen:
+        return _pick_timeline(seg_map, target_seconds), SLOT_SOURCE_FALLBACK_FILTERED_EMPTY
+    return [st["segs"] for st in chosen], SLOT_SOURCE_GEMINI
 
 
 def _rewrite_block(groups):
@@ -411,18 +574,71 @@ def _assign_timeline(beats, groups):
     """화면을 **원본 시간순 그대로** 코드가 배정한다(모델이 뭘 골랐든 무시).
 
     비트 수와 구간 수가 달라도 앞에서부터 순서대로 나눠 준다 — 순서가 곧 원본 순서라
-    말과 화면이 어긋날 수가 없다."""
+    말과 화면이 어긋날 수가 없다.
+
+    ⚠️ n(비트 수) != len(groups)일 때 정수분배 lo/hi 슬라이스가 겹칠 수 있다
+    (예: n=6, len(groups)=5 → 비트0·1 둘 다 groups[0:1]). 그대로 두면 두 비트가
+    같은 chunk에서 같은 첫 클립을 골라 화면이 중복된다(실측 job 8226822c5b09,
+    ping_pong=True, n_beats=6/n_groups=5). 그래서 이번 호출 안에서 **이미 쓴
+    seg_id**를 추적해 다음 비트가 그 seg_id를 또 고르면 다음 후보로 넘긴다 —
+    chunk 안에 못 쓴 후보가 없으면 groups 전체에서 시간순으로 안 쓴 seg를 빌려오고,
+    그마저 없으면(그룹이 비트보다 훨씬 적은 극단적 경우) 중복을 허용한다(화면 없음보다
+    중복이 낫다).
+
+    ★screen_pinned 비트(2026-08-01, F4): _ensure_cta_beat가 만든 CTA 비트는 화면이
+    이미 신중하게 정해져 있다(마지막 비트 컷 재사용) — 이 함수가 인덱스 배분으로
+    덮어쓰면 그 선택이 무의미해진다. screen_pinned=True인 비트는 lo/hi/chunk/pick
+    계산을 건너뛰고 기존 primary를 그대로 둔다. 그 seg_id는 **본 루프 전에 미리**
+    used_seg_ids에 반영한다 — 핀 비트가 비트 목록의 뒤쪽(예: 마지막 CTA)에 있어도,
+    그보다 앞선 비트가 같은 컷을 먼저 채가지 않도록 순서와 무관하게 예약해야 한다.
+    lo/hi 인덱스 분배도 **핀 비트를 뺀 개수**로 다시 계산한다(n_active) — 안 그러면
+    "핀이 그룹 하나를 미리 가져갔다"는 사실이 나머지 비트들의 분배 폭에 반영되지
+    않아, 핀이 하필 다른 비트의 자연배정 그룹과 겹칠 때 원치 않는 중복이 튄다.
+    핀 비트 하나가 CTA로 추가되는 흔한 경우 n_active == len(groups)가 되어
+    원래 의도한 1:1 불변식이 나머지 비트들에 대해 그대로 복원된다."""
     if not beats or not groups:
         return beats
-    n = len(beats)
-    for i, b in enumerate(beats):
+    used_seg_ids = set()
+    all_segs_in_order = [s for g in groups for s in g]
+    for b in beats:
+        if b.get("screen_pinned"):
+            pinned_seg_id = (b.get("primary") or {}).get("seg_id")
+            if pinned_seg_id is not None:
+                used_seg_ids.add(pinned_seg_id)
+    active_beats = [b for b in beats if not b.get("screen_pinned")]
+    n = len(active_beats)
+    j = 0
+    for b in beats:
+        if b.get("screen_pinned"):
+            pinned = b.get("primary") or {}
+            _flag_offtopic(b, [pinned] + list(b.get("alternates") or []))
+            continue
+        i = j
+        j += 1
         lo = i * len(groups) // n
         hi = max(lo + 1, (i + 1) * len(groups) // n)
         chunk = [s for g in groups[lo:hi] for s in g] or groups[min(lo, len(groups) - 1)]
         chunk = _order_clips_by_words(b.get("narration") or "", chunk)
-        b["primary"] = dict(chunk[0])
-        b["alternates"] = [dict(s) for s in chunk[1:]]
-        _flag_offtopic(b, chunk)
+        pick = next((s for s in chunk if s.get("seg_id") not in used_seg_ids), None)
+        borrowed = False
+        if pick is None:
+            pick = next((s for s in all_segs_in_order if s.get("seg_id") not in used_seg_ids),
+                        None)
+            borrowed = True
+        if pick is None:
+            pick = chunk[0]   # 안 쓴 seg가 하나도 없다 — 중복 허용(화면 없음보다 낫다)
+        else:
+            used_seg_ids.add(pick.get("seg_id"))
+        # ★rest는 항상 "실제로 alternates가 될 것들"이어야 한다(2026-08-01, F4).
+        #   pick이 chunk 밖(all_segs_in_order)에서 빌려왔다면 chunk 안의 seg는 하나도
+        #   pick이 아니므로 `s is not pick` 필터가 chunk 전체를 그대로 통과시켜버린다
+        #   — rest에 pick과 무관한 원래 로컬 chunk가 그대로 남아 offtopic 검사(아래)가
+        #   실제 배정과 다른 화면을 보게 된다. 빌려온 경우엔 rest를 빈 목록으로 둔다
+        #   (그 비트의 진짜 alternates는 없다 — 로컬 후보는 이미 다른 비트가 다 썼다).
+        rest = [] if borrowed else [s for s in chunk if s is not pick]
+        b["primary"] = dict(pick)
+        b["alternates"] = [dict(s) for s in rest]
+        _flag_offtopic(b, [pick] + rest)
     return beats
 
 
@@ -1474,6 +1690,10 @@ def _ensure_cta_beat(beats, cand):
 
     화면은 마지막 비트의 컷을 재사용한다 — 새 장면을 지어낼 수 없고, CTA는 보통 마무리
     화면 위에 얹히는 자리다. cta_line이 비면 아무것도 하지 않는다(억지 생성 금지).
+
+    ★screen_pinned=True(2026-08-01, F4): 여기서 고른 화면을 뒤이은 _assign_timeline이
+    인덱스 배분으로 덮어쓰면 이 함수의 존재 의미가 없어진다 — screen_pinned 플래그로
+    "이미 정해진 화면이니 재배정하지 마라"를 표시한다.
     """
     if not beats or any(_is_cta(b) for b in beats):
         return beats
@@ -1488,77 +1708,33 @@ def _ensure_cta_beat(beats, cand):
         "beat_idx": len(beats), "role": "CTA", "narration": line, "caption_lines": None,
         "target_seconds": round(max(1.5, len(line) / _SYLLABLES_PER_SEC), 1),
         "primary": src, "alternates": [], "effect": "cut",
-        "fit": int(last.get("fit") or 0), "forced": False,
+        "fit": int(last.get("fit") or 0), "forced": False, "screen_pinned": True,
     }]
     return beats
 
 
-_LONG_BEAT_CHARS = 55       # 이보다 길고 문장이 2개 이상이면 화면을 나눈다
-# 쪼갠 뒤 양쪽이 이보다 짧으면 나누지 않는다 — 파편 비트(7~11자)가 화면을 뚝 끊는다.
+_LONG_BEAT_CHARS = 55       # 이보다 길면 자막줄을 무효화한다(2026-08-01부터 화면은 안 나눈다)
+# (2026-08-01 폐지) 예전엔 분할 시 파편 비트 방지에 썼다 — 화면 분할 자체가 없어져 미사용이나,
+# 다른 테스트가 여전히 참조하므로 상수는 남겨둔다.
 _MIN_SPLIT_CHARS = 18
-# 분할로 비트가 무한정 늘면 화면이 스타카토가 된다(실측 v6: 6~7 지시인데 10개까지 늘었다).
+# (2026-08-01 폐지) 예전엔 분할 상한이었다 — 화면 분할이 없어져 미사용, 상수만 유지.
 _MAX_BEATS = 8
 
 
 def _split_long_beats(beats):
-    """한 비트에 문장이 여러 개 몰린 것을 **문장 경계로 쪼개** 화면을 나눈다(2026-07-30).
+    """긴 비트의 자막줄을 무효화한다(2026-08-01 재설계 — 화면은 절대 안 나눈다).
 
-    ★왜 자르지 않고 쪼개나: 백테스트 실측(v3 30건)에서 55자 초과 비트 26개 중 15개가
-      2문장이었는데, 그 문장들이 오히려 **가장 좋은 글**이었다 —
-      "…찰기가 장난 아닌 거 있죠? / …향긋한 냄새가 온 집안에 확 퍼지더라구요."
-      사장님이 원한 어미·감각어가 다 들어 있다. 문제는 글이 아니라 **화면 1개에 문장 2개**가
-      붙는 구조다. 그래서 문장을 지우거나 줄이지 않고, 비트를 나눠 각 문장에 자기 화면을 준다.
-
-    나눌 재료: 비트마다 primary + alternates(추가 컷)가 있다. 컷이 2개 이상일 때만 쪼갠다
-    (컷이 하나면 나눠도 같은 화면이 두 번 나와 반복으로 보인다 → 그대로 둔다).
-    CTA·훅은 짧아서 대상이 거의 없지만, 쪼개면 흐름이 깨지므로 명시적으로 제외한다.
-    """
-    out = []
-    # 분할 여유 = 상한까지 몇 개 더 늘릴 수 있나. 다 쓰면 더 안 쪼갠다(긴 순서대로 우선).
-    room = max(0, _MAX_BEATS - len(beats))
-    if room:
-        # 가장 긴 비트부터 분할 예산을 준다 — 제일 급한 것부터 나눈다.
-        order = sorted(range(len(beats)),
-                       key=lambda i: -len((beats[i].get("narration") or "")))
-        allow = set(order[:room])
-    else:
-        allow = set()
-    for idx, b in enumerate(beats):
+    이전엔 문장 경계로 비트 자체를 쪼개 화면도 나눴는데, 이러면 비트 수가 늘어나
+    _assign_timeline 재호출 시 세트 수(불변)보다 많아져 화면 중복이 생겼다(2026-07-31
+    실측 job 8226822c5b09). 새 원칙: 화면(슬롯)은 파이프라인 전체에서 불변 — 긴 비트는
+    자막만 여러 줄로 나눠 보여주고 화면은 그대로 공유한다."""
+    if not beats:
+        return beats
+    for b in beats:
         narr = (b.get("narration") or "").strip()
-        alts = list(b.get("alternates") or [])
-        if idx not in allow:                    # 예산 밖 = 이번엔 안 나눈다
-            if len(narr) > _LONG_BEAT_CHARS:
-                b["caption_lines"] = None
-            out.append(b)
-            continue
-        sents = [s for s in re.split(r"(?<=[.!?])\s+", narr) if s.strip()]
-        if (len(narr) <= _LONG_BEAT_CHARS or len(sents) < 2 or not alts
-                or _is_cta(b) or not out):          # not out = 첫 비트(훅)는 건드리지 않는다
-            # 못 쪼개는 긴 비트라도 자막줄은 무효화한다 — 모델이 준 줄이 길면 자막이 화면을
-            # 덮는다. None이면 3~4어절 규칙으로 다시 끊긴다(2026-07-30, 분할 도입 전부터의 처방).
-            if len(narr) > _LONG_BEAT_CHARS:
-                b["caption_lines"] = None
-            out.append(b)
-            continue
-        # 문장을 앞/뒤 두 덩어리로(2문장이면 1:1, 3문장이면 2:1).
-        half = (len(sents) + 1) // 2
-        head, tail = " ".join(sents[:half]).strip(), " ".join(sents[half:]).strip()
-        # ★최소 길이 가드(2026-07-30 실물 확인). 인용문을 문장 경계로 쪼개면 "진짜 맛있겠다"(7자),
-        #   "입가에 미소가 번지네"(11자) 같은 **파편 비트**가 생겨 화면이 뚝 끊긴다(실측 v6).
-        #   양쪽이 다 최소 길이를 넘을 때만 나눈다 — 아니면 붙여둔 채 자막줄만 무효화한다.
-        if not head or not tail or min(len(head), len(tail)) < _MIN_SPLIT_CHARS:
+        if len(narr) > _LONG_BEAT_CHARS:
             b["caption_lines"] = None
-            out.append(b)
-            continue
-        # 컷도 나눈다: 앞 비트 = primary + alternates 앞쪽 / 뒤 비트 = 남은 첫 컷을 primary로.
-        k = max(1, len(alts) // 2)
-        first = dict(b, narration=head, caption_lines=None, alternates=alts[:k - 1] if k > 1 else [],
-                     target_seconds=round(max(1.5, len(head) / _SYLLABLES_PER_SEC), 1))
-        second = dict(b, narration=tail, caption_lines=None, primary=alts[k - 1],
-                      alternates=alts[k:],
-                      target_seconds=round(max(1.5, len(tail) / _SYLLABLES_PER_SEC), 1))
-        out.extend([first, second])
-    return out
+    return beats
 
 
 def _fix_beat_structure(beats):
@@ -2182,7 +2358,11 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     #   리라이트 믹스가 **아예 안 돌았다**(오프라인 검증을 백본 꺼진 상태로만 해서 못 봤다).
     #   원본 타임라인을 뼈대로 쓰는 것이 백본(한 영상의 시간순을 뼈대로)의 상위 개념이므로
     #   리라이트가 되면 그걸 쓰고, 재료가 모자라 못 만들 때만 백본/덩어리로 내려간다.
-    tl_groups = _pick_timeline(seg_map, target_seconds) if REWRITE_MIX else []
+    # slot_source: _pick_slot_groups가 Gemini 판단을 썼는지 폴백했는지(2026-08-01, 폴백
+    # 가시화) — REWRITE_MIX가 꺼져 슬롯 경로 자체를 안 탔으면 None(아래에서 plan에 안 붙는다).
+    slot_source = None
+    if REWRITE_MIX:
+        tl_groups, slot_source = _pick_slot_groups(seg_map, target_seconds, call=_call)
     if tl_groups:
         order_block = _rewrite_block(tl_groups)
         if backbone_base:
@@ -2277,6 +2457,10 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         plan["detected_type"] = detected
         plan["affiliate_target"] = r.get("story_event", "") or ""
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)
+        # 슬롯 폴백 가시화(2026-08-01): tl_groups가 있을 때만(=슬롯 경로를 실제로 탔을 때만)
+        # 의미가 있다 — REWRITE_MIX가 꺼진 경로는 tl_groups가 애초에 []라 slot_source도 None.
+        if tl_groups:
+            plan["slot_source"] = slot_source
         story = {k: r.get(k, "") for k in
                  ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
         rule_score = _score_candidate(plan, avoid_hooks=avoid_hooks, target_seconds=target_seconds,
@@ -2356,4 +2540,12 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         pool = qualified or range(len(cands))
         best = max(pool, key=lambda i: cands[i]["score"])
         cands[best]["recommended"] = True
+        # ★내보내는 후보는 n_candidates개까지만(2026-08-01 사장님 "대본이 왜 4개야?").
+        #   위 재생성(길이·말투)은 **고르기 위해** 후보를 더 뽑는 장치다 — 합쳐놓고 그중
+        #   최선을 고르는 게 목적이지, 사람에게 6개를 늘어놓는 게 목적이 아니었다.
+        #   그래서 선택 로직(합치기·하한·best)은 그대로 두고, **화면에 나가는 개수만** 자른다.
+        #   추천 후보는 점수와 무관하게 반드시 남긴다(잘려나가면 추천이 사라진다).
+        keep = sorted(range(len(cands)), key=lambda i: (i != best, -cands[i]["score"]))
+        keep = sorted(keep[:max(1, n_candidates)])      # 원래 순서(A/B/C)를 유지해 보여준다
+        cands = [cands[i] for i in keep]
     return {"candidates": cands, "detected_type": detected}

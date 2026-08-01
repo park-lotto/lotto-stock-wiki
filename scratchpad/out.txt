@@ -1,0 +1,29 @@
+소스 2개 / 세그 합계 34
+라이브 인자: ping_pong=True · backbone_base=True · judge=True · is_recipe=False · bank_context 790자 · REWRITE_MIX=(기본1)
+후보 3개 (상한 3) → OK
+
+[0]★ 비트 6 · 중복 0 · 세트간역전 0 · 소스 2/2 · CTA끝 True · slot_source=gemini · 세트내재배치 0(말맞춤) → OK
+   lens_youtube_1f60rye-1   [hook] fit=5 주방 벽에 튄 기름 얼룩, 그냥 방치하면 나중에 닦기 진짜 힘들어져요.
+   lens_youtube_1f60rye-6   [solution] fit=5 이 방탄 가림막은 엄청 튼튼하고 투명해서 시야도 가리지 않거든요.
+   lens_instagram_1g7dpt-6  [result] fit=5 기름을 싹 막아줘서 번거롭게 닦을 필요 없이 이거만 씻어내면 끝이에요.
+   lens_youtube_1f60rye-8   [additional] fit=2 주방 청소가 편해지는 이 꿀템, 궁금하시면 댓글에 '정보'라고 남겨주세요
+   lens_youtube_1f60rye-9   [additional] fit=2 주방 청소가 편해지는 이 꿀템, 궁금하시면 댓글에 '정보'라고 남겨주세요
+   lens_instagram_1g7dpt-14 [CTA] fit=5 스티커까지 붙여 나만의 주방을 완성해보세요. 궁금하시면 댓글 남겨주세요!
+
+[1]  비트 6 · 중복 0 · 세트간역전 0 · 소스 2/2 · CTA끝 True · slot_source=gemini · 세트내재배치 0(말맞춤) → OK
+   lens_youtube_1f60rye-2   [hook] fit=5 아직도 요리하고 나서 벽 닦느라 고생하세요? 이제 그러지 마세요.
+   lens_youtube_1f60rye-6   [solution] fit=5 이 가림막이 방탄 소재라 정말 단단하고 투명해서 깔끔하거든요.
+   lens_instagram_1g7dpt-6  [result] fit=5 사방에 튀는 기름을 다 막아주니까 닦을 필요 없이 가볍게 세척만 하면 돼
+   lens_youtube_1f60rye-8   [additional] fit=2 깔끔한 주방을 원하신다면 댓글로 '방법'이라고 달아주세요!
+   lens_youtube_1f60rye-9   [additional] fit=2 깔끔한 주방을 원하신다면 댓글로 '방법'이라고 달아주세요!
+   lens_instagram_1g7dpt-15 [CTA] fit=5 귀여운 스티커로 분위기까지 바꿔보세요. 방법이 궁금하면 댓글 남겨주세요!
+
+[2]  비트 6 · 중복 0 · 세트간역전 0 · 소스 2/2 · CTA끝 True · slot_source=gemini · 세트내재배치 0(말맞춤) → OK
+   lens_youtube_1f60rye-1   [hook] fit=5 주방 기름때랑 작별 인사할 시간이에요. 진짜 신세계 경험 중입니다.
+   lens_youtube_1f60rye-6   [solution] fit=5 방탄 소재라 튼튼하고 투명해서 시야 방해도 하나도 안 되거든요.
+   lens_instagram_1g7dpt-6  [result] fit=5 기름 튀는 건 다 막아주니까 상판 닦을 일 없이 이것만 씻으면 돼요.
+   lens_youtube_1f60rye-8   [additional] fit=2 제품이 궁금하신 분들은 댓글에 '구매'라고 남겨주세요!
+   lens_youtube_1f60rye-9   [additional] fit=2 제품이 궁금하신 분들은 댓글에 '구매'라고 남겨주세요!
+   lens_instagram_1g7dpt-14 [CTA] fit=5 예쁜 스티커로 꾸미면 인테리어까지 완벽해요. 댓글로 '구매' 남겨주세요!
+
+=== 후보 3개 중 NG 0개 ===

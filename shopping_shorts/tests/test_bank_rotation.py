@@ -51,8 +51,16 @@ def test_generation_passes_material_seed(monkeypatch):
     seg = {"s0-0": {"video_id": "s0", "seg_id": "s0-0", "start": 0.0, "end": 2.0,
                     "text": "", "scene_desc": "", "motion_level": "MED"}}
     monkeypatch.setattr(edit_plan, "_build_inventory", lambda s: (seg, "인벤토리"))
-    monkeypatch.setattr(edit_plan, "_vault_call",
-                        lambda prompt, schema, **kw: seen.append(prompt) or {"candidates": []})
+    # ★슬롯 순서질의(_pick_slot_groups, 2026-08-01)는 세지 않는다 — 이 테스트가 보는 건
+    #   **대본 생성** 프롬프트가 소재마다 다른가이고, 순서질의는 소재와 무관한 별개 호출이다
+    #   (다른 테스트들도 schema.required == ["order"]로 같은 구분을 한다).
+    def _spy(prompt, schema, **kw):
+        if (schema or {}).get("required") == ["order"]:
+            return {"order": []}
+        seen.append(prompt)
+        return {"candidates": []}
+
+    monkeypatch.setattr(edit_plan, "_vault_call", _spy)
     src = [{"video_id": "s0", "segments": [], "full_text": "x"}]
     edit_plan.build_scene_first_plan(src, "밥솥으로 카스테라 만들기", 30)
     edit_plan.build_scene_first_plan(src, "교도소 비누 찌든때 세탁", 30)

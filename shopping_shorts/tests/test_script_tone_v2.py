@@ -231,7 +231,11 @@ def _beat(role, narr, n_alts=2, **kw):
 
 
 def test_long_two_sentence_beat_is_split_not_truncated():
-    """★문장을 지우지 않는다 — 그 문장들이 오히려 가장 좋은 글이었다."""
+    """★문장을 지우지 않는다 — 그 문장들이 오히려 가장 좋은 글이었다.
+
+    2026-08-01 재설계: 화면(비트 개수)은 이제 절대 안 나눈다(슬롯 불변식 —
+    _assign_timeline 재호출 시 화면 중복을 막기 위함, job 8226822c5b09 실측).
+    두 문장은 그대로 한 비트에 남고, 자막줄만 무효화돼 다시 끊기게 한다."""
     a = "제빵기로 반죽했더니 찰기가 장난 아닌 거 있죠?"
     b = "오븐에 넣었더니 향긋한 냄새가 온 집안에 확 퍼지더라구요."
     beats = [_beat("훅", "커피 버리지 마세요", n_alts=0),
@@ -239,12 +243,10 @@ def test_long_two_sentence_beat_is_split_not_truncated():
              _beat("CTA", "댓글 남겨주세요", n_alts=0)]
     out = edit_plan._fix_beat_structure(beats)
     narrs = [x["narration"] for x in out]
-    assert a in narrs and b in narrs, "두 문장이 각자 자기 비트를 가져야 한다"
-    assert len(out) == 4, f"비트가 하나 늘어야 한다: {narrs}"
-    # 쪼갠 비트는 서로 다른 화면을 쓴다(같은 컷 반복이면 나눈 의미가 없다).
-    i = narrs.index(a)
-    assert out[i]["primary"]["seg_id"] != out[i + 1]["primary"]["seg_id"]
-    assert out[i]["caption_lines"] is None and out[i + 1]["caption_lines"] is None
+    assert f"{a} {b}" in narrs, "문장을 지우거나 나누지 않고 한 비트에 유지해야 한다"
+    assert len(out) == 3, f"비트 개수는 그대로여야 한다(화면 불변): {narrs}"
+    i = narrs.index(f"{a} {b}")
+    assert out[i]["caption_lines"] is None, "자막줄만 무효화돼야 한다"
 
 
 def test_single_sentence_long_beat_is_not_split():
@@ -410,7 +412,8 @@ def test_split_respects_max_beats():
 
 
 def test_longest_beat_is_split_first():
-    """분할 예산이 한 개뿐이면 가장 긴 비트를 먼저 나눈다."""
+    """2026-08-01 재설계: 화면은 이제 절대 안 나뉜다 — 비트 개수는 몇 개가 길든 불변이다.
+    (이전엔 분할 예산이 한 개뿐이면 가장 긴 비트를 먼저 나눴으나, 그 분할 자체를 제거했다.)"""
     short2 = "앞 문장이 오십오자를 살짝 넘기도록 적당히 길게 써 둡니다요. 뒤 문장입니다요."
     long2 = ("앞 문장이 아주아주 길어서 백자에 가깝게 늘려서 확실하게 가장 긴 비트가 되도록 "
              "만들어 둡니다요. 뒤 문장도 충분히 길게 이어서 씁니다요.")
@@ -418,6 +421,6 @@ def test_longest_beat_is_split_first():
              _beat("B", long2, n_alts=2), _beat("C", short2, n_alts=2),
              _beat("D", short2, n_alts=2), _beat("E", short2, n_alts=2),
              _beat("CTA", "댓글 남겨주세요", n_alts=0)]
-    out = edit_plan._fix_beat_structure(beats)          # 7개 → 여유 1개
-    assert len(out) == 8
-    assert sum(1 for x in out if x["role"] == "B") == 2, "가장 긴 B가 나뉘어야 한다"
+    out = edit_plan._fix_beat_structure(beats)
+    assert len(out) == 7, "비트 개수는 늘지 않아야 한다(화면 불변식)"
+    assert sum(1 for x in out if x["role"] == "B") == 1, "B는 나뉘지 않고 하나로 남아야 한다"
