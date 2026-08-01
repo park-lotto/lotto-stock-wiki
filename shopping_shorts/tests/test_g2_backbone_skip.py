@@ -116,3 +116,66 @@ def test_slot_path_still_runs_ping_pong_reconcile(monkeypatch):
     monkeypatch.setattr(backbone, "ping_pong_reconcile", w)
     _run(monkeypatch, True)
     assert seen["n"] > 0, "ping_pong_reconcile까지 같이 꺼졌다(나레이션 재작성이 사라진다)"
+
+
+# ---------------------------------------------------------------------------
+# 과적재 차단(2026-08-01): 화면을 대사가 필요한 만큼만 붙인다
+# ---------------------------------------------------------------------------
+
+def _seg(sid, dur):
+    return {"seg_id": sid, "start": 0.0, "end": float(dur), "scene_desc": sid}
+
+
+def test_trim_stops_once_narration_is_covered():
+    """훅처럼 대사가 짧은 비트에 화면을 잔뜩 붙이지 않는다.
+
+    실측 근거(overload_probe): 2.3초 말하는 훅에 화면 7.0초(클립 7개)가 붙어
+    클립들이 빠르게 스쳐 카탈로그 낭독처럼 보였다."""
+    beat = {"narration": "이거 진짜 물건이에요"}          # ≈1.6초
+    pick = _seg("p", 1)
+    rest = [_seg(f"r{i}", 1) for i in range(6)]
+    out = edit_plan._trim_rest_to_narration(beat, pick, rest)
+    # 예산 = 1.6 * 1.35 ≈ 2.1초 → primary 1초 + 클립 2개면 넘긴다
+    assert len(out) < len(rest), "과적재를 하나도 안 잘랐다"
+    assert 1 + sum(s["end"] - s["start"] for s in out) >= 2.0, "필요분보다 짧게 잘랐다"
+
+
+def test_trim_keeps_everything_when_screen_is_short():
+    """★화면이 이미 대사보다 짧으면 **하나도 안 자른다**.
+
+    단순 개수 상한(MAX_CLIPS_PER_BEAT=3)으로 잘랐다면 여기서 프리즈가 났다 —
+    실측에서 feature·cta 비트가 실제로 이 상태였다(2.9s 화면 / 3.5s 필요)."""
+    long_narration = "이걸 쓰기 시작하고 나서는 정말 하루도 빠짐없이 손이 가는데 그 이유가 분명히 있어요"
+    beat = {"narration": long_narration}
+    pick = _seg("p", 1)
+    rest = [_seg(f"r{i}", 1) for i in range(4)]      # 총 5초인데 대사는 그보다 길다
+    out = edit_plan._trim_rest_to_narration(beat, pick, rest)
+    assert out == rest, "화면이 부족한 비트를 잘랐다 — 프리즈가 돌아온다"
+
+
+def test_trim_noop_without_narration():
+    """나레이션이 없으면 판단 근거가 없다 — 건드리지 않는다(fail-open)."""
+    rest = [_seg("r0", 1)]
+    assert edit_plan._trim_rest_to_narration({"narration": ""}, _seg("p", 1), rest) == rest
+
+
+def test_trim_is_actually_wired_into_assign_timeline():
+    """★함수가 옳아도 **안 불리면** 아무 소용이 없다.
+
+    앞의 세 테스트는 `_trim_rest_to_narration`만 직접 부르므로, 배선 한 줄을 지워도
+    전부 통과한다(실제로 확인했다). 그래서 `_assign_timeline`을 통과한 결과가
+    대사 예산을 지키는지를 여기서 따로 못박는다."""
+    from shopping_shorts.backbone import _LEN_TOL, narration_seconds
+
+    beats = [{"narration": "이거 진짜 물건이에요", "role": "훅"}]     # ≈1.6초
+    groups = [[_seg(f"g{i}", 1) for i in range(7)]]                    # 화면 7초치
+    out = edit_plan._assign_timeline(beats, groups)
+
+    got = out[0]
+    total = ((got["primary"]["end"] - got["primary"]["start"])
+             + sum(a["end"] - a["start"] for a in got["alternates"]))
+    budget = narration_seconds(beats[0]["narration"]) * (1 + _LEN_TOL)
+    assert total <= budget + 1.0, (
+        f"_assign_timeline이 예산({budget:.1f}s)을 크게 넘겨 화면 {total:.1f}s를 붙였다 "
+        "— 트림 배선이 빠졌다")
+    assert len(got["alternates"]) < 6, "alternates를 하나도 안 잘랐다"

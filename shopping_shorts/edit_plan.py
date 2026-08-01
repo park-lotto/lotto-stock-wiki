@@ -787,10 +787,51 @@ def _assign_timeline(beats, groups):
         #   실제 배정과 다른 화면을 보게 된다. 빌려온 경우엔 rest를 빈 목록으로 둔다
         #   (그 비트의 진짜 alternates는 없다 — 로컬 후보는 이미 다른 비트가 다 썼다).
         rest = [] if borrowed else [s for s in chunk if s is not pick]
+        rest = _trim_rest_to_narration(b, pick, rest)
         b["primary"] = dict(pick)
         b["alternates"] = [dict(s) for s in rest]
         _flag_offtopic(b, [pick] + rest)
     return beats
+
+
+def _trim_rest_to_narration(beat, pick, rest):
+    """화면을 **대사가 필요한 만큼만** 붙이고 멈춘다(과적재 차단, 2026-08-01).
+
+    왜: chunk 전체를 alternates로 넣던 탓에 한 비트가 슬롯 그룹의 세그를 통째로 가져갔다.
+    실측(scratchpad/overload_probe.py, fixture_live): 훅 비트가 **2.3초 말하는데 화면을
+    7.0초(클립 7개)** 붙였다. 클립들이 빠르게 스쳐 카탈로그 낭독처럼 보이던 것의 정체다.
+
+    ★단순 개수 상한(MAX_CLIPS_PER_BEAT=3)으로 자르면 안 된다 — 같은 실측에서 feature·cta
+      비트는 이미 화면이 **대사보다 짧아**(2.9s/3.5s, 3.2s/5.4s) 개수로 자르면 오히려
+      프리즈가 는다. 그래서 개수가 아니라 **길이**를 기준으로 삼는다.
+
+    여유(_LEN_TOL=0.35)는 backbone.length_status가 '화면이 남는다(under)'고 볼 때와
+    같은 값을 쓴다 — 같은 현상을 두 곳이 다른 기준으로 재면 판정이 엇갈린다.
+    필요분에 못 미치면 **하나도 안 자른다**(모자란 쪽은 여기서 건드릴 일이 아니다).
+    실 TTS가 추정보다 길어 화면이 부족해지면 렌더 직전 `_refill_beats_to_tts`가
+    실측 길이로 다시 채운다 — 그게 안전망이라 여기서 넉넉히 잘라도 된다."""
+    if not rest:
+        return rest
+    from shopping_shorts.backbone import _LEN_TOL, narration_seconds
+
+    need = narration_seconds(beat.get("narration") or "")
+    if need <= 0:
+        return rest
+    budget = need * (1 + _LEN_TOL)
+
+    def _dur(s):
+        return max(0.0, (s or {}).get("end", 0) - (s or {}).get("start", 0))
+
+    total = _dur(pick)
+    if total >= budget:
+        return []                      # primary만으로 이미 충분하다
+    kept = []
+    for s in rest:
+        kept.append(s)
+        total += _dur(s)
+        if total >= budget:
+            break                      # 이 클립까지로 예산을 넘겼다 — 여기서 멈춘다
+    return kept
 
 
 def _stems(txt):
