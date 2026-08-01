@@ -619,6 +619,34 @@ SLOT_SOURCE_FALLBACK_FILTERED_EMPTY = "fallback_filtered_empty"  # F5 필터가 
 SLOT_SOURCE_EMPTY_INPUT = "empty_input"                # seg_map/sets 자체가 비어 애초에 할 게 없었음
 
 
+def _slot_info(sets, chosen, kept):
+    """슬롯 선택이 무엇을 버렸는지 남긴다(2026-08-01 리뷰 G3, 기록만·동작 불변).
+
+    slot_source는 필터가 **전부** 걸러낸 경우만 표시했다 — 4세트 중 1~2개만 잘리는
+    **부분 제거는 아무 흔적이 없었다**. `after` 실사고(두 영상 담았는데 한 영상만 나감)가
+    바로 그 종류였고, 발견도 코드가 아니라 사장님 눈이었다. 그래서 세 숫자를 남긴다:
+    무엇이 잘렸나(filtered) · 소스별로 몇 세트씩 채택됐나(picked_by_source) · 애초에
+    소스별 세트가 몇 개였나(sets_by_source). 마지막 둘의 대조가 "담은 영상을 다 쓰는가"
+    (G1)를 판정하는 재료가 된다.
+    """
+    def _by_src(items):
+        out = {}
+        for st in items or []:
+            out[st["video_id"]] = out.get(st["video_id"], 0) + 1
+        return out
+
+    kept_ids = {st["set_id"] for st in kept or []}
+    return {
+        "sets_total": len(sets or []),
+        "sets_by_source": _by_src(sets),
+        "chosen": len(chosen or []),
+        "kept": len(kept or []),
+        "filtered": [st["set_id"] for st in (chosen or []) if st["set_id"] not in kept_ids],
+        "picked_by_source": _by_src(kept),
+        "sources_unused": sorted(set(_by_src(sets)) - set(_by_src(kept))),
+    }
+
+
 def _pick_slot_groups(seg_map, target_seconds=None, call=None):
     """소스별로 먼저 확정한 문장세트(_build_source_sentence_sets)를 Gemini에게 주고,
     스토리에 맞는 세트만 골라 순서를 정하게 한다(2026-08-01, F1/F2/F3 재설계).
@@ -643,10 +671,11 @@ def _pick_slot_groups(seg_map, target_seconds=None, call=None):
     (slot_source는 fallback_filtered_empty). seg_map/sets가 애초에 비어 있으면
     Gemini를 부르지도 못했다는 뜻이라 별도 태그(empty_input)를 쓴다."""
     if not seg_map:
-        return [], SLOT_SOURCE_EMPTY_INPUT
-    sets = _cap_sets(_build_source_sentence_sets(seg_map), target_seconds)
+        return [], SLOT_SOURCE_EMPTY_INPUT, _slot_info([], [], [])
+    all_sets = _build_source_sentence_sets(seg_map)
+    sets = _cap_sets(all_sets, target_seconds)
     if not sets:
-        return [], SLOT_SOURCE_EMPTY_INPUT
+        return [], SLOT_SOURCE_EMPTY_INPUT, _slot_info(all_sets, [], [])
     caller = call or _vault_call
     resp = caller(_set_seq_prompt(sets, target_seconds), _SET_SEQ_SCHEMA)
     order = (resp or {}).get("order") if isinstance(resp, dict) else None
@@ -659,11 +688,13 @@ def _pick_slot_groups(seg_map, target_seconds=None, call=None):
                 chosen.append(by_id[sid])
                 seen.add(sid)
     if not chosen:
-        return _pick_timeline(seg_map, target_seconds), SLOT_SOURCE_FALLBACK_EMPTY_ORDER
-    chosen = _filter_misplaced_sets(chosen)
-    if not chosen:
-        return _pick_timeline(seg_map, target_seconds), SLOT_SOURCE_FALLBACK_FILTERED_EMPTY
-    return [st["segs"] for st in chosen], SLOT_SOURCE_GEMINI
+        return (_pick_timeline(seg_map, target_seconds), SLOT_SOURCE_FALLBACK_EMPTY_ORDER,
+                _slot_info(sets, [], []))
+    kept = _filter_misplaced_sets(chosen)
+    if not kept:
+        return (_pick_timeline(seg_map, target_seconds), SLOT_SOURCE_FALLBACK_FILTERED_EMPTY,
+                _slot_info(sets, chosen, []))
+    return [st["segs"] for st in kept], SLOT_SOURCE_GEMINI, _slot_info(sets, chosen, kept)
 
 
 def _rewrite_block(groups):
@@ -2487,8 +2518,10 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     # slot_source: _pick_slot_groups가 Gemini 판단을 썼는지 폴백했는지(2026-08-01, 폴백
     # 가시화) — REWRITE_MIX가 꺼져 슬롯 경로 자체를 안 탔으면 None(아래에서 plan에 안 붙는다).
     slot_source = None
+    slot_info = None
     if REWRITE_MIX:
-        tl_groups, slot_source = _pick_slot_groups(seg_map, target_seconds, call=_call)
+        tl_groups, slot_source, slot_info = _pick_slot_groups(seg_map, target_seconds,
+                                                              call=_call)
     if tl_groups:
         order_block = _rewrite_block(tl_groups)
         if backbone_base:
@@ -2598,6 +2631,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         # 의미가 있다 — REWRITE_MIX가 꺼진 경로는 tl_groups가 애초에 []라 slot_source도 None.
         if tl_groups:
             plan["slot_source"] = slot_source
+            if slot_info:
+                plan["slot_info"] = slot_info      # G3 관측: 무엇이 잘리고 어느 소스가 빠졌나
         story = {k: r.get(k, "") for k in
                  ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
         rule_score = _score_candidate(plan, avoid_hooks=avoid_hooks, target_seconds=target_seconds,

@@ -56,7 +56,7 @@ def test_pick_slot_groups_f1_no_cross_source_fragment_mixing():
         ids = [st["set_id"] for st in sets]
         return {"order": list(reversed(ids))}
 
-    groups, source = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    groups, source, _info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
     assert source == ep.SLOT_SOURCE_GEMINI
     for g in groups:
         vids = {s["video_id"] for s in g}
@@ -77,7 +77,7 @@ def test_pick_slot_groups_f2_does_not_force_append_unused_sets():
         a_only = [st["set_id"] for st in sets if st["video_id"] == "a"]
         return {"order": a_only}   # b쪽 세트는 일부러 선택하지 않음(예산 내 선택 흉내)
 
-    groups, source = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    groups, source, _info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
     assert source == ep.SLOT_SOURCE_GEMINI
     ids = {s["seg_id"] for g in groups for s in g}
     assert "b-0" not in ids and "b-1" not in ids   # 강제 보충되면 안 된다
@@ -98,7 +98,7 @@ def test_pick_slot_groups_f3_falls_back_to_pick_timeline_on_empty_response():
 
     expected = ep._pick_timeline(sm, 30)
     for fake in (fake_call_none, fake_call_empty):
-        groups, source = ep._pick_slot_groups(sm, target_seconds=30, call=fake)
+        groups, source, _info = ep._pick_slot_groups(sm, target_seconds=30, call=fake)
         assert groups == expected
         assert source == ep.SLOT_SOURCE_FALLBACK_EMPTY_ORDER
 
@@ -122,7 +122,7 @@ def test_pick_slot_groups_f5_drops_completion_set_placed_in_the_middle():
         b_ids = [st["set_id"] for st in sets if st["video_id"] == "b"]
         return {"order": [by_vid_first["a"]] + b_ids}
 
-    groups, source = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    groups, source, _info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
     ids = [s["seg_id"] for g in groups for s in g]
     assert "a-1" not in ids, f"완성 세트가 중간에 낀 채 그대로 남았다: {ids}"
     assert "b-0" in ids and "b-1" in ids
@@ -143,7 +143,7 @@ def test_pick_slot_groups_f5_drops_problem_set_placed_after_the_first_slot():
         # a0 → a1 → b0(문제) : 문제 세트가 첫 자리가 아니라 맨 뒤에 낀 순서.
         return {"order": a_ids + b_ids}
 
-    groups, source = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    groups, source, _info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
     ids = [s["seg_id"] for g in groups for s in g]
     assert "b-0" not in ids, f"문제 세트가 첫 자리가 아닌 채 그대로 남았다: {ids}"
     assert "a-0" in ids and "a-1" in ids
@@ -161,7 +161,7 @@ def test_pick_slot_groups_f5_keeps_completion_set_when_genuinely_last():
         by_vid = {st["video_id"]: st["set_id"] for st in sets}
         return {"order": [by_vid["a"], by_vid["b"]]}
 
-    groups, source = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    groups, source, _info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
     ids = [s["seg_id"] for g in groups for s in g]
     assert "b-0" in ids, f"맨 끝의 정상적인 완성 세트까지 지워졌다: {ids}"
     assert source == ep.SLOT_SOURCE_GEMINI
@@ -177,7 +177,7 @@ def test_pick_slot_groups_f5_keeps_problem_set_when_genuinely_first():
         by_vid = {st["video_id"]: st["set_id"] for st in sets}
         return {"order": [by_vid["a"], by_vid["b"]]}
 
-    groups, source = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    groups, source, _info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
     ids = [s["seg_id"] for g in groups for s in g]
     assert "a-0" in ids, f"맨 앞의 정상적인 문제 세트까지 지워졌다: {ids}"
     assert source == ep.SLOT_SOURCE_GEMINI
@@ -198,7 +198,7 @@ def test_pick_slot_groups_f5_falls_back_to_pick_timeline_when_filter_empties_all
         return {"order": [by_vid["a"], by_vid["b"]]}
 
     expected = ep._pick_timeline(sm, 30)
-    groups, source = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    groups, source, _info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
     assert groups == expected
     assert source == ep.SLOT_SOURCE_FALLBACK_FILTERED_EMPTY
 
@@ -208,7 +208,7 @@ def test_pick_slot_groups_empty_seg_map_tags_empty_input():
     def fake_call(prompt, schema):
         raise AssertionError("seg_map이 비었으면 Gemini를 호출하면 안 된다")
 
-    groups, source = ep._pick_slot_groups({}, target_seconds=30, call=fake_call)
+    groups, source, _info = ep._pick_slot_groups({}, target_seconds=30, call=fake_call)
     assert groups == []
     assert source == ep.SLOT_SOURCE_EMPTY_INPUT
 
@@ -225,7 +225,7 @@ def test_pick_slot_groups_groups_by_sentence():
         v1_ids = [st["set_id"] for st in sets if st["video_id"] == "v1"]
         return {"order": [v0_ids[0], v1_ids[0], v0_ids[1]]}
 
-    groups, source = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    groups, source, _info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
     ids = [[s["seg_id"] for s in g] for g in groups]
     assert ids == [["v0-1"], ["v1-1"], ["v0-2"]]   # 각자 "요"로 끝나는 문장 → 세트 하나씩
     assert source == ep.SLOT_SOURCE_GEMINI
@@ -746,3 +746,32 @@ def test_only_one_cta_survives():
 def test_single_cta_is_untouched():
     beats = [{"role": "hook", "narration": "훅"}, {"role": "cta", "narration": "댓글"}]
     assert ep._dedupe_cta_beats(beats) == beats
+
+
+def test_partial_filtering_is_recorded(monkeypatch):
+    """부분 제거도 흔적을 남긴다(G3) — `after` 실사고가 이 종류였다."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("a-2", "라마바요", 2.0), ("b-0", "사아자요", 2.0)])
+    sm["a-2"]["shot_role"] = "완성"          # 끝세트인데 중간에 오면 잘린다
+
+    def fake_call(prompt, schema, **kw):
+        return {"order": ["a-0", "a-2", "b-0"]}
+
+    groups, source, info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    assert source == ep.SLOT_SOURCE_GEMINI
+    assert info["chosen"] == 3 and info["kept"] == 2
+    assert info["filtered"] == ["a-2"]                 # 무엇이 잘렸는지 남는다
+    assert info["picked_by_source"] == {"a": 1, "b": 1}
+    assert info["sources_unused"] == []
+
+
+def test_unused_source_is_recorded():
+    """담은 영상이 통째로 안 쓰이면 그것도 숫자로 남는다(G1 판정 재료)."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("b-0", "사아자요", 2.0)])
+
+    def fake_call(prompt, schema, **kw):
+        return {"order": ["a-0"]}                      # b를 안 골랐다
+
+    _g, source, info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    assert source == ep.SLOT_SOURCE_GEMINI
+    assert info["sources_unused"] == ["b"]
+    assert info["sets_by_source"] == {"a": 1, "b": 1}

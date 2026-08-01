@@ -101,12 +101,17 @@ def main():
     _orig = _ep._pick_slot_groups
 
     def _spy(seg_map_, target_=None, call=None):
-        groups, src = _orig(seg_map_, target_, call)
+        groups, src, info = _orig(seg_map_, target_, call)
+        if info and not slot_order:
+            print(f"슬롯 관측: 세트 {info['sets_total']}{info['sets_by_source']} → "
+                  f"선택 {info['chosen']} → 통과 {info['kept']} · "
+                  f"잘림 {info['filtered']} · 채택 {info['picked_by_source']} · "
+                  f"미사용소스 {info['sources_unused']}")
         if not slot_order:
             for gi, g in enumerate(groups):
                 for s in g:
                     slot_order[s["seg_id"]] = gi
-        return groups, src
+        return groups, src, info
 
     _ep._pick_slot_groups = _spy
     try:
