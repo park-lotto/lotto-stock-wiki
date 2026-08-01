@@ -656,3 +656,15 @@ def test_all_after_set_in_the_middle_is_dropped():
 def test_problem_set_in_the_middle_is_still_dropped():
     chosen = [_set("a-1", ["사용중", "사용중"]), _set("a-5", ["문제", "사용중"])]
     assert [s["set_id"] for s in ep._filter_misplaced_sets(chosen)] == ["a-1"]
+
+
+def test_set_prompt_requires_every_source_once():
+    """예산이 한 영상으로 차더라도 담은 영상은 다 쓰라고 명시한다.
+
+    실측(job af0e40746fe1): s0 세트 합 16.9초 · s1 합 30.2초에 목표 30초라
+    s1만으로 예산이 정확히 차서 Gemini가 s0를 통째로 버렸다(추천 후보까지 s1 단독).
+    """
+    sm = _sm([("a-0", "가나다요", 2.0), ("b-0", "라마바요", 2.0)])
+    txt = ep._set_seq_prompt(ep._build_source_sentence_sets(sm), 30)
+    assert "영상마다 최소 한 세트씩은 반드시 골라라" in txt
+    assert "덜 중요한 세트를 빼서 길이를 맞춰라" in txt
