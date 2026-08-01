@@ -56,7 +56,8 @@ def test_pick_slot_groups_f1_no_cross_source_fragment_mixing():
         ids = [st["set_id"] for st in sets]
         return {"order": list(reversed(ids))}
 
-    groups = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    groups, source = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    assert source == ep.SLOT_SOURCE_GEMINI
     for g in groups:
         vids = {s["video_id"] for s in g}
         assert len(vids) == 1, f"cross-source mixing within one set: {[s['seg_id'] for s in g]}"
@@ -76,7 +77,8 @@ def test_pick_slot_groups_f2_does_not_force_append_unused_sets():
         a_only = [st["set_id"] for st in sets if st["video_id"] == "a"]
         return {"order": a_only}   # b쪽 세트는 일부러 선택하지 않음(예산 내 선택 흉내)
 
-    groups = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    groups, source = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    assert source == ep.SLOT_SOURCE_GEMINI
     ids = {s["seg_id"] for g in groups for s in g}
     assert "b-0" not in ids and "b-1" not in ids   # 강제 보충되면 안 된다
     assert "a-0" in ids and "a-1" in ids
@@ -96,8 +98,9 @@ def test_pick_slot_groups_f3_falls_back_to_pick_timeline_on_empty_response():
 
     expected = ep._pick_timeline(sm, 30)
     for fake in (fake_call_none, fake_call_empty):
-        groups = ep._pick_slot_groups(sm, target_seconds=30, call=fake)
+        groups, source = ep._pick_slot_groups(sm, target_seconds=30, call=fake)
         assert groups == expected
+        assert source == ep.SLOT_SOURCE_FALLBACK_EMPTY_ORDER
 
 
 # ── F5: Gemini 세트 순서에도 완성/문제 컷 상식검증 필요 (2026-08-01, 외부 리뷰 후속) ──
@@ -119,10 +122,12 @@ def test_pick_slot_groups_f5_drops_completion_set_placed_in_the_middle():
         b_ids = [st["set_id"] for st in sets if st["video_id"] == "b"]
         return {"order": [by_vid_first["a"]] + b_ids}
 
-    groups = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    groups, source = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
     ids = [s["seg_id"] for g in groups for s in g]
     assert "a-1" not in ids, f"완성 세트가 중간에 낀 채 그대로 남았다: {ids}"
     assert "b-0" in ids and "b-1" in ids
+    # 필터가 일부만 제거했을 뿐 남은 결과는 여전히 Gemini 판단 경로다(전부 지워진 게 아님).
+    assert source == ep.SLOT_SOURCE_GEMINI
 
 
 def test_pick_slot_groups_f5_drops_problem_set_placed_after_the_first_slot():
@@ -138,10 +143,12 @@ def test_pick_slot_groups_f5_drops_problem_set_placed_after_the_first_slot():
         # a0 → a1 → b0(문제) : 문제 세트가 첫 자리가 아니라 맨 뒤에 낀 순서.
         return {"order": a_ids + b_ids}
 
-    groups = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    groups, source = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
     ids = [s["seg_id"] for g in groups for s in g]
     assert "b-0" not in ids, f"문제 세트가 첫 자리가 아닌 채 그대로 남았다: {ids}"
     assert "a-0" in ids and "a-1" in ids
+    # 필터가 일부만 제거했을 뿐 남은 결과는 여전히 Gemini 판단 경로다(전부 지워진 게 아님).
+    assert source == ep.SLOT_SOURCE_GEMINI
 
 
 def test_pick_slot_groups_f5_keeps_completion_set_when_genuinely_last():
@@ -154,9 +161,10 @@ def test_pick_slot_groups_f5_keeps_completion_set_when_genuinely_last():
         by_vid = {st["video_id"]: st["set_id"] for st in sets}
         return {"order": [by_vid["a"], by_vid["b"]]}
 
-    groups = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    groups, source = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
     ids = [s["seg_id"] for g in groups for s in g]
     assert "b-0" in ids, f"맨 끝의 정상적인 완성 세트까지 지워졌다: {ids}"
+    assert source == ep.SLOT_SOURCE_GEMINI
 
 
 def test_pick_slot_groups_f5_keeps_problem_set_when_genuinely_first():
@@ -169,9 +177,10 @@ def test_pick_slot_groups_f5_keeps_problem_set_when_genuinely_first():
         by_vid = {st["video_id"]: st["set_id"] for st in sets}
         return {"order": [by_vid["a"], by_vid["b"]]}
 
-    groups = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    groups, source = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
     ids = [s["seg_id"] for g in groups for s in g]
     assert "a-0" in ids, f"맨 앞의 정상적인 문제 세트까지 지워졌다: {ids}"
+    assert source == ep.SLOT_SOURCE_GEMINI
 
 
 def test_pick_slot_groups_f5_falls_back_to_pick_timeline_when_filter_empties_all():
@@ -189,8 +198,19 @@ def test_pick_slot_groups_f5_falls_back_to_pick_timeline_when_filter_empties_all
         return {"order": [by_vid["a"], by_vid["b"]]}
 
     expected = ep._pick_timeline(sm, 30)
-    groups = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    groups, source = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
     assert groups == expected
+    assert source == ep.SLOT_SOURCE_FALLBACK_FILTERED_EMPTY
+
+
+def test_pick_slot_groups_empty_seg_map_tags_empty_input():
+    """seg_map이 아예 비었으면 Gemini를 부를 것도 없다 — 폴백이 아니라 empty_input 태그."""
+    def fake_call(prompt, schema):
+        raise AssertionError("seg_map이 비었으면 Gemini를 호출하면 안 된다")
+
+    groups, source = ep._pick_slot_groups({}, target_seconds=30, call=fake_call)
+    assert groups == []
+    assert source == ep.SLOT_SOURCE_EMPTY_INPUT
 
 
 def test_pick_slot_groups_groups_by_sentence():
@@ -205,9 +225,10 @@ def test_pick_slot_groups_groups_by_sentence():
         v1_ids = [st["set_id"] for st in sets if st["video_id"] == "v1"]
         return {"order": [v0_ids[0], v1_ids[0], v0_ids[1]]}
 
-    groups = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    groups, source = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
     ids = [[s["seg_id"] for s in g] for g in groups]
     assert ids == [["v0-1"], ["v1-1"], ["v0-2"]]   # 각자 "요"로 끝나는 문장 → 세트 하나씩
+    assert source == ep.SLOT_SOURCE_GEMINI
 
 
 def test_ends_sentence_uses_korean_endings():
@@ -393,6 +414,8 @@ def test_build_scene_first_plan_uses_gemini_slot_order_with_no_duplicate_screens
     seg_ids = [b["primary"]["seg_id"] for b in plan["beats"]]
     assert len(seg_ids) == len(set(seg_ids))          # 핵심: 화면 중복 없음
     assert set(seg_ids) <= {"a-0", "a-1", "b-0", "b-1"}
+    # 폴백 가시화(2026-08-01): 슬롯 경로를 실제로 탔으면 plan에 slot_source가 남아야 한다.
+    assert plan["slot_source"] == ep.SLOT_SOURCE_GEMINI
 
 
 def test_clip_matching_the_words_comes_first():

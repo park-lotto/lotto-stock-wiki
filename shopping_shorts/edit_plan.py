@@ -473,28 +473,43 @@ def _filter_misplaced_sets(chosen):
     return keep
 
 
+# 슬롯 소스 태그(2026-08-01, 폴백 가시화) — _pick_slot_groups가 어느 경로로 결과를
+# 만들었는지 표시한다. 이 파일 스타일대로 enum 대신 평범한 문자열 상수로 정의한다
+# (shot_role의 "완성"/"after" 등과 같은 선례).
+SLOT_SOURCE_GEMINI = "gemini"                          # Gemini 응답을 그대로 사용
+SLOT_SOURCE_FALLBACK_EMPTY_ORDER = "fallback_empty_order"        # Gemini 응답에 유효한 세트가 0개
+SLOT_SOURCE_FALLBACK_FILTERED_EMPTY = "fallback_filtered_empty"  # F5 필터가 고른 세트를 전부 제거
+SLOT_SOURCE_EMPTY_INPUT = "empty_input"                # seg_map/sets 자체가 비어 애초에 할 게 없었음
+
+
 def _pick_slot_groups(seg_map, target_seconds=None, call=None):
     """소스별로 먼저 확정한 문장세트(_build_source_sentence_sets)를 Gemini에게 주고,
     스토리에 맞는 세트만 골라 순서를 정하게 한다(2026-08-01, F1/F2/F3 재설계).
 
-    build_scene_first_plan이 _pick_timeline 대신 부르는 진입점. 반환 형태는
-    _pick_timeline과 동일한 [[seg,...], ...] — 하류(_rewrite_block/_assign_timeline)는
+    build_scene_first_plan이 _pick_timeline 대신 부르는 진입점. 반환은
+    (groups, slot_source) 튜플(2026-08-01, 폴백 가시화 — 사장님 지적: 폴백이 조용히
+    일어나면 품질이 눈에 안 띄게 깎여도 알 방법이 없다) — groups는 _pick_timeline과
+    동일한 [[seg,...], ...], slot_source는 어느 경로로 만들어졌는지 나타내는 문자열
+    (SLOT_SOURCE_* 상수 중 하나). 하류(_rewrite_block/_assign_timeline)는 groups의
     seg dict만 읽으므로 세트 메타(set_id 등)는 반환 전에 벗겨낸다.
 
     Gemini가 세트 일부만 고르면(예산 안에서) 그 서브셋을 그대로 존중한다 — 옛
     _pick_slot_sequence처럼 안 고른 걸 뒤에 강제로 보충하지 않는다(그러면 예산을 준 의미가
     없어진다). 응답이 비었거나(order 없음) 알 수 없는 id만 있어 유효한 세트가 0개면,
     안전장치 없는 전체 이어붙이기 대신 **_pick_timeline로 직접 폴백**한다 — 완성/문제
-    컷 트리밍과 target_seconds 캡을 이미 갖춘, 검증된 경로다.
+    컷 트리밍과 target_seconds 캡을 이미 갖춘, 검증된 경로다(slot_source는
+    fallback_empty_order).
 
     Gemini가 유효한 세트를 골랐더라도 그 순서를 그대로 믿지 않는다(F5, 2026-08-01) —
     _filter_misplaced_sets로 완성/문제 컷 위치를 다시 검증한다. 이 필터가 전부 걸러내면
-    (골랐던 세트가 전부 규칙 위반) 마찬가지로 _pick_timeline 폴백으로 떨어진다."""
+    (골랐던 세트가 전부 규칙 위반) 마찬가지로 _pick_timeline 폴백으로 떨어진다
+    (slot_source는 fallback_filtered_empty). seg_map/sets가 애초에 비어 있으면
+    Gemini를 부르지도 못했다는 뜻이라 별도 태그(empty_input)를 쓴다."""
     if not seg_map:
-        return []
+        return [], SLOT_SOURCE_EMPTY_INPUT
     sets = _build_source_sentence_sets(seg_map)
     if not sets:
-        return []
+        return [], SLOT_SOURCE_EMPTY_INPUT
     caller = call or _vault_call
     resp = caller(_set_seq_prompt(sets, target_seconds), _SET_SEQ_SCHEMA)
     order = (resp or {}).get("order") if isinstance(resp, dict) else None
@@ -507,11 +522,11 @@ def _pick_slot_groups(seg_map, target_seconds=None, call=None):
                 chosen.append(by_id[sid])
                 seen.add(sid)
     if not chosen:
-        return _pick_timeline(seg_map, target_seconds)
+        return _pick_timeline(seg_map, target_seconds), SLOT_SOURCE_FALLBACK_EMPTY_ORDER
     chosen = _filter_misplaced_sets(chosen)
     if not chosen:
-        return _pick_timeline(seg_map, target_seconds)
-    return [st["segs"] for st in chosen]
+        return _pick_timeline(seg_map, target_seconds), SLOT_SOURCE_FALLBACK_FILTERED_EMPTY
+    return [st["segs"] for st in chosen], SLOT_SOURCE_GEMINI
 
 
 def _rewrite_block(groups):
@@ -2332,7 +2347,11 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     #   리라이트 믹스가 **아예 안 돌았다**(오프라인 검증을 백본 꺼진 상태로만 해서 못 봤다).
     #   원본 타임라인을 뼈대로 쓰는 것이 백본(한 영상의 시간순을 뼈대로)의 상위 개념이므로
     #   리라이트가 되면 그걸 쓰고, 재료가 모자라 못 만들 때만 백본/덩어리로 내려간다.
-    tl_groups = _pick_slot_groups(seg_map, target_seconds, call=_call) if REWRITE_MIX else []
+    # slot_source: _pick_slot_groups가 Gemini 판단을 썼는지 폴백했는지(2026-08-01, 폴백
+    # 가시화) — REWRITE_MIX가 꺼져 슬롯 경로 자체를 안 탔으면 None(아래에서 plan에 안 붙는다).
+    slot_source = None
+    if REWRITE_MIX:
+        tl_groups, slot_source = _pick_slot_groups(seg_map, target_seconds, call=_call)
     if tl_groups:
         order_block = _rewrite_block(tl_groups)
         if backbone_base:
@@ -2427,6 +2446,10 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         plan["detected_type"] = detected
         plan["affiliate_target"] = r.get("story_event", "") or ""
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)
+        # 슬롯 폴백 가시화(2026-08-01): tl_groups가 있을 때만(=슬롯 경로를 실제로 탔을 때만)
+        # 의미가 있다 — REWRITE_MIX가 꺼진 경로는 tl_groups가 애초에 []라 slot_source도 None.
+        if tl_groups:
+            plan["slot_source"] = slot_source
         story = {k: r.get(k, "") for k in
                  ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
         rule_score = _score_candidate(plan, avoid_hooks=avoid_hooks, target_seconds=target_seconds,
