@@ -178,3 +178,16 @@ def test_bool은_번호로_안_친다():
     """파이썬에서 True는 int라 image_no=True가 1번으로 통과해버린다."""
     picked = [(0, _seg(0))]
     assert F.score_verdicts([_v(True, "맞음")], picked) == (None, [])
+
+
+def test_judge_logs_when_no_key(monkeypatch, caplog):
+    """키가 없어 판정을 못 하면 **로그를 남긴다** — 조용한 측정 누락 금지(2026-08-01).
+
+    확대 실측 30회 중 21회가 로그 한 줄 없이 빠졌다. 예외가 아니라 early return이라
+    아무 흔적이 없었고, 실패 원인을 찾는 데 실측을 한 번 더 돌려야 했다.
+    """
+    from shopping_shorts import comment_gen, tag_qa_frames
+    monkeypatch.setattr(comment_gen, "_current_key_and_idx", lambda: (None, 0))
+    with caplog.at_level("INFO"):
+        assert tag_qa_frames._judge(["a.jpg"], [(0, {"scene_desc": "x"})]) == []
+    assert any("키가 없다" in r.message for r in caplog.records)
