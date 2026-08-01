@@ -34,6 +34,24 @@ _PREWARM_MAX_ATTEMPTS = 1        # shortcode당 총 시도(autoload와 같은 �
 _DAILY_KEY = "prewarm_daily"     # settings: "YYYY-MM-DD|n"
 
 
+def _log_tag_qa(shortcode, result):
+    """태깅 QA 점수를 로그 한 줄로 — "이 영상이 왜 이상한가"를 나중에 추적하는 실마리.
+
+    tag_audit은 표본 전체의 분포를 보지만, 사장님이 특정 영상 하나를 짚어 물을 때는
+    그 job이 그때 몇 점이었는지가 필요하다. 점수만으론 원인을 모르니 flags를 같이 남긴다.
+    ★로그 실패가 예열을 죽이면 안 된다(예열은 보조작업) — 통째로 감싼다."""
+    try:
+        qa = (result or {}).get("tag_qa") or {}
+        if not qa:
+            return
+        flags = "; ".join(qa.get("flags") or []) or "없음"
+        log.info("tag_qa %s: %.2f (재시도 %s, flags: %s)",
+                 shortcode, float(qa.get("score") or 0.0),
+                 "O" if qa.get("retried") else "X", flags)
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def _work_dir(shortcode: str) -> Path:
     """autoload와 같은 임시 폴더 규칙(shortcode sha1 16자)."""
     base = Path(DB_PATH).parent / "find_frames"
@@ -73,7 +91,7 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
           failed_download | failed_empty | failed_error | done
     예외를 밖으로 던지지 않는다 — 예열은 보조작업이라 실패해도 무해해야 한다."""
     from shopping_shorts.media_download import download_any
-    from shopping_shorts.script_extract import extract_auto
+    from shopping_shorts.script_extract import extract_auto, storable
     from shopping_shorts.structure_analyze import analyze_structure
 
     code = (shortcode or "").strip()
@@ -121,9 +139,10 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
         if not full_text:                    # ③빈 대본은 저장 금지
             store.autoload_mark_error(code, "예열: 전사 결과 없음(음성 없음·자막 불가)")
             return "failed_empty"
-        store.save_script(code, {"full_text": result.get("full_text", ""),
-                                 "segments": result.get("segments") or []},
-                          category=category)
+        # storable()로 추린다 — 손으로 dict를 다시 만들면 tag_qa가 저장에서 누락된다
+        # (담기 예열이 라이브 주경로라 여기서 새면 QA 점수가 아예 안 쌓인다).
+        store.save_script(code, storable(result), category=category)
+        _log_tag_qa(code, result)
         ok = True
     finally:
         if not ok:

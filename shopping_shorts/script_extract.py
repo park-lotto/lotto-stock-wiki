@@ -276,6 +276,23 @@ def _attach_qa(result, duration, retried):
     return result
 
 
+def storable(result):
+    """`script_extracts`에 남길 필드만 추린 dict — **저장 직전에 이걸 통과시켜라.**
+
+    ★왜 헬퍼로 뽑았나(2026-08-01): 저장부 3곳이 각자 `{"full_text":…, "segments":…}`를
+    손으로 다시 만들고 있었다. 그래서 `_attach_qa`가 붙인 `tag_qa`가 **저장 순간 버려졌고**,
+    tag_audit이 재는 A코호트(실시간 채점 점수)가 영원히 0건이 될 판이었다. 필드를 하나
+    늘릴 때마다 세 군데를 같이 고쳐야 하는 구조 자체가 재발의 원인이라 한 곳으로 모은다.
+
+    통째로 저장하지 않는 이유는 그대로 유지한다 — 추출 결과엔 DB에 남길 필요 없는
+    중간 부산물이 섞이므로 **화이트리스트**로 간다(새 필드는 여기 추가하면 전 경로에 반영).
+    """
+    r = result or {}
+    return {"full_text": r.get("full_text", "") or "",
+            "segments": r.get("segments") or [],
+            "tag_qa": r.get("tag_qa") or {}}
+
+
 def _pick_better_extract(first, second, duration):
     """QA 재시도 결과가 더 나쁘면 첫 시도를 쓴다 — 재시도가 품질을 깎으면 안 된다.
     second가 비었으면(API 실패) 볼 것도 없이 first."""

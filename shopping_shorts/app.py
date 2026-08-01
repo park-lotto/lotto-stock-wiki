@@ -29,7 +29,7 @@ from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI
 from shopping_shorts.frame_extract import (download_video, extract_frames,
                                            extract_frame_at, extract_grid_frames)
-from shopping_shorts.script_extract import extract_script, extract_auto
+from shopping_shorts.script_extract import extract_script, extract_auto, storable
 from shopping_shorts.structure_analyze import analyze_structure
 from shopping_shorts import backbone
 from shopping_shorts.aipick import build_aipick
@@ -1845,7 +1845,7 @@ def api_produce_save_to_wiki(request: Request, body: dict, background_tasks: Bac
         if not result.get("full_text") and not result.get("segments"):
             return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패 — 잠시 후 재시도"})
         category = body_category or None
-        script = {"full_text": result.get("full_text", ""), "segments": result.get("segments") or []}
+        script = storable(result)   # 손으로 추리면 tag_qa가 저장에서 샌다(2026-08-01)
         store.save_script(code, script, category=category)
         structure = None
 
@@ -6790,8 +6790,7 @@ def api_produce_autoload(request: Request, body: dict):
                 return e
             e["category"] = item.get("category") or categorize(
                 item.get("name") or "", item.get("caption") or "") or None
-            e["script"] = {"full_text": result.get("full_text", ""),
-                           "segments": result.get("segments") or []}
+            e["script"] = storable(result)   # tag_qa 보존(손으로 추리면 샌다, 2026-08-01)
             e["save_script"] = True                  # C단계가 캐시에 저장
         if not e["structure"]:
             try:
