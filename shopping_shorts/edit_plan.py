@@ -787,10 +787,51 @@ def _assign_timeline(beats, groups):
         #   실제 배정과 다른 화면을 보게 된다. 빌려온 경우엔 rest를 빈 목록으로 둔다
         #   (그 비트의 진짜 alternates는 없다 — 로컬 후보는 이미 다른 비트가 다 썼다).
         rest = [] if borrowed else [s for s in chunk if s is not pick]
+        rest = _trim_rest_to_narration(b, pick, rest)
         b["primary"] = dict(pick)
         b["alternates"] = [dict(s) for s in rest]
         _flag_offtopic(b, [pick] + rest)
     return beats
+
+
+def _trim_rest_to_narration(beat, pick, rest):
+    """화면을 **대사가 필요한 만큼만** 붙이고 멈춘다(과적재 차단, 2026-08-01).
+
+    왜: chunk 전체를 alternates로 넣던 탓에 한 비트가 슬롯 그룹의 세그를 통째로 가져갔다.
+    실측(scratchpad/overload_probe.py, fixture_live): 훅 비트가 **2.3초 말하는데 화면을
+    7.0초(클립 7개)** 붙였다. 클립들이 빠르게 스쳐 카탈로그 낭독처럼 보이던 것의 정체다.
+
+    ★단순 개수 상한(MAX_CLIPS_PER_BEAT=3)으로 자르면 안 된다 — 같은 실측에서 feature·cta
+      비트는 이미 화면이 **대사보다 짧아**(2.9s/3.5s, 3.2s/5.4s) 개수로 자르면 오히려
+      프리즈가 는다. 그래서 개수가 아니라 **길이**를 기준으로 삼는다.
+
+    여유(_LEN_TOL=0.35)는 backbone.length_status가 '화면이 남는다(under)'고 볼 때와
+    같은 값을 쓴다 — 같은 현상을 두 곳이 다른 기준으로 재면 판정이 엇갈린다.
+    필요분에 못 미치면 **하나도 안 자른다**(모자란 쪽은 여기서 건드릴 일이 아니다).
+    실 TTS가 추정보다 길어 화면이 부족해지면 렌더 직전 `_refill_beats_to_tts`가
+    실측 길이로 다시 채운다 — 그게 안전망이라 여기서 넉넉히 잘라도 된다."""
+    if not rest:
+        return rest
+    from shopping_shorts.backbone import _LEN_TOL, narration_seconds
+
+    need = narration_seconds(beat.get("narration") or "")
+    if need <= 0:
+        return rest
+    budget = need * (1 + _LEN_TOL)
+
+    def _dur(s):
+        return max(0.0, (s or {}).get("end", 0) - (s or {}).get("start", 0))
+
+    total = _dur(pick)
+    if total >= budget:
+        return []                      # primary만으로 이미 충분하다
+    kept = []
+    for s in rest:
+        kept.append(s)
+        total += _dur(s)
+        if total >= budget:
+            break                      # 이 클립까지로 예산을 넘겼다 — 여기서 멈춘다
+    return kept
 
 
 def _stems(txt):
@@ -2588,34 +2629,50 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 # 트림이 대본을 목표의 75% 밑으로 깎으면 아예 적용하지 않는다(2026-07-31).
                 # 넘치는 화면은 렌더의 _refill_beats_to_tts가 클립을 더 붙여 흡수한다.
                 min_total_chars=int((target_seconds or 0) * _SYLLABLES_PER_SEC * 0.75))
-            # 이 후보의 백본(순서 뼈대) — 백본-베이스면 후보 자신의 것, 아니면 전역 선정.
-            bb = r.get("_backbone_video") or backbone.pick_backbone(
-                source_scripts, meta=backbone_meta, forced=backbone_forced)
-            if bb:
-                plan["beats"] = backbone.order_by_backbone(plan["beats"], bb)
-            # 반복장면·한소스 편중 해소: 쓴 클립 재사용 금지 + 덜 쓴 소스 우선 교체
-            plan["beats"] = backbone.dedup_and_balance(plan["beats"], source_scripts)
-            # 서브 의무삽입: 아예 안 쓰인 소스(s2=0)를 같은 행위로 강제 삽입(dedup으론 못 잡음)
-            plan["beats"] = backbone.ensure_sources_used(plan["beats"], source_scripts)
-            # 전역 컷 반복 해소(alternates 포함) + 비트당 클립 상한 → 뚝뚝 끊김·B롤 반복 해소
-            # (dedup_and_balance는 primary만 봐서 B롤 체인이 비트마다 반복됐다, job 실측).
-            plan["beats"] = backbone.dedup_clips_global(plan["beats"], source_scripts)
-            # 영상 차별화(2026-07-27, 최종 단계): 훅(첫 비트)=비-A 소스 최고장면 / CTA(끝)=중간
-            # 소스 클립(원본 엔딩 회피). 화면만 재배정(narration 불변) → 다른 후처리 뒤에 마지막으로.
-            plan["beats"] = backbone.swap_hook_cta_for_differentiation(
-                plan["beats"], bb, source_scripts)
-        # ★핑퐁 후처리 뒤 구조 재교정(2026-07-31). 위 backbone 단계들(order_by_backbone·
-        #   dedup_and_balance·ensure_sources_used·swap_hook_cta_for_differentiation)이
-        #   비트 순서를 다시 짜면서 **CTA가 마지막이 아니게 된다** — 라이브 설정 백테스트에서
-        #   20건 중 9건이 CTA끝X였다(기본 설정 측정에선 0건이라 여태 안 보였다).
-        #   _ground_candidate·conform 뒤에 이미 걸어둔 것과 같은 교정을 여기서 한 번 더 건다(멱등).
+            # ★슬롯 경로(tl_groups)에선 아래 백본 화면 후처리 5종을 **건너뛴다**
+            #   (G2, 2026-08-01). 이들은 primary/alternates만 만지는데, 이 블록 뒤의
+            #   `_assign_timeline`(2회차)이 그 둘을 통째로 재설정하므로 **결과가 예외 없이
+            #   소멸한다** — 일을 하고 그 일을 버리는 구조였다.
+            #
+            #   실측(scratchpad/g2_probe.py, 반사실 대조): 소재 5종 × 후보 16개 전부
+            #   "스킵했을 때의 최종 화면 == 실제 최종 화면" 0건 차이. 검사가 실제로 무는지도
+            #   고의 차이 주입으로 확인했다(9건 검출).
+            #   ⚠️단순히 "5종 실행 전/후"를 비교하면 안 된다 — _assign_timeline이 우연히
+            #     같은 세그를 고른 경우를 '살아남았다'로 오판한다(초안이 실제로 그랬다).
+            #     반드시 **스킵한 비트에 같은 _assign_timeline을 걸어** 대조해야 한다.
+            #
+            #   이 5종이 슬롯을 깨뜨리며 만든 두더지가 여럿이었다(ping_pong 클립 중복 배정,
+            #   CTA가 끝에서 밀려남 → _fix_beat_structure를 3번 부르게 된 원인).
+            #   ping_pong_reconcile(위)은 **나레이션도 재작성**하므로 여기서 건드리지 않는다.
+            #   tl_groups가 없는 경로(REWRITE_MIX=0)에선 종전대로 전부 돈다.
+            if not tl_groups:
+                # 이 후보의 백본(순서 뼈대) — 백본-베이스면 후보 자신의 것, 아니면 전역 선정.
+                bb = r.get("_backbone_video") or backbone.pick_backbone(
+                    source_scripts, meta=backbone_meta, forced=backbone_forced)
+                if bb:
+                    plan["beats"] = backbone.order_by_backbone(plan["beats"], bb)
+                # 반복장면·한소스 편중 해소: 쓴 클립 재사용 금지 + 덜 쓴 소스 우선 교체
+                plan["beats"] = backbone.dedup_and_balance(plan["beats"], source_scripts)
+                # 서브 의무삽입: 아예 안 쓰인 소스(s2=0)를 같은 행위로 강제 삽입(dedup으론 못 잡음)
+                plan["beats"] = backbone.ensure_sources_used(plan["beats"], source_scripts)
+                # 전역 컷 반복 해소(alternates 포함) + 비트당 클립 상한 → 뚝뚝 끊김·B롤 반복 해소
+                # (dedup_and_balance는 primary만 봐서 B롤 체인이 비트마다 반복됐다, job 실측).
+                plan["beats"] = backbone.dedup_clips_global(plan["beats"], source_scripts)
+                # 영상 차별화(2026-07-27, 최종 단계): 훅(첫 비트)=비-A 소스 최고장면 / CTA(끝)=중간
+                # 소스 클립(원본 엔딩 회피). 화면만 재배정(narration 불변) → 다른 후처리 뒤에 마지막으로.
+                plan["beats"] = backbone.swap_hook_cta_for_differentiation(
+                    plan["beats"], bb, source_scripts)
+        # ★핑퐁 후처리 뒤 구조 재교정(2026-07-31). 원래는 위 backbone 5종이 비트 순서를
+        #   다시 짜면서 **CTA가 마지막이 아니게 되는** 것을 되돌리려고 넣었다(라이브 설정
+        #   백테스트 20건 중 9건이 CTA끝X). 슬롯 경로에선 그 5종을 이제 안 타므로 그 사유는
+        #   사라졌지만, **ping_pong_reconcile은 여전히 비트를 재작성**하므로 교정은 남긴다.
+        #   멱등이라 이미 정상인 계획엔 아무 일도 하지 않는다.
         plan["beats"] = _fix_beat_structure(plan["beats"])
         # ★리라이트 믹스는 화면을 **맨 마지막에 다시 못박는다**(2026-07-31 실측 job e288f2f0c387).
-        #   _assign_timeline을 grounding 직후에만 걸었더니, 라이브(핑퐁 ON)에서 그 뒤의
-        #   order_by_backbone·dedup_and_balance·ensure_sources_used·dedup_clips_global·
-        #   swap_hook_cta_for_differentiation이 화면을 다시 뒤섞어 원본 순서가 사라졌다
-        #   (실측: 한 비트에 s0-1·s1-7·s1-13이 섞이고 s1-7이 두 비트에 중복).
-        #   말은 저 단계들이 다듬게 두고, **화면 순서만** 원본으로 되돌린다.
+        #   ⚠️2026-08-01(G2)로 의미가 바뀌었다: 예전엔 뒤따르는 backbone 5종이 화면을 뒤섞어
+        #   그것을 되돌리는 게 주목적이었으나, 이제 그 5종을 슬롯 경로에서 건너뛰므로
+        #   여기서 되돌릴 것이 없다. 남은 역할은 **ping_pong_reconcile이 바꾼 화면**을
+        #   원본 슬롯 순서로 되돌리는 것 하나다(그 함수는 나레이션과 화면을 함께 만진다).
         if tl_groups:
             plan["beats"] = _assign_timeline(plan["beats"], tl_groups)
         plan["detected_type"] = detected
