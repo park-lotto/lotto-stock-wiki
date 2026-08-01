@@ -100,6 +100,99 @@ def test_pick_slot_groups_f3_falls_back_to_pick_timeline_on_empty_response():
         assert groups == expected
 
 
+# ── F5: Gemini 세트 순서에도 완성/문제 컷 상식검증 필요 (2026-08-01, 외부 리뷰 후속) ──
+# _pick_timeline은 '완성 컷은 끝에서만, 문제 컷은 앞에서만'을 코드로 강제하지만, 그 가드는
+# _pick_timeline 자신의 폴백 경로에만 붙어 있다. _pick_slot_groups가 Gemini 응답을 성공적으로
+# 받았을 때(훨씬 흔한 경로)는 프롬프트로 부탁만 하고 코드 검증이 없었다 — Gemini가 완성 세트를
+# 중간에 놓거나 문제 세트를 뒷부분에 놓아도 그대로 통과됐다. 아래는 그 구멍을 재현하는 테스트.
+
+def test_pick_slot_groups_f5_drops_completion_set_placed_in_the_middle():
+    """Gemini가 '완성' 세트를 시퀀스 중간에 배치하면(마지막이 아니면) 걸러내야 한다."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("a-1", "완성이요", 2.0),
+              ("b-0", "사아자요", 2.0), ("b-1", "차카타요", 2.0)])
+    sm["a-1"]["shot_role"] = "완성"
+
+    def fake_call(prompt, schema):
+        sets = ep._build_source_sentence_sets(sm)
+        by_vid_first = {st["video_id"]: st["set_id"] for st in sets}
+        # a(완성 세트) → b0 → b1 : 완성 세트가 마지막이 아니라 중간에 낀 순서.
+        b_ids = [st["set_id"] for st in sets if st["video_id"] == "b"]
+        return {"order": [by_vid_first["a"]] + b_ids}
+
+    groups = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    ids = [s["seg_id"] for g in groups for s in g]
+    assert "a-1" not in ids, f"완성 세트가 중간에 낀 채 그대로 남았다: {ids}"
+    assert "b-0" in ids and "b-1" in ids
+
+
+def test_pick_slot_groups_f5_drops_problem_set_placed_after_the_first_slot():
+    """Gemini가 '문제' 세트를 첫 자리가 아닌 곳에 배치하면 걸러내야 한다."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("a-1", "라마바요", 2.0),
+              ("b-0", "문제상황요", 2.0)])
+    sm["b-0"]["shot_role"] = "문제"
+
+    def fake_call(prompt, schema):
+        sets = ep._build_source_sentence_sets(sm)
+        a_ids = [st["set_id"] for st in sets if st["video_id"] == "a"]
+        b_ids = [st["set_id"] for st in sets if st["video_id"] == "b"]
+        # a0 → a1 → b0(문제) : 문제 세트가 첫 자리가 아니라 맨 뒤에 낀 순서.
+        return {"order": a_ids + b_ids}
+
+    groups = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    ids = [s["seg_id"] for g in groups for s in g]
+    assert "b-0" not in ids, f"문제 세트가 첫 자리가 아닌 채 그대로 남았다: {ids}"
+    assert "a-0" in ids and "a-1" in ids
+
+
+def test_pick_slot_groups_f5_keeps_completion_set_when_genuinely_last():
+    """완성 세트가 실제로 시퀀스 맨 끝이면 정상 케이스 — 지워지면 안 된다(과잉필터 금지)."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("b-0", "완성이요", 2.0)])
+    sm["b-0"]["shot_role"] = "완성"
+
+    def fake_call(prompt, schema):
+        sets = ep._build_source_sentence_sets(sm)
+        by_vid = {st["video_id"]: st["set_id"] for st in sets}
+        return {"order": [by_vid["a"], by_vid["b"]]}
+
+    groups = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    ids = [s["seg_id"] for g in groups for s in g]
+    assert "b-0" in ids, f"맨 끝의 정상적인 완성 세트까지 지워졌다: {ids}"
+
+
+def test_pick_slot_groups_f5_keeps_problem_set_when_genuinely_first():
+    """문제 세트가 실제로 시퀀스 맨 앞이면 정상 케이스 — 지워지면 안 된다(과잉필터 금지)."""
+    sm = _sm([("a-0", "문제상황요", 2.0), ("b-0", "사아자요", 2.0)])
+    sm["a-0"]["shot_role"] = "문제"
+
+    def fake_call(prompt, schema):
+        sets = ep._build_source_sentence_sets(sm)
+        by_vid = {st["video_id"]: st["set_id"] for st in sets}
+        return {"order": [by_vid["a"], by_vid["b"]]}
+
+    groups = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    ids = [s["seg_id"] for g in groups for s in g]
+    assert "a-0" in ids, f"맨 앞의 정상적인 문제 세트까지 지워졌다: {ids}"
+
+
+def test_pick_slot_groups_f5_falls_back_to_pick_timeline_when_filter_empties_all():
+    """필터가 골라놓은 세트를 전부 지우면(예: 완성 세트 하나만 골랐는데 중간 취급된 경우가
+    아니라, 걸러내고 나니 아무것도 안 남는 극단 케이스) _pick_timeline 폴백으로 이어져야
+    한다 — F3 폴백과 동일한 안전망(완성/문제 트리밍 + target_seconds 캡)을 재사용."""
+    sm = _sm([("a-0", "완성이요", 2.0), ("b-0", "문제상황요", 2.0)])
+    sm["a-0"]["shot_role"] = "완성"
+    sm["b-0"]["shot_role"] = "문제"
+
+    def fake_call(prompt, schema):
+        sets = ep._build_source_sentence_sets(sm)
+        by_vid = {st["video_id"]: st["set_id"] for st in sets}
+        # a(완성, 마지막 아님) → b(문제, 첫 자리 아님) : 둘 다 필터에 걸려 전부 제거된다.
+        return {"order": [by_vid["a"], by_vid["b"]]}
+
+    expected = ep._pick_timeline(sm, 30)
+    groups = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    assert groups == expected
+
+
 def test_pick_slot_groups_groups_by_sentence():
     """_pick_slot_groups 결과도 문장 단위 그룹(한 소스 내)으로 묶여야 한다."""
     sm = _sm([("v0-1", "가나다요", 2.0), ("v0-2", "라마바요", 2.0),

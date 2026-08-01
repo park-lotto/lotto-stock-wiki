@@ -442,6 +442,37 @@ def _set_seq_prompt(sets, target_seconds):
     return "\n".join(lines)
 
 
+def _filter_misplaced_sets(chosen):
+    """Gemini가 고른 세트 순서에도 _pick_timeline과 같은 상식 가드를 건다(F5, 2026-08-01).
+
+    _pick_timeline은 '완성 컷은 끝에서만, 문제 컷은 앞에서만'을 코드로 강제하지만, 그건
+    Gemini 실패 시의 폴백 경로에만 붙어 있었다. Gemini가 정상 응답을 준 경로(_pick_slot_groups
+    의 주력 경로)는 _set_seq_prompt로 "부탁"만 하고 코드 검증이 없었다 — 응답이 형식상
+    유효하면(order가 알려진 set_id로만 구성) 완성 세트가 중간에 끼든 문제 세트가 뒤에
+    끼든 그대로 통과됐다. 이건 이 파일이 이미 배운 교훈(_flag_offtopic 등: 프롬프트로
+    요구만 하고 코드로 확인 안 하면 지켜지는지 알 수 없다)과 같은 실패 패턴이라, 소스
+    인덱스 대신 시퀀스 위치로 같은 두 규칙을 재적용한다.
+
+    세트 단위 판정은 _pick_timeline의 비대칭 검사를 그대로 옮긴다 — 완성/after는
+    세트의 **마지막 seg**로, 문제/before는 세트의 **첫 seg**로 본다(세트=한 문장이 시작~
+    끝나는 구간이므로, 그 문장이 어디로 마무리되는지/어디서 시작하는지가 세트가 화면으로
+    보여주는 결말/도입을 가장 잘 대표한다). 걸리면 옮기지 않고 그냥 뺀다(_pick_timeline이
+    pop으로 잘라내는 것과 같은 단순함 — 억지로 재배치하면 왜 거기 있는지 설명이 더 꼬인다).
+    """
+    n = len(chosen)
+    keep = []
+    for i, st in enumerate(chosen):
+        segs = st["segs"]
+        if not segs:
+            continue
+        if i != n - 1 and segs[-1].get("shot_role") in ("완성", "after"):
+            continue
+        if i != 0 and segs[0].get("shot_role") in ("문제", "before"):
+            continue
+        keep.append(st)
+    return keep
+
+
 def _pick_slot_groups(seg_map, target_seconds=None, call=None):
     """소스별로 먼저 확정한 문장세트(_build_source_sentence_sets)를 Gemini에게 주고,
     스토리에 맞는 세트만 골라 순서를 정하게 한다(2026-08-01, F1/F2/F3 재설계).
@@ -454,7 +485,11 @@ def _pick_slot_groups(seg_map, target_seconds=None, call=None):
     _pick_slot_sequence처럼 안 고른 걸 뒤에 강제로 보충하지 않는다(그러면 예산을 준 의미가
     없어진다). 응답이 비었거나(order 없음) 알 수 없는 id만 있어 유효한 세트가 0개면,
     안전장치 없는 전체 이어붙이기 대신 **_pick_timeline로 직접 폴백**한다 — 완성/문제
-    컷 트리밍과 target_seconds 캡을 이미 갖춘, 검증된 경로다."""
+    컷 트리밍과 target_seconds 캡을 이미 갖춘, 검증된 경로다.
+
+    Gemini가 유효한 세트를 골랐더라도 그 순서를 그대로 믿지 않는다(F5, 2026-08-01) —
+    _filter_misplaced_sets로 완성/문제 컷 위치를 다시 검증한다. 이 필터가 전부 걸러내면
+    (골랐던 세트가 전부 규칙 위반) 마찬가지로 _pick_timeline 폴백으로 떨어진다."""
     if not seg_map:
         return []
     sets = _build_source_sentence_sets(seg_map)
@@ -471,6 +506,9 @@ def _pick_slot_groups(seg_map, target_seconds=None, call=None):
             if sid in by_id and sid not in seen:
                 chosen.append(by_id[sid])
                 seen.add(sid)
+    if not chosen:
+        return _pick_timeline(seg_map, target_seconds)
+    chosen = _filter_misplaced_sets(chosen)
     if not chosen:
         return _pick_timeline(seg_map, target_seconds)
     return [st["segs"] for st in chosen]
