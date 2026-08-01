@@ -519,29 +519,62 @@ def _assign_timeline(beats, groups):
     seg_id**를 추적해 다음 비트가 그 seg_id를 또 고르면 다음 후보로 넘긴다 —
     chunk 안에 못 쓴 후보가 없으면 groups 전체에서 시간순으로 안 쓴 seg를 빌려오고,
     그마저 없으면(그룹이 비트보다 훨씬 적은 극단적 경우) 중복을 허용한다(화면 없음보다
-    중복이 낫다)."""
+    중복이 낫다).
+
+    ★screen_pinned 비트(2026-08-01, F4): _ensure_cta_beat가 만든 CTA 비트는 화면이
+    이미 신중하게 정해져 있다(마지막 비트 컷 재사용) — 이 함수가 인덱스 배분으로
+    덮어쓰면 그 선택이 무의미해진다. screen_pinned=True인 비트는 lo/hi/chunk/pick
+    계산을 건너뛰고 기존 primary를 그대로 둔다. 그 seg_id는 **본 루프 전에 미리**
+    used_seg_ids에 반영한다 — 핀 비트가 비트 목록의 뒤쪽(예: 마지막 CTA)에 있어도,
+    그보다 앞선 비트가 같은 컷을 먼저 채가지 않도록 순서와 무관하게 예약해야 한다.
+    lo/hi 인덱스 분배도 **핀 비트를 뺀 개수**로 다시 계산한다(n_active) — 안 그러면
+    "핀이 그룹 하나를 미리 가져갔다"는 사실이 나머지 비트들의 분배 폭에 반영되지
+    않아, 핀이 하필 다른 비트의 자연배정 그룹과 겹칠 때 원치 않는 중복이 튄다.
+    핀 비트 하나가 CTA로 추가되는 흔한 경우 n_active == len(groups)가 되어
+    원래 의도한 1:1 불변식이 나머지 비트들에 대해 그대로 복원된다."""
     if not beats or not groups:
         return beats
-    n = len(beats)
     used_seg_ids = set()
     all_segs_in_order = [s for g in groups for s in g]
-    for i, b in enumerate(beats):
+    for b in beats:
+        if b.get("screen_pinned"):
+            pinned_seg_id = (b.get("primary") or {}).get("seg_id")
+            if pinned_seg_id is not None:
+                used_seg_ids.add(pinned_seg_id)
+    active_beats = [b for b in beats if not b.get("screen_pinned")]
+    n = len(active_beats)
+    j = 0
+    for b in beats:
+        if b.get("screen_pinned"):
+            pinned = b.get("primary") or {}
+            _flag_offtopic(b, [pinned] + list(b.get("alternates") or []))
+            continue
+        i = j
+        j += 1
         lo = i * len(groups) // n
         hi = max(lo + 1, (i + 1) * len(groups) // n)
         chunk = [s for g in groups[lo:hi] for s in g] or groups[min(lo, len(groups) - 1)]
         chunk = _order_clips_by_words(b.get("narration") or "", chunk)
         pick = next((s for s in chunk if s.get("seg_id") not in used_seg_ids), None)
+        borrowed = False
         if pick is None:
             pick = next((s for s in all_segs_in_order if s.get("seg_id") not in used_seg_ids),
                         None)
+            borrowed = True
         if pick is None:
             pick = chunk[0]   # 안 쓴 seg가 하나도 없다 — 중복 허용(화면 없음보다 낫다)
         else:
             used_seg_ids.add(pick.get("seg_id"))
-        rest = [s for s in chunk if s is not pick]
+        # ★rest는 항상 "실제로 alternates가 될 것들"이어야 한다(2026-08-01, F4).
+        #   pick이 chunk 밖(all_segs_in_order)에서 빌려왔다면 chunk 안의 seg는 하나도
+        #   pick이 아니므로 `s is not pick` 필터가 chunk 전체를 그대로 통과시켜버린다
+        #   — rest에 pick과 무관한 원래 로컬 chunk가 그대로 남아 offtopic 검사(아래)가
+        #   실제 배정과 다른 화면을 보게 된다. 빌려온 경우엔 rest를 빈 목록으로 둔다
+        #   (그 비트의 진짜 alternates는 없다 — 로컬 후보는 이미 다른 비트가 다 썼다).
+        rest = [] if borrowed else [s for s in chunk if s is not pick]
         b["primary"] = dict(pick)
         b["alternates"] = [dict(s) for s in rest]
-        _flag_offtopic(b, chunk)
+        _flag_offtopic(b, [pick] + rest)
     return beats
 
 
@@ -1593,6 +1626,10 @@ def _ensure_cta_beat(beats, cand):
 
     화면은 마지막 비트의 컷을 재사용한다 — 새 장면을 지어낼 수 없고, CTA는 보통 마무리
     화면 위에 얹히는 자리다. cta_line이 비면 아무것도 하지 않는다(억지 생성 금지).
+
+    ★screen_pinned=True(2026-08-01, F4): 여기서 고른 화면을 뒤이은 _assign_timeline이
+    인덱스 배분으로 덮어쓰면 이 함수의 존재 의미가 없어진다 — screen_pinned 플래그로
+    "이미 정해진 화면이니 재배정하지 마라"를 표시한다.
     """
     if not beats or any(_is_cta(b) for b in beats):
         return beats
@@ -1607,7 +1644,7 @@ def _ensure_cta_beat(beats, cand):
         "beat_idx": len(beats), "role": "CTA", "narration": line, "caption_lines": None,
         "target_seconds": round(max(1.5, len(line) / _SYLLABLES_PER_SEC), 1),
         "primary": src, "alternates": [], "effect": "cut",
-        "fit": int(last.get("fit") or 0), "forced": False,
+        "fit": int(last.get("fit") or 0), "forced": False, "screen_pinned": True,
     }]
     return beats
 

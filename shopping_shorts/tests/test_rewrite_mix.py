@@ -414,3 +414,92 @@ def test_assign_timeline_never_duplicates_even_when_counts_mismatch():
     ep._assign_timeline(beats, g)
     seg_ids = [b["primary"]["seg_id"] for b in beats]
     assert len(seg_ids) == len(set(seg_ids)), f"duplicate seg_ids: {seg_ids}"
+
+
+# ── F4 (2026-08-01, Fable 코드리뷰) ──────────────────────────────────────
+# Part 1: _ensure_cta_beat가 만든 CTA 비트의 화면(마지막 비트 컷 재사용)이 뒤이은
+#   _assign_timeline 재호출에서 인덱스 배분으로 덮어써지던 문제. screen_pinned 플래그로
+#   재배정 대상에서 빼되 used_seg_ids엔 반영해야 한다.
+# Part 2: 빌려오기(fallback-borrow)가 일어났을 때 _flag_offtopic이 원래 local chunk가
+#   아니라 실제 배정된 화면([pick]+rest)을 검사해야 한다.
+
+def test_pinned_cta_beat_screen_survives_assign_timeline():
+    """_ensure_cta_beat가 고른 화면(screen_pinned=True)은 _assign_timeline이 손대면 안 된다.
+
+    그룹 4개, 비트 4개(CTA 비트가 더 붙어 len(beats)=4, 그중 3개가 "진짜" 스토리
+    비트라 원래 그룹도 4개 있는 상황 — CTA 추가 전엔 n_active=3, len(groups)=4였다가,
+    CTA 비트가 붙으며 len(beats)=4가 된다). CTA는 세 번째(마지막 스토리) 비트의 컷을
+    재사용하므로 pin 값은 g2(v-2)다.
+
+    이 그룹 개수(4)로 **핀을 무시한 옛 코드**를 시뮬레이션해보면 n=4로 도는 lo/hi가
+    beat3(CTA)에 g3(v-3)을 배정해 pin 값(v-2)과 달라진다 — 즉 이 픽스처는 "우연히
+    같은 값이라 통과"가 아니라 핀 로직이 실제로 작동해야만 통과하는 진짜 회귀 테스트다.
+    """
+    sm = _sm([("v-0", "가나다요", 2.0), ("v-1", "라마바요", 2.0),
+              ("v-2", "사아자요", 2.0), ("v-3", "차카타요", 2.0)])
+    g = [[sm["v-0"]], [sm["v-1"]], [sm["v-2"]], [sm["v-3"]]]   # 그룹 4개
+    last_beat_primary = {"seg_id": "v-2", "text": "사아자요"}   # 세 번째(마지막 스토리) 비트의 컷
+    beats = [
+        {"narration": "첫줄", "beat_idx": 0, "primary": {}, "alternates": []},
+        {"narration": "둘째줄", "beat_idx": 1, "primary": {}, "alternates": []},
+        {"narration": "셋째줄", "beat_idx": 2, "primary": dict(last_beat_primary),
+         "alternates": []},
+        # _ensure_cta_beat가 만든 CTA 비트 — 마지막 스토리 비트 컷을 재사용해 화면이 이미 고정.
+        {"narration": "댓글 남겨주세요", "beat_idx": 3, "role": "CTA",
+         "primary": dict(last_beat_primary), "alternates": [], "screen_pinned": True},
+    ]
+    ep._assign_timeline(beats, g)
+    assert beats[3]["primary"]["seg_id"] == "v-2"   # 핀이 그대로 유지(옛 코드였다면 v-3이 됐다)
+    assert beats[3].get("screen_pinned") is True     # 재배정 루프를 거치지 않았다
+    # 나머지 3개 비트는 재배정 대상이라 자기들끼리 화면이 바뀔 수 있다(정상) — 다만
+    # v-2는 CTA가 예약해뒀으니 그 비트들 서로간에 중복 없이 배정됐는지만 확인한다.
+    other_seg_ids = [b["primary"]["seg_id"] for b in beats[:3]]
+    assert len(other_seg_ids) == len(set(other_seg_ids))   # 나머지 비트끼리도 중복 없음
+
+
+def test_pinned_cta_beat_stays_pinned_across_repeated_calls():
+    """리라이트 믹스는 _assign_timeline을 두 번 부른다(멱등 보장) — 핀도 두 번째 호출에서
+    안 풀려야 한다."""
+    sm = _sm([("v-0", "가나다요", 2.0), ("v-1", "라마바요", 2.0),
+              ("v-2", "사아자요", 2.0), ("v-3", "차카타요", 2.0)])
+    g = [[sm["v-0"]], [sm["v-1"]], [sm["v-2"]], [sm["v-3"]]]
+    beats = [
+        {"narration": "첫줄", "beat_idx": 0, "primary": {}, "alternates": []},
+        {"narration": "둘째줄", "beat_idx": 1, "primary": {}, "alternates": []},
+        {"narration": "셋째줄", "beat_idx": 2, "primary": {"seg_id": "v-2"}, "alternates": []},
+        {"narration": "댓글 남겨주세요", "beat_idx": 3, "role": "CTA",
+         "primary": {"seg_id": "v-2", "text": "사아자요"}, "alternates": [],
+         "screen_pinned": True},
+    ]
+    ep._assign_timeline(beats, g)
+    ep._assign_timeline(beats, g)   # 두 번째 호출(라이브 경로는 grounding 직후+맨 마지막 2회 호출)
+    assert beats[3]["primary"]["seg_id"] == "v-2"
+    assert beats[3].get("screen_pinned") is True
+
+
+def test_flag_offtopic_checks_the_actually_borrowed_pick_not_local_chunk():
+    """빌려오기(fallback-borrow)가 일어나면, 딴소리 검사는 원래 local chunk가 아니라
+    실제로 배정된 화면(pick)을 봐야 한다.
+
+    그룹 2개(g0=[A], g1=[B]), 비트 3개로 lo/hi 정수분배가 겹치게 만든다
+    (n=3, len(groups)=2 → i=0,1 모두 chunk=g0). beat0이 A를 먼저 가져가면 beat1의
+    로컬 chunk(g0=[A])는 이미 소진 — all_segs_in_order에서 B를 빌려온다(fallback-borrow).
+    A의 텍스트는 beat1 나레이션과 낱말이 겹치고, B는 안 겹치게 설계했다 — 옛 코드처럼
+    _flag_offtopic(b, chunk)로 (여전히 [A]인) 로컬 chunk를 검사했다면 실제로는 안 맞는
+    B가 배정됐는데도 offtopic이 안 잡혔을 것이다. 고친 코드는 [pick]+rest = [B]를 검사해
+    정확히 offtopic으로 잡아야 한다.
+    """
+    sm = _sm([("v-0", "기름이 사방으로 튀어서 힘들었거든요", 2.0),
+              ("v-1", "강아지 산책 완전 즐거워요", 2.0)])
+    g = [[sm["v-0"]], [sm["v-1"]]]   # 그룹 2개, 비트는 아래서 3개 — lo/hi 겹침 유도
+    beats = [
+        {"narration": "기름이 튀어서 아주 힘들었어요", "fit": 5,
+         "primary": {}, "alternates": []},   # chunk=g0=[v-0] → v-0 사용(말이 겹침)
+        {"narration": "기름이 튀어서 아주 힘들었어요", "fit": 5,
+         "primary": {}, "alternates": []},   # chunk=g0=[v-0]인데 이미 used → v-1을 빌려옴(안 겹침)
+        {"narration": "산책이 즐거워요", "fit": 5,
+         "primary": {}, "alternates": []},   # chunk=g1=[v-1]
+    ]
+    ep._assign_timeline(beats, g)
+    assert beats[1]["primary"]["seg_id"] == "v-1"          # 빌려온 화면이 맞는지 전제 확인
+    assert beats[1].get("offtopic") and beats[1]["fit"] <= 2 and beats[1]["forced"]
