@@ -268,12 +268,44 @@ def _qa_retry_decision(result, duration, already_retried):
     return True, "\n★지난 시도의 문제(반드시 고쳐라): " + "; ".join(flags)
 
 
-def _attach_qa(result, duration, retried):
+def _attach_qa(result, duration, retried, video_path=None):
     """결과에 tag_qa 기록을 붙여 반환. **결과 자체는 절대 안 바꾼다**(빈 대본 금지).
-    하류(job 로그·tag_audit)가 이 값으로 '이 영상이 왜 이상한가'를 추적한다."""
+    하류(job 로그·tag_audit)가 이 값으로 '이 영상이 왜 이상한가'를 추적한다.
+
+    video_path가 오고 Layer 2 플래그(`tag_qa_frames_enabled`)가 켜져 있으면 프레임 대조
+    점수(frame_score)도 같이 남긴다. **기본은 꺼짐**이라 평소엔 추가 비용이 0이다."""
     score, flags = tag_qa.validate_extract(result, duration)
     result["tag_qa"] = {"score": score, "flags": flags, "retried": bool(retried)}
+    _attach_frame_qa(result, video_path)
     return result
+
+
+def _attach_frame_qa(result, video_path):
+    """Layer 2 스팟체크를 붙인다 — 실패·미측정이면 **아무 키도 안 남긴다**.
+
+    ★모르는 것을 0점으로 적지 않는다: 없는 키와 0.0은 하류에서 전혀 다른 뜻이다
+    (0.0은 '화면이 전부 틀렸다'는 강한 신호다). 여기서 대충 채우면 기준선이 거짓이 된다.
+    ★어떤 예외도 추출을 죽이지 못한다 — QA는 기록 장치지 차단 장치가 아니다."""
+    if not video_path:
+        return
+    try:
+        from shopping_shorts import tag_qa_frames
+        if not tag_qa_frames.flag_on():
+            return
+        out = tag_qa_frames.spot_check(result, video_path, _qa_frame_dir(video_path))
+        if out:
+            result["tag_qa"].update(out)
+    except Exception as e:  # noqa: BLE001
+        print(f"script_extract._attach_frame_qa: 건너뜀(무해) — {e!r}",
+              file=__import__('sys').stderr)
+
+
+def _qa_frame_dir(video_path):
+    """대조용 프레임을 둘 임시 폴더 — 영상 옆에 만든다(추출 임시폴더와 같은 수명)."""
+    from pathlib import Path
+    d = Path(video_path).parent / "tag_qa_frames"
+    d.mkdir(parents=True, exist_ok=True)
+    return str(d)
 
 
 def storable(result):
@@ -371,7 +403,7 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 continue
             if qa_first is not None:             # 재시도분이 더 나쁘면 첫 결과로 되돌린다
                 result = _pick_better_extract(qa_first, result, duration)
-            return _attach_qa(result, duration, qa_retried)
+            return _attach_qa(result, duration, qa_retried, video_path)
         except Exception as e:
             m = str(e)
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
@@ -399,7 +431,7 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
             #   있는 대본이 빈 대본보다 낫다 — QA는 기록 장치지 차단 장치가 아니다.
             if qa_first is not None:
                 print(f"script_extract: QA 재시도 실패 — 첫 결과 유지 ({e!r})", file=sys.stderr)
-                return _attach_qa(qa_first, duration, qa_retried)
+                return _attach_qa(qa_first, duration, qa_retried, video_path)
             print(f"script_extract: 빈 결과 반환(재시도 소진 또는 미분류 오류) — {e!r}", file=sys.stderr)
             return dict(_EMPTY)
         finally:
@@ -409,7 +441,7 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 except Exception:
                     pass
     if qa_first is not None:                     # 재시도가 루프를 소진한 경우도 마찬가지
-        return _attach_qa(qa_first, duration, qa_retried)
+        return _attach_qa(qa_first, duration, qa_retried, video_path)
     return dict(_EMPTY)
 
 
