@@ -56,7 +56,12 @@ def test_run_preview_resolves_sfx_asset_paths(monkeypatch, tmp_path):
 
 
 def test_plan_and_tts_calls_match_sfx(monkeypatch, tmp_path):
-    """_plan_and_tts가 match_scene_assets 직후 match_sfx를 부르는지(자산 있을 때)."""
+    """_plan_and_tts가 match_scene_assets 직후 match_sfx를 부르는지.
+
+    ★2026-08-01: 자동 배치는 설정(scene_library_auto_enabled)으로 게이트된다 —
+    자산이 있어도 기본은 안 붙는다. 감자 자산이 아이스크림 영상을 덮은 실사고 때문이다.
+    이 테스트는 '켰을 때 순서가 clip→sfx인가'를 본다.
+    """
     calls = []
     monkeypatch.setattr(mix_pipeline, "match_scene_assets",
                         lambda plan, assets: (calls.append("clip"), plan)[1])
@@ -80,6 +85,40 @@ def test_plan_and_tts_calls_match_sfx(monkeypatch, tmp_path):
             # clip·sfx 둘 다 자산이 있는 상황
             return [{"id": 1, "asset_type": asset_type}]
 
+        def get_setting(self, key, default=""):
+            return "1" if key == "scene_library_auto_enabled" else default
+
     mix_pipeline._plan_and_tts(S(), "job1", {0: "s"}, 2.0, "t", "레시피",
                                tmp_path, customer_id=0)
     assert calls == ["clip", "sfx"]   # clip 매칭 직후 sfx 매칭
+
+
+def test_scene_library_off_by_default(monkeypatch, tmp_path):
+    """설정을 안 켜면 자산이 있어도 아무것도 안 붙는다(2026-08-01 실사고)."""
+    calls = []
+    monkeypatch.setattr(mix_pipeline, "match_scene_assets",
+                        lambda plan, assets: (calls.append("clip"), plan)[1])
+    monkeypatch.setattr(mix_pipeline, "match_sfx",
+                        lambda plan, assets: (calls.append("sfx"), plan)[1])
+    monkeypatch.setattr(mix_pipeline, "_synthesize_beats", lambda *a, **k: None)
+    monkeypatch.setattr(mix_pipeline, "_refill_beats_to_tts", lambda *a, **k: None)
+    monkeypatch.setattr(mix_pipeline, "_conform_beats", lambda *a, **k: None)
+    plan = {"structure": "t", "beats": [
+        {"beat_idx": 0, "narration": "x", "target_seconds": 2.0, "role": "hook",
+         "primary": {"video_id": 0, "seg_id": "s0", "start": 0, "end": 2},
+         "alternates": [], "effect": "cut", "fit": 0}]}
+    monkeypatch.setattr(mix_pipeline, "build_edit_plan", lambda *a, **k: plan)
+
+    class S:
+        def update_mix_job(self, *a, **k):
+            pass
+
+        def list_scene_assets(self, customer_id=0, asset_type=None):
+            return [{"id": 1, "asset_type": asset_type}]
+
+        def get_setting(self, key, default=""):
+            return default          # 설정 없음 = 기본 OFF
+
+    mix_pipeline._plan_and_tts(S(), "job1", {0: "s"}, 2.0, "t", "레시피",
+                               tmp_path, customer_id=0)
+    assert calls == []
