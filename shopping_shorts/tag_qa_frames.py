@@ -160,9 +160,17 @@ def _judge(frame_paths, picked):
     try:
         from google.genai import types
     except Exception:
+        # ★조용히 돌아가지 마라(2026-08-01 실사고). 아래 key 분기와 같은 이유.
+        log.info("tag_qa_frames._judge 건너뜀 — google.genai 없음")
         return []
     key, _ = comment_gen._current_key_and_idx()
     if key is None:
+        # ★실사고(확대 실측 30회 중 21회): 앞 6건이 성공한 뒤 나머지가 전부 측정 실패로
+        #   떨어졌는데 **로그가 한 줄도 없었다** — 예외가 아니라 이 early return이라서다.
+        #   Layer 2를 켜면 담기마다 모델을 한 번 더 쓰므로 키 풀이 먼저 마르는데, 그때
+        #   frame_score가 아무 흔적 없이 빠진다. "측정 못 함"이 안 보이면 그 지표는
+        #   있으나 마나다(이 파일이 None≠0.0으로 지키려던 바로 그 원칙의 관측 쪽 짝).
+        log.info("tag_qa_frames._judge 건너뜀 — 쓸 수 있는 Gemini 키가 없다(키 풀 소진?)")
         return []
     lines = "\n".join(f"{n+1}번 이미지의 묘사: {(s.get('scene_desc') or '(없음)')}"
                       for n, (_, s) in enumerate(picked))
