@@ -569,45 +569,39 @@ def _set_seq_prompt(sets, target_seconds):
 
 
 def _filter_misplaced_sets(chosen):
-    """Gemini가 고른 세트 순서에도 _pick_timeline과 같은 상식 가드를 건다(F5, 2026-08-01).
+    """완성/문제 컷의 **자리**를 바로잡는다 — 버리지 않고 옮긴다(2026-08-01 개정).
 
-    _pick_timeline은 '완성 컷은 끝에서만, 문제 컷은 앞에서만'을 코드로 강제하지만, 그건
-    Gemini 실패 시의 폴백 경로에만 붙어 있었다. Gemini가 정상 응답을 준 경로(_pick_slot_groups
-    의 주력 경로)는 _set_seq_prompt로 "부탁"만 하고 코드 검증이 없었다 — 응답이 형식상
-    유효하면(order가 알려진 set_id로만 구성) 완성 세트가 중간에 끼든 문제 세트가 뒤에
-    끼든 그대로 통과됐다. 이건 이 파일이 이미 배운 교훈(_flag_offtopic 등: 프롬프트로
-    요구만 하고 코드로 확인 안 하면 지켜지는지 알 수 없다)과 같은 실패 패턴이라, 소스
-    인덱스 대신 시퀀스 위치로 같은 두 규칙을 재적용한다.
+    _pick_timeline은 '완성 컷은 끝에서만, 문제 컷은 앞에서만'을 코드로 강제하지만 그건
+    Gemini 실패 시의 폴백 경로에만 있었다. Gemini가 정상 응답을 준 주력 경로는 프롬프트로
+    "부탁"만 하고 코드 검증이 없었다 — 이 파일이 이미 배운 교훈(요구만 하고 확인 안 하면
+    지켜지는지 알 수 없다)과 같은 실패 패턴이라, 세트 단위로 같은 두 규칙을 재적용한다.
 
-    세트 단위 판정은 _pick_timeline의 비대칭 검사를 그대로 옮긴다 — 완성/after는
-    세트의 **마지막 seg**로, 문제/before는 세트의 **첫 seg**로 본다(세트=한 문장이 시작~
-    끝나는 구간이므로, 그 문장이 어디로 마무리되는지/어디서 시작하는지가 세트가 화면으로
-    보여주는 결말/도입을 가장 잘 대표한다). 걸리면 옮기지 않고 그냥 뺀다(_pick_timeline이
-    pop으로 잘라내는 것과 같은 단순함 — 억지로 재배치하면 왜 거기 있는지 설명이 더 꼬인다).
+    판정(2026-08-01 실측으로 좁힘): 끝세트는 **마지막 seg가 `완성`**이거나 세트 전체가
+    완성/after일 때만. `after`는 영상 중간에도 나오는 태그라 그것만으로 끝세트로 몰면
+    한 소스가 통째로 사라진다(실측 lens_youtube_1f60rye). 도입세트도 같은 비대칭.
 
-    ★판정을 좁힌 이유(2026-08-01 실측): 처음엔 "마지막 seg가 완성/after"만 보고 잘랐는데,
-    `after`는 한 영상 안에서 여러 번 나온다 — 실측 소스(lens_youtube_1f60rye)의 세트 roles가
-    `after·사용중·문제·사용중·문제·사용중·after`라 중간 세트인데도 끝세트로 몰려 잘렸고,
-    그 소스의 세트가 **전부** 사라져 **두 영상을 담았는데 한 영상만 나가는** 결과가 됐다
-    (4세트 → 2세트, 길이도 반토막 나 길이 재생성이 후보를 4개로 불렸다).
-    그래서 끝세트는 **마지막 seg가 `완성`**(강한 신호)이거나 **세트 전체가 완성/after**일
-    때만으로 좁힌다. 도입세트도 같은 비대칭으로 `문제` 또는 전체가 문제/before일 때만.
+    ★처방을 '제거'에서 '이동'으로 바꾼 이유(2026-08-01, job 9c2076e18252):
+    잘라내기는 규칙은 지키지만 **재료를 버린다**. 실측에서 13.0초짜리 9세그 세트(s1-4,
+    끝이 완성×2)가 통째로 잘려 세트 총 35.5초 중 3분의 1이 날아갔고, 대본이 3비트로
+    쪼그라들며 두 번째 영상은 CTA 한 컷만 남았다. 규칙이 요구하는 건 "결말이 중간에
+    오지 마라"이지 "결말을 버려라"가 아니다 — **맨 뒤로 옮기면** 규칙도 지키고 재료도
+    산다(도입세트는 맨 앞으로). 상대 순서는 그대로 둬 Gemini가 정한 흐름을 최대한 보존한다.
     """
-    n = len(chosen)
-    keep = []
-    for i, st in enumerate(chosen):
+    openings, middles, endings = [], [], []
+    for st in chosen:
         segs = st["segs"]
         if not segs:
             continue
         roles = [s.get("shot_role") for s in segs]
         is_ending = roles[-1] == "완성" or all(r in ("완성", "after") for r in roles)
         is_opening = roles[0] == "문제" or all(r in ("문제", "before") for r in roles)
-        if i != n - 1 and is_ending:
-            continue
-        if i != 0 and is_opening:
-            continue
-        keep.append(st)
-    return keep
+        if is_ending and not is_opening:
+            endings.append(st)
+        elif is_opening and not is_ending:
+            openings.append(st)
+        else:
+            middles.append(st)          # 둘 다거나 둘 다 아니면 자리를 안 옮긴다
+    return openings + middles + endings
 
 
 # 슬롯 소스 태그(2026-08-01, 폴백 가시화) — _pick_slot_groups가 어느 경로로 결과를

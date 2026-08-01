@@ -109,8 +109,12 @@ def test_pick_slot_groups_f3_falls_back_to_pick_timeline_on_empty_response():
 # 받았을 때(훨씬 흔한 경로)는 프롬프트로 부탁만 하고 코드 검증이 없었다 — Gemini가 완성 세트를
 # 중간에 놓거나 문제 세트를 뒷부분에 놓아도 그대로 통과됐다. 아래는 그 구멍을 재현하는 테스트.
 
-def test_pick_slot_groups_f5_drops_completion_set_placed_in_the_middle():
-    """Gemini가 '완성' 세트를 시퀀스 중간에 배치하면(마지막이 아니면) 걸러내야 한다."""
+def test_pick_slot_groups_f5_moves_completion_set_to_the_end():
+    """Gemini가 '완성' 세트를 중간에 두면 **맨 뒤로 옮긴다**(버리지 않는다, 2026-08-01).
+
+    버리기는 규칙은 지키지만 재료를 버린다 — 실측(job 9c2076e18252)에서 13초짜리
+    9세그 세트가 통째로 잘려 대본이 3비트로 쪼그라들었다.
+    """
     sm = _sm([("a-0", "가나다요", 2.0), ("a-1", "완성이요", 2.0),
               ("b-0", "사아자요", 2.0), ("b-1", "차카타요", 2.0)])
     sm["a-1"]["shot_role"] = "완성"
@@ -124,14 +128,13 @@ def test_pick_slot_groups_f5_drops_completion_set_placed_in_the_middle():
 
     groups, source, _info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
     ids = [s["seg_id"] for g in groups for s in g]
-    assert "a-1" not in ids, f"완성 세트가 중간에 낀 채 그대로 남았다: {ids}"
-    assert "b-0" in ids and "b-1" in ids
-    # 필터가 일부만 제거했을 뿐 남은 결과는 여전히 Gemini 판단 경로다(전부 지워진 게 아님).
+    assert ids[-1] == "a-1", f"완성 세트가 맨 뒤로 안 갔다: {ids}"      # 옮긴다
+    assert "b-0" in ids and "b-1" in ids                               # 버리지 않는다
     assert source == ep.SLOT_SOURCE_GEMINI
 
 
-def test_pick_slot_groups_f5_drops_problem_set_placed_after_the_first_slot():
-    """Gemini가 '문제' 세트를 첫 자리가 아닌 곳에 배치하면 걸러내야 한다."""
+def test_pick_slot_groups_f5_moves_problem_set_to_the_front():
+    """Gemini가 '문제' 세트를 첫 자리가 아닌 곳에 두면 **맨 앞으로 옮긴다**."""
     sm = _sm([("a-0", "가나다요", 2.0), ("a-1", "라마바요", 2.0),
               ("b-0", "문제상황요", 2.0)])
     sm["b-0"]["shot_role"] = "문제"
@@ -145,7 +148,7 @@ def test_pick_slot_groups_f5_drops_problem_set_placed_after_the_first_slot():
 
     groups, source, _info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
     ids = [s["seg_id"] for g in groups for s in g]
-    assert "b-0" not in ids, f"문제 세트가 첫 자리가 아닌 채 그대로 남았다: {ids}"
+    assert ids[0] == "b-0", f"문제 세트가 맨 앞으로 안 갔다: {ids}"
     assert "a-0" in ids and "a-1" in ids
     # 필터가 일부만 제거했을 뿐 남은 결과는 여전히 Gemini 판단 경로다(전부 지워진 게 아님).
     assert source == ep.SLOT_SOURCE_GEMINI
@@ -183,10 +186,13 @@ def test_pick_slot_groups_f5_keeps_problem_set_when_genuinely_first():
     assert source == ep.SLOT_SOURCE_GEMINI
 
 
-def test_pick_slot_groups_f5_falls_back_to_pick_timeline_when_filter_empties_all():
-    """필터가 골라놓은 세트를 전부 지우면(예: 완성 세트 하나만 골랐는데 중간 취급된 경우가
-    아니라, 걸러내고 나니 아무것도 안 남는 극단 케이스) _pick_timeline 폴백으로 이어져야
-    한다 — F3 폴백과 동일한 안전망(완성/문제 트리밍 + target_seconds 캡)을 재사용."""
+def test_pick_slot_groups_never_empties_now_that_we_reorder():
+    """자리 교정이 '제거'에서 '이동'으로 바뀌었으므로(2026-08-01) 세트가 사라지지 않는다.
+
+    예전엔 완성 세트와 문제 세트가 서로 잘못된 자리에 있으면 **둘 다 지워져** 폴백으로
+    떨어졌다. 이제는 완성은 뒤로, 문제는 앞으로 옮겨 둘 다 살아남는다 — 재료를 버리지
+    않는 게 이 개정의 핵심이다(job 9c2076e18252에서 13초 세트가 잘려 대본이 3비트로
+    쪼그라들었다)."""
     sm = _sm([("a-0", "완성이요", 2.0), ("b-0", "문제상황요", 2.0)])
     sm["a-0"]["shot_role"] = "완성"
     sm["b-0"]["shot_role"] = "문제"
@@ -197,10 +203,11 @@ def test_pick_slot_groups_f5_falls_back_to_pick_timeline_when_filter_empties_all
         # a(완성, 마지막 아님) → b(문제, 첫 자리 아님) : 둘 다 필터에 걸려 전부 제거된다.
         return {"order": [by_vid["a"], by_vid["b"]]}
 
-    expected = ep._pick_timeline(sm, 30)
-    groups, source, _info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
-    assert groups == expected
-    assert source == ep.SLOT_SOURCE_FALLBACK_FILTERED_EMPTY
+    groups, source, info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    ids = [s["seg_id"] for g in groups for s in g]
+    assert ids == ["b-0", "a-0"]                 # 문제 앞으로 · 완성 뒤로, 둘 다 산다
+    assert source == ep.SLOT_SOURCE_GEMINI
+    assert info["filtered"] == [] and info["kept"] == 2
 
 
 def test_pick_slot_groups_empty_seg_map_tags_empty_input():
@@ -641,21 +648,21 @@ def test_mid_after_set_is_not_treated_as_ending():
     assert kept == ["b-1", "a-5", "b-8", "a-14"]      # 두 소스 다 살아남는다
 
 
-def test_real_ending_set_in_the_middle_is_still_dropped():
-    """마지막 seg가 `완성`이면 여전히 끝세트 — 중간에 오면 잘라낸다(원래 가드 유지)."""
+def test_real_ending_set_in_the_middle_moves_to_the_end():
+    """마지막 seg가 `완성`이면 끝세트 — 중간에 오면 맨 뒤로 옮긴다(버리지 않는다)."""
     chosen = [_set("a-1", ["사용중", "완성"]), _set("a-5", ["사용중", "사용중"])]
-    assert [s["set_id"] for s in ep._filter_misplaced_sets(chosen)] == ["a-5"]
+    assert [s["set_id"] for s in ep._filter_misplaced_sets(chosen)] == ["a-5", "a-1"]
 
 
-def test_all_after_set_in_the_middle_is_dropped():
-    """세트 전체가 완성/after면 중간에 올 자리가 아니다."""
+def test_all_after_set_in_the_middle_moves_to_the_end():
+    """세트 전체가 완성/after면 중간에 올 자리가 아니다 — 뒤로 보낸다."""
     chosen = [_set("a-1", ["after", "완성"]), _set("a-5", ["사용중", "사용중"])]
-    assert [s["set_id"] for s in ep._filter_misplaced_sets(chosen)] == ["a-5"]
+    assert [s["set_id"] for s in ep._filter_misplaced_sets(chosen)] == ["a-5", "a-1"]
 
 
-def test_problem_set_in_the_middle_is_still_dropped():
+def test_problem_set_in_the_middle_moves_to_the_front():
     chosen = [_set("a-1", ["사용중", "사용중"]), _set("a-5", ["문제", "사용중"])]
-    assert [s["set_id"] for s in ep._filter_misplaced_sets(chosen)] == ["a-1"]
+    assert [s["set_id"] for s in ep._filter_misplaced_sets(chosen)] == ["a-5", "a-1"]
 
 
 def test_set_prompt_requires_every_source_once():
@@ -748,8 +755,8 @@ def test_single_cta_is_untouched():
     assert ep._dedupe_cta_beats(beats) == beats
 
 
-def test_partial_filtering_is_recorded(monkeypatch):
-    """부분 제거도 흔적을 남긴다(G3) — `after` 실사고가 이 종류였다."""
+def test_reorder_keeps_every_set(monkeypatch):
+    """자리 교정은 이제 아무것도 안 버린다 — 기록(G3)에도 잘린 세트가 없다."""
     sm = _sm([("a-0", "가나다요", 2.0), ("a-2", "라마바요", 2.0), ("b-0", "사아자요", 2.0)])
     sm["a-2"]["shot_role"] = "완성"          # 끝세트인데 중간에 오면 잘린다
 
@@ -758,9 +765,9 @@ def test_partial_filtering_is_recorded(monkeypatch):
 
     groups, source, info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
     assert source == ep.SLOT_SOURCE_GEMINI
-    assert info["chosen"] == 3 and info["kept"] == 2
-    assert info["filtered"] == ["a-2"]                 # 무엇이 잘렸는지 남는다
-    assert info["picked_by_source"] == {"a": 1, "b": 1}
+    assert info["chosen"] == 3 and info["kept"] == 3   # 하나도 안 버린다
+    assert info["filtered"] == []
+    assert info["picked_by_source"] == {"a": 2, "b": 1}
     assert info["sources_unused"] == []
 
 
