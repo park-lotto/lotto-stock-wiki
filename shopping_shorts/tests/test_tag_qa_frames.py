@@ -3,6 +3,8 @@
 지키는 계약 셋:
   ①대표 세그를 '아픈 순서'로 고른다(훅 → is_key → 완성/after), 중복 없이.
   ②판정과 묘사의 **짝이 절대 밀리지 않는다** — 밀리면 엉뚱한 화면을 채점한 셈이 된다.
+    짝은 순서가 아니라 **image_no**로 맞춘다(리뷰 F3): 모델이 판정 하나를 빠뜨리면
+    순서 매칭은 그 뒤가 전부 한 칸씩 밀리는데, 틀린 줄도 모른다는 게 더 나쁘다.
   ③측정 실패는 None이다. **0.0으로 적지 않는다** — 0.0은 '화면이 전부 틀렸다'는 강한
     신호라, 실패를 0으로 기록하면 나중에 '태깅이 나빠졌다'는 거짓 결론이 나온다.
 """
@@ -57,9 +59,14 @@ def test_세그가_없으면_빈_목록():
 
 # ── ② 채점 ───────────────────────────────────────────────────────
 
+def _v(no, verdict, **kw):
+    """모델 응답 한 건 — image_no는 1부터."""
+    return dict(image_no=no, verdict=verdict, **kw)
+
+
 def test_점수는_맞음1_부분05_틀림0의_평균():
     picked = [(0, _seg(0)), (1, _seg(1)), (2, _seg(2))]
-    verdicts = [{"verdict": "맞음"}, {"verdict": "부분"}, {"verdict": "틀림"}]
+    verdicts = [_v(1, "맞음"), _v(2, "부분"), _v(3, "틀림")]
     score, detail = F.score_verdicts(verdicts, picked)
     assert score == 0.5 and len(detail) == 3
 
@@ -67,13 +74,13 @@ def test_점수는_맞음1_부분05_틀림0의_평균():
 def test_판정이_모자라면_겹치는_만큼만_센다():
     """없는 판정을 '맞음'으로 채우면 점수가 조용히 부풀어 기준선이 거짓이 된다."""
     picked = [(0, _seg(0)), (1, _seg(1)), (2, _seg(2))]
-    score, detail = F.score_verdicts([{"verdict": "틀림"}], picked)
+    score, detail = F.score_verdicts([_v(1, "틀림")], picked)
     assert score == 0.0 and len(detail) == 1      # 3장 중 1장만 판정 → 그 1장만
 
 
 def test_이상한_verdict_값은_버린다():
     picked = [(0, _seg(0)), (1, _seg(1))]
-    score, detail = F.score_verdicts([{"verdict": "글쎄"}, {"verdict": "맞음"}], picked)
+    score, detail = F.score_verdicts([_v(1, "글쎄"), _v(2, "맞음")], picked)
     assert score == 1.0 and len(detail) == 1
 
 
@@ -83,7 +90,7 @@ def test_셀_수_있는_판정이_없으면_None():
 
 def test_상세에_세그_인덱스가_남는다():
     """어느 장면이 틀렸는지 못 짚으면 추적에 못 쓴다."""
-    _, detail = F.score_verdicts([{"verdict": "틀림", "reason": "배경 소품"}], [(7, _seg(7))])
+    _, detail = F.score_verdicts([_v(1, "틀림", reason="배경 소품")], [(7, _seg(7))])
     assert detail[0]["seg_index"] == 7 and "배경" in detail[0]["reason"]
 
 
@@ -96,14 +103,14 @@ def _frames_ok(video_path, picked, dest_dir):
 def test_정상경로는_점수와_건수를_돌려준다():
     out = F.spot_check({"segments": [_seg(i) for i in range(3)]}, "/v.mp4", "/tmp",
                        _frames_fn=_frames_ok,
-                       _judge_fn=lambda p, k: [{"verdict": "맞음"}] * len(k))
+                       _judge_fn=lambda p, k: [_v(i + 1, "맞음") for i in range(len(k))])
     assert out["frame_score"] == 1.0 and out["checked"] == 3
 
 
 def test_프레임을_한_장도_못_뽑으면_None():
     out = F.spot_check({"segments": [_seg(0)]}, "/v.mp4", "/tmp",
                        _frames_fn=lambda *a: ([], []),
-                       _judge_fn=lambda p, k: [{"verdict": "맞음"}])
+                       _judge_fn=lambda p, k: [_v(1, "맞음")])
     assert out is None                      # 0.0이 아니다
 
 
@@ -121,7 +128,7 @@ def test_프레임이_일부만_뽑히면_그_세그만_채점한다():
         return [f"/tmp/{i}.jpg" for i, _ in kept], kept
     out = F.spot_check({"segments": [_seg(i) for i in range(3)]}, "/v.mp4", "/tmp",
                        _frames_fn=half,
-                       _judge_fn=lambda p, k: [{"verdict": "틀림"}] * len(k))
+                       _judge_fn=lambda p, k: [_v(i + 1, "틀림") for i in range(len(k))])
     assert out["checked"] == 1 and out["frame_score"] == 0.0
 
 
@@ -131,3 +138,43 @@ def test_세그가_없으면_모델을_아예_안_부른다():
                        _frames_fn=_frames_ok,
                        _judge_fn=lambda p, k: called.append(1) or [])
     assert out is None and not called       # 빈 추출에 돈 쓰지 않는다
+
+
+# ── 리뷰 F3: 모델이 판정을 빠뜨려도 짝이 안 밀린다 ──────────────────
+
+def test_모델이_중간_판정을_빠뜨려도_짝이_안_밀린다():
+    """★F3의 핵심 케이스. 모델이 2번을 빼고 1·3번만 주면, 순서로 맞추던 옛 코드는
+    3번 판정('틀림')을 2번 묘사에 붙여 **엉뚱한 장면을 채점**했다.
+    번호로 맞추면 3번 판정은 3번 묘사에 붙고, 2번은 그냥 빠진다."""
+    picked = [(10, _seg(10)), (20, _seg(20)), (30, _seg(30))]
+    got = F.score_verdicts([_v(1, "맞음"), _v(3, "틀림")], picked)
+    score, detail = got
+    assert [d["seg_index"] for d in detail] == [10, 30]   # 20이 아니라 30에 붙어야 한다
+    assert [d["verdict"] for d in detail] == ["맞음", "틀림"]
+    assert score == 0.5
+
+
+def test_image_no가_없으면_그_판정은_버린다():
+    """번호가 없으면 어느 이미지인지 알 수 없다 — 추측해서 붙이지 않는다."""
+    picked = [(0, _seg(0)), (1, _seg(1))]
+    score, detail = F.score_verdicts([{"verdict": "맞음"}, _v(2, "틀림")], picked)
+    assert [d["seg_index"] for d in detail] == [1] and score == 0.0
+
+
+def test_범위_밖_번호는_버린다():
+    picked = [(0, _seg(0))]
+    score, detail = F.score_verdicts([_v(5, "맞음"), _v(0, "맞음"), _v(1, "틀림")], picked)
+    assert len(detail) == 1 and score == 0.0     # 5·0은 범위 밖
+
+
+def test_중복_번호는_한_번만_센다():
+    """같은 이미지에 판정 두 개가 오면 뒤엣것이 표본을 부풀리면 안 된다."""
+    picked = [(0, _seg(0)), (1, _seg(1))]
+    score, detail = F.score_verdicts([_v(1, "맞음"), _v(1, "틀림")], picked)
+    assert len(detail) == 1 and score == 1.0
+
+
+def test_bool은_번호로_안_친다():
+    """파이썬에서 True는 int라 image_no=True가 1번으로 통과해버린다."""
+    picked = [(0, _seg(0))]
+    assert F.score_verdicts([_v(True, "맞음")], picked) == (None, [])
