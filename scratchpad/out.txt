@@ -1,0 +1,36 @@
+소스 2개 / 세그 합계 34
+후보 4개
+
+[0] 비트 6 · 중복 0 · 세트간역전 0 · 소스 2/2 · CTA끝 True · slot_source=gemini · 세트내재배치 0(말맞춤) → OK
+   lens_instagram_1g7dpt-1 [hook] fit=5 요리할 때마다 벽에 튀는 기름, 남편이 해결템을 가져왔네요.
+   lens_instagram_1g7dpt-2 [문제] fit=5 눌어붙은 자국 닦기가 보통 일이 아니었는데, 이 가림막을 쓰니 벽에 튀는 기름과
+   lens_youtube_1f60rye-2 [해결] fit=5 방탄 아크릴이라 튼튼하고 투명해 요리할 때 시야도 완벽해요.
+   lens_instagram_1g7dpt-6 [결과] fit=5 기름 안 튀어 상판 닦을 일 없고, 가림막만 씻으면 돼서 정말 간편해요.
+   lens_youtube_1f60rye-8 [결과] fit=2 귀여운 스티커로 주방 인테리어까지 화사하게 완성!
+   lens_instagram_1g7dpt-14 [CTA] fit=2 기름 튀는 주방 탈출, 댓글에 가림막이라고 남겨주세요.
+
+[1] 비트 6 · 중복 0 · 세트간역전 0 · 소스 2/2 · CTA끝 True · slot_source=gemini · 세트내재배치 0(말맞춤) → OK
+   lens_instagram_1g7dpt-1 [hook] fit=5 요리할 때마다 벽에 기름이 다 튀어서 잔소리 들었는데, 퇴근하고 오니 이런 게 
+   lens_instagram_1g7dpt-4 [문제] fit=5 매번 튄 자국 닦기 힘드셨죠? 가림막 설치하고 기름, 국물 걱정 없이 요리하세요
+   lens_youtube_1f60rye-2 [해결] fit=5 방탄 소재로 견고하고 투명해 요리할 때 정말 편해요.
+   lens_instagram_1g7dpt-6 [해결] fit=2 기름 튈 걱정 없죠. 가림막만 씻으면 끝, 진짜 간편해요.
+   lens_youtube_1f60rye-8 [결과] fit=2 예쁜 스티커로 분위기까지 살려 인테리어 효과 만점이에요.
+   lens_instagram_1g7dpt-15 [CTA] fit=5 깔끔한 주방 원하면 댓글에 정보라고 남겨주세요.
+
+[2] 비트 6 · 중복 0 · 세트간역전 0 · 소스 2/2 · CTA끝 True · slot_source=gemini · 세트내재배치 0(말맞춤) → OK
+   lens_instagram_1g7dpt-1 [hook] fit=5 요리할 때마다 벽에 기름 튀어서 매번 잔소리 들었는데, 집에 오니 투명한 가림막
+   lens_instagram_1g7dpt-3 [문제] fit=5 조리 후 벽 닦기 너무 힘들었죠? 이 가림막 하나면 기름 튈 걱정 없이 정말 쾌
+   lens_youtube_1f60rye-6 [해결] fit=5 방탄 아크릴이라 튼튼하고, 투명해서 시야 방해 없이 깔끔해요.
+   lens_instagram_1g7dpt-6 [해결] fit=5 상판 닦을 필요 없이 가림막만 씻으면 돼서 청소가 정말 쉬워졌어요.
+   lens_youtube_1f60rye-8 [결과] fit=2 스티커로 꾸미니 주방 분위기가 확 사네요. 인테리어로 최고예요.
+   lens_instagram_1g7dpt-14 [CTA] fit=2 주방 꿀템 정보가 궁금하다면 댓글에 설치라고 남겨주세요.
+
+[3] 비트 6 · 중복 0 · 세트간역전 0 · 소스 2/2 · CTA끝 True · slot_source=gemini · 세트내재배치 1(말맞춤) → OK
+   lens_instagram_1g7dpt-2 [훅] fit=5 매번 요리할 때마다 기름 튄다고 아내 잔소리에 시달리다 드디어 해방됐습니다.
+   lens_instagram_1g7dpt-1 [문제] fit=5 벽지에 밴 기름 자국 닦느라 매번 진을 뺐는데, 가림막 하나 세우니 국물이 튀어
+   lens_youtube_1f60rye-6 [해결] fit=5 방탄 소재라 튼튼하고 투명해서 시야도 완벽하죠.
+   lens_instagram_1g7dpt-6 [결과] fit=5 주변에 기름 한 방울 안 튀니 상판 닦을 일도 없고 가림막만 슥 씻으면 청소 끝
+   lens_youtube_1f60rye-10 [추가] fit=5 튼튼한 고정 받침대로 흔들림 없이 쓰기 참 좋네요.
+   lens_instagram_1g7dpt-14 [CTA] fit=5 예쁜 스티커까지 붙여서 주방 분위기 바꿔보세요. 주방 꿀팁이 궁금하면 댓글 남겨
+
+=== 후보 4개 중 NG 0개 ===

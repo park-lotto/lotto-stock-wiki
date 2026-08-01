@@ -458,6 +458,14 @@ def _filter_misplaced_sets(chosen):
     끝나는 구간이므로, 그 문장이 어디로 마무리되는지/어디서 시작하는지가 세트가 화면으로
     보여주는 결말/도입을 가장 잘 대표한다). 걸리면 옮기지 않고 그냥 뺀다(_pick_timeline이
     pop으로 잘라내는 것과 같은 단순함 — 억지로 재배치하면 왜 거기 있는지 설명이 더 꼬인다).
+
+    ★판정을 좁힌 이유(2026-08-01 실측): 처음엔 "마지막 seg가 완성/after"만 보고 잘랐는데,
+    `after`는 한 영상 안에서 여러 번 나온다 — 실측 소스(lens_youtube_1f60rye)의 세트 roles가
+    `after·사용중·문제·사용중·문제·사용중·after`라 중간 세트인데도 끝세트로 몰려 잘렸고,
+    그 소스의 세트가 **전부** 사라져 **두 영상을 담았는데 한 영상만 나가는** 결과가 됐다
+    (4세트 → 2세트, 길이도 반토막 나 길이 재생성이 후보를 4개로 불렸다).
+    그래서 끝세트는 **마지막 seg가 `완성`**(강한 신호)이거나 **세트 전체가 완성/after**일
+    때만으로 좁힌다. 도입세트도 같은 비대칭으로 `문제` 또는 전체가 문제/before일 때만.
     """
     n = len(chosen)
     keep = []
@@ -465,9 +473,12 @@ def _filter_misplaced_sets(chosen):
         segs = st["segs"]
         if not segs:
             continue
-        if i != n - 1 and segs[-1].get("shot_role") in ("완성", "after"):
+        roles = [s.get("shot_role") for s in segs]
+        is_ending = roles[-1] == "완성" or all(r in ("완성", "after") for r in roles)
+        is_opening = roles[0] == "문제" or all(r in ("문제", "before") for r in roles)
+        if i != n - 1 and is_ending:
             continue
-        if i != 0 and segs[0].get("shot_role") in ("문제", "before"):
+        if i != 0 and is_opening:
             continue
         keep.append(st)
     return keep

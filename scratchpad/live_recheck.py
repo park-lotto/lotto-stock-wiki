@@ -20,7 +20,15 @@ os.environ.setdefault("REWRITE_MIX", "1")
 os.environ.setdefault("BLOCK_MIX", "1")
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from shopping_shorts.edit_plan import build_scene_first_plan  # noqa: E402
+from shopping_shorts.edit_plan import (  # noqa: E402
+    build_scene_first_plan, _build_inventory, _build_source_sentence_sets)
+
+
+def _seg_idx(seg_id):
+    try:
+        return int(str(seg_id).rsplit("-", 1)[1])
+    except (IndexError, ValueError):
+        return -1
 
 FIXTURE = sys.argv[1] if len(sys.argv) > 1 else "/tmp/fixture.json"
 TARGET = 30
@@ -32,6 +40,17 @@ def main():
     source_scripts = list(raw.values())
     print(f"소스 {len(source_scripts)}개 / 세그 합계 "
           f"{sum(len(s.get('segments') or []) for s in source_scripts)}")
+
+    # seg_id -> (video_id, 그 소스 안에서 세트가 몇 번째인가)
+    seg_map, _inv = _build_inventory(source_scripts)
+    set_of = {}
+    per_src = {}
+    for st in _build_source_sentence_sets(seg_map):
+        vid = st["video_id"]
+        n = per_src.get(vid, 0)
+        per_src[vid] = n + 1
+        for s in st["segs"]:
+            set_of[s["seg_id"]] = (vid, n)
 
     sf = build_scene_first_plan(
         source_scripts, "", TARGET,
@@ -52,26 +71,34 @@ def main():
         beats = plan.get("beats") or []
         ids = [(b.get("primary") or {}).get("seg_id") for b in beats]
         dup = len(ids) - len(set(ids))
-        # 소스 안에서의 시간순 역전
-        rev = 0
+        # 시간순 역전 — **세트 사이**만 본다.
+        # 세트 안 순서는 말맞춤(_order_clips_by_words, 2026-07-31)이 일부러 바꾼다
+        # ("말에 맞는 컷을 비트 안에서 앞으로") — 그걸 역전으로 세면 의도된 설계를
+        # 버그로 오판한다(2026-08-01 1차 실측에서 실제로 그렇게 셌다).
+        rev = rev_in_set = 0
         seen = {}
         for sid in ids:
-            if not sid or "-" not in str(sid):
+            st = set_of.get(sid)
+            if st is None:
                 continue
-            src, _, idx = str(sid).rpartition("-")
-            try:
-                idx = int(idx)
-            except ValueError:
-                continue
-            if src in seen and idx < seen[src]:
-                rev += 1
-            seen[src] = idx
+            src, idx = st
+            if src in seen:
+                prev_set, prev_idx = seen[src]
+                if idx < prev_set:
+                    rev += 1
+                elif idx == prev_set and _seg_idx(sid) < prev_idx:
+                    rev_in_set += 1
+            seen[src] = (idx, _seg_idx(sid))
         cta_last = "cta" in str(beats[-1].get("role", "")).lower() if beats else False
         slot = plan.get("slot_source")
-        ok = (dup == 0 and rev == 0 and cta_last and slot == "gemini")
+        srcs = len({set_of[x][0] for x in ids if x in set_of})
+        ok = (dup == 0 and rev == 0 and cta_last and slot == "gemini"
+              and srcs == len(source_scripts))
         bad += 0 if ok else 1
-        print(f"\n[{i}] 비트 {len(beats)} · 중복 {dup} · 순서역전 {rev} · "
-              f"CTA끝 {cta_last} · slot_source={slot} → {'OK' if ok else 'NG'}")
+        print(f"\n[{i}] 비트 {len(beats)} · 중복 {dup} · 세트간역전 {rev} · "
+              f"소스 {srcs}/{len(source_scripts)} · "
+              f"CTA끝 {cta_last} · slot_source={slot} · 세트내재배치 {rev_in_set}(말맞춤)"
+              f" → {'OK' if ok else 'NG'}")
         for b in beats:
             print(f"   {(b.get('primary') or {}).get('seg_id'):<16} "
                   f"[{b.get('role','')}] fit={b.get('fit')} "

@@ -619,3 +619,40 @@ def test_flag_offtopic_checks_the_actually_borrowed_pick_not_local_chunk():
     ep._assign_timeline(beats, g)
     assert beats[1]["primary"]["seg_id"] == "v-1"          # 빌려온 화면이 맞는지 전제 확인
     assert beats[1].get("offtopic") and beats[1]["fit"] <= 2 and beats[1]["forced"]
+
+
+def _set(sid, roles):
+    return {"set_id": sid, "video_id": sid.rsplit("-", 1)[0],
+            "segs": [{"seg_id": f"{sid}#{i}", "shot_role": r} for i, r in enumerate(roles)]}
+
+
+def test_mid_after_set_is_not_treated_as_ending():
+    """`after`는 영상 중간에도 나온다 — 그것만으로 끝세트로 몰아 자르면 소스가 통째로 사라진다.
+
+    실측(2026-08-01, lens_youtube_1f60rye): 세트 roles가
+    after·사용중·문제·사용중·문제·사용중·after라 중간 세트인데 잘렸고, 그 소스 세트가
+    전부 없어져 두 영상을 담았는데 한 영상만 나갔다.
+    """
+    chosen = [_set("b-1", ["after", "사용중", "문제", "사용중", "after"]),
+              _set("a-5", ["사용중", "사용중"]),
+              _set("b-8", ["after", "사용중", "after"]),
+              _set("a-14", ["사용중", "완성"])]
+    kept = [s["set_id"] for s in ep._filter_misplaced_sets(chosen)]
+    assert kept == ["b-1", "a-5", "b-8", "a-14"]      # 두 소스 다 살아남는다
+
+
+def test_real_ending_set_in_the_middle_is_still_dropped():
+    """마지막 seg가 `완성`이면 여전히 끝세트 — 중간에 오면 잘라낸다(원래 가드 유지)."""
+    chosen = [_set("a-1", ["사용중", "완성"]), _set("a-5", ["사용중", "사용중"])]
+    assert [s["set_id"] for s in ep._filter_misplaced_sets(chosen)] == ["a-5"]
+
+
+def test_all_after_set_in_the_middle_is_dropped():
+    """세트 전체가 완성/after면 중간에 올 자리가 아니다."""
+    chosen = [_set("a-1", ["after", "완성"]), _set("a-5", ["사용중", "사용중"])]
+    assert [s["set_id"] for s in ep._filter_misplaced_sets(chosen)] == ["a-5"]
+
+
+def test_problem_set_in_the_middle_is_still_dropped():
+    chosen = [_set("a-1", ["사용중", "사용중"]), _set("a-5", ["문제", "사용중"])]
+    assert [s["set_id"] for s in ep._filter_misplaced_sets(chosen)] == ["a-1"]
