@@ -73,3 +73,35 @@ def test_unknown_best_asset_id_is_ignored():
     out = scene_match.match_scene_assets(plan, assets,
                                          vault_call=lambda *a, **k: {"best_asset_id": 999, "score": 0.9})
     assert "cutaway" not in out["beats"][0]
+
+
+def test_scene_library_auto_placement_is_off_by_default(monkeypatch):
+    """자동 컷어웨이·효과음은 **설정으로 켤 때만** 붙는다(2026-08-01 실사고).
+
+    실측(job a75c22f644ad): 요거트 아이스크림 소재인데 role만 같다는 이유로 '감자튀김'
+    자산이 훅 비트를 풀프레임으로 덮었고, 자산에 박힌 원본 자막까지 그대로 나갔다.
+    스위치가 없어 자산이 등록돼 있으면 모든 영상에 무조건 적용됐다.
+    """
+    from shopping_shorts import mix_pipeline
+
+    called = []
+    monkeypatch.setattr(mix_pipeline, "match_scene_assets",
+                        lambda plan, assets, **kw: called.append("clip") or plan)
+    monkeypatch.setattr(mix_pipeline, "match_sfx",
+                        lambda plan, assets, **kw: called.append("sfx") or plan)
+
+    class _Store:
+        def __init__(self, on):
+            self.on = on
+
+        def get_setting(self, key, default=""):
+            return "1" if (self.on and key == "scene_library_auto_enabled") else default
+
+        def list_scene_assets(self, **kw):
+            return [{"id": 5}]
+
+    src = "shopping_shorts/mix_pipeline.py"
+    body = open(src, encoding="utf-8").read()
+    assert 'store.get_setting("scene_library_auto_enabled", "") == "1"' in body
+    # 기본(설정 없음)에서는 자산 조회 자체를 안 한다 → 게이트가 조회보다 앞에 있어야 한다
+    assert body.index('scene_library_auto_enabled') < body.index('asset_type="clip"')

@@ -788,18 +788,27 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     if not plan["beats"]:
         raise RuntimeError("EDL 비어있음 — 대본 추출 실패 또는 Gemini 키 소진으로 편집안을 만들지 못함")
 
-    # 3.5) 장면 라이브러리 매칭 — 자산이 있을 때만(없으면 plan 무변경). match_scene_assets가
-    # beat["cutaway"]={"asset_id":..,"score":..}를 심고, run_render이 같은 키를 읽어
-    # asset_id→media_path로 해석한다(저장위치=읽기위치, seam은 mix_pipeline 배선 참고).
-    assets = store.list_scene_assets(customer_id=customer_id, asset_type="clip")
-    if assets:
-        plan = match_scene_assets(plan, assets)
-    # 3.6) 효과음(sfx) 역할 매칭 — 별도 자산 목록(asset_type="sfx")으로 조회한다. 위 clip
-    # 목록엔 sfx가 없으므로 재조회 필요. match_sfx가 beat["sfx"]={asset_id,position,..}를 심고,
-    # run_render/run_preview가 asset_id→media_path로 해석한다(컷어웨이와 같은 seam). Gemini 0회.
-    sfx_assets = store.list_scene_assets(customer_id=customer_id, asset_type="sfx")
-    if sfx_assets:
-        plan = match_sfx(plan, sfx_assets)
+    # 3.5/3.6) 장면 라이브러리 자동 배치(컷어웨이 + 효과음) — ★기본 OFF(2026-08-01 실사고).
+    #
+    # 사장님 제보 "완성 영상에 왜 감자 레시피 조각이 들어가지?"의 범인이 이 자동 배치였다.
+    # 실측(job a75c22f644ad, 요거트 아이스크림 소재): 비트0(hook)에 asset 5 "감자튀김",
+    # 비트1(process)에 asset 10 "채 썬 감자"가 붙었고 둘 다 match_type="role"이었다 —
+    # **역할 이름만 같으면 붙인다**. 소재(subject)·카테고리·키워드는 보지 않는다.
+    # 컷어웨이는 비트 영상 **위에 풀프레임 오버레이**라 우리 화면을 통째로 덮고, 그 자산에
+    # 박힌 원본 자막("구황작물 극혐하던 남편도")까지 그대로 나갔다.
+    #
+    # 게다가 켜고 끄는 스위치가 없어 **자산이 하나라도 등록돼 있으면 모든 영상에 무조건**
+    # 적용됐다(당시 12개 등록). 사장님 지시("장면 라이브러리 없애, 안 쓰니까")에 따라
+    # 기본을 OFF로 두고 설정으로만 켜지게 한다 — 자산 데이터는 지우지 않는다(되돌리기 쉽게).
+    # 다시 켜려면 설정 scene_library_auto_enabled=1. 매칭을 소재·카테고리까지 보도록 고치는
+    # 일은 장면라이브러리 트랙 소관이다.
+    if store.get_setting("scene_library_auto_enabled", "") == "1":
+        assets = store.list_scene_assets(customer_id=customer_id, asset_type="clip")
+        if assets:
+            plan = match_scene_assets(plan, assets)
+        sfx_assets = store.list_scene_assets(customer_id=customer_id, asset_type="sfx")
+        if sfx_assets:
+            plan = match_sfx(plan, sfx_assets)
 
     # 4) 비트별 TTS (naturalize + N-best + 연속성 + 프리셋 후처리)
     store.update_mix_job(job_id, status="tts")
