@@ -668,3 +668,81 @@ def test_set_prompt_requires_every_source_once():
     txt = ep._set_seq_prompt(ep._build_source_sentence_sets(sm), 30)
     assert "영상마다 최소 한 세트씩은 반드시 골라라" in txt
     assert "덜 중요한 세트를 빼서 길이를 맞춰라" in txt
+
+
+def test_sets_are_capped_to_target_length():
+    """세트가 잘게 쪼개져도 목표 길이에 맞는 개수까지만 묻는다(job e99d0e8e3e02).
+
+    30초에 11세트 = 비트당 2.7초 → 모델이 `filler` 글자를 그대로 6개 뱉었다.
+    """
+    sets = [{"set_id": f"a-{i}", "video_id": "a", "segs": [{"seg_id": f"a-{i}"}], "secs": 2.0}
+            for i in range(11)]
+    out = ep._cap_sets(sets, 30)
+    assert len(out) == 7                       # max(4, min(8, 30//4))
+    assert sum(len(s["segs"]) for s in out) == 11   # 세그는 하나도 안 버린다
+    assert [s["video_id"] for s in out] == ["a"] * 7
+
+
+def test_cap_never_merges_across_sources():
+    """소스가 번갈아 있으면 합치지 않는다 — 한 세트에 두 영상이 섞이면 프랑켄 문장."""
+    sets = [{"set_id": f"{v}-{i}", "video_id": v, "segs": [{"seg_id": f"{v}-{i}"}], "secs": 1.0}
+            for i, v in enumerate("ababababab")]
+    out = ep._cap_sets(sets, 30)
+    assert len(out) == 10                      # 합칠 이웃 쌍이 없다 → 그대로
+    assert all(len({s["seg_id"][0] for s in st["segs"]}) == 1 for st in out)
+
+
+def test_placeholder_narration_is_dropped():
+    """`filler` 같은 자리표시자는 대본으로 못 나간다."""
+    beats = [{"role": "hook", "narration": "진짜 좋아요"},
+             {"role": "filler", "narration": "filler"},
+             {"role": "본문", "narration": "본문"},
+             {"role": "cta", "narration": "댓글 주세요"}]
+    out = ep._drop_placeholder_beats(beats)
+    assert [b["narration"] for b in out] == ["진짜 좋아요", "댓글 주세요"]
+
+
+def test_short_but_real_line_survives():
+    """'끝!'처럼 짧아도 진짜 대사는 지우지 않는다."""
+    assert ep._drop_placeholder_beats([{"role": "cta", "narration": "끝!"}])
+
+
+def test_beats_are_trimmed_to_slot_count():
+    """모델이 요구한 개수를 안 지키면 코드가 맞춘다 — filler부터 버린다."""
+    beats = [{"role": "hook", "narration": "이거 진짜 좋아요"},
+             {"role": "problem", "narration": "매번 이게 문제였거든요"},
+             {"role": "filler", "narration": "티슈로 닦아내는 장면"},
+             {"role": "filler", "narration": "팔뚝 피부 케어 영상"},
+             {"role": "cta", "narration": "댓글 남겨주세요"}]
+    out = ep._trim_beats_to_slots(beats, 3)
+    assert [b["role"] for b in out] == ["hook", "problem", "cta"]
+
+
+def test_trim_keeps_hook_and_cta_when_all_roles_known():
+    """정의 밖 역할이 없으면 훅·CTA는 남기고 가운데 짧은 것부터 버린다."""
+    beats = [{"role": "hook", "narration": "훅 문장입니다"},
+             {"role": "문제", "narration": "짧다"},
+             {"role": "해결", "narration": "이렇게 해결했어요 정말로"},
+             {"role": "cta", "narration": "댓글 주세요"}]
+    out = ep._trim_beats_to_slots(beats, 3)
+    assert [b["role"] for b in out] == ["hook", "해결", "cta"]
+
+
+def test_trim_is_noop_when_counts_match():
+    beats = [{"role": "hook", "narration": "a"}, {"role": "cta", "narration": "b"}]
+    assert ep._trim_beats_to_slots(beats, 2) == beats
+
+
+def test_only_one_cta_survives():
+    """CTA가 여러 개면 마지막만 — 끝에서 한 번 부르는 게 CTA다."""
+    beats = [{"role": "hook", "narration": "훅"},
+             {"role": "cta", "narration": "댓글 주세요"},
+             {"role": "본문", "narration": "설명"},
+             {"role": "CTA", "narration": "댓글 주세요"}]
+    out = ep._dedupe_cta_beats(beats)
+    assert [b["role"] for b in out] == ["hook", "본문", "CTA"]
+
+
+def test_single_cta_is_untouched():
+    beats = [{"role": "hook", "narration": "훅"}, {"role": "cta", "narration": "댓글"}]
+    assert ep._dedupe_cta_beats(beats) == beats

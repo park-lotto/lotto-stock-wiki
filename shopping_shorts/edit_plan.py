@@ -424,6 +424,124 @@ def _build_source_sentence_sets(seg_map):
     return sets
 
 
+_MIN_SET_SECS = 4.0     # 비트 하나가 이보다 짧으면 할 말이 없다(실측 근거는 _cap_sets 참조)
+
+# 모델이 할 말이 없을 때 뱉는 자리표시자들. 실측은 `filler`(job e99d0e8e3e02, 6개)지만
+# 같은 계열이 몇 개 더 있어 함께 막는다. 역할 이름을 그대로 적은 것도 자리표시자다.
+_PLACEHOLDER_NARRATIONS = {"filler", "placeholder", "tbd", "n/a", "none", "null",
+                           "...", "..", "-", "내용", "대사", "빈칸"}
+
+
+# 대본에서 인정하는 역할들(모델이 한글·영문 아무거나 쓴다 — 낱말 포함으로 본다).
+# 여기 없는 역할(`filler` 등)은 "할 말이 없어 만든 자리"라 스토리에 기여하지 않는다.
+_KNOWN_ROLE_WORDS = ("훅", "hook", "문제", "problem", "페인", "pain", "해결", "solution",
+                     "결과", "result", "resolution", "반전", "실용", "혜택", "benefit",
+                     "장점", "경험", "story", "전개", "process", "과정", "마무리", "cta")
+
+
+def _is_known_role(role):
+    r = (role or "").strip().lower()
+    return any(w in r for w in _KNOWN_ROLE_WORDS)
+
+
+def _dedupe_cta_beats(beats):
+    """CTA는 **하나뿐**이다 — 여러 개면 마지막만 남긴다(2026-08-01).
+
+    실측(job e99d0e8e3e02 재현): 가운데 비트를 잘라내자 CTA 비트 둘이 나란히 붙었고,
+    한 후보는 "더 자세한 내용은 댓글로 물어봐주세요"가 **글자까지 똑같이** 두 번 나왔다.
+    영상 끝에서 한 번 부르는 게 CTA인데 두 번 부르면 그냥 반복이다(핸드오프 백로그의
+    '중간 CTA 중복'과 같은 건). 화면은 `_assign_timeline`이 다시 나눠 주므로 안 잃는다.
+    """
+    idx = [i for i, b in enumerate(beats or []) if _is_cta(b)]
+    if len(idx) < 2:
+        return beats
+    keep_cta = idx[-1]
+    return [b for i, b in enumerate(beats) if i == keep_cta or i not in idx]
+
+
+def _trim_beats_to_slots(beats, n):
+    """비트 수를 슬롯(세트) 수에 맞춘다 — 프롬프트가 부탁한 걸 코드가 확인한다.
+
+    실측(job e99d0e8e3e02·af0e40746fe1): 세트가 5개라 "비트를 정확히 5개 만들어라"라고
+    요구했는데 모델은 11개·7개를 만들고 남는 자리를 `filler` 역할로 채웠다. 자리표시자
+    글자는 `_drop_placeholder_beats`가 막지만, 글자만 그럴듯하게 바꿔 오면(실측:
+    "티슈로 닦아내는 장면" — 대사가 아니라 화면 설명문) 그대로 나간다.
+    프롬프트로 부탁만 하고 코드로 확인하지 않으면 지켜지는지 알 수 없다는, 이 파일이
+    반복해서 배운 교훈을 여기에도 적용한다.
+
+    버리는 순서: ①정의 밖 역할(`filler` 등) 중 짧은 것 → ②그래도 많으면 훅·CTA가 아닌
+    것 중 짧은 것. 훅과 CTA는 이야기의 처음과 끝이라 끝까지 남긴다.
+    """
+    if n <= 0 or len(beats) <= n:
+        return beats
+    keep = list(beats)
+    while len(keep) > n:
+        pool = [i for i, b in enumerate(keep) if not _is_known_role(b.get("role"))]
+        if not pool:
+            pool = [i for i, b in enumerate(keep)
+                    if not _is_cta(b) and i != 0]
+        if not pool:
+            break
+        drop = min(pool, key=lambda i: len((keep[i].get("narration") or "")))
+        keep.pop(drop)
+    return keep
+
+
+def _drop_placeholder_beats(beats):
+    """대사 자리에 자리표시자가 들어온 비트를 빼낸다(2026-08-01 실사고).
+
+    실측(job e99d0e8e3e02·af0e40746fe1): 두 건 다 role이 `hook·problem·solution·
+    filler×N·CTA` 모양이었다. 코드엔 `filler`를 만드는 곳이 없다 — **비트를 정확히 N개
+    만들라고 요구했는데 모델이 그보다 많이 만들며 남는 자리를 `filler`로 채운 것**이고,
+    그게 그대로 대본이 돼 사장님 화면까지 갔다(fit=1, 1.5초짜리 비트 6개).
+
+    `narration`이 `filler` 같은 자리표시자거나 자기 role 이름 그대로면 대사가 아니다.
+    억지로 살리지 않고 뺀다 — 화면은 `_assign_timeline`이 남은 비트에 다시 나눠 주므로
+    잃지 않는다. 판정을 좁게 잡은 이유: "끝!"처럼 짧아도 진짜 대사인 것을 지우면 안 된다.
+    """
+    out = []
+    for b in beats or []:
+        txt = (b.get("narration") or "").strip()
+        role = (b.get("role") or "").strip()
+        if txt.lower() in _PLACEHOLDER_NARRATIONS or (role and txt.lower() == role.lower()):
+            continue
+        out.append(b)
+    return out
+
+
+def _cap_sets(sets, target_seconds):
+    """세트가 너무 잘게 쪼개졌으면 **같은 소스의 이웃끼리 합친다**(2026-08-01 실사고).
+
+    ※ 이건 **예방 가드지 관측된 사고 원인이 아니다**(2026-08-01 자기정정). `filler` 사고
+    (job e99d0e8e3e02)를 처음엔 "세트가 11개라 무리한 개수를 강요했다"로 진단했는데,
+    실제 세트는 5개였고 모델이 **요구받은 5개를 넘겨 11개를 뱉으며** 남는 자리를 채운
+    것이었다. 원인은 `_drop_placeholder_beats`가 막는다.
+
+    다만 세트가 목표 길이 대비 지나치게 잘게 쪼개지면(비트당 몇 초짜리) 모델에게 할 말이
+    없는 자리를 강요하게 되는 건 사실이라, 묻기 전에 개수를 줄여 둔다 — 30초면 최대
+    7세트(비트당 4.3초).
+    합치는 대상은 **같은 소스의 붙어 있는 세트**뿐이라(원본에서도 연달아 나오던 문장들)
+    합쳐도 이야기가 튀지 않는다. 짧은 쌍부터 합쳐 긴 세트는 건드리지 않는다.
+    """
+    if not sets or not target_seconds:
+        return sets
+    cap = max(4, min(_MAX_BEATS, int(target_seconds // _MIN_SET_SECS)))
+    if len(sets) <= cap:
+        return sets
+    out = list(sets)
+    while len(out) > cap:
+        pairs = [i for i in range(len(out) - 1)
+                 if out[i]["video_id"] == out[i + 1]["video_id"]]
+        if not pairs:
+            break                      # 소스가 번갈아 있으면 더 합칠 수 없다
+        i = min(pairs, key=lambda k: out[k]["secs"] + out[k + 1]["secs"])
+        a, b = out[i], out[i + 1]
+        out[i:i + 2] = [{"set_id": a["set_id"], "video_id": a["video_id"],
+                         "segs": a["segs"] + b["segs"],
+                         "secs": round(a["secs"] + b["secs"], 1)}]
+    return out
+
+
 def _set_seq_prompt(sets, target_seconds):
     lines = ["아래는 두 영상에서 뽑은 '한 문장이 시작~끝나는' 장면 세트들이다. 각 세트의 "
              "역할(무슨 내용인지)을 보고, 하나의 자연스러운 스토리로 이어지도록 몇 개를 "
@@ -526,7 +644,7 @@ def _pick_slot_groups(seg_map, target_seconds=None, call=None):
     Gemini를 부르지도 못했다는 뜻이라 별도 태그(empty_input)를 쓴다."""
     if not seg_map:
         return [], SLOT_SOURCE_EMPTY_INPUT
-    sets = _build_source_sentence_sets(seg_map)
+    sets = _cap_sets(_build_source_sentence_sets(seg_map), target_seconds)
     if not sets:
         return [], SLOT_SOURCE_EMPTY_INPUT
     caller = call or _vault_call
@@ -2401,6 +2519,17 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
       for r in raws:
         plan = _ground_candidate(r, seg_map, lead_hook=not tl_groups)
         if plan is None:
+            continue
+        # ★자리표시자 방벽(2026-08-01 실사고, job e99d0e8e3e02): 모델이 요구한 비트 수를
+        #   넘겨 만들며 남는 자리를 `filler`라는 **글자 그대로** 채웠고, 그게 대본으로
+        #   나가 사장님 화면까지 갔다. 프롬프트로 "하지 마라"만 적으면 지켜졌는지 알 수
+        #   없다는 게 이 파일의 반복된 교훈이라, 코드로 막는다(화면은 아래
+        #   _assign_timeline이 어차피 다시 배정하므로 비트를 빼도 화면은 안 잃는다).
+        plan["beats"] = _dedupe_cta_beats(_drop_placeholder_beats(plan.get("beats") or []))
+        if tl_groups:
+            # 모델이 요구한 개수를 안 지키므로 코드가 맞춘다(위 함수 주석 참조).
+            plan["beats"] = _trim_beats_to_slots(plan["beats"], len(tl_groups))
+        if not plan["beats"]:
             continue
         # ★화면은 원본 시간순 그대로 코드가 배정한다(리라이트 믹스).
         if tl_groups:
