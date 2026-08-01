@@ -62,7 +62,31 @@ def _seg_dur(seg):
     return (seg.get("end", 0) - seg.get("start", 0)) if seg else 0.0
 
 
-def _broll_segs(pool_sources, src_count, exclude_seg_ids, prefer_video=None, min_shot=0.0):
+# 비트 성격 ↔ 어울리는 shot_role(2026-08-01 실사고). 마무리 자리에 조리 과정이 다시
+# 나오면 "조리 재방송"이 된다 — 사장님 실측 제보: 완성품→조리→완성품→조리→완성품.
+_BEAT_ROLE_SHOTS = {
+    "cta": ("완성", "after"),
+    "결과": ("완성", "after"),
+    "result": ("완성", "after"),
+    "마무리": ("완성", "after"),
+    "resolution": ("완성", "after"),
+    "과정": ("사용중",),
+    "process": ("사용중",),
+    "해결": ("사용중",),
+    "solution": ("사용중",),
+}
+
+
+def _wanted_shots(beat_role):
+    r = (beat_role or "").strip().lower()
+    for k, v in _BEAT_ROLE_SHOTS.items():
+        if k in r:
+            return v
+    return ()
+
+
+def _broll_segs(pool_sources, src_count, exclude_seg_ids, prefer_video=None, min_shot=0.0,
+                want_shots=()):
     """행위 무관 B롤 후보. **같은 소스(prefer_video=primary 릴) 우선** — 같은 요리라 의미가
     안정된다(엉뚱한 타요리 조각 삽입 방지, 2026-07-21 바나나 커스터드 실사고). 같은 소스의
     안 쓴 조각을 다 쓴 뒤에야 다른 소스로 넘어가되, 그때는 덜 쓴 소스 우선. 이미 쓴 seg_id·
@@ -73,7 +97,15 @@ def _broll_segs(pool_sources, src_count, exclude_seg_ids, prefer_video=None, min
             if seg.get("seg_id") not in exclude_seg_ids
             and not seg.get("has_effect")                 # 원본 효과 박힌 조각은 B롤로 안 씀
             and _seg_dur(seg) > 0.05]
-    segs.sort(key=lambda c: (c.get("video_id") != prefer_video,      # 같은 소스 먼저(False<True)
+    # ★비트 성격에 맞는 컷 먼저(2026-08-01). CTA·결과 자리엔 완성컷, 과정 자리엔 조리컷을
+    #   앞세운다 — 실측(job a75c22f644ad)에서 CTA 비트가 s0의 조리 전과정(설탕붓기→잼섞기
+    #   →짜넣기→뚜껑덮기) 4컷을 통째로 끌어와 영상 끝이 "조리 재방송"이 됐다. 세 후보 모두
+    #   같은 모양이라 취향이 아니라 구조 문제였다.
+    #   ★버리지 않고 **순서만** 미룬다 — 이 함수가 채울 재료를 줄이면 렌더가 정지/슬로우로
+    #   때우는 프리즈가 돌아온다(이 구역의 두더지잡기 이력). 맞는 계열이 없으면 종전대로
+    #   전부 후보로 남는다.
+    segs.sort(key=lambda c: (bool(want_shots) and c.get("shot_role") not in want_shots,
+                             c.get("video_id") != prefer_video,      # 같은 소스 먼저(False<True)
                              src_count.get(c.get("video_id"), 0),
                              _seg_dur(c) < min_shot,                  # 너무 짧은 파편은 뒤로
                              -_visual_score(c),                       # 맛있어 보이는 것 우선
@@ -128,7 +160,8 @@ def fill_clips_to_cover(beat, pool_sources, src_count=None, need=None,
     if clip_seconds(nb) < need and _count() < max_clips:
         sc = src_count if src_count is not None else Counter()
         prim_vid = (beat.get("primary") or {}).get("video_id")
-        for clip in _broll_segs(pool_sources, sc, used, prefer_video=prim_vid, min_shot=min_shot):
+        for clip in _broll_segs(pool_sources, sc, used, prefer_video=prim_vid, min_shot=min_shot,
+                                want_shots=_wanted_shots(beat.get("role"))):
             nb["alternates"].append(clip)
             used.add(clip.get("seg_id"))
             sc[clip.get("video_id")] = sc.get(clip.get("video_id"), 0) + 1
