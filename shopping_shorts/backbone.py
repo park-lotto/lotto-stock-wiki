@@ -190,14 +190,16 @@ def beat_action_mismatch(beat):
     return bool(n_act and s_act and n_act != s_act)
 
 
-def reconcile_beat_by_action(beat, pool_sources):
+def reconcile_beat_by_action(beat, pool_sources, exclude_seg_ids=None):
     """핑퐁 장면-쪽: 나레이션 행위에 맞는 클립을 풀에서 찾아 화면 스왑.
     → (new_beat, need_rewrite). 찾으면 primary 교체+action_fixed, 못 찾으면 need_rewrite=True
-    (→ 나레이션 재작성으로 넘김 = 핑퐁 대본-쪽). 나레이션 행위가 없으면 손 안 댐."""
+    (→ 나레이션 재작성으로 넘김 = 핑퐁 대본-쪽). 나레이션 행위가 없으면 손 안 댐.
+    exclude_seg_ids: 이번 ping_pong_reconcile 호출에서 이미 다른 비트가 스왑으로 가져간
+    seg_id 집합(2026-08-01) — 안 주면(None) 제외 없이 기존 동작 그대로."""
     n_act = action_dict.tag_action(beat.get("narration", ""))
     if not n_act:
         return dict(beat), False
-    clips = pick_clips_for_action(n_act, pool_sources)
+    clips = pick_clips_for_action(n_act, pool_sources, exclude_seg_ids=exclude_seg_ids)
     if clips:
         nb = dict(beat)
         nb["primary"] = clips[0]
@@ -550,14 +552,24 @@ def ping_pong_reconcile(beats, pool_sources, rewrite_call=None, max_rounds=2,
     불일치 0 또는 max_rounds 소진까지 반복. rewrite_call(beats)->{beat_idx: 새나레이션}.
     rewrite_call 없거나 실패면 그 비트는 스왑만(대본 쪽 스킵). 원본 mutate 안 함."""
     out = [dict(b) for b in beats]
+    # ★이번 ping_pong_reconcile 호출 전체(라운드 넘나들며)에서 스왑으로 이미 나간 seg_id.
+    # 라운드 안에서만 리셋하면 라운드가 넘어갈 때 재사용될 수 있어(실사고 job 8226822c5b09:
+    # bad 두 비트가 같은 행위로 매핑돼 같은 clips[0]을 각자 고름) 호출 전체 스코프로 둔다
+    # (2026-08-01).
+    claimed_seg_ids = set()
     for _ in range(max_rounds):
         bad = [i for i, b in enumerate(out) if beat_action_mismatch(b)]
         if not bad:
             break
         need_rewrite = []
         for i in bad:
-            nb, still = reconcile_beat_by_action(out[i], pool_sources)
+            nb, still = reconcile_beat_by_action(out[i], pool_sources,
+                                                  exclude_seg_ids=claimed_seg_ids)
             out[i] = nb
+            if not still:
+                sid = (nb.get("primary") or {}).get("seg_id")
+                if sid:
+                    claimed_seg_ids.add(sid)
             if still:
                 need_rewrite.append(out[i])
         if need_rewrite and rewrite_call is not None:
@@ -727,10 +739,14 @@ def ensure_sources_used(beats, pool_sources):
     return out
 
 
-def pick_clips_for_action(action, pool_sources, exclude_video=None):
+def pick_clips_for_action(action, pool_sources, exclude_video=None, exclude_seg_ids=None):
     """그 행위의 클립들(화면 스왑 best-of-N 후보). exclude_video=백본이면 서브만 반환
-    (차별화 1층: 순서·싱크는 백본, 픽셀은 다른 소스)."""
+    (차별화 1층: 순서·싱크는 백본, 픽셀은 다른 소스).
+    exclude_seg_ids: 이 seg_id들은 후보에서 뺀다(2026-08-01) — ping_pong_reconcile이
+    같은 호출 안에서 이미 다른 비트에 배정한 클립을 다시 골라 화면이 중복되는 것 방지."""
     clips = action_pool(pool_sources).get(action, [])
     if exclude_video:
         clips = [c for c in clips if c.get("video_id") != exclude_video]
+    if exclude_seg_ids:
+        clips = [c for c in clips if c.get("seg_id") not in exclude_seg_ids]
     return clips
