@@ -18,6 +18,7 @@ from pipeline.atoms import key_vault
 from shopping_shorts import action_dict
 from shopping_shorts import comment_gen
 from shopping_shorts import scene_cut
+from shopping_shorts import tag_qa
 from shopping_shorts.config import SHORTS_GEMINI_KEYS
 from shopping_shorts.video_analysis import _MODEL, _wait_until_active
 
@@ -232,6 +233,61 @@ def _compute_motion_map(video_path, cuts, fps, raw_segments, video_id):
         return {}
 
 
+# 이 점수 밑이면 태깅이 지침을 크게 어긴 것으로 보고 **딱 1회** 고쳐 부른다(2026-08-01).
+# 0.6 = 가중치가 큰 검사(커버리지 0.20·시간정합 0.20) 두 개가 깨진 수준. 그 이상 깎였다면
+# 슬롯(화면조합)이 쓸 재료 자체가 부실하다는 뜻이라 한 번은 다시 물어볼 값어치가 있다.
+_QA_RETRY_BELOW = 0.6
+
+
+def _video_duration(video_path):
+    """영상 길이(초). 실패하면 None — QA가 길이 검사만 건너뛰고 계속 돈다(fail-open).
+
+    ★format=duration을 쓰지 않는다: 그건 오디오·비디오 중 긴 값이라 화면 없는 꼬리가
+    붙어 커버리지가 부당하게 낮게 나온다(scene_cut.video_frame_count 주석의 실측 근거).
+    비디오 스트림 프레임 수 ÷ fps로 **화면이 실제로 있는 길이**를 쓴다."""
+    try:
+        fps = scene_cut.video_fps(video_path)
+        frames = scene_cut.video_frame_count(video_path)
+        if fps and frames:
+            return frames / fps
+    except Exception:
+        pass
+    return None
+
+
+def _qa_retry_decision(result, duration, already_retried):
+    """(재시도할까, 프롬프트에 얹을 힌트) — 순수 판단이라 Gemini 없이 테스트된다.
+
+    already_retried면 무조건 False: QA 재시도는 **딱 1회**다. 점수가 낮다고 계속 부르면
+    비용이 곱절이 되고, 모델이 같은 실수를 반복하면 무한루프가 된다."""
+    if already_retried:
+        return False, ""
+    score, flags = tag_qa.validate_extract(result, duration)
+    if score >= _QA_RETRY_BELOW or not flags:
+        return False, ""
+    return True, "\n★지난 시도의 문제(반드시 고쳐라): " + "; ".join(flags)
+
+
+def _attach_qa(result, duration, retried):
+    """결과에 tag_qa 기록을 붙여 반환. **결과 자체는 절대 안 바꾼다**(빈 대본 금지).
+    하류(job 로그·tag_audit)가 이 값으로 '이 영상이 왜 이상한가'를 추적한다."""
+    score, flags = tag_qa.validate_extract(result, duration)
+    result["tag_qa"] = {"score": score, "flags": flags, "retried": bool(retried)}
+    return result
+
+
+def _pick_better_extract(first, second, duration):
+    """QA 재시도 결과가 더 나쁘면 첫 시도를 쓴다 — 재시도가 품질을 깎으면 안 된다.
+    second가 비었으면(API 실패) 볼 것도 없이 first."""
+    if not (second or {}).get("segments"):
+        return first
+    if not (first or {}).get("segments"):
+        return second
+    s1, _ = tag_qa.validate_extract(first, duration)
+    s2, _ = tag_qa.validate_extract(second, duration)
+    return second if s2 > s1 else first
+
+
 def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=8):
     """영상 파일 → {"segments": [...seg_id 포함...], "full_text": str}. 실패 시 빈 결과.
 
@@ -248,10 +304,15 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
     if not SHORTS_GEMINI_KEYS:
         raise RuntimeError("script_extract: SHORTS_GEMINI_KEY가 설정되지 않았습니다")
     boundary_hint, _cuts, _fps = _boundary_hint(video_path)
-    prompt = _PROMPT.format(caption=caption or "(캡션 없음)",
-                            boundaries=boundary_hint or "(감지 실패 — 화면·주제 변화로 판단)")
+    base_prompt = _PROMPT.format(caption=caption or "(캡션 없음)",
+                                 boundaries=boundary_hint or "(감지 실패 — 화면·주제 변화로 판단)")
+    prompt = base_prompt
     model = _MODEL
     primary_503 = 0
+    # 태깅 QA(2026-08-01): 첫 성공 결과가 지침을 크게 어겼으면 문제를 알려주고 딱 1회 더 부른다.
+    # qa_first는 그 첫 결과 — 재시도가 오히려 나쁘면 이쪽으로 되돌린다(재시도가 품질을 깎지 않게).
+    duration = _video_duration(video_path)
+    qa_first, qa_retried = None, False
 
     for attempt in range(max_retries):
         key, idx = comment_gen._current_key_and_idx()
@@ -277,11 +338,23 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
             # 소스 단위 특장점: 모델의 최상위 요약을 우선하고, 없으면 세그별 집계로 폴백.
             # 무자막 영상(full_text 0자)이 대본 생성에서 통째로 빠지던 것을 막는 재료다.
             benefits = _norm_benefits(data.get("product_benefits")) or _collect_benefits(segments)
-            return {
+            result = {
                 "segments": segments,
                 "full_text": data.get("full_text", ""),
                 "product_benefits": benefits,
             }
+            # ★태깅 QA(2026-08-01). 지금까진 스키마만 통과하면 무조건 채택했다 — 프롬프트의
+            #   지침(0초 훅·받아쓰기·shot_role·change)이 지켜졌는지 아무도 안 봤다. 슬롯 기반
+            #   화면조합이 이 태깅 위에 전부 서므로 여기가 부실하면 위층이 정교해도 소용없다.
+            should_retry, hint = _qa_retry_decision(result, duration, qa_retried)
+            if should_retry:
+                qa_first, qa_retried = result, True
+                prompt = base_prompt + hint      # 무엇이 틀렸는지 알려주고 다시 묻는다
+                print(f"script_extract: 태깅 QA 재시도 — {hint.strip()}", file=sys.stderr)
+                continue
+            if qa_first is not None:             # 재시도분이 더 나쁘면 첫 결과로 되돌린다
+                result = _pick_better_extract(qa_first, result, duration)
+            return _attach_qa(result, duration, qa_retried)
         except Exception as e:
             m = str(e)
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
@@ -305,6 +378,11 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 if attempt < max_retries - 1:
                     time.sleep((attempt + 1) * 5)
                     continue
+            # ★QA 재시도 중 API가 죽었으면 첫 결과를 살려 돌려준다(2026-08-01). 점수가 낮아도
+            #   있는 대본이 빈 대본보다 낫다 — QA는 기록 장치지 차단 장치가 아니다.
+            if qa_first is not None:
+                print(f"script_extract: QA 재시도 실패 — 첫 결과 유지 ({e!r})", file=sys.stderr)
+                return _attach_qa(qa_first, duration, qa_retried)
             print(f"script_extract: 빈 결과 반환(재시도 소진 또는 미분류 오류) — {e!r}", file=sys.stderr)
             return dict(_EMPTY)
         finally:
@@ -313,6 +391,8 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                     client.files.delete(name=file_obj.name)
                 except Exception:
                     pass
+    if qa_first is not None:                     # 재시도가 루프를 소진한 경우도 마찬가지
+        return _attach_qa(qa_first, duration, qa_retried)
     return dict(_EMPTY)
 
 
