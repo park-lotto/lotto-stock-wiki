@@ -370,8 +370,10 @@ def _pick_timeline(seg_map, target_seconds):
 def _group_by_sentence(picked):
     """seg 리스트를 '원본 대사 한 문장이 시작~끝나는 구간'으로 묶는다(2026-07-31 사장님).
 
-    _pick_timeline과 _pick_slot_sequence 둘 다 이 그룹핑을 재사용한다 — 세트 정의는
-    화면을 어떤 순서로 고르든(시간순이든 Gemini 판단이든) 동일해야 하기 때문."""
+    _pick_timeline과 _build_source_sentence_sets(→_pick_slot_groups) 둘 다 이 그룹핑을
+    재사용한다 — 세트 정의는 화면을 어떤 순서로 고르든(시간순이든 Gemini 판단이든)
+    동일해야 하기 때문. 단 _build_source_sentence_sets는 **소스별로 따로** 호출해
+    다른 소스와 섞이지 않게 한다(2026-08-01, F1 수정)."""
     groups, cur = [], []
     for s in picked:
         cur.append(s)
@@ -382,7 +384,7 @@ def _group_by_sentence(picked):
     return groups
 
 
-_SLOT_SEQ_SCHEMA = {
+_SET_SEQ_SCHEMA = {
     "type": "object",
     "properties": {
         "order": {"type": "array", "items": {"type": "string"}},
@@ -391,50 +393,87 @@ _SLOT_SEQ_SCHEMA = {
 }
 
 
-def _slot_seq_prompt(seg_map):
-    lines = ["아래는 두 영상에서 뽑은 장면 조각들이다. 각 조각의 역할(무슨 내용인지)을 보고,",
-             "하나의 자연스러운 스토리로 이어지도록 순서를 정하라. 같은 제품이라도 두 영상이",
-             "서로 다른 훅·전개를 가질 수 있으니, 소스에 얽매이지 말고 내용 흐름으로 판단하라.",
-             "모든 조각을 반드시 한 번씩만 써라 — 순서만 정하고 빼거나 지어내지 마라."]
-    for sid, s in seg_map.items():
-        lines.append(f"- [{sid}] {s.get('shot_role', '')} · {s.get('scene_desc', '')} "
-                      f"· 원본 대사: {s.get('text', '')}")
-    lines.append("\n반드시 JSON {\"order\": [seg_id, ...]} 형식으로만 답하라.")
+def _build_source_sentence_sets(seg_map):
+    """seg_map을 **소스별 시간순으로 먼저** 문장세트로 묶는다(2026-08-01, F1/F2 재설계).
+
+    옛 _pick_slot_sequence는 Gemini에게 seg 낱개를 자유 재정렬시킨 *뒤에* 문장으로 묶었다
+    (_pick_slot_groups: seq → group). 그런데 _group_by_sentence는 "리스트에서 옆에 붙은
+    seg는 같은 원본 문장이다"를 전제로 한다 — 옛 _pick_timeline(소스별 시간순)에서는 항상
+    참이었지만, Gemini가 소스를 넘나들며 자유 재정렬한 리스트에서는 거짓이 될 수 있다
+    (예: [a1, b3, a2] — a1+a2가 원래 한 문장인데 사이에 b3가 끼면 그룹핑이
+    [a1, b3]를 한 세트로 묶어버린다 = 서로 다른 소스가 섞인 프랑켄 문장).
+
+    그래서 순서를 뒤집는다: 그룹핑을 **먼저**, 소스별로 각자 자기 시간순 안에서만 한다
+    (다른 소스와 절대 안 섞는다) → Gemini에게는 다 만들어진 세트를 어떤 순서로/얼마나
+    쓸지만 묻는다(_pick_slot_groups). 이러면 세트 내부는 항상 한 소스만 담겨 프랑켄
+    문장이 구조적으로 불가능하다(세트끼리 소스가 섞이는 건 허용 — 그건 완성된 문장
+    두 개를 나란히 놓는 것뿐이라 문제 없음).
+
+    반환: [{"set_id": str, "video_id": str, "segs": [seg,...], "secs": float}, ...]
+    set_id는 세트의 첫 seg_id를 그대로 쓴다(Gemini 프롬프트에서 참조할 식별자로 충분하고,
+    seg_id 자체가 이미 사람이 읽을 수 있는 값이라 별도 채번이 필요 없다)."""
+    by_vid = {}
+    for s in seg_map.values():
+        by_vid.setdefault(s.get("video_id"), []).append(s)
+    sets = []
+    for vid in by_vid:
+        segs = sorted(by_vid[vid], key=lambda s: _seg_seq(s["seg_id"])[1])
+        for g in _group_by_sentence(segs):
+            sets.append({"set_id": g[0]["seg_id"], "video_id": vid, "segs": g,
+                         "secs": round(_secs(g), 1)})
+    return sets
+
+
+def _set_seq_prompt(sets, target_seconds):
+    lines = ["아래는 두 영상에서 뽑은 '한 문장이 시작~끝나는' 장면 세트들이다. 각 세트의 "
+             "역할(무슨 내용인지)을 보고, 하나의 자연스러운 스토리로 이어지도록 몇 개를 "
+             "고를지와 순서를 정하라. 같은 제품이라도 두 영상이 서로 다른 훅·전개를 가질 "
+             "수 있으니, 소스에 얽매이지 말고 내용 흐름으로 판단하라.",
+             f"목표 영상 길이는 약 {target_seconds}초다 — 총 길이가 거기 가깝게 되도록 "
+             "필요한 세트만 골라 순서를 정하라. 전부 다 쓸 필요는 없다.",
+             "세트 하나는 통째로 쓰거나 안 쓰거나만 가능하다 — 세트를 쪼개거나 "
+             "세트 안 순서를 바꾸거나 지어내지 마라."]
+    for st in sets:
+        segs = st["segs"]
+        said = " ".join((s.get("text") or "").strip() for s in segs).strip()
+        desc = " / ".join((s.get("scene_desc") or "").strip() for s in segs)
+        lines.append(f"- [{st['set_id']}] {st['secs']}초 · {desc} · 원본 대사: {said}")
+    lines.append("\n반드시 JSON {\"order\": [set_id, ...]} 형식으로만 답하라.")
     return "\n".join(lines)
 
 
-def _pick_slot_sequence(seg_map, target_seconds=None, call=None):
-    """두 영상의 태깅 조각을 Gemini 1회 호출로 스토리 순서로 정렬한다(2026-08-01).
+def _pick_slot_groups(seg_map, target_seconds=None, call=None):
+    """소스별로 먼저 확정한 문장세트(_build_source_sentence_sets)를 Gemini에게 주고,
+    스토리에 맞는 세트만 골라 순서를 정하게 한다(2026-08-01, F1/F2/F3 재설계).
 
-    _pick_timeline(소스순서+시간순 강제 이어붙이기)을 대체 — 두 영상의 서사가 다르면
-    억지로 이어붙던 문제를 없앤다. 모델이 모르는 seg_id를 지어내면 버리고, 실제 seg_map에
-    있는데 모델이 빠뜨린 것은 원래 순서(입력 순서)대로 뒤에 이어붙인다(fail-open).
-    call이 없거나 실패(None 반환)하면 원본 시간순(dict 삽입 순서)으로 폴백한다."""
+    build_scene_first_plan이 _pick_timeline 대신 부르는 진입점. 반환 형태는
+    _pick_timeline과 동일한 [[seg,...], ...] — 하류(_rewrite_block/_assign_timeline)는
+    seg dict만 읽으므로 세트 메타(set_id 등)는 반환 전에 벗겨낸다.
+
+    Gemini가 세트 일부만 고르면(예산 안에서) 그 서브셋을 그대로 존중한다 — 옛
+    _pick_slot_sequence처럼 안 고른 걸 뒤에 강제로 보충하지 않는다(그러면 예산을 준 의미가
+    없어진다). 응답이 비었거나(order 없음) 알 수 없는 id만 있어 유효한 세트가 0개면,
+    안전장치 없는 전체 이어붙이기 대신 **_pick_timeline로 직접 폴백**한다 — 완성/문제
+    컷 트리밍과 target_seconds 캡을 이미 갖춘, 검증된 경로다."""
     if not seg_map:
         return []
+    sets = _build_source_sentence_sets(seg_map)
+    if not sets:
+        return []
     caller = call or _vault_call
-    resp = caller(_slot_seq_prompt(seg_map), _SLOT_SEQ_SCHEMA)
+    resp = caller(_set_seq_prompt(sets, target_seconds), _SET_SEQ_SCHEMA)
     order = (resp or {}).get("order") if isinstance(resp, dict) else None
-    if not order:
-        return [dict(s) for s in seg_map.values()]
+    by_id = {st["set_id"]: st for st in sets}
+    chosen = []
     seen = set()
-    out = []
-    for sid in order:
-        if sid in seg_map and sid not in seen:
-            out.append(dict(seg_map[sid]))
-            seen.add(sid)
-    for sid, s in seg_map.items():          # 모델이 빠뜨린 것 뒤에 보충
-        if sid not in seen:
-            out.append(dict(s))
-            seen.add(sid)
-    return out
-
-
-def _pick_slot_groups(seg_map, target_seconds=None, call=None):
-    """_pick_slot_sequence로 순서를 정하고 _group_by_sentence로 세트를 묶은 최종 결과.
-    build_scene_first_plan이 _pick_timeline 대신 부르는 진입점."""
-    picked = _pick_slot_sequence(seg_map, target_seconds=target_seconds, call=call)
-    return _group_by_sentence(picked)
+    if order:
+        for sid in order:
+            if sid in by_id and sid not in seen:
+                chosen.append(by_id[sid])
+                seen.add(sid)
+    if not chosen:
+        return _pick_timeline(seg_map, target_seconds)
+    return [st["segs"] for st in chosen]
 
 
 def _rewrite_block(groups):

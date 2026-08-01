@@ -17,52 +17,102 @@ def _sm(spec):
     return m
 
 
-def test_pick_slot_sequence_returns_all_segments_once():
-    """Gemini가 고른 순서가 무엇이든, 입력된 seg_id 전부가 정확히 한 번씩 나와야 한다."""
-    sm = _sm([("v0-1", "가나다요", 2.0), ("v0-2", "라마바요", 2.0),
-              ("v1-1", "사아자요", 2.0), ("v1-2", "차카타요", 2.0)])
+# ── F1/F2/F3 재설계(2026-08-01, Fable 코드리뷰) ──────────────────────────
+# 옛 _pick_slot_sequence는 seg 낱개를 Gemini에게 자유 재정렬시킨 뒤에 문장 그룹핑을 했다
+# (순서가 거꾸로 → F1: 프랑켄 문장세트) + target_seconds를 무시하고 전부 강제 사용했다
+# (F2: 비트 폭증). 그래서 _pick_slot_sequence 자체와 그 seg-level 동작을 검증하던 옛 테스트
+# 4개(returns_all_segments_once / drops_unknown_ids_from_model / falls_back_when_call_fails /
+# groups_by_sentence)는 "모든 seg를 반드시 다 쓴다"는 F2의 버그였던 동작을 정답으로 여기고
+# 있었으므로 삭제하고, 아래 세트 단위 재설계에 맞는 테스트로 교체한다.
+# 새 순서: 소스별 시간순으로 먼저 문장세트를 만들고(_build_source_sentence_sets), Gemini에겐
+# "세트를 골라 순서만 정하라"고 묻는다(_pick_slot_groups) — 세트 내부는 항상 한 소스만 담겨
+# 프랑켄 문장이 구조적으로 불가능하고, 예산(target_seconds)이 있어 전부 강제 사용도 안 한다.
+
+def test_build_source_sentence_sets_never_mixes_sources_within_one_set():
+    """세트 하나는 항상 한 video_id의 세그먼트만 담는다(소스별로 먼저 묶으므로)."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("a-1", "라마바요", 2.0),
+              ("b-0", "사아자요", 2.0), ("b-1", "차카타요", 2.0)])
+    sets = ep._build_source_sentence_sets(sm)
+    for st in sets:
+        vids = {s["video_id"] for s in st["segs"]}
+        assert len(vids) == 1
+
+
+def test_pick_slot_groups_f1_no_cross_source_fragment_mixing():
+    """F1 재현: video a는 a1(문장 미종결)+a2(종결)로 한 문장, video b는 자기 세그먼트 보유.
+
+    옛 코드(seg-level 재정렬 후 그룹핑)였다면 Gemini가 [a1, b1, a2] 순서를 반환할 때
+    _group_by_sentence가 a1(문장 안 끝남)에 b1을 이어붙이다 a2에서 끝내 [a1, b1, a2]가
+    한 세트가 됐다(서로 다른 소스의 조각이 한 문장세트에 섞임 = 프랑켄 문장).
+    새 설계에서는 세트가 소스별로 먼저 확정되므로, Gemini가 세트를 어떤 순서로 고르든
+    한 세트 안에 두 소스가 섞이는 일이 없어야 한다."""
+    sm = _sm([("a-1", "기름이 튀어서", 1.5), ("a-2", "힘들었거든요", 1.5),
+              ("b-1", "사아자요", 2.0)])
 
     def fake_call(prompt, schema):
-        # Gemini 응답 흉내: 소스를 교차하는 순서
-        return {"order": ["v1-1", "v0-1", "v1-2", "v0-2"]}
+        # 세트 단위 프롬프트를 받았다면 세트 id로 답해야 한다 — set_id를 그대로 안 쓰고
+        # 혹시 seg_id로 답하더라도(모델 실수) 알 수 없는 id는 버려지는지도 같이 확인.
+        sets = ep._build_source_sentence_sets(sm)
+        ids = [st["set_id"] for st in sets]
+        return {"order": list(reversed(ids))}
 
-    seq = ep._pick_slot_sequence(sm, call=fake_call)
-    ids = [s["seg_id"] for s in seq]
-    assert sorted(ids) == sorted(sm.keys())
-    assert ids == ["v1-1", "v0-1", "v1-2", "v0-2"]
-
-
-def test_pick_slot_sequence_drops_unknown_ids_from_model():
-    """모델이 없는 seg_id를 지어내면 그 항목만 버리고 나머지는 순서 유지."""
-    sm = _sm([("v0-1", "가나다요", 2.0), ("v0-2", "라마바요", 2.0)])
-
-    def fake_call(prompt, schema):
-        return {"order": ["v0-1", "v9-99", "v0-2"]}
-
-    seq = ep._pick_slot_sequence(sm, call=fake_call)
-    assert [s["seg_id"] for s in seq] == ["v0-1", "v0-2"]
+    groups = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    for g in groups:
+        vids = {s["video_id"] for s in g}
+        assert len(vids) == 1, f"cross-source mixing within one set: {[s['seg_id'] for s in g]}"
+    # a-1과 a-2는 같은 문장(a-2가 종결어미) → 항상 같은 세트로 붙어있어야 한다.
+    a_group = next(g for g in groups if any(s["seg_id"] == "a-1" for s in g))
+    assert [s["seg_id"] for s in a_group] == ["a-1", "a-2"]
 
 
-def test_pick_slot_sequence_falls_back_when_call_fails():
-    """Gemini 호출이 실패(None 반환)하면 _pick_timeline과 동등한 폴백(시간순 이어붙이기)으로."""
-    sm = _sm([("v0-1", "가나다요", 2.0), ("v0-2", "라마바요", 2.0)])
+def test_pick_slot_groups_f2_does_not_force_append_unused_sets():
+    """모델이 예산을 지켜 세트 일부만 골랐다면, 코드가 나머지를 강제로 뒤에 채우면 안 된다
+    (옛 _pick_slot_sequence는 '모델이 빠뜨린 것'을 무조건 뒤에 보충했다 = F2의 핵심 버그)."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("a-1", "라마바요", 2.0),
+              ("b-0", "사아자요", 2.0), ("b-1", "차카타요", 2.0)])
 
     def fake_call(prompt, schema):
+        sets = ep._build_source_sentence_sets(sm)
+        a_only = [st["set_id"] for st in sets if st["video_id"] == "a"]
+        return {"order": a_only}   # b쪽 세트는 일부러 선택하지 않음(예산 내 선택 흉내)
+
+    groups = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    ids = {s["seg_id"] for g in groups for s in g}
+    assert "b-0" not in ids and "b-1" not in ids   # 강제 보충되면 안 된다
+    assert "a-0" in ids and "a-1" in ids
+
+
+def test_pick_slot_groups_f3_falls_back_to_pick_timeline_on_empty_response():
+    """F3 재현: Gemini 응답이 비었거나(order 없음) 무효하면, 안전장치 없는 전체 이어붙이기가
+    아니라 _pick_timeline(완성/문제 컷 트리밍 + target_seconds 캡 있음)으로 바로 폴백해야 한다."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("a-1", "완성이요", 2.0), ("b-0", "사아자요", 2.0)])
+    sm["a-1"]["shot_role"] = "완성"   # a가 마지막 소스가 아니면 _pick_timeline이 이 컷을 잘라낸다
+
+    def fake_call_none(prompt, schema):
         return None
 
-    seq = ep._pick_slot_sequence(sm, call=fake_call)
-    assert [s["seg_id"] for s in seq] == ["v0-1", "v0-2"]
+    def fake_call_empty(prompt, schema):
+        return {}
+
+    expected = ep._pick_timeline(sm, 30)
+    for fake in (fake_call_none, fake_call_empty):
+        groups = ep._pick_slot_groups(sm, target_seconds=30, call=fake)
+        assert groups == expected
 
 
-def test_pick_slot_sequence_groups_by_sentence():
-    """_pick_slot_sequence 결과도 _pick_timeline과 같은 문장 단위 그룹으로 묶여야 한다."""
+def test_pick_slot_groups_groups_by_sentence():
+    """_pick_slot_groups 결과도 문장 단위 그룹(한 소스 내)으로 묶여야 한다."""
     sm = _sm([("v0-1", "가나다요", 2.0), ("v0-2", "라마바요", 2.0),
               ("v1-1", "사아자요", 2.0)])
 
     def fake_call(prompt, schema):
-        return {"order": ["v0-1", "v1-1", "v0-2"]}
+        sets = ep._build_source_sentence_sets(sm)
+        # v1 세트를 v0 세트들 사이에 끼워 넣어도(세트 단위 교차) 세트 내부는 안 섞인다.
+        v0_ids = [st["set_id"] for st in sets if st["video_id"] == "v0"]
+        v1_ids = [st["set_id"] for st in sets if st["video_id"] == "v1"]
+        return {"order": [v0_ids[0], v1_ids[0], v0_ids[1]]}
 
-    groups = ep._pick_slot_groups(sm, call=fake_call)
+    groups = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
     ids = [[s["seg_id"] for s in g] for g in groups]
     assert ids == [["v0-1"], ["v1-1"], ["v0-2"]]   # 각자 "요"로 끝나는 문장 → 세트 하나씩
 
