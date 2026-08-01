@@ -194,8 +194,10 @@ def _judge(frame_paths, picked):
         try:
             with open(fp, "rb") as fh:
                 parts.append(types.Part.from_bytes(data=fh.read(), mime_type="image/jpeg"))
-        except Exception:  # noqa: BLE001
-            return []          # 장수가 어긋나면 판정↔묘사 짝이 밀린다 — 통째로 포기
+        except Exception as e:  # noqa: BLE001
+            # 장수가 어긋나면 판정↔묘사 짝이 밀린다 — 통째로 포기하되 이유는 남긴다.
+            log.info("tag_qa_frames._judge 건너뜀 — 프레임을 못 읽었다(%s): %s", fp, e)
+            return []
     try:
         resp = comment_gen._client_for_key(key).models.generate_content(
             model=_MODEL, contents=parts,
@@ -212,16 +214,28 @@ def spot_check(result, video_path, dest_dir, *, _frames_fn=None, _judge_fn=None)
 
     None을 주는 경우 = 판단할 수 없었던 경우(세그 없음·프레임 실패·모델 실패). 이때 호출부는
     아무것도 기록하지 않는다 — **모르는 것을 0점으로 적으면 나중에 '태깅이 나빠졌다'는
-    거짓 신호가 된다.** 점수와 '측정 못 함'은 반드시 구분한다."""
+    거짓 신호가 된다.** 점수와 '측정 못 함'은 반드시 구분한다.
+
+    ★단 '기록하지 않는다'가 '아무도 모르게'는 아니다(2026-08-01): None으로 돌아가는 세 갈래
+    전부 이유를 로그로 남긴다. `_judge`의 키 없음만 고쳐도 확대 실측의 21건은 설명되지만,
+    프레임을 한 장도 못 뽑은 경우와 판정이 전부 버려진 경우는 여전히 흔적이 없었다 —
+    frame_score가 안 붙었을 때 '왜'를 물을 수 있어야 이 지표가 쓸모 있다."""
     picked = pick_segments((result or {}).get("segments") or [])
     if not picked:
+        log.info("tag_qa_frames: 측정 못 함 — 대조할 세그가 없다(세그 0개거나 전부 너무 짧다)")
         return None
     frames_fn = _frames_fn or _extract_frames
     paths, kept = frames_fn(video_path, picked, dest_dir)
     if not paths:
+        log.info("tag_qa_frames: 측정 못 함 — 대표 %d개 중 프레임을 한 장도 못 뽑았다(%s)",
+                 len(picked), video_path)
         return None
     verdicts = (_judge_fn or _judge)(paths, kept)
     score, detail = score_verdicts(verdicts, kept)
     if score is None:
+        # 판정이 0건이거나 image_no가 전부 안 맞아 버려진 경우. _judge가 이미 이유를 남겼을
+        # 수도 있지만(키 없음 등), 판정이 왔는데 전부 버려진 경우는 여기서만 보인다.
+        log.info("tag_qa_frames: 측정 못 함 — 쓸 수 있는 판정이 0건이다(프레임 %d장, 판정 %d건)",
+                 len(paths), len(verdicts or []))
         return None
     return {"frame_score": score, "checked": len(detail), "detail": detail}
