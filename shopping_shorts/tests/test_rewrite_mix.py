@@ -343,3 +343,24 @@ def test_assign_timeline_called_once_never_duplicates():
     seg_ids = [b["primary"]["seg_id"] for b in beats]
     assert len(seg_ids) == len(set(seg_ids))
     assert ep._assign_timeline([], []) == []
+
+
+def test_assign_timeline_never_duplicates_even_when_counts_mismatch():
+    """n(beats) != len(groups) 여도, 안 쓴 seg가 남아있는 한 같은 seg_id가 두 비트에
+    배정되면 안 된다.
+
+    실측(job 8226822c5b09, ping_pong=True 라이브 설정): n_beats=6, n_groups=5일 때
+    정수분배 lo/hi가 겹쳐 비트 0과 1이 둘 다 groups[0]을 받고, 그 안의 같은 첫 클립을
+    골라 화면이 중복됐다. groups(세트) 하나에 세그먼트가 2개 있어(v-0, v-0b) 6개 비트에
+    돌아갈 안 쓴 화면이 총 6개 있는 상황을 재현한다 — 이 경우 중복 없이 다 배정돼야 한다.
+    """
+    sm = _sm([("v-0", "가나다요", 1.0), ("v-0b", "라마바요", 1.0),
+              ("v-1", "사아자요", 2.0), ("v-2", "차카타요", 2.0),
+              ("v-3", "파하가요", 2.0), ("v-4", "나다라요", 2.0)])
+    g = [[sm["v-0"], sm["v-0b"]], [sm["v-1"]], [sm["v-2"]], [sm["v-3"]], [sm["v-4"]]]
+    assert len(g) == 5   # 세트 5개, 세그먼트는 총 6개
+    beats = [{"narration": f"문장{i}", "beat_idx": i, "primary": {}, "alternates": []}
+             for i in range(6)]   # 비트 6개 — 일부러 그룹(5)보다 많게
+    ep._assign_timeline(beats, g)
+    seg_ids = [b["primary"]["seg_id"] for b in beats]
+    assert len(seg_ids) == len(set(seg_ids)), f"duplicate seg_ids: {seg_ids}"

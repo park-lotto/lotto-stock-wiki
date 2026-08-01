@@ -471,17 +471,37 @@ def _assign_timeline(beats, groups):
     """화면을 **원본 시간순 그대로** 코드가 배정한다(모델이 뭘 골랐든 무시).
 
     비트 수와 구간 수가 달라도 앞에서부터 순서대로 나눠 준다 — 순서가 곧 원본 순서라
-    말과 화면이 어긋날 수가 없다."""
+    말과 화면이 어긋날 수가 없다.
+
+    ⚠️ n(비트 수) != len(groups)일 때 정수분배 lo/hi 슬라이스가 겹칠 수 있다
+    (예: n=6, len(groups)=5 → 비트0·1 둘 다 groups[0:1]). 그대로 두면 두 비트가
+    같은 chunk에서 같은 첫 클립을 골라 화면이 중복된다(실측 job 8226822c5b09,
+    ping_pong=True, n_beats=6/n_groups=5). 그래서 이번 호출 안에서 **이미 쓴
+    seg_id**를 추적해 다음 비트가 그 seg_id를 또 고르면 다음 후보로 넘긴다 —
+    chunk 안에 못 쓴 후보가 없으면 groups 전체에서 시간순으로 안 쓴 seg를 빌려오고,
+    그마저 없으면(그룹이 비트보다 훨씬 적은 극단적 경우) 중복을 허용한다(화면 없음보다
+    중복이 낫다)."""
     if not beats or not groups:
         return beats
     n = len(beats)
+    used_seg_ids = set()
+    all_segs_in_order = [s for g in groups for s in g]
     for i, b in enumerate(beats):
         lo = i * len(groups) // n
         hi = max(lo + 1, (i + 1) * len(groups) // n)
         chunk = [s for g in groups[lo:hi] for s in g] or groups[min(lo, len(groups) - 1)]
         chunk = _order_clips_by_words(b.get("narration") or "", chunk)
-        b["primary"] = dict(chunk[0])
-        b["alternates"] = [dict(s) for s in chunk[1:]]
+        pick = next((s for s in chunk if s.get("seg_id") not in used_seg_ids), None)
+        if pick is None:
+            pick = next((s for s in all_segs_in_order if s.get("seg_id") not in used_seg_ids),
+                        None)
+        if pick is None:
+            pick = chunk[0]   # 안 쓴 seg가 하나도 없다 — 중복 허용(화면 없음보다 낫다)
+        else:
+            used_seg_ids.add(pick.get("seg_id"))
+        rest = [s for s in chunk if s is not pick]
+        b["primary"] = dict(pick)
+        b["alternates"] = [dict(s) for s in rest]
         _flag_offtopic(b, chunk)
     return beats
 
