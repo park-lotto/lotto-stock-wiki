@@ -30,9 +30,14 @@ _MIN_SEG_LEN = 0.4     # 이보다 짧은 세그는 중간시각 프레임이 �
 _VERDICT_SCHEMA = {
     "type": "object",
     "properties": {"verdicts": {"type": "array", "items": {"type": "object", "properties": {
+        # ★image_no를 받는 이유(2026-08-01 리뷰 F3): 순서(zip)로 짝지으면 모델이 판정을
+        #   **하나라도 빠뜨렸을 때** 그 뒤가 전부 한 칸씩 밀려 엉뚱한 묘사를 채점한다.
+        #   프레임 추출 실패 쪽은 이미 방어했지만 모델 응답 쪽은 뚫려 있었다.
+        #   번호를 같이 받아 명시적으로 맞추고, 번호가 없거나 이상하면 그 판정은 버린다.
+        "image_no": {"type": "integer"},
         "verdict": {"type": "string", "enum": ["맞음", "부분", "틀림"]},
         "reason": {"type": "string"},
-    }, "required": ["verdict"]}}},
+    }, "required": ["image_no", "verdict"]}}},
     "required": ["verdicts"],
 }
 
@@ -88,11 +93,26 @@ def _mid(seg):
 
 
 def score_verdicts(verdicts, picked):
-    """판정 배열 → (frame_score, 상세). 모델이 개수를 덜/더 주면 **겹치는 만큼만** 센다.
+    """판정 배열 → (frame_score, 상세). 모델이 개수를 덜/더 주면 **맞춰진 것만** 센다.
+
+    ★순서(zip)가 아니라 **image_no로 짝짓는다**(2026-08-01 리뷰 F3): 모델이 2번 판정을
+    빠뜨리고 1·3번만 주면, 순서로 맞추면 3번 판정이 2번 묘사에 붙어 **엉뚱한 장면을
+    채점**한다. 점수가 틀리는 것보다 나쁜 건, 틀린 줄도 모른다는 것이다.
+    번호가 없거나 범위를 벗어나면 그 판정은 버린다(추측해서 붙이지 않는다).
 
     개수가 안 맞는다고 통째로 버리지 않는 이유: 3장 중 2장만 판정돼도 그 2장은 진짜 신호다.
     반대로 없는 판정을 '맞음'으로 채우면 점수가 조용히 부풀어 기준선이 거짓이 된다."""
-    pairs = list(zip(verdicts or [], picked or []))
+    picked = picked or []
+    pairs, seen = [], set()
+    for v in verdicts or []:
+        no = (v or {}).get("image_no")
+        if not isinstance(no, int) or isinstance(no, bool):
+            continue
+        idx = no - 1                      # 프롬프트가 1번부터 센다
+        if not (0 <= idx < len(picked)) or idx in seen:
+            continue                      # 범위 밖·중복 번호는 버린다
+        seen.add(idx)
+        pairs.append((v, picked[idx]))
     scored = [(v, p) for v, p in pairs if (v or {}).get("verdict") in _VERDICT_SCORE]
     if not scored:
         return None, []
@@ -159,7 +179,8 @@ def _judge(frame_paths, picked):
         "· '부분' = 대상은 맞지만 묘사가 화면과 **모순**된다(예: '깨끗해진 상태'라는데 아직 "
         "더러움, 전혀 다른 공정).\n"
         "· '틀림' = 주 대상 자체가 다르다. 배경 소품·장식을 주제품처럼 적었으면 '틀림'이다.\n"
-        "이미지 순서대로 verdicts 배열로 출력하고, reason은 한국어 한 줄로 짧게.")
+        "verdicts 배열로 출력하되 **각 항목에 image_no(1부터)를 반드시 넣어라** — 어느 이미지의 "
+        "판정인지 번호로 명시해야 한다. 모든 이미지를 빠짐없이 판정하고, reason은 한국어 한 줄로 짧게.")
     parts = [prompt]
     for fp in frame_paths:
         try:

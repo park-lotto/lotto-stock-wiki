@@ -288,24 +288,27 @@ def _attach_frame_qa(result, video_path):
     ★어떤 예외도 추출을 죽이지 못한다 — QA는 기록 장치지 차단 장치가 아니다."""
     if not video_path:
         return
+    import shutil
+    import tempfile
+    tmp = None
     try:
         from shopping_shorts import tag_qa_frames
         if not tag_qa_frames.flag_on():
             return
-        out = tag_qa_frames.spot_check(result, video_path, _qa_frame_dir(video_path))
+        # ★프레임은 판정에만 쓰고 바로 버린다(2026-08-01 리뷰 F6). 처음엔 '영상 옆'에
+        #   만들었는데, video_path가 도서관 영구보관본(_WIKI_MEDIA_DIR)일 때는 그 옆 폴더도
+        #   영구히 남는다 — 플래그를 켜는 순간 영상마다 jpg가 쌓인다. 수명을 여기서 소유해
+        #   finally로 반드시 지운다(디스크 81%인 서버라 누수 여지를 두면 안 된다).
+        tmp = tempfile.mkdtemp(prefix="tag_qa_frames_")
+        out = tag_qa_frames.spot_check(result, video_path, tmp)
         if out:
             result["tag_qa"].update(out)
     except Exception as e:  # noqa: BLE001
         print(f"script_extract._attach_frame_qa: 건너뜀(무해) — {e!r}",
               file=__import__('sys').stderr)
-
-
-def _qa_frame_dir(video_path):
-    """대조용 프레임을 둘 임시 폴더 — 영상 옆에 만든다(추출 임시폴더와 같은 수명)."""
-    from pathlib import Path
-    d = Path(video_path).parent / "tag_qa_frames"
-    d.mkdir(parents=True, exist_ok=True)
-    return str(d)
+    finally:
+        if tmp:
+            shutil.rmtree(tmp, ignore_errors=True)
 
 
 def storable(result):
