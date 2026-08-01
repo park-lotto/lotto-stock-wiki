@@ -106,3 +106,72 @@ def test_empty_segments_scores_zero_but_does_not_raise():
     score, flags = tag_qa.validate_extract({"segments": [], "full_text": ""}, 20.0)
     assert score == 0.0
     assert flags, "빈 결과엔 이유가 남아야 한다"
+
+
+# ── 2026-08-01 리뷰 F1: 커버리지 이중 합산 ────────────────────────
+
+def test_겹친_세그가_중간_공백을_가리지_않는다():
+    """★F1: Σ(end-start)로 세면 겹친 만큼 부풀어 공백이 숨는다.
+
+    ★이 fixture를 고르는 데 한 번 실패했다: 처음엔 '앞쪽만 겹치게' 짰더니 **꼬리 검사**가
+    먼저 걸려서, 합집합을 단순합으로 되돌려도 테스트가 그대로 통과했다(회귀 주입 실측).
+    그래서 **꼬리는 멀쩡하고 중간만 비는** 모양으로 짠다:
+      20초 영상 / 세그 0~9, 0~9(겹침), 18~20.
+      · 단순합 = 9+9+2 = 20 → 비율 1.0, 마지막 end 20 → **두 검사 다 통과(구멍)**
+      · 합집합 = 9+2 = 11 → 비율 0.55 → 커버리지 부족으로 잡힌다.
+    9~18초가 통째로 비어 있는데 단순합은 그걸 못 본다."""
+    segs = [_seg("v-0", 0.0, 9.0), _seg("v-1", 0.0, 9.0), _seg("v-2", 18.0, 20.0)]
+    r = {"segments": segs, "full_text": " ".join(s["text"] for s in segs)}
+    score, flags = tag_qa.validate_extract(r, 20.0)
+    assert any("커버리지" in f for f in flags), f"중간 공백 9초를 놓쳤다: {flags}"
+
+
+def test_겹치지_않는_정상_세그는_커버리지_통과():
+    """합집합으로 바꿔도 정상 케이스는 그대로 통과해야 한다(과잉 감점 금지)."""
+    _, flags = tag_qa.validate_extract(_good_result(n=4, dur=20.0), 20.0)
+    assert not any("커버리지" in f for f in flags), flags
+
+
+def test_맞닿은_세그는_합쳐서_센다():
+    """0~10, 10~20은 겹친 게 아니라 이어진 것 — 20초를 다 덮은 것이 맞다."""
+    segs = [_seg("v-0", 0.0, 10.0), _seg("v-1", 10.0, 20.0)]
+    r = {"segments": segs, "full_text": " ".join(s["text"] for s in segs)}
+    _, flags = tag_qa.validate_extract(r, 20.0)
+    assert not any("커버리지" in f for f in flags), flags
+
+
+# ── 2026-08-01 리뷰 F2: role 신호 3개가 한 flag로 뭉개짐 ──────────
+
+def test_role_신호_셋이_각각_flags에_실린다():
+    """★F2: 예전엔 첫 신호에서 return이라 나머지가 재시도 프롬프트에 안 실렸고,
+    모델이 같은 실수를 반복했다. 셋 다 무너졌으면 셋 다 알려줘야 한다."""
+    r = _good_result()
+    for s in r["segments"]:
+        s["shot_role"], s["change"], s["is_key"] = "기타", "", False
+    _, flags = tag_qa.validate_extract(r, 20.0)
+    assert any("shot_role" in f for f in flags), flags
+    assert any("is_key" in f for f in flags), flags
+    assert any("change" in f for f in flags), flags
+
+
+def test_role_가중치_합은_종전과_같다():
+    """총점 스케일을 흔들지 않는다 — 셋 다 무너진 경우가 예전 0.15와 같아야
+    옛 점수와 새 점수를 나란히 볼 수 있다."""
+    r = _good_result()
+    for s in r["segments"]:
+        s["shot_role"], s["change"], s["is_key"] = "기타", "", False
+    score, _ = tag_qa.validate_extract(r, 20.0)
+    assert abs(score - (1.0 - 0.15)) < 1e-9, score
+
+
+def test_change만_비면_감점이_가장_작다():
+    """change는 셋 중 가장 무른 신호다(2026-07-31 신설, 도입·CTA 위주 영상은 비어도 정상).
+    이게 shot_role 붕괴와 같은 무게면 옛 영상이 부당하게 깎인다."""
+    only_change = _good_result()
+    for s in only_change["segments"]:
+        s["change"] = ""
+    only_shot = _good_result()
+    for s in only_shot["segments"]:
+        s["shot_role"] = "기타"
+    assert tag_qa.validate_extract(only_change, 20.0)[0] > \
+           tag_qa.validate_extract(only_shot, 20.0)[0]

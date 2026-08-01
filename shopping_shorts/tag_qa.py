@@ -16,7 +16,14 @@ _W_COVERAGE = 0.20      # 커버리지 — 세그가 영상 대부분을 안 덮
 _W_TIME = 0.20          # 시간 정합 — 역전·겹침은 슬롯 순서를 직접 깨뜨린다
 _W_TEXT = 0.15          # 받아쓰기 — 원본 대사가 없으면 리라이트할 재료가 없다
 _W_FULLTEXT = 0.05      # full_text 이어붙임 일치
-_W_ROLE = 0.15          # shot_role/change/is_key 분포 — 붕괴하면 배치·실증 선별이 무의미
+# shot_role/change/is_key — 예전엔 한 검사(0.15)로 묶여 **첫 신호만 flags에 실렸다**
+# (2026-08-01 리뷰 F2). 그러면 재시도 프롬프트에 나머지 문제가 안 실려 모델이 같은 실수를
+# 반복한다. 셋을 갈라 각각 독립으로 보고하고, 합은 종전 0.15를 유지해 총점 스케일을 안 흔든다.
+# 배분은 심각도순: shot_role은 슬롯 배치가 통째로 불가능해지고, is_key는 실증 선별이 죽고,
+# change는 셋 중 가장 무른 신호다(2026-07-31 신설 필드라 도입·CTA 위주 영상은 비어도 정상).
+_W_ROLE_SHOT = 0.07
+_W_ROLE_KEY = 0.05
+_W_ROLE_CHANGE = 0.03
 _W_DESC = 0.10          # scene_desc 복붙 — 화면 구분이 사라진다
 
 _HOOK_MAX_START = 0.5   # 첫 세그가 이 시각보다 늦게 시작하면 훅 누락으로 본다
@@ -44,17 +51,38 @@ def _check_hook(segs):
     return None
 
 
-def _check_coverage(segs, duration):
-    if not duration or duration <= 0:
-        return None                      # duration 모르면 판단 보류(fail-open)
-    covered = 0.0
-    last_end = 0.0
+def _covered_seconds(segs):
+    """세그들이 실제로 덮은 초 — **겹친 구간을 한 번만 센다**(구간 합집합).
+
+    ★단순 Σ(end-start)로 세면 안 된다(2026-08-01 리뷰 F1): 세그가 겹치면 이중 합산돼
+    커버리지가 부풀고, 그만큼의 **공백이 그대로 가려진다**. 예를 들어 20초 영상에서
+    0~10을 두 세그가 나눠 가지면 합은 20초라 '100% 덮었다'가 되지만 뒤쪽 10초는 통째로
+    비어 있다 — 커버리지 검사가 잡아야 할 바로 그 상황을 못 잡는다."""
+    spans = []
     for s in segs:
         a, b = _num(s.get("start")), _num(s.get("end"))
         if a is None or b is None or b <= a:
             continue
-        covered += b - a
-        last_end = max(last_end, b)
+        spans.append((a, b))
+    if not spans:
+        return 0.0, 0.0
+    spans.sort()
+    total = 0.0
+    cur_a, cur_b = spans[0]
+    for a, b in spans[1:]:
+        if a <= cur_b:                   # 겹치거나 맞닿음 → 하나로 합친다
+            cur_b = max(cur_b, b)
+        else:
+            total += cur_b - cur_a
+            cur_a, cur_b = a, b
+    total += cur_b - cur_a
+    return total, max(b for _, b in spans)
+
+
+def _check_coverage(segs, duration):
+    if not duration or duration <= 0:
+        return None                      # duration 모르면 판단 보류(fail-open)
+    covered, last_end = _covered_seconds(segs)
     ratio = covered / duration
     if ratio < _COVERAGE_MIN:
         return f"커버리지 부족: 영상 {duration:.0f}초 중 {ratio * 100:.0f}%만 태깅됨"
@@ -105,15 +133,22 @@ def _check_fulltext(segs, result):
     return None
 
 
-def _check_roles(segs):
+def _check_shot_role(segs):
     roles = [(s.get("shot_role") or "").strip() for s in segs]
     if all(r in ("", "기타") for r in roles):
         return "shot_role 붕괴: 전 세그가 '기타'(장면 배치에 쓸 수 없다)"
-    changes = [(s.get("change") or "").strip() for s in segs]
-    if not any(changes):
-        return "change 전멸: 어느 세그도 사물의 변화를 적지 않았다"
+    return None
+
+
+def _check_is_key(segs):
     if not any(s.get("is_key") for s in segs):
         return "is_key 전멸: 기능·방법을 실증하는 구간이 하나도 없다"
+    return None
+
+
+def _check_change(segs):
+    if not any((s.get("change") or "").strip() for s in segs):
+        return "change 전멸: 어느 세그도 사물의 변화를 적지 않았다"
     return None
 
 
@@ -148,7 +183,9 @@ def validate_extract(result, video_duration=None):
         (_W_TIME, _check_time(segs, duration)),
         (_W_TEXT, _check_text(segs, result)),
         (_W_FULLTEXT, _check_fulltext(segs, result)),
-        (_W_ROLE, _check_roles(segs)),
+        (_W_ROLE_SHOT, _check_shot_role(segs)),
+        (_W_ROLE_KEY, _check_is_key(segs)),
+        (_W_ROLE_CHANGE, _check_change(segs)),
         (_W_DESC, _check_desc(segs)),
     ]
     flags = [msg for _, msg in checks if msg]
