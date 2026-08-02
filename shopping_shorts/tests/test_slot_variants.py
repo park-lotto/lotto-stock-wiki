@@ -199,3 +199,48 @@ def test_ai_story_short_answer_is_topped_up():
         if k == "ai_story":
             assert len(v) >= len(variants[0]), (
                 f"벌0({len(variants[0])}세트)보다 짧다: {len(v)}세트")
+
+
+# ---------------------------------------------------------------------------
+# v5(2026-08-02): 소스가 뭉치지 않게 — 모델이 만든 A/B 교차를 코드가 뭉개지 않는다
+# ---------------------------------------------------------------------------
+
+def test_keep_order_preserves_model_interleave():
+    """★모델이 A/B를 교차해 주면 그 리듬을 그대로 둔다.
+
+    v4 실패(job 636dd36cf2db): 정렬이 (video_id, 시각) 기준이라 소스가 1차 기준이 돼
+    `AAAAAABBBBBBBB`가 나왔다 — 영상 두 개를 앞뒤로 이어붙인 꼴. 실측해보니 모델은
+    이미 교차해서 주고 있었고(`s1-1 → s0-12 → s0-9 → s1-7`), 코드가 그걸 덮어썼다."""
+    picked = [
+        {"set_id": "s1-1", "video_id": "s1", "segs": [], "secs": 1.0},
+        {"set_id": "s0-9", "video_id": "s0", "segs": [], "secs": 1.0},
+        {"set_id": "s1-7", "video_id": "s1", "segs": [], "secs": 1.0},
+        {"set_id": "s0-12", "video_id": "s0", "segs": [], "secs": 1.0},
+    ]
+    out = edit_plan._sort_sets_in_story_order(picked, keep_order=True)
+    pat = "".join("A" if st["video_id"] == "s0" else "B" for st in out)
+    assert pat == "BABA", f"모델의 교차 리듬이 깨졌다: {pat}"
+
+
+def test_keep_order_still_fixes_time_reversal():
+    """순서를 존중하되 **같은 소스 안 시간 역전은 바로잡는다**(그 불변식은 유지)."""
+    picked = [
+        {"set_id": "s0-9", "video_id": "s0", "segs": [], "secs": 1.0},   # 뒤 세트가 먼저
+        {"set_id": "s1-1", "video_id": "s1", "segs": [], "secs": 1.0},
+        {"set_id": "s0-2", "video_id": "s0", "segs": [], "secs": 1.0},   # 앞 세트가 나중
+    ]
+    out = edit_plan._sort_sets_in_story_order(picked, keep_order=True)
+    ids = [st["set_id"] for st in out]
+    # s0끼리는 2 → 9로 바로잡히고, 자리(0번·2번)와 s1의 위치는 그대로
+    assert ids == ["s0-2", "s1-1", "s0-9"], ids
+
+
+def test_code_path_still_groups_by_source():
+    """코드 조합 경로는 순서 개념이 없으므로 종전대로 코드가 시간순을 정해준다."""
+    picked = [
+        {"set_id": "s1-1", "video_id": "s1", "segs": [], "secs": 1.0},
+        {"set_id": "s0-9", "video_id": "s0", "segs": [], "secs": 1.0},
+        {"set_id": "s0-2", "video_id": "s0", "segs": [], "secs": 1.0},
+    ]
+    out = edit_plan._sort_sets_in_story_order(picked)      # keep_order=False
+    assert [st["set_id"] for st in out] == ["s0-2", "s0-9", "s1-1"]
