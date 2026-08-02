@@ -746,13 +746,38 @@ def _alt_seq_prompt(sets, chosen_ids, target_seconds, n_alt):
     return "\n".join(lines)
 
 
-def _sort_sets_in_story_order(picked):
-    """세트끼리의 순서를 **원본 시간순**으로 되돌린다.
+def _sort_sets_in_story_order(picked, keep_order=False):
+    """세트끼리의 순서를 정한다.
 
-    조합은 '어느 세트를 쓸까'만 정하고 순서는 정하지 않는다 — 순서를 코드가 창작하면
-    이야기가 거꾸로 흐른다(이 트랙이 반복해 겪은 실패). 같은 소스 안에서는 원본
-    시간순, 소스끼리는 먼저 등장한 소스 순으로 둔다."""
-    return sorted(picked, key=lambda st: (st["video_id"], _seg_seq(st["set_id"])[1]))
+    ★v4의 실패(2026-08-02, job 636dd36cf2db): 정렬 키가 `(video_id, 시각)`이라 소스가
+      1차 기준이 돼 **A가 전부 나온 뒤 B가 전부 나왔다**(패턴 `AAAAAABBBBBBBB`).
+      시청자에겐 "영상 두 개를 앞뒤로 이어붙인 것"으로 보인다 — 같은 제품을 다른 각도로
+      보여주려고 두 개를 담은 의미가 사라진다.
+
+    ★v5(2026-08-02): 그런데 실측해보니 **모델은 이미 교차해서 준다**
+      (`s1-1 → s0-12 → s0-9 → s1-7`). 그걸 이 함수가 소스별로 뭉쳐 덮어쓰고 있었다 —
+      맥락을 보라고 모델을 불러놓고 그 결과를 코드가 뭉갠 꼴이다.
+      → `keep_order=True`면 **모델이 정한 순서를 그대로 두고**, 같은 소스 안 시간
+        역전만 바로잡는다(그 불변식은 계속 지킨다).
+
+    `keep_order=False`(코드 조합 경로)는 종전대로 소스별 시간순으로 세운다 — 그쪽은
+    애초에 순서 개념이 없는 '고르기'만 하므로 코드가 정해줘야 한다."""
+    if len(picked) < 2:
+        return list(picked)
+    if not keep_order:
+        return sorted(picked, key=lambda st: (st["video_id"], _seg_seq(st["set_id"])[1]))
+    # 모델 순서 존중: 자리는 그대로 두고, **같은 소스끼리만** 시간순으로 교환한다.
+    # (자리를 옮기지 않으므로 모델이 만든 A/B 교차 리듬이 보존된다.)
+    out = list(picked)
+    by_src = {}
+    for i, st in enumerate(out):
+        by_src.setdefault(st["video_id"], []).append(i)
+    for vid, idxs in by_src.items():
+        ordered = sorted((out[i] for i in idxs),
+                         key=lambda st: _seg_seq(st["set_id"])[1])
+        for slot, st in zip(idxs, ordered):
+            out[slot] = st
+    return out
 
 
 def _covers_all_sources(picked, sets):
@@ -855,7 +880,8 @@ def _pick_slot_variants(seg_map, target_seconds=None, n=1, call=None):
                     continue
                 # 모델이 정한 순서라도 **같은 소스 안 시간순**과 자리 규칙은 코드가 다시 건다
                 # (프롬프트로 부탁만 하고 확인 안 하면 지켜졌는지 알 수 없다 — 이 파일의 교훈).
-                kept = _filter_misplaced_sets(_sort_sets_in_story_order(picked))
+                kept = _filter_misplaced_sets(
+                    _sort_sets_in_story_order(picked, keep_order=True))
                 # ★길이 하한도 코드로 확인한다(2026-08-02): 프롬프트에 "최소 N개"를 적어도
                 #   지켜졌는지는 봐야 안다. 벌0보다 크게 짧으면 화면이 모자라 프리즈가 난다.
                 #   모자라면 **버리지 않고** 안 쓴 세트를 시간순으로 채운다(재료를 살린다).
@@ -867,7 +893,8 @@ def _pick_slot_variants(seg_map, target_seconds=None, n=1, call=None):
                         if st["set_id"] not in have:
                             kept.append(st)
                             have.add(st["set_id"])
-                    kept = _filter_misplaced_sets(_sort_sets_in_story_order(kept))
+                    kept = _filter_misplaced_sets(
+                        _sort_sets_in_story_order(kept, keep_order=True))
                 if kept and _covers_all_sources(kept, sets):
                     ai_variants.append(kept)
         except Exception:               # noqa: BLE001 — 조합 실패가 job을 죽이면 안 된다
