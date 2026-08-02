@@ -728,8 +728,17 @@ def _alt_seq_prompt(sets, chosen_ids, target_seconds, n_alt):
              "  훅(관심 끌기) → 전개 → 마무리 흐름이 말이 돼야 한다.",
              "· **영상마다 최소 한 세트씩** 골라라(여러 영상을 담은 이유는 같은 제품을 "
              "다른 각도로 보여주기 위해서다).",
-             "· **같은 영상을 3연속으로 붙이지 마라** — 한 영상만 계속 나오면 나머지를 담은 "
-             "의미가 없다. 영상을 번갈아 배치해라.",
+             # ★"3연속 금지"만 적었더니 1개씩 번갈라는 뜻으로 읽혀 리듬이 잘게 쪼개졌다.
+             #   사장님: "A1 A2 B1 B2 A3 A4 이런 정도는 괜찮다" — 한 영상에서 두 컷을
+             #   연달아 보여주면 그 영상의 맥락이 살고, 그다음 다른 영상으로 넘어가면
+             #   새 각도가 된다. 1개씩 번갈면 오히려 정신없다.
+             "· **한 영상을 1~2개씩 쓰고 다른 영상으로 넘어가라** — `A A B B A A`처럼 "
+             "덩어리로 번갈아도 좋다. 다만 **같은 영상을 3연속 이상 붙이지는 마라**"
+             "(한 영상만 오래 나오면 시청자가 '비슷한 영상'으로 느껴 나머지를 담은 의미가 없다).",
+             # ★첫 장면은 기억에 가장 많이 남는 자리다(사장님). 원본 첫 세트로 시작하면
+             #   원본과 똑같이 시작하는 셈이고, 후보끼리도 첫인상이 겹친다(실측: 세 벌 다 A1).
+             "· **첫 세트를 원본 맨 앞 세트로 시작하지 마라** — 원본과 똑같이 시작하면 "
+             "베낀 티가 나고 첫인상이 밋밋하다. 눈길을 끄는 다른 장면으로 열어라.",
              "· 세트는 통째로 쓰거나 안 쓰거나만 가능하다 — 쪼개거나 세트 안 순서를 바꾸지 마라.",
              f"· 위에 쓴 조합과 **다른 각도**로 짜라(다른 세트로 시작하거나, 다른 영상을 "
              "중심에 두거나).",
@@ -895,6 +904,26 @@ def _pick_slot_variants(seg_map, target_seconds=None, n=1, call=None):
                             have.add(st["set_id"])
                     kept = _filter_misplaced_sets(
                         _sort_sets_in_story_order(kept, keep_order=True))
+                # ★첫 장면 차별화(2026-08-02 사장님): "첫 장면은 기억에 많이 남는다".
+                #   프롬프트로 "원본 맨 앞으로 시작하지 마라"를 부탁했지만 지켜졌는지는
+                #   봐야 안다(실측: 세 벌이 전부 A1로 시작했다 — 원본과 똑같이 여는 셈).
+                #   이미 다른 벌이 쓴 첫 세트면, **뒤쪽에서 다른 소스 세트를 앞으로 당긴다**
+                #   (버리지 않는다 — 재료를 줄이면 화면이 모자란다).
+                if kept and len(kept) > 1:
+                    used_first = {v[0]["set_id"] for v in ai_variants if v}
+                    # ★벌0의 첫 세트도 피해야 한다. set_id는 그 세트의 **첫 seg_id**와
+                    #   같은 값이므로(_build_source_sentence_sets) groups[0][0]의 seg_id를
+                    #   그대로 쓴다 — 형식이 달라 비교가 늘 실패하던 버그를 여기서 고쳤다.
+                    if groups and groups[0]:
+                        used_first.add(groups[0][0].get("seg_id"))
+                    if kept[0]["set_id"] in used_first:
+                        for k in range(1, len(kept)):
+                            if kept[k]["set_id"] not in used_first:
+                                kept.insert(0, kept.pop(k))
+                                break
+                        # 앞으로 당긴 뒤에도 같은 소스 안 시간순은 지켜야 한다
+                        kept = _filter_misplaced_sets(
+                            _sort_sets_in_story_order(kept, keep_order=True))
                 if kept and _covers_all_sources(kept, sets):
                     ai_variants.append(kept)
         except Exception:               # noqa: BLE001 — 조합 실패가 job을 죽이면 안 된다
