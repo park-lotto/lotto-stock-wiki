@@ -96,30 +96,63 @@ def main():
             set_of[s["seg_id"]] = (vid, n)
 
     # Gemini가 정한 세트 순서를 가로채 기록한다(불변식 대조용 — 사후에 알 방법이 없다).
+    # ★v4(2026-08-02): 슬롯이 후보마다 다를 수 있다(_pick_slot_variants). 벌A의 순서로
+    #   모든 후보를 재면 **다른 벌을 쓰는 후보가 무조건 '순서위반'으로 찍힌다**(실측:
+    #   정상 동작을 NG로 오판했다). 그래서 벌마다 순서표를 따로 만들고, 후보를 잴 때는
+    #   **그 후보가 실제로 어느 벌을 썼는지 찾아** 그 표로 검사한다.
     import shopping_shorts.edit_plan as _ep
-    slot_order = {}
-    _orig = _ep._pick_slot_groups
+    slot_orders = []          # [ {seg_id: 세트인덱스}, ... ] 벌 순서대로
+    _orig = _ep._pick_slot_variants
 
-    def _spy(seg_map_, target_=None, call=None):
-        groups, src, info = _orig(seg_map_, target_, call)
-        if info and not slot_order:
+    def _spy(seg_map_, target_=None, n=1, call=None):
+        variants, src, info, kinds = _orig(seg_map_, target_, n, call)
+        if info and not slot_orders:
             print(f"슬롯 관측: 세트 {info['sets_total']}{info['sets_by_source']} → "
                   f"선택 {info['chosen']} → 통과 {info['kept']} · "
                   f"잘림 {info['filtered']} · 채택 {info['picked_by_source']} · "
                   f"미사용소스 {info['sources_unused']}")
-        if not slot_order:
-            for gi, g in enumerate(groups):
-                for s in g:
-                    slot_order[s["seg_id"]] = gi
-        return groups, src, info
+            print(f"슬롯 벌: {kinds}")
+        if not slot_orders:
+            for g in variants:
+                m = {}
+                for gi, grp in enumerate(g):
+                    for s in grp:
+                        m[s["seg_id"]] = gi
+                slot_orders.append(m)
+        return variants, src, info, kinds
 
-    _ep._pick_slot_groups = _spy
+    _ep._pick_slot_variants = _spy
     try:
         sf = build_scene_first_plan(source_scripts, "", TARGET, n_candidates=N_CANDIDATES,
                                     video_type=None, **args)
     finally:
-        _ep._pick_slot_groups = _orig
-    print(f"Gemini 세트 순서: {len(set(slot_order.values()))}세트")
+        _ep._pick_slot_variants = _orig
+    if not slot_orders:
+        slot_orders = [{}]
+    slot_order = slot_orders[0]
+    print(f"Gemini 세트 순서: {len(set(slot_order.values()))}세트 · 벌 {len(slot_orders)}개")
+
+    def _best_order_for(ids):
+        """이 후보가 쓴 벌을 찾는다.
+
+        ★단순히 'seg_id가 많이 겹치는 벌'로 고르면 안 된다(2026-08-02 실측 오판):
+          벌들이 같은 세트를 공유하므로 겹침 수가 같아지고, 그러면 **엉뚱한 벌**이 뽑혀
+          정상 후보가 '순서위반'으로 찍힌다(a98a4c7c3ad1에서 실제로 그랬다).
+          그 후보가 실제로 그 벌의 순서를 따르는지(역전 0)까지 보고 고른다."""
+        def _rev(m):
+            gis = [m[x] for x in ids if x in m]
+            return sum(1 for a, b in zip(gis, gis[1:]) if b < a)
+
+        def _hit(m):
+            return sum(1 for x in ids if x in m)
+
+        # ⚠️'역전이 가장 적은 벌'을 고르면 **진짜 위반도 가려질 수 있다**. 그래서
+        #   후보 세그의 과반이 실제로 들어 있는 벌만 후보로 삼는다 — 아무 벌에도 안
+        #   맞으면 겹침이 가장 큰 벌로 재서 위반이 드러나게 둔다.
+        fit = [m for m in slot_orders if _hit(m) * 2 >= len(ids)]
+        if not fit:
+            return max(slot_orders, key=_hit)
+        return min(fit, key=lambda m: (_rev(m), -_hit(m)))
     cands = sf.get("candidates") or []
     n_ok = len(cands) <= N_CANDIDATES
     print(f"후보 {len(cands)}개 (상한 {N_CANDIDATES}) → {'OK' if n_ok else 'NG'}")
@@ -136,16 +169,17 @@ def main():
         beats = plan.get("beats") or []
         ids = [(b.get("primary") or {}).get("seg_id") for b in beats]
         dup = len(ids) - len(set(ids))
-        # 불변식: 최종 비트의 화면이 Gemini가 정한 세트 순서를 거스르지 않는다.
-        gis = [slot_order[x] for x in ids if x in slot_order]
+        # 불변식: 최종 비트의 화면이 **그 후보가 받은 벌**의 세트 순서를 거스르지 않는다.
+        order = _best_order_for(ids)
+        gis = [order[x] for x in ids if x in order]
         rev = sum(1 for a, b in zip(gis, gis[1:]) if b < a)
         # 참고 지표: 세트 안에서 컷이 앞뒤로 바뀐 횟수(말맞춤의 의도된 대가)
         rev_in_set = 0
         prev_gi = prev_ix = None
         for x in ids:
-            if x not in slot_order:
+            if x not in order:
                 continue
-            gi, ix = slot_order[x], _seg_idx(x)
+            gi, ix = order[x], _seg_idx(x)
             if prev_gi == gi and ix < prev_ix:
                 rev_in_set += 1
             prev_gi, prev_ix = gi, ix

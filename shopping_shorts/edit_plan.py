@@ -691,6 +691,112 @@ def _pick_slot_groups(seg_map, target_seconds=None, call=None):
     return [st["segs"] for st in kept], SLOT_SOURCE_GEMINI, _slot_info(sets, chosen, kept)
 
 
+def _sort_sets_in_story_order(picked):
+    """세트끼리의 순서를 **원본 시간순**으로 되돌린다.
+
+    조합은 '어느 세트를 쓸까'만 정하고 순서는 정하지 않는다 — 순서를 코드가 창작하면
+    이야기가 거꾸로 흐른다(이 트랙이 반복해 겪은 실패). 같은 소스 안에서는 원본
+    시간순, 소스끼리는 먼저 등장한 소스 순으로 둔다."""
+    return sorted(picked, key=lambda st: (st["video_id"], _seg_seq(st["set_id"])[1]))
+
+
+def _covers_all_sources(picked, sets):
+    """담은 영상마다 최소 한 세트씩 들어갔는가(_set_seq_prompt가 A에 요구하는 규칙)."""
+    return {st["video_id"] for st in picked} >= {st["video_id"] for st in sets}
+
+
+def _build_variant(base, rest, sets, want, prefer_rest):
+    """세트를 골라 한 '벌'을 만든다 — 순서는 원본 시간순으로 강제한다.
+
+    prefer_rest=True면 **안 쓰인 세트(rest)를 먼저** 담는다(= 버려지던 이야기를 살린다).
+    모자라면 base에서 채우고, 소스 커버리지가 빠지면 그 소스의 세트를 하나 끌어온다.
+    규칙(순서·커버리지·misplaced)을 못 지키면 None을 돌려준다 — 호출부가 A를 복제한다."""
+    first = list(rest if prefer_rest else base)
+    second = list(base if prefer_rest else rest)
+    picked = (first + second)[:want]
+    if not picked:
+        return None
+    # 소스 커버리지 보정: 빠진 소스가 있으면 그 소스 세트 하나를 넣고 가장 흔한 소스를 뺀다.
+    if not _covers_all_sources(picked, sets):
+        have = {st["video_id"] for st in picked}
+        for st in first + second:
+            if st["video_id"] not in have:
+                counts = {}
+                for p in picked:
+                    counts[p["video_id"]] = counts.get(p["video_id"], 0) + 1
+                drop_vid = max(counts, key=counts.get)
+                for j in range(len(picked) - 1, -1, -1):
+                    if picked[j]["video_id"] == drop_vid:
+                        picked.pop(j)
+                        break
+                picked.append(st)
+                have.add(st["video_id"])
+                if _covers_all_sources(picked, sets):
+                    break
+    picked = _sort_sets_in_story_order(picked)
+    kept = _filter_misplaced_sets(picked)      # A와 같은 위치 검증을 받는다
+    if not kept or not _covers_all_sources(kept, sets):
+        return None
+    return kept
+
+
+def _pick_slot_variants(seg_map, target_seconds=None, n=1, call=None):
+    """슬롯을 **n벌** 만든다 — 후보마다 다른 이야기를 주기 위해(v4, 2026-08-02).
+
+    ★1벌째(A)는 `_pick_slot_groups`를 **그대로** 부른다. 같은 프롬프트·같은 응답 처리·
+      같은 필터다. 즉 **A는 v3와 코드 경로가 동일**하고, 이 함수는 A를 건드리지 않는다.
+      사장님 지시가 "3개 중 1개는 그대로 둔다"였고, 프롬프트를 만지면 그 약속을 못 지킨다
+      (이 트랙은 프롬프트를 만질 때마다 새 문제가 났다).
+
+    2벌째부터는 **코드가 조합**한다 — Gemini를 다시 부르지 않으므로 과금이 안 는다.
+    조합은 '어느 세트를 쓸까'만 정하고 **순서는 원본 시간순으로 강제**한다.
+
+    왜 필요한가(실측 job 8712570702b8): 후보 3개가 s1-1→s1-5/6→s1-9→s0-9/10으로 거의
+    같았다. 슬롯이 이야기를 하나만 만들고 대사 3벌이 그 위에 얹히는데, 대본은 원본 대사를
+    따라가는 게 원칙이라(`_rewrite_block`) **뼈대가 같으면 결과도 같다**. 그 job은 세트
+    7개 중 4개만 쓰고 3개를 버렸고, 버려진 쪽에 완전히 다른 이야기가 통째로 있었다.
+
+    반환: (variants, slot_source, slot_info, variant_kinds)
+      variants[i] = i번째 후보가 쓸 groups. 항상 n개(못 만들면 A를 복제한다 — 그러면
+      v3와 같은 결과라 나빠지지 않는다). variant_kinds[i]는 "gemini"/"recombined"/"cloned"
+      — 조용한 품질 저하를 막으려고 어디서 왔는지 남긴다."""
+    groups, slot_source, info = _pick_slot_groups(seg_map, target_seconds, call=call)
+    variants, kinds = [groups], [SLOT_SOURCE_GEMINI if slot_source == SLOT_SOURCE_GEMINI
+                                 else slot_source]
+    if n <= 1 or not groups:
+        return variants, slot_source, info, kinds
+    # A가 폴백이었다면 변형하지 않는다 — 품질이 이미 의심스러운데 조합을 늘릴 이유가 없다.
+    if slot_source != SLOT_SOURCE_GEMINI:
+        while len(variants) < n:
+            variants.append(groups)
+            kinds.append("cloned")
+        return variants, slot_source, info, kinds
+
+    sets = _cap_sets(_build_source_sentence_sets(seg_map), target_seconds)
+    used_ids = {g[0]["seg_id"] for g in groups if g}
+    base = [st for st in sets if st["set_id"] in used_ids]
+    rest = [st for st in sets if st["set_id"] not in used_ids]
+    want = len(base) or 1
+    seen = [tuple(g[0]["seg_id"] for g in groups if g)]
+
+    for i in range(1, n):
+        cand = None
+        if rest:
+            # 2벌째는 안 쓰인 세트를 앞세우고(버려지던 이야기), 3벌째부터는 base를 앞세워
+            # 서로 다른 조합이 나오게 한다.
+            cand = _build_variant(base, rest, sets, want, prefer_rest=(i % 2 == 1))
+            if cand and tuple(st["set_id"] for st in cand) in seen:
+                cand = None                     # 앞 벌과 같은 조합이면 의미가 없다
+        if cand:
+            variants.append([st["segs"] for st in cand])
+            kinds.append("recombined")
+            seen.append(tuple(st["set_id"] for st in cand))
+        else:
+            variants.append(groups)             # 재료가 없다 → A 복제(= v3와 동일)
+            kinds.append("cloned")
+    return variants, slot_source, info, kinds
+
+
 def _rewrite_block(groups):
     """고른 구간들을 '이 자리에서 하던 말을 우리 말로 바꿔 써라' 프롬프트 블록으로."""
     if not groups:
@@ -2554,9 +2660,13 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     # 가시화) — REWRITE_MIX가 꺼져 슬롯 경로 자체를 안 탔으면 None(아래에서 plan에 안 붙는다).
     slot_source = None
     slot_info = None
+    slot_variants, slot_kinds = [], []
     if REWRITE_MIX:
-        tl_groups, slot_source, slot_info = _pick_slot_groups(seg_map, target_seconds,
-                                                              call=_call)
+        # v4(2026-08-02): 슬롯을 후보 수만큼 뽑는다 — 1벌째는 v3와 같은 경로(무변경),
+        # 2벌째부터는 **버려지던 세트**로 코드가 조합한다(Gemini 재호출 없음).
+        slot_variants, slot_source, slot_info, slot_kinds = _pick_slot_variants(
+            seg_map, target_seconds, n=n_candidates, call=_call)
+        tl_groups = slot_variants[0] if slot_variants else []
     if tl_groups:
         order_block = _rewrite_block(tl_groups)
         if backbone_base:
@@ -2579,7 +2689,12 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                        else _spine_order_block(_build_scene_spine(seg_map, detected)))
     src_texts = [s.get("full_text", "") for s in source_scripts]
 
-    def _ground_score(raws):
+    outer_tl_groups = tl_groups
+
+    def _ground_score(raws, groups=None):
+      # groups: 이 묶음이 쓸 슬롯(v4, 2026-08-02). None이면 종전과 똑같이 바깥의
+      # tl_groups를 쓴다 — REWRITE_MIX가 꺼진 경로(tl_groups=[])도 그대로 보존된다.
+      tl_groups = outer_tl_groups if groups is None else groups
       if bb_video:
         for r in raws:
             r.setdefault("_backbone_video", bb_video)   # 핑퐁 순서고정이 이 백본을 쓴다
@@ -2707,11 +2822,51 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
 
     # 무자막 소스 특장점 블록(2026-07-26): 전부 비면 빈 문자열=무주입(회귀0).
     benefits_block = _source_benefits_block(source_scripts)
-    raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates,
-                                   call=_call, bank_context=bank_context, order_block=order_block,
-                                   benefits_block=benefits_block, engine=engine,
-                                   engine_seed=_engine_seed(reference_text))
-    cands = _ground_score(raws)
+    # ★v4(2026-08-02): 슬롯이 여러 벌이면 **벌마다 따로** 대본을 뽑는다.
+    #   벌마다 세트 목록이 다르므로 order_block("i번째 비트가 위 i번 세트다")도 달라진다 —
+    #   한 번에 뽑으면 어느 후보가 어느 벌을 따라야 하는지 프롬프트가 말할 수 없다.
+    #   대본 생성 호출이 벌 수만큼 늘어난다(과금) — 사장님이 "그냥 확실하게"로 택한 방식.
+    #   벌이 1개뿐이면(여유 없음·폴백) 종전과 완전히 같은 1회 호출로 돈다.
+    _distinct = []
+    for i, g in enumerate(slot_variants or []):
+        ids = tuple(x[0]["seg_id"] for x in g if x)
+        if ids not in [d[0] for d in _distinct]:
+            _distinct.append((ids, i, g))
+    if len(_distinct) > 1:
+        raws, cands = [], []
+        for k, (_ids, vi, g) in enumerate(_distinct):
+            sub = _scene_first_candidates(
+                inventory, reference_text, target_seconds, n=1, call=_call,
+                bank_context=bank_context, order_block=_rewrite_block(g),
+                benefits_block=benefits_block, engine=engine,
+                engine_seed=_engine_seed(reference_text) + k)
+            raws.extend(sub or [])
+            got = _ground_score(sub or [], groups=g)
+            for c in got:
+                c["plan"]["slot_variant"] = slot_kinds[vi] if vi < len(slot_kinds) else "?"
+            cands.extend(got)
+        # ★벌마다 따로 부르면 **한 벌만 실패해도 후보가 빈다**(실측: 3벌인데 후보 2개).
+        #   한 번에 뽑던 옛 경로엔 없던 위험이라, 부족분을 1벌째 슬롯으로 메운다.
+        #   (모자란 채 내보내면 사장님 화면에 후보가 2개만 뜬다 — 그게 더 나쁘다.)
+        if len(cands) < len(_distinct):
+            need = len(_distinct) - len(cands)
+            fill = _scene_first_candidates(
+                inventory, reference_text, target_seconds, n=need, call=_call,
+                bank_context=bank_context, order_block=order_block,
+                benefits_block=benefits_block, engine=engine,
+                engine_seed=_engine_seed(reference_text) + 100)
+            got = _ground_score(fill or [], groups=tl_groups)
+            for c in got:
+                c["plan"]["slot_variant"] = "refill"   # 차별화 실패를 숨기지 않는다
+            raws.extend(fill or [])
+            cands.extend(got[:need])
+    else:
+        raws = _scene_first_candidates(inventory, reference_text, target_seconds, n=n_candidates,
+                                       call=_call, bank_context=bank_context,
+                                       order_block=order_block,
+                                       benefits_block=benefits_block, engine=engine,
+                                       engine_seed=_engine_seed(reference_text))
+        cands = _ground_score(raws)
     # ①생성측 보강(세션#2): 후보가 전부 목표보다 크게 짧으면(생성이 목표초 미달) 길이 강화
     # 힌트로 1회 재생성해 합친다. ②선택 감점(_length_penalty)이 짧은 후보를 강등하므로 병합 후
     # 채점하면 긴 후보가 자연히 추천된다. 재생성은 '전부 짧을 때만' — 소스 footage 부족이 아니라
@@ -2727,23 +2882,41 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             return sum(float(b.get("target_seconds") or 0.0)
                        for b in c["plan"].get("beats", []))
         if max((_cand_secs(c) for c in cands), default=0.0) < 0.92 * len_goal:
-            raws2 = _scene_first_candidates(
-                inventory, reference_text, target_seconds, n=n_candidates, call=_call,
-                bank_context=bank_context, order_block=order_block, lengthen=True,
-                benefits_block=benefits_block, engine=engine,
-                engine_seed=_engine_seed(reference_text) + 1)
-            cands = cands + _ground_score(raws2)
+            # ★재생성도 벌별로(v4). 옛 코드는 order_block(1벌째) 하나로 n개를 다시 뽑아
+            #   **재생성분이 전부 벌A의 화면을 쓰게** 만들었다 — 차별화가 여기서 무너진다.
+            #   벌이 1개면 종전과 동일하게 한 번만 돈다.
+            for k, (_ids, vi, g) in enumerate(_distinct or [((), 0, tl_groups)]):
+                raws2 = _scene_first_candidates(
+                    inventory, reference_text, target_seconds,
+                    n=(1 if len(_distinct) > 1 else n_candidates), call=_call,
+                    bank_context=bank_context,
+                    order_block=(_rewrite_block(g) if len(_distinct) > 1 else order_block),
+                    lengthen=True, benefits_block=benefits_block, engine=engine,
+                    engine_seed=_engine_seed(reference_text) + 1 + k)
+                got = _ground_score(raws2, groups=(g if len(_distinct) > 1 else None))
+                for c in got:
+                    c["plan"]["slot_variant"] = (slot_kinds[vi] if vi < len(slot_kinds)
+                                                 else "?")
+                cands = cands + got
     # ★말투 게이트(2026-07-30 사장님 승인). 후보가 **전부** 밋밋하면 1회만 다시 뽑아 합친다.
     # 위 길이 재생성과 같은 규율: 전부 미달일 때만(과금 게이트) · 1회 상한 · 실패해도 기존 유지.
     # 없으면 감점이 순위표 노릇만 해서 3개가 다 밋밋할 때 그중 최선이 그대로 나간다
     # (실측 07-30: tone 0.67짜리가 추천으로 나갔다). 합친 뒤 아래 best 선택이 알아서 고른다.
     if cands and max(_cand_tone(c) for c in cands) < _TONE_GATE:
-        raws3 = _scene_first_candidates(
-            inventory, reference_text, target_seconds, n=n_candidates, call=_call,
-            bank_context=bank_context, order_block=order_block, tone_boost=True,
-            benefits_block=benefits_block, engine=engine,
-            engine_seed=_engine_seed(reference_text) + 2)
-        cands = cands + _ground_score(raws3)
+        # 길이 재생성과 같은 이유로 벌별로 돈다(v4) — 안 그러면 말투 재생성분이 전부
+        # 벌A의 화면을 쓴다.
+        for k, (_ids, vi, g) in enumerate(_distinct or [((), 0, tl_groups)]):
+            raws3 = _scene_first_candidates(
+                inventory, reference_text, target_seconds,
+                n=(1 if len(_distinct) > 1 else n_candidates), call=_call,
+                bank_context=bank_context,
+                order_block=(_rewrite_block(g) if len(_distinct) > 1 else order_block),
+                tone_boost=True, benefits_block=benefits_block, engine=engine,
+                engine_seed=_engine_seed(reference_text) + 2 + k)
+            got = _ground_score(raws3, groups=(g if len(_distinct) > 1 else None))
+            for c in got:
+                c["plan"]["slot_variant"] = slot_kinds[vi] if vi < len(slot_kinds) else "?"
+            cands = cands + got
     if cands:
         # ★말투 하한(2026-07-30). 최종 score는 0.75×매칭 + 0.25×품질이고 품질 안에서 말투가
         #   0.6이라, 말투가 최종 점수의 **15%**뿐이다 → tone 0.4짜리와 1.0짜리의 점수 차이가
