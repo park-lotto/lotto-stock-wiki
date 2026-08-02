@@ -22,7 +22,13 @@ from shopping_shorts.categorize import categorize
 from shopping_shorts.store import Store
 
 # 1회 수집당 새 태깅 상한(비용 가드). 초과분은 다음 수집 때 — app.py에 있던 값을 그대로 옮겼다.
-VISION_TAG_CAP = 60
+# 60 → 150 (2026-08-02): 회당 신규가 ~100건인데 상한이 60이라 태깅이 유입을 못 따라갔다.
+# 밀린 대기가 179건까지 쌓여 랭킹 노출 398건 중 태그 보유는 55%뿐 — 나머지 45%가 캡션
+# 백업 경로로 검색돼 옛날 오검('빵빵한 사운드'→'빵')이 그대로 났다.
+# 서버 실측(2026-08-02): 썸네일 0.2s + 태깅 1.4~2.8s = 건당 ~2.2s. 150건이면 ~5.5분으로
+# 회차 전체 31분(1853s) 대비 여유가 있다(수집 스크래핑이 대부분을 차지). 밀린 179건은
+# 두 회차면 소진되고, 이후엔 회당 신규 ~100건을 그때그때 따라잡는다.
+VISION_TAG_CAP = 150
 
 
 def tag_new_items(items, db_path, cap=VISION_TAG_CAP):
