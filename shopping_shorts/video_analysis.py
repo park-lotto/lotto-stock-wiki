@@ -351,6 +351,59 @@ def subject_tags_vision(image_bytes, caption, max_retries=3, quota_sleep=8):
     return {}
 
 
+_FACE_FORWARD_PROMPT = """이 이미지는 한국어 쇼츠 영상의 썸네일이다. 사람(진행자)의 얼굴·모습이
+화면의 주인공인지 판정하라. 쇼핑 제품을 보여주는 채널을 찾는 게 목적이다.
+- true = 사람 얼굴·상반신이 주인공(인물 브이로그·연예인·본인출연 토크·리액션).
+- false = 제품·음식·공간이 주인공.
+  ⚠️ 손만 나오는 것은 false다 — 손은 제품을 쥐거나 시연하는 도구다.
+  ⚠️ 사람이 배경에 조금 걸치거나 뒷모습·신체 일부만 나오는 것도 false다.
+JSON만: {"face_forward": true/false}"""
+
+_FACE_FORWARD_SCHEMA = {
+    "type": "object",
+    "properties": {"face_forward": {"type": "boolean"}},
+    "required": ["face_forward"],
+}
+
+
+def face_forward_vision(image_bytes, max_retries=3, quota_sleep=8):
+    """썸네일 1장 → True(사람이 주인공) / False(제품이 주인공) / None(판정 실패).
+
+    None과 False를 구분하는 게 중요하다 — 호출부가 '판정 실패'를 '제품채널'로
+    오해하면, 키가 잠긴 날 인물채널이 전부 통과해버린다(반대로 전부 제외돼도
+    곤란하다). 실패는 None으로 올려 호출부가 '판정 안 함'으로 다루게 한다."""
+    if not image_bytes or not SHORTS_GEMINI_KEYS:
+        return None
+    for attempt in range(max_retries):
+        key, idx = comment_gen._current_key_and_idx()
+        if key is None:
+            return None
+        try:
+            client = _client_for_key(key)
+            resp = client.models.generate_content(
+                model=_TRANSLATE_MODEL,   # flash-lite — 썸네일 1장이라 가벼운 모델로 충분
+                contents=[_FACE_FORWARD_PROMPT,
+                          types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=_FACE_FORWARD_SCHEMA,
+                ),
+            )
+            return bool(json.loads(resp.text).get("face_forward"))
+        except Exception as e:  # noqa: BLE001 — 판정 실패는 None(제외 안 함)으로 흘린다
+            if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
+                comment_gen._mark_key_exhausted(idx)
+                continue
+            if key_vault.is_quota_error(e):
+                time.sleep(quota_sleep)
+                continue
+            if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
+                time.sleep((attempt + 1) * 5)
+                continue
+            return None
+    return None
+
+
 _TEXT_LEVEL_PROMPT = """이 이미지는 SNS 숏폼 영상의 썸네일이다. 화면에 박힌 글자(제목·자막·설명
 텍스트)가 원본 장면(제품·사람·배경)을 얼마나 가리는지 판단하라.
 - none: 화면에 텍스트가 거의/전혀 없음
