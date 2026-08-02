@@ -691,6 +691,61 @@ def _pick_slot_groups(seg_map, target_seconds=None, call=None):
     return [st["segs"] for st in kept], SLOT_SOURCE_GEMINI, _slot_info(sets, chosen, kept)
 
 
+_ALT_SEQ_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "stories": {
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "string"}},
+        },
+    },
+    "required": ["stories"],
+}
+
+
+def _alt_seq_prompt(sets, chosen_ids, target_seconds, n_alt):
+    """이미 쓴 조합과 **다른 이야기**를 n_alt개 짜달라는 프롬프트(v4 개선, 2026-08-02).
+
+    왜 모델에게 맡기나: 코드가 조합하면 시간순·소스커버리지 같은 **기계적 규칙**은
+    지킬 수 있어도 "이야기가 이어지는가"를 못 본다(사장님 지적: "흐름이 어색하지 않아야
+    하는데 가능한 거야?"). 맥락 판단은 모델만 할 수 있다.
+
+    ★기존 `_set_seq_prompt`는 **한 글자도 안 건드린다** — 1벌째(=v3와 동일)를 만드는
+      프롬프트라, 손대면 "3개 중 1개는 그대로 둔다"는 약속이 깨진다. 그래서 별도 호출."""
+    used = ", ".join(chosen_ids)
+    lines = [f"아래는 여러 영상에서 뽑은 '한 문장이 시작~끝나는' 장면 세트들이다.",
+             f"이미 **[{used}]** 조합으로 영상 하나를 만들었다.",
+             f"같은 재료로 **그것과 다른 이야기 {n_alt}개**를 더 짜라.",
+             "",
+             "지켜야 할 것:",
+             # ★길이를 세게 못박는다(2026-08-02 실측): "가깝게"만 적었더니 3세트 15~20초로
+             #   벌0(4세트 27.8초)보다 크게 짧게 나왔다. 짧으면 렌더에서 화면이 모자라
+             #   프리즈가 나거나 대본이 빈약해진다. 세트 **개수**로 하한을 준다 —
+             #   초 단위로 요구하면 모델이 길이를 어림잡느라 더 부정확하다.
+             f"· 각 이야기는 목표 {target_seconds}초를 채워야 한다 — **세트를 최소 "
+             f"{max(1, len(chosen_ids))}개** 골라라(그보다 적으면 영상이 너무 짧아진다).",
+             "· **이야기가 자연스럽게 이어져야 한다** — 세트를 남는다고 아무렇게나 끼우지 마라.",
+             "  훅(관심 끌기) → 전개 → 마무리 흐름이 말이 돼야 한다.",
+             "· **영상마다 최소 한 세트씩** 골라라(여러 영상을 담은 이유는 같은 제품을 "
+             "다른 각도로 보여주기 위해서다).",
+             "· **같은 영상을 3연속으로 붙이지 마라** — 한 영상만 계속 나오면 나머지를 담은 "
+             "의미가 없다. 영상을 번갈아 배치해라.",
+             "· 세트는 통째로 쓰거나 안 쓰거나만 가능하다 — 쪼개거나 세트 안 순서를 바꾸지 마라.",
+             f"· 위에 쓴 조합과 **다른 각도**로 짜라(다른 세트로 시작하거나, 다른 영상을 "
+             "중심에 두거나).",
+             "",
+             "세트 목록:"]
+    for st in sets:
+        segs = st["segs"]
+        said = " ".join((s.get("text") or "").strip() for s in segs).strip()
+        desc = " / ".join((s.get("scene_desc") or "").strip() for s in segs)
+        lines.append(f"- [{st['set_id']}] ({st['video_id']}) {st['secs']}초 · {desc} · "
+                     f"원본 대사: {said}")
+    lines.append(f"\n반드시 JSON {{\"stories\": [[set_id, ...], ...]}} 형식으로 "
+                 f"**{n_alt}개**를 답하라.")
+    return "\n".join(lines)
+
+
 def _sort_sets_in_story_order(picked):
     """세트끼리의 순서를 **원본 시간순**으로 되돌린다.
 
@@ -779,17 +834,62 @@ def _pick_slot_variants(seg_map, target_seconds=None, n=1, call=None):
     want = len(base) or 1
     seen = [tuple(g[0]["seg_id"] for g in groups if g)]
 
+    # ★먼저 Gemini에게 "다른 이야기"를 짜달라고 한다(v4 개선, 2026-08-02).
+    #   코드 조합은 시간순·소스커버리지 같은 기계적 규칙만 지킬 뿐 **이야기가 이어지는지**를
+    #   못 본다(사장님: "흐름이 어색하지 않아야 하는데"). 맥락은 모델만 판단할 수 있다.
+    #   실패하면 아래 코드 조합으로 폴백한다 — 후보가 비는 것보다 낫다.
+    by_id = {st["set_id"]: st for st in sets}
+    ai_variants = []
+    if len(sets) > len(base):          # 여유가 있을 때만 묻는다(과금 게이트)
+        try:
+            caller = call or _vault_call
+            resp = caller(_alt_seq_prompt(sets, [st["set_id"] for st in base],
+                                          target_seconds, n - 1), _ALT_SEQ_SCHEMA)
+            for story in ((resp or {}).get("stories") or [])[: n - 1]:
+                picked, seen_ids = [], set()
+                for sid in story or []:
+                    if sid in by_id and sid not in seen_ids:
+                        picked.append(by_id[sid])
+                        seen_ids.add(sid)
+                if not picked:
+                    continue
+                # 모델이 정한 순서라도 **같은 소스 안 시간순**과 자리 규칙은 코드가 다시 건다
+                # (프롬프트로 부탁만 하고 확인 안 하면 지켜졌는지 알 수 없다 — 이 파일의 교훈).
+                kept = _filter_misplaced_sets(_sort_sets_in_story_order(picked))
+                # ★길이 하한도 코드로 확인한다(2026-08-02): 프롬프트에 "최소 N개"를 적어도
+                #   지켜졌는지는 봐야 안다. 벌0보다 크게 짧으면 화면이 모자라 프리즈가 난다.
+                #   모자라면 **버리지 않고** 안 쓴 세트를 시간순으로 채운다(재료를 살린다).
+                if kept and len(kept) < len(base):
+                    have = {st["set_id"] for st in kept}
+                    for st in sets:
+                        if len(kept) >= len(base):
+                            break
+                        if st["set_id"] not in have:
+                            kept.append(st)
+                            have.add(st["set_id"])
+                    kept = _filter_misplaced_sets(_sort_sets_in_story_order(kept))
+                if kept and _covers_all_sources(kept, sets):
+                    ai_variants.append(kept)
+        except Exception:               # noqa: BLE001 — 조합 실패가 job을 죽이면 안 된다
+            ai_variants = []
+
     for i in range(1, n):
-        cand = None
-        if rest:
+        cand, kind = None, None
+        # 1순위: 모델이 짠 이야기(맥락 있음)
+        while ai_variants and cand is None:
+            c = ai_variants.pop(0)
+            if tuple(st["set_id"] for st in c) not in seen:
+                cand, kind = c, "ai_story"
+        # 2순위: 코드 조합(맥락은 운에 맡기지만 재료는 살린다)
+        if cand is None and rest:
             # 2벌째는 안 쓰인 세트를 앞세우고(버려지던 이야기), 3벌째부터는 base를 앞세워
             # 서로 다른 조합이 나오게 한다.
-            cand = _build_variant(base, rest, sets, want, prefer_rest=(i % 2 == 1))
-            if cand and tuple(st["set_id"] for st in cand) in seen:
-                cand = None                     # 앞 벌과 같은 조합이면 의미가 없다
+            c = _build_variant(base, rest, sets, want, prefer_rest=(i % 2 == 1))
+            if c and tuple(st["set_id"] for st in c) not in seen:
+                cand, kind = c, "recombined"
         if cand:
             variants.append([st["segs"] for st in cand])
-            kinds.append("recombined")
+            kinds.append(kind)
             seen.append(tuple(st["set_id"] for st in cand))
         else:
             variants.append(groups)             # 재료가 없다 → A 복제(= v3와 동일)
