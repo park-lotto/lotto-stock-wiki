@@ -14,6 +14,9 @@ from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor
 from shopping_shorts.ranking import build_items, apply_grades, sort_by, hours_since
 
+# 인물채널 판정에 쓸 채널당 썸네일 표본 수(2026-08-02).
+FACE_SAMPLE_N = 3
+
 
 def _norm(u):
     return (u or "").strip().lstrip("@").lower()
@@ -79,7 +82,18 @@ def _rank_reels(reels, prev_comments, prev_delta, now, window_hours, profiles=No
             it["bio"] = prof.get("biography") or ""   # 카테고리 약한 보조신호(추가 호출 0)
             it["recent_count"] = counts.get(owner.lower(), 0)
         items.extend(built)
+    # 채널당 썸네일 여러 장을 대표 릴스에 실어둔다(2026-08-02) — 인물채널 판정은
+    # 영상 단위로 갈리므로(실측: toyland.kr 제품1·얼굴2) 한 장으로 채널을 자르면
+    # 오판이 난다. _one_per_channel이 대표 1개만 남기기 전에 모아둬야 한다.
+    thumbs = {}
+    for it in items:
+        u = (it.get("username") or "").lower()
+        t = it.get("thumbnail")
+        if t and len(thumbs.setdefault(u, [])) < FACE_SAMPLE_N:
+            thumbs[u].append(t)
     items = _one_per_channel(items)  # 채널 단위 — 채널당 대표 릴스 1개
+    for it in items:
+        it["sample_thumbs"] = thumbs.get((it.get("username") or "").lower(), [])
     apply_grades(items)
     return sort_by(items, "comments")
 

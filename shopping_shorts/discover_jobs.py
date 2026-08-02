@@ -101,6 +101,38 @@ def _channel_category(item):
     return "" if guess == "기타" else guess
 
 
+def _is_face_channel(item):
+    """이 채널이 '사람이 나오는 채널'인가 — 썸네일 표본이 **전부** 인물일 때만 True.
+
+    2026-08-02 사장님 지시: 연예인·본인출연 채널은 쇼핑쇼츠 레퍼런스로 못 쓴다.
+    판정을 채널명·소개글로 하면 안 된다(실측 오검): '까꿍언니 l 전셋집•인테리어'가
+    '리모델링'의 '모델'에 걸리고, '홈템블리 l 예쁜 일상 꿀템'이 '일상'에 걸린다 —
+    둘 다 우리가 원하는 제품 채널이다. 그래서 썸네일을 실제로 보는 비전 판정을 쓴다.
+
+    기준은 만장일치(3/3) — 판정이 영상 단위로 갈리기 때문이다(실측 toyland.kr
+    제품1·얼굴2). 애매한 채널은 남겨두고 랭킹 지표에서 자연히 밀리게 한다:
+    표본을 넓히는 게 이번 목적이라 '억울한 제외'가 '놓친 제외'보다 비싸다.
+    판정 실패(None)가 하나라도 있으면 제외하지 않는다 — 키가 잠긴 날 통째로
+    걸러내는 사고를 막는다."""
+    thumbs = item.get("sample_thumbs") or []
+    if len(thumbs) < 2:          # 표본 1장으로 채널을 자르지 않는다
+        return False
+    try:
+        from shopping_shorts import video_analysis
+    except Exception:            # noqa: BLE001 — 비전 없으면 판정 안 함(수집은 살아야)
+        return False
+    verdicts = []
+    for t in thumbs[:discovery.FACE_SAMPLE_N]:
+        img = video_analysis.fetch_thumb_bytes(t)
+        if not img:
+            continue
+        v = video_analysis.face_forward_vision(img)
+        if v is None:            # 판정 실패 하나라도 → 제외 안 함
+            return False
+        verdicts.append(v)
+    return len(verdicts) >= 2 and all(verdicts)
+
+
 def _known_usernames(store):
     known = {d["username"] for d in store.discovered_channels()}
     try:
@@ -164,22 +196,34 @@ def _run(days, max_total, accumulate, auto_register=False):
               "comments": i["comments"], "delta": i["delta"]} for i in items],
         )
         registered = 0
+        skipped_face = 0
         if auto_register:
             # 발굴 전부를 자동으로 레퍼런스 추적목록에 등록(2026-07-30) — 사람이
             # "목록추가"를 안 눌러도 다음 레퍼런스랭킹 수집(09시)부터 바로 잡히게.
             # discover()가 이미 known(기존 추적목록) 제외 후 검색한 결과라 전부 신규다.
+            _JOB["phase"] = "인물채널 선별"
             for it in items:
                 uname = it.get("username")
-                if uname:
-                    # 찾아낸 해시태그를 카테고리로 물려준다(2026-07-30) — 신규 채널은
-                    # 과거 이력도 캡션도 없어 랭킹에서 전부 '기타'로 보이던 문제.
-                    store.add_discovered(
-                        uname, name=it.get("name") or uname,
-                        category=_channel_category(it))
-                    registered += 1
+                if not uname:
+                    continue
+                # 연예인·본인출연 채널은 등록하지 않는다(2026-08-02 사장님 지시).
+                # 피드(save_discovery_feed)엔 이미 담겨 화면에서는 보이고, 자동
+                # 추적목록에만 안 넣는다 — 오판이 나도 사장님이 눈으로 확인 가능.
+                if _is_face_channel(it):
+                    it["face_channel"] = True
+                    skipped_face += 1
+                    continue
+                # 찾아낸 해시태그를 카테고리로 물려준다(2026-07-30) — 신규 채널은
+                # 과거 이력도 캡션도 없어 랭킹에서 전부 '기타'로 보이던 문제.
+                store.add_discovered(
+                    uname, name=it.get("name") or uname,
+                    category=_channel_category(it))
+                registered += 1
+            if skipped_face:
+                print(f"[discover] 인물채널 {skipped_face}건 자동등록 제외(썸네일 만장일치)")
         with _LOCK:
             _JOB.update(status="done", phase="완료", count=len(items), items=items,
-                       error=None, registered=registered)
+                       error=None, registered=registered, skipped_face=skipped_face)
     except Exception as e:
         msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
         with _LOCK:
@@ -202,6 +246,7 @@ def status(include_items=True):
     with _LOCK:
         s = {"status": _JOB["status"], "phase": _JOB["phase"], "count": _JOB["count"],
              "error": _JOB["error"], "registered": _JOB.get("registered", 0),
+             "skipped_face": _JOB.get("skipped_face", 0),
              "elapsed": int(time.time() - _JOB["started"]) if _JOB["started"] else 0}
         if include_items and _JOB["status"] == "done":
             s["items"] = _JOB["items"]

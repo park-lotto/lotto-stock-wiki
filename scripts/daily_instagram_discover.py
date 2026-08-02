@@ -38,7 +38,8 @@ def main():
         print(f"[daily_instagram_discover] 실패: {st.get('error')}", file=sys.stderr)
         return 1
     print(f"[daily_instagram_discover] {st.get('count')}건 발굴 · "
-          f"{st.get('registered')}건 자동등록 · {time.time() - t0:.1f}s")
+          f"{st.get('registered')}건 자동등록 · "
+          f"인물채널 {st.get('skipped_face', 0)}건 제외 · {time.time() - t0:.1f}s")
     return 0
 
 
