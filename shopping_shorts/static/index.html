@@ -1389,6 +1389,12 @@ function searchChannel(username){
   }
   setSearch(username);
 }
+// '지난 한 달' 카드의 원본 데이터(48h 랭킹인 STATE.items엔 없다).
+const HISTORY_ITEMS = {};
+// 카드 한 장을 shortcode로 되찾는다 — 48h 랭킹이든 '지난 한 달'이든.
+function findItem(sc){
+  return STATE.items.find(x=>x.shortcode===sc) || HISTORY_ITEMS[sc] || null;
+}
 async function _renderChannelHistory(username, liveShortcodes){
   const wrap=document.getElementById("channelHistoryWrap");
   if(!wrap) return;
@@ -1396,6 +1402,11 @@ async function _renderChannelHistory(username, liveShortcodes){
     const ex=encodeURIComponent((liveShortcodes||[]).filter(Boolean).join(','));
     const d=await (await fetch(`/api/channel/history?username=${encodeURIComponent(username)}&exclude=${ex}`)).json();
     if(!d || !d.ok || !Array.isArray(d.items) || !d.items.length){ wrap.innerHTML=''; return; }
+    // '지난 한 달' 항목은 STATE.items(48h 창)에 없다 → 담기·렌즈가 url/caption을
+    // 못 찾아 빈 값으로 담기던 문제(2026-08-02). 별도 레지스트리에 실어 findItem이 찾게 한다.
+    d.items.forEach(h=>{ HISTORY_ITEMS[h.shortcode] = {
+      shortcode:h.shortcode, url:h.url||'', thumbnail:h.thumb||'',
+      name:h.name||h.username||'', username:h.username||'', caption:h.caption||''}; });
     const cards = d.items.map(_historyCard).join('');
     wrap.innerHTML = `<div style="margin:18px 0 8px;padding-top:12px;border-top:1px solid var(--line);color:var(--sub);font-size:13px">📅 지난 한 달 · @${esc(username)} <b style="color:var(--txt)">(${d.items.length})</b> <span style="font-size:11px">— 48시간 창에서 내려간 과거 수집분</span></div><div class="cards">${cards}</div>`;
     markSavedButtons();
@@ -1411,7 +1422,9 @@ function _historyCard(h){
       <div class="stat"><span>댓글</span><b>${(h.comments||0).toLocaleString()}</b></div>
       <div class="actions"><div class="btns">
         <button class="view" onclick="window.open('${h.url}','_blank')">👁 보기</button>
+        <button class="comment" onclick="goComment('${h.shortcode}')">💬 댓글소통</button>
         <button class="save" id="save_${h.shortcode}" onclick="toggleMix('${h.shortcode}', this)">📥 담기</button>
+        <button class="script-btn" onclick="lensSearch(this,'${h.shortcode}')">🔍 숏템파워검색</button>
       </div></div>
     </div></div>`;
 }
@@ -1861,7 +1874,7 @@ async function lensSearch(btn, shortcode){
   openScript('<div class="sm-loading">🔍 렌즈 검색 중… (5~15초)</div>','🔍 렌즈 유사영상',true);
   const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.85));
   const fd=new FormData(); fd.append('frame', blob, 'f.jpg');
-  const srcItem=STATE.items.find(i=>i.shortcode===shortcode);
+  const srcItem=findItem(shortcode);
   const caption=(srcItem && srcItem.caption) || '';
   if(caption) fd.append('source_caption', caption);
   try{
@@ -2483,7 +2496,7 @@ function showToast(html){
 // 담기는 그 자리에서 토글만 하고(연속으로 여러 개 담기 편하게), 모음집 이동은
 // 토스트 링크로만 안내한다 — 누를 때마다 페이지 이동하면 여러 개 담을 때 불편해서(2026-07-14).
 async function toggleMix(sc, btn){
-  const it = STATE.items.find(x=>x.shortcode===sc) || {};
+  const it = findItem(sc) || {};
   try{
     const r = await fetch('/api/mix/basket/toggle', {
       method:'POST', headers:{'Content-Type':'application/json'},
