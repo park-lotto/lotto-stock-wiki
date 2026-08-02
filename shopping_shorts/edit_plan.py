@@ -2394,7 +2394,25 @@ def _banned_phrase_fuzzy_hit(beats, tail_tolerance=2):
     for phrase in _BANNED_PHRASES:
         if " " in phrase or len(phrase) < 3:
             continue
-        need = max(len(phrase) - tail_tolerance, 2)
+        # ★need의 하한이 2면 3자 금지어가 "앞 2자만 같으면 걸림"이 된다(2026-08-03 실사고):
+        #   '완벽함'을 잡으려다 **'완벽해요'·'완벽하게'**까지 0점 반려됐다. '완벽해요'는
+        #   상투어가 아니라 평범한 한국어다. 실측(job 6849ebdf1bb1): 심사위원이 최고점
+        #   (0.733)을 준 후보가 이 오탐으로 규칙점수 0점이 돼 2등으로 밀렸다.
+        #
+        #   ★단순히 하한을 올리면 원래 잡던 것을 놓친다('쾌적하게'→'쾌적한'은 공통 앞이
+        #     2자뿐이다 — 3번째가 하/한으로 갈린다). 길이로만 재면 두 사례를 못 가른다.
+        #   → **금지어가 활용어인지**로 가른다. '~하게/~하다' 꼴은 어간(앞 2자)만 같으면
+        #     활용형이 맞지만, '완벽함'처럼 명사형으로 끝나는 말은 그 자체가 통째로 있어야
+        #     상투어다. 전자만 어간 매칭을 허용한다.
+        stem = phrase
+        for suf in ("하게", "하다", "스럽게", "롭게"):
+            if phrase.endswith(suf) and len(phrase) - len(suf) >= 2:
+                stem = phrase[: -len(suf)]
+                break
+        if stem != phrase:
+            need = len(stem)          # 활용어: 어간만 같으면 활용형으로 본다
+        else:
+            need = max(len(phrase) - tail_tolerance, len(phrase) - 1, 3)
         for w in words:
             if len(w) >= need and _common_prefix_len(phrase, w) >= need:
                 return True
