@@ -117,3 +117,85 @@ def test_variants_keep_original_time_order():
         rev = sum(1 for a, b in zip(seq, seq[1:]) if a[0] == b[0] and b[1] < a[1])
         assert rev == 0, f"같은 소스 안에서 시간이 거꾸로 갔다: {seq}"
     assert checked, "역전이 가능한 벌이 하나도 없었다 — 이 검사는 아무것도 못 잡는다"
+
+
+# ---------------------------------------------------------------------------
+# v4 개선(2026-08-02): 벌1·2도 Gemini가 **맥락 있게** 조합한다
+# ---------------------------------------------------------------------------
+
+def _fake_two_calls(order_ids, stories):
+    """슬롯 1차 질의와 '다른 이야기' 질의를 갈라 답한다."""
+    def call(prompt, schema, **kw):
+        req = (schema or {}).get("required")
+        if req == ["order"]:
+            return {"order": list(order_ids)}
+        if req == ["stories"]:
+            return {"stories": [list(s) for s in stories]}
+        return {}
+    return call
+
+
+def test_ai_story_is_used_when_model_answers():
+    """모델이 다른 이야기를 주면 그걸 쓴다 — 코드 조합보다 맥락이 낫다."""
+    sm = _seg_map()
+    sets = edit_plan._cap_sets(edit_plan._build_source_sentence_sets(sm), 30)
+    s0 = [st["set_id"] for st in sets if st["video_id"] == "s0"]
+    s1 = [st["set_id"] for st in sets if st["video_id"] == "s1"]
+    base = [s0[0], s1[0]]
+    alt1 = [s0[1], s1[1]]
+    alt2 = [s0[0], s1[1]]
+    call = _fake_two_calls(base, [alt1, alt2])
+    variants, _src, _info, kinds = edit_plan._pick_slot_variants(sm, 30, n=3, call=call)
+    assert kinds[0] == edit_plan.SLOT_SOURCE_GEMINI
+    assert "ai_story" in kinds[1:], f"모델 답을 안 썼다: {kinds}"
+
+
+def test_ai_story_still_gets_code_side_checks():
+    """★모델 답이라도 코드 검증은 그대로 받는다.
+
+    프롬프트로 부탁만 하고 확인 안 하면 지켜졌는지 알 수 없다는 게 이 파일의 교훈이다.
+    모델이 **거꾸로 된 순서**를 줘도 코드가 시간순으로 되돌려야 한다."""
+    sm = _seg_map()
+    sets = edit_plan._cap_sets(edit_plan._build_source_sentence_sets(sm), 30)
+    s0 = [st["set_id"] for st in sets if st["video_id"] == "s0"]
+    s1 = [st["set_id"] for st in sets if st["video_id"] == "s1"]
+    # 같은 소스인데 뒤 세트를 앞에 둔 '거꾸로' 응답을 준다
+    bad = [s0[1], s0[0], s1[0]]
+    call = _fake_two_calls([s0[0], s1[0]], [bad, bad])
+    variants, _src, _info, _k = edit_plan._pick_slot_variants(sm, 30, n=3, call=call)
+    for v in variants:
+        seq = [(g[0]["video_id"], edit_plan._seg_seq(g[0]["seg_id"])[1]) for g in v]
+        rev = sum(1 for a, b in zip(seq, seq[1:]) if a[0] == b[0] and b[1] < a[1])
+        assert rev == 0, f"모델이 준 역순을 그대로 썼다: {seq}"
+
+
+def test_ai_story_failure_falls_back_to_recombine():
+    """'다른 이야기' 호출이 실패해도 후보가 비지 않는다(코드 조합으로 폴백)."""
+    sm = _seg_map()
+    sets = edit_plan._cap_sets(edit_plan._build_source_sentence_sets(sm), 30)
+    ids = [st["set_id"] for st in sets[:2]]
+
+    def call(prompt, schema, **kw):
+        req = (schema or {}).get("required")
+        if req == ["order"]:
+            return {"order": ids}
+        raise RuntimeError("모델 실패")     # '다른 이야기' 질의만 죽인다
+
+    variants, _src, _info, kinds = edit_plan._pick_slot_variants(sm, 30, n=3, call=call)
+    assert len(variants) == 3
+    assert "ai_story" not in kinds[1:], kinds
+
+
+def test_ai_story_short_answer_is_topped_up():
+    """모델이 세트를 너무 적게 주면 코드가 채운다 — 짧으면 화면이 모자라 프리즈가 난다."""
+    sm = _seg_map()
+    sets = edit_plan._cap_sets(edit_plan._build_source_sentence_sets(sm), 30)
+    s0 = [st["set_id"] for st in sets if st["video_id"] == "s0"]
+    s1 = [st["set_id"] for st in sets if st["video_id"] == "s1"]
+    base = [s0[0], s0[1], s1[0], s1[1]]        # 벌0은 4세트
+    call = _fake_two_calls(base, [[s0[0], s1[0]], [s0[1], s1[1]]])   # 답은 2세트뿐
+    variants, _src, _info, kinds = edit_plan._pick_slot_variants(sm, 30, n=3, call=call)
+    for v, k in zip(variants[1:], kinds[1:]):
+        if k == "ai_story":
+            assert len(v) >= len(variants[0]), (
+                f"벌0({len(variants[0])}세트)보다 짧다: {len(v)}세트")
