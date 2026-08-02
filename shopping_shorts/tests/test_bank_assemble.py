@@ -85,10 +85,17 @@ def test_assemble_combines_spine_and_parts(tmp_path):
     s = Store(str(tmp_path / "t.db"))
     sp = s.add_spine("아크", situation_type="레시피", fit_categories=["레시피"], status="approved")
     s.update_spine_stats(sp, source_count=3, perf_score=0.7)
-    iid = s.add_pattern_item("cta", "댓글에 남겨주세요")
+    # ★CTA 버킷은 2026-08-03부터 은행에서 안 뽑는다(형식 고정) — 부품 주입 확인은
+    #   다른 버킷(훅)으로 한다. CTA는 아래에서 '형식 지시가 실렸는가'로 따로 본다.
+    iid = s.add_pattern_item("hook", "와 이거 대박")
     s.set_pattern_item_status(iid, "approved")
+    cid = s.add_pattern_item("cta", "프로필 바로가기 @someone")
+    s.set_pattern_item_status(cid, "approved")
     ctx = BA.assemble_bank_context(s, "레시피")
-    assert "학습된 아크" in ctx and "댓글에 남겨주세요" in ctx
+    assert "학습된 아크" in ctx and "와 이거 대박" in ctx
+    # 은행이 CTA 후보를 나열하면 모델이 그중에서 고른다 — 목록 대신 고정 형식만 실려야 한다.
+    assert "@someone" not in ctx, "CTA 버킷 내용이 프롬프트로 샜다"
+    assert "댓글에" in ctx, "CTA 고정 형식 지시가 빠졌다"
 
 
 def test_empty_category_still_injects_general_spine(tmp_path):

@@ -82,6 +82,13 @@ def parts_block(store, k=5, rng=random):
     lines = []
     for b in STYLE_BUCKETS:
         # 훅은 강도 상위에서만 로테이션(약한 설명체 훅 배제) — 사장님 "제일 강한 훅 우선".
+        # ★CTA는 은행에서 뽑지 않는다(2026-08-03 사장님 지시: "CTA는 고정으로 댓글에 OO
+        #   남겨주세요로"). 은행에는 남의 채널에서 수확한 '프로필 👉 @아이디' 계열이 섞여
+        #   있어서, 모델이 그걸 골라 **우리에게 없는 유입 경로**를 안내했다
+        #   (실측 job 23208dec38e6: "비결 궁금하시면 프로필 링크 확인해주세요").
+        #   댓글 유도는 우리 채널의 고정 전략이므로 형식을 아래에서 못박는다.
+        if b == "cta":
+            continue
         items = _sample_bucket(store, b, k, rng=rng, rank_key=_hook_strength if b == "hook" else None)
         if not items:
             continue
@@ -97,8 +104,12 @@ def parts_block(store, k=5, rng=random):
             "꼭 사와' 뿐 아니라 '이건 진짜 사지마' 같은 반전형도). 뻔한 정공법 대신 반전·금기로 열어라.\n"
             "  ③ 신선·임팩트형 — 은행에 얽매이지 말고 3초 안에 스크롤을 멈출 가장 강한 훅을 "
             "자유롭게 창작해라.\n"
-            "CTA·나머지 부품은 구조·리듬만 가져오고 단어·인물·소재는 우리 것으로. "
-            "인명·상표·지명 등 고유명사는 반드시 교체(표절·중복 회피).]\n"
+            "나머지 부품은 구조·리듬만 가져오고 단어·인물·소재는 우리 것으로. "
+            "인명·상표·지명 등 고유명사는 반드시 교체(표절·중복 회피).\n"
+            "★CTA(마지막 비트)는 **반드시 \"댓글에 '{키워드}' 남겨주세요\" 형식**으로 써라 — "
+            "키워드는 그 소재에 맞는 한 단어로 정해라(예: '신발'·'필름'·'점토').\n"
+            "  프로필 링크·바로가기·아이디 안내 등 **다른 유입 경로는 절대 쓰지 마라**"
+            "(우리에겐 그 경로가 없다).]\n"
             + "\n".join(lines))
 
 
@@ -124,16 +135,18 @@ def content_block(store, k=4, rng=random):
 
 
 def avoid_block(store, limit=6):
-    """novelty(P0-3): 최근 영상이 쓴 훅·인물·CTA를 '이건 이미 썼으니 다르게 써라'로 블록화.
-    이력 없으면 ''. 중괄호 소독(생성 프롬프트가 .format()을 탄다)."""
+    """novelty(P0-3): 최근 영상이 쓴 훅·인물을 '이건 이미 썼으니 다르게 써라'로 블록화.
+    이력 없으면 ''. 중괄호 소독(생성 프롬프트가 .format()을 탄다).
+    ★CTA는 2026-08-03부터 형식 고정이라 이 목록에서 뺐다(아래 주석 참조)."""
     rec = store.recent_script_usage(limit=limit)
     parts = []
     if rec["hooks"]:
         parts.append("· 훅: " + " / ".join(_sanitize(h) for h in rec["hooks"]))
     if rec["persons"]:
         parts.append("· 인물: " + ", ".join(_sanitize(p) for p in rec["persons"]))
-    if rec["ctas"]:
-        parts.append("· CTA: " + ", ".join(_sanitize(c) for c in rec["ctas"]))
+    # ★CTA는 "다르게 써라" 대상에서 뺀다(2026-08-03). CTA 형식을 "댓글에 '{키워드}'
+    #   남겨주세요"로 고정했는데(parts_block), 여기서 "최근 쓴 CTA와 다르게"를 요구하면
+    #   서로 충돌해 모델이 형식을 벗어난다. 달라져야 하는 건 **키워드**지 형식이 아니다.
     if not parts:
         return ""
     return ("[최근 영상에서 이미 쓴 것 — ★반드시 다르게 써라(같은 훅·인물·CTA 반복 금지, "

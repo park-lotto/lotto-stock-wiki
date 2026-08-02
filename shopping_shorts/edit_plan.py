@@ -2194,6 +2194,43 @@ def _is_cta(beat):
     return any(k.lower() in role.lower() for k in _CTA_ROLES)
 
 
+def _has_comment_cta(text):
+    """대사에 **댓글 유도**가 들어있나(2026-08-03 사장님: "CTA는 고정으로 댓글에 OO 남겨주세요로").
+
+    프로필 링크·바로가기 안내는 우리에게 없는 경로다 — 은행에서 그 계열을 뺐지만(bank_assemble)
+    프롬프트만으론 새므로 코드로도 확인한다. 표현 흔들림('남겨주세요'/'적어주세요'/'달아주세요')은
+    허용한다 — 고정하려는 건 **유입 경로**지 어미가 아니다."""
+    t = (text or "")
+    if "댓글" not in t:
+        return False
+    return any(v in t for v in ("남겨", "적어", "달아", "써주", "써 주", "남기"))
+
+
+def _cta_fix_narration(cand):
+    """CTA 비트에 **댓글 유도**가 없으면 대사를 갈아끼운다(2026-08-03, 제자리 수정).
+
+    우선순위: 후보가 정한 `cta_line`(유도 있을 때) → `cta_keyword`로 조립 → 기본 문구.
+    비트를 새로 붙이지 않는다 — 화면이 하나 더 필요해지고 길이도 늘어난다.
+    ⚠️호출 위치가 중요하다: **최종 후보 확정 뒤**에만 부른다(길이 재생성 판단 오염 방지).
+    """
+    plan = (cand or {}).get("plan") or {}
+    beats = plan.get("beats") or []
+    ctas = [b for b in beats if _is_cta(b)]
+    if not ctas or any(_has_comment_cta(b.get("narration")) for b in ctas):
+        return cand
+    story = cand.get("story") or {}
+    line = (story.get("cta_line") or "").strip()
+    if not _has_comment_cta(line):
+        kw = (story.get("cta_keyword") or "").strip()
+        line = f"댓글에 '{kw}' 남겨주세요" if kw else "궁금하시면 댓글 남겨주세요"
+    for b in beats:
+        if _is_cta(b):
+            b["narration"] = line
+            b["target_seconds"] = round(max(1.5, len(line) / _SYLLABLES_PER_SEC), 1)
+            break
+    return cand
+
+
 def _ensure_cta_beat(beats, cand):
     """CTA 비트가 없으면 후보의 cta_line으로 만들어 붙인다(2026-07-31).
 
@@ -3186,4 +3223,13 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         keep = sorted(range(len(cands)), key=lambda i: (i != best, -cands[i]["score"]))
         keep = sorted(keep[:max(1, n_candidates)])      # 원래 순서(A/B/C)를 유지해 보여준다
         cands = [cands[i] for i in keep]
+    # ★CTA 유입 경로 교정(2026-08-03 사장님: "CTA는 고정으로 댓글에 OO 남겨주세요로").
+    #   은행에서 '프로필 👉 @아이디' 계열을 뺐고 프롬프트에도 형식을 박았지만 간헐적으로
+    #   샌다(실측 job 23208dec38e6: "비결 궁금하시면 프로필 링크 확인해주세요").
+    #   ★반드시 **여기서**(최종 후보 확정 뒤) 해야 한다 — 생성 단계에서 대사를 갈아끼우면
+    #     후보 길이가 바뀌어 **길이 재생성 판단('전부 짧은가')을 오염시킨다**
+    #     (실측: test_scene_first_lengthen 2건이 그렇게 깨졌다). 여기선 이미 선택이 끝나
+    #     길이가 판단에 안 쓰이므로 안전하다.
+    for _c in cands:
+        _cta_fix_narration(_c)
     return {"candidates": cands, "detected_type": detected}
