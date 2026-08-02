@@ -953,14 +953,64 @@ def _pick_slot_variants(seg_map, target_seconds=None, n=1, call=None):
     return variants, slot_source, info, kinds
 
 
-def _rewrite_block(groups):
+def _avoid_phrases_block(prev_narrations, top=6):
+    """앞 후보들이 이미 쓴 표현을 뽑아 "이건 쓰지 마라"로 넘긴다(2026-08-03).
+
+    왜 필요한가: 후보를 **벌마다 따로** 부르므로 각 호출은 서로 뭘 썼는지 모른다.
+    각자 원본을 보고 가장 자연스러운 표현을 고르면 **당연히 같아진다** — 실측
+    (job bf1455c1ad86 재현): 프롬프트에 "다른 면을 앞세워라"를 적어도 세 후보가
+    전부 "미국 목조주택 보수용 점토"를 그대로 썼다(겹침 39개).
+    부탁만으로 안 되면 **앞이 뭘 썼는지 알려줘야** 한다.
+
+    조사·흔한 말은 빼고 **내용어**만 넘긴다(그래야 '이 단어를 피하라'가 의미를 갖는다)."""
+    if not prev_narrations:
+        return ""
+    _STOP = {"이거", "그냥", "진짜", "정말", "해서", "하고", "있는", "되는", "같은",
+             "해도", "라고", "댓글", "남겨", "주세요", "궁금", "분들", "하시", "이건",
+             "이렇게", "그런데", "근데", "여기", "저는", "우리", "때문", "하는", "합니다"}
+    cnt = {}
+    for txt in prev_narrations:
+        for w in set(re.findall(r"[가-힣]{2,}", txt or "")):
+            if w not in _STOP:
+                cnt[w] = cnt.get(w, 0) + 1
+    # ★어미가 붙은 서술어("잡아주더라고요"·"페인트칠하니")는 피해도 소용이 없다 —
+    #   같은 뜻을 다른 어미로 쓰면 그만이라 표현이 안 바뀐다. 실측(2026-08-03)에서
+    #   정작 중요한 '미국'·'목조주택'은 빈도순에 밀려 안 올라왔다.
+    #   → **명사형(체언)을 우선**한다. 흔한 어미로 끝나는 말은 뒤로 민다.
+    _VERBY = ("요", "다", "죠", "고", "니", "서", "면", "며", "게", "지")
+    def _rank(w):
+        verby = 1 if w.endswith(_VERBY) else 0
+        return (verby, -cnt[w], -len(w))
+    ranked = sorted(cnt, key=_rank)[:top]
+    if not ranked:
+        return ""
+    return ("\n★앞서 만든 다른 후보가 이미 이런 말을 썼다: "
+            + ", ".join(f"'{w}'" for w in ranked)
+            + "\n  **이 표현들은 피하고 같은 내용을 다른 말로 써라** — 후보끼리 같은 문구를 "
+              "반복하면 3개를 만드는 의미가 없다(사실은 바꾸지 말고 표현만).")
+
+
+def _rewrite_block(groups, avoid_narrations=None):
     """고른 구간들을 '이 자리에서 하던 말을 우리 말로 바꿔 써라' 프롬프트 블록으로."""
     if not groups:
         return ""
-    lines = ["[★대사를 새로 지어내지 마라 — 이 자리에서 원본이 하던 말을 우리 말로 바꿔 쓴다]",
+    # ★역할 부여(2026-08-03 사장님). 제약을 더 얹는 대신 **무슨 일을 하는 건지**를
+    #   알려준다 — "원본을 바꿔 써라"만으론 모델이 원본 문장에 붙어 있어서, 세 후보가
+    #   전부 "미국 목조주택 보수용 점토"를 그대로 반복했다(실측 job bf1455c1ad86).
+    #   목표는 '다른 표현'이 아니라 **"원본을 본 시청자도 못 알아채게 각색"**이다.
+    lines = ["너는 국내 최정상 숏폼 벤치마킹 전문가다. 숏폼 여러 개를 믹스해 **새로운 영상**을 "
+             "만든다.",
+             "[★대사를 새로 지어내지 마라 — 이 자리에서 원본이 하던 말을 우리 말로 바꿔 쓴다]",
              "아래는 우리가 쓸 구간을 시간순으로 나열한 것이다. 화면은 이미 정해졌다.",
              "각 줄마다 **그 자리의 원본 대사와 화면**을 보고, 같은 내용을 **다른 표현으로** "
-             "새로 써라. 사건·순서·의미는 원본 그대로, 말맛만 우리 것으로."]
+             "새로 써라. 사건·순서·의미는 원본 그대로, 말맛만 우리 것으로.",
+             "",
+             "★목표는 '다르게 쓰기'가 아니라 **시청자가 원본을 봤어도 알아차리지 못하게 "
+             "각색하기**다. 같은 사실을 **우리 시청자 입장**에서 다시 말해라.",
+             "  예) 원본 \"미국에서 목조주택 보수용으로 쓰는\" "
+             "→ \"국내에서 인테리어 셀프 보수할 때 쓰는\"",
+             "  ⚠️단 **성능·수치·가격·성분은 원본에 있는 것만** 써라(내구 연수·효과를 "
+             "지어내지 마라). 바꾸는 건 **어느 쪽에서 바라보느냐**지 사실 자체가 아니다."]
     for i, g in enumerate(groups, 1):
         secs = round(_secs(g), 1)
         budget = max(6, int(secs * _SYLLABLES_PER_SEC))
@@ -973,6 +1023,17 @@ def _rewrite_block(groups):
     lines.append(f"\n★비트를 **정확히 {len(groups)}개** 만들어라 — i번째 비트가 위 i번 세트다. "
                  "비트의 seg_ids에는 그 세트의 seg_id를 넣어라(순서를 바꾸지 마라).")
     lines.append("★원본 문장을 그대로 베끼지 마라. 같은 사건을 다른 말로 써라.")
+    # ★제품 소개를 통째로 옮기지 마라(2026-08-03 사장님). 실측 job bf1455c1ad86:
+    #   후보 3개가 전부 "미국 목조주택 보수용 점토"를 명사구 그대로 반복했다 —
+    #   화면은 갈렸는데 대사가 베낀 티가 났다. 원본 대사가 같은 세트를 여러 후보가
+    #   쓰는 한 이건 구조적으로 반복된다(핵심 세트는 어차피 겹쳐야 한다).
+    #   → 사실은 유지하되 **어느 면을 앞세울지**를 바꾸게 한다.
+    lines.append(
+        "★제품을 원본이 부르던 이름 그대로 되풀이하지 마라 — 같은 물건도 "
+        "**우리 시청자가 쓸 상황**으로 바꿔 부를 수 있다(위 각색 지침대로).")
+    avoid = _avoid_phrases_block(avoid_narrations)
+    if avoid:
+        lines.append(avoid)
     # 2026-07-31 실측(사장님 "대본이 후킹 중복"): 첫 세트에 훅 문장을 2~3개 몰아 썼다 —
     # A안 "놀라시나요?"+"피곤하시죠?", C안 "깨지 마세요"+"놀라 깨시나요?"+"일어나지 마세요!".
     # 같은 말을 다른 표현으로 반복하는 것도 중복이다.
@@ -2990,16 +3051,23 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             _distinct.append((ids, i, g))
     if len(_distinct) > 1:
         raws, cands = [], []
+        # ★앞 후보가 쓴 대사를 다음 호출에 넘긴다(2026-08-03). 벌마다 따로 부르므로
+        #   서로 뭘 썼는지 모르고, 각자 원본을 보면 같은 표현을 고른다(실측: 세 후보가
+        #   전부 "미국 목조주택 보수용 점토"). 프롬프트로 "다르게 써라"만으론 안 됐다.
+        said_before = []
         for k, (_ids, vi, g) in enumerate(_distinct):
             sub = _scene_first_candidates(
                 inventory, reference_text, target_seconds, n=1, call=_call,
-                bank_context=bank_context, order_block=_rewrite_block(g),
+                bank_context=bank_context,
+                order_block=_rewrite_block(g, avoid_narrations=said_before),
                 benefits_block=benefits_block, engine=engine,
                 engine_seed=_engine_seed(reference_text) + k)
             raws.extend(sub or [])
             got = _ground_score(sub or [], groups=g)
             for c in got:
                 c["plan"]["slot_variant"] = slot_kinds[vi] if vi < len(slot_kinds) else "?"
+                said_before.append(" ".join((b.get("narration") or "")
+                                            for b in (c["plan"].get("beats") or [])))
             cands.extend(got)
         # ★벌마다 따로 부르면 **한 벌만 실패해도 후보가 빈다**(실측: 3벌인데 후보 2개).
         #   한 번에 뽑던 옛 경로엔 없던 위험이라, 부족분을 1벌째 슬롯으로 메운다.
