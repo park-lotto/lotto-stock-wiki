@@ -49,8 +49,12 @@ def test_avoid_block_lists_recent(tmp_path):
     s = Store(str(tmp_path / "t.db"))
     s.record_script_usage("와 이거 대박", "시어머니", "보관법")
     block = BA.avoid_block(s)
-    assert "와 이거 대박" in block and "시어머니" in block and "보관법" in block
+    assert "와 이거 대박" in block and "시어머니" in block
     assert "다르게" in block   # 회피 지시문
+    # ★CTA는 회피 목록에서 뺐다(2026-08-03 사장님: "CTA는 고정으로 댓글에 OO 남겨주세요로").
+    #   형식을 고정해놓고 "최근 쓴 CTA와 다르게"를 요구하면 서로 충돌해 모델이 형식을 벗어난다.
+    #   달라져야 하는 건 **키워드**지 형식이 아니다.
+    assert "보관법" not in block, "CTA가 여전히 회피 목록에 있다(형식 고정과 충돌)"
 
 
 def test_avoid_block_empty_when_no_history(tmp_path):
