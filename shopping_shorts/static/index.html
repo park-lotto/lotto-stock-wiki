@@ -1881,7 +1881,20 @@ function playTiktok(img, videoId){ _playViaMedia(img, videoId, 'tiktok', _embedT
 // 클릭 재생이 사라졌다. 이제 **누른 그 순간** /api/media로 mp4를 해석해 재생한다.
 // 해석 실패(비공개·삭제·차단)면 원본 릴스를 새 탭으로 연다 — 인스타는 iframe embed가
 // 로그인벽에 걸려 우리 화면 안 재생이 안 되기 때문(유튜브·틱톡과 다른 점).
+// ★이 페이지엔 toast()가 없다(확인함) — 자체 토스트를 쓴다.
+function _rankToast(msg){
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:99999;'
+    +'background:rgba(20,20,20,.94);color:#fff;font-size:13px;padding:11px 16px;border-radius:10px;'
+    +'box-shadow:0 8px 28px rgba(0,0,0,.45);max-width:88vw;text-align:center';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 3200);
+}
 function _embedInstagram(el, shortcode){
+  // 조용히 새탭으로 나가면 "미리보기를 눌렀는데 왜 인스타로 튀나"가 된다(2026-08-04 제보).
+  // 나가는 건 유지하되 이유는 알려준다.
+  _rankToast('이 영상은 인앱 재생이 안 돼요 — 원본으로 엽니다');
   try{ window.open('https://www.instagram.com/reel/'+shortcode+'/', '_blank', 'noopener'); }catch(e){}
 }
 function playInstagram(img, shortcode){ _playViaMedia(img, shortcode, 'instagram', _embedInstagram); }

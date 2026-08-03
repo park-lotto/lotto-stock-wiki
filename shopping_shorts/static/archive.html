@@ -81,20 +81,47 @@ function renderCatBar(){
 }
 function setCat(c){CAT=c;renderCatBar();fillChSel();document.getElementById('chSel').value='';load();}
 // 썸네일 클릭 → 인라인 재생(랭킹 playInstagram과 동일 경로: /api/media가 yt-dlp로 mp4 해석).
+// 해석(/api/media→yt-dlp)은 서버에서 2~4초 걸린다. 표시가 없으면 그동안 화면이 죽은 것처럼
+// 보여 사장님이 "미리보기가 안 된다"고 느낀다(2026-08-04 제보) → 랭킹의 _thumbLoading과 같은
+// 대기 표시를 여기에도 단다. 실패해서 인스타로 나갈 땐 **왜 나가는지** 알려주고 나간다.
+function _archLoading(box){
+  if(!box) return null;
+  const d=document.createElement('div');
+  d.textContent='⏳ 영상 불러오는 중…';
+  d.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;'
+    +'background:rgba(0,0,0,.55);color:#fff;font-size:12px;border-radius:8px;z-index:3';
+  if(getComputedStyle(box).position==='static') box.style.position='relative';
+  box.appendChild(d); return d;
+}
+function _archToast(msg){
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:99999;'
+    +'background:rgba(20,20,20,.94);color:#fff;font-size:13px;padding:11px 16px;border-radius:10px;'
+    +'box-shadow:0 8px 28px rgba(0,0,0,.45);max-width:88vw;text-align:center';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 3200);
+}
 async function playArch(el, sc, url){
   const box=el.parentElement;
   const old=el; el.style.opacity=.4;
+  const load=_archLoading(box);
   try{
     const d=await (await fetch('/api/media?platform=instagram&id='+encodeURIComponent(sc))).json();
     if(d.ok&&d.url){
+      if(load) load.remove();
       const v=document.createElement('video');
       v.src=d.url; v.controls=true; v.autoplay=true; v.playsInline=true;
       v.setAttribute('playsinline',''); v.style.cssText='width:100%;height:100%;object-fit:cover';
-      v.onerror=()=>window.open(url,'_blank');
+      v.onerror=()=>{ _archToast('영상 재생이 막혀 원본으로 엽니다'); window.open(url,'_blank'); };
       old.replaceWith(v); return;
     }
   }catch(e){}
-  el.style.opacity=1; window.open(url,'_blank');   // 해석 실패 → 원본 새탭
+  if(load) load.remove();
+  el.style.opacity=1;
+  // 해석 실패(비공개·삭제·차단) → 원본 새탭. 조용히 나가면 "왜 인스타로 튀지?"가 된다.
+  _archToast('이 영상은 인앱 재생이 안 돼요 — 원본으로 엽니다');
+  window.open(url,'_blank');
 }
 function fmt(n){n=n||0;if(n>=1e8)return (n/1e8).toFixed(1)+'억';if(n>=1e4)return (n/1e4).toFixed(1)+'만';return n.toLocaleString()}
 function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
