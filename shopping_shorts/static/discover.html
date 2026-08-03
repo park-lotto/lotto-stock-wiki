@@ -423,6 +423,18 @@ function renderDiscover(items){
   el.innerHTML = _renderDiscoverCards(list);
   revealAdmin();   // 목록추가 버튼(.admin-only)은 렌더 후 관리자에게만 노출(피드 렌더가 /api/me보다 늦어도 안전)
 }
+function _fmtAgo(i){
+  // 'X시간 전' 실시간 계산(2026-08-03) — age_hours는 수집 시점 스냅샷이라 고정돼 보였음.
+  // 서버가 실어주는 posted_at(발행시각, UTC)이 있으면 지금 기준으로 계산.
+  let h = i.age_hours || 0;
+  if(i.posted_at){
+    const t = Date.parse(i.posted_at);
+    if(!isNaN(t)) h = Math.max(0, (Date.now()-t)/3.6e6);
+  }
+  if(h < 1) return Math.max(1, Math.round(h*60)) + '분 전';
+  if(h < 48) return Math.round(h) + '시간 전';
+  return Math.round(h/24) + '일 전';
+}
 function _renderDiscoverCards(list){
   // 배지용 백분위 컨텍스트 — 지금 보이는 항목 기준(정렬·필터 반영). index.html _bctx와 동일.
   const ctx={ vs:list.map(i=>i.views||0).sort((a,b)=>a-b),
