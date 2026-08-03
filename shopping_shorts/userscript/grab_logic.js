@@ -132,6 +132,34 @@
     return best;
   }
   function _fmtT(s) { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2); }
+  // 영상 등록일 — 서버 호출 없이 URL의 ID에서 계산한다(무료·즉시).
+  //   인스타: shortcode(base64url) → media pk, 발행ms = (pk>>23) + 1314220021721
+  //           (2026-07-31 레퍼런스수집급감 트랙에서 실데이터 6/6 일치 검증한 공식)
+  //   틱톡:   /video/{id} → 발행초 = id>>32 (틱톡 ID 상위 32비트가 unix time)
+  function _postDate() {
+    try {
+      var m = location.pathname.match(/\/(?:reel|reels|p|tv)\/([A-Za-z0-9_-]+)/);
+      if (m && location.host.indexOf("instagram") >= 0) {
+        var A = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_", pk = 0n;
+        var code = m[1].slice(0, 11);           // 11자 초과분은 pk 아님(비공개 접미)
+        for (var i = 0; i < code.length; i++) {
+          var d = A.indexOf(code[i]); if (d < 0) return null;
+          pk = pk * 64n + BigInt(d);
+        }
+        return new Date(Number((pk >> 23n) + 1314220021721n));
+      }
+      var t = location.pathname.match(/\/video\/(\d{15,})/);
+      if (t && location.host.indexOf("tiktok") >= 0)
+        return new Date(Number(BigInt(t[1]) >> 32n) * 1000);
+    } catch (e) {}
+    return null;
+  }
+  function _fmtDate(d) {
+    if (!d || !isFinite(d.getTime())) return "";
+    var y = d.getFullYear();
+    if (y < 2010 || y > 2100) return "";        // 공식이 안 맞는 ID면 표시 안 함
+    return y + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+  }
   function syncSeekBar() {
     if (!_snsHost()) return;
     var box = document.getElementById("ss-seek");
@@ -147,7 +175,8 @@
       box.innerHTML = "<button id='ss-seek-p' title='일시정지/재생' style='background:none;border:none;" +
         "color:#fff;font-size:15px;cursor:pointer;padding:0 2px'>⏸</button>" +
         "<input id='ss-seek-r' type='range' min='0' max='100' step='0.1' value='0' style='width:150px;cursor:pointer'>" +
-        "<span id='ss-seek-t' style='min-width:70px;text-align:right'>0:00/0:00</span>";
+        "<span id='ss-seek-t' style='min-width:70px;text-align:right'>0:00/0:00</span>" +
+        "<span id='ss-seek-d' title='영상 등록일' style='color:#aaa;border-left:1px solid #555;padding-left:8px'></span>";
       document.body.appendChild(box);
       var r = document.getElementById("ss-seek-r");
       r.addEventListener("input", function () {
@@ -166,6 +195,12 @@
       if (document.activeElement !== r2) r2.value = v.currentTime;   // 드래그 중엔 안 덮음
       t2.textContent = _fmtT(v.currentTime) + "/" + _fmtT(v.duration);
       if (p2) p2.textContent = v.paused ? "▶" : "⏸";
+    }
+    var d2 = document.getElementById("ss-seek-d");
+    if (d2) {                                    // SPA라 영상이 바뀌면 URL도 바뀜 — 매 tick 갱신
+      var dd = _fmtDate(_postDate());
+      d2.textContent = dd ? "📅 " + dd : "";
+      d2.style.display = dd ? "" : "none";
     }
   }
   // 서버 POST(쿠키 동봉) — 샌드박스면 GM 직접, 메인월드(인스타 Blob 폴백)면 로더의
