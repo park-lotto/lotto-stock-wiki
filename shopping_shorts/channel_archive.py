@@ -10,6 +10,10 @@
 - 신규 채널 자동 편입: 대상 = (엑셀 ∪ 발굴등록 − 차단) − 아카이브 done.
 - 429/로그인벽 감지 시 30분 백오프, 2연속이면 그 회차 중단(상태 남김 → 재실행 시 이어짐).
 
+**비전태깅은 이 모듈이 하지 않는다(2026-08-04 분리).** 여기는 릴스를 모으기만 한다.
+태깅은 `archive_tagger`가 DB를 읽어 채널당 N개씩 라운드로빈으로 돌린다 — 이유는
+run() 안의 주석 참고(요약: 붙여두면 채널당 34분 → 691채널 16일).
+
 실행: python -m shopping_shorts.channel_archive [--limit N] [--max-scrolls M]
 서버에서 nohup로 돌려두면 전 채널 완주 후 종료. 재실행하면 미완 채널만 이어서.
 """
@@ -137,16 +141,18 @@ def run(limit=None, max_scrolls=_MAX_SCROLLS, sleep=time.sleep, log=print):
             walls = 0
             ok += 1
             log(f"[아카이브] {idx}/{len(targets)} @{u}: {len(items)}개 저장")
-            # 비전태깅(2026-08-03 사장님 승인) — 썸네일이 인스타 CDN 만료토큰이라
-            # **크롤 직후**가 태깅 골든타임. shortcode 캐시라 재크롤 땐 재호출 없음.
-            # 실패는 무해(그 릴스만 태그 없이 남음). 건당 ~2.2s — 크롤과 같은 저속 결이다.
-            try:
-                from shopping_shorts import vision_tagging
-                n = vision_tagging.tag_new_items(items, DB_PATH, cap=500)
-                if n:
-                    log(f"[아카이브] @{u} 비전태깅 {n}건")
-            except Exception as e:      # noqa: BLE001 — 태깅 실패가 크롤을 멈추면 안 된다
-                log(f"[아카이브] @{u} 태깅 실패(무시): {str(e)[:80]}")
+            # 비전태깅은 여기서 하지 않는다(2026-08-04 분리) — archive_tagger가 맡는다.
+            #
+            # 원래는 크롤 직후 채널당 500건을 태깅했다. 근거는 "썸네일이 CDN 만료토큰이라
+            # 크롤 직후가 골든타임"이었는데, 실측해보니 만료는 **약 4일**이었다
+            # (oe 파라미터 = hex 유닉스타임. 4.2h 지난 썸네일 40/40 다운로드 성공,
+            #  oe를 과거로 조작하면 403 → 서명은 실제로 강제되지만 유효기간이 길다).
+            # 4일이면 전 채널 크롤(약 3일)이 끝나고도 남는다.
+            #
+            # 붙여두면 채널당 34분(태깅 500건 × ~2.2s)이라 691채널에 16일이 걸렸고,
+            # 그 사이 뒤쪽 채널은 아카이브에 아예 없었다. 게다가 큰 채널은 2,300개 중
+            # 500개만 태깅되고 done으로 닫혀 나머지는 영영 안 붙었다.
+            # 떼면 채널당 ~5.7분 → 3일이면 전 채널이 목록에 올라온다.
         elif "/accounts/login" in (final_url or ""):
             walls += 1
             store.archive_mark(u, "login_wall", note=final_url[:120])
