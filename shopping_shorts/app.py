@@ -406,6 +406,13 @@ def _run_census_job(job_id):
     try:
         generate_missing_drafts(next_draft_targets(items, store))
         _tag_new_items(items)
+        # 비전태그로 카테고리 재분류 → 캐시 재저장(수집 경로와 같은 동작).
+        # 이게 빠져 있어서 전수조사가 마지막 갱신이면 캡션 없는 릴스가 전부
+        # 채널 최빈 카테고리로 남았다(2026-08-03 실사고: 뎁덕 요리영상이 뷰티로).
+        _changed = vision_tagging.recategorize_by_vision(items, DB_PATH)
+        _changed += vision_tagging.apply_channel_category(items, DB_PATH)
+        if _changed:
+            store.save_last_run(items, collected_at)
     except Exception:
         pass
 
