@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "date": "2026-07-30",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-31_0806_HD현대 조선 그룹 2Q26 Review.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "유재선",
+    "report_date": "2026년 7월 30일",
+    "stocks": [
+      {
+        "name": "HD한국조선해양",
+        "code": "009540",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "570,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 매출액은 8.9조원으로 전분기대비 9.7% 증가했고 영업이익은 1.6조원으로 전분기대비 21.3% 증가했다.",
+        "estimate_revision": null,
+        "next_catalyst": "중간배당은 전년대비 3,300원 상승한 6,500원으로 결정되었다.",
+        "thesis": [
+          "조선 부문 고선가 선박 매출 비중 상승으로 마진 18.8% 기록",
+          "엔진기계 D/F 비중 유지 및 육상발전 등 힘센엔진 매출 증가로 이익률 35.3% 달성",
+          "HD현대삼호 생산성 향상 및 건조 Mix 개선으로 22.5% 마진 기록"
+        ],
+        "valuation_basis": "2026년 추정치 기준 PER 6.2배, PBR 1.5배다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "HD한국조선해양: 영업이익 1.6조원(QoQ +21.3%) 컨센서스 상회"
+      },
+      {
+        "name": "HD현대중공업",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 매출액 6.3조원(QoQ +7.0%), 영업이익 1.0조원(QoQ +14.9%) 기록",
+        "estimate_revision": null,
+        "next_catalyst": "향후 엔진 Capa 증설, 미국 방산 협력 및 해외 특수선 수주 구체화",
+        "thesis": [
+          "조선 상선 건조 Mix에서 2024년 이후 물량이 늘어남에 따라 이익 개선",
+          "환율 약세와 조업일수 증가, 생산성 향상으로 외형 성장",
+          "2026년 2분기 수주 147.7억달러로 연간 목표치 72% 달성"
+        ],
+        "valuation_basis": "2026년 PER 13.8배, PBR 3.9배다.",
+        "risk": "해양플랜트는 공정 진행 차이로 이익이 감소했다.",
+        "supply_comment": "수주잔고는 인도기준 609억달러, 매출기준 452억달러로 전분기대비 증가했다.",
+        "quote": "HD현대중공업: 영업이익 1.0조원(QoQ +14.9%) 컨센서스 부합"
+      },
+      {
+        "name": "HD현대마린엔진",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 매출액 1,281억원(QoQ -4.0%), 영업이익 313억원(QoQ -3.9%)",
+        "estimate_revision": null,
+        "next_catalyst": "하반기에 엔진 Mix 개선으로 수익성은 상승 추세로 복귀할 전망",
+        "thesis": [
+          "이연된 엔진 2기분의 실적이 3분기에 인식될 예정",
+          "부품 부문 터보차저 및 AM 사업 성장으로 전분기대비 성장",
+          "부품 부문 마진 27.4%로 2.2%p 개선"
+        ],
+        "valuation_basis": "2026년 PER 12.0배, PBR 2.7배다.",
+        "risk": "이연된 엔진 2기분의 실적 반영으로 단순 시차에 따른 부진",
+        "supply_comment": null,
+        "quote": "HD현대마린엔진: 영업이익 313억원(QoQ -3.9%) 컨센서스 하회"
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-30",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-30_1101_압도적인 모멘텀. 전사적인 수익성도 확대 중.md"
+  },
+  "questionnaire": {
+    "broker": "DS투자증권",
+    "analyst": "김대성",
+    "report_date": "2026.07.30",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "HD현대중공업",
+        "code": "329180",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": "900,000원",
+        "tp_prev": "900,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "26년 2분기 매출액 6.3조원(이하 YoY +65.7%), 영업이익 1조원(+139.8%, OPM 16.4%)을 기록하며 영업이익 컨센서스에 부합했다.",
+        "estimate_revision": "영업이익 4,109억원(26F), 4,618억원(27F) 등 추정치 변경",
+        "next_catalyst": "SMR 원자로 용기 생산 시작, 데이터센터향 엔진 수주 확대, 특수선 수주 가시화",
+        "thesis": [
+          "선박과 엔진 부문의 수익성 확대와 견고한 실적 주도",
+          "고선가 빈티지 물량 확대와 엔진 CAPA 증설을 통한 마진 우상향",
+          "SMR, FDC, 특수선 등 풍부한 신사업 모멘텀 보유"
+        ],
+        "valuation_basis": "목표주가 900,000원 유지",
+        "risk": "조선 부문 선종별 믹스 차이로 인한 마진율 변동",
+        "supply_comment": "HIMSEN 엔진 CAPA 증설 및 핵심 기자재 내재화 진행 예정",
+        "quote": "동사는 국내 조선사 중 가장 풍부한 모멘텀을 보유 중이다. SMR의 경우 테라파워와 계약한 원자로 용기의 생산이 연말부터 시작될 예정이며 추진선 및 발전설비 등 SMR 관련 애플리케이션 활동도 꾸준히 진행 중이다."
+      }
+    ]
+  }
+}

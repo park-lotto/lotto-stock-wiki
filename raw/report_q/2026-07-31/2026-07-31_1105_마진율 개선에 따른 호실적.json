@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-31_1105_마진율 개선에 따른 호실적.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "미래에셋증권",
+    "analyst": "김기룡",
+    "report_date": "2026.7.31",
+    "stocks": [
+      {
+        "name": "DL이앤씨",
+        "code": "375500",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "100,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 2분기, DL이앤씨 연결 실적은 매출액 1.80조원(-9.5%, YoY), 영업이익 1,594억원(+26.3%, YoY)으로 시장 예상치(영업이익 1,261억원, 1개월 기준)를 66% 상회했다.",
+        "estimate_revision": null,
+        "next_catalyst": "SMR 분야에서는 지난 3월 미국 엑스에너지와 표준화 설계 계약(약 150억원) 이후 후속 사업 추진은 순조롭게 진행되고 있는 것으로 파악되고 있다.",
+        "thesis": [
+          "플랜트 수주 회복 및 SMR 사업 참여 확대 기대",
+          "주택 원가율 개선 흐름 지속",
+          "자사주 소각 및 자사주 신탁계약 체결을 통한 주주환원 강화"
+        ],
+        "valuation_basis": "Target PBR 0.75x 적용",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "DL이앤씨에 대한 투자의견 매수, 목표주가 100,000원(Target PBR 0.75x)을 유지한다.",
+        "sector": "기타"
+      }
+    ]
+  }
+}

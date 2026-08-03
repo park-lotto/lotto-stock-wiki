@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-28",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-29_0802_광모듈 CCL, 새로운 성장 축으로 부상.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS투자증권",
+    "analyst": "김수현",
+    "report_date": "2026.07.28",
+    "stocks": [
+      {
+        "name": "두산",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 전자 BG 매출액은 6,760억원 (+42% YoY), 영업이익 2,013억원 (+48% YoY)으로 당사 예상치를 또한 번 상회했다.",
+        "estimate_revision": null,
+        "next_catalyst": "4분기 중국 창수 신규 설비 양산",
+        "thesis": [
+          "광모듈용 CCL 매출이 1분기 344억원(전년 동기 대비 10배), 2분기 493억원(+43% QoQ)으로 새로운 성장축으로 부상",
+          "베라루빈 양산 돌입 및 기존 엔비디아 의존도에서 벗어나 네트워크 보드용 CCL의 수요처 다변화",
+          "4분기 중국 창수 신규 설비 양산이 시작되면서 하반기 전자 BG 매출은 최소 1.5조원 (+16.5% HoH) 이상 기록할 전망"
+        ],
+        "valuation_basis": "현재 하이엔드로 분류할 수 있을 정도의 마진율 20% 이상의 고수익성 제품으로 추정",
+        "risk": "Capa가 성장의 제약으로 작용",
+        "supply_comment": "지금부터 상당 기간은 수요가 아닌 Capa가 성장의 제약으로 작용하는 국면이 지속될 것으로 보인다.",
+        "quote": "4분기 중국 창수 신규 설비 양산이 시작되면서 일단 하반기 전자 BG 매출은 최소 1.5조원 (+16.5% HoH) 이상 기록할 전망이다."
+      }
+    ]
+  }
+}

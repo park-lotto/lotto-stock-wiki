@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-06-01",
+    "broker": "메리츠증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_Mega IPO 주식물량 공급충격 점검.md"
+  },
+  "questionnaire": {
+    "broker": "메리츠증권",
+    "analyst": "박보경",
+    "report_date": "2026. 5. 28",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "Mega IPO",
+      "미국의 주식 순발행",
+      "Share Count Boost",
+      "시가총액",
+      "IPO 공모금액",
+      "S&P500 수익률",
+      "매출성장률",
+      "마진개선율",
+      "주식수변동효과",
+      "멀티플 확장",
+      "Buyback",
+      "패시브 자금 수요",
+      "빅테크 CapEx"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "SpaceX",
+      "OpenAI",
+      "Anthropic"
+    ],
+    "risk": "대형 IPO 이후 패시브 자금 수요가 집중되면서 단기 변동성이 커질 가능성은 존재한다.",
+    "quote": "따라서 대형 IPO 흐름이 구조적 약세 요인으로 작용할 가능성은 제한적일 것이다."
+  }
+}

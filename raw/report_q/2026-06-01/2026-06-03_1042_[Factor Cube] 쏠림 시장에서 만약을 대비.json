@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "date": "2026-06-01",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_[Factor Cube] 쏠림 시장에서 만약을 대비.md"
+  },
+  "questionnaire": {
+    "broker": "SK증권",
+    "analyst": "황지우",
+    "report_date": "2026.06.01",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "PCE 물가",
+      "Fed 목표",
+      "GDP",
+      "금리",
+      "주주환원"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "주도",
+        "reason": "AI CAPEX 모멘텀이 지수 상승을 견인"
+      },
+      {
+        "sector": "전력",
+        "stance": "주도",
+        "reason": "AI 전력 인프라 확대"
+      },
+      {
+        "sector": "조선",
+        "stance": "주도",
+        "reason": "AI 전력 인프라와 조선, 주식시장 호황 등 요소 반영"
+      }
+    ],
+    "style": "1개월 단위의 모멘텀 투자",
+    "event_calendar": null,
+    "top_picks": [
+      "SK하이닉스",
+      "LS",
+      "HD현대",
+      "현대모비스",
+      "삼성생명",
+      "삼성증권",
+      "GM",
+      "Citigroup",
+      "Diamondback Energy",
+      "EchoStar",
+      "Bunge",
+      "Viatris"
+    ],
+    "risk": "상승 폭이 소수 대형주에 집중되어 있어 단순 주도주 추격보다는 되돌림을 대비한 업종 분산 필요",
+    "quote": "국내는 반도체 중심 AI CAPEX 모멘텀이 지수 상승을 견인하고 있으며, 5 월 초순 수출도 반도체 중심으로 전년 대비 큰 폭 증가. 다만 상승 폭이 소수 대형주에 집중되어 있어 단순 주도주 추격보다는 되돌림을 대비한 업종 분산도 필요하다는 관점에서 포트폴리오를 구성하였음"
+  }
+}

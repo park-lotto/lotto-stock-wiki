@@ -1,0 +1,41 @@
+{
+ "brief": "장면스파인 페이즈1: 대본-화면 싱크",
+ "created": "2026-07-20T05:24:59.890621+00:00",
+ "goals": [
+  {
+   "id": "G001",
+   "title": "④fit정직화",
+   "objective": "respine fit=4 덮어쓰기 제거, respined 플래그로 대체해 스왑버튼 부활",
+   "status": "complete",
+   "evidence": "라이브(main 418c9a5dd), 개별+whole-branch 리뷰통과, 서버 실관측 5->18조각"
+  },
+  {
+   "id": "G002",
+   "title": "⓪분석세분화",
+   "objective": "video_analysis 세그먼트 분할을 4~8초 행위단위로",
+   "status": "complete",
+   "evidence": "라이브(main 418c9a5dd), 개별+whole-branch 리뷰통과, 서버 실관측 5->18조각"
+  },
+  {
+   "id": "G003",
+   "title": "②dedup서브슬라이스",
+   "objective": "비트간 같은 시간구간 재사용 금지+서브슬라이스+얼굴 후순위 코드필터",
+   "status": "complete",
+   "evidence": "라이브(main 418c9a5dd), 개별+whole-branch 리뷰통과, 서버 실관측 5->18조각"
+  },
+  {
+   "id": "G004",
+   "title": "①visual_verb앵커",
+   "objective": "대사가 시각행위 지목하는 비트는 respine 제외, 스키마 필드로 판별",
+   "status": "complete",
+   "evidence": "라이브(main 418c9a5dd), 개별+whole-branch 리뷰통과, 서버 실관측 5->18조각"
+  },
+  {
+   "id": "G005",
+   "title": "③리컨사일",
+   "objective": "fit≤3 비트만 Gemini 1콜로 화면에 맞게 문장 미세수정, 루프 금지",
+   "status": "complete",
+   "evidence": "라이브 main 418c9a5dd, 리뷰통과, 서버 실관측 5→18조각"
+  }
+ ]
+}

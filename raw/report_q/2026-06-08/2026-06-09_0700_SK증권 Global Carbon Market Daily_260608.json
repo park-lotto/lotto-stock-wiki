@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "SK securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_0700_SK증권 Global Carbon Market Daily_260608.md"
+  },
+  "questionnaire": {
+    "broker": "SK securities",
+    "analyst": "최관순",
+    "report_date": "2026-06-08",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "EUA 76.9 유로/톤",
+      "UKA 55.5 파운드/톤",
+      "RGGI 47.4 달러/톤",
+      "CCA 32.3 달러/톤",
+      "KAU 26,550 원/톤",
+      "KOC 12,050 원/톤",
+      "i-KOC 14,900 원/톤",
+      "CEA 82.9 위안/톤",
+      "미국 WTI 90.5 USD/bbl.",
+      "유럽 Brent 93.1 USD/bbl.",
+      "중동 Dubai 85.5 USD/bbl.",
+      "미국 NYM HH 3.2 USD/MMBtu",
+      "유럽 ICE Dutch TTF 48.5 EUR/MWh",
+      "일본/한국 NYM JKM 18.8 USD/MMBtu",
+      "유럽 ICE ARA 134.0 USD/MT",
+      "중국 ZCE 961.8 CNY/MT",
+      "호주 뉴캐슬 148.8 USD/MT"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-06-08",
+        "event": "국제유가, 중동 긴장완화 기대감에 하락"
+      },
+      {
+        "date": "2026-06-08",
+        "event": "아시아 중심 탄소크레딧 구매자연합 출범"
+      },
+      {
+        "date": "2026-06-08",
+        "event": "美 민주당 주정부 기후정책 속도조절"
+      }
+    ],
+    "top_picks": null,
+    "risk": null,
+    "quote": "국제유가, 중동 긴장완화 기대감에 하락…WTI 2.7%↓"
+  }
+}

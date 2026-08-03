@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-07-28",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-29_0807_가속의 시간에서 증명의 시간으로.md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "손인준",
+    "report_date": "2026.07.28",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "rating": "STRONG BUY",
+        "rating_changed": "유지",
+        "tp_new": "560,000원",
+        "tp_prev": "560,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 영업이익 389,750억원, 2027년 영업이익 638,293억원",
+        "estimate_revision": "영업이익(26E) 391,007 ▼, 영업이익(27E) 643,256 ▼",
+        "next_catalyst": "반기 가격 협상, 2027년 HBM 가격, 대규모 주주환원, LTA 디테일 확인",
+        "thesis": [
+          "대규모 주주환원 본격화",
+          "턴키 비즈니스 부각",
+          "메모리 공급 부족 심화"
+        ],
+        "valuation_basis": "메모리 가격 상승, HBM Blended ASP 상승, LTA를 통한 장기 실적 가시성 확보",
+        "risk": "실적의 장기 지속성 및 컨센서스 추가 상향 여력에 대한 의구심",
+        "supply_comment": "Broadcom과의 5년간 $200B 규모 LTA 및 HBM 공급 확대",
+        "quote": "가격이 실적을 높이고, LTA가 지속성을 증명하며, 주주환원이 주당 가치 상승으로 연결될 전망이다."
+      },
+      {
+        "name": "SK하이닉스",
+        "code": "000660",
+        "rating": "STRONG BUY",
+        "rating_changed": "유지",
+        "tp_new": "3,700,000원",
+        "tp_prev": "3,700,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 영업이익 264,084억원, 2027년 영업이익 447,990억원",
+        "estimate_revision": "영업이익(26E) 275,445 ▼, 영업이익(27E) 459,511 ▼",
+        "next_catalyst": "HBM4 및 HBM4E 출하, LTA에 따른 세부 내용 발표, 4Q26 추가 주주환원 정책",
+        "thesis": [
+          "LTA 및 주주환원 맞물림",
+          "구조적인 밸류에이션 리레이팅",
+          "HBM 공급 협력 및 차세대 기술 우위"
+        ],
+        "valuation_basis": "구속력 있는 LTA 확대 및 장기 실적 가시성 제고",
+        "risk": "2Q26 Blended ASP 상승률의 일시적 정체 및 시장 기대치 하향",
+        "supply_comment": "SK-NVIDIA $500B 규모 등 빅테크와 AI 인프라 협력 확대",
+        "quote": "LTA와 주주환원이 맞물리며 나타날 우려 완화"
+      }
+    ]
+  }
+}

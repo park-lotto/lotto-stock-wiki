@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "date": "2026-07-27",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-28_0807_후티의 아람코 정제설비 공격.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "윤재성",
+    "report_date": "2026.07.27",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "WTI 89.3$(+8%)",
+      "Dubai 90.4$ (+11%)",
+      "정제마진 46.1$(WoW +3.0$)",
+      "유럽 디젤 선물 WoW +5%",
+      "PO +14%",
+      "톨루엔 +9%",
+      "프로필렌/PA +7%",
+      "아세톤 +6%"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": "Overweight",
+        "reason": "정유업체에 대한 긍정적 시각 유지"
+      },
+      {
+        "sector": "신재생",
+        "stance": "Overweight",
+        "reason": "폴리실리콘 하락 및 Section 232 기대감"
+      },
+      {
+        "sector": "기타",
+        "stance": "Overweight",
+        "reason": "석유화학 시황 강세"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.07.20",
+        "event": "친이란 예멘 후티 반군, 사우디에 대한 해상 봉쇄 선언"
+      },
+      {
+        "date": "2026.07.22",
+        "event": "후티 반군, 사우디 원유 선적 유조선 2척 공격"
+      },
+      {
+        "date": "2026.07.24",
+        "event": "사우디, 후티 점령지 호데이라 공습"
+      }
+    ],
+    "top_picks": [
+      "S-Oil",
+      "SK이노베이션",
+      "국도화학",
+      "OCI홀딩스",
+      "한화솔루션",
+      "금호석유화학",
+      "효성티앤씨"
+    ],
+    "risk": "WTI 기준 100$/bbl 이상으로 유가가 상승하는 경우 글로벌 매크로 및 수요에 부정적 영향을 미칠 수 있음",
+    "quote": "지금은 유가 안정화가 정유업체에게는 더욱 유리한 환경이라는 점을 재차 강조. 정유업체 Top Picks는 S-Oil, SK이노베이션"
+  }
+}

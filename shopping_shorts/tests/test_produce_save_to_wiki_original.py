@@ -70,7 +70,7 @@ def test_save_to_wiki_extracts_original_when_not_cached(monkeypatch, tmp_path):
 
     def _fake_extract(video_path, code, caption=""):
         return {"full_text": "추출된 원본 대본", "segments": [{"text": "추출된 원본 대본", "start": 0, "end": 1}]}
-    monkeypatch.setattr(app_module, "extract_script", _fake_extract)
+    monkeypatch.setattr(app_module, "extract_auto", _fake_extract)
 
     relearned = []
     monkeypatch.setattr(app_module, "_relearn_category",

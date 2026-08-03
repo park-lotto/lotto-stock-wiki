@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "date": "2026-07-27",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-27_1106_Next Energy(Power & Battery Weekly) - AI데...md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "황성현",
+    "report_date": "2026.07.27.",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "PJM 3GW 부하 이탈",
+      "데이터센터 전력수요",
+      "전력 인프라 투자"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "전력",
+        "stance": "확대 전망",
+        "reason": "AI 데이터센터의 급격한 증가와 대규모 연산 부하 및 유연성 자원 제어 필요성 증대에 따른 전력 인프라 투자 범위 확대"
+      },
+      {
+        "sector": "2차전지",
+        "stance": "확대 전망",
+        "reason": "ESS, 전력기기, 계통 제어 솔루션 등 발전·송전설비를 넘어선 전력 인프라 투자의 핵심 자원으로 활용"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.07.22.",
+        "event": "미국 최대 전력계통 PJM에서 3GW 전력수요 이탈"
+      }
+    ],
+    "top_picks": [
+      "Tesla",
+      "SK이노베이션",
+      "CATL",
+      "Fluence",
+      "Centrus",
+      "Nuscale",
+      "두산에너빌리티",
+      "Cameco",
+      "LG에너지솔루션",
+      "삼성SDI",
+      "LG화학",
+      "포스코퓨처엠",
+      "BYD"
+    ],
+    "risk": "데이터센터의 급격한 계통 이탈 시 주파수 변동과 광범위한 전압 교란 발생",
+    "quote": "앞으로 전력 인프라 투자는 발전·송전설비 중심에서 ESS와 전력기기, 계통 제어 솔루션까지 넓어질 것으로 전망된다."
+  }
+}

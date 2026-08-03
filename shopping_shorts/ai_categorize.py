@@ -26,10 +26,10 @@ _PROMPT = """너는 한국 인스타 릴스(살림·요리·인테리어·쇼핑
 채널명엔 장르가 도배돼 있으니 캡션이 절대 우선이다.
 
 카테고리(정확히 이 중 하나):
-- 홈템: 집꾸미기·셀프인테리어·수납·공간연출 등 방법/노하우 + 살 수 있는 생활/주방 물건 소개·추천
-        (옛 '인테리어'와 '생활용품'을 합친 것 — 인테리어 소품이 곧 생활용품이라 경계가 없다)
+- 홈템: 집꾸미기·셀프인테리어·수납·공간연출 등 방법/노하우 + 살 수 있는 생활/주방 물건·가전 소개·추천
+        (옛 '인테리어'+'생활용품'을 합쳤고, 2026-07-31에 '가전'까지 흡수 —
+         에어프라이어·믹서기는 주방살림이자 가전이라 경계가 실무에 없다)
 - 레시피: 집에서 만드는 요리·음료·베이킹·밥, 음식 비법·꿀팁 (예: "잡곡밥 지을 때 이거 넣으세요")
-- 가전: 특정 가전제품 소개·추천
 - 뷰티: 화장품·메이크업·스킨케어
 - 기타: 캡션이 무의미하거나 위 주제 밖 (식당 방문 추천 '맛집'도 여기 — 집에서 만드는 게 아님)
 
@@ -101,15 +101,27 @@ def _classify_batch(batch, max_key_tries=3):
 
 def reclassify(items, batch_size=_BATCH):
     """items의 'category'를 AI(캡션)로 덮어쓴다(in-place). 변경 건수 반환.
-    키 미설정이면 0(키워드 결과 유지). 배치 단위 실패는 해당 배치만 폴백."""
+    키 미설정이면 0(키워드 결과 유지). 배치 단위 실패는 해당 배치만 폴백.
+
+    ★캡션 없는 항목은 아예 AI에 보내지 않는다(2026-07-30). 429 회피로 수집이 캡션을
+    안 담게 되자, 근거가 채널명뿐인 항목까지 AI에 물어보고 그 '기타' 판정이 상류의
+    폴백(발굴 태그·과거 이력 카테고리)을 덮어써서 랭킹이 다시 기타로 뒤덮였다
+    (실측: 289건 중 277건 → 폴백 적용 후에도 248건). 판단 근거가 없으면 묻지 않는 게 맞고,
+    Gemini 호출도 그만큼 준다.
+    ★AI가 '기타'를 줘도 기존 값이 '기타'가 아니면 덮지 않는다 — 폴백으로 얻은 정보를
+    '모르겠다'가 지우는 일을 막는다."""
     if not comment_gen.SHORTS_GEMINI_KEYS or not items:
         return 0
-    enum = list(enumerate(items))
+    enum = [(i, it) for i, it in enumerate(items) if (it.get("caption") or "").strip()]
     changed = 0
     for start in range(0, len(enum), batch_size):
         out = _classify_batch(enum[start:start + batch_size])
         for idx, cat in out.items():
-            if cat in _CATS and 0 <= idx < len(items) and items[idx].get("category") != cat:
-                items[idx]["category"] = cat
-                changed += 1
+            if cat not in _CATS or not (0 <= idx < len(items)):
+                continue
+            cur = items[idx].get("category")
+            if cat == cur or (cat == "기타" and cur and cur != "기타"):
+                continue
+            items[idx]["category"] = cat
+            changed += 1
     return changed

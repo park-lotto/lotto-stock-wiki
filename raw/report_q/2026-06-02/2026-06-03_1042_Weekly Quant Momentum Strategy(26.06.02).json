@@ -1,0 +1,75 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_Weekly Quant Momentum Strategy(26.06.02).md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "안지선",
+    "report_date": "2026.06.02",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "코스피 지수 주간 변동률 +8.01%",
+      "코스닥 -7.3% 하락",
+      "코스피 12MF P/E 8.4배, TTM P/B 1.95배"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "상향",
+        "reason": "5월 1 사분면에 위치/ 지수 +55.7% 12MF EPS +11.3%상향조정"
+      },
+      {
+        "sector": "IT",
+        "stance": "상향",
+        "reason": "IT 하드웨어 업종 5 월 1 사분면에 위치 / 지수 +76.1%상승, 12MF EPS +5.6% 상향 조정"
+      },
+      {
+        "sector": "기타",
+        "stance": "상향",
+        "reason": "상사자본재 업종 5 월 1 사분면에 위치/ 지수 +13.3%상승, 12MF EPS +12.8%상향 조정"
+      },
+      {
+        "sector": "IT",
+        "stance": "상향",
+        "reason": "소프트웨어 업종 5 월, 1 사분면에 위치 / 지수 +7.8%상승, 12MF EPS+3.0%상향조정"
+      },
+      {
+        "sector": "화장품미용",
+        "stance": "하향",
+        "reason": "화장품 업종 5 월 4 사분면에 위치/ 지수 -10.4% 하락, 12MF EPS+29.7% 상향조정"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6/1~4",
+        "event": "엔비디아 GTC 타이베이"
+      },
+      {
+        "date": "6/3",
+        "event": "연준 베이지북 공개"
+      },
+      {
+        "date": "6/4",
+        "event": "스페이스X 기관투자자 대상 로드쇼"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "브이엠",
+      "티에스이",
+      "NC",
+      "NHN",
+      "삼성에스디에스",
+      "LX인터내셔널",
+      "솔루엠",
+      "달바글로벌"
+    ],
+    "risk": null,
+    "quote": "코스피 지수 4-5 월간 급등세 지속. 5 월간 개인은 46 조원 순매수, 기관은 2.4 조원 순매도, 외국인 44 조원 순매도 했다."
+  }
+}

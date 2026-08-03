@@ -9,20 +9,22 @@
     "analyst": "심수빈",
     "report_date": "2026년 06월 05일",
     "target_kind": "market",
-    "market_direction": "null",
-    "macro_vars": [
-      "미 연준의 통화정책 기조",
-      "유동성 변화",
-      "4월 미국의 물가지표",
-      "미국 비트코인 현물 ETF 자금 유출"
-    ],
-    "recommended_sectors": null,
-    "style": "null",
-    "event_calendar": null,
-    "top_picks": [
-      "스트래티지(MSTR)"
-    ],
-    "risk": "비트코인 현물 ETF의 자금 유출, 스트래티지의 비트코인 매도가 지속될 경우 투자 심리가 재차 위축될 수 있음",
-    "quote": "최근 비트코인 가격 하락. 5월 말 73,000달러 선에서 등락을 보이던 비트코인은 6월5일 약 63,000 달러 선까지 급락하며 투자심리 위축."
+    "market": {
+      "market_direction": "null",
+      "macro_vars": [
+        "미 연준의 통화정책 기조",
+        "4월 미국의 물가지표",
+        "AI 관련 주식",
+        "미국 비트코인 현물 ETF 자금 유출"
+      ],
+      "recommended_sectors": null,
+      "style": "null",
+      "event_calendar": null,
+      "top_picks": [
+        "스트래티지(MSTR)"
+      ],
+      "risk": "비트코인 현물 ETF의 자금 유출, 스트래티지의 비트코인 매도가 지속될 경우 투자 심리가 재차 위축될 수 있음",
+      "quote": "이번 하락으로 비트코인 레버리지 포지션은 정리된 만큼, 단기 추가 급락 가능성은 제한적일 것으로 예상. 그러나 비트코인 현물 ETF의 자금 유출, 스트래티지의 비트코인 매도가 지속될 경우 투자 심리가 재차 위축될 수 있어 기관 수급 흐름이 중요할 것으로 예상"
+    }
   }
 }

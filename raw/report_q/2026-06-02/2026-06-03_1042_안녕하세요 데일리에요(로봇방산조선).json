@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "Eugene Investment & Securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "Eugene Investment & Securities",
+    "analyst": "양승윤",
+    "report_date": "06/01",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "한-미 핵추진 잠수함 실무협의",
+      "이란-미국 관계",
+      "호르무즈 해협 상황",
+      "이스라엘-레바논 전황"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "유니트리 상장 심사 통과 및 휴머노이드 연구 플랫폼 공개 등 이슈"
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "한화에어로 대전공장 화재, 폴란드 포탄 생산 협력 등"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "HD현대중공업 및 대한조선 수주 소식"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "06/02",
+        "event": "한·미 핵추진 잠수함 실무협의 시작"
+      }
+    ],
+    "top_picks": [
+      "유니트리",
+      "HD현대중공업",
+      "대한조선"
+    ],
+    "risk": "이란의 호르무즈 해협 봉쇄 선언 및 이스라엘-레바논 공습 확대에 따른 중동 리스크 고조",
+    "quote": "중국 대표 휴머노이드 기업인 유니트리가 상하이 거래소의 상장심의위원회 심사를 통과. IPO 요건을 충족. 9월 이내로 상장을 예상."
+  }
+}

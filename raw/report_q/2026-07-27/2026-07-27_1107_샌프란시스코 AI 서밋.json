@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "date": "2026-07-27",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-27_1107_샌프란시스코 AI 서밋.md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "류태환",
+    "report_date": "2026.07.27.",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "매매가격지수",
+      "전세가격지수",
+      "국고채 금리",
+      "환율",
+      "국제유가",
+      "천연가스 가격",
+      "유연탄 가격",
+      "철스크랩 가격"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "건설",
+        "stance": "수주 확대 기대",
+        "reason": "AI 데이터센터 프로젝트 본격화 및 자체 데이터센터 증설·신규 구축에 따른 수주 기회 확대"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "SK(SKT)",
+      "네이버",
+      "현대건설",
+      "삼성E&A",
+      "대우건설",
+      "GS 건설",
+      "DL이앤씨",
+      "IPARK현대산업개발"
+    ],
+    "risk": "상반기 해외건설 수주액은 112.8 억달러로 전년 동기 대비 63.6% 감소. 하반기에는 중동 정세가 주요 하방 위험으로 꼽혀",
+    "quote": "이번 발표로 3 대 메가프로젝트에 포함된 SK(SKT)와 네이버의 AI 데이터센터 구축 가시성은 한층 높아졌다."
+  }
+}

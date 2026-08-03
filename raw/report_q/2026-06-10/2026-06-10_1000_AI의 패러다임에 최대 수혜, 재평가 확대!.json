@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_AI의 패러다임에 최대 수혜, 재평가 확대!.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "박강호",
+    "report_date": "2026.06.10",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "삼성전기",
+        "code": "009150",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "2,400,000",
+        "tp_prev": "920,000",
+        "tp_direction": "up",
+        "earnings_outlook": "2027년 EPS 5.8% 상향, 2026년말에 가동률은 풀 가동(이론적 100%)에 진입",
+        "estimate_revision": "2027년~2028년 주당순이익(EPS)으로 변경 역사적 상단, 밸류에이션 재평가 및 할증 반영",
+        "next_catalyst": "7월 중, FC BGA의 추가 투자 및 규모가 가시화 예상",
+        "thesis": [
+          "FC BGA 추가 투자 예상, AI 서버 및 데이터센터에서 주도권 확보",
+          "실리콘 커패시터 1.6조원 수주, 2027년 실적 반영으로 EPS는 5.8% 상향",
+          "MLCC 가격 상승 및 로봇 성장에 동참 ; 밸류에이션 재평가 확대"
+        ],
+        "valuation_basis": "2027년~2028년 주당순이익(EPS)으로 변경 역사적 상단, 밸류에이션 재평가 및 할증 반영",
+        "risk": null,
+        "supply_comment": "글로벌 AI서버 및 데이터센터향 FC BGA 공급은 일본 이비덴, 한국의 삼성전기, 대만의 유니마이크론에 의존된 상황.",
+        "quote": "삼성전기의 목표주가를 2,400,000원(2027년~2028년 주당순이익(EPS)으로 변경 역사적 상단, 밸류에이션 재평가 및 할증 반영)으로 상향."
+      }
+    ]
+  }
+}

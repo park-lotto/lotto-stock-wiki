@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-26_0804_AI RAN에는 엔비디아만 있는 것이 아닙니다.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김홍식, 이상훈",
+    "report_date": "2026년 07월 24일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "에치에프알",
+        "code": "230240",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "50,000원",
+        "tp_prev": "50,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 매출액 145.2십억원, 영업이익 (0.4)십억원 / 2027년 매출액 273.5십억원, 영업이익 50.5십억원",
+        "estimate_revision": null,
+        "next_catalyst": "미국 AI RAN 산업 개화 및 HFR의 실증 사업 성과",
+        "thesis": [
+          "미국 어퍼 C밴드 경매 확정 및 피지컬 AI 연계에 따른 AI RAN 산업 개화",
+          "통신장비 특화 LLM 개발로 통신사 피지컬 AI 니즈 부합",
+          "미국 시장 규모 및 원가 구조 고려 시 작은 M/S 확보로도 이익 및 주가 상승 가능"
+        ],
+        "valuation_basis": null,
+        "risk": "AI RAN 진출 가능성에 대한 시장의 회의적 시각, 노키아/엔비디아 중심 시장 상황 및 통신사 장비 선택 권한",
+        "supply_comment": null,
+        "quote": "HFR에 대한 투자의견 매수, 목표주가 50,000원을 유지한다. 추천사유는 1) 미국 어퍼 C밴드 경매가 확정됐는데, 피지컬 AI 연계를 위해선 곧 AI RAN 산업 개화로 이어질 것으로 판단하며, 2) HFR은 통신장비 특화 LLM을 개발하여 통신사 피지컬 AI 니즈에 부합되고, 3) 미국 시장 규모와 장비산업 원가 구조 감안시 작은 M/S 확보로도 큰 폭의 이익 증가 및 주가 상승으로 이어질 것이기 때문이다."
+      }
+    ]
+  }
+}

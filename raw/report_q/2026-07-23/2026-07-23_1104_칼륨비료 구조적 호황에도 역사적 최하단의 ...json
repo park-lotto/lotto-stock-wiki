@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-23",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-23_1104_칼륨비료 구조적 호황에도 역사적 최하단의 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "iM증권",
+    "analyst": "전유진, 장호",
+    "report_date": "2026.07.23",
+    "stocks": [
+      {
+        "name": "유니드",
+        "code": "014830",
+        "rating": "Buy",
+        "rating_changed": "Maintain",
+        "tp_new": "85,000원",
+        "tp_prev": "11만원",
+        "tp_direction": "down",
+        "earnings_outlook": "2분기 영업이익 242억원(-5.1%QoQ)으로 컨센서스 308억원 대비 -21% 하회하였다.",
+        "estimate_revision": "이익 추정치는 크게 변동 없었으나, 최근 석유화학 업종 전반의 멀티플 하락과 센티멘털 부진 고려하여 기존 대비 멀티플을 20% 할인하였다.",
+        "next_catalyst": "27년 UHC 증설을 통한 외형성장 모멘텀",
+        "thesis": [
+          "가성/탄산칼륨의 구조적 호황 진입",
+          "27년 UHC 증설을 통한 외형성장 모멘텀 확보",
+          "현재 주가는 PBR 0.35배로 역사적 최저점"
+        ],
+        "valuation_basis": "26년 BPS 170,552원에 PBR 0.5배를 적용해 산출",
+        "risk": "해상운임 급등, 중국 염소 가격 약세 전환, 중국법인의 염소 적자규모 확대",
+        "supply_comment": "러-우 전쟁과 이란사태 장기화에 따른 비료 수급 타이트로 가성/탄산칼륨은 구조적인 호황 진입한데다, 글로벌 비료 수급 타이트로 인한 업황 호조",
+        "quote": "동사에 대한 목표주가를 11만원에서 8.5만원으로 하향한다. 26년 BPS 170,552원에 PBR 0.5배를 적용해 산출했다."
+      }
+    ]
+  }
+}

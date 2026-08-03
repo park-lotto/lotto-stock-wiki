@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-31_1103_예상보다 빨라진 흑전.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": [
+      "김귀연",
+      "박서영"
+    ],
+    "report_date": "2026.07.31",
+    "stocks": [
+      {
+        "name": "삼성SDI",
+        "code": "006400",
+        "rating": "BUY",
+        "rating_changed": "매수, 유지",
+        "tp_new": "690,000",
+        "tp_prev": "920,000",
+        "tp_direction": "down",
+        "earnings_outlook": "2Q26 매출 3.8조원(YoY +19%, 이하 YoY), OP 2,038억원(흑전), OPM 5.4% 시현. 3Q26 매출 4.0조원(QoQ +5%), OP 888억원(QoQ -56%), OPM 2% 전망",
+        "estimate_revision": "TP 하향은 1) 시장 조정에 따른 타겟 밸류 조정, 2) 상장계열사의 가치하락에 기인.",
+        "next_catalyst": "2H26 흑자 안정화, 북미 ESS/유럽 EV 수주 모멘텀",
+        "thesis": [
+          "북미 ESS 매출 확대에 따른 증익 사이클 재개",
+          "non-PFE 기준 충족하는 LFP 배터리 공급",
+          "ESS 제품 믹스 효과 가시화"
+        ],
+        "valuation_basis": "2027년 EBITDA x 국내 2차전지 업종 12MF 밸류 평균, 2027년 EBITDA x 국내 피어3사 12MF 밸류 평균",
+        "risk": null,
+        "supply_comment": "2차전지",
+        "quote": "삼성SDI TP 69만원(기업가치 55조원)은 영업가치 63조원(대형전지 48조원, 소형전지 13조원, 전자재료 1.3조원), 비영업가치 1.7조원(SDC 8,480억), 순차입금 9.3조원 반영."
+      }
+    ]
+  }
+}

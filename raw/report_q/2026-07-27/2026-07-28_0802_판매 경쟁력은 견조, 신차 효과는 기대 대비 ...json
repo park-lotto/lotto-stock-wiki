@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-27",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-28_0802_판매 경쟁력은 견조, 신차 효과는 기대 대비 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김성래, 김예인",
+    "report_date": "2026년 7월 27일",
+    "stocks": [
+      {
+        "name": "기아",
+        "code": "000270",
+        "sector": "자동차",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "280,000원",
+        "tp_prev": "290,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "2Q 매출액 33.2조원(+12.6% YoY) 기록하며 분기 단위 최대 매출액 경신 지속. 영업이익은 2.63조원(-4.9%) 기록하며 시장 기대치를 하회.",
+        "estimate_revision": "매출액은 추정치 부합했으나, 영업이익은 하회",
+        "next_catalyst": "8월 RMAC 활용한 Atlas 상용화 개발 진척도는 로보틱스 지분 가치에 대한 우려를 해소할 것",
+        "thesis": [
+          "글로벌 도매 기준 2Q 판매량 85.2만대(+4.5%)로 높은 판매 성장 시현",
+          "하반기 신차 사이클 확대로 매출 성장 견조 및 믹스 개선 기대",
+          "소프트뱅크의 풋옵션 행사에 따라 향후 동사의 HMG Global 통한 간접 지분은 17.2%에서 19.1%로 증가될 전망"
+        ],
+        "valuation_basis": "AVG of (Target PER * EPS + Target PBR * BPS)",
+        "risk": "북미/유럽 수요 둔화 지속에 따른 인센티브 증가와 경제형 EV의 부정적 믹스 효과",
+        "supply_comment": null,
+        "quote": "투자의견 Buy 유지, TP 280,000원 하향"
+      }
+    ]
+  }
+}

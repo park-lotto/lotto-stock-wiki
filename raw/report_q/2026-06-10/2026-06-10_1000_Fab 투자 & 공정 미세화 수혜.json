@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_Fab 투자 & 공정 미세화 수혜.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "권명준",
+    "report_date": "2026.06.10",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "신성이엔지",
+        "code": "011930",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": {
+          "quote": "수주와 매출인식 시점차이를 고려시 2Q26부터 영업이익 흑자전환, 수익성 개선이 이뤄질 것으로 판단한다.",
+          "details": "1Q26 CE사업부(클린룸 등)의 수주잔고는 2,935억원으로 전년동기(1Q25 1,753억원) & 전분기(4Q25 2,731억원)대비 개선"
+        },
+        "estimate_revision": null,
+        "next_catalyst": "반도체 후공정 업체내 클린룸 도입",
+        "thesis": [
+          "반도체 미세화 확대에 따른 클린룸 역할 및 중요도 상향",
+          "반도체 후공정(TSV, WLP, Chiplet, Hybrid Bonding 등) 내 클린룸 도입 확대",
+          "수주잔고 증가 및 Fab 투자 확대에 따른 실적 개선"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "동사는 장비 투입 직전 공기 습도를 낮추는 초소형 제습 장비를 공급하고 있다.",
+        "sector": "반도체",
+        "quote": "동사의 실적이 개선될 것으로 전망하는 이유는 수주잔고와 고객사들의 Fab 투자확대 기조에 기인한다."
+      }
+    ]
+  }
+}

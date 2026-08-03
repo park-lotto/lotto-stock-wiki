@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-05\\2026-06-05_0700_소네페글루타이드 가치 재산정 이벤트.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS투자증권",
+    "analyst": "김민정",
+    "report_date": "2026.06.02",
+    "stocks": [
+      {
+        "name": "한미약품",
+        "code": "128940",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "680,000원",
+        "tp_prev": "680,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "‘27년 연결기준 OPM 약 20.2% 역대 최고 수준을 달성할 전망이다.",
+        "estimate_revision": null,
+        "next_catalyst": "HM17321 임상 1상 SAD 결과",
+        "thesis": [
+          "Eli Lilly 향 총 1.9조원 규모의 소네페글루타이드 기술이전 계약 체결",
+          "비만치료제 에페글레나타이드 국내 출시로 인한 실적 고성장",
+          "근육보존제 HM17321 임상 1상 결과 발표 및 추가 라이선스 아웃 기대"
+        ],
+        "valuation_basis": null,
+        "risk": "기존 EASL2026 발표가 기대되었던 Dual agonist MASH 임상 2b상 결과 발표 지연",
+        "supply_comment": null,
+        "quote": "비만치료제 에페글레나타이드 국내 출시로 인한 실적 고성장 및 R&D 모멘텀 등에서 긍정적으로 평가한다."
+      }
+    ]
+  }
+}

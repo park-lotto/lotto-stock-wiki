@@ -1,0 +1,40 @@
+{
+  "date": "2026-07-26",
+  "hit_rate": null,
+  "mentioned_count": 23,
+  "matched": [],
+  "missed": [
+    "SK하이닉스",
+    "국내 증시",
+    "기술주",
+    "대덕전자",
+    "미국 시장",
+    "반도체",
+    "반도체 소부장",
+    "반도체 장비",
+    "방산",
+    "삼성전기",
+    "삼성전자",
+    "소비내수",
+    "신한지주",
+    "에너지",
+    "엘에스일렉트릭",
+    "원익IPS",
+    "정유주",
+    "친환경",
+    "친환경 섹터",
+    "코스닥",
+    "피에스케이",
+    "하이퍼스케일러",
+    "현대자동차"
+  ],
+  "candidates": [],
+  "thresholds": {
+    "mode": "his",
+    "vacuum_pct_max": 35.0,
+    "min_up_count": 1,
+    "require_up_gt_down": true,
+    "require_leader": false,
+    "top_n": 20
+  }
+}

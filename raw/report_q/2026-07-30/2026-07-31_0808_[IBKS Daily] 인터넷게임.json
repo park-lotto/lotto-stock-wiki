@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-30",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-31_0808_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.07.30",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "수출 60% 게임, 예산 비중 6.9%",
+      "K-컬처 400조 정책"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "게임",
+        "stance": null,
+        "reason": "게임산업이 국내 콘텐츠 수출의 60.4%를 담당하는 핵심 수출 산업임에도 전체 콘텐츠 예산에서 차지하는 비중은 6.9%에 그쳐, 수출 기여도와 정책 투입 규모 사이의 격차를 좁혀야 한다는 지적이 나옴"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2030년까지",
+        "event": "정부는 K-컬처 시장 규모를 400조원으로 확대한다는 목표를 제시"
+      }
+    ],
+    "top_picks": [
+      "크래프톤"
+    ],
+    "risk": "한국콘텐츠진흥원은 게임 제작비 세액공제 도입 시 5년간 생산유발액 약 2.2조원, 취업자 약 1.5만명 증가 효과가 발생할 것으로 추산함",
+    "quote": "수출 60% 게임, 예산 비중은 6.9%···K-컬처 400조 정책 재설계 목소리"
+  }
+}

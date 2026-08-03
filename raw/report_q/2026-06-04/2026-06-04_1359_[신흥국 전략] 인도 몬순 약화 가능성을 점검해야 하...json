@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_[신흥국 전략] 인도 몬순 약화 가능성을 점검해야 하...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김근아",
+    "report_date": "2026년 6월 4일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "남서 몬순 강수량",
+      "엘니뇨",
+      "식품 물가",
+      "CPI",
+      "농산물 가격",
+      "민간소비",
+      "GDP",
+      "농촌 소비",
+      "유가",
+      "루피화 가치",
+      "반도체 수급"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6~9월",
+        "event": "남서 몬순 기간"
+      }
+    ],
+    "top_picks": null,
+    "risk": "남서 몬순 부진으로 인한 작황 둔화 및 식품 물가 상승, 소비 둔화 우려",
+    "quote": "결국 올해 남서 몬순 약화 가능성은 단순한 기상 이슈를 넘어 식품 물가 상승과 소비 둔화를 동시에 자극할 수 있는 리스크 요인이다."
+  }
+}

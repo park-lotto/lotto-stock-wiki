@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_LILLY - It's Hanmi.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "미래에셋증권",
+    "analyst": "김승민, 조세은",
+    "report_date": "2026.6.4",
+    "stocks": [
+      {
+        "name": "한미약품",
+        "code": "128940",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "700,000원",
+        "tp_prev": "66만원",
+        "tp_direction": "up",
+        "earnings_outlook": "2026F 매출액 1,759십억원, 영업이익 343십억원, EPS 18,819원",
+        "estimate_revision": null,
+        "next_catalyst": "HM15275, HM17321, HM15136 임상 개발/적응증 확장 및 상업적 성공 가능성, 에피노페그두타이드 MASH 2b상 데이터 발표, 에피노페그두타이드 국내 허가/출시",
+        "thesis": [
+          "Lilly(일라이릴리)에 대한 GLP-2 소네페글루타이드(HM15912) 1.26조원 규모 기술수출",
+          "소네페글루타이드의 월 1회 투여 편의성 및 기존 치료제 대비 차별화된 프로파일로 시장 점유율 확대 기대",
+          "GLP-2뿐 아니라 에피노페그두타이드 등을 포함한 파이프라인의 적응증 확장 및 상업적 가치 제고"
+        ],
+        "valuation_basis": "영업가치 5.9조원, 파이프라인 가치 3.1조원 등을 고려. 파이프라인 가치 산정에 릴리향 GLP-2 소네페글루타이드 5,249억원 반영",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "영업가치 5.9조원(vs. 기존 6.1조원), 파이프라인 가치 3.1조원(기존 2.5조원) 등을 고려해 산정했다.",
+        "sector": "바이오"
+      }
+    ]
+  }
+}

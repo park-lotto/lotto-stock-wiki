@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "한미반도체",
+      "signal": "bull",
+      "reason": "AI 시스템반도체용 FC 본더 3.5 신제품 출시",
+      "ts": null,
+      "quote": "한미반도체, AI 시스템반도체용 FC 본더 3.5 출시",
+      "sector": "반도체"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "한미반도체, AI 시스템반도체용 FC 본더 3.5 출시",
+      "ts": "06-26 07:00",
+      "quote": "한미반도체, AI 시스템반도체용 FC 본더 3.5 출시 - 머니투데이"
+    }
+  ],
+  "quote": "한미반도체, AI 시스템반도체용 FC 본더 3.5 출시"
+}

@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "date": "2026-07-27",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-28_0806_실적 전망치 상향 여부가 분수령.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김록호",
+    "report_date": "2026.7.27",
+    "target_kind": "market",
+    "market_direction": "중립",
+    "macro_vars": [
+      "DRAM, NAND 등 메모리 반도체 가격",
+      "빅테크 및 주요 메모리 업체의 Capex",
+      "글로벌 AI 관련 실적",
+      "메모리 반도체 수출 금액"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "중립",
+        "reason": "반도체 전반의 업황은 견조한 메모리 가격 상승과 빅테크들의 투자 의지가 유지되고 있으나, 실적 전망치 상향 여부에 대한 명확한 자신감이 필요하고, 주가 구간 방어를 위한 적극적인 주주 환원 정책이 요구됨"
+      }
+    ],
+    "style": "초안전주의",
+    "event_calendar": [
+      {
+        "date": "2026.7.27 주간",
+        "event": "빅테크(MS, Amazon, Meta 등) 및 국내 메모리 업체들의 실적 발표"
+      }
+    ],
+    "top_picks": [
+      "Nvidia",
+      "Broadcom",
+      "Micron",
+      "삼성전자",
+      "SK하이닉스"
+    ],
+    "risk": "미국 증시 조정과 연동된 투자심리 악화, 주가 상승폭에 따른 차익 실현 니즈 강세",
+    "quote": "이번 주는 빅테크 및 국내 메모리 업체들의 실적이 발표된다. 시장은 Google에 이어 MS, Amazon, Meta 모두 Capex 증가와 수익화 가능성을 확인하고자 할 것이다. 아울러 국내 메모리 업체들의 실적 및 업황 전망이 어느 때보다 중요해진 것으로 판단된다."
+  }
+}

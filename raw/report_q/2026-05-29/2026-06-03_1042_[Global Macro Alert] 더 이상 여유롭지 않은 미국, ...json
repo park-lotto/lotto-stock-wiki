@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "date": "2026-05-29",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_[Global Macro Alert] 더 이상 여유롭지 않은 미국, ...md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "하나증권",
+    "analyst": [
+      "전규연",
+      "이태석"
+    ],
+    "report_date": "2026년 5월 29일",
+    "market_direction": "하반기에도 인플레이션 우려 해소 어려움 및 미 연준 금리 동결 장기화 전망",
+    "macro_vars": [
+      "미국 원유 재고 및 휘발유 재고",
+      "글로벌 원유 공급 차질",
+      "국제유가",
+      "미국 관세 부과 및 정책",
+      "소비자물가",
+      "AI 투자",
+      "고용시장",
+      "미 연방기금금리"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6/2",
+        "event": "미국 카시카리 미니애폴리스 연은 총재 연설"
+      },
+      {
+        "date": "6/2",
+        "event": "미국 해맥 클리블랜드 연은 총재 연설"
+      },
+      {
+        "date": "6/4",
+        "event": "미 연준 5월 베이지북 공개"
+      },
+      {
+        "date": "6/4",
+        "event": "ECB 라가르드 총재 연설"
+      },
+      {
+        "date": "6/5",
+        "event": "미국 데일리 샌프란시스코 연은 총재 연설"
+      }
+    ],
+    "top_picks": null,
+    "risk": "전쟁 장기화로 인한 미 연준의 금리 인하 타이밍 실기 및 인플레이션 지속",
+    "quote": "하나증권은 미국 통화정책 경로를 기존 10월 한 차례 인하에서 연내 금리 동결로 수정한다."
+  }
+}

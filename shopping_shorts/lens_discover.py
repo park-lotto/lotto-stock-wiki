@@ -8,7 +8,8 @@ import re
 import time
 import requests
 from urllib.parse import urlparse
-from shopping_shorts.config import SERPAPI_KEY
+from shopping_shorts import serpapi_client
+from shopping_shorts.config import SERPAPI_KEY, SERPAPI_KEYS
 
 _LENS_ENDPOINT = "https://serpapi.com/search"
 _IMGUR_ENDPOINT = "https://api.imgur.com/3/image"
@@ -115,14 +116,43 @@ def _title_matches(keywords, title):
     return any(k in title_l for k in keywords)
 
 
+_IG_PERMALINK_RE = re.compile(r"/(?:p|reel|reels|tv)/[A-Za-z0-9_-]+")
+
+
 def _is_watchable(platform, link):
-    """개별 재생 가능한 영상 URL만 True. 틱톡은 discover/tag/search/music 등 검색·모음
-    페이지(개별영상 X)를 렌즈가 섞어 반환해(2026-07-14 실측) 이를 걸러낸다 —
-    /video/숫자 또는 /@user/video/숫자 형태만 통과."""
+    """개별 재생 가능한 영상 URL만 True. 렌즈(Google Lens)는 개별 영상이 아닌 검색·모음·
+    SEO 페이지를 섞어 반환한다 — 틱톡 discover/tag/search/music(2026-07-14 실측),
+    인스타 /popular/{제목슬러그}·/explore·프로필(2026-07-19 실사고: 이런 URL이 렌즈 즐겨찾기로
+    담겨 매칭 단계에서 'Apify 해석 실패'로 배치 전체를 죽였다). 다운로드 가능한 permalink만
+    받게 입구에서 거른다.
+    - 틱톡: /video/숫자
+    - 인스타: /p·/reel·/reels·/tv + 코드(개별 게시물). 그 외(/popular·/explore·프로필)는 배제.
+    - 나머지(유튜브·중국플랫폼)는 그대로(대부분 개별 콘텐츠)."""
     path = urlparse(link or "").path.lower()
     if platform == "tiktok":
         return "/video/" in path
-    return True   # 유튜브·인스타·중국플랫폼은 그대로(대부분 개별 콘텐츠)
+    if platform == "instagram":
+        return bool(_IG_PERMALINK_RE.search(path))
+    return True   # 유튜브·중국플랫폼은 그대로(대부분 개별 콘텐츠)
+
+
+def is_photo_post(platform, link):
+    """영상이 아닐 가능성이 높은 게시물인가(카드뉴스·사진·카러셀). 확정이 아니라 '후보'다.
+
+    사장님 제보(2026-07-30): 렌즈 결과에 인스타 카드뉴스(사진 여러 장)가 많이 섞인다.
+    렌즈 visual_matches에는 동영상 여부 필드가 없고(모듈 최상단 주석), 인스타 실조회는
+    Apify 유료라 결과마다 확인할 수 없다. 그래서 **URL 경로**라는 공짜 신호를 쓴다:
+      /reel·/reels·/tv = 영상 확정 → False
+      /p/              = 사진·카러셀이 대부분 → True (요즘 인스타는 영상을 reel로 보낸다)
+    ⚠️ /p/에도 옛 동영상 게시물이 있어 완벽하지 않다 → 프론트에서 '하드 제외'가 아니라
+    끌 수 있는 토글(기본 켜짐)로 쓴다. 인스타 외 플랫폼은 판정하지 않는다(False):
+    틱톡 사진첩(/photo/)은 _is_watchable이 이미 입구에서 거른다."""
+    if platform != "instagram":
+        return False
+    path = urlparse(link or "").path.lower()
+    if re.search(r"/(?:reel|reels|tv)/", path):
+        return False
+    return "/p/" in path
 
 
 def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=None):
@@ -134,8 +164,8 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
     장르는 같지만 다른 주제인 결과가 섞이는 문제(2026-07-14 실측)를 프론트에서
     표시용으로 구분하기 위함 — 결과를 제거하진 않는다(교차언어 플랫폼은 매칭 불가라
     False가 나올 수 있어 하드 필터링하면 회수율이 떨어짐)."""
-    key = api_key or SERPAPI_KEY
-    if not key:
+    keys = [api_key] if api_key else (SERPAPI_KEYS or ([SERPAPI_KEY] if SERPAPI_KEY else []))
+    if not keys:
         return []
     keywords = _extract_keywords(source_caption)
     # 파라미터가 결과를 좌우한다(2026-07-14 라이브 실측, 6프레임 대조):
@@ -143,21 +173,36 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
     #   type 없는 기본 all모드 + hl=ko&country=kr → 모든 프레임 59~60개 ✅
     # 즉 type=visual_matches를 넣으면 오히려 깨진다. all모드 응답의 visual_matches를 쓴다.
     # 로케일(hl=ko&country=kr)은 한국 콘텐츠 매칭에 필요. 드물게 첫 호출이 비면 재시도.
-    params = {"engine": "google_lens",
-              "hl": "ko", "country": "kr", "url": image_url, "api_key": key}
+    #
+    # 키 로테이션(2026-07-26): 현재 키가 월 무료한도(100회)를 소진하면(429 등) 다음
+    # 키로 넘어간다. 소진이 아닌 진짜 빈 결과("no results")는 같은 키로 재시도(_MAX_ATTEMPTS)
+    # 해야 하므로, 인덱싱 재시도는 키별 안쪽 루프로 돈다.
     matches = []
-    for attempt in range(_MAX_ATTEMPTS):
-        try:
-            r = requests.get(_LENS_ENDPOINT, params=params, timeout=timeout)
-            r.raise_for_status()
-            data = r.json()
-        except requests.RequestException:
-            return []
-        matches = data.get("visual_matches") or []
-        if matches:
-            break
-        if attempt < _MAX_ATTEMPTS - 1:
-            time.sleep(_RETRY_SLEEP)   # 인덱싱 대기 후 재시도
+    for key in keys:
+        params = {"engine": "google_lens",
+                  "hl": "ko", "country": "kr", "url": image_url, "api_key": key}
+        exhausted = False
+        for attempt in range(_MAX_ATTEMPTS):
+            try:
+                r = requests.get(_LENS_ENDPOINT, params=params, timeout=timeout)
+                data = r.json()
+            except (requests.RequestException, ValueError):
+                return []
+            if serpapi_client.is_exhausted(getattr(r, "status_code", 200), data):
+                exhausted = True   # 이 키 소진 → 바깥 루프에서 다음 키로
+                break
+            try:
+                r.raise_for_status()
+            except requests.RequestException:
+                return []
+            matches = data.get("visual_matches") or []
+            if matches:
+                break
+            if attempt < _MAX_ATTEMPTS - 1:
+                time.sleep(_RETRY_SLEEP)   # 인덱싱 대기 후 재시도
+        if exhausted:
+            continue                       # 다음 키로
+        break                              # 이 키로 처리 완료(결과 유무 무관)
     out = []
     for m in matches:
         platform = _platform_of(m.get("link"))
@@ -170,5 +215,7 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
             "title": title,
             "thumbnail": m.get("thumbnail", ""),
             "match": _title_matches(keywords, title),
+            # 카드뉴스(사진) 후보 표시 — 프론트의 '🎬 영상만' 토글이 이걸로 가린다.
+            "is_photo": is_photo_post(platform, m.get("link")),
         })
     return out

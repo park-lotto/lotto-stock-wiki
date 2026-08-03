@@ -180,9 +180,10 @@ def test_mix_accepts_youtube_url(monkeypatch, tmp_path):
     monkeypatch.setattr(mp, "download_any", lambda url, d: got.setdefault("urls", []).append(url) or (str(tmp_path / "x.mp4"), ""))
     # _prepare_sources 만 단위 검증(전체 잡 아님): youtube URL도 통과해야 함
     urls = ["https://www.youtube.com/watch?v=a", "https://www.tiktok.com/@u/video/1"]
-    paths, captions = mp._prepare_sources(urls, tmp_path)
+    paths, captions, skipped = mp._prepare_sources(urls, tmp_path)
     assert len(paths) == 2 and got["urls"] == urls
     assert captions == {"s0": "", "s1": ""}
+    assert skipped == []
 
 
 def test_prepare_sources_carries_instagram_caption(monkeypatch, tmp_path):
@@ -197,7 +198,7 @@ def test_prepare_sources_carries_instagram_caption(monkeypatch, tmp_path):
     monkeypatch.setattr(mp, "download_any", fake_download)
 
     urls = ["https://www.instagram.com/reel/AAA/", "https://www.youtube.com/watch?v=a"]
-    paths, captions = mp._prepare_sources(urls, tmp_path)
+    paths, captions, skipped = mp._prepare_sources(urls, tmp_path)
     assert captions["s0"] == "인스타 원본 캡션"
     assert captions["s1"] == ""
 
@@ -228,3 +229,13 @@ def test_resynth_tts_job_applies_voice(monkeypatch, tmp_path):
     assert captured["kw"]["voice_settings"]["style"] == 0.3
     assert captured["kw"]["speed"] == 1.3
     assert s.get_mix_job("j1")["status"] == "ready_for_review"
+
+
+def test_voice_params_extracts_pace_mode():
+    """_voice_params가 voice 스냅샷의 pace_mode를 8번째로 실어 보낸다."""
+    from shopping_shorts.mix_pipeline import _voice_params
+    on = _voice_params({"pace_mode": True})
+    assert on[7] is True
+    # 미지정이면 False(하위호환 — 스냅샷 없는 옛 job은 옛 동작).
+    off = _voice_params({})
+    assert off[7] is False

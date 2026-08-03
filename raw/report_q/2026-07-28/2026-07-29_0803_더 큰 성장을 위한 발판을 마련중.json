@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-28",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-29_0803_더 큰 성장을 위한 발판을 마련중.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "박준영, 김나우",
+    "report_date": "2026년 7월 28일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "한솔아이원스",
+        "code": "114810",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "15,000원",
+        "tp_prev": "26,300원",
+        "tp_direction": "down",
+        "earnings_outlook": "동사의 2Q26 실적은 매출액 537억원(YoY +14.3%, QoQ +9.3%, 컨센서스 대비 -1.2% 하회), 영업이익 66억원(YoY -27.7%, QoQ -7.5%, 컨센서스 대비 -38.5%)으로 시장 기대치와 당사 추정치를 하회하는 실적을 기록.",
+        "estimate_revision": "일회성 비용 발생으로 실적 하회 추정 및 목표주가 하향",
+        "next_catalyst": "HBM4 본격 양산 물량 출하에 따른 세정/코팅 사업부 실적 성장 및 마진율 개선",
+        "thesis": [
+          "일회성 비용으로 컨센서스 하회했으나 하반기 성장을 위한 일보 후퇴로 파악",
+          "최대 고객사 A사향 식각장비용 챔버 및 부품 확대 판매 예상",
+          "HBM4용 세정/코팅 사업 확장으로 인한 수익성 개선 기대"
+        ],
+        "valuation_basis": "2026F EPS 1,220원과 Target P/E 12.3배의 곱을 적용",
+        "risk": "주요 고객사향 프로모션 비용 발생에 따른 단기 수익성 하락",
+        "supply_comment": "글로벌 장비업체 A사향으로 식각장비용 챔버 및 챔버 내 부품 공급 및 HBM4용 세정/코팅 서비스 제공",
+        "quote": "동사에 대해 목표주가 15,000원(2026F EPS 1,220원과 Target P/E 12.3배의 곱)을 제시"
+      }
+    ]
+  }
+}

@@ -1,6 +1,8 @@
 """발굴 '업데이트'를 백그라운드 스레드로 실행 + 진행상황 폴링(2026-07-12).
 
-업데이트는 Apify를 여러 번(검색 6 + 릴스수집 + 프로필) 돌려 수 분 걸린다.
+업데이트는 검색 6 + 릴스수집 + 프로필을 돌려 수 분 걸린다(경로에 따라
+Apify 또는 무료 Playwright, 2026-07-30 config.INSTAGRAM_SCRAPER로 분기 —
+릴스수집과 동일 킬스위치를 공유해 한 군데서 apify↔playwright 전환).
 동기로 처리하면 (1) 프론트가 몇 분 멈춘 것처럼 보이고 (2) 그 사이 서버가
 재시작되면 HTTP 응답 자체가 HTML 에러로 깨진다. 그래서 시작만 걸고(job)
 프론트가 상태를 폴링하게 한다. 단일 워커(uvicorn 기본) 기준 모듈 전역
@@ -13,14 +15,122 @@ from concurrent.futures import ThreadPoolExecutor
 from shopping_shorts.config import DB_PATH
 from shopping_shorts.store import Store
 from shopping_shorts.channels import load_channels
-from shopping_shorts.apify_client import fetch_reels, fetch_profiles
+from shopping_shorts import config
+from shopping_shorts.apify_client import fetch_reels as _apify_fetch_reels
+from shopping_shorts.apify_client import fetch_profiles as _apify_fetch_profiles
+from shopping_shorts import instagram_playwright
 from shopping_shorts import discovery, instagram_search
+from shopping_shorts.categorize import categorize, category_of_hashtag
 
-CATEGORIES = ["#주방템", "#살림템", "#인테리어", "#자취템", "#생활꿀템", "#뷰티템"]
+# 발굴 입구 = 이 해시태그 목록이 전부다. 6개일 때 픽업이 21곳밖에 안 나온 게
+# 발단(2026-07-30) — 태그당 SERP 24건 → known 제외 → 최근 릴스 필터를 거치면
+# 태그 하나가 실제로 남기는 신규 채널은 서너 곳뿐이라, 입구를 넓히는 게 가장
+# 직접적인 레버다. 20개로 확장(사장님 지시). ⚠️playwright 경로는 태그를 순차로
+# 도므로(자원경합 회피, search_workers=1) 소요시간이 태그 수에 비례한다.
+# 2026-08-02 광범위 확장(20 → 62, 사장님 지시): 표본을 최대한 넓게 긁어와야
+# 레퍼런스 랭킹이 그 안에서 추릴 게 생긴다. 태그 추가는 싸다 — 서버 실측 태그당
+# ~13s(#주방템 24후보 13.2s / #뷰티템 24후보 12.1s)라 62개라도 검색은 ~13분이고,
+# 회차 시간의 대부분은 태그 수가 아니라 max_total(300)만큼의 채널 릴스·프로필
+# 수집이 차지한다. 즉 태그를 늘려도 총 시간은 거의 그대로고 후보 풀만 넓어진다.
+# 기존 20개는 12개가 주방·살림 계열이라 발굴이 홈템 136 vs 뷰티 3으로 쏠렸다.
+CATEGORIES = [
+    # ── 주방·살림 (기존) ──
+    "#주방템", "#살림템", "#인테리어", "#자취템", "#생활꿀템", "#뷰티템",
+    "#자취요리", "#원룸인테리어", "#주방살림", "#청소템", "#정리수납", "#수납템",
+    "#가성비템", "#쿠팡추천", "#쿠팡템", "#다이소추천", "#다이소템",
+    "#육아템", "#캠핑템", "#반려견용품",
+    # ── 쇼핑·추천 일반 ──
+    "#꿀템", "#꿀템추천", "#생활템", "#만능템", "#추천템", "#내돈내산",
+    "#쇼핑추천", "#리빙템", "#필수템", "#유용한템", "#아이디어상품",
+    # ── 주방·조리 심화 ──
+    "#주방꿀템", "#키친템", "#조리도구", "#밀프렙", "#간편요리", "#에어프라이어요리",
+    "#자취생요리", "#집밥", "#반찬레시피", "#baking",
+    # ── 청소·정리 심화 ──
+    "#청소꿀팁", "#살림꿀팁", "#정리정돈", "#주방정리", "#냉장고정리", "#세탁꿀팁",
+    # ── 인테리어·홈데코 ──
+    "#홈데코", "#집꾸미기", "#셀프인테리어", "#원룸꾸미기", "#신혼집인테리어",
+    "#홈오피스", "#조명인테리어",
+    # ── 뷰티·헬스 ──
+    "#뷰티꿀템", "#화장품추천", "#스킨케어", "#헤어템", "#다이어트템",
+    # ── 생활 기타 ──
+    "#육아꿀템", "#유아용품", "#반려묘용품", "#차량용품", "#여행템", "#사무용품",
+]
+
+# 누적 모드에서 채널을 며칠간 보존할지(마지막으로 발굴에 잡힌 시점 기준).
+# 3일간 한 번도 다시 안 잡힌 채널은 피드에서 빠진다(2026-07-30 사장님 지시).
+FEED_TTL_DAYS = 3
+
+
+def _search_fn():
+    """검색 경로 선택 — config.INSTAGRAM_SCRAPER를 따른다(릴스수집과 동일 킬스위치).
+    playwright(기본, 무료 해시태그 탐색) / apify(유료 키워드검색)."""
+    if config.INSTAGRAM_SCRAPER == "playwright":
+        return instagram_playwright.search_channels
+    return instagram_search.search_channels
+
+
+def _fetch_reels_fn(usernames, per, days):
+    if config.INSTAGRAM_SCRAPER == "playwright":
+        return instagram_playwright.fetch_reels(usernames)
+    return _apify_fetch_reels(usernames, results_per_channel=per, only_newer_than=f"{days} days")
+
+
+def _profiles_fn():
+    if config.INSTAGRAM_SCRAPER == "playwright":
+        return instagram_playwright.fetch_profiles
+    return _apify_fetch_profiles
 
 _LOCK = threading.Lock()
 _JOB = {"status": "idle", "phase": "", "count": 0, "items": [],
-        "error": None, "started": 0.0}
+        "error": None, "started": 0.0, "registered": 0}
+
+
+def _channel_category(item):
+    """발굴 채널 카테고리 — 해시태그가 1순위, 소개글은 보조(2026-07-30).
+
+    태그는 "이 채널을 어디서 찾았나"라 근거가 분명하다. 소개글은 여러 분야를 같이
+    다루는 채널이 많아 신호가 약하므로(사장님 지적) 태그로 못 정할 때만 본다.
+    둘 다 안 되면 빈 문자열 — 틀린 카테고리를 다느니 비워두는 게 낫다."""
+    tag_cat = category_of_hashtag(item.get("discover_tag"))
+    if tag_cat:
+        return tag_cat
+    bio = (item.get("bio") or "").strip()
+    if not bio:
+        return ""
+    guess = categorize(item.get("name") or "", bio)
+    return "" if guess == "기타" else guess
+
+
+def _is_face_channel(item):
+    """이 채널이 '사람이 나오는 채널'인가 — 썸네일 표본이 **전부** 인물일 때만 True.
+
+    2026-08-02 사장님 지시: 연예인·본인출연 채널은 쇼핑쇼츠 레퍼런스로 못 쓴다.
+    판정을 채널명·소개글로 하면 안 된다(실측 오검): '까꿍언니 l 전셋집•인테리어'가
+    '리모델링'의 '모델'에 걸리고, '홈템블리 l 예쁜 일상 꿀템'이 '일상'에 걸린다 —
+    둘 다 우리가 원하는 제품 채널이다. 그래서 썸네일을 실제로 보는 비전 판정을 쓴다.
+
+    기준은 만장일치(3/3) — 판정이 영상 단위로 갈리기 때문이다(실측 toyland.kr
+    제품1·얼굴2). 애매한 채널은 남겨두고 랭킹 지표에서 자연히 밀리게 한다:
+    표본을 넓히는 게 이번 목적이라 '억울한 제외'가 '놓친 제외'보다 비싸다.
+    판정 실패(None)가 하나라도 있으면 제외하지 않는다 — 키가 잠긴 날 통째로
+    걸러내는 사고를 막는다."""
+    thumbs = item.get("sample_thumbs") or []
+    if len(thumbs) < 2:          # 표본 1장으로 채널을 자르지 않는다
+        return False
+    try:
+        from shopping_shorts import video_analysis
+    except Exception:            # noqa: BLE001 — 비전 없으면 판정 안 함(수집은 살아야)
+        return False
+    verdicts = []
+    for t in thumbs[:discovery.FACE_SAMPLE_N]:
+        img = video_analysis.fetch_thumb_bytes(t)
+        if not img:
+            continue
+        v = video_analysis.face_forward_vision(img)
+        if v is None:            # 판정 실패 하나라도 → 제외 안 함
+            return False
+        verdicts.append(v)
+    return len(verdicts) >= 2 and all(verdicts)
 
 
 def _known_usernames(store):
@@ -29,73 +139,115 @@ def _known_usernames(store):
         known |= {c["username"] for c in load_channels()}
     except Exception:
         pass
+    # 🚫 영구차단(2026-07-30): 차단 채널은 '이미 아는 채널'로 취급해 재발굴을 막는다.
+    # 차단만 하고 목록추가는 안 한 채널은 discovered에도 엑셀에도 없어서, 이게 없으면
+    # 다음 업데이트에 다시 올라온다.
+    known |= store.removed_usernames()
     return known
 
 
 def _parallel_fetch(usernames, per, days, chunk=40, workers=3):
-    """채널 릴스 수집을 40개씩 병렬 청크로 — 순차(청크마다 Apify run 대기)보다 빠름."""
+    """채널 릴스 수집을 40개씩 병렬 청크로 — 순차(청크마다 Apify run 대기)보다 빠름.
+    playwright 경로는 세션 하나를 여러 스레드가 동시에 열면 충돌 위험이 있어(브라우저
+    프로세스 자원 경합) 청크 병렬 없이 그대로 한 번에 돈다(2026-07-30)."""
+    if config.INSTAGRAM_SCRAPER == "playwright":
+        return _fetch_reels_fn(usernames, per, days)
     chunks = [usernames[i:i + chunk] for i in range(0, len(usernames), chunk)] or [[]]
     if len(chunks) == 1:
-        return fetch_reels(chunks[0], results_per_channel=per, only_newer_than=f"{days} days")
+        return _fetch_reels_fn(chunks[0], per, days)
     out = []
     with ThreadPoolExecutor(max_workers=min(workers, len(chunks))) as pool:
-        for res in pool.map(
-            lambda c: fetch_reels(c, results_per_channel=per, only_newer_than=f"{days} days"),
-            chunks,
-        ):
+        for res in pool.map(lambda c: _fetch_reels_fn(c, per, days), chunks):
             out.extend(res)
     return out
 
 
-def _run(days, max_total, accumulate):
+def _run(days, max_total, accumulate, auto_register=False):
     store = Store(DB_PATH)
     per = 12 if max_total <= 40 else 18
     try:
         _JOB["phase"] = "검색"
+        # playwright 경로는 검색도 로컬 브라우저라 병렬 시 자원경합으로 일부 태그가
+        # 조용히 0건 남(2026-07-30 실측) — 순차(1)로 강제. apify는 기존처럼 병렬(6).
+        search_workers = 1 if config.INSTAGRAM_SCRAPER == "playwright" else 6
         items = discovery.discover_multi(
             CATEGORIES, known=_known_usernames(store),
-            search_fn=instagram_search.search_channels,
+            search_fn=_search_fn(),
             fetch_reels_fn=lambda us: _parallel_fetch(us, per, days),
-            profiles_fn=fetch_profiles,
+            profiles_fn=_profiles_fn(),
             prev_comments=store.prev_comments, prev_delta=store.prev_delta,
             window_hours=days * 24, max_channels_per=per, max_total=max_total,
+            search_workers=search_workers,
         )
         if accumulate:
             prev, _ = store.load_discovery_feed()
-            # cap=max_total: 매일 신규후보(new)가 우선 배치되고, 합친 뒤 댓글수
-            # 기준 상위 max_total개만 남긴다(2026-07-13) — 예전엔 무한 누적만 하고
-            # 트리밍이 없어 계속 커지기만 했음. 이제 성과(댓글수) 낮은 채널이
-            # 자연스럽게 밀려나 빠지는 로테이션 효과가 생긴다.
-            items = discovery.merge_feeds(prev, items, cap=max_total)
+            # 누적 상한 = max_total × 보존일수(2026-07-30). 예전엔 cap=max_total이라
+            # "3일 보존"을 켜도 하루치 정원을 넘는 순간 어제 채널이 댓글수에 밀려
+            # 즉시 잘려나가 보존이 무의미했다. 이제 하루치 정원 × 3일만큼 자리를
+            # 주고, 그 안에서 (1) 3일 지난 채널은 TTL로 (2) 자리가 모자라면 댓글수
+            # 낮은 순으로 빠진다.
+            items = discovery.merge_feeds(prev, items,
+                                          cap=max_total * FEED_TTL_DAYS,
+                                          ttl_days=FEED_TTL_DAYS)
         store.save_discovery_feed(items)
         store.save_run(
             time.strftime("%Y-%m-%d %H:%M"),
             [{"shortcode": i["shortcode"], "username": i["username"],
               "comments": i["comments"], "delta": i["delta"]} for i in items],
         )
+        registered = 0
+        skipped_face = 0
+        if auto_register:
+            # 발굴 전부를 자동으로 레퍼런스 추적목록에 등록(2026-07-30) — 사람이
+            # "목록추가"를 안 눌러도 다음 레퍼런스랭킹 수집(09시)부터 바로 잡히게.
+            # discover()가 이미 known(기존 추적목록) 제외 후 검색한 결과라 전부 신규다.
+            _JOB["phase"] = "인물채널 선별"
+            for it in items:
+                uname = it.get("username")
+                if not uname:
+                    continue
+                # 연예인·본인출연 채널은 등록하지 않는다(2026-08-02 사장님 지시).
+                # 피드(save_discovery_feed)엔 이미 담겨 화면에서는 보이고, 자동
+                # 추적목록에만 안 넣는다 — 오판이 나도 사장님이 눈으로 확인 가능.
+                if _is_face_channel(it):
+                    it["face_channel"] = True
+                    skipped_face += 1
+                    continue
+                # 찾아낸 해시태그를 카테고리로 물려준다(2026-07-30) — 신규 채널은
+                # 과거 이력도 캡션도 없어 랭킹에서 전부 '기타'로 보이던 문제.
+                store.add_discovered(
+                    uname, name=it.get("name") or uname,
+                    category=_channel_category(it))
+                registered += 1
+            if skipped_face:
+                print(f"[discover] 인물채널 {skipped_face}건 자동등록 제외(썸네일 만장일치)")
         with _LOCK:
-            _JOB.update(status="done", phase="완료", count=len(items), items=items, error=None)
+            _JOB.update(status="done", phase="완료", count=len(items), items=items,
+                       error=None, registered=registered, skipped_face=skipped_face)
     except Exception as e:
         msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
         with _LOCK:
             _JOB.update(status="error", phase="", error=msg)
 
 
-def start(days, max_total, accumulate):
+def start(days, max_total, accumulate, auto_register=False):
     """업데이트 시작. 이미 실행 중이면 그 상태 반환(중복 방지)."""
     with _LOCK:
         if _JOB["status"] == "running" and time.time() - _JOB["started"] < 600:
             return {"status": "running", "elapsed": int(time.time() - _JOB["started"])}
         _JOB.update(status="running", phase="시작", count=0, items=[],
-                    error=None, started=time.time())
-    threading.Thread(target=_run, args=(days, max_total, accumulate), daemon=True).start()
+                    error=None, started=time.time(), registered=0)
+    threading.Thread(target=_run, args=(days, max_total, accumulate, auto_register),
+                     daemon=True).start()
     return {"status": "running", "elapsed": 0}
 
 
 def status(include_items=True):
     with _LOCK:
         s = {"status": _JOB["status"], "phase": _JOB["phase"], "count": _JOB["count"],
-             "error": _JOB["error"], "elapsed": int(time.time() - _JOB["started"]) if _JOB["started"] else 0}
+             "error": _JOB["error"], "registered": _JOB.get("registered", 0),
+             "skipped_face": _JOB.get("skipped_face", 0),
+             "elapsed": int(time.time() - _JOB["started"]) if _JOB["started"] else 0}
         if include_items and _JOB["status"] == "done":
             s["items"] = _JOB["items"]
     return s

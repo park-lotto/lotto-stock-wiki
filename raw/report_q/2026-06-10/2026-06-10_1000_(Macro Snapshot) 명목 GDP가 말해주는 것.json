@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_(Macro Snapshot) 명목 GDP가 말해주는 것.md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "김유미",
+    "report_date": "2026년 6월 10일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "실질 GDP 성장률",
+      "명목 GDP 증가율",
+      "GDP 디플레이터",
+      "국가채무비율",
+      "재정수지 적자 비율",
+      "가계부채",
+      "기준금리"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": null,
+    "top_picks": null,
+    "risk": [
+      "반도체 중심의 성장 편중",
+      "양극화 심화 가능성"
+    ],
+    "quote": "올해 1 분기 한국 경제는 실질 성장과 명목 소득 측면에서 모두 예상보다 양호한 모습을 보였다. 실질 GDP 성장률은 전기 대비 1.8%로 잠정치(1.7%)를 상회했다."
+  }
+}

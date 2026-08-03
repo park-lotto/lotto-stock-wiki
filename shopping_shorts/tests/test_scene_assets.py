@@ -58,8 +58,8 @@ def test_make_clip_cuts_segment_and_normalizes_spec(monkeypatch, tmp_path):
     # 90프레임(3.0s)~165프레임(5.5s) 직전 = 75프레임.
     assert "-frames:v" in cmd and "75" in joined
     assert "-t" not in cmd
-    # 페이즈2 concat이 -c copy라 규격이 다르면 안 붙는다 — 720x1280/30fps/libx264/aac 고정
-    assert "scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280" in joined
+    # 페이즈2 concat이 -c copy라 규격이 다르면 안 붙는다 — 1080x1920/30fps/libx264/aac 고정
+    assert "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920" in joined
     assert "-r" in cmd and "30" in cmd
     assert "libx264" in cmd and "aac" in cmd and "yuv420p" in cmd
 

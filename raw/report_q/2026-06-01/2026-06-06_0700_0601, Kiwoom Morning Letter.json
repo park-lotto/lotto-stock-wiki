@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "date": "2026-06-01",
+    "broker": "Kiwoom",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_0700_0601, Kiwoom Morning Letter.md"
+  },
+  "questionnaire": {
+    "broker": "Kiwoom",
+    "analyst": null,
+    "report_date": "2026/6/1",
+    "target_kind": "market",
+    "market_direction": "Positive",
+    "macro_vars": [
+      "KOSPI 8,476.15 (+3.55%)",
+      "달러/원 1,504.47 (+10.99)",
+      "국고채(3년) 3.731% (-3.5bp)"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "Positive",
+        "reason": "삼성전자 HBM4E 샘플 출하 및 엔비디아 CEO 방한 소식으로 강세"
+      },
+      {
+        "sector": "전력",
+        "stance": "Positive",
+        "reason": "AI 인프라 투자 확대 및 데이터센터 수요 증가 수혜"
+      }
+    ],
+    "style": "Growth",
+    "event_calendar": [
+      {
+        "date": "5.29",
+        "event": "한국 산업생산(MoM) 3.9%"
+      },
+      {
+        "date": "5.31",
+        "event": "중국 제조업 PMI 50.3"
+      },
+      {
+        "date": "6.01",
+        "event": "한국 수출입동향(YoY) 48.0%"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "삼성전기",
+      "현대차",
+      "현대모비스"
+    ],
+    "risk": "중동 지정학적 리스크 잔존 및 환율 변동성",
+    "quote": "코스피는 미·이란 간 종전 기대감에 따른 전쟁 리스크 완화와 삼성전자의 HBM4E 샘플 출하 및 엔비디아 CEO 방한 소식으로 우상향하며 8,476.15로 마감."
+  }
+}

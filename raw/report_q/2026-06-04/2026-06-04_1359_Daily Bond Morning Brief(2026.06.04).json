@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "DAOL 투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_Daily Bond Morning Brief(2026.06.04).md"
+  },
+  "questionnaire": {
+    "broker": "DAOL 투자증권",
+    "analyst": "김지현",
+    "report_date": "04 Jun. 2026",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "Dow (-1.21%), S&P500 (-0.74%), Nasdaq (-0.89%)",
+      "2yr 4.082%(+3.9bp), 10yr 4.495%(+5.1bp)",
+      "JPY 160.07(+0.10%), EUR 1.16(-0.29%), Dollar 99.53(+0.31%)",
+      "WTI $96.02(+2.41%), Brent $97.81(+1.89%)"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6월 3일",
+        "event": "미국 5월 ISM 서비스업 지수 53.8, 5월 ADP 고용 변동 120.0, 미국 4월(최종) 내주재 주문 7.9%"
+      },
+      {
+        "date": "6월 4일",
+        "event": "한국 5월 외환보유액 427.88b"
+      }
+    ],
+    "top_picks": null,
+    "risk": "미·이란 협상에 진전이 없는 가운데 중동 지역 군사적 긴장감 고조",
+    "quote": "미·이란 협상에 진전이 없는 가운데 중동 지역 군사적 긴장감 고조에 상승"
+  }
+}

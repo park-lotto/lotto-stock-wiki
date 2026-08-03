@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-22_0804_흔들리는 시장 속, 안전한 선택지.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "손현정, 김고은",
+    "report_date": "2026.07.21",
+    "stocks": [
+      {
+        "name": "KT&G",
+        "code": "033780",
+        "rating": "BUY (M)",
+        "rating_changed": null,
+        "tp_new": "250,000원",
+        "tp_prev": "210,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "KT&G의 2Q26 연결 매출액은 1조 6,683억원(YoY +7.8%), 영업이익은 4,067억원(YoY +16.2%, OPM 24.4%)으로 추정한다.",
+        "estimate_revision": "해외 궐련과 국내 NGP를 중심으로 담배부문의 이익 체력이 높아지고 있어 2026년 연결 영업이익은 1조 5,236억원(YoY +13.4%)으로 가이던스를 상회할 전망이다.",
+        "next_catalyst": "2Q26 실적 발표에서 중간배당 발표가 예상되며, 자사주 매입·소각과 신규 주주환원 정책은 하반기 중 순차적으로 구체화될 전망이다.",
+        "thesis": [
+          "해외 궐련의 ASP 상승과 고가 제품 비중 확대",
+          "국내 NGP 침투율 약 24%, 시장점유율 48% 상회 및 믹스 개선",
+          "자사주 소각 목표 조기 달성 및 배당 확대 등 주주환원 강화"
+        ],
+        "valuation_basis": "2027년 예상 EPS에 Target PER 17배를 적용",
+        "risk": null,
+        "supply_comment": "소비내수",
+        "quote": "해외 궐련의 구조적 이익 성장과 국내 NGP 점유율 확대, 강화되는 주주환원을 감안하면 글로벌 담배업체와의 밸류에이션 격차 축소가 가능하다고 판단한다."
+      }
+    ]
+  }
+}

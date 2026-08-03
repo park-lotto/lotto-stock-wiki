@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "date": "2026-07-20",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-20_1106_단기적으로는 valuation 매력 높은 은행 위주...md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "하나증권",
+    "analyst": "최정욱, 정소영",
+    "report_date": "2026.7.20",
+    "market_direction": null,
+    "macro_vars": [
+      "미국 국채금리",
+      "국내 국채금리",
+      "원/달러 환율",
+      "국제유가",
+      "미국 6월 CPI"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": "비중확대",
+        "reason": "단기적으로는 valuation 매력 높은 은행 위주로 접근 권고"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.8.7",
+        "event": "JB금융과 BNK금융 통합 검토 착수 여부 회신 요청 기한"
+      }
+    ],
+    "top_picks": [
+      "우리금융",
+      "iM금융"
+    ],
+    "risk": "최근 초과상승 폭이 컸던 만큼 일시적으로는 조정을 보일 여지도 있음",
+    "quote": "단기적으로는 valuation 매력 높은 은행 위주로 접근 권고"
+  }
+}

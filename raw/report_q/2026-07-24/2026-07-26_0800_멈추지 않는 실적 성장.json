@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-26_0800_멈추지 않는 실적 성장.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "유재선",
+    "report_date": "2026년 7월 24일",
+    "stocks": [
+      {
+        "name": "LS ELECTRIC",
+        "code": "010120",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "270,000원",
+        "tp_prev": "220,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26 매출액 15,770억원(YoY +32.2%), 영업이익 1,768억원(YoY +64.4%)",
+        "estimate_revision": "목표주가를 기존대비 22.7% 상향",
+        "next_catalyst": "미국 빅테크향 전력기기 고정계약 협의 및 고객수/제품 라인업 확대",
+        "thesis": [
+          "신규 수주 2.1조원(YoY +243.0%) 및 수주잔고 7.0조원 확보로 실적 가시성 증대",
+          "빅테크향 배전반 및 초고압 제품 기여도 확대로 인한 수익성 개선",
+          "생산능력 증설을 통한 짧은 납기 수요 대응 및 장기적 수주/매출 우상향"
+        ],
+        "valuation_basis": "2028년 예상 EPS에 목표 PER 42배를 적용",
+        "risk": "전력기기 주요 원재료 가격 상승에 따른 원가 부담 및 하반기 마진 지속 여부",
+        "supply_comment": "짧은 납기의 수요에 대응할 수 있는 생산능력이 경쟁력의 원천이기 때문에 추가적인 증설이 검토되고 있다. 현재 미국에서 진행되는 증설 물량에 더해 국내에서도 협력업체 포함 생산능력 확대를 준비하는 모습이다.",
+        "quote": "LS ELECTRIC의 목표주가를 270,000원으로 기존대비 22.7% 상향하며 투자의견 매수를 유지한다.",
+        "sector": "전력"
+      }
+    ]
+  }
+}

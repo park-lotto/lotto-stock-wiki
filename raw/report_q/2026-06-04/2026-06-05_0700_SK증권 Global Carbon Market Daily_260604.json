@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "SK securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-05\\2026-06-05_0700_SK증권 Global Carbon Market Daily_260604.md"
+  },
+  "questionnaire": {
+    "broker": "SK securities",
+    "analyst": "최관순",
+    "report_date": "2026-06-04",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "유럽 배출권 가격 (EUA): 78.6 유로/톤",
+      "영국 배출권 가격 (UKA): 56.2 파운드/톤",
+      "미국 배출권 가격 (RGGI): 44.1 달러/톤",
+      "미국 배출권 가격 (CCA): 31.7 달러/톤",
+      "한국 배출권 가격 (KAU): 24,200 원/톤",
+      "국제유가 WTI: 96.0 USD/bbl",
+      "유럽 천연가스 (ICE Dutch TTF): 48.9 EUR/MWh"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-06-04",
+        "event": "국제유가, 중동 무력공방 재개에 3일 연속 상승…WTI 96달러"
+      },
+      {
+        "date": "2026-06-03",
+        "event": "국제감축사업 길잡이 나왔다…코트라, 산업부와 실무 매뉴얼 공개"
+      },
+      {
+        "date": "2026-06-04",
+        "event": "영국, FTA 체결 뒤 CBAM 추진…인도 '보복 검토'"
+      }
+    ],
+    "top_picks": null,
+    "risk": null,
+    "quote": "국제유가, 중동 무력공방 재개에 3일 연속 상승…WTI 96달러"
+  }
+}

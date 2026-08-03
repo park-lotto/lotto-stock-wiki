@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-27",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-28_0803_불리한 매크로 환경에도 구조적 수익성 개선 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김성래, 김예인",
+    "report_date": "2026년 7월 27일",
+    "stocks": [
+      {
+        "name": "현대모비스",
+        "code": "012330",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "810,000원",
+        "tp_prev": "810,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q 매출액 16.3조원(+2.4% 이하 YoY)로 시장 기대치 대비 하회. 영업이익은 시장 기대치를 크게 상회한 9,752억원(+12.2%) 기록.",
+        "estimate_revision": "매출액(FY1) 66,078 -> 65,342 (-1.1%), 영업이익(FY1) 3,718 -> 3,798 (+2.1%)",
+        "next_catalyst": "8월 RMAC 활용한 Atlas 상용화 개발, EV2, 아이오닉3 등 captive BEV 신차 확대",
+        "thesis": [
+          "불리한 매크로 환경에도 고부가 전장 부품을 비롯한 제품 믹스 개선으로 구조적 수익성 개선 확인",
+          "A/S 부문은 환율 효과와 판가 인상으로 고마진 기조 유지",
+          "소프트뱅크 풋옵션 행사에 따른 HMG Global 간접지분 증가 및 RMAC 활용 로봇 사업 가시화"
+        ],
+        "valuation_basis": "AVG of (Target PER * EPS + Target PBR * BPS)",
+        "risk": "북미 전기차 등 완성차 물량 감소, 인도 화재에 따른 물류비 증가, 메모리/PCB 원가 상승",
+        "supply_comment": "모듈/핵심부품 부문 내 Non-Captive 공급 증가 견조",
+        "quote": "불리한 매크로 환경에도 구조적인 수익성 개선 확인"
+      }
+    ]
+  }
+}

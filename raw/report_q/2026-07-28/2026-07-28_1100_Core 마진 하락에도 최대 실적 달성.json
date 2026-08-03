@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-28",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-28_1100_Core 마진 하락에도 최대 실적 달성.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "유재선",
+    "report_date": "2026년 7월 28일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "HD현대마린솔루션",
+        "code": "443060",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "330,000원",
+        "tp_prev": "285,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2분기 매출액은 5,804억원으로 전분기대비 1.0% 증가했다. 영업이익은 976억원으로 전분기대비 4.5% 증가했다. 전사 이익률은 16.8%로 전분기대비 0.5%p 상승했다.",
+        "estimate_revision": null,
+        "next_catalyst": "글로벌 에너지 인프라 투자가 증가하는 국면에서 AM 솔루션 서비스 대상 확대",
+        "thesis": [
+          "분기 최대 매출과 이익을 지속적으로 경신하고 있으며 수주 ASP가 우상향 추세를 유지",
+          "AM솔루션은 6개 분기 연속 최대 매출을 기록 중이며, 신규 LTSA 계약 체결 및 기존 선종에서 LPG선, 탱커 등으로 확대",
+          "미국 Aperion Energy Group과 AI 데이터센터 발전엔진 LTSA 및 O&M 유지보수 MOU 체결을 통한 사업 영역 확장"
+        ],
+        "valuation_basis": "2026년 추정치 기준 PER 26.0배, PBR 9.4배",
+        "risk": "디지털솔루션에서 일부 제품 판매보증충당금 설정 및 컨설팅, 물류 임차 등 일회성 비용 반영",
+        "supply_comment": null,
+        "quote": "HD현대마린솔루션의 목표주가 330,000원과 투자의견 매수를 유지한다. 2분기 실적은 시장 기대치에 부합했다. 일부 일회성 비용 반영으로 핵심사업 이익률이 전분기대비 감소했으나 여전히 높은 수준을 기록하고 있다."
+      }
+    ]
+  }
+}

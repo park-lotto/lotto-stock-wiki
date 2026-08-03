@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_GTC Taipei 2026 - Nvidia Keynote Review.md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "박재환",
+    "report_date": "2026.06.02",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "엔비디아",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "Vera CPU 및 RTX Spark 탑재를 통한 AI 시스템 수요 확대와 실적 업사이드 기대",
+        "thesis": [
+          "엔비디아는 단순 칩 판매를 넘어 설계·시뮬레이션·운영·전력 최적화까지 제공하는 End-to-End AI 인프라 기업으로 확장 중",
+          "Vera CPU는 AI 에이전트 워크로드에 최적화되어 설계되었으며, 코드 실행 및 데이터베이스 처리 등에서 x86 CPU 대비 약 1.8배 빠른 작업 속도 제공",
+          "RTX Spark를 통해 AI 산업이 데이터센터에서 컨슈머 단계로 확장"
+        ],
+        "valuation_basis": null,
+        "risk": "기존 컨슈머향 프로세서 플레이어인 애플, 퀄컴, 인텔, AMD에게는 엔비디아의 시장 진입이 부담으로 작용할 수 있음",
+        "supply_comment": null,
+        "quote": "금번 GTC의 핵심 수혜주는 Vera CPU와 RTX Spark를 아우르는 ARM으로 귀결된다고 판단.",
+        "sector": "반도체"
+      },
+      {
+        "name": "ARM",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "엔비디아 Vera CPU 및 RTX Spark 제품군 채택에 따른 수혜",
+        "thesis": [
+          "엔비디아의 AI 에이전트 및 AI PC 전략의 핵심 아키텍처 제공",
+          "금번 GTC의 핵심 수혜주로 평가"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "금번 GTC의 핵심 수혜주는 Vera CPU와 RTX Spark를 아우르는 ARM으로 귀결된다고 판단.",
+        "sector": "반도체"
+      }
+    ]
+  }
+}

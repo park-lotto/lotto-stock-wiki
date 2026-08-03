@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>영상 즐겨찾기 · 쇼핑쇼츠</title>
+<title>영상 즐겨찾기 · 숏템메이커</title>
 <script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <style>
   /* 스탁브레인 민트-블랙 투톤(다크 기본). produce.html과 동일 토큰. */
@@ -166,6 +166,31 @@ function sendOneToProduce(sc){
   sessionStorage.setItem('produce_mix_urls', JSON.stringify(picks.map(p=>p.url).filter(Boolean)));
   location.href='/produce';
 }
+// 플랫폼 배지 — URL 호스트로 판별(app.py _GRAB_DOMAINS와 같은 도메인). 재생 로직이
+// 이미 URL로 플랫폼을 구분하고 있어(playPreview) 같은 판별을 배지로도 보여준다.
+function platformBadge(url){
+  const h=(String(url||'').match(/^https?:\/\/([^/]+)/)||[])[1]||'';
+  const P=[['youtu','▶️','YT','#cc0000'],['tiktok.com','🎵','TikTok','#111'],
+    ['instagram.com','📷','인스타','#c13584'],
+    ['xiaohongshu','📕','샤오훙슈','#ff2442'],['xhslink','📕','샤오훙슈','#ff2442'],
+    ['rednote','📕','샤오훙슈','#ff2442'],['douyin','🎬','도우인','#111'],
+    ['iesdouyin','🎬','도우인','#111']];
+  for(const [k,emo,lab,bg] of P) if(h.includes(k))
+    return `<span style="position:absolute;top:6px;right:6px;z-index:2;background:${bg};color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px">${emo} ${lab}</span>`;
+  return '';
+}
+// 보강메타 없는 카드 재수집(2026-07-21) — 담을 때 메타가 안 왔거나 서버 probe 실패한
+// 항목만. 자동재수집은 비용이라 버튼으로만.
+async function reprobeMeta(sc, btn){
+  if(btn){ btn.disabled=true; btn.textContent='수집 중…'; }
+  try{
+    const r=await fetch('/api/mix/basket/reprobe',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({shortcode:sc})});
+    const j=await r.json();
+    if(!j.ok){ if(btn){ btn.disabled=false; btn.textContent='🔄 정보 새로고침'; } return; }
+    setTimeout(loadItems, 1600);   // 백그라운드 보강이 끝날 즈음 새로고침
+  }catch(e){ if(btn){ btn.disabled=false; btn.textContent='🔄 정보 새로고침'; } }
+}
 function render(){
   const el=document.getElementById('cards');
   document.getElementById('selCount').textContent = SELECTED.size ? `${SELECTED.size}개 선택` : '';
@@ -175,16 +200,21 @@ function render(){
   }
   el.innerHTML = ITEMS.map(i=>{
     const sel = SELECTED.has(i.shortcode);
+    const ml = metaLine(i.meta);
+    // 메타가 하나도 없을 때만 재수집 버튼(있으면 굳이 비용 쓸 이유 없음).
+    const reprobeBtn = ml ? '' : `<button onclick="reprobeMeta('${i.shortcode}',this)" style="width:100%;margin:2px 0 4px;padding:5px;background:#2d333b;color:#adbac7;border:1px solid #444;border-radius:6px;font-size:11px;cursor:pointer">🔄 정보 새로고침</button>`;
     return `
     <div class="card ${sel?'sel':''}">
-      <div class="thumb" style="position:relative">
+      <div class="thumb" onclick="toggleSelect('${i.shortcode}')" title="클릭하면 선택/해제 (▶ 는 미리보기 재생)" style="position:relative;cursor:pointer">
+        ${platformBadge(i.url)}
         <span class="chk" onclick="event.stopPropagation();toggleSelect('${i.shortcode}')" style="cursor:pointer;position:absolute;top:6px;left:6px;z-index:2">${sel?'✅':'⬜'}</span>
-        ${i.thumbnail?`<img src="${thumbSrc(i.thumbnail)}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'" onclick="playPreview('${i.shortcode}')" style="cursor:pointer">`:''}
-        <span onclick="playPreview('${i.shortcode}')" title="재생" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1;background:rgba(0,0,0,.55);color:#fff;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer">▶</span>
+        ${i.thumbnail?`<img src="${thumbSrc(i.thumbnail)}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'" style="cursor:pointer">`:''}
+        <span onclick="event.stopPropagation();playPreview('${i.shortcode}')" title="미리보기 재생" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;background:rgba(0,0,0,.55);color:#fff;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer">▶</span>
       </div>
       <div class="body">
         <div class="rank" style="white-space:normal;line-height:1.4;min-height:2.6em">${esc((i.name||i.caption||'').slice(0,60))}</div>
-        ${metaLine(i.meta)}
+        ${ml}
+        ${reprobeBtn}
         <div class="btns">
           <button class="view" onclick="window.open('${esc(i.url||'#')}','_blank')">👁 보기</button>
           <button onclick="removeItem('${i.shortcode}')">🗑 빼기</button>

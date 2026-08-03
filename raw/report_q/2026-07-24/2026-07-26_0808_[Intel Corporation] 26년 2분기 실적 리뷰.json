@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-26_0808_[Intel Corporation] 26년 2분기 실적 리뷰.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "IBK투자증권",
+    "analyst": "김운호",
+    "report_date": "2026. 7. 24",
+    "stocks": [
+      {
+        "name": "Intel Corporation",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "26년 2분기 Intel 매출액은 $16.1B(YoY +25.4%, QoQ +18.4%), 시장 컨센서스 $14.4B 상회. EPS는 $0.42, 시장 컨센서스 $0.21 상회. 26년 3분기 매출액 가이던스 $15.8B~$16.8B. 시장 컨센서스는 $15.1B, EPS는 $0.38. 시장 컨센서스 $0.27 상회",
+        "estimate_revision": null,
+        "next_catalyst": "AI Server에도 CPU 비중이 높아지고, PC용 CPU의 성능 향상이 보편화될 것으로 기대. Intel은 이러한 변화에서 가장 수혜를 받을 것으로 예상",
+        "thesis": [
+          "CCPG 매출액은 컨센서스 $8.0B를 상회, 부품가격 상승에도 수요 견조",
+          "DCAI 매출액 $6.3B로 컨센서스 $5.5B 상회, YoY 성장률 역대 최고 수준",
+          "Foundry 매출액 $5.8B로 컨센서스 $5.5B 상회, 수율 개선과 투자 싸이클로 공급 증가"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "26년 2분기 실적과 3분기 예상 실적 모두 시장 기대치를 상회",
+        "sector": "반도체"
+      }
+    ]
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-07-28",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-28_1107_RFHICRF머트리얼즈 2Q26 잠정실적 지금이니...md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "이찬영",
+    "report_date": "2026.07.28",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "RFHIC",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 연결 매출액 515억원(+15%yoy), 영업이익 112억원(+35%yoy), 시장 컨센서스 하회. 3·4분기 실적은 2분기 대비 뚜렷하게 개선될 전망이며, 연간 가이던스 달성에도 지장 없음. 매출액 가이던스 2,600억원은 유지하고 영업이익 가이던스는 기존 460억원에서 520억원으로 상향",
+        "estimate_revision": "영업이익 가이던스 기존 460억원에서 520억원으로 상향",
+        "next_catalyst": "에릭슨 벤더 선정, 미국 주파수 경매, 반도체 장비 부품 수익화",
+        "thesis": [
+          "자회사 RF머트리얼즈의 연결 이익 기여 확대",
+          "레이시온향 물량의 마진 개선 및 3분기 실적 인식 이연에 따른 개선",
+          "에릭슨 벤더 선정, 미국 주파수 경매 등 중장기 모멘텀 유효"
+        ],
+        "valuation_basis": "보수적으로 추정한 12MF 영업이익과 지배순이익은 각각 237억원, 173억원인 반면 시가총액은 4,263억원에 불과(7/27 기준)",
+        "risk": "단기적으로 뚜렷한 주가 재료가 부족해 가파른 반등을 기대하기는 어려울 수 있음",
+        "supply_comment": "RFHIC 통신 매출 중 약 130억원은 RF머트리얼즈 기여분",
+        "quote": "RFHIC는 실적이 기대를 하회했으나, 이는 레이시온향 수주 물량의 실적 인식이 3분기로 이연된 영향. 수주 취소가 아닌 시점 차이인 만큼 3·4분기 실적은 2분기 대비 뚜렷하게 개선될 전망이며, 연간 가이던스 달성에도 지장 없음."
+      },
+      {
+        "name": "RF머트리얼즈",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 연결 매출액 251억원(+51%yoy), 영업이익 53억원(+182%yoy), 시장 컨센서스 상회",
+        "estimate_revision": null,
+        "next_catalyst": "3분기 말 생산량 30% 증설 및 2027년 말 신공장 완공",
+        "thesis": [
+          "루멘텀향 공급 물량 증가 및 ASP 전분기 대비 약 30% 상승",
+          "펌프레이저 수요 대비 공급 부족 및 가동률 80% 이상 유지",
+          "2027년 Scale Across 및 DCI 시장 본격 성장 예상"
+        ],
+        "valuation_basis": null,
+        "risk": "단기간 내 급격한 증설이 쉽지 않음",
+        "supply_comment": "펌프레이저 패키지 수요가 공급을 크게 웃도는 가운데 가동률은 80% 이상. Lumentum 역시 펌프레이저 수요-공급 불균형이 30%를 상회한다고 언급",
+        "quote": "루멘텀향 공급 물량이 증가한 가운데 ASP도 전분기 대비 약 30% 상승하며 수익성이 큰 폭으로 상승"
+      }
+    ]
+  }
+}

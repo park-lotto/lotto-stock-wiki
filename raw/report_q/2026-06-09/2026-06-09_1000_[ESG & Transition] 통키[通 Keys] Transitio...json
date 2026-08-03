@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_[ESG & Transition] 통키[通 Keys] Transitio...md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "박세연, 김예인",
+    "report_date": "2026 년 6 월 9 일",
+    "target_kind": "market",
+    "market_direction": "상향 기대 유지",
+    "macro_vars": [
+      "EUA 가격 조정",
+      "KAU25 가격 급등",
+      "에너지·중동 리스크",
+      "탄소중립법 개정 및 정책프리미엄"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "전력",
+        "stance": "상향 기대",
+        "reason": "4차 계획 총량 축소·유상할당 확대, CBAM 수요, 에너지·중동 리스크 등을 배경으로 장기 상향 기대 유효"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.06.01",
+        "event": "헌재 ‘개정 시한’ 넘긴 탄소중립법 관련 논의"
+      },
+      {
+        "date": "2026.06.04",
+        "event": "CalSTRS 넷제로 목표 추진"
+      },
+      {
+        "date": "2026.06.04",
+        "event": "EU, 데이터센터 에너지 효율 기준 도입 추진"
+      }
+    ],
+    "top_picks": null,
+    "risk": "유럽 배출권 경매 물량 증가(+18%) 및 수요 둔화, 정책 변화에 따른 조정 가능성",
+    "quote": "KAU25는 4차 계획 총량 축소·유상할당 확대, CBAM 수요, 에너지·중동 리스크를 배경으로 연초 이후 약 60% 상승했지만, 정책프리미엄을 감안하면 조정 가능성이 존재하더라도 장기 상향 기대가 여전히 유효"
+  }
+}

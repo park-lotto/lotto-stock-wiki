@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "date": "2026-06-01",
+    "broker": "Kiwoom",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_0601, Kiwoom Morning Letter.md"
+  },
+  "questionnaire": {
+    "broker": "Kiwoom",
+    "analyst": null,
+    "report_date": "2026/6/1",
+    "target_kind": "market",
+    "market_direction": "bullish",
+    "macro_vars": [
+      "KOSPI 8,476.15 (+3.55%)",
+      "달러/원 1,504.47 (+10.99)",
+      "WTI(NYMEX) 87.36 (-1.73%)",
+      "미국 국채(10년) 4.436 (-1.2bp)"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "비중확대",
+        "reason": "AI 인프라 투자 확대 및 서버·클라우드·소프트웨어 등 AI 생태계 전반 확산"
+      },
+      {
+        "sector": "자동차",
+        "stance": "비중확대",
+        "reason": "미-이란 종전 기대감에 따른 전쟁 리스크 완화 및 수혜 기대"
+      }
+    ],
+    "style": "성장주 중심, AI 테마",
+    "event_calendar": [
+      {
+        "date": "5.29",
+        "event": "한국 산업생산 (MoM) 4월 발표"
+      },
+      {
+        "date": "5.31",
+        "event": "중국 제조업 PMI 5월 발표"
+      },
+      {
+        "date": "6.01",
+        "event": "한국 수출입동향 YoY 5월 발표"
+      },
+      {
+        "date": "6.02",
+        "event": "한국 CPI(YoY) 5월 발표"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "삼성전기",
+      "현대차",
+      "현대모비스"
+    ],
+    "risk": "중동 지정학적 리스크, 환율 변동성, 미-이란 협상 진전 여부",
+    "quote": "29일(금) 코스피는 전장 대비 상승 출발해 장 중 내내 상승세를 유지하며 종가 기준 사상 최고치를 경신(KOSPI 3.55%, KOSDAQ -2.68%). 지수는 미·이란 간 종전 기대감에 따른 전쟁 리스크 완화와 삼성전자의 HBM4E 샘플 출하 및 엔비디아 CEO 방한 소식으로 우상향하며 8,476.15로 마감."
+  }
+}

@@ -282,6 +282,21 @@ def test_guard_covers_seyo_forms_endings_off(text, label):
     assert not out.rstrip().endswith(","), f"{label}: 의문형 끝에 쉼표가 남았다: {out!r}"
 
 
+@pytest.mark.parametrize("text,label", [
+    ("매일 설거지 힘드셔요.", "힘드셔요"),
+    ("어디 편찮으셔요.", "편찮으셔요"),
+])
+def test_guard_covers_syeoyo_variant(text, label):
+    """`셔요`는 `세요`의 표준 축약 변이형(하시어요→하셔요/하세요)으로 같은
+    상태 서술어 계열(명령형이 없다)이다. 가드가 문자열 `세요`만 잡고 `셔요`를
+    빼먹어, 훅에서 `[curious] 매일 설거지, 힘드셔요!`로 잘못 강조됐다(2026-07-17
+    병합판정 리뷰가 "세요$ 무예외·구조적 불가"의 반례로 실측·지적).
+    뮤턴트: `_QUESTION_GUARD_ALTS`에서 `셔요`를 빼면 두 케이스 다 `'!' in out`으로 죽는다."""
+    out = _run(text, "훅", {"endings": {"intensity": 0}, "fillers": {"on": False}})
+    assert "!" not in out, f"{label}: 상태 서술어인데 훅 꼬리 강조(느낌표)가 붙었다: {out!r}"
+    assert not out.rstrip().endswith(","), f"{label}: 끝에 쉼표가 남았다: {out!r}"
+
+
 # ── 재리뷰 지적 Finding1(Critical) — 까요 바레 리터럴이 까다(peel) 평서문을 뒤집는 사고 ──
 # 위 나요/가요/하나요 감사에서 던졌던 질문("이 표면형이 명사/평서형과 겹치는가")을
 # "까요" 자신에는 안 던졌던 게 재발 원인이었다(이 트랙에서 같은 사고 클래스 4번째).

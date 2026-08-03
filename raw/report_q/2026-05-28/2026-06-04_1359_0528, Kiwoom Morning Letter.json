@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "date": "2026-05-28",
+    "broker": "Kiwoom",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_0528, Kiwoom Morning Letter.md"
+  },
+  "questionnaire": {
+    "broker": "Kiwoom",
+    "analyst": null,
+    "report_date": "2026/5/28",
+    "target_kind": "market",
+    "market_direction": "bullish",
+    "macro_vars": [
+      "KOSPI 8,228.70 +2.25%",
+      "KOSDAQ 1,133.13 +0.98%",
+      "WTI(NYMEX) 88.68 -5.55%",
+      "달러/원 1,499.98 -8.02"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "positive",
+        "reason": "미국 마이크론 급등 및 글로벌 반도체 강세"
+      },
+      {
+        "sector": "소비내수",
+        "stance": "positive",
+        "reason": "소비재·헬스케어 업종 강세 전환 및 순환매 확산"
+      }
+    ],
+    "style": "Growth",
+    "event_calendar": [
+      {
+        "date": "5.28",
+        "event": "한국 금리 결정"
+      },
+      {
+        "date": "5.28",
+        "event": "미국 근원 PCE 물가지수 (MoM), GDP (QoQ), 내구재 주문 (MoM)"
+      },
+      {
+        "date": "5.29",
+        "event": "한국 산업생산 (YoY), 일본 실업률, 산업생산 (YoY), 소매판매 (YoY), 독일 CPI (YoY)"
+      },
+      {
+        "date": "5.31",
+        "event": "중국 제조업 PMI"
+      },
+      {
+        "date": "6.01",
+        "event": "미국 제조업 PMI, ISM 제조업 지수"
+      }
+    ],
+    "top_picks": [
+      "SK하이닉스",
+      "삼성전자",
+      "마이크론",
+      "프록터앤드갬블",
+      "홈디포",
+      "나이키",
+      "유나이티드헬스"
+    ],
+    "risk": "반도체 업종의 단기 급등 부담에 따른 상승폭 조절 및 이란 지정학적 리스크 관련 협상 불확실성 잔존",
+    "quote": "27일(수) 코스피는 이란 전쟁 종식 기대감과 글로벌 반도체 강세에 힘입어 사상 최고치를 경신(KOSPI 2.25%, KOSDAQ 0.98%)."
+  }
+}

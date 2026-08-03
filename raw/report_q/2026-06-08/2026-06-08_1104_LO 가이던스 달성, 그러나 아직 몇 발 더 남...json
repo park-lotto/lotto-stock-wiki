@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-08_1104_LO 가이던스 달성, 그러나 아직 몇 발 더 남...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김선아",
+    "report_date": "2026년 06월 08일",
+    "stocks": [
+      {
+        "name": "한미약품",
+        "code": "128940",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "710,000원",
+        "tp_prev": "640,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2026년 매출액 1,698.1십억원, 영업이익 259.6십억원 / 2027년 매출액 1,793.0십억원, 영업이익 310.4십억원",
+        "estimate_revision": "sonefpeglutide 가치는 6,527억원으로 산정하였으며, HM17321은 sonefpeglutide를 통한 동사의 L/O 협상력(병용임상 옵션 가능성 추가)을 고려하여 상향 조정함",
+        "next_catalyst": "HM15275(삼중작용제), HM17321(근육증가), 선천성 고인슐린혈증 치료제 등 후보물질의 연내 추가 L/O 가능성 및 HM17321 데이터 공개(7-8월)",
+        "thesis": [
+          "Lilly향 소네페글루타이드(HM15912) 기술이전으로 L/O 가이던스 달성 및 계약 경쟁력 입증",
+          "다양한 잠재 파트너와 파이프라인 L/O 협상 가능성 열려있음",
+          "HM17321, HM15275 등 추가적인 신약 파이프라인 가치 상향 가능성"
+        ],
+        "valuation_basis": "Target EV/EBITDA는 15배 적용. 향후 시료 생산에 따른 이익과 마일스톤 수령에 따른 영업가치 증가 반영",
+        "risk": null,
+        "supply_comment": "섹터: 바이오",
+        "quote": "L/O를 연간 가이던스로 내세운 자신감을 보아, 다수의 잠재 파트너와 기본적인 term sheet은 확정된 수준의 파이프라인이 여러 개인 상황으로 짐작된다."
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_지분가치는 상승, 주주환원은 확대.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "SK증권",
+    "analyst": "최관순",
+    "report_date": "2026-06-04",
+    "stocks": [
+      {
+        "name": "삼성물산",
+        "code": "028260",
+        "rating": "매수",
+        "rating_changed": "유지",
+        "tp_new": "590,000원",
+        "tp_prev": "48만원",
+        "tp_direction": "up",
+        "earnings_outlook": "26년 삼성물산의 DPS는 전년 대비 25% 증가한 3,500원으로 예상한다.",
+        "estimate_revision": "목표주가는 삼성전자, 삼성생명 등 주요 자회사 주가 상승에 따른 지분가치 상승과 순차입금 감소를 반영하여 기존 48만원에서 59만원으로 상향조정한다.",
+        "next_catalyst": "삼성전자 FCF 개선에 따른 배당확대 가능성",
+        "thesis": [
+          "지분가치 상승",
+          "자체사업 실적개선",
+          "주주환원 확대"
+        ],
+        "valuation_basis": "현재 NAV 대비 할인율은 54.6%로 밸류에이션 매력도 높다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "지분가치 상승, 자체사업 개선, 주주환원 확대에 대한 기대감이 유효하기 때문이다."
+      }
+    ]
+  }
+}

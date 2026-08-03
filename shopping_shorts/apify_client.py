@@ -41,7 +41,13 @@ _MAX_RUN_FAILURE_ROTATIONS = 1
 # 마지막으로 성공한 토큰의 인덱스를 저장해 다음 호출부터 그 지점에서 시작
 # (매번 소진된 앞 계정부터 다시 두드리지 않음).
 _KEY_STATE_PATH = Path(__file__).parent / "data" / "apify_key_index.json"
-_EXHAUSTED_STATUSES = {401, 402, 429}
+# 시작 거부(런 미생성=무과금)라 다음 토큰으로 로테이션해야 하는 상태들.
+# 403 추가(2026-07-25 실사고): 유료 렌탈 액터(apidojo)는 FREE 계정이 월 $5
+# 하드리밋을 넘기면 403 "Monthly usage hard limit exceeded"를 뱉는다. 403을
+# 로테이션 대상에 안 넣으면 _start_run이 raise_for_status로 던지고 _run_with_rotation이
+# 그대로 재발생시켜 — 아직 예산이 남은 STARTER 토큰을 써보지도 못하고 인스타
+# '지금 수집'이 통째로 403으로 즉사했다(라이브 job 2건 403 error 실측).
+_EXHAUSTED_STATUSES = {401, 402, 403, 429}
 
 
 def _load_key_index() -> int:

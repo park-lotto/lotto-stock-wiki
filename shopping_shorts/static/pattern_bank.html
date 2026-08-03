@@ -1,0 +1,253 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>부품은행 · 숏템메이커</title>
+<script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<style>
+  /* 스탁브레인 민트-블랙 투톤(다크 기본). produce.html과 동일 토큰. */
+:root{--bg:#0a0f0d;--panel:#101815;--line:#1e2b26;--txt:#eaf3f0;--sub:#8fa1a0;--accent:#37e0bd;--accent2:#1f9e7a;--fire:#ff6b6b;--ok:#37e0bd;--gold:#f0c453;--inset:#0c1412;--hover:#131d19;color-scheme:dark;}
+:root[data-theme="light"]{--bg:#f4faf7;--panel:#ffffff;--line:#d5e6df;--txt:#0f1a16;--sub:#5c726d;--accent:#12b886;--accent2:#0ca678;--fire:#e0524a;--ok:#12b886;--gold:#b8860b;--inset:#eef7f3;--hover:#eef7f3;color-scheme:light;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic',system-ui,sans-serif;min-height:100vh}
+  .main{max-width:1080px;margin:0 auto;padding:28px 36px}
+  .head h2{font-size:24px}
+  .desc{color:var(--sub);font-size:13px;margin:6px 0 20px;line-height:1.6}
+  select,input,textarea{background:var(--inset);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;font-size:13px}
+  textarea{width:100%;min-height:96px;resize:vertical;line-height:1.6}
+  button{background:#1b2534;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font:inherit;font-size:13px;cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#04120e;font-weight:700}
+  /* 분해 입력부 */
+  .ingest{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:20px}
+  .ingest .row{display:flex;gap:10px;margin-top:10px;align-items:center;flex-wrap:wrap}
+  .ingest .row input{flex:0 0 220px}
+  /* 탭 */
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .tab{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:7px 14px;font-size:13px;cursor:pointer;display:flex;gap:6px;align-items:center}
+  .tab.on{background:var(--accent);border-color:var(--accent);color:#04120e;font-weight:700}
+  .tab .cnt{font-size:11px;opacity:.85;background:rgba(0,0,0,.18);border-radius:10px;padding:1px 6px}
+  .tab.on .cnt{background:rgba(0,0,0,.22)}
+  /* 컨트롤바 */
+  .ctl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+  .ctl .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .ctl .seg button{border:none;border-radius:0;background:var(--panel)}
+  .ctl .seg button.on{background:var(--accent);color:#04120e;font-weight:700}
+  /* 카드 */
+  .cards{display:flex;flex-direction:column;gap:10px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+  .card .txt{font-size:15px;line-height:1.5}
+  .card .meta{display:flex;gap:14px;align-items:center;font-size:12px;color:var(--sub);flex-wrap:wrap}
+  .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:6px;font-weight:700}
+  .b-pending{background:#3d3512;color:var(--gold)}
+  .b-approved{background:#123d24;color:#5ddb8e}
+  .b-rejected{background:#3d1a1a;color:#e07070}
+  .b-tpl{background:#2b1a3d;color:#b98ee0}
+  .card .acts{display:flex;gap:6px}
+  .card .acts button{padding:5px 12px;font-size:12px}
+  .card .edit{display:none;flex-direction:column;gap:6px}
+  .card.editing .edit{display:flex}
+  .card.editing .acts .a-edit{display:none}
+  .empty{color:var(--sub);font-size:13px;padding:48px;text-align:center}
+  /* 스파인 */
+  .spine{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+  .spine .name{font-size:15px;font-weight:700;margin-bottom:6px}
+  .spine .m{font-size:12px;color:var(--sub);line-height:1.6}
+  /* 토스트 */
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#132a24;border:1px solid var(--accent);color:var(--txt);padding:12px 20px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:300}
+  #toast.on{opacity:1}
+</style>
+
+<main class="main">
+  <div class="head"><h2>🔩 부품은행</h2></div>
+  <div class="desc">
+    잘 팔린 대본을 <b>8버킷 부품</b>(후킹·어미·담화부사·CTA·숫자·증거·전환·감정)으로 분해해 모으는 은행입니다.
+    붙여넣고 <b>[분해]</b>하면 부품이 <b>pending</b>으로 쌓입니다 — <b style="color:var(--gold)">승인/기각</b>으로 큐레이션하세요.
+  </div>
+
+  <div class="ingest">
+    <textarea id="fullText" placeholder="잘 팔린 대본 전문을 여기 붙여넣으세요…"></textarea>
+    <div class="row">
+      <input id="cat" placeholder="제품군(선택) 예: 기미크림">
+      <button class="primary" id="ingestBtn" onclick="doIngest()">🔎 분해</button>
+      <span class="desc" style="margin:0">키풀(Gemini)로 분해합니다. 키가 없으면 0개로 나올 수 있어요.</span>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="ctl" id="ctl">
+    <span class="desc" style="margin:0">정렬</span>
+    <div class="seg" id="sortSeg">
+      <button data-order="perf" class="on" onclick="setOrder('perf')">성과</button>
+      <button data-order="freq" onclick="setOrder('freq')">빈도</button>
+      <button data-order="recent" onclick="setOrder('recent')">최신</button>
+    </div>
+    <select id="statusFilter" onchange="load()">
+      <option value="">상태 전체</option>
+      <option value="pending">대기</option>
+      <option value="approved">승인</option>
+      <option value="rejected">기각</option>
+    </select>
+  </div>
+
+  <div id="list" class="cards"></div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+const BUCKETS = [
+  ["hook", "후킹문구"], ["ending", "어미"], ["adverb", "담화부사"],
+  ["cta", "CTA"], ["price", "숫자·가격"], ["evidence", "증거·시연"],
+  ["conflict", "전환·갈등"], ["emotion", "감정·공감"],
+];
+const SPINE_TAB = "__spine__";
+let curBucket = "hook";
+let curOrder = "perf";
+
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("on");
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("on"), 2600);
+}
+function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+async function jget(u){ const r = await fetch(u); return r.json(); }
+async function jpost(u, body){
+  const r = await fetch(u, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)});
+  return r.json();
+}
+
+async function renderTabs(){
+  let counts = {};
+  try{ counts = (await jget("/api/pattern/buckets")).counts || {}; }catch(e){}
+  const tabs = document.getElementById("tabs");
+  let html = "";
+  for(const [b, label] of BUCKETS){
+    const c = counts[b] || {pending:0, approved:0, rejected:0};
+    const total = (c.pending||0)+(c.approved||0)+(c.rejected||0);
+    html += `<div class="tab ${curBucket===b?'on':''}" onclick="pickBucket('${b}')">${esc(label)}<span class="cnt">${total}</span></div>`;
+  }
+  html += `<div class="tab ${curBucket===SPINE_TAB?'on':''}" onclick="pickBucket('${SPINE_TAB}')">🧬 매크로 스파인</div>`;
+  tabs.innerHTML = html;
+}
+
+function pickBucket(b){
+  curBucket = b;
+  renderTabs();
+  document.getElementById("ctl").style.display = (b===SPINE_TAB) ? "none" : "flex";
+  load();
+}
+function setOrder(o){
+  curOrder = o;
+  document.querySelectorAll("#sortSeg button").forEach(x=>x.classList.toggle("on", x.dataset.order===o));
+  load();
+}
+
+async function load(){
+  const list = document.getElementById("list");
+  if(curBucket === SPINE_TAB){ return loadSpines(); }
+  const status = document.getElementById("statusFilter").value;
+  const q = `/api/pattern/items?bucket=${encodeURIComponent(curBucket)}&order=${curOrder}` + (status?`&status=${status}`:"");
+  let items = [];
+  try{ items = (await jget(q)).items || []; }catch(e){}
+  if(!items.length){ list.innerHTML = `<div class="empty">부품이 없습니다. 위에서 대본을 분해해 보세요.</div>`; return; }
+  list.innerHTML = items.map(cardHtml).join("");
+}
+
+// 훅 유형(taxonomy) 라벨 — 자동수확·분류가 붙인 hook_type을 사람이 알아보게(유형 다양성 큐레이션).
+const HTYPE = {target_callout:"🎯 타깃콜아웃", shock:"😲 충격", discovery:"💡 발견",
+  warning:"🚫 경고", praise:"👏 극찬", confession:"🙈 고백", question:"❓ 질문"};
+
+function cardHtml(it){
+  const sb = {pending:"b-pending", approved:"b-approved", rejected:"b-rejected"}[it.status] || "b-pending";
+  const sl = {pending:"대기", approved:"승인", rejected:"기각"}[it.status] || it.status;
+  const tpl = it.slot_role === "template" ? `<span class="badge b-tpl">슬롯템플릿</span>` : "";
+  const ht = (it.tags && it.tags.hook_type) ? `<span class="badge b-tpl">${HTYPE[it.tags.hook_type] || it.tags.hook_type}</span>` : "";
+  const perf = (it.perf_score||0).toFixed ? Number(it.perf_score||0).toFixed(1) : it.perf_score;
+  return `<div class="card" id="c${it.id}">
+    <div class="txt">${esc(it.text)}</div>
+    <div class="meta">
+      <span class="badge ${sb}">${sl}</span>${tpl}${ht}
+      <span>빈도 ${it.freq}</span><span>성과 ${perf}</span>
+      ${it.slot_role && it.slot_role!=="template" ? `<span>역할 ${esc(it.slot_role)}</span>`:""}
+    </div>
+    <div class="acts">
+      <button class="primary" onclick="setStatus(${it.id},'approved')">승인</button>
+      <button onclick="setStatus(${it.id},'rejected')">기각</button>
+      <button class="a-edit" onclick="startEdit(${it.id})">수정</button>
+    </div>
+    <div class="edit">
+      <textarea id="e${it.id}">${esc(it.text)}</textarea>
+      <div class="acts">
+        <button class="primary" onclick="saveEdit(${it.id})">저장</button>
+        <button onclick="cancelEdit(${it.id})">취소</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function setStatus(id, status){
+  const r = await jpost("/api/pattern/item/status", {id, status});
+  if(r.ok){ toast(status==="approved"?"승인됨":"기각됨"); load(); renderTabs(); }
+  else toast("실패");
+}
+function startEdit(id){ document.getElementById("c"+id).classList.add("editing"); }
+function cancelEdit(id){ document.getElementById("c"+id).classList.remove("editing"); }
+async function saveEdit(id){
+  const text = document.getElementById("e"+id).value;
+  const r = await jpost("/api/pattern/item/edit", {id, text});
+  if(r.ok){ toast("수정됨"); load(); } else toast("실패");
+}
+
+async function loadSpines(){
+  const list = document.getElementById("list");
+  let spines = [];
+  try{ spines = (await jget("/api/pattern/spines")).spines || []; }catch(e){}
+  if(!spines.length){ list.innerHTML = `<div class="empty">매크로 스파인이 없습니다.</div>`; return; }
+  list.innerHTML = spines.map(s=>{
+    const sc = s.source_count||0;
+    const perf = Number(s.perf_score||0).toFixed(2);
+    // 승격게이트: source_count>=3 AND approved 여야 생성에 쓰임
+    let gate, gtxt;
+    if(s.status==="approved" && sc>=3){ gate="🟢"; gtxt="생성 사용 가능"; }
+    else if(sc>=3){ gate="🟡"; gtxt="승인 대기 (소스 충분)"; }
+    else { gate="🔴"; gtxt=`소스 ${sc}/3 — 더 쌓여야 함`; }
+    return `<div class="spine">
+    <div class="name">${gate} ${esc(s.name)}</div>
+    <div class="m">
+      ${s.situation_type?`상황: <b>${esc(s.situation_type)}</b> · `:""}
+      ${s.emotion_arc?`감정선: ${esc(s.emotion_arc)} · `:""}
+      ${s.appeal?`소구: ${esc(s.appeal)} · `:""}
+      상태: <b>${esc(s.status)}</b> · 소스 <b>${sc}</b> · 성과 <b>${perf}</b> · <span style="color:var(--gold)">${gtxt}</span>
+      ${Array.isArray(s.beat_chain)&&s.beat_chain.length?`<br>비트: ${esc(s.beat_chain.join(" → "))}`:""}
+    </div>
+    <div style="margin-top:8px;display:flex;gap:6px">
+      ${s.status!=="approved"?`<button class="primary" onclick="setSpineStatus(${s.id},'approved')">승인</button>`:""}
+      ${s.status!=="rejected"?`<button onclick="setSpineStatus(${s.id},'rejected')">기각</button>`:""}
+      ${s.status!=="pending"?`<button onclick="setSpineStatus(${s.id},'pending')">대기로</button>`:""}
+    </div>
+  </div>`;}).join("");
+}
+
+async function setSpineStatus(id, status){
+  const r = await jpost("/api/pattern/spine/status", {id, status});
+  if(r.ok){ toast(status==="approved"?"스파인 승인됨":status==="rejected"?"기각됨":"대기로"); loadSpines(); }
+  else toast(r.error||"실패");
+}
+
+async function doIngest(){
+  const full_text = document.getElementById("fullText").value.trim();
+  if(!full_text){ toast("대본을 붙여넣으세요"); return; }
+  const btn = document.getElementById("ingestBtn");
+  btn.disabled = true; btn.textContent = "분해 중…";
+  try{
+    const r = await jpost("/api/pattern/ingest", {full_text, product_category: document.getElementById("cat").value.trim()});
+    if(r.ok){ toast(`부품 ${r.added||0}개 담김`); if(r.added){ document.getElementById("fullText").value=""; } renderTabs(); load(); }
+    else toast(r.error || "실패");
+  }catch(e){ toast("분해 실패"); }
+  finally{ btn.disabled = false; btn.textContent = "🔎 분해"; }
+}
+
+renderTabs();
+load();
+</script>

@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_Yuanta Morning Snapshot (26.06.10).md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": null,
+    "report_date": "June 10, 2026",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "美 CPI (전년대비) 4.2%",
+      "美 신규 실업수당 청구건수 225k",
+      "日 PPI YoY 5.6%",
+      "中 CPI (전년대비) 1.3%",
+      "韓 GDP (전년동기대비) 3.8%",
+      "韓 실업률 SA 2.8%"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "06/10",
+        "event": "美 CPI (전년대비)"
+      },
+      {
+        "date": "06/10",
+        "event": "美 신규 실업수당 청구건수"
+      },
+      {
+        "date": "06/10",
+        "event": "日 PPI YoY"
+      },
+      {
+        "date": "06/10",
+        "event": "中 CPI (전년대비)"
+      },
+      {
+        "date": "06/11",
+        "event": "韓 GDP (전년동기대비)"
+      },
+      {
+        "date": "06/11",
+        "event": "韓 실업률 SA"
+      }
+    ],
+    "top_picks": [
+      "SK하이닉스",
+      "삼성전자",
+      "삼성전기",
+      "기아",
+      "SK스퀘어",
+      "LIG디펜스앤에어로스페이스",
+      "삼성SDI",
+      "현대차"
+    ],
+    "risk": "중동 지정학적 리스크",
+    "quote": "코스피지수는 전장 대비 612.52pt(+8.18%) 상승한 8,096.93pt에 마감. 반도체주 반등에 투자심리 개선. 장중 매수 사이드카 발동. 다만 코스피 상승장 국면에서 VKOSPI 사상 최고치 기록한 점은 이례적이라는 점에 주목"
+  }
+}

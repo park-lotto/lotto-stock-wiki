@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-08_1104_5월 미국 고용 부정할 수 없는 견고함.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "위재현",
+    "report_date": "2026/06/08",
+    "target_kind": "market",
+    "market_direction": "전반적인 추세는 안정적이나 불안 요소 존재",
+    "macro_vars": [
+      "비농업 신규 고용: +17.2만명",
+      "실업률: 4.3%",
+      "핵심 노동연령(25-54세) 경제활동참가율 반등",
+      "27주 이상 장기 실업자 비중: 27.5%",
+      "AI 관련 해고 증가"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6월",
+        "event": "월드컵 개최"
+      }
+    ],
+    "top_picks": null,
+    "risk": "27주 이상 장기 실업자 비중 확대 및 AI 관련 해고 추세",
+    "quote": "헤드라인 지표 강세 이면의 불안 요소는 향후 고용시장 방향성이 다시 둔화 흐름으로 바뀔 때 그 속도를 증폭시킬 수 있다."
+  }
+}

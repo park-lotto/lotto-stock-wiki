@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_0700_성공적인 MASH 결과 들고 다음 스텝으로 (NDR...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김선아",
+    "report_date": "2026년 06월 08일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "디앤디파마텍",
+        "code": "347850",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출액 12십억원, 영업이익 (26)십억원 / 2027년 매출액 12십억원, 영업이익 (26)십억원",
+        "estimate_revision": null,
+        "next_catalyst": "11월 미국간학회(AASLD)에서 상세 내역 발표",
+        "thesis": [
+          "MASH 치료제 DD01(Zabopegdutide)의 48주차 조직생검 결과에서 MASH 개선 및 섬유화 개선 통계적 유의성 확인",
+          "우수한 내약성 확보 및 짧은 titration 기간을 통한 경쟁력 강화",
+          "임상 결과를 바탕으로 기술이전(L/O) 추진 및 긍정적인 피드백 지속"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "MASH 치료제 DD01(Zabopegdutide)의 48주차 조직생검 결과를 공개하였다. 2차 지표는 MASH 환자에 한해서 생검을 통해 MASH 개선 및 섬유화 개선 지표 등을 확인하는 것이었다."
+      }
+    ]
+  }
+}

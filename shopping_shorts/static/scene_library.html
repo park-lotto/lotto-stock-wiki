@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>장면 라이브러리</title>
+<title>장면 라이브러리 · 숏템메이커</title>
 <script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <style>
   /* 스탁브레인 민트-블랙 투톤(다크 기본). produce.html과 동일 토큰. */
@@ -126,6 +126,18 @@
       <div class="fld"><label>카테고리</label>
         <select id="uCat"><option value="">(없음 — 범용)</option></select>
         <div class="hint">페이즈2 매칭이 같은 카테고리 자산만 1차 후보로 본다. 나중에 편집에서도 바꿀 수 있다.</div></div>
+      <div class="fld"><label>역할</label>
+        <select id="uRole">
+          <option value="">(없음 — 자동배치 안 함)</option>
+          <option value="훅">훅</option>
+          <option value="반전">반전</option>
+          <option value="CTA">CTA</option>
+          <option value="비법공개">비법공개</option>
+          <option value="반응">반응</option>
+          <option value="전환">전환</option>
+          <option value="본문">본문</option>
+        </select>
+        <div class="hint">효과음은 비트 역할에 맞춰 자동배치된다(훅=시작, 그 외=끝 자막에 타점). 비우면 매칭 안 함.</div></div>
       <div class="fld"><label>파일</label><input type="file" id="uFile"></div>
     </div>
     <div class="m-foot"><button class="primary" onclick="doUpload()">업로드</button></div>
@@ -191,7 +203,7 @@ async function loadScenes(){
   try{
     const d = await (await fetch('/api/scene/list?'+q)).json();
     SCENES = d.items||[];
-    if(!SCENES.length){ el.innerHTML='<div class="empty">아직 저장한 장면이 없습니다.<br>레퍼런스 랭킹·영상 제작소에서 구간을 잘라 담아보세요.</div>'; return; }
+    if(!SCENES.length){ el.innerHTML='<div class="empty">아직 저장한 장면이 없습니다.<br>레퍼런스 랭킹·숏템 제작소에서 구간을 잘라 담아보세요.</div>'; return; }
     el.innerHTML = SCENES.map(renderCard).join('');
   }catch(e){ el.innerHTML='<div class="empty">불러오기 실패 — 새로고침 해주세요.</div>'; }
 }
@@ -262,6 +274,7 @@ async function doUpload(){
   fd.append('asset_type', document.getElementById('uType').value);
   fd.append('title', title);
   fd.append('category', document.getElementById('uCat').value);
+  fd.append('role', document.getElementById('uRole').value);
   fd.append('file', f);
   try{
     const res = await fetch('/api/scene/upload',{method:'POST', body:fd});
@@ -270,7 +283,7 @@ async function doUpload(){
     if(!d.ok){ alert(d.error||'업로드 실패'); return; }
     document.getElementById('upModal').classList.remove('open');
     document.getElementById('uTitle').value=''; document.getElementById('uFile').value='';
-    document.getElementById('uCat').value='';
+    document.getElementById('uCat').value=''; document.getElementById('uRole').value='';
     loadScenes();
   }catch(e){ alert('네트워크 오류'); }
 }

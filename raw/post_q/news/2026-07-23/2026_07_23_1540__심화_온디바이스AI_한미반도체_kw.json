@@ -1,0 +1,19 @@
+{
+  "target_kind": "market",
+  "market_direction": "긍정",
+  "macro_events": [
+    {
+      "fact": "美 살아난 기술주 투자심리",
+      "ts": "10-24 07:00",
+      "quote": "美 살아난 기술주 투자심리…온디바이스AI 주↑"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "긍정",
+      "comment": "온디바이스AI 관련주 상승"
+    }
+  ],
+  "quote": "美 살아난 기술주 투자심리…온디바이스AI 주↑"
+}

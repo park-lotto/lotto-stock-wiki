@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "박상준",
+    "report_date": "2026.06.02",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "AI 장세 속 피지컬 AI 결합 및 AI 기술 기반 콘텐츠 제작·운영 고도화가 향후 핵심 전략이 될 것으로 평가됨"
+      },
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "카카오 본사 포함 쟁의권을 확보한 5개 법인이 공동 부분파업에 나서면서 그룹 차원의 노사 갈등이 본 격적인 파업 국면에 들어감"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "10일",
+        "event": "카카오 노조 5개 법인 4시간 파업"
+      }
+    ],
+    "top_picks": [
+      "크래프톤",
+      "펄어비스",
+      "카카오"
+    ],
+    "risk": "크래프톤, 펄어비스 등 주요 게임사들이 견조한 실적을 거두고도 증시에서는 상대적으로 저평가받는 흐름이 지속되고 있으며, 카카오의 경우 노사 갈등으로 인한 경영 불확실성 증대",
+    "quote": "AI 장세에 밀린 게임사들…\"피지컬 AI 결합, 전략적 선택 필요한 시점\" 카카오 창사 첫 파업 현실화…노조 \"10일 5개 법인 4시간 파업\""
+  }
+}

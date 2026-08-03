@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-22",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-23_0803_매력적인 콘텐츠 라인업에 주주가치 제고까지.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS투자증권",
+    "analyst": "장지혜",
+    "report_date": "2026.07.22",
+    "stocks": [
+      {
+        "name": "NEW",
+        "code": "160550",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2025년 매출액 143십억원, 영업이익 3십억원, 영업이익률 1.9%, 세전이익 1십억원, 지배주주지분순이익 1십억원, EPS 28원",
+        "estimate_revision": null,
+        "next_catalyst": "7/20 NEW는 8/27 임시주총을 열고 자본준비금의 감소 및 이익잉여금 전입 안건을 상정하겠다고 공시",
+        "thesis": [
+          "26년 상반기 한국 영화 콘텐츠 경쟁력 상승 및 관객 경험 긍정적",
+          "NEW의 투자/배급 영화 라인업 5편에 대한 흥행 기대감",
+          "주주가치 제고 정책의 일환으로 이익잉여금을 자기주식 취득 및 배당 재원으로 활용"
+        ],
+        "valuation_basis": null,
+        "risk": "콘텐츠 업종 전반 주가 약세",
+        "supply_comment": null,
+        "quote": "콘텐츠 흥행에서 나아가 주주가치제고 노력까지. 이익잉여금 전입으로 자사주 취득 및 배당 재원 확보"
+      }
+    ]
+  }
+}

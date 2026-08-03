@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "date": "2026-07-28",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-29_0805_2026년 7월 넷째 주 자동차이차전지 Weekly.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "김광식, 최보영",
+    "report_date": "2026/07/28",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "스페인 발렌시아 공장 포드-지리 JV 설립",
+      "미국 중국 지분 15% 이상 기업 차량, 부품 판매·제조·유통 금지 법안",
+      "6월 ACEA 유럽 신차 등록",
+      "테슬라 ESS 설치량 및 에너지사업 GPM",
+      "삼성SDI 실적 발표 예정",
+      "코발트, 리튬, 니켈 가격"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "자동차",
+        "stance": null,
+        "reason": "유럽 신차 등록 YoY +13.2% 등 전동화 차량 성장세"
+      },
+      {
+        "sector": "2차전지",
+        "stance": null,
+        "reason": "BEV +50.9%, PHV +25.0% 등 전동화 성장 및 ESS 사업 고성장"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026/07/30",
+        "event": "삼성SDI 실적 발표 예정"
+      },
+      {
+        "date": "2026/08/01",
+        "event": "BYD 휴머노이드 로봇 공개 가능성"
+      }
+    ],
+    "top_picks": [
+      "현대차",
+      "기아",
+      "현대모비스",
+      "한온시스템",
+      "TESLA",
+      "TOYOTA",
+      "BYD",
+      "GM",
+      "FORD",
+      "LG에너지솔루션",
+      "삼성 SDI",
+      "에코프로비엠",
+      "포스코퓨처엠",
+      "엘앤에프",
+      "CATL",
+      "PANASONIC",
+      "ALBEMARLE"
+    ],
+    "risk": "중국 지분 15% 이상 기업의 차량 및 부품 미국 시장 진출 금지, 원자재 가격 변동성",
+    "quote": "스페인 발렌시아 공장 포드(66%)-지리(34%) JV 설립. 28년 포드 차량 3종+지리 EV 2종 생산"
+  }
+}

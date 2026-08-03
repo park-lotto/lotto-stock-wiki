@@ -3,10 +3,54 @@ import json
 import re
 import subprocess
 import sys
+import time
 import urllib.parse
 import urllib.request
 import uuid
 from pathlib import Path
+
+from shopping_shorts import config
+
+
+def _cookies_arg(url):
+    """플랫폼별 yt-dlp 쿠키 옵션 — 파일이 있을 때만 넣는다(없으면 기존처럼 무쿠키로
+    시도해 회귀가 없다). 2026-07-20: 유튜브·틱톡이 비로그인 요청을 봇으로 보고 막기
+    시작해서(사장님 실측: 최신 yt-dlp로도 재현) 로그인 세션 쿠키 없인 다운로드·메타
+    조회가 전부 실패한다. 쿠키파일은 사장님이 브라우저에서 직접 내보낸 것(config.py).
+
+    유튜브는 쿠키만으론 부족했다 — 실측: 메타(-j)는 쿠키로 되는데 실제 다운로드는
+    "No video formats found!"로 유명 공개영상(최초 유튜브 영상)까지 재현되는 별개
+    문제였다. 원인은 유튜브의 URL 서명 난독화("n challenge")를 yt-dlp가 못 풀어서 —
+    Deno(외부 JS 런타임, 로컬에 설치함)+해독 스크립트(--remote-components ejs:github,
+    최초 1회 다운로드 후 ~/.cache/yt-dlp/challenge-solver에 캐시)가 있어야 실제
+    포맷이 나온다. 캐시되면 다음부터 이 플래그 없이도 되지만, 캐시가 비어있는
+    새 환경(서버·캐시삭제 후)에서도 자동 복구되도록 유튜브 호출에 상시 포함한다
+    (이미 캐시 있으면 그냥 빠르게 스킵 — 매 호출 재다운로드 아님)."""
+    u = (url or "").lower()
+    if "youtube.com" in u or "youtu.be" in u:
+        path = config.YTDLP_COOKIES_YOUTUBE
+        extra = ["--remote-components", "ejs:github"]
+    elif "tiktok.com" in u:
+        path = config.YTDLP_COOKIES_TIKTOK
+        extra = []
+    else:
+        return []
+    cookies = ["--cookies", path] if path and Path(path).exists() else []
+    return cookies + extra
+
+
+def _proxy_arg(url):
+    """B안(2026-07-24): 유튜브만 프록시로 보낸다(config.YTDLP_PROXY 설정 시). 서버 데이터센터 IP가
+    유튜브에 봇차단당하는 걸 주거용 프록시로 우회 → PC 릴레이 없이 서버가 직접 받는다. 틱톡·샤오홍슈
+    등은 서버서도 되므로 프록시를 안 태워(대역폭·비용 절약). 미설정이면 [](회귀0)."""
+    u = (url or "").lower()
+    if config.YTDLP_PROXY and ("youtube.com" in u or "youtu.be" in u):
+        # 회전 주거용 프록시는 죽은 IP로 라우팅되면 502(Tunnel failed)를 뱉는다 — 재시도하면
+        # 새 IP로 성공한다(2026-07-24 실측: GB풀 불량, DE/CA/FR 정상). 재시도를 넉넉히 줘서
+        # 드문 502에 소스가 통째로 스킵되지 않게 한다.
+        return ["--proxy", config.YTDLP_PROXY,
+                "--extractor-retries", "10", "--retries", "10", "--socket-timeout", "30"]
+    return []
 
 
 def _oembed(url):
@@ -34,7 +78,8 @@ def probe_grab_meta(url, timeout=40):
     폴백. 전부 실패하면 {}. 백그라운드 보강용이라 조용히 실패."""
     out = {}
     try:
-        r = subprocess.run([sys.executable, "-m", "yt_dlp", "-j", "--no-warnings", url],
+        r = subprocess.run([sys.executable, "-m", "yt_dlp", "-j", "--no-warnings",
+                            *_cookies_arg(url), *_proxy_arg(url), url],
                            capture_output=True, text=True, timeout=timeout)
         if r.returncode == 0 and r.stdout.strip():
             d = json.loads(r.stdout)
@@ -61,31 +106,104 @@ def probe_grab_meta(url, timeout=40):
     return {k: v for k, v in out.items() if v not in (None, "")}
 
 
+_IG_CODE_RE = re.compile(r"instagram\.com/(?:reel|reels|p|tv)/([A-Za-z0-9_-]+)")
+
+
 def _download_instagram(url, dest_dir):
-    """인스타 릴스 다운로드 → (mp4경로, caption). caption은 Apify 원본 dict의
-    "caption" 필드(없으면 빈 문자열) — extract_script의 캡션 힌트로 흘러간다."""
-    from shopping_shorts.apify_client import fetch_single_reel
+    """인스타 릴스 다운로드 → (mp4경로, caption).
+
+    ★Apify는 **폴백**이다(2026-07-31 순서 뒤집음). 예전엔 Apify가 유일한 경로라
+    크레딧이 마르는 순간 담기·대본추출·예열이 통째로 죽었다(실측:
+    "apify 토큰 17개 전부 실패 — 계정 17/17 소진" → 담은 영상 2개 모두 대본 0,
+    화면엔 "대본을 아직 분석하지 못했어요"만 떴다).
+    수집은 이미 무료 Playwright로 옮겼는데 다운로드만 유료 경로에 남아 있었다.
+
+    순서: ① 세션 쿠키 기반 yt-dlp(무료, resolve_media_url과 같은 경로) →
+          ② 실패 시 Apify(유료, 남아 있으면) → ③ 둘 다 실패해야 에러.
+    caption은 Apify에서만 온다(무료 경로는 빈 문자열) — 추출은 캡션 없이도 돈다.
+    """
     from shopping_shorts.frame_extract import download_video
-    raw = fetch_single_reel(url)
-    if not raw or not raw.get("videoUrl"):
-        raise RuntimeError(f"인스타 영상 해석 실패: {url}")
-    path = str(download_video(raw["videoUrl"], Path(dest_dir)))
-    return path, raw.get("caption", "")
+
+    m = _IG_CODE_RE.search(url or "")
+    code = m.group(1) if m else ""
+    # ① 무료 경로 — 릴스 페이지에서 mp4 direct URL을 뽑는다(오늘 서버 실측으로 동작 확인).
+    if code:
+        try:
+            direct = resolve_media_url("instagram", code)
+            if direct:
+                return str(download_video(direct, Path(dest_dir))), ""
+        except Exception:      # noqa: BLE001 — 무료 경로 실패는 폴백 사유일 뿐
+            pass
+    # ② 유료 폴백 — 크레딧이 남아 있으면 캡션까지 얻는다.
+    try:
+        from shopping_shorts.apify_client import fetch_single_reel
+        raw = fetch_single_reel(url)
+        if raw and raw.get("videoUrl"):
+            return str(download_video(raw["videoUrl"], Path(dest_dir))), raw.get("caption", "")
+    except Exception as e:     # noqa: BLE001
+        raise RuntimeError(f"인스타 영상 해석 실패(무료·유료 경로 모두): {url} — {e}") from e
+    raise RuntimeError(f"인스타 영상 해석 실패: {url}")
 
 
-def _download_ytdlp(url, dest_dir):
-    """유튜브/틱톡 다운로드 → (mp4경로, caption). yt-dlp 경로는 캡션 없음(빈 문자열)."""
+def _download_ytdlp(url, dest_dir, max_attempts=3):
+    """유튜브/틱톡 다운로드 → (mp4경로, caption). yt-dlp 경로는 캡션 없음(빈 문자열).
+
+    틱톡은 JS 챌린지·IP 레이트리밋으로 추출이 간헐적으로 깨진다(rehydration 에러) — 같은 URL도
+    됐다 안 됐다 한다(2026-07-23 서버 실측: 같은 영상이 성공↔실패 반복, 버전·쿠키·curl_cffi 다 정상).
+    단발 호출이면 그 한 번의 실패가 그대로 사용자 에러가 되므로, 백오프를 두고 재시도해 간헐적
+    실패를 자가치유한다. 비공개·삭제 영상은 매 시도 같은 에러라 max_attempts 뒤 그대로 실패한다."""
     out = str(Path(dest_dir) / (uuid.uuid4().hex[:8] + ".%(ext)s"))
-    r = subprocess.run(
-        [sys.executable, "-m", "yt_dlp", "-f", "mp4/bestvideo+bestaudio/best",
-         "--no-playlist", "-o", out, url],
-        capture_output=True, text=True, timeout=300)
-    if r.returncode != 0:
-        raise RuntimeError(f"yt-dlp 실패({url}): {r.stderr[-300:]}")
-    files = sorted(Path(dest_dir).glob(Path(out).stem.split('.')[0] + "*"))
-    if not files:
-        raise RuntimeError(f"yt-dlp 산출물 없음: {url}")
-    return str(files[0]), ""
+    stem = Path(out).stem.split('.')[0]
+    last_err = ""
+    for attempt in range(max_attempts):
+        # ★화질 천장(2026-07-27 사장님 "원본 동일"): 예전 -f "mp4/..."는 mp4(progressive
+        #   단일 스트림)를 먼저 잡아 유튜브에서 720p·360p 저화질을 받았다(원본이 고화질이어도).
+        #   최고 해상도 영상+음성을 따로 받아 mp4로 머지한다 — 이래야 원본 해상도가 천장이 된다.
+        #   (틱톡 등 분리 스트림이 없으면 best 단일로 폴백; 그 best는 보통 원본 해상도다.)
+        r = subprocess.run(
+            [sys.executable, "-m", "yt_dlp",
+             "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
+             "--merge-output-format", "mp4",
+             "--no-playlist", *_cookies_arg(url), *_proxy_arg(url), "-o", out, url],
+            capture_output=True, text=True, timeout=300)
+        if r.returncode == 0:
+            files = sorted(Path(dest_dir).glob(stem + "*"))
+            if files:
+                return str(files[0]), ""
+            last_err = "산출물 없음"
+        else:
+            last_err = r.stderr[-300:]
+        if attempt < max_attempts - 1:
+            time.sleep(2 * (attempt + 1))   # 2s·4s 백오프 — 틱톡 챌린지/레이트리밋 완화
+    raise RuntimeError(f"yt-dlp 실패({url}, {max_attempts}회 시도): {last_err}")
+
+
+def _download_via_relay(url, dest_dir):
+    """유튜브 URL을 로컬 릴레이 큐에 넣고, 사장님 PC 에이전트가 주거용 IP로 받아
+    서버에 올린 mp4를 회수한다(2026-07-24). 서버 데이터센터 IP는 유튜브에 봇차단당하므로
+    직접 yt-dlp는 못 쓴다. 큐잉 후 done될 때까지 폴링(상한=YT_RELAY_POLL_TIMEOUT).
+    에이전트가 안 떠 있거나 시간초과면 명확한 에러를 던진다(믹스는 이 소스만 스킵).
+    ★서버는 파일을 만들지 않고 CPU도 안 쓴다 — 무거운 다운로드는 전부 PC로 오프로드된다."""
+    import shutil
+    from shopping_shorts.store import Store
+    store = Store()
+    req_id = store.enqueue_yt_relay(url)
+    deadline = time.monotonic() + config.YT_RELAY_POLL_TIMEOUT
+    while time.monotonic() < deadline:
+        rec = store.get_yt_relay(req_id)
+        if rec and rec["status"] == "done" and rec["out_path"]:
+            src = Path(rec["out_path"])
+            if not src.exists():
+                raise RuntimeError(f"릴레이 완료 보고했으나 파일 없음: {src}")
+            dst = Path(dest_dir) / src.name
+            if src.resolve() != dst.resolve():
+                shutil.copy2(src, dst)
+            return str(dst), ""
+        if rec and rec["status"] == "failed":
+            raise RuntimeError(f"유튜브 릴레이 실패({url}): {rec.get('error') or '알 수 없음'}")
+        time.sleep(2)
+    raise RuntimeError(
+        f"유튜브 릴레이 시간초과({url}, {config.YT_RELAY_POLL_TIMEOUT}s) — PC 에이전트가 켜져 있나 확인")
 
 
 def _is_direct_video(u):
@@ -126,6 +244,13 @@ def download_any(url, dest_dir):
         return str(download_video(url, Path(dest_dir))), ""
     # 유튜브·틱톡·샤오홍슈는 yt-dlp 무료(2026-07-18 샤오홍슈 실증). 도우인은 쿠키가 필요해
     # 실패할 수 있으나 그때는 yt-dlp가 명확한 에러를 낸다(원클릭 담기 후 제작소 다운로드용).
+    # ★유튜브는 서버(데이터센터 IP)서 봇차단당해 yt-dlp가 통째로 막힌다 → 릴레이가 켜져 있으면
+    # 사장님 PC 에이전트로 오프로드한다(주거용 IP). 로컬/에이전트는 YT_RELAY_ENABLED=0이라
+    # 아래 직접 yt-dlp 경로로 간다(회귀0). 틱톡·샤오홍슈 등은 서버서도 되므로 릴레이 안 탄다.
+    # 우선순위: 프록시(B) > 릴레이(A) > 직접. 프록시가 있으면 서버가 직접 받으므로(아래 _download_ytdlp가
+    # _proxy_arg로 프록시를 붙인다) PC 릴레이를 건너뛴다 — PC 의존 없이 고객 다중 처리 가능.
+    if config.YT_RELAY_ENABLED and not config.YTDLP_PROXY and ("youtube.com" in u or "youtu.be" in u):
+        return _download_via_relay(url, dest_dir)
     if any(s in u for s in ("youtube.com", "youtu.be", "tiktok.com",
                              "xiaohongshu.com", "xhslink.com", "douyin.com",
                              "iesdouyin.com", "rednote.com")):
@@ -141,6 +266,11 @@ def resolve_media_url(platform, video_id, timeout=30):
     page = {
         "youtube": f"https://www.youtube.com/watch?v={video_id}",
         "tiktok": f"https://www.tiktok.com/@x/video/{video_id}",
+        # 인스타 추가(2026-07-30): 수집이 더 이상 직접 mp4(video_versions)를 담지 않는다
+        # — 그걸 채우던 릴스 상세 REST가 429의 주범이었다. 그 결과 랭킹 카드 썸네일의
+        # 인라인 재생이 사라졌으므로(video_url이 비어 onclick이 안 붙음), **볼 때 그 자리에서**
+        # 해석한다. 하루 950건 긁던 것을 사람이 실제로 누른 몇 건으로 바꾸는 셈이다.
+        "instagram": f"https://www.instagram.com/reel/{video_id}/",
     }.get(platform)
     if not page:
         return ""
@@ -148,7 +278,7 @@ def resolve_media_url(platform, video_id, timeout=30):
         r = subprocess.run(
             [sys.executable, "-m", "yt_dlp", "-g", "-f",
              "best[ext=mp4][vcodec!=none][acodec!=none]/best[ext=mp4]/best",
-             "--no-warnings", page],
+             "--no-warnings", *_cookies_arg(page), *_proxy_arg(page), page],
             capture_output=True, text=True, encoding="utf-8", timeout=timeout)
     except Exception:
         return ""

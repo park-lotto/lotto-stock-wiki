@@ -1,0 +1,173 @@
+<meta charset="utf-8">
+<style>html,body{margin:0;background:#05070a;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">
+{"imports":{
+  "three":"./node_modules/three/build/three.module.js",
+  "three/addons/":"./node_modules/three/examples/jsm/"
+}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass}     from 'three/addons/postprocessing/RenderPass.js';
+import {BokehPass}      from 'three/addons/postprocessing/BokehPass.js';
+import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
+import {OutputPass}     from 'three/addons/postprocessing/OutputPass.js';
+
+const W=1920, H=1080, FPS=30, DUR=6.0;
+window.__meta = {W,H,FPS,DUR,frames:Math.round(FPS*DUR)};
+
+const renderer = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true});
+renderer.setSize(W,H); renderer.setPixelRatio(1);
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x05070a);
+const camera = new THREE.PerspectiveCamera(35, W/H, 0.1, 100);
+
+// ---- 배경: 은은한 방사 그라디언트(바닥 깔기)
+{
+  const g = new THREE.PlaneGeometry(60,34);
+  const m = new THREE.ShaderMaterial({
+    uniforms:{},
+    vertexShader:`varying vec2 v; void main(){v=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+    fragmentShader:`varying vec2 v;
+      void main(){
+        float d = distance(v, vec2(0.5,0.55));
+        vec3 c = mix(vec3(0.035,0.075,0.085), vec3(0.008,0.012,0.020), smoothstep(0.0,0.72,d));
+        gl_FragColor = vec4(c,1.0);
+      }`,
+    depthWrite:false
+  });
+  const mesh = new THREE.Mesh(g,m); mesh.position.z = -14; scene.add(mesh);
+}
+
+const tex = new THREE.TextureLoader().load('./ui.png', ()=>{ window.__texReady = true; });
+tex.colorSpace = THREE.SRGBColorSpace;
+tex.anisotropy = 8;
+
+// ---- UI 평면 (셰이더: 딤 + 스팟라이트 + 클릭 리플)
+const PW = 16, PH = PW*H/W;                    // 평면 크기
+const BTN = new THREE.Vector2(0.469, 0.528);   // [무료로 시작하기] 버튼 UV (좌하단 원점)
+const uni = {
+  uTex:{value:tex},
+  uSpot:{value:0.0},        // 스팟라이트 강도 0~1
+  uSpotPos:{value:BTN},
+  uRipple:{value:-1.0},     // 리플 진행 0~1 (-1=없음)
+  uAspect:{value:W/H},
+  uPress:{value:0.0}        // 버튼 눌림 0~1
+};
+const uiMat = new THREE.ShaderMaterial({
+  uniforms:uni,
+  vertexShader:`varying vec2 v; void main(){v=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+  fragmentShader:`
+    uniform sampler2D uTex; uniform float uSpot, uRipple, uAspect, uPress;
+    uniform vec2 uSpotPos; varying vec2 v;
+    void main(){
+      vec2 uv = v;
+      // 버튼 눌림: 버튼 주변만 아주 살짝 수축
+      vec2 dq = (uv-uSpotPos)*vec2(uAspect,1.0);
+      float near = 1.0 - smoothstep(0.0, 0.10, length(dq));
+      uv = mix(uv, uSpotPos + (uv-uSpotPos)*1.035, uPress*near);
+
+      vec3 col = texture2D(uTex, uv).rgb;
+
+      // 스팟라이트: 대상 밖은 어둡게 눌러 시선 고정
+      float d = length((uv-uSpotPos)*vec2(uAspect,1.0));
+      float light = 1.0 - smoothstep(0.055, 0.30, d);
+      float dim = mix(1.0, mix(0.20, 1.28, light), uSpot);
+      col *= dim;
+
+      // 클릭 리플: 작고 빠르게 사라지는 민트 링 (버튼을 가리지 않는 크기)
+      if(uRipple >= 0.0){
+        float r = uRipple*0.115;
+        float ring = smoothstep(0.0085, 0.0, abs(d-r));
+        float fade = pow(1.0-uRipple, 1.8);
+        col += vec3(0.40,1.0,0.78) * ring * fade * 0.85;
+      }
+      gl_FragColor = vec4(col,1.0);
+    }`
+});
+const ui = new THREE.Mesh(new THREE.PlaneGeometry(PW,PH,64,36), uiMat);
+scene.add(ui);
+
+// ---- 깊이감: 얇은 림 라인 + 넓고 부드러운 드롭섀도(네온사인 아님)
+const rim = new THREE.Mesh(
+  new THREE.PlaneGeometry(PW*1.004, PH*1.007),
+  new THREE.MeshBasicMaterial({color:0x1d8f74, transparent:true, opacity:0.30})
+);
+rim.position.z = -0.05; ui.add(rim);
+
+const shadow = new THREE.Mesh(
+  new THREE.PlaneGeometry(PW*1.16, PH*1.24),
+  new THREE.ShaderMaterial({
+    transparent:true, depthWrite:false,
+    vertexShader:`varying vec2 v; void main(){v=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+    fragmentShader:`varying vec2 v;
+      void main(){
+        vec2 p = abs(v-0.5)*2.0;
+        float m = max(p.x,p.y);
+        gl_FragColor = vec4(0.0,0.0,0.0, (1.0-smoothstep(0.55,1.0,m))*0.55);
+      }`
+  })
+);
+shadow.position.set(0.10,-0.16,-0.12); ui.add(shadow);
+
+// ---- 포스트프로세싱: 진짜 광학 DoF + Bloom
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene,camera));
+const bokeh = new BokehPass(scene,camera,{focus:20.0, aperture:0.0022, maxblur:0.014});
+composer.addPass(bokeh);
+// 임계값 높여 '밝은 민트 UI 요소'만 번지게 — 흰 헤드라인은 또렷하게 유지
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(W,H), 0.30, 0.45, 0.90));
+composer.addPass(new OutputPass());
+
+// ---- 이징
+const e_out=t=>1-Math.pow(1-t,3), e_io=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const seg=(t,a,b)=>Math.max(0,Math.min(1,(t-a)/(b-a)));
+function elastic(t){ if(t<=0)return 0; if(t>=1)return 1;
+  const p=0.36; return Math.pow(2,-11*t)*Math.sin((t-p/4)*(2*Math.PI)/p)+1; }
+
+window.__render = function(t){
+  // 1) 등장: 3D 틸트가 크게 → 완만하게, 뒤에서 앞으로
+  const a = e_out(seg(t,0.0,1.5));
+  let rotY = THREE.MathUtils.degToRad(18 - 10*a);
+  let rotX = THREE.MathUtils.degToRad(-7 + 2.0*a);
+  let camZ = 26 - 5.4*a;
+  let camX = 0, camY = 0;
+
+  // 2) 버튼으로 스무스 타겟 줌 (곡선 이징)
+  const z = e_io(seg(t,1.6,2.6));
+  const bx = (BTN.x-0.5)*PW, by = (BTN.y-0.5)*PH;
+  camX += bx*0.78*z; camY += by*0.78*z; camZ -= 8.6*z;
+  rotY += THREE.MathUtils.degToRad(3.0*z);
+
+  // 4) 마지막에 살짝 뒤로 빠지며 전체 보이기
+  const out = e_io(seg(t,4.2,6.0));
+  camX *= (1-0.85*out); camY *= (1-0.85*out);
+  camZ += 9.0*out; rotY -= THREE.MathUtils.degToRad(5.0*out);
+
+  ui.rotation.set(rotX, rotY, 0);
+  camera.position.set(camX, camY, camZ);
+  camera.lookAt(camX*0.35, camY*0.35, 0);
+
+  // 스팟라이트: 줌과 함께 켜지고, 끝에 꺼짐
+  uni.uSpot.value = seg(t,1.7,2.5)*(1-seg(t,4.4,5.4));
+
+  // 3) 클릭: 2.55s — 눌림 + 리플
+  const CLICK=2.55;
+  uni.uPress.value = (t>=CLICK && t<CLICK+0.55)
+      ? (1-elastic(Math.min(1,(t-CLICK)/0.55)))*0.9 : 0.0;
+  uni.uRipple.value = (t>=CLICK && t<CLICK+0.70) ? (t-CLICK)/0.70 : -1.0;
+
+  // DoF 초점: 버튼면 거리에 맞춰 추적(줌 중엔 얕게 = 배경 더 흐림)
+  bokeh.uniforms['focus'].value = camZ*0.98;
+  bokeh.uniforms['aperture'].value = 0.0022 + 0.0030*z*(1-out);
+
+  // 림 라인은 은은하게만 호흡
+  rim.material.opacity = 0.24 + 0.10*Math.sin(t*1.4);
+
+  composer.render();
+};
+window.__ready = true;
+</script>

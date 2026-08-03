@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-22",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-27_0805_RPS 폐지와 태양광 PPA.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "유재선",
+    "report_date": "2026년 7월 22일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "SK이터닉스",
+        "code": "475150",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "66,000원",
+        "tp_prev": "60,000원",
+        "tp_direction": "up",
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "RPS 고정가격계약 중도 해지 허용 법안 및 RE100 PPA 시장 활성화",
+        "thesis": [
+          "RPS 제도 폐지 및 경쟁입찰 기반 계약시장제도로의 전환",
+          "RPS 고정가격계약 중도 해지 허용 시 PPA 시장 활성화",
+          "재생에너지 개발사 입장에서 긍정적 규제 변화"
+        ],
+        "valuation_basis": null,
+        "risk": "정부의 입찰 상한가격 인하 기조에 따른 수익성 훼손 및 보급 목표 달성 차질 가능성",
+        "supply_comment": "신규 태양광 설비가 매년 3~4GW씩 증가해왔던 흐름이 일부 둔화되는 것을 가정하더라도 규제 완화 시 RE100 PPA 시장이 활성화되기에 충분한 태양광 설비가 공급될 수 있다",
+        "quote": "재생에너지 개발사 입장에서 긍정적일 사안으로 판단되며 향후 규제 변화 여부와 방향이 중요하다."
+      }
+    ],
+    "sector_info": "신재생"
+  }
+}

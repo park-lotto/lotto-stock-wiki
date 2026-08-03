@@ -1,0 +1,166 @@
+{
+  "reports": [
+    {
+      "broker": "신한투자증권",
+      "stock": "HD현대마린솔루션",
+      "rating": null,
+      "tp": null,
+      "ts": "08:09",
+      "quote": "2Q26 연결 매출 5,804억원(+24.1%), 영업이익 976억원(+17.6%)으로 매출과 영업이익 모두 역대 분기 최대 달성",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "두산에너빌리티",
+      "rating": "매수",
+      "tp": null,
+      "ts": "08:11",
+      "quote": "부침은 있어도 방향성은 변하지 않는다",
+      "sector": "원전"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "셀트리온",
+      "rating": "매수",
+      "tp": null,
+      "ts": "08:11",
+      "quote": "신규 제품이 바꾼 이익 체급",
+      "sector": "바이오"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "한화오션",
+      "rating": "매수",
+      "tp": null,
+      "ts": "08:11",
+      "quote": "아쉬움을 덮는 이익 체력",
+      "sector": "조선"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "두산",
+      "rating": "매수",
+      "tp": null,
+      "ts": "08:11",
+      "quote": "변함없는 성장과 방향성",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "기업은행",
+      "rating": "매수",
+      "tp": null,
+      "ts": "08:11",
+      "quote": "업종 내 상대적 약세 완화 기대",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "LG이노텍",
+      "rating": "매수",
+      "tp": null,
+      "ts": "08:11",
+      "quote": "기판 성장이 주가 방향성 결정",
+      "sector": "IT"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "ISC",
+      "rating": "매수",
+      "tp": null,
+      "ts": "08:11",
+      "quote": "더 좋은 하반기 그리고 2027",
+      "sector": "반도체"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "iM금융지주",
+      "rating": "매수",
+      "tp": null,
+      "ts": "08:11",
+      "quote": "하반기로 갈수록 높아질 투자 매력",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "RFHIC",
+      "rating": "매수",
+      "tp": null,
+      "ts": "08:11",
+      "quote": "다시 전고점을 향해",
+      "sector": "통신"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "삼성에스디에스",
+      "rating": null,
+      "tp": null,
+      "ts": "08:12",
+      "quote": "AI 기대감을 제외한 본업가치만으로도 설명 가능한 수준에 이르렀다.",
+      "sector": "IT"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "LG씨엔에스",
+      "rating": null,
+      "tp": null,
+      "ts": "08:12",
+      "quote": "단기로는 AI 내러티브가 작동하며, 중장기로는 AI 사업 성과가 현실화되면서 직전 고점을 회복해나갈 것으로 전망한다.",
+      "sector": "IT"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "록히드마틴",
+      "rating": null,
+      "tp": null,
+      "ts": "14:17",
+      "quote": "수주잔고는 2,300억달러로 사상 최대치를 기록하며 성장이 가속화되는 모습",
+      "sector": "방산"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "하이브",
+      "rating": null,
+      "tp": null,
+      "ts": "07:45",
+      "quote": "질적으로 훌륭한 실적인데, 이해하기 어려운 주가",
+      "sector": "소비내수"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "한화시스템",
+      "rating": null,
+      "tp": null,
+      "ts": "08:03",
+      "quote": "수출이 이끈 호조, 미래를 위한 숨고르기",
+      "sector": "방산"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "HD현대일렉트릭",
+      "rating": "매수",
+      "tp": "100만원",
+      "ts": "08:03",
+      "quote": "투자의견 매수를 유지하나, 목표주가는 100만원으로 하향(기존 대비 -33.3%)",
+      "sector": "전력"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "인제니아테라퓨틱스",
+      "rating": null,
+      "tp": null,
+      "ts": "08:06",
+      "quote": "미국 머크의 안과 핵심 신약 원개발사",
+      "sector": "바이오"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "BNK금융지주",
+      "rating": "매수",
+      "tp": null,
+      "ts": "08:36",
+      "quote": "일회성 비용으로 컨센서스 하회",
+      "sector": "기타"
+    }
+  ]
+}

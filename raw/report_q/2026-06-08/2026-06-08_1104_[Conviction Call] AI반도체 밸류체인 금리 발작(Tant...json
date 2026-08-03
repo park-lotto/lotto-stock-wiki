@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-08_1104_[Conviction Call] AI반도체 밸류체인 금리 발작(Tant...md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "김용구",
+    "report_date": "2026.06.08",
+    "target_kind": "market",
+    "market_direction": "중립 이하",
+    "macro_vars": [
+      "미국 비농업 신규고용",
+      "시장금리",
+      "환율",
+      "외국인 수급",
+      "CPI",
+      "SpaceX 상장/청약",
+      "실질금리"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "소비내수",
+        "stance": "비중확대",
+        "reason": "고물가/고긴축/고금리 압박 우회가 가능한 안전지대"
+      },
+      {
+        "sector": "반도체/IT하드웨어/조방원",
+        "stance": "비중확대",
+        "reason": "6월 FOMC 직후부터 주가/수급 정상화에 나설 실질 성장주"
+      }
+    ],
+    "style": "순수 가치주(Pure Value)군 내 밸류업 모멘텀 보유 낙폭과대 실적주",
+    "event_calendar": [
+      {
+        "date": "2026.06.11",
+        "event": "5월 미국 Headline/Core CPI 발표"
+      },
+      {
+        "date": "2026.06.18",
+        "event": "6월 FOMC"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "삼성전기",
+      "한화오션",
+      "LG이노텍",
+      "주성엔지니어링",
+      "이수페타시스",
+      "삼양식품",
+      "대덕전자",
+      "로보티즈",
+      "일진전기",
+      "티에스이",
+      "고영",
+      "한국카본",
+      "디아이"
+    ],
+    "risk": "미국 고용지표 서프라이즈로 인한 하반기 연준 금리인상 우려 심화 및 시장금리 급등",
+    "quote": "6월 FOMC 직후 시점을 중장기 시각하 국내외 AI/반도체 밸류체인 대표주 Bottom-fishing 및 재진입의 전략적 호기로 판단하는 이유"
+  }
+}

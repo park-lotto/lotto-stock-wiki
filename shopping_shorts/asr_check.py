@@ -7,14 +7,23 @@ import difflib
 import requests
 
 from shopping_shorts import config
+from shopping_shorts.narration_naturalize import normalize_reading
 
 _GROQ_URL = "https://api.groq.com/openai/v1/audio/transcriptions"
 _MODEL = "whisper-large-v3"
 
 
 def _tokens(text):
-    """비교용 토큰화: 감정태그([..])·문장부호 제거, 공백분리, 소문자."""
+    """비교용 토큰화: 감정태그([..]) 제거 → 숫자·단위·기호를 읽기말로 정규화
+    (ref·hyp 양쪽 동일 적용) → 문장부호 제거 → 공백분리.
+
+    normalize_reading을 여기서 재사용한다 — Whisper가 성우가 읽은 '삼 점 오
+    킬로그램'을 '3.5kg'로 되표기(또는 그 반대)해도 양쪽을 같은 읽기말로 맞춰야
+    성우가 제대로 읽은 게 오독으로 안 뜬다(설계 의도, narration_naturalize.py
+    normalize_reading docstring). 태그는 정규화 전에 걷어낸다 — `[` 등 대괄호가
+    숫자 옆에 붙어 있으면 단위/기호 매칭을 흐트러뜨릴 수 있어서다."""
     text = re.sub(r"\[[^\]]+\]", " ", text)
+    text = normalize_reading(text)[0]
     text = re.sub(r"[^\w가-힣\s]", " ", text)
     return [t for t in text.split() if t]
 

@@ -1,0 +1,81 @@
+{
+  "meta": {
+    "date": "2026-07-23",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-25_1106_미용 에스테틱 2026년 2분기 프리뷰.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "한송협",
+    "report_date": "2026년 2분기",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "파마리서치",
+        "code": "214450",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": "494,000",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 매출 1,625억(YoY +16% / QoQ +11%), 영업이익 667억(YoY +19% / OPM 41%)",
+        "estimate_revision": null,
+        "next_catalyst": "서유럽 리쥬란과 미국, 동남아 화장품 성장에 따른 매출 성장",
+        "thesis": [
+          "수출이 성장을 이끌고, 늘어난 비용은 매출로 흡수",
+          "서유럽 리쥬란과 미국, 동남아 화장품이 성장을 견인하며 상회 가능성도 열려 있음",
+          "화장품 매출 463억원 추정. 미국과 동남아 수출이 늘고, 미국 화장품의 높은 매출총이익률이 비용 부담을 보완"
+        ],
+        "valuation_basis": null,
+        "risk": "외국인 수요가 강했던 전년 기저로 YoY 성장률은 한 자릿수에 그칠 전망",
+        "supply_comment": null,
+        "quote": "수출이 성장을 이끌고, 늘어난 비용은 매출로 흡수",
+        "sector": "화장품미용"
+      },
+      {
+        "name": "휴젤",
+        "code": "145020",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": "378,462",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 매출 1,300억(YoY +18% / QoQ +12%), 영업이익 550억(YoY -3% / OPM 42%)",
+        "estimate_revision": null,
+        "next_catalyst": "3Q 미국 직판 시작",
+        "thesis": [
+          "국내 톡신과 필러는 견조. 중국은 현지 판매 성장에 맞춰 선적도 증가",
+          "6월 소액 test 매출로 주문 시스템을 점검했고 7월 National Sales Meeting 진행. 준비가 빨라지며 직판 일정도 앞당겨짐",
+          "미국 인력과 인프라, medical marketing, ESOP가 반영"
+        ],
+        "valuation_basis": null,
+        "risk": "미국 인력과 인프라, medical marketing, ESOP 반영에 따른 이익 감소",
+        "supply_comment": null,
+        "quote": "2Q 실적은 무난, 다음 이벤트는 3Q 미국 직판",
+        "sector": "화장품미용"
+      },
+      {
+        "name": "클래시스",
+        "code": "214150",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": "76,267",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 매출 1,234억, 영업이익 561억",
+        "estimate_revision": null,
+        "next_catalyst": "하반기 브라질 매출과 수익 점진적 확대 및 중국 허가 연내 목표",
+        "thesis": [
+          "해외 성장은 이어지지만 국내 장비와 소모품이 기대에 못 미침",
+          "브라질 PMI와 현지 영업 체계 구축 완료",
+          "1Q Review 당시 대신 추정치보다 보수적으로 볼 필요가 있음"
+        ],
+        "valuation_basis": null,
+        "risk": "국내 장비 리팟 감소를 쿼드세이가 모두 메우지 못함, 외국인 관광객 증가 효과가 기대에 못 미침, 일본 대형 체인 수주 무산",
+        "supply_comment": null,
+        "quote": "외형은 성장하지만 국내 둔화로 눈높이 조정이 필요",
+        "sector": "화장품미용"
+      }
+    ]
+  }
+}

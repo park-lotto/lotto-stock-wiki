@@ -5,25 +5,22 @@
     "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_0700_원화 강세 재료 부재, 당분간은 1,500원대.md"
   },
   "questionnaire": {
+    "target_kind": "market",
     "broker": "한화투자증권",
     "analyst": "최규호",
     "report_date": "2026년 6월 5일",
-    "target_kind": "market",
-    "market_direction": "당분간 1,500원대 유지, 하반기 점진적 하락 전망",
+    "market_direction": "원화 약세 지속",
     "macro_vars": [
-      "원/달러 환율",
-      "국제유가(WTI)",
-      "미국 소비자물가",
-      "외국인 코스피 순매도",
-      "엔화 약세"
+      "연준의 고금리 장기화 우려",
+      "외국인의 코스피 순매도",
+      "엔화 약세 압력",
+      "미국 관세 정책"
     ],
-    "recommended_sectors": [],
+    "recommended_sectors": null,
     "style": null,
-    "event_calendar": [],
-    "top_picks": [
-      "코스피"
-    ],
-    "risk": "미국-이란 종전 협상 지연으로 인한 공급망 우려, 연준의 고금리 장기화, 엔화 약세 압력",
-    "quote": "주요 요인들 중 어느 것도 단기간에 해결되기 쉽지 않아, 당분간 환율은 1,500원대 수준을 유지할 것으로 예상한다. 단기 환율 상단은 1,550원으로 판단한다."
+    "event_calendar": null,
+    "top_picks": null,
+    "risk": "전쟁 지속에 따른 공급망 우려 및 유가 불안, 외국인 수급 부담",
+    "quote": "주요 요인들 중 어느 것도 단기간에 해결되기 쉽지 않아, 당분간 환율은 1,500원대 수준을 유지할 것으로 예상한다."
   }
 }

@@ -147,13 +147,19 @@ let HANDOFF = [];
 const STATE = { script:'', script_src_idx:null, script_from_wiki:null,
                 subtitleRemoval:false, headcopy:null, captionStyle:null,
                 deco:{ extra_texts:[], motion:null } };
-const STEPS = ['대본','자막제거','TTS','꾸미기','최종'];
+const STEP_LABELS = ['대본','화면 붙이기','TTS','꾸미기','최종'];
+// Task 6(2026-07-23): cur 바운드는 PANEL_COUNT(물리 패널 수, 지금 8)를 쓴다 — STEP_LABELS.length
+// (오브 라벨 수)와는 다른 축이다.
+const PANEL_COUNT = 8;
 let cur = 0, MIX_JOB = null, WORK_ID = null, PREVIEW_STATUS = null;
 // ★꾸미기 패널은 DOM을 진실의 원천으로 읽는다 — 복원이 STATE만 채우면 initHeadcopy가
 // DOM/기본값에서 스타일을 재구성해 덮는다. 그래서 복원 시 이 플래그를 세워, 패널 진입 때
 // applyConfig로 DOM 입력칸을 채우고 STYLE_TOUCHED로 기본프리셋 자동적용을 막는다(C-2 잔여).
 let STYLE_TOUCHED = false, PENDING_STYLE_RESTORE = false;
 function canGoNext(){ return PREVIEW_STATUS === 'ready' || PREVIEW_STATUS === 'failed'; }
+// _restoreWork의 게이트 재동기는 stepLocked() 하나만 본다(2026-07-26) — 소스와 동일 스텁.
+// 패널7(화면 붙이기=매칭)은 미리보기를 '만드는' 자리라 게이트 예외다.
+function stepLocked(i){ if(i === 7) return false; return i >= 1 && !!MIX_JOB && !canGoNext(); }
 function refreshNextBtn(){}
 function renderSteps(){}
 function showPanel(){}

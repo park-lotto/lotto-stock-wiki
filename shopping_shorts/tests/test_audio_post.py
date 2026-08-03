@@ -58,3 +58,41 @@ def test_silence_level_params():
     def dur(level):
         return float(re.search(r"stop_duration=([\d.]+)", audio_post._silence_filter(level)).group(1))
     assert dur("strong") < dur("mid") < dur("weak")
+
+
+def _af_of(monkeypatch, **kwargs):
+    """post_process가 ffmpeg에 넘긴 -af 필터 문자열을 뽑아 반환(subprocess mock)."""
+    cmd = {}
+    def fake_run(c, **k):
+        cmd["c"] = c
+        Path(c[-1]).write_bytes(b"ID3out")
+        class R: returncode = 0
+        return R()
+    monkeypatch.setattr(audio_post.subprocess, "run", fake_run)
+    src = Path(tempfile.mkdtemp()) / "in.mp3"; src.write_bytes(b"ID3")
+    dst = Path(tempfile.mkdtemp()) / "out.mp3"
+    audio_post.post_process(str(src), str(dst), **kwargs)
+    return cmd["c"][cmd["c"].index("-af") + 1]
+
+
+def test_pace_mode_builds_edge_trim_chain(monkeypatch):
+    """pace_mode=True면 앞 무음 제거(start_periods=1)+끝 여백(apad)+클릭방지(afade)."""
+    af = _af_of(monkeypatch, tempo=1.0, silence_trim="off", pace_mode=True)
+    assert "silenceremove" in af
+    assert "start_periods=1" in af
+    assert "apad" in af
+    assert "afade" in af
+
+
+def test_pace_mode_off_keeps_old_behavior(monkeypatch):
+    """pace_mode=False(기본)면 기존처럼 앞 무음 제거·apad 없음."""
+    af = _af_of(monkeypatch, tempo=1.0, silence_trim="mid", pace_mode=False)
+    assert "silenceremove" in af
+    assert "start_periods=1" not in af
+    assert "apad" not in af
+
+
+def test_pace_mode_default_is_false(monkeypatch):
+    """pace_mode 미지정이면 off로 취급(하위호환) — 기존 호출부 무영향."""
+    af = _af_of(monkeypatch, tempo=1.0, silence_trim="mid")
+    assert "start_periods=1" not in af

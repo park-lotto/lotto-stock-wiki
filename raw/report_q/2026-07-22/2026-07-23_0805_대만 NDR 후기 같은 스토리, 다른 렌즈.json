@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-22",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-23_0805_대만 NDR 후기 같은 스토리, 다른 렌즈.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "김도엽",
+    "report_date": "2026.07.21",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "두산에너빌리티",
+        "code": "034020",
+        "rating": "BUY (M)",
+        "rating_changed": false,
+        "tp_new": "149,000원",
+        "tp_prev": "149,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26E 매출액 4,730(십억원), 전년동기대비 3.5%, 전분기대비 11.0%, 영업이익 306(십억원), 전년동기대비 12.7%, 전분기대비 30.8%",
+        "estimate_revision": null,
+        "next_catalyst": "2030~2031년 납기를 두고 신규 유틸리티사와 협의가 진행 중",
+        "thesis": [
+          "가스터빈 물량 2029년 납기 슬롯까지 full booking으로 수요 가시성 견조",
+          "대체 불가능한 에너지 설비 기업으로서의 경쟁력 재확인",
+          "AI·반도체 성장에 따른 전력 인프라 수요 지속"
+        ],
+        "valuation_basis": "투자의견 Buy, 목표주가 149,000원을 유지한다.",
+        "risk": "상업화 지연과 마진 불확실성에 대한 회의론",
+        "supply_comment": "동사의 가스터빈 물량은 2029년 납기 슬롯까지 이미 full booking되어 있고, 2030~2031년 납기를 두고 신규 유틸리티사와 협의가 진행 중이어서 수요 가시성은 여전히 견조하다고 판단한다.",
+        "quote": "이번 NDR로 투자 포인트는 재확인되었으며, 투자의견 Buy, 목표주가 149,000원을 유지한다."
+      }
+    ]
+  }
+}

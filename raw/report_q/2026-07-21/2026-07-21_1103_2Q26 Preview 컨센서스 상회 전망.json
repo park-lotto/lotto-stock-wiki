@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-21_1103_2Q26 Preview 컨센서스 상회 전망.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "최정환",
+    "report_date": "2026.07.21",
+    "stocks": [
+      {
+        "name": "LIG D&A",
+        "code": "079550",
+        "rating": "BUY",
+        "rating_changed": "매수, 유지",
+        "tp_new": "990,000",
+        "tp_prev": "1,100,000",
+        "tp_direction": "down",
+        "earnings_outlook": "2Q26 연결 기준 매출액 1조 3,400억원(+41.8% YoY), 영업이익 1,220억원(+58.2% YoY, OPM 9.1%)으로 컨센서스인 매출액 1조 1,700억원 및 영업이익 1,080억원 상회 전망.",
+        "estimate_revision": "목표주가 하향의 경우 27년 실적 추정치 하향에 따른 것으로 동사 미래 성장을 위한 추가적인 비용을 반영.",
+        "next_catalyst": "UAE, 사우디 그리고 2H27 이라크 매출 인식 본격화, CAPA 증설 및 Rheinmetall과의 JV",
+        "thesis": [
+          "2Q26 컨센서스 대비 매출, 영업이익 상회 전망",
+          "26년 상고하저의 실적, 27년 고성장 전망",
+          "제품 포트폴리오 다각화 및 방공체계 유럽 시장 진출 기대"
+        ],
+        "valuation_basis": "27년 연결 기준 지배주주순이익에 Target PER 31.3x 적용해 목표주가 산출.",
+        "risk": "중동 국가의 러시아 S-400 도입 영향, 4Q26 영업이익률 연내 가장 낮은 수준(5.3%) 추정",
+        "supply_comment": "CAPA 증설 및 Rheinmetall과의 JV를 통해 중장기적으로 매출 증대 기대",
+        "quote": "27년 연결 기준 지배주주순이익에 Target PER 31.3x 적용해 목표주가 산출."
+      }
+    ]
+  }
+}

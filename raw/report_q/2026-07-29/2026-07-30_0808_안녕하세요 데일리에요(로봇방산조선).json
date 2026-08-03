@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "date": "2026-07-29",
+    "broker": "Eugene Investment & Securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-30_0808_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "Eugene Investment & Securities",
+    "analyst": "양승윤",
+    "report_date": "07/28",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "LG전자 로봇 관절 조기 양산, LG이노텍 TDK와 촉각센서 개발, 두산로보틱스 현대차에 협동로봇 추가 공급 등"
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "특사단 페루 방산 협력 확대 제안, 미 육군 30년 만에 PAC-2 GEM-T 주문, 리투아니아 레오파르트 2A8 조립 시설 건설 등"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "HD현대 필리핀조선소 첫 선박 진수, 한화 美 필리조선소 연내 2배 확대 프로젝트 등"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "LG전자",
+      "LG이노텍",
+      "두산로보틱스",
+      "현대차",
+      "뉴로메카",
+      "BYD",
+      "유니트리",
+      "KAI",
+      "현대로템",
+      "포드",
+      "GM",
+      "HD현대",
+      "한화",
+      "GTT",
+      "카타르에너지",
+      "TKMS",
+      "크라켄 테크놀로지"
+    ],
+    "risk": null,
+    "quote": "LG이노텍은 일본 TDK와 로봇용 촉각 센싱 모듈과 차세대 비전 센싱 모듈 등 피지컬 AI용 센싱 솔루션을 공동 개발할 계획. 미 육군이 약 30년 만에 PAC-2 GEM-T를 신규 주문. 현대중공업 필리핀조선소(HHIP)가 수빅조선소 재가동 이후 첫 선박을 진수."
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "date": "2026-06-05",
+    "broker": "Kiwoom",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_0605, Kiwoom Morning Letter.md"
+  },
+  "questionnaire": {
+    "broker": "Kiwoom",
+    "analyst": null,
+    "report_date": "2026. 06. 05",
+    "target_kind": "market",
+    "market_direction": "하락",
+    "macro_vars": [
+      "KOSPI -1.84%",
+      "KOSDAQ 2.31%",
+      "달러/원 1,529.70원",
+      "국제유가 하락",
+      "국고채 금리 상승"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "하락",
+        "reason": "브로드컴 실적 쇼크 및 AI 랠리 주도 기업들의 차익실현 매물 출회"
+      },
+      {
+        "sector": "통신",
+        "stance": "하락",
+        "reason": "통신 업종 내림세"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6.04",
+        "event": "한국 외환보유고 5월 발표"
+      },
+      {
+        "date": "6.05",
+        "event": "한국 경상수지 4월 발표"
+      },
+      {
+        "date": "6.08",
+        "event": "일본 GDP 1분기 발표"
+      },
+      {
+        "date": "6.09",
+        "event": "한국 GDP 1분기 발표"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스"
+    ],
+    "risk": "중동 긴장 재고조 및 지정학적 불안",
+    "quote": "4일(목) 코스피는 중동 긴장 재고조와 환율 급등으로 하락함(KOSPI -1.84%, KOSDAQ 2.31%)."
+  }
+}

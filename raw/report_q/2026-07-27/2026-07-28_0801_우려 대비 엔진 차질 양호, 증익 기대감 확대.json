@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-27",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-28_0801_우려 대비 엔진 차질 양호, 증익 기대감 확대.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김성래, 김예인",
+    "report_date": "2026년 07월 27일",
+    "stocks": [
+      {
+        "name": "현대위아",
+        "code": "011210",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "100,000원",
+        "tp_prev": "100,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 매출액 2.35조원(+8.0% 이하 YoY) 기록했고, 영업이익은 504억원(-10.4%)으로 큰 폭의 하락 우려 대비 양호.",
+        "estimate_revision": "상반기 수익성에 영향을 미친 차량부품 중 엔진 물량 회복이 하반기 동사 실적 개선에 기여 전망.",
+        "next_catalyst": "하반기 감마2 중심 엔진 물량 증가와 ’27년 열관리 매출 통한 동사 증익 사이클 확대 기조 유지. 그룹사 eM 플랫폼 수주 규모도 연 내 확정 예정",
+        "thesis": [
+          "우려 대비 상반기 차량부품 물량 차질 영향 최소화로 이익 증가에 대한 기대감 확대",
+          "하반기 감마2 중심 엔진 물량 증가 및 ’27년 열관리 매출을 통한 증익 사이클",
+          "그룹사 eM 플랫폼 수주 규모 확정에 따른 중장기 열관리 사업 성장 기대"
+        ],
+        "valuation_basis": "AVG of (Target PER * EPS + Target PBR * BPS) (기존 Multiple에 KOSPI Multiple 조정(-7%) 반영)",
+        "risk": "솔루션부문 매출 감소",
+        "supply_comment": "협력사 화재 및 러시아 물량 감소에 따른 엔진 및 구동/등속 물량 차질이 부품 전반의 매출 감소 영향을 미칠 것으로 예상했으나, 5~6월 물량 증가와 열관리 매출 증가로 차질분을 만회",
+        "quote": "우려 대비 상반기 차량부품 물량 차질 영향 최소화로 이익 증가에 대한 기대감 확대."
+      }
+    ],
+    "sector": "자동차"
+  }
+}

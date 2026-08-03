@@ -6,30 +6,40 @@
   },
   "questionnaire": {
     "broker": "하나증권",
-    "analyst": "김홍식",
+    "analyst": "김홍식, 이상훈",
     "report_date": "2026.6.5",
     "target_kind": "market",
-    "market_direction": "통신서비스 업종 투자 매력도 SKT>LGU+>KT",
+    "market_direction": "통신장비주 주도주 상승세",
     "macro_vars": [
-      "미국 신규 5G 주파수 경매",
-      "국내 AI RAN 사업 정책"
+      "미국 5G 주파수 경매",
+      "AI RAN 사업 정책",
+      "CAPEX 상향 조정"
     ],
     "recommended_sectors": [
       {
         "sector": "통신",
-        "stance": "비중확대",
-        "reason": "신규 주파수 할당을 통한 투자 확대 예상 및 AI RAN 육성 기조"
-      }
-    ],
-    "style": "통신장비주 주도주 흐름",
-    "event_calendar": [
-      {
-        "date": "2026-06-02",
-        "event": "미국 주파수 경매 시작"
+        "stance": "SKT>LGU+>KT",
+        "reason": "SKT는 2026년 이익/배당 모멘텀 및 AI RAN 사업 본격화"
       },
       {
-        "date": "2026-11",
-        "event": "엔비디아 주도 AI RAN 총회 한국 개최"
+        "sector": "통신",
+        "stance": "비중확대",
+        "reason": "미국 주파수 경매 수혜주 및 기지국 장비 업체 중심 포트폴리오 확대"
+      }
+    ],
+    "style": "주도주",
+    "event_calendar": [
+      {
+        "date": "2026-06-04",
+        "event": "디지털 트윈·로봇 트레이팅…SKT 본격적 플랫폼 사업화"
+      },
+      {
+        "date": "2026-06-04",
+        "event": "엔비디아 주도 AI RAN 총회 11월 한국서 열린다"
+      },
+      {
+        "date": "2026-06-01",
+        "event": "쏠리드윈텍, 514억 규모 군 위성 통합 PBL 사업 수주"
       }
     ],
     "top_picks": [
@@ -42,7 +52,7 @@
       "LIG아큐버",
       "쏠리드"
     ],
-    "risk": "일부 종목의 가격 부담",
-    "quote": "이젠 무선통신장비주가 주도주입니다"
+    "risk": "통신장비주 가격 부담",
+    "quote": "이젠 무선통신장비주가 주도주입니다. 미국 신규 5G 주파수 경매 돌입, 국내 AI RAN 사업 정책 본격화가 이루어진 가운데 통신장비주들이 다시 상승 흐름을 타고 있다."
   }
 }

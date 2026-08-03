@@ -9,7 +9,8 @@ def test_get_or_create_by_google(tmp_path):
     cid = s.get_or_create_by_google("sub-abc", "a@x.com")
     assert cid and s.get_customer(cid)["plan"] == "free"
     assert s.get_customer(cid)["email"] == "a@x.com"
-    assert s.get_customer(cid)["full_access_until"] > 0          # 체험 자동시작
+    assert s.get_customer(cid)["approved_at"] is None            # ★대기중(승인 전)
+    assert s.get_customer(cid)["full_access_until"] == 0         # 체험은 승인 시 시작
     assert s.get_or_create_by_google("sub-abc", "a@x.com") == cid  # 같은 sub=같은 계정
     assert s.get_or_create_by_google("sub-def", "b@x.com") != cid  # 다른 sub=다른 계정
 
@@ -111,3 +112,33 @@ def test_verified_email_kept():
         def get(self, *a, **k): return _FakeResp(200, {"sub": "s2", "email": "ok@x.com", "email_verified": True})
     ident = appmod._google_fetch_identity("code", _requests=FakeReq())
     assert ident["email"] == "ok@x.com"
+
+
+def test_approved_at_column_and_backfill(tmp_path):
+    import sqlite3
+    from shopping_shorts.store import Store
+    dbp = str(tmp_path / "t.db")
+    s = Store(dbp)
+    # 페이월 도입 전처럼 approved_at 없이 고객을 직접 INSERT(구버전 DB 재현)
+    with sqlite3.connect(dbp) as c:
+        c.execute("ALTER TABLE customers DROP COLUMN approved_at")  # 컬럼 제거해 구버전 재현
+        c.execute("INSERT INTO customers(username, password_hash, salt, created_at, plan, full_access_until) "
+                  "VALUES('old','h','s',datetime('now'),'free',0)")
+    # 다시 스키마 보증 → 컬럼 재추가 + 기존 행 백필
+    Store(dbp).ensure_paywall_schema()
+    with sqlite3.connect(dbp) as c:
+        row = c.execute("SELECT approved_at FROM customers WHERE username='old'").fetchone()
+    assert row[0] is not None       # 기존 계정 = 승인됨(백필)
+
+
+def test_create_customer_approved_flag(tmp_path):
+    from shopping_shorts.store import Store
+    s = Store(str(tmp_path / "t.db"))
+    cid_ok = s.create_customer("appr", "pw12")                 # 기본 approved=True
+    cust_ok = s.get_customer(cid_ok)
+    assert cust_ok["approved_at"] is not None
+    assert cust_ok["full_access_until"] > 0                     # 체험 시작됨
+    cid_pend = s.create_customer("pend", "pw12", approved=False)
+    cust_pend = s.get_customer(cid_pend)
+    assert cust_pend["approved_at"] is None                     # 대기중
+    assert cust_pend["full_access_until"] == 0                  # 체험 미시작

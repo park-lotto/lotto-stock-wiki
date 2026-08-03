@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-29",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-30_0801_우수한 방산, 안정적인 ICT, 개선되는 필리조...md"
+  },
+  "questionnaire": {
+    "broker": "DS투자증권",
+    "analyst": "강태호",
+    "report_date": "2026.07.29",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "한화시스템",
+        "code": "272210",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": "94,000원",
+        "tp_prev": "94,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q 매출액 1.1조원(+45.5% YoY), 영업이익 1,037억원(+219.1% YoY, OPM 9.3%)으로 컨센서스(매출 9,355억원, 영업이익 582억원)를 모두 상회했다.",
+        "estimate_revision": "26년 방산 사업부 매출 2.8조원(+17.1%), 영업이익 2,511억원(+9.6%, OPM 9%)으로 추정한다.",
+        "next_catalyst": "하반기 다부처 초소형 SAR 위성 양산사업자 선정",
+        "thesis": [
+          "폴란드 K2 EC2, UAE·사우디 M-SAM Ⅱ MFR 등 수출 매출 인식 가속화",
+          "ICT 사업부 캡티브향 매출 증가 및 필리조선소 영업손실 축소",
+          "27년부터 가파른 이익 성장 기대, 25~28년 영업이익 연평균 성장률 76.7% 예상"
+        ],
+        "valuation_basis": "27F EPS 2,302원에 Target PER 41.0배(글로벌 27F Peer P/E) 적용",
+        "risk": "하반기 약 800억원 규모의 자체투자 개발비 집행",
+        "supply_comment": "방산 사업부 수출 비중은 23%를 기록했으며 수출 마진은 40%에 달하는 것으로 추정된다.",
+        "quote": "이번 분기 실적에서 확인된 긍정적 요인은 수출 사업의 이익률이 개선되고 있으며 필리조선소의 손실 규모가 축소되고 있다는 점이다."
+      }
+    ],
+    "sector": "방산"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-07-27",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-28_0809_탄도탄 요격 미사일, 공급이 늘어도 수요가 ...md"
+  },
+  "questionnaire": {
+    "broker": "DS투자증권",
+    "analyst": "강태호",
+    "report_date": "2026.07.27",
+    "target_kind": "market",
+    "market_direction": "bullish",
+    "macro_vars": [
+      "탄도탄 요격 미사일 수요 급증",
+      "지정학적 리스크(이란 전쟁 등)로 인한 요격탄 재고 고갈",
+      "미국 국방 예산 지출 확대 및 전시 태세 전환"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "방산",
+        "stance": "비중확대",
+        "reason": "요격 미사일 공급 부족 현상으로 인한 생산 확대와 신규 계약 수요 증가"
+      }
+    ],
+    "style": "성장주",
+    "event_calendar": [
+      {
+        "date": "2026.07.20",
+        "event": "록히드마틴, 저비용 요격체 PAC-3 ACE 발표"
+      }
+    ],
+    "top_picks": [
+      "LIG디펜스앤에어로스페이스",
+      "한화에어로스페이스"
+    ],
+    "risk": "핵심 부품 공급망의 단일/소수 의존성과 물량 인도까지의 장기 리드타임 문제",
+    "quote": "탄도탄 요격 미사일, 공급이 늘어도 수요가 훨씬 크다"
+  }
+}

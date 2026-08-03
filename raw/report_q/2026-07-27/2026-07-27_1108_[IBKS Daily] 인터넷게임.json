@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "date": "2026-07-27",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-27_1108_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.07.27",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "네이버-두나무 합병 관련 특금법 개정안 규제 심사 및 카카오 본사 노사 갈등 이슈"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "오늘",
+        "event": "특금법 개정안 규제 심사"
+      },
+      {
+        "date": "오는 31일",
+        "event": "카카오뱅크 전면 파업 예고"
+      }
+    ],
+    "top_picks": [
+      "NAVER",
+      "카카오",
+      "카카오엔터프라이즈",
+      "카카오페이",
+      "카카오뱅크"
+    ],
+    "risk": "특금법 개정안 원안대로 시행될 경우 네이버의 두나무 대주주 변경 신고 수리의 걸림돌이 될 수 있다는 우려",
+    "quote": "네이버-두나무 빅딜 운명의 날…오늘 특금법 개정안 규제 심사"
+  }
+}

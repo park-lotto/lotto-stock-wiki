@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_EV Tracker 81.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "한화투자증권",
+    "analyst": "이용욱",
+    "report_date": "2026년 6월 2일",
+    "market_direction": null,
+    "macro_vars": [
+      "전기차 판매량",
+      "배터리 탑재량",
+      "ESS 수요",
+      "양극재 출하량",
+      "리튬 가격",
+      "코발트 가격",
+      "니켈 가격",
+      "알루미늄 가격",
+      "망간 가격",
+      "구리 가격"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "2차전지",
+        "stance": "중립",
+        "reason": "글로벌 전기차 시장 성장이 유럽과 동남아에 의해 견인되고 있으나, 중국 대비 경쟁력 열위와 정책적 장벽 등의 부정적 요인이 시장에 이미 반영됨"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "LG에너지솔루션",
+      "삼성SDI",
+      "SK이노베이션",
+      "CATL",
+      "BYD",
+      "Guoxuan High Tech",
+      "Panasonic",
+      "에코프로비엠",
+      "포스코퓨처엠",
+      "엘앤에프",
+      "코스모신소재",
+      "Umicore",
+      "Easpring",
+      "Ronbay",
+      "Dynanonic",
+      "대주전자재료",
+      "ShanShan",
+      "Putailai",
+      "동화기업",
+      "엔켐",
+      "천보",
+      "Guangzhou Tinci",
+      "Shenzen Capchem",
+      "SKIET",
+      "WCP",
+      "Shenzhen Senior",
+      "Yunnan Energy New Material's",
+      "Asahi Kasei",
+      "롯데에너지머티리얼즈",
+      "SKC",
+      "솔루스첨단소재",
+      "Furukawa",
+      "Tianqi Lithium",
+      "Jangxi Ganfeng",
+      "Albemarle",
+      "SQM",
+      "CNGR",
+      "화유코발트",
+      "GEM"
+    ],
+    "risk": "중국 업체 대비 기술과 가격 경쟁력 열위, 정책 의존성, 미국 전력망 인프라 확충 시점까지의 기저전력 확보 이슈",
+    "quote": "현재 국내 배터리 산업은 중국 업체에 비해 기술과 가격 경쟁력 모두 열위에 놓여 있어, 정책적 장벽 없이는 정면 대결이 어렵다."
+  }
+}

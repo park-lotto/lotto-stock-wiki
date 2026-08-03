@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "DAOL투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_Daily Morning Brief(2026.06.10).md"
+  },
+  "questionnaire": {
+    "broker": "DAOL투자증권",
+    "analyst": "jeehyun12@daolfn.com",
+    "report_date": "10 Jun. 2026",
+    "target_kind": "market",
+    "market_direction": "mixed",
+    "macro_vars": [
+      "Dow (+0.17%), S&P500 (-0.26%), Nasdaq (-0.97%)",
+      "GDP 2 3.0% 3.3%",
+      "3 2.64 4.192%",
+      "JPY 160.36(+0.12%), EUR 1.154(+0.08%), Dollar 99.91(-0.14%)",
+      "WTI $88.2(-3.40%), Brent $91.45(-2.97%)"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6월 9일",
+        "event": "한국 1분기(잠정) GDP"
+      },
+      {
+        "date": "6월 10일",
+        "event": "미국 5월 소비자물가지수, 미국 5월 근원 소비자물가지수"
+      }
+    ],
+    "top_picks": null,
+    "risk": "EU, 美 테크 기업 규제 압박 및 일부 인공지능 도구(Siri 등) 출시 불확실성",
+    "quote": "미중 갈등, 금리 인하 기대 약화가 소외자마전 개선으로 이어질 수 있다는 기대에 +1.5% 상승"
+  }
+}

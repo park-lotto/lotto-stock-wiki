@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-01",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_Corporate Day 후기 신규 채널이 열린다.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "이승은",
+    "report_date": "2026.06.01",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "한스바이오메드",
+        "code": "042520",
+        "rating": "NOT RATED",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "28기 2분기(2026년 1~3월) 연결 매출은 345억 원(+43% YoY), 영업이익은 44억 원(OPM 13%)을 기록하였으며, 28기 연간 가이던스를 매출 1,400억 원, 영업이익 150억 원 이상으로 상향 조정함",
+        "estimate_revision": "28기 연간 가이던스 상향 조정(매출 1,400억원, 영업이익 150억원 이상)",
+        "next_catalyst": "셀르디엠 CAPA 증설·국내 채널 확장·해외 진출·바운스 신규 기여·중국 중장기 모멘텀",
+        "thesis": [
+          "셀르디엠 중심의 사상 최대 분기 실적 달성",
+          "휴젤 협업을 통한 셀르디엠 판매량 확대 및 영업망 확장",
+          "신제품 바운스 및 중국 동종골 이식재 수출 등 다각화된 성장 동력"
+        ],
+        "valuation_basis": null,
+        "risk": "규제 이슈 및 신규 제품의 수율 안정화 필요성",
+        "supply_comment": "원재료 수급: 현재 미국 3개 업체로부터 분산 수급 중이며 8만개 CAPA까지는 수급이 원활한 상태",
+        "quote": "셀르디엠 CAPA 증설·국내 채널 확장·해외 진출·바운스 신규 기여·중국 중장기 모멘텀이라는 5중 성장 축이 주가 재평가의 핵심 트리거로 작용할 전망이다."
+      }
+    ]
+  }
+}

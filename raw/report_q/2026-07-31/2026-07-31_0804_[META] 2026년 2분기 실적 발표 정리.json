@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-31_0804_[META] 2026년 2분기 실적 발표 정리.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026. 7. 30",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "메타(Meta)",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 2분기 매출액 $60.8B (YoY +28.0%, QoQ +8.0%), 영업이익 $18.8B (YoY -8.2%, QoQ -17.9%), 영업이익률 30.9%, 당기순이익 $15.8B (YoY -13.6%, QoQ -40.8%), 희석 EPS 주당 $6.18, Capex $31.1B (YoY +82.7%, QoQ +56.6%), OCF $31.9B (YoY +24.7%, QoQ -1.1%), FCF $0.8B (YoY -90.8%, QoQ -93.7%)",
+        "estimate_revision": "2026년 Capex 전망치의 하단이 $130B로 상향 조정됨",
+        "next_catalyst": "핵심 사업의 AI 가속, 개인 에이전트 개발, 대기업 대상 엔터프라이즈 시장",
+        "thesis": [
+          "광고 매출($59.4B) 및 사용자 참여도 증가로 매출 성장 견인",
+          "생성형 추천 시스템(GEM) 도입을 통한 광고 클릭률 및 전환율 향상",
+          "신규 수익원(통합 구독 Meta One, 고성능 모델 API) 출시 및 확장"
+        ],
+        "valuation_basis": null,
+        "risk": "직원 보상, 인프라 비용(감가상각, 데이터센터 운영비 등), AI 토큰 비용 증가에 따른 순이익 악화",
+        "supply_comment": "컴퓨팅 공급은 당분간 부족할 것으로 전망하며, 자체 맞춤형 실리콘 개발로 장기 전략적 유연성과 공급망 레버리지를 확보 중",
+        "quote": "2026년 2분기 메타(Meta)의 매출액은 $60.8B로 전년동기 대비 28.0% 증가한 수치를 기록함. 영업이익은 $18.8B로 전년동기 대비 8.2% 하락했으며, 당기순이익은 $15.8B로 전년 동기 대비 13.6% 하락한 수치임."
+      }
+    ],
+    "sector": "IT"
+  }
+}

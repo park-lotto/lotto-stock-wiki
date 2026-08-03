@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_내년에도 훌륭한 실적 모멘텀이 대기 중입니...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김홍식",
+    "report_date": "2026년 06월 09일",
+    "stocks": [
+      {
+        "name": "RF머트리얼즈",
+        "code": "327260",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "150,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "향후 루멘텀향 매출이 300억원 이상으로 전망되는데, 이는 RF시스템즈 제외한 매출 기준 2배 성장한 수치이다. 2022년 통신용패키지 매출이 147억원이었는데, 상술한 시장효과 반영시 루멘텀향 실적을 제외한 RF향 실적으로만 500억원대 매출 증분이 가능하단 계산이다.",
+        "estimate_revision": null,
+        "next_catalyst": "고주파수 대역에서 GaN TR과 LDMOS TR의 사용 비율 변화, NXP 사업 철수로 인한 M/S 확대 및 5G RAN 구축 현황, 주파수 경매",
+        "thesis": [
+          "설비 가동률과 시설 증축을 고려하면 2027년 루멘텀향 광모듈 매출은 2026년보다도 좋을 전망",
+          "고주파수 대역에서 GaN TR 필요성과 NXP 철수를 감안시 모회사 RFHIC의 M/S가 크게 확대되면서 통신향 패키지 매출이 루멘텀향 매출 이상으로 커질 것",
+          "광 뿐만 아니라 무선주 수급에도 수혜를 받을 수 있음"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "섹터내 수급이 광에서 무선으로 이동 중인만큼, RF머트리얼즈는 타 광통신주와 달리 끊임없이 수급에 노출되는 점도 장점이다.",
+        "quote": "RF머트리얼즈에 대한 투자의견 매수를 유지한다."
+      }
+    ]
+  }
+}

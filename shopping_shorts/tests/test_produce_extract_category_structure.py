@@ -70,7 +70,7 @@ def test_extract_new_video_infers_category_and_saves_structure(monkeypatch, tmp_
     structure는 analyze_structure() 결과가 있으면 저장한다."""
     client, st = _client(monkeypatch, tmp_path)
     monkeypatch.setattr(app_module, "download_any", lambda url, d: ("/tmp/x.mp4", "캡션"))
-    monkeypatch.setattr(app_module, "extract_script",
+    monkeypatch.setattr(app_module, "extract_auto",
                          lambda path, code, caption="": {"full_text": "감자 레시피 대본", "segments": []})
     monkeypatch.setattr(app_module, "analyze_structure",
                          lambda full_text, max_key_tries=3: {"hook": "질문형"})
@@ -95,7 +95,7 @@ def test_extract_structure_analysis_failure_does_not_break_response(monkeypatch,
     엔드포인트가 예외를 던지는 최악의 경우까지 방어하는지 확인한다.)"""
     client, st = _client(monkeypatch, tmp_path)
     monkeypatch.setattr(app_module, "download_any", lambda url, d: ("/tmp/x.mp4", ""))
-    monkeypatch.setattr(app_module, "extract_script",
+    monkeypatch.setattr(app_module, "extract_auto",
                          lambda path, code, caption="": {"full_text": "본문", "segments": []})
 
     def _boom(full_text, max_key_tries=3):

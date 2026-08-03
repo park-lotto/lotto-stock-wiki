@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "date": "2026-05-29",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_Focus on Week 매파적 금리 동결 → ‘수요측 압력’...md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "IBK투자증권",
+    "analyst": [
+      "정용택",
+      "김예슬"
+    ],
+    "report_date": "2026. 5. 29",
+    "market_direction": null,
+    "macro_vars": [
+      "기준금리",
+      "경제성장률",
+      "물가 상승률",
+      "유가",
+      "GDP gap"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026. 5",
+        "event": "5월 금융통화 위원회"
+      }
+    ],
+    "top_picks": null,
+    "risk": "지나치게 반도체 호황에 집중된 경제와 점점 더 심화되는 양극화",
+    "quote": "기대 이상으로 매파적인 5월 금통위 ➡ 성장률 전망치 상향과 이로 인한 수요측 인플레 압력 등장이 핵심 ➡ 실제 금리 인상 여부는 불분명하지만 시장은 금리 인상 기정사실화하며 추가 금리 상승 모멘텀 삼을 듯"
+  }
+}

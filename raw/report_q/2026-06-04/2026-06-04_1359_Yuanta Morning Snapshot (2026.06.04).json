@@ -1,0 +1,70 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_Yuanta Morning Snapshot (2026.06.04).md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": null,
+    "report_date": "2026.06.04",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "美 S&P 글로벌 미국 제조업 PMI: 55.1",
+      "日 자본지출 YoY: 0.0%",
+      "韓 CPI (전월대비): 0.5%",
+      "美 MBA 주택융자 신청지수: 2.5%",
+      "美 실업률: 4.3%"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "06/01",
+        "event": "美 S&P 글로벌 미국 제조업 PMI"
+      },
+      {
+        "date": "06/01",
+        "event": "日 자본지출 YoY"
+      },
+      {
+        "date": "06/02",
+        "event": "韓 CPI (전월대비)"
+      },
+      {
+        "date": "06/03",
+        "event": "美 MBA 주택융자 신청지수"
+      },
+      {
+        "date": "06/04",
+        "event": "美 신규 실업수당 청구건수"
+      },
+      {
+        "date": "06/05",
+        "event": "美 실업률"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "SOL AI반도체TOP2플러스",
+      "KODEX 반도체레버리지",
+      "HD현대중공업",
+      "SK스퀘어",
+      "삼성전기",
+      "LG디스플레이",
+      "대우건설",
+      "두산",
+      "KODEX 삼성전자단일종목레버리지",
+      "TIGER 삼성전자단일종목레버리지",
+      "KODEX 코스닥150레버리지",
+      "KODEX SK하이닉스단일종목레버리지",
+      "삼성전자우",
+      "NAVER",
+      "LG전자"
+    ],
+    "risk": "미국과 이란의 무력 충동 재점화 및 중동 지역의 긴장 고조, 휴전 불확실성",
+    "quote": "다우지수는 전장대비 620.72pt(-1.21%) 하락한 50,687.07pt에 마감. 미국과 이란의 무력 충동 재점화 및 중동 지역의 긴장 고조가 즉각적인 원인으로 작용하며 하락 마감"
+  }
+}

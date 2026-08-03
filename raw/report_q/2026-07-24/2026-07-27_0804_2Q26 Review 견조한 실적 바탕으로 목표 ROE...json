@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-27_0804_2Q26 Review 견조한 실적 바탕으로 목표 ROE...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "김지영",
+    "report_date": "2026/7/24",
+    "stocks": [
+      {
+        "name": "신한지주",
+        "code": "055550",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "134,000원",
+        "tp_prev": "134,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 2분기 당기순이익(연결기준) 1조8,201억원으로 전분기 및 전년동기대비 각각 12.2%, 17.5% 증가했고, 교보증권 예상을 8.6% 상회함.",
+        "estimate_revision": null,
+        "next_catalyst": "견조한 상반기 실적 시현으로 2026년 연간 이익 증가 예상 및 안정적인 CET1비율을 바탕으로 한 적극적인 주주환원정책과 M&A에 대한 기대감",
+        "thesis": [
+          "견조한 실적 달성 및 목표 ROE(10%) 달성 가능성 확대",
+          "안정적인 CET1비율 유지",
+          "적극적인 주주환원정책과 M&A에 대한 기대감"
+        ],
+        "valuation_basis": "신한지주에 대해 투자의견 매수와 목표주가 134,000원을 유지함.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "신한지주에 대해 투자의견 매수와 목표주가 134,000원을 유지함. 1) 견조한 상반기 실적 시현으로 2026년 연간 이익 증가가 예상되는 가운데 목표 ROE(10%) 달성 가능성이 높아진 점, 2) 안정적인 CET1비율을 바탕으로 적극적인 주주환원정책과 M&A에 대한 기대감이 향후 주가에 긍정적인 영향을 줄 것으로 예상되는 점에서 업종내 Top picks 유지함."
+      }
+    ]
+  }
+}

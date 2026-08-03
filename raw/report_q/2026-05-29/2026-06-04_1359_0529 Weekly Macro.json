@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "date": "2026-05-29",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_0529 Weekly Macro.md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "김유미 / 김정현",
+    "report_date": "2026 년 5 월 29 일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "한국 5월 수출입 동향",
+      "한국 5월 소비자물가 상승률",
+      "미국 5월 ISM 제조업지수",
+      "미국 5월 고용보고서",
+      "국제유가",
+      "미국 시장금리"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6/1",
+        "event": "韓 5 월 무역수지, 韓 5 월 수출 (YoY), 中 5 월 레이팅독 제조업 PMI, 유로존 5 월 제조업 PMI (최종치), 美 5 월 S&P 제조업 PMI (최종치), 美 5 월 ISM 제조업 PMI"
+      },
+      {
+        "date": "6/2",
+        "event": "韓 5 월 CPI (YoY), 美 4 월 JOLTs 구인이직건수, 미니애폴리스 연은 총재·클리블랜드 연은 총재 발언"
+      },
+      {
+        "date": "6/3",
+        "event": "美 5 월 ADP 취업자 변동수, 美 5 월 ISM 서비스업 PMI, 美 4 월 제조업 수주 (MoM)"
+      },
+      {
+        "date": "6/5",
+        "event": "美 5 월 비농업고용자수, 美 5 월 실업률, 美 5 월 시간당 평균임금 (MoM), 美 5 월 시간당 평균임금 (YoY)"
+      }
+    ],
+    "top_picks": null,
+    "risk": "지정학적 리스크, 비용 인플레이션",
+    "quote": "다음 주에는 한국과 미국의 주요 경제지표 발표가 예정되어 있어 이에 대한 관심을 높일 필요가 있다."
+  }
+}

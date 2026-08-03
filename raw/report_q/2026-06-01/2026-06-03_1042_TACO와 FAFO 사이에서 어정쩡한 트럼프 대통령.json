@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "date": "2026-06-01",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_TACO와 FAFO 사이에서 어정쩡한 트럼프 대통령.md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "박상현",
+    "report_date": "2026-06-01",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "미국-이란 종전 협상",
+      "원유 공급망 차질 및 유가 급등",
+      "미국 내구재 수주",
+      "미국 투자사이클"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-07-04",
+        "event": "미국 독립 250주년"
+      }
+    ],
+    "top_picks": null,
+    "risk": "호르무즈 해협 봉쇄 장기화에 따른 원유 공급 부족 및 유가 추가 급등 리스크",
+    "quote": "트럼프 대통령의 이번 MOU에 대한 사실상의 거부에도 불구하고 전면전 재개보다는 협상이 좀더 진행될 가능성이 커 보인다."
+  }
+}

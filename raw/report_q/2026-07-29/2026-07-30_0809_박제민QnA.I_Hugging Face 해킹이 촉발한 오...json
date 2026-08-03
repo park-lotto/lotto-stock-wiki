@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "date": "2026-07-29",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-30_0809_박제민QnA.I_Hugging Face 해킹이 촉발한 오...md"
+  },
+  "questionnaire": {
+    "broker": "SK증권",
+    "analyst": "박제민",
+    "report_date": "2026-07-29",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "부품 비용 증가",
+      "자본 비용 증가",
+      "인력 쇼티지",
+      "전기 쇼티지"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "비중확대",
+        "reason": "Enterprise Infra 위주의 플레이어들이 오픈웨이트 확산으로 인한 자체 인프라 구축 수요 집중 수혜 예상"
+      }
+    ],
+    "style": "Enterprise Infra 중심",
+    "event_calendar": [
+      {
+        "date": "2027",
+        "event": "Frozen v2 제한 생산"
+      },
+      {
+        "date": "2028",
+        "event": "Frozen v2 본격 램프"
+      }
+    ],
+    "top_picks": [
+      "엔비디아",
+      "알파벳",
+      "애플",
+      "마이크로소프트",
+      "아마존",
+      "메타 플랫폼스",
+      "오라클",
+      "코어위브",
+      "Dell",
+      "HPE",
+      "Lenovo",
+      "Supermicro",
+      "Palantir"
+    ],
+    "risk": "Enterprise 수요 속도 미지수 및 모델 구조 변화 가능성",
+    "quote": "오픈웨이트가 확산되면 기업, 정부, 통신사, 네오클라우드, 연구기관이 자체 인프라 구축할 가능성이 높아지는 중"
+  }
+}

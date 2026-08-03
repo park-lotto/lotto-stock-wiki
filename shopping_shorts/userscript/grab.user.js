@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         로또 · 원클릭 담기
 // @namespace    lotto.shopping_shorts
-// @version      2.0.0
+// @version      2.2.0
 // @description  플랫폼 영상에 '📥 담기' 버튼. ★한 번만 설치하면 됩니다 — 담기 로직은 서버에서 매번 불러오므로 이후 업데이트는 재설치 없이 자동 반영됩니다.
 // @match        https://www.youtube.com/*
 // @match        https://www.tiktok.com/*
@@ -10,6 +10,7 @@
 // @match        https://*.rednote.com/*
 // @match        https://*.douyin.com/*
 // @match        https://*.iesdouyin.com/*
+// @match        https://shoppingshorts.duckdns.org/grab*
 // @run-at       document-idle
 // @grant        GM_xmlhttpRequest
 // @connect      shoppingshorts.duckdns.org
@@ -20,11 +21,34 @@
 // 그래서 로직을 아무리 바꿔도 사용자는 재설치할 필요가 없다(이 로더는 한 번만 설치).
 // GM_xmlhttpRequest로 받아 sandbox에서 eval → 페이지 CSP의 영향을 받지 않는다.
 // 이 로더 자체(@match·@grant)를 바꿀 때만 재설치가 필요하므로 웬만하면 안 건드린다.
+// v2.1.0: /grab(설치 안내 페이지)도 @match에 추가 — 설치가 끝나면 이 로직이 그 페이지에서
+// 실행돼 '설치됨' 표식을 남기고, 페이지가 그걸 감지해 자동으로 '완료'로 바꾼다(자가감지 신호등).
+// 이 한 줄 때문에 기존 설치자는 한 번만 재설치하면 되고, 이후 로직 변경은 여전히 재설치 불필요.
 (function () {
   "use strict";
   // 분 단위 캐시버스트: 서버 코드를 고치면 늦어도 1분 안에 모두 반영, 그 안에선 캐시 활용.
   var LOGIC_URL = "https://shoppingshorts.duckdns.org/grab_logic.js?v=" + Math.floor(Date.now() / 60000);
-  function run(code) { try { eval(code); } catch (e) { console.error("[담기] 로직 실행 실패", e); } }
+
+  // ★인스타는 eval이 막힌다 (2026-07-29 실측, 이 로더가 인스타에서 통째로 죽던 진짜 원인):
+  //   "EvalError: Evaluating a string as JavaScript violates ... 'unsafe-eval' is not an allowed source"
+  //   Tampermonkey 샌드박스라도 확장 userscript 컨텍스트가 페이지 CSP를 상속받아 eval이 거부된다
+  //   (기존 주석의 "CSP 영향을 받지 않는다"는 틀렸다). 그래서 폴백을 둔다:
+  //   인스타 CSP script-src에는 `blob:`이 허용돼 있으므로 Blob URL <script>로 로직을 넣는다.
+  //   폴백은 '메인월드'에서 돌지만 로직은 GM API를 안 쓰고 window.open만 쓰므로 그대로 동작한다.
+  function runViaBlob(code) {
+    try {
+      var u = URL.createObjectURL(new Blob([code], { type: "text/javascript" }));
+      var s = document.createElement("script");
+      s.src = u;
+      s.onload = function () { try { URL.revokeObjectURL(u); s.remove(); } catch (e) {} };
+      (document.head || document.documentElement).appendChild(s);
+      return true;
+    } catch (e) { return false; }
+  }
+  function run(code) {
+    try { eval(code); }
+    catch (e) { if (!runViaBlob(code)) console.error("[담기] 로직 실행 실패", e); }
+  }
   try {
     GM_xmlhttpRequest({
       method: "GET",

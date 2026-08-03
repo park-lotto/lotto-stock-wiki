@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-25_0807_산업 현황 점검 펀터멘탈 이상 無.md"
+  },
+  "questionnaire": {
+    "broker": "SK증권",
+    "analyst": "이선경",
+    "report_date": "2026-07-24",
+    "target_kind": "sector",
+    "sector_name": "제약/바이오",
+    "sector_view": null,
+    "thesis": [
+      "글로벌 제약사들의 매출 공백을 채우기 위한 M&A 수요 증가",
+      "IPO 시장의 회복 사이클 진입과 기업들의 상업화/후기 파이프라인 집중",
+      "FDA 리더십 불확실성에도 신약 승인 건수 증가 및 가속화"
+    ],
+    "timeline": [
+      "25년 프리미엄 인수 건수 지난 5년간 최대치 기록, 26년 상반기 견조한 흐름",
+      "26년 7월 20일 기준 미국 IPO 건수는 13건으로 다시 활성화",
+      "6월 22일 HHS에서 신약개발 가속화를 위한 Operation TrialBlazer 발표"
+    ],
+    "top_picks": [
+      {
+        "name": "코오롱티슈진",
+        "reason": "10월 첫번째 임상 3상 Sub-Group 분석 결과 및 두번째 임상 3상 결과 발표",
+        "tp": null
+      },
+      {
+        "name": "HLB",
+        "reason": "FDA PDUFA 9월 27일 예정",
+        "tp": null
+      },
+      {
+        "name": "유한양행",
+        "reason": "임상 2상 진입 및 글로벌 기술이전 기대감, Amivantamab 병용 mOS 결과 발표 기대",
+        "tp": null
+      },
+      {
+        "name": "에이비엘바이오",
+        "reason": "알츠하이머 항체 치료제+BBB 플랫폼 기술이전 발표 기대, ABL001 연말 BLA 제출 예정",
+        "tp": null
+      },
+      {
+        "name": "펩트론",
+        "reason": "일라이 릴리 기술평가 계약 연장",
+        "tp": null
+      },
+      {
+        "name": "한미약품",
+        "reason": "2H26 HM1732 임상 1상 결과 발표 기대 및 글로벌 기술이전 기대",
+        "tp": null
+      },
+      {
+        "name": "리가켐바이오",
+        "reason": "LCB14 임상 1b 종료 및 결과 발표, LCB84 임상 1상 종료/임상 2상 개시",
+        "tp": null
+      },
+      {
+        "name": "보로노이",
+        "reason": "WCLC(9/12~15) VRN11 업데이트 기대",
+        "tp": null
+      },
+      {
+        "name": "올릭스",
+        "reason": "OLX702A 1H26 임상 1상 완료 및 결과 발표 기대",
+        "tp": null
+      },
+      {
+        "name": "디앤디파마텍",
+        "reason": "3Q26 DD01 CSR 수령 예정 및 글로벌 기술이전 기대",
+        "tp": null
+      },
+      {
+        "name": "한올바이오파마",
+        "reason": "2H26 IMVT-1402 D2T RA 및 CLE 탑라인 결과 발표 기대",
+        "tp": null
+      },
+      {
+        "name": "오름테라퓨틱",
+        "reason": "2H ORM-1153 임상 1상 IND 신청 예정",
+        "tp": null
+      },
+      {
+        "name": "에이프릴바이오",
+        "reason": "2H26 APB-A1 임상 1b 탑라인 발표 기대",
+        "tp": null
+      },
+      {
+        "name": "HK이노엔",
+        "reason": "케이캡 유럽 기술이전 기대",
+        "tp": null
+      },
+      {
+        "name": "지투지바이오",
+        "reason": "2H26 파트너사 기술평가 결과에 따른 본계약 기대",
+        "tp": null
+      },
+      {
+        "name": "지아이이노베이션",
+        "reason": "GI-101/102 글로벌 기술이전 기대",
+        "tp": null
+      },
+      {
+        "name": "앱클론",
+        "reason": "AT101 26년 국내 품목 허가 신청",
+        "tp": null
+      },
+      {
+        "name": "일동제약",
+        "reason": "ID110521156 기술이전 기대",
+        "tp": null
+      },
+      {
+        "name": "셀비온",
+        "reason": "Lu-177-DGUL 2H26 연내 국내 허가 기대",
+        "tp": null
+      }
+    ],
+    "risk": "대외 환경의 불확실성과 국내 개별 기업 이슈에 따른 리스크 부각으로 밸류에이션 하락",
+    "quote": "글로벌 바이오 산업 현황 및 국내 바이오 기업의 성과를 고려, 그간 섹터 전반에 걸쳐 할인 되었던 호재가 뒤늦게 반영되며 재평가로 이어질 가능성이 크다고 판단"
+  }
+}

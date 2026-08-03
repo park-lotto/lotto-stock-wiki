@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-29",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-30_0802_2Q26 Review 보고 있는 것과 봐야 할 것.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "장민지",
+    "report_date": "2026/07/29",
+    "stocks": [
+      {
+        "name": "하이브",
+        "code": "352820",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "320,000원",
+        "tp_prev": "390,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "2Q26 연결 매출액 1조 4,500억원(YoY +105.5%), 영업이익 1,709억원(OPM 11.8%, YoY +159.3%) 기록. 음반/음원 매출액 3,268억원(YoY +43.0%), 공연 매출액 6,477억원(YoY +243.3%), MD 및 라이선싱 매출액 3,106억원(YoY +103.1%) 기록.",
+        "estimate_revision": "목표주가 하향은 실적 추정치 반영 시점 및 Target P/E(41배→35배) 조정에 기인.",
+        "next_catalyst": "하반기 미국 및 국내 걸그룹 데뷔, 코르티스의 가파른 성장, 캣츠아이를 중심으로 한 글로벌 아티스트 육성 본격화.",
+        "thesis": [
+          "공연 및 MD 부문 호조로 시장 기대치 상회",
+          "플랫폼 성장세 지속 (위버스 MAU 1,443만명, 결제금액 QoQ +12%, ARPPU QoQ +24%)",
+          "저연차 아티스트 성장에 따른 수익성 개선 가능성 유효"
+        ],
+        "valuation_basis": "12MF P/E 약 20배 수준 적용",
+        "risk": "공연 비중 확대 등에 따른 마진 부담",
+        "supply_comment": null,
+        "quote": "투자의견 BUY 유지 및 목표주가 320,000원으로 하향. 목표주가 하향은 실적 추정치 반영 시점 및 Target P/E(41배→35배) 조정에 기인."
+      }
+    ]
+  }
+}

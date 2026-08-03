@@ -1,0 +1,103 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "스피어",
+      "rating": null,
+      "tp": null,
+      "ts": "08:20",
+      "quote": "스피어, SpaceX 성장의 진짜 수혜주는 소재가 아니라 공급망이다",
+      "sector": "방산"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "지슨",
+      "rating": null,
+      "tp": null,
+      "ts": "08:55",
+      "quote": "주력 제품인 무선백도어 해킹 탐지 시스템 'Alpha-H' 상반기 매출이 전년 동기 대비 약 7배 증가",
+      "sector": "양자보안"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성전자",
+      "rating": null,
+      "tp": null,
+      "ts": "09:57",
+      "quote": "세계 최초 양산 HBM4에 자체 파운드리 4나노 공정 적용",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "코스메카코리아",
+      "rating": null,
+      "tp": null,
+      "ts": "11:10",
+      "quote": "코스메카코리아, 선케어와 고객사 다변화 수혜",
+      "sector": "화장품미용"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LG에너지솔루션",
+      "rating": null,
+      "tp": null,
+      "ts": "12:47",
+      "quote": "EVE에너지 상대로 미국 ITC 수입배제 신청과 특허소송 제기",
+      "sector": "2차전지"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "큐리언트",
+      "rating": null,
+      "tp": null,
+      "ts": "13:03",
+      "quote": "QP101은 TOP1 저해제와 CDK7 저해제를 결합한 ADC",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼천당제약",
+      "rating": null,
+      "tp": null,
+      "ts": "15:10",
+      "quote": "삼천당제약은 미국 FDA로부터 경구용 세마글루타이드 Pre-ANDA 답변을 수령",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "큐리오시스",
+      "rating": null,
+      "tp": null,
+      "ts": "11:43",
+      "quote": "큐리오시스가 독일 Merck KGaA 그룹과 5년 글로벌 공급 계약을 체결했습니다.",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SK하이닉스",
+      "rating": null,
+      "tp": null,
+      "ts": "14:50",
+      "quote": "SK하이닉스가 미국 산호세 미주 법인을 통해 3D 적층(Stacked) D램-온(on)-로직(Logic) 설계 엔지니어를 채용 중",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "AMD",
+      "rating": null,
+      "tp": null,
+      "ts": "14:56",
+      "quote": "AMD Advancing AI 2026 키노트(7.23)에서 차세대 GPU Instinct MI455X 공개",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "펩트론",
+      "rating": null,
+      "tp": null,
+      "ts": "16:51",
+      "quote": "펩트론은 오송바이오파크 제2공장 건설과 관련해 건축 변경허가를 신청",
+      "sector": "바이오"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "reports": [
+    {
+      "broker": "신한투자증권",
+      "stock": "삼성SDI",
+      "rating": "매수",
+      "tp": "700,000원",
+      "ts": "07:53",
+      "quote": "글로벌 피어 멀티플 하락(EV/EBITDA 15배→11배) 등을 반영 → TP 700,000원(-13%)으로 하향",
+      "sector": "2차전지"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "현대건설",
+      "rating": "매수",
+      "tp": null,
+      "ts": "08:10",
+      "quote": "현대건설 (000720/매수) 변한 것은 주가 뿐 [김선미]",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "에이직랜드",
+      "rating": "Not Rated",
+      "tp": null,
+      "ts": "08:10",
+      "quote": "에이직랜드 (445090/Not Rated) 장기 양산 가시성 확보 [허성규]",
+      "sector": "반도체"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "넷플릭스",
+      "rating": null,
+      "tp": null,
+      "ts": "07:51",
+      "quote": "사상 최대 자사주 매입을 고려하면 지나친 주가 저평가",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "SK텔레콤",
+      "rating": null,
+      "tp": null,
+      "ts": "07:53",
+      "quote": "지금 주가에서는 업사이드 리스크가 더 커",
+      "sector": "통신"
+    }
+  ]
+}

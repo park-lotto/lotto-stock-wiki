@@ -1,10 +1,12 @@
-"""사이드바 작업 목록 — 영상 제작소 아래에 내 작업이 뜬다(스펙 §4.4).
+"""사이드바 작업 목록 — 숏템 제작소 아래에 내 작업이 뜬다(스펙 §4.4).
 
 sidebar.js는 페이지 6개가 공유한다 — 목록 주입이 다른 페이지를 깨면 안 된다.
 """
+import os
 import pathlib
 import shutil
 import subprocess
+import tempfile
 
 import pytest
 
@@ -59,8 +61,17 @@ def _run(body, harness_override=""):
     src = SIDEBAR_JS.read_text(encoding="utf-8")
     js = _HARNESS + harness_override + "\n" + src + "\n"
     js += "(async()=>{ await new Promise(r=>setTimeout(r,0)); \n" + body + "\n})();"
-    r = subprocess.run([NODE, "-e", js], capture_output=True, text=True, timeout=30,
-                       stdin=subprocess.DEVNULL, encoding="utf-8", errors="replace")
+    # node -e 로 인라인하면 js 전체가 명령줄 인자가 돼 Windows 명령줄 길이 한계(~32KB)에 걸린다
+    # — sidebar.js가 커지면 WinError 206으로 죽는다(리눅스 서버는 ARG_MAX가 커서 안 터져 게이트가
+    # 갈렸다). 임시 .js 파일로 넘겨 길이 제한을 없앤다(단언·동작 동일, 전달 방식만 교체).
+    fd, path = tempfile.mkstemp(suffix=".js")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(js)
+        r = subprocess.run([NODE, path], capture_output=True, text=True, timeout=30,
+                           stdin=subprocess.DEVNULL, encoding="utf-8", errors="replace")
+    finally:
+        os.unlink(path)
     assert r.returncode == 0, r.stderr
     return r.stdout.strip()
 
@@ -100,22 +111,24 @@ def test_current_work_is_marked():
     assert out == "missing", "아무 작업도 안 열었는데 현재 표시가 붙었다"
 
 
-def test_no_fetch_on_other_pages():
-    """다른 페이지에서 제작소 작업 목록을 부를 이유가 없다 — 6개 페이지가 이 파일을 공유한다."""
+def test_works_fetched_on_all_pages():
+    """T6(2026-07-19): 작업 목록을 /produce 전용 → 전 페이지 노출로 바꿨다(설계서 §3-3).
+    어느 화면에서도 진행 중 작업으로 바로 복귀 — 그래서 /library 같은 다른 페이지에서도 fetch한다.
+    (옛 test_no_fetch_on_other_pages를 뒤집은 것: 그땐 /produce에서만 불렀다.)"""
     out = _run("console.log(FETCHED.filter(u=>u.indexOf('/api/produce/works')!==-1).length ? 'fetched' : 'no');",
                harness_override="location.pathname='/library';")
-    assert out == "no"
+    assert out == "fetched"
 
 
 def test_empty_list_does_not_break_nav():
-    out = _run("console.log(_nav.innerHTML.indexOf('영상 제작소') !== -1 ? 'nav-ok' : 'nav-broken');",
+    out = _run("console.log(_nav.innerHTML.indexOf('숏템 제작소') !== -1 ? 'nav-ok' : 'nav-broken');",
                harness_override="WORKS_RESPONSE = {ok:true, works:[]};")
     assert out == "nav-ok"
 
 
 def test_fetch_failure_does_not_break_nav():
     """서버가 죽어도 사이드바는 살아 있어야 한다 — 이건 6개 페이지의 유일한 네비게이션이다."""
-    out = _run("console.log(_nav.innerHTML.indexOf('영상 제작소') !== -1 ? 'nav-ok' : 'nav-broken');",
+    out = _run("console.log(_nav.innerHTML.indexOf('숏템 제작소') !== -1 ? 'nav-ok' : 'nav-broken');",
                harness_override="WORKS_RESPONSE = 'throw';")
     assert out == "nav-ok"
 

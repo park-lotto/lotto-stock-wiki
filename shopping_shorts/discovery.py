@@ -14,6 +14,9 @@ from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor
 from shopping_shorts.ranking import build_items, apply_grades, sort_by, hours_since
 
+# 인물채널 판정에 쓸 채널당 썸네일 표본 수(2026-08-02).
+FACE_SAMPLE_N = 3
+
 
 def _norm(u):
     return (u or "").strip().lstrip("@").lower()
@@ -76,9 +79,21 @@ def _rank_reels(reels, prev_comments, prev_delta, now, window_hours, profiles=No
         for it in built:
             it["discovered"] = True
             it["followers"] = followers
+            it["bio"] = prof.get("biography") or ""   # 카테고리 약한 보조신호(추가 호출 0)
             it["recent_count"] = counts.get(owner.lower(), 0)
         items.extend(built)
+    # 채널당 썸네일 여러 장을 대표 릴스에 실어둔다(2026-08-02) — 인물채널 판정은
+    # 영상 단위로 갈리므로(실측: toyland.kr 제품1·얼굴2) 한 장으로 채널을 자르면
+    # 오판이 난다. _one_per_channel이 대표 1개만 남기기 전에 모아둬야 한다.
+    thumbs = {}
+    for it in items:
+        u = (it.get("username") or "").lower()
+        t = it.get("thumbnail")
+        if t and len(thumbs.setdefault(u, [])) < FACE_SAMPLE_N:
+            thumbs[u].append(t)
     items = _one_per_channel(items)  # 채널 단위 — 채널당 대표 릴스 1개
+    for it in items:
+        it["sample_thumbs"] = thumbs.get((it.get("username") or "").lower(), [])
     apply_grades(items)
     return sort_by(items, "comments")
 
@@ -134,22 +149,30 @@ def discover(keyword, known, *, search_fn, fetch_reels_fn, profiles_fn=None,
 
 def discover_multi(keywords, known, *, search_fn, fetch_reels_fn, profiles_fn=None,
                    prev_comments, prev_delta, now=None, window_hours=48,
-                   max_channels_per=12, max_total=40):
+                   max_channels_per=12, max_total=40, search_workers=6):
     """여러 카테고리를 한 번에 → "업데이트" 한 번으로 새 채널들이 랭킹으로 정렬돼
     올라오게(2026-07-12). 카테고리 검색은 병렬로 돌려 전체 소요시간을 가장 느린
     한 카테고리 수준으로 줄인다(순차로 돌면 6개 합이 몇 분 걸려 서버 재시작에
-    걸려 죽던 문제, 2026-07-12). 릴스 수집·프로필은 각각 1회만 호출."""
-    with ThreadPoolExecutor(max_workers=min(6, len(keywords) or 1)) as pool:
+    걸려 죽던 문제, 2026-07-12). 릴스 수집·프로필은 각각 1회만 호출.
+
+    search_workers: 검색 동시성 상한(기본 6=기존 동작 그대로, Apify는 계정별
+    HTTP라 병렬이 안전). search_fn이 Playwright처럼 로컬 브라우저를 여는 경우
+    search_workers=1로 순차 실행해야 한다 — 2026-07-30 실측: 6개 동시 실행 시
+    브라우저 자원 경합으로 일부 태그가 조용히 0건이 났다(에러 없이, 세션이나
+    CPU 스케줄링 경합으로 추정)."""
+    with ThreadPoolExecutor(max_workers=min(search_workers, len(keywords) or 1)) as pool:
         results = list(pool.map(search_fn, keywords))  # 입력 순서 보존
     known_n = {_norm(k) for k in known}
     seen = set()
     targets = []
-    for cands in results:
+    found_by = {}          # username소문자 → 이 채널을 찾아낸 해시태그(카테고리 힌트)
+    for keyword, cands in zip(keywords, results):
         for u in new_usernames(cands, known_n | seen, max_channels=max_channels_per):
             n = _norm(u)
             if n in seen:
                 continue
             seen.add(n)
+            found_by[n] = keyword
             targets.append(u)
             if len(targets) >= max_total:
                 break
@@ -159,25 +182,60 @@ def discover_multi(keywords, known, *, search_fn, fetch_reels_fn, profiles_fn=No
         return []
     reels = fetch_reels_fn(targets)
     profiles = _safe_profiles(profiles_fn, reels)
-    return _rank_reels(reels, prev_comments, prev_delta, now, window_hours, profiles)
+    items = _rank_reels(reels, prev_comments, prev_delta, now, window_hours, profiles)
+    # 어느 태그에서 나온 채널인지 항목에 실어 보낸다(2026-07-30) — 자동등록이 이걸
+    # 카테고리로 쓴다. 신규 채널은 이력도 캡션도 없어 '기타'로만 들어오던 문제.
+    for it in items:
+        it["discover_tag"] = found_by.get(_norm(it.get("username")), "")
+    return items
 
 
-def merge_feeds(prev, new, cap=None):
+def merge_feeds(prev, new, cap=None, now=None, ttl_days=None):
     """누적 모드 — 이전 발굴 피드에 새 결과를 채널 단위로 합친다(2026-07-12).
     같은 채널(username)은 새 데이터로 갱신(최신 지표), 나머지 이전 채널은 유지.
     새로 발굴된 채널이 위로 오도록 new 먼저, 그 뒤 겹치지 않는 prev.
 
+    ttl_days 지정 시 **마지막으로 발굴에 잡힌 시점(last_seen)에서 그 일수만큼만
+    보존**하고 넘긴 채널은 떨어뜨린다(2026-07-30, 사장님 지시 "채널은 누적개념으로
+    3일간 보존"). 매 병합에서 new에 들어온 채널은 last_seen이 now로 갱신되므로,
+    계속 잡히는 채널은 계속 남고 3일간 한 번도 안 잡힌 채널만 빠진다. last_seen이
+    없는 옛 항목은 이번 실행 시각으로 간주해 한 번은 살려둔다(마이그레이션).
+
     cap 지정 시 병합 후 댓글수(comments) 내림차순 상위 cap개만 남긴다(2026-07-13
     — 매일 누적만 하고 트리밍이 없어 무한정 커지던 문제 해결. 댓글수 낮은
     채널이 자연스럽게 밀려서 빠지는 로테이션 효과)."""
+    now = now or datetime.now(timezone.utc)
+    stamp = now.isoformat()
     new_keys = {(_norm(i.get("username"))) for i in new}
-    out = list(new)
+    out = []
+    for i in new:
+        i = dict(i)
+        i["last_seen"] = stamp
+        out.append(i)
     for i in prev:
-        if _norm(i.get("username")) not in new_keys:
-            out.append(i)
+        if _norm(i.get("username")) in new_keys:
+            continue
+        if ttl_days and _age_days(i.get("last_seen"), now, default=0.0) > ttl_days:
+            continue
+        i = dict(i)
+        i.setdefault("last_seen", stamp)
+        out.append(i)
     if cap:
         out = sorted(out, key=lambda i: i.get("comments") or 0, reverse=True)[:cap]
     return out
+
+
+def _age_days(last_seen, now, default=0.0):
+    """last_seen(ISO 문자열) → now까지 경과 일수. 없거나 못 읽으면 default."""
+    if not last_seen:
+        return default
+    try:
+        dt = datetime.fromisoformat(str(last_seen))
+    except (ValueError, TypeError):
+        return default
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return (now - dt).total_seconds() / 86400.0
 
 
 def find_inactive(channels, active_usernames):

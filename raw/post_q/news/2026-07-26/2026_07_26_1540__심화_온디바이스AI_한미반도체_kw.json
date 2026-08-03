@@ -1,0 +1,23 @@
+{
+  "target_kind": "sector",
+  "sector_name": "반도체",
+  "sector_view": "긍정",
+  "points": [
+    "AI반도체 관련 소부장 ETF 순자산 급증",
+    "일반인들의 HBM 및 AI반도체에 대한 높은 관심"
+  ],
+  "stocks_mentioned": [],
+  "events": [
+    {
+      "fact": "신한 SOL AI반도체소부장 ETF 순자산 5000억 돌파",
+      "ts": "01-22 08:00",
+      "quote": "신한 SOL AI반도체소부장 ETF 순자산 5000억 돌파"
+    },
+    {
+      "fact": "일반인들의 AI반도체 분야에 대한 높은 관심",
+      "ts": "10-23 07:00",
+      "quote": "“HBM 보러 왔어요”…일반인도 ‘AI반도체 열기’"
+    }
+  ],
+  "quote": "신한 SOL AI반도체소부장 ETF 순자산 5000억 돌파, “HBM 보러 왔어요”…일반인도 ‘AI반도체 열기’"
+}

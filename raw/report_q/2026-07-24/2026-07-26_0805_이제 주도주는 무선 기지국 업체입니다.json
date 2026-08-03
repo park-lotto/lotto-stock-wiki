@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-26_0805_이제 주도주는 무선 기지국 업체입니다.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김홍식",
+    "report_date": "2026.7.24",
+    "target_kind": "market",
+    "market_direction": "null",
+    "macro_vars": [
+      "데이터센터 수요 둔화 우려",
+      "미국 FCC 어퍼 C밴드(3.98~4.14GHz) 160MHz 경매 승인",
+      "피지컬 AI 관련 IT 수요 견인 가능성"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "통신",
+        "stance": "Overweight",
+        "reason": "AI RAN 사업 본격화, 피지컬 AI 관련 기대감 상승, 어퍼 C밴드 투자 등 AI 기지국 고도화 수요"
+      }
+    ],
+    "style": "null",
+    "event_calendar": [
+      {
+        "date": "2026-07-23",
+        "event": "SK텔레콤, 로봇 AI 학습 데이터 국제표준화 나선다"
+      },
+      {
+        "date": "2026-07-23",
+        "event": "정부, 피지컬 AI 시대 나선다"
+      },
+      {
+        "date": "2026-07-22",
+        "event": "SKT, AI 글래스 ‘레이벤 메타’ 출시"
+      },
+      {
+        "date": "2027년초",
+        "event": "미국 어퍼 C밴드 주파수 경매 예상"
+      }
+    ],
+    "top_picks": [
+      "SKT",
+      "LGU+",
+      "KT",
+      "KMW",
+      "HFR",
+      "RFHIC"
+    ],
+    "risk": "데이터센터 수요 둔화에 따른 ICT 성장 우려",
+    "quote": "이젠 고주파수에 특화된 핵심 장비주 KMW/HFR/RFHIC에 집중 투자할 필요가 있겠다."
+  }
+}

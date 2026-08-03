@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-21_1104_2Q26 Preview 물 오르는 유통 사업부.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유진투자증권",
+    "analyst": "이해니",
+    "report_date": "2026.07.21",
+    "stocks": [
+      {
+        "name": "GS 리테일",
+        "code": "007070",
+        "rating": "BUY(유지)",
+        "rating_changed": false,
+        "tp_new": "34,000원",
+        "tp_prev": "34,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26E_revenue": "3.13조원(+4.9%yoy)",
+          "2Q26E_operating_profit": "1,009억원(+19.4%yoy)",
+          "convenience_store_2Q26E_revenue": "2.34조원(+4.9%yoy)",
+          "convenience_store_2Q26E_operating_profit": "637억원(+8.0%yoy)",
+          "supermarket_2Q26E_revenue": "4,680억원(+9.6%yoy)",
+          "supermarket_2Q26E_operating_profit": "83억원(+53.4%yoy)",
+          "home_shopping_2Q26E_revenue": "2,708억원(+1.8%yoy)",
+          "home_shopping_2Q26E_operating_profit": "257억원(+1.8%yoy)",
+          "other_2Q26E_revenue": "528억원(-5.7%yoy)",
+          "other_2Q26E_operating_profit": "32억원(흑전)"
+        },
+        "estimate_revision": null,
+        "next_catalyst": "국내 내수 소비의 환경 개선 및 부진 점포와 적자 사업부 해소에 따른 실적 턴어라운드",
+        "thesis": [
+          "전 사업부문의 월별 기존점 매출이 견조한 성장을 보일 것",
+          "부진 매장 폐점 일단락 및 수익성 위주의 점포 운영 기조 유지",
+          "홈플러스 폐점 효과 및 행사 운영 강화에 따른 슈퍼마켓 부문 큰 폭 개선"
+        ],
+        "valuation_basis": "12MF 지배주주 EPS 2,371원에 Target PER 14.3배 적용",
+        "risk": "5월 고유가 지원금 사용처에서 슈퍼 채널 제외",
+        "supply_comment": null,
+        "quote": "국내 내수 소비의 환경 개선 및 부진 점포와 적자 사업부 해소에 따른 실적 턴어라운드 기대"
+      }
+    ]
+  }
+}

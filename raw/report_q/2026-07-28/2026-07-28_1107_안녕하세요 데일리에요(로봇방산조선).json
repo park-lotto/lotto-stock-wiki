@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "date": "2026-07-28",
+    "broker": "eugenefn",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-28_1107_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "eugenefn",
+    "analyst": "양승윤",
+    "report_date": "07/27",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "중국 휴머노이드 기업 애지봇의 홍콩 IPO 절차 공식 개시 및 2027년 매출 목표 100억 위안 제시"
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "한화에어로스페이스의 매출액 2.5% 이상 규모 상품공급 기본계약 체결로 하반기 수주 물꼬 전망"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "중국 선박 엔진 자체 조달 흐름 강화로 범용 저속엔진 경쟁 심화, 단 고부가 친환경·DF엔진은 한국 업체 경쟁력 잔존"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "07/27",
+        "event": "로봇/방산/조선 주요 뉴스 및 Zoom-In 분석"
+      }
+    ],
+    "top_picks": [
+      "케이엔알시스템",
+      "AJ네트웍스",
+      "로보티즈",
+      "디든로보틱스",
+      "모비어스",
+      "엑스와이지",
+      "한화에어로스페이스",
+      "대한항공",
+      "한화그룹",
+      "KAI",
+      "LIG D&A",
+      "대한조선",
+      "HD현대중공업",
+      "대선조선",
+      "한화오션"
+    ],
+    "risk": null,
+    "quote": "당사 리서치센터가 신뢰할만한 자료 및 정보로부터 얻어진 것이나, 당사는 그 정확성이나 완전성을 보장할 수 없습니다."
+  }
+}

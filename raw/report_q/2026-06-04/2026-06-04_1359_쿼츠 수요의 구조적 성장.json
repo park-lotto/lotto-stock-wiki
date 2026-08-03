@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "한국IR협의회",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_쿼츠 수요의 구조적 성장.md"
+  },
+  "questionnaire": {
+    "broker": "한국IR협의회",
+    "analyst": "박성순, 김지은",
+    "report_date": "2026.06.04",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "원익QnC",
+        "code": "074600",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026F 매출액 1.07조원(+14.0% YoY), 영업이익 1,157억원(+94.1% YoY)을 전망.",
+        "estimate_revision": null,
+        "next_catalyst": "반도체 고객사 CAPA 확대 및 쿼츠 수요의 구조적 성장",
+        "thesis": [
+          "북미 장비사와 대만 Foundry 고객사향 물량 확대 지속",
+          "반도체 고객사 CAPA 확대에 따른 쿼츠 수요의 구조적 성장",
+          "자회사 Momentive의 수익성 개선"
+        ],
+        "valuation_basis": "2026F PER 14.6x",
+        "risk": "자회사 Momentive의 실적 변동성 및 차입금 부담",
+        "supply_comment": "반도체 고객사의 설비 투자 구간에서 장비 입고와 함께 물량이 증가하며 이후 장비 가동에 따라 교체수요가 발생하는 소모성 부품 사업 구조",
+        "quote": "2026F 매출액 1.07조원(+14.0% YoY), 영업이익 1,157억원(+94.1% YoY)을 전망. 쿼츠 부문의 견조한 성장에 의한 이익 확대와 자회사 Momentive의 수익성 개선으로 전년대비 +4.5%p 개선된 OPM 10.8%를 전망",
+        "sector": "반도체"
+      }
+    ]
+  }
+}

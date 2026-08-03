@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-22",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-23_0802_2Q26 Preview  인바운드 수혜를 보고 있는 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "이진협",
+    "report_date": "2026년 7월 21일",
+    "stocks": [
+      {
+        "name": "F&F",
+        "code": "383220",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "105,000원",
+        "tp_prev": "105,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "F&F는 2Q26 매출액 4,062억원(+7% YoY), 영업이익 975억원(+16% YoY)을 기록해 컨센서스에 부합할 것으로 추정한다.",
+        "estimate_revision": null,
+        "next_catalyst": "테일러메이드 인수 여부",
+        "thesis": [
+          "MLB 내수는 내수 강세에 더해 외국인 인바운드 증가 수혜로 2Q26 +15% YoY 성장한 것으로 추정",
+          "중국법인은 +9% YoY 성장 추정, 위안화 강세 영향으로 성장세 지속",
+          "내수 매출 중 외국인 비중 15% 차지, 구조적인 인바운드 성장에 따른 수혜"
+        ],
+        "valuation_basis": null,
+        "risk": "중국 현지 재고 관리 기조 유지 및 디스커버리의 성과 미흡에 따른 중국법인 성장성 불확실성",
+        "supply_comment": null,
+        "quote": "F&F는 2Q26 매출액 4,062억원(+7% YoY), 영업이익 975억원(+16% YoY)을 기록해 컨센서스에 부합할 것으로 추정한다.",
+        "sector": "소비내수"
+      }
+    ]
+  }
+}

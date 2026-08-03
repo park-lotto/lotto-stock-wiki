@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-23",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-23_1101_호재 나올 텐데 주가는 급락, 정답은 매수.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김홍식",
+    "report_date": "2026년 07월 23일",
+    "stocks": [
+      {
+        "name": "RFHIC",
+        "code": "218410",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "150,000원",
+        "tp_prev": "150,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 매출액 261.6십억원, 영업이익 54.2십억원, 순이익 52.2십억원. 2027년 매출액 348.3십억원, 영업이익 81.1십억원, 순이익 73.6십억원.",
+        "estimate_revision": null,
+        "next_catalyst": "미국 FCC 어퍼 C밴드 주파수 경매 승인 및 투자",
+        "thesis": [
+          "최근 실적 흐름 및 향후 전망이 양호한 데다가 미국 주파수 경매 이벤트 발생하고 있음에도 불구하고 단기 주가가 급락하였음",
+          "데이터 센터 수요 둔화 논란이 커지고 있지만 역으로 AI RAN 투자 수요 증가가 본격화되는 양상임",
+          "루멘텀 수주 동향을 감안하면 자회사인 RF머트리얼즈의 이익 기여도는 2027년에도 증가 양상을 나타낼 것이 유력함"
+        ],
+        "valuation_basis": "삼성의 미국 버라이즌 장비 수주 시 GAN TR 부문 독점적 위상을 나타낼 것이라 높은 Multiple 형성 가능",
+        "risk": null,
+        "supply_comment": "GAN TR 수급 상황에 연동될 가능성이 높음",
+        "quote": "RFHIC에 대한 투자의견 매수, 12개월 목표주가 15만원을 유지한다."
+      }
+    ]
+  }
+}

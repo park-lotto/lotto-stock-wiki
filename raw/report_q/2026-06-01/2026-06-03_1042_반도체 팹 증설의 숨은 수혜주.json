@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-01",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_반도체 팹 증설의 숨은 수혜주.md"
+  },
+  "questionnaire": {
+    "broker": "DS투자증권",
+    "analyst": "안주원",
+    "report_date": "2026.06.01",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "에코프로에이치엔",
+        "code": "383310",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "45,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "26년 실적은 매출액 1,914억원(+35.7% YoY)과 영업이익 323억원(+175.3% YoY)으로 추정한다.",
+        "estimate_revision": null,
+        "next_catalyst": "전방산업 신규 투자 확대 및 해외 고객 확보",
+        "thesis": [
+          "반도체 투자 사이클과 맞물리며 클린룸 케미컬 필터와 온실가스 감축 솔루션 동반 성장",
+          "수익성이 좋은 온실가스 감축 솔루션의 외형 성장세 두드러질 전망",
+          "24~25년 감익에서 벗어나 본격적인 실적 성장이 기대됨"
+        ],
+        "valuation_basis": "목표주가는 12MF EPS에 Target PER 29.1배를 적용했다.",
+        "risk": null,
+        "supply_comment": "반도체 및 디스플레이 제조공정에서 발생하는 유해가스와 온실가스를 처리함",
+        "quote": "에코프로에이치엔에 대해 투자의견 매수와 목표주가 45,000원을 제시한다. 목표주가는 12MF EPS에 Target PER 29.1배를 적용했다.",
+        "sector": "반도체"
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-22",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-22_0805_중국 AI 충격, AI 캐즘의 기간을 단축시킬 수...md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승헌",
+    "report_date": "2026. 7. 21",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "AI 파라미터 확대에 따른 메모리 수요 폭증",
+      "토큰당 원가 하락과 제번스의 역설에 따른 AI 수요 증가"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "중국 AI 모델 확산세가 고대역폭, 고용량 메모리(HBM 및 DRAM) 수요를 키우는 요인으로 작용함"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "엔비디아",
+      "구글",
+      "아마존",
+      "메타",
+      "마이크로소프트"
+    ],
+    "risk": "중국 AI 모델 확산에 따른 미국 AI 관련 기업 시가 총액 급락 가능성, 메모리 인프라 부담 가중",
+    "quote": "중국 모델의 확산세는 오히려 고대역폭, 고용량 메모리(HBM 및 DRAM) 수요를 키우는 요인으로 작용한다."
+  }
+}

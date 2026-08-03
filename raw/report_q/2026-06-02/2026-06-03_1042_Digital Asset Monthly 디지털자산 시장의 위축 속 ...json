@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_Digital Asset Monthly 디지털자산 시장의 위축 속 ...md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "심수빈",
+    "report_date": "2026년 06월 01일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "미국 4월 소비자물가 전년동기대비 3.8% 상승",
+      "미국 4월 생산자물가 전년동기대비 6.0% 상승",
+      "미국 CLARITY Act 상원 은행위원회 통과"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026년 06월 01일",
+        "event": "Digital Asset Monthly 발간"
+      },
+      {
+        "date": "2026년 07월",
+        "event": "GENIUS Act 세부 시행령 발표 및 미국 주식 토큰화 제한적 실거래 개시"
+      }
+    ],
+    "top_picks": [
+      "비트코인",
+      "이더리움",
+      "솔라나",
+      "리플",
+      "바이낸스코인",
+      "트론",
+      "도지코인",
+      "에이다",
+      "비트코인캐시",
+      "체인링크"
+    ],
+    "risk": "5월 Fear&Greed Index가 극단적 공포 수준으로 다시 내려오는 등 디지털자산 시장 내 투자심리는 부진하며, 미국 소비자물가와 생산자물가 상승에 따른 인플레 우려 부각",
+    "quote": "디지털자산 시장의 위축 속 진행되는 미국의 온체인 금융"
+  }
+}

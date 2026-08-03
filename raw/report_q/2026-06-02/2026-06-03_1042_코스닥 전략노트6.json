@@ -1,0 +1,183 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_코스닥 전략노트6.md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "김학준, 오현진, 조재원",
+    "report_date": "2026년 06월 02일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "에스투더블유",
+        "code": "488280",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연결기준 실적은 매출액 190억원(+63.4% YoY), 영업이익 13억원(흑자전환 YoY)로 전망",
+        "estimate_revision": null,
+        "next_catalyst": "MS Window에 코파일럿 형태로 탑재될 예정인 보안 솔루션, SAIP 모듈의 에저 연계",
+        "thesis": [
+          "SaaS 매출의 견조한 성장",
+          "퀘이사 및 SAIP의 성장세와 MS와의 연계 가능성",
+          "강력한 B2G 레퍼런스를 바탕으로 한 B2B 글로벌 확장"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "B2B 보안 솔루션인 퀘이사(QUAXAR)는 올해 기존 금융기관 및 제조업체들 중심으로 밸류체인이 확장 중"
+      },
+      {
+        "name": "한글과컴퓨터",
+        "code": "030520",
+        "rating": "BUY(Maintain)",
+        "rating_changed": null,
+        "tp_new": "34,000원",
+        "tp_prev": "34,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 연결실적은 매출액 3,654억원(YoY +11.8%), 영업이익 479억원(YoY +31.6%)로 전망",
+        "estimate_revision": null,
+        "next_catalyst": "AI 에이전트 기반 소버린 AI 사업 확대, 유럽 B2G 및 금융사 MOU 및 계약",
+        "thesis": [
+          "AI 에이전트 서비스로의 사업 모델 전환",
+          "소버린 AI에 특화된 폐쇄망 에이전트 적용",
+          "유럽 시장 대상 사업 확장"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "글로벌 진출에 대한 방향성을 AI에이전트를 기반으로 계획. 소버린 AI에 특화된 폐쇠망 에이전트를 적용"
+      },
+      {
+        "name": "파이오링크",
+        "code": "170790",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연결기준 실적은 매출액 758억원(+15.5% YoY), 영업이익 115억원(+113.3% YoY)로 전망",
+        "estimate_revision": null,
+        "next_catalyst": "2021년 스쿨넷 사업 교체 수요 반영, 고마진 원격 서비스 매출 비중 확대",
+        "thesis": [
+          "네트워크 장비 교체 주기 도래",
+          "수익성 높은 네트워크 장비 매출 확대",
+          "보안서비스 내 원격 서비스 비중 확대를 통한 이익률 개선"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "21년도 120억 규모 프로젝트의 교체 주기 도래로 올해 해당 매출 반영 전망"
+      },
+      {
+        "name": "네오티스",
+        "code": "085910",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "26년 동사의 실적은 매출액 949억원(YoY 38%), 영업이익 157억원(YoY 102%)을 전망",
+        "estimate_revision": null,
+        "next_catalyst": "마이크로비트 생산능력 연 7,000만개 이상으로 확대, MLB 고객사향 납품 본격화",
+        "thesis": [
+          "PCB 업황 호조에 따른 마이크로비트 수요 증가",
+          "생산 능력 확대를 통한 물량 증가 효과",
+          "가격 전가를 통한 수익성 방어"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "최근 PCB 업황 호조에 따라 마이크로비트 수요도 빠르게 증가 중"
+      },
+      {
+        "name": "나노",
+        "code": "187790",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "26년 실적은 매출액 1,150억원(YoY 34%), 영업이익 125억원(YoY 126%)을 전망",
+        "estimate_revision": null,
+        "next_catalyst": "미국 화력발전소 SCR 촉매필터 공급, 선박 엔진 AI 데이터센터향 신규 성장 모멘텀",
+        "thesis": [
+          "해외 수주 본격화",
+          "주요 제품 단가 상승 및 수주잔고 반등",
+          "선박 엔진 시장 내 입지를 통한 데이터센터 향 수혜"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "선박 엔진의 AI 데이터센터 진출은 동사에게 새로운 성장 모멘텀"
+      },
+      {
+        "name": "엠플러스",
+        "code": "259630",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "올해 동사의 실적은 매출액 1,830억원(YoY -1%), 영업이익 252억원(YoY 2%)을 전망",
+        "estimate_revision": null,
+        "next_catalyst": "ESS 및 각형 배터리 투자 수요 대응, 전고체 배터리 관련 장비 수주",
+        "thesis": [
+          "ESS 및 각형 투자 확대에 따른 수혜",
+          "해외 신규 고객사향 수주 확대",
+          "전고체 배터리 양산 핵심 장비 공급 역량"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "ESS 전환 투자와 각형 투자 확대 수요에 적극 대응함에 따라 경쟁업체 대비 차별화된 실적 보이는 중"
+      },
+      {
+        "name": "한텍",
+        "code": "098070",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출액 1,990억원(+16%YoY), 영업이익 438억원(+15%YoY, OPM 22%) 전망",
+        "estimate_revision": null,
+        "next_catalyst": "2H26 북미 LNG 프로젝트 수주 확인, 반도체 및 화학 플랜트 애프터마켓 수주",
+        "thesis": [
+          "2026년 사상 최대 수주 및 실적 전망",
+          "LNG 외 플랜트 및 반도체향 수주 포트폴리오 다각화",
+          "현 주가 PER 10배 수준의 저평가 국면"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2H26부터 북미 LNG 프로젝트 수주 성과 확인 가능할 전망"
+      },
+      {
+        "name": "지투파워",
+        "code": "388050",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출액 1,050억원(+36%YoY), 영업이익 133억원(+51%YoY, OPM 12.7%) 전망",
+        "estimate_revision": null,
+        "next_catalyst": "공공/지자체 태양광 보급 확대 정책, 2H26 액침냉각 ESS 상용화",
+        "thesis": [
+          "태양광 보급 정책에 따른 수혜",
+          "원가율 개선을 통한 수익성 강화",
+          "원자력 발전소 배전반 입찰 등 추가 이벤트"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사는 관급 시장에서 차별적인 수주 경쟁력 보유했기에 태양광 보급 확대 정책 수혜 가속화 예상"
+      }
+    ]
+  }
+}

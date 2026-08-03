@@ -1,0 +1,123 @@
+<meta charset="utf-8">
+<title>G1 → SVG 재작도 대조</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#070b14;--panel:#101815;--line:#1e2b26;--txt:#eaf3f0;--sub:#8fa1a0;--mint:#3ee0bf;--gold:#facc6b}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,'Malgun Gothic',sans-serif;padding:32px 24px 70px}
+  .wrap{max-width:1060px;margin:0 auto}
+  h1{font-size:20px;margin:0 0 6px}
+  .lead{color:var(--sub);font-size:13.5px;margin:0 0 26px;line-height:1.7}
+  h2{font-size:15px;margin:32px 0 12px}
+  .row{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .box.win{border-color:var(--mint);box-shadow:0 0 0 1px rgba(62,224,191,.3)}
+  .cap{font-size:11.5px;color:#5f7a74;font-family:ui-monospace,monospace;margin-top:9px;text-align:center}
+  .sizes{display:flex;gap:20px;align-items:flex-end;flex-wrap:wrap}
+  .sz{text-align:center}.sz span{display:block;font-size:10px;color:#5f7a74;font-family:ui-monospace,monospace;margin-top:6px}
+  .onlight{background:#f4f7fb;border-radius:12px;padding:20px;display:inline-block}
+  /* 사이드바 시뮬 */
+  .side{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 16px 18px;width:252px}
+  .side h3{font-family:'Black Han Sans',sans-serif;font-size:25px;letter-spacing:-.5px;margin:4px 0 15px;
+           display:flex;align-items:center;justify-content:center;gap:8px}
+  .bt{background:linear-gradient(135deg,#3ee0bf 0%,#a8f2e4 40%,#a78bff 100%);-webkit-background-clip:text;
+      background-clip:text;-webkit-text-fill-color:transparent;color:transparent;filter:drop-shadow(0 0 14px rgba(62,224,191,.5))}
+  .bt::after{content:'.';background:none;-webkit-text-fill-color:var(--gold);color:var(--gold);filter:none;margin-left:1px}
+  .grp{background:#0c1412;border:1px solid var(--line);border-radius:9px;padding:8px 10px}
+  .lb{font-size:10px;color:#5f7a74;margin-bottom:5px}
+  .it{font-size:13px;padding:4px 0;color:#c8d8d3}.it.on{color:var(--mint);font-weight:700}
+  .note{font-size:12.5px;color:var(--sub);line-height:1.7;margin-top:14px}
+  .note b{color:var(--txt)}
+</style>
+
+<!-- 재사용 심볼: 한 번 정의하고 <use>로 크기만 바꿔 쓴다 -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="mg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3ee0bf"/><stop offset="1" stop-color="#8c6ef0"/>
+    </linearGradient>
+    <linearGradient id="gg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe6ae"/><stop offset="1" stop-color="#facc6b"/>
+    </linearGradient>
+    <g id="mark">
+      <!-- 골드 손잡이 -->
+      <path d="M24 21C24 10.5 40 10.5 40 21" stroke="url(#gg)" stroke-width="3.4" stroke-linecap="round" fill="none"/>
+      <!-- 바구니 몸통: ★면으로 채우고(다크네이비) 테두리 두껍게 = 작은 크기 생존 -->
+      <path d="M18.6 20.5H45.4C48.2 20.5 50.4 22.7 50.7 25.4L52.4 48.2C52.7 51.4 50.2 54.2 47 54.2H17
+               C13.8 54.2 11.3 51.4 11.6 48.2L13.3 25.4C13.6 22.7 15.8 20.5 18.6 20.5Z"
+            fill="#0d1424" stroke="url(#mg)" stroke-width="2.8"/>
+      <!-- 셔터 원반 -->
+      <circle cx="32" cy="37.4" r="10.6" fill="url(#mg)"/>
+      <!-- 날개 경계 6개 (작아지면 자연히 사라져 깔끔한 원이 된다) -->
+      <g stroke="#0d1424" stroke-width="1.5" stroke-linecap="round">
+        <line x1="32" y1="30.2" x2="32" y2="26.8" transform="rotate(0 32 37.4)"/>
+        <line x1="32" y1="30.2" x2="32" y2="26.8" transform="rotate(60 32 37.4)"/>
+        <line x1="32" y1="30.2" x2="32" y2="26.8" transform="rotate(120 32 37.4)"/>
+        <line x1="32" y1="30.2" x2="32" y2="26.8" transform="rotate(180 32 37.4)"/>
+        <line x1="32" y1="30.2" x2="32" y2="26.8" transform="rotate(240 32 37.4)"/>
+        <line x1="32" y1="30.2" x2="32" y2="26.8" transform="rotate(300 32 37.4)"/>
+        <path d="M25.2 32.6L38.8 42.2" transform="rotate(0 32 37.4)"/>
+        <path d="M25.2 32.6L38.8 42.2" transform="rotate(120 32 37.4)"/>
+        <path d="M25.2 32.6L38.8 42.2" transform="rotate(240 32 37.4)"/>
+      </g>
+      <!-- 골드 중심 + 재생 -->
+      <circle cx="32" cy="37.4" r="4.6" fill="url(#gg)"/>
+      <path d="M30.5 35.2L34.3 37.4L30.5 39.6V35.2Z" fill="#0d1424"/>
+    </g>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <h1>G1 → SVG 재작도 대조</h1>
+  <p class="lead">
+    왼쪽이 AI가 만든 원본 PNG, 오른쪽이 제가 다시 그린 <b>벡터(SVG)</b>입니다.<br>
+    ★약점 보정: 원본은 바구니가 <b>얇은 민트 테두리뿐</b>이라 작아지면 바구니가 사라졌습니다 →
+    <b>몸통을 다크네이비로 채우고 테두리를 2.8로 두껍게</b> 했습니다. 셔터 날개선은 작아지면 자연히 사라져 <b>깔끔한 원</b>으로 degrade합니다.
+  </p>
+
+  <h2>1:1 대조 (192px)</h2>
+  <div class="row">
+    <div class="box">
+      <img src="logo_cands/G1_바구니속셔터.png" width="192" style="display:block;border-radius:10px">
+      <div class="cap">원본 PNG (nano-banana-pro)</div>
+    </div>
+    <div class="box win">
+      <svg width="192" height="192" viewBox="0 0 64 64"><use href="#mark"/></svg>
+      <div class="cap">재작도 SVG — 배경 투명·무한 확대</div>
+    </div>
+  </div>
+
+  <h2>작은 크기 생존 시험</h2>
+  <div class="box">
+    <div class="sizes">
+      <div class="sz"><svg width="64" height="64" viewBox="0 0 64 64"><use href="#mark"/></svg><span>64</span></div>
+      <div class="sz"><svg width="40" height="40" viewBox="0 0 64 64"><use href="#mark"/></svg><span>40</span></div>
+      <div class="sz"><svg width="28" height="28" viewBox="0 0 64 64"><use href="#mark"/></svg><span>28 사이드바</span></div>
+      <div class="sz"><svg width="20" height="20" viewBox="0 0 64 64"><use href="#mark"/></svg><span>20 모바일</span></div>
+      <div class="sz"><svg width="16" height="16" viewBox="0 0 64 64"><use href="#mark"/></svg><span>16 파비콘</span></div>
+    </div>
+    <div class="note">원본 PNG를 같은 크기로 줄이면 바구니 테두리가 먼저 사라집니다. 위 SVG는 <b>16px에서도 바구니·원반·골드 중심이 다 남습니다.</b></div>
+  </div>
+
+  <h2>실제 사이드바 (폰트 = Black Han Sans 그대로)</h2>
+  <div class="row">
+    <div>
+      <div class="side">
+        <h3><svg width="28" height="28" viewBox="0 0 64 64" style="flex:none"><use href="#mark"/></svg><span class="bt">숏템메이커</span></h3>
+        <div class="grp"><div class="lb">리서치</div><div class="it on">📊 레퍼런스 랭킹</div><div class="it">⭐ 영상 즐겨찾기</div><div class="it">📄 대본 즐겨찾기</div></div>
+      </div>
+      <div class="cap">28px · 가운데 정렬</div>
+    </div>
+    <div class="box">
+      <div class="onlight">
+        <svg width="72" height="72" viewBox="0 0 64 64"><use href="#mark"/></svg>
+      </div>
+      <div class="cap">밝은 배경 (카톡 공유·인쇄)</div>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:26px">
+    이대로 가면 <b>파비콘·PWA 아이콘·사이드바·로그인·대문·요금·내 계정</b> 락업을 전부 이 SVG로 교체하고 게이트 통과 후 라이브합니다.
+    폰트는 <b>Black Han Sans 현재 유지</b>(변경 없음).
+  </div>
+</div>

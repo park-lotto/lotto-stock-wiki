@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_0700_[Morning Brief] 반도체 반발매수세 유입으로 미 증시...md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": null,
+    "report_date": "2026-06-09",
+    "target_kind": "market",
+    "market_direction": "중립",
+    "macro_vars": [
+      "미국 국채 10년물 금리",
+      "달러-원 환율",
+      "기대인플레이션"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "강세",
+        "reason": "메모리 반도체 중심으로 강세를 보이며 미 증시 기술주 상승 견인"
+      }
+    ],
+    "style": "성장주 중심",
+    "event_calendar": [
+      {
+        "date": "2026-06-09",
+        "event": "애플 WWDC(~12)"
+      }
+    ],
+    "top_picks": [
+      "NAVER",
+      "마이크론",
+      "인텔",
+      "램리서치",
+      "애플"
+    ],
+    "risk": "지정학적 불안감(이란-이스라엘), 미국 소비자물가지수 경계감 및 금리 부담",
+    "quote": "메모리 반도체 중심으로 강세를 보이며 미 증시 기술주 중심 강세 보인 점 국내 증시에 우호적. 필라델피아 반도체 지수도 전주 금요일 급락에서 반등 움직임."
+  }
+}

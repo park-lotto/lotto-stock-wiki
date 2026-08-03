@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_특허 리스크 Down, 신규 딜 가능성 Up.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "홍가혜, 이채리",
+    "report_date": "2026.06.02",
+    "stocks": [
+      {
+        "name": "알테오젠",
+        "code": "196170",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": 500000,
+        "tp_prev": 500000,
+        "tp_direction": "flat",
+        "earnings_outlook": "‘25년 9월 출시 이후 1Q26 매출 $128M 기록(MSD 매출 기준). Symphony health에 따르면 4월 WAC 처방액은 $88M으로, 4월 J-code 적용 이후 MoM +76% 증가하며 점유율 확대 중.",
+        "estimate_revision": null,
+        "next_catalyst": "추가 라이선스 계약 클로징 및 키트루다 SC 매출 확대",
+        "thesis": [
+          "미국 내 핵심 특허 리스크 완화",
+          "신규 라이선스 계약 체결 가시화",
+          "키트루다 SC 초기 판매 on-track"
+        ],
+        "valuation_basis": "rNPV 기반 DCF",
+        "risk": "잔여 특허 심판 결과, 키트루다 SC 전환율 둔화, 신규 딜 클로징 지연 등",
+        "supply_comment": "제약",
+        "quote": "이번 NDR에서 확인된 특허 리스크 완화와 키트루다 SC 판매 가속은 기존 추정에 부합하며, rNPV 기반 DCF 가정에 변경 요인은 없음."
+      }
+    ]
+  }
+}

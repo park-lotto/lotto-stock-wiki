@@ -1,0 +1,24 @@
+{
+  "target_kind": "market",
+  "market_direction": "null",
+  "macro_events": [
+    {
+      "fact": "알파벳 실적 발표 예정",
+      "ts": "2026-07-23",
+      "quote": "알파벳 실적 발표는 7월 23일 새벽 미국 장 종료 이후로 예정되어 있다."
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "중립",
+      "comment": "알파벳 실적 발표가 국내 반도체 업종 AI 내러티브를 회복시킬 것인지가 관심사"
+    },
+    {
+      "sector": "IT",
+      "stance": "중립",
+      "comment": "미국 AI 인프라 투자를 주도하는 하이퍼스케일러 중 하나가 알파벳"
+    }
+  ],
+  "quote": "알파벳 실적 발표가 국내 반도체 업종 AI 내러티브를 회복시킬 것인지가 관심사."
+}

@@ -1,0 +1,19 @@
+{
+  "target_kind": "market",
+  "market_direction": "neutral",
+  "macro_events": [
+    {
+      "fact": "2025년 중국의 희토류 수출 통제",
+      "ts": "2025",
+      "quote": "2025년 중국의 희토류 수출 통제: 트럼프 관세 폭탄에 대한 대응으로 갈륨, 게르마늄 등 희토류 공급을 끊었다."
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "기타",
+      "stance": "중립",
+      "comment": "AI 혁명으로 인한 핵심 자원 공급망 리스크 심화"
+    }
+  ],
+  "quote": "AI 혁명이 지정학적 구도를 흔들며 핵심 자원의 공급망 리스크가 복격화되고 있음을 설명한다."
+}
