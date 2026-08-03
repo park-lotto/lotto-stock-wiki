@@ -4005,9 +4005,10 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
 _YT_ID_RE = re.compile(r"(?:youtube\.com/(?:shorts/|watch\?v=|live/|embed/)|youtu\.be/)([A-Za-z0-9_-]{6,})")
 
 
-def _lens_image_for_url(url, work_dir):
+def _lens_image_for_url(url, work_dir, hint_t=None):
     """URL → (구글렌즈에 넣을 공개 이미지 URL, 캡션). 실패 시 (None, '').
-    유튜브=썸네일 직행(봇차단 회피). 비유튜브=download_any 중간 프레임, 실패 시 oEmbed 썸네일 폴백."""
+    유튜브=썸네일 직행(봇차단 회피). 비유튜브=download_any 프레임(hint_t초, 없으면 중간),
+    실패 시 oEmbed 썸네일 폴백. hint_t는 시크바가 가리키던 '보고 있던 장면'(2026-08-03)."""
     m = _YT_ID_RE.search(url)
     if m:
         vid = m.group(1)
@@ -4025,7 +4026,10 @@ def _lens_image_for_url(url, work_dir):
         video_path, caption = download_any(url, str(work_dir))
         dur = frame_extract._probe_duration(video_path) or 2.0
         name = uuid.uuid4().hex + ".jpg"
-        frame = extract_frame_at(video_path, work_dir, dur / 2, filename=name)
+        ts = dur / 2
+        if hint_t is not None and hint_t >= 0:
+            ts = min(max(hint_t, 0.0), max(dur - 0.5, 0.0))   # 영상 끝 넘어가면 클램프
+        frame = extract_frame_at(video_path, work_dir, ts, filename=name)
         if frame:
             raw = Path(frame).read_bytes()
             image_url = upload_frame(raw)   # imgbb/imgur 우선(구글 상시 크롤)
@@ -4082,7 +4086,13 @@ def api_lens_trace_url(request: Request, body: dict):
     try:
         work_dir = _FIND_TMP_DIR / "lens_trace"
         work_dir.mkdir(parents=True, exist_ok=True)
-        image_url, caption = _lens_image_for_url(url, work_dir)
+        # t(초): 인스타 담기 스크립트의 시크바가 '지금 보고 있는 장면'을 실어 보낸다
+        # (2026-08-03). 없으면 종전대로 중간 프레임.
+        try:
+            hint_t = float(body.get("t")) if body.get("t") is not None else None
+        except (TypeError, ValueError):
+            hint_t = None
+        image_url, caption = _lens_image_for_url(url, work_dir, hint_t=hint_t)
         if not image_url:
             return JSONResponse(status_code=502, content={
                 "ok": False, "error": "영상/썸네일을 가져오지 못했습니다(봇차단·만료·미지원 URL)"})
