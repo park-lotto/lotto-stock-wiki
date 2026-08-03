@@ -109,6 +109,14 @@
               background:linear-gradient(90deg,#3a2f0d,#2a2408);color:#ffd76b;font-size:11px;cursor:pointer}
   .script-btn:hover{background:linear-gradient(90deg,#4a3d10,#352d0a)}
   .script-btn:disabled{opacity:.6;cursor:wait}
+  /* 🏠 숏템내부검색(2026-08-04) — 파워검색이 '외부(구글렌즈·유료)'라면 이건 '우리 관리채널
+     아카이브 안(무료)'이다. 둘을 색으로 확실히 갈라야 사장님이 유료를 헛눌러 소진하지 않는다:
+     파워검색=금색, 내부검색=청록. 2×2 격자에 5번째가 붙으면 한 칸이 외톨이로 남아
+     span 2로 아래 한 줄을 통째로 차지하게 했다(격자가 깨지지 않고 '다른 종류'로도 읽힌다). */
+  .btns .inner-btn{grid-column:1/-1;margin-top:0;padding:7px 4px;border-radius:7px;
+              border:1px solid #1f6f6b;background:linear-gradient(90deg,#0e2f2e,#0a2422);
+              color:#5fe3d6;font-size:11px;cursor:pointer;white-space:nowrap}
+  .btns .inner-btn:hover{background:linear-gradient(90deg,#14403e,#0d2e2b)}
   /* 대본 모달 */
   /* 화면을 막지 않는 이동식(플로팅) 창 — 컨테이너는 클릭 통과, 박스만 잡힘 */
   .modal-bg{display:none;position:fixed;inset:0;z-index:100;pointer-events:none}
@@ -1364,6 +1372,7 @@ function render(){
             <button class="comment" onclick="goComment('${i.shortcode}')">💬 댓글소통</button>
             <button class="save" id="save_${i.shortcode}" onclick="toggleMix('${i.shortcode}', this)">📥 즐겨찾기</button>
             <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 숏템파워검색</button>
+            ${window.IS_ADMIN?`<button class="inner-btn" title="우리가 관리하는 채널 아카이브에서 같은 제품·주제의 옛 영상 찾기 (무료·비전태그 매칭)" onclick="archiveSimilar('${i.shortcode}')">🏠 숏템내부검색</button>`:''}
           </div>
         </div>
       </div>
@@ -1425,7 +1434,7 @@ function _historyCard(h){
         <button class="comment" onclick="goComment('${h.shortcode}')">💬 댓글소통</button>
         <button class="save" id="save_${h.shortcode}" onclick="toggleMix('${h.shortcode}', this)">📥 담기</button>
         <button class="script-btn" onclick="lensSearch(this,'${h.shortcode}')">🔍 숏템파워검색</button>
-        ${window.IS_ADMIN?`<button class="script-btn" title="내 채널 아카이브에서 같은 제품·주제의 옛 영상 찾기(비전태그 매칭, 무료)" onclick="archiveSimilar('${h.shortcode}')">🏠 내채널</button>`:''}
+        ${window.IS_ADMIN?`<button class="inner-btn" title="우리가 관리하는 채널 아카이브에서 같은 제품·주제의 옛 영상 찾기 (무료·비전태그 매칭)" onclick="archiveSimilar('${h.shortcode}')">🏠 숏템내부검색</button>`:''}
       </div></div>
     </div></div>`;
 }

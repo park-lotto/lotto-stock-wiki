@@ -25,10 +25,31 @@ button.on{border-color:var(--accent);color:var(--accent);font-weight:700}
 .body{padding:8px}
 .ch{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .meta{font-size:11px;color:var(--sub);margin:3px 0 6px}
-.btns{display:flex;gap:6px}
-.btns button{flex:1;font-size:12px;padding:6px 4px}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.btns button{font-size:12px;padding:6px 4px;white-space:nowrap}
 .save.saved{border-color:#1f9d55;color:#1f9d55}
 .empty{color:var(--sub);padding:30px;text-align:center}
+/* 검색 버튼 2종(2026-08-04) — 색으로 확실히 가른다. 파워검색=외부(구글렌즈, 유료 SerpApi)
+   금색 / 내부검색=우리 관리채널 아카이브(무료) 청록. 헛눌러 유료를 태우면 안 된다.
+   둘 다 격자 한 줄을 통째로(span 2) 차지해 '원본·담기'와 종류가 다름을 드러낸다. */
+.btns .power-btn{grid-column:1/-1;border:1px solid #b8860b;
+  background:linear-gradient(90deg,#3a2f0d,#2a2408);color:#ffd76b}
+.btns .power-btn:hover{background:linear-gradient(90deg,#4a3d10,#352d0a)}
+.btns .power-btn:disabled{opacity:.6;cursor:wait}
+.btns .inner-btn{grid-column:1/-1;border:1px solid #1f6f6b;
+  background:linear-gradient(90deg,#0e2f2e,#0a2422);color:#5fe3d6}
+.btns .inner-btn:hover{background:linear-gradient(90deg,#14403e,#0d2e2b)}
+/* 결과 모달 — index.html의 무거운 플로팅 모달을 옮기지 않고, 이 페이지에 필요한 만큼만. */
+.modal-bg{display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55)}
+.modal-bg.open{display:block}
+.modal-box{position:absolute;top:3vh;left:50%;transform:translateX(-50%);
+  background:var(--bg);border:1px solid var(--line);border-radius:14px;
+  width:min(1040px,96vw);max-height:92vh;display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 10px 44px rgba(0,0,0,.6)}
+.modal-head{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.modal-head b{font-size:14px;flex:1}
+.modal-body{padding:12px 14px;overflow:auto}
+.sm-loading{padding:24px;text-align:center;color:var(--sub)}
 </style></head><body><div class="wrap">
 <h1>🏆 역대 히트작 <span class="stat" id="prog"></span></h1>
 <div class="bar" id="catBar"></div>
@@ -42,6 +63,12 @@ button.on{border-color:var(--accent);color:var(--accent);font-weight:700}
   <span class="stat">아카이브는 백그라운드로 계속 쌓입니다(팔로워 큰 채널부터) — 새로고침하면 늘어나요.</span>
 </div>
 <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
+</div>
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-head"><b id="modalTitle"></b><button onclick="closeModal()">✕ 닫기</button></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
 </div>
 <script src="/sidebar.js"></script>
 <script>
@@ -93,9 +120,12 @@ function fillChSel(){
 async function loadSaved(){
   try{SAVED=new Set((await (await fetch('/api/mix/basket')).json()).shortcodes||[])}catch(e){}
 }
-async function toggleSave(sc,url,thumb,ch,btn){
+// plat/src는 렌즈 결과(유튜브·틱톡·샤오홍슈…)용 — 안 넘기면 아카이브 기본값(인스타).
+// 여기를 인스타로 고정해두면 렌즈로 담은 유튜브 영상이 인스타로 잘못 기록돼 믹스에서 깨진다.
+async function toggleSave(sc,url,thumb,ch,btn,plat,src){
   const d=await (await fetch('/api/mix/basket/toggle',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({shortcode:sc,url:url,thumbnail:thumb,name:'@'+ch,caption:'',meta:{platform:'instagram',source:'archive'}})})).json();
+    body:JSON.stringify({shortcode:sc,url:url,thumbnail:thumb,name:(ch?('@'+ch):''),caption:'',
+      meta:{platform:plat||'instagram',source:src||'archive'}})})).json();
   if(d.in){SAVED.add(sc);btn.textContent='🎬 담김✓';btn.classList.add('saved')}
   else{SAVED.delete(sc);btn.textContent='📥 담기';btn.classList.remove('saved')}
 }
@@ -121,7 +151,7 @@ async function load(){
     const saved=SAVED.has(i.shortcode);
     return `<div class="card">
       <div class="thumb">
-        <img src="${esc(i.thumbnail)}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'" onclick="playArch(this,'${esc(i.shortcode)}','${esc(i.url)}')" title="클릭하면 바로 재생">
+        <img id="th_${esc(i.shortcode)}" src="/api/thumb?url=${encodeURIComponent(i.thumbnail||'')}" crossorigin="anonymous" loading="lazy" onerror="this.style.visibility='hidden'" onclick="playArch(this,'${esc(i.shortcode)}','${esc(i.url)}')" title="클릭하면 바로 재생">
         <span class="views">👁 ${fmt(i.views)}</span>
         <span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;padding:2px 7px;border-radius:10px">▶</span>
       </div>
@@ -134,10 +164,93 @@ async function load(){
         <div class="btns">
           <button onclick="window.open('${esc(i.url)}','_blank')">▶ 원본</button>
           <button class="save${saved?' saved':''}" onclick="toggleSave('${esc(i.shortcode)}','${esc(i.url)}','${esc(i.thumbnail)}','${esc(i.username)}',this)">${saved?'🎬 담김✓':'📥 담기'}</button>
+          <button class="power-btn" title="구글렌즈로 유튜브·틱톡·인스타·샤오홍슈·도우인에서 비슷한 영상 찾기 (유료·월 한도)" onclick="lensSearch(this,'${esc(i.shortcode)}')">🔍 숏템파워검색</button>
+          <button class="inner-btn" title="우리가 관리하는 채널 아카이브에서 같은 제품·주제의 다른 영상 찾기 (무료·비전태그 매칭)" onclick="archiveSimilar('${esc(i.shortcode)}')">🏠 숏템내부검색</button>
         </div>
       </div></div>`;
   }).join('');
 }
+// ── 검색 2종(2026-08-04) ────────────────────────────────────────────
+// 🔍 파워검색 = 외부(구글렌즈 → 5플랫폼). 유료 SerpApi라 월 한도가 있다.
+// 🏠 내부검색 = 우리 관리채널 아카이브 안. 비전태그 겹침이라 무료·즉시.
+function openModal(title, html){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalBody').innerHTML=html;
+  document.getElementById('modalBg').classList.add('open');
+}
+function closeModal(){document.getElementById('modalBg').classList.remove('open')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+// 결과 카드 공통 렌더 — 담기는 랭킹과 같은 /api/mix/basket/toggle로 간다(믹스로 바로 이어짐).
+function resultCards(items, opts){
+  const o=opts||{};
+  return `<div class="cards">`+items.map(i=>{
+    const sc=i.savesc||i.shortcode;
+    const isS=(o.saved||new Set()).has(sc);
+    const badge=(i.overlap!=null)?`<span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:var(--gold);font-size:11px;padding:2px 8px;border-radius:10px">겹침 ${i.overlap}</span>`
+      :(i.platform?`<span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px">${esc(i.platform)}</span>`:'');
+    const thumb=i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):'';
+    const meta=(i.views!=null||i.comments!=null)
+      ? `❤ ${fmt(i.likes)} · 💬 ${fmt(i.comments)} · 👁 ${fmt(i.views)}` : esc(i.title||'');
+    return `<div class="card">
+      <div class="thumb" onclick="window.open('${esc(i.url)}','_blank')">
+        <img src="${thumb}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">
+        ${badge}
+      </div>
+      <div class="body">
+        <div class="ch">${esc(i.username?('@'+i.username):(i.source||''))}</div>
+        <div class="meta">${meta}${i.posted_at?(' · '+(i.posted_at||'').slice(0,10)):''}</div>
+        <div class="btns">
+          <button onclick="window.open('${esc(i.url)}','_blank')">▶ 원본</button>
+          <button class="save${isS?' saved':''}" onclick="toggleSave('${esc(sc)}','${esc(i.url)}','${esc(i.thumbnail||'')}','${esc(i.username||'')}',this,'${esc(i.platform||'instagram')}','${i.overlap!=null?'archive':'lens'}')">${isS?'🎬 담김✓':'📥 담기'}</button>
+        </div>
+      </div></div>`;
+  }).join('')+`</div>`;
+}
+
+async function archiveSimilar(sc){
+  openModal('🏠 숏템내부검색 — 우리 채널 아카이브','<div class="sm-loading">같은 소재 찾는 중…</div>');
+  const body=document.getElementById('modalBody');
+  let d; try{ d=await (await fetch('/api/archive/similar?shortcode='+encodeURIComponent(sc)+'&limit=60')).json(); }
+  catch(e){ body.innerHTML='<div class="empty">❌ '+esc(e.message)+'</div>'; return; }
+  if(d.no_tags){ body.innerHTML='<div class="empty">이 영상은 아직 비전태그가 없어요 — 태거가 채널당 10개씩 돌고 있습니다. 잠시 뒤 다시 눌러주세요.</div>'; return; }
+  if(!d.ok){ body.innerHTML='<div class="empty">❌ 조회 실패</div>'; return; }
+  if(!(d.items||[]).length){ body.innerHTML='<div class="empty">아카이브에서 같은 소재를 못 찾았어요 — 크롤이 더 쌓이면 늘어납니다(백그라운드 진행 중).</div>'; return; }
+  const tagLine=(d.src_tags||[]).slice(0,10).join(' · ');
+  body.innerHTML=`<div style="font-size:12px;color:var(--sub);margin-bottom:10px">매칭 태그: ${esc(tagLine)}</div>`
+    + resultCards(d.items,{saved:SAVED});
+}
+
+// 렌즈는 이미지가 필요하다. 썸네일을 /api/thumb(same-origin) + crossorigin으로 받아
+// canvas 오염 없이 toBlob 할 수 있게 해뒀다(카드 <img id="th_${shortcode}">).
+function _archCapture(sc){
+  const img=document.getElementById('th_'+sc);
+  if(!img||!img.naturalWidth) return null;
+  const cv=document.createElement('canvas');
+  cv.width=img.naturalWidth; cv.height=img.naturalHeight;
+  try{ cv.getContext('2d').drawImage(img,0,0); return cv; }catch(e){ return null; }
+}
+async function lensSearch(btn, sc){
+  const cv=_archCapture(sc);
+  if(!cv){ openModal('🔍 숏템파워검색','<div class="empty">썸네일을 준비하지 못했습니다. 이미지가 뜬 뒤 다시 눌러주세요(만료된 썸네일일 수 있어요).</div>'); return; }
+  openModal('🔍 숏템파워검색 — 외부 플랫폼','<div class="sm-loading">🔍 구글렌즈 검색 중… (5~15초)</div>');
+  const body=document.getElementById('modalBody');
+  try{
+    const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.85));
+    const fd=new FormData(); fd.append('frame',blob,'f.jpg');
+    const r=await fetch('/api/lens/search',{method:'POST',body:fd});
+    if(r.status===429){ const e=await r.json(); body.innerHTML='<div class="empty" style="color:#e0623d">💰 '+esc(e.error||'렌즈 한도 초과')+'</div>'; return; }
+    const d=await r.json();
+    if(!d.ok){ body.innerHTML='<div class="empty" style="color:#e0623d">❌ 렌즈 검색 실패</div>'; return; }
+    const items=(d.items||[]);
+    if(!items.length){ body.innerHTML='<div class="empty">비슷한 영상을 못 찾았어요.</div>'; return; }
+    // 렌즈 결과는 우리 DB shortcode가 없다 → URL 기반 합성키(랭킹과 같은 규칙).
+    items.forEach(i=>{ i.savesc='lens_'+i.platform+'_'+_hash(i.url); });
+    body.innerHTML=resultCards(items,{saved:SAVED});
+  }catch(e){ body.innerHTML='<div class="empty" style="color:#e0623d">❌ '+esc(e.message)+'</div>'; }
+}
+function _hash(s){let h=0;s=String(s||'');for(let i=0;i<s.length;i++){h=((h<<5)-h+s.charCodeAt(i))|0}return (h>>>0).toString(36)}
+
 document.getElementById('chSel').addEventListener('change',load);
 document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')load()});
 renderCatBar();
