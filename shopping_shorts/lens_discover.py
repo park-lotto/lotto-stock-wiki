@@ -7,7 +7,8 @@ import os
 import re
 import time
 import requests
-from urllib.parse import urlparse
+from concurrent.futures import ThreadPoolExecutor
+from urllib.parse import urlparse, quote
 from shopping_shorts import serpapi_client
 from shopping_shorts.config import SERPAPI_KEY, SERPAPI_KEYS
 
@@ -155,6 +156,68 @@ def is_photo_post(platform, link):
     return "/p/" in path
 
 
+# ── oEmbed 실검증(2026-08-03) ────────────────────────────────────────────────
+# 사장님 제보 '렌즈 링크가 다른 영상으로 연결': 구글 렌즈가 페이지의 추천영상 썸네일을
+# 그 페이지 URL과 짝지어 반환하는 데이터 어긋남(우리 배선은 무결 — 조사 기록 handoff).
+# 틱톡·유튜브는 공식 oEmbed가 무료·무인증이라, 결과 URL을 실조회해 **실제로 열리는
+# 영상의 제목·썸네일로 교체**한다 → 보이는 것과 열리는 것이 항상 일치. 404(삭제·비공개)는
+# link_ok=False로 표시해 프론트가 숨긴다. 타임아웃·기타 실패는 원본 유지(no-op) —
+# 검증 불가가 회수율을 깎으면 안 된다. 인스타는 공개 oEmbed가 없어 대상 외.
+_OEMBED_TIMEOUT = 4
+
+
+def _oembed_endpoint(platform, link):
+    if platform == "tiktok":
+        return "https://www.tiktok.com/oembed?url=" + quote(link, safe="")
+    if platform == "youtube":
+        return "https://www.youtube.com/oembed?format=json&url=" + quote(link, safe="")
+    return None
+
+
+def verify_matches(items, keywords=None):
+    """틱톡·유튜브 항목을 oEmbed로 실조회해 제목·썸네일을 실제 값으로 교체(in-place).
+
+    제목이 바뀌면 match(키워드 일치)도 실제 제목 기준으로 다시 판정한다."""
+    def _one(i):
+        ep = _oembed_endpoint(i.get("platform"), i.get("url") or "")
+        if not ep:
+            return
+        try:
+            r = requests.get(ep, timeout=_OEMBED_TIMEOUT)
+        except requests.RequestException:
+            return
+        status = getattr(r, "status_code", None)   # 테스트 더블이 상태코드 없이 올 수 있다
+        if status == 404:
+            i["link_ok"] = False       # 삭제·비공개 — 열면 엉뚱한 피드로 떨어진다
+            return
+        if status != 200:
+            return
+        try:
+            d = r.json()
+        except (ValueError, TypeError):
+            return
+        if not isinstance(d, dict):
+            return
+        if d.get("title"):
+            i["title"] = d["title"]
+            i["match"] = _title_matches(keywords or set(), d["title"])
+        if d.get("thumbnail_url"):
+            i["thumbnail"] = d["thumbnail_url"]
+        i["verified"] = True
+    def _safe(i):
+        # 검증은 부가기능 — 어떤 예외도 렌즈 검색 자체를 죽이면 안 된다(원본 유지 no-op).
+        try:
+            _one(i)
+        except Exception:
+            pass
+    targets = [i for i in items if i.get("platform") in ("tiktok", "youtube")]
+    if not targets:
+        return items
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        list(ex.map(_safe, targets))
+    return items
+
+
 def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=None):
     """공개 이미지 URL → [{platform, url, title, thumbnail, match}]. 5개 동영상 플랫폼만.
     키 없음·호출 실패 시 [].
@@ -218,4 +281,4 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
             # 카드뉴스(사진) 후보 표시 — 프론트의 '🎬 영상만' 토글이 이걸로 가린다.
             "is_photo": is_photo_post(platform, m.get("link")),
         })
-    return out
+    return verify_matches(out, keywords=keywords)
