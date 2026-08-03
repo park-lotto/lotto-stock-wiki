@@ -31,6 +31,29 @@ from shopping_shorts.store import Store
 
 _MIN_FREE_GB = 3.0      # 이보다 적으면 중단 — 디스크 풀로 다른 작업까지 죽는 걸 막는다
 _BUSY_POLL_S = 60
+_MAX_YIELD_S = 1800     # 렌더 양보 상한 30분 — 무한대기 금지
+_STALE_HEARTBEAT_S = 900   # 심박 15분 끊기면 죽은 잡으로 본다
+
+
+def _render_alive(store, log=print):
+    """진짜로 렌더가 도는 중인가. store.heavy_job_running()을 그대로 쓰면 안 된다.
+
+    실측(2026-08-04): job_queue에 task='clean'이 state='running'인 채 **8시간째**
+    박혀 있었다(heartbeat 18:00에서 멈춤, 실제 ffmpeg·remotion 프로세스 없음).
+    그대로 믿으면 백필이 밤새 '렌더 진행 중'만 찍고 한 건도 안 한다(실제로 그랬다).
+    → 심박이 끊긴 잡은 죽은 것으로 보고 무시한다. 살아있는 잡에만 양보한다."""
+    try:
+        with store._conn() as c:
+            n = c.execute(
+                "SELECT COUNT(*) FROM job_queue WHERE state='running' "
+                "AND task IN ('render','mix','retype','preview','clean') "
+                "AND heartbeat_at IS NOT NULL "
+                "AND (julianday('now') - julianday(heartbeat_at)) * 86400 < ?",
+                (_STALE_HEARTBEAT_S,)).fetchone()[0]
+        return n > 0
+    except Exception as e:      # noqa: BLE001 — 판정 실패 시 양보하지 않는다(멈추는 것보다 낫다)
+        log(f"[백필] 렌더 판정 실패(무시하고 진행): {str(e)[:60]}")
+        return False
 
 
 def pick_targets(store, top, offset=0):
@@ -61,9 +84,14 @@ def run(top=3000, batch=40, sleep=time.sleep, log=print):
         if free < _MIN_FREE_GB:
             log(f"[백필] 디스크 여유 {free:.1f}GB < {_MIN_FREE_GB}GB — 중단(재실행하면 이어짐)")
             break
-        while store.heavy_job_running():        # 렌더에 양보
+        waited = 0
+        while _render_alive(store, log):        # 렌더에 양보(단, 죽은 잡은 무시)
             log(f"[백필] 렌더 진행 중 → {_BUSY_POLL_S}s 대기")
             sleep(_BUSY_POLL_S)
+            waited += _BUSY_POLL_S
+            if waited >= _MAX_YIELD_S:
+                log(f"[백필] {_MAX_YIELD_S//60}분째 대기 — 그만 기다리고 진행한다")
+                break
 
         targets = pick_targets(store, min(batch, top - done))
         if not targets:
