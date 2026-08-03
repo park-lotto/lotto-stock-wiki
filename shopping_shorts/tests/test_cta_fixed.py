@@ -111,3 +111,13 @@ def test_strip_mid_cta_keeps_beat_when_everything_is_cta():
     ]}}
     edit_plan._strip_mid_cta(c)
     assert c["plan"]["beats"][0]["narration"] == "댓글에 '김밥' 남겨주세요."
+
+
+def test_prompt_demands_cta_hook_with_reason():
+    """★2026-08-03 사장님: 밋밋한 '궁금하시면 댓글' 금지 — 댓글 남길 명분(낚시 훅)을 얹어야
+    댓글→DM→인포크 링크 클릭으로 이어진다. 프롬프트에 명분 공식이 박혀 있는지 못 박는다."""
+    import inspect
+    src = inspect.getsource(edit_plan)
+    assert "댓글을 남길 명분" in src
+    assert "제가 산 최저가" in src
+    assert "없는 가격·할인·한정수량을 지어내지 마라" in src, "과장 금지 가드가 빠졌다"
