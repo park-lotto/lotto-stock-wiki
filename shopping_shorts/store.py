@@ -318,6 +318,34 @@ class Store:
                     created_at TEXT
                 )
             """)
+            # 채널 릴스 전체 아카이브(2026-08-03) — 추적 채널의 옛 히트작까지 전부.
+            # 매일 수집(last_run)은 48h 창만 봐서 추적 전 히트작이 DB에 없던 것을
+            # channel_archive 크롤러(스크롤 페이지네이션)가 채운다. posted_at은
+            # shortcode에서 복원(REST 왕복 0). 랭킹·렌즈 내부검색·역대 히트작의 재료.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS channel_archive (
+                    username TEXT NOT NULL,
+                    shortcode TEXT NOT NULL,
+                    url TEXT, thumbnail TEXT,
+                    views INTEGER, likes INTEGER, comments INTEGER,
+                    posted_at TEXT,
+                    first_seen TEXT, last_seen TEXT,
+                    PRIMARY KEY (username, shortcode)
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_archive_user_views "
+                      "ON channel_archive(username, views DESC)")
+            # 채널별 아카이브 진행상태 — done이면 대상에서 빠지므로 새로 등록한 채널만
+            # 자동으로 줄을 선다(추적목록 − done 차집합).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS archive_state (
+                    username TEXT PRIMARY KEY,
+                    status TEXT,           -- done | error | login_wall
+                    reels INTEGER,
+                    note TEXT,
+                    updated_at TEXT
+                )
+            """)
             # S급 대본 위키(도서관, 2026-07-13) — 담은 대본 + AI 구조분석. 생성의 재료.
             # customer_id 복합키(2026-07-13 멀티테넌시) — 위 commented/saved/mix_basket와 동일 패턴.
             c.execute("""
@@ -1113,6 +1141,47 @@ class Store:
             ).fetchall()
         return [{"name": r[1] or r[0], "username": r[0], "followers": 0, "inpock": "",
                  "added_at": r[2] or "", "category": r[3]} for r in rows]
+
+    # ── 채널 릴스 전체 아카이브(2026-08-03) ───────────────────────────────
+    def archive_upsert_many(self, username, items, now_iso):
+        """아카이브에 릴스들을 upsert. 재크롤 시 views 등 최신값으로 갱신, first_seen 보존."""
+        with self._conn() as c:
+            for i in items:
+                c.execute(
+                    "INSERT INTO channel_archive(username, shortcode, url, thumbnail, "
+                    " views, likes, comments, posted_at, first_seen, last_seen) "
+                    "VALUES(?,?,?,?,?,?,?,?,?,?) "
+                    "ON CONFLICT(username, shortcode) DO UPDATE SET "
+                    " url=excluded.url, thumbnail=excluded.thumbnail, views=excluded.views, "
+                    " likes=excluded.likes, comments=excluded.comments, "
+                    " posted_at=excluded.posted_at, last_seen=excluded.last_seen",
+                    (username, i.get("shortcode"), i.get("url"), i.get("thumbnail"),
+                     i.get("views") or 0, i.get("likes") or 0, i.get("comments") or 0,
+                     i.get("posted_at") or "", now_iso, now_iso))
+            c.commit()
+
+    def archive_mark(self, username, status, reels=0, note=""):
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO archive_state(username, status, reels, note, updated_at) "
+                "VALUES(?,?,?,?,datetime('now')) "
+                "ON CONFLICT(username) DO UPDATE SET status=excluded.status, "
+                " reels=excluded.reels, note=excluded.note, updated_at=excluded.updated_at",
+                (username, status, reels, note))
+            c.commit()
+
+    def archive_done_usernames(self):
+        with self._conn() as c:
+            rows = c.execute("SELECT username FROM archive_state WHERE status='done'").fetchall()
+        return {r[0] for r in rows}
+
+    def heavy_job_running(self):
+        """렌더·믹스류가 도는 중인가 — '사용하면서 수집' 원칙: 아카이브 크롤러가 양보한다."""
+        with self._conn() as c:
+            n = c.execute(
+                "SELECT COUNT(*) FROM job_queue WHERE state='running' "
+                "AND task IN ('render','mix','retype','preview','clean')").fetchone()[0]
+        return n > 0
 
     def instagram_activity_map(self):
         """reel_history에서 채널별 '가장 최근 새 영상' 시각·표시명 맵. {norm_username: {"last": iso, "name": str}}.
