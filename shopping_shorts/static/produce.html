@@ -5353,6 +5353,10 @@ async function _loadThumbFrames(){
   // ★프레임이 그대로면 다시 그리지 않는다(2026-07-30) — 아래에서 5단계 진입마다 서버에
   // 물어보게 바꿨기 때문에, 매번 다시 그리면 사장님이 고른 프레임이 0번으로 리셋된다.
   // URL에 ?v={video_sig}가 붙으므로 배경 영상(자막제거본 등)이 바뀌면 URL이 달라져 갱신된다.
+  // ★이전 배경으로 만든 결과(2026-08-03 사장님: "자막지우기 했는데 저장된 썸네일에 자막이 남아있다").
+  //   자막제거 전에 생성한 결과는 안 지우고(사장님 소유) ⚠️ 표시로 알린다 — 갤러리가 다시 그려질 때 반영.
+  THUMB_STATE.stale = new Set(d.stale_results || []);
+  if (typeof renderThumbGallery === 'function' && (THUMB_STATE.results||[]).length) renderThumbGallery();
   const _prevUrls = (THUMB_STATE.frames || []).map(f => f.url).join('|');
   const _nextUrls = d.frames.map(f => f.url).join('|');
   const _box = document.getElementById('thumbFrames');
@@ -5647,11 +5651,16 @@ function renderThumbGallery(){
   // download 속성이 있는 <a>는 같은 출처(same-origin) 파일이면 새 탭으로 안 새고 바로
   // 저장 대화상자를 띄운다(우리 서버가 서빙하는 /api/produce/thumb/file/... 이라 문제없음).
   // stopPropagation으로 카드의 onclick(선택)과 분리 — 다운로드가 선택 상태를 안 건드린다.
-  document.getElementById('thumbGallery').innerHTML = THUMB_STATE.results.map(r => `
+  // ⚠️이전 영상 배지(2026-08-03): 자막제거 전 배경으로 만든 결과 — 지우지 않고 표시만 한다.
+  const _stale = THUMB_STATE.stale || new Set();
+  const _warn = THUMB_STATE.results.some(r => _stale.has(r.name))
+    ? `<div class="hint" style="grid-column:1/-1;color:var(--fire)">⚠️ 주황 표시는 <b>자막제거 전 영상</b>으로 만든 썸네일이에요 — 위에서 프레임을 다시 골라 새로 생성하세요.</div>` : '';
+  document.getElementById('thumbGallery').innerHTML = _warn + THUMB_STATE.results.map(r => `
     <div onclick="selectThumbResult('${r.name}')" data-name="${r.name}"
          style="position:relative;cursor:pointer;border-radius:6px;overflow:hidden;border:2px solid
          ${THUMB_STATE.selected === r.name ? 'var(--accent2)' : 'transparent'}">
       <img src="${r.url}" style="width:100%;display:block">
+      ${_stale.has(r.name)?`<span style="position:absolute;left:4px;top:4px;background:rgba(200,90,0,.9);color:#fff;font-size:10px;font-weight:800;border-radius:6px;padding:2px 6px">⚠️ 이전 영상</span>`:''}
       <a href="${r.url}" download="${r.name}" onclick="event.stopPropagation()" title="다운로드"
          style="position:absolute;right:4px;bottom:4px;width:24px;height:24px;border-radius:50%;
          background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;

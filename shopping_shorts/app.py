@@ -3701,11 +3701,20 @@ def api_thumb_frames(body: dict):
     video_sig = f"{vstat.st_mtime_ns}:{vstat.st_size}"
 
     thumb = job.get("thumbnail") or {}
+
+    # ★이전 배경으로 만든 결과 표시(2026-08-03): 자막제거 전(preview 배경)에 생성한 썸네일이
+    # 자막제거 후에도 갤러리에 남는다 — 데이터는 사장님 소유라 안 지우고, 어떤 결과가 지금
+    # 배경과 다른 영상에서 나왔는지 이름 목록으로 알려 화면이 ⚠️ 표시를 붙이게 한다.
+    # result_sigs가 없는 옛 결과는 확인 불가라 전부 '이전 영상'으로 본다(정확히 이번 사고 케이스).
+    def _stale_results():
+        rs = thumb.get("result_sigs") or {}
+        return [n for n in (thumb.get("results") or []) if rs.get(n) != video_sig]
+
     existing = sorted(out_dir.glob("grid_*.jpg")) if out_dir.exists() else []
     if existing and thumb.get("video_sig") == video_sig:
         meta = thumb.get("frames") or []
         if len(meta) == len(existing):
-            return {"ok": True, "frames": meta}
+            return {"ok": True, "frames": meta, "stale_results": _stale_results()}
 
     # 재추출(재재조사 픽스1·2, 2026-07-17): 여기서 rmtree(out_dir)를 돌리면 안 된다.
     # 같은 out_dir을 T4(썸네일 저장, task-4-brief.md)가 써서 사용자가 고른
@@ -3742,7 +3751,7 @@ def api_thumb_frames(body: dict):
     thumb["frames"] = frames
     thumb["video_sig"] = video_sig
     Store(DB_PATH).update_mix_job(job_id, thumbnail=thumb)
-    return {"ok": True, "frames": frames}
+    return {"ok": True, "frames": frames, "stale_results": _stale_results()}
 
 
 @app.get("/api/produce/thumb/file/{job_id}/{name}")
@@ -3809,6 +3818,12 @@ async def api_thumb_save(job_id: str = Form(...), meta: str = Form(...),
         if k in meta_obj:
             thumb[k] = meta_obj[k]
     thumb["results"] = results
+    # ★결과별 배경 서명(2026-08-03 사장님 제보): 자막제거 전 preview 배경으로 만든 썸네일이
+    # 자막제거 후에도 갤러리에 그대로 남아 "자막지우기 했는데 자막이 남아있다"가 됐다.
+    # 생성 시점의 배경 서명(video_sig — frames 추출이 최신으로 유지)을 결과마다 기록해,
+    # 배경이 바뀌면(api_thumb_frames가 대조) 옛 결과에 표시할 수 있게 한다.
+    if thumb.get("video_sig"):
+        thumb.setdefault("result_sigs", {})[name] = thumb["video_sig"]
     store.update_mix_job(job_id, thumbnail=thumb)
     return {"ok": True, "name": name,
             "url": f"/api/produce/thumb/file/{job_id}/{name}"}

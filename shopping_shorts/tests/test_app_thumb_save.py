@@ -134,3 +134,35 @@ def test_save_rejects_non_dict_meta(client_no_exception, meta_json):
                                 files={"file": ("x.png", b"\x89PNG\r\n\x1a\n" + b"\x00" * 100, "image/png")})
     assert r.status_code == 400, f"meta={meta_json}에서 {r.status_code} 받음 (400 예상)"
     assert not r.json().get("ok", True), "에러 응답이어야 함"
+
+
+# ── 배경 서명 기록 + 이전 영상 결과 표시(2026-08-03 사장님: "자막지우기 했는데 남아있다") ──
+# 자막제거 전(preview 배경)에 만든 썸네일이 자막제거 후에도 갤러리에 남는다. 지우지 않고
+# 결과별 생성 시점 배경 서명(result_sigs)을 남겨, frames API가 지금 배경과 다른 결과를 알린다.
+
+def test_save_records_background_sig_per_result(client, tmp_path):
+    st = Store(tmp_path / "t.db")
+    st.update_mix_job("j1", thumbnail={"video_sig": "111:1"})
+    r = client.post("/api/produce/thumb/save", data={"job_id": "j1", "meta": _META},
+                    files={"file": ("x.png", _PNG_1PX, "image/png")})
+    name = r.json()["name"]
+    thumb = st.get_mix_job("j1")["thumbnail"]
+    assert thumb["result_sigs"][name] == "111:1"
+
+
+def test_frames_reports_stale_results(client, tmp_path, monkeypatch):
+    """배경 서명이 다른(또는 서명 없는 옛) 결과는 stale_results로 내려온다."""
+    st = Store(tmp_path / "t.db")
+    video = tmp_path / "clean.mp4"; video.write_bytes(b"\x00" * 64)
+    st.update_mix_job("j1", clean_video_path=str(video),
+                      thumbnail={"results": ["thumb_1.png", "thumb_2.png"],
+                                 "result_sigs": {"thumb_2.png": "999:9"}})
+    # ffmpeg 없이: 프레임 추출을 스텁 — 검사 대상은 stale 판정이지 추출이 아니다.
+    out = tmp_path / "thumbs" / "j1"; out.mkdir(parents=True)
+    frame = out / "grid_00.jpg"; frame.write_bytes(b"j")
+    monkeypatch.setattr(app_module, "extract_grid_frames",
+                        lambda *a, **kw: [(frame, 0.0)])
+    d = client.post("/api/produce/thumb/frames", json={"job_id": "j1"}).json()
+    assert d["ok"] is True
+    # thumb_1=서명 없음(옛 결과)·thumb_2=다른 배경 서명 → 둘 다 '이전 영상'
+    assert set(d["stale_results"]) == {"thumb_1.png", "thumb_2.png"}
