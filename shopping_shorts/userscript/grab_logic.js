@@ -103,7 +103,54 @@
   }
   function _esc(s) { return String(s || "").replace(/[&<>"']/g, function (c) {
     return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  // ── 인스타 시크바(2026-08-03 사장님: 장면 이동이 안 돼 앞으로 못 돌아감) ──
+  // 인스타 플레이어엔 시크바가 없지만 <video>는 페이지 DOM이라 currentTime을 직접
+  // 움직일 수 있다(영상 소스가 CDN(교차출처)이어도 재생 제어는 무관). 지금 재생 중인
+  // 비디오를 골라 슬라이더로 앞뒤 이동 + 렌즈에 '보고 있는 그 장면'(초)을 실어 보낸다.
+  function _igVideo() {
+    var vs = document.querySelectorAll("video"), best = null;
+    for (var i = 0; i < vs.length; i++) {
+      var v = vs[i];
+      if (!v.duration || !isFinite(v.duration)) continue;
+      var r = v.getBoundingClientRect();
+      if (r.width < 100 || r.bottom < 0 || r.top > innerHeight) continue;   // 화면 밖 제외
+      if (!v.paused) return v;   // 재생 중인 놈이 정답
+      if (!best) best = v;
+    }
+    return best;
+  }
+  function _fmtT(s) { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2); }
+  function syncSeekBar() {
+    if (location.host.indexOf("instagram.com") < 0) return;
+    var box = document.getElementById("ss-seek");
+    if (!isSinglePost()) { if (box) box.remove(); return; }
+    var v = _igVideo();
+    if (!v) { if (box) box.remove(); return; }
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "ss-seek";
+      box.style.cssText = "position:fixed;right:18px;bottom:174px;z-index:2147483647;background:rgba(20,20,20,.92);" +
+        "border:1px solid #444;border-radius:14px;padding:8px 12px;display:flex;align-items:center;gap:8px;" +
+        "font-family:system-ui,sans-serif;color:#fff;font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.35)";
+      box.innerHTML = "<span title='장면 이동'>⏱</span>" +
+        "<input id='ss-seek-r' type='range' min='0' max='100' step='0.1' value='0' style='width:150px;cursor:pointer'>" +
+        "<span id='ss-seek-t' style='min-width:70px;text-align:right'>0:00/0:00</span>";
+      document.body.appendChild(box);
+      var r = document.getElementById("ss-seek-r");
+      r.addEventListener("input", function () {
+        var vv = _igVideo(); if (vv) { try { vv.currentTime = parseFloat(this.value); } catch (e) {} }
+      });
+    }
+    var r2 = document.getElementById("ss-seek-r"), t2 = document.getElementById("ss-seek-t");
+    if (r2 && t2) {
+      r2.max = v.duration;
+      if (document.activeElement !== r2) r2.value = v.currentTime;   // 드래그 중엔 안 덮음
+      t2.textContent = _fmtT(v.currentTime) + "/" + _fmtT(v.duration);
+    }
+  }
   function _lensRun(url) {
+    var v = _igVideo();
+    var t = (v && isFinite(v.currentTime)) ? Math.round(v.currentTime * 10) / 10 : null;
     if (typeof GM_xmlhttpRequest === "undefined") {   // 폴백: 랭킹 페이지 딥링크
       window.open(BASE + "/?lens_url=" + encodeURIComponent(url), "_blank"); return;
     }
@@ -111,7 +158,7 @@
     GM_xmlhttpRequest({
       method: "POST", url: BASE + "/api/lens/trace_url",
       headers: { "Content-Type": "application/json" },
-      data: JSON.stringify({ url: url }),
+      data: JSON.stringify(t === null ? { url: url } : { url: url, t: t }),
       onload: function (r) {
         var d = {};
         try { d = JSON.parse(r.responseText); } catch (e) {}
@@ -389,7 +436,7 @@
     } catch (e) { window.__ssDouyinInjected = false; }   // 실패 시 다음 tick에 재시도(폴백=플로팅)
   }
 
-  function tick() { try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} }
+  function tick() { try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
   setInterval(tick, 2000);
