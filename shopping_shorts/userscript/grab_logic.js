@@ -82,15 +82,78 @@
     b.addEventListener("click", function (e) { e.preventDefault(); onClick(); });
     document.body.appendChild(b);
   }
+  // 렌즈 결과를 '인스타 화면 안' 오버레이로 그린다(2026-08-03 사장님: 사이트 이동 없이).
+  // GM_xmlhttpRequest(로더 @grant·@connect)가 쿠키를 실어 보내 로그인·크레딧 가드가
+  // 그대로 동작한다. GM이 없는 환경(주입 폴백 등)만 옛 딥링크 새탭으로.
+  function _lensOverlay(html) {
+    var o = document.getElementById("ss-lens-ov");
+    if (!o) {
+      o = document.createElement("div");
+      o.id = "ss-lens-ov";
+      o.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2147483647;" +
+        "display:flex;align-items:center;justify-content:center;padding:20px;font-family:system-ui,sans-serif";
+      o.addEventListener("click", function (e) { if (e.target === o) o.remove(); });
+      document.body.appendChild(o);
+    }
+    o.innerHTML = "<div style='background:#161616;color:#eee;border:1px solid #333;border-radius:14px;" +
+      "padding:16px;max-width:720px;width:100%;max-height:82vh;overflow:auto;position:relative'>" +
+      "<button onclick='document.getElementById(\"ss-lens-ov\").remove()' style='position:absolute;" +
+      "top:6px;right:12px;background:none;border:none;color:#fff;font-size:22px;cursor:pointer'>✕</button>" +
+      "<div style='font-weight:800;margin-bottom:10px'>🔍 원본·유사 레퍼런스</div>" + html + "</div>";
+  }
+  function _esc(s) { return String(s || "").replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function _lensRun(url) {
+    if (typeof GM_xmlhttpRequest === "undefined") {   // 폴백: 랭킹 페이지 딥링크
+      window.open(BASE + "/?lens_url=" + encodeURIComponent(url), "_blank"); return;
+    }
+    _lensOverlay("<div style='padding:30px;text-align:center;color:#aaa'>🔗 원본·유사 영상 추적 중… (10~20초)</div>");
+    GM_xmlhttpRequest({
+      method: "POST", url: BASE + "/api/lens/trace_url",
+      headers: { "Content-Type": "application/json" },
+      data: JSON.stringify({ url: url }),
+      onload: function (r) {
+        var d = {};
+        try { d = JSON.parse(r.responseText); } catch (e) {}
+        if (r.status === 429) { _lensOverlay("<div style='padding:20px;color:#e0623d'>💰 " + _esc(d.error || "이번 달 렌즈 한도 초과") + "</div>"); return; }
+        if (!d.ok) { _lensOverlay("<div style='padding:20px;color:#e0623d'>❌ " + _esc(d.error || "추적 실패 — 로그인 상태를 확인해 주세요") + "</div>"); return; }
+        var items = d.items || [];
+        if (!items.length) { _lensOverlay("<div style='padding:20px;color:#aaa'>비슷한 영상을 못 찾았어요. 다른 장면의 링크로 시도해 보세요.</div>"); return; }
+        var h = "<div style='display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px'>";
+        for (var i = 0; i < items.length && i < 40; i++) {
+          var it = items[i];
+          h += "<div style='background:#222;border-radius:10px;overflow:hidden'>" +
+            "<a href='" + _esc(it.url) + "' target='_blank' rel='noopener'>" +
+            (it.thumbnail ? "<img src='" + _esc(it.thumbnail) + "' referrerpolicy='no-referrer' style='width:100%;height:110px;object-fit:cover;display:block;background:#000'>" :
+              "<div style='height:110px;background:#000'></div>") + "</a>" +
+            "<div style='padding:6px;font-size:11px'>" +
+            "<div style='color:#8ab4f8'>" + _esc(it.platform || "") + "</div>" +
+            "<div style='color:#ccc;max-height:30px;overflow:hidden'>" + _esc((it.title || "").slice(0, 60)) + "</div>" +
+            "<button style='margin-top:5px;width:100%;background:#1f6feb;color:#fff;border:none;border-radius:6px;padding:5px;cursor:pointer' " +
+            "data-u='" + _esc(it.url) + "' data-t='" + _esc(it.thumbnail || "") + "' data-n='" + _esc((it.title || "").slice(0, 100)) + "' " +
+            "onclick='void(0)'>📥 담기</button></div></div>";
+        }
+        h += "</div>";
+        _lensOverlay(h);
+        var ov = document.getElementById("ss-lens-ov");
+        var bs = ov.querySelectorAll("button[data-u]");
+        for (var j = 0; j < bs.length; j++) {
+          bs[j].addEventListener("click", function () {
+            openGrab(this.getAttribute("data-u"), this.getAttribute("data-t"), this.getAttribute("data-n"));
+          });
+        }
+      },
+      onerror: function () { _lensOverlay("<div style='padding:20px;color:#e0623d'>❌ 서버 연결 실패</div>"); }
+    });
+  }
   function syncExtraBtns() {
     if (location.host.indexOf("instagram.com") < 0) return;
-    _miniBtn("ss-coll-btn", "⭐ 즐겨찾기", "숏템메이커 영상 즐겨찾기 열기", 122, "#d29922",
-             function () { window.open(BASE + "/collection", "_blank"); });
     var lens = document.getElementById("ss-lens-btn");
     if (isSinglePost()) {
-      _miniBtn("ss-lens-btn", "🔍 렌즈", "이 영상으로 원본·유사 레퍼런스 역추적", 174, "#37b0e0",
-               function () { window.open(BASE + "/?lens_url=" + encodeURIComponent(location.href), "_blank"); });
+      _miniBtn("ss-lens-btn", "🔍 렌즈", "이 영상으로 원본·유사 레퍼런스 역추적(화면 안에서)", 122, "#37b0e0",
+               function () { _lensRun(location.href); });
     } else if (lens) { lens.remove(); }
+    var coll = document.getElementById("ss-coll-btn"); if (coll) coll.remove();   // ⭐ 제거(담기와 중복)
   }
   function syncChannelBtn() {
     var b = document.getElementById("ss-chadd-btn");
