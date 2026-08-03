@@ -292,6 +292,24 @@
         var dd = _fmtDate(_igDate(code));
         el.textContent = dd ? "📅 " + dd.slice(2) : "";
       }
+      // 카드별 🔍렌즈 — 페이지 이동 없이 이 화면에서 오버레이로(2026-08-03 사장님 요청)
+      var lb = a.querySelector(".ss-card-lens");
+      if (!lb) {
+        lb = document.createElement("button");
+        lb.className = "ss-card-lens";
+        lb.textContent = "🔍";
+        lb.title = "이 영상 렌즈(원본·유사 추적)";
+        // 위치: 우리 배지(우하단) 바로 위 — 좌하단은 인스타 자체 조회수 표기가 있어 피한다
+        lb.style.cssText = "position:absolute;right:6px;bottom:32px;z-index:99999;" +
+          "background:#37b0e0;color:#fff;border:none;border-radius:14px;width:28px;height:28px;" +
+          "font-size:13px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.4)";
+        lb.addEventListener("click", function (e) {
+          e.preventDefault(); e.stopPropagation();
+          var c = el.getAttribute("data-c");     // 클릭 시점의 현재 카드(SPA 재사용 대비)
+          if (c) _lensRun("https://www.instagram.com/reel/" + c + "/", true);
+        });
+        a.appendChild(lb);
+      }
       if (!el.getAttribute("data-q") && r.bottom > 0 && r.top < innerHeight) {
         el.setAttribute("data-q", "1");                // 보이는 카드만 큐에
         (function (el, code) {
@@ -363,8 +381,10 @@
       })(imgs[i]);
     }
   }
-  function _lensRun(url) {
-    var v = _igVideo();
+  function _lensRun(url, noT) {
+    // noT=true: 그리드 카드에서 실행 — 화면의 다른(호버 재생) 비디오 시각을 잘못 싣지 않게
+    // t를 빼고 보낸다(서버가 영상 중간 프레임으로 캡처).
+    var v = noT ? null : _igVideo();
     var t = (v && isFinite(v.currentTime)) ? Math.round(v.currentTime * 10) / 10 : null;
     _lensOverlay("<div style='padding:30px;text-align:center;color:#aaa'>🔗 원본·유사 영상 추적 중… (10~20초)</div>");
     _gmPost(BASE + "/api/lens/trace_url",
