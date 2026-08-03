@@ -4522,7 +4522,9 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                # 원클릭 담기: /grab(북마클릿 설치안내)는 공개, /api/grab(팝업)은 자체적으로
                # 세션쿠키를 검증해 고객을 식별한다(_cid 폴백이 legacy라 여기선 직접 검증). 미들웨어
                # 401을 피해 친절한 팝업 응답을 주려고 allowlist에 둔다.
-               "/grab", "/api/grab", "/grab.user.js", "/grab_logic.js",
+               # /grab_extension.zip(2026-08-04)도 공개 — 설치 안내가 로그인 전에 열리므로
+               # 다운로드가 인증에 막히면 설치 자체를 시작할 수 없다.
+               "/grab", "/api/grab", "/grab.user.js", "/grab_logic.js", "/grab_extension.zip",
                # 공용 좌측 네비 JS(2026-07-26): 모든 페이지가 <script src="/sidebar.js">로 사이드바를
                # 주입한다. 루트('/')에서 서빙돼 _FREE_PREFIX('/static/')에 안 걸려서, 무료(ranking_only)
                # 등급은 402·비로그인은 307로 막혀 사이드바(카테고리 메뉴)가 통째로 안 떴다(라이브 실증:
@@ -6423,8 +6425,44 @@ def _serve_grab_logic():
     """원클릭 담기 '로직' — grab.user.js(로더)가 GM_xmlhttpRequest로 매번 불러와 실행한다.
     이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영(재설치 불필요)."""
     p = Path(__file__).parent / "userscript" / "grab_logic.js"
+    # ★CORS 허용(2026-08-04, 확장프로그램 도입): 확장은 이 로직을 페이지 월드에서
+    # <script src>로 불러온다. 같은 파일을 유저스크립트(GM_xmlhttpRequest)와 공유하므로
+    # 한 곳만 고치면 양쪽 모두 자동 반영된다. 공개 정적 JS라 노출 위험은 없다.
     return FileResponse(p, media_type="text/javascript; charset=utf-8",
-                        headers={"Cache-Control": "public, max-age=60"})
+                        headers={"Cache-Control": "public, max-age=60",
+                                 "Access-Control-Allow-Origin": "*"})
+
+
+@app.get("/grab_extension.zip", include_in_schema=False)
+def _serve_grab_extension():
+    """원클릭 담기 **확장프로그램**(.zip) — 텀퍼몽키 없이 이것만 설치하면 된다.
+
+    왜 만들었나(2026-08-04 사장님): 유저스크립트 방식은 사용자가 4단계를 밟아야 하고
+    그중 크롬 토글 2개("개발자 모드", "사용자 스크립트 허용")는 **파일로 못 켠다**(크롬 정책).
+    실제로 2026-07-21에 고객이 그 토글을 몰라 📥가 안 뜨는 사고가 났다.
+    확장프로그램은 "사용자 스크립트 허용" 토글 자체가 필요 없어 단계가 절반으로 준다.
+
+    zip은 요청 때 메모리에서 만든다 — 빌드 산출물을 repo에 커밋하지 않기 위해서다
+    (소스가 바뀌면 zip도 자동으로 최신이 된다. mtime 기준 캐시로 매번 다시 만들지 않는다)."""
+    import io
+    import zipfile
+    edir = Path(__file__).parent / "extension"
+    if not edir.is_dir():
+        return JSONResponse({"error": "확장 소스 없음"}, status_code=404)
+    files = sorted(p for p in edir.rglob("*") if p.is_file())
+    stamp = str(max((p.stat().st_mtime_ns for p in files), default=0))
+    cached = getattr(_serve_grab_extension, "_cache", None)
+    if not (cached and cached[0] == stamp):
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+            for p in files:
+                z.write(p, p.relative_to(edir).as_posix())
+        cached = (stamp, buf.getvalue())
+        _serve_grab_extension._cache = cached
+    return Response(
+        content=cached[1], media_type="application/zip",
+        headers={"Content-Disposition": 'attachment; filename="lotto-grab-extension.zip"',
+                 "Cache-Control": "no-cache"})
 
 
 # ── 원클릭 담기: 네이티브 플랫폼(유튜브·틱톡·샤오홍슈·도우인) 영상 → 모음집 즉시 담기 ──
@@ -6565,13 +6603,29 @@ _GRAB_SETUP_HTML = """<!doctype html><html lang="ko"><head>
 </style></head>
 <body><div class="wrap">
   <h1>\U0001F4E5 담기 기능 켜기</h1>
-  <p class="lead">유튜브·틱톡·샤오홍슈·도우인에서 <b>마음에 든 영상을 클릭 한 번</b>으로 모음집에 담는 기능이에요. <b>아래 사진 4단계</b>를 그대로 따라 하세요 — 다 되면 맨 아래 <b>③이 저절로 초록불</b>로 바뀝니다.</p>
+  <p class="lead">유튜브·틱톡·인스타·샤오홍슈·도우인에서 <b>마음에 든 영상을 클릭 한 번</b>으로 모음집에 담는 기능이에요. <b>아래 2단계</b>면 끝납니다.</p>
 
   <div id="browserWarn" class="warn" style="display:none">
     ⚠️ 이 기능은 <b>PC의 크롬(Chrome) 또는 엣지(Edge)</b>에서만 켤 수 있어요.<br>이 페이지 주소를 복사해 PC 크롬에서 열어주세요.
   </div>
 
-  __GUIDE_SECTION__
+  <!-- ★확장프로그램(권장, 2026-08-04) — 텀퍼몽키 방식은 아래 접이식으로 내렸다.
+       이유: 텀퍼몽키는 크롬 토글 2개를 사람이 직접 켜야 하는데(파일로 못 켠다) 실제로
+       고객이 거기서 막혔다(2026-07-21). 확장은 '사용자 스크립트 허용' 토글이 불필요하다. -->
+  <div class="guide">
+    <div class="ghead">\U0001F4E6 딱 2단계면 끝나요</div>
+    <div class="gsub">설치 파일 하나만 받으면 됩니다. 텀퍼몽키 같은 다른 프로그램은 <b>필요 없어요</b>.</div>
+
+    <div class="gstep"><div class="gnum">1</div><div class="gtitle">아래 버튼으로 파일을 받고 → <b>압축을 풀어주세요</b><br><span style="font-size:14.5px;color:#42506a">(받은 파일에 <b>마우스 오른쪽</b> → “압축 풀기” / “Extract All”. 풀면 폴더가 하나 생겨요)</span></div></div>
+    <a class="gbtn" href="/grab_extension.zip" onclick="ssMark(1)">① 설치 파일 내려받기 ⬇</a>
+
+    <div class="gstep"><div class="gnum">2</div><div class="gtitle">아래 <b>“주소 복사”</b> → 크롬 주소창에 <b>붙여넣기(Ctrl+V) + Enter</b> → 오른쪽 위 <b>“개발자 모드”</b> 켜기 → <b>압축 푼 폴더를 그 화면에 끌어다 놓기</b></div></div>
+    <button class="gcopy" onclick="ssCopy('chrome://extensions', this)">\U0001F4CB chrome://extensions 주소 복사</button>
+    <img class="gimg" src="__IMG3__" alt="개발자 모드 켜기">
+
+    <div class="gwarnbox">\U0001F4A1 폴더를 <b>끌어다 놓는</b> 거예요. 파일(zip)이 아니라 <b>압축을 푼 폴더</b>를 놓아야 합니다.</div>
+    <div class="gdone">✅ 다 되면 유튜브·인스타·틱톡 영상에서 <b>\U0001F4E5 담기</b> 버튼이 자동으로 떠요.</div>
+  </div>
 
   <div id="steps">
     <div class="step" id="s3">
@@ -6590,6 +6644,11 @@ _GRAB_SETUP_HTML = """<!doctype html><html lang="ko"><head>
   </div>
 
   <button id="recheck" class="recheck" style="display:none" onclick="location.reload()">설치했는데 안 바뀌나요? → 확인하기</button>
+
+  <details class="alt">
+    <summary>확장프로그램이 안 되나요? — 텀퍼몽키로 설치하기(예전 방식)</summary>
+    __GUIDE_SECTION__
+  </details>
 
   <details class="alt">
     <summary>설치가 어렵나요? — 설치 없이 쓰는 방법(북마클릿)</summary>
@@ -6718,8 +6777,18 @@ def grab_setup(request: Request):
     bm64 = base64.b64encode(_GRAB_BOOKMARKLET.replace("__BASE__", base).encode()).decode()
     # Tampermonkey 크롬 웹스토어 상세(딥링크=검색 안 시킴). 엣지도 크롬스토어에서 설치 가능.
     tm_url = "https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo"
+    # ★__GUIDE_SECTION__을 먼저 끼운 뒤 __IMG3__를 치환한다 — 확장프로그램 안내(본문)와
+    # 텀퍼몽키 안내(접이식) 둘 다 같은 '개발자 모드' 사진을 쓰기 때문이다. 순서를 바꾸면
+    # 본문 쪽 __IMG3__가 그대로 남아 깨진 이미지가 뜬다.
+    gdir = Path(__file__).parent / "static" / "guide"
+    try:
+        img3 = "data:image/png;base64," + base64.b64encode(
+            (gdir / "step3_devmode.png").read_bytes()).decode()
+    except Exception:
+        img3 = ""
     html = (_GRAB_SETUP_HTML
             .replace("__GUIDE_SECTION__", _grab_guide_html())
+            .replace("__IMG3__", img3)
             .replace("__TM_URL__", tm_url).replace("__BM64__", bm64))
     return HTMLResponse(html)
 
