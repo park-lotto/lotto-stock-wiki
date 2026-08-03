@@ -1302,6 +1302,21 @@ def api_discover_add_by_url(request: Request, url: str = "", username: str = "")
         return HTMLResponse(_chadd_html("⛔ 관리자 로그인 필요",
                                         "shoppingshorts.duckdns.org에 관리자로 로그인 후 다시 눌러주세요."))
     store = Store(DB_PATH)
+    # 틱톡(2026-08-03 사장님 '틱톡도 동일하게'): 틱톡 채널은 인스타 추적목록
+    # (discovered_channels)이 아니라 시드(seeds, kind=account)로 등록해야 랭킹 수집이
+    # 잡는다 — 테이블을 섞으면 인스타 수집이 틱톡 핸들을 긁으려다 실패한다.
+    if "tiktok.com" in (url or ""):
+        m = re.search(r"tiktok\.com/@([\w.\-]+)", url or "")
+        tname = (username or (m.group(1) if m else "")).strip().lstrip("@")
+        if not tname:
+            return HTMLResponse(_chadd_html("❌ 채널을 못 찾았어요", "틱톡 영상/프로필 화면에서 눌러주세요."))
+        existing = {s2.get("value", "").lstrip("@").lower()
+                    for s2 in store.list_seeds("tiktok") if s2.get("kind") == "account"}
+        if tname.lower() in existing:
+            return HTMLResponse(_chadd_html("✔ 이미 등록된 채널", f"@{tname} — 틱톡 시드로 추적 중입니다."))
+        store.add_seed("tiktok", "account", tname)
+        return HTMLResponse(_chadd_html("✅ 틱톡 채널 등록 완료",
+                                        f"@{tname} — 다음 틱톡 수집부터 랭킹에 잡힙니다."))
     uname, disp = (username or "").strip().lstrip("@"), ""
     if not uname and url:
         try:
