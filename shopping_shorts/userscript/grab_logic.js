@@ -182,6 +182,39 @@
       if (!acked) { window.removeEventListener("message", onMsg); fail("nobridge"); }
     }, 1500);
   }
+  function _gmGet(url, done, fail) {
+    if (typeof GM_xmlhttpRequest !== "undefined") {
+      GM_xmlhttpRequest({ method: "GET", url: url,
+        onload: function (r) { done(r.status, r.responseText); }, onerror: fail });
+      return;
+    }
+    var reqId = "sg" + Math.random().toString(36).slice(2), acked = false;
+    function onMsg(ev) {
+      var d = ev && ev.data;
+      if (!d || d.reqId !== reqId) return;
+      if (d.__ssGmAck) { acked = true; return; }
+      if (!d.__ssGmResult) return;
+      window.removeEventListener("message", onMsg);
+      if (d.status > 0) done(d.status, d.text); else fail();
+    }
+    window.addEventListener("message", onMsg);
+    window.postMessage({ __ssGmFetch: true, reqId: reqId, method: "GET", url: url }, "*");
+    setTimeout(function () { if (!acked) { window.removeEventListener("message", onMsg); fail(); } }, 1500);
+  }
+  // 인스타 CSP img-src가 외부 CDN 이미지를 전부 막아 오버레이 썸네일이 깨졌다(2026-08-03
+  // 사장님 제보). data:는 허용 → 서버 /api/thumb64가 base64로 감싸 주고 여기서 src에 넣는다.
+  function _fillThumbs() {
+    var ov = document.getElementById("ss-lens-ov"); if (!ov) return;
+    var imgs = ov.querySelectorAll("img[data-t64]");
+    for (var i = 0; i < imgs.length; i++) {
+      (function (im) {
+        var u = im.getAttribute("data-t64"); im.removeAttribute("data-t64");
+        _gmGet(BASE + "/api/thumb64?url=" + encodeURIComponent(u), function (st, text) {
+          try { var d = JSON.parse(text); if (d.ok && d.data) im.src = d.data; } catch (e) {}
+        }, function () {});
+      })(imgs[i]);
+    }
+  }
   function _lensRun(url) {
     var v = _igVideo();
     var t = (v && isFinite(v.currentTime)) ? Math.round(v.currentTime * 10) / 10 : null;
@@ -200,7 +233,7 @@
           var it = items[i];
           h += "<div style='background:#222;border-radius:10px;overflow:hidden'>" +
             "<a href='" + _esc(it.url) + "' target='_blank' rel='noopener'>" +
-            (it.thumbnail ? "<img src='" + _esc(it.thumbnail) + "' referrerpolicy='no-referrer' style='width:100%;height:110px;object-fit:cover;display:block;background:#000'>" :
+            (it.thumbnail ? "<img data-t64='" + _esc(it.thumbnail) + "' style='width:100%;height:110px;object-fit:cover;display:block;background:#000'>" :
               "<div style='height:110px;background:#000'></div>") + "</a>" +
             "<div style='padding:6px;font-size:11px'>" +
             "<div style='color:#8ab4f8'>" + _esc(it.platform || "") + "</div>" +
@@ -211,6 +244,7 @@
         }
         h += "</div>";
         _lensOverlay(h);
+        _fillThumbs();
         var ov = document.getElementById("ss-lens-ov");
         var bs = ov.querySelectorAll("button[data-u]");
         for (var j = 0; j < bs.length; j++) {

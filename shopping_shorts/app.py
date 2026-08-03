@@ -3895,6 +3895,37 @@ _ALLOWED_THUMB_HOSTS = ("cdninstagram.com", "fbcdn.net", "ytimg.com",
 _ALLOWED_VIDEO_HOSTS = ("cdninstagram.com", "fbcdn.net")
 
 
+@app.get("/api/thumb64")
+def api_thumb64(url: str):
+    """썸네일을 data: URL(JSON)로 — 인스타 담기 스크립트의 렌즈 오버레이용(2026-08-03).
+    인스타 페이지 CSP img-src가 외부 이미지를 전부 막아 <img src=외부CDN>이 깨진다.
+    data:는 허용되므로 서버가 받아 base64로 감싸 주고, 스크립트는 GM 브리지로 이
+    JSON을 받아 src에 넣는다. 렌즈 결과엔 구글 캐시(gstatic) 썸네일이 많아 허용호스트에
+    gstatic·googleusercontent를 추가로 얹는다(프록시 남용 방지 화이트리스트는 유지)."""
+    import base64
+    import requests
+    allowed = _ALLOWED_THUMB_HOSTS + ("gstatic.com", "googleusercontent.com")
+    if _reject_cdn_proxy(url, allowed):
+        return JSONResponse(status_code=400, content={"ok": False, "error": "invalid host"})
+    ref = "https://www.instagram.com/"
+    if "xhscdn.com" in url:
+        ref = "https://www.xiaohongshu.com/"
+    elif "tiktokcdn" in url:
+        ref = "https://www.tiktok.com/"
+    elif "douyinpic.com" in url:
+        ref = "https://www.douyin.com/"
+    try:
+        r = requests.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0", "Referer": ref})
+        r.raise_for_status()
+        ctype = (r.headers.get("Content-Type") or "image/jpeg").split(";")[0]
+        if not ctype.startswith("image/"):
+            ctype = "image/jpeg"
+        return {"ok": True, "data": "data:" + ctype + ";base64," +
+                base64.b64encode(r.content).decode()}
+    except Exception:
+        return JSONResponse(status_code=502, content={"ok": False, "error": "fetch 실패"})
+
+
 @app.get("/api/thumb")
 def api_thumb(url: str):
     """인스타 CDN 썸네일 프록시 (핫링크 차단 우회). url=원본 이미지 주소."""
