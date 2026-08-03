@@ -141,16 +141,25 @@
     for (var j = 0; j < marked.length; j++) { try { marked[j].removeAttribute("data-ssgrab"); } catch (e) {} }
   }
   function addAnchorCardBtns() {
-    if (isSinglePost()) { clearCardBtns(); return; }   // 뷰어에선 플로팅(본 영상 담기)만
+    // ★아래 두 보정은 틱톡 전용(2026-08-03): 인스타에 전역 적용했더니 검색 그리드에서
+    // 담기 버튼이 통째로 사라졌다(실사고 — 인스타는 모달 뷰어라 URL이 /p/로 바뀌어도
+    // 그리드가 뒤에 살아 있고, img 실렌더 조건이 인스타 지연로딩 카드를 걸러버림).
+    var tk = location.host.indexOf("tiktok") >= 0;
+    if (isSinglePost()) {
+      if (tk) clearCardBtns();   // 틱톡: SPA 뷰어에 그리드 버튼이 남아 떠다니는 것 제거
+      return;                    // 공통: 뷰어에선 새 카드버튼 안 붙임(플로팅만) — 종전 동작
+    }
     var links = document.querySelectorAll('a[href*="/video/"], a[href*="/p/"], a[href*="/reel/"]');
     var big = [];
     for (var k = 0; k < links.length; k++) {
       var rr = links[k].getBoundingClientRect();
       if (rr.width < 120 || rr.height < 120) continue;
-      // 썸네일이 실제로 그려진 카드에만 붙인다 — 틱톡 뷰어의 투명/자리표시 앵커(빈 검정칸)에
-      // 붙으면 버튼만 허공에 뜬다(2026-08-03 실사고의 나머지 절반).
-      var im = links[k].querySelector("img");
-      if (!im || im.getBoundingClientRect().width < 80) continue;
+      // 틱톡만: 썸네일이 실제로 그려진 카드에만 붙인다 — 뷰어의 투명/자리표시 앵커(빈
+      // 검정칸)에 붙으면 버튼만 허공에 뜬다(2026-08-03 실사고의 나머지 절반).
+      if (tk) {
+        var im = links[k].querySelector("img");
+        if (!im || im.getBoundingClientRect().width < 80) continue;
+      }
       big.push(links[k]);
     }
     if (!isGridPage() && big.length < 3) return;
