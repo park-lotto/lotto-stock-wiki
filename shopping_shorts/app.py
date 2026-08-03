@@ -8284,6 +8284,62 @@ def _refs_page(request: Request):
 app.add_api_route("/refs", _refs_page, include_in_schema=False)
 app.add_api_route("/refs.html", _refs_page, include_in_schema=False)
 
+
+# ── 역대 히트작(채널 아카이브, 2026-08-03) — 관리자 전용 ─────────────────────
+# channel_archive(백그라운드 크롤러가 채우는 채널 전체 릴스)를 조회수순으로 본다.
+# 매일 수집 랭킹(48h 창)이 못 보는 옛 히트작 발굴용. 담기는 기존 mix_basket 재사용.
+def _archive_page(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return FileResponse(_STATIC / "archive.html", media_type="text/html", headers=_NOCACHE)
+
+
+app.add_api_route("/archive", _archive_page, include_in_schema=False)
+
+
+@app.get("/api/archive/channels")
+def api_archive_channels(request: Request):
+    """아카이브된 채널 목록 [{username, reels, top_views}] — 진행률 표시 겸용."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    with store._conn() as c:
+        rows = c.execute(
+            "SELECT username, COUNT(*), MAX(views) FROM channel_archive "
+            "GROUP BY username ORDER BY MAX(views) DESC").fetchall()
+    return {"ok": True, "channels": [
+        {"username": r[0], "reels": r[1], "top_views": r[2] or 0} for r in rows]}
+
+
+@app.get("/api/archive/items")
+def api_archive_items(request: Request, username: str = "", sort: str = "views",
+                      q: str = "", limit: int = 120):
+    """아카이브 릴스 조회. username 지정 시 그 채널만, q는 채널명 부분일치.
+    sort: views(조회수순, 기본) | recent(발행시각순)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    order = "posted_at DESC" if sort == "recent" else "views DESC"
+    where, args = [], []
+    if username:
+        where.append("username=?"); args.append(username.strip().lstrip("@"))
+    if q:
+        where.append("username LIKE ?"); args.append(f"%{q.strip().lstrip('@')}%")
+    sql = ("SELECT username, shortcode, url, thumbnail, views, likes, comments, posted_at "
+           "FROM channel_archive "
+           + ("WHERE " + " AND ".join(where) + " " if where else "")
+           + f"ORDER BY {order} LIMIT ?")
+    args.append(max(1, min(int(limit or 120), 500)))
+    with store._conn() as c:
+        rows = c.execute(sql, args).fetchall()
+    return {"ok": True, "items": [
+        {"username": r[0], "shortcode": r[1], "url": r[2], "thumbnail": r[3],
+         "views": r[4], "likes": r[5], "comments": r[6], "posted_at": r[7]}
+        for r in rows]}
+
 # ★C-1(2026-07-16 라이브 실증): 위 _NOCACHE는 /produce 등 "클린 URL" 라우트에만 붙는다.
 # /sidebar.js 같은 정적 JS/CSS/HTML은 아래 StaticFiles 마운트가 헤더 없이 그대로 서빙해서
 # 브라우저가 무기한 캐시했다 — 실측: 서버는 새 sidebar.js(mountWorks 포함, 5957바이트)를
