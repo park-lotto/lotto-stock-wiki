@@ -136,18 +136,21 @@
   //   인스타: shortcode(base64url) → media pk, 발행ms = (pk>>23) + 1314220021721
   //           (2026-07-31 레퍼런스수집급감 트랙에서 실데이터 6/6 일치 검증한 공식)
   //   틱톡:   /video/{id} → 발행초 = id>>32 (틱톡 ID 상위 32비트가 unix time)
+  function _igDate(code) {                       // 인스타 shortcode → 등록일
+    try {
+      var A = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_", pk = 0n;
+      code = code.slice(0, 11);                  // 11자 초과분은 pk 아님(비공개 접미)
+      for (var i = 0; i < code.length; i++) {
+        var d = A.indexOf(code[i]); if (d < 0) return null;
+        pk = pk * 64n + BigInt(d);
+      }
+      return new Date(Number((pk >> 23n) + 1314220021721n));
+    } catch (e) { return null; }
+  }
   function _postDate() {
     try {
       var m = location.pathname.match(/\/(?:reel|reels|p|tv)\/([A-Za-z0-9_-]+)/);
-      if (m && location.host.indexOf("instagram") >= 0) {
-        var A = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_", pk = 0n;
-        var code = m[1].slice(0, 11);           // 11자 초과분은 pk 아님(비공개 접미)
-        for (var i = 0; i < code.length; i++) {
-          var d = A.indexOf(code[i]); if (d < 0) return null;
-          pk = pk * 64n + BigInt(d);
-        }
-        return new Date(Number((pk >> 23n) + 1314220021721n));
-      }
+      if (m && location.host.indexOf("instagram") >= 0) return _igDate(m[1]);
       var t = location.pathname.match(/\/video\/(\d{15,})/);
       if (t && location.host.indexOf("tiktok") >= 0)
         return new Date(Number(BigInt(t[1]) >> 32n) * 1000);
@@ -176,7 +179,8 @@
         "color:#fff;font-size:15px;cursor:pointer;padding:0 2px'>⏸</button>" +
         "<input id='ss-seek-r' type='range' min='0' max='100' step='0.1' value='0' style='width:150px;cursor:pointer'>" +
         "<span id='ss-seek-t' style='min-width:70px;text-align:right'>0:00/0:00</span>" +
-        "<span id='ss-seek-d' title='영상 등록일' style='color:#aaa;border-left:1px solid #555;padding-left:8px'></span>";
+        "<span id='ss-seek-d' title='영상 등록일' style='color:#aaa;border-left:1px solid #555;padding-left:8px'></span>" +
+        "<span id='ss-seek-s' title='조회수·댓글수' style='color:#aaa;border-left:1px solid #555;padding-left:8px'></span>";
       document.body.appendChild(box);
       var r = document.getElementById("ss-seek-r");
       r.addEventListener("input", function () {
@@ -201,6 +205,103 @@
       var dd = _fmtDate(_postDate());
       d2.textContent = dd ? "📅 " + dd : "";
       d2.style.display = dd ? "" : "none";
+    }
+    _syncStats();
+  }
+  // 조회수·댓글수 — 서버 /api/media_stats(yt-dlp 메타, 서버측 캐시)를 GM 브리지로.
+  // URL(게시물)당 1회만 요청하고 결과를 로컬에도 캐시해 스크롤해도 재호출 없음.
+  var _statsCache = {}, _statsPending = {};
+  function _fmtN(n) {
+    if (n == null) return null;
+    if (n >= 100000000) return (n / 100000000).toFixed(1).replace(/\.0$/, "") + "억";
+    if (n >= 10000) return (n / 10000).toFixed(1).replace(/\.0$/, "") + "만";
+    if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "천";
+    return "" + n;
+  }
+  function _statsText(s) {
+    var parts = [];
+    if (s.views != null) parts.push("▶" + _fmtN(s.views));
+    if (s.likes != null) parts.push("♥" + _fmtN(s.likes));
+    if (s.comments != null) parts.push("💬" + _fmtN(s.comments));
+    return parts.join(" ");
+  }
+  function _syncStats() {
+    var el = document.getElementById("ss-seek-s");
+    if (!el) return;
+    var m = location.pathname.match(/\/(?:reel|reels|p|tv|video)\/[A-Za-z0-9_-]+/);
+    if (!m) { el.style.display = "none"; return; }
+    var key = m[0];
+    if (_statsCache[key]) {
+      var t = _statsText(_statsCache[key]);
+      el.textContent = t; el.style.display = t ? "" : "none"; return;
+    }
+    if (_statsPending[key]) { el.textContent = "…"; el.style.display = ""; return; }
+    _statsPending[key] = 1;
+    el.textContent = "…"; el.style.display = "";
+    _gmGet(BASE + "/api/media_stats?url=" + encodeURIComponent(location.href), function (st, text) {
+      try {
+        var d = JSON.parse(text || "{}");
+        if (st === 200 && d.ok) _statsCache[key] = d;
+        else _statsCache[key] = {};             // 실패는 빈값 캐시(같은 게시물 재폭격 방지)
+      } catch (e) { _statsCache[key] = {}; }
+      delete _statsPending[key];
+    }, function () { _statsCache[key] = {}; delete _statsPending[key]; });
+  }
+  // ── 인스타 채널 릴스 그리드 카드에 📅등록일+💬댓글수 배지(2026-08-03 사장님 요청) ──
+  // 등록일은 카드 href의 shortcode에서 즉시(무료). 댓글수는 서버 media_stats가 필요해
+  // '화면에 보이는 카드만' 동시 2개씩 천천히 조회한다 — 한 번에 다 쏘면 서버 yt-dlp가
+  // 인스타 429 예산을 갉아먹는다. 결과는 서버·로컬 이중 캐시라 재방문 땐 즉시 뜬다.
+  var _gridQ = [], _gridActive = 0;
+  function _gridPump() {
+    while (_gridActive < 2 && _gridQ.length) {
+      (function (it) {
+        var key = it[0], url = it[1], cb = it[2];
+        if (_statsCache[key]) { cb(_statsCache[key]); return; }
+        _gridActive++;
+        _gmGet(BASE + "/api/media_stats?url=" + encodeURIComponent(url), function (st, text) {
+          var d = {}; try { d = JSON.parse(text || "{}"); } catch (e) {}
+          _statsCache[key] = (st === 200 && d.ok) ? d : {};
+          _gridActive--; cb(_statsCache[key]); _gridPump();
+        }, function () { _statsCache[key] = {}; _gridActive--; cb({}); _gridPump(); });
+      })(_gridQ.shift());
+    }
+  }
+  function syncGridBadges() {
+    if (location.host.indexOf("instagram") < 0 || isSinglePost()) return;
+    var as = document.querySelectorAll('a[href*="/reel/"], a[href*="/p/"]');
+    for (var i = 0; i < as.length; i++) {
+      var a = as[i];
+      var m = (a.getAttribute("href") || "").match(/\/(?:reel|reels|p)\/([A-Za-z0-9_-]+)/);
+      if (!m) continue;
+      var r = a.getBoundingClientRect();
+      if (r.width < 120 || r.height < 120) continue;   // 그리드 카드만(아이콘·텍스트 링크 제외)
+      var code = m[1], key = "/reel/" + code;
+      var el = a.querySelector(".ss-card-info");
+      if (!el) {
+        if (getComputedStyle(a).position === "static") a.style.position = "relative";
+        el = document.createElement("div");
+        el.className = "ss-card-info";
+        el.style.cssText = "position:absolute;right:6px;bottom:6px;z-index:99998;" +
+          "background:rgba(0,0,0,.65);color:#fff;font:11px system-ui,sans-serif;" +
+          "border-radius:8px;padding:2px 7px;pointer-events:none";
+        a.appendChild(el);
+      }
+      if (el.getAttribute("data-c") !== code) {        // SPA 노드 재사용 대비
+        el.setAttribute("data-c", code);
+        el.removeAttribute("data-q");
+        var dd = _fmtDate(_igDate(code));
+        el.textContent = dd ? "📅 " + dd.slice(2) : "";
+      }
+      if (!el.getAttribute("data-q") && r.bottom > 0 && r.top < innerHeight) {
+        el.setAttribute("data-q", "1");                // 보이는 카드만 큐에
+        (function (el, code) {
+          _gridQ.push([key, "https://www.instagram.com/reel/" + code + "/", function (s) {
+            if (el.getAttribute("data-c") !== code) return;
+            if (s && s.comments != null) el.textContent += " 💬" + _fmtN(s.comments);
+          }]);
+        })(el, code);
+        _gridPump();
+      }
     }
   }
   // 서버 POST(쿠키 동봉) — 샌드박스면 GM 직접, 메인월드(인스타 Blob 폴백)면 로더의
@@ -554,7 +655,7 @@
     } catch (e) { window.__ssDouyinInjected = false; }   // 실패 시 다음 tick에 재시도(폴백=플로팅)
   }
 
-  function tick() { try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} }
+  function tick() { try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
   setInterval(tick, 2000);
