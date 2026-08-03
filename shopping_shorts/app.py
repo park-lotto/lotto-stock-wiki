@@ -8298,16 +8298,10 @@ def _archive_page(request: Request):
 app.add_api_route("/archive", _archive_page, include_in_schema=False)
 
 
-@app.get("/api/archive/channels")
-def api_archive_channels(request: Request):
-    """아카이브된 채널 목록 [{username, reels, top_views}] — 진행률 표시 겸용."""
-    denied = _require_admin(request)
-    if denied:
-        return denied
-    store = Store(DB_PATH)
-    blocked = store.removed_usernames()   # 영구차단 채널은 아카이브에서도 안 보이게(2026-08-03)
-    # 채널 카테고리(2026-08-03) — 랭킹과 같은 우선순위: 사람지정 > 발굴등록 카테고리 >
-    # 채널명 키워드 분류. 아카이브 화면의 카테고리 필터 재료.
+def _archive_channel_cat_fn(store):
+    """채널→카테고리 판정 함수(2026-08-03) — 랭킹과 같은 우선순위:
+    reel_history 최빈 > 발굴등록 카테고리 > 채널명 키워드 분류. 채널 목록과
+    '태그 없는 릴스' 폴백이 공유한다."""
     from shopping_shorts.categorize import categorize as _cat
     human = store.channel_categories()
     disc_cat, names = {}, {}
@@ -8326,6 +8320,18 @@ def api_archive_channels(request: Request):
     def _chcat(u):
         return (human.get((u or "").lower()) or disc_cat.get(u)
                 or _cat(names.get(u, u), "") or "기타")
+    return _chcat
+
+
+@app.get("/api/archive/channels")
+def api_archive_channels(request: Request):
+    """아카이브된 채널 목록 [{username, reels, top_views}] — 진행률 표시 겸용."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    blocked = store.removed_usernames()   # 영구차단 채널은 아카이브에서도 안 보이게(2026-08-03)
+    _chcat = _archive_channel_cat_fn(store)
     with store._conn() as c:
         rows = c.execute(
             "SELECT username, COUNT(*), MAX(views) FROM channel_archive "
@@ -8338,32 +8344,59 @@ def api_archive_channels(request: Request):
 
 @app.get("/api/archive/items")
 def api_archive_items(request: Request, username: str = "", sort: str = "views",
-                      q: str = "", limit: int = 120):
+                      q: str = "", cat: str = "", limit: int = 120):
     """아카이브 릴스 조회. username 지정 시 그 채널만, q는 채널명 부분일치.
-    sort: views(조회수순, 기본) | recent(발행시각순)."""
+    sort: views | recent | comments. cat: 카테고리 필터 — **영상 단위**(2026-08-03).
+
+    채널 단위 카테고리는 혼합 채널(맛집|살림템|레시피)에서 레시피 영상이 홈템에
+    묻히는 문제(사장님 제보)가 있어, 랭킹과 같은 방식으로 릴스별 비전태그를
+    캡션 자리에 넣어 categorize로 영상마다 판정한다. 태그 없는 릴스는 채널명만으로
+    판정(종전과 동일 수준)."""
     denied = _require_admin(request)
     if denied:
         return denied
+    from shopping_shorts.categorize import categorize as _cat_fn
+    from shopping_shorts.vision_tagging import vision_text
     store = Store(DB_PATH)
+    _chcat = _archive_channel_cat_fn(store)
     order = {"recent": "posted_at DESC", "comments": "comments DESC"}.get(sort, "views DESC")
     where, args = [], []
     if username:
-        where.append("username=?"); args.append(username.strip().lstrip("@"))
+        where.append("a.username=?"); args.append(username.strip().lstrip("@"))
     if q:
-        where.append("username LIKE ?"); args.append(f"%{q.strip().lstrip('@')}%")
-    sql = ("SELECT username, shortcode, url, thumbnail, views, likes, comments, posted_at "
-           "FROM channel_archive "
+        where.append("a.username LIKE ?"); args.append(f"%{q.strip().lstrip('@')}%")
+    sql = ("SELECT a.username, a.shortcode, a.url, a.thumbnail, a.views, a.likes, "
+           " a.comments, a.posted_at, v.subject, v.keywords_json "
+           "FROM channel_archive a LEFT JOIN vision_tags v ON v.shortcode=a.shortcode "
            + ("WHERE " + " AND ".join(where) + " " if where else "")
            + f"ORDER BY {order} LIMIT ?")
-    args.append(max(1, min(int(limit or 120), 500)))
+    # 카테고리 필터는 파이썬에서 거르므로 넉넉히 읽고 자른다.
+    lim = max(1, min(int(limit or 120), 500))
+    args.append(lim if not cat else 5000)
     blocked = store.removed_usernames()   # 영구차단 채널 릴스 숨김(2026-08-03)
+    import json as _json
     with store._conn() as c:
         rows = c.execute(sql, args).fetchall()
-    return {"ok": True, "items": [
-        {"username": r[0], "shortcode": r[1], "url": r[2], "thumbnail": r[3],
-         "views": r[4], "likes": r[5], "comments": r[6], "posted_at": r[7]}
-        for r in rows
-        if (r[0] or "").strip().lstrip("@").lower() not in blocked]}
+    out = []
+    for r in rows:
+        u = (r[0] or "").strip().lstrip("@")
+        if u.lower() in blocked:
+            continue
+        try:
+            kws = _json.loads(r[9] or "[]")
+        except ValueError:
+            kws = []
+        vtext = vision_text({"subject": r[8] or "", "keywords": kws})
+        # 태그 있으면 영상 단위 판정(랭킹과 동일), 없으면 채널 단위 폴백(종전 수준 유지).
+        item_cat = _cat_fn(u, vtext) if vtext else _chcat(u)
+        if cat and item_cat != cat:
+            continue
+        out.append({"username": r[0], "shortcode": r[1], "url": r[2], "thumbnail": r[3],
+                    "views": r[4], "likes": r[5], "comments": r[6], "posted_at": r[7],
+                    "category": item_cat})
+        if len(out) >= lim:
+            break
+    return {"ok": True, "items": out}
 
 
 @app.get("/api/archive/similar")
