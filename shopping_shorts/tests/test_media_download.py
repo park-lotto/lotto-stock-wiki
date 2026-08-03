@@ -112,3 +112,28 @@ def test_search_result_path_rewritten_to_explore(monkeypatch, tmp_path):
     assert "/search_result/" not in seen["url"]
     assert "xsec_token=TOK=" in seen["url"]          # 토큰 보존
     assert "xiaohongshu.com" in seen["url"]           # 도메인 정규화도 함께
+
+
+# ── 인스타 세션 쿠키(2026-08-03 실사고 DbhC6twy0IA) ───────────────────────
+# 무쿠키 yt-dlp에 인스타가 'empty media response'를 주고 Apify 폴백은 17계정 소진 →
+# 담기 예열이 통째로 죽었다. 수집기 세션(storage_state)을 cookies.txt로 변환해 태운다.
+
+def test_ig_cookies_converted_from_storage_state(tmp_path, monkeypatch):
+    import json as _json
+    from shopping_shorts import media_download as md
+    sess = tmp_path / "instagram_session.json"
+    sess.write_text(_json.dumps({"cookies": [
+        {"name": "sessionid", "value": "abc", "domain": ".instagram.com",
+         "path": "/", "secure": True, "expires": 1999999999},
+    ]}), encoding="utf-8")
+    monkeypatch.setattr(md.config, "INSTAGRAM_SESSION_PATH", str(sess))
+    args = md._cookies_arg("https://www.instagram.com/reel/XYZ/")
+    assert args and args[0] == "--cookies"
+    body = open(args[1], encoding="utf-8").read()
+    assert "sessionid\tabc" in body and ".instagram.com" in body
+
+
+def test_ig_cookies_missing_session_falls_back_to_no_cookies(monkeypatch):
+    from shopping_shorts import media_download as md
+    monkeypatch.setattr(md.config, "INSTAGRAM_SESSION_PATH", "")
+    assert md._cookies_arg("https://www.instagram.com/reel/XYZ/") == []
