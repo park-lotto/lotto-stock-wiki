@@ -2203,17 +2203,6 @@ async function renderTrendCards(){
 }
 
 // 플랫폼별 검색 페이지 URL(search_links.py의 _URL_BUILDERS와 동일). 바로가기+담기용.
-function _igKw(kw){
-  // 인스타 검색어 다듬기(2026-08-03). 인스타 키워드 검색은 '만들기·하는 법' 같은
-  // 동사꼬리가 붙은 긴 구문에 극단적으로 약하다(사장님 실측: '한국식 김밥 만들기' 0건,
-  // '김밥'류는 왕창). 꼬리(만들기/싸는 법/방법/레시피/꿀팁…)와 부사(맛있게/쉽게…)를
-  // 떼어 명사 중심으로 줄인다. 틱톡·중국앱은 구문 검색이 되므로 그대로 둔다.
-  let s=String(kw||'').trim();
-  const tails=/(만들기|만드는\s*법|싸는\s*법|하는\s*법|먹는\s*법|방법|레시피|꿀팁|비법|조합|추천)$/;
-  const advs=/(맛있게|쉽게|간단하게|예쁘게|빠르게|완벽하게)$/;
-  for(let i=0;i<3;i++){ s=s.replace(tails,'').trim(); s=s.replace(advs,'').trim(); }
-  return s||String(kw||'').trim();
-}
 function _lensSearchUrl(platform, kw){
   if(platform==='instagram') kw=_igKw(kw);
   const q=encodeURIComponent(kw||'');
@@ -2224,6 +2213,19 @@ function _lensSearchUrl(platform, kw){
     douyin:`https://www.douyin.com/search/${q}`,
   };
   return B[platform]||'#';
+}
+function _igKw(kw){
+  // 인스타 검색어 다듬기(2026-08-03). 인스타 키워드 검색은 '만들기·하는 법' 같은
+  // 동사꼬리가 붙은 긴 구문에 극단적으로 약하다(사장님 실측: '한국식 김밥 만들기' 0건,
+  // '김밥'류는 왕창). 꼬리(만들기/싸는 법/방법/레시피/꿀팁…)와 부사(맛있게/쉽게…)를
+  // 떼어 명사 중심으로 줄인다. 틱톡·중국앱은 구문 검색이 되므로 그대로 둔다.
+  // ⚠️ 위치: test_lens_cn_js가 _lensSearchUrl~renderLens 구간을 잘라 node로 돌리므로
+  // 이 함수는 그 구간 안에 있어야 한다(호이스팅으로 호출 순서는 무관).
+  let s=String(kw||'').trim();
+  const tails=/(만들기|만드는\s*법|싸는\s*법|하는\s*법|먹는\s*법|방법|레시피|꿀팁|비법|조합|추천)$/;
+  const advs=/(맛있게|쉽게|간단하게|예쁘게|빠르게|완벽하게)$/;
+  for(let i=0;i<3;i++){ s=s.replace(tails,'').trim(); s=s.replace(advs,'').trim(); }
+  return s||String(kw||'').trim();
 }
 function renderLens(shortcode){
   const box=document.getElementById('scriptBody');   // 모달 body에 렌더(인라인 X → UI 안 망가짐)
