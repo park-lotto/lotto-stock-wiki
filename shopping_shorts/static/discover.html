@@ -437,7 +437,7 @@ function _renderDiscoverCards(list){
         ${(i.video_url||i.shortcode)?'<span class="play-badge">▶</span>':''}
       </div>
       <div class="body">
-        <div class="rank"><span>#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</span><button class="blockbtn" title="이 채널을 영구 차단 — 지금 바로 가리고, 다음 발굴·업데이트에도 안 올라옵니다" onclick="blockChannel('${_dEsc(i.username)}','${_dEsc(i.name)}',this)">🚫 차단</button></div>
+        <div class="rank"><span>#${idx+1} · ${i.category} · ${_fmtAgo(i)}</span><button class="blockbtn" title="이 채널을 영구 차단 — 지금 바로 가리고, 다음 발굴·업데이트에도 안 올라옵니다" onclick="blockChannel('${_dEsc(i.username)}','${_dEsc(i.name)}',this)">🚫 차단</button></div>
         <div class="ch"><span class="chname" title="이 채널 영상만 보기" style="cursor:pointer" onclick="dSearchChannel('${_dEsc(i.username)}')">@${i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${_dEsc(i.url)}', this)">🔗 복사</button></div>
         <div class="rank" style="margin:-2px 0 4px">구독자 ${(i.followers||0).toLocaleString()} · 최근${DSTATE.days||2}일 ${i.recent_count||0}개</div>
         ${i.views?`<div class="stat" title="조회수 — 도달 규모"><span>조회수</span><b>${i.views.toLocaleString()}</b></div>`:''}
