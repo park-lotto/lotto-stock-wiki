@@ -1467,7 +1467,7 @@ async function archiveSimilar(sc){
     <div class="cards">`+d.items.map(i=>{
       const isS=saved.has(i.shortcode);
       return `<div class="card"><div class="thumb" style="cursor:pointer" onclick="window.open('${esc(i.url)}','_blank')">
-        <img src="${esc(i.thumbnail||'')}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">
+        <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" loading="lazy" onerror="this.style.visibility='hidden'">
         <span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:#e3b341;font-size:11px;padding:2px 8px;border-radius:10px">겹침 ${i.overlap}</span>
       </div><div class="body">
         <div class="rank">@${esc(i.username)} · 💬 ${(i.comments||0).toLocaleString()} · 👁 ${(i.views||0).toLocaleString()}</div>
