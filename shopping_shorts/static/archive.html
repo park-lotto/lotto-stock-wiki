@@ -170,19 +170,28 @@ async function blockCh(u,btn){
 async function load(){
   const u=document.getElementById('chSel').value, q=document.getElementById('q').value.trim();
   const catParam=CAT==='전체'?'':CAT;   // 영상 단위 카테고리는 서버가 비전태그로 판정
-  // limit 200 → 60 (2026-08-04). 200장은 브라우저가 한 번에 200개 요청을 던지는데
-  // /api/thumb는 sync 라우트라 uvicorn 스레드풀이 말라 **서비스가 통째로 죽었다**
-  // (실측 02:15 systemd 'Failed with result timeout' → 재시작 → 썸네일 0/197 전멸).
-  // 60장이면 브라우저 호스트당 동시연결(6)로 10턴이라 서버가 버틴다.
+  // limit 200 → 60 (2026-08-04). 200장을 한 번에 요청하면 /api/thumb(sync 라우트)가
+  // uvicorn 스레드풀을 말려 서비스가 죽은 적이 있다(02:15 systemd 'Failed with result
+  // timeout'). 60장이면 호스트당 동시연결(6)로 10턴이라 서버가 버틴다.
+  // ★단, "썸네일이 안 뜬다"의 직접 원인은 이게 아니라 <img loading="lazy">였다 —
+  //   아래 렌더부 주석 참고. 이 한도는 서버 보호용으로 남긴다.
   const d=await (await fetch(`/api/archive/items?sort=${SORT}&username=${encodeURIComponent(u)}&q=${encodeURIComponent(q)}&cat=${encodeURIComponent(catParam)}&limit=60`)).json();
   const box=document.getElementById('cards');
   let items=(d.ok&&d.items)||[];
   if(!items.length){box.innerHTML='<div class="empty">아직 없음 — 크롤러가 채우는 중입니다. 잠시 뒤 새로고침해 보세요.</div>';return}
   box.innerHTML=items.map(i=>{
     const saved=SAVED.has(i.shortcode);
+    // ★loading="lazy"를 쓰지 않는다 (2026-08-04 실측으로 잡은 진짜 원인).
+    // 사장님 제보 "썸네일 안뜨고 검정화면"의 정체가 이것이었다. 증상은 서버 문제처럼
+    // 보였지만 아니었다 — performance.getEntriesByType('resource')로 세보니 /api/thumb
+    // 요청이 **0건**이었다(브라우저가 아예 안 보냄). 화면 맨 위 카드도 rect.top=177로
+    // 뷰포트 안이고 크기도 188x335로 멀쩡한데 complete=false, currentSrc=''.
+    // 같은 img들에 loading="eager"만 주고 src를 재설정하니 즉시 5/5 로드(640px)됐다.
+    // 카드가 grid + aspect-ratio 안에 있어 lazy 로더가 가시성 판정을 못 하는 것으로 보인다.
+    // 60장뿐이라 전부 즉시 로드해도 부담이 없다.
     return `<div class="card">
       <div class="thumb">
-        <img id="th_${esc(i.shortcode)}" src="/api/thumb?url=${encodeURIComponent(i.thumbnail||'')}" loading="lazy" onerror="this.style.visibility='hidden'" onclick="playArch(this,'${esc(i.shortcode)}','${esc(i.url)}')" title="클릭하면 바로 재생">
+        <img id="th_${esc(i.shortcode)}" src="/api/thumb?url=${encodeURIComponent(i.thumbnail||'')}" onerror="this.style.visibility='hidden'" onclick="playArch(this,'${esc(i.shortcode)}','${esc(i.url)}')" title="클릭하면 바로 재생">
         <span class="views">👁 ${fmt(i.views)}</span>
         <span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;padding:2px 7px;border-radius:10px">▶</span>
       </div>
@@ -227,7 +236,7 @@ function resultCards(items, opts){
       ? `❤ ${fmt(i.likes)} · 💬 ${fmt(i.comments)} · 👁 ${fmt(i.views)}` : esc(i.title||'');
     return `<div class="card">
       <div class="thumb" onclick="window.open('${esc(i.url)}','_blank')">
-        <img src="${thumb}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">
+        <img src="${thumb}" onerror="this.style.visibility='hidden'">
         ${badge}
       </div>
       <div class="body">

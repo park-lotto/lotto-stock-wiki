@@ -1483,7 +1483,10 @@ async function archiveSimilar(sc){
         ? `<span style="position:absolute;top:6px;right:6px;background:#0e2f2e;color:#5fe3d6;border:1px solid #1f6f6b;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:700">📦 같은 제품</span>`
         : `<span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:#e3b341;font-size:11px;padding:2px 8px;border-radius:10px">겹침 ${i.overlap}</span>`;
       return `<div class="card"><div class="thumb" style="cursor:pointer" onclick="window.open('${esc(i.url)}','_blank')">
-        <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" loading="lazy" onerror="this.style.visibility='hidden'">
+        <!-- loading="lazy" 금지(2026-08-04 실측): 모달 안 grid+aspect-ratio 카드에서는
+             lazy 로더가 가시성 판정을 못 해 /api/thumb 요청을 아예 안 보낸다
+             (요청 0건·complete=false·currentSrc=''). eager로 두면 즉시 뜬다. -->
+        <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" onerror="this.style.visibility='hidden'">
         ${badge}
       </div><div class="body">
         <div class="rank">@${esc(i.username)} · 💬 ${(i.comments||0).toLocaleString()} · 👁 ${(i.views||0).toLocaleString()}</div>
