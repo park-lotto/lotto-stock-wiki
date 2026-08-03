@@ -8659,13 +8659,18 @@ def api_archive_items(request: Request, username: str = "", sort: str = "views",
 
 
 @app.get("/api/archive/similar")
-def api_archive_similar(request: Request, shortcode: str, limit: int = 40):
-    """랭킹 릴스 1개 → 내 아카이브에서 '같은 제품/주제'의 옛 영상 찾기(2026-08-03).
+def api_archive_similar(request: Request, shortcode: str, limit: int = 40,
+                        verify: bool = True, verify_n: int = 30):
+    """랭킹 릴스 1개 → 내 아카이브에서 '같은 제품'의 옛 영상 찾기(2026-08-03, 08-04 개편).
 
-    사장님 궁극 목표: 오늘 랭킹 상위 영상을 렌즈 버튼처럼 눌러, 우리가 크롤해 둔
-    채널 아카이브에서 예전 같은 소재 영상을 찾아 담기→믹스. 매칭은 양쪽 비전태그
-    (subject+keywords)의 토큰 겹침 — 렌즈(SerpApi) 비용 0. 소스에 태그가 아직
-    없으면 no_tags로 알려준다(수집 태깅이 곧 붙는다)."""
+    사장님 궁극 목표: 오늘 터진 영상을 눌러, 우리가 크롤해 둔 채널 아카이브에서
+    **같은 제품**을 다룬 예전 영상을 모아 담기→믹스. 렌즈로 하던 걸 내부에서 하는 것.
+
+    2단이다:
+      1단 태그 겹침 — 전체를 훑어 후보를 만든다(무료·즉시).
+      2단 제품명 검증 — 상위 verify_n개만 AI로 실제 제품명을 읽어 같은 제품을 올린다.
+    2단이 왜 필요한가: 태그만으로는 분위기어('살림꿀팁' 15%)가 지배해 같은 제품이
+    안 올라온다(실측). verify=false면 1단만 — 빠르지만 예전 품질이다."""
     denied = _require_admin(request)
     if denied:
         return denied
@@ -8702,10 +8707,59 @@ def api_archive_similar(request: Request, shortcode: str, limit: int = 40):
         if ov:
             scored.append((ov, r))
     scored.sort(key=lambda x: (-x[0], -(x[1][6] or 0)))   # 겹침↓ → 댓글수↓(사장님 기준)
-    return {"ok": True, "no_tags": False, "src_tags": sorted(src_t), "items": [
+
+    # ── 제품명 검증(2026-08-04, 사장님 지시: "미리 돌리지 말고 검색 누를 때") ──
+    # 태그 겹침만으로는 **같은 제품**이 안 나온다(실측: 제품명 완전일치 0건, '다이소 걸레'
+    # → 냉장고정리용품, '천사점토' → 비즈스트랩. 분위기어 '살림꿀팁'이 15%를 차지해서다).
+    # 그래서 겹침 상위 후보에만 AI를 태워 실제 제품명을 읽고, 같은 제품을 맨 위로 올린다.
+    # 미리 14,000건을 돌지 않는 이유가 이것 — 볼 것만, 그때 판독하고 캐시한다.
+    src_product = ""
+    verified = set()
+    if verify:
+        try:
+            from shopping_shorts import product_name as _pn
+            head = scored[:max(0, min(int(verify_n or 30), 60))]
+            src_thumb = ""
+            with store._conn() as c:
+                row = c.execute("SELECT thumbnail FROM channel_archive WHERE shortcode=?",
+                                (shortcode,)).fetchone()
+                if row:
+                    src_thumb = row[0] or ""
+            if not src_thumb:      # 랭킹 영상은 아카이브에 없을 수 있다 → 최근 수집분에서
+                src_thumb = _last_run_thumb(store, shortcode)
+            targets = ([{"shortcode": shortcode, "thumbnail": src_thumb}]
+                       + [{"shortcode": r[1], "thumbnail": r[3]} for _ov, r in head])
+            pmap = _pn.identify_many(targets, DB_PATH)
+            src_product = pmap.get(shortcode) or ""
+            if src_product:
+                verified = {r[1] for _ov, r in head
+                            if _pn.same_product(src_product, pmap.get(r[1]) or "")}
+                # 같은 제품이면 겹침과 무관하게 최상단(사장님 목적이 '같은 제품 모으기').
+                scored.sort(key=lambda x: (0 if x[1][1] in verified else 1,
+                                           -x[0], -(x[1][6] or 0)))
+        except Exception:   # noqa: BLE001 — 판독 실패해도 기존 겹침 결과는 나가야 한다
+            pass
+
+    return {"ok": True, "no_tags": False, "src_tags": sorted(src_t),
+            "src_product": src_product, "verified_count": len(verified), "items": [
         {"username": r[0], "shortcode": r[1], "url": r[2], "thumbnail": r[3],
          "views": r[4], "likes": r[5], "comments": r[6], "posted_at": r[7],
-         "overlap": ov} for ov, r in scored[:max(1, min(limit, 100))]]}
+         "overlap": ov, "same_product": r[1] in verified}
+        for ov, r in scored[:max(1, min(limit, 100))]]}
+
+
+def _last_run_thumb(store, shortcode):
+    """최근 수집분(last_run)에서 썸네일 찾기 — 랭킹 영상은 아카이브에 없기 때문."""
+    import json as _j
+    try:
+        with store._conn() as c:
+            row = c.execute("SELECT items_json FROM last_run ORDER BY rowid DESC LIMIT 1").fetchone()
+        for it in _j.loads(row[0]) if row else []:
+            if it.get("shortcode") == shortcode:
+                return it.get("thumbnail") or it.get("displayUrl") or ""
+    except Exception:   # noqa: BLE001
+        pass
+    return ""
 
 # ★C-1(2026-07-16 라이브 실증): 위 _NOCACHE는 /produce 등 "클린 URL" 라우트에만 붙는다.
 # /sidebar.js 같은 정적 JS/CSS/HTML은 아래 StaticFiles 마운트가 헤더 없이 그대로 서빙해서
