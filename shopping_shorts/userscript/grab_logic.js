@@ -132,7 +132,8 @@
       box.style.cssText = "position:fixed;right:18px;bottom:174px;z-index:2147483647;background:rgba(20,20,20,.92);" +
         "border:1px solid #444;border-radius:14px;padding:8px 12px;display:flex;align-items:center;gap:8px;" +
         "font-family:system-ui,sans-serif;color:#fff;font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.35)";
-      box.innerHTML = "<span title='장면 이동'>⏱</span>" +
+      box.innerHTML = "<button id='ss-seek-p' title='일시정지/재생' style='background:none;border:none;" +
+        "color:#fff;font-size:15px;cursor:pointer;padding:0 2px'>⏸</button>" +
         "<input id='ss-seek-r' type='range' min='0' max='100' step='0.1' value='0' style='width:150px;cursor:pointer'>" +
         "<span id='ss-seek-t' style='min-width:70px;text-align:right'>0:00/0:00</span>";
       document.body.appendChild(box);
@@ -140,29 +141,57 @@
       r.addEventListener("input", function () {
         var vv = _igVideo(); if (vv) { try { vv.currentTime = parseFloat(this.value); } catch (e) {} }
       });
+      document.getElementById("ss-seek-p").addEventListener("click", function () {
+        var vv = _igVideo(); if (!vv) return;
+        try { if (vv.paused) vv.play(); else vv.pause(); } catch (e) {}
+        this.textContent = vv.paused ? "▶" : "⏸";
+      });
     }
-    var r2 = document.getElementById("ss-seek-r"), t2 = document.getElementById("ss-seek-t");
+    var r2 = document.getElementById("ss-seek-r"), t2 = document.getElementById("ss-seek-t"),
+        p2 = document.getElementById("ss-seek-p");
     if (r2 && t2) {
       r2.max = v.duration;
       if (document.activeElement !== r2) r2.value = v.currentTime;   // 드래그 중엔 안 덮음
       t2.textContent = _fmtT(v.currentTime) + "/" + _fmtT(v.duration);
+      if (p2) p2.textContent = v.paused ? "▶" : "⏸";
     }
+  }
+  // 서버 POST(쿠키 동봉) — 샌드박스면 GM 직접, 메인월드(인스타 Blob 폴백)면 로더의
+  // GM 브리지(postMessage)로 위임. 브리지 응답이 1.5초 안에 없으면(구버전 로더) 실패 콜백.
+  function _gmPost(url, bodyObj, done, fail) {
+    if (typeof GM_xmlhttpRequest !== "undefined") {
+      GM_xmlhttpRequest({ method: "POST", url: url,
+        headers: { "Content-Type": "application/json" }, data: JSON.stringify(bodyObj),
+        onload: function (r) { done(r.status, r.responseText); }, onerror: fail });
+      return;
+    }
+    var reqId = "ss" + Math.random().toString(36).slice(2), acked = false;
+    function onMsg(ev) {
+      var d = ev && ev.data;
+      if (!d || d.reqId !== reqId) return;
+      if (d.__ssGmAck) { acked = true; return; }   // 브리지 살아있음 — 본 응답 대기
+      if (!d.__ssGmResult) return;
+      window.removeEventListener("message", onMsg);
+      if (d.status > 0) done(d.status, d.text); else fail();
+    }
+    window.addEventListener("message", onMsg);
+    window.postMessage({ __ssGmFetch: true, reqId: reqId, method: "POST", url: url,
+                         headers: { "Content-Type": "application/json" },
+                         body: JSON.stringify(bodyObj) }, "*");
+    setTimeout(function () {   // ACK 확인용 — 구버전 로더(브리지 없음)면 폴백
+      if (!acked) { window.removeEventListener("message", onMsg); fail("nobridge"); }
+    }, 1500);
   }
   function _lensRun(url) {
     var v = _igVideo();
     var t = (v && isFinite(v.currentTime)) ? Math.round(v.currentTime * 10) / 10 : null;
-    if (typeof GM_xmlhttpRequest === "undefined") {   // 폴백: 랭킹 페이지 딥링크
-      window.open(BASE + "/?lens_url=" + encodeURIComponent(url), "_blank"); return;
-    }
     _lensOverlay("<div style='padding:30px;text-align:center;color:#aaa'>🔗 원본·유사 영상 추적 중… (10~20초)</div>");
-    GM_xmlhttpRequest({
-      method: "POST", url: BASE + "/api/lens/trace_url",
-      headers: { "Content-Type": "application/json" },
-      data: JSON.stringify(t === null ? { url: url } : { url: url, t: t }),
-      onload: function (r) {
+    _gmPost(BASE + "/api/lens/trace_url",
+      t === null ? { url: url } : { url: url, t: t },
+      function (status, text) {
         var d = {};
-        try { d = JSON.parse(r.responseText); } catch (e) {}
-        if (r.status === 429) { _lensOverlay("<div style='padding:20px;color:#e0623d'>💰 " + _esc(d.error || "이번 달 렌즈 한도 초과") + "</div>"); return; }
+        try { d = JSON.parse(text); } catch (e) {}
+        if (status === 429) { _lensOverlay("<div style='padding:20px;color:#e0623d'>💰 " + _esc(d.error || "이번 달 렌즈 한도 초과") + "</div>"); return; }
         if (!d.ok) { _lensOverlay("<div style='padding:20px;color:#e0623d'>❌ " + _esc(d.error || "추적 실패 — 로그인 상태를 확인해 주세요") + "</div>"); return; }
         var items = d.items || [];
         if (!items.length) { _lensOverlay("<div style='padding:20px;color:#aaa'>비슷한 영상을 못 찾았어요. 다른 장면의 링크로 시도해 보세요.</div>"); return; }
@@ -190,8 +219,14 @@
           });
         }
       },
-      onerror: function () { _lensOverlay("<div style='padding:20px;color:#e0623d'>❌ 서버 연결 실패</div>"); }
-    });
+      function (why) {
+        var ov = document.getElementById("ss-lens-ov"); if (ov) ov.remove();
+        if (why === "nobridge") {   // 구버전 로더(브리지 없음) → 랭킹 페이지 딥링크 폴백
+          window.open(BASE + "/?lens_url=" + encodeURIComponent(url), "_blank");
+        } else {
+          _lensOverlay("<div style='padding:20px;color:#e0623d'>❌ 서버 연결 실패</div>");
+        }
+      });
   }
   function syncExtraBtns() {
     if (location.host.indexOf("instagram.com") < 0) return;
