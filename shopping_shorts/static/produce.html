@@ -2320,9 +2320,15 @@ async function _pushWork(){
   const st = _workState();
   if(!HANDOFF.length && !st.script) return;
   try{
+    // ★job_id는 **알 때만** 보낸다(2026-08-03 실사고: 배포 재시작 직후 MIX_JOB이 비어 있는
+    //   순간의 자동저장이 null을 보내 서버의 job 연결을 지웠다 — 사장님 작업이 "빈 작업"이 됨.
+    //   서버(/api/produce/works)는 "안 넘어온 필드 보존" 설계인데 항상 보내면 그 보존이 무의미).
+    //   job을 끊어야 하는 흐름은 없다 — "+새 작업"은 새 레코드를 만들지 기존 연결을 지우지 않는다.
+    const payload = {work_id: WORK_ID, state: st, step: cur};
+    if(MIX_JOB) payload.job_id = MIX_JOB;
     const r = await fetch('/api/produce/works', {method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({work_id: WORK_ID, state: st, job_id: MIX_JOB, step: cur})});
+      body: JSON.stringify(payload)});
     const d = await r.json();
     if(d && d.ok && d.work_id){
       WORK_ID = d.work_id;   // 다음 저장이 같은 작업을 갱신하도록
