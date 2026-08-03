@@ -112,11 +112,10 @@ async function blockCh(u,btn){
 }
 async function load(){
   const u=document.getElementById('chSel').value, q=document.getElementById('q').value.trim();
-  const d=await (await fetch(`/api/archive/items?sort=${SORT}&username=${encodeURIComponent(u)}&q=${encodeURIComponent(q)}&limit=400`)).json();
+  const catParam=CAT==='전체'?'':CAT;   // 영상 단위 카테고리는 서버가 비전태그로 판정
+  const d=await (await fetch(`/api/archive/items?sort=${SORT}&username=${encodeURIComponent(u)}&q=${encodeURIComponent(q)}&cat=${encodeURIComponent(catParam)}&limit=200`)).json();
   const box=document.getElementById('cards');
   let items=(d.ok&&d.items)||[];
-  if(CAT!=='전체') items=items.filter(i=>(CH_CAT[i.username]||'기타')===CAT);   // 채널 카테고리 필터
-  items=items.slice(0,200);
   if(!items.length){box.innerHTML='<div class="empty">아직 없음 — 크롤러가 채우는 중입니다. 잠시 뒤 새로고침해 보세요.</div>';return}
   box.innerHTML=items.map(i=>{
     const saved=SAVED.has(i.shortcode);
