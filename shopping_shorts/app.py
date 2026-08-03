@@ -21,6 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from shopping_shorts import service
 from shopping_shorts.service import collect, census, generate_missing_drafts, next_draft_targets, youtube_channel_board
 from shopping_shorts.outreach import build_queue
+from shopping_shorts.instagram_parse import shortcode_to_timestamp
 from shopping_shorts.store import Store
 from shopping_shorts import vision_tagging
 from shopping_shorts.auto_run import run_auto_job, default_stages
@@ -595,6 +596,23 @@ def api_translate(q: str = ""):
     return {"ok": True, "ko": ko, "zh": zh}
 
 
+def _attach_posted_at(items):
+    """인스타 항목에 발행시각 posted_at(ISO UTC)을 실어 보낸다(2026-08-03).
+
+    age_hours는 수집 시점에 계산된 스냅샷이라 화면의 'X시간 전'이 다음 수집까지
+    고정된다('계속 0시간 전' 제보). shortcode에 발행시각이 인코딩돼 있으므로
+    (instagram_parse.shortcode_to_timestamp) 조회 경로에서 복원해 실어 주면
+    프론트가 현재 시각 기준으로 나이를 계산할 수 있다. 인스타 전용 —
+    유튜브 video id도 같은 알파벳이라 엉뚱한 시각으로 디코드될 수 있어 호출부가
+    인스타 목록에만 쓴다."""
+    for i in items:
+        if not i.get("posted_at"):
+            ts = shortcode_to_timestamp(i.get("shortcode") or "")
+            if ts:
+                i["posted_at"] = ts
+    return items
+
+
 @app.get("/api/reference")
 def api_reference(platform: str = "instagram"):
     """마지막 수집 결과 반환 (프론트 초기 로드용). platform=플랫폼(기본 인스타)."""
@@ -611,6 +629,8 @@ def api_reference(platform: str = "instagram"):
         items = [i for i in items
                  if (i.get("username") or "").strip().lstrip("@").lower() not in blocked]
     _attach_vision_tags(items, store)   # 백그라운드로 채워진 주제태그를 실어 보냄(검색 정확도 승격)
+    if platform == "instagram":
+        _attach_posted_at(items)        # 'X시간 전' 실시간 계산용 발행시각
     return {"ok": True, "items": items, "collected_at": collected_at}
 
 
@@ -895,6 +915,7 @@ def api_outreach(request: Request, sort: str = "latest", hide_done: bool = True,
     commented = store.commented_set(customer_id=_cid(request))
     queue = build_queue(items, drafts_map=drafts, commented=commented,
                         sort=sort, hide_done=hide_done, rank_limit=rank_limit)
+    _attach_posted_at(queue)   # 인스타 큐 — 'X시간 전' 실시간 계산용
     return {"ok": True, "count": len(queue), "items": queue}
 
 
@@ -1191,16 +1212,17 @@ def api_discover_feed():
     store = Store(DB_PATH)
     items, updated_at = store.load_discovery_feed()
     blocked = store.removed_usernames()
-    if blocked:
-        items = [i for i in items
-                 if (i.get("username") or "").strip().lstrip("@").lower() not in blocked]
-    # ➕ 추가여부를 서버 기준으로 실어준다(2026-08-03) — '추가됨✓'이 브라우저 메모리에만
-    # 있어 차단·새로고침 재렌더 때 [목록추가]로 풀리던 문제. 피드에서 숨기지는 않는다:
-    # 07시 크론이 발굴 전부를 자동등록하므로 숨기면 피드가 통째로 빈다(2026-08-03 실사고).
+    # ➕ 추적목록에 있는 채널은 피드에서 숨긴다(2026-08-03 사장님 지시 재적용) —
+    # [목록추가]를 누르면 새로고침 후에도 다시 안 뜬다. 오전의 '피드 통째 소실'은
+    # 07시 크론 자동등록이 원인이었고, 같은 날 auto_register=False로 껐으므로
+    # 이제 숨겨도 피드가 비지 않는다(발굴분은 사람이 추가하기 전까지 미등록).
     added = {(d.get("username") or "").strip().lstrip("@").lower()
              for d in store.discovered_channels()}
-    for i in items:
-        i["added"] = (i.get("username") or "").strip().lstrip("@").lower() in added
+    hide = blocked | added
+    if hide:
+        items = [i for i in items
+                 if (i.get("username") or "").strip().lstrip("@").lower() not in hide]
+    _attach_posted_at(items)   # 발굴 피드도 인스타 릴스 — 'X시간 전' 실시간 계산용
     return {"ok": True, "items": items, "updated_at": updated_at}
 
 

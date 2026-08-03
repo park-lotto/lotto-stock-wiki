@@ -4,8 +4,8 @@
 
 앱 HTTP를 거치지 않고 discover_jobs._run()을 직접 동기 호출한다(백그라운드
 스레드로 감쌀 필요 없음 — 이 스크립트 자체가 이미 크론이 띄운 별도 프로세스).
-auto_register=True로 발굴 전부를 사람 확인 없이 discovered_channels에 등록한다
-(화면의 수동 [목록추가] 버튼과 달리, 매일 자동으로 최대한 넓게 반영하는 게 목적).
+등록은 자동이 아니라 화면의 [목록추가] 버튼으로 사람이 고른다(2026-08-03 전환 —
+7/30~8/2 자동등록 기간의 일 19~45건이 전부 목록에 쌓여 피드가 온통 '추가됨'이 됐다).
 """
 import sys
 import time
@@ -29,7 +29,10 @@ def main():
         discover_jobs._JOB.update(status="running", phase="시작", count=0, items=[],
                                   error=None, started=t0, registered=0)
     try:
-        discover_jobs._run(DAYS, MAX_TOTAL, accumulate=False, auto_register=True)
+        # auto_register=False(2026-08-03 사장님 지시) — 자동등록을 켜니 발굴 전부가
+        # 추적목록에 들어가 피드가 온통 '추가됨'이 됐다. 발굴은 후보만 보여주고,
+        # 등록은 사람이 [목록추가]로 고른다(누르면 피드에서 사라짐).
+        discover_jobs._run(DAYS, MAX_TOTAL, accumulate=False, auto_register=False)
     except Exception as e:  # noqa: BLE001 — 크론이 죽어도 서비스는 무사, 로그만 남긴다
         print(f"[daily_instagram_discover] 실패: {e!r}", file=sys.stderr)
         return 1
