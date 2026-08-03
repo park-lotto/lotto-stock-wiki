@@ -43,14 +43,25 @@
   // 서버 세션 쿠키가 실려 관리자 가드가 그대로 동작(/api/grab과 같은 방식).
   var _IG_RESERVED = { p: 1, reel: 1, reels: 1, explore: 1, stories: 1, accounts: 1,
                        direct: 1, tv: 1 };
+  // 인스타+틱톡 공통(2026-08-03 사장님 '틱톡도 동일하게') — 시크바·채널등록·렌즈.
+  function _snsHost() {
+    if (location.host.indexOf("instagram.com") >= 0) return "instagram";
+    if (location.host.indexOf("tiktok.com") >= 0) return "tiktok";
+    return "";
+  }
+  function _ttProfile() {   // 틱톡 프로필(/@handle) — 영상 페이지(/@handle/video/..)는 제외
+    var m = location.pathname.match(/^\/@([\w.\-]+)\/?$/);
+    return m ? m[1] : "";
+  }
   function _igProfileName() {
     var m = location.pathname.match(/^\/([^/]+)\/?(reels\/?)?$/);
     return (m && !_IG_RESERVED[m[1]]) ? m[1] : "";
   }
   function addChannelBtn() {
-    if (location.host.indexOf("instagram.com") < 0) return;
+    var host = _snsHost();
+    if (!host) return;
     if (document.getElementById("ss-chadd-btn") || !document.body) return;
-    var prof = _igProfileName();
+    var prof = host === "instagram" ? _igProfileName() : _ttProfile();
     if (!isSinglePost() && !prof) return;   // 피드/탐색에선 대상이 모호해 안 띄운다
     var b = document.createElement("button");
     b.id = "ss-chadd-btn";
@@ -62,7 +73,8 @@
       "font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer;font-family:system-ui,sans-serif";
     b.addEventListener("click", function (e) {
       e.preventDefault();
-      var p = _igProfileName();
+      // 틱톡은 URL에 @핸들이 들어 있어 서버가 URL만으로 채널을 뽑는다(시드 등록).
+      var p = _snsHost() === "instagram" ? _igProfileName() : "";
       var q = p ? "username=" + encodeURIComponent(p)
                 : "url=" + encodeURIComponent(location.href);
       window.open(BASE + "/api/discover/add_by_url?" + q, "ss_chadd", "width=380,height=240");
@@ -121,7 +133,7 @@
   }
   function _fmtT(s) { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2); }
   function syncSeekBar() {
-    if (location.host.indexOf("instagram.com") < 0) return;
+    if (!_snsHost()) return;
     var box = document.getElementById("ss-seek");
     if (!isSinglePost()) { if (box) box.remove(); return; }
     var v = _igVideo();
@@ -263,7 +275,7 @@
       });
   }
   function syncExtraBtns() {
-    if (location.host.indexOf("instagram.com") < 0) return;
+    if (!_snsHost()) return;
     var lens = document.getElementById("ss-lens-btn");
     if (isSinglePost()) {
       _miniBtn("ss-lens-btn", "🔍 렌즈", "이 영상으로 원본·유사 레퍼런스 역추적(화면 안에서)", 122, "#37b0e0",
@@ -273,7 +285,9 @@
   }
   function syncChannelBtn() {
     var b = document.getElementById("ss-chadd-btn");
-    var want = location.host.indexOf("instagram.com") >= 0 && (isSinglePost() || _igProfileName());
+    var host = _snsHost();
+    var want = !!host && (isSinglePost() ||
+                          (host === "instagram" ? _igProfileName() : _ttProfile()));
     if (b && !want) b.remove();
     else if (!b && want) addChannelBtn();
   }
