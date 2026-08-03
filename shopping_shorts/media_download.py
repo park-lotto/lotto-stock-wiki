@@ -33,10 +33,44 @@ def _cookies_arg(url):
     elif "tiktok.com" in u:
         path = config.YTDLP_COOKIES_TIKTOK
         extra = []
+    elif "instagram.com" in u:
+        # ★인스타 세션 쿠키(2026-08-03 실사고 DbhC6twy0IA): 무쿠키 yt-dlp에 인스타가
+        # "empty media response"를 주고, Apify 폴백은 17계정 소진 → 담기 예열이 통째로
+        # 죽고 실패 래치까지 걸렸다. 수집기(instagram_playwright)가 이미 로그인 세션
+        # (storage_state JSON)으로 잘 붙고 있으므로 같은 세션을 cookies.txt로 변환해 쓴다.
+        path = _ig_cookies_file()
+        extra = []
     else:
         return []
     cookies = ["--cookies", path] if path and Path(path).exists() else []
     return cookies + extra
+
+
+def _ig_cookies_file():
+    """INSTAGRAM_SESSION_PATH(Playwright storage_state JSON) → yt-dlp용 Netscape cookies.txt.
+
+    세션 파일 옆에 파생 파일로 캐시하고, 원본 mtime이 바뀌면(재로그인) 다시 만든다.
+    실패하면 "" — 종전(무쿠키) 동작 그대로라 회귀가 없다."""
+    src = config.INSTAGRAM_SESSION_PATH
+    if not (src and Path(src).exists()):
+        return ""
+    out = Path(src).with_suffix(".ytdlp-cookies.txt")
+    try:
+        if out.exists() and out.stat().st_mtime >= Path(src).stat().st_mtime:
+            return str(out)
+        state = json.loads(Path(src).read_text(encoding="utf-8"))
+        lines = ["# Netscape HTTP Cookie File"]
+        for c in state.get("cookies") or []:
+            domain = c.get("domain") or ".instagram.com"
+            lines.append("\t".join([
+                domain, "TRUE" if domain.startswith(".") else "FALSE",
+                c.get("path") or "/", "TRUE" if c.get("secure") else "FALSE",
+                str(int(c.get("expires") or 0) if (c.get("expires") or 0) > 0 else 2147483647),
+                c.get("name") or "", c.get("value") or ""]))
+        out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return str(out)
+    except Exception:  # noqa: BLE001 — 변환 실패는 무쿠키 폴백 사유일 뿐
+        return ""
 
 
 def _proxy_arg(url):
@@ -109,6 +143,25 @@ def probe_grab_meta(url, timeout=40):
 _IG_CODE_RE = re.compile(r"instagram\.com/(?:reel|reels|p|tv)/([A-Za-z0-9_-]+)")
 
 
+def _ig_video_via_session(code):
+    """shortcode → 세션 REST(video_versions)의 직접 mp4 URL. 실패·세션 없음이면 "".
+
+    수집기(instagram_playwright)가 매일 쓰는 로그인 세션 경로를 그대로 재사용한다 —
+    yt-dlp 인스타 추출기가 깨져 있을 때의 무료 안전망(2026-08-03)."""
+    from shopping_shorts import config as _cfg
+    if not (_cfg.INSTAGRAM_SESSION_PATH and Path(_cfg.INSTAGRAM_SESSION_PATH).exists()):
+        return ""
+    from shopping_shorts.instagram_parse import shortcode_to_pk
+    from shopping_shorts.instagram_playwright import _detail_context, _fetch_reel_detail
+    pk = shortcode_to_pk(code)
+    if not pk:
+        return ""
+    with _detail_context() as ctx:
+        node = _fetch_reel_detail(ctx, pk)
+    vv = (node or {}).get("video_versions") or []
+    return (vv[0] or {}).get("url") or "" if vv else ""
+
+
 def _download_instagram(url, dest_dir):
     """인스타 릴스 다운로드 → (mp4경로, caption).
 
@@ -133,6 +186,17 @@ def _download_instagram(url, dest_dir):
             if direct:
                 return str(download_video(direct, Path(dest_dir))), ""
         except Exception:      # noqa: BLE001 — 무료 경로 실패는 폴백 사유일 뿐
+            pass
+    # ①-b 무료 폴백(2026-08-03 실사고 DbhC6twy0IA): yt-dlp 인스타 추출기는 세션 쿠키를
+    # 태워도 400/empty media로 자주 죽는다(서버 실측). 수집기와 **같은 세션 REST**
+    # (/api/v1/media/{pk}/info/)로 video_versions 직접 mp4를 받는다 — 수집이 이 경로로
+    # 매일 성공 중이라 가장 믿을 만한 무료 경로다. Apify(유료)는 그 다음.
+    if code:
+        try:
+            direct = _ig_video_via_session(code)
+            if direct:
+                return str(download_video(direct, Path(dest_dir))), ""
+        except Exception:      # noqa: BLE001 — 폴백 사유일 뿐
             pass
     # ② 유료 폴백 — 크레딧이 남아 있으면 캡션까지 얻는다.
     try:
