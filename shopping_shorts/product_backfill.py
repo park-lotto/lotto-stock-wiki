@@ -67,6 +67,13 @@ def pick_targets(store, top, offset=0):
     return [{"shortcode": r[0], "thumbnail": r[1], "views": r[2] or 0} for r in rows]
 
 
+def _done_count(store):
+    """지금까지 판독된 총 건수(product_at 기준). 배치 진척 판정의 진실."""
+    with store._conn() as c:
+        return c.execute(
+            "SELECT COUNT(*) FROM vision_tags WHERE product_at IS NOT NULL").fetchone()[0]
+
+
 def _free_gb(path="/"):
     try:
         return shutil.disk_usage(path).free / (1024 ** 3)
@@ -77,6 +84,7 @@ def _free_gb(path="/"):
 def run(top=3000, batch=40, sleep=time.sleep, log=print):
     store = Store(DB_PATH)
     done = 0
+    skipped = 0        # 만료 등으로 저장 안 된 누적분 — offset으로 건너뛴다
     empty_rounds = 0
     t0 = time.time()
     while done < top:
@@ -93,20 +101,31 @@ def run(top=3000, batch=40, sleep=time.sleep, log=print):
                 log(f"[백필] {_MAX_YIELD_S//60}분째 대기 — 그만 기다리고 진행한다")
                 break
 
-        targets = pick_targets(store, min(batch, top - done))
+        # offset을 쓰는 이유: 썸네일이 만료된 건 저장이 안 돼 product_at이 계속 NULL이라
+        # 같은 행이 매 배치 또 뽑힌다(=영원히 제자리). 처리한 만큼 건너뛴다.
+        targets = pick_targets(store, min(batch, top - done), offset=skipped)
         if not targets:
             log("[백필] 판독할 게 없다 — 완료")
             break
 
-        before = len(store.products_map([t["shortcode"] for t in targets]))
+        # 진척은 **DB의 product_at 개수**로 잰다(2026-08-04 수정).
+        # 처음엔 pmap 길이로 쟀는데, pick_targets가 이미 product_at IS NULL만 고르므로
+        # before는 항상 0이고 got==len(pmap)이 된다. 썸네일이 만료된 배치에서는 아무것도
+        # 저장되지 않아 pmap이 비고 → '3배치 연속 0건'으로 **정상 동작 중에 멈췄다**
+        # (실측: 160건에서 조기중단. 실제로는 판독·저장이 잘 되고 있었다).
+        # 만료 썸네일은 저장 대상이 아니므로 그 배치가 0인 건 정상이다 — 그래도 커서는
+        # 앞으로 가야 다음 배치로 넘어간다.
+        prev_total = _done_count(store)
         pmap = product_name.identify_many(targets, DB_PATH)
-        got = len(pmap) - before
+        got = _done_count(store) - prev_total
         done += len(targets)
+        skipped += max(0, len(targets) - got)   # 저장 안 된 만큼 다음 배치에서 건너뛴다
         if got <= 0:
             empty_rounds += 1
-            # 키 소진·썸네일 만료가 겹치면 계속 0이 나온다. 3회 연속이면 멈춘다.
-            if empty_rounds >= 3:
-                log("[백필] 3배치 연속 0건 — 키 소진 또는 썸네일 만료로 판단, 중단")
+            # 진짜로 아무것도 못 저장하는 상태(키 전멸·전부 만료)가 이어지면 멈춘다.
+            # 6배치로 잡은 이유: 만료 썸네일이 연달아 몇 배치 나오는 건 흔하다.
+            if empty_rounds >= 6:
+                log("[백필] 6배치 연속 0건 — 키 소진 또는 썸네일 만료 구간으로 판단, 중단")
                 break
         else:
             empty_rounds = 0
