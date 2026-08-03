@@ -2632,8 +2632,31 @@ def api_set_smart_mix(body: dict):
 _MIX_ACTIVE_STAGES = ("downloading", "extracting", "planning", "tts")
 
 
+# 내부 사정이 드러나는 조각들 → 일반 사용자용 문장으로 갈아끼운다(관리자는 원문을 본다).
+# "무엇이 막혔고 사용자가 뭘 하면 되는지"만 남긴다. 벤더명·토큰수·경로·스택은 전부 감춘다.
+_USER_ERROR_RULES = (
+    (("apify", "instagram", "인스타", "다운로드 실패", "영상을 받지"),
+     "영상을 가져오지 못했습니다. 원본이 비공개·삭제되었거나 일시적인 문제일 수 있어요. "
+     "잠시 후 다시 시도해 주세요. (계속되면 관리자에게 알려주세요)"),
+    (("gemini", "키 소진", "edl 비어", "quota", "permission_denied", "api key"),
+     "대본을 만드는 데 실패했습니다. 잠시 후 다시 시도해 주세요. "
+     "(계속되면 관리자에게 알려주세요)"),
+    (("서버 재시작", "중단되었습니다"),
+     "작업이 중단되었습니다. 다시 시도해 주세요."),
+)
+
+
+def _user_facing_error(msg):
+    """실패 사유를 일반 사용자에게 보여줄 문장으로 바꾼다. 관리자에겐 쓰지 않는다."""
+    low = (msg or "").lower()
+    for keys, friendly in _USER_ERROR_RULES:
+        if any(k in low for k in keys):
+            return friendly
+    return "처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요."
+
+
 @app.get("/api/mix/status/{job_id}")
-def api_mix_status(job_id: str):
+def api_mix_status(job_id: str, request: Request):
     store = Store(DB_PATH)
     job = store.get_mix_job(job_id)
     if not job:
@@ -2683,7 +2706,17 @@ def api_mix_status(job_id: str):
                 weak.append({"n": i, "coverage": round(cov, 2) if cov is not None else None})
     except Exception:
         weak = []
+    # ★실패 사유는 관리자만(2026-08-04 사장님 지시). 08-03 사고 때 사용자 화면에
+    # "apify 토큰 17개 전부 실패…" 같은 내부 사정이 그대로 떴다 — 사용자는 알 수도 없고
+    # 알 필요도 없는 정보다. 반대로 **관리자에겐 원문 그대로** 보여야 사고를 빨리 잡는다
+    # (그날 13:45부터 죽고 있었는데 아무도 몰랐던 이유가 사유가 안 보여서였다).
+    error_detail = None
+    if error and _is_admin(getattr(request.state, "customer_id", None)):
+        error_detail = error
+    if error:
+        error = _user_facing_error(error)
     return {"ok": True, "status": status, "error": error,
+            "error_detail": error_detail,   # 관리자에게만 채워진다(일반 사용자는 None)
             "weak_sources": weak,
             # 1단계 미리보기(2026-07-17): 폴러를 둘로 만들지 않으려고 기존 응답에 얹는다(스펙 §6.3).
             # preview_path는 서버 내부 경로라 안 내보낸다 — 파일은 전용 라우트로만 서빙.
@@ -6077,9 +6110,28 @@ def _admin_pending(request: Request):
         return denied
     pend = Store(DB_PATH).pending_customers()
     newest = pend[0] if pend else None                      # id DESC 정렬이라 [0]이 최신
+    # 운영 사고 쪽지(2026-08-04). 이 폴러는 이미 관리자 화면이 돌리고 있으므로 여기 얹으면
+    # 새 폴러·새 배선 없이 '띠링'이 그대로 재사용된다. 비관리자는 위 _require_admin이 막는다.
+    try:
+        from shopping_shorts import ops_alert
+        alerts = ops_alert.list_alerts()
+    except Exception:                                       # noqa: BLE001 — 알림이 승인화면을 막지 않는다
+        alerts = []
     return {"ok": True, "count": len(pend),
             "newest_id": (newest["id"] if newest else 0),
-            "newest": newest, "pending": pend[:20]}          # 팝업 목록은 최근 20건까지
+            "newest": newest, "pending": pend[:20],          # 팝업 목록은 최근 20건까지
+            "alerts": alerts,
+            "alert_unread": sum(1 for a in alerts if not a.get("read"))}
+
+
+@app.post("/api/admin/alerts/read")
+def _admin_alerts_read(request: Request):
+    """운영 사고 쪽지 전부 읽음 처리(배지 끄기). 관리자만."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import ops_alert
+    return {"ok": True, "marked": ops_alert.mark_read()}
 
 
 @app.post("/api/admin/customer/update")

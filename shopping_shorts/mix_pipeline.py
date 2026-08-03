@@ -417,9 +417,21 @@ def _prepare_sources(urls, work):
         video_paths[vid] = path
         captions[vid] = caption
     if not video_paths:
+        detail = "\n".join(f"· {u}: {e}" for u, e in skipped)
+        # ★사람에게 밀어 올린다(2026-08-04). 08-03엔 이 실패가 조용히 DB에만 쌓여
+        # 13:45부터 다음날까지 아무도 몰랐다. 소스를 하나도 못 받았다 = 통로가
+        # 끊겼다는 뜻이고, 인스타는 이걸 한두 달 주기로 한다 — 즉시 알아야 한다.
+        # 알림이 실패해도 아래 예외는 그대로 나간다(본작업 흐름 불변).
+        try:
+            from shopping_shorts import ops_alert
+            ops_alert.raise_alert(
+                "source_download",
+                "소스 영상 다운로드가 전부 실패했습니다 — 수집 통로가 끊겼을 수 있습니다",
+                detail)
+        except Exception:      # noqa: BLE001
+            pass
         raise RuntimeError(
-            "소스 영상을 하나도 못 받았습니다 — 모든 URL 다운로드 실패:\n"
-            + "\n".join(f"· {u}: {e}" for u, e in skipped))
+            "소스 영상을 하나도 못 받았습니다 — 모든 URL 다운로드 실패:\n" + detail)
     return video_paths, captions, skipped
 
 
@@ -786,6 +798,17 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 오보고하지 않는다 — 성공처럼 보이는 빈 리뷰화면 대신 즉시 실패로 정상 종료
     # (2026-07-12 최종 전체리뷰 Important).
     if not plan["beats"]:
+        # 같은 이유로 사람에게 올린다(2026-08-04) — 08-03엔 Gemini 키 403(project denied)로
+        # 이 실패가 2건 났는데 역시 조용히 DB에만 남았다. 키 소진/차단은 사람이 손대야 풀린다.
+        try:
+            from shopping_shorts import ops_alert
+            ops_alert.raise_alert(
+                "edl_empty",
+                "편집안(EDL)을 만들지 못했습니다 — 대본 추출 실패 또는 Gemini 키 소진/차단",
+                "run_mix_job: EDL이 비어 있습니다. Gemini 키풀 상태(소진·403 PERMISSION_DENIED)와 "
+                "대본 추출 로그를 확인하세요.")
+        except Exception:      # noqa: BLE001
+            pass
         raise RuntimeError("EDL 비어있음 — 대본 추출 실패 또는 Gemini 키 소진으로 편집안을 만들지 못함")
 
     # 3.5/3.6) 장면 라이브러리 자동 배치(컷어웨이 + 효과음) — ★기본 OFF(2026-08-01 실사고).
