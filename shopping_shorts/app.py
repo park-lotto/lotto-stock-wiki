@@ -8673,7 +8673,7 @@ def api_archive_items(request: Request, username: str = "", sort: str = "views",
 
 @app.get("/api/archive/similar")
 def api_archive_similar(request: Request, shortcode: str, limit: int = 40,
-                        verify: bool = True, verify_n: int = 30):
+                        verify: bool = True, verify_n: int = 60):
     """랭킹 릴스 1개 → 내 아카이브에서 '같은 제품'의 옛 영상 찾기(2026-08-03, 08-04 개편).
 
     사장님 궁극 목표: 오늘 터진 영상을 눌러, 우리가 크롤해 둔 채널 아카이브에서
@@ -8705,9 +8705,13 @@ def api_archive_similar(request: Request, shortcode: str, limit: int = 40,
     with store._conn() as c:
         rows = c.execute(
             "SELECT a.username, a.shortcode, a.url, a.thumbnail, a.views, a.likes, "
-            " a.comments, a.posted_at, v.subject, v.keywords_json "
+            " a.comments, a.posted_at, v.subject, v.keywords_json, v.product "
             "FROM channel_archive a JOIN vision_tags v ON v.shortcode=a.shortcode "
             "LIMIT 50000").fetchall()
+
+    # 질의의 제품명이 이미 판독돼 있으면 먼저 꺼낸다 — 후보 선정에 쓴다(아래).
+    known_q = store.products_map([shortcode]).get(shortcode) or ""
+
     scored = []
     for r in rows:
         if r[1] == shortcode:
@@ -8717,9 +8721,19 @@ def api_archive_similar(request: Request, shortcode: str, limit: int = 40,
         except ValueError:
             kws = []
         ov = len(src_t & _tokens(r[8], kws))
-        if ov:
+        # ★겹침0이어도 '이미 판독된 제품명이 같으면' 후보에 넣는다(2026-08-04).
+        # 안 그러면 제품명이 같은데도 후보에 못 들어 영영 안 보인다 — 실측:
+        # [극세사 걸레] → [극세사 유리 닦이]가 겹침0으로 탈락(제품명엔 '극세사'가 같은데).
+        # 태그는 분위기어라 같은 제품이라고 겹친다는 보장이 없다.
+        if ov or (known_q and r[10] and _product_same(known_q, r[10])):
             scored.append((ov, r))
     scored.sort(key=lambda x: (-x[0], -(x[1][6] or 0)))   # 겹침↓ → 댓글수↓(사장님 기준)
+
+    # 판독 대상(head)을 고를 때, 이미 '같은 제품'으로 아는 것을 앞으로 당긴다.
+    # 실측: [김밥] 질의에서 제품명이 그대로 '김밥'인 영상이 겹침1로 50등이라 상위30 밖이었다.
+    if known_q:
+        scored.sort(key=lambda x: (0 if (x[1][10] and _product_same(known_q, x[1][10])) else 1,
+                                   -x[0], -(x[1][6] or 0)))
 
     # ── 제품명 검증(2026-08-04, 사장님 지시: "미리 돌리지 말고 검색 누를 때") ──
     # 태그 겹침만으로는 **같은 제품**이 안 나온다(실측: 제품명 완전일치 0건, '다이소 걸레'
@@ -8731,7 +8745,11 @@ def api_archive_similar(request: Request, shortcode: str, limit: int = 40,
     if verify:
         try:
             from shopping_shorts import product_name as _pn
-            head = scored[:max(0, min(int(verify_n or 30), 60))]
+            # 30 → 60 (2026-08-04 사장님 승인). 30이면 실측에서 놓치는 게 나왔다:
+            # [김밥] 질의에 제품명이 그대로 '김밥'인 53만회 영상이 50등이라 판독 대상 밖.
+            # 검색이 15초 → 25초로 느려지지만 "빠른데 못 찾는" 것보다 낫다는 판단.
+            # 캐시가 쌓이면 다시 빨라진다(판독된 건 재호출 없음).
+            head = scored[:max(0, min(int(verify_n or 60), 120))]
             src_thumb = ""
             with store._conn() as c:
                 row = c.execute("SELECT thumbnail FROM channel_archive WHERE shortcode=?",
@@ -8745,8 +8763,11 @@ def api_archive_similar(request: Request, shortcode: str, limit: int = 40,
             pmap = _pn.identify_many(targets, DB_PATH)
             src_product = pmap.get(shortcode) or ""
             if src_product:
-                verified = {r[1] for _ov, r in head
-                            if _pn.same_product(src_product, pmap.get(r[1]) or "")}
+                # head 밖이라도 DB에 이미 제품명이 있으면 같은 제품인지 판정한다
+                # (이번 회차에 판독한 것 + 예전에 판독해둔 것 = 전부 활용).
+                verified = {r[1] for _ov, r in scored
+                            if _pn.same_product(src_product,
+                                                pmap.get(r[1]) or r[10] or "")}
                 # 같은 제품이면 겹침과 무관하게 최상단(사장님 목적이 '같은 제품 모으기').
                 scored.sort(key=lambda x: (0 if x[1][1] in verified else 1,
                                            -x[0], -(x[1][6] or 0)))
@@ -8759,6 +8780,15 @@ def api_archive_similar(request: Request, shortcode: str, limit: int = 40,
          "views": r[4], "likes": r[5], "comments": r[6], "posted_at": r[7],
          "overlap": ov, "same_product": r[1] in verified}
         for ov, r in scored[:max(1, min(limit, 100))]]}
+
+
+def _product_same(a, b):
+    """제품명 동일 판정 래퍼 — product_name 미로딩 상황에서도 라우트가 죽지 않게."""
+    try:
+        from shopping_shorts import product_name as _pn
+        return _pn.same_product(a, b)
+    except Exception:   # noqa: BLE001
+        return False
 
 
 def _last_run_thumb(store, shortcode):
