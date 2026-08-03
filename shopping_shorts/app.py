@@ -1348,6 +1348,40 @@ def api_discover_add_by_url(request: Request, url: str = "", username: str = "")
                                     f"@{uname}{'·' + disp if disp else ''} — 다음 수집(09/15/21시)부터 랭킹에 잡힙니다."))
 
 
+# 유저스크립트 시크바용 조회수·댓글수 캐시 — URL당 1회만 yt-dlp를 태운다.
+# 사장님이 릴스를 훑는 속도만큼 호출되므로, 캐시 없으면 인스타 429 예산(수집분)을 갉아먹는다.
+_MEDIA_STATS_CACHE = {}
+_MEDIA_STATS_MAX = 500
+
+
+@app.get("/api/media_stats")
+def api_media_stats(url: str = ""):
+    """인스타/틱톡 게시물의 조회수·좋아요·댓글수(2026-08-03 사장님 '조회수랑 댓글수도').
+    yt-dlp -j 메타만 조회(다운로드 없음). 페이지 DOM엔 이 수치가 안정적으로 없어서
+    (인스타 모달은 '여러 명이 좋아합니다'로 숨김) 서버 해석이 유일한 신뢰 경로."""
+    m = re.search(r"(instagram\.com/(?:reel|reels|p|tv)/[A-Za-z0-9_-]+|tiktok\.com/@[\w.\-]+/video/\d+)",
+                  url or "")
+    if not m:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "지원하지 않는 URL"})
+    key = m.group(1)
+    if key in _MEDIA_STATS_CACHE:
+        return _MEDIA_STATS_CACHE[key]
+    try:
+        import subprocess, sys, json
+        r = subprocess.run([sys.executable, "-m", "yt_dlp", "-j", "--no-warnings",
+                            "https://www." + key], capture_output=True, text=True, timeout=45)
+        d = json.loads(r.stdout) if r.returncode == 0 and r.stdout.strip() else {}
+        out = {"ok": True, "views": d.get("view_count"),
+               "likes": d.get("like_count"), "comments": d.get("comment_count")}
+        if not (out["views"] is None and out["likes"] is None and out["comments"] is None):
+            if len(_MEDIA_STATS_CACHE) >= _MEDIA_STATS_MAX:
+                _MEDIA_STATS_CACHE.clear()
+            _MEDIA_STATS_CACHE[key] = out   # 실패·전부 None은 캐시 안 함(다음에 재시도)
+        return out
+    except Exception:
+        return JSONResponse(status_code=502, content={"ok": False, "error": "조회 실패"})
+
+
 def _chadd_html(title, body):
     return ("<html><body style='font-family:system-ui;background:#111;color:#eee;"
             "display:flex;flex-direction:column;align-items:center;justify-content:center;"
