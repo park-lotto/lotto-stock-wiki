@@ -2,15 +2,12 @@
   "manifest_version": 3,
   "name": "로또 · 원클릭 담기",
   "version": "1.0.0",
-  "description": "유튜브·틱톡·인스타·샤오홍슈·도우인 영상에 '📥 담기' 버튼을 띄웁니다. 텀퍼몽키 없이 이것만 설치하면 됩니다.",
+  "description": "유튜브·틱톡·인스타그램·샤오홍슈·도우인 영상에 '담기' 버튼을 추가해, 마음에 든 영상을 내 모음집에 클릭 한 번으로 저장합니다.",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "permissions": [
-    "storage"
-  ],
   "host_permissions": [
     "https://shoppingshorts.duckdns.org/*"
   ],
