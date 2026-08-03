@@ -2991,6 +2991,15 @@ fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
   window.addEventListener('hashchange',openTrace);
   openTrace();
 })();
+// ?lens_url= 딥링크(2026-08-03) — 인스타 담기 스크립트의 '🔍 렌즈' 버튼이 보고 있던
+// 릴스 URL을 실어 보낸다. 도착 즉시 traceByUrl로 원본/유사 역추적을 시작하고,
+// 새로고침 재실행(렌즈 크레딧 낭비)을 막으려 주소창에서 파라미터는 지운다.
+(function(){
+  var lu=new URLSearchParams(location.search).get('lens_url');
+  if(!lu) return;
+  try{ history.replaceState(null,'',location.pathname+location.hash); }catch(e){}
+  setTimeout(function(){ try{ traceByUrl(lu); }catch(e){} }, 600);
+})();
 </script>
 <script src="/sidebar.js?v=2"></script>
 </body>

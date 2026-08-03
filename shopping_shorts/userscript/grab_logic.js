@@ -69,6 +69,29 @@
     });
     document.body.appendChild(b);
   }
+  // ── ⭐즐겨찾기 이동 + 🔍렌즈(2026-08-03 사장님 요청): 인스타에서 바로.
+  // 렌즈는 랭킹 페이지 ?lens_url= 딥링크로 보내 traceByUrl(원본 역추적)을 즉시 실행.
+  function _miniBtn(id, text, title, bottom, bg, onClick) {
+    if (document.getElementById(id) || !document.body) return;
+    var b = document.createElement("button");
+    b.id = id; b.textContent = text; b.title = title;
+    b.style.cssText =
+      "position:fixed;right:18px;bottom:" + bottom + "px;z-index:2147483647;background:" + bg + ";" +
+      "color:#fff;border:none;border-radius:24px;padding:10px 16px;font-size:14px;" +
+      "font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer;font-family:system-ui,sans-serif";
+    b.addEventListener("click", function (e) { e.preventDefault(); onClick(); });
+    document.body.appendChild(b);
+  }
+  function syncExtraBtns() {
+    if (location.host.indexOf("instagram.com") < 0) return;
+    _miniBtn("ss-coll-btn", "⭐ 즐겨찾기", "숏템메이커 영상 즐겨찾기 열기", 122, "#d29922",
+             function () { window.open(BASE + "/collection", "_blank"); });
+    var lens = document.getElementById("ss-lens-btn");
+    if (isSinglePost()) {
+      _miniBtn("ss-lens-btn", "🔍 렌즈", "이 영상으로 원본·유사 레퍼런스 역추적", 174, "#37b0e0",
+               function () { window.open(BASE + "/?lens_url=" + encodeURIComponent(location.href), "_blank"); });
+    } else if (lens) { lens.remove(); }
+  }
   function syncChannelBtn() {
     var b = document.getElementById("ss-chadd-btn");
     var want = location.host.indexOf("instagram.com") >= 0 && (isSinglePost() || _igProfileName());
@@ -303,7 +326,7 @@
     } catch (e) { window.__ssDouyinInjected = false; }   // 실패 시 다음 tick에 재시도(폴백=플로팅)
   }
 
-  function tick() { try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} }
+  function tick() { try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
   setInterval(tick, 2000);
