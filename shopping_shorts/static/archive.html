@@ -151,7 +151,7 @@ async function load(){
     const saved=SAVED.has(i.shortcode);
     return `<div class="card">
       <div class="thumb">
-        <img id="th_${esc(i.shortcode)}" src="/api/thumb?url=${encodeURIComponent(i.thumbnail||'')}" crossorigin="anonymous" loading="lazy" onerror="this.style.visibility='hidden'" onclick="playArch(this,'${esc(i.shortcode)}','${esc(i.url)}')" title="클릭하면 바로 재생">
+        <img id="th_${esc(i.shortcode)}" src="/api/thumb?url=${encodeURIComponent(i.thumbnail||'')}" loading="lazy" onerror="this.style.visibility='hidden'" onclick="playArch(this,'${esc(i.shortcode)}','${esc(i.url)}')" title="클릭하면 바로 재생">
         <span class="views">👁 ${fmt(i.views)}</span>
         <span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;padding:2px 7px;border-radius:10px">▶</span>
       </div>
@@ -221,8 +221,13 @@ async function archiveSimilar(sc){
     + resultCards(d.items,{saved:SAVED});
 }
 
-// 렌즈는 이미지가 필요하다. 썸네일을 /api/thumb(same-origin) + crossorigin으로 받아
-// canvas 오염 없이 toBlob 할 수 있게 해뒀다(카드 <img id="th_${shortcode}">).
+// 렌즈는 이미지가 필요하다. 썸네일을 /api/thumb로 받는 이유가 여기 있다 — CDN에서 직접
+// 불러오면 canvas가 오염(taint)돼 toBlob이 SecurityError로 죽는다. 프록시는 same-origin이라
+// 오염되지 않는다.
+// ⚠️ crossorigin="anonymous"를 붙이면 안 된다(2026-08-04 실측: 196장 전부 안 뜸).
+// same-origin 요청에 그 속성을 붙이면 브라우저가 CORS 응답으로 취급하는데 /api/thumb는
+// Access-Control-Allow-Origin을 안 보내므로 이미지를 통째로 버린다(fetch는 200인데
+// naturalWidth=0). same-origin이라 애초에 필요도 없다.
 function _archCapture(sc){
   const img=document.getElementById('th_'+sc);
   if(!img||!img.naturalWidth) return null;
