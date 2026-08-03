@@ -352,14 +352,30 @@ def resolve_media_url(platform, video_id, timeout=30):
     }.get(platform)
     if not page:
         return ""
-    try:
-        r = subprocess.run(
-            [sys.executable, "-m", "yt_dlp", "-g", "-f",
-             "best[ext=mp4][vcodec!=none][acodec!=none]/best[ext=mp4]/best",
-             "--no-warnings", *_cookies_arg(page), *_proxy_arg(page), page],
-            capture_output=True, text=True, encoding="utf-8", timeout=timeout)
-    except Exception:
-        return ""
-    if r.returncode != 0 or not r.stdout.strip():
-        return ""
-    return r.stdout.strip().splitlines()[0]
+
+    def _try(cookies):
+        """cookies=False면 쿠키 없이 — 만료 세션이 오히려 막을 때의 탈출구."""
+        try:
+            r = subprocess.run(
+                [sys.executable, "-m", "yt_dlp", "-g", "-f",
+                 "best[ext=mp4][vcodec!=none][acodec!=none]/best[ext=mp4]/best",
+                 "--no-warnings", *(_cookies_arg(page) if cookies else []),
+                 *_proxy_arg(page), page],
+                capture_output=True, text=True, encoding="utf-8", timeout=timeout)
+        except Exception:
+            return ""
+        if r.returncode != 0 or not r.stdout.strip():
+            return ""
+        return r.stdout.strip().splitlines()[0]
+
+    url = _try(cookies=True)
+    if url:
+        return url
+    # ★쿠키가 있는데 실패했으면 **쿠키 없이 한 번 더** (2026-08-04 실사고).
+    # 만료된 인스타 세션을 붙이면 인스타가 404를 주는데, 같은 릴스가 무쿠키로는 멀쩡히
+    # 열린다(실측 10건: 쿠키 0/10 성공 · 무쿠키 8/10 성공). 쿠키는 비공개/제한 게시물을
+    # 열어주는 '추가 수단'이지 필수가 아니므로, 실패 시 무쿠키가 항상 더 나은 하한선이다.
+    # 세션이 살아 있으면 첫 시도에서 끝나 이 경로는 안 탄다(비용 0).
+    if _cookies_arg(page):
+        return _try(cookies=False)
+    return ""
