@@ -1191,9 +1191,16 @@ def api_discover_feed():
     store = Store(DB_PATH)
     items, updated_at = store.load_discovery_feed()
     blocked = store.removed_usernames()
-    if blocked:
+    # ➕ 목록추가된 채널도 피드에서 숨긴다(2026-08-03 사장님 지시) — 이미 추적목록에
+    # 들어간 채널(수동 목록추가·07시 자동등록 포함)이 피드에 남아 있으면 차단·새로고침
+    # 재렌더 때 '추가됨' 표시가 풀려 다시 [목록추가]로 보였다(추가 상태가 클릭한 브라우저
+    # 메모리에만 있었음). 서버가 걸러주면 화면엔 "아직 목록에 없는 채널"만 남는다.
+    added = {(d.get("username") or "").strip().lstrip("@").lower()
+             for d in store.discovered_channels()}
+    hide = blocked | added
+    if hide:
         items = [i for i in items
-                 if (i.get("username") or "").strip().lstrip("@").lower() not in blocked]
+                 if (i.get("username") or "").strip().lstrip("@").lower() not in hide]
     return {"ok": True, "items": items, "updated_at": updated_at}
 
 
@@ -3902,7 +3909,17 @@ def _lens_image_for_url(url, work_dir):
     유튜브=썸네일 직행(봇차단 회피). 비유튜브=download_any 중간 프레임, 실패 시 oEmbed 썸네일 폴백."""
     m = _YT_ID_RE.search(url)
     if m:
-        return f"https://i.ytimg.com/vi/{m.group(1)}/hqdefault.jpg", ""
+        vid = m.group(1)
+        # maxres(풀 9:16 프레임)가 있으면 그걸 쓴다 — hqdefault는 480x360에 검은 레터박스가
+        # 껴서 구글렌즈 매칭이 자주 0건이다(2026-07-19 실측). maxres 없으면 hqdefault 폴백.
+        for q in ("maxresdefault", "hqdefault"):
+            u = f"https://i.ytimg.com/vi/{vid}/{q}.jpg"
+            try:
+                if requests.head(u, timeout=6).status_code == 200:
+                    return u, ""
+            except Exception:  # noqa: BLE001
+                pass
+        return f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg", ""
     try:
         video_path, caption = download_any(url, str(work_dir))
         dur = frame_extract._probe_duration(video_path) or 2.0
