@@ -31,6 +31,7 @@ button.on{border-color:var(--accent);color:var(--accent);font-weight:700}
 .empty{color:var(--sub);padding:30px;text-align:center}
 </style></head><body><div class="wrap">
 <h1>🏆 역대 히트작 <span class="stat" id="prog"></span></h1>
+<div class="bar" id="catBar"></div>
 <div class="bar">
   <select id="chSel"><option value="">전체 채널</option></select>
   <input id="q" placeholder="채널명 검색" style="width:140px">
@@ -45,19 +46,49 @@ button.on{border-color:var(--accent);color:var(--accent);font-weight:700}
 <script src="/sidebar.js"></script>
 <script>
 let SORT='comments', SAVED=new Set();   // 기본=댓글순(사장님: 댓글수 기준이 제일 정확)
+let CAT='전체', CH_CAT={};              // 채널→카테고리(레퍼런스 채널과 같은 축)
+const CATS=['전체','홈템','레시피','뷰티','기타'];
+function renderCatBar(){
+  document.getElementById('catBar').innerHTML=CATS.map(c=>
+    `<button class="${CAT===c?'on':''}" onclick="setCat('${c}')">${c}</button>`).join('');
+}
+function setCat(c){CAT=c;renderCatBar();fillChSel();document.getElementById('chSel').value='';load();}
+// 썸네일 클릭 → 인라인 재생(랭킹 playInstagram과 동일 경로: /api/media가 yt-dlp로 mp4 해석).
+async function playArch(el, sc, url){
+  const box=el.parentElement;
+  const old=el; el.style.opacity=.4;
+  try{
+    const d=await (await fetch('/api/media?platform=instagram&id='+encodeURIComponent(sc))).json();
+    if(d.ok&&d.url){
+      const v=document.createElement('video');
+      v.src=d.url; v.controls=true; v.autoplay=true; v.playsInline=true;
+      v.setAttribute('playsinline',''); v.style.cssText='width:100%;height:100%;object-fit:cover';
+      v.onerror=()=>window.open(url,'_blank');
+      old.replaceWith(v); return;
+    }
+  }catch(e){}
+  el.style.opacity=1; window.open(url,'_blank');   // 해석 실패 → 원본 새탭
+}
 function fmt(n){n=n||0;if(n>=1e8)return (n/1e8).toFixed(1)+'억';if(n>=1e4)return (n/1e4).toFixed(1)+'만';return n.toLocaleString()}
 function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function setSort(s){SORT=s;
   document.getElementById('bComments').classList.toggle('on',s==='comments');
   document.getElementById('bViews').classList.toggle('on',s==='views');
   document.getElementById('bRecent').classList.toggle('on',s==='recent');load()}
+let CHANNELS=[];
 async function loadChannels(){
   const d=await (await fetch('/api/archive/channels')).json();
   if(!d.ok) return;
-  const sel=document.getElementById('chSel');
-  sel.innerHTML='<option value="">전체 채널 ('+d.channels.length+')</option>'+
-    d.channels.map(c=>`<option value="${esc(c.username)}">@${esc(c.username)} (${c.reels}개 · 최고 ${fmt(c.top_views)})</option>`).join('');
-  document.getElementById('prog').textContent='— 수집된 채널 '+d.channels.length+'개';
+  CHANNELS=d.channels; CH_CAT={};
+  CHANNELS.forEach(c=>CH_CAT[c.username]=c.category||'기타');
+  fillChSel();
+  document.getElementById('prog').textContent='— 수집된 채널 '+CHANNELS.length+'개';
+}
+function fillChSel(){
+  const list=CHANNELS.filter(c=>CAT==='전체'||(c.category||'기타')===CAT);
+  document.getElementById('chSel').innerHTML=
+    '<option value="">전체 채널 ('+list.length+')</option>'+
+    list.map(c=>`<option value="${esc(c.username)}">@${esc(c.username)} · ${esc(c.category||'기타')} (${c.reels}개 · 최고 ${fmt(c.top_views)})</option>`).join('');
 }
 async function loadSaved(){
   try{SAVED=new Set((await (await fetch('/api/mix/basket')).json()).shortcodes||[])}catch(e){}
@@ -81,15 +112,19 @@ async function blockCh(u,btn){
 }
 async function load(){
   const u=document.getElementById('chSel').value, q=document.getElementById('q').value.trim();
-  const d=await (await fetch(`/api/archive/items?sort=${SORT}&username=${encodeURIComponent(u)}&q=${encodeURIComponent(q)}&limit=200`)).json();
+  const d=await (await fetch(`/api/archive/items?sort=${SORT}&username=${encodeURIComponent(u)}&q=${encodeURIComponent(q)}&limit=400`)).json();
   const box=document.getElementById('cards');
-  if(!d.ok||!d.items.length){box.innerHTML='<div class="empty">아직 없음 — 크롤러가 채우는 중입니다. 잠시 뒤 새로고침해 보세요.</div>';return}
-  box.innerHTML=d.items.map(i=>{
+  let items=(d.ok&&d.items)||[];
+  if(CAT!=='전체') items=items.filter(i=>(CH_CAT[i.username]||'기타')===CAT);   // 채널 카테고리 필터
+  items=items.slice(0,200);
+  if(!items.length){box.innerHTML='<div class="empty">아직 없음 — 크롤러가 채우는 중입니다. 잠시 뒤 새로고침해 보세요.</div>';return}
+  box.innerHTML=items.map(i=>{
     const saved=SAVED.has(i.shortcode);
     return `<div class="card">
-      <div class="thumb" onclick="window.open('${esc(i.url)}','_blank')">
-        <img src="${esc(i.thumbnail)}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">
+      <div class="thumb">
+        <img src="${esc(i.thumbnail)}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'" onclick="playArch(this,'${esc(i.shortcode)}','${esc(i.url)}')" title="클릭하면 바로 재생">
         <span class="views">👁 ${fmt(i.views)}</span>
+        <span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;padding:2px 7px;border-radius:10px">▶</span>
       </div>
       <div class="body">
         <div class="ch" style="display:flex;justify-content:space-between;align-items:center">
@@ -106,5 +141,6 @@ async function load(){
 }
 document.getElementById('chSel').addEventListener('change',load);
 document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')load()});
+renderCatBar();
 (async()=>{await loadSaved();await loadChannels();await load()})();
 </script></body></html>

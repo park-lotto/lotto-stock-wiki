@@ -8306,12 +8306,33 @@ def api_archive_channels(request: Request):
         return denied
     store = Store(DB_PATH)
     blocked = store.removed_usernames()   # 영구차단 채널은 아카이브에서도 안 보이게(2026-08-03)
+    # 채널 카테고리(2026-08-03) — 랭킹과 같은 우선순위: 사람지정 > 발굴등록 카테고리 >
+    # 채널명 키워드 분류. 아카이브 화면의 카테고리 필터 재료.
+    from shopping_shorts.categorize import categorize as _cat
+    human = store.channel_categories()
+    disc_cat, names = {}, {}
+    for d in store.discovered_channels():
+        u = (d.get("username") or "").strip().lstrip("@")
+        if u:
+            disc_cat[u] = (d.get("category") or "").strip()
+            names[u] = d.get("name") or u
+    try:
+        for ch in load_channels():
+            u = (ch.get("username") or "").strip().lstrip("@")
+            if u and u not in names:
+                names[u] = ch.get("name") or u
+    except Exception:   # noqa: BLE001 — 엑셀 없음(로컬 등)이어도 목록은 나가야 한다
+        pass
+    def _chcat(u):
+        return (human.get((u or "").lower()) or disc_cat.get(u)
+                or _cat(names.get(u, u), "") or "기타")
     with store._conn() as c:
         rows = c.execute(
             "SELECT username, COUNT(*), MAX(views) FROM channel_archive "
             "GROUP BY username ORDER BY MAX(views) DESC").fetchall()
     return {"ok": True, "channels": [
-        {"username": r[0], "reels": r[1], "top_views": r[2] or 0} for r in rows
+        {"username": r[0], "reels": r[1], "top_views": r[2] or 0,
+         "category": _chcat(r[0])} for r in rows
         if (r[0] or "").strip().lstrip("@").lower() not in blocked]}
 
 
