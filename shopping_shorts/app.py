@@ -2477,7 +2477,10 @@ def api_mix_candidate_clone(request: Request, body: dict):
     plan["candidate_index"] = idx
     # status는 'ready_for_review' — 매칭(run_mix_job)을 다시 돌리지 않는다. 대본·컷이 이미
     # 정해져 있으므로 큐에 넣지 않고 바로 리뷰/미리보기/렌더로 갈 수 있는 상태로 만든다.
+    # ★extract도 물려준다(2026-08-03): 안 주면 복제본이 원본 분석 없이 시작해 쿠팡
+    #   "화면으로 정확히" 등 extract를 읽는 후속 기능이 빈손이 된다(실측 job 6c649edecdd8).
     store.update_mix_job(new_id, edit_plan=plan, status="ready_for_review",
+                         extract=src.get("extract"),
                          voice=src.get("voice"), deco=src.get("deco"))
     return {"ok": True, "job_id": new_id}
 
