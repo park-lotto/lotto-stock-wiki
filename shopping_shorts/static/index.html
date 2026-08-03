@@ -2228,6 +2228,8 @@ function renderLens(shortcode){
   if(st.foreignOnly) shown=shown.filter(i=>!_HANGUL_RE.test(i.title||''));
   // 카드뉴스(인스타 /p/) 가리기 — 서버가 준 is_photo만 본다(undefined면 통과 = 옛 결과 안전).
   if(st.videoOnly!==false) shown=shown.filter(i=>i.is_photo!==true);
+  // 죽은 링크(oEmbed 404 = 삭제·비공개) — 열면 엉뚱한 피드로 떨어져 항상 가린다(2026-08-03).
+  shown=shown.filter(i=>i.link_ok!==false);
   if(st.hideOfftopic) shown=shown.filter(i=>i.match!==false);
   const nPhoto=st.items.filter(i=>st.on.has(i.platform) && i.is_photo===true).length;
   const nOff=st.items.filter(i=>st.on.has(i.platform) && i.match===false).length;

@@ -120,6 +120,8 @@ def test_retries_when_lens_returns_no_results_then_succeeds(monkeypatch):
         def json(self): return self._p
 
     def flaky_get(url, params=None, timeout=None):
+        if "oembed" in url:            # oEmbed 실검증(2026-08-03)은 렌즈 재시도 횟수와 무관
+            return R({})
         calls["n"] += 1
         if calls["n"] == 1:
             return R({"error": "Google Lens hasn't returned any results for this query."})
