@@ -8,7 +8,9 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "permissions": ["storage"],
+  "permissions": [
+    "storage"
+  ],
   "host_permissions": [
     "https://shoppingshorts.duckdns.org/*"
   ],
@@ -27,24 +29,12 @@
         "https://*.iesdouyin.com/*",
         "https://shoppingshorts.duckdns.org/*"
       ],
-      "js": ["content.js"],
+      "js": [
+        "content.js",
+        "grab_logic.js"
+      ],
       "run_at": "document_idle",
       "all_frames": false
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": ["inject.js"],
-      "matches": [
-        "https://www.youtube.com/*",
-        "https://www.tiktok.com/*",
-        "https://*.instagram.com/*",
-        "https://*.xiaohongshu.com/*",
-        "https://*.rednote.com/*",
-        "https://*.douyin.com/*",
-        "https://*.iesdouyin.com/*",
-        "https://shoppingshorts.duckdns.org/*"
-      ]
     }
   ],
   "action": {

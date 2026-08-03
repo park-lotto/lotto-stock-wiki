@@ -6449,14 +6449,22 @@ def _serve_grab_extension():
     edir = Path(__file__).parent / "extension"
     if not edir.is_dir():
         return JSONResponse({"error": "확장 소스 없음"}, status_code=404)
-    files = sorted(p for p in edir.rglob("*") if p.is_file())
-    stamp = str(max((p.stat().st_mtime_ns for p in files), default=0))
+    # ★로직은 userscript/grab_logic.js가 **원본**이다. zip을 만들 때마다 그걸 담는다 —
+    # extension/ 안의 사본은 개발용 편의일 뿐이고, 배포물엔 항상 원본이 들어가야 한다.
+    # (두 벌을 손으로 관리하면 반드시 어긋나고, 그럼 확장 사용자만 옛 로직을 쓰게 된다.)
+    logic_src = Path(__file__).parent / "userscript" / "grab_logic.js"
+    files = sorted(p for p in edir.rglob("*")
+                   if p.is_file() and p.name != "grab_logic.js")
+    stamp = str(max([p.stat().st_mtime_ns for p in files]
+                    + [logic_src.stat().st_mtime_ns if logic_src.exists() else 0], default=0))
     cached = getattr(_serve_grab_extension, "_cache", None)
     if not (cached and cached[0] == stamp):
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
             for p in files:
                 z.write(p, p.relative_to(edir).as_posix())
+            if logic_src.exists():
+                z.writestr("grab_logic.js", logic_src.read_text(encoding="utf-8"))
         cached = (stamp, buf.getvalue())
         _serve_grab_extension._cache = cached
     return Response(
