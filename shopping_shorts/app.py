@@ -1191,16 +1191,16 @@ def api_discover_feed():
     store = Store(DB_PATH)
     items, updated_at = store.load_discovery_feed()
     blocked = store.removed_usernames()
-    # ➕ 목록추가된 채널도 피드에서 숨긴다(2026-08-03 사장님 지시) — 이미 추적목록에
-    # 들어간 채널(수동 목록추가·07시 자동등록 포함)이 피드에 남아 있으면 차단·새로고침
-    # 재렌더 때 '추가됨' 표시가 풀려 다시 [목록추가]로 보였다(추가 상태가 클릭한 브라우저
-    # 메모리에만 있었음). 서버가 걸러주면 화면엔 "아직 목록에 없는 채널"만 남는다.
+    if blocked:
+        items = [i for i in items
+                 if (i.get("username") or "").strip().lstrip("@").lower() not in blocked]
+    # ➕ 추가여부를 서버 기준으로 실어준다(2026-08-03) — '추가됨✓'이 브라우저 메모리에만
+    # 있어 차단·새로고침 재렌더 때 [목록추가]로 풀리던 문제. 피드에서 숨기지는 않는다:
+    # 07시 크론이 발굴 전부를 자동등록하므로 숨기면 피드가 통째로 빈다(2026-08-03 실사고).
     added = {(d.get("username") or "").strip().lstrip("@").lower()
              for d in store.discovered_channels()}
-    hide = blocked | added
-    if hide:
-        items = [i for i in items
-                 if (i.get("username") or "").strip().lstrip("@").lower() not in hide]
+    for i in items:
+        i["added"] = (i.get("username") or "").strip().lstrip("@").lower() in added
     return {"ok": True, "items": items, "updated_at": updated_at}
 
 

@@ -447,7 +447,9 @@ function _renderDiscoverCards(list){
         <div class="stat" title="댓글수 ÷ 팔로워수 (팔로워 대비 반응 비율)"><span>참여밀도</span><b>${((i.density||0)*100).toFixed(2)}%</b></div>
         <div class="btns">
           <button class="view" onclick="window.open('${_dEsc(i.url)}','_blank')">👁 보기</button>
-          <button class="add admin-only" id="add_${i.username}" style="display:none" onclick="addChannel('${_dEsc(i.username)}',this)">➕ 목록추가</button>
+          ${i.added
+            ? `<button class="add admin-only done" id="add_${i.username}" style="display:none" disabled>추가됨✓</button>`
+            : `<button class="add admin-only" id="add_${i.username}" style="display:none" onclick="addChannel('${_dEsc(i.username)}',this)">➕ 목록추가</button>`}
         </div>
       </div>
     </div>`).join("");
@@ -456,12 +458,11 @@ async function addChannel(username, btn){
   btn.disabled=true;
   const r = await fetch('/api/discover/add?username='+encodeURIComponent(username),{method:'POST'});
   if(!r.ok){ btn.disabled=false; return; }
-  // 추가되면 카드 자체를 화면에서 지운다(2026-08-03) — 예전엔 버튼만 '추가됨✓'으로
-  // 바꿨는데 그 상태가 브라우저 메모리에만 있어 차단·새로고침 재렌더 때 도로
-  // [목록추가]로 풀렸다. 이제 서버(/api/discover/feed)도 추가된 채널을 걸러주므로
-  // 새로고침해도 다시 안 뜬다.
+  // 직접 누른 카드는 그 자리에서 지우고, 데이터엔 added=true를 남긴다(2026-08-03) —
+  // 재렌더·새로고침 시엔 서버가 내려주는 added 플래그로 '추가됨✓'이 유지된다.
+  // (피드에서 아예 숨기면 07시 자동등록 탓에 피드가 통째로 비어서 표시 유지 방식으로.)
   const u = (username||'').trim().replace(/^@/,'').toLowerCase();
-  DSTATE.items = DSTATE.items.filter(i=> ((i.username||'').trim().replace(/^@/,'').toLowerCase())!==u);
+  DSTATE.items.forEach(i=>{ if(((i.username||'').trim().replace(/^@/,'').toLowerCase())===u) i.added=true; });
   document.querySelectorAll('#add_'+CSS.escape(username)).forEach(b=>{
     const card=b.closest('.card'); if(card) card.remove();
   });
