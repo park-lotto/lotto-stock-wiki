@@ -411,6 +411,16 @@ class Store:
                 c.execute("ALTER TABLE script_wiki ADD COLUMN thumbnail TEXT")
             except sqlite3.OperationalError:
                 pass  # 이미 있으면(기존 DB) 무시
+            # 제품명(2026-08-04) — "같은 제품 영상 모으기"용. subject/keywords와 왜 따로 두나:
+            # 기존 태그는 분위기어가 지배한다(실측: '살림꿀팁'이 4,222건 중 15%, '주방용품' 9%).
+            # 그래서 제품명 완전일치가 **0건**이었고, 천사점토를 넣으면 '취미·만들기·DIY'가
+            # 겹쳐 비즈스트랩이 나왔다 — 같은 제품이 아니라 같은 분위기로 묶인 것.
+            # 자막을 무시시키고 상품명만 물으면 '전동 채칼'·'접이식 소파베드'가 나온다(실측).
+            for col, ddl in (("product", "TEXT"), ("product_at", "TEXT")):
+                try:
+                    c.execute(f"ALTER TABLE vision_tags ADD COLUMN {col} {ddl}")
+                except sqlite3.OperationalError:
+                    pass  # 이미 존재
             # 원클릭 담기 영상의 메타(조회수·좋아요·댓글·길이·채널) 보관(2026-07-18).
             # yt-dlp/oEmbed로 백그라운드 보강한 값을 JSON으로 넣어 모음집이 레퍼런스 랭킹처럼 표시.
             try:
@@ -2368,6 +2378,43 @@ class Store:
                 "subject=excluded.subject, keywords_json=excluded.keywords_json, created_at=excluded.created_at",
                 (shortcode, subject or "", json.dumps(keywords or [], ensure_ascii=False)),
             )
+
+    def save_product(self, shortcode, product, category=""):
+        """제품명 저장(2026-08-04). 태그 행이 없어도 만든다 — 랭킹 영상은 아카이브에
+        없을 수 있는데 그것도 질의로 쓰이기 때문이다.
+
+        product는 빈 문자열도 저장한다(=AI가 '제품 안 보임'이라고 판정). 그래야
+        다음에 또 물어보지 않는다(캐시의 핵심 — 안 그러면 무제품 영상마다 매번 태운다)."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO vision_tags(shortcode, subject, keywords_json, created_at, "
+                " product, product_at) VALUES(?,'','[]',datetime('now'),?,datetime('now')) "
+                "ON CONFLICT(shortcode) DO UPDATE SET product=excluded.product, "
+                " product_at=excluded.product_at",
+                (shortcode, product or ""))
+            if category:
+                # 카테고리는 기존 subject가 비어있을 때만 채운다(기존 태그를 덮지 않는다).
+                c.execute("UPDATE vision_tags SET subject=? WHERE shortcode=? AND "
+                          "(subject IS NULL OR subject='')", (category, shortcode))
+            c.commit()
+
+    def products_map(self, shortcodes):
+        """[shortcode] → {shortcode: product}. product_at이 있는 것만(=이미 판정한 것).
+
+        빈 product도 돌려준다 — 호출부가 '아직 안 물어봄'과 '물어봤는데 제품 없음'을
+        구분해야 재질의를 안 한다."""
+        codes = [s for s in (shortcodes or []) if s]
+        if not codes:
+            return {}
+        out = {}
+        with self._conn() as c:
+            for i in range(0, len(codes), 400):
+                ch = codes[i:i + 400]
+                q = ("SELECT shortcode, product FROM vision_tags WHERE product_at IS NOT NULL "
+                     "AND shortcode IN (%s)" % ",".join("?" * len(ch)))
+                for sc, p in c.execute(q, ch).fetchall():
+                    out[sc] = p or ""
+        return out
 
     def get_vision_tags(self, shortcode):
         """저장된 주제태그 {subject, keywords}. 없으면 None."""

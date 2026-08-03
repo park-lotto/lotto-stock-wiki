@@ -187,7 +187,9 @@ function resultCards(items, opts){
   return `<div class="cards">`+items.map(i=>{
     const sc=i.savesc||i.shortcode;
     const isS=(o.saved||new Set()).has(sc);
-    const badge=(i.overlap!=null)?`<span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:var(--gold);font-size:11px;padding:2px 8px;border-radius:10px">겹침 ${i.overlap}</span>`
+    const badge=i.same_product
+      ? `<span style="position:absolute;top:6px;right:6px;background:#0e2f2e;color:#5fe3d6;border:1px solid #1f6f6b;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:700">📦 같은 제품</span>`
+      :(i.overlap!=null)?`<span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:var(--gold);font-size:11px;padding:2px 8px;border-radius:10px">겹침 ${i.overlap}</span>`
       :(i.platform?`<span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px">${esc(i.platform)}</span>`:'');
     const thumb=i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):'';
     const meta=(i.views!=null||i.comments!=null)
@@ -209,16 +211,23 @@ function resultCards(items, opts){
 }
 
 async function archiveSimilar(sc){
-  openModal('🏠 숏템내부검색 — 우리 채널 아카이브','<div class="sm-loading">같은 소재 찾는 중…</div>');
+  // 제품명 검증이 붙어 15~20초 — 무엇을 하는 중인지 알려야 멈춘 줄 알지 않는다.
+  openModal('🏠 숏템내부검색 — 같은 제품','<div class="sm-loading">같은 제품 찾는 중… (AI가 제품을 확인합니다, 15~20초)</div>');
   const body=document.getElementById('modalBody');
   let d; try{ d=await (await fetch('/api/archive/similar?shortcode='+encodeURIComponent(sc)+'&limit=60')).json(); }
   catch(e){ body.innerHTML='<div class="empty">❌ '+esc(e.message)+'</div>'; return; }
   if(d.no_tags){ body.innerHTML='<div class="empty">이 영상은 아직 비전태그가 없어요 — 태거가 채널당 10개씩 돌고 있습니다. 잠시 뒤 다시 눌러주세요.</div>'; return; }
   if(!d.ok){ body.innerHTML='<div class="empty">❌ 조회 실패</div>'; return; }
   if(!(d.items||[]).length){ body.innerHTML='<div class="empty">아카이브에서 같은 소재를 못 찾았어요 — 크롤이 더 쌓이면 늘어납니다(백그라운드 진행 중).</div>'; return; }
-  const tagLine=(d.src_tags||[]).slice(0,10).join(' · ');
-  body.innerHTML=`<div style="font-size:12px;color:var(--sub);margin-bottom:10px">매칭 태그: ${esc(tagLine)}</div>`
-    + resultCards(d.items,{saved:SAVED});
+  const nSame=d.verified_count||0;
+  const head=d.src_product
+    ? `<div style="margin-bottom:10px">
+         <div style="font-size:14px;font-weight:700;color:#5fe3d6">📦 ${esc(d.src_product)}</div>
+         <div style="font-size:12px;color:var(--sub);margin-top:3px">
+           ${nSame?`같은 제품 <b style="color:#5fe3d6">${nSame}건</b> — 맨 위에 모았습니다`
+                  :'같은 제품은 아직 못 찾았어요 (아래는 비슷한 소재)'}</div></div>`
+    : `<div style="font-size:12px;color:var(--sub);margin-bottom:10px">매칭 태그: ${esc((d.src_tags||[]).slice(0,10).join(' · '))}</div>`;
+  body.innerHTML=head + resultCards(d.items,{saved:SAVED});
 }
 
 // 렌즈는 이미지가 필요하다. 썸네일을 /api/thumb로 받는 이유가 여기 있다 — CDN에서 직접
