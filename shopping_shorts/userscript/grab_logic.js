@@ -37,6 +37,45 @@
     );
   }
 
+  // ── 채널등록 버튼(인스타 전용, 2026-08-03 사장님 요청): 지금 보는 게시물의 '채널'을
+  // 레퍼런스 추적목록에 등록한다. 게시물/릴스 페이지면 URL을 서버로 보내 yt-dlp가 채널을
+  // 해석해 등록, 프로필 페이지(/{username}/)면 그 계정을 바로 등록. popup GET이라
+  // 서버 세션 쿠키가 실려 관리자 가드가 그대로 동작(/api/grab과 같은 방식).
+  var _IG_RESERVED = { p: 1, reel: 1, reels: 1, explore: 1, stories: 1, accounts: 1,
+                       direct: 1, tv: 1 };
+  function _igProfileName() {
+    var m = location.pathname.match(/^\/([^/]+)\/?(reels\/?)?$/);
+    return (m && !_IG_RESERVED[m[1]]) ? m[1] : "";
+  }
+  function addChannelBtn() {
+    if (location.host.indexOf("instagram.com") < 0) return;
+    if (document.getElementById("ss-chadd-btn") || !document.body) return;
+    var prof = _igProfileName();
+    if (!isSinglePost() && !prof) return;   // 피드/탐색에선 대상이 모호해 안 띄운다
+    var b = document.createElement("button");
+    b.id = "ss-chadd-btn";
+    b.textContent = "📌 채널등록";
+    b.title = "이 게시물의 채널을 레퍼런스 추적목록에 등록";
+    b.style.cssText =
+      "position:fixed;right:18px;bottom:70px;z-index:2147483647;background:#8250df;" +
+      "color:#fff;border:none;border-radius:24px;padding:10px 16px;font-size:14px;" +
+      "font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer;font-family:system-ui,sans-serif";
+    b.addEventListener("click", function (e) {
+      e.preventDefault();
+      var p = _igProfileName();
+      var q = p ? "username=" + encodeURIComponent(p)
+                : "url=" + encodeURIComponent(location.href);
+      window.open(BASE + "/api/discover/add_by_url?" + q, "ss_chadd", "width=380,height=240");
+    });
+    document.body.appendChild(b);
+  }
+  function syncChannelBtn() {
+    var b = document.getElementById("ss-chadd-btn");
+    var want = location.host.indexOf("instagram.com") >= 0 && (isSinglePost() || _igProfileName());
+    if (b && !want) b.remove();
+    else if (!b && want) addChannelBtn();
+  }
+
   // ── 플로팅 버튼: 지금 보고 있는 '페이지'를 담는다(단일 영상 페이지용) ──
   function addFloatBtn() {
     if (document.getElementById("ss-grab-btn") || !document.body) return;
@@ -264,7 +303,7 @@
     } catch (e) { window.__ssDouyinInjected = false; }   // 실패 시 다음 tick에 재시도(폴백=플로팅)
   }
 
-  function tick() { try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} }
+  function tick() { try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
   setInterval(tick, 2000);

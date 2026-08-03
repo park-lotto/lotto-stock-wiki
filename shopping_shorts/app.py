@@ -1289,6 +1289,60 @@ def api_discover_add(request: Request, username: str, name: str = ""):
     return {"ok": True, "username": username}
 
 
+@app.get("/api/discover/add_by_url", response_class=HTMLResponse)
+def api_discover_add_by_url(request: Request, url: str = "", username: str = ""):
+    """인스타 담기 유저스크립트의 '📌 채널등록' 버튼용(2026-08-03 사장님 요청).
+
+    브라우저가 popup으로 여는 GET이라 세션 쿠키가 실려 관리자 가드가 그대로 먹는다
+    (POST /api/discover/add를 instagram.com에서 fetch하면 CORS/쿠키로 막힘 — 그래서
+    /api/grab과 같은 popup 방식). username이 오면 즉시 등록(프로필 페이지),
+    url만 오면 yt-dlp로 게시물의 채널을 해석해 등록(릴스/게시물 페이지)."""
+    denied = _require_admin(request)
+    if denied:
+        return HTMLResponse(_chadd_html("⛔ 관리자 로그인 필요",
+                                        "shoppingshorts.duckdns.org에 관리자로 로그인 후 다시 눌러주세요."))
+    store = Store(DB_PATH)
+    uname, disp = (username or "").strip().lstrip("@"), ""
+    if not uname and url:
+        try:
+            import subprocess, sys, json
+            r = subprocess.run([sys.executable, "-m", "yt_dlp", "-j", "--no-warnings", url],
+                               capture_output=True, text=True, timeout=60)
+            d = json.loads(r.stdout) if r.returncode == 0 and r.stdout.strip() else {}
+            uname = (d.get("uploader_id") or "").strip().lstrip("@")
+            # 인스타는 uploader_id가 숫자 pk로 오기도 한다 → channel(핸들)을 우선
+            ch = (d.get("channel") or "").strip().lstrip("@")
+            if ch and not ch.isdigit():
+                disp = (d.get("uploader") or "").strip()
+                if uname.isdigit() or not uname:
+                    uname = ch
+            else:
+                disp = (d.get("uploader") or "").strip()
+        except Exception:
+            pass
+    if not uname or uname.isdigit():
+        return HTMLResponse(_chadd_html("❌ 채널을 못 찾았어요", "게시물/릴스 화면에서 다시 눌러주세요."))
+    key = uname.lower()
+    if key in {(d.get("username") or "").strip().lstrip("@").lower()
+               for d in store.discovered_channels()}:
+        return HTMLResponse(_chadd_html("✔ 이미 등록된 채널", f"@{uname} — 레퍼런스 추적 중입니다."))
+    was_blocked = key in store.removed_usernames()
+    store.add_discovered(uname, name=disp)   # add_discovered가 차단도 해제한다
+    tail = " (차단 해제됨)" if was_blocked else ""
+    return HTMLResponse(_chadd_html("✅ 채널 등록 완료" + tail,
+                                    f"@{uname}{'·' + disp if disp else ''} — 다음 수집(09/15/21시)부터 랭킹에 잡힙니다."))
+
+
+def _chadd_html(title, body):
+    return ("<html><body style='font-family:system-ui;background:#111;color:#eee;"
+            "display:flex;flex-direction:column;align-items:center;justify-content:center;"
+            "height:90vh;margin:0;text-align:center'>"
+            f"<div style='font-size:20px;font-weight:800;margin-bottom:10px'>{title}</div>"
+            f"<div style='font-size:13px;color:#aaa;padding:0 14px'>{body}</div>"
+            "<button onclick='window.close()' style='margin-top:16px;background:#1f6feb;color:#fff;"
+            "border:none;border-radius:8px;padding:8px 18px;cursor:pointer'>닫기</button></body></html>")
+
+
 @app.get("/api/discover/added")
 def api_discover_added():
     """발굴로 추가한 채널 목록."""
