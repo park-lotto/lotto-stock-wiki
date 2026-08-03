@@ -55,6 +55,17 @@ def test_grab_logic_served_with_card_logic(tmp_path, monkeypatch):
     assert "addCardBtns" in r.text and "section.note-item" in r.text
 
 
+def test_grab_logic_clears_card_btns_in_single_post_viewer(tmp_path, monkeypatch):
+    """★2026-08-03 틱톡 실사고: SPA 전환으로 그리드에 붙인 카드버튼이 단일 영상 뷰어에
+    남아 8개씩 떠다녔다. 뷰어(isSinglePost)에선 clearCardBtns로 걷어내는 배선을 못 박는다."""
+    c = _client(tmp_path, monkeypatch)
+    t = c.get("/grab_logic.js").text
+    assert "clearCardBtns" in t
+    assert "if (isSinglePost()) { clearCardBtns(); return; }" in t
+    # data-ssgrab 표식도 같이 지워야 그리드로 돌아갔을 때 버튼이 다시 붙는다.
+    assert 'removeAttribute("data-ssgrab")' in t
+
+
 def test_grab_rejects_unknown_platform(tmp_path, monkeypatch):
     c = _client(tmp_path, monkeypatch)
     r = c.get("/api/grab", params={"url": "https://example.com/whatever"})

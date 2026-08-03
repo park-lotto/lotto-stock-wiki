@@ -1,6 +1,6 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-07-21-a  (설치 확인 비컨 — /grab 자가감지 신호등용)
+// 로직 버전: 2026-08-03-a  (틱톡 뷰어 카드버튼 잔존 정리 + 빈 앵커 버튼 차단)
 (function () {
   "use strict";
   if (window.__ssGrabLoaded) return;   // 로더가 중복 실행돼도 한 번만
@@ -131,14 +131,29 @@
   //   릴스 탭(/{id}/reels/) 등 제각각이라 isGridPage()가 전부 false가 돼 버튼이 안 붙었다.
   //   → URL 대신 '화면 모양'으로 판단한다: 카드 크기(120px+) 게시물 앵커가 3개 이상 = 그리드.
   //   단일 게시물 페이지는 아래 '더 보기' 그리드가 있어도 isSinglePost()로 제외해 플로팅을 남긴다.
+  // 단일 영상 뷰어로 넘어가면 카드 버튼을 걷어낸다(2026-08-03 틱톡 실사고: SPA 전환이라
+  // 검색 그리드에 붙인 버튼이 DOM에 남아 플레이어 화면 위에 8개씩 떠다녔다).
+  // data-ssgrab 표식도 같이 지워야 그리드로 돌아갔을 때 버튼이 다시 붙는다.
+  function clearCardBtns() {
+    var bs = document.querySelectorAll(".ss-card-grab");
+    for (var i = 0; i < bs.length; i++) { try { bs[i].remove(); } catch (e) {} }
+    var marked = document.querySelectorAll("[data-ssgrab]");
+    for (var j = 0; j < marked.length; j++) { try { marked[j].removeAttribute("data-ssgrab"); } catch (e) {} }
+  }
   function addAnchorCardBtns() {
+    if (isSinglePost()) { clearCardBtns(); return; }   // 뷰어에선 플로팅(본 영상 담기)만
     var links = document.querySelectorAll('a[href*="/video/"], a[href*="/p/"], a[href*="/reel/"]');
     var big = [];
     for (var k = 0; k < links.length; k++) {
       var rr = links[k].getBoundingClientRect();
-      if (rr.width >= 120 && rr.height >= 120) big.push(links[k]);
+      if (rr.width < 120 || rr.height < 120) continue;
+      // 썸네일이 실제로 그려진 카드에만 붙인다 — 틱톡 뷰어의 투명/자리표시 앵커(빈 검정칸)에
+      // 붙으면 버튼만 허공에 뜬다(2026-08-03 실사고의 나머지 절반).
+      var im = links[k].querySelector("img");
+      if (!im || im.getBoundingClientRect().width < 80) continue;
+      big.push(links[k]);
     }
-    if (!isGridPage() && !(big.length >= 3 && !isSinglePost())) return;
+    if (!isGridPage() && big.length < 3) return;
     for (var i = 0; i < big.length; i++) {
       var a = big[i];
       if (a.getAttribute("data-ssgrab")) continue;      // 중복 방지
