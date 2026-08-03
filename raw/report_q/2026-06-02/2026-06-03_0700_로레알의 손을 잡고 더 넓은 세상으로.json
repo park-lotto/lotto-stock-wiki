@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_로레알의 손을 잡고 더 넓은 세상으로.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김선아",
+    "report_date": "2026년 06월 02일",
+    "stocks": [
+      {
+        "name": "올릭스",
+        "code": "226950",
+        "rating": "Not Rated",
+        "rating_changed": false,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026 2027 매출액(십억원) N/A N/A 영업이익(십억원) N/A N/A 순이익(십억원) N/A N/A",
+        "estimate_revision": null,
+        "next_catalyst": "1) Lilly가 파트너인 MASH/비만 치료제 OLX702A의 호주 1상 MAD 투약 완료에 따른 2상 진입 소식과 Dual-siRNA 개발 여부, 2) 황반변성치료제 OLX301A의 GA 치료제로서 임상2a상 IND 신청 예정, 3) 지방세포의 ALK7을 직접 타겟하는 OLX501A의 비만원숭이 대상 약효 및 부작용 데이터 확인(올해 7-8월 경 공개 예상)",
+        "thesis": [
+          "로레알 그룹의 VC인 BOLD와 미국 자산운용사 Weiss Asset Management를 대상으로 한 1,108억원 규모의 제3자 유상증자 단행",
+          "릴리(Lilly)와의 파트너십을 통해 비대칭적 siRNA 플랫폼의 기술적 차별성과 가능성 입증",
+          "로레알과의 파트너십을 통해 의약품 시장에서 제한적으로 개발되어 온 siRNA의 미용 목적 개발 가능성 확대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "제3자 유상증자로, 166,221원 대비 10% 할인된 주당 149,599원으로 발행한다.",
+        "quote": "로레알이 오랫동안 피부 및 모발 산업에 종사하였고 관련 R&D를 이어왔기에, 기존 Modality의 한계를 몸소 경험하였을 것이다. 더욱이 ‘25년 6월부터 약 1년 간의 공동개발 후에 이어진 투자이기 때문에, 이번 SI 투자는 추가 개발에 대한 확신과 의지가 포함되어 있을 것이다."
+      }
+    ],
+    "sector": "바이오"
+  }
+}

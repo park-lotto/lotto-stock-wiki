@@ -1,0 +1,67 @@
+{
+  "reports": [
+    {
+      "broker": "램리서치",
+      "stock": "램리서치",
+      "rating": null,
+      "tp": null,
+      "ts": "09:23",
+      "quote": "4분기 매출 67.2억 달러(사상 최대), 영업이익 25.81억 달러",
+      "sector": "반도체"
+    },
+    {
+      "broker": "도쿄일렉트론",
+      "stock": "도쿄일렉트론",
+      "rating": null,
+      "tp": null,
+      "ts": "09:23",
+      "quote": "분기 매출 7,323억 엔, 영업이익 2,114억 엔으로 모두 사상 최대",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성전기",
+      "rating": null,
+      "tp": null,
+      "ts": "15:20",
+      "quote": "삼성전기, AI 서버용 MLCC 수요 급증에 전 품목 가격 30% 인상",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "코셈",
+      "rating": null,
+      "tp": null,
+      "ts": "15:20",
+      "quote": "코셈, 대기압 전자현미경 핵심 기술 일본 특허 등록 완료",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "예스티",
+      "rating": null,
+      "tp": null,
+      "ts": "15:20",
+      "quote": "예스티, 중국 업체에 유리기판 FO-PLP 큐어링 장비 공급",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "이엔에프테크놀로지",
+      "rating": null,
+      "tp": null,
+      "ts": "15:20",
+      "quote": "이엔에프테크놀로지, SK하이닉스 불산 공급망 진입 후 두 자릿수 점유율 확보",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LG디스플레이",
+      "rating": null,
+      "tp": null,
+      "ts": "17:50",
+      "quote": "LGD, 대형 OLED에 '2스택 탠덤' 기술 추진…“대중화 위한 원가 절감 방안”",
+      "sector": "IT"
+    }
+  ]
+}

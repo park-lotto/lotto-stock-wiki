@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "date": "2026-08-03",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-03_1107_[디지털자산] 디지털자산 Weekly 2026.07.31.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "최윤영",
+    "report_date": "2026.07.31",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "BTC 가격",
+      "ETH 가격",
+      "미국 ETH 현물 ETF 일별 자금 유출입",
+      "미국 BTC 현물 ETF 일별 자금 유출입",
+      "미국 BTC 선물 ETF 일별 자금 유출입",
+      "BTC 무기한 선물 펀딩비",
+      "BTC 무기한 선물 미결제약정",
+      "BTC 옵션 25 Delta Skew",
+      "BTC 옵션 ATM 내재변동성",
+      "BTC 도미넌스",
+      "BTC vs 나스닥 상관계수",
+      "BTC vs 금 상관계수",
+      "BTC vs 달러인덱스 상관계수",
+      "ETH/BTC 비율",
+      "알트코인 시가총액"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.07.26",
+        "event": "KB국민은행, Kinexys 기반 기업결제 서비스 도입"
+      },
+      {
+        "date": "2026.07.27",
+        "event": "Securitize, SEC 투자자문업 등록"
+      },
+      {
+        "date": "2026.07.27",
+        "event": "Ondo Network 공개"
+      },
+      {
+        "date": "2026.07.27",
+        "event": "포스코인터내셔널·LG CNS, 무역금융 토큰화 실증"
+      },
+      {
+        "date": "2026.07.28",
+        "event": "Morgan Stanley, ETH·SOL ETP 출시"
+      },
+      {
+        "date": "2026.07.28",
+        "event": "美 미네소타 예측시장 금지법 시행 제동"
+      },
+      {
+        "date": "2026.07.29",
+        "event": "BNY, 명의관리 온체인 전환 추진"
+      },
+      {
+        "date": "2026.07.29",
+        "event": "MoonPay, AI 에이전트 결제 서비스 출시"
+      }
+    ],
+    "top_picks": [
+      "Ondo Finance",
+      "Morgan Stanley",
+      "BNY",
+      "KB국민은행",
+      "포스코인터내셔널",
+      "LG CNS",
+      "MoonPay"
+    ],
+    "risk": "본안 소송 결과가 예측시장 규제 방향에 영향을 미칠 전망",
+    "quote": "토큰화 자산 발행만으로는 차별화가 어려워지면서, 향후 경쟁은 거래 실행·담보 활용·정산 인프라를 누가 구축하느냐로 이동하는 모습"
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_[Global ETF] ETF 트렌드 & 포트폴리오 우선순위 변...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "박승진, 신민건",
+    "report_date": "2026.6.1",
+    "target_kind": "market",
+    "market_direction": "실적 기반의 장세 재개",
+    "macro_vars": [
+      "통화정책",
+      "금리 경로",
+      "지정학적 리스크",
+      "5월 ISM 보고서",
+      "고용보고서",
+      "미국 1분기 GDP 잠정치",
+      "연준인사 블랙아웃 기간"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "비중확대",
+        "reason": "AI 네트워크 및 맞춤형 ASIC 수요 확대"
+      },
+      {
+        "sector": "전력",
+        "stance": "비중확대",
+        "reason": "AI 산업 성장의 단순한 스토리 하 우선순위"
+      },
+      {
+        "sector": "원전",
+        "stance": "비중확대",
+        "reason": "AI 산업 성장의 단순한 스토리 하 우선순위"
+      },
+      {
+        "sector": "기타",
+        "stance": "중립",
+        "reason": "SpaceX 상장 기대 및 정부 정책/민간 확장 모멘텀(우주항공)"
+      }
+    ],
+    "style": "실적 모멘텀 기반",
+    "event_calendar": [
+      {
+        "date": "2026.6.2",
+        "event": "Palo Alto 실적 발표"
+      },
+      {
+        "date": "2026.6.3",
+        "event": "Broadcom, CrowdStrike 실적 발표"
+      },
+      {
+        "date": "2026.6.4",
+        "event": "Rubrik, DocuSign 실적 발표"
+      },
+      {
+        "date": "2026.6.16-17",
+        "event": "6월 FOMC"
+      }
+    ],
+    "top_picks": [
+      "SMH",
+      "DRAM",
+      "PAVE",
+      "AIRR",
+      "NASA",
+      "DIVO",
+      "QDVO",
+      "ZAP",
+      "POWR",
+      "URA",
+      "NLR",
+      "CHAT",
+      "BAI",
+      "ARKX",
+      "REMX"
+    ],
+    "risk": "고용 모멘텀 약화에 따른 가계 전반의 소비 여력 훼손 및 인플레이션 부담",
+    "quote": "통화정책과 금리 경로에 대한 노이즈가 종전 기대 강화 흐름과 맞물려 한풀 꺾이면서 실적 기반의 장세가 재개되고 있다."
+  }
+}

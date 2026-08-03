@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-01_0801_2Q26 Review 분기별 사상 최대 실적, Top pi...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "김지영",
+    "report_date": "2026.07.31",
+    "stocks": [
+      {
+        "name": "키움증권",
+        "code": "039490",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "405,000원",
+        "tp_prev": null,
+        "tp_direction": "down",
+        "earnings_outlook": "2026년 2분기 당기순이익(연결, 지배주주기준)은 6,806억원으로 전분기 및 전년동기대비 각각 42.6%, 119.5% 증가했으며, 교보증권 예상도 49.9%난 상회함.",
+        "estimate_revision": "시장금리 및 무위험수익률 등 가정치 조정으로 405,000원으로 하향 조정함.",
+        "next_catalyst": "키움증권의 압도적인 리테일 위탁매매 경쟁력 유지 및 ETF LP관련 운용수익 부문의 성장",
+        "thesis": [
+          "주식시장 호황에 따른 거래대금 증가로 위탁매매수수료 및 IB관련 기업금융 수수료수익 증가",
+          "금융시장 변동성 확대에도 불구하고 ETF LP 수익 증가에 따른 운용손익의 큰 폭 개선",
+          "키움증권의 압도적인 리테일 위탁매매 경쟁력은 유지될 것으로 판단"
+        ],
+        "valuation_basis": "시장금리 및 무위험수익률 등 가정치 조정 반영",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "키움증권에 대해 투자의견 매수와 업종내 Top picks를 유지하나, 목표주가는 시장금리 및 무위험수익률 등 가정치 조정으로 405,000원으로 하향 조정함."
+      }
+    ]
+  }
+}

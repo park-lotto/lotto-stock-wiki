@@ -1,0 +1,25 @@
+{
+  "target_kind": "sector",
+  "sector_name": "바이오",
+  "sector_view": "긍정",
+  "points": [
+    "바이오USA 개최를 통한 수주 및 기술수출 기회 확대 기대"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "삼성바이오로직스",
+      "comment": "기술수출 및 수주 기대감",
+      "ts": null,
+      "quote": "K바이오, 바이오USA 출격…수주·기술수출 기회 찾는다",
+      "sector": "바이오"
+    }
+  ],
+  "events": [
+    {
+      "fact": "바이오USA 개최",
+      "ts": "06-15",
+      "quote": "K바이오, 바이오USA 출격…수주·기술수출 기회 찾는다"
+    }
+  ],
+  "quote": "K바이오, 바이오USA 출격…수주·기술수출 기회 찾는다"
+}

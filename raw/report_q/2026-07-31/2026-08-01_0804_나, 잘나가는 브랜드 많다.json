@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-01_0804_나, 잘나가는 브랜드 많다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "권우정",
+    "report_date": "2026.07.31",
+    "stocks": [
+      {
+        "name": "아모레퍼시픽",
+        "code": "090430",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "210,000원",
+        "tp_prev": "18만원",
+        "tp_direction": "up",
+        "earnings_outlook": {
+          "quote": "2분기 연결 매출액 및 영업이익은 각각 1.18조원(YoY 17%), 1,173억원(YoY 59%)으로, 시장기대치 +19% 상회."
+        },
+        "estimate_revision": "목표주가를 기존 18만원에서 21만원으로 상향 조정",
+        "next_catalyst": "AP본업의 멀티브랜드(에스트라/이니스프리/설화수/일리윤 등) 강세 및 수익성 개선",
+        "thesis": [
+          "K-뷰티 트렌드에 힘입어 AP본업의 멀티브랜드 강세",
+          "구조적 체질 개선으로 수익성 개선",
+          "라네즈 중심에서 벗어나 복수의 브랜드가 50~100% 성장률 기록"
+        ],
+        "valuation_basis": "12개월 Fwd EPS에 Target P/E 29배 적용(글로벌 Peer 로레알, 에스티로더, 시세이도 평균)",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "목표주가를 기존 18만원에서 21만원으로 상향 조정하는데, 이는 12개월 Fwd EPS에 Target P/E 29배 적용(글로벌 Peer 로레알, 에스티로더, 시세이도 평균).",
+        "sector": "화장품미용"
+      }
+    ]
+  }
+}

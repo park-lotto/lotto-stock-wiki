@@ -1,0 +1,19 @@
+{
+  "target_kind": "market",
+  "market_direction": "bear",
+  "macro_events": [
+    {
+      "fact": "2026년 7월 미국 증시의 역사적인 폭락",
+      "ts": "07/29/26",
+      "quote": "The worst month since the nation's founding"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "기타",
+      "stance": "neutral",
+      "comment": "시장 전반의 급락세에 따른 투심 악화"
+    }
+  ],
+  "quote": "A bizarre market"
+}

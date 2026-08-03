@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-03_0802_무관심한 국내 사이버 보안.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "권명준",
+    "report_date": "2026.07.31",
+    "target_kind": "sector",
+    "sector": "기타",
+    "sector_name": "사이버 보안",
+    "sector_view": null,
+    "thesis": [
+      "글로벌 ICT 기업들의 개방형 보안 AI 연합(Open Secure AI Alliance) 설립으로 인한 보안 도구 개발 및 신뢰도 향상",
+      "AI 발전과 맞물린 위협 증가, 통합 보안 솔루션 수요 확대, 사이버 보안의 필수재 인식 전환",
+      "국내 사이버 보안 산업은 미국 대비 인식이 약하나, AI 발전과 시장이 비례함에 따라 관심 필요"
+    ],
+    "timeline": [
+      "7월 27일: 엔비디아, Open Secure AI Alliance 출범",
+      "2Q26 이후: 미국 사이버 보안 기업 주가 강세"
+    ],
+    "top_picks": [
+      {
+        "name": "안랩",
+        "reason": "사이버 보안에 대한 관심이 미국에서 국내로 확산될 경우 백신과 EDR(엔드포인트 탐지 및 대응)을 동시 영위하여 우선적인 관심을 받을 것으로 기대",
+        "tp": null
+      },
+      {
+        "name": "지니언스",
+        "reason": "사이버 보안에 대한 관심이 미국에서 국내로 확산될 경우 우선적인 관심을 받을 것으로 기대",
+        "tp": null
+      }
+    ],
+    "risk": null,
+    "quote": "AI 발전과 사이버 보안 산업의 시장은 비례한다는 점에서 국내 사이버 보안 기업들에 대한 관심이 필요할 것으로 판단된다."
+  }
+}

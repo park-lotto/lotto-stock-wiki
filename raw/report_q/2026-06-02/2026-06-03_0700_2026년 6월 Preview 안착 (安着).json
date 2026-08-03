@@ -1,0 +1,77 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_2026년 6월 Preview 안착 (安着).md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "백길현",
+    "report_date": "2026.06.01",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "rating": "BUY (M)",
+        "rating_changed": null,
+        "tp_new": "530,000",
+        "tp_prev": "390,000",
+        "tp_direction": "up",
+        "earnings_outlook": "범용 DRAM 중심의 실적 턴어라운드 체력이 부각되며 전월(+18.3%) 대비 주가 상승 폭을 확대했다.",
+        "estimate_revision": null,
+        "next_catalyst": "HBM4 및 최선단 제품군의 대량 양산 타임라인",
+        "thesis": [
+          "범용 제품군의 타이트한 공급 우위 환경",
+          "차세대 아키텍처 도입에 따른 구조적 체질 개선",
+          "메모리 시장 ROE의 구조적 상향 및 변동성 완화"
+        ],
+        "valuation_basis": "2027년 예상 BPS * Target PBR 3.50배",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "범용 제품군의 타이트한 공급 우위 환경, 2)차세대 아키텍처 도입에 따른 구조적 체질 개선을 기반으로, ‘메모리 시장 ROE의 구조적 상향 및 변동성 완화’를 반영하고, Target PBR을 상향 조정한다. 목표주가는 각각 53만원(2027년 예상 BPS * Target PBR 3.50배)"
+      },
+      {
+        "name": "SK 하이닉스",
+        "code": "000660",
+        "rating": "BUY (M)",
+        "rating_changed": null,
+        "tp_new": "3,300,000",
+        "tp_prev": "1,900,000",
+        "tp_direction": "up",
+        "earnings_outlook": "타이트한 수급 환경 속에서 범용(Conventional) DRAM의 판가 상승 모멘텀이 극대화됨에 따라, 이익 성장 탄력이 가장 가파른 순수 메모리 중심(Memory-oriented) 기업으로의 극단적인 글로벌 자금 쏠림 현상이 발생",
+        "estimate_revision": null,
+        "next_catalyst": "HBM4/4E 공정 전환에 따른 ASP 상승 모멘텀과 기술 로드맵",
+        "thesis": [
+          "범용 제품군의 타이트한 공급 우위 환경",
+          "차세대 아키텍처 도입에 따른 구조적 체질 개선",
+          "메모리 시장 ROE의 구조적 상향 및 변동성 완화"
+        ],
+        "valuation_basis": "2027년 예상 BPS * Target PBR 3.50배",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "범용 제품군의 타이트한 공급 우위 환경, 2)차세대 아키텍처 도입에 따른 구조적 체질 개선을 기반으로, ‘메모리 시장 ROE의 구조적 상향 및 변동성 완화’를 반영하고, Target PBR을 상향 조정한다. 목표주가는 각각 330만원(2027년 예상 BPS * Target PBR 3.50배)"
+      },
+      {
+        "name": "ISC",
+        "code": "095340",
+        "rating": "Not Rated (M)",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": "AI 에이전트 워크로드 처리를 위한 칩 아키텍처 복잡화에 따른 테스트 소켓 수요 증가",
+        "thesis": [
+          "에이전틱 AI 기반의 차세대 랙 아키텍처 변형과 가속기 칩셋의 대형화에 따른 수혜",
+          "국내 테스트 부품 밸류체인의 동행지표"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "국내 테스트 부품 밸류체인에도 강력한 동행지표로 작용할 전망이며, 국내 ISC(095340 KQ)를 관련 수혜주로 제시한다.",
+        "quote": "이러한 움직임은 국내 테스트 부품 밸류체인에도 강력한 동행지표로 작용할 전망이며, 국내 ISC(095340 KQ)를 관련 수혜주로 제시한다."
+      }
+    ]
+  }
+}

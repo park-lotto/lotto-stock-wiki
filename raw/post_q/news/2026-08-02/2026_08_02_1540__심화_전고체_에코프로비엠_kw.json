@@ -1,0 +1,25 @@
+{
+  "target_kind": "sector",
+  "sector_name": "2차전지",
+  "sector_view": "긍정",
+  "points": [
+    "배터리 섹터 투자 3대 핵심 키워드로 ESS, 광물, 차세대소재 선정"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "에코프로비엠",
+      "comment": null,
+      "ts": null,
+      "quote": "전고체 에코프로비엠",
+      "sector": "2차전지"
+    }
+  ],
+  "events": [
+    {
+      "fact": "배터리 섹터 투자 3대 키워드로 ESS, 광물, 차세대소재가 제시됨",
+      "ts": "2026-08-02 04:50",
+      "quote": "배터리 섹터 투자 3대 키워드 'ESS, 광물, 차세대소재' (thecommoditiesnews.com, 08-02 04:50)"
+    }
+  ],
+  "quote": "배터리 섹터 투자 3대 키워드 'ESS, 광물, 차세대소재'"
+}

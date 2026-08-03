@@ -1,0 +1,29 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "KH바텍",
+      "signal": "neutral",
+      "reason": "휴머노이드 업체와 감속기 공급 협력 추진",
+      "ts": null,
+      "quote": "KH바텍 \"휴머노이드 업체와 감속기 공급 협력\"",
+      "sector": "로봇"
+    },
+    {
+      "name": "레인보우로보틱스",
+      "signal": "neutral",
+      "reason": "감속기 관련 논의의 파트너사로 언급",
+      "ts": null,
+      "quote": "KH바텍 \"휴머노이드 업체와 감속기 공급 협력\"",
+      "sector": "로봇"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "KH바텍이 휴머노이드 업체와 감속기 공급 협력을 진행 중임",
+      "ts": "06-15 07:00",
+      "quote": "KH바텍 \"휴머노이드 업체와 감속기 공급 협력\""
+    }
+  ],
+  "quote": "KH바텍 \"휴머노이드 업체와 감속기 공급 협력\" (zdnet.co.kr, 06-15 07:00)"
+}

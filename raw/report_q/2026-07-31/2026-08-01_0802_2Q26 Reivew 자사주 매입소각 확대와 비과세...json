@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-01_0802_2Q26 Reivew 자사주 매입소각 확대와 비과세...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "김지영",
+    "report_date": "2026/07/31",
+    "stocks": [
+      {
+        "name": "iM금융지주",
+        "code": "139130",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "24,000원",
+        "tp_prev": "24,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "iM금융지주의 2026년 2분기 당기순이익(연결기준)은 1,411억원으로 전분기 및 전년동기대비 각각 8.7%, 9.0% 감소했으며, 교보증권 예상도 7.2% 하회함.",
+        "estimate_revision": null,
+        "next_catalyst": "자사주 매입소각 확대 및 비과세 배당",
+        "thesis": [
+          "2026년 상반기 견조한 실적을 바탕으로 연간 이익 증가가 예상됨",
+          "자사주 매입소각 확대(26.2월 400억원에 300억원 추가 실시)를 통한 적극적인 주주환원정책",
+          "비과세 배당에 대한 기대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "iM금융지주에 대해 투자의견 매수와 목표주가를 24,000원 유지함. 1) 2026년 상반기 견조한 실적을 바탕으로 연간 이익 증가가 예상되며, 2)이번 실적 발표 때 나온 자사주 매입소각 확대(26.2월 400억원에 300억원 추가 실시) 및 비과세 배당에 대한 기대 등을 고려한다면 적극적인 주주환원정책에 따른 주가 상승이 기대되기 때문."
+      }
+    ]
+  }
+}

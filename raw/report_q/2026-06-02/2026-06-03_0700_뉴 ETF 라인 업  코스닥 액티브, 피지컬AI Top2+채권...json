@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_뉴 ETF 라인 업  코스닥 액티브, 피지컬AI Top2+채권...md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "김진영, 조호준",
+    "report_date": "2026. 6. 2",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "AI",
+      "반도체",
+      "IPO",
+      "바이오",
+      "로봇",
+      "소비재",
+      "커버드콜"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "수혜",
+        "reason": "AI 인프라 확대 및 메모리 반도체 실적 개선"
+      },
+      {
+        "sector": "바이오",
+        "stance": "수혜",
+        "reason": "블록버스터급 의약품 특허 만료에 따른 외부 기술 도입 수요"
+      },
+      {
+        "sector": "로봇",
+        "stance": "수혜",
+        "reason": "피지컬 AI 산업 성장 및 휴머노이드 수요 증가"
+      },
+      {
+        "sector": "소비내수",
+        "stance": "수혜",
+        "reason": "K-컨텐츠 및 화장품, 의료기기 인기"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026. 6. 2",
+        "event": "ETF 6종목 신규 상장"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "현대차",
+      "SK하이닉스"
+    ],
+    "risk": "개별 기업/오너 리스크, 시장 변동성",
+    "quote": "코스닥 핵심 섹터에 집중 투자하되, 다수의 종목을 균형 있게 편입하여 주도 섹터 익스포져 확대와 개별기업/오너리스크 분산을 동시에 추구"
+  }
+}

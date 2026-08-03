@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-03_0801_8월 SMP 150원대로 상승 예상.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "유재선",
+    "report_date": "2026.07.31",
+    "target_kind": "market",
+    "market_direction": "전력/유틸리티 위클리",
+    "macro_vars": [
+      "WTI 86.1달러/배럴",
+      "미국 천연가스 2.7달러/mmbtu",
+      "아시아 LNG 현물 21.4달러/mmbtu",
+      "호주산 유연탄 130.2달러/톤",
+      "원/달러 환율 1,442.7원",
+      "온실가스 배출권(KAU25) 26,050원"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "전력",
+        "stance": "중립",
+        "reason": "여름철 성수기 SMP 상승 불가피에 따른 실적 우려"
+      },
+      {
+        "sector": "신재생",
+        "stance": "중립",
+        "reason": "정부 RPS 정책 후속 조치에 따른 PPA 시장 공급 가능성"
+      }
+    ],
+    "style": "가치/배당/경기방어",
+    "event_calendar": [
+      {
+        "date": "2026.08",
+        "event": "8월 SMP 150원대 급등 전망"
+      },
+      {
+        "date": "2026.08",
+        "event": "3차 ESS 중앙계약시장 공고"
+      },
+      {
+        "date": "2026.10",
+        "event": "QatarEnergy LNG 불가항력 연장 검토 만기"
+      }
+    ],
+    "top_picks": [
+      "한국전력",
+      "SK이터닉스"
+    ],
+    "risk": "중동발 원자재 가격 상승 및 원/달러 환율 변동성, 전력 수급 불안",
+    "quote": "국제유가와 별개로 아시아 LNG 현물 가격이 국내 전력시장에 미치는 파급력이 크다는 점을 감안하면 겨울철 SMP 하락 안정화는 기대하기 어려운 이벤트로 판단된다."
+  }
+}

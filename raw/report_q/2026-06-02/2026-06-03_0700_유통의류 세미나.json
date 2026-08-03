@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_유통의류 세미나.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "대신증권",
+    "analyst": "유정현",
+    "report_date": null,
+    "market_direction": "소비 회복",
+    "macro_vars": [
+      "GDP 성장률",
+      "반도체 수출",
+      "환율",
+      "소비자심리지수",
+      "인바운드 관광객"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "소비내수",
+        "stance": "비중확대",
+        "reason": "외국인 소비 및 기존 럭셔리 브랜드 매출 호조, 중산층 소비 증가, 인바운드 관광객 증대 효과"
+      },
+      {
+        "sector": "반도체",
+        "stance": "호황",
+        "reason": "수출 호조를 통한 GDP 성장 견인 및 내수 소비 심리 개선의 핵심 변수"
+      }
+    ],
+    "style": "가치주 및 성장주 혼합",
+    "event_calendar": [
+      {
+        "date": "2027년 1분기",
+        "event": "SK하이닉스 성과급 지급 예정"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "호텔신라",
+      "롯데쇼핑",
+      "신세계",
+      "현대백화점",
+      "이마트",
+      "GS리테일",
+      "BGF리테일",
+      "한세실업",
+      "영원무역",
+      "화승엔터프라이즈",
+      "한섬",
+      "미스토홀딩스",
+      "신세계인터내셔날",
+      "F&F",
+      "Acushnet",
+      "Nike",
+      "Adidas",
+      "Asics",
+      "DECKERS",
+      "On Holding",
+      "Lululemon"
+    ],
+    "risk": "미국-이란 전쟁 발발 등 지정학적 리스크에 따른 소비 심리 위축",
+    "quote": "국내 소비 환경 및 주가 흐름 : 2017년 상황과 유사. 반도체 시황 호조가 수출 호조로 이어지며 GDP 성장을 견인할 경우 GDP에서 수출이 차지하는 비중이 큰 우리나라의 내수 소비 심리가 좋아지는 구조이기 때문"
+  }
+}

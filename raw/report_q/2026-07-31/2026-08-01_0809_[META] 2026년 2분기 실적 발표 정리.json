@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-01_0809_[META] 2026년 2분기 실적 발표 정리.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026. 7. 30",
+    "stocks": [
+      {
+        "name": "메타(Meta)",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": {
+          "2026_2Q_revenue": "$60.8B (YoY +28.0%, QoQ +8.0%)",
+          "2026_2Q_operating_profit": "$18.8B (YoY -8.2%, QoQ -17.9%)",
+          "2026_2Q_net_profit": "$15.8B (YoY -13.6%, QoQ -40.8%)",
+          "2026_2Q_diluted_eps": "$6.18",
+          "2026_2Q_capex": "$31.1B (YoY +82.7%, QoQ +56.6%)",
+          "2026_guidance_revenue": "$61~64B",
+          "2026_guidance_total_expenses": "$165~169B",
+          "2026_guidance_capex": "$130~145B"
+        },
+        "estimate_revision": "2026년 Capex 전망치의 하단이 $130B로 상향 조정됨",
+        "next_catalyst": "핵심 사업의 AI 가속, 개인 에이전트 개발, 대기업 대상 엔터프라이즈 시장",
+        "thesis": [
+          "매출액은 시장 컨센서스인 $60.2B 대비 소폭 상회함",
+          "광고 매출은 사용자 참여도 및 광고 최적화로 인해 노출 수가 14% 증가하며 성장을 견인",
+          "생성형 추천 시스템(GEM) 도입으로 광고 클릭률 +8.3%, 전환율 +15.7% 향상 확인"
+        ],
+        "valuation_basis": null,
+        "risk": "직원 보상, 인프라 비용(감가상각, 데이터센터 운영비 등), AI 토큰 비용 증가 등이 순이익 악화의 주된 요인",
+        "supply_comment": "자체 맞춤형 실리콘 개발로 장기 전략적 유연성과 공급망 레버리지를 확보하고 있으며, 업계 컴퓨팅 공급은 당분간 부족할 것으로 전망함",
+        "quote": "2026년 2분기 메타(Meta)의 매출액은 $60.8B로 전년동기 대비 28.0% 증가한 수치를 기록함. 영업이익은 $18.8B로 전년동기 대비 8.2% 하락했으며, 당기순이익은 $15.8B로 전년 동기 대비 13.6% 하락한 수치임."
+      }
+    ]
+  }
+}

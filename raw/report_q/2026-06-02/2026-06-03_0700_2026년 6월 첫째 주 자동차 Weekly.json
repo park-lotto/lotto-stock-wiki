@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_2026년 6월 첫째 주 자동차 Weekly.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "교보증권",
+    "analyst": "김광식, 최보영",
+    "report_date": "2026/06/02",
+    "market_direction": null,
+    "macro_vars": [
+      "미국 5월 신차 판매 1.5M",
+      "딜러 3개월 전망 -9pt QoQ",
+      "LG에너지솔루션 6GWh ESS 수주",
+      "7월 국내생산촉진세제(한국판 IRA) 내용 확정 및 발표 예정"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "자동차",
+        "stance": null,
+        "reason": "현대차그룹 수혜 기대"
+      },
+      {
+        "sector": "2차전지",
+        "stance": null,
+        "reason": "탈중국 수혜 지속 및 생산 인센티브 확보 전망"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026년 7월",
+        "event": "국내생산촉진세제(한국판 IRA) 내용 확정 및 발표 예정"
+      }
+    ],
+    "top_picks": [
+      "엔비디아",
+      "현대차",
+      "기아",
+      "LG에너지솔루션"
+    ],
+    "risk": "미국 신차 딜러 3개월 전망 -9pt QoQ로 인한 수요 부진 우려",
+    "quote": "엔비디아: Drive Hyperion Platform 기반 L4 로보택시 글로벌 협업 강화, 현대차그룹 수혜 기대 - LG에너지솔루션 6GWh(2.4조원, 오라클 등 8개 프로젝트) ESS 수주. 탈중국 수혜 지속 - 7월 국내생산촉진세제(한국판 IRA) 내용 확정 및 발표 예정. 2차전지 생산 인센티브 확보 전망"
+  }
+}

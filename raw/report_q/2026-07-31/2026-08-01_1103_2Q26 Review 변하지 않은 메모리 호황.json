@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-01_1103_2Q26 Review 변하지 않은 메모리 호황.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "최보영",
+    "report_date": "2026/07/31",
+    "stocks": [
+      {
+        "name": "삼성전자",
+        "code": "005930",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "500,000원",
+        "tp_prev": "500,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "삼성전자의 2Q26 연결기준 매출액은 171.5조원(+28% QoQ, +130% YoY), 영업이익은 89.5조원(+56% QoQ, +1,812% YoY)으로 영업이익률 52.1%의 역대 최대 실적을 기록함.",
+        "estimate_revision": null,
+        "next_catalyst": "HBM4 시장점유율 확대와 컨벤셔널 DRAM 공급 부족",
+        "thesis": [
+          "메모리 업황의 가시성이 확장되고 있음",
+          "신규 공급의 긴 리드타임과 글로벌 데이터센터 고객과의 5년 단위 LTA",
+          "HBM4 매출 비중 급상승 및 파운드리 선단공정 가동률과 수율 개선"
+        ],
+        "valuation_basis": null,
+        "risk": "부품 원가 상승 부담이 수익성을 제약함",
+        "supply_comment": "제한된 생산능력 내에서 AI 서버 수요에 적극 대응하며 DRAM과 NAND 모두 역대 최대 Bit 판매를 달성했고, 서버향 매출 비중 확대와 시장가격 상승, HBM4 공급 증가가 실적 개선을 주도함.",
+        "quote": "중요한 점은 메모리 업황의 가시성이 확장되고 있다는 점임. 신규 공급의 긴 리드타임, 글로벌 데이터센터 고객과의 5년 단위 LTA, HBM4 매출 비중 급상승, 파운드리 선단공정 가동률 및 수율 개선을 감안하면 현재 실적을 일회성 정점으로 판단하기는 이르다고 봄."
+      }
+    ]
+  }
+}

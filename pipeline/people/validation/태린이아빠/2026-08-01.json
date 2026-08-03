@@ -1,0 +1,37 @@
+{
+  "date": "2026-08-01",
+  "hit_rate": null,
+  "mentioned_count": 20,
+  "matched": [],
+  "missed": [
+    "HPSP",
+    "SK하이닉스",
+    "고영",
+    "금융",
+    "녹십자",
+    "데이터센터향 변압기",
+    "로봇",
+    "리노공업",
+    "반도체",
+    "삼성전기",
+    "삼성전자",
+    "셀트리온",
+    "소비내수",
+    "신재생",
+    "인바디",
+    "키움증권",
+    "파마리서치",
+    "한화에어로스페이스",
+    "헬스케어",
+    "화장품"
+  ],
+  "candidates": [],
+  "thresholds": {
+    "mode": "his",
+    "vacuum_pct_max": 35.0,
+    "min_up_count": 1,
+    "require_up_gt_down": true,
+    "require_leader": false,
+    "top_n": 20
+  }
+}

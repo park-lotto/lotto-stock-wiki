@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "date": "2026-07-29",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-02_0808_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "양승윤",
+    "report_date": "07/28",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "지정학적 혼란",
+      "패트리엇 재고 부족",
+      "이란 전쟁 및 중동 방공 작전",
+      "우크라이나 지원"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "LG전자 로봇 관절 악시움 조기 양산, LG이노텍-TDK 촉각센서 개발 등"
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "미 육군 PAC-2 GEM-T 30년 만의 주문, 페루 방산 협력 확대 등"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "HD현대 필리핀조선소 첫 선박 진수, 한화 美 필리조선소 연내 2배 프로젝트 등"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "LG전자",
+      "LG이노텍",
+      "두산로보틱스",
+      "현대차그룹",
+      "뉴로메카",
+      "BYD",
+      "유니트리",
+      "KAI",
+      "현대로템",
+      "포드",
+      "GM",
+      "HD현대",
+      "한화",
+      "GTT",
+      "카타르에너지",
+      "TKMS",
+      "영국 크라켄 테크놀로지"
+    ],
+    "risk": null,
+    "quote": "미 육군이 약 30년 만에 PAC-2 GEM-T를 신규 주문. 핵심 배경은 패트리엇 재고 부족. 이란 전쟁 및 중동 방공 작전, 우크라이나 지원으로 PAC-3 MSE 중심의 고가 요격탄 재고 소모 부담이 커지면서, PAC-2 GEM-T까지 다시 조달."
+  }
+}

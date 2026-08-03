@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-02_0801_일회성 없이 달성한 최대 실적.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "유재선",
+    "report_date": "2026년 7월 31일",
+    "stocks": [
+      {
+        "name": "현대코퍼레이션",
+        "code": "011760",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "38,000원",
+        "tp_prev": "33,000원",
+        "tp_direction": "up",
+        "earnings_outlook": {
+          "2Q26": "영업이익 629억원(YoY +81.6%)",
+          "2Q26_revenue": "매출액 2.8조원(YoY +46.8%)",
+          "2Q26_ope": "영업이익 629억원(YoY +81.6%)"
+        },
+        "estimate_revision": "2분기 실적은 시장 기대치를 상회했다.",
+        "next_catalyst": "지속적인 M&A를 통한 사업 확장 및 이익 안정성 확보",
+        "thesis": [
+          "모든 부문에서 매출이 성장하며 분기 기준 최대 이익을 달성",
+          "원/달러 환율 상승과 주요 제품 거래 호조 및 석유화학 판매가격 급등이 긍정적 반영",
+          "M&A를 통한 사업 확장이 이어지며 이익 안정성 확보 및 현금흐름 지속 개선"
+        ],
+        "valuation_basis": "2026년 실적 기준 PER 2.9배, PBR 0.4배로 이익 대비 극도의 저평가 국면",
+        "risk": "글로벌 시황 불확실성",
+        "supply_comment": "에너지상용부품은 배전변압기 중심의 성장이 지속",
+        "sector": "기타",
+        "quote": "2분기 실적은 시장 기대치를 상회했다. 환율 상승이 전반적으로 우호적으로 작용한 모습이다. 유가 등 에너지 가격 상승 또한 석유화학 부문 실적에 긍정적으로 반영되었다."
+      }
+    ]
+  }
+}

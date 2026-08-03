@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "Kiwoom",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_0602, Kiwoom Morning Letter.md"
+  },
+  "questionnaire": {
+    "broker": "Kiwoom",
+    "analyst": null,
+    "report_date": "2026-06-02",
+    "target_kind": "market",
+    "market_direction": "Positive",
+    "macro_vars": [
+      "KOSPI 8,788.38 (+3.68%)",
+      "달러/원 환율 1,504.30원 (-3.60원)",
+      "국제유가(WTI) 배럴당 90달러 수준",
+      "미 국채금리 상승"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "강세",
+        "reason": "뉴욕증시 AI 모멘텀 및 엔비디아의 국내 메모리 탑재 발언, 반도체 수출 호조"
+      },
+      {
+        "sector": "전기전자",
+        "stance": "강세",
+        "reason": "업종 전반의 강세"
+      }
+    ],
+    "style": "성장주 중심의 AI 랠리",
+    "event_calendar": [
+      {
+        "date": "6.01",
+        "event": "한국 수출입동향 YoY 5월 53.2%"
+      },
+      {
+        "date": "6.01",
+        "event": "한국 제조업 PMI 5월 54.8"
+      },
+      {
+        "date": "6.01",
+        "event": "미국 ISM 제조업 PMI 5월 54.0"
+      },
+      {
+        "date": "6.02",
+        "event": "한국 CPI (YoY) 5월 2.9%"
+      },
+      {
+        "date": "6.02",
+        "event": "미국 4월 JOLTs 구인건수 6866k"
+      },
+      {
+        "date": "6.02",
+        "event": "유럽 CPI (YoY) 5월 3.2%"
+      },
+      {
+        "date": "6.03",
+        "event": "미국 ADP 비농업고용 5월 120k"
+      },
+      {
+        "date": "6.03",
+        "event": "ISM 서비스업 PMI 5월 53.8"
+      },
+      {
+        "date": "6.03",
+        "event": "중국 레이팅독 서비스업 PMI 5월 52.3"
+      },
+      {
+        "date": "6.04",
+        "event": "한국 외환보유고 5월 $427.88b"
+      },
+      {
+        "date": "6.04",
+        "event": "미국 신규 실업수당 청구건수 5월 214k"
+      },
+      {
+        "date": "6.04",
+        "event": "비농업 고용 변동 5월 85k"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "LG전자",
+      "엔비디아",
+      "세일즈포스",
+      "서비스나우",
+      "인튜이트",
+      "어도비"
+    ],
+    "risk": "미-이란 종전 협상 중단으로 인한 국제유가 급등 및 인플레이션 우려 재부각",
+    "quote": "이날 기관과 개인은 각각 24,427억원, 3,862억원 순매수를 기록한 반면, 외국인은 28,281억원 순매도를 기록."
+  }
+}

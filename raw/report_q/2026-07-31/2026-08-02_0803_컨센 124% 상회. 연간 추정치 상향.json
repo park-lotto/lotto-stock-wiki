@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-02_0803_컨센 124% 상회. 연간 추정치 상향.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "윤재성",
+    "report_date": "2026년 7월 31일",
+    "stocks": [
+      {
+        "name": "SK이노베이션",
+        "code": "096770",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "200,000원",
+        "tp_prev": null,
+        "tp_direction": "null",
+        "earnings_outlook": "2Q26 영업이익은 3.49조원(QoQ +61%, YoY 흑전)으로 컨센(1.56조원)을 124% 상회했다. 3Q26 영업이익은 1.25조원(QoQ -64%, YoY +118%)을 추정한다.",
+        "estimate_revision": "정제마진 및 윤활기유 마진 강세, OSP 마이너스 국면 진입 등을 반영하여 2026년 영업이익 추정치를 기존 6.5조원에서 8.4조원으로 29% 상향한다.",
+        "next_catalyst": "카타르 Pearl GTL의 설비 타격으로 글로벌 그룹3 윤활기유의 최소 10%가 2027년 상반기까지 정상가동이 어렵다는 점을 감안할 때, 호실적도 당분간 지속된다.",
+        "thesis": [
+          "정제마진 및 윤활기유 마진 강세, OSP 마이너스 국면 진입",
+          "글로벌 그룹3 윤활기유 공급 차질에 따른 호실적 지속 전망",
+          "SK온 흡수합병을 통한 윤활기유 부문의 재무 부담 완화 기대"
+        ],
+        "valuation_basis": "2026~27년 ROE 13~17% 대비 PBR 0.7배로 절대 저평가",
+        "risk": "3Q26 유가 약세 및 재고관련손실",
+        "supply_comment": null,
+        "quote": "정제마진 및 윤활기유 마진 강세, OSP 마이너스 국면 진입 등을 반영하여 2026년 영업이익 추정치를 기존 6.5조원에서 8.4조원으로 29% 상향한다."
+      }
+    ]
+  }
+}
