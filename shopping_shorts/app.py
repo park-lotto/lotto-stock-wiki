@@ -4085,7 +4085,12 @@ def api_thumb(url: str):
     elif "douyinpic.com" in url:
         ref = "https://www.douyin.com/"
     try:
-        r = requests.get(url, timeout=15, headers={
+        # timeout 15 → 6 (2026-08-04). 이 라우트는 sync def라 uvicorn 스레드풀에서 돈다.
+        # 역대 히트작이 한 화면에 200장을 요청하면 느린 CDN 응답 하나가 스레드를 15초씩
+        # 붙잡아 풀이 마르고, 그 사이 들어온 다른 요청까지 밀려 systemd가 timeout으로
+        # 서비스를 죽였다(실측 02:15 'Failed with result timeout' → 재시작 → 썸네일 전멸).
+        # 썸네일 한 장에 6초를 넘길 이유가 없다 — 넘으면 그 장만 포기하는 게 낫다.
+        r = requests.get(url, timeout=6, headers={
             "User-Agent": "Mozilla/5.0",
             "Referer": ref,
         })

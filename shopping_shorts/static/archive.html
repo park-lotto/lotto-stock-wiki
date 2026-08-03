@@ -170,7 +170,11 @@ async function blockCh(u,btn){
 async function load(){
   const u=document.getElementById('chSel').value, q=document.getElementById('q').value.trim();
   const catParam=CAT==='전체'?'':CAT;   // 영상 단위 카테고리는 서버가 비전태그로 판정
-  const d=await (await fetch(`/api/archive/items?sort=${SORT}&username=${encodeURIComponent(u)}&q=${encodeURIComponent(q)}&cat=${encodeURIComponent(catParam)}&limit=200`)).json();
+  // limit 200 → 60 (2026-08-04). 200장은 브라우저가 한 번에 200개 요청을 던지는데
+  // /api/thumb는 sync 라우트라 uvicorn 스레드풀이 말라 **서비스가 통째로 죽었다**
+  // (실측 02:15 systemd 'Failed with result timeout' → 재시작 → 썸네일 0/197 전멸).
+  // 60장이면 브라우저 호스트당 동시연결(6)로 10턴이라 서버가 버틴다.
+  const d=await (await fetch(`/api/archive/items?sort=${SORT}&username=${encodeURIComponent(u)}&q=${encodeURIComponent(q)}&cat=${encodeURIComponent(catParam)}&limit=60`)).json();
   const box=document.getElementById('cards');
   let items=(d.ok&&d.items)||[];
   if(!items.length){box.innerHTML='<div class="empty">아직 없음 — 크롤러가 채우는 중입니다. 잠시 뒤 새로고침해 보세요.</div>';return}
@@ -264,17 +268,32 @@ async function archiveSimilar(sc){
 // same-origin 요청에 그 속성을 붙이면 브라우저가 CORS 응답으로 취급하는데 /api/thumb는
 // Access-Control-Allow-Origin을 안 보내므로 이미지를 통째로 버린다(fetch는 200인데
 // naturalWidth=0). same-origin이라 애초에 필요도 없다.
-function _archCapture(sc){
+async function _archCapture(sc){
   const img=document.getElementById('th_'+sc);
-  if(!img||!img.naturalWidth) return null;
+  if(!img) return null;
+  // 카드 이미지가 아직 안 떴어도(lazy 미도달·서버 혼잡) 파워검색은 돼야 한다.
+  // 그 자리에서 같은 URL을 새 Image로 직접 받아 캡처한다(2026-08-04 사장님 제보:
+  // "파워검색하면 썸네일 안 뜨고 검정화면" — 원인은 카드 이미지가 안 뜬 상태였다).
+  let src=img.getAttribute('src')||'';
+  const ready=img.naturalWidth>0 ? img : await new Promise(res=>{
+    const t=new Image();
+    t.onload=()=>res(t); t.onerror=()=>res(null);
+    t.src=src;
+    setTimeout(()=>res(null), 8000);       // 8초 넘으면 포기(무한대기 금지)
+  });
+  if(!ready||!ready.naturalWidth) return null;
   const cv=document.createElement('canvas');
-  cv.width=img.naturalWidth; cv.height=img.naturalHeight;
-  try{ cv.getContext('2d').drawImage(img,0,0); return cv; }catch(e){ return null; }
+  cv.width=ready.naturalWidth; cv.height=ready.naturalHeight;
+  try{ cv.getContext('2d').drawImage(ready,0,0); return cv; }catch(e){ return null; }
 }
 async function lensSearch(btn, sc){
-  const cv=_archCapture(sc);
-  if(!cv){ openModal('🔍 숏템파워검색','<div class="empty">썸네일을 준비하지 못했습니다. 이미지가 뜬 뒤 다시 눌러주세요(만료된 썸네일일 수 있어요).</div>'); return; }
-  openModal('🔍 숏템파워검색 — 외부 플랫폼','<div class="sm-loading">🔍 구글렌즈 검색 중… (5~15초)</div>');
+  // 캡처가 비동기가 됐다(카드 이미지가 안 떴으면 그 자리에서 받아온다) → 먼저 모달을 띄워
+  // 사장님이 "눌렀는데 아무 반응 없네"를 겪지 않게 한다.
+  openModal('🔍 숏템파워검색 — 외부 플랫폼','<div class="sm-loading">🖼 이미지 준비 중…</div>');
+  const body0=document.getElementById('modalBody');
+  const cv=await _archCapture(sc);
+  if(!cv){ body0.innerHTML='<div class="empty">썸네일을 준비하지 못했습니다 — 만료된 썸네일일 수 있어요(수집 후 4일이 지나면 인스타가 막습니다).</div>'; return; }
+  body0.innerHTML='<div class="sm-loading">🔍 구글렌즈 검색 중… (5~15초)</div>';
   const body=document.getElementById('modalBody');
   try{
     const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.85));
