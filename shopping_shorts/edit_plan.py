@@ -2231,6 +2231,34 @@ def _cta_fix_narration(cand):
     return cand
 
 
+def _strip_mid_cta(cand):
+    """CTA가 아닌 비트에 섞인 **댓글 유도 문장**을 걷어낸다(2026-08-03 사장님: "CTA가 두 번씩 반복됨").
+
+    실측 job e72379132e7b: 결과 비트가 "...정보 필요하시면 댓글에 '김밥' 남겨주세요"로 끝나고
+    바로 다음 CTA 비트가 또 댓글 유도 — 시청자에겐 같은 말 두 번이다. 재료가 짧은 소재에서
+    모델이 모자란 분량을 CTA 문구로 채우는 패턴. 프롬프트 지시로는 안 지켜져 코드로 자른다.
+
+    문장 단위로만 자른다(문장 일부를 수술하지 않는다). 전부 CTA 문장이라 남는 게 없으면
+    원문 유지 — 빈 비트를 만드는 것보다 중복이 낫다. 자막(caption_lines)은 비워 재분할시킨다.
+    ⚠️호출 위치: _cta_fix_narration과 같은 자리(최종 후보 확정 뒤) — 길이 재생성 판단 오염 방지.
+    """
+    beats = ((cand or {}).get("plan") or {}).get("beats") or []
+    for b in beats:
+        if _is_cta(b):
+            continue
+        narr = (b.get("narration") or "")
+        if not _has_comment_cta(narr):
+            continue
+        parts = re.split(r"(?<=[.!?。])\s+", narr.strip())
+        kept = [p for p in parts if p.strip() and not _has_comment_cta(p)]
+        if not kept or len(kept) == len(parts):
+            continue
+        b["narration"] = " ".join(kept).strip()
+        b["caption_lines"] = None
+        b["target_seconds"] = round(max(1.5, len(b["narration"]) / _SYLLABLES_PER_SEC), 1)
+    return cand
+
+
 def _ensure_cta_beat(beats, cand):
     """CTA 비트가 없으면 후보의 cta_line으로 만들어 붙인다(2026-07-31).
 
@@ -3232,4 +3260,5 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     #     길이가 판단에 안 쓰이므로 안전하다.
     for _c in cands:
         _cta_fix_narration(_c)
+        _strip_mid_cta(_c)      # 비CTA 비트에 샌 댓글 유도 제거(2026-08-03 "CTA 두 번 반복")
     return {"candidates": cands, "detected_type": detected}
