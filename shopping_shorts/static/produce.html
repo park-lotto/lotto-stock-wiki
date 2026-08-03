@@ -802,6 +802,7 @@
       <div class="seoBar">
         <button class="btn primary" id="seoGenAll" onclick="seoGenerate()">AI로 전체 생성</button>
         <button class="btn" onclick="seoCopyYoutube()">유튜브 전체 복사</button>
+        <button class="btn" onclick="seoCopyInsta()">인스타 캡션 복사</button>
         <span class="seoMsg" id="seoMsg"></span>
       </div>
       <div id="seoBody" class="seoBody"></div>
@@ -1151,6 +1152,12 @@ function renderSeo(){
     seoCard('hook','후킹 · 댓글 유도',
       `<input value="${seoEsc(SEO.hook_line)}" oninput="SEO.hook_line=this.value; seoSave()">
        <input value="${seoEsc(SEO.comment_bait)}" oninput="SEO.comment_bait=this.value; seoSave()">`) +
+    // ★인스타 캡션(2026-08-03 사장님 "폰으로 올리는 구조") — 완성 덩어리를 폰에서 복사만 하면 되게.
+    //   옛 job(insta_caption 없는 SEO)은 기존 필드로 즉석 조립(_instaCaption)해 빈 칸을 안 보여준다.
+    seoCard('insta','인스타 캡션 (폰에서 복사 → 릴스 캡션에 붙여넣기)',
+      `<textarea id="seoInsta" rows="12"
+                 oninput="SEO.insta_caption=this.value; seoSave()">${seoEsc(_instaCaption())}</textarea>
+       <button class="mini" style="margin-top:6px" onclick="seoCopyInsta()">📋 캡션 복사</button>`) +
     seoCard('cta','플랫폼별 CTA',
       plat.map(([k,l])=>`<div class="sub">${l}</div>`
         + `<textarea rows="4" oninput="SEO.cta['${k}']=this.value; seoSave()">`
@@ -1205,6 +1212,26 @@ function seoTagAdd(){
   if(again) again.focus();
 }
 
+// 인스타 캡션 — AI 생성값 우선, 옛 job(필드 없음)은 기존 재료로 즉석 조립(레퍼런스 공식 축약판).
+function _instaCaption(){
+  if(!SEO) return '';
+  if(SEO.insta_caption) return SEO.insta_caption;
+  const kw = ((SEO.comment_bait||'').match(/['‘"]([^'’"]{1,10})['’"]/)||[])[1] || '';
+  const tags = ((SEO.hashtags && (SEO.hashtags.tiktok||SEO.hashtags.youtube))||[]).slice(0,5)
+    .map(t=>t.startsWith('#')?t:'#'+t).join(' ');
+  return [SEO.hook_line||SEO.title||'', '', SEO.description||'', '',
+          (kw?`댓글에 '${kw}' 남겨주시면 정보 바로 보내드릴게요💌`:(SEO.comment_bait||'')),
+          '(🔔 팔로우 + 댓글 주셔야 DM 오류 없이 가요)',
+          "메시지 안 보이면 '숨김함/요청함' 확인해주세요", '', tags]
+    .join('\n').replace(/\n{3,}/g,'\n\n').trim();
+}
+function seoCopyInsta(){
+  if(!SEO){ alert('먼저 생성하세요'); return; }
+  const txt = _instaCaption();
+  if(!txt){ alert('캡션이 비어 있습니다 — 「AI로 전체 생성」을 누르세요'); return; }
+  navigator.clipboard.writeText(txt);
+  document.getElementById('seoMsg').textContent = '인스타 캡션 복사 완료';
+}
 function seoCopyYoutube(){
   if(!SEO){ alert('먼저 생성하세요'); return; }
   const txt = [SEO.title, '', SEO.description, '',
