@@ -3608,13 +3608,56 @@ def api_share_v(sid: str, dl: int = 0):
     return FileResponse(job["video_path"], media_type="video/mp4")
 
 
+def _selected_thumb_path(job):
+    """6단계에서 고른 최종 썸네일(thumbnail_json.selected)의 실제 파일 경로. 없으면 None.
+
+    ⚠️ selected는 사용자 입력이 아니라 서버가 지은 이름(api_thumb_save)이지만, DB를 통과한
+    문자열이라 그대로 경로에 붙이지 않는다 — _thumb_dir과 같은 basename 봉인을 한 번 더 건다.
+    """
+    if not job:
+        return None
+    thumb = job.get("thumbnail") or {}
+    name = thumb.get("selected")
+    if not name or name != os.path.basename(name) or name in (".", ".."):
+        return None
+    d = _thumb_dir(job.get("job_id") or "")
+    if d is None:                      # bad job_id — 경로순회 봉인(_thumb_dir이 None을 준다)
+        return None
+    p = d / name
+    return p if p.exists() else None
+
+
+@app.get("/api/share/t/{sid}")
+def api_share_t(sid: str, dl: int = 0):
+    """단축 id로 '선택 썸네일' PNG 서빙(로그인 불필요). 영상(/api/share/v)과 짝 — allowlist 경로.
+
+    썸네일을 아직 안 골랐으면 404. 공유 페이지는 404를 받으면 썸네일 UI를 통째로 숨긴다
+    (영상만 보내는 기존 동작으로 자연 폴백 — 여기서 500이 나면 공유 자체가 막힌다)."""
+    job_id = _share_get(sid)
+    if not job_id:
+        return JSONResponse(status_code=403, content={"ok": False, "error": "링크가 만료됐어요"})
+    p = _selected_thumb_path(Store(DB_PATH).get_mix_job(job_id))
+    if not p:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "선택된 썸네일이 없어요"})
+    fname = export_bundle.safe_name(job_id) + "_thumb.png"
+    if dl:
+        return FileResponse(str(p), media_type="image/png", filename=fname)
+    return FileResponse(str(p), media_type="image/png")
+
+
 @app.get("/s/{sid}", response_class=HTMLResponse)
 def share_page(sid: str):
-    """폰이 QR로 여는 모바일 공유 페이지(로그인 불필요). 폰 카톡 네이티브 공유로 전송."""
+    """폰이 QR로 여는 모바일 공유 페이지(로그인 불필요). 폰 카톡 네이티브 공유로 전송.
+
+    2026-08-04: 영상만 보내던 것을 **영상+선택 썸네일 한 번에**로. 썸네일이 없으면 __THUMB__을
+    빈 문자열로 넘겨(페이지가 그걸로 판단) 예전과 똑같이 영상만 보낸다."""
     job_id = _share_get(sid)
     if not job_id:
         return HTMLResponse(_SHARE_EXPIRED_HTML, status_code=403)
-    return HTMLResponse(_SHARE_PAGE_HTML.replace("__VID__", f"/api/share/v/{sid}"))
+    has_thumb = _selected_thumb_path(Store(DB_PATH).get_mix_job(job_id)) is not None
+    return HTMLResponse(_SHARE_PAGE_HTML
+                        .replace("__VID__", f"/api/share/v/{sid}")
+                        .replace("__THUMB__", f"/api/share/t/{sid}" if has_thumb else ""))
 
 
 @app.get("/api/mix/export/{job_id}")
@@ -3926,6 +3969,23 @@ def api_thumb_select(body: dict):
     thumb["selected"] = name
     store.update_mix_job(job_id, thumbnail=thumb)
     return {"ok": True}
+
+
+@app.get("/api/produce/thumb/selected/{job_id}")
+def api_thumb_selected(job_id: str):
+    """8단계(최종렌더)가 '지금 고른 썸네일'을 물어보는 곳(2026-08-04).
+
+    THUMB_STATE는 페이지 메모리라 새로고침·작업복원 후엔 비어 있다. 8단계는 DB를 진실로 삼는다.
+    안 골랐으면 200 + {ok:true, name:null} — 404를 쓰면 프런트가 오류로 오인해 카드가 깨진다."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    p = _selected_thumb_path(job)
+    if not p:
+        return {"ok": True, "name": None, "url": None}
+    name = (job.get("thumbnail") or {}).get("selected")
+    return {"ok": True, "name": name,
+            "url": f"/api/produce/thumb/file/{job_id}/{name}"}
 
 
 def _reject_cdn_proxy(url: str, allowed_hosts) -> bool:
@@ -4572,28 +4632,70 @@ _SHARE_PAGE_HTML = """<!doctype html><html lang="ko"><head>
  h1{font-size:19px;font-weight:800;margin:8px 0 4px;letter-spacing:1px}
  .sub{color:#8b93a7;font-size:13px;margin-bottom:16px}
  video{width:100%;max-width:420px;border-radius:16px;background:#000;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+ .media{width:100%;max-width:420px;display:flex;gap:10px;align-items:flex-start}
+ .media video{flex:1 1 auto;min-width:0}
+ .thumbwrap{flex:0 0 34%;display:none}
+ .thumbwrap img{width:100%;display:block;border-radius:12px;background:#000;
+      box-shadow:0 8px 24px rgba(0,0,0,.45)}
+ .thumbcap{color:#8b93a7;font-size:11px;text-align:center;margin-top:5px;font-weight:700}
  .btns{width:100%;max-width:420px;margin-top:18px;display:flex;flex-direction:column;gap:12px}
  button,a.dl{font-size:19px;font-weight:800;border:0;border-radius:14px;padding:18px;text-align:center;
       text-decoration:none;cursor:pointer}
  #shareBtn{background:#fee500;color:#191600}
  a.dl{background:#1c2740;color:#dfe7f5}
+ a.dl.sm{font-size:15px;padding:13px}
  .tip{color:#6b7488;font-size:12px;margin-top:14px;text-align:center;line-height:1.6;max-width:420px}
 </style></head><body>
  <h1>완성 영상 📱</h1>
- <div class="sub">아래 버튼으로 카톡·인스타에 바로 보내세요</div>
- <video src="__VID__" controls playsinline preload="metadata"></video>
+ <div class="sub" id="sub">아래 버튼으로 카톡·인스타에 바로 보내세요</div>
+ <div class="media">
+   <video src="__VID__" controls playsinline preload="metadata"></video>
+   <div class="thumbwrap" id="thumbWrap">
+     <img id="thumbImg" alt="썸네일">
+     <div class="thumbcap">🖼 썸네일</div>
+   </div>
+ </div>
  <div class="btns">
    <button id="shareBtn">카톡·인스타로 보내기</button>
    <a class="dl" href="__VID__?dl=1" download>영상 저장(다운로드)</a>
+   <a class="dl sm" id="thumbDl" href="#" download style="display:none">🖼 썸네일 저장(PNG)</a>
  </div>
- <div class="tip">버튼을 누르면 공유창이 떠요. 카톡을 고르고 대화방을 선택하면 전송됩니다.<br>안 뜨면 '영상 저장' 후 갤러리에서 공유하세요.</div>
+ <div class="tip" id="tip">버튼을 누르면 공유창이 떠요. 카톡을 고르고 대화방을 선택하면 전송됩니다.<br>안 뜨면 '영상 저장' 후 갤러리에서 공유하세요.</div>
 <script>
- const V="__VID__";
+ const V="__VID__", T="__THUMB__";
+ // 썸네일은 '있으면 얹는다'. 없거나(선택 안 함) 404면 예전 그대로 영상만 보낸다 —
+ // 썸네일 때문에 공유 자체가 막히는 일은 없어야 한다.
+ let THUMB_OK=false;
+ if(T){
+   const im=document.getElementById('thumbImg');
+   im.addEventListener('load', ()=>{
+     THUMB_OK=true;
+     document.getElementById('thumbWrap').style.display='block';
+     const dl=document.getElementById('thumbDl');
+     dl.href=T+'?dl=1'; dl.style.display='block';
+     document.getElementById('sub').textContent='영상 + 썸네일을 한 번에 보냅니다';
+     document.getElementById('tip').innerHTML="버튼을 누르면 공유창이 떠요. 카톡을 고르고 대화방을 선택하면 <b>영상과 썸네일이 함께</b> 전송됩니다.<br>둘이 같이 안 가면 아래 저장 버튼으로 각각 받으세요.";
+   });
+   im.src=T;   // 404면 load가 안 뜨고 THUMB_OK=false로 남는다
+ }
  document.getElementById('shareBtn').addEventListener('click', async ()=>{
    try{
      const r=await fetch(V); const b=await r.blob();
      const f=new File([b],'shopping_short.mp4',{type:'video/mp4'});
-     if(navigator.canShare && navigator.canShare({files:[f]})){
+     // ① 영상+썸네일 동시 — 폰 카톡은 파일 여러 개 공유를 받는다. canShare로 먼저 물어보고,
+     //    이 기기가 다중 파일을 거절하면 ②로 내려간다(무조건 시도하면 통째로 실패한다).
+     if(THUMB_OK){
+       try{
+         const tr=await fetch(T);
+         if(tr.ok){
+           const tf=new File([await tr.blob()],'shopping_short_thumb.png',{type:'image/png'});
+           if(navigator.canShare && navigator.canShare({files:[f,tf]})){
+             await navigator.share({files:[f,tf], title:'완성 영상 + 썸네일'}); return;
+           }
+         }
+       }catch(e){ if(e && e.name==='AbortError') return; }   // 취소는 폴백 금지(공유창 두 번 뜬다)
+     }
+     if(navigator.canShare && navigator.canShare({files:[f]})){   // ② 영상만(기존 동작)
        await navigator.share({files:[f], title:'완성 영상'}); return;
      }
      if(navigator.share){ await navigator.share({title:'완성 영상', url:location.href}); return; }
@@ -5788,8 +5890,9 @@ async def _auth_guard(request: Request, call_next):
     # 외부인이 /synth를 반복 호출해 ElevenLabs·GROQ 크레딧을 태우고 /profile/{임의id}로
     # voice_presets에 임의 행을 넣을 수 있었다(2026-07-15 리뷰 S7). 운영자는 대시보드
     # 로그인 세션으로 접근한다.
-    # /s/{sid}·/api/share/v/{sid} = QR '폰으로 보내기' 공개경로(단축id 저장소 조회, 로그인 불필요).
-    #   폰이 쿠키 없이 연다. ★/api/share/link(발급)은 여기 없음 → 로그인 게이트 유지(로그인해야 QR 발급).
+    # /s/{sid}·/api/share/v/{sid}·/api/share/t/{sid} = QR '폰으로 보내기' 공개경로(단축id 저장소
+    #   조회, 로그인 불필요). 폰이 쿠키 없이 연다. /t는 선택 썸네일 PNG(2026-08-04, 영상과 한 번에 전송).
+    #   ★/api/share/link(발급)은 여기 없음 → 로그인 게이트 유지(로그인해야 QR 발급).
     # /api/yt_relay/*는 사장님 PC 릴레이 에이전트가 로그인 쿠키 없이 호출한다(2026-07-24).
     #   자체 키 인증(_relay_auth_ok: YT_RELAY_KEY)이 있어 로그인 가드는 건너뛴다 — 안 그러면 유튜브 다운로드가 죽는다.
     # /api/coupang/relay/*도 같은 이유다(2026-07-29) — 쿠팡은 한국 IP가 아니면 막아서
@@ -5797,6 +5900,7 @@ async def _auth_guard(request: Request, call_next):
     #   (COUPANG_RELAY_TOKEN)을 검사하고, 토큰이 비어 있으면 스스로 403으로 닫는다.
     if (path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/")
             or path.startswith("/s/") or path.startswith("/api/share/v/")
+            or path.startswith("/api/share/t/")
             or path.startswith("/api/yt_relay/") or path.startswith("/api/coupang/relay/")):
         return await call_next(request)
     customer_id = _verify_session(request.cookies.get("dash_auth"))
