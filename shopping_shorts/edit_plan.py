@@ -525,7 +525,15 @@ def _cap_sets(sets, target_seconds):
     """
     if not sets or not target_seconds:
         return sets
-    cap = max(4, min(_MAX_BEATS, int(target_seconds // _MIN_SET_SECS)))
+    # ★1소스는 목표가 소재 천장(보통 18~20초)이라 4초 기준을 그대로 쓰면 4세트로 눌리는데,
+    #   plan_gate는 최소 5비트를 요구한다 — 통과 자체가 불가능해진다(2026-08-04 실측:
+    #   목표 18초 → 4세트 → "비트가 2개뿐" 반려). 짧은 목표에선 비트당 하한을 낮춰
+    #   최소 5비트를 만들 수 있게 한다(컷이 1~2초짜리라 5비트도 충분히 할 말이 있다).
+    from shopping_shorts.plan_gate import _MIN_BEATS as _GATE_MIN_BEATS
+    min_set = _MIN_SET_SECS
+    if target_seconds < _MIN_SET_SECS * _GATE_MIN_BEATS:           # 20초 미만
+        min_set = max(2.0, target_seconds / _GATE_MIN_BEATS)
+    cap = max(_GATE_MIN_BEATS, min(_MAX_BEATS, int(target_seconds // min_set)))
     if len(sets) <= cap:
         return sets
     out = list(sets)
