@@ -1425,6 +1425,7 @@ function _historyCard(h){
         <button class="comment" onclick="goComment('${h.shortcode}')">💬 댓글소통</button>
         <button class="save" id="save_${h.shortcode}" onclick="toggleMix('${h.shortcode}', this)">📥 담기</button>
         <button class="script-btn" onclick="lensSearch(this,'${h.shortcode}')">🔍 숏템파워검색</button>
+        ${window.IS_ADMIN?`<button class="script-btn" title="내 채널 아카이브에서 같은 제품·주제의 옛 영상 찾기(비전태그 매칭, 무료)" onclick="archiveSimilar('${h.shortcode}')">🏠 내채널</button>`:''}
       </div></div>
     </div></div>`;
 }
@@ -1439,6 +1440,40 @@ function fmtAgo(i){
   if(h < 1) return Math.max(1, Math.round(h*60)) + '분 전';
   if(h < 48) return Math.round(h) + '시간 전';
   return Math.round(h/24) + '일 전';
+}
+// ── 🏠 내채널 유사검색(2026-08-03) — 랭킹 릴스와 같은 제품·주제를 내 아카이브에서 찾는다.
+// 사장님 궁극 목표: 오늘 상위 영상 → 옛 같은 소재 영상 담기 → 믹스. 매칭=비전태그 겹침(무료).
+async function archiveSimilar(sc){
+  openScript('<div class="sm-loading">🏠 내 채널 아카이브에서 같은 소재 찾는 중…</div>','🏠 내 채널 유사영상',true);
+  const body=document.getElementById('scriptBody');
+  let d; try{ d=await (await fetch('/api/archive/similar?shortcode='+encodeURIComponent(sc))).json(); }
+  catch(e){ body.innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; return; }
+  if(d.no_tags){ body.innerHTML='<div style="padding:10px;color:var(--sub)">이 영상은 아직 비전태그가 없어요 — 다음 수집 태깅 후 다시 눌러주세요.</div>'; return; }
+  if(!d.ok){ body.innerHTML='<div style="padding:10px;color:#e0623d">❌ 조회 실패</div>'; return; }
+  if(!d.items.length){ body.innerHTML='<div style="padding:10px;color:var(--sub)">아카이브에서 같은 소재를 못 찾았어요 — 크롤이 더 쌓이면 늘어납니다(백그라운드 진행 중).</div>'; return; }
+  let saved=new Set();
+  try{ saved=new Set((await (await fetch('/api/mix/basket')).json()).shortcodes||[]); }catch(e){}
+  const tagLine=(d.src_tags||[]).slice(0,8).join(' · ');
+  body.innerHTML=`<div style="font-size:12px;color:var(--sub);margin-bottom:8px">매칭 태그: ${esc(tagLine)}</div>
+    <div class="cards">`+d.items.map(i=>{
+      const isS=saved.has(i.shortcode);
+      return `<div class="card"><div class="thumb" style="cursor:pointer" onclick="window.open('${esc(i.url)}','_blank')">
+        <img src="${esc(i.thumbnail||'')}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">
+        <span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:#e3b341;font-size:11px;padding:2px 8px;border-radius:10px">겹침 ${i.overlap}</span>
+      </div><div class="body">
+        <div class="rank">@${esc(i.username)} · 💬 ${(i.comments||0).toLocaleString()} · 👁 ${(i.views||0).toLocaleString()}</div>
+        <div style="font-size:11px;color:var(--sub);margin:2px 0 6px">${esc((i.posted_at||'').slice(0,10))}</div>
+        <div class="btns">
+          <button class="view" onclick="window.open('${esc(i.url)}','_blank')">▶ 원본</button>
+          <button class="save${isS?' saved':''}" onclick="archiveSave('${esc(i.shortcode)}','${esc(i.url)}','${esc(i.thumbnail||'')}','${esc(i.username)}',this)">${isS?'🎬 담김✓':'📥 담기'}</button>
+        </div></div></div>`;
+    }).join('')+'</div>';
+}
+async function archiveSave(sc,url,thumb,ch,btn){
+  const d=await (await fetch('/api/mix/basket/toggle',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({shortcode:sc,url:url,thumbnail:thumb,name:'@'+ch,caption:'',meta:{platform:'instagram',source:'archive'}})})).json();
+  if(d.in){btn.textContent='🎬 담김✓';btn.classList.add('saved');}
+  else{btn.textContent='📥 담기';btn.classList.remove('saved');}
 }
 function fmtTime(iso){
   // collected_at은 UTC로 저장됨 — 브라우저 로컬시간(한국이면 KST)으로 변환해 표시
