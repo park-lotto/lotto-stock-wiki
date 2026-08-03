@@ -1,0 +1,94 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성바이오로직스",
+      "rating": null,
+      "tp": null,
+      "ts": "13:49",
+      "quote": "삼성바이오로직스와 셀트리온, 200조 비만치료제 시장 공략 본격화",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "셀트리온",
+      "rating": null,
+      "tp": null,
+      "ts": "13:49",
+      "quote": "삼성바이오로직스와 셀트리온, 200조 비만치료제 시장 공략 본격화",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "알테오젠",
+      "rating": null,
+      "tp": null,
+      "ts": "13:49",
+      "quote": "알테오젠, 아스트라제네카·사노피 SC 프로젝트 진전으로 플랫폼 가치 확대",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "디앤디파마텍",
+      "rating": null,
+      "tp": null,
+      "ts": "13:49",
+      "quote": "이번 주 포커스: 디앤디파마텍, 삼중작용제 경쟁에서 주목받는 이유",
+      "sector": "바이오"
+    },
+    {
+      "broker": "BofA",
+      "stock": "DRAM",
+      "rating": null,
+      "tp": null,
+      "ts": "14:04",
+      "quote": "16Gb DDR5 현물·고정가격, 2025년 4분기~2026년 1분기 강한 랠리를 거쳐 약 35~40달러로 사상 최고치 도달",
+      "sector": "반도체"
+    },
+    {
+      "broker": "BofA",
+      "stock": "NAND",
+      "rating": null,
+      "tp": null,
+      "ts": "14:04",
+      "quote": "512Gb NAND 웨이퍼 현물·고정가격 모두 현재 사상 최고 수준",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "마이크로소프트",
+      "rating": null,
+      "tp": null,
+      "ts": "23:38",
+      "quote": "마이크로소프트는 6,780억달러로 절대 규모 1위 유지",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "오라클",
+      "rating": null,
+      "tp": null,
+      "ts": "23:38",
+      "quote": "오라클 수주잔고는 1,380억달러에서 6,380억달러로 362.3% 증가",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "구글",
+      "rating": null,
+      "tp": null,
+      "ts": "23:38",
+      "quote": "구글은 1,060억달러에서 5,140억달러로 384.9% 확대",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "아마존",
+      "rating": null,
+      "tp": null,
+      "ts": "23:38",
+      "quote": "아마존도 4,960억달러로 전년 대비 154.4% 증가",
+      "sector": "IT"
+    }
+  ]
+}

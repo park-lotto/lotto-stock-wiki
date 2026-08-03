@@ -1,0 +1,33 @@
+{
+  "date": "2026-07-31",
+  "hit_rate": null,
+  "mentioned_count": 16,
+  "matched": [],
+  "missed": [
+    "SK하이닉스",
+    "고영",
+    "금융",
+    "두산",
+    "로봇",
+    "반도체",
+    "삼성전기",
+    "소비내수",
+    "신재생",
+    "아마존",
+    "중국",
+    "키움증권",
+    "티엘비",
+    "하나마이크론",
+    "한화오션",
+    "헬스케어"
+  ],
+  "candidates": [],
+  "thresholds": {
+    "mode": "his",
+    "vacuum_pct_max": 35.0,
+    "min_up_count": 1,
+    "require_up_gt_down": true,
+    "require_leader": false,
+    "top_n": 20
+  }
+}

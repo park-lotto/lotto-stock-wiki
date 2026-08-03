@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-02_0802_K뷰티 최대 멀티 브랜드 대기업으로 Re-ratin...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "박종대, 양정석",
+    "report_date": "2026년 07월 31일",
+    "stocks": [
+      {
+        "name": "아모레퍼시픽",
+        "code": "090430",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "170,000원",
+        "tp_prev": "150,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2분기 연결 매출과 영업이익은 각각 전년 동기대비 17%, 59% 성장한 1조 1,759억원과 1,173억원으로 시장 기대치(OP 983억원)을 크게 넘어서는 호실적을 기록했다.",
+        "estimate_revision": "목표주가 15->17만원 상향 조정",
+        "next_catalyst": "글로벌 멀티 브랜드 대기업들, 로레알과 에스티로더의 밸류에이션(12MF PER 30배 내외)으로 수렴",
+        "thesis": [
+          "K뷰티 최대 멀티 브랜드 대기업으로서의 Re-rating 시작",
+          "글로벌 브랜드/지역/카테고리/채널 다각화 성공 입증 및 서구권 매출 비중 51% 달성",
+          "로레알과 같은 '글로벌 브랜드 포트폴리오' 관리 역량 가시화"
+        ],
+        "valuation_basis": "12MF PER 25배 적용",
+        "risk": null,
+        "supply_comment": "화장품미용",
+        "quote": "K뷰티의 글로벌 중장기 지속 성장을 위해 갖춰야 할 능력 가운데 하나가 로레알과 같은 '글로벌 브랜드 포트폴리오' 관리 역량이라는 점을 감안하면 아모레퍼시픽이 그 해답을 내놓고 있는 것이다."
+      }
+    ]
+  }
+}

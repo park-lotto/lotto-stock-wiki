@@ -1,0 +1,18 @@
+{
+  "target_kind": "market",
+  "market_direction": "null",
+  "macro_events": null,
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "부정",
+      "comment": "중국 반도체 굴기에 따른 공급 과잉 및 경쟁 심화로 인해 한국 반도체 산업이 위기 상황에 직면했다는 분석"
+    },
+    {
+      "sector": "중국",
+      "stance": "긍정",
+      "comment": "중국이 반도체 자급률을 높이며 시장 지배력을 빠르게 확대하고 있음"
+    }
+  ],
+  "quote": "null"
+}

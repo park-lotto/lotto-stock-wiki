@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-31_1109_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.07.31",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "네이버의 두나무 인수를 가로막던 핵심 장애물 하나가 해소됐음"
+      },
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "네이버가 AI 브리핑을 번역 서비스인 '파파고'와 이미지 검색 '스마트렌즈'에 결합하며 단순 번역, 검색을 넘어 정보 탐색부터 구매까지 이어지는 멀티모달 검색 경험을 강화하고 있음"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "12월 31일",
+        "event": "네이버의 두나무 인수 거래 종결일"
+      }
+    ],
+    "top_picks": [
+      "NAVER"
+    ],
+    "risk": "가상자산 거래소 대주주 지분율을 제한하는 디지털자산기본법도 여전히 변수로 남아 있음",
+    "quote": "네이버의 두나무 인수 장애물 사라진다… 규합위, 특금법 시행령 개선 권고"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-03_0804_[META] 2026년 2분기 실적 발표 정리.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026. 7. 30",
+    "stocks": [
+      {
+        "name": "메타(Meta)",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 2분기 매출액 $60.8B(YoY +28.0%, QoQ +8.0%), 영업이익 $18.8B(YoY -8.2%, QoQ -17.9%), 당기순이익 $15.8B(YoY -13.6%, QoQ -40.8%), 희석 EPS $6.18, Capex $31.1B(YoY +82.7%, QoQ +56.6%)",
+        "estimate_revision": "2026년 Capex 전망치의 하단이 $130B로 상향 조정됨",
+        "next_catalyst": "핵심 사업의 AI 가속, 개인 에이전트 개발, 대기업 대상 엔터프라이즈 시장 진출",
+        "thesis": [
+          "광고 매출($59.4B)이 사용자 참여도 및 광고 노출 수 증가에 힘입어 성장을 견인",
+          "생성형 추천 시스템(GEM) 도입을 통한 광고 클릭률(+8.3%) 및 전환율(+15.7%) 향상",
+          "공격적인 인프라 투자(2026~2027년 용량 극대화) 및 자체 맞춤형 실리콘 개발을 통한 장기 전략적 유연성 확보"
+        ],
+        "valuation_basis": null,
+        "risk": "직원 보상, 인프라 비용(감가상각, 데이터센터 운영비 등), AI 토큰 비용 증가에 따른 순이익 악화",
+        "supply_comment": "컴퓨팅 자원의 대부분은 모델 학습에 투입되며, 현재 컴퓨팅은 수요 대비 부족하고 업계 공급은 당분간 부족할 것으로 전망함",
+        "quote": "2026년 2분기 메타(Meta)의 매출액은 $60.8B로 전년동기 대비 28.0% 증가한 수치를 기록함."
+      }
+    ],
+    "sector": "IT"
+  }
+}

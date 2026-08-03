@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "SK securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_SK증권 Global Carbon Market Daily_260602.md"
+  },
+  "questionnaire": {
+    "broker": "SK securities",
+    "analyst": "최관순",
+    "report_date": "2026-06-02",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "EUA 79.2 유로/톤",
+      "UKA 55.8 파운드/톤",
+      "RGGI 44.7 달러/톤",
+      "CCA 31.4 달러/톤",
+      "KAU 23,500 원/톤",
+      "KOC 12,050 원/톤",
+      "i-KOC 14,900 원/톤",
+      "CEA 80.8 위안/톤",
+      "미국 WTI 92.2 USD/bbl.",
+      "유럽 Brent 95.4 USD/bbl.",
+      "중동 Dubai 88.8 USD/bbl.",
+      "미국 NYM HH 3.2 USD/MMBtu",
+      "유럽 ICE Dutch TTF 49.1 EUR/MWh",
+      "일본/한국 NYM JKM 18.7 USD/MMBtu",
+      "유럽 ICE ARA 137.9 USD/MT",
+      "중국 ZCE 961.8 CNY/MT",
+      "호주 뉴캐슬 140.3 USD/MT"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "KRBN",
+      "KEUA",
+      "KCCA",
+      "GRN",
+      "SOL 유럽탄소배출권",
+      "SOL 글로벌탄소배출권",
+      "KODEX 유럽탄소배출권",
+      "HANARO 글로벌탄소배출권"
+    ],
+    "risk": "EU, 메탄 규제 벌금 3년 유예 추진…LNG 공급난에 기후규제 후퇴",
+    "quote": "국제유가, 이란 협상중단 보도에 상승…WTI 5%대↑"
+  }
+}

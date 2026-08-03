@@ -1,0 +1,81 @@
+{
+  "meta": {
+    "date": "2026-07-30",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-01_1107_HD현대 조선 그룹 2Q26 Review.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "유재선",
+    "report_date": "2026년 7월 30일",
+    "stocks": [
+      {
+        "name": "HD한국조선해양",
+        "code": "009540",
+        "sector": "조선",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "570,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 매출액은 8.9조원으로 전분기대비 9.7% 증가했다. 영업이익은 1.6조원으로 전분기대비 21.3% 증가했다.",
+        "estimate_revision": null,
+        "next_catalyst": "중간배당은 전년대비 3,300원 상승한 6,500원으로 결정되었다.",
+        "thesis": [
+          "조선이 조업일수 증가와 생산성 향상으로 외형이 크게 성장했고 엔진기계도 판가 상승과 환율 상승에 매출이 증가했다.",
+          "조선은 고선가 선박 매출 비중 상승으로 마진이 18.8%로 전분기대비 2.2%p 개선되었다.",
+          "엔진기계는 D/F 비중이 높은 수준을 유지하는 가운데 육상발전 등 힘센엔진 매출 증가로 이익률이 35.3%로 추가 상승했다."
+        ],
+        "valuation_basis": "2026년 추정치 기준 PER 6.2배, PBR 1.5배다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2분기 매출액은 8.9조원으로 전분기대비 9.7% 증가했다. 영업이익은 1.6조원으로 전분기대비 21.3% 증가했다."
+      },
+      {
+        "name": "HD현대중공업",
+        "code": null,
+        "sector": "조선",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 매출액은 6.3조원을 기록하며 전분기대비 7.0% 증가했다. 영업이익은 1.0조원을 기록하며 전분기대비 14.9% 증가했다.",
+        "estimate_revision": null,
+        "next_catalyst": "향후 엔진 Capa 증설, 미국 방산 협력 및 해외 특수선 수주 구체화가 기대되는 부분이다.",
+        "thesis": [
+          "원/달러 환율 약세와 조업일수 증가, 생산성 향상, 건조 Mix 개선에 외형이 성장했다.",
+          "조선은 상선 건조 Mix에서 2022년 비중이 감소했고 2024년 이후 물량이 늘어남에 따라 이익이 개선되고 있다.",
+          "2026년 2분기 수주는 147.7억달러로 연간 목표치 72%를 달성했다."
+        ],
+        "valuation_basis": "2026년 PER 13.8배, PBR 3.9배다.",
+        "risk": "해양플랜트는 공정 진행 차이로 이익이 감소했다.",
+        "supply_comment": "수주잔고는 인도기준 609억달러, 매출기준 452억달러로 전분기대비 증가했다.",
+        "quote": "2분기 매출액은 6.3조원을 기록하며 전분기대비 7.0% 증가했다. 영업이익은 1.0조원을 기록하며 전분기대비 14.9% 증가했다."
+      },
+      {
+        "name": "HD현대마린엔진",
+        "code": null,
+        "sector": "조선",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 매출액 1,281억원을 기록하며 전분기대비 4.0% 감소했다. 영업이익은 313억원을 기록하며 전분기대비 3.9% 감소했다.",
+        "estimate_revision": null,
+        "next_catalyst": "이연된 엔진 2기분의 실적이 3분기에 인식될 예정이기 때문에 단순 시차에 따른 부진으로 볼 수 있다. 하반기에 엔진 Mix 개선으로 수익성은 상승 추세로 복귀할 전망이다.",
+        "thesis": [
+          "엔진은 인도 일정 조정에도 환율 상승 및 가동률 증가로 외형 둔화폭이 제한적이었다.",
+          "부품도 크랭크샤프트 인도 일정 조정으로 소폭 감소했지만 터보차저 및 AM 사업 성장으로 전분기대비 성장했다.",
+          "엔진 부문 마진은 23.4%로 전분기대비 0.8%p 감소했고 부품은 27.4%로 2.2%p 개선되었다."
+        ],
+        "valuation_basis": "2026년 PER 12.0배, PBR 2.7배다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "2분기 매출액 1,281억원을 기록하며 전분기대비 4.0% 감소했다. 영업이익은 313억원을 기록하며 전분기대비 3.9% 감소했다."
+      }
+    ]
+  }
+}

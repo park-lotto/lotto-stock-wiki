@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "date": "2026-07-29",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-02_0810_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.07.29",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "카카오, 경량 AI 4종 공개 및 한국어 처리 효율 향상, 플랫폼 시장 내 쿠팡과 네이버의 경쟁 심화"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "NAVER",
+      "카카오",
+      "삼성에스디에스",
+      "현대오토에버",
+      "한컴",
+      "롯데이노베이트",
+      "크래프톤",
+      "NC",
+      "넷마블",
+      "시프트업",
+      "펄어비스",
+      "카카오게임즈",
+      "더블유게임즈",
+      "웹젠",
+      "NHN",
+      "컴투스",
+      "네오위즈",
+      "데브시스터즈"
+    ],
+    "risk": null,
+    "quote": "카카오, 경량 AI 4종 공개…“한국어 효율 30% 높여”, 진격의 네이버 vs 쿠팡의 '굳히기'…플랫폼 맹주 '격돌'"
+  }
+}

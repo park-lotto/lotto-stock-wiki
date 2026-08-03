@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-30",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-01_1108_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.07.30",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "수출 60% 게임, 예산 비중은 6.9%···K-컬처 400조 정책 재설계 목소리"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "게임산업이 국내 콘텐츠 수출의 60.4%를 담당하는 핵심 수출 산업"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": null,
+        "event": "크래프톤, 음성 AI 파운데이션 모델 공개"
+      }
+    ],
+    "top_picks": [
+      "크래프톤"
+    ],
+    "risk": "게임산업이 국내 콘텐츠 수출의 60.4%를 담당하는 핵심 수출 산업임에도 전체 콘텐츠 예산에서 차지하는 비중은 6.9%에 그쳐, 수출 기여도와 정책 투입 규모 사이의 격차를 좁혀야 한다는 지적이 나옴",
+    "quote": "게임산업이 국내 콘텐츠 수출의 60.4%를 담당하는 핵심 수출 산업임에도 전체 콘텐츠 예산에서 차지하는 비중은 6.9%에 그쳐, 수출 기여도와 정책 투입 규모 사이의 격차를 좁혀야 한다는 지적이 나옴"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "target_kind": "sector",
+  "sector_name": "반도체",
+  "sector_view": "긍정",
+  "points": [
+    "TSMC의 첨단 패키징 생산 능력 2배 증설",
+    "AI 칩 공급 병목 현상 완화 기대"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "TSMC",
+      "comment": "첨단 패키징 생산 능력 2배 증설을 통해 AI 칩 병목 현상 해결 주도",
+      "ts": "2026-08-02 15:40",
+      "quote": "TSMC, 첨단패키징 내년 두 배 증설…AI칩 병목 풀 열쇠",
+      "sector": "반도체"
+    }
+  ],
+  "events": [
+    {
+      "fact": "TSMC, 첨단 패키징 시설 내년 2배 증설 발표",
+      "ts": "2026-08-02 15:40",
+      "quote": "TSMC, 첨단패키징 내년 두 배 증설…AI칩 병목 풀 열쇠"
+    }
+  ],
+  "quote": "TSMC, 첨단패키징 내년 두 배 증설…AI칩 병목 풀 열쇠"
+}

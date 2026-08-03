@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-31_1108_FCC의 C밴드 경매가 갖는 의미.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "유진투자증권",
+    "analyst": "정의훈",
+    "report_date": "2026.07.31",
+    "market_direction": null,
+    "macro_vars": [
+      "상단 C 밴드(3.98~4.14GHz) 160MHz 대역 경매",
+      "위성사업자 인센티브 배분"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "통신",
+        "stance": null,
+        "reason": "위성사업자들의 C 밴드 이전 비용 보상 및 인센티브 지급, 대체 위성 발주 증가로 인한 산업 수요 발생"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2027년 7월",
+        "event": "2차 C 밴드 경매 진행 종료"
+      },
+      {
+        "date": "2030년 12월",
+        "event": "위성사업자 대역 이전 완료 시한"
+      }
+    ],
+    "top_picks": [
+      "버라이즌",
+      "AT&T",
+      "SES",
+      "유텔샛",
+      "텔레샛",
+      "스타링크",
+      "로켓랩",
+      "이리듐",
+      "아마존",
+      "글로벌스타"
+    ],
+    "risk": "위성사업자는 좁아진 대역에서 기존 방송·통신 서비스를 유지하기 위해 신규 위성을 발사하고 지상 장비를 교체해야 하는 비용 부담 존재",
+    "quote": "이번 경매가 갖는 첫 번째 의미는 침체됐던 정지궤도(GEO) 위성 산업에 다시 한번 대규모 수요를 만들어 준다는 점이다."
+  }
+}

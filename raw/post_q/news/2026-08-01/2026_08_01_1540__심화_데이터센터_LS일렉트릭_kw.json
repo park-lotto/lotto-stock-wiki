@@ -1,0 +1,26 @@
+{
+  "target_kind": "sector",
+  "sector_name": "전력",
+  "sector_view": "긍정",
+  "points": [
+    "LG유플러스가 AIDC(AI 데이터센터) 시장에 본격 진출하며 400MW 규모, 수주 5조 원을 목표로 설정함",
+    "데이터센터 확충에 따른 전력 인프라 수요 증가로 전력 설비 관련 기업의 수혜가 예상됨"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "LS일렉트릭",
+      "comment": null,
+      "ts": "2026-08-01",
+      "quote": "데이터센터 LS일렉트릭",
+      "sector": "전력"
+    }
+  ],
+  "events": [
+    {
+      "fact": "LG유플러스, AIDC에 베팅…400MW·수주 5조원 목표",
+      "ts": "2026-07-31",
+      "quote": "LG유플러스, AIDC에 베팅…400MW·수주 5조원 목표"
+    }
+  ],
+  "quote": "LG유플러스, AIDC에 베팅…400MW·수주 5조원 목표"
+}

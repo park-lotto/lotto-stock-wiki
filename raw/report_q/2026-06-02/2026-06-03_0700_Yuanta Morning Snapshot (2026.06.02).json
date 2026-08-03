@@ -1,0 +1,83 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_Yuanta Morning Snapshot (2026.06.02).md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": null,
+    "report_date": "June 02, 2026",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      {
+        "name": "DOW",
+        "value": "51,078.88",
+        "quote": "DOW 51,078.88 +0.09 +0.99 +3.19"
+      },
+      {
+        "name": "NASDAQ",
+        "value": "27,086.81",
+        "quote": "NASDAQ 27,086.81 +0.42 +2.82 +7.85"
+      },
+      {
+        "name": "S&P 500",
+        "value": "7,599.96",
+        "quote": "S&P 500 7,599.96 +0.26 +1.69 +5.12"
+      },
+      {
+        "name": "원/달러",
+        "value": "1,513.05",
+        "quote": "원/달러 1,513.05 -0.60 +0.30 -2.39"
+      },
+      {
+        "name": "WTI(NYMEX)",
+        "value": "92.33",
+        "quote": "WTI(NYMEX) 92.33 +0.18 -1.66 -9.43"
+      }
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "06/01",
+        "event": "美 S&P 글로벌 미국 제조업 PMI"
+      },
+      {
+        "date": "06/01",
+        "event": "日 자본지출 YoY"
+      },
+      {
+        "date": "06/02",
+        "event": "韓 CPI (전월대비)"
+      },
+      {
+        "date": "06/03",
+        "event": "美 MBA 주택융자 신청지수"
+      },
+      {
+        "date": "06/04",
+        "event": "美 신규 실업수당 청구건수"
+      },
+      {
+        "date": "06/05",
+        "event": "美 실업률"
+      }
+    ],
+    "top_picks": [
+      "SK하이닉스",
+      "삼성전자",
+      "KODEX 반도체레버리지",
+      "KODEX 레버리지",
+      "NAVER",
+      "SK스퀘어",
+      "두산로보틱스",
+      "LS ELECTRIC",
+      "SKC",
+      "한화에어로스페이스"
+    ],
+    "risk": "부동산 침체와 내수 경제 위축으로 인한 가계 자산 및 소비 심리 위축",
+    "quote": "코스피지수는 전장 대비 312.23pt(+3.68%) 상승한 8,788.38pt에 마감. 젠슨 황의 방항을 앞둔 기대감이 커지면서 반도체와 로봇 관련주가 급등하며 상승 마감"
+  }
+}

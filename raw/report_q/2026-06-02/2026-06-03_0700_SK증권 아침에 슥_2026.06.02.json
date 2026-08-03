@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_SK증권 아침에 슥_2026.06.02.md"
+  },
+  "questionnaire": {
+    "broker": "SK증권",
+    "analyst": null,
+    "report_date": "2026-06-02",
+    "target_kind": "market",
+    "market_direction": "혼조",
+    "macro_vars": [
+      "미 FOMC 연설",
+      "4월 노동부 JOLTS",
+      "5월 소비자 물가지수"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "상승",
+        "reason": "엔비디아 컴퓨텍스 발표(+6.3%)로 인한 반도체 업종 전반의 매수세 확산 및 젠슨황 방한 기대감"
+      },
+      {
+        "sector": "IT",
+        "stance": "상승",
+        "reason": "정부 정책 및 산업 육성 기대가 하단 지지"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-05",
+        "event": "소비자 물가지수 발표"
+      },
+      {
+        "date": "미상",
+        "event": "FOMC 연설"
+      },
+      {
+        "date": "미상",
+        "event": "4월 노동부 JOLTS"
+      }
+    ],
+    "top_picks": [
+      "네이버",
+      "현대차",
+      "LG그룹"
+    ],
+    "risk": "이란 측에서 협상 중단 선언으로 중동 지역 긴장 상태 고조",
+    "quote": "반도체 대형주 중심 + 젠슨황 방한 기대감으로 코스피 지수 상승 마감"
+  }
+}

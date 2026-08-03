@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "date": "2026-08-03",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-03_1107_6월 ESS Battery  독립형 ESS 설치 증가.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김현수",
+    "report_date": "2026.8.3",
+    "target_kind": "sector",
+    "sector_name": "2차전지",
+    "sector_view": "비중확대",
+    "thesis": [
+      "6월 글로벌 ESS 신규 설치량(Grid+BTM)은 39.7GWh로, 전년 대비 +18% 증가",
+      "2026년 누적(1~6월) 글로벌 Grid ESS 설치량은 125.8GWh로 전년 동기 대비 +27% 증가하며 견조한 성장세 지속",
+      "미국 및 유럽의 정책 지원 강화 및 현지 공급망 구축 기조에 따른 국내 소재 및 셀 메이커 수혜 기대"
+    ],
+    "timeline": [
+      "6월 18일, 미국 FERC 계통 연계 제도 개편 발표",
+      "6월 26일, EU 에너지저장협약 체결 및 2026~2028년 ESS 설치 목표 상향"
+    ],
+    "top_picks": [
+      {
+        "name": "LG에너지솔루션",
+        "reason": "북미 ESS 생산거점 확보에 따른 수혜 기대",
+        "tp": null
+      },
+      {
+        "name": "삼성SDI",
+        "reason": "북미 ESS 생산거점 확보에 따른 수혜 기대",
+        "tp": null
+      },
+      {
+        "name": "에코프로비엠",
+        "reason": "유럽 현지 생산거점을 보유한 소재업체로서의 수혜 기대",
+        "tp": null
+      }
+    ],
+    "risk": "북미 시장은 직전 월 데이터의 사후 조정이 빈번함",
+    "quote": "글로벌 ESS 시장 성장 지속. ESS 정책 모멘텀 강화"
+  }
+}

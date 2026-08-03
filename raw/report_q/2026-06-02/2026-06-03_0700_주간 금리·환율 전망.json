@@ -12,31 +12,19 @@
     ],
     "report_date": "2026. 6.1(월)",
     "target_kind": "market",
-    "market_direction": "null",
+    "market_direction": null,
     "macro_vars": [
-      "금리",
-      "환율"
+      "기준금리",
+      "통안채 1년 금리",
+      "국고채 3년 금리",
+      "국고채 5년 금리",
+      "국고채 10년 금리",
+      "회사채AAA 3년 Spread",
+      "달러원환율"
     ],
-    "recommended_sectors": "null",
-    "style": "null",
-    "event_calendar": [
-      {
-        "date": "F1Q말",
-        "event": "종전 기대에 따른 제한적 채권 강세 종료 이후 다시 물가 우려, 수급 부담 가세하며 금리 재상승 우려"
-      },
-      {
-        "date": "F2Q말",
-        "event": "기준금리 인상 개시 전망. 단발성 아닌 사이클을 형성하는 통화정책 일정 부담"
-      },
-      {
-        "date": "F3Q말",
-        "event": "여전히 인상 사이클 이어지며 금리 상승세 추가 분출 우려"
-      },
-      {
-        "date": "F4Q말",
-        "event": "높아진 금리 레벨과 인상 사이클 호흡 조절 국면 돌입 기대. 금리 레벨 업 이후 고점 영역 스프레드 예상"
-      }
-    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [],
     "top_picks": null,
     "risk": "글로벌 인플레 우려 재부상 중이나, 3 월 대비로는 위험 회피 심리 더 높지 않아 1,500 원대 초반에서 상단 제한될 전망",
     "quote": "5 월 금통위 이후 기준금리 인상 전망 가시화: \"성장률 상향 등 모든 지표 여건이 인상 쪽\""

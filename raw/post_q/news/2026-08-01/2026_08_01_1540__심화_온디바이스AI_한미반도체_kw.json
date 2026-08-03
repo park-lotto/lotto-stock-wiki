@@ -1,0 +1,31 @@
+{
+  "target_kind": "sector",
+  "sector_name": "AI 반도체",
+  "sector_view": "긍정",
+  "points": [
+    "AI 거품 우려 해소세에 따른 반도체 테마 ETF 수익률 상승",
+    "SOL AI반도체소부장 ETF 순자산 5000억원 돌파 등 자금 유입 확대"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "한미반도체",
+      "comment": null,
+      "ts": null,
+      "quote": "온디바이스AI 한미반도체",
+      "sector": "반도체"
+    }
+  ],
+  "events": [
+    {
+      "fact": "반도체 테마 ETF 수익률 최상위권 기록",
+      "ts": "12-01 08:00",
+      "quote": "AI 거품 우려 해소 중... 반도체 테마 ETF 수익률 최상위권"
+    },
+    {
+      "fact": "신한자산운용 ‘SOL AI반도체소부장 ETF’, 순자산 5000억원 돌파",
+      "ts": "01-22 08:00",
+      "quote": "신한자산운용 ‘SOL AI반도체소부장 ETF’, 순자산 5000억원 돌파"
+    }
+  ],
+  "quote": "AI 거품 우려 해소 중... 반도체 테마 ETF 수익률 최상위권"
+}

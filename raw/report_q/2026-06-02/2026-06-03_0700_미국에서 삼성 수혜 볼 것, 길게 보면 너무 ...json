@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_미국에서 삼성 수혜 볼 것, 길게 보면 너무 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김홍식, 이상훈",
+    "report_date": "2026년 06월 02일",
+    "stocks": [
+      {
+        "name": "케이엠더블유",
+        "code": "032500",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "70,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출액 150.7십억원, 영업이익 1.6십억원, 2027년 매출액 390.6십억원, 영업이익 111.9십억원으로 예상됨",
+        "estimate_revision": null,
+        "next_catalyst": "미국 주파수 경매, 버라이즌 5G 투자 확대, 5G SA 도입 확산",
+        "thesis": [
+          "금주 미국 주파수 경매를 계기로 금년 4분기 이후 5G 투자가 본격 재개될 전망",
+          "미국 사업자간 경쟁 상황을 감안할 때 AT&T와 더불어 버라이즌도 곧 5G 투자 확대를 공식 언급할 가능성이 높음",
+          "미국이 사실상 중국산 부품 사용 제품에 전파 인증을 해주지 않는 강력한 규제를 적용함에 따라 M/S 전망이 낙관적임"
+        ],
+        "valuation_basis": "향후 이론상 KMW 최대 매출액과 과거 해외 사례 및 최근 미국 통신장비주 Multiple을 감안할 때 현재 시가총액은 너무 적다는 판단",
+        "risk": "분기 영업적자 지속",
+        "supply_comment": "과거 RU 시스템 장비를 OEM으로 공급한 유일한 회사이기도 하지만 필터/안테나 부문에서도 강력한 입지를 구축한 가운데 규제상으로도 유리한 국면이 펼쳐질 것으로 보여 큰 기대를 갖게 함",
+        "quote": "KMW에 대한 투자의견 매수, 12개월 목표주가 70,000원을 유지한다.",
+        "sector": "통신"
+      }
+    ]
+  }
+}
