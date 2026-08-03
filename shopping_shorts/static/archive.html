@@ -68,6 +68,17 @@ async function toggleSave(sc,url,thumb,ch,btn){
   if(d.in){SAVED.add(sc);btn.textContent='🎬 담김✓';btn.classList.add('saved')}
   else{SAVED.delete(sc);btn.textContent='📥 담기';btn.classList.remove('saved')}
 }
+async function blockCh(u,btn){
+  // 영구차단 — 랭킹 화면과 같은 /api/prune/remove 재사용. 아카이브 API가 차단 채널을
+  // 걸러내므로 새로고침 후에도 안 뜬다. 이 페이지 자체가 관리자 전용이라 버튼 게이트 불필요.
+  if(!confirm('@'+u+' 채널을 영구 차단할까요?\n\n아카이브·랭킹·다음 수집에서 모두 사라집니다.\n(정리 탭 「추적 제외됨」에서 되돌릴 수 있습니다)')) return;
+  if(btn){btn.disabled=true;btn.textContent='…';}
+  try{
+    const r=await fetch('/api/prune/remove?username='+encodeURIComponent(u)+'&name='+encodeURIComponent(u),{method:'POST'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    await loadChannels(); await load();
+  }catch(e){ alert('차단 실패: '+e.message); if(btn){btn.disabled=false;btn.textContent='🚫';} }
+}
 async function load(){
   const u=document.getElementById('chSel').value, q=document.getElementById('q').value.trim();
   const d=await (await fetch(`/api/archive/items?sort=${SORT}&username=${encodeURIComponent(u)}&q=${encodeURIComponent(q)}&limit=200`)).json();
@@ -81,7 +92,10 @@ async function load(){
         <span class="views">👁 ${fmt(i.views)}</span>
       </div>
       <div class="body">
-        <div class="ch">@${esc(i.username)}</div>
+        <div class="ch" style="display:flex;justify-content:space-between;align-items:center">
+          <span>@${esc(i.username)}</span>
+          <button title="이 채널을 영구 차단 — 아카이브·랭킹·수집에서 모두 사라집니다" onclick="blockCh('${esc(i.username)}',this)" style="padding:1px 7px;font-size:11px">🚫</button>
+        </div>
         <div class="meta">❤ ${fmt(i.likes)} · 💬 ${fmt(i.comments)} · ${(i.posted_at||'').slice(0,10)}</div>
         <div class="btns">
           <button onclick="window.open('${esc(i.url)}','_blank')">▶ 원본</button>

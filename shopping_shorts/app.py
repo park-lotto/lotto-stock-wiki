@@ -8305,12 +8305,14 @@ def api_archive_channels(request: Request):
     if denied:
         return denied
     store = Store(DB_PATH)
+    blocked = store.removed_usernames()   # 영구차단 채널은 아카이브에서도 안 보이게(2026-08-03)
     with store._conn() as c:
         rows = c.execute(
             "SELECT username, COUNT(*), MAX(views) FROM channel_archive "
             "GROUP BY username ORDER BY MAX(views) DESC").fetchall()
     return {"ok": True, "channels": [
-        {"username": r[0], "reels": r[1], "top_views": r[2] or 0} for r in rows]}
+        {"username": r[0], "reels": r[1], "top_views": r[2] or 0} for r in rows
+        if (r[0] or "").strip().lstrip("@").lower() not in blocked]}
 
 
 @app.get("/api/archive/items")
@@ -8333,12 +8335,14 @@ def api_archive_items(request: Request, username: str = "", sort: str = "views",
            + ("WHERE " + " AND ".join(where) + " " if where else "")
            + f"ORDER BY {order} LIMIT ?")
     args.append(max(1, min(int(limit or 120), 500)))
+    blocked = store.removed_usernames()   # 영구차단 채널 릴스 숨김(2026-08-03)
     with store._conn() as c:
         rows = c.execute(sql, args).fetchall()
     return {"ok": True, "items": [
         {"username": r[0], "shortcode": r[1], "url": r[2], "thumbnail": r[3],
          "views": r[4], "likes": r[5], "comments": r[6], "posted_at": r[7]}
-        for r in rows]}
+        for r in rows
+        if (r[0] or "").strip().lstrip("@").lower() not in blocked]}
 
 
 @app.get("/api/archive/similar")
