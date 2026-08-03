@@ -8322,7 +8322,7 @@ def api_archive_items(request: Request, username: str = "", sort: str = "views",
     if denied:
         return denied
     store = Store(DB_PATH)
-    order = "posted_at DESC" if sort == "recent" else "views DESC"
+    order = {"recent": "posted_at DESC", "comments": "comments DESC"}.get(sort, "views DESC")
     where, args = [], []
     if username:
         where.append("username=?"); args.append(username.strip().lstrip("@"))
@@ -8339,6 +8339,56 @@ def api_archive_items(request: Request, username: str = "", sort: str = "views",
         {"username": r[0], "shortcode": r[1], "url": r[2], "thumbnail": r[3],
          "views": r[4], "likes": r[5], "comments": r[6], "posted_at": r[7]}
         for r in rows]}
+
+
+@app.get("/api/archive/similar")
+def api_archive_similar(request: Request, shortcode: str, limit: int = 40):
+    """랭킹 릴스 1개 → 내 아카이브에서 '같은 제품/주제'의 옛 영상 찾기(2026-08-03).
+
+    사장님 궁극 목표: 오늘 랭킹 상위 영상을 렌즈 버튼처럼 눌러, 우리가 크롤해 둔
+    채널 아카이브에서 예전 같은 소재 영상을 찾아 담기→믹스. 매칭은 양쪽 비전태그
+    (subject+keywords)의 토큰 겹침 — 렌즈(SerpApi) 비용 0. 소스에 태그가 아직
+    없으면 no_tags로 알려준다(수집 태깅이 곧 붙는다)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    import json as _json
+    store = Store(DB_PATH)
+    src = store.vision_tags_map([shortcode]).get(shortcode)
+    if not src:
+        return {"ok": True, "no_tags": True, "items": []}
+    def _tokens(subject, kws):
+        toks = set()
+        for w in ([subject or ""] + list(kws or [])):
+            for t in str(w).replace(",", " ").split():
+                if len(t) >= 2:
+                    toks.add(t.lower())
+        return toks
+    src_t = _tokens(src.get("subject"), src.get("keywords"))
+    if not src_t:
+        return {"ok": True, "no_tags": True, "items": []}
+    with store._conn() as c:
+        rows = c.execute(
+            "SELECT a.username, a.shortcode, a.url, a.thumbnail, a.views, a.likes, "
+            " a.comments, a.posted_at, v.subject, v.keywords_json "
+            "FROM channel_archive a JOIN vision_tags v ON v.shortcode=a.shortcode "
+            "LIMIT 50000").fetchall()
+    scored = []
+    for r in rows:
+        if r[1] == shortcode:
+            continue
+        try:
+            kws = _json.loads(r[9] or "[]")
+        except ValueError:
+            kws = []
+        ov = len(src_t & _tokens(r[8], kws))
+        if ov:
+            scored.append((ov, r))
+    scored.sort(key=lambda x: (-x[0], -(x[1][6] or 0)))   # 겹침↓ → 댓글수↓(사장님 기준)
+    return {"ok": True, "no_tags": False, "src_tags": sorted(src_t), "items": [
+        {"username": r[0], "shortcode": r[1], "url": r[2], "thumbnail": r[3],
+         "views": r[4], "likes": r[5], "comments": r[6], "posted_at": r[7],
+         "overlap": ov} for ov, r in scored[:max(1, min(limit, 100))]]}
 
 # ★C-1(2026-07-16 라이브 실증): 위 _NOCACHE는 /produce 등 "클린 URL" 라우트에만 붙는다.
 # /sidebar.js 같은 정적 JS/CSS/HTML은 아래 StaticFiles 마운트가 헤더 없이 그대로 서빙해서

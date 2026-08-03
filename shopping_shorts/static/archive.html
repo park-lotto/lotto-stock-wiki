@@ -34,7 +34,8 @@ button.on{border-color:var(--accent);color:var(--accent);font-weight:700}
 <div class="bar">
   <select id="chSel"><option value="">전체 채널</option></select>
   <input id="q" placeholder="채널명 검색" style="width:140px">
-  <button id="bViews" class="on" onclick="setSort('views')">🔥 조회수순</button>
+  <button id="bComments" class="on" onclick="setSort('comments')">💬 댓글순</button>
+  <button id="bViews" onclick="setSort('views')">🔥 조회수순</button>
   <button id="bRecent" onclick="setSort('recent')">🕒 최신순</button>
   <button onclick="load()">↻ 새로고침</button>
   <span class="stat">아카이브는 백그라운드로 계속 쌓입니다(팔로워 큰 채널부터) — 새로고침하면 늘어나요.</span>
@@ -43,10 +44,12 @@ button.on{border-color:var(--accent);color:var(--accent);font-weight:700}
 </div>
 <script src="/sidebar.js"></script>
 <script>
-let SORT='views', SAVED=new Set();
+let SORT='comments', SAVED=new Set();   // 기본=댓글순(사장님: 댓글수 기준이 제일 정확)
 function fmt(n){n=n||0;if(n>=1e8)return (n/1e8).toFixed(1)+'억';if(n>=1e4)return (n/1e4).toFixed(1)+'만';return n.toLocaleString()}
 function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function setSort(s){SORT=s;document.getElementById('bViews').classList.toggle('on',s==='views');
+function setSort(s){SORT=s;
+  document.getElementById('bComments').classList.toggle('on',s==='comments');
+  document.getElementById('bViews').classList.toggle('on',s==='views');
   document.getElementById('bRecent').classList.toggle('on',s==='recent');load()}
 async function loadChannels(){
   const d=await (await fetch('/api/archive/channels')).json();

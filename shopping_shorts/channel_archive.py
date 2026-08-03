@@ -137,6 +137,16 @@ def run(limit=None, max_scrolls=_MAX_SCROLLS, sleep=time.sleep, log=print):
             walls = 0
             ok += 1
             log(f"[아카이브] {idx}/{len(targets)} @{u}: {len(items)}개 저장")
+            # 비전태깅(2026-08-03 사장님 승인) — 썸네일이 인스타 CDN 만료토큰이라
+            # **크롤 직후**가 태깅 골든타임. shortcode 캐시라 재크롤 땐 재호출 없음.
+            # 실패는 무해(그 릴스만 태그 없이 남음). 건당 ~2.2s — 크롤과 같은 저속 결이다.
+            try:
+                from shopping_shorts import vision_tagging
+                n = vision_tagging.tag_new_items(items, DB_PATH, cap=500)
+                if n:
+                    log(f"[아카이브] @{u} 비전태깅 {n}건")
+            except Exception as e:      # noqa: BLE001 — 태깅 실패가 크롤을 멈추면 안 된다
+                log(f"[아카이브] @{u} 태깅 실패(무시): {str(e)[:80]}")
         elif "/accounts/login" in (final_url or ""):
             walls += 1
             store.archive_mark(u, "login_wall", note=final_url[:120])
