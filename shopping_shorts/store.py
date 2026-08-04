@@ -249,6 +249,18 @@ class Store:
                     created_at TEXT
                 )
             """)
+            # 영상 길이 캐시(2026-08-04) — shortcode당 1행, 랭킹 카드 ⏱ 표시용.
+            # 인스타 목록 응답엔 길이가 없어 릴스마다 1회 조회(duration_backfill)가
+            # 필요한데, 길이는 불변이라 한 번 채우면 영원히 재사용한다. fail_count는
+            # 죽은 릴스를 매번 두드리지 않기 위한 포기 카운터(MAX_FAIL 초과 시 제외).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS reel_durations (
+                    shortcode  TEXT PRIMARY KEY,
+                    duration   REAL,
+                    fail_count INTEGER DEFAULT 0,
+                    updated_at TEXT
+                )
+            """)
             # 한→중 소재 번역 캐시(2026-07-24) — ko당 1행, 있으면 재호출 안 함(무과금).
             # zh 빈 문자열도 저장(번역실패 캐시) — get_translation은 그걸 ""로, 미조회는 None으로 구분.
             # 샤오홍슈·도우인 트렌드 검색카드(/api/translate + 벌크 backfill_cn_keywords)도 이 캐시를 읽는다.
@@ -2460,6 +2472,59 @@ class Store:
                     out[sc] = {"subject": subj or "", "keywords": json.loads(kj or "[]")}
         return out
 
+    # --- 영상 길이 캐시(reel_durations, 2026-08-04) — 랭킹 카드 ⏱ 표시용 ---
+    def duration_map(self, shortcodes):
+        """여러 shortcode → {shortcode: duration(초)} (성공 캐시만)."""
+        codes = [s for s in (shortcodes or []) if s]
+        out = {}
+        if not codes:
+            return out
+        with self._conn() as c:
+            for i in range(0, len(codes), 400):     # sqlite 변수 상한(999) 회피
+                chunk = codes[i:i + 400]
+                q = ("SELECT shortcode, duration FROM reel_durations "
+                     "WHERE duration IS NOT NULL AND shortcode IN (%s)"
+                     % ",".join("?" * len(chunk)))
+                for sc, dur in c.execute(q, chunk).fetchall():
+                    out[sc] = dur
+        return out
+
+    def duration_fail_map(self, shortcodes):
+        """여러 shortcode → {shortcode: fail_count} (실패 이력 있는 것만)."""
+        codes = [s for s in (shortcodes or []) if s]
+        out = {}
+        if not codes:
+            return out
+        with self._conn() as c:
+            for i in range(0, len(codes), 400):
+                chunk = codes[i:i + 400]
+                q = ("SELECT shortcode, fail_count FROM reel_durations "
+                     "WHERE fail_count > 0 AND shortcode IN (%s)"
+                     % ",".join("?" * len(chunk)))
+                for sc, n in c.execute(q, chunk).fetchall():
+                    out[sc] = int(n or 0)
+        return out
+
+    def set_reel_duration(self, shortcode, duration):
+        """길이(초) 저장 — 성공하면 fail_count는 의미 없어지므로 0으로 리셋."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO reel_durations(shortcode, duration, fail_count, updated_at) "
+                "VALUES(?,?,0,datetime('now')) "
+                "ON CONFLICT(shortcode) DO UPDATE SET duration=excluded.duration, "
+                "fail_count=0, updated_at=excluded.updated_at",
+                (shortcode, float(duration)))
+
+    def bump_duration_fail(self, shortcode):
+        """조회 실패 1회 기록 — MAX_FAIL 넘으면 duration_backfill이 더 안 두드린다."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO reel_durations(shortcode, duration, fail_count, updated_at) "
+                "VALUES(?,NULL,1,datetime('now')) "
+                "ON CONFLICT(shortcode) DO UPDATE SET fail_count=fail_count+1, "
+                "updated_at=excluded.updated_at",
+                (shortcode,))
+
     def get_translation(self, ko):
         """한국어 소재 → 저장된 중국어. 없으면 None, 번역실패로 빈값 저장됐으면 ""."""
         if not ko:
@@ -3871,7 +3936,7 @@ class Store:
     # 고객이 화면 앞에서 기다리는 작업 = 0(먼저), 배경 보조작업 = 10(나중).
     # 예전엔 큐가 id순이라 누가 영상 5개를 담으면 예열 5건이 남의 렌더를 앞질렀다(2026-07-30).
     TASK_PRIO = {"render": 0, "mix": 0, "retype": 0, "preview": 0, "clean": 0,
-                 "prewarm": 10, "overseas": 20}
+                 "prewarm": 10, "overseas": 20, "durfill": 30}
 
     def _owner_of(self, task, args):
         """이 작업이 누구 것인가(계정별 공평 분배용). 못 알아내면 None(제한 없음).

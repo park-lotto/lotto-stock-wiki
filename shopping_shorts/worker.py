@@ -12,7 +12,7 @@ import logging
 import threading
 import time
 
-from shopping_shorts import mix_pipeline, overseas_hot_jobs, prewarm
+from shopping_shorts import duration_backfill, mix_pipeline, overseas_hot_jobs, prewarm
 from shopping_shorts.config import DB_PATH
 from shopping_shorts.store import Store
 
@@ -37,6 +37,9 @@ TASKS = {
         a.get("shortcode"), a.get("url"), caption=a.get("caption") or "",
         customer_id=a.get("customer_id") or "0", video_url=a.get("video_url") or "",
         category=a.get("category")),
+    # 랭킹 카드 ⏱ 길이 백필(2026-08-04) — /api/reference가 1시간에 1번 넣는다.
+    # 실패해도 무해(run_backfill이 예외 없이 요약 문자열만 돌려준다).
+    "durfill":  lambda a: duration_backfill.run_backfill(),
 }
 
 # 진행 문구(phase·count)를 큐로 실어 보내는 리더 — 워커 프로세스 안에서만 읽을 수 있다
