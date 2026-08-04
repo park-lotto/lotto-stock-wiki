@@ -3046,7 +3046,7 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         if single_source.cta_missing(beats):
             # LLM 교정까지 실패(키 소진·429)해도 CTA는 보장 — 결정적 문구로 마지막 문장 교체.
             kw = "나도" if "나도" in _mat else "정보"
-            beats[-1]["narration"] = f"방법이 궁금하면 댓글에 '{kw}' 남겨주세요."
+            beats[-1]["narration"] = f"방법이 궁금하면 댓글에 '{kw}' 남겨주시면 바로 보내드릴게요."
         # ★CTA 비트 생존 보장(2026-08-04 실측): 모델이 CTA를 제대로 써도 covers가 비면
         # 아래 커버 배정에서 컷 0개 → 통째로 탈락 → 앞 문장이 [cta] 자리로 밀려
         # "안심이라 최고예요"류 감상문이 CTA가 됐다(fix_cta 호출 0회가 증거 — 프롬프트
@@ -3125,7 +3125,7 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         # plan 확정 직후라 어떤 경로로 와도 여기서 잡힌다.
         if plan_beats and "댓글" not in (plan_beats[-1].get("narration") or ""):
             _kw = "나도" if "나도" in _mat else "정보"
-            plan_beats[-1]["narration"] = f"방법이 궁금하면 댓글에 '{_kw}' 남겨주세요."
+            plan_beats[-1]["narration"] = f"댓글에 '{_kw}' 남겨주시면 방법 바로 보내드릴게요."
             plan_beats[-1]["caption_lines"] = None
         plan = {"structure": "free", "beats": plan_beats, "detected_type": detected,
                 "single_source": True, "hook_pattern": pat[0],
