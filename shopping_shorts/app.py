@@ -8804,9 +8804,12 @@ def api_archive_similar(request: Request, shortcode: str, limit: int = 40,
          "views": r[4], "likes": r[5], "comments": r[6], "posted_at": r[7],
          "overlap": ov, "same_product": r[1] in verified}
         for ov, r in scored[:max(1, min(limit, 100))]]
-    # no_tags는 이제 '태그도 없고 제품명 경로로도 못 찾음'일 때만 — 결과가 있으면
-    # 태그가 없어도 정상 결과로 내보낸다.
-    return {"ok": True, "no_tags": (not src_t) and not items, "src_tags": sorted(src_t),
+    # no_tags는 '태그도 없고 제품명도 못 읽음'일 때만. 제품명을 읽었는데 결과가 0이면
+    # no_tags가 아니다 — 프론트가 '같은 제품이 아직 없다'는 정직한 안내를 하게 한다
+    # (실사고: 냉장고 영상이 '스테인리스 냉장고'로 판독됐는데도 '판독 없음'으로 안내됨).
+    return {"ok": True,
+            "no_tags": (not src_t) and not src_product and not known_q and not items,
+            "src_tags": sorted(src_t),
             "src_product": src_product, "verified_count": len(verified), "items": items}
 
 
