@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-08-04",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-04_1104_예상되었던 2Q 호실적.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "권명준",
+    "report_date": "2026.08.04",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "디지털대성",
+        "code": "068930",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": {
+          "2Q26": "2Q26 실적은 매출액 690.3억원, 영업이익 151.1억원으로 전년대비 각각 16.4%, 49.9% 성장했다.",
+          "3Q26": "동사는 3Q가 성수기이며, 상반기 실적이 전년대비 개선되었다는 상황을 고려시 3Q26에도 사상 최대 실적이 기대된다."
+        },
+        "estimate_revision": null,
+        "next_catalyst": "주주환원정책(연결기준 지배지분순이익의 50% 이상 환원), 자사주 소각 및 추가 매입",
+        "thesis": [
+          "수능제도 변경 이전 마지막 연도라는 점에서 수능을 준비하는 N수생 증가",
+          "고등 온라인 및 오프라인 고등부분(호법기숙 의대관, 강대기숙 퀘타) 성장",
+          "주주환원 규모 확대 기대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "수능제도 개편전 마지막해인 올해, 반수생들의 유입이 예상된다. 수능 모의고사 관련 이감도 실적개선에 기여할 것으로 예상된다.",
+        "sector": "소비내수"
+      }
+    ]
+  }
+}

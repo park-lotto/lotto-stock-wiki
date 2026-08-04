@@ -6,35 +6,62 @@
       "rating": null,
       "tp": null,
       "ts": "12:15",
-      "quote": "350억원 규모 CB 전환 임박…\"단기 오버행 제한적\"",
+      "quote": "350억원 규모 CB 전환 임박…단기 오버행 제한적",
       "sector": "바이오"
     },
     {
       "broker": "그로쓰리서치",
-      "stock": "삼성전자",
+      "stock": "삼성전자, SK하이닉스, 마이크론",
       "rating": null,
       "tp": null,
       "ts": "07:47",
-      "quote": "삼성전자·SK하이닉스·마이크론의 2027년 DRAM 및 HBM 생산능력이 사실상 모두 배정 완료.",
+      "quote": "2027년 DRAM 생산능력 사실상 완판, AI 수요가 장기 공급부족 고착화",
       "sector": "반도체"
     },
     {
       "broker": "그로쓰리서치",
-      "stock": "SK하이닉스",
+      "stock": "대주전자재료",
       "rating": null,
       "tp": null,
-      "ts": "07:47",
-      "quote": "삼성전자·SK하이닉스·마이크론의 2027년 DRAM 및 HBM 생산능력이 사실상 모두 배정 완료.",
+      "ts": "08:26",
+      "quote": "'탈중국 대안' 대주전자재료, 스페이스X 우주 태양광 전극 소재 뚫었다",
+      "sector": "2차전지"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SK하이닉스, 샌디스크",
+      "rating": null,
+      "tp": null,
+      "ts": "09:03",
+      "quote": "SK하이닉스, 샌디스크와 차세대 스토리지 HBF 첫 표준규격 공개",
       "sector": "반도체"
     },
     {
       "broker": "그로쓰리서치",
-      "stock": "마이크론",
+      "stock": "스피어",
       "rating": null,
       "tp": null,
-      "ts": "07:47",
-      "quote": "삼성전자·SK하이닉스·마이크론의 2027년 DRAM 및 HBM 생산능력이 사실상 모두 배정 완료.",
-      "sector": "반도체"
+      "ts": "09:21",
+      "quote": "탐방보고서 스피어 +15.8% 급등 중",
+      "sector": "기타"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "아마존, 마이크로소프트, 메타, 알파벳, 오라클",
+      "rating": null,
+      "tp": null,
+      "ts": "09:39",
+      "quote": "하이퍼스케일러, AI 투자 위해 역대 최대 규모 회사채 발행",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "매그니피센트7",
+      "rating": null,
+      "tp": null,
+      "ts": "11:20",
+      "quote": "헤지펀드, 기술주 매수 다시 확대…반도체 중심으로 자금 유입",
+      "sector": "IT"
     }
   ]
 }

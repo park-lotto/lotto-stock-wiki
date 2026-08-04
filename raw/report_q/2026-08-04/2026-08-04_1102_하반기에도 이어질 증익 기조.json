@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-08-04",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-04_1102_하반기에도 이어질 증익 기조.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "유재선",
+    "report_date": "2026년 8월 4일",
+    "stocks": [
+      {
+        "name": "LX인터내셔널",
+        "code": "001120",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "66,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": {
+          "2Q26": "매출액 4.8조원(YoY +24.7%), 영업이익 1,178억원(YoY +114.2%)으로 컨센서스 부합",
+          "3Q26": "자원 트레이딩 물량 증가와 IT 성수기 효과로 안정적인 이익 흐름이 이어질 수 있다. 물류는 CL 사업 성장이 지속되고 있으며 해상운임 상승으로 하반기 이익률 상승이 예상된다."
+        },
+        "estimate_revision": null,
+        "next_catalyst": "연내 인도네시아 보크사이트 광산 투자 결과 가시화",
+        "thesis": [
+          "하반기 자원 부문의 불확실성을 감안하더라도 전년대비 증익 기조는 여전히 유효",
+          "해운 시황 강세에 따른 물류 부문 중심 외형 성장 지속",
+          "인도네시아 보크사이트 및 니켈 광산 투자를 통한 자원 역량 확보"
+        ],
+        "valuation_basis": "2026년 기준 PER 3.9배, PBR 0.4배",
+        "risk": "인도네시아의 생산량 규제 및 광산 생산쿼터 추가 발급 제한",
+        "supply_comment": null,
+        "quote": "LX인터내셔널 목표주가 66,000원과 투자의견 매수를 유지한다. 2분기 실적은 시장 기대치에 부합했다. 모든 부문에서 고른 이익 성장이 나타났다."
+      }
+    ]
+  }
+}

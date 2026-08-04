@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "date": "2026-08-04",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-04_1106_완성차 도매판매 동향(2026년 7월).md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "송선재",
+    "report_date": "2026.8.4",
+    "stocks": [
+      {
+        "name": "현대차",
+        "code": null,
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "650,000",
+        "tp_prev": "760,000",
+        "tp_direction": "down",
+        "earnings_outlook": "7월 글로벌 도매판매는 31.8만대 (-5% (YoY)), 내수 4.8만대(-14% (YoY))/해외 27.0만대(-3% (YoY))",
+        "estimate_revision": null,
+        "next_catalyst": "하반기 로봇 및 자율주행 모멘텀(주요 휴머노이드 로봇들의 출시, BD의 RMAC 확대, 생산법인 RA 설립, 공급망 구축, SDV Pace Car 출시 등)",
+        "thesis": [
+          "7월 글로벌 도매판매가 -5%(YoY)로 부진 지속",
+          "산업적 요인(수요 둔화, 경쟁 심화, 중국 EV 경쟁)은 당분간 부정적 영향 지속 예상",
+          "하반기 생산 차질 해소 및 신차 출시(아반떼/투산/그랜저HEV/아반떼HEV/GV90/아이오닉3 등)를 통한 기업적 요인 개선 기대"
+        ],
+        "valuation_basis": "12MF P/E 9배대, 자동차 주식으로도 소폭 저평가 영역",
+        "risk": "중국 EV와의 경쟁 및 산업적 수요 둔화",
+        "supply_comment": "한국/인도에서 부품사 화재건으로 발생했던 생산차질은 대체 생산방식의 발굴로 해소될 것",
+        "quote": "현대차/기아의 7월 글로벌 도매판매가 -5%/+13% (YoY)로 변동",
+        "sector": "자동차"
+      },
+      {
+        "name": "기아",
+        "code": null,
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "190,000",
+        "tp_prev": "220,000",
+        "tp_direction": "down",
+        "earnings_outlook": "7월 글로벌 도매판매는 29.8만대 (+13% (YoY)), 내수 5.5만대(+21% (YoY))/해외 24.3만대(+12% (YoY))",
+        "estimate_revision": null,
+        "next_catalyst": "이미 출시했던 EV3/EV4/EV5/PV5 효과의 글로벌 확산 및 셀토스/셀토스HEV 가세",
+        "thesis": [
+          "기아는 신차 효과로 인해 도매판매 증가율 상승",
+          "내수 친환경차 판매 비중 58%(+9%p)로 친환경차 중심의 성장세",
+          "EV 전용 모델인 EV3, EV5 등의 견조한 판매 및 다양한 신차 라인업 효과"
+        ],
+        "valuation_basis": "12MF P/E 6배대, 자동차 주식으로도 소폭 저평가 영역",
+        "risk": "글로벌 산업수요 둔화 및 경쟁 심화",
+        "supply_comment": "한국/인도에서 부품사 화재건으로 발생했던 생산차질은 대체 생산방식의 발굴로 해소될 것",
+        "quote": "기아는 신차 효과로 증가율 상승",
+        "sector": "자동차"
+      }
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-08-04",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-04_1101_2Q26 Review; 레이저티닙 유럽 진출 시작.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "정희령",
+    "report_date": "2026/08/04",
+    "stocks": [
+      {
+        "name": "유한양행",
+        "code": "000100",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "130,000원",
+        "tp_prev": "130,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "유한양행 2분기 연결 매출액 6,394억원 (YoY +10.4%), 영업이익 668억원 (YoY +34.1%, OPM 10.5%) 기록하며 컨센서스 상회",
+        "estimate_revision": null,
+        "next_catalyst": "하반기 추정되는 MARIPOSA 임상 mOS 데이터 발표 모멘텀 존재, 27년 연초 중간 데이터 일부 확인 가능할 것으로 판단",
+        "thesis": [
+          "레이저티닙 유럽 마일스톤 반영 및 공급 계약 체결",
+          "J&J 리브리반트/라즈클루즈 매출 성장 및 임상 데이터 기대감",
+          "알레르기 치료제 ‘레시게르셉트’ 기술 이전 논의 진행"
+        ],
+        "valuation_basis": "투자의견 Buy 및 목표주가 130,000원으로 유지",
+        "risk": "자디앙 등 약가인하 예정되어 있는 품목 존재 및 상반기 레이저티닙 로열티는 124억원으로 연간 마일스톤 및 로열티 가이던스 450억원 달성을 위해서는 신규 기술이전 체결이 필수적일 것으로 추정",
+        "supply_comment": "2Q26 내 브릿지 바이오파마 (560억 규모), 길리어드 사이언스 (2,102억 규모) 포함 두 건의 공급 계약 체결",
+        "quote": "유한양행의 투자의견 Buy 및 목표주가 130,000원으로 유지."
+      }
+    ],
+    "sector": "바이오"
+  }
+}
