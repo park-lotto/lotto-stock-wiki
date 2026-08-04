@@ -2986,6 +2986,118 @@ def _backbone_order_block(backbone_video, source_scripts):
         "장면만 그대로 따라가거나, 서브 소스 일부만 쓰고 나머지를 버리면 안 된다.")
 
 
+def _single_source_candidates(source_scripts, seg_map, target_seconds,
+                              n_candidates, call, detected, judge=False):
+    """1소스 전용 대본 생성(2026-08-04, handoff 남은작업①의 '핵심 배선').
+
+    기존 경로는 목표길이 조정+훅 주입'만' 하고 생성은 범용 생성기가 해서
+    ① 훅이 10패턴 뼈대를 무시하고 ② 총량이 목표(원본 90%, 하한 20초)에 못 미치거나
+    튀었다(실측 job ae8961b5f3af: 원본 22.0초 → 플랜 14.6초, 훅 패턴 밖).
+
+    여기서는 single_source가 처음부터 끝까지 운전한다:
+      컷 선별·순서(select_and_order) → 후보마다 다른 훅 패턴(hook_patterns.choose)
+      → script_prompt(문장수·글자예산 강제) → over_budget/shrink 교정루프
+      → covers 기반으로 화면을 코드가 배정(모든 컷 100% 커버 = 화면길이가 예산 그대로).
+    실패(빈 후보)면 None을 돌려 기존 경로로 폴백한다(회귀0).
+    """
+    from shopping_shorts import single_source, hook_patterns
+    segments = next((s.get("segments") for s in source_scripts if s.get("segments")), [])
+    span, budget, used, order = single_source.select_and_order(segments, target_seconds)
+    if not order:
+        return None
+    _mat = " ".join((s.get("full_text") or "") for s in source_scripts)
+    pats = hook_patterns.choose(max(3, n_candidates), material_text=_mat)
+    if not pats:
+        return None
+    print("[1소스대본] 원본 %.1f초 → 예산 %.1f초, 컷 %d개, 훅후보: %s"
+          % (span, budget, len(order), " / ".join(p[1] for p in pats)), file=sys.stderr)
+    src_texts = [s.get("full_text", "") for s in source_scripts]
+    cands = []
+    for i in range(max(1, n_candidates)):
+        pat = pats[i % len(pats)]
+        prompt = single_source.script_prompt(order, used, hook_patterns.prompt_block(pat))
+        beats = single_source.parse_beats(call(prompt, single_source.BEATS_SCHEMA))
+        # 총량 교정루프(최대 2회) — 넘치면 표현만 줄여 다시 받는다.
+        for _ in range(2):
+            over, _secs, _o = single_source.over_budget(beats, used)
+            if not beats or not over:
+                break
+            b2 = single_source.parse_beats(
+                call(single_source.shrink_prompt(beats, used), single_source.BEATS_SCHEMA))
+            if b2:
+                beats = b2
+        if not beats:
+            continue
+        # covers → 화면 배정. 모델이 빠뜨린 컷은 직전 비트에 붙여 **컷 100% 커버**를 코드가
+        # 보장한다(화면 총길이 == used == 예산 → 길이 하한이 프롬프트 아닌 코드로 지켜진다).
+        covered_by = {}                      # 컷 번호(1-base) → 비트 인덱스
+        for bi, b in enumerate(beats):
+            for c in (b.get("covers") or []):
+                try:
+                    c = int(c)
+                except (TypeError, ValueError):
+                    continue
+                if 1 <= c <= len(order):
+                    covered_by.setdefault(c, bi)
+        last_bi = 0
+        for c in range(1, len(order) + 1):
+            if c in covered_by:
+                last_bi = covered_by[c]
+            else:
+                covered_by[c] = last_bi      # 구멍은 직전 비트가 이어받는다
+        beat_cuts = {}
+        for c in sorted(covered_by):
+            beat_cuts.setdefault(covered_by[c], []).append(c)
+        plan_beats = []
+        for bi, b in enumerate(beats):
+            narration = (b.get("narration") or "").strip()
+            cuts = beat_cuts.get(bi) or []
+            if not narration or not cuts:
+                continue
+            covered = [order[c - 1] for c in cuts]
+            def _clean(s):
+                return {k: v for k, v in s.items() if k != "_dur"}
+            plan_beats.append({
+                "beat_idx": len(plan_beats), "role": "",
+                "narration": narration, "caption_lines": None,
+                "target_seconds": round(max(1.5, len(narration) / _SYLLABLES_PER_SEC), 1),
+                "primary": _clean(covered[0]),
+                "alternates": [_clean(s) for s in covered[1:]],
+                "effect": "cut", "fit": 5, "forced": False,
+            })
+        if len(plan_beats) < 3:
+            continue
+        plan_beats[0]["role"] = "hook"
+        plan_beats[-1]["role"] = "cta"
+        for b in plan_beats[1:-1]:
+            b["role"] = "story_event"
+        if len(plan_beats) >= 4:
+            plan_beats[-2]["role"] = "story_resolution"
+        plan_beats = _fix_beat_structure(plan_beats)
+        plan_beats = _fill_beat_screen_time(plan_beats, seg_map)
+        plan = {"structure": "free", "beats": plan_beats, "detected_type": detected,
+                "single_source": True, "hook_pattern": pat[0],
+                "affiliate_target": "", "plagiarism_flags": _plagiarism_flags(plan_beats, src_texts)}
+        rule_score = _score_candidate(plan, target_seconds=budget, source_full_texts=src_texts)
+        cand = {"plan": plan, "story": {"hook": plan_beats[0]["narration"]},
+                "score": rule_score, "recommended": False}
+        if judge:
+            from shopping_shorts import candidate_judge
+            jr = candidate_judge.judge(plan_beats, call=call)
+            if jr:
+                cand["judge"] = jr
+                cand["score"] = round(0.5 * rule_score + 0.5 * jr["total"], 3)
+        scr = sum(float(b.get("target_seconds") or 0) for b in plan_beats)
+        print("[1소스대본] 후보%d 훅패턴=%s %d비트 나레이션 %.1f초 / 화면예산 %.1f초"
+              % (i + 1, pat[0], len(plan_beats), scr, used), file=sys.stderr)
+        cands.append(cand)
+    if not cands:
+        return None
+    best = max(range(len(cands)), key=lambda k: cands[k]["score"])
+    cands[best]["recommended"] = True
+    return {"candidates": cands, "detected_type": detected}
+
+
 def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                            n_candidates=3, video_type=None, call=None, ping_pong=False,
                            backbone_meta=None, backbone_forced=None, bank_context="",
@@ -3008,6 +3120,15 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     if not seg_map:
         return {"candidates": [], "detected_type": detected}
     _call = call or _vault_call
+    # ★1소스 전용 경로(2026-08-04): 훅 10패턴·길이(하한 20초·원본 90%)를 single_source가
+    #   처음부터 끝까지 운전한다. 실패하면 None → 아래 기존 경로 그대로(회귀0).
+    from shopping_shorts import single_source as _ss
+    if _ss.is_single_source(source_scripts):
+        _ss_result = _single_source_candidates(
+            source_scripts, seg_map, target_seconds, n_candidates, _call, detected, judge=judge)
+        if _ss_result and _ss_result.get("candidates"):
+            return _ss_result
+        print("[1소스대본] 전용 생성 실패 — 기존 경로 폴백", file=sys.stderr)
     # 화면 순서 뼈대(order_block)를 두 모드로 정한다:
     #  ★기본 경로(backbone_base off = 라이브 기본): 장면 스파인 먼저(2026-07-29 사장님).
     #    카테고리 감지 → 그 카테고리 스파인 슬롯 순서로 태깅된 장면을 먼저 배치(장면 순서 확정)

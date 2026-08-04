@@ -53,3 +53,33 @@ def test_different_product_not_marked_same(db):
     out = _call(db)
     near = next(i for i in out["items"] if i["shortcode"] == "NEAR")
     assert near["same_product"] is False   # 극세사 걸레 ≠ 전동 채칼
+
+
+def test_untagged_query_still_searches_via_product(db):
+    """질의 영상에 비전태그가 없어도(미태깅) 제품명 경로로 검색된다 — no_tags 조기반환 회귀."""
+    path = db
+    store = Store(path)
+    with store._conn() as c:
+        c.execute("INSERT INTO channel_archive(username, shortcode, url, thumbnail, "
+                  " views, likes, comments, posted_at) VALUES('chan_q','NOTAG','u','t',1,1,1,'2026-01-01')")
+    with patch.object(ap, "DB_PATH", path), \
+         patch.object(ap, "_require_admin", lambda req: None), \
+         patch("shopping_shorts.product_name.identify_many",
+               lambda items, dbp: {"NOTAG": "전동 채칼"}):
+        out = ap.api_archive_similar(request=None, shortcode="NOTAG")
+    assert out["no_tags"] is False
+    codes = [i["shortcode"] for i in out["items"]]
+    assert "SAME" in codes and codes[0] == "SAME"
+
+
+def test_untagged_query_and_no_product_reports_no_tags(db):
+    path = db
+    store = Store(path)
+    with store._conn() as c:
+        c.execute("INSERT INTO channel_archive(username, shortcode, url, thumbnail, "
+                  " views, likes, comments, posted_at) VALUES('chan_q','NADA','u','t',1,1,1,'2026-01-01')")
+    with patch.object(ap, "DB_PATH", path), \
+         patch.object(ap, "_require_admin", lambda req: None), \
+         patch("shopping_shorts.product_name.identify_many", lambda items, dbp: {}):
+        out = ap.api_archive_similar(request=None, shortcode="NADA")
+    assert out["no_tags"] is True and out["items"] == []
