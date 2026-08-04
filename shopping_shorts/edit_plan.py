@@ -3007,7 +3007,15 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
     실패(빈 후보)면 None을 돌려 기존 경로로 폴백한다(회귀0).
     """
     from shopping_shorts import single_source, hook_patterns
-    segments = next((s.get("segments") for s in source_scripts if s.get("segments")), [])
+    _src_entry = next((s for s in source_scripts if s.get("segments")), {})
+    segments = _src_entry.get("segments") or []
+    # ★video_id 필수(2026-08-04 실사고 job ed7445bfa4e7): extract의 세그먼트에는 video_id가
+    #   없다(소스 키 아래 중첩). 없이 내보내면 조립기가 원본 mp4를 못 찾아 그 비트의 클립이
+    #   전멸하고, video_assemble의 '클립 0개 비트는 조용히 스킵'에 걸려 **훅이 통째로
+    #   빠진 미리보기**가 나갔다(화면보충이 붙은 비트만 우연히 살아남았다).
+    _vid = _src_entry.get("video_id")
+    for _s in segments:
+        _s.setdefault("video_id", _vid)
     span, budget, used, order = single_source.select_and_order(segments, target_seconds)
     if not order:
         return None
