@@ -147,7 +147,11 @@ def _ig_video_via_session(code):
     """shortcode → 세션 REST(video_versions)의 직접 mp4 URL. 실패·세션 없음이면 "".
 
     수집기(instagram_playwright)가 매일 쓰는 로그인 세션 경로를 그대로 재사용한다 —
-    yt-dlp 인스타 추출기가 깨져 있을 때의 무료 안전망(2026-08-03)."""
+    yt-dlp 인스타 추출기가 깨져 있을 때의 무료 안전망(2026-08-03).
+
+    ★code를 반드시 넘긴다(2026-08-04): 인스타가 REST(/media/{pk}/info/)를 없애고 HTML을
+    돌려주기 시작해, _fetch_reel_detail이 code로 GraphQL 폴백을 타야 mp4를 얻는다.
+    code 없이 부르면 REST만 시도하다 그대로 실패한다."""
     from shopping_shorts import config as _cfg
     if not (_cfg.INSTAGRAM_SESSION_PATH and Path(_cfg.INSTAGRAM_SESSION_PATH).exists()):
         return ""
@@ -157,7 +161,7 @@ def _ig_video_via_session(code):
     if not pk:
         return ""
     with _detail_context() as ctx:
-        node = _fetch_reel_detail(ctx, pk)
+        node = _fetch_reel_detail(ctx, pk, code)
     vv = (node or {}).get("video_versions") or []
     return (vv[0] or {}).get("url") or "" if vv else ""
 
@@ -199,14 +203,24 @@ def _download_instagram(url, dest_dir):
         except Exception:      # noqa: BLE001 — 폴백 사유일 뿐
             pass
     # ② 유료 폴백 — 크레딧이 남아 있으면 캡션까지 얻는다.
-    try:
-        from shopping_shorts.apify_client import fetch_single_reel
-        raw = fetch_single_reel(url)
-        if raw and raw.get("videoUrl"):
-            return str(download_video(raw["videoUrl"], Path(dest_dir))), raw.get("caption", "")
-    except Exception as e:     # noqa: BLE001
-        raise RuntimeError(f"인스타 영상 해석 실패(무료·유료 경로 모두): {url} — {e}") from e
-    raise RuntimeError(f"인스타 영상 해석 실패: {url}")
+    # ★킬스위치를 따른다(2026-08-04). 수집은 INSTAGRAM_SCRAPER=playwright로 이미 Apify를
+    # 떠났는데 **다운로드만 이 분기를 안 보고** 무조건 Apify로 폴백하고 있었다. 그래서
+    # 08-03 사고 때 "안 쓰는 Apify가 17개 토큰 전부 소진"이라는 엉뚱한 에러가 사용자에게
+    # 떴고, 진짜 원인(인스타가 REST를 없앰)이 그 뒤에 가려졌다. 안 쓰는 유료 경로는
+    # 시도도 하지 말고, 사유는 무료 경로 기준으로 정확히 말한다.
+    from shopping_shorts import config as _cfg
+    if _cfg.INSTAGRAM_SCRAPER != "playwright":
+        try:
+            from shopping_shorts.apify_client import fetch_single_reel
+            raw = fetch_single_reel(url)
+            if raw and raw.get("videoUrl"):
+                return str(download_video(raw["videoUrl"], Path(dest_dir))), raw.get("caption", "")
+        except Exception as e:     # noqa: BLE001
+            raise RuntimeError(f"인스타 영상 해석 실패(무료·유료 경로 모두): {url} — {e}") from e
+    raise RuntimeError(
+        f"인스타 영상을 받지 못했습니다: {url} — 무료 경로(yt-dlp·세션 GraphQL)가 모두 "
+        f"실패했습니다. 인스타가 통로를 또 바꿨거나(주기적으로 발생) 로그인 세션이 "
+        f"만료됐을 수 있습니다. 관리자 확인이 필요합니다.")
 
 
 def _download_ytdlp(url, dest_dir, max_attempts=3):
@@ -338,14 +352,30 @@ def resolve_media_url(platform, video_id, timeout=30):
     }.get(platform)
     if not page:
         return ""
-    try:
-        r = subprocess.run(
-            [sys.executable, "-m", "yt_dlp", "-g", "-f",
-             "best[ext=mp4][vcodec!=none][acodec!=none]/best[ext=mp4]/best",
-             "--no-warnings", *_cookies_arg(page), *_proxy_arg(page), page],
-            capture_output=True, text=True, encoding="utf-8", timeout=timeout)
-    except Exception:
-        return ""
-    if r.returncode != 0 or not r.stdout.strip():
-        return ""
-    return r.stdout.strip().splitlines()[0]
+
+    def _try(cookies):
+        """cookies=False면 쿠키 없이 — 만료 세션이 오히려 막을 때의 탈출구."""
+        try:
+            r = subprocess.run(
+                [sys.executable, "-m", "yt_dlp", "-g", "-f",
+                 "best[ext=mp4][vcodec!=none][acodec!=none]/best[ext=mp4]/best",
+                 "--no-warnings", *(_cookies_arg(page) if cookies else []),
+                 *_proxy_arg(page), page],
+                capture_output=True, text=True, encoding="utf-8", timeout=timeout)
+        except Exception:
+            return ""
+        if r.returncode != 0 or not r.stdout.strip():
+            return ""
+        return r.stdout.strip().splitlines()[0]
+
+    url = _try(cookies=True)
+    if url:
+        return url
+    # ★쿠키가 있는데 실패했으면 **쿠키 없이 한 번 더** (2026-08-04 실사고).
+    # 만료된 인스타 세션을 붙이면 인스타가 404를 주는데, 같은 릴스가 무쿠키로는 멀쩡히
+    # 열린다(실측 10건: 쿠키 0/10 성공 · 무쿠키 8/10 성공). 쿠키는 비공개/제한 게시물을
+    # 열어주는 '추가 수단'이지 필수가 아니므로, 실패 시 무쿠키가 항상 더 나은 하한선이다.
+    # 세션이 살아 있으면 첫 시도에서 끝나 이 경로는 안 탄다(비용 0).
+    if _cookies_arg(page):
+        return _try(cookies=False)
+    return ""

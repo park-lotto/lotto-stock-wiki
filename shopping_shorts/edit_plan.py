@@ -525,9 +525,18 @@ def _cap_sets(sets, target_seconds):
     """
     if not sets or not target_seconds:
         return sets
-    cap = max(4, min(_MAX_BEATS, int(target_seconds // _MIN_SET_SECS)))
+    # ★1소스는 목표가 소재 천장(보통 18~20초)이라 4초 기준을 그대로 쓰면 4세트로 눌리는데,
+    #   plan_gate는 최소 5비트를 요구한다 — 통과 자체가 불가능해진다(2026-08-04 실측:
+    #   목표 18초 → 4세트 → "비트가 2개뿐" 반려). 짧은 목표에선 비트당 하한을 낮춰
+    #   최소 5비트를 만들 수 있게 한다(컷이 1~2초짜리라 5비트도 충분히 할 말이 있다).
+    from shopping_shorts.plan_gate import _MIN_BEATS as _GATE_MIN_BEATS
+    min_set = _MIN_SET_SECS
+    if target_seconds < _MIN_SET_SECS * _GATE_MIN_BEATS:           # 20초 미만
+        min_set = max(2.0, target_seconds / _GATE_MIN_BEATS)
+    cap = max(_GATE_MIN_BEATS, min(_MAX_BEATS, int(target_seconds // min_set)))
     if len(sets) <= cap:
-        return sets
+        # 줄일 건 없다 — 다만 게이트 최소비트에 못 미치면 긴 세트를 쪼개 채운다.
+        return _split_sets_to_min(sets, _GATE_MIN_BEATS)
     out = list(sets)
     while len(out) > cap:
         pairs = [i for i in range(len(out) - 1)
@@ -539,6 +548,50 @@ def _cap_sets(sets, target_seconds):
         out[i:i + 2] = [{"set_id": a["set_id"], "video_id": a["video_id"],
                          "segs": a["segs"] + b["segs"],
                          "secs": round(a["secs"] + b["secs"], 1)}]
+    return _split_sets_to_min(out, min(cap, _GATE_MIN_BEATS))
+
+
+def _split_sets_to_min(sets, min_count):
+    """세트가 게이트 최소비트보다 적으면 **가장 긴 세트를 쪼개** 개수를 맞춘다(2026-08-04).
+
+    _cap_sets는 줄이기만 해서, 1소스처럼 문장세트가 애초에 4개뿐이면(실측: 20초 소재 →
+    4세트) 최소 5비트를 영원히 못 만든다. 세그가 2개 이상인 가장 긴 세트를 반으로 나눈다
+    — 같은 소스의 연속 구간을 나누는 것이라 이야기가 튀지 않는다. 더 못 쪼개면 그대로 둔다.
+    """
+    out = [dict(s) for s in (sets or [])]
+    # ★1소스일 때만 쪼갠다. 다소스는 세트가 소스 경계를 뜻하므로 쪼개면 교차믹스 규칙이
+    #   깨진다(실측: test_pick_slot_groups_f1_no_cross_source_fragment_mixing 회귀).
+    #   애초에 다소스는 재료가 넉넉해 최소비트가 모자랄 일이 없다(부족 2%).
+    if len({s.get("video_id") for s in out}) != 1:
+        return out
+    guard = 0
+    while len(out) < min_count and guard < 8:
+        guard += 1
+        cand = [i for i, s in enumerate(out) if len(s.get("segs") or []) >= 2]
+        if not cand:
+            break
+        i = max(cand, key=lambda k: out[k]["secs"])
+        s = out[i]
+        segs = s["segs"]
+        half = len(segs) // 2
+        a_segs, b_segs = segs[:half], segs[half:]
+
+        def _sum(ss):
+            tot = 0.0
+            for x in ss:
+                if isinstance(x, dict):
+                    tot += max(0.0, float(x.get("end") or 0) - float(x.get("start") or 0))
+            return round(tot, 1)
+
+        a_secs = _sum(a_segs) or round(s["secs"] * half / max(1, len(segs)), 1)
+        out[i:i + 1] = [
+            {"set_id": s["set_id"], "video_id": s["video_id"],
+             "segs": a_segs, "secs": a_secs},
+            {"set_id": (b_segs[0].get("seg_id") if isinstance(b_segs[0], dict)
+                        else f'{s["set_id"]}b'),
+             "video_id": s["video_id"], "segs": b_segs,
+             "secs": round(max(0.0, s["secs"] - a_secs), 1)},
+        ]
     return out
 
 

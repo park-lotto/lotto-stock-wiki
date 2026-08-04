@@ -21,6 +21,7 @@ from shopping_shorts.scene_match import match_scene_assets, match_sfx
 from shopping_shorts import tts
 from shopping_shorts import audio_post
 from shopping_shorts import config
+from shopping_shorts import single_source
 from shopping_shorts.video_assemble import assemble, _beat_timeline, _probe_duration, _MAX_SLOWMO, preview_preset
 from shopping_shorts.motion_assets import resolve_layers, DEFAULT_ASSETS_DIR
 from shopping_shorts.motion_packs import build_plan, load_packs
@@ -417,9 +418,21 @@ def _prepare_sources(urls, work):
         video_paths[vid] = path
         captions[vid] = caption
     if not video_paths:
+        detail = "\n".join(f"· {u}: {e}" for u, e in skipped)
+        # ★사람에게 밀어 올린다(2026-08-04). 08-03엔 이 실패가 조용히 DB에만 쌓여
+        # 13:45부터 다음날까지 아무도 몰랐다. 소스를 하나도 못 받았다 = 통로가
+        # 끊겼다는 뜻이고, 인스타는 이걸 한두 달 주기로 한다 — 즉시 알아야 한다.
+        # 알림이 실패해도 아래 예외는 그대로 나간다(본작업 흐름 불변).
+        try:
+            from shopping_shorts import ops_alert
+            ops_alert.raise_alert(
+                "source_download",
+                "소스 영상 다운로드가 전부 실패했습니다 — 수집 통로가 끊겼을 수 있습니다",
+                detail)
+        except Exception:      # noqa: BLE001
+            pass
         raise RuntimeError(
-            "소스 영상을 하나도 못 받았습니다 — 모든 URL 다운로드 실패:\n"
-            + "\n".join(f"· {u}: {e}" for u, e in skipped))
+            "소스 영상을 하나도 못 받았습니다 — 모든 URL 다운로드 실패:\n" + detail)
     return video_paths, captions, skipped
 
 
@@ -673,8 +686,24 @@ def _run_gate_correction(plan, source_scripts, target_seconds):
     프론트가 역할별로(관리자=경고/일반=숨김) 표시한다. 순수·무과금·나레이션 불변."""
     pool_ct = len({s.get("video_id") for s in (source_scripts or [])
                    if s.get("segments")} - {None})
+    # 소재 천장(전 소스 세그 합) — 목표가 이보다 크면 게이트가 소재 기준으로 판정한다.
+    mat_secs = 0.0
+    for s in (source_scripts or []):
+        for seg in (s.get("segments") or []):
+            if isinstance(seg, dict):
+                mat_secs += max(0.0, float(seg.get("end") or 0) - float(seg.get("start") or 0))
+    mat_secs = round(mat_secs, 1) or None
+
+    def _gate(bs):
+        # material_seconds는 신규 인자 — 이를 모르는 구현(테스트 더블 등)이면 없이 부른다.
+        try:
+            return plan_gate.check_plan(bs, target_seconds, pool_video_count=pool_ct,
+                                        material_seconds=mat_secs)
+        except TypeError:
+            return plan_gate.check_plan(bs, target_seconds, pool_video_count=pool_ct)
+
     beats = plan.get("beats")
-    gate = plan_gate.check_plan(beats, target_seconds, pool_video_count=pool_ct)
+    gate = _gate(beats)
     rounds = 0
     while rounds < _MAX_REPICK and _has_repickable(gate):
         new_beats = backbone.repick_for_gate(beats, source_scripts, gate)
@@ -682,7 +711,7 @@ def _run_gate_correction(plan, source_scripts, target_seconds):
             break   # 더 못 고침 → 종료(잔여 위반은 §4 마감이 처리)
         beats = new_beats
         rounds += 1
-        gate = plan_gate.check_plan(beats, target_seconds, pool_video_count=pool_ct)
+        gate = _gate(beats)
     plan["beats"] = beats
     plan["gate"] = gate
     plan["repick_rounds"] = rounds
@@ -706,6 +735,16 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     reference_text: scene_first일 때 스타일·구조를 계승할 레퍼런스 대본(보통 given_script 재활용)."""
     # 3) 통합 EDL
     store.update_mix_job(job_id, status="planning")
+    # ★1소스면 목표를 소재 천장에 맞춘다(2026-08-04). 릴 1개는 보통 20초인데 목표 30초가
+    # 그대로 내려오면 없는 10초를 채우라는 요구가 돼 반복·무편집구간으로 늘리다 게이트에
+    # 걸린다(실측: 1소스 100%가 소재부족). 하한 18초는 사장님 지시("스토리 기본이 서는 선").
+    if single_source.is_single_source(source_scripts):
+        _segs = next((s.get("segments") for s in source_scripts if s.get("segments")), [])
+        _span, _budget = single_source.budget_for(_segs, target_seconds)
+        if _budget and abs(_budget - (target_seconds or 0)) >= 0.5:
+            print("[1소스] 원본 %.1f초 → 목표 %.1f초로 조정(요청 %s초)"
+                  % (_span, _budget, target_seconds), file=sys.stderr)
+            target_seconds = round(_budget, 1)
     # 소스 다수결이 레시피면 화면을 요리 시간순으로 재배치(장면 결 맞춤) — build_edit_plan 경로에 전달.
     is_recipe = _sources_is_recipe(source_scripts)
     _rec_cands = None   # 후보목록(카드) — conform 뒤 재저장해 카드=TTS 일치시키려고 잡아둔다
@@ -728,6 +767,20 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                 avoid_hooks = None    # novelty OFF — 회피 감점 제거(드리프트 차단)
             except Exception:
                 traceback.print_exc(file=sys.stderr)
+        # ★확정 훅패턴 10종 주입(2026-08-04 사장님 지시: "훅은 은행에서 빼서 지금 나랑 정해").
+        # 은행 자동로테이션은 크롤한 남의 훅이라 매번 달라 뭐가 먹히는지 안 쌓인다. 우리가
+        # 고른 10개 뼈대만 돌린다. 소재에 맞는 것만 후보가 되고("다이소 가면"은 원본이 다이소
+        # 소재일 때만), "여러분~" 계열이 3개 중 1개꼴로 걸린다.
+        try:
+            from shopping_shorts import hook_patterns
+            _mat = " ".join((s.get("full_text") or "") for s in (source_scripts or []))
+            _pats = hook_patterns.choose(3, material_text=_mat)
+            if _pats:
+                bank_context = (hook_patterns.prompt_block(_pats[0])
+                                + ("\n" + bank_context if bank_context else ""))
+                print("[훅패턴] %s" % " / ".join(p[1] for p in _pats), file=sys.stderr)
+        except Exception:
+            traceback.print_exc(file=sys.stderr)
         sf = build_scene_first_plan(source_scripts, reference_text, target_seconds,
                                     video_type=video_type, ping_pong=ping_pong,
                                     backbone_meta=backbone_meta, backbone_forced=backbone_forced,
@@ -786,6 +839,17 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 오보고하지 않는다 — 성공처럼 보이는 빈 리뷰화면 대신 즉시 실패로 정상 종료
     # (2026-07-12 최종 전체리뷰 Important).
     if not plan["beats"]:
+        # 같은 이유로 사람에게 올린다(2026-08-04) — 08-03엔 Gemini 키 403(project denied)로
+        # 이 실패가 2건 났는데 역시 조용히 DB에만 남았다. 키 소진/차단은 사람이 손대야 풀린다.
+        try:
+            from shopping_shorts import ops_alert
+            ops_alert.raise_alert(
+                "edl_empty",
+                "편집안(EDL)을 만들지 못했습니다 — 대본 추출 실패 또는 Gemini 키 소진/차단",
+                "run_mix_job: EDL이 비어 있습니다. Gemini 키풀 상태(소진·403 PERMISSION_DENIED)와 "
+                "대본 추출 로그를 확인하세요.")
+        except Exception:      # noqa: BLE001
+            pass
         raise RuntimeError("EDL 비어있음 — 대본 추출 실패 또는 Gemini 키 소진으로 편집안을 만들지 못함")
 
     # 3.5/3.6) 장면 라이브러리 자동 배치(컷어웨이 + 효과음) — ★기본 OFF(2026-08-01 실사고).

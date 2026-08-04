@@ -109,6 +109,14 @@
               background:linear-gradient(90deg,#3a2f0d,#2a2408);color:#ffd76b;font-size:11px;cursor:pointer}
   .script-btn:hover{background:linear-gradient(90deg,#4a3d10,#352d0a)}
   .script-btn:disabled{opacity:.6;cursor:wait}
+  /* 🏠 숏템내부검색(2026-08-04) — 파워검색이 '외부(구글렌즈·유료)'라면 이건 '우리 관리채널
+     아카이브 안(무료)'이다. 둘을 색으로 확실히 갈라야 사장님이 유료를 헛눌러 소진하지 않는다:
+     파워검색=금색, 내부검색=청록. 2×2 격자에 5번째가 붙으면 한 칸이 외톨이로 남아
+     span 2로 아래 한 줄을 통째로 차지하게 했다(격자가 깨지지 않고 '다른 종류'로도 읽힌다). */
+  .btns .inner-btn{grid-column:1/-1;margin-top:0;padding:7px 4px;border-radius:7px;
+              border:1px solid #1f6f6b;background:linear-gradient(90deg,#0e2f2e,#0a2422);
+              color:#5fe3d6;font-size:11px;cursor:pointer;white-space:nowrap}
+  .btns .inner-btn:hover{background:linear-gradient(90deg,#14403e,#0d2e2b)}
   /* 대본 모달 */
   /* 화면을 막지 않는 이동식(플로팅) 창 — 컨테이너는 클릭 통과, 박스만 잡힘 */
   .modal-bg{display:none;position:fixed;inset:0;z-index:100;pointer-events:none}
@@ -1364,6 +1372,7 @@ function render(){
             <button class="comment" onclick="goComment('${i.shortcode}')">💬 댓글소통</button>
             <button class="save" id="save_${i.shortcode}" onclick="toggleMix('${i.shortcode}', this)">📥 즐겨찾기</button>
             <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 숏템파워검색</button>
+            ${window.IS_ADMIN?`<button class="inner-btn" title="우리가 관리하는 채널 아카이브에서 같은 제품·주제의 옛 영상 찾기 (무료·비전태그 매칭)" onclick="archiveSimilar('${i.shortcode}')">🏠 숏템내부검색</button>`:''}
           </div>
         </div>
       </div>
@@ -1425,7 +1434,7 @@ function _historyCard(h){
         <button class="comment" onclick="goComment('${h.shortcode}')">💬 댓글소통</button>
         <button class="save" id="save_${h.shortcode}" onclick="toggleMix('${h.shortcode}', this)">📥 담기</button>
         <button class="script-btn" onclick="lensSearch(this,'${h.shortcode}')">🔍 숏템파워검색</button>
-        ${window.IS_ADMIN?`<button class="script-btn" title="내 채널 아카이브에서 같은 제품·주제의 옛 영상 찾기(비전태그 매칭, 무료)" onclick="archiveSimilar('${h.shortcode}')">🏠 내채널</button>`:''}
+        ${window.IS_ADMIN?`<button class="inner-btn" title="우리가 관리하는 채널 아카이브에서 같은 제품·주제의 옛 영상 찾기 (무료·비전태그 매칭)" onclick="archiveSimilar('${h.shortcode}')">🏠 숏템내부검색</button>`:''}
       </div></div>
     </div></div>`;
 }
@@ -1444,7 +1453,9 @@ function fmtAgo(i){
 // ── 🏠 내채널 유사검색(2026-08-03) — 랭킹 릴스와 같은 제품·주제를 내 아카이브에서 찾는다.
 // 사장님 궁극 목표: 오늘 상위 영상 → 옛 같은 소재 영상 담기 → 믹스. 매칭=비전태그 겹침(무료).
 async function archiveSimilar(sc){
-  openScript('<div class="sm-loading">🏠 내 채널 아카이브에서 같은 소재 찾는 중…</div>','🏠 내 채널 유사영상',true);
+  // 제품명 검증(2026-08-04)이 붙어 15~20초 걸린다 — 렌즈와 비슷한 체감. 그래서 무엇을
+  // 하는 중인지 문구로 알린다(그냥 '찾는 중'만 두면 멈춘 줄 안다).
+  openScript('<div class="sm-loading">🏠 같은 제품 찾는 중… (AI가 제품을 확인합니다, 15~20초)</div>','🏠 숏템내부검색 — 같은 제품',true);
   const body=document.getElementById('scriptBody');
   let d; try{ d=await (await fetch('/api/archive/similar?shortcode='+encodeURIComponent(sc))).json(); }
   catch(e){ body.innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; return; }
@@ -1454,12 +1465,29 @@ async function archiveSimilar(sc){
   let saved=new Set();
   try{ saved=new Set((await (await fetch('/api/mix/basket')).json()).shortcodes||[]); }catch(e){}
   const tagLine=(d.src_tags||[]).slice(0,8).join(' · ');
-  body.innerHTML=`<div style="font-size:12px;color:var(--sub);margin-bottom:8px">매칭 태그: ${esc(tagLine)}</div>
-    <div class="cards">`+d.items.map(i=>{
+  // 머리말: 제품이 판독됐으면 그걸 앞세운다(사장님이 "무슨 제품으로 찾았나"를 바로 봐야 한다).
+  const nSame=d.verified_count||0;
+  const head=d.src_product
+    ? `<div style="margin-bottom:10px">
+         <div style="font-size:14px;font-weight:700;color:#5fe3d6">📦 ${esc(d.src_product)}</div>
+         <div style="font-size:12px;color:var(--sub);margin-top:3px">
+           ${nSame?`같은 제품 <b style="color:#5fe3d6">${nSame}건</b> — 맨 위에 모았습니다`
+                  :'아카이브에서 같은 제품은 아직 못 찾았어요 (아래는 비슷한 소재)'}
+         </div></div>`
+    : `<div style="font-size:12px;color:var(--sub);margin-bottom:8px">매칭 태그: ${esc(tagLine)}</div>`;
+  body.innerHTML=head+
+    `<div class="cards">`+d.items.map(i=>{
       const isS=saved.has(i.shortcode);
+      // 같은 제품이면 청록 배지로 확실히 구분 — 겹침 숫자는 부차적이다.
+      const badge=i.same_product
+        ? `<span style="position:absolute;top:6px;right:6px;background:#0e2f2e;color:#5fe3d6;border:1px solid #1f6f6b;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:700">📦 같은 제품</span>`
+        : `<span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:#e3b341;font-size:11px;padding:2px 8px;border-radius:10px">겹침 ${i.overlap}</span>`;
       return `<div class="card"><div class="thumb" style="cursor:pointer" onclick="window.open('${esc(i.url)}','_blank')">
-        <img src="${esc(i.thumbnail||'')}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">
-        <span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:#e3b341;font-size:11px;padding:2px 8px;border-radius:10px">겹침 ${i.overlap}</span>
+        <!-- loading="lazy" 금지(2026-08-04 실측): 모달 안 grid+aspect-ratio 카드에서는
+             lazy 로더가 가시성 판정을 못 해 /api/thumb 요청을 아예 안 보낸다
+             (요청 0건·complete=false·currentSrc=''). eager로 두면 즉시 뜬다. -->
+        <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" onerror="this.style.visibility='hidden'">
+        ${badge}
       </div><div class="body">
         <div class="rank">@${esc(i.username)} · 💬 ${(i.comments||0).toLocaleString()} · 👁 ${(i.views||0).toLocaleString()}</div>
         <div style="font-size:11px;color:var(--sub);margin:2px 0 6px">${esc((i.posted_at||'').slice(0,10))}</div>
@@ -1872,7 +1900,20 @@ function playTiktok(img, videoId){ _playViaMedia(img, videoId, 'tiktok', _embedT
 // 클릭 재생이 사라졌다. 이제 **누른 그 순간** /api/media로 mp4를 해석해 재생한다.
 // 해석 실패(비공개·삭제·차단)면 원본 릴스를 새 탭으로 연다 — 인스타는 iframe embed가
 // 로그인벽에 걸려 우리 화면 안 재생이 안 되기 때문(유튜브·틱톡과 다른 점).
+// ★이 페이지엔 toast()가 없다(확인함) — 자체 토스트를 쓴다.
+function _rankToast(msg){
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:99999;'
+    +'background:rgba(20,20,20,.94);color:#fff;font-size:13px;padding:11px 16px;border-radius:10px;'
+    +'box-shadow:0 8px 28px rgba(0,0,0,.45);max-width:88vw;text-align:center';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 3200);
+}
 function _embedInstagram(el, shortcode){
+  // 조용히 새탭으로 나가면 "미리보기를 눌렀는데 왜 인스타로 튀나"가 된다(2026-08-04 제보).
+  // 나가는 건 유지하되 이유는 알려준다.
+  _rankToast('이 영상은 인앱 재생이 안 돼요 — 원본으로 엽니다');
   try{ window.open('https://www.instagram.com/reel/'+shortcode+'/', '_blank', 'noopener'); }catch(e){}
 }
 function playInstagram(img, shortcode){ _playViaMedia(img, shortcode, 'instagram', _embedInstagram); }

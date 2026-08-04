@@ -2632,8 +2632,31 @@ def api_set_smart_mix(body: dict):
 _MIX_ACTIVE_STAGES = ("downloading", "extracting", "planning", "tts")
 
 
+# 내부 사정이 드러나는 조각들 → 일반 사용자용 문장으로 갈아끼운다(관리자는 원문을 본다).
+# "무엇이 막혔고 사용자가 뭘 하면 되는지"만 남긴다. 벤더명·토큰수·경로·스택은 전부 감춘다.
+_USER_ERROR_RULES = (
+    (("apify", "instagram", "인스타", "다운로드 실패", "영상을 받지"),
+     "영상을 가져오지 못했습니다. 원본이 비공개·삭제되었거나 일시적인 문제일 수 있어요. "
+     "잠시 후 다시 시도해 주세요. (계속되면 관리자에게 알려주세요)"),
+    (("gemini", "키 소진", "edl 비어", "quota", "permission_denied", "api key"),
+     "대본을 만드는 데 실패했습니다. 잠시 후 다시 시도해 주세요. "
+     "(계속되면 관리자에게 알려주세요)"),
+    (("서버 재시작", "중단되었습니다"),
+     "작업이 중단되었습니다. 다시 시도해 주세요."),
+)
+
+
+def _user_facing_error(msg):
+    """실패 사유를 일반 사용자에게 보여줄 문장으로 바꾼다. 관리자에겐 쓰지 않는다."""
+    low = (msg or "").lower()
+    for keys, friendly in _USER_ERROR_RULES:
+        if any(k in low for k in keys):
+            return friendly
+    return "처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요."
+
+
 @app.get("/api/mix/status/{job_id}")
-def api_mix_status(job_id: str):
+def api_mix_status(job_id: str, request: Request):
     store = Store(DB_PATH)
     job = store.get_mix_job(job_id)
     if not job:
@@ -2683,7 +2706,17 @@ def api_mix_status(job_id: str):
                 weak.append({"n": i, "coverage": round(cov, 2) if cov is not None else None})
     except Exception:
         weak = []
+    # ★실패 사유는 관리자만(2026-08-04 사장님 지시). 08-03 사고 때 사용자 화면에
+    # "apify 토큰 17개 전부 실패…" 같은 내부 사정이 그대로 떴다 — 사용자는 알 수도 없고
+    # 알 필요도 없는 정보다. 반대로 **관리자에겐 원문 그대로** 보여야 사고를 빨리 잡는다
+    # (그날 13:45부터 죽고 있었는데 아무도 몰랐던 이유가 사유가 안 보여서였다).
+    error_detail = None
+    if error and _is_admin(getattr(request.state, "customer_id", None)):
+        error_detail = error
+    if error:
+        error = _user_facing_error(error)
     return {"ok": True, "status": status, "error": error,
+            "error_detail": error_detail,   # 관리자에게만 채워진다(일반 사용자는 None)
             "weak_sources": weak,
             # 1단계 미리보기(2026-07-17): 폴러를 둘로 만들지 않으려고 기존 응답에 얹는다(스펙 §6.3).
             # preview_path는 서버 내부 경로라 안 내보낸다 — 파일은 전용 라우트로만 서빙.
@@ -3575,13 +3608,56 @@ def api_share_v(sid: str, dl: int = 0):
     return FileResponse(job["video_path"], media_type="video/mp4")
 
 
+def _selected_thumb_path(job):
+    """6단계에서 고른 최종 썸네일(thumbnail_json.selected)의 실제 파일 경로. 없으면 None.
+
+    ⚠️ selected는 사용자 입력이 아니라 서버가 지은 이름(api_thumb_save)이지만, DB를 통과한
+    문자열이라 그대로 경로에 붙이지 않는다 — _thumb_dir과 같은 basename 봉인을 한 번 더 건다.
+    """
+    if not job:
+        return None
+    thumb = job.get("thumbnail") or {}
+    name = thumb.get("selected")
+    if not name or name != os.path.basename(name) or name in (".", ".."):
+        return None
+    d = _thumb_dir(job.get("job_id") or "")
+    if d is None:                      # bad job_id — 경로순회 봉인(_thumb_dir이 None을 준다)
+        return None
+    p = d / name
+    return p if p.exists() else None
+
+
+@app.get("/api/share/t/{sid}")
+def api_share_t(sid: str, dl: int = 0):
+    """단축 id로 '선택 썸네일' PNG 서빙(로그인 불필요). 영상(/api/share/v)과 짝 — allowlist 경로.
+
+    썸네일을 아직 안 골랐으면 404. 공유 페이지는 404를 받으면 썸네일 UI를 통째로 숨긴다
+    (영상만 보내는 기존 동작으로 자연 폴백 — 여기서 500이 나면 공유 자체가 막힌다)."""
+    job_id = _share_get(sid)
+    if not job_id:
+        return JSONResponse(status_code=403, content={"ok": False, "error": "링크가 만료됐어요"})
+    p = _selected_thumb_path(Store(DB_PATH).get_mix_job(job_id))
+    if not p:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "선택된 썸네일이 없어요"})
+    fname = export_bundle.safe_name(job_id) + "_thumb.png"
+    if dl:
+        return FileResponse(str(p), media_type="image/png", filename=fname)
+    return FileResponse(str(p), media_type="image/png")
+
+
 @app.get("/s/{sid}", response_class=HTMLResponse)
 def share_page(sid: str):
-    """폰이 QR로 여는 모바일 공유 페이지(로그인 불필요). 폰 카톡 네이티브 공유로 전송."""
+    """폰이 QR로 여는 모바일 공유 페이지(로그인 불필요). 폰 카톡 네이티브 공유로 전송.
+
+    2026-08-04: 영상만 보내던 것을 **영상+선택 썸네일 한 번에**로. 썸네일이 없으면 __THUMB__을
+    빈 문자열로 넘겨(페이지가 그걸로 판단) 예전과 똑같이 영상만 보낸다."""
     job_id = _share_get(sid)
     if not job_id:
         return HTMLResponse(_SHARE_EXPIRED_HTML, status_code=403)
-    return HTMLResponse(_SHARE_PAGE_HTML.replace("__VID__", f"/api/share/v/{sid}"))
+    has_thumb = _selected_thumb_path(Store(DB_PATH).get_mix_job(job_id)) is not None
+    return HTMLResponse(_SHARE_PAGE_HTML
+                        .replace("__VID__", f"/api/share/v/{sid}")
+                        .replace("__THUMB__", f"/api/share/t/{sid}" if has_thumb else ""))
 
 
 @app.get("/api/mix/export/{job_id}")
@@ -3895,6 +3971,23 @@ def api_thumb_select(body: dict):
     return {"ok": True}
 
 
+@app.get("/api/produce/thumb/selected/{job_id}")
+def api_thumb_selected(job_id: str):
+    """8단계(최종렌더)가 '지금 고른 썸네일'을 물어보는 곳(2026-08-04).
+
+    THUMB_STATE는 페이지 메모리라 새로고침·작업복원 후엔 비어 있다. 8단계는 DB를 진실로 삼는다.
+    안 골랐으면 200 + {ok:true, name:null} — 404를 쓰면 프런트가 오류로 오인해 카드가 깨진다."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    p = _selected_thumb_path(job)
+    if not p:
+        return {"ok": True, "name": None, "url": None}
+    name = (job.get("thumbnail") or {}).get("selected")
+    return {"ok": True, "name": name,
+            "url": f"/api/produce/thumb/file/{job_id}/{name}"}
+
+
 def _reject_cdn_proxy(url: str, allowed_hosts) -> bool:
     """CDN 프록시(/api/thumb·/api/video)에 들어온 url이 거부 대상인가.
 
@@ -3992,7 +4085,12 @@ def api_thumb(url: str):
     elif "douyinpic.com" in url:
         ref = "https://www.douyin.com/"
     try:
-        r = requests.get(url, timeout=15, headers={
+        # timeout 15 → 6 (2026-08-04). 이 라우트는 sync def라 uvicorn 스레드풀에서 돈다.
+        # 역대 히트작이 한 화면에 200장을 요청하면 느린 CDN 응답 하나가 스레드를 15초씩
+        # 붙잡아 풀이 마르고, 그 사이 들어온 다른 요청까지 밀려 systemd가 timeout으로
+        # 서비스를 죽였다(실측 02:15 'Failed with result timeout' → 재시작 → 썸네일 전멸).
+        # 썸네일 한 장에 6초를 넘길 이유가 없다 — 넘으면 그 장만 포기하는 게 낫다.
+        r = requests.get(url, timeout=6, headers={
             "User-Agent": "Mozilla/5.0",
             "Referer": ref,
         })
@@ -4429,7 +4527,9 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                # 원클릭 담기: /grab(북마클릿 설치안내)는 공개, /api/grab(팝업)은 자체적으로
                # 세션쿠키를 검증해 고객을 식별한다(_cid 폴백이 legacy라 여기선 직접 검증). 미들웨어
                # 401을 피해 친절한 팝업 응답을 주려고 allowlist에 둔다.
-               "/grab", "/api/grab", "/grab.user.js", "/grab_logic.js",
+               # /grab_extension.zip(2026-08-04)도 공개 — 설치 안내가 로그인 전에 열리므로
+               # 다운로드가 인증에 막히면 설치 자체를 시작할 수 없다.
+               "/grab", "/api/grab", "/grab.user.js", "/grab_logic.js", "/grab_extension.zip",
                # 공용 좌측 네비 JS(2026-07-26): 모든 페이지가 <script src="/sidebar.js">로 사이드바를
                # 주입한다. 루트('/')에서 서빙돼 _FREE_PREFIX('/static/')에 안 걸려서, 무료(ranking_only)
                # 등급은 402·비로그인은 307로 막혀 사이드바(카테고리 메뉴)가 통째로 안 떴다(라이브 실증:
@@ -4539,28 +4639,70 @@ _SHARE_PAGE_HTML = """<!doctype html><html lang="ko"><head>
  h1{font-size:19px;font-weight:800;margin:8px 0 4px;letter-spacing:1px}
  .sub{color:#8b93a7;font-size:13px;margin-bottom:16px}
  video{width:100%;max-width:420px;border-radius:16px;background:#000;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+ .media{width:100%;max-width:420px;display:flex;gap:10px;align-items:flex-start}
+ .media video{flex:1 1 auto;min-width:0}
+ .thumbwrap{flex:0 0 34%;display:none}
+ .thumbwrap img{width:100%;display:block;border-radius:12px;background:#000;
+      box-shadow:0 8px 24px rgba(0,0,0,.45)}
+ .thumbcap{color:#8b93a7;font-size:11px;text-align:center;margin-top:5px;font-weight:700}
  .btns{width:100%;max-width:420px;margin-top:18px;display:flex;flex-direction:column;gap:12px}
  button,a.dl{font-size:19px;font-weight:800;border:0;border-radius:14px;padding:18px;text-align:center;
       text-decoration:none;cursor:pointer}
  #shareBtn{background:#fee500;color:#191600}
  a.dl{background:#1c2740;color:#dfe7f5}
+ a.dl.sm{font-size:15px;padding:13px}
  .tip{color:#6b7488;font-size:12px;margin-top:14px;text-align:center;line-height:1.6;max-width:420px}
 </style></head><body>
  <h1>완성 영상 📱</h1>
- <div class="sub">아래 버튼으로 카톡·인스타에 바로 보내세요</div>
- <video src="__VID__" controls playsinline preload="metadata"></video>
+ <div class="sub" id="sub">아래 버튼으로 카톡·인스타에 바로 보내세요</div>
+ <div class="media">
+   <video src="__VID__" controls playsinline preload="metadata"></video>
+   <div class="thumbwrap" id="thumbWrap">
+     <img id="thumbImg" alt="썸네일">
+     <div class="thumbcap">🖼 썸네일</div>
+   </div>
+ </div>
  <div class="btns">
    <button id="shareBtn">카톡·인스타로 보내기</button>
    <a class="dl" href="__VID__?dl=1" download>영상 저장(다운로드)</a>
+   <a class="dl sm" id="thumbDl" href="#" download style="display:none">🖼 썸네일 저장(PNG)</a>
  </div>
- <div class="tip">버튼을 누르면 공유창이 떠요. 카톡을 고르고 대화방을 선택하면 전송됩니다.<br>안 뜨면 '영상 저장' 후 갤러리에서 공유하세요.</div>
+ <div class="tip" id="tip">버튼을 누르면 공유창이 떠요. 카톡을 고르고 대화방을 선택하면 전송됩니다.<br>안 뜨면 '영상 저장' 후 갤러리에서 공유하세요.</div>
 <script>
- const V="__VID__";
+ const V="__VID__", T="__THUMB__";
+ // 썸네일은 '있으면 얹는다'. 없거나(선택 안 함) 404면 예전 그대로 영상만 보낸다 —
+ // 썸네일 때문에 공유 자체가 막히는 일은 없어야 한다.
+ let THUMB_OK=false;
+ if(T){
+   const im=document.getElementById('thumbImg');
+   im.addEventListener('load', ()=>{
+     THUMB_OK=true;
+     document.getElementById('thumbWrap').style.display='block';
+     const dl=document.getElementById('thumbDl');
+     dl.href=T+'?dl=1'; dl.style.display='block';
+     document.getElementById('sub').textContent='영상 + 썸네일을 한 번에 보냅니다';
+     document.getElementById('tip').innerHTML="버튼을 누르면 공유창이 떠요. 카톡을 고르고 대화방을 선택하면 <b>영상과 썸네일이 함께</b> 전송됩니다.<br>둘이 같이 안 가면 아래 저장 버튼으로 각각 받으세요.";
+   });
+   im.src=T;   // 404면 load가 안 뜨고 THUMB_OK=false로 남는다
+ }
  document.getElementById('shareBtn').addEventListener('click', async ()=>{
    try{
      const r=await fetch(V); const b=await r.blob();
      const f=new File([b],'shopping_short.mp4',{type:'video/mp4'});
-     if(navigator.canShare && navigator.canShare({files:[f]})){
+     // ① 영상+썸네일 동시 — 폰 카톡은 파일 여러 개 공유를 받는다. canShare로 먼저 물어보고,
+     //    이 기기가 다중 파일을 거절하면 ②로 내려간다(무조건 시도하면 통째로 실패한다).
+     if(THUMB_OK){
+       try{
+         const tr=await fetch(T);
+         if(tr.ok){
+           const tf=new File([await tr.blob()],'shopping_short_thumb.png',{type:'image/png'});
+           if(navigator.canShare && navigator.canShare({files:[f,tf]})){
+             await navigator.share({files:[f,tf], title:'완성 영상 + 썸네일'}); return;
+           }
+         }
+       }catch(e){ if(e && e.name==='AbortError') return; }   // 취소는 폴백 금지(공유창 두 번 뜬다)
+     }
+     if(navigator.canShare && navigator.canShare({files:[f]})){   // ② 영상만(기존 동작)
        await navigator.share({files:[f], title:'완성 영상'}); return;
      }
      if(navigator.share){ await navigator.share({title:'완성 영상', url:location.href}); return; }
@@ -5474,9 +5616,21 @@ _PRIVACY_BODY = f"""
 <li>구글(Google): 계정 로그인 인증</li>
 <li>AI·클라우드 인프라 제공사: 대본·음성·영상 생성 처리</li>
 </ul>
-<h2>5. 이용자의 권리</h2>
-<p>이용자는 언제든지 본인의 개인정보를 조회·수정·삭제하거나 처리 정지를 요청할 수 있으며, 회원 탈퇴로 개인정보 삭제를 요청할 수 있습니다.</p>
-<h2>6. 개인정보 보호책임자</h2>
+<h2>5. 브라우저 확장프로그램 (로또 · 원클릭 담기)</h2>
+<p>회사가 배포하는 크롬 확장프로그램 ‘원클릭 담기’는 아래 범위에서만 동작합니다.
+크롬 웹스토어 심사 기준에 따라 처리 내용을 명시합니다.</p>
+<ul>
+<li><b>동작 범위</b>: 유튜브·틱톡·인스타그램·샤오홍슈·도우인의 영상 페이지에서만 ‘담기’ 버튼을 표시합니다. 그 외 사이트에서는 어떤 동작도 하지 않습니다.</li>
+<li><b>수집·전송 항목</b>: 이용자가 ‘담기’ 버튼을 <b>직접 누른 경우에만</b> 해당 영상의 주소(URL)·제목·썸네일 이미지 주소를 회사 서버로 전송해 이용자 본인의 모음집에 저장합니다.</li>
+<li><b>수집하지 않는 것</b>: 페이지의 다른 내용, 입력값, 비밀번호, 방문 기록을 수집하지 않습니다. 버튼을 누르지 않으면 어떤 정보도 전송되지 않습니다.</li>
+<li><b>통신 대상</b>: 회사 서비스 서버(shoppingshorts.duckdns.org) 외 어떤 외부 도메인과도 통신하지 않습니다.</li>
+<li><b>원격 코드</b>: 확장은 모든 코드를 설치 패키지에 포함하며, 외부에서 코드를 내려받아 실행하지 않습니다.</li>
+<li><b>제3자 판매·양도</b>: 확장을 통해 수집한 정보를 제3자에게 판매하거나 양도하지 않으며, 신용도 평가·대출 목적으로 사용하지 않습니다.</li>
+</ul>
+<h2>6. 이용자의 권리</h2>
+<p>이용자는 언제든지 본인의 개인정보를 조회·수정·삭제하거나 처리 정지를 요청할 수 있으며, 회원 탈퇴로 개인정보 삭제를 요청할 수 있습니다.
+확장프로그램은 크롬 설정에서 언제든 삭제할 수 있으며, 삭제 시 이후 어떤 정보도 전송되지 않습니다.</p>
+<h2>7. 개인정보 보호책임자</h2>
 <p>개인정보 관련 문의는 아래 사업자정보의 문의처로 접수해 주시면 지체 없이 답변·처리합니다.</p>
 """
 
@@ -5755,8 +5909,9 @@ async def _auth_guard(request: Request, call_next):
     # 외부인이 /synth를 반복 호출해 ElevenLabs·GROQ 크레딧을 태우고 /profile/{임의id}로
     # voice_presets에 임의 행을 넣을 수 있었다(2026-07-15 리뷰 S7). 운영자는 대시보드
     # 로그인 세션으로 접근한다.
-    # /s/{sid}·/api/share/v/{sid} = QR '폰으로 보내기' 공개경로(단축id 저장소 조회, 로그인 불필요).
-    #   폰이 쿠키 없이 연다. ★/api/share/link(발급)은 여기 없음 → 로그인 게이트 유지(로그인해야 QR 발급).
+    # /s/{sid}·/api/share/v/{sid}·/api/share/t/{sid} = QR '폰으로 보내기' 공개경로(단축id 저장소
+    #   조회, 로그인 불필요). 폰이 쿠키 없이 연다. /t는 선택 썸네일 PNG(2026-08-04, 영상과 한 번에 전송).
+    #   ★/api/share/link(발급)은 여기 없음 → 로그인 게이트 유지(로그인해야 QR 발급).
     # /api/yt_relay/*는 사장님 PC 릴레이 에이전트가 로그인 쿠키 없이 호출한다(2026-07-24).
     #   자체 키 인증(_relay_auth_ok: YT_RELAY_KEY)이 있어 로그인 가드는 건너뛴다 — 안 그러면 유튜브 다운로드가 죽는다.
     # /api/coupang/relay/*도 같은 이유다(2026-07-29) — 쿠팡은 한국 IP가 아니면 막아서
@@ -5764,6 +5919,7 @@ async def _auth_guard(request: Request, call_next):
     #   (COUPANG_RELAY_TOKEN)을 검사하고, 토큰이 비어 있으면 스스로 403으로 닫는다.
     if (path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/")
             or path.startswith("/s/") or path.startswith("/api/share/v/")
+            or path.startswith("/api/share/t/")
             or path.startswith("/api/yt_relay/") or path.startswith("/api/coupang/relay/")):
         return await call_next(request)
     customer_id = _verify_session(request.cookies.get("dash_auth"))
@@ -6077,9 +6233,28 @@ def _admin_pending(request: Request):
         return denied
     pend = Store(DB_PATH).pending_customers()
     newest = pend[0] if pend else None                      # id DESC 정렬이라 [0]이 최신
+    # 운영 사고 쪽지(2026-08-04). 이 폴러는 이미 관리자 화면이 돌리고 있으므로 여기 얹으면
+    # 새 폴러·새 배선 없이 '띠링'이 그대로 재사용된다. 비관리자는 위 _require_admin이 막는다.
+    try:
+        from shopping_shorts import ops_alert
+        alerts = ops_alert.list_alerts()
+    except Exception:                                       # noqa: BLE001 — 알림이 승인화면을 막지 않는다
+        alerts = []
     return {"ok": True, "count": len(pend),
             "newest_id": (newest["id"] if newest else 0),
-            "newest": newest, "pending": pend[:20]}          # 팝업 목록은 최근 20건까지
+            "newest": newest, "pending": pend[:20],          # 팝업 목록은 최근 20건까지
+            "alerts": alerts,
+            "alert_unread": sum(1 for a in alerts if not a.get("read"))}
+
+
+@app.post("/api/admin/alerts/read")
+def _admin_alerts_read(request: Request):
+    """운영 사고 쪽지 전부 읽음 처리(배지 끄기). 관리자만."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import ops_alert
+    return {"ok": True, "marked": ops_alert.mark_read()}
 
 
 @app.post("/api/admin/customer/update")
@@ -6267,8 +6442,55 @@ def _serve_grab_logic():
     """원클릭 담기 '로직' — grab.user.js(로더)가 GM_xmlhttpRequest로 매번 불러와 실행한다.
     이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영(재설치 불필요)."""
     p = Path(__file__).parent / "userscript" / "grab_logic.js"
+    # ★CORS 허용(2026-08-04, 확장프로그램 도입): 확장은 이 로직을 페이지 월드에서
+    # <script src>로 불러온다. 같은 파일을 유저스크립트(GM_xmlhttpRequest)와 공유하므로
+    # 한 곳만 고치면 양쪽 모두 자동 반영된다. 공개 정적 JS라 노출 위험은 없다.
     return FileResponse(p, media_type="text/javascript; charset=utf-8",
-                        headers={"Cache-Control": "public, max-age=60"})
+                        headers={"Cache-Control": "public, max-age=60",
+                                 "Access-Control-Allow-Origin": "*"})
+
+
+@app.get("/grab_extension.zip", include_in_schema=False)
+def _serve_grab_extension():
+    """원클릭 담기 **확장프로그램**(.zip) — 텀퍼몽키 없이 이것만 설치하면 된다.
+
+    왜 만들었나(2026-08-04 사장님): 유저스크립트 방식은 사용자가 4단계를 밟아야 하고
+    그중 크롬 토글 2개("개발자 모드", "사용자 스크립트 허용")는 **파일로 못 켠다**(크롬 정책).
+    실제로 2026-07-21에 고객이 그 토글을 몰라 📥가 안 뜨는 사고가 났다.
+    확장프로그램은 "사용자 스크립트 허용" 토글 자체가 필요 없어 단계가 절반으로 준다.
+
+    zip은 요청 때 메모리에서 만든다 — 빌드 산출물을 repo에 커밋하지 않기 위해서다
+    (소스가 바뀌면 zip도 자동으로 최신이 된다. mtime 기준 캐시로 매번 다시 만들지 않는다)."""
+    import io
+    import zipfile
+    edir = Path(__file__).parent / "extension"
+    if not edir.is_dir():
+        return JSONResponse({"error": "확장 소스 없음"}, status_code=404)
+    # ★로직은 userscript/grab_logic.js가 **원본**이다. zip을 만들 때마다 그걸 담는다 —
+    # extension/ 안의 사본은 개발용 편의일 뿐이고, 배포물엔 항상 원본이 들어가야 한다.
+    # (두 벌을 손으로 관리하면 반드시 어긋나고, 그럼 확장 사용자만 옛 로직을 쓰게 된다.)
+    logic_src = Path(__file__).parent / "userscript" / "grab_logic.js"
+    # store/ 는 **웹스토어 제출용 자료**(스크린샷·제출가이드)라 배포물에 넣지 않는다.
+    # 넣으면 사용자 zip에 내부 문서와 이미지 수백 KB가 딸려 나간다(2026-08-04 실측으로 발견).
+    files = sorted(p for p in edir.rglob("*")
+                   if p.is_file() and p.name != "grab_logic.js"
+                   and "store" not in p.relative_to(edir).parts)
+    stamp = str(max([p.stat().st_mtime_ns for p in files]
+                    + [logic_src.stat().st_mtime_ns if logic_src.exists() else 0], default=0))
+    cached = getattr(_serve_grab_extension, "_cache", None)
+    if not (cached and cached[0] == stamp):
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+            for p in files:
+                z.write(p, p.relative_to(edir).as_posix())
+            if logic_src.exists():
+                z.writestr("grab_logic.js", logic_src.read_text(encoding="utf-8"))
+        cached = (stamp, buf.getvalue())
+        _serve_grab_extension._cache = cached
+    return Response(
+        content=cached[1], media_type="application/zip",
+        headers={"Content-Disposition": 'attachment; filename="lotto-grab-extension.zip"',
+                 "Cache-Control": "no-cache"})
 
 
 # ── 원클릭 담기: 네이티브 플랫폼(유튜브·틱톡·샤오홍슈·도우인) 영상 → 모음집 즉시 담기 ──
@@ -6409,13 +6631,29 @@ _GRAB_SETUP_HTML = """<!doctype html><html lang="ko"><head>
 </style></head>
 <body><div class="wrap">
   <h1>\U0001F4E5 담기 기능 켜기</h1>
-  <p class="lead">유튜브·틱톡·샤오홍슈·도우인에서 <b>마음에 든 영상을 클릭 한 번</b>으로 모음집에 담는 기능이에요. <b>아래 사진 4단계</b>를 그대로 따라 하세요 — 다 되면 맨 아래 <b>③이 저절로 초록불</b>로 바뀝니다.</p>
+  <p class="lead">유튜브·틱톡·인스타·샤오홍슈·도우인에서 <b>마음에 든 영상을 클릭 한 번</b>으로 모음집에 담는 기능이에요. <b>아래 2단계</b>면 끝납니다.</p>
 
   <div id="browserWarn" class="warn" style="display:none">
     ⚠️ 이 기능은 <b>PC의 크롬(Chrome) 또는 엣지(Edge)</b>에서만 켤 수 있어요.<br>이 페이지 주소를 복사해 PC 크롬에서 열어주세요.
   </div>
 
-  __GUIDE_SECTION__
+  <!-- ★확장프로그램(권장, 2026-08-04) — 텀퍼몽키 방식은 아래 접이식으로 내렸다.
+       이유: 텀퍼몽키는 크롬 토글 2개를 사람이 직접 켜야 하는데(파일로 못 켠다) 실제로
+       고객이 거기서 막혔다(2026-07-21). 확장은 '사용자 스크립트 허용' 토글이 불필요하다. -->
+  <div class="guide">
+    <div class="ghead">\U0001F4E6 딱 2단계면 끝나요</div>
+    <div class="gsub">설치 파일 하나만 받으면 됩니다. 텀퍼몽키 같은 다른 프로그램은 <b>필요 없어요</b>.</div>
+
+    <div class="gstep"><div class="gnum">1</div><div class="gtitle">아래 버튼으로 파일을 받고 → <b>압축을 풀어주세요</b><br><span style="font-size:14.5px;color:#42506a">(받은 파일에 <b>마우스 오른쪽</b> → “압축 풀기” / “Extract All”. 풀면 폴더가 하나 생겨요)</span></div></div>
+    <a class="gbtn" href="/grab_extension.zip" onclick="ssMark(1)">① 설치 파일 내려받기 ⬇</a>
+
+    <div class="gstep"><div class="gnum">2</div><div class="gtitle">아래 <b>“주소 복사”</b> → 크롬 주소창에 <b>붙여넣기(Ctrl+V) + Enter</b> → 오른쪽 위 <b>“개발자 모드”</b> 켜기 → <b>압축 푼 폴더를 그 화면에 끌어다 놓기</b></div></div>
+    <button class="gcopy" onclick="ssCopy('chrome://extensions', this)">\U0001F4CB chrome://extensions 주소 복사</button>
+    <img class="gimg" src="__IMG3__" alt="개발자 모드 켜기">
+
+    <div class="gwarnbox">\U0001F4A1 폴더를 <b>끌어다 놓는</b> 거예요. 파일(zip)이 아니라 <b>압축을 푼 폴더</b>를 놓아야 합니다.</div>
+    <div class="gdone">✅ 다 되면 유튜브·인스타·틱톡 영상에서 <b>\U0001F4E5 담기</b> 버튼이 자동으로 떠요.</div>
+  </div>
 
   <div id="steps">
     <div class="step" id="s3">
@@ -6434,6 +6672,11 @@ _GRAB_SETUP_HTML = """<!doctype html><html lang="ko"><head>
   </div>
 
   <button id="recheck" class="recheck" style="display:none" onclick="location.reload()">설치했는데 안 바뀌나요? → 확인하기</button>
+
+  <details class="alt">
+    <summary>확장프로그램이 안 되나요? — 텀퍼몽키로 설치하기(예전 방식)</summary>
+    __GUIDE_SECTION__
+  </details>
 
   <details class="alt">
     <summary>설치가 어렵나요? — 설치 없이 쓰는 방법(북마클릿)</summary>
@@ -6562,8 +6805,18 @@ def grab_setup(request: Request):
     bm64 = base64.b64encode(_GRAB_BOOKMARKLET.replace("__BASE__", base).encode()).decode()
     # Tampermonkey 크롬 웹스토어 상세(딥링크=검색 안 시킴). 엣지도 크롬스토어에서 설치 가능.
     tm_url = "https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo"
+    # ★__GUIDE_SECTION__을 먼저 끼운 뒤 __IMG3__를 치환한다 — 확장프로그램 안내(본문)와
+    # 텀퍼몽키 안내(접이식) 둘 다 같은 '개발자 모드' 사진을 쓰기 때문이다. 순서를 바꾸면
+    # 본문 쪽 __IMG3__가 그대로 남아 깨진 이미지가 뜬다.
+    gdir = Path(__file__).parent / "static" / "guide"
+    try:
+        img3 = "data:image/png;base64," + base64.b64encode(
+            (gdir / "step3_devmode.png").read_bytes()).decode()
+    except Exception:
+        img3 = ""
     html = (_GRAB_SETUP_HTML
             .replace("__GUIDE_SECTION__", _grab_guide_html())
+            .replace("__IMG3__", img3)
             .replace("__TM_URL__", tm_url).replace("__BM64__", bm64))
     return HTMLResponse(html)
 
@@ -8434,13 +8687,18 @@ def api_archive_items(request: Request, username: str = "", sort: str = "views",
 
 
 @app.get("/api/archive/similar")
-def api_archive_similar(request: Request, shortcode: str, limit: int = 40):
-    """랭킹 릴스 1개 → 내 아카이브에서 '같은 제품/주제'의 옛 영상 찾기(2026-08-03).
+def api_archive_similar(request: Request, shortcode: str, limit: int = 40,
+                        verify: bool = True, verify_n: int = 60):
+    """랭킹 릴스 1개 → 내 아카이브에서 '같은 제품'의 옛 영상 찾기(2026-08-03, 08-04 개편).
 
-    사장님 궁극 목표: 오늘 랭킹 상위 영상을 렌즈 버튼처럼 눌러, 우리가 크롤해 둔
-    채널 아카이브에서 예전 같은 소재 영상을 찾아 담기→믹스. 매칭은 양쪽 비전태그
-    (subject+keywords)의 토큰 겹침 — 렌즈(SerpApi) 비용 0. 소스에 태그가 아직
-    없으면 no_tags로 알려준다(수집 태깅이 곧 붙는다)."""
+    사장님 궁극 목표: 오늘 터진 영상을 눌러, 우리가 크롤해 둔 채널 아카이브에서
+    **같은 제품**을 다룬 예전 영상을 모아 담기→믹스. 렌즈로 하던 걸 내부에서 하는 것.
+
+    2단이다:
+      1단 태그 겹침 — 전체를 훑어 후보를 만든다(무료·즉시).
+      2단 제품명 검증 — 상위 verify_n개만 AI로 실제 제품명을 읽어 같은 제품을 올린다.
+    2단이 왜 필요한가: 태그만으로는 분위기어('살림꿀팁' 15%)가 지배해 같은 제품이
+    안 올라온다(실측). verify=false면 1단만 — 빠르지만 예전 품질이다."""
     denied = _require_admin(request)
     if denied:
         return denied
@@ -8462,9 +8720,13 @@ def api_archive_similar(request: Request, shortcode: str, limit: int = 40):
     with store._conn() as c:
         rows = c.execute(
             "SELECT a.username, a.shortcode, a.url, a.thumbnail, a.views, a.likes, "
-            " a.comments, a.posted_at, v.subject, v.keywords_json "
+            " a.comments, a.posted_at, v.subject, v.keywords_json, v.product "
             "FROM channel_archive a JOIN vision_tags v ON v.shortcode=a.shortcode "
             "LIMIT 50000").fetchall()
+
+    # 질의의 제품명이 이미 판독돼 있으면 먼저 꺼낸다 — 후보 선정에 쓴다(아래).
+    known_q = store.products_map([shortcode]).get(shortcode) or ""
+
     scored = []
     for r in rows:
         if r[1] == shortcode:
@@ -8474,13 +8736,88 @@ def api_archive_similar(request: Request, shortcode: str, limit: int = 40):
         except ValueError:
             kws = []
         ov = len(src_t & _tokens(r[8], kws))
-        if ov:
+        # ★겹침0이어도 '이미 판독된 제품명이 같으면' 후보에 넣는다(2026-08-04).
+        # 안 그러면 제품명이 같은데도 후보에 못 들어 영영 안 보인다 — 실측:
+        # [극세사 걸레] → [극세사 유리 닦이]가 겹침0으로 탈락(제품명엔 '극세사'가 같은데).
+        # 태그는 분위기어라 같은 제품이라고 겹친다는 보장이 없다.
+        if ov or (known_q and r[10] and _product_same(known_q, r[10])):
             scored.append((ov, r))
     scored.sort(key=lambda x: (-x[0], -(x[1][6] or 0)))   # 겹침↓ → 댓글수↓(사장님 기준)
-    return {"ok": True, "no_tags": False, "src_tags": sorted(src_t), "items": [
+
+    # 판독 대상(head)을 고를 때, 이미 '같은 제품'으로 아는 것을 앞으로 당긴다.
+    # 실측: [김밥] 질의에서 제품명이 그대로 '김밥'인 영상이 겹침1로 50등이라 상위30 밖이었다.
+    if known_q:
+        scored.sort(key=lambda x: (0 if (x[1][10] and _product_same(known_q, x[1][10])) else 1,
+                                   -x[0], -(x[1][6] or 0)))
+
+    # ── 제품명 검증(2026-08-04, 사장님 지시: "미리 돌리지 말고 검색 누를 때") ──
+    # 태그 겹침만으로는 **같은 제품**이 안 나온다(실측: 제품명 완전일치 0건, '다이소 걸레'
+    # → 냉장고정리용품, '천사점토' → 비즈스트랩. 분위기어 '살림꿀팁'이 15%를 차지해서다).
+    # 그래서 겹침 상위 후보에만 AI를 태워 실제 제품명을 읽고, 같은 제품을 맨 위로 올린다.
+    # 미리 14,000건을 돌지 않는 이유가 이것 — 볼 것만, 그때 판독하고 캐시한다.
+    src_product = ""
+    verified = set()
+    if verify:
+        try:
+            from shopping_shorts import product_name as _pn
+            # 30 → 60 (2026-08-04 사장님 승인). 30이면 실측에서 놓치는 게 나왔다:
+            # [김밥] 질의에 제품명이 그대로 '김밥'인 53만회 영상이 50등이라 판독 대상 밖.
+            # 검색이 15초 → 25초로 느려지지만 "빠른데 못 찾는" 것보다 낫다는 판단.
+            # 캐시가 쌓이면 다시 빨라진다(판독된 건 재호출 없음).
+            head = scored[:max(0, min(int(verify_n or 60), 120))]
+            src_thumb = ""
+            with store._conn() as c:
+                row = c.execute("SELECT thumbnail FROM channel_archive WHERE shortcode=?",
+                                (shortcode,)).fetchone()
+                if row:
+                    src_thumb = row[0] or ""
+            if not src_thumb:      # 랭킹 영상은 아카이브에 없을 수 있다 → 최근 수집분에서
+                src_thumb = _last_run_thumb(store, shortcode)
+            targets = ([{"shortcode": shortcode, "thumbnail": src_thumb}]
+                       + [{"shortcode": r[1], "thumbnail": r[3]} for _ov, r in head])
+            pmap = _pn.identify_many(targets, DB_PATH)
+            src_product = pmap.get(shortcode) or ""
+            if src_product:
+                # head 밖이라도 DB에 이미 제품명이 있으면 같은 제품인지 판정한다
+                # (이번 회차에 판독한 것 + 예전에 판독해둔 것 = 전부 활용).
+                verified = {r[1] for _ov, r in scored
+                            if _pn.same_product(src_product,
+                                                pmap.get(r[1]) or r[10] or "")}
+                # 같은 제품이면 겹침과 무관하게 최상단(사장님 목적이 '같은 제품 모으기').
+                scored.sort(key=lambda x: (0 if x[1][1] in verified else 1,
+                                           -x[0], -(x[1][6] or 0)))
+        except Exception:   # noqa: BLE001 — 판독 실패해도 기존 겹침 결과는 나가야 한다
+            pass
+
+    return {"ok": True, "no_tags": False, "src_tags": sorted(src_t),
+            "src_product": src_product, "verified_count": len(verified), "items": [
         {"username": r[0], "shortcode": r[1], "url": r[2], "thumbnail": r[3],
          "views": r[4], "likes": r[5], "comments": r[6], "posted_at": r[7],
-         "overlap": ov} for ov, r in scored[:max(1, min(limit, 100))]]}
+         "overlap": ov, "same_product": r[1] in verified}
+        for ov, r in scored[:max(1, min(limit, 100))]]}
+
+
+def _product_same(a, b):
+    """제품명 동일 판정 래퍼 — product_name 미로딩 상황에서도 라우트가 죽지 않게."""
+    try:
+        from shopping_shorts import product_name as _pn
+        return _pn.same_product(a, b)
+    except Exception:   # noqa: BLE001
+        return False
+
+
+def _last_run_thumb(store, shortcode):
+    """최근 수집분(last_run)에서 썸네일 찾기 — 랭킹 영상은 아카이브에 없기 때문."""
+    import json as _j
+    try:
+        with store._conn() as c:
+            row = c.execute("SELECT items_json FROM last_run ORDER BY rowid DESC LIMIT 1").fetchone()
+        for it in _j.loads(row[0]) if row else []:
+            if it.get("shortcode") == shortcode:
+                return it.get("thumbnail") or it.get("displayUrl") or ""
+    except Exception:   # noqa: BLE001
+        pass
+    return ""
 
 # ★C-1(2026-07-16 라이브 실증): 위 _NOCACHE는 /produce 등 "클린 URL" 라우트에만 붙는다.
 # /sidebar.js 같은 정적 JS/CSS/HTML은 아래 StaticFiles 마운트가 헤더 없이 그대로 서빙해서
