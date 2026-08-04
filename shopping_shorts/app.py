@@ -9,6 +9,7 @@ import secrets
 import shutil
 import socket
 import tempfile
+import time
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone, timedelta
@@ -620,6 +621,34 @@ def _attach_posted_at(items):
     return items
 
 
+def _attach_durations(items, store):
+    """길이 캐시(reel_durations)를 실어 보내고, 빈 곳이 있으면 백필을 예약한다(2026-08-04).
+
+    인스타 목록 수집엔 길이가 아예 없다(그리드 GraphQL 실측) — duration_backfill이
+    yt-dlp 메타로 shortcode당 평생 1회 채운 캐시를 여기서 결합한다. 백필 예약은
+    1시간에 1번 + 큐에 이미 있으면 스킵 — 조회 경로가 크롤을 몰아치지 않게."""
+    missing = False
+    if items:
+        durs = store.duration_map([i.get("shortcode") for i in items])
+        for i in items:
+            if i.get("duration") in (None, "", 0):
+                d = durs.get(i.get("shortcode"))
+                if d is not None:
+                    i["duration"] = d
+                else:
+                    missing = True
+    global _DURFILL_LAST
+    now = time.time()
+    if missing and now - _DURFILL_LAST > 3600 \
+            and not store.queue_has_pending("durfill", "k", "1"):
+        _DURFILL_LAST = now
+        store.enqueue("durfill", {"k": "1"})
+    return items
+
+
+_DURFILL_LAST = 0.0
+
+
 @app.get("/api/reference")
 def api_reference(platform: str = "instagram"):
     """마지막 수집 결과 반환 (프론트 초기 로드용). platform=플랫폼(기본 인스타)."""
@@ -636,6 +665,7 @@ def api_reference(platform: str = "instagram"):
         items = [i for i in items
                  if (i.get("username") or "").strip().lstrip("@").lower() not in blocked]
     _attach_vision_tags(items, store)   # 백그라운드로 채워진 주제태그를 실어 보냄(검색 정확도 승격)
+    _attach_durations(items, store)     # ⏱ 영상 길이 캐시 결합 + 빈 곳 백필 예약
     if platform == "instagram":
         _attach_posted_at(items)        # 'X시간 전' 실시간 계산용 발행시각
     return {"ok": True, "items": items, "collected_at": collected_at}
