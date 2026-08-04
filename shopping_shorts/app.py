@@ -7176,7 +7176,9 @@ def api_produce_aipick(request: Request, work_id: str = "", forced: str = ""):
 #      영구 캐시돼 클라가 계속 미추출로 오인한다(인스타 릴스 실패의 정체)
 #   ④ 호출당 건수 상한 + 시도 횟수 상한 — 최악의 경우에도 소모가 유한하다
 _AUTOLOAD_MAX_PER_CALL = 4      # 한 번 호출로 새로 태울 수 있는 영상 수
-_AUTOLOAD_MAX_ATTEMPTS = 1      # shortcode당 자동추출 총 시도 횟수(넘으면 영구 스킵)
+# 1 → 3 (2026-08-04): prewarm과 같은 완화 — 인스타 일시 실패 1번으로 영구 스킵되면
+# 재담기가 조용히 죽는다. 3회면 폭주 차단은 유지하면서 일시 실패를 흡수한다.
+_AUTOLOAD_MAX_ATTEMPTS = 3      # shortcode당 자동추출 총 시도 횟수(넘으면 영구 스킵)
 # 동시에 추출할 영상 수(2026-07-30). 대기의 정체가 제미니 응답이라 동시에 올리면 총 시간이
 # '가장 느린 1개'로 수렴한다. 다만 무제한으로 올리면 제미니 429가 몰려 오히려 느려지고 키가
 # 소진되므로 3으로 묶는다(_AUTOLOAD_MAX_PER_CALL=4와는 다른 축 — 그건 '총 몇 개').
@@ -7223,15 +7225,20 @@ def api_produce_autoload(request: Request, body: dict):
             store.produce_pick_add(code, customer_id=cid)
             slots[i] = {"shortcode": code, "status": "already"}
             continue
-        # ② DB 래치 — 한 번 실패한 영상은 다시 태우지 않는다(무한루프 차단의 핵심)
-        if tried.get(code, 0) >= _AUTOLOAD_MAX_ATTEMPTS:
-            slots[i] = {"shortcode": code, "status": "skipped_latched"}
-            continue
         if _ssrf_guard(*[u for u in (url, item.get("video_url")) if u]):
             slots[i] = {"shortcode": code, "status": "failed_download"}
             continue
 
+        # ②-a 캐시를 **래치보다 먼저** 본다(2026-08-04 실사고 DQohOUqgdRt): 수동 대본뽑기로
+        # 추출이 이미 있는데도 래치가 앞에 있어 skipped_latched → 도서관 적재가 영영 안 돼
+        # AI PICK(대본 3안 버튼)이 안 떴다. 캐시 히트는 제미니 비용 0이라 래치(비용 폭주
+        # 차단 장치)가 막을 이유가 없다.
         cached = store.get_extract(code)
+        if not (cached and (cached.get("full_text") or "").strip()):
+            # ②-b DB 래치 — 상한까지 실패한 영상은 다시 태우지 않는다(무한루프 차단의 핵심)
+            if tried.get(code, 0) >= _AUTOLOAD_MAX_ATTEMPTS:
+                slots[i] = {"shortcode": code, "status": "skipped_latched"}
+                continue
         if cached and (cached.get("full_text") or "").strip():
             # 캐시 히트 — 제미니 비용도 상한도 안 쓴다(담기 예열이 채워둔 경우가 이것).
             todo.append({"i": i, "item": item, "code": code, "url": url, "charged": False,
