@@ -22,12 +22,32 @@
 """
 import re
 
-MIN_SECONDS = 18.0        # 스토리가 서는 하한(사장님 지시)
+MIN_SECONDS = 20.0        # 스토리가 서는 하한(2026-08-04 사장님 상향: "22초 원본이면 최소 20초는 받아야")
 RATIO = 0.90              # 원본 대비 목표 비율
 _CHARS_PER_SEC = 6.5      # 한국어 나레이션 속도(기존 파이프라인과 동일 가정)
 _SECS_PER_LINE = 3.2      # 문장 하나가 덮는 평균 화면 길이
 
 CTA_PAT = re.compile(r"댓글|남겨주|보내드|링크|프로필|구독|팔로우")
+
+# script_prompt 응답용 스키마(_vault_call에 그대로 전달)
+BEATS_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "beats": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "n": {"type": "integer"},
+                    "covers": {"type": "array", "items": {"type": "integer"}},
+                    "narration": {"type": "string"},
+                },
+                "required": ["n", "covers", "narration"],
+            },
+        },
+    },
+    "required": ["beats"],
+}
 
 
 def is_single_source(source_scripts):
