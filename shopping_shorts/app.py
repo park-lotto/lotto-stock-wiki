@@ -8778,6 +8778,17 @@ def api_archive_similar(request: Request, shortcode: str, limit: int = 40,
             pmap = _pn.identify_many(targets, DB_PATH)
             src_product = pmap.get(shortcode) or ""
             if src_product:
+                # ★제품명 직접검색(2026-08-04 2차): 같은 제품 판정을 '태그 겹침 후보'
+                # 안에서만 하지 않고 **아카이브 전체의 판독된 제품명**과 대조한다.
+                # 종전 구조는 순환 구멍이었다 — 태그가 어긋나면(분위기어라 흔하다)
+                # 후보에 못 들고 → 판독 대상도 아니고 → 제품명이 이미 캐시돼 있어도
+                # 영영 안 나왔다. 사장님 제보 "있는 것 중에서 못 잡는다"의 뿌리.
+                in_scored = {r[1] for _ov, r in scored}
+                for r in rows:
+                    if r[1] == shortcode or r[1] in in_scored:
+                        continue
+                    if r[10] and _pn.same_product(src_product, r[10]):
+                        scored.append((0, r))   # 겹침0이지만 같은 제품 — 아래 정렬이 최상단으로
                 # head 밖이라도 DB에 이미 제품명이 있으면 같은 제품인지 판정한다
                 # (이번 회차에 판독한 것 + 예전에 판독해둔 것 = 전부 활용).
                 verified = {r[1] for _ov, r in scored
