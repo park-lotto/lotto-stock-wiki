@@ -176,6 +176,32 @@ def script_prompt(order, used_secs, hook_block):
             "JSON만: {\"beats\":[{\"n\":1,\"covers\":[1,2],\"narration\":\"...\"}]}")
 
 
+ESCALATE_SCHEMA = {
+    "type": "object",
+    "properties": {"n": {"type": "integer"}, "narration": {"type": "string"}},
+    "required": ["n", "narration"],
+}
+
+
+def escalate_prompt(beats):
+    """고조 문장 재작성 프롬프트(2026-08-04 사장님: "연결어랑 뒷내용이 안 이어진다 — 디벨롭해라").
+
+    기계적으로 연결어만 앞붙이면 '심지어' 뒤에 이미 말한 장점이 반복돼 고조가 안 된다.
+    중간 문장 중 하나를 골라 **앞 문장들을 한 단계 넘는 새 장점**으로 다시 쓰게 한다."""
+    import json
+    cur = [{"n": i + 1, "narration": (b.get("narration") or "")}
+           for i, b in enumerate(beats)]
+    return ("아래는 숏폼 나레이션이다. 구조는 훅→문제→해결장점→**고조(한 단계 위 장점)**→CTA다.\n"
+            "중간 문장(첫 문장·마지막 문장 제외) 중 고조 자리에 가장 어울리는 것 **하나**를 골라,\n"
+            "'심지어 / 놀랍게도 / 근데 이게 대박인 게 / 더군다나' 중 하나로 시작하면서\n"
+            "**앞 문장들에서 아직 안 나온 새로운 장점**으로 이어지게 다시 써라.\n"
+            "규칙: ①앞 문장 내용의 반복·재표현 금지 — 반드시 새 정보로 한 단계 올라가야 한다\n"
+            "②원래 문장이 말하던 화면(장면)과 어긋나는 내용을 지어내지 마라 — 그 문장의 소재를\n"
+            "  유지하되 '더 놀라운 점'으로 각도를 올려라 ③길이는 원래 문장의 ±20% ④말투 유지.\n\n"
+            + json.dumps(cur, ensure_ascii=False, indent=1)
+            + "\n\nJSON만: {\"n\": 고른 문장 번호, \"narration\": \"다시 쓴 문장\"}")
+
+
 def parse_beats(resp):
     """모델 응답에서 beats 배열을 꺼낸다 — {"beats":[...]}로도, 배열로도 온다(실측)."""
     if isinstance(resp, list):

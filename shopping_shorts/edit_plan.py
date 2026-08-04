@@ -3073,8 +3073,19 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         _CONNS = ["심지어", "놀랍게도", "근데 이게 대박인 게", "더군다나"]
         if len(beats) >= 3 and not any(
                 cn in (b.get("narration") or "") for b in beats for cn in _CONNS):
-            mid = beats[len(beats) // 2]
-            mid["narration"] = f"{_CONNS[i % len(_CONNS)]} {mid['narration']}"
+            # ★고조 재작성(2026-08-04 사장님 "연결어랑 뒷내용이 안 이어진다"): 기계적
+            #   앞붙이기는 '심지어' 뒤에 이미 말한 장점이 와서 고조가 안 됐다. LLM이
+            #   자리를 고르고 **앞에 안 나온 새 장점**으로 그 문장을 다시 쓴다.
+            #   실패(키 소진 등) 시에만 종전 기계식 앞붙이기로 폴백.
+            _esc = call(single_source.escalate_prompt(beats), single_source.ESCALATE_SCHEMA)
+            _n = _esc.get("n") if isinstance(_esc, dict) else None
+            _txt = (_esc.get("narration") or "").strip() if isinstance(_esc, dict) else ""
+            if (_txt and isinstance(_n, int) and 2 <= _n <= len(beats) - 1
+                    and any(c in _txt for c in _CONNS)):
+                beats[_n - 1]["narration"] = _txt
+            else:
+                mid = beats[len(beats) // 2]
+                mid["narration"] = f"{_CONNS[i % len(_CONNS)]} {mid['narration']}"
         # ★빈 나레이션 비트는 **커버 배정 전에** 걸러낸다(2026-08-04 라이브 실측 job
         #   bcdf871a6d57: 추천 후보가 16.8초 — 버려진 비트의 컷이 같이 사라져 하한 미달).
         #   먼저 거르면 아래 '구멍은 직전 비트가 이어받는다'가 그 컷들을 살린다.
@@ -3136,6 +3147,9 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
                 continue    # CTA는 압축 제외 — 마지막 컷이 짧으면 보상 문구("보내드릴게요")가
                             # 잘려나간다(실측: 1.9초 컷에 맞춰 "댓글에 나도 남겨요"로 뭉개짐).
                             # 화면 부족분은 아래 _fill_beat_screen_time이 채운다.
+            if any((b["narration"] or "").startswith(c) for c in _CONNS):
+                continue    # 고조 문장은 압축 제외 — conform이 연결어를 군더더기로 깎아
+                            # 사장님 지시("연결어 꼭") 문장이 소리 없이 사라졌다(실측).
             _scr = sum(max(0.0, float(s.get("end") or 0) - float(s.get("start") or 0))
                        for s in [b["primary"]] + b["alternates"])
             _spoken = len("".join((b["narration"] or "").split())) / _SYLLABLES_PER_SEC
