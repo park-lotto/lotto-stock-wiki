@@ -30,7 +30,10 @@ log = logging.getLogger("prewarm")
 
 # 담기 남발 방어 — 하루에 이만큼만 예열한다(넘으면 조용히 스킵, 제작소 진입 시 그때 추출).
 _PREWARM_DAILY_CAP = 40
-_PREWARM_MAX_ATTEMPTS = 1        # shortcode당 총 시도(autoload와 같은 래치를 공유)
+# 1 → 3 (2026-08-04 실사고): 인스타 다운로드는 일시 실패가 흔한데 1회 실패로 영구
+# 래치돼 재담기해도 예열이 조용히 스킵됐다(DQohOUqgdRt — 수동 대본뽑기는 즉시 성공
+# = 경로는 멀쩡, 래치만 스테일). 어제 '래치 7건 삭제' 사고와 같은 계보.
+_PREWARM_MAX_ATTEMPTS = 3        # shortcode당 총 시도(autoload와 같은 래치를 공유)
 _DAILY_KEY = "prewarm_daily"     # settings: "YYYY-MM-DD|n"
 
 
