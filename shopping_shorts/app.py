@@ -8705,8 +8705,6 @@ def api_archive_similar(request: Request, shortcode: str, limit: int = 40,
     import json as _json
     store = Store(DB_PATH)
     src = store.vision_tags_map([shortcode]).get(shortcode)
-    if not src:
-        return {"ok": True, "no_tags": True, "items": []}
     def _tokens(subject, kws):
         toks = set()
         for w in ([subject or ""] + list(kws or [])):
@@ -8714,9 +8712,10 @@ def api_archive_similar(request: Request, shortcode: str, limit: int = 40,
                 if len(t) >= 2:
                     toks.add(t.lower())
         return toks
-    src_t = _tokens(src.get("subject"), src.get("keywords"))
-    if not src_t:
-        return {"ok": True, "no_tags": True, "items": []}
+    # ★태그가 없어도 끝내지 않는다(2026-08-04 2차). 종전엔 여기서 no_tags 조기반환해
+    # 미태깅 영상은 내부검색 버튼이 무용지물이었다(사장님 실화면 제보). 지금은 제품명
+    # 직접검색이 있어 썸네일 제품명만 읽으면 태그 없이도 같은 제품을 찾는다.
+    src_t = _tokens(src.get("subject"), src.get("keywords")) if src else set()
     with store._conn() as c:
         rows = c.execute(
             "SELECT a.username, a.shortcode, a.url, a.thumbnail, a.views, a.likes, "
@@ -8800,12 +8799,15 @@ def api_archive_similar(request: Request, shortcode: str, limit: int = 40,
         except Exception:   # noqa: BLE001 — 판독 실패해도 기존 겹침 결과는 나가야 한다
             pass
 
-    return {"ok": True, "no_tags": False, "src_tags": sorted(src_t),
-            "src_product": src_product, "verified_count": len(verified), "items": [
+    items = [
         {"username": r[0], "shortcode": r[1], "url": r[2], "thumbnail": r[3],
          "views": r[4], "likes": r[5], "comments": r[6], "posted_at": r[7],
          "overlap": ov, "same_product": r[1] in verified}
-        for ov, r in scored[:max(1, min(limit, 100))]]}
+        for ov, r in scored[:max(1, min(limit, 100))]]
+    # no_tags는 이제 '태그도 없고 제품명 경로로도 못 찾음'일 때만 — 결과가 있으면
+    # 태그가 없어도 정상 결과로 내보낸다.
+    return {"ok": True, "no_tags": (not src_t) and not items, "src_tags": sorted(src_t),
+            "src_product": src_product, "verified_count": len(verified), "items": items}
 
 
 def _product_same(a, b):
