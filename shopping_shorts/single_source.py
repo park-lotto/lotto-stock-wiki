@@ -122,8 +122,12 @@ def select_and_order(segments, target_seconds=None):
 
 
 def line_count(used_secs, n_cuts):
-    """나레이션 문장 수 — 컷 수보다 적게(한 문장이 컷 2~3개를 덮는다)."""
-    return max(3, min(n_cuts, round(used_secs / _SECS_PER_LINE)))
+    """나레이션 문장 수 — 컷 수보다 적게(한 문장이 컷 2~3개를 덮는다).
+
+    ★상한 9(2026-08-04 실측 job 923d/285d): 43초 원본·컷 25개 → 13문장이 요구되자
+    글자예산에 눌려 "찌든 때 밀면 끝"류 전보문이 됐다(사장님 "대본이 이상해").
+    문장당 4~5초가 자연스러운 호흡이다 — 컷 커버는 코드가 배정하니 문장이 적어도 안전."""
+    return max(3, min(n_cuts, 9, round(used_secs / _SECS_PER_LINE)))
 
 
 def char_budget(used_secs):

@@ -3127,6 +3127,24 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         if len(plan_beats) >= 4:
             plan_beats[-2]["role"] = "story_resolution"
         plan_beats = _fix_beat_structure(plan_beats)
+        # ★비트별 콘폼(2026-08-04 실측 job 923d/285d): 총량은 예산 안인데 **비트별로**
+        #   문장이 제 화면보다 길면 _fill_beat_screen_time이 클립을 재사용해 화면을
+        #   나레이션에 맞춰 뻥튀기 — 원본 43초짜리가 61~80초 영상이 됐다(중복 금지 위반).
+        #   1소스는 화면(컷 100% 커버)이 주인이다 — 문장을 화면 길이에 맞춰 압축한다.
+        for b in plan_beats:
+            if b is plan_beats[-1]:
+                continue    # CTA는 압축 제외 — 마지막 컷이 짧으면 보상 문구("보내드릴게요")가
+                            # 잘려나간다(실측: 1.9초 컷에 맞춰 "댓글에 나도 남겨요"로 뭉개짐).
+                            # 화면 부족분은 아래 _fill_beat_screen_time이 채운다.
+            _scr = sum(max(0.0, float(s.get("end") or 0) - float(s.get("start") or 0))
+                       for s in [b["primary"]] + b["alternates"])
+            _spoken = len("".join((b["narration"] or "").split())) / _SYLLABLES_PER_SEC
+            if _scr > 0.5 and _spoken > _scr * 1.1:
+                _new = conform_narration(b["narration"], _scr)
+                if _new:
+                    b["narration"] = _new
+                    b["caption_lines"] = None
+            b["target_seconds"] = round(max(1.5, len(b["narration"].strip()) / _SYLLABLES_PER_SEC), 1)
         plan_beats = _fill_beat_screen_time(plan_beats, seg_map)
         # ★최종 안전망(2026-08-04): 위 CTA 보장 3중(프롬프트·LLM교정·컷생존)에도 뒤
         # 단계(_fix_beat_structure 등)가 마지막 비트를 갈아치우는 경로가 실측 1/6 남았다.
