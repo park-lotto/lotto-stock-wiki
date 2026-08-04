@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-08-03",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-04_0802_유럽 BEV 중심 성장 견조, 북미 회복은 관건.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김성래, 김예인",
+    "report_date": "2026년 8월 3일",
+    "stocks": [
+      {
+        "name": "한온시스템",
+        "code": "018880",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": 5100,
+        "tp_prev": 5100,
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q 동사 매출액은 2.87조원(+0.6 이하 YoY) 기록했고, 영업이익은 1,036억원으로 전년 동기 대비 61.2% 증가. 주요 볼륨 고객인 현대차그룹, 포드, VW향 매출이 2Q에 둔화되면서 매출 성장이 시장 기대치를 하회.",
+        "estimate_revision": "매출액(FY1) 11,399 -> 11,263 (-1.2%), 영업이익(FY1) 430 -> 416 (-3.2%)",
+        "next_catalyst": "HMG 볼륨 BEV 모델에 대한 eM 플랫폼 수주 여부",
+        "thesis": [
+          "유럽 전기차 수요 증가 대응 및 프리미엄 고객사(BMW, Mercedes) 매출 증가",
+          "원가절감 및 운영 효율화를 통한 수익성 개선세 지속",
+          "AI데이터센터 열관리 솔루션 및 SDV 전환 등 사업 영역 확장"
+        ],
+        "valuation_basis": "’28년 동사 12M FWD BPS(4,049원)에 발레오, 보그워너, 덴소 등 글로벌 주요 열관리 부품업체 12M FWD PBR 평균(1.27배) 적용",
+        "risk": "미주 지역 포드, GM 등 주요 고객사 프로그램 지연/취소 등으로 인한 물량 감소",
+        "supply_comment": null,
+        "quote": "’28년 동사 12M FWD BPS(4,049원)에 발레오, 보그워너, 덴소 등 글로벌 주요 열관리 부품업체 12M FWD PBR 평균(1.27배) 적용한 목표주가 5,100원 유지",
+        "sector": "자동차"
+      }
+    ]
+  }
+}

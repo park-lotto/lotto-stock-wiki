@@ -1,18 +1,228 @@
 {
-  "date": "2026-08-03",
+  "date": "2026-08-04",
   "stocks": {
-    "090430": {
-      "name": "아모레퍼시픽",
+    "012450": {
+      "name": "한화에어로스페이스",
+      "tp": {
+        "dir": "상향",
+        "count": 2,
+        "up_count": 2,
+        "down_count": 3,
+        "target": 2140000,
+        "change_pct": 4.9,
+        "high": 2140000,
+        "low": 1670000,
+        "brokerage": "다올투자증권",
+        "date": "2026-08-03"
+      }
+    },
+    "028670": {
+      "name": "팬오션",
+      "tp": {
+        "dir": "상향",
+        "count": 5,
+        "up_count": 5,
+        "down_count": 0,
+        "target": 8000,
+        "change_pct": 2.6,
+        "high": 8000,
+        "low": 5900,
+        "brokerage": "유안타증권",
+        "date": "2026-08-03"
+      }
+    },
+    "383220": {
+      "name": "F&F",
+      "tp": {
+        "dir": "상향",
+        "count": 1,
+        "up_count": 1,
+        "down_count": 0,
+        "target": 100000,
+        "change_pct": 11.1,
+        "high": 100000,
+        "low": 100000,
+        "brokerage": "삼성증권",
+        "date": "2026-08-03"
+      }
+    },
+    "002350": {
+      "name": "넥센타이어",
+      "tp": {
+        "dir": "상향",
+        "count": 1,
+        "up_count": 1,
+        "down_count": 4,
+        "target": 10000,
+        "change_pct": 6.4,
+        "high": 10000,
+        "low": 10000,
+        "brokerage": "대신증권",
+        "date": "2026-07-31"
+      }
+    },
+    "005930": {
+      "name": "삼성전자",
+      "tp": {
+        "dir": "상향",
+        "count": 1,
+        "up_count": 1,
+        "down_count": 3,
+        "target": 650000,
+        "change_pct": 10.2,
+        "high": 650000,
+        "low": 650000,
+        "brokerage": "한국투자증권",
+        "date": "2026-07-31"
+      }
+    },
+    "009150": {
+      "name": "삼성전기",
+      "tp": {
+        "dir": "상향",
+        "count": 3,
+        "up_count": 3,
+        "down_count": 6,
+        "target": 1400000,
+        "change_pct": 40.0,
+        "high": 1750000,
+        "low": 1400000,
+        "brokerage": "삼성증권",
+        "date": "2026-07-31"
+      }
+    },
+    "009830": {
+      "name": "한화솔루션",
+      "tp": {
+        "dir": "상향",
+        "count": 3,
+        "up_count": 3,
+        "down_count": 7,
+        "target": 43000,
+        "change_pct": 6.0,
+        "high": 60000,
+        "low": 39000,
+        "brokerage": "상상인증권",
+        "date": "2026-07-31"
+      }
+    },
+    "011200": {
+      "name": "HMM",
       "tp": {
         "dir": "상향",
         "count": 2,
         "up_count": 2,
         "down_count": 0,
-        "target": 170000,
-        "change_pct": 13.3,
-        "high": 170000,
+        "target": 30000,
+        "change_pct": 15.4,
+        "high": 30000,
+        "low": 21000,
+        "brokerage": "LS증권",
+        "date": "2026-07-31"
+      }
+    },
+    "016380": {
+      "name": "KG스틸",
+      "tp": {
+        "dir": "상향",
+        "count": 1,
+        "up_count": 1,
+        "down_count": 0,
+        "target": 7700,
+        "change_pct": 4.1,
+        "high": 7700,
+        "low": 7700,
+        "brokerage": "현대차증권",
+        "date": "2026-07-31"
+      }
+    },
+    "018260": {
+      "name": "삼성에스디에스",
+      "tp": {
+        "dir": "상향",
+        "count": 3,
+        "up_count": 3,
+        "down_count": 0,
+        "target": 260000,
+        "change_pct": 8.3,
+        "high": 263000,
+        "low": 260000,
+        "brokerage": "미래에셋증권",
+        "date": "2026-07-31"
+      }
+    },
+    "028260": {
+      "name": "삼성물산",
+      "tp": {
+        "dir": "상향",
+        "count": 3,
+        "up_count": 3,
+        "down_count": 7,
+        "target": 450000,
+        "change_pct": 25.0,
+        "high": 490000,
+        "low": 420000,
+        "brokerage": "BNK투자증권",
+        "date": "2026-07-31"
+      }
+    },
+    "066570": {
+      "name": "LG전자",
+      "tp": {
+        "dir": "상향",
+        "count": 4,
+        "up_count": 4,
+        "down_count": 2,
+        "target": 180000,
+        "change_pct": 5.9,
+        "high": 270000,
+        "low": 180000,
+        "brokerage": "신한투자증권",
+        "date": "2026-07-31"
+      }
+    },
+    "068270": {
+      "name": "셀트리온",
+      "tp": {
+        "dir": "상향",
+        "count": 11,
+        "up_count": 11,
+        "down_count": 0,
+        "target": 280000,
+        "change_pct": 3.7,
+        "high": 320000,
+        "low": 270000,
+        "brokerage": "현대차증권",
+        "date": "2026-07-31"
+      }
+    },
+    "073240": {
+      "name": "금호타이어",
+      "tp": {
+        "dir": "상향",
+        "count": 4,
+        "up_count": 4,
+        "down_count": 0,
+        "target": 11000,
+        "change_pct": 10.0,
+        "high": 11000,
+        "low": 7500,
+        "brokerage": "다올투자증권",
+        "date": "2026-07-31"
+      }
+    },
+    "090430": {
+      "name": "아모레퍼시픽",
+      "tp": {
+        "dir": "상향",
+        "count": 10,
+        "up_count": 10,
+        "down_count": 0,
+        "target": 210000,
+        "change_pct": 16.7,
+        "high": 210000,
         "low": 170000,
-        "brokerage": "하나증권",
+        "brokerage": "교보증권",
         "date": "2026-07-31"
       }
     },
@@ -20,14 +230,59 @@
       "name": "SK이노베이션",
       "tp": {
         "dir": "상향",
-        "count": 4,
-        "up_count": 4,
+        "count": 7,
+        "up_count": 7,
         "down_count": 0,
-        "target": 190000,
-        "change_pct": 11.8,
+        "target": 180000,
+        "change_pct": 44.0,
         "high": 200000,
-        "low": 126000,
-        "brokerage": "신한투자증권",
+        "low": 150000,
+        "brokerage": "메리츠증권",
+        "date": "2026-07-31"
+      }
+    },
+    "204320": {
+      "name": "HL만도",
+      "tp": {
+        "dir": "상향",
+        "count": 1,
+        "up_count": 1,
+        "down_count": 8,
+        "target": 52000,
+        "change_pct": 10.6,
+        "high": 52000,
+        "low": 52000,
+        "brokerage": "한국투자증권",
+        "date": "2026-07-31"
+      }
+    },
+    "213500": {
+      "name": "한솔제지",
+      "tp": {
+        "dir": "상향",
+        "count": 1,
+        "up_count": 1,
+        "down_count": 0,
+        "target": 11000,
+        "change_pct": 15.8,
+        "high": 11000,
+        "low": 11000,
+        "brokerage": "흥국증권",
+        "date": "2026-07-31"
+      }
+    },
+    "420770": {
+      "name": "기가비스",
+      "tp": {
+        "dir": "상향",
+        "count": 2,
+        "up_count": 2,
+        "down_count": 0,
+        "target": 120000,
+        "change_pct": 84.6,
+        "high": 230000,
+        "low": 120000,
+        "brokerage": "iM증권",
         "date": "2026-07-31"
       }
     },
@@ -37,42 +292,12 @@
         "dir": "상향",
         "count": 3,
         "up_count": 3,
-        "down_count": 8,
+        "down_count": 6,
         "target": 4700000,
         "change_pct": 23.7,
         "high": 4700000,
         "low": 2000000,
         "brokerage": "한국투자증권",
-        "date": "2026-07-30"
-      }
-    },
-    "009830": {
-      "name": "한화솔루션",
-      "tp": {
-        "dir": "상향",
-        "count": 2,
-        "up_count": 2,
-        "down_count": 7,
-        "target": 39000,
-        "change_pct": 25.3,
-        "high": 60000,
-        "low": 39000,
-        "brokerage": "메리츠증권",
-        "date": "2026-07-30"
-      }
-    },
-    "028260": {
-      "name": "삼성물산",
-      "tp": {
-        "dir": "상향",
-        "count": 2,
-        "up_count": 2,
-        "down_count": 7,
-        "target": 420000,
-        "change_pct": 10.5,
-        "high": 490000,
-        "low": 420000,
-        "brokerage": "유진투자증권",
         "date": "2026-07-30"
       }
     },
@@ -95,13 +320,13 @@
       "name": "DL이앤씨",
       "tp": {
         "dir": "상향",
-        "count": 2,
-        "up_count": 2,
-        "down_count": 2,
+        "count": 1,
+        "up_count": 1,
+        "down_count": 8,
         "target": 97000,
         "change_pct": 6.6,
         "high": 97000,
-        "low": 73000,
+        "low": 97000,
         "brokerage": "메리츠증권",
         "date": "2026-07-30"
       }
@@ -112,7 +337,7 @@
         "dir": "상향",
         "count": 1,
         "up_count": 1,
-        "down_count": 1,
+        "down_count": 0,
         "target": 121000,
         "change_pct": 0.8,
         "high": 121000,
@@ -140,12 +365,12 @@
       "name": "신세계",
       "tp": {
         "dir": "상향",
-        "count": 3,
-        "up_count": 3,
+        "count": 1,
+        "up_count": 1,
         "down_count": 0,
         "target": 750000,
         "change_pct": 226.1,
-        "high": 860000,
+        "high": 750000,
         "low": 750000,
         "brokerage": "하나증권",
         "date": "2026-07-29"
@@ -170,12 +395,12 @@
       "name": "현대백화점",
       "tp": {
         "dir": "상향",
-        "count": 3,
-        "up_count": 3,
+        "count": 2,
+        "up_count": 2,
         "down_count": 0,
         "target": 180000,
         "change_pct": 80.0,
-        "high": 210000,
+        "high": 200000,
         "low": 180000,
         "brokerage": "하나증권",
         "date": "2026-07-29"
@@ -187,7 +412,7 @@
         "dir": "상향",
         "count": 1,
         "up_count": 1,
-        "down_count": 0,
+        "down_count": 1,
         "target": 44000,
         "change_pct": 10.0,
         "high": 44000,
@@ -202,7 +427,7 @@
         "dir": "상향",
         "count": 1,
         "up_count": 1,
-        "down_count": 7,
+        "down_count": 0,
         "target": 490000,
         "change_pct": 44.1,
         "high": 490000,
@@ -217,7 +442,7 @@
         "dir": "상향",
         "count": 1,
         "up_count": 1,
-        "down_count": 3,
+        "down_count": 0,
         "target": 270000,
         "change_pct": 12.5,
         "high": 270000,
@@ -262,7 +487,7 @@
         "dir": "상향",
         "count": 2,
         "up_count": 2,
-        "down_count": 8,
+        "down_count": 0,
         "target": 800000,
         "change_pct": 23.1,
         "high": 850000,
@@ -292,27 +517,12 @@
         "dir": "상향",
         "count": 1,
         "up_count": 1,
-        "down_count": 5,
+        "down_count": 0,
         "target": 145000,
         "change_pct": 9.8,
         "high": 145000,
         "low": 145000,
         "brokerage": "DS투자증권",
-        "date": "2026-07-28"
-      }
-    },
-    "068270": {
-      "name": "셀트리온",
-      "tp": {
-        "dir": "상향",
-        "count": 10,
-        "up_count": 10,
-        "down_count": 0,
-        "target": 280000,
-        "change_pct": 4.9,
-        "high": 320000,
-        "low": 270000,
-        "brokerage": "다올투자증권",
         "date": "2026-07-28"
       }
     },
@@ -337,7 +547,7 @@
         "dir": "상향",
         "count": 1,
         "up_count": 1,
-        "down_count": 1,
+        "down_count": 0,
         "target": 350000,
         "change_pct": 6.1,
         "high": 350000,
@@ -365,13 +575,13 @@
       "name": "GS건설",
       "tp": {
         "dir": "상향",
-        "count": 3,
-        "up_count": 3,
-        "down_count": 13,
+        "count": 1,
+        "up_count": 1,
+        "down_count": 12,
         "target": 41000,
         "change_pct": 17.1,
-        "high": 46000,
-        "low": 34000,
+        "high": 41000,
+        "low": 41000,
         "brokerage": "메리츠증권",
         "date": "2026-07-27"
       }
@@ -421,21 +631,6 @@
         "date": "2026-07-27"
       }
     },
-    "018260": {
-      "name": "삼성에스디에스",
-      "tp": {
-        "dir": "상향",
-        "count": 1,
-        "up_count": 1,
-        "down_count": 0,
-        "target": 260000,
-        "change_pct": 23.8,
-        "high": 260000,
-        "low": 260000,
-        "brokerage": "신한투자증권",
-        "date": "2026-07-27"
-      }
-    },
     "028050": {
       "name": "삼성E&A",
       "tp": {
@@ -455,8 +650,8 @@
       "name": "하나금융지주",
       "tp": {
         "dir": "상향",
-        "count": 7,
-        "up_count": 7,
+        "count": 6,
+        "up_count": 6,
         "down_count": 0,
         "target": 160000,
         "change_pct": 6.7,
@@ -530,8 +725,8 @@
       "name": "LS ELECTRIC",
       "tp": {
         "dir": "상향",
-        "count": 12,
-        "up_count": 12,
+        "count": 11,
+        "up_count": 11,
         "down_count": 0,
         "target": 320000,
         "change_pct": 33.3,
@@ -545,8 +740,8 @@
       "name": "신한지주",
       "tp": {
         "dir": "상향",
-        "count": 6,
-        "up_count": 6,
+        "count": 4,
+        "up_count": 4,
         "down_count": 0,
         "target": 140000,
         "change_pct": 8.5,
@@ -575,8 +770,8 @@
       "name": "KB금융",
       "tp": {
         "dir": "상향",
-        "count": 7,
-        "up_count": 7,
+        "count": 5,
+        "up_count": 5,
         "down_count": 0,
         "target": 232000,
         "change_pct": 5.5,
@@ -622,7 +817,7 @@
         "dir": "상향",
         "count": 1,
         "up_count": 1,
-        "down_count": 0,
+        "down_count": 1,
         "target": 450000,
         "change_pct": 25.0,
         "high": 450000,
@@ -652,7 +847,7 @@
         "dir": "상향",
         "count": 2,
         "up_count": 2,
-        "down_count": 0,
+        "down_count": 2,
         "target": 4300,
         "change_pct": 2.4,
         "high": 4300,
@@ -695,13 +890,13 @@
       "name": "KT&G",
       "tp": {
         "dir": "상향",
-        "count": 3,
-        "up_count": 3,
+        "count": 2,
+        "up_count": 2,
         "down_count": 0,
         "target": 240000,
         "change_pct": 4.3,
         "high": 250000,
-        "low": 210000,
+        "low": 240000,
         "brokerage": "현대차증권",
         "date": "2026-07-22"
       }
@@ -719,36 +914,6 @@
         "low": 83000,
         "brokerage": "신한투자증권",
         "date": "2026-07-22"
-      }
-    },
-    "420770": {
-      "name": "기가비스",
-      "tp": {
-        "dir": "상향",
-        "count": 1,
-        "up_count": 1,
-        "down_count": 0,
-        "target": 230000,
-        "change_pct": 31.4,
-        "high": 230000,
-        "low": 230000,
-        "brokerage": "다올투자증권",
-        "date": "2026-07-22"
-      }
-    },
-    "028670": {
-      "name": "팬오션",
-      "tp": {
-        "dir": "상향",
-        "count": 2,
-        "up_count": 2,
-        "down_count": 0,
-        "target": 7800,
-        "change_pct": 11.4,
-        "high": 7800,
-        "low": 5300,
-        "brokerage": "유안타증권",
-        "date": "2026-07-21"
       }
     },
     "081660": {
@@ -815,12 +980,12 @@
       "name": "현대해상",
       "tp": {
         "dir": "상향",
-        "count": 3,
-        "up_count": 3,
+        "count": 2,
+        "up_count": 2,
         "down_count": 0,
         "target": 42000,
         "change_pct": 27.3,
-        "high": 50000,
+        "high": 45000,
         "low": 42000,
         "brokerage": "BNK투자증권",
         "date": "2026-07-20"
@@ -830,13 +995,13 @@
       "name": "S-Oil",
       "tp": {
         "dir": "상향",
-        "count": 3,
-        "up_count": 3,
+        "count": 2,
+        "up_count": 2,
         "down_count": 0,
         "target": 190000,
         "change_pct": 35.7,
         "high": 190000,
-        "low": 170000,
+        "low": 175000,
         "brokerage": "DB증권",
         "date": "2026-07-20"
       }
@@ -845,12 +1010,12 @@
       "name": "롯데쇼핑",
       "tp": {
         "dir": "상향",
-        "count": 2,
-        "up_count": 2,
+        "count": 1,
+        "up_count": 1,
         "down_count": 0,
         "target": 190000,
         "change_pct": 40.7,
-        "high": 220000,
+        "high": 190000,
         "low": 190000,
         "brokerage": "LS증권",
         "date": "2026-07-20"
@@ -905,13 +1070,13 @@
       "name": "한국타이어앤테크놀로지",
       "tp": {
         "dir": "상향",
-        "count": 4,
-        "up_count": 4,
+        "count": 2,
+        "up_count": 2,
         "down_count": 0,
         "target": 120000,
         "change_pct": 33.3,
         "high": 120000,
-        "low": 80000,
+        "low": 90000,
         "brokerage": "메리츠증권",
         "date": "2026-07-20"
       }
@@ -935,13 +1100,13 @@
       "name": "삼성화재",
       "tp": {
         "dir": "상향",
-        "count": 3,
-        "up_count": 3,
+        "count": 1,
+        "up_count": 1,
         "down_count": 0,
         "target": 870000,
         "change_pct": 40.3,
         "high": 870000,
-        "low": 740000,
+        "low": 870000,
         "brokerage": "대신증권",
         "date": "2026-07-16"
       }
@@ -961,28 +1126,13 @@
         "date": "2026-07-16"
       }
     },
-    "009150": {
-      "name": "삼성전기",
-      "tp": {
-        "dir": "상향",
-        "count": 1,
-        "up_count": 1,
-        "down_count": 1,
-        "target": 1750000,
-        "change_pct": 66.7,
-        "high": 1750000,
-        "low": 1750000,
-        "brokerage": "IBK투자증권",
-        "date": "2026-07-16"
-      }
-    },
     "015760": {
       "name": "한국전력",
       "tp": {
         "dir": "상향",
         "count": 1,
         "up_count": 1,
-        "down_count": 1,
+        "down_count": 0,
         "target": 45000,
         "change_pct": 4.7,
         "high": 45000,
@@ -1006,27 +1156,12 @@
         "date": "2026-07-16"
       }
     },
-    "073240": {
-      "name": "금호타이어",
-      "tp": {
-        "dir": "상향",
-        "count": 2,
-        "up_count": 2,
-        "down_count": 0,
-        "target": 7500,
-        "change_pct": 15.4,
-        "high": 8300,
-        "low": 7500,
-        "brokerage": "상상인증권",
-        "date": "2026-07-16"
-      }
-    },
     "161890": {
       "name": "한국콜마",
       "tp": {
         "dir": "상향",
-        "count": 2,
-        "up_count": 2,
+        "count": 1,
+        "up_count": 1,
         "down_count": 0,
         "target": 140000,
         "change_pct": 16.7,
@@ -1070,269 +1205,599 @@
       "name": "대한항공",
       "tp": {
         "dir": "상향",
-        "count": 5,
-        "up_count": 5,
+        "count": 3,
+        "up_count": 3,
         "down_count": 0,
         "target": 38000,
         "change_pct": 8.6,
-        "high": 41000,
-        "low": 33000,
+        "high": 40000,
+        "low": 38000,
         "brokerage": "신한투자증권",
         "date": "2026-07-15"
       }
     },
-    "011200": {
-      "name": "HMM",
+    "000720": {
+      "name": "현대건설",
       "tp": {
-        "dir": "상향",
-        "count": 1,
-        "up_count": 1,
-        "down_count": 0,
-        "target": 21000,
-        "change_pct": 5.0,
-        "high": 21000,
-        "low": 21000,
-        "brokerage": "KB증권",
-        "date": "2026-07-15"
-      }
-    },
-    "062040": {
-      "name": "산일전기",
-      "tp": {
-        "dir": "상향",
-        "count": 1,
-        "up_count": 1,
-        "down_count": 0,
-        "target": 250000,
-        "change_pct": 78.6,
-        "high": 250000,
-        "low": 250000,
-        "brokerage": "미래에셋증권",
-        "date": "2026-07-15"
-      }
-    },
-    "103590": {
-      "name": "일진전기",
-      "tp": {
-        "dir": "상향",
-        "count": 1,
-        "up_count": 1,
-        "down_count": 0,
-        "target": 95000,
-        "change_pct": 196.9,
-        "high": 95000,
-        "low": 95000,
-        "brokerage": "미래에셋증권",
-        "date": "2026-07-15"
-      }
-    },
-    "229640": {
-      "name": "LS에코에너지",
-      "tp": {
-        "dir": "상향",
-        "count": 1,
-        "up_count": 1,
-        "down_count": 0,
-        "target": 57000,
-        "change_pct": 7.5,
-        "high": 57000,
-        "low": 57000,
-        "brokerage": "키움증권",
-        "date": "2026-07-15"
-      }
-    },
-    "267260": {
-      "name": "HD현대일렉트릭",
-      "tp": {
-        "dir": "상향",
-        "count": 1,
-        "up_count": 1,
-        "down_count": 10,
-        "target": 1300000,
-        "change_pct": 124.1,
-        "high": 1300000,
-        "low": 1300000,
-        "brokerage": "미래에셋증권",
-        "date": "2026-07-15"
-      }
-    },
-    "298040": {
-      "name": "효성중공업",
-      "tp": {
-        "dir": "상향",
-        "count": 1,
-        "up_count": 1,
-        "down_count": 0,
-        "target": 5000000,
-        "change_pct": 309.8,
-        "high": 5000000,
-        "low": 5000000,
-        "brokerage": "미래에셋증권",
-        "date": "2026-07-15"
-      }
-    },
-    "001430": {
-      "name": "세아베스틸지주",
-      "tp": {
-        "dir": "상향",
-        "count": 1,
-        "up_count": 1,
-        "down_count": 1,
-        "target": 61700,
-        "change_pct": 87.0,
-        "high": 61700,
-        "low": 61700,
+        "dir": "하향",
+        "count": 2,
+        "up_count": 0,
+        "down_count": 2,
+        "target": 168000,
+        "change_pct": -13.8,
+        "high": 168000,
+        "low": 135000,
         "brokerage": "대신증권",
-        "date": "2026-07-14"
+        "date": "2026-08-03"
       }
     },
-    "004020": {
-      "name": "현대제철",
+    "003670": {
+      "name": "포스코퓨처엠",
       "tp": {
-        "dir": "상향",
-        "count": 1,
-        "up_count": 1,
-        "down_count": 0,
-        "target": 44600,
-        "change_pct": 3.7,
-        "high": 44600,
-        "low": 44600,
-        "brokerage": "대신증권",
-        "date": "2026-07-14"
+        "dir": "하향",
+        "count": 7,
+        "up_count": 0,
+        "down_count": 7,
+        "target": 171000,
+        "change_pct": -41.8,
+        "high": 200000,
+        "low": 148000,
+        "brokerage": "하나증권",
+        "date": "2026-08-03"
       }
     },
     "005490": {
       "name": "POSCO홀딩스",
       "tp": {
-        "dir": "상향",
-        "count": 1,
-        "up_count": 1,
-        "down_count": 1,
-        "target": 615800,
-        "change_pct": 50.2,
-        "high": 615800,
-        "low": 615800,
-        "brokerage": "대신증권",
-        "date": "2026-07-14"
-      }
-    },
-    "006260": {
-      "name": "LS",
-      "tp": {
-        "dir": "상향",
-        "count": 1,
-        "up_count": 1,
-        "down_count": 0,
-        "target": 500000,
-        "change_pct": 42.9,
-        "high": 500000,
-        "low": 500000,
-        "brokerage": "BNK투자증권",
-        "date": "2026-07-14"
-      }
-    },
-    "036540": {
-      "name": "SFA반도체",
-      "tp": {
-        "dir": "상향",
-        "count": 1,
-        "up_count": 1,
-        "down_count": 0,
-        "target": 10000,
-        "change_pct": 25.0,
-        "high": 10000,
-        "low": 10000,
-        "brokerage": "한국투자증권",
-        "date": "2026-07-14"
-      }
-    },
-    "047040": {
-      "name": "대우건설",
-      "tp": {
-        "dir": "상향",
-        "count": 1,
-        "up_count": 1,
-        "down_count": 0,
-        "target": 23000,
-        "change_pct": 198.7,
-        "high": 23000,
-        "low": 23000,
-        "brokerage": "키움증권",
-        "date": "2026-07-14"
-      }
-    },
-    "079550": {
-      "name": "LIG디펜스앤에어로스페이스",
-      "tp": {
-        "dir": "상향",
-        "count": 1,
-        "up_count": 1,
-        "down_count": 0,
-        "target": 1050000,
-        "change_pct": 52.2,
-        "high": 1050000,
-        "low": 1050000,
-        "brokerage": "유안타증권",
-        "date": "2026-07-14"
-      }
-    },
-    "139130": {
-      "name": "iM금융지주",
-      "tp": {
-        "dir": "상향",
-        "count": 1,
-        "up_count": 1,
-        "down_count": 0,
-        "target": 24000,
-        "change_pct": 6.2,
-        "high": 24000,
-        "low": 24000,
-        "brokerage": "교보증권",
-        "date": "2026-07-14"
-      }
-    },
-    "000370": {
-      "name": "한화손해보험",
-      "tp": {
-        "dir": "상향",
-        "count": 1,
-        "up_count": 1,
-        "down_count": 0,
-        "target": 8000,
-        "change_pct": 14.3,
-        "high": 8000,
-        "low": 8000,
+        "dir": "하향",
+        "count": 5,
+        "up_count": 0,
+        "down_count": 5,
+        "target": 490000,
+        "change_pct": -9.3,
+        "high": 550000,
+        "low": 400000,
         "brokerage": "신한투자증권",
-        "date": "2026-07-13"
+        "date": "2026-08-03"
+      }
+    },
+    "008770": {
+      "name": "호텔신라",
+      "tp": {
+        "dir": "하향",
+        "count": 2,
+        "up_count": 0,
+        "down_count": 2,
+        "target": 73000,
+        "change_pct": -14.1,
+        "high": 73000,
+        "low": 62000,
+        "brokerage": "한국투자증권",
+        "date": "2026-08-03"
+      }
+    },
+    "051910": {
+      "name": "LG화학",
+      "tp": {
+        "dir": "하향",
+        "count": 3,
+        "up_count": 0,
+        "down_count": 3,
+        "target": 400000,
+        "change_pct": -23.1,
+        "high": 440000,
+        "low": 380000,
+        "brokerage": "한국투자증권",
+        "date": "2026-08-03"
+      }
+    },
+    "064960": {
+      "name": "SNT모티브",
+      "tp": {
+        "dir": "하향",
+        "count": 1,
+        "up_count": 0,
+        "down_count": 1,
+        "target": 43000,
+        "change_pct": -4.4,
+        "high": 43000,
+        "low": 43000,
+        "brokerage": "대신증권",
+        "date": "2026-08-03"
+      }
+    },
+    "067160": {
+      "name": "SOOP",
+      "tp": {
+        "dir": "하향",
+        "count": 1,
+        "up_count": 0,
+        "down_count": 1,
+        "target": 51000,
+        "change_pct": -29.2,
+        "high": 51000,
+        "low": 51000,
+        "brokerage": "메리츠증권",
+        "date": "2026-08-03"
+      }
+    },
+    "091700": {
+      "name": "파트론",
+      "tp": {
+        "dir": "하향",
+        "count": 1,
+        "up_count": 0,
+        "down_count": 1,
+        "target": 7500,
+        "change_pct": -16.7,
+        "high": 7500,
+        "low": 7500,
+        "brokerage": "대신증권",
+        "date": "2026-08-03"
+      }
+    },
+    "103140": {
+      "name": "풍산",
+      "tp": {
+        "dir": "하향",
+        "count": 3,
+        "up_count": 0,
+        "down_count": 3,
+        "target": 130000,
+        "change_pct": -18.8,
+        "high": 130000,
+        "low": 85000,
+        "brokerage": "신한투자증권",
+        "date": "2026-08-03"
+      }
+    },
+    "108670": {
+      "name": "LX하우시스",
+      "tp": {
+        "dir": "하향",
+        "count": 1,
+        "up_count": 0,
+        "down_count": 1,
+        "target": 48000,
+        "change_pct": -15.8,
+        "high": 48000,
+        "low": 48000,
+        "brokerage": "하나증권",
+        "date": "2026-08-03"
+      }
+    },
+    "195940": {
+      "name": "HK이노엔",
+      "tp": {
+        "dir": "하향",
+        "count": 1,
+        "up_count": 0,
+        "down_count": 1,
+        "target": 70000,
+        "change_pct": -9.1,
+        "high": 70000,
+        "low": 70000,
+        "brokerage": "KB증권",
+        "date": "2026-08-03"
+      }
+    },
+    "247540": {
+      "name": "에코프로비엠",
+      "tp": {
+        "dir": "하향",
+        "count": 4,
+        "up_count": 0,
+        "down_count": 4,
+        "target": 160000,
+        "change_pct": -30.4,
+        "high": 160000,
+        "low": 115000,
+        "brokerage": "신한투자증권",
+        "date": "2026-08-03"
+      }
+    },
+    "267250": {
+      "name": "HD현대",
+      "tp": {
+        "dir": "하향",
+        "count": 1,
+        "up_count": 0,
+        "down_count": 1,
+        "target": 290000,
+        "change_pct": -29.3,
+        "high": 290000,
+        "low": 290000,
+        "brokerage": "대신증권",
+        "date": "2026-08-03"
+      }
+    },
+    "298040": {
+      "name": "효성중공업",
+      "tp": {
+        "dir": "하향",
+        "count": 2,
+        "up_count": 0,
+        "down_count": 2,
+        "target": 4300000,
+        "change_pct": -18.9,
+        "high": 4300000,
+        "low": 4000000,
+        "brokerage": "LS증권",
+        "date": "2026-08-03"
+      }
+    },
+    "353200": {
+      "name": "대덕전자",
+      "tp": {
+        "dir": "하향",
+        "count": 3,
+        "up_count": 0,
+        "down_count": 3,
+        "target": 170000,
+        "change_pct": -15.0,
+        "high": 170000,
+        "low": 150000,
+        "brokerage": "메리츠증권",
+        "date": "2026-08-03"
+      }
+    },
+    "361610": {
+      "name": "SK아이이테크놀로지",
+      "tp": {
+        "dir": "하향",
+        "count": 3,
+        "up_count": 0,
+        "down_count": 3,
+        "target": 15000,
+        "change_pct": -46.4,
+        "high": 15000,
+        "low": 13000,
+        "brokerage": "iM증권",
+        "date": "2026-08-03"
+      }
+    },
+    "000100": {
+      "name": "유한양행",
+      "tp": {
+        "dir": "하향",
+        "count": 6,
+        "up_count": 0,
+        "down_count": 6,
+        "target": 120000,
+        "change_pct": -14.3,
+        "high": 145000,
+        "low": 110000,
+        "brokerage": "다올투자증권",
+        "date": "2026-07-31"
+      }
+    },
+    "000150": {
+      "name": "두산",
+      "tp": {
+        "dir": "하향",
+        "count": 1,
+        "up_count": 0,
+        "down_count": 1,
+        "target": 1700000,
+        "change_pct": -22.7,
+        "high": 1700000,
+        "low": 1700000,
+        "brokerage": "BNK투자증권",
+        "date": "2026-07-31"
+      }
+    },
+    "001430": {
+      "name": "세아베스틸지주",
+      "tp": {
+        "dir": "하향",
+        "count": 2,
+        "up_count": 0,
+        "down_count": 2,
+        "target": 64000,
+        "change_pct": -26.4,
+        "high": 64000,
+        "low": 50000,
+        "brokerage": "다올투자증권",
+        "date": "2026-07-31"
+      }
+    },
+    "001440": {
+      "name": "대한전선",
+      "tp": {
+        "dir": "하향",
+        "count": 3,
+        "up_count": 0,
+        "down_count": 3,
+        "target": 48500,
+        "change_pct": -19.2,
+        "high": 48500,
+        "low": 34000,
+        "brokerage": "유안타증권",
+        "date": "2026-07-31"
+      }
+    },
+    "004000": {
+      "name": "롯데정밀화학",
+      "tp": {
+        "dir": "하향",
+        "count": 1,
+        "up_count": 0,
+        "down_count": 1,
+        "target": 66000,
+        "change_pct": -19.5,
+        "high": 66000,
+        "low": 66000,
+        "brokerage": "삼성증권",
+        "date": "2026-07-31"
+      }
+    },
+    "006400": {
+      "name": "삼성SDI",
+      "tp": {
+        "dir": "하향",
+        "count": 10,
+        "up_count": 0,
+        "down_count": 10,
+        "target": 690000,
+        "change_pct": -25.0,
+        "high": 700000,
+        "low": 402000,
+        "brokerage": "대신증권",
+        "date": "2026-07-31"
+      }
+    },
+    "006730": {
+      "name": "서부T&D",
+      "tp": {
+        "dir": "하향",
+        "count": 1,
+        "up_count": 0,
+        "down_count": 1,
+        "target": 15000,
+        "change_pct": -28.6,
+        "high": 15000,
+        "low": 15000,
+        "brokerage": "신한투자증권",
+        "date": "2026-07-31"
+      }
+    },
+    "034220": {
+      "name": "LG디스플레이",
+      "tp": {
+        "dir": "하향",
+        "count": 1,
+        "up_count": 0,
+        "down_count": 1,
+        "target": 17000,
+        "change_pct": -15.0,
+        "high": 17000,
+        "low": 17000,
+        "brokerage": "IBK투자증권",
+        "date": "2026-07-31"
       }
     },
     "039490": {
       "name": "키움증권",
       "tp": {
         "dir": "하향",
-        "count": 5,
+        "count": 10,
         "up_count": 0,
-        "down_count": 5,
-        "target": 560000,
-        "change_pct": -8.2,
+        "down_count": 10,
+        "target": 405000,
+        "change_pct": -16.5,
         "high": 560000,
-        "low": 370000,
-        "brokerage": "다올투자증권",
+        "low": 360000,
+        "brokerage": "교보증권",
         "date": "2026-07-31"
       }
     },
-    "204320": {
-      "name": "HL만도",
+    "047050": {
+      "name": "포스코인터내셔널",
+      "tp": {
+        "dir": "하향",
+        "count": 4,
+        "up_count": 0,
+        "down_count": 4,
+        "target": 80000,
+        "change_pct": -4.8,
+        "high": 83000,
+        "low": 78000,
+        "brokerage": "삼성증권",
+        "date": "2026-07-31"
+      }
+    },
+    "047810": {
+      "name": "한국항공우주",
+      "tp": {
+        "dir": "하향",
+        "count": 9,
+        "up_count": 0,
+        "down_count": 9,
+        "target": 186000,
+        "change_pct": -8.8,
+        "high": 190000,
+        "low": 140000,
+        "brokerage": "DS투자증권",
+        "date": "2026-07-31"
+      }
+    },
+    "052400": {
+      "name": "코나아이",
+      "tp": {
+        "dir": "하향",
+        "count": 1,
+        "up_count": 0,
+        "down_count": 1,
+        "target": 63000,
+        "change_pct": -34.7,
+        "high": 63000,
+        "low": 63000,
+        "brokerage": "신한투자증권",
+        "date": "2026-07-31"
+      }
+    },
+    "064350": {
+      "name": "현대로템",
+      "tp": {
+        "dir": "하향",
+        "count": 1,
+        "up_count": 0,
+        "down_count": 1,
+        "target": 295000,
+        "change_pct": -13.2,
+        "high": 295000,
+        "low": 295000,
+        "brokerage": "키움증권",
+        "date": "2026-07-31"
+      }
+    },
+    "064400": {
+      "name": "LG씨엔에스",
       "tp": {
         "dir": "하향",
         "count": 2,
         "up_count": 0,
         "down_count": 2,
-        "target": 65000,
-        "change_pct": -18.8,
-        "high": 77000,
-        "low": 65000,
+        "target": 100000,
+        "change_pct": -9.1,
+        "high": 100000,
+        "low": 86000,
+        "brokerage": "미래에셋증권",
+        "date": "2026-07-31"
+      }
+    },
+    "189300": {
+      "name": "인텔리안테크",
+      "tp": {
+        "dir": "하향",
+        "count": 2,
+        "up_count": 0,
+        "down_count": 2,
+        "target": 161000,
+        "change_pct": -19.5,
+        "high": 161000,
+        "low": 145000,
+        "brokerage": "키움증권",
+        "date": "2026-07-31"
+      }
+    },
+    "195870": {
+      "name": "해성디에스",
+      "tp": {
+        "dir": "하향",
+        "count": 2,
+        "up_count": 0,
+        "down_count": 2,
+        "target": 70000,
+        "change_pct": -38.1,
+        "high": 71000,
+        "low": 70000,
+        "brokerage": "메리츠증권",
+        "date": "2026-07-31"
+      }
+    },
+    "214150": {
+      "name": "클래시스",
+      "tp": {
+        "dir": "하향",
+        "count": 1,
+        "up_count": 0,
+        "down_count": 1,
+        "target": 62000,
+        "change_pct": -28.7,
+        "high": 62000,
+        "low": 62000,
+        "brokerage": "신한투자증권",
+        "date": "2026-07-31"
+      }
+    },
+    "237690": {
+      "name": "에스티팜",
+      "tp": {
+        "dir": "하향",
+        "count": 1,
+        "up_count": 0,
+        "down_count": 1,
+        "target": 140000,
+        "change_pct": -30.0,
+        "high": 140000,
+        "low": 140000,
+        "brokerage": "흥국증권",
+        "date": "2026-07-31"
+      }
+    },
+    "272450": {
+      "name": "진에어",
+      "tp": {
+        "dir": "하향",
+        "count": 1,
+        "up_count": 0,
+        "down_count": 1,
+        "target": 7000,
+        "change_pct": -22.2,
+        "high": 7000,
+        "low": 7000,
+        "brokerage": "미래에셋증권",
+        "date": "2026-07-31"
+      }
+    },
+    "279570": {
+      "name": "케이뱅크",
+      "tp": {
+        "dir": "하향",
+        "count": 1,
+        "up_count": 0,
+        "down_count": 1,
+        "target": 7200,
+        "change_pct": -4.0,
+        "high": 7200,
+        "low": 7200,
+        "brokerage": "삼성증권",
+        "date": "2026-07-31"
+      }
+    },
+    "298050": {
+      "name": "HS효성첨단소재",
+      "tp": {
+        "dir": "하향",
+        "count": 2,
+        "up_count": 0,
+        "down_count": 2,
+        "target": 270000,
+        "change_pct": -10.0,
+        "high": 270000,
+        "low": 230000,
         "brokerage": "iM증권",
+        "date": "2026-07-31"
+      }
+    },
+    "307950": {
+      "name": "현대오토에버",
+      "tp": {
+        "dir": "하향",
+        "count": 1,
+        "up_count": 0,
+        "down_count": 1,
+        "target": 580000,
+        "change_pct": -19.4,
+        "high": 580000,
+        "low": 580000,
+        "brokerage": "대신증권",
+        "date": "2026-07-31"
+      }
+    },
+    "352820": {
+      "name": "하이브",
+      "tp": {
+        "dir": "하향",
+        "count": 1,
+        "up_count": 0,
+        "down_count": 1,
+        "target": 300000,
+        "change_pct": -34.8,
+        "high": 300000,
+        "low": 300000,
+        "brokerage": "BNK투자증권",
         "date": "2026-07-31"
       }
     },
@@ -1340,45 +1805,45 @@
       "name": "LG에너지솔루션",
       "tp": {
         "dir": "하향",
-        "count": 3,
+        "count": 7,
         "up_count": 0,
-        "down_count": 3,
-        "target": 500000,
-        "change_pct": -15.3,
-        "high": 500000,
-        "low": 460000,
-        "brokerage": "키움증권",
+        "down_count": 7,
+        "target": 440000,
+        "change_pct": -6.4,
+        "high": 550000,
+        "low": 440000,
+        "brokerage": "메리츠증권",
         "date": "2026-07-31"
       }
     },
-    "002350": {
-      "name": "넥센타이어",
+    "460860": {
+      "name": "동국제강",
       "tp": {
         "dir": "하향",
-        "count": 5,
+        "count": 1,
         "up_count": 0,
-        "down_count": 5,
-        "target": 9000,
-        "change_pct": -10.0,
-        "high": 9000,
-        "low": 8100,
-        "brokerage": "다올투자증권",
-        "date": "2026-07-30"
+        "down_count": 1,
+        "target": 12500,
+        "change_pct": -27.3,
+        "high": 12500,
+        "low": 12500,
+        "brokerage": "현대차증권",
+        "date": "2026-07-31"
       }
     },
-    "005930": {
-      "name": "삼성전자",
+    "489790": {
+      "name": "한화비전",
       "tp": {
         "dir": "하향",
-        "count": 2,
+        "count": 1,
         "up_count": 0,
-        "down_count": 2,
-        "target": 300000,
-        "change_pct": -30.2,
-        "high": 370000,
-        "low": 300000,
-        "brokerage": "BNK투자증권",
-        "date": "2026-07-30"
+        "down_count": 1,
+        "target": 80000,
+        "change_pct": -20.0,
+        "high": 80000,
+        "low": 80000,
+        "brokerage": "SK증권",
+        "date": "2026-07-31"
       }
     },
     "009540": {
@@ -1400,43 +1865,13 @@
       "name": "두산에너빌리티",
       "tp": {
         "dir": "하향",
-        "count": 10,
-        "up_count": 0,
-        "down_count": 10,
-        "target": 110000,
-        "change_pct": -29.5,
-        "high": 140000,
-        "low": 100000,
-        "brokerage": "대신증권",
-        "date": "2026-07-30"
-      }
-    },
-    "047050": {
-      "name": "포스코인터내셔널",
-      "tp": {
-        "dir": "하향",
         "count": 1,
         "up_count": 0,
         "down_count": 1,
-        "target": 83000,
-        "change_pct": -17.0,
-        "high": 83000,
-        "low": 83000,
-        "brokerage": "KB증권",
-        "date": "2026-07-30"
-      }
-    },
-    "047810": {
-      "name": "한국항공우주",
-      "tp": {
-        "dir": "하향",
-        "count": 8,
-        "up_count": 0,
-        "down_count": 8,
-        "target": 165000,
-        "change_pct": -15.8,
-        "high": 190000,
-        "low": 140000,
+        "target": 110000,
+        "change_pct": -29.5,
+        "high": 110000,
+        "low": 110000,
         "brokerage": "대신증권",
         "date": "2026-07-30"
       }
@@ -1445,366 +1880,21 @@
       "name": "대웅제약",
       "tp": {
         "dir": "하향",
-        "count": 4,
+        "count": 1,
         "up_count": 0,
-        "down_count": 4,
+        "down_count": 1,
         "target": 170000,
         "change_pct": -10.5,
-        "high": 180000,
+        "high": 170000,
         "low": 170000,
         "brokerage": "키움증권",
         "date": "2026-07-30"
       }
-    },
-    "088980": {
-      "name": "맥쿼리인프라",
-      "tp": {
-        "dir": "하향",
-        "count": 1,
-        "up_count": 0,
-        "down_count": 1,
-        "target": 12900,
-        "change_pct": -5.1,
-        "high": 12900,
-        "low": 12900,
-        "brokerage": "삼성증권",
-        "date": "2026-07-30"
-      }
-    },
-    "138930": {
-      "name": "BNK금융지주",
-      "tp": {
-        "dir": "하향",
-        "count": 6,
-        "up_count": 0,
-        "down_count": 6,
-        "target": 23000,
-        "change_pct": -6.1,
-        "high": 25000,
-        "low": 23000,
-        "brokerage": "유안타증권",
-        "date": "2026-07-30"
-      }
-    },
-    "195870": {
-      "name": "해성디에스",
-      "tp": {
-        "dir": "하향",
-        "count": 5,
-        "up_count": 0,
-        "down_count": 5,
-        "target": 85000,
-        "change_pct": -15.0,
-        "high": 85000,
-        "low": 60000,
-        "brokerage": "교보증권",
-        "date": "2026-07-30"
-      }
-    },
-    "195940": {
-      "name": "HK이노엔",
-      "tp": {
-        "dir": "하향",
-        "count": 2,
-        "up_count": 0,
-        "down_count": 2,
-        "target": 51000,
-        "change_pct": -8.9,
-        "high": 55000,
-        "low": 51000,
-        "brokerage": "키움증권",
-        "date": "2026-07-30"
-      }
-    },
-    "237690": {
-      "name": "에스티팜",
-      "tp": {
-        "dir": "하향",
-        "count": 5,
-        "up_count": 0,
-        "down_count": 5,
-        "target": 140000,
-        "change_pct": -30.0,
-        "high": 190000,
-        "low": 140000,
-        "brokerage": "삼성증권",
-        "date": "2026-07-30"
-      }
-    },
-    "259960": {
-      "name": "크래프톤",
-      "tp": {
-        "dir": "하향",
-        "count": 2,
-        "up_count": 0,
-        "down_count": 2,
-        "target": 300000,
-        "change_pct": -9.1,
-        "high": 300000,
-        "low": 290000,
-        "brokerage": "신한투자증권",
-        "date": "2026-07-30"
-      }
-    },
-    "307950": {
-      "name": "현대오토에버",
-      "tp": {
-        "dir": "하향",
-        "count": 8,
-        "up_count": 0,
-        "down_count": 8,
-        "target": 350000,
-        "change_pct": -50.0,
-        "high": 730000,
-        "low": 300000,
-        "brokerage": "상상인증권",
-        "date": "2026-07-30"
-      }
-    },
-    "329180": {
-      "name": "HD현대중공업",
-      "tp": {
-        "dir": "하향",
-        "count": 6,
-        "up_count": 0,
-        "down_count": 6,
-        "target": 806000,
-        "change_pct": -10.4,
-        "high": 1000000,
-        "low": 650000,
-        "brokerage": "삼성증권",
-        "date": "2026-07-30"
-      }
-    },
-    "352820": {
-      "name": "하이브",
-      "tp": {
-        "dir": "하향",
-        "count": 6,
-        "up_count": 0,
-        "down_count": 6,
-        "target": 300000,
-        "change_pct": -14.3,
-        "high": 330000,
-        "low": 280000,
-        "brokerage": "LS증권",
-        "date": "2026-07-30"
-      }
-    },
-    "357780": {
-      "name": "솔브레인",
-      "tp": {
-        "dir": "하향",
-        "count": 1,
-        "up_count": 0,
-        "down_count": 1,
-        "target": 440000,
-        "change_pct": -18.5,
-        "high": 440000,
-        "low": 440000,
-        "brokerage": "키움증권",
-        "date": "2026-07-30"
-      }
-    },
-    "003220": {
-      "name": "대원제약",
-      "tp": {
-        "dir": "하향",
-        "count": 1,
-        "up_count": 0,
-        "down_count": 1,
-        "target": 14000,
-        "change_pct": -12.5,
-        "high": 14000,
-        "low": 14000,
-        "brokerage": "상상인증권",
-        "date": "2026-07-29"
-      }
-    },
-    "008770": {
-      "name": "호텔신라",
-      "tp": {
-        "dir": "하향",
-        "count": 1,
-        "up_count": 0,
-        "down_count": 1,
-        "target": 57000,
-        "change_pct": -5.0,
-        "high": 57000,
-        "low": 57000,
-        "brokerage": "하나증권",
-        "date": "2026-07-29"
-      }
-    },
-    "011210": {
-      "name": "현대위아",
-      "tp": {
-        "dir": "하향",
-        "count": 4,
-        "up_count": 0,
-        "down_count": 4,
-        "target": 80000,
-        "change_pct": -24.5,
-        "high": 88000,
-        "low": 68000,
-        "brokerage": "교보증권",
-        "date": "2026-07-29"
-      }
-    },
-    "071970": {
-      "name": "HD현대마린엔진",
-      "tp": {
-        "dir": "하향",
-        "count": 2,
-        "up_count": 0,
-        "down_count": 2,
-        "target": 82000,
-        "change_pct": -29.9,
-        "high": 110000,
-        "low": 82000,
-        "brokerage": "현대차증권",
-        "date": "2026-07-29"
-      }
-    },
-    "105630": {
-      "name": "한세실업",
-      "tp": {
-        "dir": "하향",
-        "count": 1,
-        "up_count": 0,
-        "down_count": 1,
-        "target": 12000,
-        "change_pct": -33.3,
-        "high": 12000,
-        "low": 12000,
-        "brokerage": "DB증권",
-        "date": "2026-07-29"
-      }
-    },
-    "139480": {
-      "name": "이마트",
-      "tp": {
-        "dir": "하향",
-        "count": 1,
-        "up_count": 0,
-        "down_count": 1,
-        "target": 110000,
-        "change_pct": -8.3,
-        "high": 110000,
-        "low": 110000,
-        "brokerage": "하나증권",
-        "date": "2026-07-29"
-      }
-    },
-    "170900": {
-      "name": "동아에스티",
-      "tp": {
-        "dir": "하향",
-        "count": 1,
-        "up_count": 0,
-        "down_count": 1,
-        "target": 50000,
-        "change_pct": -25.1,
-        "high": 50000,
-        "low": 50000,
-        "brokerage": "iM증권",
-        "date": "2026-07-29"
-      }
-    },
-    "272210": {
-      "name": "한화시스템",
-      "tp": {
-        "dir": "하향",
-        "count": 6,
-        "up_count": 0,
-        "down_count": 6,
-        "target": 103000,
-        "change_pct": -12.0,
-        "high": 121000,
-        "low": 91000,
-        "brokerage": "대신증권",
-        "date": "2026-07-29"
-      }
-    },
-    "365550": {
-      "name": "ESR켄달스퀘어리츠",
-      "tp": {
-        "dir": "하향",
-        "count": 1,
-        "up_count": 0,
-        "down_count": 1,
-        "target": 4600,
-        "change_pct": -14.8,
-        "high": 4600,
-        "low": 4600,
-        "brokerage": "NH투자증권",
-        "date": "2026-07-29"
-      }
-    },
-    "000150": {
-      "name": "두산",
-      "tp": {
-        "dir": "하향",
-        "count": 5,
-        "up_count": 0,
-        "down_count": 5,
-        "target": 1800000,
-        "change_pct": -18.2,
-        "high": 2400000,
-        "low": 1800000,
-        "brokerage": "교보증권",
-        "date": "2026-07-28"
-      }
-    },
-    "011790": {
-      "name": "SKC",
-      "tp": {
-        "dir": "하향",
-        "count": 1,
-        "up_count": 0,
-        "down_count": 1,
-        "target": 94000,
-        "change_pct": -32.9,
-        "high": 94000,
-        "low": 94000,
-        "brokerage": "삼성증권",
-        "date": "2026-07-28"
-      }
-    },
-    "029780": {
-      "name": "삼성카드",
-      "tp": {
-        "dir": "하향",
-        "count": 2,
-        "up_count": 0,
-        "down_count": 2,
-        "target": 66000,
-        "change_pct": -8.3,
-        "high": 69000,
-        "low": 66000,
-        "brokerage": "하나증권",
-        "date": "2026-07-28"
-      }
-    },
-    "035900": {
-      "name": "JYP Ent.",
-      "tp": {
-        "dir": "하향",
-        "count": 1,
-        "up_count": 0,
-        "down_count": 1,
-        "target": 75000,
-        "change_pct": -21.1,
-        "high": 75000,
-        "low": 75000,
-        "brokerage": "한국투자증권",
-        "date": "2026-07-28"
-      }
     }
   },
   "meta": {
-    "built_at": "2026-08-03T10:24:42",
-    "stock_count": 120,
+    "built_at": "2026-08-04T07:50:03",
+    "stock_count": 126,
     "unmatched": []
   }
 }

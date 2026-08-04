@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "date": "2026-08-03",
+    "broker": "KYOBO Securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-04_0808_[0의 시선] 시장이 흔들릴 때, 버핏의 알파벳...md"
+  },
+  "questionnaire": {
+    "broker": "KYOBO Securities",
+    "analyst": "최보영",
+    "report_date": "2026/08/03",
+    "target_kind": "sector",
+    "sector_name": "반도체",
+    "sector_view": null,
+    "thesis": [
+      "빅테크 4개사의 AI 관련 누적 CAPEX가 1.1조 달러를 돌파하며 2026년 합산 투자계획이 7,450억 달러로 상향됨",
+      "AI 투자가 현금창출력을 잠식하며 합산 FCF가 70억 달러까지 하락하는 자산경량 사업모델의 구조적 변화 진행",
+      "향후 관건은 AI 수요보다 유동성이 투자 회수기간을 견딜 수 있는지 여부이며, 완화적 정책 신호 확인 시 밸류에이션 부담 완화 가능"
+    ],
+    "timeline": [
+      "2026년 하반기: Google, Microsoft, Amazon, Meta 모두 상반기보다 하반기 CAPEX를 더 크게 계획"
+    ],
+    "top_picks": [
+      {
+        "name": "Alphabet",
+        "reason": "버핏이 시장의 단기 우려가 확대된 시점에 300억 달러 이상을 신규 투자했으며, AI 경쟁의 최종 승자가 될 확률이 높다는 판단",
+        "tp": null
+      },
+      {
+        "name": "Amazon",
+        "reason": "AWS 매출이 37% 증가하고 향후 클라우드 용량 상당 부분이 예약됐다고 밝힘",
+        "tp": null
+      },
+      {
+        "name": "Microsoft",
+        "reason": "강한 Azure 성장 전망과 현금창출력을 제시함",
+        "tp": null
+      }
+    ],
+    "risk": "국채금리 상승과 회사채시장 경색이 지속될 경우 AI 수요가 견조하더라도 주가 변동성이 반복될 가능성이 높음",
+    "quote": "1조 달러의 AI 투자가 실패하는 시점은 수요가 사라질 때가 아니라, 수익이 발생하기 전에 자본시장이 기다림을 중단할 때다."
+  }
+}

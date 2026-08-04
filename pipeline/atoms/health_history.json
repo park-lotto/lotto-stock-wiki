@@ -1,15 +1,4 @@
 {
-  "2026-07-20": {
-    "atoms": {
-      "blog": 20,
-      "news": 187,
-      "report": 77,
-      "telegram": 157,
-      "youtube": 12
-    },
-    "queue_new": 0,
-    "pytest_ok": false
-  },
   "2026-07-21": {
     "atoms": {
       "blog": 10,
@@ -81,6 +70,11 @@
     "pytest_ok": false
   },
   "2026-08-03": {
+    "atoms": {},
+    "queue_new": 0,
+    "pytest_ok": false
+  },
+  "2026-08-04": {
     "atoms": {},
     "queue_new": 0,
     "pytest_ok": false
