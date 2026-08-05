@@ -38,7 +38,22 @@ _BACKOFF_S = 30 * 60         # 로그인벽/차단 의심 시 대기
 _BUSY_POLL_S = 60            # 렌더 양보 중 재확인 주기
 
 
-def crawl_channel(username, max_scrolls=_MAX_SCROLLS):
+def session_slots():
+    """적립된 계정 세션 파일 목록(uid.json). 없으면 단일 세션으로 폴백.
+
+    2026-08-05: 히트작은 채널당 400여 개를 다 긁어야 해서(최신 100개만으론
+    조회수 상위 100개 중 0~5개밖에 안 걸린다 — 실측) 한 계정이 몇 시간 만에
+    scraping_warning에 걸린다. 재로그인으로 세션을 새로 뽑으면 즉시 살아나므로,
+    계정 여러 개를 적립해두고 막힐 때마다 넘긴다."""
+    d = os.getenv("INSTAGRAM_SESSION_DIR", "")
+    if d and os.path.isdir(d):
+        slots = sorted(os.path.join(d, f) for f in os.listdir(d) if f.endswith(".json"))
+        if slots:
+            return slots
+    return [config.INSTAGRAM_SESSION_PATH] if config.INSTAGRAM_SESSION_PATH else []
+
+
+def crawl_channel(username, max_scrolls=_MAX_SCROLLS, session_path=None):
     """채널 1개를 바닥(또는 상한)까지 스크롤 크롤. (items, final_url, error) 반환.
 
     instagram_playwright._scrape_one_playwright와 같은 캡처 방식(응답 후킹)에
@@ -53,8 +68,9 @@ def crawl_channel(username, max_scrolls=_MAX_SCROLLS):
             browser = p.chromium.launch(
                 headless=True, args=["--disable-blink-features=AutomationControlled"])
             ctx_kw = {}
-            if config.INSTAGRAM_SESSION_PATH and os.path.exists(config.INSTAGRAM_SESSION_PATH):
-                ctx_kw["storage_state"] = config.INSTAGRAM_SESSION_PATH
+            sess = session_path or config.INSTAGRAM_SESSION_PATH
+            if sess and os.path.exists(sess):
+                ctx_kw["storage_state"] = sess
             elif config.INSTAGRAM_PROXY:
                 ctx_kw["proxy"] = {"server": config.INSTAGRAM_PROXY}
             ctx = browser.new_context(**ctx_kw)
@@ -79,6 +95,10 @@ def crawl_channel(username, max_scrolls=_MAX_SCROLLS):
             # 삭제·개명된 채널 감지(2026-08-05): 인스타가 에러 라우트를 렌더한다.
             # 이걸 error로 두면 pick_targets(팔로워순)가 매일 같은 죽은 대형 채널로
             # 40개 한도를 채워 진도가 영영 안 나간다 → "gone"으로 영구 제외.
+            if "/accounts/scraping_warning" in page.url:
+                ctx.close()
+                browser.close()
+                return [], page.url, "scraping_warning"
             _body = page.content()
             if ("페이지를 사용할 수 없습니다" in _body
                     or "Sorry, this page isn't available" in _body):
@@ -135,14 +155,32 @@ def run(limit=None, max_scrolls=_MAX_SCROLLS, sleep=time.sleep, log=print):
     targets = pick_targets(store)
     if limit:
         targets = targets[:limit]
-    log(f"[아카이브] 대상 {len(targets)}채널 (팔로워순, done 제외)")
+    slots = session_slots()
+    slot_i = 0
+    log(f"[아카이브] 대상 {len(targets)}채널 (팔로워순, done 제외) · 계정 세션 {len(slots)}개")
     walls = 0
     ok = 0
     for idx, u in enumerate(targets, 1):
         while store.heavy_job_running():   # 사용하면서 수집 — 렌더에 양보
             log(f"[아카이브] 렌더 진행 중 → {_BUSY_POLL_S}s 대기")
             sleep(_BUSY_POLL_S)
-        items, final_url, err = crawl_channel(u, max_scrolls=max_scrolls)
+        # 계정 로테이션: scraping_warning이 뜨면 그 계정은 태운 것 — 다음 세션으로
+        # 넘겨 같은 채널을 재시도한다. 전 세션이 소진되면 회차를 끝낸다(재로그인 필요).
+        while True:
+            sess = slots[slot_i] if slot_i < len(slots) else None
+            items, final_url, err = crawl_channel(u, max_scrolls=max_scrolls,
+                                                  session_path=sess)
+            if err != "scraping_warning":
+                break
+            burnt = os.path.basename(sess or "?").replace(".json", "")
+            slot_i += 1
+            if slot_i >= len(slots):
+                log(f"[아카이브] 계정 {burnt} 차단 — 남은 세션 없음, 회차 종료"
+                    f" (재로그인 후 ig_session_capture.py로 갱신)")
+                return ok
+            log(f"[아카이브] 계정 {burnt} 차단 → 다음 계정으로 전환"
+                f" ({slot_i + 1}/{len(slots)})")
+            sleep(random.uniform(*_CHANNEL_GAP_S))
         now = datetime.now(timezone.utc).isoformat()
         if items:
             store.archive_upsert_many(u, items, now)
