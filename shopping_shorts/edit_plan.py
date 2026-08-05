@@ -3105,7 +3105,11 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         # ★스타일 통째 리라이트(2026-08-05): 컷 매핑 생성은 광고 카피 결을 못 벗는다(3바퀴
         #   실측) → 완성된 나레이션을 스타일 few-shot 보고 문체만 다시 쓴다(40/40 검증 방식).
         #   문장수·순서 고정이라 covers 유효. 실패 시 원본 유지·스타일 off면 no-op.
-        beats = single_source.apply_restyle(beats, call)
+        #   ★trio(기본): 후보마다 다른 채널 스타일 — A=메종(발견담)/B=채이(가족드라마)/
+        #   C=스탠다드(유머목격담). 사장님 확정 3각(2026-08-05).
+        from shopping_shorts import style_profiles as _sp0
+        beats = single_source.apply_restyle(beats, call,
+                                            style_name=_sp0.candidate_style(i))
         # ★빈 나레이션 비트는 **커버 배정 전에** 걸러낸다(2026-08-04 라이브 실측 job
         #   bcdf871a6d57: 추천 후보가 16.8초 — 버려진 비트의 컷이 같이 사라져 하한 미달).
         #   먼저 거르면 아래 '구멍은 직전 비트가 이어받는다'가 그 컷들을 살린다.
