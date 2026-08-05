@@ -232,7 +232,7 @@ RESTYLE_SCHEMA = {
 _CLICHE = ("꿀템", "갓성비", "완벽 해결", "삶의 질", "필수템", "역대급")
 
 
-def restyle_prompt(beats, length_note=""):
+def restyle_prompt(beats, length_note="", style_name=None):
     """★스타일 통째 리라이트(2026-08-05 사장님 "메종이랑 결이 아예 안 맞네").
 
     프롬프트 지시로 3바퀴를 밀어도 컷 매핑 생성은 광고 카피 결을 못 벗었다 —
@@ -244,7 +244,7 @@ def restyle_prompt(beats, length_note=""):
     cur = [{"n": i + 1, "narration": (b.get("narration") or "")}
            for i, b in enumerate(beats)]
     total = sum(len(c["narration"]) for c in cur)
-    return (style_profiles.style_block()
+    return (style_profiles.style_block(style_name)
             + "\n위 [스타일 예시]의 결로 아래 나레이션을 **문체만** 고쳐 써라.\n"
             "[절대규칙]\n"
             "1. 문장 수와 순서는 그대로 — n번 문장은 n번 자리에서 같은 내용을 말한다"
@@ -265,7 +265,7 @@ def restyle_prompt(beats, length_note=""):
             + "\n\nJSON만: {\"beats\":[{\"n\":1,\"narration\":\"...\"}]}")
 
 
-def apply_restyle(beats, call, max_tries=3):
+def apply_restyle(beats, call, max_tries=3, style_name=None):
     """스타일 리라이트 — 길이 초과·상투어는 버리지 말고 피드백 재시도(최대 3회).
 
     ★첫 구현은 길이 밖이면 조용히 원본 복귀였는데, 메종 문체가 원문보다 길어
@@ -279,7 +279,8 @@ def apply_restyle(beats, call, max_tries=3):
     note = ""
     best = None
     for _ in range(max_tries):
-        resp = call(restyle_prompt(beats, length_note=note), RESTYLE_SCHEMA)
+        resp = call(restyle_prompt(beats, length_note=note, style_name=style_name),
+                    RESTYLE_SCHEMA)
         got = (resp or {}).get("beats") if isinstance(resp, dict) else None
         if not got or len(got) != len(beats):
             return best or beats

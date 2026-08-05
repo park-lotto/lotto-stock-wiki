@@ -24,10 +24,25 @@ def test_switch_off_and_unknown():
     assert style_profiles.style_block("모르는스타일") == ""
 
 
-def test_default_is_maison():
+def test_default_is_trio_and_candidate_rotation():
     env = {k: v for k, v in os.environ.items() if k != "SCRIPT_STYLE"}
     with patch.dict(os.environ, env, clear=True):
-        assert style_profiles.active_style() == "maison"
+        assert style_profiles.active_style() == "trio"
+        assert [style_profiles.candidate_style(i) for i in range(3)] == \
+            ["maison", "chae", "standard"]
+    with patch.dict(os.environ, {"SCRIPT_STYLE": "maison"}):
+        assert style_profiles.candidate_style(2) == "maison"  # 단일 모드
+    with patch.dict(os.environ, {"SCRIPT_STYLE": "off"}):
+        assert style_profiles.candidate_style(0) is None
+
+
+def test_chae_and_standard_blocks():
+    c = style_profiles.style_block("chae")
+    assert "표정이 싹 굳으시면서" in c and "631만 회" in c and "티키타카" in c
+    s = style_profiles.style_block("standard")
+    assert "등짝 스매싱" in s and "286만 회" in s and "유머" in s
+    # trio 공통 생성 블록은 메종
+    assert "소리 질렀어요" in style_profiles.style_block("trio")
 
 
 def test_wired_into_scene_first_prompt():
