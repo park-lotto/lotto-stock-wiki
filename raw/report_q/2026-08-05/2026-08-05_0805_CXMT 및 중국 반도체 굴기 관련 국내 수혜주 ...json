@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-08-05",
+    "broker": "현대차증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-05_0805_CXMT 및 중국 반도체 굴기 관련 국내 수혜주 ...md"
+  },
+  "questionnaire": {
+    "broker": "현대차증권",
+    "analyst": "김종배",
+    "report_date": "2026. 07. 28",
+    "target_kind": "sector",
+    "sector": {
+      "sector_name": "전기전자 산업",
+      "sector_view": "비중확대",
+      "thesis": [
+        "CXMT의 성공적인 IPO로 인한 자금 조달로 Capa 확대가 예상되며, 이에 따른 국내 후공정 소재 Value-Chain 수혜",
+        "중국 Local OSAT 업체의 성장과 국내 업체들의 중국향 실적 동반 성장",
+        "AI Value-Chain 내 후공정 소재 업체들의 실적 개선세 및 매력적인 Valuation 진입"
+      ],
+      "timeline": [
+        "1Q26 기준 중국향 매출 엠케이전자 YoY +155%, 덕산하이메탈 YoY +120% 성장",
+        "하반기로 갈수록 중국향 실적 성장 흐름 가속화 전망"
+      ],
+      "top_picks": [
+        {
+          "name": "덕산하이메탈",
+          "reason": "CXMT 내 Solder Ball M/S 약 80% 수준으로 추정되며, CXMT 성장과 함께 동사의 Solder Ball 성장 기울기도 가파를 것으로 예상",
+          "tp": null
+        },
+        {
+          "name": "엠케이전자",
+          "reason": "도금 와이어 수요에 대해 사실상 중국 내 높은 M/S를 유지하고 있으며 중국 반도체 굴기와 더불어 성장 모멘텀 확보 전망",
+          "tp": null
+        }
+      ],
+      "risk": null,
+      "quote": "글로벌 AI H/W의 수요 성장+중국 모멘텀’으로 인한 후공정 소재 업체에 주목"
+    }
+  }
+}

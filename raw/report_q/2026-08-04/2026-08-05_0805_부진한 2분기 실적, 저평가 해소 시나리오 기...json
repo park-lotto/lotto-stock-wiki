@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-08-04",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-05_0805_부진한 2분기 실적, 저평가 해소 시나리오 기...md"
+  },
+  "questionnaire": {
+    "broker": "미래에셋증권",
+    "analyst": "김기룡",
+    "report_date": "2026.8.4",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "현대제철",
+        "code": "004020",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "47,000원",
+        "tp_prev": "55,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "2026년 2분기, 현대제철 연결 실적은 매출액 6.11조원(+2.7% YoY, +6.4% QoQ), 영업이익 577억원(-43.3% YoY, +267.5% QoQ)으로 시장 예상치(영업이익 744억원, 1개월 기준)를 22% 하회했다.",
+        "estimate_revision": null,
+        "next_catalyst": "2026년 하반기: ① 실적 개선 ② AI·에너지 소재 수요 확대 기대",
+        "thesis": [
+          "반덤핑 제소에 따른 유통가 상승 기조와 하반기 주요 고객사(자동차, 조선)와의 판가 인상",
+          "AI·에너지(반도체 Fab, 데이터센터) 소재 수요 확대 기대",
+          "2026년 하반기, 주주 환원 정책 발표를 통한 주가 부양 효과"
+        ],
+        "valuation_basis": "Target PBR 0.3x",
+        "risk": "중국 수급 개선 및 국내 건설 업황 회복 지연으로 반등 모멘텀 역시 약화된 상황",
+        "supply_comment": null,
+        "sector": "철강",
+        "quote": "현대제철에 대한 투자의견 매수, 목표주가 47,000원(Target PBR 0.3x)을 유지한다."
+      }
+    ]
+  }
+}

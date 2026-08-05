@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "date": "2026-08-04",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-05_0809_주택마진이 보여준 실적, 부진한 주택지표.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": [
+      "김승준",
+      "하민호"
+    ],
+    "report_date": "2026.8.4",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "코스피 지수 하락",
+      "전국 아파트 매매가/전세가 상승",
+      "6월 주택지표(착공, 미분양 등) 부진"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": "비중확대",
+        "reason": "하반기 상승 재료로 데이터센터 주목"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-07-28",
+        "event": "삼성E&A 화공플랜트 건설공사 LOA 수령"
+      },
+      {
+        "date": "2026-07-29",
+        "event": "대우건설 동부간선 지하화 건설공사"
+      }
+    ],
+    "top_picks": [
+      "GS건설"
+    ],
+    "risk": "상반기 착공 부진으로 인한 연간 가이던스 달성 하반기 의존도 심화, 지방 미분양 증가",
+    "quote": "전반적으로 우호적이지 못한 환경 속에서 하반기 나타날 수 있는 상승 재료는 데이터센터다. 특히 GS그룹의 동해 AI데이터센터 관련 뉴스(인허가, 자금조달) 등이 나타날 것으로 보고, 관련 종목으로 GS건설을 TOP PICK으로 추천한다."
+  }
+}

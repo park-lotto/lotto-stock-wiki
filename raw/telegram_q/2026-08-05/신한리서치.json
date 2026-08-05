@@ -1,0 +1,112 @@
+{
+  "reports": [
+    {
+      "broker": "신한투자증권",
+      "stock": "화낙",
+      "rating": null,
+      "tp": null,
+      "ts": "08:08",
+      "quote": "부품 공급에 대한 우려 해소가 핵심",
+      "sector": "로봇"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "S-Oil",
+      "rating": "매수",
+      "tp": null,
+      "ts": "08:16",
+      "quote": "공급 부족이 지지하는 정제마진",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "현대제철",
+      "rating": "매수",
+      "tp": null,
+      "ts": "08:16",
+      "quote": "하반기 스프레드 회복에 주목",
+      "sector": "철강"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "LX인터내셔널",
+      "rating": "매수",
+      "tp": null,
+      "ts": "08:16",
+      "quote": "좋은 흐름은 하반기에도",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "HS효성첨단소재",
+      "rating": "매수",
+      "tp": null,
+      "ts": "08:16",
+      "quote": "본업은 강하고, 탄소섬유는 살아난다",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "씨엠티엑스",
+      "rating": "매수",
+      "tp": null,
+      "ts": "08:16",
+      "quote": "인라인한 실적, 바뀐 것은 시장 환경",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "애플",
+      "rating": null,
+      "tp": null,
+      "ts": "08:16",
+      "quote": "방향성은 수익성이 좌우",
+      "sector": "IT"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "셀레스티카",
+      "rating": null,
+      "tp": null,
+      "ts": "08:16",
+      "quote": "데이터센터 CapEx 고성장 수혜 지속",
+      "sector": "IT"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "카메코",
+      "rating": null,
+      "tp": null,
+      "ts": "08:16",
+      "quote": "미국 원전 산업 재건의 핵심축",
+      "sector": "원전"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "라이온델바젤",
+      "rating": null,
+      "tp": null,
+      "ts": "08:16",
+      "quote": "공급 차질은 현재진행형",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "팔란티어",
+      "rating": null,
+      "tp": null,
+      "ts": "16:21",
+      "quote": "Rule of 40 155%, 12분기 연속 확대",
+      "sector": "IT"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "무라타",
+      "rating": null,
+      "tp": null,
+      "ts": "16:29",
+      "quote": "고부가 제품MIX 효과와 늘어나는 수주 = 실적UP",
+      "sector": "IT"
+    }
+  ]
+}

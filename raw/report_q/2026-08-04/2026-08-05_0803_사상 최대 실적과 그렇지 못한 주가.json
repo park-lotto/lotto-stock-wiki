@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-08-04",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-05_0803_사상 최대 실적과 그렇지 못한 주가.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "윤재성",
+    "report_date": "2026년 8월 4일",
+    "stocks": [
+      {
+        "name": "S-Oil",
+        "code": "010950",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "220,000원",
+        "tp_prev": "20만원",
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26 영업이익은 0.97조원(QoQ -22%, YoY 흑전)으로 컨센(0.96조원)에 부합했다. 3Q26 영업이익은 1.08조원(QoQ +12%, YoY +372%)을 추정한다.",
+        "estimate_revision": "2026~27년 영업이익 추정치를 +17~20% 상향",
+        "next_catalyst": "1) 윤활기유 추가 이익 확대 2) OSP 마이너스 재확인 3) 유가 안정",
+        "thesis": [
+          "정유 둔화에도 불구하고 윤활기유 실적 대폭 개선",
+          "3Q26 정제마진/윤활기유 강세 반영에 따른 증익 전망",
+          "2026년 사상 최대 영업이익 4.5조원(YoY +1,469%) 도전 가능성"
+        ],
+        "valuation_basis": "Target Multiple은 기존과 동일한 PBR 2배",
+        "risk": "내수 상한제에 따른 기회손실 및 적자 발생",
+        "supply_comment": "카타르 Pearl GTL Train2의 설비 타격에 따라 그룹3를 중심으로 윤활기유 가격/마진이 동반 급등한 영향",
+        "quote": "BUY 유지, TP는 20만원에서 22만원으로 상향한다. 2026~27년 영업이익 추정치를 +17~20% 상향함에 따라 BPS 상승분을 반영했다. Target Multiple은 기존과 동일한 PBR 2배다."
+      }
+    ]
+  }
+}

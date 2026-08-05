@@ -1,0 +1,17 @@
+{
+  "target_kind": "insight",
+  "leading_sectors": [
+    "기타"
+  ],
+  "stance": [
+    {
+      "target": "2026-08-03 운동 일지",
+      "view": "중립",
+      "ts": "2026-08-03",
+      "quote": "2026-08-03 운동"
+    }
+  ],
+  "methods": [],
+  "stocks_mentioned": [],
+  "quote": "2026-08-03 운동"
+}

@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-08-04",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-05_0802_2Q26 Review; 레이저티닙 유럽 진출 시작.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "정희령",
+    "report_date": "2026/08/04",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "유한양행",
+        "code": "000100",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "130,000원",
+        "tp_prev": "130,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26_revenue": "6,394억원 (YoY +10.4%)",
+          "2Q26_operating_profit": "668억원 (YoY +34.1%, OPM 10.5%)"
+        },
+        "estimate_revision": null,
+        "next_catalyst": "하반기 추정되는 MARIPOSA 임상 mOS 데이터 발표 모멘텀 존재",
+        "thesis": [
+          "유럽향 마일스톤 3천만 달러 반영되며 수익성 일시 개선",
+          "해외 사업부 2Q26 1,210억원 기록하며 전년동기대비 5.4% 성장",
+          "J&J 226 리브리반트/라즈클루즈 매출 2억 8,900만 달러 기록하며 YoY 61.6% 성장"
+        ],
+        "valuation_basis": "J&J 226 리브리반트/라즈클루즈 매출 성장 및 임상 데이터 발표 모멘텀, 신규 기술이전 가능성 고려",
+        "risk": "자디앙 등 약가인하 예정되어 있는 품목 존재 및 마일스톤/로열티 가이던스 달성을 위한 신규 기술이전 체결 필요성",
+        "supply_comment": "2Q26 내 브릿지 바이오파마 (560억 규모), 길리어드 사이언스 (2,102억 규모) 포함 두 건의 공급 계약 체결",
+        "quote": "유한양행 2분기 연결 매출액 6,394억원 (YoY +10.4%), 영업이익 668억원 (YoY +34.1%, OPM 10.5%) 기록하며 컨센서스 상회."
+      }
+    ],
+    "sector": "바이오"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-08-04",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-05_0801_안정적인 실적, 4분기 큰 성장 기대.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "박준영, 김나우",
+    "report_date": "2026년 8월 4일",
+    "stocks": [
+      {
+        "name": "칩스앤미디어",
+        "code": "094360",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "16,800원",
+        "tp_prev": "24,000",
+        "tp_direction": "down",
+        "earnings_outlook": "동사의 2Q26 잠정실적은 매출액 70.9억(QoQ +23%, YoY +7%, 컨센서스 대비 -3% 하회), 영업이익 11.3억(QoQ +523%, YoY -18%, 컨센서스 대비 -32% 하회)으로 전분기 부진한 실적을 딛고 정상 궤도로 진입.",
+        "estimate_revision": null,
+        "next_catalyst": "4분기, K-온디바이스 프로젝트 수혜",
+        "thesis": [
+          "로봇, 중화권 AI 매출 확대",
+          "AI 산업 내에서의 수혜를 영역별 지리별로 적극적으로 확장중",
+          "4분기, K-온디바이스 프로젝트 참여를 통한 온디바이스 AI반도체 생태계 활약 기대"
+        ],
+        "valuation_basis": "동사의 2027년도 EPS 504원과 국내외 피어 평균 P/E 33.4배 적용",
+        "risk": "ISO 26262(자동차 안전 인증) 획득을 위한 컨설팅 비용 및 해외 탑티어 IP 업체에서의 인재 영입 등으로 소폭 비용 상승",
+        "supply_comment": null,
+        "quote": "동사의 2Q26 잠정실적은 매출액 70.9억(QoQ +23%, YoY +7%, 컨센서스 대비 -3% 하회), 영업이익 11.3억(QoQ +523%, YoY -18%, 컨센서스 대비 -32% 하회)으로 전분기 부진한 실적을 딛고 정상 궤도로 진입.",
+        "sector": "반도체"
+      }
+    ]
+  }
+}
