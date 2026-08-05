@@ -1,0 +1,26 @@
+{
+  "target_kind": "sector",
+  "sector_name": "로봇",
+  "sector_view": "긍정",
+  "points": [
+    "로봇 상장사 Top 20 시총 지형도 공개",
+    "K-로봇 가치 급등"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "두산로보틱스",
+      "comment": null,
+      "ts": null,
+      "quote": "로봇 상장사 Top 20 시총 지형도 공개...K-로봇 가치 급등",
+      "sector": "로봇"
+    }
+  ],
+  "events": [
+    {
+      "fact": "로봇 상장사 Top 20 시총 지형도 공개",
+      "ts": "11-09 08:00",
+      "quote": "“로봇 상장사 Top 20 시총 지형도 공개...K-로봇 가치 급등”"
+    }
+  ],
+  "quote": "“로봇 상장사 Top 20 시총 지형도 공개...K-로봇 가치 급등”"
+}

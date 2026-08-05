@@ -525,9 +525,18 @@ def _cap_sets(sets, target_seconds):
     """
     if not sets or not target_seconds:
         return sets
-    cap = max(4, min(_MAX_BEATS, int(target_seconds // _MIN_SET_SECS)))
+    # ★1소스는 목표가 소재 천장(보통 18~20초)이라 4초 기준을 그대로 쓰면 4세트로 눌리는데,
+    #   plan_gate는 최소 5비트를 요구한다 — 통과 자체가 불가능해진다(2026-08-04 실측:
+    #   목표 18초 → 4세트 → "비트가 2개뿐" 반려). 짧은 목표에선 비트당 하한을 낮춰
+    #   최소 5비트를 만들 수 있게 한다(컷이 1~2초짜리라 5비트도 충분히 할 말이 있다).
+    from shopping_shorts.plan_gate import _MIN_BEATS as _GATE_MIN_BEATS
+    min_set = _MIN_SET_SECS
+    if target_seconds < _MIN_SET_SECS * _GATE_MIN_BEATS:           # 20초 미만
+        min_set = max(2.0, target_seconds / _GATE_MIN_BEATS)
+    cap = max(_GATE_MIN_BEATS, min(_MAX_BEATS, int(target_seconds // min_set)))
     if len(sets) <= cap:
-        return sets
+        # 줄일 건 없다 — 다만 게이트 최소비트에 못 미치면 긴 세트를 쪼개 채운다.
+        return _split_sets_to_min(sets, _GATE_MIN_BEATS)
     out = list(sets)
     while len(out) > cap:
         pairs = [i for i in range(len(out) - 1)
@@ -539,6 +548,50 @@ def _cap_sets(sets, target_seconds):
         out[i:i + 2] = [{"set_id": a["set_id"], "video_id": a["video_id"],
                          "segs": a["segs"] + b["segs"],
                          "secs": round(a["secs"] + b["secs"], 1)}]
+    return _split_sets_to_min(out, min(cap, _GATE_MIN_BEATS))
+
+
+def _split_sets_to_min(sets, min_count):
+    """세트가 게이트 최소비트보다 적으면 **가장 긴 세트를 쪼개** 개수를 맞춘다(2026-08-04).
+
+    _cap_sets는 줄이기만 해서, 1소스처럼 문장세트가 애초에 4개뿐이면(실측: 20초 소재 →
+    4세트) 최소 5비트를 영원히 못 만든다. 세그가 2개 이상인 가장 긴 세트를 반으로 나눈다
+    — 같은 소스의 연속 구간을 나누는 것이라 이야기가 튀지 않는다. 더 못 쪼개면 그대로 둔다.
+    """
+    out = [dict(s) for s in (sets or [])]
+    # ★1소스일 때만 쪼갠다. 다소스는 세트가 소스 경계를 뜻하므로 쪼개면 교차믹스 규칙이
+    #   깨진다(실측: test_pick_slot_groups_f1_no_cross_source_fragment_mixing 회귀).
+    #   애초에 다소스는 재료가 넉넉해 최소비트가 모자랄 일이 없다(부족 2%).
+    if len({s.get("video_id") for s in out}) != 1:
+        return out
+    guard = 0
+    while len(out) < min_count and guard < 8:
+        guard += 1
+        cand = [i for i, s in enumerate(out) if len(s.get("segs") or []) >= 2]
+        if not cand:
+            break
+        i = max(cand, key=lambda k: out[k]["secs"])
+        s = out[i]
+        segs = s["segs"]
+        half = len(segs) // 2
+        a_segs, b_segs = segs[:half], segs[half:]
+
+        def _sum(ss):
+            tot = 0.0
+            for x in ss:
+                if isinstance(x, dict):
+                    tot += max(0.0, float(x.get("end") or 0) - float(x.get("start") or 0))
+            return round(tot, 1)
+
+        a_secs = _sum(a_segs) or round(s["secs"] * half / max(1, len(segs)), 1)
+        out[i:i + 1] = [
+            {"set_id": s["set_id"], "video_id": s["video_id"],
+             "segs": a_segs, "secs": a_secs},
+            {"set_id": (b_segs[0].get("seg_id") if isinstance(b_segs[0], dict)
+                        else f'{s["set_id"]}b'),
+             "video_id": s["video_id"], "segs": b_segs,
+             "secs": round(max(0.0, s["secs"] - a_secs), 1)},
+        ]
     return out
 
 
@@ -1940,7 +1993,13 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "- 훅·CTA·풀어내는 순서는 **후보마다 개성 있게** 달라야 한다. 다만 그 차이는 "
         f"**원본의 어느 대목을 앞세우느냐**에서 나와야지, {n}개가 각자 다른 이야기를 "
         "지어내는 게 아니다.\n"
-        "- 말투는 옆에서 썰 푸는 구어체. 어떻게 살릴지는 네가 판단해라.\n\n"
+        "- 말투는 옆에서 썰 푸는 구어체. 어떻게 살릴지는 네가 판단해라.\n"
+        # ★고조 연결어(2026-08-04 사장님 지시): 스토리 중간에 놀람을 쌓는 연결어를 꼭 넣어라.
+        #   비트가 각자 놀며 뚝뚝 끊기는 걸 막는 가장 싼 장치 — 문장 사이를 '그리고'가 아니라
+        #   '한 단계 더'로 잇는다. 규칙 더미 금지 교훈(2026-07-31)에 따라 지시는 이 한 줄만.
+        "- ★스토리 중간(전개·반전 비트)에 **놀람을 쌓는 연결어를 1~2번** 넣어라 — "
+        "'심지어' '더군다나' '근데 이게 대박인 게' '놀랍게도' '이럴 수가 있나 싶게' "
+        "'여기서 끝이 아니에요' 같은 것(소재에 맞는 걸 골라 변주, 매 문장 금지·훅과 CTA엔 금지).\n\n"
         "[장면과 대사]\n"
         "- 각 비트에 그 대사가 실제로 보이는 seg_id를 붙여라(2~4개, 시간순). 인벤토리에 없는 "
         "seg_id 금지, 같은 seg_id 재사용 금지.\n"
@@ -1966,6 +2025,17 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "- caption_lines: narration을 3~4어절 호흡으로 끊은 배열. 이어붙이면 narration과 "
         "글자가 정확히 같아야 한다(단어 추가·삭제 금지).\n"
         "- 마지막 비트는 CTA다. 존댓말로 끝내라(반말 금지).\n"
+        # ★CTA 후킹(2026-08-03 사장님): 밋밋한 "궁금하시면 댓글에 OO"는 아무도 안 남긴다.
+        #   댓글 하나가 링크 클릭으로 이어지는 구조라 CTA가 제일 센 낚시여야 한다.
+        "- ★CTA는 밋밋하게 '궁금하시면 댓글 남겨주세요'로 쓰지 마라 — **댓글을 남길 명분**을 "
+        "한 줄 얹어라. 명분 예시(소재에 맞는 걸 골라 변주): "
+        "①검색 불가 희소성(\"검색해도 잘 안 나와서 제가 산 링크 그대로 드려요\") "
+        "②가격 명분(\"제가 산 최저가 그대로 보내드려요\") "
+        "③사회적 증거(\"다들 물어보셔서 댓글로만 공유해요\") "
+        "④손해 회피(\"이거 모르고 사면 비싸게 사요\"). "
+        "형식은 반드시 [명분 한 줄] + \"댓글에 '[키워드]' 남겨주시면 바로 보내드릴게요\"로 끝내라. "
+        "유입 경로는 댓글뿐이다(프로필·링크 안내 금지). 명분은 원본에 있는 사실 범위 안에서만 — "
+        "없는 가격·할인·한정수량을 지어내지 마라.\n"
         "- 각 후보에 hook, story_person, story_event, story_resolution, cta_line, "
         "cta_keyword를 채워라.\n"
         "- 억지 개그·번역투·상세페이지 상투어(꿀템·갓성비·완벽 해결·삶의 질 상승) 금지.\n"
@@ -2228,6 +2298,34 @@ def _cta_fix_narration(cand):
             b["narration"] = line
             b["target_seconds"] = round(max(1.5, len(line) / _SYLLABLES_PER_SEC), 1)
             break
+    return cand
+
+
+def _strip_mid_cta(cand):
+    """CTA가 아닌 비트에 섞인 **댓글 유도 문장**을 걷어낸다(2026-08-03 사장님: "CTA가 두 번씩 반복됨").
+
+    실측 job e72379132e7b: 결과 비트가 "...정보 필요하시면 댓글에 '김밥' 남겨주세요"로 끝나고
+    바로 다음 CTA 비트가 또 댓글 유도 — 시청자에겐 같은 말 두 번이다. 재료가 짧은 소재에서
+    모델이 모자란 분량을 CTA 문구로 채우는 패턴. 프롬프트 지시로는 안 지켜져 코드로 자른다.
+
+    문장 단위로만 자른다(문장 일부를 수술하지 않는다). 전부 CTA 문장이라 남는 게 없으면
+    원문 유지 — 빈 비트를 만드는 것보다 중복이 낫다. 자막(caption_lines)은 비워 재분할시킨다.
+    ⚠️호출 위치: _cta_fix_narration과 같은 자리(최종 후보 확정 뒤) — 길이 재생성 판단 오염 방지.
+    """
+    beats = ((cand or {}).get("plan") or {}).get("beats") or []
+    for b in beats:
+        if _is_cta(b):
+            continue
+        narr = (b.get("narration") or "")
+        if not _has_comment_cta(narr):
+            continue
+        parts = re.split(r"(?<=[.!?。])\s+", narr.strip())
+        kept = [p for p in parts if p.strip() and not _has_comment_cta(p)]
+        if not kept or len(kept) == len(parts):
+            continue
+        b["narration"] = " ".join(kept).strip()
+        b["caption_lines"] = None
+        b["target_seconds"] = round(max(1.5, len(b["narration"]) / _SYLLABLES_PER_SEC), 1)
     return cand
 
 
@@ -2894,6 +2992,164 @@ def _backbone_order_block(backbone_video, source_scripts):
         "장면만 그대로 따라가거나, 서브 소스 일부만 쓰고 나머지를 버리면 안 된다.")
 
 
+def _single_source_candidates(source_scripts, seg_map, target_seconds,
+                              n_candidates, call, detected, judge=False):
+    """1소스 전용 대본 생성(2026-08-04, handoff 남은작업①의 '핵심 배선').
+
+    기존 경로는 목표길이 조정+훅 주입'만' 하고 생성은 범용 생성기가 해서
+    ① 훅이 10패턴 뼈대를 무시하고 ② 총량이 목표(원본 90%, 하한 20초)에 못 미치거나
+    튀었다(실측 job ae8961b5f3af: 원본 22.0초 → 플랜 14.6초, 훅 패턴 밖).
+
+    여기서는 single_source가 처음부터 끝까지 운전한다:
+      컷 선별·순서(select_and_order) → 후보마다 다른 훅 패턴(hook_patterns.choose)
+      → script_prompt(문장수·글자예산 강제) → over_budget/shrink 교정루프
+      → covers 기반으로 화면을 코드가 배정(모든 컷 100% 커버 = 화면길이가 예산 그대로).
+    실패(빈 후보)면 None을 돌려 기존 경로로 폴백한다(회귀0).
+    """
+    from shopping_shorts import single_source, hook_patterns
+    segments = next((s.get("segments") for s in source_scripts if s.get("segments")), [])
+    span, budget, used, order = single_source.select_and_order(segments, target_seconds)
+    if not order:
+        return None
+    _mat = " ".join((s.get("full_text") or "") for s in source_scripts)
+    pats = hook_patterns.choose(max(3, n_candidates), material_text=_mat)
+    if not pats:
+        return None
+    print("[1소스대본] 원본 %.1f초 → 예산 %.1f초, 컷 %d개, 훅후보: %s"
+          % (span, budget, len(order), " / ".join(p[1] for p in pats)), file=sys.stderr)
+    src_texts = [s.get("full_text", "") for s in source_scripts]
+    cands = []
+    for i in range(max(1, n_candidates)):
+        pat = pats[i % len(pats)]
+        prompt = single_source.script_prompt(order, used, hook_patterns.prompt_block(pat))
+        beats = single_source.parse_beats(call(prompt, single_source.BEATS_SCHEMA))
+        # 총량 교정루프(최대 2회) — 넘치면 표현만 줄여 다시 받는다.
+        for _ in range(2):
+            over, _secs, _o = single_source.over_budget(beats, used)
+            if not beats or not over:
+                break
+            b2 = single_source.parse_beats(
+                call(single_source.shrink_prompt(beats, used), single_source.BEATS_SCHEMA))
+            if b2:
+                beats = b2
+        if not beats:
+            continue
+        # CTA 교정(2026-08-04): 마지막 문장에 '댓글'이 없으면 그 문장만 고쳐 받는다(2회).
+        # 실측: 프롬프트 강화 후에도 3후보 중 1~2개가 감상문으로 끝났다 — 코드로 보장한다.
+        for _ in range(2):
+            if not single_source.cta_missing(beats):
+                break
+            b3 = single_source.parse_beats(
+                call(single_source.fix_cta_prompt(beats, _mat), single_source.BEATS_SCHEMA))
+            if b3 and not single_source.cta_missing(b3):
+                beats = b3
+        if single_source.cta_missing(beats):
+            # LLM 교정까지 실패(키 소진·429)해도 CTA는 보장 — 결정적 문구로 마지막 문장 교체.
+            kw = "나도" if "나도" in _mat else "정보"
+            beats[-1]["narration"] = f"방법이 궁금하면 댓글에 '{kw}' 남겨주시면 바로 보내드릴게요."
+        # ★CTA 비트 생존 보장(2026-08-04 실측): 모델이 CTA를 제대로 써도 covers가 비면
+        # 아래 커버 배정에서 컷 0개 → 통째로 탈락 → 앞 문장이 [cta] 자리로 밀려
+        # "안심이라 최고예요"류 감상문이 CTA가 됐다(fix_cta 호출 0회가 증거 — 프롬프트
+        # 문제가 아니었다). 마지막 컷을 CTA 비트 소유로 강제한다.
+        if beats:
+            lastc = len(order)
+            if lastc not in {int(c) for c in (beats[-1].get("covers") or [])
+                             if str(c).lstrip("-").isdigit()}:
+                for b in beats[:-1]:
+                    b["covers"] = [c for c in (b.get("covers") or [])
+                                   if str(c).lstrip("-").isdigit() and int(c) != lastc]
+                beats[-1]["covers"] = (beats[-1].get("covers") or []) + [lastc]
+        # 고조 연결어(2026-08-04 사장님 지시 "꼭 넣어줘"): 프롬프트로는 0/3 — 글자예산
+        # 규칙('제일 중요')에 밀리고 shrink의 '수식어 덜어내라'에 깎인다(실측). 중간 비트
+        # 하나에 코드가 앞붙인다(후보마다 다른 연결어 = 말투 변주, +4~8자는 예산 오차 안).
+        _CONNS = ["심지어", "놀랍게도", "근데 이게 대박인 게", "더군다나"]
+        if len(beats) >= 3 and not any(
+                cn in (b.get("narration") or "") for b in beats for cn in _CONNS):
+            mid = beats[len(beats) // 2]
+            mid["narration"] = f"{_CONNS[i % len(_CONNS)]} {mid['narration']}"
+        # ★빈 나레이션 비트는 **커버 배정 전에** 걸러낸다(2026-08-04 라이브 실측 job
+        #   bcdf871a6d57: 추천 후보가 16.8초 — 버려진 비트의 컷이 같이 사라져 하한 미달).
+        #   먼저 거르면 아래 '구멍은 직전 비트가 이어받는다'가 그 컷들을 살린다.
+        beats = [b for b in beats if (b.get("narration") or "").strip()]
+        if not beats:
+            continue
+        # covers → 화면 배정. 모델이 빠뜨린 컷은 직전 비트에 붙여 **컷 100% 커버**를 코드가
+        # 보장한다(화면 총길이 == used == 예산 → 길이 하한이 프롬프트 아닌 코드로 지켜진다).
+        covered_by = {}                      # 컷 번호(1-base) → 비트 인덱스
+        for bi, b in enumerate(beats):
+            for c in (b.get("covers") or []):
+                try:
+                    c = int(c)
+                except (TypeError, ValueError):
+                    continue
+                if 1 <= c <= len(order):
+                    covered_by.setdefault(c, bi)
+        last_bi = 0
+        for c in range(1, len(order) + 1):
+            if c in covered_by:
+                last_bi = covered_by[c]
+            else:
+                covered_by[c] = last_bi      # 구멍은 직전 비트가 이어받는다
+        beat_cuts = {}
+        for c in sorted(covered_by):
+            beat_cuts.setdefault(covered_by[c], []).append(c)
+        plan_beats = []
+        for bi, b in enumerate(beats):
+            narration = (b.get("narration") or "").strip()
+            cuts = beat_cuts.get(bi) or []
+            if not narration or not cuts:
+                continue
+            covered = [order[c - 1] for c in cuts]
+            def _clean(s):
+                return {k: v for k, v in s.items() if k != "_dur"}
+            plan_beats.append({
+                "beat_idx": len(plan_beats), "role": "",
+                "narration": narration, "caption_lines": None,
+                "target_seconds": round(max(1.5, len(narration) / _SYLLABLES_PER_SEC), 1),
+                "primary": _clean(covered[0]),
+                "alternates": [_clean(s) for s in covered[1:]],
+                "effect": "cut", "fit": 5, "forced": False,
+            })
+        if len(plan_beats) < 3:
+            continue
+        plan_beats[0]["role"] = "hook"
+        plan_beats[-1]["role"] = "cta"
+        for b in plan_beats[1:-1]:
+            b["role"] = "story_event"
+        if len(plan_beats) >= 4:
+            plan_beats[-2]["role"] = "story_resolution"
+        plan_beats = _fix_beat_structure(plan_beats)
+        plan_beats = _fill_beat_screen_time(plan_beats, seg_map)
+        # ★최종 안전망(2026-08-04): 위 CTA 보장 3중(프롬프트·LLM교정·컷생존)에도 뒤
+        # 단계(_fix_beat_structure 등)가 마지막 비트를 갈아치우는 경로가 실측 1/6 남았다.
+        # plan 확정 직후라 어떤 경로로 와도 여기서 잡힌다.
+        if plan_beats and "댓글" not in (plan_beats[-1].get("narration") or ""):
+            _kw = "나도" if "나도" in _mat else "정보"
+            plan_beats[-1]["narration"] = f"댓글에 '{_kw}' 남겨주시면 방법 바로 보내드릴게요."
+            plan_beats[-1]["caption_lines"] = None
+        plan = {"structure": "free", "beats": plan_beats, "detected_type": detected,
+                "single_source": True, "hook_pattern": pat[0],
+                "affiliate_target": "", "plagiarism_flags": _plagiarism_flags(plan_beats, src_texts)}
+        rule_score = _score_candidate(plan, target_seconds=budget, source_full_texts=src_texts)
+        cand = {"plan": plan, "story": {"hook": plan_beats[0]["narration"]},
+                "score": rule_score, "recommended": False}
+        if judge:
+            from shopping_shorts import candidate_judge
+            jr = candidate_judge.judge(plan_beats, call=call)
+            if jr:
+                cand["judge"] = jr
+                cand["score"] = round(0.5 * rule_score + 0.5 * jr["total"], 3)
+        scr = sum(float(b.get("target_seconds") or 0) for b in plan_beats)
+        print("[1소스대본] 후보%d 훅패턴=%s %d비트 나레이션 %.1f초 / 화면예산 %.1f초"
+              % (i + 1, pat[0], len(plan_beats), scr, used), file=sys.stderr)
+        cands.append(cand)
+    if not cands:
+        return None
+    best = max(range(len(cands)), key=lambda k: cands[k]["score"])
+    cands[best]["recommended"] = True
+    return {"candidates": cands, "detected_type": detected}
+
+
 def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                            n_candidates=3, video_type=None, call=None, ping_pong=False,
                            backbone_meta=None, backbone_forced=None, bank_context="",
@@ -2916,6 +3172,15 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     if not seg_map:
         return {"candidates": [], "detected_type": detected}
     _call = call or _vault_call
+    # ★1소스 전용 경로(2026-08-04): 훅 10패턴·길이(하한 20초·원본 90%)를 single_source가
+    #   처음부터 끝까지 운전한다. 실패하면 None → 아래 기존 경로 그대로(회귀0).
+    from shopping_shorts import single_source as _ss
+    if _ss.is_single_source(source_scripts):
+        _ss_result = _single_source_candidates(
+            source_scripts, seg_map, target_seconds, n_candidates, _call, detected, judge=judge)
+        if _ss_result and _ss_result.get("candidates"):
+            return _ss_result
+        print("[1소스대본] 전용 생성 실패 — 기존 경로 폴백", file=sys.stderr)
     # 화면 순서 뼈대(order_block)를 두 모드로 정한다:
     #  ★기본 경로(backbone_base off = 라이브 기본): 장면 스파인 먼저(2026-07-29 사장님).
     #    카테고리 감지 → 그 카테고리 스파인 슬롯 순서로 태깅된 장면을 먼저 배치(장면 순서 확정)
@@ -3232,4 +3497,5 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     #     길이가 판단에 안 쓰이므로 안전하다.
     for _c in cands:
         _cta_fix_narration(_c)
+        _strip_mid_cta(_c)      # 비CTA 비트에 샌 댓글 유도 제거(2026-08-03 "CTA 두 번 반복")
     return {"candidates": cands, "detected_type": detected}

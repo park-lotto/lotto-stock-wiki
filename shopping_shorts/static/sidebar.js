@@ -34,6 +34,7 @@
       { icon: "⭐", text: "영상 즐겨찾기",   href: "/collection" },
       { icon: "🔎", text: "신규채널 픽업",   href: "/discover" },
       { icon: "🎞️", text: "장면 라이브러리", href: "/scene_library" },
+      { icon: "🏆", text: "역대 히트작",     href: "/archive", admin: true },
       { icon: "📋", text: "레퍼런스 채널 관리", href: "/refs", admin: true },
     ] },
     { label: "제작", items: [
@@ -446,6 +447,40 @@
     }
   }
 
+  // 운영 사고 쪽지(2026-08-04). 가입 토스트와 같은 자리·같은 소리를 쓰되 빨간색으로 구분한다.
+  // 08-03 인스타 통로 폐지 사고가 반나절 넘게 안 보였던 걸 막으려고 만든 통보 경로 —
+  // 클릭하면 사라지지 않고 상세(원문)를 펼친다. 사고는 원문을 봐야 손을 쓴다.
+  function _ssOpsToast(alert) {
+    if (!document.body) return;
+    var box = document.getElementById("ssSignupToasts");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "ssSignupToasts";
+      box.style.cssText = "position:fixed;top:16px;right:16px;z-index:99999;display:flex;flex-direction:column;gap:10px;max-width:340px;font-family:system-ui,sans-serif";
+      document.body.appendChild(box);
+    }
+    var card = document.createElement("div");
+    card.style.cssText = "background:#160c0c;color:#f7e9e9;border:1px solid #7a2b2b;border-left:4px solid #ff5a5a;border-radius:12px;padding:14px 16px;box-shadow:0 8px 28px rgba(0,0,0,.45);animation:ssSlideIn .25s ease";
+    card.innerHTML =
+      '<div style="font-size:13px;font-weight:800;color:#ff8080;margin-bottom:4px">🚨 운영 사고</div>' +
+      '<div style="font-size:14px;font-weight:700;line-height:1.35">' + _ssEsc(alert.title || "") + '</div>' +
+      (alert.detail
+        ? '<details style="margin-top:8px"><summary style="cursor:pointer;font-size:12px;color:#ffb3b3">상세 사유 보기</summary>' +
+          '<div style="margin-top:6px;font-size:11px;color:#e0c0c0;white-space:pre-wrap;word-break:break-all;max-height:180px;overflow:auto">' +
+          _ssEsc(alert.detail) + '</div></details>'
+        : '');
+    box.appendChild(card);
+    // 사고 알림은 자동으로 안 사라진다(가입 토스트와 다르게) — 사람이 보고 닫아야 한다.
+    var close = document.createElement("div");
+    close.textContent = "닫기";
+    close.style.cssText = "margin-top:8px;font-size:12px;color:#ffb3b3;cursor:pointer;font-weight:700";
+    close.onclick = function () {
+      card.remove();
+      try { (window.fetch || fetch)("/api/admin/alerts/read", { method: "POST" }); } catch (e) {}
+    };
+    card.appendChild(close);
+  }
+
   function _ssEsc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
 
   function initSignupAlert() {
@@ -469,6 +504,16 @@
             _ssToast(d.newest, d.count);
             window.localStorage.setItem(_SS_SEEN_KEY, String(newestId));
           }
+          // 운영 사고 쪽지(2026-08-04) — 안 읽은 것만, 한 번 띄운 건 다시 안 띄운다.
+          try {
+            var shown = window.__ssOpsShown || (window.__ssOpsShown = {});
+            (d.alerts || []).forEach(function (a) {
+              if (!a || a.read || shown[a.id]) return;
+              shown[a.id] = 1;
+              _ssDing();
+              _ssOpsToast(a);
+            });
+          } catch (e) { /* 사고 알림 실패가 승인 폴러를 죽이면 안 된다 */ }
           firstRun = false;
           setTimeout(tick, 25000);                  // 관리자면 25초마다 계속
         })

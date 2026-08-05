@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "date": "2026-07-29",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-02_0807_[ESG] PBR 0.8배법의 그물은 촘촘해야 한다.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "엄수진",
+    "report_date": "2026년 07월 28일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "상속세 및 증여세법 개정안(PBR 0.8배법)",
+      "코리아 디스카운트"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2025년 5월",
+        "event": "더불어민주당 이소영 의원, 상속세 및 증여세법 개정안 발의"
+      },
+      {
+        "date": "2026년 7월 21일",
+        "event": "PBR 0.8배법(주가누르기 방지법) 입법과제 토론회 개최"
+      }
+    ],
+    "top_picks": null,
+    "risk": [
+      "업종별 고유 특성(IT, 바이오 등) 무시 및 동일 기준 적용의 부적절성",
+      "국제적 시가 평가 원칙 훼손 및 특정 재무지표(PBR) 강제에 따른 논란",
+      "단기간 현금 마련의 어려움",
+      "일시적 주가 조정 시 과세표준 부풀려짐으로 인한 과도한 세금 부담"
+    ],
+    "quote": "부작용이 다소 우려가 되더라도 우선은 일괄적인 기준을 전체 상장회사에 적용하는 것을 원칙으로 해야 한다."
+  }
+}

@@ -423,6 +423,18 @@ function renderDiscover(items){
   el.innerHTML = _renderDiscoverCards(list);
   revealAdmin();   // 목록추가 버튼(.admin-only)은 렌더 후 관리자에게만 노출(피드 렌더가 /api/me보다 늦어도 안전)
 }
+function _fmtAgo(i){
+  // 'X시간 전' 실시간 계산(2026-08-03) — age_hours는 수집 시점 스냅샷이라 고정돼 보였음.
+  // 서버가 실어주는 posted_at(발행시각, UTC)이 있으면 지금 기준으로 계산.
+  let h = i.age_hours || 0;
+  if(i.posted_at){
+    const t = Date.parse(i.posted_at);
+    if(!isNaN(t)) h = Math.max(0, (Date.now()-t)/3.6e6);
+  }
+  if(h < 1) return Math.max(1, Math.round(h*60)) + '분 전';
+  if(h < 48) return Math.round(h) + '시간 전';
+  return Math.round(h/24) + '일 전';
+}
 function _renderDiscoverCards(list){
   // 배지용 백분위 컨텍스트 — 지금 보이는 항목 기준(정렬·필터 반영). index.html _bctx와 동일.
   const ctx={ vs:list.map(i=>i.views||0).sort((a,b)=>a-b),
@@ -437,7 +449,7 @@ function _renderDiscoverCards(list){
         ${(i.video_url||i.shortcode)?'<span class="play-badge">▶</span>':''}
       </div>
       <div class="body">
-        <div class="rank"><span>#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전</span><button class="blockbtn" title="이 채널을 영구 차단 — 지금 바로 가리고, 다음 발굴·업데이트에도 안 올라옵니다" onclick="blockChannel('${_dEsc(i.username)}','${_dEsc(i.name)}',this)">🚫 차단</button></div>
+        <div class="rank"><span>#${idx+1} · ${i.category} · ${_fmtAgo(i)}</span><button class="blockbtn" title="이 채널을 영구 차단 — 지금 바로 가리고, 다음 발굴·업데이트에도 안 올라옵니다" onclick="blockChannel('${_dEsc(i.username)}','${_dEsc(i.name)}',this)">🚫 차단</button></div>
         <div class="ch"><span class="chname" title="이 채널 영상만 보기" style="cursor:pointer" onclick="dSearchChannel('${_dEsc(i.username)}')">@${i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${_dEsc(i.url)}', this)">🔗 복사</button></div>
         <div class="rank" style="margin:-2px 0 4px">구독자 ${(i.followers||0).toLocaleString()} · 최근${DSTATE.days||2}일 ${i.recent_count||0}개</div>
         ${i.views?`<div class="stat" title="조회수 — 도달 규모"><span>조회수</span><b>${i.views.toLocaleString()}</b></div>`:''}
@@ -447,16 +459,24 @@ function _renderDiscoverCards(list){
         <div class="stat" title="댓글수 ÷ 팔로워수 (팔로워 대비 반응 비율)"><span>참여밀도</span><b>${((i.density||0)*100).toFixed(2)}%</b></div>
         <div class="btns">
           <button class="view" onclick="window.open('${_dEsc(i.url)}','_blank')">👁 보기</button>
-          <button class="add admin-only" id="add_${i.username}" style="display:none" onclick="addChannel('${_dEsc(i.username)}',this)">➕ 목록추가</button>
+          ${i.added
+            ? `<button class="add admin-only done" id="add_${i.username}" style="display:none" disabled>추가됨✓</button>`
+            : `<button class="add admin-only" id="add_${i.username}" style="display:none" onclick="addChannel('${_dEsc(i.username)}',this)">➕ 목록추가</button>`}
         </div>
       </div>
     </div>`).join("");
 }
 async function addChannel(username, btn){
   btn.disabled=true;
-  await fetch('/api/discover/add?username='+encodeURIComponent(username),{method:'POST'});
+  const r = await fetch('/api/discover/add?username='+encodeURIComponent(username),{method:'POST'});
+  if(!r.ok){ btn.disabled=false; return; }
+  // 직접 누른 카드는 그 자리에서 지우고, 데이터엔 added=true를 남긴다(2026-08-03) —
+  // 재렌더·새로고침 시엔 서버가 내려주는 added 플래그로 '추가됨✓'이 유지된다.
+  // (피드에서 아예 숨기면 07시 자동등록 탓에 피드가 통째로 비어서 표시 유지 방식으로.)
+  const u = (username||'').trim().replace(/^@/,'').toLowerCase();
+  DSTATE.items.forEach(i=>{ if(((i.username||'').trim().replace(/^@/,'').toLowerCase())===u) i.added=true; });
   document.querySelectorAll('#add_'+CSS.escape(username)).forEach(b=>{
-    b.textContent='추가됨✓'; b.classList.add('done'); b.disabled=true;
+    const card=b.closest('.card'); if(card) card.remove();
   });
 }
 

@@ -78,7 +78,7 @@ def _seg_ids(beat):
     return out
 
 
-def check_plan(beats, target_seconds=None, pool_video_count=None):
+def check_plan(beats, target_seconds=None, pool_video_count=None, material_seconds=None):
     """최종 beats를 불변식으로 검사 → {"ok", "violations"[], 지표들}.
 
     violations는 **사람이 읽는 한 줄**로 만든다(그대로 UI에 뜬다).
@@ -127,8 +127,14 @@ def check_plan(beats, target_seconds=None, pool_video_count=None):
         v.append(f"소스 {pool_video_count}개 중 1개({next(iter(vset))})만 사용 — 믹스가 안 됐습니다")
 
     secs = round(sum(float(b.get("target_seconds") or 0) for b in beats), 1)
-    if target_seconds and secs and secs < target_seconds * _SHORT_RATIO:
-        v.append(f"길이가 {secs}초로 목표 {target_seconds}초보다 많이 짧습니다")
+    # ★달성 가능한 기준으로 잰다(2026-08-04). 1소스는 원본 길이가 물리적 천장이라
+    # 20초 소재에 목표 30초를 걸면 영원히 '짧다'가 뜬다 — 실측 5일치 위반의 76%가 이것이었고,
+    # 재픽으로도 못 고쳐 매번 무의미하게 반려됐다. 소재보다 큰 목표는 소재로 눌러서 판정한다.
+    effective_target = target_seconds
+    if target_seconds and material_seconds and material_seconds < target_seconds:
+        effective_target = material_seconds
+    if effective_target and secs and secs < effective_target * _SHORT_RATIO:
+        v.append(f"길이가 {secs}초로 목표 {round(effective_target, 1)}초보다 많이 짧습니다")
     # ★너무 김(2026-07-24 실사고: 목표30초인데 77초·441자로 오버슛). 대본이 목표의 1.4배 넘으면 반려.
     if target_seconds and secs and secs > target_seconds * _LONG_RATIO:
         v.append(f"길이가 {secs}초로 목표 {target_seconds}초보다 너무 깁니다 — 대본을 줄이세요")

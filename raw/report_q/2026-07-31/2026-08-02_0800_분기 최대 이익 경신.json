@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-02_0800_분기 최대 이익 경신.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "유재선",
+    "report_date": "2026년 7월 31일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "포스코인터내셔널",
+        "code": "047050",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "105,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 매출액은 9.6조원으로 전년대비 18.4% 증가했다. 영업이익은 4,290억원으로 전년대비 26.9% 증가했다.",
+        "estimate_revision": null,
+        "next_catalyst": "북미 에너지 자산 투자 확정 시 즉시 실적에 기여할 수 있어 관련 소식에 관심을 기울일 필요가 있다.",
+        "thesis": [
+          "신규 팜 농장 인수와 호주 세넥스 증산 효과가 하반기에도 이어질 전망",
+          "소재 부문 소재/바이오의 외형 성장이 크게 나타남",
+          "LNG/터미널 매출 성장 및 LNG 트레이딩으로 인한 외형 확대"
+        ],
+        "valuation_basis": "2026년 기준 PER 9.4배, PBR 1.2배",
+        "risk": "원/달러 환율 변동성, 중동 지정학적 리스크",
+        "supply_comment": null,
+        "quote": "포스코인터내셔널의 목표주가 105,000원과 투자의견 매수를 유지한다. 2분기 실적은 시장 컨센서스를 상회했다. 분기 최대 영업이익을 달성했으며 에너지와 소재 전반적으로 이익이 성장했다.",
+        "sector": "철강"
+      }
+    ]
+  }
+}

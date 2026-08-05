@@ -1,0 +1,26 @@
+{
+  "target_kind": "sector",
+  "sector_name": "바이오",
+  "sector_view": "긍정",
+  "points": [
+    "BIO USA를 통한 K-바이오 기업들의 기술수출 및 파트너링 확대",
+    "글로벌 시장에서의 국내 바이오 기업 위상 강화"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "삼성바이오로직스",
+      "comment": "BIO USA 행사에 참여하여 기술수출 및 파트너링에 총력전을 펼침",
+      "ts": "2026-07-31",
+      "quote": "BIO USA 총출동한 'K-바이오'…기술수출·파트너링 총력전",
+      "sector": "바이오"
+    }
+  ],
+  "events": [
+    {
+      "fact": "BIO USA 개최 및 K-바이오 기업들의 참가",
+      "ts": "2024-06-17",
+      "quote": "BIO USA 총출동한 'K-바이오'…기술수출·파트너링 총력전"
+    }
+  ],
+  "quote": "BIO USA 총출동한 'K-바이오'…기술수출·파트너링 총력전"
+}

@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "DS INVESTMENT & SECURITIES",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_DS Futures Daily.md"
+  },
+  "questionnaire": {
+    "broker": "DS INVESTMENT & SECURITIES",
+    "analyst": null,
+    "report_date": "2026.06.02",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "KOSPI 200",
+      "KOSDAQ 150",
+      "변동성지수",
+      "외국인/기관 수급(Z-score)"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "NAVER",
+      "LG디스플레이",
+      "카카오",
+      "삼성중공업",
+      "미래에셋증권",
+      "두산에너빌리티",
+      "SK텔레콤",
+      "대한전선"
+    ],
+    "risk": "본 자료에 기재된 내용들은 작성자 본인의 의견을 정확하게 반영하고 있으며 외부의 부당한 압력이나 간섭 없이 작성되었음을 확인합니다.",
+    "quote": "KOSPI 200 선물에서 외국인과 기관의 일일 순매수가 이상치인 날을 감지합니다."
+  }
+}

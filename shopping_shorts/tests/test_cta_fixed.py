@@ -84,3 +84,40 @@ def test_lengthen_judgement_is_not_polluted():
     ]
     out = edit_plan._ensure_cta_beat(beats, {"cta_line": "댓글에 '점토' 남겨주세요"})
     assert out[-1]["narration"] == "댓글요", "생성 단계에서 CTA 대사가 바뀌었다"
+
+
+# ── 중간 CTA 중복 제거(2026-08-03 사장님: "CTA가 두 번씩 반복됨") ──────────
+# 실측 job e72379132e7b: 결과 비트가 "...정보 필요하시면 댓글에 '김밥' 남겨주세요"로
+# 끝나고 다음 CTA 비트가 또 댓글 유도 — 같은 말이 두 번 나갔다.
+
+def test_strip_mid_cta_removes_comment_cta_from_non_cta_beats():
+    c = {"plan": {"beats": [
+        {"role": "결과", "narration": "식어도 갓 만든 것처럼 맛있거든요. 정보 필요하시면 댓글에 '김밥' 남겨주세요.",
+         "primary": {"seg_id": "s0-1"}},
+        {"role": "CTA", "narration": "궁금하시면 댓글에 '김밥' 남겨주세요.", "primary": {"seg_id": "s0-2"}},
+    ]}}
+    edit_plan._strip_mid_cta(c)
+    beats = c["plan"]["beats"]
+    assert not edit_plan._has_comment_cta(beats[0]["narration"]), beats[0]["narration"]
+    assert "맛있거든요" in beats[0]["narration"], "CTA 아닌 문장까지 지워졌다"
+    assert edit_plan._has_comment_cta(beats[1]["narration"]), "진짜 CTA 비트는 건드리면 안 된다"
+
+
+def test_strip_mid_cta_keeps_beat_when_everything_is_cta():
+    """남는 문장이 없으면 원문 유지 — 빈 비트를 만드는 것보다 중복이 낫다."""
+    c = {"plan": {"beats": [
+        {"role": "결과", "narration": "댓글에 '김밥' 남겨주세요.", "primary": {"seg_id": "s0-1"}},
+        {"role": "CTA", "narration": "댓글에 '김밥' 남겨주세요.", "primary": {"seg_id": "s0-2"}},
+    ]}}
+    edit_plan._strip_mid_cta(c)
+    assert c["plan"]["beats"][0]["narration"] == "댓글에 '김밥' 남겨주세요."
+
+
+def test_prompt_demands_cta_hook_with_reason():
+    """★2026-08-03 사장님: 밋밋한 '궁금하시면 댓글' 금지 — 댓글 남길 명분(낚시 훅)을 얹어야
+    댓글→DM→인포크 링크 클릭으로 이어진다. 프롬프트에 명분 공식이 박혀 있는지 못 박는다."""
+    import inspect
+    src = inspect.getsource(edit_plan)
+    assert "댓글을 남길 명분" in src
+    assert "제가 산 최저가" in src
+    assert "없는 가격·할인·한정수량을 지어내지 마라" in src, "과장 금지 가드가 빠졌다"

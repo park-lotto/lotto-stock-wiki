@@ -1,0 +1,40 @@
+{
+  "target_kind": "sector",
+  "sector_name": "방산",
+  "sector_view": "긍정",
+  "points": [
+    "글로벌 방산 전시회 'Eurosatory 2026' 참가",
+    "현대자동차그룹 계열사(기아, 현대위아, 현대로템)의 무기체계 역량 집중"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "현대로템",
+      "comment": "Eurosatory 2026 전시회 참가",
+      "ts": "2026-06-22",
+      "quote": "기아·현대위아·현대로템, ‘Eurosatory 2026’ 참가",
+      "sector": "방산"
+    },
+    {
+      "name": "기아",
+      "comment": "Eurosatory 2026 전시회 참가",
+      "ts": "2026-06-22",
+      "quote": "기아·현대위아·현대로템, ‘Eurosatory 2026’ 참가",
+      "sector": "자동차"
+    },
+    {
+      "name": "현대위아",
+      "comment": "Eurosatory 2026 전시회 참가",
+      "ts": "2026-06-22",
+      "quote": "기아·현대위아·현대로템, ‘Eurosatory 2026’ 참가",
+      "sector": "방산"
+    }
+  ],
+  "events": [
+    {
+      "fact": "Eurosatory 2026 전시회 참가",
+      "ts": "2026-06-22",
+      "quote": "기아·현대위아·현대로템, ‘Eurosatory 2026’ 참가"
+    }
+  ],
+  "quote": "기아·현대위아·현대로템, ‘Eurosatory 2026’ 참가"
+}

@@ -44,6 +44,8 @@ _SCHEMA = {
         },
         "hook_line": {"type": "string"},
         "comment_bait": {"type": "string"},
+        # 인스타 릴스 캡션 전문(2026-08-03 사장님 — 폰에서 복사해 바로 붙여넣는 완성 덩어리).
+        "insta_caption": {"type": "string"},
         "cta": {
             "type": "object",
             "properties": {p: {"type": "string"} for p in _PLATFORMS},
@@ -51,7 +53,7 @@ _SCHEMA = {
         },
     },
     "required": ["title", "title_candidates", "description", "tags",
-                 "hashtags", "hook_line", "comment_bait", "cta"],
+                 "hashtags", "hook_line", "comment_bait", "insta_caption", "cta"],
 }
 
 _ONLY_LABELS = {
@@ -60,6 +62,7 @@ _ONLY_LABELS = {
     "tags": "유튜브 태그 20개",
     "hashtags": "플랫폼별 해시태그",
     "hook": "후킹 멘트와 댓글 유도",
+    "insta": "인스타 캡션",
     "cta": "플랫폼별 CTA",
 }
 
@@ -72,6 +75,18 @@ _BASE_PROMPT = """너는 한국 쇼츠 채널의 SEO 담당이다. 아래 확정
 - 태그: 정확히 20개. 유튜브 태그 전체가 500자를 넘지 않게.
 - 해시태그: 플랫폼마다 다르게. youtube 3~5개 / tiktok 3~5개 / threads 1~2개(쓰레드는 해시태그를 거의 안 쓴다).
 - CTA: 플랫폼마다 어투가 다르다. youtube=설명란 링크 유도 / tiktok=댓글 유도형 / threads=되묻는 대화체.
+- insta_caption: **인스타 릴스 캡션 전문** — 폰에서 그대로 붙여넣는 완성된 한 덩어리 텍스트다.
+  잘 되는 공구 계정들의 캡션 공식을 그대로 따른다(순서 고정):
+  ① 경험담 본문: 대본의 이야기를 1인칭으로 이어 쓴다. 한 문장마다 줄바꿈, 2~3문장마다 빈 줄.
+     설명체 나열 금지 — "반신반의하면서 해봤는데 진짜 눈앞에서 되더라고요" 같은 서사로.
+  ② ✔ 체크리스트 3~5줄: 제품 포인트를 "✔ "로 시작하는 짧은 줄로.
+  ③ 댓글 유도: 대본 CTA와 **같은 키워드**로. ★밋밋한 "궁금하시면 댓글" 금지 — **댓글 남길
+     명분**을 한 줄 얹어라(검색해도 잘 안 나옴 / 제가 산 최저가 그대로 / 다들 물어봐서 댓글로만
+     공유 / 모르고 사면 비싸게 삼 — 원본에 있는 사실 범위 안에서만).
+     그 뒤에 "댓글에 '키워드' 남겨주시면 바로 보내드릴게요💌"
+     + "(🔔 팔로우 + 댓글 주셔야 DM 오류 없이 가요)" + "메시지 안 보이면 '숨김함/요청함' 확인해주세요"
+  ④ 해시태그 4~5개(인스타용, 본문 맨 끝 한 줄).
+  이모지는 줄당 최대 1개 — 남발하면 광고 티가 난다. 과장·허위 금지는 여기도 똑같다.
 - 말투: 구조 분석의 tone을 그대로 따른다. 대본이 반말이면 제목·설명·CTA도 반말로 쓴다(영상은 반말인데 제목만 존댓말이면 같은 영상으로 안 보인다).
 - 전부 한국어. 과장·허위 금지(대본에 없는 효능을 지어내지 마라).
 
@@ -128,6 +143,8 @@ def _locked_value(seo, card):
     if card == "hook":
         bits = [x for x in (seo.get("hook_line"), seo.get("comment_bait")) if x]
         return " / ".join(bits) if bits else None
+    if card == "insta":
+        return seo.get("insta_caption") or None
     if card == "cta":
         cta = seo.get("cta") or {}
         parts = [f"{k}: {v}" for k, v in cta.items() if v]

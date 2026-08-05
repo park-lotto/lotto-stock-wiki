@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_로빈후드(HOOD), Agentic 서비스 출시 시사점.md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "양현경",
+    "report_date": "2026.06.02",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "국제 유가",
+      "글로벌 국채 금리",
+      "미 증시"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "5.27",
+        "event": "로빈후드, Agentic Trading 및 Agentic Credit Card 서비스 출시"
+      },
+      {
+        "date": "25.5월",
+        "event": "코인베이스, 에이전틱 AI 전용 결제 프로토콜 ‘x402’ 개발"
+      }
+    ],
+    "top_picks": [
+      "로빈후드",
+      "코인베이스"
+    ],
+    "risk": "전통 금융회사와 가상자산 간 규제 형평성이 확보되지 못하고 있다는 점과 Clarity Act 상원 법안 통과 가능성이 낮아진 점",
+    "quote": "에이전틱 AI 시대, 금융 경쟁이 ‘고객 확보’에서 ‘고객 대리권 확보’로 이동할 것으로 전망"
+  }
+}

@@ -135,17 +135,40 @@ function metaLine(m){
   ].filter(Boolean).join('');
   return body?`<div style="font-size:11px;margin:2px 0 6px;display:flex;flex-direction:column;gap:1px">${body}</div>`:'';
 }
-// 썸네일 ▶ 재생 — 유튜브는 임베드로 인앱 재생, 그 외(틱톡·샤오홍슈 등)는 원본에서 재생.
+// 썸네일 ▶ 재생 — 유튜브·틱톡은 임베드, 인스타는 /api/media로 mp4 즉석 해석해
+// 인앱 재생(레퍼런스랭킹과 동일 경로, 2026-08-03 이식 — 사장님 '즐겨찾기도 랭킹처럼').
+// 해석 실패·샤오홍슈·도우인은 원본 새탭(로그인벽이라 embed 불가).
 function _ytId(u){ const m=String(u||'').match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/); return m?m[1]:''; }
-function playPreview(sc){
+function _ttId(u){ const m=String(u||'').match(/tiktok\.com\/.*\/video\/(\d{6,})/); return m?m[1]:''; }
+function _titleBar(i){ return `<div style="margin-bottom:8px;font-size:13px">${esc((i.name||'').slice(0,80))}</div>`; }
+function _overlayVideo(i, src){
+  _overlay(_titleBar(i)+
+    `<video src="${esc(src)}" controls autoplay playsinline style="width:100%;max-height:70vh;border-radius:8px;background:#000"></video>`);
+}
+async function playPreview(sc){
   const i=ITEMS.find(x=>x.shortcode===sc); if(!i||!i.url) return;
   const yid=_ytId(i.url);
   if(yid){
-    _overlay(`<div style="margin-bottom:8px;font-size:13px">${esc((i.name||'').slice(0,80))}</div>`+
-      `<iframe width="100%" height="460" src="https://www.youtube.com/embed/${yid}" frameborder="0" allow="encrypted-media" allowfullscreen style="border-radius:8px"></iframe>`);
-  } else {
-    window.open(i.url,'_blank');   // 틱톡·샤오홍슈·도우인·인스타는 원본 탭에서 재생
+    _overlay(_titleBar(i)+
+      `<iframe width="100%" height="460" src="https://www.youtube.com/embed/${yid}?autoplay=1&playsinline=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="border-radius:8px"></iframe>`);
+    return;
   }
+  const tid=_ttId(i.url);
+  if(tid){
+    _overlay(_titleBar(i)+
+      `<iframe width="100%" height="560" src="https://www.tiktok.com/embed/v2/${tid}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="border-radius:8px;background:#000"></iframe>`);
+    return;
+  }
+  if(/instagram\.com/.test(i.url)){
+    if(i.play_url){ _overlayVideo(i, i.play_url); return; }   // 담을 때 받아둔 mp4가 있으면 즉시
+    _overlay(_titleBar(i)+`<div style="padding:40px;text-align:center;color:#bbb">영상 불러오는 중…</div>`);
+    try{
+      const d=await (await fetch(`/api/media?platform=instagram&id=${encodeURIComponent(i.shortcode)}`)).json();
+      if(d.ok && d.url){ _overlayVideo(i, d.url); return; }
+    }catch(e){}
+    _closeOverlay();
+  }
+  window.open(i.url,'_blank');   // 샤오홍슈·도우인·해석실패는 원본 탭에서 재생
 }
 function _overlay(html){
   let o=document.getElementById('collOverlay');

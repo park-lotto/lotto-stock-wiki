@@ -151,6 +151,17 @@ async function markDone(sc){
   await fetch(`/api/comment/done?shortcode=${encodeURIComponent(sc)}`, {method:"POST"});
 }
 
+function fmtAgo(i){
+  // 'X시간 전' 실시간 계산(2026-08-03) — age_hours는 수집 시점 스냅샷. posted_at 있으면 지금 기준.
+  let h = i.age_hours || 0;
+  if(i.posted_at){
+    const t = Date.parse(i.posted_at);
+    if(!isNaN(t)) h = Math.max(0, (Date.now()-t)/3.6e6);
+  }
+  if(h < 1) return Math.max(1, Math.round(h*60)) + '분 전';
+  if(h < 48) return Math.round(h) + '시간 전';
+  return Math.round(h/24) + '일 전';
+}
 function cardHtml(i, idx){
   ITEM_MAP[i.shortcode] = i;
   const drafts = (i.drafts||[]).map((d, di)=>
@@ -159,7 +170,7 @@ function cardHtml(i, idx){
   return `<div class="card ${i.done?'done':''}" id="c_${i.shortcode}">
     <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" loading="lazy" onerror="this.style.visibility='hidden'">
     <div class="body">
-      <div class="meta">#${idx+1} · ${i.category} · ${Math.round(i.age_hours)}시간 전 · 댓글 ${(i.comments||0).toLocaleString()}</div>
+      <div class="meta">#${idx+1} · ${i.category} · ${fmtAgo(i)} · 댓글 ${(i.comments||0).toLocaleString()}</div>
       <div class="ch">${escapeHtml(i.name||i.username||'')} ${i.done?'✅':''}</div>
       <div class="cap">${escapeHtml((i.caption||'').slice(0,60))}</div>
       ${drafts}

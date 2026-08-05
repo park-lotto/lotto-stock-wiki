@@ -36,14 +36,33 @@ def test_youtube_uses_public_thumbnail_no_download(monkeypatch, tmp_path):
     def _boom(*a, **k):
         raise AssertionError("유튜브는 다운로드하면 안 됨(봇차단 회피)")
     monkeypatch.setattr(app_module, "download_any", _boom)
+    # maxresdefault가 존재(200)한다고 가정 → 풀프레임 썸네일을 써야 함
+    class _Resp:
+        status_code = 200
+    monkeypatch.setattr(app_module.requests, "head", lambda u, timeout=6: _Resp())
 
     r = client.post("/api/lens/trace_url",
                     json={"url": "https://www.youtube.com/shorts/IPNxs-XtubM?si=PJ"})
     assert r.status_code == 200
     b = r.json()
     assert b["ok"] is True and b["count"] == 1
-    # 다운로드 없이 공개 썸네일(hqdefault)을 렌즈에 넘겼나
-    assert calls["img"] == "https://i.ytimg.com/vi/IPNxs-XtubM/hqdefault.jpg"
+    # 다운로드 없이 공개 썸네일(maxres 우선)을 렌즈에 넘겼나
+    assert calls["img"] == "https://i.ytimg.com/vi/IPNxs-XtubM/maxresdefault.jpg"
+
+
+def test_youtube_falls_back_to_hqdefault_when_no_maxres(monkeypatch, tmp_path):
+    client, _ = _client(monkeypatch, tmp_path)
+    calls = {}
+    _capture_search(monkeypatch, calls)
+    monkeypatch.setattr(app_module, "download_any",
+                        lambda *a, **k: (_ for _ in ()).throw(AssertionError("다운 금지")))
+
+    class _Resp404:
+        status_code = 404
+    monkeypatch.setattr(app_module.requests, "head", lambda u, timeout=6: _Resp404())
+    r = client.post("/api/lens/trace_url", json={"url": "https://youtu.be/ABCDEF12345"})
+    assert r.status_code == 200
+    assert calls["img"] == "https://i.ytimg.com/vi/ABCDEF12345/hqdefault.jpg"
 
 
 def test_nonyoutube_downloads_midframe(monkeypatch, tmp_path):

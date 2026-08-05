@@ -1,0 +1,24 @@
+{
+  "target_kind": "market",
+  "market_direction": "혼조",
+  "macro_events": [
+    {
+      "fact": "10년 물 국채금리 4.7% 돌파 (지난해 1월 이후 최고치)",
+      "ts": "2026-08-03",
+      "quote": "10년 물 국채금리는 4.7%를 넘어서며 지난해 1월 이후 최고치를 찍었다."
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "IT",
+      "stance": "긍정",
+      "comment": "아마존 클라우드 호실적으로 인한 상승"
+    },
+    {
+      "sector": "반도체",
+      "stance": "긍정",
+      "comment": "엔비디아 시가총액 1위 탈환"
+    }
+  ],
+  "quote": "이날 증시 방향을 가른 것은 아마존과 애플의 엇갈린 실적이었다."
+}

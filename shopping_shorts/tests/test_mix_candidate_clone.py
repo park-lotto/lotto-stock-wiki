@@ -40,7 +40,8 @@ def ctx(tmp_path, monkeypatch):
                          given_script="원본 대본", scene_first=True, backbone_main=1)
     store.set_mix_candidates("SRC", [_cand(0, "에이 훅"), _cand(1, "비 훅", recommended=True),
                                      _cand(2, "씨 훅")])
-    store.update_mix_job("SRC", status="ready_for_review")
+    store.update_mix_job("SRC", status="ready_for_review",
+                         extract={"sources": [{"video_id": "s0", "full_text": "원본 분석"}]})
     # 원본 work에 소스 mp4 2개를 깔아둔다(다운로드 완료 상태 재현).
     for i in range(2):
         d = work_root / "SRC" / f"s{i}"
@@ -102,6 +103,16 @@ def test_clone_carries_candidates_and_settings(ctx):
     assert job["urls"] == ["https://x/1", "https://x/2"]
     assert job["backbone_main"] == 1
     assert job["given_script"] == "원본 대본"
+
+
+def test_clone_carries_extract(ctx):
+    """★2026-08-03 실사고(job 6c649edecdd8): extract를 안 물려줘 복제본이 원본 분석 없이
+    시작했다 — 쿠팡 '화면으로 정확히' 등 extract를 읽는 후속 기능이 빈손이 된다."""
+    client, store, _ = ctx
+    new_id = client.post("/api/mix/candidate/clone",
+                         json={"job_id": "SRC", "index": 1}).json()["job_id"]
+    job = store.get_mix_job(new_id)
+    assert job["extract"] == {"sources": [{"video_id": "s0", "full_text": "원본 분석"}]}
 
 
 def test_three_clones_are_three_separate_jobs(ctx):

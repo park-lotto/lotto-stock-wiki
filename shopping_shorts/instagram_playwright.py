@@ -15,6 +15,7 @@ service.py는 어느 쪽을 쓰든 하류가 무변경이다.
 
 테스트는 _scrape_one을 주입해 브라우저 없이 돈다(test_instagram_playwright.py).
 """
+import json
 import os
 from contextlib import contextmanager
 
@@ -96,7 +97,7 @@ def _scrape_one_playwright(username):
                     pk = media.get("pk")
                     if not pk:
                         continue
-                    detail = _fetch_reel_detail(ctx, pk)
+                    detail = _fetch_reel_detail(ctx, pk, media.get("code") or "")
                     if detail:
                         media["taken_at"] = detail.get("taken_at")
                         media["video_versions"] = detail.get("video_versions")
@@ -135,23 +136,105 @@ def _detail_context():
             browser.close()
 
 
-def _fetch_reel_detail(ctx, pk):
-    """pk(숫자 media id)로 /api/v1/media/{pk}/info/를 직접 호출해 taken_at·video_versions를 얻는다.
+class InstagramEndpointDead(RuntimeError):
+    """인스타가 우리가 쓰던 통로를 갈아엎었을 때. '왜 실패했는지'를 위로 올린다.
 
-    이 REST 엔드포인트는 구 응답 모양({"items": [...]})이라 extract_reel_nodes를 그대로
-    재사용한다. 페이지를 새로 열어 응답을 가로채는 것보다 훨씬 빠르고, 요청한 미디어 자체만
-    정확히 돌아온다(2026-07-29 실측 — /reel/{code}/ 페이지를 열어 가로채는 방식은 유저의
-    다른 최근 게시물이 섞여 와 발행시각이 틀리게 나왔다). 실패해도 None — 목록 값(썸네일·
-    통계)만으로 항목 자체는 계속 쓸 수 있다."""
+    ★조용한 실패 금지(2026-08-04 실사고). 예전엔 여기서 그냥 None을 반환해서,
+    08-03 13:45부터 다운로드가 통째로 죽어 있었는데 **아무도 몰랐다** — 화면엔
+    "생성이 취소됨"만 떴고 로그에도 사유가 안 남았다. 사유를 못 올리면 사고가
+    길어진다."""
+
+
+def _fetch_reel_detail(ctx, pk, code=""):
+    """미디어 상세(taken_at·video_versions)를 얻는다. 실패하면 None.
+
+    ★경로가 두 번 갈아엎혔다 — 인스타는 비공식 통로를 한두 달 주기로 바꾼다:
+      - ~2026-07-28: REST `/api/v1/clips/user/`        → GraphQL 통합으로 폐지
+      - ~2026-08-03: REST `/api/v1/media/{pk}/info/`   → **JSON 대신 앱껍데기 HTML**
+
+    08-03 실측: 이 REST는 이제 200을 주면서 `text/html`(로그인된 상태의 앱 HTML)을
+    돌려준다. 세션·계정·App-ID 문제가 아니다(응답 HTML 안에 로그인된 내 username이
+    그대로 박혀 있었고, 브라우저 자체 fetch로 불러도 똑같이 HTML이었다) — **엔드포인트가
+    없어진 것**이다. 그래서 REST를 먼저 시도하되, HTML이 오면 릴 페이지를 열어
+    GraphQL 응답을 가로채는 경로로 폴백한다(서버 실측 5/5 성공, taken_at도 릴마다 정확).
+
+    code(shortcode)가 있으면 폴백을 쓸 수 있다. 없으면 REST만 시도한다."""
+    # ① 옛 REST — 살아 있으면 가장 싸다(페이지를 안 연다). 부활할 수도 있으니 남긴다.
     try:
         resp = ctx.request.get(
             f"https://www.instagram.com/api/v1/media/{pk}/info/",
             headers={"X-IG-App-ID": _IG_APP_ID},
         )
-        nodes = extract_reel_nodes(resp.json())
-        return nodes[0] if nodes else None
-    except Exception:      # noqa: BLE001
-        return None
+        if "json" in (resp.headers.get("content-type") or ""):
+            nodes = extract_reel_nodes(resp.json())
+            if nodes:
+                return nodes[0]
+    except Exception:      # noqa: BLE001 — 폴백 사유일 뿐
+        pass
+    # ② GraphQL 가로채기 폴백 — 릴 페이지가 스스로 쏘는 요청의 응답을 줍는다.
+    if code:
+        return _reel_detail_via_page(ctx, code)
+    return None
+
+
+def _reel_detail_via_page(ctx, code, timeout_ms=60000):
+    """/reel/{code}/를 열어 GraphQL 응답에서 **code가 일치하는** 노드만 집어온다.
+
+    ★code 일치 검사가 핵심이다. 이 페이지는 광고풀(PolarisClipsAdsPoolQuery)과 다음 릴
+    프리페치까지 함께 받아오므로, 먼저 온 응답을 그냥 쓰면 **엉뚱한 영상**을 받는다
+    (2026-08-04 실측: 요청한 DWYK8uAk9jo 대신 광고 DaUzcP6gUX8가 잡혔다). 2026-07-29에
+    폐기했던 '페이지 가로채기'가 발행시각을 틀리게 준 것도 같은 원인 — 그때는 code를
+    안 맞춰봤다. 지금은 맞춰보므로 taken_at이 릴마다 정확하다(실측 5/5).
+
+    doc_id를 우리가 만들어 쏘지 않는 이유: doc_id는 인스타 배포마다 바뀌고 커서(after)에
+    묶여 있어 하드코딩하면 다음 배포에 또 죽는다. 페이지가 스스로 만든 요청을 줍는 쪽이
+    갈아엎힘에 강하다."""
+    found = {}
+    page = ctx.new_page()
+
+    def _on_resp(res):
+        if found:
+            return
+        if "/graphql/query" not in res.url and "/api/v1/" not in res.url:
+            return
+        try:
+            if "json" not in (res.headers.get("content-type") or ""):
+                return
+            body = res.text()
+            if code not in body or "video_versions" not in body:
+                return
+            payload = json.loads(body)
+        except Exception:      # noqa: BLE001 — 남의 응답 하나 못 읽는 건 치명적이지 않다
+            return
+
+        def _walk(node):
+            if isinstance(node, dict):
+                if node.get("code") == code and node.get("video_versions"):
+                    found["node"] = node
+                    return True
+                return any(_walk(v) for v in node.values())
+            if isinstance(node, list):
+                return any(_walk(v) for v in node)
+            return False
+
+        _walk(payload)
+
+    page.on("response", _on_resp)
+    try:
+        page.goto(f"https://www.instagram.com/reel/{code}/",
+                  wait_until="domcontentloaded", timeout=timeout_ms)
+        for _ in range(24):        # 최대 ~12초. 응답이 오는 즉시 빠져나온다.
+            if found:
+                break
+            page.wait_for_timeout(500)
+    except Exception:              # noqa: BLE001
+        pass
+    finally:
+        try:
+            page.close()
+        except Exception:          # noqa: BLE001
+            pass
+    return found.get("node")
 
 
 def _search_hashtag_playwright(tag):
@@ -200,7 +283,7 @@ def _search_hashtag_playwright(tag):
                 pk = it.get("pk")
                 if not pk:
                     continue
-                detail = _fetch_reel_detail(ctx, pk)
+                detail = _fetch_reel_detail(ctx, pk, it.get("code") or "")
                 if detail:
                     it["like_count"] = detail.get("like_count")
                     it["comment_count"] = detail.get("comment_count")

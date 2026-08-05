@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_[IBKS Economy Outlook] Peril point 이번 경기사이...md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "정용태",
+    "report_date": "Jun/Jul 2026",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "GDP 구성 요소 중 설비투자 지표",
+      "고용지표 및 노동시장 양극화",
+      "미국 사모신용위험 및 신용위험 지표",
+      "중립금리 및 적정금리/추세금리",
+      "물가 및 기간 프리미엄",
+      "미국 재정적자 및 감세 영향"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "긍정적(선별적)",
+        "reason": "구조적인 호황을 맞은 소수 IT 기업들의 이익이 전체를 견인"
+      },
+      {
+        "sector": "산업재",
+        "stance": "부정적",
+        "reason": "2025년 기준 파산 건수가 높은 섹터로 소외된 산업의 자금 사정 어려움"
+      }
+    ],
+    "style": "가치주보다 성장주 중심의 승자독식",
+    "event_calendar": [
+      {
+        "date": "2026년 하반기",
+        "event": "유례없는 대규모 IPO 예정"
+      }
+    ],
+    "top_picks": [
+      "Space X",
+      "Open AI",
+      "Anthropic"
+    ],
+    "risk": "심화되는 양극화와 고금리 지속에 따른 사모신용 부실 위험, 그리고 AI 기업으로의 자금 쏠림에 따른 자금 시장 경색 및 유동성 불안",
+    "quote": "심화되는 양극화  하위에 누적된 부담이 경기와 시장의 발걸음을 늦추고 결국 주저앉게 만듦"
+  }
+}

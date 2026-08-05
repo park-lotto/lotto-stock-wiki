@@ -249,6 +249,18 @@ class Store:
                     created_at TEXT
                 )
             """)
+            # 영상 길이 캐시(2026-08-04) — shortcode당 1행, 랭킹 카드 ⏱ 표시용.
+            # 인스타 목록 응답엔 길이가 없어 릴스마다 1회 조회(duration_backfill)가
+            # 필요한데, 길이는 불변이라 한 번 채우면 영원히 재사용한다. fail_count는
+            # 죽은 릴스를 매번 두드리지 않기 위한 포기 카운터(MAX_FAIL 초과 시 제외).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS reel_durations (
+                    shortcode  TEXT PRIMARY KEY,
+                    duration   REAL,
+                    fail_count INTEGER DEFAULT 0,
+                    updated_at TEXT
+                )
+            """)
             # 한→중 소재 번역 캐시(2026-07-24) — ko당 1행, 있으면 재호출 안 함(무과금).
             # zh 빈 문자열도 저장(번역실패 캐시) — get_translation은 그걸 ""로, 미조회는 None으로 구분.
             # 샤오홍슈·도우인 트렌드 검색카드(/api/translate + 벌크 backfill_cn_keywords)도 이 캐시를 읽는다.
@@ -318,6 +330,34 @@ class Store:
                     created_at TEXT
                 )
             """)
+            # 채널 릴스 전체 아카이브(2026-08-03) — 추적 채널의 옛 히트작까지 전부.
+            # 매일 수집(last_run)은 48h 창만 봐서 추적 전 히트작이 DB에 없던 것을
+            # channel_archive 크롤러(스크롤 페이지네이션)가 채운다. posted_at은
+            # shortcode에서 복원(REST 왕복 0). 랭킹·렌즈 내부검색·역대 히트작의 재료.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS channel_archive (
+                    username TEXT NOT NULL,
+                    shortcode TEXT NOT NULL,
+                    url TEXT, thumbnail TEXT,
+                    views INTEGER, likes INTEGER, comments INTEGER,
+                    posted_at TEXT,
+                    first_seen TEXT, last_seen TEXT,
+                    PRIMARY KEY (username, shortcode)
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_archive_user_views "
+                      "ON channel_archive(username, views DESC)")
+            # 채널별 아카이브 진행상태 — done이면 대상에서 빠지므로 새로 등록한 채널만
+            # 자동으로 줄을 선다(추적목록 − done 차집합).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS archive_state (
+                    username TEXT PRIMARY KEY,
+                    status TEXT,           -- done | error | login_wall
+                    reels INTEGER,
+                    note TEXT,
+                    updated_at TEXT
+                )
+            """)
             # S급 대본 위키(도서관, 2026-07-13) — 담은 대본 + AI 구조분석. 생성의 재료.
             # customer_id 복합키(2026-07-13 멀티테넌시) — 위 commented/saved/mix_basket와 동일 패턴.
             c.execute("""
@@ -383,6 +423,16 @@ class Store:
                 c.execute("ALTER TABLE script_wiki ADD COLUMN thumbnail TEXT")
             except sqlite3.OperationalError:
                 pass  # 이미 있으면(기존 DB) 무시
+            # 제품명(2026-08-04) — "같은 제품 영상 모으기"용. subject/keywords와 왜 따로 두나:
+            # 기존 태그는 분위기어가 지배한다(실측: '살림꿀팁'이 4,222건 중 15%, '주방용품' 9%).
+            # 그래서 제품명 완전일치가 **0건**이었고, 천사점토를 넣으면 '취미·만들기·DIY'가
+            # 겹쳐 비즈스트랩이 나왔다 — 같은 제품이 아니라 같은 분위기로 묶인 것.
+            # 자막을 무시시키고 상품명만 물으면 '전동 채칼'·'접이식 소파베드'가 나온다(실측).
+            for col, ddl in (("product", "TEXT"), ("product_at", "TEXT")):
+                try:
+                    c.execute(f"ALTER TABLE vision_tags ADD COLUMN {col} {ddl}")
+                except sqlite3.OperationalError:
+                    pass  # 이미 존재
             # 원클릭 담기 영상의 메타(조회수·좋아요·댓글·길이·채널) 보관(2026-07-18).
             # yt-dlp/oEmbed로 백그라운드 보강한 값을 JSON으로 넣어 모음집이 레퍼런스 랭킹처럼 표시.
             try:
@@ -1113,6 +1163,47 @@ class Store:
             ).fetchall()
         return [{"name": r[1] or r[0], "username": r[0], "followers": 0, "inpock": "",
                  "added_at": r[2] or "", "category": r[3]} for r in rows]
+
+    # ── 채널 릴스 전체 아카이브(2026-08-03) ───────────────────────────────
+    def archive_upsert_many(self, username, items, now_iso):
+        """아카이브에 릴스들을 upsert. 재크롤 시 views 등 최신값으로 갱신, first_seen 보존."""
+        with self._conn() as c:
+            for i in items:
+                c.execute(
+                    "INSERT INTO channel_archive(username, shortcode, url, thumbnail, "
+                    " views, likes, comments, posted_at, first_seen, last_seen) "
+                    "VALUES(?,?,?,?,?,?,?,?,?,?) "
+                    "ON CONFLICT(username, shortcode) DO UPDATE SET "
+                    " url=excluded.url, thumbnail=excluded.thumbnail, views=excluded.views, "
+                    " likes=excluded.likes, comments=excluded.comments, "
+                    " posted_at=excluded.posted_at, last_seen=excluded.last_seen",
+                    (username, i.get("shortcode"), i.get("url"), i.get("thumbnail"),
+                     i.get("views") or 0, i.get("likes") or 0, i.get("comments") or 0,
+                     i.get("posted_at") or "", now_iso, now_iso))
+            c.commit()
+
+    def archive_mark(self, username, status, reels=0, note=""):
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO archive_state(username, status, reels, note, updated_at) "
+                "VALUES(?,?,?,?,datetime('now')) "
+                "ON CONFLICT(username) DO UPDATE SET status=excluded.status, "
+                " reels=excluded.reels, note=excluded.note, updated_at=excluded.updated_at",
+                (username, status, reels, note))
+            c.commit()
+
+    def archive_done_usernames(self):
+        with self._conn() as c:
+            rows = c.execute("SELECT username FROM archive_state WHERE status='done'").fetchall()
+        return {r[0] for r in rows}
+
+    def heavy_job_running(self):
+        """렌더·믹스류가 도는 중인가 — '사용하면서 수집' 원칙: 아카이브 크롤러가 양보한다."""
+        with self._conn() as c:
+            n = c.execute(
+                "SELECT COUNT(*) FROM job_queue WHERE state='running' "
+                "AND task IN ('render','mix','retype','preview','clean')").fetchone()[0]
+        return n > 0
 
     def instagram_activity_map(self):
         """reel_history에서 채널별 '가장 최근 새 영상' 시각·표시명 맵. {norm_username: {"last": iso, "name": str}}.
@@ -2300,6 +2391,43 @@ class Store:
                 (shortcode, subject or "", json.dumps(keywords or [], ensure_ascii=False)),
             )
 
+    def save_product(self, shortcode, product, category=""):
+        """제품명 저장(2026-08-04). 태그 행이 없어도 만든다 — 랭킹 영상은 아카이브에
+        없을 수 있는데 그것도 질의로 쓰이기 때문이다.
+
+        product는 빈 문자열도 저장한다(=AI가 '제품 안 보임'이라고 판정). 그래야
+        다음에 또 물어보지 않는다(캐시의 핵심 — 안 그러면 무제품 영상마다 매번 태운다)."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO vision_tags(shortcode, subject, keywords_json, created_at, "
+                " product, product_at) VALUES(?,'','[]',datetime('now'),?,datetime('now')) "
+                "ON CONFLICT(shortcode) DO UPDATE SET product=excluded.product, "
+                " product_at=excluded.product_at",
+                (shortcode, product or ""))
+            if category:
+                # 카테고리는 기존 subject가 비어있을 때만 채운다(기존 태그를 덮지 않는다).
+                c.execute("UPDATE vision_tags SET subject=? WHERE shortcode=? AND "
+                          "(subject IS NULL OR subject='')", (category, shortcode))
+            c.commit()
+
+    def products_map(self, shortcodes):
+        """[shortcode] → {shortcode: product}. product_at이 있는 것만(=이미 판정한 것).
+
+        빈 product도 돌려준다 — 호출부가 '아직 안 물어봄'과 '물어봤는데 제품 없음'을
+        구분해야 재질의를 안 한다."""
+        codes = [s for s in (shortcodes or []) if s]
+        if not codes:
+            return {}
+        out = {}
+        with self._conn() as c:
+            for i in range(0, len(codes), 400):
+                ch = codes[i:i + 400]
+                q = ("SELECT shortcode, product FROM vision_tags WHERE product_at IS NOT NULL "
+                     "AND shortcode IN (%s)" % ",".join("?" * len(ch)))
+                for sc, p in c.execute(q, ch).fetchall():
+                    out[sc] = p or ""
+        return out
+
     def get_vision_tags(self, shortcode):
         """저장된 주제태그 {subject, keywords}. 없으면 None."""
         with self._conn() as c:
@@ -2343,6 +2471,59 @@ class Store:
                 for sc, subj, kj in c.execute(q, chunk).fetchall():
                     out[sc] = {"subject": subj or "", "keywords": json.loads(kj or "[]")}
         return out
+
+    # --- 영상 길이 캐시(reel_durations, 2026-08-04) — 랭킹 카드 ⏱ 표시용 ---
+    def duration_map(self, shortcodes):
+        """여러 shortcode → {shortcode: duration(초)} (성공 캐시만)."""
+        codes = [s for s in (shortcodes or []) if s]
+        out = {}
+        if not codes:
+            return out
+        with self._conn() as c:
+            for i in range(0, len(codes), 400):     # sqlite 변수 상한(999) 회피
+                chunk = codes[i:i + 400]
+                q = ("SELECT shortcode, duration FROM reel_durations "
+                     "WHERE duration IS NOT NULL AND shortcode IN (%s)"
+                     % ",".join("?" * len(chunk)))
+                for sc, dur in c.execute(q, chunk).fetchall():
+                    out[sc] = dur
+        return out
+
+    def duration_fail_map(self, shortcodes):
+        """여러 shortcode → {shortcode: fail_count} (실패 이력 있는 것만)."""
+        codes = [s for s in (shortcodes or []) if s]
+        out = {}
+        if not codes:
+            return out
+        with self._conn() as c:
+            for i in range(0, len(codes), 400):
+                chunk = codes[i:i + 400]
+                q = ("SELECT shortcode, fail_count FROM reel_durations "
+                     "WHERE fail_count > 0 AND shortcode IN (%s)"
+                     % ",".join("?" * len(chunk)))
+                for sc, n in c.execute(q, chunk).fetchall():
+                    out[sc] = int(n or 0)
+        return out
+
+    def set_reel_duration(self, shortcode, duration):
+        """길이(초) 저장 — 성공하면 fail_count는 의미 없어지므로 0으로 리셋."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO reel_durations(shortcode, duration, fail_count, updated_at) "
+                "VALUES(?,?,0,datetime('now')) "
+                "ON CONFLICT(shortcode) DO UPDATE SET duration=excluded.duration, "
+                "fail_count=0, updated_at=excluded.updated_at",
+                (shortcode, float(duration)))
+
+    def bump_duration_fail(self, shortcode):
+        """조회 실패 1회 기록 — MAX_FAIL 넘으면 duration_backfill이 더 안 두드린다."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO reel_durations(shortcode, duration, fail_count, updated_at) "
+                "VALUES(?,NULL,1,datetime('now')) "
+                "ON CONFLICT(shortcode) DO UPDATE SET fail_count=fail_count+1, "
+                "updated_at=excluded.updated_at",
+                (shortcode,))
 
     def get_translation(self, ko):
         """한국어 소재 → 저장된 중국어. 없으면 None, 번역실패로 빈값 저장됐으면 ""."""
@@ -3755,7 +3936,7 @@ class Store:
     # 고객이 화면 앞에서 기다리는 작업 = 0(먼저), 배경 보조작업 = 10(나중).
     # 예전엔 큐가 id순이라 누가 영상 5개를 담으면 예열 5건이 남의 렌더를 앞질렀다(2026-07-30).
     TASK_PRIO = {"render": 0, "mix": 0, "retype": 0, "preview": 0, "clean": 0,
-                 "prewarm": 10, "overseas": 20}
+                 "prewarm": 10, "overseas": 20, "durfill": 30}
 
     def _owner_of(self, task, args):
         """이 작업이 누구 것인가(계정별 공평 분배용). 못 알아내면 None(제한 없음).

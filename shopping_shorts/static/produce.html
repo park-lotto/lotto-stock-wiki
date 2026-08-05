@@ -802,6 +802,7 @@
       <div class="seoBar">
         <button class="btn primary" id="seoGenAll" onclick="seoGenerate()">AI로 전체 생성</button>
         <button class="btn" onclick="seoCopyYoutube()">유튜브 전체 복사</button>
+        <button class="btn" onclick="seoCopyInsta()">인스타 캡션 복사</button>
         <span class="seoMsg" id="seoMsg"></span>
       </div>
       <div id="seoBody" class="seoBody"></div>
@@ -818,6 +819,12 @@
         <div style="flex:0 1 300px;min-width:240px">
           <div class="hint" style="margin-bottom:6px">🪞 완성 영상 (9:16)</div>
           <div id="finalVideo"></div>
+        </div>
+        <!-- 🖼 6단계에서 고른 썸네일이 여기로 온다(2026-08-04). 예전엔 골라도 소비하는 곳이
+             0곳이라 최종 화면에서 확인할 길이 없었다 → 카톡 전송도 영상만 갔다. -->
+        <div style="flex:0 1 200px;min-width:160px">
+          <div class="hint" style="margin-bottom:6px">🖼 썸네일 (커버)</div>
+          <div id="finalThumb"></div>
         </div>
         <div style="flex:1 1 320px;min-width:260px">
           <button id="btnFinalRender" class="btn-next" style="padding:12px 22px" onclick="renderFinal()">🎬 최종 렌더</button>
@@ -1151,6 +1158,12 @@ function renderSeo(){
     seoCard('hook','후킹 · 댓글 유도',
       `<input value="${seoEsc(SEO.hook_line)}" oninput="SEO.hook_line=this.value; seoSave()">
        <input value="${seoEsc(SEO.comment_bait)}" oninput="SEO.comment_bait=this.value; seoSave()">`) +
+    // ★인스타 캡션(2026-08-03 사장님 "폰으로 올리는 구조") — 완성 덩어리를 폰에서 복사만 하면 되게.
+    //   옛 job(insta_caption 없는 SEO)은 기존 필드로 즉석 조립(_instaCaption)해 빈 칸을 안 보여준다.
+    seoCard('insta','인스타 캡션 (폰에서 복사 → 릴스 캡션에 붙여넣기)',
+      `<textarea id="seoInsta" rows="12"
+                 oninput="SEO.insta_caption=this.value; seoSave()">${seoEsc(_instaCaption())}</textarea>
+       <button class="mini" style="margin-top:6px" onclick="seoCopyInsta()">📋 캡션 복사</button>`) +
     seoCard('cta','플랫폼별 CTA',
       plat.map(([k,l])=>`<div class="sub">${l}</div>`
         + `<textarea rows="4" oninput="SEO.cta['${k}']=this.value; seoSave()">`
@@ -1205,6 +1218,26 @@ function seoTagAdd(){
   if(again) again.focus();
 }
 
+// 인스타 캡션 — AI 생성값 우선, 옛 job(필드 없음)은 기존 재료로 즉석 조립(레퍼런스 공식 축약판).
+function _instaCaption(){
+  if(!SEO) return '';
+  if(SEO.insta_caption) return SEO.insta_caption;
+  const kw = ((SEO.comment_bait||'').match(/['‘"]([^'’"]{1,10})['’"]/)||[])[1] || '';
+  const tags = ((SEO.hashtags && (SEO.hashtags.tiktok||SEO.hashtags.youtube))||[]).slice(0,5)
+    .map(t=>t.startsWith('#')?t:'#'+t).join(' ');
+  return [SEO.hook_line||SEO.title||'', '', SEO.description||'', '',
+          (kw?`댓글에 '${kw}' 남겨주시면 정보 바로 보내드릴게요💌`:(SEO.comment_bait||'')),
+          '(🔔 팔로우 + 댓글 주셔야 DM 오류 없이 가요)',
+          "메시지 안 보이면 '숨김함/요청함' 확인해주세요", '', tags]
+    .join('\n').replace(/\n{3,}/g,'\n\n').trim();
+}
+function seoCopyInsta(){
+  if(!SEO){ alert('먼저 생성하세요'); return; }
+  const txt = _instaCaption();
+  if(!txt){ alert('캡션이 비어 있습니다 — 「AI로 전체 생성」을 누르세요'); return; }
+  navigator.clipboard.writeText(txt);
+  document.getElementById('seoMsg').textContent = '인스타 캡션 복사 완료';
+}
 function seoCopyYoutube(){
   if(!SEO){ alert('먼저 생성하세요'); return; }
   const txt = [SEO.title, '', SEO.description, '',
@@ -2320,9 +2353,15 @@ async function _pushWork(){
   const st = _workState();
   if(!HANDOFF.length && !st.script) return;
   try{
+    // ★job_id는 **알 때만** 보낸다(2026-08-03 실사고: 배포 재시작 직후 MIX_JOB이 비어 있는
+    //   순간의 자동저장이 null을 보내 서버의 job 연결을 지웠다 — 사장님 작업이 "빈 작업"이 됨.
+    //   서버(/api/produce/works)는 "안 넘어온 필드 보존" 설계인데 항상 보내면 그 보존이 무의미).
+    //   job을 끊어야 하는 흐름은 없다 — "+새 작업"은 새 레코드를 만들지 기존 연결을 지우지 않는다.
+    const payload = {work_id: WORK_ID, state: st, step: cur};
+    if(MIX_JOB) payload.job_id = MIX_JOB;
     const r = await fetch('/api/produce/works', {method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({work_id: WORK_ID, state: st, job_id: MIX_JOB, step: cur})});
+      body: JSON.stringify(payload)});
     const d = await r.json();
     if(d && d.ok && d.work_id){
       WORK_ID = d.work_id;   // 다음 저장이 같은 작업을 갱신하도록
@@ -3888,7 +3927,19 @@ async function pollMix(){
       clearInterval(MIX_POLL); renderCandidates(d.candidates||[]); loadMixReview();
       jump(1);   // 오브 인덱스 1 = 화면 붙이기(매칭, ORB_TO_PANEL[1]=7). Task 6: 매칭 완료 시 자동 이동.
     }
-    if(d.status==='failed'){ setMatchingUI(false); if(st) st._sblPipe=null; st.textContent='❌ 매칭 실패'+(d.error?' — '+d.error:''); clearInterval(MIX_POLL); }
+    // 실패 표시: 사용자에겐 순화된 d.error만. d.error_detail은 서버가 **관리자에게만** 채워
+    // 내려주므로(2026-08-04), 있으면 원문을 접이식으로 덧붙인다 — 사고를 눈으로 바로 잡으라고.
+    if(d.status==='failed'){ setMatchingUI(false); if(st) st._sblPipe=null;
+      st.textContent='❌ 매칭 실패'+(d.error?' — '+d.error:'');
+      if(d.error_detail){
+        const dt=document.createElement('details');
+        dt.style.cssText='margin-top:6px;font-size:12px;color:var(--sub)';
+        dt.innerHTML='<summary style="cursor:pointer">🔧 관리자용 상세 사유</summary>'
+                    +'<div style="margin-top:4px;white-space:pre-wrap;word-break:break-all">'
+                    +esc(d.error_detail)+'</div>';
+        st.appendChild(dt);
+      }
+      clearInterval(MIX_POLL); }
   }catch(e){}
 }
 async function loadMixReview(){
@@ -4922,10 +4973,47 @@ async function markInpock(checked){
   }catch(e){}
 }
 
+// ── 8단계 썸네일 카드 (2026-08-04) ──────────────────────────
+// 6단계에서 고른 썸네일을 완성 영상 옆에 나란히 띄운다. THUMB_STATE는 페이지 메모리라
+// 새로고침하면 비므로 **DB(=서버)를 진실로 삼는다** — 안 그러면 작업복원 후 카드가 빈다.
+// 안 골랐으면 '고르러 가기' 안내. 카톡 전송이 무엇을 보낼지 여기서 먼저 보이는 게 목적.
+let FINAL_THUMB_URL = null;   // shareVideo가 같이 보낼 PNG(없으면 null=영상만)
+async function refreshFinalThumb(){
+  const box=document.getElementById('finalThumb');
+  if(!box) return;
+  // 버튼 라벨('(영상+썸네일)')이 FINAL_THUMB_URL을 읽는데 이 함수는 비동기다 → 끝나고 나서
+  // 내보내기 박스를 한 번 다시 그려야 라벨이 실제 상태와 맞는다. 이미 렌더된 경우에만.
+  const _syncExport = () => { try{
+    if(document.querySelector('#finalVideo video')) renderExport({rendered:true});
+  }catch(e){} };
+  // ★jump()는 '오브 인덱스'를 받는다(showPanel()은 인자를 안 받는다 — 넘겨도 무시된다).
+  //   썸네일은 패널4 → PANEL_TO_ORB로 환산해야 매핑이 바뀌어도 안 깨진다.
+  const goStep = `<button class="btn-prev" style="width:100%;padding:9px;border:0;cursor:pointer;font-size:12px" onclick="jump(PANEL_TO_ORB[4])">6단계에서 고르기</button>`;
+  if(!MIX_JOB){
+    FINAL_THUMB_URL=null;
+    box.innerHTML=`<div class="hint" style="border:1px dashed var(--line);border-radius:12px;padding:14px;text-align:center;line-height:1.6">아직 없어요</div>`;
+    _syncExport(); return;
+  }
+  try{
+    const d=await (await fetch('/api/produce/thumb/selected/'+encodeURIComponent(MIX_JOB))).json();
+    if(d && d.ok && d.url){
+      FINAL_THUMB_URL=d.url;
+      box.innerHTML=`<img src="${esc(d.url)}" alt="선택 썸네일" style="width:100%;max-width:200px;border-radius:12px;display:block;border:2px solid var(--accent2)">`
+        + `<a class="btn-prev" style="display:block;margin-top:6px;padding:7px;text-align:center;text-decoration:none;font-size:12px" href="${esc(d.url)}" download="${esc(d.name||'thumb.png')}">⬇ PNG 저장</a>`
+        + `<div class="hint" style="margin-top:6px;line-height:1.5">카톡으로 보낼 때 <b>영상과 함께</b> 전송됩니다</div>`;
+      _syncExport(); return;
+    }
+  }catch(e){}
+  FINAL_THUMB_URL=null;   // 조회 실패도 '없음'으로 — 영상만 보내는 기존 동작으로 자연 폴백
+  box.innerHTML=`<div class="hint" style="border:1px dashed var(--line);border-radius:12px;padding:14px;text-align:center;line-height:1.6;margin-bottom:6px">아직 고른 썸네일이 없어요</div>`+goStep;
+  _syncExport();
+}
+
 async function refreshFinal(){
   const s=document.getElementById('finalSummary');
   if(!s) return;
   refreshInpock();
+  refreshFinalThumb();   // 썸네일 카드는 렌더 상태와 무관하게 항상 갱신(await 안 함 — 요약을 막지 않는다)
   s.innerHTML = MIX_JOB
     ? `대본 ${lenText(STATE.script)} · 자막제거 ${STATE.subtitleRemoval?'ON':'OFF'} · job ${esc(MIX_JOB)}`
     : '⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.';
@@ -4954,7 +5042,21 @@ async function shareVideo(){
     if(!resp.ok) throw new Error('영상을 아직 찾을 수 없어요');
     const blob=await resp.blob();
     const file=new File([blob], 'shopping_short.mp4', {type:'video/mp4'});
-    if(navigator.canShare && navigator.canShare({files:[file]})){
+    // ① 영상+썸네일 한 번에(2026-08-04). 썸네일을 골랐을 때만 시도하고, 이 기기가 다중 파일을
+    //    거절하면 ②(영상만)로 내려간다 — 무조건 2개로 부르면 통째로 실패한다.
+    if(FINAL_THUMB_URL){
+      try{
+        const tr=await fetch(FINAL_THUMB_URL);
+        if(tr.ok){
+          const tf=new File([await tr.blob()], 'shopping_short_thumb.png', {type:'image/png'});
+          if(navigator.canShare && navigator.canShare({files:[file,tf]})){
+            await navigator.share({files:[file,tf], title:'완성 영상 + 썸네일'});
+            return;
+          }
+        }
+      }catch(e){ if(e && e.name==='AbortError') return; }   // 취소면 여기서 끝(공유창 두 번 금지)
+    }
+    if(navigator.canShare && navigator.canShare({files:[file]})){   // ② 영상만(기존 동작)
       await navigator.share({files:[file], title:'완성 영상'});
       return;   // 공유시트에서 카톡을 고르면 됨
     }
@@ -4988,7 +5090,9 @@ async function showShareQr(job){
      +'<div style="font-size:11px;color:#9aa;word-break:break-all;margin:12px 4px 8px">'+d.url+'</div>'
      +'<button id="qrCopy" style="width:100%;font-size:16px;font-weight:800;border:0;border-radius:12px;padding:14px;background:#eef1f6;color:#222;cursor:pointer;margin-bottom:8px">링크 복사</button>'
      +'<button id="qrClose" style="width:100%;font-size:15px;border:0;border-radius:12px;padding:12px;background:#141414;color:#fff;cursor:pointer">닫기</button>'
-     +'<div style="font-size:11px;color:#aab;margin-top:12px;line-height:1.6">폰에서 열리면 <b>「카톡·인스타로 보내기」</b>를 누르세요.<br>링크는 24시간 유효합니다.</div>';
+     +'<div style="font-size:11px;color:#aab;margin-top:12px;line-height:1.6">폰에서 열리면 <b>「카톡·인스타로 보내기」</b>를 누르세요.'
+       +(FINAL_THUMB_URL?'<br><b>영상+썸네일이 한 번에</b> 전송됩니다.':'')
+       +'<br>링크는 24시간 유효합니다.</div>';
     const svg=box.querySelector('#qrImg svg');
     if(svg){ svg.setAttribute('width','240'); svg.setAttribute('height','240'); svg.style.display='block'; }
     box.querySelector('#qrClose').addEventListener('click',()=>ov.remove());
@@ -5018,7 +5122,7 @@ function renderExport(opts){
     + (rendered?`<a class="btn-next" style="${big}" href="/api/mix/video/${j}?dl=1" download>⬇ 완성 영상(MP4)</a>`:'')
     // ★카톡·공유(2026-07-21 사장님): 완성 영상을 휴대폰 공유시트로 → 거기서 카톡 선택. 모바일 전용이
     //   실질적이라(데스크톱은 파일공유 미지원 많음) 아래 shareVideo가 안 되면 다운로드 안내로 폴백한다.
-    + (rendered?`<button class="btn-next" style="${big};border:0;cursor:pointer" onclick="shareVideo()">📱 카톡·공유로 보내기</button>`:'')
+    + (rendered?`<button class="btn-next" style="${big};border:0;cursor:pointer" onclick="shareVideo()">📱 카톡·공유로 보내기${FINAL_THUMB_URL?' (영상+썸네일)':''}</button>`:'')
     // ★PC용 QR(2026-07-23): 카톡 PC는 웹에서 mp4를 대화방에 못 넣는다 → 폰으로 넘겨 폰 카톡 네이티브 공유.
     + (rendered?`<button class="btn-next" style="${big};border:0;cursor:pointer;background:#fee500;color:#191600" onclick="showShareQr('${j}')">🖥→📱 QR로 폰에 보내기</button>`:'')
     + (rendered?'<div class="hint" style="margin:2px 0 8px">📱 <b>휴대폰</b>이면 「카톡·공유로 보내기」로 바로 전송. 💻 <b>컴퓨터</b>면 「QR로 폰에 보내기」를 눌러 폰으로 스캔 → 폰 카톡으로 보내세요.</div>':'')
@@ -5144,7 +5248,8 @@ async function pollFinal(){
     if(d.status==='done'){ clearInterval(MIX_POLL); clearInterval(_rfTimer);
       document.getElementById('finalVideo').innerHTML=`<video controls autoplay muted src="/api/mix/video/${esc(MIX_JOB)}" style="max-width:300px;border-radius:12px;margin-top:10px"></video>`;
       _finalRenderRestore('✅ 렌더 완료 — 완성 영상이 재생됩니다');
-      renderExport({rendered:true}); }   // 렌더 완료 → 완성 MP4 다운로드 버튼까지
+      renderExport({rendered:true});     // 렌더 완료 → 완성 MP4 다운로드 버튼까지
+      refreshFinalThumb(); }             // 썸네일 카드·버튼 라벨도 이때 맞춘다(렌더 전엔 없었다)
     if(d.status==='failed'){ clearInterval(MIX_POLL); clearInterval(_rfTimer); _finalRenderRestore('❌ 렌더 실패'+(d.error?' — '+d.error:'')); }
   }catch(e){}
 }
@@ -5320,6 +5425,10 @@ async function _loadThumbFrames(){
   // ★프레임이 그대로면 다시 그리지 않는다(2026-07-30) — 아래에서 5단계 진입마다 서버에
   // 물어보게 바꿨기 때문에, 매번 다시 그리면 사장님이 고른 프레임이 0번으로 리셋된다.
   // URL에 ?v={video_sig}가 붙으므로 배경 영상(자막제거본 등)이 바뀌면 URL이 달라져 갱신된다.
+  // ★이전 배경으로 만든 결과(2026-08-03 사장님: "자막지우기 했는데 저장된 썸네일에 자막이 남아있다").
+  //   자막제거 전에 생성한 결과는 안 지우고(사장님 소유) ⚠️ 표시로 알린다 — 갤러리가 다시 그려질 때 반영.
+  THUMB_STATE.stale = new Set(d.stale_results || []);
+  if (typeof renderThumbGallery === 'function' && (THUMB_STATE.results||[]).length) renderThumbGallery();
   const _prevUrls = (THUMB_STATE.frames || []).map(f => f.url).join('|');
   const _nextUrls = d.frames.map(f => f.url).join('|');
   const _box = document.getElementById('thumbFrames');
@@ -5614,11 +5723,16 @@ function renderThumbGallery(){
   // download 속성이 있는 <a>는 같은 출처(same-origin) 파일이면 새 탭으로 안 새고 바로
   // 저장 대화상자를 띄운다(우리 서버가 서빙하는 /api/produce/thumb/file/... 이라 문제없음).
   // stopPropagation으로 카드의 onclick(선택)과 분리 — 다운로드가 선택 상태를 안 건드린다.
-  document.getElementById('thumbGallery').innerHTML = THUMB_STATE.results.map(r => `
+  // ⚠️이전 영상 배지(2026-08-03): 자막제거 전 배경으로 만든 결과 — 지우지 않고 표시만 한다.
+  const _stale = THUMB_STATE.stale || new Set();
+  const _warn = THUMB_STATE.results.some(r => _stale.has(r.name))
+    ? `<div class="hint" style="grid-column:1/-1;color:var(--fire)">⚠️ 주황 표시는 <b>자막제거 전 영상</b>으로 만든 썸네일이에요 — 위에서 프레임을 다시 골라 새로 생성하세요.</div>` : '';
+  document.getElementById('thumbGallery').innerHTML = _warn + THUMB_STATE.results.map(r => `
     <div onclick="selectThumbResult('${r.name}')" data-name="${r.name}"
          style="position:relative;cursor:pointer;border-radius:6px;overflow:hidden;border:2px solid
          ${THUMB_STATE.selected === r.name ? 'var(--accent2)' : 'transparent'}">
       <img src="${r.url}" style="width:100%;display:block">
+      ${_stale.has(r.name)?`<span style="position:absolute;left:4px;top:4px;background:rgba(200,90,0,.9);color:#fff;font-size:10px;font-weight:800;border-radius:6px;padding:2px 6px">⚠️ 이전 영상</span>`:''}
       <a href="${r.url}" download="${r.name}" onclick="event.stopPropagation()" title="다운로드"
          style="position:absolute;right:4px;bottom:4px;width:24px;height:24px;border-radius:50%;
          background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;
@@ -5648,6 +5762,9 @@ async function selectThumbResult(name){
       return false;
     }
     if (st) st.textContent = '';
+    // 8단계 카드도 즉시 따라오게 한다 — DB가 바뀌었는데 최종화면이 옛 썸네일이면
+    // "카톡으로 뭘 보내는지"가 어긋난다(단계를 안 옮겨도 맞아야 한다).
+    try { refreshFinalThumb(); } catch(e){}
     return true;
   } catch(e){
     THUMB_STATE.selected = prev; renderThumbGallery();

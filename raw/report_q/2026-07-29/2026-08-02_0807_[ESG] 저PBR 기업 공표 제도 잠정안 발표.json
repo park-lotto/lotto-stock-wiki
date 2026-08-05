@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-07-29",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-02_0807_[ESG] 저PBR 기업 공표 제도 잠정안 발표.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "엄수진",
+    "report_date": "2026년 07월 29일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "저PBR 기업 공표 제도"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "8월 5일",
+        "event": "한국거래소 규정·세칙 개정예고 개시"
+      },
+      {
+        "date": "8월 24일까지",
+        "event": "공식 의견수렴"
+      },
+      {
+        "date": "9월 중",
+        "event": "증선위·금융위 정례회의 승인"
+      },
+      {
+        "date": "11월 2일",
+        "event": "최초 공표"
+      }
+    ],
+    "top_picks": null,
+    "risk": "일시적으로 PBR이 떨어진 기업보다 장기간 그 상태를 방치했거나 어쩌면 의도적으로 주가 상승을 오랫동안 억제한 기업이 더 페널티를 받아야 한다고 생각한다.",
+    "quote": "동 제도는 PBR이 낮은 수준에 머무르고 있음에도 불구하고 기업이 주주가치 제고를 위한 노력을 하지 않고 낮은 주가를 방치하거나 오히려 누르는 현상을 개선하기 위해, 일정 기준에 해당하는 저PBR 기업들의 리스트를 공표(Naming & Shaming)하는 정책이다."
+  }
+}

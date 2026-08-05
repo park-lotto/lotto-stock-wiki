@@ -148,6 +148,16 @@ SHORTS_GEMINI_KEYS = [
     if (v := os.environ.get("SHORTS_GEMINI_KEY" if i == 1 else f"SHORTS_GEMINI_KEY_{i}", ""))
 ]
 
+# ★제작소 비상 예약(2026-08-04 사장님 "제작소 비상용으로 2개정도 빼놓고해").
+#   태거가 새 키 4개를 2시간 만에 소진해 제작소 EDL이 통째로 죽은 실사고의 재발 방지.
+#   대량 소비자(태거·백필)는 SHORTS_BULK_MODE=1로 띄운다 → 마지막 N개 키가 목록에서
+#   빠져 손도 못 댄다. 서비스(제작소)는 전체를 본다. 소진 상태파일은 인덱스 기반인데
+#   잘라내는 게 '꼬리'라 앞쪽 인덱스는 두 프로세스가 동일하게 해석한다.
+_PRODUCE_RESERVED = int(os.environ.get("SHORTS_PRODUCE_RESERVED", "2") or 0)
+if (os.environ.get("SHORTS_BULK_MODE") == "1" and _PRODUCE_RESERVED > 0
+        and len(SHORTS_GEMINI_KEYS) > _PRODUCE_RESERVED):
+    SHORTS_GEMINI_KEYS = SHORTS_GEMINI_KEYS[:-_PRODUCE_RESERVED]
+
 # YouTube Data API v3 키 풀(제품찾기 실수집용, 2026-07-09) — 무료 할당량 계정별
 # 소진 대비 로테이션. _N 넘버링 동적 스캔(SHORTS_GEMINI_KEYS와 동일 패턴).
 _YOUTUBE_MAX = 30

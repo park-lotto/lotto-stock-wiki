@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-01_1101_지연된 물량, 채워지는 수주.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS투자증권",
+    "analyst": "최태용",
+    "report_date": "2026.07.31",
+    "stocks": [
+      {
+        "name": "LG에너지솔루션",
+        "code": "373220",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": 600000,
+        "tp_prev": 600000,
+        "tp_direction": "flat",
+        "earnings_outlook": "3Q26F 매출액 9.1조원(+20.0% QoQ, +49.6% YoY), 영업이익 2,720억원(+140.0% QoQ, -54.7% YoY)을 전망한다.",
+        "estimate_revision": "2026F 영업이익 전망치를 1,500억원에서 808억원으로 하향 조정함.",
+        "next_catalyst": "4분기 얼티엄셀즈 1공장 재가동 및 AMPC 인식 본격화, 2027년 북미 50GWh 가동 및 랜싱 각형 10~15GWh 증설",
+        "thesis": [
+          "IT업체발 수주 증가로 ESS 리레이팅 조건 확보",
+          "2027년까지의 ESS 수주잔고와 AI 데이터센터향 매출 연결",
+          "밸류에이션 기준 연도를 2027년으로 변경하여 목표주가 유지"
+        ],
+        "valuation_basis": "밸류에이션 기준 연도를 2027년으로 변경",
+        "risk": "신규 라인 셋업에 따른 초기 램프업 비용 및 보상금 인식 시점 불확실성",
+        "supply_comment": "2025년 말 ESS 수주잔고 140GWh와 상반기 신규 수주 3조원은 향후 2~3년에 걸쳐 인식되는 물량으로 AI 데이터센터 투자 속도와 무관하게 매출로 연결된다.",
+        "quote": "밸류에이션 기준 연도를 2027년으로 변경하고 목표주가 60만원, 투자의견 ‘매수’를 유지한다."
+      }
+    ]
+  }
+}

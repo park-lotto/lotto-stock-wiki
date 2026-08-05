@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         로또 · 원클릭 담기
 // @namespace    lotto.shopping_shorts
-// @version      2.2.0
+// @version      2.3.0
 // @description  플랫폼 영상에 '📥 담기' 버튼. ★한 번만 설치하면 됩니다 — 담기 로직은 서버에서 매번 불러오므로 이후 업데이트는 재설치 없이 자동 반영됩니다.
 // @match        https://www.youtube.com/*
 // @match        https://www.tiktok.com/*
@@ -49,6 +49,37 @@
     try { eval(code); }
     catch (e) { if (!runViaBlob(code)) console.error("[담기] 로직 실행 실패", e); }
   }
+  // ★GM 브리지(v2.3.0, 2026-08-03): 인스타에선 로직이 Blob(메인월드)로 돌아 GM API가
+  //   없다 → 렌즈 in-page 오버레이가 서버 API를 못 불렀다(쿠키 없는 fetch는 CORS/로그인
+  //   벽). 로더(샌드박스, GM 보유)가 postMessage로 요청을 받아 GM_xmlhttpRequest를 대신
+  //   수행하고 결과를 되돌려준다. 로직 쪽은 브리지 응답이 없으면(구버전 로더) 딥링크 폴백.
+  window.addEventListener("message", function (ev) {
+    var d = ev && ev.data;
+    if (!d || !d.__ssGmFetch || !d.reqId) return;
+    // 우리 서버로 가는 요청만 대행 — 페이지(메인월드) 스크립트가 이 브리지로 임의
+    // 도메인에 쿠키 실린 요청을 쏘는 악용을 막는다.
+    if (String(d.url || "").indexOf("https://shoppingshorts.duckdns.org/") !== 0) return;
+    // 즉시 ACK — 본 응답은 수십 초 걸릴 수 있어, 로직 쪽 '브리지 존재 확인'(1.5초)용.
+    window.postMessage({ __ssGmAck: true, reqId: d.reqId }, "*");
+    try {
+      GM_xmlhttpRequest({
+        method: d.method || "GET",
+        url: d.url,
+        headers: d.headers || {},
+        data: d.body || undefined,
+        onload: function (r) {
+          window.postMessage({ __ssGmResult: true, reqId: d.reqId,
+                               status: r.status, text: r.responseText }, "*");
+        },
+        onerror: function () {
+          window.postMessage({ __ssGmResult: true, reqId: d.reqId, status: 0, text: "" }, "*");
+        }
+      });
+    } catch (e) {
+      window.postMessage({ __ssGmResult: true, reqId: d.reqId, status: 0, text: "" }, "*");
+    }
+  });
+
   try {
     GM_xmlhttpRequest({
       method: "GET",

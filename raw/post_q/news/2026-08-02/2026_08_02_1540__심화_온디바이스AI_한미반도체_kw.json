@@ -1,0 +1,25 @@
+{
+  "target_kind": "sector",
+  "sector_name": "반도체",
+  "sector_view": "긍정",
+  "points": [
+    "AI 반도체 소부장 ETF 순자산 5000억원 돌파"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "한미반도체",
+      "comment": null,
+      "ts": null,
+      "quote": "온디바이스AI 한미반도체",
+      "sector": "반도체"
+    }
+  ],
+  "events": [
+    {
+      "fact": "신한자산운용 ‘SOL AI반도체소부장 ETF’, 순자산 5000억원 돌파",
+      "ts": "01-22 08:00",
+      "quote": "신한자산운용 ‘SOL AI반도체소부장 ETF’, 순자산 5000억원 돌파"
+    }
+  ],
+  "quote": "신한자산운용 ‘SOL AI반도체소부장 ETF’, 순자산 5000억원 돌파"
+}

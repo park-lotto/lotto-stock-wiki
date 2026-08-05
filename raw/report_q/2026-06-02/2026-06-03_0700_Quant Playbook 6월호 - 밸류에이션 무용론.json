@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_Quant Playbook 6월호 - 밸류에이션 무용론.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "신현용",
+    "report_date": "2026.06.02",
+    "target_kind": "market",
+    "market_direction": "bullish",
+    "macro_vars": [
+      "반도체 업종 주가",
+      "이익 추정치 상향조정",
+      "P/E",
+      "쏠림 장세"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "Overweight",
+        "reason": "이익 추정치 상향조정 지속으로 인한 저평가 논리 유효"
+      },
+      {
+        "sector": "반도체",
+        "stance": "Overweight",
+        "reason": "이익 추정치 상향조정이 지속되며 밸류에이션 무용론 기반 강세 지속 전망"
+      }
+    ],
+    "style": "Growth/Momentum",
+    "event_calendar": [
+      {
+        "date": "2026.05.25~29",
+        "event": "단일종목 레버리지 ETF 상장 주간"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "SK스퀘어",
+      "삼성전기",
+      "LG에너지솔루션",
+      "HD현대중공업",
+      "삼성생명",
+      "두산에너빌리티",
+      "삼성SDI",
+      "SK",
+      "LG전자",
+      "효성중공업",
+      "LG이노텍",
+      "한화시스템",
+      "KT&G",
+      "LIG디펜스앤에어로스페이스",
+      "LS",
+      "S-Oil",
+      "대덕전자",
+      "OCI홀딩스",
+      "신세계",
+      "롯데쇼핑"
+    ],
+    "risk": "반도체 대형주로의 쏠림 심화 및 소외 종목과의 성과 격차 확대, 실적 시즌 공백",
+    "quote": "결국, 밸류에이션의 급등락은 주가와 이익의 속도 차이가 만든 결과값에 불가하며, 전략 판단의 기준은 이익 기대감 개선세가 지속될 수 있는지, 현재 매수 후보군에 편입되어 있는지에 대한 여부가 핵심"
+  }
+}
