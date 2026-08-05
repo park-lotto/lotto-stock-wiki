@@ -127,7 +127,16 @@ def line_count(used_secs, n_cuts):
     ★상한 9(2026-08-04 실측 job 923d/285d): 43초 원본·컷 25개 → 13문장이 요구되자
     글자예산에 눌려 "찌든 때 밀면 끝"류 전보문이 됐다(사장님 "대본이 이상해").
     문장당 4~5초가 자연스러운 호흡이다 — 컷 커버는 코드가 배정하니 문장이 적어도 안전."""
-    return max(3, min(n_cuts, 9, round(used_secs / _SECS_PER_LINE)))
+    secs_per_line = _SECS_PER_LINE
+    # ★채널 스타일 ON이면 문장을 길게(2026-08-05): 30초=8문장(문장당 ~13자)에선 메종식
+    #   "~는데 ~니까 ~더라고요" 긴 호흡이 구조적으로 불가능했다(실측 job 64e0a110 드라이런).
+    try:
+        from shopping_shorts import style_profiles
+        if style_profiles.active_style():
+            secs_per_line = 4.8          # 30초 → 6문장(문장당 ~23자) — 메종 실측 호흡
+    except Exception:
+        pass
+    return max(3, min(n_cuts, 9, round(used_secs / secs_per_line)))
 
 
 def char_budget(used_secs):
