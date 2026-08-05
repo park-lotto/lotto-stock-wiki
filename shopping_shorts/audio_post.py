@@ -36,16 +36,73 @@ _PACE_FADE = 0.012       # 가장자리 페이드(초)
 _LOUDNORM = "loudnorm=I=-16:TP=-1.5:LRA=11"
 
 
+# 속도감 모드 무음 판정값 — _pace_filters와 measure_removed_spans가 **같은 값**을 써야
+# "잘라낸 구간"과 "측정한 구간"이 어긋나지 않는다. 한 곳에서만 고치도록 상수로 뺐다.
+_PACE_THRESHOLD = "-38dB"
+_PACE_STOP_DURATION = 0.3
+_PACE_START_SILENCE = 0.05
+
+
 def _pace_filters():
     """앞·중간·뒤 무음 모두 제거 + 끝 고정 여백 + 클릭방지 페이드.
     기존 silence_trim(뒤/중간만)과 달리 start_periods=1로 문장 첫머리 숨까지 잘라
     다음 문장이 딱 붙게 한다. apad는 마지막(여백은 페이드 대상 아님)."""
     return [
-        ("silenceremove=start_periods=1:start_threshold=-38dB:start_silence=0.05:"
-         "stop_periods=-1:stop_duration=0.3:stop_threshold=-38dB"),
+        (f"silenceremove=start_periods=1:start_threshold={_PACE_THRESHOLD}:"
+         f"start_silence={_PACE_START_SILENCE}:"
+         f"stop_periods=-1:stop_duration={_PACE_STOP_DURATION}:"
+         f"stop_threshold={_PACE_THRESHOLD}"),
         f"afade=t=in:st=0:d={_PACE_FADE}",
         f"apad=pad_dur={_PACE_TAIL_PAD}",
     ]
+
+
+def measure_removed_spans(in_path, threshold=None, min_dur=None):
+    """속도감 모드가 **잘라낼** 무음 구간 [(시작초, 끝초), ...]을 원본 타임라인 기준으로 반환.
+
+    ★왜 필요한가(2026-08-06): pace_mode의 silenceremove는 내부 무음까지 전부 없앤다.
+    이건 조각별(piecewise) 시간왜곡이라 tts_timestamps.rescale의 선형사상 하나로는
+    표현이 안 된다 — 잘린 쉼 뒤의 단어가 갈수록 늦게 표시된다(실측 +0.11 → +0.28s 누적).
+    여기서 '어디를 얼마나 잘랐나'를 재두면 rescale이 그만큼씩 당겨 정확히 맞출 수 있다.
+
+    silencedetect는 판정만 하고 자르지 않으므로 원본 시각 그대로 읽힌다. 임계·최소길이를
+    _pace_filters와 동일하게 맞춰 판정 불일치를 최소화한다(완전 동일하진 않아 ±수십ms 잔차는 남는다).
+    실패·ffmpeg 없음 → [](호출부는 선형 폴백 = 기존 동작)."""
+    thr = threshold or _PACE_THRESHOLD
+    # 앞무음은 start_silence(0.05)만 넘어도 잘리고 내부는 stop_duration(0.3) 이상만 잘린다.
+    # 더 짧은 쪽으로 잡아 앞무음을 놓치지 않고, 내부 구간은 아래에서 길이로 걸러낸다.
+    d = _PACE_START_SILENCE if min_dur is None else min_dur
+    try:
+        r = subprocess.run(
+            ["ffmpeg", "-i", str(in_path), "-af",
+             f"silencedetect=noise={thr}:d={d}", "-f", "null", "-"],
+            stdin=subprocess.DEVNULL, capture_output=True, text=True, check=True)
+    except Exception:
+        return []
+    spans, start = [], None
+    for line in (r.stderr or "").splitlines():
+        if "silence_start:" in line:
+            try:
+                start = float(line.split("silence_start:")[1].split("|")[0].strip())
+            except ValueError:
+                start = None
+        elif "silence_end:" in line and start is not None:
+            try:
+                end = float(line.split("silence_end:")[1].split("|")[0].strip())
+            except ValueError:
+                start = None
+                continue
+            if start <= 1e-3:
+                # 앞무음: start_periods=1이 통째로 걷어낸다.
+                spans.append((start, end))
+            elif (end - start) >= _PACE_STOP_DURATION:
+                # ★내부 무음은 '삭제'가 아니라 stop_duration까지 '줄이기'다(2026-08-06 실측).
+                # silenceremove는 0.3초를 남긴다 — 전체를 지운다고 보면 뒤 단어를 너무
+                # 많이 당겨 자막이 이번엔 반대로 빨라진다(실측: 2.2초 감지 vs 실제 1.433초).
+                # 그래서 초과분만 잘린 것으로 계산한다. 뒤에서부터 깎이므로 구간 끝을 남긴다.
+                spans.append((start, end - _PACE_STOP_DURATION))
+            start = None
+    return spans
 
 
 def post_process(in_path, out_path, tempo=1.0, silence_trim="off", pace_mode=False,

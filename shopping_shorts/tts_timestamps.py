@@ -22,7 +22,12 @@ ElevenLabs /with-timestamps는 같은 값을 추가비용 없이 준다(같은 �
 import json
 import os
 
+# 속도감 모드 끝여백 — audio_post는 표준 라이브러리만 import하므로 순환 위험 없다.
+from .audio_post import _PACE_TAIL_PAD
+
 _SUFFIX = ".align.json"
+# 무음 제거 구간 사이드카(2026-08-06). align과 같은 stale 위험을 지므로 clear/copy가 함께 다룬다.
+_CUT_SUFFIX = ".cuts.json"
 
 
 def sidecar_path(mp3_path):
@@ -30,13 +35,46 @@ def sidecar_path(mp3_path):
     return str(mp3_path) + _SUFFIX
 
 
+def cuts_path(mp3_path):
+    """mp3 경로 → 무음제거 구간 사이드카 경로."""
+    return str(mp3_path) + _CUT_SUFFIX
+
+
+def save_removed(mp3_path, spans):
+    """후처리가 잘라낼 무음 구간 [(s,e), ...] 저장. 빈 리스트면 옛 값만 지운다
+    (남겨두면 stale — 이번엔 안 잘랐는데 옛 구간으로 당겨버린다)."""
+    if not spans:
+        try:
+            os.remove(cuts_path(mp3_path))
+        except OSError:
+            pass
+        return None
+    try:
+        with open(cuts_path(mp3_path), "w", encoding="utf-8") as f:
+            json.dump([[float(s), float(e)] for s, e in spans], f)
+        return cuts_path(mp3_path)
+    except OSError:
+        return None
+
+
+def load_removed(mp3_path):
+    """저장된 무음제거 구간 → [(s,e), ...]. 없거나 깨졌으면 [](선형 폴백)."""
+    try:
+        with open(cuts_path(mp3_path), encoding="utf-8") as f:
+            data = json.load(f)
+        return [(float(s), float(e)) for s, e in data]
+    except (OSError, ValueError, TypeError):
+        return []
+
+
 def clear(mp3_path):
     """옛 정렬 제거. ★합성 직전에 반드시 부른다 — 같은 경로 재합성 시 옛 정렬이
     남으면 새 대사에 옛 타이밍을 씌운다(자막이 통째로 밀린다)."""
-    try:
-        os.remove(sidecar_path(mp3_path))
-    except OSError:
-        pass
+    for p in (sidecar_path(mp3_path), cuts_path(mp3_path)):
+        try:
+            os.remove(p)
+        except OSError:
+            pass
 
 
 def save(mp3_path, alignment):
@@ -101,19 +139,56 @@ def words_from_alignment(alignment):
 _RESCALE_MIN, _RESCALE_MAX = 0.5, 2.0
 
 
-def rescale(words, final_dur):
+def _shift_by_removed(t, removed):
+    """원본 시각 t를, removed 구간들이 잘려나간 뒤의 시각으로 옮긴다.
+    t보다 앞에서 잘린 길이를 전부 빼고, t가 잘린 구간 **안**이면 그 구간 시작으로 당긴다."""
+    cut = 0.0
+    for s, e in removed:
+        if e <= t:
+            cut += e - s
+        elif s < t:            # t가 잘린 구간 내부 → 구간 시작 시각으로 붙는다
+            cut += t - s
+    return max(0.0, t - cut)
+
+
+def rescale(words, final_dur, removed=None):
     """TTS 시각을 **후처리된** mp3의 타임라인으로 옮긴다. 못 믿을 값이면 원본 그대로.
 
     ★왜 필요한가: 합성 직후 audio_post.post_process가 같은 파일을 제자리에서 고친다
-    (tempo 배속 + 앞뒤 무음 트림). ASR은 그 결과물을 듣고 받아 적으니 자동으로 맞았지만,
+    (tempo 배속 + 무음 트림). ASR은 그 결과물을 듣고 받아 적으니 자동으로 맞았지만,
     TTS 타임스탬프는 **후처리 전** 음성의 시각이라 그대로 쓰면 자막이 밀린다.
-    둘 다 선형 변환이므로 [첫 단어 시작, 마지막 단어 끝] → [0, final_dur]로 되맞추면 된다
-    (앞 트림 = 상수 이동, 배속 = 배율 — 이 한 번의 사상이 둘 다 흡수한다).
 
-    배율이 0.5~2.0 밖이면 가정이 깨진 것(길이 측정 실패 등)이라 손대지 않는다 —
-    틀린 보정보다 무보정이 낫다."""
+    removed=[(시작,끝), ...] (audio_post.measure_removed_spans)가 주어지면 **조각별**로
+    당긴다. 속도감 모드는 내부 무음까지 없애는데 그건 선형변환이 아니라서, 예전의 단일
+    선형사상([첫단어,끝단어]→[0,final_dur])으로는 잘린 쉼 뒤 단어가 갈수록 늦어졌다
+    (실측 +0.11 → +0.28s 누적, 2026-08-06). 조각별로 갚으면 그 누적이 사라진다.
+
+    removed가 없으면(=무음삭제 안 한 경로) 예전 선형사상 그대로 — 앞 트림은 상수 이동,
+    배속은 배율이라 그 경우엔 직선 하나로 정확하다. 배율이 0.5~2.0 밖이면 가정이 깨진
+    것(길이 측정 실패 등)이라 손대지 않는다 — 틀린 보정보다 무보정이 낫다."""
     if not words or not final_dur or final_dur <= 0:
         return words
+    if removed:
+        shifted = []
+        for w in words:
+            s, e = w.get("start"), w.get("end")
+            shifted.append({"word": w.get("word", ""),
+                            "start": _shift_by_removed(s, removed) if s is not None else None,
+                            "end": _shift_by_removed(e, removed) if e is not None else None})
+        # 잔차 보정: silencedetect(판정)와 silenceremove(실제 삭제)의 임계가 완전히 같지
+        # 않아 조각별 계산이 실제보다 조금씩 짧게 나온다(실측 -0.09s). 마지막 단어 끝이
+        # 후처리 오디오의 '발화 끝'(= final_dur - 끝여백)에 오도록 남은 오차만 균등 배분한다.
+        # 배율이 1에서 크게 벗어나면 가정이 깨진 것이라 손대지 않는다.
+        last_end = shifted[-1].get("end")
+        speech_end = final_dur - _PACE_TAIL_PAD
+        if last_end and last_end > 0 and speech_end > 0:
+            k = speech_end / last_end
+            if 0.9 <= k <= 1.15:
+                for w in shifted:
+                    for key in ("start", "end"):
+                        if w[key] is not None:
+                            w[key] *= k
+        return shifted
     first = words[0].get("start")
     last = words[-1].get("end")
     if first is None or last is None or last <= first:
