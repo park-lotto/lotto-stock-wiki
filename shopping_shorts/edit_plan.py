@@ -3084,8 +3084,12 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
     print("[1소스대본] 원본 %.1f초 → 예산 %.1f초, 컷 %d개, 훅후보: %s"
           % (span, budget, len(order), " / ".join(p[1] for p in pats)), file=sys.stderr)
     src_texts = [s.get("full_text", "") for s in source_scripts]
-    cands = []
-    for i in range(max(1, n_candidates)):
+
+    def _one_candidate(i):
+        """후보 하나를 통째로 만든다. 실패면 None.
+
+        ★후보끼리 공유 상태가 없다(각자 자기 beats/plan만 만진다) — 그래서 아래에서
+          스레드로 동시에 돌린다. seg_map·order·source_scripts는 읽기 전용으로만 쓴다."""
         pat = pats[i % len(pats)]
         # ★후보마다 다른 키로 나간다(2026-08-05) — 같은 키 연타로 분당한도 429가 나
         #   스타일 리라이트가 통째로 무효화되던 것(위 _vault_call 주석 참고).
@@ -3106,7 +3110,7 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
             if b2:
                 beats = b2
         if not beats:
-            continue
+            return None
         # CTA 교정(2026-08-04): 마지막 문장에 '댓글'이 없으면 그 문장만 고쳐 받는다(2회).
         # 실측: 프롬프트 강화 후에도 3후보 중 1~2개가 감상문으로 끝났다 — 코드로 보장한다.
         for _ in range(2):
@@ -3164,7 +3168,7 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         #   먼저 거르면 아래 '구멍은 직전 비트가 이어받는다'가 그 컷들을 살린다.
         beats = [b for b in beats if (b.get("narration") or "").strip()]
         if not beats:
-            continue
+            return None
         # covers → 화면 배정. 모델이 빠뜨린 컷은 직전 비트에 붙여 **컷 100% 커버**를 코드가
         # 보장한다(화면 총길이 == used == 예산 → 길이 하한이 프롬프트 아닌 코드로 지켜진다).
         covered_by = {}                      # 컷 번호(1-base) → 비트 인덱스
@@ -3203,7 +3207,7 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
                 "effect": "cut", "fit": 5, "forced": False,
             })
         if len(plan_beats) < 3:
-            continue
+            return None
         plan_beats[0]["role"] = "hook"
         plan_beats[-1]["role"] = "cta"
         for b in plan_beats[1:-1]:
@@ -3255,7 +3259,36 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         scr = sum(float(b.get("target_seconds") or 0) for b in plan_beats)
         print("[1소스대본] 후보%d 훅패턴=%s %d비트 나레이션 %.1f초 / 화면예산 %.1f초"
               % (i + 1, pat[0], len(plan_beats), scr, used), file=sys.stderr)
-        cands.append(cand)
+        return cand
+
+    # ★후보 병렬 생성(2026-08-06). 예전엔 for로 순차라 **후보 1개 시간 × 3**이 걸렸다
+    #   (실측 로그 23:06:12/22/34 — 후보당 10~12초, 총 30초+). 이 일은 CPU가 아니라
+    #   Gemini 응답 대기가 거의 전부라, 스레드로 동시에 기다리면 그대로 벽시계가 1/3이
+    #   된다(메모리는 HTTP 요청 몇 개 수준 — 렌더처럼 ffmpeg가 뜨는 게 아니다).
+    #   ★선행조건이 방금 갖춰졌다: 후보별 키 오프셋 없이 병렬로 돌리면 셋이 **동시에**
+    #   같은 키를 때려 분당한도 429가 확정이었다. 순차일 땐 그나마 시차라도 있었다.
+    #   후보끼리 공유 상태가 없어(각자 자기 beats/plan만 만든다) 락이 필요 없다.
+    def _safe_candidate(i):
+        """★한 후보가 터져도 나머지는 살린다(2026-08-06). ex.map은 예외를 그대로
+        올려보내므로, 감싸지 않으면 후보 하나의 모델 응답 깨짐이 **대본 3개를 전멸**
+        시킨다(순차 for였을 땐 그 후보만 죽고 나머지는 살았다 — 병렬화로 생기는
+        새 위험이라 여기서 막는다)."""
+        try:
+            return _one_candidate(i)
+        except Exception as e:      # noqa: BLE001 — 후보 하나의 실패가 전멸이 되면 안 된다
+            print(f"[1소스대본] 후보{i + 1} 실패(나머지는 계속): {e!r}", file=sys.stderr)
+            return None
+
+    n = max(1, n_candidates)
+    if n == 1:
+        c0 = _safe_candidate(0)
+        cands = [c0] if c0 else []
+    else:
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=n) as ex:
+            # 순서 보존이 중요하다 — 후보 i에 배정된 스타일(trio: A=메종/B=채이/
+            # C=스탠다드)과 화면 표시 순서가 어긋나면 안 된다. map은 입력 순서대로 준다.
+            cands = [c for c in ex.map(_safe_candidate, range(n)) if c]
     if not cands:
         return None
     # ★추천에 스타일 이탈 감점(2026-08-05): 리라이트 실패로 옛 카피체로 남은 후보가
