@@ -1,0 +1,103 @@
+{
+  "meta": {
+    "date": "2026-08-05",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-05_1108_[디지털자산] 월간 디지털자산 시장 동향 기...md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "최윤영",
+    "report_date": "2026년 8월 4일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "기관자금",
+      "RWA",
+      "DeFi",
+      "Stablecoin"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": null,
+        "reason": "기관자금 유출입 축소, RWA 시장 성장, DeFi 및 스테이블코인 생태계 확장"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.06.24",
+        "event": "Ripple·SBI, 금융청 승인 후 일본에 달러 스테이블코인 RLUSD 출시"
+      },
+      {
+        "date": "2026.06.26",
+        "event": "Nomura·Circle, USDC 기반 외화 즉시결제 서비스 공동 추진 업무협약 체결"
+      },
+      {
+        "date": "2026.07.02",
+        "event": "Securitize(SECZ) NYSE 상장"
+      },
+      {
+        "date": "2026.07.13",
+        "event": "Lawson·HashPort, 도쿄 다카나와 게이트웨이시티점에서 엔화 스테이블코인 JPYC 결제 실증"
+      },
+      {
+        "date": "2026.07.14",
+        "event": "JCB·Circle, USDC 기반 국경간 결제 및 가맹점 결제 공동 검토 업무협약 체결"
+      },
+      {
+        "date": "2026.07.15",
+        "event": "DTCC, 주식·ETF·미국 국채 대상 첫 토큰화 증권 실거래 수행"
+      },
+      {
+        "date": "2026.07.16",
+        "event": "Cantor Fitzgerald와 협력해 IPO·후속 증자 과정에 토큰화 기술 적용 추진"
+      },
+      {
+        "date": "2026.07.20",
+        "event": "Hyperliquid, HIP-4 업그레이드 발표"
+      },
+      {
+        "date": "2026.07.22",
+        "event": "Ondo Finance, Ondo Perps에서 토큰화 주식 무기한선물 담보 지원"
+      },
+      {
+        "date": "2026.07.23",
+        "event": "Oasis Pro Markets, FINRA로부터 토큰화 주식·ETF·펀드 관련 업무 승인 확보"
+      },
+      {
+        "date": "2026.10",
+        "event": "DTCC, 토큰화 서비스 정식 출시 예정"
+      }
+    ],
+    "top_picks": [
+      "Bitcoin",
+      "Ethereum",
+      "Solana",
+      "Hyperliquid",
+      "XRP",
+      "Chainlink",
+      "Sui",
+      "Litecoin",
+      "Strategy",
+      "Metaplanet",
+      "BitMine",
+      "USDT",
+      "USDC",
+      "USDS",
+      "USDe",
+      "Provenance",
+      "Avalanche",
+      "Securitize",
+      "Ondo Finance",
+      "Uniswap",
+      "Robinhood",
+      "PumpSwap",
+      "PancakeSwap",
+      "Aerodrome",
+      "Orca"
+    ],
+    "risk": "디지털자산 ETP 순유출 지속, 선물시장 관망세, 특정 스테이블코인 공급 감소",
+    "quote": "시장 조정 속 토큰화·온체인 금융은 확대"
+  }
+}
