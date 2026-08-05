@@ -53,7 +53,24 @@ def session_slots():
     return [config.INSTAGRAM_SESSION_PATH] if config.INSTAGRAM_SESSION_PATH else []
 
 
-def crawl_channel(username, max_scrolls=_MAX_SCROLLS, session_path=None):
+def slot_proxy(index):
+    """계정 슬롯 index에 고정 배정되는 한국 주거용 출구.
+
+    2026-08-05: 계정만 바꾸고 IP가 같으면 인스타가 한 기계로 묶어 본다(새로 만든
+    계정도 몇 시간 만에 scraping_warning). Webshare 회전주거용은 username에
+    `-kr-N` 접미사를 붙이면 슬롯마다 다른 한국 가정회선으로 나간다(실측:
+    kr-1 LG POWERCOMM, kr-3 SK브로드밴드 …). 계정↔IP를 1:1로 붙여 서로 다른
+    사용자처럼 보이게 한다. 미설정이면 None(직결) — 기존 동작 유지."""
+    user = os.getenv("WEBSHARE_USER", "")
+    pw = os.getenv("WEBSHARE_PASS", "")
+    if not user or not pw:
+        return None
+    host = os.getenv("WEBSHARE_HOST", "p.webshare.io:80")
+    cc = os.getenv("WEBSHARE_COUNTRY", "kr")
+    return f"http://{user}-{cc}-{index + 1}:{pw}@{host}"
+
+
+def crawl_channel(username, max_scrolls=_MAX_SCROLLS, session_path=None, proxy=None):
     """채널 1개를 바닥(또는 상한)까지 스크롤 크롤. (items, final_url, error) 반환.
 
     instagram_playwright._scrape_one_playwright와 같은 캡처 방식(응답 후킹)에
@@ -71,8 +88,18 @@ def crawl_channel(username, max_scrolls=_MAX_SCROLLS, session_path=None):
             sess = session_path or config.INSTAGRAM_SESSION_PATH
             if sess and os.path.exists(sess):
                 ctx_kw["storage_state"] = sess
-            elif config.INSTAGRAM_PROXY:
-                ctx_kw["proxy"] = {"server": config.INSTAGRAM_PROXY}
+            # 세션과 프록시는 배타가 아니다 — 계정마다 전용 출구를 붙여야 IP로
+            # 묶이지 않는다(2026-08-05). proxy 인자가 없을 때만 구 설정으로 폴백.
+            p = proxy or config.INSTAGRAM_PROXY
+            if p:
+                rest = p.split("://", 1)[-1]
+                if "@" in rest:
+                    cred, hostport = rest.rsplit("@", 1)
+                    user, _, pw = cred.partition(":")
+                    ctx_kw["proxy"] = {"server": "http://" + hostport,
+                                       "username": user, "password": pw}
+                else:
+                    ctx_kw["proxy"] = {"server": p}
             ctx = browser.new_context(**ctx_kw)
             Stealth().apply_stealth_sync(ctx)
             page = ctx.new_page()
@@ -169,7 +196,8 @@ def run(limit=None, max_scrolls=_MAX_SCROLLS, sleep=time.sleep, log=print):
         while True:
             sess = slots[slot_i] if slot_i < len(slots) else None
             items, final_url, err = crawl_channel(u, max_scrolls=max_scrolls,
-                                                  session_path=sess)
+                                                  session_path=sess,
+                                                  proxy=slot_proxy(slot_i))
             if err != "scraping_warning":
                 break
             burnt = os.path.basename(sess or "?").replace(".json", "")
