@@ -1946,6 +1946,9 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "[제품 — ★이게 중심이다. 무슨 제품이고 핵심 장점이 뭔지 여기서 잡고 절대 벗어나지 마라. "
         "다국어면 한국어로]\n"
         f"{(reference_text or '')[:1500]}\n\n"
+        # ★채널 스타일(2026-08-05)을 맨 앞에 — 맨 뒤에 붙였더니 규칙 40줄에 밀려 절반만
+        #   먹었다(실측 job 64e0a110: 훅 명령형·문장 뚝뚝·합쇼체 잔존). 문체는 이게 우선.
+        + _style_extra() +
         # 2026-07-29(사장님 확정): 스펙 나열형 reference_text를 그대로 던지면 대본도 나열형으로
         # 나온다. 3단계 상황 프레임을 줘서 Gemini가 스스로 '썰'을 짓게 유도(고정 문구 하드코딩 금지
         # — 제품마다 실제 스펙에서 재구성해야 하므로 지시만 주고 내용은 매번 새로 만들게 한다).
@@ -1990,6 +1993,10 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         + "[이야기]\n"
         "- 기능 나열이 아니라 하나로 이어지는 이야기로 엮어라. 무슨 일이 있었고·그래서 어떻게 "
         "됐는지가 이어지게. 문장이 각자 놀면 광고 문구로 들린다.\n"
+        # ★비트 문장 잇기(2026-08-05): 비트마다 한 문장씩 닫으니 대본이 뚝뚝 끊겼다(실측).
+        "- ★비트가 나뉘어 있어도 대본은 한 호흡이다 — 각 비트의 narration이 독립 문장으로 "
+        "닫히지 말고, 앞 비트를 이어받아 흐르게 써라. 한 비트 안에서 장점 2~3개를 접속으로 "
+        "이어 긴 문장 하나로 써도 좋다.\n"
         "- 훅·CTA·풀어내는 순서는 **후보마다 개성 있게** 달라야 한다. 다만 그 차이는 "
         f"**원본의 어느 대목을 앞세우느냐**에서 나와야지, {n}개가 각자 다른 이야기를 "
         "지어내는 게 아니다.\n"
@@ -2050,9 +2057,6 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
            if tone_boost else "")
         # 엔진 버전별 추가 블록(v3 = 백테스트 은행 few-shot).
         + _engine_extra(engine, engine_seed)
-        # ★채널 스타일(2026-08-05 사장님): 히트 채널 실제 대본 few-shot으로 결을 입힌다.
-        #   1호=메종홈디노, 3후보 전부 적용. 롤백=서버 env SCRIPT_STYLE=off 한 줄.
-        + _style_extra()
         + "\n출력은 스키마 JSON만.")
     raw = call(prompt, _SCENE_FIRST_SCHEMA)
     if not raw or not isinstance(raw, dict):
