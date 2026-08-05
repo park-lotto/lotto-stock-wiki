@@ -63,16 +63,19 @@ def merge(store, bucket=None, apply=False, out=print):
         merged_total += len(rest)
         if apply:
             with store._conn() as c:
+                # ★UNIQUE(bucket, canonical) — 접힘행 중 canonical==canon인 행이 있으면
+                # 대표행 갱신이 충돌한다(2026-08-05 서버 실사고). 접힘행부터 비켜놓는다.
+                for x in rest:
+                    c.execute(
+                        "UPDATE pattern_item SET status='merged', "
+                        "canonical=canonical || '#merged' || id, note=?, updated_at=? "
+                        "WHERE id=?",
+                        (f"merged into id={keeper['id']} ({canon})", now, x["id"]))
                 c.execute(
                     "UPDATE pattern_item SET canonical=?, freq=?, source_ids_json=?, "
                     "updated_at=? WHERE id=?",
                     (canon, total_freq, json.dumps(sids, ensure_ascii=False), now,
                      keeper["id"]))
-                for x in rest:
-                    c.execute(
-                        "UPDATE pattern_item SET status='merged', note=?, updated_at=? "
-                        "WHERE id=?",
-                        (f"merged into id={keeper['id']} ({canon})", now, x["id"]))
     out(f"\n{'[적용]' if apply else '[dry-run]'} 접힌 행 {merged_total}개")
     return merged_total
 

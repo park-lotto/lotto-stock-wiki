@@ -41,10 +41,13 @@ def test_add_pattern_item_dedups_new_variants(store):
 def test_merge_collapses_legacy_rows_reversibly(store):
     # 옛 canonical로 이미 갈라져 쌓인 행들을 병합 — 삭제 아닌 status='merged'
     ids = []
+    # ★'더라고요'(canonical==병합 목표 canon) 행 포함 — UNIQUE(bucket,canonical) 충돌
+    #   시나리오(2026-08-05 서버 실사고: 대표행 canonical 갱신이 접힘행과 충돌해 크래시)
     for text, canon, freq in [("~하더라고요", "~하더라고요", 74),
                               ("하더라고요", "하더라고요", 69),
                               ("~더라고요", "~더라고요", 38),
-                              ("~더라구요", "~더라구요", 18)]:
+                              ("~더라구요", "~더라구요", 18),
+                              ("더라고요", "더라고요", 5)]:
         iid = store.add_pattern_item("ending", text, canonical=canon)
         with store._conn() as c:
             c.execute("UPDATE pattern_item SET freq=?, status='approved' WHERE id=?",
@@ -52,15 +55,15 @@ def test_merge_collapses_legacy_rows_reversibly(store):
         ids.append(iid)
 
     n = merge(store, bucket="ending", apply=False, out=lambda *a: None)
-    assert n == 3  # dry-run은 개수만 보고
+    assert n == 4  # dry-run은 개수만 보고
     approved = store.list_pattern_items(bucket="ending", status="approved")
-    assert len(approved) == 4  # dry-run이라 무변경
+    assert len(approved) == 5  # dry-run이라 무변경
 
     merge(store, bucket="ending", apply=True, out=lambda *a: None)
     approved = store.list_pattern_items(bucket="ending", status="approved")
     assert len(approved) == 1
     keeper = approved[0]
-    assert keeper["freq"] == 74 + 69 + 38 + 18
+    assert keeper["freq"] == 74 + 69 + 38 + 18 + 5
     assert keeper["canonical"] == "더라고요"
     merged = store.list_pattern_items(bucket="ending", status="merged")
-    assert len(merged) == 3  # 복구 가능하게 남아 있다
+    assert len(merged) == 4  # 복구 가능하게 남아 있다
