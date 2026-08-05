@@ -797,7 +797,9 @@ def _normalize_source(cat, raw):
 
 # 서버(크롤러) 자동 등록용
 SSH_KEY = r"C:\Users\TheRose\crawling_bot_client\LightsailDefaultKey-ap-northeast-2.pem"
-SSH_HOST = "ubuntu@3.39.179.148"
+# IP는 바뀔 수 있다(2026-08-05 인스타 scraping_warning 회피로 교체) —
+# 서버 주소는 SERVER_HOST 하나로만 바꾼다.
+SSH_HOST = os.getenv("SERVER_HOST", "ubuntu@3.39.179.148")
 REMOTE_ADD = "python3 /home/ubuntu/kmong/crawling_bot/add_source.py"
 
 
