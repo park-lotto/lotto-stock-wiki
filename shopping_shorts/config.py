@@ -142,7 +142,11 @@ OVERSEAS_DOUYIN_ENABLED = os.getenv("OVERSEAS_DOUYIN_ENABLED", "true").lower() =
 # 하루 종일 같이 소모돼 예고 없이 소진되는 사고가 있었음 — 쇼핑쇼츠는 이 전용
 # 풀만 쓰고, 공유 풀로 폴백하지 않는다(소진되면 그냥 다음날까지 대기).
 # _N 넘버링을 동적으로 스캔(2026-07-09, 3개→13개로 확장하며 고정 목록 대신 변경).
-_SHORTS_GEMINI_MAX = 30
+# 2026-08-06: 상한을 30 → 200으로 올렸다. 태깅은 키당 하루 500건(RPD)이 벽이라
+# 26만건을 며칠에 끝내려면 키를 계속 늘리는 수밖에 없는데(사장님: "구글 프로젝트
+# 따로 만들어 계속 추가"), 31번째부터는 스캔에서 빠져 **조용히 무시**됐다.
+# 환경변수로도 조절 가능하게 뒀다.
+_SHORTS_GEMINI_MAX = int(os.environ.get("SHORTS_GEMINI_MAX", "200"))
 SHORTS_GEMINI_KEYS = [
     v for i in range(1, _SHORTS_GEMINI_MAX + 1)
     if (v := os.environ.get("SHORTS_GEMINI_KEY" if i == 1 else f"SHORTS_GEMINI_KEY_{i}", ""))
