@@ -143,3 +143,6 @@ shopping_shorts/motion/.render_tmp/
 # 서버에서 _weather_calib_append가 파일을 알아서 다시 만든다(makedirs+append).
 /output/weather_calib/
 .coupang_profile/
+
+# 인스타 계정 세션(sessionid = 로그인 자격증명) — 절대 커밋 금지
+scripts/ig_sessions/
