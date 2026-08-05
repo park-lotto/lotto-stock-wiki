@@ -1785,6 +1785,10 @@ class Store:
                 self._record_history(c, items, collected_at)
             except Exception:
                 pass  # 히스토리 누적 실패가 수집 저장을 막지 않는다
+            try:
+                self._feed_archive(c, items, collected_at)
+            except Exception:
+                pass  # 아카이브 적재 실패도 수집 저장을 막지 않는다
 
     @staticmethod
     def _norm_username(u):
@@ -1818,6 +1822,38 @@ class Store:
         # 30일 정리 — last_seen이 30일보다 오래된 행 삭제(수집이 곧 정리 트리거).
         cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
         c.execute("DELETE FROM reel_history WHERE last_seen < ?", (cutoff,))
+
+    def _feed_archive(self, c, items, collected_at):
+        """레퍼런스 수집분을 channel_archive(영구)에도 적재한다(2026-08-06).
+
+        왜 필요한가: reel_history는 30일이 지나면 지워지는데, 역대 히트작 매칭
+        (api_archive_similar)은 channel_archive만 본다. 연결이 없으면 "한 바퀴
+        크롤" 이후 새로 터진 영상이 아카이브에 영영 안 들어가서, 시간이 갈수록
+        아카이브가 낡는다. 레퍼런스는 어차피 매일 수집하므로 **추가 트래픽 0**으로
+        신규분을 계속 적립할 수 있다.
+
+        기존 크롤러가 넣은 행을 훼손하지 않는다: 같은 (username, shortcode)면
+        조회수 등 최신값만 갱신되고 first_seen은 보존된다(archive_upsert_many와
+        같은 규약). posted_at도 크롤러와 동일하게 shortcode에서 복원해 형식을 맞춘다.
+        """
+        from shopping_shorts.instagram_parse import shortcode_to_timestamp
+        for it in items or []:
+            sc = (it.get("shortcode") or "").strip()
+            user = self._norm_username(it.get("username"))
+            if not sc or not user:
+                continue
+            c.execute(
+                "INSERT INTO channel_archive(username, shortcode, url, thumbnail, "
+                " views, likes, comments, posted_at, first_seen, last_seen) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?) "
+                "ON CONFLICT(username, shortcode) DO UPDATE SET "
+                " url=excluded.url, thumbnail=excluded.thumbnail, views=excluded.views, "
+                " likes=excluded.likes, comments=excluded.comments, "
+                " posted_at=excluded.posted_at, last_seen=excluded.last_seen",
+                (user, sc, it.get("url"), it.get("thumbnail"),
+                 int(it.get("views") or 0), int(it.get("likes") or 0),
+                 int(it.get("comments") or 0),
+                 shortcode_to_timestamp(sc) or "", collected_at, collected_at))
 
     def channel_history(self, username, exclude=()):
         """한 채널의 지난 30일 수집분을 last_seen 최신순으로 반환.
