@@ -645,8 +645,11 @@ def _caption_durations(segs, dur, real_durs=None):
     if _CAP_MIN_DUR * n >= dur:      # 하한조차 못 채우면 균등분할
         return [dur / n] * n
     if real_durs is not None and len(real_durs) == len(segs) and sum(real_durs) > 0:
+        # ★실측값은 그대로 쓴다 — dur로 되늘리지 않는다(2026-08-06).
+        # 예전 `dur * d / s` 정규화는 리드인(자막 밖 무음)까지 구절에 비례배분해 자막을
+        # 늘려버려, 애써 실측한 타이밍을 도로 흐트러뜨렸다. 합이 dur를 넘을 때만 줄인다.
         s = sum(real_durs)
-        raw = [dur * d / s for d in real_durs]
+        raw = [dur * d / s for d in real_durs] if s > dur else list(real_durs)
     else:
         weights = [max(1, len(s.replace("\n", ""))) for s in segs]
         total_w = sum(weights)
@@ -663,7 +666,34 @@ def _caption_durations(segs, dur, real_durs=None):
     return floored
 
 
-def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None, cap_offset=0.0, tail=0.5, cap_lines=None):
+def _adjust_caps_for_trim(beat):
+    """(lead_in, durs) — 저장된 cap_lead/cap_durs에 head_trim을 반영해 돌려준다.
+
+    ★왜(2026-08-06): cap_durs·cap_lead는 **합성 시점에 한 번** 계산되고 그 뒤 무효화가
+    없다(mix_pipeline). 그런데 사장님이 제작소에서 앞을 트림하면 오디오만 왼쪽으로
+    당겨지고 자막 모양은 옛날 그대로 남아 또 어긋났다. 트림한 만큼 리드인에서 갚고,
+    리드인으로 모자라면 첫 구절을 파고들어 깎는다(음수 시작 금지).
+    """
+    durs = beat.get("cap_durs")
+    lead = float(beat.get("cap_lead") or 0.0)
+    trim = float(beat.get("head_trim") or 0.0)
+    if not durs or trim <= 0:
+        return lead, (list(durs) if durs else durs)
+    durs = list(durs)
+    if trim <= lead:
+        return lead - trim, durs
+    # 리드인을 다 쓰고도 남으면 앞 구절부터 순서대로 깎아 없앤다.
+    rest = trim - lead
+    for i, d in enumerate(durs):
+        if rest <= 0:
+            break
+        take = min(d, rest)
+        durs[i] = d - take
+        rest -= take
+    return 0.0, durs
+
+
+def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None, cap_offset=0.0, tail=0.5, cap_lines=None, lead_in=0.0):
     """나레이션 한 비트의 자막(하단 바 + 순차 drawtext)을 필터 문자열 리스트로 반환한다.
     _segmented_drawtext 기반: highlight_rules가 있으면 단어별 강조, 없으면 세그먼트 1개
     (기존과 동일 산출물). 각 구절 enable 구간은 t0(전체 타임라인 오프셋)만큼 밀린다.
@@ -708,7 +738,9 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
             f"drawbox=x=0:y=ih-{_BAR_H}:w=iw:h={_BAR_H}:color=black@0.82:t=fill:"
             f"enable='between(t,{_bs:.2f},{t0 + dur + tail + cap_offset:.2f})'"
         )
-    t = 0.0
+    # lead_in = 비트 시작~첫 발화까지의 무음(ASR 실측). 0이면 종전과 동일하게 비트 머리에서 시작.
+    # 예전엔 항상 0이라, 말이 늦게 시작하는 비트에서 자막이 먼저 떴다(2026-08-06 수정).
+    t = max(0.0, float(lead_in or 0.0))
     for i, (seg, d) in enumerate(zip(segs, durs)):
         start = max(0.0, t + t0 + cap_offset)
         t += d
@@ -1297,13 +1329,17 @@ def _beat_timeline(edit_plan, tts_paths):
         if not tts:
             continue
         dur = _beat_effective_dur(beat, tts)
+        # 트림(head_trim)을 자막 타이밍에 반영 — 저장된 cap_durs/cap_lead는 트림 전 기준이라
+        # 그대로 쓰면 트림한 비트만 어긋난다(2026-08-06).
+        _cap_lead, _cap_durs = _adjust_caps_for_trim(beat)
         timeline.append({
             "beat_idx": idx,
             "t0": t0,
             "dur": dur,
             "narration": beat.get("narration", ""),
             "role": beat.get("role", ""),
-            "cap_durs": beat.get("cap_durs"),
+            "cap_durs": _cap_durs,
+            "cap_lead": _cap_lead,
             "cap_offset": beat.get("cap_offset", 0.0),
             "caption_lines": beat.get("caption_lines"),   # AI가 끊어준 자막 호흡 줄(있으면)
             "sfx": beat.get("sfx"),                        # 효과음 매칭(있으면) — position 읽기용
@@ -1344,7 +1380,8 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         filters.extend(_caption_drawtexts(b["narration"], b["dur"], work, b["beat_idx"],
                                           b["t0"], caption_style, real_durs=b.get("cap_durs"),
                                           cap_offset=b.get("cap_offset", 0.0), tail=_tail,
-                                          cap_lines=b.get("caption_lines")))
+                                          cap_lines=b.get("caption_lines"),
+                                          lead_in=b.get("cap_lead", 0.0)))
     if headcopy and (headcopy.get("text") or "").strip():
         # enable 없으면 전체 표시(기존). 팩이 hook_only면 렌더 파생값 _headcopy_enable이 온다.
         hc_enable = ((deco or {}).get("motion") or {}).get("_headcopy_enable")

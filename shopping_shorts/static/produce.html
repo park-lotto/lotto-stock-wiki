@@ -4819,7 +4819,10 @@ function _vpDriveCaption(aud, b){
   const upd=()=>{
     const dur=aud.duration||rel.reduce((a,c)=>a+c,0)||1;
     const durs=rel.map(r=> (Array.isArray(b.cap_durs)&&b.cap_durs.length)? r : r*dur);
-    let t=aud.currentTime-off, acc=0, cur=segs[0]||'';
+    // cap_lead = 말 시작 전 무음(서버 ASR 실측). 렌더러와 같은 기준점을 써야 미리보기와
+    // 최종 영상이 일치한다 — 예전엔 둘 다 0에서 시작해 자막이 먼저 떴다(2026-08-06).
+    const lead=(Array.isArray(b.cap_durs)&&b.cap_durs.length)?(+b.cap_lead||0):0;
+    let t=aud.currentTime-off, acc=lead, cur=(t<lead)?'':(segs[0]||'');
     for(let k=0;k<segs.length;k++){ if(t>=acc){ cur=segs[k]; } acc+=durs[k]; }
     cap.textContent=cur;
   };

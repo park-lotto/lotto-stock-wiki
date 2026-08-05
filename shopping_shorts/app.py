@@ -7713,6 +7713,7 @@ def api_produce_mix_beats_preview(job_id: str):
             "caption": narr,                                        # 폴백·호환용(통째)
             "segs": video_assemble._caption_segments(narr, preset=b.get("caption_lines")),  # 렌더와 같은 분할
             "durs": b.get("cap_durs"),                              # 구절별 실제 표시시간(없으면 None)
+            "lead": b.get("cap_lead", 0.0),                         # 말 시작 전 무음(초) — 렌더와 같은 기준점
         })
     return {"beats": out}
 
