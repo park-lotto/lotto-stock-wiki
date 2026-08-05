@@ -96,3 +96,36 @@ def test_similar_has_view_and_comment_badges():
     assert 'class="views"' in sim, "내부검색에 조회수 배지가 없다"
     assert 'class="cmts"' in sim, "내부검색에 댓글 배지가 없다"
     assert "댓글" in sim, "'댓글' 글자가 없다(숫자만이면 구분 불가)"
+
+
+# ── 채널 보기 뒤로가기(2026-08-06 사장님: "채널명 클릭 후 뒤로가기하면 다른 페이지로 간다") ──
+# archive.html엔 히스토리 처리가 **아예 없었다**. 채널 클릭은 같은 페이지에서 목록만 바꾸므로
+# 브라우저 히스토리엔 아무것도 안 쌓이고, 뒤로가기를 누르면 이 화면을 통째로 떠난다.
+# 랭킹(index.html)은 같은 문제를 pushState + popstate로 이미 해결했다 — 같은 방식으로 맞춘다.
+
+def test_filter_channel_pushes_history():
+    """채널 보기로 들어갈 때 히스토리를 한 칸 쌓는다 — 그래야 뒤로가기가 '나가기'가 아니라
+    '채널 보기 해제'가 된다."""
+    src = ARCHIVE_HTML.read_text(encoding="utf-8")
+    i = src.index("function filterChannel(")
+    body = src[i:src.index("\n}", i)]
+    assert "pushState" in body, "채널 보기 진입 시 히스토리를 안 쌓는다 — 뒤로가기가 페이지를 떠난다"
+
+
+def test_popstate_restores_full_list():
+    """뒤로가기(popstate) → 전체 목록으로 되돌린다."""
+    src = ARCHIVE_HTML.read_text(encoding="utf-8")
+    assert "popstate" in src, "popstate 처리가 없다"
+    i = src.index("popstate")
+    seg = src[i:i + 400]
+    assert "load(" in seg or "filterChannel" in seg or "chSel" in seg, \
+        "뒤로가기가 목록을 안 되돌린다: " + seg[:200]
+
+
+def test_same_channel_twice_does_not_stack_history():
+    """같은 채널을 두 번 눌러도 히스토리를 두 번 쌓지 않는다 —
+    쌓이면 뒤로가기를 여러 번 눌러야 나가는 꼴이 된다(랭킹의 CHANNEL_VIEW 가드와 같은 취지)."""
+    src = ARCHIVE_HTML.read_text(encoding="utf-8")
+    i = src.index("function filterChannel(")
+    body = src[i:src.index("\n}", i)]
+    assert "CH_VIEW" in body, "지금 보고 있는 채널을 기억하지 않아 히스토리가 중복으로 쌓인다"
