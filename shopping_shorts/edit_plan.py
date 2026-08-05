@@ -2050,6 +2050,9 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
            if tone_boost else "")
         # 엔진 버전별 추가 블록(v3 = 백테스트 은행 few-shot).
         + _engine_extra(engine, engine_seed)
+        # ★채널 스타일(2026-08-05 사장님): 히트 채널 실제 대본 few-shot으로 결을 입힌다.
+        #   1호=메종홈디노, 3후보 전부 적용. 롤백=서버 env SCRIPT_STYLE=off 한 줄.
+        + _style_extra()
         + "\n출력은 스키마 JSON만.")
     raw = call(prompt, _SCENE_FIRST_SCHEMA)
     if not raw or not isinstance(raw, dict):
@@ -2075,6 +2078,15 @@ def _engine_seed(reference_text):
     h = hashlib.md5((reference_text or "").encode("utf-8")).hexdigest()
     return int(h[:6], 16) % 97
 
+
+
+def _style_extra():
+    """채널 스타일 블록(style_profiles). 부가기능 — 실패해도 생성을 죽이지 않는다."""
+    try:
+        from shopping_shorts import style_profiles
+        return style_profiles.style_block()
+    except Exception:
+        return ""
 
 
 def _engine_extra(engine, seed=0):
