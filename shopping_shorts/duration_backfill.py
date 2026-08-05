@@ -31,6 +31,11 @@ PER_RUN_LIMIT = 40
 SLEEP_SEC = 2.0
 # 이 횟수만큼 실패한 shortcode는 더 안 두드린다(삭제·비공개 릴스).
 MAX_FAIL = 3
+# 한 번에 훑을 아카이브(역대 히트작) 릴스 수 — 조회수 상위부터.
+# ★왜 전부가 아닌가: 아카이브는 78,265건이다(2026-08-06 실측). 전부 대상에 넣어도 회당
+#   PER_RUN_LIMIT(40)만 조회하니 결과는 같지만, 매 실행마다 7만 건을 SELECT·필터링하는 건
+#   낭비다. 상위 N만 보면 "사장님이 실제로 보는 카드"부터 채워진다(정렬=조회수 DESC).
+ARCHIVE_SCAN_LIMIT = 600
 
 _PAGE = {
     "instagram": "https://www.instagram.com/reel/{id}/",
@@ -95,6 +100,25 @@ def _targets(store):
             seen.add(sc)
             if i.get("duration") in (None, "", 0):
                 out.append((platform, sc))
+    # ★아카이브(역대 히트작)도 대상에 넣는다(2026-08-06 사장님: 히트작 카드에 ⏱ 표시).
+    #   예전엔 last_run만 봐서 아카이브는 **영원히 대상이 아니었다** — 78,265건 중 길이를
+    #   아는 205건은 랭킹에 우연히 겹친 것뿐이었다.
+    #   랭킹 뒤에 붙인다: 지금 보는 화면이 먼저고, 아카이브는 남는 자리를 채운다.
+    #   조회수 DESC라 사장님이 실제로 보는 상위 카드부터 채워진다.
+    try:
+        with store._conn() as c:
+            rows = c.execute(
+                "SELECT shortcode FROM channel_archive "
+                "WHERE shortcode IS NOT NULL AND shortcode != '' "
+                "ORDER BY views DESC LIMIT ?", (ARCHIVE_SCAN_LIMIT,)).fetchall()
+        for (sc,) in rows:
+            sc = (sc or "").strip()
+            if not sc or sc in seen:
+                continue
+            seen.add(sc)
+            out.append(("instagram", sc))      # 아카이브는 전부 인스타 릴스다
+    except Exception:                          # noqa: BLE001 — 아카이브가 비어도 랭킹 백필은 계속
+        pass
     return out
 
 

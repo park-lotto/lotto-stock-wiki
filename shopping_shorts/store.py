@@ -1234,6 +1234,22 @@ class Store:
             ).fetchall()
         return {r[0]: {"last": r[1] or "", "name": r[2] or ""} for r in rows}
 
+    def channel_name_map(self):
+        """{username: 한글 표시명} — 아카이브(히트작) 카드가 @아이디 대신 한글 이름을 쓰려고 읽는다.
+
+        아카이브 테이블(channel_archive)엔 username밖에 없는데, 수집 이력(reel_history)엔
+        채널 표시명이 같이 저장돼 있다(실측 2026-08-06: 아카이브 518채널 중 433개 커버).
+        빈 이름은 아예 담지 않는다 — 화면이 `name || username`으로 폴백하므로 빈 문자열을
+        넣으면 오히려 '이름 있는데 빈칸'이 된다.
+        ★instagram_activity_map과 목적이 다르다(저건 활동시각 판정용이라 MAX(first_seen)까지
+        집계한다) — 여기선 이름만 필요해 가볍게 뽑는다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT username, MAX(name) FROM reel_history "
+                "WHERE name IS NOT NULL AND name != '' GROUP BY username"
+            ).fetchall()
+        return {r[0]: r[1] for r in rows if r[0] and r[1]}
+
     def remove_channel(self, username, name=""):
         """죽은 채널을 추적 제외목록에 추가(소프트 삭제). 발굴목록에 있었다면 함께 제거."""
         with self._conn() as c:
