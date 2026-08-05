@@ -4009,6 +4009,9 @@ class Store:
     # swap으로 밀리고 렌더가 기어간다(실측 13:21 load average 11.76 / swap 1204MB,
     # 최종렌더 8분+). 크롤을 없애는 게 아니라 **순서를 양보**시킨다 — 다음 주기에 돈다.
     _HEAVY_TASKS = ("render", "mix", "retype", "preview", "clean")
+    # 인스타 세션(브라우저·계정 쿠키)을 공유하는 작업 — 동시에 하나만 돈다(claim_next).
+    # 워커를 여러 개 띄울 때 같은 계정으로 동시 접속해 플래그되는 걸 막는다.
+    _EXCLUSIVE_TASKS = ("durfill", "prewarm")
 
     def heavy_job_active(self):
         """렌더 계열 작업이 지금 돌고 있거나 대기 중이면 True.
@@ -4032,6 +4035,15 @@ class Store:
             # 때까지 굶었다("누가 쓰면 느려지는" 진짜 원인 — 서버 크기 문제가 아니다).
             # 워커가 N개면 서로 다른 계정 N명이 동시에 진행된다.
             # owner가 NULL인 옛 작업·소유자 불명 작업은 제한 없이 집는다(하위호환).
+            # ★인스타 세션 독점(2026-08-05): _EXCLUSIVE_TASKS는 **동시에 하나만** 돈다.
+            #   durfill·prewarm은 인스타 브라우저 세션(INSTAGRAM_SESSION_PATH)을 공유한다.
+            #   워커가 1개일 땐 자연히 직렬이라 안 드러났지만, 워커를 여러 개 띄우면
+            #   같은 계정 세션으로 동시에 붙어 **계정이 플래그**된다(제품명검색 트랙 실측:
+            #   서버 크롤 시도만으로 helrou75·syospa123 두 계정이 1~2시간 만에 소실,
+            #   한 번 플래그되면 어느 IP에서도 안 된다). 계정은 IP보다 비싸다.
+            #   ★같은 UPDATE 문 안에서 검사한다 — 파이썬으로 먼저 세면 워커 3개가
+            #   동시에 "지금 0개"를 보고 셋 다 집는 경합이 난다.
+            ph = ",".join("?" * len(self._EXCLUSIVE_TASKS))
             row = c.execute(
                 "UPDATE job_queue SET state='running', "
                 "       claimed_at=datetime('now'), heartbeat_at=datetime('now') "
@@ -4040,8 +4052,12 @@ class Store:
                 "               AND (q.owner IS NULL OR q.owner NOT IN "
                 "                    (SELECT owner FROM job_queue "
                 "                      WHERE state='running' AND owner IS NOT NULL)) "
+                f"               AND (q.task NOT IN ({ph}) OR NOT EXISTS "
+                "                    (SELECT 1 FROM job_queue r "
+                f"                     WHERE r.state='running' AND r.task IN ({ph}))) "
                 "             ORDER BY COALESCE(q.prio, 5), q.id LIMIT 1) "
-                "RETURNING id, task, args_json").fetchone()
+                "RETURNING id, task, args_json",
+                self._EXCLUSIVE_TASKS * 2).fetchone()
             if not row:
                 return None
             return {"id": row[0], "task": row[1], "args": json.loads(row[2])}
