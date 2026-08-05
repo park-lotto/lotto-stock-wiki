@@ -1,0 +1,36 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "term1",
+      "type": "shell",
+      "command": "cls",
+      "windows": { "options": { "shell": { "executable": "powershell.exe", "args": ["-NoExit", "-Command"] } } },
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "shortem" },
+      "problemMatcher": []
+    },
+    {
+      "label": "term2",
+      "type": "shell",
+      "command": "cls",
+      "windows": { "options": { "shell": { "executable": "powershell.exe", "args": ["-NoExit", "-Command"] } } },
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "shortem" },
+      "problemMatcher": []
+    },
+    {
+      "label": "term3",
+      "type": "shell",
+      "command": "cls",
+      "windows": { "options": { "shell": { "executable": "powershell.exe", "args": ["-NoExit", "-Command"] } } },
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "shortem" },
+      "problemMatcher": []
+    },
+    {
+      "label": "터미널 3개",
+      "dependsOn": ["term1", "term2", "term3"],
+      "dependsOrder": "parallel",
+      "runOptions": { "runOn": "folderOpen" },
+      "problemMatcher": []
+    }
+  ]
+}
