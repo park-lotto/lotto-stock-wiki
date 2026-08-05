@@ -6,8 +6,35 @@
       "rating": null,
       "tp": null,
       "ts": "08:08",
-      "quote": "부품 공급에 대한 우려 해소가 핵심",
+      "quote": "부품 공급에 대한 우려 해소가 핵심 / 1QFY26 Review: 역대 최대 분기 신규 수주 달성 / 생산 지연 가능성을 반영하여 보수적 가이던스 제시",
       "sector": "로봇"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "큐리언트",
+      "rating": null,
+      "tp": null,
+      "ts": "08:16",
+      "quote": "CDK7 저해제, 론자와 ADC 판도 바꾼다",
+      "sector": "바이오"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "리커전 파마",
+      "rating": null,
+      "tp": null,
+      "ts": "08:16",
+      "quote": "AI 신약개발 선구자가 주목하는 ‘CDK7’",
+      "sector": "바이오"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "앱클론",
+      "rating": null,
+      "tp": null,
+      "ts": "08:16",
+      "quote": "HER2 위암 정복, 하반기 턴어라운드",
+      "sector": "바이오"
     },
     {
       "broker": "신한투자증권",
@@ -29,7 +56,7 @@
     },
     {
       "broker": "신한투자증권",
-      "stock": "LX인터내셔널",
+      "stock": "LX인터내셔내셔널",
       "rating": "매수",
       "tp": null,
       "ts": "08:16",
@@ -74,6 +101,15 @@
     },
     {
       "broker": "신한투자증권",
+      "stock": "화낙",
+      "rating": null,
+      "tp": null,
+      "ts": "08:16",
+      "quote": "부품 공급 차질 우려로 주가 급락",
+      "sector": "로봇"
+    },
+    {
+      "broker": "신한투자증권",
       "stock": "카메코",
       "rating": null,
       "tp": null,
@@ -92,21 +128,57 @@
     },
     {
       "broker": "신한투자증권",
+      "stock": "삼성증권",
+      "rating": "매수",
+      "tp": null,
+      "ts": "08:09",
+      "quote": "사상 최대 실적, 다음은 사상 최대 주주환원",
+      "sector": "기타"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "카카오페이",
+      "rating": "중립",
+      "tp": null,
+      "ts": "08:09",
+      "quote": "전통 금융의 이익, 핀테크의 멀티플",
+      "sector": "IT"
+    },
+    {
+      "broker": "신한투자증권",
       "stock": "팔란티어",
       "rating": null,
       "tp": null,
-      "ts": "16:21",
-      "quote": "Rule of 40 155%, 12분기 연속 확대",
+      "ts": "08:09",
+      "quote": "또 한번 역대급 실적으로 존재감 증명",
       "sector": "IT"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "이튼 코퍼레이션",
+      "rating": null,
+      "tp": null,
+      "ts": "08:09",
+      "quote": "27년까지 이어질 실적 성장세",
+      "sector": "전력"
     },
     {
       "broker": "신한투자증권",
       "stock": "무라타",
       "rating": null,
       "tp": null,
-      "ts": "16:29",
-      "quote": "고부가 제품MIX 효과와 늘어나는 수주 = 실적UP",
+      "ts": "08:09",
+      "quote": "확실한 방향성",
       "sector": "IT"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "한화엔진",
+      "rating": null,
+      "tp": "5.3만원",
+      "ts": "11:03",
+      "quote": "안정적인 수주와 신사업을 감안할 때 중장기 매수 관점 유지",
+      "sector": "조선"
     }
   ]
 }
