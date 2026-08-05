@@ -232,7 +232,7 @@ RESTYLE_SCHEMA = {
 _CLICHE = ("꿀템", "갓성비", "완벽 해결", "삶의 질", "필수템", "역대급")
 
 
-def restyle_prompt(beats):
+def restyle_prompt(beats, length_note=""):
     """★스타일 통째 리라이트(2026-08-05 사장님 "메종이랑 결이 아예 안 맞네").
 
     프롬프트 지시로 3바퀴를 밀어도 컷 매핑 생성은 광고 카피 결을 못 벗었다 —
@@ -250,8 +250,11 @@ def restyle_prompt(beats):
             "1. 문장 수와 순서는 그대로 — n번 문장은 n번 자리에서 같은 내용을 말한다"
             "(그 문장이 덮는 화면이 고정돼 있다. 내용을 옮기면 화면과 어긋난다).\n"
             "2. 사실·스펙·정보 추가 금지. 없던 인물·구매처·수치를 지어내지 마라.\n"
-            f"3. 전체 길이는 지금({total}자)의 ±15% 안.\n"
-            "4. 마지막 문장(CTA)은 형식 유지 — 댓글 키워드와 받는 것을 그대로 살려라.\n"
+            f"3. ★전체 길이는 지금({total}자)의 ±15% 안 — 이 나레이션은 화면 길이에 묶여 "
+            "있어 길어지면 영상이 끝났는데 말이 남는다. 각 문장도 원래 문장과 비슷한 길이로. "
+            "결을 살리되 **바꿔 쓰는 것이지 늘려 쓰는 게 아니다**.\n"
+            + (f"   {length_note}\n" if length_note else "")
+            + "4. 마지막 문장(CTA)은 형식 유지 — 댓글 키워드와 받는 것을 그대로 살려라.\n"
             "5. 상투어 금지: 꿀템·갓성비·완벽 해결·삶의 질·필수템·역대급 — 있으면 지워라.\n"
             "6. 예시처럼: 훅은 감탄/사건 선언, 문장은 '~는데 ~니까 ~더라고요'로 길게 잇고, "
             "다음 문장이 앞을 이어받게(그래서/근데/심지어). 합쇼체(~습니다) 금지.\n\n"
@@ -259,33 +262,47 @@ def restyle_prompt(beats):
             + "\n\nJSON만: {\"beats\":[{\"n\":1,\"narration\":\"...\"}]}")
 
 
-def apply_restyle(beats, call):
-    """리라이트 1회 + 상투어 잔존 시 1회 재시도. 실패·문장수 불일치면 원본 유지(안전)."""
+def apply_restyle(beats, call, max_tries=3):
+    """스타일 리라이트 — 길이 초과·상투어는 버리지 말고 피드백 재시도(최대 3회).
+
+    ★첫 구현은 길이 밖이면 조용히 원본 복귀였는데, 메종 문체가 원문보다 길어
+    **매번 1.5배로 불어 게이트에 걸리고 아무 일도 안 일어났다**(2026-08-05 서버 실측
+    — '조용한 폴백' 계보). 이제 초과분은 '줄여서 다시'를 알려주고 재요청한다.
+    문장수 불일치·빈 응답 같은 구조 실패만 즉시 원본 유지."""
     from shopping_shorts import style_profiles
     if not style_profiles.active_style() or not beats:
         return beats
-    for _ in range(2):
-        resp = call(restyle_prompt(beats), RESTYLE_SCHEMA)
+    old_total = sum(len(b.get("narration") or "") for b in beats)
+    note = ""
+    best = None
+    for _ in range(max_tries):
+        resp = call(restyle_prompt(beats, length_note=note), RESTYLE_SCHEMA)
         got = (resp or {}).get("beats") if isinstance(resp, dict) else None
         if not got or len(got) != len(beats):
-            return beats
+            return best or beats
         by_n = {int(g.get("n", 0)): (g.get("narration") or "").strip() for g in got}
         if sorted(by_n) != list(range(1, len(beats) + 1)) or not all(by_n.values()):
-            return beats
-        new_total = sum(len(v) for v in by_n.values())
-        old_total = sum(len(b.get("narration") or "") for b in beats)
-        if not (0.7 <= new_total / max(1, old_total) <= 1.4):
-            return beats
+            return best or beats
         out = []
         for i, b in enumerate(beats):
             nb = dict(b)
             nb["narration"] = by_n[i + 1]
             out.append(nb)
+        ratio = sum(len(v) for v in by_n.values()) / max(1, old_total)
+        if ratio > 1.25:
+            note = (f"직전 결과가 원본의 {ratio:.2f}배로 너무 길었다 — 결은 유지하되 "
+                    f"군더더기를 덜어 {old_total}자 근처로 줄여라.")
+            best = best or (out if ratio <= 1.45 else None)   # 아주 심하지 않으면 예비 보관
+            continue
+        if ratio < 0.75:
+            note = f"직전 결과가 원본의 {ratio:.2f}배로 너무 짧았다 — {old_total}자 근처로."
+            continue
         if any(c in v for v in by_n.values() for c in _CLICHE):
-            beats = out          # 상투어 남았으면 결과를 입력 삼아 한 번 더
+            note = "직전 결과에 금지 상투어(꿀템·삶의 질 등)가 남았다 — 전부 제거하라."
+            best = out
             continue
         return out
-    return out
+    return best or beats
 
 
 def parse_beats(resp):
