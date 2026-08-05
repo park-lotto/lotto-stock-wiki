@@ -26,10 +26,19 @@ PATTERN_BUCKETS = ("hook", "ending", "adverb", "cta", "price",
                    "evidence", "conflict", "emotion")
 
 
-def _normalize_canonical(text):
+def _normalize_canonical(text, bucket=None):
     """dedup 키 — strip + 소문자 + 연속 공백 1개. 공백·대소문자만 다른 문구는
-    같은 부품으로 합쳐(freq로 쌓아) 목록이 중복으로 붓지 않게 한다."""
-    return " ".join((text or "").split()).lower()
+    같은 부품으로 합쳐(freq로 쌓아) 목록이 중복으로 붓지 않게 한다.
+
+    2026-08-05 어미 변형 통합(대본퀄 v6): '~더라고요' 계열이 표기만 달라 5행·203회로
+    과포화돼 대본이 그 어미 범벅이 됐다. 물결 접두(~)와 '더라구'/'더라고' 표기 차이는
+    같은 부품이다. ending 버킷은 '하더라고요'류 짧은 변형도 '더라고요'로 접는다."""
+    t = " ".join((text or "").split()).lower()
+    t = t.lstrip("~").strip()
+    t = t.replace("더라구", "더라고")
+    if bucket == "ending" and t.endswith("더라고요") and len(t) <= 5:
+        t = "더라고요"
+    return t
 
 
 class Store:
@@ -2746,7 +2755,7 @@ class Store:
         """부품 1개 저장 → 행 id. **dedup**: 같은 (bucket, canonical)이 이미 있으면
         새 행을 만들지 않고 freq+1 & source_ids_json에 source_id를 (중복 없이) append.
         canonical 미지정 시 text를 정규화(strip·소문자·공백1개)해 생성한다."""
-        canon = canonical if canonical is not None else _normalize_canonical(text)
+        canon = canonical if canonical is not None else _normalize_canonical(text, bucket)
         now = datetime.now(timezone.utc).isoformat()
         with self._conn() as c:
             row = c.execute(
