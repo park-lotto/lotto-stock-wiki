@@ -56,6 +56,14 @@ def test_wired_into_single_source_prompt():
         assert "스타일 예시" not in script_prompt(order, 10.0, "[훅블록]")
 
 
+def test_single_source_line_count_longer_sentences_when_style_on():
+    """스타일 ON이면 문장 수가 줄어 긴 호흡이 된다 (30초: 8~9문장 → 6문장)."""
+    from shopping_shorts.single_source import line_count
+    assert line_count(30.0, 13) == 6
+    with patch.dict(os.environ, {"SCRIPT_STYLE": "off"}):
+        assert line_count(30.0, 13) == 9  # 종전과 동일
+
+
 def test_wired_into_script_generate_prompts():
     """도서관 3안(generate_variations)·믹스(script_generate) 엔진 배선."""
     from shopping_shorts import script_generate as sg
