@@ -82,7 +82,8 @@ def style_penalty(narrations):
     if not active_style() or not narrations:
         return 0.0
     joined = " ".join(narrations)
-    p = 0.06 * joined.count("습니다")
+    # 합쇼체 종결(~습니다/~ㅂ니다) — '니다'로 닫히는 문장을 센다
+    p = 0.06 * len(re.findall(r"니다\s*[.!?…]", joined + " "))
     first = (narrations[0] or "").strip()
     if re.search(r"(하세요|보세요|쓰세요|마세요)", first.split(".")[0]) and \
             not re.match(r"(와|아니|헐|세상에|저 이거|이거)", first):
