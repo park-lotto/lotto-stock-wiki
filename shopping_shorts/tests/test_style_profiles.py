@@ -64,6 +64,45 @@ def test_single_source_line_count_longer_sentences_when_style_on():
         assert line_count(30.0, 13) == 9  # 종전과 동일
 
 
+def _mk_beats():
+    return [{"n": 1, "covers": [1], "narration": "다이소에서 역대급 스팀기를 발견했어요."},
+            {"n": 2, "covers": [2, 3], "narration": "물만으로 살균까지 되니 정말 편해요."},
+            {"n": 3, "covers": [4], "narration": "댓글에 '정보' 남겨주시면 링크 드릴게요."}]
+
+
+def test_apply_restyle_swaps_narration_keeps_covers():
+    from shopping_shorts.single_source import apply_restyle
+    def fake_call(prompt, schema):
+        assert "스타일 예시" in prompt      # few-shot이 실려 간다
+        return {"beats": [{"n": 1, "narration": "와, 저 이거 보고 소리 질렀거든요."},
+                          {"n": 2, "narration": "물만으로 살균까지 되는 게 편하더라고요."},
+                          {"n": 3, "narration": "댓글에 '정보' 남겨주시면 링크 드릴게요."}]}
+    out = apply_restyle(_mk_beats(), fake_call)
+    assert out[0]["narration"].startswith("와,") and out[0]["covers"] == [1]
+    assert out[1]["covers"] == [2, 3]      # 컷 매핑 보존
+
+
+def test_apply_restyle_falls_back_on_bad_response():
+    from shopping_shorts.single_source import apply_restyle
+    src = _mk_beats()
+    assert apply_restyle(src, lambda *a: None) == src              # 실패 → 원본
+    assert apply_restyle(src, lambda *a: {"beats": [{"n": 1, "narration": "x"}]}) == src  # 개수 불일치
+    with patch.dict(os.environ, {"SCRIPT_STYLE": "off"}):
+        assert apply_restyle(src, lambda *a: (_ for _ in ()).throw(AssertionError)) == src  # off=무호출
+
+
+def test_apply_restyle_retries_on_cliche():
+    from shopping_shorts.single_source import apply_restyle
+    calls = {"n": 0}
+    def fake_call(prompt, schema):
+        calls["n"] += 1
+        word = "꿀템이에요" if calls["n"] == 1 else "괜찮더라고요"
+        return {"beats": [{"n": i + 1, "narration": f"이 제품 써봤는데 진짜 {word}."}
+                          for i in range(3)]}
+    out = apply_restyle(_mk_beats(), fake_call)
+    assert calls["n"] == 2 and "꿀템" not in out[0]["narration"]
+
+
 def test_wired_into_script_generate_prompts():
     """도서관 3안(generate_variations)·믹스(script_generate) 엔진 배선."""
     from shopping_shorts import script_generate as sg

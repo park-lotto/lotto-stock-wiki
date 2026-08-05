@@ -220,6 +220,74 @@ def escalate_prompt(beats):
             + "\n\nJSON만: {\"n\": 고른 문장 번호, \"narration\": \"다시 쓴 문장\"}")
 
 
+RESTYLE_SCHEMA = {
+    "type": "object",
+    "properties": {"beats": {"type": "array", "items": {
+        "type": "object",
+        "properties": {"n": {"type": "integer"}, "narration": {"type": "string"}},
+        "required": ["n", "narration"]}}},
+    "required": ["beats"],
+}
+
+_CLICHE = ("꿀템", "갓성비", "완벽 해결", "삶의 질", "필수템", "역대급")
+
+
+def restyle_prompt(beats):
+    """★스타일 통째 리라이트(2026-08-05 사장님 "메종이랑 결이 아예 안 맞네").
+
+    프롬프트 지시로 3바퀴를 밀어도 컷 매핑 생성은 광고 카피 결을 못 벗었다 —
+    오프라인 40개 교정(전규칙 40/40)에서 증명된 방식 그대로, 완성된 나레이션을
+    스타일 예시를 보고 **문체만 통째로 고쳐 쓰게** 한다. 내용·순서·문장수 고정이라
+    covers(컷 매핑)가 그대로 유효하다."""
+    import json
+    from shopping_shorts import style_profiles
+    cur = [{"n": i + 1, "narration": (b.get("narration") or "")}
+           for i, b in enumerate(beats)]
+    total = sum(len(c["narration"]) for c in cur)
+    return (style_profiles.style_block()
+            + "\n위 [스타일 예시]의 결로 아래 나레이션을 **문체만** 고쳐 써라.\n"
+            "[절대규칙]\n"
+            "1. 문장 수와 순서는 그대로 — n번 문장은 n번 자리에서 같은 내용을 말한다"
+            "(그 문장이 덮는 화면이 고정돼 있다. 내용을 옮기면 화면과 어긋난다).\n"
+            "2. 사실·스펙·정보 추가 금지. 없던 인물·구매처·수치를 지어내지 마라.\n"
+            f"3. 전체 길이는 지금({total}자)의 ±15% 안.\n"
+            "4. 마지막 문장(CTA)은 형식 유지 — 댓글 키워드와 받는 것을 그대로 살려라.\n"
+            "5. 상투어 금지: 꿀템·갓성비·완벽 해결·삶의 질·필수템·역대급 — 있으면 지워라.\n"
+            "6. 예시처럼: 훅은 감탄/사건 선언, 문장은 '~는데 ~니까 ~더라고요'로 길게 잇고, "
+            "다음 문장이 앞을 이어받게(그래서/근데/심지어). 합쇼체(~습니다) 금지.\n\n"
+            + json.dumps(cur, ensure_ascii=False, indent=1)
+            + "\n\nJSON만: {\"beats\":[{\"n\":1,\"narration\":\"...\"}]}")
+
+
+def apply_restyle(beats, call):
+    """리라이트 1회 + 상투어 잔존 시 1회 재시도. 실패·문장수 불일치면 원본 유지(안전)."""
+    from shopping_shorts import style_profiles
+    if not style_profiles.active_style() or not beats:
+        return beats
+    for _ in range(2):
+        resp = call(restyle_prompt(beats), RESTYLE_SCHEMA)
+        got = (resp or {}).get("beats") if isinstance(resp, dict) else None
+        if not got or len(got) != len(beats):
+            return beats
+        by_n = {int(g.get("n", 0)): (g.get("narration") or "").strip() for g in got}
+        if sorted(by_n) != list(range(1, len(beats) + 1)) or not all(by_n.values()):
+            return beats
+        new_total = sum(len(v) for v in by_n.values())
+        old_total = sum(len(b.get("narration") or "") for b in beats)
+        if not (0.7 <= new_total / max(1, old_total) <= 1.4):
+            return beats
+        out = []
+        for i, b in enumerate(beats):
+            nb = dict(b)
+            nb["narration"] = by_n[i + 1]
+            out.append(nb)
+        if any(c in v for v in by_n.values() for c in _CLICHE):
+            beats = out          # 상투어 남았으면 결과를 입력 삼아 한 번 더
+            continue
+        return out
+    return out
+
+
 def parse_beats(resp):
     """모델 응답에서 beats 배열을 꺼낸다 — {"beats":[...]}로도, 배열로도 온다(실측)."""
     if isinstance(resp, list):
