@@ -103,6 +103,17 @@ def test_apply_restyle_retries_on_cliche():
     assert calls["n"] == 2 and "꿀템" not in out[0]["narration"]
 
 
+def test_style_penalty_flags_copy_tone_and_off_is_zero():
+    from shopping_shorts.style_profiles import style_penalty
+    copy = ["싱크대 냄새 고민이라면 꼭 써보세요.", "거품이 오염물을 밀어냅니다.",
+            "즉시 녹여줍니다.", "댓글에 '정보' 남겨주세요."]
+    maison = ["와, 저 이거 보고 소리 질렀어요.", "기름때가 바로 녹더라고요.",
+              "댓글에 '정보' 남겨주시면 보내드릴게요."]
+    assert style_penalty(copy) > 0.2 > style_penalty(maison)
+    with patch.dict(os.environ, {"SCRIPT_STYLE": "off"}):
+        assert style_penalty(copy) == 0.0
+
+
 def test_wired_into_script_generate_prompts():
     """도서관 3안(generate_variations)·믹스(script_generate) 엔진 배선."""
     from shopping_shorts import script_generate as sg

@@ -72,6 +72,25 @@ def active_style():
     return None if v in ("off", "0", "") else v
 
 
+def style_penalty(narrations):
+    """스타일 이탈 감점(0~0.5) — 추천이 리라이트 실패 후보를 고르는 걸 막는다.
+
+    2026-08-05 실사고(job 31b394c4): 후보 3개 중 리라이트에 실패해 옛 카피체로 남은
+    후보가 ★추천으로 뽑혔다(채점이 스타일을 안 봄). 합쇼체(~습니다)와 명령형 훅만
+    가볍게 감점한다 — 스타일 off면 0(회귀 없음)."""
+    import re
+    if not active_style() or not narrations:
+        return 0.0
+    joined = " ".join(narrations)
+    # 합쇼체 종결(~습니다/~ㅂ니다) — '니다'로 닫히는 문장을 센다
+    p = 0.06 * len(re.findall(r"니다\s*[.!?…]", joined + " "))
+    first = (narrations[0] or "").strip()
+    if re.search(r"(하세요|보세요|쓰세요|마세요)", first.split(".")[0]) and \
+            not re.match(r"(와|아니|헐|세상에|저 이거|이거)", first):
+        p += 0.15
+    return min(p, 0.5)
+
+
 def style_block(name=None):
     """생성 프롬프트에 얹을 스타일 블록. 모르는 이름·off면 ''(종전 동일 — 회귀 0)."""
     name = name if name is not None else active_style()

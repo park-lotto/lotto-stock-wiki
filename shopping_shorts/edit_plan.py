@@ -3205,7 +3205,16 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         cands.append(cand)
     if not cands:
         return None
-    best = max(range(len(cands)), key=lambda k: cands[k]["score"])
+    # ★추천에 스타일 이탈 감점(2026-08-05): 리라이트 실패로 옛 카피체로 남은 후보가
+    #   ★추천으로 뽑히던 실사고(job 31b394c4). 표시 score는 안 건드리고 선택에만 반영.
+    from shopping_shorts import style_profiles as _sp
+
+    def _pick_key(k):
+        narrs = [(b.get("narration") or "")
+                 for b in (cands[k]["plan"].get("beats") or [])]
+        return cands[k]["score"] - _sp.style_penalty(narrs)
+
+    best = max(range(len(cands)), key=_pick_key)
     cands[best]["recommended"] = True
     return {"candidates": cands, "detected_type": detected}
 
