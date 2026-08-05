@@ -154,3 +154,39 @@ def test_ui_exposes_clone_button():
     assert "event.stopPropagation()" in src, "카드 클릭과 버튼 클릭이 겹친다"
     assert "WORK_ID = null" in body, "새 작업 레코드를 안 만들면 원본이 작업목록에서 사라진다"
     assert "PREVIEW_STATUS=null" in body, "새 job인데 옛 미리보기 게이트를 물고 있으면 유료단계로 샌다"
+
+
+# ── 2026-08-06 사장님 제보: "따로 만들기를 눌러도 내 작업에 추가가 안 된다" ──────────
+# 성공 메시지("새 작업을 시작했어요")까지 뜨는데 왼쪽 '내 작업'에 새 줄이 안 생겼다.
+# 원인 3개 — 아래 3개 테스트가 각각 하나씩 못 박는다.
+
+def test_clone_pushes_work_immediately():
+    """★핵심. saveWork()는 서버 POST를 1초 디바운스한다 — 그 사이 사장님이 새로고침하거나
+    다른 화면으로 가면 새 작업 레코드가 **아예 안 생긴다**(WORK_ID=null인 채로 사라짐).
+    '따로 만들기'는 사용자가 명시적으로 만든 분기점이라 즉시 확정해야 한다."""
+    src = PRODUCE_HTML.read_text(encoding="utf-8")
+    body = src[src.index("async function cloneCandidate(idx){"):src.index("// ─── CANDIDATES-END")]
+    assert "_pushWork()" in body, (
+        "saveWork()만 부르면 1초 디바운스라 새 작업이 서버에 안 박힌다 — _pushWork로 즉시 확정"
+    )
+
+
+def test_clone_sets_script_so_work_has_title():
+    """새 작업 제목은 서버가 state['script'] 앞 20자에서 뽑는다(upsert_produce_work).
+    복제 시 STATE.script를 고른 후보 대본으로 안 바꾸면 목록에 '(제목 없음)'만 3줄 쌓여
+    어느 게 A안이고 C안인지 구분이 안 된다."""
+    src = PRODUCE_HTML.read_text(encoding="utf-8")
+    body = src[src.index("async function cloneCandidate(idx){"):src.index("// ─── CANDIDATES-END")]
+    assert "STATE.script" in body, (
+        "고른 후보 대본을 STATE.script에 안 넣으면 새 작업 제목이 비어 '(제목 없음)'이 된다"
+    )
+
+
+def test_sidebar_exposes_work_refresh_hook():
+    """사이드바 '내 작업'은 페이지 로드 때 mountWorks()가 딱 한 번 그린다. 전역 훅이 없으면
+    복제로 작업이 새로 생겨도 **새로고침 전까지 목록에 안 뜬다**(사장님이 본 증상 그대로)."""
+    js = (pathlib.Path(__file__).resolve().parents[1] / "static" / "sidebar.js").read_text(encoding="utf-8")
+    assert "__ssRefreshWorks" in js, "목록을 다시 그릴 전역 훅이 없다"
+    src = PRODUCE_HTML.read_text(encoding="utf-8")
+    body = src[src.index("async function cloneCandidate(idx){"):src.index("// ─── CANDIDATES-END")]
+    assert "__ssRefreshWorks" in body, "복제 후 사이드바를 다시 그리지 않으면 새 작업이 안 보인다"

@@ -4093,10 +4093,23 @@ async function cloneCandidate(idx){
   // ★WORK_ID를 비워 **새 작업 레코드**가 생기게 한다. 안 비우면 지금 작업의 job_id가 덮여
   //   원본이 내 작업목록에서 길을 잃는다(그러면 3편을 따로 못 만든다 — 이 기능의 목적 자체).
   WORK_ID = null;
+  // ★고른 후보 대본을 STATE.script에 싣는다(2026-08-06). 작업 제목은 서버가
+  //   state.script 앞 20자에서 뽑는다(upsert_produce_work) — 안 실으면 목록에
+  //   '(제목 없음)'만 여러 줄 쌓여 어느 게 A안이고 C안인지 구분이 안 된다.
+  const _c = (CAND_LIST || []).find(x => x && x.index === idx);
+  if(_c && _c.script){ STATE.script = _c.script; STATE.script_carryover = false; }
+  // ★saveWork()는 서버 POST를 1초 디바운스한다 — 그 사이 새로고침하면 새 작업 레코드가
+  //   **아예 안 생긴다**(WORK_ID=null인 채로 증발). '따로 만들기'는 사장님이 명시적으로
+  //   찍은 분기점이라 즉시 확정해야 한다. saveWork()는 sessionStorage·저장표시용으로 같이 둔다.
   saveWork();
+  clearTimeout(_workTimer);          // 디바운스 예약분과 겹쳐 두 번 POST되는 것 방지
+  await _pushWork();                 // 서버에 새 작업 레코드 확정 → WORK_ID가 여기서 채워진다
   renderCandidates(CAND_LIST);
   loadMixReview();
   refreshNextBtn();
+  // ★사이드바 '내 작업'을 다시 그린다. mountWorks는 페이지 로드 때 한 번만 돌아서,
+  //   이걸 안 부르면 새 작업이 생겨도 **새로고침 전까지 목록에 안 뜬다**(사장님 제보의 증상).
+  if(window.__ssRefreshWorks) window.__ssRefreshWorks(WORK_ID);
   const cs2 = document.getElementById('candStatus');
   if(cs2) cs2.innerHTML = `🎞 <b>${esc(lbl)}</b> 대본으로 <b>새 작업</b>을 시작했어요 — 이어서 만드세요`;
 }
