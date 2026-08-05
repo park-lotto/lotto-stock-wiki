@@ -5,6 +5,7 @@ run_render: 사용자가 확인 후 최종 ffmpeg 렌더 → done.
 각 단계에서 mix_jobs.status를 갱신하고, 예외는 status='failed'+error로 잡는다.
 """
 import hashlib
+import re
 import subprocess
 import sys
 import traceback
@@ -62,6 +63,29 @@ def _beat_words(mp3_path, dur=None):
 
 def _source_video_id(i):
     return f"s{i}"
+
+
+# URL → 캐시 키(shortcode). script_extracts는 **shortcode**로 저장된다(담기·AI PICK·
+# prewarm 전부 그렇다). 반면 믹스 파이프라인 안에서 소스를 부르는 이름은 "s0"·"s1"이라,
+# 그걸로 캐시를 찾으면 **영원히 빗나간다**.
+#   ★2026-08-06 실사고: 캐시 재사용 코드(2026-07-24)가 `store.get_extract(vid)`로 vid="s0"을
+#   넘겨 **한 번도 적중한 적이 없었다**. 라이브 확인 — 저장된 추출 408건, 그 중 그 영상의
+#   캐시도 조건까지 충족(segments 12개·seg_id 전부·change 필드 있음)인데 매번 Gemini로
+#   재전사했다(실측 job ff3921a9ae4c: 작업 118초 중 85초가 다운로드+재추출).
+_SHORTCODE_RES = (
+    re.compile(r"instagram\.com/(?:reel|reels|p|tv)/([A-Za-z0-9_-]+)"),
+    re.compile(r"(?:youtube\.com/shorts/|youtu\.be/|youtube\.com/watch\?v=)([A-Za-z0-9_-]+)"),
+    re.compile(r"tiktok\.com/(?:@[^/]+/video/|v/)(\d+)"),
+)
+
+
+def _cache_key_for_url(url):
+    """이 URL의 script_extracts 캐시 키(shortcode). 못 알아내면 None."""
+    for rx in _SHORTCODE_RES:
+        m = rx.search(url or "")
+        if m:
+            return m.group(1)
+    return None
 
 
 # 성우 미선택(2단계 미리보기 등) 기본 성우 = 미나·표현(kr-mina-expressive, 2026-07-25 사장님 확정).
@@ -466,6 +490,9 @@ def run_mix_job(job_id, db_path, work_root):
         # 전사로 추출한다(느림·PROCESSING실패 근본해소). 기본 off=회귀0. 실측 후 승격.
         # 설계: docs/superpowers/specs/2026-07-29-프레임태깅-추출전환-design.md
         _use_frames = store.get_setting("frame_extract_enabled", "") == "1"
+        # vid("s0") → 원래 URL. 캐시 키(shortcode)를 되찾는 데 쓴다.
+        _url_of = {_source_video_id(i): u for i, u in enumerate(job["urls"])}
+
         def _extract(item):
             vid, path = item
             # 캐시 재사용(2026-07-24): 이 소스 대본을 담기/AI PICK/뽑기 때 이미 뽑아
@@ -475,7 +502,13 @@ def run_mix_job(job_id, db_path, work_root):
             #   segments가 비었거나 seg_id 없는 항목이 하나라도 있으면 캐시를 버리고 새로 추출한다.
             cached = None
             try:
-                cached = store.get_extract(vid)
+                # ★캐시 키는 shortcode다(2026-08-06 수정). 예전엔 vid("s0")로 찾아
+                #   **한 번도 적중하지 않았다** — 위 _cache_key_for_url 주석 참고.
+                _ck = _cache_key_for_url(_url_of.get(vid))
+                if _ck:
+                    cached = store.get_extract(_ck)
+                if cached is None:
+                    cached = store.get_extract(vid)      # 옛 방식도 남겨둔다(하위호환)
             except Exception:
                 cached = None
             segs = (cached or {}).get("segments")
