@@ -16,37 +16,40 @@ from shopping_shorts import edit_plan
 
 
 def _fixture(monkeypatch, delay=0.0, record=None):
-    """_single_source_candidates가 부르는 single_source/hook_patterns를 대역으로."""
-    import types as _t
+    """_single_source_candidates가 부르는 single_source/hook_patterns를 대역으로.
+
+    ★_one_candidate는 `from shopping_shorts import single_source`를 **함수 안에서**
+      한다. sys.modules를 바꿔치는 방식은 다른 테스트가 이미 진짜 모듈을 import해
+      둔 뒤엔 안 먹는다(단독 실행은 통과, 전체 실행은 실패 — 실제로 겪었다).
+      그래서 **진짜 모듈 객체의 속성을 monkeypatch**한다. monkeypatch가 테스트
+      끝에 원복하므로 다른 테스트에 새지 않는다."""
+    from shopping_shorts import hook_patterns as real_hp
+    from shopping_shorts import single_source as real_ss
 
     order = [{"start": 0.0, "end": 3.0, "video_id": "v", "text": "a"} for _ in range(4)]
 
-    def _beats():
+    def _beats(raw=None):
         return [{"narration": f"문장{i} 댓글에 '나도'", "covers": [i + 1]} for i in range(4)]
 
-    ss = _t.SimpleNamespace(
-        select_and_order=lambda seg, tgt: (18.0, 18.0, 18.0, order),
-        script_prompt=lambda *a, **k: "p",
-        BEATS_SCHEMA={}, ESCALATE_SCHEMA={}, RESTYLE_SCHEMA={},
-        parse_beats=lambda raw: _beats(),
-        over_budget=lambda b, u: (False, 0, 0),
-        shrink_prompt=lambda *a: "p",
-        cta_missing=lambda b: False,
-        fix_cta_prompt=lambda *a: "p",
-        escalate_prompt=lambda b: "p",
-        apply_restyle=lambda beats, call, style_name=None: beats,
-    )
-    monkeypatch.setattr(edit_plan, "single_source", ss, raising=False)
+    for name, val in (
+        ("select_and_order", lambda seg, tgt: (18.0, 18.0, 18.0, order)),
+        ("script_prompt", lambda *a, **k: "p"),
+        ("parse_beats", _beats),
+        ("over_budget", lambda b, u: (False, 0, 0)),
+        ("shrink_prompt", lambda *a, **k: "p"),
+        ("cta_missing", lambda b: False),
+        ("fix_cta_prompt", lambda *a, **k: "p"),
+        ("escalate_prompt", lambda b: "p"),
+        ("apply_restyle", lambda beats, call, style_name=None: beats),
+    ):
+        monkeypatch.setattr(real_ss, name, val, raising=False)
 
-    hp = _t.SimpleNamespace(
-        choose=lambda n, material_text="": [("discover", "우연한발견"),
-                                            ("y_stop_buy", "이제사지마"),
-                                            ("target", "대상호출")],
-        prompt_block=lambda p: "블록",
-    )
-    monkeypatch.setattr(edit_plan, "hook_patterns", hp, raising=False)
-    monkeypatch.setitem(__import__("sys").modules, "shopping_shorts.single_source", ss)
-    monkeypatch.setitem(__import__("sys").modules, "shopping_shorts.hook_patterns", hp)
+    monkeypatch.setattr(
+        real_hp, "choose",
+        lambda n, material_text="": [("discover", "우연한발견"),
+                                     ("y_stop_buy", "이제사지마"),
+                                     ("target", "대상호출")], raising=False)
+    monkeypatch.setattr(real_hp, "prompt_block", lambda p: "블록", raising=False)
 
     def call(prompt, schema, **kw):
         if record is not None:
@@ -93,16 +96,21 @@ def test_후보1개면_스레드_안쓴다(monkeypatch):
 def test_한_후보가_죽어도_나머지는_산다(monkeypatch):
     """스레드에서 예외가 새면 ex.map이 통째로 터져 대본이 0개가 된다."""
     call = _fixture(monkeypatch, delay=0.0)
-    real = edit_plan.single_source.parse_beats
+    from shopping_shorts import single_source as real_ss
+    real = real_ss.parse_beats          # _fixture가 이미 대역으로 바꿔둔 것
     state = {"n": 0}
+    import threading as _th
+    lock = _th.Lock()
 
-    def flaky(raw):
-        state["n"] += 1
-        if state["n"] == 2:            # 두 번째 호출만 터뜨린다
+    def flaky(raw=None):
+        with lock:                      # 병렬이라 카운터에 락이 필요하다
+            state["n"] += 1
+            mine = state["n"]
+        if mine == 2:                   # 두 번째 호출만 터뜨린다
             raise RuntimeError("모델 응답 깨짐")
         return real(raw)
 
-    monkeypatch.setattr(edit_plan.single_source, "parse_beats", flaky, raising=False)
+    monkeypatch.setattr(real_ss, "parse_beats", flaky, raising=False)
     out = edit_plan._single_source_candidates(
         [{"segments": [{"start": 0, "end": 3}], "full_text": "본문", "video_id": "v"}],
         {}, 18.0, 3, call, "generic")
