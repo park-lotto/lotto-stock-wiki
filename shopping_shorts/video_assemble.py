@@ -53,8 +53,25 @@ _FINAL_PRESET = "medium"
 # ffmpeg 스레드 상한(2026-07-30) — 워커를 여러 개 띄워 고객 작업을 동시에 처리하려면
 # 인코딩 하나가 코어를 다 먹어선 안 된다. 0은 "ffmpeg가 알아서 전부 사용"이라, 렌더 2건이
 # 겹치면 서로를 굶기며 둘 다 느려진다. 워커 수만큼 코어를 나눠 갖게 상한을 둔다.
-#   FFMPEG_THREADS 미설정 시 0(=제한 없음) → 기존 동작 그대로(워커 1개 환경 무영향).
-_FFMPEG_THREADS = int(os.getenv("FFMPEG_THREADS", "0") or 0)
+#
+# ★2026-08-06 기본값을 코어수/워커수로 자동 산정한다. 예전 기본은 0(무제한)이었는데,
+#   워커가 1개일 땐 그게 맞았지만 **워커 3개로 늘어난 뒤로는 셋이 각자 전 코어를 잡으려
+#   들어 서로를 굶긴다**(4코어에 12스레드 요구 = 컨텍스트 스위칭 낭비). 서버 env에
+#   FFMPEG_THREADS를 안 넣어두면 계속 0이라, 잊어도 안전하도록 코드가 기본을 준다.
+#   env로 명시하면 그게 항상 이긴다(0을 넣으면 종전처럼 무제한).
+#   ★하한 2: 코어÷워커를 그대로 쓰면 4코어/3워커 = 1스레드가 되는데, **셋이 동시에
+#   렌더하는 건 드문 일**이라 평소 렌더까지 1스레드로 기어가면 손해가 더 크다. x264는
+#   스레드 2개만 돼도 1개보다 확연히 빠르고, 겹칠 때의 과점유는 2 상한으로 충분히 막힌다.
+def _default_ffmpeg_threads():
+    try:
+        cores = os.cpu_count() or 1
+        workers = int(os.getenv("WORKER_COUNT", "3") or 3)
+        return max(2, cores // max(1, workers))
+    except Exception:                     # noqa: BLE001 — 산정 실패는 무제한으로(종전 동작)
+        return 0
+
+
+_FFMPEG_THREADS = int(os.getenv("FFMPEG_THREADS", "") or _default_ffmpeg_threads())
 
 
 # ── 중간 산출물은 "빠르게", 최종 1회만 "품질"(2026-07-31 렌더 단축) ──────────────
