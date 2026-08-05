@@ -27,14 +27,21 @@
     python -m shopping_shorts.archive_tagger --rounds 0     # 태울 게 없을 때까지 계속
 """
 import argparse
+import os
 import random
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 from shopping_shorts.config import DB_PATH
 from shopping_shorts.store import Store
 
 _ITEM_GAP_S = (0.3, 0.9)     # 태깅 사이 짧은 휴식(CDN 예의)
 _BUSY_POLL_S = 60            # 렌더 양보 중 재확인 주기
+# 한 배치를 몇 갈래로 동시에 태울지(2026-08-06). 순차 처리가 진짜 병목이었다 —
+# 키가 23개인데 한 번에 하나씩만 써서 하룻밤 8,655건에 그쳤다(이론상 50만건).
+# 키풀 로테이션은 _STATE_LOCK으로 이미 스레드안전하고 tag_one은 건별 독립이라
+# 그대로 병렬화된다. 환경변수로 조절: ARCHIVE_TAG_WORKERS.
+_WORKERS = max(1, int(os.getenv("ARCHIVE_TAG_WORKERS", "8")))
 
 
 def pick_batch(store, username, per_channel):
@@ -110,14 +117,23 @@ def run(per_channel=10, rounds=1, sleep=time.sleep, log=print):
             batch = pick_batch(store, u, per_channel)
             if not batch:
                 continue
-            ok = 0
-            for it in batch:
+            def _one(it):
+                """한 건 태깅 — 실패는 삼킨다(한 건이 배치를 멈추면 안 된다)."""
                 try:
-                    if tag_one(video_analysis, store, it):
-                        ok += 1
-                except Exception as e:   # noqa: BLE001 — 한 건 실패가 전체를 멈추면 안 된다
+                    return bool(tag_one(video_analysis, store, it))
+                except Exception as e:   # noqa: BLE001
                     log(f"[태거] @{u} {it['shortcode']} 실패(무시): {str(e)[:60]}")
-                sleep(random.uniform(*_ITEM_GAP_S))
+                    return False
+
+            if _WORKERS > 1:
+                with ThreadPoolExecutor(max_workers=_WORKERS) as ex:
+                    ok = sum(ex.map(_one, batch))
+                sleep(random.uniform(*_ITEM_GAP_S))   # 채널 사이 한 번만 쉰다
+            else:
+                ok = 0
+                for it in batch:
+                    ok += _one(it)
+                    sleep(random.uniform(*_ITEM_GAP_S))
             total += ok
             done_this_round += ok
             log(f"[태거] {rnd}바퀴 {idx}/{len(chans)} @{u}: {ok}/{len(batch)}건 "
