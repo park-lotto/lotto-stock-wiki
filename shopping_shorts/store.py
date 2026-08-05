@@ -1206,6 +1206,12 @@ class Store:
             rows = c.execute("SELECT username FROM archive_state WHERE status='done'").fetchall()
         return {r[0] for r in rows}
 
+    def archive_gone_usernames(self):
+        """삭제·개명으로 페이지가 없는 채널 — 크롤 대상에서 영구 제외."""
+        with self._conn() as c:
+            rows = c.execute("SELECT username FROM archive_state WHERE status='gone'").fetchall()
+        return {r[0] for r in rows}
+
     def heavy_job_running(self):
         """렌더·믹스류가 도는 중인가 — '사용하면서 수집' 원칙: 아카이브 크롤러가 양보한다."""
         with self._conn() as c:

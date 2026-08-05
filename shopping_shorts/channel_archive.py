@@ -76,6 +76,15 @@ def crawl_channel(username, max_scrolls=_MAX_SCROLLS):
             page.goto(url, timeout=config.INSTAGRAM_PW_TIMEOUT_MS,
                       wait_until="domcontentloaded")
             page.wait_for_timeout(3000)
+            # 삭제·개명된 채널 감지(2026-08-05): 인스타가 에러 라우트를 렌더한다.
+            # 이걸 error로 두면 pick_targets(팔로워순)가 매일 같은 죽은 대형 채널로
+            # 40개 한도를 채워 진도가 영영 안 나간다 → "gone"으로 영구 제외.
+            _body = page.content()
+            if ("페이지를 사용할 수 없습니다" in _body
+                    or "Sorry, this page isn't available" in _body):
+                ctx.close()
+                browser.close()
+                return [], url, "page_gone"
             stall = 0
             prev = len(seen)
             for _ in range(max_scrolls):
@@ -107,9 +116,9 @@ def crawl_channel(username, max_scrolls=_MAX_SCROLLS):
 
 
 def pick_targets(store):
-    """(엑셀 ∪ 발굴등록 − 차단) − done, 팔로워 내림차순 — 대형 채널부터."""
+    """(엑셀 ∪ 발굴등록 − 차단) − done − gone, 팔로워 내림차순 — 대형 채널부터."""
     removed = {(u or "").strip().lstrip("@").lower() for u in store.removed_usernames()}
-    done = store.archive_done_usernames()
+    done = store.archive_done_usernames() | store.archive_gone_usernames()
     best = {}
     for c in list(load_channels()) + list(store.discovered_channels()):
         u = (c.get("username") or "").strip().lstrip("@")
@@ -153,6 +162,9 @@ def run(limit=None, max_scrolls=_MAX_SCROLLS, sleep=time.sleep, log=print):
             # 그 사이 뒤쪽 채널은 아카이브에 아예 없었다. 게다가 큰 채널은 2,300개 중
             # 500개만 태깅되고 done으로 닫혀 나머지는 영영 안 붙었다.
             # 떼면 채널당 ~5.7분 → 3일이면 전 채널이 목록에 올라온다.
+        elif err == "page_gone":
+            store.archive_mark(u, "gone", note="페이지 없음(삭제/개명)")
+            log(f"[아카이브] @{u} 페이지 없음 → gone(영구 제외)")
         elif "/accounts/login" in (final_url or ""):
             walls += 1
             store.archive_mark(u, "login_wall", note=final_url[:120])
