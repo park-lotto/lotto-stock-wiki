@@ -356,6 +356,18 @@ class Store:
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_archive_user_views "
                       "ON channel_archive(username, views DESC)")
+            # 채널 표시명(2026-08-06) — 아카이브 카드를 @아이디 대신 한글 이름으로 띄운다.
+            # ★channel_archive에 컬럼을 더하지 않는 이유: 저긴 릴스 단위(7.8만행)라
+            #   채널당 1개인 이름을 행마다 중복 저장하게 된다. 채널 단위 표를 따로 둔다.
+            # ★reel_history에 끼워 넣지 않는 이유: 저건 '수집 이력'이라 릴스 행이 전제인데,
+            #   이름만 있는 가짜 행을 넣으면 활동시각 판정(instagram_activity_map)이 오염된다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS channel_names (
+                    username TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    updated_at TEXT
+                )
+            """)
             # 채널별 아카이브 진행상태 — done이면 대상에서 빠지므로 새로 등록한 채널만
             # 자동으로 줄을 선다(추적목록 − done 차집합).
             c.execute("""
@@ -1175,8 +1187,21 @@ class Store:
 
     # ── 채널 릴스 전체 아카이브(2026-08-03) ───────────────────────────────
     def archive_upsert_many(self, username, items, now_iso):
-        """아카이브에 릴스들을 upsert. 재크롤 시 views 등 최신값으로 갱신, first_seen 보존."""
+        """아카이브에 릴스들을 upsert. 재크롤 시 views 등 최신값으로 갱신, first_seen 보존.
+
+        items[*]['name']이 있으면 채널 표시명으로도 기록한다(2026-08-06) — 카드가
+        @아이디 대신 한글 이름을 띄우는 소스. **빈 값은 무시**한다: 응답 노드마다
+        user가 있기도 없기도 해서 빈 이름이 섞여 들어오는데, 그게 기존 이름을 덮으면
+        한 번 얻은 이름이 다음 크롤에 날아간다."""
         with self._conn() as c:
+            disp = next((str(i.get("name")).strip() for i in (items or [])
+                         if (i.get("name") or "").strip()), "")
+            if disp:
+                c.execute(
+                    "INSERT INTO channel_names(username, name, updated_at) VALUES(?,?,?) "
+                    "ON CONFLICT(username) DO UPDATE SET name=excluded.name, "
+                    " updated_at=excluded.updated_at",
+                    (username, disp, now_iso))
             for i in items:
                 c.execute(
                     "INSERT INTO channel_archive(username, shortcode, url, thumbnail, "
@@ -1242,13 +1267,23 @@ class Store:
         빈 이름은 아예 담지 않는다 — 화면이 `name || username`으로 폴백하므로 빈 문자열을
         넣으면 오히려 '이름 있는데 빈칸'이 된다.
         ★instagram_activity_map과 목적이 다르다(저건 활동시각 판정용이라 MAX(first_seen)까지
-        집계한다) — 여기선 이름만 필요해 가볍게 뽑는다."""
+        집계한다) — 여기선 이름만 필요해 가볍게 뽑는다.
+
+        ★소스 2개(2026-08-06): 수집 이력(reel_history)과 아카이브 크롤이 직접 기록한
+        channel_names. 아카이브 채널 518개 중 434개만 수집 이력에 있어서(실측) 나머지는
+        이름을 못 얻었다 — 크롤이 응답에서 주워 담기 시작하면 channel_names가 그 구멍을
+        메운다. 크롤이 최신이므로 **channel_names가 우선**이다."""
         with self._conn() as c:
             rows = c.execute(
                 "SELECT username, MAX(name) FROM reel_history "
                 "WHERE name IS NOT NULL AND name != '' GROUP BY username"
             ).fetchall()
-        return {r[0]: r[1] for r in rows if r[0] and r[1]}
+            out = {r[0]: r[1] for r in rows if r[0] and r[1]}
+            for u, n in c.execute(
+                    "SELECT username, name FROM channel_names WHERE name != ''"):
+                if u and n:
+                    out[u] = n          # 크롤이 직접 본 이름이 더 정확·최신
+        return out
 
     def remove_channel(self, username, name=""):
         """죽은 채널을 추적 제외목록에 추가(소프트 삭제). 발굴목록에 있었다면 함께 제거."""

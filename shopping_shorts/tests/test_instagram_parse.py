@@ -21,9 +21,12 @@ _NODE = {
 
 def test_parse_reel_node_fills_all_ten_keys():
     d = parse_reel_node(_NODE, "homeinon")
+    # ownerFullName 추가(2026-08-06): 아카이브 카드를 @아이디 대신 한글 이름으로 띄우려고
+    # 이미 받은 응답의 user.full_name을 주워 담는다(추가 요청 0건).
     assert set(d) == {
         "shortcode", "url", "timestamp", "caption", "commentsCount",
         "likesCount", "videoViewCount", "displayUrl", "videoUrl", "ownerUsername",
+        "ownerFullName",
     }
     assert d["shortcode"] == "DbMmu39Sph9"
     assert d["url"] == "https://www.instagram.com/reel/DbMmu39Sph9/"

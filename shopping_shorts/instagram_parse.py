@@ -133,6 +133,13 @@ def parse_reel_node(node, username):
         "displayUrl": _best_image(node),
         "videoUrl": _best_video(node),
         "ownerUsername": username,
+        # 채널 표시명(2026-08-06) — 아카이브 카드를 한글 이름으로 띄우려고 주워 담는다.
+        # ★이미 받은 응답에서 꺼낼 뿐이라 **추가 요청이 0건**이다(parse_search_item도
+        #   같은 user.full_name을 읽는다). 이 경로는 계정이 차단돼 세션을 돌려쓰는 중이라
+        #   요청을 한 건도 더 늘리면 안 된다.
+        # 노드에 user가 없는 경우가 흔하다(응답 모양이 여러 가지) → 빈 문자열로 안전 폴백.
+        "ownerFullName": ((node.get("user") or {}).get("full_name") or "")
+                         if isinstance(node.get("user"), dict) else "",
     }
 
 
