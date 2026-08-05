@@ -6,6 +6,7 @@ pipeline.atoms.key_vault의 공유 풀과 분리(2026-07-09, 공유 풀이 다�
 PerDay 문자열 매칭)만 key_vault의 순수 함수를 재사용하고, 로테이션·상태
 저장은 이 모듈 자체 상태 파일로 완전히 독립."""
 import json
+import os
 import threading
 import time
 from pathlib import Path
@@ -114,16 +115,42 @@ def _current_key_and_idx():
 _rr_cursor = {"i": 0}
 
 
+# 키별 최근 호출 시각(분당 한도 회피용, 2026-08-06). 무료등급은 키당 **분당 15건**이
+# 상한이라(실측: 16번째 요청에서 429), 병렬로 쏟아부으면 대부분이 429로 버려진다
+# — 태거 실측 성공률 20%, 9건/분. 429를 맞고 재시도하는 대신 **애초에 안 맞게**
+# 키마다 최소 간격을 두고 내준다. 하루 한도(RPD 500)는 이걸로 못 뚫는다 —
+# 그건 키 개수를 늘려야만 는다.
+_RPM_PER_KEY = int(os.environ.get("SHORTS_RPM_PER_KEY", "15"))
+_MIN_GAP_S = 60.0 / max(1, _RPM_PER_KEY)
+_key_last_used = {}
+
+
 def _next_live_key_and_idx():
-    """라이브 키를 라운드로빈으로 하나씩 반환(호출마다 다음 키). 다 소진되면 (None, None)."""
+    """라이브 키를 라운드로빈으로 하나씩 반환(호출마다 다음 키). 다 소진되면 (None, None).
+
+    2026-08-06: 분당 한도를 지키도록 '지금 쓸 수 있는' 키를 고른다. 라이브 키를
+    한 바퀴 돌며 마지막 사용 후 _MIN_GAP_S가 지난 키를 찾고, 전부 쿨다운 중이면
+    가장 빨리 풀리는 키가 풀릴 때까지 그만큼만 잔다(최대 _MIN_GAP_S).
+    키가 많아질수록 대기는 0에 수렴한다 — 키를 늘리면 그대로 빨라진다."""
     live = _live_key_indices()
     if not live:
         return None, None
-    with _STATE_LOCK:
-        i = _rr_cursor["i"] % len(live)
-        _rr_cursor["i"] = i + 1
-    idx = live[i]
-    return SHORTS_GEMINI_KEYS[idx], idx
+    while True:
+        with _STATE_LOCK:
+            now = time.monotonic()
+            start = _rr_cursor["i"] % len(live)
+            _rr_cursor["i"] = start + 1
+            soonest = None
+            for off in range(len(live)):
+                idx = live[(start + off) % len(live)]
+                ready_at = _key_last_used.get(idx, 0.0) + _MIN_GAP_S
+                if ready_at <= now:
+                    _key_last_used[idx] = now
+                    return SHORTS_GEMINI_KEYS[idx], idx
+                if soonest is None or ready_at < soonest:
+                    soonest = ready_at
+            wait = min(max(0.0, soonest - now), _MIN_GAP_S)
+        time.sleep(wait)   # 락 밖에서 잔다 — 다른 스레드를 막지 않는다
 
 
 def build_prompt(caption, channel, category):
