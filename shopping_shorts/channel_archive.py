@@ -32,6 +32,12 @@ from shopping_shorts.store import Store
 
 _MAX_SCROLLS = 200       # 채널당 스크롤 상한(약 12개/스크롤 → 대략 2400개까지)
 _STALL_LIMIT = 6         # 연속 N회 새 릴스 0이면 바닥으로 판정
+# 프록시 대역폭을 먹는 리소스 유형. 데이터는 전부 graphql(xhr) 응답 후킹으로
+# 받으므로 아래는 화면 그리기에만 쓰이고 우리는 쓰지 않는다 → 받을 이유가 없다.
+# ⚠️ stylesheet는 절대 넣지 마라(2026-08-06 실측). CSS를 막으면 레이아웃이 안 잡혀
+# 스크롤이 무한로딩을 못 깨우고, 같은 30스크롤에서 372건 → 12건으로 죽는다.
+# 대역폭은 조금 줄지만 데이터가 통째로 날아가므로 순손실이다.
+_BLOCKED_RESOURCES = ("image", "media", "font")
 _SCROLL_PAUSE_MS = 2200
 _CHANNEL_GAP_S = (15, 35)    # 채널 사이 랜덤 휴식
 _BACKOFF_S = 30 * 60         # 로그인벽/차단 의심 시 대기
@@ -103,6 +109,19 @@ def crawl_channel(username, max_scrolls=_MAX_SCROLLS, session_path=None, proxy=N
             ctx = browser.new_context(**ctx_kw)
             Stealth().apply_stealth_sync(ctx)
             page = ctx.new_page()
+
+            # 대역폭 절감(2026-08-06): 주거용 프록시는 GB 과금인데 채널당 87MB를
+            # 쓰고 있었다(실측). 그중 이미지·폰트·CSS는 우리가 한 바이트도 안 쓴다
+            # — 릴스 데이터는 전부 아래 _on_response의 graphql 후킹으로 들어온다.
+            # 실측: 26.4MB → 13.7MB(-48%), 같은 스크롤 수에서 수집 건수 동일.
+            # 인스타가 렌더를 막아 데이터가 안 나오는 날을 대비해 끌 수 있게 뒀다.
+            if os.getenv("ARCHIVE_BLOCK_ASSETS", "1") != "0":
+                def _route(route):
+                    if route.request.resource_type in _BLOCKED_RESOURCES:
+                        return route.abort()
+                    return route.continue_()
+
+                page.route("**/*", _route)
 
             def _on_response(resp):
                 if "graphql" not in resp.url and "/api/v1/clips/user/" not in resp.url:
