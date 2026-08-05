@@ -340,7 +340,8 @@ def _pick_better_extract(first, second, duration):
     return second if s2 > s1 else first
 
 
-def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=8):
+def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=8,
+                   use_boundaries=True):
     """영상 파일 → {"segments": [...seg_id 포함...], "full_text": str}. 실패 시 빈 결과.
 
     전용 키 풀 로테이션(comment_gen 재사용). 전용 풀 소진 시 빈 결과.
@@ -355,7 +356,19 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
     다른 모델이라 앞 모델의 혼잡과 무관하다."""
     if not SHORTS_GEMINI_KEYS:
         raise RuntimeError("script_extract: SHORTS_GEMINI_KEY가 설정되지 않았습니다")
+    # ★use_boundaries=False — 장면전환 힌트를 빼고 모델 자율 분할로 뽑는다(2026-08-06).
+    #   힌트는 보통 세분화에 도움되지만(35.8초 영상 실측: 힌트 103% vs 무힌트 73%),
+    #   **일부 영상에서는 모델이 힌트 개수를 '세그먼트 상한'처럼 받아들여** 앞쪽 경계만
+    #   쓰고 뒤쪽 대사를 거기에 우겨넣는다 → 영상 뒷부분이 통째로 날아간다.
+    #   실측(Dbjk5BXToB7, 21.1초): 힌트 있음 **55%**(11.6초에서 끊김, 같은 문장 6번 반복)
+    #   vs 힌트 없음 **81%**(17.0초, 마지막 CTA가 15~17초 제자리). 경계 22개를 다 줬는데
+    #   모델은 앞 12개만 썼다. 그래서 재추출 때는 **조건을 바꿔서** 다시 뽑는다 —
+    #   같은 힌트로 다시 부르면 같은 결과가 나올 뿐이다(그 27초가 순수 낭비였다).
+    #   ★_cuts·_fps는 힌트를 끄더라도 계산해 둔다 — 아래 모션레벨 계산이 쓴다.
+    #     (여기서 한 번 빠뜨려 UnboundLocalError로 추출이 통째로 빈 결과가 됐다)
     boundary_hint, _cuts, _fps = _boundary_hint(video_path)
+    if not use_boundaries:
+        boundary_hint = ""
     base_prompt = _PROMPT.format(caption=caption or "(캡션 없음)",
                                  boundaries=boundary_hint or "(감지 실패 — 화면·주제 변화로 판단)")
     prompt = base_prompt

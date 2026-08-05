@@ -375,7 +375,15 @@ def _conform_beats(beats, tts_dir, *, voice, global_pron=None):
 
 # 추출이 영상의 이만큼도 구간화하지 못하면 '빈약'으로 본다(2026-07-31).
 # 실측: 21초 영상이 2구간 7.4초(35%)로 나와 재료로 못 썼는데 화면엔 표시가 없었다.
-_MIN_COVERAGE = 0.55
+# ★0.55 → 0.75 (2026-08-06). 55%는 **영상 절반이 날아가도 통과**시키는 기준이었다.
+#   게다가 실측에서 실패값이 하필 정확히 55.0%(11.6/21.1=0.549)로 찍혀 경계에 걸렸다 —
+#   재시도가 되기도 하고 안 되기도 하는 회색지대. 뒤쪽 대사가 통째로 빠지면 사장님
+#   결과물이 11~16초로 짧아진다(원본 21초가 멀쩡히 있는데도). 같은 영상 5회 실측에서
+#   95%도 나왔으므로 75%는 충분히 도달 가능한 기준이다.
+_MIN_COVERAGE = 0.75
+# 커버리지가 낮을 때 다시 뽑는 횟수. 편차가 커서(55~95%) 몇 번 더 뽑으면 좋은 게 나온다.
+# 1회 추출이 20~30초라 무한정 늘릴 순 없다 — 3회면 실측 분포상 대부분 75%를 넘긴다.
+_EXTRACT_RETRIES = 3
 
 
 def _video_seconds(path):
@@ -540,11 +548,23 @@ def run_mix_job(job_id, db_path, work_root):
             #   2구간 7.4초로 뭉쳐 나와 재료가 사실상 없었고, 화면엔 아무 표시도 없어서
             #   "왜 A로만 만들어졌지?"로만 보였다. → 커버리지를 재서 낮으면 한 번 다시 뽑고,
             #   그래도 낮으면 결과에 표시를 남겨 상류가 사장님께 알릴 수 있게 한다.
+            # ★추출 커버리지는 **같은 영상·같은 조건에서도 크게 흔들린다**(2026-08-06 실측).
+            #   Dbjk5BXToB7(21.1초)을 5회 반복: 67% / 95% / 55% / 55% / 55% — 평균 65%.
+            #   영상이나 힌트 문제가 아니라 모델 출력의 확률적 편차다(한때 '힌트가 범인'
+            #   이라고 봤으나 표본 1개짜리 오판이었다). 뒷부분이 통째로 날아가면 사장님
+            #   결과물이 11~16초로 짧아진다 — 원본 21초가 멀쩡히 있는데도.
+            #   그래서 **낮으면 여러 번 다시 뽑고 가장 좋은 것을 쓴다**. 재시도는 조건을
+            #   바꿔가며(힌트 on/off 번갈아) 한다 — 같은 조건 반복은 같은 실패를 부른다.
             cov = _extract_coverage(r, path)
-            if cov is not None and cov < _MIN_COVERAGE:
-                r2 = extract_script(path, vid, caption=captions.get(vid, ""))
+            for _try in range(_EXTRACT_RETRIES):
+                if cov is None or cov >= _MIN_COVERAGE:
+                    break
+                r2 = extract_script(path, vid, caption=captions.get(vid, ""),
+                                    use_boundaries=bool(_try % 2))
                 cov2 = _extract_coverage(r2, path)
-                if cov2 is None or cov2 > (cov or 0):
+                if cov2 is not None and cov2 > (cov or 0):
+                    print(f"[extract] {vid} 재추출 {_try + 1}회차로 개선: "
+                          f"{cov:.0%} → {cov2:.0%}", flush=True)
                     r, cov = r2, cov2
             r["coverage"] = cov
             r["weak_extract"] = bool(cov is not None and cov < _MIN_COVERAGE)
