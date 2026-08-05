@@ -122,8 +122,12 @@ def select_and_order(segments, target_seconds=None):
 
 
 def line_count(used_secs, n_cuts):
-    """나레이션 문장 수 — 컷 수보다 적게(한 문장이 컷 2~3개를 덮는다)."""
-    return max(3, min(n_cuts, round(used_secs / _SECS_PER_LINE)))
+    """나레이션 문장 수 — 컷 수보다 적게(한 문장이 컷 2~3개를 덮는다).
+
+    ★상한 9(2026-08-04 실측 job 923d/285d): 43초 원본·컷 25개 → 13문장이 요구되자
+    글자예산에 눌려 "찌든 때 밀면 끝"류 전보문이 됐다(사장님 "대본이 이상해").
+    문장당 4~5초가 자연스러운 호흡이다 — 컷 커버는 코드가 배정하니 문장이 적어도 안전."""
+    return max(3, min(n_cuts, 9, round(used_secs / _SECS_PER_LINE)))
 
 
 def char_budget(used_secs):
@@ -149,10 +153,53 @@ def script_prompt(order, used_secs, hook_block):
             f"3. ★전체 합계 **{total}자를 넘기지 마라**(화면 {used_secs:.1f}초). 이게 제일 중요하다 —\n"
             f"   넘으면 영상이 끝났는데 말이 남는다. 한 문장은 평균 {max(8, total // max(1, n_lines))}자 정도다.\n"
             "4. 컷 순서대로 이야기가 이어져야 한다. 첫 문장은 위 훅 패턴으로 시작하라.\n"
+            # ★2026-08-04 원본대조 실측(job 53bd4a4a): 후보 3개 전부 '다이소'가 사라지고
+            #   CTA가 혜택 설명문으로 바뀜. 원본의 파는 힘(구매처·참여유도)은 각색해도 보존.
+            "   원본대사에 구매처·브랜드(다이소·쿠팡 등)가 있으면 대본 어딘가에 **한 번** "
+            "자연스럽게 살려라 — 위치는 자유(뒷부분·CTA 근처도 좋다). ★단 스토리와 모순되게 "
+            "끼워넣지 마라(예: '독일 친구가 알려줬다'는 이야기에 '쿠팡에서 찾은'을 훅에 박으면 "
+            "출처가 둘이 된다 — 그럴 땐 구매처를 뒤로 미뤄 '쿠팡에서 샀어요'로 풀어라).\n"
+            "   (2026-08-04 완화: 훅 강제였더니 스토리 모순 발생 — 사장님 지시로 위치 자유화)\n"
             "5. 화면 설명과 어긋나는 말을 지어내지 마라.\n"
-            "6. 마지막 문장은 '댓글에 OO 남겨주세요'로 끝내라(링크·프로필 금지).\n\n"
+            "6. ★마지막 문장은 **반드시** \"댓글에 '키워드' 남겨주시면 [받는 것] 드릴게요\" "
+            "형태로 끝내라(링크·프로필 금지). ★남기면 뭘 받는지(제가 산 링크·정확한 방법·"
+            "최저가 정보)를 반드시 말하라 — 받는 게 안 보이면 아무도 안 남긴다. "
+            "감상('참 좋네요')으로 끝나거나 '댓글'이 마지막 문장에 없으면 통째로 버려진다. "
+            "원본대사에 참여유도(예: \"'나도' 남겨주세요\")가 있으면 그 키워드를 이어받아라.\n"
+            "7. ★중간 문장 중 **하나는 반드시 고조 연결어로 시작**하라 — '심지어' '더군다나' "
+            "'근데 이게 대박인 게' '놀랍게도' '이럴 수가 있나 싶게' 중 소재에 맞는 것 하나"
+            "(훅·마지막 문장엔 금지, 두 번 이상도 금지). 이야기가 한 단계 올라가는 문장 앞에 "
+            "놓고, 연결어 뒤엔 반드시 **앞에서 안 나온 새로운 추가 장점**을 말하라 — "
+            "이미 말한 장점 반복은 고조가 아니라 동어반복이다. 그리고 종결어미를 다양하게 — 전 문장이 '~요/~니다'로 똑같으면 "
+            "낭독문처럼 들린다('~거든요' '~더라고요' '~죠' 섞기).\n\n"
             "[컷]\n" + json.dumps(cuts, ensure_ascii=False, indent=1) + "\n\n"
             "JSON만: {\"beats\":[{\"n\":1,\"covers\":[1,2],\"narration\":\"...\"}]}")
+
+
+ESCALATE_SCHEMA = {
+    "type": "object",
+    "properties": {"n": {"type": "integer"}, "narration": {"type": "string"}},
+    "required": ["n", "narration"],
+}
+
+
+def escalate_prompt(beats):
+    """고조 문장 재작성 프롬프트(2026-08-04 사장님: "연결어랑 뒷내용이 안 이어진다 — 디벨롭해라").
+
+    기계적으로 연결어만 앞붙이면 '심지어' 뒤에 이미 말한 장점이 반복돼 고조가 안 된다.
+    중간 문장 중 하나를 골라 **앞 문장들을 한 단계 넘는 새 장점**으로 다시 쓰게 한다."""
+    import json
+    cur = [{"n": i + 1, "narration": (b.get("narration") or "")}
+           for i, b in enumerate(beats)]
+    return ("아래는 숏폼 나레이션이다. 구조는 훅→문제→해결장점→**고조(한 단계 위 장점)**→CTA다.\n"
+            "중간 문장(첫 문장·마지막 문장 제외) 중 고조 자리에 가장 어울리는 것 **하나**를 골라,\n"
+            "'심지어 / 놀랍게도 / 근데 이게 대박인 게 / 더군다나' 중 하나로 시작하면서\n"
+            "**앞 문장들에서 아직 안 나온 새로운 장점**으로 이어지게 다시 써라.\n"
+            "규칙: ①앞 문장 내용의 반복·재표현 금지 — 반드시 새 정보로 한 단계 올라가야 한다\n"
+            "②원래 문장이 말하던 화면(장면)과 어긋나는 내용을 지어내지 마라 — 그 문장의 소재를\n"
+            "  유지하되 '더 놀라운 점'으로 각도를 올려라 ③길이는 원래 문장의 ±20% ④말투 유지.\n\n"
+            + json.dumps(cur, ensure_ascii=False, indent=1)
+            + "\n\nJSON만: {\"n\": 고른 문장 번호, \"narration\": \"다시 쓴 문장\"}")
 
 
 def parse_beats(resp):
@@ -172,6 +219,29 @@ def over_budget(beats, used_secs, tol=0.15):
     chars = sum(len((b.get("narration") or "")) for b in (beats or []))
     secs = chars / _CHARS_PER_SEC
     return (secs > used_secs * (1 + tol)), secs, secs - used_secs
+
+
+def cta_missing(beats):
+    """마지막 문장에 댓글 유도가 없는가 — 실측 2026-08-04: 프롬프트만으론 2/3만 지켜져
+    코드 교정이 필요했다(감상문 '참 좋네요'류로 끝나는 후보가 계속 나옴)."""
+    if not beats:
+        return False
+    return "댓글" not in (beats[-1].get("narration") or "")
+
+
+def fix_cta_prompt(beats, source_text=""):
+    """마지막 문장만 댓글 CTA로 고쳐 받는 교정 프롬프트(shrink와 같은 방식).
+
+    전체 재생성이 아니라 마지막 문장만 — 다른 문장 품질을 흔들지 않는다."""
+    import json
+    cur = [{"n": b.get("n"), "covers": b.get("covers"), "narration": b.get("narration")}
+           for b in beats]
+    kw = "나도" if "나도" in (source_text or "") else "정보"
+    return ("아래 나레이션의 **마지막 문장만** 고쳐라. 나머지는 글자 하나 바꾸지 마라.\n"
+            f"마지막 문장은 반드시 \"댓글에 '{kw}' 남겨주세요\" 형태의 댓글 유도로 끝내라"
+            "(길이는 지금 마지막 문장과 비슷하게, 링크·프로필 금지).\n\n"
+            + json.dumps(cur, ensure_ascii=False, indent=1)
+            + "\n\nJSON만: {\"beats\":[{\"n\":1,\"covers\":[1,2],\"narration\":\"...\"}]}")
 
 
 def shrink_prompt(beats, used_secs):

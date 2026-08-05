@@ -9,6 +9,7 @@ import secrets
 import shutil
 import socket
 import tempfile
+import time
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone, timedelta
@@ -620,6 +621,34 @@ def _attach_posted_at(items):
     return items
 
 
+def _attach_durations(items, store):
+    """길이 캐시(reel_durations)를 실어 보내고, 빈 곳이 있으면 백필을 예약한다(2026-08-04).
+
+    인스타 목록 수집엔 길이가 아예 없다(그리드 GraphQL 실측) — duration_backfill이
+    yt-dlp 메타로 shortcode당 평생 1회 채운 캐시를 여기서 결합한다. 백필 예약은
+    1시간에 1번 + 큐에 이미 있으면 스킵 — 조회 경로가 크롤을 몰아치지 않게."""
+    missing = False
+    if items:
+        durs = store.duration_map([i.get("shortcode") for i in items])
+        for i in items:
+            if i.get("duration") in (None, "", 0):
+                d = durs.get(i.get("shortcode"))
+                if d is not None:
+                    i["duration"] = d
+                else:
+                    missing = True
+    global _DURFILL_LAST
+    now = time.time()
+    if missing and now - _DURFILL_LAST > 3600 \
+            and not store.queue_has_pending("durfill", "k", "1"):
+        _DURFILL_LAST = now
+        store.enqueue("durfill", {"k": "1"})
+    return items
+
+
+_DURFILL_LAST = 0.0
+
+
 @app.get("/api/reference")
 def api_reference(platform: str = "instagram"):
     """마지막 수집 결과 반환 (프론트 초기 로드용). platform=플랫폼(기본 인스타)."""
@@ -636,6 +665,7 @@ def api_reference(platform: str = "instagram"):
         items = [i for i in items
                  if (i.get("username") or "").strip().lstrip("@").lower() not in blocked]
     _attach_vision_tags(items, store)   # 백그라운드로 채워진 주제태그를 실어 보냄(검색 정확도 승격)
+    _attach_durations(items, store)     # ⏱ 영상 길이 캐시 결합 + 빈 곳 백필 예약
     if platform == "instagram":
         _attach_posted_at(items)        # 'X시간 전' 실시간 계산용 발행시각
     return {"ok": True, "items": items, "collected_at": collected_at}
@@ -7146,7 +7176,9 @@ def api_produce_aipick(request: Request, work_id: str = "", forced: str = ""):
 #      영구 캐시돼 클라가 계속 미추출로 오인한다(인스타 릴스 실패의 정체)
 #   ④ 호출당 건수 상한 + 시도 횟수 상한 — 최악의 경우에도 소모가 유한하다
 _AUTOLOAD_MAX_PER_CALL = 4      # 한 번 호출로 새로 태울 수 있는 영상 수
-_AUTOLOAD_MAX_ATTEMPTS = 1      # shortcode당 자동추출 총 시도 횟수(넘으면 영구 스킵)
+# 1 → 3 (2026-08-04): prewarm과 같은 완화 — 인스타 일시 실패 1번으로 영구 스킵되면
+# 재담기가 조용히 죽는다. 3회면 폭주 차단은 유지하면서 일시 실패를 흡수한다.
+_AUTOLOAD_MAX_ATTEMPTS = 3      # shortcode당 자동추출 총 시도 횟수(넘으면 영구 스킵)
 # 동시에 추출할 영상 수(2026-07-30). 대기의 정체가 제미니 응답이라 동시에 올리면 총 시간이
 # '가장 느린 1개'로 수렴한다. 다만 무제한으로 올리면 제미니 429가 몰려 오히려 느려지고 키가
 # 소진되므로 3으로 묶는다(_AUTOLOAD_MAX_PER_CALL=4와는 다른 축 — 그건 '총 몇 개').
@@ -7193,15 +7225,20 @@ def api_produce_autoload(request: Request, body: dict):
             store.produce_pick_add(code, customer_id=cid)
             slots[i] = {"shortcode": code, "status": "already"}
             continue
-        # ② DB 래치 — 한 번 실패한 영상은 다시 태우지 않는다(무한루프 차단의 핵심)
-        if tried.get(code, 0) >= _AUTOLOAD_MAX_ATTEMPTS:
-            slots[i] = {"shortcode": code, "status": "skipped_latched"}
-            continue
         if _ssrf_guard(*[u for u in (url, item.get("video_url")) if u]):
             slots[i] = {"shortcode": code, "status": "failed_download"}
             continue
 
+        # ②-a 캐시를 **래치보다 먼저** 본다(2026-08-04 실사고 DQohOUqgdRt): 수동 대본뽑기로
+        # 추출이 이미 있는데도 래치가 앞에 있어 skipped_latched → 도서관 적재가 영영 안 돼
+        # AI PICK(대본 3안 버튼)이 안 떴다. 캐시 히트는 제미니 비용 0이라 래치(비용 폭주
+        # 차단 장치)가 막을 이유가 없다.
         cached = store.get_extract(code)
+        if not (cached and (cached.get("full_text") or "").strip()):
+            # ②-b DB 래치 — 상한까지 실패한 영상은 다시 태우지 않는다(무한루프 차단의 핵심)
+            if tried.get(code, 0) >= _AUTOLOAD_MAX_ATTEMPTS:
+                slots[i] = {"shortcode": code, "status": "skipped_latched"}
+                continue
         if cached and (cached.get("full_text") or "").strip():
             # 캐시 히트 — 제미니 비용도 상한도 안 쓴다(담기 예열이 채워둔 경우가 이것).
             todo.append({"i": i, "item": item, "code": code, "url": url, "charged": False,
@@ -8804,9 +8841,12 @@ def api_archive_similar(request: Request, shortcode: str, limit: int = 40,
          "views": r[4], "likes": r[5], "comments": r[6], "posted_at": r[7],
          "overlap": ov, "same_product": r[1] in verified}
         for ov, r in scored[:max(1, min(limit, 100))]]
-    # no_tags는 이제 '태그도 없고 제품명 경로로도 못 찾음'일 때만 — 결과가 있으면
-    # 태그가 없어도 정상 결과로 내보낸다.
-    return {"ok": True, "no_tags": (not src_t) and not items, "src_tags": sorted(src_t),
+    # no_tags는 '태그도 없고 제품명도 못 읽음'일 때만. 제품명을 읽었는데 결과가 0이면
+    # no_tags가 아니다 — 프론트가 '같은 제품이 아직 없다'는 정직한 안내를 하게 한다
+    # (실사고: 냉장고 영상이 '스테인리스 냉장고'로 판독됐는데도 '판독 없음'으로 안내됨).
+    return {"ok": True,
+            "no_tags": (not src_t) and not src_product and not known_q and not items,
+            "src_tags": sorted(src_t),
             "src_product": src_product, "verified_count": len(verified), "items": items}
 
 

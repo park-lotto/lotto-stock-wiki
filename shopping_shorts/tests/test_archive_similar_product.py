@@ -83,3 +83,20 @@ def test_untagged_query_and_no_product_reports_no_tags(db):
          patch("shopping_shorts.product_name.identify_many", lambda items, dbp: {}):
         out = ap.api_archive_similar(request=None, shortcode="NADA")
     assert out["no_tags"] is True and out["items"] == []
+
+
+def test_product_read_but_no_match_is_not_no_tags(db):
+    """제품명은 읽었는데 같은 제품이 0건이면 no_tags가 아니다 — '판독 없음' 오안내 회귀."""
+    path = db
+    store = Store(path)
+    with store._conn() as c:
+        c.execute("INSERT INTO channel_archive(username, shortcode, url, thumbnail, "
+                  " views, likes, comments, posted_at) VALUES('chan_q','FRIDGE','u','t',1,1,1,'2026-01-01')")
+    with patch.object(ap, "DB_PATH", path), \
+         patch.object(ap, "_require_admin", lambda req: None), \
+         patch("shopping_shorts.product_name.identify_many",
+               lambda items, dbp: {"FRIDGE": "스테인리스 냉장고"}):
+        out = ap.api_archive_similar(request=None, shortcode="FRIDGE")
+    assert out["no_tags"] is False
+    assert out["src_product"] == "스테인리스 냉장고"
+    assert out["items"] == []

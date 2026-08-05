@@ -258,7 +258,11 @@ async function archiveSimilar(sc){
   catch(e){ body.innerHTML='<div class="empty">❌ '+esc(e.message)+'</div>'; return; }
   if(d.no_tags){ body.innerHTML='<div class="empty">이 영상은 태그·제품명 판독이 아직 없어요 — 백그라운드 태깅이 돌고 있습니다. 잠시 뒤 다시 눌러주세요.</div>'; return; }
   if(!d.ok){ body.innerHTML='<div class="empty">❌ 조회 실패</div>'; return; }
-  if(!(d.items||[]).length){ body.innerHTML='<div class="empty">아카이브에서 같은 소재를 못 찾았어요 — 크롤이 더 쌓이면 늘어납니다(백그라운드 진행 중).</div>'; return; }
+  if(!(d.items||[]).length){
+    body.innerHTML='<div class="empty">'+(d.src_product
+      ? '📦 제품은 <b>'+esc(d.src_product)+'</b>(으)로 읽었는데, 아카이브에 같은 제품이 아직 없어요 — 제품명 백필이 진행 중이라 곧 늘어납니다.'
+      : '아카이브에서 같은 소재를 못 찾았어요 — 크롤이 더 쌓이면 늘어납니다(백그라운드 진행 중).')+'</div>';
+    return; }
   const nSame=d.verified_count||0;
   const head=d.src_product
     ? `<div style="margin-bottom:10px">

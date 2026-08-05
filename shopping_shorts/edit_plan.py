@@ -1993,7 +1993,13 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "- 훅·CTA·풀어내는 순서는 **후보마다 개성 있게** 달라야 한다. 다만 그 차이는 "
         f"**원본의 어느 대목을 앞세우느냐**에서 나와야지, {n}개가 각자 다른 이야기를 "
         "지어내는 게 아니다.\n"
-        "- 말투는 옆에서 썰 푸는 구어체. 어떻게 살릴지는 네가 판단해라.\n\n"
+        "- 말투는 옆에서 썰 푸는 구어체. 어떻게 살릴지는 네가 판단해라.\n"
+        # ★고조 연결어(2026-08-04 사장님 지시): 스토리 중간에 놀람을 쌓는 연결어를 꼭 넣어라.
+        #   비트가 각자 놀며 뚝뚝 끊기는 걸 막는 가장 싼 장치 — 문장 사이를 '그리고'가 아니라
+        #   '한 단계 더'로 잇는다. 규칙 더미 금지 교훈(2026-07-31)에 따라 지시는 이 한 줄만.
+        "- ★스토리 중간(전개·반전 비트)에 **놀람을 쌓는 연결어를 1~2번** 넣어라 — "
+        "'심지어' '더군다나' '근데 이게 대박인 게' '놀랍게도' '이럴 수가 있나 싶게' "
+        "'여기서 끝이 아니에요' 같은 것(소재에 맞는 걸 골라 변주, 매 문장 금지·훅과 CTA엔 금지).\n\n"
         "[장면과 대사]\n"
         "- 각 비트에 그 대사가 실제로 보이는 seg_id를 붙여라(2~4개, 시간순). 인벤토리에 없는 "
         "seg_id 금지, 같은 seg_id 재사용 금지.\n"
@@ -3001,7 +3007,15 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
     실패(빈 후보)면 None을 돌려 기존 경로로 폴백한다(회귀0).
     """
     from shopping_shorts import single_source, hook_patterns
-    segments = next((s.get("segments") for s in source_scripts if s.get("segments")), [])
+    _src_entry = next((s for s in source_scripts if s.get("segments")), {})
+    segments = _src_entry.get("segments") or []
+    # ★video_id 필수(2026-08-04 실사고 job ed7445bfa4e7): extract의 세그먼트에는 video_id가
+    #   없다(소스 키 아래 중첩). 없이 내보내면 조립기가 원본 mp4를 못 찾아 그 비트의 클립이
+    #   전멸하고, video_assemble의 '클립 0개 비트는 조용히 스킵'에 걸려 **훅이 통째로
+    #   빠진 미리보기**가 나갔다(화면보충이 붙은 비트만 우연히 살아남았다).
+    _vid = _src_entry.get("video_id")
+    for _s in segments:
+        _s.setdefault("video_id", _vid)
     span, budget, used, order = single_source.select_and_order(segments, target_seconds)
     if not order:
         return None
@@ -3026,6 +3040,56 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
                 call(single_source.shrink_prompt(beats, used), single_source.BEATS_SCHEMA))
             if b2:
                 beats = b2
+        if not beats:
+            continue
+        # CTA 교정(2026-08-04): 마지막 문장에 '댓글'이 없으면 그 문장만 고쳐 받는다(2회).
+        # 실측: 프롬프트 강화 후에도 3후보 중 1~2개가 감상문으로 끝났다 — 코드로 보장한다.
+        for _ in range(2):
+            if not single_source.cta_missing(beats):
+                break
+            b3 = single_source.parse_beats(
+                call(single_source.fix_cta_prompt(beats, _mat), single_source.BEATS_SCHEMA))
+            if b3 and not single_source.cta_missing(b3):
+                beats = b3
+        if single_source.cta_missing(beats):
+            # LLM 교정까지 실패(키 소진·429)해도 CTA는 보장 — 결정적 문구로 마지막 문장 교체.
+            kw = "나도" if "나도" in _mat else "정보"
+            beats[-1]["narration"] = f"방법이 궁금하면 댓글에 '{kw}' 남겨주시면 바로 보내드릴게요."
+        # ★CTA 비트 생존 보장(2026-08-04 실측): 모델이 CTA를 제대로 써도 covers가 비면
+        # 아래 커버 배정에서 컷 0개 → 통째로 탈락 → 앞 문장이 [cta] 자리로 밀려
+        # "안심이라 최고예요"류 감상문이 CTA가 됐다(fix_cta 호출 0회가 증거 — 프롬프트
+        # 문제가 아니었다). 마지막 컷을 CTA 비트 소유로 강제한다.
+        if beats:
+            lastc = len(order)
+            if lastc not in {int(c) for c in (beats[-1].get("covers") or [])
+                             if str(c).lstrip("-").isdigit()}:
+                for b in beats[:-1]:
+                    b["covers"] = [c for c in (b.get("covers") or [])
+                                   if str(c).lstrip("-").isdigit() and int(c) != lastc]
+                beats[-1]["covers"] = (beats[-1].get("covers") or []) + [lastc]
+        # 고조 연결어(2026-08-04 사장님 지시 "꼭 넣어줘"): 프롬프트로는 0/3 — 글자예산
+        # 규칙('제일 중요')에 밀리고 shrink의 '수식어 덜어내라'에 깎인다(실측). 중간 비트
+        # 하나에 코드가 앞붙인다(후보마다 다른 연결어 = 말투 변주, +4~8자는 예산 오차 안).
+        _CONNS = ["심지어", "놀랍게도", "근데 이게 대박인 게", "더군다나"]
+        if len(beats) >= 3 and not any(
+                cn in (b.get("narration") or "") for b in beats for cn in _CONNS):
+            # ★고조 재작성(2026-08-04 사장님 "연결어랑 뒷내용이 안 이어진다"): 기계적
+            #   앞붙이기는 '심지어' 뒤에 이미 말한 장점이 와서 고조가 안 됐다. LLM이
+            #   자리를 고르고 **앞에 안 나온 새 장점**으로 그 문장을 다시 쓴다.
+            #   실패(키 소진 등) 시에만 종전 기계식 앞붙이기로 폴백.
+            _esc = call(single_source.escalate_prompt(beats), single_source.ESCALATE_SCHEMA)
+            _n = _esc.get("n") if isinstance(_esc, dict) else None
+            _txt = (_esc.get("narration") or "").strip() if isinstance(_esc, dict) else ""
+            if (_txt and isinstance(_n, int) and 2 <= _n <= len(beats) - 1
+                    and any(c in _txt for c in _CONNS)):
+                beats[_n - 1]["narration"] = _txt
+            else:
+                mid = beats[len(beats) // 2]
+                mid["narration"] = f"{_CONNS[i % len(_CONNS)]} {mid['narration']}"
+        # ★빈 나레이션 비트는 **커버 배정 전에** 걸러낸다(2026-08-04 라이브 실측 job
+        #   bcdf871a6d57: 추천 후보가 16.8초 — 버려진 비트의 컷이 같이 사라져 하한 미달).
+        #   먼저 거르면 아래 '구멍은 직전 비트가 이어받는다'가 그 컷들을 살린다.
+        beats = [b for b in beats if (b.get("narration") or "").strip()]
         if not beats:
             continue
         # covers → 화면 배정. 모델이 빠뜨린 컷은 직전 비트에 붙여 **컷 100% 커버**를 코드가
@@ -3074,7 +3138,35 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         if len(plan_beats) >= 4:
             plan_beats[-2]["role"] = "story_resolution"
         plan_beats = _fix_beat_structure(plan_beats)
+        # ★비트별 콘폼(2026-08-04 실측 job 923d/285d): 총량은 예산 안인데 **비트별로**
+        #   문장이 제 화면보다 길면 _fill_beat_screen_time이 클립을 재사용해 화면을
+        #   나레이션에 맞춰 뻥튀기 — 원본 43초짜리가 61~80초 영상이 됐다(중복 금지 위반).
+        #   1소스는 화면(컷 100% 커버)이 주인이다 — 문장을 화면 길이에 맞춰 압축한다.
+        for b in plan_beats:
+            if b is plan_beats[-1]:
+                continue    # CTA는 압축 제외 — 마지막 컷이 짧으면 보상 문구("보내드릴게요")가
+                            # 잘려나간다(실측: 1.9초 컷에 맞춰 "댓글에 나도 남겨요"로 뭉개짐).
+                            # 화면 부족분은 아래 _fill_beat_screen_time이 채운다.
+            if any((b["narration"] or "").startswith(c) for c in _CONNS):
+                continue    # 고조 문장은 압축 제외 — conform이 연결어를 군더더기로 깎아
+                            # 사장님 지시("연결어 꼭") 문장이 소리 없이 사라졌다(실측).
+            _scr = sum(max(0.0, float(s.get("end") or 0) - float(s.get("start") or 0))
+                       for s in [b["primary"]] + b["alternates"])
+            _spoken = len("".join((b["narration"] or "").split())) / _SYLLABLES_PER_SEC
+            if _scr > 0.5 and _spoken > _scr * 1.1:
+                _new = conform_narration(b["narration"], _scr)
+                if _new:
+                    b["narration"] = _new
+                    b["caption_lines"] = None
+            b["target_seconds"] = round(max(1.5, len(b["narration"].strip()) / _SYLLABLES_PER_SEC), 1)
         plan_beats = _fill_beat_screen_time(plan_beats, seg_map)
+        # ★최종 안전망(2026-08-04): 위 CTA 보장 3중(프롬프트·LLM교정·컷생존)에도 뒤
+        # 단계(_fix_beat_structure 등)가 마지막 비트를 갈아치우는 경로가 실측 1/6 남았다.
+        # plan 확정 직후라 어떤 경로로 와도 여기서 잡힌다.
+        if plan_beats and "댓글" not in (plan_beats[-1].get("narration") or ""):
+            _kw = "나도" if "나도" in _mat else "정보"
+            plan_beats[-1]["narration"] = f"댓글에 '{_kw}' 남겨주시면 방법 바로 보내드릴게요."
+            plan_beats[-1]["caption_lines"] = None
         plan = {"structure": "free", "beats": plan_beats, "detected_type": detected,
                 "single_source": True, "hook_pattern": pat[0],
                 "affiliate_target": "", "plagiarism_flags": _plagiarism_flags(plan_beats, src_texts)}
