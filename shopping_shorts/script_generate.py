@@ -23,6 +23,15 @@ _MODEL = comment_gen._MODEL
 _GEN_GROUP = "general"
 
 
+def _style_extra():
+    """채널 스타일 블록(style_profiles, 2026-08-05). 실패해도 생성을 죽이지 않는다."""
+    try:
+        from shopping_shorts import style_profiles
+        return style_profiles.style_block()
+    except Exception:
+        return ""
+
+
 def _call_json(prompt, schema):
     """key_vault 캐스케이드 키풀로 JSON 1콜. 소진키는 마킹하고 다음 키로.
     무키·전부실패면 {} (호출부는 반드시 빈 dict 허용 — fail-open)."""
@@ -263,8 +272,9 @@ def generate_mix(sources, target_seconds=30, n=3, max_key_tries=3, bank_context=
     n = max(1, min(int(n or 3), 5))
     seconds = max(5, min(int(target_seconds or 30), 90))
     words = max(15, round(seconds * 2.3))
-    prompt = _MIX_PROMPT.format(sources=_mix_source_block(sources[:3]), seconds=seconds, words=words, n=n,
-                                bank=("\n\n" + bank_context) if bank_context else "")
+    prompt = (_MIX_PROMPT.format(sources=_mix_source_block(sources[:3]), seconds=seconds, words=words, n=n,
+                                 bank=("\n\n" + bank_context) if bank_context else "")
+              + _style_extra())   # ★채널 스타일(2026-08-05) — format 뒤에 붙인다({} 무관)
     return _verify_and_fix(_generate_drafts(prompt), seconds)
 
 
@@ -331,10 +341,11 @@ def generate_variations(structure, full_text, elem_modes, category_lookup, mode=
             "(중복 회피) 리라이트하라. 없던 내용이나 다른 제품을 지어내지 마라." + subj_line)
     seconds = 30
     words = max(15, round(seconds * 2.3))
-    prompt = _GEN_PROMPT.format(
+    prompt = (_GEN_PROMPT.format(
         full_text=full_text[:3000], elems=_elem_lines(structure or {}, elem_modes, category_lookup),
         topic_line=topic_line, n=n, seconds=seconds, words=words,
         bank=("\n\n" + bank_context) if bank_context else "")
+        + _style_extra())   # ★채널 스타일(2026-08-05)
     for _ in range(max_key_tries):
         key, ki = comment_gen._current_key_and_idx()
         if key is None:
