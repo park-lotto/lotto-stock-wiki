@@ -134,6 +134,15 @@ def char_budget(used_secs):
     return int(used_secs * _CHARS_PER_SEC)
 
 
+def _style_extra():
+    """채널 스타일 블록(style_profiles, 2026-08-05). 실패해도 생성을 죽이지 않는다."""
+    try:
+        from shopping_shorts import style_profiles
+        return style_profiles.style_block()
+    except Exception:
+        return ""
+
+
 def script_prompt(order, used_secs, hook_block):
     """1소스 각색 대본 프롬프트. hook_block은 hook_patterns.prompt_block() 결과."""
     import json
@@ -143,7 +152,7 @@ def script_prompt(order, used_secs, hook_block):
             for i, s in enumerate(order)]
     n_lines = line_count(used_secs, len(order))
     total = char_budget(used_secs)
-    return (hook_block +
+    return (hook_block + _style_extra() +   # ★채널 스타일(2026-08-05)
             "\n아래는 숏폼 한 편을 재편집한 컷 순서다. 이 화면들에 얹을 **나레이션**을 써라.\n\n"
             "[절대규칙]\n"
             "1. 원본대사를 베끼지 마라. 같은 뜻을 완전히 다른 표현으로 바꿔라(어순·어휘·문형 전부).\n"
