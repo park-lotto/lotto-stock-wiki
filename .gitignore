@@ -146,3 +146,7 @@ shopping_shorts/motion/.render_tmp/
 
 # 인스타 계정 세션(sessionid = 로그인 자격증명) — 절대 커밋 금지
 scripts/ig_sessions/
+
+# 인증 시크릿·사용자DB (2026-08-06 로그인게이트 v2)
+db/.session_secret
+db/users.db
