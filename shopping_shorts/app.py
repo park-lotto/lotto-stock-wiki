@@ -2745,8 +2745,14 @@ def api_mix_status(job_id: str, request: Request):
         error_detail = error
     if error:
         error = _user_facing_error(error)
+    # ★순서 대기 표시(2026-08-06 사장님): 큐에서 기다리는 중인데 '다운로드 중'으로 보여
+    #   멈춘 것처럼 보였다. 아직 워커가 안 집었으면(queue의 mix 항목이 queued) 개수를 내려
+    #   프론트가 '순서 대기 중 — 내 앞 N개'를 띄운다.
+    queue_ahead = (store.mix_queue_ahead(job_id)
+                   if status in _MIX_ACTIVE_STAGES else None)
     return {"ok": True, "status": status, "error": error,
             "error_detail": error_detail,   # 관리자에게만 채워진다(일반 사용자는 None)
+            "queue_ahead": queue_ahead,     # None=대기 아님 / 0=다음 차례 / N=내 앞 N개
             "weak_sources": weak,
             # 1단계 미리보기(2026-07-17): 폴러를 둘로 만들지 않으려고 기존 응답에 얹는다(스펙 §6.3).
             # preview_path는 서버 내부 경로라 안 내보낸다 — 파일은 전용 라우트로만 서빙.
