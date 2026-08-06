@@ -24,16 +24,88 @@ def test_switch_off_and_unknown():
     assert style_profiles.style_block("모르는스타일") == ""
 
 
+def _clean_env(**over):
+    """SCRIPT_STYLE·SCRIPT_TRIO를 지운 환경(서버 env가 테스트에 새는 걸 막는다)."""
+    env = {k: v for k, v in os.environ.items()
+           if k not in ("SCRIPT_STYLE", "SCRIPT_TRIO")}
+    env.update(over)
+    return patch.dict(os.environ, env, clear=True)
+
+
 def test_default_is_trio_and_candidate_rotation():
-    env = {k: v for k, v in os.environ.items() if k != "SCRIPT_STYLE"}
-    with patch.dict(os.environ, env, clear=True):
+    with _clean_env():
         assert style_profiles.active_style() == "trio"
+        # 2026-08-07 C안 교체: standard → hometerior(홈테리어픽)
         assert [style_profiles.candidate_style(i) for i in range(3)] == \
-            ["maison", "chae", "standard"]
+            ["maison", "chae", "hometerior"]
     with patch.dict(os.environ, {"SCRIPT_STYLE": "maison"}):
         assert style_profiles.candidate_style(2) == "maison"  # 단일 모드
     with patch.dict(os.environ, {"SCRIPT_STYLE": "off"}):
         assert style_profiles.candidate_style(0) is None
+    # standard는 목록에 남아 단일 지정으로 계속 쓸 수 있다(교체가 아니라 자리만 양보)
+    with patch.dict(os.environ, {"SCRIPT_STYLE": "standard"}):
+        assert style_profiles.candidate_style(0) == "standard"
+        assert "등짝 스매싱" in style_profiles.style_block()
+
+
+def test_trio_overridable_by_env_for_rollback():
+    """코드 배포 없이 C안을 되돌리는 통로(서버 env 한 줄)."""
+    with _clean_env(SCRIPT_TRIO="maison,chae,standard"):
+        assert [style_profiles.candidate_style(i) for i in range(3)] == \
+            ["maison", "chae", "standard"]
+    with _clean_env(SCRIPT_TRIO="  ,,  "):        # 쓰레기 값이면 기본값
+        assert style_profiles.candidate_style(2) == "hometerior"
+    with _clean_env(SCRIPT_TRIO="없는스타일"):     # 모르는 이름만 있으면 기본값
+        assert style_profiles.candidate_style(2) == "hometerior"
+
+
+def test_hometerior_block_has_fewshot_and_guide():
+    b = style_profiles.style_block("hometerior")
+    assert "스타일 예시" in b and "271만 회" in b
+    assert "멘탈 지켜줍니다" in b               # few-shot 원문 전문
+    assert "마지막 한 문장은 합쇼체로" in b      # 이 채널의 서명
+    assert "CTA 규칙(명분+보상형)" in b
+    # ★중복 대본(애플힙 재업로드)이 예시로 새면 한 소재로 쏠린다 — 3편이 서로 달라야 한다
+    assert b.count("애플힙") == 0
+
+
+def test_hometerior_hapsyo_ending_is_not_penalized():
+    """★시킨 대로 쓴 후보가 감점당해 추천에서 밀려나던 구조를 막는다.
+
+    홈테리어픽은 끝맺음 합쇼체가 스타일 지시다(실측: 35편 중 34편). 스타일을 안 넘기면
+    종전대로 감점 — 하위호환."""
+    from shopping_shorts.style_profiles import style_penalty
+    ht = ["나가실 때 원상 복구해 주세요, 이 소리 제일 무섭잖아요.",
+          "문틀 다 까졌더라고요.", "이거 미리 챙겨두세요. 멘탈 지켜줍니다."]
+    with _clean_env():
+        assert style_penalty(ht, "hometerior") == 0.0    # 지시대로 쓴 것 → 감점 없음
+        assert style_penalty(ht) > 0.0                   # 스타일 미지정 → 종전 동작
+        assert style_penalty(ht, "maison") > 0.0         # 다른 스타일이면 여전히 이탈
+        # 허용치를 넘겨 본문까지 합쇼체면 홈테리어픽에서도 감점된다(전면 면제 아님)
+        allsyo = ["이겁니다.", "저겁니다.", "그겁니다.", "끝입니다."]
+        assert style_penalty(allsyo, "hometerior") > 0.0
+
+
+def test_story_frame_matches_assigned_style():
+    """구도와 스타일이 어긋나면 프롬프트 두 블록이 서로 싸운다."""
+    with _clean_env():
+        assert style_profiles.story_frame(0)[0] == "발견담"
+        assert style_profiles.story_frame(1)[0] == "가족 에피소드"
+        # C안이 hometerior로 바뀌었으니 구도도 문제해결담이어야 한다(지인 목격담 X)
+        assert style_profiles.story_frame(2)[0] == "문제해결담"
+        assert "문제해결담" in style_profiles.story_frame_block(2)
+        # 이름을 직접 주면 그 스타일의 구도
+        assert style_profiles.story_frame(0, "hometerior")[0] == "문제해결담"
+        assert style_profiles.story_frame(2, "standard")[0] == "지인 목격담"
+    with patch.dict(os.environ, {"SCRIPT_STYLE": "off"}):
+        assert style_profiles.story_frame(0) is None
+
+
+def test_style_penalty_wired_with_style_name():
+    """배선 잠금 — 스타일 인자를 지워도 함수 테스트는 통과한다(이 트랙 실사고 패턴)."""
+    from shopping_shorts import edit_plan
+    src = open(edit_plan.__file__, encoding="utf-8").read()
+    assert src.count("style_penalty(narrs, ") == 2      # 1소스·2소스 두 경로 모두
 
 
 def test_chae_and_standard_blocks():

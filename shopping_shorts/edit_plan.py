@@ -3357,7 +3357,9 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
     def _pick_key(k):
         narrs = [(b.get("narration") or "")
                  for b in (cands[k]["plan"].get("beats") or [])]
-        return cands[k]["score"] - _sp.style_penalty(narrs)
+        # ★후보에 배정된 스타일을 같이 넘긴다(2026-08-07) — 홈테리어픽은 합쇼체 끝맺음이
+        #   스타일 지시라, 안 넘기면 **시킨 대로 쓴 후보가** 감점돼 추천에서 밀려난다.
+        return cands[k]["score"] - _sp.style_penalty(narrs, _sp.candidate_style(k))
 
     best = max(range(len(cands)), key=_pick_key)
     cands[best]["recommended"] = True
@@ -3730,7 +3732,9 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         def _sf_pick_key(i):
             narrs = [(b.get("narration") or "")
                      for b in cands[i]["plan"].get("beats", [])]
-            return cands[i]["score"] - _sp2.style_penalty(narrs)
+            # 스타일 동반(2026-08-07, 1소스 _pick_key와 동일 이유) — 위 3193·3575에서
+            # candidate_style(i)로 리라이트했으니 채점도 같은 i로 물어야 짝이 맞는다.
+            return cands[i]["score"] - _sp2.style_penalty(narrs, _sp2.candidate_style(i))
 
         best = max(pool, key=_sf_pick_key)
         cands[best]["recommended"] = True
