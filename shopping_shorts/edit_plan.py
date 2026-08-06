@@ -3431,6 +3431,11 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     src_texts = [s.get("full_text", "") for s in source_scripts]
 
     outer_tl_groups = tl_groups
+    # ★스타일 배정 전역 카운터(2026-08-06 실측: 벌별로 _ground_score가 따로 불리면
+    #   enumerate가 매번 0부터 세서 **후보 전부가 maison**이 됐다 — 잡 실측 3/3 maison).
+    #   호출 경계와 무관하게 A→B→C가 순환하도록 하나의 카운터를 공유한다.
+    import itertools as _it
+    _style_ctr = _it.count()
 
     def _ground_score(raws, groups=None):
       # groups: 이 묶음이 쓸 슬롯(v4, 2026-08-02). None이면 종전과 똑같이 바깥의
@@ -3440,7 +3445,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         for r in raws:
             r.setdefault("_backbone_video", bb_video)   # 핑퐁 순서고정이 이 백본을 쓴다
       cands = []
-      for _ci, r in enumerate(raws):
+      for r in raws:
+        _ci = next(_style_ctr)
         plan = _ground_candidate(r, seg_map, lead_hook=not tl_groups)
         if plan is None:
             continue
