@@ -94,7 +94,7 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
           failed_download | failed_empty | failed_error | done
     예외를 밖으로 던지지 않는다 — 예열은 보조작업이라 실패해도 무해해야 한다."""
     from shopping_shorts.media_download import download_any
-    from shopping_shorts.script_extract import extract_auto, storable
+    from shopping_shorts.script_extract import extract_auto, storable, KeyPoolExhausted
     from shopping_shorts.structure_analyze import analyze_structure
 
     code = (shortcode or "").strip()
@@ -135,6 +135,11 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
             return "failed_download"
         try:
             result = extract_auto(video_path, code, caption=(caption or dl_caption or ""))
+        except KeyPoolExhausted as e:
+            # 서버 사정(키 풀 잠김)이지 영상 탓이 아니다 → 래치를 돌려준다(2026-08-07).
+            # 안 그러면 키가 되살아난 뒤에도 이 영상만 영구히 자동추출에서 빠진다.
+            store.autoload_rollback_attempt(code, f"예열 보류: {e}")
+            return "deferred_nokey"
         except Exception as e:  # noqa: BLE001
             store.autoload_mark_error(code, f"예열 추출 실패: {e}")
             return "failed_error"

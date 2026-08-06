@@ -1790,6 +1790,21 @@ class Store:
                 (shortcode,),
             )
 
+    def autoload_rollback_attempt(self, shortcode, error=""):
+        """선래치를 되돌린다 — **영상 탓이 아닌 실패**(키 풀 소진 등)에만 쓴다.
+
+        ★왜 필요한가(2026-08-07 실사고). 래치는 "이 영상은 아무리 시도해도 안 된다"를
+        기억하는 장치지 "지금 서버가 못 한다"를 기억하는 장치가 아니다. 키 풀이 잠긴
+        동안 담긴 영상들이 시도 3회를 그냥 까먹고 `skipped_latched`가 돼, 키가 되살아난
+        뒤에도 자동추출에서 영구 제외됐다(수동 '대본 뽑기'는 래치를 안 봐서 되던 이유).
+        사유는 남기되 카운터는 돌려준다 — 진단은 유지하고 재시도 기회만 복구."""
+        with self._conn() as c:
+            c.execute(
+                "UPDATE produce_autoload SET attempts=MAX(0, attempts-1), "
+                "last_error=?, updated_at=datetime('now') WHERE shortcode=?",
+                ((error or "")[:300], shortcode),
+            )
+
     def autoload_mark_error(self, shortcode, error):
         """실패 사유 기록(진단용). attempts는 이미 선래치에서 올라가 있다."""
         with self._conn() as c:

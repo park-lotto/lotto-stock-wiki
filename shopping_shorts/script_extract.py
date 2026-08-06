@@ -29,6 +29,17 @@ _FALLBACK_MODEL = "gemini-3.1-flash-lite"
 
 _EMPTY = {"segments": [], "full_text": ""}
 
+
+class KeyPoolExhausted(RuntimeError):
+    """전용 Gemini 키 풀이 통째로 잠겨 **호출조차 못 한** 상태.
+
+    ★왜 예외로 올리나(2026-08-07 실사고). 예전엔 여기서 조용히 빈 결과를 돌려줬다 —
+    그래서 호출부가 "키가 없다"와 "이 영상엔 음성이 없다"를 **구분할 수 없었고**,
+    실패가 `failed_empty`로 기록돼 ①로그에 아무 흔적이 없고(원인 파악에 30분+)
+    ②영상 잘못이 아닌데도 재시도 래치(produce_autoload.attempts)를 깎아먹었다.
+    3회면 그 영상은 키가 되살아난 뒤에도 자동추출에서 영구 제외됐다.
+    빈 결과와 달리 이건 **영상을 다시 시도하면 되는 일시적 상태**라 구분이 필요하다."""
+
 _RESPONSE_SCHEMA = {
     "type": "object",
     "properties": {
@@ -382,7 +393,11 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
     for attempt in range(max_retries):
         key, idx = comment_gen._current_key_and_idx()
         if key is None:
-            return dict(_EMPTY)
+            # 조용한 빈 결과 금지(2026-08-07) — 호출부가 '음성 없는 영상'으로 오해했다.
+            print("script_extract: 키 풀 전체 소진 — 호출 못 함(영상 문제 아님)",
+                  file=sys.stderr)
+            raise KeyPoolExhausted(
+                "Gemini 키 풀이 전부 소진 표시 상태라 대본 추출을 시작하지 못했습니다")
         client = comment_gen._client_for_key(key)
         file_obj = None
         try:

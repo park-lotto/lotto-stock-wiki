@@ -1,4 +1,5 @@
 import io
+import pytest
 from shopping_shorts import script_extract
 
 
@@ -76,11 +77,19 @@ def test_extract_script_maps_gemini_response(monkeypatch):
     assert out["segments"][0]["scene_desc"] == "손에 든 컵"
 
 
-def test_extract_script_exhausted_pool_returns_empty(monkeypatch):
+def test_extract_script_exhausted_pool_raises(monkeypatch):
+    """키 풀이 잠기면 **예외**를 올린다(2026-08-07 계약 변경).
+
+    예전엔 빈 결과를 조용히 돌려줬고 이 테스트가 그 동작을 고정하고 있었다.
+    그 침묵이 실사고의 원인이었다 — 호출부가 '키 없음'을 '음성 없는 영상'으로
+    오해해 로그도 안 남기고 재시도 래치만 깎았다(3회면 영구 제외).
+    빈 결과와 키 소진은 대응이 정반대(전자는 포기, 후자는 나중에 재시도)라
+    반드시 구분돼야 한다.
+    """
     monkeypatch.setattr(script_extract, "SHORTS_GEMINI_KEYS", ["dummy"])
     monkeypatch.setattr(script_extract.comment_gen, "_current_key_and_idx", lambda: (None, None))
-    out = script_extract.extract_script("/fake.mp4", "vidX")
-    assert out == {"segments": [], "full_text": ""}
+    with pytest.raises(script_extract.KeyPoolExhausted):
+        script_extract.extract_script("/fake.mp4", "vidX")
 
 
 def test_boundary_hint_formats_seconds(monkeypatch):

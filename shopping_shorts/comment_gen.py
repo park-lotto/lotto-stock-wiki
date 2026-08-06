@@ -7,8 +7,10 @@ PerDay 문자열 매칭)만 key_vault의 순수 함수를 재사용하고, 로�
 저장은 이 모듈 자체 상태 파일로 완전히 독립."""
 import json
 import os
+import sys
 import threading
 import time
+import urllib.request
 from pathlib import Path
 from datetime import datetime, timezone
 from google import genai
@@ -56,7 +58,76 @@ def _mark_key_exhausted(idx):
 
 def _live_key_indices():
     exhausted = set(_load_state()["exhausted"])
-    return [i for i in range(len(SHORTS_GEMINI_KEYS)) if i not in exhausted]
+    live = [i for i in range(len(SHORTS_GEMINI_KEYS)) if i not in exhausted]
+    if not live and SHORTS_GEMINI_KEYS:
+        # ★풀이 통째로 잠겼으면 표시를 믿지 말고 실제로 찔러본다(2026-08-07 실사고).
+        #   증상: 제작소가 "담긴 영상의 대본을 아직 분석하지 못했어요"만 띄운다.
+        #   실측(서버): 소진표시 20개인데 그 키들을 직접 호출하니 **전부 HTTP 200**이었다.
+        #   왜 오탐이 쌓이나 — 이 상태파일은 13개 모듈이 공유하는데(ai_categorize·
+        #   product_name·script_extract·video_analysis…) 아침 크론(태거 965건·백필)이
+        #   한 바퀴 돌며 키를 잠그면 **그날 하루 종일 아무도 안 풀어준다**. 분당한도
+        #   429나 일시적 오류가 PerDay로 잘못 분류돼도 마찬가지로 영구히 남는다.
+        #   그래서 "다 죽었다"는 판정만큼은 근거를 다시 확인한다 — 살아있으면 표시를
+        #   지운다. 진짜 소진이면 recheck가 실패해 그대로 빈 리스트가 돌아간다.
+        revived = _recheck_exhausted_keys()
+        if revived:
+            live = revived
+    return live
+
+
+# 전 키 소진 판정 시 재검증 — 너무 자주 때리면 그 자체가 한도를 먹으므로 쿨다운을 둔다.
+_RECHECK_COOLDOWN_S = float(os.environ.get("SHORTS_KEY_RECHECK_COOLDOWN", "300"))
+_last_recheck = {"t": 0.0}
+
+
+def _probe_key_alive(key, timeout=15):
+    """키가 실제로 살아있는지 확인. 살아있으면 True.
+
+    ★REST를 직접 친다 — SDK를 쓰지 않는다(2026-08-07 실측으로 배운 것).
+      처음엔 '가장 싼 호출'이라고 `client.models.list()`를 썼는데 **살아있는 키에도
+      전부 실패**했다: models.list는 지연 페이저를 돌려주고 그 사이 클라이언트가
+      닫혀 `RuntimeError: Cannot send a request, as the client has been closed`가 난다.
+      호출이 네트워크를 타지도 못하므로 키 상태와 무관하게 항상 '죽음'으로 보였다 —
+      그대로 뒀으면 오탐 해제가 **한 건도 안 되는** 가짜 수리가 될 뻔했다.
+      그래서 판정 근거는 실제 HTTP 응답으로 둔다(라이브 실측: 소진표시 키가 200).
+
+    비용: 최소 프롬프트 1회. RPD를 1 먹지만 '전 키 잠김'일 때만·쿨다운을 두고 돈다."""
+    body = json.dumps({"contents": [{"parts": [{"text": "hi"}]}],
+                       "generationConfig": {"maxOutputTokens": 1}}).encode()
+    url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
+           f"{_MODEL}:generateContent?key={key}")
+    req = urllib.request.Request(url, data=body,
+                                 headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return r.status == 200
+    except Exception:                                         # noqa: BLE001
+        # 429(진짜 소진)·401·네트워크 오류 → 되살리지 않는다.
+        # 보수적으로 간다: 잘못 되살리면 죽은 키를 계속 때린다.
+        return False
+
+
+def _recheck_exhausted_keys():
+    """소진 표시된 키를 실제로 찔러 살아있는 것만 표시 해제. 되살아난 인덱스 목록 반환."""
+    with _STATE_LOCK:
+        if time.monotonic() - _last_recheck["t"] < _RECHECK_COOLDOWN_S:
+            return []
+        _last_recheck["t"] = time.monotonic()
+        marked = list(_load_state()["exhausted"])
+    revived = []
+    for idx in marked:
+        if idx >= len(SHORTS_GEMINI_KEYS):
+            continue
+        if _probe_key_alive(SHORTS_GEMINI_KEYS[idx]):
+            revived.append(idx)
+    if revived:
+        with _STATE_LOCK:
+            state = _load_state()
+            state["exhausted"] = [i for i in state["exhausted"] if i not in revived]
+            _save_state(state)
+        print(f"comment_gen: 소진표시 오탐 해제 — 키 {revived} 되살림(실호출 200 확인)",
+              file=sys.stderr)
+    return revived
 
 
 def _client_for_key(key):
