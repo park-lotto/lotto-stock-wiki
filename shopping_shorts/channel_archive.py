@@ -205,32 +205,35 @@ def run(limit=None, max_scrolls=_MAX_SCROLLS, sleep=time.sleep, log=print):
     targets = pick_targets(store)
     if limit:
         targets = targets[:limit]
-    slots = session_slots()
-    slot_i = 0
-    log(f"[아카이브] 대상 {len(targets)}채널 (팔로워순, done 제외) · 계정 세션 {len(slots)}개")
+    # 계정 로테이션(2026-08-06 사장님 결정): 채널마다 계정을 번갈아 쓴다 —
+    # "경고 뜰 때까지 한 계정을 태우지 말고" 부하를 1/N로 나눈다.
+    # live = (전역 슬롯 인덱스, 세션경로) 목록. 경고가 뜬 계정은 목록에서 빼되
+    # 프록시 출구는 전역 인덱스로 고정한다(계정↔IP 1:1 — 남은 계정이 죽은 계정의
+    # IP를 물려받으면 인스타가 한 기계로 묶어 본다).
+    live = list(enumerate(session_slots()))
+    log(f"[아카이브] 대상 {len(targets)}채널 (팔로워순, done 제외) · 계정 세션 {len(live)}개 로테이션")
     walls = 0
     ok = 0
     for idx, u in enumerate(targets, 1):
         while store.heavy_job_running():   # 사용하면서 수집 — 렌더에 양보
             log(f"[아카이브] 렌더 진행 중 → {_BUSY_POLL_S}s 대기")
             sleep(_BUSY_POLL_S)
-        # 계정 로테이션: scraping_warning이 뜨면 그 계정은 태운 것 — 다음 세션으로
-        # 넘겨 같은 채널을 재시도한다. 전 세션이 소진되면 회차를 끝낸다(재로그인 필요).
+        # scraping_warning이 뜨면 그 계정만 빼고 같은 채널을 다음 계정으로 재시도.
+        # 전 계정이 소진되면 회차를 끝낸다(재로그인 필요).
         while True:
-            sess = slots[slot_i] if slot_i < len(slots) else None
+            gi, sess = live[idx % len(live)] if live else (0, None)
             items, final_url, err = crawl_channel(u, max_scrolls=max_scrolls,
                                                   session_path=sess,
-                                                  proxy=slot_proxy(slot_i))
+                                                  proxy=slot_proxy(gi))
             if err != "scraping_warning":
                 break
             burnt = os.path.basename(sess or "?").replace(".json", "")
-            slot_i += 1
-            if slot_i >= len(slots):
+            live = [(g, s) for g, s in live if s != sess]
+            if not live:
                 log(f"[아카이브] 계정 {burnt} 차단 — 남은 세션 없음, 회차 종료"
                     f" (재로그인 후 ig_session_capture.py로 갱신)")
                 return ok
-            log(f"[아카이브] 계정 {burnt} 차단 → 다음 계정으로 전환"
-                f" ({slot_i + 1}/{len(slots)})")
+            log(f"[아카이브] 계정 {burnt} 차단 → 로테이션에서 제외 (남은 {len(live)}개)")
             sleep(random.uniform(*_CHANNEL_GAP_S))
         now = datetime.now(timezone.utc).isoformat()
         if items:
