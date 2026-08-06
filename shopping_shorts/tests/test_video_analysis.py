@@ -4,8 +4,16 @@ from shopping_shorts import video_analysis, comment_gen
 
 @pytest.fixture(autouse=True)
 def isolate_shorts_gemini_state(monkeypatch, tmp_path):
-    """모든 테스트에서 실제 data/shorts_gemini_state.json을 절대 건드리지 않는다."""
+    """모든 테스트에서 실제 data/shorts_gemini_state.json을 절대 건드리지 않는다.
+
+    ★2026-08-06: 분당 한도 라운드로빈(_rr_cursor·_key_last_used)이 모듈 메모리
+    상태라, 앞 테스트가 커서를 돌려놓으면 'key1부터 시작' 가정이 실행 순서에 따라
+    깨졌다(★finish 게이트 간헐 차단의 실제 원인 — 단독 실행은 통과, 파일 실행은
+    실패). 커서·쿨다운도 테스트마다 리셋하고, _MIN_GAP_S=0으로 쿨다운 sleep 제거."""
     monkeypatch.setattr(comment_gen, "_STATE_PATH", tmp_path / "shorts_gemini_state.json")
+    monkeypatch.setitem(comment_gen._rr_cursor, "i", 0)
+    comment_gen._key_last_used.clear()
+    monkeypatch.setattr(comment_gen, "_MIN_GAP_S", 0.0)
 
 
 class FakeFileObj:
