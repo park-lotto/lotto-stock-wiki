@@ -2093,6 +2093,11 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "(예: 본문 '재료 하나만 바꾸면 끝' → CTA '그 재료 궁금하시면 댓글에').\n"
         "- 각 후보에 hook, story_person, story_event, story_resolution, cta_line, "
         "cta_keyword를 채워라.\n"
+        # ★후보별 이야기 구도(2026-08-06 사장님 "요리책 낸 엄마로 비슷하네 다"): 원본 인물이
+        #   센 소재에서 후보 전부가 같은 인물 구도로 수렴 — 구도를 강제로 갈라준다.
+        "- ★후보마다 **이야기 구도를 다르게**: 1번=1인칭 발견담(인물 에피소드 앞세우지 말 것), "
+        "2번=가족 에피소드(엄마·남편·아이 반응 장면), 3번=지인 목격담(친구 집에서 보고 충격). "
+        "원본의 인물은 근거로만 쓰되 세 후보가 같은 인물 구도면 실패다. 사실은 지어내지 마라.\n"
         "- 억지 개그·번역투·상세페이지 상투어(꿀템·갓성비·완벽 해결·삶의 질 상승) 금지.\n"
         # 은행 = 실제로 잘 나온 대본 조각들. ★규칙이 아니라 **벤치마킹 대상**으로 준다.
         + ((f"\n[벤치마킹 — 실제로 잘 나온 대본들의 조각이다. 규칙이 아니라 참고다. "
@@ -3105,7 +3110,12 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         #   흩어 워커끼리도 안 겹치게 한다.
         _koff = _candidate_key_offset(i)
         _c = _offset_call(call, _koff)
-        prompt = single_source.script_prompt(order, used, hook_patterns.prompt_block(pat))
+        # ★후보별 이야기 구도(2026-08-06 사장님 "요리책 낸 엄마로 비슷하네 다"): 원본 인물이
+        #   센 소재에서 세 후보가 같은 구도로 수렴하는 것을 생성 단계에서 갈라준다.
+        from shopping_shorts import style_profiles as _sp_f
+        prompt = single_source.script_prompt(
+            order, used, hook_patterns.prompt_block(pat),
+            frame_block=_sp_f.story_frame_block(i))
         beats = single_source.parse_beats(_c(prompt, single_source.BEATS_SCHEMA))
         # 총량 교정루프(최대 2회) — 넘치면 표현만 줄여 다시 받는다.
         for _ in range(2):

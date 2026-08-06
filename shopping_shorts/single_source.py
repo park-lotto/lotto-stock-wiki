@@ -174,8 +174,9 @@ def _style_extra():
         return ""
 
 
-def script_prompt(order, used_secs, hook_block):
-    """1소스 각색 대본 프롬프트. hook_block은 hook_patterns.prompt_block() 결과."""
+def script_prompt(order, used_secs, hook_block, frame_block=""):
+    """1소스 각색 대본 프롬프트. hook_block은 hook_patterns.prompt_block() 결과.
+    frame_block: 후보별 이야기 구도(style_profiles.story_frame_block) — 빈 문자열이면 종전 동일."""
     import json
     cuts = [{"n": i + 1, "seg": s.get("seg_id"), "초": round(s["_dur"], 1),
              "화면": s.get("scene_desc") or "", "원본대사": s.get("text") or "",
@@ -183,7 +184,7 @@ def script_prompt(order, used_secs, hook_block):
             for i, s in enumerate(order)]
     n_lines = line_count(used_secs, len(order))
     total = char_budget(used_secs)
-    return (hook_block + _style_extra() +   # ★채널 스타일(2026-08-05)
+    return (hook_block + _style_extra() + (frame_block or "") +   # ★채널 스타일(2026-08-05)·구도(2026-08-06)
             "\n아래는 숏폼 한 편을 재편집한 컷 순서다. 이 화면들에 얹을 **나레이션**을 써라.\n\n"
             "[절대규칙]\n"
             "1. 원본대사를 베끼지 마라. 같은 뜻을 완전히 다른 표현으로 바꿔라(어순·어휘·문형 전부).\n"
