@@ -2523,6 +2523,16 @@ async function _restoreWork(workId){
     try{
       const s = await (await fetch('/api/mix/status/'+encodeURIComponent(MIX_JOB))).json();
       if(s && s.ok) PREVIEW_STATUS = s.preview_status || null;
+      // ★진행 중 매칭 이어받기(2026-08-06 사장님 제보 "다른 작업 갔다 오면 매칭중이 풀린다").
+      //   서버 잡은 계속 도는데 복원 경로가 폴링을 재시작하지 않아 UI만 잊었다.
+      //   진행 중 상태면 폴링·패널0 표시를 되살린다 — 완료/실패면 종전대로(아무 것도 안 함).
+      if(s && s.ok && ['queued','downloading','extracting','planning','tts'].includes(s.status)){
+        if(MIX_POLL) clearInterval(MIX_POLL);
+        MIX_POLL=setInterval(pollMix,2500);
+        try{ if(typeof updateMatchProgress==='function') updateMatchProgress(MIX_LABEL[s.status]||s.status); }catch(e){}
+        try{ if(typeof setMatchingUI==='function') setMatchingUI(true); }catch(e){}
+        pollMix();
+      }
     }catch(e){}   // 못 읽으면 null로 둔다 = 잠긴 채. 모르면 안전한 쪽.
   }
   const st = d.step;
