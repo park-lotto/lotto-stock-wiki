@@ -356,6 +356,18 @@ class Store:
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_archive_user_views "
                       "ON channel_archive(username, views DESC)")
+            # 채널 표시명(2026-08-06) — 아카이브 카드를 @아이디 대신 한글 이름으로 띄운다.
+            # ★channel_archive에 컬럼을 더하지 않는 이유: 저긴 릴스 단위(7.8만행)라
+            #   채널당 1개인 이름을 행마다 중복 저장하게 된다. 채널 단위 표를 따로 둔다.
+            # ★reel_history에 끼워 넣지 않는 이유: 저건 '수집 이력'이라 릴스 행이 전제인데,
+            #   이름만 있는 가짜 행을 넣으면 활동시각 판정(instagram_activity_map)이 오염된다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS channel_names (
+                    username TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    updated_at TEXT
+                )
+            """)
             # 채널별 아카이브 진행상태 — done이면 대상에서 빠지므로 새로 등록한 채널만
             # 자동으로 줄을 선다(추적목록 − done 차집합).
             c.execute("""
@@ -1175,8 +1187,21 @@ class Store:
 
     # ── 채널 릴스 전체 아카이브(2026-08-03) ───────────────────────────────
     def archive_upsert_many(self, username, items, now_iso):
-        """아카이브에 릴스들을 upsert. 재크롤 시 views 등 최신값으로 갱신, first_seen 보존."""
+        """아카이브에 릴스들을 upsert. 재크롤 시 views 등 최신값으로 갱신, first_seen 보존.
+
+        items[*]['name']이 있으면 채널 표시명으로도 기록한다(2026-08-06) — 카드가
+        @아이디 대신 한글 이름을 띄우는 소스. **빈 값은 무시**한다: 응답 노드마다
+        user가 있기도 없기도 해서 빈 이름이 섞여 들어오는데, 그게 기존 이름을 덮으면
+        한 번 얻은 이름이 다음 크롤에 날아간다."""
         with self._conn() as c:
+            disp = next((str(i.get("name")).strip() for i in (items or [])
+                         if (i.get("name") or "").strip()), "")
+            if disp:
+                c.execute(
+                    "INSERT INTO channel_names(username, name, updated_at) VALUES(?,?,?) "
+                    "ON CONFLICT(username) DO UPDATE SET name=excluded.name, "
+                    " updated_at=excluded.updated_at",
+                    (username, disp, now_iso))
             for i in items:
                 c.execute(
                     "INSERT INTO channel_archive(username, shortcode, url, thumbnail, "
@@ -1233,6 +1258,32 @@ class Store:
                 "MAX(name) AS nm FROM reel_history GROUP BY username"
             ).fetchall()
         return {r[0]: {"last": r[1] or "", "name": r[2] or ""} for r in rows}
+
+    def channel_name_map(self):
+        """{username: 한글 표시명} — 아카이브(히트작) 카드가 @아이디 대신 한글 이름을 쓰려고 읽는다.
+
+        아카이브 테이블(channel_archive)엔 username밖에 없는데, 수집 이력(reel_history)엔
+        채널 표시명이 같이 저장돼 있다(실측 2026-08-06: 아카이브 518채널 중 433개 커버).
+        빈 이름은 아예 담지 않는다 — 화면이 `name || username`으로 폴백하므로 빈 문자열을
+        넣으면 오히려 '이름 있는데 빈칸'이 된다.
+        ★instagram_activity_map과 목적이 다르다(저건 활동시각 판정용이라 MAX(first_seen)까지
+        집계한다) — 여기선 이름만 필요해 가볍게 뽑는다.
+
+        ★소스 2개(2026-08-06): 수집 이력(reel_history)과 아카이브 크롤이 직접 기록한
+        channel_names. 아카이브 채널 518개 중 434개만 수집 이력에 있어서(실측) 나머지는
+        이름을 못 얻었다 — 크롤이 응답에서 주워 담기 시작하면 channel_names가 그 구멍을
+        메운다. 크롤이 최신이므로 **channel_names가 우선**이다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT username, MAX(name) FROM reel_history "
+                "WHERE name IS NOT NULL AND name != '' GROUP BY username"
+            ).fetchall()
+            out = {r[0]: r[1] for r in rows if r[0] and r[1]}
+            for u, n in c.execute(
+                    "SELECT username, name FROM channel_names WHERE name != ''"):
+                if u and n:
+                    out[u] = n          # 크롤이 직접 본 이름이 더 정확·최신
+        return out
 
     def remove_channel(self, username, name=""):
         """죽은 채널을 추적 제외목록에 추가(소프트 삭제). 발굴목록에 있었다면 함께 제거."""
@@ -1785,6 +1836,10 @@ class Store:
                 self._record_history(c, items, collected_at)
             except Exception:
                 pass  # 히스토리 누적 실패가 수집 저장을 막지 않는다
+            try:
+                self._feed_archive(c, items, collected_at)
+            except Exception:
+                pass  # 아카이브 적재 실패도 수집 저장을 막지 않는다
 
     @staticmethod
     def _norm_username(u):
@@ -1818,6 +1873,38 @@ class Store:
         # 30일 정리 — last_seen이 30일보다 오래된 행 삭제(수집이 곧 정리 트리거).
         cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
         c.execute("DELETE FROM reel_history WHERE last_seen < ?", (cutoff,))
+
+    def _feed_archive(self, c, items, collected_at):
+        """레퍼런스 수집분을 channel_archive(영구)에도 적재한다(2026-08-06).
+
+        왜 필요한가: reel_history는 30일이 지나면 지워지는데, 역대 히트작 매칭
+        (api_archive_similar)은 channel_archive만 본다. 연결이 없으면 "한 바퀴
+        크롤" 이후 새로 터진 영상이 아카이브에 영영 안 들어가서, 시간이 갈수록
+        아카이브가 낡는다. 레퍼런스는 어차피 매일 수집하므로 **추가 트래픽 0**으로
+        신규분을 계속 적립할 수 있다.
+
+        기존 크롤러가 넣은 행을 훼손하지 않는다: 같은 (username, shortcode)면
+        조회수 등 최신값만 갱신되고 first_seen은 보존된다(archive_upsert_many와
+        같은 규약). posted_at도 크롤러와 동일하게 shortcode에서 복원해 형식을 맞춘다.
+        """
+        from shopping_shorts.instagram_parse import shortcode_to_timestamp
+        for it in items or []:
+            sc = (it.get("shortcode") or "").strip()
+            user = self._norm_username(it.get("username"))
+            if not sc or not user:
+                continue
+            c.execute(
+                "INSERT INTO channel_archive(username, shortcode, url, thumbnail, "
+                " views, likes, comments, posted_at, first_seen, last_seen) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?) "
+                "ON CONFLICT(username, shortcode) DO UPDATE SET "
+                " url=excluded.url, thumbnail=excluded.thumbnail, views=excluded.views, "
+                " likes=excluded.likes, comments=excluded.comments, "
+                " posted_at=excluded.posted_at, last_seen=excluded.last_seen",
+                (user, sc, it.get("url"), it.get("thumbnail"),
+                 int(it.get("views") or 0), int(it.get("likes") or 0),
+                 int(it.get("comments") or 0),
+                 shortcode_to_timestamp(sc) or "", collected_at, collected_at))
 
     def channel_history(self, username, exclude=()):
         """한 채널의 지난 30일 수집분을 last_seen 최신순으로 반환.
@@ -4009,6 +4096,9 @@ class Store:
     # swap으로 밀리고 렌더가 기어간다(실측 13:21 load average 11.76 / swap 1204MB,
     # 최종렌더 8분+). 크롤을 없애는 게 아니라 **순서를 양보**시킨다 — 다음 주기에 돈다.
     _HEAVY_TASKS = ("render", "mix", "retype", "preview", "clean")
+    # 인스타 세션(브라우저·계정 쿠키)을 공유하는 작업 — 동시에 하나만 돈다(claim_next).
+    # 워커를 여러 개 띄울 때 같은 계정으로 동시 접속해 플래그되는 걸 막는다.
+    _EXCLUSIVE_TASKS = ("durfill", "prewarm")
 
     def heavy_job_active(self):
         """렌더 계열 작업이 지금 돌고 있거나 대기 중이면 True.
@@ -4032,6 +4122,15 @@ class Store:
             # 때까지 굶었다("누가 쓰면 느려지는" 진짜 원인 — 서버 크기 문제가 아니다).
             # 워커가 N개면 서로 다른 계정 N명이 동시에 진행된다.
             # owner가 NULL인 옛 작업·소유자 불명 작업은 제한 없이 집는다(하위호환).
+            # ★인스타 세션 독점(2026-08-05): _EXCLUSIVE_TASKS는 **동시에 하나만** 돈다.
+            #   durfill·prewarm은 인스타 브라우저 세션(INSTAGRAM_SESSION_PATH)을 공유한다.
+            #   워커가 1개일 땐 자연히 직렬이라 안 드러났지만, 워커를 여러 개 띄우면
+            #   같은 계정 세션으로 동시에 붙어 **계정이 플래그**된다(제품명검색 트랙 실측:
+            #   서버 크롤 시도만으로 helrou75·syospa123 두 계정이 1~2시간 만에 소실,
+            #   한 번 플래그되면 어느 IP에서도 안 된다). 계정은 IP보다 비싸다.
+            #   ★같은 UPDATE 문 안에서 검사한다 — 파이썬으로 먼저 세면 워커 3개가
+            #   동시에 "지금 0개"를 보고 셋 다 집는 경합이 난다.
+            ph = ",".join("?" * len(self._EXCLUSIVE_TASKS))
             row = c.execute(
                 "UPDATE job_queue SET state='running', "
                 "       claimed_at=datetime('now'), heartbeat_at=datetime('now') "
@@ -4040,8 +4139,12 @@ class Store:
                 "               AND (q.owner IS NULL OR q.owner NOT IN "
                 "                    (SELECT owner FROM job_queue "
                 "                      WHERE state='running' AND owner IS NOT NULL)) "
+                f"               AND (q.task NOT IN ({ph}) OR NOT EXISTS "
+                "                    (SELECT 1 FROM job_queue r "
+                f"                     WHERE r.state='running' AND r.task IN ({ph}))) "
                 "             ORDER BY COALESCE(q.prio, 5), q.id LIMIT 1) "
-                "RETURNING id, task, args_json").fetchone()
+                "RETURNING id, task, args_json",
+                self._EXCLUSIVE_TASKS * 2).fetchone()
             if not row:
                 return None
             return {"id": row[0], "task": row[1], "args": json.loads(row[2])}

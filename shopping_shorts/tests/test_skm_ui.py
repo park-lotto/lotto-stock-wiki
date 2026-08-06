@@ -384,10 +384,12 @@ def test_boot_account_latest_or_local_cross_device_sync(tmp_path):
     end = HTML.index("_bootRestore();", start)      # 함수는 _bootRestore 호출 직전에 정의됨
     body = HTML[start:end]
 
-    def run(ss, works):
+    def run(ss, works, arrived=False):
         driver = (
             "'use strict';\n"
             "const calls=[];\n"
+            # 새 재료가 방금 도착했나 — 실제 _consumeProduceHandoff가 window에 남기는 신호.
+            "global.window=global; window._PENDING_ARRIVED=" + ("true" if arrived else "false") + ";\n"
             "const _SS=" + json.dumps(ss) + ";\n"
             "const sessionStorage={getItem:k=> (k in _SS)?_SS[k]:null};\n"
             "const _WORKS=" + json.dumps(works) + ";\n"
@@ -418,13 +420,18 @@ def test_boot_account_latest_or_local_cross_device_sync(tmp_path):
     def pw(wid):   # produce_work sessionStorage 값(진행중 작업)
         return json.dumps({"work_id": wid, "script": "x", "handoff": [{"url": "x"}]})
 
-    # (A) 방금 이 기기에서 보낸 재료 + 로컬작업 → 로컬 복원으로 유지(계정 최신 안 덮음)
+    # (A) 방금 이 기기에서 보낸 재료 + 로컬작업 → 로컬 복원으로 유지(계정 최신 안 덮음).
+    #     ★새 재료(_PENDING_ARRIVED)는 아직 서버에 없다 — 서버본으로 되돌리면 그 재료가 사라진다.
     assert run({"produce_handoff": json.dumps([{"url": "a"}]), "produce_work": pw("B")},
-               [{"work_id": "A"}]) == ["consume"]
-    # (B) 로컬작업 B 있음, 계정 최신 A(다름) → 로컬 유지(덮지 않음). 바꾸려면 ?work=로.
-    assert run({"produce_work": pw("B")}, [{"work_id": "A"}, {"work_id": "B"}]) == ["consume"]
-    # (C) 로컬 A == 계정 최신 A → 로컬 유지
-    assert run({"produce_work": pw("A")}, [{"work_id": "A"}]) == ["consume"]
+               [{"work_id": "A"}], arrived=True) == ["consume"]
+    # (B) 로컬작업 B 있음, 계정 최신 A(다름) → **B를 다시 읽는다**(2026-08-06 변경).
+    #     C-1이 막은 건 "계정 최신 A로 로컬 B를 덮는 것" — 여기서 여는 건 로컬이 들고 있던 B 자신이라
+    #     hijack이 아니다. 로컬 스냅샷엔 step·job_id가 없어서(handoff·script·work_id만) 이걸 안 하면
+    #     매칭 화면에서 새로고침할 때마다 1단계로 떨어지고, 이어지는 saveWork가 서버의 step을
+    #     0으로 덮어썼다(사장님 제보 "3개로 나눈 것들 모두 1단계로 고정").
+    assert run({"produce_work": pw("B")}, [{"work_id": "A"}, {"work_id": "B"}]) == ["consume", "restore:B"]
+    # (C) 로컬 A == 계정 최신 A → 같은 A를 다시 읽어 단계·job을 되살린다(위와 같은 이유)
+    assert run({"produce_work": pw("A")}, [{"work_id": "A"}]) == ["consume", "restore:A"]
     # (D) 로컬 완전히 빈 기기(새 브라우저/탭) → 계정 최신작업 자동 이어받기(모바일→PC)
     assert run({}, [{"work_id": "A"}]) == ["consume", "restore:A"]
     # (E) 빈 기기 + 서버에도 작업 없음 → 빈 상태 유지(폴백)

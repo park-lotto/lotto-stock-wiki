@@ -24,9 +24,12 @@ def _fake_error(username):
 def test_fetch_reels_returns_ten_key_items():
     items = ipw.fetch_reels(["homeinon"], _scrape_one=_fake_ok)
     assert len(items) == 1
+    # ownerFullName 추가(2026-08-06) — parse_reel_node가 채널 표시명을 같이 싣는다
+    # (아카이브 카드 한글 이름용, 추가 요청 0건). 같은 파서를 타므로 여기도 한 키 늘었다.
     assert set(items[0]) == {
         "shortcode", "url", "timestamp", "caption", "commentsCount",
         "likesCount", "videoViewCount", "displayUrl", "videoUrl", "ownerUsername",
+        "ownerFullName",
     }
     assert items[0]["ownerUsername"] == "homeinon"
 

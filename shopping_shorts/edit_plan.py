@@ -9,6 +9,7 @@
 build_edit_plan(Gemini 콜)은 Task 4에서 추가.
 """
 
+import inspect
 import json
 import os
 import re
@@ -1821,14 +1822,26 @@ def _is_dead_key_error(e):
                                 "API_KEY_INVALID", "API key not valid"))
 
 
-def _vault_call(prompt, schema, max_tries=8):
+def _vault_call(prompt, schema, max_tries=8, key_offset=0):
     """key_vault 캐스케이드 예비키풀로 JSON 생성 호출 → raw dict. 무키/실패면 None.
 
     build_edit_plan이 comment_gen 전용키(1개, 쉽게 소진) 대신 배치된 예비키를
-    쓰도록 하는 공용 경로(2026-07-13)."""
+    쓰도록 하는 공용 경로(2026-07-13).
+
+    ★key_offset — 시작 키를 어긋나게 돌린다(2026-08-05). get_live_keys_cascade는
+      매번 **같은 순서**를 돌려주므로, 인자 없이 부르면 모든 호출이 keys[0]부터
+      시작한다. 후보 3개를 연달아 생성하면 3초 안에 같은 키를 연타해 **분당 한도
+      (무료등급 15 RPM)** 를 넘겨 429가 났다(실측 job 9c470e54ab97 23:08:31~34
+      3연발 → 스타일 리라이트 3회 재시도가 전부 튕겨 조용히 원본 폴백, 후보
+      A/B/C 스타일이 통째로 안 입혀졌다). 키가 18개 살아있는데 0번만 두들긴 것.
+      후보 인덱스·워커 PID를 섞어 오프셋을 주면 서로 다른 키로 나가 429 자체가
+      안 난다. 실패 시 동작은 종전과 같다 — 대기 없이 다음 키로 순차 회전."""
     keys = key_vault.get_live_keys_cascade("general")
     if not keys:
         return None
+    if key_offset:
+        _o = int(key_offset) % len(keys)
+        keys = keys[_o:] + keys[:_o]
     for key in keys[:max_tries]:
         try:
             resp = key_vault.get_client_for_key(key).models.generate_content(
@@ -1864,6 +1877,35 @@ def _vault_call(prompt, schema, max_tries=8):
             print(f"edit_plan._vault_call: {e!r}", file=sys.stderr)
             return None
     return None
+
+
+def _candidate_key_offset(i):
+    """후보 i가 쓸 키 오프셋. 워커 PID를 섞어 워커끼리도 안 겹치게 한다.
+
+    키풀 길이는 여기서 모른다(캐스케이드가 그때그때 다르다) — 나머지 연산은
+    _vault_call이 실제 키 개수로 한다. 여기선 '서로 다른 수'만 보장하면 된다."""
+    return os.getpid() * 7 + i
+
+
+def _offset_call(call, key_offset):
+    """call에 key_offset을 붙여주는 래퍼. 못 받는 call이면 원본 그대로 돌려준다.
+
+    ★테스트·다른 호출부가 넘기는 가짜 call은 (prompt, schema)만 받는다. 무조건
+      key_offset을 넘기면 TypeError로 대본 생성이 통째로 죽는다 — 시그니처를
+      확인해 받는 것만 붙인다(부가기능이 본 기능을 죽이지 않게)."""
+    if not key_offset or call is None:
+        return call
+    try:
+        if "key_offset" not in inspect.signature(call).parameters:
+            return call
+    except (TypeError, ValueError):     # 내장·C함수 등 시그니처를 못 읽는 경우
+        return call
+
+    def _wrapped(prompt, schema, **kw):
+        kw.setdefault("key_offset", key_offset)
+        return call(prompt, schema, **kw)
+
+    return _wrapped
 
 
 _SCENE_FIRST_SCHEMA = {
@@ -3042,29 +3084,40 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
     print("[1소스대본] 원본 %.1f초 → 예산 %.1f초, 컷 %d개, 훅후보: %s"
           % (span, budget, len(order), " / ".join(p[1] for p in pats)), file=sys.stderr)
     src_texts = [s.get("full_text", "") for s in source_scripts]
-    cands = []
-    for i in range(max(1, n_candidates)):
+
+    def _one_candidate(i):
+        """후보 하나를 통째로 만든다. 실패면 None.
+
+        ★후보끼리 공유 상태가 없다(각자 자기 beats/plan만 만진다) — 그래서 아래에서
+          스레드로 동시에 돌린다. seg_map·order·source_scripts는 읽기 전용으로만 쓴다."""
         pat = pats[i % len(pats)]
+        # ★후보마다 다른 키로 나간다(2026-08-05) — 같은 키 연타로 분당한도 429가 나
+        #   스타일 리라이트가 통째로 무효화되던 것(위 _vault_call 주석 참고).
+        #   워커 PID를 섞는 이유: 워커를 여러 개 띄우면 각 워커의 후보0이 전부 같은
+        #   키로 몰린다(워커 3개 예정 → 9개 호출이 keys[0]에 집중). PID로 출발점을
+        #   흩어 워커끼리도 안 겹치게 한다.
+        _koff = _candidate_key_offset(i)
+        _c = _offset_call(call, _koff)
         prompt = single_source.script_prompt(order, used, hook_patterns.prompt_block(pat))
-        beats = single_source.parse_beats(call(prompt, single_source.BEATS_SCHEMA))
+        beats = single_source.parse_beats(_c(prompt, single_source.BEATS_SCHEMA))
         # 총량 교정루프(최대 2회) — 넘치면 표현만 줄여 다시 받는다.
         for _ in range(2):
             over, _secs, _o = single_source.over_budget(beats, used)
             if not beats or not over:
                 break
             b2 = single_source.parse_beats(
-                call(single_source.shrink_prompt(beats, used), single_source.BEATS_SCHEMA))
+                _c(single_source.shrink_prompt(beats, used), single_source.BEATS_SCHEMA))
             if b2:
                 beats = b2
         if not beats:
-            continue
+            return None
         # CTA 교정(2026-08-04): 마지막 문장에 '댓글'이 없으면 그 문장만 고쳐 받는다(2회).
         # 실측: 프롬프트 강화 후에도 3후보 중 1~2개가 감상문으로 끝났다 — 코드로 보장한다.
         for _ in range(2):
             if not single_source.cta_missing(beats):
                 break
             b3 = single_source.parse_beats(
-                call(single_source.fix_cta_prompt(beats, _mat), single_source.BEATS_SCHEMA))
+                _c(single_source.fix_cta_prompt(beats, _mat), single_source.BEATS_SCHEMA))
             if b3 and not single_source.cta_missing(b3):
                 beats = b3
         if single_source.cta_missing(beats):
@@ -3093,7 +3146,7 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
             #   앞붙이기는 '심지어' 뒤에 이미 말한 장점이 와서 고조가 안 됐다. LLM이
             #   자리를 고르고 **앞에 안 나온 새 장점**으로 그 문장을 다시 쓴다.
             #   실패(키 소진 등) 시에만 종전 기계식 앞붙이기로 폴백.
-            _esc = call(single_source.escalate_prompt(beats), single_source.ESCALATE_SCHEMA)
+            _esc = _c(single_source.escalate_prompt(beats), single_source.ESCALATE_SCHEMA)
             _n = _esc.get("n") if isinstance(_esc, dict) else None
             _txt = (_esc.get("narration") or "").strip() if isinstance(_esc, dict) else ""
             if (_txt and isinstance(_n, int) and 2 <= _n <= len(beats) - 1
@@ -3108,14 +3161,14 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         #   ★trio(기본): 후보마다 다른 채널 스타일 — A=메종(발견담)/B=채이(가족드라마)/
         #   C=스탠다드(유머목격담). 사장님 확정 3각(2026-08-05).
         from shopping_shorts import style_profiles as _sp0
-        beats = single_source.apply_restyle(beats, call,
+        beats = single_source.apply_restyle(beats, _c,
                                             style_name=_sp0.candidate_style(i))
         # ★빈 나레이션 비트는 **커버 배정 전에** 걸러낸다(2026-08-04 라이브 실측 job
         #   bcdf871a6d57: 추천 후보가 16.8초 — 버려진 비트의 컷이 같이 사라져 하한 미달).
         #   먼저 거르면 아래 '구멍은 직전 비트가 이어받는다'가 그 컷들을 살린다.
         beats = [b for b in beats if (b.get("narration") or "").strip()]
         if not beats:
-            continue
+            return None
         # covers → 화면 배정. 모델이 빠뜨린 컷은 직전 비트에 붙여 **컷 100% 커버**를 코드가
         # 보장한다(화면 총길이 == used == 예산 → 길이 하한이 프롬프트 아닌 코드로 지켜진다).
         covered_by = {}                      # 컷 번호(1-base) → 비트 인덱스
@@ -3154,7 +3207,7 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
                 "effect": "cut", "fit": 5, "forced": False,
             })
         if len(plan_beats) < 3:
-            continue
+            return None
         plan_beats[0]["role"] = "hook"
         plan_beats[-1]["role"] = "cta"
         for b in plan_beats[1:-1]:
@@ -3206,7 +3259,36 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         scr = sum(float(b.get("target_seconds") or 0) for b in plan_beats)
         print("[1소스대본] 후보%d 훅패턴=%s %d비트 나레이션 %.1f초 / 화면예산 %.1f초"
               % (i + 1, pat[0], len(plan_beats), scr, used), file=sys.stderr)
-        cands.append(cand)
+        return cand
+
+    # ★후보 병렬 생성(2026-08-06). 예전엔 for로 순차라 **후보 1개 시간 × 3**이 걸렸다
+    #   (실측 로그 23:06:12/22/34 — 후보당 10~12초, 총 30초+). 이 일은 CPU가 아니라
+    #   Gemini 응답 대기가 거의 전부라, 스레드로 동시에 기다리면 그대로 벽시계가 1/3이
+    #   된다(메모리는 HTTP 요청 몇 개 수준 — 렌더처럼 ffmpeg가 뜨는 게 아니다).
+    #   ★선행조건이 방금 갖춰졌다: 후보별 키 오프셋 없이 병렬로 돌리면 셋이 **동시에**
+    #   같은 키를 때려 분당한도 429가 확정이었다. 순차일 땐 그나마 시차라도 있었다.
+    #   후보끼리 공유 상태가 없어(각자 자기 beats/plan만 만든다) 락이 필요 없다.
+    def _safe_candidate(i):
+        """★한 후보가 터져도 나머지는 살린다(2026-08-06). ex.map은 예외를 그대로
+        올려보내므로, 감싸지 않으면 후보 하나의 모델 응답 깨짐이 **대본 3개를 전멸**
+        시킨다(순차 for였을 땐 그 후보만 죽고 나머지는 살았다 — 병렬화로 생기는
+        새 위험이라 여기서 막는다)."""
+        try:
+            return _one_candidate(i)
+        except Exception as e:      # noqa: BLE001 — 후보 하나의 실패가 전멸이 되면 안 된다
+            print(f"[1소스대본] 후보{i + 1} 실패(나머지는 계속): {e!r}", file=sys.stderr)
+            return None
+
+    n = max(1, n_candidates)
+    if n == 1:
+        c0 = _safe_candidate(0)
+        cands = [c0] if c0 else []
+    else:
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=n) as ex:
+            # 순서 보존이 중요하다 — 후보 i에 배정된 스타일(trio: A=메종/B=채이/
+            # C=스탠다드)과 화면 표시 순서가 어긋나면 안 된다. map은 입력 순서대로 준다.
+            cands = [c for c in ex.map(_safe_candidate, range(n)) if c]
     if not cands:
         return None
     # ★추천에 스타일 이탈 감점(2026-08-05): 리라이트 실패로 옛 카피체로 남은 후보가

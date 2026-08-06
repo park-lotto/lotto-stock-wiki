@@ -7713,6 +7713,7 @@ def api_produce_mix_beats_preview(job_id: str):
             "caption": narr,                                        # 폴백·호환용(통째)
             "segs": video_assemble._caption_segments(narr, preset=b.get("caption_lines")),  # 렌더와 같은 분할
             "durs": b.get("cap_durs"),                              # 구절별 실제 표시시간(없으면 None)
+            "lead": b.get("cap_lead", 0.0),                         # 말 시작 전 무음(초) — 렌더와 같은 기준점
         })
     return {"beats": out}
 
@@ -8660,8 +8661,10 @@ def api_archive_channels(request: Request):
         rows = c.execute(
             "SELECT username, COUNT(*), MAX(views) FROM channel_archive "
             "GROUP BY username ORDER BY MAX(views) DESC").fetchall()
+    names = store.channel_name_map()   # 한글 표시명(2026-08-06) — 드롭다운도 카드와 같은 이름으로
     return {"ok": True, "channels": [
-        {"username": r[0], "reels": r[1], "top_views": r[2] or 0,
+        {"username": r[0], "name": names.get((r[0] or "").strip().lstrip("@"), ""),
+         "reels": r[1], "top_views": r[2] or 0,
          "category": _chcat(r[0])} for r in rows
         if (r[0] or "").strip().lstrip("@").lower() not in blocked]}
 
@@ -8698,6 +8701,9 @@ def api_archive_items(request: Request, username: str = "", sort: str = "views",
     lim = max(1, min(int(limit or 120), 500))
     args.append(lim if not cat else 5000)
     blocked = store.removed_usernames()   # 영구차단 채널 릴스 숨김(2026-08-03)
+    # 한글 표시명(2026-08-06 사장님: "채널명은 한글로 레퍼런스 랭킹처럼"). 아카이브엔
+    # username뿐이라 수집 이력에서 이름을 끌어온다. 없으면 화면이 @아이디로 폴백한다.
+    names = store.channel_name_map()
     import json as _json
     with store._conn() as c:
         rows = c.execute(sql, args).fetchall()
@@ -8715,11 +8721,16 @@ def api_archive_items(request: Request, username: str = "", sort: str = "views",
         item_cat = _cat_fn(u, vtext) if vtext else _chcat(u)
         if cat and item_cat != cat:
             continue
-        out.append({"username": r[0], "shortcode": r[1], "url": r[2], "thumbnail": r[3],
+        out.append({"username": r[0], "name": names.get(u, ""),
+                    "shortcode": r[1], "url": r[2], "thumbnail": r[3],
                     "views": r[4], "likes": r[5], "comments": r[6], "posted_at": r[7],
                     "category": item_cat})
         if len(out) >= lim:
             break
+    # ⏱ 영상 길이(2026-08-06 사장님 요청). 랭킹과 **같은 헬퍼**를 쓴다 — 캐시 결합 + 빈 곳이
+    # 있으면 백필 예약(1시간 1회)까지 한 곳에서 처리된다. 아직 대부분 비어 있어(78,265건 중
+    # 극소수) 화면은 아는 것에만 ⏱을 띄운다 — 백필이 조회수 상위부터 채우면 점점 늘어난다.
+    _attach_durations(out, store)
     return {"ok": True, "items": out}
 
 
