@@ -3074,7 +3074,8 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
     _vid = _src_entry.get("video_id")
     for _s in segments:
         _s.setdefault("video_id", _vid)
-    span, budget, used, order = single_source.select_and_order(segments, target_seconds)
+    span, budget, used, order = single_source.select_and_order(
+        segments, target_seconds, video_type=detected)
     if not order:
         return None
     _mat = " ".join((s.get("full_text") or "") for s in source_scripts)

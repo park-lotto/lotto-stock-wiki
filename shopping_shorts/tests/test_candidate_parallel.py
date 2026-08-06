@@ -32,7 +32,7 @@ def _fixture(monkeypatch, delay=0.0, record=None):
         return [{"narration": f"문장{i} 댓글에 '나도'", "covers": [i + 1]} for i in range(4)]
 
     for name, val in (
-        ("select_and_order", lambda seg, tgt: (18.0, 18.0, 18.0, order)),
+        ("select_and_order", lambda seg, tgt, **kw: (18.0, 18.0, 18.0, order)),
         ("script_prompt", lambda *a, **k: "p"),
         ("parse_beats", _beats),
         ("over_budget", lambda b, u: (False, 0, 0)),
