@@ -782,3 +782,64 @@ def test_unused_source_is_recorded():
     assert source == ep.SLOT_SOURCE_GEMINI
     assert info["sources_unused"] == ["b"]
     assert info["sets_by_source"] == {"a": 1, "b": 1}
+
+
+# ── 비트 바닥(2026-08-07) ────────────────────────────────────────────────
+# 실측 08-06 라이브 12건: 고른 세트 수가 그대로 비트 수가 된다(chosen==kept==beats 전건
+# 일치). 길이 예산만 주면 세트가 적고 길 때 Gemini가 2개만 골라 5단계 스파인이 2비트로
+# 무너졌다(job 8aa51a1940de: 4세트→chosen 2→2비트, 30초 목표에 14.2초). 프롬프트로 하한을
+# 부탁하되, 지켜졌는지는 코드가 확인한다.
+
+def test_kept_sets_are_split_to_reach_min_beats():
+    """세트를 적게 골라도 문장 경계에서 쪼개 최소 비트를 채운다.
+
+    실측 붕괴 job의 모양을 본뜬다 — 세트 하나가 **여러 문장**을 담아 길다(그래서 2세트만
+    골라도 예산이 차 버린다). 이 경우 세트 안에 자를 수 있는 문장 경계가 있다.
+    """
+    sm = _sm([("a-0", "카페에 갔는데요", 3.0), ("a-1", "정말 맛있더라고요", 3.0),
+              ("a-2", "비법을 물어봤어요", 3.0),
+              ("b-0", "집에서 해봤는데요", 3.0), ("b-1", "진짜 부드럽죠", 3.0),
+              ("b-2", "매일 만들어 먹어요", 3.0)])
+    # 한 세트에 여러 문장이 들어가도록 묶는다(실측: 한 세트 6~13초).
+    kept = [{"set_id": "a-0", "video_id": "a", "secs": 9.0,
+             "segs": [sm["a-0"], sm["a-1"], sm["a-2"]]},
+            {"set_id": "b-0", "video_id": "b", "secs": 9.0,
+             "segs": [sm["b-0"], sm["b-1"], sm["b-2"]]}]
+    out = ep._split_kept_to_min_beats(kept, 5)
+    assert len(out) >= 5, f"적게 고른 세트를 쪼개 비트를 채우지 않았다(={len(out)})"
+    # 쪼개도 소스 경계는 지킨다
+    for st in out:
+        assert len({s["video_id"] for s in st["segs"]}) == 1
+    # 세그먼트는 하나도 잃지 않는다(재료 보존)
+    assert sum(len(st["segs"]) for st in out) == 6
+
+
+def test_split_gives_up_when_sets_are_single_segment():
+    """1세그먼트 세트만 남으면 더 못 쪼갠다 — 억지로 늘리지 않고 그대로 둔다.
+
+    이 backstop의 **한계를 명시**한다: 세트가 잘게 쪼개져 있으면(각 1문장) 나눌 내부
+    경계가 없다. 그 경우 비트 바닥은 프롬프트 하한(_set_seq_prompt)이 책임진다.
+    """
+    sm = _sm([("a-0", "가나다요", 2.0), ("b-0", "사아자요", 2.0)])
+    kept = ep._build_source_sentence_sets(sm)
+    out = ep._split_kept_to_min_beats(kept, 5)
+    assert len(out) == len(kept)
+
+
+def test_split_never_breaks_a_sentence():
+    """쪼갤 자리가 문장 중간뿐이면 쪼개지 않는다(프랑켄 문장 금지가 개수보다 우선)."""
+    # a-0은 문장 미종결("튀어서") → a-0|a-1 사이는 자를 수 없는 자리다.
+    sm = _sm([("a-0", "기름이 튀어서", 2.0), ("a-1", "힘들었거든요", 2.0)])
+    kept = ep._build_source_sentence_sets(sm)
+    out = ep._split_kept_to_min_beats(kept, 5)
+    assert len(out) == len(kept), "문장 중간을 갈랐다"
+    for st in out:
+        assert st["segs"][-1]["text"].endswith(("요", "다", "죠", "네", "까"))
+
+
+def test_min_beat_hint_is_in_the_set_prompt():
+    """프롬프트에 세트 개수 하한이 실제로 실린다(예산만 주면 2개만 고른다)."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("b-0", "사아자요", 2.0)])
+    sets = ep._build_source_sentence_sets(sm)
+    p = ep._set_seq_prompt(sets, 30)
+    assert str(ep._GATE_MIN_BEATS_HINT) in p and "최소" in p

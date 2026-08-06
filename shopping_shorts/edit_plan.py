@@ -426,6 +426,9 @@ def _build_source_sentence_sets(seg_map):
 
 
 _MIN_SET_SECS = 4.0     # 비트 하나가 이보다 짧으면 할 말이 없다(실측 근거는 _cap_sets 참조)
+# 프롬프트에 적어 줄 "최소 몇 세트" 힌트 = 게이트 최소비트. plan_gate와 한 값을 쓴다
+# (여기서 5를 따로 박으면 게이트만 올렸을 때 조용히 어긋난다).
+from shopping_shorts.plan_gate import _MIN_BEATS as _GATE_MIN_BEATS_HINT  # noqa: E402
 
 # 모델이 할 말이 없을 때 뱉는 자리표시자들. 실측은 `filler`(job e99d0e8e3e02, 6개)지만
 # 같은 계열이 몇 개 더 있어 함께 막는다. 역할 이름을 그대로 적은 것도 자리표시자다.
@@ -603,6 +606,16 @@ def _set_seq_prompt(sets, target_seconds):
              "수 있으니, 소스에 얽매이지 말고 내용 흐름으로 판단하라.",
              f"목표 영상 길이는 약 {target_seconds}초다 — 총 길이가 거기 가깝게 되도록 "
              "필요한 세트만 골라 순서를 정하라. 세트를 전부 다 쓸 필요는 없다.",
+             # ★세트 개수의 **하한**을 못박는다(2026-08-07 실측). 길이 예산만 주면 세트가
+             #   적고 긴 경우 2개로도 30초가 차서 Gemini가 2개만 고른다 — 고른 세트 수가
+             #   그대로 비트 수가 되므로(chosen==kept==beats, 08-06 12건 전건 일치) 5단계
+             #   스파인이 2비트로 무너진다(실측 job 8aa51a1940de: 4세트→chosen 2→2비트,
+             #   30초 목표에 14.2초). 같은 교훈이 _alt_seq_prompt엔 이미 반영돼 있었는데
+             #   이 1벌째 프롬프트만 빠져 있었다.
+             f"★**최소 {_GATE_MIN_BEATS_HINT}개 이상의 세트**를 골라라 — 고른 세트 하나가 "
+             "영상의 한 장면(비트)이 된다. 그보다 적으면 훅→문제→해결→결과→마무리 흐름이 "
+             "안 서고 한 장면이 지나치게 길어진다. 세트가 부족해 보여도 짧은 세트를 여러 개 "
+             "골라 장면 수를 채워라(세트가 그보다 적게 있으면 있는 것을 전부 골라라).",
              # ★2026-08-01 라이브 실측(job af0e40746fe1): s0 세트 합 16.9초 · s1 합 30.2초에
              #   목표가 30초라, s1 하나만으로 예산이 정확히 차서 Gemini가 s0를 통째로 버렸다
              #   (추천 후보까지 s1 단독). 버그가 아니라 예산 산수인데, 사장님이 영상 두 개를
@@ -742,7 +755,63 @@ def _pick_slot_groups(seg_map, target_seconds=None, call=None):
     if not kept:
         return (_pick_timeline(seg_map, target_seconds), SLOT_SOURCE_FALLBACK_FILTERED_EMPTY,
                 _slot_info(sets, chosen, []))
+    # ★프롬프트로 "최소 N세트"를 부탁했어도 지켜졌는지는 코드가 확인한다(이 파일의 교훈:
+    #   요구만 하고 확인 안 하면 지켜지는지 알 수 없다). 고른 세트 수 = 비트 수라,
+    #   모자라면 고른 세트를 **문장 경계에서** 쪼개 장면 수를 채운다. 안 골린 세트를
+    #   억지로 끌어오지 않는다 — Gemini가 짠 이야기 흐름은 그대로 두는 게 낫다.
+    kept = _split_kept_to_min_beats(kept, _GATE_MIN_BEATS_HINT)
     return [st["segs"] for st in kept], SLOT_SOURCE_GEMINI, _slot_info(sets, chosen, kept)
+
+
+def _split_kept_to_min_beats(kept, min_count):
+    """채택 세트가 min_count보다 적으면 **문장이 끝난 자리에서** 쪼개 개수를 맞춘다.
+
+    쪼개는 자리를 문장 경계로 제한하는 이유: 한 문장이 두 화면으로 찢어지면
+    "기름이 튀어서 | 힘들었거든요"처럼 프랑켄 문장이 된다(회귀 테스트가 지키는 불변식).
+    문장 경계가 없어 더 못 쪼개면 그대로 둔다 — 억지로 나누느니 비트가 적은 게 낫다.
+    같은 세트 안에서만 나누므로 소스 경계는 자동으로 지켜진다. 순수 계산."""
+    out = [dict(st) for st in (kept or [])]
+
+    def _cut_at(segs):
+        for k in range(len(segs) - 1, 0, -1):          # 뒤에서부터 = 최대한 균형 있게
+            prev = segs[k - 1]
+            if isinstance(prev, dict) and _ends_sentence(prev.get("text")):
+                return k
+        return 0
+
+    guard = 0
+    while len(out) < min_count and guard < 8:
+        guard += 1
+        cand = [i for i, st in enumerate(out)
+                if len(st.get("segs") or []) >= 2 and _cut_at(st["segs"])]
+        if not cand:
+            break
+        i = max(cand, key=lambda k: out[k].get("secs") or 0)
+        st = out[i]
+        segs = st["segs"]
+        half = _cut_at(segs)
+        a_segs, b_segs = segs[:half], segs[half:]
+
+        def _sum(ss):
+            tot = 0.0
+            for x in ss:
+                if isinstance(x, dict):
+                    tot += max(0.0, float(x.get("end") or 0) - float(x.get("start") or 0))
+            return round(tot, 1)
+
+        a_secs = _sum(a_segs)
+        out[i:i + 1] = [
+            {"set_id": st["set_id"], "video_id": st["video_id"], "segs": a_segs,
+             "secs": a_secs},
+            {"set_id": (b_segs[0].get("seg_id") if isinstance(b_segs[0], dict)
+                        else f'{st["set_id"]}b'),
+             "video_id": st["video_id"], "segs": b_segs,
+             "secs": round(max(0.0, (st.get("secs") or 0) - a_secs), 1)},
+        ]
+    if len(out) != len(kept or []):
+        print("[슬롯] 채택 %d세트 → %d세트로 분할(최소 %d비트 확보)"
+              % (len(kept or []), len(out), min_count), file=sys.stderr)
+    return out
 
 
 _ALT_SEQ_SCHEMA = {
@@ -2196,11 +2265,23 @@ def _ground_candidate(cand, seg_map, structure="free", lead_hook=True):
     ★영상은 beats를 읽으므로 첫 비트가 밋밋하면 hook(강한 오프너)을 앞에 얹는다."""
     hook = cand.get("hook", "")
     beats_out = []
+    dropped = []
     for beat in cand.get("beats", []):
         segs = beat.get("seg_ids") or []
-        primary = _ground_ref({"seg_id": segs[0]}, seg_map) if segs else None
+        # ★환각 seg_id 하나로 비트를 통째로 버리지 않는다(2026-08-07). 나레이션은 멀쩡한데
+        #   화면 지목만 틀린 경우가 있어, 같은 비트의 나머지 seg_id로 내려가며 살린다.
+        #   (예전엔 seg_ids[0]이 인벤토리에 없으면 그 비트의 대사까지 통째로 사라졌다.)
+        primary, used_i = None, 0
+        for i, sid in enumerate(segs):
+            primary = _ground_ref({"seg_id": sid}, seg_map)
+            if primary is not None:
+                used_i = i
+                break
         if primary is None:
+            dropped.append({"role": beat.get("role", ""),
+                            "narration": (beat.get("narration") or "")[:60]})
             continue
+        segs = segs[used_i:]
         alts, seen = [], {primary["seg_id"]}
         for sid in segs[1:]:
             g = _ground_ref({"seg_id": sid}, seg_map)
@@ -2227,6 +2308,11 @@ def _ground_candidate(cand, seg_map, structure="free", lead_hook=True):
         })
     if not beats_out:
         return None
+    if dropped:
+        # 조용한 실패 금지 — 몇 개가 왜 사라졌는지 남긴다.
+        print("_ground_candidate: 환각 seg_id로 비트 %d개 드롭 — %s"
+              % (len(dropped), "; ".join("[%s]%s" % (d["role"], d["narration"]) for d in dropped)),
+              file=sys.stderr)
     beats_out = _ensure_cta_beat(beats_out, cand)
     beats_out = _fix_beat_structure(beats_out)
     beats_out = _fill_beat_screen_time(beats_out, seg_map)
