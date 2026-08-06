@@ -754,6 +754,38 @@ def _has_repickable(gate):
     return any(any(h in v for h in _REPICKABLE_HINTS) for v in (gate.get("violations") or []))
 
 
+def _prefer_structurally_sound(rec, candidates, target_seconds):
+    """추천 후보의 골격이 무너졌으면 형제 후보 중 성한 것으로 바꾼다(순수·무과금).
+
+    형태만 본다(비트 수·길이) — 문장 품질 판정은 judge 소관이라 건드리지 않는다.
+    바꿀 게 없으면 추천을 그대로 돌려준다(회귀 0). 정렬은 안정적이라 같은 입력이면 같은 결과."""
+    def _beats(c):
+        return ((c or {}).get("plan") or {}).get("beats") or []
+
+    def _secs(c):
+        return round(sum(float(b.get("target_seconds") or 0) for b in _beats(c)), 1)
+
+    def _broken(c):
+        n = len(_beats(c))
+        if n < plan_gate._MIN_BEATS:
+            return True
+        # 목표의 절반도 안 되면 이야기가 안 선다(게이트의 _SHORT_RATIO보다 느슨한 하한).
+        return bool(target_seconds) and _secs(c) < target_seconds * 0.5
+
+    if not _broken(rec):
+        return rec
+    # 성한 후보 중 비트가 가장 많은 것(같으면 원래 순서 유지 = 심사 순위 존중).
+    sound = [c for c in (candidates or []) if c is not rec and not _broken(c)]
+    if not sound:
+        print("[골격] 추천 후보가 %d비트/%.1f초로 무너졌으나 성한 형제 후보가 없어 그대로 진행"
+              % (len(_beats(rec)), _secs(rec)), file=sys.stderr)
+        return rec
+    best = max(sound, key=lambda c: len(_beats(c)))
+    print("[골격] 추천 후보(%d비트/%.1f초)를 형제 후보(%d비트/%.1f초)로 교체"
+          % (len(_beats(rec)), _secs(rec), len(_beats(best)), _secs(best)), file=sys.stderr)
+    return best
+
+
 def _run_gate_correction(plan, source_scripts, target_seconds):
     """게이트 검사→재픽 루프. 위반이 재픽 가능하면 통과할 때까지 재픽(상한 _MAX_REPICK).
     재픽이 무변화면 즉시 종료(수렴). 최종 gate를 plan["gate"]에 항상 저장 —
@@ -874,6 +906,11 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
             _rec_cands = sf["candidates"]   # conform 뒤 재저장용(카드=TTS 일치)
             rec = next((cand for cand in sf["candidates"] if cand["recommended"]),
                        sf["candidates"][0])
+            # ★골격이 무너진 후보는 추천이라도 쓰지 않는다(2026-08-07).
+            #   심사(judge)는 대본 품질·장면싱크를 보지 형태(비트 수)를 안 본다. 실측 08-06:
+            #   12건 중 6건이 5비트 미만으로 나갔고 그중 3건은 2비트(30초 목표에 14.2초)였다.
+            #   같은 job의 다른 후보가 멀쩡하면 그걸 쓰는 게 항상 낫다 — 추가 호출·과금 없다.
+            rec = _prefer_structurally_sound(rec, sf["candidates"], target_seconds)
             plan = rec["plan"]
             plan["generator"] = "scene_first"   # ★P1: 어느 생성기가 만들었나(조용한 폴백 금지)
             # 주입 미리보기(2026-07-23): 이 대본에 실제로 들어간 은행 블록을 plan에 실어 리뷰
