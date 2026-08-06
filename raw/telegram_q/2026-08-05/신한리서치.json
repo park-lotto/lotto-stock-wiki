@@ -6,35 +6,17 @@
       "rating": null,
       "tp": null,
       "ts": "08:08",
-      "quote": "부품 공급에 대한 우려 해소가 핵심 / 1QFY26 Review: 역대 최대 분기 신규 수주 달성 / 생산 지연 가능성을 반영하여 보수적 가이던스 제시",
+      "quote": "부품 공급에 대한 우려 해소가 핵심, 1QFY26 Review: 역대 최대 분기 신규 수주 달성, 생산 지연 가능성을 반영하여 보수적 가이던스 제시",
       "sector": "로봇"
     },
     {
       "broker": "신한투자증권",
-      "stock": "큐리언트",
+      "stock": "유니트리",
       "rating": null,
       "tp": null,
-      "ts": "08:16",
-      "quote": "CDK7 저해제, 론자와 ADC 판도 바꾼다",
-      "sector": "바이오"
-    },
-    {
-      "broker": "신한투자증권",
-      "stock": "리커전 파마",
-      "rating": null,
-      "tp": null,
-      "ts": "08:16",
-      "quote": "AI 신약개발 선구자가 주목하는 ‘CDK7’",
-      "sector": "바이오"
-    },
-    {
-      "broker": "신한투자증권",
-      "stock": "앱클론",
-      "rating": null,
-      "tp": null,
-      "ts": "08:16",
-      "quote": "HER2 위암 정복, 하반기 턴어라운드",
-      "sector": "바이오"
+      "ts": "08:11",
+      "quote": "8월 5일 수요 예측 시작, 이르면 중순 상장 기대, 본토 최초 상장 휴머노이드 업체로서의 프리미엄 기대, IPO 자금은 하드웨어 캐파 증설과 AI 모델 개발에 집중, 로봇 본체를 넘어 임바디드 AI 데이터 플랫폼 업체로 도약",
+      "sector": "로봇"
     },
     {
       "broker": "신한투자증권",
@@ -56,7 +38,7 @@
     },
     {
       "broker": "신한투자증권",
-      "stock": "LX인터내셔내셔널",
+      "stock": "LX인터내셔널",
       "rating": "매수",
       "tp": null,
       "ts": "08:16",
@@ -83,51 +65,6 @@
     },
     {
       "broker": "신한투자증권",
-      "stock": "애플",
-      "rating": null,
-      "tp": null,
-      "ts": "08:16",
-      "quote": "방향성은 수익성이 좌우",
-      "sector": "IT"
-    },
-    {
-      "broker": "신한투자증권",
-      "stock": "셀레스티카",
-      "rating": null,
-      "tp": null,
-      "ts": "08:16",
-      "quote": "데이터센터 CapEx 고성장 수혜 지속",
-      "sector": "IT"
-    },
-    {
-      "broker": "신한투자증권",
-      "stock": "화낙",
-      "rating": null,
-      "tp": null,
-      "ts": "08:16",
-      "quote": "부품 공급 차질 우려로 주가 급락",
-      "sector": "로봇"
-    },
-    {
-      "broker": "신한투자증권",
-      "stock": "카메코",
-      "rating": null,
-      "tp": null,
-      "ts": "08:16",
-      "quote": "미국 원전 산업 재건의 핵심축",
-      "sector": "원전"
-    },
-    {
-      "broker": "신한투자증권",
-      "stock": "라이온델바젤",
-      "rating": null,
-      "tp": null,
-      "ts": "08:16",
-      "quote": "공급 차질은 현재진행형",
-      "sector": "기타"
-    },
-    {
-      "broker": "신한투자증권",
       "stock": "삼성증권",
       "rating": "매수",
       "tp": null,
@@ -142,43 +79,43 @@
       "tp": null,
       "ts": "08:09",
       "quote": "전통 금융의 이익, 핀테크의 멀티플",
-      "sector": "IT"
-    },
-    {
-      "broker": "신한투자증권",
-      "stock": "팔란티어",
-      "rating": null,
-      "tp": null,
-      "ts": "08:09",
-      "quote": "또 한번 역대급 실적으로 존재감 증명",
-      "sector": "IT"
-    },
-    {
-      "broker": "신한투자증권",
-      "stock": "이튼 코퍼레이션",
-      "rating": null,
-      "tp": null,
-      "ts": "08:09",
-      "quote": "27년까지 이어질 실적 성장세",
-      "sector": "전력"
-    },
-    {
-      "broker": "신한투자증권",
-      "stock": "무라타",
-      "rating": null,
-      "tp": null,
-      "ts": "08:09",
-      "quote": "확실한 방향성",
-      "sector": "IT"
+      "sector": "기타"
     },
     {
       "broker": "신한투자증권",
       "stock": "한화엔진",
-      "rating": null,
+      "rating": "매수",
       "tp": "5.3만원",
       "ts": "11:03",
-      "quote": "안정적인 수주와 신사업을 감안할 때 중장기 매수 관점 유지",
+      "quote": "탄탄한 본업, 넓어지는 성장판, 매수 투자의견과 목표주가 5.3만원 유지",
       "sector": "조선"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "쿠팡",
+      "rating": null,
+      "tp": null,
+      "ts": "13:54",
+      "quote": "매출 성장률 한 자릿수 및 영업적자 흐름 지속, 대규모 행정과징금과 대만 신사업 투자 확대가 동시 반영, 2Q26 매출 89억달러(+4%), 영업적자 5.6억달러 기록",
+      "sector": "소비내수"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "타워 세미컨덕터",
+      "rating": null,
+      "tp": null,
+      "ts": "17:25",
+      "quote": "기존 방향성의 견조함과 장기 로드맵을 동시에 증명, 2Q26 Review: 실리콘 포토닉스 확대로 GPM 30% 달성, NPO 확장과 일본 Fab 증설을 통한 27~28년 로드맵 구체화",
+      "sector": "반도체"
+    },
+    {
+      "broker": "신한투자증권",
+      "stock": "AMD",
+      "rating": null,
+      "tp": null,
+      "ts": "17:25",
+      "quote": "결국 시선은 하반기로, 2Q26 Review: 역대급 실적에도 이미 너무 높은 눈높이, 현재의 우려사항은 하반기 숫자로 증명 가능",
+      "sector": "반도체"
     }
   ]
 }

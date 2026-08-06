@@ -1,9 +1,4 @@
 {
-  "2026-07-23": {
-    "atoms": {},
-    "queue_new": 0,
-    "pytest_ok": false
-  },
   "2026-07-24": {
     "atoms": {},
     "queue_new": 0,
@@ -70,6 +65,11 @@
     "pytest_ok": false
   },
   "2026-08-05": {
+    "atoms": {},
+    "queue_new": 0,
+    "pytest_ok": false
+  },
+  "2026-08-06": {
     "atoms": {},
     "queue_new": 0,
     "pytest_ok": false

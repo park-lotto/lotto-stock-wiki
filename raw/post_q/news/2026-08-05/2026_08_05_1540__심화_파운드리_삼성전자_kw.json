@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성전자",
+      "signal": "bull",
+      "reason": "AI칩 성능을 극대화하는 신기술인 zHBM을 최초 공개하며 차세대 메모리 시장 주도권 확보 기대",
+      "ts": "2026-08-04",
+      "quote": "HBM, 이제 AI칩 위로 올라간다…삼성전자 ‘zHBM’ 첫 공개",
+      "sector": "반도체"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "삼성전자가 기존 HBM의 한계를 극복하고 AI칩 성능을 높일 수 있는 zHBM 기술을 처음으로 공개함",
+      "ts": "2026-08-04",
+      "quote": "HBM, 이제 AI칩 위로 올라간다…삼성전자 ‘zHBM’ 첫 공개"
+    }
+  ],
+  "quote": "HBM, 이제 AI칩 위로 올라간다…삼성전자 ‘zHBM’ 첫 공개"
+}
