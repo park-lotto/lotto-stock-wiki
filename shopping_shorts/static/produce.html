@@ -3976,8 +3976,11 @@ async function startProduceMix(){
     //   서버에 결속되기 전에 날아갔다 → 그 작업의 job_id는 영영 NULL로 남고, 돌아와도
     //   _restoreMixContext가 안 돌아 **대본 후보·미리보기가 통째로 사라진 것처럼 보였다**
     //   (사장님 제보 "대본 뽑은 게 다시 다 리셋된다"). job_id 결속은 미룰 수 있는 종류가 아니다.
+    //   ⚠️ 저장은 **부가기능이다** — 여기서 던지면 아래 refreshNextBtn(게이트 재잠금)에 영영
+    //      도달하지 못해 재매칭 후 [다음]이 열린 채로 남는다(유료 자막제거 우회). 이 슬라이스를
+    //      잘라 도는 게이트 테스트엔 _pushWorkNow 스텁이 없다 — try/typeof로 감싼다.
     saveWork();          // 로컬(sessionStorage)·표시 갱신은 종전대로
-    _pushWorkNow();      // 서버 확정은 지금 — 대기 중인 디바운스를 앞당겨 삼킨다
+    try{ if(typeof _pushWorkNow === 'function') _pushWorkNow(); }catch(_){ }   // 서버 확정은 지금
     // 동적 단계바 시작(loader.js 있을 때만). 컨트롤러는 #mixStatus 속성에 담는다(최상위 변수 X).
     // ★로딩 UI는 부가기능 — 절대 매칭 흐름(폴링·게이트 재잠금)을 막으면 안 된다. try/catch로 감싼다.
     st._sblPipe = null;
