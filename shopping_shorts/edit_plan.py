@@ -3161,8 +3161,10 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         #   ★trio(기본): 후보마다 다른 채널 스타일 — A=메종(발견담)/B=채이(가족드라마)/
         #   C=스탠다드(유머목격담). 사장님 확정 3각(2026-08-05).
         from shopping_shorts import style_profiles as _sp0
+        _restyle_rep = {}
         beats = single_source.apply_restyle(beats, _c,
-                                            style_name=_sp0.candidate_style(i))
+                                            style_name=_sp0.candidate_style(i),
+                                            report=_restyle_rep)
         # ★빈 나레이션 비트는 **커버 배정 전에** 걸러낸다(2026-08-04 라이브 실측 job
         #   bcdf871a6d57: 추천 후보가 16.8초 — 버려진 비트의 컷이 같이 사라져 하한 미달).
         #   먼저 거르면 아래 '구멍은 직전 비트가 이어받는다'가 그 컷들을 살린다.
@@ -3249,7 +3251,14 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
                 "affiliate_target": "", "plagiarism_flags": _plagiarism_flags(plan_beats, src_texts)}
         rule_score = _score_candidate(plan, target_seconds=budget, source_full_texts=src_texts)
         cand = {"plan": plan, "story": {"hook": plan_beats[0]["narration"]},
-                "score": rule_score, "recommended": False}
+                "score": rule_score, "recommended": False,
+                # ★스타일 배정 결과를 남긴다(2026-08-06): restyle 실패가 조용히 원본으로
+                #   남으면 trio 3후보가 같은 결로 수렴하는데, 어느 후보가 실패했는지
+                #   DB(candidates_json)에서 볼 수 없었다.
+                "style": _restyle_rep.get("style"),
+                # ok 키 자체가 없으면(스타일 off·대역) None = '모름' — False(확정 실패)와
+                # 구분해야 게이트가 스타일 off에서 헛돌지 않는다.
+                "restyled": _restyle_rep.get("ok")}
         if judge:
             from shopping_shorts import candidate_judge
             jr = candidate_judge.judge(plan_beats, call=call)
@@ -3274,10 +3283,33 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         시킨다(순차 for였을 땐 그 후보만 죽고 나머지는 살았다 — 병렬화로 생기는
         새 위험이라 여기서 막는다)."""
         try:
-            return _one_candidate(i)
+            c = _one_candidate(i)
         except Exception as e:      # noqa: BLE001 — 후보 하나의 실패가 전멸이 되면 안 된다
             print(f"[1소스대본] 후보{i + 1} 실패(나머지는 계속): {e!r}", file=sys.stderr)
             return None
+        # ★품질 게이트 재생성(2026-08-06 사장님 "품질이 뒤죽박죽"): judge 낙제(total≤0.4)
+        #   또는 스타일 리라이트 실패 후보만 1회 다시 만들고 점수 좋은 쪽을 쓴다.
+        #   후보 생성은 병렬 실측 18초라 재생성 1회 상한이면 잡당 +20초 안이다.
+        #   SCRIPT_QUALITY_RETRY=0 으로 끄면 종전과 동일(회귀 0).
+        if os.environ.get("SCRIPT_QUALITY_RETRY", "1") in ("0", "off", ""):
+            return c
+        _bad = (c is not None and (
+            (c.get("judge") or {}).get("total", 1.0) <= 0.4
+            or c.get("restyled") is False))
+        if _bad:
+            why = ("judge %.2f" % (c.get("judge") or {}).get("total", 1.0)
+                   if (c.get("judge") or {}).get("total", 1.0) <= 0.4 else "restyle 실패")
+            print(f"[1소스대본] 후보{i + 1} 품질미달({why}) → 1회 재생성", file=sys.stderr)
+            try:
+                c2 = _one_candidate(i)
+            except Exception as e:  # noqa: BLE001
+                print(f"[1소스대본] 후보{i + 1} 재생성 실패(원본 유지): {e!r}",
+                      file=sys.stderr)
+                return c
+            if c2 and (c2.get("score", 0) > c.get("score", 0)
+                       or (c2.get("restyled") and not c.get("restyled"))):
+                return c2
+        return c
 
     n = max(1, n_candidates)
     if n == 1:

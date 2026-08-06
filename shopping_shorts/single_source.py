@@ -267,14 +267,28 @@ def restyle_prompt(beats, length_note="", style_name=None):
             + "\n\nJSON만: {\"beats\":[{\"n\":1,\"narration\":\"...\"}]}")
 
 
-def apply_restyle(beats, call, max_tries=3, style_name=None):
+def apply_restyle(beats, call, max_tries=3, style_name=None, report=None):
     """스타일 리라이트 — 길이 초과·상투어는 버리지 말고 피드백 재시도(최대 3회).
 
     ★첫 구현은 길이 밖이면 조용히 원본 복귀였는데, 메종 문체가 원문보다 길어
     **매번 1.5배로 불어 게이트에 걸리고 아무 일도 안 일어났다**(2026-08-05 서버 실측
     — '조용한 폴백' 계보). 이제 초과분은 '줄여서 다시'를 알려주고 재요청한다.
-    문장수 불일치·빈 응답 같은 구조 실패만 즉시 원본 유지."""
+    문장수 불일치·빈 응답 같은 구조 실패만 즉시 원본 유지.
+
+    report(dict, 선택): 호출자가 성공/실패를 알 수 있게 채워준다 —
+    {"ok": bool, "style": str, "why": str}. 실패가 조용히 원본으로 남으면 trio가
+    전부 같은 결로 수렴하는데 로그 0줄이라 진단 불가였다(2026-08-06 서버 실측)."""
+    import sys
     from shopping_shorts import style_profiles
+
+    def _done(out, ok, why):
+        if report is not None:
+            report.update(ok=ok, style=style_name or style_profiles.active_style(),
+                          why=why)
+        print(f"[restyle] 스타일={style_name} {'성공' if ok else '실패'}({why})",
+              file=sys.stderr)
+        return out
+
     if not style_profiles.active_style() or not beats:
         return beats
     old_total = sum(len(b.get("narration") or "") for b in beats)
@@ -285,10 +299,10 @@ def apply_restyle(beats, call, max_tries=3, style_name=None):
                     RESTYLE_SCHEMA)
         got = (resp or {}).get("beats") if isinstance(resp, dict) else None
         if not got or len(got) != len(beats):
-            return best or beats
+            return _done(best or beats, best is not None, "빈 응답·비트수 불일치")
         by_n = {int(g.get("n", 0)): (g.get("narration") or "").strip() for g in got}
         if sorted(by_n) != list(range(1, len(beats) + 1)) or not all(by_n.values()):
-            return best or beats
+            return _done(best or beats, best is not None, "번호 불일치·빈 나레이션")
         out = []
         for i, b in enumerate(beats):
             nb = dict(b)
@@ -313,8 +327,9 @@ def apply_restyle(beats, call, max_tries=3, style_name=None):
                     "\"남겨주시면 [받는 것] 드릴게요\" 형태로.")
             best = out
             continue
-        return out
-    return best or beats
+        return _done(out, True, "정상")
+    return _done(best or beats, best is not None,
+                 "재시도 소진(길이·상투어·CTA)")
 
 
 def parse_beats(resp):
