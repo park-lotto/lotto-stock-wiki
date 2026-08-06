@@ -3921,17 +3921,24 @@ async function pollMix(){
     const st=document.getElementById('mixStatus');
     if(!d.ok){ if(st) st._sblPipe=null; st.textContent='상태 조회 실패'+(d.error?' — '+d.error:''); clearInterval(MIX_POLL); const th0=document.getElementById('theater'); if(th0) th0.hidden=true; setMatchingUI(false); return; }
     const _pipe = st ? st._sblPipe : null;
+    // ★순서 대기(2026-08-06): 워커가 아직 안 집은 잡은 '다운로드 중'이 아니라 대기 중이다 —
+    //   멈춘 것처럼 보이던 원인. queue_ahead: null=진행 중 / 0=다음 차례 / N=내 앞 N개.
+    const _waiting = (typeof d.queue_ahead==='number');
+    const _label = _waiting
+      ? ('순서 대기 중…'+(d.queue_ahead>0?(' — 내 앞 작업 '+d.queue_ahead+'개'):' 곧 시작합니다'))
+      : (MIX_LABEL[d.status]||d.status);
     if(_pipe && d.status!=='failed'){
       // 단계바 진행. ready_for_review=전부 완료, 그 외는 해당 단계로.
       const idx=MIX_STAGE_ORDER.indexOf(d.status);
       // 완료는 done()으로 — set(4)는 5단계를 '진행 중'(스피너·펄스)으로 그려 "완료!"인데도 뱅글뱅글 돈다.
       if(d.status==='ready_for_review') _pipe.done('매칭 완료! 아래에서 대본 후보를 골라주세요');
-      else if(idx>=0) _pipe.set(idx, (MIX_LABEL[d.status]||d.status)+' <b>'+(idx+1)+'/4</b>');
-      else st.textContent='상태: '+(MIX_LABEL[d.status]||d.status);   // rendering 등
+      else if(_waiting) _pipe.set(0, _label);
+      else if(idx>=0) _pipe.set(idx, _label+' <b>'+(idx+1)+'/4</b>');
+      else st.textContent='상태: '+_label;   // rendering 등
     } else if(d.status!=='failed'){
-      st.textContent='상태: '+(MIX_LABEL[d.status]||d.status)+(d.error?' — '+d.error:'');   // loader.js 폴백
+      st.textContent='상태: '+_label+(d.error?' — '+d.error:'');   // loader.js 폴백
     }
-    updateMatchProgress(MIX_LABEL[d.status]||d.status);   // ★Task8: 패널0 미러링 — 사용자가 있는 화면에도 같은 단계 표시
+    updateMatchProgress(_label);   // ★Task8: 패널0 미러링 — 사용자가 있는 화면에도 같은 단계 표시
     // 극장(Task5) 종료 — 성공/실패 어느 쪽이든 대기 연출은 끝났으니 숨긴다. (commit 7d156f09c에서
     // 이 두 분기가 매칭 완료 신호였다 — 별도 job 상태를 새로 만들지 않고 그대로 재사용한다.)
     if(d.status==='ready_for_review' || d.status==='failed'){

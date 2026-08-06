@@ -1,6 +1,7 @@
 """SQLite 수집 이력 저장소."""
 import hashlib
 import json
+import os
 import secrets
 import sqlite3
 import uuid
@@ -4136,18 +4137,43 @@ class Store:
                 "       claimed_at=datetime('now'), heartbeat_at=datetime('now') "
                 " WHERE id = (SELECT q.id FROM job_queue q "
                 "             WHERE q.state='queued' "
-                "               AND (q.owner IS NULL OR q.owner NOT IN "
-                "                    (SELECT owner FROM job_queue "
-                "                      WHERE state='running' AND owner IS NOT NULL)) "
+                # ★관리자(owner '0')는 동시 N개 허용(2026-08-06 사장님 — 두 작업을 병렬로
+                #   돌리며 확인하는 운용). 일반 고객은 종전대로 1개(공평 분배 유지).
+                #   N은 ADMIN_CONCURRENT_JOBS(기본 2).
+                "               AND (q.owner IS NULL OR "
+                "                    (SELECT COUNT(*) FROM job_queue "
+                "                      WHERE state='running' AND owner=q.owner) "
+                "                    < CASE WHEN q.owner='0' THEN ? ELSE 1 END) "
                 f"               AND (q.task NOT IN ({ph}) OR NOT EXISTS "
                 "                    (SELECT 1 FROM job_queue r "
                 f"                     WHERE r.state='running' AND r.task IN ({ph}))) "
                 "             ORDER BY COALESCE(q.prio, 5), q.id LIMIT 1) "
                 "RETURNING id, task, args_json",
-                self._EXCLUSIVE_TASKS * 2).fetchone()
+                (int(os.environ.get("ADMIN_CONCURRENT_JOBS", "2") or 2),)
+                + self._EXCLUSIVE_TASKS * 2).fetchone()
             if not row:
                 return None
             return {"id": row[0], "task": row[1], "args": json.loads(row[2])}
+
+    def mix_queue_ahead(self, job_id):
+        """이 잡의 mix 큐 항목이 아직 'queued'면 앞에 선 queued 개수를 반환, 아니면 None.
+
+        2026-08-06 사장님 제보: 대기 중인데 '영상 다운로드 중'으로 보여 멈춘 것처럼
+        보인다 — 화면이 '순서 대기 중(내 앞 N개)'을 정직하게 표시할 근거를 준다."""
+        try:
+            with self._conn() as c:
+                row = c.execute(
+                    "SELECT id FROM job_queue WHERE task='mix' AND state='queued' "
+                    "  AND args_json LIKE ? ORDER BY id DESC LIMIT 1",
+                    (f'%"{job_id}"%',)).fetchone()
+                if not row:
+                    return None
+                ahead = c.execute(
+                    "SELECT COUNT(*) FROM job_queue "
+                    " WHERE state='queued' AND id < ?", (row[0],)).fetchone()[0]
+            return int(ahead)
+        except sqlite3.Error:
+            return None
 
     def heartbeat(self, qid, progress=None):
         """워커가 살아있다는 신호. 30초마다 찍는다 — 멈추면 reap_stale이 죽은 걸로 본다.
