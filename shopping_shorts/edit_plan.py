@@ -2085,6 +2085,12 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "형식은 반드시 [명분 한 줄] + \"댓글에 '[키워드]' 남겨주시면 바로 보내드릴게요\"로 끝내라. "
         "유입 경로는 댓글뿐이다(프로필·링크 안내 금지). 명분은 원본에 있는 사실 범위 안에서만 — "
         "없는 가격·할인·한정수량을 지어내지 마라.\n"
+        # ★CTA 미끼(2026-08-06 사장님 확정, 1소스와 동일): 본문이 비법을 다 풀면 CTA에 줄 게
+        #   안 남는다 — 가장 구체적인 한 조각은 본문에서 숨기고 CTA가 그 조각을 문다.
+        "- ★미끼 규칙: 핵심 비법의 **가장 구체적인 한 조각**(정확한 비율·핵심 재료 하나·"
+        "온도/시간 같은 수치)은 본문에서 말하지 마라 — '비법이 있다'는 것과 효과만 보여주고, "
+        "그 조각이 뭔지는 CTA에서 걸어라. 단, 뭘 숨겼는지는 시청자가 알게 하라"
+        "(예: 본문 '재료 하나만 바꾸면 끝' → CTA '그 재료 궁금하시면 댓글에').\n"
         "- 각 후보에 hook, story_person, story_event, story_resolution, cta_line, "
         "cta_keyword를 채워라.\n"
         "- 억지 개그·번역투·상세페이지 상투어(꿀템·갓성비·완벽 해결·삶의 질 상승) 금지.\n"
@@ -3424,7 +3430,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         for r in raws:
             r.setdefault("_backbone_video", bb_video)   # 핑퐁 순서고정이 이 백본을 쓴다
       cands = []
-      for r in raws:
+      for _ci, r in enumerate(raws):
         plan = _ground_candidate(r, seg_map, lead_hook=not tl_groups)
         if plan is None:
             continue
@@ -3524,11 +3530,22 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             plan["slot_source"] = slot_source
             if slot_info:
                 plan["slot_info"] = slot_info      # G3 관측: 무엇이 잘리고 어느 소스가 빠졌나
+        # ★트리오 스타일 이식(2026-08-06 사장님 "모두 동일하게"): 믹스(장면 배정)는 경로마다
+        #   다르지만, 나레이션 문체 리라이트는 화면과 무관하다 — 1소스와 같은 배선.
+        #   covers·컷 매핑은 불변(문장수·순서 고정 규칙이 restyle_prompt에 있다).
+        from shopping_shorts import single_source as _ss1
+        from shopping_shorts import style_profiles as _sp1
+        _restyle_rep = {}
+        plan["beats"] = _ss1.apply_restyle(plan["beats"], _call,
+                                           style_name=_sp1.candidate_style(_ci),
+                                           report=_restyle_rep)
         story = {k: r.get(k, "") for k in
                  ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
         rule_score = _score_candidate(plan, avoid_hooks=avoid_hooks, target_seconds=target_seconds,
                                        source_full_texts=src_texts)
-        cand = {"plan": plan, "story": story, "score": rule_score, "recommended": False}
+        cand = {"plan": plan, "story": story, "score": rule_score, "recommended": False,
+                "style": _restyle_rep.get("style"),
+                "restyled": _restyle_rep.get("ok")}
         # ★심사위원(사장님 기준: 대본품질·장면싱크·스토리라인) — judge on일 때만(Gemini 콜).
         # 규칙점수(빠른 계산)와 반반 섞어 최종 순위. 심사 실패는 규칙점수만으로 폴백(무해).
         from shopping_shorts import candidate_judge
@@ -3666,7 +3683,16 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         rich = [i for i in toned if _cand_sensory(cands[i]) >= _SENSORY_FLOOR]
         qualified = rich or toned
         pool = qualified or range(len(cands))
-        best = max(pool, key=lambda i: cands[i]["score"])
+        # ★스타일 이탈 감점(2026-08-06, 1소스 3298과 동일 배선): 리라이트 실패로 옛
+        #   카피체로 남은 후보가 ★추천되는 것을 막는다. 표시 score는 안 건드린다.
+        from shopping_shorts import style_profiles as _sp2
+
+        def _sf_pick_key(i):
+            narrs = [(b.get("narration") or "")
+                     for b in cands[i]["plan"].get("beats", [])]
+            return cands[i]["score"] - _sp2.style_penalty(narrs)
+
+        best = max(pool, key=_sf_pick_key)
         cands[best]["recommended"] = True
         # ★내보내는 후보는 n_candidates개까지만(2026-08-01 사장님 "대본이 왜 4개야?").
         #   위 재생성(길이·말투)은 **고르기 위해** 후보를 더 뽑는 장치다 — 합쳐놓고 그중
