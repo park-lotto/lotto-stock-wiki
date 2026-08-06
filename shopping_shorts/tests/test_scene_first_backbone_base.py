@@ -34,6 +34,10 @@ def test_backbone_base_uses_rich_generator_with_order_block():
     import pytest as _pytest
     _mp = _pytest.MonkeyPatch()
     _mp.setattr(edit_plan, "REWRITE_MIX", False)
+    # ★스타일 리라이트 off(2026-08-06): 트리오 이식 뒤 restyle 프롬프트가 마지막 call이 돼
+    #   seen["prompt"]가 생성 프롬프트가 아니게 된다. 이 테스트의 관심사는 생성 프롬프트의
+    #   백본 블록이므로 스타일만 끈다(스타일 배선은 test_candidate_parallel 쪽이 지킨다).
+    _mp.setenv("SCRIPT_STYLE", "off")
     res = edit_plan.build_scene_first_plan(_SOURCES, "ref", 20, n_candidates=1, call=_cap,
                                            backbone_base=True, bank_context="[은행 훅] 이거 실화냐")
     _mp.undo()

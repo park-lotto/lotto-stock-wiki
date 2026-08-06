@@ -1,6 +1,7 @@
 """SQLite 수집 이력 저장소."""
 import hashlib
 import json
+import os
 import secrets
 import sqlite3
 import uuid
@@ -1787,6 +1788,21 @@ class Store:
                 "VALUES(?,1,datetime('now')) ON CONFLICT(shortcode) DO UPDATE SET "
                 "attempts=produce_autoload.attempts+1, updated_at=datetime('now')",
                 (shortcode,),
+            )
+
+    def autoload_rollback_attempt(self, shortcode, error=""):
+        """선래치를 되돌린다 — **영상 탓이 아닌 실패**(키 풀 소진 등)에만 쓴다.
+
+        ★왜 필요한가(2026-08-07 실사고). 래치는 "이 영상은 아무리 시도해도 안 된다"를
+        기억하는 장치지 "지금 서버가 못 한다"를 기억하는 장치가 아니다. 키 풀이 잠긴
+        동안 담긴 영상들이 시도 3회를 그냥 까먹고 `skipped_latched`가 돼, 키가 되살아난
+        뒤에도 자동추출에서 영구 제외됐다(수동 '대본 뽑기'는 래치를 안 봐서 되던 이유).
+        사유는 남기되 카운터는 돌려준다 — 진단은 유지하고 재시도 기회만 복구."""
+        with self._conn() as c:
+            c.execute(
+                "UPDATE produce_autoload SET attempts=MAX(0, attempts-1), "
+                "last_error=?, updated_at=datetime('now') WHERE shortcode=?",
+                ((error or "")[:300], shortcode),
             )
 
     def autoload_mark_error(self, shortcode, error):
@@ -4136,18 +4152,43 @@ class Store:
                 "       claimed_at=datetime('now'), heartbeat_at=datetime('now') "
                 " WHERE id = (SELECT q.id FROM job_queue q "
                 "             WHERE q.state='queued' "
-                "               AND (q.owner IS NULL OR q.owner NOT IN "
-                "                    (SELECT owner FROM job_queue "
-                "                      WHERE state='running' AND owner IS NOT NULL)) "
+                # ★관리자(owner '0')는 동시 N개 허용(2026-08-06 사장님 — 두 작업을 병렬로
+                #   돌리며 확인하는 운용). 일반 고객은 종전대로 1개(공평 분배 유지).
+                #   N은 ADMIN_CONCURRENT_JOBS(기본 2).
+                "               AND (q.owner IS NULL OR "
+                "                    (SELECT COUNT(*) FROM job_queue "
+                "                      WHERE state='running' AND owner=q.owner) "
+                "                    < CASE WHEN q.owner='0' THEN ? ELSE 1 END) "
                 f"               AND (q.task NOT IN ({ph}) OR NOT EXISTS "
                 "                    (SELECT 1 FROM job_queue r "
                 f"                     WHERE r.state='running' AND r.task IN ({ph}))) "
                 "             ORDER BY COALESCE(q.prio, 5), q.id LIMIT 1) "
                 "RETURNING id, task, args_json",
-                self._EXCLUSIVE_TASKS * 2).fetchone()
+                (int(os.environ.get("ADMIN_CONCURRENT_JOBS", "2") or 2),)
+                + self._EXCLUSIVE_TASKS * 2).fetchone()
             if not row:
                 return None
             return {"id": row[0], "task": row[1], "args": json.loads(row[2])}
+
+    def mix_queue_ahead(self, job_id):
+        """이 잡의 mix 큐 항목이 아직 'queued'면 앞에 선 queued 개수를 반환, 아니면 None.
+
+        2026-08-06 사장님 제보: 대기 중인데 '영상 다운로드 중'으로 보여 멈춘 것처럼
+        보인다 — 화면이 '순서 대기 중(내 앞 N개)'을 정직하게 표시할 근거를 준다."""
+        try:
+            with self._conn() as c:
+                row = c.execute(
+                    "SELECT id FROM job_queue WHERE task='mix' AND state='queued' "
+                    "  AND args_json LIKE ? ORDER BY id DESC LIMIT 1",
+                    (f'%"{job_id}"%',)).fetchone()
+                if not row:
+                    return None
+                ahead = c.execute(
+                    "SELECT COUNT(*) FROM job_queue "
+                    " WHERE state='queued' AND id < ?", (row[0],)).fetchone()[0]
+            return int(ahead)
+        except sqlite3.Error:
+            return None
 
     def heartbeat(self, qid, progress=None):
         """워커가 살아있다는 신호. 30초마다 찍는다 — 멈추면 reap_stale이 죽은 걸로 본다.

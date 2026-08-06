@@ -39,6 +39,14 @@ def main():
     except Exception as e:  # noqa: BLE001 — 크론이 죽어도 서비스는 무사, 로그만 남긴다
         print(f"[daily_instagram_collect] 실패: {e!r}", file=sys.stderr)
         return 1
+    # ★빈 결과 가드(2026-08-06): 세션 만료 등으로 0건이 나오면 저장하지 않는다.
+    # 저장하면 화면 랭킹 캐시(last_run)가 빈 목록으로 덮여 "아무것도 안 뜨는" 사고가 난다
+    # (실사고 2026-08-06 09:00 회차: 만료 세션으로 0건 수집 → 캐시 [] 덮임 → 랭킹 공백).
+    # 직전 정상 캐시를 남겨두는 쪽이 항상 낫다 — 다음 회차가 성공하면 자연 갱신된다.
+    if not items:
+        print("[daily_instagram_collect] 0건 수집 — 캐시 미갱신(직전 랭킹 유지), "
+              "세션 만료 여부 확인 필요", file=sys.stderr)
+        return 1
     collected_at = datetime.now(timezone.utc).isoformat()
     Store(DB_PATH).save_last_run(items, collected_at)
 

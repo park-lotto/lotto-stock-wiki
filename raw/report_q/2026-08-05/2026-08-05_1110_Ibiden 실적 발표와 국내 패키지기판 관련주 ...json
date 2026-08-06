@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "date": "2026-08-05",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-05_1110_Ibiden 실적 발표와 국내 패키지기판 관련주 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "sector",
+    "broker": "iM증권",
+    "analyst": "고의영",
+    "report_date": "2026.08.05",
+    "sector_name": "전기전자",
+    "sector_view": "비중확대",
+    "thesis": [
+      "Electronics 부문의 서프라이즈가 실적과 가이던스를 모두 견인함",
+      "AI서버향 수요 호조, 범용 서버 수요 회복 및 스위치 IC 수요 확대 예상",
+      "선수금 유입을 통한 대규모 투자 재원 조달 및 실질적인 계약 논의 확인"
+    ],
+    "timeline": [
+      "2H26~FY27: 기가비스 등 검사장비 업체의 수주 인식 집중",
+      "2H26: 삼성전기 FC-BGA 영업이익률 30% 근접 전망",
+      "2H26: LG이노텍, 대덕전자 스위치 IC용 FC-BGA 양산 돌입"
+    ],
+    "top_picks": [
+      {
+        "name": "삼성전기",
+        "reason": "서버 CPU용 FC-BGA 신규 프로젝트 3Q26 본격화 및 북미 고객사향 스위치 IC용 FC-BGA 양산 시작",
+        "tp": null
+      },
+      {
+        "name": "LG이노텍",
+        "reason": "2H26부터 스위치 IC용 FC-BGA 양산 돌입",
+        "tp": null
+      },
+      {
+        "name": "대덕전자",
+        "reason": "2H26부터 스위치 IC용 FC-BGA 양산 돌입",
+        "tp": null
+      },
+      {
+        "name": "기가비스",
+        "reason": "Ibiden의 하반기 설비 투자 집중으로 인한 수주 인식 확대",
+        "tp": null
+      }
+    ],
+    "risk": null,
+    "quote": "Electronics 부문의 서프라이즈가 실적과 가이던스를 모두 견인했다. 가이던스 상향 배경은 ① AI서버향 수요 호조 지속, ② 예상을 상회한 범용 서버 수요와 향후 확대가 예상되는 스위치 IC 수요, ③ 작년 양산을 시작한 Ono 공장 안정화와 기존 캐파 활용 확대에 따른 물량 상회, ④ 높게 유지된 고부가 제품 판가 등이다."
+  }
+}

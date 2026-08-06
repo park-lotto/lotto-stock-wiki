@@ -20,6 +20,7 @@
      → 컷마다 한 문장이 아니라 **한 문장이 컷 2~3개를 덮는다**. 컷마다 문장을 요구하면
        총량이 2배로 튄다(실측: 17.8초 화면에 35.2초 나레이션).
 """
+import os
 import re
 
 MIN_SECONDS = 20.0        # 스토리가 서는 하한(2026-08-04 사장님 상향: "22초 원본이면 최소 20초는 받아야")
@@ -80,8 +81,16 @@ def budget_for(segments, target_seconds=None):
     return span, min(want, span)            # 원본을 넘을 수 없다
 
 
-def select_and_order(segments, target_seconds=None):
+_DONE_ROLES = {"after", "완성", "결과"}      # 완성품 샷
+_COOK_ROLES = {"사용중", "조리", "과정"}     # 조리(비법) 샷
+
+
+def select_and_order(segments, target_seconds=None, video_type=None):
     """핵심 보존 + 예산 내 선별 + 스토리 순서 재배치.
+
+    video_type=="recipe"(2026-08-06 사장님): 완성품(훅) → 재료 → 조리 한 덩어리 →
+    완성품 → CTA. 조리가 틈틈이 2번 쪼개져 들어가는 게 어색하다 — 비법 구간 한 번이면
+    충분. 그룹 안은 시간순이라 공정 순서는 안 깨진다. SCENE_PHASE_ORDER=0으로 off.
 
     반환: (span, budget, used_secs, ordered_segments)
     """
@@ -112,11 +121,24 @@ def select_and_order(segments, target_seconds=None):
     # 훅 = 가장 임팩트 큰 핵심 컷. 길이가 같으면 **뒤쪽 컷**을 집는다 —
     # 앞 컷을 집으면 나머지가 시간순 그대로라 순서가 안 바뀐다(원본 트는 느낌).
     hook_pool = [s for s in core if s.get("is_key")] or core
+    recipe_phase = (video_type == "recipe"
+                    and os.environ.get("SCENE_PHASE_ORDER", "1") not in ("0", "off", ""))
+    if recipe_phase:
+        # 훅은 완성품 우선 — "완성품으로 열고, 조리는 비법 대목에 한 번".
+        done_hooks = [s for s in hook_pool if s.get("shot_role") in _DONE_ROLES]
+        hook_pool = done_hooks or hook_pool
     hook = max(hook_pool, key=lambda s: (s["_dur"], float(s.get("start") or 0)))
     body = [s for s in core if s is not hook]
-    # 전개(사용중=과정) → 결과(완성), 그룹 안에서는 시간순이라 맥락이 안 깨진다.
-    body.sort(key=lambda s: (0 if s.get("shot_role") == "사용중" else 1,
-                             float(s.get("start") or 0)))
+    if recipe_phase:
+        # 재료/기타(0) → 조리 연속 블록(1) → 완성품(2). 그룹 안은 시간순.
+        def _phase(s):
+            r = s.get("shot_role")
+            return 1 if r in _COOK_ROLES else (2 if r in _DONE_ROLES else 0)
+        body.sort(key=lambda s: (_phase(s), float(s.get("start") or 0)))
+    else:
+        # 전개(사용중=과정) → 결과(완성), 그룹 안에서는 시간순이라 맥락이 안 깨진다.
+        body.sort(key=lambda s: (0 if s.get("shot_role") == "사용중" else 1,
+                                 float(s.get("start") or 0)))
     cta.sort(key=lambda s: float(s.get("start") or 0))
     return span, budget, used, [hook] + body + cta
 
@@ -152,8 +174,9 @@ def _style_extra():
         return ""
 
 
-def script_prompt(order, used_secs, hook_block):
-    """1소스 각색 대본 프롬프트. hook_block은 hook_patterns.prompt_block() 결과."""
+def script_prompt(order, used_secs, hook_block, frame_block=""):
+    """1소스 각색 대본 프롬프트. hook_block은 hook_patterns.prompt_block() 결과.
+    frame_block: 후보별 이야기 구도(style_profiles.story_frame_block) — 빈 문자열이면 종전 동일."""
     import json
     cuts = [{"n": i + 1, "seg": s.get("seg_id"), "초": round(s["_dur"], 1),
              "화면": s.get("scene_desc") or "", "원본대사": s.get("text") or "",
@@ -161,7 +184,7 @@ def script_prompt(order, used_secs, hook_block):
             for i, s in enumerate(order)]
     n_lines = line_count(used_secs, len(order))
     total = char_budget(used_secs)
-    return (hook_block + _style_extra() +   # ★채널 스타일(2026-08-05)
+    return (hook_block + _style_extra() + (frame_block or "") +   # ★채널 스타일(2026-08-05)·구도(2026-08-06)
             "\n아래는 숏폼 한 편을 재편집한 컷 순서다. 이 화면들에 얹을 **나레이션**을 써라.\n\n"
             "[절대규칙]\n"
             "1. 원본대사를 베끼지 마라. 같은 뜻을 완전히 다른 표현으로 바꿔라(어순·어휘·문형 전부).\n"
@@ -184,6 +207,13 @@ def script_prompt(order, used_secs, hook_block):
             "최저가 정보)를 반드시 말하라 — 받는 게 안 보이면 아무도 안 남긴다. "
             "감상('참 좋네요')으로 끝나거나 '댓글'이 마지막 문장에 없으면 통째로 버려진다. "
             "원본대사에 참여유도(예: \"'나도' 남겨주세요\")가 있으면 그 키워드를 이어받아라.\n"
+            # ★CTA 미끼(2026-08-06 사장님 확정: 본문에 비법 한 조각 남기기 — 조회수 우선).
+            #   기존엔 본문이 비법을 다 풀어 CTA에 줄 게 안 남았다(3후보 공통, 실측 잡 다수).
+            "   ★미끼 규칙: 핵심 비법의 **가장 구체적인 한 조각**(정확한 비율·핵심 재료 하나·"
+            "온도/시간 같은 수치)은 본문에서 말하지 마라 — '비법이 있다'는 것과 효과만 보여주고, "
+            "그 조각이 뭔지는 CTA에서 \"궁금하시면 댓글에…\"로 남겨라. 본문에서 방법을 다 "
+            "알려주면 댓글 남길 이유가 사라진다. 단, 뭘 숨겼는지는 시청자가 알게 하라"
+            "(예: 본문 '재료 하나만 바꾸면 끝' → CTA '그 재료 궁금하시면 댓글에').\n"
             "7. ★중간 문장 중 **하나는 반드시 고조 연결어로 시작**하라 — '심지어' '더군다나' "
             "'근데 이게 대박인 게' '놀랍게도' '이럴 수가 있나 싶게' 중 소재에 맞는 것 하나"
             "(훅·마지막 문장엔 금지, 두 번 이상도 금지). 이야기가 한 단계 올라가는 문장 앞에 "
@@ -259,7 +289,8 @@ def restyle_prompt(beats, length_note="", style_name=None):
             + (f"   {length_note}\n" if length_note else "")
             + "4. ★마지막 문장(CTA)은 반드시 \"댓글에 '키워드' 남겨주시면 [받는 것] "
             "드릴게요\" 형태 — 키워드와 받는 것(링크·방법·최저가)을 빼먹지 마라. "
-            "\"남겨주세요\"로만 끝나면 실패다.\n"
+            "\"남겨주세요\"로만 끝나면 실패다. ★원본이 숨겨둔 비법 조각(비율·재료·수치)을 "
+            "리라이트에서 본문에 풀지 마라 — 그건 CTA의 미끼다.\n"
             "5. 상투어 금지: 꿀템·갓성비·완벽 해결·삶의 질·필수템·역대급 — 있으면 지워라.\n"
             "6. 예시처럼: 훅은 감탄/사건 선언, 문장은 '~는데 ~니까 ~더라고요'로 길게 잇고, "
             "다음 문장이 앞을 이어받게(그래서/근데/심지어). 합쇼체(~습니다) 금지.\n\n"
@@ -267,14 +298,28 @@ def restyle_prompt(beats, length_note="", style_name=None):
             + "\n\nJSON만: {\"beats\":[{\"n\":1,\"narration\":\"...\"}]}")
 
 
-def apply_restyle(beats, call, max_tries=3, style_name=None):
+def apply_restyle(beats, call, max_tries=3, style_name=None, report=None):
     """스타일 리라이트 — 길이 초과·상투어는 버리지 말고 피드백 재시도(최대 3회).
 
     ★첫 구현은 길이 밖이면 조용히 원본 복귀였는데, 메종 문체가 원문보다 길어
     **매번 1.5배로 불어 게이트에 걸리고 아무 일도 안 일어났다**(2026-08-05 서버 실측
     — '조용한 폴백' 계보). 이제 초과분은 '줄여서 다시'를 알려주고 재요청한다.
-    문장수 불일치·빈 응답 같은 구조 실패만 즉시 원본 유지."""
+    문장수 불일치·빈 응답 같은 구조 실패만 즉시 원본 유지.
+
+    report(dict, 선택): 호출자가 성공/실패를 알 수 있게 채워준다 —
+    {"ok": bool, "style": str, "why": str}. 실패가 조용히 원본으로 남으면 trio가
+    전부 같은 결로 수렴하는데 로그 0줄이라 진단 불가였다(2026-08-06 서버 실측)."""
+    import sys
     from shopping_shorts import style_profiles
+
+    def _done(out, ok, why):
+        if report is not None:
+            report.update(ok=ok, style=style_name or style_profiles.active_style(),
+                          why=why)
+        print(f"[restyle] 스타일={style_name} {'성공' if ok else '실패'}({why})",
+              file=sys.stderr)
+        return out
+
     if not style_profiles.active_style() or not beats:
         return beats
     old_total = sum(len(b.get("narration") or "") for b in beats)
@@ -285,10 +330,10 @@ def apply_restyle(beats, call, max_tries=3, style_name=None):
                     RESTYLE_SCHEMA)
         got = (resp or {}).get("beats") if isinstance(resp, dict) else None
         if not got or len(got) != len(beats):
-            return best or beats
+            return _done(best or beats, best is not None, "빈 응답·비트수 불일치")
         by_n = {int(g.get("n", 0)): (g.get("narration") or "").strip() for g in got}
         if sorted(by_n) != list(range(1, len(beats) + 1)) or not all(by_n.values()):
-            return best or beats
+            return _done(best or beats, best is not None, "번호 불일치·빈 나레이션")
         out = []
         for i, b in enumerate(beats):
             nb = dict(b)
@@ -313,8 +358,9 @@ def apply_restyle(beats, call, max_tries=3, style_name=None):
                     "\"남겨주시면 [받는 것] 드릴게요\" 형태로.")
             best = out
             continue
-        return out
-    return best or beats
+        return _done(out, True, "정상")
+    return _done(best or beats, best is not None,
+                 "재시도 소진(길이·상투어·CTA)")
 
 
 def parse_beats(resp):

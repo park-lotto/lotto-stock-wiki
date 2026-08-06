@@ -2033,7 +2033,11 @@ def _collect_seg_benefits(segments):
 
 def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3, call=_vault_call,
                             bank_context="", order_block="", lengthen=False,
-                            benefits_block="", tone_boost=False, engine=None, engine_seed=0):
+                            benefits_block="", tone_boost=False, engine=None, engine_seed=0,
+                            frame_start=None):
+    """frame_start(2026-08-06): 이 호출의 첫 후보가 쓸 이야기 구도 인덱스(style_profiles.
+    _STORY_FRAMES 순환). None이면 무주입(회귀 0). 슬롯 경로는 벌마다 n=1로 따로 부르는데,
+    배치용 '후보마다 다르게' 지시는 n=1에서 전부 1번(발견담)이 돼 구도가 안 갈렸다."""
     """스토리 헌장 + 장면 팔레트 + 레퍼 구조 → 후보 n개. 각 비트는 seg_ids(2~4 다중컷)로
     장면을 지목한다. 실패 시 []. 헌장이 품질을 담당하므로 별도 검증루프 없음(1콜).
 
@@ -2051,6 +2055,16 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
     #    남긴 것: 배선(seg_id 지목·caption_lines 일치·스키마 필드) + 중요 액션(변화) 집중.
     #    선행 설계(참고): docs/superpowers/specs/2026-07-26-대본프롬프트-단순화-Gemini종합-design.md
     lo, hi = int(char_target * 0.93), int(char_target * 1.05)
+    from shopping_shorts import style_profiles as _spf
+    if frame_start is None:
+        _frame_txt = ""
+    elif n == 1:
+        _frame_txt = _spf.story_frame_block(frame_start)
+    else:
+        _fr = [_spf.story_frame(frame_start + k) for k in range(n)]
+        _frame_txt = ("\n★후보별 이야기 구도 — 겹치면 실패다(사실·인물은 지어내지 마라):\n"
+                      + "\n".join(f"  {k + 1}번 후보 = **{f[0]}**: {f[1]}"
+                                  for k, f in enumerate(_fr) if f) + "\n") if any(_fr) else ""
     prompt = (
         f"너는 한국 쇼핑 숏폼(살림·요리·제품) 대본 작가다. 아래 재료로 서로 다른 훅을 쓴 "
         f"대본 후보 {n}개를 만들어라. 화자가 들려주는 짧은 이야기체로, 사람이 말하듯 자연스럽게.\n\n"
@@ -2059,7 +2073,7 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         f"{(reference_text or '')[:1500]}\n\n"
         # ★채널 스타일(2026-08-05)을 맨 앞에 — 맨 뒤에 붙였더니 규칙 40줄에 밀려 절반만
         #   먹었다(실측 job 64e0a110: 훅 명령형·문장 뚝뚝·합쇼체 잔존). 문체는 이게 우선.
-        + _style_extra() +
+        + _style_extra() + _frame_txt +
         # 2026-07-29(사장님 확정): 스펙 나열형 reference_text를 그대로 던지면 대본도 나열형으로
         # 나온다. 3단계 상황 프레임을 줘서 Gemini가 스스로 '썰'을 짓게 유도(고정 문구 하드코딩 금지
         # — 제품마다 실제 스펙에서 재구성해야 하므로 지시만 주고 내용은 매번 새로 만들게 한다).
@@ -2154,8 +2168,15 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "형식은 반드시 [명분 한 줄] + \"댓글에 '[키워드]' 남겨주시면 바로 보내드릴게요\"로 끝내라. "
         "유입 경로는 댓글뿐이다(프로필·링크 안내 금지). 명분은 원본에 있는 사실 범위 안에서만 — "
         "없는 가격·할인·한정수량을 지어내지 마라.\n"
+        # ★CTA 미끼(2026-08-06 사장님 확정, 1소스와 동일): 본문이 비법을 다 풀면 CTA에 줄 게
+        #   안 남는다 — 가장 구체적인 한 조각은 본문에서 숨기고 CTA가 그 조각을 문다.
+        "- ★미끼 규칙: 핵심 비법의 **가장 구체적인 한 조각**(정확한 비율·핵심 재료 하나·"
+        "온도/시간 같은 수치)은 본문에서 말하지 마라 — '비법이 있다'는 것과 효과만 보여주고, "
+        "그 조각이 뭔지는 CTA에서 걸어라. 단, 뭘 숨겼는지는 시청자가 알게 하라"
+        "(예: 본문 '재료 하나만 바꾸면 끝' → CTA '그 재료 궁금하시면 댓글에').\n"
         "- 각 후보에 hook, story_person, story_event, story_resolution, cta_line, "
         "cta_keyword를 채워라.\n"
+        # (후보별 이야기 구도는 _frame_txt로 상단에 주입 — 2026-08-06, frame_start 관통)
         "- 억지 개그·번역투·상세페이지 상투어(꿀템·갓성비·완벽 해결·삶의 질 상승) 금지.\n"
         # 은행 = 실제로 잘 나온 대본 조각들. ★규칙이 아니라 **벤치마킹 대상**으로 준다.
         + ((f"\n[벤치마킹 — 실제로 잘 나온 대본들의 조각이다. 규칙이 아니라 참고다. "
@@ -3160,7 +3181,8 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
     _vid = _src_entry.get("video_id")
     for _s in segments:
         _s.setdefault("video_id", _vid)
-    span, budget, used, order = single_source.select_and_order(segments, target_seconds)
+    span, budget, used, order = single_source.select_and_order(
+        segments, target_seconds, video_type=detected)
     if not order:
         return None
     _mat = " ".join((s.get("full_text") or "") for s in source_scripts)
@@ -3184,7 +3206,12 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         #   흩어 워커끼리도 안 겹치게 한다.
         _koff = _candidate_key_offset(i)
         _c = _offset_call(call, _koff)
-        prompt = single_source.script_prompt(order, used, hook_patterns.prompt_block(pat))
+        # ★후보별 이야기 구도(2026-08-06 사장님 "요리책 낸 엄마로 비슷하네 다"): 원본 인물이
+        #   센 소재에서 세 후보가 같은 구도로 수렴하는 것을 생성 단계에서 갈라준다.
+        from shopping_shorts import style_profiles as _sp_f
+        prompt = single_source.script_prompt(
+            order, used, hook_patterns.prompt_block(pat),
+            frame_block=_sp_f.story_frame_block(i))
         beats = single_source.parse_beats(_c(prompt, single_source.BEATS_SCHEMA))
         # 총량 교정루프(최대 2회) — 넘치면 표현만 줄여 다시 받는다.
         for _ in range(2):
@@ -3247,8 +3274,10 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         #   ★trio(기본): 후보마다 다른 채널 스타일 — A=메종(발견담)/B=채이(가족드라마)/
         #   C=스탠다드(유머목격담). 사장님 확정 3각(2026-08-05).
         from shopping_shorts import style_profiles as _sp0
+        _restyle_rep = {}
         beats = single_source.apply_restyle(beats, _c,
-                                            style_name=_sp0.candidate_style(i))
+                                            style_name=_sp0.candidate_style(i),
+                                            report=_restyle_rep)
         # ★빈 나레이션 비트는 **커버 배정 전에** 걸러낸다(2026-08-04 라이브 실측 job
         #   bcdf871a6d57: 추천 후보가 16.8초 — 버려진 비트의 컷이 같이 사라져 하한 미달).
         #   먼저 거르면 아래 '구멍은 직전 비트가 이어받는다'가 그 컷들을 살린다.
@@ -3335,7 +3364,14 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
                 "affiliate_target": "", "plagiarism_flags": _plagiarism_flags(plan_beats, src_texts)}
         rule_score = _score_candidate(plan, target_seconds=budget, source_full_texts=src_texts)
         cand = {"plan": plan, "story": {"hook": plan_beats[0]["narration"]},
-                "score": rule_score, "recommended": False}
+                "score": rule_score, "recommended": False,
+                # ★스타일 배정 결과를 남긴다(2026-08-06): restyle 실패가 조용히 원본으로
+                #   남으면 trio 3후보가 같은 결로 수렴하는데, 어느 후보가 실패했는지
+                #   DB(candidates_json)에서 볼 수 없었다.
+                "style": _restyle_rep.get("style"),
+                # ok 키 자체가 없으면(스타일 off·대역) None = '모름' — False(확정 실패)와
+                # 구분해야 게이트가 스타일 off에서 헛돌지 않는다.
+                "restyled": _restyle_rep.get("ok")}
         if judge:
             from shopping_shorts import candidate_judge
             jr = candidate_judge.judge(plan_beats, call=call)
@@ -3360,10 +3396,33 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         시킨다(순차 for였을 땐 그 후보만 죽고 나머지는 살았다 — 병렬화로 생기는
         새 위험이라 여기서 막는다)."""
         try:
-            return _one_candidate(i)
+            c = _one_candidate(i)
         except Exception as e:      # noqa: BLE001 — 후보 하나의 실패가 전멸이 되면 안 된다
             print(f"[1소스대본] 후보{i + 1} 실패(나머지는 계속): {e!r}", file=sys.stderr)
             return None
+        # ★품질 게이트 재생성(2026-08-06 사장님 "품질이 뒤죽박죽"): judge 낙제(total≤0.4)
+        #   또는 스타일 리라이트 실패 후보만 1회 다시 만들고 점수 좋은 쪽을 쓴다.
+        #   후보 생성은 병렬 실측 18초라 재생성 1회 상한이면 잡당 +20초 안이다.
+        #   SCRIPT_QUALITY_RETRY=0 으로 끄면 종전과 동일(회귀 0).
+        if os.environ.get("SCRIPT_QUALITY_RETRY", "1") in ("0", "off", ""):
+            return c
+        _bad = (c is not None and (
+            (c.get("judge") or {}).get("total", 1.0) <= 0.4
+            or c.get("restyled") is False))
+        if _bad:
+            why = ("judge %.2f" % (c.get("judge") or {}).get("total", 1.0)
+                   if (c.get("judge") or {}).get("total", 1.0) <= 0.4 else "restyle 실패")
+            print(f"[1소스대본] 후보{i + 1} 품질미달({why}) → 1회 재생성", file=sys.stderr)
+            try:
+                c2 = _one_candidate(i)
+            except Exception as e:  # noqa: BLE001
+                print(f"[1소스대본] 후보{i + 1} 재생성 실패(원본 유지): {e!r}",
+                      file=sys.stderr)
+                return c
+            if c2 and (c2.get("score", 0) > c.get("score", 0)
+                       or (c2.get("restyled") and not c.get("restyled"))):
+                return c2
+        return c
 
     n = max(1, n_candidates)
     if n == 1:
@@ -3384,7 +3443,9 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
     def _pick_key(k):
         narrs = [(b.get("narration") or "")
                  for b in (cands[k]["plan"].get("beats") or [])]
-        return cands[k]["score"] - _sp.style_penalty(narrs)
+        # ★후보에 배정된 스타일을 같이 넘긴다(2026-08-07) — 홈테리어픽은 합쇼체 끝맺음이
+        #   스타일 지시라, 안 넘기면 **시킨 대로 쓴 후보가** 감점돼 추천에서 밀려난다.
+        return cands[k]["score"] - _sp.style_penalty(narrs, _sp.candidate_style(k))
 
     best = max(range(len(cands)), key=_pick_key)
     cands[best]["recommended"] = True
@@ -3468,6 +3529,20 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     src_texts = [s.get("full_text", "") for s in source_scripts]
 
     outer_tl_groups = tl_groups
+    # ★스타일 배정 전역 카운터(2026-08-06 실측: 벌별로 _ground_score가 따로 불리면
+    #   enumerate가 매번 0부터 세서 **후보 전부가 maison**이 됐다 — 잡 실측 3/3 maison).
+    #   호출 경계와 무관하게 A→B→C가 순환하도록 하나의 카운터를 공유한다.
+    import itertools as _it
+    _style_ctr = _it.count()
+    # ★구도 카운터(2026-08-06 사장님 "1번 해봐"): 생성 호출마다 n만큼 전진 — raws가 생성
+    #   순서대로 그라운딩되므로 스타일 카운터(_style_ctr)와 같은 인덱스가 같은 후보에 닿아
+    #   스타일↔구도 짝(maison=발견담/chae=가족/standard=목격담)이 유지된다.
+    _frame_ctr = {"i": 0}
+
+    def _take_frames(k):
+        s = _frame_ctr["i"]
+        _frame_ctr["i"] += max(0, int(k or 0))
+        return s
 
     def _ground_score(raws, groups=None):
       # groups: 이 묶음이 쓸 슬롯(v4, 2026-08-02). None이면 종전과 똑같이 바깥의
@@ -3478,6 +3553,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             r.setdefault("_backbone_video", bb_video)   # 핑퐁 순서고정이 이 백본을 쓴다
       cands = []
       for r in raws:
+        _ci = next(_style_ctr)
         plan = _ground_candidate(r, seg_map, lead_hook=not tl_groups)
         if plan is None:
             continue
@@ -3577,11 +3653,22 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             plan["slot_source"] = slot_source
             if slot_info:
                 plan["slot_info"] = slot_info      # G3 관측: 무엇이 잘리고 어느 소스가 빠졌나
+        # ★트리오 스타일 이식(2026-08-06 사장님 "모두 동일하게"): 믹스(장면 배정)는 경로마다
+        #   다르지만, 나레이션 문체 리라이트는 화면과 무관하다 — 1소스와 같은 배선.
+        #   covers·컷 매핑은 불변(문장수·순서 고정 규칙이 restyle_prompt에 있다).
+        from shopping_shorts import single_source as _ss1
+        from shopping_shorts import style_profiles as _sp1
+        _restyle_rep = {}
+        plan["beats"] = _ss1.apply_restyle(plan["beats"], _call,
+                                           style_name=_sp1.candidate_style(_ci),
+                                           report=_restyle_rep)
         story = {k: r.get(k, "") for k in
                  ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
         rule_score = _score_candidate(plan, avoid_hooks=avoid_hooks, target_seconds=target_seconds,
                                        source_full_texts=src_texts)
-        cand = {"plan": plan, "story": story, "score": rule_score, "recommended": False}
+        cand = {"plan": plan, "story": story, "score": rule_score, "recommended": False,
+                "style": _restyle_rep.get("style"),
+                "restyled": _restyle_rep.get("ok")}
         # ★심사위원(사장님 기준: 대본품질·장면싱크·스토리라인) — judge on일 때만(Gemini 콜).
         # 규칙점수(빠른 계산)와 반반 섞어 최종 순위. 심사 실패는 규칙점수만으로 폴백(무해).
         from shopping_shorts import candidate_judge
@@ -3622,7 +3709,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 bank_context=bank_context,
                 order_block=_rewrite_block(g, avoid_narrations=said_before),
                 benefits_block=benefits_block, engine=engine,
-                engine_seed=_engine_seed(reference_text) + k)
+                engine_seed=_engine_seed(reference_text) + k,
+                frame_start=_take_frames(1))
             raws.extend(sub or [])
             got = _ground_score(sub or [], groups=g)
             for c in got:
@@ -3639,7 +3727,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 inventory, reference_text, target_seconds, n=need, call=_call,
                 bank_context=bank_context, order_block=order_block,
                 benefits_block=benefits_block, engine=engine,
-                engine_seed=_engine_seed(reference_text) + 100)
+                engine_seed=_engine_seed(reference_text) + 100,
+                frame_start=_take_frames(need))
             got = _ground_score(fill or [], groups=tl_groups)
             for c in got:
                 c["plan"]["slot_variant"] = "refill"   # 차별화 실패를 숨기지 않는다
@@ -3650,7 +3739,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                                        call=_call, bank_context=bank_context,
                                        order_block=order_block,
                                        benefits_block=benefits_block, engine=engine,
-                                       engine_seed=_engine_seed(reference_text))
+                                       engine_seed=_engine_seed(reference_text),
+                                       frame_start=_take_frames(n_candidates))
         cands = _ground_score(raws)
     # ①생성측 보강(세션#2): 후보가 전부 목표보다 크게 짧으면(생성이 목표초 미달) 길이 강화
     # 힌트로 1회 재생성해 합친다. ②선택 감점(_length_penalty)이 짧은 후보를 강등하므로 병합 후
@@ -3677,7 +3767,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                     bank_context=bank_context,
                     order_block=(_rewrite_block(g) if len(_distinct) > 1 else order_block),
                     lengthen=True, benefits_block=benefits_block, engine=engine,
-                    engine_seed=_engine_seed(reference_text) + 1 + k)
+                    engine_seed=_engine_seed(reference_text) + 1 + k,
+                    frame_start=_take_frames(1 if len(_distinct) > 1 else n_candidates))
                 got = _ground_score(raws2, groups=(g if len(_distinct) > 1 else None))
                 for c in got:
                     c["plan"]["slot_variant"] = (slot_kinds[vi] if vi < len(slot_kinds)
@@ -3697,7 +3788,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 bank_context=bank_context,
                 order_block=(_rewrite_block(g) if len(_distinct) > 1 else order_block),
                 tone_boost=True, benefits_block=benefits_block, engine=engine,
-                engine_seed=_engine_seed(reference_text) + 2 + k)
+                engine_seed=_engine_seed(reference_text) + 2 + k,
+                frame_start=_take_frames(1 if len(_distinct) > 1 else n_candidates))
             got = _ground_score(raws3, groups=(g if len(_distinct) > 1 else None))
             for c in got:
                 c["plan"]["slot_variant"] = slot_kinds[vi] if vi < len(slot_kinds) else "?"
@@ -3719,7 +3811,18 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         rich = [i for i in toned if _cand_sensory(cands[i]) >= _SENSORY_FLOOR]
         qualified = rich or toned
         pool = qualified or range(len(cands))
-        best = max(pool, key=lambda i: cands[i]["score"])
+        # ★스타일 이탈 감점(2026-08-06, 1소스 3298과 동일 배선): 리라이트 실패로 옛
+        #   카피체로 남은 후보가 ★추천되는 것을 막는다. 표시 score는 안 건드린다.
+        from shopping_shorts import style_profiles as _sp2
+
+        def _sf_pick_key(i):
+            narrs = [(b.get("narration") or "")
+                     for b in cands[i]["plan"].get("beats", [])]
+            # 스타일 동반(2026-08-07, 1소스 _pick_key와 동일 이유) — 위 3193·3575에서
+            # candidate_style(i)로 리라이트했으니 채점도 같은 i로 물어야 짝이 맞는다.
+            return cands[i]["score"] - _sp2.style_penalty(narrs, _sp2.candidate_style(i))
+
+        best = max(pool, key=_sf_pick_key)
         cands[best]["recommended"] = True
         # ★내보내는 후보는 n_candidates개까지만(2026-08-01 사장님 "대본이 왜 4개야?").
         #   위 재생성(길이·말투)은 **고르기 위해** 후보를 더 뽑는 장치다 — 합쳐놓고 그중

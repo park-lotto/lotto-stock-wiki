@@ -32,7 +32,7 @@ def _fixture(monkeypatch, delay=0.0, record=None):
         return [{"narration": f"문장{i} 댓글에 '나도'", "covers": [i + 1]} for i in range(4)]
 
     for name, val in (
-        ("select_and_order", lambda seg, tgt: (18.0, 18.0, 18.0, order)),
+        ("select_and_order", lambda seg, tgt, **kw: (18.0, 18.0, 18.0, order)),
         ("script_prompt", lambda *a, **k: "p"),
         ("parse_beats", _beats),
         ("over_budget", lambda b, u: (False, 0, 0)),
@@ -40,7 +40,7 @@ def _fixture(monkeypatch, delay=0.0, record=None):
         ("cta_missing", lambda b: False),
         ("fix_cta_prompt", lambda *a, **k: "p"),
         ("escalate_prompt", lambda b: "p"),
-        ("apply_restyle", lambda beats, call, style_name=None: beats),
+        ("apply_restyle", lambda beats, call, style_name=None, **kw: beats),
     ):
         monkeypatch.setattr(real_ss, name, val, raising=False)
 
@@ -115,3 +115,53 @@ def test_한_후보가_죽어도_나머지는_산다(monkeypatch):
         [{"segments": [{"start": 0, "end": 3}], "full_text": "본문", "video_id": "v"}],
         {}, 18.0, 3, call, "generic")
     assert out and len(out["candidates"]) >= 1, f"하나 죽었다고 전멸하면 안 된다: {out}"
+
+
+def test_품질미달_후보는_1회_재생성한다(monkeypatch):
+    """restyle 확정 실패(restyled=False) 후보는 한 번 다시 만든다 — 조용한 원본
+    수렴이 '품질 뒤죽박죽'의 원인이었다(2026-08-06). 상한 1회라 무한루프 없음."""
+    call = _fixture(monkeypatch, delay=0.0)
+    from shopping_shorts import single_source as real_ss
+    calls = {"n": 0}
+    import threading as _th
+    lock = _th.Lock()
+
+    def failing_restyle(beats, call, style_name=None, report=None, **kw):
+        with lock:
+            calls["n"] += 1
+        if report is not None:
+            report.update(ok=False, style=style_name, why="테스트 강제 실패")
+        return beats
+
+    monkeypatch.setattr(real_ss, "apply_restyle", failing_restyle, raising=False)
+    out = edit_plan._single_source_candidates(
+        [{"segments": [{"start": 0, "end": 3}], "full_text": "본문", "video_id": "v"}],
+        {}, 18.0, 3, call, "generic")
+    assert out and len(out["candidates"]) == 3
+    # 후보 3개 × (원본 1회 + 재생성 1회) = 6회. 더 돌면 상한이 깨진 것.
+    assert calls["n"] == 6, calls["n"]
+    assert all(c["restyled"] is False for c in out["candidates"])
+
+
+def test_품질게이트는_끌_수_있다(monkeypatch):
+    """SCRIPT_QUALITY_RETRY=0 → 재생성 없이 종전과 동일(회귀 0)."""
+    monkeypatch.setenv("SCRIPT_QUALITY_RETRY", "0")
+    call = _fixture(monkeypatch, delay=0.0)
+    from shopping_shorts import single_source as real_ss
+    calls = {"n": 0}
+    import threading as _th
+    lock = _th.Lock()
+
+    def failing_restyle(beats, call, style_name=None, report=None, **kw):
+        with lock:
+            calls["n"] += 1
+        if report is not None:
+            report.update(ok=False, style=style_name, why="테스트 강제 실패")
+        return beats
+
+    monkeypatch.setattr(real_ss, "apply_restyle", failing_restyle, raising=False)
+    out = edit_plan._single_source_candidates(
+        [{"segments": [{"start": 0, "end": 3}], "full_text": "본문", "video_id": "v"}],
+        {}, 18.0, 3, call, "generic")
+    assert out and len(out["candidates"]) == 3
+    assert calls["n"] == 3, calls["n"]

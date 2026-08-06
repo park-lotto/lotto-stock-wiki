@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-08-05",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-05_1100_해외 확장과 신사업 준비.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS투자증권",
+    "analyst": "장지혜",
+    "report_date": "2026.08.05",
+    "stocks": [
+      {
+        "name": "디어유",
+        "code": "376300",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": "33,000원",
+        "tp_prev": "50,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "디어유의 26년 2분기 실적은 연결 기준 매출액 234억원(+16% YoY), 영업이익 95억원(+27% YoY, OPM 40.5%)으로 시장 기대치(OP 102억원)를 소폭 하회했다.",
+        "estimate_revision": "목표주가 하향은 엔터 업종 목표배수를 기존 30배에서 20배로 하향 조정한데 기인한다.",
+        "next_catalyst": "미국 신사업",
+        "thesis": [
+          "중국과 일본으로 서비스를 확장하며 해외 로열티 수익 증가",
+          "미국 신사업을 통한 사업 다변화",
+          "버블포재팬의 당분기말 구독수는 10.7만명으로 +8% QoQ 증가했고 중국 QQ 뮤직 내 이용자수도 +25% QoQ 증가"
+        ],
+        "valuation_basis": "목표주가 하향은 엔터 업종 목표배수를 기존 30배에서 20배로 하향 조정한데 기인한다.",
+        "risk": "구독자 감소와 신사업 비용 부담",
+        "supply_comment": null,
+        "quote": "디어유는 버블 성장률 둔화 속 1)중국과 일본으로 서비스를 확장하며 해외 로열티 수익 증가, 2)미국 신사업을 통한 사업 다변화로 성장이 기대된다."
+      }
+    ],
+    "sector": "소비내수"
+  }
+}

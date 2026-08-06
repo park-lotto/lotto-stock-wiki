@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-08-05",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-05_1101_어둡지만은 않다.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "박희철",
+    "report_date": "Aug 5 2026",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "비에이치",
+        "code": "090460",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "24,000원",
+        "tp_prev": "42,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "2026년 2분기 연결 실적은 매출액 4,142억원(YoY +6.3%), 영업이익 79억원(YoY -53.7%, OPM 1.9%)을 기록. 2026년 매출액은 1조 9,391억원(YoY +8.2%), 영업이익 1,002억원(YoY +85.6%, OPM 5.2%)으로 전망.",
+        "estimate_revision": "SET 공급망 내에서 비교적 견조한 실적 체력을 확보하고 있으나, 추후 BOM Cost 압박 등을 고려할 때 추정치 하향 조정은 불가피.",
+        "next_catalyst": "로보틱스 밸류체인으로의 확장. 고성장 신규 수요처인 로보틱스향 매출 발생 시 재평가 필요.",
+        "thesis": [
+          "전방 밸류체인의 고객사 비중 확대",
+          "폴더블 및 IT OLED 등 신규 채택 품목 증가",
+          "로보틱스 수요처 확장 기대감"
+        ],
+        "valuation_basis": "Historical 12MF P/E 평균 8배 적용",
+        "risk": "베트남 공장 이전으로 인한 일시적인 비용 반영과 생산 효율 저하, BOM Cost 압박",
+        "supply_comment": "SET내의 BOM Cost 관리 기조를 감안할 때, 비용 효율화는 향후 핵심 역량이 될 것으로 전망.",
+        "quote": "비에이치에 대한 투자의견은 유지하되, 목표주가는 24,000원으로 하향."
+      }
+    ],
+    "sector": "IT"
+  }
+}

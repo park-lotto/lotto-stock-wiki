@@ -1,41 +1,27 @@
 {
- "brief": "장면스파인 페이즈1: 대본-화면 싱크",
- "created": "2026-07-20T05:24:59.890621+00:00",
+ "brief": "숏템메이커 인증을 dashboard/server.py에 이식: 고객 SQLite+구글 OAuth+세션쿠키, fail-closed, 일반유저는 /market·/insights만, 관리자는 전체. 로컬 구동으로 검증.",
+ "created": "2026-08-06T04:05:19.313975+00:00",
  "goals": [
   {
    "id": "G001",
-   "title": "④fit정직화",
-   "objective": "respine fit=4 덮어쓰기 제거, respined 플래그로 대체해 스왑버튼 부활",
+   "title": "인증이식",
+   "objective": "customers 저장소+구글 OAuth+세션쿠키를 server.py에 이식, 하드코딩 시크릿 제거·fail-closed",
    "status": "complete",
-   "evidence": "라이브(main 418c9a5dd), 개별+whole-branch 리뷰통과, 서버 실관측 5->18조각"
+   "evidence": "server.py 인증블록 v2 교체(OAuth+users.db+세션쿠키, 하드코딩 시크릿 제거), ast.parse 통과"
   },
   {
    "id": "G002",
-   "title": "⓪분석세분화",
-   "objective": "video_analysis 세그먼트 분할을 4~8초 행위단위로",
+   "title": "접근제어",
+   "objective": "일반유저 /market·/insights(+API)만 허용, 관리자 전체, 로그인 페이지",
    "status": "complete",
-   "evidence": "라이브(main 418c9a5dd), 개별+whole-branch 리뷰통과, 서버 실관측 5->18조각"
+   "evidence": "_user_allowed 경로게이트 + 운영자 deny + 공유상태 GET-only, 로그인페이지에 구글 버튼"
   },
   {
    "id": "G003",
-   "title": "②dedup서브슬라이스",
-   "objective": "비트간 같은 시간구간 재사용 금지+서브슬라이스+얼굴 후순위 코드필터",
+   "title": "검증",
+   "objective": "로컬 구동으로 비로그인 차단·로그인 접근·권한분리 확인",
    "status": "complete",
-   "evidence": "라이브(main 418c9a5dd), 개별+whole-branch 리뷰통과, 서버 실관측 5->18조각"
-  },
-  {
-   "id": "G004",
-   "title": "①visual_verb앵커",
-   "objective": "대사가 시각행위 지목하는 비트는 respine 제외, 스키마 필드로 판별",
-   "status": "complete",
-   "evidence": "라이브(main 418c9a5dd), 개별+whole-branch 리뷰통과, 서버 실관측 5->18조각"
-  },
-  {
-   "id": "G005",
-   "title": "③리컨사일",
-   "objective": "fit≤3 비트만 Gemini 1콜로 화면에 맞게 문장 미세수정, 루프 금지",
-   "status": "complete",
-   "evidence": "라이브 main 418c9a5dd, 리뷰통과, 서버 실관측 5→18조각"
+   "evidence": "라이브 검증 15/15 PASS"
   }
  ]
 }
