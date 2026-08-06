@@ -1964,7 +1964,11 @@ def _collect_seg_benefits(segments):
 
 def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3, call=_vault_call,
                             bank_context="", order_block="", lengthen=False,
-                            benefits_block="", tone_boost=False, engine=None, engine_seed=0):
+                            benefits_block="", tone_boost=False, engine=None, engine_seed=0,
+                            frame_start=None):
+    """frame_start(2026-08-06): 이 호출의 첫 후보가 쓸 이야기 구도 인덱스(style_profiles.
+    _STORY_FRAMES 순환). None이면 무주입(회귀 0). 슬롯 경로는 벌마다 n=1로 따로 부르는데,
+    배치용 '후보마다 다르게' 지시는 n=1에서 전부 1번(발견담)이 돼 구도가 안 갈렸다."""
     """스토리 헌장 + 장면 팔레트 + 레퍼 구조 → 후보 n개. 각 비트는 seg_ids(2~4 다중컷)로
     장면을 지목한다. 실패 시 []. 헌장이 품질을 담당하므로 별도 검증루프 없음(1콜).
 
@@ -1982,6 +1986,16 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
     #    남긴 것: 배선(seg_id 지목·caption_lines 일치·스키마 필드) + 중요 액션(변화) 집중.
     #    선행 설계(참고): docs/superpowers/specs/2026-07-26-대본프롬프트-단순화-Gemini종합-design.md
     lo, hi = int(char_target * 0.93), int(char_target * 1.05)
+    from shopping_shorts import style_profiles as _spf
+    if frame_start is None:
+        _frame_txt = ""
+    elif n == 1:
+        _frame_txt = _spf.story_frame_block(frame_start)
+    else:
+        _fr = [_spf.story_frame(frame_start + k) for k in range(n)]
+        _frame_txt = ("\n★후보별 이야기 구도 — 겹치면 실패다(사실·인물은 지어내지 마라):\n"
+                      + "\n".join(f"  {k + 1}번 후보 = **{f[0]}**: {f[1]}"
+                                  for k, f in enumerate(_fr) if f) + "\n") if any(_fr) else ""
     prompt = (
         f"너는 한국 쇼핑 숏폼(살림·요리·제품) 대본 작가다. 아래 재료로 서로 다른 훅을 쓴 "
         f"대본 후보 {n}개를 만들어라. 화자가 들려주는 짧은 이야기체로, 사람이 말하듯 자연스럽게.\n\n"
@@ -1990,7 +2004,7 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         f"{(reference_text or '')[:1500]}\n\n"
         # ★채널 스타일(2026-08-05)을 맨 앞에 — 맨 뒤에 붙였더니 규칙 40줄에 밀려 절반만
         #   먹었다(실측 job 64e0a110: 훅 명령형·문장 뚝뚝·합쇼체 잔존). 문체는 이게 우선.
-        + _style_extra() +
+        + _style_extra() + _frame_txt +
         # 2026-07-29(사장님 확정): 스펙 나열형 reference_text를 그대로 던지면 대본도 나열형으로
         # 나온다. 3단계 상황 프레임을 줘서 Gemini가 스스로 '썰'을 짓게 유도(고정 문구 하드코딩 금지
         # — 제품마다 실제 스펙에서 재구성해야 하므로 지시만 주고 내용은 매번 새로 만들게 한다).
@@ -2093,11 +2107,7 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "(예: 본문 '재료 하나만 바꾸면 끝' → CTA '그 재료 궁금하시면 댓글에').\n"
         "- 각 후보에 hook, story_person, story_event, story_resolution, cta_line, "
         "cta_keyword를 채워라.\n"
-        # ★후보별 이야기 구도(2026-08-06 사장님 "요리책 낸 엄마로 비슷하네 다"): 원본 인물이
-        #   센 소재에서 후보 전부가 같은 인물 구도로 수렴 — 구도를 강제로 갈라준다.
-        "- ★후보마다 **이야기 구도를 다르게**: 1번=1인칭 발견담(인물 에피소드 앞세우지 말 것), "
-        "2번=가족 에피소드(엄마·남편·아이 반응 장면), 3번=지인 목격담(친구 집에서 보고 충격). "
-        "원본의 인물은 근거로만 쓰되 세 후보가 같은 인물 구도면 실패다. 사실은 지어내지 마라.\n"
+        # (후보별 이야기 구도는 _frame_txt로 상단에 주입 — 2026-08-06, frame_start 관통)
         "- 억지 개그·번역투·상세페이지 상투어(꿀템·갓성비·완벽 해결·삶의 질 상승) 금지.\n"
         # 은행 = 실제로 잘 나온 대본 조각들. ★규칙이 아니라 **벤치마킹 대상**으로 준다.
         + ((f"\n[벤치마킹 — 실제로 잘 나온 대본들의 조각이다. 규칙이 아니라 참고다. "
@@ -3436,6 +3446,15 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     #   호출 경계와 무관하게 A→B→C가 순환하도록 하나의 카운터를 공유한다.
     import itertools as _it
     _style_ctr = _it.count()
+    # ★구도 카운터(2026-08-06 사장님 "1번 해봐"): 생성 호출마다 n만큼 전진 — raws가 생성
+    #   순서대로 그라운딩되므로 스타일 카운터(_style_ctr)와 같은 인덱스가 같은 후보에 닿아
+    #   스타일↔구도 짝(maison=발견담/chae=가족/standard=목격담)이 유지된다.
+    _frame_ctr = {"i": 0}
+
+    def _take_frames(k):
+        s = _frame_ctr["i"]
+        _frame_ctr["i"] += max(0, int(k or 0))
+        return s
 
     def _ground_score(raws, groups=None):
       # groups: 이 묶음이 쓸 슬롯(v4, 2026-08-02). None이면 종전과 똑같이 바깥의
@@ -3602,7 +3621,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 bank_context=bank_context,
                 order_block=_rewrite_block(g, avoid_narrations=said_before),
                 benefits_block=benefits_block, engine=engine,
-                engine_seed=_engine_seed(reference_text) + k)
+                engine_seed=_engine_seed(reference_text) + k,
+                frame_start=_take_frames(1))
             raws.extend(sub or [])
             got = _ground_score(sub or [], groups=g)
             for c in got:
@@ -3619,7 +3639,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 inventory, reference_text, target_seconds, n=need, call=_call,
                 bank_context=bank_context, order_block=order_block,
                 benefits_block=benefits_block, engine=engine,
-                engine_seed=_engine_seed(reference_text) + 100)
+                engine_seed=_engine_seed(reference_text) + 100,
+                frame_start=_take_frames(need))
             got = _ground_score(fill or [], groups=tl_groups)
             for c in got:
                 c["plan"]["slot_variant"] = "refill"   # 차별화 실패를 숨기지 않는다
@@ -3630,7 +3651,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                                        call=_call, bank_context=bank_context,
                                        order_block=order_block,
                                        benefits_block=benefits_block, engine=engine,
-                                       engine_seed=_engine_seed(reference_text))
+                                       engine_seed=_engine_seed(reference_text),
+                                       frame_start=_take_frames(n_candidates))
         cands = _ground_score(raws)
     # ①생성측 보강(세션#2): 후보가 전부 목표보다 크게 짧으면(생성이 목표초 미달) 길이 강화
     # 힌트로 1회 재생성해 합친다. ②선택 감점(_length_penalty)이 짧은 후보를 강등하므로 병합 후
@@ -3657,7 +3679,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                     bank_context=bank_context,
                     order_block=(_rewrite_block(g) if len(_distinct) > 1 else order_block),
                     lengthen=True, benefits_block=benefits_block, engine=engine,
-                    engine_seed=_engine_seed(reference_text) + 1 + k)
+                    engine_seed=_engine_seed(reference_text) + 1 + k,
+                    frame_start=_take_frames(1 if len(_distinct) > 1 else n_candidates))
                 got = _ground_score(raws2, groups=(g if len(_distinct) > 1 else None))
                 for c in got:
                     c["plan"]["slot_variant"] = (slot_kinds[vi] if vi < len(slot_kinds)
@@ -3677,7 +3700,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 bank_context=bank_context,
                 order_block=(_rewrite_block(g) if len(_distinct) > 1 else order_block),
                 tone_boost=True, benefits_block=benefits_block, engine=engine,
-                engine_seed=_engine_seed(reference_text) + 2 + k)
+                engine_seed=_engine_seed(reference_text) + 2 + k,
+                frame_start=_take_frames(1 if len(_distinct) > 1 else n_candidates))
             got = _ground_score(raws3, groups=(g if len(_distinct) > 1 else None))
             for c in got:
                 c["plan"]["slot_variant"] = slot_kinds[vi] if vi < len(slot_kinds) else "?"
