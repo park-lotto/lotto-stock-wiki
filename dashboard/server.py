@@ -400,7 +400,14 @@ def _users_conn():
         google_sub TEXT UNIQUE,
         email TEXT,
         admin INTEGER DEFAULT 0,
+        approved INTEGER DEFAULT 0,
+        blocked INTEGER DEFAULT 0,
         created TEXT)""")
+    # 기존 DB 마이그레이션(컬럼 없으면 추가) — 승인제(2026-08-06): Gemini API 비용 보호
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(users)")}
+    for c in ("approved", "blocked"):
+        if c not in cols:
+            conn.execute(f"ALTER TABLE users ADD COLUMN {c} INTEGER DEFAULT 0")
     return conn
 
 
@@ -419,8 +426,10 @@ def _get_or_create_google_user(sub: str, email):
 def _get_user(uid: int):
     try:
         with _users_conn() as conn:
-            row = conn.execute("SELECT id, email, admin FROM users WHERE id=?", (uid,)).fetchone()
-        return {"id": row[0], "email": row[1] or "", "admin": bool(row[2])} if row else None
+            row = conn.execute("SELECT id, email, admin, approved, blocked FROM users WHERE id=?",
+                               (uid,)).fetchone()
+        return ({"id": row[0], "email": row[1] or "", "admin": bool(row[2]),
+                 "approved": bool(row[3]), "blocked": bool(row[4])} if row else None)
     except Exception:
         return None
 
@@ -622,6 +631,101 @@ def _healthz():
     return {"ok": True}
 
 
+# ── 승인제 (2026-08-06) — Gemini API 비용 보호: 가입해도 관리자 승인 전엔 사용 불가 ──
+_PENDING_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>승인 대기중 · STOCK BRAIN</title>
+<style>body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;
+background:#0b0b0e;font-family:system-ui,'Noto Sans KR',sans-serif;color:#eee}
+.box{background:#16161c;border:1px solid #2a2a30;border-radius:14px;padding:36px 32px;width:320px;text-align:center}
+h1{color:#d4af37;font-size:17px;margin:0 0 14px}p{color:#9aa;font-size:13px;line-height:1.7;margin:0 0 18px}
+a{color:#667;font-size:12px}</style></head>
+<body><div class=box><h1>__TITLE__</h1><p>__MSG__</p><a href=/logout>로그아웃</a></div></body></html>"""
+
+
+def _pending_response(user, path: str):
+    """미승인·차단 사용자 응답. API는 403 JSON, 페이지는 안내 화면."""
+    blocked = bool(user.get("blocked"))
+    if path.startswith("/api/"):
+        return JSONResponse({"error": "blocked" if blocked else "pending_approval"}, status_code=403)
+    if blocked:
+        html = _PENDING_HTML.replace("__TITLE__", "이용이 제한된 계정입니다") \
+                            .replace("__MSG__", "관리자에게 문의해주세요.")
+    else:
+        html = _PENDING_HTML.replace("__TITLE__", "가입 승인 대기중입니다 ⏳") \
+                            .replace("__MSG__", "관리자가 승인하면 바로 이용할 수 있어요.<br>승인 후 새로고침해주세요.")
+    return HTMLResponse(html, status_code=403)
+
+
+# ── 회원 관리 (/admin — 관리자 전용) ──
+_ADMIN_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>회원 관리 · STOCK BRAIN</title>
+<style>body{margin:0;background:#0b0b0e;font-family:system-ui,'Noto Sans KR',sans-serif;color:#eee;padding:28px}
+h1{color:#d4af37;font-size:19px;margin:0 0 4px}.sub{color:#778;font-size:12px;margin-bottom:20px}
+table{border-collapse:collapse;width:100%;max-width:860px}th,td{padding:9px 12px;font-size:13px;text-align:left;
+border-bottom:1px solid #23232a}th{color:#889;font-weight:600;font-size:12px}
+.b{border:0;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;margin-right:6px}
+.ok{background:#1f6f43;color:#dff5e7}.no{background:#333;color:#bbb}.ban{background:#6f1f1f;color:#f5dfdf}
+.tag{font-size:11px;border-radius:6px;padding:2px 8px;font-weight:700}
+.t-wait{background:#4a3b12;color:#ffd863}.t-ok{background:#143c26;color:#6fe0a0}.t-ban{background:#3c1414;color:#e06f6f}
+.t-adm{background:#1c2740;color:#8fb4ff}a{color:#667;font-size:12px}</style></head>
+<body><h1>회원 관리</h1><div class=sub>승인해야 이용 가능(Gemini API 비용 보호) · <a href=/>홈</a></div>
+<table><thead><tr><th>이메일</th><th>가입일</th><th>상태</th><th>작업</th></tr></thead>
+<tbody id=rows></tbody></table>
+<script>
+async function load(){
+  const r=await fetch('/api/admin/users');const d=await r.json();
+  document.getElementById('rows').innerHTML=(d.users||[]).map(u=>{
+    const st=u.admin?'<span class="tag t-adm">관리자</span>'
+      :u.blocked?'<span class="tag t-ban">차단됨</span>'
+      :u.approved?'<span class="tag t-ok">승인됨</span>':'<span class="tag t-wait">승인 대기</span>';
+    const btns=u.admin?'':(
+      (u.approved?'<button class="b no" onclick="upd('+u.id+',{approved:0})">승인 해제</button>'
+                 :'<button class="b ok" onclick="upd('+u.id+',{approved:1})">승인</button>')+
+      (u.blocked ?'<button class="b no" onclick="upd('+u.id+',{blocked:0})">차단 해제</button>'
+                 :'<button class="b ban" onclick="upd('+u.id+',{blocked:1})">차단</button>'));
+    return '<tr><td>'+(u.email||'(이메일 비공개)')+'</td><td>'+(u.created||'').slice(0,10)+
+           '</td><td>'+st+'</td><td>'+btns+'</td></tr>';
+  }).join('')||'<tr><td colspan=4 style="color:#667">아직 가입자가 없습니다</td></tr>';
+}
+async function upd(id,patch){
+  await fetch('/api/admin/user_update',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(Object.assign({id:id},patch))});load();
+}
+load();
+</script></body></html>"""
+
+
+@app.get("/admin", response_class=HTMLResponse)
+def _admin_page():
+    return _ADMIN_HTML   # 접근 제어는 미들웨어(_user_allowed에 없음 → 관리자만 통과)
+
+
+@app.get("/api/admin/users")
+def _api_admin_users():
+    with _users_conn() as conn:
+        rows = conn.execute(
+            "SELECT id, email, admin, approved, blocked, created FROM users ORDER BY id DESC").fetchall()
+    return {"users": [{"id": r[0], "email": r[1], "admin": bool(r[2]),
+                       "approved": bool(r[3]), "blocked": bool(r[4]), "created": r[5]} for r in rows]}
+
+
+@app.post("/api/admin/user_update")
+async def _api_admin_user_update(req: Request):
+    b = await req.json()
+    uid = int(b.get("id", 0))
+    sets, vals = [], []
+    for k in ("approved", "blocked"):
+        if k in b:
+            sets.append(f"{k}=?"); vals.append(1 if b[k] else 0)
+    if not uid or not sets:
+        return JSONResponse({"ok": False, "error": "id/필드 없음"}, status_code=400)
+    with _users_conn() as conn:
+        if conn.execute("SELECT admin FROM users WHERE id=?", (uid,)).fetchone() == (1,):
+            return JSONResponse({"ok": False, "error": "관리자는 변경 불가"}, status_code=400)
+        conn.execute(f"UPDATE users SET {', '.join(sets)} WHERE id=?", vals + [uid])
+    return {"ok": True}
+
+
 @app.middleware("http")
 async def _auth_guard(request: Request, call_next):
     if not _AUTH_ON:
@@ -636,10 +740,20 @@ async def _auth_guard(request: Request, call_next):
         if path.startswith("/api/"):
             return JSONResponse({"error": "unauthorized"}, status_code=401)
         return RedirectResponse("/login")
-    if not _is_admin(uid) and not _user_allowed(path, request.method):
-        if path.startswith("/api/"):
-            return JSONResponse({"error": "forbidden"}, status_code=403)
-        return RedirectResponse("/market")   # 일반 사용자는 홈(관리 대시보드) 대신 히트맵으로
+    if not _is_admin(uid):
+        user = _get_user(uid)
+        if user is None:               # 세션은 유효한데 계정이 삭제됨 → 재로그인
+            r = RedirectResponse("/login")
+            r.delete_cookie("dash_auth")
+            return r
+        if user["blocked"] or not user["approved"]:   # 승인제: 승인 전·차단이면 전부 차단
+            if path == "/logout":
+                return await call_next(request)
+            return _pending_response(user, path)
+        if not _user_allowed(path, request.method):
+            if path.startswith("/api/"):
+                return JSONResponse({"error": "forbidden"}, status_code=403)
+            return RedirectResponse("/market")   # 일반 사용자는 홈(관리 대시보드) 대신 히트맵으로
     response = await call_next(request)
     _no_store(request, response)
     return response

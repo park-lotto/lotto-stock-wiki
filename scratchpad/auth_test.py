@@ -30,8 +30,13 @@ chk("관리자 → 홈(/) 접근 200", r.status_code == 200, r.status_code)
 r = s.get(B + "/brain", allow_redirects=False)
 chk("관리자 → /brain 접근 200", r.status_code == 200, r.status_code)
 
-# 일반 사용자(uid=5, users.db에 없음 → 비관리자 취급) 쿠키 위조가 아닌 '서버 시크릿으로 서명' = 정상 세션 시뮬
-u = {"dash_auth": sign(5)}
+# 일반 사용자 = 승인된 계정(uid 102, 아래 승인제 섹션에서 미리 생성)으로 시뮬
+import sqlite3 as _sq
+_c = _sq.connect(r"C:\Users\TheRose\Desktop\로또의 주식\db\users.db")
+_c.execute("INSERT OR IGNORE INTO users(id, google_sub, email, approved, blocked, created) VALUES(102,'t-approved','ok@test.com',1,0,'2026-08-06')")
+_c.execute("UPDATE users SET approved=1, blocked=0 WHERE id=102")
+_c.commit(); _c.close()
+u = {"dash_auth": sign(102)}
 r = requests.get(B + "/market", cookies=u, allow_redirects=False)
 chk("사용자 → /market 200", r.status_code == 200, r.status_code)
 r = requests.get(B + "/insights", cookies=u, allow_redirects=False)
@@ -48,6 +53,42 @@ r = requests.post(B + "/api/watchlist", cookies=u, json={"code": "005930"}, allo
 chk("사용자 → watchlist POST 403", r.status_code == 403, r.status_code)
 r = requests.get(B + "/api/watchlist", cookies=u, allow_redirects=False)
 chk("사용자 → watchlist GET 허용", r.status_code not in (401, 403), r.status_code)
+
+# ── 승인제 검증 ──
+import sqlite3
+DB = r"C:\Users\TheRose\Desktop\로또의 주식\db\users.db"
+conn = sqlite3.connect(DB)
+conn.execute("INSERT OR IGNORE INTO users(id, google_sub, email, approved, blocked, created) VALUES(101,'t-pending','pend@test.com',0,0,'2026-08-06')")
+conn.execute("UPDATE users SET approved=0, blocked=0 WHERE id=101")   # 재실행 대비 초기화
+conn.execute("INSERT OR IGNORE INTO users(id, google_sub, email, approved, blocked, created) VALUES(102,'t-approved','ok@test.com',1,0,'2026-08-06')")
+conn.execute("INSERT OR IGNORE INTO users(id, google_sub, email, approved, blocked, created) VALUES(103,'t-blocked','ban@test.com',1,1,'2026-08-06')")
+conn.commit(); conn.close()
+
+pend, appr, ban = {"dash_auth": sign(101)}, {"dash_auth": sign(102)}, {"dash_auth": sign(103)}
+r = requests.get(B + "/market", cookies=pend, allow_redirects=False)
+chk("미승인 → /market 403 대기화면", r.status_code == 403 and "승인 대기중" in r.text, r.status_code)
+r = requests.get(B + "/api/heatmap_tab", cookies=pend, allow_redirects=False)
+chk("미승인 → API 403", r.status_code == 403, r.status_code)
+r = requests.get(B + "/market", cookies=appr, allow_redirects=False)
+chk("승인됨 → /market 200", r.status_code == 200, r.status_code)
+r = requests.get(B + "/market", cookies=ban, allow_redirects=False)
+chk("차단됨 → 403 제한화면", r.status_code == 403 and "제한된 계정" in r.text, r.status_code)
+r = requests.get(B + "/admin", cookies=appr, allow_redirects=False)
+chk("일반 사용자 → /admin 차단", r.status_code in (302, 307), r.status_code)
+r = requests.get(B + "/api/admin/users", cookies=appr, allow_redirects=False)
+chk("일반 사용자 → 관리 API 403", r.status_code == 403, r.status_code)
+r = s.get(B + "/admin", allow_redirects=False)
+chk("관리자 → /admin 200", r.status_code == 200 and "회원 관리" in r.text, r.status_code)
+r = s.get(B + "/api/admin/users", allow_redirects=False)
+users = r.json().get("users", [])
+chk("관리자 → 가입자 목록 조회", r.status_code == 200 and any(u["id"] == 101 for u in users), len(users))
+r = s.post(B + "/api/admin/user_update", json={"id": 101, "approved": 1})
+chk("관리자 → 승인 처리 ok", r.status_code == 200 and r.json().get("ok"), r.text[:60])
+r = requests.get(B + "/market", cookies=pend, allow_redirects=False)
+chk("승인 직후 → /market 200", r.status_code == 200, r.status_code)
+r = s.post(B + "/api/admin/user_update", json={"id": 101, "blocked": 1})
+r = requests.get(B + "/market", cookies=pend, allow_redirects=False)
+chk("차단 직후 → 403", r.status_code == 403, r.status_code)
 
 # 위조 쿠키(다른 시크릿 서명) → 거부
 bad = f"0:{int(time.time())+3600}"
