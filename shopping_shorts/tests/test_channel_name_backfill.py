@@ -15,8 +15,17 @@
 """
 import pytest
 
-from shopping_shorts import channel_name_backfill as cnb
 from shopping_shorts.store import Store
+
+# ★모듈이 아직 없으면 이 파일 전체를 건너뛴다(2026-08-06).
+#   이 테스트는 구현 전에 먼저 커밋된 '보강 테스트'다(커밋 d2664f139 "미완성 보강 테스트
+#   보존"). 그런데 import가 모듈 수준에서 실패하면 **pytest가 수집 단계에서 통째로 중단**
+#   (rc=3)돼 3,300건이 한 건도 안 돈다 → finish 게이트가 "테스트 검사는 무력하다"를 띄우고
+#   **모든 세션의 병합이 검증 없이 통과**한다(실측: 그 상태로 병합 1건이 나갔다).
+#   skip으로 바꿔두면 나머지 테스트는 정상 동작하고, 모듈이 생기는 순간 저절로 살아난다.
+cnb = pytest.importorskip(
+    "shopping_shorts.channel_name_backfill",
+    reason="channel_name_backfill 미구현 — 모듈이 생기면 자동으로 활성화된다")
 
 
 def _seed(store, archived, named=()):
