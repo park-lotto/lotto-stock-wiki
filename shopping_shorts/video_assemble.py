@@ -219,7 +219,10 @@ _CAP_TARGET = int(os.environ.get("CAPTION_TARGET_CHARS", "14") or 14)
 _CAP_MAX_WORDS = int(os.environ.get("CAPTION_MAX_WORDS", "4") or 4)
 # 의존명사(홀로 자막이 되면 뜻이 없어 앞말에 붙어야 하는 말) — 1어절 꼬리로 남으면 앞 구절에 병합.
 # "…식단" | "때문?" → "…식단 때문?". 글자수가 아니라 품사로 판별(독립명사 "대박"·"가루"는 안 붙임).
-_CAP_BOUND_NOUN = {"때문", "때", "것", "수", "뿐", "등", "데", "줄", "채", "척", "터", "만큼", "대로", "듯"}
+# "거·게·건·걸"은 "것"의 구어형(것+조사 축약) — 실렌더에서 "…사 드시는 | 거 이제
+# 멈추셔야"로 끊긴 실사고(2026-08-06, 8자 상한에서 드러남).
+_CAP_BOUND_NOUN = {"때문", "때", "것", "수", "뿐", "등", "데", "줄", "채", "척", "터", "만큼", "대로", "듯",
+                   "거", "게", "건", "걸"}
 # ── 머리 단어(head-marker): 이 단어를 만나면 그 **앞에서** 끊고, 이 단어가 다음
 #    구절의 머리가 된다(뒤 명사/서술어를 데려간다). "…일쑤였는데 | 이 방법은"처럼
 #    관형어 "이"가 앞 구절 꼬리에 남지 않게 한다. 관형사·지시어·부사·수관형사.
@@ -629,7 +632,12 @@ def _caption_segments(narration, preset=None):
         # (c) 앞 어절이 문장부호로 끝났으면 문장 경계에서 끊는다. 쉼표도 자연 휴지라
         #     그 뒤에서 끊는다("빵 달라는 아이, | 아무 식빵이나" — 쉼표 넘겨 뭉치지 않게).
         sent_break = cur[-1].endswith((".", "?", "!", "…", ",", "、"))
-        if not prev_pulls and (head_break or lead_break or sent_break
+        # ★의존명사는 구절 머리가 될 수 없다(2026-08-06 실렌더 "…사 드시는 | 거 이제"):
+        #   끊을 자리라도 다음 단어가 의존명사면 상한을 한 어절 넘겨서라도 데려간 뒤 끊는다.
+        #   기존 병합(아래)은 '마지막 1어절 꼬리'만 잡아 중간 구절 머리는 못 막았다.
+        #   문장 경계(sent_break)는 예외 — 문장부호를 넘겨 붙이지 않는다.
+        bound_pull = bare in _CAP_BOUND_NOUN and not sent_break
+        if not prev_pulls and not bound_pull and (head_break or lead_break or sent_break
                                or not room or not under_cap):
             out.append(" ".join(cur))
             cur = [w]
