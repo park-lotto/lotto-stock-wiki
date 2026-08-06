@@ -101,6 +101,35 @@ def test_story_frame_matches_assigned_style():
         assert style_profiles.story_frame(0) is None
 
 
+def test_restyle_prompt_does_not_contradict_itself_on_hapsyo():
+    """★라이브 실사고(job cc794cf30b4b): 리라이트 [절대규칙]에 "합쇼체 금지"가 모든
+    스타일에 하드코딩돼, 끝맺음 합쇼체가 서명인 홈테리어픽에서 스타일 블록과 규칙이
+    같은 프롬프트 안에서 싸우고 '절대'가 이겼다 → C안 합쇼체 0건(서명 실종).
+
+    한 프롬프트가 같은 것을 시키면서 동시에 금지하면 안 된다."""
+    from shopping_shorts.single_source import restyle_prompt
+    beats = [{"n": 1, "covers": [1], "narration": "테스트 문장이에요."}]
+    with _clean_env():
+        ht = restyle_prompt(beats, style_name="hometerior")
+        assert "합쇼체(~습니다) 금지" not in ht          # 서명을 막던 금지가 없어야
+        assert "마지막 한 문장만** 합쇼체로 짧게 닫아라" in ht
+        assert "마지막 한 문장은 합쇼체로" in ht          # 스타일 블록 쪽 지시도 살아있고
+        # 다른 스타일·미지정은 종전 그대로(회귀 0)
+        for name in ("maison", "chae", "standard", None):
+            p = restyle_prompt(beats, style_name=name)
+            assert "합쇼체(~습니다) 금지" in p, name
+            assert "마지막 한 문장만** 합쇼체로 짧게 닫아라" not in p, name
+
+
+def test_hapsyo_rule_not_hardcoded_in_restyle_prompt():
+    """배선 잠금 — 문구를 다시 하드코딩하면 위 테스트가 통과해도 이게 잡는다."""
+    from shopping_shorts import single_source
+    src = open(single_source.__file__, encoding="utf-8").read()
+    assert "hapsyo_rule(style_name)" in src
+    # 절대규칙 안에 리터럴 금지문이 되살아나면 실패
+    assert "심지어). 합쇼체(~습니다) 금지." not in src
+
+
 def test_style_penalty_wired_with_style_name():
     """배선 잠금 — 스타일 인자를 지워도 함수 테스트는 통과한다(이 트랙 실사고 패턴)."""
     from shopping_shorts import edit_plan
