@@ -63,7 +63,9 @@ def test_hometerior_block_has_fewshot_and_guide():
     b = style_profiles.style_block("hometerior")
     assert "스타일 예시" in b and "271만 회" in b
     assert "멘탈 지켜줍니다" in b               # few-shot 원문 전문
-    assert "마지막 한 문장은 합쇼체로" in b      # 이 채널의 서명
+    assert "CTA 바로 앞 문장을 합쇼체로" in b    # 이 채널의 서명(자리는 CTA 직전)
+    assert "합쇼체 한 방은 **CTA 직전 자리**" in b
+    assert "동작을 순서대로 짚는다" in b          # 감탄이 아니라 실행 방법이 본체
     assert "CTA 규칙(명분+보상형)" in b
     # ★중복 대본(애플힙 재업로드)이 예시로 새면 한 소재로 쏠린다 — 3편이 서로 달라야 한다
     assert b.count("애플힙") == 0
@@ -112,13 +114,34 @@ def test_restyle_prompt_does_not_contradict_itself_on_hapsyo():
     with _clean_env():
         ht = restyle_prompt(beats, style_name="hometerior")
         assert "합쇼체(~습니다) 금지" not in ht          # 서명을 막던 금지가 없어야
-        assert "마지막 한 문장만** 합쇼체로 짧게 닫아라" in ht
-        assert "마지막 한 문장은 합쇼체로" in ht          # 스타일 블록 쪽 지시도 살아있고
+        assert "**CTA 바로 앞 문장**" in ht
+        assert "CTA 바로 앞 문장을 합쇼체로" in ht        # 스타일 블록 쪽 지시도 살아있고
         # 다른 스타일·미지정은 종전 그대로(회귀 0)
         for name in ("maison", "chae", "standard", None):
             p = restyle_prompt(beats, style_name=name)
             assert "합쇼체(~습니다) 금지" in p, name
-            assert "마지막 한 문장만** 합쇼체로 짧게 닫아라" not in p, name
+            assert "**CTA 바로 앞 문장**" not in p, name
+
+
+def test_hapsyo_slot_does_not_collide_with_cta_rule():
+    """★2차 실사고(job c22d0e9de39d): 지시를 "**마지막** 한 문장은 합쇼체"로 썼는데
+    그 자리는 규칙 4가 CTA로 이미 예약한 자리다("댓글에 '키워드' ~ 드릴게요" = 요체).
+    '반드시/실패다'까지 붙은 규칙 4가 이겨 **합쇼체가 구조적으로 나올 수 없었다**(0건).
+    원본에서도 서명은 CTA가 아니라 그 앞 마무리 문장이다("멘탈 지켜줍니다").
+
+    두 규칙이 **같은 문장**을 가리키면 안 된다."""
+    from shopping_shorts.single_source import restyle_prompt
+    with _clean_env():
+        p = restyle_prompt([{"n": 1, "covers": [1], "narration": "테스트."}],
+                           style_name="hometerior")
+        # 규칙 4는 여전히 '마지막 문장(CTA)'을 가져간다
+        assert "마지막 문장(CTA)은 반드시" in p
+        # 합쇼체는 그 앞자리를 가리켜야 한다 — 같은 자리를 다투면 안 된다
+        assert "CTA 바로 앞 문장" in p
+        assert "맨 끝 CTA 문장은 규칙 4대로 쓰고 합쇼체로 만들지 마라" in p
+        # 옛 표현(자리 충돌)이 되살아나면 실패
+        assert "마지막 한 문장만** 합쇼체" not in p
+        assert "마지막 한 문장은 합쇼체로 짧게 닫는다" not in p
 
 
 def test_hapsyo_rule_not_hardcoded_in_restyle_prompt():
