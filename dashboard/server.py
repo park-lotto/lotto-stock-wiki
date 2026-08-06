@@ -476,8 +476,9 @@ def _set_session_cookie(response, uid: int):
                         max_age=_COOKIE_MAX_AGE, httponly=True, samesite="lax")
 
 
-# ── 일반 사용자 접근범위: 히트맵(/market) + 인사이트(/insights)만 ──
-_USER_PAGES = ("/market", "/insights")
+# ── 일반 사용자 접근범위: 홈(/home) + 히트맵(/market) + 인사이트(/insights)만 ──
+_USER_PAGES = ("/home", "/market", "/insights")
+_USER_EXACT_ALLOW = {"/api/me", "/topbar.js"}   # 상단바·내정보(모든 로그인 사용자)
 _USER_API_PREFIX = (
     "/api/insights/", "/api/catalysts",
     # market.html이 쓰는 API들
@@ -498,7 +499,7 @@ _USER_GET_ONLY_PREFIX = ("/api/sector_custom", "/api/watchlist", "/api/insights/
 
 
 def _user_allowed(path: str, method: str) -> bool:
-    if path in _USER_PAGES or path == "/logout":
+    if path in _USER_PAGES or path == "/logout" or path in _USER_EXACT_ALLOW:
         return True
     if any(path.startswith(p) for p in _USER_DENY_PREFIX):
         return False
@@ -548,7 +549,7 @@ async def _api_login(req: Request):
     u = (form.get("user") or [""])[0]
     p = (form.get("pass") or [""])[0]
     if DASH_PASS and u == DASH_USER and p == DASH_PASS:
-        r = RedirectResponse("/market", status_code=303)
+        r = RedirectResponse("/home", status_code=303)
         _set_session_cookie(r, 0)
         return r
     return RedirectResponse("/login?e=" + _urlparse.quote("아이디 또는 비밀번호가 틀렸습니다"), status_code=303)
@@ -620,7 +621,13 @@ def _google_callback(request: Request, code: str = "", state: str = "", error: s
     if not ident:
         return RedirectResponse("/login?e=" + _urlparse.quote("구글 인증에 실패했어요"), status_code=303)
     uid, _created = _get_or_create_google_user(ident["sub"], ident.get("email"))
-    r = RedirectResponse("/market", status_code=303)
+    if _created and not _is_admin(uid):     # 새 가입 → 사장님 텔레그램 쪽지(승인 대기 알림)
+        try:
+            _weather_tg(f"📥 STOCK BRAIN 새 가입: {ident.get('email') or '(이메일 비공개)'}\n"
+                        f"승인 대기중입니다 → https://stockbrain1.duckdns.org/admin")
+        except Exception:
+            pass
+    r = RedirectResponse("/home", status_code=303)
     _set_session_cookie(r, uid)
     r.delete_cookie("g_state")
     return r
@@ -700,6 +707,86 @@ def _admin_page():
     return _ADMIN_HTML   # 접근 제어는 미들웨어(_user_allowed에 없음 → 관리자만 통과)
 
 
+# ── 사용자 홈(/home) — 블랙 첫화면: 히트맵·인사이트 두 개만, 관리자면 관리 버튼 추가 ──
+_HOME_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>STOCK BRAIN</title>
+<style>*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#000;color:#eee;
+font-family:system-ui,'Noto Sans KR',sans-serif;display:flex;flex-direction:column}
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:24px}
+.wrap{width:100%;max-width:760px}
+h1{color:#d4af37;font-size:22px;letter-spacing:2px;text-align:center;margin:0 0 34px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:560px){.cards{grid-template-columns:1fr}}
+a.card{display:block;background:#0e0e12;border:1px solid #23232a;border-radius:18px;
+padding:34px 26px;text-decoration:none;color:#eee;transition:.15s;text-align:center}
+a.card:hover{border-color:#d4af37;transform:translateY(-2px)}
+.ico{font-size:34px;margin-bottom:12px}.t{font-size:17px;font-weight:800;margin-bottom:6px}
+.d{font-size:12.5px;color:#889;line-height:1.6}</style></head>
+<body><div id=topbar></div><script src=/topbar.js></script>
+<main><div class=wrap><h1>⚡ STOCK BRAIN</h1>
+<div class=cards>
+<a class=card href=/market><div class=ico>🔥</div><div class=t>섹터 히트맵</div>
+<div class=d>업종·테마별 자금 흐름을<br>한눈에</div></a>
+<a class=card href=/insights><div class=ico>🧠</div><div class=t>인사이트</div>
+<div class=d>리포트·뉴스 요약과<br>시장 브리핑</div></a>
+</div></div></main></body></html>"""
+
+
+@app.get("/home", response_class=HTMLResponse)
+def _home_page():
+    return _HOME_HTML
+
+
+@app.get("/api/me")
+def _api_me(request: Request):
+    uid = _verify_session(request.cookies.get("dash_auth", ""))
+    if uid is None:
+        if not _AUTH_ON:
+            return {"ok": True, "admin": True, "email": "(로컬)"}
+        return JSONResponse({"ok": False}, status_code=401)
+    u = _get_user(uid) or {}
+    return {"ok": True, "admin": _is_admin(uid), "email": u.get("email", "관리자" if uid == 0 else "")}
+
+
+# 공용 상단바 — 사용자: 히트맵·인사이트만 / 관리자: +관리자·회원관리 버튼 (market·insights·home에 주입)
+_TOPBAR_JS = """(function(){
+fetch('/api/me').then(function(r){return r.ok?r.json():null}).then(function(me){
+  if(!me||!me.ok)return;
+  var bar=document.createElement('div');
+  bar.id='sb-topbar';
+  var s=document.createElement('style');
+  s.textContent='#sb-topbar{position:fixed;top:0;left:0;right:0;z-index:99999;height:46px;'+
+   'background:#000;border-bottom:1px solid #1e1e24;display:flex;align-items:center;gap:6px;'+
+   'padding:0 14px;font-family:system-ui,"Noto Sans KR",sans-serif}'+
+   '#sb-topbar .lg{color:#d4af37;font-weight:800;font-size:14px;letter-spacing:1px;'+
+   'text-decoration:none;margin-right:14px}'+
+   '#sb-topbar a.nv{color:#aab;font-size:13px;font-weight:700;text-decoration:none;'+
+   'padding:6px 12px;border-radius:8px}'+
+   '#sb-topbar a.nv:hover,#sb-topbar a.nv.on{background:#16161c;color:#fff}'+
+   '#sb-topbar .sp{flex:1}'+
+   '#sb-topbar a.ad{color:#8fb4ff;font-size:12px;font-weight:700;text-decoration:none;'+
+   'border:1px solid #2a3a5a;border-radius:8px;padding:5px 11px;margin-left:6px}'+
+   '#sb-topbar a.out{color:#667;font-size:12px;text-decoration:none;margin-left:10px}'+
+   'body{padding-top:46px!important}';
+  document.head.appendChild(s);
+  var p=location.pathname;
+  var h='<a class=lg href=/home>⚡ STOCK BRAIN</a>'+
+    '<a class="nv'+(p=='/market'?' on':'')+'" href=/market>🔥 히트맵</a>'+
+    '<a class="nv'+(p=='/insights'?' on':'')+'" href=/insights>🧠 인사이트</a>'+
+    '<span class=sp></span>';
+  if(me.admin){h+='<a class=ad href=/>⚙ 관리자 페이지</a><a class=ad href=/admin>👥 회원관리</a>';}
+  h+='<a class=out href=/logout>로그아웃</a>';
+  bar.innerHTML=h;
+  document.body.prepend(bar);
+});
+})();"""
+
+
+@app.get("/topbar.js")
+def _topbar_js():
+    return PlainTextResponse(_TOPBAR_JS, media_type="application/javascript")
+
+
 @app.get("/api/admin/users")
 def _api_admin_users():
     with _users_conn() as conn:
@@ -753,7 +840,7 @@ async def _auth_guard(request: Request, call_next):
         if not _user_allowed(path, request.method):
             if path.startswith("/api/"):
                 return JSONResponse({"error": "forbidden"}, status_code=403)
-            return RedirectResponse("/market")   # 일반 사용자는 홈(관리 대시보드) 대신 히트맵으로
+            return RedirectResponse("/home")   # 일반 사용자는 관리 대시보드 대신 블랙 홈으로
     response = await call_next(request)
     _no_store(request, response)
     return response
