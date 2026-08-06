@@ -2079,7 +2079,11 @@ function jump(o){
   // "자막제거" 칩 한 번 클릭으로 게이트가 통째로 우회됐다. 뒤로(완료 단계)는 자유 — 잠긴 단계는
   // 항상 미완 프런티어 위쪽이라 뒤는 애초에 안 잠긴다.
   if(stepLocked(p)){ toast(stepLockMsg()); return; }
-  cur=p; renderSteps(); showPanel(); saveWork();   // ★단계를 서버에 남긴다(2026-07-19) — 안 남기면 새로고침이 1단계로 되돌린다
+  cur=p;
+  // ★사용자가 스스로 옮긴 단계다 — 서버 기준선도 같이 옮겨 "게이트 강등"과 구분한다(2026-08-07).
+  //   이게 없으면 앞 단계로 돌아간 이동이 강등으로 오인돼 서버에 저장되지 않는다.
+  try{ _syncServerStep(); }catch(e){}
+  renderSteps(); showPanel(); saveWork();   // ★단계를 서버에 남긴다(2026-07-19) — 안 남기면 새로고침이 1단계로 되돌린다
 }
 function go(d){
   // 오브 순서로 ±d 이동 → 매핑을 경유해 jump(o)에 위임한다. 게이트 가드는 jump 안에 있다
@@ -2323,6 +2327,10 @@ let _workTimer = null;   // 서버 POST 디바운스(입력마다 두들기지 �
 // _lastCommitted = 서버에 마지막으로 확정 저장된 스냅샷(_workState JSON), _prevCommitted = 그 직전.
 // 서버 push는 1초 디바운스라 연타 입력은 하나로 뭉친다 → _prevCommitted는 "직전 저장 지점"이 된다.
 let _lastCommitted = null, _prevCommitted = null;
+// ★서버가 기억하는 진행단계(2026-08-07). _restoreWork가 게이트 때문에 cur를 0으로 **강등**해도
+//   서버의 원래 단계는 여기 남는다 — 저장할 때 그 0을 되쓰지 않기 위해서다(_pushWork 참조).
+//   강등이 아닌 사용자의 실제 이동(go/jump)은 _serverStep을 같이 전진시키므로 정상 저장된다.
+let _serverStep = null;
 function _setSaveStatus(text, cls){
   if(typeof document === 'undefined') return;   // DOM 없는 환경(노드 슬라이스 테스트)에선 무해히 지나간다
   const el = document.getElementById('saveStatus'); if(!el) return;
@@ -2339,6 +2347,15 @@ function _refreshRevertBtn(){
 // 서버 복원 직후 호출 — 복원 상태를 저장 기준선으로 삼아 "✓ 저장됨" 표시 + 첫 편집 되돌리기 가능.
 // (save 슬라이스에 둬서 _lastCommitted·_workState와 한 스코프. _bootRestore는 존재할 때만 부른다.)
 function _seedSaveBaseline(){ _lastCommitted = JSON.stringify(_workState()); _markSaved(); _refreshRevertBtn(); }
+// 지금의 cur가 "게이트 강등의 산물"인가 = 서버에 되쓰면 안 되는 값인가.
+// _serverStep(서버가 기억하는 단계)보다 화면이 **뒤에** 있고 그 자리가 0이면 강등으로 본다.
+// 사용자가 스스로 앞 단계로 돌아간 경우(go/jump)는 _syncServerStep이 _serverStep을 같이
+// 내려주므로 여기서 걸리지 않는다 — 되돌아간 그 단계가 정상 저장된다.
+function _stepDemoted(){
+  return cur === 0 && typeof _serverStep === 'number' && _serverStep > 0;
+}
+// 사용자의 명시적 단계 이동 — 서버 기준선도 같이 옮긴다(이후 저장이 이 값을 정상 반영).
+function _syncServerStep(){ _serverStep = cur; }
 function _workState(){
   // ★sessionStorage.produce_work의 스키마 **그대로** + step + work_id. 새 형식을 발명하지 않는다 —
   // _consumeProduceHandoff가 이미 이 모양을 읽는다(스펙 §4.2).
@@ -2357,7 +2374,15 @@ async function _pushWork(){
     //   순간의 자동저장이 null을 보내 서버의 job 연결을 지웠다 — 사장님 작업이 "빈 작업"이 됨.
     //   서버(/api/produce/works)는 "안 넘어온 필드 보존" 설계인데 항상 보내면 그 보존이 무의미).
     //   job을 끊어야 하는 흐름은 없다 — "+새 작업"은 새 레코드를 만들지 기존 연결을 지우지 않는다.
-    const payload = {work_id: WORK_ID, state: st, step: cur};
+    // ★step도 **알 때만** 보낸다(2026-08-07, job_id와 같은 이유). _restoreWork는 게이트가
+    //   잠겨 있으면 cur를 0으로 강등하는데(stepLocked → cur=0), 그 0을 그대로 되쓰면 서버의
+    //   진행단계가 **영구히 0으로 파괴된다** — 왕복할수록 작업이 1단계에 고착됐다. 서버는
+    //   미전송 필드를 보존하므로(app.py api_produce_works_save), 안 보내면 원래 단계가 남는다.
+    //   강등이 아닌 진짜 0단계(허브에서 작업 시작)는 stepLocked(0)이 false라 정상 전송된다.
+    // ★typeof 가드 — 이 함수를 정규식으로 떼어 도는 테스트 하네스(test_work_save_job_guard_js)엔
+    //   _stepDemoted가 없다. 없으면 "강등 아님"으로 봐서 **종전 동작(step 항상 전송)**을 유지한다.
+    const payload = {work_id: WORK_ID, state: st};
+    if(!(typeof _stepDemoted === 'function' && _stepDemoted())) payload.step = cur;
     if(MIX_JOB) payload.job_id = MIX_JOB;
     const r = await fetch('/api/produce/works', {method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -2400,7 +2425,47 @@ function saveWork(){
   clearTimeout(_workTimer);
   _workTimer = setTimeout(_pushWork, 1000);                                      // 서버는 디바운스
 }
+// 디바운스를 기다리지 않고 **지금** 서버에 확정 저장한다(2026-08-07).
+// job_id 결속처럼 "1초 사이에 페이지가 날아가면 영영 못 되찾는" 값에만 쓴다 — 일반 편집은
+// 종전대로 saveWork()의 디바운스를 탄다(입력마다 서버를 두들기지 않기 위한 설계).
+function _pushWorkNow(){
+  clearTimeout(_workTimer); _workTimer = null;
+  try{ return _pushWork(); }catch(e){}
+}
 function clearWork(){ try{ sessionStorage.removeItem('produce_work'); }catch(e){} }
+// ★이탈 직전 저장 플러시(2026-08-07 사장님 제보 "내 작업에서 다른 걸 클릭하면 대본이 리셋된다").
+//   사이드바의 작업 전환은 SPA 전환이 아니라 **location.href = 전체 페이지 리로드**다(sidebar.js).
+//   그런데 서버 저장은 1초 디바운스(saveWork의 _workTimer)라, 대본을 뽑고 1초 안에 다른 작업을
+//   누르면 그 _pushWork는 **영영 안 나간다** — 사장님이 잃어버린 게 바로 이 구간이다.
+//   fetch는 언로드 중에 취소되므로 반드시 sendBeacon을 쓴다(브라우저가 이탈 후에도 보장 전송).
+//   Content-Type: 서버 라우트가 dict 바디를 요구하므로 application/json Blob으로 보낸다.
+function flushWork(){
+  if(!_workTimer) return;              // 대기 중인 저장이 없으면 할 일 없음(중복 POST 방지)
+  clearTimeout(_workTimer); _workTimer = null;
+  const st = _workState();
+  if(!HANDOFF.length && !st.script) return;
+  const payload = {work_id: WORK_ID, state: st};
+  // step은 **잠금강등(cur=0)일 때 보내지 않는다** — 아래 _pushWork와 같은 규칙(진행단계 파괴 방지).
+  if(!(typeof _stepDemoted === 'function' && _stepDemoted())) payload.step = cur;
+  if(MIX_JOB) payload.job_id = MIX_JOB;   // 없을 땐 안 보낸다(서버는 미전송 필드를 보존)
+  try{
+    const blob = new Blob([JSON.stringify(payload)], {type:'application/json'});
+    if(navigator.sendBeacon && navigator.sendBeacon('/api/produce/works', blob)) return;
+  }catch(e){}
+  // sendBeacon이 없거나 거부되면(용량초과 등) keepalive fetch로 한 번 더 시도한다.
+  try{ fetch('/api/produce/works', {method:'POST', keepalive:true,
+        headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)}); }catch(e){}
+}
+// pagehide가 주 신호다 — bfcache·모바일 탭전환까지 덮는다. beforeunload는 폴백(구형 사파리).
+// ★try/typeof 이중 가드: 이 슬라이스를 잘라 도는 테스트 하네스는 window를 얕게 스텁해
+//   addEventListener가 없다 — 여기서 던지면 **저장 함수 전체가 로드에 실패**한다(부가기능이
+//   본체를 죽이는 꼴). 등록 실패는 조용히 넘기고 디바운스 저장은 그대로 살려둔다.
+try{
+  if(typeof window !== 'undefined' && typeof window.addEventListener === 'function'){
+    window.addEventListener('pagehide', flushWork);
+    window.addEventListener('beforeunload', flushWork);
+  }
+}catch(e){}
 
 // ── 📂 내 작업목록 (2026-07-26 크로스기기 싱크) ───────────────────────────
 // 서버는 이미 계정별로 작업을 저장한다(GET /api/produce/works). 이걸 여는 화면이 없어
@@ -2537,6 +2602,13 @@ async function _restoreWork(workId){
   }
   const st = d.step;
   cur = (typeof st === 'number' && st >= 0 && st < PANEL_COUNT) ? st : 0;
+  // ★서버가 기억하는 단계를 따로 붙든다(2026-08-07). 바로 아래 stepLocked 강등이 cur를 0으로
+  //   깎는데, 그 0이 다음 saveWork로 서버에 되쓰이면 진행단계가 **영구히 파괴**된다
+  //   (사장님 제보 "작업을 옮겨 다니면 계속 1단계로 돌아온다"). _pushWork가 이 값을 보고
+  //   강등된 0의 전송을 건너뛴다.
+  //   ★try 가드 — 이 함수를 앵커 슬라이스하는 테스트 하네스엔 _serverStep 선언이 없다.
+  //     못 써도 복원 자체는 계속 돈다(종전 동작 = step 항상 전송).
+  try{ _serverStep = cur; }catch(e){}
   // ★게이트는 stepLocked() 하나로만 판정한다(2026-07-26 사장님 제보 "새로고침하면 2단계로
   //   되돌아온다"). 예전엔 여기서 `cur>0 && MIX_JOB && !canGoNext()`를 직접 다시 썼는데,
   //   그 식은 stepLocked()의 **패널7 예외를 모른다** — 매칭·대본후보·미리보기를 "만드는"
@@ -3899,7 +3971,13 @@ async function startProduceMix(){
     // ★새 job을 서버 작업파일에 즉시 남긴다(2026-07-19). 안 남기면 새로고침 시 _restoreWork가
     //   job_id=null을 읽어 미리보기·편집안이 통째로 사라진다(사장님 제보). 게이트는 복원 후에도
     //   서버 preview_status를 다시 읽어 canGoNext()로 잠그므로 미리보기 우회 위험은 없다.
-    saveWork();
+    // ★디바운스가 아니라 **즉시 확정**한다(2026-08-07). saveWork()는 1초 디바운스라, 매칭을
+    //   걸어놓고 1초 안에 사이드바에서 다른 작업을 클릭하면(=전체 페이지 리로드) 이 job_id가
+    //   서버에 결속되기 전에 날아갔다 → 그 작업의 job_id는 영영 NULL로 남고, 돌아와도
+    //   _restoreMixContext가 안 돌아 **대본 후보·미리보기가 통째로 사라진 것처럼 보였다**
+    //   (사장님 제보 "대본 뽑은 게 다시 다 리셋된다"). job_id 결속은 미룰 수 있는 종류가 아니다.
+    saveWork();          // 로컬(sessionStorage)·표시 갱신은 종전대로
+    _pushWorkNow();      // 서버 확정은 지금 — 대기 중인 디바운스를 앞당겨 삼킨다
     // 동적 단계바 시작(loader.js 있을 때만). 컨트롤러는 #mixStatus 속성에 담는다(최상위 변수 X).
     // ★로딩 UI는 부가기능 — 절대 매칭 흐름(폴링·게이트 재잠금)을 막으면 안 된다. try/catch로 감싼다.
     st._sblPipe = null;
