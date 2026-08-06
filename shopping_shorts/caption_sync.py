@@ -67,6 +67,18 @@ def phrase_durs_from_words(narration, words, total_dur, preset=None):
         durs.append(max(0.0, nxt - s))
     if sum(durs) <= 0:
         return None
+    # ★0초 구절 방지(2026-08-06 실렌더 df9b54de557d beat0): 끝 단어가 정렬에서 빠지면
+    #   _interp가 마지막 시각을 total_dur로 클램프 → 마지막 구절 durs=0.0 → 그 자막이
+    #   **아예 안 뜨고** 직전 구절이 화면에 남는다("자막이 늦다"의 실체 — 음성은 다음
+    #   구절을 말하는데 화면은 이전 구절). 최소 표시시간을 보장하고 부족분은 여유 있는
+    #   구절에서 비례로 가져온다(총합 불변 — 리드인·비율 설계는 그대로).
+    _min = 0.25
+    if any(d < _min for d in durs) and sum(durs) > _min * len(durs):
+        need = sum(max(0.0, _min - d) for d in durs)
+        surplus = sum(max(0.0, d - _min) for d in durs)
+        if surplus > 0:
+            durs = [_min if d < _min else d - (d - _min) * need / surplus
+                    for d in durs]
     # ★정규화(d * total_dur / tot) 제거 — 2026-08-06.
     # 그 스케일링은 "합이 total_dur"라는 겉보기만 맞추고, 리드인만큼의 이동 오차를 전
     # 구절에 비례배분해 오히려 번지게 했다. 지금은 실제 발화 간격을 그대로 두고 리드인은
