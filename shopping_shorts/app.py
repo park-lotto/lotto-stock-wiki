@@ -31,7 +31,8 @@ from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI
 from shopping_shorts.frame_extract import (download_video, extract_frames,
                                            extract_frame_at, extract_grid_frames)
-from shopping_shorts.script_extract import extract_script, extract_auto, storable
+from shopping_shorts.script_extract import (extract_script, extract_auto, storable,
+                                            KeyPoolExhausted)
 from shopping_shorts.structure_analyze import analyze_structure
 from shopping_shorts import backbone
 from shopping_shorts.aipick import build_aipick
@@ -1820,6 +1821,13 @@ def api_produce_extract_from_url(request: Request, body: dict, background_tasks:
         caption = (body.get("caption") or dl_caption or "")
         try:
             result = extract_auto(video_path, code, caption=caption)
+        except KeyPoolExhausted:
+            # 영상 문제가 아니라 서버 AI 키가 잠깐 다 찬 상태 — 사용자에게 그대로 알린다
+            # (2026-08-07: 예전엔 "대본 추출 실패 — 잠시 후 재시도"로 뭉뚱그려져
+            #  사장님이 영상을 의심하게 만들었다).
+            return JSONResponse(status_code=503, content={
+                "ok": False, "error": "AI 키가 일시적으로 모두 사용 중입니다 — "
+                                      "잠시 후(또는 자정 이후) 다시 시도해 주세요."})
         except Exception as e:  # noqa: BLE001
             msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
             return JSONResponse(status_code=500, content={"ok": False, "error": msg})
@@ -2008,6 +2016,13 @@ def api_produce_save_to_wiki(request: Request, body: dict, background_tasks: Bac
         caption = body.get("caption") or dl_caption or ""
         try:
             result = extract_auto(video_path, code, caption=caption)
+        except KeyPoolExhausted:
+            # 영상 문제가 아니라 서버 AI 키가 잠깐 다 찬 상태 — 사용자에게 그대로 알린다
+            # (2026-08-07: 예전엔 "대본 추출 실패 — 잠시 후 재시도"로 뭉뚱그려져
+            #  사장님이 영상을 의심하게 만들었다).
+            return JSONResponse(status_code=503, content={
+                "ok": False, "error": "AI 키가 일시적으로 모두 사용 중입니다 — "
+                                      "잠시 후(또는 자정 이후) 다시 시도해 주세요."})
         except Exception as e:  # noqa: BLE001
             msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
             return JSONResponse(status_code=500, content={"ok": False, "error": msg})
@@ -7283,6 +7298,13 @@ def api_produce_autoload(request: Request, body: dict):
             try:
                 result = extract_auto(e["video_path"], code,
                                       caption=(item.get("caption") or dl_caption or ""))
+            except KeyPoolExhausted as ex:
+                # 키 풀 잠김 = 서버 사정. 영상 탓이 아니므로 래치를 되돌려야 한다
+                # (2026-08-07). 여기선 DB에 못 쓰므로(병렬 구간) 표시만 남기고
+                # C단계에서 rollback 한다.
+                e["status"], e["error"] = "deferred_nokey", str(ex)
+                e["rollback_latch"] = True
+                return e
             except Exception as ex:  # noqa: BLE001
                 e["status"], e["error"] = "failed_download", str(ex)
                 return e
@@ -7334,7 +7356,10 @@ def api_produce_autoload(request: Request, body: dict):
     for e in done:
         code, item = e["code"], e["item"]
         if e["status"] != "added":
-            if e.get("error"):
+            if e.get("rollback_latch"):
+                # 키 풀 잠김 — 시도 횟수를 돌려준다(영상 탓이 아니다, 2026-08-07)
+                store.autoload_rollback_attempt(code, e.get("error") or "")
+            elif e.get("error"):
                 store.autoload_mark_error(code, e["error"])
             if e["charged"]:
                 refund_credit(cid, "script")         # 실패는 환불
