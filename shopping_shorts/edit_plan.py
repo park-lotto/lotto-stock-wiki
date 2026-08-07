@@ -3284,6 +3284,24 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         beats = [b for b in beats if (b.get("narration") or "").strip()]
         if not beats:
             return None
+        # ★최종 총량 게이트(2026-08-07 사장님 "자막이 순식간에 지나간다"): 위의 shrink
+        #   교정루프는 초안 직후에만 돌고, 그 뒤의 CTA 교정·고조 재작성·스타일 리라이트가
+        #   문장을 도로 불려도 아무도 다시 재지 않았다 — 실측 job a0157a0ed29d: 나레이션
+        #   34.2초가 화면 29.9초를 넘은 채 렌더돼 자막 줄당 0.8초로 순삭. 여기서 한 번 더
+        #   재고, 넘치면 표현만 줄여 받는다(문장수·covers 불변 → 화면 배정 유효).
+        for _ in range(2):
+            _over2, _secs2, _ = single_source.over_budget(beats, used)
+            if not _over2:
+                break
+            print("[1소스대본] 후보%d 최종 총량 초과(나레이션 %.1f초/예산 %.1f초) → 축약 재요청"
+                  % (i + 1, _secs2, used), file=sys.stderr)
+            _b4 = single_source.parse_beats(
+                _c(single_source.shrink_prompt(beats, used), single_source.BEATS_SCHEMA))
+            if _b4 and len(_b4) == len(beats):
+                for _bi, _nb in enumerate(_b4):     # 축약 응답이 covers를 빠뜨려도 승계
+                    if not _nb.get("covers"):
+                        _nb["covers"] = beats[_bi].get("covers")
+                beats = _b4
         # covers → 화면 배정. 모델이 빠뜨린 컷은 직전 비트에 붙여 **컷 100% 커버**를 코드가
         # 보장한다(화면 총길이 == used == 예산 → 길이 하한이 프롬프트 아닌 코드로 지켜진다).
         covered_by = {}                      # 컷 번호(1-base) → 비트 인덱스
