@@ -330,6 +330,8 @@ def apply_restyle(beats, call, max_tries=3, style_name=None, report=None):
     old_total = sum(len(b.get("narration") or "") for b in beats)
     note = ""
     best = None
+    closest = None          # 구조는 멀쩡하나 길이 밖인 스타일본 중 1.0배에 가장 근접한 것
+    closest_ratio = None
     for _ in range(max_tries):
         resp = call(restyle_prompt(beats, length_note=note, style_name=style_name),
                     RESTYLE_SCHEMA)
@@ -345,6 +347,8 @@ def apply_restyle(beats, call, max_tries=3, style_name=None, report=None):
             nb["narration"] = by_n[i + 1]
             out.append(nb)
         ratio = sum(len(v) for v in by_n.values()) / max(1, old_total)
+        if closest is None or abs(ratio - 1) < abs(closest_ratio - 1):
+            closest, closest_ratio = out, ratio
         if ratio > 1.25:
             note = (f"직전 결과가 원본의 {ratio:.2f}배로 너무 길었다 — 결은 유지하되 "
                     f"군더더기를 덜어 {old_total}자 근처로 줄여라.")
@@ -364,8 +368,37 @@ def apply_restyle(beats, call, max_tries=3, style_name=None, report=None):
             best = out
             continue
         return _done(out, True, "정상")
-    return _done(best or beats, best is not None,
-                 "재시도 소진(길이·상투어·CTA)")
+    if best is not None:
+        return _done(best, True, "재시도 소진(길이·상투어·CTA)")
+    # ★마지막 압축 패스(2026-08-07): 재시도가 전부 길이 밖이면 종전엔 스타일을 통째로
+    # 버리고 원본 복귀 → trio가 같은 결로 수렴("메종/채이/홈테리어 매칭이 안 됨" 실사고,
+    # job 11:38 maison·chae 실패 로그). 스타일이 입혀진 최근접본을 붙잡고 "문체는 두고
+    # 길이만 줄여라"를 한 번 더 태운다 — 스타일과 화면 길이를 둘 다 지키는 마지막 기회.
+    if closest is not None:
+        import json as _json
+        cur = [{"n": i + 1, "narration": (b.get("narration") or "")}
+               for i, b in enumerate(closest)]
+        resp = call(
+            ("아래 나레이션의 **문체·어미·결은 그대로** 두고, 각 문장의 군더더기만 "
+             f"덜어 전체를 {old_total}자(±15%) 안으로 맞춰라. 문장 수·순서·내용 유지, "
+             "사실 추가 금지, 마지막 문장의 댓글 CTA 형태 유지.\n"
+             "JSON만: {\"beats\":[{\"n\":1,\"narration\":\"...\"}]}\n\n")
+            + _json.dumps(cur, ensure_ascii=False, indent=1), RESTYLE_SCHEMA)
+        got = (resp or {}).get("beats") if isinstance(resp, dict) else None
+        if got and len(got) == len(beats):
+            by_n = {int(g.get("n", 0)): (g.get("narration") or "").strip() for g in got}
+            if (sorted(by_n) == list(range(1, len(beats) + 1)) and all(by_n.values())):
+                ratio = sum(len(v) for v in by_n.values()) / max(1, old_total)
+                if 0.75 <= ratio <= 1.25:
+                    out = []
+                    for i, b in enumerate(beats):
+                        nb = dict(b)
+                        nb["narration"] = by_n[i + 1]
+                        out.append(nb)
+                    return _done(out, True, f"압축패스({closest_ratio:.2f}→{ratio:.2f}배)")
+    return _done(beats, False,
+                 f"재시도 소진(최근접 {closest_ratio:.2f}배)" if closest_ratio
+                 else "재시도 소진(길이·상투어·CTA)")
 
 
 def parse_beats(resp):
