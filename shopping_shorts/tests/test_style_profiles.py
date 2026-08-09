@@ -162,7 +162,12 @@ def test_style_penalty_wired_with_style_name():
 
 def test_chae_and_standard_blocks():
     c = style_profiles.style_block("chae")
-    assert "표정이 싹 굳으시면서" in c and "631만 회" in c and "티키타카" in c
+    # ★631만 예시(미니 세탁기)는 2026-08-09에 제외했다 — 그 예시가 프롬프트에 실리면
+    #   Gemini가 candidates를 통째로 비워 돌려줘 **채이 후보가 통째로 사라졌다**
+    #   (반사실 대조: 3편 0/8 → 631만 제외 8/8). 살아 있는 536만·295만으로 검사한다.
+    #   상세: style_profiles._CHAE_FEWSHOT 위 주석.
+    assert "500만 원 날릴" in c and "536만 회" in c and "티키타카" in c
+    assert "631만 회" not in c, "응답을 막는 631만 예시가 되살아났다 — 채이가 안 나온다"
     s = style_profiles.style_block("standard")
     assert "등짝 스매싱" in s and "286만 회" in s and "유머" in s
     # trio 공통 생성 블록은 메종
