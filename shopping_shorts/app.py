@@ -1082,7 +1082,7 @@ def api_mix_basket(request: Request):
     store = Store(DB_PATH)
     cid = _cid(request)
     items = store.mix_basket_list(customer_id=cid)
-    # 담을 때 저장한 인스타 CDN 썬네일은 며칠이면 만료(403)되어 검은칸이 된다
+    # 담을 때 저장한 인스타 CDN 썸네일은 며칠이면 만료(403)되어 검은칸이 된다
     # (2026-08-09 실측). 아카이브 크롤이 매일 새 URL을 받아오므로 있으면 그걸로 바꿔서 준다.
     try:
         codes = [i.get("shortcode") for i in items if i.get("shortcode")]
@@ -1096,8 +1096,8 @@ def api_mix_basket(request: Request):
                 t = fresh.get(i.get("shortcode"))
                 if t:
                     i["thumbnail"] = t
-    except Exception as e:  # noqa: BLE001 — 썬네일 보강 실패가 목록을 막지 않는다
-        print(f"basket 썬네일 보강 실패(무해): {e}", file=sys.stderr)
+    except Exception as e:  # noqa: BLE001 — 썸네일 보강 실패가 목록을 막지 않는다
+        print(f"basket 썸네일 보강 실패(무해): {e}", file=sys.stderr)
     _attach_durations(items, store)   # ⏱ 길이(2026-08-09 — 랭킹·히트작과 동일)
     return {"ok": True, "items": items,
             "shortcodes": sorted(store.mix_basket_shortcodes(customer_id=cid))}

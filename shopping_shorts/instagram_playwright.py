@@ -92,7 +92,7 @@ def _scrape_one_playwright(username, session_path=None, proxy=None):
                       wait_until="domcontentloaded")
             page.wait_for_timeout(2500)          # 릴스 목록 XHR이 도착할 여유
             # 간헐 챌린지 재시도(2026-08-09): 같은 계정·프록시로 단독 방문은 정상인데
-            # 수집 경로에서만 update_risky_contactpoint가 간헐적으로 떴다(실측).
+            # 수집 경로에서만 update_risky_contactpoint가 간헐적으로 뜬다(실측).
             # 챌린지면 잠깐 쉬고 최대 2회 재진입 — 대개 두 번째엔 정상 페이지가 온다.
             for _retry in range(2):
                 if not any(k in page.url for k in ("challenge", "scraping_warning", "risky", "suspended")):
@@ -348,11 +348,12 @@ def fetch_reels(usernames, on_progress=None, _scrape_one=None):
     total = len(names)
     tally = {"ok": 0, "login_wall": 0, "not_found": 0, "error": 0}
     items = []
-    # 계정 로테이션(2026-08-09): 아카이브 크롤과 동일하게 ig_sessions 계정들을
-    # 전용 출구(계정↔IP 1:1)와 묶어 번갈아 쓴다. 단일 계정은 하루 3회×수백채널을
-    # 혼자 받다 scraping_warning에 걸렸다(2026-08-07~09 실사고).
+    # 계정 로테이션(2026-08-09): 기본은 기존 단일 계정(서버 IP 직결) — 사장님 지시로
+    # 아카이브 크롤이 끝나기 전까지 그 3계정을 수집에 돌려쓰지 않는다. 아카이브 종료 후
+    # /etc/shopping-shorts.env에 INSTAGRAM_COLLECT_ROTATION=1을 추가하면 켜진다
+    # (ig_sessions 계정들 × 계정별 주거용 출구, 아카이브와 같은 계정↔IP 1:1).
     slots = []
-    if _scrape_one is None:
+    if _scrape_one is None and os.getenv("INSTAGRAM_COLLECT_ROTATION", "") == "1":
         from shopping_shorts.channel_archive import session_slots, slot_proxy
         slots = [(gi, sp) for gi, sp in enumerate(session_slots())]
     for i, uname in enumerate(names, start=1):
