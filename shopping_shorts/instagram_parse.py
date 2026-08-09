@@ -233,6 +233,22 @@ def parse_hashtag_search_item(item):
     }
 
 
+# 인스타가 "이 계정/접속을 못 믿겠다"며 릴스 대신 띄우는 관문 URL 조각들.
+# not_found(=채널이 없다)와 반드시 갈라야 한다 — 원인도 대처도 정반대다.
+#   login_wall  → 계정·세션·IP 문제. 세션 재발급·계정 교체로 뚫린다.
+#   not_found   → 채널이 비공개/삭제. 계정을 아무리 바꿔도 안 된다.
+# ★update_risky_contactpoint(2026-08-09 추가): 본인확인 요구 페이지. 이게 목록에
+# 없어서 챌린지 199채널이 전부 not_found로 집계됐고, "채널이 다 없어졌다"로 오독한 뒤
+# "계정이 한도소진됐다"는 엉뚱한 결론까지 갔다(진짜 원인은 계정↔IP 불일치 버그였다).
+_LOGIN_WALL_URL_HINTS = (
+    "/accounts/login",
+    "scraping_warning",
+    "update_risky_contactpoint",   # 본인확인(위험 연락처) 요구
+    "/challenge",                  # 캡차·인증 관문
+    "/accounts/suspended",         # 계정 정지
+)
+
+
 def classify_channel_result(nodes, page_url, error):
     """채널 1개의 수집 결과를 4가지로 분류한다.
 
@@ -244,6 +260,7 @@ def classify_channel_result(nodes, page_url, error):
         return "error"
     if nodes:
         return "ok"
-    if "/accounts/login" in (page_url or "") or "scraping_warning" in (page_url or ""):
+    url = page_url or ""
+    if any(h in url for h in _LOGIN_WALL_URL_HINTS):
         return "login_wall"
     return "not_found"

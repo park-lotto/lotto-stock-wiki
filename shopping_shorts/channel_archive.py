@@ -42,6 +42,10 @@ _SCROLL_PAUSE_MS = 2200
 _CHANNEL_GAP_S = (15, 35)    # 채널 사이 랜덤 휴식
 _BACKOFF_S = 30 * 60         # 로그인벽/차단 의심 시 대기
 _BUSY_POLL_S = 60            # 렌더 양보 중 재확인 주기
+# 인스타가 릴스 대신 띄우는 관문 URL 조각(계정 교체로 뚫리는 것들).
+# instagram_parse._LOGIN_WALL_URL_HINTS와 같은 성격 — 그쪽은 분류, 여기는 즉시 중단용.
+_WALL_URL_HINTS = ("/accounts/scraping_warning", "update_risky_contactpoint",
+                   "/challenge", "/accounts/suspended", "/accounts/login")
 
 
 # 풀별 프록시 출구 오프셋 — 같은 kr-N을 두 계정이 나눠 쓰지 않게 번호대를 갈라둔다.
@@ -170,7 +174,12 @@ def crawl_channel(username, max_scrolls=_MAX_SCROLLS, session_path=None, proxy=N
             # 삭제·개명된 채널 감지(2026-08-05): 인스타가 에러 라우트를 렌더한다.
             # 이걸 error로 두면 pick_targets(팔로워순)가 매일 같은 죽은 대형 채널로
             # 40개 한도를 채워 진도가 영영 안 나간다 → "gone"으로 영구 제외.
-            if "/accounts/scraping_warning" in page.url:
+            # ★관문은 scraping_warning 하나가 아니다(2026-08-09). 본인확인
+            # (update_risky_contactpoint)·챌린지·정지도 같은 성격이다 — 이걸 못 잡으면
+            # 릴스 0건을 그대로 "수집 끝"으로 처리해 **빈 채로 done 처리**되고,
+            # 그 채널은 다시 안 돈다(pick_targets가 done을 제외하므로 영구 유실).
+            # 계정 교체(아래 run()의 재시도)로 뚫리는 건들이라 같은 신호로 묶는다.
+            if any(h in page.url for h in _WALL_URL_HINTS):
                 ctx.close()
                 browser.close()
                 return [], page.url, "scraping_warning"

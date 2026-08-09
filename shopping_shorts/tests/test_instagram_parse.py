@@ -190,3 +190,28 @@ def test_parse_hashtag_search_item_without_username_returns_none():
     assert parse_hashtag_search_item({"pk": "1", "user": {}}) is None
     assert parse_hashtag_search_item({}) is None
     assert parse_hashtag_search_item(None) is None
+
+
+# ── 관문 URL 분류(2026-08-09 실사고) ──
+# update_risky_contactpoint가 목록에 없어 챌린지 199채널이 전부 not_found로 집계됐다.
+# "채널이 다 없어졌다"로 오독 → "계정 한도소진"이라는 엉뚱한 결론까지 갔다.
+# 원인·대처가 정반대라(계정 교체 vs 포기) 반드시 갈라야 한다.
+import pytest
+
+
+@pytest.mark.parametrize("url", [
+    "https://www.instagram.com/accounts/update_risky_contactpoint/?challenge_id=1",
+    "https://www.instagram.com/challenge/action/12345/",
+    "https://www.instagram.com/accounts/suspended/",
+    "https://www.instagram.com/accounts/scraping_warning/",
+])
+def test_classify_login_wall_covers_all_gate_urls(url):
+    assert classify_channel_result([], url, None) == "login_wall"
+
+
+def test_classify_gate_url_is_not_confused_with_missing_channel():
+    """관문(계정 교체로 뚫림)과 없는 채널(못 뚫음)이 같은 값이면 원인을 못 읽는다."""
+    gate = classify_channel_result(
+        [], "https://www.instagram.com/accounts/update_risky_contactpoint/", None)
+    gone = classify_channel_result([], "https://www.instagram.com/u/reels/", None)
+    assert gate == "login_wall" and gone == "not_found" and gate != gone
