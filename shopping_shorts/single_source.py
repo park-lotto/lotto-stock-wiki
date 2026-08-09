@@ -464,6 +464,48 @@ def parse_beats(resp):
     return []
 
 
+def under_budget(beats, used_secs, floor=0.85):
+    """대본이 예산보다 **짧은가** → (미달여부, 나레이션초, 모자란초).
+
+    ★사장님 지시(2026-08-09): "대본이 짧은 건 있을 수가 없다. 그렇게 되면 스토리 자체가
+      안 나오고 **설득 구조가 실패한 대본**이다."
+      종전엔 over_budget(넘침)만 있고 미달은 방치였다 — 실측: 요구 202자인데 115자(56%)가
+      그대로 나갔다(4문장). 넘치면 줄이면서 모자라면 안 채우는 건 비대칭이다.
+    floor: 예산의 이 비율 미만이면 미달로 본다(기본 85%)."""
+    chars = sum(len((b.get("narration") or "")) for b in (beats or []))
+    secs = chars / _CHARS_PER_SEC
+    need = used_secs * floor
+    return (secs < need), secs, need - secs
+
+
+def expand_prompt(beats, used_secs, material_text=""):
+    """모자란 분량을 채워 다시 받는다 — **문장을 늘리지 말고 살을 붙인다**.
+
+    ★새 사실을 지어내면 안 된다(원본에 없는 성능·수치·가격 금지). 늘리는 건
+      '어떻게 그랬는지·그래서 어땠는지'의 서사·묘사다 — few-shot 채널들이 그렇게 쓴다."""
+    import json
+    n_lines = max(len(beats or []), 5)
+    total = char_budget(used_secs)
+    cur = [{"n": b.get("n"), "covers": b.get("covers"), "narration": b.get("narration")}
+           for b in (beats or [])]
+    now = sum(len((b.get("narration") or "")) for b in (beats or []))
+    return ("아래 나레이션이 **너무 짧아서 이야기가 서지 않는다**"
+            f"(지금 {now}자 / 목표 {total}자).\n"
+            f"★문장 수를 **{n_lines}개로** 맞추고, 전체를 **{total}자에 가깝게** 늘려라.\n"
+            "[늘리는 방법 — 이것만 해라]\n"
+            "- 상황을 구체적으로: 언제·어디서·누가 그랬는지 한 겹 더 (원본 재료 범위 안에서)\n"
+            "- 동작을 순서대로: 뭘 어떻게 했는지 손에 잡히게\n"
+            "- 반응·결과를 붙여서: 그래서 어땠는지, 누가 뭐라고 했는지\n"
+            "- 문장을 길게 이어라: \"~는데 ~니까 ~더라고요\"처럼 한 문장에 두세 마디를 몬다\n"
+            "[절대 하지 마라]\n"
+            "- 원본에 없는 **성능·수치·가격·구매처를 지어내는 것**\n"
+            "- 같은 말을 다르게 반복해 글자만 늘리는 것\n"
+            "- 마지막 CTA 문장의 형식을 바꾸는 것(댓글 유도는 그대로 둔다)\n\n"
+            f"[원본 소재]\n{(material_text or '')[:900]}\n\n"
+            + json.dumps(cur, ensure_ascii=False, indent=1)
+            + "\n\nJSON만: {\"beats\":[{\"n\":1,\"covers\":[1,2],\"narration\":\"...\"}]}")
+
+
 def over_budget(beats, used_secs, tol=0.15):
     """나레이션 총량이 화면을 넘었나 → (초과여부, 나레이션초, 초과초)."""
     chars = sum(len((b.get("narration") or "")) for b in (beats or []))
@@ -705,6 +747,43 @@ def fix_hook_prompt(beats, material_text):
             f"[원본 소재]\n{(material_text or '')[:900]}\n\n"
             + json.dumps(cur, ensure_ascii=False, indent=1)
             + "\n\nJSON만: {\"beats\":[{\"n\":1,\"covers\":[1,2],\"narration\":\"...\"}]}")
+
+
+# CTA 키워드로 쓰기엔 뜻이 없는 말 — 소재에서 뽑을 때 걸러낸다.
+_KW_STOP = {
+    "이거", "그거", "저거", "이것", "그것", "정말", "진짜", "너무", "완전", "그냥",
+    "제가", "저는", "우리", "여기", "거기", "지금", "다음", "하나", "두는", "때문",
+    "하면", "해서", "있는", "없는", "같은", "이런", "저런", "그런", "바로", "다들",
+    "매번", "요즘", "제품", "사용", "가능", "생각", "경우", "방법", "정보",
+}
+
+
+def cta_keyword_for(beats, material_text=""):
+    """CTA 폴백에 쓸 키워드 — **소재에서** 뽑는다(2026-08-09).
+
+    종전엔 '나도'/'정보' 둘뿐이라 파전·곰팡이 영상에도 "댓글에 '정보'"가 나갔다
+    (10회 실측 6번). 소재와 겉돌 뿐 아니라 **인포크 자동응답 키워드가 대본과 어긋난다**.
+    순서: ①대본이 이미 쓴 따옴표 키워드 ②소재에서 자주 나오는 명사 ③'정보'(최후)."""
+    # ① 대본에 이미 있는 CTA 키워드를 그대로 따른다(후보 간 일관성).
+    for b in reversed(beats or []):
+        m = _re.search(r"['\"]([가-힣]{2,6})['\"]", b.get("narration") or "")
+        if m and m.group(1) not in _KW_STOP:
+            return m.group(1)
+    # ② 소재에서 2~4글자 한글 명사 중 최빈어.
+    #   ★조사를 떼고 센다 — 안 떼면 "파전이"·"곰팡이가"가 키워드로 나간다(실측).
+    words = _re.findall(r"[가-힣]{2,6}", material_text or "")
+    freq = {}
+    for w in words:
+        w = _re.sub(r"(이|가|은|는|을|를|에|의|도|만|과|와|로|으로|께|한테|에서|부터|까지)$",
+                    "", w)
+        if len(w) < 2 or w in _KW_STOP:
+            continue
+        freq[w] = freq.get(w, 0) + 1
+    if freq:
+        best = max(freq.items(), key=lambda kv: (kv[1], len(kv[0])))
+        if best[1] >= 2:                     # 한 번만 나온 말은 소재의 핵심이 아니다
+            return best[0]
+    return "나도" if "나도" in (material_text or "") else "정보"
 
 
 def shrink_prompt(beats, used_secs):

@@ -50,6 +50,7 @@ def _fixture(monkeypatch, delay=0.0, record=None):
         ("chae_person_missing", lambda b, style_name=None: False),
         ("maison_signature_missing", lambda b, style_name=None: False),
         ("hook_contradicts", lambda b, mat, call: False),
+        ("under_budget", lambda b, used, floor=0.85: (False, 0, 0)),
     ):
         monkeypatch.setattr(real_ss, name, val, raising=False)
 
