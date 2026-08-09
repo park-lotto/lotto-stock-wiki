@@ -203,3 +203,27 @@ def test_style_block_signature_accepts_name():
             assert block == ""
         else:
             assert block == style_profiles.style_block(name)
+
+
+def test_cta_keyword_comes_from_material():
+    """★CTA 폴백 키워드는 소재에서 뽑는다(2026-08-09).
+
+    종전엔 '나도'/'정보' 둘뿐이라 파전·곰팡이 영상에도 "댓글에 '정보'"가 나갔다
+    (10회 실측 6번). 인포크 자동응답 키워드가 대본과 어긋나는 원인이기도 하다."""
+    kw = single_source.cta_keyword_for(
+        [], "파전이 눅눅해서 시어머니께 여쭤봤더니 파전 비법을 알려주셨어요 파전이 바삭해졌어요")
+    assert kw == "파전", kw
+    kw2 = single_source.cta_keyword_for(
+        [], "욕실 곰팡이가 안 지워졌는데 젤을 바르니 곰팡이가 사라졌어요 곰팡이 재발도 없어요")
+    assert kw2 == "곰팡이", kw2
+
+
+def test_cta_keyword_prefers_script_keyword():
+    """대본이 이미 쓴 키워드가 있으면 그걸 따른다(후보 간 일관성)."""
+    beats = [{"narration": "앞 문장"}, {"narration": "댓글에 '바삭' 남겨주세요"}]
+    assert single_source.cta_keyword_for(beats, "아무 소재나") == "바삭"
+
+
+def test_cta_keyword_falls_back_when_no_signal():
+    """소재에 반복되는 명사가 없으면 종전 폴백('정보')로 떨어진다 — 회귀 0."""
+    assert single_source.cta_keyword_for([], "정보 방법 그냥 이거") == "정보"

@@ -140,8 +140,20 @@ def select_and_order(segments, target_seconds=None, video_type=None):
 
     key = [s for s in segs if s.get("is_key")]
     rest = [s for s in segs if not s.get("is_key")]
-    keep = list(key)
-    used = sum(s["_dur"] for s in keep)
+    # ★핵심 컷도 **예산 안에서만** 담는다(2026-08-09 사장님 지시: "다른 영상을 해도 똑같은
+    #   결과가 나오는 원칙을 찾아야 한다").
+    #   종전엔 `keep = list(key)`로 is_key를 통째로 넣어 예산 검사를 건너뛰었다.
+    #   그래서 **컷이 전부 is_key인 소재는 원본 길이가 그대로 나갔다** — 실측 DUF9DWKkkki:
+    #   컷 10개가 모두 is_key라 예산 30초인데 65.4초가 담겼고 영상이 67초로 나갔다.
+    #   같은 목표(30초)를 줬는데 소재에 따라 26초/67초로 갈리면 원칙이 아니다.
+    #   ⚠️최소 보장은 남긴다 — 예산이 아무리 작아도 핵심 컷 3개까지는 담아 이야기가 선다
+    #     (0개가 되면 훅·전개·CTA 자리가 사라진다).
+    key.sort(key=lambda s: float(s.get("start") or 0))
+    keep, used = [], 0.0
+    for s in key:
+        if used + s["_dur"] <= budget or len(keep) < 3:
+            keep.append(s)
+            used += s["_dur"]
     # 여유분은 CTA(마무리) 먼저 확보하고, 그 다음 소재 뒤쪽 컷부터.
     rest.sort(key=lambda s: (0 if _is_cta(s) else 1, -float(s.get("start") or 0)))
     for s in rest:
@@ -183,7 +195,12 @@ def select_and_order(segments, target_seconds=None, video_type=None):
     #   budget에는 STORY_MIN_SECONDS 하한이 들어 있어 스토리가 설 분량이 확보된다.
     #   모자란 화면은 _fill_beat_screen_time이 **클립 재사용**으로 채운다(중복 허용 = 사장님 지시).
     #   ⚠️used를 바꾸지 않는 이유: 화면 배정·conform이 실제 화면 길이로 계산해야 한다.
-    script_secs = max(used, budget) if STORY_MIN_SECONDS > 0 else used
+    # ★상한은 budget이다(2026-08-09 2차 수정). 처음엔 max(used, budget)로 뒀는데,
+    #   그게 **긴 소재에서 천장을 뚫는 통로**가 됐다 — 실측(실제 즐겨찾기 DUF9DWKkkki,
+    #   원본 67초): budget 30초인데 used가 65.4초라 요구가 529자로 뛰고 결과가 **1,011자·
+    #   영상 124초**로 나왔다(숏폼인데 2분). 사장님이 30초를 골랐으면 30초가 상한이다.
+    #   짧은 쪽을 채우는 건 budget에 이미 STORY_MIN_SECONDS 하한이 들어 있어 해결된다.
+    script_secs = budget if STORY_MIN_SECONDS > 0 else used
     return span, budget, script_secs, [hook] + body + cta
 
 
@@ -236,41 +253,65 @@ def script_prompt(order, used_secs, hook_block, frame_block="", cand_idx=None):
     n_lines = line_count(used_secs, len(order))
     total = char_budget(used_secs)
     return (hook_block + _style_extra(cand_idx) + (frame_block or "") +   # ★채널 스타일(2026-08-05, 후보별 2026-08-09)·구도(2026-08-06)
-            "\n아래는 숏폼 한 편을 재편집한 컷 순서다. 이 화면들에 얹을 **나레이션**을 써라.\n\n"
+            # ★역할 부여(v5 방식을 1소스에 이식, 2026-08-09). v5는 제약을 얹는 대신
+            #   **무슨 일을 하는 건지** 알려줘서 통째 복사를 없앴다(`_rewrite_block`).
+            #   그런데 그 블록은 **2소스 경로에만** 쓰이고 1소스엔 없었다 — 1소스는
+            #   "어순·어휘·문형 전부 바꿔라"라는 제약만 있었고, 그게 오히려 왜곡을 만들었다
+            #   ("20년 동안 전집 하셨던 시어머니" → "20년 경력 시어머니").
+            "\n너는 국내 최정상 숏폼 벤치마킹 전문가다. 아래 화면들로 **새로운 영상**을 만든다.\n"
+            "★목표는 '다르게 쓰기'가 아니라 **원본을 본 시청자도 알아차리지 못하게 각색하기**다.\n"
+            "  같은 사실을 **우리 시청자 입장**에서 다시 말해라.\n"
+            "  ⚠️바꾸는 건 **말투와 표현**이지 사실이 아니다. 원본 그대로 둘 것:\n"
+            "    성능·수치·가격 / **누가 무엇을 했는지** / **누가 어디로 갔는지(방향)**.\n"
+            # ★2026-08-09 사장님 지적 2건이 같은 계열이다 — 관계·방향을 뒤집으면 뒤 문장이
+            #   통째로 모순된다:
+            #   ① "20년 동안 **전집** 하셨던 시어머니" → "20년 경력 **시어머니**"
+            #      (경력이 붙는 건 가게인데 사람에 붙였다)
+            #   ② 원본 "내가 **시댁에 갔다**" → 대본 "시어머니가 **놀러 오셨다**"
+            #      → 그래서 뒤의 "집에 오자마자 써봤는데"가 말이 안 되게 됐다.
+            #   방향 하나만 뒤집혀도 뒤 문장 전체가 무너지므로 여기서 못박는다.
+            "    예) 내가 시댁에 갔다 → \"어머니가 놀러 오셨다\"로 뒤집지 마라"
+            "(뒤에 '집에 오자마자'가 나오면 말이 안 된다).\n\n"
+            "아래는 숏폼 한 편을 재편집한 컷 순서다. 이 화면들에 얹을 **나레이션**을 써라.\n\n"
             "[절대규칙]\n"
-            "1. 원본대사를 베끼지 마라. 같은 뜻을 완전히 다른 표현으로 바꿔라(어순·어휘·문형 전부).\n"
+            # ★2026-08-09 사장님 지시: "그냥 자유롭게 표현하라고 자유를 줘."
+            #   종전 "어순·어휘·문형 **전부** 바꿔라"가 왜곡을 만들었다 — 모델이 그 지시를
+            #   지키려고 "20년 동안 전집 하셨던 시어머니"를 압축해 "20년 경력 시어머니"로
+            #   만들었다(수식 대상이 가게→사람으로 바뀐다).
+            #   ⚠️그 자리에 "수식 관계는 바꾸지 마라" 같은 예외를 덧대는 것도 결국 제약이다
+            #     (제약 과적재 = 규칙끼리 이긴다). 지시를 **빼는 쪽**으로 간다.
+            #   각색 자체는 _rewrite_block·스타일 few-shot이 이미 이끈다.
+            "1. 원본 대사에 매이지 말고 **자유롭게** 네 말로 써라(그대로 옮겨 적지만 마라).\n"
             f"2. ★문장은 **정확히 {n_lines}개**만 써라. 컷마다 하나씩 쓰는 게 아니다 —\n"
             "   한 문장이 컷 2~3개에 걸쳐 흐르고, 다음 장면에서 자연스럽게 이어받는 구성이다.\n"
             "   각 문장에 그 문장이 덮는 컷 번호를 covers로 적어라(예: covers:[1,2,3]).\n"
             f"3. ★전체 합계 **{total}자를 넘기지 마라**(화면 {used_secs:.1f}초). 이게 제일 중요하다 —\n"
             f"   넘으면 영상이 끝났는데 말이 남는다. 한 문장은 평균 {max(8, total // max(1, n_lines))}자 정도다.\n"
             "4. 컷 순서대로 이야기가 이어져야 한다. 첫 문장은 위 훅 패턴으로 시작하라.\n"
-            # ★2026-08-04 원본대조 실측(job 53bd4a4a): 후보 3개 전부 '다이소'가 사라지고
-            #   CTA가 혜택 설명문으로 바뀜. 원본의 파는 힘(구매처·참여유도)은 각색해도 보존.
-            "   원본대사에 구매처·브랜드(다이소·쿠팡 등)가 있으면 대본 어딘가에 **한 번** "
-            "자연스럽게 살려라 — 위치는 자유(뒷부분·CTA 근처도 좋다). ★단 스토리와 모순되게 "
-            "끼워넣지 마라(예: '독일 친구가 알려줬다'는 이야기에 '쿠팡에서 찾은'을 훅에 박으면 "
-            "출처가 둘이 된다 — 그럴 땐 구매처를 뒤로 미뤄 '쿠팡에서 샀어요'로 풀어라).\n"
-            "   (2026-08-04 완화: 훅 강제였더니 스토리 모순 발생 — 사장님 지시로 위치 자유화)\n"
-            "5. 화면 설명과 어긋나는 말을 지어내지 마라.\n"
+            "5. 화면에 없는 걸 지어내지 마라(원본에 있는 사실·수치만).\n"
+            # ★2026-08-04 실측(job 53bd4a4a): 후보 3개 전부 '다이소'가 사라졌다. 구매처는
+            #   원본의 '파는 힘'이라 보존한다. 다만 **위치·표현은 자유**(2026-08-09 단순화).
+            "   원본에 구매처·브랜드(다이소·쿠팡 등)가 있으면 대본 어딘가에 한 번 살려라.\n"
             "6. ★마지막 문장은 **반드시** \"댓글에 '키워드' 남겨주시면 [받는 것] 드릴게요\" "
-            "형태로 끝내라(링크·프로필 금지). ★남기면 뭘 받는지(제가 산 링크·정확한 방법·"
-            "최저가 정보)를 반드시 말하라 — 받는 게 안 보이면 아무도 안 남긴다. "
-            "감상('참 좋네요')으로 끝나거나 '댓글'이 마지막 문장에 없으면 통째로 버려진다. "
-            "원본대사에 참여유도(예: \"'나도' 남겨주세요\")가 있으면 그 키워드를 이어받아라.\n"
-            # ★CTA 미끼(2026-08-06 사장님 확정: 본문에 비법 한 조각 남기기 — 조회수 우선).
-            #   기존엔 본문이 비법을 다 풀어 CTA에 줄 게 안 남았다(3후보 공통, 실측 잡 다수).
-            "   ★미끼 규칙: 핵심 비법의 **가장 구체적인 한 조각**(정확한 비율·핵심 재료 하나·"
-            "온도/시간 같은 수치)은 본문에서 말하지 마라 — '비법이 있다'는 것과 효과만 보여주고, "
-            "그 조각이 뭔지는 CTA에서 \"궁금하시면 댓글에…\"로 남겨라. 본문에서 방법을 다 "
-            "알려주면 댓글 남길 이유가 사라진다. 단, 뭘 숨겼는지는 시청자가 알게 하라"
-            "(예: 본문 '재료 하나만 바꾸면 끝' → CTA '그 재료 궁금하시면 댓글에').\n"
-            "7. ★중간 문장 중 **하나는 반드시 고조 연결어로 시작**하라 — '심지어' '더군다나' "
-            "'근데 이게 대박인 게' '놀랍게도' '이럴 수가 있나 싶게' 중 소재에 맞는 것 하나"
-            "(훅·마지막 문장엔 금지, 두 번 이상도 금지). 이야기가 한 단계 올라가는 문장 앞에 "
-            "놓고, 연결어 뒤엔 반드시 **앞에서 안 나온 새로운 추가 장점**을 말하라 — "
-            "이미 말한 장점 반복은 고조가 아니라 동어반복이다. 그리고 종결어미를 다양하게 — 전 문장이 '~요/~니다'로 똑같으면 "
-            "낭독문처럼 들린다('~거든요' '~더라고요' '~죠' 섞기).\n\n"
+            "형태로 끝내라(링크·프로필 금지). 뭘 받는지 반드시 말하라 — 받는 게 안 보이면 "
+            "아무도 안 남긴다. 그래서 **핵심 비법의 가장 구체적인 한 조각**(정확한 비율·"
+            "핵심 재료 이름·수치)은 본문에서 말하지 말고 CTA로 남겨라.\n"
+            # ★2026-08-09 사장님 지시: "정말 필요한 가이드·하네스 테두리만 치고 제미니한테
+            #   대본의 창작 자유를 줘. 우리 3개 모델들의 장점을 알려주고 벤치마킹해서."
+            #   → 걷어낸 것: 구매처 위치 설명 5줄 · 미끼 예시 6줄 · 고조 연결어 목록 지정 ·
+            #     어미 종류 지시. 전부 "어떻게 쓸지"를 지시하던 것들이다.
+            #     그 자리는 위의 [스타일 예시](실제 히트 대본 few-shot)가 대신한다 —
+            #     규칙으로 설명하는 것보다 **잘된 대본을 보고 배우는 게** 낫다(어미교정 실측).
+            #   ⚠️되풀이 금지: 여기에 "~하지 마라"를 다시 쌓지 마라. 안 지켜지고(합쇼체
+            #     금지했는데 위반), 규칙끼리 이겨 품질이 떨어진다. 결과를 고쳐야 하면
+            #     프롬프트가 아니라 **코드 교정**으로 잡는다(edit_plan의 서명 보장들).
+            # ★스타일이 꺼져 있으면(_style_extra가 '') 이 문구도 빼야 한다 —
+            #   "위 [스타일 예시]"가 없는데 참조하면 모델이 헷갈리고, 배선 테스트도 깨진다.
+            + ("7. 위 [스타일 예시]는 조회수 수백만짜리 실제 히트 대본이다. 규칙을 지키는 "
+               "것보다 **그 대본들처럼 들리게 쓰는 것**이 중요하다 — 리듬·호흡·말맛을 "
+               "벤치마킹해라. 나머지는 네 판단대로 자유롭게 써라.\n\n"
+               if _style_extra(cand_idx) else
+               "7. 나머지는 네 판단대로 자유롭게 써라.\n\n") +
             "[컷]\n" + json.dumps(cuts, ensure_ascii=False, indent=1) + "\n\n"
             "JSON만: {\"beats\":[{\"n\":1,\"covers\":[1,2],\"narration\":\"...\"}]}")
 
@@ -464,6 +505,48 @@ def parse_beats(resp):
     return []
 
 
+def under_budget(beats, used_secs, floor=0.85):
+    """대본이 예산보다 **짧은가** → (미달여부, 나레이션초, 모자란초).
+
+    ★사장님 지시(2026-08-09): "대본이 짧은 건 있을 수가 없다. 그렇게 되면 스토리 자체가
+      안 나오고 **설득 구조가 실패한 대본**이다."
+      종전엔 over_budget(넘침)만 있고 미달은 방치였다 — 실측: 요구 202자인데 115자(56%)가
+      그대로 나갔다(4문장). 넘치면 줄이면서 모자라면 안 채우는 건 비대칭이다.
+    floor: 예산의 이 비율 미만이면 미달로 본다(기본 85%)."""
+    chars = sum(len((b.get("narration") or "")) for b in (beats or []))
+    secs = chars / _CHARS_PER_SEC
+    need = used_secs * floor
+    return (secs < need), secs, need - secs
+
+
+def expand_prompt(beats, used_secs, material_text=""):
+    """모자란 분량을 채워 다시 받는다 — **문장을 늘리지 말고 살을 붙인다**.
+
+    ★새 사실을 지어내면 안 된다(원본에 없는 성능·수치·가격 금지). 늘리는 건
+      '어떻게 그랬는지·그래서 어땠는지'의 서사·묘사다 — few-shot 채널들이 그렇게 쓴다."""
+    import json
+    n_lines = max(len(beats or []), 5)
+    total = char_budget(used_secs)
+    cur = [{"n": b.get("n"), "covers": b.get("covers"), "narration": b.get("narration")}
+           for b in (beats or [])]
+    now = sum(len((b.get("narration") or "")) for b in (beats or []))
+    return ("아래 나레이션이 **너무 짧아서 이야기가 서지 않는다**"
+            f"(지금 {now}자 / 목표 {total}자).\n"
+            f"★문장 수를 **{n_lines}개로** 맞추고, 전체를 **{total}자에 가깝게** 늘려라.\n"
+            "[늘리는 방법 — 이것만 해라]\n"
+            "- 상황을 구체적으로: 언제·어디서·누가 그랬는지 한 겹 더 (원본 재료 범위 안에서)\n"
+            "- 동작을 순서대로: 뭘 어떻게 했는지 손에 잡히게\n"
+            "- 반응·결과를 붙여서: 그래서 어땠는지, 누가 뭐라고 했는지\n"
+            "- 문장을 길게 이어라: \"~는데 ~니까 ~더라고요\"처럼 한 문장에 두세 마디를 몬다\n"
+            "[절대 하지 마라]\n"
+            "- 원본에 없는 **성능·수치·가격·구매처를 지어내는 것**\n"
+            "- 같은 말을 다르게 반복해 글자만 늘리는 것\n"
+            "- 마지막 CTA 문장의 형식을 바꾸는 것(댓글 유도는 그대로 둔다)\n\n"
+            f"[원본 소재]\n{(material_text or '')[:900]}\n\n"
+            + json.dumps(cur, ensure_ascii=False, indent=1)
+            + "\n\nJSON만: {\"beats\":[{\"n\":1,\"covers\":[1,2],\"narration\":\"...\"}]}")
+
+
 def over_budget(beats, used_secs, tol=0.15):
     """나레이션 총량이 화면을 넘었나 → (초과여부, 나레이션초, 초과초)."""
     chars = sum(len((b.get("narration") or "")) for b in (beats or []))
@@ -608,11 +691,28 @@ def maison_signature_missing(beats, style_name=None):
         else (beats[0].get("narration") or "")
     if not body.strip():
         return False
+    # ★2026-08-09 2차 수정(사장님 지적: "이것도 어색한 문장들 아닌가?").
+    #   종전엔 인물·증거·긴연결 **셋 중 하나**만 있으면 통과였다. 그래서 "지인 집에
+    #   갔는데…" 한 마디로 인물이 잡히면, 나머지가 "…흘러내려요 / …편해요"처럼 뚝뚝
+    #   끊긴 설명 나열이어도 그냥 지나갔다(실측).
+    #   메종 가이드의 핵심은 **"문장을 뚝뚝 닫지 마라 — ~는데 ~니까 ~더라고요로 길게
+    #   잇고 다음 문장은 앞을 이어받아라"**다. 그게 이 채널을 이야기로 만든다.
+    #   → **긴 연결(또는 이어받는 접속)** 을 필수로 보고, 인물·증거는 보조로 둔다.
+    _has_flow = bool(_MAISON_LONG.search(body))
+    if not _has_flow:
+        # 문장 머리에서 앞을 이어받는 접속어도 '이어짐'으로 인정한다.
+        _conn = ("근데", "그래서", "심지어", "게다가", "더군다나", "그러다", "그랬더니")
+        _sentences = [s.strip() for s in _re.split(r"(?<=[.!?])\s+", body) if s.strip()]
+        _has_flow = sum(1 for s in _sentences[1:]
+                        if s.startswith(_conn)) >= 1
+    if not _has_flow:
+        return True                          # 이어지지 않으면 메종이 아니다
+    # 이어지긴 하는데 인물·증거가 전무하면 그때만 보강한다.
     if any(p in body for p in _MAISON_PEOPLE):
         return False
     if any(p in body for p in _MAISON_PROOF):
         return False
-    return not _MAISON_LONG.search(body)
+    return True
 
 
 def fix_maison_prompt(beats):
@@ -620,12 +720,12 @@ def fix_maison_prompt(beats):
     import json
     cur = [{"n": b.get("n"), "covers": b.get("covers"), "narration": b.get("narration")}
            for b in beats]
-    return ("아래 나레이션이 '발견담' 스타일인데 **밋밋한 광고 문구**처럼 됐다.\n"
-            "본문 문장 중 **한 문장만** 골라 아래 셋 중 하나가 되게 고쳐라.\n"
-            "1) 인물을 통과시킨다 — \"친구가 이렇게 쓰더라고요\" / \"엄마가 보시더니\"\n"
-            "2) 장점 2~3개를 **한 문장에 몰아** 길게 잇는다 — "
-            "\"~는데 ~니까 ~더라고요\" (문장을 뚝뚝 끊지 않는다)\n"
-            "3) 사회적 증거를 붙인다 — \"심지어 없어서 못 산다고 하더라고요\"\n"
+    return ("아래 나레이션이 **문장을 뚝뚝 끊어 나열**해서 광고 문구처럼 들린다.\n"
+            "★본문 문장들이 **이야기로 이어지게** 고쳐라 — 이게 이 채널의 핵심이다.\n"
+            "1) 장점 2~3개를 **한 문장에 몰아** 길게 잇는다 — \"~는데 ~니까 ~더라고요\"\n"
+            "2) 다음 문장은 **앞 문장을 이어받아** 시작한다 — 근데/그래서/심지어/그랬더니\n"
+            "3) 여유가 되면 인물을 통과시키거나(\"친구가 이렇게 쓰더라고요\") "
+            "사회적 증거를 붙인다(\"없어서 못 산다고 하더라고요\")\n"
             "★지켜야 할 것:\n"
             "- 나머지 문장은 글자 하나 바꾸지 마라. 문장 수도 그대로.\n"
             "- **마지막 CTA 문장은 절대 건드리지 마라.**\n"
@@ -674,6 +774,73 @@ def hook_sanity_prompt(hook_line, material_text):
             "JSON만: {\"contradicts\": true/false, \"reason\": \"한 줄\"}")
 
 
+FACT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "distorts": {"type": "boolean"},
+        "worst": {"type": "string"},
+        "reason": {"type": "string"},
+    },
+    "required": ["distorts", "worst", "reason"],
+}
+
+
+def fact_check_prompt(narrs, material_text):
+    """★대본 **전체**가 원본 사실을 왜곡했는가(2026-08-09).
+
+    훅 검사(hook_contradicts)는 첫 문장만 본다 — 본문 왜곡은 통과했다.
+    실측: 원본 "20년 동안 **전집** 하셨던 시어머니" → 대본 "20년 차 시어머니"/"20년 차
+    사장님"(경력이 붙는 건 가게인데 사람에 붙였다), "아이들도 여섯 장을 순삭"(원본에
+    없는 사실). 사장님 지적: "2회차에 20년차 시어머니가 말이 되나?"
+    """
+    body = "\n".join("%d. %s" % (i + 1, n) for i, n in enumerate(narrs or []))
+    return ("아래 [대본]이 [원본 소재]에 **없는 사실을 지어냈거나 뜻을 왜곡했는지** 판정해라.\n\n"
+            "[왜곡의 예 — distorts=true]\n"
+            "- 원본 \"20년 동안 전집 하셨던 시어머니\" → 대본 \"20년 차 시어머니\"\n"
+            "  (경력이 붙는 건 **가게**지 사람이 아니다. 수식 대상을 바꾸면 왜곡이다)\n"
+            "- 원본에 없는 수치·인원·가격·후기를 만든 것(\"아이들이 여섯 장을 순삭\")\n"
+            "- 원본에 없는 제품 성능·효과를 단정한 것\n\n"
+            "[왜곡이 아닌 것 — distorts=false]\n"
+            "- 같은 사실을 다른 표현으로 각색한 것(이건 오히려 목표다)\n"
+            "- 관계 프레임을 빌린 것(\"친구가\"·\"엄마가\") — 사실이 아니라 화자 설정이다\n"
+            "- 과장·감탄(\"역대급\", \"진짜 놀랐어요\")\n\n"
+            f"[원본 소재]\n{(material_text or '')[:1200]}\n\n"
+            f"[대본]\n{body}\n\n"
+            "JSON만: {\"distorts\":true/false,\"worst\":\"가장 문제인 문장 그대로\","
+            "\"reason\":\"한 줄\"}")
+
+
+def fact_distorted(beats, material_text, call):
+    """대본이 원본을 왜곡했으면 True. 판정 실패·애매하면 False(회귀 0)."""
+    if not beats or not call or not (material_text or "").strip():
+        return False
+    narrs = [(b.get("narration") or "").strip() for b in beats]
+    narrs = [n for n in narrs if n]
+    if not narrs:
+        return False
+    try:
+        r = call(fact_check_prompt(narrs, material_text), FACT_SCHEMA)
+    except Exception:
+        return False
+    return bool(r.get("distorts")) if isinstance(r, dict) else False
+
+
+def fix_fact_prompt(beats, material_text):
+    """왜곡된 문장만 원본 사실에 맞게 고쳐 받는다."""
+    import json
+    cur = [{"n": b.get("n"), "covers": b.get("covers"), "narration": b.get("narration")}
+           for b in (beats or [])]
+    return ("아래 대본에 **원본에 없는 사실이거나 뜻이 왜곡된 문장**이 있다.\n"
+            "그 문장만 원본 사실에 맞게 고쳐라. 나머지는 글자 하나 바꾸지 마라.\n"
+            "★수식 대상을 바꾸지 마라 — \"20년 동안 전집 하셨던 시어머니\"를 "
+            "\"20년 차 시어머니\"로 줄이면 뜻이 달라진다.\n"
+            "★원본에 없는 수치·인원·가격·후기를 만들지 마라.\n"
+            "★문장 수·길이·어미는 그대로. 마지막 CTA 문장은 건드리지 마라.\n\n"
+            f"[원본 소재]\n{(material_text or '')[:1000]}\n\n"
+            + json.dumps(cur, ensure_ascii=False, indent=1)
+            + "\n\nJSON만: {\"beats\":[{\"n\":1,\"covers\":[1,2],\"narration\":\"...\"}]}")
+
+
 def hook_contradicts(beats, material_text, call):
     """훅이 소재와 모순이면 True. 판정 실패·빈 값이면 **False**(종전 동작 유지 = 회귀 0).
 
@@ -705,6 +872,213 @@ def fix_hook_prompt(beats, material_text):
             f"[원본 소재]\n{(material_text or '')[:900]}\n\n"
             + json.dumps(cur, ensure_ascii=False, indent=1)
             + "\n\nJSON만: {\"beats\":[{\"n\":1,\"covers\":[1,2],\"narration\":\"...\"}]}")
+
+
+# CTA 키워드로 쓰기엔 뜻이 없는 말 — 소재에서 뽑을 때 걸러낸다.
+_KW_STOP = {
+    "이거", "그거", "저거", "이것", "그것", "정말", "진짜", "너무", "완전", "그냥",
+    "제가", "저는", "우리", "여기", "거기", "지금", "다음", "하나", "두는", "때문",
+    "하면", "해서", "있는", "없는", "같은", "이런", "저런", "그런", "바로", "다들",
+    "매번", "요즘", "제품", "사용", "가능", "생각", "경우", "방법", "정보",
+    # 수량·순서를 세는 말은 키워드가 못 된다(실측: "번째"가 뽑혔다).
+    "번째", "하나씩", "가지", "개씩", "정도", "얼마", "조금", "많이", "그리고",
+}
+# ★어미·서술어는 키워드가 될 수 없다(2026-08-09 실측 버그: CTA가 "댓글에 '거예요'"로
+#   나갔다). 명사만 뽑아야 하는데 형태소 분석기가 없어 어미를 정규식으로 걸러낸다.
+_KW_TAIL_RX = _re.compile(
+    r"(거예요|예요|에요|해요|아요|어요|더라고요|거든요|잖아요|네요|세요|시요|"
+    r"습니다|입니다|합니다|십니다|는데|니까|어서|라고|다고|면서|으로|처럼|같이)$")
+
+
+def cta_keyword_for(beats, material_text=""):
+    """CTA 폴백에 쓸 키워드 — **소재에서** 뽑는다(2026-08-09).
+
+    종전엔 '나도'/'정보' 둘뿐이라 파전·곰팡이 영상에도 "댓글에 '정보'"가 나갔다
+    (10회 실측 6번). 소재와 겉돌 뿐 아니라 **인포크 자동응답 키워드가 대본과 어긋난다**.
+    순서: ①대본이 이미 쓴 따옴표 키워드 ②소재에서 자주 나오는 명사 ③'정보'(최후)."""
+    # ① 대본에 이미 있는 CTA 키워드를 그대로 따른다(후보 간 일관성).
+    for b in reversed(beats or []):
+        m = _re.search(r"['\"]([가-힣]{2,6})['\"]", b.get("narration") or "")
+        if m and m.group(1) not in _KW_STOP:
+            return m.group(1)
+    # ② 소재에서 2~4글자 한글 명사 중 최빈어.
+    #   ★조사를 떼고 센다 — 안 떼면 "파전이"·"곰팡이가"가 키워드로 나간다(실측).
+    words = _re.findall(r"[가-힣]{2,6}", material_text or "")
+    freq = {}
+    for w in words:
+        if _KW_TAIL_RX.search(w):        # 어미·서술어는 제외(명사만 키워드가 된다)
+            continue
+        w = _re.sub(r"(이|가|은|는|을|를|에|의|도|만|과|와|로|으로|께|한테|에서|부터|까지)$",
+                    "", w)
+        if len(w) < 2 or w in _KW_STOP:
+            continue
+        freq[w] = freq.get(w, 0) + 1
+    if freq:
+        best = max(freq.items(), key=lambda kv: (kv[1], len(kv[0])))
+        if best[1] >= 2:                     # 한 번만 나온 말은 소재의 핵심이 아니다
+            return best[0]
+    return "나도" if "나도" in (material_text or "") else "정보"
+
+
+def hapsyo_violation(beats, style_name=None):
+    """★합쇼체를 **쓰면 안 되는 스타일**인데 썼는가(2026-08-09).
+
+    메종·채이 few-shot 원문에는 합쇼체가 **0회**이고 가이드도 "합쇼체(~습니다)로 닫지
+    마라"라고 명시한다. 그런데 실측에서 메종 대본이 "비법 공개합니다 / 식감이 완전히
+    달라집니다"로 나왔다 — style_penalty가 0.27점 감점은 하지만 **고치지는 않는다**.
+    감점은 순위표일 뿐이라 3후보가 다 위반하면 위반한 게 그대로 추천된다.
+    CTA·서명과 같은 원칙으로 **코드가 교정**한다.
+    허용 편수(_HAPSYO_ALLOWANCE)를 넘긴 경우만 위반으로 본다 — 홈테리어픽은 2편까지
+    서명이므로 대상이 아니다."""
+    try:
+        from shopping_shorts import style_profiles as _sp
+    except Exception:
+        return False
+    if not beats:
+        return False
+    allowed = _sp._HAPSYO_ALLOWANCE.get(style_name or "", 0)
+    narrs = [(b.get("narration") or "").strip() for b in beats]
+    hits = [n for n in narrs if _re.search(r"[가-힣]니다[.!?~]*$", n)]
+    return len(hits) > allowed
+
+
+def fix_hapsyo_violation_prompt(beats, style_name=None):
+    """합쇼체로 닫은 문장만 요체로 되돌려 받는다(다른 교정과 같은 방식)."""
+    import json
+    cur = [{"n": b.get("n"), "covers": b.get("covers"), "narration": b.get("narration")}
+           for b in (beats or [])]
+    return ("아래 나레이션에서 **'~습니다/~합니다/~됩니다'처럼 합쇼체로 끝나는 문장만** "
+            "요체로 고쳐라. 나머지 문장은 글자 하나 바꾸지 마라.\n"
+            "★이 채널은 합쇼체를 쓰지 않는다 — 예시 대본에 한 번도 안 나온다.\n"
+            "고칠 어미: ~더라고요 / ~거든요 / ~는 거예요 / ~잖아요 / ~네요\n"
+            "  예) \"식감이 완전히 달라집니다\" → \"식감이 완전히 달라지더라고요\"\n"
+            "      \"비법을 공개합니다\" → \"비법을 알려드릴게요\"\n"
+            "★뜻과 길이는 그대로, **어미만** 바꾼다. 문장 수도 그대로.\n"
+            "★마지막 CTA 문장은 건드리지 마라.\n\n"
+            + json.dumps(cur, ensure_ascii=False, indent=1)
+            + "\n\nJSON만: {\"beats\":[{\"n\":1,\"covers\":[1,2],\"narration\":\"...\"}]}")
+
+
+# 훅 첫머리에 오는 감탄사·부름말 — 이 채널들이 실제로 쓰는 시작이다.
+# (메종 52만 "와, 저 이거 보고 소리 질렀어요" / 홈테리어픽 178만 "와... 커튼도 블라인드도")
+# ★2026-08-09 사장님 지시: "와 / 여러분을 넣으라니까 **아니는 빼**."
+#   '아니'는 실제 few-shot에도 없고 시비조로 들린다 — 목록에서 제외했다.
+_HOOK_OPENERS = ("와", "여러분")
+
+
+def hook_opener_missing(beats, style_name=None):
+    """훅 첫머리에 감탄사·부름말이 없는가(2026-08-09 사장님 지시).
+
+    "처음 훅은 와~ / 여러분 이런 것 좀 들어가게. 적당히 좀 넣어야 살지.
+     메종이랑 홈테리어 영상들 대부분 쓰던데."
+    ★프롬프트로는 안 됐다 — 훅 틀에 "와,"를 넣고 "감탄사는 살려라"까지 적었는데도
+      실측 3/3, 재시도 3/3 전부 사라졌다(훅 블록의 "베끼지 마라"에 밀린다).
+      그래서 CTA·서명과 같이 코드로 보장한다.
+    ★채이는 대상이 아니다 — few-shot 2편 모두 "이거 몰라서/저 이거 때문에"로 열고
+      감탄사를 안 쓴다(그 채널 결이 아니다)."""
+    if (style_name or "") == "chae":
+        return False
+    if not beats:
+        return False
+    first = (beats[0].get("narration") or "").strip()
+    if not first:
+        return False
+    head = first[:12]
+    return not any(head.startswith(o) or (o + ",") in head or (o + " ") in head
+                   for o in _HOOK_OPENERS)
+
+
+# ★매장 추천 훅 — 사장님이 준 형태 그대로(2026-08-09): "이게 지금 제일 핫한 건데".
+#   모델에 맡기면 "다이소 정리함 보고 깜짝 놀랐어요"로 축약해버려 코드가 직접 세운다.
+_STORE_HOOKS = (
+    "와 여러분 {place} 가면 이거 꼭 사오셔야 합니다.",
+    "와 {place} 가면 이건 꼭 쟁여놓으세요.",
+    "여러분 {place} 가면 이건 꼭 챙기셔야 합니다.",
+)
+_STORE_NAMES = ("다이소", "올리브영", "이마트", "코스트코", "편의점", "마트")
+
+
+def store_hook_for(material_text, idx=0):
+    """소재에 매장이 있으면 그 매장으로 매장추천 훅 문장을 만든다. 없으면 None.
+
+    ★3후보 중 **한 후보에만** 쓴다(사장님: "3개 중 한 개는 강제시켜봐") — 셋 다 같은
+      훅으로 열면 후보를 나눈 의미가 없다."""
+    m = material_text or ""
+    place = next((s for s in _STORE_NAMES if s in m), None)
+    if not place:
+        return None
+    return _STORE_HOOKS[idx % len(_STORE_HOOKS)].format(place=place)
+
+
+def force_store_hook(beats, material_text, idx=0):
+    """첫 문장을 매장추천 훅으로 **교체**한다(코드가 직접 — 모델은 축약해버린다).
+
+    ★원래 첫 문장은 버리지 않고 **둘째 문장 앞에 붙여** 내용 손실을 막는다."""
+    hook = store_hook_for(material_text, idx)
+    if not hook or not beats:
+        return beats
+    first = (beats[0].get("narration") or "").strip()
+    if not first or first.startswith(("와 ", "여러분 ")):
+        return beats                      # 이미 그 형태면 그대로 둔다
+    beats[0]["narration"] = hook
+    beats[0]["caption_lines"] = None
+    if len(beats) > 1:                    # 밀려난 원문은 다음 비트 앞에 얹는다
+        # ★밀려난 문장이 감탄사로 시작하면 그 감탄사를 뗀다(2026-08-09 실측 버그):
+        #   강제 훅이 "와 여러분 …"인데 뒤에 "와, 저 이거 보고…"가 붙어 **"와"가 두 번**
+        #   나왔다. 훅은 한 번만 터져야 한다.
+        _moved = _re.sub(r"^(와|여러분)[,\.\s]+", "", first).strip()
+        nxt = (beats[1].get("narration") or "").strip()
+        beats[1]["narration"] = (_moved + " " + nxt).strip() if _moved else nxt
+        beats[1]["caption_lines"] = None
+    return beats
+
+
+# ★내 감정·반응에 '~더라고요'가 붙으면 틀린 말이다(2026-08-09 사장님 지적).
+#   '~더라고요'는 **남의 일을 보거나 겪어서 알게 된 것**에 쓴다 —
+#   "충격받았더라고요"(X) → "충격받았어요"(O).
+_SELF_FEEL_RX = _re.compile(
+    r"(충격받았|놀랐|당황했|감동했|짜증났|화났|기뻤|속상했|서운했|소리 질렀|"
+    r"기절할 뻔했|현타 왔)더라고요")
+
+
+def fix_self_feeling_endings(beats):
+    """내 감정 + '더라고요'를 '~어요'로 바로잡는다(코드가 직접 — 한 글자 치환이다)."""
+    if not beats:
+        return beats
+    for b in beats:
+        t = b.get("narration") or ""
+        if not t:
+            continue
+        new = _SELF_FEEL_RX.sub(lambda m: m.group(1) + "어요", t)
+        if new != t:
+            b["narration"] = new
+            b["caption_lines"] = None
+    return beats
+
+
+def add_hook_opener(beats):
+    """첫 문장 앞에 감탄사를 **코드가 직접** 붙인다(2026-08-09).
+
+    ★LLM에 맡기지 않는다 — fix 프롬프트로 "첫 문장 맨 앞에만"이라고 지시했더니
+      모델이 **6문장 전부에 "아니,"를 붙였다**(실측, 사장님 확인). 한 단어 얹는 일에
+      모델을 부를 이유가 없다. 결정적으로 코드가 한다(CTA 폴백과 같은 원칙).
+    ★맨 앞 한 마디만 얹고 나머지 문장은 손대지 않는다."""
+    if not beats:
+        return beats
+    first = (beats[0].get("narration") or "").strip()
+    if not first:
+        return beats
+    # ★'와'만 붙인다(2026-08-09 사장님 지시: "여러분이 나올 때는 ~하지 마라 / ~해라
+    #   이런 건데 지금 억지로 넣은 거야. 저렇게밖에 안 되면 빼고 와~ 이걸 넣어").
+    #   '여러분'은 **명령·권유형과 짝**이다("여러분 다이소 가면 사오세요"). 그건 훅 패턴
+    #   y_store/y_when/y_never 틀에 이미 들어 있으니 거기서 나온다.
+    #   여기서 붙이는 건 서술형 문장 앞이라 '여러분'을 얹으면 어색해진다
+    #   (실측: "여러분 시댁 놀러 갔다가 ~ 소리 질렀잖아요" — 명령형이 아닌데 부름말).
+    #   '아니'도 뺐다(few-shot에 없고 시비조로 들린다).
+    opener = "와, "
+    beats[0]["narration"] = opener + first
+    beats[0]["caption_lines"] = None
+    return beats
 
 
 def shrink_prompt(beats, used_secs):

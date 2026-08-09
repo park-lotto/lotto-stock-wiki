@@ -4074,11 +4074,53 @@ async function loadMixReview(){
 const CAND_LBL = ['A안','B안','C안','D안','E안'];
 let CAND_LIST = [];        // 마지막으로 그린 후보 목록(pickCandidate가 다시 그릴 때 재사용)
 let CAND_SEL  = null;      // 지금 '선택된' 후보의 index(c.index). null이면 recommended를 따른다.
+// ✏ 대본 직접 고치기(2026-08-10 사장님) ─────────────────────────────────────
+// 어느 카드가 편집칸을 펼쳤나(c.index → true). 카드를 다시 그려도 펼친 상태가 유지되게
+// 렌더 밖에 둔다 — pickCandidate가 renderCandidates를 다시 부르기 때문.
+let CAND_EDIT_OPEN = {};
+// ★고친 문장은 CAND_LIST[i].lines에 **그 자리에서** 되쓴다(별도 저장소를 안 만든다).
+//   lines가 곧 화면·전송·길이표시의 유일한 진실이라 두 군데가 어긋날 일이 없다(0순위-B).
+//   서버 반영은 pickCandidate 한 곳에서만 한다(mixSyncEdit와 같은 일원화 규율).
+function _candLines(c){
+  // 서버가 lines를 안 주는 옛 job·테스트 스텁 방어 — script 한 줄을 1문장으로 취급한다.
+  if(Array.isArray(c.lines) && c.lines.length) return c.lines;
+  const s = (c.script || c.hook || '').trim();
+  return s ? [s] : [];
+}
+// 카드가 원문에서 바뀌었나(서버로 narrations를 실을지 판단). 원본은 c._lines0에 박아둔다.
+function _candDirty(c){
+  const cur = _candLines(c), base = c._lines0;
+  if(!Array.isArray(base) || base.length !== cur.length) return false;
+  return cur.some((t,i) => (t||'').trim() !== (base[i]||'').trim());
+}
+// 편집칸 펼치기/접기. 카드 클릭(pickCandidate)으로 전파되면 안 된다 — 호출부에서 stopPropagation.
+function toggleCandEdit(idx){
+  CAND_EDIT_OPEN[idx] = !CAND_EDIT_OPEN[idx];
+  renderCandidates(CAND_LIST);
+}
+// 문장 칸 입력 → lines에 즉시 반영 + 이 카드의 길이/예상초 표시 갱신(로컬 전용).
+// ★카드를 다시 그리지 않는다 — 입력 중 innerHTML을 갈아치우면 포커스와 커서가 날아간다.
+function onCandLineEdit(ta, idx, li){
+  const c = (CAND_LIST || []).find(x => x && x.index === idx);
+  if(!c) return;
+  const lines = _candLines(c).slice();
+  lines[li] = ta.value;
+  c.lines = lines;
+  if(typeof document === 'undefined' || !document.querySelector) return;
+  const card = document.querySelector('.cand[data-cidx="' + idx + '"]');
+  if(!card) return;
+  const lp = card.querySelector('.candlen');
+  if(lp) lp.textContent = lenText(lines.join(' ').trim()) + ' · 예상 영상시간 약 ' + _candSecs(c) + '초';
+  const dz = card.querySelector('.canddirty');
+  if(dz) dz.textContent = _candDirty(c) ? '✏ 고쳐 씀 — 이 카드를 눌러야 반영됩니다' : '';
+}
 // 후보 대본의 예상 발화시간(초) — 자막·보이스 추정과 같은 SYLLABLES_PER_SEC로 계산(공백 제외 글자수÷음절속도).
 // AI PICK 카드의 '길이'는 원본 영상 길이(고정)라, 여기선 '이 대본을 읽으면 나올 영상 길이'를 따로 보여준다.
 function _candSecs(c){
   const sps = (typeof SYLLABLES_PER_SEC!=='undefined') ? SYLLABLES_PER_SEC : 5.7;   // 슬라이스 테스트(전역 없음) 방어
-  const t = (c.script || c.hook || '').replace(/\s/g,'');
+  // ★lines가 있으면 그쪽이 진실이다(고쳐 쓴 글자가 예상초에 바로 반영돼야 한다).
+  const src = (Array.isArray(c.lines) && c.lines.length) ? c.lines.join(' ') : (c.script || c.hook || '');
+  const t = src.replace(/\s/g,'');
   return t ? Math.max(1, Math.round(t.length / sps)) : 0;
 }
 // 지금 선택된 후보 index 결정: 명시 선택(CAND_SEL) > recommended > 첫 번째.
@@ -4120,6 +4162,10 @@ function renderCandidates(list){
   const el = document.getElementById('mixCandidates');
   if(!el) return;
   if(!list || list.length < 2){ el.innerHTML = ''; CAND_LIST = []; return; }
+  // ★원문 스냅샷(_lines0)을 딱 한 번 박는다 — "고쳤나?" 판정의 기준선. 이미 있으면 덮지
+  //   않는다(pickCandidate가 카드를 다시 그릴 때마다 기준선이 갱신되면 편집이 영영 dirty가
+  //   아니게 되어 서버로 안 실린다).
+  list.forEach(c => { if(c && !Array.isArray(c._lines0)) c._lines0 = _candLines(c).slice(); });
   CAND_LIST = list;
   const selIdx = _candSelIdx(list);
   // dataset이 없는 환경(테스트 스텁)도 있으므로 방어적으로 읽는다.
@@ -4136,11 +4182,33 @@ function renderCandidates(list){
                     : c.recommended ? '<span class="rec" style="background:linear-gradient(135deg,#c9d3e6,#8b97b0);color:#1a2233">👍 추천</span>'
                     : '';
         // 대본 전체 표시(2026-07-24 사장님): A/B/C를 통째로 읽고 비교해 고른다 — 훅 한 줄이 아니라 나레이션 전문.
-        return `<div class="cand${on?' on':''}" onclick="pickCandidate(${c.index})" style="cursor:pointer;flex:1 1 260px;min-width:0">`
+        // ✏ 직접 고치기(2026-08-10): 펼치면 문장마다 칸이 생긴다. 칸 수 = 비트 수로 **고정** —
+        //   화면 배정(covers)이 문장 개수·순서에 묶여 있어 문장을 쪼개거나 합치면 컷이 어긋난다.
+        const lines = _candLines(c);
+        const open = !!CAND_EDIT_OPEN[c.index];
+        const dirty = _candDirty(c);
+        const body = open
+          ? lines.map((t,li) => `<div style="margin-bottom:5px">`
+              + `<div style="font-size:10px;color:#6b7488;font-weight:800;margin-bottom:2px">${li+1}번 문장</div>`
+              // onclick/onkeydown까지 막아야 칸을 누르거나 스페이스를 쳐도 카드가 '고르기'로 안 샌다.
+              + `<textarea class="candline" data-li="${li}" rows="2"`
+              + ` onclick="event.stopPropagation()" onkeydown="event.stopPropagation()"`
+              + ` oninput="event.stopPropagation();onCandLineEdit(this,${c.index},${li})"`
+              + ` style="width:100%;box-sizing:border-box;font-size:12px;line-height:1.5;padding:6px;`
+              + `border:1px solid var(--line);border-radius:6px;background:#0a1018;color:var(--txt);resize:vertical"`
+              + `>${esc(t)}</textarea></div>`).join('')
+            + `<div class="hint" style="font-size:10px;line-height:1.5;margin-top:2px">`
+            + `✏ 글자는 자유롭게 고치세요. <b>문장 칸을 비우지 마세요</b>(비우면 그 문장은 원래대로 둡니다).<br>`
+            + `문장 <b>개수는 화면 배정에 묶여 있어</b> 칸 수를 그대로 둡니다 — 많이 길게 쓰면 자막이 밀릴 수 있어요.</div>`
+          : `<p style="white-space:pre-wrap">${esc(lines.join(' ') || c.script || c.hook || '')}</p>`;
+        return `<div class="cand${on?' on':''}" data-cidx="${c.index}" onclick="pickCandidate(${c.index})" style="cursor:pointer;flex:1 1 260px;min-width:0">`
           + `<div class="cb">${CAND_LBL[i]||('후보 '+(i+1))}${badge}</div>`
-          + `<p style="white-space:pre-wrap">${esc(c.script || c.hook || '')}</p>`
+          + body
           // ⏱ 예상 영상시간(2026-07-25 사장님): 이 대본을 읽으면 나올 영상 길이 — A/B/C 아래마다.
-          + `<div style="margin-top:6px;font-size:11px;color:var(--accent2);font-weight:800">⏱ 예상 영상시간 약 ${_candSecs(c)}초</div>`
+          + `<div class="candlen" style="margin-top:6px;font-size:11px;color:var(--accent2);font-weight:800">${open?(lenText(lines.join(' ').trim())+' · '):''}⏱ 예상 영상시간 약 ${_candSecs(c)}초</div>`
+          + `<div class="canddirty" style="margin-top:3px;font-size:10px;color:var(--accent);font-weight:800">${dirty?'✏ 고쳐 씀 — 이 카드를 눌러야 반영됩니다':''}</div>`
+          + `<div style="margin-top:6px"><button type="button" class="ghost" style="font-size:11px;padding:4px 8px"`
+          + ` onclick="event.stopPropagation();toggleCandEdit(${c.index})">${open?'✕ 편집 닫기':'✏ 대본 고치기'}</button></div>`
           + `<div style="margin-top:3px;font-size:10px;color:#6b7488">${c.story_person?esc(c.story_person):''}${c.score!=null?(c.story_person?' · ':'')+`점수 ${c.score}`:''}</div>`
           + `<div class="pickhint" style="font-size:11px;color:${on?'var(--accent)':'var(--sub)'};margin-top:6px">${on?'✅ 이 대본으로 만드는 중':'👆 이 대본으로 고르기'}</div>`
           // ★따로 만들기(2026-07-30 사장님 "3개 다 만들고 싶다"). 같은 job에서 후보만 바꿔
@@ -4164,10 +4232,18 @@ async function pickCandidate(idx){
   const lbl = _candLabelOf(CAND_LIST, idx);
   _syncPreviewCandHint(lbl, 'switching');
   const cs = document.getElementById('candStatus'); if(cs) cs.innerHTML = `🔄 <b>${esc(lbl)}</b> 대본으로 바꾸는 중…`;
+  // ✏ 고쳐 쓴 문장이 있을 때만 narrations를 싣는다(2026-08-10). 안 고쳤으면 payload가
+  //   종전과 **완전히 동일** — 편집 기능이 기존 경로를 1비트도 안 건드린다.
+  const _c = (CAND_LIST || []).find(x => x && x.index === idx);
+  const payload = {job_id: MIX_JOB, index: idx};
+  if(_c && _candDirty(_c)) payload.narrations = _candLines(_c);
   try{
     const r = await (await fetch('/api/mix/candidate', {method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({job_id: MIX_JOB, index: idx})})).json();
+      body: JSON.stringify(payload)})).json();
     if(!r.ok){ alert(r.error || '후보 전환 실패'); CAND_SEL = prev; renderCandidates(CAND_LIST); return; }
+    // 서버가 편집을 받아 후보 목록에까지 되썼다 = 이제 이게 원문이다. 기준선을 갱신해
+    //   같은 편집이 다음 클릭에 또 실려 가지 않게 한다(그래도 무해하지만 payload가 깔끔하다).
+    if(r.edited && _c) _c._lines0 = _candLines(_c).slice();
   }catch(e){ alert('네트워크 오류'); CAND_SEL = prev; renderCandidates(CAND_LIST); return; }
   loadMixReview();   // edit_plan이 바뀌었다 = 새 매칭과 동일하게 취급(미리보기 게이트도 다시 잠긴다)
   _syncPreviewCandHint(lbl);   // loadMixReview가 편집안을 다시 그려도 미리보기 힌트는 지금 대본을 가리킨다
@@ -4184,6 +4260,18 @@ async function cloneCandidate(idx){
   if(!confirm(`🎞 "${lbl}" 대본을 별도 작업으로 만들까요?\n\n지금 작업은 그대로 남고, 새 작업으로 넘어갑니다.\n(영상 만들기 횟수를 1회 사용합니다)`)) return;
   const cs = document.getElementById('candStatus');
   if(cs) cs.innerHTML = `🎞 <b>${esc(lbl)}</b> 대본을 새 작업으로 만드는 중…`;
+  // ✏ 고쳐 쓴 문장을 **먼저** 서버 후보목록에 박는다(2026-08-10). clone은 DB의 후보 plan을
+  //   그대로 물려주므로, 안 밀어넣으면 카드를 한 번도 안 누른 채 '따로 만들기'를 누른 사장님의
+  //   편집이 조용히 사라진다. 편집이 없으면 이 호출 자체를 안 한다(종전 경로 그대로).
+  const _pre = (CAND_LIST || []).find(x => x && x.index === idx);
+  if(_pre && _candDirty(_pre)){
+    try{
+      const _r = await (await fetch('/api/mix/candidate', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({job_id: MIX_JOB, index: idx, narrations: _candLines(_pre)})})).json();
+      if(!_r || !_r.ok){ alert((_r && _r.error) || '고친 대본 저장 실패'); return; }
+      _pre._lines0 = _candLines(_pre).slice();
+    }catch(e){ alert('네트워크 오류'); return; }
+  }
   let d=null;
   try{
     d = await (await fetch('/api/mix/candidate/clone', {method:'POST', headers:{'Content-Type':'application/json'},
@@ -4204,7 +4292,10 @@ async function cloneCandidate(idx){
   //   state.script 앞 20자에서 뽑는다(upsert_produce_work) — 안 실으면 목록에
   //   '(제목 없음)'만 여러 줄 쌓여 어느 게 A안이고 C안인지 구분이 안 된다.
   const _c = (CAND_LIST || []).find(x => x && x.index === idx);
-  if(_c && _c.script){ STATE.script = _c.script; STATE.script_carryover = false; }
+  // ✏ 고쳐 쓴 문장이 있으면 그걸 제목 재료로 쓴다(2026-08-10) — 안 고쳤으면 lines를 이어붙인
+  //   결과가 곧 script라 종전과 같다.
+  const _txt = _c ? (_candLines(_c).join(' ').trim() || _c.script) : '';
+  if(_txt){ STATE.script = _txt; STATE.script_carryover = false; }
   // ★saveWork()는 서버 POST를 1초 디바운스한다 — 그 사이 새로고침하면 새 작업 레코드가
   //   **아예 안 생긴다**(WORK_ID=null인 채로 증발). '따로 만들기'는 사장님이 명시적으로
   //   찍은 분기점이라 즉시 확정해야 한다. saveWork()는 sessionStorage·저장표시용으로 같이 둔다.
