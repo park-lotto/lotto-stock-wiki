@@ -2549,7 +2549,20 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
 @app.post("/api/mix/candidate")
 def api_mix_candidate(body: dict):
     """장면 우선 대본 모드(2026-07-20, Task6): 후보 선택 — 고른 후보의 plan을 edit_plan으로
-    세팅한다(미리보기/렌더가 이걸 읽는다)."""
+    세팅한다(미리보기/렌더가 이걸 읽는다).
+
+    narrations(2026-08-10, 선택): 카드에서 사장님이 **직접 고쳐 쓴** 문장 배열. 있으면 그
+    후보 plan의 beats[].narration에 덮어쓴다. 안 보내면(=편집 안 함) 종전과 100% 동일.
+
+    ★길이가 beats와 다르면 통째로 무시한다. 화면 배정(beats[].covers)은 문장 개수·순서에
+      묶여 있어서 문장이 늘거나 줄면 컷 매핑이 어긋난다 — 프론트가 칸을 문장 수만큼 고정해
+      두지만 서버도 스스로 지킨다(클라 신뢰 금지).
+    ★빈 문자열은 그 문장을 건너뛴다(원문 유지) — 실수로 칸을 비운 채 고르면 그 비트의 TTS가
+      무음이 되고 렌더가 죽는다.
+    ★TTS 재합성은 저절로 된다: 렌더 경로가 나레이션 **내용 해시**로 mp3 경로를 만들므로
+      (mix_pipeline._beat_tts_path) 글자가 바뀌면 tts_path가 안 맞아 그 비트만 다시 합성된다.
+      그래서 여기선 tts_path를 지울 필요도, 별도 재합성을 부를 필요도 없다.
+    """
     job_id = (body.get("job_id") or "").strip()
     idx = int(body.get("index") or 0)
     store = Store(DB_PATH)
@@ -2557,13 +2570,30 @@ def api_mix_candidate(body: dict):
     if not cands or not (0 <= idx < len(cands)):
         return JSONResponse(status_code=404, content={"ok": False, "error": "후보 없음"})
     plan = cands[idx]["plan"]
+    beats = plan.get("beats") or []
+    narrations = body.get("narrations")
+    edited = False
+    if isinstance(narrations, list) and len(narrations) == len(beats) and beats:
+        for b, n in zip(beats, narrations):
+            if not isinstance(n, str):
+                continue
+            n = n.strip()
+            if not n or n == (b.get("narration") or "").strip():
+                continue
+            b["narration"] = n
+            edited = True
+    # ★고친 대본을 **후보 목록에도** 되쓴다(2026-08-10). 안 하면 다른 후보를 눌렀다 돌아오는
+    #   순간 이 endpoint가 DB의 원본 plan을 다시 꽂아 편집이 조용히 날아간다(같은 이유로
+    #   새로고침 복원·카드 재렌더도 원문으로 되돌아간다).
+    if edited:
+        store.set_mix_candidates(job_id, cands)
     # ★고른 후보를 plan에 새긴다(2026-07-30 사장님 "완료 갔다 오면 대본이 리셋된다").
     #   후보 자체는 job_id별로 DB에 남아 있는데(set_mix_candidates), 복원 경로가 "지금 무엇을
     #   골랐나"를 알 길이 없어 카드를 다시 그릴 수 없었다. 컬럼 추가 없이 edit_plan(JSON)에
     #   실어 마이그레이션 없이 복원한다 — 렌더는 이 키를 안 읽으므로 무해.
     plan["candidate_index"] = idx
     store.update_mix_job(job_id, edit_plan=plan)
-    return {"ok": True}
+    return {"ok": True, "edited": edited}
 
 
 def _clone_mix_work_sources(src_job, new_job, n_urls):
@@ -2751,9 +2781,16 @@ def api_mix_status(job_id: str, request: Request):
     # 실으면 남의 창작물이 새는 것과 같은 노출 문제(§3981)가 나므로 카드 렌더용 필드만 뽑는다.
     # script(2026-07-24): 후보 대본 '전체 나레이션'은 사장님이 A/B/C를 비교해 고르는 자기 산출물이라
     # 카드에서 통째로 보여준다 — 소스 plan(컷·seg_ids 등)이 아니라 말할 문장만 이어붙인다(edit_plan §561과 동일).
+    # lines(2026-08-10): 카드에서 **문장별로** 고쳐 쓰기 위한 나레이션 배열. script를 그냥
+    #   안 이어붙인 것뿐이라 새로 새는 정보는 없다(위 노출 원칙 그대로). 문장 단위로 내리는
+    #   이유는 화면 배정(beats[].covers)이 **문장 개수·순서에 묶여** 있어서다 — 통짜 텍스트로
+    #   편집시키면 사장님이 문장을 쪼개거나 합치는 순간 컷 매핑이 어긋난다. 칸을 문장 수만큼
+    #   고정해 두면 글자만 고치게 되어 covers가 항상 유효하다.
     candidates = [{"index": i, "score": c.get("score"), "recommended": bool(c.get("recommended")),
                    "hook": (c.get("story") or {}).get("hook", ""),
                    "story_person": (c.get("story") or {}).get("story_person", ""),
+                   "lines": [(b.get("narration") or "").strip()
+                             for b in ((c.get("plan") or {}).get("beats") or [])],
                    "script": " ".join((b.get("narration") or "").strip()
                                        for b in ((c.get("plan") or {}).get("beats") or [])).strip()}
                   for i, c in enumerate(store.get_mix_candidates(job_id))]

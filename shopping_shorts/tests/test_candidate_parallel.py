@@ -51,6 +51,8 @@ def _fixture(monkeypatch, delay=0.0, record=None):
         ("maison_signature_missing", lambda b, style_name=None: False),
         ("hook_contradicts", lambda b, mat, call: False),
         ("under_budget", lambda b, used, floor=0.85: (False, 0, 0)),
+        ("hapsyo_violation", lambda b, style_name=None: False),
+        ("hook_opener_missing", lambda b, style_name=None: False),
     ):
         monkeypatch.setattr(real_ss, name, val, raising=False)
 

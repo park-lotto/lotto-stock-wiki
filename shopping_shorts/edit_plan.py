@@ -3422,14 +3422,9 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
                 _b = _r
             return _b
 
-        beats = _sig_fix(single_source.hapsyo_tail_missing,
-                         single_source.fix_hapsyo_prompt)
-        beats = _sig_fix(single_source.chae_person_missing,
-                         single_source.fix_chae_person_prompt)
-        # ★메종 서명 보장(2026-08-09): 축약이 긴 연결·보너스 문장을 제일 먼저 깎아
-        #   메종만 밋밋한 카피체로 남았다(라이브 경로 실측 0/6 — 채이·홈은 보장이 있어 6/6).
-        beats = _sig_fix(single_source.maison_signature_missing,
-                         single_source.fix_maison_prompt)
+        # ⚠️서명 보장은 **길이 관문 뒤**로 옮겼다(2026-08-09, 아래 참조).
+        #   여기서 고쳐도 뒤따르는 축약·보강이 문장을 다시 쓰면서 서명이 날아갔다
+        #   (실측: 채이가 "힘들었습니다/끝냈습니다"로 나감 — 검사기는 위반을 잡았는데도).
         # ★훅 소재불일치 사후검사(2026-08-09). 정규식으로 소재를 미리 거르는 방식은
         #   새 소재마다 뚫린다 — 같은 계열 사고가 3번 났다(y_never 피규어 / diy 피규어 /
         #   diy 파전 "이제 집에서 파전 안 부쳐요", job d8a17db5d99f).
@@ -3446,6 +3441,14 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
                 if not _nb.get("covers"):
                     _nb["covers"] = beats[_bi].get("covers")
             beats = _bk
+        # ⚠️원본 왜곡 검사(fact_distorted)는 **배선하지 않는다**(2026-08-09).
+        #   사장님 지적 "20년차 시어머니가 말이 되나?"는 맞지만, LLM 판정 방식은
+        #   **소재마다 결과가 흔들려** 규칙이 못 된다 — 실측: 왜곡 2건·정상 1건을 주자
+        #   **3건 모두 True**로 판정했다(정상 대본까지 왜곡 처리).
+        #   그대로 걸면 멀쩡한 문장을 계속 고치라고 시켜 품질이 더 나빠진다.
+        #   다른 검사들(합쇼체·인물·길이)은 어미·단어·숫자로 판정해 영상이 바뀌어도
+        #   같은 규칙이 적용된다 — 왜곡 검사만 그 성질을 못 갖췄다.
+        #   함수는 남겨둔다(판정 프롬프트를 고쳐 재현성을 확보하면 그때 배선).
         # ★★길이 최종 확정 — **문장을 다시 쓰는 모든 단계가 끝난 뒤 여기 한 곳에서만** 잰다.
         #   (2026-08-09 사장님 지시: "땜빵하는 수정은 안 되고 근본 원인을 수정해야 한다.")
         #
@@ -3494,19 +3497,65 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
                     _acc += len(_t)
                     _kept.append(_b)
                     continue
+                # ★문장 **중간에서는 절대 자르지 않는다**(2026-08-09 실측 버그: "심지어
+                #   내열성도 좋아서 … 다들 이걸로 바"에서 끊겼다).
+                #   ⚠️2차 수정: 문장 경계를 못 찾으면 버렸더니 **6문장이 3문장으로 줄었다**
+                #     (실측). 예산은 '넘치면 자막이 밀린다'는 안전선이지 절대선이 아니다 —
+                #     문장을 통째로 잃는 게 더 나쁘다. 약간의 초과는 허용하고 넣는다.
                 _room = _body_cap - _acc
-                if _room >= 12:             # 남은 자리가 문장 꼴이 될 때만 잘라 넣는다
-                    _cut = _t[:_room].rstrip()
-                    _m = re.search(r"^.*[.!?]", _cut)   # 문장 경계에서 끊는다
-                    _b["narration"] = (_m.group(0) if _m else _cut)
+                _m = re.search(r"^.*[.!?]", _t[:_room]) if _room >= 12 else None
+                if _m and len(_m.group(0)) >= 12:      # 문장 경계까지 들어가면 거기까지
+                    _b["narration"] = _m.group(0)
                     _b["caption_lines"] = None
                     _acc += len(_b["narration"])
+                    _kept.append(_b)
+                elif len(_t) <= _body_cap * 0.5:       # 짧은 문장이면 통째로 넣는다
+                    _acc += len(_t)                    # (예산을 조금 넘어도 자막이 산다)
                     _kept.append(_b)
                 break                        # 예산 소진 — 나머지 본문 비트는 버린다
             if _kept:                        # 본문이 통째로 비면 자르지 않는다(원본 유지)
                 print("[1소스대본] 후보%d 총량 초과 코드절단(%.1f초→예산 %.1f초, %d→%d비트)"
                       % (i + 1, _s2, used, len(beats), len(_kept) + 1), file=sys.stderr)
                 beats = _kept + [_cta]
+        # ★★채널 서명 보장 — **길이 관문까지 끝난 맨 마지막**에 둔다(2026-08-09 2차).
+        #   처음엔 리라이트 직후에 뒀는데, 뒤따르는 축약·보강이 문장을 다시 쓰면서 서명이
+        #   날아갔다 — 실측: 채이가 "힘들었습니다/끝냈습니다"로 나갔다(검사기는 위반을
+        #   정확히 잡았는데도 결과물엔 남았다 = 고친 뒤 누가 또 덮어썼다는 뜻).
+        #   이게 오늘 반복해서 밟은 함정이다: **문장을 다시 쓰는 단계 뒤에 검사가 없으면 샌다.**
+        #   길이는 위에서 코드가 확정했으므로(모델 재작성 없음) 여기서 어미만 고쳐도 안전하다.
+        #   ⚠️새 후처리를 넣을 땐 반드시 이 블록보다 **앞**에 넣어라.
+        beats = _sig_fix(single_source.hapsyo_tail_missing,
+                         single_source.fix_hapsyo_prompt)
+        beats = _sig_fix(single_source.chae_person_missing,
+                         single_source.fix_chae_person_prompt)
+        beats = _sig_fix(single_source.maison_signature_missing,
+                         single_source.fix_maison_prompt)
+        # 합쇼체 위반(메종·채이는 few-shot에 0회인데 나오는 것) — 홈테리어픽은 허용 편수가
+        # 있어 대상이 아니다(그 채널은 합쇼체가 서명).
+        beats = _sig_fix(single_source.hapsyo_violation,
+                         lambda _b: single_source.fix_hapsyo_violation_prompt(_b, _hap_style))
+        # ★훅 감탄사 보장(2026-08-09 사장님 지시: "처음 훅은 와~ / 여러분 이런 것 좀
+        #   들어가게. 메종이랑 홈테리어 영상들 대부분 쓰던데").
+        #   훅 틀에 "와,"를 넣고 "감탄사는 살려라"까지 프롬프트에 적었는데도 실측 3/3·3/3
+        #   전부 사라졌다(훅 블록의 "예시를 베끼지 마라"에 밀린다) → 코드로 보장한다.
+        #   채이는 대상 아님(few-shot 2편이 감탄사 없이 "이거 몰라서~"로 연다).
+        # ★주어-어미 불일치 교정(2026-08-09 사장님 지적: "주어랑 일체시키는 건 기본인데").
+        #   '~더라고요'는 남의 일을 보고 알게 된 것에 쓴다 — **내 감정**엔 안 붙는다
+        #   ("충격받았더라고요" → "충격받았어요"). 한 글자 치환이라 코드가 직접 한다.
+        beats = single_source.fix_self_feeling_endings(beats)
+        # ★매장추천 훅 강제 — **3후보 중 첫 후보에만**(2026-08-09 사장님 지시:
+        #   "이 훅은 제품에 들어갈 때 반드시 써야 하는 훅 / 3개 중 한 개는 강제시켜봐").
+        #   프롬프트로는 모델이 "다이소 정리함 보고 깜짝 놀랐어요"로 축약해 버려서
+        #   코드가 첫 문장을 직접 세운다. 소재에 매장이 없으면 no-op.
+        _forced_store = False
+        if i == 0:
+            _before_h = (beats[0].get("narration") or "") if beats else ""
+            beats = single_source.force_store_hook(beats, _mat, idx=i)
+            _forced_store = bool(beats) and (beats[0].get("narration") or "") != _before_h
+        # ★LLM이 아니라 **코드가** 붙인다 — fix 프롬프트로 "첫 문장 맨 앞에만"이라 시켰더니
+        #   모델이 6문장 전부에 "아니,"를 붙였다(실측). 한 단어 얹는 데 모델은 불필요하다.
+        if not _forced_store and single_source.hook_opener_missing(beats, _hap_style):
+            beats = single_source.add_hook_opener(beats)
         # covers → 화면 배정. 모델이 빠뜨린 컷은 직전 비트에 붙여 **컷 100% 커버**를 코드가
         # 보장한다(화면 총길이 == used == 예산 → 길이 하한이 프롬프트 아닌 코드로 지켜진다).
         covered_by = {}                      # 컷 번호(1-base) → 비트 인덱스
@@ -3545,6 +3594,24 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
                 #   5~6개가 나눠 가지면 한 비트는 빈손이 되는데, 그게 곧 문장 소실이었다.
                 #   → 앞 비트에 **대사를 이어 붙인다**(화면은 그 비트 것을 그대로 쓴다).
                 #   앞이 없으면(첫 비트) 다음 루프에서 뒤 비트가 받도록 보류한다.
+                #
+                # ⚠️단 **CTA(마지막 비트)는 절대 합치지 않는다**(2026-08-09 실측):
+                #   합치면 "…알겠더라고요. 댓글에 '청소' 남겨주시면…"처럼 본문 끝에 CTA가
+                #   달라붙어 한 문장이 된다. 자막도 그 덩어리로 뜨고, CTA가 독립 비트가
+                #   아니게 돼 뒤 단계(CTA 보장·키워드 교정)가 엉뚱한 문장을 만진다.
+                #   → 마지막 컷을 빌려서라도 **제 비트로 세운다**(화면은 앞과 공유).
+                if bi == len(beats) - 1 and plan_beats:
+                    _borrow = plan_beats[-1]
+                    plan_beats.append({
+                        "beat_idx": len(plan_beats), "role": "",
+                        "narration": narration, "caption_lines": None,
+                        "target_seconds": round(
+                            max(1.5, len(narration) / (_SYLLABLES_PER_SEC * _speech_speed())), 1),
+                        "primary": dict(_borrow.get("primary") or {}),
+                        "alternates": [],
+                        "effect": "cut", "fit": 5, "forced": False,
+                    })
+                    continue
                 if plan_beats:
                     plan_beats[-1]["narration"] = (
                         plan_beats[-1]["narration"].rstrip() + " " + narration)
@@ -3625,6 +3692,26 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
             b["target_seconds"] = round(
                 max(1.5, len(b["narration"].strip()) / (_SYLLABLES_PER_SEC * _speech_speed())), 1)
         plan_beats = _fill_beat_screen_time(plan_beats, seg_map)
+        # ★화면 총량 상한(2026-08-09). _fill_beat_screen_time은 **비트별로** need를 채울 뿐
+        #   전체 합계는 아무도 안 본다 — 비트마다 조금씩 넘치면 합계가 새어나간다
+        #   (실측 DUfiVBLD-46: 선별은 29.9초로 정상인데 채우고 나니 39초).
+        #   목표 대비 상한을 넘으면 **뒤쪽 보조 컷(alternates)부터** 잘라 맞춘다 —
+        #   primary(주 화면)는 건드리지 않아 대사↔화면 대응이 유지된다.
+        _cap_total = used * 1.12
+        def _tot(bs):
+            return sum(sum(max(0.0, float(s.get("end") or 0) - float(s.get("start") or 0))
+                           for s in [b.get("primary") or {}] + (b.get("alternates") or []))
+                       for b in bs)
+        _now = _tot(plan_beats)
+        if _now > _cap_total:
+            for _b in reversed(plan_beats):         # 뒤쪽 비트부터 덜어낸다
+                while _now > _cap_total and (_b.get("alternates") or []):
+                    _drop = _b["alternates"].pop()
+                    _now -= max(0.0, float(_drop.get("end") or 0) - float(_drop.get("start") or 0))
+                if _now <= _cap_total:
+                    break
+            print("[1소스대본] 후보%d 화면 총량 %0.1f초 → %0.1f초로 조정(예산 %.1f초)"
+                  % (i + 1, _tot(plan_beats) + 0.0, _now, used), file=sys.stderr)
         # ★최종 안전망(2026-08-04): 위 CTA 보장 3중(프롬프트·LLM교정·컷생존)에도 뒤
         # 단계(_fix_beat_structure 등)가 마지막 비트를 갈아치우는 경로가 실측 1/6 남았다.
         # plan 확정 직후라 어떤 경로로 와도 여기서 잡힌다.
