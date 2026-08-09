@@ -4103,7 +4103,15 @@ _ALLOWED_THUMB_HOSTS = ("cdninstagram.com", "fbcdn.net", "ytimg.com",
                         "xhscdn.com",
                         # 도우인 커버 CDN(pN-sign.douyinpic.com) — 해외HOT 도우인 카드 썸네일.
                         # 없으면 도우인 카드가 검게 깨짐(실측 2026-07-26).
-                        "douyinpic.com")
+                        "douyinpic.com",
+                        # ★구글 렌즈 결과 썸네일(encrypted-tbnN.gstatic.com) — 숏템파워검색.
+                        # 렌즈(SerpApi visual_matches)의 thumbnail은 플랫폼 CDN이 아니라
+                        # **구글이 재호스팅한 gstatic 주소**다. 화이트리스트에 없어서 /api/thumb가
+                        # 400을 뱉었고, 카드가 통째로 검게 떴다(실측 2026-08-09 서버로그:
+                        # "GET /api/thumb?url=...encrypted-tbn0.gstatic.com... 400 Bad Request" 40건).
+                        # 유튜브·인스타 결과만 검게 보인 이유도 이것 — 틱톡 결과는 렌즈가
+                        # 원본 tiktokcdn 주소를 주는 경우가 있어 우연히 통과했다.
+                        "gstatic.com")
 _ALLOWED_VIDEO_HOSTS = ("cdninstagram.com", "fbcdn.net")
 
 
@@ -4155,9 +4163,59 @@ def _thumb_cache_path(url: str):
     return _THUMB_CACHE_DIR / (hashlib.sha1(name.encode()).hexdigest() + ".jpg")
 
 
+# 인스타 웹이 자기 자신도 쓰는 공개 앱ID(비밀 아님) — oembed 호출에 필요.
+# instagram_playwright._IG_APP_ID와 같은 값이지만, app.py가 그 모듈(=playwright 의존)을
+# 끌어오지 않게 여기 따로 둔다.
+_IG_OEMBED_APP_ID = "936619743392459"
+
+
+def _thumb_via_oembed(url: str, shortcode: str | None):
+    """만료된 썸네일 URL → 공개 oembed로 새 주소를 받아 내려받고 디스크 캐시에 저장.
+
+    성공하면 이미지 bytes, 실패하면 None. **로그인이 필요 없다**는 게 핵심 —
+    계정이 전부 429(한도소진)여도 동작한다(실측 2026-08-09).
+    shortcode가 없으면 복구 불가(어느 게시물인지 알 수 없다) → None.
+    """
+    if not shortcode:
+        return None
+    import requests
+    try:
+        j = requests.get("https://www.instagram.com/api/v1/oembed/",
+                         params={"url": f"https://www.instagram.com/p/{shortcode}/"},
+                         headers={"User-Agent": "Mozilla/5.0",
+                                  "x-ig-app-id": _IG_OEMBED_APP_ID},
+                         timeout=6).json()
+        fresh = j.get("thumbnail_url")
+        if not fresh:
+            return None
+        r = requests.get(fresh, timeout=6, headers={
+            "User-Agent": "Mozilla/5.0", "Referer": "https://www.instagram.com/"})
+        r.raise_for_status()
+        if not r.content[:2] == b"\xff\xd8":     # JPEG가 아니면 버린다(에러 HTML 방지)
+            return None
+        # 캐시 키는 **원래 URL**의 파일명 — 화면이 그 키로 찾으므로 여기 맞춰 저장해야 한다.
+        cache = _thumb_cache_path(url)
+        if cache is not None:
+            try:
+                _THUMB_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+                tmp = cache.with_suffix(".tmp")
+                tmp.write_bytes(r.content)
+                tmp.replace(cache)
+            except OSError:
+                pass
+        return r.content
+    except Exception:   # noqa: BLE001 — 복구는 best-effort, 실패하면 그냥 404로 떨어진다
+        return None
+
+
 @app.get("/api/thumb")
-def api_thumb(url: str):
-    """인스타 CDN 썸네일 프록시 (핫링크 차단 우회). url=원본 이미지 주소."""
+def api_thumb(url: str, v: str | None = None, shortcode: str | None = None):
+    """인스타 CDN 썸네일 프록시 (핫링크 차단 우회). url=원본 이미지 주소.
+
+    v = 캐시버스터(프론트 THUMB_V). 서버 동작엔 안 쓰지만 **받아는 줘야 한다** —
+    선언이 없으면 FastAPI가 무시할 뿐이라 무해하지만, 명시해 두면 의도가 드러나고
+    나중에 누가 `extra="forbid"`류를 걸어도 안 깨진다. 값은 URL을 다르게 만들어
+    브라우저가 옛 404를 재사용하지 못하게 하는 게 전부다."""
     import requests
     from fastapi.responses import Response
     if _reject_cdn_proxy(url, _ALLOWED_THUMB_HOSTS):
@@ -4198,7 +4256,22 @@ def api_thumb(url: str):
         return Response(content=r.content, media_type=ctype,
                         headers={"Cache-Control": "public, max-age=86400"})
     except Exception:
-        return Response(status_code=404, content=b"")
+        # ★만료 자가복구(2026-08-09): CDN 서명(oe=)은 ~4일이면 만료돼 저장된 URL이 전부
+        # 403이 된다. 그런데 **게시물 자체는 살아 있으므로** 공개 oembed에 물어보면 인스타가
+        # 서명이 새로 붙은 주소를 알려준다 — 로그인 불필요라 계정이 429여도 된다(실측
+        # 2026-08-09: 계정 4개가 전부 429인 상태에서 75건 중 66건 복구).
+        # 파일명은 그대로라 디스크 캐시 키(_thumb_cache_path)가 바뀌지 않는다 = 다음부터는
+        # 위쪽 캐시히트로 즉시 나간다.
+        got = _thumb_via_oembed(url, shortcode)
+        if got:
+            return Response(content=got, media_type="image/jpeg",
+                            headers={"Cache-Control": "public, max-age=86400"})
+        # ★실패는 절대 캐시하지 않는다(2026-08-09). 헤더가 없으면 브라우저가 휴리스틱
+        # 캐싱으로 이 404를 몇 시간 기억한다. 그 뒤 우리가 이미지를 복구해 디스크 캐시에
+        # 넣어도 **브라우저가 재요청을 안 해** 카드가 계속 까맣게 남는다(실측: 서버는
+        # 200/71KB를 주는데 화면만 검은 상태). URL이 글자까지 같아 캐시버스팅도 안 먹는다.
+        return Response(status_code=404, content=b"",
+                        headers={"Cache-Control": "no-store"})
 
 
 @app.get("/api/video")
