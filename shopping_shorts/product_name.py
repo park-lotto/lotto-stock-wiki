@@ -42,11 +42,31 @@ _PROMPT = """이 이미지는 한국어 쇼츠 영상의 썸네일이다.
 - 나쁜 예: "주방용품", "살림꿀팁", "인테리어", "청소" (← 범주·분위기는 금지)
 - 제품이 안 보이거나 특정할 수 없으면 product를 빈 문자열로 두라.
 
-JSON으로만 답하라:
-{"product": "구체적 상품명", "category": "대분류"}"""
+★재질을 반드시 확인하라(2026-08-10 추가) — 겉보기가 비슷해 자주 틀린다:
+  클레이(찰흙·지점토) / 유리 / 아크릴·레진 / 플라스틱 / 도자기 / 금속 / 나무 / 천·실 / 종이 / 식품
+  - 반투명하다고 유리로 단정하지 마라. 클레이·레진·아크릴도 반투명하다.
+  - 손으로 빚은 자국·무광 질감이면 클레이일 확률이 높다.
+  - 못 정하겠으면 material을 빈 문자열로 두라(억지로 찍지 마라).
+  ⚠️ 재질은 **material에만** 적어라. product에 재질어를 넣지 마라
+     ('유리 믹싱볼' → product는 "믹싱볼", material은 "유리").
 
+★made_by: 그 물건을 **직접 만드는 과정**을 보여주는 영상이면 "직접만들기",
+  완제품을 소개·사용하는 영상이면 "완제품". 모르겠으면 빈 문자열.
+
+JSON으로만 답하라:
+{"product": "구체적 상품명", "material": "재질", "made_by": "", "category": "대분류"}"""
+
+# material·made_by는 2026-08-10 추가. 실측(사장님 제보 케이스):
+#   클레이 토끼  A(현행) "레진 파츠" ❌ → B(재질질문) "클레이 캐릭터 피규어"/클레이/직접만들기 ✅
+#   피규어장식장 A "아크릴 피규어 진열장" → B "피규어 진열장"/아크릴/완제품
+# made_by가 갈리면 '만드는 영상'과 '파는 물건'이 안 섞인다 — 이 케이스의 핵심 오답이었다.
+# ★product에는 재질을 넣지 않는다: _MODIFIERS가 재질어를 떼는 이유(위 주석)와 같은 사고를
+#   막기 위함이다. 재질은 별도 필드로 두어야 비교에 쓸지 말지를 코드가 고를 수 있다.
 _SCHEMA = {"type": "object",
-           "properties": {"product": {"type": "string"}, "category": {"type": "string"}},
+           "properties": {"product": {"type": "string"},
+                          "material": {"type": "string"},
+                          "made_by": {"type": "string"},
+                          "category": {"type": "string"}},
            "required": ["product", "category"]}
 
 # 제품명에서 핵심어를 뽑을 때 떼는 수식어. '전동 채칼'과 '채칼 세트'가 같은 제품으로
@@ -74,13 +94,13 @@ def _identify_one(image_bytes):
 
         from shopping_shorts import video_analysis
     except Exception:      # noqa: BLE001 — 비전 모듈 없으면 조용히 포기
-        return None, None
+        return None, None, None, None
     if not image_bytes:
-        return None, None
+        return None, None, None, None
     for _ in range(3):
         key, idx = comment_gen._next_live_key_and_idx()
         if key is None:
-            return None, None
+            return None, None, None, None
         try:
             client = video_analysis._client_for_key(key)
             r = client.models.generate_content(
@@ -90,15 +110,20 @@ def _identify_one(image_bytes):
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json", response_schema=_SCHEMA))
             d = json.loads(r.text)
-            return (d.get("product") or "").strip(), (d.get("category") or "").strip()
+            # material·made_by는 2026-08-10 추가. 옛 호출부가 2개만 받아도 안 깨지도록
+            # **뒤에** 붙인다(앞에 끼우면 언패킹하는 모든 곳이 조용히 어긋난다).
+            return ((d.get("product") or "").strip(),
+                    (d.get("category") or "").strip(),
+                    (d.get("material") or "").strip(),
+                    (d.get("made_by") or "").strip())
         except Exception as e:      # noqa: BLE001
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
                 comment_gen._mark_key_exhausted(idx)
                 continue           # 다음 키로 (죽은 키 8·11번이 여기서 걸러진다)
             if key_vault.is_quota_error(e):
                 continue           # 429는 다음 키로 — 기다리지 않는다(검색은 대화형이다)
-            return None, None
-    return None, None
+            return None, None, None, None
+    return None, None, None, None
 
 
 def identify_many(items, db_path, max_workers=_MAX_WORKERS, expired_out=None):
@@ -120,16 +145,17 @@ def identify_many(items, db_path, max_workers=_MAX_WORKERS, expired_out=None):
         if not img:
             if expired_out is not None:
                 expired_out.append(it["shortcode"])
-            return it["shortcode"], None, None      # 썸네일 만료 — 캐시에 안 남긴다
-        p, cat = _identify_one(img)
-        return it["shortcode"], p, cat
+            # 썸네일 만료 — 캐시에 안 남긴다(살아나면 다시 판독한다)
+            return it["shortcode"], None, None, None, None
+        p, cat, mat, made = _identify_one(img)
+        return it["shortcode"], p, cat, mat, made
 
     out = dict(cached)
     with _fut.ThreadPoolExecutor(max_workers=max_workers) as ex:
-        for sc, p, cat in ex.map(_work, todo):
+        for sc, p, cat, mat, made in ex.map(_work, todo):
             if p is None:
                 continue        # 판정 실패 — 다음에 다시 시도한다
-            store.save_product(sc, p, cat)
+            store.save_product(sc, p, cat, mat, made)
             out[sc] = p
     return out
 

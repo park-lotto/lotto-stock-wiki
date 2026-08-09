@@ -450,7 +450,12 @@ class Store:
             # 그래서 제품명 완전일치가 **0건**이었고, 천사점토를 넣으면 '취미·만들기·DIY'가
             # 겹쳐 비즈스트랩이 나왔다 — 같은 제품이 아니라 같은 분위기로 묶인 것.
             # 자막을 무시시키고 상품명만 물으면 '전동 채칼'·'접이식 소파베드'가 나온다(실측).
-            for col, ddl in (("product", "TEXT"), ("product_at", "TEXT")):
+            # material·made_by(2026-08-10): 썸네일만 보면 재질을 자주 틀린다
+            # (실측: 클레이 토끼 → "레진 파츠"). 재질을 물으면 맞히므로 따로 저장한다.
+            # made_by는 '직접만들기 vs 완제품' — 만드는 영상과 파는 물건이 안 섞이게
+            # 하는 결정적 신호다(사장님 제보 케이스의 핵심 오답이었다).
+            for col, ddl in (("product", "TEXT"), ("product_at", "TEXT"),
+                             ("material", "TEXT"), ("made_by", "TEXT")):
                 try:
                     c.execute(f"ALTER TABLE vision_tags ADD COLUMN {col} {ddl}")
                 except sqlite3.OperationalError:
@@ -2535,7 +2540,7 @@ class Store:
                 (shortcode, subject or "", json.dumps(keywords or [], ensure_ascii=False)),
             )
 
-    def save_product(self, shortcode, product, category=""):
+    def save_product(self, shortcode, product, category="", material="", made_by=""):
         """제품명 저장(2026-08-04). 태그 행이 없어도 만든다 — 랭킹 영상은 아카이브에
         없을 수 있는데 그것도 질의로 쓰이기 때문이다.
 
@@ -2544,10 +2549,12 @@ class Store:
         with self._conn() as c:
             c.execute(
                 "INSERT INTO vision_tags(shortcode, subject, keywords_json, created_at, "
-                " product, product_at) VALUES(?,'','[]',datetime('now'),?,datetime('now')) "
+                " product, product_at, material, made_by) "
+                "VALUES(?,'','[]',datetime('now'),?,datetime('now'),?,?) "
                 "ON CONFLICT(shortcode) DO UPDATE SET product=excluded.product, "
-                " product_at=excluded.product_at",
-                (shortcode, product or ""))
+                " product_at=excluded.product_at, material=excluded.material, "
+                " made_by=excluded.made_by",
+                (shortcode, product or "", material or "", made_by or ""))
             if category:
                 # 카테고리는 기존 subject가 비어있을 때만 채운다(기존 태그를 덮지 않는다).
                 c.execute("UPDATE vision_tags SET subject=? WHERE shortcode=? AND "
