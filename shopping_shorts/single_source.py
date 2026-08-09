@@ -165,18 +165,25 @@ def char_budget(used_secs):
     return int(used_secs * _CHARS_PER_SEC)
 
 
-def _style_extra():
-    """채널 스타일 블록(style_profiles, 2026-08-05). 실패해도 생성을 죽이지 않는다."""
+def _style_extra(cand_idx=None):
+    """채널 스타일 블록(style_profiles, 2026-08-05). 실패해도 생성을 죽이지 않는다.
+
+    ★cand_idx를 주면 **그 후보에 배정된 채널**의 few-shot을 싣는다(2026-08-09).
+      안 주면 종전과 100% 동일(trio면 maison 공통) — 하위호환."""
     try:
         from shopping_shorts import style_profiles
+        if cand_idx is not None:
+            return style_profiles.candidate_style_block(cand_idx)
         return style_profiles.style_block()
     except Exception:
         return ""
 
 
-def script_prompt(order, used_secs, hook_block, frame_block=""):
+def script_prompt(order, used_secs, hook_block, frame_block="", cand_idx=None):
     """1소스 각색 대본 프롬프트. hook_block은 hook_patterns.prompt_block() 결과.
-    frame_block: 후보별 이야기 구도(style_profiles.story_frame_block) — 빈 문자열이면 종전 동일."""
+    frame_block: 후보별 이야기 구도(style_profiles.story_frame_block) — 빈 문자열이면 종전 동일.
+    cand_idx: 이 후보의 인덱스(0부터). 주면 후보별 채널 스타일 few-shot이 실린다 —
+      ★안 주면 종전과 100% 동일(회귀 0)."""
     import json
     cuts = [{"n": i + 1, "seg": s.get("seg_id"), "초": round(s["_dur"], 1),
              "화면": s.get("scene_desc") or "", "원본대사": s.get("text") or "",
@@ -184,7 +191,7 @@ def script_prompt(order, used_secs, hook_block, frame_block=""):
             for i, s in enumerate(order)]
     n_lines = line_count(used_secs, len(order))
     total = char_budget(used_secs)
-    return (hook_block + _style_extra() + (frame_block or "") +   # ★채널 스타일(2026-08-05)·구도(2026-08-06)
+    return (hook_block + _style_extra(cand_idx) + (frame_block or "") +   # ★채널 스타일(2026-08-05, 후보별 2026-08-09)·구도(2026-08-06)
             "\n아래는 숏폼 한 편을 재편집한 컷 순서다. 이 화면들에 얹을 **나레이션**을 써라.\n\n"
             "[절대규칙]\n"
             "1. 원본대사를 베끼지 마라. 같은 뜻을 완전히 다른 표현으로 바꿔라(어순·어휘·문형 전부).\n"
@@ -439,6 +446,96 @@ def fix_cta_prompt(beats, source_text=""):
     return ("아래 나레이션의 **마지막 문장만** 고쳐라. 나머지는 글자 하나 바꾸지 마라.\n"
             f"마지막 문장은 반드시 \"댓글에 '{kw}' 남겨주세요\" 형태의 댓글 유도로 끝내라"
             "(길이는 지금 마지막 문장과 비슷하게, 링크·프로필 금지).\n\n"
+            + json.dumps(cur, ensure_ascii=False, indent=1)
+            + "\n\nJSON만: {\"beats\":[{\"n\":1,\"covers\":[1,2],\"narration\":\"...\"}]}")
+
+
+import re as _re
+
+# 합쇼체 = 종성 ㅂ인 음절 + '니다'(합니다·훌륭합니다·됩니다·줍니다·집니다·습니다).
+# ★고정 목록(습니다|입니다|됩니다)으로 검사하지 마라 — "추천합니다"·"훌륭합니다"를 놓친다
+#   (2026-08-09 실측에서 실제로 놓쳐 판정이 틀렸다. CLAUDE.md '고정 명사 목록 체커 함정').
+_HAPSYO_END = _re.compile(r"[가-힣]니다\s*[.!?~]*\s*$")
+
+
+def hapsyo_tail_missing(beats, style_name=None):
+    """홈테리어픽 서명 — **CTA 직전 문장**이 합쇼체로 닫히는가(2026-08-09).
+
+    이 채널은 본문을 요체로 가다가 CTA 앞 한 문장만 합쇼체로 끊는 낙차가 서명이다
+    (실측: 히트 35편 중 34편). 프롬프트로 2차까지 지시했으나 10회 실측 7/10에 그쳤다 —
+    CTA·빈비트와 같은 방식으로 코드가 보장한다.
+    ★해당 스타일이 아니면 항상 False(다른 스타일은 합쇼체가 오히려 감점 대상이다)."""
+    if (style_name or "") != "hometerior":
+        return False
+    if not beats or len(beats) < 2:
+        return False
+    prev = (beats[-2].get("narration") or "").strip()
+    if not prev:
+        return False
+    return not _HAPSYO_END.search(prev)
+
+
+def fix_hapsyo_prompt(beats):
+    """CTA 직전 문장만 합쇼체로 닫아 다시 받는다(fix_cta_prompt와 같은 방식).
+
+    전체 재생성이 아니라 그 한 문장만 — 다른 문장 품질을 흔들지 않는다."""
+    import json
+    n = len(beats) - 1                      # 1-based로 CTA 직전
+    cur = [{"n": b.get("n"), "covers": b.get("covers"), "narration": b.get("narration")}
+           for b in beats]
+    return ("아래 나레이션에서 **%d번째 문장(마지막 CTA 바로 앞) 하나만** 고쳐라. "
+            "나머지 문장은 글자 하나 바꾸지 마라.\n"
+            "그 문장의 **끝을 합쇼체로 짧게 닫아라** — 예: \"멘탈 지켜줍니다\" / "
+            "\"감성 미쳤습니다\" / \"롤러 한 번 굴리는 걸로 끝입니다\".\n"
+            "★뜻과 길이는 지금과 비슷하게 두고 **어미만** 합쇼체로 바꾼다. "
+            "문장 전체를 합쇼체 문어체로 새로 쓰지 마라(본문은 요체 그대로다).\n"
+            "★마지막 CTA 문장은 절대 건드리지 마라 — 합쇼체로 바꾸면 안 된다.\n\n"
+            % n
+            + json.dumps(cur, ensure_ascii=False, indent=1)
+            + "\n\nJSON만: {\"beats\":[{\"n\":1,\"covers\":[1,2],\"narration\":\"...\"}]}")
+
+
+# 채이 스타일의 생명 = 가족·지인 액자("시어머니가 오셨는데 ~라고 하시는 거예요").
+# 관계 프레임은 원본에 없어도 빌리라고 가이드가 명시한다(사실·수치만 원본 범위).
+_CHAE_PEOPLE = ("엄마", "어머니", "시어머니", "친정", "남편", "와이프", "아내",
+                "딸", "아들", "친구", "동생", "언니", "누나", "형", "이웃", "지인")
+
+
+def chae_person_missing(beats, style_name=None):
+    """채이 서명 — 본문에 **인물**이 등장하는가(2026-08-09).
+
+    이 채널은 가족과의 티키타카(갈등→반전)가 뼈대다. 인물이 없으면 어미만 채이고
+    이야기는 다른 채널과 같아진다(실측 10회 중 1건이 인물 0명으로 밋밋해졌다).
+    ★해당 스타일이 아니면 항상 False(다른 채널은 인물이 서명이 아니다).
+    CTA 문장은 제외하고 본문만 본다."""
+    if (style_name or "") != "chae":
+        return False
+    if not beats:
+        return False
+    body = " ".join((b.get("narration") or "") for b in beats[:-1]) if len(beats) > 1 \
+        else (beats[0].get("narration") or "")
+    if not body.strip():
+        return False
+    return not any(p in body for p in _CHAE_PEOPLE)
+
+
+def fix_chae_person_prompt(beats):
+    """본문 한 문장에 가족 액자를 넣어 다시 받는다(fix_cta_prompt와 같은 방식).
+
+    ★새 사실·수치를 지어내지 말고 **관계 프레임만** 빌린다 — 가이드와 같은 선."""
+    import json
+    cur = [{"n": b.get("n"), "covers": b.get("covers"), "narration": b.get("narration")}
+           for b in beats]
+    return ("아래 나레이션은 '가족 에피소드' 스타일인데 **등장인물이 없어** 밋밋하다.\n"
+            "본문 문장 중 **한 문장만** 골라 가족·지인이 등장하는 장면으로 고쳐라 "
+            "(예: \"시어머니가 놀러 오셨는데 이게 뭐냐고 물어보시는 거예요\", "
+            "\"엄마가 보더니 왜 이런 걸 말 안 했냐고 하시더라고요\").\n"
+            "★지켜야 할 것:\n"
+            "- 나머지 문장은 글자 하나 바꾸지 마라. 문장 수도 그대로.\n"
+            "- **마지막 CTA 문장은 절대 건드리지 마라.**\n"
+            "- 제품의 성능·수치·가격 같은 **사실은 새로 지어내지 마라** — 빌리는 건 "
+            "인물과 관계 프레임뿐이다.\n"
+            "- 길이는 지금 문장과 비슷하게.\n\n"
             + json.dumps(cur, ensure_ascii=False, indent=1)
             + "\n\nJSON만: {\"beats\":[{\"n\":1,\"covers\":[1,2],\"narration\":\"...\"}]}")
 

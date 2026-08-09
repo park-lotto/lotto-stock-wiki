@@ -41,6 +41,13 @@ def _fixture(monkeypatch, delay=0.0, record=None):
         ("fix_cta_prompt", lambda *a, **k: "p"),
         ("escalate_prompt", lambda b: "p"),
         ("apply_restyle", lambda beats, call, style_name=None, **kw: beats),
+        # ★서명 보장(2026-08-09)도 다른 교정루프와 같이 꺼둔다 — 이 테스트가 재는 것은
+        #   **후보 3개가 병렬로 도는가**지 교정 횟수가 아니다. 안 끄면 가짜 문장
+        #   ("문장1 댓글에 '나도'")이 서명을 안 지켜 후보1·2만 call을 2회씩 더 부르고,
+        #   가장 느린 후보가 전체 시간을 결정해 병렬인데도 0.9초를 넘긴다.
+        #   ⚠️라이브에선 실제 소재 6건 중 보장 발동 0건이었다(생성이 이미 서명을 지킨다).
+        ("hapsyo_tail_missing", lambda b, style_name=None: False),
+        ("chae_person_missing", lambda b, style_name=None: False),
     ):
         monkeypatch.setattr(real_ss, name, val, raising=False)
 
