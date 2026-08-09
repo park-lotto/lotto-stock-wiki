@@ -44,23 +44,52 @@ _BACKOFF_S = 30 * 60         # 로그인벽/차단 의심 시 대기
 _BUSY_POLL_S = 60            # 렌더 양보 중 재확인 주기
 
 
-def session_slots():
+# 풀별 프록시 출구 오프셋 — 같은 kr-N을 두 계정이 나눠 쓰지 않게 번호대를 갈라둔다.
+# reference를 10부터 둔 이유: 아카이브 계정이 10개까지 늘어도 겹치지 않는다.
+_POOL_PROXY_OFFSET = {"archive": 0, "reference": 10}
+
+# 풀 이름 상수 — 문자열 오타로 조용히 상위 폴더 폴백되는 걸 막는다.
+POOL_ARCHIVE = "archive"
+POOL_REFERENCE = "reference"
+
+
+def session_slots(pool=None):
     """적립된 계정 세션 파일 목록(uid.json). 없으면 단일 세션으로 폴백.
 
     2026-08-05: 히트작은 채널당 400여 개를 다 긁어야 해서(최신 100개만으론
     조회수 상위 100개 중 0~5개밖에 안 걸린다 — 실측) 한 계정이 몇 시간 만에
     scraping_warning에 걸린다. 재로그인으로 세션을 새로 뽑으면 즉시 살아나므로,
-    계정 여러 개를 적립해두고 막힐 때마다 넘긴다."""
+    계정 여러 개를 적립해두고 막힐 때마다 넘긴다.
+
+    ★풀 분리(2026-08-09): pool="archive"|"reference"를 주면 하위 폴더만 본다.
+    아카이브(히트작)와 레퍼런스랭킹이 같은 계정을 공유하던 탓에, 아침 아카이브가
+    계정 한도를 다 태우면 저녁 레퍼런스 수집이 **첫 채널부터 0건**이 됐다(2026-08-09
+    실사고: 199채널 전부 not_found, ok 0). 계정을 갈라 서로의 한도를 잠식하지 않게 한다.
+
+    하위 폴더가 없거나 비어 있으면 기존처럼 상위 폴더 전체를 쓴다 — 폴더를 만들기
+    전에도 동작이 안 바뀌고, 나중에 파일만 옮기면 코드 수정 없이 분리가 켜진다.
+    아카이브가 끝나 계정을 레퍼런스로 합칠 때도 파일 이동만으로 끝난다."""
     d = os.getenv("INSTAGRAM_SESSION_DIR", "")
     if d and os.path.isdir(d):
+        if pool:
+            sub = os.path.join(d, pool)
+            if os.path.isdir(sub):
+                slots = sorted(os.path.join(sub, f) for f in os.listdir(sub)
+                               if f.endswith(".json"))
+                if slots:
+                    return slots
         slots = sorted(os.path.join(d, f) for f in os.listdir(d) if f.endswith(".json"))
         if slots:
             return slots
     return [config.INSTAGRAM_SESSION_PATH] if config.INSTAGRAM_SESSION_PATH else []
 
 
-def slot_proxy(index):
+def slot_proxy(index, pool=None):
     """계정 슬롯 index에 고정 배정되는 한국 주거용 출구.
+
+    ★풀 오프셋(2026-08-09): 풀을 나누면 양쪽 다 index 0부터 시작해 **서로 다른 계정이
+    같은 출구 IP를 물려받는다** — 아래 "계정↔IP 1:1"이 깨져 인스타가 한 기계로 묶어 본다.
+    풀마다 오프셋을 줘서 출구가 겹치지 않게 한다(archive=0.., reference=10..).
 
     2026-08-05: 계정만 바꾸고 IP가 같으면 인스타가 한 기계로 묶어 본다(새로 만든
     계정도 몇 시간 만에 scraping_warning). Webshare 회전주거용은 username에
@@ -73,7 +102,7 @@ def slot_proxy(index):
         return None
     host = os.getenv("WEBSHARE_HOST", "p.webshare.io:80")
     cc = os.getenv("WEBSHARE_COUNTRY", "kr")
-    return f"http://{user}-{cc}-{index + 1}:{pw}@{host}"
+    return f"http://{user}-{cc}-{index + _POOL_PROXY_OFFSET.get(pool, 0) + 1}:{pw}@{host}"
 
 
 def crawl_channel(username, max_scrolls=_MAX_SCROLLS, session_path=None, proxy=None):
@@ -211,7 +240,7 @@ def run(limit=None, max_scrolls=_MAX_SCROLLS, sleep=time.sleep, log=print):
     # live = (전역 슬롯 인덱스, 세션경로) 목록. 경고가 뜬 계정은 목록에서 빼되
     # 프록시 출구는 전역 인덱스로 고정한다(계정↔IP 1:1 — 남은 계정이 죽은 계정의
     # IP를 물려받으면 인스타가 한 기계로 묶어 본다).
-    live = list(enumerate(session_slots()))
+    live = list(enumerate(session_slots(POOL_ARCHIVE)))
     log(f"[아카이브] 대상 {len(targets)}채널 (팔로워순, done 제외) · 계정 세션 {len(live)}개 로테이션")
     walls = 0
     ok = 0
@@ -225,7 +254,7 @@ def run(limit=None, max_scrolls=_MAX_SCROLLS, sleep=time.sleep, log=print):
             gi, sess = live[idx % len(live)] if live else (0, None)
             items, final_url, err = crawl_channel(u, max_scrolls=max_scrolls,
                                                   session_path=sess,
-                                                  proxy=slot_proxy(gi))
+                                                  proxy=slot_proxy(gi, POOL_ARCHIVE))
             if err != "scraping_warning":
                 break
             burnt = os.path.basename(sess or "?").replace(".json", "")
