@@ -24,6 +24,13 @@ def _fake_gemini(monkeypatch, payload_text):
     monkeypatch.setattr(edit_plan.comment_gen, "_current_key_and_idx", lambda: ("k", 0))
     monkeypatch.setattr(edit_plan.comment_gen, "_client_for_key", lambda key: FakeClient())
     monkeypatch.setattr(edit_plan, "SHORTS_GEMINI_KEYS", ["fake_key"])
+    # ★build_edit_plan은 comment_gen 전용키가 아니라 **key_vault 캐스케이드 예비키풀**을
+    #   쓴다(_vault_call, 2026-07-13 전환 — 전용키 1개가 쉽게 소진돼서). 위 comment_gen
+    #   stub만으로는 그 경로를 못 막아 실제 키를 찾다 못 찾고 None을 반환 → beats가 []가 되어
+    #   이 테스트가 실패했다. 여기서 검증하려는 건 '응답을 어떻게 그라운딩·표절판정하느냐'이므로
+    #   모델 호출 자체를 payload로 갈음한다.
+    monkeypatch.setattr(edit_plan, "_vault_call",
+                        lambda prompt, schema, **kw: json.loads(payload_text))
 
 
 def test_build_edit_plan_grounds_and_flags(monkeypatch):

@@ -129,4 +129,11 @@ def test_plan_and_tts_no_bank_when_disabled(tmp_path, monkeypatch):
     _wire_plan(monkeypatch, box)
     mp._plan_and_tts(store, "j", [{"full_text": "x"}], 20, "free", None, tmp_path / "w",
                      scene_first=True, reference_text="ref")
-    assert box["bank"] == ""   # 설정 off → 회귀0(은행 미주입)
+    # 설정 off → 은행 내용이 안 들어간다(회귀0).
+    # ⚠️ ""(빈 문자열)로 보면 안 된다(2026-08-10). 2026-08-04부터 **확정 훅패턴 10종**이
+    #    은행 on/off와 무관하게 항상 bank_context 앞에 붙는다(mix_pipeline.py:891,
+    #    사장님 "훅은 은행에서 빼서 지금 나랑 정해"). 그래서 off여도 bank는 비어 있지 않다.
+    #    이 테스트가 지키려는 건 '훅패턴이 없다'가 아니라 **'은행 항목이 안 샌다'**이므로
+    #    승인해 둔 은행 문구가 실제로 빠졌는지로 검사한다.
+    assert "승인훅하나" not in box["bank"]
+    assert "[훅 패턴" in box["bank"]   # 훅패턴은 off와 무관하게 항상 주입된다(그 계약도 같이 고정)

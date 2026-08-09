@@ -113,6 +113,12 @@ def _voice_params(voice):
     (미나·표현) 기본값. naturalize_profile None → naturalize()가 자체 기본값 사용,
     pace_mode False → 속도감 다듬기 없음 = 옛 동작.
 
+    ⚠️ pace_mode의 '기본'은 두 층이다(2026-08-10 정정 — 이 설명이 틀려 있었다):
+      · voice 스냅샷에 키가 있으면 그 값
+      · 스냅샷이 없거나 비었으면 **_DEFAULT_VOICE로 폴백** → 거기 pace_mode=True(2026-07-25~)
+    즉 `_voice_params({})[7]`은 False가 아니라 True다. 기본값을 알고 싶으면
+    _DEFAULT_VOICE를 보라 — 여기 적힌 `v.get(..., False)`만 보고 판단하면 틀린다.
+
     스냅샷은 /api/mix/voice가 프리셋에서 통째로 복사해 넣는다 — naturalize_profile·model_id가
     빠지면 튜닝 작업대에서 동결한 값이 렌더에 도달하지 못한다(2026-07-15 whole-branch 리뷰 S1/S8)."""
     v = voice or _DEFAULT_VOICE
