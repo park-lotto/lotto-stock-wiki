@@ -352,14 +352,21 @@ def fetch_reels(usernames, on_progress=None, _scrape_one=None):
     # 아카이브 크롤이 끝나기 전까지 그 3계정을 수집에 돌려쓰지 않는다. 아카이브 종료 후
     # /etc/shopping-shorts.env에 INSTAGRAM_COLLECT_ROTATION=1을 추가하면 켜진다
     # (ig_sessions 계정들 × 계정별 주거용 출구, 아카이브와 같은 계정↔IP 1:1).
+    #
+    # ★풀 분리(2026-08-09): 로테이션을 켜도 **레퍼런스 전용 풀만** 본다
+    # (ig_sessions/reference/). 아카이브 계정을 그대로 돌려쓰면 아침 아카이브가 태운
+    # 한도를 저녁 수집이 물려받아 첫 채널부터 0건이 된다 — 분리의 핵심이 여기다.
+    # reference 폴더가 없으면 기존처럼 상위 폴더 전체로 폴백한다(동작 불변).
     slots = []
     if _scrape_one is None and os.getenv("INSTAGRAM_COLLECT_ROTATION", "") == "1":
-        from shopping_shorts.channel_archive import session_slots, slot_proxy
-        slots = [(gi, sp) for gi, sp in enumerate(session_slots())]
+        from shopping_shorts.channel_archive import (POOL_REFERENCE, session_slots,
+                                                     slot_proxy)
+        slots = [(gi, sp) for gi, sp in enumerate(session_slots(POOL_REFERENCE))]
     for i, uname in enumerate(names, start=1):
         if slots:
             gi, sp = slots[(i - 1) % len(slots)]
-            nodes, page_url, error = scrape(uname, session_path=sp, proxy=slot_proxy(gi))
+            nodes, page_url, error = scrape(uname, session_path=sp,
+                                            proxy=slot_proxy(gi, POOL_REFERENCE))
         else:
             nodes, page_url, error = scrape(uname)
         verdict = classify_channel_result(nodes, page_url, error)
