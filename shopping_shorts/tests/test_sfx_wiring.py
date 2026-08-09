@@ -88,7 +88,11 @@ def test_plan_and_tts_calls_match_sfx(monkeypatch, tmp_path):
         def get_setting(self, key, default=""):
             return "1" if key == "scene_library_auto_enabled" else default
 
-    mix_pipeline._plan_and_tts(S(), "job1", {0: "s"}, 2.0, "t", "레시피",
+    # source_scripts는 **dict 리스트**다(2026-08-10 수정). 원래 {0: "s"}를 넘겼는데,
+    # 나중에 들어온 single_source.is_single_source가 이걸 순회하며 s.get(...)을 부르자
+    # int 키 0에서 AttributeError로 죽었다. 이 테스트의 관심사는 clip↔sfx 호출 순서뿐이라
+    # 형태만 실제와 맞춘다(빈 리스트면 단일소스 판정 자체를 안 타 흐름이 달라진다).
+    mix_pipeline._plan_and_tts(S(), "job1", [{"video_id": "v0", "full_text": "s"}], 2.0, "t", "레시피",
                                tmp_path, customer_id=0)
     assert calls == ["clip", "sfx"]   # clip 매칭 직후 sfx 매칭
 
@@ -119,6 +123,10 @@ def test_scene_library_off_by_default(monkeypatch, tmp_path):
         def get_setting(self, key, default=""):
             return default          # 설정 없음 = 기본 OFF
 
-    mix_pipeline._plan_and_tts(S(), "job1", {0: "s"}, 2.0, "t", "레시피",
+    # source_scripts는 **dict 리스트**다(2026-08-10 수정). 원래 {0: "s"}를 넘겼는데,
+    # 나중에 들어온 single_source.is_single_source가 이걸 순회하며 s.get(...)을 부르자
+    # int 키 0에서 AttributeError로 죽었다. 이 테스트의 관심사는 clip↔sfx 호출 순서뿐이라
+    # 형태만 실제와 맞춘다(빈 리스트면 단일소스 판정 자체를 안 타 흐름이 달라진다).
+    mix_pipeline._plan_and_tts(S(), "job1", [{"video_id": "v0", "full_text": "s"}], 2.0, "t", "레시피",
                                tmp_path, customer_id=0)
     assert calls == []

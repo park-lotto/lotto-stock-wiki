@@ -1,5 +1,5 @@
 import shopping_shorts.overseas_hot_jobs as job
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from shopping_shorts.store import Store
 
 
@@ -174,13 +174,20 @@ def test_collect_category_keeps_heavy_text_thumbnails(monkeypatch):
     monkeypatch.setattr(job.douyin_search, "search_full", lambda kw, max_results=40: [])
     monkeypatch.setattr(job.xiaohongshu_search, "search_full", lambda kw, max_results=40: [])
 
+    # ★고정 날짜 금지(2026-08-10): build_overseas_items의 기본 창은 336h(14일)라
+    #   "2026-07-25"를 박아두면 그 날로부터 14일이 지난 순간 kept가 통째로 비어
+    #   items가 []가 된다(실제로 그렇게 깨져 있었다). 이 테스트는 now를 고정하지 않으므로
+    #   발행일을 '지금 기준 최근'으로 만든다. (위 test_run_collects_ranks_and_saves는
+    #   now까지 함께 고정해 자기완결이라 손대지 않는다.)
+    recent = (datetime.now(timezone.utc) - timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
     def fake_tt(kw, max_results=40):
         return [
-            {"video_id": "clean1", "title": "kitchen gadget", "published_at": "2026-07-25T12:00:00Z",
+            {"video_id": "clean1", "title": "kitchen gadget", "published_at": recent,
              "views": 1000, "likes": 10, "comments": 1, "collects": 0, "shares": 0,
              "channel_title": "a", "thumbnail": "http://x/clean.jpg", "url": "https://tt/clean",
              "media_platform": "tiktok"},
-            {"video_id": "cluttered1", "title": "kitchen gadget 2", "published_at": "2026-07-25T12:00:00Z",
+            {"video_id": "cluttered1", "title": "kitchen gadget 2", "published_at": recent,
              "views": 1000, "likes": 10, "comments": 1, "collects": 0, "shares": 0,
              "channel_title": "b", "thumbnail": "http://x/cluttered.jpg", "url": "https://tt/cluttered",
              "media_platform": "tiktok"},

@@ -103,7 +103,13 @@ def test_cron_script_calls_tagging_and_recategorize(tmp_path, monkeypatch):
     db = tmp_path / "c.db"
     Store(db)
     monkeypatch.setattr(cron, "DB_PATH", db)
-    monkeypatch.setattr(cron.service, "collect", lambda platform=None: [_item("Z9", "채널", "기타")])
+    # ★50건 이상을 줘야 한다(2026-08-10). 크론에 **부분수집 가드**가 생겼다
+    #   (daily_instagram_collect.py:48 `_MIN_ITEMS = 50`, 2026-08-09 — 7건짜리 반쪽
+    #   수집이 정상 랭킹 수백 건을 덮은 실사고 대응). 1건만 주면 그 가드에 걸려
+    #   main()이 1을 반환하고 후속(태깅·재분류)까지 안 불려 이 테스트가 실패했다.
+    #   여기서 지킬 것은 '크론이 후속을 부르는가'이므로 가드를 통과할 만큼만 준다.
+    _items = [_item(f"Z{i}", "채널", "기타") for i in range(60)]
+    monkeypatch.setattr(cron.service, "collect", lambda platform=None: _items)
     monkeypatch.setattr(cron.Store(db).__class__, "heavy_job_active", lambda self: False)
 
     called = {}
