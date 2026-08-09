@@ -140,8 +140,20 @@ def select_and_order(segments, target_seconds=None, video_type=None):
 
     key = [s for s in segs if s.get("is_key")]
     rest = [s for s in segs if not s.get("is_key")]
-    keep = list(key)
-    used = sum(s["_dur"] for s in keep)
+    # ★핵심 컷도 **예산 안에서만** 담는다(2026-08-09 사장님 지시: "다른 영상을 해도 똑같은
+    #   결과가 나오는 원칙을 찾아야 한다").
+    #   종전엔 `keep = list(key)`로 is_key를 통째로 넣어 예산 검사를 건너뛰었다.
+    #   그래서 **컷이 전부 is_key인 소재는 원본 길이가 그대로 나갔다** — 실측 DUF9DWKkkki:
+    #   컷 10개가 모두 is_key라 예산 30초인데 65.4초가 담겼고 영상이 67초로 나갔다.
+    #   같은 목표(30초)를 줬는데 소재에 따라 26초/67초로 갈리면 원칙이 아니다.
+    #   ⚠️최소 보장은 남긴다 — 예산이 아무리 작아도 핵심 컷 3개까지는 담아 이야기가 선다
+    #     (0개가 되면 훅·전개·CTA 자리가 사라진다).
+    key.sort(key=lambda s: float(s.get("start") or 0))
+    keep, used = [], 0.0
+    for s in key:
+        if used + s["_dur"] <= budget or len(keep) < 3:
+            keep.append(s)
+            used += s["_dur"]
     # 여유분은 CTA(마무리) 먼저 확보하고, 그 다음 소재 뒤쪽 컷부터.
     rest.sort(key=lambda s: (0 if _is_cta(s) else 1, -float(s.get("start") or 0)))
     for s in rest:
@@ -183,7 +195,12 @@ def select_and_order(segments, target_seconds=None, video_type=None):
     #   budget에는 STORY_MIN_SECONDS 하한이 들어 있어 스토리가 설 분량이 확보된다.
     #   모자란 화면은 _fill_beat_screen_time이 **클립 재사용**으로 채운다(중복 허용 = 사장님 지시).
     #   ⚠️used를 바꾸지 않는 이유: 화면 배정·conform이 실제 화면 길이로 계산해야 한다.
-    script_secs = max(used, budget) if STORY_MIN_SECONDS > 0 else used
+    # ★상한은 budget이다(2026-08-09 2차 수정). 처음엔 max(used, budget)로 뒀는데,
+    #   그게 **긴 소재에서 천장을 뚫는 통로**가 됐다 — 실측(실제 즐겨찾기 DUF9DWKkkki,
+    #   원본 67초): budget 30초인데 used가 65.4초라 요구가 529자로 뛰고 결과가 **1,011자·
+    #   영상 124초**로 나왔다(숏폼인데 2분). 사장님이 30초를 골랐으면 30초가 상한이다.
+    #   짧은 쪽을 채우는 건 budget에 이미 STORY_MIN_SECONDS 하한이 들어 있어 해결된다.
+    script_secs = budget if STORY_MIN_SECONDS > 0 else used
     return span, budget, script_secs, [hook] + body + cta
 
 

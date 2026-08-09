@@ -1397,6 +1397,17 @@ def _assign_blocks(beats, blocks):
 _SYLLABLES_PER_SEC = 5.7
 
 
+def _speech_speed():
+    """실제 발화 배속(2026-08-09). _SYLLABLES_PER_SEC은 speed 1.0 기준 실측치라
+    라이브 보이스(speed 1.3~1.6)에선 그만큼 빠르다 — 실측 8.19자/초 ÷ 5.7 = 1.44.
+    env `SCRIPT_SPEECH_SPEED=1.0`이면 종전 동작(회귀 0)."""
+    try:
+        v = float(os.environ.get("SCRIPT_SPEECH_SPEED", "1.44") or 1.44)
+    except (TypeError, ValueError):
+        v = 1.44
+    return min(2.0, max(1.0, v))
+
+
 def _seg_benefits(seg):
     """세그먼트의 product_benefits → 문장 리스트(fail-open []). list/str 모두 허용.
     무자막 소스(text 빈칸)에서 대본이 쓸 수 있는 유일한 언어 재료라 여기서 흘리면 안 된다."""
@@ -2394,19 +2405,6 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
             max_alts = 14 if _ss_a.STORY_MIN_SECONDS > 0 else 6
         except Exception:
             max_alts = 6
-    # ★말 속도 보정(2026-08-09). target_seconds는 _SYLLABLES_PER_SEC=5.7 기준인데
-    #   그건 **speed 1.0** 실측치다(2026-07-17 성우 14명). 라이브 기본 보이스는 speed가
-    #   1.3~1.6이라 실제 발화는 그만큼 짧다 — 실측 20건에서 8.19자/초(공백 포함)였다.
-    #   보정 없이 채우면 화면이 말보다 40% 길어져 **말이 끝나고 영상만 돈다**.
-    #   ⚠️렌더는 _probe_duration으로 실제 TTS 길이를 다시 재므로 결과물이 깨지진 않는다 —
-    #     여기서 맞추는 건 '얼마나 채울지'다. env `SCRIPT_SPEECH_SPEED=1.0`이면 종전 동작.
-    #   값 유도: 실측 8.19자/초 ÷ 상수 5.7 = **1.44**(1.35로 잡았더니 화면이 여전히
-    #   말보다 15~20% 길었다 — 실측 어긋남 4/9).
-    try:
-        _spd = float(os.environ.get("SCRIPT_SPEECH_SPEED", "1.44") or 1.44)
-    except (TypeError, ValueError):
-        _spd = 1.44
-    _spd = min(2.0, max(1.0, _spd))
     if not beats:
         return beats
     used = set()
@@ -2415,7 +2413,7 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
             if s and s.get("seg_id"):
                 used.add(s["seg_id"])
     for b in beats:
-        need = float(b.get("target_seconds") or 0) / _spd     # 실제 발화 속도 반영
+        need = float(b.get("target_seconds") or 0)
         have = _beat_screen_secs(b)
         if have >= need or not b.get("primary"):
             continue
@@ -2466,17 +2464,20 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
                     _added = True
                 if not _added:
                     break                   # 붙일 게 아예 없다 — 무한루프 방지
-            # ★마지막에 붙인 컷이 need를 크게 넘기면 **끝을 잘라** 맞춘다(2026-08-09).
-            #   컷이 3.2초 단위라 통째로 더하면 화면이 말보다 15초씩 길어졌다(실측
-            #   화면 44.8초 vs 말 29.1초) — 말이 끝나고 영상만 도는 꼴이다.
-            if alts and have > need + 1.0:
-                _last = alts[-1]
-                _dur = max(0.0, float(_last["end"]) - float(_last["start"]))
-                _over = have - need
-                if 0 < _over < _dur:        # 그 컷 안에서만 자른다(앞 컷들은 그대로)
-                    _last["end"] = round(float(_last["end"]) - _over, 2)
-                    have = need
         b["alternates"] = alts
+        # ★마지막에 붙인 컷이 need를 크게 넘기면 **끝을 잘라** 맞춘다(2026-08-09).
+        #   컷이 3~5초 단위라 통째로 더하면 화면이 말보다 훨씬 길어진다(실측 화면 42초 vs
+        #   말 33.6초) — 말이 끝나고 영상만 도는 꼴이다.
+        #   ⚠️2차 수정: 처음엔 이 트리밍을 **재사용 폴백 안에만** 넣어서, 안 쓴 컷으로
+        #     채운 일반 경로(대부분의 경우)에는 적용되지 않았다 — 그래서 40초 초과가 남았다.
+        #     이제 두 경로가 끝난 **뒤** 한 곳에서 자른다.
+        if alts and have > need + 1.0:
+            _last = alts[-1]
+            _dur = max(0.0, float(_last["end"]) - float(_last["start"]))
+            _over = have - need
+            if 0 < _over < _dur:            # 그 컷 안에서만 자른다(앞 컷들은 그대로)
+                _last["end"] = round(float(_last["end"]) - _over, 2)
+                have = need
     return beats
 
 
@@ -3445,6 +3446,67 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
                 if not _nb.get("covers"):
                     _nb["covers"] = beats[_bi].get("covers")
             beats = _bk
+        # ★★길이 최종 확정 — **문장을 다시 쓰는 모든 단계가 끝난 뒤 여기 한 곳에서만** 잰다.
+        #   (2026-08-09 사장님 지시: "땜빵하는 수정은 안 되고 근본 원인을 수정해야 한다.")
+        #
+        #   근본 문제: 이 함수에서 대본 길이를 바꾸는 단계가 **11개**인데 길이를 검사하는 건
+        #   초안축약·최종축약 2곳뿐이었다. 그 뒤의 미달보강·서명보장 3종·훅검사가 문장을
+        #   다시 써도 아무도 재지 않아 계속 샜다 — 단계마다 가드를 덧대는 방식으론
+        #   새 단계가 생길 때마다 같은 사고가 반복된다(실제로 오늘만 3번 반복했다).
+        #   → 순서를 바꾸는 대신 **마지막 관문 하나**로 통일한다. 앞 단계들은 자유롭게
+        #     고쳐 쓰고, 최종 길이는 여기서 한 번에 맞춘다.
+        #   ⚠️새 후처리를 넣을 땐 반드시 이 블록보다 **앞**에 넣어라.
+        for _ in range(2):
+            _o, _osec, _ = single_source.over_budget(beats, used)
+            _u, _usec, _ = single_source.under_budget(beats, used)
+            if not _o and not _u:
+                break
+            _fixed = single_source.parse_beats(_c(
+                (single_source.shrink_prompt(beats, used) if _o
+                 else single_source.expand_prompt(beats, used, _mat)),
+                single_source.BEATS_SCHEMA))
+            if not _fixed:
+                break
+            for _bi, _nb in enumerate(_fixed):      # covers 승계(화면 배정 불변)
+                if not _nb.get("covers") and _bi < len(beats):
+                    _nb["covers"] = beats[_bi].get("covers")
+            _before = sum(len((b.get("narration") or "")) for b in beats)
+            _after = sum(len((b.get("narration") or "")) for b in _fixed)
+            if _after == _before:                   # 안 변했으면 그만(무한 루프 방지)
+                break
+            beats = _fixed
+        # ★모델이 끝내 안 줄이면 **코드가 자른다**(2026-08-09). LLM 교정은 실패할 수 있고
+        #   (실측: 20초 소재에서 예산 202자인데 339자가 그대로 통과 = 영상 44초), 그때
+        #   그냥 내보내면 목표 30초짜리가 44초로 나간다. 교정 루프는 '잘 줄이는' 수단이지
+        #   '보장'이 아니다 — 보장은 코드가 한다(CTA·빈비트와 같은 원칙).
+        #   ⚠️CTA(마지막 문장)는 자르지 않는다 — 보상 문구가 잘리면 유입이 끊긴다.
+        _o2, _s2, _ = single_source.over_budget(beats, used)
+        if _o2 and len(beats) > 1:
+            _limit = single_source.char_budget(used)
+            _cta = beats[-1]
+            _body = beats[:-1]
+            _body_cap = max(0, _limit - len((_cta.get("narration") or "")))
+            _acc = 0
+            _kept = []
+            for _b in _body:
+                _t = (_b.get("narration") or "").strip()
+                if _acc + len(_t) <= _body_cap:
+                    _acc += len(_t)
+                    _kept.append(_b)
+                    continue
+                _room = _body_cap - _acc
+                if _room >= 12:             # 남은 자리가 문장 꼴이 될 때만 잘라 넣는다
+                    _cut = _t[:_room].rstrip()
+                    _m = re.search(r"^.*[.!?]", _cut)   # 문장 경계에서 끊는다
+                    _b["narration"] = (_m.group(0) if _m else _cut)
+                    _b["caption_lines"] = None
+                    _acc += len(_b["narration"])
+                    _kept.append(_b)
+                break                        # 예산 소진 — 나머지 본문 비트는 버린다
+            if _kept:                        # 본문이 통째로 비면 자르지 않는다(원본 유지)
+                print("[1소스대본] 후보%d 총량 초과 코드절단(%.1f초→예산 %.1f초, %d→%d비트)"
+                      % (i + 1, _s2, used, len(beats), len(_kept) + 1), file=sys.stderr)
+                beats = _kept + [_cta]
         # covers → 화면 배정. 모델이 빠뜨린 컷은 직전 비트에 붙여 **컷 100% 커버**를 코드가
         # 보장한다(화면 총길이 == used == 예산 → 길이 하한이 프롬프트 아닌 코드로 지켜진다).
         covered_by = {}                      # 컷 번호(1-base) → 비트 인덱스
@@ -3489,7 +3551,7 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
                     plan_beats[-1]["caption_lines"] = None
                     plan_beats[-1]["target_seconds"] = round(
                         max(1.5, len(plan_beats[-1]["narration"].strip())
-                            / _SYLLABLES_PER_SEC), 1)
+                            / (_SYLLABLES_PER_SEC * _speech_speed())), 1)
                 else:
                     _carry = narration          # 첫 비트가 빈손 — 아래에서 앞에 붙인다
                 continue
@@ -3499,7 +3561,11 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
             plan_beats.append({
                 "beat_idx": len(plan_beats), "role": "",
                 "narration": narration, "caption_lines": None,
-                "target_seconds": round(max(1.5, len(narration) / _SYLLABLES_PER_SEC), 1),
+                # ★speed 보정(2026-08-09): 이 값이 _fill_beat_screen_time의 need가 된다.
+                #   보정 없이 두면 그 비트만 5.7자/초로 잡혀 화면이 44% 과충전된다
+                #   (실측: 같은 66자인데 한 비트는 8.0초, 보정 빠진 비트는 11.6초).
+                "target_seconds": round(
+                    max(1.5, len(narration) / (_SYLLABLES_PER_SEC * _speech_speed())), 1),
                 "primary": _clean(covered[0]),
                 "alternates": [_clean(s) for s in covered[1:]],
                 "effect": "cut", "fit": 5, "forced": False,
@@ -3548,7 +3614,16 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
                 if _new:
                     b["narration"] = _new
                     b["caption_lines"] = None
-            b["target_seconds"] = round(max(1.5, len(b["narration"].strip()) / _SYLLABLES_PER_SEC), 1)
+            # ★발화 속도 보정(2026-08-09): _SYLLABLES_PER_SEC(5.7)은 **speed 1.0** 실측치다
+            #   (2026-07-17 성우 14명). 라이브 기본 보이스는 speed 1.3~1.6이라 실제는 더 빠르다 —
+            #   라이브 렌더 20건 실측 **8.19자/초**(공백 포함) = 5.7 × 1.44.
+            #   보정 없이 두면 이 비트가 실제보다 길다고 잡혀 _fill_beat_screen_time이 화면을
+            #   40% 과충전한다(실측: 화면 41.9초 vs 말 29.1초 — 말 끝나고 영상만 돈다).
+            #   ⚠️_SYLLABLES_PER_SEC 자체는 안 건드린다(21곳 사용·produce.html과 짝·잠금 테스트).
+            #     렌더는 _probe_duration으로 실제 TTS를 다시 재므로 결과물은 안 깨진다.
+            #   되돌리려면 env `SCRIPT_SPEECH_SPEED=1.0`.
+            b["target_seconds"] = round(
+                max(1.5, len(b["narration"].strip()) / (_SYLLABLES_PER_SEC * _speech_speed())), 1)
         plan_beats = _fill_beat_screen_time(plan_beats, seg_map)
         # ★최종 안전망(2026-08-04): 위 CTA 보장 3중(프롬프트·LLM교정·컷생존)에도 뒤
         # 단계(_fix_beat_structure 등)가 마지막 비트를 갈아치우는 경로가 실측 1/6 남았다.
