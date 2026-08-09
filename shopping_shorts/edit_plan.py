@@ -3454,6 +3454,7 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
             cands = [c for c in ex.map(_safe_candidate, range(n)) if c]
     if not cands:
         return None
+    _apply_judge_rank(cands, judge, call)
     # ★추천에 스타일 이탈 감점(2026-08-05): 리라이트 실패로 옛 카피체로 남은 후보가
     #   ★추천으로 뽑히던 실사고(job 31b394c4). 표시 score는 안 건드리고 선택에만 반영.
     from shopping_shorts import style_profiles as _sp
@@ -3468,6 +3469,24 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
     best = max(range(len(cands)), key=_pick_key)
     cands[best]["recommended"] = True
     return {"candidates": cands, "detected_type": detected}
+
+
+def _apply_judge_rank(cands, judge, call):
+    """★judge 변별력(2026-08-09): judge()는 후보를 따로 보므로 셋 다 '무난'이면 동점이
+    구조적으로 반복됐다(실측 0.467×3, 0.333×3). 후보 전부를 **한 호출에 비교**시켜
+    (동점 금지) 그 상대점수로 score를 ±0.05 안에서 보정한다 — 동점이 갈라지고,
+    보정 폭이 작아 규칙점수·절대판정의 큰 서열은 뒤집지 않는다.
+    rank 실패/judge off/후보 1개면 아무것도 안 바꾼다(종전과 100% 동일)."""
+    if not judge or len(cands) < 2:
+        return
+    from shopping_shorts import candidate_judge as _cj
+    rr = _cj.rank([c["plan"].get("beats") for c in cands], call=call)
+    if not rr:
+        return
+    for i, c in enumerate(cands):
+        if i in rr:
+            c["judge_cmp"] = rr[i]
+            c["score"] = round(c["score"] + 0.1 * (rr[i]["score"] - 0.5), 3)
 
 
 def build_scene_first_plan(source_scripts, reference_text, target_seconds,
@@ -3813,6 +3832,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 c["plan"]["slot_variant"] = slot_kinds[vi] if vi < len(slot_kinds) else "?"
             cands = cands + got
     if cands:
+        _apply_judge_rank(cands, judge, _call)
         # ★말투 하한(2026-07-30). 최종 score는 0.75×매칭 + 0.25×품질이고 품질 안에서 말투가
         #   0.6이라, 말투가 최종 점수의 **15%**뿐이다 → tone 0.4짜리와 1.0짜리의 점수 차이가
         #   0.09에 불과해 매칭 점수 차이에 쉽게 뒤집힌다. 실측(95건 중 27건 약함)에서 평서과다

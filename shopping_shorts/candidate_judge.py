@@ -71,6 +71,80 @@ def _judge_prompt(beats):
         "각 0~5 정수와 reason(한 줄) JSON만 출력.")
 
 
+_RANK_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "ranking": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "candidate": {"type": "integer"},   # 1-base
+                    "score": {"type": "integer"},       # 0~100, 동점 금지
+                    "reason": {"type": "string"},
+                },
+                "required": ["candidate", "score"],
+            },
+        },
+    },
+    "required": ["ranking"],
+}
+
+
+def _rank_prompt(beats_list):
+    blocks = []
+    for i, beats in enumerate(beats_list):
+        blocks.append(f"[후보 {i + 1}]\n{_beats_block(beats)}")
+    return (
+        "너는 한국 쇼핑 숏폼 편집 심사위원이다. 아래 후보 대본들을 **서로 비교해서** 채점해라.\n"
+        "기준은 셋: ①대본 자체(첫 대사가 강한 훅인가, 짤드라마인가, 말투가 자연스러운가) "
+        "②대사↔화면 싱크 ③처음~끝이 하나의 이야기로 말이 되나.\n"
+        "★반드시 우열을 갈라라 — **동점 금지**. 비슷해 보여도 훅의 세기, 화면 지목의 구체성, "
+        "마무리 흐름에서 차이를 찾아 점수를 벌려라(0~100 정수, 최소 5점 이상 차이).\n\n"
+        + "\n\n".join(blocks) + "\n\n"
+        "각 후보의 candidate(1부터)·score(0~100, 동점 금지)·reason(우열 이유 한 줄)을 "
+        "ranking 배열 JSON만 출력.")
+
+
+def rank(beats_list, call=None):
+    """후보 여러 개를 **한 호출에서 비교** 채점 → {idx(0-base): {"score": 0~1, "rank": 1~n, "reason"}}.
+    judge()는 후보를 따로 보므로 셋 다 '무난 3/3/3'이 나와 동점이 반복됐다(실측 0.467×3).
+    비교 대상을 같이 보여주고 동점을 금지해야 우열이 갈린다. 실패/후보<2면 None
+    (호출부가 아무것도 안 바꾸는 폴백 — 종전과 동일)."""
+    beats_list = [b for b in (beats_list or [])]
+    if len(beats_list) < 2 or any(not b for b in beats_list):
+        return None
+    if call is None:
+        from shopping_shorts import pattern_bank
+        call = pattern_bank._default_call
+    try:
+        res = call(_rank_prompt(beats_list), _RANK_SCHEMA)
+    except Exception as e:
+        print(f"candidate_judge.rank: {e!r}", file=sys.stderr)
+        return None
+    rows = (res or {}).get("ranking") if isinstance(res, dict) else None
+    if not isinstance(rows, list):
+        return None
+    out = {}
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        try:
+            idx = int(r.get("candidate")) - 1
+            sc = max(0, min(100, int(r.get("score"))))
+        except (TypeError, ValueError):
+            continue
+        if 0 <= idx < len(beats_list) and idx not in out:
+            out[idx] = {"score": round(sc / 100.0, 3),
+                        "reason": (r.get("reason") or "").strip()}
+    if len(out) != len(beats_list):
+        return None      # 일부 후보가 빠지면 빠진 쪽만 보정을 못 받아 순위가 왜곡된다
+    order = sorted(out, key=lambda i: -out[i]["score"])
+    for pos, i in enumerate(order):
+        out[i]["rank"] = pos + 1
+    return out
+
+
 def judge(beats, call=None):
     """후보(grounded beats)를 3축 채점 → {script_quality, scene_sync, storyline, reason, total}.
     total = 세 점수 평균/5 (0~1). call None이면 실제 Gemini. 실패/빈 beats면 None(규칙점수 폴백)."""
