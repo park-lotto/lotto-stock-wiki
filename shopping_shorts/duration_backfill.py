@@ -115,7 +115,7 @@ def _targets(store):
             # 조회수 상위와 다를 수 있어 댓글 상위도 같이 대상에 넣는다.
             rows += c.execute(
                 "SELECT shortcode FROM channel_archive "
-                "WHERE shortcode IS NOT NULL AND shortcode !=  "
+                "WHERE shortcode IS NOT NULL AND shortcode != '' "
                 "ORDER BY comments DESC LIMIT ?", (ARCHIVE_SCAN_LIMIT,)).fetchall()
         for (sc,) in rows:
             sc = (sc or "").strip()
@@ -123,8 +123,13 @@ def _targets(store):
                 continue
             seen.add(sc)
             out.append(("instagram", sc))      # 아카이브는 전부 인스타 릴스다
-    except Exception:                          # noqa: BLE001 — 아카이브가 비어도 랭킹 백필은 계속
-        pass
+    except Exception as e:                     # noqa: BLE001 — 아카이브가 비어도 랭킹 백필은 계속
+        # ★조용히 넘기지 마라(2026-08-10 실사고). 여기 있던 `pass`가 SQL 문법오류
+        #   (`shortcode !=  ` — 빈문자열 리터럴 '' 누락, 2026-08-09 21ca1a0b4에서 유입)를
+        #   통째로 삼켰다. 그 결과 **아카이브 대상이 항상 0건**이 돼 히트작 ⏱ 길이가
+        #   영원히 안 채워졌는데, 로그 한 줄도 안 남아 아무도 몰랐다.
+        #   랭킹 백필은 계속 돌려야 하니 예외는 여전히 삼키되, 흔적은 반드시 남긴다.
+        print(f"[durfill] 아카이브 대상 수집 실패(랭킹 백필은 계속): {type(e).__name__}: {e}")
     return out
 
 

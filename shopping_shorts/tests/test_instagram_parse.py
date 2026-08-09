@@ -23,10 +23,13 @@ def test_parse_reel_node_fills_all_ten_keys():
     d = parse_reel_node(_NODE, "homeinon")
     # ownerFullName 추가(2026-08-06): 아카이브 카드를 @아이디 대신 한글 이름으로 띄우려고
     # 이미 받은 응답의 user.full_name을 주워 담는다(추가 요청 0건).
+    # duration 추가(2026-08-09 '⏱길이 전면화' 21ca1a0b4): clips API 노드의
+    # video_duration을 그대로 주워 담는다(추가 요청 0건). 이 테스트는 키 집합을
+    # **정확히** 대조해서 조용한 누락을 잡는 게 목적이므로, 키가 늘면 여기도 같이 늘린다.
     assert set(d) == {
         "shortcode", "url", "timestamp", "caption", "commentsCount",
         "likesCount", "videoViewCount", "displayUrl", "videoUrl", "ownerUsername",
-        "ownerFullName",
+        "ownerFullName", "duration",
     }
     assert d["shortcode"] == "DbMmu39Sph9"
     assert d["url"] == "https://www.instagram.com/reel/DbMmu39Sph9/"
@@ -37,6 +40,14 @@ def test_parse_reel_node_fills_all_ten_keys():
     assert d["displayUrl"] == "https://cdn/thumb.jpg"
     assert d["videoUrl"] == "https://cdn/video.mp4"
     assert d["ownerUsername"] == "homeinon"
+    # 노드에 video_duration이 없으면 None(있는 척하지 않는다 — 0으로 채우면 '0초 영상'이 된다).
+    assert d["duration"] is None
+
+
+def test_parse_reel_node_reads_video_duration():
+    """⏱길이(2026-08-09): 노드에 video_duration이 실려 오면 float로 담는다."""
+    node = dict(_NODE, video_duration=12.34)
+    assert parse_reel_node(node, "homeinon")["duration"] == 12.34
 
 
 def test_parse_reel_node_timestamp_is_iso_utc():
