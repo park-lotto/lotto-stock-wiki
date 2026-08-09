@@ -215,8 +215,14 @@ def crawl_channel(username, max_scrolls=_MAX_SCROLLS, session_path=None, proxy=N
         return [], url, str(e)[:200]
 
 
-def pick_targets(store):
-    """(엑셀 ∪ 발굴등록 − 차단) − done − gone, 팔로워 내림차순 — 대형 채널부터."""
+def pick_targets(store, refresh_stale=True):
+    """(엑셀 ∪ 발굴등록 − 차단) − done − gone, 팔로워 내림차순 — 대형 채널부터.
+
+    ★2026-08-09: done이어도 **4일 넘게 안 본 채널은 뒤에 다시 붙인다**. 썸네일
+    CDN 서명이 ~4일이면 만료돼(403) 역대 히트작 카드가 검게 죽기 때문이다
+    (실측: 첫 페이지 상위 12건 중 4건 사망, 전부 8-03 크롤분).
+    새 채널을 **먼저** 다 돌고 그 다음 갱신이라, 신규 수집이 밀리지 않는다.
+    """
     removed = {(u or "").strip().lstrip("@").lower() for u in store.removed_usernames()}
     done = store.archive_done_usernames() | store.archive_gone_usernames()
     best = {}
@@ -227,7 +233,14 @@ def pick_targets(store):
         f = c.get("followers") or 0
         if u not in best or f > best[u]:
             best[u] = f
-    return [u for u, _ in sorted(best.items(), key=lambda x: -x[1])]
+    fresh = [u for u, _ in sorted(best.items(), key=lambda x: -x[1])]
+    if not refresh_stale:
+        return fresh
+    # 썸네일이 만료됐을 done 채널 — 새 채널 뒤에 붙인다(오래 방치된 것부터).
+    gone = store.archive_gone_usernames()
+    stale = [u for u in store.archive_stale_usernames()
+             if u not in gone and u.lower() not in removed]
+    return fresh + stale
 
 
 def run(limit=None, max_scrolls=_MAX_SCROLLS, sleep=time.sleep, log=print):

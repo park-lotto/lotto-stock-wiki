@@ -56,11 +56,18 @@ def _mark_key_exhausted(idx):
             _save_state(state)
 
 
+# 풀이 이 비율 이하로 줄면 '거의 전멸'로 보고 재검증한다(2026-08-09).
+# 전멸(0개)까지 기다리면 남은 1~2개에 워커 전부가 몰려 429를 맞고, 그것마저
+# 잠긴 뒤에야 재검증이 돌았다 — 그 사이 태깅은 계속 0건이다.
+_REVIVE_BELOW_RATIO = float(os.environ.get("SHORTS_KEY_REVIVE_RATIO", "0.2"))
+
+
 def _live_key_indices():
     exhausted = set(_load_state()["exhausted"])
     live = [i for i in range(len(SHORTS_GEMINI_KEYS)) if i not in exhausted]
-    if not live and SHORTS_GEMINI_KEYS:
-        # ★풀이 통째로 잠겼으면 표시를 믿지 말고 실제로 찔러본다(2026-08-07 실사고).
+    scarce = len(live) <= max(1, int(len(SHORTS_GEMINI_KEYS) * _REVIVE_BELOW_RATIO))
+    if scarce and exhausted and SHORTS_GEMINI_KEYS:
+        # ★풀이 거의 다 잠겼으면 표시를 믿지 말고 실제로 찔러본다(2026-08-07 실사고).
         #   증상: 제작소가 "담긴 영상의 대본을 아직 분석하지 못했어요"만 띄운다.
         #   실측(서버): 소진표시 20개인데 그 키들을 직접 호출하니 **전부 HTTP 200**이었다.
         #   왜 오탐이 쌓이나 — 이 상태파일은 13개 모듈이 공유하는데(ai_categorize·
@@ -71,7 +78,8 @@ def _live_key_indices():
         #   지운다. 진짜 소진이면 recheck가 실패해 그대로 빈 리스트가 돌아간다.
         revived = _recheck_exhausted_keys()
         if revived:
-            live = revived
+            # 되살린 것만 쓰면 원래 살아있던 키를 버리게 된다 — 합쳐서 정렬한다.
+            live = sorted(set(live) | set(revived))
     return live
 
 
@@ -191,7 +199,12 @@ _rr_cursor = {"i": 0}
 # — 태거 실측 성공률 20%, 9건/분. 429를 맞고 재시도하는 대신 **애초에 안 맞게**
 # 키마다 최소 간격을 두고 내준다. 하루 한도(RPD 500)는 이걸로 못 뚫는다 —
 # 그건 키 개수를 늘려야만 는다.
-_RPM_PER_KEY = int(os.environ.get("SHORTS_RPM_PER_KEY", "15"))
+# ★15 → 5 (2026-08-09). 15는 추정이었고 실측 한도는 **분당 5건**이다:
+#   429 원문 `limit: 5, model: gemini-3.5-flash / Please retry in 45.5s`
+#   (서버에서 한 키를 연타해 8번째 호출에 재현). 15로 두면 페이서가 실제보다
+#   3배 빠르게 키를 내줘 **429를 스스로 자초**한다 — 태거가 `0/40건`을 130채널
+#   연속으로 찍은 진짜 원인이었다(키는 멀쩡했고 실호출은 200이었다).
+_RPM_PER_KEY = int(os.environ.get("SHORTS_RPM_PER_KEY", "5"))
 _MIN_GAP_S = 60.0 / max(1, _RPM_PER_KEY)
 _key_last_used = {}
 

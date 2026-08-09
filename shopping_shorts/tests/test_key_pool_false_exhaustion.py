@@ -55,16 +55,23 @@ def test_genuinely_dead_keys_stay_locked(state_file, monkeypatch):
     assert json.loads(state_file.read_text(encoding="utf-8"))["exhausted"] == [0, 1, 2]
 
 
-def test_recheck_only_when_pool_fully_locked(state_file, monkeypatch):
-    """키가 하나라도 살아 있으면 재검증을 아예 안 한다(불필요한 호출로 한도를 먹지 않게)."""
-    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", [f"k{i}" for i in range(3)])
-    _write_state(state_file, [0, 1])             # 2번은 살아있음
+def test_recheck_skipped_while_pool_has_headroom(state_file, monkeypatch):
+    """풀에 여유가 있으면 재검증을 안 한다(불필요한 호출로 한도를 먹지 않게).
+
+    ⚠️ 2026-08-09 수정: 종전엔 '하나라도 살아있으면 안 한다'(전멸일 때만)였는데,
+    그러면 20개 중 19개가 오탐이어도 남은 1개로 워커가 몰려 429를 맞고 그것마저
+    잠긴 뒤에야 재검증이 돌았다 — 그 사이 태깅은 계속 0건이었다. 지금은 살아있는
+    키가 풀의 20% 이하로 줄면 '거의 전멸'로 보고 재검증한다. 그래서 여유 있음을
+    검증하려면 키를 넉넉히 두고 소수만 잠근다.
+    """
+    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", [f"k{i}" for i in range(10)])
+    _write_state(state_file, [0, 1])             # 8개 살아있음 = 여유 충분
     calls = []
     monkeypatch.setattr(comment_gen, "_probe_key_alive",
                         lambda key, timeout=15: calls.append(key) or True)
 
-    assert comment_gen._live_key_indices() == [2]
-    assert calls == [], "살아있는 키가 있으면 재검증 호출은 0이어야 한다"
+    assert comment_gen._live_key_indices() == [2, 3, 4, 5, 6, 7, 8, 9]
+    assert calls == [], "여유가 있으면 재검증 호출은 0이어야 한다"
 
 
 def test_recheck_is_rate_limited(state_file, monkeypatch):

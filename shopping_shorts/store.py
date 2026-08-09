@@ -1240,6 +1240,24 @@ class Store:
             rows = c.execute("SELECT username FROM archive_state WHERE status='done'").fetchall()
         return {r[0] for r in rows}
 
+    def archive_stale_usernames(self, older_than_days=4):
+        """done이지만 썸네일이 만료됐을 채널 — 다시 크롤해 URL을 갱신해야 한다.
+
+        왜 필요한가(2026-08-09 실측): 인스타 CDN 썸네일 URL의 `oe` 서명은 **약 4일**
+        이면 만료돼 403이 된다. 그런데 pick_targets가 done을 영구 제외해서, 8-03에
+        크롤한 채널의 썸네일은 8-07쯤 죽은 뒤 **아무도 되살리지 않았다** — 역대 히트작
+        첫 페이지 상위 12건 중 4건이 검게 죽어 있었다(상위 200건 중 55건).
+
+        재크롤하면 같은 shortcode에 새 URL이 덮어써진다(실측: vibe_item 재크롤 →
+        만료 2026-08-14로 갱신). shortcode가 PK라 이미 붙은 vision_tags는 그대로다.
+        """
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT username FROM archive_state WHERE status='done' "
+                "  AND updated_at < datetime('now', ?)",
+                (f"-{int(older_than_days)} days",)).fetchall()
+        return {r[0] for r in rows}
+
     def archive_gone_usernames(self):
         """삭제·개명으로 페이지가 없는 채널 — 크롤 대상에서 영구 제외."""
         with self._conn() as c:
