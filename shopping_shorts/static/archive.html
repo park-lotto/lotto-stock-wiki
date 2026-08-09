@@ -79,6 +79,8 @@ button.on{border-color:var(--accent);color:var(--accent);font-weight:700}
   <span class="stat">아카이브는 백그라운드로 계속 쌓입니다(팔로워 큰 채널부터) — 새로고침하면 늘어나요.</span>
 </div>
 <div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
+<!-- 더 보기(2026-08-09): 60개 단위 append. 마지막 페이지(60개 미만)면 숨긴다. -->
+<div id="moreWrap" style="display:none;text-align:center;margin:14px 0"><button onclick="loadMore()" style="padding:8px 22px">⬇ 더 보기 — 다음 60개</button></div>
 </div>
 <div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
   <div class="modal-box">
@@ -235,7 +237,9 @@ window.addEventListener('popstate', ()=>{
   const sel=document.getElementById('chSel'); if(sel) sel.value='';
   load();
 });
-async function load(){
+let OFFSET=0;   // 페이지네이션(2026-08-09) — 60개 단위, 필터·정렬 바꾸면 0으로
+async function load(append){
+  if(!append) OFFSET=0;
   const u=document.getElementById('chSel').value, q=document.getElementById('q').value.trim();
   const catParam=CAT==='전체'?'':CAT;   // 영상 단위 카테고리는 서버가 비전태그로 판정
   // limit 200 → 60 (2026-08-04). 200장을 한 번에 요청하면 /api/thumb(sync 라우트)가
@@ -243,11 +247,18 @@ async function load(){
   // timeout'). 60장이면 호스트당 동시연결(6)로 10턴이라 서버가 버틴다.
   // ★단, "썸네일이 안 뜬다"의 직접 원인은 이게 아니라 <img loading="lazy">였다 —
   //   아래 렌더부 주석 참고. 이 한도는 서버 보호용으로 남긴다.
-  const d=await (await fetch(`/api/archive/items?sort=${SORT}&username=${encodeURIComponent(u)}&q=${encodeURIComponent(q)}&cat=${encodeURIComponent(catParam)}&limit=60`)).json();
+  const d=await (await fetch(`/api/archive/items?sort=${SORT}&username=${encodeURIComponent(u)}&q=${encodeURIComponent(q)}&cat=${encodeURIComponent(catParam)}&limit=60&offset=${OFFSET}`)).json();
   const box=document.getElementById('cards');
   let items=(d.ok&&d.items)||[];
-  if(!items.length){box.innerHTML='<div class="empty">아직 없음 — 크롤러가 채우는 중입니다. 잠시 뒤 새로고침해 보세요.</div>';return}
-  box.innerHTML=items.map(i=>{
+  const moreWrap=document.getElementById('moreWrap');
+  if(!items.length){
+    if(moreWrap)moreWrap.style.display='none';
+    if(append)return;   // 다음 페이지가 비었을 뿐 — 그려둔 카드는 유지
+    box.innerHTML='<div class="empty">아직 없음 — 크롤러가 채우는 중입니다. 잠시 뒤 새로고침해 보세요.</div>';return}
+  // 차단채널 필터로 60개 미만이 와도 다음 페이지가 있을 수 있다(실측 54개) —
+  // 0개일 때만 숨긴다. 끝에서 한 번 더 눌리면 0개가 와서 그때 숨는다.
+  if(moreWrap)moreWrap.style.display=items.length?'':'none';
+  const html=items.map(i=>{
     const saved=SAVED.has(i.shortcode);
     // ★loading="lazy"를 쓰지 않는다 (2026-08-04 실측으로 잡은 진짜 원인).
     // 사장님 제보 "썸네일 안뜨고 검정화면"의 정체가 이것이었다. 증상은 서버 문제처럼
@@ -292,7 +303,9 @@ async function load(){
         </div>
       </div></div>`;
   }).join('');
+  if(append) box.insertAdjacentHTML('beforeend', html); else box.innerHTML=html;
 }
+function loadMore(){OFFSET+=60; load(true);}
 // ── 검색 2종(2026-08-04) ────────────────────────────────────────────
 // 🔍 파워검색 = 외부(구글렌즈 → 5플랫폼). 유료 SerpApi라 월 한도가 있다.
 // 🏠 내부검색 = 우리 관리채널 아카이브 안. 비전태그 겹침이라 무료·즉시.

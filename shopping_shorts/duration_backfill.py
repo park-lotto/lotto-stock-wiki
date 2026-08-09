@@ -111,6 +111,12 @@ def _targets(store):
                 "SELECT shortcode FROM channel_archive "
                 "WHERE shortcode IS NOT NULL AND shortcode != '' "
                 "ORDER BY views DESC LIMIT ?", (ARCHIVE_SCAN_LIMIT,)).fetchall()
+            # 히트작 기본 정렬은 **댓글순**(2026-08-09) — 사장님이 보는 첫 화면들이
+            # 조회수 상위와 다를 수 있어 댓글 상위도 같이 대상에 넣는다.
+            rows += c.execute(
+                "SELECT shortcode FROM channel_archive "
+                "WHERE shortcode IS NOT NULL AND shortcode !=  "
+                "ORDER BY comments DESC LIMIT ?", (ARCHIVE_SCAN_LIMIT,)).fetchall()
         for (sc,) in rows:
             sc = (sc or "").strip()
             if not sc or sc in seen:

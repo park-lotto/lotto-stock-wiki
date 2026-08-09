@@ -43,6 +43,12 @@ def main():
     # 저장하면 화면 랭킹 캐시(last_run)가 빈 목록으로 덮여 "아무것도 안 뜨는" 사고가 난다
     # (실사고 2026-08-06 09:00 회차: 만료 세션으로 0건 수집 → 캐시 [] 덮임 → 랭킹 공백).
     # 직전 정상 캐시를 남겨두는 쪽이 항상 낫다 — 다음 회차가 성공하면 자연 갱신된다.
+    # 부분수집 가드(2026-08-09): 7건짜리 반쪽 수집이 정상 랭킹(수백 건)을 덮은 실사고.
+    # 계정 차단·챌린지로 일부만 긁혔을 때는 직전 캐시를 지키는 게 낫다.
+    _MIN_ITEMS = 50
+    if items and len(items) < _MIN_ITEMS:
+        print(f"[daily_instagram_collect] {len(items)}건뿐(기준 {_MIN_ITEMS} 미만) — 부분수집으로 보고 캐시 미갱신(직전 랭킹 유지)", file=sys.stderr)
+        return 1
     if not items:
         print("[daily_instagram_collect] 0건 수집 — 캐시 미갱신(직전 랭킹 유지), "
               "세션 만료 여부 확인 필요", file=sys.stderr)

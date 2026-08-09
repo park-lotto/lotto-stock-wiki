@@ -38,7 +38,7 @@ _REEL_API_HINTS = ("/api/v1/clips/user/", "/api/v1/feed/reels_media", "/graphql"
 _IG_APP_ID = "936619743392459"
 
 
-def _scrape_one_playwright(username):
+def _scrape_one_playwright(username, session_path=None, proxy=None):
     """채널 1개 → (nodes, page_url, error). 브라우저를 실제로 띄우는 유일한 함수.
 
     반환 계약을 (nodes, page_url, error) 세 값으로 고정한 이유: 분류(classify_channel_result)가
@@ -53,6 +53,19 @@ def _scrape_one_playwright(username):
     # 걸리는 걸 막는다(2026-07-29 실사고, scripts/instagram_setup_session.py와 동일 조치).
     launch_kw = {"headless": True, "args": ["--disable-blink-features=AutomationControlled"]}
     ctx_kw = {}
+    # 계정 로테이션(2026-08-09): fetch_reels가 세션·프록시를 지정하면 그걸 쓴다.
+    # 단일 계정이 scraping_warning에 걸렸던 사고 후, 아카이브 방식(계정↔IP 1:1)을 이식.
+    if session_path and os.path.exists(session_path):
+        ctx_kw["storage_state"] = session_path
+        if proxy:
+            rest = proxy.split("://", 1)[-1]
+            if "@" in rest:
+                cred, hostport = rest.rsplit("@", 1)
+                puser, _, ppw = cred.partition(":")
+                ctx_kw["proxy"] = {"server": "http://" + hostport,
+                                   "username": puser, "password": ppw}
+            else:
+                ctx_kw["proxy"] = {"server": proxy}
     # 세션(storage_state)이 있으면 그걸로 로그인 상태 직결한다 — 샤오홍슈에서 검증된 대로
     # 프록시 없이도 되므로 프록시보다 우선한다. 없으면 기존 경로(프록시/직결)로 폴백.
     if config.INSTAGRAM_SESSION_PATH and os.path.exists(config.INSTAGRAM_SESSION_PATH):
@@ -78,6 +91,16 @@ def _scrape_one_playwright(username):
             page.goto(url, timeout=config.INSTAGRAM_PW_TIMEOUT_MS,
                       wait_until="domcontentloaded")
             page.wait_for_timeout(2500)          # 릴스 목록 XHR이 도착할 여유
+            # 간헐 챌린지 재시도(2026-08-09): 같은 계정·프록시로 단독 방문은 정상인데
+            # 수집 경로에서만 update_risky_contactpoint가 간헐적으로 떴다(실측).
+            # 챌린지면 잠깐 쉬고 최대 2회 재진입 — 대개 두 번째엔 정상 페이지가 온다.
+            for _retry in range(2):
+                if not any(k in page.url for k in ("challenge", "scraping_warning", "risky", "suspended")):
+                    break
+                page.wait_for_timeout(8000)
+                page.goto(url, timeout=config.INSTAGRAM_PW_TIMEOUT_MS,
+                          wait_until="domcontentloaded")
+                page.wait_for_timeout(4000)
             final_url = page.url
 
             # 목록 응답(clips_connection)엔 taken_at·video_versions·caption이 없다
@@ -325,8 +348,19 @@ def fetch_reels(usernames, on_progress=None, _scrape_one=None):
     total = len(names)
     tally = {"ok": 0, "login_wall": 0, "not_found": 0, "error": 0}
     items = []
+    # 계정 로테이션(2026-08-09): 아카이브 크롤과 동일하게 ig_sessions 계정들을
+    # 전용 출구(계정↔IP 1:1)와 묶어 번갈아 쓴다. 단일 계정은 하루 3회×수백채널을
+    # 혼자 받다 scraping_warning에 걸렸다(2026-08-07~09 실사고).
+    slots = []
+    if _scrape_one is None:
+        from shopping_shorts.channel_archive import session_slots, slot_proxy
+        slots = [(gi, sp) for gi, sp in enumerate(session_slots())]
     for i, uname in enumerate(names, start=1):
-        nodes, page_url, error = scrape(uname)
+        if slots:
+            gi, sp = slots[(i - 1) % len(slots)]
+            nodes, page_url, error = scrape(uname, session_path=sp, proxy=slot_proxy(gi))
+        else:
+            nodes, page_url, error = scrape(uname)
         verdict = classify_channel_result(nodes, page_url, error)
         tally[verdict] = tally.get(verdict, 0) + 1
         if verdict == "ok":

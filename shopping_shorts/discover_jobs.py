@@ -189,6 +189,11 @@ def _run(days, max_total, accumulate, auto_register=False):
             items = discovery.merge_feeds(prev, items,
                                           cap=max_total * FEED_TTL_DAYS,
                                           ttl_days=FEED_TTL_DAYS)
+        # 빈 결과 가드(2026-08-09): 세션 경고(scraping_warning)로 0건이 나온 날
+        # 빈 피드가 직전 발굴 목록을 통째로 지우는 사고가 있었다(8/9 07시 회차).
+        # 0건이면 직전 피드를 그대로 두고 실패로 끝낸다.
+        if not items:
+            raise RuntimeError("발굴 0건 — 세션/차단 의심, 직전 피드 유지")
         store.save_discovery_feed(items)
         store.save_run(
             time.strftime("%Y-%m-%d %H:%M"),

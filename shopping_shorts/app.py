@@ -1081,7 +1081,25 @@ def api_mix_basket(request: Request):
     """바구니 항목 목록(담은 순서) + shortcode 집합."""
     store = Store(DB_PATH)
     cid = _cid(request)
-    return {"ok": True, "items": store.mix_basket_list(customer_id=cid),
+    items = store.mix_basket_list(customer_id=cid)
+    # 담을 때 저장한 인스타 CDN 썬네일은 며칠이면 만료(403)되어 검은칸이 된다
+    # (2026-08-09 실측). 아카이브 크롤이 매일 새 URL을 받아오므로 있으면 그걸로 바꿔서 준다.
+    try:
+        codes = [i.get("shortcode") for i in items if i.get("shortcode")]
+        if codes:
+            with store._conn() as c:
+                q = ",".join("?" * len(codes))
+                fresh = dict(c.execute(
+                    f"SELECT shortcode, thumbnail FROM channel_archive "
+                    f"WHERE shortcode IN ({q}) AND thumbnail!=''", codes).fetchall())
+            for i in items:
+                t = fresh.get(i.get("shortcode"))
+                if t:
+                    i["thumbnail"] = t
+    except Exception as e:  # noqa: BLE001 — 썬네일 보강 실패가 목록을 막지 않는다
+        print(f"basket 썬네일 보강 실패(무해): {e}", file=sys.stderr)
+    _attach_durations(items, store)   # ⏱ 길이(2026-08-09 — 랭킹·히트작과 동일)
+    return {"ok": True, "items": items,
             "shortcodes": sorted(store.mix_basket_shortcodes(customer_id=cid))}
 
 
@@ -1261,6 +1279,7 @@ def api_discover_feed():
         items = [i for i in items
                  if (i.get("username") or "").strip().lstrip("@").lower() not in hide]
     _attach_posted_at(items)   # 발굴 피드도 인스타 릴스 — 'X시간 전' 실시간 계산용
+    _attach_durations(items, store)   # ⏱ 길이(2026-08-09 — 랭킹·히트작과 동일)
     return {"ok": True, "items": items, "updated_at": updated_at}
 
 
@@ -4119,6 +4138,23 @@ def api_thumb64(url: str):
         return JSONResponse(status_code=502, content={"ok": False, "error": "fetch 실패"})
 
 
+# 썸네일 디스크 캐시(2026-08-09). CDN 서명토큰(oe)이 ~4일에 만료돼 오래된
+# 아카이브 썸네일이 전부 403 → 역대 히트작 카드가 까맣게 죽었다(실측).
+# 키 = URL path의 파일명 — 토큰이 갱신돼도 파일명은 같아서 재수집 없이도 맞는다.
+_THUMB_CACHE_DIR = Path(__file__).parent / "data" / "thumb_cache"
+
+
+def _thumb_cache_path(url: str):
+    try:
+        name = (urllib.parse.urlparse(url).path or "").rsplit("/", 1)[-1]
+    except ValueError:
+        return None
+    if not name or len(name) > 200:
+        return None
+    import hashlib
+    return _THUMB_CACHE_DIR / (hashlib.sha1(name.encode()).hexdigest() + ".jpg")
+
+
 @app.get("/api/thumb")
 def api_thumb(url: str):
     """인스타 CDN 썸네일 프록시 (핫링크 차단 우회). url=원본 이미지 주소."""
@@ -4126,6 +4162,10 @@ def api_thumb(url: str):
     from fastapi.responses import Response
     if _reject_cdn_proxy(url, _ALLOWED_THUMB_HOSTS):
         return Response(status_code=400, content=b"invalid host")
+    cache = _thumb_cache_path(url)
+    if cache is not None and cache.exists():
+        return Response(content=cache.read_bytes(), media_type="image/jpeg",
+                        headers={"Cache-Control": "public, max-age=86400"})
     # 호스트에 맞는 Referer로 핫링크 차단을 우회한다. xhscdn은 인스타 referer로도 200이
     # 오지만(실측), 만료토큰형 URL 대비 정확한 출처를 보낸다. tiktok도 자기 도메인으로.
     ref = "https://www.instagram.com/"
@@ -4147,6 +4187,14 @@ def api_thumb(url: str):
         })
         r.raise_for_status()
         ctype = r.headers.get("Content-Type", "image/jpeg")
+        if cache is not None and ctype.startswith("image/"):
+            try:
+                _THUMB_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+                tmp = cache.with_suffix(".tmp")
+                tmp.write_bytes(r.content)
+                tmp.replace(cache)
+            except OSError:
+                pass    # 캐시 실패는 서빙에 영향 없음
         return Response(content=r.content, media_type=ctype,
                         headers={"Cache-Control": "public, max-age=86400"})
     except Exception:
@@ -8702,7 +8750,7 @@ def api_archive_channels(request: Request):
 
 @app.get("/api/archive/items")
 def api_archive_items(request: Request, username: str = "", sort: str = "views",
-                      q: str = "", cat: str = "", limit: int = 120):
+                      q: str = "", cat: str = "", limit: int = 120, offset: int = 0):
     """아카이브 릴스 조회. username 지정 시 그 채널만, q는 채널명 부분일치.
     sort: views | recent | comments. cat: 카테고리 필터 — **영상 단위**(2026-08-03).
 
@@ -8727,10 +8775,12 @@ def api_archive_items(request: Request, username: str = "", sort: str = "views",
            " a.comments, a.posted_at, v.subject, v.keywords_json "
            "FROM channel_archive a LEFT JOIN vision_tags v ON v.shortcode=a.shortcode "
            + ("WHERE " + " AND ".join(where) + " " if where else "")
-           + f"ORDER BY {order} LIMIT ?")
+           + f"ORDER BY {order} LIMIT ? OFFSET ?")
     # 카테고리 필터는 파이썬에서 거르므로 넉넉히 읽고 자른다.
     lim = max(1, min(int(limit or 120), 500))
-    args.append(lim if not cat else 5000)
+    # 페이지네이션(2026-08-09): cat 필터는 파이썬에서 거르므로 offset도 파이썬에서 센다.
+    off = max(0, int(offset or 0))
+    args.extend([lim, off] if not cat else [5000, 0])
     blocked = store.removed_usernames()   # 영구차단 채널 릴스 숨김(2026-08-03)
     # 한글 표시명(2026-08-06 사장님: "채널명은 한글로 레퍼런스 랭킹처럼"). 아카이브엔
     # username뿐이라 수집 이력에서 이름을 끌어온다. 없으면 화면이 @아이디로 폴백한다.
@@ -8751,6 +8801,9 @@ def api_archive_items(request: Request, username: str = "", sort: str = "views",
         # 태그 있으면 영상 단위 판정(랭킹과 동일), 없으면 채널 단위 폴백(종전 수준 유지).
         item_cat = _cat_fn(u, vtext) if vtext else _chcat(u)
         if cat and item_cat != cat:
+            continue
+        if cat and off > 0:
+            off -= 1
             continue
         out.append({"username": r[0], "name": names.get(u, ""),
                     "shortcode": r[1], "url": r[2], "thumbnail": r[3],

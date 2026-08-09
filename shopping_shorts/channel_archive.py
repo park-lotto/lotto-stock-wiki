@@ -179,6 +179,7 @@ def crawl_channel(username, max_scrolls=_MAX_SCROLLS, session_path=None, proxy=N
                 # 이미 후킹해 받은 응답의 user.full_name — **추가 요청 0건**이다.
                 # 노드마다 있기도 없기도 해서 빈 값이 섞인다 → 저장 쪽이 빈 값은 무시한다.
                 "name": it.get("ownerFullName") or "",
+                "duration": it.get("duration"),
             })
         return items, final_url, None
     except Exception as e:              # noqa: BLE001 — 채널 하나 실패로 전체가 죽지 않게

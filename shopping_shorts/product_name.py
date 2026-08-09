@@ -101,7 +101,7 @@ def _identify_one(image_bytes):
     return None, None
 
 
-def identify_many(items, db_path, max_workers=_MAX_WORKERS):
+def identify_many(items, db_path, max_workers=_MAX_WORKERS, expired_out=None):
     """[{shortcode, thumbnail}] → {shortcode: product}. 캐시된 건 건드리지 않는다.
 
     items 중 product_at이 없는 것만 실제로 판독하고 저장한다. 반환은 캐시+신규 합본."""
@@ -118,6 +118,8 @@ def identify_many(items, db_path, max_workers=_MAX_WORKERS):
     def _work(it):
         img = video_analysis.fetch_thumb_bytes(it.get("thumbnail"))
         if not img:
+            if expired_out is not None:
+                expired_out.append(it["shortcode"])
             return it["shortcode"], None, None      # 썸네일 만료 — 캐시에 안 남긴다
         p, cat = _identify_one(img)
         return it["shortcode"], p, cat

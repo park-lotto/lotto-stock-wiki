@@ -132,6 +132,10 @@ def parse_reel_node(node, username):
         "videoViewCount": _int(_first(node, "play_count", "view_count", "playCount", default=0)),
         "displayUrl": _best_image(node),
         "videoUrl": _best_video(node),
+        # ⏱ 길이(2026-08-09): clips API 노드에 video_duration이 이미 실려 온다 —
+        # yt-dlp 백필(건당 수 초)로 채우던 것을 크롤이 지나가며 공짜로 채운다.
+        "duration": (float(node.get("video_duration"))
+                     if node.get("video_duration") else None),
         "ownerUsername": username,
         # 채널 표시명(2026-08-06) — 아카이브 카드를 한글 이름으로 띄우려고 주워 담는다.
         # ★이미 받은 응답에서 꺼낼 뿐이라 **추가 요청이 0건**이다(parse_search_item도
@@ -240,6 +244,6 @@ def classify_channel_result(nodes, page_url, error):
         return "error"
     if nodes:
         return "ok"
-    if "/accounts/login" in (page_url or ""):
+    if "/accounts/login" in (page_url or "") or "scraping_warning" in (page_url or ""):
         return "login_wall"
     return "not_found"

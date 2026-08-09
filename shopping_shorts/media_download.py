@@ -52,8 +52,18 @@ def _ig_cookies_file():
     세션 파일 옆에 파생 파일로 캐시하고, 원본 mtime이 바뀌면(재로그인) 다시 만든다.
     실패하면 "" — 종전(무쿠키) 동작 그대로라 회귀가 없다."""
     src = config.INSTAGRAM_SESSION_PATH
-    if not (src and Path(src).exists()):
+    # 2026-08-09: 메인 세션이 죽으면(만료 쿠키에 인스타가 404) 제한 게시물 재생이
+    # 전부 원본 새탭으로 튄다(사장님 제보). 아카이브 크롤이 실제로 쓰는 로테이션
+    # 세션(INSTAGRAM_SESSION_DIR)이 매일 갱신되는 살아있는 계정이므로, 메인 포함
+    # 후보 중 **가장 최근 갱신된** 세션을 쿠키 소스로 쓴다.
+    import os as _os
+    _d = _os.getenv("INSTAGRAM_SESSION_DIR", "")
+    _cands = [src] if (src and Path(src).exists()) else []
+    if _d and Path(_d).is_dir():
+        _cands += [str(p) for p in Path(_d).glob("*.json")]
+    if not _cands:
         return ""
+    src = max(_cands, key=lambda p: Path(p).stat().st_mtime)
     out = Path(src).with_suffix(".ytdlp-cookies.txt")
     try:
         if out.exists() and out.stat().st_mtime >= Path(src).stat().st_mtime:

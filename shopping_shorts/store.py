@@ -1215,6 +1215,14 @@ class Store:
                     (username, i.get("shortcode"), i.get("url"), i.get("thumbnail"),
                      i.get("views") or 0, i.get("likes") or 0, i.get("comments") or 0,
                      i.get("posted_at") or "", now_iso, now_iso))
+                # ⏱ 길이(2026-08-09): 크롤 응답의 video_duration을 같은 트랜잭션에 저장.
+                if i.get("duration"):
+                    c.execute(
+                        "INSERT INTO reel_durations(shortcode, duration, fail_count, "
+                        " updated_at) VALUES(?,?,0,datetime('now')) "
+                        "ON CONFLICT(shortcode) DO UPDATE SET duration=excluded.duration, "
+                        " fail_count=0, updated_at=excluded.updated_at",
+                        (i.get("shortcode"), float(i["duration"])))
             c.commit()
 
     def archive_mark(self, username, status, reels=0, note=""):

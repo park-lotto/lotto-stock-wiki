@@ -145,28 +145,41 @@ function _overlayVideo(i, src){
   _overlay(_titleBar(i)+
     `<video src="${esc(src)}" controls autoplay playsinline style="width:100%;max-height:70vh;border-radius:8px;background:#000"></video>`);
 }
-async function playPreview(sc){
+// 카드 안 인라인 재생(2026-08-09 사장님 "새창 하나뜸" — 히트작 playArch와 동일 UX).
+// 오버레이 모달은 걷어내고 .thumb 안의 img를 <video>/<iframe>으로 바꾼다.
+// ★.thumb의 onclick(선택토글)이 재생 컨트롤 클릭까지 먹지 않게 stopPropagation.
+async function playPreview(el, sc){
   const i=ITEMS.find(x=>x.shortcode===sc); if(!i||!i.url) return;
+  const box=el&&el.closest?el.closest('.thumb'):null;
+  if(!box){ window.open(i.url,'_blank'); return; }
+  const mount=n=>{
+    n.style.cssText+=';position:absolute;inset:0;width:100%;height:100%;background:#000;border:0';
+    n.onclick=e=>e.stopPropagation();
+    if(getComputedStyle(box).position==='static') box.style.position='relative';
+    box.querySelectorAll('img,video,iframe').forEach(x=>x.remove());
+    el.remove(); box.appendChild(n);
+  };
   const yid=_ytId(i.url);
-  if(yid){
-    _overlay(_titleBar(i)+
-      `<iframe width="100%" height="460" src="https://www.youtube.com/embed/${yid}?autoplay=1&playsinline=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="border-radius:8px"></iframe>`);
-    return;
-  }
+  if(yid){ const f=document.createElement('iframe');
+    f.src=`https://www.youtube.com/embed/${yid}?autoplay=1&playsinline=1`;
+    f.allow='autoplay; encrypted-media; picture-in-picture'; f.allowFullscreen=true; mount(f); return; }
   const tid=_ttId(i.url);
-  if(tid){
-    _overlay(_titleBar(i)+
-      `<iframe width="100%" height="560" src="https://www.tiktok.com/embed/v2/${tid}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="border-radius:8px;background:#000"></iframe>`);
-    return;
-  }
+  if(tid){ const f=document.createElement('iframe');
+    f.src=`https://www.tiktok.com/embed/v2/${tid}`;
+    f.allow='autoplay; encrypted-media; picture-in-picture'; f.allowFullscreen=true; mount(f); return; }
   if(/instagram\.com/.test(i.url)){
-    if(i.play_url){ _overlayVideo(i, i.play_url); return; }   // 담을 때 받아둔 mp4가 있으면 즉시
-    _overlay(_titleBar(i)+`<div style="padding:40px;text-align:center;color:#bbb">영상 불러오는 중…</div>`);
-    try{
-      const d=await (await fetch(`/api/media?platform=instagram&id=${encodeURIComponent(i.shortcode)}`)).json();
-      if(d.ok && d.url){ _overlayVideo(i, d.url); return; }
-    }catch(e){}
-    _closeOverlay();
+    let src=i.play_url||'';
+    if(!src){
+      el.textContent='⏳';
+      try{
+        const d=await (await fetch(`/api/media?platform=instagram&id=${encodeURIComponent(i.shortcode)}`)).json();
+        if(d.ok && d.url) src=d.url;
+      }catch(e){}
+      el.textContent='▶';
+    }
+    if(src){ const v=document.createElement('video');
+      v.src=src; v.controls=true; v.autoplay=true; v.playsInline=true;
+      v.setAttribute('playsinline',''); v.style.objectFit='cover'; mount(v); return; }
   }
   window.open(i.url,'_blank');   // 샤오홍슈·도우인·해석실패는 원본 탭에서 재생
 }
@@ -232,7 +245,8 @@ function render(){
         ${platformBadge(i.url)}
         <span class="chk" onclick="event.stopPropagation();toggleSelect('${i.shortcode}')" style="cursor:pointer;position:absolute;top:6px;left:6px;z-index:2">${sel?'✅':'⬜'}</span>
         ${i.thumbnail?`<img src="${thumbSrc(i.thumbnail)}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'" style="cursor:pointer">`:''}
-        <span onclick="event.stopPropagation();playPreview('${i.shortcode}')" title="미리보기 재생" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;background:rgba(0,0,0,.55);color:#fff;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer">▶</span>
+        ${i.duration!=null?`<span style="position:absolute;left:6px;bottom:6px;z-index:2;background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:2px 7px;border-radius:10px">⏱ ${_fmtDur(i.duration)}</span>`:''}
+        <span onclick="event.stopPropagation();playPreview(this,'${i.shortcode}')" title="미리보기 재생" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;background:rgba(0,0,0,.55);color:#fff;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer">▶</span>
       </div>
       <div class="body">
         <div class="rank" style="white-space:normal;line-height:1.4;min-height:2.6em">${esc((i.name||i.caption||'').slice(0,60))}</div>
