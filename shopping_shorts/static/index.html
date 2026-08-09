@@ -477,6 +477,14 @@ body.is-admin .blockbtn{display:inline-block}
     </div>
   </div>
 <script>
+// 썸네일 프록시 URL 빌더(2026-08-09). ★v= 를 붙이는 이유:
+// CDN 서명 만료로 /api/thumb가 404를 낸 적이 있으면 브라우저가 그 결과를 기억해,
+// 나중에 서버가 이미지를 복구(디스크 캐시 백필)해도 **재요청을 안 해** 카드가 계속
+// 까맣게 남는다(실측 2026-08-09: 서버는 200/71KB인데 화면만 검음). URL이 글자까지
+// 같아 강력새로고침으로도 안 풀렸다. v 값을 올리면 브라우저가 새 주소로 보고 다시 받는다.
+// 복구 백필을 돌린 뒤에는 이 숫자를 올릴 것.
+const THUMB_V = 2;
+function thumbURL(u){ return u ? ('/api/thumb?url='+encodeURIComponent(u)+'&v='+THUMB_V) : ''; }
 // 유형(제작·수익화 방식) = 초보자 탐색축. 2026-07-16 백엔드가 '인테리어'+'생활용품'을
 // '홈템'으로 합치면서 세부주제(2차축)가 사라졌다 — 이제 버튼 1개 = 백엔드 카테고리 1개다.
 // ★버튼은 백엔드가 내는 카테고리(홈템/레시피/뷰티/기타)를 전부 덮어야
@@ -1263,7 +1271,7 @@ function renderOverseas(){
         ? ('조회 ' + ((i.views>=10000)?(Math.round(i.views/1000)/10)+'만':i.views))
         : ('반응 ' + (i.base_count||0));
       const thumb = i.thumbnail
-        ? `<img src="/api/thumb?url=${encodeURIComponent(i.thumbnail)}" loading="lazy">`
+        ? `<img src="${thumbURL(i.thumbnail)}" loading="lazy">`
         : '<div class="ov-noimg">▶</div>';
       const title = (i.caption||i.title||'').replace(/</g,'&lt;');
       return `<a class="ov-card" href="${i.url||'#'}" target="_blank" rel="noopener">
@@ -1352,7 +1360,7 @@ function render(){
   el.innerHTML = items.map((i,idx)=>`
     <div class="card">
       <div class="thumb">
-        <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.platform==='youtube'?`onclick="playYoutube(this,'${i.shortcode}')"`:(i.platform==='tiktok'?`onclick="playTiktok(this,'${i.shortcode}')"`:((i.platform||PLATFORM)==='instagram'?`onclick="playInstagram(this,'${i.shortcode}')"`:'')))} loading="lazy" onerror="this.style.visibility='hidden'">
+        <img src="${thumbURL(i.thumbnail)}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.platform==='youtube'?`onclick="playYoutube(this,'${i.shortcode}')"`:(i.platform==='tiktok'?`onclick="playTiktok(this,'${i.shortcode}')"`:((i.platform||PLATFORM)==='instagram'?`onclick="playInstagram(this,'${i.shortcode}')"`:'')))} loading="lazy" onerror="this.style.visibility='hidden'">
         ${badgeHTML(i, _bctx)}
         ${(i.video_url||i.platform==='youtube'||i.platform==='tiktok'||(i.platform||PLATFORM)==='instagram')?'<span class="play-badge">▶</span>':''}
       </div>
@@ -1423,7 +1431,7 @@ async function _renderChannelHistory(username, liveShortcodes){
 }
 function _historyCard(h){
   return `<div class="card">
-    <div class="thumb"><img src="${h.thumb?('/api/thumb?url='+encodeURIComponent(h.thumb)):''}" loading="lazy" onerror="this.style.visibility='hidden'"></div>
+    <div class="thumb"><img src="${thumbURL(h.thumb)}" loading="lazy" onerror="this.style.visibility='hidden'"></div>
     <div class="body">
       <div class="rank">${esc(h.category||'')} · ${fmtTime(h.last_seen)}</div>
       <div class="ch"><span class="chname">${esc(h.name||h.username||'')}</span></div>
@@ -1490,7 +1498,7 @@ async function archiveSimilar(sc){
         <!-- loading="lazy" 금지(2026-08-04 실측): 모달 안 grid+aspect-ratio 카드에서는
              lazy 로더가 가시성 판정을 못 해 /api/thumb 요청을 아예 안 보낸다
              (요청 0건·complete=false·currentSrc=''). eager로 두면 즉시 뜬다. -->
-        <img src="${i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):''}" onerror="this.style.visibility='hidden'">
+        <img src="${thumbURL(i.thumbnail)}" onerror="this.style.visibility='hidden'">
         ${badge}
       </div><div class="body">
         <div class="rank">@${esc(i.username)} · 💬 ${(i.comments||0).toLocaleString()} · 👁 ${(i.views||0).toLocaleString()}</div>
@@ -2266,7 +2274,7 @@ async function renderTrendCards(){
     const xhs = cnBtn('📕 샤오홍슈', '#ff2442', _lensSearchUrl('xiaohongshu', zh));
     const dy  = cnBtn('🎬 도우인', 'var(--txt,inherit)', _lensSearchUrl('douyin', zh));
     const pbadges = g.platforms.map(p=>PLAT_EMOJI[p]||'').join('');
-    const thumb = rep.thumbnail ? ('/api/thumb?url='+encodeURIComponent(rep.thumbnail)) : '';
+    const thumb = thumbURL(rep.thumbnail);
     return `
     <div class="card">
       <div class="thumb"><img src="${thumb}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'"></div>

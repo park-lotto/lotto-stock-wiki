@@ -4156,8 +4156,13 @@ def _thumb_cache_path(url: str):
 
 
 @app.get("/api/thumb")
-def api_thumb(url: str):
-    """인스타 CDN 썸네일 프록시 (핫링크 차단 우회). url=원본 이미지 주소."""
+def api_thumb(url: str, v: str | None = None):
+    """인스타 CDN 썸네일 프록시 (핫링크 차단 우회). url=원본 이미지 주소.
+
+    v = 캐시버스터(프론트 THUMB_V). 서버 동작엔 안 쓰지만 **받아는 줘야 한다** —
+    선언이 없으면 FastAPI가 무시할 뿐이라 무해하지만, 명시해 두면 의도가 드러나고
+    나중에 누가 `extra="forbid"`류를 걸어도 안 깨진다. 값은 URL을 다르게 만들어
+    브라우저가 옛 404를 재사용하지 못하게 하는 게 전부다."""
     import requests
     from fastapi.responses import Response
     if _reject_cdn_proxy(url, _ALLOWED_THUMB_HOSTS):
@@ -4198,7 +4203,13 @@ def api_thumb(url: str):
         return Response(content=r.content, media_type=ctype,
                         headers={"Cache-Control": "public, max-age=86400"})
     except Exception:
-        return Response(status_code=404, content=b"")
+        # ★실패는 절대 캐시하지 않는다(2026-08-09). CDN 서명(oe=)이 만료되면 여기로 떨어지는데,
+        # 헤더가 없으면 브라우저가 휴리스틱 캐싱으로 이 404를 몇 시간 기억한다. 그 뒤 우리가
+        # 아카이브에서 이미지를 복구해 디스크 캐시에 넣어도 **브라우저가 재요청을 안 해**
+        # 카드가 계속 까맣게 남는다(실측: 서버는 200/71KB를 주는데 화면만 검은 상태).
+        # URL이 글자까지 같아 캐시버스팅도 안 먹으므로, 실패를 안 남기는 게 유일한 해법.
+        return Response(status_code=404, content=b"",
+                        headers={"Cache-Control": "no-store"})
 
 
 @app.get("/api/video")
