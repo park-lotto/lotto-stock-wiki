@@ -66,10 +66,22 @@ def _is_cta(s):
     return bool(CTA_PAT.search(s.get("text") or "")) or s.get("shot_role") == "기타"
 
 
-def budget_for(segments, target_seconds=None):
-    """이 소재로 만들 수 있는 목표 길이. 하한 18초, 상한 원본길이.
+# ★스토리 하한(2026-08-09 사장님 지시): "짧은 쇼츠에도 설득구조가 있어야 하고, 클릭으로
+#   이어지려면 스토리가 탄탄한 대본이 가장 우선이다. 스타일을 살리려면 **중복을 허용하고**
+#   최대한 살려야 한다."
+#   종전엔 원본 길이가 천장이라(min(want, span)) 22초 소재는 20초·130자로 눌렸다 —
+#   채이 가족액자(few-shot 377자)·메종 긴 연결이 물리적으로 안 들어가 스타일이 죽었다
+#   (라이브 경로 실측: 메종 0/6). 화면은 _fill_beat_screen_time이 클립 재사용으로 채운다.
+#   ⚠️시간은 목표가 아니라 **결과**다 — 스토리가 설 분량을 먼저 주고 화면이 따라온다.
+STORY_MIN_SECONDS = float(os.environ.get("SCRIPT_STORY_MIN_SEC", "25") or 25)
 
-    target_seconds(사용자가 고른 값)가 원본보다 크면 **무시한다** — 물리적으로 불가능하다.
+
+def budget_for(segments, target_seconds=None):
+    """이 소재로 만들 대본 분량. 하한 STORY_MIN_SECONDS(기본 25초).
+
+    ★원본보다 길어도 된다(2026-08-09) — 부족한 화면은 클립 재사용으로 채운다.
+      되돌리려면 서버 env `SCRIPT_STORY_MIN_SEC=0` (그러면 종전처럼 원본이 천장).
+    target_seconds(사용자가 고른 값)가 더 짧으면 존중하되 하한은 지킨다.
     """
     if not segments:
         return 0.0, 0.0
@@ -78,7 +90,17 @@ def budget_for(segments, target_seconds=None):
     want = max(MIN_SECONDS, span * RATIO)
     if target_seconds:                      # 사용자가 더 짧게 원하면 존중(단 하한은 지킨다)
         want = min(want, max(MIN_SECONDS, float(target_seconds)))
-    return span, min(want, span)            # 원본을 넘을 수 없다
+    if STORY_MIN_SECONDS <= 0:              # 롤백 스위치 — 종전과 100% 동일
+        return span, min(want, span)
+    # 스토리가 설 분량을 보장한다(원본보다 길어도 된다 — 부족분은 클립 재사용으로 채운다).
+    floor = min(STORY_MIN_SECONDS, float(target_seconds) if target_seconds else STORY_MIN_SECONDS)
+    out = max(min(want, span), floor)
+    # ★사용자가 고른 목표는 **최종 상한**이다(2026-08-09 실측 버그): MIN_SECONDS(20초)가
+    #   want의 하한이라 목표를 15초로 줘도 want가 20으로 올라가 19.5초가 나왔다.
+    #   사장님이 짧게 고른 걸 코드가 늘리면 안 된다.
+    if target_seconds:
+        out = min(out, float(target_seconds))
+    return span, out
 
 
 _DONE_ROLES = {"after", "완성", "결과"}      # 완성품 샷
@@ -140,7 +162,14 @@ def select_and_order(segments, target_seconds=None, video_type=None):
         body.sort(key=lambda s: (0 if s.get("shot_role") == "사용중" else 1,
                                  float(s.get("start") or 0)))
     cta.sort(key=lambda s: float(s.get("start") or 0))
-    return span, budget, used, [hook] + body + cta
+    # ★대본 분량은 **화면 실측(used)이 아니라 예산(budget)** 기준이다(2026-08-09 사장님 지시).
+    #   used는 "고른 컷 길이의 합"이라 원본이 천장이다 — 19.2초 소재는 영원히 124자·4문장이라
+    #   채이 가족액자(few-shot 377자)·메종 긴 연결이 물리적으로 못 들어갔다(메종 0/6 실측).
+    #   budget에는 STORY_MIN_SECONDS 하한이 들어 있어 스토리가 설 분량이 확보된다.
+    #   모자란 화면은 _fill_beat_screen_time이 **클립 재사용**으로 채운다(중복 허용 = 사장님 지시).
+    #   ⚠️used를 바꾸지 않는 이유: 화면 배정·conform이 실제 화면 길이로 계산해야 한다.
+    script_secs = max(used, budget) if STORY_MIN_SECONDS > 0 else used
+    return span, budget, script_secs, [hook] + body + cta
 
 
 def line_count(used_secs, n_cuts):
@@ -536,6 +565,129 @@ def fix_chae_person_prompt(beats):
             "- 제품의 성능·수치·가격 같은 **사실은 새로 지어내지 마라** — 빌리는 건 "
             "인물과 관계 프레임뿐이다.\n"
             "- 길이는 지금 문장과 비슷하게.\n\n"
+            + json.dumps(cur, ensure_ascii=False, indent=1)
+            + "\n\nJSON만: {\"beats\":[{\"n\":1,\"covers\":[1,2],\"narration\":\"...\"}]}")
+
+
+# 메종 서명 = ①인물을 통과한다("그 사람이 이렇게 쓰더라") ②장점을 한 문장에 몰아
+# 긴 호흡으로 잇는다("~는데 ~니까 ~더라고요") ③"심지어/더 대박인 건" 보너스.
+# 가이드(_MAISON_GUIDE)가 요구하는 그대로다.
+_MAISON_PEOPLE = _CHAE_PEOPLE + ("사장님", "손님", "직원", "형", "누나")
+_MAISON_PROOF = ("난리", "없어서 못", "대박", "심지어", "더 대박인", "다들")
+_MAISON_LONG = _re.compile(r"(는데|니까|어서).{0,40}(더라고요|거든요|잖아요|는 거예요)")
+
+
+def maison_signature_missing(beats, style_name=None):
+    """메종 서명 — 인물·긴연결·사회적증거 중 **하나도 없으면** True(2026-08-09).
+
+    ★셋 다 요구하지 않는다 — 소재에 인물이 없을 수도 있어 과교정이 된다. 하나라도
+      있으면 통과시키고, 전무할 때만 고친다(밋밋한 광고 카피체가 되는 경우).
+    실측 배경: 축약(shrink)이 총량 초과를 줄일 때 메종의 긴 연결·보너스 문장이 제일
+      먼저 깎인다. 채이·홈테리어픽은 보장이 있어 살아남는데 메종만 없어 0/6이었다.
+    ★해당 스타일이 아니면 항상 False(회귀 0)."""
+    if (style_name or "") != "maison":
+        return False
+    if not beats:
+        return False
+    body = " ".join((b.get("narration") or "") for b in beats[:-1]) if len(beats) > 1 \
+        else (beats[0].get("narration") or "")
+    if not body.strip():
+        return False
+    if any(p in body for p in _MAISON_PEOPLE):
+        return False
+    if any(p in body for p in _MAISON_PROOF):
+        return False
+    return not _MAISON_LONG.search(body)
+
+
+def fix_maison_prompt(beats):
+    """본문 한 문장을 메종 결로 고쳐 받는다(다른 서명 보장과 같은 방식)."""
+    import json
+    cur = [{"n": b.get("n"), "covers": b.get("covers"), "narration": b.get("narration")}
+           for b in beats]
+    return ("아래 나레이션이 '발견담' 스타일인데 **밋밋한 광고 문구**처럼 됐다.\n"
+            "본문 문장 중 **한 문장만** 골라 아래 셋 중 하나가 되게 고쳐라.\n"
+            "1) 인물을 통과시킨다 — \"친구가 이렇게 쓰더라고요\" / \"엄마가 보시더니\"\n"
+            "2) 장점 2~3개를 **한 문장에 몰아** 길게 잇는다 — "
+            "\"~는데 ~니까 ~더라고요\" (문장을 뚝뚝 끊지 않는다)\n"
+            "3) 사회적 증거를 붙인다 — \"심지어 없어서 못 산다고 하더라고요\"\n"
+            "★지켜야 할 것:\n"
+            "- 나머지 문장은 글자 하나 바꾸지 마라. 문장 수도 그대로.\n"
+            "- **마지막 CTA 문장은 절대 건드리지 마라.**\n"
+            "- 성능·수치·가격 같은 **사실은 새로 지어내지 마라**(빌리는 건 관계 프레임뿐).\n"
+            "- 어미는 요체(~더라고요·~거든요·~잖아요). 합쇼체(~습니다) 금지.\n"
+            "- 길이는 지금 문장과 비슷하게.\n\n"
+            + json.dumps(cur, ensure_ascii=False, indent=1)
+            + "\n\nJSON만: {\"beats\":[{\"n\":1,\"covers\":[1,2],\"narration\":\"...\"}]}")
+
+
+HOOK_SANITY_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "contradicts": {"type": "boolean"},
+        "reason": {"type": "string"},
+    },
+    "required": ["contradicts", "reason"],
+}
+
+
+def hook_sanity_prompt(hook_line, material_text):
+    """훅 첫 문장이 **소재와 모순되는가**를 묻는다(2026-08-09).
+
+    ★왜 정규식이 아니라 사후검사인가 — 소재 신호를 정규식으로 미리 거르는 방식은
+      **새 소재가 나올 때마다 뚫린다**. 실제로 같은 계열 사고가 세 번 났다:
+        1) 2026-08-04 y_never  → "피규어 대충 만들지 마세요"(선물 소재)
+        2) 2026-08-04 diy      → "피규어를 사 먹지 마세요"(먹거리 아님)
+        3) 2026-08-09 diy      → "이제 집에서 파전 안 부쳐요"(원래 집에서 만드는 음식,
+                                  job d8a17db5d99f — 만드는 법 영상인데 안 만든다고 했다)
+      매번 조건을 덧댔지만 근본은 **훅 틀이 안 맞아도 모델이 억지로 끼운다**는 것이다.
+      결과물을 보고 판정하면 소재 종류와 무관하게 걸러진다.
+    반환 스키마: {contradicts: bool, reason: str}"""
+    return ("아래는 숏폼 영상의 **원본 소재 설명**과 그 영상에 붙인 **첫 문장(훅)**이다.\n"
+            "훅이 소재와 **논리적으로 모순되는지만** 판정해라.\n\n"
+            "[모순의 예]\n"
+            "- 만드는 법을 알려주는 영상인데 훅이 \"이제 안 만들어요/안 사 먹어요\"라고 한다\n"
+            "- 원래 집에서 해 먹는 음식인데 \"이제 사 먹지 마세요\"라고 한다\n"
+            "- 소재에 없는 장소·인물·사건을 사실인 것처럼 말한다\n"
+            "- 제품 용도와 정반대로 말한다\n\n"
+            "[모순이 아닌 것 — contradicts=false]\n"
+            "- 과장·감탄·호기심 유발(\"진짜 충격받았어요\", \"역대급\")\n"
+            "- 시청자를 부르는 말(\"~하시는 분들 이거 보세요\")\n"
+            "- 소재에 있는 사실을 다른 표현으로 각색한 것\n\n"
+            f"[원본 소재]\n{(material_text or '')[:1200]}\n\n"
+            f"[훅 첫 문장]\n{hook_line}\n\n"
+            "JSON만: {\"contradicts\": true/false, \"reason\": \"한 줄\"}")
+
+
+def hook_contradicts(beats, material_text, call):
+    """훅이 소재와 모순이면 True. 판정 실패·빈 값이면 **False**(종전 동작 유지 = 회귀 0).
+
+    ★모순일 때만 True — 애매하면 통과시킨다. 멀쩡한 훅을 버리는 쪽이 더 나쁘다."""
+    if not beats or not call:
+        return False
+    hook = (beats[0].get("narration") or "").strip()
+    if not hook or not (material_text or "").strip():
+        return False
+    try:
+        r = call(hook_sanity_prompt(hook, material_text), HOOK_SANITY_SCHEMA)
+    except Exception:
+        return False
+    if not isinstance(r, dict):
+        return False
+    return bool(r.get("contradicts"))
+
+
+def fix_hook_prompt(beats, material_text):
+    """첫 문장만 소재에 맞게 다시 받는다(fix_cta_prompt와 같은 방식)."""
+    import json
+    cur = [{"n": b.get("n"), "covers": b.get("covers"), "narration": b.get("narration")}
+           for b in beats]
+    return ("아래 나레이션의 **첫 문장만** 고쳐라. 나머지 문장은 글자 하나 바꾸지 마라.\n"
+            "지금 첫 문장이 원본 소재와 **모순된다**(소재에 없는 말을 하거나 뜻이 반대다).\n"
+            "★소재에 실제로 있는 내용으로, 3초 안에 스크롤을 멈출 만한 한 문장(30자 내외)으로 "
+            "다시 써라. 없는 사실·인물·장소를 지어내지 마라.\n"
+            "★문장 수와 covers는 그대로 둔다.\n\n"
+            f"[원본 소재]\n{(material_text or '')[:900]}\n\n"
             + json.dumps(cur, ensure_ascii=False, indent=1)
             + "\n\nJSON만: {\"beats\":[{\"n\":1,\"covers\":[1,2],\"narration\":\"...\"}]}")
 

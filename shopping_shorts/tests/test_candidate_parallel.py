@@ -48,6 +48,8 @@ def _fixture(monkeypatch, delay=0.0, record=None):
         #   ⚠️라이브에선 실제 소재 6건 중 보장 발동 0건이었다(생성이 이미 서명을 지킨다).
         ("hapsyo_tail_missing", lambda b, style_name=None: False),
         ("chae_person_missing", lambda b, style_name=None: False),
+        ("maison_signature_missing", lambda b, style_name=None: False),
+        ("hook_contradicts", lambda b, mat, call: False),
     ):
         monkeypatch.setattr(real_ss, name, val, raising=False)
 

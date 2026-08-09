@@ -3300,31 +3300,7 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         beats = single_source.apply_restyle(beats, _c,
                                             style_name=_sp0.candidate_style(i),
                                             report=_restyle_rep)
-        # ★홈테리어픽 서명 보장(2026-08-09): CTA 직전 문장을 합쇼체로 닫는다.
-        #   프롬프트 2차 수정으로도 10회 실측 7/10에 그쳤다 — CTA·빈비트와 같이 코드로 잡는다.
-        #   ★리라이트 **뒤**에 둔다(리라이트가 어미를 도로 요체로 되돌리기 때문).
-        #   해당 스타일이 아니면 hapsyo_tail_missing이 항상 False라 no-op(회귀 0).
         _hap_style = _sp0.candidate_style(i)
-        for _ in range(2):
-            if not single_source.hapsyo_tail_missing(beats, _hap_style):
-                break
-            _bh = single_source.parse_beats(
-                _c(single_source.fix_hapsyo_prompt(beats), single_source.BEATS_SCHEMA))
-            if _bh and len(_bh) == len(beats):
-                beats = _bh
-            else:
-                break
-        # ★채이 서명 보장(2026-08-09): 본문에 가족·지인이 등장하게. 인물이 없으면
-        #   어미만 채이고 이야기는 다른 채널과 같아진다(10회 실측 1건). 다른 스타일엔 no-op.
-        for _ in range(2):
-            if not single_source.chae_person_missing(beats, _hap_style):
-                break
-            _bp = single_source.parse_beats(
-                _c(single_source.fix_chae_person_prompt(beats), single_source.BEATS_SCHEMA))
-            if _bp and len(_bp) == len(beats):
-                beats = _bp
-            else:
-                break
         # ★빈 나레이션 비트는 **커버 배정 전에** 걸러낸다(2026-08-04 라이브 실측 job
         #   bcdf871a6d57: 추천 후보가 16.8초 — 버려진 비트의 컷이 같이 사라져 하한 미달).
         #   먼저 거르면 아래 '구멍은 직전 비트가 이어받는다'가 그 컷들을 살린다.
@@ -3349,6 +3325,55 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
                     if not _nb.get("covers"):
                         _nb["covers"] = beats[_bi].get("covers")
                 beats = _b4
+        # ★★채널 서명 보장 — **문장을 다시 쓰는 모든 단계가 끝난 뒤**에 둔다(2026-08-09).
+        #   처음엔 리라이트 직후에 뒀다가 라이브에서 홈테리어픽이 다시 깨졌다(job d8a17db5d99f):
+        #   뒤따르는 **최종 축약(shrink)**이 문장을 다시 쓰면서 합쇼체 어미를 도로 날린다
+        #   (그 잡 로그: 3후보 전부 "최종 총량 초과 → 축약 재요청"). CTA·고조·리라이트가
+        #   문장을 불려도 아무도 다시 안 쟀던 것과 같은 실패다.
+        #   ⚠️여기서 고친 뒤엔 문장을 다시 쓰는 단계가 없어야 한다 — 새 후처리를 넣을 땐
+        #     반드시 이 블록보다 **앞**에 넣어라.
+        #   ⚠️길이: fix는 "길이는 지금과 비슷하게, 어미만" 지시라 예산을 크게 흔들지 않는다.
+        #     (넘치면 자막 싱크가 흔들리므로 아래에서 covers는 그대로 승계한다)
+        #   해당 스타일이 아니면 두 검사 모두 항상 False라 no-op(회귀 0).
+        def _sig_fix(_check, _mk_prompt):
+            _b = beats
+            for _ in range(2):
+                if not _check(_b, _hap_style):
+                    break
+                _r = single_source.parse_beats(
+                    _c(_mk_prompt(_b), single_source.BEATS_SCHEMA))
+                if not _r or len(_r) != len(_b):
+                    break
+                for _bi, _nb in enumerate(_r):      # covers 승계(화면 배정 불변)
+                    if not _nb.get("covers"):
+                        _nb["covers"] = _b[_bi].get("covers")
+                _b = _r
+            return _b
+
+        beats = _sig_fix(single_source.hapsyo_tail_missing,
+                         single_source.fix_hapsyo_prompt)
+        beats = _sig_fix(single_source.chae_person_missing,
+                         single_source.fix_chae_person_prompt)
+        # ★메종 서명 보장(2026-08-09): 축약이 긴 연결·보너스 문장을 제일 먼저 깎아
+        #   메종만 밋밋한 카피체로 남았다(라이브 경로 실측 0/6 — 채이·홈은 보장이 있어 6/6).
+        beats = _sig_fix(single_source.maison_signature_missing,
+                         single_source.fix_maison_prompt)
+        # ★훅 소재불일치 사후검사(2026-08-09). 정규식으로 소재를 미리 거르는 방식은
+        #   새 소재마다 뚫린다 — 같은 계열 사고가 3번 났다(y_never 피규어 / diy 피규어 /
+        #   diy 파전 "이제 집에서 파전 안 부쳐요", job d8a17db5d99f).
+        #   결과물을 보고 판정하면 소재 종류와 무관하다. 모순일 때만 첫 문장을 다시 받는다
+        #   (판정 실패·애매하면 통과 = 회귀 0).
+        for _ in range(2):
+            if not single_source.hook_contradicts(beats, _mat, _c):
+                break
+            _bk = single_source.parse_beats(
+                _c(single_source.fix_hook_prompt(beats, _mat), single_source.BEATS_SCHEMA))
+            if not _bk or len(_bk) != len(beats):
+                break
+            for _bi, _nb in enumerate(_bk):
+                if not _nb.get("covers"):
+                    _nb["covers"] = beats[_bi].get("covers")
+            beats = _bk
         # covers → 화면 배정. 모델이 빠뜨린 컷은 직전 비트에 붙여 **컷 100% 커버**를 코드가
         # 보장한다(화면 총길이 == used == 예산 → 길이 하한이 프롬프트 아닌 코드로 지켜진다).
         covered_by = {}                      # 컷 번호(1-base) → 비트 인덱스
@@ -3398,7 +3423,14 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         # ★비트별 콘폼(2026-08-04 실측 job 923d/285d): 총량은 예산 안인데 **비트별로**
         #   문장이 제 화면보다 길면 _fill_beat_screen_time이 클립을 재사용해 화면을
         #   나레이션에 맞춰 뻥튀기 — 원본 43초짜리가 61~80초 영상이 됐다(중복 금지 위반).
-        #   1소스는 화면(컷 100% 커버)이 주인이다 — 문장을 화면 길이에 맞춰 압축한다.
+        #
+        # ★2026-08-09 사장님 지시로 정책을 뒤집었다: "스타일을 살리려면 **중복을 허용하고**
+        #   최대한 살려야 한다. 결국 클릭으로 이으려면 **스토리가 탄탄한 대본이 가장 우선**이다."
+        #   → 이제 **대본이 주인**이고 화면이 따라온다. 압축은 폭주 방지선으로만 남긴다:
+        #     화면의 _CONFORM_MAX_RATIO배를 넘을 때만 깎는다(그 아래면 클립 재사용으로 채운다).
+        #   ⚠️상한을 없애면 43초→80초 사고가 재발한다 — 무제한 허용이 아니라 배율 완화다.
+        #   되돌리려면 서버 env `SCRIPT_CONFORM_RATIO=1.1`(종전 동작).
+        _conform_ratio = float(os.environ.get("SCRIPT_CONFORM_RATIO", "2.0") or 2.0)
         for b in plan_beats:
             if b is plan_beats[-1]:
                 continue    # CTA는 압축 제외 — 마지막 컷이 짧으면 보상 문구("보내드릴게요")가
@@ -3410,7 +3442,7 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
             _scr = sum(max(0.0, float(s.get("end") or 0) - float(s.get("start") or 0))
                        for s in [b["primary"]] + b["alternates"])
             _spoken = len("".join((b["narration"] or "").split())) / _SYLLABLES_PER_SEC
-            if _scr > 0.5 and _spoken > _scr * 1.1:
+            if _scr > 0.5 and _spoken > _scr * _conform_ratio:
                 _new = conform_narration(b["narration"], _scr)
                 if _new:
                     b["narration"] = _new
