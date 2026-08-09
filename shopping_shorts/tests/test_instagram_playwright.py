@@ -118,3 +118,33 @@ def test_fetch_profiles_empty_input_returns_empty():
     out = ipw.fetch_profiles([], _fetch_all=lambda us: called.append(us) or {})
     assert out == {}
     assert called == []
+
+
+# ── 로테이션 계정 덮어쓰기 회귀(2026-08-09 실사고) ──
+# config.INSTAGRAM_SESSION_PATH가 로테이션이 고른 계정을 무조건 덮어써서, 어떤 계정을
+# 골라도 항상 단일 계정이 쓰이고 **프록시만 로테이션 것이 남았다** = 계정↔IP 불일치.
+# 인스타가 update_risky_contactpoint 챌린지를 띄워 수집이 전 채널 0건이 됐다
+# (tally가 전부 not_found라 "채널이 없다"로 오독되기까지 했다).
+def test_rotation_session_not_overridden_by_config(tmp_path, monkeypatch):
+    """로테이션이 고른 계정을 config의 단일 계정이 덮어쓰면 안 된다."""
+    import inspect
+    import os
+    from shopping_shorts import config, instagram_playwright as IP
+
+    rot = tmp_path / "rotation_account.json"
+    rot.write_text("{}")
+    single = tmp_path / "single_account.json"
+    single.write_text("{}")
+    monkeypatch.setattr(config, "INSTAGRAM_SESSION_PATH", str(single))
+
+    # 함수 내부 분기와 같은 규칙으로 조립 결과를 재현해 검증(브라우저는 안 띄운다).
+    ctx_kw = {}
+    if os.path.exists(str(rot)):
+        ctx_kw["storage_state"] = str(rot)
+    if not ctx_kw.get("storage_state"):
+        if config.INSTAGRAM_SESSION_PATH and os.path.exists(config.INSTAGRAM_SESSION_PATH):
+            ctx_kw["storage_state"] = config.INSTAGRAM_SESSION_PATH
+    assert ctx_kw["storage_state"] == str(rot), "로테이션 계정이 config에 덮어써지면 안 된다"
+
+    # 위 재현이 실제 코드와 어긋나지 않게, 가드 자체가 소스에 있는지도 잠근다.
+    assert 'if not ctx_kw.get("storage_state")' in inspect.getsource(IP._scrape_one_playwright)

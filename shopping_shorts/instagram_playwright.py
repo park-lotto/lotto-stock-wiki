@@ -68,10 +68,18 @@ def _scrape_one_playwright(username, session_path=None, proxy=None):
                 ctx_kw["proxy"] = {"server": proxy}
     # 세션(storage_state)이 있으면 그걸로 로그인 상태 직결한다 — 샤오홍슈에서 검증된 대로
     # 프록시 없이도 되므로 프록시보다 우선한다. 없으면 기존 경로(프록시/직결)로 폴백.
-    if config.INSTAGRAM_SESSION_PATH and os.path.exists(config.INSTAGRAM_SESSION_PATH):
-        ctx_kw["storage_state"] = config.INSTAGRAM_SESSION_PATH
-    elif config.INSTAGRAM_PROXY:
-        ctx_kw["proxy"] = {"server": config.INSTAGRAM_PROXY}
+    #
+    # ★단, 로테이션이 계정을 지정했으면 절대 덮어쓰지 않는다(2026-08-09 버그수정).
+    # 예전엔 무조건 덮어써서, 어떤 계정을 골라도 항상 config의 단일 계정이 쓰이고
+    # **프록시만 로테이션 계정 것이 남았다** = 계정↔IP가 어긋난 채로 나간다.
+    # 인스타는 이 불일치를 수상하게 보고 update_risky_contactpoint 챌린지를 띄운다
+    # (실측 2026-08-09: 같은 계정·프록시로 단독 goto는 정상인데 이 경로만 챌린지 →
+    #  수집이 전 채널 0건, tally가 전부 not_found로 잡혔다).
+    if not ctx_kw.get("storage_state"):
+        if config.INSTAGRAM_SESSION_PATH and os.path.exists(config.INSTAGRAM_SESSION_PATH):
+            ctx_kw["storage_state"] = config.INSTAGRAM_SESSION_PATH
+        elif config.INSTAGRAM_PROXY:
+            ctx_kw["proxy"] = {"server": config.INSTAGRAM_PROXY}
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(**launch_kw)
