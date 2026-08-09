@@ -1918,6 +1918,16 @@ def _vault_call(prompt, schema, max_tries=8, key_offset=0):
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json", response_schema=schema),
             )
+            # ★빈 응답은 **다음 키로 재시도**한다(2026-08-09 실측). 모델이 candidates를
+            #   통째로 비워 돌려주는 일이 간헐적으로 있다(finish_reason조차 없고
+            #   candidates_token_count=None — 출력을 시작조차 안 했다). 종전엔 resp.text가
+            #   None이라 json.loads(None)이 TypeError로 터지고 아래 `return None`으로
+            #   떨어져 **그 후보가 통째로 사라졌다**. 10회 실측: 채이 6/10·홈테리어픽 3/10이
+            #   '빈 대본'으로 죽어 "스타일 3개가 안 나온다"의 직접 원인이었다.
+            #   재시도는 다른 키로 나가므로 429·일시 장애와도 자연히 갈린다.
+            if not (resp.text or "").strip():
+                print("edit_plan._vault_call: 빈 응답 → 다음 키로 재시도", file=sys.stderr)
+                continue
             return json.loads(resp.text)
         except Exception as e:  # noqa: BLE001
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
@@ -2073,7 +2083,11 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         f"{(reference_text or '')[:1500]}\n\n"
         # ★채널 스타일(2026-08-05)을 맨 앞에 — 맨 뒤에 붙였더니 규칙 40줄에 밀려 절반만
         #   먹었다(실측 job 64e0a110: 훅 명령형·문장 뚝뚝·합쇼체 잔존). 문체는 이게 우선.
-        + _style_extra() + _frame_txt +
+        # ★2026-08-09: 슬롯 경로는 벌마다 n=1로 따로 부르므로 **그 후보의 채널**을 싣는다
+        #   (frame_start가 곧 후보 인덱스다 — 위 _frame_txt와 같은 값을 쓴다).
+        #   n>1(한 콜에 여러 후보)이면 하나만 실을 수 없으니 종전대로 공통 블록.
+        + _style_extra(frame_start if (n == 1 and frame_start is not None) else None)
+        + _frame_txt +
         # 2026-07-29(사장님 확정): 스펙 나열형 reference_text를 그대로 던지면 대본도 나열형으로
         # 나온다. 3단계 상황 프레임을 줘서 Gemini가 스스로 '썰'을 짓게 유도(고정 문구 하드코딩 금지
         # — 제품마다 실제 스펙에서 재구성해야 하므로 지시만 주고 내용은 매번 새로 만들게 한다).
@@ -2216,10 +2230,15 @@ def _engine_seed(reference_text):
 
 
 
-def _style_extra():
-    """채널 스타일 블록(style_profiles). 부가기능 — 실패해도 생성을 죽이지 않는다."""
+def _style_extra(cand_idx=None):
+    """채널 스타일 블록(style_profiles). 부가기능 — 실패해도 생성을 죽이지 않는다.
+
+    ★cand_idx를 주면 **그 후보에 배정된 채널**의 few-shot을 싣는다(2026-08-09, 1소스와 동일).
+      안 주면 종전과 100% 동일(trio면 maison 공통) — 하위호환."""
     try:
         from shopping_shorts import style_profiles
+        if cand_idx is not None:
+            return style_profiles.candidate_style_block(cand_idx)
         return style_profiles.style_block()
     except Exception:
         return ""
@@ -3209,9 +3228,12 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         # ★후보별 이야기 구도(2026-08-06 사장님 "요리책 낸 엄마로 비슷하네 다"): 원본 인물이
         #   센 소재에서 세 후보가 같은 구도로 수렴하는 것을 생성 단계에서 갈라준다.
         from shopping_shorts import style_profiles as _sp_f
+        # ★cand_idx(2026-08-09): 이 후보의 채널 few-shot을 **생성 단계에서** 싣는다.
+        #   종전엔 셋 다 maison으로 태어나고 리라이트가 어미만 갈아 "3개가 비슷하게
+        #   읽힌다"였다(위 candidate_style_block 주석에 실측 job 2건).
         prompt = single_source.script_prompt(
             order, used, hook_patterns.prompt_block(pat),
-            frame_block=_sp_f.story_frame_block(i))
+            frame_block=_sp_f.story_frame_block(i), cand_idx=i)
         beats = single_source.parse_beats(_c(prompt, single_source.BEATS_SCHEMA))
         # 총량 교정루프(최대 2회) — 넘치면 표현만 줄여 다시 받는다.
         for _ in range(2):
@@ -3278,6 +3300,31 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         beats = single_source.apply_restyle(beats, _c,
                                             style_name=_sp0.candidate_style(i),
                                             report=_restyle_rep)
+        # ★홈테리어픽 서명 보장(2026-08-09): CTA 직전 문장을 합쇼체로 닫는다.
+        #   프롬프트 2차 수정으로도 10회 실측 7/10에 그쳤다 — CTA·빈비트와 같이 코드로 잡는다.
+        #   ★리라이트 **뒤**에 둔다(리라이트가 어미를 도로 요체로 되돌리기 때문).
+        #   해당 스타일이 아니면 hapsyo_tail_missing이 항상 False라 no-op(회귀 0).
+        _hap_style = _sp0.candidate_style(i)
+        for _ in range(2):
+            if not single_source.hapsyo_tail_missing(beats, _hap_style):
+                break
+            _bh = single_source.parse_beats(
+                _c(single_source.fix_hapsyo_prompt(beats), single_source.BEATS_SCHEMA))
+            if _bh and len(_bh) == len(beats):
+                beats = _bh
+            else:
+                break
+        # ★채이 서명 보장(2026-08-09): 본문에 가족·지인이 등장하게. 인물이 없으면
+        #   어미만 채이고 이야기는 다른 채널과 같아진다(10회 실측 1건). 다른 스타일엔 no-op.
+        for _ in range(2):
+            if not single_source.chae_person_missing(beats, _hap_style):
+                break
+            _bp = single_source.parse_beats(
+                _c(single_source.fix_chae_person_prompt(beats), single_source.BEATS_SCHEMA))
+            if _bp and len(_bp) == len(beats):
+                beats = _bp
+            else:
+                break
         # ★빈 나레이션 비트는 **커버 배정 전에** 걸러낸다(2026-08-04 라이브 실측 job
         #   bcdf871a6d57: 추천 후보가 16.8초 — 버려진 비트의 컷이 같이 사라져 하한 미달).
         #   먼저 거르면 아래 '구멍은 직전 비트가 이어받는다'가 그 컷들을 살린다.
@@ -3699,6 +3746,33 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         plan["beats"] = _ss1.apply_restyle(plan["beats"], _call,
                                            style_name=_sp1.candidate_style(_ci),
                                            report=_restyle_rep)
+        # ★홈테리어픽 서명 보장(2026-08-09, 1소스와 동일 배선): CTA 직전 문장을 합쇼체로.
+        #   리라이트 **뒤**에 둔다(리라이트가 어미를 도로 요체로 되돌린다).
+        #   해당 스타일이 아니면 no-op(회귀 0). 1소스 실측: 프롬프트만으론 7/10 → 보장 후 10/10.
+        _hap_style1 = _sp1.candidate_style(_ci)
+
+        def _apply_narr_fix(_mk_prompt):
+            """narration만 갈아끼운다 — covers·seg_ids(화면 배정)는 원본 유지."""
+            _nb = _ss1.parse_beats(_call(_mk_prompt(plan["beats"]), _ss1.BEATS_SCHEMA))
+            if not _nb or len(_nb) != len(plan["beats"]):
+                return False
+            for _o, _n in zip(plan["beats"], _nb):
+                _t = (_n.get("narration") or "").strip()
+                if _t:
+                    _o["narration"] = _t
+            return True
+
+        for _ in range(2):
+            if not _ss1.hapsyo_tail_missing(plan["beats"], _hap_style1):
+                break
+            if not _apply_narr_fix(_ss1.fix_hapsyo_prompt):
+                break
+        # ★채이 서명 보장(2026-08-09, 1소스와 동일): 본문에 가족·지인이 등장하게.
+        for _ in range(2):
+            if not _ss1.chae_person_missing(plan["beats"], _hap_style1):
+                break
+            if not _apply_narr_fix(_ss1.fix_chae_person_prompt):
+                break
         story = {k: r.get(k, "") for k in
                  ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
         rule_score = _score_candidate(plan, avoid_hooks=avoid_hooks, target_seconds=target_seconds,
