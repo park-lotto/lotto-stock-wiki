@@ -164,8 +164,8 @@ def analyze_video(video_path, caption, max_retries=5, quota_sleep=8):
             if key_vault.is_quota_error(e):
                 # 분당 제한 등 "일일 소진"까지는 확인 안 되는 429 — 키를 영구
                 # 제외하면 전용 풀(3개뿐)이 금방 동나므로, 같은 키로 짧게
-                # 대기 후 재시도
-                time.sleep(quota_sleep)
+                # 대기 후 재시도. 서버가 대기시간을 알려주면 그 값을 쓴다(2026-08-09).
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
                 continue
             if attempt < max_retries - 1 and any(c in m for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
@@ -225,7 +225,10 @@ def translate_keyword(keyword, max_retries=3, quota_sleep=8):
                 comment_gen._mark_key_exhausted(idx)
                 continue
             if key_vault.is_quota_error(e):
-                time.sleep(quota_sleep)
+                # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
+                # 고정 8초는 실제 대기(45초)에 한참 못 미쳐 재시도 3번이 전부
+                # 429로 타버렸고, 결과가 조용한 빈 값이라 태거가 0/40건만 찍었다.
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
                 continue
             if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
@@ -269,7 +272,10 @@ def cn_search_keyword(caption, max_retries=3, quota_sleep=8):
                 comment_gen._mark_key_exhausted(idx)
                 continue
             if key_vault.is_quota_error(e):
-                time.sleep(quota_sleep)
+                # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
+                # 고정 8초는 실제 대기(45초)에 한참 못 미쳐 재시도 3번이 전부
+                # 429로 타버렸고, 결과가 조용한 빈 값이라 태거가 0/40건만 찍었다.
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
                 continue
             if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
@@ -348,7 +354,10 @@ def subject_tags_vision(image_bytes, caption, max_retries=3, quota_sleep=8):
                 comment_gen._mark_key_exhausted(idx)
                 continue
             if key_vault.is_quota_error(e):
-                time.sleep(quota_sleep)
+                # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
+                # 고정 8초는 실제 대기(45초)에 한참 못 미쳐 재시도 3번이 전부
+                # 429로 타버렸고, 결과가 조용한 빈 값이라 태거가 0/40건만 찍었다.
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
                 continue
             if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
@@ -401,7 +410,10 @@ def face_forward_vision(image_bytes, max_retries=3, quota_sleep=8):
                 comment_gen._mark_key_exhausted(idx)
                 continue
             if key_vault.is_quota_error(e):
-                time.sleep(quota_sleep)
+                # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
+                # 고정 8초는 실제 대기(45초)에 한참 못 미쳐 재시도 3번이 전부
+                # 429로 타버렸고, 결과가 조용한 빈 값이라 태거가 0/40건만 찍었다.
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
                 continue
             if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
@@ -454,7 +466,10 @@ def text_level_vision(image_bytes, max_retries=3, quota_sleep=8):
                 comment_gen._mark_key_exhausted(idx)
                 continue
             if key_vault.is_quota_error(e):
-                time.sleep(quota_sleep)
+                # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
+                # 고정 8초는 실제 대기(45초)에 한참 못 미쳐 재시도 3번이 전부
+                # 429로 타버렸고, 결과가 조용한 빈 값이라 태거가 0/40건만 찍었다.
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
                 continue
             if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
@@ -517,7 +532,10 @@ def cn_search_keyword_vision(image_bytes, caption, max_retries=3, quota_sleep=8)
                 comment_gen._mark_key_exhausted(idx)
                 continue
             if key_vault.is_quota_error(e):
-                time.sleep(quota_sleep)
+                # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
+                # 고정 8초는 실제 대기(45초)에 한참 못 미쳐 재시도 3번이 전부
+                # 429로 타버렸고, 결과가 조용한 빈 값이라 태거가 0/40건만 찍었다.
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
                 continue
             if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
@@ -586,7 +604,10 @@ def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8):
                 comment_gen._mark_key_exhausted(idx)
                 continue
             if key_vault.is_quota_error(e):
-                time.sleep(quota_sleep)
+                # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
+                # 고정 8초는 실제 대기(45초)에 한참 못 미쳐 재시도 3번이 전부
+                # 429로 타버렸고, 결과가 조용한 빈 값이라 태거가 0/40건만 찍었다.
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
                 continue
             if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
@@ -637,7 +658,10 @@ def judge_same_product(product, titles, max_retries=2, quota_sleep=8):
                 comment_gen._mark_key_exhausted(idx)
                 continue
             if key_vault.is_quota_error(e):
-                time.sleep(quota_sleep)
+                # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
+                # 고정 8초는 실제 대기(45초)에 한참 못 미쳐 재시도 3번이 전부
+                # 429로 타버렸고, 결과가 조용한 빈 값이라 태거가 0/40건만 찍었다.
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
                 continue
             if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
