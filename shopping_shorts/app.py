@@ -4103,7 +4103,15 @@ _ALLOWED_THUMB_HOSTS = ("cdninstagram.com", "fbcdn.net", "ytimg.com",
                         "xhscdn.com",
                         # 도우인 커버 CDN(pN-sign.douyinpic.com) — 해외HOT 도우인 카드 썸네일.
                         # 없으면 도우인 카드가 검게 깨짐(실측 2026-07-26).
-                        "douyinpic.com")
+                        "douyinpic.com",
+                        # ★구글 렌즈 결과 썸네일(encrypted-tbnN.gstatic.com) — 숏템파워검색.
+                        # 렌즈(SerpApi visual_matches)의 thumbnail은 플랫폼 CDN이 아니라
+                        # **구글이 재호스팅한 gstatic 주소**다. 화이트리스트에 없어서 /api/thumb가
+                        # 400을 뱉었고, 카드가 통째로 검게 떴다(실측 2026-08-09 서버로그:
+                        # "GET /api/thumb?url=...encrypted-tbn0.gstatic.com... 400 Bad Request" 40건).
+                        # 유튜브·인스타 결과만 검게 보인 이유도 이것 — 틱톡 결과는 렌즈가
+                        # 원본 tiktokcdn 주소를 주는 경우가 있어 우연히 통과했다.
+                        "gstatic.com")
 _ALLOWED_VIDEO_HOSTS = ("cdninstagram.com", "fbcdn.net")
 
 
