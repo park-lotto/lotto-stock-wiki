@@ -22,7 +22,113 @@ from pathlib import Path
 from PIL import ImageFont
 
 # 출력 규격(숏폼 세로). 소스 해상도가 달라도 여기로 통일해야 concat -c copy가 안전.
-_OUT_W, _OUT_H = 720, 1280
+_OUT_W, _OUT_H = 1080, 1920
+# ★x264 프리셋: 기본 medium(최종). 미리보기는 preview_preset()가
+# veryfast로 낮춰 6분→~1.5분. ★스레드로컬인 이유(오류검사에서 잡음): run_preview와
+# run_render는 각각 BackgroundTasks 스레드에서 돈다 — 모듈 전역이면 미리보기가 켠
+# veryfast가 동시에 도는 **최종 렌더**까지 저화질로 오염시키는 레이스가 난다.
+# assemble 호출 트리는 스레드 내부 분기가 없으므로(실측: 이 모듈에 ThreadPool 없음)
+# 스레드로컬이 정확히 "이 렌더만" 바꾼다.
+import contextlib as _contextlib
+import threading as _threading
+
+_preset_local = _threading.local()
+# CRF(화질): 낮을수록 고화질. 최종은 16(원본에 아주 가깝게), 미리보기는 28(빠르고 작게).
+# ★CRF 미지정 시 libx264 기본이 23이라 최종도 흐릿하고, 자막 오버레이 재인코딩으로 세대손실이
+#   더 쌓였다(2026-07-27 사장님: "최종이 원본보다 안 좋다"). 프리셋과 같은 스레드로컬로 둬
+#   미리보기(veryfast/28)와 최종(slow/16)이 서로 오염되지 않게 한다.
+#   2026-07-27 2차 상향: 18→16 + medium→slow(같은 CRF에서 압축효율↑=디테일 더 보존). 최종만
+#   느려지고(미리보기는 veryfast 유지) 화질이 원본에 더 붙는다. 용량 크면 17~18로 되돌린다.
+#
+# ★2026-07-30 slow→medium 되돌림(사장님 지시 — 최종렌더 8~10분 체감).
+#   preset은 "얼마나 오래 고민해 압축하나"이고 화질 목표는 CRF가 정한다 — CRF 16을 그대로
+#   두므로 x264는 같은 품질을 노리고 인코딩한다. 차이는 **속도와 용량**에 나타난다:
+#   medium은 1.5~2배 빠르고 파일이 10~20% 커진다. 07-27의 화질 상향분은 CRF 18→16이
+#   대부분이고 그건 유지된다. 소셜 업로드는 플랫폼이 재인코딩하므로 체감차는 더 줄어든다.
+#   ⚠️ 되돌릴 땐 이 한 줄만 "slow"로 바꾸면 된다(용량이 문제면 CRF 17~18이 먼저다).
+_FINAL_CRF, _PREVIEW_CRF = "16", "28"
+_FINAL_PRESET = "medium"
+
+
+# ffmpeg 스레드 상한(2026-07-30) — 워커를 여러 개 띄워 고객 작업을 동시에 처리하려면
+# 인코딩 하나가 코어를 다 먹어선 안 된다. 0은 "ffmpeg가 알아서 전부 사용"이라, 렌더 2건이
+# 겹치면 서로를 굶기며 둘 다 느려진다. 워커 수만큼 코어를 나눠 갖게 상한을 둔다.
+#
+# ★2026-08-06 기본값을 코어수/워커수로 자동 산정한다. 예전 기본은 0(무제한)이었는데,
+#   워커가 1개일 땐 그게 맞았지만 **워커 3개로 늘어난 뒤로는 셋이 각자 전 코어를 잡으려
+#   들어 서로를 굶긴다**(4코어에 12스레드 요구 = 컨텍스트 스위칭 낭비). 서버 env에
+#   FFMPEG_THREADS를 안 넣어두면 계속 0이라, 잊어도 안전하도록 코드가 기본을 준다.
+#   env로 명시하면 그게 항상 이긴다(0을 넣으면 종전처럼 무제한).
+#   ★하한 2: 코어÷워커를 그대로 쓰면 4코어/3워커 = 1스레드가 되는데, **셋이 동시에
+#   렌더하는 건 드문 일**이라 평소 렌더까지 1스레드로 기어가면 손해가 더 크다. x264는
+#   스레드 2개만 돼도 1개보다 확연히 빠르고, 겹칠 때의 과점유는 2 상한으로 충분히 막힌다.
+def _default_ffmpeg_threads():
+    try:
+        cores = os.cpu_count() or 1
+        workers = int(os.getenv("WORKER_COUNT", "3") or 3)
+        return max(2, cores // max(1, workers))
+    except Exception:                     # noqa: BLE001 — 산정 실패는 무제한으로(종전 동작)
+        return 0
+
+
+_FFMPEG_THREADS = int(os.getenv("FFMPEG_THREADS", "") or _default_ffmpeg_threads())
+
+
+# ── 중간 산출물은 "빠르게", 최종 1회만 "품질"(2026-07-31 렌더 단축) ──────────────
+# 지금까지 서브클립·비트클립까지 전부 최종 품질(CRF 16 · medium)로 인코딩했다. 그런데
+# 자막 번인(_burn_captions)이 어차피 전체를 **다시** 인코딩하므로, 중간 결과의 압축률에
+# 공들이는 시간은 그대로 버려진다. 화질을 정하는 건 마지막 패스다.
+#   중간 = veryfast · CRF 14 → 인코딩 시간이 크게 줄고(세대손실은 CRF 14라 사실상 무시),
+#   최종 = 기존 그대로(preset medium · CRF 16) → 산출물 화질 목표 불변.
+# ⚠️ 중간 파일이 조금 커진다(CRF 14). 디스크가 빠듯하면 _MID_CRF를 16으로 올려라.
+# 되돌리기: MID_PRESET=medium MID_CRF=16 (환경변수) — 코드 수정 없이 원복된다.
+_MID_PRESET = os.getenv("MID_PRESET", "veryfast")
+_MID_CRF = os.getenv("MID_CRF", "14")
+
+
+def _mid_preset():
+    """중간 패스 preset — 미리보기 모드처럼 전체 preset이 낮춰진 경우엔 그걸 따른다."""
+    cur = getattr(_preset_local, "value", None)
+    return cur if cur else _MID_PRESET
+
+
+def _mid_crf():
+    cur = getattr(_preset_local, "crf", None)
+    return cur if cur else _MID_CRF
+
+
+def _threads_args():
+    """['-threads','N'] 또는 [] — 인코딩 명령에 끼워 넣는다."""
+    return ["-threads", str(_FFMPEG_THREADS)] if _FFMPEG_THREADS > 0 else []
+
+
+def _preset():
+    return getattr(_preset_local, "value", _FINAL_PRESET)
+
+
+def _crf():
+    return getattr(_preset_local, "crf", _FINAL_CRF)
+
+
+@_contextlib.contextmanager
+def preview_preset(preset="veryfast", crf=_PREVIEW_CRF):
+    """이 블록(현재 스레드) 안의 assemble 인코딩만 빠른 프리셋·낮은 화질로. 끝나면 원복."""
+    prev = getattr(_preset_local, "value", None)
+    prev_crf = getattr(_preset_local, "crf", None)
+    _preset_local.value = preset
+    _preset_local.crf = crf
+    try:
+        yield
+    finally:
+        if prev is None:
+            del _preset_local.value
+        else:
+            _preset_local.value = prev
+        if prev_crf is None:
+            if hasattr(_preset_local, "crf"):
+                del _preset_local.crf
+        else:
+            _preset_local.crf = prev_crf
 _FONT_DIR = Path(__file__).parent / "static" / "fonts"
 # 반중복탐지 회피(2026-07-14) — 말 안 해도 항상 적용. 화질 오염 없는(비가역 손상X)
 # 것만 자동화: ①전 비트 기본 크롭+줌(살짝 확대, 원본과 프레임 구도가 달라짐)
@@ -64,13 +170,59 @@ def _base_zoom_vf():
     w, h = int(_OUT_W * _BASE_ZOOM), int(_OUT_H * _BASE_ZOOM)
     return f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={_OUT_W}:{_OUT_H}"
 # 하단 자막 바(원본 소각 자막을 덮는다) + 한 줄 자막 스타일.
-_BAR_H = 300
-_CAP_FONTSIZE = 52      # 짧은 1줄 구절이라 여유 있음 → 키움
+_BAR_H = 450
+_CAP_FONTSIZE = 78      # 짧은 1줄 구절이라 여유 있음 → 키움
+
+# ★꾸미기 UI가 쓰는 기준 폭(produce.html의 VIDEO_W). 미리보기·썸네일은 자막/헤드카피 px를
+#   **이 폭 기준**으로 축소해 그린다(scale = PREVIEW_W/VIDEO_W).
+_UI_REF_W = 720
+
+
+def _ui_px(v, default, zero_ok=False):
+    """꾸미기 화면에서 온 px 값을 출력 해상도로 환산한다(2026-07-30 사장님 제보:
+    "썸네일 비율보다 실제 렌더 자막이 더 작게 나온다").
+
+    뿌리: 2026-07-24 f08c18aec가 출력을 720x1280 → 1080x1920으로 올리면서 **내부 기본값은
+    전부 ×1.5** 했지만(_CAP_FONTSIZE 52→78, size 64→96, outline_w 6→9, shadow_d 3→5,
+    box_pad 16→24, _BAR_H 300→450) **UI에서 넘어온 값은 환산하지 않았고**, 프론트의
+    VIDEO_W도 720에 남았다. 그래서 사장님이 슬라이더로 정한 크기는 미리보기에선 720폭
+    기준으로 커 보이고 실제 렌더에선 1080폭에 그려져 정확히 720/1080=67%로 작아졌다.
+
+    → UI 값만 ×(_OUT_W/_UI_REF_W). **기본값은 이미 1080 기준이라 환산하지 않는다**
+      (여기서 같이 곱하면 기본값이 1.5배 더 커지는 이중 확대가 된다).
+
+    zero_ok: box_pad처럼 0이 "여백 없음"이라는 뜻인 값은 True(0을 기본값으로 안 되돌린다).
+    나머지(size·outline_w·shadow_d)는 종전 `or` 의미대로 0/None이면 기본값.
+    """
+    if v is None or v == "" or (not zero_ok and not v):
+        return default
+    try:
+        return int(round(float(v) * _OUT_W / _UI_REF_W))
+    except (TypeError, ValueError):
+        return default
 # 자막 리듬 목표: 한 구절 2~3어절, 무자막 없이 빠르게 순차 전환. 핵심은 글자수보다
 # **의미(호흡) 단위** — 수식어(관형어·부사)는 뒤 단어와 붙어 한 호흡이 되어야 한다.
 # 예) "이 방법은 진짜", "자세한 보관비법", "바로 알려드릴게요", "그냥 두지 마세요".
-_CAP_TARGET = 9         # 한 구절 목표 글자수(공백 제외). 이 안이면 이어붙이려 시도.
-_CAP_MAX_WORDS = 3      # 한 구절 최대 어절 수(하드리밋).
+# 2026-07-25: 9→14 / 3→4로 상향. 9자·3어절은 이어지는 한 문장을 화면에서 너무 잘게
+# 토막내(대본은 코헤런트인데 자막이 스타카토로 끊겨 보임) "연결이 끊긴다"는 제보의 실제
+# 원인이었다. 실측(문장×설정 비교): 14/4가 자연스러운 호흡을 유지하면서 부정("안 됐는데")·
+# 쉼표 끊김 등 품질을 지키는 지점(5어절은 부정을 갈라놓고, 16자↑는 짧은 문장이 통째 1줄이
+# 돼 화면에 길게 참). _CAP_HEAD 수식어 붙이기 로직은 그대로라 "마법의|가루" 파편은 방지.
+# ★단, 3어절 시절의 미세 그룹핑(예 "며칠 안 됐는데"를 3어절 통짜로)은 큰 상한에선 앞 어절이
+#   먼저 채워 갈릴 수 있다 — 잘게 안 끊기는 전체 흐름과 맞바꾼 의도된 트레이드오프.
+# 2026-08-06 사장님 "장면마다 자막이 너무 길다": 레퍼런스 실측(4~8자, 2~3어절)로
+# 줄일 수 있게 env 스위치(핸드오프 대본퀄v3 '다음에 할 것 4번'). 7/25의 14/4는 스타카토
+# 제보 대응이라 **기본값은 14/4 유지**(테스트도 이 리듬을 명세로 본다) — 서버는
+# /etc/shopping-shorts.env 에 CAPTION_TARGET_CHARS=8 CAPTION_MAX_WORDS=3 으로 짧게 운용,
+# 되돌리기는 그 두 줄 삭제.
+_CAP_TARGET = int(os.environ.get("CAPTION_TARGET_CHARS", "14") or 14)
+_CAP_MAX_WORDS = int(os.environ.get("CAPTION_MAX_WORDS", "4") or 4)
+# 의존명사(홀로 자막이 되면 뜻이 없어 앞말에 붙어야 하는 말) — 1어절 꼬리로 남으면 앞 구절에 병합.
+# "…식단" | "때문?" → "…식단 때문?". 글자수가 아니라 품사로 판별(독립명사 "대박"·"가루"는 안 붙임).
+# "거·게·건·걸"은 "것"의 구어형(것+조사 축약) — 실렌더에서 "…사 드시는 | 거 이제
+# 멈추셔야"로 끊긴 실사고(2026-08-06, 8자 상한에서 드러남).
+_CAP_BOUND_NOUN = {"때문", "때", "것", "수", "뿐", "등", "데", "줄", "채", "척", "터", "만큼", "대로", "듯",
+                   "거", "게", "건", "걸"}
 # ── 머리 단어(head-marker): 이 단어를 만나면 그 **앞에서** 끊고, 이 단어가 다음
 #    구절의 머리가 된다(뒤 명사/서술어를 데려간다). "…일쑤였는데 | 이 방법은"처럼
 #    관형어 "이"가 앞 구절 꼬리에 남지 않게 한다. 관형사·지시어·부사·수관형사.
@@ -78,7 +230,9 @@ _CAP_HEAD = {"이", "그", "저", "한", "두", "세", "네", "몇", "각", "매
              "이런", "저런", "그런", "무슨", "어떤", "온갖", "단", "딱", "약",
              "자세한", "확실한", "특별한", "간단한", "완벽한",
              "바로", "그냥", "그대로", "다시", "먼저", "이제", "지금", "꼭", "막",
-             "가장", "제일", "훨씬", "더", "덜", "약간", "좀", "진짜", "정말"}
+             "가장", "제일", "훨씬", "더", "덜", "약간", "좀", "진짜", "정말",
+             # 양태부사(뒤 서술어를 꾸며 반드시 앞에서 끊고 뒤로 붙는다): "뚝 떨어지다"
+             "뚝", "확", "쭉", "싹", "푹", "팍", "툭", "쫙", "쓱", "훅"}
 # ── 도입어(lead): 이 단어(로 끝나는 어절)는 한 호흡을 열고 **뒤에서** 끊는다.
 #    호격("여러분")·연결 도입("남겨주시면") 등 그 자체로 한 박자.
 _CAP_LEAD = {"여러분", "여러분,", "자"}
@@ -87,9 +241,13 @@ _CAP_LEAD = {"여러분", "여러분,", "자"}
 # 끊기는 앞 절이 충분히 길 때(_CAP_LEAD_MINCHARS↑)만 적용해 "밭에서"(짧음)는 안 끊는다.
 _CAP_LEAD_SUFFIX = ("면", "면서", "니까", "는데", "지만", "거든", "잖아")
 _CAP_LEAD_MINCHARS = 4  # 연결어미 끊기 최소 글자수(공백 제외). 이보다 짧으면 이어붙임.
+# 시간/빈도 도입 부사(아침마다·날마다·집집마다)는 자기 뒤에서 끊어 한 박자를 연다 →
+# 뒤에 오는 '수식어+명사'가 3어절 하드캡에 밀려 쪼개지지 않는다("빵 달라는 아이"가 온전히
+# 묶임, 2026-07-20 사장님 제보). "마다"는 항상 부사/보조사라 뒤에서 끊어도 안전(글자수 무관).
+_CAP_OPENER_SUFFIX = ("마다",)
 _CAP_HEAD_MINCHARS = 4  # 머리 단어 앞에서 끊는 최소(앞 구절) 글자수. 짧으면 이어붙임
                         # ("이것 한" 파편 방지, "…일쑤였는데 | 이" 는 앞이 길어 끊김).
-_CAP_WRAP = 13          # 아주 긴 단일 어절 방어용(한 줄 최대 글자수, 720px 안)
+_CAP_WRAP = 19          # 아주 긴 단일 어절 방어용(한 줄 최대 글자수, 1080px 안)
 _CAP_MIN_DUR = 0.25     # 한 구절 최소 표시시간(속도감).
 
 # 한글 폰트 후보(먼저 발견되는 것 사용). repo에 NanumGothic을 번들하므로 서버·로컬
@@ -134,6 +292,22 @@ def _probe_duration(path):
     return float(out.stdout.strip())
 
 
+_TRIM_FLOOR = 0.4  # 비트 트림 후 남길 최소 길이(초). 과트림·역전 방지.
+
+
+def _effective_dur(probe, head_trim=0.0, tail_trim=0.0, floor=_TRIM_FLOOR):
+    """probe(원본 TTS 길이)에서 앞/뒤 트림을 뺀 실질 비트 길이. 하한 가드 포함.
+    음수 트림은 0으로 취급. 결과가 floor 밑이면 floor로 고정한다."""
+    d = probe - max(0.0, head_trim) - max(0.0, tail_trim)
+    return max(floor, d)
+
+
+def _beat_effective_dur(beat, tts_path):
+    """비트 dict의 head_trim/tail_trim을 반영한 실질 길이(단일 출처)."""
+    return _effective_dur(_probe_duration(tts_path),
+                          beat.get("head_trim", 0.0), beat.get("tail_trim", 0.0))
+
+
 def _run_ffmpeg(cmd, cwd=None):
     """ffmpeg 실행. 실패 시 stderr를 예외에 담아 원인을 삼키지 않는다.
     stdin=DEVNULL 필수(Windows): pytest 캡처 중에는 부모 stdin 핸들이 유효하지
@@ -147,27 +321,123 @@ def _run_ffmpeg(cmd, cwd=None):
 
 
 _MIN_CLIP = 0.8   # 초. 이보다 짧은 독립 클립은 만들지 않는다(깜빡임 방지).
+# 연속도 아닌 짧은 클립을 흡수(=정지 유발)하는 하한. 0.5초 이상 움직이는 실클립은 흡수하지 않고
+# 그대로 둔다 — 짧게 움직이는 게 정지프레임보다 낫다는 사장님 피드백(2026-07-21).
+_MIN_CLIP_KEEP = 0.5
+
+# 슬로우모션 상한. 소스가 나레이션보다 짧을 때 무제한으로 늘리면(옛 동작) 부자연스러운
+# 슬로우크롤이 됐다(사장님 실측, 2026-07-19). 재생은 최대 이 배율까지만 늘리고, 그 이상
+# 필요한 시간은 마지막 프레임 정지(freeze)로 떠안는다 → 요리 동작은 자연 속도, 남는 시간만 홀드.
+_MAX_SLOWMO = 1.15
+
+# 마지막 비트 '여운'(초) — 대사가 끝나도 화면을 이만큼 더 살려둔다(2026-07-20 콘폼루프 T4,
+# 사장님 육안 피드백 "붙이면 바로 자르지 말고 대사 끝나고 1초 정도 더 냅두면").
+_LAST_RUNOUT = 1.0
 
 
-def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP):
+def _speed_and_freeze(src_dur, out_dur, max_slowmo=_MAX_SLOWMO):
+    """소스 구간 src_dur초를 출력 out_dur초로 채울 때, (움직이는 재생 길이, 정지프레임 길이).
+
+    - out_dur ≤ src_dur: 늘릴 필요 없음 → (out_dur, 0).
+    - 필요한 배율이 상한 이내: 그대로 완만한 슬로우 → (out_dur, 0).
+    - 상한 초과: 재생은 src_dur*max_slowmo까지만, 나머지는 freeze로 → (capped, out_dur-capped).
+
+    항상 play_out + freeze == out_dur (총 길이·오디오/자막 싱크 보존)."""
+    if src_dur <= 1e-9 or out_dur <= src_dur:
+        return (out_dur, 0.0)
+    capped = src_dur * max_slowmo
+    if out_dur <= capped + 1e-9:
+        return (out_dur, 0.0)
+    return (capped, out_dur - capped)
+
+
+def _extend_last_clip_for_runout(plan, segs, runout=_LAST_RUNOUT):
+    """마지막 비트 계획의 끝에 여운 runout초를 붙인다(plan 제자리 수정, 반환 동일 객체).
+
+    소스 구간 [start,end]에 실프레임 여유(slack)가 남았으면 그만큼 **1배속 실영상**으로
+    연장하고, 부족분은 out_dur만 늘려 기존 _speed_and_freeze 기계(완만 슬로모→켄번즈 홀드)가
+    흡수한다. 오디오는 tts 그대로라 마지막 1초는 자연스러운 무성 여운이 된다 —
+    mux의 -t가 이 여운만큼 같이 늘어나야 화면에 실린다(assemble 쪽 runout 참조)."""
+    if not plan or runout <= 0:
+        return plan
+    c = plan[-1]
+    seg = next((s for s in segs
+                if s.get("video_id") == c.get("video_id")
+                and float(s.get("start", 0.0)) <= float(c.get("start", 0.0)) < float(s.get("end", 0.0))),
+               None)
+    slack = 0.0
+    if seg:
+        slack = max(0.0, float(seg["end"]) - (float(c["start"]) + float(c["src_dur"])))
+    real_ext = min(runout, slack)
+    c["src_dur"] += real_ext
+    c["out_dur"] += runout
+    return plan
+
+
+def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None, max_shot=None):
     """비트의 순서 구간 리스트 → 나레이션 길이(tts_dur)에 맞춘 클립 계획.
-    각 클립은 자기 구간 [start,end]를 절대 넘지 않는다(유출 0). 부족분은 마지막 클립을
-    슬로모(out_dur>src_dur)로 늘려 채우고, 0.8초 미만 자투리는 직전 클립에 흡수한다.
-    반환: [{"video_id","start","src_dur","out_dur"}, ...]"""
+    각 클립은 자기 구간 [start,end]를 절대 넘지 않는다(유출 0). 부족분은 아래 정책으로 채운다.
+    반환: [{"video_id","start","src_dur","out_dur"}, ...]
+
+    ★멈추지 말고 진짜 영상으로(2026-07-20 사장님): 배정 구간을 다 써도 모자라면, 소스 릴은
+    보통 구간보다 훨씬 길어(구간 2초 vs 릴 30초) 뒤에 실프레임이 남아있다. `src_durs`
+    ({video_id: 소스총길이})가 주어지면 마지막 클립의 읽기 창을 소스에 남은 만큼 더 늘려
+    **1배속 실영상**으로 채운다 → freeze/억지슬로우 없음. 소스까지 소진돼야만 슬로모 폴백.
+    src_durs 미제공(하위호환)이면 예전처럼 마지막 클립을 슬로모로 늘린다.
+
+    max_shot(2026-07-22): 한 컷을 이보다 오래 안 끈다 — 세그먼트를 이 상한 청크로 **번갈아**
+    재생(라운드로빈)해 긴 정지(7초 홀드) 대신 distinct 앵글로 컷한다(벤치마크 ~1.1초 컷 밀도).
+    같은 세그먼트는 창을 앞으로 밀며 재생(정지 아님). None/0이면 옛 동작(세그 통째 재생)."""
     eps = 1e-3
     clips = []
     filled = 0.0
-    for seg in segments:
-        remaining = tts_dur - filled
-        if remaining <= eps:
-            break
-        seg_len = seg["end"] - seg["start"]
-        if seg_len <= eps:
-            continue
-        take = min(seg_len, remaining)   # 1배속으로 이만큼 재생(구간 이내)
-        clips.append({"video_id": seg["video_id"], "start": seg["start"],
-                      "src_dur": take, "out_dur": take})
-        filled += take
+    if max_shot and max_shot > eps and len(segments) > 1:
+        # 라운드로빈: distinct 세그먼트를 max_shot씩 번갈아 → 컷 밀도↑. 각 세그 읽기위치를 유지해
+        # 다시 올 땐 이어서 재생(같은 프레임 반복 아님). 다 소진되면 아래 공통 shortfall로.
+        pos = [seg["start"] for seg in segments]
+        oi, guard0 = 0, 0
+        while tts_dur - filled > eps and guard0 < 2000:
+            guard0 += 1
+            i = oi % len(segments); oi += 1
+            seg = segments[i]
+            avail = seg["end"] - pos[i]
+            if avail <= eps:
+                if all(segments[k]["end"] - pos[k] <= eps for k in range(len(segments))):
+                    break                          # 전 세그 소진 → shortfall 정책으로
+                continue
+            take = min(avail, max_shot, tts_dur - filled)
+            # ★깜빡임 방지(2026-07-29 사장님 "0.몇초마다 두서없이 바뀌어 눈아프고 집중안됨"):
+            #   min_clip 미만 컷 금지. 실측(75f41e558957.mp4)에서 0.47~0.63초 컷이 수두룩했던 건
+            #   이 라운드로빈이 세그 잔량(avail)이 짧아도 그대로 뱉었기 때문 — min_clip 파라미터가
+            #   여기서 안 쓰였다. 잔량이 min_clip 미만이면 (a)min_clip 이상 낼 수 있는 다른 세그로
+            #   전환, (b)그런 세그가 없으면 루프를 끝내 아래 shortfall(마지막 클립을 실프레임으로
+            #   연장, 되풀이 없음)이 이어받게 한다. 단 남은 나레이션 자체가 min_clip 미만이면
+            #   그 자투리는 새 tiny컷 대신 shortfall로 흡수.
+            if take < min_clip - eps:
+                if tts_dur - filled < min_clip - eps:
+                    break
+                j = next((k for k in range(len(segments))
+                          if segments[k]["end"] - pos[k] >= min_clip - eps), -1)
+                if j < 0:
+                    break
+                i = j; seg = segments[i]
+                take = min(seg["end"] - pos[i], max_shot, tts_dur - filled)
+            clips.append({"video_id": seg["video_id"], "start": pos[i],
+                          "src_dur": take, "out_dur": take})
+            pos[i] += take
+            filled += take
+    else:
+        for seg in segments:
+            remaining = tts_dur - filled
+            if remaining <= eps:
+                break
+            seg_len = seg["end"] - seg["start"]
+            if seg_len <= eps:
+                continue
+            take = min(seg_len, remaining)   # 1배속으로 이만큼 재생(구간 이내)
+            clips.append({"video_id": seg["video_id"], "start": seg["start"],
+                          "src_dur": take, "out_dur": take})
+            filled += take
 
     if not clips:
         # 구간이 하나도 못 쓰였다(모두 길이 0). 첫 구간을 tts_dur로 슬로모(방어적 폴백).
@@ -177,17 +447,102 @@ def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP):
 
     shortfall = tts_dur - filled
     if shortfall > eps:
-        # 구간을 다 써도 모자람 → 마지막 클립을 슬로모로 늘려 채운다.
-        clips[-1]["out_dur"] += shortfall
+        # 1순위: 마지막 클립을 그 소스에 남은 실프레임으로 연장(1배속) — 릴이 배정 구간보다 길다.
+        if src_durs:
+            last = clips[-1]
+            sdur = src_durs.get(last["video_id"], 0.0)
+            avail = max(0.0, sdur - (last["start"] + last["src_dur"]))
+            real_ext = min(shortfall, avail)
+            if real_ext > eps:
+                last["src_dur"] += real_ext
+                last["out_dur"] += real_ext
+                shortfall -= real_ext
+        # 2순위(★뒤에서 채우기, 2026-07-27 사장님: "같은 장면 반복 말고, 조금 미스 나도
+        #   뒤 실프레임으로 자연스럽게"): 예전엔 seg["start"]로 되감아 재생해 같은 장면이
+        #   2~3번 되풀이돼 보였다. 대신 각 소스 릴의 '아직 안 튼 뒷부분'을 이어서 소비한다 —
+        #   릴은 배정 구간보다 훨씬 길어(구간 2초 vs 릴 30초) 뒤에 실프레임이 남아있다.
+        #   소스별로 지금까지 소비한 최대 지점(head)부터 앞으로만 밀며 새 클립을 붙이므로
+        #   같은 창을 다시 틀지 않는다. 배정 구간 [start,end]은 벗어나지만 새 프레임이라
+        #   되풀이보다 자연스럽다. 모든 소스가 각자 끝까지 소진돼야만 3순위 홀드로.
+        # 2a: 소스 릴의 '아직 안 튼 뒷부분'을 앞으로만 밀며 소비 → 같은 창을 다시 안 튼다.
+        #   소스별 head(지금까지 소비한 최대 지점)부터 src 총길이까지 새 클립을 붙인다.
+        #   릴이 배정 구간보다 길면(흔함) 여기서 대부분 채워져 되풀이가 사라진다.
+        if src_durs:
+            head = {}
+            for cl in clips:
+                end = cl["start"] + cl["src_dur"]
+                if end > head.get(cl["video_id"], 0.0):
+                    head[cl["video_id"]] = end
+            chunk = max_shot if (max_shot and max_shot > eps) else shortfall
+            guard = 0
+            while shortfall > eps and guard < 2000:
+                guard += 1
+                progressed = False
+                for seg in segments:
+                    if shortfall <= eps:
+                        break
+                    vid = seg["video_id"]
+                    h = head.get(vid, seg["end"])
+                    avail = src_durs.get(vid, 0.0) - h
+                    if avail <= eps:
+                        continue
+                    take = min(avail, chunk, shortfall)
+                    clips.append({"video_id": vid, "start": h,
+                                  "src_dur": take, "out_dur": take})
+                    head[vid] = h + take
+                    shortfall -= take
+                    progressed = True
+                if not progressed:
+                    break
+        # 2b: 소스 뒤까지 다 소진돼도 모자라면(짧은 릴), 슬로모/정지 대신 실영상 루프로 채운다
+        #   (2026-07-20 사장님 "멈춤·슬로우 없음"). 되풀이는 남지만 이건 뒤가 진짜 없는 극단뿐.
+        guard = 0
+        while shortfall > eps and guard < 500:
+            guard += 1
+            progressed = False
+            for seg in segments:
+                if shortfall <= eps:
+                    break
+                seg_len = seg["end"] - seg["start"]
+                if seg_len <= eps:
+                    continue
+                take = min(seg_len, shortfall)
+                clips.append({"video_id": seg["video_id"], "start": seg["start"],
+                              "src_dur": take, "out_dur": take})
+                shortfall -= take
+                progressed = True
+            if not progressed:
+                break
+        # 3순위(극단 방어 — 쓸 실영상이 아예 0인 비정상 경로에서만): 최소한만 홀드.
+        if shortfall > eps:
+            clips[-1]["out_dur"] += shortfall
 
-    # 0.8초 미만 독립 클립 제거: 그런 클립을 이웃에 흡수(이웃이 슬로모로 그 시간을 떠안는다).
-    # 앞 클립이 있으면 앞으로, 없으면(첫 클립) 뒤로 합친다. 합계(sum out_dur)는 보존된다.
+    # 0.8초 미만 독립 클립 제거: 그런 클립을 이웃에 흡수. 합계(sum out_dur)는 보존된다.
+    # ★흡수를 정지프레임으로 떠넘기지 않는다(2026-07-21 사장님 "화면 멈춤"): 이웃이 같은 소스의
+    #   연속 구간이면 src_dur도 늘려 **실프레임**으로 흡수한다. 안 그러면 2순위 루프가 실영상
+    #   움직임으로 채운 짧은 클립들이 여기서 다시 out_dur만 부풀어 프리즈로 되돌아갔다(실측:
+    #   b3 CTA 비트 0.97초 정지의 정체). 연속도 아니고 볼 만큼(≥_MIN_CLIP_KEEP) 움직이면 흡수
+    #   안 하고 그대로 둔다 — 짧은 움직임이 정지보다 낫다.
+    def _contig(nb, k):
+        n, s = clips[nb], clips[k]
+        return (n["video_id"] == s["video_id"]
+                and abs((n["start"] + n["src_dur"]) - s["start"]) < 0.05)
+
+    def _absorbable(k):
+        if clips[k]["out_dur"] >= min_clip - eps:
+            return False
+        nb = k - 1 if k > 0 else k + 1
+        return _contig(nb, k) or clips[k]["out_dur"] < _MIN_CLIP_KEEP - eps
+
     while len(clips) > 1:
-        idx = next((k for k, c in enumerate(clips) if c["out_dur"] < min_clip - eps), None)
+        idx = next((k for k in range(len(clips)) if _absorbable(k)), None)
         if idx is None:
             break
         nb = idx - 1 if idx > 0 else idx + 1
-        clips[nb]["out_dur"] += clips[idx]["out_dur"]
+        neigh = clips[nb]
+        if _contig(nb, idx):
+            neigh["src_dur"] += clips[idx]["src_dur"]   # 실프레임 연장 → 정지 안 생김
+        neigh["out_dur"] += clips[idx]["out_dur"]
         clips.pop(idx)
     return clips
 
@@ -197,7 +552,34 @@ def _strip_punct(w):
     return w.strip(".,!?…\"'()[]")
 
 
-def _caption_segments(narration):
+# 자막 각 줄 끝에서 뗄 문장부호(마침표·쉼표·말줄임). 감탄/의문(? !)·물결(~)은 톤이라 남긴다.
+_CAP_TRIM_TAIL = ".,、，。…"
+
+
+def _strip_cap_tail(s):
+    """표시용 — 자막 한 줄 끝의 마침표·쉼표·말줄임만 뗀다('봤잖아요.'→'봤잖아요'). ?!~는 유지."""
+    s = s.rstrip()
+    while s and s[-1] in _CAP_TRIM_TAIL:
+        s = s[:-1].rstrip()
+    return s
+
+
+def _wrap_long(segs):
+    """구절 리스트에서 _CAP_WRAP를 크게 넘는 초장문만 줄바꿈으로 방어(대부분 그대로 1줄).
+    각 줄은 표시용으로 끝 문장부호를 정리한다(2026-07-21 사장님 '봤잖아요.' 마침표 노출)."""
+    out = []
+    for s in segs:
+        s = _strip_cap_tail(s)
+        if not s:
+            continue
+        if len(s.replace(" ", "")) > _CAP_WRAP:
+            out.extend(textwrap.wrap(s, _CAP_WRAP) or [s])
+        else:
+            out.append(s)
+    return out
+
+
+def _caption_segments(narration, preset=None):
     """나레이션을 **의미(호흡) 단위**의 짧은 구절로 나눈다(2~3어절, 1줄).
     예) "여러분 / 오이 절대", "냉장고에 / 그냥 두지 마세요",
         "버리기 일쑤였는데 / 이 방법은 진짜", "남겨주시면 / 자세한 보관비법 / 바로 알려드릴게요".
@@ -210,10 +592,18 @@ def _caption_segments(narration):
       그 **뒤에서** 끊는다. ("여러분 |", "남겨주시면 |")
     - 그 밖에는 글자수(_CAP_TARGET) / 어절수(_CAP_MAX_WORDS) 목표 안에서 이어붙인다.
 
-    방어: 목표를 크게 넘는 아주 긴 단일 어절은 _CAP_WRAP로 강제 줄바꿈."""
+    방어: 목표를 크게 넘는 아주 긴 단일 어절은 _CAP_WRAP로 강제 줄바꿈.
+
+    preset: 대본을 쓴 AI가 미리 끊어준 호흡 줄(list). 이어붙였을 때 narration과 정확히
+    같으면(공백만 무시) 그대로 채택 — 규칙기반 두더지잡기를 근본적으로 대체한다(2026-07-21).
+    글자가 하나라도 다르면(모델이 문장을 바꿈) 무시하고 아래 규칙 폴백으로 안전하게 내려간다."""
     narr = (narration or "").strip()
     if not narr:
         return []
+    if preset and isinstance(preset, (list, tuple)):
+        lines = [str(x).strip() for x in preset if str(x).strip()]
+        if lines and "".join(lines).replace(" ", "") == narr.replace(" ", ""):
+            return _wrap_long(lines)
     words = narr.split()
     out, cur = [], []
     for i, w in enumerate(words):
@@ -237,10 +627,17 @@ def _caption_segments(narration):
         # (b) 현재 구절이 도입어/연결어미로 끝나면 여기서 끊어 한 박자를 준다. 단
         #     연결어미 끊기는 앞 절이 충분히 길 때만("밭에서" 같은 짧은 부사구는 이어붙임).
         lead_break = prev in _CAP_LEAD or (
-            prev.endswith(_CAP_LEAD_SUFFIX) and cur_chars >= _CAP_LEAD_MINCHARS)
-        # (c) 앞 어절이 문장부호로 끝났으면 문장 경계에서 끊는다.
-        sent_break = cur[-1].endswith((".", "?", "!", "…"))
-        if not prev_pulls and (head_break or lead_break or sent_break
+            prev.endswith(_CAP_LEAD_SUFFIX) and cur_chars >= _CAP_LEAD_MINCHARS
+        ) or prev.endswith(_CAP_OPENER_SUFFIX)   # 도입 부사(…마다)는 글자수 무관 뒤에서 끊음
+        # (c) 앞 어절이 문장부호로 끝났으면 문장 경계에서 끊는다. 쉼표도 자연 휴지라
+        #     그 뒤에서 끊는다("빵 달라는 아이, | 아무 식빵이나" — 쉼표 넘겨 뭉치지 않게).
+        sent_break = cur[-1].endswith((".", "?", "!", "…", ",", "、"))
+        # ★의존명사는 구절 머리가 될 수 없다(2026-08-06 실렌더 "…사 드시는 | 거 이제"):
+        #   끊을 자리라도 다음 단어가 의존명사면 상한을 한 어절 넘겨서라도 데려간 뒤 끊는다.
+        #   기존 병합(아래)은 '마지막 1어절 꼬리'만 잡아 중간 구절 머리는 못 막았다.
+        #   문장 경계(sent_break)는 예외 — 문장부호를 넘겨 붙이지 않는다.
+        bound_pull = bare in _CAP_BOUND_NOUN and not sent_break
+        if not prev_pulls and not bound_pull and (head_break or lead_break or sent_break
                                or not room or not under_cap):
             out.append(" ".join(cur))
             cur = [w]
@@ -248,14 +645,19 @@ def _caption_segments(narration):
             cur.append(w)
     if cur:
         out.append(" ".join(cur))
+    # 고아 꼬리 병합: 마지막 구절이 1어절이면 앞 구절에 붙인다 —
+    #   (a) 의존명사 파편이거나("…식단" | "때문?" → "…식단 때문?"), 또는
+    #   (b) 붙여도 한 줄(_CAP_WRAP)을 안 넘으면. 어절 상한을 14/4로 키운 뒤 "…우리 | 아이",
+    #       "…물러서 | 버렸거든요"처럼 마지막 명사·서술어가 홀로 떨어지는 고아가 생겨서다
+    #       (2026-07-25). 화면 폭만 지키면 홀로 뜨는 1어절보다 앞에 붙는 게 늘 낫다.
+    if len(out) >= 2 and len(out[-1].split()) == 1:
+        merged = out[-2] + " " + out[-1]
+        if _strip_punct(out[-1]) in _CAP_BOUND_NOUN \
+                or len(merged.replace(" ", "")) <= _CAP_WRAP:
+            out[-2] = merged
+            out.pop()
     # 목표를 크게 넘는 초장문 단일 구절만 줄바꿈으로 방어(대부분은 그대로 1줄).
-    segs = []
-    for s in out:
-        if len(s.replace(" ", "")) > _CAP_WRAP:
-            segs.extend(textwrap.wrap(s, _CAP_WRAP) or [s])
-        else:
-            segs.append(s)
-    return segs or [narr]
+    return _wrap_long(out) or [narr]
 
 
 def _caption_durations(segs, dur, real_durs=None):
@@ -273,8 +675,11 @@ def _caption_durations(segs, dur, real_durs=None):
     if _CAP_MIN_DUR * n >= dur:      # 하한조차 못 채우면 균등분할
         return [dur / n] * n
     if real_durs is not None and len(real_durs) == len(segs) and sum(real_durs) > 0:
+        # ★실측값은 그대로 쓴다 — dur로 되늘리지 않는다(2026-08-06).
+        # 예전 `dur * d / s` 정규화는 리드인(자막 밖 무음)까지 구절에 비례배분해 자막을
+        # 늘려버려, 애써 실측한 타이밍을 도로 흐트러뜨렸다. 합이 dur를 넘을 때만 줄인다.
         s = sum(real_durs)
-        raw = [dur * d / s for d in real_durs]
+        raw = [dur * d / s for d in real_durs] if s > dur else list(real_durs)
     else:
         weights = [max(1, len(s.replace("\n", ""))) for s in segs]
         total_w = sum(weights)
@@ -291,24 +696,64 @@ def _caption_durations(segs, dur, real_durs=None):
     return floored
 
 
-def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None, cap_offset=0.0, tail=0.5):
+def _adjust_caps_for_trim(beat):
+    """(lead_in, durs) — 저장된 cap_lead/cap_durs에 head_trim을 반영해 돌려준다.
+
+    ★왜(2026-08-06): cap_durs·cap_lead는 **합성 시점에 한 번** 계산되고 그 뒤 무효화가
+    없다(mix_pipeline). 그런데 사장님이 제작소에서 앞을 트림하면 오디오만 왼쪽으로
+    당겨지고 자막 모양은 옛날 그대로 남아 또 어긋났다. 트림한 만큼 리드인에서 갚고,
+    리드인으로 모자라면 첫 구절을 파고들어 깎는다(음수 시작 금지).
+    """
+    durs = beat.get("cap_durs")
+    lead = float(beat.get("cap_lead") or 0.0)
+    trim = float(beat.get("head_trim") or 0.0)
+    if not durs or trim <= 0:
+        return lead, (list(durs) if durs else durs)
+    durs = list(durs)
+    if trim <= lead:
+        return lead - trim, durs
+    # 리드인을 다 쓰고도 남으면 앞 구절부터 순서대로 깎아 없앤다.
+    rest = trim - lead
+    for i, d in enumerate(durs):
+        if rest <= 0:
+            break
+        take = min(d, rest)
+        durs[i] = d - take
+        rest -= take
+    return 0.0, durs
+
+
+def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None, cap_offset=0.0, tail=0.5, cap_lines=None, lead_in=0.0):
     """나레이션 한 비트의 자막(하단 바 + 순차 drawtext)을 필터 문자열 리스트로 반환한다.
     _segmented_drawtext 기반: highlight_rules가 있으면 단어별 강조, 없으면 세그먼트 1개
     (기존과 동일 산출물). 각 구절 enable 구간은 t0(전체 타임라인 오프셋)만큼 밀린다.
-    real_durs가 주어지면 _caption_durations에 그대로 전달해 ASR 실측 타이밍을 쓴다."""
-    segs = _caption_segments(narration)
+    real_durs가 주어지면 _caption_durations에 그대로 전달해 ASR 실측 타이밍을 쓴다.
+    cap_lines가 있으면(AI가 끊어준 호흡 줄) 그 경계를 그대로 쓴다 — 규칙 폴백은 안전망."""
+    segs = _caption_segments(narration, preset=cap_lines)
     if not segs:
         return []
     style = style or {}
     durs = _caption_durations(segs, dur, real_durs=real_durs)
-    size = max(10, int(style.get("size") or _CAP_FONTSIZE))
+    size = max(10, _ui_px(style.get("size"), _CAP_FONTSIZE))
     ypct = style.get("y_pct")
     if ypct is None:
-        # 기존 폴백 "h-text_h-100"의 근사치를 %로 환산(문자 높이는 size*1.2로 근사)
-        ypct = max(0.0, min(100.0, (_OUT_H - 100 - size * 0.6) / _OUT_H * 100.0))
+        # 기존 폴백 "h-text_h-150"의 근사치를 %로 환산(문자 높이는 size*1.2로 근사)
+        # 150 = 1080p 기준 하단 여백(720p 100px ×1.5, 2026-07-24 1080p 업그레이드)
+        ypct = max(0.0, min(100.0, (_OUT_H - 150 - size * 0.6) / _OUT_H * 100.0))
+    # 자막 가로 위치(%): UI 드래그 결과가 style.x_pct로 온다. 미지정이면 종전대로 중앙(50).
+    # 예전엔 아래 _segmented_drawtext 호출에 50이 하드코딩돼, 미리보기로 옮겨도 최종 렌더는
+    # 항상 중앙이었다(2026-07-25 배선). 0~100 클램프.
+    xpct = style.get("x_pct")
+    xpct = 50.0 if xpct is None else max(0.0, min(100.0, float(xpct)))
     use_box = bool(style.get("box"))
-    show_bar = style.get("bar", True) and not use_box
-    effect = style.get("effect") or "none"
+    # 하단 자막 바 기본 OFF(2026-07-19) — 300px·black@0.82 바가 화면 하단 23%를
+    # 덮어 "검정바"로 보인다는 제보. 그림자 자막만으로 가독성 확보. 원본 소각자막을
+    # 덮어야 하는 경우엔 style.bar=True로 명시적으로 켠다(자막제거 ON이면 불필요).
+    show_bar = style.get("bar", False) and not use_box
+    # 자막 등장효과 기본값 = fade(2026-07-19). 예전 기본 "none"은 자막이 하드
+    # 온/오프로 뚝뚝 끊겨 "딱딱하다"는 제보의 원인이었다. 미지정 시 은은한 페이드로
+    # 등장시킨다. 끄려면 effect="none"을 명시(문자열이라 truthy → 아래 폴백 안 탐).
+    effect = style.get("effect") or "fade"
     parts = []
     if show_bar:
         # ⚠️ enable= 없이는 이 바가 영상 전체 시간대에 걸쳐 그려진다. _burn_captions가
@@ -323,14 +768,17 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
             f"drawbox=x=0:y=ih-{_BAR_H}:w=iw:h={_BAR_H}:color=black@0.82:t=fill:"
             f"enable='between(t,{_bs:.2f},{t0 + dur + tail + cap_offset:.2f})'"
         )
-    t = 0.0
+    # lead_in = 비트 시작~첫 발화까지의 무음(ASR 실측). 0이면 종전과 동일하게 비트 머리에서 시작.
+    # 예전엔 항상 0이라, 말이 늦게 시작하는 비트에서 자막이 먼저 떴다(2026-08-06 수정).
+    t = max(0.0, float(lead_in or 0.0))
     for i, (seg, d) in enumerate(zip(segs, durs)):
         start = max(0.0, t + t0 + cap_offset)
         t += d
         end = (dur + tail if i == len(segs) - 1 else t) + t0 + cap_offset
         seg_parts = _segmented_drawtext(
-            seg, style, work, f"cap_{idx}_{i}", 50, ypct,
+            seg, style, work, f"cap_{idx}_{i}", xpct, ypct,
             highlight_rules=style.get("highlight_rules"), default_color="0xFFFFFF",
+            single_line=True,   # 자막은 무조건 한 줄(폭 넘으면 폰트 자동축소)
         )
         enable_clause = f"enable='between(t,{start:.2f},{end:.2f})'"
         for sp in seg_parts:
@@ -374,25 +822,120 @@ def _caption_vf(narration, dur, has_font, work, idx):
     return ",".join([base] + draws)
 
 
+def _extend_with_frozen_motion(sub_path, play_out, freeze, out_path):
+    """움직이는 클립(sub) 뒤에 freeze초 정지 구간을 붙이되, '죽은 정지'가 아니라 완만한
+    켄번즈 줌을 전체(play+freeze)에 얹어 정지 구간에도 화면이 살아있게 한다(2026-07-19,
+    P1 후속). 사장님 육안 피드백 — tpad clone 단독 홀드는 마지막 프레임이 픽셀까지 동일해
+    뚝 멈춰 어색하다.
+
+    한 체인에서 tpad→zoompan 순서로 건다. 예전 주석의 'zoompan은 tpad와 한 체인에서
+    안 된다(출력 잘림)'는 반대 순서(zoompan→tpad)의 문제였다 — tpad를 먼저 두면 출력이
+    정상 길이로 나온다(실측 2026-07-19). zoompan은 출력 프레임번호 'on'으로 확대하므로
+    tpad가 만든 정지 프레임에서도 줌이 계속 진행돼 움직임이 유지된다."""
+    total = play_out + freeze
+    _run_ffmpeg([
+        "ffmpeg", "-y", "-i", str(sub_path),
+        "-vf", f"tpad=stop_mode=clone:stop_duration={freeze:.3f},{_kenburns_vf(total)}",
+        "-r", "30", "-an", "-t", f"{total:.3f}",
+        "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(out_path),
+    ])
+    return out_path
+
+
+# ── 3초 훅 In-Point 자동(P1, 2026-07-28) ──────────────────────────────
+_MIN_HOOK_TAIL = 1.0  # 훅 클립이 최소 이만큼은 남아야(피크가 끝이라도) — 잘린 훅 방지
+
+
+def pick_hook_start(orig_start, orig_end, base_time, delta=0.0, min_tail=_MIN_HOOK_TAIL):
+    """훅 시작점 결정(순수·테스트대상). base_time(자동 모션피크)에 delta(초, UI가 ±0.2씩
+    누적한 미세조정)를 더해 [orig_start, orig_end-min_tail]로 클램프. base_time None이면
+    orig_start 기준. 윈도우가 좁으면(≤min_tail) orig_start."""
+    if orig_end - orig_start <= min_tail:
+        return orig_start
+    base = base_time if base_time is not None else orig_start
+    return max(orig_start, min(base + (delta or 0.0), orig_end - min_tail))
+
+
+def _hook_delta(work):
+    """work.state의 훅 미세조정 오프셋(초). UI [◀0.2s][0.2s▶]가 누적. 없으면 0.0."""
+    try:
+        st = work.get("state") if isinstance(work, dict) and "state" in work else work
+        v = (st or {}).get("hook_inpoint_delta")
+        return float(v) if v is not None else 0.0
+    except Exception:
+        return 0.0
+
+
+def _apply_hook_inpoint(edit_plan, source_video_paths, work):
+    """훅 비트(beats[0]) primary.start를 모션 피크(자동) + UI delta로 이동(P1).
+    소스 밖/윈도우 좁음/실패 시 무변경(렌더 안 죽인다). peak_at·hook_delta를 primary에 실어
+    프리뷰 UI가 현재 시작점·미세조정을 표시·조절하게 한다."""
+    try:
+        from shopping_shorts import scene_cut as _sc
+        beats = edit_plan.get("beats") or []
+        if not beats:
+            return
+        prim = (beats[0] or {}).get("primary")
+        if not prim or prim.get("video_id") not in source_video_paths:
+            return
+        a, b = float(prim["start"]), float(prim["end"])
+        peak_t = _sc.peak_time_in_window(source_video_paths[prim["video_id"]], a, b)
+        delta = _hook_delta(work)
+        prim["hook_peak_at"] = round(peak_t, 3)
+        prim["hook_delta"] = round(delta, 3)
+        prim["start"] = pick_hook_start(a, b, peak_t, delta)
+    except Exception:
+        pass
+
+
 def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=None):
     """각 비트를 [소스영상+TTS]로 렌더(우리 자막 없음) → concat → mix_raw.mp4 경로.
     자막을 굽지 않으므로 이후 VMake 자막제거가 우리 자막을 지우지 않는다.
     -vf는 우리 자막 vf가 아니라 규격 통일용 base(scale/crop)만 쓴다.
     반중복탐지 회피(항상 자동): 훅·반전 비트는 켄번즈 줌, 나머지는 기본 크롭+줌."""
+    _apply_hook_inpoint(edit_plan, source_video_paths, work)  # 훅 시작점 자동/오버라이드(P1)
     important = _important_beat_indices(edit_plan["beats"])
     beat_clips = []
+    # 소스 실제 길이 캐시(2026-07-19). 약한 매칭이 소스 밖 구간(예: 60초 릴에 155초)을 잡으면
+    # -ss가 끝을 넘어 0프레임 서브클립 → concat "no stream" → 미리보기 전체가 죽었다. 소스별 길이를
+    # 한 번만 재서(ffprobe) start를 소스 안으로 당긴다.
+    _src_dur_cache = {}
+    def _src_dur(vid):
+        if vid not in _src_dur_cache:
+            try:
+                _src_dur_cache[vid] = _probe_duration(source_video_paths[vid])
+            except Exception:
+                _src_dur_cache[vid] = 0.0
+        return _src_dur_cache[vid]
+    # 여운 대상 = TTS가 있는 마지막 비트(2026-07-20 T4). 그 비트만 대사 끝+_LAST_RUNOUT초를
+    # 화면에 더 싣는다(-t 연장 포함). 세그먼트 전멸로 스킵되면 여운도 조용히 사라진다(치명 아님).
+    _runout_idx = max((b["beat_idx"] for b in edit_plan["beats"]
+                       if tts_paths.get(b["beat_idx"])), default=None)
     for beat in edit_plan["beats"]:
         idx = beat["beat_idx"]
         tts = tts_paths.get(idx)
         if not tts:
             continue
-        tts_dur = _probe_duration(tts)
-        # 순서 구간 리스트 = [primary] + alternates. 소스에 실재하는 것만.
+        tts_dur = _beat_effective_dur(beat, tts)
+        _head_trim = beat.get("head_trim", 0.0)
+        # 순서 구간 리스트 = [primary] + alternates. 소스에 실재하고 + 디코드 가능한 것만.
+        # 손상/빈 소스(_src_dur=0)는 여기서 걸러야 아래 -ss 렌더가 예외로 죽지 않는다(2026-07-19).
         segs = [s for s in ([beat["primary"]] + list(beat.get("alternates", [])))
-                if s and s.get("video_id") in source_video_paths]
+                if s and s.get("video_id") in source_video_paths
+                and _src_dur(s["video_id"]) > 0.05]
         if not segs:
             continue
-        plan = _plan_beat_clips(segs, tts_dur)
+        # 소스별 총길이를 넘겨 '멈춤 대신 소스 실프레임 더 재생'을 켠다(2026-07-20).
+        beat_src_durs = {s["video_id"]: _src_dur(s["video_id"]) for s in segs}
+        # 컷 밀도(2026-07-22): 한 컷을 MAX_SHOT_SECONDS 넘게 안 끌고 distinct 세그먼트를 번갈아
+        # 재생 → 긴 정지 대신 컷(벤치마크급). 포인트 비트는 홀드가 맞으니 라운드로빈 안 함.
+        from shopping_shorts import backbone as _bb, config as _cfg
+        _max_shot = None if _bb.is_point_beat(beat) else getattr(_cfg, "MAX_SHOT_SECONDS", 0) or None
+        plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs, max_shot=_max_shot)
+        # 마지막 비트 여운: 실프레임 여유는 1배속으로, 부족분은 아래 slowmo/freeze 기계가 흡수.
+        runout = _LAST_RUNOUT if idx == _runout_idx else 0.0
+        if runout > 0:
+            _extend_last_clip_for_runout(plan, segs, runout)
         vf = _kenburns_vf(tts_dur) if idx in important else _base_zoom_vf()
         # 비트당 다중 클립: 각 구간을 [start, start+src_dur]만큼만 잘라(유출 0) 이어붙이고,
         # 부족분은 마지막 클립을 슬로모(setpts)로 늘려 대사 길이에 맞춘다.
@@ -400,16 +943,49 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
         for j, c in enumerate(plan):
             src = source_video_paths[c["video_id"]]
             sub = work / f"beat_{idx}_{j}.mp4"
-            # setpts로 슬로모: 소스 src_dur초를 출력 out_dur초로 늘린다(1배속이면 factor=1).
-            factor = c["out_dur"] / c["src_dur"] if c["src_dur"] > 1e-6 else 1.0
-            vf_full = f"{vf},setpts={factor:.6f}*PTS" if factor > 1.0 + 1e-6 else vf
-            # -ss(입력 시크) start부터, 출력 out_dur초. 오디오 없음(비트 오디오는 아래서 합침).
+            # 슬로우 상한(1.15배)+정지프레임(2026-07-19): 무제한 슬로우크롤 제거.
+            # 재생은 최대 _MAX_SLOWMO배까지만 늘리고, 남는 시간은 마지막 프레임 정지(freeze).
+            # play_out+freeze == out_dur → 총 길이·오디오/자막 싱크 불변.
+            play_out, freeze = _speed_and_freeze(c["src_dur"], c["out_dur"])
+            # freeze 클립은 움직이는 부분을 정적 베이스줌으로 두고, 켄번즈 모션은 freeze
+            # 패스에서 전체(play+freeze)에 한 번만 건다(정지 구간도 살아있게, 2026-07-19).
+            # 안 그러면 pass1 줌 + freeze 켄번즈가 겹쳐 줌이 두 번 쌓인다.
+            clip_vf = _base_zoom_vf() if freeze > 1e-3 else vf
+            factor = play_out / c["src_dur"] if c["src_dur"] > 1e-6 else 1.0
+            vf_full = f"{clip_vf},setpts={factor:.6f}*PTS" if factor > 1.0 + 1e-6 else clip_vf
+            # start를 소스 안으로 당긴다(타트랙 병합, 2026-07-19). 약한 매칭이 소스 밖을 잡으면
+            #   -ss가 끝을 넘어 0프레임이 나와 concat이 죽는다. [start, start+src_dur]가 소스
+            #   안에 들어오게 당기되, 소스가 src_dur보다 짧으면 0에서 있는 만큼 읽는다.
+            sdur = _src_dur(c["video_id"])
+            start = c["start"]
+            if sdur > 0:
+                start = max(0.0, min(start, sdur - min(c["src_dur"], sdur)))
+            # 1단계 — 움직임: 입력을 [start, start+src_dur]만 읽어(-ss+입력측 -t) 유출 차단.
+            #   입력 제한이 핵심(P1) — 상한 배율이 out_dur/src_dur보다 작으면 setpts가 다음
+            #   구간까지 끌어와 유출된다(다색 소스 실측). 잘라두면 이 구간만 play_out으로 늘어난다.
+            sub = work / f"beat_{idx}_{j}.mp4"
             _run_ffmpeg([
-                "ffmpeg", "-y", "-ss", f"{c['start']:.3f}", "-i", str(src),
-                "-vf", vf_full, "-r", "30", "-an", "-t", f"{c['out_dur']:.3f}",
-                "-c:v", "libx264", "-pix_fmt", "yuv420p", str(sub),
+                "ffmpeg", "-y", "-ss", f"{start:.3f}", "-t", f"{c['src_dur']:.3f}",
+                "-i", str(src),
+                "-vf", vf_full, "-r", "30", "-an", "-t", f"{play_out:.3f}",
+                "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(sub),
             ])
-            sub_paths.append(sub)
+            # 그래도 비면(소스 손상/범위밖) 이 클립만 버린다 — 하나가 미리보기 전체를 죽이지 않게.
+            if not sub.exists() or _probe_duration(sub) <= 0.05:
+                continue
+            # 2단계 — 정지프레임(P1 후속, 2026-07-19): 마지막 프레임을 freeze초 홀드하되
+            #   전체에 켄번즈를 얹어 '죽은 정지'가 아니라 움직이는 홀드로 만든다. tpad→zoompan
+            #   순서면 한 체인에서 정상 동작(_extend_with_frozen_motion 주석 참조).
+            if freeze > 1e-3:
+                frozen = work / f"beat_{idx}_{j}f.mp4"
+                _extend_with_frozen_motion(sub, play_out, freeze, frozen)
+                sub_paths.append(frozen)
+            else:
+                sub_paths.append(sub)
+        if not sub_paths:
+            # 이 비트는 쓸 클립이 하나도 없다(모든 소스 손상/범위밖). 비트를 건너뛴다 —
+            # 미리보기가 통째로 죽는 것보다 이 비트만 빠지는 게 낫다.
+            continue
         # 비트의 클립들(동일 규격)을 concat → 비트 무음 영상(길이 ≈ tts_dur)
         beat_video = work / f"beat_{idx}_v.mp4"
         cat = work / f"beat_{idx}_list.txt"
@@ -418,32 +994,35 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                      "-c", "copy", str(beat_video)])
         # 컷어웨이(장면라이브러리 페이즈2-B): 라이브러리 자산을 비트 영상 위에 풀프레임
         # 오버레이. 창=[0, min(자산길이, tts_dur)]. 비트 길이·TTS 오디오 불변 → 자막 t0 싱크
-        # 불변. beat_video는 이미 규격(720x1280)·vf 적용 → 재-vf 없이 오버레이만 얹는다.
+        # 불변. beat_video는 이미 규격(1080x1920)·vf 적용 → 재-vf 없이 오버레이만 얹는다.
         clip = work / f"beat_{idx}.mp4"
         cutaway = (cutaway_paths or {}).get(idx)
         if cutaway:
             asset_dur = _probe_duration(cutaway)
             win = min(asset_dur, tts_dur)
             fc = (
-                f"[1:v]scale=720:1280:force_original_aspect_ratio=increase,"
-                f"crop=720:1280,setpts=PTS-STARTPTS[ov];"
+                f"[1:v]scale={_OUT_W}:{_OUT_H}:force_original_aspect_ratio=increase,"
+                f"crop={_OUT_W}:{_OUT_H},setpts=PTS-STARTPTS[ov];"
                 f"[0:v][ov]overlay=0:0:enable='between(t,0,{win:.3f})'[vout]"
             )
             _run_ffmpeg([
                 "ffmpeg", "-y",
                 "-i", str(beat_video),   # 0: 내 다중클립 비트영상(이미 vf 적용)
                 "-i", str(cutaway),      # 1: 컷어웨이 자산(오디오 버림 = b-roll)
-                "-i", str(tts),          # 2: 나레이션
+                "-ss", f"{_head_trim:.3f}", "-i", str(tts),          # 2: 나레이션(앞트림 반영)
                 "-filter_complex", fc, "-r", "30",
                 "-map", "[vout]", "-map", "2:a:0",
-                "-t", f"{tts_dur:.3f}",
-                "-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
+                # 여운(runout): 마지막 비트만 대사 뒤 화면이 더 산다 — 오디오는 tts 길이에서
+                # 자연 종료(무성 여운). 컷어웨이 창(win)은 tts_dur 기준 그대로(여운을 덮지 않음).
+                "-t", f"{tts_dur + runout:.3f}",
+                "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
             ])
         else:
-            # 비트 나레이션(tts) 오디오를 얹고 길이를 tts_dur로 맞춘다.
+            # 비트 나레이션(tts) 오디오를 얹고 길이를 tts_dur(+마지막 비트는 여운)로 맞춘다.
             _run_ffmpeg([
-                "ffmpeg", "-y", "-i", str(beat_video), "-i", str(tts),
-                "-map", "0:v:0", "-map", "1:a:0", "-t", f"{tts_dur:.3f}",
+                "ffmpeg", "-y", "-i", str(beat_video),
+                "-ss", f"{_head_trim:.3f}", "-i", str(tts),
+                "-map", "0:v:0", "-map", "1:a:0", "-t", f"{tts_dur + runout:.3f}",
                 "-c:v", "copy", "-c:a", "aac", str(clip),
             ])
         beat_clips.append(clip)
@@ -451,7 +1030,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
         raise RuntimeError("video_assemble: 렌더할 비트가 없습니다")
     concat_txt = work / "concat_mix.txt"
     concat_txt.write_text("".join(f"file '{c.as_posix()}'\n" for c in beat_clips), encoding="utf-8")
-    # 비트 클립들은 이미 동일 설정(720x1280 libx264/aac 30fps)이므로 -c copy로 붙인다
+    # 비트 클립들은 이미 동일 설정(1080x1920 libx264/aac 30fps)이므로 -c copy로 붙인다
     # (재인코딩 concat은 2GB 서버에서 수십 초 → 배포 재시작에 걸려 죽던 원인, 2026-07-12).
     mix_raw = work / "mix_raw.mp4"
     _run_ffmpeg(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat_txt),
@@ -598,23 +1177,38 @@ def _wrap_to_width(line, font, max_w):
 
 
 def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
-                          highlight_rules=None, default_color="0xFFFFFF"):
+                          highlight_rules=None, default_color="0xFFFFFF", single_line=False):
     """헤드카피/자막 한 블록을 줄 단위로 나누고, highlight_rules에 매칭되는 단어만
     별도 색·배지로 세그먼트를 쪼개 나란히 이어붙인 drawtext 필터 리스트를 반환한다.
     규칙이 없거나 매칭 0건이면 줄마다 세그먼트 1개 = 기존 _fixed_drawtext/_caption_drawtexts와
-    동일한 산출물(하위호환). 폭 측정은 Pillow로 실제 폰트파일 기준 수행."""
+    동일한 산출물(하위호환). 폭 측정은 Pillow로 실제 폰트파일 기준 수행.
+    single_line=True(자막): 절대 줄바꿈하지 않고 **한 줄**로 두되, 폭을 넘으면 폰트를
+    자동 축소해 한 줄에 맞춘다(사장님: 자막은 무조건 한 줄). 미리보기도 동일 비율로 축소."""
     base_style = base_style or {}
     lines = (text or "").split("\n")
     if not any(l.strip() for l in lines):
         return []
     fontref, font_disk_path = _resolve_seg_font(base_style, work, key_prefix)
-    size = max(8, int(base_style.get("size") or 64))
+    size = max(8, _ui_px(base_style.get("size"), 96))
     try:
         pil_font = ImageFont.truetype(font_disk_path, size)
     except OSError:
         pil_font = ImageFont.load_default()
-    # 폭 초과 줄 자동 줄바꿈 — 미리보기(pre-wrap)와 맞춰 최종 영상도 화면 밖으로 안 넘게.
-    lines = [seg for ln in lines for seg in _wrap_to_width(ln, pil_font, 0.92 * _OUT_W)]
+    max_w = 0.92 * _OUT_W
+    if single_line:
+        # 자막: 개행·연속공백을 한 칸으로 접어 한 줄로. 폭 초과 시 폰트 축소(줄바꿈 금지).
+        one = " ".join(" ".join(lines).split())
+        w = pil_font.getlength(one) if one else 0
+        if w > max_w:
+            size = max(8, int(size * max_w / w))
+            try:
+                pil_font = ImageFont.truetype(font_disk_path, size)
+            except OSError:
+                pass
+        lines = [one]
+    else:
+        # 폭 초과 줄 자동 줄바꿈 — 미리보기(pre-wrap)와 맞춰 최종 영상도 화면 밖으로 안 넘게.
+        lines = [seg for ln in lines for seg in _wrap_to_width(ln, pil_font, max_w)]
     base_color_raw = base_style.get("color")  # 원시 #hex(또는 None) — _hex_to_ff는 drawtext 빌드에서 1회만 적용(이중변환 방지)
     x_center = x_pct / 100.0 * _OUT_W
     y_top = y_pct / 100.0 * _OUT_H
@@ -643,20 +1237,20 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
                 f"x={int(run_x)}", f"y={int(line_y)}",
             ]
             if base_style.get("outline"):
-                seg_parts.append(f"borderw={max(1, int(base_style.get('outline_w') or 6))}")
+                seg_parts.append(f"borderw={max(1, _ui_px(base_style.get('outline_w'), 9))}")
                 seg_parts.append(f"bordercolor={_hex_to_ff(base_style.get('outline_color'), '0x000000')}")
             if base_style.get("shadow"):
                 # 은은한 드롭 그림자(레퍼런스 자막룩) — 두꺼운 테두리 대신 부드러운 가독성.
                 sc = _hex_to_ff(base_style.get("shadow_color"), "0x000000")
-                sd = max(1, int(base_style.get("shadow_d") or 3))
+                sd = max(1, _ui_px(base_style.get("shadow_d"), 5))
                 seg_parts += [f"shadowcolor={sc}@0.55", f"shadowx={sd}", f"shadowy={sd}"]
             if seg_box:
                 bc = _hex_to_ff(seg_box_color, "0x000000")
-                seg_parts += ["box=1", f"boxcolor={bc}@0.90", "boxborderw=8"]
+                seg_parts += ["box=1", f"boxcolor={bc}@0.90", "boxborderw=12"]
             elif base_style.get("box") and not seg_box:
                 bc = _hex_to_ff(base_style.get("box_color"), "0x000000")
                 op = max(0.0, min(1.0, (base_style.get("box_opacity") or 80) / 100.0))
-                pad = max(0, int(base_style.get("box_pad") if base_style.get("box_pad") is not None else 16))
+                pad = max(0, _ui_px(base_style.get("box_pad"), 24, zero_ok=True))
                 seg_parts += ["box=1", f"boxcolor={bc}@{op:.2f}", f"boxborderw={pad}"]
             parts.append(":".join(seg_parts))
             run_x += w
@@ -679,26 +1273,42 @@ def _fixed_drawtext(spec, work, key, default_color="0xFFFFFF"):
         if fpath.exists():
             shutil.copy(fpath, work / f"font_{key}.ttf")
             fontref = f"font_{key}.ttf"
-    size = max(8, int(spec.get("size") or 64))
+    size = max(8, _ui_px(spec.get("size"), 96))
     xf = min(1.0, max(0.0, (spec.get("x", 50)) / 100.0))
     yf = min(1.0, max(0.0, (spec.get("y", 14)) / 100.0))
+    # 워터마크 등 spec.float가 켜지면 y를 시간표현식으로 만들어 위아래로 은은히 떠다니게 한다
+    # (진폭=화면높이 0.6%, 주기 3s). ffmpeg 식평가는 sin/PI/t 지원(자막 슬라이드에서 검증됨).
+    if spec.get("float"):
+        y_expr = f"y=(h*{yf:.4f}-th/2+h*0.006*sin(2*PI*t/3))"
+    else:
+        y_expr = f"y=(h*{yf:.4f}-th/2)"
     parts = [
         f"drawtext=fontfile={fontref}:textfile=txt_{key}.txt",
         f"fontcolor={_hex_to_ff(spec.get('color'), default_color)}",
         f"fontsize={size}",
-        f"x=(w*{xf:.4f}-tw/2)", f"y=(h*{yf:.4f}-th/2)",
+        f"x=(w*{xf:.4f}-tw/2)", y_expr,
     ]
     if spec.get("alpha") is not None:
         parts.append(f"alpha={max(0.0, min(1.0, float(spec.get('alpha')))):.2f}")
     if spec.get("outline"):
-        parts.append(f"borderw={max(1, int(spec.get('outline_w') or 6))}")
+        parts.append(f"borderw={max(1, _ui_px(spec.get('outline_w'), 9))}")
         parts.append(f"bordercolor={_hex_to_ff(spec.get('outline_color'), '0x000000')}")
     if spec.get("box"):
         bc = _hex_to_ff(spec.get("box_color"), "0x000000")
         op = max(0.0, min(1.0, (spec.get("box_opacity") or 80) / 100.0))
-        pad = max(0, int(spec.get("box_pad") if spec.get("box_pad") is not None else 16))
+        pad = max(0, _ui_px(spec.get("box_pad"), 24, zero_ok=True))
         parts += ["box=1", f"boxcolor={bc}@{op:.2f}", f"boxborderw={pad}"]
     return ":".join(parts)
+
+
+def _default_headcopy_enable(timeline):
+    """명시 enable(hook_only 팩)이 없을 때의 기본(2026-07-25) — 헤드카피를 **마지막 비트 시작
+    전까지**만 노출해 끝의 CTA 자막과 두 줄로 겹치지 않게 한다(job 57ec653ba579: 상단 헤드카피
+    + 하단 CTA 충돌). 비트가 2개 미만이면 제한하지 않는다(None=기존 전체표시)."""
+    if not timeline or len(timeline) < 2:
+        return None
+    last_t0 = float(timeline[-1]["t0"])
+    return f"lte(t,{last_t0:.2f})"
 
 
 def _headcopy_drawtext_parts(hc, work, enable=None):
@@ -748,21 +1358,28 @@ def _beat_timeline(edit_plan, tts_paths):
         tts = tts_paths.get(idx)
         if not tts:
             continue
-        dur = _probe_duration(tts)
+        dur = _beat_effective_dur(beat, tts)
+        # 트림(head_trim)을 자막 타이밍에 반영 — 저장된 cap_durs/cap_lead는 트림 전 기준이라
+        # 그대로 쓰면 트림한 비트만 어긋난다(2026-08-06).
+        _cap_lead, _cap_durs = _adjust_caps_for_trim(beat)
         timeline.append({
             "beat_idx": idx,
             "t0": t0,
             "dur": dur,
             "narration": beat.get("narration", ""),
             "role": beat.get("role", ""),
-            "cap_durs": beat.get("cap_durs"),
+            "cap_durs": _cap_durs,
+            "cap_lead": _cap_lead,
             "cap_offset": beat.get("cap_offset", 0.0),
+            "caption_lines": beat.get("caption_lines"),   # AI가 끊어준 자막 호흡 줄(있으면)
+            "sfx": beat.get("sfx"),                        # 효과음 매칭(있으면) — position 읽기용
+            "head_trim": beat.get("head_trim", 0.0),
         })
         t0 += dur
     return timeline
 
 
-def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None, caption_style=None, deco=None):
+def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None, caption_style=None, deco=None, sfx_paths=None):
     """완성된 믹스 영상(in_video) 위에 우리 자막을 비트 타이밍대로 굽는다.
     비트 경계는 각 비트 tts 길이 누적(t0)으로 계산해, drawtext enable 구간을 전체
     타임라인 기준으로 배치한다(_caption_drawtexts에 t0 오프셋 전달). drawtext 값 안의
@@ -792,10 +1409,15 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         _tail = 0.5 if b is timeline[-1] else 0.0
         filters.extend(_caption_drawtexts(b["narration"], b["dur"], work, b["beat_idx"],
                                           b["t0"], caption_style, real_durs=b.get("cap_durs"),
-                                          cap_offset=b.get("cap_offset", 0.0), tail=_tail))
+                                          cap_offset=b.get("cap_offset", 0.0), tail=_tail,
+                                          cap_lines=b.get("caption_lines"),
+                                          lead_in=b.get("cap_lead", 0.0)))
     if headcopy and (headcopy.get("text") or "").strip():
         # enable 없으면 전체 표시(기존). 팩이 hook_only면 렌더 파생값 _headcopy_enable이 온다.
         hc_enable = ((deco or {}).get("motion") or {}).get("_headcopy_enable")
+        if not hc_enable:
+            # 명시 enable 없으면 끝 비트(CTA)와 겹치지 않게 마지막 비트 전까지만(2026-07-25).
+            hc_enable = _default_headcopy_enable(timeline)
         filters.extend(_headcopy_drawtext_parts(headcopy, work, enable=hc_enable))
     # 꾸미기 장식(deco): 추가 텍스트(여러 개) + 워터마크 닉네임. 모두 고정 drawtext.
     deco = deco or {}
@@ -808,8 +1430,9 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         wm_spec = {"text": wm.get("text"), "font": wm.get("font"),
                    "color": wm.get("color", "#FFFFFF"),
                    "size": wm.get("size", 30),
-                   "x": wm.get("x", 50), "y": wm.get("y", 95),
+                   "x": wm.get("x", 50), "y": wm.get("y", 88),
                    "alpha": wm.get("alpha", 0.6),
+                   "float": wm.get("float", True),
                    "outline": wm.get("outline", True),
                    "outline_color": wm.get("outline_color", "#000000"),
                    "outline_w": wm.get("outline_w", 3)}
@@ -829,10 +1452,25 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     motion = deco.get("motion") or {}
     motion_layers = [L for L in (motion.get("layers") or []) if L.get("_abspath")]
     has_motion = bool(motion_layers)
-    if not has_bgm and not has_overlay and not has_motion:
+    # 효과음(sfx): 비트별 position → 절대 오프셋(초)을 캡션과 **같은 함수**로 계산한다
+    # (별도 계산 금지 — 저장위치=읽기위치). first=0.0 / last=마지막 세그먼트 직전까지의 합
+    # (세그먼트 1개면 0.0). 절대시각 = 비트 t0 + 오프셋. sfx_events=[(경로, 절대초), ...].
+    sfx_paths = sfx_paths or {}
+    sfx_events = []
+    for b in timeline:
+        sfx = b.get("sfx")
+        path = sfx_paths.get(b["beat_idx"])
+        if not sfx or not path:
+            continue
+        segs = _caption_segments(b["narration"], preset=b.get("caption_lines"))
+        seg_durs = _caption_durations(segs, b["dur"], real_durs=b.get("cap_durs"))
+        offset = 0.0 if sfx.get("position") == "first" else sum(seg_durs[:-1])
+        sfx_events.append((path, b["t0"] + offset))
+    has_sfx = bool(sfx_events)
+    if not has_bgm and not has_overlay and not has_motion and not has_sfx:
         base_vf = vf
         _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-vf", base_vf, "-r", "30",
-                     "-c:v", "libx264", "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
+                     "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), *_threads_args(), "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
                     cwd=str(work))
         return str(out_path)
     inputs = ["-i", str(in_video)]
@@ -853,28 +1491,54 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         m_inputs, m_fc, vcur, idx = _motion_layer_filters(motion_layers, idx, vcur)
         inputs += m_inputs
         fc += m_fc
+    # 오디오 믹스: 나레이션(항상) + BGM(있으면) + 효과음(있으면)을 한 번에 amix.
+    # duration=first → 첫 입력(나레이션) 길이로 잘린다. 효과음이 비트보다 길면 다음
+    # 비트 위로 흘러넘치되 영상 끝에서만 잘린다(v1 알려진 한계, 스펙 §4.3).
     amap = None
+    mix_labels = ["0:a"]                              # 나레이션(항상 있음, 첫 입력)
     if has_bgm:                                       # 배경음악(나레이션 위 낮은 볼륨)
         inputs += ["-i", bgm_path]
         vol = max(0.0, min(1.0, (bgm.get("volume", 15)) / 100.0))
         fc.append(f"[{idx}:a]aloop=loop=-1:size=2000000000,volume={vol:.3f}[bg]")
-        fc.append("[0:a][bg]amix=inputs=2:duration=first:dropout_transition=2[a]")
-        amap = "[a]"
+        mix_labels.append("bg")
         idx += 1
+    if has_sfx:                                       # 효과음(비트별 오프셋에 adelay)
+        sfx_vol = max(0.0, min(1.0, (deco.get("sfx_volume", 60)) / 100.0))
+        for i, (sfx_path, offset_sec) in enumerate(sfx_events):
+            inputs += ["-i", sfx_path]
+            ms = max(0, round(offset_sec * 1000))
+            fc.append(f"[{idx}:a]adelay={ms}:all=1,volume={sfx_vol:.3f}[sfx{i}]")
+            mix_labels.append(f"sfx{i}")
+            idx += 1
+    if len(mix_labels) > 1:
+        ins = "".join(f"[{lb}]" for lb in mix_labels)
+        fc.append(f"{ins}amix=inputs={len(mix_labels)}:duration=first:dropout_transition=2[a]")
+        amap = "[a]"
     cmd = ["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(fc), "-map", f"[{vcur}]"]
     cmd += (["-map", amap, "-c:a", "aac"] if amap else ["-map", "0:a", "-c:a", "copy"])
-    cmd += ["-r", "30", "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out_path)]
+    cmd += ["-r", "30", "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(out_path)]
     _run_ffmpeg(cmd, cwd=str(work))
     return str(out_path)
 
 
-def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, headcopy=None, caption_style=None, deco=None, cutaway_paths=None):
+def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, headcopy=None, caption_style=None, deco=None, cutaway_paths=None, sfx_paths=None, burn_captions=True):
     """EDL → 최종 mp4. 1)믹스(자막X) 2)clean_fn(있으면 자막제거) 3)우리 자막.
     clean_fn(mix_raw_path)->clean_path 를 주면 그 사이에 VMake 자막제거가 끼워진다
     (없으면 생략). 자막제거는 우리 자막을 굽기 전 깨끗한 믹스에 돌려야 우리 자막이
-    함께 지워지지 않는다."""
+    함께 지워지지 않는다.
+    sfx_paths: {beat_idx: media_path} — beat["sfx"]가 붙은 비트의 효과음 경로(컷어웨이와
+    같은 seam). _burn_captions가 position→오프셋을 캡션과 같은 함수로 계산해 amix에 섞는다.
+    ★인코딩 프리셋은 모듈 _X264_PRESET(기본 medium). 미리보기는 호출부(run_preview)가
+    preview_preset() 컨텍스트로 veryfast로 감싼다 — 최종은 그대로 medium 고화질."""
     work = Path(out_path).parent / f"asm_{uuid.uuid4().hex[:8]}"
     work.mkdir(parents=True, exist_ok=True)
     mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=cutaway_paths)
     base_video = clean_fn(mix_raw) if clean_fn else mix_raw
-    return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco)
+    if not burn_captions:
+        # '자막 없는 clean 배경'용(썸네일 배경 등, 2026-07-22) — 우리 나레이션 자막·꾸미기를
+        # 굽는 _burn_captions 패스를 통째로 건너뛴다. base_video(믹스[+원본자막제거])를 그대로
+        # 확정하므로 ①썸네일에 나레이션 자막이 안 박히고 ②캡션 인코딩 패스가 없어 더 빠르다.
+        import shutil
+        shutil.copyfile(base_video, out_path)
+        return out_path
+    return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco, sfx_paths=sfx_paths)

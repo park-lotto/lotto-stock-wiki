@@ -1,0 +1,22 @@
+{
+  "reports": [
+    {
+      "broker": "한투글로벌",
+      "stock": "Seagate",
+      "rating": null,
+      "tp": null,
+      "ts": "05:42",
+      "quote": "Seagate FY4Q26 실적 및 FY1Q27 가이던스 모두 기대치 상회. 시간외 주가 +7% 상승 중",
+      "sector": "IT"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "Teradyne",
+      "rating": null,
+      "tp": null,
+      "ts": "06:07",
+      "quote": "Teradyne FY2Q26 실적 및 FY3Q26 가이던스 컨센 상회",
+      "sector": "반도체"
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "date": "2026-06-12",
+    "broker": "Eugene Investment & Securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-15_0705_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "Eugene Investment & Securities",
+    "analyst": "양승윤",
+    "report_date": "2024-06-11",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "로봇 산업 동향",
+      "방산 산업 동향",
+      "조선 산업 동향"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "LG 4,000억 규모 로봇 훈련소 구축 및 데이터 기반 AI 모델 고도화"
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "폴란드 K2 전차 도입 유지, 인도 K9 추가 도입 및 무기 생산 신속 증대 압박"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "한화오션 KDDX 우선협상자 선정 및 AIX 추진실 개편 등 기술 고도화"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2024-06-11",
+        "event": "로봇/방산/조선 주요 뉴스 발표"
+      }
+    ],
+    "top_picks": [
+      "LG",
+      "LG CNS",
+      "에스피지",
+      "빅웨이브로보틱스",
+      "본시스템즈",
+      "보스턴다이내믹스",
+      "보쉬",
+      "유니버설로봇",
+      "현대로템",
+      "KAI",
+      "한화에어로스페이스",
+      "한화오션",
+      "삼성중공업",
+      "HD한국조선해양",
+      "TKMS"
+    ],
+    "risk": "미국 무기 생산 재고 소진 및 보충 능력 지연, 조선업 수주 관련 이의제기 가능성 및 수출 경험 부족",
+    "quote": "데이터 기반, 로봇 AI 모델 고도화 추진."
+  }
+}

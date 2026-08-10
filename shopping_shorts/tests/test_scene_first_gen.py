@@ -1,0 +1,134 @@
+from shopping_shorts import edit_plan
+
+
+def _fake_call(prompt, schema, **kw):
+    # 프롬프트에 이야기 지침·팔레트·제품(레퍼런스)이 실렸는지 + 후보 형태 반환
+    # (2026-07-26 단순화: '스토리 헌장'→'이야기체 5단계 스파인'으로 교체)
+    assert "이야기" in prompt and "[s0-0]" in prompt and "원본대본" in prompt
+    return {"candidates": [{
+        "hook": "양파 이렇게 두지 마세요",
+        "story_person": "살림고수", "story_event": "썩는 양파 발견",
+        "story_resolution": "통풍보관 터득", "cta_line": "댓글에 '보관법'", "cta_keyword": "보관법",
+        "beats": [{"role": "훅", "narration": "곰팡이 핀 양파 보셨죠?", "seg_ids": ["s0-1", "s0-2"], "fit": 5, "forced": False}]}]}
+
+
+def test_scene_first_candidates_shape():
+    cands = edit_plan._scene_first_candidates("[s0-0] 화면:양파\n[s0-1] 화면:곰팡이\n[s0-2] 화면:단면",
+                                              reference_text="원본대본 텍스트", target_seconds=20,
+                                              n=3, call=_fake_call)
+    assert len(cands) == 1
+    assert cands[0]["cta_keyword"] == "보관법"
+    assert cands[0]["beats"][0]["seg_ids"] == ["s0-1", "s0-2"]
+
+
+def test_scene_first_candidates_fail_open():
+    assert edit_plan._scene_first_candidates("[s0-0] 화면:양파", "ref", 20, call=lambda *a, **k: None) == []
+
+
+def _seg_map():
+    def s(sid, st, en, sc):
+        return {"video_id": sid.split("-")[0], "seg_id": sid, "start": st, "end": en,
+                "text": "", "scene_desc": sc}
+    return {x["seg_id"]: x for x in [
+        s("s0-1", 1.0, 2.0, "곰팡이"), s("s0-2", 2.0, 3.5, "단면"), s("s0-3", 4.0, 6.0, "통풍")]}
+
+
+def test_ground_candidate_multicut_to_edl():
+    cand = {"beats": [
+        {"role": "훅", "narration": "곰팡이 핀 양파 보셨죠?", "seg_ids": ["s0-1", "s0-2"], "fit": 5, "forced": False},
+        {"role": "해결", "narration": "통풍이 핵심이에요 진짜", "seg_ids": ["s0-3"], "fit": 4, "forced": True}]}
+    plan = edit_plan._ground_candidate(cand, _seg_map())
+    b0 = plan["beats"][0]
+    assert b0["primary"]["seg_id"] == "s0-1"                      # 첫 seg=primary
+    assert [a["seg_id"] for a in b0["alternates"]] == ["s0-2"]     # 나머지=alternates(다중컷)
+    assert b0["primary"]["scene_desc"] == "곰팡이"                 # scene_desc 실림
+    assert plan["beats"][1]["forced"] is True and plan["beats"][1]["fit"] == 4
+    assert b0["target_seconds"] > 0                                # 글자수 기준 재계산됨
+
+
+def test_ground_candidate_leads_weak_beat0_with_hook():
+    # 훅은 강한데 beats[0]이 밋밋 → 첫 비트에 hook 앞절을 얹어 세게 연다(영상은 beats를 읽음)
+    cand = {"hook": "와 이거 진짜 대박인데요? 남편이 야식 타령해서 골치였는데 끝!",
+            "beats": [{"role": "훅", "narration": "매번 찐 감자만 주니 지겹다더라고요.",
+                       "seg_ids": ["s0-1"], "fit": 5, "forced": False}]}
+    plan = edit_plan._ground_candidate(cand, _seg_map())
+    assert plan["beats"][0]["narration"].startswith("와 이거 진짜 대박인데요?")
+
+
+def test_ground_candidate_keeps_already_strong_beat0():
+    # beats[0]이 이미 강한 오프너로 열면 hook을 또 얹지 않는다(중복 방지)
+    cand = {"hook": "와 이거 대박이죠? 어쩌고",
+            "beats": [{"role": "훅", "narration": "와 이거 진짜 놀랐잖아요! 감자가 이렇게 되네요.",
+                       "seg_ids": ["s0-1"], "fit": 5, "forced": False}]}
+    plan = edit_plan._ground_candidate(cand, _seg_map())
+    assert plan["beats"][0]["narration"] == "와 이거 진짜 놀랐잖아요! 감자가 이렇게 되네요."
+
+
+def test_ground_candidate_carries_caption_lines():
+    # AI가 끊어준 자막 호흡줄을 비트에 실어보낸다(렌더가 그 경계를 씀)
+    cand = {"beats": [{"role": "훅", "narration": "곰팡이 핀 양파 보셨죠?",
+                       "caption_lines": ["곰팡이 핀", "양파 보셨죠?"],
+                       "seg_ids": ["s0-1"], "fit": 5, "forced": False}]}
+    plan = edit_plan._ground_candidate(cand, _seg_map())
+    assert plan["beats"][0]["caption_lines"] == ["곰팡이 핀", "양파 보셨죠?"]
+
+
+def test_caption_segments_honors_valid_preset_and_rejects_invalid():
+    from shopping_shorts import video_assemble as v
+    narr = "와 이거 만든 사람 진짜 천재 아닌가요"
+    # 이어붙여 원본과 같으면 그대로 — 수식어 '만든 사람' 안 쪼갬
+    assert v._caption_segments(narr, preset=["와 이거", "만든 사람", "진짜 천재 아닌가요"]) \
+        == ["와 이거", "만든 사람", "진짜 천재 아닌가요"]
+    # 글자가 다르면(모델이 바꿈) 무시하고 규칙 폴백
+    got = v._caption_segments(narr, preset=["엉뚱한", "줄"])
+    assert "".join(got).replace(" ", "") == narr.replace(" ", "")
+
+
+def test_ground_candidate_drops_invalid_primary():
+    cand = {"beats": [{"role": "x", "narration": "n", "seg_ids": ["없는id"], "fit": 3, "forced": False}]}
+    assert edit_plan._ground_candidate(cand, _seg_map()) is None   # 유효 비트 0개 → None
+
+
+def test_score_prefers_high_fit_low_forced():
+    good = {"beats": [{"fit": 5, "forced": False, "primary": {"seg_id": "a"}, "alternates": [{"seg_id": "b"}]},
+                      {"fit": 5, "forced": False, "primary": {"seg_id": "c"}, "alternates": []}]}
+    bad = {"beats": [{"fit": 2, "forced": True, "primary": {"seg_id": "a"}, "alternates": []},
+                     {"fit": 2, "forced": True, "primary": {"seg_id": "a"}, "alternates": []}]}
+    assert edit_plan._score_candidate(good) > edit_plan._score_candidate(bad)
+    assert edit_plan._score_candidate({"beats": []}) == 0.0
+
+
+def test_build_scene_first_plan_recommends_best(monkeypatch):
+    # 조각 5개 — 첫(s0-0)·끝(s0-4)은 인벤토리에서 제외(썸네일·CTA 차단, Task 3). 후보는
+    # 가운데 s0-1/s0-2/s0-3만 참조하므로 살아있다(실제 라이브 패턴).
+    src = [{"video_id": "s0", "full_text": "원본", "segments": [
+        {"seg_id": "s0-0", "start": 0.0, "end": 1.0, "text": "", "scene_desc": "썸네일"},
+        {"seg_id": "s0-1", "start": 1.0, "end": 2.0, "text": "", "scene_desc": "곰팡이"},
+        {"seg_id": "s0-2", "start": 2.0, "end": 3.0, "text": "", "scene_desc": "단면"},
+        {"seg_id": "s0-3", "start": 3.0, "end": 5.0, "text": "", "scene_desc": "통풍"},
+        {"seg_id": "s0-4", "start": 5.0, "end": 6.0, "text": "", "scene_desc": "CTA"}]}]
+
+    # 나레이션을 목표(20초≈114자) 근처로 채워 ①길이 재생성 게이트가 안 걸리게 한다 —
+    # 이 테스트의 의도는 '길이 동일 시 fit 높은 후보 추천'이다(세션#2 보강과 분리).
+    _long1 = "곰팡이 핀 양파를 봤는데 남편이 이거 먹어도 되냐고 묻길래 통풍만 잘하면 괜찮다고 안심시켰어요"
+    _long2 = "그래서 베란다에 며칠 널어놨더니 멀쩡해져서 남편이 이거 무슨 마법이냐고 깜짝 놀라더라고요 진짜"
+
+    def fake_call(prompt, schema, **kw):
+        return {"candidates": [
+            {"hook": "A", "cta_keyword": "k", "beats": [
+                {"role": "훅", "narration": _long1, "seg_ids": ["s0-1", "s0-2"], "fit": 5, "forced": False},
+                {"role": "cta", "narration": _long2, "seg_ids": ["s0-3"], "fit": 5, "forced": False}]},
+            {"hook": "B", "cta_keyword": "k", "beats": [
+                {"role": "훅", "narration": _long1, "seg_ids": ["s0-1"], "fit": 2, "forced": True},
+                {"role": "cta", "narration": _long2, "seg_ids": ["s0-1"], "fit": 2, "forced": True}]}]}
+
+    out = edit_plan.build_scene_first_plan(src, "원본대본", 20, n_candidates=2, call=fake_call)
+    # 2026-07-31: 길이·말투 하한에 미달하면 후보를 더 뽑아 붙인다(재생성). 가짜 call은 늘
+    # 같은 후보를 주므로 개수가 늘 수 있다 — 여기서 지킬 것은 '추천이 하나'이지 개수가 아니다.
+    assert len(out["candidates"]) >= 2
+    rec = [c for c in out["candidates"] if c["recommended"]]
+    assert len(rec) == 1 and rec[0]["story"]["hook"] == "A"        # 고fit 후보 추천
+    # 2026-07-31 덩어리 믹스: 화면은 모델이 아니라 **코드가** 확정된 훅/스토리/CTA 덩어리에서
+    # 배정한다(_assign_blocks). 그래서 모델이 s0-1을 골랐어도 훅 덩어리의 장면이 들어간다 —
+    # 이게 "말만 하고 검사 안 하던" 옛 스파인과의 차이다. 인벤토리 장면이면 통과.
+    assert rec[0]["plan"]["beats"][0]["primary"]["seg_id"].startswith("s0-")

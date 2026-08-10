@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-08_1104_신호와 소음.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유진투자증권",
+    "analyst": "허준서",
+    "report_date": "2026.06.08",
+    "stocks": [
+      {
+        "name": "서진시스템",
+        "code": "178320",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "79,000원",
+        "tp_prev": "70,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2026년과 2027년의 평균 EPS에 Target P/E 22배를 적용, 플루언스향 ESS 매출액 추정치는 NVL72 랙 출하량 기반 BTM ESS 시장 성장성 반영",
+        "estimate_revision": "목표주가 변경의 이유는 부가세 이슈(보수적 수준에서 Base Case 적용)와 ESS 사업부문 성장성 확대를 추정치에 반영했기 때문",
+        "next_catalyst": "지멘스는 엔비디아의 NVL72용 전력-쿨링 아키텍처를 공개, 해당 아키텍처는 DSX 플랫폼의 일환이며 플루언스 에너지의 ESS인 Smart Stack 제품 탑재 공식화",
+        "thesis": [
+          "지멘스-엔비디아 NVL72용 전력-쿨링 아키텍처 공개에 따른 플루언스 에너지 ESS 탑재로 BTM 시장 침투 본격화",
+          "플루언스 에너지의 핵심 제조 파트너로서 데이터센터 고객들의 Power Quality 수요 충족을 통한 직수혜",
+          "금속 및 전장부품의 극단적으로 높은 내재화율을 바탕으로 긍정적 업황에서 마진 레버리지 극대화"
+        ],
+        "valuation_basis": "2026년과 2027년의 평균 EPS에 Target P/E 22배를 적용",
+        "risk": "베트남 정부로부터 부과된 부가세 이슈 (3가지 시나리오: 이의신청 수용 환급/잔여 보증금 반환/전액 영업외 비용 인식)",
+        "supply_comment": "금속 및 전장부품 모두에서 내재화율이 극단적으로 높은 서진시스템은 총 조립 공정 수행은 물론, 조립에 필요한 부품도 원재료 제작 단계에서부터 자체제작",
+        "quote": "투자의견 BUY를 유지하고 목표주가 79,000원으로 소폭 상향조정, 기존 산출방식과 동일한 2026년과 2027년의 평균 EPS에 Target P/E 22배를 적용"
+      }
+    ]
+  }
+}

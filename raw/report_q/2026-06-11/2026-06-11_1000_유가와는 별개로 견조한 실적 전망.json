@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-11_1000_유가와는 별개로 견조한 실적 전망.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "안도현",
+    "report_date": "2026년 06월 11일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "한국공항",
+        "code": "005430",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "한국공항의 1분기 매출액은 14% (YoY) 증가한 1,780억원, 영업이익은 36% 증가한 197억원(영업이익률 11.1%)으로 호실적을 기록했다.",
+        "estimate_revision": null,
+        "next_catalyst": "통합 항공사 출범 이후 주주환원 제고",
+        "thesis": [
+          "지상조업사 매출은 항공편 운항횟수와 계약된 조업 단가를 기반으로 하여 유가 상승에 따른 수익성 영향이 제한적임",
+          "대한항공 위주의 항공시장 재편과 신규 외항사 고객 유입(18% YoY 증가)에 따른 실적 우상향",
+          "대한항공/진에어라는 국내 유일 FSC와 최대 LCC 그룹을 캡티브 고객사로 보유"
+        ],
+        "valuation_basis": null,
+        "risk": "고유가가 장기화될 경우 항공사의 감편 영향 가능성",
+        "supply_comment": null,
+        "quote": "대한항공/진에어라는 국내 유일 FSC와 최대 LCC 그룹을 캡티브 고객사로 보유하고 있는 회사라는 점에 주목한다."
+      }
+    ]
+  }
+}

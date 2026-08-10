@@ -1,0 +1,19 @@
+{
+  "target_kind": "market",
+  "market_direction": "neutral",
+  "macro_events": [
+    {
+      "fact": "IGU, 2026년 중동 분쟁에서 LNG 시장은 충격 잘 흡수 진단",
+      "ts": "2026-07-14",
+      "quote": "IGU, 2026년 중동 분쟁에서 LNG 시장은 충격 잘 흡수 진단"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "조선",
+      "stance": "neutral",
+      "comment": "LNG 시장의 안정적 흐름에 따른 중립적 전망"
+    }
+  ],
+  "quote": "IGU, 2026년 중동 분쟁에서 LNG 시장은 충격 잘 흡수 진단"
+}

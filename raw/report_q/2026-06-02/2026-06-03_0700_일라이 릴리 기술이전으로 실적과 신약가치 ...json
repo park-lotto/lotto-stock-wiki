@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_일라이 릴리 기술이전으로 실적과 신약가치 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "IBK투자증권",
+    "analyst": "정이수",
+    "report_date": "2026. 6. 2",
+    "stocks": [
+      {
+        "name": "한미약품",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "계약금은 올해 2~3분기 중 실적에 반영될 것으로 예상되며, 이에 따라 단기 실적 서프라이즈도 기대된다.",
+        "estimate_revision": null,
+        "next_catalyst": "2027년 12월 단장증후군 글로벌 임상 2상 종료 예정, 염증성 장질환으로의 적응증 확장 가능성",
+        "thesis": [
+          "일라이 릴리와 단장증후군 치료제 후보물질 소네페글루타이드 라이선스 계약 체결(계약 규모 12억 6,000만 달러)",
+          "월 1회 투여 가능한 장기 지속형 GLP-2 analog로 투약 편의성 측면의 차별화된 경쟁력 확보",
+          "향후 에페글레나타이드 병용 등을 통한 염증성 장질환 적응증 확장 및 비만·대사질환 치료제와의 시너지 전략 기대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "한미약품은 6월 1일 일라이 릴리와 단장증후군 치료제 후보물질 소네페글루타이드(LAPS GLP-2 analog)에 대한 라이선스 계약 체결을 발표했다.",
+        "sector": "바이오"
+      },
+      {
+        "name": "한미사이언스",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": null,
+        "estimate_revision": null,
+        "next_catalyst": null,
+        "thesis": [
+          "LAPSCOVERY 플랫폼 기술 공동 개발에 따른 기술이전 수익 배분 가능성"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "다만 한미사이언스와 공동 개발한 장기 지속형 플랫폼 기술인 LAPSCOVERY가 적용된 후보물질인 만큼, 향후 계약금과 마일스톤, 로열티 수익은 한미약품과 한미사이언스 간 일정 비율로 배분될 가능성이 높다고 판단한다.",
+        "sector": "바이오"
+      }
+    ]
+  }
+}

@@ -1,0 +1,845 @@
+"""리라이트 믹스 — 원본 타임라인을 뼈대로 두고 문장만 갈아끼운다(2026-07-31).
+
+레퍼런스 프로그램 역분석: 자기 자막이 그 순간 원본 자막을 바꿔 말한 것이었다
+("변하는데"→"말랑말랑 젤리 같아요"). 화면을 새로 찾을 필요가 없다.
+사장님 정의: "대사의 시작과 끝 장면까지가 한 세트."
+"""
+from shopping_shorts import edit_plan as ep
+
+
+def _sm(spec):
+    m, t = {}, 0.0
+    for sid, text, dur in spec:
+        m[sid] = {"video_id": sid.rsplit("-", 1)[0], "seg_id": sid, "start": t, "end": t + dur,
+                  "text": text, "scene_desc": f"{sid} 화면", "change": "", "is_key": False,
+                  "shot_role": "사용중"}
+        t += dur
+    return m
+
+
+# ── F1/F2/F3 재설계(2026-08-01, Fable 코드리뷰) ──────────────────────────
+# 옛 _pick_slot_sequence는 seg 낱개를 Gemini에게 자유 재정렬시킨 뒤에 문장 그룹핑을 했다
+# (순서가 거꾸로 → F1: 프랑켄 문장세트) + target_seconds를 무시하고 전부 강제 사용했다
+# (F2: 비트 폭증). 그래서 _pick_slot_sequence 자체와 그 seg-level 동작을 검증하던 옛 테스트
+# 4개(returns_all_segments_once / drops_unknown_ids_from_model / falls_back_when_call_fails /
+# groups_by_sentence)는 "모든 seg를 반드시 다 쓴다"는 F2의 버그였던 동작을 정답으로 여기고
+# 있었으므로 삭제하고, 아래 세트 단위 재설계에 맞는 테스트로 교체한다.
+# 새 순서: 소스별 시간순으로 먼저 문장세트를 만들고(_build_source_sentence_sets), Gemini에겐
+# "세트를 골라 순서만 정하라"고 묻는다(_pick_slot_groups) — 세트 내부는 항상 한 소스만 담겨
+# 프랑켄 문장이 구조적으로 불가능하고, 예산(target_seconds)이 있어 전부 강제 사용도 안 한다.
+
+def test_build_source_sentence_sets_never_mixes_sources_within_one_set():
+    """세트 하나는 항상 한 video_id의 세그먼트만 담는다(소스별로 먼저 묶으므로)."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("a-1", "라마바요", 2.0),
+              ("b-0", "사아자요", 2.0), ("b-1", "차카타요", 2.0)])
+    sets = ep._build_source_sentence_sets(sm)
+    for st in sets:
+        vids = {s["video_id"] for s in st["segs"]}
+        assert len(vids) == 1
+
+
+def test_pick_slot_groups_f1_no_cross_source_fragment_mixing():
+    """F1 재현: video a는 a1(문장 미종결)+a2(종결)로 한 문장, video b는 자기 세그먼트 보유.
+
+    옛 코드(seg-level 재정렬 후 그룹핑)였다면 Gemini가 [a1, b1, a2] 순서를 반환할 때
+    _group_by_sentence가 a1(문장 안 끝남)에 b1을 이어붙이다 a2에서 끝내 [a1, b1, a2]가
+    한 세트가 됐다(서로 다른 소스의 조각이 한 문장세트에 섞임 = 프랑켄 문장).
+    새 설계에서는 세트가 소스별로 먼저 확정되므로, Gemini가 세트를 어떤 순서로 고르든
+    한 세트 안에 두 소스가 섞이는 일이 없어야 한다."""
+    sm = _sm([("a-1", "기름이 튀어서", 1.5), ("a-2", "힘들었거든요", 1.5),
+              ("b-1", "사아자요", 2.0)])
+
+    def fake_call(prompt, schema):
+        # 세트 단위 프롬프트를 받았다면 세트 id로 답해야 한다 — set_id를 그대로 안 쓰고
+        # 혹시 seg_id로 답하더라도(모델 실수) 알 수 없는 id는 버려지는지도 같이 확인.
+        sets = ep._build_source_sentence_sets(sm)
+        ids = [st["set_id"] for st in sets]
+        return {"order": list(reversed(ids))}
+
+    groups, source, _info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    assert source == ep.SLOT_SOURCE_GEMINI
+    for g in groups:
+        vids = {s["video_id"] for s in g}
+        assert len(vids) == 1, f"cross-source mixing within one set: {[s['seg_id'] for s in g]}"
+    # a-1과 a-2는 같은 문장(a-2가 종결어미) → 항상 같은 세트로 붙어있어야 한다.
+    a_group = next(g for g in groups if any(s["seg_id"] == "a-1" for s in g))
+    assert [s["seg_id"] for s in a_group] == ["a-1", "a-2"]
+
+
+def test_pick_slot_groups_f2_does_not_force_append_unused_sets():
+    """모델이 예산을 지켜 세트 일부만 골랐다면, 코드가 나머지를 강제로 뒤에 채우면 안 된다
+    (옛 _pick_slot_sequence는 '모델이 빠뜨린 것'을 무조건 뒤에 보충했다 = F2의 핵심 버그)."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("a-1", "라마바요", 2.0),
+              ("b-0", "사아자요", 2.0), ("b-1", "차카타요", 2.0)])
+
+    def fake_call(prompt, schema):
+        sets = ep._build_source_sentence_sets(sm)
+        a_only = [st["set_id"] for st in sets if st["video_id"] == "a"]
+        return {"order": a_only}   # b쪽 세트는 일부러 선택하지 않음(예산 내 선택 흉내)
+
+    groups, source, _info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    assert source == ep.SLOT_SOURCE_GEMINI
+    ids = {s["seg_id"] for g in groups for s in g}
+    assert "b-0" not in ids and "b-1" not in ids   # 강제 보충되면 안 된다
+    assert "a-0" in ids and "a-1" in ids
+
+
+def test_pick_slot_groups_f3_falls_back_to_pick_timeline_on_empty_response():
+    """F3 재현: Gemini 응답이 비었거나(order 없음) 무효하면, 안전장치 없는 전체 이어붙이기가
+    아니라 _pick_timeline(완성/문제 컷 트리밍 + target_seconds 캡 있음)으로 바로 폴백해야 한다."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("a-1", "완성이요", 2.0), ("b-0", "사아자요", 2.0)])
+    sm["a-1"]["shot_role"] = "완성"   # a가 마지막 소스가 아니면 _pick_timeline이 이 컷을 잘라낸다
+
+    def fake_call_none(prompt, schema):
+        return None
+
+    def fake_call_empty(prompt, schema):
+        return {}
+
+    expected = ep._pick_timeline(sm, 30)
+    for fake in (fake_call_none, fake_call_empty):
+        groups, source, _info = ep._pick_slot_groups(sm, target_seconds=30, call=fake)
+        assert groups == expected
+        assert source == ep.SLOT_SOURCE_FALLBACK_EMPTY_ORDER
+
+
+# ── F5: Gemini 세트 순서에도 완성/문제 컷 상식검증 필요 (2026-08-01, 외부 리뷰 후속) ──
+# _pick_timeline은 '완성 컷은 끝에서만, 문제 컷은 앞에서만'을 코드로 강제하지만, 그 가드는
+# _pick_timeline 자신의 폴백 경로에만 붙어 있다. _pick_slot_groups가 Gemini 응답을 성공적으로
+# 받았을 때(훨씬 흔한 경로)는 프롬프트로 부탁만 하고 코드 검증이 없었다 — Gemini가 완성 세트를
+# 중간에 놓거나 문제 세트를 뒷부분에 놓아도 그대로 통과됐다. 아래는 그 구멍을 재현하는 테스트.
+
+def test_pick_slot_groups_f5_moves_completion_set_to_the_end():
+    """Gemini가 '완성' 세트를 중간에 두면 **맨 뒤로 옮긴다**(버리지 않는다, 2026-08-01).
+
+    버리기는 규칙은 지키지만 재료를 버린다 — 실측(job 9c2076e18252)에서 13초짜리
+    9세그 세트가 통째로 잘려 대본이 3비트로 쪼그라들었다.
+    """
+    sm = _sm([("a-0", "가나다요", 2.0), ("a-1", "완성이요", 2.0),
+              ("b-0", "사아자요", 2.0), ("b-1", "차카타요", 2.0)])
+    sm["a-1"]["shot_role"] = "완성"
+
+    def fake_call(prompt, schema):
+        sets = ep._build_source_sentence_sets(sm)
+        by_vid_first = {st["video_id"]: st["set_id"] for st in sets}
+        # a(완성 세트) → b0 → b1 : 완성 세트가 마지막이 아니라 중간에 낀 순서.
+        b_ids = [st["set_id"] for st in sets if st["video_id"] == "b"]
+        return {"order": [by_vid_first["a"]] + b_ids}
+
+    groups, source, _info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    ids = [s["seg_id"] for g in groups for s in g]
+    assert ids[-1] == "a-1", f"완성 세트가 맨 뒤로 안 갔다: {ids}"      # 옮긴다
+    assert "b-0" in ids and "b-1" in ids                               # 버리지 않는다
+    assert source == ep.SLOT_SOURCE_GEMINI
+
+
+def test_pick_slot_groups_f5_moves_problem_set_to_the_front():
+    """Gemini가 '문제' 세트를 첫 자리가 아닌 곳에 두면 **맨 앞으로 옮긴다**."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("a-1", "라마바요", 2.0),
+              ("b-0", "문제상황요", 2.0)])
+    sm["b-0"]["shot_role"] = "문제"
+
+    def fake_call(prompt, schema):
+        sets = ep._build_source_sentence_sets(sm)
+        a_ids = [st["set_id"] for st in sets if st["video_id"] == "a"]
+        b_ids = [st["set_id"] for st in sets if st["video_id"] == "b"]
+        # a0 → a1 → b0(문제) : 문제 세트가 첫 자리가 아니라 맨 뒤에 낀 순서.
+        return {"order": a_ids + b_ids}
+
+    groups, source, _info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    ids = [s["seg_id"] for g in groups for s in g]
+    assert ids[0] == "b-0", f"문제 세트가 맨 앞으로 안 갔다: {ids}"
+    assert "a-0" in ids and "a-1" in ids
+    # 필터가 일부만 제거했을 뿐 남은 결과는 여전히 Gemini 판단 경로다(전부 지워진 게 아님).
+    assert source == ep.SLOT_SOURCE_GEMINI
+
+
+def test_pick_slot_groups_f5_keeps_completion_set_when_genuinely_last():
+    """완성 세트가 실제로 시퀀스 맨 끝이면 정상 케이스 — 지워지면 안 된다(과잉필터 금지)."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("b-0", "완성이요", 2.0)])
+    sm["b-0"]["shot_role"] = "완성"
+
+    def fake_call(prompt, schema):
+        sets = ep._build_source_sentence_sets(sm)
+        by_vid = {st["video_id"]: st["set_id"] for st in sets}
+        return {"order": [by_vid["a"], by_vid["b"]]}
+
+    groups, source, _info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    ids = [s["seg_id"] for g in groups for s in g]
+    assert "b-0" in ids, f"맨 끝의 정상적인 완성 세트까지 지워졌다: {ids}"
+    assert source == ep.SLOT_SOURCE_GEMINI
+
+
+def test_pick_slot_groups_f5_keeps_problem_set_when_genuinely_first():
+    """문제 세트가 실제로 시퀀스 맨 앞이면 정상 케이스 — 지워지면 안 된다(과잉필터 금지)."""
+    sm = _sm([("a-0", "문제상황요", 2.0), ("b-0", "사아자요", 2.0)])
+    sm["a-0"]["shot_role"] = "문제"
+
+    def fake_call(prompt, schema):
+        sets = ep._build_source_sentence_sets(sm)
+        by_vid = {st["video_id"]: st["set_id"] for st in sets}
+        return {"order": [by_vid["a"], by_vid["b"]]}
+
+    groups, source, _info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    ids = [s["seg_id"] for g in groups for s in g]
+    assert "a-0" in ids, f"맨 앞의 정상적인 문제 세트까지 지워졌다: {ids}"
+    assert source == ep.SLOT_SOURCE_GEMINI
+
+
+def test_pick_slot_groups_never_empties_now_that_we_reorder():
+    """자리 교정이 '제거'에서 '이동'으로 바뀌었으므로(2026-08-01) 세트가 사라지지 않는다.
+
+    예전엔 완성 세트와 문제 세트가 서로 잘못된 자리에 있으면 **둘 다 지워져** 폴백으로
+    떨어졌다. 이제는 완성은 뒤로, 문제는 앞으로 옮겨 둘 다 살아남는다 — 재료를 버리지
+    않는 게 이 개정의 핵심이다(job 9c2076e18252에서 13초 세트가 잘려 대본이 3비트로
+    쪼그라들었다)."""
+    sm = _sm([("a-0", "완성이요", 2.0), ("b-0", "문제상황요", 2.0)])
+    sm["a-0"]["shot_role"] = "완성"
+    sm["b-0"]["shot_role"] = "문제"
+
+    def fake_call(prompt, schema):
+        sets = ep._build_source_sentence_sets(sm)
+        by_vid = {st["video_id"]: st["set_id"] for st in sets}
+        # a(완성, 마지막 아님) → b(문제, 첫 자리 아님) : 둘 다 필터에 걸려 전부 제거된다.
+        return {"order": [by_vid["a"], by_vid["b"]]}
+
+    groups, source, info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    ids = [s["seg_id"] for g in groups for s in g]
+    assert ids == ["b-0", "a-0"]                 # 문제 앞으로 · 완성 뒤로, 둘 다 산다
+    assert source == ep.SLOT_SOURCE_GEMINI
+    assert info["filtered"] == [] and info["kept"] == 2
+
+
+def test_pick_slot_groups_empty_seg_map_tags_empty_input():
+    """seg_map이 아예 비었으면 Gemini를 부를 것도 없다 — 폴백이 아니라 empty_input 태그."""
+    def fake_call(prompt, schema):
+        raise AssertionError("seg_map이 비었으면 Gemini를 호출하면 안 된다")
+
+    groups, source, _info = ep._pick_slot_groups({}, target_seconds=30, call=fake_call)
+    assert groups == []
+    assert source == ep.SLOT_SOURCE_EMPTY_INPUT
+
+
+def test_pick_slot_groups_groups_by_sentence():
+    """_pick_slot_groups 결과도 문장 단위 그룹(한 소스 내)으로 묶여야 한다."""
+    sm = _sm([("v0-1", "가나다요", 2.0), ("v0-2", "라마바요", 2.0),
+              ("v1-1", "사아자요", 2.0)])
+
+    def fake_call(prompt, schema):
+        sets = ep._build_source_sentence_sets(sm)
+        # v1 세트를 v0 세트들 사이에 끼워 넣어도(세트 단위 교차) 세트 내부는 안 섞인다.
+        v0_ids = [st["set_id"] for st in sets if st["video_id"] == "v0"]
+        v1_ids = [st["set_id"] for st in sets if st["video_id"] == "v1"]
+        return {"order": [v0_ids[0], v1_ids[0], v0_ids[1]]}
+
+    groups, source, _info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    ids = [[s["seg_id"] for s in g] for g in groups]
+    assert ids == [["v0-1"], ["v1-1"], ["v0-2"]]   # 각자 "요"로 끝나는 문장 → 세트 하나씩
+    assert source == ep.SLOT_SOURCE_GEMINI
+
+
+def test_ends_sentence_uses_korean_endings():
+    assert ep._ends_sentence("잔소리 들었는데 설치해놨더라고요")
+    assert ep._ends_sentence("확 줄어든 거 있죠?")
+    assert not ep._ends_sentence("이게 방탄아크릴 소재라")
+    assert not ep._ends_sentence("")
+
+
+def test_set_breaks_at_sentence_end_not_by_time():
+    """한 세트 = 원본 문장 하나가 시작해서 끝나는 장면까지."""
+    sm = _sm([("v-0", "요리할 때마다 기름이", 1.5), ("v-1", "튀어서 힘들었거든요", 1.5),
+              ("v-2", "이걸 세웠더니", 1.5), ("v-3", "싹 막아주네요", 1.5)])
+    g = ep._pick_timeline(sm, 30)
+    assert len(g) == 2
+    assert [s["seg_id"] for s in g[0]] == ["v-0", "v-1"]
+    assert [s["seg_id"] for s in g[1]] == ["v-2", "v-3"]
+
+
+def test_short_segment_does_not_become_its_own_set():
+    sm = _sm([("v-0", "네요", 0.3), ("v-1", "이렇게 하니까 되더라고요", 2.0)])
+    g = ep._pick_timeline(sm, 30)
+    assert len(g) == 1
+
+
+def test_prompt_shows_original_line_and_budget():
+    sm = _sm([("v-0", "기름이 튀어서 힘들었거든요", 2.0)])
+    txt = ep._rewrite_block(ep._pick_timeline(sm, 30))
+    assert "원본이 한 말: 기름이 튀어서 힘들었거든요" in txt
+    assert "자 이내" in txt
+    assert "그대로 베끼지 마라" in txt
+
+
+def test_assign_timeline_puts_screens_in_source_order():
+    """말과 화면이 어긋날 수 없다 — 순서가 곧 원본 순서다."""
+    sm = _sm([("v-0", "가나다라마바사요", 2.0), ("v-1", "아자차카타파하요", 2.0)])
+    g = ep._pick_timeline(sm, 30)
+    beats = [{"narration": "첫줄", "primary": {"seg_id": "v-1"}, "alternates": []},
+             {"narration": "둘째줄", "primary": {"seg_id": "v-0"}, "alternates": []}]
+    ep._assign_timeline(beats, g)
+    assert beats[0]["primary"]["seg_id"] == "v-0"
+    assert beats[1]["primary"]["seg_id"] == "v-1"
+
+
+def test_beat_count_mismatch_is_safe():
+    sm = _sm([("v-0", "가나다요", 2.0), ("v-1", "라마바요", 2.0), ("v-2", "사아자요", 2.0)])
+    g = ep._pick_timeline(sm, 30)
+    beats = [{"narration": "한 줄뿐", "primary": {"seg_id": "v-2"}, "alternates": []}]
+    ep._assign_timeline(beats, g)
+    assert beats[0]["primary"]["seg_id"] == "v-0"      # 앞에서부터 순서대로
+
+
+def test_source_order_is_preserved_within_a_source():
+    """소스 안에서는 원본 시간순 그대로 — CTA 화면이 앞으로 튈 수 없다."""
+    sm = _sm([("v-0", "가나다요", 2.0), ("v-1", "라마바요", 2.0), ("v-2", "사아자요", 2.0)])
+    ids = [s["seg_id"] for g in ep._pick_timeline(sm, 30) for s in g]
+    assert ids == ["v-0", "v-1", "v-2"]
+
+
+def test_trailing_ending_shots_of_non_final_source_are_dropped():
+    """A를 다 쓰고 B를 붙이면 A의 마무리 화면이 한가운데 온다 → 꼬리의 완성컷은 잘라낸다."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("a-1", "라마바요", 2.0), ("a-2", "완성이요", 2.0),
+              ("b-0", "사아자요", 2.0)])
+    sm["a-2"]["shot_role"] = "완성"
+    ids = [s["seg_id"] for g in ep._pick_timeline(sm, 30) for s in g]
+    assert "a-2" not in ids and "b-0" in ids
+
+
+def test_final_source_keeps_its_ending_shot():
+    """마지막 소스의 완성컷은 남긴다 — 마무리는 끝에서 나와야 한다."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("a-1", "완성이요", 2.0)])
+    sm["a-1"]["shot_role"] = "완성"
+    ids = [s["seg_id"] for g in ep._pick_timeline(sm, 30) for s in g]
+    assert "a-1" in ids
+
+
+def test_offtopic_line_is_flagged():
+    """그 자리의 결과 한 낱말도 안 겹치면 딴소리로 표시한다(fit↓·forced)."""
+    sm = _sm([("v-0", "기름이 사방으로 튀어서 힘들었거든요", 2.0)])
+    g = ep._pick_timeline(sm, 30)
+    beats = [{"narration": "강아지 산책 정말 즐거워요", "fit": 5,
+              "primary": {"seg_id": "v-0"}, "alternates": []}]
+    ep._assign_timeline(beats, g)
+    assert beats[0].get("offtopic") and beats[0]["fit"] <= 2 and beats[0]["forced"]
+
+
+def test_reworded_line_is_not_flagged():
+    """표현을 바꿔 쓰라고 했으니 많이 겹칠 필요는 없다 — 결만 이어지면 통과."""
+    sm = _sm([("v-0", "기름이 사방으로 튀어서 힘들었거든요", 2.0)])
+    g = ep._pick_timeline(sm, 30)
+    beats = [{"narration": "요리할 때마다 기름 때문에 스트레스였죠", "fit": 5,
+              "primary": {"seg_id": "v-0"}, "alternates": []}]
+    ep._assign_timeline(beats, g)
+    assert not beats[0].get("offtopic")
+
+
+def test_reassign_is_idempotent_and_restores_order():
+    """핑퐁 후처리가 화면을 뒤섞어도 마지막에 다시 걸면 원본 순서로 돌아온다(멱등).
+
+    실측(job e288f2f0c387): grounding 직후에만 걸었더니 order_by_backbone·dedup_*·
+    swap_hook_cta가 화면을 다시 섞어 한 비트에 s0-1·s1-7·s1-13이 뒤엉켰다.
+    """
+    sm = _sm([("v-0", "가나다요", 2.0), ("v-1", "라마바요", 2.0), ("v-2", "사아자요", 2.0)])
+    g = ep._pick_timeline(sm, 30)
+    beats = [{"narration": "첫줄", "primary": {"seg_id": "v-0"}, "alternates": []},
+             {"narration": "둘째줄", "primary": {"seg_id": "v-1"}, "alternates": []},
+             {"narration": "셋째줄", "primary": {"seg_id": "v-2"}, "alternates": []}]
+    ep._assign_timeline(beats, g)
+    first = [b["primary"]["seg_id"] for b in beats]
+    # 후처리가 화면을 뒤섞은 상황을 흉내
+    beats[0]["primary"], beats[2]["primary"] = beats[2]["primary"], beats[0]["primary"]
+    ep._assign_timeline(beats, g)
+    assert [b["primary"]["seg_id"] for b in beats] == first
+
+
+def test_rewrite_mix_runs_even_when_backbone_is_on():
+    """★라이브는 backbone_base_enabled=1이다(2026-07-31 서버 실조회).
+
+    처음엔 backbone_base가 꺼진 분기에만 넣어서 라이브에서 리라이트 믹스가 아예 안 돌았다
+    (실측 job 52f64c62b3ef: 훅에 s1-13·s1-4·s1-14가 뒤엉키고 s0-5가 두 비트에 중복).
+    """
+    seen = {}
+
+    def _cap(prompt, schema):
+        seen["p"] = prompt
+        return {"candidates": [{"hook": "h", "beats": [
+            {"role": "훅", "narration": "새 문장", "seg_ids": ["v-0"], "fit": 5}]}]}
+
+    sources = [{"video_id": "v", "full_text": "본문", "segments": [
+        {"seg_id": f"v-{i}", "start": i * 2, "end": i * 2 + 2, "text": "기름이 튀었거든요",
+         "scene_desc": "주방", "change": "기름이 튄다", "shot_role": "사용중"} for i in range(5)]}]
+    ep.build_scene_first_plan(sources, "ref", 20, n_candidates=1, call=_cap,
+                              backbone_base=True)
+    assert "원본이 하던 말을 우리 말로 바꿔 쓴다" in seen["p"]
+
+
+def test_build_scene_first_plan_uses_gemini_slot_order_with_no_duplicate_screens():
+    """build_scene_first_plan이 _pick_timeline이 아니라 _pick_slot_groups를 쓰는지 확인한다
+    (Task5: 화면 순서를 소스순서+시간순 강제가 아니라 Gemini 판단으로 정한다).
+
+    fake_call이 스키마로 분기한다 — order 스키마(_SLOT_SEQ_SCHEMA)로 물으면 두 소스를
+    교차하는 순서(order 응답)를, 대본/후보 스키마로 물으면 후보 candidates 응답을 준다.
+    _pick_timeline이었다면 소스 a 전부 → 소스 b 전부 순서로 강제됐을 것이나, 여기서는
+    order 응답이 b-0을 a-1보다 앞에 오도록 일부러 교차시켜, 실제로 그 순서가 tl_groups에
+    반영됐는지(=_pick_timeline이 아니라 _pick_slot_groups가 쓰였는지)를 간접 확인한다.
+
+    핵심 검증은 사장님이 실측한 화면중복 버그의 재발 방지: 최종 plan['beats']의
+    primary.seg_id에 중복이 없어야 한다.
+    """
+    calls = {"order": 0, "script": 0}
+
+    def fake_call(prompt, schema):
+        if schema.get("required") == ["order"]:
+            calls["order"] += 1
+            # 소스를 교차하는 순서(단순 a전부→b전부가 아님) — 실제로 반영되는지 확인용.
+            return {"order": ["b-0", "a-0", "a-1", "b-1"]}
+        calls["script"] += 1
+        return {"candidates": [{"hook": "h", "beats": [
+            {"role": "훅", "narration": "첫 줄", "seg_ids": ["a-0"], "fit": 5},
+            {"role": "스토리", "narration": "둘째 줄", "seg_ids": ["a-0"], "fit": 5},
+            {"role": "CTA", "narration": "셋째 줄", "seg_ids": ["a-0"], "fit": 5},
+        ]}]}
+
+    sources = [
+        {"video_id": "a", "full_text": "본문A", "segments": [
+            {"seg_id": "a-0", "start": 0, "end": 2, "text": "가나다요",
+             "scene_desc": "주방A1", "change": "가나다", "shot_role": "사용중"},
+            {"seg_id": "a-1", "start": 2, "end": 4, "text": "라마바요",
+             "scene_desc": "주방A2", "change": "라마바", "shot_role": "사용중"},
+        ]},
+        {"video_id": "b", "full_text": "본문B", "segments": [
+            {"seg_id": "b-0", "start": 0, "end": 2, "text": "사아자요",
+             "scene_desc": "주방B1", "change": "사아자", "shot_role": "사용중"},
+            {"seg_id": "b-1", "start": 2, "end": 4, "text": "차카타요",
+             "scene_desc": "주방B2", "change": "차카타", "shot_role": "사용중"},
+        ]},
+    ]
+
+    result = ep.build_scene_first_plan(sources, "ref", 8, n_candidates=1, call=fake_call)
+
+    assert calls["order"] >= 1     # _pick_slot_groups가 실제로 _call을 order 스키마로 불렀다
+    plan = result["candidates"][0]["plan"]
+    seg_ids = [b["primary"]["seg_id"] for b in plan["beats"]]
+    assert len(seg_ids) == len(set(seg_ids))          # 핵심: 화면 중복 없음
+    assert set(seg_ids) <= {"a-0", "a-1", "b-0", "b-1"}
+    # 폴백 가시화(2026-08-01): 슬롯 경로를 실제로 탔으면 plan에 slot_source가 남아야 한다.
+    assert plan["slot_source"] == ep.SLOT_SOURCE_GEMINI
+
+
+def test_clip_matching_the_words_comes_first():
+    """말에 맞는 컷을 비트 안에서 앞으로 올린다(사장님: 태깅이 맞으면 가져오면 되잖아)."""
+    sm = _sm([("v-0", "", 2.0), ("v-1", "", 2.0)])
+    sm["v-0"]["change"] = "가림막을 벽에 설치한다"
+    sm["v-1"]["change"] = "물티슈로 표면을 닦아낸다"
+    got = ep._order_clips_by_words("물티슈로 쓱 닦아도 끝이에요",
+                                   [sm["v-0"], sm["v-1"]])
+    assert got[0]["seg_id"] == "v-1"
+
+
+def test_clip_order_kept_when_nothing_matches():
+    sm = _sm([("v-0", "", 2.0), ("v-1", "", 2.0)])
+    got = ep._order_clips_by_words("전혀 다른 이야기", [sm["v-0"], sm["v-1"]])
+    assert [s["seg_id"] for s in got] == ["v-0", "v-1"]
+
+
+def test_later_source_intro_problem_shots_are_dropped():
+    """두 번째 소스의 도입부(문제·before=더러운 상태)가 후반에 끼면 안 된다."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("a-1", "라마바요", 2.0),
+              ("b-0", "사아자요", 2.0), ("b-1", "차카타요", 2.0)])
+    sm["b-0"]["shot_role"] = "문제"
+    ids = [s["seg_id"] for g in ep._pick_timeline(sm, 30) for s in g]
+    assert "b-0" not in ids and "b-1" in ids
+
+
+def test_first_source_keeps_its_intro():
+    sm = _sm([("a-0", "가나다요", 2.0), ("a-1", "라마바요", 2.0)])
+    sm["a-0"]["shot_role"] = "문제"
+    ids = [s["seg_id"] for g in ep._pick_timeline(sm, 30) for s in g]
+    assert "a-0" in ids
+
+
+def test_rewrite_mix_does_not_prepend_hook_again():
+    """★후킹 중복 차단(2026-07-31 사장님). 리라이트 믹스는 첫 세트가 이미 훅 자리라
+    hook 필드를 덧붙이면 같은 말이 두 번 나온다(실측 B안: '카페에 두면 다들 어디서
+    샀냐고 물어봐요' 뒤에 같은 문장이 그대로 이어짐)."""
+    sm = _sm([("v-0", "카페에 두면 다들 어디서 샀냐고 물어봐요", 2.0)])
+    cand = {"hook": "이거 카페에 두면 다들 어디서 샀냐고 물어봐요",
+            "beats": [{"role": "훅", "narration": "다들 어디서 샀냐고 물어보더라고요",
+                       "seg_ids": ["v-0"], "fit": 5}]}
+    plan = ep._ground_candidate(cand, sm, lead_hook=False)
+    assert plan["beats"][0]["narration"] == "다들 어디서 샀냐고 물어보더라고요"
+
+
+def test_legacy_path_still_leads_with_hook():
+    sm = _sm([("v-0", "본문", 2.0)])
+    cand = {"hook": "이거 진짜 물건이에요",
+            "beats": [{"role": "훅", "narration": "그래서 써봤는데요",
+                       "seg_ids": ["v-0"], "fit": 5}]}
+    plan = ep._ground_candidate(cand, sm, lead_hook=True)
+    assert plan["beats"][0]["narration"].startswith("이거 진짜 물건이에요")
+
+
+def test_prompt_forbids_repeating_the_hook():
+    sm = _sm([("v-0", "기름이 튀었거든요", 2.0)])
+    txt = ep._rewrite_block(ep._pick_timeline(sm, 30))
+    assert "한 문장으로" in txt and "두 번 말하지 마라" in txt
+
+
+def test_empty_inventory_is_safe():
+    assert ep._pick_timeline({}, 30) == []
+    assert ep._rewrite_block([]) == ""
+
+
+def test_assign_timeline_called_once_never_duplicates():
+    """_assign_timeline이 grounding 직후 딱 한 번만 불리면(재호출 없음), n==len(groups)가
+    항상 성립하므로 화면 중복이 구조적으로 생길 수 없다 — split이 비트를 늘리지 않는지 검증.
+
+    group idx 2(v-2, v-3)는 v-2 텍스트가 문장을 안 끝내(_ends_sentence False) 다음 컷과
+    한 세트로 묶인다 — 이래야 _assign_timeline이 그 비트에 real alternates(v-3)를 채워
+    (구)_split_long_beats의 분할 조건("컷이 2개 이상")을 실제로 태운다."""
+    sm = _sm([("v-0", "가나다요", 2.0), ("v-1", "라마바요", 2.0),
+              ("v-2", "사이참깨", 1.5), ("v-3", "사아자요", 2.0),
+              ("v-4", "차카타요", 2.0)])
+    g = ep._pick_timeline(sm, 30)
+    assert len(g) == 4
+    long_narr = ("이 냄비는 정말 놀라울 정도로 열전도가 빠르고 코팅이 오래 가서 만족스럽습니다. "
+                 "게다가 손잡이까지 안 뜨거워서 요리할 때 진짜 편하더라고요.")
+    beats = [
+        {"narration": "첫줄", "beat_idx": 0, "primary": {"seg_id": "v-0"}, "alternates": []},
+        {"narration": "둘째줄", "beat_idx": 1, "primary": {"seg_id": "v-1"}, "alternates": []},
+        {"narration": long_narr, "beat_idx": 2, "primary": {"seg_id": "v-2"},
+         "alternates": [{"seg_id": "v-2b"}]},
+        {"narration": "넷째줄", "beat_idx": 3, "primary": {"seg_id": "v-4"}, "alternates": []},
+    ]
+    ep._assign_timeline(beats, g)
+    beats = ep._fix_beat_structure(beats)   # split이 더는 개수를 안 늘려야 한다
+    assert len(beats) == 4                  # 불변식: 그룹 개수와 항상 같다
+    seg_ids = [b["primary"]["seg_id"] for b in beats]
+    assert len(seg_ids) == len(set(seg_ids))
+    assert ep._assign_timeline([], []) == []
+
+
+def test_assign_timeline_never_duplicates_even_when_counts_mismatch():
+    """n(beats) != len(groups) 여도, 안 쓴 seg가 남아있는 한 같은 seg_id가 두 비트에
+    배정되면 안 된다.
+
+    실측(job 8226822c5b09, ping_pong=True 라이브 설정): n_beats=6, n_groups=5일 때
+    정수분배 lo/hi가 겹쳐 비트 0과 1이 둘 다 groups[0]을 받고, 그 안의 같은 첫 클립을
+    골라 화면이 중복됐다. groups(세트) 하나에 세그먼트가 2개 있어(v-0, v-0b) 6개 비트에
+    돌아갈 안 쓴 화면이 총 6개 있는 상황을 재현한다 — 이 경우 중복 없이 다 배정돼야 한다.
+    """
+    sm = _sm([("v-0", "가나다요", 1.0), ("v-0b", "라마바요", 1.0),
+              ("v-1", "사아자요", 2.0), ("v-2", "차카타요", 2.0),
+              ("v-3", "파하가요", 2.0), ("v-4", "나다라요", 2.0)])
+    g = [[sm["v-0"], sm["v-0b"]], [sm["v-1"]], [sm["v-2"]], [sm["v-3"]], [sm["v-4"]]]
+    assert len(g) == 5   # 세트 5개, 세그먼트는 총 6개
+    beats = [{"narration": f"문장{i}", "beat_idx": i, "primary": {}, "alternates": []}
+             for i in range(6)]   # 비트 6개 — 일부러 그룹(5)보다 많게
+    ep._assign_timeline(beats, g)
+    seg_ids = [b["primary"]["seg_id"] for b in beats]
+    assert len(seg_ids) == len(set(seg_ids)), f"duplicate seg_ids: {seg_ids}"
+
+
+# ── F4 (2026-08-01, Fable 코드리뷰) ──────────────────────────────────────
+# Part 1: _ensure_cta_beat가 만든 CTA 비트의 화면(마지막 비트 컷 재사용)이 뒤이은
+#   _assign_timeline 재호출에서 인덱스 배분으로 덮어써지던 문제. screen_pinned 플래그로
+#   재배정 대상에서 빼되 used_seg_ids엔 반영해야 한다.
+# Part 2: 빌려오기(fallback-borrow)가 일어났을 때 _flag_offtopic이 원래 local chunk가
+#   아니라 실제 배정된 화면([pick]+rest)을 검사해야 한다.
+
+def test_pinned_cta_beat_screen_survives_assign_timeline():
+    """_ensure_cta_beat가 고른 화면(screen_pinned=True)은 _assign_timeline이 손대면 안 된다.
+
+    그룹 4개, 비트 4개(CTA 비트가 더 붙어 len(beats)=4, 그중 3개가 "진짜" 스토리
+    비트라 원래 그룹도 4개 있는 상황 — CTA 추가 전엔 n_active=3, len(groups)=4였다가,
+    CTA 비트가 붙으며 len(beats)=4가 된다). CTA는 세 번째(마지막 스토리) 비트의 컷을
+    재사용하므로 pin 값은 g2(v-2)다.
+
+    이 그룹 개수(4)로 **핀을 무시한 옛 코드**를 시뮬레이션해보면 n=4로 도는 lo/hi가
+    beat3(CTA)에 g3(v-3)을 배정해 pin 값(v-2)과 달라진다 — 즉 이 픽스처는 "우연히
+    같은 값이라 통과"가 아니라 핀 로직이 실제로 작동해야만 통과하는 진짜 회귀 테스트다.
+    """
+    sm = _sm([("v-0", "가나다요", 2.0), ("v-1", "라마바요", 2.0),
+              ("v-2", "사아자요", 2.0), ("v-3", "차카타요", 2.0)])
+    g = [[sm["v-0"]], [sm["v-1"]], [sm["v-2"]], [sm["v-3"]]]   # 그룹 4개
+    last_beat_primary = {"seg_id": "v-2", "text": "사아자요"}   # 세 번째(마지막 스토리) 비트의 컷
+    beats = [
+        {"narration": "첫줄", "beat_idx": 0, "primary": {}, "alternates": []},
+        {"narration": "둘째줄", "beat_idx": 1, "primary": {}, "alternates": []},
+        {"narration": "셋째줄", "beat_idx": 2, "primary": dict(last_beat_primary),
+         "alternates": []},
+        # _ensure_cta_beat가 만든 CTA 비트 — 마지막 스토리 비트 컷을 재사용해 화면이 이미 고정.
+        {"narration": "댓글 남겨주세요", "beat_idx": 3, "role": "CTA",
+         "primary": dict(last_beat_primary), "alternates": [], "screen_pinned": True},
+    ]
+    ep._assign_timeline(beats, g)
+    assert beats[3]["primary"]["seg_id"] == "v-2"   # 핀이 그대로 유지(옛 코드였다면 v-3이 됐다)
+    assert beats[3].get("screen_pinned") is True     # 재배정 루프를 거치지 않았다
+    # 나머지 3개 비트는 재배정 대상이라 자기들끼리 화면이 바뀔 수 있다(정상) — 다만
+    # v-2는 CTA가 예약해뒀으니 그 비트들 서로간에 중복 없이 배정됐는지만 확인한다.
+    other_seg_ids = [b["primary"]["seg_id"] for b in beats[:3]]
+    assert len(other_seg_ids) == len(set(other_seg_ids))   # 나머지 비트끼리도 중복 없음
+
+
+def test_pinned_cta_beat_stays_pinned_across_repeated_calls():
+    """리라이트 믹스는 _assign_timeline을 두 번 부른다(멱등 보장) — 핀도 두 번째 호출에서
+    안 풀려야 한다."""
+    sm = _sm([("v-0", "가나다요", 2.0), ("v-1", "라마바요", 2.0),
+              ("v-2", "사아자요", 2.0), ("v-3", "차카타요", 2.0)])
+    g = [[sm["v-0"]], [sm["v-1"]], [sm["v-2"]], [sm["v-3"]]]
+    beats = [
+        {"narration": "첫줄", "beat_idx": 0, "primary": {}, "alternates": []},
+        {"narration": "둘째줄", "beat_idx": 1, "primary": {}, "alternates": []},
+        {"narration": "셋째줄", "beat_idx": 2, "primary": {"seg_id": "v-2"}, "alternates": []},
+        {"narration": "댓글 남겨주세요", "beat_idx": 3, "role": "CTA",
+         "primary": {"seg_id": "v-2", "text": "사아자요"}, "alternates": [],
+         "screen_pinned": True},
+    ]
+    ep._assign_timeline(beats, g)
+    ep._assign_timeline(beats, g)   # 두 번째 호출(라이브 경로는 grounding 직후+맨 마지막 2회 호출)
+    assert beats[3]["primary"]["seg_id"] == "v-2"
+    assert beats[3].get("screen_pinned") is True
+
+
+def test_flag_offtopic_checks_the_actually_borrowed_pick_not_local_chunk():
+    """빌려오기(fallback-borrow)가 일어나면, 딴소리 검사는 원래 local chunk가 아니라
+    실제로 배정된 화면(pick)을 봐야 한다.
+
+    그룹 2개(g0=[A], g1=[B]), 비트 3개로 lo/hi 정수분배가 겹치게 만든다
+    (n=3, len(groups)=2 → i=0,1 모두 chunk=g0). beat0이 A를 먼저 가져가면 beat1의
+    로컬 chunk(g0=[A])는 이미 소진 — all_segs_in_order에서 B를 빌려온다(fallback-borrow).
+    A의 텍스트는 beat1 나레이션과 낱말이 겹치고, B는 안 겹치게 설계했다 — 옛 코드처럼
+    _flag_offtopic(b, chunk)로 (여전히 [A]인) 로컬 chunk를 검사했다면 실제로는 안 맞는
+    B가 배정됐는데도 offtopic이 안 잡혔을 것이다. 고친 코드는 [pick]+rest = [B]를 검사해
+    정확히 offtopic으로 잡아야 한다.
+    """
+    sm = _sm([("v-0", "기름이 사방으로 튀어서 힘들었거든요", 2.0),
+              ("v-1", "강아지 산책 완전 즐거워요", 2.0)])
+    g = [[sm["v-0"]], [sm["v-1"]]]   # 그룹 2개, 비트는 아래서 3개 — lo/hi 겹침 유도
+    beats = [
+        {"narration": "기름이 튀어서 아주 힘들었어요", "fit": 5,
+         "primary": {}, "alternates": []},   # chunk=g0=[v-0] → v-0 사용(말이 겹침)
+        {"narration": "기름이 튀어서 아주 힘들었어요", "fit": 5,
+         "primary": {}, "alternates": []},   # chunk=g0=[v-0]인데 이미 used → v-1을 빌려옴(안 겹침)
+        {"narration": "산책이 즐거워요", "fit": 5,
+         "primary": {}, "alternates": []},   # chunk=g1=[v-1]
+    ]
+    ep._assign_timeline(beats, g)
+    assert beats[1]["primary"]["seg_id"] == "v-1"          # 빌려온 화면이 맞는지 전제 확인
+    assert beats[1].get("offtopic") and beats[1]["fit"] <= 2 and beats[1]["forced"]
+
+
+def _set(sid, roles):
+    return {"set_id": sid, "video_id": sid.rsplit("-", 1)[0],
+            "segs": [{"seg_id": f"{sid}#{i}", "shot_role": r} for i, r in enumerate(roles)]}
+
+
+def test_mid_after_set_is_not_treated_as_ending():
+    """`after`는 영상 중간에도 나온다 — 그것만으로 끝세트로 몰아 자르면 소스가 통째로 사라진다.
+
+    실측(2026-08-01, lens_youtube_1f60rye): 세트 roles가
+    after·사용중·문제·사용중·문제·사용중·after라 중간 세트인데 잘렸고, 그 소스 세트가
+    전부 없어져 두 영상을 담았는데 한 영상만 나갔다.
+    """
+    chosen = [_set("b-1", ["after", "사용중", "문제", "사용중", "after"]),
+              _set("a-5", ["사용중", "사용중"]),
+              _set("b-8", ["after", "사용중", "after"]),
+              _set("a-14", ["사용중", "완성"])]
+    kept = [s["set_id"] for s in ep._filter_misplaced_sets(chosen)]
+    assert kept == ["b-1", "a-5", "b-8", "a-14"]      # 두 소스 다 살아남는다
+
+
+def test_real_ending_set_in_the_middle_moves_to_the_end():
+    """마지막 seg가 `완성`이면 끝세트 — 중간에 오면 맨 뒤로 옮긴다(버리지 않는다)."""
+    chosen = [_set("a-1", ["사용중", "완성"]), _set("a-5", ["사용중", "사용중"])]
+    assert [s["set_id"] for s in ep._filter_misplaced_sets(chosen)] == ["a-5", "a-1"]
+
+
+def test_all_after_set_in_the_middle_moves_to_the_end():
+    """세트 전체가 완성/after면 중간에 올 자리가 아니다 — 뒤로 보낸다."""
+    chosen = [_set("a-1", ["after", "완성"]), _set("a-5", ["사용중", "사용중"])]
+    assert [s["set_id"] for s in ep._filter_misplaced_sets(chosen)] == ["a-5", "a-1"]
+
+
+def test_problem_set_in_the_middle_moves_to_the_front():
+    chosen = [_set("a-1", ["사용중", "사용중"]), _set("a-5", ["문제", "사용중"])]
+    assert [s["set_id"] for s in ep._filter_misplaced_sets(chosen)] == ["a-5", "a-1"]
+
+
+def test_set_prompt_requires_every_source_once():
+    """예산이 한 영상으로 차더라도 담은 영상은 다 쓰라고 명시한다.
+
+    실측(job af0e40746fe1): s0 세트 합 16.9초 · s1 합 30.2초에 목표 30초라
+    s1만으로 예산이 정확히 차서 Gemini가 s0를 통째로 버렸다(추천 후보까지 s1 단독).
+    """
+    sm = _sm([("a-0", "가나다요", 2.0), ("b-0", "라마바요", 2.0)])
+    txt = ep._set_seq_prompt(ep._build_source_sentence_sets(sm), 30)
+    assert "영상마다 최소 한 세트씩은 반드시 골라라" in txt
+    assert "덜 중요한 세트를 빼서 길이를 맞춰라" in txt
+
+
+def test_sets_are_capped_to_target_length():
+    """세트가 잘게 쪼개져도 목표 길이에 맞는 개수까지만 묻는다(job e99d0e8e3e02).
+
+    30초에 11세트 = 비트당 2.7초 → 모델이 `filler` 글자를 그대로 6개 뱉었다.
+    """
+    sets = [{"set_id": f"a-{i}", "video_id": "a", "segs": [{"seg_id": f"a-{i}"}], "secs": 2.0}
+            for i in range(11)]
+    out = ep._cap_sets(sets, 30)
+    assert len(out) == 7                       # max(4, min(8, 30//4))
+    assert sum(len(s["segs"]) for s in out) == 11   # 세그는 하나도 안 버린다
+    assert [s["video_id"] for s in out] == ["a"] * 7
+
+
+def test_cap_never_merges_across_sources():
+    """소스가 번갈아 있으면 합치지 않는다 — 한 세트에 두 영상이 섞이면 프랑켄 문장."""
+    sets = [{"set_id": f"{v}-{i}", "video_id": v, "segs": [{"seg_id": f"{v}-{i}"}], "secs": 1.0}
+            for i, v in enumerate("ababababab")]
+    out = ep._cap_sets(sets, 30)
+    assert len(out) == 10                      # 합칠 이웃 쌍이 없다 → 그대로
+    assert all(len({s["seg_id"][0] for s in st["segs"]}) == 1 for st in out)
+
+
+def test_placeholder_narration_is_dropped():
+    """`filler` 같은 자리표시자는 대본으로 못 나간다."""
+    beats = [{"role": "hook", "narration": "진짜 좋아요"},
+             {"role": "filler", "narration": "filler"},
+             {"role": "본문", "narration": "본문"},
+             {"role": "cta", "narration": "댓글 주세요"}]
+    out = ep._drop_placeholder_beats(beats)
+    assert [b["narration"] for b in out] == ["진짜 좋아요", "댓글 주세요"]
+
+
+def test_short_but_real_line_survives():
+    """'끝!'처럼 짧아도 진짜 대사는 지우지 않는다."""
+    assert ep._drop_placeholder_beats([{"role": "cta", "narration": "끝!"}])
+
+
+def test_beats_are_trimmed_to_slot_count():
+    """모델이 요구한 개수를 안 지키면 코드가 맞춘다 — filler부터 버린다."""
+    beats = [{"role": "hook", "narration": "이거 진짜 좋아요"},
+             {"role": "problem", "narration": "매번 이게 문제였거든요"},
+             {"role": "filler", "narration": "티슈로 닦아내는 장면"},
+             {"role": "filler", "narration": "팔뚝 피부 케어 영상"},
+             {"role": "cta", "narration": "댓글 남겨주세요"}]
+    out = ep._trim_beats_to_slots(beats, 3)
+    assert [b["role"] for b in out] == ["hook", "problem", "cta"]
+
+
+def test_trim_keeps_hook_and_cta_when_all_roles_known():
+    """정의 밖 역할이 없으면 훅·CTA는 남기고 가운데 짧은 것부터 버린다."""
+    beats = [{"role": "hook", "narration": "훅 문장입니다"},
+             {"role": "문제", "narration": "짧다"},
+             {"role": "해결", "narration": "이렇게 해결했어요 정말로"},
+             {"role": "cta", "narration": "댓글 주세요"}]
+    out = ep._trim_beats_to_slots(beats, 3)
+    assert [b["role"] for b in out] == ["hook", "해결", "cta"]
+
+
+def test_trim_is_noop_when_counts_match():
+    beats = [{"role": "hook", "narration": "a"}, {"role": "cta", "narration": "b"}]
+    assert ep._trim_beats_to_slots(beats, 2) == beats
+
+
+def test_only_one_cta_survives():
+    """CTA가 여러 개면 마지막만 — 끝에서 한 번 부르는 게 CTA다."""
+    beats = [{"role": "hook", "narration": "훅"},
+             {"role": "cta", "narration": "댓글 주세요"},
+             {"role": "본문", "narration": "설명"},
+             {"role": "CTA", "narration": "댓글 주세요"}]
+    out = ep._dedupe_cta_beats(beats)
+    assert [b["role"] for b in out] == ["hook", "본문", "CTA"]
+
+
+def test_single_cta_is_untouched():
+    beats = [{"role": "hook", "narration": "훅"}, {"role": "cta", "narration": "댓글"}]
+    assert ep._dedupe_cta_beats(beats) == beats
+
+
+def test_reorder_keeps_every_set(monkeypatch):
+    """자리 교정은 이제 아무것도 안 버린다 — 기록(G3)에도 잘린 세트가 없다."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("a-2", "라마바요", 2.0), ("b-0", "사아자요", 2.0)])
+    sm["a-2"]["shot_role"] = "완성"          # 끝세트인데 중간에 오면 잘린다
+
+    def fake_call(prompt, schema, **kw):
+        return {"order": ["a-0", "a-2", "b-0"]}
+
+    groups, source, info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    assert source == ep.SLOT_SOURCE_GEMINI
+    assert info["chosen"] == 3 and info["kept"] == 3   # 하나도 안 버린다
+    assert info["filtered"] == []
+    assert info["picked_by_source"] == {"a": 2, "b": 1}
+    assert info["sources_unused"] == []
+
+
+def test_unused_source_is_recorded():
+    """담은 영상이 통째로 안 쓰이면 그것도 숫자로 남는다(G1 판정 재료)."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("b-0", "사아자요", 2.0)])
+
+    def fake_call(prompt, schema, **kw):
+        return {"order": ["a-0"]}                      # b를 안 골랐다
+
+    _g, source, info = ep._pick_slot_groups(sm, target_seconds=30, call=fake_call)
+    assert source == ep.SLOT_SOURCE_GEMINI
+    assert info["sources_unused"] == ["b"]
+    assert info["sets_by_source"] == {"a": 1, "b": 1}
+
+
+# ── 비트 바닥(2026-08-07) ────────────────────────────────────────────────
+# 실측 08-06 라이브 12건: 고른 세트 수가 그대로 비트 수가 된다(chosen==kept==beats 전건
+# 일치). 길이 예산만 주면 세트가 적고 길 때 Gemini가 2개만 골라 5단계 스파인이 2비트로
+# 무너졌다(job 8aa51a1940de: 4세트→chosen 2→2비트, 30초 목표에 14.2초). 프롬프트로 하한을
+# 부탁하되, 지켜졌는지는 코드가 확인한다.
+
+def test_kept_sets_are_split_to_reach_min_beats():
+    """세트를 적게 골라도 문장 경계에서 쪼개 최소 비트를 채운다.
+
+    실측 붕괴 job의 모양을 본뜬다 — 세트 하나가 **여러 문장**을 담아 길다(그래서 2세트만
+    골라도 예산이 차 버린다). 이 경우 세트 안에 자를 수 있는 문장 경계가 있다.
+    """
+    sm = _sm([("a-0", "카페에 갔는데요", 3.0), ("a-1", "정말 맛있더라고요", 3.0),
+              ("a-2", "비법을 물어봤어요", 3.0),
+              ("b-0", "집에서 해봤는데요", 3.0), ("b-1", "진짜 부드럽죠", 3.0),
+              ("b-2", "매일 만들어 먹어요", 3.0)])
+    # 한 세트에 여러 문장이 들어가도록 묶는다(실측: 한 세트 6~13초).
+    kept = [{"set_id": "a-0", "video_id": "a", "secs": 9.0,
+             "segs": [sm["a-0"], sm["a-1"], sm["a-2"]]},
+            {"set_id": "b-0", "video_id": "b", "secs": 9.0,
+             "segs": [sm["b-0"], sm["b-1"], sm["b-2"]]}]
+    out = ep._split_kept_to_min_beats(kept, 5)
+    assert len(out) >= 5, f"적게 고른 세트를 쪼개 비트를 채우지 않았다(={len(out)})"
+    # 쪼개도 소스 경계는 지킨다
+    for st in out:
+        assert len({s["video_id"] for s in st["segs"]}) == 1
+    # 세그먼트는 하나도 잃지 않는다(재료 보존)
+    assert sum(len(st["segs"]) for st in out) == 6
+
+
+def test_split_gives_up_when_sets_are_single_segment():
+    """1세그먼트 세트만 남으면 더 못 쪼갠다 — 억지로 늘리지 않고 그대로 둔다.
+
+    이 backstop의 **한계를 명시**한다: 세트가 잘게 쪼개져 있으면(각 1문장) 나눌 내부
+    경계가 없다. 그 경우 비트 바닥은 프롬프트 하한(_set_seq_prompt)이 책임진다.
+    """
+    sm = _sm([("a-0", "가나다요", 2.0), ("b-0", "사아자요", 2.0)])
+    kept = ep._build_source_sentence_sets(sm)
+    out = ep._split_kept_to_min_beats(kept, 5)
+    assert len(out) == len(kept)
+
+
+def test_split_never_breaks_a_sentence():
+    """쪼갤 자리가 문장 중간뿐이면 쪼개지 않는다(프랑켄 문장 금지가 개수보다 우선)."""
+    # a-0은 문장 미종결("튀어서") → a-0|a-1 사이는 자를 수 없는 자리다.
+    sm = _sm([("a-0", "기름이 튀어서", 2.0), ("a-1", "힘들었거든요", 2.0)])
+    kept = ep._build_source_sentence_sets(sm)
+    out = ep._split_kept_to_min_beats(kept, 5)
+    assert len(out) == len(kept), "문장 중간을 갈랐다"
+    for st in out:
+        assert st["segs"][-1]["text"].endswith(("요", "다", "죠", "네", "까"))
+
+
+def test_min_beat_hint_is_in_the_set_prompt():
+    """프롬프트에 세트 개수 하한이 실제로 실린다(예산만 주면 2개만 고른다)."""
+    sm = _sm([("a-0", "가나다요", 2.0), ("b-0", "사아자요", 2.0)])
+    sets = ep._build_source_sentence_sets(sm)
+    p = ep._set_seq_prompt(sets, 30)
+    assert str(ep._GATE_MIN_BEATS_HINT) in p and "최소" in p

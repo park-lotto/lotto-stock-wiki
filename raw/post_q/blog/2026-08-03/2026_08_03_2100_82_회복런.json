@@ -1,0 +1,15 @@
+{
+  "target_kind": "insight",
+  "leading_sectors": [
+    "기타"
+  ],
+  "stance": [],
+  "methods": [
+    {
+      "rule": "회복런",
+      "quote": "8/2 회복런"
+    }
+  ],
+  "stocks_mentioned": [],
+  "quote": "8/2 회복런"
+}

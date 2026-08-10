@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_한국 수출 더 뜨거워졌다.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "대신증권",
+    "analyst": "이정훈",
+    "report_date": "2026.06.01",
+    "market_direction": null,
+    "macro_vars": [
+      "5월 일평균 수출액 40억 달러 돌파",
+      "+60.7%YoY 수출 증가율",
+      "석유류 및 화학 제품 수출 단가 상승",
+      "미국 시카고 PMI 62.7"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "호조",
+        "reason": "AI 수요 폭발로 일평균 수출 +182% 증가"
+      },
+      {
+        "sector": "IT",
+        "stance": "호조",
+        "reason": "컴퓨터 수출 +310% 기록적인 증가세 지속"
+      },
+      {
+        "sector": "화장품미용",
+        "stance": "호조",
+        "reason": "2개월 연속 30%대의 증가율 기록"
+      },
+      {
+        "sector": "기타",
+        "stance": "호조",
+        "reason": "석유류 및 화학 제품 수출 단가 급등 영향"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": null,
+    "risk": "미국-이란 간 종전 협상 공회전 및 유럽 수출 모멘텀 둔화",
+    "quote": "일단 하반기까지는 매크로 환경을 크게 우려할 필요는 없어 보인다."
+  }
+}

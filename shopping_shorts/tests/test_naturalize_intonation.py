@@ -7,29 +7,35 @@ def _p(intensity):
             "endings": {"on": False}, "emotion_arc": {"on": False}, "phrasing": {"on": False}}
 
 
-def test_intonation_adds_pause_before_emphasis_word():
-    """강조어 앞에 짧은 포즈(쉼표)를 넣어 억양을 만든다."""
-    d = naturalize_detail("이거 진짜 대박이에요", _p(1.0), beat_index=0, beat_total=1)
-    assert "이거, 진짜 대박이에요" == d["text"]
+def test_intonation_adds_pause_before_trailing_emphasis_word():
+    """트레일링 강조어(문장 끝/구두점 앞) 앞엔 짧은 포즈(쉼표)를 넣어 억양을 만든다.
+
+    2026-07-21 사장님 재판정 — 옛 테스트는 "이거 진짜 대박이에요" → "이거, 진짜
+    대박이에요"였으나, 그건 intensifier(진짜가 '대박'을 직접 수식)라 실사용에서
+    사투리 억양으로 들려 뒤집었다(intensifier는 안 끊는다 →
+    test_naturalize_intensifier_v3). 포즈가 살아있는 건 부사가 트레일링일 때뿐이다.
+    """
+    d = naturalize_detail("가격이 싼데 완전.", _p(1.0), beat_index=0, beat_total=1)
+    assert "싼데, 완전" in d["text"], d["text"]
     assert d["applied"]["intonation"] == 1
 
 
-def test_intonation_scales_with_intensity():
-    # 브리프 원안은 0.34를 썼지만 공유 선택자 _take_count는 올림(ceil)이라
-    # ceil(3*0.34 - 1e-9) = ceil(1.02) = 2가 나와 "낮은 강도=1개" 단언이 깨진다.
-    # 실제로 take=1이 나오는 강도(0.3, ceil(3*0.3-1e-9)=ceil(0.9-eps)=1)로 교체한다.
-    # _take_count 자체는 5개 스테이지가 공유하므로 수정하지 않는다.
+def test_intonation_intensifier_chain_never_fires():
+    """2026-07-21 재판정 — intensifier가 연쇄된 문장(진짜·완전·훨씬이 전부 뒤
+    단어를 직접 수식)은 강도와 무관하게 쉼표를 하나도 안 넣는다.
+
+    옛 테스트는 이 문장으로 intensity 스케일링(1개→3개)을 검증했지만, 그 후보들이
+    전부 intensifier라 재판정 후엔 후보가 0이 됐다 — 스케일링 자체가 이 문장에선
+    성립하지 않는다(_take_count 스케일링은 다른 스테이지 테스트가 커버한다).
+    여기서는 "어떤 강도에서도 intensifier는 안 끊는다"를 봉인한다.
+    """
     text = "이거 진짜 완전 대박이고 훨씬 좋아요"
     low = naturalize_detail(text, _p(0.3), beat_index=0, beat_total=1)
     high = naturalize_detail(text, _p(1.0), beat_index=0, beat_total=1)
-    assert low["applied"]["intonation"] == 1
-    assert high["applied"]["intonation"] == 3
-    assert low["text"] != high["text"]
-    # Task6 재리뷰 Minor1: 개수·부등호만 보면 "어느 후보를 고르는지"(앞에서부터=결정적)가
-    # 무방비다 — cands[:take] -> cands[-take:] 뮤턴트를 주입해도 위 4개 단언은 그대로
-    # 통과한다(개수·서로 다름은 유지되므로). 낮은 강도에서 정확히 "첫 후보"(진짜 앞)만
-    # 고른다는 걸 문자열로 봉인한다.
-    assert low["text"] == "이거, 진짜 완전 대박이고 훨씬 좋아요"
+    assert low["text"] == text
+    assert high["text"] == text
+    assert "intonation" not in low["applied"]
+    assert "intonation" not in high["applied"]
 
 
 def test_intonation_off_is_noop():
@@ -70,12 +76,15 @@ def test_intonation_no_false_positive_other_substrings():
 
 def test_intonation_works_with_default_profile():
     """격리 프로파일(_p)이 아니라 실사용 기본 프로파일(전 스테이지 on)에서도 동작해야
-    한다 — 이 프로젝트에서 "격리에선 통과, 실사용에선 무발동"이 반복된 함정이다."""
-    text = "이거 진짜 대박이에요"
+    한다 — 이 프로젝트에서 "격리에선 통과, 실사용에선 무발동"이 반복된 함정이다.
+
+    2026-07-21 재판정 반영 — intensifier "이거 진짜 대박이에요"는 이제 안 끊으므로,
+    실제로 포즈가 나는 트레일링 부사 문장으로 검증한다."""
+    text = "가격이 싼데 완전."
     p = merge_profile({})
     d = naturalize_detail(text, p, beat_role="실용", beat_index=0, beat_total=1)
     assert d["applied"].get("intonation", 0) >= 1
-    assert "," in d["text"]
+    assert "싼데, 완전" in d["text"], d["text"]
 
 
 def test_intonation_no_ghost_candidate_from_emotion_tag():

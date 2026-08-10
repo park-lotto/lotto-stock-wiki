@@ -1,0 +1,22 @@
+{
+  "reports": [
+    {
+      "broker": "한투글로벌",
+      "stock": "AMD",
+      "rating": null,
+      "tp": null,
+      "ts": "06:37",
+      "quote": "AMD FY2Q 매출 factset 컨센 2%, 영업이익 3%, 조정 EPS 2% 상회. FY3Q 매출 가이던스는 기대치 3.6% 상회. 단, FY3Q GPM 가이던스는 56%로 컨센(56.2%)을 미세하게 하회",
+      "sector": "반도체"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "SpaceX",
+      "rating": null,
+      "tp": null,
+      "ts": "06:48",
+      "quote": "SpaceX, FY2Q 실적은 전반적으로 양호. 매출은 예상치를 크게 상회했지만, Starlink는 기대에 소폭 못 미침.",
+      "sector": "기타"
+    }
+  ]
+}

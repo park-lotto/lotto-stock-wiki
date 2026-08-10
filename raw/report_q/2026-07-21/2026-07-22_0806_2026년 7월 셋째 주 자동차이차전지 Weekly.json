@@ -1,0 +1,63 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-22_0806_2026년 7월 셋째 주 자동차이차전지 Weekly.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "교보증권",
+    "analyst": [
+      "김광식",
+      "최보영"
+    ],
+    "report_date": "2026/07/21",
+    "market_direction": null,
+    "macro_vars": [
+      "인도 6월 도매 판매량 32.6만대(+18.2% YoY)",
+      "KBB 미국 소비자 저가 Segment 이동",
+      "미-이란 재충돌로 WTI 주간 +10% 급등"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026/07/20",
+        "event": "정의선, 보스턴다이나믹스 지분 25%로…사재 추가 투입"
+      },
+      {
+        "date": "2026/07/13",
+        "event": "폭스바겐, 10만명 감원 추진"
+      },
+      {
+        "date": "2026/07/20",
+        "event": "미국 SKon-현대차 합작 HSBMA, 전기차 배터리 양산 시작"
+      },
+      {
+        "date": "2026/07/15",
+        "event": "LG엔솔, 구글 최대 태양광, ESS 사업에 수천억 규모 배터리 공급"
+      }
+    ],
+    "top_picks": [
+      "현대차",
+      "기아",
+      "현대모비스",
+      "한온시스템",
+      "TESLA",
+      "TOYOTA",
+      "BYD",
+      "GM",
+      "FORD",
+      "LG 에너지솔루션",
+      "삼성 SDI",
+      "에코프로비엠",
+      "포스코퓨처엠",
+      "엘앤에프",
+      "CATL",
+      "PANASONIC",
+      "ALBEMARLE"
+    ],
+    "risk": null,
+    "quote": "인도: 6월 도매 판매량 32.6만대(+18.2% YoY), 로컬 OE 판매량 +32.5% YoY 확장 주도"
+  }
+}

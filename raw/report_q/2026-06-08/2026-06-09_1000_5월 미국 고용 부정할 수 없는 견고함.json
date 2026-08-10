@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_5월 미국 고용 부정할 수 없는 견고함.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "위재현",
+    "report_date": "2026/06/08",
+    "target_kind": "market",
+    "market_direction": "5월 미국 고용: 부정할 수 없는 견고함",
+    "macro_vars": [
+      "비농업 신규 고용: +17.2만명 증가",
+      "실업률: 3개월 연속 4.3% 유지",
+      "25-54세 경제활동참가율 반등",
+      "27주 이상 장기 실업자 비중: 27.5%로 확대",
+      "AI 관련 해고 증가"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "여가 및 숙박업",
+        "stance": "중립",
+        "reason": "월드컵 개최 대비 선제적 채용으로 신규 고용의 40% 차지"
+      },
+      {
+        "sector": "교육 및 헬스케어",
+        "stance": "중립",
+        "reason": "기존 주도 업종에서 여가 및 숙박업으로 주도권 이동 중"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026/06",
+        "event": "월드컵 개최"
+      }
+    ],
+    "top_picks": null,
+    "risk": "장기 실업자 비중 확대 및 AI 도입에 따른 기업들의 해고 활동 증가",
+    "quote": "헤드라인 지표 강세 이면의 불안 요소는 향후 고용시장 방향성이 다시 둔화 흐름으로 바뀔 때 그 속도를 증폭시킬 수 있다."
+  }
+}

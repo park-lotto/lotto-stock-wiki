@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-03_0804_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.07.31",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "네이버의 두나무 인수 관련 규제 해소",
+      "디지털자산기본법 가상자산 거래소 대주주 지분율 제한 변수",
+      "네이버 AI 브리핑 및 멀티모달 검색 경험 강화"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "12월 31일",
+        "event": "공정위 기업결합 심사로 연기된 네이버의 두나무 인수 거래 종결 예정일"
+      }
+    ],
+    "top_picks": [
+      "NAVER",
+      "두나무"
+    ],
+    "risk": "공정위 기업결합 심사 지연 및 가상자산 거래소 대주주 지분율을 제한하는 디지털자산기본법 변수 존재",
+    "quote": "대통령 직속 규제합리화위원회가 특금법 시행령 개정안에 예외 규정을 마련하라고 권고하면서, 네이버의 두나무 인수를 가로막던 핵심 장애물 하나가 해소됐음"
+  }
+}

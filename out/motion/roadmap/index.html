@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: 'Malgun Gothic'; src: local('Malgun Gothic'); }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 1920px; height: 1080px; overflow: hidden; background: #05070b;
+        font-family: "Malgun Gothic", sans-serif;
+      }
+      #root { position: relative; width: 1920px; height: 1080px; }
+      #bg { position: absolute; inset: 0; background: radial-gradient(circle at 50% 45%, #121a2b 0%, #0a0e18 55%, #05070b 100%); }
+      #grid { position: absolute; inset: 0; opacity: .08;
+        background-image: linear-gradient(#2a3550 1px, transparent 1px), linear-gradient(90deg, #2a3550 1px, transparent 1px);
+        background-size: 96px 96px; }
+
+      .toplabel { position: absolute; top: 90px; left: 0; width: 1920px; text-align: center;
+        color: #8b93a7; font-size: 30px; letter-spacing: 10px; font-weight: 800; }
+
+      #path { position: absolute; inset: 0; }
+
+      .node {
+        position: absolute; height: 96px; padding: 0 34px; border-radius: 18px;
+        display: flex; align-items: center; gap: 16px;
+        font-size: 34px; font-weight: 800; color: #eaf0ff;
+        background: linear-gradient(160deg, #1c2740, #131c30);
+        border: 2px solid #35507e; box-shadow: 0 18px 44px rgba(0,0,0,.5);
+      }
+      .node .dot { width: 20px; height: 20px; border-radius: 50%; background: #5aa9ff; box-shadow: 0 0 16px #5aa9ff; }
+      .node.now {
+        background: linear-gradient(160deg, #ffd873, #f5b301);
+        border-color: #ffe9a8; color: #3a2600; box-shadow: 0 0 50px rgba(245,179,1,.55);
+      }
+      .node.now .dot { background: #7a5200; box-shadow: none; }
+      .node .badge {
+        position: absolute; top: -18px; right: -10px; background: #ff3b3b; color: #fff;
+        font-size: 18px; font-weight: 800; padding: 4px 12px; border-radius: 999px;
+      }
+
+      .cap { position: absolute; bottom: 120px; left: 0; width: 1920px; text-align: center;
+        color: #fff; font-size: 68px; font-weight: 900; letter-spacing: 2px; }
+      .cap b { color: #f5b301; }
+      .sub { position: absolute; bottom: 66px; left: 0; width: 1920px; text-align: center;
+        color: #7f8aa3; font-size: 30px; font-weight: 700; letter-spacing: 4px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920" data-height="1080">
+
+      <div id="bg" class="clip" data-start="0" data-duration="6" data-track-index="0"></div>
+      <div id="grid" class="clip" data-start="0" data-duration="6" data-track-index="1"></div>
+
+      <svg id="path" class="clip" data-start="0" data-duration="6" data-track-index="2" viewBox="0 0 1920 1080" fill="none">
+        <path id="road" d="M 250 780 L 560 660 L 850 545 L 1140 435 L 1400 335 L 1650 245"
+              pathLength="1" stroke="#f5b301" stroke-width="7" stroke-linecap="round"
+              stroke-linejoin="round" style="stroke-dasharray:1; stroke-dashoffset:1; filter: drop-shadow(0 0 8px rgba(245,179,1,.5));"/>
+      </svg>
+
+      <div class="toplabel clip" data-start="0" data-duration="6" data-track-index="3">숏템박스&nbsp;&nbsp;확장&nbsp;&nbsp;로드맵</div>
+
+      <div class="node now clip" data-start="0.3" data-duration="5.7" data-track-index="4" style="left:250px; top:780px;">
+        <span class="dot"></span>쇼핑쇼츠<span class="badge">NOW</span>
+      </div>
+      <div class="node clip" data-start="0.9" data-duration="5.1" data-track-index="5" style="left:560px; top:660px;">
+        <span class="dot"></span>짤쇼핑
+      </div>
+      <div class="node clip" data-start="1.5" data-duration="4.5" data-track-index="6" style="left:850px; top:545px;">
+        <span class="dot"></span>연예인쇼핑
+      </div>
+      <div class="node clip" data-start="2.1" data-duration="3.9" data-track-index="7" style="left:1140px; top:435px;">
+        <span class="dot"></span>네이버클립
+      </div>
+      <div class="node clip" data-start="2.7" data-duration="3.3" data-track-index="8" style="left:1400px; top:335px;">
+        <span class="dot"></span>쓰레드
+      </div>
+      <div class="node clip" data-start="3.3" data-duration="2.7" data-track-index="9" style="left:1650px; top:245px;">
+        <span class="dot"></span>블로그
+      </div>
+
+      <div class="cap clip" data-start="4.0" data-duration="2.0" data-track-index="10">하나 잡아두면 <b>계속 커집니다</b></div>
+      <div class="sub clip" data-start="4.4" data-duration="1.6" data-track-index="11">확장될 때마다 &nbsp;<span style="color:#f5b301">1기 큰 할인</span></div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true, defaults: { overwrite: "auto" } });
+
+      gsap.set(".node", { xPercent: -50, yPercent: -50 });
+
+      tl.from("#grid", { opacity: 0, duration: .5 }, 0);
+      tl.from(".toplabel", { opacity: 0, y: -16, duration: .5 }, 0);
+
+      tl.to("#road", { strokeDashoffset: 0, duration: 3.2, ease: "none" }, 0.3);
+
+      const times = [0.3, 0.9, 1.5, 2.1, 2.7, 3.3];
+      ["4","5","6","7","8","9"].forEach((t, i) => {
+        tl.fromTo(`[data-track-index="${t}"]`, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: .45, ease: "back.out(1.7)" }, times[i]);
+      });
+
+      tl.from(".cap", { opacity: 0, y: 30, duration: .45 }, 4.0);
+      tl.from(".sub", { opacity: 0, y: 20, duration: .4 }, 4.4);
+
+      tl.seek(0);
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

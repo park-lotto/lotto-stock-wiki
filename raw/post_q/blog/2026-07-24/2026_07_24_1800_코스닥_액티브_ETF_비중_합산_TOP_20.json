@@ -1,0 +1,13 @@
+{
+  "target_kind": "market",
+  "market_direction": null,
+  "macro_events": [
+    {
+      "fact": "코스닥 액티브 ETF 비중 합산 TOP 20",
+      "ts": "2026-07-24",
+      "quote": "코스닥 액티브 ETF 비중 합산 TOP 20 2026-07-24 기준 | 코스닥 액티브 3종"
+    }
+  ],
+  "sectors_mentioned": [],
+  "quote": "코스닥 액티브 ETF 비중 합산 TOP 20 2026-07-24 기준 | 코스닥 액티브 3종"
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-17_1100_이제는 사야 할 시점(+ TerraPower 탐방기).md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "윤재성",
+    "report_date": "2026년 7월 16일",
+    "stocks": [
+      {
+        "name": "SK이노베이션",
+        "code": "096770",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "200,000원",
+        "tp_prev": "170,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26 영업이익은 1.8조원(QoQ -16%, YoY 흑전)으로 컨센(1.49조원)을 21% 상회할 전망이다.",
+        "estimate_revision": "2026~27년 추정치를 60% 내외 상향",
+        "next_catalyst": "윤활기유 호실적 지속, TerraPower 지분 가치 및 차세대 SMR 사업",
+        "thesis": [
+          "정제마진 강세 및 원유 시장 구조 변화에 따른 실적 개선",
+          "윤활기유 사업의 글로벌 그룹3 점유율 우위 및 SK온 재무 부담 완화",
+          "TerraPower 지분 보유를 통한 차세대 SMR 시장 성장 동력 확보"
+        ],
+        "valuation_basis": "2026~27년 평균 BPS 16만원에 2017~18년 호황기의 고점 밸류에이션 PBR 1.2배를 적용",
+        "risk": "유가 급락에 따른 재고관련손실 및 역래깅 효과",
+        "supply_comment": null,
+        "quote": "절대 실적 강도 및 Peer와의 상대 가치를 감안할 때, 이제는 사야 할 시점이다."
+      }
+    ]
+  }
+}

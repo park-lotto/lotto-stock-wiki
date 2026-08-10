@@ -58,6 +58,29 @@ def test_frames_extracts_and_returns_ts(client, tmp_path, monkeypatch):
     assert frames[0]["url"].startswith("/api/produce/thumb/file/j1/")
 
 
+def test_frames_prefer_caption_free_source(client, tmp_path, monkeypatch):
+    """썸네일 배경은 자막 없는 소스 우선(설계 Q1) — 자막제거본(clean_video_path)이 있으면
+    자막 박힌 최종 렌더(video_path) 대신 그걸 쓴다. 사장님 제보 2026-07-19: 썸네일에 자막 필요없음."""
+    s = Store(tmp_path / "t.db")
+    s.create_mix_job("j1", ["https://x/1"], 30, "template")
+    final = tmp_path / "final.mp4"; final.write_bytes(b"final")
+    clean = tmp_path / "clean.mp4"; clean.write_bytes(b"clean")
+    s.update_mix_job("j1", video_path=str(final), clean_video_path=str(clean))
+
+    used = {}
+
+    def fake_grid(video_path, dest_dir, n=10):
+        used["path"] = video_path
+        dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
+        p = dest / "grid_00.jpg"; p.write_bytes(b"img")
+        return [(p, 0.0)]
+
+    monkeypatch.setattr(app_module, "extract_grid_frames", fake_grid)
+    r = client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
+    assert r.status_code == 200
+    assert used["path"] == str(clean), "자막 박힌 video_path 대신 자막제거본(clean)을 써야 한다"
+
+
 def test_frames_reuses_existing(client, tmp_path, monkeypatch):
     """이미 뽑아뒀으면 재추출하지 않는다(설계: '이미 있으면 재사용')."""
     _job_with_video(tmp_path)
@@ -441,3 +464,50 @@ def test_frames_still_404_when_no_video_at_all(client, tmp_path):
     r = client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
     assert r.status_code == 404
     assert r.json()["error"] == "믹스 영상 없음"
+
+
+# ── 자막제거 후 옛 프레임이 뜨던 캐시 문제(2026-07-30 사장님 제보) ──
+# grid_{i:02d}.jpg는 결정적 파일명이라 재추출이 같은 파일을 덮어쓴다. URL이 똑같으면
+# 브라우저가 옛 이미지를 재검증 없이 그대로 보여준다(FileResponse는 Cache-Control 미설정).
+def _stub_grid(monkeypatch):
+    def fake_grid(video_path, dest_dir, n=10):
+        dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
+        out = []
+        for i in range(n):
+            p = dest / f"grid_{i:02d}.jpg"; p.write_bytes(b"img")
+            out.append((p, float(i)))
+        return out
+    monkeypatch.setattr(app_module, "extract_grid_frames", fake_grid)
+
+
+def test_frame_urls_carry_cache_buster(client, tmp_path, monkeypatch):
+    """프레임 URL에 ?v=서명이 붙는다 — 없으면 브라우저가 옛 프레임을 계속 보여준다."""
+    _stub_grid(monkeypatch)
+    _job_with_video(tmp_path)
+    frames = client.post("/api/produce/thumb/frames", json={"job_id": "j1"}).json()["frames"]
+    assert all("?v=" in f["url"] for f in frames)
+
+
+def test_frame_urls_change_when_background_video_changes(client, tmp_path, monkeypatch):
+    """자막제거본(clean_video_path)이 생기면 URL이 달라진다 → 브라우저가 새로 받는다.
+    이게 없으면 서버가 자막 없는 프레임을 새로 뽑아도 화면은 옛 이미지 그대로다."""
+    _stub_grid(monkeypatch)
+    s = _job_with_video(tmp_path)
+    before = client.post("/api/produce/thumb/frames", json={"job_id": "j1"}).json()["frames"]
+
+    clean = tmp_path / "clean.mp4"
+    clean.write_bytes(b"fake-but-different-size")     # 다른 크기 → 다른 video_sig
+    s.update_mix_job("j1", clean_video_path=str(clean), clean_status="ready")
+    after = client.post("/api/produce/thumb/frames", json={"job_id": "j1"}).json()["frames"]
+
+    assert [f["url"] for f in after] != [f["url"] for f in before]
+
+
+def test_thumb_file_sets_no_cache(client, tmp_path, monkeypatch):
+    """?v=가 안 붙은 옛 URL(DB에 저장된 frames)도 살리는 2차 방어."""
+    _stub_grid(monkeypatch)
+    _job_with_video(tmp_path)
+    client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
+    r = client.get("/api/produce/thumb/file/j1/grid_00.jpg")
+    assert r.status_code == 200
+    assert "no-cache" in r.headers.get("cache-control", "")

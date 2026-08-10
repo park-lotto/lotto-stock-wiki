@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-02_0805_이차전지 소재부문 9분기 만에 흑자 전환.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "권지우",
+    "report_date": "2026년 7월 31일",
+    "stocks": [
+      {
+        "name": "POSCO홀딩스",
+        "code": "005490",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "550,000원",
+        "tp_prev": "550,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 연결 매출액은 19조 2,590억 원(YoY +9.7%, QoQ +7.7%), 영업이익은 8,190억 원(YoY +34.9%, OPM 4.3%)으로 컨센서스를 12.2% 상회했다.",
+        "estimate_revision": null,
+        "next_catalyst": "철강 영업이익의 점진적 정상화와 아르헨티나 4분기 추가 증익",
+        "thesis": [
+          "포스코인터내셔널을 중심으로 한 인프라 부문의 호조",
+          "POSCO 별도 이익 회복",
+          "이차전지소재의 9개 분기 만의 흑자 전환"
+        ],
+        "valuation_basis": null,
+        "risk": "중국산 열연 수입 증가와 광양 전기로 초기 비용",
+        "supply_comment": "PPLS는 스포듀민과 수산화리튬 간 패리티 정상화 여부를 모니터링할 필요가 있다.",
+        "quote": "투자의견 BUY와 목표주가 550,000원을 유지한다. 2분기 실적은 약한 철강 시황에서도 본업 이익 하단을 방어했고, 리튬 사업이 실제 손익으로 전환되기 시작했음을 확인시켰다."
+      }
+    ]
+  }
+}

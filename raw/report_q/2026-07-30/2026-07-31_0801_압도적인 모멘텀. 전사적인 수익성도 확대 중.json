@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-30",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-31_0801_압도적인 모멘텀. 전사적인 수익성도 확대 중.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS투자증권",
+    "analyst": "김대성",
+    "report_date": "2026.07.30",
+    "stocks": [
+      {
+        "name": "HD현대중공업",
+        "code": "329180",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "900,000원",
+        "tp_prev": "900,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "26년 2분기 매출액 6.3조원(이하 YoY +65.7%), 영업이익 1조원(+139.8%, OPM 16.4%)을 기록하며 영업이익 컨센서스에 부합했다.",
+        "estimate_revision": null,
+        "next_catalyst": "HIMSEN 엔진 증설 발표, SMR 원자로 용기 생산, FDC 설계 고객사 협의, 특수선 수주",
+        "thesis": [
+          "선박 조업일수 증가, 고선가 물량 확대, 환율 효과에 따른 상선 부문 수익성 개선",
+          "육상형 엔진 매출 증가 및 DF엔진·중형엔진 비중 확대로 엔진 부문 이익률 우상향",
+          "SMR, FDC, 특수선 등 조선사 중 가장 풍부한 모멘텀 보유"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "HIMSEN 엔진의 현재 CAPA는 약 3GW로 인콰이어리를 고려시 하반기 내 증설 발표가 기대되며 밸류체인이 선박용 중속엔진과 상이한 만큼 서플라이 체인 육성과 핵심 기자재 내재화도 동시에 진행될 예정",
+        "quote": "동사는 국내 조선사 중 가장 풍부한 모멘텀을 보유 중이다."
+      }
+    ],
+    "sector": "조선"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_바이오텍의 정석.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "정희령",
+    "report_date": "2026.06.04",
+    "stocks": [
+      {
+        "name": "오스코텍",
+        "code": "039200",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2024.12 매출액 34십억원, 2025.12 매출액 100십억원",
+        "estimate_revision": null,
+        "next_catalyst": "레이저티닙의 최종 OS 데이터 발표, OCT-648 전임상 결과 발표",
+        "thesis": [
+          "미국 바이오텍 Agios와 SYK 저해제인 세비도플레닙 기술이전 체결",
+          "J&J향 레이저티닙, 사노피향 ADEL-Y01에 이은 세비도플레닙 딜 체결로 레거시 파이프라인 정리 및 기술이전 수익을 통한 R&D 선순환 구조 구축",
+          "누적 딜 규모 대비 시총 저평가 판단 및 레이저티닙 로열티 매출 증가에 따른 기업 가치 상승 기대"
+        ],
+        "valuation_basis": "레이저티닙 로열티 매출 증가 확인됨에 따라 기업 가치 동반 상승할 것으로 판단",
+        "risk": "단기간 내 R&D 성과를 확인할 모멘텀 부재",
+        "supply_comment": "섹터: 바이오",
+        "quote": "임상 단계의 파이프라인 대부분이 딜 체결되며 현재 OCT-598 외 타 파이프라인은 전부 전임상 단계로, 단기간 내 R&D 성과를 확인할 모멘텀은 부재되었으나, 레이저티닙, ADEL-Y01 및 세비도플레닙까지 누적 딜 규모 대비 시총 저평가 판단."
+      }
+    ]
+  }
+}

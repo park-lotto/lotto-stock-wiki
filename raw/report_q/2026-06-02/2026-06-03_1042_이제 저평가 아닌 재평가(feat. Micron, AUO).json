@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_이제 저평가 아닌 재평가(feat. Micron, AUO).md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "키움증권",
+    "analyst": "오현진",
+    "report_date": "2026. 6. 2",
+    "stocks": [
+      {
+        "name": "유니트론텍",
+        "code": "142210",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "동사의 1분기 실적은 매출액 2,203억원(YoY 28%), 영업이익 184억원(YoY 85%)으로 분기 최대 실적을 기록했다. 올해 동사의 실적은 매출액 9,459억원(YoY 23%), 영업이익 666억원(YoY 106%)을 전망한다.",
+        "estimate_revision": null,
+        "next_catalyst": "자율주행 및 AI 로보틱스 분야로 신규 사업 추진 중이며 AMR 및 자율배송로봇에 적용 가능한 양산형 AI 컴퓨팅 모듈인 'URC-100'을 개발하여 기기 적용 및 고도화 진행 중.",
+        "thesis": [
+          "전장용 반도체 및 디스플레이 전문 유통 업체로서 반도체 가격 상승 사이클에 따른 구조적 마진 개선",
+          "AI 인프라 확장으로 인한 메모리 공급 타이트화와 고객사의 유통 채널 의존도 상승",
+          "자율주행 및 AI 로보틱스 분야 등 전방 산업의 구조적 변화에 따른 성장 잠재력"
+        ],
+        "valuation_basis": "동사의 현재주가는 26년 기준 PER 3.1배. 낮은 멀티플을 적용 받는 반도체 유통업체임을 감안해도 현저한 저평가 국면.",
+        "risk": null,
+        "supply_comment": "동사의 주요 벤더사는 Micron과 AUO 등이 있으며, 주요 고객사는 국내외 자동차 부품 업체 등이다.",
+        "quote": "동사의 현재주가는 26년 기준 PER 3.1배. 낮은 멀티플을 적용 받는 반도체 유통업체임을 감안해도 현저한 저평가 국면."
+      }
+    ]
+  }
+}

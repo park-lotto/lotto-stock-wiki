@@ -67,13 +67,24 @@ def _run(cmd, cwd):
     return p.returncode, (p.stdout or "") + (p.stderr or "")
 
 
+def _xdist_args():
+    """pytest-xdist가 있으면 전 코어 병렬(-n auto). 전역 finish 락이 한 번에 하나의
+    게이트만 돌리므로 CPU 스래싱 없이 그 하나가 16코어를 다 쓴다 — 실측 직렬 312초 →
+    병렬 44초(7배), 실패집합 완전 동일(9 failed/2396 passed). 미설치 환경은 직렬 폴백."""
+    try:
+        import xdist  # noqa: F401
+    except Exception:
+        return []
+    return ["-n", "auto"]
+
+
 def snapshot(cwd=BASE, run=_run):
     """지금 이 워킹트리 상태를 찍는다 (문법·import·pytest)."""
     rc_c, out_c = run([sys.executable, "-m", "compileall", TARGET, "-q"], cwd)
     rc_i, out_i = run([sys.executable, "-c", f"import {TARGET}.app"], cwd)
     rc_p, out_p = run(
         [sys.executable, "-m", "pytest", f"{TARGET}/tests",
-         "-q", "--tb=no", "-rf", "-p", "no:cacheprovider"],
+         "-q", "--tb=no", "-rf", "-p", "no:cacheprovider", *_xdist_args()],
         cwd,
     )
     return {
@@ -118,6 +129,27 @@ def compare(before, after):
             f"pytest가 아예 못 돌았다 (rc={after['pytest_rc']} — 수집 오류 등). "
             "실패 목록이 비어 있어도 통과가 아니다."
         )
+
+    # ★기준선이 비정상이면 실패 목록 비교는 의미가 없다(2026-08-06 실사고).
+    #   before가 rc=2(수집 오류)면 pytest가 **한 건도 안 돌아** before["failed"]가 빈다.
+    #   그 상태로 빼기를 하면 **원래 있던 실패 전부가 '새로 깨진 것'으로 잡혀**, 하필
+    #   그 수집 오류를 고치는 커밋이 막힌다(실측: 기존 실패 22건이 전부 신규로 오탐).
+    #   기준선이 깨진 건 이 병합의 잘못이 아니다 — after가 정상으로 돌아왔다면 통과시키고
+    #   경고만 남긴다. after까지 비정상이면 위 before_sane 분기가 이미 잡는다.
+    if not before_sane:
+        if not after_sane:
+            # 둘 다 비정상 = 이 병합이 기준선을 고치지 못했다. 실패 목록이 양쪽 다
+            # 비어 있어 비교가 무의미하므로, 통과시키면 **검증 없이 나간다**(오늘 실제로
+            # 그렇게 병합 1건이 나갔다). 막고 사람이 보게 한다.
+            problems.append(
+                f"pytest가 병합 전후 모두 비정상이다 (before rc={before['pytest_rc']}, "
+                f"after rc={after['pytest_rc']}). 실패 목록이 비어 있어도 통과가 아니다 — "
+                "수집 오류부터 고쳐라.")
+            return problems
+        print("ℹ️ 기준선 pytest가 비정상(rc=%d)이라 실패 비교를 건너뛴다 — 병합 후는 "
+              "rc=%d(실패 %d건). 이 병합이 기준선을 고쳤을 수 있다."
+              % (before["pytest_rc"], after["pytest_rc"], len(after["failed"])))
+        return problems
 
     new_failed = sorted(set(after["failed"]) - set(before["failed"]))
     if new_failed:

@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-08_1104_2026년 6월 둘째 주 반도체 Weekly.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "최보영",
+    "report_date": "2026/ 06/ 08",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "구글 850억 달러 유증",
+      "브로드컴 가이던스 실망",
+      "미국 고용 호조에 따른 금리 인상 가능성",
+      "5월 차이신 제조업 PMI 51.8",
+      "대만 5월 IT 업체 매출액: 난야 YoY +730.1%, 폭스콘 YoY +39.6%",
+      "DDR5 가격 상승",
+      "2분기 서버 DRAM 고정가 전망치 +50~55% 상향 조정"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "견조",
+        "reason": "CSP, PC OEM 등 전방위 메모리 LTA 계약이 체결 중인 상황"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026/ 06/ 08",
+        "event": "WWDC26 개최"
+      },
+      {
+        "date": "2026/ 06/ 05",
+        "event": "DDR5 가격 상승"
+      },
+      {
+        "date": "2026/ 06/ 04",
+        "event": "브로드컴 실적 발표"
+      },
+      {
+        "date": "2026/ 06/ 03",
+        "event": "SK하이닉스 생산능력 2배 확대 보도"
+      }
+    ],
+    "top_picks": [
+      "난야",
+      "폭스콘",
+      "삼성전자",
+      "SK하이닉스",
+      "TSMC"
+    ],
+    "risk": "SOCAMM2 용량 하향 노이즈, 브로드컴 가이던스 실망에 따른 테크 주가 급락",
+    "quote": "CSP, PC OEM 등 전방위 메모리 LTA 계약이 체결 중인 상황으로 업황은 여전히 견조하다 판단"
+  }
+}

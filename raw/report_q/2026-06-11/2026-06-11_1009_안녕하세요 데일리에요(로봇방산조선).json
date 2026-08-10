@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "Eugene Investment & Securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-11_1009_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "Eugene Investment & Securities",
+    "analyst": "양승윤",
+    "report_date": "06/10",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "한-EU 정상회담 개최",
+      "한-EU 비밀정보보호협정 체결을 위한 협상 개시"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": "강화",
+        "reason": "야스카와전기의 피지컬 AI 분야 1,200억엔 투자 추진"
+      },
+      {
+        "sector": "방산",
+        "stance": "확대",
+        "reason": "한국-EU 정상회담을 통한 방위 분야 이니셔티브 교류 발전 기대"
+      },
+      {
+        "sector": "조선",
+        "stance": "성장",
+        "reason": "러시아 가스메이저 노바텍의 쇄빙 LNG선 10척 인수 추진 등"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "10일",
+        "event": "한국-EU 정상회담 개최"
+      },
+      {
+        "date": "12일",
+        "event": "일본 방위상 인니 방문해 호위함 수출 협의"
+      }
+    ],
+    "top_picks": [
+      "뉴로메카",
+      "두산로보",
+      "나우로보틱스",
+      "노이라",
+      "마이액추에이터",
+      "야스카와",
+      "현대로템",
+      "레이시온",
+      "록히드마틴",
+      "HD현대",
+      "노바텍",
+      "한화오션",
+      "MOL",
+      "HD현대중공업",
+      "후둥중화"
+    ],
+    "risk": null,
+    "quote": "일본 산업용 로봇 기업 야스카와전기가 10일 중기 경영계획 설명회에서 향후 4년간 M&A와 자본 제휴를 중심으로 피지컬 AI 분야에 약 1,200억엔을 투자할 것이라 발표."
+  }
+}

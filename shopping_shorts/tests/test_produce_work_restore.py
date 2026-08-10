@@ -20,10 +20,16 @@ _HARNESS = r"""
 'use strict';
 let HANDOFF = [];
 const STATE = { script:'', script_src_idx:null, script_from_wiki:null };
-const STEPS = ['대본','자막제거','TTS','꾸미기','최종'];
+const STEP_LABELS = ['대본','화면 붙이기','TTS','꾸미기','최종'];
+// ★Task 6(2026-07-23): cur(패널 인덱스) 범위 체크는 STEP_LABELS.length(오브 라벨 수)가 아니라
+// PANEL_COUNT(물리 패널 수)를 쓴다 — 신규 매칭 패널(data-step=7)이 생겨 둘이 갈라졌다(7 vs 8).
+const PANEL_COUNT = 8;
 let cur = 0, MIX_JOB = null, WORK_ID = null, PREVIEW_STATUS = null;
 let STYLE_TOUCHED = false, PENDING_STYLE_RESTORE = false;   // 꾸미기 스타일 복원 플래그(C-2 잔여)
 function canGoNext(){ return PREVIEW_STATUS === 'ready' || PREVIEW_STATUS === 'failed'; }
+// _restoreWork의 게이트 재동기는 stepLocked() 하나만 본다(2026-07-26) — 소스와 동일 스텁.
+// 패널7(화면 붙이기=매칭)은 미리보기를 '만드는' 자리라 게이트 예외다.
+function stepLocked(i){ if(i === 7) return false; return i >= 1 && !!MIX_JOB && !canGoNext(); }
 let NEXT_DISABLED = null;
 // !!(...): 실제 코드의 `b.disabled = gated`는 DOM boolean IDL 프로퍼티라 대입 시 ToBoolean으로
 // 강제변환된다(null → false). 이 스텁은 DOM이 아닌 평범한 변수라 그 강제변환을 흉내낸다 —
@@ -155,6 +161,52 @@ def test_bogus_step_does_not_escape_the_wizard(js):
       console.log(JSON.stringify({cur}));
     """)
     assert '"cur": 0' in out.replace('"cur":0', '"cur": 0')
+
+
+def test_restores_step_7_matching_panel(js):
+    """★Task 6: 신규 매칭 패널(data-step=7)이 생겨 물리 패널 수가 8이 됐다 — 이건 오브 라벨 수
+    (STEP_LABELS.length=7과는 다른 축이다. cur 복원 바운드가 STEP_LABELS.length에 그대로 걸리면
+    7단계(화면 붙이기)는 범위 밖으로 오판돼 0으로 튕긴다(Task2 리뷰 Minor②) — PANEL_COUNT(8)를
+    써야 한다. 매칭 전(job_id 없음)이라 게이트 재동기에도 안 걸린다."""
+    out = _run(js, """
+      RESPONSES = {'/api/produce/works/': {ok:true, step:7, job_id:null, state:{script:'대본'}}};
+      await _restoreWork('w-1');
+      console.log(JSON.stringify({cur}));
+    """)
+    assert '"cur": 7' in out.replace('"cur":7', '"cur": 7'), (
+        "매칭 패널(step:7)로 복원되지 않았다 — PANEL_COUNT 바운드 확인: " + out)
+
+
+def test_restores_matching_panel_even_before_preview(js):
+    """★2026-08-06 사장님 제보: "3개로 나눈 것들 모두 이 화면(1단계)으로 고정됨".
+
+    '따로 만들기'로 갈라진 작업은 **job은 있는데 미리보기는 아직 안 본** 상태로 저장된다
+    (preview_status=null). 그 조합에서 복원이 `stepLocked(cur)`에 걸려 7(매칭 화면)을
+    0으로 되감았다 — 대본 후보 A/B/C를 고르는 자리가 바로 그 화면인데 거기서 쫓겨나니
+    3편을 따로 만들 방법이 사라진다.
+
+    stepLocked() 자신은 패널7을 예외로 둔다(`if(i===7) return false`) — 즉 이 되감기는
+    게이트의 뜻이 아니었다. 기존 test_restores_step_7_matching_panel은 job_id:null이라
+    게이트 자체를 안 태워서 이 조합을 못 잡았다."""
+    out = _run(js, """
+      RESPONSES = {'/api/produce/works/': {ok:true, step:7, job_id:'job-9', state:{script:'대본'}},
+                   '/api/mix/status/': {ok:true, preview_status:null}};
+      await _restoreWork('w-1');
+      console.log(JSON.stringify({cur}));
+    """)
+    assert '"cur": 7' in out.replace('"cur":7', '"cur": 7'), (
+        "미리보기 전이라고 매칭 화면에서 1단계로 쫓겨났다 — 후보를 고를 자리가 없어진다: " + out)
+
+
+def test_gate_still_holds_for_paid_steps_after_the_panel7_fix(js):
+    """★위 수정이 게이트를 뚫으면 안 된다 — 패널7만 예외고 2~6단계(유료 자막제거 등)는 그대로 잠근다."""
+    out = _run(js, """
+      RESPONSES = {'/api/produce/works/': {ok:true, step:2, job_id:'job-9', state:{script:'대본'}},
+                   '/api/mix/status/': {ok:true, preview_status:null}};
+      await _restoreWork('w-1');
+      console.log(JSON.stringify({cur}));
+    """)
+    assert '"cur": 0' in out.replace('"cur":0', '"cur": 0'), "유료 단계 게이트가 뚫렸다: " + out
 
 
 def test_missing_work_falls_back_to_old_path(js):

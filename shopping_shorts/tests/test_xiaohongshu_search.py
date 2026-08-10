@@ -1,5 +1,6 @@
 import pytest
 from shopping_shorts import xiaohongshu_search
+from shopping_shorts import xiaohongshu_search as xhs
 
 
 def test_search_returns_normalized_candidates(monkeypatch):
@@ -119,3 +120,35 @@ def test_search_no_tokens_raises(monkeypatch):
     monkeypatch.setattr(xiaohongshu_search, "APIFY_TOKENS", [])
     with pytest.raises(RuntimeError, match="APIFY_TOKEN"):
         xiaohongshu_search.search("x")
+
+
+def test_search_full_maps_engagement_schema(monkeypatch):
+    monkeypatch.setattr(xhs, "APIFY_TOKENS", ["fake-key"])
+
+    def fake_run(payload, tokens, timeout, poll_interval, actor=None):
+        return [{
+            "url": "https://www.xiaohongshu.com/explore/abc", "type": "video", "id": "abc",
+            "title": "厨房好物", "timestamp": 1779088572,
+            "video": {"url_720p": "https://v.mp4", "duration_seconds": 25},
+            "images": [{"url": "https://cover.jpg"}], "cover_image_index": 0,
+            "author": {"userid": "u_kim", "nickname": "김철수"},
+            "engagement": {"liked_count": 300, "comments_count": 12,
+                           "collected_count": 90, "shared_count": 7},
+        }]
+    monkeypatch.setattr(xhs, "_run_with_rotation", fake_run)
+
+    out = xhs.search_full("厨房好物", max_results=40)
+    assert len(out) == 1
+    r = out[0]
+    assert r["video_id"] == "abc" and r["media_platform"] == "xiaohongshu"
+    assert r["published_at"] == "2026-05-18T07:16:12Z"   # 1779088572 → ISO(UTC)
+    assert r["likes"] == 300 and r["comments"] == 12 and r["collects"] == 90 and r["shares"] == 7
+    assert r["views"] == 0 and r["channel_title"] == "김철수" and r["thumbnail"] == "https://cover.jpg"
+    assert r["channel_id"] == "u_kim"   # 계정 발굴 집계·프로필URL 조립용(author.userid)
+
+
+def test_search_full_skips_non_video(monkeypatch):
+    monkeypatch.setattr(xhs, "APIFY_TOKENS", ["fake-key"])
+    monkeypatch.setattr(xhs, "_run_with_rotation",
+                        lambda *a, **k: [{"url": "u", "type": "normal", "id": "x"}])
+    assert xhs.search_full("x") == []

@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "DS INVESTMENT & SECURITIES",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-19_0809_2Q26 Preview 상선은 순항 중.md"
+  },
+  "questionnaire": {
+    "broker": "DS INVESTMENT & SECURITIES",
+    "analyst": "김대성",
+    "report_date": "2026.07.16",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "삼성중공업",
+        "code": "010140",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": 42000,
+        "tp_prev": 42000,
+        "tp_direction": "flat",
+        "earnings_outlook": "26년 2분기 실적은 매출액 3.2조원(+18.0% 이하 YoY), 영업이익 3,753억원(+83.2%, OPM 11.9%)으로 전망",
+        "estimate_revision": null,
+        "next_catalyst": "하반기 델핀 2호기와 웨스턴향 FLNG 수주",
+        "thesis": [
+          "가스선(LNG선 및 LPG선)의 매출 비중 확대와 고선가 빈티지 물량 확대",
+          "본격적으로 개화하는 FLNG 매출 및 수익성 개선",
+          "국내 조선사 중 FDC 수주 가시성 가장 높음"
+        ],
+        "valuation_basis": "목표주가 42,000원 투자의견 매수 유지",
+        "risk": null,
+        "supply_comment": "삼성중공업은 LNGC를 13척 수주 하며 LNGC 수주에 집중했으며 국내 조선사 수주잔고 중 LNGC 비중이 가장 높은 상황",
+        "quote": "국내 조선사 중 FDC 수주 가시성은 가장 앞서 있다고 판단. 목표주가 42,000원 투자의견 매수 유지"
+      },
+      {
+        "name": "HD현대중공업",
+        "code": "033500",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": 900000,
+        "tp_prev": 900000,
+        "tp_direction": "flat",
+        "earnings_outlook": "26년 2분기 실적은 매출액 6.0조원(+56.6% 이하 YoY), 영업이익 9,775억원(+125.4%, OPM 16.3%)으로 전망",
+        "estimate_revision": null,
+        "next_catalyst": "데이터센터향 엔진 수주, 해외 군함 수주, FDC 발주",
+        "thesis": [
+          "상선 영업이익률 16.8% 전망 및 가스선 매출 비중 80% 확대",
+          "데이터센터향 엔진 수주 및 생산능력(CAPA) 확장",
+          "해외 군함 및 MASGA 관련 모멘텀"
+        ],
+        "valuation_basis": "투자의견 매수와 목표주가 900,000원 유지",
+        "risk": null,
+        "supply_comment": "중속 엔진 생산능력은 약 3GW로 이미 선박용 엔진향 가동률이 100% 수준",
+        "quote": "중속엔진 생산능력 확장 및 데이터센터향 엔진 추가 수주 임박. 투자의견 매수와 목표주가 900,000원 유지"
+      },
+      {
+        "name": "한화오션",
+        "code": "042660",
+        "rating": "매수",
+        "rating_changed": true,
+        "tp_new": 132000,
+        "tp_prev": 170000,
+        "tp_direction": "down",
+        "earnings_outlook": "26년 2분기 실적은 매출액 4조 9,210억원(+49.4% 이하 YoY), 영업이익 5,540억원(+49.1%, OPM 11.3%)으로 전망",
+        "estimate_revision": null,
+        "next_catalyst": "하반기 해외 군함 및 해양플랜트 수주",
+        "thesis": [
+          "상선 영업이익률 19.1%로 전분기 대비 성장 기대",
+          "고선가 빈티지 물량 확대에 따른 선가 상승 지속",
+          "미국 및 그 외 국가의 군함 수출 본 계약 성공 시 프리미엄 회복"
+        ],
+        "valuation_basis": "캐나다 CPSP 수주 실패에 따른 군함 수출 모멘텀 축소로 목표 주가를 132,000원으로 하향",
+        "risk": "특수선 해외 수주 지연에 따른 고정비 부담",
+        "supply_comment": "탱커선과 컨테이너선의 경우에도 반복 건조 효과 및 고선가 물량 반영으로 기존 예상치보다 이익률 높아지고 있음",
+        "quote": "미국 및 그 외 국가의 군함 수출 본 계약 성공 시 프리미엄 회복 가능할 것으로 기대. 투자의견 매수 유지"
+      }
+    ]
+  }
+}

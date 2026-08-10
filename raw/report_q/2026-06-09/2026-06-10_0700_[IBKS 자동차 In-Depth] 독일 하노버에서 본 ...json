@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_0700_[IBKS 자동차 In-Depth] 독일 하노버에서 본 ...md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이현욱",
+    "report_date": "2026. 6. 8",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "현대차",
+        "code": "005380",
+        "rating": "매수",
+        "rating_changed": "유지",
+        "tp_new": "770,000원",
+        "tp_prev": "650,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2026년 매출액 195조 1,890억원(YoY +4.8%), 영업이익 12조 100억원(YoY +4.7%)",
+        "estimate_revision": "상향",
+        "next_catalyst": "Physical AI 생태계 구축 및 로보틱스 사업의 SOTP 반영",
+        "thesis": [
+          "HEV 중심의 실적 방어력과 전동화 전환 유연성",
+          "주주환원 확대에 따른 밸류에이션 하방 지지",
+          "Boston Dynamics 및 Atlas 양산을 통한 로보틱스 옵션 가치 부각"
+        ],
+        "valuation_basis": "본업 가치는 27년 지배순이익 11.5조원에 Target PER 11.5배 적용, 로봇 가치는 2030년 BD 추정 매출액 10.9조원에 Target PSR 13배 적용",
+        "risk": "전통 OEM 전반의 구조적 디스카운트",
+        "supply_comment": "자율주행, 스마트팩토리, 로보틱스를 아우르는 AI 기반 산업 플랫폼으로 전환",
+        "quote": "현대차그룹은 BD를 단순 기술 자산으로 보유하는 것이 아니라, 그룹 차원의 제조, 부품, 물류, IT, 금융 역량을 결합한 End-to-End Industrial Platform으로 확장하려는 전략을 제시하고 있다."
+      },
+      {
+        "name": "현대모비스",
+        "code": "012330",
+        "rating": "매수",
+        "rating_changed": "유지",
+        "tp_new": "760,000원",
+        "tp_prev": "600,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2026년 매출액 65조 5,510억원(YoY +7.2%), 영업이익 3조 5,400억원(YoY +5.4%)",
+        "estimate_revision": "상향",
+        "next_catalyst": "Atlas 액추에이터 내재화 및 로봇 핵심 부품 사업 진입",
+        "thesis": [
+          "Atlas 액추에이터 내재화에 따른 로봇 핵심 부품 사업 진입",
+          "현대차그룹 Physical AI 생태계 내 제조 및 부품 핵심 계열사로서의 역할 확대",
+          "기존 전동화 부품 역량과 로봇 구동계 기술의 확장성"
+        ],
+        "valuation_basis": "본업 가치는 27년 지배순이익 4.6조원에 Target PER 11.5배 적용, 로봇 가치는 2030년 로봇 부문 추정 매출액 1.2조원에 Target PSR 13배 적용",
+        "risk": "기존 전동화 부품주에서 휴머노이드 핵심 부품주로 리레이팅 과정",
+        "supply_comment": "현대차그룹 로보틱스 전략의 핵심 부품 내재화 수혜주",
+        "quote": "현대모비스는 현대차그룹 로보틱스 전략의 핵심 부품 내재화 수혜주로 부각될 수 있다."
+      },
+      {
+        "name": "현대오토에버",
+        "code": "307950",
+        "rating": "매수",
+        "rating_changed": "유지",
+        "tp_new": "880,000원",
+        "tp_prev": "500,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2026년 매출액 4조 7,130억원(YoY +10.8%), 영업이익 2,527억원(YoY -1.0%)",
+        "estimate_revision": "상향",
+        "next_catalyst": "현대차그룹 AI 팩토리 및 디지털 전환 투자 확대",
+        "thesis": [
+          "현대차그룹의 AI 팩토리 및 디지털 전환 투자 확대",
+          "SDV 전환에 따른 매출 성장",
+          "그룹사 ERP, 클라우드, ITO 수요 확대에 따른 안정적 외형 성장"
+        ],
+        "valuation_basis": "2028년 EPS 추정치에 Historical Max Value 5% 할증한 61.4배 적용",
+        "risk": "SDV 전환 속도 및 IT 서비스 수요 변화",
+        "supply_comment": "그룹사 제조, 물류, 로봇, 자율주행, 차량 데이터 인프라 고도화 수혜",
+        "quote": "현대오토에버의 투자포인트는 1) 현대차그룹의 AI 팩토리 및 디지털 전환 투자 확대, 2) SDV 전환에 따른 매출 성장, 3) 그룹사 ERP, 클라우드, ITO 수요 확대에 따른 안정적 외형 성장이다."
+      }
+    ]
+  }
+}

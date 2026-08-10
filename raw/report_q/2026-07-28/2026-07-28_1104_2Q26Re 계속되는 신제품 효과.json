@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "date": "2026-07-28",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-28_1104_2Q26Re 계속되는 신제품 효과.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "하현수",
+    "report_date": "2026.07.28",
+    "stocks": [
+      {
+        "name": "셀트리온",
+        "code": "068270",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "280,000원",
+        "tp_prev": "257,355원",
+        "tp_direction": "up",
+        "earnings_outlook": {
+          "2Q26P_Sales": "1조 3,937억원",
+          "2Q26P_OP": "4,518억원",
+          "2Q26P_OPM": "32.4%",
+          "quote": "연결 기준 매출액 1조 3,937억원(+45.0%YoY, 이하 YoY 생략), 영업이익 4,518억원(+86.3%, OPM 32.4%)를 기록하며 기존 잠정 실적(매출액 1.3조원, 영업이익 4,300억원)을 초과하는 실적 기록."
+        },
+        "estimate_revision": {
+          "content": "매출액 및 영업이익 전망 상향",
+          "quote": "매수 의견을 유지하며 목표 주가를 28만원으로 상향."
+        },
+        "next_catalyst": [
+          "하반기 옴리클로 300mg 제형 출시",
+          "신규 시밀러 품목(CT-P55, CT-P51 등) 추가",
+          "2030년까지 총 7개 신규 제품 허가 목표"
+        ],
+        "thesis": [
+          "신규 바이오시밀러 제품군의 매출 급성장(전체 매출의 65% 비중)",
+          "옴리클로의 성공적인 시장 안착 및 고용량 제형 출시 기대",
+          "상위 시밀러 기업으로서의 가격 경쟁력 및 공급 안정성 부각"
+        ],
+        "valuation_basis": "12MF EBITDA 23,748억원에 Target EV/EBITDA 28x 적용",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "신규 시밀러들의 가파른 성장으로 실적 성장을 견인하고 있으며 CT-P55, CT-P51(키트루다 시밀러) 등 신규 품목들이 추가되며 이익 성장 이어질 것으로 전망.",
+        "sector": "바이오"
+      }
+    ]
+  }
+}

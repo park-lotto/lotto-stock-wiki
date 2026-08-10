@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-12",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-12_1001_차세대 면역 항암제 파이프라인 보유.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "하현수",
+    "report_date": "2026.06.12",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "와이바이오로직스",
+        "code": "338840",
+        "rating": "NOT RATED",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2024A 매출액 58억 원, 영업이익 -84억 원, 2025A 매출액 29억 원, 영업이익 -93억 원 전망",
+        "estimate_revision": null,
+        "next_catalyst": "연내 CMC와 GLP tox 진행 및 27년 IND 제출",
+        "thesis": [
+          "Multi-AbKine 파이프라인(AR170, AR166)의 전임상 결과 우수한 종양 억제 효과 확인",
+          "IL-2 변이체 스크리닝을 통한 최적화 전략 및 안전성 확보",
+          "환자 유래 종양 세포를 이용한 PDX 모델 및 영장류 모델 독성 평가 진행"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "AACR에서 동사는 AR170(PD-1xVEGFxIL-2)와 AR166(PD-1xLAG-3xIL-2)의 전임상 연구 결과를 공개."
+      }
+    ],
+    "sector": "바이오"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-05-27",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_시총 1조 달러 클럽과 투자사이클.md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "박상현",
+    "report_date": "2026-05-27",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "미국 투자사이클",
+      "반도체 슈퍼 사이클",
+      "국내 기업 체감경기",
+      "고유가",
+      "국채 금리"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "우호적",
+        "reason": "강력한 AI 투자 사이클에 따른 반도체 슈퍼 사이클"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "마이크론",
+      "월마트",
+      "SK하이닉스"
+    ],
+    "risk": "고유가-고물가-고금리 현상",
+    "quote": "반도체 랠리가 언제까지 지속될지는 모르겠지만 최소한 하반기 미국 등 주요국의 투자사이클 호조가 지속될 가능성이 크다는 점에서 AI발 반도체 업황 수혜도 상당기간 지속될 것으로 예상된다."
+  }
+}

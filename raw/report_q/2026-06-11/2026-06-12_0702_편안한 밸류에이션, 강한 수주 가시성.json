@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-12_0702_편안한 밸류에이션, 강한 수주 가시성.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "손현정",
+    "report_date": "2026.06.11",
+    "stocks": [
+      {
+        "name": "효성중공업",
+        "code": "298040",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "5,000,000원",
+        "tp_prev": "5,000,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26E_sales": "1조 7,948억원",
+          "2Q26E_operating_profit": "3,182억원",
+          "2Q26E_OPM": "17.7%",
+          "2026F_sales": "7조 2,880억원",
+          "2026F_operating_profit": "1조 1,833억원",
+          "2026F_OPM": "16.2%",
+          "2027F_sales": "9조 8,599억원",
+          "2027F_operating_profit": "1조 7,696억원",
+          "2027F_OPM": "17.9%"
+        },
+        "estimate_revision": "신규수주는 이미 가이던스 상향 가능성을 가리킨다.",
+        "next_catalyst": "SST 실증 완료(2026년 연내), 수주 및 매출 발생(2027년), 데이터센터 800V DC 전력 구조 연결",
+        "thesis": [
+          "강한 수주 가시성과 편안한 밸류에이션을 동시에 보유한 업종 내 가장 안정적인 선택지",
+          "미국향 고마진 차단기 물량 이연분 반영 및 북미 초고압 수주잔고 매출 전환",
+          "SST·STATCOM·HVDC 모멘텀을 통한 경쟁사 대비 밸류에이션 디스카운트 축소 가능"
+        ],
+        "valuation_basis": "2027F PER 21배, 2028F PER 15배 수준으로 국내외 Peer 대비 밸류에이션 부담이 낮음",
+        "risk": null,
+        "supply_comment": "765kV 초고압 변압기와 GIS/GCB를 함께 공급할 수 있는 초고압 패키지 경쟁력 보유",
+        "quote": "효성중공업에 대해 투자의견 BUY, 목표주가 5,000,000원을 유지한다. 하반기 전력기기 업종 내 Top Pick 의견을 유지한다."
+      }
+    ]
+  }
+}

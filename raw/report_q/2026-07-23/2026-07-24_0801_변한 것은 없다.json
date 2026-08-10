@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-23",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-24_0801_변한 것은 없다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "iM증권",
+    "analyst": "정재원",
+    "report_date": "2026.07.23",
+    "stocks": [
+      {
+        "name": "SK바이오팜",
+        "code": "326030",
+        "rating": "Buy",
+        "rating_changed": "Maintain",
+        "tp_new": "130,000원",
+        "tp_prev": null,
+        "tp_direction": "down",
+        "earnings_outlook": "당분기 매출은 2,399억원(컨센서스 2,338억원, YoY +36%), 영업이익은 883억원(컨센서스 845억원, YoY +43%, OPM 37%)으로 제시한다.",
+        "estimate_revision": "실적 추정치 조정에 따른 목표주가 하향",
+        "next_catalyst": "연내 계약이 마무리된다면 내년부터 엑스코프리 외에 새로운 제품 라인업이 가세함에 따른 추가적인 외형 성장도 기대된다.",
+        "thesis": [
+          "엑스코프리의 처방량 상승 추세 지속",
+          "도입 제품을 통한 새로운 성장 가능성",
+          "자체 개발 중인 뉴 모달리티(RPT, TPD) 파이프라인의 순조로운 진행"
+        ],
+        "valuation_basis": "DCF 밸류에이션을 적용해 목표주가를 산출했으며 Terminal growth는 3%로 설정했다.",
+        "risk": "신규 도입제품이나 뉴 모달리티 분야에 대한 파이프라인 가치 및 엑스코프리의 미국 외 지역(일본, 중국 등)에 대한 판매를 반영하지 않음",
+        "supply_comment": "엑스코프리의 처방량 상승 추세는 여전히 지속되고 있으며, 경쟁상황 역시 크게 변동이 없는 상황이다.",
+        "quote": "동사에 대한 투자의견은 그대로 유지하나, 목표주가를 13만원으로 하향한다. DCF 밸류에이션을 적용해 목표주가를 산출했으며 Terminal growth는 3%로 설정했다."
+      }
+    ]
+  }
+}

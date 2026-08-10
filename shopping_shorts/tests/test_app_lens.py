@@ -1,4 +1,5 @@
 import base64
+import types
 from fastapi.testclient import TestClient
 from shopping_shorts import app as appmod
 from shopping_shorts.store import Store
@@ -201,3 +202,134 @@ def test_lens_cn_vision_extract_and_similarity_sort(tmp_path, monkeypatch):
     byurl = {i["url"]: i for i in d["items"]}
     assert byurl["https://xhs/2"]["match"] is False          # no → ⚠️
     assert byurl["https://dy/1"]["sim"] == "similar" and byurl["https://dy/1"]["match"] is None
+
+
+def test_lens_yt_returns_youtube_items(tmp_path, monkeypatch):
+    db = str(tmp_path / "t.db")
+    monkeypatch.setattr(appmod, "DB_PATH", db)
+    monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
+    monkeypatch.setattr(appmod, "cn_search_keyword_vision",
+                        lambda raw, cap: {"product": "물총", "zh": "水枪"})
+    fake = [{"url": f"https://youtu.be/v{i}", "title": f"물총 리뷰 {i}",
+             "thumbnail": f"https://img/{i}.jpg"} for i in range(3)]
+    monkeypatch.setattr(appmod, "youtube_search",
+                        types.SimpleNamespace(search=lambda kw, max_results=40: fake))
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/yt",
+               data={"source_caption": "물총 여름 필수템"},
+               files={"frame": ("f.jpg", b"\xff\xd8\xff", "image/jpeg")})
+    assert r.status_code == 200
+    d = r.json()
+    assert d["ok"] is True
+    assert d["count"] == 3
+    assert all(i["platform"] == "youtube" for i in d["items"])
+    assert all(i["match"] is None for i in d["items"])
+    assert d["keyword"] == "물총"
+
+
+def test_lens_yt_empty_keyword_returns_empty(tmp_path, monkeypatch):
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/yt", data={"source_caption": ""})
+    assert r.status_code == 200
+    d = r.json()
+    assert d["ok"] is True and d["count"] == 0
+
+
+def test_lens_yt_search_failure_returns_empty(tmp_path, monkeypatch):
+    db = str(tmp_path / "t.db")
+    monkeypatch.setattr(appmod, "DB_PATH", db)
+    monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
+    monkeypatch.setattr(appmod, "cn_search_keyword_vision",
+                        lambda raw, cap: {"product": "물총", "zh": "水枪"})
+    def boom(kw, max_results=40):
+        raise RuntimeError("quota exhausted")
+    monkeypatch.setattr(appmod, "youtube_search",
+                        types.SimpleNamespace(search=boom))
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/yt",
+               data={"source_caption": "물총"},
+               files={"frame": ("f.jpg", b"\xff\xd8\xff", "image/jpeg")})
+    assert r.status_code == 200
+    d = r.json()
+    assert d["ok"] is True and d["count"] == 0
+
+
+# ── /api/lens/cn/keywords : 프레임 → 중국어 후보 검색어 (2026-07-19) ──
+def test_lens_cn_keywords_returns_candidates(tmp_path, monkeypatch):
+    monkeypatch.setattr(appmod, "cn_search_candidates",
+                        lambda raw, cap: {"product": "감자칩",
+                                          "candidates": [{"ko": "공기튀김 감자칩", "zh": "空气炸锅土豆片"}]})
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/cn/keywords",
+               files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_caption": "풍선감자"})
+    d = r.json()
+    assert d["ok"] and d["product"] == "감자칩"
+    assert d["candidates"][0]["zh"] == "空气炸锅土豆片"
+
+
+def test_lens_cn_keywords_empty_without_frame_or_caption(tmp_path, monkeypatch):
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/cn/keywords", data={"source_caption": ""})
+    d = r.json()
+    assert d["ok"] and d["candidates"] == []
+
+
+# ── /api/lens/cn/search : 검색어 1개 → 샤오홍슈+도우인 (2026-07-19) ──
+def test_lens_cn_search_merges_platforms(tmp_path, monkeypatch):
+    monkeypatch.setattr(appmod, "APIFY_TOKENS", ["tok"])
+    seen = {}
+    def xhs(kw, max_results=8):
+        seen["kw"] = kw
+        return [{"url": "https://xhs/1", "title": "空气炸锅土豆片"}]
+    monkeypatch.setattr(appmod.xiaohongshu_search, "search", xhs)
+    monkeypatch.setattr(appmod.douyin_search, "search",
+                        lambda kw, max_results=8: [{"url": "https://dy/1", "title": "土豆片"}])
+    c = TestClient(appmod.app)
+    d = c.post("/api/lens/cn/search", data={"keyword": "空气炸锅土豆片"}).json()
+    assert seen["kw"] == "空气炸锅土豆片"
+    assert d["ok"] and d["count"] == 2 and d["keyword"] == "空气炸锅土豆片"
+    assert {i["platform"] for i in d["items"]} == {"xiaohongshu", "douyin"}
+    assert all(i["match"] is None for i in d["items"])
+
+
+def test_lens_cn_search_empty_keyword(tmp_path, monkeypatch):
+    monkeypatch.setattr(appmod, "APIFY_TOKENS", ["tok"])
+    c = TestClient(appmod.app)
+    d = c.post("/api/lens/cn/search", data={"keyword": "  "}).json()
+    assert d["items"] == [] and d["count"] == 0
+
+
+def test_lens_cn_search_no_tokens(tmp_path, monkeypatch):
+    monkeypatch.setattr(appmod, "APIFY_TOKENS", [])
+    c = TestClient(appmod.app)
+    d = c.post("/api/lens/cn/search", data={"keyword": "土豆片"}).json()
+    assert d["items"] == []
+
+
+def test_lens_cn_search_survives_one_actor_error(tmp_path, monkeypatch):
+    monkeypatch.setattr(appmod, "APIFY_TOKENS", ["tok"])
+    def boom(kw, max_results=8):
+        raise RuntimeError("actor down")
+    monkeypatch.setattr(appmod.xiaohongshu_search, "search", boom)
+    monkeypatch.setattr(appmod.douyin_search, "search",
+                        lambda kw, max_results=8: [{"url": "https://dy/2", "title": "d"}])
+    c = TestClient(appmod.app)
+    d = c.post("/api/lens/cn/search", data={"keyword": "土豆片"}).json()
+    assert d["count"] == 1 and d["items"][0]["platform"] == "douyin"
+
+
+def test_lens_month_limit_scales_with_keys(tmp_path, monkeypatch):
+    """렌즈 월 한도 = 키 개수 × 100(무료 계정당). 설정 override 있으면 그 값."""
+    s = Store(str(tmp_path / "t.db"))
+    import shopping_shorts.config as cfg
+    monkeypatch.setattr(cfg, "SERPAPI_KEYS", ["k1"])
+    assert appmod._lens_month_limit(s) == 100
+    monkeypatch.setattr(cfg, "SERPAPI_KEYS", ["k1", "k2"])
+    assert appmod._lens_month_limit(s) == 200          # 2번째 키 넣으면 자동 200
+    monkeypatch.setattr(cfg, "SERPAPI_KEYS", [])
+    assert appmod._lens_month_limit(s) == 100          # 키 0개여도 최소 100
+    s.set_setting("lens_month_limit", "50")
+    assert appmod._lens_month_limit(s) == 50            # 설정 override 우선

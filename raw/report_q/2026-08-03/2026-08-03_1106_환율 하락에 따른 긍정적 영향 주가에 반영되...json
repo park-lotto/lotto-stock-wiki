@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-08-03",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-03_1106_환율 하락에 따른 긍정적 영향 주가에 반영되...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "최정욱, 정소영",
+    "report_date": "2026.8.3",
+    "target_kind": "market",
+    "market_direction": "null",
+    "macro_vars": [
+      "미국 국채금리",
+      "국내 국채금리",
+      "원/달러 환율"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": "비중확대",
+        "reason": "실적 안정성이 높고 매크로 지표 등이 은행주에 우호적"
+      }
+    ],
+    "style": "null",
+    "event_calendar": [
+      {
+        "date": "2026년 9월 이전",
+        "event": "홍콩 ELS 제재안 최종 결론 예상"
+      }
+    ],
+    "top_picks": [
+      "BNK금융",
+      "iM금융"
+    ],
+    "risk": "증권 거래대금 감소 및 은행 NIM 추가 상승 불확실성에 따른 2분기 실적 피크아웃 우려",
+    "quote": "실적 안정성 높고, 매크로 지표 등도 은행주에 우호적이라는 점에서 은행주에 대한 관심을 계속 확대해야 한다는 기존 의견을 유지"
+  }
+}

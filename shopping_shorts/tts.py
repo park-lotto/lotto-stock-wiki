@@ -3,6 +3,7 @@
 ElevenLabs는 Gemini와 무관한 별도 API라 전용/공유 키풀 규칙과 무관(단일 키).
 키가 없으면 개발용 무음 mp3를 반환해 파이프라인 E2E가 키 없이도 관통되게 한다.
 """
+import base64
 import shutil
 import subprocess
 import time
@@ -10,8 +11,12 @@ import time
 import requests
 
 from shopping_shorts import config
+from shopping_shorts import tts_timestamps
 
 _ENDPOINT = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+# 같은 합성인데 응답에 문자단위 정렬이 얹혀 온다(추가 과금 없음, 2026-07-31).
+# 자막 싱크가 여기서 나온다 — 왜 필요한지는 tts_timestamps 모듈 문서 참조.
+_ENDPOINT_TS = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}/with-timestamps"
 
 # 한국어 발화속도 근사치(초당 글자수). 무음 mock 길이 추정용.
 _CHARS_PER_SEC = 5.0
@@ -48,6 +53,9 @@ def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
     speed: 재생속도. API는 0.7~1.2만 허용하므로 그 범위로 clamp해 voice_settings.speed로 보냄
            (1.2 초과분은 audio_post에서 atempo로 별도 보정).
     seed/previous_text/next_text: 선택. v3면 voice_settings에서 use_speaker_boost 자동 drop."""
+    # ★옛 정렬 먼저 지운다 — 같은 경로에 다른 대사를 재합성하는 길이 있다(비트 재합성·
+    #   콘폼). 안 지우면 새 음성에 옛 타이밍이 씌워져 자막이 통째로 밀린다.
+    tts_timestamps.clear(out_path)
     if not config.ELEVENLABS_API_KEY:
         _write_silent_mp3(out_path, _estimate_seconds(text))
         return out_path
@@ -75,19 +83,56 @@ def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
             payload["previous_text"] = previous_text
         if next_text:
             payload["next_text"] = next_text
-    for attempt in range(max_retries):
+    # 타임스탬프 엔드포인트를 먼저 쓰고, 거기서만 실패하면 일반 엔드포인트로 내려앉는다.
+    # (자막 싱크는 잃어도 음성은 나와야 한다 — ASR 폴백이 그 자리를 다시 받는다.)
+    # ★폴백은 재시도 횟수를 먹지 않는다 — 먹게 하면 max_retries=1에서 mp3 없이 반환돼
+    #   다음 단계(ffprobe)가 죽는다.
+    want_ts = bool(config.ELEVENLABS_TIMESTAMPS)
+    attempt = 0
+    while attempt < max_retries:
         try:
-            r = requests.post(url, headers=headers, json=payload, timeout=60)
+            u = _ENDPOINT_TS.format(voice_id=vid) if want_ts else url
+            r = requests.post(u, headers=headers, json=payload, timeout=60)
             r.raise_for_status()
+            if want_ts:
+                audio, alignment = _parse_ts_response(r)
+                if audio is None:                 # 응답 모양이 다르다 → 일반 경로로
+                    want_ts = False
+                    continue
+                with open(out_path, "wb") as f:
+                    f.write(audio)
+                tts_timestamps.save(out_path, alignment)
+                return out_path
             with open(out_path, "wb") as f:
                 f.write(r.content)
             return out_path
         except requests.RequestException:
-            if attempt < max_retries - 1:
-                time.sleep((attempt + 1) * 2)
+            if want_ts:                           # 타임스탬프 경로만의 문제일 수 있다
+                want_ts = False
+                continue
+            attempt += 1
+            if attempt < max_retries:
+                time.sleep(attempt * 2)
                 continue
             raise
     return out_path
+
+
+def _parse_ts_response(resp):
+    """/with-timestamps 응답 → (mp3 bytes, alignment dict). 모양이 다르면 (None, None)."""
+    # AttributeError까지 잡는다 — 응답이 JSON을 모르는 객체일 수 있다(일반 엔드포인트를
+    # 흉내내는 테스트 더블 포함). 모르면 일반 경로로 내려앉는 게 맞다.
+    try:
+        data = resp.json()
+    except (ValueError, AttributeError):
+        return None, None
+    if not isinstance(data, dict) or not data.get("audio_base64"):
+        return None, None
+    try:
+        audio = base64.b64decode(data["audio_base64"])
+    except (ValueError, TypeError):
+        return None, None
+    return audio, data.get("alignment")
 
 
 def synthesize_best(text, out_path, n=1, base_seed=None, ranker=None, **kw):
@@ -104,4 +149,7 @@ def synthesize_best(text, out_path, n=1, base_seed=None, ranker=None, **kw):
         cands.append((score, cand))
     cands.sort(key=lambda x: x[0])
     shutil.copyfile(cands[0][1], out_path)
+    # ★고른 take의 정렬도 같이 옮긴다. 안 옮기면 out_path엔 정렬이 없어 ASR 폴백으로
+    #   돌아가고(효과 0), 더 나쁘게는 옛 정렬이 남아 있으면 stale이 된다(copy가 지운다).
+    tts_timestamps.copy(cands[0][1], out_path)
     return out_path

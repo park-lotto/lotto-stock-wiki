@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-01_1105_자동차 섀시에서 로봇 관절로 이어질 시간.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "송선재",
+    "report_date": "2026년 7월 31일",
+    "stocks": [
+      {
+        "name": "HL만도",
+        "code": "204320",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "69,000원",
+        "tp_prev": null,
+        "tp_direction": "null",
+        "earnings_outlook": "2분기 매출액/영업이익은 4%/3% (YoY) 증가한 2.5조원/1,070억원(영업이익률 4.3%, flat (YoY))을 기록했다.",
+        "estimate_revision": null,
+        "next_catalyst": "하반기 로봇 액추에이터 시제품 대응과 사양 협의, 2027년 수주 및 공장 투자",
+        "thesis": [
+          "본업의 견조한 실적과 지역/고객 다변화",
+          "로봇 액추에이터 사업의 순차적 가시화",
+          "미국의 중국산 부품 규제에 따른 반사 수혜"
+        ],
+        "valuation_basis": "관련 일정이 가시화될 때마다 주가 Valuation이 자극될 것으로 전망한다.",
+        "risk": "반도체/PCB 가격 상승에 따른 원가 부담",
+        "supply_comment": "반도체/원자재 원가 부담은 3분기 늘겠지만, 고객사들과의 협의를 통해 가격 연동 및 리커버리를 통해 부정적 영향을 최소화한다는 목표이다.",
+        "quote": "HL만도에 대한 투자의견 BUY와 목표주가 6.9만원을 유지한다."
+      }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+[Unit]
+Description=Shopping Shorts 카테고리 백필(이력·태그 없는 채널만 릴스 1건 캡션으로 채움)
+After=network.target shopping-shorts.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/lotto-stock-wiki
+EnvironmentFile=/etc/shopping-shorts.env
+# --limit 40: 한 번에 40채널까지만(429 회피). 남으면 다음 날 이어서 채운다.
+# --sleep 3: 채널 사이 3초 — 수집(219채널) 직후 연달아 긁으면 로그인벽에 걸린다(2026-07-30 실측).
+ExecStart=/usr/bin/python3 scripts/backfill_channel_category.py --limit 40 --sleep 3
+# 실패해도 조용히 끝낸다 — 부가 작업이라 알림을 울릴 이유가 없고, 다음 날 다시 시도한다.
+SuccessExitStatus=0 1

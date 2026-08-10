@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-27",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-27_1103_비과세 효과 반영 시 주주환원율 50% 상회.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "우도형",
+    "report_date": "2026.07.27",
+    "stocks": [
+      {
+        "name": "우리금융지주",
+        "code": "316140",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "48,000원",
+        "tp_prev": "48,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "우리금융지주의 2분기 지배주주순이익은 1조 46억원으로 컨센서스를 7.8% 상회했다.",
+        "estimate_revision": "순영업수익 11,672(2026E), 영업이익 4,393(2026E), 지배주주순이익 3,226(2026E)",
+        "next_catalyst": "3분기 운영리스크 완화에 따른 CET-1비율 10bp 상승 효과가 반영될 전망이다.",
+        "thesis": [
+          "양호한 수수료 수익과 판매관리비 감소",
+          "비과세 배당 효과를 포함한 실질 총주주환원율은 50.8% 수준",
+          "금리 상승에 대비해 선제적으로 반영된 조달비용 상승이 하반기 정상화되면서 경쟁사 대비 이익 변동성이 축소될 것으로 판단"
+        ],
+        "valuation_basis": "Target PBR 0.83, 12M Fwd BPS 58,201원",
+        "risk": null,
+        "supply_comment": "하반기 1,500억원 수준의 추가 자사주 매입이 발표됐으며 매입종료는 27년 1월 22일이다.",
+        "quote": "우리금융지주에 대해 투자의견 Buy, 목표주가 48,000원을 유지한다."
+      }
+    ]
+  }
+}

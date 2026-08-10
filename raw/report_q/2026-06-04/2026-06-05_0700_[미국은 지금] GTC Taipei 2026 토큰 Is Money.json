@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-05\\2026-06-05_0700_[미국은 지금] GTC Taipei 2026 토큰 Is Money.md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "김승혁",
+    "report_date": "2026년 06월 02일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "AI 에이전트 컴퓨팅 구조 전환",
+      "토큰 매출화(Compute is revenue)",
+      "AI 팩토리 인프라 투자 사이클"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "수혜",
+        "reason": "파운드리, HBM 메모리 공급망 및 차세대 시스템 Vera Rubin 밸류체인 수혜"
+      },
+      {
+        "sector": "IT",
+        "stance": "수혜",
+        "reason": "대만 ODM, 네오클라우드, Agent 맞춤 SaaS 기업 등"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026년 6월 1일",
+        "event": "GTC 타이페이(Taipei) 2026 개최"
+      }
+    ],
+    "top_picks": [
+      "Microsoft",
+      "Alphabet(Google)",
+      "Cadence",
+      "Palantir",
+      "ServiceNow",
+      "CrowdStrike",
+      "Adobe",
+      "IBM(Red Hat)",
+      "Micron",
+      "Dell",
+      "CoreWeave",
+      "Nebius",
+      "Shopify",
+      "Intercontinental Exchange",
+      "Intel",
+      "AMD",
+      "NVIDIA"
+    ],
+    "risk": "AI 자본지출의 지속성에 대한 시장의 의문",
+    "quote": "NVIDIA 의 전략은 이 패턴이 구동되는 단위, 즉 AI 팩토리 전체를 자사 스택으로 통합 공급하는 데 있으며, 이를 통해 회사를 GPU 기업에서 인프라 기업으로 재정의하고 있다."
+  }
+}

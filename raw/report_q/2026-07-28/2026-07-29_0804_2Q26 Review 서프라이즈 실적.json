@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-28",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-29_0804_2Q26 Review 서프라이즈 실적.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "최보영",
+    "report_date": "2026/07/28",
+    "stocks": [
+      {
+        "name": "LG이노텍",
+        "code": "011070",
+        "rating": "Buy",
+        "rating_changed": "유지",
+        "tp_new": "1,300,000 원",
+        "tp_prev": "1,300,000 원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 매출액 5조 5,272억원(YoY +40.5%, QoQ -0.1%), 영업이익 2,458억원(YoY +2057.3%, QoQ -16.8%)으로 컨센서스(1,823억원)을 큰 폭으로 상회",
+        "estimate_revision": null,
+        "next_catalyst": "3분기 스마트폰 신모델 양산 및 공급 확대, RF-SiP와 고성능 메모리용 FC-CSP 수요 호조, FC-BGA 생산능력 확대, 차량 통신·조명 모듈 및 AP모듈 공급 증가",
+        "thesis": [
+          "계절적 비수기에도 긍정적인 환율효과와 스마트폰 롱테일 수요 호조 및 제품 믹스 개선",
+          "차량용 카메라 공급 확대 및 고부가 반도체기판 수요 증가와 FC-BGA 공급 확대에 따른 패키지솔루션 성장",
+          "부채비율 하락과 차입금 축소 등 재무건전성 개선 흐름 지속"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동사의 2Q26 매출액 5조 5,272억원(YoY +40.5%, QoQ -0.1%), 영업이익 2,458억원(YoY +2057.3%, QoQ -16.8%)으로 컨센서스(1,823억원)을 큰 폭으로 상회하는 서프라이즈 실적을 시현."
+      }
+    ],
+    "sector": "IT"
+  }
+}

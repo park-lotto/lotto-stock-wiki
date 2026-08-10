@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-26_0800_2Q26 Review; 방향성을 믿고 갈 때.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "정희령",
+    "report_date": "2026.07.24",
+    "stocks": [
+      {
+        "name": "삼성바이오로직스",
+        "code": "207940",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "1,900,000원",
+        "tp_prev": "1,400,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26 매출액 1조 3,209억원 (YoY +30.2%), 영업이익 5,864억원 (YoY +23.0%, OPM 44.4%) 기록하며 컨센서스 부합",
+        "estimate_revision": "하반기부터 5공장 및 미국 락빌 공장 매출 인식되며 가이던스 상단 달성할 수 있을 것으로 판단",
+        "next_catalyst": "5공장 및 미국 락빌 공장 매출 인식",
+        "thesis": [
+          "제 1~4공장은 풀가동 유지. 5공장의 경우 인증용 배치 생산 단계 시작되어, 3분기부터 매출 반영 가능할 예정",
+          "미국 락빌 공장의 2분기 생산분 또한 3분기부터 매출 인식 시작",
+          "연초 연결 기준 연간 가이던스 15~20% 성장 제시, 하반기부터 5공장 및 미국 락빌 공장 매출 인식되며 가이던스 상단 달성할 수 있을 것으로 판단"
+        ],
+        "valuation_basis": "27F EBITDA 3조 4,276억원에 EV/EBITDA 24.5배 부여",
+        "risk": "상반기 수주액 둔화되며 산업 환경에 대한 우려 존재",
+        "supply_comment": "2Q26 누적 CMO 수주 Non-binding 금액은 243억 달러 규모",
+        "quote": "삼성바이오로직스의 투자의견 Buy 및 목표주가 1,900,000원으로 상향. 27F EBITDA 3조 4,276억원에 EV/EBITDA 24.5배 부여.",
+        "sector": "바이오"
+      }
+    ]
+  }
+}

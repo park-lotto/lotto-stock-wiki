@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_우리보다 확실한 AT&T 벤더사는 없습니다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김홍식, 이상훈",
+    "report_date": "2026년 06월 04일",
+    "stocks": [
+      {
+        "name": "에치에프알",
+        "code": "230240",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "50,000원",
+        "tp_prev": "50,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "AT&T의 CAPEX 2배 증액 및 중국산 장비 퇴출로 인한 M/S 증가를 고려하면 내년 HFR 수출실적이 과거 최대치를 경신할 것이며",
+        "estimate_revision": null,
+        "next_catalyst": "미국 경매 이후에는 국내 경매가 이어지며 주가 상승을 이어갈 것으로 전망",
+        "thesis": [
+          "미국내 SI 업체 간 이해관계 고려시 AT&T 프론트홀 공급자로 후지쯔가 유력한만큼 후지쯔 메인벤더인 HFR에 수혜가 예상",
+          "AT&T의 CAPEX 2배 증액 및 중국산 장비 퇴출로 인한 M/S 증가를 고려하면 내년 HFR 수출실적이 과거 최대치를 경신할 것",
+          "국내외 무선장비 업체는 물론 과거 멀티플 대비 저평가 국면이어서 키맞추기식 주가 급등이 기대"
+        ],
+        "valuation_basis": "이번 경매 재료 크기를 감안했을 때 주가는 최소한 과거 PBR 고점인 7배를 넘어서 본격적인 상승국면에 진입할 것이란 판단이다.",
+        "risk": null,
+        "supply_comment": "HFR은 당시 후지쯔의 퍼스트 벤더였고, 지금도 긴밀히 협력 중이다. 통신장비는 안정성이 가장 중요하단 점을 고려하면, 곧 경매가 시작하는 현시점에 후지쯔가 HFR을 대체할 공급사를 찾는 모험을 강행하진 않을 것이다.",
+        "quote": "HFR에 대한 투자의견 매수, 목표주가 50,000원을 유지한다.",
+        "sector": "통신"
+      }
+    ]
+  }
+}

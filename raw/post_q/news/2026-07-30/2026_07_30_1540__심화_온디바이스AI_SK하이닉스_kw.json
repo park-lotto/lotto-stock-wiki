@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "SK하이닉스",
+      "signal": "bull",
+      "reason": "10나노급 6세대 LPDDR6 개발 성공을 통한 온디바이스 AI 시장 경쟁력 강화",
+      "ts": "2026-07-30",
+      "quote": "SK하이닉스 10나노급 6세대 '1c LPDDR6' 개발, '온디바이스 AI' 최적화",
+      "sector": "반도체"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "SK하이닉스가 10나노급 6세대 LPDDR6를 개발하여 온디바이스 AI 시장을 겨냥함",
+      "ts": "2026-07-30",
+      "quote": "SK하이닉스 10나노급 6세대 '1c LPDDR6' 개발, '온디바이스 AI' 최적화"
+    }
+  ],
+  "quote": "SK하이닉스 10나노급 6세대 '1c LPDDR6' 개발, '온디바이스 AI' 최적화"
+}

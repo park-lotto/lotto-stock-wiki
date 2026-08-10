@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_월간 디지털자산 시장 동향 기관자금, RWA, D...md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "최윤영",
+    "report_date": "2026년 6월 2일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "비트코인 ETP 자금 유출입",
+      "스테이블코인 공급량",
+      "RWA 시장 규모",
+      "DeFi 거래량"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": null,
+        "reason": "디지털자산(기관 자금, 스테이블코인, RWA, DeFi) 시장 동향 분석"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026년 5월",
+        "event": "ARC 토큰 프리세일 2.22억 달러 조달"
+      },
+      {
+        "date": "2026년 2분기 말~3분기",
+        "event": "Arc 메인넷 출시 예정"
+      }
+    ],
+    "top_picks": null,
+    "risk": "현물 시장에서는 월초 비트코인 ETP 중심 유입 이후 차익 실현 전환, 스테이블코인 공급 확장 둔화, 토큰화 비상장 주식 발행사 경고 및 법적 리스크",
+    "quote": "현물 시장에서는 월초 비트코인 ETP 중심 유입 이후 차익 실현 전환. 파생 시장은 CME 베이시스 축소 등 기관 관망세 지속, 무기한선물은 음수 펀딩비 장기화 후 양수 전환되며 포지셔닝 정상화 흐름"
+  }
+}

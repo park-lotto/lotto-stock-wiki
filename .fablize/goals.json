@@ -1,0 +1,27 @@
+{
+ "brief": "숏템메이커 인증을 dashboard/server.py에 이식: 고객 SQLite+구글 OAuth+세션쿠키, fail-closed, 일반유저는 /market·/insights만, 관리자는 전체. 로컬 구동으로 검증.",
+ "created": "2026-08-06T04:05:19.313975+00:00",
+ "goals": [
+  {
+   "id": "G001",
+   "title": "인증이식",
+   "objective": "customers 저장소+구글 OAuth+세션쿠키를 server.py에 이식, 하드코딩 시크릿 제거·fail-closed",
+   "status": "complete",
+   "evidence": "server.py 인증블록 v2 교체(OAuth+users.db+세션쿠키, 하드코딩 시크릿 제거), ast.parse 통과"
+  },
+  {
+   "id": "G002",
+   "title": "접근제어",
+   "objective": "일반유저 /market·/insights(+API)만 허용, 관리자 전체, 로그인 페이지",
+   "status": "complete",
+   "evidence": "_user_allowed 경로게이트 + 운영자 deny + 공유상태 GET-only, 로그인페이지에 구글 버튼"
+  },
+  {
+   "id": "G003",
+   "title": "검증",
+   "objective": "로컬 구동으로 비로그인 차단·로그인 접근·권한분리 확인",
+   "status": "complete",
+   "evidence": "라이브 검증 15/15 PASS"
+  }
+ ]
+}

@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_Next Energy(Power & Battery Weekly) - LGES...md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "황성현",
+    "report_date": "2026.06.02.",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "EV 판매량 추이",
+      "전력판매량",
+      "배터리 가격 및 원가",
+      "원자재 가격(니켈, 코발트, 망간, 리튬, 알루미늄, 구리)",
+      "SMP",
+      "원전가동률",
+      "REC 및 ETS 거래",
+      "국제유가",
+      "천연가스 및 석탄 가격"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "2차전지",
+        "stance": "긍정적",
+        "reason": "AI 데이터센터 시장 확대와 ESS의 필요성 증가로 SI 역량 보유 업체에 대한 밸류에이션 프리미엄 전망"
+      },
+      {
+        "sector": "전력",
+        "stance": "긍정적",
+        "reason": "데이터센터 가동과 부하 변동에 대응하는 인프라로서 ESS의 역할 중요성 확대"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "LG에너지솔루션",
+      "CATL",
+      "Fluence",
+      "SK이노베이션",
+      "두산에너빌리티",
+      "Cameco",
+      "Nuscale",
+      "Centrus",
+      "삼성SDI",
+      "LG화학",
+      "포스코퓨처엠",
+      "Tesla",
+      "BYD"
+    ],
+    "risk": "데이터센터의 24시간 가동과 순간 부하 변동에 따른 대규모 정전 리스크 관리 부담",
+    "quote": "미국 AI 데이터센터 시장 규모 확대와 ESS 의 필요성이 커지는 상황 속에서 앞으로 SI 역량 보유 업체에 대한 밸류에이션 프리미엄이 정당화될 것으로 전망된다."
+  }
+}

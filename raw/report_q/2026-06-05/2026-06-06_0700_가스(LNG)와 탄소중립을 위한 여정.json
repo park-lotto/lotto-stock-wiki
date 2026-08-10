@@ -13,24 +13,27 @@
       {
         "name": "삼성E&A",
         "code": "028050",
-        "rating": "BUY",
+        "rating": "Buy",
         "rating_changed": "유지",
         "tp_new": "67,000원",
         "tp_prev": null,
-        "tp_direction": "flat",
-        "earnings_outlook": "2026년 매출액 10,210.9십억원, 영업이익 879.6십억원, 순이익 722.5십억원, EPS 3,600원, 2027년 매출액 11,636.7십억원, 영업이익 1,023.3십억원, 순이익 843.0십억원, EPS 4,206원",
+        "tp_direction": "null",
+        "earnings_outlook": {
+          "quote": "Consensus Data 2026 2027 매출액(십억원) 10,210.9 11,636.7 영업이익(십억원) 879.6 1,023.3 순이익(십억원) 722.5 843.0 EPS(원) 3,600 4,206 BPS(원) 27,113 30,545"
+        },
         "estimate_revision": null,
         "next_catalyst": "이란과 미국 간 종전",
         "thesis": [
-          "LNG액화 플랜트 시장 진출 기회 확보",
-          "미국 내 허니웰UOP와의 CCS 협업",
-          "지정학적 리스크 해소 후 중동 재건 수혜"
+          "LNG액화 프로젝트 수주 기회 확대 및 관련 수행 역량 보유",
+          "미국 내 허니웰UOP와 함께하는 탄소중립(CCS) 프로젝트 추진",
+          "지정학적 에너지 수급 변화에 따른 중장기적 수주 기회 증대"
         ],
         "valuation_basis": "26년 EPS 추정치에 Target P/E 20.0배를 적용",
-        "risk": "중동 분쟁 및 이란 관련 지정학적 리스크",
-        "supply_comment": "중동 화공 프로젝트, 블루암모니아, 비료, 수처리, 그린수소, CCS 및 LNG 프로젝트 등 다양한 수주 파이프라인 보유",
+        "risk": "중동 분쟁 격화에 따른 중동 재건 시점 연기 및 주가 하락",
+        "supply_comment": "중소형LNG는 기술 기반 파트너와 함께, 대형LNG는 레거시 EPC와 JV 추진",
         "quote": "삼성E&A 투자의견 Buy, 목표주가는 67,000원을 유지한다. 목표주가는 26년 EPS 추정치에 Target P/E 20.0배를 적용했다."
       }
-    ]
+    ],
+    "sector": "기타"
   }
 }

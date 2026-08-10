@@ -1,0 +1,25 @@
+{
+  "target_kind": "sector",
+  "sector_name": "2차전지",
+  "sector_view": "긍정",
+  "points": [
+    "하반기 K배터리 실적 반등 및 조기 흑자전환 기대감 상승"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "LG에너지솔루션",
+      "comment": null,
+      "ts": null,
+      "quote": "하반기 실적 반등 시동 거는 K배터리…조기 흑자전환 기대↑",
+      "sector": "2차전지"
+    }
+  ],
+  "events": [
+    {
+      "fact": "하반기 K배터리 실적 반등 및 조기 흑자전환 기대",
+      "ts": "2026-07-25",
+      "quote": "하반기 실적 반등 시동 거는 K배터리…조기 흑자전환 기대↑"
+    }
+  ],
+  "quote": "하반기 실적 반등 시동 거는 K배터리…조기 흑자전환 기대↑"
+}

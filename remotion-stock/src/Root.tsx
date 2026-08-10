@@ -5,6 +5,8 @@ import { Composition } from 'remotion';
 import { MyComposition } from './Composition';
 import { LongformComposition } from './LongformComposition';
 import { BannerComposition } from './BannerComposition';
+// 숏템메이커 VSL(2026-07-30, T1) — 배경 화면녹화를 구간별 배속으로 재생하는 뼈대.
+import { VslDemo, VSL_DEMO_FRAMES, VSL_FPS } from './vsl/VslDemo';
 import { VIDEO } from './theme';
 import { AIStockVideo } from './AIStockVideo';
 import { BuyHighVideo } from './BuyHighVideo';
@@ -795,6 +797,19 @@ export const RemotionRoot: React.FC = () => {
         component={GB06_CTA}
         durationInFrames={600}
         fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ── 숏템메이커 VSL (2026-07-30) ──────────────────────────────
+          T1 검증용. 테스트 클립엔 프레임 번호가 찍혀 있어 배속이 실제로
+          걸렸는지 눈으로 보인다(숫자가 뛰는 속도가 구간마다 달라짐).
+          실촬영 후에는 segments를 anchors.json에서 자동 생성한다(T3). */}
+      <Composition
+        id="VSL-Demo-T1"
+        component={VslDemo}
+        durationInFrames={VSL_DEMO_FRAMES}
+        fps={VSL_FPS}
         width={1920}
         height={1080}
       />

@@ -5,29 +5,32 @@
     "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_0700_[중국 테마 전략] 과창50 지수와 CXMT 상장.md"
   },
   "questionnaire": {
-    "target_kind": "market",
     "broker": "하나증권",
     "analyst": "김성은, 김경환",
     "report_date": "2026년 6월 5일",
+    "target_kind": "market",
     "market_direction": null,
     "macro_vars": [
-      "중국 과창판(STAR) IPO 활성화",
-      "중국 정부의 '1+6' 제도 개혁",
-      "CXMT 상장",
-      "중국 반도체 산업 낙수효과"
+      "중국 과창판 IPO 활성화",
+      "중국 정부의 ‘1+6’ 제도 개혁",
+      "CXMT 상장에 따른 중국 반도체 산업 낙수효과"
     ],
     "recommended_sectors": [
       {
         "sector": "반도체",
         "stance": "비중확대",
-        "reason": "과창50 내 반도체 산업 비중이 77%로 매우 높으며, CXMT 상장에 따른 낙수효과로 국산 반도체 장비 및 소재 발주 확대가 예상됨"
+        "reason": "CXMT 상장 조달 자금이 DRAM 기술 고도화 및 HBM·PIM 개발에 투입되어 국산 반도체 장비 및 소재 발주 확대로 이어질 전망"
       }
     ],
     "style": null,
     "event_calendar": [
       {
-        "date": "2026년 6월",
+        "date": "2026년 6월 내",
         "event": "CXMT 상장 가능성"
+      },
+      {
+        "date": "2026년 6월 12일",
+        "event": "화홍반도체 과창50 지수 편입 예정"
       }
     ],
     "top_picks": [
@@ -46,7 +49,7 @@
       "MetaX",
       "Yuanjie Semi"
     ],
-    "risk": "CXMT 상장이 단기적으로 대규모 자금 흡수에 따른 시장 변동성을 유발할 가능성이 높음",
-    "quote": "따라서 CXMT 상장 이후 가장 먼저 주목해야 할 부분은 ‘중국 반도체 산업의 낙수효과’이다."
+    "risk": "CXMT 상장 이후 단기적으로 대규모 자금 흡수에 따른 시장 변동성 유발 가능성",
+    "quote": "CXMT 상장 이후 가장 먼저 주목해야 할 부분은 ‘중국 반도체 산업의 낙수효과’이다."
   }
 }

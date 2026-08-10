@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_[IBKS Daily] Start with IBKS(2026.06.04) 중동 리스...md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": null,
+    "report_date": "2026. 06. 04",
+    "target_kind": "market",
+    "market_direction": "변동성 장세",
+    "macro_vars": [
+      "미국 5월 ADP취업자 변동 122k",
+      "미국 5월 ISM 서비스 지수 54.5",
+      "미국 4월 제조업수주 4.8%",
+      "국제유가 상승",
+      "국채 금리 상승",
+      "달러인덱스 상승"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "강세",
+        "reason": "AI 낙관론 및 컴퓨텍스에서 AI 공급망 투자 심리 강화, 젠슨 황의 마벨 테크놀로지 긍정 발언"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026. 06. 04",
+        "event": "증시 Comment 및 Midnight News"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "마벨 테크놀로지"
+    ],
+    "risk": "중동 긴장 고조, 글로벌 관세 전쟁 우려, 차익실현 매물 출회",
+    "quote": "반도체주 강세에 강보합. 외국인 순매도에도 개인 매수세가 지수 하락을 방어했으며, 엔비디아발 호재로 반도체주가 강세를 보였으나 단기 과열 부담에 따른 차익실현 매물이 출회되며 변동성 장세가 지속."
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-31_1101_3Q는 예상 상회, 최고! FC BGAMLCC, 공급부...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "박강호",
+    "report_date": "2026.07.31",
+    "stocks": [
+      {
+        "name": "삼성전기",
+        "code": "009150",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "2,800,000",
+        "tp_prev": "2,800,000",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26": "매출 3.46조원(24.2% YoY, 7.7% QoQ), 영업이익 4,404억원(106.7% YoY, 57% QoQ)",
+          "3Q26_est": "영업이익 6,130억원",
+          "4Q26_est": "영업이익 6,323억원",
+          "2026_annual_est": "영업이익 1.97조원(115.3% YoY)"
+        },
+        "estimate_revision": "2026년, 2027년 주당순이익(EPS)을 종전대비 각각 8.7%, 21.5%씩 상향",
+        "next_catalyst": "2027년 실리콘 캐패시터의 매출 반영",
+        "thesis": [
+          "FC BGA/MLCC 고부가 비중 확대로 믹스 효과 극대화",
+          "AI향 반도체 및 데이터센터 등 고부가 부품 점유율 확대",
+          "AI 서버 및 전장 시장 수요 강세에 따른 수주 증가 및 이익 상향"
+        ],
+        "valuation_basis": "2027년~2028년 주당순이익(EPS)의 평균 상단, 밸류에이션 재평가 및 할증 반영",
+        "risk": null,
+        "supply_comment": "일본 경쟁업체와 대등한 관계 형성, 고부가 중심으로 점유율 확대 중이며 일본 및 삼성전기의 MLCC 가동률은 95% 후반대 예상",
+        "quote": "FC BGA/MLCC, 고부가 중심으로 매출 확대, 본격적인 이익 상향 구간"
+      }
+    ]
+  }
+}

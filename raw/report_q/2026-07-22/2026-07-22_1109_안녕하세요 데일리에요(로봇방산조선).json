@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "date": "2026-07-22",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-22_1109_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "양승윤",
+    "report_date": "2024-07-21",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "미국 방산 공급망 확보 및 핵심 소재의 국내 조달 보장 행정명령"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "삼성전자는 대표이사 직속 RX사업추진실을 신설. 그동안 전사에 분산돼 있던 로봇 R&D·사업화 역량을 통합해 중장기 전략, 핵심기술 개발, 사업화까지 하나의 추진체계로 가져가겠다는 방향."
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "미국 방산 공급망 관리 심화에 따른 한국 방산의 부품·소재 파트너로서 기회 확대 가능성"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "Wärtsilä의 에너지 부문 2분기 수주액 전년비 82% 증가, 수주 잔고 GPM 5%p 이상 개선 및 29년까지 생산 능력 2.2배 확대 계획"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2024-07-21",
+        "event": "로봇/방산/조선 주요 뉴스"
+      }
+    ],
+    "top_picks": [
+      "삼성",
+      "레인보우로보틱스",
+      "에스피지",
+      "삼현",
+      "홀리데이로보",
+      "한화에어로",
+      "KAI",
+      "LIG D&A",
+      "한라IMS",
+      "HD현대重"
+    ],
+    "risk": null,
+    "quote": "삼성전자는 대표이사 직속 RX사업추진실을 신설. 그동안 전사에 분산돼 있던 로봇 R&D·사업화 역량을 통합해 중장기 전략,핵심기술 개발,사업화까지 하나의 추진체계로 가져가겠다는 방향."
+  }
+}

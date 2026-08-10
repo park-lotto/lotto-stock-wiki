@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-21_1107_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.07.21",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "코스피 -4.5% (-1D), -4.3% (-1W), -28.0% (-1Y)",
+      "코스닥 -5.3% (-1D), -6.2% (-1W), -22.4% (-1Y)"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "대형 게임사들은 신작 출시 수보다 유망 프로젝트 선별과 기존 IP 수익 극대화에 초점을 맞추는 자본 배분 전략으로 전환하고 있음"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.07.21",
+        "event": "IBK투자증권 인터넷/SW/게임 업종지수 발표"
+      }
+    ],
+    "top_picks": null,
+    "risk": "AI로 인해 게임 개발 문턱이 낮아지며 신작이 급증하고 있지만, 당해 출시 신작의 매출 비중은 2년 연속 하락하며 매출이 검증된 기존 IP로 더욱 집중되고 있음",
+    "quote": "대형 게임사들은 신작 출시 수보다 유망 프로젝트 선별과 기존 IP 수익 극대화에 초점을 맞추는 자본 배분 전략으로 전환하고 있음"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "LIG넥스원",
+      "signal": "bull",
+      "reason": "절충교역을 통한 F-15 HUD 수백억 규모 수출 성공",
+      "ts": "2026-08-02",
+      "quote": "LIG D&A 50년-32 절충교역 통해 F-15 HUD 수백억 수출",
+      "sector": "방산"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "LIG넥스원이 절충교역을 통해 F-15 HUD(헤드업디스플레이) 장비를 수백억 원 규모로 수출함",
+      "ts": "2026-08-02",
+      "quote": "절충교역 통해 F-15 HUD 수백억 수출"
+    }
+  ],
+  "quote": "LIG D&A 50년-32 절충교역 통해 F-15 HUD 수백억 수출"
+}

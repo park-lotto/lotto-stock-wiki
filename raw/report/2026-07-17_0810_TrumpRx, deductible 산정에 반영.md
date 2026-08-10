@@ -4,19 +4,107 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 - **카테고리**: 산업분석
+
+
+
+
+
+
+
+
+
+
+
 
 
 - **증권사**: TrumpRx, deductible 산정에 반영
 
 
+
+
+
+
+
+
+
+
+
+
+
 - **날짜**: 26.07.16
+
+
+
+
+
+
+
+
+
+
+
 
 
 - **링크**: [원문 보기](https://finance.naver.com/research/industry_read.naver?nid=45347&page=1)
 
 
+
+
+
+
+
+
+
+
+
+
+
 - **PDF**: [다운로드](https://stock.pstatic.net/stock-research/industry/66/20260716_industry_428042000.pdf)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -28,10 +116,65 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <think>
 
 
+
+
+
+
+
+
+
+
+
+
+
 Okay, let's see. The user wants a summary of this investment report on the TrumpRx platform and the recent agreement with CVS and Cigna. They need it in Korean, specifically structured with [핵심 요약] and [투자 포인트]. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -43,7 +186,51 @@ First, I need to parse the original report. The main points are that Donald Trum
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Now, for the core summary. The report likely gives a target stock price and investment advice. The original text mentions that this change is expected to improve access to GLP-1 treatments and reduce patient economic burdens. The analyst's opinion here is probably positive, seeing this as a boost for pharmaceutical and bio companies, especially those producing GLP-1 drugs. The compliance notice at the end might have a BUY or HOLD recommendation, but the original text doesn't explicitly state it. Wait, the user's example didn't include target price or investment advice, but the instructions say to include target price and recommendation. Since the original report doesn't mention specific stocks or price targets, I need to check again. Hmm, the example from the user included a BUY recommendation and target price, but in this case, the report might not mention it. Wait, the input user provided the example of including "목표주가, 투자의견(BUY/HOLD 등), 핵심 수치", but in this particular report, maybe they didn't specify. The original document here is about the regulatory change and its impact on drug accessibility and patient costs. So, the investment advisor's core conclusion would be positive. However, without specific stocks mentioned, the target price and recommendation might not be present. But the instruction says to include core numbers. Maybe the analyst's recommendation is to BUY related pharmaceutical companies? Since the original text mentions companies like CVS and Cigna, but the main beneficiaries are the pharma companies producing GLP-1 drugs that become more accessible. But the original report doesn't specify target price. The user might expect that the analyst gives a BUY or HOLD based on the improved accessibility leading to higher drug usage. Since the original example didn't mention target price, perhaps the user is okay with omitting it if it's not present. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -55,7 +242,51 @@ Wait, the user's example included "목표주가" (target price) but perhaps in t
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Alternatively, maybe the analyst's overall opinion is positive, so 투자의견 could be BUY or POSITIVE. But since it's sector comment, perhaps it's about the sector, not individual stocks. The example given by the user had a target price and recommendation, but maybe in this case, the original doesn't have it. I'll proceed with the information given. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -67,7 +298,51 @@ So, the core summary is that CVS and Cigna agreed to count TrumpRx purchases tow
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Since there's no explicit recommendation or target price in the original text, perhaps the user's example is a generic one. Maybe the user wants me to include a recommendation despite the absence, but that would be making assumptions. The user's instruction says to write only based on the content provided. So, in the absence of explicit information, perhaps it's better to leave those parts out. But the user's example included it. Wait, the example might have been a hypothetical. The user provided an example with "BUY" and target price, which may not be in the actual report the user provided. The actual report's first part is the Sector Comment on 제약·바이오 (pharmaceutical and bio sector), but the original text doesn't specify recommendations. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -79,7 +354,51 @@ Hmm. So if the user's example requires including target price and 투자의견, 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 In conclusion, since the original text does not provide target price or recommendation (like BUY), I can't include them. Therefore, in [핵심 요약], I should summarize the main point without those elements. But the user's example included them. This is a bit confusing. However, the user's instruction says to include 목표주가 and 투자의견 if present. Since they are not present, maybe I should state that. Alternatively, maybe the analyst's comment is implicit. For example, the analyst might be positive about the sector, so the 투자의견 could be "POSITIVE OUTLOOK". But that's an interpretation. Since the original is a Sector Comment and doesn't mention specific
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

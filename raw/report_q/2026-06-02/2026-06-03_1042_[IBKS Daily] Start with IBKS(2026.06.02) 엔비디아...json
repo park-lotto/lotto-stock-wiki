@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_[IBKS Daily] Start with IBKS(2026.06.02) 엔비디아...md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": null,
+    "report_date": "2026. 06. 02",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "미국 5월 S&P 글로벌 제조업 PMI 55.1",
+      "미국 5월 ISM 제조업지수 54.0",
+      "미국 5월 건설지출 전월대비 0.4%",
+      "달러인덱스 미-이란 무력 공방에 상승",
+      "국제유가 호르무즈 리스크 재점화에 급등"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "엔비디아",
+      "HP",
+      "인텔",
+      "삼성전자",
+      "SK하이닉스",
+      "두산로보틱스",
+      "NAVER"
+    ],
+    "risk": "유가 상승에도 GDP 성장세와 반도체 수출을 언급하며 기준금리 인상을 재차 시사",
+    "quote": "한은 총재 \"韓 성장 굉장히 강력…통화정책 조정 장애물 적어\" : 유가 상승에도 GDP 성장세와 반도체 수출을 언급하며 기준금리 인상을 재차 시사"
+  }
+}

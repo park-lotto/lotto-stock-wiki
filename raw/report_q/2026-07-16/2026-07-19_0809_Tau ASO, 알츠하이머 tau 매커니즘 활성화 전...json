@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-19_0809_Tau ASO, 알츠하이머 tau 매커니즘 활성화 전...md"
+  },
+  "questionnaire": {
+    "broker": "DS투자증권",
+    "analyst": "김민정",
+    "report_date": "2026.07.16",
+    "target_kind": "sector",
+    "sector_name": "바이오",
+    "sector_view": null,
+    "thesis": [
+      "Diranersen(tau ASO) 임상 2상 결과, CDR-SB를 위약 대비 -0.54 감소시키며 항아밀로이드 치료제와 유사한 수준의 인지기능 개선 효과 확인",
+      "Tau tangle 감소가 인지기능 개선에 효과가 있다는 인과관계 입증 및 ARIA 부작용에서 자유로운 기전 확인",
+      "Biogen의 Diranersen 인지기능 개선 성공으로 알츠하이머 치료제 개발에서 tau 매커니즘 접근법 활성화 전망"
+    ],
+    "timeline": [
+      "2026년 7월 14일: Biogen/Ionis tau ASO Diranersen 임상 2상 CELIA 결과 발표",
+      "올해 연말: CELIA 2년 추적관찰 데이터 확보 및 발표 예정"
+    ],
+    "top_picks": [
+      {
+        "name": "Diranersen",
+        "reason": "임상 2상에서 60mg Q24W 투여 시 위약 대비 CDR-SB 26% 감소하며 인지기능 개선 효능 입증, ARIA 부작용에서 자유로움",
+        "tp": null
+      }
+    ],
+    "risk": [
+      "임상 2상 primary endpoint(용량 증가에 따른 유효성 증가 여부) 달성 실패",
+      "CELIA 임상에서 ADCS-ADL-MCI(기능평가지표) 위약 대비 분리 미발생",
+      "초기 알츠하이머 환자의 개인간 특이성이 매우 커 tau PET 감소와 인지기능 개선 간의 연관성 추가 확인 필요"
+    ],
+    "quote": "당사는 Biogen의 Diranersen 인지기능개선 성공으로 인하여 알츠하이머 치료제 개발에서 tau 매커니즘 접근법이 활성화 될 것으로 전망한다."
+  }
+}

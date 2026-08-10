@@ -30,7 +30,7 @@ def test_parse_search_and_stats(monkeypatch):
     assert it["video_id"] == "vid1"
     assert it["channel_title"] == "살림TV"
     assert it["views"] == 10000 and it["likes"] == 500 and it["comments"] == 40
-    assert it["thumbnail"] == "http://t/vid1.jpg"
+    assert it["thumbnail"] == "https://i.ytimg.com/vi/vid1/oardefault.jpg"  # 세로 쇼츠 썸네일
 
 
 def test_key_rotation_on_quota_403(monkeypatch):

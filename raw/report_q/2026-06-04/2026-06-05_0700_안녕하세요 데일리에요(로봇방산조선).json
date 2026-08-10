@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "Eugene Investment & Securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-05\\2026-06-05_0700_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "Eugene Investment & Securities",
+    "analyst": "양승윤",
+    "report_date": "06/03",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "美 두산로보틱스 거점 9월 증설",
+      "中 휴머노이드 시장 판매량",
+      "스웨덴 육군사령관 방한 K2·천무 운용 현장 확인",
+      "삼성중공업 4.3조원 규모 델핀 FLNG 수주"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": "긍정",
+        "reason": "현대차 그룹과 보스턴 다이내믹스의 미국 세일즈 로드쇼 개시 예정 등 로봇 산업 확대 기대"
+      },
+      {
+        "sector": "방산",
+        "stance": "긍정",
+        "reason": "스웨덴 육군사령관 방한으로 K2전차와 천무 등 한국형 무기체계 운용 현장 방문 및 중장기 협력 기대"
+      },
+      {
+        "sector": "조선",
+        "stance": "긍정",
+        "reason": "삼성중공업의 4.3조원 규모 FLNG 수주 및 포시도니아 2026을 통한 신규 사업 협력"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "9월",
+        "event": "두산로보틱스 美 거점 증설"
+      },
+      {
+        "date": "하반기",
+        "event": "현대차그룹, 아틀라스 하반기 미국 세일즈 로드쇼"
+      },
+      {
+        "date": "하반기",
+        "event": "한화시스템, 복합형 APS 하반기 첫 시험"
+      }
+    ],
+    "top_picks": [
+      "두산로보틱스",
+      "현대차그룹",
+      "티라로보틱스",
+      "한화시스템",
+      "현대로템",
+      "삼성중공업",
+      "HD현대중공업",
+      "한화오션"
+    ],
+    "risk": null,
+    "quote": "언론 보도에 따르면, 현대차 그룹과 보스턴 다이내믹스가 올 하반기 미국 세일즈 로드쇼를 개시할 예정으로 파악됨."
+  }
+}

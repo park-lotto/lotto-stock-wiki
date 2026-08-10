@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-31_1104_실적으로만 볼 수는 없는 주식.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": [
+      "김귀연",
+      "박서영"
+    ],
+    "report_date": "2026.07.31",
+    "stocks": [
+      {
+        "name": "현대오토에버",
+        "code": "307950",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "580,000",
+        "tp_prev": "720,000",
+        "tp_direction": "down",
+        "earnings_outlook": "2Q26 매출 1.3조(YoY +20%, 이하 YoY), OP 905억(+11%), OPM 7.2% 시현",
+        "estimate_revision": "2026F, 2027F 매출액 각각 1.5% 상향, 2026F 영업이익 4.1% 상향, 2027F 영업이익 -9.1% 하향",
+        "next_catalyst": "8/26일 현대차 CEO Investor Day 이벤트, 보스턴다이내믹스 북미 양산투자 가시화",
+        "thesis": [
+          "2Q26 Enterprise IT 이연 매출 반영 및 고마진 프로젝트 믹스 효과로 어닝 서프라이즈 기록",
+          "현대차그룹의 Physical AI 투자 및 사업 확장에 따른 동사의 중장기적 수혜 유효",
+          "주가 낙폭 과대 구간(고점 대비 66% 하락)에서 현대차그룹 관련 이벤트 및 투자 가시화에 따른 반등 가능성"
+        ],
+        "valuation_basis": "2028년 EPS 13,553원에 Target PER 43배 적용. Target PER은 Physical AI 기대감이 반영된 1H26 12MF 밸류 평균에 시장 조정과 금리인상 부담을 고려해 30% 할인 적용",
+        "risk": "차량SW 부문의 글로벌 신차 가격 경쟁력 심화와 내비 채택률 하락에 따른 수익성 제한",
+        "supply_comment": "7/28일 현대기아의 GPU 서버 통합 구매 및 공급 계약 공시 등을 통해 현대차그룹의 Physical AI 투자가 구체화됨",
+        "quote": "실적으로만 볼 수는 없는 주식"
+      }
+    ]
+  }
+}

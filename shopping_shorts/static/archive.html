@@ -1,0 +1,443 @@
+<!doctype html>
+<!-- 역대 히트작(채널 아카이브, 2026-08-03) — 관리자 전용.
+     백그라운드 크롤러(channel_archive)가 채운 채널 전체 릴스를 조회수순으로 본다.
+     매일 수집 랭킹(48h 창)이 못 보는 옛 히트작 발굴용. 담기=기존 /api/mix/basket/toggle.
+     ⚠️ 썸네일은 인스타 CDN 만료토큰이라 오래된 건 깨질 수 있음 → onerror로 가리고
+     카드 클릭 시 원본 릴스를 새탭으로 연다(재생·확인은 원본에서). -->
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🏆 역대 히트작 — 채널 아카이브</title>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--line:#30363d;--txt:#e6edf3;--sub:#8b98a9;--accent:#58a6ff;--gold:#e3b341}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,'Malgun Gothic',sans-serif}
+.wrap{max-width:1200px;margin:0 auto;padding:16px}
+h1{font-size:18px;margin:6px 0 12px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+select,input,button{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px}
+button{cursor:pointer}
+button.on{border-color:var(--accent);color:var(--accent);font-weight:700}
+.stat{font-size:12px;color:var(--sub)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.thumb{position:relative;aspect-ratio:9/16;background:#000;cursor:pointer}
+.thumb img{width:100%;height:100%;object-fit:cover}
+/* ★max-width 44%: 아래 .cmts(52%)와 합쳐도 100%를 안 넘겨 두 배지가 절대 안 겹친다.
+   카드는 180px까지 좁아지므로(.cards minmax) 상한이 없으면 긴 숫자끼리 포갠다. */
+.views{position:absolute;bottom:6px;left:6px;max-width:44%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+       background:rgba(0,0,0,.7);color:var(--gold);font-weight:700;font-size:12px;padding:2px 8px;border-radius:10px}
+/* 💬 댓글 배지(2026-08-06 사장님: "결국 댓글수가 제일 중요함") — 이 화면은 기본 정렬이
+   이미 댓글순인데 정작 댓글수는 아래 회색 메타 줄에 묻혀 있었다. 정렬 기준이 화면에서
+   제일 안 보이던 셈. 조회수 배지와 같은 줄 오른쪽에 두되 색을 갈라(민트) 한눈에 구분된다.
+   ★max-width+ellipsis: 카드 폭이 180px까지 좁아지므로(.cards minmax) 조회수가 길면
+   두 배지가 겹친다 — 겹치느니 잘린다. */
+.cmts{position:absolute;bottom:6px;right:6px;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+      background:rgba(0,0,0,.78);color:#3ee0bf;font-weight:800;font-size:12px;padding:2px 8px;border-radius:10px}
+/* ⏱ 길이(2026-08-06) — 좌상단. ▶ 재생표시가 우상단이라 자리가 안 겹친다. */
+.dur{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.7);color:#e6edf3;font-weight:700;font-size:11px;padding:2px 7px;border-radius:10px}
+.body{padding:8px}
+.ch{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 채널명 클릭 = 그 채널만 보기(2026-08-06). 누를 수 있다는 걸 보이게 — 60대 어포던스.
+   min-width:0 이 없으면 flex 자식이 안 줄어들어 🚫버튼을 카드 밖으로 밀어낸다. */
+.chname{cursor:pointer;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chname:hover{color:var(--accent);text-decoration:underline}
+.meta{font-size:11px;color:var(--sub);margin:3px 0 6px}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.btns button{font-size:12px;padding:6px 4px;white-space:nowrap}
+.save.saved{border-color:#1f9d55;color:#1f9d55}
+.empty{color:var(--sub);padding:30px;text-align:center}
+/* 검색 버튼 2종(2026-08-04) — 색으로 확실히 가른다. 파워검색=외부(구글렌즈, 유료 SerpApi)
+   금색 / 내부검색=우리 관리채널 아카이브(무료) 청록. 헛눌러 유료를 태우면 안 된다.
+   둘 다 격자 한 줄을 통째로(span 2) 차지해 '원본·담기'와 종류가 다름을 드러낸다. */
+.btns .power-btn{grid-column:1/-1;border:1px solid #b8860b;
+  background:linear-gradient(90deg,#3a2f0d,#2a2408);color:#ffd76b}
+.btns .power-btn:hover{background:linear-gradient(90deg,#4a3d10,#352d0a)}
+.btns .power-btn:disabled{opacity:.6;cursor:wait}
+.btns .inner-btn{grid-column:1/-1;border:1px solid #1f6f6b;
+  background:linear-gradient(90deg,#0e2f2e,#0a2422);color:#5fe3d6}
+.btns .inner-btn:hover{background:linear-gradient(90deg,#14403e,#0d2e2b)}
+/* 결과 모달 — index.html의 무거운 플로팅 모달을 옮기지 않고, 이 페이지에 필요한 만큼만. */
+.modal-bg{display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55)}
+.modal-bg.open{display:block}
+.modal-box{position:absolute;top:3vh;left:50%;transform:translateX(-50%);
+  background:var(--bg);border:1px solid var(--line);border-radius:14px;
+  width:min(1040px,96vw);max-height:92vh;display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 10px 44px rgba(0,0,0,.6)}
+.modal-head{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.modal-head b{font-size:14px;flex:1}
+.modal-body{padding:12px 14px;overflow:auto}
+.sm-loading{padding:24px;text-align:center;color:var(--sub)}
+</style></head><body><div class="wrap">
+<h1>🏆 역대 히트작 <span class="stat" id="prog"></span></h1>
+<div class="bar" id="catBar"></div>
+<div class="bar">
+  <select id="chSel"><option value="">전체 채널</option></select>
+  <input id="q" placeholder="채널명 검색" style="width:140px">
+  <button id="bComments" class="on" onclick="setSort('comments')">💬 댓글순</button>
+  <button id="bViews" onclick="setSort('views')">🔥 조회수순</button>
+  <button id="bRecent" onclick="setSort('recent')">🕒 최신순</button>
+  <button onclick="load()">↻ 새로고침</button>
+  <span class="stat">아카이브는 백그라운드로 계속 쌓입니다(팔로워 큰 채널부터) — 새로고침하면 늘어나요.</span>
+</div>
+<div class="cards" id="cards"><div class="empty">불러오는 중…</div></div>
+<!-- 더 보기(2026-08-09): 60개 단위 append. 마지막 페이지(60개 미만)면 숨긴다. -->
+<div id="moreWrap" style="display:none;text-align:center;margin:14px 0"><button onclick="loadMore()" style="padding:8px 22px">⬇ 더 보기 — 다음 60개</button></div>
+</div>
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-head"><b id="modalTitle"></b><button onclick="closeModal()">✕ 닫기</button></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+<script src="/sidebar.js"></script>
+<script>
+let SORT='comments', SAVED=new Set();   // 기본=댓글순(사장님: 댓글수 기준이 제일 정확)
+let CAT='전체', CH_CAT={};              // 채널→카테고리(레퍼런스 채널과 같은 축)
+const CATS=['전체','홈템','레시피','뷰티','기타'];
+function renderCatBar(){
+  document.getElementById('catBar').innerHTML=CATS.map(c=>
+    `<button class="${CAT===c?'on':''}" onclick="setCat('${c}')">${c}</button>`).join('');
+}
+function setCat(c){CAT=c;renderCatBar();fillChSel();document.getElementById('chSel').value='';load();}
+// 썸네일 클릭 → 인라인 재생(랭킹 playInstagram과 동일 경로: /api/media가 yt-dlp로 mp4 해석).
+// 해석(/api/media→yt-dlp)은 서버에서 2~4초 걸린다. 표시가 없으면 그동안 화면이 죽은 것처럼
+// 보여 사장님이 "미리보기가 안 된다"고 느낀다(2026-08-04 제보) → 랭킹의 _thumbLoading과 같은
+// 대기 표시를 여기에도 단다. 실패해서 인스타로 나갈 땐 **왜 나가는지** 알려주고 나간다.
+function _archLoading(box){
+  if(!box) return null;
+  const d=document.createElement('div');
+  d.textContent='⏳ 영상 불러오는 중…';
+  d.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;'
+    +'background:rgba(0,0,0,.55);color:#fff;font-size:12px;border-radius:8px;z-index:3';
+  if(getComputedStyle(box).position==='static') box.style.position='relative';
+  box.appendChild(d); return d;
+}
+function _archToast(msg){
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:99999;'
+    +'background:rgba(20,20,20,.94);color:#fff;font-size:13px;padding:11px 16px;border-radius:10px;'
+    +'box-shadow:0 8px 28px rgba(0,0,0,.45);max-width:88vw;text-align:center';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 3200);
+}
+// platform: 기본 instagram(히트작 메인은 전부 인스타 아카이브). 내부검색 모달은
+// 렌즈 결과(유튜브·틱톡 등)가 섞여 들어오므로(2026-08-06) 호출부가 실제 플랫폼을 넘긴다 —
+// instagram으로 고정해 물으면 남의 플랫폼 id로 조회해 무조건 실패하고 원본창으로 튄다.
+async function playArch(el, sc, url, platform){
+  const box=el.parentElement;
+  const old=el; el.style.opacity=.4;
+  const load=_archLoading(box);
+  try{
+    const d=await (await fetch('/api/media?platform='+encodeURIComponent(platform||'instagram')+'&id='+encodeURIComponent(sc))).json();
+    if(d.ok&&d.url){
+      if(load) load.remove();
+      const v=document.createElement('video');
+      v.src=d.url; v.controls=true; v.autoplay=true; v.playsInline=true;
+      v.setAttribute('playsinline',''); v.style.cssText='width:100%;height:100%;object-fit:cover';
+      v.onerror=()=>{ _archToast('영상 재생이 막혀 원본으로 엽니다'); window.open(url,'_blank'); };
+      old.replaceWith(v); return;
+    }
+  }catch(e){}
+  if(load) load.remove();
+  el.style.opacity=1;
+  // 해석 실패(비공개·삭제·차단) → 원본 새탭. 조용히 나가면 "왜 인스타로 튀지?"가 된다.
+  _archToast('이 영상은 인앱 재생이 안 돼요 — 원본으로 엽니다');
+  window.open(url,'_blank');
+}
+function fmt(n){n=n||0;if(n>=1e8)return (n/1e8).toFixed(1)+'억';if(n>=1e4)return (n/1e4).toFixed(1)+'만';return n.toLocaleString()}
+// ⏱ 영상 길이(2026-08-06 사장님: "영상시간 몇 초짜리인지 표시좀"). 릴스는 대부분 1분 미만이라
+// 60초 미만은 '17초'로 그대로 보여준다(0:17보다 "몇 초짜리"가 바로 읽힌다). 넘으면 분:초.
+// ★값이 없으면 빈 문자열 — 호출부가 이걸로 배지 자체를 안 그린다. '0초'는 거짓이다.
+function fmtDur(s){
+  if(s==null || s==='' || isNaN(s)) return '';
+  s=Math.round(Number(s)); if(s<=0) return '';
+  return s<60 ? s+'초' : Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function setSort(s){SORT=s;
+  document.getElementById('bComments').classList.toggle('on',s==='comments');
+  document.getElementById('bViews').classList.toggle('on',s==='views');
+  document.getElementById('bRecent').classList.toggle('on',s==='recent');load()}
+let CHANNELS=[];
+async function loadChannels(){
+  const d=await (await fetch('/api/archive/channels')).json();
+  if(!d.ok) return;
+  CHANNELS=d.channels; CH_CAT={};
+  CHANNELS.forEach(c=>CH_CAT[c.username]=c.category||'기타');
+  fillChSel();
+  document.getElementById('prog').textContent='— 수집된 채널 '+CHANNELS.length+'개';
+}
+function fillChSel(){
+  const list=CHANNELS.filter(c=>CAT==='전체'||(c.category||'기타')===CAT);
+  document.getElementById('chSel').innerHTML=
+    '<option value="">전체 채널 ('+list.length+')</option>'+
+    // 한글 표시명 우선(2026-08-06) — 카드와 같은 이름으로 보여야 드롭다운에서 찾을 수 있다.
+    // 이름이 없는 채널(실측 518개 중 85개)은 @아이디로 폴백한다.
+    list.map(c=>`<option value="${esc(c.username)}">${c.name?esc(c.name):'@'+esc(c.username)} · ${esc(c.category||'기타')} (${c.reels}개 · 최고 ${fmt(c.top_views)})</option>`).join('');
+}
+async function loadSaved(){
+  try{SAVED=new Set((await (await fetch('/api/mix/basket')).json()).shortcodes||[])}catch(e){}
+}
+// plat/src는 렌즈 결과(유튜브·틱톡·샤오홍슈…)용 — 안 넘기면 아카이브 기본값(인스타).
+// 여기를 인스타로 고정해두면 렌즈로 담은 유튜브 영상이 인스타로 잘못 기록돼 믹스에서 깨진다.
+async function toggleSave(sc,url,thumb,ch,btn,plat,src){
+  const d=await (await fetch('/api/mix/basket/toggle',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({shortcode:sc,url:url,thumbnail:thumb,name:(ch?('@'+ch):''),caption:'',
+      meta:{platform:plat||'instagram',source:src||'archive'}})})).json();
+  if(d.in){SAVED.add(sc);btn.textContent='🎬 담김✓';btn.classList.add('saved')}
+  else{SAVED.delete(sc);btn.textContent='📥 담기';btn.classList.remove('saved')}
+}
+async function blockCh(u,btn){
+  // 영구차단 — 랭킹 화면과 같은 /api/prune/remove 재사용. 아카이브 API가 차단 채널을
+  // 걸러내므로 새로고침 후에도 안 뜬다. 이 페이지 자체가 관리자 전용이라 버튼 게이트 불필요.
+  if(!confirm('@'+u+' 채널을 영구 차단할까요?\n\n아카이브·랭킹·다음 수집에서 모두 사라집니다.\n(정리 탭 「추적 제외됨」에서 되돌릴 수 있습니다)')) return;
+  if(btn){btn.disabled=true;btn.textContent='…';}
+  try{
+    const r=await fetch('/api/prune/remove?username='+encodeURIComponent(u)+'&name='+encodeURIComponent(u),{method:'POST'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    await loadChannels(); await load();
+  }catch(e){ alert('차단 실패: '+e.message); if(btn){btn.disabled=false;btn.textContent='🚫';} }
+}
+// 카드의 채널명 클릭 → 그 채널 영상만(2026-08-06 사장님: "누르면 해당 채널들만 나오게").
+// ★드롭다운(chSel)을 세팅해 기존 load()를 그대로 태운다 — 필터 경로를 새로 만들지 않는다.
+//   화면에서 숨기는 게 아니라 서버에 username 필터를 걸어 **그 채널 전체**를 다시 받는다
+//   (지금 화면의 60장에만 있는 게 아니라 그 채널의 히트작이 다 나와야 하므로).
+//   드롭다운에 그 채널이 없으면(카테고리 필터에 걸려 목록에서 빠진 경우) 카테고리를 전체로
+//   풀고 다시 채운다 — 안 그러면 value 대입이 씹혀 필터가 조용히 무시된다.
+// ★히스토리를 한 칸 쌓는다(2026-08-06 사장님: "채널명 클릭 후 뒤로가기하면 다른 페이지로 간다").
+//   채널 보기는 같은 페이지에서 목록만 바꾸므로 브라우저가 볼 땐 아무 일도 안 일어난 것이다 —
+//   그 상태로 뒤로가기를 누르면 이 화면을 통째로 떠난다. 랭킹(index.html)이 같은 문제를
+//   pushState+popstate로 이미 풀었고, 여기도 같은 방식으로 맞춘다.
+//   ★URL은 안 바꾼다(같은 주소로 pushState) — 주소에 채널을 박으면 새로고침 때 채널 화면이
+//     되살아나는데, 새로고침은 '전체 목록'으로 시작하는 게 맞다(랭킹과 같은 판단).
+let CH_VIEW=null;              // 지금 보고 있는 채널(중복 pushState 방지)
+function filterChannel(username){
+  if(!username) return;
+  const sel=document.getElementById('chSel');
+  if(sel){
+    if(!Array.from(sel.options).some(o=>o.value===username)){
+      CAT='전체'; renderCatBar(); fillChSel();
+    }
+    sel.value=username;
+  }
+  const q=document.getElementById('q'); if(q) q.value='';   // 검색어가 남아 있으면 교집합이 돼 0건이 된다
+  // 같은 채널을 다시 눌러도 안 쌓는다 — 쌓이면 뒤로가기를 여러 번 눌러야 나가게 된다.
+  if(CH_VIEW!==username){
+    CH_VIEW=username;
+    try{ history.pushState({archCh:username}, '', location.href); }catch(e){}
+  }
+  try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){}
+  load();
+}
+// 뒤로가기 → 채널 보기 해제(전체 목록). 채널 보기 중이 아니면 아무것도 안 한다 =
+// 브라우저가 평소대로 이전 페이지로 나간다(가두지 않는다).
+window.addEventListener('popstate', ()=>{
+  if(!CH_VIEW) return;
+  CH_VIEW=null;
+  const sel=document.getElementById('chSel'); if(sel) sel.value='';
+  load();
+});
+let OFFSET=0;   // 페이지네이션(2026-08-09) — 60개 단위, 필터·정렬 바꾸면 0으로
+async function load(append){
+  if(!append) OFFSET=0;
+  const u=document.getElementById('chSel').value, q=document.getElementById('q').value.trim();
+  const catParam=CAT==='전체'?'':CAT;   // 영상 단위 카테고리는 서버가 비전태그로 판정
+  // limit 200 → 60 (2026-08-04). 200장을 한 번에 요청하면 /api/thumb(sync 라우트)가
+  // uvicorn 스레드풀을 말려 서비스가 죽은 적이 있다(02:15 systemd 'Failed with result
+  // timeout'). 60장이면 호스트당 동시연결(6)로 10턴이라 서버가 버틴다.
+  // ★단, "썸네일이 안 뜬다"의 직접 원인은 이게 아니라 <img loading="lazy">였다 —
+  //   아래 렌더부 주석 참고. 이 한도는 서버 보호용으로 남긴다.
+  const d=await (await fetch(`/api/archive/items?sort=${SORT}&username=${encodeURIComponent(u)}&q=${encodeURIComponent(q)}&cat=${encodeURIComponent(catParam)}&limit=60&offset=${OFFSET}`)).json();
+  const box=document.getElementById('cards');
+  let items=(d.ok&&d.items)||[];
+  const moreWrap=document.getElementById('moreWrap');
+  if(!items.length){
+    if(moreWrap)moreWrap.style.display='none';
+    if(append)return;   // 다음 페이지가 비었을 뿐 — 그려둔 카드는 유지
+    box.innerHTML='<div class="empty">아직 없음 — 크롤러가 채우는 중입니다. 잠시 뒤 새로고침해 보세요.</div>';return}
+  // 차단채널 필터로 60개 미만이 와도 다음 페이지가 있을 수 있다(실측 54개) —
+  // 0개일 때만 숨긴다. 끝에서 한 번 더 눌리면 0개가 와서 그때 숨는다.
+  if(moreWrap)moreWrap.style.display=items.length?'':'none';
+  const html=items.map(i=>{
+    const saved=SAVED.has(i.shortcode);
+    // ★loading="lazy"를 쓰지 않는다 (2026-08-04 실측으로 잡은 진짜 원인).
+    // 사장님 제보 "썸네일 안뜨고 검정화면"의 정체가 이것이었다. 증상은 서버 문제처럼
+    // 보였지만 아니었다 — performance.getEntriesByType('resource')로 세보니 /api/thumb
+    // 요청이 **0건**이었다(브라우저가 아예 안 보냄). 화면 맨 위 카드도 rect.top=177로
+    // 뷰포트 안이고 크기도 188x335로 멀쩡한데 complete=false, currentSrc=''.
+    // 같은 img들에 loading="eager"만 주고 src를 재설정하니 즉시 5/5 로드(640px)됐다.
+    // 카드가 grid + aspect-ratio 안에 있어 lazy 로더가 가시성 판정을 못 하는 것으로 보인다.
+    // 60장뿐이라 전부 즉시 로드해도 부담이 없다.
+    return `<div class="card">
+      <div class="thumb">
+        <img id="th_${esc(i.shortcode)}" src="/api/thumb?url=${encodeURIComponent(i.thumbnail||'')}" onerror="this.style.visibility='hidden'" onclick="playArch(this,'${esc(i.shortcode)}','${esc(i.url)}')" title="클릭하면 바로 재생">
+        <span class="views">👁 ${fmt(i.views)}</span>
+        <!-- 💬 댓글수 — 이 화면의 기본 정렬 기준이자 사장님이 제일 중요하게 보는 값이라
+             썸네일 위로 올린다. '댓글' 글자를 붙이는 이유: 숫자 배지가 둘 나란히 있으면
+             어느 게 조회수고 어느 게 댓글인지 구분이 안 된다. -->
+        <span class="cmts" title="댓글수 — 이 화면의 기본 정렬 기준">💬 댓글 ${fmt(i.comments)}</span>
+        <!-- ⏱ 길이 — 아직 대부분 비어 있다(인스타가 목록에 길이를 안 준다). 백필이
+             조회수 상위부터 채우는 대로 늘어난다. 모르면 배지를 아예 안 그린다. -->
+        ${fmtDur(i.duration)?`<span class="dur">⏱ ${fmtDur(i.duration)}</span>`:''}
+        <span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;padding:2px 7px;border-radius:10px">▶</span>
+      </div>
+      <div class="body">
+        <div class="ch" style="display:flex;justify-content:space-between;align-items:center">
+          <!-- 채널명: 한글 우선(없으면 @아이디) + 누르면 그 채널만(2026-08-06 사장님 요청,
+               레퍼런스 랭킹의 searchChannel과 같은 동작). 이름이 길면 카드가 180px까지
+               좁아지므로 넘치는 건 …로 자른다. -->
+          <span class="chname" title="이 채널 영상만 보기" onclick="filterChannel('${esc(i.username)}')"
+                >${i.name?esc(i.name):'@'+esc(i.username)}</span>
+          <button title="이 채널을 영구 차단 — 아카이브·랭킹·수집에서 모두 사라집니다" onclick="blockCh('${esc(i.username)}',this)" style="padding:1px 7px;font-size:11px">🚫</button>
+        </div>
+        <!-- 메타 줄(2026-08-06 사장님: "댓글수는 중복이니 지우고, 좋아요가 짤린다. 하트를 컬러로").
+             댓글수는 썸네일 위 .cmts 배지에 이미 크게 있다 — 같은 값을 두 번 쓰느라 자리를
+             먹어 좋아요가 잘렸다. 빼면 카드가 180px까지 좁아져도 좋아요·날짜가 다 들어간다.
+             ❤(U+2764, 흑백 문자)는 회색 메타 줄에서 거의 안 보여 ❤️(VS16, 컬러 이모지)로 바꾼다. -->
+        <div class="meta">❤️ ${fmt(i.likes)} · ${(i.posted_at||'').slice(0,10)}</div>
+        <div class="btns">
+          <button onclick="window.open('${esc(i.url)}','_blank')">▶ 원본</button>
+          <button class="save${saved?' saved':''}" onclick="toggleSave('${esc(i.shortcode)}','${esc(i.url)}','${esc(i.thumbnail)}','${esc(i.username)}',this)">${saved?'🎬 담김✓':'📥 담기'}</button>
+          <button class="power-btn" title="구글렌즈로 유튜브·틱톡·인스타·샤오홍슈·도우인에서 비슷한 영상 찾기 (유료·월 한도)" onclick="lensSearch(this,'${esc(i.shortcode)}')">🔍 숏템파워검색</button>
+          <button class="inner-btn" title="우리가 관리하는 채널 아카이브에서 같은 제품·주제의 다른 영상 찾기 (무료·비전태그 매칭)" onclick="archiveSimilar('${esc(i.shortcode)}')">🏠 숏템내부검색</button>
+        </div>
+      </div></div>`;
+  }).join('');
+  if(append) box.insertAdjacentHTML('beforeend', html); else box.innerHTML=html;
+}
+function loadMore(){OFFSET+=60; load(true);}
+// ── 검색 2종(2026-08-04) ────────────────────────────────────────────
+// 🔍 파워검색 = 외부(구글렌즈 → 5플랫폼). 유료 SerpApi라 월 한도가 있다.
+// 🏠 내부검색 = 우리 관리채널 아카이브 안. 비전태그 겹침이라 무료·즉시.
+function openModal(title, html){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalBody').innerHTML=html;
+  document.getElementById('modalBg').classList.add('open');
+}
+function closeModal(){document.getElementById('modalBg').classList.remove('open')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+// 결과 카드 공통 렌더 — 담기는 랭킹과 같은 /api/mix/basket/toggle로 간다(믹스로 바로 이어짐).
+function resultCards(items, opts){
+  const o=opts||{};
+  return `<div class="cards">`+items.map(i=>{
+    const sc=i.savesc||i.shortcode;
+    const isS=(o.saved||new Set()).has(sc);
+    const badge=i.same_product
+      ? `<span style="position:absolute;top:6px;right:6px;background:#0e2f2e;color:#5fe3d6;border:1px solid #1f6f6b;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:700">📦 같은 제품</span>`
+      :(i.overlap!=null)?`<span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:var(--gold);font-size:11px;padding:2px 8px;border-radius:10px">겹침 ${i.overlap}</span>`
+      :(i.platform?`<span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px">${esc(i.platform)}</span>`:'');
+    const thumb=i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):'';
+    // 조회수·댓글은 이제 썸네일 위 배지에 있다(아래 참조) — 여기서 또 쓰면 중복이라
+    // 좋아요가 밀려 잘린다(메인 카드와 같은 정리, 2026-08-06 사장님 지적).
+    // 지표가 아예 없는 렌즈 결과는 종전대로 제목을 보여준다.
+    const meta=(i.views!=null||i.comments!=null)
+      ? `❤️ ${fmt(i.likes)}` : esc(i.title||'');
+    // ★히트작 메인과 같은 카드로(2026-08-06 사장님: "썸네일 바로 재생되게하고 조회수랑
+    //   댓글 썸네일 위에 보이게 히트작 메인처럼"). 재생은 playArch를 재사용한다 —
+    //   같은 동작을 두 번 구현하면 한쪽만 고쳐지는 게 이 파일의 기존 교훈이다.
+    //   렌즈 결과는 인스타가 아닐 수 있어 platform을 넘긴다(없으면 instagram).
+    //   지표가 아예 없는 항목(렌즈 원본 등)엔 배지를 안 띄운다 — '👁 0'은 거짓이다.
+    return `<div class="card">
+      <div class="thumb">
+        <img src="${thumb}" onerror="this.style.visibility='hidden'"
+             onclick="playArch(this,'${esc(sc)}','${esc(i.url)}','${esc(i.platform||'instagram')}')"
+             title="클릭하면 바로 재생">
+        ${i.views!=null?`<span class="views">👁 ${fmt(i.views)}</span>`:''}
+        ${i.comments!=null?`<span class="cmts" title="댓글수">💬 댓글 ${fmt(i.comments)}</span>`:''}
+        ${fmtDur(i.duration)?`<span class="dur">⏱ ${fmtDur(i.duration)}</span>`:''}
+        ${badge}
+      </div>
+      <div class="body">
+        <div class="ch">${esc(i.username?('@'+i.username):(i.source||''))}</div>
+        <div class="meta">${meta}${i.posted_at?(' · '+(i.posted_at||'').slice(0,10)):''}</div>
+        <div class="btns">
+          <button onclick="window.open('${esc(i.url)}','_blank')">▶ 원본</button>
+          <button class="save${isS?' saved':''}" onclick="toggleSave('${esc(sc)}','${esc(i.url)}','${esc(i.thumbnail||'')}','${esc(i.username||'')}',this,'${esc(i.platform||'instagram')}','${i.overlap!=null?'archive':'lens'}')">${isS?'🎬 담김✓':'📥 담기'}</button>
+        </div>
+      </div></div>`;
+  }).join('')+`</div>`;
+}
+
+async function archiveSimilar(sc){
+  // 제품명 검증이 붙어 15~20초 — 무엇을 하는 중인지 알려야 멈춘 줄 알지 않는다.
+  openModal('🏠 숏템내부검색 — 같은 제품','<div class="sm-loading">같은 제품 찾는 중… (AI가 제품을 확인합니다, 15~20초)</div>');
+  const body=document.getElementById('modalBody');
+  let d; try{ d=await (await fetch('/api/archive/similar?shortcode='+encodeURIComponent(sc)+'&limit=60')).json(); }
+  catch(e){ body.innerHTML='<div class="empty">❌ '+esc(e.message)+'</div>'; return; }
+  if(d.no_tags){ body.innerHTML='<div class="empty">이 영상은 태그·제품명 판독이 아직 없어요 — 백그라운드 태깅이 돌고 있습니다. 잠시 뒤 다시 눌러주세요.</div>'; return; }
+  if(!d.ok){ body.innerHTML='<div class="empty">❌ 조회 실패</div>'; return; }
+  if(!(d.items||[]).length){
+    body.innerHTML='<div class="empty">'+(d.src_product
+      ? '📦 제품은 <b>'+esc(d.src_product)+'</b>(으)로 읽었는데, 아카이브에 같은 제품이 아직 없어요 — 제품명 백필이 진행 중이라 곧 늘어납니다.'
+      : '아카이브에서 같은 소재를 못 찾았어요 — 크롤이 더 쌓이면 늘어납니다(백그라운드 진행 중).')+'</div>';
+    return; }
+  const nSame=d.verified_count||0;
+  const head=d.src_product
+    ? `<div style="margin-bottom:10px">
+         <div style="font-size:14px;font-weight:700;color:#5fe3d6">📦 ${esc(d.src_product)}</div>
+         <div style="font-size:12px;color:var(--sub);margin-top:3px">
+           ${nSame?`같은 제품 <b style="color:#5fe3d6">${nSame}건</b> — 맨 위에 모았습니다`
+                  :'같은 제품은 아직 못 찾았어요 (아래는 비슷한 소재)'}</div></div>`
+    : `<div style="font-size:12px;color:var(--sub);margin-bottom:10px">매칭 태그: ${esc((d.src_tags||[]).slice(0,10).join(' · '))}</div>`;
+  body.innerHTML=head + resultCards(d.items,{saved:SAVED});
+}
+
+// 렌즈는 이미지가 필요하다. 썸네일을 /api/thumb로 받는 이유가 여기 있다 — CDN에서 직접
+// 불러오면 canvas가 오염(taint)돼 toBlob이 SecurityError로 죽는다. 프록시는 same-origin이라
+// 오염되지 않는다.
+// ⚠️ crossorigin="anonymous"를 붙이면 안 된다(2026-08-04 실측: 196장 전부 안 뜸).
+// same-origin 요청에 그 속성을 붙이면 브라우저가 CORS 응답으로 취급하는데 /api/thumb는
+// Access-Control-Allow-Origin을 안 보내므로 이미지를 통째로 버린다(fetch는 200인데
+// naturalWidth=0). same-origin이라 애초에 필요도 없다.
+async function _archCapture(sc){
+  const img=document.getElementById('th_'+sc);
+  if(!img) return null;
+  // 카드 이미지가 아직 안 떴어도(lazy 미도달·서버 혼잡) 파워검색은 돼야 한다.
+  // 그 자리에서 같은 URL을 새 Image로 직접 받아 캡처한다(2026-08-04 사장님 제보:
+  // "파워검색하면 썸네일 안 뜨고 검정화면" — 원인은 카드 이미지가 안 뜬 상태였다).
+  let src=img.getAttribute('src')||'';
+  const ready=img.naturalWidth>0 ? img : await new Promise(res=>{
+    const t=new Image();
+    t.onload=()=>res(t); t.onerror=()=>res(null);
+    t.src=src;
+    setTimeout(()=>res(null), 8000);       // 8초 넘으면 포기(무한대기 금지)
+  });
+  if(!ready||!ready.naturalWidth) return null;
+  const cv=document.createElement('canvas');
+  cv.width=ready.naturalWidth; cv.height=ready.naturalHeight;
+  try{ cv.getContext('2d').drawImage(ready,0,0); return cv; }catch(e){ return null; }
+}
+async function lensSearch(btn, sc){
+  // 캡처가 비동기가 됐다(카드 이미지가 안 떴으면 그 자리에서 받아온다) → 먼저 모달을 띄워
+  // 사장님이 "눌렀는데 아무 반응 없네"를 겪지 않게 한다.
+  openModal('🔍 숏템파워검색 — 외부 플랫폼','<div class="sm-loading">🖼 이미지 준비 중…</div>');
+  const body0=document.getElementById('modalBody');
+  const cv=await _archCapture(sc);
+  if(!cv){ body0.innerHTML='<div class="empty">썸네일을 준비하지 못했습니다 — 만료된 썸네일일 수 있어요(수집 후 4일이 지나면 인스타가 막습니다).</div>'; return; }
+  body0.innerHTML='<div class="sm-loading">🔍 구글렌즈 검색 중… (5~15초)</div>';
+  const body=document.getElementById('modalBody');
+  try{
+    const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.85));
+    const fd=new FormData(); fd.append('frame',blob,'f.jpg');
+    const r=await fetch('/api/lens/search',{method:'POST',body:fd});
+    if(r.status===429){ const e=await r.json(); body.innerHTML='<div class="empty" style="color:#e0623d">💰 '+esc(e.error||'렌즈 한도 초과')+'</div>'; return; }
+    const d=await r.json();
+    if(!d.ok){ body.innerHTML='<div class="empty" style="color:#e0623d">❌ 렌즈 검색 실패</div>'; return; }
+    const items=(d.items||[]);
+    if(!items.length){ body.innerHTML='<div class="empty">비슷한 영상을 못 찾았어요.</div>'; return; }
+    // 렌즈 결과는 우리 DB shortcode가 없다 → URL 기반 합성키(랭킹과 같은 규칙).
+    items.forEach(i=>{ i.savesc='lens_'+i.platform+'_'+_hash(i.url); });
+    body.innerHTML=resultCards(items,{saved:SAVED});
+  }catch(e){ body.innerHTML='<div class="empty" style="color:#e0623d">❌ '+esc(e.message)+'</div>'; }
+}
+function _hash(s){let h=0;s=String(s||'');for(let i=0;i<s.length;i++){h=((h<<5)-h+s.charCodeAt(i))|0}return (h>>>0).toString(36)}
+
+// 드롭다운으로 직접 고를 때도 CH_VIEW를 맞춰둔다(2026-08-06) — 안 맞추면 카드 클릭과
+// 드롭다운이 서로 다른 상태를 봐서 뒤로가기가 들쭉날쭉해진다(드롭다운으로 채널을 골랐는데
+// CH_VIEW가 null이면 popstate가 그냥 통과해 페이지를 떠난다).
+document.getElementById('chSel').addEventListener('change',function(){ CH_VIEW=this.value||null; load(); });
+document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')load()});
+renderCatBar();
+(async()=>{await loadSaved();await loadChannels();await load()})();
+</script></body></html>

@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "Kiwoom",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-05\\2026-06-05_0700_0604, Kiwoom Morning Letter.md"
+  },
+  "questionnaire": {
+    "broker": "Kiwoom",
+    "analyst": null,
+    "report_date": "2026/6/4",
+    "target_kind": "market",
+    "market_direction": "KOSPI 0.15% (2026-06-02)",
+    "macro_vars": [
+      "KOSPI 8,801.49",
+      "KOSDAQ 1,026.03",
+      "USD/KRW 1,535.14",
+      "Oil WTI 96.02"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "전력",
+        "stance": "비중확대",
+        "reason": "AI發 전력 슈퍼사이클로 인한 영토 확장"
+      },
+      {
+        "sector": "반도체",
+        "stance": "기타",
+        "reason": "삼성전자 HBM5 실물 모형 공개 등 기술 초격차 도전"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6.02",
+        "event": "한국 CPI (YoY) 5월, 미국 4월 JOLTs 구인건수"
+      },
+      {
+        "date": "6.03",
+        "event": "미국 ADP 비농업고용 5월, ISM 서비스업 PMI 5월"
+      },
+      {
+        "date": "6.04",
+        "event": "한국 외환보유고 5월, 미국 신규 실업수당 청구건수 5월"
+      },
+      {
+        "date": "6.05",
+        "event": "한국 경상수지 4월, 미국 비농업 고용자수 변동 5월"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "LG전자",
+      "현대차",
+      "기아",
+      "한화에어로스페이스",
+      "현대건설"
+    ],
+    "risk": "중동 지정학적 리스크 심화 및 물가 우려에 따른 투자심리 위축",
+    "quote": "2일(화) 코스피는 장 초반 사상 처음 8,900선을 돌파했으나 하락 전환 후 반등 상승 마감(KOSPI 0.15%, KOSDAQ -2.29%)."
+  }
+}

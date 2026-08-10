@@ -1,0 +1,90 @@
+<style>
+  .wf{background:#070b14;border-radius:12px;padding:14px;position:relative;overflow:hidden;min-height:250px;font-weight:700}
+  .wf *{box-sizing:border-box}
+  .wf .bar{display:flex;gap:6px;align-items:center;margin-bottom:10px}
+  .wf .dot{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:900;background:#0d1420;border:2px solid #243244;color:#5a6580}
+  .wf .dot.on{background:linear-gradient(135deg,#6ef0d4,#14b8a6);border-color:transparent;color:#04201b;box-shadow:0 0 14px rgba(62,224,191,.6)}
+  .wf .dot.done{background:#facc6b;border-color:#facc6b;color:#231a00}
+  .wf .seg{flex:1;height:3px;background:#243244;border-radius:2px}
+  .wf .seg.fill{background:linear-gradient(90deg,#6ef0d4,#14b8a6)}
+  .wf .box{border:1px solid rgba(62,224,191,.4);border-radius:10px;background:rgba(13,20,32,.9);padding:10px;color:#cfe9ff;font-size:12px;font-weight:800}
+  .wf .ghost{border:1px dashed #33415a;border-radius:10px;padding:8px;color:#5a6580;font-size:11px;font-weight:700}
+  .wf .glow{box-shadow:0 0 16px rgba(62,224,191,.35)}
+  .wf .chip{display:inline-block;padding:5px 12px;border-radius:99px;background:rgba(62,224,191,.12);border:1px solid #3ee0bf;color:#3ee0bf;font-size:11px;font-weight:900}
+  @keyframes slideIn{from{transform:translateX(28px);opacity:0}to{transform:none;opacity:1}}
+  .wf .slide{animation:slideIn 1.6s ease infinite alternate}
+  .arrow{color:#3ee0bf;font-weight:900}
+</style>
+
+<h2>숏템메이커 페이지 구조 — 어떤 뼈대로 갈까요?</h2>
+<p class="subtitle">공통 흐름: 레퍼런스·즐겨찾기·렌즈에서 <b>담기</b> → 재료 도착 → 대본 확보 → 매칭(후보 3개) → 자막제거·음성·꾸미기·SEO → 렌더. 이 흐름을 담는 그릇을 골라주세요.</p>
+
+<div class="options">
+
+  <div class="option" data-choice="fullstep" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>풀스크린 스텝 위저드 — 한 화면 = 한 단계</h3>
+      <p>단계 전환 시 슬라이드/페이드 애니메이션. 지금처럼 세로로 다 쌓지 않고, 화면 전체를 현재 단계가 씁니다. 상단에 빛나는 진행바 상시 고정.</p>
+      <div class="wf">
+        <div class="bar"><span class="dot done">✓</span><span class="seg fill"></span><span class="dot on">2</span><span class="seg"></span><span class="dot">3</span><span class="seg"></span><span class="dot">4</span><span class="seg"></span><span class="dot">5</span></div>
+        <div class="box glow slide" style="min-height:150px;display:flex;flex-direction:column;gap:8px;justify-content:center;align-items:center">
+          <div style="font-size:15px;font-weight:900;color:#fff">🎬 지금 단계만 큼직하게</div>
+          <div class="ghost" style="width:70%">이전·다음 단계는 화면 밖 — 슬라이드로 전환</div>
+          <span class="chip">다음 →</span>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>강점</h4><ul><li>집중력 최고 — 지금 할 일 하나만 보임</li><li>전환 애니메이션으로 "있어 보이는" 효과 최대</li><li>모바일에서도 그대로 먹힘</li></ul></div>
+        <div class="cons"><h4>약점</h4><ul><li>전체 흐름 조망이 안 됨(진행바로 보완)</li><li>재료(영상풀)를 다시 보려면 1단계로 돌아가야</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="workbench" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>작업대형 — 좌측 재료 레일 고정 + 우측 스테이지 전환</h3>
+      <p>좌측에 재료(영상풀)와 미리보기가 항상 떠 있고(접기 가능), 우측 큰 영역만 단계별로 슬라이드 전환. "재료를 보며 만든다"는 지금 구조의 진화형.</p>
+      <div class="wf" style="display:flex;gap:10px">
+        <div style="width:34%;display:flex;flex-direction:column;gap:8px">
+          <div class="box" style="font-size:11px">◀ 재료 레일 (고정)</div>
+          <div class="ghost">영상1 · 📝🎬⭐</div>
+          <div class="ghost">영상2 · 🎬</div>
+          <div class="box glow" style="font-size:11px">🪞 미리보기 (sticky)</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+          <div class="bar" style="margin-bottom:2px"><span class="dot done">✓</span><span class="seg fill"></span><span class="dot on">2</span><span class="seg"></span><span class="dot">3</span></div>
+          <div class="box glow slide" style="flex:1;display:grid;place-items:center;min-height:120px">
+            <div style="text-align:center"><div style="font-size:14px;font-weight:900;color:#fff">우측 스테이지만 전환</div><span class="chip" style="margin-top:6px">다음 →</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>강점</h4><ul><li>재료·미리보기를 어느 단계에서든 확인</li><li>기존 사용 습관과 연속성 — 학습 비용 적음</li><li>전환 애니메이션도 우측에서 그대로 가능</li></ul></div>
+        <div class="cons"><h4>약점</h4><ul><li>화면 분할로 A보다 집중감·임팩트는 덜함</li><li>좁은 화면에선 결국 세로로 접혀야 함</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="scroll" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>세로 스크롤 유지 + 완료 단계 접힘</h3>
+      <p>구조는 지금처럼 세로로 쌓되, 끝난 단계는 요약 칩 한 줄로 접히고 현재 단계만 네온으로 크게 열림. 가장 공사가 작음.</p>
+      <div class="wf" style="display:flex;flex-direction:column;gap:8px">
+        <div class="ghost">✓ 1 · 재료·대본 — "카라멜 대본 · 영상 5개" <span style="float:right">펼치기 ▾</span></div>
+        <div class="box glow slide" style="min-height:90px;display:grid;place-items:center">
+          <div style="text-align:center"><div style="font-size:14px;font-weight:900;color:#fff">2 · 매칭 (현재 — 크게 열림)</div><span class="chip" style="margin-top:6px">영상 매칭 시작</span></div>
+        </div>
+        <div class="ghost">3 · 음성 (대기)</div>
+        <div class="ghost">4 · 꾸미기 (대기)</div>
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>강점</h4><ul><li>구현 리스크·공사 최소 — 기존 코드 뼈대 유지</li><li>스크롤로 전체 흐름 항상 조망</li></ul></div>
+        <div class="cons"><h4>약점</h4><ul><li>"리뉴얼했다"는 임팩트가 가장 약함</li><li>화려한 전환 연출 여지가 적음</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>

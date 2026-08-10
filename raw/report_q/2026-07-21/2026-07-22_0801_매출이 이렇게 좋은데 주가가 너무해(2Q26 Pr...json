@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-22_0801_매출이 이렇게 좋은데 주가가 너무해(2Q26 Pr...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김선아",
+    "report_date": "2026년 7월 21일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "SK바이오팜",
+        "code": "326030",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "150,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 실적은 매출 2,385억원(YoY+35.3%, QoQ+4.7%), 영업이익 885억원(YoY+43.0%, QoQ-1.4%, OPM37.1%)으로 전망된다.",
+        "estimate_revision": "컨센서스와 비교하면 매출액 2.0%, 영업이익 4.7%를 상회하는 수준인데, 미공개 로열티나 기타 일회성 매출이 예상치 보다 높다면 최근 우호적인 환율 영향으로 더 높은 매출을 기대할 수 있다.",
+        "next_catalyst": "2nd 프로덕트 도입과 중국 합작법인인 Ignis Therapeutics(40.97% 보유)의 홍콩증권거래소(HKEX) 상장이 이뤄진다면 단기적으로 주가의 큰 상승도 기대해 봄 직하다.",
+        "thesis": [
+          "엑스코프리 처방량의 견조한 성장세 및 Briviact 제네릭 영향 부재",
+          "연간 계획된 R&D 비용 증가에도 불구하고 고수익성 유지 전망",
+          "차세대 모달리티(RPT, TPD) 투자 및 Insilico Medicine과의 협업을 통한 혁신 도전"
+        ],
+        "valuation_basis": "Peer EV/EBITDA (FY1)평균인 17배를 적용, 2nd product의 잠재가치를 약 3천억원으로 산정하여 산출했다.",
+        "risk": "영업이익의 QoQ 증가율은 매출액을 따라가기 어려울 수 있는데, 이는 연간 계획된 R&D 비용이 1Q에 유난히 적게 사용된 반면 2Q는 계획된 수준만큼 비용이 발생하였기 때문",
+        "supply_comment": null,
+        "quote": "2Q26 실적은 매출 2,385억원(YoY+35.3%, QoQ+4.7%), 영업이익 885억원(YoY+43.0%, QoQ-1.4%, OPM37.1%)으로 전망된다."
+      }
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_소외될 이유가 있을까.md"
+  },
+  "questionnaire": {
+    "broker": "SK증권",
+    "analyst": "이동주",
+    "report_date": "2026-06-04",
+    "target_kind": "sector",
+    "sector_name": "반도체 소부장",
+    "sector_view": null,
+    "thesis": [
+      "해외 주요 장비사들의 WFE 시장 눈높이 지속 상향",
+      "실질 CAPA 확대의 제약 심화 (공정 난이도 상승, HBM 비중 확대 등)",
+      "명목 CAPA 증설 강도 매우 강함 (SK하이닉스 2030년까지 웨이퍼 CAPA 2배 확대 목표)"
+    ],
+    "timeline": [
+      "2027년말부터 CAPA 가파른 증가 예상",
+      "2027년 상반기 기점으로 2029년까지 증설 관련 장비 발주 및 Fab-in 랠리 예상",
+      "2030년까지 증설 사이클 이어질 것으로 예상"
+    ],
+    "top_picks": [
+      {
+        "name": "SK하이닉스",
+        "reason": "강한 CAPA 증설 주도 (5년 내 웨이퍼 CAPA 2배 확대 목표)",
+        "tp": null
+      }
+    ],
+    "risk": [
+      "실질 CAPA 확대 제약 (선단 테크 노드 공정 난이도 상승, HBM 비중 확대에 따른 캐파 잠식)",
+      "HBM3의 낮은 수율(CXMT 사례)",
+      "클린룸 공간 제약"
+    ],
+    "quote": "Signal: 주가 조정 배경은 업황보다는 ETF 수급 영향, Key: 강한 CAPA 증설 수반 (Feat. SK 하이닉스 CAPA 2X 목표), Step: 이번 조정은 좋은 매수 기회"
+  }
+}

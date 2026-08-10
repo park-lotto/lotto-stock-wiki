@@ -335,55 +335,483 @@ async def api_studio_presets_delete(req: Request):
     return JSONResponse(content={"ok": True, "presets": presets})
 
 
-# ── 로그인 게이트 (지인 배포용) — 자격증명은 환경변수로만, repo에 안 올림 ──
-import hmac as _hmac, hashlib as _hashlib
-DASH_USER   = os.environ.get("DASH_USER", "admin")
-DASH_PASS   = os.environ.get("DASH_PASS", "")        # 비어있으면 인증 OFF(로컬 개발)
-DASH_SECRET = os.environ.get("DASH_SECRET", "stockbrain-local-secret")
-_AUTH_ON = bool(DASH_PASS)
-_AUTH_ALLOW = ("/login", "/api/login", "/favicon.ico", "/healthz", "/api/push_market_flow")
+# ── 로그인 게이트 v2 (2026-08-06) — 사용자 계정제(구글 OAuth) + 관리자 ──
+# 숏템메이커(shopping_shorts/app.py) 인증 모델 이식:
+#   · HMAC 서명 세션쿠키 "uid:expiry:sig" (기존 단일 공유토큰 → 사용자별)
+#   · 구글 OAuth 가입/로그인 → users 테이블(SQLite). 일반 사용자는 /market·/insights만.
+#   · 기존 DASH_USER/DASH_PASS 로그인은 uid 0(관리자)로 하위호환.
+import hmac as _hmac, hashlib as _hashlib, sqlite3 as _sqlite3, secrets as _secrets
+import urllib.parse as _urlparse
+from datetime import timezone as _tzutc
 
-def _auth_token() -> str:
-    return _hmac.new(DASH_SECRET.encode(), f"{DASH_USER}:{DASH_PASS}".encode(), _hashlib.sha256).hexdigest()
+DASH_USER = os.environ.get("DASH_USER", "admin")
+DASH_PASS = os.environ.get("DASH_PASS", "")        # 비어있고 OAuth도 미설정이면 인증 OFF(로컬 개발)
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+GOOGLE_REDIRECT_URI = os.environ.get("GOOGLE_REDIRECT_URI", "http://localhost:8090/auth/google/callback")
+_ADMIN_EMAILS = {"parklotto12@gmail.com"}
+
+
+def _load_dash_secret() -> str:
+    """세션쿠키 HMAC 키. env 최우선, 없으면 db/.session_secret에 랜덤 생성해 영속화.
+    ★소스에 기본값을 박지 않는다 — 예전 하드코딩 기본값("stockbrain-local-secret")은
+    env 한 줄만 빠뜨리면 누구나 쿠키를 위조할 수 있는 구멍이었다."""
+    env = os.environ.get("DASH_SECRET", "").strip()
+    if env:
+        return env
+    path = os.path.join(ROOT, "db", ".session_secret")
+    try:
+        with open(path, encoding="utf-8") as f:
+            existing = f.read().strip()
+        if existing:
+            return existing
+    except OSError:
+        pass
+    generated = _secrets.token_hex(32)
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(generated)
+    except OSError:
+        pass  # 영속화 실패해도 이번 프로세스는 랜덤키로 뜬다(재기동 시 재로그인될 뿐).
+    return generated
+
+
+DASH_SECRET = _load_dash_secret()
+_AUTH_ON = bool(DASH_PASS) or bool(GOOGLE_CLIENT_ID)
+if not _AUTH_ON:
+    print("⚠️ [보안] DASH_PASS·GOOGLE_CLIENT_ID 모두 미설정 → 인증 OFF(전원 관리자). "
+          "외부 공개 배포라면 반드시 설정하세요.", file=sys.stderr)
+
+_COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
+_AUTH_ALLOW = ("/login", "/api/login", "/logout", "/favicon.ico", "/healthz",
+               "/api/push_market_flow",       # 외부 푸시(자체 검증) — 쿠키 없이 옴
+               "/auth/google/login", "/auth/google/callback")
+
+# ── users 저장소 (SQLite) ──
+_USERS_DB = os.path.join(ROOT, "db", "users.db")
+
+
+def _users_conn():
+    os.makedirs(os.path.dirname(_USERS_DB), exist_ok=True)
+    conn = _sqlite3.connect(_USERS_DB, timeout=10)
+    conn.execute("""CREATE TABLE IF NOT EXISTS users(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        google_sub TEXT UNIQUE,
+        email TEXT,
+        admin INTEGER DEFAULT 0,
+        approved INTEGER DEFAULT 0,
+        blocked INTEGER DEFAULT 0,
+        created TEXT)""")
+    # 기존 DB 마이그레이션(컬럼 없으면 추가) — 승인제(2026-08-06): Gemini API 비용 보호
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(users)")}
+    for c in ("approved", "blocked"):
+        if c not in cols:
+            conn.execute(f"ALTER TABLE users ADD COLUMN {c} INTEGER DEFAULT 0")
+    return conn
+
+
+def _get_or_create_google_user(sub: str, email):
+    with _users_conn() as conn:
+        row = conn.execute("SELECT id, email FROM users WHERE google_sub=?", (sub,)).fetchone()
+        if row:
+            if email and email != row[1]:
+                conn.execute("UPDATE users SET email=? WHERE id=?", (email, row[0]))
+            return row[0], False
+        cur = conn.execute("INSERT INTO users(google_sub, email, created) VALUES(?,?,?)",
+                           (sub, email, datetime.now(_tzutc.utc).isoformat()))
+        return cur.lastrowid, True
+
+
+def _get_user(uid: int):
+    try:
+        with _users_conn() as conn:
+            row = conn.execute("SELECT id, email, admin, approved, blocked FROM users WHERE id=?",
+                               (uid,)).fetchone()
+        return ({"id": row[0], "email": row[1] or "", "admin": bool(row[2]),
+                 "approved": bool(row[3]), "blocked": bool(row[4])} if row else None)
+    except Exception:
+        return None
+
+
+def _is_admin(uid) -> bool:
+    if uid == 0:            # legacy DASH_USER/DASH_PASS 로그인
+        return True
+    u = _get_user(uid)
+    if not u:
+        return False
+    return u["admin"] or u["email"].lower() in _ADMIN_EMAILS
+
+
+# ── 세션 쿠키 (uid:expiry:sig) ──
+def _sign_session(uid: int, expiry: int) -> str:
+    payload = f"{uid}:{expiry}"
+    sig = _hmac.new(DASH_SECRET.encode(), payload.encode(), _hashlib.sha256).hexdigest()
+    return f"{payload}:{sig}"
+
+
+def _verify_session(cookie: str):
+    """쿠키 → uid(int) 또는 None(위조·만료·형식오류)."""
+    if not cookie:
+        return None
+    try:
+        uid_s, exp_s, sig = cookie.split(":")
+        expiry = int(exp_s)
+    except ValueError:
+        return None
+    if datetime.now(_tzutc.utc).timestamp() > expiry:
+        return None
+    expected = _hmac.new(DASH_SECRET.encode(), f"{uid_s}:{exp_s}".encode(), _hashlib.sha256).hexdigest()
+    if not _hmac.compare_digest(sig, expected):
+        return None
+    try:
+        return int(uid_s)
+    except ValueError:
+        return None
+
+
+def _set_session_cookie(response, uid: int):
+    expiry = int(datetime.now(_tzutc.utc).timestamp()) + _COOKIE_MAX_AGE
+    response.set_cookie("dash_auth", _sign_session(uid, expiry),
+                        max_age=_COOKIE_MAX_AGE, httponly=True, samesite="lax")
+
+
+# ── 일반 사용자 접근범위: 홈(/home) + 히트맵(/market) + 인사이트(/insights)만 ──
+_USER_PAGES = ("/home", "/market", "/insights")
+_USER_EXACT_ALLOW = {"/api/me", "/topbar.js"}   # 상단바·내정보(모든 로그인 사용자)
+_USER_API_PREFIX = (
+    "/api/insights/", "/api/catalysts",
+    # market.html이 쓰는 API들
+    "/api/news_feed", "/api/heatmap_tab", "/api/stock_supply_batch", "/api/sector_detail",
+    "/api/sector_summary", "/api/etf_bar", "/api/market_briefing", "/api/market_flow",
+    "/api/sector_custom", "/api/sector_names", "/api/sector_stocks", "/api/stock_search",
+    "/api/watchlist", "/api/stock_summary", "/api/taerini_stock", "/api/taerini_consensus",
+    "/api/stock_candles", "/api/briefing/pending",
+)
+# 운영자 전용(외부 사용자 차단): 노트북LM 세션·위키/유튜브 반출·프리셋 편집·브리핑 발행
+_USER_DENY_PREFIX = (
+    "/api/insights/nlm_", "/api/insights/to_wiki", "/api/insights/to_youtube",
+    "/api/insights/studio_presets", "/api/briefing/publish_pending",
+)
+# 공유 상태를 바꾸는 엔드포인트는 GET만 허용(외부 사용자가 관리자 데이터를 못 바꾸게)
+_USER_GET_ONLY_PREFIX = ("/api/sector_custom", "/api/watchlist", "/api/insights/history_save",
+                         "/api/insights/notebook_forget")
+
+
+def _user_allowed(path: str, method: str) -> bool:
+    if path in _USER_PAGES or path == "/logout" or path in _USER_EXACT_ALLOW:
+        return True
+    if any(path.startswith(p) for p in _USER_DENY_PREFIX):
+        return False
+    if any(path.startswith(p) for p in _USER_GET_ONLY_PREFIX) and method != "GET":
+        return False
+    return any(path.startswith(p) for p in _USER_API_PREFIX)
+
 
 _LOGIN_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>STOCK BRAIN 로그인</title>
 <style>body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;
 background:#0b0b0e;font-family:system-ui,'Noto Sans KR',sans-serif}
-.box{background:#16161c;border:1px solid #2a2a30;border-radius:14px;padding:32px 28px;width:280px}
+.box{background:#16161c;border:1px solid #2a2a30;border-radius:14px;padding:32px 28px;width:300px}
 h1{color:#d4af37;font-size:18px;margin:0 0 18px;text-align:center;letter-spacing:1px}
 input{width:100%;box-sizing:border-box;margin:6px 0;padding:11px 12px;background:#0e0e12;
 border:1px solid #333;border-radius:8px;color:#eee;font-size:14px}
 button{width:100%;margin-top:12px;padding:11px;background:#d4af37;color:#111;border:0;
 border-radius:8px;font-weight:700;font-size:14px;cursor:pointer}
-.err{color:#e74c3c;font-size:12px;text-align:center;margin-top:10px;min-height:14px}</style></head>
-<body><form class=box method=post action=/api/login>
+a.gbtn{display:block;text-align:center;margin-bottom:14px;padding:12px;background:#fff;color:#1a1a1a;
+border-radius:8px;font-weight:700;font-size:14px;text-decoration:none}
+.or{color:#555;font-size:11px;text-align:center;margin:4px 0 8px}
+.err{color:#e74c3c;font-size:12px;text-align:center;margin-top:10px;min-height:14px}
+details{margin-top:6px}summary{color:#666;font-size:12px;cursor:pointer;text-align:center}</style></head>
+<body><div class=box>
 <h1>⚡ STOCK BRAIN</h1>
-<input name=user placeholder=아이디 autocomplete=username autofocus>
+__GOOGLE__
+<details><summary>관리자 로그인</summary>
+<form method=post action=/api/login>
+<input name=user placeholder=아이디 autocomplete=username>
 <input name=pass type=password placeholder=비밀번호 autocomplete=current-password>
-<button>로그인</button>
-<div class=err>__ERR__</div></form></body></html>"""
+<button>로그인</button></form></details>
+<div class=err>__ERR__</div></div></body></html>"""
+
+_GOOGLE_BTN = '<a class=gbtn href="/auth/google/login">구글로 시작하기</a>'
+
 
 @app.get("/login", response_class=HTMLResponse)
 def _login_page(e: str = ""):
-    return _LOGIN_HTML.replace("__ERR__", "아이디 또는 비밀번호가 틀렸습니다" if e else "")
+    g = _GOOGLE_BTN if GOOGLE_CLIENT_ID else '<div class=or>구글 로그인 미설정</div>'
+    return _LOGIN_HTML.replace("__GOOGLE__", g).replace("__ERR__", e or "")
+
 
 @app.post("/api/login")
 async def _api_login(req: Request):
-    import urllib.parse as _up
     body = (await req.body()).decode("utf-8", "ignore")
-    form = _up.parse_qs(body)
+    form = _urlparse.parse_qs(body)
     u = (form.get("user") or [""])[0]
     p = (form.get("pass") or [""])[0]
-    if u == DASH_USER and p == DASH_PASS and _AUTH_ON:
-        r = RedirectResponse("/market", status_code=303)
-        r.set_cookie("dash_auth", _auth_token(), max_age=60*60*24*30, httponly=True, samesite="lax")
+    if DASH_PASS and u == DASH_USER and p == DASH_PASS:
+        r = RedirectResponse("/home", status_code=303)
+        _set_session_cookie(r, 0)
         return r
-    return RedirectResponse("/login?e=1", status_code=303)
+    return RedirectResponse("/login?e=" + _urlparse.quote("아이디 또는 비밀번호가 틀렸습니다"), status_code=303)
+
+
+@app.get("/logout")
+def _logout():
+    r = RedirectResponse("/login", status_code=303)
+    r.delete_cookie("dash_auth")
+    return r
+
+
+# ── 구글 OAuth (숏템메이커와 동일 플로우: state 쿠키 → code → userinfo) ──
+_GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
+_GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+_GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
+
+
+def _google_fetch_identity(code):
+    """code → {sub, email} 또는 None."""
+    tok = requests.post(_GOOGLE_TOKEN_URL, data={
+        "code": code, "client_id": GOOGLE_CLIENT_ID, "client_secret": GOOGLE_CLIENT_SECRET,
+        "redirect_uri": GOOGLE_REDIRECT_URI, "grant_type": "authorization_code"}, timeout=10)
+    if tok.status_code != 200:
+        return None
+    access = tok.json().get("access_token")
+    if not access:
+        return None
+    ui = requests.get(_GOOGLE_USERINFO_URL, headers={"Authorization": "Bearer " + access}, timeout=10)
+    if ui.status_code != 200:
+        return None
+    d = ui.json()
+    if not d.get("sub"):
+        return None
+    email = d.get("email") if d.get("email_verified") is True else None
+    return {"sub": d["sub"], "email": email}
+
+
+@app.get("/auth/google/login")
+def _google_login():
+    if not (GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET):
+        return HTMLResponse("<h3 style='font-family:sans-serif'>구글 로그인이 아직 설정되지 않았어요.</h3>",
+                            status_code=503)
+    state = _secrets.token_urlsafe(24)
+    q = _urlparse.urlencode({
+        "client_id": GOOGLE_CLIENT_ID, "redirect_uri": GOOGLE_REDIRECT_URI,
+        "response_type": "code", "scope": "openid email profile",
+        "state": state, "access_type": "online", "prompt": "select_account"})
+    r = RedirectResponse(_GOOGLE_AUTH_URL + "?" + q, status_code=303)
+    r.set_cookie("g_state", state, max_age=600, httponly=True, samesite="lax")
+    return r
+
+
+@app.get("/auth/google/callback")
+def _google_callback(request: Request, code: str = "", state: str = "", error: str = ""):
+    if error or not code:
+        return RedirectResponse("/login?e=" + _urlparse.quote("구글 로그인이 취소됐어요"), status_code=303)
+    cookie_state = request.cookies.get("g_state")
+    try:
+        state_ok = bool(cookie_state) and _hmac.compare_digest(cookie_state, state)
+    except (TypeError, ValueError):
+        state_ok = False       # 비-ASCII state 주입 등 → fail-closed
+    if not state_ok:
+        return RedirectResponse("/login?e=" + _urlparse.quote("보안 검증 실패 — 다시 시도해주세요"), status_code=303)
+    try:
+        ident = _google_fetch_identity(code)
+    except Exception:
+        ident = None
+    if not ident:
+        return RedirectResponse("/login?e=" + _urlparse.quote("구글 인증에 실패했어요"), status_code=303)
+    uid, _created = _get_or_create_google_user(ident["sub"], ident.get("email"))
+    if _created and not _is_admin(uid):     # 새 가입 → 사장님 텔레그램 쪽지(승인 대기 알림)
+        try:
+            _weather_tg(f"📥 STOCK BRAIN 새 가입: {ident.get('email') or '(이메일 비공개)'}\n"
+                        f"승인 대기중입니다 → https://stockbrain1.duckdns.org/admin")
+        except Exception:
+            pass
+    r = RedirectResponse("/home", status_code=303)
+    _set_session_cookie(r, uid)
+    r.delete_cookie("g_state")
+    return r
+
 
 @app.get("/healthz")
 def _healthz():
     return {"ok": True}
+
+
+# ── 승인제 (2026-08-06) — Gemini API 비용 보호: 가입해도 관리자 승인 전엔 사용 불가 ──
+_PENDING_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>승인 대기중 · STOCK BRAIN</title>
+<style>body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;
+background:#0b0b0e;font-family:system-ui,'Noto Sans KR',sans-serif;color:#eee}
+.box{background:#16161c;border:1px solid #2a2a30;border-radius:14px;padding:36px 32px;width:320px;text-align:center}
+h1{color:#d4af37;font-size:17px;margin:0 0 14px}p{color:#9aa;font-size:13px;line-height:1.7;margin:0 0 18px}
+a{color:#667;font-size:12px}</style></head>
+<body><div class=box><h1>__TITLE__</h1><p>__MSG__</p><a href=/logout>로그아웃</a></div></body></html>"""
+
+
+def _pending_response(user, path: str):
+    """미승인·차단 사용자 응답. API는 403 JSON, 페이지는 안내 화면."""
+    blocked = bool(user.get("blocked"))
+    if path.startswith("/api/"):
+        return JSONResponse({"error": "blocked" if blocked else "pending_approval"}, status_code=403)
+    if blocked:
+        html = _PENDING_HTML.replace("__TITLE__", "이용이 제한된 계정입니다") \
+                            .replace("__MSG__", "관리자에게 문의해주세요.")
+    else:
+        html = _PENDING_HTML.replace("__TITLE__", "가입 승인 대기중입니다 ⏳") \
+                            .replace("__MSG__", "관리자가 승인하면 바로 이용할 수 있어요.<br>승인 후 새로고침해주세요.")
+    return HTMLResponse(html, status_code=403)
+
+
+# ── 회원 관리 (/admin — 관리자 전용) ──
+_ADMIN_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>회원 관리 · STOCK BRAIN</title>
+<style>body{margin:0;background:#0b0b0e;font-family:system-ui,'Noto Sans KR',sans-serif;color:#eee;padding:28px}
+h1{color:#d4af37;font-size:19px;margin:0 0 4px}.sub{color:#778;font-size:12px;margin-bottom:20px}
+table{border-collapse:collapse;width:100%;max-width:860px}th,td{padding:9px 12px;font-size:13px;text-align:left;
+border-bottom:1px solid #23232a}th{color:#889;font-weight:600;font-size:12px}
+.b{border:0;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;margin-right:6px}
+.ok{background:#1f6f43;color:#dff5e7}.no{background:#333;color:#bbb}.ban{background:#6f1f1f;color:#f5dfdf}
+.tag{font-size:11px;border-radius:6px;padding:2px 8px;font-weight:700}
+.t-wait{background:#4a3b12;color:#ffd863}.t-ok{background:#143c26;color:#6fe0a0}.t-ban{background:#3c1414;color:#e06f6f}
+.t-adm{background:#1c2740;color:#8fb4ff}a{color:#667;font-size:12px}</style></head>
+<body><h1>회원 관리</h1><div class=sub>승인해야 이용 가능(Gemini API 비용 보호) · <a href=/>홈</a></div>
+<table><thead><tr><th>이메일</th><th>가입일</th><th>상태</th><th>작업</th></tr></thead>
+<tbody id=rows></tbody></table>
+<script>
+async function load(){
+  const r=await fetch('/api/admin/users');const d=await r.json();
+  document.getElementById('rows').innerHTML=(d.users||[]).map(u=>{
+    const st=u.admin?'<span class="tag t-adm">관리자</span>'
+      :u.blocked?'<span class="tag t-ban">차단됨</span>'
+      :u.approved?'<span class="tag t-ok">승인됨</span>':'<span class="tag t-wait">승인 대기</span>';
+    const btns=u.admin?'':(
+      (u.approved?'<button class="b no" onclick="upd('+u.id+',{approved:0})">승인 해제</button>'
+                 :'<button class="b ok" onclick="upd('+u.id+',{approved:1})">승인</button>')+
+      (u.blocked ?'<button class="b no" onclick="upd('+u.id+',{blocked:0})">차단 해제</button>'
+                 :'<button class="b ban" onclick="upd('+u.id+',{blocked:1})">차단</button>'));
+    return '<tr><td>'+(u.email||'(이메일 비공개)')+'</td><td>'+(u.created||'').slice(0,10)+
+           '</td><td>'+st+'</td><td>'+btns+'</td></tr>';
+  }).join('')||'<tr><td colspan=4 style="color:#667">아직 가입자가 없습니다</td></tr>';
+}
+async function upd(id,patch){
+  await fetch('/api/admin/user_update',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(Object.assign({id:id},patch))});load();
+}
+load();
+</script></body></html>"""
+
+
+@app.get("/admin", response_class=HTMLResponse)
+def _admin_page():
+    return _ADMIN_HTML   # 접근 제어는 미들웨어(_user_allowed에 없음 → 관리자만 통과)
+
+
+# ── 사용자 홈(/home) — 블랙 첫화면: 히트맵·인사이트 두 개만, 관리자면 관리 버튼 추가 ──
+_HOME_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>STOCK BRAIN</title>
+<style>*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#000;color:#eee;
+font-family:system-ui,'Noto Sans KR',sans-serif;display:flex;flex-direction:column}
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:24px}
+.wrap{width:100%;max-width:760px}
+h1{color:#d4af37;font-size:22px;letter-spacing:2px;text-align:center;margin:0 0 34px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:560px){.cards{grid-template-columns:1fr}}
+a.card{display:block;background:#0e0e12;border:1px solid #23232a;border-radius:18px;
+padding:34px 26px;text-decoration:none;color:#eee;transition:.15s;text-align:center}
+a.card:hover{border-color:#d4af37;transform:translateY(-2px)}
+.ico{font-size:34px;margin-bottom:12px}.t{font-size:17px;font-weight:800;margin-bottom:6px}
+.d{font-size:12.5px;color:#889;line-height:1.6}</style></head>
+<body><div id=topbar></div><script src=/topbar.js></script>
+<main><div class=wrap><h1>⚡ STOCK BRAIN</h1>
+<div class=cards>
+<a class=card href=/market><div class=ico>🔥</div><div class=t>섹터 히트맵</div>
+<div class=d>업종·테마별 자금 흐름을<br>한눈에</div></a>
+<a class=card href=/insights><div class=ico>🧠</div><div class=t>인사이트</div>
+<div class=d>리포트·뉴스 요약과<br>시장 브리핑</div></a>
+</div></div></main></body></html>"""
+
+
+@app.get("/home", response_class=HTMLResponse)
+def _home_page():
+    return _HOME_HTML
+
+
+@app.get("/api/me")
+def _api_me(request: Request):
+    uid = _verify_session(request.cookies.get("dash_auth", ""))
+    if uid is None:
+        if not _AUTH_ON:
+            return {"ok": True, "admin": True, "email": "(로컬)"}
+        return JSONResponse({"ok": False}, status_code=401)
+    u = _get_user(uid) or {}
+    return {"ok": True, "admin": _is_admin(uid), "email": u.get("email", "관리자" if uid == 0 else "")}
+
+
+# 공용 상단바 — 사용자: 히트맵·인사이트만 / 관리자: +관리자·회원관리 버튼 (market·insights·home에 주입)
+_TOPBAR_JS = """(function(){
+fetch('/api/me').then(function(r){return r.ok?r.json():null}).then(function(me){
+  if(!me||!me.ok)return;
+  var bar=document.createElement('div');
+  bar.id='sb-topbar';
+  var s=document.createElement('style');
+  s.textContent='#sb-topbar{position:fixed;top:0;left:0;right:0;z-index:99999;height:46px;'+
+   'background:#000;border-bottom:1px solid #1e1e24;display:flex;align-items:center;gap:6px;'+
+   'padding:0 14px;font-family:system-ui,"Noto Sans KR",sans-serif}'+
+   '#sb-topbar .lg{color:#d4af37;font-weight:800;font-size:14px;letter-spacing:1px;'+
+   'text-decoration:none;margin-right:14px}'+
+   '#sb-topbar a.nv{color:#aab;font-size:13px;font-weight:700;text-decoration:none;'+
+   'padding:6px 12px;border-radius:8px}'+
+   '#sb-topbar a.nv:hover,#sb-topbar a.nv.on{background:#16161c;color:#fff}'+
+   '#sb-topbar .sp{flex:1}'+
+   '#sb-topbar a.ad{color:#8fb4ff;font-size:12px;font-weight:700;text-decoration:none;'+
+   'border:1px solid #2a3a5a;border-radius:8px;padding:5px 11px;margin-left:6px}'+
+   '#sb-topbar a.out{color:#667;font-size:12px;text-decoration:none;margin-left:10px}'+
+   'body{padding-top:46px!important}';
+  document.head.appendChild(s);
+  var p=location.pathname;
+  var h='<a class=lg href=/home>⚡ STOCK BRAIN</a>'+
+    '<a class="nv'+(p=='/market'?' on':'')+'" href=/market>🔥 히트맵</a>'+
+    '<a class="nv'+(p=='/insights'?' on':'')+'" href=/insights>🧠 인사이트</a>'+
+    '<span class=sp></span>';
+  if(me.admin){h+='<a class=ad href=/>⚙ 관리자 페이지</a><a class=ad href=/admin>👥 회원관리</a>';}
+  h+='<a class=out href=/logout>로그아웃</a>';
+  bar.innerHTML=h;
+  document.body.prepend(bar);
+});
+})();"""
+
+
+@app.get("/topbar.js")
+def _topbar_js():
+    return PlainTextResponse(_TOPBAR_JS, media_type="application/javascript")
+
+
+@app.get("/api/admin/users")
+def _api_admin_users():
+    with _users_conn() as conn:
+        rows = conn.execute(
+            "SELECT id, email, admin, approved, blocked, created FROM users ORDER BY id DESC").fetchall()
+    return {"users": [{"id": r[0], "email": r[1], "admin": bool(r[2]),
+                       "approved": bool(r[3]), "blocked": bool(r[4]), "created": r[5]} for r in rows]}
+
+
+@app.post("/api/admin/user_update")
+async def _api_admin_user_update(req: Request):
+    b = await req.json()
+    uid = int(b.get("id", 0))
+    sets, vals = [], []
+    for k in ("approved", "blocked"):
+        if k in b:
+            sets.append(f"{k}=?"); vals.append(1 if b[k] else 0)
+    if not uid or not sets:
+        return JSONResponse({"ok": False, "error": "id/필드 없음"}, status_code=400)
+    with _users_conn() as conn:
+        if conn.execute("SELECT admin FROM users WHERE id=?", (uid,)).fetchone() == (1,):
+            return JSONResponse({"ok": False, "error": "관리자는 변경 불가"}, status_code=400)
+        conn.execute(f"UPDATE users SET {', '.join(sets)} WHERE id=?", vals + [uid])
+    return {"ok": True}
+
 
 @app.middleware("http")
 async def _auth_guard(request: Request, call_next):
@@ -394,13 +822,28 @@ async def _auth_guard(request: Request, call_next):
     path = request.url.path
     if path in _AUTH_ALLOW or path.startswith("/static"):
         return await call_next(request)
-    if request.cookies.get("dash_auth") == _auth_token():
-        response = await call_next(request)
-        _no_store(request, response)
-        return response
-    if path.startswith("/api/"):
-        return JSONResponse({"error": "unauthorized"}, status_code=401)
-    return RedirectResponse("/login")
+    uid = _verify_session(request.cookies.get("dash_auth", ""))
+    if uid is None:
+        if path.startswith("/api/"):
+            return JSONResponse({"error": "unauthorized"}, status_code=401)
+        return RedirectResponse("/login")
+    if not _is_admin(uid):
+        user = _get_user(uid)
+        if user is None:               # 세션은 유효한데 계정이 삭제됨 → 재로그인
+            r = RedirectResponse("/login")
+            r.delete_cookie("dash_auth")
+            return r
+        if user["blocked"] or not user["approved"]:   # 승인제: 승인 전·차단이면 전부 차단
+            if path == "/logout":
+                return await call_next(request)
+            return _pending_response(user, path)
+        if not _user_allowed(path, request.method):
+            if path.startswith("/api/"):
+                return JSONResponse({"error": "forbidden"}, status_code=403)
+            return RedirectResponse("/home")   # 일반 사용자는 관리 대시보드 대신 블랙 홈으로
+    response = await call_next(request)
+    _no_store(request, response)
+    return response
 
 
 def _no_store(request: Request, response):
@@ -797,7 +1240,9 @@ def _normalize_source(cat, raw):
 
 # 서버(크롤러) 자동 등록용
 SSH_KEY = r"C:\Users\TheRose\crawling_bot_client\LightsailDefaultKey-ap-northeast-2.pem"
-SSH_HOST = "ubuntu@3.39.179.148"
+# IP는 바뀔 수 있다(2026-08-05 인스타 scraping_warning 회피로 교체) —
+# 서버 주소는 SERVER_HOST 하나로만 바꾼다.
+SSH_HOST = os.getenv("SERVER_HOST", "ubuntu@3.39.179.148")
 REMOTE_ADD = "python3 /home/ubuntu/kmong/crawling_bot/add_source.py"
 
 

@@ -1,10 +1,12 @@
-"""사이드바 작업 목록 — 영상 제작소 아래에 내 작업이 뜬다(스펙 §4.4).
+"""사이드바 작업 목록 — 숏템 제작소 아래에 내 작업이 뜬다(스펙 §4.4).
 
 sidebar.js는 페이지 6개가 공유한다 — 목록 주입이 다른 페이지를 깨면 안 된다.
 """
+import os
 import pathlib
 import shutil
 import subprocess
+import tempfile
 
 import pytest
 
@@ -59,8 +61,17 @@ def _run(body, harness_override=""):
     src = SIDEBAR_JS.read_text(encoding="utf-8")
     js = _HARNESS + harness_override + "\n" + src + "\n"
     js += "(async()=>{ await new Promise(r=>setTimeout(r,0)); \n" + body + "\n})();"
-    r = subprocess.run([NODE, "-e", js], capture_output=True, text=True, timeout=30,
-                       stdin=subprocess.DEVNULL, encoding="utf-8", errors="replace")
+    # node -e 로 인라인하면 js 전체가 명령줄 인자가 돼 Windows 명령줄 길이 한계(~32KB)에 걸린다
+    # — sidebar.js가 커지면 WinError 206으로 죽는다(리눅스 서버는 ARG_MAX가 커서 안 터져 게이트가
+    # 갈렸다). 임시 .js 파일로 넘겨 길이 제한을 없앤다(단언·동작 동일, 전달 방식만 교체).
+    fd, path = tempfile.mkstemp(suffix=".js")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(js)
+        r = subprocess.run([NODE, path], capture_output=True, text=True, timeout=30,
+                           stdin=subprocess.DEVNULL, encoding="utf-8", errors="replace")
+    finally:
+        os.unlink(path)
     assert r.returncode == 0, r.stderr
     return r.stdout.strip()
 
@@ -100,22 +111,24 @@ def test_current_work_is_marked():
     assert out == "missing", "아무 작업도 안 열었는데 현재 표시가 붙었다"
 
 
-def test_no_fetch_on_other_pages():
-    """다른 페이지에서 제작소 작업 목록을 부를 이유가 없다 — 6개 페이지가 이 파일을 공유한다."""
+def test_works_fetched_on_all_pages():
+    """T6(2026-07-19): 작업 목록을 /produce 전용 → 전 페이지 노출로 바꿨다(설계서 §3-3).
+    어느 화면에서도 진행 중 작업으로 바로 복귀 — 그래서 /library 같은 다른 페이지에서도 fetch한다.
+    (옛 test_no_fetch_on_other_pages를 뒤집은 것: 그땐 /produce에서만 불렀다.)"""
     out = _run("console.log(FETCHED.filter(u=>u.indexOf('/api/produce/works')!==-1).length ? 'fetched' : 'no');",
                harness_override="location.pathname='/library';")
-    assert out == "no"
+    assert out == "fetched"
 
 
 def test_empty_list_does_not_break_nav():
-    out = _run("console.log(_nav.innerHTML.indexOf('영상 제작소') !== -1 ? 'nav-ok' : 'nav-broken');",
+    out = _run("console.log(_nav.innerHTML.indexOf('숏템 제작소') !== -1 ? 'nav-ok' : 'nav-broken');",
                harness_override="WORKS_RESPONSE = {ok:true, works:[]};")
     assert out == "nav-ok"
 
 
 def test_fetch_failure_does_not_break_nav():
     """서버가 죽어도 사이드바는 살아 있어야 한다 — 이건 6개 페이지의 유일한 네비게이션이다."""
-    out = _run("console.log(_nav.innerHTML.indexOf('영상 제작소') !== -1 ? 'nav-ok' : 'nav-broken');",
+    out = _run("console.log(_nav.innerHTML.indexOf('숏템 제작소') !== -1 ? 'nav-ok' : 'nav-broken');",
                harness_override="WORKS_RESPONSE = 'throw';")
     assert out == "nav-ok"
 
@@ -128,6 +141,109 @@ def test_quoted_script_title_does_not_break_markup():
                  {work_id:'w1', title:'"이거 실화냐?" 협탁이', step:0, job_id:null, updated_at:'2026-07-17T01:00:00+00:00'}]};''')
     assert 'title=""' not in out, "title 속성이 따옴표에서 끊겼다"
     assert "&quot;" in out or "&#34;" in out, "큰따옴표가 이스케이프되지 않았다"
+
+
+def test_work_has_delete_button():
+    """각 작업에 삭제(✕) 버튼이 있어야 지울 수 있다(2026-07-19 사장님 요청)."""
+    out = _run("console.log(JSON.stringify({"
+               "del: _nav.innerHTML.indexOf('ss-work-del') !== -1,"
+               "fn: _nav.innerHTML.indexOf('__ssDelWork') !== -1,"
+               "wid: _nav.innerHTML.indexOf('data-wid=\"w1\"') !== -1}));")
+    assert '"del":true' in out and '"fn":true' in out and '"wid":true' in out, out
+
+
+def test_delete_calls_backend_and_removes_row():
+    """✕ 클릭 → 삭제 API 호출. confirm=true 가정."""
+    out = _run("""
+      window.confirm = function(){ return true; };
+      window.alert = function(){};
+      const before = FETCHED.length;
+      window.__ssDelWork({stopPropagation:function(){}}, 'w1');
+      await new Promise(r=>setTimeout(r,20));
+      console.log(FETCHED.filter(u=>u.indexOf('/api/produce/works/w1/delete')!==-1).length ? 'called' : 'no');
+    """)
+    assert out == "called", f"삭제 API가 안 불렸다: {out}"
+
+
+def test_delete_aborts_when_not_confirmed():
+    """confirm=false면 아무것도 안 한다 — 실수 삭제 방지."""
+    out = _run("""
+      window.confirm = function(){ return false; };
+      window.__ssDelWork({stopPropagation:function(){}}, 'w1');
+      await new Promise(r=>setTimeout(r,20));
+      console.log(FETCHED.filter(u=>u.indexOf('/delete')!==-1).length ? 'called' : 'aborted');
+    """)
+    assert out == "aborted", f"확인 취소했는데 삭제됐다: {out}"
+
+
+# ── 목록 다시 그리기(2026-08-06) ────────────────────────────────────────────
+# 사장님 제보: "따로 만들기를 누르면 내 작업에 추가가 되야 하는데 안 된다".
+# mountWorks는 페이지 로드 때 한 번만 돌아 화면 안에서 생긴 작업이 안 보였다.
+# ★.ss-works를 찾아 **갈아끼우는지**를 봐야 하므로 _nav.querySelector를 실제로 동작시킨다
+#   (기본 harness는 null만 돌려줘서 '중복 삽입'을 못 잡는다).
+_NAV_QS = """
+_nav.querySelector = function(sel){
+  var cls = sel.replace('.','');
+  for (var i=0;i<this.children.length;i++){
+    var c = this.children[i];
+    if (c.classList && c.classList.contains && c.classList.contains(cls)) return c;
+    if (typeof c.className === 'string' && c.className.split(' ').indexOf(cls) !== -1) return c;
+  }
+  return null;
+};
+_nav.replaceChild = function(nu, old){
+  var i = this.children.indexOf(old);
+  if (i >= 0) this.children[i] = nu; else this.children.push(nu);
+  this._html = this.children.map(function(c){ return c._html || ''; }).join('');
+  return old;
+};
+"""
+
+
+def test_refresh_hook_is_exposed():
+    """전역 훅이 없으면 화면 안에서 목록을 다시 그릴 방법이 아예 없다."""
+    out = _run("console.log(typeof window.__ssRefreshWorks);", harness_override=_NAV_QS)
+    assert out == "function", out
+
+
+def test_refresh_does_not_duplicate_the_list():
+    """★다시 그릴 때 기존 .ss-works를 갈아끼워야 한다 — 그냥 삽입하면 '내 작업'이 두 벌 쌓인다."""
+    out = _run("""
+      window.__ssRefreshWorks();
+      await new Promise(r=>setTimeout(r,20));
+      console.log(_nav.children.filter(c => c.className === 'ss-group ss-works').length);
+    """, harness_override=_NAV_QS)
+    assert out == "1", f"목록 블록이 {out}개 — 다시 그리기가 중복 삽입됐다"
+
+
+def test_refresh_shows_newly_created_work():
+    """복제로 생긴 작업이 **새로고침 없이** 목록에 뜬다(이 버그의 본체)."""
+    out = _run("""
+      WORKS_RESPONSE = { ok:true, works:[
+        {work_id:'w1', title:'협탁 인테리어 대본', step:1, job_id:'j1', updated_at:'2026-07-17T01:00:00+00:00'},
+        {work_id:'w9', title:'C안 토마토 주스', step:2, job_id:'j9', updated_at:'2026-08-06T01:00:00+00:00'}]};
+      window.__ssRefreshWorks('w9');
+      await new Promise(r=>setTimeout(r,20));
+      const h = _nav.children.filter(c => c.className === 'ss-group ss-works')[0]._html;
+      console.log(JSON.stringify({shown: h.indexOf('C안 토마토 주스') !== -1,
+                                  cur: h.indexOf('data-wid="w9"') !== -1 && h.indexOf('ss-work-current') !== -1}));
+    """, harness_override=_NAV_QS)
+    assert '"shown":true' in out, f"새 작업이 목록에 안 떴다: {out}"
+    assert '"cur":true' in out, f"새 작업이 '지금 작업'으로 표시 안 됐다: {out}"
+
+
+def test_refresh_current_id_beats_url():
+    """cloneCandidate는 URL을 즉시 안 바꾼다 — 인자로 받은 id가 ?work= 보다 우선해야
+    '지금 작업' 표시가 원본 쪽에 잘못 남지 않는다.
+    (WORK_ID는 produce.html에서 `let`이라 window에 안 올라간다 → 인자로 넘기는 게 유일한 길.)"""
+    out = _run("""
+      window.__ssRefreshWorks('w2');
+      await new Promise(r=>setTimeout(r,20));
+      const h = _nav.children.filter(c => c.className === 'ss-group ss-works')[0]._html;
+      const i2 = h.indexOf('data-wid="w2"'), i1 = h.indexOf('data-wid="w1"');
+      console.log(h.slice(0, i2).lastIndexOf('ss-work-current') > i1 ? 'w2-current' : 'wrong');
+    """, harness_override=_NAV_QS + "location.search='?work=w1';")
+    assert out == "w2-current", f"URL의 w1이 인자 w2를 이겼다: {out}"
 
 
 def test_angle_brackets_in_title_do_not_become_tags():

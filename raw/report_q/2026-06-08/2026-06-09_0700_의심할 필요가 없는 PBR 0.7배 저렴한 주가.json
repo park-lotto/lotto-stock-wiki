@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_0700_의심할 필요가 없는 PBR 0.7배 저렴한 주가.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김승준",
+    "report_date": "2026년 6월 8일",
+    "stocks": [
+      {
+        "name": "삼성물산",
+        "code": "028260",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "650,000원",
+        "tp_prev": "600,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "26년 EPS 추정치에 Target P/E 43.0배를 적용했다. 26년 BPS 추정치에 P/B 1.0배를 적용한 것과 같다.",
+        "estimate_revision": "삼성물산 투자의견 Buy를 유지하며, 목표주가는 기존 600,000원에서 650,000원으로 8.3% 상향한다.",
+        "next_catalyst": "3분기 베트남 팀코리아 시공사 선정 입찰, 4분기 루마니아 대형원전 수주, 2027년 유럽 SMR 수주",
+        "thesis": [
+          "현재 삼성전자 주가 반영 시 PBR 0.7배로 밸류에이션이 저렴함",
+          "원전(대형원전, SMR) 수주 추진 및 태양광, 바이오 등 풍부한 내러티브",
+          "반도체 투자와 그에 따른 매출액 성장의 기대"
+        ],
+        "valuation_basis": "26년 EPS 추정치에 Target P/E 43.0배 적용",
+        "risk": null,
+        "supply_comment": "삼성물산 반도체 프로젝트(P4, P5, 용인, 테일러) 및 원전 프로젝트(베트남, 루마니아, 사우디, 미국, 스웨덴, 폴란드, 에스토니아) 추진",
+        "quote": "최근 주가가 상승했어도, 여전히 삼성물산의 밸류에이션은 저렴하다. 현재 삼성전자 주가 반영시 PBR 0.7배다. 원전과 태양광, 계열사 투자까지 프리미엄(특히 PEER!)을 고려할 때, 삼성물산 매수를 추천한다."
+      }
+    ]
+  }
+}

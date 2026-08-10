@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "DS & SECURITIES",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_[DS Defense Daily] 2026-06-10.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "DS & SECURITIES",
+    "analyst": "강태호",
+    "report_date": "2026.06.10",
+    "market_direction": null,
+    "macro_vars": [
+      "미군 헬리콥터 격추 보복으로 인한 이란 공습",
+      "러시아 칼리닌그라드 Su-24M/Su-30SM2 공습 훈련",
+      "호주 AS9 155mm 곡사포 실사격 훈련",
+      "천궁-II 인도네시아 수출 추진",
+      "폴란드형 전차 K2PL 최종 생산기지 확정"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "100조 수주잔고 확보 및 하반기 실적 가시화"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-04-08",
+        "event": "워싱턴과 테헤란 휴전 연장 및 해협 재개방 회담"
+      }
+    ],
+    "top_picks": [
+      "한화에어로스페이스",
+      "현대로템",
+      "LIG D&A",
+      "한국항공우주",
+      "한화시스템",
+      "풍산",
+      "SNT다이내믹스",
+      "엠앤씨솔루션",
+      "STX엔진",
+      "SNT모티브",
+      "삼양컴텍"
+    ],
+    "risk": "이스라엘과 헤즈볼라 간의 분쟁으로 인한 외교적 합의 노력 무산 가능성",
+    "quote": "100조 수주잔고 쌓인 K-방산…하반기 실적의 시간 도래"
+  }
+}

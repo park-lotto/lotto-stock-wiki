@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-05\\2026-06-05_0700_[Global Watchlist] AI 모멘텀 확장 지속 단, 대형 I...md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "박윤철",
+    "report_date": "2026.06.04",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "AI Capex",
+      "대형 IPO",
+      "중간선거",
+      "물가",
+      "금리"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "전력",
+        "stance": "수혜",
+        "reason": "AI 투자 지속 및 에너지 대란으로 인한 미드스트림 및 인프라 수요 증가"
+      },
+      {
+        "sector": "반도체",
+        "stance": "수혜",
+        "reason": "정부와 기업 주도 AI 투자 경쟁으로 인한 구조적 공급 부족 및 이익 추정치 상향"
+      },
+      {
+        "sector": "소비내수",
+        "stance": "수혜",
+        "reason": "중간선거를 앞둔 트럼프의 민생 지원 정책 및 경기 불황형 소비 증가"
+      },
+      {
+        "sector": "기타",
+        "stance": "수혜",
+        "reason": "지정학적 갈등 심화 및 인플레 헷지 수혜 자산으로서의 금(GLD) 선호"
+      }
+    ],
+    "style": "장기 우량주 투자 및 중기 수급/정책 테마 접근",
+    "event_calendar": [
+      {
+        "date": "2026.06.12",
+        "event": "스페이스X 상장 예정"
+      }
+    ],
+    "top_picks": [
+      "테슬라",
+      "알파벳A",
+      "달러 제너럴",
+      "카니발",
+      "몰리나 헬스케어"
+    ],
+    "risk": "대형 IPO에 따른 단기 수급 충격 및 변동성, 중동 전쟁으로 인한 물가 부담, 경기 둔화 우려",
+    "quote": "AI 모멘텀 확장 지속: 단, 대형 IPO에 따른 변동성에 유의"
+  }
+}

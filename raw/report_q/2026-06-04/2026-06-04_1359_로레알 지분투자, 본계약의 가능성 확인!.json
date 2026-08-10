@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_로레알 지분투자, 본계약의 가능성 확인!.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "정희령",
+    "report_date": "2026.06.04",
+    "stocks": [
+      {
+        "name": "올릭스",
+        "code": "226950",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2025.12 매출액 15십억원(YoY 158.3%), 영업이익 -30십억원(OP 마진 -200.0%) 전망",
+        "estimate_revision": null,
+        "next_catalyst": "로레알과의 본계약 체결, OLX702A에 대한 릴리의 옵션 행사, OLX501A 기술 이전 체결",
+        "thesis": [
+          "로레알 그룹 벤처펀드로부터 1,107억원 규모 투자 유치 및 본계약 전환 기대감",
+          "OLX104C는 두피 내 피내주사로 투여하는 방식으로 전신노출에 의한 부작용 위험 제거",
+          "올릭스의 수많은 에셋이 높은 딜 가능성을 보유하고 있어 기업 가치 저평가 판단"
+        ],
+        "valuation_basis": null,
+        "risk": "오버행에 대한 우려",
+        "supply_comment": "이번 3자 배정 유상증자에 참여한 Weiss Asset의 경우 25년 8월 발행되었던 CPS 투자에도 참여했던 이력. 해당 CPS의 경우 1년 보호 예수 기간이 임박했음에도 3자 배정 유상증자에 추가 참여하며 오버행에 대한 우려 제거",
+        "quote": "로레알과의 공동 연구개발 계약 체결 후 시장은 본계약 전환에 대한 기대감 갖고 있었으며, 이번 지분 투자는 해당 본계약의 높은 가능성을 확인할 기회였다고 판단."
+      }
+    ]
+  }
+}

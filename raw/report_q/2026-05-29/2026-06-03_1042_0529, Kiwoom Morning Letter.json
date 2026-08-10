@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "date": "2026-05-29",
+    "broker": "Kiwoom",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_0529, Kiwoom Morning Letter.md"
+  },
+  "questionnaire": {
+    "broker": "Kiwoom",
+    "analyst": null,
+    "report_date": "2026-05-29",
+    "target_kind": "market",
+    "market_direction": "null",
+    "macro_vars": [
+      "한국 금리 결정 2.5%",
+      "미국 근원 PCE 물가지수 (MoM) 4월 0.2%",
+      "GDP (QoQ) 1분기 1.6%",
+      "내구재 주문 (MoM) 4월 7.9%"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "null",
+        "reason": "삼성전자와 SK하이닉스 등 반도체 쏠림 우려 속에 차익실현 매물 출회"
+      },
+      {
+        "sector": "에너지",
+        "stance": "null",
+        "reason": "미국-이란 MOU 잠정 합의로 인한 지정학적 불안 완화 및 미국 원유재고 감소 영향"
+      }
+    ],
+    "style": "null",
+    "event_calendar": [
+      {
+        "date": "5.28",
+        "event": "한국 금리 결정"
+      },
+      {
+        "date": "5.29",
+        "event": "한국 산업생산"
+      },
+      {
+        "date": "5.31",
+        "event": "중국 제조업 PMI"
+      },
+      {
+        "date": "6.01",
+        "event": "미국 제조업 PMI"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "현대차",
+      "기아",
+      "POSCO홀딩스"
+    ],
+    "risk": "미국 4월 PCE 물가상승률 3.8%로 약 3년 만에 최고치 기록 및 1분기 GDP 성장률 2.0%에서 1.6%로 하향 조정에 따른 인플레이션 부담과 성장 둔화 우려",
+    "quote": "트럼프 대통령의 최종 승인 여부를 둘러싼 불확실성이 여전히 남아 있는 가운데, 미국 에너지정보청(EIA)이 발표한 주간 원유재고가 330만 배럴 감소하며 6주 연속 감소세를 기록한 점이 유가의 하방 압력을 제한."
+  }
+}

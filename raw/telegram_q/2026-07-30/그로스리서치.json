@@ -1,0 +1,58 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "지앤비에스 에코",
+      "rating": null,
+      "tp": null,
+      "ts": "08:02",
+      "quote": "SK하이닉스 증설과 인도 태양광 투자로 본격화되는 수주 성장",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "올릭스",
+      "rating": null,
+      "tp": null,
+      "ts": "09:15",
+      "quote": "투여 49일 후 내장지방이 29.2% 감소",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성중공업",
+      "rating": null,
+      "tp": null,
+      "ts": "10:50",
+      "quote": "미국 데이터센터 개발사 M3와 엔지니어링 계약 예정",
+      "sector": "조선"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "지투지바이오",
+      "rating": null,
+      "tp": null,
+      "ts": "11:35",
+      "quote": "셀트리온 항체 물질에 지투지바이오의 ‘InnoBioLAMP’ 플랫폼 적용 가능성 공동 검토",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "씨이랩",
+      "rating": null,
+      "tp": null,
+      "ts": "15:28",
+      "quote": "과기정통부 주도의 'AIDC 얼라이언스' 참여",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "셀트리온",
+      "rating": null,
+      "tp": null,
+      "ts": "15:28",
+      "quote": "4중작용 후보물질 CT-G32 비임상 결과를 오는 11월 학회에서 공개",
+      "sector": "바이오"
+    }
+  ]
+}

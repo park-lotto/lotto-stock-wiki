@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_코스피, 코스닥 서킷 브레이커 발동. 젠슨 황도 막지 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "대신증권",
+    "analyst": "이경민",
+    "report_date": "2026.06.08",
+    "market_direction": "하락",
+    "macro_vars": [
+      "미국채 금리 상승",
+      "미국 5월 비농업 고용 호조",
+      "중동 지정학적 리스크 확대",
+      "유가 상승"
+    ],
+    "recommended_sectors": [],
+    "style": "위험자산 회피",
+    "event_calendar": [
+      {
+        "date": "2026.06.08",
+        "event": "코스피, 코스닥 서킷 브레이커 발동"
+      }
+    ],
+    "top_picks": [
+      "NAVER"
+    ],
+    "risk": "중동 지정학적 리스크 고조 및 미국채 금리 상승에 따른 증시 하방 압력",
+    "quote": "금일 국내 증시는 미국채 금리 상승, 반도체 투자심리 위축, 중동 지정학적 리스크 확대로 3개월 만에 서킷 브레이커가 발동되며 급락세를 시현"
+  }
+}

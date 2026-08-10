@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "date": "2026-07-28",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-29_0801_아직 불안한 실적.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "송유림, 김예인",
+    "report_date": "2026년 7월 28일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "한국전력",
+        "code": "015760",
+        "rating": "Buy(유지)",
+        "rating_changed": false,
+        "tp_new": "47,000원",
+        "tp_prev": "64,000원",
+        "tp_direction": "down",
+        "earnings_outlook": {
+          "2Q26E_revenue": "21.78조 원",
+          "2Q26E_operating_profit": "2.0조 원",
+          "YoY_operating_profit_growth": "-6.1%",
+          "QoQ_operating_profit_growth": "-47.0%",
+          "quote": "한국전력의 2분기 매출액은 21.8조 원, 영업이익 2.0조 원으로 전년동기 대비 각각 -0.7%, -6.1%를 기록한 것으로 추정한다."
+        },
+        "estimate_revision": "중동 사태에 따른 에너지 가격 변동이 지속됨에 따라 올해 연간 영업이익 추정치를 기존 12조 원대에서 9조 원대로 추가 하향 조정",
+        "next_catalyst": "대미투자 발표, 베트남 원전 가시화, 제12차 전기본 확정",
+        "thesis": [
+          "하반기부터 본격적인 이익 감소 구간 진입",
+          "에너지 가격 변동성 확대 및 실적 추정치 추가 하향 조정 가능성",
+          "원전 관련 모멘텀을 통한 주가 반등 가능성"
+        ],
+        "valuation_basis": "12개월 예상 BPS에 목표배수 0.55배(기존 0.7배, 예상 ROE 14.2% -> 10.2%)를 적용",
+        "risk": "에너지 가격 변동에 따른 실적 리스크",
+        "supply_comment": "sector: 전력, 원전",
+        "quote": "동사에 대해 투자의견 Buy를 유지하나, 목표주가는 실적 추정치 변경을 반영해 47,000 원으로 하향합니다."
+      }
+    ]
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "meta": {
+    "date": "2026-06-15",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-15_1006_[NVIDIA GTC Taipei  COMPUTEX 2026 참관기]...md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "김운호",
+    "report_date": "2026. 06. 15",
+    "target_kind": "sector",
+    "sector_name": "반도체",
+    "sector_view": null,
+    "thesis": [
+      "Agent AI 시대 도래에 따른 메모리 수요 폭발",
+      "Agent AI는 단순 서버뿐만 아니라 PC 및 Edge 환경으로 확장",
+      "GPU와 CPU를 결합한 시스템 중심의 AI 인프라 변화와 연결성 솔루션(CPO 등)의 중요성 증대"
+    ],
+    "timeline": [
+      "2026년 Agent AI 전성시대 도래",
+      "2030년까지 AI token 사용량 급증 및 인프라 확장"
+    ],
+    "top_picks": [
+      {
+        "name": "NVIDIA",
+        "reason": "Agent AI를 위한 시스템 구축 및 AI 생태계 주도",
+        "tp": null
+      },
+      {
+        "name": "Intel",
+        "reason": "Agent AI를 위한 Core Ultra Series 3 및 이종 추론 솔루션 제시",
+        "tp": null
+      },
+      {
+        "name": "Qualcomm",
+        "reason": "Device 중심의 Agent AI 전략 및 Snapdragon X 시리즈 출시",
+        "tp": null
+      },
+      {
+        "name": "Marvell",
+        "reason": "AI 인프라 병목 해소를 위한 데이터 전송 및 CPO 솔루션 제시",
+        "tp": null
+      },
+      {
+        "name": "삼성중공업",
+        "reason": "전력 및 부지 부족 해결을 위한 Floating Data center 솔루션 제안",
+        "tp": null
+      },
+      {
+        "name": "Solidigm",
+        "reason": "Context Memory Storage를 통한 AI Inference 가속",
+        "tp": null
+      },
+      {
+        "name": "KIOXIA",
+        "reason": "GPU Direct Storage 및 Context Memory Storage 솔루션 제시",
+        "tp": null
+      }
+    ],
+    "risk": "전력·냉각·부지 등 데이터센터 구축 인프라 부족, 데이터 전송에서의 물리적 한계(Copper Wall)",
+    "quote": "대한민국은 Agent AI 시대에 NVIDIA와 동반 성장할 최적의 생태계(Ecosytem)를 보유하고 있음을 확인하는 순간입니다."
+  }
+}

@@ -162,3 +162,19 @@ def test_compare_reports_every_new_failure_not_just_first():
     problems = merge_gate.compare(before, after)
     joined = " ".join(problems)
     assert "tests/t.py::a" in joined and "tests/t.py::b" in joined
+
+
+def test_xdist_args_parallel_when_installed():
+    # 이 리포 환경은 pytest-xdist를 requirements로 설치 → -n auto 병렬
+    assert merge_gate._xdist_args() == ["-n", "auto"]
+
+
+def test_snapshot_cmd_includes_xdist(monkeypatch):
+    # snapshot이 pytest 호출에 -n auto를 실어 보내는지(설치 환경) — run을 가로채 확인
+    seen = []
+    def fake_run(cmd, cwd):
+        seen.append(cmd)
+        return (0, "")
+    merge_gate.snapshot(cwd=".", run=fake_run)
+    pytest_cmd = next(c for c in seen if "pytest" in c)
+    assert "-n" in pytest_cmd and "auto" in pytest_cmd

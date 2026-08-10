@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "date": "2026-07-15",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-19_1106_2026년 7월 셋째 주 전기전자 Weekly.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "박희철, 최보영",
+    "report_date": "2026/ 7/ 15",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "금 선물",
+      "은 선물",
+      "구리 선물",
+      "원/달러 환율"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "밸류에이션 부담이 적거나, 호실적을 통해 밸류에이션 재정립이 가능한 기업"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "7/9",
+        "event": "애플, 중국 CXMT D램 테스트 착수"
+      },
+      {
+        "date": "7/12",
+        "event": "LG전자, 엔비디아 AI 서버 랙 만든다"
+      },
+      {
+        "date": "7/13",
+        "event": "삼성전자-삼성D, 유리 인터포저 협력 추진"
+      },
+      {
+        "date": "7/13",
+        "event": "JNTC, 일본 토판과 유리기판 상용화 협약 체결"
+      }
+    ],
+    "top_picks": [
+      "Apple",
+      "Zhen Ding",
+      "Largan",
+      "Nan Ya PCB",
+      "Lenovo"
+    ],
+    "risk": "반도체발 주가 변동성, 높은 밸류에이션을 형성하던 기업들에 대한 수급 이탈",
+    "quote": "결국, 밸류에이션 부담이 적거나, 호실적을 통해 밸류에이션 재정립이 가능한 기업 주목 필요"
+  }
+}

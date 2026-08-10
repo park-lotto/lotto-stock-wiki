@@ -1,0 +1,25 @@
+{
+  "target_kind": "sector",
+  "sector_name": "로봇",
+  "sector_view": "긍정",
+  "points": [
+    "미국의 중국 로봇 수입 금지에 따른 한국 로봇 기업의 중장기 반사이익 기대"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "두산로보틱스",
+      "comment": null,
+      "ts": null,
+      "quote": "휴머노이드 두산로보틱스",
+      "sector": "로봇"
+    }
+  ],
+  "events": [
+    {
+      "fact": "미국, 중국 로봇 수입 금지 조치",
+      "ts": "2026-08-04",
+      "quote": "美, 中로봇 수입금지…"
+    }
+  ],
+  "quote": "美, 中로봇 수입금지…"
+}

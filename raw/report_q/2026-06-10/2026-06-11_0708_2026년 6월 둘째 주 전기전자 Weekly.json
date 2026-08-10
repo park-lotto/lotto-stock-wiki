@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-11_0708_2026년 6월 둘째 주 전기전자 Weekly.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "교보증권",
+    "analyst": [
+      "박희철",
+      "최보영"
+    ],
+    "report_date": "2026/ 6/ 10",
+    "market_direction": "섹터 수익률 전반적으로 부진",
+    "macro_vars": [
+      "매크로 불확실성",
+      "SOCAMM 관련 노이즈",
+      "금 선물",
+      "은 선물",
+      "구리 선물",
+      "원/달러 환율"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "긍정적",
+        "reason": "뚜렷한 호실적 가능성이 제기된 기업들 중심으로 강한 반등 발생"
+      }
+    ],
+    "style": "호실적 기대감 기반 수급 집중 종목 선호",
+    "event_calendar": [
+      {
+        "date": "6/4",
+        "event": "LG이노텍, 베트남 하이퐁에 반도체 기판 공장 증설"
+      },
+      {
+        "date": "6/5",
+        "event": "삼성, 올해 폴더블폰 3종 500만~600만대 출하 목표...폴드8·와이드폴드에 기대"
+      },
+      {
+        "date": "6/9",
+        "event": "SOCAMM2 용량 반토막…엔비디아 고육지책에 기판 업계는 '방긋'"
+      }
+    ],
+    "top_picks": [
+      "Kingboard Laminates",
+      "Gold Circuit"
+    ],
+    "risk": "매크로 불확실성 및 SOCAMM 관련 노이즈",
+    "quote": "매크로 불확실성 및 SOCAMM 관련 노이즈 등으로 섹터 수익률 전반적으로 부진. 다만, 뚜렷한 호실적 가능성이 제기된 기업들 중심으로 강한 반등 발생."
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-22",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-22_1102_4DPLEX와 함께하는 CGV의 Brand New Day.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS투자증권",
+    "analyst": "장지혜",
+    "report_date": "2026.07.22",
+    "stocks": [
+      {
+        "name": "CJ CGV",
+        "code": "079160",
+        "rating": "Buy",
+        "rating_changed": null,
+        "tp_new": "8,000원",
+        "tp_prev": "8,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2분기 실적은 연결 매출액 5,466억원(+11% YoY), 영업이익 196억원(+1044% YoY, OPM 3.6%)으로 컨센 부합 전망",
+        "estimate_revision": null,
+        "next_catalyst": "하반기 <HOPE>, <스파이더맨: 브랜드 뉴 데이>, <오디세이> 등 특별관 수요 높은 영화 라인업 개봉",
+        "thesis": [
+          "국내외 영화관 구조 개선을 통한 수익성 향상",
+          "4DPLEX의 글로벌 특별관 플랫폼 확대 및 콘텐츠 제작 강화",
+          "자회사 4DPLEX 및 올리브네트웍스의 실적 성장에 따른 기업가치 기여도 확대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "소비내수",
+        "quote": "투자의견 매수, 목표주가 8천원 유지. 하반기 갈수록 실적 모멘텀 강화 및 자회사 기업가치 기여도 확대"
+      }
+    ]
+  }
+}

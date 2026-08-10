@@ -1,0 +1,68 @@
+{
+  "meta": {
+    "date": "2026-06-01",
+    "broker": "Yuanta",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_Yuanta Morning Snapshot (2026.06.01).md"
+  },
+  "questionnaire": {
+    "broker": "Yuanta",
+    "analyst": null,
+    "report_date": "June 01, 2026",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "DOW 51,032.46",
+      "NASDAQ 26,972.62",
+      "S&P 500 7,580.06",
+      "VIX 15.32",
+      "필라델피아 반도체 12,829.38",
+      "원/달러 1,503.95",
+      "WTI(NYMEX) 89.70"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "06/01",
+        "event": "美 S&P 글로벌 미국 제조업 PMI"
+      },
+      {
+        "date": "06/02",
+        "event": "日 자본지출 YoY"
+      },
+      {
+        "date": "06/03",
+        "event": "韓 CPI (전월대비)"
+      },
+      {
+        "date": "06/04",
+        "event": "美 MBA 주택융자 신청지수"
+      },
+      {
+        "date": "06/05",
+        "event": "美 신규 실업수당 청구건수, 美 실업률"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "KODEX 레버리지",
+      "KODEX 반도체레버리지",
+      "TIGER 반도체TOP10레버리지",
+      "현대차",
+      "삼성전자우",
+      "LG씨엔에스",
+      "두산",
+      "삼성전기",
+      "SOL AI반도체TOP2플러스",
+      "TIGER SK하이닉스단일종목레버리지",
+      "KODEX SK하이닉스단일종목레버리지",
+      "KODEX 코스닥150레버리지",
+      "삼성에스디에스",
+      "LG",
+      "현대모비스",
+      "TIGER 삼성전자단일종목레버리지"
+    ],
+    "risk": "중동 전쟁의 리스크, 광모듈/AI인프라 관련 종목에 대한 차익실현 매물",
+    "quote": "코스피지수는 전장 대비 290.86pt(+3.55%) 상승한 8,476.15pt에 마감. 중동 전쟁의 리스크 완화 및 반도체 섹터 상승에 따른 지수 상승 마감"
+  }
+}

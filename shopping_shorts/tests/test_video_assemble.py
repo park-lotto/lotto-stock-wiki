@@ -32,6 +32,26 @@ def test_wrap_preserves_explicit_newline_via_segmented():
     assert lines == ["짧은줄", ""]
 
 
+def test_caption_single_line_shrinks_headcopy_wraps(tmp_path):
+    # 사장님 규칙: 자막(single_line=True)은 무조건 한 줄 — 폭 넘으면 폰트 축소, 줄바꿈 금지.
+    # 헤드카피(single_line=False)는 기존대로 여러 줄로 줄바꿈.
+    import re
+    long_txt = "훨씬 맛있더라고요 정말 첨가물 걱정도 전혀 없으니까 매일 먹어요"
+    style = {"size": 54, "color": "#FFFFFF", "font": "NanumGothic-Bold.ttf"}
+
+    def y_lines(parts):
+        return {m.group(1) for p in parts if (m := re.search(r":y=(-?\d+)", p))}
+
+    def sizes(parts):
+        return {int(m.group(1)) for p in parts if (m := re.search(r"fontsize=(\d+)", p))}
+
+    cap = va._segmented_drawtext(long_txt, style, tmp_path, "cap", 50, 37, single_line=True)
+    hc = va._segmented_drawtext(long_txt, style, tmp_path, "hc", 50, 12, single_line=False)
+    assert len(y_lines(cap)) == 1               # 자막은 한 줄뿐
+    assert all(s < 54 for s in sizes(cap))      # 한 줄에 맞추려 폰트가 줄었다
+    assert len(y_lines(hc)) > 1                 # 헤드카피는 여러 줄로 줄바꿈
+
+
 # ── 자막 구절 분할 ──────────────────────────────────────────────
 
 def test_caption_segments_empty():
@@ -42,9 +62,11 @@ def test_caption_segments_empty():
 
 def test_caption_segments_splits_into_short_phrases():
     # 어절 기준 짧은 구절. 각 구절은 공백 제외 글자수가 목표 근처(1줄), 줄바꿈 없음.
-    segs = va._caption_segments("오이 사자마자 냉장고에 넣으셨나요?")
+    # (2026-07-25: 짧은 문장은 14자 안에 1구절로 들어갈 수 있어 긴 문장으로 '쪼개짐'을 검증.)
+    src = "오이는 사자마자 바로 냉장고에 넣어야 다들 신선하게 오래 먹더라고요"
+    segs = va._caption_segments(src)
     assert len(segs) >= 2                       # 한 덩어리로 안 뭉침
-    assert " ".join(segs) == "오이 사자마자 냉장고에 넣으셨나요?"  # 어절 순서·내용 보존
+    assert " ".join(segs) == src                # 어절 순서·내용 보존
     for s in segs:
         assert "\n" not in s                    # 짧은 1줄
         assert len(s.replace(" ", "")) <= va._CAP_WRAP  # 화면 밖으로 안 나감
@@ -72,20 +94,24 @@ def test_caption_segments_max_words_cap():
     assert " ".join(segs) == "가 나 다 라 마 바 사 아"        # 내용 보존
 
 
-def test_caption_segments_ref_rhythm_2to3_words():
-    # 레퍼런스 리듬: 2~3어절 단위(너무 잘게 쪼개지 않음). 어절 상한은 지킨다.
+def test_caption_segments_ref_rhythm_not_too_fine():
+    # 리듬: 3~4어절 단위(2026-07-25 상향). 너무 잘게 쪼개지 않고 어절 상한은 지킨다.
     segs = va._caption_segments("저도 오이를 냉장고에 넣어도 꼭 두 세개씩 물러서 버렸거든요")
-    assert 3 <= len(segs) <= 5                               # 적당히 뭉침(잘게X)
-    assert all(len(s.split()) <= va._CAP_MAX_WORDS for s in segs)
+    assert 1 <= len(segs) <= 3                               # 적당히 뭉침(잘게X — 옛 3~5→2~3)
+    # 진짜 제약은 화면폭(_CAP_WRAP)이다 — 어절 상한은 세그먼트化 중의 소프트 리밋이고,
+    # 고아 꼬리·의존명사 병합은 폭만 지키면 상한을 한 어절 넘길 수 있다(의도된 동작).
+    assert all(len(s.replace(" ", "")) <= va._CAP_WRAP for s in segs)
 
 
 def test_caption_segments_no_dangling_modifier():
-    # 수식어(관형어·부사)가 구절 끝에 홀로 남지 않는다("며칠 안"|"됐는데" 방지).
+    # 수식어(관형어·부사)가 구절 끝에 홀로 남지 않는다.
     segs = va._caption_segments("분명 사온 지 며칠 안 됐는데 물러지고 곰팡이 펴서")
     for s in segs:
         assert s.split()[-1] not in va._CAP_HEAD            # 머리 단어로 안 끝남
-    # "며칠 안 됐는데"가 한 덩어리로 붙었는지
-    assert any("며칠 안" in s and "됐는데" in s for s in segs)
+    # 부정 "안"이 서술어와 붙는다("안 됐는데" — "안"이 홀로/뒤에 떨어지지 않음).
+    # (2026-07-25: 어절 상한 상향으로 "며칠 안 됐는데" 3어절 통짜 그룹핑은 앞 어절이 먼저
+    #  채워 갈릴 수 있으나, 부정+서술어 결합이라는 핵심 불변식은 지킨다.)
+    assert any("안 됐는데" in s for s in segs)
 
 
 def test_caption_segments_modifier_leads_next_phrase():
@@ -109,6 +135,49 @@ def test_caption_segments_han_modifier_stays_with_noun():
     segs = va._caption_segments("이것 한 스푼이면 아삭함이 한 달넘게 마법의 가루!")
     assert any("한 스푼이면" in s for s in segs)
     assert any("한 달넘게" in s for s in segs)
+
+
+def test_caption_segments_time_adverb_opener_breaks_first():
+    # 사장님 제보(2026-07-20): "아침마다 빵 달라는 아이, …"에서 "아이"가 앞 구절에서
+    # 떨어져 "아이, 아무 식빵이나"로 붙던 문제. 시간/빈도 도입어(…마다)는 자기 뒤에서
+    # 끊겨 한 박자를 열고, 뒤 '수식어+명사'가 온전히 묶여야 한다("빵 달라는 아이").
+    segs = va._caption_segments("아침마다 빵 달라는 아이, 아무 식빵이나 좋아하는 우리 아이")
+    # 끝 쉼표는 표시용으로 제거됨(2026-07-21) → "빵 달라는 아이"
+    # 2026-07-25: 어절 상한 14/4 + 쉼표 끊김으로 "아무 식빵이나 좋아하는 우리 아이"가 한
+    # 호흡으로 묶인다("우리 아이"가 안 갈림 — 고아 꼬리 병합). …마다 끊김·아이 비고아는 유지.
+    assert segs == ["아침마다", "빵 달라는 아이", "아무 식빵이나 좋아하는 우리 아이"], segs
+    assert not any(s.startswith("아이") for s in segs)   # 아이가 다음 구절 머리로 안 떨어짐
+
+
+def test_caption_segments_short_mada_opener_breaks():
+    # 짧은 도입어(날마다=3자)도 자기 뒤에서 끊긴다.
+    segs = va._caption_segments("날마다 우유 달라는 아이")
+    assert segs[0] == "날마다"
+    assert any("우유 달라는 아이" in s for s in segs)
+
+
+def test_caption_segments_no_orphan_tail_fragment():
+    # 사장님 제보(2026-07-20): "…식단 때문?"이 "아이, 범인은 식단" | "때문?"으로 쪼개져
+    # "때문?"이 홀로 자막이 되던 문제. 짧은 1어절 꼬리(의존명사 "때문" 등)는 앞 구절에 붙는다.
+    segs = va._caption_segments("아침 수업 조는 아이, 범인은 식단 때문?")
+    assert "때문?" not in segs                       # 고아 파편이 홀로 안 남음
+    assert any("식단 때문?" in s for s in segs)       # "때문"이 앞말에 붙음
+
+
+def test_caption_segments_manner_adverb_leads_verb():
+    # 사장님 제보(2026-07-20): "…치솟았다가 뚝 | 떨어지거든요"에서 양태부사 "뚝"이 앞말에
+    # 붙어 끊기던 문제. 뚝/확/쭉 같은 부사는 뒤 서술어의 머리로 붙는다("뚝 떨어지거든요").
+    segs = va._caption_segments("혈당이 급격히 치솟았다가 뚝 떨어지거든요.")
+    for s in segs:
+        assert s.split()[-1] != "뚝"                # 뚝이 구절 끝에 홀로 안 남음
+    assert any("뚝 떨어지거든요" in s for s in segs)
+
+
+def test_caption_segments_keeps_meaningful_single_word_tail():
+    # 방어: 뜻 있는 긴 1어절 꼬리(서술어)는 병합하지 않는다. 끝 마침표는 표시용 제거(2026-07-21).
+    segs = va._caption_segments("혈당이 급격히 치솟았다가 뚝 떨어지거든요.")
+    assert any(s.endswith("떨어지거든요") for s in segs)
+    assert "때" not in [va._strip_punct(s) for s in segs]  # 짧은 파편 없음
 
 
 def test_caption_segments_breaks_after_sentence_end():
@@ -284,19 +353,34 @@ def test_segmented_drawtext_base_color_kept_alongside_highlight(tmp_path):
 # ── Task 2: _headcopy_drawtext_parts/_caption_drawtexts 리팩터 회귀 가드 ──
 
 def test_headcopy_drawtext_no_highlight_matches_single_block(tmp_path):
-    """highlight_rules 없는 hc는 세그먼트 1개(폭측정 x좌표 무관하게 fontcolor/폰트 등 필드는 기존과 동일)."""
+    """highlight_rules 없는 hc는 세그먼트 1개(폭측정 x좌표 무관하게 fontcolor/폰트 등 필드는 기존과 동일).
+
+    ⚠️ 2026-07-30: px 값(size·outline_w)은 이제 **UI 기준폭(720) → 출력폭(1080) 환산**을
+    거친다(_ui_px). 예전엔 UI값이 그대로 나가서 실제 렌더 자막이 미리보기의 67%로 작았다
+    (사장님 제보). 색·폰트 등 비-px 필드는 종전 그대로다.
+    """
     hc = {"text": "테스트 문구", "font": "", "color": "#FF8800", "size": 60,
           "x": 50, "y": 14, "outline": True, "outline_color": "#000000", "outline_w": 7}
     dt = va._headcopy_drawtext_parts(hc, tmp_path)[0]
     assert dt is not None
     assert "fontcolor=0xFF8800" in dt
-    assert "borderw=7" in dt
+    assert f"borderw={round(7 * va._OUT_W / va._UI_REF_W)}" in dt
+    assert f"fontsize={round(60 * va._OUT_W / va._UI_REF_W)}" in dt
     assert "bordercolor=0x000000" in dt
 
 
-def test_caption_drawtexts_no_style_still_renders_bar_and_text(tmp_path):
+def test_caption_drawtexts_no_bar_by_default(tmp_path):
+    # 2026-07-19: 하단 검정바 기본 OFF. 스타일 없이 부르면 바(drawbox) 없이 텍스트만.
     parts = va._caption_drawtexts("여러분 안녕하세요 반갑습니다", 2.0, tmp_path, 0)
-    assert any("drawbox" in p for p in parts)  # 하단 바 유지
+    assert parts, "자막 텍스트는 그려져야 한다"
+    assert not any("drawbox" in p for p in parts)  # 하단 바 없음
+
+
+def test_caption_drawtexts_bar_opt_in(tmp_path):
+    # bar=True로 명시하면 하단 바를 그린다(원본 소각자막 가리기용 옵트인).
+    parts = va._caption_drawtexts("여러분 안녕하세요 반갑습니다", 2.0, tmp_path, 0,
+                                  style={"bar": True})
+    assert any("drawbox" in p for p in parts)
 
 
 # ── Critical 버그 픽스: deco.highlight_rules → headcopy/caption_style 병합 ──
@@ -369,17 +453,18 @@ def test_plan_chains_multiple_segments_to_fill():
     assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips)
 
 
-def test_plan_slows_last_clip_when_short():
-    # 2.2 + 2.2 = 4.4 < 4.9 → 부족분 0.5는 마지막 클립을 슬로모로 늘림.
+def test_plan_fills_short_remainder_with_real_motion_not_slowmo():
+    # 2.2 + 2.2 = 4.4 < 4.9 → 부족분 0.5(≥_MIN_CLIP_KEEP)는 슬로모/정지 대신 실영상을 한 조각
+    #   더 붙여(1배속) 채운다 — "화면 멈춤" 방지(2026-07-21). 짧은 움직임 > 정지.
     segs = [_seg("A", 0.0, 2.2), _seg("B", 5.0, 7.2)]
     clips = va._plan_beat_clips(segs, tts_dur=4.9)
     assert abs(_total_out(clips) - 4.9) < 0.05
-    # 마지막 클립만 슬로모(out_dur > src_dur), 나머진 1배속
-    assert clips[-1]["out_dur"] > clips[-1]["src_dur"] + 1e-6
-    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips[:-1])
-    # 유출 0: src_dur는 구간 길이 이내
-    for c, s in zip(clips, segs):
-        assert c["src_dur"] <= (s["end"] - s["start"]) + 1e-9
+    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips)  # 전부 1배속(슬로모/정지 0)
+    assert len(clips) >= 3                                              # 조각을 더 이어붙였다
+    # 유출 0: src_dur는 각 구간 길이 이내
+    for c in clips:
+        s = next(s for s in segs if s["video_id"] == c["video_id"])
+        assert c["start"] + c["src_dur"] <= s["end"] + 1e-9
 
 
 def test_plan_absorbs_tiny_remainder_into_previous():
@@ -418,6 +503,37 @@ def test_plan_absorbs_short_middle_segment():
     clips = va._plan_beat_clips(segs, tts_dur=5.3)
     assert all(c["out_dur"] >= 0.8 - 1e-9 for c in clips)
     assert abs(_total_out(clips) - 5.3) < 0.05
+
+
+def test_plan_extends_into_source_instead_of_freeze():
+    # ★멈추지 말고(2026-07-20 사장님): 배정 구간(0~2.2)이 짧아도 소스 릴이 30초면 마지막
+    #   클립을 소스 실프레임으로 더 재생(1배속) → freeze/억지슬로우 없음.
+    segs = [_seg("A", 0.0, 2.2)]
+    clips = va._plan_beat_clips(segs, tts_dur=4.0, src_durs={"A": 30.0})
+    assert abs(_total_out(clips) - 4.0) < 0.05
+    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips)  # 슬로모 0(전부 1배속)
+    assert clips[-1]["src_dur"] > 2.2 - 1e-6                            # 배정 구간보다 더 읽음
+    assert clips[-1]["start"] + clips[-1]["src_dur"] <= 30.0 + 1e-9     # 소스 밖 유출 0
+
+
+def test_plan_loops_real_footage_no_slowmo_when_source_short():
+    # ★멈춤·슬로우 없음(2026-07-20 사장님 확정): 소스 릴이 짧아(2.5초) 실프레임을 다 써도
+    #   슬로모로 늘리지 않고 '한 장면 더 붙여'(1배속 실영상 루프) 채운다.
+    segs = [_seg("A", 0.0, 2.2)]
+    clips = va._plan_beat_clips(segs, tts_dur=4.0, src_durs={"A": 2.5})
+    assert abs(_total_out(clips) - 4.0) < 0.05
+    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips)  # 전부 1배속(슬로모 0)
+    assert len(clips) >= 2                                              # 장면을 더 이어붙였다
+    for c in clips:
+        assert c["start"] + c["src_dur"] <= 2.5 + 1e-9                  # 소스 밖 유출 0
+
+
+def test_plan_loops_real_footage_even_without_src_durs():
+    # src_durs 미제공(하위호환)이어도 슬로모가 아니라 실영상 루프로 채운다.
+    segs = [_seg("A", 0.0, 2.2)]
+    clips = va._plan_beat_clips(segs, tts_dur=4.0)
+    assert abs(_total_out(clips) - 4.0) < 0.05
+    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips)  # 슬로모 없음
 
 
 # ── _render_mix 실렌더 grounding (유출 0 + 길이 일치) ──────────────
@@ -484,9 +600,11 @@ def _vavg(stats):
 
 
 @pytest.mark.skipif(not _HAS_FF, reason="ffmpeg/ffprobe 없음")
-def test_render_mix_no_overflow_and_exact_length(tmp_path):
-    # 소스 A: 0~1s=red, 1~2s=green, 2~3s=blue. 매칭 구간은 [0,1](red)뿐인데 나레이션은 2초.
-    # 옛 코드면 1s 이후 green이 샜다(유출). 새 코드는 red를 슬로모로 2초 채운다.
+def test_render_mix_extends_into_source_no_freeze(tmp_path):
+    # ★멈추지 말고 진짜 영상으로(2026-07-20 사장님): 소스 A는 0~1=red,1~2=green,2~3=blue(총3초).
+    # 매칭 구간은 [0,1](red)뿐인데 나레이션은 2초. 옛 코드는 red를 freeze/슬로모로 홀드했다
+    # (멈춤). 새 코드는 소스 릴에 남은 실프레임([1,2]=green)을 1배속으로 더 재생해 채운다 →
+    # 화면이 멈추지 않고 진짜 영상이 이어진다. 단 소스 끝(3초) '밖'은 절대 안 읽는다(0프레임 방지).
     src = tmp_path / "A.mp4"
     _make_color_source(src, ["red", "green", "blue"])
     tts = tmp_path / "tts0.wav"
@@ -498,14 +616,15 @@ def test_render_mix_no_overflow_and_exact_length(tmp_path):
     }]}
     out = va._render_mix(edit_plan, {0: str(tts)}, {"A": str(src)}, tmp_path)
 
-    assert abs(va._probe_duration(out) - 2.0) < 0.15   # 길이 == 나레이션
-    # 유출 0: 1.5초 지점(옛 코드면 green이 나올 자리)이 red 계열이어야 한다.
-    # signalstats YUV: red는 V(빨강) 크고(실측 240), green은 낮다(실측 81). 150을 경계로
-    # red/green을 가른다(blue=110도 150 미만이라 같이 걸러지지만 이 테스트 소스엔 안 나옴).
+    # 길이 == 나레이션 + 마지막 비트 여운(_LAST_RUNOUT). 여운은 소스 실프레임이 아니라
+    # 홀드로 채워질 수 있어 여유를 둔다.
+    assert abs(va._probe_duration(out) - (2.0 + va._LAST_RUNOUT)) < 0.2
+    # 1.5초 지점은 freeze로 red를 홀드하지 않고 소스 실프레임을 이어 재생(green)해야 한다.
+    # signalstats YUV: red는 V 큼(실측 240), green은 낮음(실측 81) → 150 경계로 가른다.
     stats = _avg_color(out, 1.5)
     vavg = _vavg(stats)
     assert vavg is not None  # 프레임을 실제로 뽑았다(빈 출력 아님)
-    assert vavg > 150, f"1.5초 지점이 red가 아님(VAVG={vavg}) — 유출 의심"
+    assert vavg < 150, f"1.5초가 여전히 red 홀드(VAVG={vavg}) — 멈춤 제거 안 됨(소스 이어읽기 실패)"
 
 
 @pytest.mark.skipif(not _HAS_FF, reason="ffmpeg/ffprobe 없음")
@@ -521,7 +640,49 @@ def test_render_mix_chains_two_segments(tmp_path):
         "alternates": [{"video_id": "A", "seg_id": "A-1", "start": 2.0, "end": 4.0}],
     }]}
     out = va._render_mix(edit_plan, {0: str(tts)}, {"A": str(src)}, tmp_path)
-    assert abs(va._probe_duration(out) - 3.5) < 0.2
+    # 3.5(나레이션) + 여운 1s(T4). 여기선 구간 [2,4]에 0.5s 여유가 있어 여운의 절반은
+    # 실프레임(green, 매칭 구간 안이라 유출 아님), 나머지는 홀드로 채워진다.
+    assert abs(va._probe_duration(out) - (3.5 + va._LAST_RUNOUT)) < 0.2
+
+
+@pytest.mark.skipif(not _HAS_FF, reason="ffmpeg/ffprobe 없음")
+def test_render_mix_survives_match_beyond_source_length(tmp_path):
+    # ★약한 매칭이 소스 길이 '밖'을 잡아도 미리보기가 죽지 않는다(2026-07-19 실사고).
+    # 3초 소스인데 매칭 구간이 155~226초 → 옛 코드는 -ss 155가 끝을 넘어 0프레임 →
+    # beat concat "Output file does not contain any stream" → _render_mix 전체가 크래시.
+    # 새 코드는 start를 소스 안으로 당겨 정상 렌더한다.
+    src = tmp_path / "A.mp4"
+    _make_color_source(src, ["red", "green", "blue"])       # 총 3초
+    tts = tmp_path / "tts0.wav"
+    _make_silence(tts, 2.0)
+    edit_plan = {"beats": [{
+        "beat_idx": 0, "role": "hook", "narration": "x",
+        "primary": {"video_id": "A", "seg_id": "A-x", "start": 155.0, "end": 226.0},
+        "alternates": [],
+    }]}
+    out = va._render_mix(edit_plan, {0: str(tts)}, {"A": str(src)}, tmp_path)   # 옛 코드면 여기서 예외
+    assert va._probe_duration(out) > 0.5, "미리보기가 빈 영상으로 나왔다"
+
+
+@pytest.mark.skipif(not _HAS_FF, reason="ffmpeg/ffprobe 없음")
+def test_render_mix_skips_dead_beat_instead_of_crashing(tmp_path):
+    # 두 비트 중 하나가 손상 소스(길이 0)라도 나머지 비트로 미리보기가 나온다 —
+    # 하나의 죽은 매칭이 전체를 무너뜨리지 않는다.
+    good = tmp_path / "good.mp4"
+    _make_color_source(good, ["red", "green"])              # 총 2초
+    dead = tmp_path / "dead.mp4"
+    dead.write_bytes(b"not a video")                        # 디코드 불가 → _probe_duration 0
+    tts0 = tmp_path / "tts0.wav"; _make_silence(tts0, 1.5)
+    tts1 = tmp_path / "tts1.wav"; _make_silence(tts1, 1.5)
+    edit_plan = {"beats": [
+        {"beat_idx": 0, "role": "hook", "narration": "x",
+         "primary": {"video_id": "G", "seg_id": "G-0", "start": 0.0, "end": 2.0}, "alternates": []},
+        {"beat_idx": 1, "role": "cta", "narration": "y",
+         "primary": {"video_id": "D", "seg_id": "D-0", "start": 0.0, "end": 2.0}, "alternates": []},
+    ]}
+    out = va._render_mix(edit_plan, {0: str(tts0), 1: str(tts1)},
+                         {"G": str(good), "D": str(dead)}, tmp_path)
+    assert va._probe_duration(out) > 0.5, "성한 비트까지 통째로 날아갔다"
 
 
 def test_sparkle_effect_emits_flashing_alpha(tmp_path):
@@ -547,3 +708,41 @@ def test_shadow_emits_soft_drop_shadow(tmp_path):
     joined = ",".join(draws)
     assert "shadowx=" in joined and "shadowy=" in joined
     assert "borderw=" not in joined  # 두꺼운 테두리 아님
+
+
+def test_caption_fades_in_by_default(tmp_path):
+    # effect 미지정(기본) 자막도 하드 온/오프가 아니라 부드럽게 등장해야 한다.
+    # fade의 알파 램프(min(1,max(0,(t-start)/spd)))가 최종 필터에 들어간다.
+    # 딱딱하게 넘어간다는 제보(2026-07-19)의 실수정 — 등장 애니메이션 기본 ON.
+    draws = va._caption_drawtexts("부드럽게 뜨는 자막", 2.0, tmp_path, 0)
+    joined = ",".join(draws)
+    assert "alpha='min(1,max(0,(t-" in joined, "기본 자막에 fade 알파 램프가 없다"
+
+
+def test_explicit_effect_none_stays_hard_cut(tmp_path):
+    # 명시적으로 effect='none'을 준 경우엔 여전히 하드 온/오프(알파 램프 없음).
+    # 기본값만 fade로 바뀌었을 뿐, 끄고 싶으면 끌 수 있다는 보장.
+    style = {"effect": "none", "size": 50, "y_pct": 84, "box": False, "bar": False}
+    draws = va._caption_drawtexts("하드 컷 자막", 2.0, tmp_path, 0, style=style)
+    assert "alpha=" not in ",".join(draws)
+
+
+def test_plan_fills_from_source_tail_not_replay():
+    """회귀(2026-07-27 사장님 "같은 장면 반복 말고 뒤에서 채우기"): 마지막 클립 소스의 꼬리가
+    모자라도, 다른 소스(A)에 안 튼 뒷부분이 있으면 그걸 앞으로 밀며 소비한다 — 되감아 재생(루프)
+    하지 않는다. A는 배정 구간이 [0,1]뿐이지만 소스는 30초라, 채움은 1초 이후 실프레임이어야 한다."""
+    import shopping_shorts.video_assemble as va
+    segs = [{"video_id": "A", "start": 0.0, "end": 1.0},
+            {"video_id": "B", "start": 0.0, "end": 1.0}]
+    clips = va._plan_beat_clips(segs, tts_dur=8.0, src_durs={"A": 30.0, "B": 1.5})
+    assert abs(sum(c["out_dur"] for c in clips) - 8.0) < 0.05
+    assert all(abs(c["out_dur"] - c["src_dur"]) < 1e-6 for c in clips)   # 슬로모 0
+    # ★핵심: A의 재생이 배정 구간 끝(1.0)을 넘어 뒷부분 실프레임까지 갔다 = 되감기 아님
+    a_max_end = max((c["start"] + c["src_dur"] for c in clips if c["video_id"] == "A"), default=0.0)
+    assert a_max_end > 1.0 + 1e-6
+    for c in clips:                                                      # 유출 0
+        assert c["start"] + c["src_dur"] <= src_durs_of(c["video_id"]) + 1e-9
+
+
+def src_durs_of(vid):
+    return {"A": 30.0, "B": 1.5}[vid]

@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-19_0804_아직 시작도 안 했습니다.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "하나증권",
+    "analyst": "김홍식, 이상훈",
+    "report_date": "2026.7.16",
+    "market_direction": "통신장비주 1차 상승 후 중간 반락 과정을 거쳐 미국 어퍼C밴드 주파수 경매 발표를 재료로 2차 상승 전망",
+    "macro_vars": [
+      "2025년 데이터센터 기반 광통신 투자",
+      "미국 어퍼 C밴드(3.98~4.14GHz) 주파수 경매",
+      "2027년 국내 AI RAN 활성화를 위한 5G SA 구축"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "통신",
+        "stance": "SKT=LGU+>KT",
+        "reason": "SKT는 실적 정상화/AI RAN 사업/국책 AI 사업자 선정 가능성, LGU+는 2분기 실적 호전/주주 환원 증대 기대"
+      }
+    ],
+    "style": "통신장비 업종 내 AI RAN 관련주 및 미국 어퍼 C밴드 관련주 집중 투자 권고",
+    "event_calendar": [
+      {
+        "date": "2026-07-22",
+        "event": "미국 FCC(연방통신위원회) 어퍼 C밴드(3.98~4.14GHz) 160MHz 경매 여부 표결"
+      }
+    ],
+    "top_picks": [
+      "SKT",
+      "LGU+",
+      "KMW",
+      "HFR",
+      "RFHIC"
+    ],
+    "risk": "통신장비주 급락 우려, 업황 회복 지연 가능성",
+    "quote": "2026년 6~7월은 통신장비주 중간 반락 과정일 가능성이 높으며 빠르면 7월 말부터 2027년 봄까지 미국 어퍼C밴드 주파수 경매 발표를 재료로 2차 상승이 나타날 것이란 판단이다."
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_실적 성장 본격화 & 주가 급락은 저가 매수 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "허민호",
+    "report_date": "2026.06.01",
+    "stocks": [
+      {
+        "name": "LS",
+        "code": "006260",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": 630000,
+        "tp_prev": 630000,
+        "tp_direction": "flat",
+        "earnings_outlook": "LS전선의 매출액 2026년 8.46조원(+12.2% YoY)에서 2028년 10.23조원(‘25~’28년 3개년 CAGR +10.7%)으로 증가, 영업이익률은 2026년 5.3%(+1.6%p YoY)에서 2028년 6.4%로 개선 전망",
+        "estimate_revision": null,
+        "next_catalyst": "LS전선 기업가치 재평가, 고마진 전력케이블/부스웨이 매출 성장 본격화",
+        "thesis": [
+          "투자의견 매수, 목표주가 630,000원 유지. 최근 주가 급락은 과도",
+          "LS ELECTRIC의 높은 밸류에이션 정당화: 미국 FPS 사례로 확인 가능",
+          "LS전선 기업가치 재평가: 고마진 전력케이블/부스웨이 매출 성장 본격화"
+        ],
+        "valuation_basis": "목표주가는 적정 NAV 40.7조원 대비 52% 할인, 현재 NAV 대비 26% 할인",
+        "risk": "LS M&M은 전기동 제련 사업 업황 및 부산물 가격 등에 실적 변동성이 심함",
+        "supply_comment": null,
+        "quote": "그럼에도 불구하고 주가는 다른 전력기기, 전선업체 주가 하락 대비 급락이 큰 점은 과도하다고 판단"
+      }
+    ]
+  }
+}

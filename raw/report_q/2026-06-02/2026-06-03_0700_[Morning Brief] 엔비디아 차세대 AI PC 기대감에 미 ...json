@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "IM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_[Morning Brief] 엔비디아 차세대 AI PC 기대감에 미 ...md"
+  },
+  "questionnaire": {
+    "broker": "IM증권",
+    "analyst": null,
+    "report_date": "2026-06-02",
+    "target_kind": "market",
+    "market_direction": "상승",
+    "macro_vars": [
+      "한국 5월 소비자물가",
+      "미국 4월 노동부 JOLTS",
+      "미국 3, 6개월물 국채 입찰",
+      "달러-원 환율 1,504.30원 마감"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "강세 지속 전망",
+        "reason": "엔비디아 차세대 AI PC 플랫폼 개발 및 AI 관련주 강세"
+      },
+      {
+        "sector": "IT",
+        "stance": "강세",
+        "reason": "AI 에이전트 구축 및 소프트웨어 업종 파괴적 혁신 기대감"
+      }
+    ],
+    "style": "대형주 위주의 쏠림 현상",
+    "event_calendar": [
+      {
+        "date": "2026-06-02",
+        "event": "젠슨황 CEO 방한 일정"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "LG전자",
+      "LG씨엔에스",
+      "네이버",
+      "세일즈포스",
+      "서비스나우",
+      "엔비디아",
+      "마이크론"
+    ],
+    "risk": "중동전쟁 리스크, 코스피 9,000pt 돌파 시 차익실현 매물 출회",
+    "quote": "중동전쟁 리스크는 잔존하고 있으나 미 증시에서 엔비디아 차세대 AI PC 관련 소식이 전해지며 AI 및 반도체 강세는 지속. 미 증시 S&P500 섹터 중 테크와 에너지 업종에 쏠림 현상 지속되는 가운데 금일 국내 증시도 반도체 중심으로 쏠림 현상 지속될 것으로 예상."
+  }
+}

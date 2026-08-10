@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-08-03",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-04_0805_3분기부터는 본업까지 흑전.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS투자증권",
+    "analyst": "최태용",
+    "report_date": "2026.07.31",
+    "stocks": [
+      {
+        "name": "삼성SDI",
+        "code": "006400",
+        "rating": "매수",
+        "rating_changed": "null",
+        "tp_new": "840,000원",
+        "tp_prev": "840,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26P 잠정 매출액 3.8조원(+5.4% QoQ, +18.5% YoY), 영업이익(AMPC 포함) 2,038억원. 3Q26F 매출액 4.0조원(+6.5% QoQ, +31.5% YoY), 영업이익 1,135억원(-44.3% QoQ, 흑전 YoY)을 전망한다.",
+        "estimate_revision": "2026F 영업이익 추정치를 (440)십억원에서 373십억원으로 상향 조정.",
+        "next_catalyst": "미국 각형 LFP 10월 셀 양산 및 연내 SBB 2.0 공급 개시, ESS 추가 CAPA 확보 여부, 전고체 하반기 샘플 공급",
+        "thesis": [
+          "미국 관세 환급 효과 및 본업(UPS/BBU 호조, 소형전지 가동률 상승) 개선에 따른 흑자 전환",
+          "ESS 부문 매출 30~40% 증가 및 Double-digit 수익성 유지 전망",
+          "전고체 배터리 2027년 하반기 양산 목표 및 휴머노이드향 신사업 모멘텀"
+        ],
+        "valuation_basis": "null",
+        "risk": "자동차 부문 스텔란티스 미국 생산분 유럽 수출 프로젝트 종료로 인한 매출 감소",
+        "supply_comment": "확보 수주는 2029년까지의 CAPA를 상당 부분 커버한다.",
+        "quote": "본업의 안정적인 수주와 함께 Physical AI 모멘텀 기대감도 여전히 유효하다. 목표주가 840,000원, 투자의견 '매수'를 유지한다."
+      }
+    ]
+  }
+}

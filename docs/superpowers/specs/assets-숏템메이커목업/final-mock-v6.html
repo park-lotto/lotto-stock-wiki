@@ -1,0 +1,174 @@
+<style>
+  .mk{background:#070b14;border-radius:16px;padding:20px;position:relative;overflow:hidden;color:#e7ecf7;font-weight:700;margin-bottom:26px}
+  .mk *{box-sizing:border-box;font-family:inherit}
+  .mk::before{content:"";position:absolute;inset:-30%;background:
+    radial-gradient(30% 24% at 25% 30%, rgba(62,224,191,.14), transparent 70%),
+    radial-gradient(26% 22% at 75% 65%, rgba(156,94,224,.14), transparent 70%);
+    animation:mkAurora 9s ease-in-out infinite;pointer-events:none}
+  @keyframes mkAurora{0%,100%{transform:translate(-8%,-5%)}50%{transform:translate(8%,5%)}}
+  .mk-logo{font-size:22px;font-weight:900;background:linear-gradient(90deg,#3ee0bf,#8ea2ff);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:14px;position:relative}
+  .orbbar{position:relative;display:flex;align-items:flex-start;justify-content:space-between;margin:0 6px 18px;padding-top:4px}
+  .orbline{position:absolute;top:20px;left:24px;right:24px;height:4px;background:#1a2436;border-radius:4px}
+  .orbfill{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:linear-gradient(90deg,#facc6b,#3ee0bf);box-shadow:0 0 12px rgba(62,224,191,.6)}
+  .orb{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:5px;flex:1}
+  .orb .ball{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:900;
+    background:radial-gradient(circle at 32% 28%, #17222f, #0b111c 70%);border:2px solid #243244;color:#5a6580}
+  .orb.done .ball{background:radial-gradient(circle at 32% 28%, #ffe29a, #f5b53f 75%);border-color:transparent;color:#3a2800}
+  .orb.cur .ball{background:radial-gradient(circle at 32% 28%, #7df5db, #14b8a6 75%);border-color:transparent;color:#04201b;animation:orbPulse 1.6s ease-out infinite}
+  .orb.cur::after{content:"";position:absolute;top:-6px;width:48px;height:48px;border-radius:50%;border:2px solid rgba(62,224,191,.5);animation:orbRing 1.6s ease-out infinite}
+  @keyframes orbPulse{0%{box-shadow:0 0 0 0 rgba(62,224,191,.55)}70%{box-shadow:0 0 0 14px rgba(62,224,191,0)}100%{box-shadow:0 0 0 0 rgba(62,224,191,0)}}
+  @keyframes orbRing{0%{transform:scale(.9);opacity:1}100%{transform:scale(1.5);opacity:0}}
+  .orb .lb{font-size:11px;font-weight:800;color:#5a6580}
+  .orb.cur .lb{color:#fff;text-shadow:0 0 12px rgba(62,224,191,.8)}
+  .orb.done .lb{color:#c9a44a}
+  .mk-body{position:relative;display:flex;gap:14px;align-items:stretch}
+  .rail{width:25%;display:flex;flex-direction:column;gap:7px}
+  .rail-t{font-size:11px;font-weight:900;color:#3ee0bf}
+  .mat{background:rgba(13,20,32,.92);border:2px solid #2a8f7c;border-radius:10px;padding:7px 9px;font-size:12px;font-weight:800;display:flex;gap:8px;align-items:center;position:relative;cursor:pointer}
+  .mat.off{border-color:#243244;opacity:.5}
+  .mat .th{width:26px;height:36px;border-radius:5px;background:linear-gradient(160deg,#2b3a4e,#141d2c);flex-shrink:0}
+  .mat .chk{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#3ee0bf;color:#04201b;display:grid;place-items:center;font-size:11px;font-weight:900}
+  .mat.off .chk{display:none}
+  .stage{flex:1;display:flex;flex-direction:column;gap:9px}
+  .todo{background:rgba(13,20,32,.9);border:1px solid #6b5c2a;border-radius:12px;padding:10px 14px;position:relative}
+  .todo h5{margin:0;font-size:13px;font-weight:900;color:#fff;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .todo .badge{font-size:10px;padding:3px 9px;border-radius:99px;font-weight:900;background:rgba(250,204,107,.15);color:#facc6b}
+  .ai{background:linear-gradient(135deg,rgba(62,224,191,.07),rgba(140,110,240,.07));border:1px solid rgba(62,224,191,.5);border-radius:12px;padding:12px;margin-top:8px}
+  .ai .who{display:flex;align-items:center;gap:10px}
+  .ai .th{width:36px;height:48px;border-radius:7px;background:linear-gradient(160deg,#3a4a60,#1a2534)}
+  .ai b{font-size:14px;color:#fff}
+  /* 수치 강조 타일 */
+  .stats{display:flex;gap:8px;margin:10px 0}
+  .stt{flex:1;background:rgba(7,12,22,.85);border:1px solid #243244;border-radius:10px;padding:8px 6px;text-align:center}
+  .stt .v{font-size:17px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums}
+  .stt .v.hot{color:#ff8b6b;text-shadow:0 0 12px rgba(255,107,80,.55)}
+  .stt .v.mint{color:#7df5db;text-shadow:0 0 12px rgba(62,224,191,.5)}
+  .stt .k{font-size:10px;color:#8b97b0;font-weight:800;margin-top:2px}
+  .stt .x{display:inline-block;font-size:10px;font-weight:900;color:#ff8b6b;background:rgba(255,107,80,.12);border-radius:99px;padding:1px 7px;margin-top:3px}
+  .why{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 0}
+  .tag{font-size:11px;padding:4px 10px;border-radius:99px;font-weight:900;border:1px solid}
+  .tag.t1{border-color:#facc6b;color:#facc6b;background:rgba(250,204,107,.08)}
+  .tag.t2{border-color:#3ee0bf;color:#3ee0bf;background:rgba(62,224,191,.08)}
+  .newline{margin-top:9px;padding:8px 12px;border-radius:10px;background:rgba(62,224,191,.12);border:1px solid rgba(62,224,191,.55);font-size:13px;font-weight:900;color:#7df5db}
+  .swap{font-size:11px;color:#5a6580;font-weight:800;cursor:pointer;margin-top:7px;display:inline-block}
+  .cta{text-align:center;padding:14px;border-radius:13px;font-size:16px;font-weight:900;color:#04201b;
+    background:linear-gradient(135deg,#7df5db,#14b8a6);box-shadow:0 0 24px rgba(62,224,191,.5);cursor:pointer;position:relative;overflow:hidden}
+  .cta::after{content:"";position:absolute;top:0;bottom:0;width:40%;left:-40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);animation:shine 2.4s infinite}
+  @keyframes shine{to{left:120%}}
+  /* ── 2단계(매칭 후) ── */
+  .seqno{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#7df5db,#14b8a6);color:#04201b;font-size:12px;font-weight:900;margin-right:7px}
+  .cand{flex:1;background:rgba(13,20,32,.95);border:2px solid #243244;border-radius:12px;padding:10px;cursor:pointer;font-size:12px}
+  .cand.on{border-color:#3ee0bf;box-shadow:0 0 16px rgba(62,224,191,.25)}
+  .cand .cb{font-size:12px;font-weight:900;color:#fff;display:flex;gap:6px;align-items:center;margin-bottom:5px}
+  .cand .rec{font-size:9px;padding:2px 7px;border-radius:99px;background:linear-gradient(135deg,#7df5db,#14b8a6);color:#04201b;font-weight:900}
+  .cand p{margin:0;color:#8b97b0;font-weight:700;font-size:11px;line-height:1.5}
+  .beat{display:flex;gap:8px;align-items:center;background:rgba(7,12,22,.85);border:1px solid #243244;border-radius:9px;padding:7px 10px;font-size:11px;font-weight:700}
+  .beat .sc{width:28px;height:20px;border-radius:4px;background:linear-gradient(160deg,#2b3a4e,#141d2c);flex-shrink:0}
+  .beat .tx{flex:1;color:#cfe9ff}
+  .beat .fit{color:#3ee0bf;font-weight:900}
+  .prevbox{border:1px solid rgba(62,224,191,.5);border-radius:12px;background:rgba(13,20,32,.95);padding:10px;text-align:center}
+  .prevbox .scr{aspect-ratio:9/16;max-height:210px;margin:6px auto;border-radius:9px;background:linear-gradient(170deg,#15202e,#0a1220);display:grid;place-items:center;color:#3ee0bf;font-size:26px}
+</style>
+
+<h2>v6 — 균형 + 수치 근거 + "시작 후" 순서까지</h2>
+<p class="subtitle">위: 1단계(수치로 왜 벤치마킹인지 보여줌) · 아래: ⚡시작 누른 뒤 2단계가 ①→②→③ 순서로 내려오는 구조</p>
+
+<div class="mk">
+  <div class="mk-logo">🛠 숏템메이커 <span style="font-size:11px;color:#5a6580">— 1 · 영상/대본</span></div>
+  <div class="orbbar">
+    <div class="orbline"><div class="orbfill" style="width:9%"></div></div>
+    <div class="orb cur"><div class="ball">1</div><div class="lb">영상/대본</div></div>
+    <div class="orb"><div class="ball">2</div><div class="lb">매칭</div></div>
+    <div class="orb"><div class="ball">3</div><div class="lb">음성</div></div>
+    <div class="orb"><div class="ball">4</div><div class="lb">꾸미기</div></div>
+    <div class="orb"><div class="ball">5</div><div class="lb">썸네일</div></div>
+    <div class="orb"><div class="ball">6</div><div class="lb">SEO</div></div>
+    <div class="orb"><div class="ball">7</div><div class="lb">완성</div></div>
+  </div>
+
+  <div class="mk-body">
+    <div class="rail">
+      <div class="rail-t">◀ 영상 4개 · 뺄 건 클릭</div>
+      <div class="mat"><span class="chk">✓</span><div class="th"></div><div>채이홈 · 곰팡이</div></div>
+      <div class="mat"><span class="chk">✓</span><div class="th"></div><div>인테리홈</div></div>
+      <div class="mat off"><div class="th"></div><div>콩알리뷰</div></div>
+      <div class="mat"><span class="chk">✓</span><div class="th"></div><div>도쿄카라멜</div></div>
+    </div>
+
+    <div class="stage">
+      <div class="todo">
+        <div class="n"></div>
+        <h5>✓ 대본 <span class="badge">🤖 AI PICK — 선택 영상 중 완성도 1위 대본</span></h5>
+        <div class="ai">
+          <div class="who"><div class="th"></div><div><b>채이홈 · 곰팡이 박멸템</b><div style="font-size:11px;color:#8b97b0">뷰티 · 팔로워 23만</div></div></div>
+          <div class="stats">
+            <div class="stt"><div class="v hot">240만</div><div class="k">조회수</div><div class="x">팔로워의 10배 🔥</div></div>
+            <div class="stt"><div class="v">1,286</div><div class="k">댓글</div><div class="x">평균의 4.2배</div></div>
+            <div class="stt"><div class="v mint">3.19%</div><div class="k">참여밀도</div><div class="x">담긴 4개 중 1위</div></div>
+            <div class="stt"><div class="v">25초</div><div class="k">길이</div></div>
+          </div>
+          <div class="why"><span class="tag t1">🎙 권위인용형 훅</span><span class="tag t2">👥 주변인물 등장</span></div>
+          <div class="newline">✨ 이 뼈대로 100% 새로운 대본을 만듭니다 — 복사가 아니에요</div>
+          <span class="swap">🔁 다른 대본 보기 · ✍️ 직접 쓰기</span>
+        </div>
+      </div>
+      <div class="cta">⚡ 이대로 만들기 시작</div>
+      <div style="font-size:11px;color:#5a6580;font-weight:700;text-align:center;cursor:pointer">고급 ▾</div>
+    </div>
+  </div>
+</div>
+
+<div class="mk">
+  <div class="mk-logo">🛠 숏템메이커 <span style="font-size:11px;color:#5a6580">— ⚡시작 후: 2 · 매칭 (위에서 아래로 ①②③)</span></div>
+  <div class="orbbar">
+    <div class="orbline"><div class="orbfill" style="width:24%"></div></div>
+    <div class="orb done"><div class="ball">✓</div><div class="lb">영상/대본</div></div>
+    <div class="orb cur"><div class="ball">2</div><div class="lb">매칭</div></div>
+    <div class="orb"><div class="ball">3</div><div class="lb">음성</div></div>
+    <div class="orb"><div class="ball">4</div><div class="lb">꾸미기</div></div>
+    <div class="orb"><div class="ball">5</div><div class="lb">썸네일</div></div>
+    <div class="orb"><div class="ball">6</div><div class="lb">SEO</div></div>
+    <div class="orb"><div class="ball">7</div><div class="lb">완성</div></div>
+  </div>
+
+  <div class="mk-body">
+    <div class="rail">
+      <div class="rail-t">◀ 재료 (접힘)</div>
+      <div class="mat" style="opacity:.65"><div class="th"></div><div style="font-size:11px">영상 3개 ▾</div></div>
+      <div class="prevbox">
+        <div class="rail-t" style="color:#facc6b">🪞 ③ 미리보기</div>
+        <div class="scr">▶</div>
+        <div style="font-size:10px;color:#8b97b0">②까지 고르면 여기서 재생</div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="todo" style="border-color:#3ee0bf">
+        <h5><span class="seqno">1</span>새 대본 고르기 <span class="badge" style="background:rgba(62,224,191,.15);color:#3ee0bf">3개 만들었어요 — 하나만 고르세요</span></h5>
+        <div style="display:flex;gap:8px;margin-top:9px">
+          <div class="cand on"><div class="cb">A안 <span class="rec">👍 추천</span></div><p>"곰팡이 청소, 저는 다이소만 가요" — 진솔형</p></div>
+          <div class="cand"><div class="cb">B안</div><p>"남편이 웃다가 따라 샀어요" — 위트형</p></div>
+          <div class="cand"><div class="cb">C안</div><p>"3천원으로 끝내는 법" — 가성비형</p></div>
+        </div>
+      </div>
+
+      <div class="todo">
+        <h5><span class="seqno">2</span>장면 확인 <span class="badge">A안 기준 — 문장마다 어떤 화면이 붙는지</span></h5>
+        <div style="display:flex;flex-direction:column;gap:5px;margin-top:9px">
+          <div class="beat"><div class="sc"></div><div class="tx">"곰팡이 청소, 저는 다이소만 가요"</div><div class="fit">채이홈 0:02 ✓</div></div>
+          <div class="beat"><div class="sc"></div><div class="tx">"바르고 하룻밤 자면 끝이거든요"</div><div class="fit">채이홈 0:12 ✓</div></div>
+          <div class="beat"><div class="sc"></div><div class="tx">"결과 보실래요?"</div><div class="fit">인테리홈 0:08 ✓</div></div>
+          <div style="font-size:10px;color:#5a6580;font-weight:800;cursor:pointer">장면 바꾸기·전체 보기 ▾</div>
+        </div>
+      </div>
+
+      <div class="cta">▶ ③ 미리보기 만들기 — 왼쪽에서 재생됩니다</div>
+      <div style="text-align:center;font-size:12px;font-weight:900;color:#5a6580;cursor:pointer">확인했으면 → 다음 (3 · 음성)</div>
+    </div>
+  </div>
+</div>
+
+<div class="options" style="margin-top:6px">
+  <div class="option" data-choice="ok" onclick="toggleSelect(this)"><div class="letter">✓</div><div class="content"><h3>이 방향으로 확정</h3><p>세부 설계 정리로 넘어갑니다</p></div></div>
+  <div class="option" data-choice="fix" onclick="toggleSelect(this)"><div class="letter">✎</div><div class="content"><h3>고칠 부분 있음</h3><p>채팅으로 알려주세요</p></div></div>
+</div>

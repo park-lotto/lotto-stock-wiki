@@ -1,0 +1,166 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성전자",
+      "rating": null,
+      "tp": null,
+      "ts": "07:36",
+      "quote": "HBM5 베이스 다이에 최선단 2나노 GAA 공정 적용, HBM4E 대비 동작 속도 50% 이상 향상이 개발 목표",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "HLB",
+      "rating": null,
+      "tp": null,
+      "ts": "07:42",
+      "quote": "FDA가 리보세라닙에 세 번째 CRL을 발송하며 주가 급락",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "펩트론",
+      "rating": null,
+      "tp": null,
+      "ts": "07:42",
+      "quote": "일라이릴리 공동개발 물질이 터제파타이드가 아니라는 발표에 하한가 기록",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성전기",
+      "rating": null,
+      "tp": null,
+      "ts": "09:05",
+      "quote": "최근 3개월간 공개된 장기계약 합계는 약 2조 2,491억원",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "셀트리온",
+      "rating": null,
+      "tp": null,
+      "ts": "09:18",
+      "quote": "2분기 매출 1조 3,937억원(YoY +45%), 영업이익 4,518억원(YoY +86.3%)",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "코스메카코리아",
+      "rating": null,
+      "tp": null,
+      "ts": "09:31",
+      "quote": "산업보고서에서 소개한 코스메카코리아가 10%대 급등 중입니다.",
+      "sector": "화장품미용"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성전자",
+      "rating": null,
+      "tp": null,
+      "ts": "09:44",
+      "quote": "삼성전자가 8세대 고대역폭메모리 HBM5 베이스 다이에 2나노 GAA 공정을 적용할 계획",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "이엔셀",
+      "rating": null,
+      "tp": null,
+      "ts": "10:00",
+      "quote": "줄기세포 기반 스킨부스터 등 재생의료·항노화 신사업 추진",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LG전자",
+      "rating": null,
+      "tp": null,
+      "ts": "10:09",
+      "quote": "600kW급 냉각수 분배장치(CDU)에 대해 엔비디아 최종 품질 인증 획득",
+      "sector": "전력"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "ISC",
+      "rating": null,
+      "tp": null,
+      "ts": "13:25",
+      "quote": "글로벌 데이터센터 고객사에 AI 서버용 커넥티비티 소켓 ‘ISC 링크 엣지’ 공급 추진",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "한화오션",
+      "rating": null,
+      "tp": null,
+      "ts": "14:14",
+      "quote": "매출 5조 4,432억원 (YoY +65% · QoQ +70%), 영업이익 7,361억원 (YoY +98% · QoQ +67%)",
+      "sector": "조선"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "에스티팜",
+      "rating": null,
+      "tp": null,
+      "ts": "15:51",
+      "quote": "매출 1,085억원, 영업이익 183억원으로 전년 대비 각각 58.9%, 41.7% 증가",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "두산에너빌리티",
+      "rating": null,
+      "tp": null,
+      "ts": "16:11",
+      "quote": "매출은 4조 7,248억원 (YoY +3%), 영업이익은 3,143억원 (YoY +16%), 컨센서스 2,629억원을 상회",
+      "sector": "원전"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LS일렉트릭",
+      "rating": null,
+      "tp": null,
+      "ts": "17:43",
+      "quote": "2분기 매출 1조 5,770억원, 영업이익 1,785억원으로 분기 최대 실적",
+      "sector": "전력"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "HD현대마린솔루션",
+      "rating": null,
+      "tp": null,
+      "ts": "18:20",
+      "quote": "매출 5,804억원 (YoY +24.1%), 영업이익 976억원 (YoY +17.6%)",
+      "sector": "조선"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "LG이노텍",
+      "rating": null,
+      "tp": null,
+      "ts": "09:16",
+      "quote": "LG이노텍의 광학·초정밀 설계와 TDK의 센서 기술 결합",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SK하이닉스",
+      "rating": null,
+      "tp": null,
+      "ts": "10:04",
+      "quote": "지난 3월 개발한 차세대 모바일 D램 LPDDR6를 올해 하반기부터 양산 계획",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "파인메딕스",
+      "rating": null,
+      "tp": null,
+      "ts": "10:13",
+      "quote": "듀오젯 나이프와 스윙 나이프의 국내 제조 허가 및 모델 등록 완료",
+      "sector": "바이오"
+    }
+  ]
+}

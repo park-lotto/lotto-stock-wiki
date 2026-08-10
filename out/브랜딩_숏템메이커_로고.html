@@ -1,0 +1,153 @@
+<meta charset="utf-8">
+<title>숏템메이커 로고 · 워드마크 v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#070b14; --mint:#3ee0bf; --aurora:#8c6ef0; --gold:#facc6b;
+         --panel:#0e1524; --line:#1d2740; --txt:#e9eef8; --sub:#7c8aa5; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+       font-family:system-ui,'Malgun Gothic',sans-serif;padding:38px 26px 60px}
+  .wrap{max-width:1000px;margin:0 auto}
+  h1{font-size:20px;font-weight:800;margin:0 0 4px}
+  .lead{color:var(--sub);font-size:13.5px;margin:0 0 30px;line-height:1.6}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+        padding:26px;margin-bottom:18px}
+  .card h2{font-size:13px;font-weight:800;color:var(--mint);margin:0 0 3px;
+           letter-spacing:.4px;text-transform:uppercase}
+  .card .why{font-size:12.5px;color:var(--sub);margin:0 0 20px;line-height:1.65}
+  .row{display:flex;flex-wrap:wrap;gap:34px;align-items:center}
+
+  /* ── 락업(심볼+워드마크) : 실제 서비스 CSS 규칙 그대로 ── */
+  .brand{display:flex;align-items:center;gap:11px}
+  .brand .sym{flex:none}
+  .brand .wm{display:flex;flex-direction:column;line-height:1}
+  .nm{font-family:'Black Han Sans',sans-serif;letter-spacing:-.5px;
+      background:linear-gradient(135deg,#3ee0bf 0%,#7fe9d8 42%,#8c6ef0 100%);
+      -webkit-background-clip:text;background-clip:text;color:transparent;
+      -webkit-text-fill-color:transparent;filter:drop-shadow(0 0 12px rgba(62,224,191,.32))}
+  .nm::after{content:'.';background:none;-webkit-text-fill-color:var(--gold);
+             color:var(--gold);filter:none;margin-left:2px}
+  .en{font-family:ui-monospace,monospace;color:#4c8f85;margin-top:5px}
+
+  .lk-xl .sym{width:56px;height:56px} .lk-xl .nm{font-size:52px} .lk-xl .en{font-size:12px;letter-spacing:5.6px}
+  .lk-lg .sym{width:34px;height:34px} .lk-lg .nm{font-size:31px} .lk-lg .en{font-size:10px;letter-spacing:3.8px}
+  .lk-md .sym{width:27px;height:27px} .lk-md .nm{font-size:22px} .lk-md .en{font-size:9px;letter-spacing:2.8px}
+  .lk-sm .sym{width:20px;height:20px} .lk-sm .nm{font-size:16px}  .lk-sm .en{display:none}
+
+  .cap{font-size:11.5px;color:#5c6a84;margin-top:9px;font-family:ui-monospace,monospace}
+  .sizes{display:flex;gap:30px;align-items:flex-end;flex-wrap:wrap}
+  .sz{text-align:center} .sz svg{display:block;margin:0 auto 8px}
+
+  /* 팔레트 */
+  .pal{display:flex;gap:12px;flex-wrap:wrap}
+  .sw{width:132px;border:1px solid var(--line);border-radius:11px;overflow:hidden}
+  .sw .chip{height:56px} .sw .meta{padding:8px 10px;font-size:11px;line-height:1.5}
+  .sw .meta b{display:block;font-size:12px;margin-bottom:1px}
+  .sw .meta code{color:var(--sub);font-size:10.5px}
+
+  /* 대비 확인: 밝은 배경 */
+  .onlight{background:#f4f7fb;border-radius:12px;padding:22px}
+  .onlight .en{color:#5b7f78}
+  .onlight .nm{filter:none}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mint);font-size:11px;text-transform:uppercase;letter-spacing:.4px;width:118px}
+  td b{color:var(--gold)}
+</style>
+
+<div class="wrap">
+  <h1>숏템메이커 — 심볼·워드마크 v3</h1>
+  <p class="lead">
+    이름에서 <b style="color:var(--sub)">박스</b>가 빠졌으니 박스 모티프도 버렸습니다.
+    아래는 <b style="color:var(--mint)">지금 코드에 들어간 실물</b>입니다(app.py <code>_LOGO_SVG</code>·워드마크 CSS에서 그대로 뽑음).
+  </p>
+
+  <div class="card">
+    <h2>기본 락업</h2>
+    <p class="why">
+      심볼 = <b>세로 프레임(정확히 9:16)</b> → 숏폼 그 자체 · <b>골드 재생 삼각형</b> → 완성된 영상 ·
+      <b>아래 골드 닷</b> → 폰 홈버튼(폰으로 만든다는 걸 도형으로 되받는다).<br>
+      한줄문구는 <b style="color:var(--gold)">“쇼핑쇼츠, 이제 10분만에”</b>.<br>
+      링은 <b>민트 → 오로라</b> 그라데이션 — UI리뉴얼 테마 토큰(<code>--mint #3ee0bf</code> / <code>--aurora #8c6ef0</code>)과 한 몸.
+    </p>
+    <div class="brand lk-xl">
+      <svg class="sym" viewBox="0 0 64 64" fill="none" role="img" aria-label="숏템메이커"><defs><radialGradient id="ldk" cx="50%" cy="38%" r="70%"><stop offset="0" stop-color="#17223c"/><stop offset="1" stop-color="#070b14"/></radialGradient><linearGradient id="lmg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3ee0bf"/><stop offset="1" stop-color="#8c6ef0"/></linearGradient><linearGradient id="lgg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe6ae"/><stop offset="1" stop-color="#facc6b"/></linearGradient></defs><circle cx="32" cy="32" r="29" fill="url(#ldk)"/><circle cx="32" cy="32" r="29" stroke="url(#lmg)" stroke-width="2.6"/><rect x="23" y="15" width="18" height="31" rx="4.4" stroke="url(#lmg)" stroke-width="2.6"/><path d="M29.2 24.1l9.4 6.4-9.4 6.4V24.1z" fill="url(#lgg)"/><circle cx="32" cy="51.5" r="2.2" fill="url(#lgg)"/></svg>
+      <span class="wm"><span class="nm">숏템메이커</span><span class="en">SHOTEMMAKER</span></span>
+    </div>
+    <div class="cap">↑ 글자 끝 <span style="color:var(--gold)">골드 마침점</span>이 이 브랜드의 포인트입니다 — “여기서 끝난다 = 완성”</div>
+  </div>
+
+  <div class="card">
+    <h2>실제 쓰이는 크기</h2>
+    <p class="why">
+      로그인(31px) · 대문/요금 네비(22px) · 사이드바(16px + 20px 심볼).
+      <b>심볼은 글자보다 작게</b> 잡았습니다 — 크면 왼쪽이 무거워 보입니다(사장님 지적 반영: 34→27px, 사이드바 24→20px).
+      <b>20px에서도 읽히게</b> 심볼 요소를 4개로 제한했습니다(스파크·스택 같은 잔가지는 의도적으로 버림).
+    </p>
+    <div class="row">
+      <div>
+        <div class="brand lk-lg">
+          <svg class="sym" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="29" fill="url(#ldk)"/><circle cx="32" cy="32" r="29" stroke="url(#lmg)" stroke-width="2.6"/><rect x="23" y="15" width="18" height="31" rx="4.4" stroke="url(#lmg)" stroke-width="2.6"/><path d="M29.2 24.1l9.4 6.4-9.4 6.4V24.1z" fill="url(#lgg)"/><circle cx="32" cy="51.5" r="2.2" fill="url(#lgg)"/></svg>
+          <span class="wm"><span class="nm">숏템메이커</span><span class="en">SHOTEMMAKER</span></span>
+        </div>
+        <div class="cap">로그인 화면</div>
+      </div>
+      <div>
+        <div class="brand lk-md">
+          <svg class="sym" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="29" fill="url(#ldk)"/><circle cx="32" cy="32" r="29" stroke="url(#lmg)" stroke-width="2.6"/><rect x="23" y="15" width="18" height="31" rx="4.4" stroke="url(#lmg)" stroke-width="2.6"/><path d="M29.2 24.1l9.4 6.4-9.4 6.4V24.1z" fill="url(#lgg)"/><circle cx="32" cy="51.5" r="2.2" fill="url(#lgg)"/></svg>
+          <span class="wm"><span class="nm">숏템메이커</span><span class="en">SHOTEMMAKER</span></span>
+        </div>
+        <div class="cap">대문 · 요금 네비</div>
+      </div>
+      <div>
+        <div class="brand lk-sm">
+          <svg class="sym" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="29" fill="url(#ldk)"/><circle cx="32" cy="32" r="29" stroke="url(#lmg)" stroke-width="2.6"/><rect x="23" y="15" width="18" height="31" rx="4.4" stroke="url(#lmg)" stroke-width="2.6"/><path d="M29.2 24.1l9.4 6.4-9.4 6.4V24.1z" fill="url(#lgg)"/><circle cx="32" cy="51.5" r="2.2" fill="url(#lgg)"/></svg>
+          <span class="wm"><span class="nm">숏템메이커</span></span>
+        </div>
+        <div class="cap">사이드바 (20px 심볼)</div>
+      </div>
+    </div>
+
+    <div class="sizes" style="margin-top:28px">
+      <div class="sz"><svg width="64" height="64" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="29" fill="url(#ldk)"/><circle cx="32" cy="32" r="29" stroke="url(#lmg)" stroke-width="2.6"/><rect x="23" y="15" width="18" height="31" rx="4.4" stroke="url(#lmg)" stroke-width="2.6"/><path d="M29.2 24.1l9.4 6.4-9.4 6.4V24.1z" fill="url(#lgg)"/><circle cx="32" cy="51.5" r="2.2" fill="url(#lgg)"/></svg><div class="cap">64</div></div>
+      <div class="sz"><svg width="34" height="34" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="29" fill="url(#ldk)"/><circle cx="32" cy="32" r="29" stroke="url(#lmg)" stroke-width="2.6"/><rect x="23" y="15" width="18" height="31" rx="4.4" stroke="url(#lmg)" stroke-width="2.6"/><path d="M29.2 24.1l9.4 6.4-9.4 6.4V24.1z" fill="url(#lgg)"/><circle cx="32" cy="51.5" r="2.2" fill="url(#lgg)"/></svg><div class="cap">34</div></div>
+      <div class="sz"><svg width="24" height="24" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="29" fill="url(#ldk)"/><circle cx="32" cy="32" r="29" stroke="url(#lmg)" stroke-width="2.6"/><rect x="23" y="15" width="18" height="31" rx="4.4" stroke="url(#lmg)" stroke-width="2.6"/><path d="M29.2 24.1l9.4 6.4-9.4 6.4V24.1z" fill="url(#lgg)"/><circle cx="32" cy="51.5" r="2.2" fill="url(#lgg)"/></svg><div class="cap">24</div></div>
+      <div class="sz"><svg width="16" height="16" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="29" fill="url(#ldk)"/><circle cx="32" cy="32" r="29" stroke="url(#lmg)" stroke-width="2.6"/><rect x="23" y="15" width="18" height="31" rx="4.4" stroke="url(#lmg)" stroke-width="2.6"/><path d="M29.2 24.1l9.4 6.4-9.4 6.4V24.1z" fill="url(#lgg)"/><circle cx="32" cy="51.5" r="2.2" fill="url(#lgg)"/></svg><div class="cap">16 (파비콘)</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>밝은 배경 대비 확인</h2>
+    <p class="why">카톡 공유·인쇄·흰 배경 문서에 얹힐 때. 심볼은 다크 디스크를 품고 있어 흰 배경에서도 버팁니다.</p>
+    <div class="onlight">
+      <div class="brand lk-lg">
+        <svg class="sym" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="29" fill="url(#ldk)"/><circle cx="32" cy="32" r="29" stroke="url(#lmg)" stroke-width="2.6"/><rect x="23" y="15" width="18" height="31" rx="4.4" stroke="url(#lmg)" stroke-width="2.6"/><path d="M29.2 24.1l9.4 6.4-9.4 6.4V24.1z" fill="url(#lgg)"/><circle cx="32" cy="51.5" r="2.2" fill="url(#lgg)"/></svg>
+        <span class="wm"><span class="nm">숏템메이커</span><span class="en">SHOTEMMAKER</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>팔레트</h2>
+    <p class="why">새로 만든 색이 아니라 <b>UI리뉴얼 theme.css의 토큰 그대로</b>입니다 — 위젯·대시보드·서비스가 같은 색을 씁니다.</p>
+    <div class="pal">
+      <div class="sw"><div class="chip" style="background:#3ee0bf"></div><div class="meta"><b>민트</b><code>#3ee0bf --mint</code><br><code>주색 · 링 · 워드마크 시작</code></div></div>
+      <div class="sw"><div class="chip" style="background:#8c6ef0"></div><div class="meta"><b>오로라</b><code>#8c6ef0 --aurora</code><br><code>보조 · 워드마크 끝</code></div></div>
+      <div class="sw"><div class="chip" style="background:#facc6b"></div><div class="meta"><b>골드</b><code>#facc6b --gold</code><br><code>포인트 · 재생·홈닷·마침점</code></div></div>
+      <div class="sw"><div class="chip" style="background:#070b14"></div><div class="meta"><b>배경</b><code>#070b14 --bg</code><br><code>딥 네이비 블랙</code></div></div>
+      <div class="sw"><div class="chip" style="background:linear-gradient(135deg,#3ee0bf 0%,#7fe9d8 42%,#8c6ef0 100%)"></div><div class="meta"><b>브랜드 그라데이션</b><code>135°</code><br><code>워드마크 · 링</code></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>규칙</h2>
+    <table>
+      <tr><th>골드는 하나만</th><td>한 화면에서 <b>골드는 “가장 중요한 한 곳”</b>에만. 심볼 안에서도 재생·홈닷뿐입니다. 남발하면 포인트가 죽습니다.</td></tr>
+      <tr><th>마침점 유지</th><td>워드마크 끝 <b>골드 마침점</b>은 CSS <code>::after</code>라 이름을 바꿔도 자동으로 따라옵니다. 지우지 마십시오 — 이게 식별점입니다.</td></tr>
+      <tr><th>최소 크기</th><td>심볼 단독 <b>16px</b>까지. 그 아래로는 프레임 안 삼각형이 뭉갭니다.</td></tr>
+      <tr><th>여백</th><td>심볼 지름의 <b>0.35배</b>를 사방 최소 여백으로. 락업 간격은 <code>gap:11px</code>.</td></tr>
+      <tr><th>금지</th><td>그라데이션 방향 바꾸기 · 링 색을 단색 민트로 되돌리기 · 워드마크를 단색으로 칠하기.</td></tr>
+    </table>
+  </div>
+</div>

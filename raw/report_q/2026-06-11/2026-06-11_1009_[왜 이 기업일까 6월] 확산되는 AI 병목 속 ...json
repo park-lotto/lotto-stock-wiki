@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-11_1009_[왜 이 기업일까 6월] 확산되는 AI 병목 속 ...md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "박희철",
+    "report_date": "2026/06/11",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "롯데에너지머티리얼즈",
+        "code": "020150",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2027년 연결 매출액 1조 3,205억원(YoY +45.0%), 영업이익 734억원(YoY 흑자전환, OPM 5.6%)으로 추정.",
+        "estimate_revision": null,
+        "next_catalyst": "고부가 회로박의 공급 증가, 전지박 수요 확대에 따른 가공비 회복",
+        "thesis": [
+          "AI 수요가 야기한 고부가 회로박 수요 확대",
+          "전지박 사업의 완연한 회복세",
+          "익산 공장의 회로박 Capa 전환에 따른 구조적인 턴어라운드"
+        ],
+        "valuation_basis": null,
+        "risk": "2차전지 전방 산업 업황 부진",
+        "supply_comment": "현재 익산과 말레이시아에 제조 공장을 보유하고 있으며, 회로박 사업 확장을 위해 익산 공장의 CAPA를 전지박에서 회로박으로 전환하고 있다.",
+        "quote": "턴어라운드가 본격화될 2027년 연결 매출액을 1조 3,205억원(YoY +45.0%), 영업이익 734억원(YoY 흑자전환, OPM 5.6%)으로 추정."
+      },
+      {
+        "name": "엠케이전자",
+        "code": "033160",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 연결 매출액 2조 2,386억원(YoY +59.5%), 영업이익 983억원(YoY +592.9%, OPM 4.4%)으로 추정.",
+        "estimate_revision": null,
+        "next_catalyst": "LPDDR의 서버향 침투 본격화에 따른 본딩 와이어 수요 확대",
+        "thesis": [
+          "LPDDR의 서버향 침투 본격화로 인한 본딩 와이어 수요 증가",
+          "SOCAMM 채택에 따른 신규 시장 개화",
+          "원부자재 내재화 등을 통한 독보적인 경쟁력과 글로벌 시장 내 공고한 입지"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "동사는 금속 정련 및 합금 설계 등 핵심 공정을 내재화하고 있어 원가 변동성 속에서도 안정적인 마진 창출력을 확보하고 있다.",
+        "quote": "엠케이전자의 2026년 연결 매출액을 2조 2,386억원(YoY +59.5%), 영업이익 983억원(YoY +592.9%, OPM 4.4%)으로 추정."
+      }
+    ]
+  }
+}

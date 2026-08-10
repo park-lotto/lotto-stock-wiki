@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-28",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-28_1103_사상 최대 매출이 예상되는 2026년.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "권명준",
+    "report_date": "2026.07.28",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "파인엠텍",
+        "code": "441270",
+        "rating": "NOT RATED",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "26년에는 기존 고객사향 매출에 신규 고객사향 매출이 더해진다는 점에서 사상 최대 매출이 가능하다고 판단한다.",
+        "estimate_revision": null,
+        "next_catalyst": "2H26 북미 스마트폰 고객사향 폴더블 스마트폰 출시",
+        "thesis": [
+          "폴더블폰 라인업 확대 및 신규 와이드 폴드 제품을 통한 고객사 점유율 상향 기대",
+          "경쟁사 매각 추진에 따른 불안정한 입지 및 동사의 점유율 상향 가능성",
+          "26년 신규 고객사 확대로 인한 사상 최대 매출 달성 가능성"
+        ],
+        "valuation_basis": null,
+        "risk": "일부 부품의 퀄리티 이슈 및 생산차질 이슈",
+        "supply_comment": "폴더블 스마트폰 글로벌 기업 대상으로 백플레이트(내장힌지)를 공급하고 있다.",
+        "quote": "기존 고객사향 매출에 신규 고객사향 매출이 더해진다는 점에서 사상 최대 매출이 가능하다고 판단한다.",
+        "sector": "IT"
+      }
+    ]
+  }
+}

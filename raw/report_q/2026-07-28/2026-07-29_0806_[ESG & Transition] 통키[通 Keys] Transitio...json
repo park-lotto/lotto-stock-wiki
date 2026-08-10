@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "date": "2026-07-28",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-29_0806_[ESG & Transition] 통키[通 Keys] Transitio...md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "박세연, 김예인",
+    "report_date": "2026 년 7 월 28 일",
+    "target_kind": "market",
+    "market_direction": "중립",
+    "macro_vars": [
+      "EUA 가격 상승",
+      "에너지 가격 상승",
+      "지정학적 리스크",
+      "공급 부족 인식"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "신재생",
+        "stance": "상승",
+        "reason": "EU 전기화 행동계획 및 중국 재생에너지 계획 발표"
+      },
+      {
+        "sector": "전력",
+        "stance": "상승",
+        "reason": "AI 데이터센터 전력 수요 급증 및 전력망 투자 확대"
+      }
+    ],
+    "style": "기타",
+    "event_calendar": [
+      {
+        "date": "2026.07.27",
+        "event": "네덜란드 연금펀드의 메스테 투자 재검토"
+      },
+      {
+        "date": "2026.07.15",
+        "event": "EU 메탄 규제 유예 추진"
+      },
+      {
+        "date": "2026.07.21",
+        "event": "EU 전기화 행동계획 발표"
+      },
+      {
+        "date": "2026.07.24",
+        "event": "중국 재생에너지 계획 발표"
+      },
+      {
+        "date": "2026.07.27",
+        "event": "메타 가스발전 투자로 RE100 탈퇴"
+      }
+    ],
+    "top_picks": [
+      "메타"
+    ],
+    "risk": "차익실현에 따른 변동성 확대 가능성",
+    "quote": "2026~2027 년 공급 부족이 유지될 것이라는 인식과 에너지 가격 상승으로 EUA 는 강세를 이어갔습니다. 이번 주에도 견조한 실수요가 가격을 지지할 전망이나, 단기 급등에 따른 변동성 확대 가능성은 경계할 필요가 있습니다."
+  }
+}

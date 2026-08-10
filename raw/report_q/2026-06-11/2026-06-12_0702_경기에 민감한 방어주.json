@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-12_0702_경기에 민감한 방어주.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "iM증권",
+    "analyst": "설용진",
+    "report_date": "2026.06.11",
+    "stocks": [
+      {
+        "name": "서울보증보험",
+        "code": "031210",
+        "rating": "Buy",
+        "rating_changed": "Initiate",
+        "tp_new": "56,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "서울보증보험의 26E 별도 순이익은 3,152억원(+19.3% YoY)를 전망한다.",
+        "estimate_revision": null,
+        "next_catalyst": "이익 회복에 따른 배당 확대 및 배당 하단 가이던스 제공",
+        "thesis": [
+          "국내 유일의 전업 보증보험사로서의 독점적 지위",
+          "최저 배당금 제시 등 주주친화적 정책",
+          "보증사업 사이클 개선에 따른 이익 회복 기대"
+        ],
+        "valuation_basis": "고든배당모형(CoE 6.75%, 배당 영구성장률 1.6% 반영)",
+        "risk": "예금보험공사의 오버행 리스크, 경기에 민감한 사업구조로 인한 이익 변동성",
+        "supply_comment": "예금보험공사의 지분 매각 오버행 리스크 상존하나, 공적자금 회수 등을 위한 적극적인 배당 정책 등으로 단기적으로 과도한 충격이 발생할 정도의 지분 매각은 발생하지 않을 것으로 전망함",
+        "quote": "서울보증보험에 대해 투자의견 Buy, 목표주가 56,000원으로 커버리지를 개시한다."
+      }
+    ]
+  }
+}

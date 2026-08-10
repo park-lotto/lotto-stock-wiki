@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "DAOL투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_Daily Morning Brief(2026.06.08).md"
+  },
+  "questionnaire": {
+    "broker": "DAOL투자증권",
+    "analyst": "김지현",
+    "report_date": "08 Jun. 2026",
+    "target_kind": "market",
+    "market_direction": "null",
+    "macro_vars": [
+      "Dow (-1.35%), S&P500 (-2.64%), Nasdaq (-4.18%)",
+      "2yr 4.147%(+10.4bp), 10yr 4.53%(+5.7bp)",
+      "JPY 160.29(+0.17%), EUR 1.152(-0.77%), Dollar 100.07(+0.66%)",
+      "WTI $90.54(-2.69%), Brent $93.09(-2.04%)"
+    ],
+    "recommended_sectors": null,
+    "style": "null",
+    "event_calendar": [
+      {
+        "date": "6월 5일",
+        "event": "미국 5월 비농업고용"
+      },
+      {
+        "date": "6월 5일",
+        "event": "미국 5월 실업률"
+      }
+    ],
+    "top_picks": [
+      "SK그룹",
+      "LG그룹",
+      "네이버",
+      "하이닉스",
+      "한화에어로스페이스",
+      "현대차",
+      "농심",
+      "제주항공",
+      "엔비디아",
+      "엔씨"
+    ],
+    "risk": "금리 인상 가능성 부각, 고용지수 호조에 따른 금리 인상 가능성, 지정학적 리스크",
+    "quote": "미국 금리 인상 가능성 부각에 따른 금리 인상 가능성으로 금리 인상 가능성 부각"
+  }
+}

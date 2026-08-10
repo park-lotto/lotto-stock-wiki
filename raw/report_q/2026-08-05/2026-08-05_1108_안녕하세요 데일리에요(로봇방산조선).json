@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "date": "2026-08-05",
+    "broker": "eugene investment & securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-05_1108_안녕하세요 데일리에요(로봇방산조선).md"
+  },
+  "questionnaire": {
+    "broker": "eugene investment & securities",
+    "analyst": "양승윤",
+    "report_date": "08/04",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": null,
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": null,
+        "reason": "새만금 현대차 AI·로봇 클러스터, 종합보세구역 지정 / 빅웨이브로보틱스 공모주 수요예측 / SKF그룹, 中 리더드라이브와 로봇 부품 합작사 설립 / 중국 유니트리 1,800만원 로봇"
+      },
+      {
+        "sector": "방산",
+        "stance": null,
+        "reason": "필리핀 방공시스템(천궁-II) 도입 / LIG넥스원 장보고-III 배치-II 3번함 전자전체계 CDR 완료 / 호주 육군 AS9 헌츠맨 성능 극찬"
+      },
+      {
+        "sector": "조선",
+        "stance": null,
+        "reason": "삼성중공업, 무스테리안(M3)과 50MW급 부유식 데이터센터(FDC) 엔지니어링 계약 / HD현대중공업, 볼티모어 교량붕괴 사고 부담 해소 / 마키나락스, HD한조양 용접로봇 이상탐지 AI 적용"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "4~10일",
+        "event": "빅웨이브로보틱스 공모주 수요예측"
+      },
+      {
+        "date": "7월 21일",
+        "event": "필리핀, 공군 지상기반방공체계(GBADS) 낙찰통지서 발행"
+      }
+    ],
+    "top_picks": [
+      "현대차",
+      "빅웨이브로보틱스",
+      "SKF",
+      "리더드라이브",
+      "유니트리",
+      "LIG넥스원",
+      "삼성중공업",
+      "무스테리안",
+      "HD현대중공업",
+      "마키나락스",
+      "HD한조양",
+      "안두릴"
+    ],
+    "risk": null,
+    "quote": "동 자료에 수록된 내용은 당사 리서치센터가 신뢰할만한 자료 및 정보로부터 얻어진 것이나, 당사는 그 정확성이나 완전성을 보장할 수 없습니다."
+  }
+}

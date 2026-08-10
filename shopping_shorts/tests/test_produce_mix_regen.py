@@ -15,8 +15,10 @@ import pytest
 PRODUCE_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"
 NODE = shutil.which("node")
 
+# 2026-07-23 Task4: genMix()가 믹스탭과 함께 제거돼 END 앵커를 그 자리에 남은
+# 마커(`// ── openGenFromWiki 끝 ──`)로 옮겼다(produce.html 참조).
 START_ANCHOR = "function openGenFromWiki(){"
-END_ANCHOR = "function genMix(){"
+END_ANCHOR = "// ── openGenFromWiki 끝 ──"
 
 _HARNESS_PREFIX = r"""
 'use strict';
@@ -144,6 +146,10 @@ def test_use_single_script_is_gone():
     assert "그대로 쓰기" not in text, "'그대로 쓰기' 버튼 문구가 남아 있다"
 
 
+@pytest.mark.skip(
+    reason="Task4(2026-07-23): 이 테스트가 지키려던 전제(genMix=이 태스크 범위 밖)가 "
+    "숏템메이커 리뉴얼 Task4 브리프에서 뒤집혔다 — 믹스탭 전체(genMix 포함) 명시적 제거 대상. "
+    "AI PICK 자동담김으로 대체. 백엔드 /api/produce/script/mix 엔드포인트 자체는 스코프 밖이라 남음.")
 def test_mix_combine_survives():
     """범위 밖 — 2개+ 조합은 그대로여야 한다."""
     text = PRODUCE_HTML.read_text(encoding="utf-8")

@@ -1,0 +1,40 @@
+{
+  "stocks": [
+    {
+      "name": "Intel",
+      "signal": "bull",
+      "reason": "FY2Q26 earnings exceeded expectations with strong revenue growth driven by AI demand, and the company raised its 2026/2027 CapEx guidance.",
+      "ts": "05:26",
+      "quote": "FY2Q26 15년 내 최강 매출 성장 — 견조한 수요·실행력 개선으로 가이던스 상회",
+      "sector": "반도체"
+    },
+    {
+      "name": "Samsung Electronics",
+      "signal": "bull",
+      "reason": "Close to finalizing a main supply contract for HBM4 with AMD and potential for simultaneous Foundry and HBM orders.",
+      "ts": "18:39",
+      "quote": "AMD-삼성전자 HBM4 본계약 임박 — AMD ‘헬리오스’ 양산 선언, 삼성 파운드리 수장 급파",
+      "sector": "반도체"
+    },
+    {
+      "name": "AMD",
+      "signal": "bull",
+      "reason": "Announced mass production of 'Helios' AI server racks starting 3Q26 and nearing a main HBM4 supply contract with Samsung.",
+      "ts": "18:39",
+      "quote": "AMD AI 서버 랙 ‘헬리오스’ 본격 양산 선언 — 3Q26 말부터 출하 예정",
+      "sector": "반도체"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "Morgan Stanley suggests the selloff in US memory stocks creates a compelling entry point due to HBM4 capacity absorption causing shortages in 2027.",
+      "ts": "04:55",
+      "quote": "Morgan Stanley : Selloff of US memory stocks creates a compelling entry point"
+    },
+    {
+      "fact": "Google Cloud's revenue growth is accelerating, with 2Q26 YoY growth reported at 82%.",
+      "ts": "11:25",
+      "quote": "구글 클라우드의 매출 성장률이 가속화되고 있음이 재차 확인되었습니다"
+    }
+  ]
+}

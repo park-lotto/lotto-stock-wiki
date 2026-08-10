@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-12_0704_2H26 OUTLOOK - 호르무즈 해협 봉쇄 이후 유...md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "황성현",
+    "report_date": "2026.06.11",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "한국전력",
+        "code": "015760",
+        "rating": "STRONG BUY",
+        "rating_changed": "상향",
+        "tp_new": "92,000원",
+        "tp_prev": "92,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 연결 매출액 97조원, 영업이익 15조원 전망",
+        "estimate_revision": "영업이익(26) 14,673(변동 ▼), 영업이익(27) 20,645(변동 ▼)",
+        "next_catalyst": "SMP 상한제 시행 가능성 및 원전 정상화",
+        "thesis": [
+          "SMP 상한제 도입과 재생에너지 비중 상승에 따른 실적 개선",
+          "신한울 3·4호기 가동 및 계속운전 원전 복귀로 인한 원전 발전 비중 확대",
+          "미국 원전 밸류체인 진입 및 대미 원전 투자의 주계약자로서의 모멘텀"
+        ],
+        "valuation_basis": "원가회수율 131% 수준에서 과거 한전 PBR 0.5배에서 1.0배 이상으로 리레이팅 전망",
+        "risk": "지정학적 리스크에 따른 유가 변동성 및 전기요금 제도 개편 지연",
+        "supply_comment": "한국전력을 중심으로 한 팀코리아의 수주가 이어질 것이라 판단",
+        "quote": "당사는 한국전력에 대해 투자의견을 STRONG BUY로 상향하며, 목표주가 92,000원을 유지함."
+      },
+      {
+        "name": "한전기술",
+        "code": "052690",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "200,000원",
+        "tp_prev": "200,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 매출액 6,070억원, 영업이익 770억원 전망",
+        "estimate_revision": "영업이익(26) 77(변동 ▲), 영업이익(27) 97(변동 ▼)",
+        "next_catalyst": "체코·신한울 진행률 상승 및 핵잠수함 프로젝트 연동",
+        "thesis": [
+          "핵잠수함 탑재 예정 원자로 설계 원천 기관으로서 역할 확대",
+          "대미투자 확정 시 APR1400 수출 기대감",
+          "신흥국 대상 재처리 포함 토탈 패키지 수출 경쟁력 부각"
+        ],
+        "valuation_basis": "null",
+        "risk": "한미 123협정 개정 지연 및 원전 수출 경쟁 환경 변화",
+        "supply_comment": "핵추진선에 활용되는 BANDI, 한국형 혁신형(i-SMR) 등 설계 용역을 담당 중",
+        "quote": "한전기술에 대해 투자의견 BUY, 목표주가 200,000원을 유지."
+      },
+      {
+        "name": "한전KPS",
+        "code": "051600",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "67,000원",
+        "tp_prev": "67,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2026년 매출액 1.6조원, 영업이익 1,910억원 전망",
+        "estimate_revision": "영업이익(26) 191(변동 ▲), 영업이익(27) 199(변동 ▼)",
+        "next_catalyst": "원전 계획예방정비 물량 증가 및 해외 원전 정비 수주",
+        "thesis": [
+          "원전 수명연장 공사 사이클 단축에 따른 추가 개보수 물량 확대",
+          "12차 전력수급기본계획 내 신규 원전 및 SMR 건설 모멘텀",
+          "해외(루마니아, 체코) 원전 유지보수 계약 수주 기대"
+        ],
+        "valuation_basis": "null",
+        "risk": "정비 사업 특성상 기자재 구매 비용 변동 및 노무비 영향",
+        "supply_comment": "원자로 1급 정비가 가능한 업체로, 해외 신규 원전 수주 시 정비 기술 이전 및 장기 기술서비스계약(TSA) 체결 예상",
+        "quote": "당사는 한전KPS에 대해 투자의견 BUY, 목표주가 67,000원을 유지함."
+      }
+    ]
+  }
+}

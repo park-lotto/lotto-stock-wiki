@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-16",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-19_1101_또 서프라이즈인데, 주가는 너무 싸다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "손현정, 김고운",
+    "report_date": "2026.07.16",
+    "stocks": [
+      {
+        "name": "포스코인터내셔널",
+        "code": "047050",
+        "rating": "BUY (M)",
+        "rating_changed": null,
+        "tp_new": "112,000원",
+        "tp_prev": "112,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 연결 매출액은 8조 5,378억원(YoY +4.6%), 영업이익은 3,974억원(YoY +28.8%, OPM 4.7%)으로 영업이익 기준 시장 컨센서스를 상회할 전망이다.",
+        "estimate_revision": "인도네시아 팜의 생산 정상화와 SENEX 증산 효과가 본격 반영되며 투자법인 중심의 이익 성장이 전사 증익을 견인할 것으로 예상한다.",
+        "next_catalyst": "SENEX 증산과 광양 LNG 터미널 확장",
+        "thesis": [
+          "자산 기반 사업(팜, SENEX, 발전 및 LNG 인프라)의 이익 기여도 확대",
+          "실적은 성장하고 밸류에이션은 하락하여 저평가 구간 진입",
+          "LNG 밸류체인 강화 및 신성장 사업(북미 LNG 자산 투자, 희토류) 추진"
+        ],
+        "valuation_basis": "현재 PER 8배는 절대적으로도, 일본 종합상사 Peer와 비교해도 과도한 할인 구간으로 판단한다.",
+        "risk": "POSCO홀딩스의 보유 지분 축소 가능성, 유가 조정에 따른 에너지 사업 가치 하락",
+        "supply_comment": null,
+        "quote": "자산 기반 사업이 이익 레벨을 높인다. 실적은 성장하고 밸류에이션은 하락했다. 현재 PER 8배는 절대적으로도, 일본 종합상사 Peer와 비교해도 과도한 할인 구간으로 판단한다."
+      }
+    ],
+    "sector": "철강"
+  }
+}

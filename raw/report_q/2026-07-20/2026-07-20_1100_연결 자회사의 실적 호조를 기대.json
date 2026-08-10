@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-20",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-20_1100_연결 자회사의 실적 호조를 기대.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "김도하",
+    "report_date": "2026년 7월 16일",
+    "stocks": [
+      {
+        "name": "삼성생명",
+        "code": "032830",
+        "rating": "Hold(유지)",
+        "rating_changed": false,
+        "tp_new": "346,000원",
+        "tp_prev": "312,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26 연결 지배 순이익은 8,183억원(+8% YoY)으로 컨센서스에 부합하는 실적이 예상됨.",
+        "estimate_revision": "별도 영업이익은 기존 추정치 대비 4% 하향했으나 연결 자회사 실적의 호조가 이를 상쇄하면서 연결 실적은 기존 예상치와 유사한 수준으로 추정",
+        "next_catalyst": "NAV 할인율을 40%로 축소하며 목표주가를 11% 상향 조정",
+        "thesis": [
+          "2Q26 지배 순이익 8,183억원(+8% YoY) 추정",
+          "연결 자회사 실적 호조",
+          "지분가치에 대한 할인율 일부 축소 반영"
+        ],
+        "valuation_basis": "NAV 할인율을 40%로 축소하며 목표주가를 11% 상향 조정",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "한화투자증권은 삼성생명의 목표주가 산정 시 삼성전자 지분가치에 대해 55%의 할인율을 적용해왔음.",
+        "sector": "기타"
+      }
+    ]
+  }
+}

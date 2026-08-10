@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "date": "2026-05-29",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_국내 시총, 1등 자리가 바뀔까.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "iM증권",
+    "analyst": "박상현",
+    "report_date": "2026-05-29",
+    "market_direction": null,
+    "macro_vars": [
+      "반도체 수출증가율",
+      "경상수지 흑자 규모",
+      "GDP성장률",
+      "지정학적 리스크"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "긍정적",
+        "reason": "AI 투자 사이클과 AI산업 확장성에 따른 업황 호조 및 낙수효과 기대"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스"
+    ],
+    "risk": "주가 혹은 자금 쏠림 현상으로 인한 주식시장 내 심각한 양극화 현상 및 버블 리스크",
+    "quote": "오히려 반도체 업황 호조로 시총 1위 자리를 두고 국내 대표적인 반도체 업체들이 선의의 경쟁을 벌일 수 있음은 국내 주식시장과 경기에는 긍정적 시그널로 해석되며 이후 반도체 슈퍼 호황의 수혜, 즉 낙수효과가 주로 어디로 흘러갈지를 주목해야 할 시점"
+  }
+}

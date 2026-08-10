@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-08_1104_성공적인 MASH 결과 들고 다음 스텝으로 (NDR...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "김선아",
+    "report_date": "2026년 06월 08일",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "디앤디파마텍",
+        "code": "347850",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 매출액 12십억원, 영업이익 (26)십억원 / 2027년 매출액 12십억원, 영업이익 (26)십억원",
+        "estimate_revision": null,
+        "next_catalyst": "11월 미국간학회(AASLD)에서 상세 내역 발표 및 조직생검 분석 결과, 기술이전(L/O)을 위한 Confidential Deck 진행",
+        "thesis": [
+          "MASH 치료제 DD01(Zabopegdutide)의 48주차 조직생검 결과에서 섬유화 악화 없는 MASH 해소 57%(p=0.0003) 등 통계적 유의성 달성",
+          "경쟁약물 대비 짧은 titration(2주)으로 우수한 내약성 확보",
+          "글로벌 빅파마와의 기술이전 논의가 긍정적 피드백 속에 진행 중"
+        ],
+        "valuation_basis": "GSK가 Boston Pharmaceuticals로부터 Efimosfermin를 인수한 사례(총 계약 규모 $2B, 선급금 $1.2B)를 참고하여 유의미한 규모의 선급금이 동반된 대형 계약 기대",
+        "risk": "조직생검 데이터에 대한 추가 검토 필요성, 기술이전 최종 성사 여부, 적은 임상 환자 수",
+        "supply_comment": "기타 (바이오)",
+        "quote": "MASH 치료제 DD01(Zabopegdutide)의 48주차 조직생검 결과를 공개하였다. 2차 지표는 MASH 환자에 한해서 생검을 통해 MASH 개선 및 섬유화 개선 지표 등을 확인하는 것이었다."
+      }
+    ]
+  }
+}

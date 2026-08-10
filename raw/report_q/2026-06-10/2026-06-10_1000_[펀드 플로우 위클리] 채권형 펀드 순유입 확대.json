@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_[펀드 플로우 위클리] 채권형 펀드 순유입 확대.md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "김용구",
+    "report_date": "2026.06.10",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "미국 5월 CPI",
+      "6월 FOMC"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "순유입",
+        "reason": "AI/반도체 밸류체인 중심으로의 자금이 집중된 것으로 판단"
+      },
+      {
+        "sector": "IT",
+        "stance": "순유입",
+        "reason": "반도체 대형주 집중 ETF 및 기판 관련주 노출이 높은 IT로는 자금이 유입"
+      }
+    ],
+    "style": "대형 혼합 스타일, 중형 가치, 소형 혼합",
+    "event_calendar": [
+      {
+        "date": "6/12",
+        "event": "스페이스X 상장"
+      }
+    ],
+    "top_picks": [
+      "엔비디아"
+    ],
+    "risk": "미국 고용지표 호조에 따른 금리인상 우려, 브로드컴발 AI/반도체 밸류체인 성장 둔화 우려",
+    "quote": "주식형 펀드 순유입액의 성격 변화. 미국 주식형 펀드 순유입의 대다수가 S&P500 지수추종 ETF에서 발생한 반면, 최근 큰 비중을 차지하던 성장주로의 순유입은 축소."
+  }
+}

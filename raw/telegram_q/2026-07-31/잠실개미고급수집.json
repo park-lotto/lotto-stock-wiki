@@ -1,0 +1,48 @@
+{
+  "stocks": [
+    {
+      "name": "AMZN",
+      "signal": "bull",
+      "reason": "AWS revenue grew 37% YoY, exceeding market consensus of 31.3%, with AI and internal chips showing high run-rates.",
+      "ts": "05:33",
+      "quote": "AWS 역시 이번 분기 매출액이 전년 동기 대비 37% 증가하며 시장 컨센서스인 31.3%를 상회했습니다",
+      "sector": "IT"
+    },
+    {
+      "name": "삼성전자",
+      "signal": "bull",
+      "reason": "2Q26 earnings showed significant profit growth with high memory margins, leading to expectations of stock buybacks and dividend expansion.",
+      "ts": "20:42",
+      "quote": "삼성전자는 영업이익 89.5조원 (+56.4% QoQ)으로 메모리 경쟁사들 대비 가장 강력한 수익성 확장을 입증",
+      "sector": "반도체"
+    },
+    {
+      "name": "SK하이닉스",
+      "signal": "bull",
+      "reason": "Chairman Chey Tae-won purchased 3,620 shares, signaling confidence in the stock.",
+      "ts": "19:17",
+      "quote": "최태원 회장, SK하이닉스 주식 3620주 매수",
+      "sector": "반도체"
+    },
+    {
+      "name": "키옥시아",
+      "signal": "bull",
+      "reason": "Data center revenue surged 5x YoY with 72% operating margin and announced stock splits and buybacks.",
+      "ts": "16:32",
+      "quote": "데이터센터용 매출은 전년 동기 대비 5배 이상 증가한 1조 1,747억 엔을 기록",
+      "sector": "반도체"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "Leopold Aschenbrenner's hedge fund, Situational Awareness, is seeking new capital after losses from recent AI stock declines.",
+      "ts": "13:48",
+      "quote": "전 OpenAI 연구원 레오폴트 아셴브레너(Leopold Aschenbrenner)가 설립한 약 200억 달러 규모의 헤지펀드 ‘시추에이셔널 어웨어니스(Situational Awareness)’가 최근 AI 관련 주식의 급락으로 큰 손실을 본 뒤 투자자들로부터 신규 자금을 조달하려 하고 있다"
+    },
+    {
+      "fact": "CSOP is launching a KOSPI 200 covered call product to hedge against high volatility in the Korean market.",
+      "ts": "20:15",
+      "quote": "SK하이닉스 단일 커버드콜은 아니지만, KOSPI200 커버드콜을 CSOP에서 출시합니다."
+    }
+  ]
+}

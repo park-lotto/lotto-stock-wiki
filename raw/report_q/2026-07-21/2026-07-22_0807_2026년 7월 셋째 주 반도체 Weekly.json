@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-22_0807_2026년 7월 셋째 주 반도체 Weekly.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "최보영",
+    "report_date": "2026/ 07/ 21",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "WTI 주간 15% 급등",
+      "2분기 GDP 성장률 4.3%",
+      "미국 2년 국채 수익률 4.16%",
+      "미국 10년 국채 수익률 4.57%"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "7/22",
+        "event": "알파벳 실적 발표"
+      },
+      {
+        "date": "7/23",
+        "event": "인텔 실적 발표"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "SK하이닉스",
+      "TSMC"
+    ],
+    "risk": "미국-이란 호르무즈 충돌 지속, 미국 의회 CXMT, YMTC 메모리 사용 제한 요구, 중국 반도체 핵심 생산 소재 헬륨 수출 금지",
+    "quote": "메모리 업황 악화보다 레버리지 포지션 비대칭, 청산(삼전닉스 레버리지 청산 1조원 추정) 때문"
+  }
+}

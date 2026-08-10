@@ -53,6 +53,34 @@ def test_extract_beat_frame_real_ffmpeg(tmp_path):
     assert ok and out.exists() and out.stat().st_size > 0
 
 
+def test_extract_beat_frame_prefers_clean_source(tmp_path):
+    """2단계 자막제거 청소본이 있으면 원본이 아니라 청소본에서 프레임을 뜬다.
+    (2026-07-21 버그: 꾸미기 미리보기가 원본 glob만 써서 지운 자막이 살아있었다.)"""
+    from shopping_shorts import app as app_module
+    work = tmp_path / "job"
+    (work / "s0").mkdir(parents=True)
+    # 원본=teal, 청소본=maroon. 프레임 색으로 어느 소스를 썼는지 판별한다.
+    orig = work / "s0" / "clip.mp4"
+    clean = tmp_path / "s0_clean.mp4"
+    for path, color in ((orig, "teal"), (clean, "maroon")):
+        _sp.run(["ffmpeg", "-y", "-f", "lavfi", "-i", f"color=c={color}:s=1080x1920:d=1",
+                 "-c:v", "libx264", "-pix_fmt", "yuv420p", str(path)],
+                capture_output=True, stdin=_sp.DEVNULL)
+    out = work / "beatframes" / "0_clean.jpg"
+    ok = app_module._extract_beat_frame(
+        work, {"primary": {"video_id": "s0", "start": 0.3}}, out,
+        clean_sources={"s0": str(clean)})
+    assert ok and out.exists()
+    # 뽑은 프레임의 평균색이 maroon(청소본)에 가까운지 = R이 G/B보다 확실히 큼.
+    probe = _sp.run(["ffmpeg", "-i", str(out), "-vf",
+                     "scale=1:1", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
+                    capture_output=True, stdin=_sp.DEVNULL)
+    rgb = probe.stdout[:3]
+    assert len(rgb) == 3, "프레임 픽셀 추출 실패"
+    r, g, b = rgb[0], rgb[1], rgb[2]
+    assert r > g + 40 and r > b + 40, f"청소본(maroon) 대신 원본(teal)을 씀: rgb={r},{g},{b}"
+
+
 def test_beats_preview_gives_segments_like_real_render(tmp_path, monkeypatch):
     """★자막 미리보기≠실제렌더 seam 봉인(2026-07-18 사장님 실측).
 

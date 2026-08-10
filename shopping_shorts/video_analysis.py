@@ -100,7 +100,10 @@ def _client_for_key(key):
     return _client_cache[key]
 
 
-def _wait_until_active(client, file_obj, max_wait_s=60, poll_interval=2):
+def _wait_until_active(client, file_obj, max_wait_s=180, poll_interval=2):
+    # 대기 상한 180초(2026-07-29): 예전 60초는 조급해서 '조금 느린' 영상(길거나·제미니가 잠깐
+    # 붐빌 때)이 준비 전에 실패로 던져져 빈 추출→대본이 짧아졌다(5a8e089d 10초 실사고). 제미니는
+    # 재업로드해도 다시 PROCESSING부터라 조급하게 끊는 이득이 없다 — 실제 준비될 때까지 기다린다.
     waited = 0
     state = file_obj.state.name
     while state == "PROCESSING" and waited < max_wait_s:
@@ -128,7 +131,7 @@ def analyze_video(video_path, caption, max_retries=5, quota_sleep=8):
     prompt = _PROMPT.format(caption=caption or "(캡션 없음)")
 
     for attempt in range(max_retries):
-        key, idx = comment_gen._current_key_and_idx()
+        key, idx = comment_gen._next_live_key_and_idx()
         if key is None:
             return dict(_EMPTY)  # 전용 풀 전체 소진 — 공유 풀로 넘어가지 않고 여기서 멈춤
 
@@ -161,8 +164,8 @@ def analyze_video(video_path, caption, max_retries=5, quota_sleep=8):
             if key_vault.is_quota_error(e):
                 # 분당 제한 등 "일일 소진"까지는 확인 안 되는 429 — 키를 영구
                 # 제외하면 전용 풀(3개뿐)이 금방 동나므로, 같은 키로 짧게
-                # 대기 후 재시도
-                time.sleep(quota_sleep)
+                # 대기 후 재시도. 서버가 대기시간을 알려주면 그 값을 쓴다(2026-08-09).
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
                 continue
             if attempt < max_retries - 1 and any(c in m for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
@@ -203,7 +206,7 @@ def translate_keyword(keyword, max_retries=3, quota_sleep=8):
 
     prompt = _TRANSLATE_PROMPT.format(keyword=keyword)
     for attempt in range(max_retries):
-        key, idx = comment_gen._current_key_and_idx()
+        key, idx = comment_gen._next_live_key_and_idx()
         if key is None:
             return result
         try:
@@ -222,7 +225,10 @@ def translate_keyword(keyword, max_retries=3, quota_sleep=8):
                 comment_gen._mark_key_exhausted(idx)
                 continue
             if key_vault.is_quota_error(e):
-                time.sleep(quota_sleep)
+                # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
+                # 고정 8초는 실제 대기(45초)에 한참 못 미쳐 재시도 3번이 전부
+                # 429로 타버렸고, 결과가 조용한 빈 값이라 태거가 0/40건만 찍었다.
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
                 continue
             if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
@@ -251,7 +257,7 @@ def cn_search_keyword(caption, max_retries=3, quota_sleep=8):
         return ""
     prompt = _CN_KEYWORD_PROMPT.format(caption=caption[:400])
     for attempt in range(max_retries):
-        key, idx = comment_gen._current_key_and_idx()
+        key, idx = comment_gen._next_live_key_and_idx()
         if key is None:
             return ""
         try:
@@ -266,7 +272,10 @@ def cn_search_keyword(caption, max_retries=3, quota_sleep=8):
                 comment_gen._mark_key_exhausted(idx)
                 continue
             if key_vault.is_quota_error(e):
-                time.sleep(quota_sleep)
+                # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
+                # 고정 8초는 실제 대기(45초)에 한참 못 미쳐 재시도 3번이 전부
+                # 429로 타버렸고, 결과가 조용한 빈 값이라 태거가 0/40건만 찍었다.
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
                 continue
             if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
@@ -288,13 +297,217 @@ _CN_VISION_PROMPT = """이 이미지는 한국어 쇼츠 영상의 한 장면(�
 캡션: {caption}"""
 
 
+_SUBJECT_TAGS_PROMPT = """이 이미지는 한국어 쇼츠 영상의 썸네일이다. 화면에 박힌 글자(제목·주제어)\
+와 물건의 생김새를, 아래 캡션과 종합해 이 영상이 다루는 '주제'를 특정하라. 랭킹 검색에서
+"오이"·"빵" 같은 검색어로 이 영상이 잡히게 만드는 게 목적이다.
+- 화면 글자에 주제어가 있으면 그것을 최우선 반영(캡션엔 없고 자막에만 있는 경우가 많다).
+- subject: 이 영상의 주제 명사 1개(짧게. 예: 오이무침, 블루투스 스피커, 베이글, 소파).
+- keywords: 검색에 쓸 3~6개(주제 명사·핵심 재료·용도·상위 분류. 예: ["오이","다이어트반찬","여름반찬"]).
+  ⚠️ 캡션에 우연히 들어간 말이 아니라 '영상이 실제로 다루는 것'만.
+- JSON만: {{"subject": "...", "keywords": ["...", ...]}}
+캡션: {caption}"""
+
+_SUBJECT_TAGS_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "subject": {"type": "string"},
+        "keywords": {"type": "array", "items": {"type": "string"}, "minItems": 1, "maxItems": 8},
+    },
+    "required": ["subject", "keywords"],
+}
+
+
+# ★키 선택은 전부 comment_gen._next_live_key_and_idx()를 쓴다(2026-08-06).
+# _current_key_and_idx는 늘 live[0]만 돌려주므로, 키가 23개여도 이 파일의 모든
+# 요청이 1번 키 하나를 때렸다 — 무료등급 분당 15건(실측: 16번째에 429)에 묶여
+# 병렬로 돌려도 처리량이 안 늘었다(워커 8→24로 올려도 37~39건/분 평평).
+# 라운드로빈으로 바꾸면 키 수만큼 곱해진다. 2026-07-23에 comment_gen 쪽을 고칠 때
+# (성공률 7%→29%) 이 파일 9곳이 통째로 빠져 있었다.
+def subject_tags_vision(image_bytes, caption, max_retries=3, quota_sleep=8):
+    """썸네일 이미지(+캡션) → {"subject": str, "keywords": [str]}. 랭킹 검색용 주제태그.
+    화면 자막·물건 생김새를 읽어 캡션에 없는 주제어도 뽑는다. 키 없음/실패 시 {} (→ 캡션 백업 검색)."""
+    if not image_bytes or not SHORTS_GEMINI_KEYS:
+        return {}
+    prompt = _SUBJECT_TAGS_PROMPT.format(caption=(caption or "(캡션 없음)")[:400])
+    for attempt in range(max_retries):
+        key, idx = comment_gen._next_live_key_and_idx()
+        if key is None:
+            return {}
+        try:
+            client = _client_for_key(key)
+            resp = client.models.generate_content(
+                model=_TRANSLATE_MODEL,  # flash-lite — 썸네일 1장이라 가벼운 모델로 충분
+                contents=[prompt, types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=_SUBJECT_TAGS_SCHEMA,
+                ),
+            )
+            data = json.loads(resp.text)
+            subject = (data.get("subject") or "").strip()
+            keywords = [k.strip() for k in (data.get("keywords") or []) if k and k.strip()]
+            if not subject and not keywords:
+                return {}
+            return {"subject": subject, "keywords": keywords}
+        except Exception as e:
+            if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
+                comment_gen._mark_key_exhausted(idx)
+                continue
+            if key_vault.is_quota_error(e):
+                # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
+                # 고정 8초는 실제 대기(45초)에 한참 못 미쳐 재시도 3번이 전부
+                # 429로 타버렸고, 결과가 조용한 빈 값이라 태거가 0/40건만 찍었다.
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
+                continue
+            if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
+                time.sleep((attempt + 1) * 5)
+                continue
+            return {}
+    return {}
+
+
+_FACE_FORWARD_PROMPT = """이 이미지는 한국어 쇼츠 영상의 썸네일이다. 사람(진행자)의 얼굴·모습이
+화면의 주인공인지 판정하라. 쇼핑 제품을 보여주는 채널을 찾는 게 목적이다.
+- true = 사람 얼굴·상반신이 주인공(인물 브이로그·연예인·본인출연 토크·리액션).
+- false = 제품·음식·공간이 주인공.
+  ⚠️ 손만 나오는 것은 false다 — 손은 제품을 쥐거나 시연하는 도구다.
+  ⚠️ 사람이 배경에 조금 걸치거나 뒷모습·신체 일부만 나오는 것도 false다.
+JSON만: {"face_forward": true/false}"""
+
+_FACE_FORWARD_SCHEMA = {
+    "type": "object",
+    "properties": {"face_forward": {"type": "boolean"}},
+    "required": ["face_forward"],
+}
+
+
+def face_forward_vision(image_bytes, max_retries=3, quota_sleep=8):
+    """썸네일 1장 → True(사람이 주인공) / False(제품이 주인공) / None(판정 실패).
+
+    None과 False를 구분하는 게 중요하다 — 호출부가 '판정 실패'를 '제품채널'로
+    오해하면, 키가 잠긴 날 인물채널이 전부 통과해버린다(반대로 전부 제외돼도
+    곤란하다). 실패는 None으로 올려 호출부가 '판정 안 함'으로 다루게 한다."""
+    if not image_bytes or not SHORTS_GEMINI_KEYS:
+        return None
+    for attempt in range(max_retries):
+        key, idx = comment_gen._next_live_key_and_idx()
+        if key is None:
+            return None
+        try:
+            client = _client_for_key(key)
+            resp = client.models.generate_content(
+                model=_TRANSLATE_MODEL,   # flash-lite — 썸네일 1장이라 가벼운 모델로 충분
+                contents=[_FACE_FORWARD_PROMPT,
+                          types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=_FACE_FORWARD_SCHEMA,
+                ),
+            )
+            return bool(json.loads(resp.text).get("face_forward"))
+        except Exception as e:  # noqa: BLE001 — 판정 실패는 None(제외 안 함)으로 흘린다
+            if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
+                comment_gen._mark_key_exhausted(idx)
+                continue
+            if key_vault.is_quota_error(e):
+                # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
+                # 고정 8초는 실제 대기(45초)에 한참 못 미쳐 재시도 3번이 전부
+                # 429로 타버렸고, 결과가 조용한 빈 값이라 태거가 0/40건만 찍었다.
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
+                continue
+            if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
+                time.sleep((attempt + 1) * 5)
+                continue
+            return None
+    return None
+
+
+_TEXT_LEVEL_PROMPT = """이 이미지는 SNS 숏폼 영상의 썸네일이다. 화면에 박힌 글자(제목·자막·설명
+텍스트)가 원본 장면(제품·사람·배경)을 얼마나 가리는지 판단하라.
+- none: 화면에 텍스트가 거의/전혀 없음
+- light: 작은 워터마크·짧은 자막 정도, 원본 장면이 잘 보임
+- heavy: 큰 제목 텍스트·자막이 화면 상당 부분을 가려 원본 장면이 잘 안 보임
+JSON만: {"text_level": "none"|"light"|"heavy"}"""
+
+_TEXT_LEVEL_SCHEMA = {
+    "type": "object",
+    "properties": {"text_level": {"type": "string", "enum": ["none", "light", "heavy"]}},
+    "required": ["text_level"],
+}
+
+
+def text_level_vision(image_bytes, max_retries=3, quota_sleep=8):
+    """썸네일 이미지 → 자막/텍스트 오버레이 정도 {"text_level": "none"|"light"|"heavy"}.
+    해외HOT 발굴에서 자막 없는 원본 소스 영상만 골라내기 위한 판정(2026-07-29). 실패·키없음 시 {}
+    (overseas_funnel.passes_caption_clutter가 판정없는 항목은 통과시키므로 과필터 안 됨)."""
+    if not image_bytes or not SHORTS_GEMINI_KEYS:
+        return {}
+    for attempt in range(max_retries):
+        key, idx = comment_gen._next_live_key_and_idx()
+        if key is None:
+            return {}
+        try:
+            client = _client_for_key(key)
+            resp = client.models.generate_content(
+                model=_TRANSLATE_MODEL,  # flash-lite — 썸네일 1장이라 가벼운 모델로 충분
+                contents=[_TEXT_LEVEL_PROMPT, types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=_TEXT_LEVEL_SCHEMA,
+                ),
+            )
+            data = json.loads(resp.text)
+            level = (data.get("text_level") or "").strip()
+            if level not in ("none", "light", "heavy"):
+                return {}
+            return {"text_level": level}
+        except Exception as e:
+            if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
+                comment_gen._mark_key_exhausted(idx)
+                continue
+            if key_vault.is_quota_error(e):
+                # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
+                # 고정 8초는 실제 대기(45초)에 한참 못 미쳐 재시도 3번이 전부
+                # 429로 타버렸고, 결과가 조용한 빈 값이라 태거가 0/40건만 찍었다.
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
+                continue
+            if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
+                time.sleep((attempt + 1) * 5)
+                continue
+            return {}
+    return {}
+
+
+def _referer_for(url):
+    """CDN 핫링크 차단 우회용 Referer. xhscdn(샤오홍슈)은 인스타 Referer로는 막힌다(2026-07-29 실측)."""
+    if "xhscdn.com" in url or "rednote.com" in url:
+        return "https://www.rednote.com/"
+    return "https://www.instagram.com/"
+
+
+def fetch_thumb_bytes(url, timeout=15):
+    """썸네일 URL → 이미지 bytes. 인스타/샤오홍슈 CDN 핫링크 차단 우회 헤더 포함. 실패 시 None."""
+    if not url:
+        return None
+    try:
+        import requests
+        r = requests.get(url, timeout=timeout, headers={
+            "User-Agent": "Mozilla/5.0",
+            "Referer": _referer_for(url),
+        })
+        r.raise_for_status()
+        return r.content
+    except Exception:
+        return None
+
+
 def cn_search_keyword_vision(image_bytes, caption, max_retries=3, quota_sleep=8):
     """프레임 이미지(+캡션) → {"product","zh"}. 화면 글자·제품 생김새까지 반영. 실패 시 {}."""
     if not image_bytes or not SHORTS_GEMINI_KEYS:
         return {}
     prompt = _CN_VISION_PROMPT.format(caption=(caption or "(캡션 없음)")[:400])
     for attempt in range(max_retries):
-        key, idx = comment_gen._current_key_and_idx()
+        key, idx = comment_gen._next_live_key_and_idx()
         if key is None:
             return {}
         try:
@@ -319,13 +532,88 @@ def cn_search_keyword_vision(image_bytes, caption, max_retries=3, quota_sleep=8)
                 comment_gen._mark_key_exhausted(idx)
                 continue
             if key_vault.is_quota_error(e):
-                time.sleep(quota_sleep)
+                # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
+                # 고정 8초는 실제 대기(45초)에 한참 못 미쳐 재시도 3번이 전부
+                # 429로 타버렸고, 결과가 조용한 빈 값이라 태거가 0/40건만 찍었다.
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
                 continue
             if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
                 continue
             return {}
     return {}
+
+
+_CN_CANDIDATES_PROMPT = """이 이미지는 한국어 쇼츠 영상의 한 장면(썸네일)이다. 화면에 박힌 글자\
+(제품명·주제어)와 물건의 생김새를 아래 캡션과 종합해 '이 영상이 소개하는 바로 그 제품/소재'를 \
+특정하라. 그 제품과 같은 영상을 중국 SNS(샤오홍슈/도우인)에서 찾을 **중국어 검색어 후보 3~4개**를 만들라.
+- 넓은 제품+방식(예: 에어프라이어 감자칩→空气炸锅土豆片) → 좁은 제품명(예: 气泡土豆) 순으로 다양하게.
+- 화면 글자에 제품명이 있으면 최우선 반영. 서로 다른 각도의 검색어(재료·조리법·모양)를 섞어라.
+- 각 후보에 한국어 뜻(ko)을 짧게 달라(사용자가 뭘 누르는지 알게).
+- JSON만: {{"product": "한국어 제품명(짧게)", \
+"candidates": [{{"ko": "한국어 뜻", "zh": "중국어 검색어"}}, ...]}}
+캡션: {caption}"""
+
+_CN_CANDIDATES_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "product": {"type": "string"},
+        "candidates": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"ko": {"type": "string"}, "zh": {"type": "string"}},
+                "required": ["ko", "zh"],
+            },
+            "minItems": 1, "maxItems": 4,
+        },
+    },
+    "required": ["product", "candidates"],
+}
+
+
+def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8):
+    """프레임(+캡션) → {"product": str, "candidates": [{"ko","zh"}]}. 실패/키없음 시 빈 리스트."""
+    empty = {"product": "", "candidates": []}
+    if not image_bytes or not SHORTS_GEMINI_KEYS:
+        return empty
+    prompt = _CN_CANDIDATES_PROMPT.format(caption=(caption or "(캡션 없음)")[:400])
+    for attempt in range(max_retries):
+        key, idx = comment_gen._next_live_key_and_idx()
+        if key is None:
+            return empty
+        try:
+            client = _client_for_key(key)
+            resp = client.models.generate_content(
+                model=_MODEL,
+                contents=[prompt, types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=_CN_CANDIDATES_SCHEMA,
+                ),
+            )
+            data = json.loads(resp.text)
+            cands = []
+            for c in (data.get("candidates") or []):
+                ko, zh = (c.get("ko") or "").strip(), (c.get("zh") or "").strip()
+                if zh:
+                    cands.append({"ko": ko, "zh": zh})
+            return {"product": (data.get("product") or "").strip(), "candidates": cands}
+        except Exception as e:
+            if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
+                comment_gen._mark_key_exhausted(idx)
+                continue
+            if key_vault.is_quota_error(e):
+                # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
+                # 고정 8초는 실제 대기(45초)에 한참 못 미쳐 재시도 3번이 전부
+                # 429로 타버렸고, 결과가 조용한 빈 값이라 태거가 0/40건만 찍었다.
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
+                continue
+            if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
+                time.sleep((attempt + 1) * 5)
+                continue
+            return empty
+    return empty
 
 
 _CN_JUDGE_PROMPT = """기준 제품: {product}
@@ -346,7 +634,7 @@ def judge_same_product(product, titles, max_retries=2, quota_sleep=8):
     numbered = "\n".join(f"{i + 1}. {t}" for i, t in enumerate(titles))
     prompt = _CN_JUDGE_PROMPT.format(product=product, titles=numbered)
     for attempt in range(max_retries):
-        key, idx = comment_gen._current_key_and_idx()
+        key, idx = comment_gen._next_live_key_and_idx()
         if key is None:
             return []
         try:
@@ -370,7 +658,10 @@ def judge_same_product(product, titles, max_retries=2, quota_sleep=8):
                 comment_gen._mark_key_exhausted(idx)
                 continue
             if key_vault.is_quota_error(e):
-                time.sleep(quota_sleep)
+                # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
+                # 고정 8초는 실제 대기(45초)에 한참 못 미쳐 재시도 3번이 전부
+                # 429로 타버렸고, 결과가 조용한 빈 값이라 태거가 0/40건만 찍었다.
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
                 continue
             if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)

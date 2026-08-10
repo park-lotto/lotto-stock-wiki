@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "date": "2026-06-01",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_국내주식 마감 시황 (26.05.29) - Life is Good.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "유안타증권",
+    "analyst": "이재원",
+    "report_date": "2026.05.29",
+    "market_direction": "KOSPI 8,476pt(+3.6%), KOSDAQ 1,075pt(-2.7%)",
+    "macro_vars": [
+      "4월 PCE 물가",
+      "미국-이란 휴전 연장 합의",
+      "유가",
+      "금리",
+      "달러"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "기타",
+        "stance": "매력적",
+        "reason": "산업재(조선, 방산)와 2차전지 그리고 증권 업종"
+      }
+    ],
+    "style": "반도체 + 호실적 업종 구성으로 알파 추구 전략",
+    "event_calendar": [
+      {
+        "date": "다음주",
+        "event": "젠슨황 방한"
+      }
+    ],
+    "top_picks": [
+      "SK하이닉스",
+      "삼성전자",
+      "LG전자",
+      "현대오토에버",
+      "로보티즈",
+      "삼성전기",
+      "LG이노텍",
+      "대덕전자"
+    ],
+    "risk": "지정학적 갈등, 반도체 소부장 수급 유인 여력 악화",
+    "quote": "반도체 이익 주도력 지속되는 현 상황에서 반도체 비중을 축소하는 것은 적절하지 않음. 반도체 + 호실적 업종 구성으로 알파 추구 전략이 유효."
+  }
+}

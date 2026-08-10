@@ -4,8 +4,16 @@ from shopping_shorts import video_analysis, comment_gen
 
 @pytest.fixture(autouse=True)
 def isolate_shorts_gemini_state(monkeypatch, tmp_path):
-    """모든 테스트에서 실제 data/shorts_gemini_state.json을 절대 건드리지 않는다."""
+    """모든 테스트에서 실제 data/shorts_gemini_state.json을 절대 건드리지 않는다.
+
+    ★2026-08-06: 분당 한도 라운드로빈(_rr_cursor·_key_last_used)이 모듈 메모리
+    상태라, 앞 테스트가 커서를 돌려놓으면 'key1부터 시작' 가정이 실행 순서에 따라
+    깨졌다(★finish 게이트 간헐 차단의 실제 원인 — 단독 실행은 통과, 파일 실행은
+    실패). 커서·쿨다운도 테스트마다 리셋하고, _MIN_GAP_S=0으로 쿨다운 sleep 제거."""
     monkeypatch.setattr(comment_gen, "_STATE_PATH", tmp_path / "shorts_gemini_state.json")
+    monkeypatch.setitem(comment_gen._rr_cursor, "i", 0)
+    comment_gen._key_last_used.clear()
+    monkeypatch.setattr(comment_gen, "_MIN_GAP_S", 0.0)
 
 
 class FakeFileObj:
@@ -235,3 +243,86 @@ def test_analyze_video_all_keys_exhausted_returns_empty(monkeypatch, tmp_path):
 
     result = video_analysis.analyze_video(video_path, caption="test")
     assert result == {"keywords": {"ko": [], "en": [], "zh": [], "ja": [], "ru": []}, "category": ""}
+
+
+def test_text_level_vision_returns_level(monkeypatch):
+    monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", ["fake-key"])
+    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["fake-key"])
+
+    class FakeModels:
+        def generate_content(self, **kw):
+            class R: text = '{"text_level": "heavy"}'
+            return R()
+
+    class FakeClient:
+        models = FakeModels()
+
+    monkeypatch.setattr(video_analysis, "_client_for_key", lambda key: FakeClient())
+
+    assert video_analysis.text_level_vision(b"fakeimg") == {"text_level": "heavy"}
+
+
+def test_text_level_vision_no_keys_returns_empty(monkeypatch):
+    monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", [])
+    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", [])
+    assert video_analysis.text_level_vision(b"fakeimg") == {}
+
+
+def test_text_level_vision_no_image_returns_empty(monkeypatch):
+    monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", ["fake-key"])
+    assert video_analysis.text_level_vision(None) == {}
+
+
+def test_text_level_vision_invalid_level_returns_empty(monkeypatch):
+    monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", ["fake-key"])
+    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["fake-key"])
+
+    class FakeModels:
+        def generate_content(self, **kw):
+            class R: text = '{"text_level": "unknown"}'
+            return R()
+
+    class FakeClient:
+        models = FakeModels()
+
+    monkeypatch.setattr(video_analysis, "_client_for_key", lambda key: FakeClient())
+    assert video_analysis.text_level_vision(b"img") == {}
+
+
+def test_fetch_thumb_bytes_uses_rednote_referer_for_xhs_cdn(monkeypatch):
+    captured = {}
+
+    class FakeResp:
+        content = b"imgdata"
+
+        def raise_for_status(self):
+            pass
+
+    def fake_get(url, timeout, headers):
+        captured["headers"] = headers
+        return FakeResp()
+
+    monkeypatch.setattr("requests.get", fake_get)
+
+    result = video_analysis.fetch_thumb_bytes("http://sns-webpic-qc.xhscdn.com/foo.jpg")
+    assert result == b"imgdata"
+    assert captured["headers"]["Referer"] == "https://www.rednote.com/"
+
+
+def test_fetch_thumb_bytes_uses_instagram_referer_by_default(monkeypatch):
+    captured = {}
+
+    class FakeResp:
+        content = b"imgdata"
+
+        def raise_for_status(self):
+            pass
+
+    def fake_get(url, timeout, headers):
+        captured["headers"] = headers
+        return FakeResp()
+
+    monkeypatch.setattr("requests.get", fake_get)
+
+    video_analysis.fetch_thumb_bytes("http://scontent.cdninstagram.com/foo.jpg")
+    assert captured["headers"]["Referer"] == "https://www.instagram.com/"

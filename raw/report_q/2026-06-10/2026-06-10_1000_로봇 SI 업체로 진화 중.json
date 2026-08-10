@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_로봇 SI 업체로 진화 중.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "김혜빈",
+    "report_date": "2026. 6.10",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "클로봇",
+        "code": "466100",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": {
+          "summary": "2026년 실적은 DLS 편입 시점에 따라 시나리오별로 다르게 전망됨 (시나리오 A 매출 1,119억원/영익 0억원, 시나리오 B 매출 819억원/영익 -6억원, 시나리오 C 매출 519억원/영익 -9억원)",
+          "quote": "표 4. 시나리오별 클로봇 2026F 실적 전망 (억원) 구분 시나리오 A (DLS 3Q26 편입 가정) 시나리오 B (DLS 4Q26 편입 가정) 시나리오 C (DLS 미편입 가정) 매출액 1,119 819 519 영업이익 0 -6 -9"
+        },
+        "estimate_revision": null,
+        "next_catalyst": "DLS 인수 마무리 및 합병 시너지 가시화",
+        "thesis": [
+          "특정 하드웨어에 종속되지 않는 소프트웨어 범용성 확보 및 자율주행 솔루션 경쟁력",
+          "DLS 인수를 통해 물류 자동화 SI 사업으로의 도약 및 물류 오케스트레이션 플랫폼 구축",
+          "국내외 대기업 및 주요 산업현장 중심의 다양한 레퍼런스 확보"
+        ],
+        "valuation_basis": null,
+        "risk": "유상증자에 따른 신주 발행 희석 우려 및 단기 주가 변동성, DLS 인수 관련 초기 통합 시행착오 가능성",
+        "supply_comment": null,
+        "quote": "DLS 인수 마무리 및 합병 시너지 가시화 시점까지는 긴 호흡으로 바라보며 단기 변동성에 대한 보수적 대응이 필요하다고 판단한다."
+      }
+    ],
+    "sector": "로봇"
+  }
+}

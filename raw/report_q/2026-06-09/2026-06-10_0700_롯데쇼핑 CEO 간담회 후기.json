@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_0700_롯데쇼핑 CEO 간담회 후기.md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "유정현, 홍성원 RA",
+    "report_date": "2026.06.08",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "롯데쇼핑",
+        "code": "023530",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "200,000",
+        "tp_prev": "200,000",
+        "tp_direction": "flat",
+        "earnings_outlook": "투자의견 BUY와 목표주가 200,000원(12M FWD PER 15배) 유지. 국내 소비 회복뿐 아니라 외국인 매출액 급증으로 전례 없는 호황 기록 중. 여기에 전 사업부가 수익성에 초점을 맞춰 매우 신중한 투자 결정을 통해 ROE 개선, PBR 상승 전망",
+        "estimate_revision": null,
+        "next_catalyst": "오카도 CFC 투자 1호기 안착 및 향후 2, 3호기 투자 계획 실행 여부",
+        "thesis": [
+          "백화점 부문의 외국인 전용 멤버스 카드 및 맞춤형 점포 리뉴얼 전략을 통한 매출 및 수익성 개선",
+          "대형마트 부문의 홈플러스 폐점 반사 수혜 지속 및 전 사업부의 수익성 중심 경영을 통한 ROE 개선",
+          "국내 소비 회복과 외국인 매출액 급증으로 인한 전례 없는 호황"
+        ],
+        "valuation_basis": "12M FWD PER 15배",
+        "risk": "마트 산업 전체의 구조적 수요 감소와 신규 출점의 한계",
+        "supply_comment": null,
+        "quote": "투자의견 BUY와 목표주가 200,000원(12M FWD PER 15배) 유지. 국내 소비 회복뿐 아니라 외국인 매출액 급증으로 전례 없는 호황 기록 중."
+      }
+    ],
+    "sector": "소비내수"
+  }
+}

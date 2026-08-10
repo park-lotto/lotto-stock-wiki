@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-29",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-29_1103_2Q26 Review 무난함 속에 숨겨진 저력.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "김광식",
+    "report_date": "2026/7/29",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "HD현대일렉트릭",
+        "code": "267260",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "1,000,000원",
+        "tp_prev": "1,000,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "실적은 매출액 1.1조원(+26.0% YoY), 영업이익 2,870억원(+37.3% YoY, OPM 25.1%)으로 컨센서스(매출액 1.1조원, 영업이익 2,854억원) 부합 기록.",
+        "estimate_revision": "수주 가이던스 $51.9억 기존 대비 23% 상향 조정",
+        "next_catalyst": "글로벌 빅테크社 향 확장 및 데이터센터 향 비중 확대",
+        "thesis": [
+          "고수익성 위주의 제품 믹스 개선 및 수주 수익성 상승",
+          "글로벌 빅테크사향 장기 공급계약 체결을 통한 외형 성장",
+          "신공장 인력 확보 및 미국 CAPA 확장 가속화"
+        ],
+        "valuation_basis": "PEER Group 12MF P/E 적용",
+        "risk": "배전 물량 증분에 따른 전사 수익성 우려 및 믹스 악화",
+        "supply_comment": "7월 2일 글로벌 빅테크社와 1.1조원 규모의 장기 공급계약 체결 공시. 주요 ITEM은 초고압/배전 변압기.",
+        "quote": "HD현대일렉트릭 실적은 매출액 1.1조원(+26.0% YoY), 영업이익 2,870억원(+37.3% YoY, OPM 25.1%)으로 컨센서스(매출액 1.1조원, 영업이익 2,854억원) 부합 기록."
+      }
+    ]
+  }
+}

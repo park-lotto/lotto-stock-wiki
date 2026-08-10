@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-24_1109_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.07.24",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "크래프톤, 글로벌 게임 커머스 인프라 기업 '네온 커머스'에 전략적 투자"
+      },
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "네이버, 1784 스마트빌딩 기술 솔루션 첫 수출…日 대형 복합빌딩"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "크래프톤",
+      "네이버"
+    ],
+    "risk": null,
+    "quote": "크래프톤, 글로벌 게임 커머스 인프라 기업 '네온 커머스'에 전략적 투자 네이버, 1784 스마트빌딩 기술 솔루션 첫 수출…日 대형 복합빌딩"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-27",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-27_1101_안정적 실적 기조 유지.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "하나증권",
+    "analyst": "김승준",
+    "report_date": "2026년 7월 27일",
+    "stocks": [
+      {
+        "name": "IPARK현대산업개발",
+        "code": "294870",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "29,000원",
+        "tp_prev": "29,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 매출액 9,288억원(-20.2%yoy), 영업이익 1,226억원(+52.7%yoy). 3Q26 매출액 9,083억원(-13.7%yoy), 영업이익 1,175억원(+61.0%yoy)으로 추정한다.",
+        "estimate_revision": "2분기 GPM이 저조했던 점을 감안하여 3분기 GPM 추정치를 하향했다.",
+        "next_catalyst": "서울원 아이파크의 공정 본격화, 청주가경(자체) 분양 등",
+        "thesis": [
+          "안정적인 실적 기조 유지 및 자체사업 이익 증가 기대",
+          "주주환원 정책(배당성향 20%, 연간 DPS 1,000원 추정, 자사주 소각 예정)",
+          "서울원 아이파크 등 자체사업 진행에 따른 이익 성장"
+        ],
+        "valuation_basis": "26년 EPS 추정치에 Target P/E 6.0배를 적용함",
+        "risk": "부동산 경기의 변화, 이란과 미국과의 분쟁 이슈 장기화 시 건축원가 영향 가능성",
+        "supply_comment": "상반기 분양은 5,030세대로 연간 목표(13,032세대) 대비 달성률이 조금 못 미쳤음. 3분기 분양 계획은 6,337세대임.",
+        "quote": "IPARK현대산업개발 투자의견 Buy, 목표주가 29,000원을 유지한다. 목표주가는 26년 EPS 추정치에 Target P/E 6.0배를 적용했다."
+      }
+    ]
+  }
+}

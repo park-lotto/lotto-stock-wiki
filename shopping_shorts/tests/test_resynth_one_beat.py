@@ -12,7 +12,8 @@ def test_resynth_one_beat_overwrites_only_target(monkeypatch, tmp_path):
     monkeypatch.setattr(mp, "synthesize_line", fake_synth_line)
     monkeypatch.setattr(mp, "_probe_duration", lambda p: 3.0)
     monkeypatch.setattr(mp.asr_check, "transcribe_words", lambda p: [{"word": "가", "start": 0.0, "end": 3.0}])
-    monkeypatch.setattr(mp.caption_sync, "phrase_durs_from_words", lambda n, w, d: [3.0])
+    monkeypatch.setattr(mp.caption_sync, "phrase_durs_from_words",
+                        lambda n, w, d, preset=None: mp.caption_sync.PhraseTiming([3.0], 0.0))
 
     plan = {"beats": [
         {"beat_idx": 0, "narration": "가나", "cap_durs": None},

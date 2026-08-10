@@ -8,13 +8,15 @@ C:/Users/TheRose/crawling_bot_data 로 들어온다. 이를 서버로 올려 대
       python scripts/sync_crawl_to_server.py --days 2   # 오늘+어제
 """
 import argparse
+import os
 import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
 
 SRC = Path("C:/Users/TheRose/crawling_bot_data")
 KEY = "C:/Users/TheRose/crawling_bot_client/LightsailDefaultKey-ap-northeast-2.pem"
-HOST = "ubuntu@3.39.179.148"
+# IP는 바뀔 수 있다 — 서버 주소는 SERVER_HOST 환경변수로 한 번에 교체한다.
+HOST = os.getenv("SERVER_HOST", "ubuntu@3.39.179.148")
 REMOTE_MD = "/home/ubuntu/kmong/crawling_bot/output/md"
 
 

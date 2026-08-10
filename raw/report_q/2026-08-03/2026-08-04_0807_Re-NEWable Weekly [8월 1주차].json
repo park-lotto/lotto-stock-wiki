@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-08-03",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-04_0807_Re-NEWable Weekly [8월 1주차].md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "교보증권",
+    "analyst": "조혜빈",
+    "report_date": "2026. 08. 03",
+    "market_direction": null,
+    "macro_vars": [
+      "유가 하락",
+      "금리 상승"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026. 08",
+        "event": "미국 Section 232 발표"
+      }
+    ],
+    "top_picks": [
+      "한화솔루션",
+      "OCI홀딩스",
+      "SK이터닉스",
+      "HD현대 에너지솔루션",
+      "씨에스윈드",
+      "LS마린솔루션",
+      "SK오션플랜트"
+    ],
+    "risk": "전쟁 장기화로 인한 유가 연동성 지속 및 미국 공급망 분리 규제 확대",
+    "quote": "지난주 신재생에너지 주가는 국내 증시 전반의 급락과 함께 큰 폭으로 하락. 섹터 내부에서는 유가 하락에 따른 주가 조정, 금리 상승에 따른 할인율 부담, Meta의 RE100 탈퇴가 데이터센터발 재생에너지 수요 둔화로 해석된 점이 복합적으로 작용한 것으로 판단."
+  }
+}

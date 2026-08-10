@@ -11,9 +11,10 @@
     이 모델로 태워 구간 6개·full_text 208자 확보(response_schema까지 지켜짐).
   → 그래서 '키를 더 넣자'가 아니라 '모델을 갈아타자'가 맞는 대응이다.
 
-설계:
-  - primary(_MODEL)로 503을 **2번** 겪은 뒤에만 _FALLBACK_MODEL로 내려간다.
-    (503은 spike라 잠깐 뒤 원래 모델이 살아나는 일이 잦고, 그동안은 품질 좋은 쪽을 쓰는 게 낫다)
+설계(2026-07-24 갱신):
+  - primary(_MODEL)로 503을 **1번** 겪으면 바로 _FALLBACK_MODEL로 내려간다. 예전엔 spike 회복을
+    기대해 2번 겪은 뒤 내려갔으나, 검열 실측 성공률 29%(100/350)로 3.5-flash가 spike가 아니라
+    지속적으로 막힌 게 드러나 죽은 모델 재시도를 낭비하지 않게 첫 503에서 바로 폴백한다.
   - 폴백 후엔 sleep 없이 바로 간다 — 다른 모델이라 앞 모델의 혼잡과 무관.
   - _MODEL 자체는 안 건드린다(video_analysis·similarity가 공유).
 
@@ -107,15 +108,15 @@ def test_falls_back_to_lite_when_primary_overloaded(harness):
     assert r["segments"] and r["segments"][0]["seg_id"] == "vid1-0"
 
 
-def test_retries_primary_before_falling_back(harness):
-    """503은 spike라 바로 안 내려간다 — primary를 2번은 시도한 뒤에만 폴백."""
+def test_falls_back_on_first_503(harness):
+    """503은 지속적이므로 첫 503에서 바로 폴백한다 — 죽은 모델 재시도 낭비 제거(2026-07-24)."""
     calls, overloaded, vid, box = harness
     overloaded.add(script_extract._MODEL)
     script_extract.extract_script(vid, "vid1")
     primary_tries = [c for c in calls if c == script_extract._MODEL]
-    assert len(primary_tries) >= 2, f"primary를 한 번만 보고 폴백했다 — calls={calls}"
-    assert calls.index(script_extract._FALLBACK_MODEL) == len(primary_tries), \
-        f"폴백 시점이 primary 재시도 뒤가 아니다 — calls={calls}"
+    assert len(primary_tries) == 1, f"첫 503에서 바로 폴백해야 한다 — calls={calls}"
+    assert calls.index(script_extract._FALLBACK_MODEL) == 1, \
+        f"폴백이 첫 503 직후가 아니다 — calls={calls}"
 
 
 def test_gives_up_when_both_models_overloaded(harness):

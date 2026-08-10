@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-31_1100_전 부문 실적 약진함에 따라 어닝 서프라이즈...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": [
+      "박혜진",
+      "권용수RA"
+    ],
+    "report_date": "2026.07.30",
+    "stocks": [
+      {
+        "name": "키움증권",
+        "code": "039490",
+        "rating": "BUY",
+        "rating_changed": "매수, 유지",
+        "tp_new": 370000,
+        "tp_prev": 540000,
+        "tp_direction": "down",
+        "earnings_outlook": "2Q26 연결 순이익 6,801억원(QoQ +42.8%, YoY +120%) 기록",
+        "estimate_revision": "투자의견 매수 유지하나 목표주가 370,000원으로 하향",
+        "next_catalyst": "2028년까지 감액배당 추진",
+        "thesis": [
+          "2분기 BK, WM, IB, Trading 전 부문 실적 개선되어 어닝 서프 달성",
+          "주식 평가익, ETF LP수익 증가하여 운용손익 사상 최대",
+          "업황 악화에 따라 하반기 실적 감소 불가피"
+        ],
+        "valuation_basis": "목표주가 하향은 전술한 요인에 따라 타겟 PBR을 하향한 것에 기인",
+        "risk": "3분기들어 거래대금 감소 및 ETF 규제 강화로 인한 하반기 실적 감소",
+        "supply_comment": null,
+        "quote": "전 부문 수익성 개선되며 컨센서스를 크게 상회하는 호실적 발표. 특히 주식운용 부문 평가손익과 ETF LP 관련 손익이 크게 증가하여 운용손익이 당사 추정을 크게 상회하였음."
+      }
+    ]
+  }
+}

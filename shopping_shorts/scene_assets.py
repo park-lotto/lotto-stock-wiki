@@ -14,7 +14,7 @@ from . import edit_plan, frame_extract, scene_cut
 
 # 페이즈2 concat이 -c copy(video_assemble.py:346)라 자산 클립도 비트 클립과
 # **같은 규격**이어야 붙는다. video_assemble._OUT_W/_OUT_H와 같은 값.
-_OUT_W, _OUT_H = 720, 1280
+_OUT_W, _OUT_H = 1080, 1920
 _SPEC_VF = (f"scale={_OUT_W}:{_OUT_H}:force_original_aspect_ratio=increase,"
             f"crop={_OUT_W}:{_OUT_H}")
 
@@ -39,7 +39,7 @@ def probe_duration(path):
 
 
 def make_clip(src_path, start, end, out_path):
-    """src_path의 [start,end) 구간을 잘라 규격(720x1280/30fps/libx264/aac)으로 통일.
+    """src_path의 [start,end) 구간을 잘라 규격(1080x1920/30fps/libx264/aac)으로 통일.
 
     ★프레임 번호로 자른다. 초로 계산하면 프레임이 샌다 — 30fps 영상은 프레임이
     1/30초 간격에만 존재하므로 4.13 같은 값은 '프레임이 없는 시각'이고, ffmpeg가

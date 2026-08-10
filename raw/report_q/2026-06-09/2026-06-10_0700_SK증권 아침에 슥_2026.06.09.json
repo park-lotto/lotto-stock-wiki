@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_0700_SK증권 아침에 슥_2026.06.09.md"
+  },
+  "questionnaire": {
+    "broker": "SK증권",
+    "analyst": null,
+    "report_date": "2026-06-09",
+    "target_kind": "market",
+    "market_direction": "하락",
+    "macro_vars": [
+      "전일 급락 이후 저가매수세와 반도체 투자심리 회복으로 상승 마감",
+      "지정학 리스크에도 기술주 상승으로 약보합 마감",
+      "아시아 전반 위험회피 심리 작용. 기술주 중심의 낙폭으로 하락 마감",
+      "미국발 반도체주 급락으로 코스피, 코스닥이 크게 낙폭하며 하락 마감"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "4월",
+        "event": "미국 무역수지"
+      },
+      {
+        "date": "5월",
+        "event": "미국 주택"
+      },
+      {
+        "date": "2분기",
+        "event": "국내 GDP"
+      },
+      {
+        "date": "5월",
+        "event": "중국 무역수지"
+      }
+    ],
+    "top_picks": [
+      "인텔",
+      "마이크론"
+    ],
+    "risk": "미국 기술주 하락, 국채금리 상승, 반도체 대형주 동반 약세",
+    "quote": "미국발 반도체주 급락으로 코스피, 코스닥이 크게 낙폭하며 하락 마감"
+  }
+}

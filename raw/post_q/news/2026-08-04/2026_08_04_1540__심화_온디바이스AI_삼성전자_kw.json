@@ -1,0 +1,25 @@
+{
+  "target_kind": "sector",
+  "sector_name": "방산",
+  "sector_view": "긍정",
+  "points": [
+    "KAI, K-온디바이스 AI 반도체 사업 방산 분야 우선 협상 대상자 선정"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "KAI",
+      "comment": "K-온디바이스 AI 반도체 사업 방산 분야 우선 협상 대상자 선정",
+      "ts": "2026-08-04",
+      "quote": "KAI, 'K-온디바이스 AI 반도체 사업' 방산 분야 우선 협상 대상자 선정",
+      "sector": "방산"
+    }
+  ],
+  "events": [
+    {
+      "fact": "KAI, 'K-온디바이스 AI 반도체 사업' 방산 분야 우선 협상 대상자 선정",
+      "ts": "2026-08-04",
+      "quote": "KAI, 'K-온디바이스 AI 반도체 사업' 방산 분야 우선 협상 대상자 선정"
+    }
+  ],
+  "quote": "KAI, 'K-온디바이스 AI 반도체 사업' 방산 분야 우선 협상 대상자 선정"
+}

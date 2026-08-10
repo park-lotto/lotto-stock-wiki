@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_0602 달러, 지표 호조 속 상승.md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": [
+      "김유미",
+      "안예하",
+      "심수빈"
+    ],
+    "report_date": "2026. 6. 2",
+    "target_kind": "market",
+    "market_direction": "달러, 지표 호조 속 상승",
+    "macro_vars": [
+      "달러인덱스: 99.174 (+0.23%)",
+      "WTI 유가: 92.16달러 (+5.49%)",
+      "미 국채 10년 금리: 4.453% (+1.77bp)",
+      "미국 5월 ISM 제조업지수: 54.0"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026. 6. 2",
+        "event": "KIWOOM FICC DAILY 발간"
+      }
+    ],
+    "top_picks": null,
+    "risk": "미국과 이란 간 최종 협상이 난항을 겪으면서 중동발 지정학적 불확실성이 확대되었으며, 이로 인해 유가가 급등하고 인플레이션 우려가 재부각됨.",
+    "quote": "달러화는 미국과 이란 간 최종 협상이 난항을 겪으면서 중동발 지정학적 불확실성이 확대된 가운데, 국제유가와 미 국채금리가 동반 상승하고 미국 경제지표도 양호하게 발표되면서 강세"
+  }
+}

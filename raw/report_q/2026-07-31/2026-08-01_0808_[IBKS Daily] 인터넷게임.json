@@ -1,0 +1,29 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "IBK투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-01_0808_[IBKS Daily] 인터넷게임.md"
+  },
+  "questionnaire": {
+    "broker": "IBK투자증권",
+    "analyst": "이승훈",
+    "report_date": "2026.07.31",
+    "target_kind": "sector",
+    "sector_name": "인터넷/SW/게임",
+    "sector_view": null,
+    "thesis": [
+      "네이버의 두나무 인수를 가로막던 핵심 장애물 하나가 해소됐음",
+      "네이버, 'AI 브리핑' 확대 및 멀티모달 검색 경험 강화"
+    ],
+    "timeline": [
+      "네이버 두나무 인수: 공정위 기업결합 심사 지연으로 거래 종결일 12월 31일로 연기"
+    ],
+    "top_picks": null,
+    "risk": [
+      "가상자산 거래소 대주주 지분율을 제한하는 디지털자산기본법",
+      "공정위 기업결합 심사 지연"
+    ],
+    "quote": "네이버의 두나무 인수 장애물 사라진다… 규합위, 특금법 시행령 개선 권고",
+    "sector": "IT"
+  }
+}

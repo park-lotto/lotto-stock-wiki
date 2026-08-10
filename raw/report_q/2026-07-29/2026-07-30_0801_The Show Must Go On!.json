@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-29",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-30_0801_The Show Must Go On!.md"
+  },
+  "questionnaire": {
+    "broker": "DS투자증권",
+    "analyst": "장지혜",
+    "report_date": "2026.07.29",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "하이브",
+        "code": "352820",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": "350,000원",
+        "tp_prev": "350,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": "26년 2분기 실적은 연결 기준 매출액 1.45조원(+105% YoY), 영업이익 1,709억원(+159% YoY, OPM 11.8%)으로 시장 기대치(OP 1,551억원)를 상회했다.",
+        "estimate_revision": null,
+        "next_catalyst": "하반기에도 하이브는 BTS 월드투어를 기반으로 주요 IP의 투어가 추가되며 호실적을 이어갈 것으로 전망한다.",
+        "thesis": [
+          "BTS를 비롯한 하이브의 국내외 IP 활동 증가로 음반, 공연, MD 실적 호조",
+          "공연 매출 6,477억원(+243%) 및 매출 비중 45%까지 확대",
+          "하반기 BTS 월드투어 53회 및 KATSEYE 두 번째 월드투어 등 주요 IP 글로벌 투어 확대"
+        ],
+        "valuation_basis": "하이브의 국내외 IP 경쟁력을 감안해 목표 배수 40배로 프리미엄을 유지한다.",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "하이브의 국내외 IP 경쟁력을 감안해 목표 배수 40배로 프리미엄을 유지한다."
+      }
+    ],
+    "sector": "소비내수"
+  }
+}

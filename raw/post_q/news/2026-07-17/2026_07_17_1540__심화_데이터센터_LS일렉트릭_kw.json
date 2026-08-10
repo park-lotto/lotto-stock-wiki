@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "LS ELECTRIC",
+      "signal": "bull",
+      "reason": "데이터센터 시장의 성장으로 인한 수혜 및 마진 확대 본격화",
+      "ts": "2026-07-17",
+      "quote": "LS ELECTRIC, 데이터센터 훈풍 타고 마진 확대 본격화",
+      "sector": "전력"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "LS ELECTRIC이 데이터센터 수요 증가에 힘입어 수익성 개선이 본격화되고 있음",
+      "ts": "2026-07-17",
+      "quote": "LS ELECTRIC, 데이터센터 훈풍 타고 마진 확대 본격화"
+    }
+  ],
+  "quote": "LS ELECTRIC, 데이터센터 훈풍 타고 마진 확대 본격화"
+}

@@ -1,0 +1,25 @@
+{
+  "leading_sectors": [
+    "반도체"
+  ],
+  "stance": [
+    {
+      "target": "SK하이닉스",
+      "view": "중립",
+      "ts": "00:04",
+      "quote": "SK하닉 변동성 근황😭"
+    }
+  ],
+  "methods": [],
+  "stocks_mentioned": [
+    {
+      "name": "SK하이닉스",
+      "comment": "최근 변동성이 확대되는 모습임.",
+      "ts": "00:04",
+      "quote": "SK하닉 변동성 근황😭",
+      "sector": "반도체"
+    }
+  ],
+  "noise_ratio": 0.8,
+  "quote": "SK하닉 변동성 근황😭"
+}

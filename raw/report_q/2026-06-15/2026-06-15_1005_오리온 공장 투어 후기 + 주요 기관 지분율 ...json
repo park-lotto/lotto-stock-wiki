@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "date": "2026-06-15",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-15_1005_오리온 공장 투어 후기 + 주요 기관 지분율 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "하나증권",
+    "analyst": "심은주, 고찬결",
+    "report_date": "2026.6.15",
+    "market_direction": null,
+    "macro_vars": [
+      "음식료 업종지수 코스피 대비 3.1%p 아웃퍼폼",
+      "곡물가 및 원·달러 환율 변동",
+      "글로벌 식료품비 지출 감소(GLP-1 복용 영향)"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "소비내수",
+        "stance": "Overweight",
+        "reason": "음식료 업종의 상대적 강세와 주요 종목의 실적 개선 기대감"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.6.15",
+        "event": "ETF 리밸런싱"
+      },
+      {
+        "date": "2027.7",
+        "event": "진천통합센터 Phase 1 완공 예정"
+      }
+    ],
+    "top_picks": [
+      "오리온",
+      "CJ제일제당"
+    ],
+    "risk": "롯데칠성(국내 주류 및 음료 수요 부진), 콜마비앤에이치(주가 모멘텀 부재), 동원산업(주가 모멘텀 부재)",
+    "quote": "전주 음식료 업종지수는 코스피 대비 3.1%p 아웃퍼폼 시현, ETF 리밸런싱을 앞두고 주요 대형주의 주가 변동성이 확대되면서 상대적으로 업종지수는 아웃퍼폼 시현함"
+  }
+}

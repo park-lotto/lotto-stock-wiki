@@ -28,6 +28,47 @@ def test_grab_adds_xiaohongshu_to_basket(tmp_path, monkeypatch):
     assert any(x.startswith("grab_xiaohongshu_") for x in scs)
 
 
+def test_grab_accepts_rednote_search_result(tmp_path, monkeypatch):
+    """카드별 담기(v1.2.0)가 보내는 rednote.com/search_result URL을 담아야 한다.
+    한국 로그인 도메인이 rednote.com이라 www.xiaohongshu.com은 게스트벽이고 카드는 rednote에서 뜬다."""
+    c = _client(tmp_path, monkeypatch)
+    r = c.get("/api/grab", params={"url": "https://www.rednote.com/search_result/6884d27e0000000012",
+                                   "title": "香蕉鸡蛋饼", "thumbnail": "t.jpg"})
+    assert r.status_code == 200 and "담겼어요" in r.text
+    scs = Store(str(tmp_path / "t.db")).mix_basket_shortcodes(customer_id=0)
+    assert any(x.startswith("grab_xiaohongshu_") for x in scs)   # rednote=샤오홍슈 플랫폼
+
+
+def test_grab_userscript_is_thin_loader(tmp_path, monkeypatch):
+    """grab.user.js는 로직을 서버에서 불러오는 '로더'여야 한다(재설치 없이 업데이트되게)."""
+    c = _client(tmp_path, monkeypatch)
+    r = c.get("/grab.user.js")
+    assert r.status_code == 200
+    assert "GM_xmlhttpRequest" in r.text and "/grab_logic.js" in r.text
+
+
+def test_grab_logic_served_with_card_logic(tmp_path, monkeypatch):
+    """/grab_logic.js는 실제 담기 로직(카드별 버튼 포함)을 서빙한다."""
+    c = _client(tmp_path, monkeypatch)
+    r = c.get("/grab_logic.js")
+    assert r.status_code == 200
+    assert "addCardBtns" in r.text and "section.note-item" in r.text
+
+
+def test_grab_logic_clears_card_btns_in_single_post_viewer(tmp_path, monkeypatch):
+    """★2026-08-03 틱톡 실사고: SPA 전환으로 그리드에 붙인 카드버튼이 단일 영상 뷰어에
+    남아 8개씩 떠다녔다. 뷰어(isSinglePost)에선 clearCardBtns로 걷어내는 배선을 못 박는다.
+    ★2026-08-03 후속: 걷어내기는 틱톡 전용(tk)이어야 한다 — 전역 적용했더니 인스타
+    검색 그리드에서 담기 버튼이 통째로 사라졌다(모달 뷰어 + img 지연로딩)."""
+    c = _client(tmp_path, monkeypatch)
+    t = c.get("/grab_logic.js").text
+    assert "clearCardBtns" in t
+    assert "if (tk) clearCardBtns();" in t
+    assert "if (isSinglePost())" in t
+    # data-ssgrab 표식도 같이 지워야 그리드로 돌아갔을 때 버튼이 다시 붙는다.
+    assert 'removeAttribute("data-ssgrab")' in t
+
+
 def test_grab_rejects_unknown_platform(tmp_path, monkeypatch):
     c = _client(tmp_path, monkeypatch)
     r = c.get("/api/grab", params={"url": "https://example.com/whatever"})
@@ -70,3 +111,13 @@ def test_set_meta_does_not_overwrite_existing_name(tmp_path):
     s.mix_basket_set_meta("grab_yt_2", customer_id=0, thumbnail="new.jpg", name="새제목")
     item = [i for i in s.mix_basket_list(customer_id=0) if i["shortcode"] == "grab_yt_2"][0]
     assert item["thumbnail"] == "orig.jpg" and item["name"] == "원제목"
+
+
+def test_set_meta_merges_not_overwrites(tmp_path):
+    """재보강이 간헐 실패로 일부 필드만 와도 기존 값을 안 잃고 병합한다."""
+    s = Store(str(tmp_path / "t.db"))
+    s.mix_basket_add("grab_tk_1", url="u", customer_id=0)
+    s.mix_basket_set_meta("grab_tk_1", customer_id=0, meta={"views": 676000, "comments": 715})
+    s.mix_basket_set_meta("grab_tk_1", customer_id=0, meta={"channel": "오늘식탁"})  # views 없이 옴
+    m = [i for i in s.mix_basket_list(customer_id=0) if i["shortcode"] == "grab_tk_1"][0]["meta"]
+    assert m["views"] == 676000 and m["comments"] == 715 and m["channel"] == "오늘식탁"

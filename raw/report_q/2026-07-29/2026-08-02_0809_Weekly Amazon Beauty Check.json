@@ -1,0 +1,28 @@
+{
+  "meta": {
+    "date": "2026-07-29",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-02_0809_Weekly Amazon Beauty Check.md"
+  },
+  "questionnaire": {
+    "broker": "SK증권",
+    "analyst": "형권훈",
+    "report_date": "2026-07-29",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "medicube",
+      "ANUA",
+      "BIODANCE",
+      "ARENCIA",
+      "d’alba Piedmont",
+      "EQQUALBERRY"
+    ],
+    "risk": null,
+    "quote": "K뷰티 유니버스의 아마존 BSR 총점은 이번 주 1,843pt 기록해 전 주 대비 ▼111pt 둔화"
+  }
+}

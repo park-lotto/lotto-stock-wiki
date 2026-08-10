@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "date": "2026-08-05",
+    "broker": "SK securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-05_1109_박제민QnA_I_AMD, 이제 칩이 아니라 랙을 판...md"
+  },
+  "questionnaire": {
+    "broker": "SK securities",
+    "analyst": "박제민",
+    "report_date": "2026-08-05",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "GPU 렌탈 가격 추이",
+      "LLM 지출",
+      "AI Labs ARR 및 기업가치",
+      "Nvidia 순환 출자"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": null,
+        "reason": "AMD의 Helios 랙 사업 본격화, GPU/CPU/네트워킹 자체 조달 및 랙 단위 경쟁력 확보"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026-07-20",
+        "event": "Helios 랙스케일 시스템 공개 및 Microsoft Azure 앵커 고객 발표"
+      },
+      {
+        "date": "2026-07-23",
+        "event": "Advancing AI 2026에서 Helios·MI455X·EPYC Venice 9006 발표"
+      }
+    ],
+    "top_picks": [
+      "엔비디아",
+      "알파벳",
+      "애플",
+      "마이크로소프트",
+      "아마존",
+      "메타 플랫폼스",
+      "오라클",
+      "코어위브",
+      "AMD",
+      "OpenAI",
+      "Anthropic",
+      "Cerebras",
+      "Groq",
+      "Intel",
+      "SambaNova",
+      "Sharon AI",
+      "Firmus Technologies",
+      "Broadcom"
+    ],
+    "risk": "Nvidia의 순환 출자 논란 및 오하이오 데이터센터 금융 보증 관련 신용 위험, Helios 랙 양산 램프 지연 및 백플레인 신뢰성 문제",
+    "quote": "AMD, 이제 칩이 아니라 랙을 판다"
+  }
+}

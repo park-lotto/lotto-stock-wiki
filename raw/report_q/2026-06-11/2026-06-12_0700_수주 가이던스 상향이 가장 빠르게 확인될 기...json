@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-12_0700_수주 가이던스 상향이 가장 빠르게 확인될 기...md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "손현정",
+    "report_date": "2026.06.11",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "LS ELECTRIC",
+        "code": "010120",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "300,000원",
+        "tp_prev": "260,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26 실적은 매출액 1조 4,764억원(YoY +23.7%), 영업이익 1,596억원(YoY +47.0%, OPM 10.8%)으로 전망한다. 2026년 연결 매출액은 6조 2,779억원(YoY +26.4%), 영업이익 7,083억원(YoY +66.1%, OPM 11.3%)으로 추정한다. 2027년에는 매출액 8조 243억원(YoY +27.8%), 영업이익 1조 1,183억원(YoY +57.9%, OPM 13.9%)으로 이익 레벨이 한 단계 높아질 전망이다.",
+        "estimate_revision": "연간 신규수주 가이던스는 5조~6조원 수준으로 상향될 가능성이 높다.",
+        "next_catalyst": "데이터센터 접속 구간, 내부 전력 인프라, 온사이트 발전용 전력 패키지 수요 확대",
+        "thesis": [
+          "전력기기 업종 내 가장 빠르게 수주 가이던스 상향이 확인될 수 있는 기업",
+          "데이터센터 관련 AI 인프라 수주 확대 및 핵심 제품군(MV 배전반) 공급 능력 보유",
+          "Bloom Energy향 수주 지속 및 미국 유타 공장(2028년 본격 생산 목표)을 통한 중장기 성장 옵션"
+        ],
+        "valuation_basis": "2028년 추정 EPS 7,863원에 Target PER 38배 적용",
+        "risk": null,
+        "supply_comment": "데이터센터·온사이트 발전향 수주 내 MV 배전반 비중은 약 80%로, 동사의 핵심 제품군이다.",
+        "quote": "LS ELECTRIC에 대해 투자의견 BUY를 유지하고, 목표주가를 300,000원으로 상향한다."
+      }
+    ]
+  }
+}

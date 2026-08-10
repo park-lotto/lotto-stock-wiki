@@ -45,13 +45,19 @@ def test_preview_requires_edit_plan(client):
     assert "매칭" in r.json()["error"]
 
 
+def _preview_queue_count(store):
+    """2026-07-29 독립워커 전환: app.py는 이제 run_preview를 직접 예약하지 않고
+    Store.enqueue("preview", ...)로 큐에 넣는다(실행은 별도 워커 프로세스).
+    그래서 '예약됐는가'는 job_queue의 preview 항목 수로 센다."""
+    with store._conn() as c:
+        return c.execute("SELECT COUNT(*) FROM job_queue WHERE task='preview'").fetchone()[0]
+
+
 def test_preview_schedules_render(client, monkeypatch):
-    _job_with_plan()
-    called = []
-    monkeypatch.setattr(app_module, "run_preview", lambda *a: called.append(a))
+    store = _job_with_plan()
     r = client.post("/api/produce/mix/preview", json={"job_id": "J1"})
     assert r.status_code == 200 and r.json()["ok"] is True
-    assert called, "run_preview가 예약되지 않았다"
+    assert _preview_queue_count(store) == 1, "preview가 큐에 예약되지 않았다"
 
 
 # ── 매칭 단계(downloading~tts) staleness 가드 (2026-07-18 실사고) ──────────────
@@ -94,11 +100,9 @@ def test_preview_does_not_double_schedule_while_rendering(client, monkeypatch):
     """★더블클릭 방어 — 이미 렌더 중이면 또 걸지 않는다(ffmpeg 두 번 = CPU 두 배)."""
     store = _job_with_plan()
     store.update_mix_job("J1", preview_status="rendering")
-    called = []
-    monkeypatch.setattr(app_module, "run_preview", lambda *a: called.append(a))
     r = client.post("/api/produce/mix/preview", json={"job_id": "J1"})
     assert r.status_code == 200
-    assert not called, "이미 렌더 중인데 또 예약했다"
+    assert _preview_queue_count(store) == 0, "이미 렌더 중인데 또 예약했다"
 
 
 def test_preview_claims_rendering_synchronously_before_scheduling(client, monkeypatch):
@@ -119,12 +123,11 @@ def test_preview_claims_rendering_synchronously_before_scheduling(client, monkey
 
 def test_preview_second_click_is_rejected_after_first_claimed(client, monkeypatch):
     """위 동기 쓰기의 결과 — 두 번째 클릭은 ffmpeg를 또 돌리지 않는다(실제 더블클릭 흐름)."""
-    _job_with_plan()
-    called = []
-    monkeypatch.setattr(app_module, "run_preview", lambda *a: called.append(a))
+    store = _job_with_plan()
     client.post("/api/produce/mix/preview", json={"job_id": "J1"})
     client.post("/api/produce/mix/preview", json={"job_id": "J1"})
-    assert len(called) == 1, f"더블클릭에 run_preview가 {len(called)}번 예약됐다 — ffmpeg 두 개가 같은 파일에 쓴다"
+    n = _preview_queue_count(store)
+    assert n == 1, f"더블클릭에 preview가 {n}번 예약됐다 — ffmpeg 두 개가 같은 파일에 쓴다"
 
 
 def test_stale_rendering_allows_reschedule(client, monkeypatch):
@@ -137,11 +140,9 @@ def test_stale_rendering_allows_reschedule(client, monkeypatch):
     store = _job_with_plan()
     store.update_mix_job("J1", preview_status="rendering")
     _backdate(app_module.DB_PATH, "J1", 11)        # 10분 타임아웃 초과 = 죽은 렌더의 잔해
-    called = []
-    monkeypatch.setattr(app_module, "run_preview", lambda *a: called.append(a))
     r = client.post("/api/produce/mix/preview", json={"job_id": "J1"})
     assert r.status_code == 200
-    assert called, "죽은 렌더의 'rendering'에 영구히 갇혔다 — 재매칭 말곤 탈출구가 없다"
+    assert _preview_queue_count(store) == 1, "죽은 렌더의 'rendering'에 영구히 갇혔다 — 재매칭 말곤 탈출구가 없다"
 
 
 def test_fresh_rendering_still_blocks_reschedule(client, monkeypatch):
@@ -150,10 +151,8 @@ def test_fresh_rendering_still_blocks_reschedule(client, monkeypatch):
     store = _job_with_plan()
     store.update_mix_job("J1", preview_status="rendering")
     _backdate(app_module.DB_PATH, "J1", 5)         # 아직 도는 중
-    called = []
-    monkeypatch.setattr(app_module, "run_preview", lambda *a: called.append(a))
     client.post("/api/produce/mix/preview", json={"job_id": "J1"})
-    assert not called, "아직 렌더 중인데 또 예약했다 — ffmpeg 두 개가 같은 파일에 쓴다"
+    assert _preview_queue_count(store) == 0, "아직 렌더 중인데 또 예약했다 — ffmpeg 두 개가 같은 파일에 쓴다"
 
 
 def test_serve_preview_404_before_ready(client):

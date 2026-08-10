@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-08-03",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-04_0803_2027년 이익 기여를 기다릴 시점.md"
+  },
+  "questionnaire": {
+    "broker": "DS투자증권",
+    "analyst": "최태용",
+    "report_date": "2026.08.03",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "에코프로비엠",
+        "code": "247540",
+        "rating": "매수",
+        "rating_changed": false,
+        "tp_new": 250000,
+        "tp_prev": 300000,
+        "tp_direction": "down",
+        "earnings_outlook": "3Q26F 매출액 6,700억원(+16.2% QoQ, +7.1% YoY), 영업이익 224억원(+24.3% QoQ, -55.7% YoY)을 전망한다.",
+        "estimate_revision": "2027년 EBITDA 추정 하향을 반영해 목표주가를 25만원으로 하향",
+        "next_catalyst": "헝가리 2라인 가동 및 생산량 확대, BNSI 니켈 제련소 가동",
+        "thesis": [
+          "헝가리 2라인 가동에 따른 실질적인 이익 기여 기대 (2027년)",
+          "BNSI 니켈 제련소 가동을 통한 하이니켈 양극재 원가 경쟁력 확보",
+          "2Q26P 실적은 ESS 부문 부진으로 컨센서스를 하회했으나, PT부문은 전년 대비 성장"
+        ],
+        "valuation_basis": "27F EBITDA 적용 및 3개년 멀티플 평균 적용, 우호적 정책 환경 감안 20% 할증",
+        "risk": "지분이 SPC를 경유하고 유상증자 조달액이 주가에 연동되어 손익 기여 규모 산정 불확실성 존재",
+        "supply_comment": "BNSI 연산 9만톤 규모에서 확보하는 Off-take 물량을 시장가 대비 할인 매입해 전구체 업체에 직접 공급",
+        "quote": "2027년 EBITDA 추정 하향을 반영해 목표주가를 25만원으로 하향하나 투자의견 '매수'는 유지한다."
+      }
+    ],
+    "sector": "2차전지"
+  }
+}

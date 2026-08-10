@@ -1,0 +1,18 @@
+{"ts": "2026-07-20T05:24:59.892067+00:00", "event": "plan_created", "brief": "장면스파인 페이즈1: 대본-화면 싱크", "count": 5}
+{"ts": "2026-07-20T07:02:25.448685+00:00", "event": "story_started", "id": "G001", "title": "④fit정직화"}
+{"ts": "2026-07-20T07:02:25.553791+00:00", "event": "checkpoint", "id": "G001", "status": "complete", "evidence": "라이브(main 418c9a5dd), 개별+whole-branch 리뷰통과, 서버 실관측 5->18조각", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-07-20T07:02:25.659331+00:00", "event": "story_started", "id": "G002", "title": "⓪분석세분화"}
+{"ts": "2026-07-20T07:02:25.771673+00:00", "event": "checkpoint", "id": "G002", "status": "complete", "evidence": "라이브(main 418c9a5dd), 개별+whole-branch 리뷰통과, 서버 실관측 5->18조각", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-07-20T07:02:25.873223+00:00", "event": "story_started", "id": "G003", "title": "②dedup서브슬라이스"}
+{"ts": "2026-07-20T07:02:25.973867+00:00", "event": "checkpoint", "id": "G003", "status": "complete", "evidence": "라이브(main 418c9a5dd), 개별+whole-branch 리뷰통과, 서버 실관측 5->18조각", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-07-20T07:02:26.077203+00:00", "event": "story_started", "id": "G004", "title": "①visual_verb앵커"}
+{"ts": "2026-07-20T07:02:26.177237+00:00", "event": "checkpoint", "id": "G004", "status": "complete", "evidence": "라이브(main 418c9a5dd), 개별+whole-branch 리뷰통과, 서버 실관측 5->18조각", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-07-20T07:02:26.281551+00:00", "event": "story_started", "id": "G005", "title": "③리컨사일"}
+{"ts": "2026-07-20T07:02:54.253239+00:00", "event": "checkpoint", "id": "G005", "status": "complete", "evidence": "라이브 main 418c9a5dd, 리뷰통과, 서버 실관측 5→18조각", "verify_cmd": "서버 실키 extract_script(s1 실영상) + finish 게이트 pytest", "verify_evidence": "s1영상 5→18조각(scene_cut 18경계 반영). finish 게이트 통과(baseline 8 그대로). main 418c9a5dd 배포"}
+{"ts": "2026-08-06T04:05:19.314983+00:00", "event": "plan_created", "brief": "숏템메이커 인증을 dashboard/server.py에 이식: 고객 SQLite+구글 OAuth+세션쿠키, fail-closed, 일반유저는 /market·/insights만, 관리자는 전체. 로컬 구동으로 검증.", "count": 3}
+{"ts": "2026-08-06T04:11:39.138590+00:00", "event": "story_started", "id": "G001", "title": "인증이식"}
+{"ts": "2026-08-06T04:11:39.222389+00:00", "event": "checkpoint", "id": "G001", "status": "complete", "evidence": "server.py 인증블록 v2 교체(OAuth+users.db+세션쿠키, 하드코딩 시크릿 제거), ast.parse 통과", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-08-06T04:11:39.302381+00:00", "event": "story_started", "id": "G002", "title": "접근제어"}
+{"ts": "2026-08-06T04:11:39.382660+00:00", "event": "checkpoint", "id": "G002", "status": "complete", "evidence": "_user_allowed 경로게이트 + 운영자 deny + 공유상태 GET-only, 로그인페이지에 구글 버튼", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-08-06T04:11:39.460822+00:00", "event": "story_started", "id": "G003", "title": "검증"}
+{"ts": "2026-08-06T04:11:39.540268+00:00", "event": "checkpoint", "id": "G003", "status": "complete", "evidence": "라이브 검증 15/15 PASS", "verify_cmd": "python scratchpad/auth_test.py", "verify_evidence": "15/15 PASS: 비로그인 307/401, 관리자 전체, 사용자 market/insights만, 운영자API 403, 위조쿠키 거부"}

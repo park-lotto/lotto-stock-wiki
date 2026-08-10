@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-22",
+    "broker": "메리츠증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-23_0800_로보틱스+데이터센터 쿨링 시스템  애플카.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "메리츠증권",
+    "analyst": "양승수",
+    "report_date": "2026. 7. 7",
+    "stocks": [
+      {
+        "name": "LG전자",
+        "code": "066570",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "260,000원",
+        "tp_prev": "120,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2Q26 실적은 매출액 22.8조원(+9.9% YoY), 영업이익 1조 4,734억원(+130.4% YoY)로, 영업이익 기준 시장 컨센서스 1조 346억원을 42.4% 상회할 전망이다.",
+        "estimate_revision": "2026년 영업이익 신규 추정치 4,361억원, 기존 추정치 3,454억원으로 26.3% 상향",
+        "next_catalyst": "AI 데이터센터향 쿨링 시스템 수주 및 액체냉각 CDU AI GPU 고객사향 퀄 테스트 완료 및 수주",
+        "thesis": [
+          "AI 데이터센터향 쿨링 시스템 공급자 역할 확대 및 신사업 구체화",
+          "로보틱스 사업의 액추에이터 및 홈로봇 중심의 생태계 구축 및 플랫폼 역량 강화",
+          "HS(Home Appliance & Air Solution)·VS(Vehicle component Solutions) 중심의 본업 수익성 회복 및 할인 요인 해소"
+        ],
+        "valuation_basis": "12MF BPS 151,297원에 코스피 평균 12MF PBR 1.72배를 적용",
+        "risk": null,
+        "supply_comment": "AI 데이터센터향 쿨링 시스템은 북미 하이퍼스케일러 고객사의 퀄 테스트가 막바지 단계에 진입",
+        "quote": "그동안 동사는 낮은 본업 성장성, 제한적인 신사업 가시성, 낮은 ROE로 인해 코스피 평균 PBR 대비 할인되어 거래되어 왔다. 그러나 HS·VS 중심의 수익성 개선에 더해 AI 데이터센터 쿨링 시스템과 로보틱스 사업이 구체화되면서 기존 할인 요인은 점차 해소되고 있다고 판단한다."
+      }
+    ]
+  }
+}

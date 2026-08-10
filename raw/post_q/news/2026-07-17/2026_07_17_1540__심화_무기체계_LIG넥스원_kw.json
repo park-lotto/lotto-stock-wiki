@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "LIG넥스원",
+      "signal": "bull",
+      "reason": "LIG D&A 출범을 통한 미래사업 확장",
+      "ts": "2026-07-17",
+      "quote": "새 간판 단 LIG D&A...미래사업 확장 포부",
+      "sector": "방산"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "LIG넥스원이 LIG D&A를 출범하며 미래사업 확장에 나섬",
+      "ts": "2026-07-17",
+      "quote": "새 간판 단 LIG D&A...미래사업 확장 포부"
+    }
+  ],
+  "quote": "새 간판 단 LIG D&A...미래사업 확장 포부"
+}

@@ -22,6 +22,7 @@ class _FakeResponse:
 
 
 def test_lens_matches_returns_normalized(monkeypatch):
+    monkeypatch.setattr(product_identify, "SERPAPI_KEYS", ["fake-key"])
     monkeypatch.setattr(product_identify, "SERPAPI_KEY", "fake-key")
 
     def fake_get(url, params=None, timeout=None):
@@ -40,6 +41,7 @@ def test_lens_matches_returns_normalized(monkeypatch):
 
 
 def test_lens_matches_request_failure_returns_empty(monkeypatch):
+    monkeypatch.setattr(product_identify, "SERPAPI_KEYS", ["fake-key"])
     monkeypatch.setattr(product_identify, "SERPAPI_KEY", "fake-key")
 
     def fake_get(url, params=None, timeout=None):
@@ -50,22 +52,26 @@ def test_lens_matches_request_failure_returns_empty(monkeypatch):
 
 
 def test_lens_matches_no_key_returns_empty(monkeypatch):
+    monkeypatch.setattr(product_identify, "SERPAPI_KEYS", [])
     monkeypatch.setattr(product_identify, "SERPAPI_KEY", "")
     assert product_identify._lens_matches("https://x.com/frame.jpg") == []
 
 
 def test_identify_product_no_serpapi_key_returns_empty(monkeypatch):
+    monkeypatch.setattr(product_identify, "SERPAPI_KEYS", [])
     monkeypatch.setattr(product_identify, "SERPAPI_KEY", "")
     assert product_identify.identify_product(["https://x.com/f1.jpg"]) == ""
 
 
 def test_identify_product_no_frames_returns_empty(monkeypatch):
+    monkeypatch.setattr(product_identify, "SERPAPI_KEYS", ["fake-key"])
     monkeypatch.setattr(product_identify, "SERPAPI_KEY", "fake-key")
     assert product_identify.identify_product([]) == ""
 
 
 def test_identify_product_no_matches_skips_gemini_call(monkeypatch):
     """모든 프레임이 매칭 없으면 Gemini 호출 없이 빈 문자열(비용 절약)."""
+    monkeypatch.setattr(product_identify, "SERPAPI_KEYS", ["fake-key"])
     monkeypatch.setattr(product_identify, "SERPAPI_KEY", "fake-key")
     monkeypatch.setattr(product_identify, "_lens_matches", lambda url, **kw: [])
 
@@ -78,6 +84,7 @@ def test_identify_product_no_matches_skips_gemini_call(monkeypatch):
 
 
 def test_identify_product_aggregates_frames_and_returns_name(monkeypatch):
+    monkeypatch.setattr(product_identify, "SERPAPI_KEYS", ["fake-key"])
     monkeypatch.setattr(product_identify, "SERPAPI_KEY", "fake-key")
     monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["fake-gemini-key"])
     monkeypatch.setattr(product_identify, "SHORTS_GEMINI_KEYS", ["fake-gemini-key"])
@@ -112,9 +119,17 @@ def test_identify_product_aggregates_frames_and_returns_name(monkeypatch):
 
 
 def test_identify_product_no_gemini_keys_returns_empty(monkeypatch):
+    monkeypatch.setattr(product_identify, "SERPAPI_KEYS", ["fake-key"])
     monkeypatch.setattr(product_identify, "SERPAPI_KEY", "fake-key")
     monkeypatch.setattr(product_identify, "SHORTS_GEMINI_KEYS", [])
     monkeypatch.setattr(product_identify, "_lens_matches",
                          lambda url, **kw: [{"source": "s", "title": "t"}])
 
     assert product_identify.identify_product(["https://x.com/f1.jpg"]) == ""
+
+
+def test_prompt_main_product_vs_background_prop_guard():
+    """배경 소품·동물에 낚여 주 제품을 오인하는 것을 막는 지시가 프롬프트에 있는지(2026-07-29 실사고)."""
+    p = product_identify._PROMPT
+    assert "배경 소품" in p
+    assert "동물" in p

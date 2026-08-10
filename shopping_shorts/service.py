@@ -4,16 +4,28 @@ from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from shopping_shorts.config import (DB_PATH, WINDOW_HOURS, DRAFT_BATCH_SIZE, MAX_CHANNELS,
-                                    YOUTUBE_WINDOW_HOURS, YOUTUBE_MAX_PER_KW)
-from shopping_shorts.channels import load_channels
+                                    YOUTUBE_WINDOW_HOURS, YOUTUBE_MAX_PER_KW,
+                                    DEAD_AFTER_DAYS, CENSUS_RESULTS_PER_CHANNEL,
+                                    XIAOHONGSHU_WINDOW_HOURS)
+from shopping_shorts.channels import load_channels, merge_tracked, select_tracked
 from shopping_shorts.apify_client import fetch_reels
-from shopping_shorts.ranking import build_items, build_youtube_items, build_tiktok_items, apply_grades
+from shopping_shorts import config
+from shopping_shorts.instagram_playwright import fetch_reels as _pw_fetch_reels
+from shopping_shorts.instagram_playwright import LAST_TALLY as _PW_TALLY
+from shopping_shorts.ranking import (build_items, build_youtube_items, build_tiktok_items,
+                                     build_overseas_items, apply_grades, aggregate_channels)
+from shopping_shorts.channel_fitness import channel_fitness
 from shopping_shorts.store import Store
 from shopping_shorts.comment_gen import generate as _gen_comments
 from shopping_shorts import ai_categorize, topic_grouper
-from shopping_shorts.youtube_client import search_shorts as yt_search
+from shopping_shorts.youtube_client import search_shorts as yt_search, fetch_channel_shorts as yt_fetch_channel
+from shopping_shorts.youtube_category_presets import preset_keywords
 from shopping_shorts.tiktok_client import fetch_account_videos as tt_fetch
 from shopping_shorts.tiktok_search import search_full as tt_search_full
+from shopping_shorts.xiaohongshu_playwright import fetch_notes as _xhs_fetch_notes
+from shopping_shorts import xiaohongshu_search, xiaohongshu_discovery, overseas_seeds
+from shopping_shorts.instagram_playwright import search_hashtag as _ig_search_hashtag
+from shopping_shorts import instagram_discovery
 
 TIKTOK_SEARCH_COUNT_DEFAULT = 50   # 언어당 fetch 개수(설정 tiktok_search_count로 오버라이드)
 _TIKTOK_LANG_KINDS = {"ko", "en", "ja", "zh", "ru"}   # 키워드 시드의 언어코드 kind
@@ -32,6 +44,50 @@ def _export_csv(items, run_date):
         w.writeheader()
         w.writerows(items)
     return path
+
+
+import re as _re
+_SEED_CH_ID = _re.compile(r"/channel/(UC[A-Za-z0-9_-]{6,})")
+
+
+def youtube_channel_board(sort="views"):
+    """등록된 유튜브 채널(account 시드)을 최근 랭킹 지표와 조인한 리더보드.
+
+    레퍼런스 랭킹처럼 조회수·속도·참여율(density)·가속으로 정렬. 각 채널의 지표는
+    최근 수집(last_run)에서 그 채널이 올린 영상들을 집계한 것(ranking.aggregate_channels).
+    최근 영상이 없는 채널은 0 지표 + collected=False(수집대기)로 함께 나온다.
+    sort: 'views'|'speed'|'density'|'accel'|'count'."""
+    store = Store(DB_PATH)
+    items, collected_at = store.load_last_run_platform("youtube")
+    agg = {r["channel_id"]: r for r in aggregate_channels(items)}
+    fit = channel_fitness(items)  # 채널명(name/username) → {total, good, other, fitness}
+    rows = []
+    for s in store.list_seeds("youtube"):
+        if s["kind"] != "account":
+            continue
+        m = _SEED_CH_ID.search(s["value"] or "")
+        cid = m.group(1) if m else None
+        base = {"channel_id": cid, "channel_url": s["value"], "seed_url": s["value"],
+                "added_at": s.get("added_at", ""),
+                "name": "", "video_count": 0, "views": 0, "speed": 0, "density": 0.0,
+                "accel": 0, "grade": "—", "thumbnail": "", "collected": False,
+                "fitness": 0.0, "good": 0, "other": 0}
+        if cid and cid in agg:
+            base.update(agg[cid])
+            base["collected"] = True
+        f = fit.get(base.get("name")) if base.get("name") else None
+        if f:
+            base["fitness"] = f["fitness"]
+            base["good"] = f["good"]
+            base["other"] = f["other"]
+        rows.append(base)
+    key = {"views": "views", "speed": "speed", "density": "density",
+           "accel": "accel", "count": "video_count"}.get(sort, "views")
+    reverse = True
+    if sort == "fitness":
+        key, reverse = "fitness", False  # 지울 후보(적합도 낮음)가 위로
+    rows.sort(key=lambda x: (x.get(key) or 0), reverse=reverse)
+    return {"channels": rows, "collected_at": collected_at, "total": len(rows)}
 
 
 def next_draft_targets(items, store, limit=DRAFT_BATCH_SIZE):
@@ -86,28 +142,54 @@ def generate_missing_drafts(items):
         list(pool.map(_generate_one, items))
 
 
-def _collect_youtube():
-    """유튜브 키워드 시드로 인기 Shorts 발굴 → 조회수 기반 랭킹.
+def _collect_youtube(categories=None, seed_only=False):
+    """유튜브 카테고리 프리셋 + 수동 키워드 시드(발굴) + 계정 시드(채널기반) → 조회수 랭킹.
 
-    시드의 kind = 언어코드(ko/en/ja/zh/ru). 언어별로 묶어 각 언어·지역으로
-    검색(regionCode 편향 → 외국영상 혼입 방지). 예전 kind="keyword" 시드는 ko로 취급."""
+    categories=None → 프리셋 전 카테고리 union(전체 딸깍) / ["혼합형"] → 그 카테고리만.
+    프리셋은 lang=ko로 검색. 수동 키워드 시드(kind=언어코드)·계정 시드는 항상 함께 수집.
+    세 경로 raw를 video_id로 중복제거 후 공통 파이프라인.
+
+    seed_only=True면 등록 계정 시드만 쓴다(2026-07-29).
+    왜: preset/by_lang 키워드 검색은 조회수 높은 국내 쇼츠를 주제 무관하게 끌어와
+    랭킹의 절반을 '기타'(연예·이슈 클립)로 채웠다. 매일 도는 자동 수집에서는 이 경로를 끄고,
+    새 채널 발굴이 필요한 수동 '지금 수집'에서만 켠다.
+    덤: fetch_channel_shorts는 ≤60초 필터가 내장돼 있어 쇼츠만 남는다."""
     store = Store(DB_PATH)
     seeds = store.list_seeds("youtube")
-    if not seeds:
-        return []
-    # 언어별 키워드 묶음 (kind가 언어코드가 아니면 ko)
     _LANGS = {"ko", "en", "ja", "zh", "ru"}
     by_lang = {}
+    accounts = []
     for s in seeds:
-        lang = s["kind"] if s["kind"] in _LANGS else "ko"
-        by_lang.setdefault(lang, []).append(s["value"])
+        if s["kind"] == "account":
+            accounts.append(s["value"])
+        else:
+            lang = s["kind"] if s["kind"] in _LANGS else "ko"
+            by_lang.setdefault(lang, []).append(s["value"])
     now = datetime.now(timezone.utc)
     after = (now - timedelta(hours=YOUTUBE_WINDOW_HOURS)).strftime("%Y-%m-%dT%H:%M:%SZ")
     raw = []
-    for lang, kws in by_lang.items():
-        raw.extend(yt_search(kws, after, max_per_kw=YOUTUBE_MAX_PER_KW, lang=lang))
+    if not seed_only:
+        # 카테고리 프리셋(한국어) — 딸깍 수집의 핵심
+        preset = preset_keywords(categories)
+        if preset:
+            raw.extend(yt_search(preset, after, max_per_kw=YOUTUBE_MAX_PER_KW, lang="ko"))
+        # 수동 키워드 시드(언어별)
+        for lang, kws in by_lang.items():
+            raw.extend(yt_search(kws, after, max_per_kw=YOUTUBE_MAX_PER_KW, lang=lang))
+    # 계정 시드(채널기반)
+    for acc in accounts:
+        raw.extend(yt_fetch_channel(acc, cache_get=store.yt_cache_get,
+                                    cache_put=store.yt_cache_put))
+    # video_id 중복제거(프리셋·수동·계정 겹칠 수 있음) — 첫 등장 우선
+    seen, deduped = set(), []
+    for r in raw:
+        vid = r.get("video_id")
+        if not vid or vid in seen:
+            continue
+        seen.add(vid)
+        deduped.append(r)
     items = build_youtube_items(
-        raw,
+        deduped,
         prev_base=lambda sc: store.prev_base_platform("youtube", sc),
         prev_delta=lambda sc: store.prev_delta_platform("youtube", sc),
         now=now, window_hours=YOUTUBE_WINDOW_HOURS,
@@ -120,11 +202,13 @@ def _collect_youtube():
     return items
 
 
-def _collect_tiktok():
+def _collect_tiktok(include_paid_keywords=False):
     """틱톡 시드 계정(@handle)들의 최근 영상 → 조회수 기반 랭킹(무료 yt-dlp).
 
-    시드 kind='account'. 계정마다 yt-dlp로 훑어(실패계정은 스킵) 14일 창 내 영상을
-    공통 item으로 만든다. 유튜브와 동일한 지표·저장 구조."""
+    include_paid_keywords=False(기본): **무료 경로만** — 계정 시드(yt-dlp)만 훑는다.
+    키워드 시드 검색은 Apify 건당과금이라 자동 수집에서 뺐다(2026-07-24 "과금 없는 구조").
+    코드는 지우지 않는다 — 관리자가 명시로 켤 때만(True) 돈다.
+    """
     store = Store(DB_PATH)
     seeds = store.list_seeds("tiktok")
     if not seeds:
@@ -139,7 +223,7 @@ def _collect_tiktok():
     # 번역돼 저장됨(UI addSeed). 언어당 tiktok_search_count(기본 50)개. 계정 경로와 같은
     # raw 스키마라 아래 build_tiktok_items로 함께 흘러간다.
     lang_seeds = [s["value"] for s in seeds if s["kind"] in _TIKTOK_LANG_KINDS]
-    if lang_seeds:
+    if include_paid_keywords and lang_seeds:
         count = int(store.get_setting("tiktok_search_count", TIKTOK_SEARCH_COUNT_DEFAULT))
         for kw in lang_seeds:
             raw.extend(tt_search_full(kw, max_results=count))
@@ -157,7 +241,208 @@ def _collect_tiktok():
     return items
 
 
-def collect(platform="instagram", limit_channels=None):
+def _collect_xiaohongshu():
+    """샤오홍슈 레퍼런스 채널(프로필 URL 시드)의 최근 48h 노트 → 참여기반 랭킹(무료 크롤).
+
+    build_overseas_items를 window_hours=48로 재사용 — 해외HOT과 랭킹 공식 공유(view-less,
+    base=좋아요+댓글+수집+공유). 로그인 세션 재사용, 프록시 불필요(2026-07-29 검증)."""
+    store = Store(DB_PATH)
+    seeds = store.list_seeds("xiaohongshu")
+    urls = [s["value"] for s in seeds if s["kind"] == "account"]
+    if not urls:
+        return []
+    now = datetime.now(timezone.utc)
+    raw = _xhs_fetch_notes(urls)
+    items = build_overseas_items(
+        raw,
+        prev_base=lambda sc: store.prev_base_platform("xiaohongshu", sc),
+        prev_delta=lambda sc: store.prev_delta_platform("xiaohongshu", sc),
+        now=now, window_hours=XIAOHONGSHU_WINDOW_HOURS,
+    )
+    apply_grades(items)
+    run_date = now.strftime("%Y-%m-%d %H:%M")
+    store.save_run_platform("xiaohongshu", run_date,
+                            [{"shortcode": i["shortcode"], "base": i["base_count"], "delta": i["delta"]} for i in items])
+    store.save_last_run_platform("xiaohongshu", items, now.isoformat())
+    return items
+
+
+# ── 샤오홍슈 계정 발굴(리더보드·담기·삭제·자동등록) ──
+# 설계: docs/superpowers/specs/2026-07-29-샤오홍슈-계정발굴-design.md
+# 검색 발굴(포스트)을 작성자별로 집계해 '잘하는 계정'을 모아준다 → 레퍼런스에 등록.
+
+def _xhs_search_fn():
+    """발굴 검색 경로 선택 — 해외HOT과 동일하게 config.XHS_SCRAPER를 따른다.
+    playwright(기본, 무료 로그인세션 크롤) / apify(유료). 서버 기본이 playwright라
+    발굴도 공짜로 돈다. 둘 다 search_full(keyword)→노트 리스트로 인터페이스 동일."""
+    if getattr(config, "XHS_SCRAPER", "apify") == "playwright":
+        from shopping_shorts import playwright_crawl
+        # 발굴은 인기순(sort='general', 샤오홍슈 기본)으로 검색 → '진짜 볼 것'을 재료로 삼는다.
+        # (해외HOT은 time_descending 선점용이라 여기서만 general로 가른다.)
+        return lambda kw: playwright_crawl.search_full(kw, sort="general")
+    return xiaohongshu_search.search_full
+
+
+def discover_xiaohongshu_accounts(min_notes=2):
+    """계정 발굴 리더보드. 블랙리스트 제외, 이미 등록된 계정은 is_registered=True."""
+    store = Store(DB_PATH)
+    blacklist = store.xhs_blacklist_list()
+    registered = {s["value"] for s in store.list_seeds("xiaohongshu") if s["kind"] == "account"}
+    accounts = xiaohongshu_discovery.discover_accounts(
+        _xhs_search_fn(), overseas_seeds.load_seeds(),
+        min_notes=min_notes, blacklist=blacklist)
+    # 누적 기록(관측 기반) — 이번 발굴을 append하고, 과거 누적치를 각 계정에 붙인다.
+    run_ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")
+    store.xhs_discovery_record(run_ts, accounts)
+    stats = store.xhs_discovery_stats()
+    for a in accounts:
+        a["is_registered"] = a["profile_url"] in registered
+        st = stats.get(a["userid"], {})
+        a["appear_count"] = st.get("appear_count", 1)        # 관측 횟수(자주 돌수록↑)
+        a["appear_days"] = st.get("appear_days", 1)          # 등장 일수
+        a["cum_engagement"] = st.get("cum_engagement", a["engagement_sum"])  # 누적 참여합
+    # 마지막 결과를 캐시 — 다른 페이지 갔다 와도 크롤 없이 바로 다시 띄운다(백그라운드도 갱신).
+    # ★빈 결과(크롤 실패·세션 경합 0건)는 저장하지 않는다 — 이전 좋은 캐시를 지우면 안 됨.
+    if accounts:
+        import json as _json
+        store.set_setting("xhs_last_result", _json.dumps(
+            {"at": run_ts, "items": accounts}, ensure_ascii=False))
+    return accounts
+
+
+def cached_xiaohongshu_accounts():
+    """마지막 발굴 결과(캐시) — 크롤 없이 읽는다. 없으면 {'items': []}."""
+    import json as _json
+    raw = Store(DB_PATH).get_setting("xhs_last_result", "")
+    if not raw:
+        return {"at": "", "items": []}
+    try:
+        d = _json.loads(raw)
+        return {"at": d.get("at", ""), "items": d.get("items", [])}
+    except Exception:
+        return {"at": "", "items": []}
+
+
+def adopt_xiaohongshu_account(profile_url, userid=None):
+    """[담기] — 레퍼런스 계정 시드로 등록. 블랙리스트면 거부."""
+    store = Store(DB_PATH)
+    if userid and str(userid) in store.xhs_blacklist_list():
+        return {"ok": False, "reason": "blacklisted"}
+    store.add_seed("xiaohongshu", "account", profile_url)
+    return {"ok": True}
+
+
+def blacklist_xiaohongshu_account(userid, profile_url=None):
+    """[삭제] — 계정 시드 제거 + 영구 블랙리스트(자동등록·발굴 재등장 차단)."""
+    store = Store(DB_PATH)
+    if profile_url:
+        store.remove_seed("xiaohongshu", profile_url)
+    store.xhs_blacklist_add(userid)
+    return {"ok": True}
+
+
+def auto_register_xiaohongshu(top_n=10, min_notes=2):
+    """매일: 발굴 상위 N 계정을 레퍼런스에 자동 등록(블랙리스트·기등록 제외). 등록 URL 리스트 반환."""
+    store = Store(DB_PATH)
+    added = []
+    for a in discover_xiaohongshu_accounts(min_notes=min_notes):
+        if len(added) >= top_n:
+            break
+        if a.get("is_registered"):
+            continue
+        store.add_seed("xiaohongshu", "account", a["profile_url"])
+        added.append(a["profile_url"])
+    return added
+
+
+def _ig_hashtags_by_category():
+    """overseas_seeds.json의 tiktok 키워드(공백 자연어)를 인스타 해시태그(붙여쓰기)로
+    변환 — 별도 시드파일 없이 기존 카테고리 팩과 동기 유지(2026-07-30)."""
+    out = {}
+    for cat, packs in overseas_seeds.load_seeds().items():
+        tags = [(kw or "").replace(" ", "").lower() for kw in (packs or {}).get("tiktok", [])]
+        out[cat] = [t for t in tags if t]
+    return out
+
+
+def discover_instagram_accounts(min_posts=2):
+    """인스타 계정 발굴 리더보드(해시태그 탐색, 참여도=좋아요+댓글 합산, 2026-07-30).
+    블랙리스트 제외, 이미 등록된 계정은 is_registered=True."""
+    store = Store(DB_PATH)
+    blacklist = store.ig_blacklist_list()
+    # 인스타 실제 추적 대상은 discovered_channels(엑셀과 union되는 테이블) —
+    # 샤오홍슈처럼 platform_seeds가 아니다(2026-07-30, channels.select_tracked 참고).
+    registered = {d["username"].lower() for d in store.discovered_channels()}
+    accounts = instagram_discovery.discover_accounts(
+        _ig_search_hashtag, _ig_hashtags_by_category(),
+        min_posts=min_posts, blacklist=blacklist)
+    run_ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")
+    store.ig_discovery_record(run_ts, accounts)
+    stats = store.ig_discovery_stats()
+    for a in accounts:
+        a["is_registered"] = a["username"].lower() in registered
+        st = stats.get(a["username"].lower(), {})
+        a["appear_count"] = st.get("appear_count", 1)        # 관측 횟수(자주 돌수록↑)
+        a["appear_days"] = st.get("appear_days", 1)          # 등장 일수
+        a["cum_engagement"] = st.get("cum_engagement", a["engagement_sum"])  # 누적 참여합
+    if accounts:
+        import json as _json
+        store.set_setting("ig_discovery_last_result", _json.dumps(
+            {"at": run_ts, "items": accounts}, ensure_ascii=False))
+    return accounts
+
+
+def cached_instagram_discovery():
+    """마지막 인스타 발굴 결과(캐시) — 크롤 없이 읽는다. 없으면 {'items': []}."""
+    import json as _json
+    raw = Store(DB_PATH).get_setting("ig_discovery_last_result", "")
+    if not raw:
+        return {"at": "", "items": []}
+    try:
+        d = _json.loads(raw)
+        return {"at": d.get("at", ""), "items": d.get("items", [])}
+    except Exception:
+        return {"at": "", "items": []}
+
+
+def adopt_instagram_discovery_account(username, full_name=""):
+    """[담기] — discovered_channels(엑셀과 union되는 실제 추적 목록)에 등록.
+    블랙리스트면 거부. 채널 릴스 자체(fetch_reels)는 다음 collect("instagram")부터 포함된다."""
+    store = Store(DB_PATH)
+    if username.lower() in store.ig_blacklist_list():
+        return {"ok": False, "reason": "blacklisted"}
+    store.add_discovered(username, name=full_name or username)
+    return {"ok": True}
+
+
+def blacklist_instagram_discovery_account(username):
+    """[삭제] — 추적목록 제거 + 영구 블랙리스트(자동등록·발굴 재등장 차단)."""
+    store = Store(DB_PATH)
+    store.remove_channel(username)
+    store.ig_blacklist_add(username)
+    return {"ok": True}
+
+
+def auto_register_instagram(top_n=10, min_posts=2):
+    """매일: 발굴 상위 N 계정을 레퍼런스(discovered_channels)에 자동 등록
+    (블랙리스트·기등록 제외). 등록 username 리스트 반환."""
+    store = Store(DB_PATH)
+    added = []
+    for a in discover_instagram_accounts(min_posts=min_posts):
+        if len(added) >= top_n:
+            break
+        if a.get("is_registered"):
+            continue
+        store.add_discovered(a["username"], name=a.get("full_name") or a["username"])
+        added.append(a["username"])
+    return added
+
+
+LAST_COLLECT_TALLY = {}
+# 마지막 인스타 수집의 채널 분류 집계(app.py가 job 결과에 담는다). apify 경로면 빈 dict.
+
+
+def collect(platform="instagram", categories=None, limit_channels=None, on_progress=None, seed_only=False):
     """1회 수집 실행 → 지표·등급 채워진 항목 리스트 반환 + DB 저장.
 
     platform: "instagram"(기본, 엑셀 채널 기반) | "youtube"(키워드 시드 기반,
@@ -165,34 +450,27 @@ def collect(platform="instagram", limit_channels=None):
     limit_channels: 테스트/절약용 채널 수 상한 (None=전체). 댓글 draft 생성은
     포함하지 않음 — 호출부(app.py)가 generate_missing_drafts()를 별도로(백그라운드)
     호출해야 한다.
+    on_progress(done, total, items_so_far, tally): 인스타+Playwright 경로에서만 채널마다
+    호출된다(수집이 도는지 화면에 보여주기 위함). Apify 경로는 진행률을 알 수 없어 무시된다.
     """
     if platform == "youtube":
-        return _collect_youtube()
+        return _collect_youtube(categories, seed_only=seed_only)
     if platform == "tiktok":
         return _collect_tiktok()
+    if platform == "xiaohongshu":
+        return _collect_xiaohongshu()
     if platform != "instagram":
         return []   # 미구현 플랫폼이 인스타 Apify 스크레이프로 흘러들지 않게
 
     channels = load_channels()
 
-    # 발굴로 추가한 채널을 엑셀 목록과 union하고, 죽은(추적제외) 채널은 뺀다
-    # (2026-07-12). 엑셀 원본은 안 건드리는 소프트 관리 — 제외/추가 모두 DB에서만.
+    # 활동성 선별(2026-07-22): 생존+측정대기만 긁고 사망(센서스 판정)·수동제거는 뺀다.
+    # 팔로워 컷 없음. 센서스 전(활동테이블 빈 상태)엔 전원 측정대기라 전 채널 = 초기 안전동작.
+    # 엑셀 원본은 안 건드리는 소프트 관리 — 제외/추가/사망 모두 DB에서만.
     _store = Store(DB_PATH)
-    known = {c["username"].strip().lstrip("@").lower() for c in channels}
-    for d in _store.discovered_channels():
-        if d["username"].strip().lstrip("@").lower() not in known:
-            channels.append(d)
-    removed = _store.removed_usernames()
-    if removed:
-        channels = [c for c in channels
-                    if c["username"].strip().lstrip("@").lower() not in removed]
-
-    # 엑셀(load_channels에서 이미 MAX_CHANNELS 캡됨)+발굴채널 union 후 다시 캡
-    # (2026-07-13) — union으로 발굴채널이 계속 늘면 엑셀 캡을 우회해 무한정
-    # 커지던 구멍. 순서(엑셀 먼저, 발굴채널은 최신 추가순)를 유지한 채 자르므로
-    # 엑셀은 그대로 유지되고 오래된 발굴채널부터 자연스럽게 빠진다.
-    if len(channels) > MAX_CHANNELS:
-        channels = channels[:MAX_CHANNELS]
+    channels = select_tracked(channels, _store.discovered_channels(),
+                              removed=_store.removed_usernames(),
+                              dead=_store.dead_usernames())
 
     if limit_channels:
         channels = channels[:limit_channels]
@@ -200,7 +478,26 @@ def collect(platform="instagram", limit_channels=None):
     meta_by_user = {c["username"]: c for c in channels}
     usernames = list(meta_by_user.keys())
 
-    reels = fetch_reels(usernames)  # 전체 채널 릴스 원본
+    # 채널 대표 카테고리 주입(2026-07-30) — 캡션 없이 수집하게 되면서 릴스 단위 판정이
+    # 거의 '기타'로 떨어졌다(실측 289건 중 277건). 과거 이력의 최빈 카테고리를 meta에
+    # 실어 ranking._category_of가 폴백으로 쓰게 한다. 엑셀 메타에 category가 이미
+    # 있으면 그걸 존중한다(사람이 정한 값이 우선).
+    _chan_cats = Store(DB_PATH).channel_categories()
+    for _u, _m in meta_by_user.items():
+        if not (_m.get("category") or "").strip():
+            _m["category"] = _chan_cats.get((_u or "").lower().lstrip("@"), "")
+
+    # ── 스크레이퍼 선택(2026-07-28) ──
+    # Apify는 성공해도 28분, 403으로 통째로 죽는 사례 2건(서버 collect_jobs 실측).
+    # Playwright 경로는 채널별 실패 격리 + 진행률 보고가 된다. 라이브가 이 수집에
+    # 묶여 있으므로 환경변수 하나로 즉시 되돌릴 수 있게 분기로 남긴다.
+    global LAST_COLLECT_TALLY
+    if config.INSTAGRAM_SCRAPER == "playwright":
+        reels = _pw_fetch_reels(usernames, on_progress=on_progress)
+        LAST_COLLECT_TALLY = dict(_PW_TALLY)
+    else:
+        reels = fetch_reels(usernames)      # 전체 채널 릴스 원본(Apify)
+        LAST_COLLECT_TALLY = {}
 
     store = Store(DB_PATH)
     now = datetime.now(timezone.utc)
@@ -237,3 +534,89 @@ def collect(platform="instagram", limit_channels=None):
     ])
     _export_csv(all_items, run_date)  # 날짜별 CSV 아카이브
     return all_items
+
+
+def _norm_u(username):
+    return (username or "").strip().lstrip("@").lower()
+
+
+def _record_activity(seen, username, item, reel):
+    """센서스에서 본 릴스 1건으로 채널 활동레코드 갱신(채널당 최고 점수 + 최신 시각)."""
+    u = _norm_u(username)
+    views = item.get("views") or 0
+    comments = item.get("comments") or 0
+    density = (comments / views) if views > 0 else 0.0   # 참여밀도(조회 없으면 0)
+    age = item.get("age_hours") or 0
+    recency = max(0.0, 1 - age / (DEAD_AFTER_DAYS * 24))  # 최근일수록 1
+    score = density * (1 + recency)
+    ts = reel.get("timestamp")
+    cur = seen.get(u)
+    if cur is None:
+        seen[u] = {"username": username, "alive": True, "last_post_at": ts,
+                   "engagement_density": density, "activity_score": score}
+        return
+    if score > cur["activity_score"]:
+        cur["activity_score"] = score
+        cur["engagement_density"] = density
+    if ts and (not cur["last_post_at"] or ts > cur["last_post_at"]):
+        cur["last_post_at"] = ts
+
+
+def census():
+    """전수 센서스(2026-07-22) — 전 채널(팔로워/사망 필터 없음)을 긁어 활동성 판정.
+
+    최근 DEAD_AFTER_DAYS일 내 릴스를 반환한 채널 = 생존, 0건 = 사망. 전체 랭킹과
+    사망목록을 즉시 돌려주고, DB에 반영할 활동레코드(activity_records)도 함께 반환한다
+    — 호출부(app.py)가 이걸 background로 upsert해 "정리를 뒤에서" 처리한다. 하드삭제 없음.
+    Apify 실패 시 예외는 호출부로 전파(활동테이블 미갱신 → 사망 오판 안 함)."""
+    store = Store(DB_PATH)
+    excel = load_channels()
+    # 마스터 = 엑셀 전체 ∪ 발굴/등록, 수동제거만 제외. 사망 채널도 포함해 재확인(=부활 기회).
+    master = select_tracked(excel, store.discovered_channels(),
+                            removed=store.removed_usernames(), dead=set())
+    meta_by_user = {c["username"]: c for c in master}
+    usernames = list(meta_by_user.keys())
+
+    reels = fetch_reels(usernames, results_per_channel=CENSUS_RESULTS_PER_CHANNEL,
+                        only_newer_than=f"{DEAD_AFTER_DAYS} days")
+
+    now = datetime.now(timezone.utc)
+    all_items = []
+    seen_alive = {}   # 정규화 username -> 활동레코드
+    for r in reels:
+        user = r.get("ownerUsername") or r.get("username")
+        meta = meta_by_user.get(user)
+        if not meta:
+            continue
+        items = build_items([r], meta, prev_comments=store.prev_comments,
+                            prev_delta=store.prev_delta, now=now,
+                            window_hours=DEAD_AFTER_DAYS * 24)
+        for it in items:
+            # 전수조사 참여밀도 = (좋아요+댓글)/조회수 (영상별). build_items의 기본
+            # density는 댓글÷팔로워인데 릴스 스크래퍼엔 팔로워가 없어 전부 0이 된다
+            # → 조회수 기준으로 덮어써야 소형채널도 밀도로 상위에 오른다.
+            v = it.get("views") or 0
+            it["density"] = ((it.get("likes") or 0) + (it.get("comments") or 0)) / v if v else 0.0
+            all_items.append(it)
+            _record_activity(seen_alive, meta["username"], it, r)
+    apply_grades(all_items)
+    # 채널당 상한이 아니라 영상별 참여밀도 내림차순 → 소형채널의 뜨거운 영상이 안 밀린다.
+    all_items.sort(key=lambda i: i.get("density") or 0.0, reverse=True)
+
+    alive_norm = set(seen_alive.keys())
+    dead_channels = [c for c in master if _norm_u(c["username"]) not in alive_norm]
+    prior_dead = store.dead_usernames()
+    revived_n = sum(1 for u in alive_norm if u in prior_dead)
+
+    activity_records = list(seen_alive.values()) + [
+        {"username": c["username"], "alive": False} for c in dead_channels]
+
+    return {
+        "items": all_items,
+        "dead": dead_channels,
+        "activity_records": activity_records,
+        "scanned_n": len(usernames),
+        "alive_n": len(alive_norm),
+        "dead_n": len(dead_channels),
+        "revived_n": revived_n,
+    }

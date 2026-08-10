@@ -1,0 +1,24 @@
+{
+  "stocks": [
+    {
+      "name": "Moonshot",
+      "signal": "neutral",
+      "reason": "Kimi K3 모델을 통해 스케일링 법칙의 유효성을 증명하며 중국 AI 모델의 프리미엄화와 대규모 인프라 최적화 전략을 보여줌",
+      "ts": "03:53",
+      "quote": "K3는 더 이상 전통적인 의미에서 낮은 가격으로 경쟁하는 중국형 모델이 아닙니다. 미국의 최상위 폐쇄형 모델들에 근접한 가격 책정으로 곧장 이동한 것입니다.",
+      "sector": "중국"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "중국 Moonshot이 강력한 개방형 AI 모델인 Kimi K3를 공개함",
+      "ts": "01:48",
+      "quote": "중국의 문샷 프로젝트가 강력한 개방형 AI 모델을 공개한 후 투자자들은 AI 주도 랠리의 강도에 의문을 제기하고 있습니다"
+    },
+    {
+      "fact": "글로벌 빅테크 기업들이 데이터 센터 구축을 위해 수천억 달러를 투자하고 있음",
+      "ts": "03:54",
+      "quote": "tech giants including Meta, Google, Microsoft and others shovel hundreds of billions of dollars into building dozens of new data centers all over the world."
+    }
+  ]
+}

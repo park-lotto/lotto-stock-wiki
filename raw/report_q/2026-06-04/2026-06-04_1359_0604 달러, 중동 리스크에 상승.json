@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "date": "2026-06-04",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-04\\2026-06-04_1359_0604 달러, 중동 리스크에 상승.md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "김유미, 안예하, 심수빈",
+    "report_date": "2026. 6. 4",
+    "target_kind": "market",
+    "market_direction": "달러 강세, 금리 상승",
+    "macro_vars": [
+      "국제유가 상승",
+      "미국 국채금리 상승",
+      "미국 5월 ADP 민간고용 12.2만 건",
+      "5월 ISM 서비스업지수 54.5"
+    ],
+    "recommended_sectors": null,
+    "style": "기타",
+    "event_calendar": [
+      {
+        "date": "2026. 6. 4",
+        "event": "미국 5월 ADP 민간고용 발표"
+      },
+      {
+        "date": "2026. 6. 4",
+        "event": "5월 ISM 서비스업지수 발표"
+      }
+    ],
+    "top_picks": null,
+    "risk": "중동 지역 지정학적 리스크 심화",
+    "quote": "달러화는 중동 지역의 지정학적 긴장이 재차 고조되며 국제유가와 미국채금리가 상승한 가운데, 예상보다 양호한 미국 경제지표로 강세"
+  }
+}

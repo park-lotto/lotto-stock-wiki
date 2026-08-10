@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1206_2Q 기존점 +14%, 목표주가 23만원으로 상향.md"
+  },
+  "questionnaire": {
+    "broker": "키움증권",
+    "analyst": "박상준, CFA",
+    "report_date": "2026. 6. 10",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "롯데쇼핑",
+        "code": "023530",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "230,000원",
+        "tp_prev": null,
+        "tp_direction": "up",
+        "earnings_outlook": "롯데쇼핑의 2분기 연결기준 영업이익 전망치를 1,045억원(+157% YoY)으로 상향 조정한다. 26년 연간 영업이익 전망치를 8,146억원(+49% YoY)으로 상향 조정한다.",
+        "estimate_revision": "상향",
+        "next_catalyst": "백화점 매출 성장세 강화 및 할인점 반사수혜",
+        "thesis": [
+          "국내 주식시장 강세에 따른 자산효과와 외국인 매출 증가",
+          "국내 백화점 기존점 매출 성장률 전망치 상향",
+          "국내 할인점의 홈플러스 폐점에 따른 반사수혜 확대"
+        ],
+        "valuation_basis": "일본 백화점 3 社 평균 PER 에 20% 할인",
+        "risk": null,
+        "supply_comment": "소비내수",
+        "quote": "롯데쇼핑의 2분기 영업이익과 26년 연간 영업이익 전망치를 각각 1,045억원, 8,146억원으로 상향 조정한다."
+      }
+    ]
+  }
+}

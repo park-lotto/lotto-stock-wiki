@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-01_0800_사업 지주회사로 체질 개선.md"
+  },
+  "questionnaire": {
+    "broker": "미래에셋증권",
+    "analyst": "서미화",
+    "report_date": "2026.7.31",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "동아쏘시오홀딩스",
+        "code": "000640",
+        "rating": "Not Rated",
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "동아쏘시오홀딩스는 2Q26 연결 매출액 4,124억원(+18.9% YoY), 영업이익 390억원(+38.3% YoY)을 달성했다.",
+        "estimate_revision": null,
+        "next_catalyst": "26년 7월 23일, 지분율 100% 비상장 자회사인 동아제약을 무증자 소규모 합병 방식으로 흡수합병하기로 결정(합병기일: 2026년 10월 1일)했다.",
+        "thesis": [
+          "주요 자회사인 동아제약, 용마로지스의 매출 성장과 자회사의 판관비 감소로 영업이익 증가",
+          "동아제약의 박카스 및 일반의약품 부문 판매 호조와 더마화장품 채널 확장을 통한 성장 지속",
+          "사업 지주회사 체제 재편으로 지배구조 단순화 및 신속한 의사결정 체계 구축"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "동아쏘시오홀딩스는 2Q26 연결 매출액 4,124억원(+18.9% YoY), 영업이익 390억원(+38.3% YoY)을 달성했다."
+      }
+    ]
+  }
+}

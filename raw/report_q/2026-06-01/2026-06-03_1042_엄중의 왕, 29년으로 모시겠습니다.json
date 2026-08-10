@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-01",
+    "broker": "미래에셋증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_엄중의 왕, 29년으로 모시겠습니다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "미래에셋증권",
+    "analyst": "박준서",
+    "report_date": "2026.6.1",
+    "stocks": [
+      {
+        "name": "삼성전기",
+        "code": "009150",
+        "rating": "매수",
+        "rating_changed": null,
+        "tp_new": "2,800,000원",
+        "tp_prev": "1,300,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "동사의 26F~30F 매출 CAGR +24.6%, 영업이익 CAGR +61.3%를 전망",
+        "estimate_revision": "목표주가 +115% 상향. 판가 상승 + CAPEX 투자로 중장기 성장성 확보",
+        "next_catalyst": "AI 사이클은 과거 MLCC 숏티지(17~18년)·전기차(21~22년) 사이클을 능가하며, 다년간 독점계약으로 중장기 성장이 가시화",
+        "thesis": [
+          "다년간 독점계약 체결. 이제 허벅지에 온 AI 사이클(FC-BGA, MLCC)",
+          "MLCC, 과거 사이클 대비 이체 초입. Si Cap까지 신규 수요 폭발적 증가",
+          "AI 사이클에 따른 공급 부족 가시화"
+        ],
+        "valuation_basis": "29년 EPS 93,242원에 과거 업사이클 기준 P/E 30배를 적용",
+        "risk": null,
+        "supply_comment": "고객사의 선제적 재고 확보를 위한 LTA·가격 인상 수용 등을 감안하면, 코로나 사이클을 상회하는 인상폭이 수용될 가능성도 존재함",
+        "quote": "목표주가를 2,800,000원(기존 1,300,000원)으로 +115% 상향한다."
+      }
+    ]
+  }
+}

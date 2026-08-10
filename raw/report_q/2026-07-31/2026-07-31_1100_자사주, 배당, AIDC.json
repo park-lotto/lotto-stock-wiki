@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-31",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-31_1100_자사주, 배당, AIDC.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": "김회재",
+    "report_date": "2026.07.30",
+    "stocks": [
+      {
+        "name": "LG유플러스",
+        "code": "032640",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": 20000,
+        "tp_prev": 20000,
+        "tp_direction": "flat",
+        "earnings_outlook": "2Q26 OP 3.3천억원(+8% yoy), 25년 OP 8.9천억원(+3% yoy), 26E OP 1.17조원(+31% yoy) 전망",
+        "estimate_revision": null,
+        "next_catalyst": "무선의 ARPU 반등",
+        "thesis": [
+          "중간배당 270원(+20원 yoy) 결정. 26E DPS 700원(+40원 yoy)",
+          "자사주 900억원 결정(+100억원 yoy). 총주주환원율 53% 전망",
+          "AIDC 추가 투자 결정, 26~28년 1.35조원. 30년 DC 매출 1.1조원 가능"
+        ],
+        "valuation_basis": "26E EPS 1,609원에 PER 13배 적용. 최근 5년 통신업(KT, LGU+ 기준) 평균 10배 대비 30% 할증 적용",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "투자의견 매수(Buy), 목표주가 20,000원 유지",
+        "sector": "통신"
+      }
+    ]
+  }
+}

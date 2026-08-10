@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-07-30",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-31_0801_오랜만에 턴어라운드.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "권우정",
+    "report_date": "Jul 30 2026",
+    "stocks": [
+      {
+        "name": "LG생활건강",
+        "code": "051900",
+        "rating": "Trading Buy",
+        "rating_changed": true,
+        "tp_new": "310,000원",
+        "tp_prev": "280,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2분기 연결 매출액 및 영업이익은 각각 1조 6,574억원 (YoY 3%), 1,028억원 (YoY 88%)으로 시장기대치(752억원)를 +37% 상회.",
+        "estimate_revision": "영업이익이 8개 분기 만에, 매출액이 6개 분기 만에 성장 전환하며 회복 구간에 진입",
+        "next_catalyst": "북미 매출이 처음으로 중국 매출을 상회",
+        "thesis": [
+          "영업이익 8개 분기 만에 성장 전환 성공",
+          "닥터그루트 중심의 북미 수익성 개선",
+          "관세 환입 효과(150억원) 반영"
+        ],
+        "valuation_basis": "12개월 Fwd EPS에 Target P/E 20배 적용",
+        "risk": "3분기 중동발 원부자재 비용이 QoQ 200억원 증가하며 비용 부담이 확대될 전망",
+        "supply_comment": "화장품미용",
+        "quote": "투자의견을 Trading Buy로 상향하는데, 영업이익이 8개 분기 만에, 매출액이 6개 분기 만에 성장 전환하며 회복 구간에 진입했다고 판단하기 때문."
+      }
+    ]
+  }
+}

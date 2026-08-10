@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "키움증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_1042_올해 1건 ‘이상’ 기술이전 목표. 이상무!.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "키움증권",
+    "analyst": "허혜민",
+    "report_date": "2026. 6. 2.",
+    "stocks": [
+      {
+        "name": "한미약품",
+        "code": "128940",
+        "rating": "Buy",
+        "rating_changed": true,
+        "tp_new": "660,000원",
+        "tp_prev": "560,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2026F 매출액 1,631.3 십억원, 영업이익 264.3 십억원",
+        "estimate_revision": "소네페글루타이드 신약가치를 반영하여 투자의견과 목표주가를 상향하였다.",
+        "next_catalyst": "소네페글루타이드 글로벌 2상(DOLPHINS-2) 진행 및 데이터 확인",
+        "thesis": [
+          "릴리향 소네페글루타이드 대규모 기술 이전으로 연구개발 중심 기업 경쟁력 입증",
+          "희귀질환 치료제로서 상업적 차별화 및 적응증 확장 가능성",
+          "글로벌 상용화 트랙 레코드를 보유한 랩스커버리 플랫폼 기반의 시너지"
+        ],
+        "valuation_basis": "영업가치(Fw12M EBITDA * 상위제약사 평균 EV/EBITDA)와 비영업가치(듀얼_MSD, 트리플어고니스트, 소네페글루타이드) 합산 후 순차입금 차감",
+        "risk": "릴리향 기술이전 계약금 유입 시기 불확실성",
+        "supply_comment": null,
+        "quote": "전일(6/1) 릴리향으로 소네페글루타이드 기술이전 소식에 동사의 주가는 +10% 상승, 시가총액 약 6,149억원이 증가하였습니다."
+      }
+    ],
+    "sector": "바이오"
+  }
+}

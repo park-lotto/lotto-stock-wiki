@@ -1,0 +1,22 @@
+{
+  "reports": [
+    {
+      "broker": "한투글로벌",
+      "stock": "알파벳",
+      "rating": null,
+      "tp": null,
+      "ts": "18:15",
+      "quote": "알파벳(GOOGL US): 긍정적 요인에 집중",
+      "sector": "IT"
+    },
+    {
+      "broker": "한투글로벌",
+      "stock": "테슬라",
+      "rating": null,
+      "tp": null,
+      "ts": "05:32",
+      "quote": "테슬라 FY2Q top line 컨센 상회, bottom line 하회",
+      "sector": "자동차"
+    }
+  ]
+}

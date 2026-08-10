@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "date": "2026-07-21",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-22_0804_이제는 주가가 답할 차례.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "손현정",
+    "report_date": "2026.07.21",
+    "stocks": [
+      {
+        "name": "삼양식품",
+        "code": "003230",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "2,000,000원",
+        "tp_prev": "2,000,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26E_revenue": "7,616억원",
+          "2Q26E_operating_profit": "1,760억원",
+          "2Q26E_YoY_revenue": "+37.7%",
+          "2Q26E_YoY_operating_profit": "+46.5%",
+          "2026F_revenue": "3조 972억원",
+          "2026F_operating_profit": "7,256억원"
+        },
+        "estimate_revision": null,
+        "next_catalyst": "3Q26 미국향 매출 이연분 반영 및 밀양2공장 가동률 상승",
+        "thesis": [
+          "해외 매출 성장세 지속 및 밀양2공장 가동 확대로 인한 생산량 증대",
+          "2026년 연결 매출액 및 영업이익의 견조한 성장세",
+          "2027년 중국 공장 가동을 통한 생산능력 확대 및 물류비·관세 절감 기대"
+        ],
+        "valuation_basis": "최근 주가 조정으로 현재 주가는 2027년 예상 PER 10배까지 하락했으며, 실적 성장을 감안할 때 현 밸류에이션은 성장성을 충분히 반영하지 못한 수준",
+        "risk": "글로벌 마케팅 확대, 일회성 인건비 발생, 미국향 물량의 매출 인식 시차",
+        "supply_comment": "밀양2공장 가동시간 확대와 특근을 통해 생산량이 QoQ +10% 이상 증가하며 주요 지역의 판매 성장을 뒷받침한 것으로 판단",
+        "quote": "최근 주가 조정으로 현재 주가는 2027년 예상 PER 10배까지 하락했다. 2026년 영업이익이 전년 대비 38.4% 증가하고, 2027년에도 중국 공장 가동을 기반으로 높은 성장이 이어질 것으로 예상되는 점을 감안하면 현 밸류에이션은 성장성을 충분히 반영하지 못한 수준이다."
+      }
+    ],
+    "sector": "소비내수"
+  }
+}

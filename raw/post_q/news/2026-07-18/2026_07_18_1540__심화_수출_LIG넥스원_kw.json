@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "LIG넥스원",
+      "signal": "bull",
+      "reason": "전 CIA 핵심간부 영입을 통한 대미 무기수출 전략 강화",
+      "ts": null,
+      "quote": "LIG넥스원 자회사 LIG D&A가 미국 중앙정보국(CIA) 출신 핵심 인사를 영입해 대미 방산 수출 전략을 총괄하게 했다.",
+      "sector": "방산"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "LIG D&A, 前 CIA 핵심간부 영입",
+      "ts": "2026-07-14",
+      "quote": "LIG D&A ,前 CIA 핵심간부 영입…대미 무기수출 전략 총괄"
+    }
+  ],
+  "quote": "LIG D&A ,前 CIA 핵심간부 영입…대미 무기수출 전략 총괄"
+}

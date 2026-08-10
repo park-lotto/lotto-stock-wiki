@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-08_1104_화수분전략.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": [
+      "이재만",
+      "손일수"
+    ],
+    "report_date": "2026년 6월 8일",
+    "target_kind": "market",
+    "market_direction": "중립/조정 시그널",
+    "macro_vars": [
+      "미국 국채금리",
+      "미국 명목 GDP 성장률(YoY)",
+      "CPI(YoY)",
+      "연준(Fed) 기준금리"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "비중확대",
+        "reason": "2026~27년 매출<EPS<FCF 증가율 순으로 형성된 업종"
+      },
+      {
+        "sector": "전력",
+        "stance": "비중확대",
+        "reason": "2026~27년 매출<EPS<FCF 증가율 순으로 형성된 업종"
+      },
+      {
+        "sector": "IT",
+        "stance": "비중확대",
+        "reason": "2026~27년 매출<EPS<FCF 증가율 순으로 형성된 업종(하드웨어)"
+      }
+    ],
+    "style": "매출 보다 순이익 증가율(수익성), 순이익 보다 현금흐름 증가율(현금창출 능력)이 높은 업종 확대",
+    "event_calendar": [
+      {
+        "date": "2026년 6월 11일",
+        "event": "미국 2026년 5월 CPI YoY 발표"
+      },
+      {
+        "date": "2026년 6월 18일",
+        "event": "FOMC회의 개최"
+      }
+    ],
+    "top_picks": [
+      "SK하이닉스",
+      "삼성전자"
+    ],
+    "risk": "성장률보다 비용(금리)이 큰 경우 조정 발생",
+    "quote": "금리 상승과 고금리에 대응할 수 있는 전략은 매출 보다 순이익 증가율(수익성), 순이익 보다는 현금흐름 증가율(현금창출 능력)이 높은 업종의 비중을 확대하는 것이다."
+  }
+}

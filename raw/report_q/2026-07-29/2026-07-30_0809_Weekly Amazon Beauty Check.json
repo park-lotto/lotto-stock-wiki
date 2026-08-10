@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "date": "2026-07-29",
+    "broker": "SK증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-30_0809_Weekly Amazon Beauty Check.md"
+  },
+  "questionnaire": {
+    "broker": "SK증권",
+    "analyst": "형권훈",
+    "report_date": "2026-07-29",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [],
+    "recommended_sectors": [
+      {
+        "sector": "화장품미용",
+        "stance": null,
+        "reason": "K뷰티 유니버스 아마존 BSR 총점 분석 및 주요 브랜드 성과 추적"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "medicube",
+      "ANUA",
+      "BIODANCE",
+      "ARENCIA",
+      "d'alba Piedmont",
+      "EQQUALBERRY",
+      "CeraVe",
+      "The Ordinary",
+      "EltaMD",
+      "La Roche-Posay",
+      "Vanicream",
+      "Neutrogena",
+      "PanOxyl",
+      "CLEAN SKIN CLUB",
+      "L'Oreal Paris",
+      "Cetaphil",
+      "Mighty Patch",
+      "Differin",
+      "celimax",
+      "MEDITHERAPY",
+      "Dr.Althea",
+      "Paula's Choice",
+      "SimplyVital",
+      "Timeless Skin Care",
+      "RoC",
+      "Good Molecules",
+      "Olay",
+      "Amazon Basics",
+      "BRIOTECH",
+      "TOSOWOONG",
+      "Cliganic",
+      "DRMTLGY"
+    ],
+    "risk": null,
+    "quote": "K뷰티 유니버스의 아마존 BSR 총점은 이번 주 1,843pt 기록해 전 주 대비 ▼111pt 둔화"
+  }
+}

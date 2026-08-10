@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "date": "2026-06-08",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_0700_[Econ Snapshot] 미국 5월 비농업 고용 주도 업종 분...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "전규연, 이태석",
+    "report_date": "2026.6.8",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "미국 5월 비농업부문 신규 고용 17.2만 명",
+      "미국 5월 실업률 4.3%",
+      "미국 5월 시간당 평균 임금 0.3% 상승",
+      "6월 FOMC 점도표 전망",
+      "미국 5월 CPI 및 PPI 발표"
+    ],
+    "recommended_sectors": null,
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "6/10",
+        "event": "미국 5월 CPI 발표"
+      },
+      {
+        "date": "6/11",
+        "event": "미국 5월 PPI 발표"
+      },
+      {
+        "date": "6/11~7/19",
+        "event": "북중미 월드컵"
+      },
+      {
+        "date": "6/18",
+        "event": "6월 FOMC"
+      }
+    ],
+    "top_picks": null,
+    "risk": "노동시장의 하방 리스크가 해소되었다고 보기는 어려움, 물가 상승세 지속 가능성, 전쟁 변수",
+    "quote": "하나증권은 미 연준이 연내 금리 동결 기조를 이어갈 것이라는 기존 전망 유지. 전쟁 변수에 따라 경제 및 물가 경로가 달라질 수 있으며, 미국 기준금리는 약간 긴축적인 수준이므로 향후 물가 흐름을 지켜볼 시간을 확보하고 있을 것으로 판단"
+  }
+}

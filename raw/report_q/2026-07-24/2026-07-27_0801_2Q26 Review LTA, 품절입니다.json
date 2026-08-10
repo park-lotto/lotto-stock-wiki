@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-07-24",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-27_0801_2Q26 Review LTA, 품절입니다.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "조혜빈",
+    "report_date": "2026.07.24",
+    "stocks": [
+      {
+        "name": "OCI홀딩스",
+        "code": "010060",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "430,000원",
+        "tp_prev": "430,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26": "매출액 1조 232억원(+31.8% YoY), 영업이익 1,081억원(흑전, OPM 10.6%)",
+          "3Q26E": "정비 완료와 SMP 강세로 3분기 흑자 전환 예상"
+        },
+        "estimate_revision": null,
+        "next_catalyst": "증설분 물량 인수 의무와 선수금을 전제로 한 LTA 협상, '29년부터 실적 기여",
+        "thesis": [
+          "LTA로 판매 물량을 선확보하여 증설 리스크를 낮춤",
+          "공급 형태가 폴리 단품에서 웨이퍼로 확대되며 수익성 개선 기대",
+          "태양광 섹터 내 Top-Pick"
+        ],
+        "valuation_basis": "27E EPS 19,381원에 OP 비중별 Peer PER을 가중평균해 산출",
+        "risk": "Section 232 발표를 앞둔 고객사의 구매 지연과 SE의 석탄 가격 상승 및 정비비 증가",
+        "supply_comment": "폴리와 웨이퍼 모두 '28~29년 물량까지 판매 완료 상태",
+        "quote": "LTA로 판매 물량을 선확보하는 동시에 선수금과 인수 의무를 통해 증설 리스크를 낮춘 점이 긍정적이다."
+      }
+    ]
+  }
+}

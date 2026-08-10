@@ -1,0 +1,40 @@
+{
+  "market_direction": "상승",
+  "macro_events": [
+    {
+      "fact": "일본 정부 및 일본은행의 외환시장 개입",
+      "ts": "06:23",
+      "quote": "THE JAPANESE GOVERNMENT AND THE BANK OF JAPAN INTERVENED IN THE FOREX MARKET, WITH U.S. AUTHORITIES ALSO CONDUCTING A RATE CHECK - NIKKEI"
+    },
+    {
+      "fact": "미국 2분기 GDP 성장률 발표 (시장 예상 하회)",
+      "ts": "07:41",
+      "quote": "미국 상무부는 미국의 2분기 GDP 성장률 속보치를 공개. 헤드라인 수치는 전기대비 연율 환산 기준 1.5% 성장해 지난 1분기 성장률이자 시장 예상, 2.1%를 0.6%p 하회."
+    },
+    {
+      "fact": "6월 개인소비지출(PCE) 물가지수 발표",
+      "ts": "07:41",
+      "quote": "6월 PCE 가격지수는 1년 전에 비해 3.7% 상승했으며 전달 대비로는 0.1% 하락."
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "강세",
+      "comment": "마이크로소프트의 실적 호조에 따른 AI 인프라 투자 지속 기대감으로 관련주 급반등",
+      "quote": "마이크로소프트, 아마존 등 하이퍼스케일러 실적 확인 후 AI 인프라 투자 모멘텀 우려 완화되며 반도체주 급반등"
+    },
+    {
+      "sector": "전력",
+      "stance": "강세",
+      "comment": "AI 인프라 투자 모멘텀 재부각에 따른 관련 산업 관심 확대",
+      "quote": "AI 인프라 투자 확대 모멘텀 살아나자 생태계 내 필수 산업인 전력 인프라(전력 기기+원전 등 전력원) 관련 산업에 대한 관심도 재부각"
+    },
+    {
+      "sector": "2차전지",
+      "stance": "강세",
+      "comment": "ESS 사업 확대에 따른 실적 개선 기대감 부각",
+      "quote": "국내 2차전지 업계 대표 기업인 삼성SDI와 LG에너지솔루션이 ESS(에너지저장장치) 확대에 힘입어 실적 개선을 이뤄냄."
+    }
+  ]
+}

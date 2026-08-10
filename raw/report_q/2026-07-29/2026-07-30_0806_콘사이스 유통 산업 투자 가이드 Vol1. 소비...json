@@ -1,0 +1,162 @@
+{
+  "meta": {
+    "date": "2026-07-29",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-30_0806_콘사이스 유통 산업 투자 가이드 Vol1. 소비...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "박종대",
+    "report_date": "2026.07.29",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "롯데쇼핑",
+        "code": "023530",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "180,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 연결 영업이익은 1,070억원(YoY 163%)에 이를 전망",
+        "estimate_revision": null,
+        "next_catalyst": "소비 규모가 달라지면서 채널간 침투 영향은 당분간 불식될 수 있다. 따라서, 2026년에는 신세계/현대백화점의 주가 백화점만 두드러졌지만, 2027년에는 롯데쇼핑과 이마트, 편의점은 물론 롯데하이마트까지 실적을 기대할 수 있을지 모른다.",
+        "thesis": [
+          "백화점 부진 점포 스크랩과 대형마트 통합 소싱, 홈쇼핑 송출수수료 정체 등이 복합적으로 작용한 결과",
+          "주식 자산/외국인 인바운드/가계 소득효과로 실적과 주가가 한단계 레벨업할 것으로 기대",
+          "소비 규모 전반이 한단계 크게 올라선다면, 다양한 유통 채널은 물론 패션 투자 회사(Zara)/자회사까지 보유하고 있는 롯데쇼핑이 가장 주목할 만한 실적 모멘텀을 보일 수 있다."
+        ],
+        "valuation_basis": "백화점과 홈쇼핑, 컬쳐웍스의 사업가치는 물론 기타 자회사 지분가치까지 Sum of Parts 방식으로 산출",
+        "risk": "식품 온라인 사업 '제타' 출시 영향 하반기 비용부담이 클 것으로 보임, 인도네시아 법인은 현지 정치/경제 불안으로 소비가 크게 위축된 상태",
+        "supply_comment": null,
+        "quote": "소비 규모 전반이 한단계 크게 올라선다면, 제반 유통 채널을 포괄하고 있고, 패션 투자 회사(Zara)/자회사까지 보유하고 있는 롯데쇼핑이 가장 주목할 만한 실적 모멘텀을 보일 수 있다."
+      },
+      {
+        "name": "이마트",
+        "code": "139480",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "110,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 연결 영업이익은 610억원(YoY 182%) 수준이 가능할 전망",
+        "estimate_revision": null,
+        "next_catalyst": "홈플러스 59개점 폐점 영향 인근 이마트 매출은 YoY 10% 증가했고, 전사적으로 2%p 성장률을 제고시킨 바 있다.",
+        "thesis": [
+          "홈플러스 폐업으로 롯데쇼핑과 이마트 등 대형마트 사업을 영위하고 있는 업체들의 반사이익이 기대된다.",
+          "트레이더스/에브리데이도 1분기 대비 성장률이 모두 제고되고 있다.",
+          "전문점(노브랜드)도 대부분 부진 카테고리를 정리하고 안정적 실적 개선을 이어가고 있다."
+        ],
+        "valuation_basis": "이마트 별도 영업가치와 비상장 자회사 지분가치 등을 Sum of Parts 방식으로 산출",
+        "risk": "스타벅스코리아는 가습기 리콜 문제와 5월 마케팅 논란에 따른 매출 저하로 실적 불확실성이 큰 상태, 신세계건설의 미분양 아파트/상가에 대한 대손충당금은 예측하기 힘든 일회성 비용",
+        "supply_comment": null,
+        "quote": "11만원은 12MF PER 28배에 해당하는 가격으로 이마트 별도 영업가치와 비상장 자회사 지분가치 등을 Sum of Parts 방식으로 산출한 수치다."
+      },
+      {
+        "name": "신세계",
+        "code": "004170",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "750,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 연결 영업이익은 1,490억원(YoY 97%)에 달할 것으로 보인다",
+        "estimate_revision": null,
+        "next_catalyst": "본점 리뉴얼 기저효과가 크다. 전년도 4월부터 11월까지 본관 70% 공간에 대해 영업 중단 상태에서 리뉴얼을 실시했다. 전년도 11월에 오픈했고, 본점은 올해 6월까지 YoY 60% 매출 신장 중",
+        "thesis": [
+          "백화점 실적은 압도적인 호조세이다. 1분기 총매출 YoY 13%에 이어 2분기 YoY 14%에 이를 전망이다.",
+          "명품 매출 비중과 라인업이 가장 우위에 있는 신세계가 가장 선두에 설 가능성이 크다.",
+          "면세점 불확실성이 크게 완화되었다."
+        ],
+        "valuation_basis": "적정 12MF PER 15배를 적용 산출한 수치",
+        "risk": "단기적으로 주식 자산 효과가 반감되면서 주가 조정이 있었지만",
+        "supply_comment": null,
+        "quote": "역대급 수출, GDI 증가에 따른 2027년 가계 소득 증가 효과가 더해진다면 PER 15배 이상이 충분히 가능하다."
+      },
+      {
+        "name": "현대백화점",
+        "code": "069960",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "180,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 연결 영업이익은 780억원(YoY -10%) 수준에 머물 전망",
+        "estimate_revision": null,
+        "next_catalyst": "2026년 하반기 높은 백화점 매출 성장률(YoY 7%, 총매출 기준)과 사업 구조 개선(면세점+지누스) 및 감가상각비 감소(YoY -6%) 효과",
+        "thesis": [
+          "면세점 사업은 2025년 3분기부터 흑자전환했다. 연간 400억원 적자를 내던 동대문점을 스크랩했기 때문",
+          "더현대는 모든 광역시에 오픈할 계획이고, 압구정 본점 재개발 역시 중장기 성장 여력을 높이는 요인",
+          "외국인 인바운드 효과 확대와 함께 2027년 가계 소득 증가 효과가 본격화될 경우 PER 15배 이상 적용이 충분히 적용 가능"
+        ],
+        "valuation_basis": "적정 12MF PER 12배를 적용한 수치",
+        "risk": "지누스 실적 부진 때문이다(영업손실 280억원 추정)",
+        "supply_comment": null,
+        "quote": "18만원은 적정 12MF PER 12배를 적용한 수치다."
+      },
+      {
+        "name": "GS리테일",
+        "code": "007070",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "31,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 매출과 영업이익은 전년 동기대비 4%, 19% 증가한 3조 880억원과 1,000억원으로 추정",
+        "estimate_revision": null,
+        "next_catalyst": "편의점 사업은 2025년 1분기부터 수익성 위주 전략으로 선회했다. 신규 점포 출점이 줄어들면서 2026년 1분기부터 감가상각비가 줄어들기 시작했다.",
+        "thesis": [
+          "편의점 사업의 수익성 위주 전략 및 판촉비와 설치비 효율화",
+          "홈쇼핑 부문은 송출수수료 부담이 완화된 상황에서 고마진 의류/건기식/뷰티 위주 편성이 증가",
+          "부진 사업 구조조정 마무리"
+        ],
+        "valuation_basis": "적정 12MF PER 13배를 적용한 수치",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "3.1만원은 12MF PER 13배를 적용한 수치다."
+      },
+      {
+        "name": "BGF리테일",
+        "code": "282330",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "165,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 연결 OP 740억원 예상",
+        "estimate_revision": null,
+        "next_catalyst": "감가상각비가 처음으로 감소하기 시작했다. 1분기 감가상각비는 1,265억원(별도기준, YoY -1.2억원)이었다.",
+        "thesis": [
+          "상품믹스 개선으로 매출총이익률이 상승하고 있다. 저마진 담배 매출 비중은 37%에 그쳤으며, 고마진 식품 매출 비중이 상승",
+          "해외 사업 확대는 추가적인 수익성 개선 요인이다.",
+          "편의점 영업환경은 우호적이다. 외국인 인바운드는 신규 수요가 되고 있고, 경쟁은 완화"
+        ],
+        "valuation_basis": "적정 12MF PER 12배 수준",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "16.5만원은 12MF PER 12배 수준이다."
+      },
+      {
+        "name": "호텔신라",
+        "code": "008770",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "57,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 연결 영업이익은 540억원(2Q25 OP 90억원) 내외 시장 기대치 수준",
+        "estimate_revision": null,
+        "next_catalyst": "인천공항 면세점과 해외공항 면세점이 연간 거의 1,000억원 수준 영업손실을 내왔는데, 인천공항은 2026년 4월을 끝으로 인천공항 DF1 영업을 종료한다.",
+        "thesis": [
+          "공항점 수익성은 상당히 좋아질 수 있다.",
+          "호텔 부문은 투숙률과 객실료 동반 상승으로 외형성장과 수익성 개선을 모두 달성",
+          "면세점 사업 구조조정 성과"
+        ],
+        "valuation_basis": "적정 12MF 20배를 적용한 수치",
+        "risk": "시내점 매출은 YoY 10% 내외로 외국인 인바운드 증가율에 비하면 상당히 낮은 수치",
+        "supply_comment": null,
+        "quote": "5.7만원은 12MF 20배를 적용한 수치다."
+      }
+    ]
+  }
+}

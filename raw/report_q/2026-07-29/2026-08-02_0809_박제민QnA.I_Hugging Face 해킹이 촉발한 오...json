@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "date": "2026-07-29",
+    "broker": "SK securities",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-02_0809_박제민QnA.I_Hugging Face 해킹이 촉발한 오...md"
+  },
+  "questionnaire": {
+    "broker": "SK securities",
+    "analyst": "박제민",
+    "report_date": "2026-07-29",
+    "target_kind": "sector",
+    "sector_name": "IT",
+    "sector_view": null,
+    "thesis": [
+      "Hugging Face 해킹 사태로 폐쇄형 프런티어 모델의 통제권 문제가 부각되며 오픈웨이트 트렌드가 가속화됨",
+      "엔비디아 중심의 오픈웨이트 연대 확대와 보안 인프라 구축 흐름으로 인프라 위주의 플레이어들이 수혜 예상",
+      "구글의 Frozen v2 등 AI 모델에 특화된 추론 전용 칩 개발 및 도입 시도는 모델 상향 평준화와 기존 AI Labs 해자 약화의 시그널"
+    ],
+    "timeline": [
+      "7월 중순 OpenAI 사이버 침투 벤치마크 평가 과정에서 가드레일 제거 모델 테스트",
+      "7/20 Google Gemini 아키텍처 추론 전용 칩 'Frozen v2' 개발 보도",
+      "2027년 Frozen v2 제한 생산 전망",
+      "2028년 Frozen v2 본격 램프 전망"
+    ],
+    "top_picks": [
+      {
+        "name": "엔비디아",
+        "reason": "오픈웨이트 연대를 주도하며 CUDA와 NVIDIA GPU 생태계로의 전환 가속",
+        "tp": null
+      },
+      {
+        "name": "알파벳",
+        "reason": "TPU 활용 인프라 해자 인정 및 신규 ASIC Frozen v2 개발을 통한 효율화 추진",
+        "tp": null
+      },
+      {
+        "name": "애플",
+        "reason": "Siri 고도화로 인한 소비자용 Agent 출시 주목",
+        "tp": null
+      },
+      {
+        "name": "마이크로소프트",
+        "reason": "자체 모델 및 커스텀 AI 도입 수요 대응",
+        "tp": null
+      },
+      {
+        "name": "아마존",
+        "reason": "AI Labs에 대한 공격적 투자 및 AIaaS ARR 전망",
+        "tp": null
+      },
+      {
+        "name": "메타 플랫폼스",
+        "reason": "Muse Spark 개발을 통한 모델 확보 및 소비자용 Agent 활용",
+        "tp": null
+      },
+      {
+        "name": "오라클",
+        "reason": "높은 수주 잔고 대비 매출 전환 성공 여부 주목",
+        "tp": null
+      },
+      {
+        "name": "코어위브",
+        "reason": "부품·자본 비용 증가 추세 속 수주 잔고와 매출 전환 성공 여부 주목",
+        "tp": null
+      },
+      {
+        "name": "Dell",
+        "reason": "Enterprise Infra 위주의 플레이어로 기업 내부 AI Factory 구축 수요 집중 수혜",
+        "tp": null
+      },
+      {
+        "name": "HPE",
+        "reason": "Enterprise Infra 위주의 플레이어로 기업 내부 AI Factory 구축 수요 집중 수혜",
+        "tp": null
+      },
+      {
+        "name": "Lenovo",
+        "reason": "Enterprise Infra 위주의 플레이어로 기업 내부 AI Factory 구축 수요 집중 수혜",
+        "tp": null
+      },
+      {
+        "name": "Supermicro",
+        "reason": "Enterprise Infra 위주의 플레이어로 기업 내부 AI Factory 구축 수요 집중 수혜",
+        "tp": null
+      },
+      {
+        "name": "Palantir",
+        "reason": "기업 데이터 및 업무 흐름을 관리하는 Control Plane 가치 상승",
+        "tp": null
+      }
+    ],
+    "risk": "Enterprise AI 수요 속도가 실제 Backlog만큼 올라오는지 확인할 필요가 있음",
+    "quote": "엔비디아 중심 오픈웨이트 연대 가속으로 오픈웨이트 모델의 성능을 향후 낙관적으로 볼 수 있는 상황"
+  }
+}

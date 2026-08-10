@@ -53,7 +53,10 @@ _LLM_PROMPT = (
 def _llm_extra(beats, client):
     body = "\n".join(f'{i}: {b.get("text","")}' for i, b in enumerate(beats))
     resp = client.models.generate_content(
-        model="gemini-2.5-flash",
+        # gemini-2.5-flash는 신규 키에 404다("no longer available to new users",
+        # 2026-07-29 서버 실측). suggest()가 예외를 조용히 삼키므로(무과금 폴백)
+        # 여기 모델명이 낡으면 LLM 효과 추천이 매번 0건인 채 아무도 모른다.
+        model="gemini-3.1-flash-lite",
         contents=[_LLM_PROMPT + "\n" + body],
         config={"response_mime_type": "application/json"},
     )

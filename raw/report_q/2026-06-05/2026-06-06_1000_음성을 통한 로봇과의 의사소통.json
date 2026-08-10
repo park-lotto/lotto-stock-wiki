@@ -5,10 +5,10 @@
     "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-06_1000_음성을 통한 로봇과의 의사소통.md"
   },
   "questionnaire": {
+    "target_kind": "stock",
     "broker": "유안타증권",
     "analyst": "권명준",
     "report_date": "2026.06.05",
-    "target_kind": "stock",
     "stocks": [
       {
         "name": "세나테크놀로지",
@@ -18,18 +18,19 @@
         "tp_new": null,
         "tp_prev": null,
         "tp_direction": null,
-        "earnings_outlook": "매출액 2024A 1,675억원, 2025A 1,793억원 / 영업이익 2024A 216억원, 2025A 163억원",
+        "earnings_outlook": "2024A 매출액 1,675억원, 영업이익 216억원, 2025A 매출액 1,793억원, 영업이익 163억원",
         "estimate_revision": null,
-        "next_catalyst": "향후 5년 내 물류 로봇 누적 1,000대 공급, 연내 골프카트 로봇 양산 준비 및 본격 판매",
+        "next_catalyst": "2025 로보월드 골프카트로봇 트롤리 공개 및 양산/판매 시작",
         "thesis": [
-          "핌즈와 물류센터용 로봇사업 공동 추진",
-          "클로봇과 로봇-작업자 음성 통신 솔루션 개발",
-          "개인용 자율주행 골프 트롤리(드론캐디 로버)를 통한 서비스 로봇 시장 진출"
+          "핌즈와 차세대 물류센터용 로봇사업 공동 추진을 통한 물류 네트워크 결합",
+          "클로봇과 로봇-작업자 음성 통신 솔루션 개발을 위한 협업",
+          "개인용 자율주행 골프 트롤리 신사업 추진 및 서비스 로봇 산업 진출"
         ],
         "valuation_basis": null,
         "risk": null,
-        "supply_comment": "로봇",
-        "quote": "핌즈의 물류데이터와 동사의 피지컬 AI 기술을 결합, 향후 5년내 누적 1,000대 공급이라는 구체적인 사업 목표 제시하고 있다."
+        "supply_comment": null,
+        "quote": "핌즈의 물류데이터와 동사의 피지컬 AI 기술을 결합, 향후 5년내 누적 1,000대 공급이라는 구체적인 사업 목표 제시하고 있다.",
+        "sector": "로봇"
       }
     ]
   }

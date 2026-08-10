@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-20",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-20_1105_실적은 기대 이상, 원전 모멘텀은 숨 고르기.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유진투자증권",
+    "analyst": "류태환",
+    "report_date": "2026.07.20",
+    "stocks": [
+      {
+        "name": "대우건설",
+        "code": "047040",
+        "rating": "BUY",
+        "rating_changed": false,
+        "tp_new": "24,000원",
+        "tp_prev": "28,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "2Q26 매출액 2조 219억원(-11.1%yoy), 영업이익 1,772억원(+115.6%yoy, OPM 8.8%) 전망. 2026년 실적은 매출액 8조 825억원, 영업이익 7,941억원 전망.",
+        "estimate_revision": "영업이익 추정치 상향 가능성 존재",
+        "next_catalyst": "하반기 모잠비크 LNG Area 4 수주 가능성",
+        "thesis": [
+          "글로벌 LNG 액화플랜트 EPC 시장 내 국내 건설사 중 유일한 원청 수행 실적 확보",
+          "팀코리아의 원전 수출에 대한 높은 베타 보유",
+          "플랜트 부문 경상 마진율 회복 기대"
+        ],
+        "valuation_basis": "12M Fwd BPS 9,872원에 Target PBR 2.4배를 적용(글로벌 peer 평균 PBR 대비 할인율 10% 적용)",
+        "risk": "주요 프로젝트의 수주 가시화 지연",
+        "supply_comment": "매출채권회전율 소폭 하락 및 매출액 대비 매출채권 규모가 여전히 높은 수준으로 대손 발생 가능성 모니터링 필요",
+        "sector": "원전",
+        "quote": "LNG와 원전을 중심으로 한 중장기 성장 방향성은 유효하나, 주요 프로젝트의 수주 가시화가 지연되고 있는 점을 반영해 적용 멀티플 하향."
+      }
+    ]
+  }
+}

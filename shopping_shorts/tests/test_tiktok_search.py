@@ -70,7 +70,7 @@ def test_search_full_returns_ranking_raw_schema(monkeypatch):
             "diggCount": 8400,
             "commentCount": 210,
             "authorMeta": {"name": "clean_life"},
-            "videoMeta": {"coverUrl": "https://p16-sign.tiktokcdn.com/cover.jpeg"},
+            "videoMeta": {"coverUrl": "https://p16-sign.tiktokcdn.com/cover.jpeg", "duration": 42},
         }]
 
     monkeypatch.setattr(tiktok_search, "_run_with_rotation", fake_run_with_rotation)
@@ -87,6 +87,8 @@ def test_search_full_returns_ranking_raw_schema(monkeypatch):
         "views": 152000,
         "likes": 8400,
         "comments": 210,
+        "duration": 42,
+        "media_platform": "tiktok",
     }]
     assert captured["payload"]["searchQueries"] == ["곰팡이 제거"]
     assert captured["payload"]["resultsPerPage"] == 60
@@ -117,3 +119,22 @@ def test_search_full_no_tokens_raises(monkeypatch):
     monkeypatch.setattr(tiktok_search, "APIFY_TOKENS", [])
     with pytest.raises(RuntimeError, match="APIFY_TOKEN"):
         tiktok_search.search_full("x")
+
+
+def test_fetch_urls_uses_posturls_and_normalizes(monkeypatch):
+    monkeypatch.setattr(tiktok_search, "APIFY_TOKENS", ["fake"])
+    cap = {}
+    def fake_run(payload, tokens, timeout, poll, actor=None):
+        cap["payload"] = payload
+        return [{"id": "9", "text": "t", "webVideoUrl": "https://tt/9",
+                 "authorMeta": {"name": "a"}, "videoMeta": {"coverUrl": "c", "duration": 30},
+                 "createTimeISO": "2026-07-20T00:00:00.000Z",
+                 "playCount": 100, "diggCount": 10, "commentCount": 2}]
+    monkeypatch.setattr(tiktok_search, "_run_with_rotation", fake_run)
+    out = tiktok_search.fetch_urls(["https://tt/9"])
+    assert cap["payload"]["postURLs"] == ["https://tt/9"]
+    assert out[0]["video_id"] == "9" and out[0]["media_platform"] == "tiktok" and out[0]["views"] == 100
+
+
+def test_fetch_urls_empty_returns_empty():
+    assert tiktok_search.fetch_urls([]) == []

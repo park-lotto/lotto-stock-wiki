@@ -1,0 +1,162 @@
+{
+  "meta": {
+    "date": "2026-07-29",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-31_1110_콘사이스 유통 산업 투자 가이드 Vol1. 소비...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "박종대",
+    "report_date": "2026.07.29",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "롯데쇼핑",
+        "code": "023530",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "180,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 연결 영업이익은 1,070억원(YoY 163%)에 이를 전망",
+        "estimate_revision": null,
+        "next_catalyst": "2027년 가계소득 효과",
+        "thesis": [
+          "백화점 부진 점포 스크랩과 대형마트 통합 소싱, 홈쇼핑 송출수수료 정체 등으로 15년 만에 전사적인 실적 턴어라운드",
+          "주식 자산/외국인 인바운드/가계 소득효과로 실적과 주가가 한단계 레벨업",
+          "2027년 가계소득 효과는 유통 채널 전반을 품고 있는 롯데쇼핑 수혜가 가장 클 것"
+        ],
+        "valuation_basis": "백화점과 홈쇼핑, 컬쳐웍스의 사업가치는 물론 기타 자회사 지분가치까지 Sum of Parts 방식으로 산출",
+        "risk": "온라인 사업 '제타' 서비스 관련 물류시스템 투자 비용 및 인도네시아 정국 불안",
+        "supply_comment": null,
+        "quote": "15년 동안의 실적 부진을 극복하고 전사적인 실적 턴어라운드 국면에 있다."
+      },
+      {
+        "name": "이마트",
+        "code": "139480",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "110,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 연결 영업이익은 610억원(YoY 182%) 수준이 가능할 전망",
+        "estimate_revision": null,
+        "next_catalyst": "홈플러스 영업중단 반사이익 본격화",
+        "thesis": [
+          "홈플러스 폐업으로 인한 인근 이마트 점포 매출 10% 증가 효과",
+          "전문점(노브랜드) 부진 카테고리 정리 및 호텔 사업 개선세",
+          "PER 기준으로는 낮지 않지만(12MF PER 21배), PBR 0.2배의 절대적인 저평가 상태"
+        ],
+        "valuation_basis": "이마트 별도 영업가치와 비상장 자회사 지분가치 등을 Sum of Parts 방식으로 산출",
+        "risk": "스타벅스 가습기 리콜 문제 및 마케팅 논란, 쓱닷컴 및 G마켓의 실적 부진, 신세계건설 미분양 관련 대손충당금 우려",
+        "supply_comment": null,
+        "quote": "대형마트 부문 높은 실적 모멘텀은 긍정적이나, 몇몇 자회사들의 실적 불확실성이 아쉽다."
+      },
+      {
+        "name": "신세계",
+        "code": "004170",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "750,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 연결 영업이익은 1,490억원(YoY 97%)에 달할 것으로 보임",
+        "estimate_revision": null,
+        "next_catalyst": "2분기 백화점 실적 모멘텀",
+        "thesis": [
+          "본점 리뉴얼 기저효과 및 명품 매출 비중이 높은 구조",
+          "면세점 불확실성 완화(인천공항 DF2 철수)",
+          "국내외 명품 브랜드 라인업이 가장 우위에 있어 외국인 인바운드 수혜 예상"
+        ],
+        "valuation_basis": "적정 12MF PER 15배 적용",
+        "risk": "주가 조정 가능성",
+        "supply_comment": null,
+        "quote": "2026년은 실적과 밸류에이션이 모두 상승하는 한해가 되고 있다."
+      },
+      {
+        "name": "현대백화점",
+        "code": "069960",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "180,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 연결 영업이익은 780억원(YoY -10%) 수준 전망, 하반기 YoY 30% 이상 증가 예상",
+        "estimate_revision": null,
+        "next_catalyst": "사업 구조 개선 및 감가상각비 감소 효과",
+        "thesis": [
+          "면세점 사업의 흑자 전환(동대문점 스크랩)",
+          "하반기 높은 백화점 매출 성장률과 사업 구조 개선 효과",
+          "본점 재개발을 통한 중장기 성장 여력 확보"
+        ],
+        "valuation_basis": "적정 12MF PER 12배 적용",
+        "risk": "지누스 실적 부진",
+        "supply_comment": null,
+        "quote": "백화점 업종은 실적과 밸류에이션 측면에서 모두 레벨업 국면에 있다."
+      },
+      {
+        "name": "GS리테일",
+        "code": "007070",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "31,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 매출과 영업이익은 전년 동기대비 4%, 19% 증가한 3조 880억원과 1,000억원으로 추정",
+        "estimate_revision": null,
+        "next_catalyst": "사업 효율화로 인한 수익성 개선",
+        "thesis": [
+          "편의점 감가상각비 감소 시작 및 비용 구조 효율화",
+          "홈쇼핑 송출수수료 부담 완화 및 고마진 상품 위주 편성",
+          "부진 계열사 정리 및 사업 구조조정 마무리"
+        ],
+        "valuation_basis": "적정 12MF PER 13배 적용",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "업황 개선과 사업구조 개선으로 추세적인 실적 턴어라운드 국면을 이어갈 것으로 예상한다."
+      },
+      {
+        "name": "BGF리테일",
+        "code": "282330",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "165,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 영업이익 증가폭은 제한적일 것으로 예상(연결 OP 740억원 예상)",
+        "estimate_revision": null,
+        "next_catalyst": "감가상각비 감소 및 영업레버리지 효과",
+        "thesis": [
+          "감가상각비 감소로 인한 이익 개선",
+          "외국인 인바운드 증가에 따른 편의점 매출 기여도 확대",
+          "해외 사업 확대 및 고마진 식품 매출 비중 상승"
+        ],
+        "valuation_basis": "적정 12MF PER 12배 적용",
+        "risk": "일회성 비용(가맹점주 위로금 등)",
+        "supply_comment": null,
+        "quote": "점포 출점 정체에 따른 편의점 성장률 저하는 밸류에이션 할인 요인이나 향후 안정적인 수익성 개선 가능성은 긍정적이다."
+      },
+      {
+        "name": "호텔신라",
+        "code": "008770",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "57,000원",
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2분기 연결 영업이익은 540억원 내외 전망",
+        "estimate_revision": null,
+        "next_catalyst": "공항면세점 수익성 개선",
+        "thesis": [
+          "공항면세점 영업손실 축소",
+          "시내면세점 소매 고객 비중 상승을 통한 수익성 개선",
+          "호텔 부문의 투숙률 및 객실료 상승"
+        ],
+        "valuation_basis": "적정 12MF PER 20배 적용",
+        "risk": "중장기 매출 증가율 10% 이상 달성의 한계",
+        "supply_comment": null,
+        "quote": "호텔신라 실적은 분명한 실적 턴어라운드 국면에 접어들었다."
+      }
+    ]
+  }
+}

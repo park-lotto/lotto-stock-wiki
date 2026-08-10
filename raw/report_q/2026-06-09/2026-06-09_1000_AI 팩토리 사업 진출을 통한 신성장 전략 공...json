@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-09_1000_AI 팩토리 사업 진출을 통한 신성장 전략 공...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "김동우",
+    "report_date": "2026/06/09",
+    "stocks": [
+      {
+        "name": "NAVER",
+        "code": "035420",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "390,000원",
+        "tp_prev": "350,000원",
+        "tp_direction": "up",
+        "earnings_outlook": "2027년 4,750억원, 2028년 2.5조원의 AI 팩토리 매출 기여 추정",
+        "estimate_revision": "SOTP Valuation에 있어 AI 팩토리 기여에 따른 27년 엔터프라이즈 매출 추정치 상향으로 엔터프라이즈 사업 가치를 6.9조원(기존 2.3조원), 2H26 네이버파이낸셜-두나무의 포괄적 지분교환을 시작으로 블록체인 사업 시작될 가능성을 반영해 파이낸셜 사업 가치를 5.6조원(기존 3.4조원)으로 상향함에 따름.",
+        "next_catalyst": "27~28년 리스를 통한 200MW(한국 포함 아시아권)의 데이터센터 확보 및 AI 팩토리 사업 본격화",
+        "thesis": [
+          "엔비디아 협업을 통한 AI 팩토리 사업 진출",
+          "기존 B2C 사업 위주의 asset-light 전략에서 B2B 위주 자본집약적 사업으로의 전환",
+          "인프라부터 서비스에 이르는 풀스택 클라우드 서비스를 제공해온 기술 기반 바탕의 외부향 B2B 사업 본격화"
+        ],
+        "valuation_basis": "SOTP Valuation(광고, 쇼핑, 엔터프라이즈, 파이낸셜, Webtoon Entertainment, 포쉬마크, LY Corporation 가치 합산)",
+        "risk": "사업 시작 단계로 자본 조달 방법과 구체적인 계약 형태, 시기에 있어 다소 불확실성 존재",
+        "supply_comment": "네이버 및 전략적 협업사의 자본 기반의 SPV 설립 후 펀딩을 통해 자금을 조달할 계획인 것으로 파악",
+        "quote": "투자의견 매수 유지, 목표주가는 390,000원으로 +11.4% 상향조정(기존 350,000원)."
+      }
+    ]
+  }
+}

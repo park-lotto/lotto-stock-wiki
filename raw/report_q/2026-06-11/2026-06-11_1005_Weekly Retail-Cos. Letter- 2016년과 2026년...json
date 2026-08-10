@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-11",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-11_1005_Weekly Retail-Cos. Letter- 2016년과 2026년...md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "하나증권",
+    "analyst": "박종대",
+    "report_date": "2026.6.11",
+    "market_direction": null,
+    "macro_vars": [
+      "외국인 인바운드",
+      "환율",
+      "내국인 소비",
+      "부동산/주식 자산가치 효과"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "소비내수",
+        "stance": "비중확대",
+        "reason": "백화점은 외국인 인바운드 소비패턴 변화(개별여행 중심)와 내국인 소비 증가로 새로운 성장 동력을 갖게 됨"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "호텔신라",
+      "신세계",
+      "현대백화점",
+      "롯데쇼핑"
+    ],
+    "risk": "호텔신라의 경우 DF1 사업 중단에 따른 매출 감소 및 호텔 투숙률 상단 도달에 따른 매출 성장 한계 존재",
+    "quote": "2025년부터는 외국인 인바운드 이코노미로 백화점 업체들의 Re-rating을 기대할 수 있는 시간을 지나고 있다."
+  }
+}

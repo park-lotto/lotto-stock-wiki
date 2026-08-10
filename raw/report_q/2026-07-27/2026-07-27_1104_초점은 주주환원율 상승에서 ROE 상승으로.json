@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "date": "2026-07-27",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-27_1104_초점은 주주환원율 상승에서 ROE 상승으로.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "우도형",
+    "report_date": "2026.07.27",
+    "stocks": [
+      {
+        "name": "하나금융지주",
+        "code": "086790",
+        "rating": "BUY",
+        "rating_changed": null,
+        "tp_new": "175,000원",
+        "tp_prev": "170,000원",
+        "tp_direction": "up",
+        "earnings_outlook": {
+          "2Q26P": "순이익 1조 1,928억원(컨센서스 1조 2,455억원 대비 4.2% 하회)",
+          "2Q26P_YoY": "1.7%",
+          "2Q26P_QoQ": "-1.4%"
+        },
+        "estimate_revision": "목표주가 상향은 수수료 이익 추정치 상향에 따른 ROE 개선에 기인한다.",
+        "next_catalyst": "10월 22일까지 자사주 2,500억원 매입 및 3분기 실적에서 추가적인 자사주 매입 발표 예정",
+        "thesis": [
+          "기업가치 제고 계획 2.0 발표를 통한 목표 ROE 12% 및 주주환원율 50% 이상 관리",
+          "비이자이익 부문 양호한 수수료 수익 증가세",
+          "주주환원 프레임워크 도입 및 총주주환원수익률(26년 말 기대 6.6%) 상승 전망"
+        ],
+        "valuation_basis": "2026~2028년 평균 ROE 9.8% 및 영구성장률 4.0%를 적용하여 산출된 Target PBR 0.89배 활용",
+        "risk": "환평가손실 275억원 및 중앙그룹 관련 충당금 749억원 반영",
+        "supply_comment": null,
+        "quote": "목표주가 상향은 수수료 이익 추정치 상향에 따른 ROE 개선에 기인한다.",
+        "sector": "기타"
+      }
+    ]
+  }
+}

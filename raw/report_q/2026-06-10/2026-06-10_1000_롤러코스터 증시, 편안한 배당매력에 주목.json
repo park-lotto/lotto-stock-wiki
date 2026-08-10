@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_롤러코스터 증시, 편안한 배당매력에 주목.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "대신증권",
+    "analyst": [
+      "박혜진",
+      "권용수RA"
+    ],
+    "report_date": "2026.06.05",
+    "stocks": [
+      {
+        "name": "NH투자증권",
+        "code": "005940",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": 45000,
+        "tp_prev": 45000,
+        "tp_direction": "flat",
+        "earnings_outlook": "추세가 지속된다면 동사의 2분기 브로커리지 수수료수익은 1분기 대비 27.6% 증가한 5,104억원 기록 전망",
+        "estimate_revision": null,
+        "next_catalyst": "2분기 실적발표",
+        "thesis": [
+          "최근 조정으로 낮아진 주가 및 높아진 배당수익률",
+          "IMA 사업역량 강화 및 리테일 신용공여 한도 확대를 위한 유상증자",
+          "일평균 거래대금 증가에 따른 2분기 실적 개선 전망"
+        ],
+        "valuation_basis": "2026년 예상 PBR 1.09x 하락 및 높은 배당성향 감안",
+        "risk": "금리변동성 확대에 따른 트레이딩수익 변동 가능성",
+        "supply_comment": "동사는 지난 6월 2일 농협금융지주 3자배정 4,000억원 유상증자 결의",
+        "quote": "최근 금리변동성 확대되어 트레이딩수익이 관건이나 우수한 ‘26년 연간실적으로 높아진 배당매력, 그리고 낮아진 멀티플이 긍정적"
+      }
+    ]
+  }
+}

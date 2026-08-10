@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-12_0707_Non-China 공급망의 가치, 매수 기회.md"
+  },
+  "questionnaire": {
+    "target_kind": "sector",
+    "broker": "하나증권",
+    "analyst": "윤재성, 김형준",
+    "report_date": "2026년 06월 10일",
+    "sector_name": "태양광",
+    "sector_view": "Overweight",
+    "thesis": [
+      "미국 내 Non-China 공급망 구축이 에너지 안보 관점에서 중요하며, 단기 전력 공급 부족 해결의 핵심임.",
+      "Section 232 관련 정책 모멘텀이 6~7월 중 가시화될 예정임.",
+      "SpaceX 태양광 셀 공장 등 미국 내 신규 프로젝트들의 진척 상황이 확인되고 있음."
+    ],
+    "timeline": [
+      "6~7월: Section 232 결과 확인 예상",
+      "6~7월: 6~7월 모멘텀 강화 예상"
+    ],
+    "top_picks": [
+      {
+        "name": "OCI홀딩스",
+        "reason": "Top Picks로 선정",
+        "tp": "550,000원"
+      },
+      {
+        "name": "한화솔루션",
+        "reason": "Top Picks로 선정",
+        "tp": "60,000원"
+      }
+    ],
+    "risk": "한국 태양광 업체의 주가 급락은 펀더먼털보다는 단순한 주식 수급 이슈로 판단됨.",
+    "quote": "이번 주가 급락은 절호의 매수 기회라 판단한다. Top Picks는 OCI홀딩스와 한화솔루션이다."
+  }
+}

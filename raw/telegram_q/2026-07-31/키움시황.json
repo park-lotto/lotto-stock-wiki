@@ -1,0 +1,27 @@
+{
+  "market_direction": "상승",
+  "macro_events": [
+    {
+      "fact": "6월 PCE 물가 컨센서스 부합(YoY 3.7%)",
+      "ts": "07:45",
+      "quote": "6월 PCE 물가 컨센 부합(YoY, 3.7% vs 컨센 3.7%)"
+    },
+    {
+      "fact": "오픈AI 출신 레오폴드의 Situational Awareness Capital 펀드 청산 및 시타델 인수",
+      "ts": "07:45",
+      "quote": "오픈 AI 출신인 레오폴드의 Situational Awareness Capital 펀드의 청산 소식도 눈여겨볼 필요가 있습니다."
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "긍정적",
+      "comment": "디레버리징 해소 및 삼성전자 컨퍼런스콜을 통한 실적 가시성 개선으로 상방 재료가 우위에 있음"
+    },
+    {
+      "sector": "IT",
+      "stance": "중립",
+      "comment": "대형 테크주들의 실적 호조와 현금흐름 약화 우려가 공존하나 시장은 개선세에 주목"
+    }
+  ]
+}

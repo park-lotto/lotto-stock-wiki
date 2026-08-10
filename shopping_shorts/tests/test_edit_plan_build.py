@@ -24,6 +24,13 @@ def _fake_gemini(monkeypatch, payload_text):
     monkeypatch.setattr(edit_plan.comment_gen, "_current_key_and_idx", lambda: ("k", 0))
     monkeypatch.setattr(edit_plan.comment_gen, "_client_for_key", lambda key: FakeClient())
     monkeypatch.setattr(edit_plan, "SHORTS_GEMINI_KEYS", ["fake_key"])
+    # ★build_edit_plan은 comment_gen 전용키가 아니라 **key_vault 캐스케이드 예비키풀**을
+    #   쓴다(_vault_call, 2026-07-13 전환 — 전용키 1개가 쉽게 소진돼서). 위 comment_gen
+    #   stub만으로는 그 경로를 못 막아 실제 키를 찾다 못 찾고 None을 반환 → beats가 []가 되어
+    #   이 테스트가 실패했다. 여기서 검증하려는 건 '응답을 어떻게 그라운딩·표절판정하느냐'이므로
+    #   모델 호출 자체를 payload로 갈음한다.
+    monkeypatch.setattr(edit_plan, "_vault_call",
+                        lambda prompt, schema, **kw: json.loads(payload_text))
 
 
 def test_build_edit_plan_grounds_and_flags(monkeypatch):
@@ -42,7 +49,8 @@ def test_build_edit_plan_grounds_and_flags(monkeypatch):
     assert out["beats"][0]["primary"]["end"] == 2.0
     # 표절: beat1 narration "안 흘러요"가 소스 full_text와 동일 → flag
     assert any(f["beat_idx"] == 1 for f in out["plagiarism_flags"])
-    assert out["detected_type"] == "product_reveal"
+    # 장면스파인 재설계(2026-07-29): 옛 key product_reveal은 generic으로 흡수된다.
+    assert out["detected_type"] == "generic"
     assert out["affiliate_target"] == "소금"
 
 
@@ -56,7 +64,7 @@ def test_build_edit_plan_structure_locked_to_input(monkeypatch):
     out = edit_plan.build_edit_plan(_scripts(), target_seconds=5, structure="template",
                                      video_type="recipe_secret")
     assert out["structure"] == "template"
-    assert out["detected_type"] == "recipe_secret"
+    assert out["detected_type"] == "recipe"   # 옛 key recipe_secret → recipe 흡수
 
 
 def test_build_edit_plan_exhausted_returns_empty(monkeypatch):
@@ -65,7 +73,7 @@ def test_build_edit_plan_exhausted_returns_empty(monkeypatch):
     out = edit_plan.build_edit_plan(_scripts(), target_seconds=5, structure="template",
                                      video_type="product_reveal")
     assert out == {"structure": "template", "beats": [], "plagiarism_flags": [],
-                    "detected_type": "product_reveal", "affiliate_target": ""}
+                    "detected_type": "generic", "affiliate_target": ""}
 
 
 def test_build_edit_plan_auto_detects_when_type_not_given(monkeypatch):
@@ -77,14 +85,14 @@ def test_build_edit_plan_auto_detects_when_type_not_given(monkeypatch):
     _fake_gemini(monkeypatch, payload)
     monkeypatch.setattr(edit_plan, "detect_video_type", lambda scripts: "recipe_secret")
     out = edit_plan.build_edit_plan(_scripts(), target_seconds=5, structure="template")
-    assert out["detected_type"] == "recipe_secret"
+    assert out["detected_type"] == "recipe"   # 감지값(옛 key)도 새 key로 흡수
 
 
 def test_detect_video_type_returns_valid_key(monkeypatch):
     payload = json.dumps({"video_type": "recipe_secret"})
     _fake_gemini(monkeypatch, payload)
     result = edit_plan.detect_video_type(_scripts())
-    assert result == "recipe_secret"
+    assert result == "recipe"   # 옛 key → 새 key 정규화 반환
 
 
 def test_detect_video_type_invalid_key_falls_back_to_default(monkeypatch):

@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-06-10",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_1000_콥데이 후기 SMR, 그리고 미국.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유진투자증권",
+    "analyst": "류태환",
+    "report_date": "2026.06.10",
+    "stocks": [
+      {
+        "name": "DL 이앤씨",
+        "code": "375500",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": 144000,
+        "tp_prev": 144000,
+        "tp_direction": "flat",
+        "earnings_outlook": "매출은 소폭 감소할 수 있으나 수익성 중심의 성장 전략을 통해 안정적인 이익 체력을 유지할 전망.",
+        "estimate_revision": null,
+        "next_catalyst": "연말까지 ASME N-Stamp 취득, SMR 시장 내 경쟁력 강화",
+        "thesis": [
+          "주택 부문의 원가율 개선과 전사적인 비용 효율화를 바탕으로 실적 개선 흐름 지속",
+          "X-energy 지분 투자 및 Amazon의 전략적 파트너십을 통한 SMR 시장 선점 가능성",
+          "미국 Golden Triangle Polymer Project 수행을 통한 미국 플랜트 시장 내 실질적인 경험 축적"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": "두산에너빌리티는 창원 본사 부지 내에 X-energy 의 Xe-100 기자재 생산시설을 건설 중",
+        "quote": "DL이앤씨를 설명하는 핵심 키워드는 ‘SMR’, 그리고 ‘미국’이라고 판단."
+      }
+    ]
+  }
+}

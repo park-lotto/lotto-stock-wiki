@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_국내주식 마감 시황 (26.06.01) - 깐부회동에 이은 삼...md"
+  },
+  "questionnaire": {
+    "broker": "유안타증권",
+    "analyst": "이재원, 김세빈",
+    "report_date": "2026.06.01",
+    "target_kind": "market",
+    "market_direction": "KOSPI 8,788pt(+3.7%), KOSDAQ 1,050pt(-2.3%)",
+    "macro_vars": [
+      "S&P500 +0.2%",
+      "NASDAQ +0.2%",
+      "필라델피아반도체지수 +0.2%"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": "긍정",
+        "reason": "젠슨황 방한 기대감 및 AI 인프라 수요 장기화"
+      },
+      {
+        "sector": "반도체",
+        "stance": "긍정",
+        "reason": "삼성전자 영업이익 추정치 상향 및 5월 반도체 수출 호조"
+      },
+      {
+        "sector": "조선",
+        "stance": "긍정",
+        "reason": "수주 모멘텀 지속"
+      },
+      {
+        "sector": "전력",
+        "stance": "긍정",
+        "reason": "낙폭 과대 호실적 호수출"
+      }
+    ],
+    "style": "대형주 쏠림 및 중소형주 눌림",
+    "event_calendar": [
+      {
+        "date": "2026.06.08",
+        "event": "젠슨황 네이버 방문 유력"
+      }
+    ],
+    "top_picks": [
+      "삼성전자",
+      "NAVER",
+      "삼성에스디에스",
+      "포스코DX",
+      "한미약품"
+    ],
+    "risk": "KOSDAQ 4거래일 연속 하락, KOSDAQ 순매수 주체이던 개인의 자금 이탈 지속 전망",
+    "quote": "금일 KOSPI, KOSDAQ 각각 +3.7%, -2.3% 등락. 핵심 키워드는 젠슨황 랠리, 대형주 쏠림, KOSDAQ 눌림으로 정리 가능"
+  }
+}

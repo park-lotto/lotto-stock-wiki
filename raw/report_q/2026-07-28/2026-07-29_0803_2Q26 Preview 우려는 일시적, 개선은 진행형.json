@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-07-28",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-07-29_0803_2Q26 Preview 우려는 일시적, 개선은 진행형.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "교보증권",
+    "analyst": "장민지",
+    "report_date": "2026/07/28",
+    "stocks": [
+      {
+        "name": "이마트",
+        "code": "139480",
+        "rating": "BUY",
+        "rating_changed": "유지",
+        "tp_new": "110,000원",
+        "tp_prev": null,
+        "tp_direction": "down",
+        "earnings_outlook": "이마트 2Q26 연결 기준 매출액 6조 8,297억원(YoY -3.0%), 영업이익 196억원(YoY -9.2%, OPM 0.3%)로 영업이익 기준 시장 기대치 하회 전망(Fnguide 기준 563억원)",
+        "estimate_revision": "자회사 스타벅스 실적 추정치 하향 조정에 기인하여 목표주가 하향",
+        "next_catalyst": "3분기부터 실적 모멘텀 강화 예상(명절 효과 반영 및 경쟁 완화에 따른 객수 회복)",
+        "thesis": [
+          "이마트(별도): 기존점 성장률(할인점 +3.8%, 트레이더스 +4.7%, 에브리데이 +10.6%) 및 객수 회복으로 본업 체력 견조",
+          "스타벅스: 마케팅 이슈 및 e-프리퀀시 행사 취소에 따른 매출 역성장세",
+          "자회사 실적 추정치 하향 조정을 반영하여 목표주가 하향하나, 하반기 실적 모멘텀 강화 기대"
+        ],
+        "valuation_basis": "Target EV/EBITDA 6.0배 적용 (실적 회복 국면 진입을 감안해 1년 평균에서 5년 평균 수치 적용)",
+        "risk": null,
+        "supply_comment": null,
+        "quote": "투자의견 BUY 유지 및 목표주가 110,000원으로 하향. 목표주가 하향은 자회사 스타벅스 실적 추정치 하향 조정에 기인.",
+        "sector": "소비내수"
+      }
+    ]
+  }
+}

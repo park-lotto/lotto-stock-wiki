@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-08-04",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-05_0801_2Q26 Review  계속되는 GPM 고민.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "이진협",
+    "report_date": "2026년 8월 4일",
+    "stocks": [
+      {
+        "name": "한섬",
+        "code": "020000",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "28,000원",
+        "tp_prev": null,
+        "tp_direction": "down",
+        "earnings_outlook": "한섬은 2Q26 매출액 3,632억원(+7.4% YoY), 영업이익 46억원(+525.0% YoY)를 기록해 컨센서스 대비 매출액은 부합했으며, 영업이익은 큰 폭으로 하회했다.",
+        "estimate_revision": "목표주가 하향은 실적 전망치와 목표 P/E(10배 → 8배)를 하향한 것에 따른다.",
+        "next_catalyst": "4분기부터는 소득효과가 소비에 미치는 영향이 커지면서 소비 반등이 본격화되고 시장의 의구심은 해소될 수 있을 것으로 전망한다. 또한 연말 스킴스의 전개를 앞두고 있다.",
+        "thesis": [
+          "내수 소비 성장에 따라 외형성장이 나타났지만 GPM이 -0.9%p YoY 악화된 것이 실적 부진의 주된 원인이었다.",
+          "4분기 소득 효과 강세 및 신규 브랜드(스킴스) 전개로 인한 모멘텀 강화 기대",
+          "인바운드 관광객 수요 유입을 통한 실적 개선 전망"
+        ],
+        "valuation_basis": "목표주가 하향은 실적 전망치와 목표 P/E(10배 → 8배)를 하향한 것에 따른다.",
+        "risk": "6월부터 패션 성장률이 둔화되는 모습을 보이고 있다.",
+        "supply_comment": null,
+        "quote": "한섬에 대해 투자의견 BUY를 유지하며, 목표주가를 2.8만원으로 하향한다.",
+        "sector": "소비내수"
+      }
+    ]
+  }
+}

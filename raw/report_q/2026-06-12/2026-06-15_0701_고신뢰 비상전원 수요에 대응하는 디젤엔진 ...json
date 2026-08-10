@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-06-12",
+    "broker": "서울평가정보(주)",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-15_0701_고신뢰 비상전원 수요에 대응하는 디젤엔진 ...md"
+  },
+  "questionnaire": {
+    "broker": "서울평가정보(주)",
+    "analyst": "박진희",
+    "report_date": "2026.06.11.",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "썬테크",
+        "code": "217320",
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2026년 예상 175.6억 원으로 회복 흐름을 이어갈 전망이다.",
+        "estimate_revision": null,
+        "next_catalyst": "고효율·저매연 발전기, 디지털 AVR 제품, 방산 및 데이터센터용 비상전원 제품의 수주 확대",
+        "thesis": [
+          "비상발전기 관급 수요 기반 민수·방산 비상전원 수요로 확장",
+          "전력 안정성 및 친환경 규제 강화에 따른 비상발전기 시장 성장",
+          "자본 확충과 방산사업 강화 및 데이터센터·대형 전력수요처 대응"
+        ],
+        "valuation_basis": null,
+        "risk": "건설경기 둔화, 공공 예산 집행 지연, 엔진 및 희토류 가격 변동, 저가 제품과의 가격 경쟁, ESS·연료전지 등 대체 기술 확산 가능성",
+        "supply_comment": "중대형 엔진의 수입 의존도와 환율 변동, 엔진 제조사의 가격 결정력이 원가 리스크로 작용할 수 있음",
+        "quote": "관급 기반을 바탕으로 민수·방산 비상전원 수요로 확장하는 디젤엔진 비상발전기 전문기업",
+        "sector": "전력"
+      }
+    ]
+  }
+}

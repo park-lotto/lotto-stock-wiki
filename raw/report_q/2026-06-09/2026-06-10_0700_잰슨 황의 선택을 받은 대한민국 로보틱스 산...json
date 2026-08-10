@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "date": "2026-06-09",
+    "broker": "iM증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-10_0700_잰슨 황의 선택을 받은 대한민국 로보틱스 산...md"
+  },
+  "questionnaire": {
+    "broker": "iM증권",
+    "analyst": "이상수",
+    "report_date": "2026.06.09",
+    "target_kind": "sector",
+    "sector_name": "로봇",
+    "sector_view": "비중확대",
+    "thesis": [
+      "대한민국 로보틱스 산업은 nVIDIA의 고객이자 파트너로서 성장 잠재력이 높음",
+      "산업용 로봇과 달리 자율성을 전제로 하는 휴머노이드 로봇 시장에서 nVIDIA Jetson 플랫폼과 소프트웨어 솔루션에 대한 의존도가 높음",
+      "국내 대기업 중심의 로보틱스 생태계가 상대적으로 잘 구축되어 있어 nVIDIA와의 협력 기조 지속 전망"
+    ],
+    "timeline": [
+      "2026 하반기: 국내 자동차 부품 업체들의 휴머노이드용 제품 공개",
+      "2026 하반기: 레인보우로보틱스 휴머노이드 공개 및 양산",
+      "2026 하반기: 주요 로보틱스 업체들의 신규 공장 증설 시작"
+    ],
+    "top_picks": [
+      {
+        "name": "LG전자",
+        "reason": "Jetson Thor 및 Isaac GROOT 등 휴머노이드 개발 플랫폼을 활용해 nVIDIA와 레퍼런스 휴머노이드를 개발할 예정",
+        "tp": null
+      },
+      {
+        "name": "두산로보틱스",
+        "reason": "협동로봇 개발 및 배포 과정에서 nVIDIA 플랫폼을 활용해왔으며, 휴머노이드 개발 과정에서도 nVIDIA 플랫폼 활용 예정",
+        "tp": null
+      },
+      {
+        "name": "레인보우로보틱스",
+        "reason": "거의 모든 휴머노이드 업체가 nVIDIA 솔루션에 높은 의존도를 보이고 있어 향후 nVIDIA 파트너가 될 가능성 높음",
+        "tp": null
+      },
+      {
+        "name": "로보티즈",
+        "reason": "Isaac Sim 기반 AI Walker 시뮬레이션 공개, 완제품 업체로 외연 확장 중이며 nVIDIA와의 협력 가능성 높음",
+        "tp": null
+      },
+      {
+        "name": "현대차그룹 (Boston Dynamics)",
+        "reason": "이미 Boston Dynamics 개발 과정에 Jetson 플랫폼이 활용되고 있음",
+        "tp": null
+      }
+    ],
+    "risk": [
+      "로보틱스 산업 관련 단기 차익 실현 매물 출회",
+      "금리 인하 지연으로 인한 성장주 수급 이탈",
+      "휴머노이드 업체들의 전반적인 양산 일정 연기 가능성"
+    ],
+    "quote": "대한민국 로보틱스 산업은 nVIDIA의 고객이자 파트너"
+  }
+}

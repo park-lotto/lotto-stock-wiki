@@ -3,9 +3,12 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>영상 즐겨찾기 · 쇼핑쇼츠</title>
+<title>영상 즐겨찾기 · 숏템메이커</title>
+<script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <style>
-  :root{--bg:#0a0e14;--panel:#111722;--line:#1e2735;--txt:#e6edf3;--sub:#8b98a9;--accent:#2f81f7;--accent2:#6d3bef;--fire:#ff6b35;--ok:#2ea043;}
+  /* 스탁브레인 민트-블랙 투톤(다크 기본). produce.html과 동일 토큰. */
+:root{--bg:#0a0f0d;--panel:#101815;--line:#1e2b26;--txt:#eaf3f0;--sub:#8fa1a0;--accent:#37e0bd;--accent2:#1f9e7a;--fire:#ff6b6b;--ok:#37e0bd;--gold:#f0c453;--inset:#0c1412;--sel-bg:linear-gradient(90deg,#123a30,#0c221c);--sel-fg:#6ff0d6;--grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--hover:#131d19;color-scheme:dark;}
+:root[data-theme="light"]{--bg:#f4faf7;--panel:#ffffff;--line:#d5e6df;--txt:#0f1a16;--sub:#5c726d;--accent:#12b886;--accent2:#0ca678;--fire:#e0524a;--ok:#12b886;--gold:#b8860b;--inset:#eef7f3;--sel-bg:linear-gradient(90deg,#d8f2ea,#eafaf5);--sel-fg:#0a7d66;--grad:linear-gradient(135deg,#19c9ab,#0a8f79);--hover:#eef7f3;color-scheme:light;}
   *{box-sizing:border-box}
   body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic',system-ui,sans-serif;margin:0;min-height:100vh}
   .main{flex:1;padding:24px 32px;overflow:auto}
@@ -27,8 +30,8 @@
   .body{padding:12px;flex:1;display:flex;flex-direction:column}
   .rank{font-size:13px;color:var(--txt)}
   .btns{display:flex;gap:6px;margin-top:auto;padding-top:10px}
-  .btns button{flex:1;font-size:11px;padding:7px 4px;border-radius:7px;border:1px solid var(--line);background:#0d131c;color:var(--txt);cursor:pointer}
-  .btns button.view{border-color:#2f81f7;color:#7db4ff}
+  .btns button{flex:1;font-size:11px;padding:7px 4px;border-radius:7px;border:1px solid var(--line);background:var(--inset);color:var(--txt);cursor:pointer}
+  .btns button.view{border-color:var(--accent);color:var(--sel-fg)}
   .empty{color:var(--sub);text-align:center;padding:60px;grid-column:1/-1}
 </style>
 </head>
@@ -75,7 +78,7 @@ function sendToProduce(){
   // thumbnail·caption도 넘겨야 한다(대본 추출은 shortcode로). 최대 5개(2단계 입력 상한).
   const picks=ITEMS.filter(i=>SELECTED.has(i.shortcode)).slice(0,5).map(i=>({
     url:i.url||'', shortcode:i.shortcode||'', name:i.name||'',
-    thumbnail:i.thumbnail||'', caption:i.caption||''}));
+    thumbnail:i.thumbnail||'', caption:i.caption||'', play_url:i.play_url||''}));
   if(!picks.length){ alert('보낼 항목을 먼저 선택하세요'); return; }
   // 신규 형식(items)과 구버전 호환(urls) 둘 다 저장.
   sessionStorage.setItem('produce_handoff', JSON.stringify(picks));
@@ -87,7 +90,11 @@ function sendToProduce(){
 // 핫링크 차단이 있어 프록시 경유해야 뜬다(2026-07-14 버그수정).
 function thumbSrc(u){
   if(!u) return '';
-  return u.includes('gstatic.com') ? u : '/api/thumb?url='+encodeURIComponent(u);
+  // gstatic(구글렌즈)·중국 CDN(샤오홍슈 xhscdn·도우인 douyinpic)은 핫링크 제한이 없어
+  // no-referrer로 직접 로드한다. /api/thumb 프록시는 인스타 referer를 붙여 중국 CDN에서
+  // 오히려 400/검게 나오므로 프록시를 태우지 않는다(2026-07-18 모음집 검은썸네일 수정).
+  if(/gstatic\.com|xhscdn\.com|douyinpic\.com|xhslink\.com/.test(u)) return u;
+  return '/api/thumb?url='+encodeURIComponent(u);
 }
 function _fmtCount(n){
   if(n==null||isNaN(n)) return '';
@@ -102,26 +109,123 @@ function _fmtDur(s){
   s=Math.round(Number(s)); const m=Math.floor(s/60);
   return m+':'+String(s%60).padStart(2,'0');
 }
-// 레퍼런스 랭킹처럼 영상정보 한 줄(조회수·좋아요·댓글·길이·채널) — 원클릭 담기 보강메타(m).
+// 속도(시간당) = 댓글수 ÷ 업로드 후 경과시간(시간). ts(업로드 unixtime) 있어야 계산.
+function _speed(comments, ts){
+  if(comments==null || !ts) return null;
+  const hrs=(Date.now()/1000 - Number(ts))/3600;
+  return hrs>0 ? comments/hrs : null;
+}
+// 레퍼런스 랭킹처럼 영상정보 블록(조회수·좋아요·댓글·팔로워·속도·참여밀도·길이) — 담기 보강메타(m).
+// ※가속은 시계열 2회 스냅샷이 필요해 일회성 담기론 불가. 팔로워·참여밀도는 플랫폼이 팔로워를
+//   줄 때만(틱톡은 안 줌). 조회수·댓글·좋아요·속도·길이는 대부분 나온다.
 function metaLine(m){
   if(!m) return '';
-  const parts=[
-    m.channel?('👤 '+esc(String(m.channel).slice(0,18))):'',
-    (m.views!=null)?('👁 '+_fmtCount(m.views)):'',
-    (m.likes!=null)?('❤ '+_fmtCount(m.likes)):'',
-    (m.comments!=null)?('💬 '+_fmtCount(m.comments)):'',
-    (m.duration!=null)?('⏱ '+_fmtDur(m.duration)):''
-  ].filter(Boolean);
-  return parts.length?`<div style="font-size:11px;color:var(--sub);margin:2px 0 4px">${parts.join('  ·  ')}</div>`:'';
+  const row=(label,val)=> (val!=null&&val!=='')
+    ? `<div style="display:flex;justify-content:space-between;gap:8px"><span style="color:var(--sub)">${label}</span><b>${val}</b></div>` : '';
+  const sp=_speed(m.comments, m.ts);
+  const body=[
+    m.channel?`<div style="opacity:.85;margin-bottom:2px">👤 ${esc(String(m.channel).slice(0,22))}</div>`:'',
+    m.followers?row('팔로워', Number(m.followers).toLocaleString()):'',
+    row('조회수', m.views!=null?Number(m.views).toLocaleString():''),
+    row('좋아요', m.likes!=null?Number(m.likes).toLocaleString():''),
+    row('댓글', m.comments!=null?Number(m.comments).toLocaleString():''),
+    sp!=null?row('속도(시간당)', sp.toFixed(1)):'',
+    (m.followers&&m.comments!=null)?row('참여밀도', (m.comments/m.followers*100).toFixed(2)+'%'):'',
+    m.duration!=null?row('길이', _fmtDur(m.duration)):''
+  ].filter(Boolean).join('');
+  return body?`<div style="font-size:11px;margin:2px 0 6px;display:flex;flex-direction:column;gap:1px">${body}</div>`:'';
 }
+// 썸네일 ▶ 재생 — 유튜브·틱톡은 임베드, 인스타는 /api/media로 mp4 즉석 해석해
+// 인앱 재생(레퍼런스랭킹과 동일 경로, 2026-08-03 이식 — 사장님 '즐겨찾기도 랭킹처럼').
+// 해석 실패·샤오홍슈·도우인은 원본 새탭(로그인벽이라 embed 불가).
+function _ytId(u){ const m=String(u||'').match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/); return m?m[1]:''; }
+function _ttId(u){ const m=String(u||'').match(/tiktok\.com\/.*\/video\/(\d{6,})/); return m?m[1]:''; }
+function _titleBar(i){ return `<div style="margin-bottom:8px;font-size:13px">${esc((i.name||'').slice(0,80))}</div>`; }
+function _overlayVideo(i, src){
+  _overlay(_titleBar(i)+
+    `<video src="${esc(src)}" controls autoplay playsinline style="width:100%;max-height:70vh;border-radius:8px;background:#000"></video>`);
+}
+// 카드 안 인라인 재생(2026-08-09 사장님 "새창 하나뜸" — 히트작 playArch와 동일 UX).
+// 오버레이 모달은 걷어내고 .thumb 안의 img를 <video>/<iframe>으로 바꾼다.
+// ★.thumb의 onclick(선택토글)이 재생 컨트롤 클릭까지 먹지 않게 stopPropagation.
+async function playPreview(el, sc){
+  const i=ITEMS.find(x=>x.shortcode===sc); if(!i||!i.url) return;
+  const box=el&&el.closest?el.closest('.thumb'):null;
+  if(!box){ window.open(i.url,'_blank'); return; }
+  const mount=n=>{
+    n.style.cssText+=';position:absolute;inset:0;width:100%;height:100%;background:#000;border:0';
+    n.onclick=e=>e.stopPropagation();
+    if(getComputedStyle(box).position==='static') box.style.position='relative';
+    box.querySelectorAll('img,video,iframe').forEach(x=>x.remove());
+    el.remove(); box.appendChild(n);
+  };
+  const yid=_ytId(i.url);
+  if(yid){ const f=document.createElement('iframe');
+    f.src=`https://www.youtube.com/embed/${yid}?autoplay=1&playsinline=1`;
+    f.allow='autoplay; encrypted-media; picture-in-picture'; f.allowFullscreen=true; mount(f); return; }
+  const tid=_ttId(i.url);
+  if(tid){ const f=document.createElement('iframe');
+    f.src=`https://www.tiktok.com/embed/v2/${tid}`;
+    f.allow='autoplay; encrypted-media; picture-in-picture'; f.allowFullscreen=true; mount(f); return; }
+  if(/instagram\.com/.test(i.url)){
+    let src=i.play_url||'';
+    if(!src){
+      el.textContent='⏳';
+      try{
+        const d=await (await fetch(`/api/media?platform=instagram&id=${encodeURIComponent(i.shortcode)}`)).json();
+        if(d.ok && d.url) src=d.url;
+      }catch(e){}
+      el.textContent='▶';
+    }
+    if(src){ const v=document.createElement('video');
+      v.src=src; v.controls=true; v.autoplay=true; v.playsInline=true;
+      v.setAttribute('playsinline',''); v.style.objectFit='cover'; mount(v); return; }
+  }
+  window.open(i.url,'_blank');   // 샤오홍슈·도우인·해석실패는 원본 탭에서 재생
+}
+function _overlay(html){
+  let o=document.getElementById('collOverlay');
+  if(!o){ o=document.createElement('div'); o.id='collOverlay';
+    o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+    o.addEventListener('click',e=>{ if(e.target===o) _closeOverlay(); }); document.body.appendChild(o); }
+  o.innerHTML=`<div style="background:#171717;border:1px solid #333;border-radius:12px;padding:14px;max-width:820px;width:100%;position:relative">`+
+    `<button onclick="_closeOverlay()" style="position:absolute;top:2px;right:10px;background:none;border:none;color:#fff;font-size:22px;cursor:pointer">✕</button>${html}</div>`;
+  o.style.display='flex';
+}
+function _closeOverlay(){ const o=document.getElementById('collOverlay'); if(o){ o.innerHTML=''; o.style.display='none'; } }
 // 이 영상 하나만 바로 제작소로 (선택 안 해도 카드에서 바로).
 function sendOneToProduce(sc){
   const i=ITEMS.find(x=>x.shortcode===sc); if(!i) return;
   const picks=[{url:i.url||'', shortcode:i.shortcode||'', name:i.name||'',
-                thumbnail:i.thumbnail||'', caption:i.caption||''}];
+                thumbnail:i.thumbnail||'', caption:i.caption||'', play_url:i.play_url||''}];
   sessionStorage.setItem('produce_handoff', JSON.stringify(picks));
   sessionStorage.setItem('produce_mix_urls', JSON.stringify(picks.map(p=>p.url).filter(Boolean)));
   location.href='/produce';
+}
+// 플랫폼 배지 — URL 호스트로 판별(app.py _GRAB_DOMAINS와 같은 도메인). 재생 로직이
+// 이미 URL로 플랫폼을 구분하고 있어(playPreview) 같은 판별을 배지로도 보여준다.
+function platformBadge(url){
+  const h=(String(url||'').match(/^https?:\/\/([^/]+)/)||[])[1]||'';
+  const P=[['youtu','▶️','YT','#cc0000'],['tiktok.com','🎵','TikTok','#111'],
+    ['instagram.com','📷','인스타','#c13584'],
+    ['xiaohongshu','📕','샤오훙슈','#ff2442'],['xhslink','📕','샤오훙슈','#ff2442'],
+    ['rednote','📕','샤오훙슈','#ff2442'],['douyin','🎬','도우인','#111'],
+    ['iesdouyin','🎬','도우인','#111']];
+  for(const [k,emo,lab,bg] of P) if(h.includes(k))
+    return `<span style="position:absolute;top:6px;right:6px;z-index:2;background:${bg};color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px">${emo} ${lab}</span>`;
+  return '';
+}
+// 보강메타 없는 카드 재수집(2026-07-21) — 담을 때 메타가 안 왔거나 서버 probe 실패한
+// 항목만. 자동재수집은 비용이라 버튼으로만.
+async function reprobeMeta(sc, btn){
+  if(btn){ btn.disabled=true; btn.textContent='수집 중…'; }
+  try{
+    const r=await fetch('/api/mix/basket/reprobe',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({shortcode:sc})});
+    const j=await r.json();
+    if(!j.ok){ if(btn){ btn.disabled=false; btn.textContent='🔄 정보 새로고침'; } return; }
+    setTimeout(loadItems, 1600);   // 백그라운드 보강이 끝날 즈음 새로고침
+  }catch(e){ if(btn){ btn.disabled=false; btn.textContent='🔄 정보 새로고침'; } }
 }
 function render(){
   const el=document.getElementById('cards');
@@ -132,15 +236,22 @@ function render(){
   }
   el.innerHTML = ITEMS.map(i=>{
     const sel = SELECTED.has(i.shortcode);
+    const ml = metaLine(i.meta);
+    // 메타가 하나도 없을 때만 재수집 버튼(있으면 굳이 비용 쓸 이유 없음).
+    const reprobeBtn = ml ? '' : `<button onclick="reprobeMeta('${i.shortcode}',this)" style="width:100%;margin:2px 0 4px;padding:5px;background:#2d333b;color:#adbac7;border:1px solid #444;border-radius:6px;font-size:11px;cursor:pointer">🔄 정보 새로고침</button>`;
     return `
     <div class="card ${sel?'sel':''}">
-      <div class="thumb" onclick="toggleSelect('${i.shortcode}')">
-        ${i.thumbnail?`<img src="${thumbSrc(i.thumbnail)}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">`:''}
-        <span class="chk">${sel?'✅':'⬜'}</span>
+      <div class="thumb" onclick="toggleSelect('${i.shortcode}')" title="클릭하면 선택/해제 (▶ 는 미리보기 재생)" style="position:relative;cursor:pointer">
+        ${platformBadge(i.url)}
+        <span class="chk" onclick="event.stopPropagation();toggleSelect('${i.shortcode}')" style="cursor:pointer;position:absolute;top:6px;left:6px;z-index:2">${sel?'✅':'⬜'}</span>
+        ${i.thumbnail?`<img src="${thumbSrc(i.thumbnail)}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'" style="cursor:pointer">`:''}
+        ${i.duration!=null?`<span style="position:absolute;left:6px;bottom:6px;z-index:2;background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:2px 7px;border-radius:10px">⏱ ${_fmtDur(i.duration)}</span>`:''}
+        <span onclick="event.stopPropagation();playPreview(this,'${i.shortcode}')" title="미리보기 재생" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;background:rgba(0,0,0,.55);color:#fff;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer">▶</span>
       </div>
       <div class="body">
         <div class="rank" style="white-space:normal;line-height:1.4;min-height:2.6em">${esc((i.name||i.caption||'').slice(0,60))}</div>
-        ${metaLine(i.meta)}
+        ${ml}
+        ${reprobeBtn}
         <div class="btns">
           <button class="view" onclick="window.open('${esc(i.url||'#')}','_blank')">👁 보기</button>
           <button onclick="removeItem('${i.shortcode}')">🗑 빼기</button>

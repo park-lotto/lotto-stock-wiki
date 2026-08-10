@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "date": "2026-06-02",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-06-03_0700_한국 수출 더 뜨거워졌다.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "대신증권",
+    "analyst": "이정훈",
+    "report_date": "2026.06.01",
+    "market_direction": "한국 수출 모멘텀 확대 및 하반기 매크로 환경 낙관",
+    "macro_vars": [
+      "5월 일평균 수출액 42.8억 달러 (+60.7% YoY)",
+      "5월 수출 +53.2% YoY",
+      "5월 수입 +20.8% YoY",
+      "무역수지 269.4억 달러",
+      "미국 시카고 PMI 62.7"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "반도체",
+        "stance": "폭발적 수요",
+        "reason": "5월 일평균 반도체 수출 +182% 증가"
+      },
+      {
+        "sector": "IT",
+        "stance": "양호",
+        "reason": "미국, 중국, 아세안 등 IT 품목 중심 견조한 성장세"
+      },
+      {
+        "sector": "화장품미용",
+        "stance": "양호",
+        "reason": "최근 수출 모멘텀이 가장 양호한 품목으로 2개월 연속 30%대의 증가율 기록"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": null,
+    "risk": "미국-이란 간 종전 협상 공회전, 유럽 및 일부 신흥국의 부진한 수요, 유가 상승에 따른 에너지 수입 증가",
+    "quote": "제조업 수요 전혀 식지 않고 있어, 하반기 매크로 환경 우려할 필요 없음"
+  }
+}
