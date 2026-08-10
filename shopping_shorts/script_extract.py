@@ -390,7 +390,16 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
     duration = _video_duration(video_path)
     qa_first, qa_retried = None, False
 
-    for attempt in range(max_retries):
+    # ★죽은 키(401/403 서비스계정 비활성) 우회는 재시도 예산(max_retries)을 먹지 않는다
+    #   (2026-08-10 실사고). 죽은 키가 27개면 max_retries=4로는 살아있는 키에 닿기 전에
+    #   재시도가 소진돼 job이 실패했다. 죽은 키는 _mark_key_exhausted로 즉시 풀에서 빠지므로,
+    #   여기서는 살아있는 키를 만날 때까지 걸어간다. 풀이 진짜 다 죽으면 _current_key_and_idx가
+    #   None을 돌려 KeyPoolExhausted로 빠져나온다. 안전 상한: 실재시도 + 전체 키 수 + 여유.
+    attempt = 0
+    _walk_guard = 0
+    _walk_cap = max_retries + len(SHORTS_GEMINI_KEYS) + 2
+    while attempt < max_retries and _walk_guard < _walk_cap:
+        _walk_guard += 1
         key, idx = comment_gen._current_key_and_idx()
         if key is None:
             # 조용한 빈 결과 금지(2026-08-07) — 호출부가 '음성 없는 영상'으로 오해했다.
@@ -431,6 +440,7 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 qa_first, qa_retried = result, True
                 prompt = base_prompt + hint      # 무엇이 틀렸는지 알려주고 다시 묻는다
                 print(f"script_extract: 태깅 QA 재시도 — {hint.strip()}", file=sys.stderr)
+                attempt += 1
                 continue
             if qa_first is not None:             # 재시도분이 더 나쁘면 첫 결과로 되돌린다
                 result = _pick_better_extract(qa_first, result, duration)
@@ -439,9 +449,10 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
             m = str(e)
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
                 comment_gen._mark_key_exhausted(idx)
-                continue
+                continue  # ★죽은 키 우회는 attempt를 안 올린다 — 살아있는 키까지 걸어간다
             if key_vault.is_quota_error(e):
                 time.sleep(quota_sleep)
+                attempt += 1
                 continue
             if any(c in m for c in ("503", "UNAVAILABLE", "overloaded")):
                 if model == _MODEL:
@@ -454,9 +465,11 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                         model = _FALLBACK_MODEL
                         print(f"script_extract: {_MODEL} 503 → {_FALLBACK_MODEL}로 폴백",
                               file=sys.stderr)
+                        attempt += 1
                         continue  # 다른 모델이라 앞 모델의 혼잡과 무관 — 기다리지 않는다
                 if attempt < max_retries - 1:
                     time.sleep((attempt + 1) * 5)
+                    attempt += 1
                     continue
             # ★QA 재시도 중 API가 죽었으면 첫 결과를 살려 돌려준다(2026-08-01). 점수가 낮아도
             #   있는 대본이 빈 대본보다 낫다 — QA는 기록 장치지 차단 장치가 아니다.
