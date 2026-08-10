@@ -119,4 +119,4 @@ def test_factsheet_wiring_locked_in_edit_plan():
     src = Path(ss.__file__).with_name("edit_plan.py").read_text(encoding="utf-8")
     assert src.count("SCRIPT_FACTSHEET") >= 2          # 1소스 + scene_first
     assert src.count("facts_block=_facts_block") >= 2   # 생성 + 리스타일(1소스)
-    assert "facts_block=_sf_facts_block" in src         # scene_first 리스타일
+    assert src.count("facts_block=_sf_facts_block") >= 6  # scene_first 리스타일1+생성5(2026-08-10 믹스 접지)

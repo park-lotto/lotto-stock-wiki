@@ -2055,7 +2055,9 @@ def _collect_seg_benefits(segments):
 def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3, call=_vault_call,
                             bank_context="", order_block="", lengthen=False,
                             benefits_block="", tone_boost=False, engine=None, engine_seed=0,
-                            frame_start=None):
+                            frame_start=None,
+                            facts_block=""):
+    # facts_block(사실표 v7, 2026-08-10): 빈 문자열이면 무주입=종전 동일.
     """frame_start(2026-08-06): 이 호출의 첫 후보가 쓸 이야기 구도 인덱스(style_profiles.
     _STORY_FRAMES 순환). None이면 무주입(회귀 0). 슬롯 경로는 벌마다 n=1로 따로 부르는데,
     배치용 '후보마다 다르게' 지시는 n=1에서 전부 1번(발견담)이 돼 구도가 안 갈렸다."""
@@ -2125,6 +2127,7 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         #   인벤토리에 '변화:' 칸을 새로 실었으니, 대본을 그 변화들에서 **거꾸로** 짜게 한다.
         # 화면 일치 지시는 아래 [장면과 대사] 블록으로 합쳤다(2026-07-31 정리) — 같은 말을
         # 두 군데서 하면 모델이 한쪽을 놓친다.
+        + ((facts_block + "\n") if facts_block else "")   # ★사실표(v7) — 믹스 생성도 접지
         + ((benefits_block + "\n\n") if benefits_block else "")
         + ((order_block + "\n\n") if order_block else "")
         # ★2026-07-27 과삭제 복구: 레버1이 스토리 강제를 전부 걷어내 대본이 '기능 자막 나열'로
@@ -4161,7 +4164,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 order_block=_rewrite_block(g, avoid_narrations=said_before),
                 benefits_block=benefits_block, engine=engine,
                 engine_seed=_engine_seed(reference_text) + k,
-                frame_start=_take_frames(1))
+                frame_start=_take_frames(1), facts_block=_sf_facts_block)
             raws.extend(sub or [])
             got = _ground_score(sub or [], groups=g)
             for c in got:
@@ -4179,7 +4182,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 bank_context=bank_context, order_block=order_block,
                 benefits_block=benefits_block, engine=engine,
                 engine_seed=_engine_seed(reference_text) + 100,
-                frame_start=_take_frames(need))
+                frame_start=_take_frames(need), facts_block=_sf_facts_block)
             got = _ground_score(fill or [], groups=tl_groups)
             for c in got:
                 c["plan"]["slot_variant"] = "refill"   # 차별화 실패를 숨기지 않는다
@@ -4191,7 +4194,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                                        order_block=order_block,
                                        benefits_block=benefits_block, engine=engine,
                                        engine_seed=_engine_seed(reference_text),
-                                       frame_start=_take_frames(n_candidates))
+                                       frame_start=_take_frames(n_candidates), facts_block=_sf_facts_block)
         cands = _ground_score(raws)
     # ①생성측 보강(세션#2): 후보가 전부 목표보다 크게 짧으면(생성이 목표초 미달) 길이 강화
     # 힌트로 1회 재생성해 합친다. ②선택 감점(_length_penalty)이 짧은 후보를 강등하므로 병합 후
@@ -4219,7 +4222,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                     order_block=(_rewrite_block(g) if len(_distinct) > 1 else order_block),
                     lengthen=True, benefits_block=benefits_block, engine=engine,
                     engine_seed=_engine_seed(reference_text) + 1 + k,
-                    frame_start=_take_frames(1 if len(_distinct) > 1 else n_candidates))
+                    frame_start=_take_frames(1 if len(_distinct) > 1 else n_candidates), facts_block=_sf_facts_block)
                 got = _ground_score(raws2, groups=(g if len(_distinct) > 1 else None))
                 for c in got:
                     c["plan"]["slot_variant"] = (slot_kinds[vi] if vi < len(slot_kinds)
@@ -4240,7 +4243,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 order_block=(_rewrite_block(g) if len(_distinct) > 1 else order_block),
                 tone_boost=True, benefits_block=benefits_block, engine=engine,
                 engine_seed=_engine_seed(reference_text) + 2 + k,
-                frame_start=_take_frames(1 if len(_distinct) > 1 else n_candidates))
+                frame_start=_take_frames(1 if len(_distinct) > 1 else n_candidates), facts_block=_sf_facts_block)
             got = _ground_score(raws3, groups=(g if len(_distinct) > 1 else None))
             for c in got:
                 c["plan"]["slot_variant"] = slot_kinds[vi] if vi < len(slot_kinds) else "?"
