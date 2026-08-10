@@ -232,13 +232,15 @@
     .cp-run-lbl{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--txt);margin-top:10px}
     .cp-run-lbl .cp-dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
     .cp-run-sub{font-size:11.5px;color:var(--sub);margin-top:4px}
-    .cp-scan{position:relative;width:104px;height:185px;border-radius:9px;overflow:hidden;margin-bottom:12px;
+    /* 진행중 썸네일 — 좌측 구석에 작게 있던 걸 키우고 가운데로(2026-08-10 사장님) */
+    .cp-scan{position:relative;width:170px;height:302px;border-radius:9px;overflow:hidden;margin:0 auto 12px;
       background:linear-gradient(160deg,#2a3a44,#141c22);border:1px solid #0006}
     .cp-scan img{width:100%;height:100%;object-fit:cover;display:block}
     /* 완료 C 비교 */
-    .cp-compare{display:flex;align-items:center;gap:0;margin-top:2px}
-    .cp-cell{flex:1;display:flex;flex-direction:column;align-items:center}
-    .cp-frame{position:relative;width:100%;max-width:170px;aspect-ratio:9/16;border-radius:10px;overflow:hidden;
+    /* 비포/애프터 — 좌우로 흩어져 작게 보이던 걸 키우고 가운데로 모음(2026-08-10 사장님) */
+    .cp-compare{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:2px}
+    .cp-cell{flex:0 1 auto;display:flex;flex-direction:column;align-items:center}
+    .cp-frame{position:relative;width:min(260px,38vw);aspect-ratio:9/16;border-radius:10px;overflow:hidden;
       background:#000;border:1px solid #0006}
     .cp-frame img{width:100%;height:100%;object-fit:cover;display:block}
     .cp-lbl{position:absolute;top:8px;left:8px;font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.55);color:#fff}
