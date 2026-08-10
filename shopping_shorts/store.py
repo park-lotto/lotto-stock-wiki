@@ -2640,6 +2640,34 @@ class Store:
                     out[sc] = dur
         return out
 
+    def lens_insta_meta(self, shortcodes):
+        """여러 인스타 shortcode → {sc: {views, likes, comments, posted_at, channel}}.
+
+        렌즈 검색 결과의 인스타 카드에 우리 랭킹 DB가 이미 아는 정보를 얹는다
+        (2026-08-10 사장님 "레퍼런스랭킹에 나오는 정보 최대한 보이게").
+        channel_archive(19만행, likes·posted_at 있음)를 1순위로, 거기 없으면
+        reel_history(수집 랭킹, upload_ts)로 채운다 — 같은 sc가 양쪽에 있으면
+        아카이브가 이긴다(필드가 더 온전함)."""
+        codes = [s for s in (shortcodes or []) if s]
+        out = {}
+        if not codes:
+            return out
+        with self._conn() as c:
+            for i in range(0, len(codes), 400):
+                chunk = codes[i:i + 400]
+                ph = ",".join("?" * len(chunk))
+                for sc, u, v, cm, ts in c.execute(
+                        "SELECT shortcode, username, views, comments, upload_ts "
+                        "FROM reel_history WHERE shortcode IN (%s)" % ph, chunk):
+                    out[sc] = {"channel": u, "views": v, "comments": cm,
+                               "posted_at": ts}
+                for sc, u, v, lk, cm, pa in c.execute(
+                        "SELECT shortcode, username, views, likes, comments, posted_at "
+                        "FROM channel_archive WHERE shortcode IN (%s)" % ph, chunk):
+                    out[sc] = {"channel": u, "views": v, "likes": lk,
+                               "comments": cm, "posted_at": pa}
+        return out
+
     def duration_fail_map(self, shortcodes):
         """여러 shortcode → {shortcode: fail_count} (실패 이력 있는 것만)."""
         codes = [s for s in (shortcodes or []) if s]
