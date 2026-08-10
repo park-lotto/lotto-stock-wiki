@@ -9,7 +9,7 @@ from pathlib import Path
 from shopping_shorts import edit_plan as ep
 
 
-def _seg(sid, video, start, end, desc="장면"):
+def _seg(sid, video, start, end, desc="대사 장면"):
     return {"seg_id": sid, "video_id": video, "start": start, "end": end,
             "scene_desc": desc, "text": ""}
 
@@ -64,6 +64,23 @@ def test_missing_primary_fails():
     assert ep._model_binding_ok(beats, _groups()) is False
     assert ep._model_binding_ok([], _groups()) is False
     assert ep._model_binding_ok(_valid_beats(), []) is False
+
+
+def test_word_mismatch_with_better_cut_fails():
+    # ⑤ "말에 맞는 컷"(2026-07-31): primary가 대사와 0겹침인데 인벤토리에 겹치는
+    # 컷(b-1: '바나나 써는')이 있으면 폴백 — _order_clips_by_words가 당겨오게 한다.
+    groups = _groups()
+    groups[1][1]["scene_desc"] = "바나나 써는"
+    beats = _valid_beats()
+    beats[1]["narration"] = "바나나 썰어 넣고"          # primary b-0='대사 장면'과 0겹침
+    assert ep._model_binding_ok(beats, groups) is False
+
+
+def test_word_mismatch_without_better_cut_ok():
+    # 어떤 컷도 안 겹치면(모두 무관) ⑤는 발동하지 않는다 — 폴백해도 나을 게 없다.
+    beats = _valid_beats()
+    beats[1]["narration"] = "완전 무관한 이야기"
+    assert ep._model_binding_ok(beats, _groups()) is True
 
 
 def test_pin_screens_keeps_model_binding(monkeypatch):

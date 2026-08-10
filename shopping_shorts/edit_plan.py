@@ -1175,11 +1175,14 @@ def _model_binding_ok(beats, groups):
     재배정해 대사-화면이 어긋났다(실측 job fb3b0b6c: 대사 '인덕션·변기' 비트에 샤워기).
     검사(전부 기계식, LLM 0콜):
       ①모든 비트에 primary  ②비트 간 seg 중복 없음(주+보조)
-      ③같은 소스 내 primary 시간 비역전(사장님 불변식)  ④모든 seg가 슬롯 인벤토리 안.
+      ③같은 소스 내 primary 시간 비역전(사장님 불변식)  ④모든 seg가 슬롯 인벤토리 안
+      ⑤"말에 맞는 컷"(2026-07-31 사장님) 유지 — primary가 대사와 낱말 0겹침인데
+        인벤토리에 겹치는 다른 컷이 있으면 거짓(폴백의 _order_clips_by_words가 당겨온다).
     하나라도 어긋나면 False → 호출부가 _assign_timeline 폴백(종전과 100% 동일)."""
     if not beats or not groups:
         return False
-    inv = {s.get("seg_id") for g in groups for s in g}
+    all_segs = [s for g in groups for s in g]
+    inv = {s.get("seg_id") for s in all_segs}
     seen = set()
     last_start = {}
     for b in beats:
@@ -1196,6 +1199,9 @@ def _model_binding_ok(beats, groups):
         if v in last_start and st < last_start[v] - 0.01:
             return False
         last_start[v] = st
+        want = _stems(b.get("narration") or "")
+        if want and not _word_hits(want, p) and any(_word_hits(want, s) for s in all_segs):
+            return False
     return True
 
 
@@ -1349,12 +1355,14 @@ def _order_clips_by_words(narration, segs):
     want = _stems(narration)
     if not want:
         return segs
+    return sorted(segs, key=lambda s: -_word_hits(want, s))  # 안정 정렬 → 동점은 원순서
 
-    def _hit(s):
-        return len(want & _stems(f"{s.get('change') or ''} {s.get('scene_desc') or ''} "
-                                f"{s.get('text') or ''}"))
 
-    return sorted(segs, key=lambda s: -_hit(s))     # 파이썬 정렬은 안정 → 동점은 원순서
+def _word_hits(want, seg):
+    """대사 어간 집합과 컷 태깅(변화·화면·원본대사)의 낱말 겹침 수 — 낱말 일치 판정의
+    단일 소스(0순위-B). _order_clips_by_words 정렬과 _model_binding_ok ⑤가 함께 쓴다."""
+    return len(want & _stems(f"{seg.get('change') or ''} {seg.get('scene_desc') or ''} "
+                             f"{seg.get('text') or ''}"))
 
 
 def _flag_offtopic(beat, segs):
