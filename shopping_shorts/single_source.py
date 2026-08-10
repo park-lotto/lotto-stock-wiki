@@ -784,6 +784,105 @@ FACT_SCHEMA = {
     "required": ["distorts", "worst", "reason"],
 }
 
+# ── 증거검증형 날조 검사(2026-08-10) ─────────────────────────────────────────
+# fact_distorted(불리언 판정)는 소재마다 결과가 흔들려 배선 보류됐다(정상 대본까지
+# 3/3 True — edit_plan.py의 보류 주석). 판정을 "날조 구절을 대본에서 **그대로 인용**"
+# 하게 바꾸고, 인용이 ①대본에 실재하고 ②원본 소재에 없을 때만 유효로 친다.
+# 애매한 True가 구절 인용을 못 대면 코드가 기계적으로 버린다 → 오탐이 회귀를 못 만든다.
+# 실사고(job 890c2f41e35a): "우유로 구운 우유"·"칼로리가 절반"·"에어프라이어" —
+# 훅 검사는 첫 문장만 봐서 본문 날조가 전부 통과했다.
+
+FAB_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "fabrications": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "quote": {"type": "string"},
+                    "reason": {"type": "string"},
+                },
+                "required": ["quote", "reason"],
+            },
+        },
+    },
+    "required": ["fabrications"],
+}
+
+
+def fabrication_prompt(narrs, material_text):
+    body = "\n".join("%d. %s" % (i + 1, n) for i, n in enumerate(narrs or []))
+    return ("아래 [대본]에서 [원본 소재]에 **없는 사실을 지어낸 구절**만 찾아라.\n"
+            "구절은 반드시 [대본]에서 **글자 그대로 복사**해라(6자 이상). "
+            "바꿔 쓰면 무효 처리된다.\n\n"
+            "[날조인 것]\n"
+            "- 원본에 없는 조리도구·재료·수치·가격·효능 (예: 원본에 없는 \"에어프라이어\", "
+            "\"칼로리가 절반\")\n"
+            "- 제품·음식 이름을 바꾸거나 문법이 어긋나게 비튼 것 (예: \"구운 우유\"를 "
+            "\"우유로 구운 우유\"로)\n\n"
+            "[날조가 아닌 것 — 넣지 마라]\n"
+            "- 같은 사실을 다른 표현으로 각색한 것(이건 목표다)\n"
+            "- 화자·관계 설정(\"친구가\", \"엄마가\") / 과장·감탄(\"역대급\")\n\n"
+            f"[원본 소재]\n{(material_text or '')[:1200]}\n\n"
+            f"[대본]\n{body}\n\n"
+            "없으면 빈 배열. JSON만: {\"fabrications\":[{\"quote\":\"대본 그대로\","
+            "\"reason\":\"한 줄\"}]}")
+
+
+def _norm_ws(s):
+    return _re.sub(r"\s+", "", s or "")
+
+
+def fact_fabrications(beats, material_text, call, samples=2):
+    """검증된 날조 구절 목록. 판정 실패·인용 불일치·애매하면 [] (회귀 0).
+
+    유효 조건(코드 검증 — LLM 오탐을 기계적으로 거른다):
+      ①quote(공백 무시)가 나레이션에 실재  ②원본 소재에는 없음  ③6자 이상.
+
+    ★samples=2 합집합(2026-08-10 실측): 단발 판정은 같은 입력에서 잡았다 놓쳤다
+    한다(C안 1/2, A안 2/3). 감도는 합집합으로 올리고, 오탐은 위 코드 필터가
+    계속 막는다(정상 대본 실측 오탐 0)."""
+    if not beats or not call or not (material_text or "").strip():
+        return []
+    narrs = [(b.get("narration") or "").strip() for b in beats]
+    narrs = [n for n in narrs if n]
+    if not narrs:
+        return []
+    script_n = _norm_ws(" ".join(narrs))
+    mat_n = _norm_ws(material_text)
+    out = []
+    for _ in range(max(1, samples)):
+        try:
+            r = call(fabrication_prompt(narrs, material_text), FAB_SCHEMA)
+        except Exception:
+            continue
+        items = r.get("fabrications") if isinstance(r, dict) else None
+        if not isinstance(items, list):
+            continue
+        for it in items:
+            q = (it.get("quote") or "").strip() if isinstance(it, dict) else ""
+            qn = _norm_ws(q)
+            if len(qn) >= 6 and qn in script_n and qn not in mat_n and q not in out:
+                out.append(q)
+    return out
+
+
+def fix_fabrication_prompt(beats, material_text, quotes):
+    """검증된 날조 구절이 든 문장만 원본 사실로 고쳐 받는다."""
+    import json
+    cur = [{"n": b.get("n"), "covers": b.get("covers"), "narration": b.get("narration")}
+           for b in (beats or [])]
+    ql = "\n".join("- %s" % q for q in quotes)
+    return ("아래 대본에 **원본 소재에 없는 날조 구절**이 있다:\n"
+            f"{ql}\n\n"
+            "이 구절이 든 문장만 원본 사실에 맞게 고쳐라. 나머지는 글자 하나 바꾸지 마라.\n"
+            "★원본에 없는 도구·재료·수치·가격·효능을 새로 넣지 마라.\n"
+            "★문장 수·covers·어미는 그대로. 마지막 CTA 문장은 건드리지 마라.\n\n"
+            f"[원본 소재]\n{(material_text or '')[:1000]}\n\n"
+            + json.dumps(cur, ensure_ascii=False, indent=1)
+            + "\n\nJSON만: {\"beats\":[{\"n\":1,\"covers\":[1,2],\"narration\":\"...\"}]}")
+
 
 def fact_check_prompt(narrs, material_text):
     """★대본 **전체**가 원본 사실을 왜곡했는가(2026-08-09).

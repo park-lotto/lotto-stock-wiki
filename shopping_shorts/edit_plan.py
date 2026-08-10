@@ -3441,14 +3441,26 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
                 if not _nb.get("covers"):
                     _nb["covers"] = beats[_bi].get("covers")
             beats = _bk
-        # ⚠️원본 왜곡 검사(fact_distorted)는 **배선하지 않는다**(2026-08-09).
-        #   사장님 지적 "20년차 시어머니가 말이 되나?"는 맞지만, LLM 판정 방식은
-        #   **소재마다 결과가 흔들려** 규칙이 못 된다 — 실측: 왜곡 2건·정상 1건을 주자
-        #   **3건 모두 True**로 판정했다(정상 대본까지 왜곡 처리).
-        #   그대로 걸면 멀쩡한 문장을 계속 고치라고 시켜 품질이 더 나빠진다.
-        #   다른 검사들(합쇼체·인물·길이)은 어미·단어·숫자로 판정해 영상이 바뀌어도
-        #   같은 규칙이 적용된다 — 왜곡 검사만 그 성질을 못 갖췄다.
-        #   함수는 남겨둔다(판정 프롬프트를 고쳐 재현성을 확보하면 그때 배선).
+        # ⚠️원본 왜곡 검사(fact_distorted, 불리언판정)는 **배선하지 않는다**(2026-08-09).
+        #   LLM 불리언 판정은 소재마다 흔들린다 — 실측: 정상 대본까지 3/3 True.
+        # ★대신 증거검증형(fact_fabrications, 2026-08-10)을 배선 — 날조 구절을 대본에서
+        #   그대로 인용시키고 ①대본에 실재 ②소재에 없음 을 코드로 검증해 오탐을 거른다.
+        #   실사고 job 890c2f41e35a: "우유로 구운 우유"·"칼로리가 절반"·"에어프라이어" —
+        #   훅 검사는 첫 문장만 봐서 본문 날조 3후보 전부 통과했다.
+        if os.getenv("SCRIPT_FACT_GATE", "1") != "0":
+            for _ in range(2):
+                _fabs = single_source.fact_fabrications(beats, _mat, _c)
+                if not _fabs:
+                    break
+                _fb = single_source.parse_beats(
+                    _c(single_source.fix_fabrication_prompt(beats, _mat, _fabs),
+                       single_source.BEATS_SCHEMA))
+                if not _fb or len(_fb) != len(beats):
+                    break
+                for _bi, _nb in enumerate(_fb):
+                    if not _nb.get("covers"):
+                        _nb["covers"] = beats[_bi].get("covers")
+                beats = _fb
         # ★★길이 최종 확정 — **문장을 다시 쓰는 모든 단계가 끝난 뒤 여기 한 곳에서만** 잰다.
         #   (2026-08-09 사장님 지시: "땜빵하는 수정은 안 되고 근본 원인을 수정해야 한다.")
         #
@@ -4072,6 +4084,16 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 break
             if not _apply_narr_fix(_ss1.fix_chae_person_prompt):
                 break
+        # ★날조 검사(증거검증형, 2026-08-10) — 1소스와 동일 배선(edit_plan 1소스 주석 참조).
+        if os.getenv("SCRIPT_FACT_GATE", "1") != "0":
+            _mat_sf = " ".join(t for t in src_texts if t)
+            for _ in range(2):
+                _fabs = _ss1.fact_fabrications(plan["beats"], _mat_sf, _call)
+                if not _fabs:
+                    break
+                if not _apply_narr_fix(
+                        lambda _b: _ss1.fix_fabrication_prompt(_b, _mat_sf, _fabs)):
+                    break
         story = {k: r.get(k, "") for k in
                  ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
         rule_score = _score_candidate(plan, avoid_hooks=avoid_hooks, target_seconds=target_seconds,
