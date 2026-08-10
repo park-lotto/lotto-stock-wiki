@@ -152,8 +152,23 @@ def _detail_context():
     from playwright_stealth import Stealth
 
     ctx_kw = {}
-    if config.INSTAGRAM_SESSION_PATH and os.path.exists(config.INSTAGRAM_SESSION_PATH):
-        ctx_kw["storage_state"] = config.INSTAGRAM_SESSION_PATH
+    # ★세션 선택(2026-08-10): 구 단일 세션(INSTAGRAM_SESSION_PATH)이 본인확인
+    # 챌린지에 걸려 상세 조회가 통째로 None을 돌려주는 사고가 났다(발굴 0건과
+    # 같은 뿌리, 0순위-B). 로테이션 풀(reference — 신선 계정)을 1순위로 쓰고,
+    # 풀이 비어 있을 때만 기존 단일 세션으로 폴백한다 — 동작 불변.
+    session_path = ""
+    try:
+        from shopping_shorts.channel_archive import POOL_REFERENCE, session_slots
+        slots = session_slots(POOL_REFERENCE)
+        if slots:
+            session_path = slots[0]
+    except Exception:                       # noqa: BLE001 — 풀 조회 실패 시 기존 경로
+        pass
+    if not session_path and config.INSTAGRAM_SESSION_PATH \
+            and os.path.exists(config.INSTAGRAM_SESSION_PATH):
+        session_path = config.INSTAGRAM_SESSION_PATH
+    if session_path:
+        ctx_kw["storage_state"] = session_path
     elif config.INSTAGRAM_PROXY:
         ctx_kw["proxy"] = {"server": config.INSTAGRAM_PROXY}
     with sync_playwright() as p:
