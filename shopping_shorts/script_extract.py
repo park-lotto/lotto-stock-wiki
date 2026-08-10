@@ -29,6 +29,17 @@ _FALLBACK_MODEL = "gemini-3.1-flash-lite"
 
 _EMPTY = {"segments": [], "full_text": ""}
 
+
+class KeyPoolExhausted(RuntimeError):
+    """전용 Gemini 키 풀이 통째로 잠겨 **호출조차 못 한** 상태.
+
+    ★왜 예외로 올리나(2026-08-07 실사고). 예전엔 여기서 조용히 빈 결과를 돌려줬다 —
+    그래서 호출부가 "키가 없다"와 "이 영상엔 음성이 없다"를 **구분할 수 없었고**,
+    실패가 `failed_empty`로 기록돼 ①로그에 아무 흔적이 없고(원인 파악에 30분+)
+    ②영상 잘못이 아닌데도 재시도 래치(produce_autoload.attempts)를 깎아먹었다.
+    3회면 그 영상은 키가 되살아난 뒤에도 자동추출에서 영구 제외됐다.
+    빈 결과와 달리 이건 **영상을 다시 시도하면 되는 일시적 상태**라 구분이 필요하다."""
+
 _RESPONSE_SCHEMA = {
     "type": "object",
     "properties": {
@@ -340,7 +351,8 @@ def _pick_better_extract(first, second, duration):
     return second if s2 > s1 else first
 
 
-def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=8):
+def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=8,
+                   use_boundaries=True):
     """영상 파일 → {"segments": [...seg_id 포함...], "full_text": str}. 실패 시 빈 결과.
 
     전용 키 풀 로테이션(comment_gen 재사용). 전용 풀 소진 시 빈 결과.
@@ -355,7 +367,19 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
     다른 모델이라 앞 모델의 혼잡과 무관하다."""
     if not SHORTS_GEMINI_KEYS:
         raise RuntimeError("script_extract: SHORTS_GEMINI_KEY가 설정되지 않았습니다")
+    # ★use_boundaries=False — 장면전환 힌트를 빼고 모델 자율 분할로 뽑는다(2026-08-06).
+    #   힌트는 보통 세분화에 도움되지만(35.8초 영상 실측: 힌트 103% vs 무힌트 73%),
+    #   **일부 영상에서는 모델이 힌트 개수를 '세그먼트 상한'처럼 받아들여** 앞쪽 경계만
+    #   쓰고 뒤쪽 대사를 거기에 우겨넣는다 → 영상 뒷부분이 통째로 날아간다.
+    #   실측(Dbjk5BXToB7, 21.1초): 힌트 있음 **55%**(11.6초에서 끊김, 같은 문장 6번 반복)
+    #   vs 힌트 없음 **81%**(17.0초, 마지막 CTA가 15~17초 제자리). 경계 22개를 다 줬는데
+    #   모델은 앞 12개만 썼다. 그래서 재추출 때는 **조건을 바꿔서** 다시 뽑는다 —
+    #   같은 힌트로 다시 부르면 같은 결과가 나올 뿐이다(그 27초가 순수 낭비였다).
+    #   ★_cuts·_fps는 힌트를 끄더라도 계산해 둔다 — 아래 모션레벨 계산이 쓴다.
+    #     (여기서 한 번 빠뜨려 UnboundLocalError로 추출이 통째로 빈 결과가 됐다)
     boundary_hint, _cuts, _fps = _boundary_hint(video_path)
+    if not use_boundaries:
+        boundary_hint = ""
     base_prompt = _PROMPT.format(caption=caption or "(캡션 없음)",
                                  boundaries=boundary_hint or "(감지 실패 — 화면·주제 변화로 판단)")
     prompt = base_prompt
@@ -369,7 +393,11 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
     for attempt in range(max_retries):
         key, idx = comment_gen._current_key_and_idx()
         if key is None:
-            return dict(_EMPTY)
+            # 조용한 빈 결과 금지(2026-08-07) — 호출부가 '음성 없는 영상'으로 오해했다.
+            print("script_extract: 키 풀 전체 소진 — 호출 못 함(영상 문제 아님)",
+                  file=sys.stderr)
+            raise KeyPoolExhausted(
+                "Gemini 키 풀이 전부 소진 표시 상태라 대본 추출을 시작하지 못했습니다")
         client = comment_gen._client_for_key(key)
         file_obj = None
         try:

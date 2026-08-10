@@ -1,4 +1,16 @@
+from datetime import datetime, timedelta, timezone
+
 from shopping_shorts import service
+
+
+# ★고정 날짜를 쓰면 안 되는 자리다(2026-08-10).
+#   build_youtube_items는 published_at이 YOUTUBE_WINDOW_HOURS(=336h, 14일)보다
+#   오래되면 그 영상을 버린다(ranking.py:128 `if age > window_hours: continue`).
+#   원래 이 파일은 "2026-07-24T00:00:00Z"를 박아뒀는데, 시간이 흘러 14일을 넘기자
+#   수집 결과가 통째로 []가 되면서 3건이 한꺼번에 실패했다 — 코드는 멀쩡한데
+#   **날짜가 지나서 깨지는 시한폭탄 테스트**였다.
+#   그래서 "지금 기준 최근"으로 만든다. 언제 돌려도 창 안에 있다.
+RECENT = (datetime.now(timezone.utc) - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def test_collect_youtube(monkeypatch, tmp_path):
@@ -11,7 +23,7 @@ def test_collect_youtube(monkeypatch, tmp_path):
         assert keywords == ["살림꿀팁"]
         return [{"video_id": "v1", "channel_title": "살림TV", "channel_id": "c1",
                  "title": "t", "thumbnail": "x",
-                 "published_at": "2026-07-24T00:00:00Z",
+                 "published_at": RECENT,
                  "views": 24000, "likes": 100, "comments": 10}]
     monkeypatch.setattr(service, "yt_search", fake_search)
 
@@ -32,10 +44,10 @@ def test_collect_youtube_merges_account_and_keyword(monkeypatch, tmp_path):
     def fake_search(keywords, published_after_iso, **kw):
         return [
             {"video_id": "v1", "channel_title": "A", "channel_id": "c1", "title": "t",
-             "thumbnail": "x", "published_at": "2026-07-24T00:00:00Z",
+             "thumbnail": "x", "published_at": RECENT,
              "views": 1000, "likes": 5, "comments": 1},
             {"video_id": "dup", "channel_title": "A", "channel_id": "c1", "title": "t",
-             "thumbnail": "x", "published_at": "2026-07-24T00:00:00Z",
+             "thumbnail": "x", "published_at": RECENT,
              "views": 1000, "likes": 5, "comments": 1},
         ]
     monkeypatch.setattr(service, "yt_search", fake_search)
@@ -44,10 +56,10 @@ def test_collect_youtube_merges_account_and_keyword(monkeypatch, tmp_path):
         assert seed == "@salim"
         return [
             {"video_id": "v2", "channel_title": "B", "channel_id": "c2", "title": "t",
-             "thumbnail": "x", "published_at": "2026-07-24T00:00:00Z",
+             "thumbnail": "x", "published_at": RECENT,
              "views": 2000, "likes": 9, "comments": 3},
             {"video_id": "dup", "channel_title": "B", "channel_id": "c2", "title": "t",
-             "thumbnail": "x", "published_at": "2026-07-24T00:00:00Z",
+             "thumbnail": "x", "published_at": RECENT,
              "views": 2000, "likes": 9, "comments": 3},
         ]
     monkeypatch.setattr(service, "yt_fetch_channel", fake_channel)
@@ -68,7 +80,7 @@ def test_collect_youtube_preset_all(monkeypatch, tmp_path):
         seen["lang"] = kw.get("lang")
         return [{"video_id": "p1", "channel_title": "T", "channel_id": "c",
                  "title": "t", "thumbnail": "x",
-                 "published_at": "2026-07-24T00:00:00Z",
+                 "published_at": RECENT,
                  "views": 500, "likes": 1, "comments": 0}]
     monkeypatch.setattr(service, "yt_search", fake_search)
 

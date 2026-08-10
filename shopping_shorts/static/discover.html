@@ -409,6 +409,7 @@ async function playInstagram(img, shortcode){
   }catch(e){ if(load) load.remove(); }
   window.open('https://www.instagram.com/reel/'+shortcode+'/','_blank','noopener');
 }
+const _dFmtDur=s=>{s=Math.round(Number(s)||0);return s<=0?'':(s<60?s+'초':Math.floor(s/60)+':'+String(s%60).padStart(2,'0'))};
 const _dEsc = s => String(s??'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
 function renderDiscover(items){
   if(items) DSTATE.items = items;
@@ -447,6 +448,7 @@ function _renderDiscoverCards(list){
         <img src="${thumb(i.thumbnail)}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.shortcode?`onclick="playInstagram(this,'${i.shortcode}')"`:'')} loading="lazy" onerror="this.style.visibility='hidden'">
         ${badgeHTML(i, ctx)}
         ${(i.video_url||i.shortcode)?'<span class="play-badge">▶</span>':''}
+        ${i.duration!=null?`<span style="position:absolute;left:6px;bottom:6px;z-index:2;background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:2px 7px;border-radius:10px">⏱ ${_dFmtDur(i.duration)}</span>`:''}
       </div>
       <div class="body">
         <div class="rank"><span>#${idx+1} · ${i.category} · ${_fmtAgo(i)}</span><button class="blockbtn" title="이 채널을 영구 차단 — 지금 바로 가리고, 다음 발굴·업데이트에도 안 올라옵니다" onclick="blockChannel('${_dEsc(i.username)}','${_dEsc(i.name)}',this)">🚫 차단</button></div>

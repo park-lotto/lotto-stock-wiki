@@ -30,7 +30,10 @@ log = logging.getLogger("prewarm")
 
 # 담기 남발 방어 — 하루에 이만큼만 예열한다(넘으면 조용히 스킵, 제작소 진입 시 그때 추출).
 _PREWARM_DAILY_CAP = 40
-_PREWARM_MAX_ATTEMPTS = 1        # shortcode당 총 시도(autoload와 같은 래치를 공유)
+# 1 → 3 (2026-08-04 실사고): 인스타 다운로드는 일시 실패가 흔한데 1회 실패로 영구
+# 래치돼 재담기해도 예열이 조용히 스킵됐다(DQohOUqgdRt — 수동 대본뽑기는 즉시 성공
+# = 경로는 멀쩡, 래치만 스테일). 어제 '래치 7건 삭제' 사고와 같은 계보.
+_PREWARM_MAX_ATTEMPTS = 3        # shortcode당 총 시도(autoload와 같은 래치를 공유)
 _DAILY_KEY = "prewarm_daily"     # settings: "YYYY-MM-DD|n"
 
 
@@ -91,7 +94,7 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
           failed_download | failed_empty | failed_error | done
     예외를 밖으로 던지지 않는다 — 예열은 보조작업이라 실패해도 무해해야 한다."""
     from shopping_shorts.media_download import download_any
-    from shopping_shorts.script_extract import extract_auto, storable
+    from shopping_shorts.script_extract import extract_auto, storable, KeyPoolExhausted
     from shopping_shorts.structure_analyze import analyze_structure
 
     code = (shortcode or "").strip()
@@ -132,6 +135,11 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
             return "failed_download"
         try:
             result = extract_auto(video_path, code, caption=(caption or dl_caption or ""))
+        except KeyPoolExhausted as e:
+            # 서버 사정(키 풀 잠김)이지 영상 탓이 아니다 → 래치를 돌려준다(2026-08-07).
+            # 안 그러면 키가 되살아난 뒤에도 이 영상만 영구히 자동추출에서 빠진다.
+            store.autoload_rollback_attempt(code, f"예열 보류: {e}")
+            return "deferred_nokey"
         except Exception as e:  # noqa: BLE001
             store.autoload_mark_error(code, f"예열 추출 실패: {e}")
             return "failed_error"

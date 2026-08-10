@@ -1,6 +1,7 @@
 """SQLite 수집 이력 저장소."""
 import hashlib
 import json
+import os
 import secrets
 import sqlite3
 import uuid
@@ -26,10 +27,19 @@ PATTERN_BUCKETS = ("hook", "ending", "adverb", "cta", "price",
                    "evidence", "conflict", "emotion")
 
 
-def _normalize_canonical(text):
+def _normalize_canonical(text, bucket=None):
     """dedup 키 — strip + 소문자 + 연속 공백 1개. 공백·대소문자만 다른 문구는
-    같은 부품으로 합쳐(freq로 쌓아) 목록이 중복으로 붓지 않게 한다."""
-    return " ".join((text or "").split()).lower()
+    같은 부품으로 합쳐(freq로 쌓아) 목록이 중복으로 붓지 않게 한다.
+
+    2026-08-05 어미 변형 통합(대본퀄 v6): '~더라고요' 계열이 표기만 달라 5행·203회로
+    과포화돼 대본이 그 어미 범벅이 됐다. 물결 접두(~)와 '더라구'/'더라고' 표기 차이는
+    같은 부품이다. ending 버킷은 '하더라고요'류 짧은 변형도 '더라고요'로 접는다."""
+    t = " ".join((text or "").split()).lower()
+    t = t.lstrip("~").strip()
+    t = t.replace("더라구", "더라고")
+    if bucket == "ending" and t.endswith("더라고요") and len(t) <= 5:
+        t = "더라고요"
+    return t
 
 
 class Store:
@@ -347,6 +357,18 @@ class Store:
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_archive_user_views "
                       "ON channel_archive(username, views DESC)")
+            # 채널 표시명(2026-08-06) — 아카이브 카드를 @아이디 대신 한글 이름으로 띄운다.
+            # ★channel_archive에 컬럼을 더하지 않는 이유: 저긴 릴스 단위(7.8만행)라
+            #   채널당 1개인 이름을 행마다 중복 저장하게 된다. 채널 단위 표를 따로 둔다.
+            # ★reel_history에 끼워 넣지 않는 이유: 저건 '수집 이력'이라 릴스 행이 전제인데,
+            #   이름만 있는 가짜 행을 넣으면 활동시각 판정(instagram_activity_map)이 오염된다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS channel_names (
+                    username TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    updated_at TEXT
+                )
+            """)
             # 채널별 아카이브 진행상태 — done이면 대상에서 빠지므로 새로 등록한 채널만
             # 자동으로 줄을 선다(추적목록 − done 차집합).
             c.execute("""
@@ -428,7 +450,12 @@ class Store:
             # 그래서 제품명 완전일치가 **0건**이었고, 천사점토를 넣으면 '취미·만들기·DIY'가
             # 겹쳐 비즈스트랩이 나왔다 — 같은 제품이 아니라 같은 분위기로 묶인 것.
             # 자막을 무시시키고 상품명만 물으면 '전동 채칼'·'접이식 소파베드'가 나온다(실측).
-            for col, ddl in (("product", "TEXT"), ("product_at", "TEXT")):
+            # material·made_by(2026-08-10): 썸네일만 보면 재질을 자주 틀린다
+            # (실측: 클레이 토끼 → "레진 파츠"). 재질을 물으면 맞히므로 따로 저장한다.
+            # made_by는 '직접만들기 vs 완제품' — 만드는 영상과 파는 물건이 안 섞이게
+            # 하는 결정적 신호다(사장님 제보 케이스의 핵심 오답이었다).
+            for col, ddl in (("product", "TEXT"), ("product_at", "TEXT"),
+                             ("material", "TEXT"), ("made_by", "TEXT")):
                 try:
                     c.execute(f"ALTER TABLE vision_tags ADD COLUMN {col} {ddl}")
                 except sqlite3.OperationalError:
@@ -1166,8 +1193,21 @@ class Store:
 
     # ── 채널 릴스 전체 아카이브(2026-08-03) ───────────────────────────────
     def archive_upsert_many(self, username, items, now_iso):
-        """아카이브에 릴스들을 upsert. 재크롤 시 views 등 최신값으로 갱신, first_seen 보존."""
+        """아카이브에 릴스들을 upsert. 재크롤 시 views 등 최신값으로 갱신, first_seen 보존.
+
+        items[*]['name']이 있으면 채널 표시명으로도 기록한다(2026-08-06) — 카드가
+        @아이디 대신 한글 이름을 띄우는 소스. **빈 값은 무시**한다: 응답 노드마다
+        user가 있기도 없기도 해서 빈 이름이 섞여 들어오는데, 그게 기존 이름을 덮으면
+        한 번 얻은 이름이 다음 크롤에 날아간다."""
         with self._conn() as c:
+            disp = next((str(i.get("name")).strip() for i in (items or [])
+                         if (i.get("name") or "").strip()), "")
+            if disp:
+                c.execute(
+                    "INSERT INTO channel_names(username, name, updated_at) VALUES(?,?,?) "
+                    "ON CONFLICT(username) DO UPDATE SET name=excluded.name, "
+                    " updated_at=excluded.updated_at",
+                    (username, disp, now_iso))
             for i in items:
                 c.execute(
                     "INSERT INTO channel_archive(username, shortcode, url, thumbnail, "
@@ -1180,6 +1220,14 @@ class Store:
                     (username, i.get("shortcode"), i.get("url"), i.get("thumbnail"),
                      i.get("views") or 0, i.get("likes") or 0, i.get("comments") or 0,
                      i.get("posted_at") or "", now_iso, now_iso))
+                # ⏱ 길이(2026-08-09): 크롤 응답의 video_duration을 같은 트랜잭션에 저장.
+                if i.get("duration"):
+                    c.execute(
+                        "INSERT INTO reel_durations(shortcode, duration, fail_count, "
+                        " updated_at) VALUES(?,?,0,datetime('now')) "
+                        "ON CONFLICT(shortcode) DO UPDATE SET duration=excluded.duration, "
+                        " fail_count=0, updated_at=excluded.updated_at",
+                        (i.get("shortcode"), float(i["duration"])))
             c.commit()
 
     def archive_mark(self, username, status, reels=0, note=""):
@@ -1195,6 +1243,30 @@ class Store:
     def archive_done_usernames(self):
         with self._conn() as c:
             rows = c.execute("SELECT username FROM archive_state WHERE status='done'").fetchall()
+        return {r[0] for r in rows}
+
+    def archive_stale_usernames(self, older_than_days=4):
+        """done이지만 썸네일이 만료됐을 채널 — 다시 크롤해 URL을 갱신해야 한다.
+
+        왜 필요한가(2026-08-09 실측): 인스타 CDN 썸네일 URL의 `oe` 서명은 **약 4일**
+        이면 만료돼 403이 된다. 그런데 pick_targets가 done을 영구 제외해서, 8-03에
+        크롤한 채널의 썸네일은 8-07쯤 죽은 뒤 **아무도 되살리지 않았다** — 역대 히트작
+        첫 페이지 상위 12건 중 4건이 검게 죽어 있었다(상위 200건 중 55건).
+
+        재크롤하면 같은 shortcode에 새 URL이 덮어써진다(실측: vibe_item 재크롤 →
+        만료 2026-08-14로 갱신). shortcode가 PK라 이미 붙은 vision_tags는 그대로다.
+        """
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT username FROM archive_state WHERE status='done' "
+                "  AND updated_at < datetime('now', ?)",
+                (f"-{int(older_than_days)} days",)).fetchall()
+        return {r[0] for r in rows}
+
+    def archive_gone_usernames(self):
+        """삭제·개명으로 페이지가 없는 채널 — 크롤 대상에서 영구 제외."""
+        with self._conn() as c:
+            rows = c.execute("SELECT username FROM archive_state WHERE status='gone'").fetchall()
         return {r[0] for r in rows}
 
     def heavy_job_running(self):
@@ -1218,6 +1290,32 @@ class Store:
                 "MAX(name) AS nm FROM reel_history GROUP BY username"
             ).fetchall()
         return {r[0]: {"last": r[1] or "", "name": r[2] or ""} for r in rows}
+
+    def channel_name_map(self):
+        """{username: 한글 표시명} — 아카이브(히트작) 카드가 @아이디 대신 한글 이름을 쓰려고 읽는다.
+
+        아카이브 테이블(channel_archive)엔 username밖에 없는데, 수집 이력(reel_history)엔
+        채널 표시명이 같이 저장돼 있다(실측 2026-08-06: 아카이브 518채널 중 433개 커버).
+        빈 이름은 아예 담지 않는다 — 화면이 `name || username`으로 폴백하므로 빈 문자열을
+        넣으면 오히려 '이름 있는데 빈칸'이 된다.
+        ★instagram_activity_map과 목적이 다르다(저건 활동시각 판정용이라 MAX(first_seen)까지
+        집계한다) — 여기선 이름만 필요해 가볍게 뽑는다.
+
+        ★소스 2개(2026-08-06): 수집 이력(reel_history)과 아카이브 크롤이 직접 기록한
+        channel_names. 아카이브 채널 518개 중 434개만 수집 이력에 있어서(실측) 나머지는
+        이름을 못 얻었다 — 크롤이 응답에서 주워 담기 시작하면 channel_names가 그 구멍을
+        메운다. 크롤이 최신이므로 **channel_names가 우선**이다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT username, MAX(name) FROM reel_history "
+                "WHERE name IS NOT NULL AND name != '' GROUP BY username"
+            ).fetchall()
+            out = {r[0]: r[1] for r in rows if r[0] and r[1]}
+            for u, n in c.execute(
+                    "SELECT username, name FROM channel_names WHERE name != ''"):
+                if u and n:
+                    out[u] = n          # 크롤이 직접 본 이름이 더 정확·최신
+        return out
 
     def remove_channel(self, username, name=""):
         """죽은 채널을 추적 제외목록에 추가(소프트 삭제). 발굴목록에 있었다면 함께 제거."""
@@ -1723,6 +1821,21 @@ class Store:
                 (shortcode,),
             )
 
+    def autoload_rollback_attempt(self, shortcode, error=""):
+        """선래치를 되돌린다 — **영상 탓이 아닌 실패**(키 풀 소진 등)에만 쓴다.
+
+        ★왜 필요한가(2026-08-07 실사고). 래치는 "이 영상은 아무리 시도해도 안 된다"를
+        기억하는 장치지 "지금 서버가 못 한다"를 기억하는 장치가 아니다. 키 풀이 잠긴
+        동안 담긴 영상들이 시도 3회를 그냥 까먹고 `skipped_latched`가 돼, 키가 되살아난
+        뒤에도 자동추출에서 영구 제외됐다(수동 '대본 뽑기'는 래치를 안 봐서 되던 이유).
+        사유는 남기되 카운터는 돌려준다 — 진단은 유지하고 재시도 기회만 복구."""
+        with self._conn() as c:
+            c.execute(
+                "UPDATE produce_autoload SET attempts=MAX(0, attempts-1), "
+                "last_error=?, updated_at=datetime('now') WHERE shortcode=?",
+                ((error or "")[:300], shortcode),
+            )
+
     def autoload_mark_error(self, shortcode, error):
         """실패 사유 기록(진단용). attempts는 이미 선래치에서 올라가 있다."""
         with self._conn() as c:
@@ -1770,6 +1883,10 @@ class Store:
                 self._record_history(c, items, collected_at)
             except Exception:
                 pass  # 히스토리 누적 실패가 수집 저장을 막지 않는다
+            try:
+                self._feed_archive(c, items, collected_at)
+            except Exception:
+                pass  # 아카이브 적재 실패도 수집 저장을 막지 않는다
 
     @staticmethod
     def _norm_username(u):
@@ -1803,6 +1920,38 @@ class Store:
         # 30일 정리 — last_seen이 30일보다 오래된 행 삭제(수집이 곧 정리 트리거).
         cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
         c.execute("DELETE FROM reel_history WHERE last_seen < ?", (cutoff,))
+
+    def _feed_archive(self, c, items, collected_at):
+        """레퍼런스 수집분을 channel_archive(영구)에도 적재한다(2026-08-06).
+
+        왜 필요한가: reel_history는 30일이 지나면 지워지는데, 역대 히트작 매칭
+        (api_archive_similar)은 channel_archive만 본다. 연결이 없으면 "한 바퀴
+        크롤" 이후 새로 터진 영상이 아카이브에 영영 안 들어가서, 시간이 갈수록
+        아카이브가 낡는다. 레퍼런스는 어차피 매일 수집하므로 **추가 트래픽 0**으로
+        신규분을 계속 적립할 수 있다.
+
+        기존 크롤러가 넣은 행을 훼손하지 않는다: 같은 (username, shortcode)면
+        조회수 등 최신값만 갱신되고 first_seen은 보존된다(archive_upsert_many와
+        같은 규약). posted_at도 크롤러와 동일하게 shortcode에서 복원해 형식을 맞춘다.
+        """
+        from shopping_shorts.instagram_parse import shortcode_to_timestamp
+        for it in items or []:
+            sc = (it.get("shortcode") or "").strip()
+            user = self._norm_username(it.get("username"))
+            if not sc or not user:
+                continue
+            c.execute(
+                "INSERT INTO channel_archive(username, shortcode, url, thumbnail, "
+                " views, likes, comments, posted_at, first_seen, last_seen) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?) "
+                "ON CONFLICT(username, shortcode) DO UPDATE SET "
+                " url=excluded.url, thumbnail=excluded.thumbnail, views=excluded.views, "
+                " likes=excluded.likes, comments=excluded.comments, "
+                " posted_at=excluded.posted_at, last_seen=excluded.last_seen",
+                (user, sc, it.get("url"), it.get("thumbnail"),
+                 int(it.get("views") or 0), int(it.get("likes") or 0),
+                 int(it.get("comments") or 0),
+                 shortcode_to_timestamp(sc) or "", collected_at, collected_at))
 
     def channel_history(self, username, exclude=()):
         """한 채널의 지난 30일 수집분을 last_seen 최신순으로 반환.
@@ -2391,7 +2540,7 @@ class Store:
                 (shortcode, subject or "", json.dumps(keywords or [], ensure_ascii=False)),
             )
 
-    def save_product(self, shortcode, product, category=""):
+    def save_product(self, shortcode, product, category="", material="", made_by=""):
         """제품명 저장(2026-08-04). 태그 행이 없어도 만든다 — 랭킹 영상은 아카이브에
         없을 수 있는데 그것도 질의로 쓰이기 때문이다.
 
@@ -2400,10 +2549,12 @@ class Store:
         with self._conn() as c:
             c.execute(
                 "INSERT INTO vision_tags(shortcode, subject, keywords_json, created_at, "
-                " product, product_at) VALUES(?,'','[]',datetime('now'),?,datetime('now')) "
+                " product, product_at, material, made_by) "
+                "VALUES(?,'','[]',datetime('now'),?,datetime('now'),?,?) "
                 "ON CONFLICT(shortcode) DO UPDATE SET product=excluded.product, "
-                " product_at=excluded.product_at",
-                (shortcode, product or ""))
+                " product_at=excluded.product_at, material=excluded.material, "
+                " made_by=excluded.made_by",
+                (shortcode, product or "", material or "", made_by or ""))
             if category:
                 # 카테고리는 기존 subject가 비어있을 때만 채운다(기존 태그를 덮지 않는다).
                 c.execute("UPDATE vision_tags SET subject=? WHERE shortcode=? AND "
@@ -2746,7 +2897,7 @@ class Store:
         """부품 1개 저장 → 행 id. **dedup**: 같은 (bucket, canonical)이 이미 있으면
         새 행을 만들지 않고 freq+1 & source_ids_json에 source_id를 (중복 없이) append.
         canonical 미지정 시 text를 정규화(strip·소문자·공백1개)해 생성한다."""
-        canon = canonical if canonical is not None else _normalize_canonical(text)
+        canon = canonical if canonical is not None else _normalize_canonical(text, bucket)
         now = datetime.now(timezone.utc).isoformat()
         with self._conn() as c:
             row = c.execute(
@@ -3994,6 +4145,9 @@ class Store:
     # swap으로 밀리고 렌더가 기어간다(실측 13:21 load average 11.76 / swap 1204MB,
     # 최종렌더 8분+). 크롤을 없애는 게 아니라 **순서를 양보**시킨다 — 다음 주기에 돈다.
     _HEAVY_TASKS = ("render", "mix", "retype", "preview", "clean")
+    # 인스타 세션(브라우저·계정 쿠키)을 공유하는 작업 — 동시에 하나만 돈다(claim_next).
+    # 워커를 여러 개 띄울 때 같은 계정으로 동시 접속해 플래그되는 걸 막는다.
+    _EXCLUSIVE_TASKS = ("durfill", "prewarm")
 
     def heavy_job_active(self):
         """렌더 계열 작업이 지금 돌고 있거나 대기 중이면 True.
@@ -4017,19 +4171,57 @@ class Store:
             # 때까지 굶었다("누가 쓰면 느려지는" 진짜 원인 — 서버 크기 문제가 아니다).
             # 워커가 N개면 서로 다른 계정 N명이 동시에 진행된다.
             # owner가 NULL인 옛 작업·소유자 불명 작업은 제한 없이 집는다(하위호환).
+            # ★인스타 세션 독점(2026-08-05): _EXCLUSIVE_TASKS는 **동시에 하나만** 돈다.
+            #   durfill·prewarm은 인스타 브라우저 세션(INSTAGRAM_SESSION_PATH)을 공유한다.
+            #   워커가 1개일 땐 자연히 직렬이라 안 드러났지만, 워커를 여러 개 띄우면
+            #   같은 계정 세션으로 동시에 붙어 **계정이 플래그**된다(제품명검색 트랙 실측:
+            #   서버 크롤 시도만으로 helrou75·syospa123 두 계정이 1~2시간 만에 소실,
+            #   한 번 플래그되면 어느 IP에서도 안 된다). 계정은 IP보다 비싸다.
+            #   ★같은 UPDATE 문 안에서 검사한다 — 파이썬으로 먼저 세면 워커 3개가
+            #   동시에 "지금 0개"를 보고 셋 다 집는 경합이 난다.
+            ph = ",".join("?" * len(self._EXCLUSIVE_TASKS))
             row = c.execute(
                 "UPDATE job_queue SET state='running', "
                 "       claimed_at=datetime('now'), heartbeat_at=datetime('now') "
                 " WHERE id = (SELECT q.id FROM job_queue q "
                 "             WHERE q.state='queued' "
-                "               AND (q.owner IS NULL OR q.owner NOT IN "
-                "                    (SELECT owner FROM job_queue "
-                "                      WHERE state='running' AND owner IS NOT NULL)) "
+                # ★관리자(owner '0')는 동시 N개 허용(2026-08-06 사장님 — 두 작업을 병렬로
+                #   돌리며 확인하는 운용). 일반 고객은 종전대로 1개(공평 분배 유지).
+                #   N은 ADMIN_CONCURRENT_JOBS(기본 2).
+                "               AND (q.owner IS NULL OR "
+                "                    (SELECT COUNT(*) FROM job_queue "
+                "                      WHERE state='running' AND owner=q.owner) "
+                "                    < CASE WHEN q.owner='0' THEN ? ELSE 1 END) "
+                f"               AND (q.task NOT IN ({ph}) OR NOT EXISTS "
+                "                    (SELECT 1 FROM job_queue r "
+                f"                     WHERE r.state='running' AND r.task IN ({ph}))) "
                 "             ORDER BY COALESCE(q.prio, 5), q.id LIMIT 1) "
-                "RETURNING id, task, args_json").fetchone()
+                "RETURNING id, task, args_json",
+                (int(os.environ.get("ADMIN_CONCURRENT_JOBS", "2") or 2),)
+                + self._EXCLUSIVE_TASKS * 2).fetchone()
             if not row:
                 return None
             return {"id": row[0], "task": row[1], "args": json.loads(row[2])}
+
+    def mix_queue_ahead(self, job_id):
+        """이 잡의 mix 큐 항목이 아직 'queued'면 앞에 선 queued 개수를 반환, 아니면 None.
+
+        2026-08-06 사장님 제보: 대기 중인데 '영상 다운로드 중'으로 보여 멈춘 것처럼
+        보인다 — 화면이 '순서 대기 중(내 앞 N개)'을 정직하게 표시할 근거를 준다."""
+        try:
+            with self._conn() as c:
+                row = c.execute(
+                    "SELECT id FROM job_queue WHERE task='mix' AND state='queued' "
+                    "  AND args_json LIKE ? ORDER BY id DESC LIMIT 1",
+                    (f'%"{job_id}"%',)).fetchone()
+                if not row:
+                    return None
+                ahead = c.execute(
+                    "SELECT COUNT(*) FROM job_queue "
+                    " WHERE state='queued' AND id < ?", (row[0],)).fetchone()[0]
+            return int(ahead)
+        except sqlite3.Error:
+            return None
 
     def heartbeat(self, qid, progress=None):
         """워커가 살아있다는 신호. 30초마다 찍는다 — 멈추면 reap_stale이 죽은 걸로 본다.

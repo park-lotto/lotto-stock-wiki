@@ -7,14 +7,17 @@ def _w(word, s, e): return {"word": word, "start": s, "end": e}
 
 
 def test_len_matches_segments_and_sums_total():
+    """★2026-08-06 계약 변경: 반환은 PhraseTiming(durs, lead_in)이고, durs 합은
+    total_dur가 **아니라** (total_dur - lead_in)이다. 예전엔 리드인까지 durs에 비례배분해
+    합을 total_dur로 맞췄는데, 그게 자막을 먼저 뜨게 한 원인이었다."""
     narr = "귤은 손으로 까요 이제 시작합니다"
     words = [_w("귤은", 0.0, 0.4), _w("손으로", 0.4, 0.9), _w("까요", 0.9, 1.4),
              _w("이제", 2.0, 2.3), _w("시작합니다", 2.3, 3.0)]
-    durs = cs.phrase_durs_from_words(narr, words, 3.0)
-    assert durs is not None
-    assert len(durs) == len(_caption_segments(narr))
-    assert abs(sum(durs) - 3.0) < 1e-6
-    assert all(d >= 0 for d in durs)
+    res = cs.phrase_durs_from_words(narr, words, 3.0)
+    assert res is not None
+    assert len(res.durs) == len(_caption_segments(narr))
+    assert abs(res.lead_in + sum(res.durs) - 3.0) < 1e-6
+    assert all(d >= 0 for d in res.durs)
 
 
 def test_caption_follows_voice_not_charcount():
@@ -25,12 +28,12 @@ def test_caption_follows_voice_not_charcount():
     narr = "이거 진짜 완전 대박이라서 다들 놀랐어요"
     words = [_w("이거", 0.0, 0.3), _w("진짜", 0.3, 0.6), _w("완전", 0.6, 1.0),
              _w("대박이라서", 1.0, 1.9), _w("다들", 2.0, 2.2), _w("놀랐어요", 2.2, 2.5)]
-    durs = cs.phrase_durs_from_words(narr, words, 2.5)
+    res = cs.phrase_durs_from_words(narr, words, 2.5)
     segs = _caption_segments(narr)
     assert len(segs) == 2
-    assert len(durs) == len(segs)
-    # '대박' 구절은 2.0에 시작 → 그 앞 구절(들)의 합이 2.0에 가깝다.
-    assert abs(sum(durs[:-1]) - 2.0) < 0.05
+    assert len(res.durs) == len(segs)
+    # '대박' 구절은 2.0에 시작 → 리드인 + 그 앞 구절(들)의 합이 2.0에 가깝다.
+    assert abs(res.lead_in + sum(res.durs[:-1]) - 2.0) < 0.05
 
 
 def test_filler_insertion_absorbed():
@@ -38,8 +41,8 @@ def test_filler_insertion_absorbed():
     narr = "요새 이거 유행이에요"
     words = [_w("와", 0.0, 0.2), _w("요새", 0.2, 0.6), _w("이거", 0.6, 1.0),
              _w("유행이에요", 1.0, 1.8)]
-    durs = cs.phrase_durs_from_words(narr, words, 1.8)
-    assert durs is not None and len(durs) == len(_caption_segments(narr))
+    res = cs.phrase_durs_from_words(narr, words, 1.8)
+    assert res is not None and len(res.durs) == len(_caption_segments(narr))
 
 
 def test_low_confidence_returns_none():

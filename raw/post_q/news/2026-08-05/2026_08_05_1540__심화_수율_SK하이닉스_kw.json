@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "SK하이닉스",
+      "signal": "bull",
+      "reason": "HBM4 수율이 이전 세대인 HBM3E에 근접하며 순조로운 생산 체계를 확보함",
+      "ts": "2026-07-29",
+      "quote": "SK하이닉스 \"HBM4 수율 HBM3E에 근접\"",
+      "sector": "반도체"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "SK하이닉스가 HBM4 수율이 이전 세대 수준에 근접했다고 밝혔으며, 내년 HBM4E 양산을 계획 중임",
+      "ts": "2026-07-29",
+      "quote": "SK하이닉스 \"HBM4 수율 이전 세대 근접…내년 HBM4E 양산\""
+    }
+  ],
+  "quote": "SK하이닉스 \"HBM4 수율 이전 세대 근접…내년 HBM4E 양산\""
+}

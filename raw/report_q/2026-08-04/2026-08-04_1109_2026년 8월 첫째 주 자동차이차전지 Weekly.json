@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "date": "2026-08-04",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-04_1109_2026년 8월 첫째 주 자동차이차전지 Weekly.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "김광식, 최보영",
+    "report_date": "2026/ 08/ 04",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "8월 미국 소매 판매 139.5만대(-0.4% YoY), SAAR 1,670만대",
+      "북미 공급 병목: 일본 지진으로 렉서스/닛산 생산 차질",
+      "캐나다 50% 관세 기인한 현대차 그룹 반사 수혜"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "자동차",
+        "stance": null,
+        "reason": "8월 도매 판매량 현대차 31.8만대(-5.1% YoY) 기아 29.8만대(+12.5% YoY). 현대기아 7월 미국 판매 역대 최대"
+      },
+      {
+        "sector": "2차전지",
+        "stance": null,
+        "reason": "LG엔솔 상반기 AI DC 프로젝트 포함 3조원 이상 ESS 수주, 삼성SDI 7분기 만에 흑자 전환"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026년 8월",
+        "event": "삼성SDI 각형 LFP ESS 10월 셀 생산 및 연내 SBB 2.0 판매 개시"
+      },
+      {
+        "date": "2026년 4분기",
+        "event": "LG엔솔 애리조나 46파이 라인 가동"
+      }
+    ],
+    "top_picks": [
+      "현대차",
+      "기아",
+      "현대모비스",
+      "한온시스템",
+      "LG에너지솔루션",
+      "삼성SDI",
+      "에코프로비엠",
+      "포스코퓨처엠",
+      "엘앤에프"
+    ],
+    "risk": null,
+    "quote": "8월 도매 판매량: 현대차 31.8만대(-5.1% YoY) 기아 29.8만대(+12.5% YoY). 판매 성장 괴리율 심화"
+  }
+}

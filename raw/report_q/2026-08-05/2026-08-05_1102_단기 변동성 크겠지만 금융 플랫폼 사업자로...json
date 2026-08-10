@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-08-05",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-05_1102_단기 변동성 크겠지만 금융 플랫폼 사업자로...md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": "김동우",
+    "report_date": "2026.08.05",
+    "target_kind": "stock",
+    "stocks": [
+      {
+        "name": "카카오페이",
+        "code": "377300",
+        "rating": "Trading Buy",
+        "rating_changed": "유지",
+        "tp_new": "58,000원",
+        "tp_prev": "76,000원",
+        "tp_direction": "down",
+        "earnings_outlook": "2Q26 매출은 3,351억원(YoY +40.6%), 영익 586억원(YoY +528.2%)으로 컨센서스(매출 3,195억원, 영익 385억원) 상회.",
+        "estimate_revision": null,
+        "next_catalyst": "신규 가입 고객의 액티브 유저 전환율 증가, 연금 & ISA 등 장기 패시브 고객 기반 강화, 투자 매매업 라이선스 취득을 통한 B2B 사업 강화",
+        "thesis": [
+          "2Q26 매출 및 영업이익 컨센서스 상회",
+          "결제, 대출중개 및 플랫폼 사업 중심의 매출 및 영업이익 꾸준한 개선",
+          "카카오페이 증권과 카카오손해보험의 고성장에 따른 금융서비스 매출 성장"
+        ],
+        "valuation_basis": "2027년 매출액 1.44조원 및 target PSR 4.4배(Paypal, Block, Affirm Holdings, Robinhood PSR 가중평균)를 적용하고, 순현금 가치 1.6조원을 인식하여 산출",
+        "risk": "1H26 동사 연결 매출을 가장 크게 견인했던 카카오페이증권 매출은 하반기 증시 변동성 증가로 2분기 대비 감소할 것으로 예상, 외부 변수에 따른 단기 실적 변동성",
+        "supply_comment": null,
+        "quote": "2Q26 매출은 3,351억원(YoY +40.6%), 영익 586억원(YoY +528.2%)으로 컨센서스(매출 3,195억원, 영익 385억원) 상회."
+      }
+    ]
+  }
+}

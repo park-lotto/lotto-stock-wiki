@@ -1,0 +1,112 @@
+{
+  "reports": [
+    {
+      "broker": "그로쓰리서치",
+      "stock": "와이바이오",
+      "rating": null,
+      "tp": null,
+      "ts": "12:15",
+      "quote": "350억원 CB전환 단기 오버행 제한적",
+      "sector": "기타"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "삼성전자·SK하이닉스·마이크론",
+      "rating": null,
+      "tp": null,
+      "ts": "07:47",
+      "quote": "삼성전자·SK하이닉스·마이크론의 2027년 DRAM 및 HBM 생산능력이 사실상 모두 배정 완료.",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "대주전자재료",
+      "rating": null,
+      "tp": null,
+      "ts": "08:26",
+      "quote": "미국 현지에서 전극 소재 사양·품질 평가 진행. 양산 공급을 위한 세부 협의를 사실상 마무리",
+      "sector": "2차전지"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SK하이닉스",
+      "rating": null,
+      "tp": null,
+      "ts": "09:03",
+      "quote": "HBF는 HBM급 속도와 낸드급 용량을 결합",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "스피어",
+      "rating": null,
+      "tp": null,
+      "ts": "09:21",
+      "quote": "계약 규모가 기존 대비 약 2배 수준으로 확대되면서, 해당 내용이 주가에 반영된 것으로 보입니다.",
+      "sector": "기타"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "아마존·마이크로소프트·메타·알파벳·오라클",
+      "rating": null,
+      "tp": null,
+      "ts": "09:39",
+      "quote": "아마존, 마이크로소프트, 메타, 알파벳, 오라클의 회사채 발행 규모가 2026년 2,500억달러를 넘어설 전망",
+      "sector": "IT"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "제주반도체",
+      "rating": null,
+      "tp": null,
+      "ts": "09:48",
+      "quote": "퀄컴 5G IoT 칩셋에 탑재되는 저전력 D램 LPDDR5 인증 획득",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "TSMC",
+      "rating": null,
+      "tp": null,
+      "ts": "10:45",
+      "quote": "규모 7.1 강진으로 멈췄던 구마모토 1공장이 정상 생산 체제로 복귀",
+      "sector": "반도체"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "SK",
+      "rating": null,
+      "tp": null,
+      "ts": "11:00",
+      "quote": "SK㈜, 보통주·우선주 모두 주당 1,500원 현금 중간배당 결정",
+      "sector": "기타"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "한미약품·유한양행·대웅제약",
+      "rating": null,
+      "tp": null,
+      "ts": "12:48",
+      "quote": "한미약품은 매출 4,672억원(+29.3%), 영업이익 1,311억원(+116.9%)으로 역대급 실적 기록.",
+      "sector": "바이오"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "네이버",
+      "rating": null,
+      "tp": null,
+      "ts": "18:03",
+      "quote": "네이버는 11월 사우디 리야드 ‘시티스케이프 글로벌’에서 실외 자율주행 배송로봇 ‘누리’를 공개하고 정식 출시",
+      "sector": "로봇"
+    },
+    {
+      "broker": "그로쓰리서치",
+      "stock": "화이자",
+      "rating": null,
+      "tp": null,
+      "ts": "23:40",
+      "quote": "경구형·완전편향형(fully biased)·초장기지속형 GLP-1 수용체 작용제 MET-224o 개발 중단",
+      "sector": "바이오"
+    }
+  ]
+}

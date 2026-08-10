@@ -15,6 +15,7 @@ service.py는 어느 쪽을 쓰든 하류가 무변경이다.
 
 테스트는 _scrape_one을 주입해 브라우저 없이 돈다(test_instagram_playwright.py).
 """
+import itertools
 import json
 import os
 from contextlib import contextmanager
@@ -38,7 +39,7 @@ _REEL_API_HINTS = ("/api/v1/clips/user/", "/api/v1/feed/reels_media", "/graphql"
 _IG_APP_ID = "936619743392459"
 
 
-def _scrape_one_playwright(username):
+def _scrape_one_playwright(username, session_path=None, proxy=None):
     """채널 1개 → (nodes, page_url, error). 브라우저를 실제로 띄우는 유일한 함수.
 
     반환 계약을 (nodes, page_url, error) 세 값으로 고정한 이유: 분류(classify_channel_result)가
@@ -53,12 +54,33 @@ def _scrape_one_playwright(username):
     # 걸리는 걸 막는다(2026-07-29 실사고, scripts/instagram_setup_session.py와 동일 조치).
     launch_kw = {"headless": True, "args": ["--disable-blink-features=AutomationControlled"]}
     ctx_kw = {}
+    # 계정 로테이션(2026-08-09): fetch_reels가 세션·프록시를 지정하면 그걸 쓴다.
+    # 단일 계정이 scraping_warning에 걸렸던 사고 후, 아카이브 방식(계정↔IP 1:1)을 이식.
+    if session_path and os.path.exists(session_path):
+        ctx_kw["storage_state"] = session_path
+        if proxy:
+            rest = proxy.split("://", 1)[-1]
+            if "@" in rest:
+                cred, hostport = rest.rsplit("@", 1)
+                puser, _, ppw = cred.partition(":")
+                ctx_kw["proxy"] = {"server": "http://" + hostport,
+                                   "username": puser, "password": ppw}
+            else:
+                ctx_kw["proxy"] = {"server": proxy}
     # 세션(storage_state)이 있으면 그걸로 로그인 상태 직결한다 — 샤오홍슈에서 검증된 대로
     # 프록시 없이도 되므로 프록시보다 우선한다. 없으면 기존 경로(프록시/직결)로 폴백.
-    if config.INSTAGRAM_SESSION_PATH and os.path.exists(config.INSTAGRAM_SESSION_PATH):
-        ctx_kw["storage_state"] = config.INSTAGRAM_SESSION_PATH
-    elif config.INSTAGRAM_PROXY:
-        ctx_kw["proxy"] = {"server": config.INSTAGRAM_PROXY}
+    #
+    # ★단, 로테이션이 계정을 지정했으면 절대 덮어쓰지 않는다(2026-08-09 버그수정).
+    # 예전엔 무조건 덮어써서, 어떤 계정을 골라도 항상 config의 단일 계정이 쓰이고
+    # **프록시만 로테이션 계정 것이 남았다** = 계정↔IP가 어긋난 채로 나간다.
+    # 인스타는 이 불일치를 수상하게 보고 update_risky_contactpoint 챌린지를 띄운다
+    # (실측 2026-08-09: 같은 계정·프록시로 단독 goto는 정상인데 이 경로만 챌린지 →
+    #  수집이 전 채널 0건, tally가 전부 not_found로 잡혔다).
+    if not ctx_kw.get("storage_state"):
+        if config.INSTAGRAM_SESSION_PATH and os.path.exists(config.INSTAGRAM_SESSION_PATH):
+            ctx_kw["storage_state"] = config.INSTAGRAM_SESSION_PATH
+        elif config.INSTAGRAM_PROXY:
+            ctx_kw["proxy"] = {"server": config.INSTAGRAM_PROXY}
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(**launch_kw)
@@ -78,6 +100,16 @@ def _scrape_one_playwright(username):
             page.goto(url, timeout=config.INSTAGRAM_PW_TIMEOUT_MS,
                       wait_until="domcontentloaded")
             page.wait_for_timeout(2500)          # 릴스 목록 XHR이 도착할 여유
+            # 간헐 챌린지 재시도(2026-08-09): 같은 계정·프록시로 단독 방문은 정상인데
+            # 수집 경로에서만 update_risky_contactpoint가 간헐적으로 뜬다(실측).
+            # 챌린지면 잠깐 쉬고 최대 2회 재진입 — 대개 두 번째엔 정상 페이지가 온다.
+            for _retry in range(2):
+                if not any(k in page.url for k in ("challenge", "scraping_warning", "risky", "suspended")):
+                    break
+                page.wait_for_timeout(8000)
+                page.goto(url, timeout=config.INSTAGRAM_PW_TIMEOUT_MS,
+                          wait_until="domcontentloaded")
+                page.wait_for_timeout(4000)
             final_url = page.url
 
             # 목록 응답(clips_connection)엔 taken_at·video_versions·caption이 없다
@@ -237,13 +269,35 @@ def _reel_detail_via_page(ctx, code, timeout_ms=60000):
     return found.get("node")
 
 
+_DISCOVER_SLOT_COUNTER = itertools.count()
+
+
+def _discover_session_proxy():
+    """발굴이 쓸 (세션경로, 프록시) 짝 — 계정↔IP를 **함께** 정한다(0순위-B).
+
+    2026-08-10 사고: 수집·아카이브는 로테이션(ig_sessions + 주거용 출구)으로
+    이관됐는데 발굴만 구 단일 세션(INSTAGRAM_SESSION_PATH)+서버직결로 남아,
+    그 계정이 본인확인 챌린지(update_risky_contactpoint)에 걸리자 나흘째 0건.
+    A/B 실측: 구세션·직결=0건(챌린지 리다이렉트) / 로테이션 슬롯0+kr 출구=24건.
+    수집과 같은 레퍼런스 풀을 태그마다 순환해 쓴다(한 계정에 몰리지 않게).
+    풀이 비면 기존 단일 세션으로 폴백(session_slots가 처리) — 동작 불변.
+    """
+    from shopping_shorts.channel_archive import (POOL_REFERENCE, session_slots,
+                                                 slot_proxy)
+    slots = session_slots(POOL_REFERENCE)
+    if not slots:
+        return None, None
+    i = next(_DISCOVER_SLOT_COUNTER) % len(slots)
+    return slots[i], slot_proxy(i, POOL_REFERENCE)
+
+
 def _search_hashtag_playwright(tag):
     """해시태그 1개 → (게시물 dict 리스트, error). 계정발굴 전용(2026-07-30).
 
     /explore/tags/{tag}/ 진입 시 인스타가 자체적으로 부르는
     xdt_fbsearch__top_serp_graphql 응답을 가로챈다(실측: 로그인벽 없이 세션
-    재사용, 서버직결 성공 — hashtag당 게시물 20여개·고유계정 20개 안팎).
-    _scrape_one_playwright와 같은 세션·스텔스 설정을 그대로 쓴다.
+    재사용 — hashtag당 게시물 20여개·고유계정 20개 안팎).
+    세션·프록시는 _discover_session_proxy()가 짝으로 정한다(2026-08-10).
     """
     from playwright.sync_api import sync_playwright
     from playwright_stealth import Stealth
@@ -252,8 +306,11 @@ def _search_hashtag_playwright(tag):
     captured = []
     launch_kw = {"headless": True, "args": ["--disable-blink-features=AutomationControlled"]}
     ctx_kw = {}
-    if config.INSTAGRAM_SESSION_PATH and os.path.exists(config.INSTAGRAM_SESSION_PATH):
-        ctx_kw["storage_state"] = config.INSTAGRAM_SESSION_PATH
+    session_path, proxy = _discover_session_proxy()
+    if session_path and os.path.exists(session_path):
+        ctx_kw["storage_state"] = session_path
+        if proxy:
+            ctx_kw["proxy"] = {"server": proxy}
     elif config.INSTAGRAM_PROXY:
         ctx_kw["proxy"] = {"server": config.INSTAGRAM_PROXY}
     try:
@@ -272,9 +329,22 @@ def _search_hashtag_playwright(tag):
                     pass
 
             page.on("response", _on_response)
-            page.goto(url, timeout=config.INSTAGRAM_PW_TIMEOUT_MS, wait_until="domcontentloaded")
+            # 주거용 프록시 경유는 서버직결(20s 기준)보다 훨씬 느리다 — 실측(2026-08-10):
+            # 같은 태그가 20s 제한에선 goto 타임아웃으로 전 태그 0건, 60s 제한에선 24건.
+            page.goto(url, timeout=max(60000, config.INSTAGRAM_PW_TIMEOUT_MS),
+                      wait_until="domcontentloaded")
             page.wait_for_timeout(5000)     # SERP graphql 응답 도착 여유 — 3.5초는 서버
             # 재실측(2026-07-30)에서 0/24건으로 불안정했다, 5초는 3회 연속 24건 안정.
+
+            # 챌린지 리다이렉트를 조용히 삼키지 않는다(2026-08-10) — 나흘 0건의
+            # 원인이 로그에 한 줄도 안 남아 규명에 A/B 실측까지 필요했다.
+            # URL 판정은 실제 리다이렉트 목적지(/accounts/, /challenge)로만 한다
+            # (본문 문자열 검사는 CSS 변수명 오탐 전례가 있어 금지 — 0순위-B).
+            if not captured and ("/accounts/" in page.url or "/challenge" in page.url):
+                redirected = page.url
+                ctx.close()
+                browser.close()
+                return [], f"challenge_redirect: {redirected[:150]}"
 
             # SERP 응답엔 좋아요·댓글수가 없다(실측) — 릴스수집과 같은 media info REST를
             # 상위 표본만 한 번씩 더 불러 참여도를 보강한다(2026-07-30, 샤오홍슈 발굴처럼
@@ -325,8 +395,27 @@ def fetch_reels(usernames, on_progress=None, _scrape_one=None):
     total = len(names)
     tally = {"ok": 0, "login_wall": 0, "not_found": 0, "error": 0}
     items = []
+    # 계정 로테이션(2026-08-09): 기본은 기존 단일 계정(서버 IP 직결) — 사장님 지시로
+    # 아카이브 크롤이 끝나기 전까지 그 3계정을 수집에 돌려쓰지 않는다. 아카이브 종료 후
+    # /etc/shopping-shorts.env에 INSTAGRAM_COLLECT_ROTATION=1을 추가하면 켜진다
+    # (ig_sessions 계정들 × 계정별 주거용 출구, 아카이브와 같은 계정↔IP 1:1).
+    #
+    # ★풀 분리(2026-08-09): 로테이션을 켜도 **레퍼런스 전용 풀만** 본다
+    # (ig_sessions/reference/). 아카이브 계정을 그대로 돌려쓰면 아침 아카이브가 태운
+    # 한도를 저녁 수집이 물려받아 첫 채널부터 0건이 된다 — 분리의 핵심이 여기다.
+    # reference 폴더가 없으면 기존처럼 상위 폴더 전체로 폴백한다(동작 불변).
+    slots = []
+    if _scrape_one is None and os.getenv("INSTAGRAM_COLLECT_ROTATION", "") == "1":
+        from shopping_shorts.channel_archive import (POOL_REFERENCE, session_slots,
+                                                     slot_proxy)
+        slots = [(gi, sp) for gi, sp in enumerate(session_slots(POOL_REFERENCE))]
     for i, uname in enumerate(names, start=1):
-        nodes, page_url, error = scrape(uname)
+        if slots:
+            gi, sp = slots[(i - 1) % len(slots)]
+            nodes, page_url, error = scrape(uname, session_path=sp,
+                                            proxy=slot_proxy(gi, POOL_REFERENCE))
+        else:
+            nodes, page_url, error = scrape(uname)
         verdict = classify_channel_result(nodes, page_url, error)
         tally[verdict] = tally.get(verdict, 0) + 1
         if verdict == "ok":

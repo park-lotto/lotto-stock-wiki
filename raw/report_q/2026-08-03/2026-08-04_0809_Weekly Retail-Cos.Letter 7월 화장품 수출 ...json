@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "date": "2026-08-03",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-04_0809_Weekly Retail-Cos.Letter 7월 화장품 수출 ...md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "박종대, RA 양정석",
+    "report_date": "2026.08.03",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "7월 화장품 수출 YoY 36%",
+      "중국 수출 YoY 19% 증가",
+      "소비심리(7월) 106.8(MoM +0.2p)",
+      "주택가격전망 127(MoM +7p)"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "화장품미용",
+        "stance": "비중확대",
+        "reason": "상저하고 제조 업황을 숫자로 입증하는 중"
+      },
+      {
+        "sector": "소비내수",
+        "stance": "중립",
+        "reason": "단기 대형마트>백화점"
+      }
+    ],
+    "style": null,
+    "event_calendar": [],
+    "top_picks": [
+      "제닉",
+      "코스맥스",
+      "코스메카코리아",
+      "호텔신라",
+      "이마트",
+      "롯데쇼핑",
+      "GS리테일",
+      "BGF리테일"
+    ],
+    "risk": "면세점 매출 정체 시 12MF PER 15배 이상의 밸류에이션 부담, 소비심리 급락 영향, 계열사 실적 불확실성",
+    "quote": "7월 화장품 수출은 10.98억 달러(YoY 36%)의 호조세를 이어갔다. 이번 7월 화장품 수출은 이러한 국내 화장품 산업의 업황을 숫자로 입증하고 있다고 볼 수 있다."
+  }
+}

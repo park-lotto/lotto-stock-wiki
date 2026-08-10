@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성바이오로직스",
+      "signal": "bull",
+      "reason": "AACR 첫 참가를 통한 CRDMO 경쟁력 홍보",
+      "ts": null,
+      "quote": "삼성바이오로직스, AACR 첫 참가…CRDMO 경쟁력 알려",
+      "sector": "바이오"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "삼성바이오로직스가 미국암연구학회(AACR)에 처음으로 참가하여 CRDMO 경쟁력을 알림",
+      "ts": "2026-08-03",
+      "quote": "삼성바이오로직스, AACR 첫 참가…CRDMO 경쟁력 알려"
+    }
+  ],
+  "quote": "삼성바이오로직스, AACR 첫 참가…CRDMO 경쟁력 알려"
+}

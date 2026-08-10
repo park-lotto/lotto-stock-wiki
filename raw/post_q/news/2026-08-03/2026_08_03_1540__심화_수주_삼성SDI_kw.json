@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성SDI",
+      "signal": "bull",
+      "reason": "하반기 ESS 및 AI 수요 증가로 인한 본업 실적 회복 전망",
+      "ts": null,
+      "quote": "삼성SDI, 하반기 본업 살아난다⋯ESSㆍAI 수요가 견인",
+      "sector": "2차전지"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "삼성SDI가 ESS 및 AI 관련 수요를 바탕으로 하반기 실적 개선이 기대됨",
+      "ts": "2026-08-03",
+      "quote": "삼성SDI, 하반기 본업 살아난다⋯ESSㆍAI 수요가 견인"
+    }
+  ],
+  "quote": "삼성SDI, 하반기 본업 살아난다⋯ESSㆍAI 수요가 견인"
+}

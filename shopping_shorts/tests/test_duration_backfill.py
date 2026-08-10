@@ -82,3 +82,56 @@ def test_run_backfill_gives_up_after_max_fail(tmp_path, monkeypatch):
                         lambda: (_ for _ in ()).throw(AssertionError("호출되면 안 됨")))
     out = duration_backfill.run_backfill(db_path=dbp, sleep_s=0)
     assert "성공 0" in out and "실패 0" in out
+
+
+# ── 아카이브(역대 히트작) 백필 확장 (2026-08-06) ──────────────────────────
+# 사장님 요청으로 히트작 카드에 ⏱ 길이를 붙이려는데, _targets()가 last_run(지금 랭킹 화면)만
+# 훑어서 **아카이브 릴스는 영원히 대상이 안 됐다**(실측: 78,265개 중 길이 아는 것 205개 =
+# 랭킹에 우연히 겹친 것뿐). 아카이브를 대상에 넣되, 78,265개를 한 번에 몰아치면 429 사고
+# (2026-07-30)가 재발하므로 **조회수 상위부터** 조금씩 채운다.
+
+def _seed_archive(store, rows):
+    with store._conn() as c:
+        for u, sc, views in rows:
+            c.execute("INSERT INTO channel_archive(username, shortcode, url, thumbnail, "
+                      "views, likes, comments, posted_at, first_seen, last_seen) "
+                      "VALUES(?,?,?,?,?,0,0,'','','')", (u, sc, "u", "t", views))
+
+
+def test_targets_include_archive_top_views(tmp_path):
+    """★아카이브가 대상에 들어온다 — 안 들어오면 히트작 ⏱은 영원히 안 채워진다."""
+    s = Store(tmp_path / "t.db")
+    _seed_last_run(s, [])
+    _seed_archive(s, [("ch", "ARCH_HI", 900), ("ch", "ARCH_LO", 5)])
+    codes = [sc for _, sc in duration_backfill._targets(s)]
+    assert "ARCH_HI" in codes, "아카이브 릴스가 백필 대상에 없다"
+
+
+def test_archive_targets_are_ordered_by_views(tmp_path):
+    """전부 채우는 데 몇 달 걸리므로(회당 상한이 있다) **많이 본 것부터** 채운다 —
+    사장님이 실제로 보는 건 상위 카드다."""
+    s = Store(tmp_path / "t.db")
+    _seed_last_run(s, [])
+    _seed_archive(s, [("ch", "LOW", 1), ("ch", "TOP", 999), ("ch", "MID", 50)])
+    codes = [sc for _, sc in duration_backfill._targets(s) if sc.isupper()]
+    assert codes.index("TOP") < codes.index("MID") < codes.index("LOW"), \
+        f"조회수 상위부터가 아니다: {codes}"
+
+
+def test_last_run_still_comes_first(tmp_path):
+    """랭킹(지금 보는 화면)이 아카이브보다 먼저다 — 기존 동작을 아카이브가 밀어내면 안 된다."""
+    s = Store(tmp_path / "t.db")
+    _seed_last_run(s, [{"shortcode": "RANKED"}])
+    _seed_archive(s, [("ch", "ARCHV", 10 ** 9)])
+    codes = [sc for _, sc in duration_backfill._targets(s)]
+    assert codes.index("RANKED") < codes.index("ARCHV")
+
+
+def test_archive_slice_is_bounded(tmp_path):
+    """429 계보(2026-07-30 하루 950건 → 수집 급감)를 의식해 한 번에 다 담지 않는다."""
+    s = Store(tmp_path / "t.db")
+    _seed_last_run(s, [])
+    _seed_archive(s, [("ch", f"A{i:05d}", 1000 - i) for i in range(900)])
+    codes = [sc for _, sc in duration_backfill._targets(s)]
+    assert len(codes) <= duration_backfill.ARCHIVE_SCAN_LIMIT, \
+        f"아카이브를 통째로 담았다({len(codes)}건) — 상한이 없다"

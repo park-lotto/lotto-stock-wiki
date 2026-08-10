@@ -18,7 +18,10 @@ def test_candidates_empty_without_image(monkeypatch):
 
 def test_candidates_parses_vision_json(monkeypatch):
     monkeypatch.setattr(va, "SHORTS_GEMINI_KEYS", ["k"])
-    monkeypatch.setattr(va.comment_gen, "_current_key_and_idx", lambda: ("k", 0))
+    # 키 조달 함수가 _current_key_and_idx → **_next_live_key_and_idx**로 바뀌었다
+    # (키풀 자가복구 작업). 옛 이름을 stub하면 진짜 함수가 돌아 키 없음(None)으로
+    # 빠지고, cn_search_candidates가 조용히 빈 결과를 돌려줘 이 테스트가 실패했다.
+    monkeypatch.setattr(va.comment_gen, "_next_live_key_and_idx", lambda: ("k", 0))
     payload = {"product": "에어프라이어 감자칩",
                "candidates": [{"ko": "공기튀김 감자칩", "zh": "空气炸锅土豆片"},
                               {"ko": "버블 감자", "zh": "气泡土豆"}]}

@@ -31,7 +31,8 @@ from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI
 from shopping_shorts.frame_extract import (download_video, extract_frames,
                                            extract_frame_at, extract_grid_frames)
-from shopping_shorts.script_extract import extract_script, extract_auto, storable
+from shopping_shorts.script_extract import (extract_script, extract_auto, storable,
+                                            KeyPoolExhausted)
 from shopping_shorts.structure_analyze import analyze_structure
 from shopping_shorts import backbone
 from shopping_shorts.aipick import build_aipick
@@ -1080,7 +1081,25 @@ def api_mix_basket(request: Request):
     """바구니 항목 목록(담은 순서) + shortcode 집합."""
     store = Store(DB_PATH)
     cid = _cid(request)
-    return {"ok": True, "items": store.mix_basket_list(customer_id=cid),
+    items = store.mix_basket_list(customer_id=cid)
+    # 담을 때 저장한 인스타 CDN 썸네일은 며칠이면 만료(403)되어 검은칸이 된다
+    # (2026-08-09 실측). 아카이브 크롤이 매일 새 URL을 받아오므로 있으면 그걸로 바꿔서 준다.
+    try:
+        codes = [i.get("shortcode") for i in items if i.get("shortcode")]
+        if codes:
+            with store._conn() as c:
+                q = ",".join("?" * len(codes))
+                fresh = dict(c.execute(
+                    f"SELECT shortcode, thumbnail FROM channel_archive "
+                    f"WHERE shortcode IN ({q}) AND thumbnail!=''", codes).fetchall())
+            for i in items:
+                t = fresh.get(i.get("shortcode"))
+                if t:
+                    i["thumbnail"] = t
+    except Exception as e:  # noqa: BLE001 — 썸네일 보강 실패가 목록을 막지 않는다
+        print(f"basket 썸네일 보강 실패(무해): {e}", file=sys.stderr)
+    _attach_durations(items, store)   # ⏱ 길이(2026-08-09 — 랭킹·히트작과 동일)
+    return {"ok": True, "items": items,
             "shortcodes": sorted(store.mix_basket_shortcodes(customer_id=cid))}
 
 
@@ -1260,6 +1279,7 @@ def api_discover_feed():
         items = [i for i in items
                  if (i.get("username") or "").strip().lstrip("@").lower() not in hide]
     _attach_posted_at(items)   # 발굴 피드도 인스타 릴스 — 'X시간 전' 실시간 계산용
+    _attach_durations(items, store)   # ⏱ 길이(2026-08-09 — 랭킹·히트작과 동일)
     return {"ok": True, "items": items, "updated_at": updated_at}
 
 
@@ -1820,6 +1840,13 @@ def api_produce_extract_from_url(request: Request, body: dict, background_tasks:
         caption = (body.get("caption") or dl_caption or "")
         try:
             result = extract_auto(video_path, code, caption=caption)
+        except KeyPoolExhausted:
+            # 영상 문제가 아니라 서버 AI 키가 잠깐 다 찬 상태 — 사용자에게 그대로 알린다
+            # (2026-08-07: 예전엔 "대본 추출 실패 — 잠시 후 재시도"로 뭉뚱그려져
+            #  사장님이 영상을 의심하게 만들었다).
+            return JSONResponse(status_code=503, content={
+                "ok": False, "error": "AI 키가 일시적으로 모두 사용 중입니다 — "
+                                      "잠시 후(또는 자정 이후) 다시 시도해 주세요."})
         except Exception as e:  # noqa: BLE001
             msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
             return JSONResponse(status_code=500, content={"ok": False, "error": msg})
@@ -2008,6 +2035,13 @@ def api_produce_save_to_wiki(request: Request, body: dict, background_tasks: Bac
         caption = body.get("caption") or dl_caption or ""
         try:
             result = extract_auto(video_path, code, caption=caption)
+        except KeyPoolExhausted:
+            # 영상 문제가 아니라 서버 AI 키가 잠깐 다 찬 상태 — 사용자에게 그대로 알린다
+            # (2026-08-07: 예전엔 "대본 추출 실패 — 잠시 후 재시도"로 뭉뚱그려져
+            #  사장님이 영상을 의심하게 만들었다).
+            return JSONResponse(status_code=503, content={
+                "ok": False, "error": "AI 키가 일시적으로 모두 사용 중입니다 — "
+                                      "잠시 후(또는 자정 이후) 다시 시도해 주세요."})
         except Exception as e:  # noqa: BLE001
             msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
             return JSONResponse(status_code=500, content={"ok": False, "error": msg})
@@ -2515,7 +2549,20 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
 @app.post("/api/mix/candidate")
 def api_mix_candidate(body: dict):
     """장면 우선 대본 모드(2026-07-20, Task6): 후보 선택 — 고른 후보의 plan을 edit_plan으로
-    세팅한다(미리보기/렌더가 이걸 읽는다)."""
+    세팅한다(미리보기/렌더가 이걸 읽는다).
+
+    narrations(2026-08-10, 선택): 카드에서 사장님이 **직접 고쳐 쓴** 문장 배열. 있으면 그
+    후보 plan의 beats[].narration에 덮어쓴다. 안 보내면(=편집 안 함) 종전과 100% 동일.
+
+    ★길이가 beats와 다르면 통째로 무시한다. 화면 배정(beats[].covers)은 문장 개수·순서에
+      묶여 있어서 문장이 늘거나 줄면 컷 매핑이 어긋난다 — 프론트가 칸을 문장 수만큼 고정해
+      두지만 서버도 스스로 지킨다(클라 신뢰 금지).
+    ★빈 문자열은 그 문장을 건너뛴다(원문 유지) — 실수로 칸을 비운 채 고르면 그 비트의 TTS가
+      무음이 되고 렌더가 죽는다.
+    ★TTS 재합성은 저절로 된다: 렌더 경로가 나레이션 **내용 해시**로 mp3 경로를 만들므로
+      (mix_pipeline._beat_tts_path) 글자가 바뀌면 tts_path가 안 맞아 그 비트만 다시 합성된다.
+      그래서 여기선 tts_path를 지울 필요도, 별도 재합성을 부를 필요도 없다.
+    """
     job_id = (body.get("job_id") or "").strip()
     idx = int(body.get("index") or 0)
     store = Store(DB_PATH)
@@ -2523,13 +2570,30 @@ def api_mix_candidate(body: dict):
     if not cands or not (0 <= idx < len(cands)):
         return JSONResponse(status_code=404, content={"ok": False, "error": "후보 없음"})
     plan = cands[idx]["plan"]
+    beats = plan.get("beats") or []
+    narrations = body.get("narrations")
+    edited = False
+    if isinstance(narrations, list) and len(narrations) == len(beats) and beats:
+        for b, n in zip(beats, narrations):
+            if not isinstance(n, str):
+                continue
+            n = n.strip()
+            if not n or n == (b.get("narration") or "").strip():
+                continue
+            b["narration"] = n
+            edited = True
+    # ★고친 대본을 **후보 목록에도** 되쓴다(2026-08-10). 안 하면 다른 후보를 눌렀다 돌아오는
+    #   순간 이 endpoint가 DB의 원본 plan을 다시 꽂아 편집이 조용히 날아간다(같은 이유로
+    #   새로고침 복원·카드 재렌더도 원문으로 되돌아간다).
+    if edited:
+        store.set_mix_candidates(job_id, cands)
     # ★고른 후보를 plan에 새긴다(2026-07-30 사장님 "완료 갔다 오면 대본이 리셋된다").
     #   후보 자체는 job_id별로 DB에 남아 있는데(set_mix_candidates), 복원 경로가 "지금 무엇을
     #   골랐나"를 알 길이 없어 카드를 다시 그릴 수 없었다. 컬럼 추가 없이 edit_plan(JSON)에
     #   실어 마이그레이션 없이 복원한다 — 렌더는 이 키를 안 읽으므로 무해.
     plan["candidate_index"] = idx
     store.update_mix_job(job_id, edit_plan=plan)
-    return {"ok": True}
+    return {"ok": True, "edited": edited}
 
 
 def _clone_mix_work_sources(src_job, new_job, n_urls):
@@ -2717,9 +2781,16 @@ def api_mix_status(job_id: str, request: Request):
     # 실으면 남의 창작물이 새는 것과 같은 노출 문제(§3981)가 나므로 카드 렌더용 필드만 뽑는다.
     # script(2026-07-24): 후보 대본 '전체 나레이션'은 사장님이 A/B/C를 비교해 고르는 자기 산출물이라
     # 카드에서 통째로 보여준다 — 소스 plan(컷·seg_ids 등)이 아니라 말할 문장만 이어붙인다(edit_plan §561과 동일).
+    # lines(2026-08-10): 카드에서 **문장별로** 고쳐 쓰기 위한 나레이션 배열. script를 그냥
+    #   안 이어붙인 것뿐이라 새로 새는 정보는 없다(위 노출 원칙 그대로). 문장 단위로 내리는
+    #   이유는 화면 배정(beats[].covers)이 **문장 개수·순서에 묶여** 있어서다 — 통짜 텍스트로
+    #   편집시키면 사장님이 문장을 쪼개거나 합치는 순간 컷 매핑이 어긋난다. 칸을 문장 수만큼
+    #   고정해 두면 글자만 고치게 되어 covers가 항상 유효하다.
     candidates = [{"index": i, "score": c.get("score"), "recommended": bool(c.get("recommended")),
                    "hook": (c.get("story") or {}).get("hook", ""),
                    "story_person": (c.get("story") or {}).get("story_person", ""),
+                   "lines": [(b.get("narration") or "").strip()
+                             for b in ((c.get("plan") or {}).get("beats") or [])],
                    "script": " ".join((b.get("narration") or "").strip()
                                        for b in ((c.get("plan") or {}).get("beats") or [])).strip()}
                   for i, c in enumerate(store.get_mix_candidates(job_id))]
@@ -2745,8 +2816,14 @@ def api_mix_status(job_id: str, request: Request):
         error_detail = error
     if error:
         error = _user_facing_error(error)
+    # ★순서 대기 표시(2026-08-06 사장님): 큐에서 기다리는 중인데 '다운로드 중'으로 보여
+    #   멈춘 것처럼 보였다. 아직 워커가 안 집었으면(queue의 mix 항목이 queued) 개수를 내려
+    #   프론트가 '순서 대기 중 — 내 앞 N개'를 띄운다.
+    queue_ahead = (store.mix_queue_ahead(job_id)
+                   if status in _MIX_ACTIVE_STAGES else None)
     return {"ok": True, "status": status, "error": error,
             "error_detail": error_detail,   # 관리자에게만 채워진다(일반 사용자는 None)
+            "queue_ahead": queue_ahead,     # None=대기 아님 / 0=다음 차례 / N=내 앞 N개
             "weak_sources": weak,
             # 1단계 미리보기(2026-07-17): 폴러를 둘로 만들지 않으려고 기존 응답에 얹는다(스펙 §6.3).
             # preview_path는 서버 내부 경로라 안 내보낸다 — 파일은 전용 라우트로만 서빙.
@@ -4063,7 +4140,15 @@ _ALLOWED_THUMB_HOSTS = ("cdninstagram.com", "fbcdn.net", "ytimg.com",
                         "xhscdn.com",
                         # 도우인 커버 CDN(pN-sign.douyinpic.com) — 해외HOT 도우인 카드 썸네일.
                         # 없으면 도우인 카드가 검게 깨짐(실측 2026-07-26).
-                        "douyinpic.com")
+                        "douyinpic.com",
+                        # ★구글 렌즈 결과 썸네일(encrypted-tbnN.gstatic.com) — 숏템파워검색.
+                        # 렌즈(SerpApi visual_matches)의 thumbnail은 플랫폼 CDN이 아니라
+                        # **구글이 재호스팅한 gstatic 주소**다. 화이트리스트에 없어서 /api/thumb가
+                        # 400을 뱉었고, 카드가 통째로 검게 떴다(실측 2026-08-09 서버로그:
+                        # "GET /api/thumb?url=...encrypted-tbn0.gstatic.com... 400 Bad Request" 40건).
+                        # 유튜브·인스타 결과만 검게 보인 이유도 이것 — 틱톡 결과는 렌즈가
+                        # 원본 tiktokcdn 주소를 주는 경우가 있어 우연히 통과했다.
+                        "gstatic.com")
 _ALLOWED_VIDEO_HOSTS = ("cdninstagram.com", "fbcdn.net")
 
 
@@ -4098,13 +4183,84 @@ def api_thumb64(url: str):
         return JSONResponse(status_code=502, content={"ok": False, "error": "fetch 실패"})
 
 
+# 썸네일 디스크 캐시(2026-08-09). CDN 서명토큰(oe)이 ~4일에 만료돼 오래된
+# 아카이브 썸네일이 전부 403 → 역대 히트작 카드가 까맣게 죽었다(실측).
+# 키 = URL path의 파일명 — 토큰이 갱신돼도 파일명은 같아서 재수집 없이도 맞는다.
+_THUMB_CACHE_DIR = Path(__file__).parent / "data" / "thumb_cache"
+
+
+def _thumb_cache_path(url: str):
+    try:
+        name = (urllib.parse.urlparse(url).path or "").rsplit("/", 1)[-1]
+    except ValueError:
+        return None
+    if not name or len(name) > 200:
+        return None
+    import hashlib
+    return _THUMB_CACHE_DIR / (hashlib.sha1(name.encode()).hexdigest() + ".jpg")
+
+
+# 인스타 웹이 자기 자신도 쓰는 공개 앱ID(비밀 아님) — oembed 호출에 필요.
+# instagram_playwright._IG_APP_ID와 같은 값이지만, app.py가 그 모듈(=playwright 의존)을
+# 끌어오지 않게 여기 따로 둔다.
+_IG_OEMBED_APP_ID = "936619743392459"
+
+
+def _thumb_via_oembed(url: str, shortcode: str | None):
+    """만료된 썸네일 URL → 공개 oembed로 새 주소를 받아 내려받고 디스크 캐시에 저장.
+
+    성공하면 이미지 bytes, 실패하면 None. **로그인이 필요 없다**는 게 핵심 —
+    계정이 전부 429(한도소진)여도 동작한다(실측 2026-08-09).
+    shortcode가 없으면 복구 불가(어느 게시물인지 알 수 없다) → None.
+    """
+    if not shortcode:
+        return None
+    import requests
+    try:
+        j = requests.get("https://www.instagram.com/api/v1/oembed/",
+                         params={"url": f"https://www.instagram.com/p/{shortcode}/"},
+                         headers={"User-Agent": "Mozilla/5.0",
+                                  "x-ig-app-id": _IG_OEMBED_APP_ID},
+                         timeout=6).json()
+        fresh = j.get("thumbnail_url")
+        if not fresh:
+            return None
+        r = requests.get(fresh, timeout=6, headers={
+            "User-Agent": "Mozilla/5.0", "Referer": "https://www.instagram.com/"})
+        r.raise_for_status()
+        if not r.content[:2] == b"\xff\xd8":     # JPEG가 아니면 버린다(에러 HTML 방지)
+            return None
+        # 캐시 키는 **원래 URL**의 파일명 — 화면이 그 키로 찾으므로 여기 맞춰 저장해야 한다.
+        cache = _thumb_cache_path(url)
+        if cache is not None:
+            try:
+                _THUMB_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+                tmp = cache.with_suffix(".tmp")
+                tmp.write_bytes(r.content)
+                tmp.replace(cache)
+            except OSError:
+                pass
+        return r.content
+    except Exception:   # noqa: BLE001 — 복구는 best-effort, 실패하면 그냥 404로 떨어진다
+        return None
+
+
 @app.get("/api/thumb")
-def api_thumb(url: str):
-    """인스타 CDN 썸네일 프록시 (핫링크 차단 우회). url=원본 이미지 주소."""
+def api_thumb(url: str, v: str | None = None, shortcode: str | None = None):
+    """인스타 CDN 썸네일 프록시 (핫링크 차단 우회). url=원본 이미지 주소.
+
+    v = 캐시버스터(프론트 THUMB_V). 서버 동작엔 안 쓰지만 **받아는 줘야 한다** —
+    선언이 없으면 FastAPI가 무시할 뿐이라 무해하지만, 명시해 두면 의도가 드러나고
+    나중에 누가 `extra="forbid"`류를 걸어도 안 깨진다. 값은 URL을 다르게 만들어
+    브라우저가 옛 404를 재사용하지 못하게 하는 게 전부다."""
     import requests
     from fastapi.responses import Response
     if _reject_cdn_proxy(url, _ALLOWED_THUMB_HOSTS):
         return Response(status_code=400, content=b"invalid host")
+    cache = _thumb_cache_path(url)
+    if cache is not None and cache.exists():
+        return Response(content=cache.read_bytes(), media_type="image/jpeg",
+                        headers={"Cache-Control": "public, max-age=86400"})
     # 호스트에 맞는 Referer로 핫링크 차단을 우회한다. xhscdn은 인스타 referer로도 200이
     # 오지만(실측), 만료토큰형 URL 대비 정확한 출처를 보낸다. tiktok도 자기 도메인으로.
     ref = "https://www.instagram.com/"
@@ -4126,10 +4282,33 @@ def api_thumb(url: str):
         })
         r.raise_for_status()
         ctype = r.headers.get("Content-Type", "image/jpeg")
+        if cache is not None and ctype.startswith("image/"):
+            try:
+                _THUMB_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+                tmp = cache.with_suffix(".tmp")
+                tmp.write_bytes(r.content)
+                tmp.replace(cache)
+            except OSError:
+                pass    # 캐시 실패는 서빙에 영향 없음
         return Response(content=r.content, media_type=ctype,
                         headers={"Cache-Control": "public, max-age=86400"})
     except Exception:
-        return Response(status_code=404, content=b"")
+        # ★만료 자가복구(2026-08-09): CDN 서명(oe=)은 ~4일이면 만료돼 저장된 URL이 전부
+        # 403이 된다. 그런데 **게시물 자체는 살아 있으므로** 공개 oembed에 물어보면 인스타가
+        # 서명이 새로 붙은 주소를 알려준다 — 로그인 불필요라 계정이 429여도 된다(실측
+        # 2026-08-09: 계정 4개가 전부 429인 상태에서 75건 중 66건 복구).
+        # 파일명은 그대로라 디스크 캐시 키(_thumb_cache_path)가 바뀌지 않는다 = 다음부터는
+        # 위쪽 캐시히트로 즉시 나간다.
+        got = _thumb_via_oembed(url, shortcode)
+        if got:
+            return Response(content=got, media_type="image/jpeg",
+                            headers={"Cache-Control": "public, max-age=86400"})
+        # ★실패는 절대 캐시하지 않는다(2026-08-09). 헤더가 없으면 브라우저가 휴리스틱
+        # 캐싱으로 이 404를 몇 시간 기억한다. 그 뒤 우리가 이미지를 복구해 디스크 캐시에
+        # 넣어도 **브라우저가 재요청을 안 해** 카드가 계속 까맣게 남는다(실측: 서버는
+        # 200/71KB를 주는데 화면만 검은 상태). URL이 글자까지 같아 캐시버스팅도 안 먹는다.
+        return Response(status_code=404, content=b"",
+                        headers={"Cache-Control": "no-store"})
 
 
 @app.get("/api/video")
@@ -7176,7 +7355,9 @@ def api_produce_aipick(request: Request, work_id: str = "", forced: str = ""):
 #      영구 캐시돼 클라가 계속 미추출로 오인한다(인스타 릴스 실패의 정체)
 #   ④ 호출당 건수 상한 + 시도 횟수 상한 — 최악의 경우에도 소모가 유한하다
 _AUTOLOAD_MAX_PER_CALL = 4      # 한 번 호출로 새로 태울 수 있는 영상 수
-_AUTOLOAD_MAX_ATTEMPTS = 1      # shortcode당 자동추출 총 시도 횟수(넘으면 영구 스킵)
+# 1 → 3 (2026-08-04): prewarm과 같은 완화 — 인스타 일시 실패 1번으로 영구 스킵되면
+# 재담기가 조용히 죽는다. 3회면 폭주 차단은 유지하면서 일시 실패를 흡수한다.
+_AUTOLOAD_MAX_ATTEMPTS = 3      # shortcode당 자동추출 총 시도 횟수(넘으면 영구 스킵)
 # 동시에 추출할 영상 수(2026-07-30). 대기의 정체가 제미니 응답이라 동시에 올리면 총 시간이
 # '가장 느린 1개'로 수렴한다. 다만 무제한으로 올리면 제미니 429가 몰려 오히려 느려지고 키가
 # 소진되므로 3으로 묶는다(_AUTOLOAD_MAX_PER_CALL=4와는 다른 축 — 그건 '총 몇 개').
@@ -7223,15 +7404,20 @@ def api_produce_autoload(request: Request, body: dict):
             store.produce_pick_add(code, customer_id=cid)
             slots[i] = {"shortcode": code, "status": "already"}
             continue
-        # ② DB 래치 — 한 번 실패한 영상은 다시 태우지 않는다(무한루프 차단의 핵심)
-        if tried.get(code, 0) >= _AUTOLOAD_MAX_ATTEMPTS:
-            slots[i] = {"shortcode": code, "status": "skipped_latched"}
-            continue
         if _ssrf_guard(*[u for u in (url, item.get("video_url")) if u]):
             slots[i] = {"shortcode": code, "status": "failed_download"}
             continue
 
+        # ②-a 캐시를 **래치보다 먼저** 본다(2026-08-04 실사고 DQohOUqgdRt): 수동 대본뽑기로
+        # 추출이 이미 있는데도 래치가 앞에 있어 skipped_latched → 도서관 적재가 영영 안 돼
+        # AI PICK(대본 3안 버튼)이 안 떴다. 캐시 히트는 제미니 비용 0이라 래치(비용 폭주
+        # 차단 장치)가 막을 이유가 없다.
         cached = store.get_extract(code)
+        if not (cached and (cached.get("full_text") or "").strip()):
+            # ②-b DB 래치 — 상한까지 실패한 영상은 다시 태우지 않는다(무한루프 차단의 핵심)
+            if tried.get(code, 0) >= _AUTOLOAD_MAX_ATTEMPTS:
+                slots[i] = {"shortcode": code, "status": "skipped_latched"}
+                continue
         if cached and (cached.get("full_text") or "").strip():
             # 캐시 히트 — 제미니 비용도 상한도 안 쓴다(담기 예열이 채워둔 경우가 이것).
             todo.append({"i": i, "item": item, "code": code, "url": url, "charged": False,
@@ -7270,6 +7456,13 @@ def api_produce_autoload(request: Request, body: dict):
             try:
                 result = extract_auto(e["video_path"], code,
                                       caption=(item.get("caption") or dl_caption or ""))
+            except KeyPoolExhausted as ex:
+                # 키 풀 잠김 = 서버 사정. 영상 탓이 아니므로 래치를 되돌려야 한다
+                # (2026-08-07). 여기선 DB에 못 쓰므로(병렬 구간) 표시만 남기고
+                # C단계에서 rollback 한다.
+                e["status"], e["error"] = "deferred_nokey", str(ex)
+                e["rollback_latch"] = True
+                return e
             except Exception as ex:  # noqa: BLE001
                 e["status"], e["error"] = "failed_download", str(ex)
                 return e
@@ -7321,7 +7514,10 @@ def api_produce_autoload(request: Request, body: dict):
     for e in done:
         code, item = e["code"], e["item"]
         if e["status"] != "added":
-            if e.get("error"):
+            if e.get("rollback_latch"):
+                # 키 풀 잠김 — 시도 횟수를 돌려준다(영상 탓이 아니다, 2026-08-07)
+                store.autoload_rollback_attempt(code, e.get("error") or "")
+            elif e.get("error"):
                 store.autoload_mark_error(code, e["error"])
             if e["charged"]:
                 refund_credit(cid, "script")         # 실패는 환불
@@ -7706,6 +7902,7 @@ def api_produce_mix_beats_preview(job_id: str):
             "caption": narr,                                        # 폴백·호환용(통째)
             "segs": video_assemble._caption_segments(narr, preset=b.get("caption_lines")),  # 렌더와 같은 분할
             "durs": b.get("cap_durs"),                              # 구절별 실제 표시시간(없으면 None)
+            "lead": b.get("cap_lead", 0.0),                         # 말 시작 전 무음(초) — 렌더와 같은 기준점
         })
     return {"beats": out}
 
@@ -8653,15 +8850,17 @@ def api_archive_channels(request: Request):
         rows = c.execute(
             "SELECT username, COUNT(*), MAX(views) FROM channel_archive "
             "GROUP BY username ORDER BY MAX(views) DESC").fetchall()
+    names = store.channel_name_map()   # 한글 표시명(2026-08-06) — 드롭다운도 카드와 같은 이름으로
     return {"ok": True, "channels": [
-        {"username": r[0], "reels": r[1], "top_views": r[2] or 0,
+        {"username": r[0], "name": names.get((r[0] or "").strip().lstrip("@"), ""),
+         "reels": r[1], "top_views": r[2] or 0,
          "category": _chcat(r[0])} for r in rows
         if (r[0] or "").strip().lstrip("@").lower() not in blocked]}
 
 
 @app.get("/api/archive/items")
 def api_archive_items(request: Request, username: str = "", sort: str = "views",
-                      q: str = "", cat: str = "", limit: int = 120):
+                      q: str = "", cat: str = "", limit: int = 120, offset: int = 0):
     """아카이브 릴스 조회. username 지정 시 그 채널만, q는 채널명 부분일치.
     sort: views | recent | comments. cat: 카테고리 필터 — **영상 단위**(2026-08-03).
 
@@ -8686,11 +8885,16 @@ def api_archive_items(request: Request, username: str = "", sort: str = "views",
            " a.comments, a.posted_at, v.subject, v.keywords_json "
            "FROM channel_archive a LEFT JOIN vision_tags v ON v.shortcode=a.shortcode "
            + ("WHERE " + " AND ".join(where) + " " if where else "")
-           + f"ORDER BY {order} LIMIT ?")
+           + f"ORDER BY {order} LIMIT ? OFFSET ?")
     # 카테고리 필터는 파이썬에서 거르므로 넉넉히 읽고 자른다.
     lim = max(1, min(int(limit or 120), 500))
-    args.append(lim if not cat else 5000)
+    # 페이지네이션(2026-08-09): cat 필터는 파이썬에서 거르므로 offset도 파이썬에서 센다.
+    off = max(0, int(offset or 0))
+    args.extend([lim, off] if not cat else [5000, 0])
     blocked = store.removed_usernames()   # 영구차단 채널 릴스 숨김(2026-08-03)
+    # 한글 표시명(2026-08-06 사장님: "채널명은 한글로 레퍼런스 랭킹처럼"). 아카이브엔
+    # username뿐이라 수집 이력에서 이름을 끌어온다. 없으면 화면이 @아이디로 폴백한다.
+    names = store.channel_name_map()
     import json as _json
     with store._conn() as c:
         rows = c.execute(sql, args).fetchall()
@@ -8708,11 +8912,19 @@ def api_archive_items(request: Request, username: str = "", sort: str = "views",
         item_cat = _cat_fn(u, vtext) if vtext else _chcat(u)
         if cat and item_cat != cat:
             continue
-        out.append({"username": r[0], "shortcode": r[1], "url": r[2], "thumbnail": r[3],
+        if cat and off > 0:
+            off -= 1
+            continue
+        out.append({"username": r[0], "name": names.get(u, ""),
+                    "shortcode": r[1], "url": r[2], "thumbnail": r[3],
                     "views": r[4], "likes": r[5], "comments": r[6], "posted_at": r[7],
                     "category": item_cat})
         if len(out) >= lim:
             break
+    # ⏱ 영상 길이(2026-08-06 사장님 요청). 랭킹과 **같은 헬퍼**를 쓴다 — 캐시 결합 + 빈 곳이
+    # 있으면 백필 예약(1시간 1회)까지 한 곳에서 처리된다. 아직 대부분 비어 있어(78,265건 중
+    # 극소수) 화면은 아는 것에만 ⏱을 띄운다 — 백필이 조회수 상위부터 채우면 점점 늘어난다.
+    _attach_durations(out, store)
     return {"ok": True, "items": out}
 
 

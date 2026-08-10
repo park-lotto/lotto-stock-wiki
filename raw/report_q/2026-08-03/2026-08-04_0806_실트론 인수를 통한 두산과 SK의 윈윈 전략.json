@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "date": "2026-08-03",
+    "broker": "DS투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-04_0806_실트론 인수를 통한 두산과 SK의 윈윈 전략.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "DS투자증권",
+    "analyst": "김수현",
+    "report_date": "2026.08.03",
+    "stocks": [
+      {
+        "name": "두산",
+        "code": null,
+        "rating": null,
+        "rating_changed": null,
+        "tp_new": "2,680,000",
+        "tp_prev": "2,400,000",
+        "tp_direction": "up",
+        "earnings_outlook": "27년 EBITDA 7,300억원(외부 평가 기관 측정치)에 상장 웨이퍼 기업들 평균 EV/EBITDA 10.5배를 적용",
+        "estimate_revision": null,
+        "next_catalyst": "실트론 상장 없고 향후 이익과 벨류에이션 리레이팅이 가능한 상황",
+        "thesis": [
+          "두산의 SK실트론 지분 70.61% 인수",
+          "비상장 유지로 할인 요인 제거 및 실적 회복",
+          "SK실트론의 업황 턴어라운드 초기에 따른 가치 상승"
+        ],
+        "valuation_basis": "27년 EBITDA 7,300억원에 상장 웨이퍼 기업들 평균 EV/EBITDA 10.5배 적용하여 산출",
+        "risk": null,
+        "supply_comment": "반도체",
+        "quote": "두산은 실트론 인수 SPA 체결 직후 향후 실트론 상장은 없다고 못박았다. 또한 ㈜두산과의 합병 시나리오 등을 열어 두고 검토한다고 밝혔다. 이에 따라 SK실트론의 가치를 할인할 이유는 없다."
+      }
+    ]
+  }
+}

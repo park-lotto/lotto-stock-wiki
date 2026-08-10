@@ -56,13 +56,33 @@ def _render_alive(store, log=print):
         return False
 
 
+_TRIED_RETRY_DAYS = 7   # 만료 썸네일 실패 기록 후 재시도 유예 — 재크롤로 URL이 갱신될 시간
+
+def _ensure_tried_table(store):
+    with store._conn() as c:
+        c.execute("CREATE TABLE IF NOT EXISTS product_backfill_tried("
+                  "shortcode TEXT PRIMARY KEY, tried_at TEXT NOT NULL)")
+
+
+def _mark_tried(store, shortcodes):
+    if not shortcodes:
+        return
+    with store._conn() as c:
+        c.executemany(
+            "INSERT OR REPLACE INTO product_backfill_tried(shortcode, tried_at) "
+            "VALUES(?, datetime('now'))", [(sc,) for sc in shortcodes])
+
+
 def pick_targets(store, top, offset=0):
     """조회수 상위에서 '아직 제품명이 없는' 릴스 [{shortcode, thumbnail}]."""
     with store._conn() as c:
         rows = c.execute(
             "SELECT a.shortcode, a.thumbnail, a.views FROM channel_archive a "
             "LEFT JOIN vision_tags v ON v.shortcode=a.shortcode "
+            "LEFT JOIN product_backfill_tried t ON t.shortcode=a.shortcode "
             "WHERE a.thumbnail!='' AND (v.product_at IS NULL) "
+            "AND (t.tried_at IS NULL OR "
+            "     (julianday('now') - julianday(t.tried_at)) > " + str(_TRIED_RETRY_DAYS) + ") "
             "ORDER BY a.views DESC LIMIT ? OFFSET ?", (top, offset)).fetchall()
     return [{"shortcode": r[0], "thumbnail": r[1], "views": r[2] or 0} for r in rows]
 
@@ -83,6 +103,7 @@ def _free_gb(path="/"):
 
 def run(top=3000, batch=40, sleep=time.sleep, log=print):
     store = Store(DB_PATH)
+    _ensure_tried_table(store)
     done = 0
     skipped = 0        # 만료 등으로 저장 안 된 누적분 — offset으로 건너뛴다
     empty_rounds = 0
@@ -116,8 +137,10 @@ def run(top=3000, batch=40, sleep=time.sleep, log=print):
         # 만료 썸네일은 저장 대상이 아니므로 그 배치가 0인 건 정상이다 — 그래도 커서는
         # 앞으로 가야 다음 배치로 넘어간다.
         prev_total = _done_count(store)
-        pmap = product_name.identify_many(targets, DB_PATH)
+        expired = []    # 썸네일 만료로 영구실패한 행 — 기록해서 다음 실행이 건너뛰게 한다(2026-08-09)
+        pmap = product_name.identify_many(targets, DB_PATH, expired_out=expired)
         got = _done_count(store) - prev_total
+        _mark_tried(store, expired)
         done += len(targets)
         skipped += max(0, len(targets) - got)   # 저장 안 된 만큼 다음 배치에서 건너뛴다
         if got <= 0:

@@ -80,11 +80,18 @@ def test_prewarm_skips_when_cache_valid(store, gate, monkeypatch):
 
 
 def test_prewarm_respects_latch(store, gate, monkeypatch):
-    """한 번 시도한(실패한) 영상은 다시 태우지 않는다."""
-    store.autoload_mark_attempt("sc3")
+    """상한(3회)까지 시도한 영상은 다시 태우지 않는다 — 1회는 재시도 허용.
+
+    2026-08-04: 임계 1→3. 인스타 일시 실패 1번으로 영구 래치돼 재담기가
+    조용히 스킵되던 실사고(DQohOUqgdRt) 재발 방지."""
+    for _ in range(prewarm._PREWARM_MAX_ATTEMPTS):
+        store.autoload_mark_attempt("sc3")
     _stub_pipeline(monkeypatch)
     assert prewarm.run_prewarm("sc3", "https://x/", db_path=_p(store)) == "skipped_latched"
     assert gate["count"] == 0
+    # 상한 미만이면 재시도된다(= skipped_latched가 아니다)
+    store.autoload_mark_attempt("sc3b")
+    assert prewarm.run_prewarm("sc3b", "https://x/", db_path=_p(store)) != "skipped_latched"
 
 
 def test_prewarm_does_not_save_empty_text(store, gate, monkeypatch):

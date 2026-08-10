@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-08-04",
+    "broker": "유안타증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-04_1104_M&A 통한 성장 & 사업부간 시너지 효과 기대.md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "유안타증권",
+    "analyst": "권명준",
+    "report_date": "2026.08.04",
+    "stocks": [
+      {
+        "name": "폰드그룹",
+        "code": "472850",
+        "rating": "Not Rated",
+        "rating_changed": false,
+        "tp_new": null,
+        "tp_prev": null,
+        "tp_direction": null,
+        "earnings_outlook": "2Q26 실적은 매출액 1,494억원, 영업이익 217.5억원으로 각각 전년대비 33.3%, 38.1% 성장했다. 분기 사상 최대 실적이다. 화장품 매출액은 전년대비 150.6%, 전분기대비 57.5% 증가했다. 라이브 커머스 2분기 매출액은 전분기 대비 49.7% 성장했다.",
+        "estimate_revision": null,
+        "next_catalyst": "M&A를 통한 성장과 사업부간 시너지 효과",
+        "thesis": [
+          "전 사업부의 매출 성장세 및 의류 기업에서 컨슈머 기업으로의 사업 구조 변화",
+          "신규 사업인 화장품 및 라이브 커머스 부문의 2Q26 영업이익 비중이 전체의 50%를 상회",
+          "루다엘, 모나드홀딩스, 디에스패션 등 M&A를 통한 사업 포트폴리오 확대 및 시너지 효과 기대"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "M&A를 통한 성장과 사업부간 시너지 효과가 기대된다.",
+        "sector": "소비내수"
+      }
+    ]
+  }
+}

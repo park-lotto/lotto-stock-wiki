@@ -1,0 +1,13 @@
+{
+  "target_kind": "market",
+  "market_direction": "null",
+  "macro_events": [
+    {
+      "fact": "2026-08-03 운동 일지 기록",
+      "ts": "2026-08-03",
+      "quote": "260803 운동"
+    }
+  ],
+  "sectors_mentioned": [],
+  "quote": "260803 운동"
+}

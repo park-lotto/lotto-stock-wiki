@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "date": "2026-08-03",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-04_0811_7월 윤활기유 수출가격 추가 급등.md"
+  },
+  "questionnaire": {
+    "broker": "하나증권",
+    "analyst": "윤재성",
+    "report_date": "2026.08.03",
+    "target_kind": "market",
+    "market_direction": "null",
+    "macro_vars": [
+      "WTI 84.7$(-5%)",
+      "Dubai 81.8$ (-10%)",
+      "정제마진 49.1$(WoW +3.0$)",
+      "유럽 디젤 선물 WoW +7%"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "에너지/화학",
+        "stance": "Overweight",
+        "reason": "정제마진 강세 및 윤활기유 수출단가 급등"
+      },
+      {
+        "sector": "태양광",
+        "stance": "Overweight",
+        "reason": "미국 내 중국 공급망 규제 Section 232 기대감 및 반사 수혜"
+      }
+    ],
+    "style": "null",
+    "event_calendar": [
+      {
+        "date": "2026.08.02",
+        "event": "트럼프 호르무즈 전면 개방 및 이란 공격 취소 명령"
+      },
+      {
+        "date": "2026.08.15",
+        "event": "사우디 Jizan 정제설비 재가동 목표일"
+      },
+      {
+        "date": "2027.01.31",
+        "event": "러시아 휘발유 수출금지 조치 종료 및 디젤 수출 금지 종료(정유사 제외)"
+      }
+    ],
+    "top_picks": [
+      "S-Oil",
+      "SK이노베이션",
+      "효성티앤씨",
+      "국도화학",
+      "OCI홀딩스",
+      "한화솔루션",
+      "금호석유화학"
+    ],
+    "risk": [
+      "이란 인접 국가 에너지 시설 공격 위협",
+      "중동 정제설비 가동 차질 확대",
+      "러시아 정제설비 타격 지속",
+      "미국 태양광 설치량 둔화 리스크",
+      "테슬라 중국 장비 반입 이슈에 따른 증설 속도 둔화 가능성"
+    ],
+    "quote": "한국 정유업체는 정제마진/윤활기유 2대 축을 중심으로 하반기 호실적 지속할 가능성 높아. Top Picks S-Oil, SK이노베이션"
+  }
+}

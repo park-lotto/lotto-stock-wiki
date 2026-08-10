@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "date": "2026-08-03",
+    "broker": "DS INVESTMENT & SECURITIES",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-04_0806_해외 방산 실적발표로 보는 한국 방산 주가 ...md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "DS INVESTMENT & SECURITIES",
+    "analyst": "강태호",
+    "report_date": "2026.08.03",
+    "market_direction": null,
+    "macro_vars": [
+      "유럽 국방비 증가",
+      "미국 국방 예산 및 미사일 수요",
+      "고환율"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "방산",
+        "stance": "비중확대",
+        "reason": "수주잔고 인식 가속화에 따른 매출·영업이익 개선 및 수주잔고 증가"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.08",
+        "event": "K9MH 미국 우선협상자 선정"
+      },
+      {
+        "date": "2026.12",
+        "event": "K9 폴란드 3차 계약"
+      }
+    ],
+    "top_picks": [
+      "한화에어로스페이스",
+      "LIG디펜스앤에어로스페이스"
+    ],
+    "risk": "2분기 기준 수주잔고가 전년 말 대비 유의미하게 늘어난 기업은 아직 없음",
+    "quote": "하반기 5사 합산 50조원 이상의 수주잔고 파이프라인이 아직 유효하기 때문에 수주잔고 성장이 가속화되는 기업들이 방위산업 주가 상승을 견인할 전망"
+  }
+}

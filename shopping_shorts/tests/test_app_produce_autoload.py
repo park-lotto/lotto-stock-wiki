@@ -95,14 +95,19 @@ def test_autoload_empty_transcript_is_not_saved(monkeypatch, tmp_path):
 
 
 def test_autoload_does_not_retry_a_failed_video(monkeypatch, tmp_path):
-    """③★무한루프 차단: 같은 영상으로 몇 번을 다시 불러도 추출은 딱 한 번만 돈다."""
+    """③★무한루프 차단: 같은 영상 반복 호출에도 추출은 상한(3회)까지만 돈다.
+
+    2026-08-04: 임계 1→3 완화(인스타 일시 실패 1번으로 영구 스킵되던 실사고).
+    폭주 차단 계약은 유지 — 상한 도달 후엔 몇 번을 불러도 추출 0회."""
+    from shopping_shorts import app as _app
     client, store = _client(monkeypatch, tmp_path)
     calls = []
     _stub_extract(monkeypatch, calls, "")
 
     for _ in range(5):
         client.post("/api/produce/autoload", json={"items": [{"url": URL}]})
-    assert len(calls) == 1, f"실패한 영상을 재추출했다(크레딧 소모 루프): {calls}"
+    assert len(calls) == _app._AUTOLOAD_MAX_ATTEMPTS, \
+        f"상한과 다르게 추출됐다(크레딧 소모 루프?): {len(calls)}"
 
     last = client.post("/api/produce/autoload", json={"items": [{"url": URL}]}).json()
     assert last["results"][0]["status"] == "skipped_latched"
@@ -300,3 +305,20 @@ def test_autoload_cached_items_skip_cap_and_credit(monkeypatch, tmp_path):
     r = client.post("/api/produce/autoload", json={"items": items})
     assert r.status_code == 200
     assert r.json()["added"] == 3        # 상한 1이어도 캐시 3건은 다 통과
+
+
+def test_autoload_cache_hit_bypasses_latch(monkeypatch, tmp_path):
+    """★캐시가 래치를 이긴다(2026-08-04 실사고): 추출이 이미 있으면(비용 0) 래치돼
+    있어도 도서관 적재가 돼야 한다 — 안 그러면 AI PICK 버튼이 영영 안 뜬다."""
+    from shopping_shorts import app as _app
+    client, store = _client(monkeypatch, tmp_path)
+    calls = []
+    _stub_extract(monkeypatch, calls, "")
+    import hashlib as _h
+    code = _h.sha1(URL.strip().encode()).hexdigest()[:12]
+    for _ in range(_app._AUTOLOAD_MAX_ATTEMPTS):
+        store.autoload_mark_attempt(code)          # 래치 상한 도달
+    store.save_script(code, {"full_text": "대본 있음", "segments": []})
+    r = client.post("/api/produce/autoload", json={"items": [{"url": URL}]}).json()
+    assert r["results"][0]["status"] != "skipped_latched"
+    assert len(calls) == 0                          # 재추출(비용)은 없어야 한다

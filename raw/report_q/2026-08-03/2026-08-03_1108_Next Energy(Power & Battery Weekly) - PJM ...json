@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "date": "2026-08-03",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-03_1108_Next Energy(Power & Battery Weekly) - PJM ...md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "황성현",
+    "report_date": "2026.08.03.",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "Tesla(-17.8%), SK이노베이션(+7.2%), CATL(+6.2%), Fluence(-4.5%)",
+      "Centrus(+5.0%), Nuscale(+4.8%), 두산에너빌리티(+3.4%), Cameco(+2.6%)",
+      "KOSPI 6,691 ▼1.9",
+      "KRX 2차전지 3,195 ▼0.8",
+      "KRX 유틸리티 1,047 ▲22.6"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "전력",
+        "stance": "비중확대",
+        "reason": "AI 데이터센터 수요 급증에 따른 6.8GW 규모 보완 용량 조달 및 전력 인프라 투자 지속"
+      }
+    ],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026.09.30 ~ 10.21",
+        "event": "PJM Reliability Backstop Procurement 실시"
+      }
+    ],
+    "top_picks": [
+      "두산에너빌리티",
+      "LG에너지솔루션",
+      "SK이노베이션",
+      "포스코퓨처엠"
+    ],
+    "risk": "데이터센터 전력 연결이 상시 공급에서 조건부 공급으로 변경되며, 높은 송전망 접속비와 장기간의 인허가가 공급 확대를 제한할 수 있음",
+    "quote": "이번 사례를 통해 AI 데이터센터의 병목이 반도체에서 전력 공급 및 계통 접속으로 이동하고 있음을 볼 수 있으며, 전력인프라에 대한 투자기회도 지속 유효한 것을 확인할 수 있다."
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "date": "2026-08-04",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-04_1110_[ESG] PBR 0.8, 바람과 함께 사라지다.md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "엄수진",
+    "report_date": "2026년 08월 04일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "상속세 및 증여세법 법률 및 시행령 개정",
+      "상장주식 평가방법 개선",
+      "저 PBR 기업 공표 제도"
+    ],
+    "recommended_sectors": [],
+    "style": null,
+    "event_calendar": [
+      {
+        "date": "2026년 08월 03일",
+        "event": "「2026년 세제개편안」 발표"
+      },
+      {
+        "date": "2027년 04월 01일",
+        "event": "개정 상증세법 적용 개시"
+      }
+    ],
+    "top_picks": null,
+    "risk": [
+      "‘새로운 눌러진 시가’가 회사 가치 평가의 척도로 군림하게 될 가능성",
+      "세액 부담이 급증할 가능성"
+    ],
+    "quote": "상장회사가 주가를 장기간 눌러왔거나 주가를 하락시키기 위한 인위적인 행위를 한 것으로 추정되면(일정 요건 충족) 과세관청의 심의･의결을 거쳐 주식 평가기간을 현행보다 확장하여 상장주식의 가치를 재평가한다는 것이 골자이다."
+  }
+}

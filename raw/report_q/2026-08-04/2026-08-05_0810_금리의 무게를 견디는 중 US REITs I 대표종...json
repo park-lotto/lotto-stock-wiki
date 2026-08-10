@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "date": "2026-08-04",
+    "broker": "대신증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-05_0810_금리의 무게를 견디는 중 US REITs I 대표종...md"
+  },
+  "questionnaire": {
+    "broker": "대신증권",
+    "analyst": "김다은",
+    "report_date": "2026.05",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "금리",
+      "인플레이션",
+      "10년물 국채 TR",
+      "장기금리"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "데이터센터",
+        "stance": "선호",
+        "reason": "중장기 구조적 수요가 확인되고 실적 개선이 성과 차별화를 견인함"
+      },
+      {
+        "sector": "시니어하우징",
+        "stance": "선호",
+        "reason": "중장기 구조적 수요가 확인되고 수요 회복과 가격결정력으로 추가 모멘텀 입증"
+      },
+      {
+        "sector": "호텔",
+        "stance": "선별적 접근",
+        "reason": "수요 회복과 가격결정력으로 추가적인 모멘텀 입증"
+      },
+      {
+        "sector": "리테일",
+        "stance": "선별적 접근",
+        "reason": "수요 회복과 가격결정력으로 추가적인 모멘텀 입증"
+      }
+    ],
+    "style": "실적 가시성과 펀더멘털이 뒷받침되는 섹터 중심의 선별적 접근",
+    "event_calendar": null,
+    "top_picks": [
+      "이퀴닉스 (EQIX)",
+      "디지털리얼티 (DLR)",
+      "웰타워 (WELL)",
+      "프로로지스 (PLD)",
+      "사이먼프로퍼티그룹 (SPG)",
+      "리얼티인컴 (O)",
+      "아메리칸 타워 (AMT)",
+      "인비테이션 홈즈(INVH)"
+    ],
+    "risk": [
+      "장기금리 상승 부담",
+      "금리 인하 기대 후퇴"
+    ],
+    "quote": "향후 리츠 시장은 금리 부담이 남아 있는 만큼 전반적 리레이팅보다는 실적 가시성과 펀더멘털이 뒷받침되는 섹터 중심의 선별적 접근 유효"
+  }
+}

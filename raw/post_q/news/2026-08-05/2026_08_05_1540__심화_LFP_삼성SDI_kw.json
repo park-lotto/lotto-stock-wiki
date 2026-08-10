@@ -1,0 +1,29 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성SDI",
+      "signal": "bull",
+      "reason": "LFP 양극재 공급 계약을 통한 탈중국 공급망 확보",
+      "ts": null,
+      "quote": "삼성SDI·엘앤에프, LFP 양극재 공급 계약…탈중국 공급망 확보",
+      "sector": "2차전지"
+    },
+    {
+      "name": "엘앤에프",
+      "signal": "bull",
+      "reason": "삼성SDI향 LFP 양극재 공급 계약 체결",
+      "ts": null,
+      "quote": "삼성SDI·엘앤에프, LFP 양극재 공급 계약…탈중국 공급망 확보",
+      "sector": "2차전지"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "삼성SDI와 엘앤에프가 LFP 양극재 공급 계약을 체결함",
+      "ts": "03-24 07:00",
+      "quote": "삼성SDI·엘앤에프, LFP 양극재 공급 계약…탈중국 공급망 확보"
+    }
+  ],
+  "quote": "삼성SDI·엘앤에프, LFP 양극재 공급 계약…탈중국 공급망 확보"
+}

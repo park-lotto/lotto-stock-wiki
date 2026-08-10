@@ -114,8 +114,16 @@ def test_default_path_injects_block_mix_then_spine_fallback():
         seen["prompt"] = prompt
         return {"candidates": [{"hook": "h", "beats": [
             {"role": "훅", "narration": "완성부터 보여드릴게요", "seg_ids": ["s1-2"], "fit": 5}]}]}
-    ep.build_scene_first_plan(sources, "ref", 20, n_candidates=1, call=_cap,
-                              video_type="recipe", backbone_base=False)
+    # ★스타일 리라이트 off(2026-08-06 트리오 이식): restyle 프롬프트가 마지막 call이 돼
+    #   seen["prompt"]가 생성 프롬프트가 아니게 된다. 이 테스트의 관심사는 생성 프롬프트다.
+    import pytest as _pytest
+    _mp = _pytest.MonkeyPatch()
+    _mp.setenv("SCRIPT_STYLE", "off")
+    try:
+        ep.build_scene_first_plan(sources, "ref", 20, n_candidates=1, call=_cap,
+                                  video_type="recipe", backbone_base=False)
+    finally:
+        _mp.undo()
     p = seen["prompt"]
     # 2026-07-31 최종: 기본 경로 = **리라이트 믹스**(원본 타임라인 뼈대 + 문장만 갈아끼우기).
     # 덩어리 믹스(BLOCK_MIX)와 옛 스파인은 그 뒤 폴백이다.

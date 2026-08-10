@@ -234,11 +234,14 @@
   // NAV는 로드 시 동기로 그려지는 정적 배열이라 하위 항목 개념이 없다 → 마운트 뒤에 주입한다.
   // NAV 구조 자체는 안 건드린다 — 페이지 6개가 이 파일을 공유한다.
   var WORK_STEPS = 7;   // produce 7단계 — 미니바 칸 수
-  function mountWorks() {
+  // curWid: '지금 작업'으로 표시할 work_id. 안 넘기면 URL(?work=)에서 뽑는다.
+  // ★produce.html의 WORK_ID는 `let`이라 **window에 안 올라간다**(렉시컬 바인딩 — MIX_JOB에서
+  //   이미 한 번 밟은 함정). 그래서 window를 훔쳐보지 않고 **인자로 받는다**.
+  function mountWorks(curWid) {
     var nav = document.querySelector(".ss-nav");
     if (!nav) return;
-    var open = null;
-    try { open = new URLSearchParams(location.search).get("work"); } catch (e) {}
+    var open = curWid || null;
+    if (!open) { try { open = new URLSearchParams(location.search).get("work"); } catch (e) {} }
     fetch("/api/produce/works").then(function (r) { return r.json(); }).then(function (d) {
       if (!d || !d.ok || !d.works) return;
       var h = '<div class="ss-label">내 작업</div>';
@@ -271,10 +274,19 @@
       var wrap = document.createElement("div");
       wrap.className = "ss-group ss-works";
       wrap.innerHTML = h;
+      // ★다시 그릴 때는 **기존 블록을 갈아끼운다**(2026-08-06 __ssRefreshWorks 추가).
+      //   그냥 삽입하면 '내 작업' 목록이 통째로 두 벌 쌓인다. 위 주석의 "nav 통째 재파싱 금지"는
+      //   그대로 지킨다 — 건드리는 건 .ss-works 하나뿐이라 nav의 다른 자식·scrollLeft는 무사하다.
+      var old = nav.querySelector(".ss-works");
+      if (old) { nav.replaceChild(wrap, old); return; }
       var toggle = nav.querySelector(".ss-toggle");
       if (toggle) nav.insertBefore(wrap, toggle); else nav.appendChild(wrap);
     }).catch(function () {});   // 서버가 죽어도 네비게이션은 살아 있어야 한다
   }
+  // 작업 목록 다시 그리기(2026-08-06 사장님 제보 "따로 만들기 눌러도 내 작업에 추가가 안 된다").
+  // mountWorks는 페이지 로드 때 딱 한 번 돈다 — 화면 안에서 작업이 새로 생기는 흐름
+  // ('따로 만들기'가 그렇다)에는 다시 그릴 손잡이가 없어 새로고침 전까지 목록이 옛것이었다.
+  window.__ssRefreshWorks = function (curWid) { try { mountWorks(curWid); } catch (e) {} };
 
   // ── 유료게이트(2026-07-19): /api/me 등급으로 UI를 잠근다. sidebar.js는 6개 페이지 공유라
   //    여기 한 곳이면 전 페이지에 체험배너·🔒메뉴·만료안내가 걸린다. ──

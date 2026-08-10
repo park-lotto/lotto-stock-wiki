@@ -9,6 +9,7 @@
 build_edit_plan(Gemini 콜)은 Task 4에서 추가.
 """
 
+import inspect
 import json
 import os
 import re
@@ -425,6 +426,9 @@ def _build_source_sentence_sets(seg_map):
 
 
 _MIN_SET_SECS = 4.0     # 비트 하나가 이보다 짧으면 할 말이 없다(실측 근거는 _cap_sets 참조)
+# 프롬프트에 적어 줄 "최소 몇 세트" 힌트 = 게이트 최소비트. plan_gate와 한 값을 쓴다
+# (여기서 5를 따로 박으면 게이트만 올렸을 때 조용히 어긋난다).
+from shopping_shorts.plan_gate import _MIN_BEATS as _GATE_MIN_BEATS_HINT  # noqa: E402
 
 # 모델이 할 말이 없을 때 뱉는 자리표시자들. 실측은 `filler`(job e99d0e8e3e02, 6개)지만
 # 같은 계열이 몇 개 더 있어 함께 막는다. 역할 이름을 그대로 적은 것도 자리표시자다.
@@ -602,6 +606,16 @@ def _set_seq_prompt(sets, target_seconds):
              "수 있으니, 소스에 얽매이지 말고 내용 흐름으로 판단하라.",
              f"목표 영상 길이는 약 {target_seconds}초다 — 총 길이가 거기 가깝게 되도록 "
              "필요한 세트만 골라 순서를 정하라. 세트를 전부 다 쓸 필요는 없다.",
+             # ★세트 개수의 **하한**을 못박는다(2026-08-07 실측). 길이 예산만 주면 세트가
+             #   적고 긴 경우 2개로도 30초가 차서 Gemini가 2개만 고른다 — 고른 세트 수가
+             #   그대로 비트 수가 되므로(chosen==kept==beats, 08-06 12건 전건 일치) 5단계
+             #   스파인이 2비트로 무너진다(실측 job 8aa51a1940de: 4세트→chosen 2→2비트,
+             #   30초 목표에 14.2초). 같은 교훈이 _alt_seq_prompt엔 이미 반영돼 있었는데
+             #   이 1벌째 프롬프트만 빠져 있었다.
+             f"★**최소 {_GATE_MIN_BEATS_HINT}개 이상의 세트**를 골라라 — 고른 세트 하나가 "
+             "영상의 한 장면(비트)이 된다. 그보다 적으면 훅→문제→해결→결과→마무리 흐름이 "
+             "안 서고 한 장면이 지나치게 길어진다. 세트가 부족해 보여도 짧은 세트를 여러 개 "
+             "골라 장면 수를 채워라(세트가 그보다 적게 있으면 있는 것을 전부 골라라).",
              # ★2026-08-01 라이브 실측(job af0e40746fe1): s0 세트 합 16.9초 · s1 합 30.2초에
              #   목표가 30초라, s1 하나만으로 예산이 정확히 차서 Gemini가 s0를 통째로 버렸다
              #   (추천 후보까지 s1 단독). 버그가 아니라 예산 산수인데, 사장님이 영상 두 개를
@@ -741,7 +755,63 @@ def _pick_slot_groups(seg_map, target_seconds=None, call=None):
     if not kept:
         return (_pick_timeline(seg_map, target_seconds), SLOT_SOURCE_FALLBACK_FILTERED_EMPTY,
                 _slot_info(sets, chosen, []))
+    # ★프롬프트로 "최소 N세트"를 부탁했어도 지켜졌는지는 코드가 확인한다(이 파일의 교훈:
+    #   요구만 하고 확인 안 하면 지켜지는지 알 수 없다). 고른 세트 수 = 비트 수라,
+    #   모자라면 고른 세트를 **문장 경계에서** 쪼개 장면 수를 채운다. 안 골린 세트를
+    #   억지로 끌어오지 않는다 — Gemini가 짠 이야기 흐름은 그대로 두는 게 낫다.
+    kept = _split_kept_to_min_beats(kept, _GATE_MIN_BEATS_HINT)
     return [st["segs"] for st in kept], SLOT_SOURCE_GEMINI, _slot_info(sets, chosen, kept)
+
+
+def _split_kept_to_min_beats(kept, min_count):
+    """채택 세트가 min_count보다 적으면 **문장이 끝난 자리에서** 쪼개 개수를 맞춘다.
+
+    쪼개는 자리를 문장 경계로 제한하는 이유: 한 문장이 두 화면으로 찢어지면
+    "기름이 튀어서 | 힘들었거든요"처럼 프랑켄 문장이 된다(회귀 테스트가 지키는 불변식).
+    문장 경계가 없어 더 못 쪼개면 그대로 둔다 — 억지로 나누느니 비트가 적은 게 낫다.
+    같은 세트 안에서만 나누므로 소스 경계는 자동으로 지켜진다. 순수 계산."""
+    out = [dict(st) for st in (kept or [])]
+
+    def _cut_at(segs):
+        for k in range(len(segs) - 1, 0, -1):          # 뒤에서부터 = 최대한 균형 있게
+            prev = segs[k - 1]
+            if isinstance(prev, dict) and _ends_sentence(prev.get("text")):
+                return k
+        return 0
+
+    guard = 0
+    while len(out) < min_count and guard < 8:
+        guard += 1
+        cand = [i for i, st in enumerate(out)
+                if len(st.get("segs") or []) >= 2 and _cut_at(st["segs"])]
+        if not cand:
+            break
+        i = max(cand, key=lambda k: out[k].get("secs") or 0)
+        st = out[i]
+        segs = st["segs"]
+        half = _cut_at(segs)
+        a_segs, b_segs = segs[:half], segs[half:]
+
+        def _sum(ss):
+            tot = 0.0
+            for x in ss:
+                if isinstance(x, dict):
+                    tot += max(0.0, float(x.get("end") or 0) - float(x.get("start") or 0))
+            return round(tot, 1)
+
+        a_secs = _sum(a_segs)
+        out[i:i + 1] = [
+            {"set_id": st["set_id"], "video_id": st["video_id"], "segs": a_segs,
+             "secs": a_secs},
+            {"set_id": (b_segs[0].get("seg_id") if isinstance(b_segs[0], dict)
+                        else f'{st["set_id"]}b'),
+             "video_id": st["video_id"], "segs": b_segs,
+             "secs": round(max(0.0, (st.get("secs") or 0) - a_secs), 1)},
+        ]
+    if len(out) != len(kept or []):
+        print("[슬롯] 채택 %d세트 → %d세트로 분할(최소 %d비트 확보)"
+              % (len(kept or []), len(out), min_count), file=sys.stderr)
+    return out
 
 
 _ALT_SEQ_SCHEMA = {
@@ -1327,6 +1397,17 @@ def _assign_blocks(beats, blocks):
 _SYLLABLES_PER_SEC = 5.7
 
 
+def _speech_speed():
+    """실제 발화 배속(2026-08-09). _SYLLABLES_PER_SEC은 speed 1.0 기준 실측치라
+    라이브 보이스(speed 1.3~1.6)에선 그만큼 빠르다 — 실측 8.19자/초 ÷ 5.7 = 1.44.
+    env `SCRIPT_SPEECH_SPEED=1.0`이면 종전 동작(회귀 0)."""
+    try:
+        v = float(os.environ.get("SCRIPT_SPEECH_SPEED", "1.44") or 1.44)
+    except (TypeError, ValueError):
+        v = 1.44
+    return min(2.0, max(1.0, v))
+
+
 def _seg_benefits(seg):
     """세그먼트의 product_benefits → 문장 리스트(fail-open []). list/str 모두 허용.
     무자막 소스(text 빈칸)에서 대본이 쓸 수 있는 유일한 언어 재료라 여기서 흘리면 안 된다."""
@@ -1821,14 +1902,26 @@ def _is_dead_key_error(e):
                                 "API_KEY_INVALID", "API key not valid"))
 
 
-def _vault_call(prompt, schema, max_tries=8):
+def _vault_call(prompt, schema, max_tries=8, key_offset=0):
     """key_vault 캐스케이드 예비키풀로 JSON 생성 호출 → raw dict. 무키/실패면 None.
 
     build_edit_plan이 comment_gen 전용키(1개, 쉽게 소진) 대신 배치된 예비키를
-    쓰도록 하는 공용 경로(2026-07-13)."""
+    쓰도록 하는 공용 경로(2026-07-13).
+
+    ★key_offset — 시작 키를 어긋나게 돌린다(2026-08-05). get_live_keys_cascade는
+      매번 **같은 순서**를 돌려주므로, 인자 없이 부르면 모든 호출이 keys[0]부터
+      시작한다. 후보 3개를 연달아 생성하면 3초 안에 같은 키를 연타해 **분당 한도
+      (무료등급 15 RPM)** 를 넘겨 429가 났다(실측 job 9c470e54ab97 23:08:31~34
+      3연발 → 스타일 리라이트 3회 재시도가 전부 튕겨 조용히 원본 폴백, 후보
+      A/B/C 스타일이 통째로 안 입혀졌다). 키가 18개 살아있는데 0번만 두들긴 것.
+      후보 인덱스·워커 PID를 섞어 오프셋을 주면 서로 다른 키로 나가 429 자체가
+      안 난다. 실패 시 동작은 종전과 같다 — 대기 없이 다음 키로 순차 회전."""
     keys = key_vault.get_live_keys_cascade("general")
     if not keys:
         return None
+    if key_offset:
+        _o = int(key_offset) % len(keys)
+        keys = keys[_o:] + keys[:_o]
     for key in keys[:max_tries]:
         try:
             resp = key_vault.get_client_for_key(key).models.generate_content(
@@ -1836,6 +1929,16 @@ def _vault_call(prompt, schema, max_tries=8):
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json", response_schema=schema),
             )
+            # ★빈 응답은 **다음 키로 재시도**한다(2026-08-09 실측). 모델이 candidates를
+            #   통째로 비워 돌려주는 일이 간헐적으로 있다(finish_reason조차 없고
+            #   candidates_token_count=None — 출력을 시작조차 안 했다). 종전엔 resp.text가
+            #   None이라 json.loads(None)이 TypeError로 터지고 아래 `return None`으로
+            #   떨어져 **그 후보가 통째로 사라졌다**. 10회 실측: 채이 6/10·홈테리어픽 3/10이
+            #   '빈 대본'으로 죽어 "스타일 3개가 안 나온다"의 직접 원인이었다.
+            #   재시도는 다른 키로 나가므로 429·일시 장애와도 자연히 갈린다.
+            if not (resp.text or "").strip():
+                print("edit_plan._vault_call: 빈 응답 → 다음 키로 재시도", file=sys.stderr)
+                continue
             return json.loads(resp.text)
         except Exception as e:  # noqa: BLE001
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
@@ -1864,6 +1967,35 @@ def _vault_call(prompt, schema, max_tries=8):
             print(f"edit_plan._vault_call: {e!r}", file=sys.stderr)
             return None
     return None
+
+
+def _candidate_key_offset(i):
+    """후보 i가 쓸 키 오프셋. 워커 PID를 섞어 워커끼리도 안 겹치게 한다.
+
+    키풀 길이는 여기서 모른다(캐스케이드가 그때그때 다르다) — 나머지 연산은
+    _vault_call이 실제 키 개수로 한다. 여기선 '서로 다른 수'만 보장하면 된다."""
+    return os.getpid() * 7 + i
+
+
+def _offset_call(call, key_offset):
+    """call에 key_offset을 붙여주는 래퍼. 못 받는 call이면 원본 그대로 돌려준다.
+
+    ★테스트·다른 호출부가 넘기는 가짜 call은 (prompt, schema)만 받는다. 무조건
+      key_offset을 넘기면 TypeError로 대본 생성이 통째로 죽는다 — 시그니처를
+      확인해 받는 것만 붙인다(부가기능이 본 기능을 죽이지 않게)."""
+    if not key_offset or call is None:
+        return call
+    try:
+        if "key_offset" not in inspect.signature(call).parameters:
+            return call
+    except (TypeError, ValueError):     # 내장·C함수 등 시그니처를 못 읽는 경우
+        return call
+
+    def _wrapped(prompt, schema, **kw):
+        kw.setdefault("key_offset", key_offset)
+        return call(prompt, schema, **kw)
+
+    return _wrapped
 
 
 _SCENE_FIRST_SCHEMA = {
@@ -1922,7 +2054,13 @@ def _collect_seg_benefits(segments):
 
 def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3, call=_vault_call,
                             bank_context="", order_block="", lengthen=False,
-                            benefits_block="", tone_boost=False, engine=None, engine_seed=0):
+                            benefits_block="", tone_boost=False, engine=None, engine_seed=0,
+                            frame_start=None,
+                            facts_block=""):
+    # facts_block(사실표 v7, 2026-08-10): 빈 문자열이면 무주입=종전 동일.
+    """frame_start(2026-08-06): 이 호출의 첫 후보가 쓸 이야기 구도 인덱스(style_profiles.
+    _STORY_FRAMES 순환). None이면 무주입(회귀 0). 슬롯 경로는 벌마다 n=1로 따로 부르는데,
+    배치용 '후보마다 다르게' 지시는 n=1에서 전부 1번(발견담)이 돼 구도가 안 갈렸다."""
     """스토리 헌장 + 장면 팔레트 + 레퍼 구조 → 후보 n개. 각 비트는 seg_ids(2~4 다중컷)로
     장면을 지목한다. 실패 시 []. 헌장이 품질을 담당하므로 별도 검증루프 없음(1콜).
 
@@ -1940,12 +2078,29 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
     #    남긴 것: 배선(seg_id 지목·caption_lines 일치·스키마 필드) + 중요 액션(변화) 집중.
     #    선행 설계(참고): docs/superpowers/specs/2026-07-26-대본프롬프트-단순화-Gemini종합-design.md
     lo, hi = int(char_target * 0.93), int(char_target * 1.05)
+    from shopping_shorts import style_profiles as _spf
+    if frame_start is None:
+        _frame_txt = ""
+    elif n == 1:
+        _frame_txt = _spf.story_frame_block(frame_start)
+    else:
+        _fr = [_spf.story_frame(frame_start + k) for k in range(n)]
+        _frame_txt = ("\n★후보별 이야기 구도 — 겹치면 실패다(사실·인물은 지어내지 마라):\n"
+                      + "\n".join(f"  {k + 1}번 후보 = **{f[0]}**: {f[1]}"
+                                  for k, f in enumerate(_fr) if f) + "\n") if any(_fr) else ""
     prompt = (
         f"너는 한국 쇼핑 숏폼(살림·요리·제품) 대본 작가다. 아래 재료로 서로 다른 훅을 쓴 "
         f"대본 후보 {n}개를 만들어라. 화자가 들려주는 짧은 이야기체로, 사람이 말하듯 자연스럽게.\n\n"
         "[제품 — ★이게 중심이다. 무슨 제품이고 핵심 장점이 뭔지 여기서 잡고 절대 벗어나지 마라. "
         "다국어면 한국어로]\n"
         f"{(reference_text or '')[:1500]}\n\n"
+        # ★채널 스타일(2026-08-05)을 맨 앞에 — 맨 뒤에 붙였더니 규칙 40줄에 밀려 절반만
+        #   먹었다(실측 job 64e0a110: 훅 명령형·문장 뚝뚝·합쇼체 잔존). 문체는 이게 우선.
+        # ★2026-08-09: 슬롯 경로는 벌마다 n=1로 따로 부르므로 **그 후보의 채널**을 싣는다
+        #   (frame_start가 곧 후보 인덱스다 — 위 _frame_txt와 같은 값을 쓴다).
+        #   n>1(한 콜에 여러 후보)이면 하나만 실을 수 없으니 종전대로 공통 블록.
+        + _style_extra(frame_start if (n == 1 and frame_start is not None) else None)
+        + _frame_txt +
         # 2026-07-29(사장님 확정): 스펙 나열형 reference_text를 그대로 던지면 대본도 나열형으로
         # 나온다. 3단계 상황 프레임을 줘서 Gemini가 스스로 '썰'을 짓게 유도(고정 문구 하드코딩 금지
         # — 제품마다 실제 스펙에서 재구성해야 하므로 지시만 주고 내용은 매번 새로 만들게 한다).
@@ -1972,6 +2127,7 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         #   인벤토리에 '변화:' 칸을 새로 실었으니, 대본을 그 변화들에서 **거꾸로** 짜게 한다.
         # 화면 일치 지시는 아래 [장면과 대사] 블록으로 합쳤다(2026-07-31 정리) — 같은 말을
         # 두 군데서 하면 모델이 한쪽을 놓친다.
+        + ((facts_block + "\n") if facts_block else "")   # ★사실표(v7) — 믹스 생성도 접지
         + ((benefits_block + "\n\n") if benefits_block else "")
         + ((order_block + "\n\n") if order_block else "")
         # ★2026-07-27 과삭제 복구: 레버1이 스토리 강제를 전부 걷어내 대본이 '기능 자막 나열'로
@@ -1990,6 +2146,10 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         + "[이야기]\n"
         "- 기능 나열이 아니라 하나로 이어지는 이야기로 엮어라. 무슨 일이 있었고·그래서 어떻게 "
         "됐는지가 이어지게. 문장이 각자 놀면 광고 문구로 들린다.\n"
+        # ★비트 문장 잇기(2026-08-05): 비트마다 한 문장씩 닫으니 대본이 뚝뚝 끊겼다(실측).
+        "- ★비트가 나뉘어 있어도 대본은 한 호흡이다 — 각 비트의 narration이 독립 문장으로 "
+        "닫히지 말고, 앞 비트를 이어받아 흐르게 써라. 한 비트 안에서 장점 2~3개를 접속으로 "
+        "이어 긴 문장 하나로 써도 좋다.\n"
         "- 훅·CTA·풀어내는 순서는 **후보마다 개성 있게** 달라야 한다. 다만 그 차이는 "
         f"**원본의 어느 대목을 앞세우느냐**에서 나와야지, {n}개가 각자 다른 이야기를 "
         "지어내는 게 아니다.\n"
@@ -2036,8 +2196,15 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         "형식은 반드시 [명분 한 줄] + \"댓글에 '[키워드]' 남겨주시면 바로 보내드릴게요\"로 끝내라. "
         "유입 경로는 댓글뿐이다(프로필·링크 안내 금지). 명분은 원본에 있는 사실 범위 안에서만 — "
         "없는 가격·할인·한정수량을 지어내지 마라.\n"
+        # ★CTA 미끼(2026-08-06 사장님 확정, 1소스와 동일): 본문이 비법을 다 풀면 CTA에 줄 게
+        #   안 남는다 — 가장 구체적인 한 조각은 본문에서 숨기고 CTA가 그 조각을 문다.
+        "- ★미끼 규칙: 핵심 비법의 **가장 구체적인 한 조각**(정확한 비율·핵심 재료 하나·"
+        "온도/시간 같은 수치)은 본문에서 말하지 마라 — '비법이 있다'는 것과 효과만 보여주고, "
+        "그 조각이 뭔지는 CTA에서 걸어라. 단, 뭘 숨겼는지는 시청자가 알게 하라"
+        "(예: 본문 '재료 하나만 바꾸면 끝' → CTA '그 재료 궁금하시면 댓글에').\n"
         "- 각 후보에 hook, story_person, story_event, story_resolution, cta_line, "
         "cta_keyword를 채워라.\n"
+        # (후보별 이야기 구도는 _frame_txt로 상단에 주입 — 2026-08-06, frame_start 관통)
         "- 억지 개그·번역투·상세페이지 상투어(꿀템·갓성비·완벽 해결·삶의 질 상승) 금지.\n"
         # 은행 = 실제로 잘 나온 대본 조각들. ★규칙이 아니라 **벤치마킹 대상**으로 준다.
         + ((f"\n[벤치마킹 — 실제로 잘 나온 대본들의 조각이다. 규칙이 아니라 참고다. "
@@ -2075,6 +2242,20 @@ def _engine_seed(reference_text):
     h = hashlib.md5((reference_text or "").encode("utf-8")).hexdigest()
     return int(h[:6], 16) % 97
 
+
+
+def _style_extra(cand_idx=None):
+    """채널 스타일 블록(style_profiles). 부가기능 — 실패해도 생성을 죽이지 않는다.
+
+    ★cand_idx를 주면 **그 후보에 배정된 채널**의 few-shot을 싣는다(2026-08-09, 1소스와 동일).
+      안 주면 종전과 100% 동일(trio면 maison 공통) — 하위호환."""
+    try:
+        from shopping_shorts import style_profiles
+        if cand_idx is not None:
+            return style_profiles.candidate_style_block(cand_idx)
+        return style_profiles.style_block()
+    except Exception:
+        return ""
 
 
 def _engine_extra(engine, seed=0):
@@ -2138,11 +2319,23 @@ def _ground_candidate(cand, seg_map, structure="free", lead_hook=True):
     ★영상은 beats를 읽으므로 첫 비트가 밋밋하면 hook(강한 오프너)을 앞에 얹는다."""
     hook = cand.get("hook", "")
     beats_out = []
+    dropped = []
     for beat in cand.get("beats", []):
         segs = beat.get("seg_ids") or []
-        primary = _ground_ref({"seg_id": segs[0]}, seg_map) if segs else None
+        # ★환각 seg_id 하나로 비트를 통째로 버리지 않는다(2026-08-07). 나레이션은 멀쩡한데
+        #   화면 지목만 틀린 경우가 있어, 같은 비트의 나머지 seg_id로 내려가며 살린다.
+        #   (예전엔 seg_ids[0]이 인벤토리에 없으면 그 비트의 대사까지 통째로 사라졌다.)
+        primary, used_i = None, 0
+        for i, sid in enumerate(segs):
+            primary = _ground_ref({"seg_id": sid}, seg_map)
+            if primary is not None:
+                used_i = i
+                break
         if primary is None:
+            dropped.append({"role": beat.get("role", ""),
+                            "narration": (beat.get("narration") or "")[:60]})
             continue
+        segs = segs[used_i:]
         alts, seen = [], {primary["seg_id"]}
         for sid in segs[1:]:
             g = _ground_ref({"seg_id": sid}, seg_map)
@@ -2169,6 +2362,11 @@ def _ground_candidate(cand, seg_map, structure="free", lead_hook=True):
         })
     if not beats_out:
         return None
+    if dropped:
+        # 조용한 실패 금지 — 몇 개가 왜 사라졌는지 남긴다.
+        print("_ground_candidate: 환각 seg_id로 비트 %d개 드롭 — %s"
+              % (len(dropped), "; ".join("[%s]%s" % (d["role"], d["narration"]) for d in dropped)),
+              file=sys.stderr)
     beats_out = _ensure_cta_beat(beats_out, cand)
     beats_out = _fix_beat_structure(beats_out)
     beats_out = _fill_beat_screen_time(beats_out, seg_map)
@@ -2184,7 +2382,7 @@ def _beat_screen_secs(beat):
     return tot
 
 
-def _fill_beat_screen_time(beats, seg_map, max_alts=6):
+def _fill_beat_screen_time(beats, seg_map, max_alts=None):
     """비트마다 **화면 길이 합 ≥ 대사 읽는 시간**이 되게 컷을 더 붙인다(2026-07-31).
 
     ★왜 필요한가 — 실측(job 61a2678a8e03, 사장님 영상 육안 검증):
@@ -2199,6 +2397,17 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=6):
     인벤토리가 동나면 그때만 재사용을 허용한다 — 같은 화면이 두 번 나오는 게
     엉뚱한 화면이 걸리는 것보다 낫다.
     """
+    # ★상한(2026-08-09): 종전 고정 6은 컷이 3초대면 화면 19초가 천장이라, 대본이
+    #   28~42초로 길어진 뒤엔 **화면이 말을 못 따라갔다**(실측 비율 1.4~2.2배 —
+    #   자막이 밀리거나 말 도중에 영상이 끝난다). 사장님 지시가 "중복을 허용해 채우라"이므로
+    #   스토리 하한이 켜져 있으면 상한을 넉넉히 준다(재사용은 아래 폴백이 이미 허용한다).
+    #   ⚠️무제한은 아니다 — 한 비트에 컷이 수십 개면 화면이 정신없어진다.
+    if max_alts is None:
+        try:
+            from shopping_shorts import single_source as _ss_a
+            max_alts = 14 if _ss_a.STORY_MIN_SECONDS > 0 else 6
+        except Exception:
+            max_alts = 6
     if not beats:
         return beats
     used = set()
@@ -2239,15 +2448,39 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=6):
             used.add(sid)
             have += max(0.0, float(g["end"]) - float(g["start"]))
         if have < need:                     # 인벤토리 소진 → 재사용 허용(빈 화면보다 낫다)
-            for s in pool:
-                if have >= need or len(alts) >= max_alts:
-                    break
-                g = _ground_ref({"seg_id": s.get("seg_id")}, seg_map)
-                if not g or g["seg_id"] == (b["primary"] or {}).get("seg_id"):
-                    continue
-                alts.append(g)
-                have += max(0.0, float(g["end"]) - float(g["start"]))
+            # ★pool을 **여러 바퀴** 돈다(2026-08-09). 종전엔 한 바퀴뿐이라 컷이 6개인
+            #   소재에서는 붙일 게 금방 동나 화면이 19초에 묶였다 — 대본이 27~30초로
+            #   길어진 뒤엔 말이 화면을 1.4~2.2배 초과했다(자막 밀림·말 도중 종료).
+            #   사장님 지시 "중복 허용"에 따라 같은 컷을 다시 쓰더라도 화면을 채운다.
+            _guard = 0
+            while have < need and len(alts) < max_alts and _guard < 40:
+                _guard += 1
+                _added = False
+                for s in pool:
+                    if have >= need or len(alts) >= max_alts:
+                        break
+                    g = _ground_ref({"seg_id": s.get("seg_id")}, seg_map)
+                    if not g or g["seg_id"] == (b["primary"] or {}).get("seg_id"):
+                        continue
+                    alts.append(g)
+                    have += max(0.0, float(g["end"]) - float(g["start"]))
+                    _added = True
+                if not _added:
+                    break                   # 붙일 게 아예 없다 — 무한루프 방지
         b["alternates"] = alts
+        # ★마지막에 붙인 컷이 need를 크게 넘기면 **끝을 잘라** 맞춘다(2026-08-09).
+        #   컷이 3~5초 단위라 통째로 더하면 화면이 말보다 훨씬 길어진다(실측 화면 42초 vs
+        #   말 33.6초) — 말이 끝나고 영상만 도는 꼴이다.
+        #   ⚠️2차 수정: 처음엔 이 트리밍을 **재사용 폴백 안에만** 넣어서, 안 쓴 컷으로
+        #     채운 일반 경로(대부분의 경우)에는 적용되지 않았다 — 그래서 40초 초과가 남았다.
+        #     이제 두 경로가 끝난 **뒤** 한 곳에서 자른다.
+        if alts and have > need + 1.0:
+            _last = alts[-1]
+            _dur = max(0.0, float(_last["end"]) - float(_last["start"]))
+            _over = have - need
+            if 0 < _over < _dur:            # 그 컷 안에서만 자른다(앞 컷들은 그대로)
+                _last["end"] = round(float(_last["end"]) - _over, 2)
+                have = need
     return beats
 
 
@@ -3007,8 +3240,17 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
     실패(빈 후보)면 None을 돌려 기존 경로로 폴백한다(회귀0).
     """
     from shopping_shorts import single_source, hook_patterns
-    segments = next((s.get("segments") for s in source_scripts if s.get("segments")), [])
-    span, budget, used, order = single_source.select_and_order(segments, target_seconds)
+    _src_entry = next((s for s in source_scripts if s.get("segments")), {})
+    segments = _src_entry.get("segments") or []
+    # ★video_id 필수(2026-08-04 실사고 job ed7445bfa4e7): extract의 세그먼트에는 video_id가
+    #   없다(소스 키 아래 중첩). 없이 내보내면 조립기가 원본 mp4를 못 찾아 그 비트의 클립이
+    #   전멸하고, video_assemble의 '클립 0개 비트는 조용히 스킵'에 걸려 **훅이 통째로
+    #   빠진 미리보기**가 나갔다(화면보충이 붙은 비트만 우연히 살아남았다).
+    _vid = _src_entry.get("video_id")
+    for _s in segments:
+        _s.setdefault("video_id", _vid)
+    span, budget, used, order = single_source.select_and_order(
+        segments, target_seconds, video_type=detected)
     if not order:
         return None
     _mat = " ".join((s.get("full_text") or "") for s in source_scripts)
@@ -3018,35 +3260,65 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
     print("[1소스대본] 원본 %.1f초 → 예산 %.1f초, 컷 %d개, 훅후보: %s"
           % (span, budget, len(order), " / ".join(p[1] for p in pats)), file=sys.stderr)
     src_texts = [s.get("full_text", "") for s in source_scripts]
-    cands = []
-    for i in range(max(1, n_candidates)):
+    # ★사실표(v7, 2026-08-10): 잡당 1회 뽑아 세 후보의 생성·리스타일이 공유한다.
+    #   실패하면 빈 표 → 블록 무주입(종전과 100% 동일). SCRIPT_FACTSHEET=0로 즉시 off.
+    _facts_block = ""
+    if os.getenv("SCRIPT_FACTSHEET", "1") != "0":
+        _facts_block = single_source.factsheet_block(
+            single_source.build_factsheet(_mat, call))
+        if _facts_block:
+            print("[1소스대본] 사실표 주입(%d자)" % len(_facts_block), file=sys.stderr)
+        else:
+            print("[1소스대본] 사실표 실패 → 무주입(종전 동작)", file=sys.stderr)
+
+    def _one_candidate(i):
+        """후보 하나를 통째로 만든다. 실패면 None.
+
+        ★후보끼리 공유 상태가 없다(각자 자기 beats/plan만 만진다) — 그래서 아래에서
+          스레드로 동시에 돌린다. seg_map·order·source_scripts는 읽기 전용으로만 쓴다."""
         pat = pats[i % len(pats)]
-        prompt = single_source.script_prompt(order, used, hook_patterns.prompt_block(pat))
-        beats = single_source.parse_beats(call(prompt, single_source.BEATS_SCHEMA))
+        # ★후보마다 다른 키로 나간다(2026-08-05) — 같은 키 연타로 분당한도 429가 나
+        #   스타일 리라이트가 통째로 무효화되던 것(위 _vault_call 주석 참고).
+        #   워커 PID를 섞는 이유: 워커를 여러 개 띄우면 각 워커의 후보0이 전부 같은
+        #   키로 몰린다(워커 3개 예정 → 9개 호출이 keys[0]에 집중). PID로 출발점을
+        #   흩어 워커끼리도 안 겹치게 한다.
+        _koff = _candidate_key_offset(i)
+        _c = _offset_call(call, _koff)
+        # ★후보별 이야기 구도(2026-08-06 사장님 "요리책 낸 엄마로 비슷하네 다"): 원본 인물이
+        #   센 소재에서 세 후보가 같은 구도로 수렴하는 것을 생성 단계에서 갈라준다.
+        from shopping_shorts import style_profiles as _sp_f
+        # ★cand_idx(2026-08-09): 이 후보의 채널 few-shot을 **생성 단계에서** 싣는다.
+        #   종전엔 셋 다 maison으로 태어나고 리라이트가 어미만 갈아 "3개가 비슷하게
+        #   읽힌다"였다(위 candidate_style_block 주석에 실측 job 2건).
+        prompt = single_source.script_prompt(
+            order, used, hook_patterns.prompt_block(pat),
+            frame_block=_sp_f.story_frame_block(i), cand_idx=i,
+            facts_block=_facts_block)
+        beats = single_source.parse_beats(_c(prompt, single_source.BEATS_SCHEMA))
         # 총량 교정루프(최대 2회) — 넘치면 표현만 줄여 다시 받는다.
         for _ in range(2):
             over, _secs, _o = single_source.over_budget(beats, used)
             if not beats or not over:
                 break
             b2 = single_source.parse_beats(
-                call(single_source.shrink_prompt(beats, used), single_source.BEATS_SCHEMA))
+                _c(single_source.shrink_prompt(beats, used), single_source.BEATS_SCHEMA))
             if b2:
                 beats = b2
         if not beats:
-            continue
+            return None
         # CTA 교정(2026-08-04): 마지막 문장에 '댓글'이 없으면 그 문장만 고쳐 받는다(2회).
         # 실측: 프롬프트 강화 후에도 3후보 중 1~2개가 감상문으로 끝났다 — 코드로 보장한다.
         for _ in range(2):
             if not single_source.cta_missing(beats):
                 break
             b3 = single_source.parse_beats(
-                call(single_source.fix_cta_prompt(beats, _mat), single_source.BEATS_SCHEMA))
+                _c(single_source.fix_cta_prompt(beats, _mat), single_source.BEATS_SCHEMA))
             if b3 and not single_source.cta_missing(b3):
                 beats = b3
         if single_source.cta_missing(beats):
             # LLM 교정까지 실패(키 소진·429)해도 CTA는 보장 — 결정적 문구로 마지막 문장 교체.
             kw = "나도" if "나도" in _mat else "정보"
-            beats[-1]["narration"] = f"방법이 궁금하면 댓글에 '{kw}' 남겨주세요."
+            beats[-1]["narration"] = f"방법이 궁금하면 댓글에 '{kw}' 남겨주시면 바로 보내드릴게요."
         # ★CTA 비트 생존 보장(2026-08-04 실측): 모델이 CTA를 제대로 써도 covers가 비면
         # 아래 커버 배정에서 컷 0개 → 통째로 탈락 → 앞 문장이 [cta] 자리로 밀려
         # "안심이라 최고예요"류 감상문이 CTA가 됐다(fix_cta 호출 0회가 증거 — 프롬프트
@@ -3065,14 +3337,252 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         _CONNS = ["심지어", "놀랍게도", "근데 이게 대박인 게", "더군다나"]
         if len(beats) >= 3 and not any(
                 cn in (b.get("narration") or "") for b in beats for cn in _CONNS):
-            mid = beats[len(beats) // 2]
-            mid["narration"] = f"{_CONNS[i % len(_CONNS)]} {mid['narration']}"
+            # ★고조 재작성(2026-08-04 사장님 "연결어랑 뒷내용이 안 이어진다"): 기계적
+            #   앞붙이기는 '심지어' 뒤에 이미 말한 장점이 와서 고조가 안 됐다. LLM이
+            #   자리를 고르고 **앞에 안 나온 새 장점**으로 그 문장을 다시 쓴다.
+            #   실패(키 소진 등) 시에만 종전 기계식 앞붙이기로 폴백.
+            _esc = _c(single_source.escalate_prompt(beats), single_source.ESCALATE_SCHEMA)
+            _n = _esc.get("n") if isinstance(_esc, dict) else None
+            _txt = (_esc.get("narration") or "").strip() if isinstance(_esc, dict) else ""
+            if (_txt and isinstance(_n, int) and 2 <= _n <= len(beats) - 1
+                    and any(c in _txt for c in _CONNS)):
+                beats[_n - 1]["narration"] = _txt
+            else:
+                mid = beats[len(beats) // 2]
+                mid["narration"] = f"{_CONNS[i % len(_CONNS)]} {mid['narration']}"
+        # ★스타일 통째 리라이트(2026-08-05): 컷 매핑 생성은 광고 카피 결을 못 벗는다(3바퀴
+        #   실측) → 완성된 나레이션을 스타일 few-shot 보고 문체만 다시 쓴다(40/40 검증 방식).
+        #   문장수·순서 고정이라 covers 유효. 실패 시 원본 유지·스타일 off면 no-op.
+        #   ★trio(기본): 후보마다 다른 채널 스타일 — A=메종(발견담)/B=채이(가족드라마)/
+        #   C=스탠다드(유머목격담). 사장님 확정 3각(2026-08-05).
+        from shopping_shorts import style_profiles as _sp0
+        _restyle_rep = {}
+        beats = single_source.apply_restyle(beats, _c,
+                                            style_name=_sp0.candidate_style(i),
+                                            report=_restyle_rep,
+                                            facts_block=_facts_block)
+        _hap_style = _sp0.candidate_style(i)
         # ★빈 나레이션 비트는 **커버 배정 전에** 걸러낸다(2026-08-04 라이브 실측 job
         #   bcdf871a6d57: 추천 후보가 16.8초 — 버려진 비트의 컷이 같이 사라져 하한 미달).
         #   먼저 거르면 아래 '구멍은 직전 비트가 이어받는다'가 그 컷들을 살린다.
         beats = [b for b in beats if (b.get("narration") or "").strip()]
         if not beats:
-            continue
+            return None
+        # ★최종 총량 게이트(2026-08-07 사장님 "자막이 순식간에 지나간다"): 위의 shrink
+        #   교정루프는 초안 직후에만 돌고, 그 뒤의 CTA 교정·고조 재작성·스타일 리라이트가
+        #   문장을 도로 불려도 아무도 다시 재지 않았다 — 실측 job a0157a0ed29d: 나레이션
+        #   34.2초가 화면 29.9초를 넘은 채 렌더돼 자막 줄당 0.8초로 순삭. 여기서 한 번 더
+        #   재고, 넘치면 표현만 줄여 받는다(문장수·covers 불변 → 화면 배정 유효).
+        for _ in range(2):
+            _over2, _secs2, _ = single_source.over_budget(beats, used)
+            if not _over2:
+                break
+            print("[1소스대본] 후보%d 최종 총량 초과(나레이션 %.1f초/예산 %.1f초) → 축약 재요청"
+                  % (i + 1, _secs2, used), file=sys.stderr)
+            _b4 = single_source.parse_beats(
+                _c(single_source.shrink_prompt(beats, used), single_source.BEATS_SCHEMA))
+            if _b4 and len(_b4) == len(beats):
+                for _bi, _nb in enumerate(_b4):     # 축약 응답이 covers를 빠뜨려도 승계
+                    if not _nb.get("covers"):
+                        _nb["covers"] = beats[_bi].get("covers")
+                beats = _b4
+        # ★대본 미달 보강(2026-08-09 사장님 지시): "대본이 짧은 건 있을 수가 없다.
+        #   그렇게 되면 스토리 자체가 안 나오고 **설득 구조가 실패한 대본**이다."
+        #   종전엔 over_budget(넘침)만 있고 미달은 방치였다 — 실측: 요구 202자에 115자(56%)가
+        #   4문장으로 그대로 나갔다. 넘치면 줄이면서 모자라면 안 채우는 건 비대칭이다.
+        #   ★축약 루프 **뒤**에 둔다(축약이 도로 깎으면 의미가 없다). 늘린 뒤 다시 축약하지
+        #     않는다 — expand는 "목표에 가깝게"라 초과로 튀지 않는다(넘치면 다음 잡에서 잡힌다).
+        for _ in range(2):
+            _short, _s_secs, _lack = single_source.under_budget(beats, used)
+            if not _short:
+                break
+            print("[1소스대본] 후보%d 분량 미달(나레이션 %.1f초/예산 %.1f초) → 보강 재요청"
+                  % (i + 1, _s_secs, used), file=sys.stderr)
+            _be = single_source.parse_beats(
+                _c(single_source.expand_prompt(beats, used, _mat),
+                   single_source.BEATS_SCHEMA))
+            if not _be:
+                break
+            # 문장 수가 늘어도 받는다(짧은 게 문제였다) — covers는 없으면 승계.
+            for _bi, _nb in enumerate(_be):
+                if not _nb.get("covers") and _bi < len(beats):
+                    _nb["covers"] = beats[_bi].get("covers")
+            _new_chars = sum(len((b.get("narration") or "")) for b in _be)
+            _old_chars = sum(len((b.get("narration") or "")) for b in beats)
+            if _new_chars <= _old_chars:      # 안 늘었으면 원본 유지(무한 루프 방지)
+                break
+            beats = _be
+        # ★★채널 서명 보장 — **문장을 다시 쓰는 모든 단계가 끝난 뒤**에 둔다(2026-08-09).
+        #   처음엔 리라이트 직후에 뒀다가 라이브에서 홈테리어픽이 다시 깨졌다(job d8a17db5d99f):
+        #   뒤따르는 **최종 축약(shrink)**이 문장을 다시 쓰면서 합쇼체 어미를 도로 날린다
+        #   (그 잡 로그: 3후보 전부 "최종 총량 초과 → 축약 재요청"). CTA·고조·리라이트가
+        #   문장을 불려도 아무도 다시 안 쟀던 것과 같은 실패다.
+        #   ⚠️여기서 고친 뒤엔 문장을 다시 쓰는 단계가 없어야 한다 — 새 후처리를 넣을 땐
+        #     반드시 이 블록보다 **앞**에 넣어라.
+        #   ⚠️길이: fix는 "길이는 지금과 비슷하게, 어미만" 지시라 예산을 크게 흔들지 않는다.
+        #     (넘치면 자막 싱크가 흔들리므로 아래에서 covers는 그대로 승계한다)
+        #   해당 스타일이 아니면 두 검사 모두 항상 False라 no-op(회귀 0).
+        def _sig_fix(_check, _mk_prompt):
+            _b = beats
+            for _ in range(2):
+                if not _check(_b, _hap_style):
+                    break
+                _r = single_source.parse_beats(
+                    _c(_mk_prompt(_b), single_source.BEATS_SCHEMA))
+                if not _r or len(_r) != len(_b):
+                    break
+                for _bi, _nb in enumerate(_r):      # covers 승계(화면 배정 불변)
+                    if not _nb.get("covers"):
+                        _nb["covers"] = _b[_bi].get("covers")
+                _b = _r
+            return _b
+
+        # ⚠️서명 보장은 **길이 관문 뒤**로 옮겼다(2026-08-09, 아래 참조).
+        #   여기서 고쳐도 뒤따르는 축약·보강이 문장을 다시 쓰면서 서명이 날아갔다
+        #   (실측: 채이가 "힘들었습니다/끝냈습니다"로 나감 — 검사기는 위반을 잡았는데도).
+        # ★훅 소재불일치 사후검사(2026-08-09). 정규식으로 소재를 미리 거르는 방식은
+        #   새 소재마다 뚫린다 — 같은 계열 사고가 3번 났다(y_never 피규어 / diy 피규어 /
+        #   diy 파전 "이제 집에서 파전 안 부쳐요", job d8a17db5d99f).
+        #   결과물을 보고 판정하면 소재 종류와 무관하다. 모순일 때만 첫 문장을 다시 받는다
+        #   (판정 실패·애매하면 통과 = 회귀 0).
+        for _ in range(2):
+            if not single_source.hook_contradicts(beats, _mat, _c):
+                break
+            _bk = single_source.parse_beats(
+                _c(single_source.fix_hook_prompt(beats, _mat), single_source.BEATS_SCHEMA))
+            if not _bk or len(_bk) != len(beats):
+                break
+            for _bi, _nb in enumerate(_bk):
+                if not _nb.get("covers"):
+                    _nb["covers"] = beats[_bi].get("covers")
+            beats = _bk
+        # ⚠️원본 왜곡 검사(fact_distorted, 불리언판정)는 **배선하지 않는다**(2026-08-09).
+        #   LLM 불리언 판정은 소재마다 흔들린다 — 실측: 정상 대본까지 3/3 True.
+        # ★대신 증거검증형(fact_fabrications, 2026-08-10)을 배선 — 날조 구절을 대본에서
+        #   그대로 인용시키고 ①대본에 실재 ②소재에 없음 을 코드로 검증해 오탐을 거른다.
+        #   실사고 job 890c2f41e35a: "우유로 구운 우유"·"칼로리가 절반"·"에어프라이어" —
+        #   훅 검사는 첫 문장만 봐서 본문 날조 3후보 전부 통과했다.
+        if os.getenv("SCRIPT_FACT_GATE", "0") == "1":   # 기본 off — 사실표(v7)가 뿌리 처방, 게이트는 관측용 opt-in
+            for _ in range(2):
+                _fabs = single_source.fact_fabrications(beats, _mat, _c)
+                if not _fabs:
+                    break
+                _fb = single_source.parse_beats(
+                    _c(single_source.fix_fabrication_prompt(beats, _mat, _fabs),
+                       single_source.BEATS_SCHEMA))
+                if not _fb or len(_fb) != len(beats):
+                    break
+                for _bi, _nb in enumerate(_fb):
+                    if not _nb.get("covers"):
+                        _nb["covers"] = beats[_bi].get("covers")
+                beats = _fb
+        # ★★길이 최종 확정 — **문장을 다시 쓰는 모든 단계가 끝난 뒤 여기 한 곳에서만** 잰다.
+        #   (2026-08-09 사장님 지시: "땜빵하는 수정은 안 되고 근본 원인을 수정해야 한다.")
+        #
+        #   근본 문제: 이 함수에서 대본 길이를 바꾸는 단계가 **11개**인데 길이를 검사하는 건
+        #   초안축약·최종축약 2곳뿐이었다. 그 뒤의 미달보강·서명보장 3종·훅검사가 문장을
+        #   다시 써도 아무도 재지 않아 계속 샜다 — 단계마다 가드를 덧대는 방식으론
+        #   새 단계가 생길 때마다 같은 사고가 반복된다(실제로 오늘만 3번 반복했다).
+        #   → 순서를 바꾸는 대신 **마지막 관문 하나**로 통일한다. 앞 단계들은 자유롭게
+        #     고쳐 쓰고, 최종 길이는 여기서 한 번에 맞춘다.
+        #   ⚠️새 후처리를 넣을 땐 반드시 이 블록보다 **앞**에 넣어라.
+        for _ in range(2):
+            _o, _osec, _ = single_source.over_budget(beats, used)
+            _u, _usec, _ = single_source.under_budget(beats, used)
+            if not _o and not _u:
+                break
+            _fixed = single_source.parse_beats(_c(
+                (single_source.shrink_prompt(beats, used) if _o
+                 else single_source.expand_prompt(beats, used, _mat)),
+                single_source.BEATS_SCHEMA))
+            if not _fixed:
+                break
+            for _bi, _nb in enumerate(_fixed):      # covers 승계(화면 배정 불변)
+                if not _nb.get("covers") and _bi < len(beats):
+                    _nb["covers"] = beats[_bi].get("covers")
+            _before = sum(len((b.get("narration") or "")) for b in beats)
+            _after = sum(len((b.get("narration") or "")) for b in _fixed)
+            if _after == _before:                   # 안 변했으면 그만(무한 루프 방지)
+                break
+            beats = _fixed
+        # ★모델이 끝내 안 줄이면 **코드가 자른다**(2026-08-09). LLM 교정은 실패할 수 있고
+        #   (실측: 20초 소재에서 예산 202자인데 339자가 그대로 통과 = 영상 44초), 그때
+        #   그냥 내보내면 목표 30초짜리가 44초로 나간다. 교정 루프는 '잘 줄이는' 수단이지
+        #   '보장'이 아니다 — 보장은 코드가 한다(CTA·빈비트와 같은 원칙).
+        #   ⚠️CTA(마지막 문장)는 자르지 않는다 — 보상 문구가 잘리면 유입이 끊긴다.
+        _o2, _s2, _ = single_source.over_budget(beats, used)
+        if _o2 and len(beats) > 1:
+            _limit = single_source.char_budget(used)
+            _cta = beats[-1]
+            _body = beats[:-1]
+            _body_cap = max(0, _limit - len((_cta.get("narration") or "")))
+            _acc = 0
+            _kept = []
+            for _b in _body:
+                _t = (_b.get("narration") or "").strip()
+                if _acc + len(_t) <= _body_cap:
+                    _acc += len(_t)
+                    _kept.append(_b)
+                    continue
+                # ★문장 **중간에서는 절대 자르지 않는다**(2026-08-09 실측 버그: "심지어
+                #   내열성도 좋아서 … 다들 이걸로 바"에서 끊겼다).
+                #   ⚠️2차 수정: 문장 경계를 못 찾으면 버렸더니 **6문장이 3문장으로 줄었다**
+                #     (실측). 예산은 '넘치면 자막이 밀린다'는 안전선이지 절대선이 아니다 —
+                #     문장을 통째로 잃는 게 더 나쁘다. 약간의 초과는 허용하고 넣는다.
+                _room = _body_cap - _acc
+                _m = re.search(r"^.*[.!?]", _t[:_room]) if _room >= 12 else None
+                if _m and len(_m.group(0)) >= 12:      # 문장 경계까지 들어가면 거기까지
+                    _b["narration"] = _m.group(0)
+                    _b["caption_lines"] = None
+                    _acc += len(_b["narration"])
+                    _kept.append(_b)
+                elif len(_t) <= _body_cap * 0.5:       # 짧은 문장이면 통째로 넣는다
+                    _acc += len(_t)                    # (예산을 조금 넘어도 자막이 산다)
+                    _kept.append(_b)
+                break                        # 예산 소진 — 나머지 본문 비트는 버린다
+            if _kept:                        # 본문이 통째로 비면 자르지 않는다(원본 유지)
+                print("[1소스대본] 후보%d 총량 초과 코드절단(%.1f초→예산 %.1f초, %d→%d비트)"
+                      % (i + 1, _s2, used, len(beats), len(_kept) + 1), file=sys.stderr)
+                beats = _kept + [_cta]
+        # ★★채널 서명 보장 — **길이 관문까지 끝난 맨 마지막**에 둔다(2026-08-09 2차).
+        #   처음엔 리라이트 직후에 뒀는데, 뒤따르는 축약·보강이 문장을 다시 쓰면서 서명이
+        #   날아갔다 — 실측: 채이가 "힘들었습니다/끝냈습니다"로 나갔다(검사기는 위반을
+        #   정확히 잡았는데도 결과물엔 남았다 = 고친 뒤 누가 또 덮어썼다는 뜻).
+        #   이게 오늘 반복해서 밟은 함정이다: **문장을 다시 쓰는 단계 뒤에 검사가 없으면 샌다.**
+        #   길이는 위에서 코드가 확정했으므로(모델 재작성 없음) 여기서 어미만 고쳐도 안전하다.
+        #   ⚠️새 후처리를 넣을 땐 반드시 이 블록보다 **앞**에 넣어라.
+        beats = _sig_fix(single_source.hapsyo_tail_missing,
+                         single_source.fix_hapsyo_prompt)
+        beats = _sig_fix(single_source.chae_person_missing,
+                         single_source.fix_chae_person_prompt)
+        beats = _sig_fix(single_source.maison_signature_missing,
+                         single_source.fix_maison_prompt)
+        # 합쇼체 위반(메종·채이는 few-shot에 0회인데 나오는 것) — 홈테리어픽은 허용 편수가
+        # 있어 대상이 아니다(그 채널은 합쇼체가 서명).
+        beats = _sig_fix(single_source.hapsyo_violation,
+                         lambda _b: single_source.fix_hapsyo_violation_prompt(_b, _hap_style))
+        # ★훅 감탄사 보장(2026-08-09 사장님 지시: "처음 훅은 와~ / 여러분 이런 것 좀
+        #   들어가게. 메종이랑 홈테리어 영상들 대부분 쓰던데").
+        #   훅 틀에 "와,"를 넣고 "감탄사는 살려라"까지 프롬프트에 적었는데도 실측 3/3·3/3
+        #   전부 사라졌다(훅 블록의 "예시를 베끼지 마라"에 밀린다) → 코드로 보장한다.
+        #   채이는 대상 아님(few-shot 2편이 감탄사 없이 "이거 몰라서~"로 연다).
+        # ★주어-어미 불일치 교정(2026-08-09 사장님 지적: "주어랑 일체시키는 건 기본인데").
+        #   '~더라고요'는 남의 일을 보고 알게 된 것에 쓴다 — **내 감정**엔 안 붙는다
+        #   ("충격받았더라고요" → "충격받았어요"). 한 글자 치환이라 코드가 직접 한다.
+        beats = single_source.fix_self_feeling_endings(beats)
+        # ★매장추천 훅 강제 — **3후보 중 첫 후보에만**(2026-08-09 사장님 지시:
+        #   "이 훅은 제품에 들어갈 때 반드시 써야 하는 훅 / 3개 중 한 개는 강제시켜봐").
+        #   프롬프트로는 모델이 "다이소 정리함 보고 깜짝 놀랐어요"로 축약해 버려서
+        #   코드가 첫 문장을 직접 세운다. 소재에 매장이 없으면 no-op.
+        _forced_store = False
+        if i == 0:
+            _before_h = (beats[0].get("narration") or "") if beats else ""
+            beats = single_source.force_store_hook(beats, _mat, idx=i)
+            _forced_store = bool(beats) and (beats[0].get("narration") or "") != _before_h
+        # ★LLM이 아니라 **코드가** 붙인다 — fix 프롬프트로 "첫 문장 맨 앞에만"이라 시켰더니
+        #   모델이 6문장 전부에 "아니,"를 붙였다(실측). 한 단어 얹는 데 모델은 불필요하다.
+        if not _forced_store and single_source.hook_opener_missing(beats, _hap_style):
+            beats = single_source.add_hook_opener(beats)
         # covers → 화면 배정. 모델이 빠뜨린 컷은 직전 비트에 붙여 **컷 100% 커버**를 코드가
         # 보장한다(화면 총길이 == used == 예산 → 길이 하한이 프롬프트 아닌 코드로 지켜진다).
         covered_by = {}                      # 컷 번호(1-base) → 비트 인덱스
@@ -3094,10 +3604,50 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         for c in sorted(covered_by):
             beat_cuts.setdefault(covered_by[c], []).append(c)
         plan_beats = []
+        _carry = ""          # 컷을 못 받은 **첫** 비트의 대사 — 다음 비트 앞에 붙인다
         for bi, b in enumerate(beats):
             narration = (b.get("narration") or "").strip()
+            if _carry and narration:
+                narration = _carry.rstrip() + " " + narration
+                _carry = ""
             cuts = beat_cuts.get(bi) or []
-            if not narration or not cuts:
+            if not narration:
+                continue
+            if not cuts:
+                # ★컷을 못 받은 비트를 **버리지 않는다**(2026-08-09 사장님 지시: "대본이
+                #   짧은 건 있을 수가 없다 — 스토리가 안 나오고 설득 구조가 실패한다").
+                #   종전엔 continue로 대사째 사라져 보강 직후 189자가 143자가 됐다(실측:
+                #   미달 검사는 통과했는데 최종만 짧다 = 검사 이후 소실). 컷 6개를 비트
+                #   5~6개가 나눠 가지면 한 비트는 빈손이 되는데, 그게 곧 문장 소실이었다.
+                #   → 앞 비트에 **대사를 이어 붙인다**(화면은 그 비트 것을 그대로 쓴다).
+                #   앞이 없으면(첫 비트) 다음 루프에서 뒤 비트가 받도록 보류한다.
+                #
+                # ⚠️단 **CTA(마지막 비트)는 절대 합치지 않는다**(2026-08-09 실측):
+                #   합치면 "…알겠더라고요. 댓글에 '청소' 남겨주시면…"처럼 본문 끝에 CTA가
+                #   달라붙어 한 문장이 된다. 자막도 그 덩어리로 뜨고, CTA가 독립 비트가
+                #   아니게 돼 뒤 단계(CTA 보장·키워드 교정)가 엉뚱한 문장을 만진다.
+                #   → 마지막 컷을 빌려서라도 **제 비트로 세운다**(화면은 앞과 공유).
+                if bi == len(beats) - 1 and plan_beats:
+                    _borrow = plan_beats[-1]
+                    plan_beats.append({
+                        "beat_idx": len(plan_beats), "role": "",
+                        "narration": narration, "caption_lines": None,
+                        "target_seconds": round(
+                            max(1.5, len(narration) / (_SYLLABLES_PER_SEC * _speech_speed())), 1),
+                        "primary": dict(_borrow.get("primary") or {}),
+                        "alternates": [],
+                        "effect": "cut", "fit": 5, "forced": False,
+                    })
+                    continue
+                if plan_beats:
+                    plan_beats[-1]["narration"] = (
+                        plan_beats[-1]["narration"].rstrip() + " " + narration)
+                    plan_beats[-1]["caption_lines"] = None
+                    plan_beats[-1]["target_seconds"] = round(
+                        max(1.5, len(plan_beats[-1]["narration"].strip())
+                            / (_SYLLABLES_PER_SEC * _speech_speed())), 1)
+                else:
+                    _carry = narration          # 첫 비트가 빈손 — 아래에서 앞에 붙인다
                 continue
             covered = [order[c - 1] for c in cuts]
             def _clean(s):
@@ -3105,13 +3655,17 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
             plan_beats.append({
                 "beat_idx": len(plan_beats), "role": "",
                 "narration": narration, "caption_lines": None,
-                "target_seconds": round(max(1.5, len(narration) / _SYLLABLES_PER_SEC), 1),
+                # ★speed 보정(2026-08-09): 이 값이 _fill_beat_screen_time의 need가 된다.
+                #   보정 없이 두면 그 비트만 5.7자/초로 잡혀 화면이 44% 과충전된다
+                #   (실측: 같은 66자인데 한 비트는 8.0초, 보정 빠진 비트는 11.6초).
+                "target_seconds": round(
+                    max(1.5, len(narration) / (_SYLLABLES_PER_SEC * _speech_speed())), 1),
                 "primary": _clean(covered[0]),
                 "alternates": [_clean(s) for s in covered[1:]],
                 "effect": "cut", "fit": 5, "forced": False,
             })
         if len(plan_beats) < 3:
-            continue
+            return None
         plan_beats[0]["role"] = "hook"
         plan_beats[-1]["role"] = "cta"
         for b in plan_beats[1:-1]:
@@ -3119,20 +3673,96 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         if len(plan_beats) >= 4:
             plan_beats[-2]["role"] = "story_resolution"
         plan_beats = _fix_beat_structure(plan_beats)
+        # ★비트별 콘폼(2026-08-04 실측 job 923d/285d): 총량은 예산 안인데 **비트별로**
+        #   문장이 제 화면보다 길면 _fill_beat_screen_time이 클립을 재사용해 화면을
+        #   나레이션에 맞춰 뻥튀기 — 원본 43초짜리가 61~80초 영상이 됐다(중복 금지 위반).
+        #
+        # ★2026-08-09 사장님 지시로 정책을 뒤집었다: "스타일을 살리려면 **중복을 허용하고**
+        #   최대한 살려야 한다. 결국 클릭으로 이으려면 **스토리가 탄탄한 대본이 가장 우선**이다."
+        #   → 이제 **대본이 주인**이고 화면이 따라온다. 압축은 폭주 방지선으로만 남긴다:
+        #     화면의 _CONFORM_MAX_RATIO배를 넘을 때만 깎는다(그 아래면 클립 재사용으로 채운다).
+        #   ⚠️상한을 없애면 43초→80초 사고가 재발한다 — 무제한 허용이 아니라 배율 완화다.
+        #   되돌리려면 서버 env `SCRIPT_CONFORM_RATIO=1.1`(종전 동작).
+        # ★2026-08-09(2차): 배율 완화(1.1→2.0)만으로는 부족했다 — 실측 4/12가 여전히
+        #   미달(최저 106자=52%)로 나갔다. 화면 19.2초 · 대본 25초치면 비트마다 걸린다.
+        #   사장님 지시는 "**중복을 허용해** 최대한 살려라"이므로, 대본을 깎는 대신
+        #   **화면을 늘려서** 맞춘다(_fill_beat_screen_time이 클립 재사용으로 채운다).
+        #   → 스토리 하한이 켜져 있으면 conform을 **끈다**(폭주 방지는 아래 _fill이 담당).
+        #   되돌리려면 env `SCRIPT_CONFORM_RATIO=1.1`(옛 동작) 또는 `SCRIPT_STORY_MIN_SEC=0`.
+        _conform_ratio = float(os.environ.get("SCRIPT_CONFORM_RATIO", "2.0") or 2.0)
+        if single_source.STORY_MIN_SECONDS > 0 and "SCRIPT_CONFORM_RATIO" not in os.environ:
+            _conform_ratio = float("inf")     # 대본을 깎지 않는다 — 화면이 따라온다
+        for b in plan_beats:
+            if b is plan_beats[-1]:
+                continue    # CTA는 압축 제외 — 마지막 컷이 짧으면 보상 문구("보내드릴게요")가
+                            # 잘려나간다(실측: 1.9초 컷에 맞춰 "댓글에 나도 남겨요"로 뭉개짐).
+                            # 화면 부족분은 아래 _fill_beat_screen_time이 채운다.
+            if any((b["narration"] or "").startswith(c) for c in _CONNS):
+                continue    # 고조 문장은 압축 제외 — conform이 연결어를 군더더기로 깎아
+                            # 사장님 지시("연결어 꼭") 문장이 소리 없이 사라졌다(실측).
+            _scr = sum(max(0.0, float(s.get("end") or 0) - float(s.get("start") or 0))
+                       for s in [b["primary"]] + b["alternates"])
+            _spoken = len("".join((b["narration"] or "").split())) / _SYLLABLES_PER_SEC
+            if _scr > 0.5 and _spoken > _scr * _conform_ratio:
+                _new = conform_narration(b["narration"], _scr)
+                if _new:
+                    b["narration"] = _new
+                    b["caption_lines"] = None
+            # ★발화 속도 보정(2026-08-09): _SYLLABLES_PER_SEC(5.7)은 **speed 1.0** 실측치다
+            #   (2026-07-17 성우 14명). 라이브 기본 보이스는 speed 1.3~1.6이라 실제는 더 빠르다 —
+            #   라이브 렌더 20건 실측 **8.19자/초**(공백 포함) = 5.7 × 1.44.
+            #   보정 없이 두면 이 비트가 실제보다 길다고 잡혀 _fill_beat_screen_time이 화면을
+            #   40% 과충전한다(실측: 화면 41.9초 vs 말 29.1초 — 말 끝나고 영상만 돈다).
+            #   ⚠️_SYLLABLES_PER_SEC 자체는 안 건드린다(21곳 사용·produce.html과 짝·잠금 테스트).
+            #     렌더는 _probe_duration으로 실제 TTS를 다시 재므로 결과물은 안 깨진다.
+            #   되돌리려면 env `SCRIPT_SPEECH_SPEED=1.0`.
+            b["target_seconds"] = round(
+                max(1.5, len(b["narration"].strip()) / (_SYLLABLES_PER_SEC * _speech_speed())), 1)
         plan_beats = _fill_beat_screen_time(plan_beats, seg_map)
+        # ★화면 총량 상한(2026-08-09). _fill_beat_screen_time은 **비트별로** need를 채울 뿐
+        #   전체 합계는 아무도 안 본다 — 비트마다 조금씩 넘치면 합계가 새어나간다
+        #   (실측 DUfiVBLD-46: 선별은 29.9초로 정상인데 채우고 나니 39초).
+        #   목표 대비 상한을 넘으면 **뒤쪽 보조 컷(alternates)부터** 잘라 맞춘다 —
+        #   primary(주 화면)는 건드리지 않아 대사↔화면 대응이 유지된다.
+        _cap_total = used * 1.12
+        def _tot(bs):
+            return sum(sum(max(0.0, float(s.get("end") or 0) - float(s.get("start") or 0))
+                           for s in [b.get("primary") or {}] + (b.get("alternates") or []))
+                       for b in bs)
+        _now = _tot(plan_beats)
+        if _now > _cap_total:
+            for _b in reversed(plan_beats):         # 뒤쪽 비트부터 덜어낸다
+                while _now > _cap_total and (_b.get("alternates") or []):
+                    _drop = _b["alternates"].pop()
+                    _now -= max(0.0, float(_drop.get("end") or 0) - float(_drop.get("start") or 0))
+                if _now <= _cap_total:
+                    break
+            print("[1소스대본] 후보%d 화면 총량 %0.1f초 → %0.1f초로 조정(예산 %.1f초)"
+                  % (i + 1, _tot(plan_beats) + 0.0, _now, used), file=sys.stderr)
         # ★최종 안전망(2026-08-04): 위 CTA 보장 3중(프롬프트·LLM교정·컷생존)에도 뒤
         # 단계(_fix_beat_structure 등)가 마지막 비트를 갈아치우는 경로가 실측 1/6 남았다.
         # plan 확정 직후라 어떤 경로로 와도 여기서 잡힌다.
         if plan_beats and "댓글" not in (plan_beats[-1].get("narration") or ""):
-            _kw = "나도" if "나도" in _mat else "정보"
-            plan_beats[-1]["narration"] = f"방법이 궁금하면 댓글에 '{_kw}' 남겨주세요."
+            # ★키워드를 소재에서 뽑는다(2026-08-09). 종전엔 '나도'/'정보' 둘뿐이라
+            #   파전·곰팡이 영상에도 "댓글에 '정보'"가 나갔다(10회 실측 6번). 소재와 겉도는
+            #   데다 **인포크 자동응답 키워드가 대본과 어긋난다**(2026-08-03 핸드오프 지적).
+            #   앞 후보가 이미 쓴 키워드가 있으면 그걸 따르고, 없으면 소재 명사에서 고른다.
+            _kw = single_source.cta_keyword_for(beats, _mat)
+            plan_beats[-1]["narration"] = f"댓글에 '{_kw}' 남겨주시면 방법 바로 보내드릴게요."
             plan_beats[-1]["caption_lines"] = None
         plan = {"structure": "free", "beats": plan_beats, "detected_type": detected,
                 "single_source": True, "hook_pattern": pat[0],
                 "affiliate_target": "", "plagiarism_flags": _plagiarism_flags(plan_beats, src_texts)}
         rule_score = _score_candidate(plan, target_seconds=budget, source_full_texts=src_texts)
         cand = {"plan": plan, "story": {"hook": plan_beats[0]["narration"]},
-                "score": rule_score, "recommended": False}
+                "score": rule_score, "recommended": False,
+                # ★스타일 배정 결과를 남긴다(2026-08-06): restyle 실패가 조용히 원본으로
+                #   남으면 trio 3후보가 같은 결로 수렴하는데, 어느 후보가 실패했는지
+                #   DB(candidates_json)에서 볼 수 없었다.
+                "style": _restyle_rep.get("style"),
+                # ok 키 자체가 없으면(스타일 off·대역) None = '모름' — False(확정 실패)와
+                # 구분해야 게이트가 스타일 off에서 헛돌지 않는다.
+                "restyled": _restyle_rep.get("ok")}
         if judge:
             from shopping_shorts import candidate_judge
             jr = candidate_judge.judge(plan_beats, call=call)
@@ -3142,12 +3772,94 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         scr = sum(float(b.get("target_seconds") or 0) for b in plan_beats)
         print("[1소스대본] 후보%d 훅패턴=%s %d비트 나레이션 %.1f초 / 화면예산 %.1f초"
               % (i + 1, pat[0], len(plan_beats), scr, used), file=sys.stderr)
-        cands.append(cand)
+        return cand
+
+    # ★후보 병렬 생성(2026-08-06). 예전엔 for로 순차라 **후보 1개 시간 × 3**이 걸렸다
+    #   (실측 로그 23:06:12/22/34 — 후보당 10~12초, 총 30초+). 이 일은 CPU가 아니라
+    #   Gemini 응답 대기가 거의 전부라, 스레드로 동시에 기다리면 그대로 벽시계가 1/3이
+    #   된다(메모리는 HTTP 요청 몇 개 수준 — 렌더처럼 ffmpeg가 뜨는 게 아니다).
+    #   ★선행조건이 방금 갖춰졌다: 후보별 키 오프셋 없이 병렬로 돌리면 셋이 **동시에**
+    #   같은 키를 때려 분당한도 429가 확정이었다. 순차일 땐 그나마 시차라도 있었다.
+    #   후보끼리 공유 상태가 없어(각자 자기 beats/plan만 만든다) 락이 필요 없다.
+    def _safe_candidate(i):
+        """★한 후보가 터져도 나머지는 살린다(2026-08-06). ex.map은 예외를 그대로
+        올려보내므로, 감싸지 않으면 후보 하나의 모델 응답 깨짐이 **대본 3개를 전멸**
+        시킨다(순차 for였을 땐 그 후보만 죽고 나머지는 살았다 — 병렬화로 생기는
+        새 위험이라 여기서 막는다)."""
+        try:
+            c = _one_candidate(i)
+        except Exception as e:      # noqa: BLE001 — 후보 하나의 실패가 전멸이 되면 안 된다
+            print(f"[1소스대본] 후보{i + 1} 실패(나머지는 계속): {e!r}", file=sys.stderr)
+            return None
+        # ★품질 게이트 재생성(2026-08-06 사장님 "품질이 뒤죽박죽"): judge 낙제(total≤0.4)
+        #   또는 스타일 리라이트 실패 후보만 1회 다시 만들고 점수 좋은 쪽을 쓴다.
+        #   후보 생성은 병렬 실측 18초라 재생성 1회 상한이면 잡당 +20초 안이다.
+        #   SCRIPT_QUALITY_RETRY=0 으로 끄면 종전과 동일(회귀 0).
+        if os.environ.get("SCRIPT_QUALITY_RETRY", "1") in ("0", "off", ""):
+            return c
+        _bad = (c is not None and (
+            (c.get("judge") or {}).get("total", 1.0) <= 0.4
+            or c.get("restyled") is False))
+        if _bad:
+            why = ("judge %.2f" % (c.get("judge") or {}).get("total", 1.0)
+                   if (c.get("judge") or {}).get("total", 1.0) <= 0.4 else "restyle 실패")
+            print(f"[1소스대본] 후보{i + 1} 품질미달({why}) → 1회 재생성", file=sys.stderr)
+            try:
+                c2 = _one_candidate(i)
+            except Exception as e:  # noqa: BLE001
+                print(f"[1소스대본] 후보{i + 1} 재생성 실패(원본 유지): {e!r}",
+                      file=sys.stderr)
+                return c
+            if c2 and (c2.get("score", 0) > c.get("score", 0)
+                       or (c2.get("restyled") and not c.get("restyled"))):
+                return c2
+        return c
+
+    n = max(1, n_candidates)
+    if n == 1:
+        c0 = _safe_candidate(0)
+        cands = [c0] if c0 else []
+    else:
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=n) as ex:
+            # 순서 보존이 중요하다 — 후보 i에 배정된 스타일(trio: A=메종/B=채이/
+            # C=스탠다드)과 화면 표시 순서가 어긋나면 안 된다. map은 입력 순서대로 준다.
+            cands = [c for c in ex.map(_safe_candidate, range(n)) if c]
     if not cands:
         return None
-    best = max(range(len(cands)), key=lambda k: cands[k]["score"])
+    _apply_judge_rank(cands, judge, call)
+    # ★추천에 스타일 이탈 감점(2026-08-05): 리라이트 실패로 옛 카피체로 남은 후보가
+    #   ★추천으로 뽑히던 실사고(job 31b394c4). 표시 score는 안 건드리고 선택에만 반영.
+    from shopping_shorts import style_profiles as _sp
+
+    def _pick_key(k):
+        narrs = [(b.get("narration") or "")
+                 for b in (cands[k]["plan"].get("beats") or [])]
+        # ★후보에 배정된 스타일을 같이 넘긴다(2026-08-07) — 홈테리어픽은 합쇼체 끝맺음이
+        #   스타일 지시라, 안 넘기면 **시킨 대로 쓴 후보가** 감점돼 추천에서 밀려난다.
+        return cands[k]["score"] - _sp.style_penalty(narrs, _sp.candidate_style(k))
+
+    best = max(range(len(cands)), key=_pick_key)
     cands[best]["recommended"] = True
     return {"candidates": cands, "detected_type": detected}
+
+
+def _apply_judge_rank(cands, judge, call):
+    """★judge 변별력(2026-08-09): judge()는 후보를 따로 보므로 셋 다 '무난'이면 동점이
+    구조적으로 반복됐다(실측 0.467×3, 0.333×3). 후보 전부를 **한 호출에 비교**시켜
+    (동점 금지) 그 상대점수로 score를 ±0.05 안에서 보정한다 — 동점이 갈라지고,
+    보정 폭이 작아 규칙점수·절대판정의 큰 서열은 뒤집지 않는다.
+    rank 실패/judge off/후보 1개면 아무것도 안 바꾼다(종전과 100% 동일)."""
+    if not judge or len(cands) < 2:
+        return
+    from shopping_shorts import candidate_judge as _cj
+    rr = _cj.rank([c["plan"].get("beats") for c in cands], call=call)
+    if not rr:
+        return
+    for i, c in enumerate(cands):
+        if i in rr:
+            c["judge_cmp"] = rr[i]
+            c["score"] = round(c["score"] + 0.1 * (rr[i]["score"] - 0.5), 3)
 
 
 def build_scene_first_plan(source_scripts, reference_text, target_seconds,
@@ -3225,8 +3937,28 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         order_block = (_blocks_order_block(blocks) if blocks
                        else _spine_order_block(_build_scene_spine(seg_map, detected)))
     src_texts = [s.get("full_text", "") for s in source_scripts]
+    # ★사실표(v7, 2026-08-10) — 1소스와 동일 계약: 잡당 1회, 실패=무주입(종전 동일).
+    _sf_facts_block = ""
+    if os.getenv("SCRIPT_FACTSHEET", "1") != "0":
+        from shopping_shorts import single_source as _ss_facts
+        _sf_facts_block = _ss_facts.factsheet_block(
+            _ss_facts.build_factsheet(" ".join(t for t in src_texts if t), _call))
 
     outer_tl_groups = tl_groups
+    # ★스타일 배정 전역 카운터(2026-08-06 실측: 벌별로 _ground_score가 따로 불리면
+    #   enumerate가 매번 0부터 세서 **후보 전부가 maison**이 됐다 — 잡 실측 3/3 maison).
+    #   호출 경계와 무관하게 A→B→C가 순환하도록 하나의 카운터를 공유한다.
+    import itertools as _it
+    _style_ctr = _it.count()
+    # ★구도 카운터(2026-08-06 사장님 "1번 해봐"): 생성 호출마다 n만큼 전진 — raws가 생성
+    #   순서대로 그라운딩되므로 스타일 카운터(_style_ctr)와 같은 인덱스가 같은 후보에 닿아
+    #   스타일↔구도 짝(maison=발견담/chae=가족/standard=목격담)이 유지된다.
+    _frame_ctr = {"i": 0}
+
+    def _take_frames(k):
+        s = _frame_ctr["i"]
+        _frame_ctr["i"] += max(0, int(k or 0))
+        return s
 
     def _ground_score(raws, groups=None):
       # groups: 이 묶음이 쓸 슬롯(v4, 2026-08-02). None이면 종전과 똑같이 바깥의
@@ -3237,6 +3969,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             r.setdefault("_backbone_video", bb_video)   # 핑퐁 순서고정이 이 백본을 쓴다
       cands = []
       for r in raws:
+        _ci = next(_style_ctr)
         plan = _ground_candidate(r, seg_map, lead_hook=not tl_groups)
         if plan is None:
             continue
@@ -3336,11 +4069,60 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             plan["slot_source"] = slot_source
             if slot_info:
                 plan["slot_info"] = slot_info      # G3 관측: 무엇이 잘리고 어느 소스가 빠졌나
+        # ★트리오 스타일 이식(2026-08-06 사장님 "모두 동일하게"): 믹스(장면 배정)는 경로마다
+        #   다르지만, 나레이션 문체 리라이트는 화면과 무관하다 — 1소스와 같은 배선.
+        #   covers·컷 매핑은 불변(문장수·순서 고정 규칙이 restyle_prompt에 있다).
+        from shopping_shorts import single_source as _ss1
+        from shopping_shorts import style_profiles as _sp1
+        _restyle_rep = {}
+        plan["beats"] = _ss1.apply_restyle(plan["beats"], _call,
+                                           style_name=_sp1.candidate_style(_ci),
+                                           report=_restyle_rep,
+                                           facts_block=_sf_facts_block)
+        # ★홈테리어픽 서명 보장(2026-08-09, 1소스와 동일 배선): CTA 직전 문장을 합쇼체로.
+        #   리라이트 **뒤**에 둔다(리라이트가 어미를 도로 요체로 되돌린다).
+        #   해당 스타일이 아니면 no-op(회귀 0). 1소스 실측: 프롬프트만으론 7/10 → 보장 후 10/10.
+        _hap_style1 = _sp1.candidate_style(_ci)
+
+        def _apply_narr_fix(_mk_prompt):
+            """narration만 갈아끼운다 — covers·seg_ids(화면 배정)는 원본 유지."""
+            _nb = _ss1.parse_beats(_call(_mk_prompt(plan["beats"]), _ss1.BEATS_SCHEMA))
+            if not _nb or len(_nb) != len(plan["beats"]):
+                return False
+            for _o, _n in zip(plan["beats"], _nb):
+                _t = (_n.get("narration") or "").strip()
+                if _t:
+                    _o["narration"] = _t
+            return True
+
+        for _ in range(2):
+            if not _ss1.hapsyo_tail_missing(plan["beats"], _hap_style1):
+                break
+            if not _apply_narr_fix(_ss1.fix_hapsyo_prompt):
+                break
+        # ★채이 서명 보장(2026-08-09, 1소스와 동일): 본문에 가족·지인이 등장하게.
+        for _ in range(2):
+            if not _ss1.chae_person_missing(plan["beats"], _hap_style1):
+                break
+            if not _apply_narr_fix(_ss1.fix_chae_person_prompt):
+                break
+        # ★날조 검사(증거검증형, 2026-08-10) — 1소스와 동일 배선(edit_plan 1소스 주석 참조).
+        if os.getenv("SCRIPT_FACT_GATE", "0") == "1":   # 기본 off — 사실표(v7)가 뿌리 처방, 게이트는 관측용 opt-in
+            _mat_sf = " ".join(t for t in src_texts if t)
+            for _ in range(2):
+                _fabs = _ss1.fact_fabrications(plan["beats"], _mat_sf, _call)
+                if not _fabs:
+                    break
+                if not _apply_narr_fix(
+                        lambda _b: _ss1.fix_fabrication_prompt(_b, _mat_sf, _fabs)):
+                    break
         story = {k: r.get(k, "") for k in
                  ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
         rule_score = _score_candidate(plan, avoid_hooks=avoid_hooks, target_seconds=target_seconds,
                                        source_full_texts=src_texts)
-        cand = {"plan": plan, "story": story, "score": rule_score, "recommended": False}
+        cand = {"plan": plan, "story": story, "score": rule_score, "recommended": False,
+                "style": _restyle_rep.get("style"),
+                "restyled": _restyle_rep.get("ok")}
         # ★심사위원(사장님 기준: 대본품질·장면싱크·스토리라인) — judge on일 때만(Gemini 콜).
         # 규칙점수(빠른 계산)와 반반 섞어 최종 순위. 심사 실패는 규칙점수만으로 폴백(무해).
         from shopping_shorts import candidate_judge
@@ -3381,7 +4163,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 bank_context=bank_context,
                 order_block=_rewrite_block(g, avoid_narrations=said_before),
                 benefits_block=benefits_block, engine=engine,
-                engine_seed=_engine_seed(reference_text) + k)
+                engine_seed=_engine_seed(reference_text) + k,
+                frame_start=_take_frames(1), facts_block=_sf_facts_block)
             raws.extend(sub or [])
             got = _ground_score(sub or [], groups=g)
             for c in got:
@@ -3398,7 +4181,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 inventory, reference_text, target_seconds, n=need, call=_call,
                 bank_context=bank_context, order_block=order_block,
                 benefits_block=benefits_block, engine=engine,
-                engine_seed=_engine_seed(reference_text) + 100)
+                engine_seed=_engine_seed(reference_text) + 100,
+                frame_start=_take_frames(need), facts_block=_sf_facts_block)
             got = _ground_score(fill or [], groups=tl_groups)
             for c in got:
                 c["plan"]["slot_variant"] = "refill"   # 차별화 실패를 숨기지 않는다
@@ -3409,7 +4193,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                                        call=_call, bank_context=bank_context,
                                        order_block=order_block,
                                        benefits_block=benefits_block, engine=engine,
-                                       engine_seed=_engine_seed(reference_text))
+                                       engine_seed=_engine_seed(reference_text),
+                                       frame_start=_take_frames(n_candidates), facts_block=_sf_facts_block)
         cands = _ground_score(raws)
     # ①생성측 보강(세션#2): 후보가 전부 목표보다 크게 짧으면(생성이 목표초 미달) 길이 강화
     # 힌트로 1회 재생성해 합친다. ②선택 감점(_length_penalty)이 짧은 후보를 강등하므로 병합 후
@@ -3436,7 +4221,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                     bank_context=bank_context,
                     order_block=(_rewrite_block(g) if len(_distinct) > 1 else order_block),
                     lengthen=True, benefits_block=benefits_block, engine=engine,
-                    engine_seed=_engine_seed(reference_text) + 1 + k)
+                    engine_seed=_engine_seed(reference_text) + 1 + k,
+                    frame_start=_take_frames(1 if len(_distinct) > 1 else n_candidates), facts_block=_sf_facts_block)
                 got = _ground_score(raws2, groups=(g if len(_distinct) > 1 else None))
                 for c in got:
                     c["plan"]["slot_variant"] = (slot_kinds[vi] if vi < len(slot_kinds)
@@ -3456,12 +4242,14 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 bank_context=bank_context,
                 order_block=(_rewrite_block(g) if len(_distinct) > 1 else order_block),
                 tone_boost=True, benefits_block=benefits_block, engine=engine,
-                engine_seed=_engine_seed(reference_text) + 2 + k)
+                engine_seed=_engine_seed(reference_text) + 2 + k,
+                frame_start=_take_frames(1 if len(_distinct) > 1 else n_candidates), facts_block=_sf_facts_block)
             got = _ground_score(raws3, groups=(g if len(_distinct) > 1 else None))
             for c in got:
                 c["plan"]["slot_variant"] = slot_kinds[vi] if vi < len(slot_kinds) else "?"
             cands = cands + got
     if cands:
+        _apply_judge_rank(cands, judge, _call)
         # ★말투 하한(2026-07-30). 최종 score는 0.75×매칭 + 0.25×품질이고 품질 안에서 말투가
         #   0.6이라, 말투가 최종 점수의 **15%**뿐이다 → tone 0.4짜리와 1.0짜리의 점수 차이가
         #   0.09에 불과해 매칭 점수 차이에 쉽게 뒤집힌다. 실측(95건 중 27건 약함)에서 평서과다
@@ -3478,7 +4266,18 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         rich = [i for i in toned if _cand_sensory(cands[i]) >= _SENSORY_FLOOR]
         qualified = rich or toned
         pool = qualified or range(len(cands))
-        best = max(pool, key=lambda i: cands[i]["score"])
+        # ★스타일 이탈 감점(2026-08-06, 1소스 3298과 동일 배선): 리라이트 실패로 옛
+        #   카피체로 남은 후보가 ★추천되는 것을 막는다. 표시 score는 안 건드린다.
+        from shopping_shorts import style_profiles as _sp2
+
+        def _sf_pick_key(i):
+            narrs = [(b.get("narration") or "")
+                     for b in cands[i]["plan"].get("beats", [])]
+            # 스타일 동반(2026-08-07, 1소스 _pick_key와 동일 이유) — 위 3193·3575에서
+            # candidate_style(i)로 리라이트했으니 채점도 같은 i로 물어야 짝이 맞는다.
+            return cands[i]["score"] - _sp2.style_penalty(narrs, _sp2.candidate_style(i))
+
+        best = max(pool, key=_sf_pick_key)
         cands[best]["recommended"] = True
         # ★내보내는 후보는 n_candidates개까지만(2026-08-01 사장님 "대본이 왜 4개야?").
         #   위 재생성(길이·말투)은 **고르기 위해** 후보를 더 뽑는 장치다 — 합쳐놓고 그중

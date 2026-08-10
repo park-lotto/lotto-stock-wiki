@@ -1,0 +1,39 @@
+{
+  "date": "2026-08-04",
+  "hit_rate": null,
+  "mentioned_count": 22,
+  "matched": [],
+  "missed": [
+    "AI 캐펙스 관련주",
+    "LG이노텍",
+    "SK하이닉스",
+    "금융",
+    "기가비스",
+    "대우건설",
+    "데이터센터 인프라",
+    "두산",
+    "로봇",
+    "리노공업",
+    "반도체",
+    "변압기",
+    "삼성전기",
+    "삼성전자",
+    "셀트리온",
+    "소비내수",
+    "인바디",
+    "티엘비",
+    "파마리서치",
+    "한화비전",
+    "한화에어로스페이스",
+    "화장품"
+  ],
+  "candidates": [],
+  "thresholds": {
+    "mode": "his",
+    "vacuum_pct_max": 35.0,
+    "min_up_count": 1,
+    "require_up_gt_down": true,
+    "require_leader": false,
+    "top_n": 20
+  }
+}

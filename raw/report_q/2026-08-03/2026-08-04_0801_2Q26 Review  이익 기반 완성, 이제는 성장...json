@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "date": "2026-08-03",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-04_0801_2Q26 Review  이익 기반 완성, 이제는 성장...md"
+  },
+  "questionnaire": {
+    "target_kind": "stock",
+    "broker": "한화투자증권",
+    "analyst": "이진협",
+    "report_date": "2026년 8월 3일",
+    "stocks": [
+      {
+        "name": "호텔신라",
+        "code": "008770",
+        "rating": "Buy",
+        "rating_changed": false,
+        "tp_new": "75,000원",
+        "tp_prev": "75,000원",
+        "tp_direction": "flat",
+        "earnings_outlook": {
+          "2Q26_result": "매출액 9,718억원(-5.2% YoY), 영업이익 611억원(+602.3% YoY)",
+          "market_consensus_comparison": "영업이익 기준 시장 컨센서스(552억원)을 상회했다.",
+          "TR_performance": "매출액 7,726억원(-9.1% YoY), 영업이익 364억원(흑전 YoY)",
+          "Hotel_Leisure_performance": "매출액 1,992억원(+13.6% YoY), 영업이익 247억원(+23.5% YoY)"
+        },
+        "estimate_revision": null,
+        "next_catalyst": "TR부문의 외형 성장",
+        "thesis": [
+          "시내점 수익성 개선 및 적자 사이트 DF1 철수를 통한 TR 사업 이익 기반 완성",
+          "호텔/레저 부문 외국인 인바운드 강세 및 ADR 성장으로 인한 영업 레버리지 효과",
+          "인바운드 관광객 성장률에 부합하는 시내점 외형 성장 필요"
+        ],
+        "valuation_basis": null,
+        "risk": null,
+        "supply_comment": null,
+        "quote": "시내점의 수익성이 개선되고, 인천공항 DF1 철수에 따라 동사 TR 사업의 이익 기반은 완성된 것으로 판단된다.",
+        "sector": "소비내수"
+      }
+    ]
+  }
+}

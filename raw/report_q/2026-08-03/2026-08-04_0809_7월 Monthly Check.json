@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "date": "2026-08-03",
+    "broker": "하나증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-04_0809_7월 Monthly Check.md"
+  },
+  "questionnaire": {
+    "target_kind": "market",
+    "broker": "하나증권",
+    "analyst": "고연수",
+    "report_date": "2026년 08월 03일",
+    "market_direction": "Overweight",
+    "macro_vars": [
+      "국고채 3년물 금리 3.76%",
+      "국고채 10년물 금리 4.26%"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "증권",
+        "stance": "Overweight",
+        "reason": "단일종목 레버리지 ETF 거래 증가 등 시장 변동성 확대 및 향후 금융당국의 과열 완화 정책에 따른 점진적 안정 예상"
+      }
+    ],
+    "event_calendar": [
+      {
+        "date": "7월 31일",
+        "event": "단일종목 레버리지 ETF 기본예탁금 1,000만원에서 3,000만원으로 상향"
+      }
+    ],
+    "top_picks": [
+      "키움증권",
+      "삼성증권",
+      "NH투자증권",
+      "한국금융지주"
+    ],
+    "risk": "단일종목 레버리지 ETF 출시 이후 시장 변동성이 급격히 확대됨",
+    "quote": "향후 시장 변동성은 점진적으로 완화될 가능성이 높다고 판단한다."
+  }
+}

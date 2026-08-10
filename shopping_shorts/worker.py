@@ -23,6 +23,14 @@ _MIX_WORK_DIR = DB_PATH.parent / "mix_jobs"
 POLL_SEC = 5           # 큐가 비었을 때 다시 볼 때까지
 HEARTBEAT_SEC = 30     # 살아있다는 신호 주기(reap_stale 2분보다 충분히 짧게)
 
+
+def _log_prewarm(a, status):
+    """예열 결과를 한 줄로 남긴다 — done 외(스킵·실패)는 사유가 보여야 진단이 된다."""
+    lvl = log.info if status in ("done", "already") else log.warning
+    lvl("prewarm %s: %s", a.get("shortcode"), status)
+    return status
+
+
 TASKS = {
     "mix":      lambda a: mix_pipeline.run_mix_job(a["job_id"], DB_PATH, _MIX_WORK_DIR),
     "retype":   lambda a: mix_pipeline.retype_mix_job(a["job_id"], a["video_type"],
@@ -33,10 +41,12 @@ TASKS = {
     "overseas": lambda a: overseas_hot_jobs._run(),
     # 담기 시 사전분석 예열(2026-07-30) — 제작소 1단계 로딩 제거용. 실패해도 무해하다
     # (run_prewarm이 예외를 안 던지고 상태 문자열만 돌려준다).
-    "prewarm":  lambda a: prewarm.run_prewarm(
+    # ★상태 문자열을 버리지 않고 로그로 남긴다(2026-08-04 실사고: skipped_latched로
+    # 조용히 스킵됐는데 '작업 완료'만 찍혀 1단계가 왜 비었는지 아무도 몰랐다).
+    "prewarm":  lambda a: _log_prewarm(a, prewarm.run_prewarm(
         a.get("shortcode"), a.get("url"), caption=a.get("caption") or "",
         customer_id=a.get("customer_id") or "0", video_url=a.get("video_url") or "",
-        category=a.get("category")),
+        category=a.get("category"))),
     # 랭킹 카드 ⏱ 길이 백필(2026-08-04) — /api/reference가 1시간에 1번 넣는다.
     # 실패해도 무해(run_backfill이 예외 없이 요약 문자열만 돌려준다).
     "durfill":  lambda a: duration_backfill.run_backfill(),

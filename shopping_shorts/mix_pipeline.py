@@ -5,6 +5,7 @@ run_render: 사용자가 확인 후 최종 ffmpeg 렌더 → done.
 각 단계에서 mix_jobs.status를 갱신하고, 예외는 status='failed'+error로 잡는다.
 """
 import hashlib
+import re
 import subprocess
 import sys
 import traceback
@@ -44,7 +45,7 @@ MOTION_ASSETS_DIR = DEFAULT_ASSETS_DIR
 _PINNED_TTS_SEED = 7
 
 
-def _beat_words(mp3_path, dur=None):
+def _beat_words(mp3_path, dur=None, removed=None):
     """자막 싱크용 단어 타임스탬프. TTS가 준 것을 먼저 쓰고, 없으면 ASR로 폴백한다(2026-07-31).
 
     ①TTS 타임스탬프 — 우리가 보낸 원문 그대로의 시각이라 맞출 대상이 없다(정렬 실패 없음).
@@ -52,16 +53,42 @@ def _beat_words(mp3_path, dur=None):
       키 없는 무음 mock일 때 여기로 온다. 폴백을 남겨두는 이유는 그 세 경우에도
       자막이 글자수 추정으로 떨어지지 않게 하기 위해서다.
     ★asr_check를 모듈 속성으로 부른다 — 테스트가 mix_pipeline.asr_check를 monkeypatch 한다.
+
+    removed: 후처리가 잘라낸 무음 구간(원본 타임라인). 주면 rescale이 조각별로 갚는다
+    — 속도감 모드 내부 무음 제거는 선형사상으로 못 맞춘다(2026-08-06).
     """
     words = tts_timestamps.words_from_mp3(mp3_path)
     if words:
         # 합성 뒤 audio_post가 배속·무음트림으로 파일을 고쳤을 수 있다 → 최종 길이로 되맞춤.
-        return tts_timestamps.rescale(words, dur)
+        return tts_timestamps.rescale(words, dur, removed=removed)
     return asr_check.transcribe_words(mp3_path)
 
 
 def _source_video_id(i):
     return f"s{i}"
+
+
+# URL → 캐시 키(shortcode). script_extracts는 **shortcode**로 저장된다(담기·AI PICK·
+# prewarm 전부 그렇다). 반면 믹스 파이프라인 안에서 소스를 부르는 이름은 "s0"·"s1"이라,
+# 그걸로 캐시를 찾으면 **영원히 빗나간다**.
+#   ★2026-08-06 실사고: 캐시 재사용 코드(2026-07-24)가 `store.get_extract(vid)`로 vid="s0"을
+#   넘겨 **한 번도 적중한 적이 없었다**. 라이브 확인 — 저장된 추출 408건, 그 중 그 영상의
+#   캐시도 조건까지 충족(segments 12개·seg_id 전부·change 필드 있음)인데 매번 Gemini로
+#   재전사했다(실측 job ff3921a9ae4c: 작업 118초 중 85초가 다운로드+재추출).
+_SHORTCODE_RES = (
+    re.compile(r"instagram\.com/(?:reel|reels|p|tv)/([A-Za-z0-9_-]+)"),
+    re.compile(r"(?:youtube\.com/shorts/|youtu\.be/|youtube\.com/watch\?v=)([A-Za-z0-9_-]+)"),
+    re.compile(r"tiktok\.com/(?:@[^/]+/video/|v/)(\d+)"),
+)
+
+
+def _cache_key_for_url(url):
+    """이 URL의 script_extracts 캐시 키(shortcode). 못 알아내면 None."""
+    for rx in _SHORTCODE_RES:
+        m = rx.search(url or "")
+        if m:
+            return m.group(1)
+    return None
 
 
 # 성우 미선택(2단계 미리보기 등) 기본 성우 = 미나·표현(kr-mina-expressive, 2026-07-25 사장님 확정).
@@ -85,6 +112,12 @@ def _voice_params(voice):
     silence_trim, naturalize_profile, model_id, pace_mode). voice 없으면 _DEFAULT_VOICE
     (미나·표현) 기본값. naturalize_profile None → naturalize()가 자체 기본값 사용,
     pace_mode False → 속도감 다듬기 없음 = 옛 동작.
+
+    ⚠️ pace_mode의 '기본'은 두 층이다(2026-08-10 정정 — 이 설명이 틀려 있었다):
+      · voice 스냅샷에 키가 있으면 그 값
+      · 스냅샷이 없거나 비었으면 **_DEFAULT_VOICE로 폴백** → 거기 pace_mode=True(2026-07-25~)
+    즉 `_voice_params({})[7]`은 False가 아니라 True다. 기본값을 알고 싶으면
+    _DEFAULT_VOICE를 보라 — 여기 적힌 `v.get(..., False)`만 보고 판단하면 틀린다.
 
     스냅샷은 /api/mix/voice가 프리셋에서 통째로 복사해 넣는다 — naturalize_profile·model_id가
     빠지면 튜닝 작업대에서 동결한 값이 렌더에 도달하지 못한다(2026-07-15 whole-branch 리뷰 S1/S8)."""
@@ -132,6 +165,17 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
                         ranker=ranker,
                         voice_id=voice_id, voice_settings=settings, speed=speed,
                         model_id=model_id, previous_text=previous_text, next_text=next_text)
+    # ★무음 제거 '전에' 어디를 자를지 재서 사이드카에 남긴다(2026-08-06). post_process는
+    # 제자리 덮어쓰기라 뒤에는 원본 타임라인을 알 길이 없다. 이 구간들이 있어야 TTS
+    # 타임스탬프를 조각별로 당겨 자막을 맞출 수 있다(선형사상으론 누적 드리프트가 남는다).
+    # 반환값 대신 사이드카에 쓰는 이유: synthesize_line 호출부가 6곳이고 대부분 반환값을
+    # 대사 텍스트로 쓴다 — 시그니처를 바꾸면 그 전부와 기존 스텁이 깨진다.
+    if pace_mode:
+        try:
+            tts_timestamps.save_removed(str(out_path),
+                                        audio_post.measure_removed_spans(str(out_path)))
+        except Exception:
+            pass                  # 측정 실패 = 선형 폴백(기존 동작), 렌더는 계속
     # 비트별 라우드니스 정규화는 실제 ElevenLabs 음성일 때만 — 키 없는 개발용 무음 mock에
     # loudnorm을 걸면 무음 바닥을 노이즈로 끌어올린다(reference_local_tts_silent_mock_trap).
     audio_post.post_process(str(out_path), str(out_path), tempo=extra_tempo,
@@ -206,11 +250,15 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
             beat["target_seconds"] = round(_ad, 1)
         # 자막 타이밍용: 실제 말한 워드 시각으로 구절 표시시간 계산(실패/키없음 → 미설정=폴백).
         beat["cap_durs"] = None
-        words = _beat_words(str(out), _ad)
+        beat["cap_lead"] = 0.0
+        words = _beat_words(str(out), _ad, removed=tts_timestamps.load_removed(str(out)))
         if words:
-            beat["cap_durs"] = caption_sync.phrase_durs_from_words(
+            _timing = caption_sync.phrase_durs_from_words(
                 beat["narration"], words, _ad or 0.0,
                 preset=beat.get("caption_lines"))   # None일 수 있음 → 폴백
+            if _timing:
+                beat["cap_durs"] = _timing.durs
+                beat["cap_lead"] = _timing.lead_in
 
     if total == 0:
         return
@@ -343,15 +391,26 @@ def _conform_beats(beats, tts_dir, *, voice, global_pron=None):
         # 못 봐 오차가 커서 실측으로 둔다(2026-07-21). 실측 실패 시에만 추정 폴백.
         beat["target_seconds"] = round(new_dur, 1) if new_dur and new_dur > 0 \
             else round(max(1.5, len(new_n.strip()) / _SYLLABLES_PER_SEC), 1)
-        words = _beat_words(str(out), new_dur)
+        beat["cap_lead"] = 0.0
+        words = _beat_words(str(out), new_dur, removed=tts_timestamps.load_removed(str(out)))
         if words:
-            beat["cap_durs"] = caption_sync.phrase_durs_from_words(new_n, words, new_dur)
+            _t = caption_sync.phrase_durs_from_words(new_n, words, new_dur)
+            beat["cap_durs"] = _t.durs if _t else None
+            beat["cap_lead"] = _t.lead_in if _t else 0.0
         beat["sync_gap"] = round(max(0.0, new_dur - budget), 2)
 
 
 # 추출이 영상의 이만큼도 구간화하지 못하면 '빈약'으로 본다(2026-07-31).
 # 실측: 21초 영상이 2구간 7.4초(35%)로 나와 재료로 못 썼는데 화면엔 표시가 없었다.
-_MIN_COVERAGE = 0.55
+# ★0.55 → 0.75 (2026-08-06). 55%는 **영상 절반이 날아가도 통과**시키는 기준이었다.
+#   게다가 실측에서 실패값이 하필 정확히 55.0%(11.6/21.1=0.549)로 찍혀 경계에 걸렸다 —
+#   재시도가 되기도 하고 안 되기도 하는 회색지대. 뒤쪽 대사가 통째로 빠지면 사장님
+#   결과물이 11~16초로 짧아진다(원본 21초가 멀쩡히 있는데도). 같은 영상 5회 실측에서
+#   95%도 나왔으므로 75%는 충분히 도달 가능한 기준이다.
+_MIN_COVERAGE = 0.75
+# 커버리지가 낮을 때 다시 뽑는 횟수. 편차가 커서(55~95%) 몇 번 더 뽑으면 좋은 게 나온다.
+# 1회 추출이 20~30초라 무한정 늘릴 순 없다 — 3회면 실측 분포상 대부분 75%를 넘긴다.
+_EXTRACT_RETRIES = 3
 
 
 def _video_seconds(path):
@@ -466,6 +525,9 @@ def run_mix_job(job_id, db_path, work_root):
         # 전사로 추출한다(느림·PROCESSING실패 근본해소). 기본 off=회귀0. 실측 후 승격.
         # 설계: docs/superpowers/specs/2026-07-29-프레임태깅-추출전환-design.md
         _use_frames = store.get_setting("frame_extract_enabled", "") == "1"
+        # vid("s0") → 원래 URL. 캐시 키(shortcode)를 되찾는 데 쓴다.
+        _url_of = {_source_video_id(i): u for i, u in enumerate(job["urls"])}
+
         def _extract(item):
             vid, path = item
             # 캐시 재사용(2026-07-24): 이 소스 대본을 담기/AI PICK/뽑기 때 이미 뽑아
@@ -475,7 +537,13 @@ def run_mix_job(job_id, db_path, work_root):
             #   segments가 비었거나 seg_id 없는 항목이 하나라도 있으면 캐시를 버리고 새로 추출한다.
             cached = None
             try:
-                cached = store.get_extract(vid)
+                # ★캐시 키는 shortcode다(2026-08-06 수정). 예전엔 vid("s0")로 찾아
+                #   **한 번도 적중하지 않았다** — 위 _cache_key_for_url 주석 참고.
+                _ck = _cache_key_for_url(_url_of.get(vid))
+                if _ck:
+                    cached = store.get_extract(_ck)
+                if cached is None:
+                    cached = store.get_extract(vid)      # 옛 방식도 남겨둔다(하위호환)
             except Exception:
                 cached = None
             segs = (cached or {}).get("segments")
@@ -507,11 +575,23 @@ def run_mix_job(job_id, db_path, work_root):
             #   2구간 7.4초로 뭉쳐 나와 재료가 사실상 없었고, 화면엔 아무 표시도 없어서
             #   "왜 A로만 만들어졌지?"로만 보였다. → 커버리지를 재서 낮으면 한 번 다시 뽑고,
             #   그래도 낮으면 결과에 표시를 남겨 상류가 사장님께 알릴 수 있게 한다.
+            # ★추출 커버리지는 **같은 영상·같은 조건에서도 크게 흔들린다**(2026-08-06 실측).
+            #   Dbjk5BXToB7(21.1초)을 5회 반복: 67% / 95% / 55% / 55% / 55% — 평균 65%.
+            #   영상이나 힌트 문제가 아니라 모델 출력의 확률적 편차다(한때 '힌트가 범인'
+            #   이라고 봤으나 표본 1개짜리 오판이었다). 뒷부분이 통째로 날아가면 사장님
+            #   결과물이 11~16초로 짧아진다 — 원본 21초가 멀쩡히 있는데도.
+            #   그래서 **낮으면 여러 번 다시 뽑고 가장 좋은 것을 쓴다**. 재시도는 조건을
+            #   바꿔가며(힌트 on/off 번갈아) 한다 — 같은 조건 반복은 같은 실패를 부른다.
             cov = _extract_coverage(r, path)
-            if cov is not None and cov < _MIN_COVERAGE:
-                r2 = extract_script(path, vid, caption=captions.get(vid, ""))
+            for _try in range(_EXTRACT_RETRIES):
+                if cov is None or cov >= _MIN_COVERAGE:
+                    break
+                r2 = extract_script(path, vid, caption=captions.get(vid, ""),
+                                    use_boundaries=bool(_try % 2))
                 cov2 = _extract_coverage(r2, path)
-                if cov2 is None or cov2 > (cov or 0):
+                if cov2 is not None and cov2 > (cov or 0):
+                    print(f"[extract] {vid} 재추출 {_try + 1}회차로 개선: "
+                          f"{cov:.0%} → {cov2:.0%}", flush=True)
                     r, cov = r2, cov2
             r["coverage"] = cov
             r["weak_extract"] = bool(cov is not None and cov < _MIN_COVERAGE)
@@ -680,6 +760,38 @@ def _has_repickable(gate):
     return any(any(h in v for h in _REPICKABLE_HINTS) for v in (gate.get("violations") or []))
 
 
+def _prefer_structurally_sound(rec, candidates, target_seconds):
+    """추천 후보의 골격이 무너졌으면 형제 후보 중 성한 것으로 바꾼다(순수·무과금).
+
+    형태만 본다(비트 수·길이) — 문장 품질 판정은 judge 소관이라 건드리지 않는다.
+    바꿀 게 없으면 추천을 그대로 돌려준다(회귀 0). 정렬은 안정적이라 같은 입력이면 같은 결과."""
+    def _beats(c):
+        return ((c or {}).get("plan") or {}).get("beats") or []
+
+    def _secs(c):
+        return round(sum(float(b.get("target_seconds") or 0) for b in _beats(c)), 1)
+
+    def _broken(c):
+        n = len(_beats(c))
+        if n < plan_gate._MIN_BEATS:
+            return True
+        # 목표의 절반도 안 되면 이야기가 안 선다(게이트의 _SHORT_RATIO보다 느슨한 하한).
+        return bool(target_seconds) and _secs(c) < target_seconds * 0.5
+
+    if not _broken(rec):
+        return rec
+    # 성한 후보 중 비트가 가장 많은 것(같으면 원래 순서 유지 = 심사 순위 존중).
+    sound = [c for c in (candidates or []) if c is not rec and not _broken(c)]
+    if not sound:
+        print("[골격] 추천 후보가 %d비트/%.1f초로 무너졌으나 성한 형제 후보가 없어 그대로 진행"
+              % (len(_beats(rec)), _secs(rec)), file=sys.stderr)
+        return rec
+    best = max(sound, key=lambda c: len(_beats(c)))
+    print("[골격] 추천 후보(%d비트/%.1f초)를 형제 후보(%d비트/%.1f초)로 교체"
+          % (len(_beats(rec)), _secs(rec), len(_beats(best)), _secs(best)), file=sys.stderr)
+    return best
+
+
 def _run_gate_correction(plan, source_scripts, target_seconds):
     """게이트 검사→재픽 루프. 위반이 재픽 가능하면 통과할 때까지 재픽(상한 _MAX_REPICK).
     재픽이 무변화면 즉시 종료(수렴). 최종 gate를 plan["gate"]에 항상 저장 —
@@ -800,6 +912,11 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
             _rec_cands = sf["candidates"]   # conform 뒤 재저장용(카드=TTS 일치)
             rec = next((cand for cand in sf["candidates"] if cand["recommended"]),
                        sf["candidates"][0])
+            # ★골격이 무너진 후보는 추천이라도 쓰지 않는다(2026-08-07).
+            #   심사(judge)는 대본 품질·장면싱크를 보지 형태(비트 수)를 안 본다. 실측 08-06:
+            #   12건 중 6건이 5비트 미만으로 나갔고 그중 3건은 2비트(30초 목표에 14.2초)였다.
+            #   같은 job의 다른 후보가 멀쩡하면 그걸 쓰는 게 항상 낫다 — 추가 호출·과금 없다.
+            rec = _prefer_structurally_sound(rec, sf["candidates"], target_seconds)
             plan = rec["plan"]
             plan["generator"] = "scene_first"   # ★P1: 어느 생성기가 만들었나(조용한 폴백 금지)
             # 주입 미리보기(2026-07-23): 이 대본에 실제로 들어간 은행 블록을 plan에 실어 리뷰
@@ -1279,11 +1396,13 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
             _rdur = _probe_duration(str(out))
         except Exception:      # noqa: BLE001 — 길이 측정 실패로 재합성을 죽이지 않는다
             _rdur = None
-        words = _beat_words(str(out), _rdur)
+        words = _beat_words(str(out), _rdur, removed=tts_timestamps.load_removed(str(out)))
         if words:
-            beat["cap_durs"] = caption_sync.phrase_durs_from_words(
+            _t = caption_sync.phrase_durs_from_words(
                 beat["narration"], words, _rdur or 0.0,
                 preset=beat.get("caption_lines"))
+            beat["cap_durs"] = _t.durs if _t else None
+            beat["cap_lead"] = _t.lead_in if _t else 0.0
         # 완료 신호: 단조 증가 버전. 프론트가 이 값 변화를 폴링해 '재합성 끝'을 안다
         # (mp3는 같은 경로/URL이라 겉으론 구분이 안 되므로 — 고정 4초 추측을 이 신호로 대체).
         beat["tts_ver"] = (beat.get("tts_ver") or 0) + 1

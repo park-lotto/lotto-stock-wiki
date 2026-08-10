@@ -177,6 +177,38 @@ def test_restores_step_7_matching_panel(js):
         "매칭 패널(step:7)로 복원되지 않았다 — PANEL_COUNT 바운드 확인: " + out)
 
 
+def test_restores_matching_panel_even_before_preview(js):
+    """★2026-08-06 사장님 제보: "3개로 나눈 것들 모두 이 화면(1단계)으로 고정됨".
+
+    '따로 만들기'로 갈라진 작업은 **job은 있는데 미리보기는 아직 안 본** 상태로 저장된다
+    (preview_status=null). 그 조합에서 복원이 `stepLocked(cur)`에 걸려 7(매칭 화면)을
+    0으로 되감았다 — 대본 후보 A/B/C를 고르는 자리가 바로 그 화면인데 거기서 쫓겨나니
+    3편을 따로 만들 방법이 사라진다.
+
+    stepLocked() 자신은 패널7을 예외로 둔다(`if(i===7) return false`) — 즉 이 되감기는
+    게이트의 뜻이 아니었다. 기존 test_restores_step_7_matching_panel은 job_id:null이라
+    게이트 자체를 안 태워서 이 조합을 못 잡았다."""
+    out = _run(js, """
+      RESPONSES = {'/api/produce/works/': {ok:true, step:7, job_id:'job-9', state:{script:'대본'}},
+                   '/api/mix/status/': {ok:true, preview_status:null}};
+      await _restoreWork('w-1');
+      console.log(JSON.stringify({cur}));
+    """)
+    assert '"cur": 7' in out.replace('"cur":7', '"cur": 7'), (
+        "미리보기 전이라고 매칭 화면에서 1단계로 쫓겨났다 — 후보를 고를 자리가 없어진다: " + out)
+
+
+def test_gate_still_holds_for_paid_steps_after_the_panel7_fix(js):
+    """★위 수정이 게이트를 뚫으면 안 된다 — 패널7만 예외고 2~6단계(유료 자막제거 등)는 그대로 잠근다."""
+    out = _run(js, """
+      RESPONSES = {'/api/produce/works/': {ok:true, step:2, job_id:'job-9', state:{script:'대본'}},
+                   '/api/mix/status/': {ok:true, preview_status:null}};
+      await _restoreWork('w-1');
+      console.log(JSON.stringify({cur}));
+    """)
+    assert '"cur": 0' in out.replace('"cur":0', '"cur": 0'), "유료 단계 게이트가 뚫렸다: " + out
+
+
 def test_missing_work_falls_back_to_old_path(js):
     """지워진 작업의 링크를 눌러도 빈 화면이 되면 안 된다 — 기존 복원 경로로 떨어진다."""
     out = _run(js, """

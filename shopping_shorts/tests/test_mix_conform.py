@@ -70,7 +70,8 @@ def test_conform_pass_rewrites_only_over_budget_beat(monkeypatch, tmp_path):
                         lambda n, out, **k: synth_calls.append((n, str(out))))
     monkeypatch.setattr(mp.asr_check, "transcribe_words", lambda p: [{"w": "짧게"}])
     monkeypatch.setattr(mp.caption_sync, "phrase_durs_from_words",
-                        lambda n, w, d, preset=None: [d])
+                        lambda n, w, d, preset=None:
+                        mp.caption_sync.PhraseTiming([d], 0.0))
     mp._conform_beats(beats, tmp_path, voice=None)
 
     b0, b1 = beats

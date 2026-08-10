@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "date": "2026-08-05",
+    "broker": "한화투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-05_1106_[ESG] 거버넌스 임팩트  주주행동주의의 진...md"
+  },
+  "questionnaire": {
+    "broker": "한화투자증권",
+    "analyst": "박세연, 김예인",
+    "report_date": "2026년 8월 5일",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "정부의 단계적 정책",
+      "상법 개정",
+      "자본시장 체질개선 방안",
+      "중복상장 규제"
+    ],
+    "recommended_sectors": [],
+    "style": "주주행동주의",
+    "event_calendar": [
+      {
+        "date": "2024.10.4",
+        "event": "코리아 밸류업 지수 산출 개시"
+      },
+      {
+        "date": "2025.7",
+        "event": "상법 개정 통과"
+      },
+      {
+        "date": "2026.3.18",
+        "event": "체질개선 방안"
+      },
+      {
+        "date": "2026.7.6",
+        "event": "중복상장 원칙금지"
+      }
+    ],
+    "top_picks": null,
+    "risk": "종목 선별 효과와 제도 효과를 명확히 구분하기에 한계가 있음",
+    "quote": "코리아 밸류업 지수가 KOSPI 를 64.5%p, MSCI 지수 대비 130%p 이상 앞선 초과수익은 제도적 거버넌스 드라이브와 종목 선별 효과가 병존한 결과이며, 그 배경에는 한국을 포함한 아시아 전역의 주주행동주의 강도 상승이 있습니다."
+  }
+}

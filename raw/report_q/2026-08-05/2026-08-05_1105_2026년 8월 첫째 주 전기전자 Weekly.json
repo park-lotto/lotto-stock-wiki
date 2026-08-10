@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "date": "2026-08-05",
+    "broker": "교보증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-05_1105_2026년 8월 첫째 주 전기전자 Weekly.md"
+  },
+  "questionnaire": {
+    "broker": "교보증권",
+    "analyst": [
+      "박희철",
+      "최보영"
+    ],
+    "report_date": "2026/ 8/ 5",
+    "target_kind": "market",
+    "market_direction": null,
+    "macro_vars": [
+      "금 선물",
+      "은 선물",
+      "구리 선물",
+      "원/달러 환율"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "IT",
+        "stance": null,
+        "reason": "국내 전기전자 섹터의 밸류에이션 조정이 어느정도 마무리되는 시점"
+      }
+    ],
+    "style": null,
+    "event_calendar": null,
+    "top_picks": [
+      "삼성전기",
+      "LG전자",
+      "LG이노텍",
+      "두산",
+      "이수페타시스",
+      "심텍",
+      "대덕전자",
+      "해성디에스",
+      "비에이치",
+      "티엘비",
+      "드림텍"
+    ],
+    "risk": "테크의 변동성이 아직 끝나지 않았다고 판단",
+    "quote": "테크의 변동성이 아직 끝나지 않았다고 판단, 뚜렷한 근거 중심의 선별적인 접근 필요"
+  }
+}

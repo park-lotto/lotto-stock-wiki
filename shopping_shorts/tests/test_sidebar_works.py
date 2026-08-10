@@ -176,6 +176,76 @@ def test_delete_aborts_when_not_confirmed():
     assert out == "aborted", f"확인 취소했는데 삭제됐다: {out}"
 
 
+# ── 목록 다시 그리기(2026-08-06) ────────────────────────────────────────────
+# 사장님 제보: "따로 만들기를 누르면 내 작업에 추가가 되야 하는데 안 된다".
+# mountWorks는 페이지 로드 때 한 번만 돌아 화면 안에서 생긴 작업이 안 보였다.
+# ★.ss-works를 찾아 **갈아끼우는지**를 봐야 하므로 _nav.querySelector를 실제로 동작시킨다
+#   (기본 harness는 null만 돌려줘서 '중복 삽입'을 못 잡는다).
+_NAV_QS = """
+_nav.querySelector = function(sel){
+  var cls = sel.replace('.','');
+  for (var i=0;i<this.children.length;i++){
+    var c = this.children[i];
+    if (c.classList && c.classList.contains && c.classList.contains(cls)) return c;
+    if (typeof c.className === 'string' && c.className.split(' ').indexOf(cls) !== -1) return c;
+  }
+  return null;
+};
+_nav.replaceChild = function(nu, old){
+  var i = this.children.indexOf(old);
+  if (i >= 0) this.children[i] = nu; else this.children.push(nu);
+  this._html = this.children.map(function(c){ return c._html || ''; }).join('');
+  return old;
+};
+"""
+
+
+def test_refresh_hook_is_exposed():
+    """전역 훅이 없으면 화면 안에서 목록을 다시 그릴 방법이 아예 없다."""
+    out = _run("console.log(typeof window.__ssRefreshWorks);", harness_override=_NAV_QS)
+    assert out == "function", out
+
+
+def test_refresh_does_not_duplicate_the_list():
+    """★다시 그릴 때 기존 .ss-works를 갈아끼워야 한다 — 그냥 삽입하면 '내 작업'이 두 벌 쌓인다."""
+    out = _run("""
+      window.__ssRefreshWorks();
+      await new Promise(r=>setTimeout(r,20));
+      console.log(_nav.children.filter(c => c.className === 'ss-group ss-works').length);
+    """, harness_override=_NAV_QS)
+    assert out == "1", f"목록 블록이 {out}개 — 다시 그리기가 중복 삽입됐다"
+
+
+def test_refresh_shows_newly_created_work():
+    """복제로 생긴 작업이 **새로고침 없이** 목록에 뜬다(이 버그의 본체)."""
+    out = _run("""
+      WORKS_RESPONSE = { ok:true, works:[
+        {work_id:'w1', title:'협탁 인테리어 대본', step:1, job_id:'j1', updated_at:'2026-07-17T01:00:00+00:00'},
+        {work_id:'w9', title:'C안 토마토 주스', step:2, job_id:'j9', updated_at:'2026-08-06T01:00:00+00:00'}]};
+      window.__ssRefreshWorks('w9');
+      await new Promise(r=>setTimeout(r,20));
+      const h = _nav.children.filter(c => c.className === 'ss-group ss-works')[0]._html;
+      console.log(JSON.stringify({shown: h.indexOf('C안 토마토 주스') !== -1,
+                                  cur: h.indexOf('data-wid="w9"') !== -1 && h.indexOf('ss-work-current') !== -1}));
+    """, harness_override=_NAV_QS)
+    assert '"shown":true' in out, f"새 작업이 목록에 안 떴다: {out}"
+    assert '"cur":true' in out, f"새 작업이 '지금 작업'으로 표시 안 됐다: {out}"
+
+
+def test_refresh_current_id_beats_url():
+    """cloneCandidate는 URL을 즉시 안 바꾼다 — 인자로 받은 id가 ?work= 보다 우선해야
+    '지금 작업' 표시가 원본 쪽에 잘못 남지 않는다.
+    (WORK_ID는 produce.html에서 `let`이라 window에 안 올라간다 → 인자로 넘기는 게 유일한 길.)"""
+    out = _run("""
+      window.__ssRefreshWorks('w2');
+      await new Promise(r=>setTimeout(r,20));
+      const h = _nav.children.filter(c => c.className === 'ss-group ss-works')[0]._html;
+      const i2 = h.indexOf('data-wid="w2"'), i1 = h.indexOf('data-wid="w1"');
+      console.log(h.slice(0, i2).lastIndexOf('ss-work-current') > i1 ? 'w2-current' : 'wrong');
+    """, harness_override=_NAV_QS + "location.search='?work=w1';")
+    assert out == "w2-current", f"URL의 w1이 인자 w2를 이겼다: {out}"
+
+
 def test_angle_brackets_in_title_do_not_become_tags():
     """대본에 <>가 있으면 진짜 DOM 태그로 살아나면 안 된다."""
     out = _run("console.log(_nav.innerHTML);",

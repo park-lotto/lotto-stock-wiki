@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 # 자동배포: origin/main에 새 커밋 있으면 reset --hard로 강제 동기화(서버=main의 거울). 코드(py/html/js/css/dashboard/scripts) 바뀐 경우에만 재시작.
 # ⚠️ 서버 로컬 수정은 강제로 덮인다(예전엔 '충돌 시 스킵'이었으나 그게 배포를 통째로 멈췄다).
-#    서버가 직접 쓰는 파일은 반드시 .gitignore로 추적에서 빼둘 것 — 추적된 채면 3분마다 초기화된다.
-# 서버 크론 등록: */3 * * * * /home/ubuntu/lotto-stock-wiki/deploy/auto_deploy.sh
+#    서버가 직접 쓰는 파일은 반드시 .gitignore로 추적에서 빼둘 것 — 추적된 채면 1분마다 초기화된다.
+# 서버 크론 등록: */1 * * * * bash /home/ubuntu/lotto-stock-wiki/deploy/auto_deploy.sh
+#   ★2026-08-06 3분 → 1분 (사장님: "그냥 바로 하게 안 되나"). 폴링이라 즉시는 아니지만
+#     푸시 후 최대 대기가 3분→1분이 된다. 겹침은 맨 위 `flock -n 9 || exit 0`이 막으므로
+#     주기를 줄여도 동시에 두 번 돌지 않는다(이미 도는 중이면 그냥 종료).
+#     ⚠️ 서버를 다시 세우면 crontab은 안 따라온다(2026-08-06 증설 때 실제로 겪음) —
+#        이 줄 그대로 `crontab -e`에 다시 넣을 것.
 #
 # ★2026-07-30 두 가지 변경 (사장님 지시: 사용자가 생겼을 때 배포가 끊김을 만들지 않게)
 #   ① **연기한 재시작을 반드시 다시 시도한다(버그 수정).** 예전엔 연기한 사실을 기억하는 곳이
@@ -17,6 +22,17 @@
 #      "배포가 영영 안 감"이 이 repo 역사상 최악 사고라, 끊김 몇 초보다 그게 더 위험하다.
 #      워커는 강제하지 않는다 — 강제하면 사용자의 렌더가 죽는다. 대신 좀비 가드(heartbeat
 #      2분)가 죽은 job을 걸러내므로 영영 막히지는 않는다.
+#
+# ★2026-08-06 두 가지 수정 (실사고: 병렬 대본 코드가 배포됐는데 워커가 옛 코드로 계속 돌았다)
+#   ③ **워커 유닛이 템플릿 인스턴스로 바뀌었다**(worker@1/2/3, 동시제작용 다중화).
+#      구 이름 `shopping-shorts-worker`는 **유닛 자체가 사라져**(could not be found) 재시작이
+#      실패할 운명이었다. 지금 살아있는 인스턴스를 systemd에 물어서 전부 재시작한다.
+#   ④ **배경작업만 도는 중이면 더 안 미룬다.** 좀비 가드는 '죽은 job'만 거른다 — 살아있는
+#      배경작업(prewarm·durfill)이 **끊임없이 이어지면** busy가 영원히 참이라 재시작이
+#      무한 연기됐다(실측 01:12~01:18 "연기(작업 진행 중, 360초 경과)" 반복, 그 사이
+#      워커 3개가 4분 전 코드로 계속 돌았다). 고객 작업(mix·render·retype·preview·clean)이
+#      돌 때만 미룬다 — 그건 죽이면 사장님이 만들던 영상이 날아가니까. 배경작업은 죽어도
+#      다음 크론이 다시 큐에 넣으므로 잃는 게 없다.
 set -uo pipefail
 REPO=/home/ubuntu/lotto-stock-wiki
 LOG=/tmp/auto_deploy.log
@@ -63,8 +79,12 @@ try:
         # heartbeat_at은 SQLite datetime('now') 표준형(공백구분)으로 저장된다 —
         # 파이썬 ISO형('...T...')과 섞이면 문자열 비교가 깨지므로 datetime()으로 정규화한다
         # (2026-07-19에 그 함정을 한 번 밟았다).
+        # ★고객 작업일 때만 미룬다(2026-08-06). 배경작업(prewarm·durfill·overseas)은
+        #   재시작으로 죽어도 다음 크론이 다시 큐에 넣으므로 잃는 게 없다. 반면 이걸
+        #   세면 배경작업이 끊임없이 이어질 때 배포가 **영원히** 안 나간다(실측 사고).
         "SELECT COUNT(*) FROM job_queue "
         "WHERE state='running' "
+        "AND task IN ('mix','render','retype','preview','clean') "
         "AND datetime(heartbeat_at) > datetime('now','-2 minutes')").fetchone()[0]
     sys.exit(0 if n > 0 else 1)   # exit 0 = 진행 중 → 연기
 except Exception as e:
@@ -156,10 +176,20 @@ fi
 # 강제하지 않는다. 좀비 가드(heartbeat 2분)가 죽은 job을 걸러내므로 영영 막히지 않는다.
 if _pending_has shopping-shorts-worker; then
   if _worker_busy; then
-    echo "$(date '+%F %T') worker 재시작 연기(작업 진행 중, ${AGE}초 경과) $HEADSHORT" >>"$LOG"
+    echo "$(date '+%F %T') worker 재시작 연기(고객작업 진행 중, ${AGE}초 경과) $HEADSHORT" >>"$LOG"
   else
-    sudo systemctl restart shopping-shorts-worker >>"$LOG" 2>&1 \
-      && echo "$(date '+%F %T') worker 재시작완료 $HEADSHORT" >>"$LOG"
-    _pending_del shopping-shorts-worker
+    # ★살아있는 워커 유닛을 systemd에 물어본다(2026-08-06). 워커는 템플릿 인스턴스
+    #   (worker@1/2/3)로 바뀌었고 구 이름 `shopping-shorts-worker`는 유닛이 없어져
+    #   restart가 실패한다. 이름을 코드에 박으면 인스턴스 수가 바뀔 때마다 또 깨진다.
+    WORKER_UNITS=$(systemctl list-units --type=service --state=loaded --no-pager --plain \
+                     'shopping-shorts-worker*' 2>/dev/null | awk '{print $1}' | grep '\.service$')
+    [ -z "$WORKER_UNITS" ] && WORKER_UNITS=shopping-shorts-worker.service
+    if sudo systemctl restart $WORKER_UNITS >>"$LOG" 2>&1; then
+      echo "$(date '+%F %T') worker 재시작완료 [$(echo $WORKER_UNITS | tr '\n' ' ')] $HEADSHORT" >>"$LOG"
+      _pending_del shopping-shorts-worker
+    else
+      # 실패하면 PENDING을 지우지 않는다 — 다음 크론이 다시 시도한다(조용한 유실 방지).
+      echo "$(date '+%F %T') ⚠️ worker 재시작 실패 — 다음 크론 재시도 $HEADSHORT" >>"$LOG"
+    fi
   fi
 fi

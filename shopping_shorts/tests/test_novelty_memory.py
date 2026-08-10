@@ -73,6 +73,7 @@ def test_avoid_block_sanitizes_braces(tmp_path):
 def _wire(monkeypatch, box):
     def fake_sf(source_scripts, reference_text, target_seconds, **kw):
         box["bank"] = kw.get("bank_context")
+        box["avoid"] = kw.get("avoid_hooks")   # novelty on/off를 직접 확인하려고 같이 담는다
         return {"candidates": [
             {"plan": {"beats": [{"beat_idx": 0}], "structure": "free",
                       "plagiarism_flags": [], "detected_type": "x", "affiliate_target": ""},
@@ -118,4 +119,9 @@ def test_plan_and_tts_no_avoid_when_disabled(tmp_path, monkeypatch):
     _wire(monkeypatch, box)
     mp._plan_and_tts(store, "j", [{"full_text": "x"}], 20, "free", None, tmp_path / "w",
                      scene_first=True, reference_text="ref")
-    assert box["bank"] == ""   # 설정 off → 회귀0
+    # 설정 off → 회귀0(옛날에 쓴 훅이 회피 목록으로 안 들어간다).
+    # ⚠️ ""로 보면 안 된다(2026-08-10) — 2026-08-04부터 확정 훅패턴 10종이 은행 on/off와
+    #    무관하게 bank_context에 항상 붙는다(mix_pipeline.py:891). 여기서 지킬 것은
+    #    **옛 사용기록이 새어 들어오지 않는가**이므로 그것으로 검사한다.
+    assert "옛날에쓴훅" not in box["bank"]
+    assert box["avoid"] in (None, [], "")   # novelty OFF → 회피 목록 자체가 없다

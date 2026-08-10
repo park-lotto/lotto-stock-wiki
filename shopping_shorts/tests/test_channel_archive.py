@@ -86,3 +86,52 @@ def test_run_yields_while_render_busy(store):
          patch.object(ca, "Store", return_value=store):
         ca.run(sleep=lambda s: slept.append(s), log=lambda *a: None)
     assert ca._BUSY_POLL_S in slept    # 양보 대기가 실제로 일어남
+
+
+# ── 계정 풀 분리(2026-08-09) ──
+# 왜 잠그나: 아카이브와 레퍼런스랭킹이 같은 계정을 공유해, 아침 아카이브가 한도를
+# 태우면 저녁 수집이 첫 채널부터 0건이 됐다(199채널 전부 not_found 실사고).
+# 폴더가 없을 땐 동작이 안 바뀌어야 하고(폴백), 생기면 계정·출구가 모두 갈려야 한다.
+
+def _mk(d, *names):
+    os.makedirs(d, exist_ok=True)
+    for n in names:
+        with open(os.path.join(d, n), "w") as f:
+            f.write("{}")
+
+
+def test_session_slots_falls_back_when_pool_dir_absent(tmp_path):
+    """하위 폴더가 없으면 기존처럼 상위 폴더 전체 — 분리 전에도 동작 불변."""
+    d = str(tmp_path / "sess")
+    _mk(d, "a.json", "b.json")
+    with patch.dict(os.environ, {"INSTAGRAM_SESSION_DIR": d}):
+        arch = ca.session_slots(ca.POOL_ARCHIVE)
+        ref = ca.session_slots(ca.POOL_REFERENCE)
+    assert [os.path.basename(x) for x in arch] == ["a.json", "b.json"]
+    assert [os.path.basename(x) for x in ref] == ["a.json", "b.json"]
+
+
+def test_session_slots_splits_by_pool(tmp_path):
+    """하위 폴더가 있으면 자기 풀만 본다 — 서로의 한도를 잠식하지 않는다."""
+    d = str(tmp_path / "sess")
+    _mk(d)
+    _mk(os.path.join(d, "archive"), "a1.json", "a2.json")
+    _mk(os.path.join(d, "reference"), "r1.json")
+    with patch.dict(os.environ, {"INSTAGRAM_SESSION_DIR": d}):
+        arch = [os.path.basename(x) for x in ca.session_slots(ca.POOL_ARCHIVE)]
+        ref = [os.path.basename(x) for x in ca.session_slots(ca.POOL_REFERENCE)]
+    assert arch == ["a1.json", "a2.json"]
+    assert ref == ["r1.json"]
+    assert not set(arch) & set(ref)
+
+
+def test_slot_proxy_exits_do_not_collide_across_pools():
+    """풀이 갈려도 출구 IP가 겹치면 계정↔IP 1:1이 깨져 한 기계로 묶인다."""
+    env = {"WEBSHARE_USER": "u", "WEBSHARE_PASS": "p"}
+    with patch.dict(os.environ, env):
+        arch = {ca.slot_proxy(i, ca.POOL_ARCHIVE) for i in range(3)}
+        ref = {ca.slot_proxy(i, ca.POOL_REFERENCE) for i in range(3)}
+    assert not arch & ref
+    # 풀 미지정(기존 호출부)은 아카이브와 같은 번호대 — 하위호환.
+    with patch.dict(os.environ, env):
+        assert ca.slot_proxy(0) == ca.slot_proxy(0, ca.POOL_ARCHIVE)

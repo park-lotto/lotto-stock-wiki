@@ -101,3 +101,90 @@ def test_render_candidates_and_pick(tmp_path):
     assert len(calls) == 1
     assert calls[0]["body"] == {"job_id": "JID", "index": 1}
     assert r["reloaded"] is True
+
+
+# ── 🎞 따로 만들기 런타임 그라운딩(2026-08-06) ──────────────────────────────
+# 사장님 제보: "따로 만들기를 누르면 새로고침되면서 내 작업에 추가가 되야 하는데 안 된다".
+# 문자열 검사(test_mix_candidate_clone.test_clone_*)만으론 "정말 서버에 박히나"를 못 본다 —
+# 여기서 슬라이스를 실제로 **돌려서** POST와 사이드바 갱신을 눈으로 확인한다.
+_CLONE_DRIVER = r"""
+(function(){
+  global.window = global;
+  global.esc = (s)=>String(s==null?'':s);
+  global.MIX_JOB = 'JID';
+  global.WORK_ID = 'OLD_WORK';
+  global.CAND_SEL = 0;
+  global.STATE = {script:'원본 대본', script_carryover:true};
+  global.PREVIEW_POLL = null; global.PREVIEW_GEN = 0; global.PREVIEW_STATUS = 'ready';
+  global._workTimer = null;
+  const captured = {fetchCalls:[], pushed:0, saved:0, refreshed:[], boxes:{}};
+  global.clearInterval = ()=>{}; global.clearTimeout = ()=>{};
+  global.loadMixReview = ()=>{}; global.refreshNextBtn = ()=>{};
+  global.confirm = ()=>true; global.alert = (m)=>{ captured.alert = m; };
+  global.saveWork = ()=>{ captured.saved++; };
+  // 실제 _pushWork는 서버가 준 work_id로 WORK_ID를 채운다 — 그 계약을 그대로 흉내낸다.
+  global._pushWork = async ()=>{ captured.pushed++; WORK_ID = 'NEW_WORK'; };
+  global.__ssRefreshWorks = (wid)=>{ captured.refreshed.push(wid === undefined ? null : wid); };
+  global.fetch = async (url, opts)=>{
+    captured.fetchCalls.push({url, body: opts && opts.body ? JSON.parse(opts.body) : null});
+    if(url === '/api/mix/candidate/clone') return {json: async()=>({ok:true, job_id:'NEWJOB'})};
+    return {json: async()=>({ok:true})};
+  };
+  global.document = { getElementById: (id)=>({ set innerHTML(v){ captured.boxes[id]=v; },
+                                               get innerHTML(){ return captured.boxes[id]||''; } }) };
+  // ★CAND_LIST는 슬라이스 안에서 `let`으로 선언돼 global 대입이 안 먹는다(섀도잉).
+  //   실제 화면과 똑같이 renderCandidates를 태워 채운다 — 그게 진짜 경로다.
+  renderCandidates([
+    {index:0, score:0.5, recommended:false, script:'에이 대본 전문', hook:'훅0', story_person:'화자0'},
+    {index:1, score:0.9, recommended:true,  script:'씨 대본 전문 토마토 주스', hook:'훅1', story_person:'화자1'},
+  ]);
+  (async()=>{
+    await cloneCandidate(1);
+    console.log(JSON.stringify({
+      fetchCalls: captured.fetchCalls, pushed: captured.pushed, saved: captured.saved,
+      refreshed: captured.refreshed, script: STATE.script, workId: WORK_ID,
+      mixJob: MIX_JOB, previewStatus: PREVIEW_STATUS,
+    }));
+  })();
+})();
+"""
+
+
+def _run_clone(tmp_path):
+    js = tmp_path / "clone.js"
+    js.write_text(_slice() + _CLONE_DRIVER, encoding="utf-8")
+    out = subprocess.run([NODE, str(js)], capture_output=True, text=True,
+                         encoding="utf-8", errors="replace",
+                         stdin=subprocess.DEVNULL, timeout=30)
+    assert out.returncode == 0, out.stderr
+    return json.loads(out.stdout.strip().splitlines()[-1])
+
+
+@pytest.mark.skipif(not NODE, reason="node 없음")
+def test_clone_persists_new_work_and_refreshes_sidebar(tmp_path):
+    """★버그의 본체. 복제 후 (1)서버에 **즉시** 새 작업을 박고 (2)사이드바를 다시 그려야
+    사장님 눈에 '내 작업'이 하나 더 생긴 게 보인다."""
+    r = _run_clone(tmp_path)
+    # 복제 API가 고른 후보로 불렸다
+    calls = [c for c in r["fetchCalls"] if c["url"] == "/api/mix/candidate/clone"]
+    assert len(calls) == 1 and calls[0]["body"] == {"job_id": "JID", "index": 1}
+    # 디바운스(saveWork)에만 맡기지 않고 즉시 확정 — 여기가 "추가가 안 된다"의 원인이었다
+    assert r["pushed"] == 1, "새 작업이 서버에 즉시 안 박혔다(1초 디바운스에 맡기면 증발한다)"
+    # 사이드바를 **새 work_id로** 다시 그린다(_pushWork가 채운 값이어야 한다)
+    assert r["refreshed"] == ["NEW_WORK"], f"사이드바 갱신이 잘못됐다: {r['refreshed']}"
+    assert r["workId"] == "NEW_WORK"
+
+
+@pytest.mark.skipif(not NODE, reason="node 없음")
+def test_clone_carries_chosen_script_for_work_title(tmp_path):
+    """작업 제목은 서버가 state.script 앞 20자에서 뽑는다 — 안 실으면 '(제목 없음)'만 쌓인다."""
+    r = _run_clone(tmp_path)
+    assert r["script"] == "씨 대본 전문 토마토 주스", f"고른 후보 대본이 안 실렸다: {r['script']}"
+
+
+@pytest.mark.skipif(not NODE, reason="node 없음")
+def test_clone_switches_job_and_relocks_preview(tmp_path):
+    """새 job으로 갈아타면서 옛 미리보기 게이트를 놓아야 유료단계로 안 샌다(기존 계약 유지)."""
+    r = _run_clone(tmp_path)
+    assert r["mixJob"] == "NEWJOB"
+    assert r["previewStatus"] is None

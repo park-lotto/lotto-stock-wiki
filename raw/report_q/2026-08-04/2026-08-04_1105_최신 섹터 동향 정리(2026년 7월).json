@@ -1,0 +1,80 @@
+{
+  "meta": {
+    "date": "2026-08-04",
+    "broker": "유진투자증권",
+    "raw_file": "C:\\Users\\TheRose\\Desktop\\로또의 주식\\raw\\report\\2026-08-04_1105_최신 섹터 동향 정리(2026년 7월).md"
+  },
+  "questionnaire": {
+    "broker": "유진투자증권",
+    "analyst": "양승윤",
+    "report_date": "2026.08.04",
+    "target_kind": "market",
+    "market_direction": "null",
+    "macro_vars": [
+      "지정학 리스크",
+      "국방비 증액",
+      "미국 조선소 현대화",
+      "한미 조선협력",
+      "글로벌 방산 증설"
+    ],
+    "recommended_sectors": [
+      {
+        "sector": "로봇",
+        "stance": "OVERWEIGHT",
+        "reason": "대기업의 로봇 사업화 본격 추진 및 생산·데이터·고객 확보 역량 강화"
+      },
+      {
+        "sector": "방산",
+        "stance": "OVERWEIGHT",
+        "reason": "NATO 재무장 및 국방비 증액, 현지생산·수출 파이프라인 확대"
+      },
+      {
+        "sector": "조선",
+        "stance": "OVERWEIGHT",
+        "reason": "고부가 상선 수주 호조 및 한미 조선협력 실행 단계 진입"
+      }
+    ],
+    "style": "null",
+    "event_calendar": [
+      {
+        "date": "8/19",
+        "event": "중국 WRC"
+      },
+      {
+        "date": "8/26",
+        "event": "현대차 CID"
+      }
+    ],
+    "top_picks": [
+      "유니트리",
+      "삼성",
+      "LG",
+      "현대차",
+      "보스턴다이내믹스",
+      "Figure",
+      "Apptronik",
+      "테슬라",
+      "KNDS",
+      "라인메탈",
+      "록히드마틴",
+      "보잉",
+      "한화-WB",
+      "KAI",
+      "한화오션",
+      "HD현대",
+      "삼성중공업",
+      "양밍",
+      "Delfin LNG",
+      "ADNOC",
+      "Total",
+      "슈나이더일렉트릭",
+      "필리조선소",
+      "TKMS",
+      "HD현대중공업",
+      "머스크",
+      "CMA-CGM"
+    ],
+    "risk": "러시아·우크라이나와 중동 지정학 리스크, 중국의 상선 수주 점유율 확대, 미국 조선 관련 법 개정 필요성",
+    "quote": "7월 섹터별 합산 시가총액은 로봇 -20%, 조선 -11%, 방산 -11%를 기록. 절대 수익률은 부진했으나 코스피(-22%)·코스닥(-22%) 대비로는 아웃퍼폼."
+  }
+}

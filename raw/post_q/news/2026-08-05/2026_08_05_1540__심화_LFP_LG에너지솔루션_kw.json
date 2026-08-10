@@ -1,0 +1,29 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "엘앤에프",
+      "signal": "neutral",
+      "reason": "LFP 시제품 출하 완료",
+      "ts": null,
+      "quote": "엘앤에프는 LFP 시제품 출하했는데",
+      "sector": "2차전지"
+    },
+    {
+      "name": "LG화학",
+      "signal": "neutral",
+      "reason": "LFP 양산 계획 2028년 이후로 전망",
+      "ts": "2028년 이후",
+      "quote": "LG화학 양산은 2028년 이후",
+      "sector": "2차전지"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "엘앤에프는 LFP 시제품을 출하했으나 LG화학의 LFP 양산 시점은 2028년 이후로 예상됨",
+      "ts": "2026-08-05",
+      "quote": "엘앤에프는 LFP 시제품 출하했는데…LG화학 양산은 2028년 이후"
+    }
+  ],
+  "quote": "엘앤에프는 LFP 시제품 출하했는데…LG화학 양산은 2028년 이후"
+}
