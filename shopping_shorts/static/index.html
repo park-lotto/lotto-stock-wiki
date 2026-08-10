@@ -2173,6 +2173,12 @@ function _fmtDur(s){
   s=Math.round(Number(s)); const m=Math.floor(s/60), ss=s%60;
   return m+':'+String(ss).padStart(2,'0');
 }
+// 게시일 표시(렌즈 카드 📅) — ISO 문자열(channel_archive.posted_at)·epoch초 둘 다 받는다.
+function _fmtPostDate(v){
+  if(!v) return '';
+  if(!isNaN(v) && Number(v)>1e9) return new Date(Number(v)*1000).toISOString().slice(0,10);
+  return String(v).slice(0,10);
+}
 // ── 트렌드 검색카드(2026-07-24) ──────────────────────
 // 인스·틱·유튜 상위 통합에서 소재를 뽑아 샤오·도우 딥링크 카드로. 순수함수는 node 테스트됨.
 const _TREND_STOP = new Set(['만들기','완성','레시피','털기','또','집에서','하는','추천','리뷰','종','신상털기']);
@@ -2394,8 +2400,15 @@ function renderLens(shortcode){
   const cards=shown.map(i=>{
     const plabel=LENS_PLATFORMS.find(p=>p.k===i.platform)?.label||'';
     const isSaved=st.saved.has(i.savesc), isSel=st.sel.has(i.savesc);
-    const stat=(i.views)?('👁 '+_fmtCount(i.views)):((i.likes!=null)?('❤ '+_fmtCount(i.likes)):'');   // 도우인 playCount=0 잦음 → 0이면 좋아요로
-    const meta=[i.channel?('👤 '+esc(i.channel)):'', stat, (i.duration!=null)?('⏱ '+_fmtDur(i.duration)):''].filter(Boolean).join('  ·  ');
+    // 랭킹 카드처럼 아는 정보는 전부 보여준다(2026-08-10 사장님). 인스타는 서버가
+    // 우리 랭킹 DB(channel_archive 등)로 보강해 조회수·댓글·게시일·길이가 함께 온다.
+    const stat=[(i.views)?('👁 '+_fmtCount(i.views)):((i.likes!=null&&!i.views)?'':''),
+      (i.likes!=null&&i.likes!=='')?('❤ '+_fmtCount(i.likes)):'',
+      (i.comments!=null&&i.comments!=='')?('💬 '+_fmtCount(i.comments)):''].filter(Boolean).join('  ·  ')
+      ||((i.likes!=null)?('❤ '+_fmtCount(i.likes)):'');   // 도우인 playCount=0 잦음 → 0이면 좋아요로
+    const meta=[i.channel?('👤 '+esc(i.channel)):'', stat,
+      (i.duration!=null)?('⏱ '+_fmtDur(i.duration)):'',
+      i.posted_at?('📅 '+_fmtPostDate(i.posted_at)):''].filter(Boolean).join('  ·  ');
     return `
     <div class="card" style="${isSel?'outline:2px solid var(--accent)':''}">
       <div class="thumb" style="position:relative">
