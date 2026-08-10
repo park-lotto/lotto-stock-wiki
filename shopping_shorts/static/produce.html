@@ -6085,6 +6085,12 @@ refreshStep0();   // Task4: 초기 로드(세션스토리지 경로) — AI PICK
 
 // ── 재료(HANDOFF) 카드 하단 정보 슬롯 — index.html의 enrichCard/forceEnrich/renderEnrich를
 // 그대로 복제(Task 6, 별도 페이지라 공유 불가). XSS수정판(esc(d.channel_url||'#')) 기준.
+function _fmtDur(s){
+  // 한국어 길이 표기(2026-08-10, index.html과 동일): 25초 / 1분 5초
+  if(s==null || isNaN(s)) return '';
+  s=Math.round(Number(s)); const m=Math.floor(s/60), ss=s%60;
+  return m>0 ? (m+'분'+(ss?(' '+ss+'초'):'')) : (ss+'초');
+}
 function _fmtCount(n){
   if(n==null || isNaN(n)) return '';
   n=Number(n);
@@ -6127,11 +6133,12 @@ function renderEnrich(d){
     return msg?`<span style="color:var(--sub)">${msg}</span>`:'';
   }
   const ch = d.channel_name?`👤 <a href="${esc(d.channel_url||'#')}" target="_blank" style="color:var(--accent)">${esc(d.channel_name)}</a>${d.subscribers?(' · 구독 '+_fmtCount(d.subscribers)):''}`:'';
-  const stat = [d.views!=null?('👁 '+_fmtCount(d.views)):'', d.likes!=null?('❤ '+_fmtCount(d.likes)):'', d.comment_count!=null?('💬 '+_fmtCount(d.comment_count)):'', d.upload_date?('📅 '+esc((d.upload_date||'').slice(0,10))):''].filter(Boolean).join('  ·  ');
+  const _ep=t=>t?`<span style="white-space:nowrap;background:rgba(255,255,255,.06);border-radius:8px;padding:1px 7px">${t}</span>`:'';
+  const stat = [d.views!=null?('👁 조회 '+_fmtCount(d.views)):'', d.likes!=null?('❤ '+_fmtCount(d.likes)):'', d.comment_count!=null?('💬 '+_fmtCount(d.comment_count)):'', d.duration!=null?('🎬 '+_fmtDur(d.duration)):'', d.upload_date?('📅 '+esc((d.upload_date||'').slice(0,10))):''].filter(Boolean).map(_ep).join('');
   const cmts = (d.top_comments||[]).slice(0,5).map(c=>`<div style="margin:2px 0">💬 <b>${esc(c.author)}</b> ${esc((c.text||'').slice(0,120))}</div>`).join('');
   const cmtBlock = cmts?`<details style="margin-top:4px"><summary style="cursor:pointer">인기 댓글 ${d.top_comments.length}</summary>${cmts}</details>`:'';
   const capBlock = d.caption?`<details style="margin-top:4px"><summary style="cursor:pointer">원문 캡션</summary><div style="white-space:pre-wrap;margin-top:2px">${esc(d.caption)}</div></details>`:'';
-  return `${ch?('<div>'+ch+'</div>'):''}${stat?('<div style="margin-top:2px">'+stat+'</div>'):''}${cmtBlock}${capBlock}`;
+  return `${ch?('<div style="font-size:12px;line-height:1.7">'+ch+'</div>'):''}${stat?('<div style="display:flex;flex-wrap:wrap;gap:4px 6px;font-size:12px;line-height:1.7;margin-top:3px">'+stat+'</div>'):''}${cmtBlock}${capBlock}`;
 }
 // 관리자(사장님 cid0) 판별 — 비유튜브 재료의 "정보 채우기" 버튼 노출 조건(index.html과 동일 플래그명).
 window.IS_ADMIN=false;

@@ -1130,10 +1130,49 @@ def api_enrich(request: Request, body: dict):
         return {"ok": True, "status": "ok", **data}
     if not force:
         return {"status": "needs_manual"}
-    denied = _require_admin(request)   # 비유튜브 실조회(Apify 유료)는 관리자만
+    denied = _require_admin(request)   # 비유튜브 실조회는 관리자만(브라우저·크레딧 보호)
     if denied:
         return denied
-    # 비유튜브 force(관리자): Apify 경로 — 현 단계는 미구현 스텁(후속 계획)
+    # 인스타 force(관리자): Apify 없이 우리 세션의 릴 상세 조회로 채운다(2026-08-10
+    # 사장님 "렌즈 인스타 카드에 몇초짜리인지 정보가 없다"). 같은 응답의
+    # video_dash_manifest에서 길이(⏱)까지 뽑아 reel_durations에 영구 저장 —
+    # 이후 렌즈·히트작·랭킹 어디서든 재조회 없이 뜬다.
+    m = _IG_SC_RE.search(url)
+    if (platform == "instagram" or "instagram.com" in url) and m:
+        sc = m.group(1)
+        try:
+            from shopping_shorts.duration_backfill import _manifest_duration
+            from shopping_shorts.instagram_parse import shortcode_to_pk
+            from shopping_shorts.instagram_playwright import (_detail_context,
+                                                              _fetch_reel_detail)
+            node = None
+            pk = shortcode_to_pk(sc)
+            if pk:
+                with _detail_context() as ctx:
+                    node = _fetch_reel_detail(ctx, pk, sc)
+            if node:
+                user = node.get("user") if isinstance(node.get("user"), dict) else {}
+                cap = node.get("caption") if isinstance(node.get("caption"), dict) else {}
+                dur = _manifest_duration(node)
+                if dur:
+                    store.set_reel_duration(sc, dur)
+                ts = node.get("taken_at")
+                data = {k: v for k, v in {
+                    "channel_name": (user or {}).get("username") or "",
+                    "channel_url": ("https://www.instagram.com/%s/" % user["username"]) if (user or {}).get("username") else "",
+                    "views": node.get("play_count") or node.get("view_count"),
+                    "likes": node.get("like_count"),
+                    "comment_count": node.get("comment_count"),
+                    "duration": dur,
+                    "upload_date": datetime.utcfromtimestamp(ts).isoformat() if isinstance(ts, (int, float)) and ts > 0 else "",
+                    "caption": ((cap or {}).get("text") or "")[:1000],
+                }.items() if v not in (None, "")}
+                store.upsert_enrichment(url, "instagram", data, "ok", now)
+                return {"ok": True, "status": "ok", **data}
+        except Exception:                  # noqa: BLE001 — 조회 실패는 no_data로(검색은 계속)
+            pass
+        return {"status": "no_data"}       # 실패는 캐시 안 함 — 다음 클릭이 성공할 수 있다
+    # 그 외 비유튜브(틱톡 등) force: Apify 경로 — 현 단계는 미구현 스텁(후속 계획)
     return {"status": "no_data"}
 
 
@@ -4378,7 +4417,8 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
             name = uuid.uuid4().hex + ".jpg"
             (work_dir / name).write_bytes(raw)
             image_url = f"{PUBLIC_BASE_URL}/api/find/frame/lens/{name}"
-        items = search_similar_videos(image_url, source_caption=source_caption)
+        items = _lens_finalize(
+            search_similar_videos(image_url, source_caption=source_caption), store)
         store.bump_lens(month)
         return {"ok": True, "items": items, "count": len(items)}
     except Exception:
@@ -4390,6 +4430,41 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
 # (2026-07-19 실측). 렌즈는 이미지 1장이면 되므로 공개 썸네일(i.ytimg.com — 구글 CDN이라
 # 렌즈가 즉시 읽음)을 다운로드 없이 쓴다.
 _YT_ID_RE = re.compile(r"(?:youtube\.com/(?:shorts/|watch\?v=|live/|embed/)|youtu\.be/)([A-Za-z0-9_-]{6,})")
+
+# 렌즈 결과 후처리(2026-08-10 사장님) — 렌즈 검색·유사영상찾기 두 엔드포인트가 공유하는
+# 단일 지점(0순위-B). ①인스타 항목을 우리 랭킹 DB(channel_archive·reel_history·
+# reel_durations)로 보강해 조회수·좋아요·댓글·게시일·길이·채널을 채우고 ②인스타를
+# 맨 위로 정렬한다(같은 플랫폼끼리는 렌즈 유사도 순서 유지 = 안정 정렬).
+_IG_SC_RE = re.compile(r"instagram\.com/(?:reel|reels|p|tv)/([A-Za-z0-9_-]+)")
+
+
+def _lens_finalize(items, store):
+    try:
+        sc_of = {}
+        for it in items:
+            if it.get("platform") == "instagram":
+                m = _IG_SC_RE.search(it.get("url") or "")
+                if m:
+                    sc_of[id(it)] = m.group(1)
+        codes = list(set(sc_of.values()))
+        meta = store.lens_insta_meta(codes) if codes else {}
+        durs = store.duration_map(codes) if codes else {}
+        for it in items:
+            sc = sc_of.get(id(it))
+            if not sc:
+                continue
+            m = meta.get(sc) or {}
+            for k in ("views", "likes", "comments", "channel", "posted_at"):
+                if it.get(k) in (None, "") and m.get(k) not in (None, ""):
+                    it[k] = m[k]
+            if it.get("duration") in (None, "") and durs.get(sc):
+                it["duration"] = durs[sc]
+    except Exception:                       # noqa: BLE001 — 보강 실패로 검색을 죽이지 않는다
+        import sys as _sys
+        import traceback as _tb
+        _tb.print_exc(file=_sys.stderr)
+    items.sort(key=lambda i: 0 if i.get("platform") == "instagram" else 1)
+    return items
 
 
 def _lens_image_for_url(url, work_dir, hint_t=None):
@@ -4483,7 +4558,8 @@ def api_lens_trace_url(request: Request, body: dict):
         if not image_url:
             return JSONResponse(status_code=502, content={
                 "ok": False, "error": "영상/썸네일을 가져오지 못했습니다(봇차단·만료·미지원 URL)"})
-        items = search_similar_videos(image_url, source_caption=caption)
+        items = _lens_finalize(
+            search_similar_videos(image_url, source_caption=caption), store)
         # 📕🎬 중국앱 키워드 후보(비전). 렌즈 유사영상은 프론트가 프레임으로 뽑지만 trace는
         # 프레임이 서버에만 있다(유튜브는 아예 썸네일 URL·caption 없음) → 서버가 image_url에서
         # 바이트를 받아 직접 만든다. cn_search_candidates는 image_bytes가 없으면 빈 리스트라
