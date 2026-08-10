@@ -175,15 +175,19 @@ def rescale(words, final_dur, removed=None):
             shifted.append({"word": w.get("word", ""),
                             "start": _shift_by_removed(s, removed) if s is not None else None,
                             "end": _shift_by_removed(e, removed) if e is not None else None})
-        # 잔차 보정: silencedetect(판정)와 silenceremove(실제 삭제)의 임계가 완전히 같지
-        # 않아 조각별 계산이 실제보다 조금씩 짧게 나온다(실측 -0.09s). 마지막 단어 끝이
-        # 후처리 오디오의 '발화 끝'(= final_dur - 끝여백)에 오도록 남은 오차만 균등 배분한다.
-        # 배율이 1에서 크게 벗어나면 가정이 깨진 것이라 손대지 않는다.
+        # 스케일 보정: 무음컷을 갚은 뒤에도 두 오차가 남는다.
+        # ①silencedetect(판정)와 silenceremove(실제 삭제)의 임계 차이(실측 -0.09s).
+        # ②★atempo 배속 — removed 스팬은 배속 **전** 타임라인 값이라, speed>1.2 보이스
+        #   (atempo 1.25~1.33)에선 자막이 음성보다 그 배율만큼 느리게 간다. 종전 클램프
+        #   0.9~1.15가 이 경우(k≈0.75)를 '가정 깨짐'으로 오판해 보정을 건너뛰어
+        #   **자막·TTS 속도 불일치**가 났다(실측 job 1730cd607d25: 전 비트 20~30% 지연,
+        #   2026-08-10). 배속은 선형이라 균등 배율로 정확히 갚아진다 — 선형 분기와 같은
+        #   넓은 안전범위(_RESCALE_MIN~MAX)만 남긴다.
         last_end = shifted[-1].get("end")
         speech_end = final_dur - _PACE_TAIL_PAD
         if last_end and last_end > 0 and speech_end > 0:
             k = speech_end / last_end
-            if 0.9 <= k <= 1.15:
+            if _RESCALE_MIN <= k <= _RESCALE_MAX:
                 for w in shifted:
                     for key in ("start", "end"):
                         if w[key] is not None:
