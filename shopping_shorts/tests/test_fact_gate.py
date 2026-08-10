@@ -81,3 +81,42 @@ def test_wiring_locked_in_edit_plan():
     src = Path(ss.__file__).with_name("edit_plan.py").read_text(encoding="utf-8")
     assert src.count("fact_fabrications(") >= 2
     assert src.count('SCRIPT_FACT_GATE') >= 2
+
+
+# ── 사실표(v7) ───────────────────────────────────────────────────────────────
+
+def test_factsheet_block_empty_is_noop():
+    assert ss.factsheet_block([]) == ""
+    assert ss.factsheet_block(None) == ""
+
+
+def test_build_factsheet_failure_returns_empty():
+    def boom(p, s):
+        raise RuntimeError("429")
+    assert ss.build_factsheet(MAT, boom) == []
+    assert ss.build_factsheet("", _call_returning([])) == []
+    assert ss.build_factsheet(MAT, None) == []
+
+
+def test_build_factsheet_returns_trimmed_facts():
+    def call(p, s):
+        return {"facts": [" 이름: 우유 구운 것 ", "", "가격은 만원", 3]}
+    assert ss.build_factsheet(MAT, call) == ["이름: 우유 구운 것", "가격은 만원"]
+
+
+def test_factsheet_injected_into_prompts():
+    blk = ss.factsheet_block(["이름: 우유 구운 것"])
+    order = [{"seg_id": "s", "_dur": 3.0, "scene_desc": "", "text": "", "is_key": False}]
+    p1 = ss.script_prompt(order, 10.0, "훅블록", facts_block=blk)
+    p2 = ss.restyle_prompt([{"narration": "문장"}], facts_block=blk)
+    assert "사실표" in p1 and "우유 구운 것" in p1
+    assert "사실표" in p2 and "우유 구운 것" in p2
+    # 무주입이면 종전과 동일(사실표 흔적 없음)
+    assert "사실표" not in ss.script_prompt(order, 10.0, "훅블록")
+
+
+def test_factsheet_wiring_locked_in_edit_plan():
+    src = Path(ss.__file__).with_name("edit_plan.py").read_text(encoding="utf-8")
+    assert src.count("SCRIPT_FACTSHEET") >= 2          # 1소스 + scene_first
+    assert src.count("facts_block=_facts_block") >= 2   # 생성 + 리스타일(1소스)
+    assert "facts_block=_sf_facts_block" in src         # scene_first 리스타일

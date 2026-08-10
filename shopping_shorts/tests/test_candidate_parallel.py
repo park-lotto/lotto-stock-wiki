@@ -16,6 +16,8 @@ from shopping_shorts import edit_plan
 
 
 def _fixture(monkeypatch, delay=0.0, record=None):
+    # 사실표(v7)는 잡당 LLM 1콜을 추가한다 — 이 파일은 병렬성만 재므로 끈다.
+    monkeypatch.setenv("SCRIPT_FACTSHEET", "0")
     """_single_source_candidates가 부르는 single_source/hook_patterns를 대역으로.
 
     ★_one_candidate는 `from shopping_shorts import single_source`를 **함수 안에서**

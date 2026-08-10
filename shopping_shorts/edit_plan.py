@@ -3257,6 +3257,16 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
     print("[1소스대본] 원본 %.1f초 → 예산 %.1f초, 컷 %d개, 훅후보: %s"
           % (span, budget, len(order), " / ".join(p[1] for p in pats)), file=sys.stderr)
     src_texts = [s.get("full_text", "") for s in source_scripts]
+    # ★사실표(v7, 2026-08-10): 잡당 1회 뽑아 세 후보의 생성·리스타일이 공유한다.
+    #   실패하면 빈 표 → 블록 무주입(종전과 100% 동일). SCRIPT_FACTSHEET=0로 즉시 off.
+    _facts_block = ""
+    if os.getenv("SCRIPT_FACTSHEET", "1") != "0":
+        _facts_block = single_source.factsheet_block(
+            single_source.build_factsheet(_mat, call))
+        if _facts_block:
+            print("[1소스대본] 사실표 주입(%d자)" % len(_facts_block), file=sys.stderr)
+        else:
+            print("[1소스대본] 사실표 실패 → 무주입(종전 동작)", file=sys.stderr)
 
     def _one_candidate(i):
         """후보 하나를 통째로 만든다. 실패면 None.
@@ -3279,7 +3289,8 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         #   읽힌다"였다(위 candidate_style_block 주석에 실측 job 2건).
         prompt = single_source.script_prompt(
             order, used, hook_patterns.prompt_block(pat),
-            frame_block=_sp_f.story_frame_block(i), cand_idx=i)
+            frame_block=_sp_f.story_frame_block(i), cand_idx=i,
+            facts_block=_facts_block)
         beats = single_source.parse_beats(_c(prompt, single_source.BEATS_SCHEMA))
         # 총량 교정루프(최대 2회) — 넘치면 표현만 줄여 다시 받는다.
         for _ in range(2):
@@ -3345,7 +3356,8 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         _restyle_rep = {}
         beats = single_source.apply_restyle(beats, _c,
                                             style_name=_sp0.candidate_style(i),
-                                            report=_restyle_rep)
+                                            report=_restyle_rep,
+                                            facts_block=_facts_block)
         _hap_style = _sp0.candidate_style(i)
         # ★빈 나레이션 비트는 **커버 배정 전에** 걸러낸다(2026-08-04 라이브 실측 job
         #   bcdf871a6d57: 추천 후보가 16.8초 — 버려진 비트의 컷이 같이 사라져 하한 미달).
@@ -3447,7 +3459,7 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         #   그대로 인용시키고 ①대본에 실재 ②소재에 없음 을 코드로 검증해 오탐을 거른다.
         #   실사고 job 890c2f41e35a: "우유로 구운 우유"·"칼로리가 절반"·"에어프라이어" —
         #   훅 검사는 첫 문장만 봐서 본문 날조 3후보 전부 통과했다.
-        if os.getenv("SCRIPT_FACT_GATE", "1") != "0":
+        if os.getenv("SCRIPT_FACT_GATE", "0") == "1":   # 기본 off — 사실표(v7)가 뿌리 처방, 게이트는 관측용 opt-in
             for _ in range(2):
                 _fabs = single_source.fact_fabrications(beats, _mat, _c)
                 if not _fabs:
@@ -3922,6 +3934,12 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         order_block = (_blocks_order_block(blocks) if blocks
                        else _spine_order_block(_build_scene_spine(seg_map, detected)))
     src_texts = [s.get("full_text", "") for s in source_scripts]
+    # ★사실표(v7, 2026-08-10) — 1소스와 동일 계약: 잡당 1회, 실패=무주입(종전 동일).
+    _sf_facts_block = ""
+    if os.getenv("SCRIPT_FACTSHEET", "1") != "0":
+        from shopping_shorts import single_source as _ss_facts
+        _sf_facts_block = _ss_facts.factsheet_block(
+            _ss_facts.build_factsheet(" ".join(t for t in src_texts if t), _call))
 
     outer_tl_groups = tl_groups
     # ★스타일 배정 전역 카운터(2026-08-06 실측: 벌별로 _ground_score가 따로 불리면
@@ -4056,7 +4074,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         _restyle_rep = {}
         plan["beats"] = _ss1.apply_restyle(plan["beats"], _call,
                                            style_name=_sp1.candidate_style(_ci),
-                                           report=_restyle_rep)
+                                           report=_restyle_rep,
+                                           facts_block=_sf_facts_block)
         # ★홈테리어픽 서명 보장(2026-08-09, 1소스와 동일 배선): CTA 직전 문장을 합쇼체로.
         #   리라이트 **뒤**에 둔다(리라이트가 어미를 도로 요체로 되돌린다).
         #   해당 스타일이 아니면 no-op(회귀 0). 1소스 실측: 프롬프트만으론 7/10 → 보장 후 10/10.
@@ -4085,7 +4104,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             if not _apply_narr_fix(_ss1.fix_chae_person_prompt):
                 break
         # ★날조 검사(증거검증형, 2026-08-10) — 1소스와 동일 배선(edit_plan 1소스 주석 참조).
-        if os.getenv("SCRIPT_FACT_GATE", "1") != "0":
+        if os.getenv("SCRIPT_FACT_GATE", "0") == "1":   # 기본 off — 사실표(v7)가 뿌리 처방, 게이트는 관측용 opt-in
             _mat_sf = " ".join(t for t in src_texts if t)
             for _ in range(2):
                 _fabs = _ss1.fact_fabrications(plan["beats"], _mat_sf, _call)

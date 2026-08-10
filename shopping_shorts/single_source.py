@@ -240,7 +240,8 @@ def _style_extra(cand_idx=None):
         return ""
 
 
-def script_prompt(order, used_secs, hook_block, frame_block="", cand_idx=None):
+def script_prompt(order, used_secs, hook_block, frame_block="", cand_idx=None,
+                  facts_block=""):
     """1소스 각색 대본 프롬프트. hook_block은 hook_patterns.prompt_block() 결과.
     frame_block: 후보별 이야기 구도(style_profiles.story_frame_block) — 빈 문자열이면 종전 동일.
     cand_idx: 이 후보의 인덱스(0부터). 주면 후보별 채널 스타일 few-shot이 실린다 —
@@ -271,7 +272,9 @@ def script_prompt(order, used_secs, hook_block, frame_block="", cand_idx=None):
             #      → 그래서 뒤의 "집에 오자마자 써봤는데"가 말이 안 되게 됐다.
             #   방향 하나만 뒤집혀도 뒤 문장 전체가 무너지므로 여기서 못박는다.
             "    예) 내가 시댁에 갔다 → \"어머니가 놀러 오셨다\"로 뒤집지 마라"
-            "(뒤에 '집에 오자마자'가 나오면 말이 안 된다).\n\n"
+            "(뒤에 '집에 오자마자'가 나오면 말이 안 된다).\n"
+            # ★사실표(v7): 있으면 사실의 출처를 이 표 하나로 못박는다. 빈 문자열=종전 동일.
+            + (facts_block or "") + "\n"
             "아래는 숏폼 한 편을 재편집한 컷 순서다. 이 화면들에 얹을 **나레이션**을 써라.\n\n"
             "[절대규칙]\n"
             # ★2026-08-09 사장님 지시: "그냥 자유롭게 표현하라고 자유를 줘."
@@ -354,7 +357,7 @@ RESTYLE_SCHEMA = {
 _CLICHE = ("꿀템", "갓성비", "완벽 해결", "삶의 질", "필수템", "역대급")
 
 
-def restyle_prompt(beats, length_note="", style_name=None):
+def restyle_prompt(beats, length_note="", style_name=None, facts_block=""):
     """★스타일 통째 리라이트(2026-08-05 사장님 "메종이랑 결이 아예 안 맞네").
 
     프롬프트 지시로 3바퀴를 밀어도 컷 매핑 생성은 광고 카피 결을 못 벗었다 —
@@ -367,6 +370,7 @@ def restyle_prompt(beats, length_note="", style_name=None):
            for i, b in enumerate(beats)]
     total = sum(len(c["narration"]) for c in cur)
     return (style_profiles.style_block(style_name)
+            + (facts_block or "")   # ★사실표(v7) — 리스타일이 사실을 발명하지 못하게
             + "\n위 [스타일 예시]의 결로 아래 나레이션을 **문체만** 고쳐 써라.\n"
             "[절대규칙]\n"
             "1. 문장 수와 순서는 그대로 — n번 문장은 n번 자리에서 같은 내용을 말한다"
@@ -395,7 +399,8 @@ def restyle_prompt(beats, length_note="", style_name=None):
             + "\n\nJSON만: {\"beats\":[{\"n\":1,\"narration\":\"...\"}]}")
 
 
-def apply_restyle(beats, call, max_tries=3, style_name=None, report=None):
+def apply_restyle(beats, call, max_tries=3, style_name=None, report=None,
+                  facts_block=""):
     """스타일 리라이트 — 길이 초과·상투어는 버리지 말고 피드백 재시도(최대 3회).
 
     ★첫 구현은 길이 밖이면 조용히 원본 복귀였는데, 메종 문체가 원문보다 길어
@@ -425,7 +430,8 @@ def apply_restyle(beats, call, max_tries=3, style_name=None, report=None):
     closest = None          # 구조는 멀쩡하나 길이 밖인 스타일본 중 1.0배에 가장 근접한 것
     closest_ratio = None
     for _ in range(max_tries):
-        resp = call(restyle_prompt(beats, length_note=note, style_name=style_name),
+        resp = call(restyle_prompt(beats, length_note=note, style_name=style_name,
+                                   facts_block=facts_block),
                     RESTYLE_SCHEMA)
         got = (resp or {}).get("beats") if isinstance(resp, dict) else None
         if not got or len(got) != len(beats):
@@ -791,6 +797,57 @@ FACT_SCHEMA = {
 # 애매한 True가 구절 인용을 못 대면 코드가 기계적으로 버린다 → 오탐이 회귀를 못 만든다.
 # 실사고(job 890c2f41e35a): "우유로 구운 우유"·"칼로리가 절반"·"에어프라이어" —
 # 훅 검사는 첫 문장만 봐서 본문 날조가 전부 통과했다.
+
+# ── 사실표(v7, 2026-08-10) ───────────────────────────────────────────────────
+# 두더지잡기의 뿌리 처방: "긴 원문 + 몰라보게 각색" 조합이 사실까지 바꿨다
+# (실사고 job 890c2f41: '우유로 구운 우유'·'칼로리 절반'·'에어프라이어').
+# 사실을 **닫힌 목록**으로 먼저 뽑아 고정하고, 생성·리스타일엔 "사실은 이 표에서만,
+# 표현은 자유"를 준다 — 무엇(고정)/어떻게(자유)를 입력에서 갈라 사후 검사 의존을 줄인다.
+
+FACTSHEET_SCHEMA = {
+    "type": "object",
+    "properties": {"facts": {"type": "array", "items": {"type": "string"}}},
+    "required": ["facts"],
+}
+
+
+def factsheet_prompt(material_text):
+    return ("아래 [원본 소재]에서 **사실만** 짧은 문장 목록으로 뽑아라(8~16개).\n"
+            "반드시 넣을 것: 제품/음식의 **이름(원문 표기 그대로)** · 재료·도구 · "
+            "수치·가격 · 장소·사건(누가 무엇을 했는지) · 반응/평가 · 댓글 CTA 키워드.\n"
+            "★이름이 문장 속 서술로만 나오면(예: \"그냥 우유 구운거야\") 그 표현을 "
+            "그대로 이름으로 적어라(\"이름: 우유 구운 것\"). 다른 말로 합성하거나 "
+            "\"이름 없음\"으로 버리지 마라 — 대본이 이 이름을 그대로 쓴다.\n"
+            "원문에 없는 것을 추측해 넣지 마라. 조리법·스펙이 원문에 없으면 "
+            "\"만드는 법 상세는 원문에 없음\"처럼 **없음도 사실로** 적어라.\n\n"
+            f"[원본 소재]\n{(material_text or '')[:1500]}\n\n"
+            "JSON만: {\"facts\":[\"...\"]}")
+
+
+def build_factsheet(material_text, call):
+    """사실표(문장 리스트). 실패·빈 결과면 [] — 호출부는 빈 표면 무주입(종전 동일)."""
+    if not call or not (material_text or "").strip():
+        return []
+    try:
+        r = call(factsheet_prompt(material_text), FACTSHEET_SCHEMA)
+    except Exception:
+        return []
+    facts = r.get("facts") if isinstance(r, dict) else None
+    if not isinstance(facts, list):
+        return []
+    return [f.strip() for f in facts if isinstance(f, str) and f.strip()][:16]
+
+
+def factsheet_block(facts):
+    """생성·리스타일 프롬프트에 끼우는 사실표 블록. 빈 표면 빈 문자열(회귀 0)."""
+    if not facts:
+        return ""
+    return ("\n[사실표 — 이 영상의 사실 전부]\n"
+            + "\n".join("- %s" % f for f in facts)
+            + "\n★사실은 이 표에 있는 것만 써라. 표에 없는 도구·재료·수치·가격·효능·"
+            "사건을 만들지 마라. 제품·음식 **이름은 표의 표기 그대로**(줄이거나 "
+            "합성하지 마라). 말투·화자·구도·표현은 완전히 자유다.\n")
+
 
 FAB_SCHEMA = {
     "type": "object",
