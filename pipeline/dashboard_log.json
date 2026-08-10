@@ -112,27 +112,6 @@
     "next": "사장님 재생성·렌더 → cap_durs 전후 비교 실측"
   },
   {
-    "date": "2026-08-10",
-    "category": "스탁브레인",
-    "track": "main·깃풀",
-    "summary": "대시보드 집↔회사 충돌 원인 규명: log.json이 PC별 로컬(.claude, git 밖)이라 재발행 시 상대 PC 트랙 소실. 해법=log.json을 repo로 이동해 git 동기화 제안.",
-    "next": "사장님 승인 시 dashboard_cli 경로 수정+양PC log 병합"
-  },
-  {
-    "date": "2026-08-10",
-    "category": "스탁브레인",
-    "track": "main·조사",
-    "summary": "레퍼런스랭킹 오늘 수집 확인: 인스타 417건 06:31 KST 성공(1차 0건 실패→가드 보존→재시도 성공). 타이머가 00:44부터 죽어있던 것 발견·재기동(캐치업 12:08 1회 추가 수집)",
-    "next": "12:08 캐치업 수집 정상건수 확인 — 실패 시 세션 교체 필요"
-  },
-  {
-    "date": "2026-08-10",
-    "category": "스탁브레인",
-    "track": "git동기화",
-    "summary": "제작소 불통 뿌리 규명·해결: 실패지점=EDL 생성, SHORTS 키가 아니라 위키 key_vault general 풀 사용 — 그 풀이 전소진(가용0). 제작소 키 3개를 GEMINI_API_KEY_5~7에도 배선, 실호출 OK 확인",
-    "next": "사장님 재생성 확인 / 근본책=EDL 전용 키그룹 분리 검토"
-  },
-  {
     "date": "2026-08-09",
     "category": "스탁브레인",
     "track": "발굴",
@@ -166,5 +145,26 @@
     "track": "일반문의",
     "summary": "카카오 계정 OTP 불통 진단: ①시간 동기화 ②Authenticator bybit 항목은 지메일 계정 판단 → 카카오 GA만 Reset(24h 출금정지) 안내",
     "next": "시간동기화 결과→필요시 GA Reset 진행 확인"
+  },
+  {
+    "date": "2026-08-10",
+    "category": "스탁브레인",
+    "track": "main·조사",
+    "summary": "레퍼런스랭킹 오늘 수집 확인: 인스타 417건 06:31 KST 성공(1차 0건 실패→가드 보존→재시도 성공). 타이머가 00:44부터 죽어있던 것 발견·재기동(캐치업 12:08 1회 추가 수집)",
+    "next": "12:08 캐치업 수집 정상건수 확인 — 실패 시 세션 교체 필요"
+  },
+  {
+    "date": "2026-08-10",
+    "category": "스탁브레인",
+    "track": "git동기화",
+    "summary": "제작소 불통 뿌리 규명·해결: 실패지점=EDL 생성, SHORTS 키가 아니라 위키 key_vault general 풀 사용 — 그 풀이 전소진(가용0). 제작소 키 3개를 GEMINI_API_KEY_5~7에도 배선, 실호출 OK 확인",
+    "next": "사장님 재생성 확인 / 근본책=EDL 전용 키그룹 분리 검토"
+  },
+  {
+    "date": "2026-08-10",
+    "category": "스탁브레인",
+    "track": "main·깃풀",
+    "summary": "대시보드 log git동기화 구축: log.json→repo pipeline/dashboard_log.json 이동(회사PC 5트랙 병합), CLI 패치+repo에 패치본·README 커밋(94b707f2c). 이제 깃풀만 하면 집↔회사 기록 자동 병합.",
+    "next": "집PC에서 tools/dashboard/dashboard_cli.py 1회 복사(README 참조)"
   }
 ]
