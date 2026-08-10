@@ -15,6 +15,7 @@ service.py는 어느 쪽을 쓰든 하류가 무변경이다.
 
 테스트는 _scrape_one을 주입해 브라우저 없이 돈다(test_instagram_playwright.py).
 """
+import itertools
 import json
 import os
 from contextlib import contextmanager
@@ -268,13 +269,35 @@ def _reel_detail_via_page(ctx, code, timeout_ms=60000):
     return found.get("node")
 
 
+_DISCOVER_SLOT_COUNTER = itertools.count()
+
+
+def _discover_session_proxy():
+    """발굴이 쓸 (세션경로, 프록시) 짝 — 계정↔IP를 **함께** 정한다(0순위-B).
+
+    2026-08-10 사고: 수집·아카이브는 로테이션(ig_sessions + 주거용 출구)으로
+    이관됐는데 발굴만 구 단일 세션(INSTAGRAM_SESSION_PATH)+서버직결로 남아,
+    그 계정이 본인확인 챌린지(update_risky_contactpoint)에 걸리자 나흘째 0건.
+    A/B 실측: 구세션·직결=0건(챌린지 리다이렉트) / 로테이션 슬롯0+kr 출구=24건.
+    수집과 같은 레퍼런스 풀을 태그마다 순환해 쓴다(한 계정에 몰리지 않게).
+    풀이 비면 기존 단일 세션으로 폴백(session_slots가 처리) — 동작 불변.
+    """
+    from shopping_shorts.channel_archive import (POOL_REFERENCE, session_slots,
+                                                 slot_proxy)
+    slots = session_slots(POOL_REFERENCE)
+    if not slots:
+        return None, None
+    i = next(_DISCOVER_SLOT_COUNTER) % len(slots)
+    return slots[i], slot_proxy(i, POOL_REFERENCE)
+
+
 def _search_hashtag_playwright(tag):
     """해시태그 1개 → (게시물 dict 리스트, error). 계정발굴 전용(2026-07-30).
 
     /explore/tags/{tag}/ 진입 시 인스타가 자체적으로 부르는
     xdt_fbsearch__top_serp_graphql 응답을 가로챈다(실측: 로그인벽 없이 세션
-    재사용, 서버직결 성공 — hashtag당 게시물 20여개·고유계정 20개 안팎).
-    _scrape_one_playwright와 같은 세션·스텔스 설정을 그대로 쓴다.
+    재사용 — hashtag당 게시물 20여개·고유계정 20개 안팎).
+    세션·프록시는 _discover_session_proxy()가 짝으로 정한다(2026-08-10).
     """
     from playwright.sync_api import sync_playwright
     from playwright_stealth import Stealth
@@ -283,8 +306,11 @@ def _search_hashtag_playwright(tag):
     captured = []
     launch_kw = {"headless": True, "args": ["--disable-blink-features=AutomationControlled"]}
     ctx_kw = {}
-    if config.INSTAGRAM_SESSION_PATH and os.path.exists(config.INSTAGRAM_SESSION_PATH):
-        ctx_kw["storage_state"] = config.INSTAGRAM_SESSION_PATH
+    session_path, proxy = _discover_session_proxy()
+    if session_path and os.path.exists(session_path):
+        ctx_kw["storage_state"] = session_path
+        if proxy:
+            ctx_kw["proxy"] = {"server": proxy}
     elif config.INSTAGRAM_PROXY:
         ctx_kw["proxy"] = {"server": config.INSTAGRAM_PROXY}
     try:
@@ -306,6 +332,16 @@ def _search_hashtag_playwright(tag):
             page.goto(url, timeout=config.INSTAGRAM_PW_TIMEOUT_MS, wait_until="domcontentloaded")
             page.wait_for_timeout(5000)     # SERP graphql 응답 도착 여유 — 3.5초는 서버
             # 재실측(2026-07-30)에서 0/24건으로 불안정했다, 5초는 3회 연속 24건 안정.
+
+            # 챌린지 리다이렉트를 조용히 삼키지 않는다(2026-08-10) — 나흘 0건의
+            # 원인이 로그에 한 줄도 안 남아 규명에 A/B 실측까지 필요했다.
+            # URL 판정은 실제 리다이렉트 목적지(/accounts/, /challenge)로만 한다
+            # (본문 문자열 검사는 CSS 변수명 오탐 전례가 있어 금지 — 0순위-B).
+            if not captured and ("/accounts/" in page.url or "/challenge" in page.url):
+                redirected = page.url
+                ctx.close()
+                browser.close()
+                return [], f"challenge_redirect: {redirected[:150]}"
 
             # SERP 응답엔 좋아요·댓글수가 없다(실측) — 릴스수집과 같은 media info REST를
             # 상위 표본만 한 번씩 더 불러 참여도를 보강한다(2026-07-30, 샤오홍슈 발굴처럼
