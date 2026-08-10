@@ -329,7 +329,10 @@ def _search_hashtag_playwright(tag):
                     pass
 
             page.on("response", _on_response)
-            page.goto(url, timeout=config.INSTAGRAM_PW_TIMEOUT_MS, wait_until="domcontentloaded")
+            # 주거용 프록시 경유는 서버직결(20s 기준)보다 훨씬 느리다 — 실측(2026-08-10):
+            # 같은 태그가 20s 제한에선 goto 타임아웃으로 전 태그 0건, 60s 제한에선 24건.
+            page.goto(url, timeout=max(60000, config.INSTAGRAM_PW_TIMEOUT_MS),
+                      wait_until="domcontentloaded")
             page.wait_for_timeout(5000)     # SERP graphql 응답 도착 여유 — 3.5초는 서버
             # 재실측(2026-07-30)에서 0/24건으로 불안정했다, 5초는 3회 연속 24건 안정.
 
