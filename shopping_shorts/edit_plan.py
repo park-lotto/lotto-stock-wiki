@@ -3257,6 +3257,16 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
     print("[1소스대본] 원본 %.1f초 → 예산 %.1f초, 컷 %d개, 훅후보: %s"
           % (span, budget, len(order), " / ".join(p[1] for p in pats)), file=sys.stderr)
     src_texts = [s.get("full_text", "") for s in source_scripts]
+    # ★사실표(v7, 2026-08-10): 잡당 1회 뽑아 세 후보의 생성·리스타일이 공유한다.
+    #   실패하면 빈 표 → 블록 무주입(종전과 100% 동일). SCRIPT_FACTSHEET=0로 즉시 off.
+    _facts_block = ""
+    if os.getenv("SCRIPT_FACTSHEET", "1") != "0":
+        _facts_block = single_source.factsheet_block(
+            single_source.build_factsheet(_mat, call))
+        if _facts_block:
+            print("[1소스대본] 사실표 주입(%d자)" % len(_facts_block), file=sys.stderr)
+        else:
+            print("[1소스대본] 사실표 실패 → 무주입(종전 동작)", file=sys.stderr)
 
     def _one_candidate(i):
         """후보 하나를 통째로 만든다. 실패면 None.
@@ -3279,7 +3289,8 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         #   읽힌다"였다(위 candidate_style_block 주석에 실측 job 2건).
         prompt = single_source.script_prompt(
             order, used, hook_patterns.prompt_block(pat),
-            frame_block=_sp_f.story_frame_block(i), cand_idx=i)
+            frame_block=_sp_f.story_frame_block(i), cand_idx=i,
+            facts_block=_facts_block)
         beats = single_source.parse_beats(_c(prompt, single_source.BEATS_SCHEMA))
         # 총량 교정루프(최대 2회) — 넘치면 표현만 줄여 다시 받는다.
         for _ in range(2):
@@ -3345,7 +3356,8 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         _restyle_rep = {}
         beats = single_source.apply_restyle(beats, _c,
                                             style_name=_sp0.candidate_style(i),
-                                            report=_restyle_rep)
+                                            report=_restyle_rep,
+                                            facts_block=_facts_block)
         _hap_style = _sp0.candidate_style(i)
         # ★빈 나레이션 비트는 **커버 배정 전에** 걸러낸다(2026-08-04 라이브 실측 job
         #   bcdf871a6d57: 추천 후보가 16.8초 — 버려진 비트의 컷이 같이 사라져 하한 미달).
@@ -3441,14 +3453,26 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
                 if not _nb.get("covers"):
                     _nb["covers"] = beats[_bi].get("covers")
             beats = _bk
-        # ⚠️원본 왜곡 검사(fact_distorted)는 **배선하지 않는다**(2026-08-09).
-        #   사장님 지적 "20년차 시어머니가 말이 되나?"는 맞지만, LLM 판정 방식은
-        #   **소재마다 결과가 흔들려** 규칙이 못 된다 — 실측: 왜곡 2건·정상 1건을 주자
-        #   **3건 모두 True**로 판정했다(정상 대본까지 왜곡 처리).
-        #   그대로 걸면 멀쩡한 문장을 계속 고치라고 시켜 품질이 더 나빠진다.
-        #   다른 검사들(합쇼체·인물·길이)은 어미·단어·숫자로 판정해 영상이 바뀌어도
-        #   같은 규칙이 적용된다 — 왜곡 검사만 그 성질을 못 갖췄다.
-        #   함수는 남겨둔다(판정 프롬프트를 고쳐 재현성을 확보하면 그때 배선).
+        # ⚠️원본 왜곡 검사(fact_distorted, 불리언판정)는 **배선하지 않는다**(2026-08-09).
+        #   LLM 불리언 판정은 소재마다 흔들린다 — 실측: 정상 대본까지 3/3 True.
+        # ★대신 증거검증형(fact_fabrications, 2026-08-10)을 배선 — 날조 구절을 대본에서
+        #   그대로 인용시키고 ①대본에 실재 ②소재에 없음 을 코드로 검증해 오탐을 거른다.
+        #   실사고 job 890c2f41e35a: "우유로 구운 우유"·"칼로리가 절반"·"에어프라이어" —
+        #   훅 검사는 첫 문장만 봐서 본문 날조 3후보 전부 통과했다.
+        if os.getenv("SCRIPT_FACT_GATE", "0") == "1":   # 기본 off — 사실표(v7)가 뿌리 처방, 게이트는 관측용 opt-in
+            for _ in range(2):
+                _fabs = single_source.fact_fabrications(beats, _mat, _c)
+                if not _fabs:
+                    break
+                _fb = single_source.parse_beats(
+                    _c(single_source.fix_fabrication_prompt(beats, _mat, _fabs),
+                       single_source.BEATS_SCHEMA))
+                if not _fb or len(_fb) != len(beats):
+                    break
+                for _bi, _nb in enumerate(_fb):
+                    if not _nb.get("covers"):
+                        _nb["covers"] = beats[_bi].get("covers")
+                beats = _fb
         # ★★길이 최종 확정 — **문장을 다시 쓰는 모든 단계가 끝난 뒤 여기 한 곳에서만** 잰다.
         #   (2026-08-09 사장님 지시: "땜빵하는 수정은 안 되고 근본 원인을 수정해야 한다.")
         #
@@ -3910,6 +3934,12 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         order_block = (_blocks_order_block(blocks) if blocks
                        else _spine_order_block(_build_scene_spine(seg_map, detected)))
     src_texts = [s.get("full_text", "") for s in source_scripts]
+    # ★사실표(v7, 2026-08-10) — 1소스와 동일 계약: 잡당 1회, 실패=무주입(종전 동일).
+    _sf_facts_block = ""
+    if os.getenv("SCRIPT_FACTSHEET", "1") != "0":
+        from shopping_shorts import single_source as _ss_facts
+        _sf_facts_block = _ss_facts.factsheet_block(
+            _ss_facts.build_factsheet(" ".join(t for t in src_texts if t), _call))
 
     outer_tl_groups = tl_groups
     # ★스타일 배정 전역 카운터(2026-08-06 실측: 벌별로 _ground_score가 따로 불리면
@@ -4044,7 +4074,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         _restyle_rep = {}
         plan["beats"] = _ss1.apply_restyle(plan["beats"], _call,
                                            style_name=_sp1.candidate_style(_ci),
-                                           report=_restyle_rep)
+                                           report=_restyle_rep,
+                                           facts_block=_sf_facts_block)
         # ★홈테리어픽 서명 보장(2026-08-09, 1소스와 동일 배선): CTA 직전 문장을 합쇼체로.
         #   리라이트 **뒤**에 둔다(리라이트가 어미를 도로 요체로 되돌린다).
         #   해당 스타일이 아니면 no-op(회귀 0). 1소스 실측: 프롬프트만으론 7/10 → 보장 후 10/10.
@@ -4072,6 +4103,16 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 break
             if not _apply_narr_fix(_ss1.fix_chae_person_prompt):
                 break
+        # ★날조 검사(증거검증형, 2026-08-10) — 1소스와 동일 배선(edit_plan 1소스 주석 참조).
+        if os.getenv("SCRIPT_FACT_GATE", "0") == "1":   # 기본 off — 사실표(v7)가 뿌리 처방, 게이트는 관측용 opt-in
+            _mat_sf = " ".join(t for t in src_texts if t)
+            for _ in range(2):
+                _fabs = _ss1.fact_fabrications(plan["beats"], _mat_sf, _call)
+                if not _fabs:
+                    break
+                if not _apply_narr_fix(
+                        lambda _b: _ss1.fix_fabrication_prompt(_b, _mat_sf, _fabs)):
+                    break
         story = {k: r.get(k, "") for k in
                  ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
         rule_score = _score_candidate(plan, avoid_hooks=avoid_hooks, target_seconds=target_seconds,
