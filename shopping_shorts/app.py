@@ -1130,10 +1130,49 @@ def api_enrich(request: Request, body: dict):
         return {"ok": True, "status": "ok", **data}
     if not force:
         return {"status": "needs_manual"}
-    denied = _require_admin(request)   # 비유튜브 실조회(Apify 유료)는 관리자만
+    denied = _require_admin(request)   # 비유튜브 실조회는 관리자만(브라우저·크레딧 보호)
     if denied:
         return denied
-    # 비유튜브 force(관리자): Apify 경로 — 현 단계는 미구현 스텁(후속 계획)
+    # 인스타 force(관리자): Apify 없이 우리 세션의 릴 상세 조회로 채운다(2026-08-10
+    # 사장님 "렌즈 인스타 카드에 몇초짜리인지 정보가 없다"). 같은 응답의
+    # video_dash_manifest에서 길이(⏱)까지 뽑아 reel_durations에 영구 저장 —
+    # 이후 렌즈·히트작·랭킹 어디서든 재조회 없이 뜬다.
+    m = _IG_SC_RE.search(url)
+    if (platform == "instagram" or "instagram.com" in url) and m:
+        sc = m.group(1)
+        try:
+            from shopping_shorts.duration_backfill import _manifest_duration
+            from shopping_shorts.instagram_parse import shortcode_to_pk
+            from shopping_shorts.instagram_playwright import (_detail_context,
+                                                              _fetch_reel_detail)
+            node = None
+            pk = shortcode_to_pk(sc)
+            if pk:
+                with _detail_context() as ctx:
+                    node = _fetch_reel_detail(ctx, pk, sc)
+            if node:
+                user = node.get("user") if isinstance(node.get("user"), dict) else {}
+                cap = node.get("caption") if isinstance(node.get("caption"), dict) else {}
+                dur = _manifest_duration(node)
+                if dur:
+                    store.set_reel_duration(sc, dur)
+                ts = node.get("taken_at")
+                data = {k: v for k, v in {
+                    "channel_name": (user or {}).get("username") or "",
+                    "channel_url": ("https://www.instagram.com/%s/" % user["username"]) if (user or {}).get("username") else "",
+                    "views": node.get("play_count") or node.get("view_count"),
+                    "likes": node.get("like_count"),
+                    "comment_count": node.get("comment_count"),
+                    "duration": dur,
+                    "upload_date": datetime.utcfromtimestamp(ts).isoformat() if isinstance(ts, (int, float)) and ts > 0 else "",
+                    "caption": ((cap or {}).get("text") or "")[:1000],
+                }.items() if v not in (None, "")}
+                store.upsert_enrichment(url, "instagram", data, "ok", now)
+                return {"ok": True, "status": "ok", **data}
+        except Exception:                  # noqa: BLE001 — 조회 실패는 no_data로(검색은 계속)
+            pass
+        return {"status": "no_data"}       # 실패는 캐시 안 함 — 다음 클릭이 성공할 수 있다
+    # 그 외 비유튜브(틱톡 등) force: Apify 경로 — 현 단계는 미구현 스텁(후속 계획)
     return {"status": "no_data"}
 
 
