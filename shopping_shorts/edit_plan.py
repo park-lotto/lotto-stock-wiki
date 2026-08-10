@@ -1971,6 +1971,21 @@ def _vault_call(prompt, schema, max_tries=8, key_offset=0):
       안 난다. 실패 시 동작은 종전과 같다 — 대기 없이 다음 키로 순차 회전."""
     keys = key_vault.get_live_keys_cascade("general")
     if not keys:
+        # ★위키 예비풀(general/ingest/embed/briefing)이 전멸하면 SHORTS 전용풀의
+        #   살아있는 키로라도 대본을 만든다(2026-08-10 실사고). 이날 위키 4개 그룹이
+        #   전부 라이브 0이 돼 _vault_call이 None을 돌려 → scene_first 후보 0 →
+        #   build_edit_plan beats 0 → "EDL 비어있음"으로 제작소가 통째로 실패했다.
+        #   추출(script_extract)은 SHORTS 키로 정상이었는데 대본 쓰기만 위키 풀에
+        #   묶여 있어 죽은 것 — 같은 lite 모델이라 SHORTS 키로 그대로 생성된다.
+        try:
+            from shopping_shorts import comment_gen as _cg
+            keys = [_cg.SHORTS_GEMINI_KEYS[i] for i in _cg._live_key_indices()]
+            if keys:
+                print("edit_plan._vault_call: 위키 예비풀 전멸 → SHORTS 전용풀로 폴백",
+                      file=sys.stderr)
+        except Exception:
+            keys = []
+    if not keys:
         return None
     if key_offset:
         _o = int(key_offset) % len(keys)
