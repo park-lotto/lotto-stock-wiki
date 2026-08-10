@@ -149,22 +149,57 @@
   {
     "date": "2026-08-10",
     "category": "스탁브레인",
+    "track": "main·깃풀",
+    "summary": "대시보드 log git동기화 구축 완료: log→repo pipeline/dashboard_log.json(24건 병합), CLI 패치, tools/dashboard 커밋(94b707f2c·a4cca2823), 18트랙 재발행.",
+    "next": "집PC에서 tools/dashboard/dashboard_cli.py 1회 복사(README 참조)"
+  },
+  {
+    "date": "2026-08-10",
+    "category": "스탁브레인",
     "track": "main·조사",
-    "summary": "레퍼런스랭킹 오늘 수집 확인: 인스타 417건 06:31 KST 성공(1차 0건 실패→가드 보존→재시도 성공). 타이머가 00:44부터 죽어있던 것 발견·재기동(캐치업 12:08 1회 추가 수집)",
-    "next": "12:08 캐치업 수집 정상건수 확인 — 실패 시 세션 교체 필요"
+    "summary": "발굴 0건 원인 확정(A/B 실측): 발굴 함수만 챌린지 걸린 구계정(INSTAGRAM_SESSION_PATH)+서버직결 사용 → explore가 본인확인 챌린지로 리다이렉트. 수집용 로테이션 세션+주거용 프록시로는 24건 정상. 0순위-B 재발 사례",
+    "next": "승인 시 트랙 잡고 _search_hashtag_playwright를 session_slots(reference)+slot_proxy로 배선 → 실측 → finish"
+  },
+  {
+    "date": "2026-08-10",
+    "category": "스탁브레인",
+    "track": "자막싱크",
+    "summary": "신규 믹스(e6167030) 실측검증: 5비트 전부 자막합=오디오 일치(OK), 새 코드 정상 작동 확인",
+    "next": "사장님 최종렌더 후 육안 확인"
   },
   {
     "date": "2026-08-10",
     "category": "스탁브레인",
     "track": "git동기화",
-    "summary": "제작소 불통 뿌리 규명·해결: 실패지점=EDL 생성, SHORTS 키가 아니라 위키 key_vault general 풀 사용 — 그 풀이 전소진(가용0). 제작소 키 3개를 GEMINI_API_KEY_5~7에도 배선, 실호출 OK 확인",
-    "next": "사장님 재생성 확인 / 근본책=EDL 전용 키그룹 분리 검토"
+    "summary": "⏱ 미표시 뿌리 확인: durfill이 '랭킹 우선'이라 150건 상한을 랭킹이 다 소모, 히트작 top100 커버 0 그대로 → 히트작 상위 전용 백필(durfill_archive.py, views·comments 상위 300씩) 대기열 등록(현 백필 종료 즉시 자동 시작)",
+    "next": "아카이브 백필 완료 후 top100 커버리지 재실측 → 히트작·랭킹 ⏱ 육안"
   },
   {
     "date": "2026-08-10",
     "category": "스탁브레인",
-    "track": "main·깃풀",
-    "summary": "대시보드 log git동기화 구축: log.json→repo pipeline/dashboard_log.json 이동(회사PC 5트랙 병합), CLI 패치+repo에 패치본·README 커밋(94b707f2c). 이제 깃풀만 하면 집↔회사 기록 자동 병합.",
-    "next": "집PC에서 tools/dashboard/dashboard_cli.py 1회 복사(README 참조)"
+    "track": "렌즈인스타정보",
+    "summary": "★종결: 가독성 개선 main·서버 반영 확인(240398d85), 히트작 길이 백필 585/587 성공, top100 조회수·댓글 커버리지 100/100. 렌즈 정보채우기·🎬배지·한국어 길이 전부 라이브",
+    "next": "사장님 Ctrl+F5 육안 확인만 남음"
+  },
+  {
+    "date": "2026-08-10",
+    "category": "스탁브레인",
+    "track": "일반문의",
+    "summary": "★결제정리 종결(캡처 3종 확인): Apify 8/13 구독종료 확정 / fal 카드미등록·잔액$7.17 / RunPod Auto-Pay Disabled·잔액$9.23·소비 $0/hr. 추가 결제 발생 경로 0",
+    "next": "없음 — 종결"
+  },
+  {
+    "date": "2026-08-10",
+    "category": "스탁브레인",
+    "track": "발굴세션복구",
+    "summary": "위키키 대여 검토(실측): 위키 제미니 21키 중 오늘 18소진(살아있음 general 3뿐), 크롤은 제미니 거의 안쓰나 인제스트·임베딩·브리핑이 매일 소진. 빌릴 여유 없음+풀혼합 사고 재발구역. 권고=태깅 전용 새키 추가",
+    "next": "사장님 결정: ①태깅 전용 새키 추가(추천) ②위키키 실소진 검증 후 진짜 노는것만 이관"
+  },
+  {
+    "date": "2026-08-10",
+    "category": "스탁브레인",
+    "track": "대본퀄v3",
+    "summary": "장면싱크 v7 구현: _pin_screens 관문(4불변식 기계검사)으로 모델 화면배정 존중, 위반시 _assign_timeline 폴백(종전 100%), SCENE_BINDING 킬스위치. TDD 10테스트+관련 40테스트 green, finish 게이트 진행중",
+    "next": "게이트 통과·라이브 반영 확인 후 새 믹스 잡으로 비트↔장면 매칭 재검증"
   }
 ]

@@ -1,0 +1,34 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성전자",
+      "signal": "bull",
+      "reason": "HBM 대비 8배 성능을 가진 차세대 zHBM 공개 및 3D 메모리 시장 선도 기대",
+      "ts": "2026-08-04",
+      "quote": "삼성전자, ‘HBM5 8배 성능’ 차세대 메모리 선봬…“3D 메모리 선도”",
+      "sector": "반도체"
+    },
+    {
+      "name": "SK하이닉스",
+      "signal": "neutral",
+      "reason": "삼성전자와의 차세대 메모리 주도권 경쟁 및 HBM 수요 지속",
+      "ts": "2026-08-04",
+      "quote": "삼성전자-SK하닉, 美 FMS서 '포스트 HBM' 주도권 대결",
+      "sector": "반도체"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "삼성전자, FMS 2026에서 HBM 대비 8배 성능을 내는 차세대 zHBM 기술 최초 공개",
+      "ts": "2026-08-04",
+      "quote": "삼성전자, 'HBM 대비 8배 성능' 차세대 zHBM 최초 공개"
+    },
+    {
+      "fact": "AI 메모리 시장 호조에 따라 HBM 및 GDDR7, DDR4 등 메모리 가격 및 수요 상승세",
+      "ts": "2026-08-04",
+      "quote": "메모리값 또 뛴다…삼성·SK, HBM 이어 GDDR7·DDR4까지 호조"
+    }
+  ],
+  "quote": "삼성, AI칩 위에 HBM 쌓는다… 성능 8배 ‘zHBM’ 공개"
+}

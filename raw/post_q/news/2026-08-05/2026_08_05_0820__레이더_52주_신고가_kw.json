@@ -1,0 +1,149 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "르네산트",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-04",
+      "quote": "르네산트 주가, 44.52달러로 52주 신고가 경신",
+      "sector": "기타"
+    },
+    {
+      "name": "매치 그룹",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-04",
+      "quote": "매치 그룹 주가 52주 신고가 41.03달러 기록",
+      "sector": "기타"
+    },
+    {
+      "name": "크록스",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-04",
+      "quote": "크록스 주가, 140.46달러로 52주 신고가 기록",
+      "sector": "소비내수"
+    },
+    {
+      "name": "Pacira Pharmaceuticals",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-04",
+      "quote": "Pacira Pharmaceuticals 주가 52주 신고가 기록, 27.65달러",
+      "sector": "바이오"
+    },
+    {
+      "name": "유나이티드 파이어 그룹",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-04",
+      "quote": "유나이티드 파이어 그룹, 52주 신고가 54.63달러 기록",
+      "sector": "기타"
+    },
+    {
+      "name": "Associated Banc-Corp",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-04",
+      "quote": "Associated Banc-Corp 주가, 31.83달러로 52주 신고가 경신",
+      "sector": "기타"
+    },
+    {
+      "name": "아밀릭스 파마슈티컬스",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-04",
+      "quote": "아밀릭스 파마슈티컬스 주가, 20.98달러로 52주 신고가 경신",
+      "sector": "바이오"
+    },
+    {
+      "name": "트리니티 캐피탈",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-04",
+      "quote": "트리니티 캐피탈 주가 52주 신고가 경신, 18.12달러 기록",
+      "sector": "기타"
+    },
+    {
+      "name": "링센트럴",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-04",
+      "quote": "링센트럴 주가, 52주 신고가 58.98달러 기록",
+      "sector": "IT"
+    },
+    {
+      "name": "유나이티드 뱅크셰어스",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-04",
+      "quote": "유나이티드 뱅크셰어스 주식, 49.28 USD로 52주 신고가 기록",
+      "sector": "기타"
+    },
+    {
+      "name": "프로토 랩스",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-04",
+      "quote": "프로토 랩스 주가 83.19달러로 52주 신고가 경신",
+      "sector": "기타"
+    },
+    {
+      "name": "올드 내셔널 뱅코프",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-04",
+      "quote": "올드 내셔널 뱅코프 주가, 27.32달러로 52주 신고가 경신",
+      "sector": "기타"
+    },
+    {
+      "name": "제트블루 항공",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-04",
+      "quote": "제트블루 항공 주가, 6.51달러로 52주 신고가 경신",
+      "sector": "기타"
+    },
+    {
+      "name": "Simmons First National Corporation",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-03",
+      "quote": "Simmons First National Corporation 주식, 23.91달러로 52주 신고가 경신",
+      "sector": "기타"
+    },
+    {
+      "name": "프랭클린 리소시스",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-03",
+      "quote": "프랭클린 리소시스 주가, 34.95달러로 52주 신고가 경신",
+      "sector": "기타"
+    },
+    {
+      "name": "엔리븐 테라퓨틱스",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-03",
+      "quote": "엔리븐 테라퓨틱스 주가, 52주 신고가 $55.87 기록",
+      "sector": "바이오"
+    },
+    {
+      "name": "Ziff Davis",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-03",
+      "quote": "Ziff Davis 주식, 54.98달러로 52주 신고가 경신",
+      "sector": "기타"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "8월 4일 52주 신고가 종목 및 최근 동향 발표",
+      "ts": "2026-08-04",
+      "quote": "[표]8월 4일 52주 신고가 종목 및 최근 동향"
+    }
+  ],
+  "quote": "8월 4일 주요 종목들의 52주 신고가 경신 흐름"
+}

@@ -1,0 +1,1 @@
+[boot] kiwoom_api: OK (서버에 키움 키 등록됨)

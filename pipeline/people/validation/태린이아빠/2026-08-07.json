@@ -1,0 +1,31 @@
+{
+  "date": "2026-08-07",
+  "hit_rate": null,
+  "mentioned_count": 14,
+  "matched": [],
+  "missed": [
+    "GS건설",
+    "금융",
+    "대우건설",
+    "데이터센터 관련주",
+    "반도체 소부장",
+    "삼성전기",
+    "샘씨엔에스",
+    "원전",
+    "이수페타시스",
+    "전력기기",
+    "하나마이크론",
+    "한국 증시",
+    "한화비전",
+    "한화에어로스페이스"
+  ],
+  "candidates": [],
+  "thresholds": {
+    "mode": "his",
+    "vacuum_pct_max": 35.0,
+    "min_up_count": 1,
+    "require_up_gt_down": true,
+    "require_leader": false,
+    "top_n": 20
+  }
+}
