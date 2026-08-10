@@ -1167,6 +1167,51 @@ def _rewrite_block(groups, avoid_narrations=None):
     return "\n".join(lines)
 
 
+def _model_binding_ok(beats, groups):
+    """모델이 지목한(grounding된) 화면 배정이 불변식을 지키는가(장면싱크 v7, 2026-08-10).
+
+    뿌리: 프롬프트는 "각 비트에 대사가 보이는 seg_id를 붙여라"를 이미 계약으로 걸고
+    _ground_candidate가 그대로 실었는데, _assign_timeline이 무조건 버리고 시간 등분으로
+    재배정해 대사-화면이 어긋났다(실측 job fb3b0b6c: 대사 '인덕션·변기' 비트에 샤워기).
+    검사(전부 기계식, LLM 0콜):
+      ①모든 비트에 primary  ②비트 간 seg 중복 없음(주+보조)
+      ③같은 소스 내 primary 시간 비역전(사장님 불변식)  ④모든 seg가 슬롯 인벤토리 안.
+    하나라도 어긋나면 False → 호출부가 _assign_timeline 폴백(종전과 100% 동일)."""
+    if not beats or not groups:
+        return False
+    inv = {s.get("seg_id") for g in groups for s in g}
+    seen = set()
+    last_start = {}
+    for b in beats:
+        p = b.get("primary")
+        if not p:
+            return False
+        for c in [p] + list(b.get("alternates") or []):
+            sid = c.get("seg_id")
+            if sid not in inv or sid in seen:
+                return False
+            seen.add(sid)
+        v = p.get("video_id")
+        st = float(p.get("start") or 0.0)
+        if v in last_start and st < last_start[v] - 0.01:
+            return False
+        last_start[v] = st
+    return True
+
+
+def _pin_screens(beats, groups):
+    """화면 확정의 단일 관문(0순위-B: 같은 판단은 한 곳에서만).
+
+    모델 배정이 불변식을 지키면 **그대로 존중**(대사-화면 결합 보존, offtopic 플래그만
+    갱신), 아니면 종전 그대로 시간 등분(_assign_timeline). SCENE_BINDING=0으로 즉시
+    종전 동작 복귀."""
+    if os.getenv("SCENE_BINDING", "1") != "0" and _model_binding_ok(beats, groups):
+        for b in beats:
+            _flag_offtopic(b, [c for c in [b.get("primary")] + list(b.get("alternates") or []) if c])
+        return beats
+    return _assign_timeline(beats, groups)
+
+
 def _assign_timeline(beats, groups):
     """화면을 **원본 시간순 그대로** 코드가 배정한다(모델이 뭘 골랐든 무시).
 
@@ -3984,9 +4029,9 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             plan["beats"] = _trim_beats_to_slots(plan["beats"], len(tl_groups))
         if not plan["beats"]:
             continue
-        # ★화면은 원본 시간순 그대로 코드가 배정한다(리라이트 믹스).
+        # ★화면 확정(장면싱크 v7): 모델 배정이 불변식 통과면 존중, 아니면 시간등분 폴백.
         if tl_groups:
-            plan["beats"] = _assign_timeline(plan["beats"], tl_groups)
+            plan["beats"] = _pin_screens(plan["beats"], tl_groups)
         elif blocks:
             plan["beats"] = _assign_blocks(plan["beats"], blocks)
         # fit 정직화(페이블): 행위 불일치 증거가 있으면 자기신고 fit을 깎는다 — 스왑버튼·
@@ -4059,7 +4104,9 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         #   여기서 되돌릴 것이 없다. 남은 역할은 **ping_pong_reconcile이 바꾼 화면**을
         #   원본 슬롯 순서로 되돌리는 것 하나다(그 함수는 나레이션과 화면을 함께 만진다).
         if tl_groups:
-            plan["beats"] = _assign_timeline(plan["beats"], tl_groups)
+            # ping_pong은 화면·나레이션을 함께 재작성하므로 종전대로 슬롯 순서로 되못박는다.
+            plan["beats"] = (_assign_timeline(plan["beats"], tl_groups) if ping_pong
+                             else _pin_screens(plan["beats"], tl_groups))
         plan["detected_type"] = detected
         plan["affiliate_target"] = r.get("story_event", "") or ""
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)
