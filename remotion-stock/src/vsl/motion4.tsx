@@ -12,6 +12,7 @@
 import React from 'react';
 import {
   AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig, Easing,
+  Loop, OffthreadVideo, staticFile,
 } from 'remotion';
 import { MINT, BG, FONT } from './motion';
 import { RED } from './motion2';
@@ -389,3 +390,144 @@ export const SeatsShrink: React.FC<{ from?: number; to?: number; showCount?: boo
     </AbsoluteFill>
   );
 };
+
+/* ══════════════════════════════════════════════════════════════
+   배경 레이어 (2026-08-11 사장님 "S7·S8 배경이 밋밋하다")
+
+   왜 영상 배경인가: 후반부는 말이 무거운 구간이라 화면이 비면 슬라이드처럼 보인다.
+   그렇다고 새 소재를 찍을 필요는 없다 — **이미 만든 완성 쇼츠**를 어둡게 깔면
+   "고생하신 분들 / 이걸 쓰셨으면" 하는 말 뒤로 결과물이 계속 흐른다.
+   장식이 아니라 배경에 깔린 증거다.
+
+   ★가독성이 우선이다. 밝기를 0.2 언저리까지 눌러 자막이 절대 안 묻히게 한다.
+   ══════════════════════════════════════════════════════════════ */
+
+const BED_CLIPS = [
+  'vsl/s1/KakaoTalk_20260811_100239161.mp4',
+  'vsl/s1/final_63d8494f99e3.mp4',
+  'vsl/s1/KakaoTalk_20260811_103115345.mp4',
+  'vsl/s1/final_31b394c4685d.mp4',
+  'vsl/s1/KakaoTalk_20260811_105318092.mp4',
+  'vsl/s1/final_8b7facca37a8.mp4',
+];
+
+/** 완성 쇼츠가 세로로 흐르는 배경. cols열이 서로 다른 속도로 움직여 패턴이 안 보인다. */
+export const ReelBed: React.FC<{
+  cols?: number; brightness?: number; blur?: number; speed?: number;
+}> = ({ cols = 3, brightness = 0.22, blur = 1.5, speed = 1 }) => {
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+  const colW = 1920 / cols;
+  const cellH = Math.round(colW * 16 / 9);
+  return (
+    <AbsoluteFill style={{ background: '#040A08', overflow: 'hidden' }}>
+      {Array.from({ length: cols }).map((_, c) => {
+        // 열마다 속도·시작 위치를 어긋내 '같은 화면이 반복된다'는 느낌을 없앤다
+        const sp = speed * (0.8 + (c % 3) * 0.22);
+        const y = interpolate(frame, [0, durationInFrames], [0, -cellH * 0.9 * sp]);
+        const a = BED_CLIPS[(c * 2) % BED_CLIPS.length];
+        const b = BED_CLIPS[(c * 2 + 1) % BED_CLIPS.length];
+        return (
+          <div key={c} style={{
+            position: 'absolute', left: c * colW, top: -cellH * 0.25 + (c % 2 ? -120 : 0),
+            width: colW, transform: `translateY(${y}px)`,
+          }}>
+            {[a, b].map((src, i) => (
+              <div key={i} style={{
+                position: 'relative', width: colW, height: cellH, overflow: 'hidden',
+              }}>
+                <Loop durationInFrames={Math.max(1, Math.round(14 * fps))}>
+                  <OffthreadVideo
+                    src={staticFile(src)}
+                    trimBefore={Math.round((3 + i * 4 + c * 2) * fps)}
+                    volume={0}
+                    style={{
+                      width: '100%', height: '100%', objectFit: 'cover',
+                      filter: `brightness(${brightness}) blur(${blur}px) saturate(0.7)`,
+                    }}
+                  />
+                </Loop>
+              </div>
+            ))}
+          </div>
+        );
+      })}
+      {/* 가독성 보호막 — 이게 없으면 자막이 영상 무늬에 묻힌다 */}
+      <AbsoluteFill style={{ background: 'rgba(4,10,8,0.52)' }} />
+      <AbsoluteFill style={{
+        background: 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 34%, rgba(0,0,0,0.72) 100%)',
+      }} />
+    </AbsoluteFill>
+  );
+};
+
+/** 느리게 떠오르는 민트 입자 — 화면이 '살아 있다'는 최소 신호 */
+export const Particles: React.FC<{ count?: number; tone?: string }> = ({
+  count = 34, tone = MINT,
+}) => {
+  const frame = useCurrentFrame();
+  return (
+    <AbsoluteFill style={{ pointerEvents: 'none' }}>
+      {Array.from({ length: count }).map((_, i) => {
+        const seed = (i * 9301 + 49297) % 233280 / 233280;
+        const seed2 = (i * 4211 + 12345) % 65536 / 65536;
+        const x = seed * 1920;
+        const speed = 0.25 + seed2 * 0.55;
+        const y = (1180 - ((frame * speed + seed2 * 1200) % 1300));
+        const size = 2 + seed2 * 4;
+        const op = 0.10 + seed * 0.30;
+        return (
+          <div key={i} style={{
+            position: 'absolute', left: x, top: y, width: size, height: size,
+            borderRadius: size, background: tone, opacity: op,
+            boxShadow: `0 0 ${size * 4}px ${tone}`,
+          }} />
+        );
+      })}
+    </AbsoluteFill>
+  );
+};
+
+/** 필름 그레인 + 비네트 — 순수 CSS라 렌더가 가볍고, 평평한 화면에 질감을 준다 */
+export const Grain: React.FC<{ opacity?: number }> = ({ opacity = 0.06 }) => {
+  const frame = useCurrentFrame();
+  const shift = (frame % 6) * 37;
+  return (
+    <AbsoluteFill style={{
+      pointerEvents: 'none', opacity,
+      backgroundImage:
+        'repeating-conic-gradient(#fff 0% 25%, #000 0% 50%)',
+      backgroundSize: '3px 3px',
+      backgroundPosition: `${shift}px ${shift * 0.7}px`,
+      mixBlendMode: 'overlay',
+    }} />
+  );
+};
+
+/** 위에서 아래로 훑는 민트 광선 — 아주 느리게, 존재감만 */
+export const ScanBeam: React.FC<{ tone?: string }> = ({ tone = MINT }) => {
+  const frame = useCurrentFrame();
+  const { durationInFrames } = useVideoConfig();
+  const y = interpolate(frame, [0, durationInFrames], [-30, 130]);
+  return (
+    <AbsoluteFill style={{ pointerEvents: 'none', overflow: 'hidden' }}>
+      <div style={{
+        position: 'absolute', left: '-20%', right: '-20%', top: `${y}%`, height: '46%',
+        background: `linear-gradient(180deg, rgba(0,0,0,0) 0%, ${tone}14 50%, rgba(0,0,0,0) 100%)`,
+        transform: 'rotate(-8deg)',
+      }} />
+    </AbsoluteFill>
+  );
+};
+
+/** S7·S8 전용 합성 배경 — 영상 침대 + 입자 + 광선 + 그레인 */
+export const RichBed: React.FC<{ reels?: boolean; tone?: string; brightness?: number }> = ({
+  reels = true, tone = MINT, brightness = 0.22,
+}) => (
+  <AbsoluteFill>
+    {reels ? <ReelBed brightness={brightness} /> : <Aura tone={tone} strength={0.12} />}
+    <ScanBeam tone={tone} />
+    <Particles tone={tone} />
+    <Grain />
+  </AbsoluteFill>
+);

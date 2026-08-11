@@ -23,7 +23,7 @@ import { RED } from './motion2';
 import { BUILD } from './motion3';
 import {
   Aura, DailyStream, Roadmap, WhoList, PriceReveal, PriceVersus,
-  CtaCards, PointDown, PriceBadge, SeatsShrink,
+  CtaCards, PointDown, PriceBadge, SeatsShrink, RichBed,
 } from './motion4';
 
 export const VSL_FPS_2 = 30;
@@ -44,6 +44,8 @@ type Body =
 type Sfx = { n: string; at: number; v?: number };
 export type Cut2 = {
   text: string; d: number; big?: boolean; center?: boolean; sfx?: Sfx[]; badge?: boolean;
+  /** 이 컷의 배경 정책. rich=완성 쇼츠가 흐르는 배경(S7·S8), 미지정=씬 기본값 */
+  bed?: 'rich' | 'aura' | 'none';
 } & Body;
 
 const S = {
@@ -192,8 +194,15 @@ export const S10_CUTS: Cut2[] = [
   { text: '', d: 0.55, m: 'black', center: true },
 ];
 
+/* ── 배경 선택기 ────────────────────────────────────────
+   cut.bed가 'rich'면 완성 쇼츠가 흐르는 배경, 아니면 종전 오라.
+   배경을 씬 파일 한 곳에서 정하게 해 두면 "이 컷만 왜 다르지"가 안 생긴다. */
+const Bed: React.FC<{ cut: Cut2; def?: 'rich' | 'aura' }> = ({ cut, def = 'aura' }) => (
+  (cut.bed ?? def) === 'rich' ? <RichBed /> : <Aura strength={0.08} />
+);
+
 /* ── 렌더러 ─────────────────────────────────────────────── */
-const CutView: React.FC<{ cut: Cut2 }> = ({ cut }) => {
+const CutView: React.FC<{ cut: Cut2; def?: 'rich' | 'aura' }> = ({ cut, def }) => {
   const { scale, flash } = useKick();
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
@@ -201,15 +210,15 @@ const CutView: React.FC<{ cut: Cut2 }> = ({ cut }) => {
   let body: React.ReactNode = null;
   switch (cut.m) {
     case 'black': body = <BlackCard />; break;
-    case 'aura': body = <Aura tone={cut.tone ?? MINT} />; break;
-    case 'daily': body = <><Aura strength={0.07} /><DailyStream items={BUILD.recent ?? []} /></>; break;
-    case 'road': body = <><Aura strength={0.06} /><Roadmap items={ROAD} appearAt={cut.appearAt} /></>; break;
-    case 'who': body = <><Aura strength={0.07} /><WhoList lines={cut.lines} appearAt={cut.appearAt} /></>; break;
+    case 'aura': body = <Bed cut={cut} def={def} />; break;
+    case 'daily': body = <><Bed cut={cut} def={def} /><DailyStream items={BUILD.recent ?? []} /></>; break;
+    case 'road': body = <><Bed cut={cut} def={def} /><Roadmap items={ROAD} appearAt={cut.appearAt} /></>; break;
+    case 'who': body = <><Bed cut={cut} def={def} /><WhoList lines={cut.lines} appearAt={cut.appearAt} /></>; break;
     case 'price': body = <PriceReveal price={cut.price} label={cut.label} after={cut.after} />; break;
     case 'versus': body = <><Aura strength={0.06} /><PriceVersus /></>; break;
-    case 'cta': body = <><Aura strength={0.10} /><CtaCards appearAt={cut.appearAt} /></>; break;
-    case 'point': body = <><Aura strength={0.12} /><PointDown label={cut.label} /></>; break;
-    case 'seats': body = <><Aura strength={0.07} /><SeatsShrink /></>; break;
+    case 'cta': body = <><Bed cut={cut} def={def} /><CtaCards appearAt={cut.appearAt} /></>; break;
+    case 'point': body = <><Bed cut={cut} def={def} /><PointDown label={cut.label} /></>; break;
+    case 'seats': body = <><Bed cut={cut} def={def} /><SeatsShrink /></>; break;
   }
 
   const centered = cut.center;
@@ -235,7 +244,7 @@ const CutView: React.FC<{ cut: Cut2 }> = ({ cut }) => {
   );
 };
 
-const makeScene = (cuts: Cut2[], audio: string): React.FC => () => {
+const makeScene = (cuts: Cut2[], audio: string, def?: 'rich' | 'aura'): React.FC => () => {
   let at = 0;
   return (
     <AbsoluteFill style={{ background: BG }}>
@@ -245,7 +254,7 @@ const makeScene = (cuts: Cut2[], audio: string): React.FC => () => {
         at += cut.d;
         return (
           <Sequence key={i} from={from} durationInFrames={Math.round(cut.d * VSL_FPS_2)}>
-            <CutView cut={cut} />
+            <CutView cut={cut} def={def} />
           </Sequence>
         );
       })}
@@ -256,8 +265,9 @@ const makeScene = (cuts: Cut2[], audio: string): React.FC => () => {
 const frames = (cuts: Cut2[]) => Math.round(cuts.reduce((a, c) => a + c.d, 0) * VSL_FPS_2);
 
 export const S6Proof = makeScene(S6_CUTS, 'vsl/s6.mp3');
-export const S7Expand = makeScene(S7_CUTS, 'vsl/s7.mp3');
-export const S8Offer = makeScene(S8_CUTS, 'vsl/s8.mp3');
+// S7·S8은 말이 무거운 구간이라 배경이 비면 슬라이드처럼 보인다 → 완성 쇼츠를 깔아 둔다.
+export const S7Expand = makeScene(S7_CUTS, 'vsl/s7.mp3', 'rich');
+export const S8Offer = makeScene(S8_CUTS, 'vsl/s8.mp3', 'rich');
 export const S9Challenge = makeScene(S9_CUTS, 'vsl/s9.mp3');
 export const S10Cta = makeScene(S10_CUTS, 'vsl/s10.mp3');
 
