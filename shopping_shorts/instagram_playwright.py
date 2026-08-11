@@ -80,7 +80,10 @@ def _scrape_one_playwright(username, session_path=None, proxy=None):
         if config.INSTAGRAM_SESSION_PATH and os.path.exists(config.INSTAGRAM_SESSION_PATH):
             ctx_kw["storage_state"] = config.INSTAGRAM_SESSION_PATH
         elif config.INSTAGRAM_PROXY:
-            ctx_kw["proxy"] = {"server": config.INSTAGRAM_PROXY}
+            from shopping_shorts.channel_archive import playwright_proxy_kw
+            _pk = playwright_proxy_kw(config.INSTAGRAM_PROXY)
+            if _pk:
+                ctx_kw["proxy"] = _pk
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(**launch_kw)
@@ -170,7 +173,10 @@ def _detail_context():
     if session_path:
         ctx_kw["storage_state"] = session_path
     elif config.INSTAGRAM_PROXY:
-        ctx_kw["proxy"] = {"server": config.INSTAGRAM_PROXY}
+        from shopping_shorts.channel_archive import playwright_proxy_kw
+        _pk = playwright_proxy_kw(config.INSTAGRAM_PROXY)
+        if _pk:
+            ctx_kw["proxy"] = _pk
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=True, args=["--disable-blink-features=AutomationControlled"])
@@ -321,13 +327,19 @@ def _search_hashtag_playwright(tag):
     captured = []
     launch_kw = {"headless": True, "args": ["--disable-blink-features=AutomationControlled"]}
     ctx_kw = {}
+    from shopping_shorts.channel_archive import playwright_proxy_kw
     session_path, proxy = _discover_session_proxy()
     if session_path and os.path.exists(session_path):
         ctx_kw["storage_state"] = session_path
-        if proxy:
-            ctx_kw["proxy"] = {"server": proxy}
-    elif config.INSTAGRAM_PROXY:
-        ctx_kw["proxy"] = {"server": config.INSTAGRAM_PROXY}
+        # ★인증은 반드시 분리(2026-08-11): {"server": "http://u:p@h"}는 Playwright가
+        # 인증을 무시해 조용히 실패한다 — 신규 계정을 넣고도 발굴 0건이던 뿌리.
+        pk = playwright_proxy_kw(proxy)
+        if pk:
+            ctx_kw["proxy"] = pk
+    else:
+        pk = playwright_proxy_kw(config.INSTAGRAM_PROXY)
+        if pk:
+            ctx_kw["proxy"] = pk
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(**launch_kw)
@@ -474,7 +486,10 @@ def _fetch_profiles_playwright(usernames):
     if config.INSTAGRAM_SESSION_PATH and os.path.exists(config.INSTAGRAM_SESSION_PATH):
         ctx_kw["storage_state"] = config.INSTAGRAM_SESSION_PATH
     elif config.INSTAGRAM_PROXY:
-        ctx_kw["proxy"] = {"server": config.INSTAGRAM_PROXY}
+        from shopping_shorts.channel_archive import playwright_proxy_kw
+        _pk = playwright_proxy_kw(config.INSTAGRAM_PROXY)
+        if _pk:
+            ctx_kw["proxy"] = _pk
     out = {}
     try:
         with sync_playwright() as p:

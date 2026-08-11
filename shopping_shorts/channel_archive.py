@@ -109,6 +109,24 @@ def slot_proxy(index, pool=None):
     return f"http://{user}-{cc}-{index + _POOL_PROXY_OFFSET.get(pool, 0) + 1}:{pw}@{host}"
 
 
+def playwright_proxy_kw(p):
+    """프록시 URL → Playwright proxy 딕셔너리. 없으면 None.
+
+    ★한 군데에서만 정한다(0순위-B, 2026-08-11 실사고): Playwright는
+    `user:pw@host` 형태의 URL 내장 인증을 **지원하지 않는다** — username/password를
+    분리해 넘겨야 한다. crawl_channel엔 이 분리가 있었는데 발굴
+    (_search_hashtag_playwright)엔 `{"server": url}`로 통째로 넘겨 프록시 인증이
+    조용히 실패, 신규 계정을 넣고도 발굴이 계속 0건이었다."""
+    if not p:
+        return None
+    rest = p.split("://", 1)[-1]
+    if "@" in rest:
+        cred, hostport = rest.rsplit("@", 1)
+        user, _, pw = cred.partition(":")
+        return {"server": "http://" + hostport, "username": user, "password": pw}
+    return {"server": p}
+
+
 def crawl_channel(username, max_scrolls=_MAX_SCROLLS, session_path=None, proxy=None):
     """채널 1개를 바닥(또는 상한)까지 스크롤 크롤. (items, final_url, error) 반환.
 
@@ -130,15 +148,9 @@ def crawl_channel(username, max_scrolls=_MAX_SCROLLS, session_path=None, proxy=N
             # 세션과 프록시는 배타가 아니다 — 계정마다 전용 출구를 붙여야 IP로
             # 묶이지 않는다(2026-08-05). proxy 인자가 없을 때만 구 설정으로 폴백.
             p = proxy or config.INSTAGRAM_PROXY
-            if p:
-                rest = p.split("://", 1)[-1]
-                if "@" in rest:
-                    cred, hostport = rest.rsplit("@", 1)
-                    user, _, pw = cred.partition(":")
-                    ctx_kw["proxy"] = {"server": "http://" + hostport,
-                                       "username": user, "password": pw}
-                else:
-                    ctx_kw["proxy"] = {"server": p}
+            pk = playwright_proxy_kw(p)
+            if pk:
+                ctx_kw["proxy"] = pk
             ctx = browser.new_context(**ctx_kw)
             Stealth().apply_stealth_sync(ctx)
             page = ctx.new_page()
