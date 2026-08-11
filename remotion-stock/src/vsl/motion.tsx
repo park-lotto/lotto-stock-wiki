@@ -229,7 +229,7 @@ type WordTok = { t: string; hi: boolean };
    예전엔 강조 안의 단어를 하나씩 쪼개 각자 민트 박스를 줬다 → flex 줄바꿈이
    "안 하시는 / 걸 추천드립니다" 처럼 구 한가운데를 잘라 박스가 따로 놀았다
    (사장님 캡처 2장 실측). 덩어리로 묶으면 통째로 다음 줄로 넘어간다. */
-type WordGroup = { words: string[]; hi: boolean };
+type WordGroup = { words: string[]; hi: boolean; tail?: string };
 
 const tokenize = (text: string): WordGroup[] => {
   const out: WordGroup[] = [];
@@ -240,7 +240,46 @@ const tokenize = (text: string): WordGroup[] => {
     if (hi) out.push({ words, hi });                       // 강조는 통째로
     else words.forEach((w) => out.push({ words: [w], hi })); // 일반은 낱말 단위(등장 스태거)
   });
+  /* ★구두점이 줄 앞으로 떨어지는 것 방지 — 강조 뒤 쉼표가 다음 줄 첫 글자가 돼
+     ", 음성과 대본만…"이 됐다(실측). 선행 구두점은 앞 덩어리에 붙여 같이 다닌다. */
+  for (let i = 1; i < out.length; i += 1) {
+    const g = out[i];
+    const m = g.words[0]?.match(/^([,.!?…·]+)(.*)$/);
+    if (!m) continue;
+    out[i - 1].tail = (out[i - 1].tail ?? '') + m[1];
+    if (m[2]) g.words[0] = m[2];
+    else { g.words.shift(); if (!g.words.length) { out.splice(i, 1); i -= 1; } }
+  }
   return out;
+};
+
+/* 균형 줄바꿈 — flex-wrap에 맡기면 첫 줄을 꽉 채우고 남은 한 낱말이 둘째 줄에
+   혼자 떨어진다("… 댓글이 많은 / 순입니다." 사장님 캡처). 그래서 **줄을 직접 나눈다**:
+   전체 폭을 줄 수로 나눈 목표치를 넘어가면 다음 줄로 넘긴다.
+   한글은 글자폭이 거의 균일해서 글자수로 재도 눈에 맞는다(강조는 박스 여백 +2자). */
+const MAX_W = 1560;
+
+const layoutLines = (groups: WordGroup[], size: number): WordGroup[][] => {
+  const cost = (g: WordGroup) => g.words.join(' ').length + (g.tail?.length ?? 0) + (g.hi ? 2 : 0) + 0.6;
+  const total = groups.reduce((a, g) => a + cost(g), 0);
+  const perLine = Math.max(6, Math.floor(MAX_W / (size * 0.98)));
+  const lineCount = Math.max(1, Math.ceil(total / perLine));
+  if (lineCount === 1) return [groups];
+  const target = total / lineCount;
+  const lines: WordGroup[][] = [];
+  let cur: WordGroup[] = [];
+  let acc = 0;
+  groups.forEach((g, i) => {
+    const c = cost(g);
+    const rest = groups.length - i;             // 남은 줄을 채울 그룹이 모자라지 않게
+    const linesLeft = lineCount - lines.length;
+    if (cur.length && acc + c / 2 > target && linesLeft > 1 && rest >= linesLeft) {
+      lines.push(cur); cur = []; acc = 0;
+    }
+    cur.push(g); acc += c;
+  });
+  if (cur.length) lines.push(cur);
+  return lines;
 };
 
 export const KineticWord: React.FC<{
@@ -249,42 +288,57 @@ export const KineticWord: React.FC<{
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const groups = tokenize(text);
+  const lines = layoutLines(groups, size);
   let wi = 0; // 등장 순서는 낱말 기준(강조 덩어리도 안에서 차례로 뜬다)
   return (
     <AbsoluteFill style={{
       alignItems: 'center', justifyContent: center ? 'center' : 'flex-end',
       paddingBottom: center ? 0 : 92, pointerEvents: 'none',
     }}>
-      <div style={{ maxWidth: 1560, textAlign: 'center' }}>
-        <div style={{
-          display: 'flex', flexWrap: 'wrap', gap: '10px 16px',
-          justifyContent: 'center', alignItems: 'baseline',
-        }}>
-          {groups.map((g, gi) => {
-            const start = wi; wi += g.words.length;
-            const s = spring({
-              frame: frame - start * perWord, fps,
-              config: { damping: 12, stiffness: 220, mass: 0.4 },
-            });
-            const y = interpolate(s, [0, 1], [34, 0]);
-            const sc = interpolate(s, [0, 1], [0.82, 1]);
-            return (
-              <span key={gi} style={{
-                // ★nowrap — 강조 덩어리는 절대 줄 가운데서 안 쪼개진다
-                display: 'inline-flex', gap: 14, whiteSpace: 'nowrap',
-                transform: `translateY(${y}px) scale(${sc})`, opacity: s,
-                fontFamily: FONT, fontWeight: 900, fontSize: size, lineHeight: 1.24,
-                color: g.hi ? '#05130E' : '#fff',
-                background: g.hi ? MINT : undefined,
-                padding: g.hi ? '2px 16px' : undefined,
-                borderRadius: g.hi ? 12 : undefined,
-                boxShadow: g.hi ? `0 0 38px ${MINT}66` : undefined,
-                textShadow: g.hi ? 'none' : '0 8px 32px rgba(0,0,0,0.8)',
-                wordBreak: 'keep-all',
-              }}>{g.words.join(' ')}</span>
-            );
-          })}
-        </div>
+      <div style={{ maxWidth: MAX_W, textAlign: 'center' }}>
+        {lines.map((line, li) => (
+          <div key={li} style={{
+            display: 'flex', flexWrap: 'nowrap', gap: 16,
+            justifyContent: 'center', alignItems: 'baseline',
+            marginTop: li === 0 ? 0 : 10,
+          }}>
+            {line.map((g, gi) => {
+              const start = wi; wi += g.words.length;
+              const s = spring({
+                frame: frame - start * perWord, fps,
+                config: { damping: 12, stiffness: 220, mass: 0.4 },
+              });
+              const y = interpolate(s, [0, 1], [34, 0]);
+              const sc = interpolate(s, [0, 1], [0.82, 1]);
+              const box = (
+                <span key={gi} style={{
+                  display: 'inline-flex', gap: 14, whiteSpace: 'nowrap',
+                  transform: `translateY(${y}px) scale(${sc})`, opacity: s,
+                  fontFamily: FONT, fontWeight: 900, fontSize: size, lineHeight: 1.24,
+                  color: g.hi ? '#05130E' : '#fff',
+                  background: g.hi ? MINT : undefined,
+                  padding: g.hi ? '2px 16px' : undefined,
+                  borderRadius: g.hi ? 12 : undefined,
+                  boxShadow: g.hi ? `0 0 38px ${MINT}66` : undefined,
+                  textShadow: g.hi ? 'none' : '0 8px 32px rgba(0,0,0,0.8)',
+                  wordBreak: 'keep-all',
+                }}>{g.words.join(' ')}</span>
+              );
+              return g.tail ? (
+                <span key={gi} style={{
+                  display: 'inline-flex', alignItems: 'baseline', whiteSpace: 'nowrap',
+                }}>
+                  {box}
+                  <span style={{
+                    fontFamily: FONT, fontWeight: 900, fontSize: size, lineHeight: 1.24,
+                    color: '#fff', textShadow: '0 8px 32px rgba(0,0,0,0.8)',
+                    transform: `translateY(${y}px) scale(${sc})`, opacity: s,
+                  }}>{g.tail}</span>
+                </span>
+              ) : box;
+            })}
+          </div>
+        ))}
         {sub ? (
           <div style={{
             marginTop: 18, fontFamily: FONT, fontWeight: 700, fontSize: 38,
