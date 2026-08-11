@@ -188,3 +188,13 @@ def run_backfill(db_path=DB_PATH, limit=PER_RUN_LIMIT, sleep_s=SLEEP_SEC, codes=
         time.sleep(sleep_s)
     return (f"durfill: 성공 {ok}·실패 {ng}·캐시적중 {len(cached)}"
             f"·잔여 {max(0, len(targets) - len(cached) - len(todo))}")
+
+
+if __name__ == "__main__":
+    # 격리 실행용 CLI(2026-08-11) — daily_instagram_collect가 수집 직후 이걸
+    # 서브프로세스로 여러 번 불러 레퍼런스 길이를 채운다. 한 패스가 Playwright
+    # EPIPE로 죽어도 부모(수집 잡)와 다음 패스는 안 죽는다.
+    import argparse
+    _ap = argparse.ArgumentParser()
+    _ap.add_argument("--limit", type=int, default=PER_RUN_LIMIT)
+    print(run_backfill(limit=_ap.parse_args().limit))
