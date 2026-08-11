@@ -648,6 +648,128 @@ export const ScreenBed: React.FC<{ brightness?: number; deep?: boolean }> = ({
   );
 };
 
+/* ══════════════════════════════════════════════════════════════
+   BG6 릴스월 — 완성 쇼츠가 **인스타 릴스 플레이어 안에서** 도는 화면 (2026-08-11)
+
+   사장님 요청: "쇼핑쇼츠 영상들 인스타에 있는 것들 재생화면으로."
+   실제 인스타 녹화본이 없어서 플레이어 화면을 만들었다. 우리 결과물이
+   '피드에 올라가 도는 상태'로 보이는 게 요지다.
+
+   ★좋아요·댓글 수는 넣지 않는다. 없는 수치를 지어내면 그게 거짓말이다
+     (같은 실수를 '남은 자리 14'로 이미 한 번 했다). 아이콘만 둔다.
+   ★폰 3대는 서로 다른 시점에 다음 쇼츠로 '넘어간다' — 스와이프 재생처럼 읽힌다.
+   ══════════════════════════════════════════════════════════════ */
+
+const PhoneIcons: React.FC = () => (
+  <div style={{
+    position: 'absolute', right: 14, bottom: 96, display: 'flex',
+    flexDirection: 'column', gap: 22, alignItems: 'center', opacity: 0.9,
+  }}>
+    {/* 하트 */}
+    <div style={{ fontSize: 30, color: '#fff', lineHeight: 1 }}>♥</div>
+    {/* 댓글 — 말풍선 외곽선 */}
+    <div style={{
+      width: 26, height: 24, border: '2.5px solid #fff', borderRadius: 8,
+    }} />
+    {/* 공유 — 종이비행기 대용 삼각형 */}
+    <div style={{
+      width: 0, height: 0, borderLeft: '15px solid #fff',
+      borderTop: '9px solid transparent', borderBottom: '9px solid transparent',
+      transform: 'rotate(-20deg)',
+    }} />
+  </div>
+);
+
+/** 폰 1대 — 안에서 쇼츠가 돌고, 일정 간격으로 다음 편으로 넘어간다 */
+const Phone: React.FC<{ seed: number; w: number; every: number; brightness: number }> = ({
+  seed, w, every, brightness,
+}) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const h = Math.round(w * 16 / 9);
+  const step = Math.max(1, Math.round(every * fps));
+  const idx = Math.floor((frame + seed * 37) / step);
+  const src = BED_CLIPS[(idx + seed) % BED_CLIPS.length];
+  // 넘어가는 순간 살짝 위로 밀린다 — 스와이프 느낌
+  const local = (frame + seed * 37) % step;
+  const slide = local < 8 ? interpolate(local, [0, 8], [40, 0]) : 0;
+  return (
+    <div style={{
+      position: 'relative', width: w, height: h, borderRadius: 26, overflow: 'hidden',
+      border: '2px solid rgba(255,255,255,0.16)',
+      boxShadow: '0 30px 80px rgba(0,0,0,0.6)', background: '#000',
+    }}>
+      <div style={{ position: 'absolute', inset: 0, transform: `translateY(${slide}px)` }}>
+        <OffthreadVideo
+          key={src + idx}
+          src={staticFile(src)} trimBefore={Math.round((2 + seed * 3) * fps)} volume={0}
+          style={{
+            width: '100%', height: '100%', objectFit: 'cover',
+            filter: `brightness(${brightness}) saturate(0.9)`,
+          }}
+        />
+      </div>
+      {/* 상단 릴스 라벨 */}
+      <div style={{
+        position: 'absolute', top: 16, left: 18, right: 18,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        fontFamily: FONT, fontWeight: 800, fontSize: 20, color: '#fff', opacity: 0.85,
+      }}>
+        <span>릴스</span>
+        <span style={{ fontSize: 22, letterSpacing: 2 }}>⋯</span>
+      </div>
+      {/* 하단 자리표시 — 캡션 내용을 지어내지 않고 막대로만 둔다 */}
+      <div style={{
+        position: 'absolute', left: 16, bottom: 26, display: 'flex',
+        flexDirection: 'column', gap: 8,
+      }}>
+        <div style={{ width: w * 0.42, height: 9, borderRadius: 5, background: 'rgba(255,255,255,0.5)' }} />
+        <div style={{ width: w * 0.3, height: 8, borderRadius: 5, background: 'rgba(255,255,255,0.28)' }} />
+      </div>
+      <PhoneIcons />
+      {/* 화면 유리 반사 */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'linear-gradient(120deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 42%)',
+      }} />
+    </div>
+  );
+};
+
+/** 릴스 플레이어 3대가 나란히 — 가운데가 앞, 양옆은 뒤로 물러난다 */
+export const InstaBed: React.FC<{ brightness?: number }> = ({ brightness = 0.8 }) => {
+  const frame = useCurrentFrame();
+  const float = (k: number) => Math.sin((frame + k * 40) / 70) * 10;
+  const phones = [
+    { seed: 1, w: 340, every: 5.5, x: -600, s: 0.9, o: 0.72 },
+    { seed: 0, w: 400, every: 6.5, x: 0, s: 1.0, o: 1.0 },
+    { seed: 2, w: 340, every: 7.5, x: 600, s: 0.9, o: 0.72 },
+  ];
+  return (
+    <AbsoluteFill style={{ background: '#060B09', overflow: 'hidden' }}>
+      <AbsoluteFill style={{
+        background: 'radial-gradient(ellipse at 50% 40%, rgba(61,240,178,0.10) 0%, rgba(0,0,0,0) 60%)',
+      }} />
+      <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center' }}>
+        {phones.map((p) => (
+          <div key={p.seed} style={{
+            position: 'absolute',
+            transform: `translate(${p.x}px, ${float(p.seed)}px) scale(${p.s})`,
+            opacity: p.o,
+          }}>
+            <Phone seed={p.seed} w={p.w} every={p.every} brightness={brightness} />
+          </div>
+        ))}
+      </AbsoluteFill>
+      {/* 가독성 보호막 */}
+      <AbsoluteFill style={{ background: 'rgba(4,10,8,0.18)' }} />
+      <AbsoluteFill style={{
+        background: 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.62) 100%)',
+      }} />
+    </AbsoluteFill>
+  );
+};
+
 /** BG4 나이트빌드 — 개발 화면을 강하게 흐려 '만들어지는 중'의 질감만 남긴다.
     ★글자가 읽히면 안 된다(내부 화면이다). blur 16px로 코드는 색·흐름으로만 남는다. */
 const NightBed: React.FC<{ brightness?: number }> = ({ brightness = 0.42 }) => {
@@ -677,10 +799,11 @@ const NightBed: React.FC<{ brightness?: number }> = ({ brightness = 0.42 }) => {
 
 /** 합성 배경 — 기획서 BG1~BG5. work=워크벤치/딥=그래픽 컷 바닥/오라=보이드 */
 export const RichBed: React.FC<{
-  kind?: 'work' | 'deep' | 'night' | 'aura'; tone?: string; brightness?: number;
+  kind?: 'work' | 'deep' | 'night' | 'insta' | 'aura'; tone?: string; brightness?: number;
 }> = ({ kind = 'work', tone = MINT, brightness = 0.32 }) => (
   <AbsoluteFill>
     {kind === 'aura' ? <Aura tone={tone} strength={0.12} />
+      : kind === 'insta' ? <InstaBed />
       : kind === 'night' ? <NightBed />
       : <ScreenBed brightness={brightness} deep={kind === 'deep'} />}
     <ScanBeam tone={tone} />

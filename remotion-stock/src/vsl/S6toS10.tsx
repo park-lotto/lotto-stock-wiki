@@ -45,7 +45,7 @@ type Sfx = { n: string; at: number; v?: number };
 export type Cut2 = {
   text: string; d: number; big?: boolean; center?: boolean; sfx?: Sfx[]; badge?: boolean;
   /** 이 컷의 배경 정책. rich=완성 쇼츠가 흐르는 배경(S7·S8), 미지정=씬 기본값 */
-  bed?: 'rich' | 'aura' | 'none';
+  bed?: 'rich' | 'aura' | 'insta' | 'none';
 } & Body;
 
 const S = {
@@ -211,10 +211,11 @@ const UPGRADES = [
 /* ── 배경 선택기 ────────────────────────────────────────
    cut.bed가 'rich'면 완성 쇼츠가 흐르는 배경, 아니면 종전 오라.
    배경을 씬 파일 한 곳에서 정하게 해 두면 "이 컷만 왜 다르지"가 안 생긴다. */
-const Bed: React.FC<{ cut: Cut2; def?: 'rich' | 'aura'; graphic?: boolean }> = ({
+const Bed: React.FC<{ cut: Cut2; def?: 'rich' | 'aura' | 'insta'; graphic?: boolean }> = ({
   cut, def = 'aura', graphic,
 }) => {
   const use = cut.bed ?? def;
+  if (use === 'insta') return <RichBed kind={graphic ? 'deep' : 'insta'} />;
   if (use !== 'rich') return <Aura strength={0.08} />;
   // 기획서 배정: 그래픽이 주인공인 컷은 BG3 딥필드(색만 남긴 바닥),
   // 말만 있는 컷은 BG1 워크벤치(우리 페이지) ↔ BG2 결과물 벽
@@ -222,7 +223,7 @@ const Bed: React.FC<{ cut: Cut2; def?: 'rich' | 'aura'; graphic?: boolean }> = (
 };
 
 /* ── 렌더러 ─────────────────────────────────────────────── */
-const CutView: React.FC<{ cut: Cut2; def?: 'rich' | 'aura'; centerAll?: boolean }> = ({
+const CutView: React.FC<{ cut: Cut2; def?: 'rich' | 'aura' | 'insta'; centerAll?: boolean }> = ({
   cut, def, centerAll,
 }) => {
   const { scale, flash } = useKick();
@@ -279,7 +280,7 @@ const CutView: React.FC<{ cut: Cut2; def?: 'rich' | 'aura'; centerAll?: boolean 
 };
 
 const makeScene = (
-  cuts: Cut2[], audio: string, def?: 'rich' | 'aura', centerAll?: boolean,
+  cuts: Cut2[], audio: string, def?: 'rich' | 'aura' | 'insta', centerAll?: boolean,
 ): React.FC => () => {
   let at = 0;
   return (
@@ -301,7 +302,7 @@ const makeScene = (
 const frames = (cuts: Cut2[]) => Math.round(cuts.reduce((a, c) => a + c.d, 0) * VSL_FPS_2);
 
 // S6도 가운데 자막 + 우리 페이지 배경. 'black' 컷만 예외로 검정을 지킨다(밀어내는 화법)
-export const S6Proof = makeScene(S6_CUTS, 'vsl/s6.mp3', 'rich', true);
+export const S6Proof = makeScene(S6_CUTS, 'vsl/s6.mp3', 'insta', true);
 // S7·S8은 말이 무거운 구간이라 배경이 비면 슬라이드처럼 보인다 → 완성 쇼츠를 깔아 둔다.
 export const S7Expand = makeScene(S7_CUTS, 'vsl/s7.mp3', 'rich', true);
 export const S8Offer = makeScene(S8_CUTS, 'vsl/s8.mp3', 'rich', true);
