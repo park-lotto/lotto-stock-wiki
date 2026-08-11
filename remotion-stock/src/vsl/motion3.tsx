@@ -17,6 +17,7 @@ import stats from './buildStats.json';
 export const BUILD = stats as {
   total: number; first: string; last: string; days: number; files: number;
   byHour: number[]; nightPct: number; topDay: [string, number]; msgs: string[];
+  recent?: { d: string; s: string }[];
 };
 
 /* ── CommitRain: 진짜 커밋 메시지가 폭포처럼 흐른다 ───────────────

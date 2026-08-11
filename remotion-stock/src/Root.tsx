@@ -13,6 +13,11 @@ import { S1ColdOpen, S1_FRAMES, S1_FPS } from './vsl/S1ColdOpen';
 import { S2Pain, S2_FRAMES, S2_FPS } from './vsl/S2Pain';
 // S4 탄생+원리(2026-08-11) — repo 실측 커밋/야간 히트맵 증거 + 원리 4단계 도식.
 import { S4Build, S4_FRAMES, S4_FPS } from './vsl/S4Build';
+// S6~S10(2026-08-11) — 촬영본 없는 후반부. 자막·그래픽은 whisper 실측 발화 기준.
+import {
+  S6Proof, S7Expand, S8Offer, S9Challenge, S10Cta,
+  S6_FRAMES, S7_FRAMES, S8_FRAMES, S9_FRAMES, S10_FRAMES, VSL_FPS_2,
+} from './vsl/S6toS10';
 import { VIDEO } from './theme';
 import { AIStockVideo } from './AIStockVideo';
 import { BuyHighVideo } from './BuyHighVideo';
@@ -832,6 +837,46 @@ export const RemotionRoot: React.FC = () => {
         component={S4Build}
         durationInFrames={S4_FRAMES}
         fps={S4_FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="VSL-S6-Proof"
+        component={S6Proof}
+        durationInFrames={S6_FRAMES}
+        fps={VSL_FPS_2}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="VSL-S7-Expand"
+        component={S7Expand}
+        durationInFrames={S7_FRAMES}
+        fps={VSL_FPS_2}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="VSL-S8-Offer"
+        component={S8Offer}
+        durationInFrames={S8_FRAMES}
+        fps={VSL_FPS_2}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="VSL-S9-Challenge"
+        component={S9Challenge}
+        durationInFrames={S9_FRAMES}
+        fps={VSL_FPS_2}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="VSL-S10-CTA"
+        component={S10Cta}
+        durationInFrames={S10_FRAMES}
+        fps={VSL_FPS_2}
         width={1920}
         height={1080}
       />
