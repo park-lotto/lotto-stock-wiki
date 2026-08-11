@@ -1,208 +1,152 @@
 /**
- * S1ColdOpen — VSL 1회차 콜드오픈(2026-08-11 사장님 지시 "속도감 있게 전환하면서").
+ * S1ColdOpen v3 — 기획서 `영상제작/00_기획/S1_장면설계.md`의 컷 시트를 그대로 구현.
  *
- * 구조: 대본 한 줄 = 한 섹션. 섹션마다 레이아웃(triptych/single/duo/quote/black)을
- * 바꿔가며 완성본 쇼츠 10개를 빠르게 순환한다 — "결과물이 계속 쏟아진다"는 인상이 S1의 논지.
+ * v2에서 뭐가 문제였나: 레이아웃은 5종인데 **모션이 사실상 1종**(스케일 팝 + 켄번즈)이라
+ * 화면이 계속 바뀌는데도 단조로웠다. v3는 모션 어휘 8종(motion.tsx)을 문장마다 배정해
+ * "결과물이 쏟아진다"는 주장 자체를 화면 문법으로 만든다.
  *
- * ★타이밍은 TTS 입고 전의 **추정치**다(CAPS[].dur, 합 ≈ 67초). S1.mp3가 오면
- *   faster-whisper 단어 타임스탬프로 start/dur만 갈아끼운다 — 레이아웃 코드는 그대로.
- *
- * 재료: 바탕화면 영상제작/02_장면소재/S1_완성쇼츠들 → public/vsl/s1/ (git 미추적,
- *   .gitignore: remotion-stock/public/**\/*.mp4 — 다른 PC에선 같은 폴더에서 다시 복사).
+ * 타이밍: 나레이션 s1.mp3(실측 57.0초) 기준. CUTS[].d는 whisper 문장 타임스탬프에서
+ * 뽑은 값으로 갈아끼운다(04_자막_타임스탬프/s1_words.json → tools로 생성).
  */
 
 import React from 'react';
+import { AbsoluteFill, Audio, Sequence, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
 import {
-  AbsoluteFill, Loop, OffthreadVideo, Sequence, interpolate,
-  spring, staticFile, useCurrentFrame, useVideoConfig,
-} from 'remotion';
-
-/* ── 재료: ffprobe 실측 길이(2026-08-11) ─────────────────────── */
-type Clip = { src: string; dur: number };
-export const S1_CLIPS: Clip[] = [
-  { src: 'vsl/s1/final_31b394c4685d.mp4', dur: 27.5 },
-  { src: 'vsl/s1/final_4115571b6c67.mp4', dur: 25.5 },
-  { src: 'vsl/s1/final_4f3a7a9b5e35.mp4', dur: 13.2 },
-  { src: 'vsl/s1/final_63d8494f99e3.mp4', dur: 28.3 },
-  { src: 'vsl/s1/final_8b7facca37a8.mp4', dur: 24.1 },
-  { src: 'vsl/s1/final_a0157a0ed29d.mp4', dur: 31.1 },
-  { src: 'vsl/s1/final_bb9db3a5f759.mp4', dur: 22.3 },
-  { src: 'vsl/s1/final_ddccf1efabd4.mp4', dur: 22.3 },
-  { src: 'vsl/s1/final_df9b54de557d.mp4', dur: 23.4 },
-  { src: 'vsl/s1/final_e22413db7460.mp4', dur: 17.5 },
-];
-
-/* ── 대본 → 섹션 표. text의 |는 강조 하이라이트 구간 ───────────── */
-type Layout = 'triptych' | 'single' | 'duo' | 'quote' | 'black';
-type Cap = {
-  text: string; dur: number; layout: Layout;
-  clips: number[];          // S1_CLIPS 인덱스
-  sub?: string;             // 작은 보조줄
-};
-export const S1_CAPS: Cap[] = [
-  { text: '지금 보시는 |이 쇼츠들.|', dur: 3.0, layout: 'triptych', clips: [0, 1, 3] },
-  { text: '제가 직접 손으로 만든 게 |아닙니다.|', dur: 3.4, layout: 'triptych', clips: [0, 1, 3] },
-  { text: '키보드, 단 한 번도 안 쳤습니다.', sub: '그냥 버튼만 눌렀습니다', dur: 5.2, layout: 'single', clips: [4] },
-  { text: '하나에 |십 분.|', sub: '자막·성우·편집 전부 버튼으로만', dur: 5.4, layout: 'single', clips: [2] },
-  { text: '|이 퀄리티| 보십시오.', sub: '숙련자 2~3시간 수작업보다 낫습니다', dur: 5.6, layout: 'duo', clips: [5, 6] },
-  { text: '대본과 장면이 |딱딱| 맞습니다.', sub: '놀랍지 않습니까?', dur: 4.6, layout: 'single', clips: [7] },
-  { text: '쇼츠와 관련 없는 지인들께 먼저 드려봤습니다.', dur: 4.0, layout: 'triptych', clips: [8, 9, 2] },
-  { text: '"와, 이게 |이렇게까지| 된다고?"', dur: 3.2, layout: 'quote', clips: [9] },
-  { text: '시중 자동화 프로그램, 내 돈 주고 다 뜯어봤습니다.', dur: 4.2, layout: 'single', clips: [1] },
-  { text: '하나같이 |구멍투성이.|', dur: 2.6, layout: 'black', clips: [] },
-  { text: '답답해서, 결국 |제가 직접| 만들었습니다.', dur: 3.6, layout: 'single', clips: [3] },
-  { text: '말로만 하지 않겠습니다.', dur: 2.4, layout: 'black', clips: [] },
-  { text: '이 영상에서 |처음부터 끝까지| 하나를 실제로 만들어 보여드립니다.', dur: 5.6, layout: 'duo', clips: [0, 8] },
-  { text: '제가 하는 건 |마우스 클릭.| 그것뿐.', dur: 3.4, layout: 'single', clips: [6] },
-  { text: '목표는 하나. |60대 어머니도| 직접 할 수 있게.', dur: 4.4, layout: 'single', clips: [5] },
-  { text: '왜 어머니였는지는… |마지막에| 말씀드리겠습니다.', dur: 3.2, layout: 'black', clips: [] },
-  { text: '소문나기 전에, |빨리| 보시길 바랍니다.', dur: 3.0, layout: 'quote', clips: [4] },
-];
+  BG, Clip, GridBloom, PickZoom, SliceWipe, WhipPan, CardStack,
+  KineticWord, CountPunch, BlackCard, Reel, BlurBed, useKick, Flash, ProgressBar,
+} from './motion';
 
 export const S1_FPS = 30;
-export const S1_FRAMES = Math.round(S1_CAPS.reduce((a, c) => a + c.dur, 0) * S1_FPS);
 
-const BG = '#08110E';
-const MINT = '#3DF0B2';
-const FONT = "'Pretendard','Archivo',sans-serif";
+/* ── 재료(ffprobe 실측 2026-08-11) — 카톡 신규 5 + 기존 final 4 ───────── */
+export const S1_CLIPS: Clip[] = [
+  { src: 'vsl/s1/KakaoTalk_20260811_100239161.mp4', dur: 32.5 },
+  { src: 'vsl/s1/KakaoTalk_20260811_100723116.mp4', dur: 25.4 },
+  { src: 'vsl/s1/KakaoTalk_20260811_103115345.mp4', dur: 34.5 },
+  { src: 'vsl/s1/KakaoTalk_20260811_104842839.mp4', dur: 30.1 },
+  { src: 'vsl/s1/KakaoTalk_20260811_105318092.mp4', dur: 31.5 },
+  { src: 'vsl/s1/final_31b394c4685d.mp4', dur: 27.5 },
+  { src: 'vsl/s1/final_63d8494f99e3.mp4', dur: 28.3 },
+  { src: 'vsl/s1/final_8b7facca37a8.mp4', dur: 24.1 },
+  { src: 'vsl/s1/final_e22413db7460.mp4', dur: 17.5 },
+];
+const C = (i: number) => S1_CLIPS[i % S1_CLIPS.length];
 
-/* 세로 9:16 릴 팬 — 시작점을 중반부로 밀어 각 컷이 다른 장면을 보여준다 */
-const Pane: React.FC<{ clip: Clip; w: number; h: number; seed: number; radius?: number }> = ({
-  clip, w, h, seed, radius = 16,
-}) => {
-  const { fps } = useVideoConfig();
-  const offset = (clip.dur * 0.25 * ((seed % 3) + 1)) % Math.max(1, clip.dur - 4);
-  const usable = Math.max(1.5, clip.dur - offset);
-  return (
-    // ★position:relative 필수 — <Loop>는 내부에서 absolute-fill <Sequence>를 만든다.
-    //   static이면 앵커가 바깥 전체화면 AbsoluteFill로 잡혀 영상이 액자를 뚫고 풀스크린이 된다
-    //   (2026-08-11 v1 렌더 프레임 실측으로 발견).
-    <div style={{ position: 'relative', width: w, height: h, overflow: 'hidden', borderRadius: radius,
-      background: '#000', boxShadow: '0 18px 48px rgba(0,0,0,0.55)' }}>
-      <Loop durationInFrames={Math.max(1, Math.floor(usable * fps))}>
-        <OffthreadVideo src={staticFile(clip.src)} trimBefore={Math.round(offset * fps)}
-          volume={0} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-      </Loop>
-    </div>
-  );
-};
+/* ── 컷 시트 ─────────────────────────────────────────────────
+   m = 모션 어휘, d = 길이(초), text = 자막(|구간|은 민트 스탬프) */
+type Motion =
+  | { m: 'grid'; clips: number[] }
+  | { m: 'pick'; hero: number; others?: number[] }
+  | { m: 'slice'; clip: number; from?: 'top' | 'bottom' }
+  | { m: 'whip'; clip: number; dir?: 1 | -1 }
+  | { m: 'stack'; clips: number[] }
+  | { m: 'count'; from: number; to: number; suffix?: string; label?: string; clip: number }
+  | { m: 'black' }
+  | { m: 'quote'; clip: number };
 
-/* 흐린 배경 채움 — 같은 클립을 크게 깔고 블러 */
-const BlurBg: React.FC<{ clip: Clip; seed: number }> = ({ clip, seed }) => {
-  const { fps } = useVideoConfig();
-  const offset = (clip.dur * 0.3 * ((seed % 2) + 1)) % Math.max(1, clip.dur - 4);
-  return (
-    <AbsoluteFill style={{ overflow: 'hidden' }}>
-      <Loop durationInFrames={Math.max(1, Math.floor((clip.dur - offset) * fps))}>
-        <OffthreadVideo src={staticFile(clip.src)} trimBefore={Math.round(offset * fps)} volume={0}
-          style={{ width: '100%', height: '100%', objectFit: 'cover',
-            filter: 'blur(42px) brightness(0.35) saturate(1.2)', transform: 'scale(1.15)' }} />
-      </Loop>
-    </AbsoluteFill>
-  );
-};
+type Cut = { text: string; sub?: string; d: number; big?: boolean } & Motion;
 
-/* 킥 — 섹션 진입 시 화면 전체 펀치(스케일+미세 회전) & 민트 플래시 */
-const useKick = () => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const pop = spring({ frame, fps, config: { damping: 14, stiffness: 190, mass: 0.6 } });
-  const scale = interpolate(pop, [0, 1], [1.08, 1]);
-  const flash = interpolate(frame, [0, 5], [0.55, 0], { extrapolateRight: 'clamp' });
-  return { scale, flash };
-};
+/** ★d는 whisper 실측(s1_words.json, 22세그먼트)에서 뽑은 값이다 — 합 57.00초 = mp3 길이.
+ *  손으로 어림하지 않는다: 자막이 반 박자 어긋나면 "AI가 만든 티"가 바로 난다. */
+export const S1_CUTS: Cut[] = [
+  { text: '지금 보시는 |이 쇼츠들.|', d: 1.90, m: 'grid', clips: [0, 1, 2, 3, 4, 5, 6, 7, 8] },
+  { text: '제가 직접 손으로 만든 게 |아닙니다.|', d: 1.60, m: 'pick', hero: 2, others: [0, 4] },
+  { text: '키보드요? 단 한 번도 |안 쳤습니다.|', d: 2.10, m: 'black', big: true },
+  { text: '그냥 |버튼만| 눌렀습니다.', d: 1.44, m: 'slice', clip: 3 },
+  { text: '', d: 2.06, m: 'count', from: 180, to: 10, suffix: '분', label: '하나 만드는 데', clip: 1 },
+  { text: '자막도, 성우도, 편집도 |전부 버튼으로만.|', d: 2.86, m: 'stack', clips: [5, 0, 6] },
+  { text: '|이 퀄리티| 보십시오.', d: 1.48, m: 'pick', hero: 4, others: [7, 1] },
+  { text: '숙련된 제작자가 |두세 시간| 꼬박 수작업한 것보다 낫습니다.', d: 4.42, m: 'whip', clip: 6, dir: 1 },
+  { text: '대본이랑 영상 장면이 |딱딱| 맞습니다.', d: 2.42, m: 'slice', clip: 7, from: 'bottom' },
+  { text: '정말, |놀랍지 않습니까?|', d: 1.58, m: 'pick', hero: 8, others: [2, 5] },
+  { text: '쇼츠와 전혀 관련 없는 지인 몇 분께 먼저 드려봤거든요.', d: 4.52, m: 'grid', clips: [1, 3, 5, 7, 0, 4] },
+  { text: '하나같이 |그러시더군요.|', d: 1.60, m: 'whip', clip: 3, dir: -1 },
+  { text: '"와, 이게 |이렇게까지| 된다고?"', d: 2.30, m: 'quote', clip: 0, big: true },
+  { text: '시중 자동화 프로그램, |내 돈 주고| 통째로 다 뜯어봤습니다.', d: 4.24, m: 'whip', clip: 5, dir: 1 },
+  { text: '근데 하나같이 |구멍투성이더군요.|', d: 2.50, m: 'black', big: true },
+  { text: '답답해서, 결국 |제가 직접| 만들었습니다.', d: 2.56, m: 'pick', hero: 6, others: [3, 8] },
+  { text: '말로만 하지 않겠습니다.', d: 1.30, m: 'black', big: true },
+  { text: '이 영상 안에서 |처음부터 끝까지| 하나를 실제로 만들어 보여드립니다.', d: 5.16, m: 'stack', clips: [2, 7, 4] },
+  { text: '', d: 3.10, m: 'count', from: 0, to: 1, label: '제가 화면에서 하는 건 마우스 클릭. 그것뿐.', clip: 8 },
+  { text: '설계 목표는 |딱 하나|였습니다.', d: 2.02, m: 'slice', clip: 4, from: 'bottom' },
+  { text: '우리 |육십 대 어머니도| 직접 할 수 있게.', d: 2.54, m: 'pick', hero: 1, others: [6, 0] },
+  { text: '왜 하필 어머니였는지는… |마지막에| 말씀드리겠습니다.', d: 3.30, m: 'black', big: true },
+];
 
-/* 강조 파싱: |구간|을 민트 하이라이트로 */
-const Rich: React.FC<{ text: string; size: number }> = ({ text, size }) => {
-  const parts = text.split('|');
-  return (
-    <span style={{ fontFamily: FONT, fontWeight: 900, fontSize: size, lineHeight: 1.22,
-      color: '#fff', textShadow: '0 8px 34px rgba(0,0,0,0.75)', wordBreak: 'keep-all' }}>
-      {parts.map((p, i) => i % 2 === 1
-        ? <span key={i} style={{ color: MINT, textShadow: `0 0 34px ${MINT}55` }}>{p}</span>
-        : <span key={i}>{p}</span>)}
-    </span>
-  );
-};
+export const S1_FRAMES = Math.round(S1_CUTS.reduce((a, c) => a + c.d, 0) * S1_FPS);
 
-/* 자막 블록 — 단어 계단식 팝인 */
-const Caption: React.FC<{ cap: Cap; big?: boolean; center?: boolean }> = ({ cap, big, center }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const up = spring({ frame, fps, config: { damping: 15, stiffness: 170 } });
-  const y = interpolate(up, [0, 1], [46, 0]);
-  return (
-    <AbsoluteFill style={{ alignItems: 'center', justifyContent: center ? 'center' : 'flex-end',
-      paddingBottom: center ? 0 : 96, pointerEvents: 'none' }}>
-      <div style={{ transform: `translateY(${y}px)`, opacity: up, textAlign: 'center', maxWidth: 1560 }}>
-        <Rich text={cap.text} size={big ? 96 : 72} />
-        {cap.sub ? (
-          <div style={{ marginTop: 18, fontFamily: FONT, fontWeight: 700, fontSize: 40,
-            color: 'rgba(255,255,255,0.82)', textShadow: '0 4px 20px rgba(0,0,0,0.7)' }}>
-            {cap.sub}
-          </div>
-        ) : null}
-      </div>
-    </AbsoluteFill>
-  );
-};
-
-const REEL_W = 560, REEL_H = 996;
-
-const Section: React.FC<{ cap: Cap; idx: number }> = ({ cap, idx }) => {
+/* ── 컷 하나 렌더 ───────────────────────────────────────────── */
+const CutView: React.FC<{ cut: Cut; idx: number }> = ({ cut, idx }) => {
   const { scale, flash } = useKick();
   const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
-  // 켄번즈 — 홀수 섹션은 줌인, 짝수는 줌아웃(단조로움 방지)
-  const drift = interpolate(frame, [0, durationInFrames], idx % 2 ? [1, 1.06] : [1.06, 1]);
-  const clips = cap.clips.map((i) => S1_CLIPS[i]);
+  const { durationInFrames } = useVideoConfig();
 
   let body: React.ReactNode = null;
-  if (cap.layout === 'triptych') {
-    body = (
-      <AbsoluteFill style={{ flexDirection: 'row', gap: 22, alignItems: 'center', justifyContent: 'center' }}>
-        {clips.map((c, i) => <Pane key={i} clip={c} w={REEL_W} h={REEL_H} seed={idx + i} />)}
-      </AbsoluteFill>
-    );
-  } else if (cap.layout === 'duo') {
-    body = (
-      <>
-        <BlurBg clip={clips[0]} seed={idx} />
-        <AbsoluteFill style={{ flexDirection: 'row', gap: 60, alignItems: 'center', justifyContent: 'center' }}>
-          {clips.map((c, i) => <Pane key={i} clip={c} w={520} h={924} seed={idx + i + 1} />)}
+  switch (cut.m) {
+    case 'grid':
+      body = <GridBloom clips={cut.clips.map(C)} cols={cut.clips.length > 6 ? 3 : 3} />;
+      break;
+    case 'pick':
+      body = <PickZoom hero={C(cut.hero)} others={(cut.others ?? []).map(C)} seed={idx} />;
+      break;
+    case 'slice':
+      body = (
+        <SliceWipe from={cut.from ?? 'top'}>
+          <PickZoom hero={C(cut.clip)} seed={idx} />
+        </SliceWipe>
+      );
+      break;
+    case 'whip':
+      body = (
+        <WhipPan dir={cut.dir ?? 1}>
+          <PickZoom hero={C(cut.clip)} seed={idx} />
+        </WhipPan>
+      );
+      break;
+    case 'stack':
+      body = <CardStack clips={cut.clips.map(C)} seed={idx} />;
+      break;
+    case 'count':
+      body = (
+        <AbsoluteFill>
+          <BlurBed clip={C(cut.clip)} seed={idx} />
+          <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <Reel clip={C(cut.clip)} w={470} h={836} seed={idx} dim={0.55} />
+          </AbsoluteFill>
+          <CountPunch from={cut.from} to={cut.to} suffix={cut.suffix} label={cut.label} />
         </AbsoluteFill>
-      </>
-    );
-  } else if (cap.layout === 'single' || cap.layout === 'quote') {
-    body = (
-      <>
-        <BlurBg clip={clips[0]} seed={idx} />
-        <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center' }}>
-          <Pane clip={clips[0]} w={588} h={1044} seed={idx + 2} radius={20} />
+      );
+      break;
+    case 'quote':
+      body = (
+        <AbsoluteFill>
+          <BlurBed clip={C(cut.clip)} seed={idx} />
+          <AbsoluteFill style={{ background: 'rgba(0,0,0,0.42)' }} />
         </AbsoluteFill>
-      </>
-    );
+      );
+      break;
+    case 'black':
+      body = <BlackCard />;
+      break;
   }
-  // black은 body 없음(암전 카드)
 
-  const quote = cap.layout === 'quote';
-  const black = cap.layout === 'black';
+  const centered = cut.m === 'black' || cut.m === 'quote';
   return (
     <AbsoluteFill style={{ background: BG }}>
-      <AbsoluteFill style={{ transform: `scale(${scale * drift})` }}>{body}</AbsoluteFill>
-      {/* 자막 가독용 하단 그라데이션(암전 카드 제외) */}
-      {!black && (
-        <AbsoluteFill style={{ background: quote
-          ? 'rgba(0,0,0,0.45)'
-          : 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0) 34%)' }} />
+      <AbsoluteFill style={{ transform: `scale(${scale})` }}>{body}</AbsoluteFill>
+      {/* 자막 가독 그라데이션 — 암전·인용 카드엔 필요 없다 */}
+      {!centered && (
+        <AbsoluteFill style={{
+          background: 'linear-gradient(to top, rgba(0,0,0,0.76) 0%, rgba(0,0,0,0) 32%)',
+          pointerEvents: 'none',
+        }} />
       )}
-      <Caption cap={cap} big={quote || black} center={quote || black} />
-      {/* 진입 플래시 — 민트 킥 */}
-      <AbsoluteFill style={{ background: MINT, opacity: flash * 0.35, pointerEvents: 'none' }} />
-      <AbsoluteFill style={{ background: '#fff', opacity: flash * 0.25, pointerEvents: 'none' }} />
-      {/* 진행 바 — 위쪽 얇은 민트 라인(섹션 내 진행) */}
-      <div style={{ position: 'absolute', top: 0, left: 0, height: 6,
-        width: `${(frame / durationInFrames) * 100}%`, background: MINT, opacity: 0.8 }} />
+      {cut.text ? (
+        <KineticWord text={cut.text} sub={cut.sub} center={centered}
+          size={cut.big ? 92 : 74} />
+      ) : null}
+      <Flash v={flash} />
+      <ProgressBar p={frame / durationInFrames} />
     </AbsoluteFill>
   );
 };
@@ -211,12 +155,14 @@ export const S1ColdOpen: React.FC = () => {
   let at = 0;
   return (
     <AbsoluteFill style={{ background: BG }}>
-      {S1_CAPS.map((cap, i) => {
+      {/* 나레이션 — 이 트랙이 타이밍의 기준선이다 */}
+      <Audio src={staticFile('vsl/s1.mp3')} />
+      {S1_CUTS.map((cut, i) => {
         const from = Math.round(at * S1_FPS);
-        at += cap.dur;
+        at += cut.d;
         return (
-          <Sequence key={i} from={from} durationInFrames={Math.round(cap.dur * S1_FPS)}>
-            <Section cap={cap} idx={i} />
+          <Sequence key={i} from={from} durationInFrames={Math.round(cut.d * S1_FPS)}>
+            <CutView cut={cut} idx={i} />
           </Sequence>
         );
       })}
