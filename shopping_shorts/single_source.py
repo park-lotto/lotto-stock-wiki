@@ -1228,14 +1228,26 @@ def add_hook_opener(beats):
     first = (beats[0].get("narration") or "").strip()
     if not first:
         return beats
-    # ★'와'만 붙인다(2026-08-09 사장님 지시: "여러분이 나올 때는 ~하지 마라 / ~해라
-    #   이런 건데 지금 억지로 넣은 거야. 저렇게밖에 안 되면 빼고 와~ 이걸 넣어").
-    #   '여러분'은 **명령·권유형과 짝**이다("여러분 다이소 가면 사오세요"). 그건 훅 패턴
-    #   y_store/y_when/y_never 틀에 이미 들어 있으니 거기서 나온다.
-    #   여기서 붙이는 건 서술형 문장 앞이라 '여러분'을 얹으면 어색해진다
-    #   (실측: "여러분 시댁 놀러 갔다가 ~ 소리 질렀잖아요" — 명령형이 아닌데 부름말).
-    #   '아니'도 뺐다(few-shot에 없고 시비조로 들린다).
-    opener = "와, "
+    # ★로테이션(2026-08-11 사장님: "1번으로 수정 / 여러분이랑 와 이게 제일 무난한 훅인데").
+    #   종전엔 무조건 "와, "라 최근 6잡 중 5잡 훅이 전부 "와,"로 시작했다(실측) —
+    #   뽑을 때마다 "와 와 와"로 들리는 단조로움. 규칙:
+    #   · 질문형(?) → 안 붙인다(감탄사가 물음을 깬다)
+    #   · 명령·권유형 → "여러분 " ('여러분'은 명령·권유형과 짝, 8/9 사장님.
+    #     실측 어색례: "여러분 시댁 놀러 갔다가 ~ 소리 질렀잖아요" — 서술형엔 안 얹는다)
+    #   · 서술형 → 대본별 결정적 해시로 절반은 "와, ", 절반은 무부착(모델이 쓴 훅 그대로)
+    #   '아니'는 제외 유지(few-shot에 없고 시비조, 8/9 사장님).
+    sent_end = first.split(".")[0].split("!")[0]
+    if first.rstrip().endswith("?") or sent_end.rstrip().endswith("?"):
+        return beats
+    imperative = _re.search(r"(세요|십시오|합시다)[.!]?$", sent_end.strip())
+    if imperative:
+        opener = "여러분 "
+    else:
+        import hashlib
+        h = int(hashlib.md5(first.encode("utf-8")).hexdigest(), 16)
+        if h % 2:
+            return beats                     # 절반은 모델 훅 그대로 — 단조로움 방지
+        opener = "와, "
     beats[0]["narration"] = opener + first
     beats[0]["caption_lines"] = None
     return beats
