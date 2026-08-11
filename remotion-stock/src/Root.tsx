@@ -18,6 +18,7 @@ import {
   S6Proof, S7Expand, S8Offer, S9Challenge, S10Cta,
 } from './vsl/S6toS10';
 import { S5_2Demo, S5_2_FRAMES, S5_FPS } from './vsl/S5_2';
+import { S5_2Capcut, S5_2CAPCUT_FRAMES } from './vsl/S5_2Capcut';
 import {
   S6_FRAMES, S7_FRAMES, S8_FRAMES, S9_FRAMES, S10_FRAMES, VSL_FPS_2,
 } from './vsl/S6toS10';
@@ -840,6 +841,15 @@ export const RemotionRoot: React.FC = () => {
         component={S4Build}
         durationInFrames={S4_FRAMES}
         fps={S4_FPS}
+        width={1920}
+        height={1080}
+      />
+      {/* S5-2 캡컷본 위에 자막·애니메이션·효과음만 얹은 판 (배경은 손대지 않는다) */}
+      <Composition
+        id="VSL-S5-2-Capcut"
+        component={S5_2Capcut}
+        durationInFrames={S5_2CAPCUT_FRAMES}
+        fps={S5_FPS}
         width={1920}
         height={1080}
       />
