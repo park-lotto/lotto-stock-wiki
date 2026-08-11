@@ -16,6 +16,9 @@ import { S4Build, S4_FRAMES, S4_FPS } from './vsl/S4Build';
 // S6~S10(2026-08-11) — 촬영본 없는 후반부. 자막·그래픽은 whisper 실측 발화 기준.
 import {
   S6Proof, S7Expand, S8Offer, S9Challenge, S10Cta,
+} from './vsl/S6toS10';
+import { S5_2Demo, S5_2_FRAMES, S5_FPS } from './vsl/S5_2';
+import {
   S6_FRAMES, S7_FRAMES, S8_FRAMES, S9_FRAMES, S10_FRAMES, VSL_FPS_2,
 } from './vsl/S6toS10';
 import { VIDEO } from './theme';
@@ -837,6 +840,15 @@ export const RemotionRoot: React.FC = () => {
         component={S4Build}
         durationInFrames={S4_FRAMES}
         fps={S4_FPS}
+        width={1920}
+        height={1080}
+      />
+      {/* S5-2 데모 — 화면이 주인공, 말은 해설. whisper 실측 싱크 + 배속으로 화면을 말에 맞춘다 */}
+      <Composition
+        id="VSL-S5-2-Demo"
+        component={S5_2Demo}
+        durationInFrames={S5_2_FRAMES}
+        fps={S5_FPS}
         width={1920}
         height={1080}
       />
