@@ -2552,6 +2552,10 @@ async function _restoreWork(workId){
   if(!d || !d.ok){ _consumeProduceHandoff(); return; }
   const w = d.state || {};
   WORK_ID = workId;
+  // ★서버 단계를 **복원 첫 줄에서** 붙든다(2026-08-11, 2중 방어). 아래 refreshStep0 등
+  //   복원 도중의 어떤 저장도 cur가 아직 0인 채로 나가는데, _serverStep이 비어 있으면
+  //   _stepDemoted가 강등을 못 알아봐 step=0이 서버 진행단계를 파괴한다(위 refreshStep0 주석).
+  try{ if(typeof d.step === 'number' && d.step > 0) _serverStep = d.step; }catch(e){}
   HANDOFF = w.handoff || [];
   STATE.script = w.script || '';
   STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
@@ -3115,8 +3119,15 @@ async function refreshStep0(){
   //   여기서 바로 aipick을 부르면, 서버 work.state.handoff가 아직 옛것(또는 빈값)이라
   //   _load_work_sources가 '계정 전체 담김픽'으로 폴백해 이 작업과 무관한 옛 소스가 뜬다.
   //   aipick 조회 전에 밀린 저장을 즉시 서버로 밀어넣어 handoff·WORK_ID를 확정한 뒤 읽는다.
-  if(_workTimer){ clearTimeout(_workTimer); _workTimer = null; }
-  try{ await _pushWork(); }catch(e){}
+  //   ★밀린 저장이 **있을 때만** 민다(2026-08-11 사장님 제보 "새로고침하면 대본 3안 전으로 리셋").
+  //   무조건 밀면 _restoreWork 복원 도중(cur·_serverStep 세팅 전) 이 함수가 불릴 때
+  //   step=0이 서버의 멀쩡한 진행단계를 덮어썼다 — 작업을 열기만 해도 다음 새로고침이
+  //   1단계로 떨어졌다(실측: 열린 작업 8개 전부 step=0으로 파괴). 담기 직후 레이스는
+  //   항상 _workTimer가 걸려 있으므로 이 조건으로도 종전 보호가 그대로 유지된다.
+  if(_workTimer){
+    clearTimeout(_workTimer); _workTimer = null;
+    try{ await _pushWork(); }catch(e){}
+  }
   try{
     // 사장님이 썸네일을 클릭해 특정 영상을 AI PICK으로 지정(bbMain)했으면 서버에도 강제한다
     // (안 그러면 완성도 자동선정이 클릭을 덮어씀 — forced가 지정 시 최우선, app.py 참조).
