@@ -133,10 +133,18 @@ def _targets(store):
     return out
 
 
-def run_backfill(db_path=DB_PATH, limit=PER_RUN_LIMIT, sleep_s=SLEEP_SEC):
-    """길이 없는 랭킹 항목을 캐시 우선으로 채운다. 요약 문자열 반환(워커 로그용)."""
+def run_backfill(db_path=DB_PATH, limit=PER_RUN_LIMIT, sleep_s=SLEEP_SEC, codes=None):
+    """길이 없는 랭킹 항목을 캐시 우선으로 채운다. 요약 문자열 반환(워커 로그용).
+
+    codes: 명시 인스타 shortcode 목록(2026-08-11, 렌즈 ⏱ 미표시 제보). 렌즈 검색 결과는
+    랭킹 피드·아카이브에 없는 영상이 대부분이라 _targets 스캔으로는 **영원히 대상이 안 된다**
+    — 조회 경로(_lens_finalize)가 못 채운 코드를 큐 payload로 직접 넘긴다. 있으면 피드
+    스캔을 건너뛰고 그것만 채운다(소배치라 _detail_context 부담 없음)."""
     store = Store(db_path)
-    targets = _targets(store)
+    if codes:
+        targets = [("instagram", str(sc).strip()) for sc in codes if str(sc or "").strip()]
+    else:
+        targets = _targets(store)
     if not targets:
         return "durfill: 대상 0건"
     cached = store.duration_map([sc for _, sc in targets])
