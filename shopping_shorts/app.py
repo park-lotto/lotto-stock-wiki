@@ -4436,6 +4436,7 @@ _YT_ID_RE = re.compile(r"(?:youtube\.com/(?:shorts/|watch\?v=|live/|embed/)|yout
 # reel_durations)로 보강해 조회수·좋아요·댓글·게시일·길이·채널을 채우고 ②인스타를
 # 맨 위로 정렬한다(같은 플랫폼끼리는 렌즈 유사도 순서 유지 = 안정 정렬).
 _IG_SC_RE = re.compile(r"instagram\.com/(?:reel|reels|p|tv)/([A-Za-z0-9_-]+)")
+_LENS_DURFILL_LAST = 0.0   # 렌즈발 길이 백필 예약 게이트(10분) — _DURFILL_LAST와 같은 결
 
 
 def _lens_finalize(items, store):
@@ -4459,6 +4460,16 @@ def _lens_finalize(items, store):
                     it[k] = m[k]
             if it.get("duration") in (None, "") and durs.get(sc):
                 it["duration"] = durs[sc]
+        # ★못 채운 길이는 백필을 예약한다(2026-08-11 사장님 제보 "렌즈 ⏱ 안 나옴").
+        #   렌즈 결과는 랭킹 피드·아카이브 밖 영상이 대부분이라 durfill의 _targets 스캔으론
+        #   영원히 대상이 안 됐다 — 캐시에 있던 것만 우연히 떴다. 여기서 명시 코드로 예약해
+        #   다음 검색부터 뜨게 한다(이번 응답엔 못 싣는다 — 크롤은 비동기).
+        #   10분 게이트 + 20건 상한: 조회 경로가 크롤을 몰아치지 않게(_attach_durations와 같은 결).
+        missing = [sc for sc in codes if sc not in durs]
+        global _LENS_DURFILL_LAST
+        if missing and time.time() - _LENS_DURFILL_LAST > 600:
+            _LENS_DURFILL_LAST = time.time()
+            store.enqueue("durfill", {"codes": missing[:20]})
     except Exception:                       # noqa: BLE001 — 보강 실패로 검색을 죽이지 않는다
         import sys as _sys
         import traceback as _tb
