@@ -649,122 +649,75 @@ export const ScreenBed: React.FC<{ brightness?: number; deep?: boolean }> = ({
 };
 
 /* ══════════════════════════════════════════════════════════════
-   BG6 릴스월 — 완성 쇼츠가 **인스타 릴스 플레이어 안에서** 도는 화면 (2026-08-11)
+   BG6 릴스월 — 인스타 프로필 릴스 그리드 **실제 녹화** (2026-08-11)
 
-   사장님 요청: "쇼핑쇼츠 영상들 인스타에 있는 것들 재생화면으로."
-   실제 인스타 녹화본이 없어서 플레이어 화면을 만들었다. 우리 결과물이
-   '피드에 올라가 도는 상태'로 보이는 게 요지다.
+   처음엔 릴스 플레이어를 직접 그려 완성 쇼츠를 넣었다. 사장님이 실제 인스타
+   화면 3개(총 50초)를 주셔서 **진짜로 교체**했다. 만든 화면과 결정적으로 다른 점:
+   **조회수가 실제로 찍혀 있다**(28.9만·1.1만·8025…). 지어낸 숫자가 아니라
+   실측치라 그대로 써도 된다 — 이게 이 배경의 힘이다.
 
-   ★좋아요·댓글 수는 넣지 않는다. 없는 수치를 지어내면 그게 거짓말이다
-     (같은 실수를 '남은 자리 14'로 이미 한 번 했다). 아이콘만 둔다.
-   ★폰 3대는 서로 다른 시점에 다음 쇼츠로 '넘어간다' — 스와이프 재생처럼 읽힌다.
+   녹화가 브라우저 창이라 위아래 검은 여백이 있다 → 1.32배로 잘라 없앤다.
    ══════════════════════════════════════════════════════════════ */
 
-const PhoneIcons: React.FC = () => (
-  <div style={{
-    position: 'absolute', right: 14, bottom: 96, display: 'flex',
-    flexDirection: 'column', gap: 22, alignItems: 'center', opacity: 0.9,
-  }}>
-    {/* 하트 */}
-    <div style={{ fontSize: 30, color: '#fff', lineHeight: 1 }}>♥</div>
-    {/* 댓글 — 말풍선 외곽선 */}
-    <div style={{
-      width: 26, height: 24, border: '2.5px solid #fff', borderRadius: 8,
-    }} />
-    {/* 공유 — 종이비행기 대용 삼각형 */}
-    <div style={{
-      width: 0, height: 0, borderLeft: '15px solid #fff',
-      borderTop: '9px solid transparent', borderBottom: '9px solid transparent',
-      transform: 'rotate(-20deg)',
-    }} />
-  </div>
-);
+const IG_CLIPS = [
+  { src: 'vsl/insta/ig1.mp4', len: 25.1 },
+  { src: 'vsl/insta/ig3.mp4', len: 15.5 },
+  { src: 'vsl/insta/ig2.mp4', len: 9.2 },
+];
 
-/** 폰 1대 — 안에서 쇼츠가 돌고, 일정 간격으로 다음 편으로 넘어간다 */
-const Phone: React.FC<{ seed: number; w: number; every: number; brightness: number }> = ({
-  seed, w, every, brightness,
+const IG_WINDOWS = [
+  { z: 1.32, x: 0, y: 0 },
+  { z: 1.55, x: -6, y: 4 },
+  { z: 1.40, x: 5, y: -3 },
+];
+
+const IgShot: React.FC<{ src: string; at: number; win: number; brightness: number }> = ({
+  src, at, win, brightness,
 }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const h = Math.round(w * 16 / 9);
-  const step = Math.max(1, Math.round(every * fps));
-  const idx = Math.floor((frame + seed * 37) / step);
-  const src = BED_CLIPS[(idx + seed) % BED_CLIPS.length];
-  // 넘어가는 순간 살짝 위로 밀린다 — 스와이프 느낌
-  const local = (frame + seed * 37) % step;
-  const slide = local < 8 ? interpolate(local, [0, 8], [40, 0]) : 0;
+  const { fps, durationInFrames } = useVideoConfig();
+  const w = IG_WINDOWS[win % IG_WINDOWS.length];
+  const z = interpolate(frame, [0, durationInFrames], [w.z, w.z * 1.05]);
+  const fade = interpolate(frame, [0, 10], [0, 1], { extrapolateRight: 'clamp' });
   return (
-    <div style={{
-      position: 'relative', width: w, height: h, borderRadius: 26, overflow: 'hidden',
-      border: '2px solid rgba(255,255,255,0.16)',
-      boxShadow: '0 30px 80px rgba(0,0,0,0.6)', background: '#000',
-    }}>
-      <div style={{ position: 'absolute', inset: 0, transform: `translateY(${slide}px)` }}>
-        <OffthreadVideo
-          key={src + idx}
-          src={staticFile(src)} trimBefore={Math.round((2 + seed * 3) * fps)} volume={0}
-          style={{
-            width: '100%', height: '100%', objectFit: 'cover',
-            filter: `brightness(${brightness}) saturate(0.9)`,
-          }}
-        />
-      </div>
-      {/* 상단 릴스 라벨 */}
-      <div style={{
-        position: 'absolute', top: 16, left: 18, right: 18,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        fontFamily: FONT, fontWeight: 800, fontSize: 20, color: '#fff', opacity: 0.85,
-      }}>
-        <span>릴스</span>
-        <span style={{ fontSize: 22, letterSpacing: 2 }}>⋯</span>
-      </div>
-      {/* 하단 자리표시 — 캡션 내용을 지어내지 않고 막대로만 둔다 */}
-      <div style={{
-        position: 'absolute', left: 16, bottom: 26, display: 'flex',
-        flexDirection: 'column', gap: 8,
-      }}>
-        <div style={{ width: w * 0.42, height: 9, borderRadius: 5, background: 'rgba(255,255,255,0.5)' }} />
-        <div style={{ width: w * 0.3, height: 8, borderRadius: 5, background: 'rgba(255,255,255,0.28)' }} />
-      </div>
-      <PhoneIcons />
-      {/* 화면 유리 반사 */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        background: 'linear-gradient(120deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 42%)',
-      }} />
-    </div>
+    <AbsoluteFill style={{ overflow: 'hidden', opacity: fade, background: '#000' }}>
+      <OffthreadVideo
+        src={staticFile(src)} trimBefore={Math.round(at * fps)} volume={0}
+        style={{
+          width: '100%', height: '100%', objectFit: 'cover',
+          transform: `scale(${z}) translate(${w.x}%, ${w.y}%)`,
+          filter: `brightness(${brightness}) saturate(0.95)`,
+        }}
+      />
+    </AbsoluteFill>
   );
 };
 
-/** 릴스 플레이어 3대가 나란히 — 가운데가 앞, 양옆은 뒤로 물러난다 */
-export const InstaBed: React.FC<{ brightness?: number }> = ({ brightness = 0.8 }) => {
-  const frame = useCurrentFrame();
-  const float = (k: number) => Math.sin((frame + k * 40) / 70) * 10;
-  const phones = [
-    { seed: 1, w: 340, every: 5.5, x: -600, s: 0.9, o: 0.72 },
-    { seed: 0, w: 400, every: 6.5, x: 0, s: 1.0, o: 1.0 },
-    { seed: 2, w: 340, every: 7.5, x: 600, s: 0.9, o: 0.72 },
-  ];
+/** 인스타 릴스 그리드가 흐르는 배경 */
+export const InstaBed: React.FC<{ brightness?: number }> = ({ brightness = 0.62 }) => {
+  const { fps, durationInFrames } = useVideoConfig();
+  const segs: { from: number; dur: number; i: number }[] = [];
+  let at = 0, i = 0;
+  while (at < durationInFrames) {
+    const dur = Math.round([7, 6, 8][i % 3] * fps);
+    segs.push({ from: at, dur: Math.min(dur, durationInFrames - at), i });
+    at += dur; i += 1;
+  }
   return (
     <AbsoluteFill style={{ background: '#060B09', overflow: 'hidden' }}>
+      {segs.map((sg) => {
+        const clip = IG_CLIPS[sg.i % IG_CLIPS.length];
+        const at2 = (sg.i * 4.5) % Math.max(0.5, clip.len - 7);
+        return (
+          <Sequence key={sg.i} from={sg.from} durationInFrames={sg.dur}>
+            <IgShot src={clip.src} at={at2} win={sg.i} brightness={brightness} />
+          </Sequence>
+        );
+      })}
+      {/* 가독성 보호막 — 실사가 밝아서 이게 없으면 자막이 묻힌다 */}
+      <AbsoluteFill style={{ background: 'rgba(4,10,8,0.34)' }} />
       <AbsoluteFill style={{
-        background: 'radial-gradient(ellipse at 50% 40%, rgba(61,240,178,0.10) 0%, rgba(0,0,0,0) 60%)',
-      }} />
-      <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center' }}>
-        {phones.map((p) => (
-          <div key={p.seed} style={{
-            position: 'absolute',
-            transform: `translate(${p.x}px, ${float(p.seed)}px) scale(${p.s})`,
-            opacity: p.o,
-          }}>
-            <Phone seed={p.seed} w={p.w} every={p.every} brightness={brightness} />
-          </div>
-        ))}
-      </AbsoluteFill>
-      {/* 가독성 보호막 */}
-      <AbsoluteFill style={{ background: 'rgba(4,10,8,0.18)' }} />
-      <AbsoluteFill style={{
-        background: 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.62) 100%)',
+        background: 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.30) 0%, rgba(0,0,0,0.76) 100%)',
       }} />
     </AbsoluteFill>
   );
