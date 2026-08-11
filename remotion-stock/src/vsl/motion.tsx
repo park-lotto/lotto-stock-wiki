@@ -271,9 +271,14 @@ const layoutLines = (groups: WordGroup[], size: number): WordGroup[][] => {
   let acc = 0;
   groups.forEach((g, i) => {
     const c = cost(g);
-    const rest = groups.length - i;             // 남은 줄을 채울 그룹이 모자라지 않게
+    // 남은 그룹 수가 '앞으로 더 만들 줄 수' 이상이어야 줄을 나눈다.
+    // ★rest >= linesLeft 로 뒀다가 마지막 강조 덩어리를 못 내려보내 한 줄에 다 붙고
+    //   좌우가 잘렸다(사장님 캡처 'SNS로 … 추천드립니다'). -1이 맞다.
+    const rest = groups.length - i;
     const linesLeft = lineCount - lines.length;
-    if (cur.length && acc + c / 2 > target && linesLeft > 1 && rest >= linesLeft) {
+    const balance = acc + c / 2 > target && linesLeft > 1 && rest >= linesLeft - 1;
+    const overflow = acc + c > perLine;        // 백스톱: 폭을 넘기면 무조건 넘긴다
+    if (cur.length && (balance || overflow)) {
       lines.push(cur); cur = []; acc = 0;
     }
     cur.push(g); acc += c;
