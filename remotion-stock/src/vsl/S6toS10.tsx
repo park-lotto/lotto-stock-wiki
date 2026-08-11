@@ -305,9 +305,9 @@ const frames = (cuts: Cut2[]) => Math.round(cuts.reduce((a, c) => a + c.d, 0) * 
 export const S6Proof = makeScene(S6_CUTS, 'vsl/s6.mp3', 'insta', true);
 // S7·S8은 말이 무거운 구간이라 배경이 비면 슬라이드처럼 보인다 → 완성 쇼츠를 깔아 둔다.
 export const S7Expand = makeScene(S7_CUTS, 'vsl/s7.mp3', 'rich', true);
-export const S8Offer = makeScene(S8_CUTS, 'vsl/s8.mp3', 'rich', true);
+export const S8Offer = makeScene(S8_CUTS, 'vsl/s8.mp3', 'insta', true);
 // S9는 '영상 올리고 보상받는' 챌린지 — 결과물 벽이 그대로 증거다
-export const S9Challenge = makeScene(S9_CUTS, 'vsl/s9.mp3', 'rich', true);
+export const S9Challenge = makeScene(S9_CUTS, 'vsl/s9.mp3', 'insta', true);
 export const S10Cta = makeScene(S10_CUTS, 'vsl/s10.mp3');
 
 export const S6_FRAMES = frames(S6_CUTS);

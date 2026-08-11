@@ -78,45 +78,88 @@ export type RoadItem = { label: string; when: string; soon?: boolean };
 export const Roadmap: React.FC<{ items: RoadItem[]; appearAt: number[] }> = ({ items, appearAt }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const lineP = interpolate(frame, [0, 60], [0, 1], { extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
+  /* ★선을 절대좌표(top:112)로 띄워놨더니 칩 글자를 가로질렀다(사장님 캡처 2장).
+     이제 선은 **점이 놓인 줄에만** 있고, 칩은 그 아래 별도 층에 있다.
+     진행선도 시간이 아니라 **켜진 항목 수**까지만 자란다 — 안 켜진 칩까지
+     선이 미리 그어져 있으면 "이미 다 됐다"로 읽혀 로드맵이 뜻을 잃는다. */
+  const onCount = items.filter((_, i) => frame >= Math.round((appearAt[i] ?? i * 0.8) * fps)).length;
+  const target = items.length <= 1 ? 1 : (onCount - 0.5) / (items.length - 1);
+  const grow = interpolate(
+    frame, [0, 20], [0, Math.max(0, Math.min(1, target))],
+    { extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) },
+  );
+  const DOT_ROW = 46;   // 점이 놓인 줄의 높이
   return (
     <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ width: 1640, position: 'relative' }}>
-        {/* 타임라인 */}
-        <div style={{
-          position: 'absolute', left: 0, right: 0, top: 112, height: 4,
-          background: '#ffffff14', borderRadius: 2,
-        }} />
-        <div style={{
-          position: 'absolute', left: 0, top: 112, height: 4, width: `${lineP * 100}%`,
-          background: `linear-gradient(90deg, ${MINT}, ${MINT}55)`, borderRadius: 2,
-          boxShadow: `0 0 20px ${MINT}66`,
-        }} />
+        {/* 1층 — 라벨(지금·확장·곧) */}
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14 }}>
+          {items.map((it, i) => {
+            const at = Math.round((appearAt[i] ?? i * 0.8) * fps);
+            const on = frame >= at;
+            return (
+              <div key={i} style={{
+                flex: 1, textAlign: 'center', fontFamily: FONT, fontWeight: 800, fontSize: 24,
+                color: it.soon ? '#ffffff88' : MINT, opacity: on ? 1 : 0.3, marginBottom: 14,
+              }}>{it.when}</div>
+            );
+          })}
+        </div>
+
+        {/* 2층 — 선 + 점. 이 줄에는 글자가 없다(그래서 안 겹친다) */}
+        <div style={{ position: 'relative', height: DOT_ROW }}>
+          <div style={{
+            position: 'absolute', left: 60, right: 60, top: DOT_ROW / 2 - 2, height: 4,
+            background: '#ffffff12', borderRadius: 2,
+          }} />
+          <div style={{
+            position: 'absolute', left: 60, top: DOT_ROW / 2 - 2, height: 4,
+            width: `calc((100% - 120px) * ${grow})`,
+            background: `linear-gradient(90deg, ${MINT}, ${MINT}77)`, borderRadius: 2,
+            boxShadow: `0 0 20px ${MINT}66`,
+          }} />
+          <div style={{
+            position: 'absolute', inset: 0, display: 'flex',
+            justifyContent: 'space-between', gap: 14, alignItems: 'center',
+          }}>
+            {items.map((it, i) => {
+              const at = Math.round((appearAt[i] ?? i * 0.8) * fps);
+              const on = frame >= at;
+              const p = on ? spring({ frame: frame - at, fps, config: { damping: 13, stiffness: 220 } }) : 0;
+              const done = on && !it.soon;
+              return (
+                <div key={i} style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                  {/* ★켜진 항목엔 체크, 예정은 빈 동그라미 — 상태가 한눈에 갈린다 */}
+                  <div style={{
+                    width: 38, height: 38, borderRadius: 19,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: done ? MINT : '#0A1512',
+                    border: `3px solid ${done ? MINT : (on ? '#ffffff66' : '#ffffff2a')}`,
+                    boxShadow: done ? `0 0 26px ${MINT}99` : undefined,
+                    color: '#05130E', fontSize: 22, fontWeight: 900, fontFamily: FONT,
+                    transform: `scale(${0.7 + p * 0.3})`,
+                  }}>{done ? '✓' : ''}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 3층 — 칩 */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, marginTop: 18 }}>
           {items.map((it, i) => {
             const at = Math.round((appearAt[i] ?? i * 0.8) * fps);
             const on = frame >= at;
             const p = on ? spring({ frame: frame - at, fps, config: { damping: 14, stiffness: 200 } }) : 0;
             return (
-              <div key={i} style={{
-                flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-                transform: `translateY(${interpolate(p, [0, 1], [30, 0])}px)`, opacity: on ? p : 0.22,
-              }}>
-                <div style={{
-                  fontFamily: FONT, fontWeight: 800, fontSize: 24,
-                  color: it.soon ? '#ffffff88' : MINT, marginBottom: 16,
-                }}>{it.when}</div>
-                <div style={{
-                  width: 26, height: 26, borderRadius: 13, marginBottom: 20,
-                  background: it.soon ? 'transparent' : MINT,
-                  border: `3px solid ${it.soon ? '#ffffff44' : MINT}`,
-                  boxShadow: it.soon ? undefined : `0 0 24px ${MINT}88`,
-                }} />
+              <div key={i} style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
                 <div style={{
                   padding: '18px 22px', borderRadius: 16, textAlign: 'center', minWidth: 200,
                   background: it.soon ? 'rgba(255,255,255,0.04)' : 'rgba(61,240,178,0.12)',
                   border: it.soon ? '2px dashed #ffffff2e' : `2px solid ${MINT}66`,
                   fontFamily: FONT, fontWeight: 900, fontSize: 38, color: '#fff',
+                  transform: `translateY(${interpolate(p, [0, 1], [26, 0])}px)`,
+                  opacity: on ? 1 : 0.22,
                 }}>{it.label}</div>
               </div>
             );
@@ -537,6 +580,7 @@ export const ScanBeam: React.FC<{ tone?: string }> = ({ tone = MINT }) => {
 /** ★우리 편 화면만. s2/rec*는 남의 유튜브, s4/rec1은 개발 터미널이라 고객 구간엔 안 쓴다. */
 const SCREEN_CLIPS = [
   { src: 'vsl/s4/rec2.mp4', len: 27.6 },  // 레퍼런스 랭킹
+  { src: 'vsl/s4/rec4.mp4', len: 43.1 },  // 레퍼런스 랭킹 (2026-08-11 추가분)
   { src: 'vsl/s4/rec3.mp4', len: 33.8 },  // 히트작 그리드
 ];
 
@@ -562,7 +606,7 @@ const ScreenShot: React.FC<{
   const z = interpolate(frame, [0, durationInFrames], [w.z, w.z * 1.07]);
   const dx = interpolate(frame, [0, durationInFrames], [w.x, w.x * 0.4]);
   const dy = interpolate(frame, [0, durationInFrames], [w.y, w.y * 0.4]);
-  const fade = interpolate(frame, [0, 12], [0, 1], { extrapolateRight: 'clamp' });
+  const fade = interpolate(frame, [0, 22], [0, 1], { extrapolateRight: 'clamp' });
   return (
     <AbsoluteFill style={{ overflow: 'hidden', opacity: fade }}>
       <OffthreadVideo
@@ -582,7 +626,7 @@ const ScreenShot: React.FC<{
 const ReelRow: React.FC<{ pick: number; brightness: number }> = ({ pick, brightness }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
-  const fade = interpolate(frame, [0, 12], [0, 1], { extrapolateRight: 'clamp' });
+  const fade = interpolate(frame, [0, 22], [0, 1], { extrapolateRight: 'clamp' });
   const y = interpolate(frame, [0, durationInFrames], [0, -70]);
   const colW = 1920 / 3;
   return (
@@ -678,7 +722,7 @@ const IgShot: React.FC<{ src: string; at: number; win: number; brightness: numbe
   const { fps, durationInFrames } = useVideoConfig();
   const w = IG_WINDOWS[win % IG_WINDOWS.length];
   const z = interpolate(frame, [0, durationInFrames], [w.z, w.z * 1.05]);
-  const fade = interpolate(frame, [0, 10], [0, 1], { extrapolateRight: 'clamp' });
+  const fade = interpolate(frame, [0, 22], [0, 1], { extrapolateRight: 'clamp' });
   return (
     <AbsoluteFill style={{ overflow: 'hidden', opacity: fade, background: '#000' }}>
       <OffthreadVideo
