@@ -4186,6 +4186,13 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 if not _apply_narr_fix(
                         lambda _b: _ss1.fix_fabrication_prompt(_b, _mat_sf, _fabs)):
                     break
+        # ★최종 총량 재측정(2026-08-11 사장님 "25~35초가 제일 좋다"): 위 conform(4069)은
+        #   리라이트 **전**에 돌아, 리라이트 팽창(실측 1.5~1.6배)이 재측정 없이 그대로
+        #   나갔다(실측: 목표 30초 잡이 예상 38·51초). 1소스 경로는 리라이트 뒤 최종
+        #   over_budget+코드컷이 있는데 믹스엔 없었다(0순위-B: 같은 판단이 경로마다 다름).
+        #   문장을 만지는 모든 단계(리라이트·서명보장·날조교정) 뒤에서 한 번 더 잰다 —
+        #   예산 이내면 무변경(회귀0), covers·화면 배정은 conform이 안 건드린다.
+        plan["beats"] = _conform_overflow_beats(plan["beats"], target_seconds)
         story = {k: r.get(k, "") for k in
                  ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
         rule_score = _score_candidate(plan, avoid_hooks=avoid_hooks, target_seconds=target_seconds,
