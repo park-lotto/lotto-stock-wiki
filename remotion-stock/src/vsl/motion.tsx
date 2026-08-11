@@ -288,7 +288,10 @@ export const KineticWord: React.FC<{
 /* ── M7 CountPunch: 숫자 카운트 + 착지 셰이크 ────────────────── */
 export const CountPunch: React.FC<{
   from: number; to: number; suffix?: string; label?: string; holdFrames?: number;
-}> = ({ from, to, suffix = '', label, holdFrames = 26 }) => {
+  /** 강조색 — S2 페인 구간은 붉은색을 넘긴다. 기본 민트로 두면 "여긴 문제 구간"이라는
+   *  색 규칙이 카운터 하나 때문에 깨진다(2026-08-11 S2 v1 프레임 검수에서 적발). */
+  color?: string;
+}> = ({ from, to, suffix = '', label, holdFrames = 26, color = MINT }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const p = interpolate(frame, [0, holdFrames], [0, 1], {
@@ -309,7 +312,7 @@ export const CountPunch: React.FC<{
       <div style={{ textAlign: 'center', transform: `scale(${sc})` }}>
         <div style={{
           fontFamily: "'Space Mono','Roboto Mono',monospace", fontWeight: 700,
-          fontSize: 210, color: MINT, textShadow: `0 0 70px ${MINT}55`,
+          fontSize: 210, color, textShadow: `0 0 70px ${color}55`,
           letterSpacing: '-0.02em',
         }}>{val}{suffix}</div>
         {label ? (
@@ -357,10 +360,10 @@ export const Flash: React.FC<{ v: number }> = ({ v }) => (
 );
 
 /* 상단 진행바 */
-export const ProgressBar: React.FC<{ p: number }> = ({ p }) => (
+export const ProgressBar: React.FC<{ p: number; color?: string }> = ({ p, color = MINT }) => (
   <div style={{
     position: 'absolute', top: 0, left: 0, height: 5,
-    width: `${p * 100}%`, background: MINT, opacity: 0.85,
-    boxShadow: `0 0 18px ${MINT}88`,
+    width: `${p * 100}%`, background: color, opacity: 0.85,
+    boxShadow: `0 0 18px ${color}88`,
   }} />
 );

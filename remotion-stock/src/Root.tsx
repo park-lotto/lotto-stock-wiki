@@ -9,6 +9,8 @@ import { BannerComposition } from './BannerComposition';
 import { VslDemo, VSL_DEMO_FRAMES, VSL_FPS } from './vsl/VslDemo';
 // S1 콜드오픈(2026-08-11) — 완성본 쇼츠 10개 고속 전환 + 키네틱 자막. TTS 입고 전 추정 타이밍.
 import { S1ColdOpen, S1_FRAMES, S1_FPS } from './vsl/S1ColdOpen';
+// S2 페인 씬(2026-08-11) — 탈색/붉은 경고 톤, 마지막 2컷만 민트 복귀.
+import { S2Pain, S2_FRAMES, S2_FPS } from './vsl/S2Pain';
 import { VIDEO } from './theme';
 import { AIStockVideo } from './AIStockVideo';
 import { BuyHighVideo } from './BuyHighVideo';
@@ -812,6 +814,14 @@ export const RemotionRoot: React.FC = () => {
         component={S1ColdOpen}
         durationInFrames={S1_FRAMES}
         fps={S1_FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="VSL-S2-Pain"
+        component={S2Pain}
+        durationInFrames={S2_FRAMES}
+        fps={S2_FPS}
         width={1920}
         height={1080}
       />
