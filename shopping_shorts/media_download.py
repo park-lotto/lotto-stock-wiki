@@ -274,7 +274,10 @@ def _download_via_relay(url, dest_dir):
     ★서버는 파일을 만들지 않고 CPU도 안 쓴다 — 무거운 다운로드는 전부 PC로 오프로드된다."""
     import shutil
     from shopping_shorts.store import Store
-    store = Store()
+    # db_path는 필수 인자다(2026-08-11 실사고): 릴레이 경로가 프록시 도입 이후 한 번도
+    # 안 불려서, Store 시그니처가 바뀐 걸 아무도 못 밟았다 — 프록시가 죽어 릴레이로
+    # 되돌리는 순간 첫 줄에서 TypeError로 터졌다.
+    store = Store(config.DB_PATH)
     req_id = store.enqueue_yt_relay(url)
     deadline = time.monotonic() + config.YT_RELAY_POLL_TIMEOUT
     while time.monotonic() < deadline:
