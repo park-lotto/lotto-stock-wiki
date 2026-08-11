@@ -12,7 +12,7 @@
 import React from 'react';
 import {
   AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig, Easing,
-  Loop, OffthreadVideo, staticFile,
+  Loop, OffthreadVideo, staticFile, Sequence,
 } from 'remotion';
 import { MINT, BG, FONT } from './motion';
 import { RED } from './motion2';
@@ -520,14 +520,171 @@ export const ScanBeam: React.FC<{ tone?: string }> = ({ tone = MINT }) => {
   );
 };
 
-/** S7·S8 전용 합성 배경 — 영상 침대 + 입자 + 광선 + 그레인 */
-export const RichBed: React.FC<{ reels?: boolean; tone?: string; brightness?: number }> = ({
-  reels = true, tone = MINT, brightness = 0.22,
-}) => (
+/* ══════════════════════════════════════════════════════════════
+   ScreenBed — 배경의 주인공은 '우리 페이지'다 (2026-08-11)
+
+   쇼츠만 3열로 흘리니 같은 무늬가 계속 도는 것처럼 보였다. S7·S8에서 하는 말은
+   "프로그램이 확장된다 / 이 안에 다 담았다"인데, 그 말의 증거는 쇼츠 결과물이
+   아니라 **제작소·레퍼런스·히트작 화면 그 자체**다. 그래서 배경을 화면녹화로 바꾸고,
+   S1 완성본은 사이사이 숨 돌리는 자리에만 끼운다.
+
+   반복 안 보이게 하는 장치 두 개:
+   ① 소재 6개(총 205초)를 세그먼트마다 다른 지점(seek)에서 재생 → 같은 파일이 다시
+      나와도 다른 장면이 나온다.
+   ② 세그먼트 길이를 7·9·8초로 어긋내 '몇 초마다 바뀐다'는 박자가 안 잡힌다.
+   ══════════════════════════════════════════════════════════════ */
+
+/** ★우리 편 화면만. s2/rec*는 남의 유튜브, s4/rec1은 개발 터미널이라 고객 구간엔 안 쓴다. */
+const SCREEN_CLIPS = [
+  { src: 'vsl/s4/rec2.mp4', len: 27.6 },  // 레퍼런스 랭킹
+  { src: 'vsl/s4/rec3.mp4', len: 33.8 },  // 히트작 그리드
+];
+
+/* 뷰포트 — 실사 소재가 61초뿐이라 '소재'가 아니라 '보는 방식'을 늘린다.
+   같은 클립도 크게 잘라 다른 영역을 보여주면 다른 화면으로 읽힌다. */
+const WINDOWS = [
+  { z: 1.65, x: -14, y: -10 },
+  { z: 2.10, x: 12, y: 8 },
+  { z: 1.80, x: 8, y: -14 },
+  { z: 2.20, x: -10, y: 12 },
+  { z: 1.70, x: 0, y: 0 },
+];
+
+const SEG_LENS = [7, 9, 8]; // 초 — 균등하면 박자가 잡힌다
+
+/** BG1 워크벤치 — 우리 페이지를 크게 잘라 아주 느리게 민다 */
+const ScreenShot: React.FC<{
+  src: string; at: number; brightness: number; win: number; deep?: boolean;
+}> = ({ src, at, brightness, win, deep }) => {
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+  const w = WINDOWS[win % WINDOWS.length];
+  const z = interpolate(frame, [0, durationInFrames], [w.z, w.z * 1.07]);
+  const dx = interpolate(frame, [0, durationInFrames], [w.x, w.x * 0.4]);
+  const dy = interpolate(frame, [0, durationInFrames], [w.y, w.y * 0.4]);
+  const fade = interpolate(frame, [0, 12], [0, 1], { extrapolateRight: 'clamp' });
+  return (
+    <AbsoluteFill style={{ overflow: 'hidden', opacity: fade }}>
+      <OffthreadVideo
+        src={staticFile(src)} trimBefore={Math.round(at * fps)} playbackRate={1.2} volume={0}
+        style={{
+          width: '100%', height: '100%', objectFit: 'cover',
+          transform: `scale(${z}) translate(${dx}%, ${dy}%)`,
+          // BG3 딥필드 = 같은 소재를 강하게 흐려 색만 남긴다(그래픽 컷의 바닥)
+          filter: `brightness(${brightness}) blur(${deep ? 14 : 1.4}px) saturate(${deep ? 1.15 : 0.9})`,
+        }}
+      />
+    </AbsoluteFill>
+  );
+};
+
+/** BG2 결과물 벽 — 완성 쇼츠 3편이 서로 다른 속도로 흐른다 */
+const ReelRow: React.FC<{ pick: number; brightness: number }> = ({ pick, brightness }) => {
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+  const fade = interpolate(frame, [0, 12], [0, 1], { extrapolateRight: 'clamp' });
+  const y = interpolate(frame, [0, durationInFrames], [0, -70]);
+  const colW = 1920 / 3;
+  return (
+    <AbsoluteFill style={{ background: '#040A08', overflow: 'hidden', opacity: fade }}>
+      {[0, 1, 2].map((c) => {
+        const src = BED_CLIPS[(pick * 3 + c) % BED_CLIPS.length];
+        return (
+          <div key={c} style={{
+            position: 'absolute', left: c * colW, top: -160 + (c % 2 ? -40 : 0),
+            width: colW, height: 1420, overflow: 'hidden',
+            transform: `translateY(${y * (0.7 + c * 0.25)}px)`,
+          }}>
+            <OffthreadVideo
+              src={staticFile(src)}
+              trimBefore={Math.round((2 + c * 3 + pick * 2) * fps)} volume={0}
+              style={{
+                width: '100%', height: '100%', objectFit: 'cover',
+                filter: `brightness(${brightness}) blur(1.4px) saturate(0.75)`,
+              }}
+            />
+          </div>
+        );
+      })}
+    </AbsoluteFill>
+  );
+};
+
+/** 우리 페이지(BG1) ↔ 결과물 벽(BG2) 교차 배경. deep=true면 전부 BG3 딥필드. */
+export const ScreenBed: React.FC<{ brightness?: number; deep?: boolean }> = ({
+  brightness = 0.32, deep,
+}) => {
+  const { fps, durationInFrames } = useVideoConfig();
+  const segs: { from: number; dur: number; i: number }[] = [];
+  let at = 0, i = 0;
+  while (at < durationInFrames) {
+    const dur = Math.round(SEG_LENS[i % SEG_LENS.length] * fps);
+    segs.push({ from: at, dur: Math.min(dur, durationInFrames - at), i });
+    at += dur; i += 1;
+  }
+  return (
+    <AbsoluteFill style={{ background: '#040A08', overflow: 'hidden' }}>
+      {segs.map((s) => {
+        // 화면·화면·결과물 — 20초 룰(같은 그림이 20초 안에 두 번 안 온다)
+        const isReel = !deep && s.i % 3 === 2;
+        const k = Math.floor(s.i / 3);
+        const clip = SCREEN_CLIPS[s.i % SCREEN_CLIPS.length];
+        const at2 = (1 + s.i * 5.5) % Math.max(1, clip.len - 9);
+        return (
+          <Sequence key={s.i} from={s.from} durationInFrames={s.dur}>
+            {isReel
+              ? <ReelRow pick={k} brightness={brightness * 0.8} />
+              : <ScreenShot src={clip.src} at={at2} win={s.i} deep={deep}
+                  brightness={deep ? brightness * 1.5 : brightness} />}
+          </Sequence>
+        );
+      })}
+      {/* 가독성 보호막 — 배경은 어디까지나 배경이다 */}
+      <AbsoluteFill style={{ background: `rgba(4,10,8,${deep ? 0.42 : 0.5})` }} />
+      <AbsoluteFill style={{
+        background: 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.26) 0%, rgba(0,0,0,0.78) 100%)',
+      }} />
+    </AbsoluteFill>
+  );
+};
+
+/** BG4 나이트빌드 — 개발 화면을 강하게 흐려 '만들어지는 중'의 질감만 남긴다.
+    ★글자가 읽히면 안 된다(내부 화면이다). blur 16px로 코드는 색·흐름으로만 남는다. */
+const NightBed: React.FC<{ brightness?: number }> = ({ brightness = 0.42 }) => {
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+  const z = interpolate(frame, [0, durationInFrames], [1.25, 1.4]);
+  return (
+    <AbsoluteFill style={{ background: '#040A08', overflow: 'hidden' }}>
+      <Loop durationInFrames={Math.max(1, Math.round(20 * fps))}>
+        <OffthreadVideo
+          src={staticFile('vsl/s4/rec1.mp4')} trimBefore={Math.round(2 * fps)}
+          playbackRate={1.6} volume={0}
+          style={{
+            width: '100%', height: '100%', objectFit: 'cover',
+            transform: `scale(${z})`,
+            filter: `brightness(${brightness}) blur(16px) saturate(1.3)`,
+          }}
+        />
+      </Loop>
+      <AbsoluteFill style={{ background: 'rgba(4,10,8,0.46)' }} />
+      <AbsoluteFill style={{
+        background: 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.8) 100%)',
+      }} />
+    </AbsoluteFill>
+  );
+};
+
+/** 합성 배경 — 기획서 BG1~BG5. work=워크벤치/딥=그래픽 컷 바닥/오라=보이드 */
+export const RichBed: React.FC<{
+  kind?: 'work' | 'deep' | 'night' | 'aura'; tone?: string; brightness?: number;
+}> = ({ kind = 'work', tone = MINT, brightness = 0.32 }) => (
   <AbsoluteFill>
-    {reels ? <ReelBed brightness={brightness} /> : <Aura tone={tone} strength={0.12} />}
+    {kind === 'aura' ? <Aura tone={tone} strength={0.12} />
+      : kind === 'night' ? <NightBed />
+      : <ScreenBed brightness={brightness} deep={kind === 'deep'} />}
     <ScanBeam tone={tone} />
-    <Particles tone={tone} />
+    <Particles tone={tone} count={22} />
     <Grain />
   </AbsoluteFill>
 );

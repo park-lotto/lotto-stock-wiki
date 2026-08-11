@@ -197,34 +197,56 @@ export const S10_CUTS: Cut2[] = [
 /* ── 배경 선택기 ────────────────────────────────────────
    cut.bed가 'rich'면 완성 쇼츠가 흐르는 배경, 아니면 종전 오라.
    배경을 씬 파일 한 곳에서 정하게 해 두면 "이 컷만 왜 다르지"가 안 생긴다. */
-const Bed: React.FC<{ cut: Cut2; def?: 'rich' | 'aura' }> = ({ cut, def = 'aura' }) => (
-  (cut.bed ?? def) === 'rich' ? <RichBed /> : <Aura strength={0.08} />
-);
+const Bed: React.FC<{ cut: Cut2; def?: 'rich' | 'aura'; graphic?: boolean }> = ({
+  cut, def = 'aura', graphic,
+}) => {
+  // '매일 업그레이드' 컷은 씬과 무관하게 나이트빌드 — 말과 화면이 한 몸이다
+  if (cut.m === 'daily') return <RichBed kind="night" />;
+  const use = cut.bed ?? def;
+  if (use !== 'rich') return <Aura strength={0.08} />;
+  // 기획서 배정: 그래픽이 주인공인 컷은 BG3 딥필드(색만 남긴 바닥),
+  // 말만 있는 컷은 BG1 워크벤치(우리 페이지) ↔ BG2 결과물 벽
+  return <RichBed kind={graphic ? 'deep' : 'work'} />;
+};
 
 /* ── 렌더러 ─────────────────────────────────────────────── */
-const CutView: React.FC<{ cut: Cut2; def?: 'rich' | 'aura' }> = ({ cut, def }) => {
+const CutView: React.FC<{ cut: Cut2; def?: 'rich' | 'aura'; centerAll?: boolean }> = ({
+  cut, def, centerAll,
+}) => {
   const { scale, flash } = useKick();
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
 
+  // 가운데에 그래픽이 있는 컷 — 여기에 가운데 자막을 얹으면 겹친다(S7 12초 실측)
+  const graphic = ['daily', 'road', 'who', 'cta', 'point', 'seats', 'versus', 'stat'].includes(cut.m);
+
   let body: React.ReactNode = null;
   switch (cut.m) {
     case 'black': body = <BlackCard />; break;
-    case 'aura': body = <Bed cut={cut} def={def} />; break;
-    case 'daily': body = <><Bed cut={cut} def={def} /><DailyStream items={BUILD.recent ?? []} /></>; break;
-    case 'road': body = <><Bed cut={cut} def={def} /><Roadmap items={ROAD} appearAt={cut.appearAt} /></>; break;
-    case 'who': body = <><Bed cut={cut} def={def} /><WhoList lines={cut.lines} appearAt={cut.appearAt} /></>; break;
+    case 'aura': body = <Bed cut={cut} def={def} graphic={graphic} />; break;
+    case 'daily': body = <><Bed cut={cut} def={def} graphic={graphic} /><DailyStream items={(BUILD.recent ?? []).slice(0, 7)} /></>; break;
+    case 'road': body = <><Bed cut={cut} def={def} graphic={graphic} /><Roadmap items={ROAD} appearAt={cut.appearAt} /></>; break;
+    case 'who': body = <><Bed cut={cut} def={def} graphic={graphic} /><WhoList lines={cut.lines} appearAt={cut.appearAt} /></>; break;
     case 'price': body = <PriceReveal price={cut.price} label={cut.label} after={cut.after} />; break;
     case 'versus': body = <><Aura strength={0.06} /><PriceVersus /></>; break;
-    case 'cta': body = <><Bed cut={cut} def={def} /><CtaCards appearAt={cut.appearAt} /></>; break;
-    case 'point': body = <><Bed cut={cut} def={def} /><PointDown label={cut.label} /></>; break;
-    case 'seats': body = <><Bed cut={cut} def={def} /><SeatsShrink /></>; break;
+    case 'cta': body = <><Bed cut={cut} def={def} graphic={graphic} /><CtaCards appearAt={cut.appearAt} /></>; break;
+    case 'point': body = <><Bed cut={cut} def={def} graphic={graphic} /><PointDown label={cut.label} /></>; break;
+    case 'seats': body = <><Bed cut={cut} def={def} graphic={graphic} /><SeatsShrink /></>; break;
   }
 
-  const centered = cut.center;
+  // centerAll: 씬 전체를 가운데 자막으로 (S7·S8). 배경이 화면녹화라
+  // 아래에 붙은 자막이 UI 위에 얹혀 읽기 나빴다 → 가운데가 항상 비어 있게 만든다.
+  const centered = cut.center ?? (centerAll && !graphic);
   return (
     <AbsoluteFill style={{ background: BG }}>
       <AbsoluteFill style={{ transform: `scale(${scale})` }}>{body}</AbsoluteFill>
+      {centered && cut.m !== 'price' && cut.text ? (
+        // 가운데 자막용 보호막 — 글자 뒤만 눌러 배경은 살리고 가독성은 지킨다
+        <AbsoluteFill style={{
+          background: 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.66) 0%, rgba(0,0,0,0.22) 46%, rgba(0,0,0,0) 68%)',
+          pointerEvents: 'none',
+        }} />
+      ) : null}
       {!centered && cut.m !== 'price' && (
         <AbsoluteFill style={{
           background: 'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0) 30%)',
@@ -244,7 +266,9 @@ const CutView: React.FC<{ cut: Cut2; def?: 'rich' | 'aura' }> = ({ cut, def }) =
   );
 };
 
-const makeScene = (cuts: Cut2[], audio: string, def?: 'rich' | 'aura'): React.FC => () => {
+const makeScene = (
+  cuts: Cut2[], audio: string, def?: 'rich' | 'aura', centerAll?: boolean,
+): React.FC => () => {
   let at = 0;
   return (
     <AbsoluteFill style={{ background: BG }}>
@@ -254,7 +278,7 @@ const makeScene = (cuts: Cut2[], audio: string, def?: 'rich' | 'aura'): React.FC
         at += cut.d;
         return (
           <Sequence key={i} from={from} durationInFrames={Math.round(cut.d * VSL_FPS_2)}>
-            <CutView cut={cut} def={def} />
+            <CutView cut={cut} def={def} centerAll={centerAll} />
           </Sequence>
         );
       })}
@@ -266,9 +290,10 @@ const frames = (cuts: Cut2[]) => Math.round(cuts.reduce((a, c) => a + c.d, 0) * 
 
 export const S6Proof = makeScene(S6_CUTS, 'vsl/s6.mp3');
 // S7·S8은 말이 무거운 구간이라 배경이 비면 슬라이드처럼 보인다 → 완성 쇼츠를 깔아 둔다.
-export const S7Expand = makeScene(S7_CUTS, 'vsl/s7.mp3', 'rich');
-export const S8Offer = makeScene(S8_CUTS, 'vsl/s8.mp3', 'rich');
-export const S9Challenge = makeScene(S9_CUTS, 'vsl/s9.mp3');
+export const S7Expand = makeScene(S7_CUTS, 'vsl/s7.mp3', 'rich', true);
+export const S8Offer = makeScene(S8_CUTS, 'vsl/s8.mp3', 'rich', true);
+// S9는 '영상 올리고 보상받는' 챌린지 — 결과물 벽이 그대로 증거다
+export const S9Challenge = makeScene(S9_CUTS, 'vsl/s9.mp3', 'rich', true);
 export const S10Cta = makeScene(S10_CUTS, 'vsl/s10.mp3');
 
 export const S6_FRAMES = frames(S6_CUTS);
