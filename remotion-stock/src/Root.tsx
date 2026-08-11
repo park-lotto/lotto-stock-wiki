@@ -11,6 +11,8 @@ import { VslDemo, VSL_DEMO_FRAMES, VSL_FPS } from './vsl/VslDemo';
 import { S1ColdOpen, S1_FRAMES, S1_FPS } from './vsl/S1ColdOpen';
 // S2 페인 씬(2026-08-11) — 탈색/붉은 경고 톤, 마지막 2컷만 민트 복귀.
 import { S2Pain, S2_FRAMES, S2_FPS } from './vsl/S2Pain';
+// S4 탄생+원리(2026-08-11) — repo 실측 커밋/야간 히트맵 증거 + 원리 4단계 도식.
+import { S4Build, S4_FRAMES, S4_FPS } from './vsl/S4Build';
 import { VIDEO } from './theme';
 import { AIStockVideo } from './AIStockVideo';
 import { BuyHighVideo } from './BuyHighVideo';
@@ -822,6 +824,14 @@ export const RemotionRoot: React.FC = () => {
         component={S2Pain}
         durationInFrames={S2_FRAMES}
         fps={S2_FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="VSL-S4-Build"
+        component={S4Build}
+        durationInFrames={S4_FRAMES}
+        fps={S4_FPS}
         width={1920}
         height={1080}
       />
