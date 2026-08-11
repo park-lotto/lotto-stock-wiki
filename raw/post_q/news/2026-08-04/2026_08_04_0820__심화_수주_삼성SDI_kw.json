@@ -1,0 +1,31 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "삼성SDI",
+      "signal": "bull",
+      "reason": "ESS 수주 호조 및 LFP 배터리 양산",
+      "ts": "2026-08-04",
+      "quote": "삼성SDI, ESS 수주 '풍부'·신사업 '순항'…목표가 84만원",
+      "sector": "2차전지"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "삼성SDI, 미국 ESS용 LFP 배터리 10월 양산",
+      "ts": "2026-07-30",
+      "quote": "삼성SDI, 美 ESS용 LFP 10월 양산"
+    },
+    {
+      "fact": "ESS 수주 물량 2029년까지 확보",
+      "ts": "2026-07-30",
+      "quote": "각형 LFP 수주, 이미 2029년 캐파 꽉차"
+    },
+    {
+      "fact": "유럽 OEM과 연내 추가 수주 논의 중",
+      "ts": "2026-07-30",
+      "quote": "유럽 OEM 다수와 협의중…연내 추가 수주 기대"
+    }
+  ],
+  "quote": "삼성SDI “ESS 초과 수요에 증설 검토…美 LFP 10월 양산”"
+}
