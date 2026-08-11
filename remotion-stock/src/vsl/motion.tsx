@@ -225,10 +225,20 @@ export const CardStack: React.FC<{ clips: Clip[]; seed?: number }> = ({ clips, s
 /* ── M6 KineticWord: 단어 단위 팝인 + 키워드 스탬프 ──────────
    text의 |구간|은 민트 스탬프(박스+글로우)로 강조된다. */
 type WordTok = { t: string; hi: boolean };
-const tokenize = (text: string): WordTok[] => {
-  const out: WordTok[] = [];
+/* |강조|는 **한 덩어리**로 묶는다.
+   예전엔 강조 안의 단어를 하나씩 쪼개 각자 민트 박스를 줬다 → flex 줄바꿈이
+   "안 하시는 / 걸 추천드립니다" 처럼 구 한가운데를 잘라 박스가 따로 놀았다
+   (사장님 캡처 2장 실측). 덩어리로 묶으면 통째로 다음 줄로 넘어간다. */
+type WordGroup = { words: string[]; hi: boolean };
+
+const tokenize = (text: string): WordGroup[] => {
+  const out: WordGroup[] = [];
   text.split('|').forEach((chunk, ci) => {
-    chunk.split(/\s+/).filter(Boolean).forEach((w) => out.push({ t: w, hi: ci % 2 === 1 }));
+    const words = chunk.split(/\s+/).filter(Boolean);
+    if (!words.length) return;
+    const hi = ci % 2 === 1;
+    if (hi) out.push({ words, hi });                       // 강조는 통째로
+    else words.forEach((w) => out.push({ words: [w], hi })); // 일반은 낱말 단위(등장 스태거)
   });
   return out;
 };
@@ -238,37 +248,40 @@ export const KineticWord: React.FC<{
 }> = ({ text, sub, size = 74, center = false, perWord = 1.6 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const toks = tokenize(text);
+  const groups = tokenize(text);
+  let wi = 0; // 등장 순서는 낱말 기준(강조 덩어리도 안에서 차례로 뜬다)
   return (
     <AbsoluteFill style={{
       alignItems: 'center', justifyContent: center ? 'center' : 'flex-end',
       paddingBottom: center ? 0 : 92, pointerEvents: 'none',
     }}>
-      <div style={{ maxWidth: 1620, textAlign: 'center' }}>
+      <div style={{ maxWidth: 1560, textAlign: 'center' }}>
         <div style={{
-          display: 'flex', flexWrap: 'wrap', gap: '0 16px',
+          display: 'flex', flexWrap: 'wrap', gap: '10px 16px',
           justifyContent: 'center', alignItems: 'baseline',
         }}>
-          {toks.map((tk, i) => {
+          {groups.map((g, gi) => {
+            const start = wi; wi += g.words.length;
             const s = spring({
-              frame: frame - i * perWord, fps,
+              frame: frame - start * perWord, fps,
               config: { damping: 12, stiffness: 220, mass: 0.4 },
             });
             const y = interpolate(s, [0, 1], [34, 0]);
             const sc = interpolate(s, [0, 1], [0.82, 1]);
             return (
-              <span key={i} style={{
-                display: 'inline-block', transform: `translateY(${y}px) scale(${sc})`,
-                opacity: s,
+              <span key={gi} style={{
+                // ★nowrap — 강조 덩어리는 절대 줄 가운데서 안 쪼개진다
+                display: 'inline-flex', gap: 14, whiteSpace: 'nowrap',
+                transform: `translateY(${y}px) scale(${sc})`, opacity: s,
                 fontFamily: FONT, fontWeight: 900, fontSize: size, lineHeight: 1.24,
-                color: tk.hi ? '#05130E' : '#fff',
-                background: tk.hi ? MINT : undefined,
-                padding: tk.hi ? '2px 14px' : undefined,
-                borderRadius: tk.hi ? 10 : undefined,
-                boxShadow: tk.hi ? `0 0 38px ${MINT}66` : undefined,
-                textShadow: tk.hi ? 'none' : '0 8px 32px rgba(0,0,0,0.8)',
+                color: g.hi ? '#05130E' : '#fff',
+                background: g.hi ? MINT : undefined,
+                padding: g.hi ? '2px 16px' : undefined,
+                borderRadius: g.hi ? 12 : undefined,
+                boxShadow: g.hi ? `0 0 38px ${MINT}66` : undefined,
+                textShadow: g.hi ? 'none' : '0 8px 32px rgba(0,0,0,0.8)',
                 wordBreak: 'keep-all',
-              }}>{tk.t}</span>
+              }}>{g.words.join(' ')}</span>
             );
           })}
         </div>
@@ -276,7 +289,7 @@ export const KineticWord: React.FC<{
           <div style={{
             marginTop: 18, fontFamily: FONT, fontWeight: 700, fontSize: 38,
             color: 'rgba(255,255,255,0.86)', textShadow: '0 4px 20px rgba(0,0,0,0.85)',
-            opacity: interpolate(frame, [toks.length * perWord, toks.length * perWord + 8], [0, 1],
+            opacity: interpolate(frame, [wi * perWord, wi * perWord + 8], [0, 1],
               { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
           }}>{sub}</div>
         ) : null}

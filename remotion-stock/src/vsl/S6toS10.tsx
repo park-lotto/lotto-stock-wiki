@@ -67,8 +67,8 @@ export const S6_CUTS: Cut2[] = [
     sfx: [S.boom(0, 0.26)] },
   { text: '이제는 본인이 실행하느냐, 마느냐… |딱 거기서 갈립니다.|', d: 3.74, m: 'aura',
     sfx: [S.whoosh(0)] },
-  { text: '솔직히 말씀드리겠습니다.', d: 1.56, m: 'black', center: true },
-  { text: '이렇게까지 |밥상 다 차려드렸는데도| 안 하신다면…', d: 3.32, m: 'black', center: true,
+  { text: '솔직히 말씀드리겠습니다.', d: 1.56, m: 'aura', center: true },
+  { text: '이렇게까지 |밥상 다 차려드렸는데도| 안 하신다면…', d: 3.32, m: 'aura', center: true,
     sfx: [S.boom(0, 0.24)] },
   { text: '에스엔에스로 돈 버는 일은, 그냥 |안 하시는 걸 추천드립니다.|', d: 3.66, m: 'black', center: true, big: true,
     sfx: [S.boom(0, 0.36)] },
@@ -194,14 +194,26 @@ export const S10_CUTS: Cut2[] = [
   { text: '', d: 0.55, m: 'black', center: true },
 ];
 
+
+/* ★'매일 업그레이드' 목록 — 내부 커밋 메시지를 그대로 띄우면 고객은 못 알아본다
+   ("제작소 EDL빔 복구"가 무슨 말인가). 사장님이 준 기능 문구로 바꿨다.
+   날짜는 실제 빌드가 있었던 날(buildStats 최근 커밋일)을 쓴다. */
+const UPGRADES = [
+  { d: '8월 11일', s: '샤오홍슈 바로 가져오기' },
+  { d: '8월 11일', s: '레퍼런스 랭킹 대규모 업데이트' },
+  { d: '8월 10일', s: '영상 길이 · 썸네일 자동 업데이트' },
+  { d: '8월 10일', s: '대본 — 최상위 채널 흡수' },
+  { d: '8월 9일', s: '역대 히트작 크롤링 시작' },
+  { d: '8월 9일', s: '틱톡 랭킹 추가' },
+  { d: '8월 7일', s: '발음 교정 사전 적용' },
+];
+
 /* ── 배경 선택기 ────────────────────────────────────────
    cut.bed가 'rich'면 완성 쇼츠가 흐르는 배경, 아니면 종전 오라.
    배경을 씬 파일 한 곳에서 정하게 해 두면 "이 컷만 왜 다르지"가 안 생긴다. */
 const Bed: React.FC<{ cut: Cut2; def?: 'rich' | 'aura'; graphic?: boolean }> = ({
   cut, def = 'aura', graphic,
 }) => {
-  // '매일 업그레이드' 컷은 씬과 무관하게 나이트빌드 — 말과 화면이 한 몸이다
-  if (cut.m === 'daily') return <RichBed kind="night" />;
   const use = cut.bed ?? def;
   if (use !== 'rich') return <Aura strength={0.08} />;
   // 기획서 배정: 그래픽이 주인공인 컷은 BG3 딥필드(색만 남긴 바닥),
@@ -224,7 +236,7 @@ const CutView: React.FC<{ cut: Cut2; def?: 'rich' | 'aura'; centerAll?: boolean 
   switch (cut.m) {
     case 'black': body = <BlackCard />; break;
     case 'aura': body = <Bed cut={cut} def={def} graphic={graphic} />; break;
-    case 'daily': body = <><Bed cut={cut} def={def} graphic={graphic} /><DailyStream items={(BUILD.recent ?? []).slice(0, 7)} /></>; break;
+    case 'daily': body = <><Bed cut={cut} def={def} graphic={graphic} /><DailyStream items={UPGRADES} /></>; break;
     case 'road': body = <><Bed cut={cut} def={def} graphic={graphic} /><Roadmap items={ROAD} appearAt={cut.appearAt} /></>; break;
     case 'who': body = <><Bed cut={cut} def={def} graphic={graphic} /><WhoList lines={cut.lines} appearAt={cut.appearAt} /></>; break;
     case 'price': body = <PriceReveal price={cut.price} label={cut.label} after={cut.after} />; break;
@@ -288,7 +300,8 @@ const makeScene = (
 
 const frames = (cuts: Cut2[]) => Math.round(cuts.reduce((a, c) => a + c.d, 0) * VSL_FPS_2);
 
-export const S6Proof = makeScene(S6_CUTS, 'vsl/s6.mp3');
+// S6도 가운데 자막 + 우리 페이지 배경. 'black' 컷만 예외로 검정을 지킨다(밀어내는 화법)
+export const S6Proof = makeScene(S6_CUTS, 'vsl/s6.mp3', 'rich', true);
 // S7·S8은 말이 무거운 구간이라 배경이 비면 슬라이드처럼 보인다 → 완성 쇼츠를 깔아 둔다.
 export const S7Expand = makeScene(S7_CUTS, 'vsl/s7.mp3', 'rich', true);
 export const S8Offer = makeScene(S8_CUTS, 'vsl/s8.mp3', 'rich', true);
