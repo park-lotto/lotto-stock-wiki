@@ -286,6 +286,9 @@ def _download_via_relay(url, dest_dir):
             src = Path(rec["out_path"])
             if not src.exists():
                 raise RuntimeError(f"릴레이 완료 보고했으나 파일 없음: {src}")
+            # yt-dlp 경로는 -o가 폴더를 알아서 만들지만 릴레이는 copy2라 직접 만들어야
+            # 한다(2026-08-11): 없으면 FileNotFoundError로 다운로드가 통째로 실패한다.
+            Path(dest_dir).mkdir(parents=True, exist_ok=True)
             dst = Path(dest_dir) / src.name
             if src.resolve() != dst.resolve():
                 shutil.copy2(src, dst)
