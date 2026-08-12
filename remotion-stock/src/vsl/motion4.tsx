@@ -767,6 +767,36 @@ export const InstaBed: React.FC<{ brightness?: number }> = ({ brightness = 0.62 
   );
 };
 
+/* 남의 방식 배경 — 유튜브 강의·검색 화면. ★페인 구간에서만 쓴다.
+   우리 오퍼 뒤에 깔면 경쟁자 얼굴이 우리 편처럼 보인다(2026-08-11 규칙). */
+const PAIN_CLIPS = ['vsl/s2/rec3.mp4', 'vsl/s2/rec2.mp4', 'vsl/s2/rec1.mp4'];
+
+const PainBed: React.FC<{ brightness?: number }> = ({ brightness = 0.34 }) => {
+  const { fps, durationInFrames } = useVideoConfig();
+  const segs: { from: number; dur: number; i: number }[] = [];
+  let at = 0, i = 0;
+  while (at < durationInFrames) {
+    const dur = Math.round(6 * fps);
+    segs.push({ from: at, dur: Math.min(dur, durationInFrames - at), i });
+    at += dur; i += 1;
+  }
+  return (
+    <AbsoluteFill style={{ background: '#0B0D0D', overflow: 'hidden' }}>
+      {segs.map((sg) => (
+        <Sequence key={sg.i} from={sg.from} durationInFrames={sg.dur}>
+          <IgShot src={PAIN_CLIPS[sg.i % PAIN_CLIPS.length]} at={4 + sg.i * 7}
+            win={sg.i} brightness={brightness} />
+        </Sequence>
+      ))}
+      {/* 탈색 — 남의 방식은 색이 빠져 보여야 한다(S2 색 규칙) */}
+      <AbsoluteFill style={{ background: 'rgba(10,10,12,0.5)' }} />
+      <AbsoluteFill style={{
+        background: 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.8) 100%)',
+      }} />
+    </AbsoluteFill>
+  );
+};
+
 /** BG4 나이트빌드 — 개발 화면을 강하게 흐려 '만들어지는 중'의 질감만 남긴다.
     ★글자가 읽히면 안 된다(내부 화면이다). blur 16px로 코드는 색·흐름으로만 남는다. */
 const NightBed: React.FC<{ brightness?: number }> = ({ brightness = 0.42 }) => {
@@ -796,11 +826,12 @@ const NightBed: React.FC<{ brightness?: number }> = ({ brightness = 0.42 }) => {
 
 /** 합성 배경 — 기획서 BG1~BG5. work=워크벤치/딥=그래픽 컷 바닥/오라=보이드 */
 export const RichBed: React.FC<{
-  kind?: 'work' | 'deep' | 'night' | 'insta' | 'aura'; tone?: string; brightness?: number;
+  kind?: 'work' | 'deep' | 'night' | 'insta' | 'pain' | 'aura'; tone?: string; brightness?: number;
 }> = ({ kind = 'work', tone = MINT, brightness = 0.32 }) => (
   <AbsoluteFill>
     {kind === 'aura' ? <Aura tone={tone} strength={0.12} />
       : kind === 'insta' ? <InstaBed />
+      : kind === 'pain' ? <PainBed />
       : kind === 'night' ? <NightBed />
       : <ScreenBed brightness={brightness} deep={kind === 'deep'} />}
     <ScanBeam tone={tone} />

@@ -21,8 +21,10 @@ import { S5_2Demo, S5_2_FRAMES, S5_FPS } from './vsl/S5_2';
 import { S5_2Capcut, S5_2CAPCUT_FRAMES } from './vsl/S5_2Capcut';
 import {
   S5_1Edit, S5_1_FRAMES, makeOverlayScene, S5_2_END_EDIT, S5_2_EDIT_FRAMES,
+  S5_3Edit, S5_3_FRAMES, S5_4to11Edit, S5_4to11_FRAMES,
 } from './vsl/S5Overlay';
 import { S5_2_CUTS } from './vsl/S5_2';
+import { S5_0Scene, S5_0_FRAMES, S5_12Scene, S5_12_FRAMES } from './vsl/S5Ends';
 const S5_2Edit = makeOverlayScene('vsl/s5/edit_s5_2.mp4', S5_2_CUTS as any, S5_2_END_EDIT);
 import {
   S6_FRAMES, S7_FRAMES, S8_FRAMES, S9_FRAMES, S10_FRAMES, VSL_FPS_2,
@@ -846,6 +848,39 @@ export const RemotionRoot: React.FC = () => {
         component={S4Build}
         durationInFrames={S4_FRAMES}
         fps={S4_FPS}
+        width={1920}
+        height={1080}
+      />
+      {/* 촬영본 없는 두 씬 — 화면을 만든다 */}
+      <Composition
+        id="VSL-S5-0-Intro"
+        component={S5_0Scene}
+        durationInFrames={S5_0_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="VSL-S5-12-Outro"
+        component={S5_12Scene}
+        durationInFrames={S5_12_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="VSL-S5-3-Edit"
+        component={S5_3Edit}
+        durationInFrames={S5_3_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="VSL-S5-4to11-Edit"
+        component={S5_4to11Edit}
+        durationInFrames={S5_4to11_FRAMES}
+        fps={30}
         width={1920}
         height={1080}
       />
