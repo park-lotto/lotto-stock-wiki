@@ -25,6 +25,7 @@ import {
 } from './vsl/S5Overlay';
 import { S5_2_CUTS } from './vsl/S5_2';
 import { S5_0Scene, S5_0_FRAMES, S5_12Scene, S5_12_FRAMES } from './vsl/S5Ends';
+import { StyleCompare } from './vsl/StyleCompare';
 const S5_2Edit = makeOverlayScene('vsl/s5/edit_s5_2.mp4', S5_2_CUTS as any, S5_2_END_EDIT);
 import {
   S6_FRAMES, S7_FRAMES, S8_FRAMES, S9_FRAMES, S10_FRAMES, VSL_FPS_2,
@@ -848,6 +849,14 @@ export const RemotionRoot: React.FC = () => {
         component={S4Build}
         durationInFrames={S4_FRAMES}
         fps={S4_FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="VSL-StyleCompare"
+        component={StyleCompare}
+        durationInFrames={90}
+        fps={30}
         width={1920}
         height={1080}
       />

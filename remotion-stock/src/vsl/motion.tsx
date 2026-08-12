@@ -291,9 +291,17 @@ export const KineticWord: React.FC<{
   text: string; sub?: string; size?: number; center?: boolean; perWord?: number;
   /** 강조 배경색 — S2 페인 구간은 RED를 넘겨 쓴다(색 규칙은 씬이 정한다) */
   accent?: string; hiText?: string; font?: string; pad?: number;
+  /** 강조 표현 방식 (2026-08-12 추가 — "투박하다"는 지적)
+   *   stamp     통짜 형광 박스. 세지만 넓게 쓰면 유치해진다 (기존)
+   *   underline 글자는 흰색 그대로, 밑에 두꺼운 형광 밑줄. 형광펜 그은 느낌
+   *   plate     반투명 짙은 판 + 얇은 형광 테두리, 글자는 형광색. 차분하고 고급 */
+  hi?: 'stamp' | 'underline' | 'plate';
+  /** 낱말 튐 강도 — calm이면 문장이 통째로 잔잔히 올라온다(데모 구간용) */
+  mode?: 'pop' | 'calm';
 }> = ({
   text, sub, size = 74, center = false, perWord = 1.6,
   accent = MINT, hiText = '#05130E', font = FONT, pad = 92,
+  hi = 'stamp', mode = 'pop',
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -314,24 +322,48 @@ export const KineticWord: React.FC<{
           }}>
             {line.map((g, gi) => {
               const start = wi; wi += g.words.length;
+              // calm: 강조가 아닌 문장은 낱말 스태거 없이 통째로 잔잔하게 올라온다
+              const calm = mode === 'calm' && !g.hi;
               const s = spring({
-                frame: frame - start * perWord, fps,
-                config: { damping: 12, stiffness: 220, mass: 0.4 },
+                frame: frame - (calm ? 0 : start * perWord), fps,
+                config: calm
+                  ? { damping: 24, stiffness: 110, mass: 0.9 }
+                  : { damping: 12, stiffness: 220, mass: 0.4 },
               });
-              const y = interpolate(s, [0, 1], [34, 0]);
-              const sc = interpolate(s, [0, 1], [0.82, 1]);
+              const y = interpolate(s, [0, 1], [calm ? 12 : 34, 0]);
+              const sc = interpolate(s, [0, 1], [calm ? 1 : 0.82, 1]);
+              // 강조 표현 3종
+              const hiStyle: React.CSSProperties =
+                !g.hi ? {}
+                : hi === 'underline' ? {
+                    color: '#fff',
+                    boxShadow: `inset 0 -0.30em 0 0 ${accent}cc`,
+                    padding: '0 6px', borderRadius: 4,
+                    textShadow: '0 3px 12px rgba(0,0,0,0.9)',
+                  }
+                : hi === 'plate' ? {
+                    color: accent,
+                    background: 'rgba(4,12,10,0.72)',
+                    border: `2px solid ${accent}99`,
+                    padding: '2px 16px', borderRadius: 12,
+                    textShadow: `0 0 18px ${accent}55`,
+                  }
+                : {
+                    color: hiText, background: accent,
+                    padding: '2px 16px', borderRadius: 12,
+                    boxShadow: `0 0 38px ${accent}66`,
+                    textShadow: 'none',
+                  };
               const box = (
                 <span key={gi} style={{
                   display: 'inline-flex', gap: 14, whiteSpace: 'nowrap',
                   transform: `translateY(${y}px) scale(${sc})`, opacity: s,
                   fontFamily: font, fontWeight: 900, fontSize: size, lineHeight: 1.24,
-                  color: g.hi ? hiText : '#fff',
-                  background: g.hi ? accent : undefined,
-                  padding: g.hi ? '2px 16px' : undefined,
-                  borderRadius: g.hi ? 12 : undefined,
-                  boxShadow: g.hi ? `0 0 38px ${accent}66` : undefined,
-                  textShadow: g.hi ? 'none' : '0 8px 32px rgba(0,0,0,0.8)',
+                  color: '#fff',
+                  // 그라데이션 금지라 가독성은 그림자 다층으로만 잡는다
+                  textShadow: '0 3px 10px rgba(0,0,0,0.95), 0 8px 30px rgba(0,0,0,0.85)',
                   wordBreak: 'keep-all',
+                  ...hiStyle,
                 }}>{g.words.join(' ')}</span>
               );
               return g.tail ? (

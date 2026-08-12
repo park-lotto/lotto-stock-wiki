@@ -22,7 +22,7 @@ import {
 import { RED } from './motion2';
 import { BUILD } from './motion3';
 import {
-  Aura, DailyStream, Roadmap, WhoList, PriceReveal, PriceVersus,
+  Aura, DailyStream, Roadmap, WhoList, PriceReveal,
   CtaCards, PointDown, PriceBadge, SeatsShrink, RichBed,
 } from './motion4';
 
@@ -35,7 +35,6 @@ type Body =
   | { m: 'road'; appearAt: number[] }
   | { m: 'who'; lines: string[]; appearAt: number[] }
   | { m: 'price'; price: string; label: string; after?: string }
-  | { m: 'versus' }
   | { m: 'cta'; appearAt: number[] }
   | { m: 'point'; label?: string }
   | { m: 'seats' }
@@ -223,15 +222,19 @@ const Bed: React.FC<{ cut: Cut2; def?: 'rich' | 'aura' | 'insta'; graphic?: bool
 };
 
 /* ── 렌더러 ─────────────────────────────────────────────── */
-const CutView: React.FC<{ cut: Cut2; def?: 'rich' | 'aura' | 'insta'; centerAll?: boolean }> = ({
-  cut, def, centerAll,
+const CutView: React.FC<{
+  cut: Cut2; def?: 'rich' | 'aura' | 'insta'; centerAll?: boolean;
+  /** 씬 안에서 이 컷이 시작하는 프레임 / 씬 전체 프레임 — 진행바가 컷마다 리셋되던 버그 수정 */
+  baseFrame?: number; sceneFrames?: number;
+}> = ({
+  cut, def, centerAll, baseFrame = 0, sceneFrames,
 }) => {
   const { scale, flash } = useKick();
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
 
   // 가운데에 그래픽이 있는 컷 — 여기에 가운데 자막을 얹으면 겹친다(S7 12초 실측)
-  const graphic = ['daily', 'road', 'who', 'cta', 'point', 'seats', 'versus', 'stat'].includes(cut.m);
+  const graphic = ['daily', 'road', 'who', 'cta', 'point', 'seats', 'stat'].includes(cut.m);
 
   let body: React.ReactNode = null;
   switch (cut.m) {
@@ -241,7 +244,7 @@ const CutView: React.FC<{ cut: Cut2; def?: 'rich' | 'aura' | 'insta'; centerAll?
     case 'road': body = <><Bed cut={cut} def={def} graphic={graphic} /><Roadmap items={ROAD} appearAt={cut.appearAt} /></>; break;
     case 'who': body = <><Bed cut={cut} def={def} graphic={graphic} /><WhoList lines={cut.lines} appearAt={cut.appearAt} /></>; break;
     case 'price': body = <PriceReveal price={cut.price} label={cut.label} after={cut.after} />; break;
-    case 'versus': body = <><Aura strength={0.06} /><PriceVersus /></>; break;
+    // 'versus' 삭제 — 옛 가격이 박힌 컴포넌트였다(2026-08-12)
     case 'cta': body = <><Bed cut={cut} def={def} graphic={graphic} /><CtaCards appearAt={cut.appearAt} /></>; break;
     case 'point': body = <><Bed cut={cut} def={def} graphic={graphic} /><PointDown label={cut.label} /></>; break;
     case 'seats': body = <><Bed cut={cut} def={def} graphic={graphic} /><SeatsShrink /></>; break;
@@ -253,23 +256,12 @@ const CutView: React.FC<{ cut: Cut2; def?: 'rich' | 'aura' | 'insta'; centerAll?
   return (
     <AbsoluteFill style={{ background: BG }}>
       <AbsoluteFill style={{ transform: `scale(${scale})` }}>{body}</AbsoluteFill>
-      {centered && cut.m !== 'price' && cut.text ? (
-        // 가운데 자막용 보호막 — 글자 뒤만 눌러 배경은 살리고 가독성은 지킨다
-        <AbsoluteFill style={{
-          background: 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.66) 0%, rgba(0,0,0,0.22) 46%, rgba(0,0,0,0) 68%)',
-          pointerEvents: 'none',
-        }} />
-      ) : null}
-      {!centered && cut.m !== 'price' && (
-        <AbsoluteFill style={{
-          background: 'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0) 30%)',
-          pointerEvents: 'none',
-        }} />
-      )}
+      {/* ★그라데이션 스크림 2종 제거(2026-08-12) — 확정 제약 "그라데이션 금지".
+         S5에선 걷어냈는데 후반 5씬에 남아 있었다. 가독성은 글자 그림자로만 잡는다. */}
       {cut.text ? <KineticWord text={cut.text} center={centered} size={cut.big ? 88 : 64} /> : null}
       {cut.badge ? <PriceBadge /> : null}
       <Flash v={flash * 0.7} />
-      <ProgressBar p={frame / durationInFrames} />
+      <ProgressBar p={(baseFrame + frame) / (sceneFrames ?? durationInFrames)} />
       {(cut.sfx ?? []).map((s, i) => (
         <Sequence key={i} from={Math.round(s.at * VSL_FPS_2)} layout="none">
           <Audio src={staticFile(`vsl/sfx/${s.n}`)} volume={s.v ?? 0.3} />
@@ -282,6 +274,7 @@ const CutView: React.FC<{ cut: Cut2; def?: 'rich' | 'aura' | 'insta'; centerAll?
 const makeScene = (
   cuts: Cut2[], audio: string, def?: 'rich' | 'aura' | 'insta', centerAll?: boolean,
 ): React.FC => () => {
+  const sceneFrames = Math.round(cuts.reduce((a, c) => a + c.d, 0) * VSL_FPS_2);
   let at = 0;
   return (
     <AbsoluteFill style={{ background: BG }}>
@@ -291,7 +284,8 @@ const makeScene = (
         at += cut.d;
         return (
           <Sequence key={i} from={from} durationInFrames={Math.round(cut.d * VSL_FPS_2)}>
-            <CutView cut={cut} def={def} centerAll={centerAll} />
+            <CutView cut={cut} def={def} centerAll={centerAll}
+              baseFrame={from} sceneFrames={sceneFrames} />
           </Sequence>
         );
       })}

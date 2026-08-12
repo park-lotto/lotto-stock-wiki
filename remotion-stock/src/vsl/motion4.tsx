@@ -201,68 +201,14 @@ export const WhoList: React.FC<{ lines: string[]; appearAt: number[] }> = ({ lin
   );
 };
 
-/* ── S8-B: 외주 비용 계산기 ★S8의 승부처 ─────────────────────
-   말로 하면 흘러가는 숫자를, 계산 과정으로 보여준다:
-   3만원 × 하루 1개 × 30일 = 90만원 / 매달. 마지막에 '매달'이 붉게 반복 강조된다. */
-export const CostCalc: React.FC<{ showAt: number[] }> = ({ showAt }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const rows = [
-    { k: '쇼츠 편집 외주', v: '한 편 3만 원', note: '(자막 포함 시 5~10만 원)' },
-    { k: '하루 한 편만', v: '× 30일' },
-    { k: '한 달', v: '90만 원' },
-  ];
-  const finalAt = Math.round((showAt[3] ?? 3.4) * fps);
-  const fp = frame >= finalAt ? spring({ frame: frame - finalAt, fps, config: { damping: 10, stiffness: 240 } }) : 0;
-  return (
-    <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ width: 1280 }}>
-        {rows.map((r, i) => {
-          const at = Math.round((showAt[i] ?? i * 1.1) * fps);
-          const on = frame >= at;
-          const p = on ? spring({ frame: frame - at, fps, config: { damping: 15, stiffness: 200 } }) : 0;
-          const last = i === rows.length - 1;
-          return (
-            <div key={i} style={{
-              display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
-              padding: last ? '22px 4px 10px' : '14px 4px',
-              borderTop: last ? `2px solid ${RED}66` : undefined,
-              marginTop: last ? 18 : 0,
-              opacity: p, transform: `translateY(${interpolate(p, [0, 1], [22, 0])}px)`,
-            }}>
-              <div style={{ fontFamily: FONT, fontWeight: 800, fontSize: last ? 52 : 40, color: last ? '#fff' : '#ffffffbb' }}>
-                {r.k}
-                {r.note ? <span style={{ fontSize: 26, color: '#ffffff66', marginLeft: 12 }}>{r.note}</span> : null}
-              </div>
-              <div style={{
-                fontFamily: "'Space Mono',monospace", fontWeight: 700,
-                fontSize: last ? 82 : 44, color: last ? RED : '#ffffffdd',
-                textShadow: last ? `0 0 40px ${RED}44` : undefined,
-              }}>{r.v}</div>
-            </div>
-          );
-        })}
-        {/* '매달 나가는 돈' — 여기가 이 그래픽의 핵심 한 방 */}
-        <div style={{
-          marginTop: 26, textAlign: 'right',
-          opacity: fp, transform: `scale(${interpolate(fp, [0, 1], [1.25, 1])})`,
-        }}>
-          <span style={{
-            fontFamily: FONT, fontWeight: 900, fontSize: 56, color: '#160404',
-            background: RED, padding: '6px 22px', borderRadius: 12,
-            boxShadow: `0 0 46px ${RED}55`,
-          }}>그것도 매달</span>
-        </div>
-      </div>
-    </AbsoluteFill>
-  );
-};
+/* ★삭제(2026-08-12): CostCalc(외주 3만×30일=90만) — 녹음에 없는 구간이라 안 쓰는데
+   옛 숫자만 코드에 남아 있었다. 죽은 코드에 든 가격은 언젠가 화면에 나간다. */
 
 /* ── S8-C: 가격 공개 ★장식 금지 ────────────────────────────
    숫자만 크게, 배경은 거의 검정. 등장은 느리게(스프링 damping 높게) — 튀어오르면 싸구려가 된다. */
 export const PriceReveal: React.FC<{
-  price?: string; label?: string; after?: string;
-}> = ({ price = '99만 원', label = '평생 소장', after }) => {
+  price: string; label: string; after?: string;   // ★선택 아님 — 안 넘기면 컴파일이 막는다
+}> = ({ price, label, after }) => {   // ★기본값 없음 — 가격은 넘겨받은 것만 쓴다
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const p = spring({ frame, fps, config: { damping: 26, stiffness: 70, mass: 1.2 } });
@@ -290,41 +236,10 @@ export const PriceReveal: React.FC<{
   );
 };
 
-/* 가격 대조 — 왼쪽 붉은(외주, 매달) vs 오른쪽 민트(평생 1회) */
-export const PriceVersus: React.FC<{ rightAt?: number }> = ({ rightAt = 1.2 }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const l = spring({ frame, fps, config: { damping: 16, stiffness: 150 } });
-  const rAt = Math.round(rightAt * fps);
-  const r = frame >= rAt ? spring({ frame: frame - rAt, fps, config: { damping: 12, stiffness: 190 } }) : 0;
-  const Card: React.FC<{ t: string; big: string; sub: string; tone: string; p: number; dim?: boolean }> = ({
-    t, big, sub, tone, p, dim,
-  }) => (
-    <div style={{
-      width: 700, padding: '46px 40px', borderRadius: 24, textAlign: 'center',
-      background: dim ? 'rgba(255,90,77,0.07)' : 'rgba(61,240,178,0.10)',
-      border: `2px solid ${tone}55`,
-      transform: `translateY(${interpolate(p, [0, 1], [50, 0])}px) scale(${interpolate(p, [0, 1], [0.94, 1])})`,
-      opacity: p, boxShadow: dim ? undefined : `0 0 60px ${tone}22`,
-    }}>
-      <div style={{ fontFamily: FONT, fontWeight: 800, fontSize: 34, color: '#ffffffaa' }}>{t}</div>
-      <div style={{
-        fontFamily: FONT, fontWeight: 900, fontSize: 108, color: tone, margin: '10px 0 6px',
-        textShadow: `0 0 50px ${tone}44`,
-      }}>{big}</div>
-      <div style={{ fontFamily: FONT, fontWeight: 800, fontSize: 32, color: '#fff' }}>{sub}</div>
-    </div>
-  );
-  return (
-    <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ display: 'flex', gap: 40, alignItems: 'center' }}>
-        <Card t="편집 외주" big="90만 원" sub="매달 · 계속" tone={RED} p={l} dim />
-        <div style={{ fontFamily: FONT, fontWeight: 900, fontSize: 60, color: '#ffffff33' }}>vs</div>
-        <Card t="숏템메이커" big="99만 원" sub="평생 · 한 번" tone={MINT} p={r} />
-      </div>
-    </AbsoluteFill>
-  );
-};
+/* ★삭제(2026-08-12): PriceVersus — "90만 원 매달 / 99만 원 평생"이 박혀 있었다.
+   실제 녹음은 "1기에서만 1년 77만 원". 안 쓰는 컴포넌트였지만 CutView 스위치에
+   'versus'가 살아 있어, 컷 하나만 잘못 쓰면 음성과 다른 가격이 나갈 뻔했다.
+   가격은 PRICE_LABEL/PRICE_VALUE 상수 한 곳에서만 온다. */
 
 /* ── S10: CTA 카드 — 행동 두 개를 번호로 못 박는다 ──────────── */
 export const CtaCards: React.FC<{ appearAt: number[] }> = ({ appearAt }) => {
