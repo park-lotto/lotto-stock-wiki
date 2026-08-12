@@ -1,12 +1,11 @@
 @echo off
-REM ìœ íŠœë¸Œ ë¦´ë ˆì´ ì—ì´ì „íŠ¸ â€” PC ì£¼ê±°ìš© IPë¡œ ìœ íŠœë¸Œë¥¼ ë°›ì•„ ì„œë²„ì— ì˜¬ë¦°ë‹¤.
-REM ì„œë²„ëŠ” YT_RELAY_ENABLED=1 / YTDLP_PROXY ë¹„ì›€ ìƒíƒœì—¬ì•¼ ì´ ê²½ë¡œë¥¼ íƒ„ë‹¤(2026-08-11).
-REM ì´ ì°½ì„ ë‹«ìœ¼ë©´ ì œìž‘ì†Œì˜ ìœ íŠœë¸Œ ì†Œìž¬ ë‹¤ìš´ë¡œë“œê°€ ë©ˆì¶˜ë‹¤.
+REM À¯Æ©ºê ¸±·¹ÀÌ ¿¡ÀÌÀüÆ® - PC ÁÖ°Å¿ë IP·Î À¯Æ©ºê¸¦ ¹Þ¾Æ ¼­¹ö¿¡ ¿Ã¸°´Ù(2026-08-11).
+REM ¼­¹ö´Â YT_RELAY_ENABLED=1 / YTDLP_PROXY ºñ¿ò »óÅÂ¿©¾ß ÀÌ °æ·Î¸¦ Åº´Ù.
 cd /d "%~dp0.."
-set YT_RELAY_SERVER=https://shoppingshorts.duckdns.org
-set YT_RELAY_KEY=eAiqvdZ27K121kvDT0zhZ0o-tda5a6Nm
+set "YT_RELAY_SERVER=https://shoppingshorts.duckdns.org"
+set "YT_RELAY_KEY=eAiqvdZ27K121kvDT0zhZ0o-tda5a6Nm"
 :loop
-py -m shopping_shorts.youtube_relay_agent
-echo [relay] ì¢…ë£Œë¨ - 10ì´ˆ ë’¤ ìž¬ì‹œìž‘
+py -m shopping_shorts.youtube_relay_agent >> "%TEMP%\yt_relay.log" 2>&1
+echo [relay] exited - restart in 10s >> "%TEMP%\yt_relay.log"
 timeout /t 10 /nobreak >nul
 goto loop
