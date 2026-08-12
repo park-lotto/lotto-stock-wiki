@@ -86,7 +86,8 @@ export const GridBloom: React.FC<{ clips: Clip[]; cols?: number; stagger?: numbe
   const { fps, durationInFrames } = useVideoConfig();
   const rows = Math.ceil(clips.length / cols);
   const gap = 16;
-  const cellH = Math.floor((1080 - gap * (rows + 1)) / rows);
+  // 세로 캔버스에서도 격자가 화면 안에 들어오도록 실제 높이로 나눈다
+  const cellH = Math.floor((useVideoConfig().height - gap * (rows + 1)) / rows);
   const cellW = Math.floor(cellH * 9 / 16);
   // 격자 전체가 아주 천천히 밀려 올라간다 — 정지 화면이 아니라 '흐르는 생산 라인'
   const rise = interpolate(frame, [0, durationInFrames], [12, -12]);
@@ -153,7 +154,10 @@ export const SliceWipe: React.FC<{
   children: React.ReactNode; slices?: number; durFrames?: number; from?: 'top' | 'bottom';
 }> = ({ children, slices = 5, durFrames = 12, from = 'top' }) => {
   const frame = useCurrentFrame();
-  const w = 1920 / slices;
+  // ★캔버스 크기를 박아두면 안 된다 — 세로(1080×1920)에서 커버 조각이 화면 아래
+  //   절반에 그대로 남아 영상을 가렸다(사장님 제보 19초·50초, 실측 확인).
+  const { width: CW, height: CH } = useVideoConfig();
+  const w = CW / slices;
   return (
     <AbsoluteFill>
       {children}
@@ -163,10 +167,10 @@ export const SliceWipe: React.FC<{
           extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
           easing: Easing.bezier(0.76, 0, 0.24, 1),
         });
-        const y = (from === 'top' ? -1 : 1) * p * 1080;
+        const y = (from === 'top' ? -1 : 1) * p * CH;
         return (
           <div key={i} style={{
-            position: 'absolute', left: i * w, top: 0, width: w + 1, height: 1080,
+            position: 'absolute', left: i * w, top: 0, width: w + 1, height: CH,
             background: i % 2 ? BG : '#0C1A15', transform: `translateY(${y}px)`,
           }} />
         );
@@ -257,12 +261,27 @@ const tokenize = (text: string): WordGroup[] => {
    혼자 떨어진다("… 댓글이 많은 / 순입니다." 사장님 캡처). 그래서 **줄을 직접 나눈다**:
    전체 폭을 줄 수로 나눈 목표치를 넘어가면 다음 줄로 넘긴다.
    한글은 글자폭이 거의 균일해서 글자수로 재도 눈에 맞는다(강조는 박스 여백 +2자). */
-const MAX_W = 1560;
+/* ★폭을 상수로 박지 마라 — 세로(1080×1920) 쇼츠에서 글자가 화면 밖으로 나간다.
+   가로 1920 기준 1560 = 화면의 81%. 그 비율을 실제 캔버스 폭에 적용한다. */
+const WRAP_RATIO = 1560 / 1920;
+const wrapWidth = (canvasW: number) => Math.round(canvasW * WRAP_RATIO);
 
-const layoutLines = (groups: WordGroup[], size: number): WordGroup[][] => {
+const layoutLines = (groups0: WordGroup[], size: number, maxW: number): WordGroup[][] => {
   const cost = (g: WordGroup) => g.words.join(' ').length + (g.tail?.length ?? 0) + (g.hi ? 2 : 0) + 0.6;
+  const perLine = Math.max(6, Math.floor(maxW / (size * 0.98)));
+
+  /* ★한 덩어리가 한 줄보다 길면 쪼갠다 — 강조는 통째로 다니는 게 원칙이지만
+     그게 줄 폭을 넘으면 nowrap이라 화면 밖으로 나간다(세로 1080에서 실측).
+     원칙보다 "글자가 보이는 것"이 먼저다. */
+  const groups: WordGroup[] = [];
+  groups0.forEach((g) => {
+    if (cost(g) <= perLine || g.words.length < 2) { groups.push(g); return; }
+    g.words.forEach((w, i) => groups.push({
+      words: [w], hi: g.hi, tail: i === g.words.length - 1 ? g.tail : undefined,
+    }));
+  });
+
   const total = groups.reduce((a, g) => a + cost(g), 0);
-  const perLine = Math.max(6, Math.floor(MAX_W / (size * 0.98)));
   const lineCount = Math.max(1, Math.ceil(total / perLine));
   if (lineCount === 1) return [groups];
   const target = total / lineCount;
@@ -304,9 +323,10 @@ export const KineticWord: React.FC<{
   hi = 'stamp', mode = 'pop',
 }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, width } = useVideoConfig();
+  const MAX_W = wrapWidth(width);
   const groups = tokenize(text);
-  const lines = layoutLines(groups, size);
+  const lines = layoutLines(groups, size, MAX_W);
   let wi = 0; // 등장 순서는 낱말 기준(강조 덩어리도 안에서 차례로 뜬다)
   return (
     <AbsoluteFill style={{

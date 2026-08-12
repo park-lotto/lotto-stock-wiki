@@ -183,7 +183,7 @@ const CutView: React.FC<{ cut: Cut; idx: number }> = ({ cut, idx }) => {
         }} />
       )}
       {cut.text ? (
-        <KineticWord text={cut.text} sub={cut.sub} center={centered}
+        <KineticWord hi="underline" text={cut.text} sub={cut.sub} center={centered}
           size={cut.big ? 92 : 74} />
       ) : null}
       <Flash v={flash} />

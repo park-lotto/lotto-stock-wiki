@@ -258,7 +258,7 @@ const CutView: React.FC<{
       <AbsoluteFill style={{ transform: `scale(${scale})` }}>{body}</AbsoluteFill>
       {/* ★그라데이션 스크림 2종 제거(2026-08-12) — 확정 제약 "그라데이션 금지".
          S5에선 걷어냈는데 후반 5씬에 남아 있었다. 가독성은 글자 그림자로만 잡는다. */}
-      {cut.text ? <KineticWord text={cut.text} center={centered} size={cut.big ? 88 : 64} /> : null}
+      {cut.text ? <KineticWord text={cut.text} center={centered} size={cut.big ? 88 : 64} hi="underline" /> : null}
       {cut.badge ? <PriceBadge /> : null}
       <Flash v={flash * 0.7} />
       <ProgressBar p={(baseFrame + frame) / (sceneFrames ?? durationInFrames)} />

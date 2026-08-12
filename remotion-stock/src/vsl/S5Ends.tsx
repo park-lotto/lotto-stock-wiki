@@ -35,7 +35,7 @@ type ECut = {
 const Body: React.FC<{ cut: ECut }> = ({ cut }) => (
   <AbsoluteFill style={{ background: BG }}>
     {cut.bg === 'black' ? <BlackCard /> : <RichBed kind={cut.bg} />}
-    <KineticWord text={cut.text} center size={cut.big ? 82 : 62} perWord={1.4} />
+    <KineticWord text={cut.text} center size={cut.big ? 82 : 62} perWord={1.4} hi="underline" />
     {(cut.sfx ?? []).map((s, i) => (
       <Sequence key={i} from={Math.round(s.at * S5E_FPS)} layout="none">
         <Audio src={staticFile(`vsl/sfx/${s.n}`)} volume={s.v ?? 0.28} />

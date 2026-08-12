@@ -129,7 +129,7 @@ const CutView: React.FC<{ cut: Cut; idx: number }> = ({ cut, idx }) => {
         }} />
       )}
       {cut.text ? (
-        <KineticWord text={cut.text} center={centered} size={cut.big ? 92 : 66} />
+        <KineticWord hi="underline" text={cut.text} center={centered} size={cut.big ? 92 : 66} />
       ) : null}
       <Flash v={flash} />
       <ProgressBar p={frame / durationInFrames} />

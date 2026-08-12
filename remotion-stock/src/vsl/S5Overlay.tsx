@@ -31,7 +31,7 @@ export type OCut = {
    (그림자는 그라데이션이 아니다). 화면 위에 남는 건 자막과 소리뿐이다. */
 const Overlay: React.FC<{ cut: OCut }> = ({ cut }) => (
   <AbsoluteFill>
-    <KineticWord text={cut.text} size={58} perWord={1.3} />
+    <KineticWord text={cut.text} size={58} perWord={1.3} hi="plate" mode="calm" />
     {(cut.sfx ?? []).map((s, i) => (
       <Sequence key={i} from={Math.round(s.at * S5_FPS_O)} layout="none">
         <Audio src={staticFile(`vsl/sfx/${s.n}`)} volume={s.v ?? 0.28} />

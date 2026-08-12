@@ -18,6 +18,7 @@ import {
   S6Proof, S7Expand, S8Offer, S9Challenge, S10Cta,
 } from './vsl/S6toS10';
 import { S5_2Demo, S5_2_FRAMES, S5_FPS } from './vsl/S5_2';
+import { ShortS5_2, SHORT_S5_2_FRAMES, ShortOutro, SHORT_OUTRO_FRAMES } from './vsl/Shorts';
 import { S5_2Capcut, S5_2CAPCUT_FRAMES } from './vsl/S5_2Capcut';
 import {
   S5_1Edit, S5_1_FRAMES, makeOverlayScene, S5_2_END_EDIT, S5_2_EDIT_FRAMES,
@@ -935,6 +936,43 @@ export const RemotionRoot: React.FC = () => {
         fps={VSL_FPS_2}
         width={1920}
         height={1080}
+      />
+      {/* 세로 쇼츠 — 배경이 세로(완성 쇼츠)라 그대로 9:16으로 렌더된다 */}
+      <Composition
+        id="VSL-Short-S1"
+        component={S1ColdOpen}
+        durationInFrames={S1_FRAMES}
+        fps={S1_FPS}
+        width={1080}
+        height={1920}
+      />
+      <Composition
+        id="VSL-Short-Outro"
+        component={ShortOutro}
+        durationInFrames={SHORT_OUTRO_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+      {/* 세로 쇼츠 — 가로 녹화본이라 위에 앉히고 아래를 자막 자리로 비운다 */}
+      <Composition
+        id="VSL-Short-S5-2"
+        component={ShortS5_2}
+        durationInFrames={SHORT_S5_2_FRAMES}
+        fps={S5_FPS}
+        width={1080}
+        height={1920}
+      />
+      {/* 세로 쇼츠 1호 — 같은 씬을 9:16으로만 다시 그린다(2026-08-12).
+          자막 줄바꿈은 캔버스 폭을 따라가므로(motion.tsx wrapWidth) 손댈 게 없다.
+          배경 insta 클립이 세로 원본이라 9:16에서 잘리지 않고 꽉 찬다. */}
+      <Composition
+        id="VSL-Short-S6"
+        component={S6Proof}
+        durationInFrames={S6_FRAMES}
+        fps={VSL_FPS_2}
+        width={1080}
+        height={1920}
       />
       <Composition
         id="VSL-S7-Expand"

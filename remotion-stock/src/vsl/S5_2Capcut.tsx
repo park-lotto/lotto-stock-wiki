@@ -81,7 +81,7 @@ const Overlay: React.FC<{ cut: typeof S5_2_CUTS[number] }> = ({ cut }) => (
       background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 15%, rgba(0,0,0,0) 32%)',
       pointerEvents: 'none',
     }} />
-    <KineticWord text={cut.text} size={58} perWord={1.3} />
+    <KineticWord text={cut.text} size={58} perWord={1.3} hi="plate" mode="calm" />
     {(cut.sfx ?? []).map((s, i) => (
       <Sequence key={i} from={Math.round(s.at * S5_FPS)} layout="none">
         <Audio src={staticFile(`vsl/sfx/${s.n}`)} volume={s.v ?? 0.28} />

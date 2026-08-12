@@ -42,10 +42,12 @@ export const Aura: React.FC<{ tone?: string; strength?: number }> = ({
    실제 날짜가 지나가면 확인 가능한 사실이 된다. */
 export const DailyStream: React.FC<{ items: { d: string; s: string }[] }> = ({ items }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, width } = useVideoConfig();
+  // ★폭 고정(1420) 금지 — 세로 1080 캔버스에서 목록이 화면 밖으로 밀려 날짜가 잘렸다(실측)
+  const w = Math.min(1420, Math.round(width * 0.88));
   return (
     <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ width: 1420, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ width: w, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {items.map((it, i) => {
           const p = spring({ frame: frame - i * 3.4, fps, config: { damping: 15, stiffness: 200 } });
           return (

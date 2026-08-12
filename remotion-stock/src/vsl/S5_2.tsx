@@ -140,7 +140,7 @@ const CutView: React.FC<{ cut: Cut }> = ({ cut }) => {
         background: 'linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.45) 14%, rgba(0,0,0,0) 30%)',
         pointerEvents: 'none',
       }} />
-      <KineticWord text={cut.text} size={58} perWord={1.4} />
+      <KineticWord text={cut.text} size={58} perWord={1.4} hi="plate" mode="calm" />
       <AbsoluteFill style={{ background: '#fff', opacity: flash, pointerEvents: 'none' }} />
       <ProgressBar p={frame / durationInFrames} />
       {(cut.sfx ?? []).map((s, i) => (
