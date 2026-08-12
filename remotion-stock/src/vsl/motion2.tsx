@@ -11,6 +11,7 @@ import {
   AbsoluteFill, Img, OffthreadVideo, interpolate, spring,
   staticFile, useCurrentFrame, useVideoConfig, Easing, Loop,
 } from 'remotion';
+import { KineticWord } from './motion';
 
 export const RED = '#FF5A4D';
 export const MINT2 = '#3DF0B2';
@@ -206,43 +207,16 @@ export const StillPan: React.FC<{ src: string; dir?: 1 | -1 }> = ({ src, dir = 1
 };
 
 /* 붉은 경고 자막 — S1의 KineticWord와 같은 문법이지만 색만 다르다 */
+/* ★S2 자막도 KineticWord 하나로 합쳤다 (2026-08-12).
+   전엔 같은 로직이 KineticWord·PainWord 두 벌이었다. 그래서 KineticWord만 고친
+   ①강조 덩어리 nowrap ②균형 줄바꿈 ③구두점 고아 방지가 S2엔 안 들어갔고,
+   실제로 사장님 캡처에서 |"자세한 건 무료강의에서."|가 두 줄로 쪼개졌다.
+   같은 판단은 한 곳에만 둔다 — 색·폰트만 넘긴다. */
 export const PainWord: React.FC<{
   text: string; size?: number; center?: boolean; perWord?: number; accent?: string;
-}> = ({ text, size = 76, center = false, perWord = 1.6, accent = RED }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const toks: { t: string; hi: boolean }[] = [];
-  text.split('|').forEach((chunk, ci) => {
-    chunk.split(/\s+/).filter(Boolean).forEach((w) => toks.push({ t: w, hi: ci % 2 === 1 }));
-  });
-  return (
-    <AbsoluteFill style={{
-      alignItems: 'center', justifyContent: center ? 'center' : 'flex-end',
-      paddingBottom: center ? 0 : 94, pointerEvents: 'none',
-    }}>
-      <div style={{
-        display: 'flex', flexWrap: 'wrap', gap: '0 16px',
-        justifyContent: 'center', maxWidth: 1640,
-      }}>
-        {toks.map((tk, i) => {
-          const s = spring({ frame: frame - i * perWord, fps, config: { damping: 12, stiffness: 220, mass: 0.4 } });
-          return (
-            <span key={i} style={{
-              display: 'inline-block',
-              transform: `translateY(${interpolate(s, [0, 1], [30, 0])}px) scale(${interpolate(s, [0, 1], [0.85, 1])})`,
-              opacity: s,
-              fontFamily: FONT2, fontWeight: 900, fontSize: size, lineHeight: 1.25,
-              color: tk.hi ? '#160404' : '#fff',
-              background: tk.hi ? accent : undefined,
-              padding: tk.hi ? '2px 14px' : undefined,
-              borderRadius: tk.hi ? 10 : undefined,
-              boxShadow: tk.hi ? `0 0 34px ${accent}55` : undefined,
-              textShadow: tk.hi ? 'none' : '0 8px 30px rgba(0,0,0,0.85)',
-              wordBreak: 'keep-all',
-            }}>{tk.t}</span>
-          );
-        })}
-      </div>
-    </AbsoluteFill>
-  );
-};
+}> = ({ text, size = 76, center = false, perWord = 1.6, accent = RED }) => (
+  <KineticWord
+    text={text} size={size} center={center} perWord={perWord}
+    accent={accent} hiText="#160404" font={FONT2} pad={94}
+  />
+);

@@ -289,7 +289,12 @@ const layoutLines = (groups: WordGroup[], size: number): WordGroup[][] => {
 
 export const KineticWord: React.FC<{
   text: string; sub?: string; size?: number; center?: boolean; perWord?: number;
-}> = ({ text, sub, size = 74, center = false, perWord = 1.6 }) => {
+  /** 강조 배경색 — S2 페인 구간은 RED를 넘겨 쓴다(색 규칙은 씬이 정한다) */
+  accent?: string; hiText?: string; font?: string; pad?: number;
+}> = ({
+  text, sub, size = 74, center = false, perWord = 1.6,
+  accent = MINT, hiText = '#05130E', font = FONT, pad = 92,
+}) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const groups = tokenize(text);
@@ -298,7 +303,7 @@ export const KineticWord: React.FC<{
   return (
     <AbsoluteFill style={{
       alignItems: 'center', justifyContent: center ? 'center' : 'flex-end',
-      paddingBottom: center ? 0 : 92, pointerEvents: 'none',
+      paddingBottom: center ? 0 : pad, pointerEvents: 'none',
     }}>
       <div style={{ maxWidth: MAX_W, textAlign: 'center' }}>
         {lines.map((line, li) => (
@@ -319,12 +324,12 @@ export const KineticWord: React.FC<{
                 <span key={gi} style={{
                   display: 'inline-flex', gap: 14, whiteSpace: 'nowrap',
                   transform: `translateY(${y}px) scale(${sc})`, opacity: s,
-                  fontFamily: FONT, fontWeight: 900, fontSize: size, lineHeight: 1.24,
-                  color: g.hi ? '#05130E' : '#fff',
-                  background: g.hi ? MINT : undefined,
+                  fontFamily: font, fontWeight: 900, fontSize: size, lineHeight: 1.24,
+                  color: g.hi ? hiText : '#fff',
+                  background: g.hi ? accent : undefined,
                   padding: g.hi ? '2px 16px' : undefined,
                   borderRadius: g.hi ? 12 : undefined,
-                  boxShadow: g.hi ? `0 0 38px ${MINT}66` : undefined,
+                  boxShadow: g.hi ? `0 0 38px ${accent}66` : undefined,
                   textShadow: g.hi ? 'none' : '0 8px 32px rgba(0,0,0,0.8)',
                   wordBreak: 'keep-all',
                 }}>{g.words.join(' ')}</span>
@@ -335,7 +340,7 @@ export const KineticWord: React.FC<{
                 }}>
                   {box}
                   <span style={{
-                    fontFamily: FONT, fontWeight: 900, fontSize: size, lineHeight: 1.24,
+                    fontFamily: font, fontWeight: 900, fontSize: size, lineHeight: 1.24,
                     color: '#fff', textShadow: '0 8px 32px rgba(0,0,0,0.8)',
                     transform: `translateY(${y}px) scale(${sc})`, opacity: s,
                   }}>{g.tail}</span>
