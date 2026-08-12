@@ -1,0 +1,574 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"> 
+ <html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:x="urn:schemas-microsoft-com:office:excel"
+xmlns="http://www.w3.org/TR/REC-html40">
+	<HEAD>
+		<title>리포트서머리</title>
+		<meta name="CODE_LANGUAGE" Content="C#">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<style type="text/css">
+			td { FONT: 11px '맑은 고딕'; COLOR: #333333; border-top:none;border-bottom:0.5pt solid rgb(209,209,209);}
+			br {mso-data-placement:same-cell;}
+			body { PADDING-RIGHT: 0px; PADDING-LEFT: 0px; PADDING-BOTTOM: 0px; MARGIN: 0px; FONT: 9pt '맑은 고딕'; PADDING-TOP: 0px }
+			form { PADDING-RIGHT: 0px; PADDING-LEFT: 0px; PADDING-BOTTOM: 0px; MARGIN: 0px; FONT: 9pt '맑은 고딕'; PADDING-TOP: 0px }
+			.title{font:bold 14pt 'HY견고딕';color:rgb(47,71,107)}
+			.hd { font: bold 9pt '맑은 고딕'; color: rgb(53,91,157); height: 30px; background-color: rgb(247,247,247); text-align: center;border-top:1px rgb(47,71,107) solid}
+			.strdeg{mso-width-source:userset;width:80px;height: 24px;text-align: left}
+			.pre_recomm{mso-width-source:userset;width:80px;height: 24px;text-align: left}
+			.recomm{width:80px;height: 24px;text-align: left}
+			.brk{mso-width-source:userset;width:110px;height: 24px;text-align: left}
+			.cmp,.ind{mso-width-source:userset;width:90px;height: 24px;text-align: left}
+			.strprc{mso-width-source:userset;width:60px;height: 24px;text-align: right}
+			.pre_targer_prc{mso-width-source:userset;width:60px;height: 24px;text-align: right}
+			.close_prc{mso-width-source:userset;width:80px;height: 24px;text-align: right}
+			.comment{width:500px;height: 49px;}
+			.comment2{width:450px;height: 49px;}
+			.rpt_title{width:275px;height:24px;text-align: left}
+			.img0{width:20px;height:30px;line-height:30px;font-size:11pt;font-family:'HY견고딕';font-weight:bold;color:rgb(101,102,102)}
+			.img1{width:20px;height:30px;line-height:30px;font-size:7pt;font-family:'맑은 고딕';color:rgb(254,1,10)}
+			.img2{width:20px;height:30px;line-height:30px;font-size:11pt;font-family:'맑은 고딕';font-weight:bold;color:rgb(14,152,15)}
+			.img3{width:20px;height:30px;line-height:30px;font-size:7pt;font-family:'맑은 고딕';color:rgb(52,101,254)}
+			.img4{width:20px;height:30px;line-height:30px;font-size:9pt;font-family:'맑은 고딕';font-weight:bold;color:rgb(254,1,10)}
+			@page
+	            {mso-header-data:"&R리포트서머리";
+	            mso-footer-data:"Page &P of &N";
+	            margin:.5in 0in .4in 0in;
+	            mso-header-margin:.31in;
+	            mso-footer-margin:.2in;
+	            mso-page-orientation:landscape;}
+		</style>
+    <!--[if gte mso 9]><xml>
+       <x:ExcelWorkbook>
+        <x:ExcelWorksheets>
+         <x:ExcelWorksheet>
+          <x:Name>WiseReport ReportSummary</x:Name>
+          <x:WorksheetOptions>
+            <x:FreezePanes/>
+            <x:FrozenNoSplit/>
+            <x:SplitHorizontal>5</x:SplitHorizontal>
+            <x:TopRowBottomPane>5</x:TopRowBottomPane>
+            <x:ActivePane>2</x:ActivePane>
+            <x:DoNotDisplayGridlines/>
+            <x:Print>
+                <x:PaperSizeIndex>9</x:PaperSizeIndex>
+                <x:Scale>90</x:Scale> 
+                <x:ValidPrinterInfo/>
+            </x:Print>
+          </x:WorksheetOptions>
+         </x:ExcelWorksheet>
+        </x:ExcelWorksheets>
+       </x:ExcelWorkbook>
+      </xml><![endif]-->
+	</HEAD>
+	<body bottomMargin="0" leftMargin="0" topMargin="0" rightMargin="0">
+         
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-C8B2QNTM16"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-C8B2QNTM16');
+</script>
+
+		<form method="post" action="./summaryexcel.aspx?cn=&amp;fmt=2&amp;ee=20260811&amp;sortCol=&amp;sortTyp=" id="Form1">
+<div class="aspNetHidden">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwULLTE5ODc1MjczMzhkZK1uVmb2cGLVvIQ+lHb37TlJRESJ" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['Form1'];
+if (!theForm) {
+    theForm = document.Form1;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<script src="/WebResource.axd?d=EnHdU53b5uA6lKGq8bLJgCXexEBiKJSTKiXq84RtXnNu7LDCmV1KxyTtwXgDEBhZaJdTNK9Rr5w1-1BOBKBccwQcrBs1&amp;t=638286403360000000" type="text/javascript"></script>
+
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="3E16E249" />
+	<input type="hidden" name="__SCROLLPOSITIONX" id="__SCROLLPOSITIONX" value="0" />
+	<input type="hidden" name="__SCROLLPOSITIONY" id="__SCROLLPOSITIONY" value="0" />
+	<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+	<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+</div>
+        <div id="ind_excel">
+                <table style="border-collapse:collapse;table-layout:fixed;mso-width-source:userset;width:1100px">
+                     <col style='mso-width-source:userset;width:90px'>
+                     <col style='mso-width-source:userset;width:90px'>                     
+                     <col style='mso-width-source:userset;width:25px'>
+                     <col style='mso-width-source:userset;width:80px'>
+                     <col style='mso-width-source:userset;width:90px'>
+					<col style='mso-width-source:userset;width:275px'>
+                     <col style='mso-width-source:userset;width:450px'>
+				    <tr>
+					    <td colspan="7" height="30" align="center" class="title">산업리포트 요약(2026.08.11)</td>
+				    </tr>
+                    <tr>
+                        <td class="hd">기관명/작성자</td>
+                        <td class="hd">산업명</td>                        
+                        <td class="hd" colspan="2">투자의견</td>
+                        <td class="hd">이전의견</td>
+						<td class="hd">제목</td>
+                        <td class="hd">요약</td>
+                    </tr>
+                    <tr>
+                        <td colspan="7" style="height: 1px;border-bottom:1px solid rgb(209,209,209)"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">유진투자증권</font><br/>황성현</td>
+                        <td class="ind"><font color="rgb(53,91,157)">화학</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">OPEC+ 증산보다 실제 공급이 중요</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 정유: WTI(-6.7%), 휘발유(-9.3%), 등유(-6.7%), 경유(-6.6%), 고유황중유(-1.1%)<br/><span class="comment_text">▶</span> 화학: 납사(-14.7%), LDPE(+4.2%), 벤젠(-3.7%), 부타디엔(+3.5%), 프로필렌(-2.9%)<br/><span class="comment_text">▶</span> 태양광: 알루미늄(+2.1%), 메탈실리콘(+0.3%), 모듈(+0.1%), 이 외 변화 없음<br/><span class="comment_text">▶</span> 협상 완료 이후 공급 과잉 규모 커질 듯</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>장재혁,김아현</td>
+                        <td class="ind"><font color="rgb(53,91,157)">철강</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">미국 케이블 관세 업데이트</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 미 상무부 BIS, Section 232 철강·알루미늄·구리 관세 대상에 14개 파생품목 추가하는 방안에 대한 의견수렴 공고<br/><span class="comment_text">▶</span> 관세 부담의 수출자/수입자 간 귀속과 가격전가율을 고려해야 하므로, ‘미국향 매출 익스포저 × 관세인상분’의 단순계산으로 손익 영향을 추정하기는 어려움<br/><span class="comment_text">▶</span> 케이블 산업에서도 미국 현지 생산능력을 확보한 업체와 해외 생산 후 미국으로 직접 수출하는 업체 간 관세 대응력의 차이가 점차 확대될 것으로 예상</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">DS투자증권</font><br/>강태호</td>
+                        <td class="ind"><font color="rgb(53,91,157)">우주항공과국방</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">DS Defense Daily</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">유안타증권</font><br/>백종민</td>
+                        <td class="ind"><font color="rgb(53,91,157)">우주항공과국방</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">한화에어로, KAI 지분 인수 관련 향후 경로 점검</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 한화에어로·KAI 기업결합 심사 절차 개시 예정<br/><span class="comment_text">▶</span> 불승인 가능성보다는 ‘조건부 승인’ or ‘간이 심사’ 유력 전망<br/><span class="comment_text">▶</span> 현시점 KAI 지분 관련 주요 이해관계자의 입장은?</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">한국투자증권</font><br/>장남현</td>
+                        <td class="ind"><font color="rgb(53,91,157)">우주항공과국방</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">비중확대</td>
+                        
+                        <td class="pre_recomm">비중확대</td>
+						<td class="rpt_title">한화 그룹 한국항공우주 지분 매입 영향 분석</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 한화-한국항공우주 사업 결합 시, 긍정적 효과 발생할 것으로 전망<br/><span class="comment_text">▶</span> 긍정적 효과 1) 완제기 및 우주 사업 확대 및 수익성 개선<br/><span class="comment_text">▶</span> 긍정적 효과 2) 플랫폼 확대를 통한 수출 경쟁력 증대</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">대신증권</font><br/>최정환</td>
+                        <td class="ind"><font color="rgb(53,91,157)">우주항공과국방</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">조달 방식의 변화 그리고 방위산업의 변곡점</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 여전히 유효한 투자포인트, 저렴해진 Valuation<br/><span class="comment_text">▶</span> 앙카라 나토 정상회담을 통해 논의된 공동조달 및 생산<br/><span class="comment_text">▶</span> 방위산업체 멀티플 리레이팅을 전망</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>김승준,하민호</td>
+                        <td class="ind"><font color="rgb(53,91,157)">건설</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">건설 Weekly: 주택마진이 보여준 실적, 부진한 주택지표</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">유진투자증권</font><br/>양승윤</td>
+                        <td class="ind"><font color="rgb(53,91,157)">기계</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">안녕하세요 데일리에요(로봇/방산/조선)</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>배기연,김현비</td>
+                        <td class="ind"><font color="rgb(53,91,157)">조선</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">항해일지</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">한국투자증권</font><br/>강경태,황현정</td>
+                        <td class="ind"><font color="rgb(53,91,157)">조선</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">비중확대</td>
+                        
+                        <td class="pre_recomm">비중확대</td>
+						<td class="rpt_title">HD현대중공업의 DC향 중속엔진 추가 수주 코멘트</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 엔진발전기세트 중 엔진 가격 비중 50% 초반대, ASP 변함없이 제품만 달라진 것<br/><span class="comment_text">▶</span> HD현대중공업 중속엔진 생산 능력은 2030년까지 모두 소진, 증설 시작될 것<br/><span class="comment_text">▶</span> 관계사 수주 및 증설에 더 밀접한 수혜는 HD현대마린솔루션, 초고마진 LTSA 매출액 증가세</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">NH투자증권</font><br/>정연승,이민재</td>
+                        <td class="ind"><font color="rgb(53,91,157)">조선</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">두 번째 데이터센터용 엔진 수주, 증설은 더 가까워졌다</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 1조원 규모의 데이터센터용 발전 엔진 추가 수주. 하반기 추가 수주 및 증설 전망<br/><span class="comment_text">▶</span> HD현대그룹의 데이터센터향 매출 확대의 시작</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">LS증권</font><br/>이재혁</td>
+                        <td class="ind"><font color="rgb(53,91,157)">항공사</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">’26.07 항공 수송 실적: Hot Summer</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 7월 인천공항 국제선 여객 수송실적 649 만명 (YoY + 5.3%) (vs ’19.07 105.0%)<br/><span class="comment_text">▶</span> 수요 강세와 비용 압박의 난기류 속 가격 전가력이 열쇠</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>안도현</td>
+                        <td class="ind"><font color="rgb(53,91,157)">운송인프라</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">7월 인천공항 수송실적: 2Q가 저점, 턴어라운드 기대</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 7월 인천공항 여객수송실적 652만명(+5% (YoY))<br/><span class="comment_text">▶</span> 7월 인천공항 화물수송실적 26.9만톤(+5% (YoY))<br/><span class="comment_text">▶</span> 외국인 인바운드 증가와 내국인 아웃바운드 감소</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">NH투자증권</font><br/>하늘</td>
+                        <td class="ind"><font color="rgb(53,91,157)">자동차</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">7월 중국 자동차 판매: 비수기와 무관한 전반적 수요 부진</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 7월 자동차 판매 비수기. 고유가 부담으로 전기차 선호 강화</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">교보증권</font><br/>김광식,최보영</td>
+                        <td class="ind"><font color="rgb(53,91,157)">자동차</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">2026년 8월 둘째 주 자동차/이차전지 Weekly</td>
+                        <td class="comment2"><span class="comment_text">▶</span> EU-US 무역협정: 7/1 발효 EU산 자동차 관세 27.5%→15% 인하, 포르쉐/메르세데스/BMW 수혜<br/><span class="comment_text">▶</span> 미국 7월 신차: SAAR 16.3M(YoY -1.4%) 예상치(16.7M) 하회, HEV M/S 19.6%(+2.9%p YoY)<br/><span class="comment_text">▶</span> 상반기 글로벌 ESS 출하량 461GWh, YoY +71% 증가. 점유율: LG엔솔 2.6%(+1.6%p), 삼성SDI 1.4%<br/><span class="comment_text">▶</span> 포스코퓨처엠 19만톤 LFP 양극재 공급 기사화되며 주가 반등. 삼원계 라인 전환 통해 1.5만톤 우선 대응</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>김준성,배현서</td>
+                        <td class="ind"><font color="rgb(53,91,157)">자동차</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">Mobility at a glance</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">삼성증권</font><br/>정동희</td>
+                        <td class="ind"><font color="rgb(53,91,157)">화장품</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">OVERWEIGHT</td>
+						<td class="rpt_title">화장품 수출 데이터북 - 2026년 8월 1~10일 잠정치</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">신한투자증권</font><br/>박현진,권채윤</td>
+                        <td class="ind"><font color="rgb(53,91,157)">화장품</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">비중확대</td>
+                        
+                        <td class="pre_recomm">비중확대</td>
+						<td class="rpt_title">8월 아마존 랭킹, 수출 점검</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 아마존 랭킹 견조, 3Q26도 기대되는 수출 수요<br/><span class="comment_text">▶</span> 2Q26 실적도 대부분 흥행 중<br/><span class="comment_text">▶</span> 8월 첫째 주까지 아마존 순위 변화 point: 에이피알 지속 부각</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">다올투자증권</font><br/>박종현</td>
+                        <td class="ind"><font color="rgb(53,91,157)">화장품</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">K-뷰티 Weekly</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>김정욱,황홍진</td>
+                        <td class="ind"><font color="rgb(53,91,157)">식품</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">F&B Morning Talk</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">한국투자증권</font><br/>최고운</td>
+                        <td class="ind"><font color="rgb(53,91,157)">식품</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">비중확대</td>
+                        
+                        <td class="pre_recomm">비중확대</td>
+						<td class="rpt_title">좋은 타이밍에 가격 인상</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 상반기 잘 버텼고 하반기 가격 인상 더해져 올해 실적은 턴어라운드<br/><span class="comment_text">▶</span> 전쟁 피해 피크를 찍고 방어주로 순환매 들어오는 타이밍에 가격 인상<br/><span class="comment_text">▶</span> 투자 판단의 기준은 결국 제품 경쟁력과 해외 모멘텀에 달려 있음</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">삼성증권</font><br/>서근희,정동희</td>
+                        <td class="ind"><font color="rgb(53,91,157)">건강관리업체및서비스</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">헬스케어 수출 데이터 weekly</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>조아해,공건희</td>
+                        <td class="ind"><font color="rgb(53,91,157)">은행</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">메리츠 Financial Daily</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">삼성증권</font><br/>이경자,홍주미</td>
+                        <td class="ind"><font color="rgb(53,91,157)">부동산</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">OVERWEIGHT</td>
+						<td class="rpt_title">대체투자 Weekly - 리츠, 공모채 발행 재개</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>김선우,우서현</td>
+                        <td class="ind"><font color="rgb(53,91,157)">IT서비스</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">Meritz Overnight Tech</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">한국투자증권</font><br/>김정찬</td>
+                        <td class="ind"><font color="rgb(53,91,157)">통신장비</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">비중확대</td>
+                        
+                        <td class="pre_recomm">비중확대</td>
+						<td class="rpt_title">광통신: 추가 상승을 예상하는 이유</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 광 밸류체인 가파른 상승 중 잠깐의 부침<br/><span class="comment_text">▶</span> 광학 부품의 병목 심화는 계속된다<br/><span class="comment_text">▶</span> 광 밸류체인 비중확대 및 RF머트리얼즈 매수 의견 유지</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>김홍식,이상훈</td>
+                        <td class="ind"><font color="rgb(53,91,157)">통신장비</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">스페이스X는 디시네트워크와는 급이 다릅니다</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 스페이스X의 지상파 시장 진출 가능성 고조, 결국 새로운 이통사로 부상 전망<br/><span class="comment_text">▶</span> 스페이스X가 매출처로 등장한다면 국내 무선통신장비 업종에는 큰 호재<br/><span class="comment_text">▶</span> 미국의 중국 규제 감안 시 국내 아웃소싱 무선통신장비 업체 큰 수혜 예상</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">메리츠증권</font><br/>양승수</td>
+                        <td class="ind"><font color="rgb(53,91,157)">전자장비와기기</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">Neutral</td>
+						<td class="rpt_title">7월 대만 IT 동향: 우려를 불식하는 실적의 기울기</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 대만 IT 업체들의 7월 합산 매출액은 AI향 수요 확대에 힘입어 전년 대비 높은 성장세를 지속<br/><span class="comment_text">▶</span> 특히 대만 주요 메모리 업체들의 7월 합산 매출액은 YoY 424.7% 증가하며 오히려 성장의 기울기가 한층 가팔라지는 모습<br/><span class="comment_text">▶</span> 대만 주요 MLCC 업체들은 AI를 포함한 전방위적인 수요 확대에 힘입어 역대 최고 수준의 매출을 기록</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">유안타증권</font><br/>고선영,임석민</td>
+                        <td class="ind"><font color="rgb(53,91,157)">전자장비와기기</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">Same But Differ (5): Never Give Up, 폭풍은 지나가고 마진은 남는다</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 1. 전기전자 현황 점검 - 우려 속 피어오른 희망<br/><span class="comment_text">▶</span> 2. 뚜렷한 성장 궤적 - 국내외 2Q26 실적시즌<br/><span class="comment_text">▶</span> 3. 국내 전기전자 투자전략 - 고부가 제품 익스포저 확대가 만든 격차</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">신한투자증권</font><br/>최승환,김형태,허성규,김유민,이병화,이채윤</td>
+                        <td class="ind"><font color="rgb(53,91,157)">반도체와반도체장비</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">비중확대</td>
+                        
+                        <td class="pre_recomm">비중확대</td>
+						<td class="rpt_title">반도체 중소형주, 타이밍이 됐다</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 시가총액 1조원 미만의 후공정 및 스페셜티 장비, 레거시 메모리, 공정 부품주 위험대비 보상 높음<br/><span class="comment_text">▶</span> 대형 IDM의 투자 사이클 속 전공정에서 후공정, 부품 등 온기 확산 확인<br/><span class="comment_text">▶</span> 1) 첨단 패키징과 기판 검사 2) HBM 메모리 수율 개선 3) 차세대 메모리 테스트</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">DB증권</font><br/>서승연,조현지</td>
+                        <td class="ind"><font color="rgb(53,91,157)">반도체와반도체장비</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">7월 대만 Tech 매출: 강한 수요, 제한적인 공급</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 7월 대만 주요 Tech 품목의 MoM 및 YoY 증감률<br/><span class="comment_text">▶</span> TSMC의 7월 매출액은 NT$4,676억(+6% MoM, +45% YoY)으로 사상 최대 월 매출을 기록<br/><span class="comment_text">▶</span> Nanya의 7월 매출액은 NT$439억(+49% MoM, +720% YoY)으로 사상 최대 월 매출을 기록</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">미래에셋증권</font><br/>김영건</td>
+                        <td class="ind"><font color="rgb(53,91,157)">반도체와반도체장비</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">비중확대</td>
+                        
+                        <td class="pre_recomm">비중확대</td>
+						<td class="rpt_title">데이터센터의 투자 여력 충분</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 빅테크의 투자 지속 가능성 우려는 과도<br/><span class="comment_text">▶</span> DRAM 위주의 메모리 초호황 지속 전망</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">다올투자증권</font><br/>임도영</td>
+                        <td class="ind"><font color="rgb(53,91,157)">방송과엔터테인먼트</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">7월 음반원 업데이트</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 7월 총 496.2만장(YoY+38.9%; 이하 YoY), 4사 합산 262.3만장(-53.3%) <br/><span class="comment_text">▶</span> 2Q에 집중됐던 주요 IP들의 활동이 마무리되며 공백기에 진입, 글로벌반 발매 컴백 IP 수MoM 감소(-3팀) 및 솔로/유닛 활동으로만 구성<br/><span class="comment_text">▶</span> 7월 엔터 4사 합산 월간 리스너 수는 3.0억명(YoY+11.2%, MoM-2.4%; 이하 MoM) 기록. 주요 IP들의 활동이 마무리되며 하이브 외 MoM 하락한 영향</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">NH투자증권</font><br/>강창엽,오세범</td>
+                        <td class="ind"><font color="rgb(53,91,157)">방송과엔터테인먼트</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">Positive</td>
+						<td class="rpt_title">e스포츠: 뉴 미디어 시대의 종합예술</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 스포츠팀, 유망 대체투자 자산으로 부각<br/><span class="comment_text">▶</span> e스포츠, 차세대 스포츠로 부상<br/><span class="comment_text">▶</span> e스포츠 Industry Highlight</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">IBK투자증권</font><br/>이승훈,박상준</td>
+                        <td class="ind"><font color="rgb(53,91,157)">양방향미디어와서비스</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">IBKS Daily [인터넷/게임]</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <!--tr style="height:5px; border:0px;">
+                        <td colspan="7" style="border-bottom:0px solid rgb(209,209,209)"></td>
+                    </tr-->
+				    <tr>
+                        <td colspan="7" style="height:96px;border-bottom:0px solid rgb(209,209,209)"><img alt="" src="https://www.wisereport.co.kr/wisereport/summary/images/excel_footer.png"/></td>
+				    </tr>
+			    </table>
+            </div>
+    
+
+<script type="text/javascript">
+//<![CDATA[
+
+theForm.oldSubmit = theForm.submit;
+theForm.submit = WebForm_SaveScrollPositionSubmit;
+
+theForm.oldOnSubmit = theForm.onsubmit;
+theForm.onsubmit = WebForm_SaveScrollPositionOnSubmit;
+//]]>
+</script>
+</form>
+	</body>
+</HTML>
+

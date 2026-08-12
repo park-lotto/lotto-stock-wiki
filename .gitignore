@@ -150,3 +150,7 @@ scripts/ig_sessions/
 # 인증 시크릿·사용자DB (2026-08-06 로그인게이트 v2)
 db/.session_secret
 db/users.db
+
+# API 키 백업 — 절대 커밋 금지(2026-08-12 푸시차단 사고)
+.env.bak*
+.env.backup*

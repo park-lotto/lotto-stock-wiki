@@ -1,0 +1,133 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "WisdomTree",
+      "signal": "bull",
+      "reason": "52주 신고가 기록",
+      "ts": "2026-08-03",
+      "quote": "WisdomTree, 52주 신고가 $21.24 기록",
+      "sector": "기타"
+    },
+    {
+      "name": "Simmons First National Corporation",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-03",
+      "quote": "Simmons First National Corporation 주식, 23.91달러로 52주 신고가 경신",
+      "sector": "기타"
+    },
+    {
+      "name": "프랭클린 리소시스",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-03",
+      "quote": "프랭클린 리소시스 주가, 34.95달러로 52주 신고가 경신",
+      "sector": "기타"
+    },
+    {
+      "name": "엔리븐 테라퓨틱스",
+      "signal": "bull",
+      "reason": "52주 신고가 기록",
+      "ts": "2026-08-03",
+      "quote": "엔리븐 테라퓨틱스 주가, 52주 신고가 $55.87 기록",
+      "sector": "바이오"
+    },
+    {
+      "name": "Ziff Davis",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-03",
+      "quote": "Ziff Davis 주식, 54.98달러로 52주 신고가 경신",
+      "sector": "IT"
+    },
+    {
+      "name": "다나오스",
+      "signal": "bull",
+      "reason": "52주 신고가 기록",
+      "ts": "2026-08-03",
+      "quote": "다나오스 주가, 52주 신고가 143.48달러 기록",
+      "sector": "기타"
+    },
+    {
+      "name": "ServisFirst 뱅크쉐어즈",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-03",
+      "quote": "ServisFirst 뱅크쉐어즈 주가 90.86달러로 52주 신고가 경신",
+      "sector": "기타"
+    },
+    {
+      "name": "CSW Industrials",
+      "signal": "bull",
+      "reason": "52주 신고가 기록",
+      "ts": "2026-08-03",
+      "quote": "CSW Industrials 주식, 52주 신고가 337.5달러 기록",
+      "sector": "기타"
+    },
+    {
+      "name": "Pinnacle Financial Partners",
+      "signal": "bull",
+      "reason": "52주 신고가 기록",
+      "ts": "2026-08-03",
+      "quote": "Pinnacle Financial Partners 주가 52주 신고가 기록 (107.22달러)",
+      "sector": "기타"
+    },
+    {
+      "name": "펄스 바이오사이언스",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-08-03",
+      "quote": "펄스 바이오사이언스 주가, 36.79달러로 52주 신고가 경신",
+      "sector": "바이오"
+    },
+    {
+      "name": "가던트 헬스",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-31",
+      "quote": "가던트 헬스 주가 52주 신고가 경신, 174.29달러 기록",
+      "sector": "바이오"
+    },
+    {
+      "name": "세이프티 인슈어런스 그룹",
+      "signal": "bull",
+      "reason": "52주 신고가 달성",
+      "ts": "2026-07-31",
+      "quote": "세이프티 인슈어런스 그룹 주가, 52주 신고가 $103.53 달성",
+      "sector": "기타"
+    },
+    {
+      "name": "Popular Inc",
+      "signal": "bull",
+      "reason": "52주 신고가 기록",
+      "ts": "2026-07-31",
+      "quote": "Popular Inc 주식, 52주 신고가 176.54달러 기록",
+      "sector": "기타"
+    },
+    {
+      "name": "덱스컴",
+      "signal": "bull",
+      "reason": "52주 신고가 기록",
+      "ts": "2026-07-31",
+      "quote": "덱스컴 주가, 52주 신고가 82.85달러 기록",
+      "sector": "바이오"
+    },
+    {
+      "name": "일루미나",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-30",
+      "quote": "일루미나 주가, 199.23 USD로 52주 신고가 경신",
+      "sector": "바이오"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "아마존, 1조 달러 AWS 비전으로 52주 신고가 돌파 가능성 주목",
+      "ts": "2026-08-03",
+      "quote": "“52주 신고가 뚫는다”···아마존, ‘1조 달러 AWS 비전’으로 돌파구 마련할까?"
+    }
+  ],
+  "quote": "8월 3일 기준 다수 종목 52주 신고가 경신 및 동향"
+}
