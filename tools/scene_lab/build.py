@@ -1,0 +1,407 @@
+# -*- coding: utf-8 -*-
+"""로컬 장면교체 실험 페이지 빌더 (v2 — 한 칸에 여러 장 편성).
+
+data.json(서버 실데이터) + thumbs/*.jpg 를 읽어 자립형 index.html을 만든다.
+file://에서 fetch가 막히므로 데이터는 HTML 안에 인라인으로 박는다.
+
+v2 변경: 비트를 '장면 목록(list)'으로 다룬다. 첫 항목이 primary, 나머지가 alternates.
+사람이 목록에 추가·삭제·순서변경을 직접 한다 — 사장님 손그림(한 칸에 화살표 여러 개).
+"""
+import json
+import sys
+from pathlib import Path
+
+# 인자로 잡 폴더를 받는다(fetch.py가 out/<job_id>를 넘긴다). 없으면 이 파일 옆(옛 방식).
+BASE = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else Path(__file__).parent
+data = json.loads((BASE / "data.json").read_text(encoding="utf-8"))
+
+html = """<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>장면교체 실험실 — 숏템메이커</title>
+<style>
+:root{
+  --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2b3140;
+  --ink:#e8ecf4; --dim:#98a2b8; --accent:#4da3ff; --good:#3ecf8e; --warn:#ffb44d; --bad:#ff6b6b;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+     font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;font-size:14px}
+header{padding:12px 18px;border-bottom:1px solid var(--line);display:flex;
+       align-items:center;gap:18px;flex-wrap:wrap;background:var(--panel)}
+h1{font-size:16px;margin:0;font-weight:700}
+.sub{color:var(--dim);font-size:12px}
+.modes{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.mode{padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);
+      color:var(--dim);cursor:pointer;font-size:12px;line-height:1.4;text-align:center}
+.mode.on{border-color:var(--accent);color:#fff;background:#1b2a3d}
+.wrap{display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 130px)}
+.pane{overflow-y:auto;padding:14px}
+.pane.left{border-right:1px solid var(--line);background:var(--panel)}
+.srcgroup{margin-bottom:18px}
+.srchead{font-size:12px;color:var(--dim);margin-bottom:8px;display:flex;justify-content:space-between}
+.thumbs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg{border:1px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;
+     background:var(--panel2);position:relative;transition:.12s}
+.seg:hover{border-color:var(--accent);transform:translateY(-2px)}
+.seg img{width:100%;display:block;aspect-ratio:9/16;object-fit:cover}
+.seg .meta{padding:5px 6px;font-size:10px;color:var(--dim);line-height:1.35}
+.seg .sid{color:var(--ink);font-weight:600}
+.seg .add{position:absolute;left:5px;top:5px;background:var(--accent);color:#fff;font-size:10px;
+     padding:2px 6px;border-radius:5px;opacity:0;transition:.12s}
+.seg:hover .add{opacity:1}
+.seg.inthis{border-color:var(--good);box-shadow:0 0 0 1px var(--good) inset}
+.seg.inthis::after{content:"이 칸에 있음";position:absolute;top:5px;right:5px;background:#000b;
+     color:var(--good);font-size:9px;padding:2px 5px;border-radius:4px}
+.beat{border:1px solid var(--line);border-radius:10px;margin-bottom:12px;background:var(--panel)}
+.beat.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.bhead{display:flex;align-items:center;gap:9px;padding:9px 12px;background:var(--panel2);
+       cursor:pointer;flex-wrap:wrap;border-radius:9px 9px 0 0}
+.role{font-weight:700;font-size:13px}
+.chip{font-size:10px;padding:2px 7px;border-radius:99px;border:1px solid var(--line);color:var(--dim)}
+.chip.bad{border-color:var(--bad);color:var(--bad)}
+.chip.good{border-color:var(--good);color:var(--good)}
+.chip.warn{border-color:var(--warn);color:var(--warn)}
+.narr{color:var(--dim);font-size:12px;flex:1 1 100%;line-height:1.5}
+.bbody{padding:10px 12px}
+.lbl{font-size:11px;color:var(--dim);margin:0 0 6px}
+.row{display:flex;gap:16px;flex-wrap:wrap}
+.col{flex:1 1 300px;min-width:260px}
+.list{display:flex;gap:6px;flex-wrap:wrap}
+.item{position:relative;width:64px;border:1px solid var(--line);border-radius:6px;overflow:hidden;
+      background:#000}
+.item img{width:100%;display:block;aspect-ratio:9/16;object-fit:cover}
+.item .n{position:absolute;left:3px;top:3px;background:#000c;color:#fff;font-size:9px;
+      padding:1px 4px;border-radius:3px}
+.item .ctl{display:flex;justify-content:space-between;padding:2px 3px;background:var(--panel2)}
+.item .ctl span{cursor:pointer;font-size:10px;color:var(--dim);padding:0 2px}
+.item .ctl span:hover{color:var(--ink)}
+.item .ctl .del:hover{color:var(--bad)}
+.item.first{border-color:var(--accent)}
+/* 담았지만 시간이 모자라 이 칸에서는 안 나오는 장면 — 오해 방지(2026-08-13 사장님 질문) */
+.item.unused{opacity:.35;filter:grayscale(1)}
+.item.unused::after{content:"안 나옴";position:absolute;left:0;right:0;top:38%;text-align:center;
+  font-size:9px;color:var(--warn);background:#000a;padding:2px 0}
+.strip{display:flex;gap:3px;overflow-x:auto;padding-bottom:5px}
+.cut{flex:0 0 auto;width:52px;border-radius:5px;overflow:hidden;border:1px solid var(--line);background:#000}
+.cut img{width:100%;display:block;aspect-ratio:9/16;object-fit:cover}
+.cut .t{font-size:9px;text-align:center;color:var(--dim);padding:1px 0}
+.cut.mine{border-color:var(--good)}
+.cut.mine .t{color:var(--good)}
+.cut.long{border-color:var(--warn)}
+.cut.long .t{color:var(--warn)}
+.empty{color:var(--bad);font-size:11px;padding:6px 0}
+footer{border-top:1px solid var(--line);padding:9px 18px;display:flex;gap:20px;
+       align-items:center;background:var(--panel);flex-wrap:wrap;font-size:12px}
+.kpi b{font-size:17px;color:var(--accent)}
+.kpi.warnv b{color:var(--warn)}
+.kpi.goodv b{color:var(--good)}
+.hint{color:var(--dim);font-size:11px}
+button.act{padding:5px 10px;border-radius:7px;border:1px solid var(--line);background:var(--panel2);
+      color:var(--ink);cursor:pointer;font-size:11px}
+button.act:hover{border-color:var(--accent)}
+.ord{display:flex;gap:3px;margin-left:auto}
+#player{position:fixed;right:16px;bottom:56px;width:210px;background:var(--panel);
+        border:1px solid var(--accent);border-radius:10px;padding:8px;z-index:50;display:none}
+#player.on{display:block}
+#player video{width:100%;border-radius:6px;background:#000;display:block;aspect-ratio:9/16;object-fit:contain}
+.phead{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-bottom:6px}
+.phead .x{cursor:pointer;color:var(--dim)}
+.phead .x:hover{color:var(--bad)}
+.pinfo{font-size:10px;color:var(--dim);margin-top:5px;line-height:1.4;min-height:26px}
+.play{position:absolute;left:5px;bottom:26px;background:#000b;color:#fff;font-size:11px;
+      padding:2px 7px;border-radius:5px;cursor:pointer;z-index:2}
+.play:hover{background:var(--accent)}
+.item .play{left:2px;bottom:20px;font-size:9px;padding:1px 5px}
+.cut{cursor:pointer}
+.cut:hover{border-color:var(--accent)}
+</style></head><body>
+
+<header>
+  <div>
+    <h1>장면교체 실험실 <span class="sub">— 로컬 전용 · 서버/라이브에 아무 영향 없음</span></h1>
+    <div class="sub" id="jobline"></div>
+  </div>
+  <div class="modes">
+    <div class="mode on" id="m-live" onclick="setMode('live')">① 지금 라이브<br><span class="sub">AI 후보 그대로</span></div>
+    <div class="mode" id="m-one" onclick="setMode('one')">② 한 장만<br><span class="sub">후보 다 지움</span></div>
+    <div class="mode" id="m-hand" onclick="setMode('hand')">③ 내가 편성<br><span class="sub">칸마다 직접 담기</span></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="pane left">
+    <div class="lbl" id="palhint"></div>
+    <div id="palette"></div>
+  </div>
+  <div class="pane right">
+    <div class="lbl">아래 <b>“실제 나올 화면”</b>이 렌더 결과입니다(렌더 알고리즘 이식) ·
+      <span style="color:var(--warn)">주황 = 2.5초 넘게 안 바뀌는 컷(늘어짐)</span></div>
+    <div id="film"></div>
+  </div>
+</div>
+
+<div id="player">
+  <div class="phead"><b>미리보기</b><span class="x" onclick="stopPlay()">닫기 ✕</span></div>
+  <video id="vid" muted playsinline></video>
+  <div class="pinfo" id="pinfo">장면의 ▶ 또는 칸의 “이 칸 재생”을 누르세요</div>
+</div>
+
+<footer>
+  <div class="kpi">총 컷 <b id="k-cuts">-</b></div>
+  <div class="kpi">평균 컷길이 <b id="k-avg">-</b>초</div>
+  <div class="kpi" id="k-long-wrap">늘어진 컷 <b id="k-long">-</b></div>
+  <div class="kpi" id="k-own-wrap">내가 고른 화면 <b id="k-own">-</b></div>
+  <button class="act" onclick="reset()">처음으로</button>
+  <div class="hint">초록 = 내가 고른 것 / ③번 모드에서 왼쪽 장면을 클릭하면 선택한 칸에 <b>추가</b>됩니다</div>
+</footer>
+
+<script>
+const DATA = __DATA__;
+const MAX_SHOT = 2.2, MIN_CLIP = 0.8, EPS = 1e-3, LONG_CUT = 2.5;
+
+let mode = 'live';
+let sel = 0;
+let lists = [];              // 비트별 장면 seg_id 목록(첫 항목이 primary)
+const chosen = new Set();    // 사람이 손으로 담은 seg_id
+
+function baseList(b){
+  return [b.primary, ...(b.alternates || [])].filter(Boolean).map(s => s.seg_id);
+}
+function initLists(){
+  lists = DATA.beats.map(b => {
+    const all = baseList(b);
+    if (mode === 'one') return all.slice(0, 1);
+    if (mode === 'hand') return all.slice(0, 1);   // 시작점 1장, 나머지는 사람이 담는다
+    return all;
+  });
+}
+
+// video_assemble._plan_beat_clips 이식(라운드로빈 + shortfall 1순위 근사)
+function planClips(segIds, ttsDur){
+  const segments = segIds.map(id => ({...DATA.segments[id], seg_id: id})).filter(s => s.start != null);
+  const clips = []; let filled = 0;
+  if (!segments.length) return clips;
+  if (segments.length > 1){
+    const pos = segments.map(s => s.start);
+    let oi = 0, guard = 0;
+    while (ttsDur - filled > EPS && guard++ < 2000){
+      let i = oi % segments.length; oi++;
+      let seg = segments[i];
+      const avail = seg.end - pos[i];
+      if (avail <= EPS){
+        if (segments.every((s,k) => s.end - pos[k] <= EPS)) break;
+        continue;
+      }
+      let take = Math.min(avail, MAX_SHOT, ttsDur - filled);
+      if (take < MIN_CLIP - EPS){
+        if (ttsDur - filled < MIN_CLIP - EPS) break;
+        const j = segments.findIndex((s,k) => s.end - pos[k] >= MIN_CLIP - EPS);
+        if (j < 0) break;
+        i = j; seg = segments[i];
+        take = Math.min(seg.end - pos[i], MAX_SHOT, ttsDur - filled);
+      }
+      clips.push({seg_id: seg.seg_id, video_id: seg.video_id, start: pos[i], dur: take});
+      pos[i] += take; filled += take;
+    }
+  } else {
+    const seg = segments[0];
+    const take = Math.min(seg.end - seg.start, ttsDur);
+    clips.push({seg_id: seg.seg_id, video_id: seg.video_id, start: seg.start, dur: take});
+    filled += take;
+  }
+  const short = ttsDur - filled;
+  if (short > EPS && clips.length) clips[clips.length - 1].dur += short;   // 그 장면이 계속 나온다
+  return clips;
+}
+
+function render(){
+  document.getElementById('jobline').textContent =
+    `job ${DATA.job_id} · 칸(멘트) ${DATA.beats.length}개 · 쓸 수 있는 장면 ${Object.keys(DATA.segments).length}개`;
+  document.getElementById('palhint').innerHTML = mode === 'hand'
+    ? '장면을 클릭하면 <b style="color:var(--accent)">선택한 칸에 담깁니다</b>(여러 장 가능)'
+    : '③ 내가 편성 모드에서 담을 수 있습니다';
+
+  // 팔레트
+  const byVid = {};
+  for (const [sid, s] of Object.entries(DATA.segments)) (byVid[s.video_id] ||= []).push({sid, ...s});
+  const cur = new Set(lists[sel] || []);
+
+  document.getElementById('palette').innerHTML = Object.entries(byVid).map(([vid, segs]) => {
+    segs.sort((a,b) => a.start - b.start);
+    return `<div class="srcgroup"><div class="srchead"><span>소스 ${vid}</span><span>${segs.length}개</span></div>
+      <div class="thumbs">${segs.map(s => `
+        <div class="seg ${cur.has(s.sid)?'inthis':''}" onclick="add('${s.sid}')"
+             title="${(s.scene_desc||'').replace(/"/g,'')}">
+          <img src="thumbs/${s.sid}.jpg" loading="lazy">
+          <span class="play" onclick="playSeg('${s.sid}', event)">▶ 보기</span>
+          ${mode==='hand' && !cur.has(s.sid) ? '<span class="add">+ 담기</span>' : ''}
+          <div class="meta"><span class="sid">${s.sid.split('-').pop()}</span>
+            · ${(s.end-s.start).toFixed(1)}초<br>${(s.scene_desc||'').slice(0,20)}</div>
+        </div>`).join('')}</div></div>`;
+  }).join('');
+
+  // 필름스트립
+  let totCuts = 0, totDur = 0, mineDur = 0, longCuts = 0;
+  document.getElementById('film').innerHTML = DATA.beats.map((b, i) => {
+    const ids = lists[i] || [];
+    const clips = planClips(ids, b.target_seconds || 3);
+    totCuts += clips.length;
+    const bdur = clips.reduce((a,c) => a + c.dur, 0);
+    totDur += bdur;
+    mineDur += clips.filter(c => chosen.has(c.seg_id)).reduce((a,c) => a + c.dur, 0);
+    const longs = clips.filter(c => c.dur > LONG_CUT).length;
+    longCuts += longs;
+    // ★늘어짐의 진짜 기준은 '장수'가 아니라 '담은 장면 길이의 합'이다(2026-08-13 실험에서 확인).
+    //   장면이 0.9초짜리면 3장을 담아도 2.7초뿐이라 5.8초 멘트를 못 채우고 마지막 컷이 늘어난다.
+    const have = ids.reduce((a,id) => a + (DATA.segments[id] ? DATA.segments[id].end - DATA.segments[id].start : 0), 0);
+    const needSec = b.target_seconds || 3;
+    const lack = Math.max(0, needSec - have);
+    // 실제로 화면에 나온 장면 = 컷에 등장한 것. 담았어도 시간이 모자라면 안 나온다.
+    const used = new Set(clips.map(c => c.seg_id));
+    const unused = ids.filter(id => !used.has(id)).length;
+    return `<div class="beat ${i===sel?'sel':''}" onclick="selBeat(${i})">
+      <div class="bhead">
+        <span class="role">${i+1}. ${b.role || '칸'}</span>
+        <span class="chip">${(b.target_seconds||0).toFixed(1)}초</span>
+        <span class="chip ${lack > 0.1 ? 'bad' : 'good'}">멘트 ${needSec.toFixed(1)}초${
+          lack > 0.1 ? ` · <b>${lack.toFixed(1)}초 부족</b>` : ' · 채움'}</span>
+        <span class="chip ${unused ? 'warn' : ''}">담음 ${ids.length}장 → <b>실제 ${used.size}장</b>${
+          unused ? ` · ${unused}장 안 나옴` : ''}</span>
+        <span class="chip ${longs?'warn':'good'}">컷 ${clips.length}개${longs?` · 늘어짐 ${longs}`:''}</span>
+        <span class="ord">
+          ${mode==='hand' ? `<button class="act" onclick="event.stopPropagation();clearBeat(${i})">비우기</button>` : ''}
+          <button class="act" onclick="event.stopPropagation();move(${i},-1)">↑</button>
+          <button class="act" onclick="event.stopPropagation();move(${i},1)">↓</button>
+        </span>
+        <div class="narr">${b.narration || ''}</div>
+      </div>
+      <div class="bbody"><div class="row">
+        <div class="col">
+          <div class="lbl">이 칸에 담은 장면 (첫 장이 대표)</div>
+          ${ids.length ? `<div class="list">${ids.map((id, k) => `
+            <div class="item ${k===0?'first':''} ${used.has(id)?'':'unused'}"
+                 title="${used.has(id)?'이 칸에서 실제로 나옵니다':'시간이 모자라 이 칸에서는 안 나옵니다 — ◀▶로 앞으로 옮기세요'}">
+              <span class="n">${k+1}</span>
+              <img src="thumbs/${id}.jpg" loading="lazy">
+              <span class="play" onclick="playSeg('${id}', event)">▶</span>
+              <div class="ctl">
+                <span onclick="event.stopPropagation();moveSeg(${i},${k},-1)">◀</span>
+                <span class="del" onclick="event.stopPropagation();delSeg(${i},${k})">✕</span>
+                <span onclick="event.stopPropagation();moveSeg(${i},${k},1)">▶</span>
+              </div>
+            </div>`).join('')}</div>`
+            : '<div class="empty">장면이 없습니다 — 왼쪽에서 담아주세요</div>'}
+        </div>
+        <div class="col">
+          <div class="lbl">실제 나올 화면 (${bdur.toFixed(1)}초)
+            ${clips.length ? `· <button class="act" onclick="playBeat(${i}, event)">▶ 이 칸 재생</button>` : ''}</div>
+          <div class="strip">${clips.map(c => `
+            <div class="cut ${chosen.has(c.seg_id)?'mine':''} ${c.dur>LONG_CUT?'long':''}"
+                 onclick="playSeg('${c.seg_id}', event)" title="이 컷 보기">
+              <img src="thumbs/${c.seg_id}.jpg" loading="lazy">
+              <div class="t">${c.dur.toFixed(1)}s</div>
+            </div>`).join('')}</div>
+        </div>
+      </div></div></div>`;
+  }).join('');
+
+  document.getElementById('k-cuts').textContent = totCuts;
+  document.getElementById('k-avg').textContent = totCuts ? (totDur/totCuts).toFixed(1) : '-';
+  document.getElementById('k-long').textContent = longCuts + '개';
+  document.getElementById('k-long-wrap').className = 'kpi ' + (longCuts ? 'warnv' : 'goodv');
+  const own = totDur ? Math.round(mineDur/totDur*100) : 0;
+  document.getElementById('k-own').textContent = chosen.size ? own + '%' : '—';
+  document.getElementById('k-own-wrap').className =
+    'kpi ' + (!chosen.size ? '' : own >= 80 ? 'goodv' : 'warnv');
+}
+
+// ── 미리보기 재생 ────────────────────────────────────────────────
+// 소스 mp4를 그대로 쓰고 구간만 잘라 재생한다. 여러 컷은 이어서 재생 →
+// '실제 나올 화면'을 그대로 눈으로 본다(렌더 돌리지 않고 확인).
+let seq = [], seqI = 0, seqTimer = null, seqLabel = '';
+const vid = () => document.getElementById('vid');
+
+function stopPlay(){
+  clearTimeout(seqTimer); seqTimer = null; seq = [];
+  const v = vid(); if (v) v.pause();
+  document.getElementById('player').classList.remove('on');
+}
+function playSeg(sid, ev){
+  if (ev) ev.stopPropagation();
+  const s = DATA.segments[sid];
+  if (!s) return;
+  seqLabel = `장면 ${sid.split('-').pop()}`;
+  startSeq([{seg_id: sid, video_id: s.video_id, start: s.start, dur: s.end - s.start}]);
+}
+function playBeat(i, ev){
+  if (ev) ev.stopPropagation();
+  const clips = planClips(lists[i] || [], DATA.beats[i].target_seconds || 3);
+  if (!clips.length) return;
+  seqLabel = `칸 ${i+1} 전체`;
+  startSeq(clips);
+}
+function startSeq(clips){
+  clearTimeout(seqTimer);
+  seq = clips; seqI = 0;
+  document.getElementById('player').classList.add('on');
+  step();
+}
+function step(){
+  const v = vid();
+  if (seqI >= seq.length){
+    document.getElementById('pinfo').textContent = `${seqLabel} — 재생 끝 (${seq.length}컷)`;
+    v.pause(); return;
+  }
+  const c = seq[seqI];
+  const src = `src/${c.video_id}.mp4`;
+  const go = () => {
+    v.currentTime = c.start;
+    v.play().catch(()=>{});
+    document.getElementById('pinfo').innerHTML =
+      `${seqLabel}<br>컷 ${seqI+1}/${seq.length} · ${c.dur.toFixed(1)}초 · 장면 ${c.seg_id.split('-').pop()}`;
+    seqTimer = setTimeout(() => { seqI++; step(); }, c.dur * 1000);
+  };
+  if (!v.src.endsWith(src)){
+    v.src = src;
+    v.onloadedmetadata = go;                 // 소스가 바뀌면 메타데이터를 기다렸다 시크
+  } else go();
+}
+
+function selBeat(i){ sel = i; render(); }
+function add(sid){
+  if (mode !== 'hand'){ setMode('hand'); }
+  const l = lists[sel];
+  if (!l) return;
+  if (l.includes(sid)) return;          // 중복 금지 — 같은 화면 되풀이 방지
+  l.push(sid); chosen.add(sid); render();
+}
+function delSeg(i, k){ lists[i].splice(k, 1); render(); }
+function moveSeg(i, k, d){
+  const l = lists[i], j = k + d;
+  if (j < 0 || j >= l.length) return;
+  [l[k], l[j]] = [l[j], l[k]]; render();
+}
+function clearBeat(i){ lists[i] = []; sel = i; render(); }
+function move(i, d){
+  const j = i + d;
+  if (j < 0 || j >= DATA.beats.length) return;
+  [DATA.beats[i], DATA.beats[j]] = [DATA.beats[j], DATA.beats[i]];
+  [lists[i], lists[j]] = [lists[j], lists[i]];
+  sel = j; render();
+}
+function setMode(m){
+  mode = m;
+  ['live','one','hand'].forEach(x =>
+    document.getElementById('m-' + x).classList.toggle('on', x === m));
+  initLists(); chosen.clear(); render();
+}
+function reset(){ setMode(mode); }
+initLists(); render();
+</script></body></html>
+"""
+
+html = html.replace("__DATA__", json.dumps(data, ensure_ascii=False))
+out = BASE / "index.html"
+out.write_text(html, encoding="utf-8")
+print("wrote", out, len(html), "bytes")
