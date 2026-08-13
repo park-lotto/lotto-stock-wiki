@@ -21,6 +21,7 @@ import {
 } from 'remotion';
 import { KineticWord, MINT, BG, FONT } from './motion';
 import { S5_2_CUTS, S5_FPS } from './S5_2';
+import { S5_1_CUTS } from './S5Overlay';
 
 /* ══════════ 쇼츠 끝에 붙이는 롱폼 안내 카드 ══════════
    쇼츠는 "다 보여주는" 자리가 아니다. 궁금한 채로 끊고 롱폼으로 넘긴다. */
@@ -65,14 +66,16 @@ export const SHORT_S5_2_FROM = 19.36;
 export const SHORT_S5_2_TO = 38.62;
 export const SHORT_S5_2_FRAMES = Math.round((SHORT_S5_2_TO - SHORT_S5_2_FROM) * S5_FPS);
 
-/** 이 구간에 걸리는 컷만 골라 0초 기준으로 다시 센다 */
-const SEG = S5_2_CUTS
-  .filter((c) => c.t >= SHORT_S5_2_FROM && c.t < SHORT_S5_2_TO)
-  .map((c, i, arr) => ({
-    ...c,
-    rel: c.t - SHORT_S5_2_FROM,
-    dur: (arr[i + 1]?.t ?? SHORT_S5_2_TO) - c.t,
-  }));
+/** 구간에 걸리는 컷만 골라 0초 기준으로 다시 센다 */
+type WideCut = { t: number; text: string; sfx?: { n: string; at: number; v?: number }[] };
+const sliceCuts = (cuts: WideCut[], from: number, to: number) =>
+  cuts
+    .filter((c) => c.t >= from && c.t < to)
+    .map((c, i, arr) => ({
+      ...c,
+      rel: c.t - from,
+      dur: (arr[i + 1]?.t ?? to) - c.t,
+    }));
 
 /** 상단 배지 — 무슨 화면을 보고 있는지 한 줄로 못 박는다 */
 const TopTag: React.FC<{ label: string }> = ({ label }) => {
@@ -91,37 +94,59 @@ const TopTag: React.FC<{ label: string }> = ({ label }) => {
   );
 };
 
-export const ShortS5_2: React.FC = () => (
-  <AbsoluteFill style={{ background: BG }}>
-    {/* 녹화본 — 세로 화면 위쪽에 통째로. 크롭하지 않는다(브라우저 UI가 뜻이다) */}
-    <div style={{
-      position: 'absolute', left: 0, right: 0, top: 300, height: 608, background: '#000',
-    }}>
-      <OffthreadVideo
-        src={staticFile(BASE)}
-        trimBefore={Math.round(SHORT_S5_2_FROM * S5_FPS)}
-        trimAfter={Math.round(SHORT_S5_2_TO * S5_FPS)}
-        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-      />
-    </div>
-    <TopTag label="레퍼런스 랭킹 · 실화면" />
-    {SEG.map((cut, i) => (
-      <Sequence key={i} from={Math.round(cut.rel * S5_FPS)}
-        durationInFrames={Math.max(1, Math.round(cut.dur * S5_FPS))}>
-        {/* 자막은 아래 빈 공간 한가운데. 영상 위에 안 겹친다.
-            ★AbsoluteFill에 top만 주면 아래로 밀려 잘린다(실측) — 자리를 직접 잡는다 */}
-        <div style={{
-          position: 'absolute', left: 0, right: 0, top: 930, height: 640,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <KineticWord text={cut.text} center size={62} perWord={1.3} hi="underline" />
-        </div>
-        {(cut.sfx ?? []).map((s, k) => (
-          <Sequence key={k} from={Math.round(s.at * S5_FPS)} layout="none">
-            <Audio src={staticFile(`vsl/sfx/${s.n}`)} volume={s.v ?? 0.28} />
-          </Sequence>
-        ))}
-      </Sequence>
-    ))}
-  </AbsoluteFill>
+/** 가로 녹화본 한 구간을 세로 쇼츠로 찍어내는 공장 (①위 영상 / ②아래 자막) */
+const makeWideShort = (
+  src: string, cuts: WideCut[], from: number, to: number, label: string,
+): React.FC => () => {
+  const seg = sliceCuts(cuts, from, to);
+  return (
+    <AbsoluteFill style={{ background: BG }}>
+      {/* 녹화본 — 세로 화면 위쪽에 통째로. 크롭하지 않는다(브라우저 UI가 뜻이다) */}
+      <div style={{
+        position: 'absolute', left: 0, right: 0, top: 300, height: 608, background: '#000',
+      }}>
+        <OffthreadVideo
+          src={staticFile(src)}
+          trimBefore={Math.round(from * S5_FPS)}
+          trimAfter={Math.round(to * S5_FPS)}
+          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+        />
+      </div>
+      <TopTag label={label} />
+      {seg.map((cut, i) => (
+        <Sequence key={i} from={Math.round(cut.rel * S5_FPS)}
+          durationInFrames={Math.max(1, Math.round(cut.dur * S5_FPS))}>
+          {/* 자막은 아래 빈 공간 한가운데. 영상 위에 안 겹친다.
+              ★AbsoluteFill에 top만 주면 아래로 밀려 잘린다(실측) — 자리를 직접 잡는다 */}
+          <div style={{
+            position: 'absolute', left: 0, right: 0, top: 930, height: 640,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <KineticWord text={cut.text} center size={62} perWord={1.3} hi="underline" />
+          </div>
+          {(cut.sfx ?? []).map((s, k) => (
+            <Sequence key={k} from={Math.round(s.at * S5_FPS)} layout="none">
+              <Audio src={staticFile(`vsl/sfx/${s.n}`)} volume={s.v ?? 0.28} />
+            </Sequence>
+          ))}
+        </Sequence>
+      ))}
+    </AbsoluteFill>
+  );
+};
+
+export const ShortS5_2 = makeWideShort(
+  BASE, S5_2_CUTS, SHORT_S5_2_FROM, SHORT_S5_2_TO, '레퍼런스 랭킹 · 실화면',
+);
+
+/* ══════════ 쇼츠 2호 — S5-1 레퍼런스 랭킹편 (2026-08-13) ══════════
+   훅: "속도·가속·참여 밀도를 숫자로 다 보여준다" → "작은 채널에서 실속 있게 터지는 게
+   알짜다" → "자동 태깅". 마지막 두 문장(정렬·검색 / 바로 찾으시면)은 롱폼 몫으로 남긴다.
+   구간·자막 시각은 S5_1_CUTS(whisper 실측) 그대로 — 다시 재지 않는다. */
+export const SHORT_S5_1_FROM = 7.40;
+export const SHORT_S5_1_TO = 26.28;
+export const SHORT_S5_1_FRAMES = Math.round((SHORT_S5_1_TO - SHORT_S5_1_FROM) * S5_FPS);
+
+export const ShortS5_1 = makeWideShort(
+  'vsl/s5/edit_s5_1.mp4', S5_1_CUTS, SHORT_S5_1_FROM, SHORT_S5_1_TO, '레퍼런스 랭킹 · 실화면',
 );

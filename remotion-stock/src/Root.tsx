@@ -18,7 +18,7 @@ import {
   S6Proof, S7Expand, S8Offer, S9Challenge, S10Cta,
 } from './vsl/S6toS10';
 import { S5_2Demo, S5_2_FRAMES, S5_FPS } from './vsl/S5_2';
-import { ShortS5_2, SHORT_S5_2_FRAMES, ShortOutro, SHORT_OUTRO_FRAMES } from './vsl/Shorts';
+import { ShortS5_2, SHORT_S5_2_FRAMES, ShortS5_1, SHORT_S5_1_FRAMES, ShortOutro, SHORT_OUTRO_FRAMES } from './vsl/Shorts';
 import { S5_2Capcut, S5_2CAPCUT_FRAMES } from './vsl/S5_2Capcut';
 import {
   S5_1Edit, S5_1_FRAMES, makeOverlayScene, S5_2_END_EDIT, S5_2_EDIT_FRAMES,
@@ -955,6 +955,14 @@ export const RemotionRoot: React.FC = () => {
         height={1920}
       />
       {/* 세로 쇼츠 — 가로 녹화본이라 위에 앉히고 아래를 자막 자리로 비운다 */}
+      <Composition
+        id="VSL-Short-S5-1"
+        component={ShortS5_1}
+        durationInFrames={SHORT_S5_1_FRAMES}
+        fps={S5_FPS}
+        width={1080}
+        height={1920}
+      />
       <Composition
         id="VSL-Short-S5-2"
         component={ShortS5_2}
