@@ -534,16 +534,29 @@ let seq = [], seqI = 0, seqTimer = null, seqLabel = '';
 //   중간에 검정화면이 살짝 생긴다"). 원인은 <video> 하나에 src를 갈아끼우느라 파일을 다시
 //   여는 공백이었다 — 실제 렌더 영상에는 없는, 미리보기만의 현상이다.
 //   처방: 소스마다 <video>를 미리 만들어 두고 **보이기만** 바꾼다(파일은 계속 열려 있다).
+//   ★2026-08-14 2차(사장님 "1에서 2로 갈 때 1-2 장면이 살짝 낀다"): 소스별로 재생기를 하나만
+//   두면 **같은 소스 안에서 구간이 점프할 때** 시크가 끝나기 전 이전 프레임이 그대로 보인다
+//   (실측: 칸1의 컷1 s0@14.1초 → 컷2 s0@4.7초). 이건 전환마다 증상이 다르게 나오는
+//   두더지의 뿌리였다 — 재생기가 하나면 '보여주면서 동시에 다음 자리를 찾는' 일이 불가능하다.
+//   그래서 소스마다 재생기를 **2개**(A/B) 두고 컷마다 번갈아 쓴다. 다음 컷은 항상 **숨은 쪽**에서
+//   미리 자리를 잡아두고, 전환은 보이기만 바꾼다 → 같은 소스든 다른 소스든 프레임 누수 0.
 const _vids = {};
-function vidFor(videoId){
-  if (_vids[videoId]) return _vids[videoId];
+function vidFor(videoId, slot){
+  const key = videoId + ':' + (slot || 0);
+  if (_vids[key]) return _vids[key];
   const box = document.getElementById('vidbox');
   const v = document.createElement('video');
   v.muted = true; v.playsInline = true; v.preload = 'auto';
   v.src = `src/${videoId}.mp4`;
   v.style.display = 'none';
   box.appendChild(v);
-  _vids[videoId] = v;
+  _vids[key] = v;
+  return v;
+}
+// 컷을 숨은 재생기에 미리 앉힌다(시크 완료까지 기다린다). 반환은 그 재생기.
+function seat(c){
+  const v = vidFor(c.video_id, c._slot);
+  if (Math.abs(v.currentTime - c.start) > 0.05) v.currentTime = c.start;
   return v;
 }
 let curVid = null;
@@ -557,7 +570,7 @@ const vid = () => curVid || document.getElementById('vid');
 // 페이지가 열리면 소스들을 미리 열어 둔다(첫 전환도 매끄럽게).
 function warmVideos(){
   const ids = new Set(Object.values(DATA.segments).map(s => s.video_id));
-  ids.forEach(id => vidFor(id));
+  ids.forEach(id => { vidFor(id, 0); vidFor(id, 1); });   // A/B 두 벌
 }
 
 function stopPlay(){
@@ -632,6 +645,12 @@ function runAllFrom(i){
   seqLabel = `전체 재생 - 칸 ${i+1}/${DATA.beats.length} (${DATA.beats[i].role || ''})`;
   if (!clips.length){ runAllFrom(i + 1); return; }
   startSeq(clips);
+  // 다음 칸의 첫 컷도 지금 미리 앉혀 둔다(칸을 넘을 때도 누수 0).
+  const nx = DATA.beats[i + 1];
+  if (nx){
+    const ncl = planClips(lists[i + 1] || [], nx.target_seconds || 3);
+    if (ncl[0]){ ncl[0]._slot = 0; seat(ncl[0]); }
+  }
   const a = audio();
   a.onended = () => { if (playKey === 'all') runAllFrom(i + 1); };
   a.src = `tts/beat_${i}.mp3`;
@@ -645,6 +664,9 @@ function startSeq(clips){
   // 컷 경계 누적(자막을 컷 단위로 끊어 보여주려면 각 컷의 [시작,끝) 초가 필요하다)
   let off = 0;
   seqBounds = clips.map(c => { const a = off; off += c.dur; return [a, off]; });
+  clips.forEach((c, k) => { c._slot = k % 2; });   // 이웃한 컷은 다른 재생기 → 미리 앉히기 가능
+  if (clips[0]) seat(clips[0]);
+  if (clips[1]) seat(clips[1]);
   document.getElementById('player').classList.add('on');
   step();
 }
@@ -655,7 +677,7 @@ function step(){
     return;
   }
   const c = seq[seqI];
-  const v = vidFor(c.video_id);
+  const v = vidFor(c.video_id, c._slot);
   const go = () => {
     // ★시크가 **끝난 뒤에** 보여준다(2026-08-14 사장님 "3번 솔루션 끝나는 장면 마지막에
     //   2번 첫 장면이 잠깐 보인다"). 칸2와 칸4가 같은 소스(s0)를 쓰는데, 칸4로 넘어갈 때
@@ -671,12 +693,8 @@ function step(){
     }
     document.getElementById('pinfo').innerHTML =
       `${seqLabel}<br>컷 ${seqI+1}/${seq.length} · ${c.dur.toFixed(1)}초 · 장면 ${c.seg_id}`;
-    // 다음 컷의 소스를 미리 그 지점으로 옮겨 둔다(전환 순간에 할 일을 없앤다).
-    const n = seq[seqI + 1];
-    if (n){
-      const nv = vidFor(n.video_id);
-      if (nv !== v && nv.readyState >= 1) nv.currentTime = n.start;
-    }
+    // 다음 컷을 **숨은 재생기**에 미리 앉힌다 — 전환 순간에 할 일이 남지 않는다.
+    if (seq[seqI + 1]) seat(seq[seqI + 1]);
     seqTimer = setTimeout(() => { seqI++; step(); }, c.dur * 1000);
   };
   if (v.readyState >= 1) go();           // 이미 열려 있으면 즉시
