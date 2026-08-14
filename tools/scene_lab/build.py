@@ -74,7 +74,9 @@ h1{font-size:16px;margin:0;font-weight:700}
 .chip.bad{border-color:var(--bad);color:var(--bad)}
 .chip.good{border-color:var(--good);color:var(--good)}
 .chip.warn{border-color:var(--warn);color:var(--warn)}
-.narr{color:var(--dim);font-size:12px;flex:1 1 100%;line-height:1.5}
+.narr{color:var(--dim);font-size:12px;flex:1 1 100%;line-height:1.5;border:1px dashed transparent;border-radius:5px;padding:3px 5px;outline:none}
+.narr:hover{border-color:var(--line)}
+.narr:focus{border-color:var(--accent);color:var(--ink);background:#0f1620}
 .why{flex:1 1 100%;font-size:11.5px;color:var(--good);line-height:1.5;background:#0f2a20;border:1px solid #1f4d3a;border-radius:6px;padding:5px 8px;margin-top:2px}
 .bbody{padding:10px 12px}
 .lbl{font-size:11px;color:var(--dim);margin:0 0 6px}
@@ -480,7 +482,15 @@ function render(){
           <button class="act" onclick="event.stopPropagation();move(${i},-1)">↑</button>
           <button class="act" onclick="event.stopPropagation();move(${i},1)">↓</button>
         </span>
-        <div class="narr">${b.narration || ''}</div>
+        <div class="narr" contenteditable="true" spellcheck="false"
+             data-i="${i}" onblur="editNarr(${i}, this)"
+             onclick="event.stopPropagation()"
+             title="눌러서 대본을 고칠 수 있습니다">${esc(narrOf(i))}</div>
+        ${narrChanged(i) ? `<div class="why" style="color:var(--warn);border-color:#5a4520;background:#2a2113">
+             ✏ 대본 수정됨 · 예상 ${estSec(narrOf(i)).toFixed(1)}초(원래 ${(b.target_seconds||0).toFixed(1)}초)
+             — 음성·자막은 다시 뽑아야 반영됩니다
+             <button class="act" style="margin-left:8px" onclick="event.stopPropagation();resetNarr(${i})">되돌리기</button>
+             <button class="act" onclick="event.stopPropagation();copyScript()">전체 대본 복사</button></div>` : ''}
         ${(mode==='pick' && _why[i]) ? `<div class="why">🎯 ${esc(_why[i])}</div>` : ''}
       </div>
       <div class="bbody"><div class="row">
@@ -732,7 +742,7 @@ const SAVE_KEY = 'sceneLab:' + (DATA.job_id || 'job');
 function saveWork(){
   try{
     localStorage.setItem(SAVE_KEY, JSON.stringify({
-      mode, lists, chosen: [...chosen], at: new Date().toISOString()
+      mode, lists, chosen: [...chosen], narr: NARR, at: new Date().toISOString()
     }));
   }catch(e){}
   const el = document.getElementById('savedmsg');
@@ -747,6 +757,8 @@ function loadWork(){
     mode = w.mode || 'hand';
     lists = w.lists.map(l => Array.isArray(l) ? l.slice() : []);
     chosen.clear(); (w.chosen || []).forEach(x => chosen.add(x));
+    Object.keys(NARR).forEach(k => delete NARR[k]);
+    Object.assign(NARR, w.narr || {});
     ['live','one','hand','pick'].forEach(x => {
       const b = document.getElementById('m-' + x);
       if (b) b.classList.toggle('on', x === mode);
@@ -757,6 +769,31 @@ function loadWork(){
   }catch(e){ return false; }
 }
 function clearWork(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+// ── 대본 편집(2026-08-14 사장님 "여기서 대본까지 수정되게 해줘") ────────────────────
+// 로컬에서 음성(TTS)을 새로 만들 수는 없다 — 그래서 **글을 고쳐 저장하고, 길이가 어떻게
+// 바뀌는지 라이브와 같은 기준(글자수 ÷ 초당 글자수)으로 보여주는 것**까지가 여기의 몫이다.
+// 고친 대본은 '전체 대본 복사'로 가져가 제작소에 넣으면 음성·자막이 새로 만들어진다.
+const NARR = {};                       // beat_idx → 고친 대본
+function narrOf(i){ return NARR[i] != null ? NARR[i] : (DATA.beats[i].narration || ''); }
+function narrChanged(i){ return NARR[i] != null && NARR[i] !== (DATA.beats[i].narration || ''); }
+function estSec(t){
+  const n = String(t || '').split(' ').join('').length;   // 공백 뺀 글자수
+  return Math.max(1.5, n / (DATA.syll_per_sec || 5.7));
+}
+function editNarr(i, el){
+  const t = (el.innerText || '').trim();
+  if (t === (DATA.beats[i].narration || '')){ delete NARR[i]; } else { NARR[i] = t; }
+  render();
+}
+function resetNarr(i){ delete NARR[i]; render(); }
+function copyScript(){
+  // 개행은 코드에 직접 쓰지 않는다 — 이 JS는 파이썬 문자열 안에 들어 있어 이스케이프가 충돌한다.
+  const NL = String.fromCharCode(10);
+  const txt = DATA.beats.map((b, i) => (i+1) + '. ' + (b.role || '') + NL + narrOf(i)).join(NL + NL);
+  navigator.clipboard.writeText(txt).then(
+    () => { const el = document.getElementById('savedmsg'); if (el) el.textContent = '📋 대본을 복사했습니다 — 제작소에 붙여넣으면 음성·자막이 새로 만들어집니다'; },
+    () => {});
+}
 function selBeat(i){ sel = i; render(); }
 function add(sid){
   // ★담을 때 지금 배치를 절대 초기화하지 않는다(2026-08-14 사장님 "4장면 있었는데 하나

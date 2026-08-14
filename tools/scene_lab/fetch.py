@@ -86,6 +86,8 @@ if not r[0]: raise SystemExit('편집안이 아직 없다(상태: %s) — 제작
 plan=json.loads(r[0]); extract=json.loads(r[1])
 seg_map,_=ep._build_inventory(list(extract.values()))
 out={{'job_id':'{job_id}','beats':plan['beats'],'urls':json.loads(r[2]),
+     # 대본을 고쳤을 때 예상 길이를 라이브와 같은 기준으로 계산하려고 상수를 함께 싣는다.
+     'syll_per_sec':ep._SYLLABLES_PER_SEC,
      'segments':{{k:{{'video_id':v['video_id'],'start':v['start'],'end':v['end'],
                     'scene_desc':v.get('scene_desc',''),'text':v.get('text',''),
                     # ★추출이 이미 태깅한 결(2026-08-14 사장님 "완성품·조리 이런 식으로 나누고
