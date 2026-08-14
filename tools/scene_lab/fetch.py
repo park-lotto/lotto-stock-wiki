@@ -108,6 +108,7 @@ for vid in sorted(set(s['video_id'] for s in d['segments'].values())):
     g=glob.glob(base+'/'+vid+'/*.mp4')
     if g: src[vid]=g[0]
 n=0
+hashes={{}}
 for sid,s in d['segments'].items():
     p=src.get(s['video_id'])
     if not p: continue
@@ -118,7 +119,16 @@ for sid,s in d['segments'].items():
                     # 좌측 라이브러리·칸 카드 둘 다 이 한 장을 키워 쓴다.
                     '-frames:v','1','-vf','scale=360:-1',o],check=False)
     if os.path.exists(o): n+=1
+    # ★비슷한 장면 묶기(2026-08-14 사장님 "이건 두 개 중복"): 같은 프레임을 8x8 흑백으로
+    #   줄여 평균해시를 낸다. 설명·시각이 달라도 **그림이 사실상 같은** 컷을 잡아낸다.
+    r2=subprocess.run(['ffmpeg','-y','-loglevel','error','-ss',str(mid),'-i',p,'-frames:v','1',
+                       '-vf','scale=8:8,format=gray','-f','rawvideo','-'],capture_output=True)
+    b=r2.stdout or b''
+    if len(b)>=64:
+        px=list(b[:64]); avg=sum(px)/64.0
+        hashes[sid]=''.join('1' if v>avg else '0' for v in px)
 json.dump(src, open('/tmp/sl_src.json','w'))
+d['phash']=hashes
 # ★소스 길이도 같이 잰다(2026-08-14). 실측 s1-10은 100~104초인데 s1.mp4는 78.5초 —
 #   존재하지 않는 구간을 가리키는 세그먼트가 있었고 아무도 안 걸렀다(썸네일 추출 실패로 발각).
 dur={{}}

@@ -204,6 +204,7 @@ const GROUPS = [
   {key:'완성',   title:'🏆 완성품',          hint:'훅·CTA에 좋다'},
   {key:'after',  title:'✅ 결과·증거',       hint:'쪼갠 단면·먹는 반응 — 결과 칸에 좋다'},
   {key:'굽기',   title:'🔥 굽기·완성 직전',  hint:'오븐·가열 — 과정의 절정'},
+  {key:'마무리', title:'🍫 마무리·데코',      hint:'초콜릿·토핑 — 완성 직전 한 끗'},
   {key:'재료',   title:'🥣 재료·반죽 준비',  hint:'섞기·짜기 — 해결 칸에 좋다'},
   {key:'기타',   title:'그 밖의 장면',       hint:''},
 ];
@@ -211,11 +212,15 @@ const GROUPS = [
 //   "완성품 조리랑 재료조리는 구분해서 나와야"). 이건 **실험실에서 고르기 쉬우라고 하는
 //   화면 분류**일 뿐 배치 로직과 무관하다 — 라이브 판단을 새로 만드는 게 아니다.
 const _BAKE = ['오븐', '굽', '예열', '구워', '식힘망'];
+// 다 만든 것 위에 하는 작업 — 사장님 지적(Db9O4pqza74-10 '초콜릿 묻은 쿠키 위에 견과류를
+// 얹는 작업'이 '재료 준비'로 갔다). 굽기보다 뒤 단계라 따로 세운다.
+const _DECO = ['얹', '적시', '묻은', '묻힌', '토핑', '데코', '장식', '뿌리'];
 function groupOf(sid){
   const s0 = DATA.segments[sid] || {};
   const r = s0.shot_role || '기타';
   if (r === '사용중'){
     const d = (s0.scene_desc || '') + ' ' + (s0.action || '') + ' ' + (s0.change || '');
+    if (_DECO.some(w => d.includes(w))) return '마무리';
     return _BAKE.some(w => d.includes(w)) ? '굽기' : '재료';
   }
   return GROUPS.some(g => g.key === r) ? r : '기타';
@@ -226,10 +231,46 @@ function useTags(sid){
   if (r === '완성'){ t.push('후킹용'); t.push('CTA용'); }
   if (r === 'after'){ t.push('후킹용'); t.push('결과용'); }
   if (r === '굽기') t.push('굽기용');
+  if (r === '마무리') t.push('마무리용');
   if (r === '재료') t.push('조리용');
   if (s0.is_key) t.push('실증');
   return t;
 }
+// ★비슷한 장면 묶기(2026-08-14 사장님 "이건 두 개 중복 / 비슷한 거 묶어보고").
+//   썸네일을 8x8 흑백으로 줄인 평균해시를 fetch가 실어 온다. 설명·시각이 달라도 **그림이
+//   사실상 같은** 컷을 잡는다. 실측(job 409f894230c6): s3-2↔s3-20 거리0, s3-5↔s3-21 거리1,
+//   s3-1↔s3-18 거리4(사장님이 지목한 그 쌍).
+const DUP_MAX = 8;                 // 해밍거리 이 이하면 '비슷'
+let hideDup = true;                // 비슷한 것은 대표 1장만 보이기(기본 켬)
+function _hash(sid){ return (DATA.phash || {})[sid] || ''; }
+function _dist(a, b){
+  if (!a || !b || a.length !== b.length) return 99;
+  let n = 0; for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) n++;
+  return n;
+}
+// 비슷한 것끼리 묶어 대표(가장 이른 장면)를 정한다. {sid: {rep, mates:[...]}}
+let DUPS = null;
+function dupMap(){
+  if (DUPS) return DUPS;
+  DUPS = {};
+  const ids = Object.keys(DATA.segments).filter(id => !outOfRange(id) && _hash(id));
+  const seen = new Set();
+  for (const a of ids){
+    if (seen.has(a)) continue;
+    const group = [a];
+    for (const b of ids){
+      if (b === a || seen.has(b)) continue;
+      if (_dist(_hash(a), _hash(b)) <= DUP_MAX) group.push(b);
+    }
+    group.sort((x, y) => DATA.segments[x].start - DATA.segments[y].start);
+    const rep = group[0];
+    group.forEach(g => { seen.add(g); DUPS[g] = {rep, mates: group.filter(x => x !== g)}; });
+  }
+  return DUPS;
+}
+function isDupOf(sid){ const d = dupMap()[sid]; return (d && d.rep !== sid) ? d.rep : null; }
+function dupMates(sid){ const d = dupMap()[sid]; return d ? d.mates : []; }
+function toggleDup(on){ hideDup = on; render(); }
 function tooShort(sid){
   const s0 = DATA.segments[sid]; if (!s0) return false;
   return (s0.end - s0.start) < MIN_CLIP - EPS;
@@ -333,15 +374,20 @@ function render(){
 
   // 팔레트
   const byRole = {};
-  let dropped = 0;
+  let dropped = 0, folded = 0;
   for (const [sid, s] of Object.entries(DATA.segments)){
     // ★소스 밖 구간은 아예 빼 놓는다(2026-08-14 사장님 "소스 밖 구간은 빼라").
     //   실체가 없는 화면이라 후보로 보일 이유가 없다. 몇 개 뺐는지는 위에 알린다.
     if (outOfRange(sid)){ dropped++; continue; }
+    if (hideDup && isDupOf(sid)){ folded++; continue; }   // 비슷한 것은 대표만 보인다
     (byRole[groupOf(sid)] ||= []).push({sid, ...s});
   }
   const dropMsg = document.getElementById('dropmsg');
-  if (dropMsg) dropMsg.textContent = dropped ? `⚠ 소스 밖 구간 ${dropped}개는 목록에서 제외했습니다(실체 없는 화면)` : '';
+  if (dropMsg) dropMsg.innerHTML =
+    (dropped ? `⚠ 소스 밖 구간 ${dropped}개 제외(실체 없는 화면)<br>` : '')
+    + `<label style="cursor:pointer;color:var(--dim)"><input type="checkbox" ${hideDup?'checked':''}
+        onchange="toggleDup(this.checked)"> 비슷한 그림은 대표 1장만 보기`
+    + (folded ? ` <b style="color:var(--accent)">(${folded}장 접힘)</b>` : ' (접힌 것 없음)') + `</label>`;
   const cur = new Set(lists[sel] || []);
 
   // 결 그룹 순서로 묶어 보여준다 — 같은 성격끼리 모여 있어야 고르기 쉽다.
@@ -362,6 +408,7 @@ function render(){
             <div>${useTags(s.sid).map(t=>`<span class="utag${t==='실증'?' key':''}">${t}</span>`).join('')}</div>
             ${outOfRange(s.sid)?`<div class="oorbadge">⚠ 소스 밖 구간 — 원본 ${(DATA.src_duration||{})[s.video_id]}초</div>`:''}
             ${tooShort(s.sid)?`<div class="oorbadge">⚠ 0.8초 미만 — 담아도 화면에 안 나옵니다</div>`:''}
+            ${dupMates(s.sid).length?`<div class="utag" style="border-color:var(--accent);color:var(--accent)">비슷한 그림 ${dupMates(s.sid).length}장 더 (${esc(dupMates(s.sid).join(', '))})</div>`:''}
             <div class="d">${esc(s.scene_desc||'(설명 없음)')}</div>
             </div>
         </div>`).join('')}</div></div>`;
@@ -434,6 +481,11 @@ function render(){
                  onclick="playSeg('${c.seg_id}', event)" title="이 컷 보기">
               <img src="thumbs/${c.seg_id}.jpg" loading="lazy">
               <div class="t">${c.dur.toFixed(1)}s${c.dur>LONG_CUT?' 늘림':''}</div>
+              ${(() => { const sg = DATA.segments[c.seg_id];
+                 const over = sg ? (c.start + c.dur) - sg.end : 0;
+                 return over > 0.15
+                   ? `<div class="cutsub" style="color:var(--bad)">⚠ 원본 뒤 ${over.toFixed(1)}초가 더 나옵니다(다른 내용)</div>`
+                   : ''; })()}
               <div class="cutsub">${capsIn(i, a, b).map(c=>esc(c.text)).join(' / ') || '&nbsp;'}</div>
             </div>`;}).join('')})()}</div>
         </div>
