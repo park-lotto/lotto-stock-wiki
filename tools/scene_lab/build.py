@@ -35,17 +35,17 @@ h1{font-size:16px;margin:0;font-weight:700}
 .mode{padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);
       color:var(--dim);cursor:pointer;font-size:12px;line-height:1.4;text-align:center}
 .mode.on{border-color:var(--accent);color:#fff;background:#1b2a3d}
-.wrap{display:grid;grid-template-columns:var(--libw,430px) 1fr;height:calc(100vh - 130px)}
+.wrap{display:grid;grid-template-columns:var(--libw,520px) 1fr;height:calc(100vh - 130px)}
 .pane{overflow-y:auto;padding:14px}
 .pane.left{border-right:1px solid var(--line);background:var(--panel)}
 .srcgroup{margin-bottom:18px}
 .srchead{font-size:12px;color:var(--dim);margin-bottom:8px;display:flex;justify-content:space-between}
 .thumbs{display:grid;grid-template-columns:1fr;gap:10px}
-.seg{display:grid;grid-template-columns:96px 1fr;align-items:stretch}
+.seg{display:grid;grid-template-columns:150px 1fr;align-items:stretch}
 .seg{border:1px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;
      background:var(--panel2);position:relative;transition:.12s}
 .seg:hover{border-color:var(--accent);transform:translateY(-2px)}
-.seg img{width:96px;display:block;aspect-ratio:9/16;object-fit:cover}
+.seg img{width:150px;display:block;aspect-ratio:9/16;object-fit:cover}
 .seg .meta{padding:8px 10px;font-size:12px;color:var(--ink);line-height:1.5;display:flex;flex-direction:column;gap:3px}
 .seg .meta .d{color:var(--dim);font-size:11.5px;line-height:1.45}
 .seg .sid{color:var(--ink);font-weight:600}
@@ -174,7 +174,7 @@ button.act:hover{border-color:var(--accent)}
   <div class="kpi" id="k-long-wrap">늘어진 컷 <b id="k-long">-</b></div>
   <div class="kpi" id="k-own-wrap">내가 고른 화면 <b id="k-own">-</b></div>
   <button class="act" onclick="reset()">처음으로</button>
-  <div class="hint">초록 = 내가 고른 것 / ③번 모드에서 왼쪽 장면을 클릭하면 선택한 칸에 <b>추가</b>됩니다</div>
+  <div class="hint">왼쪽 장면 <b>두 번 클릭</b> = 선택한 칸에 담기 / 칸 안 썸네일은 <b>끌어서 순서 변경</b>, <b>두 번 클릭 = 삭제</b></div>
 </footer>
 
 <script>
@@ -285,11 +285,11 @@ function render(){
     segs.sort((a,b) => a.start - b.start);
     return `<div class="srcgroup"><div class="srchead"><span>소스 ${vid}</span><span>${segs.length}개</span></div>
       <div class="thumbs">${segs.map(s => `
-        <div class="seg ${cur.has(s.sid)?'inthis':''} ${outOfRange(s.sid)?'oor':''}" onclick="add('${s.sid}')"
+        <div class="seg ${cur.has(s.sid)?'inthis':''} ${outOfRange(s.sid)?'oor':''}" ondblclick="add('${s.sid}')"
              title="${(s.scene_desc||'').replace(/"/g,'')}">
           <img src="thumbs/${s.sid}.jpg" loading="lazy">
           <span class="play" onclick="playSeg('${s.sid}', event)">▶ 보기</span>
-          ${mode==='hand' && !cur.has(s.sid) ? '<span class="add">+ 담기</span>' : ''}
+          ${!cur.has(s.sid) ? '<span class="add">두 번 눌러 담기</span>' : ''}
           <div class="meta"><span class="sid">${s.sid}</span>
             <span style="color:var(--dim)">· ${(s.end-s.start).toFixed(1)}초</span>
             ${outOfRange(s.sid)?`<div class="oorbadge">⚠ 소스 밖 구간 — 원본 ${(DATA.src_duration||{})[s.video_id]}초</div>`:''}
@@ -338,7 +338,10 @@ function render(){
           <div class="lbl">이 칸에 담은 장면 (첫 장이 대표)</div>
           ${ids.length ? `<div class="list">${ids.map((id, k) => `
             <div class="item ${k===0?'first':''} ${used.has(id)?'':'unused'} ${outOfRange(id)?'oor':''}"
-                 title="${used.has(id)?'이 칸에서 실제로 나옵니다':'시간이 모자라 이 칸에서는 안 나옵니다 — ◀▶로 앞으로 옮기세요'}">
+                 draggable="true" ondragstart="dragStart(${i},${k},event)"
+                 ondragover="event.preventDefault()" ondrop="dragDrop(${i},${k},event)"
+                 ondblclick="delSeg(${i},${k})"
+                 title="끌어서 순서 바꾸기 · 두 번 누르면 삭제${used.has(id)?'':' (지금은 시간이 모자라 안 나옵니다)'}">
               <span class="n">${k+1}</span>
               <img src="thumbs/${id}.jpg" loading="lazy">
               <span class="play" onclick="playSeg('${id}', event)">▶</span>
@@ -467,6 +470,21 @@ function step(){
   } else go();
 }
 
+// 끌어서 순서 바꾸기(2026-08-14 사장님 "잡고 이동해서 순서변경"). 같은 칸 안에서만 옮긴다
+// — 칸을 넘나들면 대사와 화면의 짝이 조용히 어긋난다.
+let dragFrom = null;
+function dragStart(i, k, ev){
+  dragFrom = {i, k};
+  if (ev && ev.dataTransfer) ev.dataTransfer.effectAllowed = 'move';
+}
+function dragDrop(i, k, ev){
+  if (ev) ev.preventDefault();
+  if (!dragFrom || dragFrom.i !== i || dragFrom.k === k){ dragFrom = null; return; }
+  const l = lists[i];
+  const [moved] = l.splice(dragFrom.k, 1);
+  l.splice(k, 0, moved);
+  dragFrom = null; render();
+}
 function selBeat(i){ sel = i; render(); }
 function add(sid){
   if (mode !== 'hand'){ setMode('hand'); }
