@@ -3236,6 +3236,16 @@ function renderCompareCards(d){
     const hi = _candIdxInHandoff(c.video_id);
     const hf = HANDOFF[hi] || {};
     const isPick = c.video_id === pickId;
+    // 분석 대기 카드(2026-08-14): 클릭도, 메인 후보도 아직 아니다 — 상태를 그대로 보여준다.
+    if(c.pending){
+      const pth = c.thumbnail || hf.thumbnail || '';
+      return `<div class="cmp-card" style="opacity:.65" title="${esc(c.name||'영상')}">
+          <span class="cmp-pickhint">⏳ 분석 중</span>
+          <div class="cmp-top"><div class="cmp-thumbwrap">${pth?`<img src="${pth.includes('gstatic.com')?pth:('/api/thumb?url='+encodeURIComponent(pth))}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">`:'<div class="cmp-th-ph"></div>'}</div>
+            <div class="cmp-nm">${esc(c.name || hf.name || '영상')}</div></div>
+          <div class="cmp-nostruct">대본 분석이 끝나면 후보가 됩니다</div>
+        </div>`;
+    }
     const thumb = c.thumbnail || hf.thumbnail || '';
     const name = c.name || hf.name || '영상';
     const st = c.structure;
@@ -3280,6 +3290,11 @@ function renderAiPick(d, hasFootage){
   // pick_id==null은 두 경우가 다르다: 담긴 재료가 아예 없으면(hasFootage=false) 빈 상태,
   // 재료는 담겨 있는데 그 대본을 아직 분석 못 했으면(hasFootage=true) 별도 안내 —
   // "아직 담긴 영상이 없어요"를 ✓체크된 카드가 보이는 화면에 띄우면 모순돼 보인다.
+  // ★분석 대기(hold, 2026-08-14 사장님 "한국어 대본 축 영상이 없으면 기다리는 걸로"):
+  //   담긴 영상 중 아직 추출이 안 끝난 게 있고 한국어 축(인스타·유튜브)이 아직 없으면
+  //   서버가 메인을 확정하지 않고 hold로 내려준다. 여기서 "덜 끝났다"를 그대로 보여주고
+  //   잠시 뒤 스스로 다시 읽는다 — 다운로드가 늦은 영상에 시간을 더 주는 것이 핵심이다.
+  if(d && d.hold){ renderWaitingState(d); return; }
   if(!d || d.pick_id==null){ hasFootage ? renderNoScriptState() : renderEmptyState(); return; }
   window._aiPick = d;
   // 자동선정 결과(bbMain 미지정 상태)를 왼쪽 레일에도 반영 — 사장님이 아직 안 골랐으면
@@ -3287,9 +3302,12 @@ function renderAiPick(d, hasFootage){
   if(typeof renderPool==='function') renderPool();
   const t = d.tiles || {}, stc = d.structure || {}, seg = (stc.segments) || [];
   const pm = d.pick_meta || {};
-  const hf = (typeof HANDOFF!=='undefined' && HANDOFF[d.pick_index]) || {};
-  const _name = pm.title || hf.name || '선택 영상';
-  const _thumb = pm.thumbnail || hf.thumbnail || '';
+  // ★HANDOFF[d.pick_index] 폴백 제거(2026-08-14 사장님 제보 '상단은 한국어인데 메인은 중국어').
+  //   pick_index는 서버 sources 배열 좌표인데 HANDOFF는 담긴 전체 배열이라 좌표계가 다르다 —
+  //   추출이 덜 끝나 sources가 짧아지면 0번(한국어 인스타)을 집어, 숫자는 샤오홍슈인데
+  //   이름·썸네일만 다른 영상인 자기모순 카드가 됐다. 모르면 추측하지 말고 비워둔다.
+  const _name = pm.title || '선택 영상';
+  const _thumb = pm.thumbnail || '';
   const _sub = [pm.category, (pm.followers!=null?('팔로워 '+fmtNum(pm.followers)):null)].filter(Boolean).join(' · ');
   const _who = `<div class="aipick-who">${_thumb?`<img class="th" src="${_thumb.includes('gstatic.com')?_thumb:('/api/thumb?url='+encodeURIComponent(_thumb))}" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">`:'<div class="th"></div>'}<div><div class="nm">${esc(_name)}</div>${_sub?`<div class="sub">${esc(_sub)}</div>`:''}</div></div>`;
   const _tiles = [];
@@ -3427,6 +3445,26 @@ function renderEmptyState(){
 // 재료는 담겨 있지만(✓ 켜짐) 그 재료의 대본을 아직 분석하지 못해 AI PICK을 못 고른 경우 —
 // renderEmptyState()("아직 담긴 영상이 없어요")를 쓰면 왼쪽 레일의 ✓카드와 모순돼 보인다.
 // 직접 쓰기 경로(SCRIPT_MODE_HTML.manual)는 그대로 열어둔다.
+// 분석 대기 화면(2026-08-14) — 메인을 아직 못 정한 이유를 말하고, 끝날 때까지 스스로 다시 읽는다.
+// 재시도는 8초 간격 최대 15회(=약 2분). 실측 근거: 인스타 추출이 담기 후 3분 안에 끝났다
+// (work 73fc36693ed5, 04:02 담김 → 04:05 추출 완료). 한도를 넘으면 종전 화면으로 넘긴다.
+let _holdTries = 0;
+function renderWaitingState(d){
+  const el = document.getElementById('aiPick'); if(!el) return;
+  const n = d.pending_count || 0;
+  const names = (d.candidates||[]).filter(c=>c.pending).map(c=>esc(c.name||'영상')).join(', ');
+  el.innerHTML = `
+    <div class="skm-card empty">
+      <h2>⏳ 담긴 영상 ${n}개를 아직 분석 중이에요 — 메인은 그 뒤에 정할게요.</h2>
+      <div class="hint" style="text-align:center;margin:10px 0;color:var(--sub)">
+        ${names?esc(names)+'<br>':''}한국어 대본이 될 영상이 준비되기 전에 메인을 정하면 엉뚱한 영상이 축이 됩니다.<br>
+        끝나면 이 화면이 저절로 바뀝니다.
+      </div>
+      ${renderCompareCards(d)}
+    </div>`;
+  if(_holdTries < 15){ _holdTries++; setTimeout(()=>{ try{ refreshStep0(); }catch(e){} }, 8000); }
+  else { renderNoScriptState(); }
+}
 function renderNoScriptState(){
   const el = document.getElementById('aiPick'); if(!el) return;
   // ★"대본 뽑기" 버튼 복구(2026-07-26). Task4 재구성에서 카드별 📝뽑기 버튼을 없애고

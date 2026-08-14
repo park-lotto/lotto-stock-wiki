@@ -7357,6 +7357,7 @@ def _load_work_sources(work_id, cid):
     #   이 작업의 재료 목록이므로 그 shortcode로 좁힌다. work_id 없거나 handoff가 비면(옛 경로)
     #   계정 전체 픽으로 폴백(회귀0).
     codes = None
+    entry_by_code = {}       # shortcode → handoff 항목(추출 전에도 이름·썸네일·URL을 아는 유일한 출처)
     if work_id:
         work = store.get_produce_work(work_id, customer_id=cid)
         if work and isinstance(work.get("state"), dict):
@@ -7364,6 +7365,8 @@ def _load_work_sources(work_id, cid):
             # 순서 보존(핸드오프 순서 = 재료 바구니 순서 → pick 카드의 이름·썸네일 정합).
             codes = [e.get("shortcode") for e in handoff
                      if isinstance(e, dict) and e.get("shortcode")]
+            entry_by_code = {e["shortcode"]: e for e in handoff
+                             if isinstance(e, dict) and e.get("shortcode")}
     if not codes:
         codes = list(store.produce_pick_shortcodes(customer_id=cid))
     # ★후보 = '넘어온 영상(handoff)' 전부. 예전엔 wiki_list(도서관) ∩ codes로 좁혀,
@@ -7371,7 +7374,13 @@ def _load_work_sources(work_id, cid):
     #   넘어온 3개 중 도서관에 없던 '홈스텐다드'가 빠지고, 도서관 즐겨찾기인 금손여신·
     #   살림홈만 남아 "도서관 것만 AI PICK"). 이제 도서관에 없으면 script_extracts(전역
     #   추출 캐시)+reel_history에서 끌어와, 저장 여부와 무관하게 넘어온 영상이 곧 후보다.
+    #   ★2026-08-14(사장님 "왜 메인이 중국어냐"): 추출이 **아직 안 끝난** 영상을 조용히 빼던
+    #   것을 멈춘다. 실측(work 73fc36693ed5): 인스타 Db9O4pqza74의 추출은 04:05:00에 끝났는데
+    #   사장님이 화면을 본 건 04:02 — 그 3분 동안 한국어 소스가 목록에서 통째로 사라져,
+    #   남은 샤오홍슈 2개로 메인이 정해졌다(영구 결손이 아니라 경합). 이제 pending으로 남겨
+    #   "분석 중"임을 화면이 말하게 하고, 하류(build_aipick)가 메인 확정을 보류한다.
     items = []
+    pending_codes = []
     seen = set()
     for sc in codes:
         if sc in seen:
@@ -7380,6 +7389,8 @@ def _load_work_sources(work_id, cid):
         w = store.get_wiki_item(sc, customer_id=cid) or _extract_as_source_item(store, sc)
         if w:
             items.append(w)
+        else:
+            pending_codes.append(sc)
     # 댓글수는 '지금' 값(reel_history 최신 크롤)을 우선 쓴다 — 도서관 스냅샷(script_wiki.comments)은
     # 저장 순간에 박제돼, 저장 후 댓글이 늘면 AI PICK만 옛 숫자를 보여준다(재료카드와 불일치,
     # 참여밀도도 옛 기준). 최신값이 없으면(30일 지나 정리 등) 도서관 스냅샷으로 폴백(2026-07-26).
@@ -7401,9 +7412,23 @@ def _load_work_sources(work_id, cid):
             #   비어, 프론트가 HANDOFF[pick_index]로 이름·썸네일을 추측한다 — 바구니 순서가 서버
             #   sources 순서와 어긋나면 '살림홈 숫자에 엉뚱한 영상 썸네일'처럼 카드가 자기모순이 된다.
             #   pick의 숫자와 썸네일이 항상 같은 영상에서 나오게 하려면 여기서 실어야 한다.
-            "name": w.get("name") or "",
-            "thumbnail": w.get("thumbnail") or "",
+            #   ★handoff 항목으로 폴백(2026-08-14). 샤오홍슈 담기(grab_*)는 reel_history에
+            #   행이 없어(실측) 이름·썸네일이 빈 채로 내려갔고, 그래서 프론트가 HANDOFF
+            #   인덱스로 '추측'하는 길이 열려 있었다. 담을 때 이미 아는 값이니 여기서 채운다.
+            "name": w.get("name") or (entry_by_code.get(w["shortcode"]) or {}).get("name") or "",
+            "thumbnail": (w.get("thumbnail")
+                          or (entry_by_code.get(w["shortcode"]) or {}).get("thumbnail") or ""),
             "category": w.get("category") or "",
+        })
+    # 추출 대기 중인 영상 — 목록에서 빼지 않고 pending으로 실어 보낸다(화면이 "분석 중"을 말하게).
+    for sc in pending_codes:
+        e = entry_by_code.get(sc) or {}
+        sources.append({
+            "video_id": sc, "text": "", "segments": [], "followers": None, "comments": None,
+            "seconds": None, "views": None, "structure": None,
+            "source_url": e.get("url") or "", "name": e.get("name") or "",
+            "thumbnail": e.get("thumbnail") or "", "category": "",
+            "pending": True,
         })
     return sources
 
