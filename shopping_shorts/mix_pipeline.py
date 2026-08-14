@@ -23,6 +23,7 @@ from shopping_shorts import tts
 from shopping_shorts import audio_post
 from shopping_shorts import config
 from shopping_shorts import single_source
+from shopping_shorts import script_lang
 from shopping_shorts.video_assemble import assemble, _beat_timeline, _probe_duration, _MAX_SLOWMO, preview_preset
 from shopping_shorts.motion_assets import resolve_layers, DEFAULT_ASSETS_DIR
 from shopping_shorts.motion_packs import build_plan, load_packs
@@ -847,6 +848,11 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     reference_text: scene_first일 때 스타일·구조를 계승할 레퍼런스 대본(보통 given_script 재활용)."""
     # 3) 통합 EDL
     store.update_mix_job(job_id, status="planning")
+    # ★언어 분리(2026-08-14 사장님 "샤오홍슈에 있는 영상은 대본과 아예 닿지 않게 하라"):
+    #   외국어 소스의 **말만** 지운다 — 화면·특장점은 그대로 남아 장면 재료로 계속 쓰인다.
+    #   ★반드시 여기 한 곳에서만 한다(0순위-B). 아래 모든 경로(훅패턴 material_text·
+    #   scene_first·build_edit_plan 폴백)가 이 source_scripts 하나를 본다.
+    source_scripts = script_lang.mute_foreign_speech(source_scripts)
     # ★1소스면 목표를 소재 천장에 맞춘다(2026-08-04). 릴 1개는 보통 20초인데 목표 30초가
     # 그대로 내려오면 없는 10초를 채우라는 요구가 돼 반복·무편집구간으로 늘리다 게이트에
     # 걸린다(실측: 1소스 100%가 소재부족). 하한 18초는 사장님 지시("스토리 기본이 서는 선").
