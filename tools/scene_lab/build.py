@@ -18,6 +18,11 @@ data = json.loads((BASE / "data.json").read_text(encoding="utf-8"))
 #   fetch가 data.json을 덮어써도 이 파일은 남아 배치가 유지된다.
 _picks = BASE / "picks.json"
 data["picks"] = json.loads(_picks.read_text(encoding="utf-8")) if _picks.exists() else None
+# ★PC를 옮겨도 조립이 따라오게(2026-08-14 사장님 "집 가서 하게"). 브라우저 저장(localStorage)은
+#   그 PC에만 남는다. tools/scene_lab/saved/<job>.json은 git이 추적하므로 다른 PC에서 받으면
+#   그대로 열린다. 그 PC에 더 최근 편집이 있으면 그쪽이 이긴다(아래 loadWork 참조).
+_saved = Path(__file__).resolve().parent / "saved" / (BASE.name + ".json")
+data["saved"] = json.loads(_saved.read_text(encoding="utf-8")) if _saved.exists() else None
 
 html = """<!doctype html>
 <html lang="ko"><head><meta charset="utf-8">
@@ -771,6 +776,23 @@ function loadWork(){
   }catch(e){ return false; }
 }
 function clearWork(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+// git으로 따라온 조립(saved/<job>.json)을 불러온다 — 이 PC에 저장본이 없을 때만 쓴다.
+function loadSaved(){
+  const w = DATA.saved;
+  if (!w || !Array.isArray(w.lists) || w.lists.length !== DATA.beats.length) return false;
+  mode = w.mode || 'hand';
+  lists = w.lists.map(l => Array.isArray(l) ? l.slice() : []);
+  chosen.clear(); (w.chosen || []).forEach(x => chosen.add(x));
+  Object.keys(NARR).forEach(k => delete NARR[k]);
+  Object.assign(NARR, w.narr || {});
+  ['live','one','hand','pick'].forEach(x => {
+    const b = document.getElementById('m-' + x);
+    if (b) b.classList.toggle('on', x === mode);
+  });
+  const el = document.getElementById('savedmsg');
+  if (el) el.textContent = '📦 다른 PC에서 만든 조립을 불러왔습니다' + (w.at ? ` (${w.at.slice(0,10)})` : '');
+  return true;
+}
 // ── 대본 편집(2026-08-14 사장님 "여기서 대본까지 수정되게 해줘") ────────────────────
 // 로컬에서 음성(TTS)을 새로 만들 수는 없다 — 그래서 **글을 고쳐 저장하고, 길이가 어떻게
 // 바뀌는지 라이브와 같은 기준(글자수 ÷ 초당 글자수)으로 보여주는 것**까지가 여기의 몫이다.
@@ -867,6 +889,7 @@ if (DATA.picks && (DATA.picks.lists || []).length){
 // ★저장된 내 편집이 있으면 그것부터 — 없을 때만 기본 배치로 연다.
 warmVideos();
 if (loadWork()) render();
+else if (loadSaved()) render();                       // 다른 PC에서 넘어온 조립
 else if (DATA.picks && (DATA.picks.lists || []).length) setMode('pick');
 else { initLists(); render(); }
 </script></body></html>
