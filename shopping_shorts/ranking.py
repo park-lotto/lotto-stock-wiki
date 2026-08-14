@@ -56,7 +56,11 @@ def build_items(reels, meta, prev_comments, prev_delta, now=None, window_hours=4
         delta = comments if is_new else comments - prev_c
         prev_d = prev_delta(sc)
         accel = None if prev_d is None else delta - prev_d
-        followers = meta.get("followers") or 0
+        # ★팔로워는 크롤이 실어온 실시간 값을 우선한다(2026-08-14). 엑셀 메타는
+        # ①발굴 채널엔 아예 없고(실측 316건 중 212건=67% 결측) ②있어도 낡았다
+        # (roomoftem.kr 엑셀 3811 vs 실제 6653). 릴스 페이지가 내려주는 값이라
+        # 추가 요청 0건. 크롤이 못 받았을 때만 엑셀로 폴백한다.
+        followers = int(r.get("ownerFollowers") or 0) or (meta.get("followers") or 0)
         # density가 참조하므로 dict 리터럴 밖에서 먼저 만든다(리터럴 안에선 키끼리 참조 불가).
         likes = int(r.get("likesCount") or 0)
         views = int(r.get("videoViewCount") or r.get("videoPlayCount") or 0)
@@ -85,6 +89,11 @@ def build_items(reels, meta, prev_comments, prev_delta, now=None, window_hours=4
             # 그 67%는 구조적으로 최상위 배지에서 배제됐다. views는 결측 0/316(실측)이라
             # 조회 기반으로 바꾸면 팔로워 의존이 통째로 사라지고 정의도 타 플랫폼과 통일된다.
             "density": ((likes + comments) / views) if views else 0.0,
+            # 팔로워 대비 반응(2026-08-14 되살림). 조회 기반 density와 **다른 것을 본다**:
+            # density=본 사람 중 몇 %가 반응했나 / fan_density=구독자 규모 대비 얼마나
+            # 뜨거웠나(작은 채널의 대박을 잡는 눈). 팔로워가 크롤로 채워지면서 다시
+            # 쓸 수 있게 됐으므로 죽이지 않고 별도 지표로 남긴다.
+            "fan_density": (comments / followers) if followers else 0.0,
             "category": _category_of(meta, r),
             "caption": r.get("caption", ""),
         })

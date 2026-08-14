@@ -142,3 +142,38 @@ def test_accel_zero_is_not_treated_as_missing():
     b = {"shortcode": "b", "speed": 10.0, "density": 1.0, "accel": 10}
     apply_grades([a, b])
     assert a["score"] < b["score"]        # 0점 가속은 불리한 게 맞다
+
+
+def test_crawled_followers_beat_stale_excel():
+    """크롤이 실어온 팔로워가 낡은 엑셀값을 이긴다(실측: 엑셀 3811 vs 실제 6653)."""
+    reels = [{"shortcode": "f", "timestamp": (NOW - timedelta(hours=2)).isoformat(),
+              "commentsCount": 100, "likesCount": 0, "videoViewCount": 1000,
+              "ownerFollowers": 6653,
+              "displayUrl": "", "url": "", "caption": ""}]
+    meta = {"name": "n", "username": "u", "followers": 3811}      # 낡은 엑셀
+    it = build_items(reels, meta, prev_comments=lambda sc: None,
+                     prev_delta=lambda sc: None, now=NOW, window_hours=48)[0]
+    assert round(it["fan_density"], 6) == round(100 / 6653, 6)
+
+
+def test_followers_fallback_to_excel_when_crawl_missing():
+    """크롤이 팔로워를 못 받으면 엑셀값으로 폴백(회귀 방지)."""
+    reels = [{"shortcode": "g", "timestamp": (NOW - timedelta(hours=2)).isoformat(),
+              "commentsCount": 100, "likesCount": 0, "videoViewCount": 1000,
+              "displayUrl": "", "url": "", "caption": ""}]         # ownerFollowers 없음
+    it = build_items(reels, {"name": "n", "username": "u", "followers": 500},
+                     prev_comments=lambda sc: None, prev_delta=lambda sc: None,
+                     now=NOW, window_hours=48)[0]
+    assert it["fan_density"] == 100 / 500
+
+
+def test_fan_density_survives_no_followers_anywhere():
+    """양쪽 다 없으면 0 — 나눗셈 폭발 금지."""
+    reels = [{"shortcode": "h", "timestamp": (NOW - timedelta(hours=2)).isoformat(),
+              "commentsCount": 5, "likesCount": 0, "videoViewCount": 100,
+              "displayUrl": "", "url": "", "caption": ""}]
+    it = build_items(reels, {"name": "n", "username": "u"},
+                     prev_comments=lambda sc: None, prev_delta=lambda sc: None,
+                     now=NOW, window_hours=48)[0]
+    assert it["fan_density"] == 0.0
+    assert it["density"] == 0.05      # 조회 기반은 살아있다
