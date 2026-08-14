@@ -268,6 +268,11 @@ body.is-admin .blockbtn{display:inline-block}
 .ctype:hover{transform:translateY(-1px);box-shadow:0 6px 18px -8px rgba(55,224,189,.5)}
 .ctype.active{background:linear-gradient(180deg,#45efc0,#20c596)!important;color:#052018!important;border-color:transparent!important;
   box-shadow:0 4px 16px -4px rgba(55,224,189,.6)}
+/* 카드 상단 팔로워(2026-08-14) — 값이 없어도 '—'로 자리를 지킨다.
+   예전엔 팔로워가 없으면 줄 자체가 사라져 카드마다 높이가 달라지고
+   '이 채널은 팔로워를 못 받았다'는 사실이 보이지 않았다. */
+.folw{margin:-2px 0 6px;font-size:12px;font-weight:700;color:var(--accent);
+      letter-spacing:.01em;opacity:.95}
 /* 걸러내기 토글(2026-08-14) — 정렬 탭과 눈에 띄게 다르게(알약형) 만들어 축이 다름을 보인다 */
 .filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
 .filters .flabel{color:var(--sub);font-size:12px}
@@ -1460,12 +1465,11 @@ function render(){
       <div class="body">
         <div class="rank"><span>#${idx+1} · ${i.category} · ${fmtAgo(i)}</span><button class="blockbtn" title="이 채널을 영구 차단 — 지금 바로 가리고, 다음 수집·업데이트에도 안 올라옵니다" onclick="blockChannel('${esc(i.username||'')}','${esc(i.name||'')}',this)">🚫 차단</button></div>
         <div class="ch"><span class="chname" title="이 채널 영상만 보기(지난 한 달 포함)" style="cursor:pointer" onclick="searchChannel('${esc(i.username||'')}')">${i.name||i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${i.url}', this)">🔗 복사</button></div>
-        ${i.followers?`<div class="rank" style="margin:-4px 0 4px">팔로워 ${i.followers.toLocaleString()}</div>`:''}
+        <div class="folw" title="채널 팔로워(구독자) 수 — 수집이 실어온 실시간 값">👥 팔로워 ${i.followers?i.followers.toLocaleString():'—'}</div>
         ${i.views?`<div class="stat" title="조회수 — 옆의 +숫자는 직전 수집 대비 증가분(= '전체' 탭 정렬 기준)"><span>조회수</span><b>${i.views.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>`:''}
         <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${i.comments.toLocaleString()}${i.views?'':` <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span>`}</b></div>
         <div class="stat" title="댓글 ÷ 경과시간 — 게시 후 시간당 평균"><span>시간당댓글</span><b>${i.speed.toFixed(1)}</b></div>
         <div class="stat" title="댓글 ÷ 조회수 — 본 사람 중 댓글 단 비율"><span>조회수당댓글</span><b>${(i.density*100).toFixed(2)}%</b></div>
-        <div class="stat" title="채널 팔로워(구독자) 수 — 수집이 실어온 실시간 값"><span>팔로워</span><b>${i.followers?i.followers.toLocaleString():"—"}</b></div>
         ${i.fan_density?`<div class="stat" title="댓글 ÷ 팔로워수 — 구독자 규모 대비 반응"><span>팔로워당댓글</span><b>${(i.fan_density*100).toFixed(2)}%</b></div>`:""}
         ${i.inpock?`<div style="margin-top:6px"><a href="${i.inpock}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🛒 판매채널</a></div>`:''}
         <div class="actions">
