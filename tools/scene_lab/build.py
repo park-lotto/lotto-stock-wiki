@@ -117,7 +117,8 @@ button.act:hover{border-color:var(--accent)}
 #player{position:fixed;right:16px;bottom:56px;width:300px;background:var(--panel);
         border:1px solid var(--accent);border-radius:10px;padding:8px;z-index:50;display:none}
 #player.on{display:block}
-#player video{width:100%;border-radius:6px;background:#000;display:block;aspect-ratio:9/16;object-fit:contain}
+#player #vidbox{position:relative;background:#000;border-radius:6px;overflow:hidden;aspect-ratio:9/16}
+#player video{width:100%;height:100%;border-radius:6px;background:#000;display:block;aspect-ratio:9/16;object-fit:contain;position:absolute;inset:0}
 .phead{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-bottom:6px}
 .phead .x{cursor:pointer;color:var(--dim)}
 .phead .x:hover{color:var(--bad)}
@@ -168,7 +169,7 @@ button.act:hover{border-color:var(--accent)}
 
 <div id="player">
   <div class="phead"><b>미리보기</b><span class="x" onclick="stopPlay()">닫기 ✕</span></div>
-  <video id="vid" muted playsinline></video>
+  <div id="vidbox"></div>
   <div id="subbox"></div>
   <audio id="bgaudio"></audio>
   <div class="pinfo" id="pinfo">장면의 ▶ 또는 칸의 “이 칸 재생”을 누르세요<br>
@@ -454,7 +455,35 @@ function render(){
 // 소스 mp4를 그대로 쓰고 구간만 잘라 재생한다. 여러 컷은 이어서 재생 →
 // '실제 나올 화면'을 그대로 눈으로 본다(렌더 돌리지 않고 확인).
 let seq = [], seqI = 0, seqTimer = null, seqLabel = '';
-const vid = () => document.getElementById('vid');
+// ★칸이 넘어갈 때 검은 화면이 잠깐 생기던 것(2026-08-14 사장님 "훅에서 problem 넘어갈 때
+//   중간에 검정화면이 살짝 생긴다"). 원인은 <video> 하나에 src를 갈아끼우느라 파일을 다시
+//   여는 공백이었다 — 실제 렌더 영상에는 없는, 미리보기만의 현상이다.
+//   처방: 소스마다 <video>를 미리 만들어 두고 **보이기만** 바꾼다(파일은 계속 열려 있다).
+const _vids = {};
+function vidFor(videoId){
+  if (_vids[videoId]) return _vids[videoId];
+  const box = document.getElementById('vidbox');
+  const v = document.createElement('video');
+  v.muted = true; v.playsInline = true; v.preload = 'auto';
+  v.src = `src/${videoId}.mp4`;
+  v.style.display = 'none';
+  box.appendChild(v);
+  _vids[videoId] = v;
+  return v;
+}
+let curVid = null;
+function showVid(v){
+  if (curVid === v) return;
+  if (curVid){ curVid.pause(); curVid.style.display = 'none'; }
+  v.style.display = 'block';
+  curVid = v;
+}
+const vid = () => curVid || document.getElementById('vid');
+// 페이지가 열리면 소스들을 미리 열어 둔다(첫 전환도 매끄럽게).
+function warmVideos(){
+  const ids = new Set(Object.values(DATA.segments).map(s => s.video_id));
+  ids.forEach(id => vidFor(id));
+}
 
 function stopPlay(){
   clearTimeout(seqTimer); seqTimer = null; seq = [];
@@ -545,24 +574,29 @@ function startSeq(clips){
   step();
 }
 function step(){
-  const v = vid();
   if (seqI >= seq.length){
     document.getElementById('pinfo').textContent = `${seqLabel} — 재생 끝 (${seq.length}컷)`;
-    v.pause(); return;
+    if (curVid) curVid.pause();
+    return;
   }
   const c = seq[seqI];
-  const src = `src/${c.video_id}.mp4`;
+  const v = vidFor(c.video_id);
   const go = () => {
     v.currentTime = c.start;
+    showVid(v);                    // 보일 때는 이미 시크가 끝나 있다 → 검은 화면 없음
     v.play().catch(()=>{});
     document.getElementById('pinfo').innerHTML =
-      `${seqLabel}<br>컷 ${seqI+1}/${seq.length} · ${c.dur.toFixed(1)}초 · 장면 ${c.seg_id.split('-').pop()}`;
+      `${seqLabel}<br>컷 ${seqI+1}/${seq.length} · ${c.dur.toFixed(1)}초 · 장면 ${c.seg_id}`;
+    // 다음 컷의 소스를 미리 그 지점으로 옮겨 둔다(전환 순간에 할 일을 없앤다).
+    const n = seq[seqI + 1];
+    if (n){
+      const nv = vidFor(n.video_id);
+      if (nv !== v && nv.readyState >= 1) nv.currentTime = n.start;
+    }
     seqTimer = setTimeout(() => { seqI++; step(); }, c.dur * 1000);
   };
-  if (!v.src.endsWith(src)){
-    v.src = src;
-    v.onloadedmetadata = go;                 // 소스가 바뀌면 메타데이터를 기다렸다 시크
-  } else go();
+  if (v.readyState >= 1) go();           // 이미 열려 있으면 즉시
+  else v.onloadedmetadata = go;
 }
 
 // 끌어서 순서 바꾸기(2026-08-14 사장님 "잡고 이동해서 순서변경"). 같은 칸 안에서만 옮긴다
@@ -662,6 +696,7 @@ if (DATA.picks && (DATA.picks.lists || []).length){
   if (DATA.picks.label) el.firstChild.textContent = DATA.picks.label + ' ';
 }
 // ★저장된 내 편집이 있으면 그것부터 — 없을 때만 기본 배치로 연다.
+warmVideos();
 if (loadWork()) render();
 else if (DATA.picks && (DATA.picks.lists || []).length) setMode('pick');
 else { initLists(); render(); }
