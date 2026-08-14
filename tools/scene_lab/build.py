@@ -507,7 +507,15 @@ function dragDrop(i, k, ev){
 }
 function selBeat(i){ sel = i; render(); }
 function add(sid){
-  if (mode !== 'hand'){ setMode('hand'); }
+  // ★담을 때 지금 배치를 절대 초기화하지 않는다(2026-08-14 사장님 "4장면 있었는데 하나
+  //   추가하니 2개로 변했다"). 예전엔 setMode('hand')를 불렀는데 그게 initLists()로 전 칸을
+  //   되돌려, ④ 배치에 한 장 담는 순간 4장이 1장(첫 장만)으로 줄고 새 것까지 2장이 됐다.
+  //   모드 표시만 '내가 편성'으로 바꾸고 리스트·선택은 그대로 둔다.
+  if (mode !== 'hand'){
+    mode = 'hand';
+    ['live','one','hand','pick'].forEach(x =>
+      document.getElementById('m-' + x).classList.toggle('on', x === 'hand'));
+  }
   const l = lists[sel];
   if (!l) return;
   if (l.includes(sid)) return;          // 중복 금지 — 같은 화면 되풀이 방지
