@@ -161,7 +161,7 @@ button.act:hover{border-color:var(--accent)}
     <div id="palette"></div>
   </div>
   <div class="pane right">
-    <div class="lbl"><button class="act" onclick="playAll(event)" style="margin-right:10px">▶ 전체 재생(칸 이어서)</button><label style="cursor:pointer;margin-right:12px"><input type="checkbox" onchange="toggleOne(this.checked)"> 1장=1컷(되돌아옴 없음)</label>아래 <b>“실제 나올 화면”</b>이 렌더 결과입니다(렌더 알고리즘 이식) ·
+    <div class="lbl"><button class="act" onclick="playAll(event)" style="margin-right:10px">▶ 전체 재생(칸 이어서)</button><label style="cursor:pointer;margin-right:12px"><input type="checkbox" onchange="toggleOne(this.checked)"> 1장=1컷 · 비례 배분(되돌아옴 없음)</label>아래 <b>“실제 나올 화면”</b>이 렌더 결과입니다(렌더 알고리즘 이식) ·
       <span style="color:var(--warn)">주황 = 2.5초 넘게 안 바뀌는 컷(늘어짐)</span></div>
     <div id="film"></div>
   </div>
@@ -335,19 +335,28 @@ function planClips(segIds, ttsDur){
   const clips = []; let filled = 0;
   if (!segments.length) return clips;
   if (onePerSeg){
-    // 담은 순서대로 한 장에 한 컷. 길이는 나레이션을 장수로 고르게 나누고, 남는 시간은
-    // **마지막 컷**이 흡수한다(새 컷을 만들지 않으므로 되돌아옴이 없다).
-    const share = ttsDur / segments.length;
-    for (const seg of segments){
-      const remaining = ttsDur - filled;
-      if (remaining <= EPS) break;
-      const take = Math.min(seg.end - seg.start, share, remaining);
-      if (take <= EPS) continue;
-      if (take < MIN_CLIP - EPS && clips.length) continue;
-      clips.push({seg_id: seg.seg_id, video_id: seg.video_id, start: seg.start, dur: take});
-      filled += take;
+    // 1장=1컷 · 비례 배분(라이브 _plan_beat_clips one_per_seg와 같은 규칙).
+    // 나레이션 시간을 담은 장면들에 **길이 비례**로 나눈다 — 남으면 줄이고 모자라면 늘린다.
+    // 담은 게 전부·순서대로·한 번씩 나오고, 긴 장면은 길게 짧은 장면은 짧게 비율이 유지된다.
+    let usable = segments.filter(g => g.end - g.start > EPS);
+    while (usable.length > 1){
+      const total = usable.reduce((a,g) => a + (g.end - g.start), 0);
+      const scale = total > EPS ? ttsDur / total : 0;
+      const small = usable.filter(g => (g.end - g.start) * scale < MIN_CLIP - EPS);
+      if (!small.length) break;
+      usable = usable.filter(g => !small.includes(g));
     }
-    if (clips.length && ttsDur - filled > EPS) clips[clips.length - 1].dur += ttsDur - filled;
+    if (usable.length){
+      const total = usable.reduce((a,g) => a + (g.end - g.start), 0);
+      const scale = total > EPS ? ttsDur / total : 0;
+      usable.forEach((seg, k) => {
+        let take = (seg.end - seg.start) * scale;
+        if (k === usable.length - 1) take = Math.max(0, ttsDur - filled);
+        if (take <= EPS) return;
+        clips.push({seg_id: seg.seg_id, video_id: seg.video_id, start: seg.start, dur: take});
+        filled += take;
+      });
+    }
     return clips;
   }
   if (segments.length > 1){

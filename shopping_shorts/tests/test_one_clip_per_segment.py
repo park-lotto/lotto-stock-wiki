@@ -38,14 +38,29 @@ def test_share_is_even_when_sources_long_enough():
     assert all(abs(c["out_dur"] - 2.0) < 1e-6 for c in clips)
 
 
-def test_short_segment_gives_what_it_has():
-    """짧은 장면은 가진 만큼만 쓰고, 남는 시간은 **마지막 컷**이 흡수한다(새 컷 안 만듦)."""
-    segs = [_seg("a", 0, 1.0), _seg("b", 0, 10)]
+def test_proportional_shrink():
+    """총합이 남으면 길이 비례로 줄인다 — 긴 장면은 길게, 짧은 장면은 짧게."""
+    segs = [_seg("a", 0, 2.0), _seg("b", 0, 4.0)]
+    clips = _plan_beat_clips(segs, 3.0, max_shot=2.2, one_per_seg=True)
+    assert len(clips) == 2
+    assert abs(clips[0]["out_dur"] - 1.0) < 1e-6       # 2:4 비율 그대로
+    assert abs(clips[1]["out_dur"] - 2.0) < 1e-6
+
+
+def test_proportional_stretch():
+    """모자라면 비례로 늘린다 — 마지막 하나만 길게 늘리지 않는다."""
+    segs = [_seg("a", 0, 2.0), _seg("b", 0, 4.0)]
+    clips = _plan_beat_clips(segs, 12.0, max_shot=2.2, one_per_seg=True)
+    assert abs(clips[0]["out_dur"] - 4.0) < 1e-6
+    assert abs(clips[1]["out_dur"] - 8.0) < 1e-6
+
+
+def test_too_small_share_is_dropped():
+    """비례로 나눴을 때 0.8초에 못 미치는 장면은 빼고 남은 것끼리 다시 나눈다(깜빡임 방지)."""
+    segs = [_seg("a", 0, 1.0), _seg("b", 0, 10)]      # a 몫은 0.55초 → 제외
     clips = _plan_beat_clips(segs, 6.0, max_shot=2.2, one_per_seg=True)
-    assert len(clips) == 2                             # 담은 장수 그대로
-    assert abs(clips[0]["out_dur"] - 1.0) < 1e-6       # 1초짜리는 1초만
-    assert abs(clips[1]["out_dur"] - 5.0) < 1e-6       # 몫 3초 + 남은 2초를 흡수
-    assert abs(sum(c["out_dur"] for c in clips) - 6.0) < 1e-6
+    assert [c["video_id"] for c in clips] == ["b"]
+    assert abs(clips[0]["out_dur"] - 6.0) < 1e-6
 
 
 def test_tiny_leftover_not_made_into_clip():
