@@ -32,8 +32,8 @@ def test_build_items_filters_by_window():
     assert it["delta"] == 600            # 직전값 없으면 delta = comments (신규)
     assert it["is_new"] is True
     assert round(it["speed"], 1) == 120.0  # 600 / 5h
-    # 참여밀도 = (좋아요+댓글)/조회수 (2026-08-14 정의 변경, 옛값은 comments/followers=0.6)
-    assert round(it["density"], 3) == 6.1  # (10 + 600) / 100
+    # 조회수당댓글 = 댓글/조회수 (2026-08-14: 이름과 식을 맞춤. 옛값 comments/followers=0.6)
+    assert round(it["density"], 3) == 6.0  # 600 / 100
 
 
 def test_density_uses_views_not_followers():
@@ -44,7 +44,7 @@ def test_density_uses_views_not_followers():
     meta = {"name": "발굴채널", "username": "u"}          # followers 키 자체가 없다
     it = build_items(reels, meta, prev_comments=lambda sc: None,
                      prev_delta=lambda sc: None, now=NOW, window_hours=48)[0]
-    assert round(it["density"], 3) == 0.1                # (60 + 40) / 1000
+    assert round(it["density"], 3) == 0.04               # 댓글 40 / 조회 1000
 
 
 def test_density_zero_views_is_safe():
@@ -175,4 +175,4 @@ def test_fan_density_survives_no_followers_anywhere():
                      prev_comments=lambda sc: None, prev_delta=lambda sc: None,
                      now=NOW, window_hours=48)[0]
     assert it["fan_density"] == 0.0
-    assert it["density"] == 0.05      # 조회 기반은 살아있다
+    assert it["density"] == 0.05      # 조회 기반은 살아있다 (댓글 5 / 조회 100)

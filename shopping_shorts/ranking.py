@@ -81,14 +81,19 @@ def build_items(reels, meta, prev_comments, prev_delta, now=None, window_hours=4
             "is_new": is_new,
             "accel": accel,
             "speed": comments / age if age > 0 else float(comments),
-            # 참여밀도 = (좋아요+댓글)/조회수 — 5개 플랫폼 공통 정의(2026-08-14).
+            # 조회수당댓글 = 댓글/조회수 (2026-08-14 사장님 지시로 이름·식 통일).
+            # 세 지표를 전부 '댓글' 기준으로 맞춘다 — 시간당댓글·조회수당댓글·팔로워당댓글.
+            # 좋아요를 뺀 이유는 이름이 식을 그대로 말하게 하기 위함이다(옛 식은
+            # (좋아요+댓글)/조회수였는데 이름이 '조회수당댓글'이면 거짓말이 된다).
+            # ※타 플랫폼(유튜브 :158 등)은 여전히 (좋아요+댓글)/조회수 — 인스타만 갈렸다.
+            # 옛 정의 이력 ↓
             # 옛 정의는 comments/followers였는데 인스타만 이 공식을 썼고(유튜브 :158·틱톡 :253·
             # 레딧 :303·샤오홍슈 :359는 전부 조회·참여 기반), followers가 엑셀 메타에만 있어
             # 발굴채널은 값이 아예 없다 → 실측 212/316건(67%)이 density=0으로 고착. 그 결과
             # 배지 판정(index.html: score=vr*0.35+dr*0.50+sr*0.15)에서 density 가중이 50%인데
             # 그 67%는 구조적으로 최상위 배지에서 배제됐다. views는 결측 0/316(실측)이라
             # 조회 기반으로 바꾸면 팔로워 의존이 통째로 사라지고 정의도 타 플랫폼과 통일된다.
-            "density": ((likes + comments) / views) if views else 0.0,
+            "density": (comments / views) if views else 0.0,
             # 팔로워 대비 반응(2026-08-14 되살림). 조회 기반 density와 **다른 것을 본다**:
             # density=본 사람 중 몇 %가 반응했나 / fan_density=구독자 규모 대비 얼마나
             # 뜨거웠나(작은 채널의 대박을 잡는 눈). 팔로워가 크롤로 채워지면서 다시
