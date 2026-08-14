@@ -489,7 +489,9 @@ function render(){
         ${narrChanged(i) ? `<div class="why" style="color:var(--warn);border-color:#5a4520;background:#2a2113">
              ✏ 대본 수정됨 · 예상 ${estSec(narrOf(i)).toFixed(1)}초(원래 ${(b.target_seconds||0).toFixed(1)}초)
              — 음성·자막은 다시 뽑아야 반영됩니다
-             <button class="act" style="margin-left:8px" onclick="event.stopPropagation();resetNarr(${i})">되돌리기</button>
+             <button class="act" style="margin-left:8px;border-color:var(--good);color:var(--good)"
+                     onclick="event.stopPropagation();retts(${i})">🔊 음성·자막 다시 뽑기</button>
+             <button class="act" onclick="event.stopPropagation();resetNarr(${i})">되돌리기</button>
              <button class="act" onclick="event.stopPropagation();copyScript()">전체 대본 복사</button></div>` : ''}
         ${(mode==='pick' && _why[i]) ? `<div class="why">🎯 ${esc(_why[i])}</div>` : ''}
       </div>
@@ -786,6 +788,25 @@ function editNarr(i, el){
   render();
 }
 function resetNarr(i){ delete NARR[i]; render(); }
+// ★음성·자막 다시 뽑기 — 로컬 서버(serve.py)가 SSH로 진짜 서버에 시킨다. 라이브와 같은
+//   코드로 만들어 받으므로 자막이 어긋날 수 없다. 끝나면 페이지를 다시 읽어 반영한다.
+async function retts(i){
+  const msg = document.getElementById('savedmsg');
+  const txt = narrOf(i);
+  if (msg) msg.textContent = `🔊 칸 ${i+1} 음성·자막 만드는 중… (10~20초)`;
+  try{
+    const r = await fetch('/retts', {method:'POST', headers:{'Content-Type':'application/json'},
+                                    body: JSON.stringify({beat_idx: i, text: txt})});
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || '실패');
+    delete NARR[i];                       // 서버 data.json이 새 대본으로 바뀌었다
+    saveWork();
+    if (msg) msg.textContent = `✅ 칸 ${i+1} 다시 뽑음 — ${j.dur}초 / 자막 ${j.captions.length}구절. 새로고침합니다`;
+    setTimeout(() => location.reload(), 900);
+  }catch(e){
+    if (msg) msg.textContent = '⚠ 다시 뽑기 실패: ' + (e.message || e);
+  }
+}
 function copyScript(){
   // 개행은 코드에 직접 쓰지 않는다 — 이 JS는 파이썬 문자열 안에 들어 있어 이스케이프가 충돌한다.
   const NL = String.fromCharCode(10);

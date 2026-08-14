@@ -5,6 +5,7 @@
 currentTime으로 특정 지점을 못 찾아(시크 불가) 미리보기가 안 돈다.
 그래서 206 Partial Content를 직접 처리한다.
 """
+import json
 import os
 import re
 import sys
@@ -13,6 +14,7 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _HERE)   # retts를 import 하려고
 # 인자 = job_id(=out/<job_id>) 또는 폴더 경로. 없으면 out/ 안에서 가장 최근 잡을 연다.
 _arg = sys.argv[1] if len(sys.argv) > 1 else None
 if _arg and os.path.isdir(_arg):
@@ -32,6 +34,30 @@ PORT = int(os.environ.get("SCENE_LAB_PORT", "8777"))
 
 
 class RangeHandler(SimpleHTTPRequestHandler):
+    def do_POST(self):
+        """★'음성·자막 다시 뽑기'(2026-08-14). 브라우저는 서버에 SSH를 못 하니 이 로컬 서버가
+        대신 부른다. 라이브와 같은 코드(tts.synthesize_tts / _caption_segments)로 만들어
+        받아오므로 자막이 어긋날 수 없다 — JS로 다시 나누면 두 벌이 된다(0순위-B)."""
+        if self.path != "/retts":
+            self.send_error(404)
+            return
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+            body = json.loads(self.rfile.read(n).decode("utf-8"))
+            job = os.path.basename(BASE)
+            import retts as _retts
+            meta = _retts.retts(job, int(body["beat_idx"]), body["text"])
+            out = json.dumps({"ok": True, "dur": meta["dur"],
+                              "captions": meta["captions"]}).encode("utf-8")
+            self.send_response(200)
+        except Exception as e:                     # 실패해도 페이지는 살아 있어야 한다
+            out = json.dumps({"ok": False, "error": str(e)[:300]}).encode("utf-8")
+            self.send_response(500)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(out)))
+        self.end_headers()
+        self.wfile.write(out)
+
     def send_head(self):
         rng = self.headers.get("Range")
         if not rng:
