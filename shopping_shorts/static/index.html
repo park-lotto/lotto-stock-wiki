@@ -247,7 +247,12 @@
 .tabs{position:relative;gap:4px;overflow-x:auto;scrollbar-width:thin}
 .tab{font-weight:700;border-radius:9px 9px 0 0;transition:color .2s,background .2s;white-space:nowrap;flex:0 0 auto}
 /* 지표탭(전체·시간당댓글수·조회수밀도·팔로워밀도)과 단순정렬탭(댓글·팔로워·조회수)을 눈으로 가르는 구분선 */
-.tab-div{flex:0 0 auto;align-self:center;width:1px;height:18px;background:var(--line);margin:0 8px}
+/* 탭 두 묶음을 눈에 띄게 가른다(2026-08-14) — 얇은 선 하나로는 구분이 안 보였다.
+   왼쪽 '강도 지표'=계산해서 순위를 매기는 것 / 오른쪽 '단순 정렬'=절대값 그대로 줄세우기. */
+.tab-div{flex:0 0 auto;align-self:center;width:1px;height:26px;background:var(--line);margin:0 14px;opacity:.9}
+.tab-grp{flex:0 0 auto;align-self:center;font-size:11px;font-weight:700;letter-spacing:.02em;
+         color:var(--sub);opacity:.75;padding:2px 8px;margin-right:2px;border-radius:6px;
+         background:rgba(255,255,255,.05);white-space:nowrap}
 /* 🚫 차단 = 관리자 전용. 기본 숨김이고 body.is-admin일 때만 뜬다(구독자 화면 플래시 방지) */
 .blockbtn{display:none;flex-shrink:0;background:var(--inset);border:1px solid var(--line);color:var(--sub);
   font-size:11px;padding:3px 7px;border-radius:6px;cursor:pointer;line-height:1;margin-left:auto}
@@ -408,11 +413,13 @@ body.is-admin .blockbtn{display:inline-block}
       </div>
     </details>
     <div class="tabs" id="tabs">
+      <span class="tab-grp">강도 지표</span>
       <div class="tab active" data-tab="comments" title="오늘 늘어난 조회수(직전 수집 대비 증가분) 순 — 매일 순위가 바뀝니다">📊 전체</div>
       <div class="tab" data-tab="speed" title="댓글수 ÷ 경과시간 — 올라온 뒤 시간당 평균 몇 개씩 댓글이 붙었는지. ★지금 이 순간의 속도가 아니라 게시 후 누적 평균입니다">⚡ 시간당댓글수</div>
       <div class="tab" data-tab="density" title="(좋아요+댓글) ÷ 조회수 — 본 사람 중 몇 %가 반응했는지. 조회수가 작아도 반응이 뜨거우면 상위권">💥 조회수밀도</div>
       <div class="tab" data-tab="fan_density" title="댓글수 ÷ 팔로워수 — 구독자 규모 대비 얼마나 뜨거웠는지. 작은 채널의 대박을 잡는 눈(조회수밀도와 보는 게 다릅니다)">🙌 팔로워밀도</div>
       <span class="tab-div"></span>
+      <span class="tab-grp">단순 정렬</span>
       <div class="tab" data-tab="rawcomments" title="댓글 수가 많은 순 (절대값)">💬 댓글순</div>
       <div class="tab" data-tab="followers" title="채널 팔로워(구독자)가 많은 순">👥 팔로워순</div>
       <div class="tab" data-tab="views" title="조회수가 많은 순">👁 조회수순</div>
