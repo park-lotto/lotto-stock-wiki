@@ -50,7 +50,10 @@ class RangeHandler(SimpleHTTPRequestHandler):
             out = json.dumps({"ok": True, "dur": meta["dur"],
                               "captions": meta["captions"]}).encode("utf-8")
             self.send_response(200)
-        except Exception as e:                     # 실패해도 페이지는 살아 있어야 한다
+        except (Exception, SystemExit) as e:       # 실패해도 페이지는 살아 있어야 한다
+            # ★retts는 잘못된 입력에 sys.exit를 부른다(SystemExit는 Exception이 아니라
+            #   BaseException이라 안 잡히면 응답이 통째로 비어 버린다, 실측 000).
+
             out = json.dumps({"ok": False, "error": str(e)[:300]}).encode("utf-8")
             self.send_response(500)
         self.send_header("Content-Type", "application/json; charset=utf-8")

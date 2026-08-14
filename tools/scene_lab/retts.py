@@ -62,11 +62,16 @@ import json, os, sys
 sys.path.insert(0, '/home/ubuntu/lotto-stock-wiki')
 from shopping_shorts import tts as _tts
 from shopping_shorts import video_assemble as va
+from shopping_shorts import mix_pipeline as mp
 text = {text!r}
 out = '/tmp/sl_retts_{beat_idx}.mp3'
 if os.path.exists(out):
     os.remove(out)
-_tts.synthesize_tts(text, out)
+# ★성우 = 미나(kr-mina-expressive). 값을 여기 옮겨 적지 않는다 — mix_pipeline._DEFAULT_VOICE를
+#   그대로 읽어 쓴다(두 벌이 되면 라이브와 목소리가 갈린다, 0순위-B).
+vid, vset, spd, _tempo, _trim, _nat, mid, _pace = mp._voice_params(None)
+print('   성우:', mp._DEFAULT_VOICE.get('preset_id'), '/ speed', spd)
+_tts.synthesize_tts(text, out, voice_id=vid, voice_settings=vset, speed=spd, model_id=mid)
 dur = 0.0
 try:
     import subprocess as sp
