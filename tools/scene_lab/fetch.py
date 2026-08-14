@@ -87,7 +87,12 @@ plan=json.loads(r[0]); extract=json.loads(r[1])
 seg_map,_=ep._build_inventory(list(extract.values()))
 out={{'job_id':'{job_id}','beats':plan['beats'],'urls':json.loads(r[2]),
      'segments':{{k:{{'video_id':v['video_id'],'start':v['start'],'end':v['end'],
-                    'scene_desc':v.get('scene_desc',''),'text':v.get('text','')}} for k,v in seg_map.items()}}}}
+                    'scene_desc':v.get('scene_desc',''),'text':v.get('text',''),
+                    # ★추출이 이미 태깅한 결(2026-08-14 사장님 "완성품·조리 이런 식으로 나누고
+                    #   후킹용·조리용·CTA용 태그"). 실험실이 안 받아와서 세밀한 묘사만 보였다.
+                    'shot_role':v.get('shot_role') or '기타','is_key':bool(v.get('is_key')),
+                    'action':v.get('action') or '','change':v.get('change') or '',
+                    'benefits':v.get('product_benefits') or []}} for k,v in seg_map.items()}}}}
 open('/tmp/sl_data.json','w').write(json.dumps(out,ensure_ascii=False))
 print('   세그먼트', len(seg_map), '/ 칸', len(plan['beats']))
 """))

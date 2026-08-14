@@ -53,6 +53,8 @@ h1{font-size:16px;margin:0;font-weight:700}
 .seg .meta{padding:8px 10px;font-size:12px;color:var(--ink);line-height:1.5;display:flex;flex-direction:column;gap:3px}
 .seg .meta .d{color:var(--dim);font-size:11.5px;line-height:1.45}
 .seg .sid{color:var(--ink);font-weight:600}
+.utag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:99px;margin:2px 3px 0 0;border:1px solid var(--line);color:var(--dim)}
+.utag.key{border-color:var(--good);color:var(--good)}
 .seg .add{position:absolute;left:5px;top:5px;background:var(--accent);color:#fff;font-size:10px;
      padding:2px 6px;border-radius:5px;opacity:0;transition:.12s}
 .seg:hover .add{opacity:1}
@@ -193,6 +195,28 @@ const MAX_SHOT = 2.2, MIN_CLIP = 0.8, EPS = 1e-3, LONG_CUT = MAX_SHOT + 0.05;   
 // 최소 컷 길이(0.8초)에 못 미치는 장면 — 담아도 화면에 **안 나온다**(라운드로빈이 건너뛴다).
 // 2026-08-14 사장님 "여 씬이 들어가면 뭔가 꼬인다": 0.7초짜리를 담으면 그 장면은 사라지고,
 // 남은 소재로 나레이션 길이를 채우느라 다른 컷이 길게 늘어난다. 담기 전에 알려준다.
+// ★장면을 결(役)로 묶는다(2026-08-14 사장님 "완성품·조리 이런 식으로 나누고 후킹용·조리용·
+//   CTA용 태그"). 새 판단을 만들지 않는다 — 추출이 이미 붙여둔 shot_role/is_key를 그대로 쓴다
+//   (완성 / after=결과·증거 / 사용중=조리·사용 / 기타). 실측 분포 9·5·41·1.
+const GROUPS = [
+  {key:'완성',   title:'🏆 완성품',        hint:'훅·CTA에 좋다'},
+  {key:'after',  title:'✅ 결과·증거',     hint:'쪼갠 단면·먹는 반응 — 결과 칸에 좋다'},
+  {key:'사용중', title:'🍳 조리·사용 과정', hint:'해결·과정 칸에 좋다'},
+  {key:'기타',   title:'그 밖의 장면',     hint:''},
+];
+function groupOf(sid){
+  const r = (DATA.segments[sid] || {}).shot_role || '기타';
+  return GROUPS.some(g => g.key === r) ? r : '기타';
+}
+// 용도 배지 — 위 결에서 바로 파생한 **제안**이다(강제 아님, 담는 건 사장님 판단).
+function useTags(sid){
+  const s0 = DATA.segments[sid] || {}, r = groupOf(sid), t = [];
+  if (r === '완성'){ t.push('후킹용'); t.push('CTA용'); }
+  if (r === 'after'){ t.push('후킹용'); t.push('결과용'); }
+  if (r === '사용중') t.push('조리용');
+  if (s0.is_key) t.push('실증');
+  return t;
+}
 function tooShort(sid){
   const s0 = DATA.segments[sid]; if (!s0) return false;
   return (s0.end - s0.start) < MIN_CLIP - EPS;
@@ -295,13 +319,18 @@ function render(){
     : '③ 내가 편성 모드에서 담을 수 있습니다';
 
   // 팔레트
-  const byVid = {};
-  for (const [sid, s] of Object.entries(DATA.segments)) (byVid[s.video_id] ||= []).push({sid, ...s});
+  const byRole = {};
+  for (const [sid, s] of Object.entries(DATA.segments))
+    (byRole[groupOf(sid)] ||= []).push({sid, ...s});
   const cur = new Set(lists[sel] || []);
 
-  document.getElementById('palette').innerHTML = Object.entries(byVid).map(([vid, segs]) => {
-    segs.sort((a,b) => a.start - b.start);
-    return `<div class="srcgroup"><div class="srchead"><span>소스 ${vid}</span><span>${segs.length}개</span></div>
+  // 결 그룹 순서로 묶어 보여준다 — 같은 성격끼리 모여 있어야 고르기 쉽다.
+  // 그룹 안에서는 소스별·시간순이라 과정 순서(준비→반죽→굽기)가 자연히 보인다.
+  document.getElementById('palette').innerHTML = GROUPS.filter(g => (byRole[g.key]||[]).length).map(g => {
+    const segs = byRole[g.key];
+    segs.sort((a,b) => a.video_id === b.video_id ? a.start - b.start
+                                                 : a.video_id.localeCompare(b.video_id));
+    return `<div class="srcgroup"><div class="srchead"><span>${g.title}${g.hint?` <span style="opacity:.65">· ${g.hint}</span>`:''}</span><span>${segs.length}개</span></div>
       <div class="thumbs">${segs.map(s => `
         <div class="seg ${cur.has(s.sid)?'inthis':''} ${(outOfRange(s.sid)||tooShort(s.sid))?'oor':''}" ondblclick="add('${s.sid}')"
              title="${(s.scene_desc||'').replace(/"/g,'')}">
@@ -309,7 +338,8 @@ function render(){
           <span class="play" onclick="playSeg('${s.sid}', event)">▶ 보기</span>
           ${!cur.has(s.sid) ? '<span class="add">두 번 눌러 담기</span>' : ''}
           <div class="meta"><span class="sid">${s.sid}</span>
-            <span style="color:var(--dim)">· ${(s.end-s.start).toFixed(1)}초</span>
+            <span style="color:var(--dim)">· ${(s.end-s.start).toFixed(1)}초 · ${s.video_id}</span>
+            <div>${useTags(s.sid).map(t=>`<span class="utag${t==='실증'?' key':''}">${t}</span>`).join('')}</div>
             ${outOfRange(s.sid)?`<div class="oorbadge">⚠ 소스 밖 구간 — 원본 ${(DATA.src_duration||{})[s.video_id]}초</div>`:''}
             ${tooShort(s.sid)?`<div class="oorbadge">⚠ 0.8초 미만 — 담아도 화면에 안 나옵니다</div>`:''}
             <div class="d">${esc(s.scene_desc||'(설명 없음)')}</div>
