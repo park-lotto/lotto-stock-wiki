@@ -98,3 +98,24 @@ def test_build_inventory_exposes_motion_level_without_touching_scene_desc():
     # None인 경우 라인에 모션 표기 없음(잡음 최소화)
     line0 = [l for l in inventory.split("\n") if "[v1-0]" in l][0]
     assert "모션:" not in line0
+
+
+def test_build_inventory_keeps_short_source_alive():
+    """세그가 적은 소스(무자막·자막 듬성한 해외영상)를 통째로 죽이지 않는다.
+
+    2026-08-14 실사고(job 1e924608af83): 샤오홍슈 소스가 세그 3개였는데 첫·끝을 빼는
+    규칙(옛 기준 len>=3)에 걸려 **1개만** 살아남았다 → 그 소스가 사실상 사라졌다.
+    잘라낸 뒤 3개 이상 남을 때만 자른다.
+    """
+    def _segs(n):
+        return [{"seg_id": f"s-{i}", "start": float(i), "end": float(i + 1),
+                 "text": "", "scene_desc": "장면"} for i in range(n)]
+
+    # 3·4개짜리 짧은 소스: 하나도 안 버린다(예전엔 1개·2개만 남았다)
+    for n in (3, 4):
+        seg_map, _ = edit_plan._build_inventory([{"video_id": "cn", "segments": _segs(n)}])
+        assert len(seg_map) == n, f"세그 {n}개 소스가 잘려나갔다: {len(seg_map)}개 생존"
+
+    # 5개 이상은 종전대로 첫·끝을 버린다(CTA·썸네일 박제 차단 유지)
+    seg_map, _ = edit_plan._build_inventory([{"video_id": "kr", "segments": _segs(5)}])
+    assert set(seg_map) == {"s-1", "s-2", "s-3"}
