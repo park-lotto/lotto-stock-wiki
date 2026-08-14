@@ -35,22 +35,28 @@ h1{font-size:16px;margin:0;font-weight:700}
 .mode{padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);
       color:var(--dim);cursor:pointer;font-size:12px;line-height:1.4;text-align:center}
 .mode.on{border-color:var(--accent);color:#fff;background:#1b2a3d}
-.wrap{display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 130px)}
+.wrap{display:grid;grid-template-columns:var(--libw,430px) 1fr;height:calc(100vh - 130px)}
 .pane{overflow-y:auto;padding:14px}
 .pane.left{border-right:1px solid var(--line);background:var(--panel)}
 .srcgroup{margin-bottom:18px}
 .srchead{font-size:12px;color:var(--dim);margin-bottom:8px;display:flex;justify-content:space-between}
-.thumbs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.thumbs{display:grid;grid-template-columns:1fr;gap:10px}
+.seg{display:grid;grid-template-columns:96px 1fr;align-items:stretch}
 .seg{border:1px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;
      background:var(--panel2);position:relative;transition:.12s}
 .seg:hover{border-color:var(--accent);transform:translateY(-2px)}
-.seg img{width:100%;display:block;aspect-ratio:9/16;object-fit:cover}
-.seg .meta{padding:5px 6px;font-size:10px;color:var(--dim);line-height:1.35}
+.seg img{width:96px;display:block;aspect-ratio:9/16;object-fit:cover}
+.seg .meta{padding:8px 10px;font-size:12px;color:var(--ink);line-height:1.5;display:flex;flex-direction:column;gap:3px}
+.seg .meta .d{color:var(--dim);font-size:11.5px;line-height:1.45}
 .seg .sid{color:var(--ink);font-weight:600}
 .seg .add{position:absolute;left:5px;top:5px;background:var(--accent);color:#fff;font-size:10px;
      padding:2px 6px;border-radius:5px;opacity:0;transition:.12s}
 .seg:hover .add{opacity:1}
 .seg.inthis{border-color:var(--good);box-shadow:0 0 0 1px var(--good) inset}
+/* 소스 영상 길이를 넘어가는 세그먼트 — 렌더하면 검은 화면/정지가 된다(2026-08-14 발각) */
+.seg.oor,.item.oor,.cut.oor{border-color:var(--bad)}
+.item.oor,.cut.oor{box-shadow:0 0 0 1px var(--bad) inset}
+.oorbadge{color:var(--bad);font-size:11px;font-weight:700}
 .seg.inthis::after{content:"이 칸에 있음";position:absolute;top:5px;right:5px;background:#000b;
      color:var(--good);font-size:9px;padding:2px 5px;border-radius:4px}
 .beat{border:1px solid var(--line);border-radius:10px;margin-bottom:12px;background:var(--panel)}
@@ -68,13 +74,13 @@ h1{font-size:16px;margin:0;font-weight:700}
 .row{display:flex;gap:16px;flex-wrap:wrap}
 .col{flex:1 1 300px;min-width:260px}
 .list{display:flex;gap:6px;flex-wrap:wrap}
-.item{position:relative;width:64px;border:1px solid var(--line);border-radius:6px;overflow:hidden;
+.item{position:relative;width:132px;border:1px solid var(--line);border-radius:6px;overflow:hidden;
       background:#000}
 .item img{width:100%;display:block;aspect-ratio:9/16;object-fit:cover}
-.item .n{position:absolute;left:3px;top:3px;background:#000c;color:#fff;font-size:9px;
+.item .n{position:absolute;left:4px;top:4px;background:#000c;color:#fff;font-size:11px;
       padding:1px 4px;border-radius:3px}
 .item .ctl{display:flex;justify-content:space-between;padding:2px 3px;background:var(--panel2)}
-.item .ctl span{cursor:pointer;font-size:10px;color:var(--dim);padding:0 2px}
+.item .ctl span{cursor:pointer;font-size:12px;color:var(--dim);padding:0 2px}
 .item .ctl span:hover{color:var(--ink)}
 .item .ctl .del:hover{color:var(--bad)}
 .item.first{border-color:var(--accent)}
@@ -83,9 +89,9 @@ h1{font-size:16px;margin:0;font-weight:700}
 .item.unused::after{content:"안 나옴";position:absolute;left:0;right:0;top:38%;text-align:center;
   font-size:9px;color:var(--warn);background:#000a;padding:2px 0}
 .strip{display:flex;gap:3px;overflow-x:auto;padding-bottom:5px}
-.cut{flex:0 0 auto;width:52px;border-radius:5px;overflow:hidden;border:1px solid var(--line);background:#000}
+.cut{flex:0 0 auto;width:88px;border-radius:5px;overflow:hidden;border:1px solid var(--line);background:#000}
 .cut img{width:100%;display:block;aspect-ratio:9/16;object-fit:cover}
-.cut .t{font-size:9px;text-align:center;color:var(--dim);padding:1px 0}
+.cut .t{font-size:11px;text-align:center;color:var(--dim);padding:1px 0}
 .cut.mine{border-color:var(--good)}
 .cut.mine .t{color:var(--good)}
 .cut.long{border-color:var(--warn)}
@@ -101,7 +107,7 @@ button.act{padding:5px 10px;border-radius:7px;border:1px solid var(--line);backg
       color:var(--ink);cursor:pointer;font-size:11px}
 button.act:hover{border-color:var(--accent)}
 .ord{display:flex;gap:3px;margin-left:auto}
-#player{position:fixed;right:16px;bottom:56px;width:210px;background:var(--panel);
+#player{position:fixed;right:16px;bottom:56px;width:300px;background:var(--panel);
         border:1px solid var(--accent);border-radius:10px;padding:8px;z-index:50;display:none}
 #player.on{display:block}
 #player video{width:100%;border-radius:6px;background:#000;display:block;aspect-ratio:9/16;object-fit:contain}
@@ -109,10 +115,19 @@ button.act:hover{border-color:var(--accent)}
 .phead .x{cursor:pointer;color:var(--dim)}
 .phead .x:hover{color:var(--bad)}
 .pinfo{font-size:10px;color:var(--dim);margin-top:5px;line-height:1.4;min-height:26px}
+/* 자막 트랙 — 말한 데까지 흰색, 남은 말은 흐리게(카라오케식). 어긋나면 바로 보인다 */
+#subbox{margin-top:6px;min-height:42px;font-size:13px;line-height:1.5;font-weight:700;
+  background:#000a;border-radius:6px;padding:6px 8px;word-break:keep-all}
+#subbox .said{color:#fff}
+#subbox .rest{color:#ffffff44}
+/* 컷마다 그 시간대 자막 — '이 글자를 말할 때 이 그림' 을 한눈에 */
+.cutsub{font-size:10px;color:var(--dim);line-height:1.35;padding:3px 4px;
+  background:var(--panel);border-top:1px solid var(--line);min-height:30px;word-break:keep-all}
 .play{position:absolute;left:5px;bottom:26px;background:#000b;color:#fff;font-size:11px;
       padding:2px 7px;border-radius:5px;cursor:pointer;z-index:2}
 .play:hover{background:var(--accent)}
-.item .play{left:2px;bottom:20px;font-size:9px;padding:1px 5px}
+.item .play{left:4px;bottom:24px;font-size:11px;padding:2px 7px}
+.item .cap{padding:4px 5px;font-size:10.5px;color:var(--dim);line-height:1.35;background:var(--panel);border-top:1px solid var(--line)}
 .cut{cursor:pointer}
 .cut:hover{border-color:var(--accent)}
 </style></head><body>
@@ -144,7 +159,10 @@ button.act:hover{border-color:var(--accent)}
 <div id="player">
   <div class="phead"><b>미리보기</b><span class="x" onclick="stopPlay()">닫기 ✕</span></div>
   <video id="vid" muted playsinline></video>
-  <div class="pinfo" id="pinfo">장면의 ▶ 또는 칸의 “이 칸 재생”을 누르세요</div>
+  <div id="subbox"></div>
+  <audio id="bgaudio"></audio>
+  <div class="pinfo" id="pinfo">장면의 ▶ 또는 칸의 “이 칸 재생”을 누르세요<br>
+    <span style="opacity:.7">칸 재생 = 화면+음성+자막을 함께 봅니다(렌더 안 함)</span></div>
 </div>
 
 <footer>
@@ -160,7 +178,64 @@ button.act:hover{border-color:var(--accent)}
 const DATA = __DATA__;
 const MAX_SHOT = 2.2, MIN_CLIP = 0.8, EPS = 1e-3, LONG_CUT = 2.5;
 
+// 컷 구간[a,b)에 실제로 나오는 자막 조각 — 이 글자를 말할 때 이 그림이 뜬다.
+function subRange(i, a, b){
+  const al = ALIGN[i];
+  if (!al || !al.length) return '';
+  return stripTag(al.filter(c => c.start < b - 1e-3 && c.end > a + 1e-3).map(c => c.ch).join(''));
+}
+// 감정 태그 [curious] 처럼 음성엔 없고 표기만 있는 앞머리를 뗀다(정규식 없이 — 이 JS는
+// 파이썬 문자열 안에 들어 있어 역슬래시를 쓰면 파이썬 이스케이프와 충돌한다).
+function stripTag(t){
+  const s0 = String(t || '');
+  const l = s0.replace(/^[ ]+/, '');
+  if (l.charAt(0) !== '[') return s0.trim();
+  const i = l.indexOf(']');
+  return (i < 0 ? l : l.slice(i + 1)).trim();
+}
+// 소스 영상 길이를 넘는 구간인가 — 실측(job 409f894230c6): s1-10이 100~104초인데
+// s1.mp4는 78.5초였다. 렌더하면 그 컷은 실체가 없다. 눈에 보이게 표시한다.
+function outOfRange(sid){
+  const s0 = DATA.segments[sid]; if (!s0) return false;
+  const d = (DATA.src_duration || {})[s0.video_id];
+  return !!d && s0.end > d + 0.2;
+}
+function esc(t){ return String(t==null?'':t).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+// ── 자막·음성 트랙(2026-08-14 사장님 "결국 자막이랑 맞아떨어지는 걸 봐야 한다") ──────
+// 렌더를 다시 돌리지 않는다. 서버가 이미 만들어 둔 것을 그대로 겹쳐 재생한다:
+//   화면 = 소스 mp4의 구간(무음)  /  음성 = tts/beat_N.mp3  /  자막 = align.json(글자별 시각)
+// 장면을 바꿔도 음성·자막은 그대로라, 교체하자마자 "말과 그림이 맞나"를 눈으로 본다.
+const ALIGN = {};            // beat_idx → [{ch,start,end}]
+let audioEl = null;
+function audio(){ return audioEl || (audioEl = document.getElementById('bgaudio')); }
+async function loadAlign(i){
+  if (ALIGN[i] !== undefined) return ALIGN[i];
+  try{
+    const r = await fetch(`tts/beat_${i}.align.json`);
+    if (!r.ok) throw 0;
+    const j = await r.json();
+    const chs = j.characters || [], st = j.character_start_times_seconds || j.start_times || [],
+          en = j.character_end_times_seconds || j.end_times || [];
+    ALIGN[i] = chs.map((c, k) => ({ch: c, start: +st[k] || 0, end: +en[k] || 0}));
+  }catch(e){ ALIGN[i] = null; }
+  return ALIGN[i];
+}
+// 지금 시각까지 발음된 글자까지만 보여준다(카라오케식) — 음성과 어긋나면 바로 눈에 띈다.
+function subAt(i, t){
+  const a = ALIGN[i];
+  const full = (DATA.beats[i] && DATA.beats[i].narration) || '';
+  if (!a || !a.length) return {said: full, rest: ''};
+  let n = 0;
+  for (const c of a){ if (c.start <= t) n++; else break; }
+  const txt = a.map(c => c.ch).join('');
+  // 앞머리 [curious] 같은 감정 태그는 화면에서 뺀다(음성엔 없는 표기).
+  const off = txt.length - stripTag(txt).length;
+  return {said: txt.slice(off, Math.max(off, n)), rest: txt.slice(Math.max(off, n))};
+}
+
 let mode = 'live';
+let seqBeat = null;   // 지금 재생 중인 칸(자막·음성 트랙 기준)
 let sel = 0;
 let lists = [];              // 비트별 장면 seg_id 목록(첫 항목이 primary)
 const chosen = new Set();    // 사람이 손으로 담은 seg_id
@@ -231,13 +306,16 @@ function render(){
     segs.sort((a,b) => a.start - b.start);
     return `<div class="srcgroup"><div class="srchead"><span>소스 ${vid}</span><span>${segs.length}개</span></div>
       <div class="thumbs">${segs.map(s => `
-        <div class="seg ${cur.has(s.sid)?'inthis':''}" onclick="add('${s.sid}')"
+        <div class="seg ${cur.has(s.sid)?'inthis':''} ${outOfRange(s.sid)?'oor':''}" onclick="add('${s.sid}')"
              title="${(s.scene_desc||'').replace(/"/g,'')}">
           <img src="thumbs/${s.sid}.jpg" loading="lazy">
           <span class="play" onclick="playSeg('${s.sid}', event)">▶ 보기</span>
           ${mode==='hand' && !cur.has(s.sid) ? '<span class="add">+ 담기</span>' : ''}
-          <div class="meta"><span class="sid">${s.sid.split('-').pop()}</span>
-            · ${(s.end-s.start).toFixed(1)}초<br>${(s.scene_desc||'').slice(0,20)}</div>
+          <div class="meta"><span class="sid">${s.sid}</span>
+            <span style="color:var(--dim)">· ${(s.end-s.start).toFixed(1)}초</span>
+            ${outOfRange(s.sid)?`<div class="oorbadge">⚠ 소스 밖 구간 — 원본 ${(DATA.src_duration||{})[s.video_id]}초</div>`:''}
+            <div class="d">${esc(s.scene_desc||'(설명 없음)')}</div>
+            ${s.text ? `<div class="d" style="opacity:.72">💬 ${esc(String(s.text).slice(0,40))}</div>` : ''}</div>
         </div>`).join('')}</div></div>`;
   }).join('');
 
@@ -280,7 +358,7 @@ function render(){
         <div class="col">
           <div class="lbl">이 칸에 담은 장면 (첫 장이 대표)</div>
           ${ids.length ? `<div class="list">${ids.map((id, k) => `
-            <div class="item ${k===0?'first':''} ${used.has(id)?'':'unused'}"
+            <div class="item ${k===0?'first':''} ${used.has(id)?'':'unused'} ${outOfRange(id)?'oor':''}"
                  title="${used.has(id)?'이 칸에서 실제로 나옵니다':'시간이 모자라 이 칸에서는 안 나옵니다 — ◀▶로 앞으로 옮기세요'}">
               <span class="n">${k+1}</span>
               <img src="thumbs/${id}.jpg" loading="lazy">
@@ -290,18 +368,21 @@ function render(){
                 <span class="del" onclick="event.stopPropagation();delSeg(${i},${k})">✕</span>
                 <span onclick="event.stopPropagation();moveSeg(${i},${k},1)">▶</span>
               </div>
+              <div class="cap">${outOfRange(id)?'<span class="oorbadge">! 소스 밖 - 화면 없음</span><br>':''}${esc(((DATA.segments[id]||{}).scene_desc||'').slice(0,34))}</div>
             </div>`).join('')}</div>`
             : '<div class="empty">장면이 없습니다 — 왼쪽에서 담아주세요</div>'}
         </div>
         <div class="col">
           <div class="lbl">실제 나올 화면 (${bdur.toFixed(1)}초)
             ${clips.length ? `· <button class="act" onclick="playBeat(${i}, event)">▶ 이 칸 재생</button>` : ''}</div>
-          <div class="strip">${clips.map(c => `
-            <div class="cut ${chosen.has(c.seg_id)?'mine':''} ${c.dur>LONG_CUT?'long':''}"
+          <div class="strip">${(()=>{let off=0; return clips.map(c => {
+            const a=off, b=off+c.dur; off=b;
+            return `<div class="cut ${chosen.has(c.seg_id)?'mine':''} ${c.dur>LONG_CUT?'long':''} ${outOfRange(c.seg_id)?'oor':''}"
                  onclick="playSeg('${c.seg_id}', event)" title="이 컷 보기">
               <img src="thumbs/${c.seg_id}.jpg" loading="lazy">
               <div class="t">${c.dur.toFixed(1)}s</div>
-            </div>`).join('')}</div>
+              <div class="cutsub">${esc(subRange(i, a, b)) || '&nbsp;'}</div>
+            </div>`;}).join('')})()}</div>
         </div>
       </div></div></div>`;
   }).join('');
@@ -324,6 +405,9 @@ const vid = () => document.getElementById('vid');
 
 function stopPlay(){
   clearTimeout(seqTimer); seqTimer = null; seq = [];
+  clearInterval(subTimer); seqBeat = null;
+  const a = audio(); if (a){ a.pause(); }
+  const sb = document.getElementById('subbox'); if (sb) sb.innerHTML = '';
   const v = vid(); if (v) v.pause();
   document.getElementById('player').classList.remove('on');
 }
@@ -331,15 +415,39 @@ function playSeg(sid, ev){
   if (ev) ev.stopPropagation();
   const s = DATA.segments[sid];
   if (!s) return;
-  seqLabel = `장면 ${sid.split('-').pop()}`;
+  seqLabel = `장면 ${sid}`;
+  clearInterval(subTimer); seqBeat = null;
+  const a0 = audio(); if (a0) a0.pause();
+  const sb0 = document.getElementById('subbox'); if (sb0) sb0.innerHTML = '';
   startSeq([{seg_id: sid, video_id: s.video_id, start: s.start, dur: s.end - s.start}]);
 }
-function playBeat(i, ev){
+async function playBeat(i, ev){
   if (ev) ev.stopPropagation();
   const clips = planClips(lists[i] || [], DATA.beats[i].target_seconds || 3);
   if (!clips.length) return;
   seqLabel = `칸 ${i+1} 전체`;
+  await loadAlign(i);
+  seqBeat = i;
   startSeq(clips);
+  // 음성은 화면과 별개 트랙 — 같이 0초부터 튼다(캡컷의 오디오 트랙과 같은 개념).
+  const a = audio();
+  a.src = `tts/beat_${i}.mp3`;
+  a.currentTime = 0;
+  a.play().catch(()=>{});
+  tickSub();
+}
+// 자막은 음성 시각을 따라간다(화면 컷이 몇 개로 쪼개지든 무관).
+let subTimer = null;
+function tickSub(){
+  clearInterval(subTimer);
+  const box = document.getElementById('subbox');
+  if (seqBeat == null){ box.innerHTML = ''; return; }
+  subTimer = setInterval(() => {
+    const a = audio();
+    const {said, rest} = subAt(seqBeat, a.currentTime || 0);
+    box.innerHTML = `<span class="said">${esc(said)}</span><span class="rest">${esc(rest)}</span>`;
+    if (a.ended || a.paused) clearInterval(subTimer);
+  }, 60);
 }
 function startSeq(clips){
   clearTimeout(seqTimer);
@@ -398,6 +506,8 @@ function setMode(m){
 }
 function reset(){ setMode(mode); }
 initLists(); render();
+// 자막 타이밍을 전부 읽고 한 번 더 그린다 — 컷 밑 자막이 처음부터 보이게.
+Promise.all(DATA.beats.map((_, i) => loadAlign(i))).then(() => render());
 </script></body></html>
 """
 

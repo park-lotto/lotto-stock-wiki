@@ -75,7 +75,7 @@ def fetch(job_id):
     (work / "thumbs").mkdir(parents=True, exist_ok=True)
     (work / "src").mkdir(parents=True, exist_ok=True)
 
-    print(f"[1/4] 편집안·세그먼트 뽑는 중… ({job_id})")
+    print(f"[1/5] 편집안·세그먼트 뽑는 중… ({job_id})")
     print(py_on_server(f"""
 import json,sqlite3
 from shopping_shorts import edit_plan as ep
@@ -92,7 +92,7 @@ open('/tmp/sl_data.json','w').write(json.dumps(out,ensure_ascii=False))
 print('   세그먼트', len(seg_map), '/ 칸', len(plan['beats']))
 """))
 
-    print("[2/4] 썸네일 뽑는 중…")
+    print("[2/5] 썸네일 뽑는 중…")
     print(py_on_server(f"""
 import json,subprocess,glob,os,shutil
 d=json.load(open('/tmp/sl_data.json'))
@@ -109,22 +109,66 @@ for sid,s in d['segments'].items():
     mid=(s['start']+s['end'])/2
     o='/tmp/sl_thumbs/'+sid+'.jpg'
     subprocess.run(['ffmpeg','-y','-loglevel','error','-ss',str(mid),'-i',p,
-                    '-frames:v','1','-vf','scale=200:-1',o],check=False)
+                    # 썸네일 폭 200→360(2026-08-14 사장님 "썸네일이 잘 안 보인다").
+                    # 좌측 라이브러리·칸 카드 둘 다 이 한 장을 키워 쓴다.
+                    '-frames:v','1','-vf','scale=360:-1',o],check=False)
     if os.path.exists(o): n+=1
 json.dump(src, open('/tmp/sl_src.json','w'))
-print('   썸네일', n)
+# ★소스 길이도 같이 잰다(2026-08-14). 실측 s1-10은 100~104초인데 s1.mp4는 78.5초 —
+#   존재하지 않는 구간을 가리키는 세그먼트가 있었고 아무도 안 걸렀다(썸네일 추출 실패로 발각).
+dur={{}}
+for vid,p2 in src.items():
+    r=subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',p2],
+                     capture_output=True,text=True)
+    try: dur[vid]=round(float((r.stdout or '0').strip()),2)
+    except ValueError: dur[vid]=0.0
+d['src_duration']=dur
+json.dump(d, open('/tmp/sl_data.json','w'), ensure_ascii=False)
+over=[sid for sid,s2 in d['segments'].items() if dur.get(s2['video_id'],0) and s2['end'] > dur[s2['video_id']]+0.2]
+print('   썸네일', n, '/ 범위초과 세그', len(over), over[:6])
 """))
 
-    print("[3/4] 내려받는 중…")
+    # ★비트별 TTS + 글자 타임스탬프(2026-08-14 사장님 "자막이 맞아떨어지는 걸 봐야 한다").
+    #   렌더를 다시 돌릴 필요가 없다 — 화면(mp4 구간)·음성(mp3)·자막(align.json)이 각각
+    #   따로 있으니 브라우저에서 캡컷처럼 3트랙으로 겹쳐 재생하면 된다. 장면을 바꿔도
+    #   음성·자막은 그대로라 교체 즉시 결과가 보인다(렌더 0회).
+    print("[3/5] 음성·자막 타이밍 뽑는 중…")
+    print(py_on_server(f"""
+import json,glob,os,shutil,re
+base='{JOBS}/{job_id}/tts'
+shutil.rmtree('/tmp/sl_tts', ignore_errors=True); os.makedirs('/tmp/sl_tts')
+d=json.load(open('/tmp/sl_data.json'))
+voices={{}}
+for i in range(len(d['beats'])):
+    # beat_<i>_<해시>.mp3 (조각본 _0.mp3 등은 제외 — 합본만 쓴다)
+    g=[p for p in glob.glob(base+'/beat_%d_*.mp3' % i) if re.match(r'^beat_%d_[0-9a-f]+\\.mp3$' % i, os.path.basename(p))]
+    if not g: continue
+    mp3=g[0]
+    shutil.copy(mp3, '/tmp/sl_tts/beat_%d.mp3' % i)
+    al=mp3+'.align.json'
+    if os.path.exists(al):
+        shutil.copy(al, '/tmp/sl_tts/beat_%d.align.json' % i)
+    voices[i]=True
+# ★TTS mp3는 0600 root 소유로 만들어진다(실측) — sudo로 복사하면 사본도 0600 root라
+#   ubuntu 계정의 scp가 조용히 실패해 '음성 0개'가 된다. 받을 수 있게 권한을 연다.
+for f in glob.glob('/tmp/sl_tts/*'):
+    os.chmod(f, 0o644)
+print('   음성', len(voices), '개 / 자막타이밍', len(glob.glob('/tmp/sl_tts/*.align.json')), '개')
+"""))
+
+    print("[4/5] 내려받는 중…")
     if not scp("/tmp/sl_data.json", work / "data.json"):
         sys.exit("[중단] data.json 다운로드 실패")
     subprocess.run(["scp", "-q", "-i", _key(), f"{HOST}:/tmp/sl_thumbs/*.jpg",
                     str(work / "thumbs")], check=False)
+    (work / "tts").mkdir(parents=True, exist_ok=True)
+    subprocess.run(["scp", "-q", "-i", _key(), f"{HOST}:/tmp/sl_tts/*",
+                    str(work / "tts")], check=False)
     src_map = json.loads(ssh("cat /tmp/sl_src.json"))
     for vid, remote in src_map.items():
         scp(remote, work / "src" / f"{vid}.mp4")
     got = len(list((work / "src").glob("*.mp4")))
-    print(f"   썸네일 {len(list((work / 'thumbs').glob('*.jpg')))}장 / 소스 {got}개")
+    print(f"   썸네일 {len(list((work / 'thumbs').glob('*.jpg')))}장 / 소스 {got}개 / 음성 {len(list((work / 'tts').glob('*.mp3')))}개")
 
     # faststart 리먹스: 브라우저가 구간 탐색(시크)을 하려면 moov가 앞에 있어야 한다.
     for mp4 in (work / "src").glob("*.mp4"):
@@ -135,7 +179,7 @@ print('   썸네일', n)
         if r.returncode == 0 and tmp.exists():
             mp4.unlink(); tmp.rename(mp4)
 
-    print("[4/4] 페이지 만드는 중…")
+    print("[5/5] 페이지 만드는 중…")
     subprocess.run([sys.executable, str(BASE / "build.py"), str(work)], check=True)
     print(f"\n완료 → py tools/scene_lab/serve.py {job_id}")
 
