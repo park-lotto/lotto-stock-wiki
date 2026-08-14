@@ -32,7 +32,29 @@ def test_build_items_filters_by_window():
     assert it["delta"] == 600            # 직전값 없으면 delta = comments (신규)
     assert it["is_new"] is True
     assert round(it["speed"], 1) == 120.0  # 600 / 5h
-    assert round(it["density"], 3) == 0.6  # 600 / 1000
+    # 참여밀도 = (좋아요+댓글)/조회수 (2026-08-14 정의 변경, 옛값은 comments/followers=0.6)
+    assert round(it["density"], 3) == 6.1  # (10 + 600) / 100
+
+
+def test_density_uses_views_not_followers():
+    """팔로워가 없어도 density가 살아있어야 한다 — 발굴채널이 전부 0으로 죽던 버그(실측 67%)."""
+    reels = [{"shortcode": "a", "timestamp": (NOW - timedelta(hours=2)).isoformat(),
+              "commentsCount": 40, "likesCount": 60, "videoViewCount": 1000,
+              "displayUrl": "", "url": "", "caption": ""}]
+    meta = {"name": "발굴채널", "username": "u"}          # followers 키 자체가 없다
+    it = build_items(reels, meta, prev_comments=lambda sc: None,
+                     prev_delta=lambda sc: None, now=NOW, window_hours=48)[0]
+    assert round(it["density"], 3) == 0.1                # (60 + 40) / 1000
+
+
+def test_density_zero_views_is_safe():
+    """조회수 0이어도 ZeroDivisionError 없이 0.0."""
+    reels = [{"shortcode": "b", "timestamp": (NOW - timedelta(hours=2)).isoformat(),
+              "commentsCount": 5, "likesCount": 5, "videoViewCount": 0,
+              "displayUrl": "", "url": "", "caption": ""}]
+    it = build_items(reels, {"name": "n", "username": "u"}, prev_comments=lambda sc: None,
+                     prev_delta=lambda sc: None, now=NOW, window_hours=48)[0]
+    assert it["density"] == 0.0
 
 def test_build_items_delta_and_accel():
     reels = [{"shortcode": "x", "timestamp": (NOW - timedelta(hours=10)).isoformat(),

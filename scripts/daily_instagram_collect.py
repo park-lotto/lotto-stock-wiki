@@ -83,6 +83,23 @@ def main():
     except Exception as e:  # noqa: BLE001
         print(f"[daily_instagram_collect] 길이 백필 실패(무해): {e!r}", file=sys.stderr)
 
+    # ★채널별 결과 내역 로깅(2026-08-14). instagram_playwright가 채널마다
+    # ok/login_wall/not_found/error를 이미 집계해 service.LAST_COLLECT_TALLY로 넘기는데,
+    # 웹 UI 경로(app.py의 진행률)에서만 노출되고 크론 로그엔 한 줄도 안 남았다.
+    # 그래서 "대상 389채널 중 165채널만 기여, 224채널 0건"이 나와도 **긁다 실패한 건지
+    # 그냥 최근 48h에 안 올린 건지 구분할 수가 없었다**(실측 2026-08-14).
+    # ok는 '노드를 받았다'는 뜻이지 48h 이내라는 뜻은 아니므로, ok에서 실제 기여
+    # 채널수를 빼면 '살아있는데 최근 게시 없음'이 갈라진다.
+    try:
+        tally = dict(getattr(service, "LAST_COLLECT_TALLY", {}) or {})
+        if tally:
+            contributed = len({i.get("username") for i in items})
+            quiet = max(0, int(tally.get("ok", 0)) - contributed)
+            print(f"[daily_instagram_collect] 채널결과 {tally} · 기여 {contributed}채널 "
+                  f"· 살아있으나 48h내 게시없음 {quiet}채널")
+    except Exception as e:  # noqa: BLE001 — 로그가 수집을 죽이면 안 된다
+        print(f"[daily_instagram_collect] tally 로깅 실패(무해): {e!r}", file=sys.stderr)
+
     print(f"[daily_instagram_collect] {len(items)}건 수집 · {time.time() - t0:.1f}s")
     return 0
 
