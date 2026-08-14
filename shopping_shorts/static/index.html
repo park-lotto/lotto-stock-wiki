@@ -263,6 +263,14 @@ body.is-admin .blockbtn{display:inline-block}
 .ctype:hover{transform:translateY(-1px);box-shadow:0 6px 18px -8px rgba(55,224,189,.5)}
 .ctype.active{background:linear-gradient(180deg,#45efc0,#20c596)!important;color:#052018!important;border-color:transparent!important;
   box-shadow:0 4px 16px -4px rgba(55,224,189,.6)}
+/* 걸러내기 토글(2026-08-14) — 정렬 탭과 눈에 띄게 다르게(알약형) 만들어 축이 다름을 보인다 */
+.filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+.filters .flabel{color:var(--sub);font-size:12px}
+.ftog{background:transparent;color:var(--sub);border:1px solid var(--line);border-radius:999px;
+      padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s}
+.ftog:hover{color:var(--txt);border-color:var(--txt)}
+.ftog.on{background:var(--accent);border-color:var(--accent);color:#111}
+.fcount{color:var(--sub);font-size:12px;margin-left:2px}
 /* secondary sub-filter (소재) */
 .cat{transition:all .18s}
 .cat:hover{transform:translateY(-1px);color:var(--txt);border-color:var(--accent)}
@@ -410,6 +418,17 @@ body.is-admin .blockbtn{display:inline-block}
       <div class="tab" data-tab="views" title="조회수가 많은 순">👁 조회수순</div>
       <span class="tab-ink" id="tabInk"></span>
     </div>
+    <!-- 걸러내기(2026-08-14) — 정렬 탭과 다른 축이다. 정렬=줄 세우는 기준(택1),
+         걸러내기=아예 안 보이게 빼는 것(각각 켜고 끔, 둘 다 켜면 둘 다 만족하는 것만).
+         데이터를 버리는 게 아니라 화면에서만 숨기므로 끄면 그대로 돌아온다. -->
+    <div class="filters" id="filters">
+      <span class="flabel">걸러내기</span>
+      <button class="ftog" data-f="fresh" onclick="toggleFilter('fresh')"
+              title="올라온 지 24시간 안 된 것만 — 남들보다 먼저 잡으려면 여기">🆕 신작</button>
+      <button class="ftog" data-f="rising" onclick="toggleFilter('rising')"
+              title="시간당 댓글이 쌓이는 속도가 지금 보이는 것 중 상위 25% — 터지는 중인 것만">🔥 급상승</button>
+      <span class="fcount" id="fcount"></span>
+    </div>
     <div class="ctypes" id="ctypes"></div>
     <input id="rankSearch" type="text" placeholder="🔍 숏템검색 — 채널명·소재·링크 (채이홈·피자·인스타링크…)"
            oninput="setSearch(this.value)" onkeydown="if(event.key==='Enter')onSearchEnter(this.value)"
@@ -502,7 +521,32 @@ const CTYPES = [
 // 2026-07-31 가전→홈템 병합. 옛 데이터에 남은 category="가전"도 홈템 버튼으로 흡수한다 —
 // 매핑을 지우면 undefined가 되어 어느 버튼에도 안 뜬다(2026-07-16 홈템 병합 때 겪은 사고).
 const TOPIC_CTYPE = {홈템:"홈템", 가전:"홈템", 레시피:"비법형", 뷰티:"혼합형", 기타:"기타"};
-let STATE = {items:[], tab:"comments", ctype:"전체", cat:"전체", q:""};
+let STATE = {items:[], tab:"comments", ctype:"전체", cat:"전체", q:"",
+             filters:_loadFilters()};
+// 걸러내기 상태는 브라우저에 기억시킨다 — 새로고침마다 다시 켜게 하면 아무도 안 쓴다.
+function _loadFilters(){
+  try{ const v=JSON.parse(localStorage.getItem("refFilters")||"{}");
+       return {fresh:!!v.fresh, rising:!!v.rising}; }
+  catch(e){ return {fresh:false, rising:false}; }
+}
+function toggleFilter(k){
+  STATE.filters[k]=!STATE.filters[k];
+  try{ localStorage.setItem("refFilters", JSON.stringify(STATE.filters)); }catch(e){}
+  renderFilterButtons(); render();
+}
+function renderFilterButtons(){
+  document.querySelectorAll("#filters .ftog").forEach(b=>
+    b.classList.toggle("on", !!STATE.filters[b.dataset.f]));
+}
+// 🔥급상승 = 고정 임계값이 아니라 **지금 목록 안에서의 상위 25%**.
+// 고정값(예: 속도 8/h)을 쓰면 회차마다 분포가 달라 어떤 날은 3건, 어떤 날은 200건이 된다.
+// 백분위면 "오늘 것 중 잘 나가는 것"이라는 뜻이 항상 유지된다.
+const RISING_PCTL = 0.75;
+function _risingCut(list){
+  const v=list.map(i=>i.speed||0).filter(x=>x>0).sort((a,b)=>a-b);
+  if(!v.length) return Infinity;              // 속도값이 하나도 없으면 아무도 통과 못 함
+  return v[Math.min(v.length-1, Math.floor(v.length*RISING_PCTL))];
+}
 let PLATFORM='instagram';
 // ── 플랫폼별 안내문구·지표 툴팁(2026-07-24, 토글 노출 대응) — 인스타 기준 문구를
 // 그대로 두면 틱톡/유튜브(시드계정·키워드+14일창, 조회수기반)에 거짓 설명이 된다. ──
@@ -1347,6 +1391,19 @@ function render(){
   } else {
     items = items.filter(i=> matchesSearch(i, STATE.q));
   }
+  // 걸러내기 적용(2026-08-14). 둘 다 켜면 둘 다 만족하는 것만(AND) — 직관과 같게.
+  // 급상승 기준선은 '거르기 직전' 목록에서 잡는다: 신작만 켠 뒤 그 안에서 다시 상위25%를
+  // 잡으면 기준이 두 번 좁아져 사장님이 예상한 것보다 훨씬 적게 남는다.
+  const _beforeFilter = items.length;
+  if(STATE.filters.fresh || STATE.filters.rising){
+    const cut = STATE.filters.rising ? _risingCut(items) : 0;
+    if(STATE.filters.fresh)  items = items.filter(i=> (i.age_hours ?? 999) < 24);
+    if(STATE.filters.rising) items = items.filter(i=> (i.speed||0) >= cut);
+  }
+  const _fc = document.getElementById("fcount");
+  if(_fc) _fc.textContent = (STATE.filters.fresh||STATE.filters.rising)
+    ? `${_beforeFilter}건 중 ${items.length}건 표시 중` : "";
+
   items.sort((a,b)=> sortKey(b)-sortKey(a));
   // 배지용 백분위 컨텍스트 — 지금 보이는 항목 기준(정렬·필터 반영)
   const _bctx={ vs:items.map(i=>i.views||0).sort((a,b)=>a-b),
@@ -1356,7 +1413,9 @@ function render(){
   if(!items.length){
     el.innerHTML = (searching && _looksLikeUrl(STATE.q))
       ? '<div class="empty">🔗 링크 감지 — <b>엔터</b>를 누르면 이 영상의 원본·유사 영상을 찾아드려요.</div>'
-      : '<div class="empty">결과 없음.</div>';
+      : ((STATE.filters.fresh||STATE.filters.rising)
+          ? '<div class="empty">0건 — 걸러내기 때문입니다. 위의 <b>🆕 신작</b>·<b>🔥 급상승</b>을 꺼보세요.</div>'
+          : '<div class="empty">결과 없음.</div>');
     return;
   }
   el.innerHTML = items.map((i,idx)=>`
@@ -3146,7 +3205,7 @@ async function commitScene(){
   finally{ btn.disabled = false; btn.textContent = '💾 라이브러리에 저장'; }
 }
 
-renderCtypes(); renderCats(); loadLast(); loadRefAdded(); updatePlatformCopy(PLATFORM);
+renderCtypes(); renderCats(); renderFilterButtons(); loadLast(); loadRefAdded(); updatePlatformCopy(PLATFORM);
 
 // ── 관리자(사장님 cid0) 전용 운영버튼(2026-07-22) ──
 // 수집·전수조사·레퍼런스등록은 크롤 비용이 드는 운영 액션이라 관리자만 쓴다.

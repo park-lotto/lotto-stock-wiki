@@ -107,7 +107,16 @@ def apply_grades(items):
     nd = _normalize(items, "density")
     for i in items:
         sc = i["shortcode"]
-        score = (ns[sc] + na[sc] + nd[sc]) / 3.0
+        # ★가속은 '측정 불가'와 '가속 0'을 구분한다(2026-08-14).
+        # accel = 이번 delta − 직전 delta 라서 처음 잡힌 릴스는 직전이 없어 None이다.
+        # 예전엔 _normalize가 None을 0으로 눌러 그대로 3분의 1 축에 넣었다 —
+        # 갓 올라온 영상은 잘못한 게 없는데 종합점수가 자동으로 3분의 2로 깎였다
+        # (실측: 오늘 316건 중 198건이 accel 없음 = 63%가 이 불이익을 받고 있었다).
+        # 측정 불가면 그 축을 빼고 남은 축들의 평균을 낸다 — 신작도 같은 잣대로 겨룬다.
+        axes = [ns[sc], nd[sc]]
+        if i.get("accel") is not None:
+            axes.append(na[sc])
+        score = sum(axes) / len(axes)
         i["score"] = round(score, 3)
         i["grade"] = grade_from_scores(score)
     return items

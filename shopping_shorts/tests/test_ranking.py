@@ -121,3 +121,24 @@ def test_build_items_includes_video_url():
     items = build_items(reels, meta, prev_comments=lambda sc: None,
                         prev_delta=lambda sc: None, now=NOW, window_hours=48)
     assert items[0]["video_url"] == "https://scontent.cdninstagram.com/video123.mp4"
+
+
+def test_new_item_not_penalized_by_missing_accel():
+    """처음 잡힌 릴스(accel=None)는 가속 축을 빼고 채점한다 — 신작 자동 감점 방지(2026-08-14)."""
+    from shopping_shorts.ranking import apply_grades
+    # 속도·밀도는 최고값(=정규화 1.0)인데 accel만 없는 신작
+    fresh = {"shortcode": "fresh", "speed": 100.0, "density": 0.5, "accel": None}
+    # 같은 속도·밀도인데 가속까지 측정된 기존 항목
+    known = {"shortcode": "known", "speed": 100.0, "density": 0.5, "accel": 50}
+    apply_grades([fresh, known])
+    assert fresh["score"] == 1.0          # 옛 동작이면 2/3 = 0.667로 깎였다
+    assert known["score"] == 1.0
+
+
+def test_accel_zero_is_not_treated_as_missing():
+    """가속이 '측정됐는데 0'인 것은 축에 그대로 들어가야 한다(측정불가와 구분)."""
+    from shopping_shorts.ranking import apply_grades
+    a = {"shortcode": "a", "speed": 10.0, "density": 1.0, "accel": 0}
+    b = {"shortcode": "b", "speed": 10.0, "density": 1.0, "accel": 10}
+    apply_grades([a, b])
+    assert a["score"] < b["score"]        # 0점 가속은 불리한 게 맞다
