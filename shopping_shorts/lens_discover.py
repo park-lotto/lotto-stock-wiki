@@ -218,7 +218,7 @@ def verify_matches(items, keywords=None):
     return items
 
 
-def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=None):
+def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=None, stats=None):
     """공개 이미지 URL → [{platform, url, title, thumbnail, match}]. 5개 동영상 플랫폼만.
     키 없음·호출 실패 시 [].
 
@@ -266,11 +266,27 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
         if exhausted:
             continue                       # 다음 키로
         break                              # 이 키로 처리 완료(결과 유무 무관)
+    # ★인스타 편차 계측(2026-08-14 사장님 "인스타는 0건이거나 왕창이거나 편차가 심하다").
+    #   추측하지 않으려면 어디서 사라지는지 세야 한다. 렌즈 원본(visual_matches) 중
+    #   인스타 링크가 몇 개였고, 그중 몇 개가 개별 게시물이 아니라(프로필·/explore·
+    #   /popular 슬러그) 입구에서 잘렸고, 몇 개가 카드뉴스(/p/)인지를 응답에 싣는다.
+    #   → 0건일 때 "렌즈가 아예 안 물어온 것"인지 "우리가 거른 것"인지 화면에서 갈린다.
+    st = stats if isinstance(stats, dict) else {}
+    st["raw_total"] = len(matches)
+    st["ig_raw"] = 0
+    st["ig_dropped_not_post"] = 0
+    st["ig_photo"] = 0
     out = []
     for m in matches:
         platform = _platform_of(m.get("link"))
+        if platform == "instagram":
+            st["ig_raw"] += 1
         if not platform or not _is_watchable(platform, m.get("link")):
+            if platform == "instagram":
+                st["ig_dropped_not_post"] += 1
             continue
+        if platform == "instagram" and is_photo_post(platform, m.get("link")):
+            st["ig_photo"] += 1
         title = m.get("title", "")
         out.append({
             "platform": platform,

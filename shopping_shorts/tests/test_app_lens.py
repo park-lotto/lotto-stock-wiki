@@ -26,7 +26,7 @@ def _client(tmp_path, monkeypatch, items=None, limit_reached=False):
     monkeypatch.setattr(appmod, "DB_PATH", db)
     monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
     monkeypatch.setattr(appmod, "search_similar_videos",
-                        lambda url, source_caption="": items if items is not None else [])
+                        lambda url, source_caption="", stats=None: items if items is not None else [])
     # imgur 업로드는 네트워크라 목킹 — None 반환 시 서버URL 폴백 경로를 탄다
     monkeypatch.setattr(appmod, "upload_frame", lambda raw: None)
     if limit_reached:
@@ -59,7 +59,7 @@ def test_lens_search_forwards_source_caption(tmp_path, monkeypatch):
     monkeypatch.setattr(appmod, "upload_frame", lambda raw: None)
     captured = {}
 
-    def fake_search(url, source_caption=""):
+    def fake_search(url, source_caption="", stats=None):
         captured["source_caption"] = source_caption
         return []
     monkeypatch.setattr(appmod, "search_similar_videos", fake_search)
@@ -259,7 +259,7 @@ def test_lens_yt_search_failure_returns_empty(tmp_path, monkeypatch):
 # ── /api/lens/cn/keywords : 프레임 → 중국어 후보 검색어 (2026-07-19) ──
 def test_lens_cn_keywords_returns_candidates(tmp_path, monkeypatch):
     monkeypatch.setattr(appmod, "cn_search_candidates",
-                        lambda raw, cap: {"product": "감자칩",
+                        lambda raw, cap, exclude=None: {"product": "감자칩",
                                           "candidates": [{"ko": "공기튀김 감자칩", "zh": "空气炸锅土豆片"}]})
     c = TestClient(appmod.app)
     r = c.post("/api/lens/cn/keywords",
@@ -268,6 +268,66 @@ def test_lens_cn_keywords_returns_candidates(tmp_path, monkeypatch):
     d = r.json()
     assert d["ok"] and d["product"] == "감자칩"
     assert d["candidates"][0]["zh"] == "空气炸锅土豆片"
+
+
+def test_lens_cn_keywords_forwards_exclude(tmp_path, monkeypatch):
+    """🔄 다른 검색어(2026-08-14): 프론트가 보낸 '이미 본 후보'를 비전에 그대로 넘겨야
+    같은 3~4개가 또 나오는 복불복이 안 된다."""
+    seen = {}
+
+    def fake(raw, cap, exclude=None):
+        seen["exclude"] = exclude
+        return {"product": "감자칩", "candidates": [{"ko": "회오리감자", "zh": "龙卷风土豆"}]}
+    monkeypatch.setattr(appmod, "cn_search_candidates", fake)
+    c = TestClient(appmod.app)
+    d = c.post("/api/lens/cn/keywords",
+               files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_caption": "풍선감자",
+                     "exclude": "공기튀김 감자칩\n空气炸锅土豆片"}).json()
+    assert seen["exclude"] == ["공기튀김 감자칩", "空气炸锅土豆片"]
+    assert d["candidates"][0]["zh"] == "龙卷风土豆"
+
+
+def test_lens_search_reports_instagram_dropoff(tmp_path, monkeypatch):
+    """인스타 편차 계측(2026-08-14): 렌즈 원본 인스타 링크 중 개별 게시물이 아닌 것과
+    카드뉴스를 세어 응답 diag에 실어야 '0건'의 원인이 화면에서 갈린다."""
+    db = str(tmp_path / "t.db")
+    monkeypatch.setattr(appmod, "DB_PATH", db)
+    monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
+    monkeypatch.setattr(appmod, "upload_frame", lambda raw: None)
+    from shopping_shorts import lens_discover
+    raw_matches = [
+        {"link": "https://www.instagram.com/reel/AAA111/", "title": "릴"},
+        {"link": "https://www.instagram.com/p/BBB222/", "title": "카드뉴스"},
+        {"link": "https://www.instagram.com/popular/some-slug/", "title": "모음"},
+        {"link": "https://www.instagram.com/someuser/", "title": "프로필"},
+    ]
+    monkeypatch.setattr(lens_discover, "verify_matches", lambda items, keywords=None: items)
+    monkeypatch.setattr(appmod, "search_similar_videos",
+                        lambda url, source_caption="", stats=None:
+                        _run_real(lens_discover, raw_matches, stats))
+    c = TestClient(appmod.app)
+    d = _post_img(c).json()
+    assert d["diag"]["ig_raw"] == 4
+    assert d["diag"]["ig_dropped_not_post"] == 2      # /popular/, 프로필
+    assert d["diag"]["ig_photo"] == 1                 # /p/
+    assert len(d["items"]) == 2                       # reel + /p/(가리기는 프론트 토글)
+
+
+def _run_real(lens_discover, raw_matches, stats):
+    """search_similar_videos의 '후처리 루프'만 실제로 태운다(SerpApi 호출 없이)."""
+    import requests
+
+    class _R:
+        status_code = 200
+        def json(self): return {"visual_matches": raw_matches}
+        def raise_for_status(self): pass
+    orig = requests.get
+    requests.get = lambda *a, **k: _R()
+    try:
+        return lens_discover.search_similar_videos("https://img/x.jpg", api_key="k", stats=stats)
+    finally:
+        requests.get = orig
 
 
 def test_lens_cn_keywords_empty_without_frame_or_caption(tmp_path, monkeypatch):

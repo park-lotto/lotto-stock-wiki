@@ -4417,10 +4417,12 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
             name = uuid.uuid4().hex + ".jpg"
             (work_dir / name).write_bytes(raw)
             image_url = f"{PUBLIC_BASE_URL}/api/find/frame/lens/{name}"
+        diag = {}
         items = _lens_finalize(
-            search_similar_videos(image_url, source_caption=source_caption), store)
+            search_similar_videos(image_url, source_caption=source_caption, stats=diag), store)
         store.bump_lens(month)
-        return {"ok": True, "items": items, "count": len(items)}
+        # diag: 인스타 결과가 0/왕창으로 튀는 이유를 화면에서 갈라 보기 위한 계측(2026-08-14).
+        return {"ok": True, "items": items, "count": len(items), "diag": diag}
     except Exception:
         refund_credit(cid, "lens")   # 업로드·검색 실패 → 예약한 크레딧 되돌림(성공한 검색만 과금)
         raise
@@ -4684,7 +4686,7 @@ async def api_lens_cn(request: Request, frame: UploadFile = File(None),
 
 @app.post("/api/lens/cn/keywords")
 async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
-                                source_caption: str = Form("")):
+                                source_caption: str = Form(""), exclude: str = Form("")):
     """프레임(+캡션) → 중국어 후보 검색어 리스트. Gemini 비전 1회, Apify 안 부름.
     프론트가 렌즈 열 때 호출해 후보 버튼을 그린다(2026-07-19)."""
     if frame is None and not (source_caption or "").strip():
@@ -4695,8 +4697,10 @@ async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
             raw = await frame.read()
         except Exception:
             raw = None
+    # exclude: 프론트 '🔄 다른 검색어'가 이미 보여준 후보를 개행으로 붙여 보낸다.
+    seen = [s.strip() for s in (exclude or "").split("\n") if s.strip()][:20]
     try:
-        v = cn_search_candidates(raw, source_caption)
+        v = cn_search_candidates(raw, source_caption, exclude=seen)
     except Exception:
         v = {}
     return {"ok": True, "product": v.get("product", ""),

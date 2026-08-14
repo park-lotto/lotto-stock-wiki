@@ -572,12 +572,23 @@ _CN_CANDIDATES_SCHEMA = {
 }
 
 
-def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8):
-    """프레임(+캡션) → {"product": str, "candidates": [{"ko","zh"}]}. 실패/키없음 시 빈 리스트."""
+def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8, exclude=None):
+    """프레임(+캡션) → {"product": str, "candidates": [{"ko","zh"}]}. 실패/키없음 시 빈 리스트.
+
+    exclude: 이미 보여준 검색어들(ko/zh 문자열 리스트). 렌즈의 '🔄 다른 검색어'가 넘긴다 —
+    같은 프레임으로 다시 물어도 비전이 매번 비슷한 3~4개를 뽑아 '복불복'이 되던 걸 막고
+    (2026-08-14 사장님), 이미 나온 건 빼고 **다른 각도**로 뽑게 프롬프트에 박는다.
+    ★모델 출력은 확률적이라 프롬프트만으론 완벽히 안 지켜진다 → 아래에서 실제로 걸러낸다."""
     empty = {"product": "", "candidates": []}
     if not image_bytes or not SHORTS_GEMINI_KEYS:
         return empty
+    seen = {str(s).strip() for s in (exclude or []) if str(s or "").strip()}
     prompt = _CN_CANDIDATES_PROMPT.format(caption=(caption or "(캡션 없음)")[:400])
+    if seen:
+        prompt += ("\n\n※ 아래 검색어들은 **이미 사용자에게 보여준 것**이다. 이것들과 "
+                   "겹치지 않는 **완전히 다른 각도**의 후보만 만들라(재료·조리법·모양·"
+                   "브랜드·사용상황 등 아직 안 쓴 축으로):\n"
+                   + "\n".join(f"- {s}" for s in sorted(seen)[:20]))
     for attempt in range(max_retries):
         key, idx = comment_gen._next_live_key_and_idx()
         if key is None:
@@ -596,8 +607,9 @@ def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8):
             cands = []
             for c in (data.get("candidates") or []):
                 ko, zh = (c.get("ko") or "").strip(), (c.get("zh") or "").strip()
-                if zh:
+                if zh and zh not in seen and (not ko or ko not in seen):
                     cands.append({"ko": ko, "zh": zh})
+                    seen.add(zh)          # 같은 응답 안의 중복도 막는다
             return {"product": (data.get("product") or "").strip(), "candidates": cands}
         except Exception as e:
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):

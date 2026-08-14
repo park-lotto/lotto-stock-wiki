@@ -1996,7 +1996,7 @@ async function lensSearch(btn, shortcode){
     // 캡션이 없어도 됨). ytLoading=true로 두고 renderLens가 '불러오는 중'을 보여준다.
     LENS_STATE[shortcode]={items, on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
                            sel:new Set(), shortsOnly:false, foreignOnly:false, videoOnly:true, hideOfftopic:false, ytLoading:true, keyword:'', caption,
-                           cnCands:[]};
+                           cnCands:[], frameBlob:blob, cnLoading:false, diag:(d.diag||null)};
     renderLens(shortcode);
     fetchLensYt(shortcode, caption, blob);   // ▶️ 유튜브 무료 키워드 자동합류(비동기)
     fetchLensCnKeywords(shortcode, caption, blob);   // 📕🎬 중국앱 후보 검색어 자동합류(비동기)
@@ -2054,19 +2054,47 @@ async function fetchLensYt(shortcode, caption, blob){
 // 프레임(비전)으로 중국어 후보 검색어를 받아 '사이트 링크' 버튼으로 그린다.
 // ★무료: Apify로 자동검색하지 않는다. 후보 클릭=그 중국어로 샤오홍슈/도우인 사이트를 열고,
 //   고객은 거기서 유저스크립트 '📥 담기'로 담는다(Apify 비용 0, 비전 후보만 Gemini 무료쿼터).
-async function fetchLensCnKeywords(shortcode, caption, blob){
+async function fetchLensCnKeywords(shortcode, caption, blob, append){
   try{
+    const st0=LENS_STATE[shortcode];
     const fd=new FormData();
     if(blob) fd.append('frame', blob, 'f.jpg');
     if(caption) fd.append('source_caption', caption);
+    // 🔄 다른 검색어: 이미 보여준 후보를 넘겨 '겹치지 않는 다른 각도'로 받는다(2026-08-14).
+    if(append && st0) fd.append('exclude', (st0.cnCands||[]).map(c=>[c.ko,c.zh].filter(Boolean).join('\n')).join('\n'));
     const d=await (await fetch('/api/lens/cn/keywords',{method:'POST',body:fd})).json();
     const st=LENS_STATE[shortcode]; if(!st) return;
-    st.cnCands=(d.candidates||[]).filter(c=>c && c.zh);
+    const got=(d.candidates||[]).filter(c=>c && c.zh);
+    if(append){
+      // 쌓는다 — 사장님이 4개 이후 다른 것도 열어볼 수 있게. 서버가 이미 걸렀지만
+      // 모델이 프롬프트를 안 지킬 수 있어 여기서도 zh 기준 중복 제거(이중 안전).
+      const have=new Set((st.cnCands||[]).map(c=>c.zh));
+      st.cnCands=(st.cnCands||[]).concat(got.filter(c=>!have.has(c.zh)));
+      st.cnNoNew = got.length===0 || st.cnCands.length===have.size;
+    } else {
+      st.cnCands=got;
+    }
     // 비전 5~15초 사이 사용자가 다른 카드 렌즈를 열었으면 이 모달은 남의 것 → 재렌더 금지
     // (형제 fetchLensYt와 동일 가드. 안 하면 늦은 응답이 현재 모달을 덮어씀)
     const root=document.getElementById('lensRoot');
     if(root && root.dataset.sc===shortcode) renderLens(shortcode);
   }catch(e){ /* 후보 실패해도 렌즈 나머지는 정상 */ }
+  finally{
+    const st=LENS_STATE[shortcode];
+    if(st) st.cnLoading=false;
+    const root=document.getElementById('lensRoot');
+    if(root && root.dataset.sc===shortcode) renderLens(shortcode);
+  }
+}
+// 🔄 다른 검색어 — 같은 프레임으로 비전에 다시 묻되 '이미 본 것 빼고'를 넘긴다.
+// 검색어가 렌즈 열 때마다 복불복으로 바뀌던 걸(2026-08-14 사장님) 쌓아가는 방식으로 바꾼 것.
+// Gemini 무료쿼터만 쓴다 — Apify·SerpApi 비용 0(후보는 '링크 여는 버튼'일 뿐).
+async function lensMoreCnKeywords(shortcode){
+  const st=LENS_STATE[shortcode];
+  if(!st || st.cnLoading || !st.frameBlob) return;
+  st.cnLoading=true; st.cnNoNew=false;
+  renderLens(shortcode);
+  await fetchLensCnKeywords(shortcode, st.caption||'', st.frameBlob, true);
 }
 function toggleLensPlatform(shortcode, k){
   const st=LENS_STATE[shortcode]; if(!st) return;
@@ -2325,6 +2353,23 @@ function _igKw(kw){
   for(let i=0;i<3;i++){ s=s.replace(tails,'').trim(); s=s.replace(advs,'').trim(); }
   return s||String(kw||'').trim();
 }
+// 인스타 결과가 '0건이거나 왕창이거나'로 튀는 이유를 화면에서 갈라 보여준다(2026-08-14).
+// 서버 diag가 세어준다: 렌즈 원본에 인스타 링크가 몇 개였나(ig_raw), 그중 개별 게시물이
+// 아니라 프로필·검색페이지라 입구에서 잘린 게 몇 개(ig_dropped_not_post), 카드뉴스(/p/)가
+// 몇 개(ig_photo). 0건일 때 "렌즈가 안 물어왔다" vs "우리가 걸렀다"가 구분된다.
+// ⚠️ 위치: test_lens_cn_js가 _lensSearchUrl~renderLens 구간만 잘라 node로 돌리므로
+// renderLens가 부르는 이 함수는 그 구간 안에 있어야 한다.
+function _lensIgDiag(st){
+  const d=st && st.diag; if(!d || typeof d.ig_raw!=='number') return '';
+  const shownIg=(st.items||[]).filter(i=>i.platform==='instagram').length;
+  if(d.ig_raw===0) return '<span style="font-size:11px;color:var(--sub)" title="구글렌즈가 이 장면과 닮은 인스타 게시물을 하나도 못 찾았습니다. 인스타는 구글 색인이 드물어 장면에 따라 편차가 큽니다 — 아래 📷인스타 버튼으로 키워드 검색을 해보세요">📷 인스타 0건 — 렌즈가 아예 못 찾음(우리가 거른 게 아님)</span>';
+  const cut=d.ig_dropped_not_post||0, photo=d.ig_photo||0;
+  if(!cut && !photo) return '';
+  const parts=[];
+  if(cut) parts.push(`프로필·검색페이지 ${cut}`);
+  if(photo) parts.push(`카드뉴스 ${photo}`);
+  return `<span style="font-size:11px;color:var(--sub)" title="구글렌즈가 준 인스타 링크 중 개별 영상 게시물이 아닌 것들입니다. 카드뉴스는 위 '🎬 영상만'을 끄면 다시 보입니다">📷 렌즈 인스타 원본 ${d.ig_raw}건 → 표시 ${shownIg}건 (제외: ${parts.join(', ')})</span>`;
+}
 function renderLens(shortcode){
   const box=document.getElementById('scriptBody');   // 모달 body에 렌더(인라인 X → UI 안 망가짐)
   const st=LENS_STATE[shortcode]; if(!st || !box) return;
@@ -2368,11 +2413,16 @@ function renderLens(shortcode){
       <button onclick="lensBulkDelete('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">🗑 선택 삭제(${selCount})</button>
       ${(()=>{const nYt=shown.filter(i=>i.platform==='youtube').length; return nYt?`<button onclick="lensBenchAllYoutube('${shortcode}')" title="이 렌즈 결과의 유튜브 채널들(짜집기 채널)을 전부 벤치 리스트에 등록 → 채널기반 수집에 편입" style="${btnCss};border-color:var(--accent);color:var(--accent);font-weight:700">➕ 유튜브 채널 전부 벤치등록(${nYt})</button>`:'';})()}
       ${st.ytLoading?'<span style="color:var(--sub)">▶️ 유튜브 불러오는 중…</span>':''}
+      ${_lensIgDiag(st)}
       <a href="/grab" target="_blank" rel="noopener" title="샤오홍슈·도우인·틱톡·인스타 영상에 '📥 담기' 버튼이 안 뜨면 여기서 1회 켜기" style="text-decoration:none;font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--accent);background:#1f6feb1a;color:var(--accent);font-weight:700;margin-left:auto;white-space:nowrap">📥 담기 버튼 켜기</a>
     </div>
   </div>
   ${st.cnCands && st.cnCands.length ? `<div style="margin-bottom:8px;padding-top:8px;border-top:1px solid var(--line)">
-      <div style="font-size:12px;color:var(--sub);margin-bottom:5px">📕🎬🎵📷 비슷한 영상 찾기 — 눌러서 열고, 마음에 들면 📥담기</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
+        <span style="font-size:12px;color:var(--sub)">📕🎬🎵📷 비슷한 영상 찾기 — 눌러서 열고, 마음에 들면 📥담기</span>
+        ${st.frameBlob?`<button onclick="lensMoreCnKeywords('${shortcode}')" ${st.cnLoading?'disabled':''} title="같은 장면으로 다른 각도의 검색어를 더 뽑습니다(이미 나온 건 빼고 아래에 쌓입니다). 무료 — 추가 비용 없음" style="${btnCss};border-color:var(--accent);color:var(--accent)">${st.cnLoading?'⏳ 뽑는 중…':'🔄 다른 검색어 더'}</button>`:''}
+        ${st.cnNoNew?'<span style="font-size:11px;color:var(--sub)">더 나올 게 없어요 — 이 장면에서 뽑을 각도는 다 나왔습니다</span>':''}
+      </div>
       <div style="display:flex;flex-direction:column;gap:6px">
         ${st.cnCands.map(c=>{
           // 샤오훙슈 검색은 로그아웃 방문자를 로그인으로 막는다(登录后查看搜索结果). 해외판
