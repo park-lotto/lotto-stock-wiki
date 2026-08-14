@@ -118,6 +118,7 @@ button.act:hover{border-color:var(--accent)}
 /* 자막 트랙 — 말한 데까지 흰색, 남은 말은 흐리게(카라오케식). 어긋나면 바로 보인다 */
 #subbox{margin-top:6px;min-height:42px;font-size:13px;line-height:1.5;font-weight:700;
   background:#000a;border-radius:6px;padding:6px 8px;word-break:keep-all}
+#subbox .subtag{font-size:10px;color:var(--accent);font-weight:600;margin-bottom:3px}
 #subbox .said{color:#fff}
 #subbox .rest{color:#ffffff44}
 /* 컷마다 그 시간대 자막 — '이 글자를 말할 때 이 그림' 을 한눈에 */
@@ -162,7 +163,9 @@ button.act:hover{border-color:var(--accent)}
   <div id="subbox"></div>
   <audio id="bgaudio"></audio>
   <div class="pinfo" id="pinfo">장면의 ▶ 또는 칸의 “이 칸 재생”을 누르세요<br>
-    <span style="opacity:.7">칸 재생 = 화면+음성+자막을 함께 봅니다(렌더 안 함)</span></div>
+    <span style="opacity:.7">칸 재생 = 화면+음성+자막을 함께 봅니다(렌더 안 함)</span><br>
+    <label style="cursor:pointer"><input type="checkbox" id="subcut" checked
+      onchange="subPerCut=this.checked"> 자막을 컷 단위로 끊기</label></div>
 </div>
 
 <footer>
@@ -236,6 +239,8 @@ function subAt(i, t){
 
 let mode = 'live';
 let seqBeat = null;   // 지금 재생 중인 칸(자막·음성 트랙 기준)
+let seqBounds = [];   // 컷별 [시작,끝) 초 — 자막을 컷 단위로 끊는 기준
+let subPerCut = true; // ★자막을 컷 단위로 끊어 보여준다(2026-08-14 사장님 '장면이 3개면 3개로')
 let sel = 0;
 let lists = [];              // 비트별 장면 seg_id 목록(첫 항목이 primary)
 const chosen = new Set();    // 사람이 손으로 담은 seg_id
@@ -443,15 +448,32 @@ function tickSub(){
   const box = document.getElementById('subbox');
   if (seqBeat == null){ box.innerHTML = ''; return; }
   subTimer = setInterval(() => {
-    const a = audio();
-    const {said, rest} = subAt(seqBeat, a.currentTime || 0);
-    box.innerHTML = `<span class="said">${esc(said)}</span><span class="rest">${esc(rest)}</span>`;
+    const a = audio(), t = a.currentTime || 0;
+    let said, rest, tag = '';
+    // ★컷 단위 자막: 지금 재생 중인 컷 구간의 글자만 띄운다. 컷이 3개면 자막도 3번 바뀐다
+    //   — 실제 영상에서 한 화면에 어떤 말이 얹히는지가 그대로 보인다.
+    const k = subPerCut ? seqBounds.findIndex(([a0, b0]) => t >= a0 - 1e-3 && t < b0) : -1;
+    if (k >= 0){
+      const [a0, b0] = seqBounds[k];
+      const whole = subRange(seqBeat, a0, b0);
+      const upto  = subRange(seqBeat, a0, Math.min(t, b0));
+      // 지금까지 말한 부분(upto)은 whole의 앞머리 — 길이로 갈라 카라오케를 유지한다.
+      said = whole.slice(0, upto.length); rest = whole.slice(upto.length);
+      tag = `컷 ${k+1}/${seqBounds.length}`;
+    } else {
+      ({said, rest} = subAt(seqBeat, t));
+    }
+    box.innerHTML = (tag ? `<div class="subtag">${tag}</div>` : '')
+      + `<span class="said">${esc(said)}</span><span class="rest">${esc(rest)}</span>`;
     if (a.ended || a.paused) clearInterval(subTimer);
   }, 60);
 }
 function startSeq(clips){
   clearTimeout(seqTimer);
   seq = clips; seqI = 0;
+  // 컷 경계 누적(자막을 컷 단위로 끊어 보여주려면 각 컷의 [시작,끝) 초가 필요하다)
+  let off = 0;
+  seqBounds = clips.map(c => { const a = off; off += c.dur; return [a, off]; });
   document.getElementById('player').classList.add('on');
   step();
 }
