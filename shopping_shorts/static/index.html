@@ -271,8 +271,10 @@ body.is-admin .blockbtn{display:inline-block}
 /* 카드 상단 팔로워(2026-08-14) — 값이 없어도 '—'로 자리를 지킨다.
    예전엔 팔로워가 없으면 줄 자체가 사라져 카드마다 높이가 달라지고
    '이 채널은 팔로워를 못 받았다'는 사실이 보이지 않았다. */
-.folw{margin:-2px 0 6px;font-size:12px;font-weight:700;color:var(--accent);
-      letter-spacing:.01em;opacity:.95}
+.folw{display:flex;align-items:center;gap:10px;margin:-2px 0 6px;font-size:12px;
+      font-weight:700;color:var(--accent);letter-spacing:.01em;opacity:.95}
+/* 영상 길이 — 썸네일 위(재생 컨트롤과 겹치던 자리)에서 여기로 옮겼다(2026-08-14). */
+.folw .dur{color:var(--sub);font-weight:600;opacity:.9}
 /* 걸러내기 토글(2026-08-14) — 정렬 탭과 눈에 띄게 다르게(알약형) 만들어 축이 다름을 보인다 */
 .filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
 .filters .flabel{color:var(--sub);font-size:12px}
@@ -1234,7 +1236,7 @@ function badgeHTML(i, ctx){
     const txt = must ? '진짜 봐야할 것' : b.t;
     h+=`<span class="ibadge ${cls}"><span class="emo">${emo}</span><span class="lbl">${txt}</span></span>`;
   }
-  if(i.views) h+=`<span class="vbadge">👁 ${_fmtViews(i.views)}</span>`;
+  // 조회수 배지 제거(2026-08-14) — 지표줄에 이미 있고, 재생 컨트롤과 겹치는 자리였다.
   return h;
 }
 // 검색창 하나로 채널명·소재·링크 — 링크면 엔터 시 원본·유사 영상 추적으로 보낸다(2026-07-22).
@@ -1459,13 +1461,12 @@ function render(){
       <div class="thumb">
         <img src="${thumbURL(i.thumbnail, i.shortcode)}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.platform==='youtube'?`onclick="playYoutube(this,'${i.shortcode}')"`:(i.platform==='tiktok'?`onclick="playTiktok(this,'${i.shortcode}')"`:((i.platform||PLATFORM)==='instagram'?`onclick="playInstagram(this,'${i.shortcode}')"`:'')))} loading="lazy" onerror="this.style.visibility='hidden'">
         ${badgeHTML(i, _bctx)}
-        ${i.duration!=null?`<span style="position:absolute;left:6px;bottom:6px;z-index:2;background:rgba(0,0,0,.72);color:#fff;font-size:12px;font-weight:600;padding:2px 8px;border-radius:10px">🎬 ${_fmtDur(i.duration)}</span>`:''}
         ${(i.video_url||i.platform==='youtube'||i.platform==='tiktok'||(i.platform||PLATFORM)==='instagram')?'<span class="play-badge">▶</span>':''}
       </div>
       <div class="body">
         <div class="rank"><span>#${idx+1} · ${i.category} · ${fmtAgo(i)}</span><button class="blockbtn" title="이 채널을 영구 차단 — 지금 바로 가리고, 다음 수집·업데이트에도 안 올라옵니다" onclick="blockChannel('${esc(i.username||'')}','${esc(i.name||'')}',this)">🚫 차단</button></div>
         <div class="ch"><span class="chname" title="이 채널 영상만 보기(지난 한 달 포함)" style="cursor:pointer" onclick="searchChannel('${esc(i.username||'')}')">${i.name||i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${i.url}', this)">🔗 복사</button></div>
-        <div class="folw" title="채널 팔로워(구독자) 수 — 수집이 실어온 실시간 값">👥 팔로워 ${i.followers?i.followers.toLocaleString():'—'}</div>
+        <div class="folw"><span title="채널 팔로워(구독자) 수 — 수집이 실어온 실시간 값">👥 팔로워 ${i.followers?i.followers.toLocaleString():'—'}</span>${i.duration!=null?`<span class="dur" title="영상 길이">🎬 ${_fmtDur(i.duration)}</span>`:''}</div>
         ${i.views?`<div class="stat" title="조회수 — 옆의 +숫자는 직전 수집 대비 증가분(= '전체' 탭 정렬 기준)"><span>조회수</span><b>${i.views.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>`:''}
         <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${i.comments.toLocaleString()}${i.views?'':` <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span>`}</b></div>
         <div class="stat" title="댓글 ÷ 경과시간 — 게시 후 시간당 평균"><span>시간당댓글</span><b>${i.speed.toFixed(1)}</b></div>
