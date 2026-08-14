@@ -179,7 +179,8 @@ button.act:hover{border-color:var(--accent)}
   <div class="kpi">평균 컷길이 <b id="k-avg">-</b>초</div>
   <div class="kpi" id="k-long-wrap">늘어진 컷 <b id="k-long">-</b></div>
   <div class="kpi" id="k-own-wrap">내가 고른 화면 <b id="k-own">-</b></div>
-  <button class="act" onclick="reset()">처음으로</button>
+  <button class="act" onclick="reset()">처음으로(저장 지움)</button>
+  <span id="savedmsg" class="hint" style="color:var(--good)"></span>
   <div class="hint">왼쪽 장면 <b>두 번 클릭</b> = 선택한 칸에 담기 / 칸 안 썸네일은 <b>끌어서 순서 변경</b>, <b>두 번 클릭 = 삭제</b></div>
 </footer>
 
@@ -397,6 +398,7 @@ function render(){
   document.getElementById('k-own').textContent = chosen.size ? own + '%' : '—';
   document.getElementById('k-own-wrap').className =
     'kpi ' + (!chosen.size ? '' : own >= 80 ? 'goodv' : 'warnv');
+  saveWork();          // 무엇을 바꾸든 그리는 순간 저장된다
 }
 
 // ── 미리보기 재생 ────────────────────────────────────────────────
@@ -529,6 +531,38 @@ function dragDrop(i, k, ev){
   l.splice(k, 0, moved);
   dragFrom = null; render();
 }
+// ★내가 조립한 것을 브라우저에 저장한다(2026-08-14 사장님 "방금 조립한 게 없어지고
+//   네가 만든 걸로 되어 있어"). 새로고침·페이지 재빌드에도 남는다. 잡별로 따로 저장하므로
+//   다른 잡을 열어도 안 섞인다. '처음으로'를 누르면 지운다.
+const SAVE_KEY = 'sceneLab:' + (DATA.job_id || 'job');
+function saveWork(){
+  try{
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      mode, lists, chosen: [...chosen], at: new Date().toISOString()
+    }));
+  }catch(e){}
+  const el = document.getElementById('savedmsg');
+  if (el) el.textContent = '💾 내 편집 저장됨 (새로고침해도 남습니다)';
+}
+function loadWork(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return false;
+    const w = JSON.parse(raw);
+    if (!w || !Array.isArray(w.lists) || w.lists.length !== DATA.beats.length) return false;
+    mode = w.mode || 'hand';
+    lists = w.lists.map(l => Array.isArray(l) ? l.slice() : []);
+    chosen.clear(); (w.chosen || []).forEach(x => chosen.add(x));
+    ['live','one','hand','pick'].forEach(x => {
+      const b = document.getElementById('m-' + x);
+      if (b) b.classList.toggle('on', x === mode);
+    });
+    const el = document.getElementById('savedmsg');
+    if (el) el.textContent = '💾 이어서 편집 중 (저장된 배치를 불러왔습니다)';
+    return true;
+  }catch(e){ return false; }
+}
+function clearWork(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
 function selBeat(i){ sel = i; render(); }
 function add(sid){
   // ★담을 때 지금 배치를 절대 초기화하지 않는다(2026-08-14 사장님 "4장면 있었는데 하나
@@ -568,15 +602,20 @@ function setMode(m){
   if (m === 'pick') lists.forEach(l => l.forEach(id => chosen.add(id)));
   render();
 }
-function reset(){ setMode(mode); }
+function reset(){
+  clearWork();
+  const el = document.getElementById('savedmsg'); if (el) el.textContent = '';
+  setMode(mode);          // 지금 모드의 기본 배치로 되돌린다(저장본 삭제)
+}
 if (DATA.picks && (DATA.picks.lists || []).length){
   const el = document.getElementById('m-pick');
   el.style.display = '';
   if (DATA.picks.label) el.firstChild.textContent = DATA.picks.label + ' ';
-  setMode('pick');            // ★기본을 '대본에 맞게 고른 배치'로 연다
-} else {
-  initLists(); render();
 }
+// ★저장된 내 편집이 있으면 그것부터 — 없을 때만 기본 배치로 연다.
+if (loadWork()) render();
+else if (DATA.picks && (DATA.picks.lists || []).length) setMode('pick');
+else { initLists(); render(); }
 </script></body></html>
 """
 
