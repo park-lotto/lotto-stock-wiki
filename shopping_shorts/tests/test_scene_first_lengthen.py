@@ -48,6 +48,8 @@ def test_regenerates_when_all_candidates_short():
     def fake_call(prompt, schema, **kw):
         if schema.get("required") == ["order"]:     # Task5: _pick_slot_groups의 순서질의(회귀0 대상 아님)
             return {"order": []}
+        if schema.get("required") == ["picks"]:     # 약한비트 화면 재선택(2026-08-14) - 대본 생성 호출이 아니다
+            return {"picks": []}
         if schema.get("required") == ["beats"]:     # 1소스 전용 경로(2026-08-04) — 빈 응답=기존 경로 폴백(이 테스트 대상 아님)
             return {"beats": []}
         calls["n"] += 1
@@ -74,6 +76,8 @@ def test_no_regeneration_when_length_ok():
     def fake_call(prompt, schema, **kw):
         if schema.get("required") == ["order"]:     # Task5: _pick_slot_groups의 순서질의(회귀0 대상 아님)
             return {"order": []}
+        if schema.get("required") == ["picks"]:     # 약한비트 화면 재선택(2026-08-14) - 대본 생성 호출이 아니다
+            return {"picks": []}
         if schema.get("required") == ["beats"]:     # 1소스 전용 경로(2026-08-04) — 빈 응답=기존 경로 폴백(이 테스트 대상 아님)
             return {"beats": []}
         calls["n"] += 1

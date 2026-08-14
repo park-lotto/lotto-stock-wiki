@@ -3179,6 +3179,95 @@ def _reconcile_weak_beats(beats, call=_vault_call):
     return out
 
 
+_REPICK_SCHEMA = {
+    "type": "object",
+    "properties": {"picks": {"type": "array", "items": {
+        "type": "object",
+        "properties": {"beat_idx": {"type": "integer"}, "seg_id": {"type": "string"},
+                       "fit": {"type": "integer"}},
+        "required": ["beat_idx", "seg_id", "fit"]}}},
+    "required": ["picks"],
+}
+
+
+def _repick_weak_beats(beats, seg_map, call=_vault_call, min_fit=4):
+    """약한 비트(fit<=3 또는 forced)의 **화면을 다시 고른다** — 인벤토리 전체에서.
+
+    ★왜 필요한가(2026-08-14 사장님 "좋은 장면을 가져오는 것에 집중"): 지금까지 약한 비트의
+    구제 수단은 `_reconcile_weak_beats` 하나뿐이었는데, 그건 **대사를 화면에 맞춰 고친다**.
+    방향이 반대다 — 대사가 원하는 화면이 인벤토리에 실제로 있어도 후보로 올라오지 않으면
+    영영 안 쓰인다. 실측(job 74d3f7a29620): "찍히는 즉시 결과 나온다"는 멘트에 `s1-13`
+    (촬영 모드 전환 버튼, fit=2)이 붙었는데, 정작 `s3-4`(촬영 직후 결과 데이터가 뜨는 화면)는
+    한 번도 안 쓰였다. 미사용 장면이 13개였다.
+
+    그래서 대본을 고치기 **전에** 화면을 먼저 다시 찾는다. 더 맞는 화면(new fit>=min_fit)을
+    찾으면 primary를 교체하고, 못 찾으면 그대로 둔다 → 기존 대본수정이 종전대로 받는다.
+    Gemini 1회(약한 비트를 모아 한 번). 대상 0개면 호출 자체를 안 한다(과금 0·회귀 0).
+    실패하면 원본 그대로(fail-open)."""
+    weak = [b for b in beats
+            if not b.get("respined")
+            and ((0 < int(b.get("fit") or 0) <= 3) or bool(b.get("forced")))]
+    if not weak or not seg_map:
+        return beats
+    # 다른 비트가 이미 쓰는 화면은 후보에서 빼 중복 컷을 만들지 않는다(primary만 — alternates는
+    # 라운드로빈 여분이라 양보 가능).
+    taken = {(b.get("primary") or {}).get("seg_id") for b in beats}
+    weak_own = {(b.get("primary") or {}).get("seg_id") for b in weak}
+    pool = [sid for sid in seg_map if sid not in (taken - weak_own)]
+    if not pool:
+        return beats
+    cand_lines = "\n".join(
+        "[{sid}] 화면:{desc}{ch}{say}".format(
+            sid=sid,
+            desc=(seg_map[sid].get("scene_desc") or "")[:60],
+            ch=(" | 변화:" + seg_map[sid]["change"][:30]) if seg_map[sid].get("change") else "",
+            say=(" | 말:" + (seg_map[sid].get("text") or "")[:40]) if seg_map[sid].get("text") else "")
+        for sid in pool)
+    beat_lines = "\n".join(
+        f"[{b['beat_idx']}] 대사:{b.get('narration','')} (현재화면:{(b.get('primary') or {}).get('scene_desc','')})"
+        for b in weak)
+    prompt = (
+        "아래 비트들은 대사와 화면이 어긋난다. **대사는 절대 바꾸지 말고**, 후보 목록에서 "
+        "그 대사가 말하는 것을 실제로 보여주는 화면을 다시 골라라.\n"
+        "- 대사의 핵심 동작·결과가 화면에 실제로 보이는 것을 고른다. 분위기만 비슷한 건 안 된다.\n"
+        "- 지금 화면보다 확실히 나은 후보가 없으면 그 비트는 **출력에서 빼라**(억지로 고르지 마라).\n"
+        "- fit은 새로 고른 화면과 대사가 맞는 정도(1~5)를 솔직하게.\n"
+        f"[비트]\n{beat_lines}\n\n[후보 화면]\n{cand_lines}\n\n출력은 picks 배열의 JSON만.")
+    raw = call(prompt, _REPICK_SCHEMA)
+    if not raw or not isinstance(raw, dict):
+        return beats
+    weak_idx = {b["beat_idx"] for b in weak}
+    picks, used = {}, set()
+    for p in raw.get("picks", []):
+        try:
+            bi, sid, fit = int(p["beat_idx"]), str(p["seg_id"]).strip(), int(p.get("fit") or 0)
+        except (KeyError, TypeError, ValueError):
+            continue
+        if bi in weak_idx and sid in seg_map and sid not in used and fit >= min_fit:
+            picks[bi] = (sid, fit)
+            used.add(sid)
+    if not picks:
+        return beats
+    out = []
+    for b in beats:
+        nb = dict(b)
+        pick = picks.get(b["beat_idx"])
+        cur = (b.get("primary") or {}).get("seg_id")
+        if pick and pick[0] != cur:
+            sid, fit = pick
+            new_primary = _ground_ref({"seg_id": sid}, seg_map)
+            if new_primary:
+                nb["primary"] = new_primary
+                nb["fit"] = fit
+                nb["forced"] = False
+                nb["repicked"] = True
+                # 새 primary가 여분에 있으면 빼고, 틀렸던 옛 primary는 되살리지 않는다.
+                nb["alternates"] = [a for a in (b.get("alternates") or [])
+                                    if a.get("seg_id") != sid]
+        out.append(nb)
+    return out
+
+
 def build_edit_plan(source_scripts, target_seconds, structure="template", video_type=None,
                     n_alternates=2, max_retries=4, quota_sleep=8, given_script=None,
                     is_recipe=False):
@@ -3217,6 +3306,9 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
         return empty
     raw.setdefault("structure", structure)
     grounded = _validate_and_ground(raw, seg_map, n_alternates, is_recipe=is_recipe)
+    # ★대본을 고치기 전에 **화면부터 다시 고른다**(2026-08-14). 더 맞는 화면을 찾으면 fit이
+    #   올라가 아래 재작성 대상에서 자연히 빠지고, 못 찾은 비트만 종전대로 대사를 고친다.
+    grounded["beats"] = _repick_weak_beats(grounded["beats"], seg_map)
     grounded["beats"] = _reconcile_weak_beats(grounded["beats"])
     # 각 비트 target_seconds는 나레이션 글자수 기준으로 재계산(실제 렌더 길이 =
     # 나레이션 읽는 시간 ≈ 글자수÷_SYLLABLES_PER_SEC초). UI 표시 초와 실제 길이가 어긋나지 않게.
@@ -4134,6 +4226,10 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             # ping_pong은 화면·나레이션을 함께 재작성하므로 종전대로 슬롯 순서로 되못박는다.
             plan["beats"] = (_assign_timeline(plan["beats"], tl_groups) if ping_pong
                              else _pin_screens(plan["beats"], tl_groups))
+        # ★약한 비트 화면 재선택(2026-08-14) — 반드시 화면 못박기(_assign_timeline/_pin_screens)
+        #   **뒤**에 온다. 앞에 두면 이 두 함수가 primary/alternates를 통째로 재설정해 결과가
+        #   예외 없이 소멸한다(G2 실측이 backbone 5종에서 확인한 것과 같은 함정).
+        plan["beats"] = _repick_weak_beats(plan["beats"], seg_map, call=_call)
         plan["detected_type"] = detected
         plan["affiliate_target"] = r.get("story_event", "") or ""
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)
