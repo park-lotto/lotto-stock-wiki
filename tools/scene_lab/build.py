@@ -43,17 +43,17 @@ h1{font-size:16px;margin:0;font-weight:700}
 .pane{overflow-y:auto;padding:14px}
 .pane.left{border-right:1px solid var(--line);background:var(--panel)}
 .srcgroup{margin-bottom:18px}
-.srchead{font-size:12px;color:var(--dim);margin-bottom:8px;display:flex;justify-content:space-between}
-.thumbs{display:grid;grid-template-columns:1fr;gap:10px}
-.seg{display:grid;grid-template-columns:150px 1fr;align-items:stretch}
+.srchead{font-size:12.5px;color:var(--ink);font-weight:700;margin-bottom:8px;display:flex;justify-content:space-between;gap:8px;position:sticky;top:0;background:var(--panel);padding:6px 4px;border-bottom:1px solid var(--line);z-index:2}
+.thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.seg{display:block}
 .seg{border:1px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;
      background:var(--panel2);position:relative;transition:.12s}
 .seg:hover{border-color:var(--accent);transform:translateY(-2px)}
-.seg img{width:150px;display:block;aspect-ratio:9/16;object-fit:cover}
-.seg .meta{padding:8px 10px;font-size:12px;color:var(--ink);line-height:1.5;display:flex;flex-direction:column;gap:3px}
-.seg .meta .d{color:var(--dim);font-size:11.5px;line-height:1.45}
+.seg img{width:100%;display:block;aspect-ratio:9/16;object-fit:cover}
+.seg .meta{padding:5px 6px;font-size:10.5px;color:var(--ink);line-height:1.4;display:flex;flex-direction:column;gap:2px}
+.seg .meta .d{color:var(--dim);font-size:10.5px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .seg .sid{color:var(--ink);font-weight:600}
-.utag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:99px;margin:2px 3px 0 0;border:1px solid var(--line);color:var(--dim)}
+.utag{display:inline-block;font-size:9px;padding:1px 5px;border-radius:99px;margin:2px 3px 0 0;border:1px solid var(--line);color:var(--dim)}
 .utag.key{border-color:var(--good);color:var(--good)}
 .seg .add{position:absolute;left:5px;top:5px;background:var(--accent);color:#fff;font-size:10px;
      padding:2px 6px;border-radius:5px;opacity:0;transition:.12s}
@@ -338,12 +338,12 @@ function render(){
           <span class="play" onclick="playSeg('${s.sid}', event)">▶ 보기</span>
           ${!cur.has(s.sid) ? '<span class="add">두 번 눌러 담기</span>' : ''}
           <div class="meta"><span class="sid">${s.sid}</span>
-            <span style="color:var(--dim)">· ${(s.end-s.start).toFixed(1)}초 · ${s.video_id}</span>
+            <span style="color:var(--dim)">${(s.end-s.start).toFixed(1)}초 · ${s.video_id}</span>
             <div>${useTags(s.sid).map(t=>`<span class="utag${t==='실증'?' key':''}">${t}</span>`).join('')}</div>
             ${outOfRange(s.sid)?`<div class="oorbadge">⚠ 소스 밖 구간 — 원본 ${(DATA.src_duration||{})[s.video_id]}초</div>`:''}
             ${tooShort(s.sid)?`<div class="oorbadge">⚠ 0.8초 미만 — 담아도 화면에 안 나옵니다</div>`:''}
             <div class="d">${esc(s.scene_desc||'(설명 없음)')}</div>
-            ${s.text ? `<div class="d" style="opacity:.72">💬 ${esc(String(s.text).slice(0,40))}</div>` : ''}</div>
+            </div>
         </div>`).join('')}</div></div>`;
   }).join('');
 
