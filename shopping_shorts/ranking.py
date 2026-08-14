@@ -57,6 +57,9 @@ def build_items(reels, meta, prev_comments, prev_delta, now=None, window_hours=4
         prev_d = prev_delta(sc)
         accel = None if prev_d is None else delta - prev_d
         followers = meta.get("followers") or 0
+        # density가 참조하므로 dict 리터럴 밖에서 먼저 만든다(리터럴 안에선 키끼리 참조 불가).
+        likes = int(r.get("likesCount") or 0)
+        views = int(r.get("videoViewCount") or r.get("videoPlayCount") or 0)
         items.append({
             "shortcode": sc,
             "name": meta.get("name"),
@@ -67,14 +70,21 @@ def build_items(reels, meta, prev_comments, prev_delta, now=None, window_hours=4
             "video_url": r.get("videoUrl", ""),
             "url": r.get("url", ""),
             "comments": comments,
-            "likes": int(r.get("likesCount") or 0),
-            "views": int(r.get("videoViewCount") or r.get("videoPlayCount") or 0),
+            "likes": likes,
+            "views": views,
             "age_hours": round(age, 1),
             "delta": delta,
             "is_new": is_new,
             "accel": accel,
             "speed": comments / age if age > 0 else float(comments),
-            "density": (comments / followers) if followers else 0.0,
+            # 참여밀도 = (좋아요+댓글)/조회수 — 5개 플랫폼 공통 정의(2026-08-14).
+            # 옛 정의는 comments/followers였는데 인스타만 이 공식을 썼고(유튜브 :158·틱톡 :253·
+            # 레딧 :303·샤오홍슈 :359는 전부 조회·참여 기반), followers가 엑셀 메타에만 있어
+            # 발굴채널은 값이 아예 없다 → 실측 212/316건(67%)이 density=0으로 고착. 그 결과
+            # 배지 판정(index.html: score=vr*0.35+dr*0.50+sr*0.15)에서 density 가중이 50%인데
+            # 그 67%는 구조적으로 최상위 배지에서 배제됐다. views는 결측 0/316(실측)이라
+            # 조회 기반으로 바꾸면 팔로워 의존이 통째로 사라지고 정의도 타 플랫폼과 통일된다.
+            "density": ((likes + comments) / views) if views else 0.0,
             "category": _category_of(meta, r),
             "caption": r.get("caption", ""),
         })
