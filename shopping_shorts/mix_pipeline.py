@@ -439,7 +439,7 @@ def _extract_coverage(r, path):
     return min(1.0, covered / dur)
 
 
-def _prepare_sources(urls, work):
+def _prepare_sources(urls, work, store=None):
     """소스 URL들을 플랫폼 무관하게 다운로드 → ({video_id: mp4경로}, {video_id: caption}, skipped).
     caption은 인스타 소스만 채워짐(download_any가 (path, caption) 튜플 반환) — 유튜브/틱톡은
     빈 문자열이라 extract_script가 영상 재전사로 채운다.
@@ -487,7 +487,7 @@ def _prepare_sources(urls, work):
             ops_alert.raise_alert(
                 "source_download",
                 "소스 영상 다운로드가 전부 실패했습니다 — 수집 통로가 끊겼을 수 있습니다",
-                detail)
+                detail, store=store)
         except Exception:      # noqa: BLE001
             pass
         raise RuntimeError(
@@ -514,7 +514,7 @@ def run_mix_job(job_id, db_path, work_root):
         # video_id -> mp4 path, video_id -> caption(인스타만 채워짐, 유튜브/틱톡은 "").
         # extract_script가 caption을 힌트로 쓰고 없어도 영상 재전사로 동작 — .get(vid, "")로 안전 기본값.
         # 소스별 예외격리: 불량 URL은 스킵되고 최소 1개만 살면 계속(2026-07-19).
-        video_paths, captions, skipped = _prepare_sources(job["urls"], work)
+        video_paths, captions, skipped = _prepare_sources(job["urls"], work, store=store)
         if skipped:
             print(f"run_mix_job[{job_id}]: {len(skipped)}개 소스 스킵 "
                   f"(불량 URL) — {[u for u, _ in skipped]}", file=sys.stderr)
@@ -964,7 +964,7 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                 "edl_empty",
                 "편집안(EDL)을 만들지 못했습니다 — 대본 추출 실패 또는 Gemini 키 소진/차단",
                 "run_mix_job: EDL이 비어 있습니다. Gemini 키풀 상태(소진·403 PERMISSION_DENIED)와 "
-                "대본 추출 로그를 확인하세요.")
+                "대본 추출 로그를 확인하세요.", store=store)
         except Exception:      # noqa: BLE001
             pass
         raise RuntimeError("EDL 비어있음 — 대본 추출 실패 또는 Gemini 키 소진으로 편집안을 만들지 못함")
