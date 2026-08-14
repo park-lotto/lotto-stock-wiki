@@ -428,7 +428,11 @@ function render(){
     longCuts += longs;
     // ★늘어짐의 진짜 기준은 '장수'가 아니라 '담은 장면 길이의 합'이다(2026-08-13 실험에서 확인).
     //   장면이 0.9초짜리면 3장을 담아도 2.7초뿐이라 5.8초 멘트를 못 채우고 마지막 컷이 늘어난다.
-    const have = ids.reduce((a,id) => a + (DATA.segments[id] ? DATA.segments[id].end - DATA.segments[id].start : 0), 0);
+    // ★0.8초 미만은 어차피 버려지므로 '가진 시간'에서 뺀다(2026-08-14 사장님 "하나를 추가하면
+    //   저렇게 된다 부족인데"). 담긴 장수만 세면 왜 계속 부족한지 알 수 없다.
+    const okIds = ids.filter(id => DATA.segments[id] && !tooShort(id));
+    const have = okIds.reduce((a,id) => a + (DATA.segments[id].end - DATA.segments[id].start), 0);
+    const tinyN = ids.length - okIds.length;
     const needSec = b.target_seconds || 3;
     const lack = Math.max(0, needSec - have);
     // 실제로 화면에 나온 장면 = 컷에 등장한 것. 담았어도 시간이 모자라면 안 나온다.
@@ -439,7 +443,8 @@ function render(){
         <span class="role">${i+1}. ${b.role || '칸'}</span>
         <span class="chip">${(b.target_seconds||0).toFixed(1)}초</span>
         <span class="chip ${lack > 0.1 ? 'bad' : 'good'}">멘트 ${needSec.toFixed(1)}초${
-          lack > 0.1 ? ` · <b>${lack.toFixed(1)}초 부족</b>` : ' · 채움'}</span>
+          lack > 0.1 ? ` · <b>${lack.toFixed(1)}초 부족 → 장면 ${Math.ceil(lack / MAX_SHOT)}장 더</b>` : ' · 채움'}</span>
+        ${tinyN ? `<span class="chip bad">0.8초 미만 ${tinyN}장은 안 쓰임</span>` : ''}
         <span class="chip ${unused ? 'warn' : ''}">담음 ${ids.length}장 → <b>실제 ${used.size}장</b>${
           unused ? ` · ${unused}장 안 나옴` : ''}</span>
         <span class="chip ${longs?'warn':'good'}">컷 ${clips.length}개${longs?` · 늘어짐 ${longs}`:''}</span>
