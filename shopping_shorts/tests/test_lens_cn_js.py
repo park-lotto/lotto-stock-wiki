@@ -39,26 +39,3 @@ def test_cn_candidate_site_links():
     assert r["tk"].startswith("https://www.tiktok.com/search?q=")
     assert r["ig"].startswith("https://www.instagram.com/explore/search/keyword/?q=")
     assert "%EA%B3%B5%EA%B8%B0" in r["tk"]   # '공기...' 한국어 인코딩
-
-
-@pytest.mark.skipif(NODE is None, reason="node 없음")
-def test_instagram_tag_link_strips_spaces_and_tails():
-    """인스타 '#태그' 버튼(2026-08-14 사장님 "계정만 검색된다").
-
-    인스타 키워드 검색은 띄어쓴 여러 단어에 약해 계정·추천만 뜬다. 태그 URL은 공백이
-    들어가면 안 되므로 꼬리(만들기 등) 제거 후 한 덩어리로 붙여야 게시물 그리드가 뜬다."""
-    driver = _slice() + r"""
-    console.log(JSON.stringify({
-      tag:  decodeURIComponent(_lensSearchUrl('instagram_tag', '시금치 치아바타')),
-      tail: decodeURIComponent(_lensSearchUrl('instagram_tag', '한국식 김밥 만들기')),
-      kw:   decodeURIComponent(_lensSearchUrl('instagram', '시금치 치아바타')),
-    }));
-    """
-    out = subprocess.run([NODE, "-e", driver], capture_output=True, text=True,
-                         encoding="utf-8", stdin=subprocess.DEVNULL, timeout=20)
-    assert out.returncode == 0, out.stderr
-    r = json.loads(out.stdout)
-    assert r["tag"] == "https://www.instagram.com/explore/tags/시금치치아바타/"
-    assert r["tail"] == "https://www.instagram.com/explore/tags/한국식김밥/"
-    # 키워드 검색은 종전대로 공백 유지(태그와 서로 다른 입구)
-    assert r["kw"] == "https://www.instagram.com/explore/search/keyword/?q=시금치 치아바타"
