@@ -1482,8 +1482,12 @@ def _build_inventory(source_scripts):
     for script in source_scripts:
         vid = script.get("video_id", "")
         segs = script.get("segments", [])
-        # 첫·마지막 세그먼트 제외(CTA·썸네일 박제 차단) — 3개 이상일 때만(2개↓면 삭제 안 함).
-        usable = segs[1:-1] if len(segs) >= 3 else segs
+        # 첫·마지막 세그먼트 제외(CTA·썸네일 박제 차단).
+        # ★잘라낸 뒤 3개 이상 남을 때만 자른다(2026-08-14). 예전 기준(>=3)은 세그가 적은
+        #   소스를 통째로 죽였다 — 실측(job 1e924608af83): 자막이 듬성한 샤오홍슈 소스가
+        #   세그 3개뿐이라 첫·끝을 빼고 **1개만** 살아남았다(19개짜리 인스타는 17개가 남아
+        #   티가 안 났다). 소스를 하나 통째로 잃는 손해가 CTA 한 컷 섞일 위험보다 크다.
+        usable = segs[1:-1] if len(segs) >= 5 else segs
         for seg in usable:
             sid = seg["seg_id"]
             length = round(seg["end"] - seg["start"], 2)
