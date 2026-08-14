@@ -2086,6 +2086,37 @@ async function fetchLensCnKeywords(shortcode, caption, blob, append){
     if(root && root.dataset.sc===shortcode) renderLens(shortcode);
   }
 }
+// ⌨️ 키워드 직접 넣기 → 검색어 조합 펼치기(2026-08-14 사장님 "시금치 치아바타처럼
+// 넣으면 조합이 나오게"). 렌즈 후보는 화면 기반이라 머리로 떠올린 소재는 새로고침해도
+// 안 나온다 — 이 입구는 프레임 없이 텍스트만으로 돈다. 한국어만 넣어도 중국어가 같이 나와
+// 인스타·틱톡·샤오홍슈·도우인 버튼이 한 줄에 다 생긴다. 무료(Gemini 텍스트 1회).
+async function lensExpandKeyword(shortcode){
+  const st=LENS_STATE[shortcode]; if(!st || st.cnLoading) return;
+  const inp=document.getElementById('lensKwInput');
+  const kw=((inp && inp.value)||'').trim();
+  if(!kw){ if(inp) inp.focus(); return; }
+  st.cnLoading=true; st.cnNoNew=false; st.kwSeed=kw;
+  renderLens(shortcode);
+  try{
+    const fd=new FormData();
+    fd.append('keyword', kw);
+    // 이미 화면에 있는 후보는 빼고 받는다 — 같은 키워드로 또 눌러도 새 조합이 쌓인다.
+    fd.append('exclude', (st.cnCands||[]).map(c=>[c.ko,c.zh].filter(Boolean).join('\n')).join('\n'));
+    const d=await (await fetch('/api/lens/kw/expand',{method:'POST',body:fd})).json();
+    const st2=LENS_STATE[shortcode]; if(!st2) return;
+    const got=(d.candidates||[]).filter(c=>c && (c.ko||c.zh));
+    const have=new Set((st2.cnCands||[]).map(c=>c.zh||c.ko));
+    const fresh=got.filter(c=>!have.has(c.zh||c.ko));
+    st2.cnCands=(st2.cnCands||[]).concat(fresh);
+    st2.cnNoNew=fresh.length===0;
+    if(inp) inp.value='';
+  }catch(e){ /* 실패해도 렌즈 나머지는 정상 */ }
+  finally{
+    const st3=LENS_STATE[shortcode]; if(st3) st3.cnLoading=false;
+    const root=document.getElementById('lensRoot');
+    if(root && root.dataset.sc===shortcode) renderLens(shortcode);
+  }
+}
 // 🔄 다른 검색어 — 같은 프레임으로 비전에 다시 묻되 '이미 본 것 빼고'를 넘긴다.
 // 검색어가 렌즈 열 때마다 복불복으로 바뀌던 걸(2026-08-14 사장님) 쌓아가는 방식으로 바꾼 것.
 // Gemini 무료쿼터만 쓴다 — Apify·SerpApi 비용 0(후보는 '링크 여는 버튼'일 뿐).
@@ -2417,14 +2448,22 @@ function renderLens(shortcode){
       <a href="/grab" target="_blank" rel="noopener" title="샤오홍슈·도우인·틱톡·인스타 영상에 '📥 담기' 버튼이 안 뜨면 여기서 1회 켜기" style="text-decoration:none;font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--accent);background:#1f6feb1a;color:var(--accent);font-weight:700;margin-left:auto;white-space:nowrap">📥 담기 버튼 켜기</a>
     </div>
   </div>
-  ${st.cnCands && st.cnCands.length ? `<div style="margin-bottom:8px;padding-top:8px;border-top:1px solid var(--line)">
+  <div style="margin-bottom:8px;padding-top:8px;border-top:1px solid var(--line)">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+        <span style="font-size:12px;color:var(--sub)">⌨️ 찾는 소재를 직접 넣기:</span>
+        <input id="lensKwInput" placeholder="예: 시금치 치아바타" value="${esc(st.kwSeed||'')}"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();lensExpandKeyword('${shortcode}')}"
+          style="flex:1;min-width:150px;max-width:280px;font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid var(--line);background:#0d131c;color:var(--fg,inherit)">
+        <button onclick="lensExpandKeyword('${shortcode}')" ${st.cnLoading?'disabled':''}
+          title="넣은 소재로 검색어 조합을 여러 개 만들어 아래에 쌓습니다. 한국어만 넣어도 중국어까지 같이 나옵니다 — 무료" style="${btnCss};border-color:var(--accent);color:var(--accent);font-weight:700">${st.cnLoading?'⏳ 만드는 중…':'✨ 검색어 조합 만들기'}</button>
+      </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
         <span style="font-size:12px;color:var(--sub)">📕🎬🎵📷 비슷한 영상 찾기 — 눌러서 열고, 마음에 들면 📥담기</span>
         ${st.frameBlob?`<button onclick="lensMoreCnKeywords('${shortcode}')" ${st.cnLoading?'disabled':''} title="같은 장면으로 다른 각도의 검색어를 더 뽑습니다(이미 나온 건 빼고 아래에 쌓입니다). 무료 — 추가 비용 없음" style="${btnCss};border-color:var(--accent);color:var(--accent)">${st.cnLoading?'⏳ 뽑는 중…':'🔄 다른 검색어 더'}</button>`:''}
         ${st.cnNoNew?'<span style="font-size:11px;color:var(--sub)">더 나올 게 없어요 — 이 장면에서 뽑을 각도는 다 나왔습니다</span>':''}
       </div>
       <div style="display:flex;flex-direction:column;gap:6px">
-        ${st.cnCands.map(c=>{
+        ${(st.cnCands||[]).map(c=>{
           // 샤오훙슈 검색은 로그아웃 방문자를 로그인으로 막는다(登录后查看搜索结果). 해외판
           // rednote.com 검색은 같은 결과를 로그인 벽 없이 보여준다(2026-07-19 실측). 빌더·백엔드는
           // 그대로 두고 '여는 링크'만 _openUrl로 rednote 치환. 도우인은 해외판 없어 그대로.
@@ -2433,16 +2472,19 @@ function renderLens(shortcode){
           const xhs=_openUrl(_lensSearchUrl('xiaohongshu', c.zh)), dy=_lensSearchUrl('douyin', c.zh);
           const tk=_lensSearchUrl('tiktok', kw), ig=_lensSearchUrl('instagram', kw);
           const lnk='text-decoration:none;padding:5px 11px;border-radius:10px;border:1px solid var(--line);color:var(--accent);font-size:12px;white-space:nowrap';
+          // 키워드 조합은 ko만/zh만 나올 수 있다 → 없는 언어의 버튼은 그리지 않는다
+          // (빈 검색어로 사이트를 열면 엉뚱한 홈으로 떨어진다).
           return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <div style="min-width:120px"><div style="font-size:14px;font-weight:600">${kw}</div>
-              <div style="font-size:11px;color:var(--sub)">${c.zh}</div></div>
-            <a href="${xhs}" target="_blank" rel="noopener" style="${lnk}">📕 샤오홍슈</a>
-            <a href="${dy}" target="_blank" rel="noopener" style="${lnk}">🎬 도우인</a>
-            <a href="${tk}" target="_blank" rel="noopener" style="${lnk}">🎵 틱톡</a>
-            <a href="${ig}" target="_blank" rel="noopener" style="${lnk}">📷 인스타</a></div>`;
+              <div style="font-size:11px;color:var(--sub)">${c.zh||''}</div></div>
+            ${c.zh?`<a href="${xhs}" target="_blank" rel="noopener" style="${lnk}">📕 샤오홍슈</a>
+            <a href="${dy}" target="_blank" rel="noopener" style="${lnk}">🎬 도우인</a>`:''}
+            ${kw?`<a href="${tk}" target="_blank" rel="noopener" style="${lnk}">🎵 틱톡</a>
+            <a href="${ig}" target="_blank" rel="noopener" style="${lnk}">📷 인스타</a>`:''}</div>`;
         }).join('')}
+        ${(st.cnCands||[]).length?'':`<div style="font-size:11px;color:var(--sub)">아직 검색어가 없습니다 — 위에 소재를 넣고 <b>✨ 검색어 조합 만들기</b>를 누르거나, 화면에서 자동으로 뽑히길 기다려 보세요.</div>`}
       </div>
-    </div>` : ''}
+    </div>
   ${st.keyword?`<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px;font-size:11px">
       <span style="color:var(--sub)">🔗 다른 플랫폼에서 찾아 담기:</span>
       ${[['tiktok','🎵 틱톡'],['instagram','📷 인스타']].map(([k,lbl])=>

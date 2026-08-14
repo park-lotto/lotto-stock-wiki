@@ -628,6 +628,88 @@ def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8, exc
     return empty
 
 
+_KW_EXPAND_PROMPT = """사용자가 찾으려는 소재: "{keyword}"
+
+이 소재의 쇼츠·릴스를 여러 SNS(인스타/틱톡/샤오홍슈/도우인)에서 찾기 위한 **검색어 조합 \
+{n}개**를 만들라. 사용자가 던진 건 짧은 소재어일 뿐이니, 실제로 결과가 잘 나오는 검색어로 \
+넓혀·좁혀 다양하게 펼쳐라.
+- 서로 **다른 축**으로: 재료 조합 / 조리·사용 방법 / 완성 형태·비주얼 / 상황·용도 / 상위 카테고리
+- 넓은 것(결과 많음) → 좁은 것(정확도 높음) 순으로 섞어라
+- ★인스타·틱톡용 한국어(ko)는 '만들기·하는 법' 같은 동사꼬리를 빼고 **명사 중심**으로 \
+짧게(인스타 키워드 검색이 긴 구문에 매우 약하다)
+- 중국어(zh)는 축자번역이 아니라 중국 창작자가 실제로 쓰는 표현으로
+- JSON만: {{"candidates": [{{"ko": "한국어 검색어", "zh": "중국어 검색어"}}, ...]}}"""
+
+_KW_EXPAND_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "candidates": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"ko": {"type": "string"}, "zh": {"type": "string"}},
+                "required": ["ko", "zh"],
+            },
+            "minItems": 1, "maxItems": 8,
+        },
+    },
+    "required": ["candidates"],
+}
+
+
+def expand_search_keywords(keyword, n=6, exclude=None, max_retries=3, quota_sleep=8):
+    """한국어 소재어('시금치 치아바타') → [{"ko","zh"}] 검색어 조합. 실패·키없음 시 [].
+
+    왜(2026-08-14 사장님): 렌즈의 후보 검색어는 **화면(프레임) 기반**이라 사장님이 머리로
+    떠올린 소재는 새로고침해도 안 나온다. 그래서 '키워드를 직접 넣으면 조합이 나오는' 입구를
+    따로 판다. 프레임이 필요 없으므로 렌즈를 안 열어도 쓸 수 있고, 한국어를 넣으면 중국어
+    번역까지 같이 나와 4개 플랫폼 버튼이 한 줄에 다 생긴다.
+    exclude: 이미 보여준 검색어(중복 방지 — '🔄 더'와 같은 방식).
+    ★텍스트만이라 가벼운 모델(_TRANSLATE_MODEL)을 쓴다 — 비전 쿼터를 안 먹는다."""
+    kw = (keyword or "").strip()
+    if not kw or not SHORTS_GEMINI_KEYS:
+        return []
+    seen = {str(s).strip() for s in (exclude or []) if str(s or "").strip()}
+    prompt = _KW_EXPAND_PROMPT.format(keyword=kw[:100], n=max(1, min(int(n or 6), 8)))
+    if seen:
+        prompt += ("\n\n※ 아래는 이미 보여준 검색어다. 겹치지 않는 다른 축으로만 만들라:\n"
+                   + "\n".join(f"- {s}" for s in sorted(seen)[:20]))
+    for attempt in range(max_retries):
+        key, idx = comment_gen._next_live_key_and_idx()
+        if key is None:
+            return []
+        try:
+            client = _client_for_key(key)
+            resp = client.models.generate_content(
+                model=_TRANSLATE_MODEL, contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=_KW_EXPAND_SCHEMA,
+                ),
+            )
+            data = json.loads(resp.text)
+            out = []
+            for c in (data.get("candidates") or []):
+                ko, zh = (c.get("ko") or "").strip(), (c.get("zh") or "").strip()
+                if not (ko or zh) or ko in seen or (zh and zh in seen):
+                    continue
+                out.append({"ko": ko, "zh": zh})
+                seen.update(x for x in (ko, zh) if x)
+            return out
+        except Exception as e:
+            if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
+                comment_gen._mark_key_exhausted(idx)
+                continue
+            if key_vault.is_quota_error(e):
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
+                continue
+            if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
+                time.sleep((attempt + 1) * 5)
+                continue
+            return []
+    return []
+
+
 _CN_JUDGE_PROMPT = """기준 제품: {product}
 아래는 검색 결과 영상 제목들(주로 중국어)이다. 각 제목이 '기준 제품과 같은(또는 거의 같은) 제품'을 \
 다루는지 판정하라.

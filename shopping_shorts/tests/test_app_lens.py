@@ -288,6 +288,39 @@ def test_lens_cn_keywords_forwards_exclude(tmp_path, monkeypatch):
     assert d["candidates"][0]["zh"] == "龙卷风土豆"
 
 
+def test_lens_kw_expand_returns_combos(tmp_path, monkeypatch):
+    """⌨️ 키워드 직접 넣기(2026-08-14): 한국어 소재어만 넣어도 ko+zh 조합이 나와야 한다."""
+    seen = {}
+
+    def fake(kw, n=6, exclude=None):
+        seen.update(kw=kw, n=n, exclude=exclude)
+        return [{"ko": "시금치 치아바타", "zh": "菠菜恰巴塔"},
+                {"ko": "시금치 빵", "zh": "菠菜面包"}]
+    monkeypatch.setattr(appmod, "expand_search_keywords", fake)
+    c = TestClient(appmod.app)
+    d = c.post("/api/lens/kw/expand",
+               data={"keyword": "시금치 치아바타", "exclude": "菠菜吐司", "n": 6}).json()
+    assert seen["kw"] == "시금치 치아바타" and seen["exclude"] == ["菠菜吐司"]
+    assert d["ok"] and d["keyword"] == "시금치 치아바타"
+    assert [x["zh"] for x in d["candidates"]] == ["菠菜恰巴塔", "菠菜面包"]
+
+
+def test_lens_kw_expand_empty_keyword(tmp_path, monkeypatch):
+    c = TestClient(appmod.app)
+    d = c.post("/api/lens/kw/expand", data={"keyword": "  "}).json()
+    assert d["ok"] and d["candidates"] == []
+
+
+def test_lens_kw_expand_survives_gemini_error(tmp_path, monkeypatch):
+    """비전·번역이 죽어도 렌즈 화면이 깨지면 안 된다 — 빈 리스트로 정상 응답."""
+    def boom(kw, n=6, exclude=None):
+        raise RuntimeError("quota")
+    monkeypatch.setattr(appmod, "expand_search_keywords", boom)
+    c = TestClient(appmod.app)
+    d = c.post("/api/lens/kw/expand", data={"keyword": "시금치"}).json()
+    assert d["ok"] and d["candidates"] == []
+
+
 def test_lens_search_reports_instagram_dropoff(tmp_path, monkeypatch):
     """인스타 편차 계측(2026-08-14): 렌즈 원본 인스타 링크 중 개별 게시물이 아닌 것과
     카드뉴스를 세어 응답 diag에 실어야 '0건'의 원인이 화면에서 갈린다."""

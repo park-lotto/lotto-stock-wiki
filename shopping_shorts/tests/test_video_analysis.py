@@ -326,3 +326,54 @@ def test_fetch_thumb_bytes_uses_instagram_referer_by_default(monkeypatch):
 
     video_analysis.fetch_thumb_bytes("http://scontent.cdninstagram.com/foo.jpg")
     assert captured["headers"]["Referer"] == "https://www.instagram.com/"
+
+
+# ── expand_search_keywords: 키워드 직접 입력 → 검색어 조합 (2026-08-14) ──
+def _fake_gemini(monkeypatch, payload, captured=None):
+    monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", ["fake-key"])
+    monkeypatch.setattr(comment_gen, "SHORTS_GEMINI_KEYS", ["fake-key"])
+    monkeypatch.setattr(comment_gen, "_next_live_key_and_idx", lambda: ("fake-key", 0))
+
+    class FakeModels:
+        def generate_content(self, **kw):
+            if captured is not None:
+                captured["prompt"] = kw.get("contents")
+                captured["model"] = kw.get("model")
+            class R:
+                text = payload
+            return R()
+
+    class FakeClient:
+        models = FakeModels()
+
+    monkeypatch.setattr(video_analysis, "_client_for_key", lambda key: FakeClient())
+    monkeypatch.setattr(video_analysis.time, "sleep", lambda s: None)
+
+
+def test_expand_search_keywords_returns_ko_zh_pairs(monkeypatch):
+    cap = {}
+    _fake_gemini(monkeypatch, '{"candidates":[{"ko":"시금치 치아바타","zh":"菠菜恰巴塔"},'
+                              '{"ko":"시금치 빵","zh":"菠菜面包"}]}', cap)
+    out = video_analysis.expand_search_keywords("시금치 치아바타")
+    assert out == [{"ko": "시금치 치아바타", "zh": "菠菜恰巴塔"},
+                   {"ko": "시금치 빵", "zh": "菠菜面包"}]
+    assert "시금치 치아바타" in cap["prompt"]
+    # 텍스트만이라 가벼운 모델 — 비전 쿼터를 먹지 않는다
+    assert cap["model"] == video_analysis._TRANSLATE_MODEL
+
+
+def test_expand_search_keywords_drops_already_seen(monkeypatch):
+    """🔄 반복 클릭 시 같은 게 또 쌓이지 않아야 한다(모델이 프롬프트를 어겨도)."""
+    cap = {}
+    _fake_gemini(monkeypatch, '{"candidates":[{"ko":"시금치 빵","zh":"菠菜面包"},'
+                              '{"ko":"시금치 스콘","zh":"菠菜司康"}]}', cap)
+    out = video_analysis.expand_search_keywords("시금치", exclude=["菠菜面包"])
+    assert [c["zh"] for c in out] == ["菠菜司康"]
+    assert "菠菜面包" in cap["prompt"]        # 제외 목록이 프롬프트에도 실린다
+
+
+def test_expand_search_keywords_empty_without_keyword_or_keys(monkeypatch):
+    monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", ["fake-key"])
+    assert video_analysis.expand_search_keywords("") == []
+    monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", [])
+    assert video_analysis.expand_search_keywords("시금치") == []
