@@ -246,7 +246,7 @@
 /* tabs + sliding underline */
 .tabs{position:relative;gap:4px;overflow-x:auto;scrollbar-width:thin}
 .tab{font-weight:700;border-radius:9px 9px 0 0;transition:color .2s,background .2s;white-space:nowrap;flex:0 0 auto}
-/* 지표탭(전체·시간당댓글수·조회수밀도·팔로워밀도)과 단순정렬탭(댓글·팔로워·조회수)을 눈으로 가르는 구분선 */
+/* 지표탭(전체·시간당댓글·조회수당댓글·팔로워당댓글)과 단순정렬탭(댓글·팔로워·조회수)을 눈으로 가르는 구분선 */
 /* 탭 두 묶음을 눈에 띄게 가른다(2026-08-14) — 얇은 선 하나로는 구분이 안 보였다.
    왼쪽 '강도 지표'=계산해서 순위를 매기는 것 / 오른쪽 '단순 정렬'=절대값 그대로 줄세우기. */
 .tab-div{flex:0 0 auto;align-self:center;width:1px;height:26px;background:var(--line);margin:0 14px;opacity:.9}
@@ -415,9 +415,9 @@ body.is-admin .blockbtn{display:inline-block}
     <div class="tabs" id="tabs">
       <span class="tab-grp">강도 지표</span>
       <div class="tab active" data-tab="comments" title="오늘 늘어난 조회수(직전 수집 대비 증가분) 순 — 매일 순위가 바뀝니다">📊 전체</div>
-      <div class="tab" data-tab="speed" title="댓글수 ÷ 경과시간 — 올라온 뒤 시간당 평균 몇 개씩 댓글이 붙었는지. ★지금 이 순간의 속도가 아니라 게시 후 누적 평균입니다">⚡ 시간당댓글수</div>
-      <div class="tab" data-tab="density" title="(좋아요+댓글) ÷ 조회수 — 본 사람 중 몇 %가 반응했는지. 조회수가 작아도 반응이 뜨거우면 상위권">💥 조회수밀도</div>
-      <div class="tab" data-tab="fan_density" title="댓글수 ÷ 팔로워수 — 구독자 규모 대비 얼마나 뜨거웠는지. 작은 채널의 대박을 잡는 눈(조회수밀도와 보는 게 다릅니다)">🙌 팔로워밀도</div>
+      <div class="tab" data-tab="speed" title="댓글 ÷ 경과시간 — 올라온 뒤 시간당 평균 몇 개씩 댓글이 붙었는지. ★지금 이 순간의 속도가 아니라 게시 후 누적 평균입니다">⚡ 시간당댓글</div>
+      <div class="tab" data-tab="density" title="댓글 ÷ 조회수 — 본 사람 100명 중 몇 명이 댓글을 달았는지. 조회수가 작아도 반응이 뜨거우면 상위권">💥 조회수당댓글</div>
+      <div class="tab" data-tab="fan_density" title="댓글 ÷ 팔로워수 — 구독자 규모 대비 얼마나 뜨거웠는지. 작은 채널의 대박을 잡는 눈(조회수당댓글과 보는 게 다릅니다)">🙌 팔로워당댓글</div>
       <span class="tab-div"></span>
       <span class="tab-grp">단순 정렬</span>
       <div class="tab" data-tab="rawcomments" title="댓글 수가 많은 순 (절대값)">💬 댓글순</div>
@@ -564,7 +564,7 @@ const DESC_BY_PLATFORM = {
   xiaohongshu: '등록한 <b>샤오홍슈 채널</b>의 최근 <b>48시간</b> 이내 노트를 참여도 기반 강도로 랭킹합니다. (무료 수집)',
 };
 const TAB_TIP = {
-  instagram: {speed:'댓글수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수', fan_density:'댓글수 ÷ 팔로워수'},   // 조회수밀도·팔로워밀도
+  instagram: {speed:'댓글 ÷ 경과시간', density:'댓글 ÷ 조회수', fan_density:'댓글 ÷ 팔로워수'},
   tiktok:    {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
   youtube:   {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
   xiaohongshu: {speed:'(좋아요+댓글+수집+공유) ÷ 경과시간', density:'(수집+공유) ÷ (좋아요+댓글+수집+공유)'},
@@ -1438,7 +1438,18 @@ function render(){
           : '<div class="empty">결과 없음.</div>');
     return;
   }
-  el.innerHTML = items.map((i,idx)=>`
+  // ★값이 아직 없는 지표로 정렬하면 순서가 무의미해진다(2026-08-14 사장님 제보).
+  // 팔로워당댓글은 팔로워를 수집이 실어오기 시작한 게 오늘부터라, 그 전에 저장된
+  // 캐시엔 값이 없다 → 전부 0 → 정렬이 원래 순서 그대로라 '댓글 1개'짜리가 위에 온다.
+  // 조용히 이상한 순서를 보여주는 대신 왜 그런지 말해준다.
+  const _needFan = (STATE.tab==='fan_density' && !items.some(i=>(i.fan_density||0)>0));
+  const _needDen = (STATE.tab==='density'     && !items.some(i=>(i.density||0)>0));
+  const _notice = (_needFan||_needDen)
+    ? `<div class="empty" style="margin-bottom:10px">이 지표는 아직 값이 없어 순서가 의미 없습니다 —
+        ${_needFan?'팔로워를 수집이 실어오기 시작한 게 오늘부터라':'조회수 기준 계산이 바뀌어'}
+        <b>다음 수집(내일 오전 9시)</b>부터 채워집니다.</div>`
+    : '';
+  el.innerHTML = _notice + items.map((i,idx)=>`
     <div class="card">
       <div class="thumb">
         <img src="${thumbURL(i.thumbnail, i.shortcode)}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.platform==='youtube'?`onclick="playYoutube(this,'${i.shortcode}')"`:(i.platform==='tiktok'?`onclick="playTiktok(this,'${i.shortcode}')"`:((i.platform||PLATFORM)==='instagram'?`onclick="playInstagram(this,'${i.shortcode}')"`:'')))} loading="lazy" onerror="this.style.visibility='hidden'">
@@ -1452,9 +1463,10 @@ function render(){
         ${i.followers?`<div class="rank" style="margin:-4px 0 4px">팔로워 ${i.followers.toLocaleString()}</div>`:''}
         ${i.views?`<div class="stat" title="조회수 — 옆의 +숫자는 직전 수집 대비 증가분(= '전체' 탭 정렬 기준)"><span>조회수</span><b>${i.views.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>`:''}
         <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${i.comments.toLocaleString()}${i.views?'':` <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span>`}</b></div>
-        <div class="stat" title="댓글수 ÷ 경과시간 — 게시 후 시간당 평균"><span>시간당댓글수</span><b>${i.speed.toFixed(1)}</b></div>
-        <div class="stat" title="(좋아요+댓글) ÷ 조회수 — 본 사람 중 반응한 비율"><span>조회수밀도</span><b>${(i.density*100).toFixed(2)}%</b></div>
-        ${i.fan_density?`<div class="stat" title="댓글수 ÷ 팔로워수 — 구독자 규모 대비 반응"><span>팔로워밀도</span><b>${(i.fan_density*100).toFixed(2)}%</b></div>`:""}
+        <div class="stat" title="댓글 ÷ 경과시간 — 게시 후 시간당 평균"><span>시간당댓글</span><b>${i.speed.toFixed(1)}</b></div>
+        <div class="stat" title="댓글 ÷ 조회수 — 본 사람 중 댓글 단 비율"><span>조회수당댓글</span><b>${(i.density*100).toFixed(2)}%</b></div>
+        <div class="stat" title="채널 팔로워(구독자) 수 — 수집이 실어온 실시간 값"><span>팔로워</span><b>${i.followers?i.followers.toLocaleString():"—"}</b></div>
+        ${i.fan_density?`<div class="stat" title="댓글 ÷ 팔로워수 — 구독자 규모 대비 반응"><span>팔로워당댓글</span><b>${(i.fan_density*100).toFixed(2)}%</b></div>`:""}
         ${i.inpock?`<div style="margin-top:6px"><a href="${i.inpock}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🛒 판매채널</a></div>`:''}
         <div class="actions">
           <div class="btns">
