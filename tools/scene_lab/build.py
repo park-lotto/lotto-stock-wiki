@@ -157,7 +157,7 @@ button.act:hover{border-color:var(--accent)}
     <div id="palette"></div>
   </div>
   <div class="pane right">
-    <div class="lbl">아래 <b>“실제 나올 화면”</b>이 렌더 결과입니다(렌더 알고리즘 이식) ·
+    <div class="lbl"><button class="act" onclick="playAll(event)" style="margin-right:10px">▶ 전체 재생(칸 이어서)</button>아래 <b>“실제 나올 화면”</b>이 렌더 결과입니다(렌더 알고리즘 이식) ·
       <span style="color:var(--warn)">주황 = 2.5초 넘게 안 바뀌는 컷(늘어짐)</span></div>
     <div id="film"></div>
   </div>
@@ -408,6 +408,7 @@ const vid = () => document.getElementById('vid');
 function stopPlay(){
   clearTimeout(seqTimer); seqTimer = null; seq = [];
   playKey = null;
+  const a0 = audio(); if (a0) a0.onended = null;    // 전체 재생 체인 끊기
   clearInterval(subTimer); seqBeat = null;
   const a = audio(); if (a){ a.pause(); }
   const sb = document.getElementById('subbox'); if (sb) sb.innerHTML = '';
@@ -460,6 +461,29 @@ function tickSub(){
   }, 60);
 }
 
+// ★전체 재생(2026-08-14 사장님 "지금 된 거 이어서 보여줘봐"): 칸 0부터 끝까지 이어서 돈다.
+//   칸이 끝나면(음성 ended) 다음 칸으로 넘어간다 — 렌더 없이 완성 영상 흐름을 그대로 본다.
+function playAll(ev){
+  if (ev) ev.stopPropagation();
+  if (playKey === 'all' && !audio().paused){ stopPlay(); return; }   // 다시 누르면 정지
+  playKey = 'all';
+  runAllFrom(0);
+}
+function runAllFrom(i){
+  if (playKey !== 'all') return;
+  if (i >= DATA.beats.length){ stopPlay(); return; }
+  const clips = planClips(lists[i] || [], DATA.beats[i].target_seconds || 3);
+  seqBeat = i; sel = i;
+  seqLabel = `전체 재생 - 칸 ${i+1}/${DATA.beats.length} (${DATA.beats[i].role || ''})`;
+  if (!clips.length){ runAllFrom(i + 1); return; }
+  startSeq(clips);
+  const a = audio();
+  a.onended = () => { if (playKey === 'all') runAllFrom(i + 1); };
+  a.src = `tts/beat_${i}.mp3`;
+  a.currentTime = 0;
+  a.play().catch(()=>{});
+  tickSub();
+}
 function startSeq(clips){
   clearTimeout(seqTimer);
   seq = clips; seqI = 0;
