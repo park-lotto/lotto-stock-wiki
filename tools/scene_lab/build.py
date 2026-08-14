@@ -161,7 +161,7 @@ button.act:hover{border-color:var(--accent)}
     <div id="palette"></div>
   </div>
   <div class="pane right">
-    <div class="lbl"><button class="act" onclick="playAll(event)" style="margin-right:10px">▶ 전체 재생(칸 이어서)</button>아래 <b>“실제 나올 화면”</b>이 렌더 결과입니다(렌더 알고리즘 이식) ·
+    <div class="lbl"><button class="act" onclick="playAll(event)" style="margin-right:10px">▶ 전체 재생(칸 이어서)</button><label style="cursor:pointer;margin-right:12px"><input type="checkbox" onchange="toggleOne(this.checked)"> 1장=1컷(되돌아옴 없음)</label>아래 <b>“실제 나올 화면”</b>이 렌더 결과입니다(렌더 알고리즘 이식) ·
       <span style="color:var(--warn)">주황 = 2.5초 넘게 안 바뀌는 컷(늘어짐)</span></div>
     <div id="film"></div>
   </div>
@@ -328,10 +328,28 @@ function initLists(){
 }
 
 // video_assemble._plan_beat_clips 이식(라운드로빈 + shortfall 1순위 근사)
+let onePerSeg = false;   // ★1장=1컷(라이브 config.ONE_CLIP_PER_SEGMENT와 같은 규칙)
+function toggleOne(on){ onePerSeg = on; render(); }
 function planClips(segIds, ttsDur){
   const segments = segIds.map(id => ({...DATA.segments[id], seg_id: id})).filter(s => s.start != null);
   const clips = []; let filled = 0;
   if (!segments.length) return clips;
+  if (onePerSeg){
+    // 담은 순서대로 한 장에 한 컷. 길이는 나레이션을 장수로 고르게 나누고, 남는 시간은
+    // **마지막 컷**이 흡수한다(새 컷을 만들지 않으므로 되돌아옴이 없다).
+    const share = ttsDur / segments.length;
+    for (const seg of segments){
+      const remaining = ttsDur - filled;
+      if (remaining <= EPS) break;
+      const take = Math.min(seg.end - seg.start, share, remaining);
+      if (take <= EPS) continue;
+      if (take < MIN_CLIP - EPS && clips.length) continue;
+      clips.push({seg_id: seg.seg_id, video_id: seg.video_id, start: seg.start, dur: take});
+      filled += take;
+    }
+    if (clips.length && ttsDur - filled > EPS) clips[clips.length - 1].dur += ttsDur - filled;
+    return clips;
+  }
   if (segments.length > 1){
     const pos = segments.map(s => s.start);
     let oi = 0, guard = 0;
@@ -639,9 +657,18 @@ function step(){
   const c = seq[seqI];
   const v = vidFor(c.video_id);
   const go = () => {
-    v.currentTime = c.start;
-    showVid(v);                    // 보일 때는 이미 시크가 끝나 있다 → 검은 화면 없음
-    v.play().catch(()=>{});
+    // ★시크가 **끝난 뒤에** 보여준다(2026-08-14 사장님 "3번 솔루션 끝나는 장면 마지막에
+    //   2번 첫 장면이 잠깐 보인다"). 칸2와 칸4가 같은 소스(s0)를 쓰는데, 칸4로 넘어갈 때
+    //   s0가 칸2에서 멈춰 있던 위치(견과류 얹는 장면)를 한 프레임 노출하고 나서 이동했다.
+    const show = () => { showVid(v); v.play().catch(()=>{}); };
+    if (Math.abs(v.currentTime - c.start) < 0.05) show();
+    else {
+      let done = false;
+      const once = () => { if (done) return; done = true; v.onseeked = null; show(); };
+      v.onseeked = once;
+      v.currentTime = c.start;
+      setTimeout(once, 200);       // seeked가 안 와도 멈추지 않게(폴백)
+    }
     document.getElementById('pinfo').innerHTML =
       `${seqLabel}<br>컷 ${seqI+1}/${seq.length} · ${c.dur.toFixed(1)}초 · 장면 ${c.seg_id}`;
     // 다음 컷의 소스를 미리 그 지점으로 옮겨 둔다(전환 순간에 할 일을 없앤다).

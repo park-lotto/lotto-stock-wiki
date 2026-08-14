@@ -374,7 +374,8 @@ def _extend_last_clip_for_runout(plan, segs, runout=_LAST_RUNOUT):
     return plan
 
 
-def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None, max_shot=None):
+def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None, max_shot=None,
+                     one_per_seg=False):
     """비트의 순서 구간 리스트 → 나레이션 길이(tts_dur)에 맞춘 클립 계획.
     각 클립은 자기 구간 [start,end]를 절대 넘지 않는다(유출 0). 부족분은 아래 정책으로 채운다.
     반환: [{"video_id","start","src_dur","out_dur"}, ...]
@@ -391,7 +392,25 @@ def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None, max_s
     eps = 1e-3
     clips = []
     filled = 0.0
-    if max_shot and max_shot > eps and len(segments) > 1:
+    if one_per_seg and segments:
+        # ★1장 = 1컷(2026-08-14 사장님 "1 2 3 - 1로 되돌아오던데"). 라운드로빈은 소재가 모자라면
+        #   앞 장면으로 되돌아와 같은 장면이 두 번 나온다. 이 모드는 담은 순서대로 **한 장에 한 컷**,
+        #   길이는 나레이션을 장수로 나눠 고르게 준다(세그가 짧으면 그 길이까지만). 남는 시간은
+        #   아래 공통 shortfall이 마지막 컷을 실프레임으로 늘려 흡수한다 — 되돌아옴은 없다.
+        share = tts_dur / len(segments)
+        for seg in segments:
+            remaining = tts_dur - filled
+            if remaining <= eps:
+                break
+            take = min(seg["end"] - seg["start"], share, remaining)
+            if take < min_clip - eps and clips:
+                continue                      # 너무 짧은 조각은 만들지 않는다(깜빡임 방지)
+            if take <= eps:
+                continue
+            clips.append({"video_id": seg["video_id"], "start": seg["start"],
+                          "src_dur": take, "out_dur": take})
+            filled += take
+    elif max_shot and max_shot > eps and len(segments) > 1:
         # 라운드로빈: distinct 세그먼트를 max_shot씩 번갈아 → 컷 밀도↑. 각 세그 읽기위치를 유지해
         # 다시 올 땐 이어서 재생(같은 프레임 반복 아님). 다 소진되면 아래 공통 shortfall로.
         pos = [seg["start"] for seg in segments]
@@ -446,6 +465,22 @@ def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None, max_s
                  "src_dur": max(seg["end"] - seg["start"], eps), "out_dur": tts_dur}]
 
     shortfall = tts_dur - filled
+    if shortfall > eps and one_per_seg:
+        # ★1장=1컷에서는 **되돌아오지 않는다**. 남는 시간은 마지막 컷 하나로 흡수한다:
+        #   소스에 실프레임이 남아 있으면 1배속으로 이어 붙이고(자연스럽다), 그것도 없으면
+        #   마지막 컷을 늘린다. 새 컷을 만들면 담은 장수와 컷 수가 어긋나 이 모드의 뜻이 깨진다.
+        last = clips[-1]
+        if src_durs:
+            sdur = src_durs.get(last["video_id"], 0.0)
+            avail = max(0.0, sdur - (last["start"] + last["src_dur"]))
+            real_ext = min(shortfall, avail)
+            if real_ext > eps:
+                last["src_dur"] += real_ext
+                last["out_dur"] += real_ext
+                shortfall -= real_ext
+        if shortfall > eps:
+            last["out_dur"] += shortfall      # 실프레임이 없으면 그 컷을 늘린다
+            shortfall = 0.0
     if shortfall > eps:
         # 1순위: 마지막 클립을 그 소스에 남은 실프레임으로 연장(1배속) — 릴이 배정 구간보다 길다.
         if src_durs:
@@ -931,7 +966,10 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
         # 재생 → 긴 정지 대신 컷(벤치마크급). 포인트 비트는 홀드가 맞으니 라운드로빈 안 함.
         from shopping_shorts import backbone as _bb, config as _cfg
         _max_shot = None if _bb.is_point_beat(beat) else getattr(_cfg, "MAX_SHOT_SECONDS", 0) or None
-        plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs, max_shot=_max_shot)
+        # 1장=1컷 모드(기본 off). 켜면 담은 장면이 순서대로 한 번씩만 나온다(되돌아옴 없음).
+        _one = bool(getattr(_cfg, "ONE_CLIP_PER_SEGMENT", False))
+        plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs, max_shot=_max_shot,
+                                one_per_seg=_one)
         # 마지막 비트 여운: 실프레임 여유는 1배속으로, 부족분은 아래 slowmo/freeze 기계가 흡수.
         runout = _LAST_RUNOUT if idx == _runout_idx else 0.0
         if runout > 0:
