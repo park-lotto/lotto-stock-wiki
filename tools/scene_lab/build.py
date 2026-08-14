@@ -185,10 +185,17 @@ button.act:hover{border-color:var(--accent)}
 
 <script>
 const DATA = __DATA__;
-const MAX_SHOT = 2.2, MIN_CLIP = 0.8, EPS = 1e-3, LONG_CUT = 2.5;
+const MAX_SHOT = 2.2, MIN_CLIP = 0.8, EPS = 1e-3, LONG_CUT = MAX_SHOT + 0.05;   // 상한을 넘긴 컷 = 소재가 모자라 늘린 것
 
 // 소스 영상 길이를 넘는 구간인가 — 실측(job 409f894230c6): s1-10이 100~104초인데
 // s1.mp4는 78.5초였다. 렌더하면 그 컷은 실체가 없다. 눈에 보이게 표시한다.
+// 최소 컷 길이(0.8초)에 못 미치는 장면 — 담아도 화면에 **안 나온다**(라운드로빈이 건너뛴다).
+// 2026-08-14 사장님 "여 씬이 들어가면 뭔가 꼬인다": 0.7초짜리를 담으면 그 장면은 사라지고,
+// 남은 소재로 나레이션 길이를 채우느라 다른 컷이 길게 늘어난다. 담기 전에 알려준다.
+function tooShort(sid){
+  const s0 = DATA.segments[sid]; if (!s0) return false;
+  return (s0.end - s0.start) < MIN_CLIP - EPS;
+}
 function outOfRange(sid){
   const s0 = DATA.segments[sid]; if (!s0) return false;
   const d = (DATA.src_duration || {})[s0.video_id];
@@ -295,7 +302,7 @@ function render(){
     segs.sort((a,b) => a.start - b.start);
     return `<div class="srcgroup"><div class="srchead"><span>소스 ${vid}</span><span>${segs.length}개</span></div>
       <div class="thumbs">${segs.map(s => `
-        <div class="seg ${cur.has(s.sid)?'inthis':''} ${outOfRange(s.sid)?'oor':''}" ondblclick="add('${s.sid}')"
+        <div class="seg ${cur.has(s.sid)?'inthis':''} ${(outOfRange(s.sid)||tooShort(s.sid))?'oor':''}" ondblclick="add('${s.sid}')"
              title="${(s.scene_desc||'').replace(/"/g,'')}">
           <img src="thumbs/${s.sid}.jpg" loading="lazy">
           <span class="play" onclick="playSeg('${s.sid}', event)">▶ 보기</span>
@@ -303,6 +310,7 @@ function render(){
           <div class="meta"><span class="sid">${s.sid}</span>
             <span style="color:var(--dim)">· ${(s.end-s.start).toFixed(1)}초</span>
             ${outOfRange(s.sid)?`<div class="oorbadge">⚠ 소스 밖 구간 — 원본 ${(DATA.src_duration||{})[s.video_id]}초</div>`:''}
+            ${tooShort(s.sid)?`<div class="oorbadge">⚠ 0.8초 미만 — 담아도 화면에 안 나옵니다</div>`:''}
             <div class="d">${esc(s.scene_desc||'(설명 없음)')}</div>
             ${s.text ? `<div class="d" style="opacity:.72">💬 ${esc(String(s.text).slice(0,40))}</div>` : ''}</div>
         </div>`).join('')}</div></div>`;
@@ -374,7 +382,7 @@ function render(){
             return `<div class="cut ${chosen.has(c.seg_id)?'mine':''} ${c.dur>LONG_CUT?'long':''} ${outOfRange(c.seg_id)?'oor':''}"
                  onclick="playSeg('${c.seg_id}', event)" title="이 컷 보기">
               <img src="thumbs/${c.seg_id}.jpg" loading="lazy">
-              <div class="t">${c.dur.toFixed(1)}s</div>
+              <div class="t">${c.dur.toFixed(1)}s${c.dur>LONG_CUT?' 늘림':''}</div>
               <div class="cutsub">${capsIn(i, a, b).map(c=>esc(c.text)).join(' / ') || '&nbsp;'}</div>
             </div>`;}).join('')})()}</div>
         </div>
