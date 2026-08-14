@@ -144,7 +144,48 @@ def parse_reel_node(node, username):
         # 노드에 user가 없는 경우가 흔하다(응답 모양이 여러 가지) → 빈 문자열로 안전 폴백.
         "ownerFullName": ((node.get("user") or {}).get("full_name") or "")
                          if isinstance(node.get("user"), dict) else "",
+        # 팔로워(2026-08-14) — instagram_playwright가 같은 페이지 응답에서 주워
+        # 노드에 실어준 값(_owner_follower_count). 노드 자체의 user.follower_count도
+        # 드물게 있어 함께 본다. 추가 요청 0건.
+        "ownerFollowers": _int(node.get("_owner_follower_count")
+                               or ((node.get("user") or {}).get("follower_count")
+                                   if isinstance(node.get("user"), dict) else 0)
+                               or 0),
     }
+
+
+def extract_follower_count(payload):
+    """인스타 응답 → 그 계정의 팔로워 수(못 찾으면 0).
+
+    /{계정}/reels/ 를 열면 인스타가 스스로 graphql로 프로필을 함께 내려준다
+    (실측 2026-08-14: data.user.follower_count). 모양이 여러 가지라 알려진 자리를
+    먼저 보고, 없으면 얕게 훑는다. **추가 요청은 하지 않는다** — 이미 받은
+    응답에서 꺼내는 것뿐이다.
+    """
+    if not isinstance(payload, dict):
+        return 0
+    user = (payload.get("data") or {}).get("user")
+    if isinstance(user, dict):
+        n = _int(user.get("follower_count") or 0)
+        if n:
+            return n
+        # 옛 웹 모양: edge_followed_by.count
+        edge = user.get("edge_followed_by")
+        if isinstance(edge, dict) and _int(edge.get("count") or 0):
+            return _int(edge["count"])
+    # 알려진 자리에 없으면 깊이 3까지만 훑는다(전체 순회는 큰 응답에서 낭비).
+    def _walk(o, depth):
+        if depth > 3 or not isinstance(o, dict):
+            return 0
+        for k, v in o.items():
+            if k == "follower_count" and _int(v or 0):
+                return _int(v)
+            if isinstance(v, dict):
+                got = _walk(v, depth + 1)
+                if got:
+                    return got
+        return 0
+    return _walk(payload, 0)
 
 
 def extract_reel_nodes(payload):

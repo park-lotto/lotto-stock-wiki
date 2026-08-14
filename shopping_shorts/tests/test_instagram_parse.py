@@ -26,10 +26,12 @@ def test_parse_reel_node_fills_all_ten_keys():
     # duration 추가(2026-08-09 '⏱길이 전면화' 21ca1a0b4): clips API 노드의
     # video_duration을 그대로 주워 담는다(추가 요청 0건). 이 테스트는 키 집합을
     # **정확히** 대조해서 조용한 누락을 잡는 게 목적이므로, 키가 늘면 여기도 같이 늘린다.
+    # ownerFollowers 추가(2026-08-14): /{계정}/reels/ 응답에 딸려오는 팔로워 수를
+    # instagram_playwright가 노드에 실어주면 그대로 담는다(추가 요청 0건).
     assert set(d) == {
         "shortcode", "url", "timestamp", "caption", "commentsCount",
         "likesCount", "videoViewCount", "displayUrl", "videoUrl", "ownerUsername",
-        "ownerFullName", "duration",
+        "ownerFullName", "duration", "ownerFollowers",
     }
     assert d["shortcode"] == "DbMmu39Sph9"
     assert d["url"] == "https://www.instagram.com/reel/DbMmu39Sph9/"
@@ -226,3 +228,27 @@ def test_classify_gate_url_is_not_confused_with_missing_channel():
         [], "https://www.instagram.com/accounts/update_risky_contactpoint/", None)
     gone = classify_channel_result([], "https://www.instagram.com/u/reels/", None)
     assert gate == "login_wall" and gone == "not_found" and gate != gone
+
+
+def test_extract_follower_count_graphql_user():
+    """실측 모양: data.user.follower_count (2026-08-14 roomoftem.kr=6653)."""
+    from shopping_shorts.instagram_parse import extract_follower_count
+    assert extract_follower_count({"data": {"user": {"follower_count": 6653}}}) == 6653
+
+
+def test_extract_follower_count_legacy_edge():
+    from shopping_shorts.instagram_parse import extract_follower_count
+    assert extract_follower_count(
+        {"data": {"user": {"edge_followed_by": {"count": 1234}}}}) == 1234
+
+
+def test_extract_follower_count_absent_is_zero():
+    from shopping_shorts.instagram_parse import extract_follower_count
+    assert extract_follower_count({"items": [{"pk": "1"}]}) == 0
+    assert extract_follower_count(None) == 0
+
+
+def test_parse_reel_node_carries_follower():
+    from shopping_shorts.instagram_parse import parse_reel_node
+    d = parse_reel_node({"code": "abc", "pk": "1", "_owner_follower_count": 6653}, "u")
+    assert d["ownerFollowers"] == 6653

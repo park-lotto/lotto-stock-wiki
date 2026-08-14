@@ -22,8 +22,8 @@ from contextlib import contextmanager
 
 from shopping_shorts import config
 from shopping_shorts.instagram_parse import (
-    classify_channel_result, extract_hashtag_search_items, extract_reel_nodes,
-    parse_hashtag_search_item, parse_reel_node,
+    classify_channel_result, extract_follower_count, extract_hashtag_search_items,
+    extract_reel_nodes, parse_hashtag_search_item, parse_reel_node,
 )
 
 # 마지막 실행의 분류 집계 — 호출부(service/app)가 job 결과에 담아 화면·보고에 쓴다.
@@ -50,6 +50,9 @@ def _scrape_one_playwright(username, session_path=None, proxy=None):
 
     url = f"https://www.instagram.com/{username}/reels/"
     captured = []
+    # 반환 계약을 (nodes, page_url, error) 3값으로 유지하려고 팔로워는 노드에 실어 보낸다
+    # (계약을 4값으로 늘리면 _scrape_one 주입 테스트가 통째로 깨진다).
+    follower_box = [0]
     # AutomationControlled 끄기 — 로그인 세션(storage_state)이 CDP 흔적만으로 캡차 벽에
     # 걸리는 걸 막는다(2026-07-29 실사고, scripts/instagram_setup_session.py와 동일 조치).
     launch_kw = {"headless": True, "args": ["--disable-blink-features=AutomationControlled"]}
@@ -95,8 +98,25 @@ def _scrape_one_playwright(username, session_path=None, proxy=None):
                 if not any(h in resp.url for h in _REEL_API_HINTS):
                     return
                 try:
-                    captured.extend(extract_reel_nodes(resp.json()))
+                    payload = resp.json()
                 except Exception:      # noqa: BLE001 — JSON이 아니거나 모양이 다르면 그냥 무시
+                    return
+                # ★팔로워는 이미 이 페이지에 온다(2026-08-14 실측). /{계정}/reels/를 열면
+                # 인스타가 graphql로 data.user.follower_count를 함께 내려주는데
+                # (실측 roomoftem.kr=6653), 여기서 릴스 모양만 꺼내 쓰고 나머지는
+                # 버리고 있었다. 그래서 발굴 채널은 팔로워가 영영 안 채워졌고
+                # (실측 316건 중 212건=67% 결측), 엑셀에 있는 값도 낡아 있었다
+                # (같은 채널 엑셀 3811 vs 실제 6653). 같은 응답에서 주워 담으면
+                # 추가 요청·프록시 트래픽이 0이다.
+                try:
+                    _fc = extract_follower_count(payload)
+                    if _fc:
+                        follower_box[0] = _fc
+                except Exception:      # noqa: BLE001 — 팔로워는 부가정보. 실패해도 릴스는 살린다
+                    pass
+                try:
+                    captured.extend(extract_reel_nodes(payload))
+                except Exception:      # noqa: BLE001
                     pass
 
             page.on("response", _on_response)
@@ -140,6 +160,10 @@ def _scrape_one_playwright(username, session_path=None, proxy=None):
 
             ctx.close()
             browser.close()
+        if follower_box[0]:
+            for _n in captured:
+                if isinstance(_n, dict):
+                    _n["_owner_follower_count"] = follower_box[0]
         return captured, final_url, None
     except Exception as e:                        # noqa: BLE001 — 채널 하나의 실패로 전체가 죽지 않게
         return [], url, str(e)[:200]

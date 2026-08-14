@@ -412,6 +412,7 @@ body.is-admin .blockbtn{display:inline-block}
       <div class="tab" data-tab="speed" title="댓글수 ÷ 경과시간(시간) — 시간당 댓글이 얼마나 빨리 쌓이는지">⚡ 속도</div>
       <div class="tab" data-tab="accel" title="이번 수집 Δ(댓글 증가분) − 직전 수집 Δ — 증가세 자체가 빨라지고 있는지(가속도)">📈 가속</div>
       <div class="tab" data-tab="density" title="(좋아요+댓글) ÷ 조회수 — 본 사람 중 몇 %가 반응했는지. 조회수가 작아도 반응이 뜨거우면 상위권">💥 참여밀도</div>
+      <div class="tab" data-tab="fan_density" title="댓글수 ÷ 팔로워수 — 구독자 규모 대비 얼마나 뜨거웠는지. 작은 채널의 대박을 잡는 눈(참여밀도와 보는 게 다릅니다)">🙌 팔로워 대비</div>
       <span class="tab-div"></span>
       <div class="tab" data-tab="rawcomments" title="댓글 수가 많은 순 (절대값)">💬 댓글순</div>
       <div class="tab" data-tab="followers" title="채널 팔로워(구독자)가 많은 순">👥 팔로워순</div>
@@ -557,7 +558,7 @@ const DESC_BY_PLATFORM = {
   xiaohongshu: '등록한 <b>샤오홍슈 채널</b>의 최근 <b>48시간</b> 이내 노트를 참여도 기반 강도로 랭킹합니다. (무료 수집)',
 };
 const TAB_TIP = {
-  instagram: {speed:'댓글수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수'},
+  instagram: {speed:'댓글수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수', fan_density:'댓글수 ÷ 팔로워수'},
   tiktok:    {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
   youtube:   {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
   xiaohongshu: {speed:'(좋아요+댓글+수집+공유) ÷ 경과시간', density:'(수집+공유) ÷ (좋아요+댓글+수집+공유)'},
@@ -1037,6 +1038,7 @@ document.querySelectorAll('.tab').forEach(x=> x.onclick=()=>setTab(x.dataset.tab
 //   ?? 폴백: delta 없는 옛 캐시 items가 섞여도 예전 기준(누적 댓글수)으로 자연히 되돌아간다.
 function sortKey(i){
   return {comments:(i.delta ?? i.comments), speed:i.speed, accel:(i.accel??-1), density:i.density,
+          fan_density:(i.fan_density||0),
           // 단순정렬 3종(2026-07-30) — 지표 계산 없이 절대값 그대로 내림차순.
           // '전체'는 오늘 증가분(delta) 기준이라, 누적 절대값으로 보고 싶을 때 쓴다.
           rawcomments:(i.comments||0), followers:(i.followers||0), views:(i.views||0)}[STATE.tab] || 0;
@@ -1435,6 +1437,7 @@ function render(){
         <div class="stat" title="댓글수 ÷ 경과시간(시간)"><span>속도(시간당)</span><b>${i.speed.toFixed(1)}</b></div>
         <div class="stat" title="이번 수집 Δ − 직전 수집 Δ (증가세가 빨라지는 중인지)"><span>가속</span><b>${i.accel==null?'—':(i.accel>0?'+':'')+i.accel}</b></div>
         <div class="stat" title="(좋아요+댓글) ÷ 조회수 — 본 사람 중 반응한 비율"><span>참여밀도</span><b>${(i.density*100).toFixed(2)}%</b></div>
+        ${i.fan_density?`<div class="stat" title="댓글수 ÷ 팔로워수 — 구독자 규모 대비 반응"><span>팔로워대비</span><b>${(i.fan_density*100).toFixed(2)}%</b></div>`:""}
         ${i.inpock?`<div style="margin-top:6px"><a href="${i.inpock}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🛒 판매채널</a></div>`:''}
         <div class="actions">
           <div class="btns">
