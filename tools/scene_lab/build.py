@@ -14,6 +14,10 @@ from pathlib import Path
 # 인자로 잡 폴더를 받는다(fetch.py가 out/<job_id>를 넘긴다). 없으면 이 파일 옆(옛 방식).
 BASE = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else Path(__file__).parent
 data = json.loads((BASE / "data.json").read_text(encoding="utf-8"))
+# ★사람이 대본을 읽고 직접 고른 배치(선택). picks.json이 있으면 ④번 모드로 노출한다.
+#   fetch가 data.json을 덮어써도 이 파일은 남아 배치가 유지된다.
+_picks = BASE / "picks.json"
+data["picks"] = json.loads(_picks.read_text(encoding="utf-8")) if _picks.exists() else None
 
 html = """<!doctype html>
 <html lang="ko"><head><meta charset="utf-8">
@@ -69,6 +73,7 @@ h1{font-size:16px;margin:0;font-weight:700}
 .chip.good{border-color:var(--good);color:var(--good)}
 .chip.warn{border-color:var(--warn);color:var(--warn)}
 .narr{color:var(--dim);font-size:12px;flex:1 1 100%;line-height:1.5}
+.why{flex:1 1 100%;font-size:11.5px;color:var(--good);line-height:1.5;background:#0f2a20;border:1px solid #1f4d3a;border-radius:6px;padding:5px 8px;margin-top:2px}
 .bbody{padding:10px 12px}
 .lbl{font-size:11px;color:var(--dim);margin:0 0 6px}
 .row{display:flex;gap:16px;flex-wrap:wrap}
@@ -142,6 +147,7 @@ button.act:hover{border-color:var(--accent)}
     <div class="mode on" id="m-live" onclick="setMode('live')">① 지금 라이브<br><span class="sub">AI 후보 그대로</span></div>
     <div class="mode" id="m-one" onclick="setMode('one')">② 한 장만<br><span class="sub">후보 다 지움</span></div>
     <div class="mode" id="m-hand" onclick="setMode('hand')">③ 내가 편성<br><span class="sub">칸마다 직접 담기</span></div>
+    <div class="mode" id="m-pick" onclick="setMode('pick')" style="display:none">④ 대본에 맞게<br><span class="sub">대사 보고 고른 배치</span></div>
   </div>
 </header>
 
@@ -227,6 +233,10 @@ function initLists(){
     const all = baseList(b);
     if (mode === 'one') return all.slice(0, 1);
     if (mode === 'hand') return all.slice(0, 1);   // 시작점 1장, 나머지는 사람이 담는다
+    if (mode === 'pick'){                          // 대본을 읽고 고른 배치(picks.json)
+      const l = ((DATA.picks || {}).lists || [])[b.beat_idx];
+      return (l && l.length) ? l.slice() : all;
+    }
     return all;
   });
 }
@@ -300,6 +310,7 @@ function render(){
 
   // 필름스트립
   let totCuts = 0, totDur = 0, mineDur = 0, longCuts = 0;
+  const _why = (DATA.picks || {}).why || [];
   document.getElementById('film').innerHTML = DATA.beats.map((b, i) => {
     const ids = lists[i] || [];
     const clips = planClips(ids, b.target_seconds || 3);
@@ -332,6 +343,7 @@ function render(){
           <button class="act" onclick="event.stopPropagation();move(${i},1)">↓</button>
         </span>
         <div class="narr">${b.narration || ''}</div>
+        ${(mode==='pick' && _why[i]) ? `<div class="why">🎯 ${esc(_why[i])}</div>` : ''}
       </div>
       <div class="bbody"><div class="row">
         <div class="col">
@@ -509,12 +521,22 @@ function move(i, d){
 }
 function setMode(m){
   mode = m;
-  ['live','one','hand'].forEach(x =>
+  ['live','one','hand','pick'].forEach(x =>
     document.getElementById('m-' + x).classList.toggle('on', x === m));
-  initLists(); chosen.clear(); render();
+  initLists(); chosen.clear();
+  // ④ 모드는 전부 사람이 고른 화면이므로 '내가 고른 화면 %' 지표가 100%가 되게 표시한다.
+  if (m === 'pick') lists.forEach(l => l.forEach(id => chosen.add(id)));
+  render();
 }
 function reset(){ setMode(mode); }
-initLists(); render();
+if (DATA.picks && (DATA.picks.lists || []).length){
+  const el = document.getElementById('m-pick');
+  el.style.display = '';
+  if (DATA.picks.label) el.firstChild.textContent = DATA.picks.label + ' ';
+  setMode('pick');            // ★기본을 '대본에 맞게 고른 배치'로 연다
+} else {
+  initLists(); render();
+}
 </script></body></html>
 """
 
