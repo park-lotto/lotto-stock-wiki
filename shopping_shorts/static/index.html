@@ -246,7 +246,7 @@
 /* tabs + sliding underline */
 .tabs{position:relative;gap:4px;overflow-x:auto;scrollbar-width:thin}
 .tab{font-weight:700;border-radius:9px 9px 0 0;transition:color .2s,background .2s;white-space:nowrap;flex:0 0 auto}
-/* 지표탭(전체·속도·가속·참여밀도)과 단순정렬탭(댓글·팔로워·조회수)을 눈으로 가르는 구분선 */
+/* 지표탭(전체·속도·조회수밀도·팔로워밀도)과 단순정렬탭(댓글·팔로워·조회수)을 눈으로 가르는 구분선 */
 .tab-div{flex:0 0 auto;align-self:center;width:1px;height:18px;background:var(--line);margin:0 8px}
 /* 🚫 차단 = 관리자 전용. 기본 숨김이고 body.is-admin일 때만 뜬다(구독자 화면 플래시 방지) */
 .blockbtn{display:none;flex-shrink:0;background:var(--inset);border:1px solid var(--line);color:var(--sub);
@@ -410,9 +410,8 @@ body.is-admin .blockbtn{display:inline-block}
     <div class="tabs" id="tabs">
       <div class="tab active" data-tab="comments" title="오늘 늘어난 조회수(직전 수집 대비 증가분) 순 — 매일 순위가 바뀝니다">📊 전체</div>
       <div class="tab" data-tab="speed" title="댓글수 ÷ 경과시간(시간) — 시간당 댓글이 얼마나 빨리 쌓이는지">⚡ 속도</div>
-      <div class="tab" data-tab="accel" title="이번 수집 Δ(댓글 증가분) − 직전 수집 Δ — 증가세 자체가 빨라지고 있는지(가속도)">📈 가속</div>
-      <div class="tab" data-tab="density" title="(좋아요+댓글) ÷ 조회수 — 본 사람 중 몇 %가 반응했는지. 조회수가 작아도 반응이 뜨거우면 상위권">💥 참여밀도</div>
-      <div class="tab" data-tab="fan_density" title="댓글수 ÷ 팔로워수 — 구독자 규모 대비 얼마나 뜨거웠는지. 작은 채널의 대박을 잡는 눈(참여밀도와 보는 게 다릅니다)">🙌 팔로워 대비</div>
+      <div class="tab" data-tab="density" title="(좋아요+댓글) ÷ 조회수 — 본 사람 중 몇 %가 반응했는지. 조회수가 작아도 반응이 뜨거우면 상위권">💥 조회수밀도</div>
+      <div class="tab" data-tab="fan_density" title="댓글수 ÷ 팔로워수 — 구독자 규모 대비 얼마나 뜨거웠는지. 작은 채널의 대박을 잡는 눈(조회수밀도와 보는 게 다릅니다)">🙌 팔로워밀도</div>
       <span class="tab-div"></span>
       <div class="tab" data-tab="rawcomments" title="댓글 수가 많은 순 (절대값)">💬 댓글순</div>
       <div class="tab" data-tab="followers" title="채널 팔로워(구독자)가 많은 순">👥 팔로워순</div>
@@ -558,7 +557,7 @@ const DESC_BY_PLATFORM = {
   xiaohongshu: '등록한 <b>샤오홍슈 채널</b>의 최근 <b>48시간</b> 이내 노트를 참여도 기반 강도로 랭킹합니다. (무료 수집)',
 };
 const TAB_TIP = {
-  instagram: {speed:'댓글수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수', fan_density:'댓글수 ÷ 팔로워수'},
+  instagram: {speed:'댓글수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수', fan_density:'댓글수 ÷ 팔로워수'},   // 조회수밀도·팔로워밀도
   tiktok:    {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
   youtube:   {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
   xiaohongshu: {speed:'(좋아요+댓글+수집+공유) ÷ 경과시간', density:'(수집+공유) ÷ (좋아요+댓글+수집+공유)'},
@@ -1190,25 +1189,33 @@ window.addEventListener('popstate', function(){
   // 우리가 쌓은 항목에서 빠져나왔다 = 채널 보기 종료. 이미 나갔으면 no-op.
   exitChannelView({fromPopstate:true});
 });
-// 썸네일 배지(2026-07-22) — 조회수=도달규모, 참여밀도=반응, 속도=상승세를 '보이는 항목 안에서의
+// 썸네일 배지(2026-07-22) — 조회수=도달규모, 조회수밀도=반응, 속도=상승세를 '보이는 항목 안에서의
 // 백분위'로 보고 "소형인데 빠르게" 같은 한줄 판단 라벨을 붙인다. 절대값이 아니라 지금 목록 대비 상대.
+// ★팔로워밀도 반영(2026-08-14): 팔로워가 크롤로 채워지면서 '구독자 대비 대박'을 배지가
+// 볼 수 있게 됐다. 조회수밀도와 보는 게 달라서(본 사람 중 반응률 vs 구독자 규모 대비 열기)
+// 둘 중 높은 쪽을 '반응' 축으로 쓴다 — 어느 한쪽으로만 터진 것도 놓치지 않는다.
+// 팔로워가 없는 항목은 fr=0이라 종전처럼 조회수밀도만으로 판정된다(회귀 없음).
 function _pctl(sorted, v){ let lo=0,hi=sorted.length; while(lo<hi){const m=(lo+hi)>>1; if(sorted[m]<=v) lo=m+1; else hi=m;} return sorted.length? lo/sorted.length : 0; }
 function _fmtViews(n){ n=n||0; return n>=10000 ? (n/10000).toFixed(1)+'만' : n.toLocaleString(); }
-function _insight(vr, dr, sr){
+function _insight(vr, dr, sr, fr){
   // 아주 선별적 — 평범한 건 배지 없음(대부분 배지 X). 빨강=뜨는중, 연두=반응 좋음.
+  const rr = Math.max(dr, fr||0);   // 반응 축 = 조회수밀도·팔로워밀도 중 높은 쪽
   if(vr<=0.40 && sr>=0.85) return {e:'🚀', t:'SMALL · 떡상中', c:'red'};   // 작은데 빠르게(발굴가치)
-  if(dr>=0.90 && vr<=0.45) return {e:'💎', t:'SMALL · 알짜', c:'green'};   // 작은데 반응 최상
-  if(dr>=0.90 && vr>=0.60) return {e:'🔥', t:'반응 좋음', c:'green'};      // 반응 확실히 좋음
+  // 팔로워밀도로만 최상위면 '구독자 대비 대박'이라 라벨을 갈라 보여준다.
+  if((fr||0)>=0.90 && dr<0.90 && vr<=0.45) return {e:'🙌', t:'구독자 대비 대박', c:'green'};
+  if(rr>=0.90 && vr<=0.45) return {e:'💎', t:'SMALL · 알짜', c:'green'};   // 작은데 반응 최상
+  if(rr>=0.90 && vr>=0.60) return {e:'🔥', t:'반응 좋음', c:'green'};      // 반응 확실히 좋음
   if(sr>=0.92)             return {e:'📈', t:'급상승', c:'red'};
   return null;
 }
 function badgeHTML(i, ctx){
   const vr=_pctl(ctx.vs, i.views||0), dr=_pctl(ctx.ds, i.density||0), sr=_pctl(ctx.ss, i.speed||0);
-  const b=_insight(vr, dr, sr);
+  const fr=(ctx.fs && ctx.fs.length) ? _pctl(ctx.fs, i.fan_density||0) : 0;
+  const b=_insight(vr, dr, sr, fr);
   let h='';
   if(b){
     // 🎯 진짜 봐야할 것: 도달·반응·상승세 종합(반응 가중) 최상위만 — 극소수. 크고 빨갛게 강조.
-    const score = vr*0.35 + dr*0.50 + sr*0.15;
+    const score = vr*0.35 + Math.max(dr, fr)*0.50 + sr*0.15;
     const must = score>=0.90;
     const cls = must ? 'must' : b.c;
     const emo = must ? '🎯' : b.e;
@@ -1269,7 +1276,7 @@ function initOverseasCats(){
     `<div class="ctype${c===overseasFilter?' active':''}" onclick="setOverseasCat('${c}')">${c}</div>`).join('');
 }
 function setOverseasCat(c){ overseasFilter=c; initOverseasCats(); renderOverseas(); }
-// 정렬 두 갈래(2026-07-29): 서버가 주는 순서는 score(속도·가속·밀도 종합)라 "지금 뜨는 중"을
+// 정렬 두 갈래(2026-07-29): 서버가 주는 순서는 score(속도·조회수밀도 종합)라 "지금 뜨는 중"을
 // 잡는 데 맞지만, 사장님이 기대한 "인기순"과는 다르다(실측: 반응 28만이 3위, 반응 8이 9위).
 // 어느 쪽이 맞는지는 쓰는 목적에 달렸으므로 고르게 둔다 — 기본은 기존 동작(score) 유지.
 const OVERSEAS_SORTS = [
@@ -1410,7 +1417,11 @@ function render(){
   // 배지용 백분위 컨텍스트 — 지금 보이는 항목 기준(정렬·필터 반영)
   const _bctx={ vs:items.map(i=>i.views||0).sort((a,b)=>a-b),
                 ds:items.map(i=>i.density||0).sort((a,b)=>a-b),
-                ss:items.map(i=>i.speed||0).sort((a,b)=>a-b) };
+                ss:items.map(i=>i.speed||0).sort((a,b)=>a-b),
+                // 팔로워밀도는 **값이 있는 항목만** 모아 분포를 만든다. 팔로워를 못 받은
+                // 항목의 0을 섞으면 바닥이 0으로 채워져, 실제로는 평범한 값도 상위 백분위로
+                // 부풀어 오른다(팔로워 결측이 많던 시기의 왜곡을 그대로 재현하게 된다).
+                fs:items.map(i=>i.fan_density||0).filter(x=>x>0).sort((a,b)=>a-b) };
   const el = document.getElementById("cards");
   if(!items.length){
     el.innerHTML = (searching && _looksLikeUrl(STATE.q))
@@ -1435,9 +1446,8 @@ function render(){
         ${i.views?`<div class="stat" title="조회수 — 옆의 +숫자는 직전 수집 대비 증가분(= '전체' 탭 정렬 기준)"><span>조회수</span><b>${i.views.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>`:''}
         <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${i.comments.toLocaleString()}${i.views?'':` <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span>`}</b></div>
         <div class="stat" title="댓글수 ÷ 경과시간(시간)"><span>속도(시간당)</span><b>${i.speed.toFixed(1)}</b></div>
-        <div class="stat" title="이번 수집 Δ − 직전 수집 Δ (증가세가 빨라지는 중인지)"><span>가속</span><b>${i.accel==null?'—':(i.accel>0?'+':'')+i.accel}</b></div>
-        <div class="stat" title="(좋아요+댓글) ÷ 조회수 — 본 사람 중 반응한 비율"><span>참여밀도</span><b>${(i.density*100).toFixed(2)}%</b></div>
-        ${i.fan_density?`<div class="stat" title="댓글수 ÷ 팔로워수 — 구독자 규모 대비 반응"><span>팔로워대비</span><b>${(i.fan_density*100).toFixed(2)}%</b></div>`:""}
+        <div class="stat" title="(좋아요+댓글) ÷ 조회수 — 본 사람 중 반응한 비율"><span>조회수밀도</span><b>${(i.density*100).toFixed(2)}%</b></div>
+        ${i.fan_density?`<div class="stat" title="댓글수 ÷ 팔로워수 — 구독자 규모 대비 반응"><span>팔로워밀도</span><b>${(i.fan_density*100).toFixed(2)}%</b></div>`:""}
         ${i.inpock?`<div style="margin-top:6px"><a href="${i.inpock}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🛒 판매채널</a></div>`:''}
         <div class="actions">
           <div class="btns">
@@ -1821,7 +1831,7 @@ async function doCensus(){
     if(d.status==="error"){ st.textContent="❌ "+(d.error||"실패"); btn.disabled=false; return; }
     // done — 결과 렌더(동기 때와 동일)
     STATE.items = d.items; st.textContent=`✅ ${d.count}건 (${fmtTime(d.collected_at)})`;
-    setTab('density');   // 전수조사는 영상별 참여밀도순으로 — 소형채널도 안 밀리게
+    setTab('density');   // 전수조사는 영상별 조회수밀도순으로 — 소형채널도 안 밀리게
     const dead = d.dead||[];
     let html = `<span style="color:var(--txt)">스캔 <b>${d.scanned_n}</b> · 생존 <b style="color:var(--ok)">${d.alive_n}</b> · 사망 <b style="color:var(--fire)">${d.dead_n}</b> · 부활 <b style="color:var(--gold)">${d.revived_n}</b></span>`;
     if(dead.length){

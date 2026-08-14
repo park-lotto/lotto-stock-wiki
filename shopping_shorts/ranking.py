@@ -110,22 +110,19 @@ def _normalize(items, key):
 
 
 def apply_grades(items):
-    """속도·가속·밀도를 정규화 후 균등 종합 → grade 채움. items를 in-place 갱신."""
+    """속도·조회수밀도를 정규화 후 균등 종합 → grade 채움. items를 in-place 갱신.
+
+    가속은 2026-08-14에 종합점수에서 빠졌다(속도와 뜻이 겹침, 사장님 결정)."""
     ns = _normalize(items, "speed")
-    na = _normalize(items, "accel")
     nd = _normalize(items, "density")
     for i in items:
         sc = i["shortcode"]
-        # ★가속은 '측정 불가'와 '가속 0'을 구분한다(2026-08-14).
-        # accel = 이번 delta − 직전 delta 라서 처음 잡힌 릴스는 직전이 없어 None이다.
-        # 예전엔 _normalize가 None을 0으로 눌러 그대로 3분의 1 축에 넣었다 —
-        # 갓 올라온 영상은 잘못한 게 없는데 종합점수가 자동으로 3분의 2로 깎였다
-        # (실측: 오늘 316건 중 198건이 accel 없음 = 63%가 이 불이익을 받고 있었다).
-        # 측정 불가면 그 축을 빼고 남은 축들의 평균을 낸다 — 신작도 같은 잣대로 겨룬다.
-        axes = [ns[sc], nd[sc]]
-        if i.get("accel") is not None:
-            axes.append(na[sc])
-        score = sum(axes) / len(axes)
+        # ★가속은 종합점수에서 뺐다(2026-08-14, 사장님 결정 "속도랑 의미가 비슷하다").
+        # accel = 이번 delta − 직전 delta 인데 speed = 댓글/경과시간 과 사실상 같은 것을
+        # 본다(둘 다 '얼마나 빨리 쌓이나'). 게다가 처음 잡힌 릴스는 직전이 없어 None이라
+        # 예전엔 그게 0으로 눌려 신작이 자동 감점됐다(실측 316건 중 198건=63%).
+        # 값 자체는 계속 계산해 둔다 — 이력·조사용이고, 나중에 되살릴 수도 있다.
+        score = (ns[sc] + nd[sc]) / 2.0
         i["score"] = round(score, 3)
         i["grade"] = grade_from_scores(score)
     return items
