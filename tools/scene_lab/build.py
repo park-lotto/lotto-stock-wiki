@@ -156,6 +156,7 @@ button.act:hover{border-color:var(--accent)}
 <div class="wrap">
   <div class="pane left">
     <div class="lbl" id="palhint"></div>
+    <div class="lbl" id="dropmsg" style="color:var(--bad)"></div>
     <div id="palette"></div>
   </div>
   <div class="pane right">
@@ -199,13 +200,23 @@ const MAX_SHOT = 2.2, MIN_CLIP = 0.8, EPS = 1e-3, LONG_CUT = MAX_SHOT + 0.05;   
 //   CTA용 태그"). 새 판단을 만들지 않는다 — 추출이 이미 붙여둔 shot_role/is_key를 그대로 쓴다
 //   (완성 / after=결과·증거 / 사용중=조리·사용 / 기타). 실측 분포 9·5·41·1.
 const GROUPS = [
-  {key:'완성',   title:'🏆 완성품',        hint:'훅·CTA에 좋다'},
-  {key:'after',  title:'✅ 결과·증거',     hint:'쪼갠 단면·먹는 반응 — 결과 칸에 좋다'},
-  {key:'사용중', title:'🍳 조리·사용 과정', hint:'해결·과정 칸에 좋다'},
-  {key:'기타',   title:'그 밖의 장면',     hint:''},
+  {key:'완성',   title:'🏆 완성품',          hint:'훅·CTA에 좋다'},
+  {key:'after',  title:'✅ 결과·증거',       hint:'쪼갠 단면·먹는 반응 — 결과 칸에 좋다'},
+  {key:'굽기',   title:'🔥 굽기·완성 직전',  hint:'오븐·가열 — 과정의 절정'},
+  {key:'재료',   title:'🥣 재료·반죽 준비',  hint:'섞기·짜기 — 해결 칸에 좋다'},
+  {key:'기타',   title:'그 밖의 장면',       hint:''},
 ];
+// ★조리(shot_role='사용중')를 '굽기'와 '재료 준비'로 한 겹 더 가른다(2026-08-14 사장님
+//   "완성품 조리랑 재료조리는 구분해서 나와야"). 이건 **실험실에서 고르기 쉬우라고 하는
+//   화면 분류**일 뿐 배치 로직과 무관하다 — 라이브 판단을 새로 만드는 게 아니다.
+const _BAKE = ['오븐', '굽', '예열', '구워', '식힘망'];
 function groupOf(sid){
-  const r = (DATA.segments[sid] || {}).shot_role || '기타';
+  const s0 = DATA.segments[sid] || {};
+  const r = s0.shot_role || '기타';
+  if (r === '사용중'){
+    const d = (s0.scene_desc || '') + ' ' + (s0.action || '') + ' ' + (s0.change || '');
+    return _BAKE.some(w => d.includes(w)) ? '굽기' : '재료';
+  }
   return GROUPS.some(g => g.key === r) ? r : '기타';
 }
 // 용도 배지 — 위 결에서 바로 파생한 **제안**이다(강제 아님, 담는 건 사장님 판단).
@@ -213,7 +224,8 @@ function useTags(sid){
   const s0 = DATA.segments[sid] || {}, r = groupOf(sid), t = [];
   if (r === '완성'){ t.push('후킹용'); t.push('CTA용'); }
   if (r === 'after'){ t.push('후킹용'); t.push('결과용'); }
-  if (r === '사용중') t.push('조리용');
+  if (r === '굽기') t.push('굽기용');
+  if (r === '재료') t.push('조리용');
   if (s0.is_key) t.push('실증');
   return t;
 }
@@ -320,8 +332,15 @@ function render(){
 
   // 팔레트
   const byRole = {};
-  for (const [sid, s] of Object.entries(DATA.segments))
+  let dropped = 0;
+  for (const [sid, s] of Object.entries(DATA.segments)){
+    // ★소스 밖 구간은 아예 빼 놓는다(2026-08-14 사장님 "소스 밖 구간은 빼라").
+    //   실체가 없는 화면이라 후보로 보일 이유가 없다. 몇 개 뺐는지는 위에 알린다.
+    if (outOfRange(sid)){ dropped++; continue; }
     (byRole[groupOf(sid)] ||= []).push({sid, ...s});
+  }
+  const dropMsg = document.getElementById('dropmsg');
+  if (dropMsg) dropMsg.textContent = dropped ? `⚠ 소스 밖 구간 ${dropped}개는 목록에서 제외했습니다(실체 없는 화면)` : '';
   const cur = new Set(lists[sel] || []);
 
   // 결 그룹 순서로 묶어 보여준다 — 같은 성격끼리 모여 있어야 고르기 쉽다.
