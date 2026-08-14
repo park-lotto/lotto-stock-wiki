@@ -134,7 +134,7 @@ print('   썸네일', n, '/ 범위초과 세그', len(over), over[:6])
     #   음성·자막은 그대로라 교체 즉시 결과가 보인다(렌더 0회).
     print("[3/5] 음성·자막 타이밍 뽑는 중…")
     print(py_on_server(f"""
-import json,glob,os,shutil,re
+import json,glob,os,shutil,re,subprocess
 base='{JOBS}/{job_id}/tts'
 shutil.rmtree('/tmp/sl_tts', ignore_errors=True); os.makedirs('/tmp/sl_tts')
 d=json.load(open('/tmp/sl_data.json'))
@@ -153,7 +153,39 @@ for i in range(len(d['beats'])):
 #   ubuntu 계정의 scp가 조용히 실패해 '음성 0개'가 된다. 받을 수 있게 권한을 연다.
 for f in glob.glob('/tmp/sl_tts/*'):
     os.chmod(f, 0o644)
-print('   음성', len(voices), '개 / 자막타이밍', len(glob.glob('/tmp/sl_tts/*.align.json')), '개')
+# ★자막은 **라이브와 같은 코드로** 만든다(2026-08-14 사장님 '기존 코드와 달라').
+#   _caption_segments(구절 나눔) + _caption_durations(구절별 표시시간)은 실제 렌더가
+#   쓰는 바로 그 함수다. JS로 옮겨 적으면 두 벌이 되어 반드시 어긋난다(0순위-B) —
+#   여기서 호출해 결과만 실어 보낸다. 실험실은 계산하지 않고 그대로 그린다.
+from shopping_shorts import video_assemble as va
+caps={{}}
+for b in d['beats']:
+    i=b['beat_idx']
+    segs=va._caption_segments(b.get('narration') or '', b.get('caption_lines'))
+    mp3='/tmp/sl_tts/beat_%d.mp3' % i
+    dur=0.0
+    if os.path.exists(mp3):
+        rr=subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',mp3],
+                          capture_output=True,text=True)
+        try: dur=float((rr.stdout or '0').strip())
+        except ValueError: dur=0.0
+    lead,rd=va._adjust_caps_for_trim(b)
+    durs=va._caption_durations(segs, dur or (b.get('target_seconds') or 3.0), real_durs=rd)
+    t=float(lead or 0.0); rows=[]
+    for seg,dd in zip(segs,durs):
+        rows.append({{'text':seg,'start':round(t,3),'end':round(t+dd,3)}}); t+=dd
+    caps[str(i)]=rows
+d['captions']=caps
+d['tts_dur']={{str(b['beat_idx']): None for b in d['beats']}}
+for i in list(caps):
+    mp3='/tmp/sl_tts/beat_%s.mp3' % i
+    if os.path.exists(mp3):
+        rr=subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',mp3],
+                          capture_output=True,text=True)
+        try: d['tts_dur'][i]=round(float((rr.stdout or '0').strip()),3)
+        except ValueError: pass
+json.dump(d, open('/tmp/sl_data.json','w'), ensure_ascii=False)
+print('   음성', len(voices), '개 / 자막 구절', sum(len(v) for v in caps.values()), '개')
 """))
 
     print("[4/5] 내려받는 중…")

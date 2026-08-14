@@ -165,7 +165,7 @@ button.act:hover{border-color:var(--accent)}
   <div class="pinfo" id="pinfo">장면의 ▶ 또는 칸의 “이 칸 재생”을 누르세요<br>
     <span style="opacity:.7">칸 재생 = 화면+음성+자막을 함께 봅니다(렌더 안 함)</span><br>
     <label style="cursor:pointer"><input type="checkbox" id="subcut" checked
-      onchange="subPerCut=this.checked"> 자막을 컷 단위로 끊기</label></div>
+      onchange="subPerCut=this.checked"> 지금 컷 번호 표시</label></div>
 </div>
 
 <footer>
@@ -181,21 +181,6 @@ button.act:hover{border-color:var(--accent)}
 const DATA = __DATA__;
 const MAX_SHOT = 2.2, MIN_CLIP = 0.8, EPS = 1e-3, LONG_CUT = 2.5;
 
-// 컷 구간[a,b)에 실제로 나오는 자막 조각 — 이 글자를 말할 때 이 그림이 뜬다.
-function subRange(i, a, b){
-  const al = ALIGN[i];
-  if (!al || !al.length) return '';
-  return stripTag(al.filter(c => c.start < b - 1e-3 && c.end > a + 1e-3).map(c => c.ch).join(''));
-}
-// 감정 태그 [curious] 처럼 음성엔 없고 표기만 있는 앞머리를 뗀다(정규식 없이 — 이 JS는
-// 파이썬 문자열 안에 들어 있어 역슬래시를 쓰면 파이썬 이스케이프와 충돌한다).
-function stripTag(t){
-  const s0 = String(t || '');
-  const l = s0.replace(/^[ ]+/, '');
-  if (l.charAt(0) !== '[') return s0.trim();
-  const i = l.indexOf(']');
-  return (i < 0 ? l : l.slice(i + 1)).trim();
-}
 // 소스 영상 길이를 넘는 구간인가 — 실측(job 409f894230c6): s1-10이 100~104초인데
 // s1.mp4는 78.5초였다. 렌더하면 그 컷은 실체가 없다. 눈에 보이게 표시한다.
 function outOfRange(sid){
@@ -207,40 +192,29 @@ function esc(t){ return String(t==null?'':t).replace(/[&<>"]/g, c=>({'&':'&amp;'
 
 // ── 자막·음성 트랙(2026-08-14 사장님 "결국 자막이랑 맞아떨어지는 걸 봐야 한다") ──────
 // 렌더를 다시 돌리지 않는다. 서버가 이미 만들어 둔 것을 그대로 겹쳐 재생한다:
-//   화면 = 소스 mp4의 구간(무음)  /  음성 = tts/beat_N.mp3  /  자막 = align.json(글자별 시각)
-// 장면을 바꿔도 음성·자막은 그대로라, 교체하자마자 "말과 그림이 맞나"를 눈으로 본다.
-const ALIGN = {};            // beat_idx → [{ch,start,end}]
+//   화면 = 소스 mp4의 구간(무음)  /  음성 = tts/beat_N.mp3  /  자막 = DATA.captions
+// ★자막 구절·타이밍은 fetch가 **라이브 렌더와 같은 함수**(_caption_segments,
+//   _caption_durations)로 계산해 실어 온다. 여기서 다시 나누면 두 벌이 되어 반드시
+//   어긋난다(0순위-B). 예전엔 글자 타임스탬프(align.json)를 컷 경계로 잘라 썼는데
+//   ①문장이 어절 중간에서 잘리고 ②align은 무음 트림 전 기준(8.16초)이라 실제 mp3
+//   (6.10초)보다 느리게 흘렀다 — 사장님이 둘 다 지적했다.
 let audioEl = null;
 function audio(){ return audioEl || (audioEl = document.getElementById('bgaudio')); }
-async function loadAlign(i){
-  if (ALIGN[i] !== undefined) return ALIGN[i];
-  try{
-    const r = await fetch(`tts/beat_${i}.align.json`);
-    if (!r.ok) throw 0;
-    const j = await r.json();
-    const chs = j.characters || [], st = j.character_start_times_seconds || j.start_times || [],
-          en = j.character_end_times_seconds || j.end_times || [];
-    ALIGN[i] = chs.map((c, k) => ({ch: c, start: +st[k] || 0, end: +en[k] || 0}));
-  }catch(e){ ALIGN[i] = null; }
-  return ALIGN[i];
+function capsOf(i){ return (DATA.captions || {})[String(i)] || []; }
+// 구간 [a,b)에 걸치는 자막 구절들 — 자르지 않고 구절 통째로 돌려준다.
+function capsIn(i, a, b){
+  return capsOf(i).filter(c => c.start < b - 1e-3 && c.end > a + 1e-3);
 }
-// 지금 시각까지 발음된 글자까지만 보여준다(카라오케식) — 음성과 어긋나면 바로 눈에 띈다.
-function subAt(i, t){
-  const a = ALIGN[i];
-  const full = (DATA.beats[i] && DATA.beats[i].narration) || '';
-  if (!a || !a.length) return {said: full, rest: ''};
-  let n = 0;
-  for (const c of a){ if (c.start <= t) n++; else break; }
-  const txt = a.map(c => c.ch).join('');
-  // 앞머리 [curious] 같은 감정 태그는 화면에서 뺀다(음성엔 없는 표기).
-  const off = txt.length - stripTag(txt).length;
-  return {said: txt.slice(off, Math.max(off, n)), rest: txt.slice(Math.max(off, n))};
+function capAt(i, t){
+  const cs = capsOf(i);
+  return cs.find(c => t >= c.start - 1e-3 && t < c.end) || null;
 }
 
 let mode = 'live';
 let seqBeat = null;   // 지금 재생 중인 칸(자막·음성 트랙 기준)
+let playKey = null;   // 지금 재생 중인 대상 — 같은 것을 다시 누르면 정지(토글)
 let seqBounds = [];   // 컷별 [시작,끝) 초 — 자막을 컷 단위로 끊는 기준
-let subPerCut = true; // ★자막을 컷 단위로 끊어 보여준다(2026-08-14 사장님 '장면이 3개면 3개로')
+let subPerCut = true; // 미리보기에 '컷 n/N' 표시(자막 자체는 라이브와 같은 구절 단위)
 let sel = 0;
 let lists = [];              // 비트별 장면 seg_id 목록(첫 항목이 primary)
 const chosen = new Set();    // 사람이 손으로 담은 seg_id
@@ -386,7 +360,7 @@ function render(){
                  onclick="playSeg('${c.seg_id}', event)" title="이 컷 보기">
               <img src="thumbs/${c.seg_id}.jpg" loading="lazy">
               <div class="t">${c.dur.toFixed(1)}s</div>
-              <div class="cutsub">${esc(subRange(i, a, b)) || '&nbsp;'}</div>
+              <div class="cutsub">${capsIn(i, a, b).map(c=>esc(c.text)).join(' / ') || '&nbsp;'}</div>
             </div>`;}).join('')})()}</div>
         </div>
       </div></div></div>`;
@@ -410,6 +384,7 @@ const vid = () => document.getElementById('vid');
 
 function stopPlay(){
   clearTimeout(seqTimer); seqTimer = null; seq = [];
+  playKey = null;
   clearInterval(subTimer); seqBeat = null;
   const a = audio(); if (a){ a.pause(); }
   const sb = document.getElementById('subbox'); if (sb) sb.innerHTML = '';
@@ -420,18 +395,22 @@ function playSeg(sid, ev){
   if (ev) ev.stopPropagation();
   const s = DATA.segments[sid];
   if (!s) return;
+  // ★한 번 누르면 재생, 같은 것을 다시 누르면 정지(2026-08-14 사장님 "정지 버튼이 없다").
+  if (playKey === 'seg:' + sid && !vid().paused){ stopPlay(); return; }
+  playKey = 'seg:' + sid;
   seqLabel = `장면 ${sid}`;
   clearInterval(subTimer); seqBeat = null;
   const a0 = audio(); if (a0) a0.pause();
   const sb0 = document.getElementById('subbox'); if (sb0) sb0.innerHTML = '';
   startSeq([{seg_id: sid, video_id: s.video_id, start: s.start, dur: s.end - s.start}]);
 }
-async function playBeat(i, ev){
+function playBeat(i, ev){
   if (ev) ev.stopPropagation();
   const clips = planClips(lists[i] || [], DATA.beats[i].target_seconds || 3);
   if (!clips.length) return;
+  if (playKey === 'beat:' + i && !audio().paused){ stopPlay(); return; }   // 다시 누르면 정지
+  playKey = 'beat:' + i;
   seqLabel = `칸 ${i+1} 전체`;
-  await loadAlign(i);
   seqBeat = i;
   startSeq(clips);
   // 음성은 화면과 별개 트랙 — 같이 0초부터 튼다(캡컷의 오디오 트랙과 같은 개념).
@@ -449,25 +428,15 @@ function tickSub(){
   if (seqBeat == null){ box.innerHTML = ''; return; }
   subTimer = setInterval(() => {
     const a = audio(), t = a.currentTime || 0;
-    let said, rest, tag = '';
-    // ★컷 단위 자막: 지금 재생 중인 컷 구간의 글자만 띄운다. 컷이 3개면 자막도 3번 바뀐다
-    //   — 실제 영상에서 한 화면에 어떤 말이 얹히는지가 그대로 보인다.
-    const k = subPerCut ? seqBounds.findIndex(([a0, b0]) => t >= a0 - 1e-3 && t < b0) : -1;
-    if (k >= 0){
-      const [a0, b0] = seqBounds[k];
-      const whole = subRange(seqBeat, a0, b0);
-      const upto  = subRange(seqBeat, a0, Math.min(t, b0));
-      // 지금까지 말한 부분(upto)은 whole의 앞머리 — 길이로 갈라 카라오케를 유지한다.
-      said = whole.slice(0, upto.length); rest = whole.slice(upto.length);
-      tag = `컷 ${k+1}/${seqBounds.length}`;
-    } else {
-      ({said, rest} = subAt(seqBeat, t));
-    }
+    const c = capAt(seqBeat, t);
+    const k = seqBounds.findIndex(([a0, b0]) => t >= a0 - 1e-3 && t < b0);
+    const tag = (subPerCut && k >= 0) ? `컷 ${k+1}/${seqBounds.length}` : '';
     box.innerHTML = (tag ? `<div class="subtag">${tag}</div>` : '')
-      + `<span class="said">${esc(said)}</span><span class="rest">${esc(rest)}</span>`;
+      + `<span class="said">${esc(c ? c.text : '')}</span>`;
     if (a.ended || a.paused) clearInterval(subTimer);
   }, 60);
 }
+
 function startSeq(clips){
   clearTimeout(seqTimer);
   seq = clips; seqI = 0;
@@ -528,8 +497,6 @@ function setMode(m){
 }
 function reset(){ setMode(mode); }
 initLists(); render();
-// 자막 타이밍을 전부 읽고 한 번 더 그린다 — 컷 밑 자막이 처음부터 보이게.
-Promise.all(DATA.beats.map((_, i) => loadAlign(i))).then(() => render());
 </script></body></html>
 """
 
