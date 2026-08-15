@@ -27,15 +27,15 @@
    "id": "G004",
    "title": "화면",
    "objective": "목업 v2 이식. 본문 16px·폭 1440px 가독성 기준 준수",
-   "status": "pending",
-   "evidence": null
+   "status": "complete",
+   "evidence": "stock.html 신설, /stock 200, 브라우저에서 5칸 전부 렌더 확인. 가독성 기준 준수(본문16px·폭1440px·mut #aab6c6). D-day 파싱버그(연도 없는 '8월 26일') 실측으로 잡아 수정"
   },
   {
    "id": "G005",
    "title": "검증",
    "objective": "브라우저 실측 + 게이트 통과 후 main 병합",
-   "status": "pending",
-   "evidence": null
+   "status": "complete",
+   "evidence": "브라우저 실측 + 게이트 통과 + main 병합 완료"
   }
  ]
 }
