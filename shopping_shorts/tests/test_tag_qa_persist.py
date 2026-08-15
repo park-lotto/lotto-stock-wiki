@@ -30,11 +30,23 @@ def test_저장_대상_밖의_필드는_안_담는다():
     """화이트리스트가 유지되는지 — 중간 부산물까지 DB에 실리면 안 된다."""
     out = storable({"full_text": "말", "segments": [], "tag_qa": {},
                     "video_path": "/tmp/x.mp4", "raw_response": "…"})
-    assert set(out) == {"full_text", "segments", "tag_qa"}
+    # source_brief 추가(2026-08-16) — 1단계 화면·대본 생성이 읽는 영상 단위 요약.
+    assert set(out) == {"full_text", "segments", "tag_qa", "source_brief"}
 
 
 def test_None이나_빈_입력도_안전하다():
-    assert storable(None) == {"full_text": "", "segments": [], "tag_qa": {}}
+    assert storable(None) == {"full_text": "", "segments": [], "tag_qa": {},
+                              "source_brief": {}}
+
+
+def test_source_brief는_정규화돼_담긴다():
+    """모델이 준 요약이 그대로가 아니라 _norm_brief를 거쳐 담긴다(길이·공백 통제)."""
+    out = storable({"source_brief": {"product": "  휴대용   에스프레소 메이커 ",
+                                     "role": "기능 시연", "zzz": "모르는 키"}})
+    assert out["source_brief"]["product"] == "휴대용 에스프레소 메이커"
+    assert "zzz" not in out["source_brief"]          # 스키마 밖 키는 안 담는다
+    # 형식이 어긋나도 죽지 않는다(fail-open) — 옛 추출본엔 이 필드 자체가 없다.
+    assert storable({"source_brief": "문자열"})["source_brief"] == {}
 
 
 # ── 저장부가 헬퍼를 실제로 쓰는지 (하네스가 계약을 발명하지 않게) ──
