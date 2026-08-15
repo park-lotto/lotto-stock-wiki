@@ -78,7 +78,7 @@ function updateTrimBar(){
       <span class="hint">시작 ${trimA.toFixed(1)}초 — 끝 지점에서 다시 누르세요</span>`;
   } else {
     bar.innerHTML = `<button class="act" onclick="trimMark(event)">✂ 여기부터 자르기</button>
-      <span class="hint">진행바로 지점을 찾아 누르세요</span>`;
+      <span class="hint">뺄 구간의 <b>시작</b>에서 누르고, 끝에서 한 번 더 — 진행바를 끌어 지점을 찾으세요</span>`;
   }
 }
 function trimMark(ev){
