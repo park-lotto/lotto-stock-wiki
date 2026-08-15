@@ -3826,16 +3826,29 @@ async function pmLoadStyles(category){
     const d=await (await fetch('/api/script/styles'+(category?('?category='+encodeURIComponent(category)):''))).json();
     styles=(d&&d.styles)||[];
   }catch(e){ styles=[]; }
-  // 쓸 수 있는 스타일이 없으면 아예 안 보여준다 — 빈 드롭다운은 고장으로 보인다.
+  // 스타일이 하나도 없을 때만 숨긴다(빈 드롭다운은 고장으로 보인다).
   if(!styles.length){ sec.style.display='none'; row.style.display='none'; return; }
+  // ★카테고리로 걸러 숨기지 않고 **등급을 표시**한다(2026-08-15 사장님 지적).
+  //   숨기면 홈템 외 소재에선 기능이 없는 것처럼 보인다. 안 맞으면 경고만 달고 고르게 둔다.
   const opt=(s)=>{
-    // 실적을 함께 보여준다 — 감이 아니라 숫자로 고르게.
-    const src=(s.source_count||0)?(' · 근거 '+s.source_count+'편'):'';
-    return '<option value="'+s.id+'">'+esc(s.name||('스타일 '+s.id))+src+'</option>';
+    const mark = (s.fit==='검증') ? '✅ ' : '⚠️ ';
+    const src  = (s.source_count||0) ? (' · 근거 '+s.source_count+'편') : '';
+    const warn = (s.fit==='검증') ? '' : ' (다른 소재에서 검증)';
+    return '<option value="'+s.id+'">'+mark+esc(s.name||('스타일 '+s.id))+src+warn+'</option>';
   };
   const list=styles.map(opt).join('');
   s1.innerHTML='<option value="">(안 고름 — 기존 방식)</option>'+list;
   s2.innerHTML='<option value="">(안 고름)</option>'+list;
+  // ★기본값을 우리가 골라둔다 — 고르는 건 선택지지 숙제가 아니다(딸깍 원칙).
+  //   서버가 '검증 먼저, 실적순'으로 정렬해 주므로 첫 번째가 곧 추천이다.
+  const best = styles.find(x=>x.fit==='검증') || styles[0];
+  if(best) s1.value = String(best.id);
+  const hint = row.querySelector('.subj-hint');
+  if(hint){
+    hint.innerHTML = (best && best.fit==='검증')
+      ? '✅ 이 소재에서 검증된 <b>'+esc(best.name)+'</b>을 미리 골라뒀어요. 바꾸거나 빼도 됩니다.'
+      : '⚠️ 이 소재에서 검증된 스타일이 아직 없어요. 다른 소재에서 통한 것을 써볼 수 있지만 어색할 수 있습니다.';
+  }
   sec.style.display=''; row.style.display='flex';
 }
 function pmPickedStyleIds(){
@@ -3861,7 +3874,7 @@ async function pmRunGen(){
   if(mode==='B'&&!topic){ res.innerHTML='<div class="hint" style="color:var(--fire)">내 주제/제품을 입력하세요.</div>'; return; }
   btn.disabled=true; res.innerHTML='<div class="hint">✨ 초안 만드는 중… (15~40초)</div>';
   try{
-    const body={mode, my_topic:topic, subject, n:3, elem_modes:elemModes, structure:PM_BASE_STRUCT, base_script:PM_BASE_SCRIPT, category:PM_CATEGORY};
+    const body={mode, my_topic:topic, subject, n:2, elem_modes:elemModes, structure:PM_BASE_STRUCT, base_script:PM_BASE_SCRIPT, category:PM_CATEGORY};
     const _styleIds=(typeof pmPickedStyleIds==='function')?pmPickedStyleIds():[];
     if(_styleIds.length){ body.style_ids=_styleIds; }   // 없으면 키 자체를 안 보낸다(기존 경로 유지)
     const d=await (await fetch('/api/wiki/generate?shortcode='+encodeURIComponent(PM_SHORTCODE||PM_URL),

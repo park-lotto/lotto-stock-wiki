@@ -9158,16 +9158,32 @@ def api_pattern_spines(status: str = None):
 def api_script_styles(category: str = None):
     """대본 생성에서 고를 수 있는 **스타일** 목록(2026-08-15).
 
-    조건: 승인됨 + beat_roles가 붙어 있음(=기계가 검사 가능) + 카테고리 적합.
-    카테고리 잠금이 여기 있는 이유: 톤이 안 맞는 조합(이어폰에 '시월드형')은 구조 검사를
-    통과해버려 게이트로 못 잡는다 — 애초에 목록에 안 띄운다."""
-    styles = Store(DB_PATH).list_style_spines(category=category or None)
-    return {"ok": True, "styles": [
-        {"id": s["id"], "name": s["name"], "situation_type": s["situation_type"],
-         "beat_roles": s["beat_roles"], "chars_per_30s": s["chars_per_30s"],
-         "fit_categories": s["fit_categories"], "source_count": s["source_count"],
-         "perf_score": s["perf_score"]}
-        for s in styles]}
+    조건: 승인됨 + beat_roles가 붙어 있음(=기계가 검사 가능).
+
+    ★카테고리로 **숨기지 않는다**(2026-08-15 사장님 지적으로 방침 변경). 처음엔 안 맞으면
+      목록에서 뺐는데, 그러면 홈템 말고는(레시피·가전·뷰티) 칸이 통째로 사라져 사용자는
+      기능이 있는지도 모른다. 실제로 다른 소재에 씌워도 잘 나온 실험이 있다(채이홈 스타일을
+      DIY 피규어 소재에 적용 성공). 그래서 **경고만 달고 판단은 사람에게 맡긴다**:
+        fit="검증"  = 이 소재에서 실제로 통한 스타일
+        fit="타소재" = 다른 소재에서 검증됨(써도 되지만 어울림은 확인 필요)
+      정렬은 검증 먼저, 그다음 실적순 — 첫 번째가 곧 추천이다."""
+    styles = Store(DB_PATH).list_style_spines(category=None)     # 잠그지 않고 전부
+    cat = (category or "").strip()
+    out = []
+    for s in styles:
+        fits = s.get("fit_categories") or []
+        verified = bool(cat) and (not fits or cat in fits)
+        out.append({
+            "id": s["id"], "name": s["name"], "situation_type": s["situation_type"],
+            "beat_roles": s["beat_roles"], "chars_per_30s": s["chars_per_30s"],
+            "fit_categories": fits, "source_count": s["source_count"],
+            "perf_score": s["perf_score"],
+            "fit": "검증" if verified else "타소재",
+            # 사용자가 이름만 보고는 못 고른다 — 어디서 나왔고 얼마나 통했는지를 함께 준다.
+            "evidence": s.get("situation_type") or "",
+        })
+    out.sort(key=lambda x: (x["fit"] != "검증", -(x["perf_score"] or 0), -(x["source_count"] or 0)))
+    return {"ok": True, "styles": out}
 
 
 @app.post("/api/pattern/spine/status")
