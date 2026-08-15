@@ -71,7 +71,8 @@
     ".ss-acct-u b{color:var(--sel-fg,#6ff0d6);font-weight:700}" +
     ".ss-acct-since{font-size:11px;color:var(--sub,#8b98a9);margin-top:9px;text-align:right}" +
     ".ss-acct-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}" +
-    ".ss-acct-link{flex:1 1 0;white-space:nowrap;text-align:center;font-size:12px;color:var(--txt,#e6edf3);text-decoration:none;padding:8px 4px;border:1px solid var(--line,#1e2735);border-radius:8px;background:var(--panel,#111722)}" +
+    // 44px 터치타깃(2026-08-15) — 실측 34px이었다.
+    ".ss-acct-link{flex:1 1 0;white-space:nowrap;text-align:center;font-size:12px;color:var(--txt,#e6edf3);text-decoration:none;padding:12px 4px;min-height:44px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;border:1px solid var(--line,#1e2735);border-radius:8px;background:var(--panel,#111722)}" +
     ".ss-acct-link.wide{flex-basis:100%}" +
     ".ss-acct-link:hover{border-color:var(--accent,#37e0bd);color:var(--sel-fg,#6ff0d6)}" +
     // 브랜드 텍스트만 민트 그라디언트(이모지는 제외 — text-fill:transparent가 이모지 글리프까지 비운다)
@@ -93,7 +94,8 @@
     ".ss-work:hover{color:var(--txt,#e6edf3)}" +
     ".ss-work.ss-work-current{color:var(--sel-fg,#6ff0d6);background:var(--sel-bg,linear-gradient(90deg,#123a30,#0c221c))}" +
     ".ss-toggle{margin-top:18px;padding-top:14px;border-top:1px solid var(--line,#1e2735)}" +
-    ".ss-toggle-btn{width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--line,#1e2735);" +
+    // 44px 터치타깃(2026-08-15) — 실측 37px이었다. 60대가 주 사용자.
+    ".ss-toggle-btn{width:100%;padding:12px;min-height:44px;border-radius:9px;border:1px solid var(--line,#1e2735);" +
       "background:var(--inset,#0c1412);color:var(--txt,#e6edf3);font-size:13px;cursor:pointer;" +
       "display:flex;align-items:center;justify-content:center;gap:7px;font-family:inherit}" +
     ".ss-toggle-btn:hover{border-color:var(--accent,#37e0bd)}" +
@@ -117,7 +119,10 @@
       ".ss-nav h1{margin:0 8px 0 0;flex-shrink:0;font-size:19px;justify-content:flex-start}" +
       ".ss-group{margin:0;padding:0;background:none;border:none;display:flex;gap:6px;align-items:center}" +
       ".ss-label{display:none}" +
-      ".ss-item{margin:0;padding:6px 10px;flex-shrink:0;font-size:12px}}";
+      // 44px 터치타깃(2026-08-15) — 실측 28px이라 가로띠에서 손가락으로 누르기 작았다.
+      // 가로띠는 어차피 가로 스크롤(scrollWidth 1477 > 390)이라 높이를 키워도 안 잘린다.
+      ".ss-item{margin:0;padding:0 13px;min-height:44px;display:flex;align-items:center;" +
+        "flex-shrink:0;font-size:13px}}";
   // 버튼 쿠션감(전역, 2026-07-24) — 누르면 쏙 눌렸다 통통 튀어나옴. 사장님 선택 '쿠션' 프리셋.
   // 자체 transition 없는 주버튼(.btn-next/.btn-prev/.tab/.cta-shine 등)엔 풀 적용. 자체
   // transition을 가진 버튼은 페이지 규칙(클래스>요소)이 우선이라 배경 트랜지션을 안 밟고

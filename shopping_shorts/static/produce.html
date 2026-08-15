@@ -67,7 +67,11 @@
     .previewSlot{position:sticky;top:12px;align-self:flex-start;z-index:7}
 
     /* 진행바 — 크게(60대 최우선). 완료=채운 민트+체크, 현재=링+숨쉬기(색이 아니라 형태로도 구분) */
-    .steps{margin:26px 0 30px;max-width:1120px}  /* 컨테이너는 블록 — 안의 .orbbar(theme.css)가 100% 채워 오브를 균등 분배 */
+    /* ★가로폭 상한을 없앴다(2026-08-15 사장님 "레퍼런스 랭킹처럼 크게").
+       랭킹 페이지(index.html)는 .main{flex:1}만 쓰고 상한이 없어 화면 끝까지 채운다 —
+       제작소만 1120px에 묶여 오른쪽이 통째로 비어 있었다. 세로 영상(9:16) 레일은
+       각자 max-width를 그대로 두므로, 늘어난 폭은 옆의 대본·결과 칼럼이 먹는다. */
+    .steps{margin:26px 0 30px}  /* 컨테이너는 블록 — 안의 .orbbar(theme.css)가 100% 채워 오브를 균등 분배 */
     .step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;cursor:pointer}
     .step .dot{width:52px;height:52px;border-radius:50%;background:var(--panel);border:2px solid var(--line);
       display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--sub);z-index:1;
@@ -109,7 +113,7 @@
                   aspect-ratio:9/16;object-fit:contain;position:absolute;inset:0}
     #player .x:hover{color:var(--txt)}
     #subbox b{color:var(--accent)}
-    .panel{display:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;max-width:1120px}
+    .panel{display:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
     .panel.show{display:block}
     .panel h3{margin:0 0 4px;font-size:18px}
     .panel .sub{color:var(--sub);font-size:14px;margin-bottom:16px}
@@ -121,7 +125,7 @@
     .lockcard .lc-h{font-size:14px;color:var(--sub);margin-top:6px;line-height:1.5}
 
     /* 하단 네비 */
-    .nav{display:flex;justify-content:space-between;margin:18px 0 40px;max-width:1120px}
+    .nav{display:flex;justify-content:space-between;margin:18px 0 40px}
     button{font-family:inherit;border:0;border-radius:9px;padding:11px 20px;cursor:pointer;font-size:14px}
     .btn-prev{background:var(--panel);border:1px solid var(--line);color:var(--txt)}
     .btn-next{background:var(--grad);color:#fff}
@@ -376,8 +380,143 @@
     .skm-card.empty{text-align:center;padding:26px 18px}
     .skm-card.empty h2{font-size:15px;line-height:1.5;margin:0 0 16px;color:var(--txt);font-weight:800}
     .empty-cta{display:flex;flex-direction:column;gap:8px;max-width:280px;margin:0 auto}
-    .empty-cta .cta-shine{display:block;padding:11px;box-sizing:border-box;text-decoration:none;font-size:14px}
+    /* padding:11px면 높이가 41px로 44px 터치타깃에 3px 모자란다(2026-08-15 실측) → 13px */
+    .empty-cta .cta-shine{display:block;padding:13px;min-height:44px;box-sizing:border-box;text-decoration:none;font-size:14px}
     .aiPickCta{display:block;box-sizing:border-box;margin-top:12px;text-align:center}
+
+    /* ══════════════════════════════════════════════════════════════════════
+       T2 · 손가락 타깃 44px (2026-08-15 사장님 "큼직하게")
+       기준: 터치 타깃 최소 44×44px. 60대가 주 사용자라 데스크톱에서도 같이 키운다.
+       ★크기는 여기서만 정한다 — JS가 만드는 버튼에 인라인 style로 크기를 적으면
+         CSS를 이겨 이 규칙이 통째로 죽는다(0순위-B: 같은 판단 두 벌 금지).
+       실측(전): .cand .ghost 23px · #revertBtn 29px · .urlDel 21px ·
+                 .workBtn 35px · .ss-toggle-btn 37px · .ss-acct-link 34px
+       ══════════════════════════════════════════════════════════════════════ */
+    /* 대본 카드 본문 15.5px — 4516줄 템플릿의 인라인 style에 있던 걸 여기로 옮겼다.
+       인라인이면 CSS(넓은 화면 16px 확대)를 이겨버려 확대가 죽는다. theme.css의
+       `.cand{font-size:12px}`를 이겨야 하므로 .main을 붙여 특이도를 올린다. */
+    .main .cand{font-size:15.5px}
+    /* 대본 카드의 ✏고치기 / 🎞따로만들기 — 사장님이 가장 자주 누르는 자리(카드마다 2개) */
+    .cand .ghost{min-height:44px;padding:11px 16px;font-size:13px;font-weight:700;
+      background:var(--inset);border:1px solid var(--line);color:var(--txt);
+      border-radius:9px;cursor:pointer;width:100%;text-align:center;line-height:1.2}
+    .cand .ghost:hover{border-color:var(--accent);color:var(--accent)}
+    /* ↩ 되돌리기 */
+    #revertBtn{min-height:44px;padding:10px 16px}
+    /* ✕ 칸 지우기 — 인라인 style이 3곳(449·2392·3648)에 복붙돼 있어 크기만 CSS로 올린다.
+       인라인은 background/border/color만 정하고 크기는 여기 한 곳이 정한다. */
+    .urlDel{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+    /* 📂 내 작업목록 / ＋ 새 작업 */
+    .workBtn{min-height:44px;padding:12px 16px}
+    /* ← 이전 / 다음 → (42px) + URL추가·✔확정(36px, 인라인 padding:8px 14px).
+       인라인 style은 padding만 정하고 height는 안 정하므로 min-height로 한 번에 올린다. */
+    .btn-prev,.btn-next{min-height:44px}
+    /* 사이드바(sidebar.js 주입) — 테마토글·계정링크. 사이드바 자체 규칙은 sidebar.js가
+       단일 소스지만 높이만 여기서 보정하면 6개 페이지가 어긋난다 → sidebar.js에서 고쳤다.
+       (여기엔 남기지 않는다 — 0순위-B) */
+
+    /* ══════════════════════════════════════════════════════════════════════
+       T1 · 넓은 화면에서 큼직하게 (2026-08-15)
+       ★min-width:1600px 안에서만 올린다 — 노트북(1280·1440)은 지금 그대로라 회귀 0.
+       실측(전, 2000px): 패널 1666px인데 h3 18px·본문 11~12px이 20개 = 폭만 넓고 글자는 작았다.
+       ══════════════════════════════════════════════════════════════════════ */
+    @media (min-width:1600px){
+      body{font-size:16px}
+      .main{padding:28px 40px}
+      .head h2{font-size:26px}
+      .head .desc{font-size:15px}
+      .panel{padding:26px}
+      .panel h3{font-size:23px}
+      .panel .sub{font-size:16px;margin-bottom:18px}
+      /* 11~12px 무리(칩·힌트·라벨)를 12.5~13px로. 9px 1개는 최소 11px */
+      .hint{font-size:13px}
+      .chip{font-size:13px}
+      /* ★theme.css가 뒤에 링크돼(504줄) 같은 특이도면 진다 — .main을 붙여 한 단 올린다.
+         (.cmp-title/.stat-tile span/.stt .k/.cand p/.orb .lb/.cand는 전부 theme.css에도 있다) */
+      .main .cmp-title,.main .orbbar .orb .lb{font-size:12.5px}
+      .main .stat-tile span,.main .stt .k,.main .cand p{font-size:12.5px}
+      .demotag{font-size:11px}
+      .cp-lbl{font-size:11px}
+      /* 읽는 글 = 대본 카드 본문. 여기가 제일 중요하다.
+         ★.cand는 인라인 style에도 font-size:15.5px가 박혀 있다(4516줄 템플릿) — 인라인이
+           CSS를 이기므로 여기서 키워도 안 먹는다. 그래서 인라인 쪽에서 뺐다(아래 주석 참고). */
+      .main .cand{font-size:16px}
+      .tab{font-size:15px;padding:14px 20px}
+      textarea{font-size:15px}
+      button{font-size:15px}
+      /* 진행바 오브도 같이 큼직하게 — 패널이 1650px인데 오브만 36px이면 작아 보인다.
+         ★theme.css가 이 <style> **뒤에** 링크돼 있어(504줄) 같은 특이도면 theme.css가 이긴다.
+           실측: `.orb .ball{width:44px}`은 통째로 무시됐다(36x36 그대로). 그래서 .orbbar를
+           앞에 붙여 특이도를 한 단 올린다(!important 없이 이기는 정공법). */
+      .orbbar .orb .ball{width:44px;height:44px;font-size:15px}
+      .orbbar .orbline{top:24px}
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       T3 · 모바일 (≤768px) — 2026-08-15 신설. 제작소엔 폭 기반 미디어쿼리가 0건이었다.
+       ★사이드바는 여기서 손대지 않는다: sidebar.js가 이미 @media(max-width:760px)로
+         가로띠 규칙을 갖고 있고(6개 페이지 공용 단일 소스), 여기 또 적으면 두 벌이 된다.
+         실측으로 확인함 — 390px에서 .ss-nav 높이 91px·가로스크롤(scrollWidth 1477) 정상 동작.
+         (index.html의 .sidebar/.menu-item 모바일 규칙은 죽은 코드다 — sidebar.js가
+          aside.sidebar를 제거하고 aside.ss-nav를 주입하므로 그 셀렉터엔 아무것도 안 걸린다)
+       ══════════════════════════════════════════════════════════════════════ */
+    @media (max-width:768px){
+      /* M4: 여백을 줄여 좁은 폭을 내용에 준다 */
+      .main{padding:14px 12px}
+      .panel{padding:14px 12px;border-radius:12px}
+      .head h2{font-size:19px}
+      .head .desc{font-size:12.5px}
+      .panel h3{font-size:17px}
+      .panel .sub{font-size:13.5px;margin-bottom:12px}
+
+      /* M2: 8단계 진행바 — 균등분배를 풀고 가로 스크롤 띠로.
+         실측(전): 390px에서 라벨 높이 45px = 3줄로 쪼개짐("영상/대 본출력").
+         flex:1을 풀고 각 오브에 최소폭을 줘 라벨이 한 줄로 서게 한다. 넘치는 만큼
+         .orbbar가 가로로 스크롤된다(단계 이동이 핵심 조작이라 8개 전부 눌러야 한다). */
+      /* ★theme.css가 이 <style> 뒤에 링크돼 있어(504줄) 같은 특이도면 theme.css가 이긴다.
+         실측: `.orbbar{justify-content:flex-start}`·`.orb{flex:0 0 auto}`가 통째로 무시됐다
+         (computed로 space-between·1 1 0% 그대로). theme.css가 안 정한 overflow-x·min-width만
+         살아남아 "우연히" 스크롤이 됐던 것 — 셀렉터를 한 단 올려 확실히 이기게 한다. */
+      .main .orbbar{overflow-x:auto;overflow-y:hidden;justify-content:flex-start;
+        gap:2px;margin:0 0 14px;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;
+        scrollbar-width:thin}
+      .main .orbbar .orb{flex:0 0 auto;min-width:64px;padding:0 2px}
+      .main .orbbar .orb .lb{font-size:11px;white-space:nowrap}
+      /* 진행선은 스크롤 컨테이너 기준 절대배치라 스크롤 시 어긋난다 → 모바일에선 숨기고
+         오브 자체 색(done/cur)으로만 진척을 보인다 */
+      .main .orbbar .orbline,.main .orbbar .orbfill{display:none}
+      .main .orbbar .orb .ball{width:40px;height:40px}
+      /* 옛 .step 진행바(쓰는 화면이 남아 있으면)도 같이 */
+      .step .lbl{font-size:12px}
+
+      /* M3: 빈 미리보기가 세로 520px을 먹어 스크롤이 무의미하게 길었다.
+         inline style="min-height:520px"이라 !important 없이는 못 이긴다(실측). */
+      #mixPreviewPanel{min-height:0!important}
+      /* 세로영상 레일(9:16)은 모바일에선 상한을 풀어 폭을 다 쓴다 — 옆에 설 칼럼이 없다.
+         ★데스크톱의 320/400px 상한은 그대로 둔다(지우면 9:16이 가로로 늘어난다). */
+      .panel > div > div[style*="max-width:320px"],
+      .panel > div > div[style*="max-width:400px"]{max-width:none!important}
+      /* sticky는 모바일에서 화면을 눌러 먹으므로 해제(reference_렌즈모달_sticky함정) */
+      .previewSlot{position:static}
+
+      /* M4: 손가락 타깃 — 좁은 화면에선 더 확실히 */
+      .tab{min-height:44px;flex:1 1 100%;min-width:0}
+      .btn-prev,.btn-next{min-height:46px;padding:12px 16px}
+      .nav{gap:8px;margin:14px 0 28px}
+      .workBtns{width:100%}
+      .workBtn{flex:1 1 0;min-height:46px}
+      /* 대본 카드는 세로로 한 장씩(390px에 3장은 못 넣는다) */
+      .cand{flex:1 1 100%!important}
+      /* 비포/애프터 프레임이 좌우로 흩어지면 둘 다 너무 작아진다 */
+      .cp-frame{width:min(150px,42vw)}
+      .cp-arrow{width:34px;font-size:20px}
+      .cp-scan{width:132px;height:234px}
+      /* 모달은 화면 폭을 다 쓴다 */
+      #worksBg,.gen-bg{padding:10px}
+      .worksBox{padding:14px}
+      textarea{font-size:16px}   /* iOS는 16px 미만이면 포커스 시 화면을 확대한다 */
+      input[type=text]{font-size:16px}
+    }
   </style>
   <link rel="stylesheet" href="theme.css?v=1">
 </head>
@@ -920,9 +1059,9 @@
       <div id="sceneLabBox" style="display:none;margin-top:18px">
         <div style="display:flex;align-items:center;gap:10px;margin:0 0 6px">
           <div style="font-size:13px;font-weight:800">🎬 장면 편집 — 어떤 화면이 언제 나올지 여기서 정하고 미리 봅니다</div>
-          <!-- 넓게 보기(2026-08-15 사장님 "왼쪽 사이드바까지 사용하면 안되나"): 패널은
-               max-width 1120px이고 사이드바가 270px을 먹어 왼쪽이 남는다. 이 버튼은
-               편집 화면만 화면 전체로 띄운다(사이드바·패널 여백까지 전부 사용). -->
+          <!-- 넓게 보기(2026-08-15 사장님 "왼쪽 사이드바까지 사용하면 안되나"): 패널 폭
+               상한은 없앴지만 사이드바가 270px을 계속 먹는다. 이 버튼은 편집 화면만
+               화면 전체로 띄운다(사이드바·패널 여백까지 전부 사용). -->
           <button type="button" id="sceneLabWideBtn" class="btn"
                   style="margin-left:auto;padding:6px 12px;font-size:12px;background:var(--inset);border:1px solid var(--line);color:var(--sub)"
                   onclick="toggleSceneLabWide()">⛶ 넓게 보기</button>
@@ -4509,20 +4648,25 @@ function renderCandidates(list){
             + `✏ 글자는 자유롭게 고치세요. <b>문장 칸을 비우지 마세요</b>(비우면 그 문장은 원래대로 둡니다).<br>`
             + `문장 <b>개수는 화면 배정에 묶여 있어</b> 칸 수를 그대로 둡니다 — 많이 길게 쓰면 자막이 밀릴 수 있어요.</div>`
           : `<p style="white-space:pre-wrap">${esc(lines.join(' ') || c.script || c.hook || '')}</p>`;
-        return `<div class="cand${on?' on':''}" data-cidx="${c.index}" onclick="pickCandidate(${c.index})" style="cursor:pointer;flex:1 1 260px;min-width:0;display:flex;flex-direction:column;font-size:15.5px;line-height:1.75;letter-spacing:-.2px;padding:14px 16px;word-break:keep-all">`
+        // ★font-size를 인라인에서 뺐다(2026-08-15) — 인라인은 CSS를 이겨서 넓은 화면
+        //   확대(@media min-width:1600px의 .main .cand{font-size:16px})가 통째로 죽었다.
+        //   기본 15.5px은 아래 CSS `.cand`가 정한다(같은 판단 두 벌 금지, 0순위-B).
+        return `<div class="cand${on?' on':''}" data-cidx="${c.index}" onclick="pickCandidate(${c.index})" style="cursor:pointer;flex:1 1 260px;min-width:0;display:flex;flex-direction:column;line-height:1.75;letter-spacing:-.2px;padding:14px 16px;word-break:keep-all">`
           + `<div class="cb">${CAND_LBL[i]||('후보 '+(i+1))}${badge}</div>`
           + body
           // ⏱ 예상 영상시간(2026-07-25 사장님): 이 대본을 읽으면 나올 영상 길이 — A/B/C 아래마다.
           + `<div class="candlen" style="margin-top:6px;font-size:11px;color:var(--accent2);font-weight:800">${open?(lenText(lines.join(' ').trim())+' · '):''}⏱ 예상 영상시간 약 ${_candSecs(c)}초</div>`
           + `<div class="canddirty" style="margin-top:3px;font-size:10px;color:var(--accent);font-weight:800">${dirty?'✏ 고쳐 씀 — 이 카드를 눌러야 반영됩니다':''}</div>`
-          + `<div style="margin-top:6px"><button type="button" class="ghost" style="font-size:11px;padding:4px 8px"`
+          // 버튼 크기는 CSS `.cand .ghost`가 정한다(2026-08-15 T2, 44px 터치타깃) — 인라인
+          // style로 적으면 CSS를 이기므로 여기선 클래스만 준다(같은 판단 두 벌 금지, 0순위-B).
+          + `<div style="margin-top:6px"><button type="button" class="ghost"`
           + ` onclick="event.stopPropagation();toggleCandEdit(${c.index})">${open?'✕ 편집 닫기':'✏ 대본 고치기'}</button></div>`
           + `<div style="margin-top:3px;font-size:10px;color:#6b7488">${c.story_person?esc(c.story_person):''}${c.score!=null?(c.story_person?' · ':'')+`점수 ${c.score}`:''}</div>`
           + `<div class="pickhint" style="font-size:11px;color:${on?'var(--accent)':'var(--sub)'};margin-top:6px">${on?'✅ 이 대본으로 만드는 중':'👆 이 대본으로 고르기'}</div>`
           // ★따로 만들기(2026-07-30 사장님 "3개 다 만들고 싶다"). 같은 job에서 후보만 바꿔
           //   렌더하면 출력이 final.mp4 고정경로라 앞 영상을 덮어쓴다 — 그래서 별도 작업으로 뗀다.
           //   onclick 전파를 막아야 카드 클릭(pickCandidate)과 겹치지 않는다.
-          + `<div style="margin-top:6px"><button type="button" class="ghost" style="font-size:11px;padding:4px 8px"`
+          + `<div style="margin-top:6px"><button type="button" class="ghost"`
           + ` onclick="event.stopPropagation();cloneCandidate(${c.index})">🎞 이 대본으로 따로 만들기</button></div>`
           + `</div>`;
       }).join('')
