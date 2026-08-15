@@ -62,6 +62,10 @@ def main():
         sp = existing[0]
         st.set_spine_style(sp["id"], beat_roles=BEAT_ROLES, templates=TEMPLATES,
                            chars_per_30s=300)
+        import json as _json
+        with st._conn() as _c:                      # 카테고리 교정(기존 행도 고친다)
+            _c.execute("UPDATE spine SET fit_categories_json=? WHERE id=?",
+                       (_json.dumps(["홈템"], ensure_ascii=False), sp["id"]))
         print("이미 있어 갱신함: id=%s" % sp["id"])
         return 0
     sid = st.add_spine(
@@ -70,7 +74,10 @@ def main():
         beat_chain=BEAT_CHAIN,
         emotion_arc="당황 → 억울 → 반전 → 만족",
         appeal="가족 갈등이라는 흔한 상황 + 제3자 권위로 신뢰 이전",
-        fit_categories=["살림청소", "생활용품", "주방"],
+        # ★실제 시스템 카테고리 어휘로 맞춘다(2026-08-15 실측: 홈템72·레시피56·가전·뷰티·기타).
+        #   내가 임의로 "살림청소·생활용품·주방"이라고 넣었더니 어느 영상과도 안 맞아
+        #   드롭다운이 아예 안 떴다 — 라벨은 반드시 DB에 실재하는 값이어야 한다.
+        fit_categories=["홈템"],
         status="approved",
     )
     st.set_spine_style(sid, beat_roles=BEAT_ROLES, templates=TEMPLATES, chars_per_30s=300)
