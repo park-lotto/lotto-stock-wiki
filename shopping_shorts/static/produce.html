@@ -859,10 +859,11 @@
           <div id="mixStatus" class="hint"></div>
           <div style="font-size:13px;font-weight:800;margin:8px 0 6px">① 새 대본 고르기</div>
           <div id="mixCandidates"></div>
-          <!-- 쿠팡 연결(2026-07-28) — 접힌 '장면 확인'(#mixReview) 안에 넣으면 묻힌다.
-               #mixPreviewCta와 같은 규약으로 패널의 항상 보이는 자리에 둔다. -->
-          <div id="coupangSlot" style="margin-top:14px"></div>
-          <div style="font-size:13px;font-weight:800;margin:16px 0 6px">② 장면 확인 <span style="font-weight:500;color:var(--sub)">— 아래 넓은 화면에서</span></div>
+          <!-- 쿠팡 연결(2026-07-28) — 2026-08-15 사장님 "쿠팡은 따로 단계로 뺄꺼야 여기있을필요없어".
+               ★슬롯 자체는 남긴다: renderCoupangSlot()이 이 요소에 그리므로 지우면 그 코드가 죽는다.
+               감춰만 두고, 별도 단계를 만들 때 그 자리로 옮긴다(그때 이 줄을 지운다). -->
+          <div id="coupangSlot" style="display:none;margin-top:14px"></div>
+          <div style="font-size:13px;font-weight:800;margin:16px 0 6px">② 장면 확인 <span style="font-weight:500;color:var(--sub)">— 아래 타임프레임에서</span></div>
           <!-- 시험 중인 새 장면 편집 화면으로 가는 링크(2026-08-15 사장님 "주소를 손으로 치지 마라").
                임베드(SCENE_LAB_EMBED)를 켜면 화면이 여기 바로 뜨므로 이 링크는 자동으로 숨는다. -->
           <a id="sceneLabLink" href="#" target="_blank" rel="noopener"
