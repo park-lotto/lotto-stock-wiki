@@ -66,7 +66,12 @@ function updateTrimBar(){
   bar.style.display = 'flex';
   const t = TRIMS[sid];
   if (t){
-    bar.innerHTML = `<span class="hint">✂ ${t[0].toFixed(1)}~${t[1].toFixed(1)}초 뺐음 · 여기 재생은 원본 전체</span>
+    const seg = (DATA.segments || {})[sid] || {};
+    const full = Math.max(0, (seg.end || 0) - (seg.start || 0));
+    const cutLen = t[1] - t[0];
+    bar.innerHTML = `<span class="hint">✂ <b>${t[0].toFixed(1)}~${t[1].toFixed(1)}초</b>를 빼서 이 장면은
+        <b>${full.toFixed(1)}초 → ${Math.max(0, full - cutLen).toFixed(1)}초</b>로 짧아집니다
+        — 영상에서 그 구간이 안 나옵니다(여기 미리보기는 원본 전체를 보여줍니다)</span>
       <button class="act" onclick="event.stopPropagation();unTrim('${sid}')">되돌리기</button>`;
   } else if (trimA != null){
     bar.innerHTML = `<button class="act" onclick="trimMark(event)">✂ 여기까지</button>
@@ -471,7 +476,15 @@ function seqTotal(){ return seqBounds.length ? seqBounds[seqBounds.length - 1][1
 function curT(){
   if (!seq.length) return 0;
   if (seqBeat != null) return audio().currentTime || 0;   // 음성이 시계(자막과 같은 기준)
-  if (seqI >= seq.length) return seqTotal();
+  // ★재생이 끝난 뒤에도 **지금 화면이 서 있는 자리**를 돌려준다(2026-08-15 사장님
+  //   "여기부터 여기까지 자르기를 했는데 뭐가 바뀌는거지?"). 예전엔 끝나면 무조건 총길이를
+  //   돌려줘서, 다 본 뒤 진행바를 옮겨 잘라도 두 지점이 같은 값이 되어 조용히 취소됐다.
+  if (seqI >= seq.length){
+    const last = seq.length - 1, lc = seq[last];
+    if (curVid && lc) return Math.min(seqTotal(),
+      seqBounds[last][0] + Math.max(0, curVid.currentTime - lc.start));
+    return seqTotal();
+  }
   const c = seq[seqI];
   return seqBounds[seqI][0] + Math.max(0, (curVid ? curVid.currentTime : c.start) - c.start);
 }
