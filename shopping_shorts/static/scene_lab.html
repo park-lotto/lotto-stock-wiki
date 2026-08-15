@@ -495,7 +495,13 @@ async function makeTts(){
       done++;
       say(`🔊 음성 만드는 중… ${done}/${need.length}`);
     }
-    say('✅ 음성이 준비됐어요 — 이제 소리와 함께 재생됩니다');
+    // ★자막 시간표를 다시 받아야 한다(2026-08-15 사장님 "자막이 tts랑 싱크 안 맞는데").
+    //   화면을 열 때 받은 자막 시각은 음성이 없어 **글자 수로 추정한 값**이다. 음성이 생기면
+    //   서버가 실제 말 길이로 다시 계산하므로, 새로 받아야 말과 자막이 맞는다.
+    //   담아둔 편성은 저장돼 있어 새로 읽어도 그대로 남는다(saveWork).
+    say('✅ 음성 준비 완료 — 자막 시간을 맞추는 중…');
+    await new Promise(r => setTimeout(r, 800));
+    location.reload();
   }catch(e){
     say('⚠ 음성 만들기 실패: ' + (e.message || e));
   }finally{
