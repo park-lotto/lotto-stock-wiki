@@ -41,7 +41,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
 .gobtn:hover{border-color:var(--mint);color:var(--mint)}
 .gobtn:focus-visible,.qbox input:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
 .px{font-size:15px;color:var(--mut);white-space:nowrap}
-.px b{color:var(--txt)}.px .up{color:var(--grn)}.px .dn{color:var(--red)}
+.px b{color:var(--txt)}
 
 .meta{display:flex;gap:var(--s3);flex-wrap:wrap;align-items:baseline;font-size:13.5px;
   color:var(--dim);padding-bottom:var(--s4);border-bottom:1px solid var(--line)}
@@ -149,7 +149,12 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
 .ftab td{padding:12px 0;border-bottom:1px solid rgba(37,45,58,.5);text-align:right}
 .ftab td:first-child{text-align:left;font-weight:600}
 .ftab tr:last-child td{border-bottom:none}
-.up{color:var(--grn)}.dn{color:var(--red)}
+/* ★가격·수급 숫자는 한국식 — 상승/순매수 빨강, 하락/순매도 파랑.
+   섹터맵(market.html --up1:#c0392b / --dn1:#1a5276)과 같은 관례다.
+   캔들을 한국식으로 그려놓고 숫자만 초록/빨강으로 두면 같은 화면 안에서 모순이 된다.
+   ⚠️ 발언 부호 점(.dot.p/.dot.n)은 별개다 — 그건 '의견'이지 가격이 아니라
+      인사이트2와 같은 초록=강세를 유지한다. */
+.up{color:#e74c3c}.dn{color:#4f96ff}
 .mini{display:inline-flex;gap:2px;align-items:flex-end;height:20px;vertical-align:middle}
 .mini i{width:7px;display:block;border-radius:1px}
 .mini i.p{background:var(--grn)}.mini i.n{background:var(--red)}
@@ -165,6 +170,54 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
   background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:13px 15px}
 .ck .m{color:var(--gold);font-size:14px;line-height:1.5}
 .ck .t{font-size:15.5px;line-height:1.6;max-width:940px}
+
+/* ── 차트 ────────────────────────────────────────────────────
+   사장님: "주가 위치가 제일 중요" → 검색 바로 아래 맨 위에 둔다.
+   레이어는 기본 꺼짐 — 처음엔 깨끗한 차트를 보고 필요한 것만 켠다. */
+.chartwrap{background:var(--bg2);border:1px solid var(--line);border-radius:11px;overflow:hidden}
+.chead{display:flex;align-items:center;gap:var(--s2);padding:12px var(--s3);
+  border-bottom:1px solid var(--line);flex-wrap:wrap}
+.chead .pos{font-size:14.5px;color:var(--mut)}
+.chead .pos b{color:var(--txt)}
+.layers{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.lay{background:transparent;border:1px solid var(--line);color:var(--dim);padding:6px 13px;
+  border-radius:999px;font-size:13.5px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.lay:hover{color:var(--txt);border-color:#3b4658}
+.lay.on{background:rgba(79,209,197,.13);border-color:var(--mint);color:var(--mint)}
+.lay:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
+.cbody{position:relative}
+#cv{display:block;width:100%;height:400px;cursor:crosshair}
+.tip{position:absolute;pointer-events:none;display:none;z-index:5;min-width:230px;max-width:330px;
+  background:#0b0e13;border:1px solid var(--line2);border-radius:9px;padding:11px 13px;
+  box-shadow:0 8px 26px rgba(0,0,0,.55);font-size:13.5px;line-height:1.6}
+.tip.on{display:block}
+.tip .d{font-size:12.5px;color:var(--dim);margin-bottom:5px}
+.tip .r{display:flex;gap:8px;justify-content:space-between}
+.tip .why{margin-top:6px;padding-top:6px;border-top:1px solid var(--line);color:var(--gold);font-size:12.5px}
+.tip .q{margin-top:6px;padding-top:6px;border-top:1px solid var(--line);color:var(--mut);font-size:13px}
+.cnote{padding:10px var(--s3);border-top:1px solid var(--line);font-size:13px;color:var(--dim)}
+
+/* 중요한 날 목록 — 차트를 안 봐도 되게 */
+.kd{margin-top:var(--s3);display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:var(--s2)}
+.kdi{background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:12px 14px;
+  cursor:pointer;font-family:inherit;text-align:left;color:inherit;width:100%}
+.kdi:hover{border-color:var(--mint)}
+.kdi.sel{border-color:var(--gold);background:var(--bg3)}
+.kdi .h{display:flex;gap:9px;align-items:baseline}
+.kdi .dt{font-size:14.5px;font-weight:700}
+.kdi .cg{font-size:15px;font-weight:800}
+.kdi .why{font-size:13px;color:var(--dim);margin-top:4px}
+
+/* 그날 상세 */
+.dayp{margin-top:var(--s3);background:#0b0e13;border:1px solid var(--gold);border-radius:10px;overflow:hidden}
+.dayh{padding:13px 16px;background:linear-gradient(135deg,rgba(229,184,75,.09),transparent);
+  border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px}
+.dayh .t{font-size:17px;font-weight:700}
+.dayh .m{font-size:14px;color:var(--mut)}
+.dayl{max-height:420px;overflow-y:auto}
+.dayl .qi{padding:12px 16px;border-bottom:1px solid rgba(37,45,58,.6);font-size:14.5px;line-height:1.6}
+.dayl .qi:last-child{border-bottom:none}
+.dayl .qm{font-size:12.5px;color:var(--dim);margin-top:5px;display:flex;gap:9px;flex-wrap:wrap;align-items:center}
 
 .msg{padding:60px 20px;text-align:center;color:var(--dim);font-size:15px}
 .warn{margin:var(--s3) 0;padding:12px 15px;border-radius:8px;font-size:14.5px;line-height:1.6;
@@ -222,8 +275,12 @@ async function go(){
     MAT=await r.json();
     if(MAT.error) throw new Error(MAT.error);
     BYID={}; (MAT.atoms||[]).forEach(a=>BYID[a.id]=a);
-    BRIEF=null;
+    BRIEF=null; KD=null; SELDAY=null;
     render();
+    // 차트도 따로 불러온다 — 캔들·수급 조회가 느려도 위 재료는 이미 떠 있다
+    fetch('/api/insights2/keydays?q='+encodeURIComponent(q)+'&days=180')
+      .then(x=>x.json()).then(k=>{KD=k; render();})
+      .catch(e=>{KD={error:String(e&&e.message||e)}; render();});
     // 종합은 시간이 걸리니 재료를 먼저 그리고 뒤에 채운다 — LLM이 죽어도 화면은 산다
     fetch('/api/insights2/brief?q='+encodeURIComponent(q))
       .then(x=>x.json()).then(b=>{BRIEF=b; render();})
@@ -284,6 +341,7 @@ function render(){
     ${MAT.q!==MAT.canonical?`<span class="warn">「${esc(MAT.q)}」→ <b>${esc(MAT.canonical)}</b>로 찾았습니다</span>`:''}
   </div>
   ${MAT.too_short?`<div class="warn"><b>검색어가 짧습니다.</b> 「${esc(MAT.q)}」로 시작하는 다른 종목까지 섞일 수 있습니다.</div>`:''}
+  ${secChart()}
   ${!c.atoms?`<div class="msg">이 종목에 대한 발언이 아직 없습니다.</div>`:`
     ${secSchedule(b)}
     ${secVerdict(b,c)}
@@ -296,9 +354,230 @@ function render(){
     ${b.model?`<br><b>종합</b> · ${esc(b.model)} — 정해진 칸의 값만 뽑고 화면은 코드가 그립니다.`:''}
     ${f.date_from?`<br><b>수급</b> · KIS 투자자별 일별 ${esc(f.date_from)}~${esc(f.date_to)} (${f.days||0}일)`:''}
   </footer>`;
+
+  // innerHTML 이후에 캔버스가 존재하므로 여기서 그린다
+  const dp=document.getElementById('dayp');
+  if(dp) dp.innerHTML=dayPanel();
+  drawChart();
 }
 
+// 창 크기가 바뀌면 캔버스 해상도가 어긋난다 — 다시 그린다
+let _rz;
+window.addEventListener('resize',()=>{clearTimeout(_rz); _rz=setTimeout(drawChart,150);});
+
 function pend(what){return `<div class="msg">${what} — 종합을 기다리는 중…</div>`;}
+
+/* ══ 차트 ═══════════════════════════════════════════════════
+   라이브러리 없이 캔버스로 직접 그린다(이 대시보드는 프레임워크를 안 쓴다).
+   레이어는 기본 꺼짐 — 켜야 마커가 보인다. */
+let KD=null;                                  // keydays API 응답
+let LAY={key:true, atom:false, flow:false};   // 켜진 레이어
+let SELDAY=null;                              // 클릭해 고정한 날짜
+let GEO=null;                                 // 캔들 x좌표 등 히트테스트용
+
+function secChart(){
+  if(!KD) return `<section class="blk"><div class="lab">주가 위치</div>
+    <div class="msg">차트를 불러오는 중…</div></section>`;
+  if(KD.error) return `<section class="blk"><div class="lab">주가 위치</div>
+    <div class="empty"><div class="big">차트를 불러오지 못했습니다</div>
+    <div class="why">${esc(KD.error)}</div></div></section>`;
+
+  const cd=KD.candles||[], cl=cd.map(x=>x.close).filter(Boolean);
+  const lo=Math.min(...cl), hi=Math.max(...cl), now=cl[cl.length-1];
+  const pos=hi>lo?Math.round((now-lo)/(hi-lo)*100):50;
+  const nAtomDays=Object.keys(KD.byDate||{}).length;
+  const nFlowDays=Object.keys(KD.flow||{}).length;
+
+  return `<section class="blk">
+    <div class="lab">주가 위치 <span class="n">— 이미 반영됐나</span></div>
+    <div class="chartwrap">
+      <div class="chead">
+        <span class="pos"><b class="num">${cd.length}일</b> 구간 위치
+          <b class="num">${pos}%</b>
+          <span style="color:var(--dim)">(저 ${lo.toLocaleString()} · 고 ${hi.toLocaleString()})</span></span>
+        <div class="layers">
+          <button class="lay ${LAY.key?'on':''}" onclick="tgl('key')">⚡ 중요한 날 ${(KD.keydays||[]).length}</button>
+          <button class="lay ${LAY.atom?'on':''}" onclick="tgl('atom')">💬 발언 ${nAtomDays}일</button>
+          <button class="lay ${LAY.flow?'on':''}" onclick="tgl('flow')">📈 수급 ${nFlowDays}일</button>
+        </div>
+      </div>
+      <div class="cbody">
+        <canvas id="cv"></canvas>
+        <div class="tip" id="tip"></div>
+      </div>
+      <div class="cnote">${coverNote()}</div>
+    </div>
+    ${LAY.key?`<div class="kd" id="kdlist">${(KD.keydays||[]).slice(0,12).map(kdCard).join('')}</div>`:''}
+    <div id="dayp"></div>
+  </section>`;
+}
+
+function coverNote(){
+  const c=KD.coverage||{};
+  const bits=[];
+  if(c.candles_from) bits.push(`캔들 ${c.candles_from}~`);
+  bits.push(c.atoms_from?`발언 ${c.atoms_from}~`:'발언 없음');
+  bits.push(c.flow_from?`수급 ${c.flow_from}~`:'수급 없음');
+  return `📅 ${bits.join(' · ')} — <b style="color:var(--gold)">그 이전 구간은 자료가 없는 것이지
+    조용했던 것이 아닙니다.</b> 수급은 오늘부터 매일 쌓입니다.`;
+}
+
+function tgl(k){ LAY[k]=!LAY[k]; render(); }
+
+function kdCard(k){
+  const cls=k.chg>0?'up':k.chg<0?'dn':'';
+  return `<button class="kdi ${SELDAY===k.date?'sel':''}" onclick="pickDay('${k.date}')">
+    <div class="h"><span class="dt">${esc(k.date)}</span>
+      <span class="cg ${cls} num">${k.chg>0?'+':''}${k.chg}%</span>
+      <span style="margin-left:auto;color:var(--dim);font-size:13px">점수 ${k.score}</span></div>
+    <div class="why">${esc((k.why||[]).join(' · '))}</div>
+  </button>`;
+}
+
+/* 캔버스 렌더 — render() 이후 DOM이 붙고 나서 부른다 */
+function drawChart(){
+  const cv=document.getElementById('cv');
+  if(!cv||!KD||!KD.candles) return;
+  const cd=KD.candles;
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth, H=cv.clientHeight;
+  cv.width=W*dpr; cv.height=H*dpr;
+  const g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0);
+  g.clearRect(0,0,W,H);
+
+  const padL=8, padR=64, padT=12, volH=64, gap=8;
+  const priceH=H-padT-volH-gap-18;
+  const hi=Math.max(...cd.map(c=>c.high)), lo=Math.min(...cd.map(c=>c.low));
+  const span=(hi-lo)||1;
+  const bw=(W-padL-padR)/cd.length;
+  const X=i=>padL+i*bw+bw/2;
+  const Y=p=>padT+(hi-p)/span*priceH;
+  GEO={X,bw,n:cd.length,padL,padR,W};
+
+  // 가로 눈금 + 오른쪽 가격
+  g.strokeStyle='rgba(37,45,58,.7)'; g.fillStyle='#7d8a9c';
+  g.font='11px system-ui'; g.textAlign='left'; g.lineWidth=1;
+  for(let k=0;k<=4;k++){
+    const p=lo+span*k/4, y=Y(p);
+    g.beginPath(); g.moveTo(padL,y); g.lineTo(W-padR,y); g.stroke();
+    g.fillText(Math.round(p).toLocaleString(), W-padR+6, y+4);
+  }
+
+  // 자료 없는 구간을 어둡게 — "조용했던 시기"로 오해하지 않게
+  const af=(KD.coverage||{}).atoms_from;
+  if(af){
+    const i=cd.findIndex(c=>c.time>=af);
+    if(i>0){ g.fillStyle='rgba(0,0,0,.28)'; g.fillRect(padL,padT,X(i)-padL,priceH+gap+volH); }
+  }
+
+  // 거래량
+  const vmax=Math.max(...cd.map(c=>c.value||0))||1;
+  const vTop=padT+priceH+gap;
+  cd.forEach((c,i)=>{
+    const up=c.close>=c.open;
+    g.fillStyle=up?'rgba(255,107,107,.35)':'rgba(79,150,255,.32)';
+    const h=(c.value||0)/vmax*volH;
+    g.fillRect(X(i)-bw*0.34, vTop+volH-h, Math.max(1,bw*0.68), h);
+  });
+
+  // 캔들 (한국식: 상승 빨강 / 하락 파랑)
+  cd.forEach((c,i)=>{
+    const up=c.close>=c.open;
+    g.strokeStyle=up?'#ff6b6b':'#4f96ff'; g.fillStyle=g.strokeStyle;
+    const x=X(i);
+    g.beginPath(); g.moveTo(x,Y(c.high)); g.lineTo(x,Y(c.low)); g.stroke();
+    const y1=Y(Math.max(c.open,c.close)), y2=Y(Math.min(c.open,c.close));
+    g.fillRect(x-bw*0.32, y1, Math.max(1,bw*0.64), Math.max(1,y2-y1));
+  });
+
+  // 마커 — 켠 레이어만
+  const my=padT+priceH+3;
+  const keyset=new Set((KD.keydays||[]).map(k=>k.date));
+  cd.forEach((c,i)=>{
+    const marks=[];
+    if(LAY.key&&keyset.has(c.time)) marks.push('#e5b84b');
+    if(LAY.atom&&(KD.byDate||{})[c.time]) marks.push('#4fd1c5');
+    if(LAY.flow&&(KD.flow||{})[c.time]) marks.push('#9d8cf0');
+    marks.forEach((col,k)=>{
+      g.fillStyle=col; const x=X(i), y=my+k*7;
+      g.beginPath(); g.moveTo(x,y); g.lineTo(x-4,y+6); g.lineTo(x+4,y+6); g.closePath(); g.fill();
+    });
+  });
+
+  // 고정한 날 세로선
+  if(SELDAY){
+    const i=cd.findIndex(c=>c.time===SELDAY);
+    if(i>=0){ g.strokeStyle='rgba(229,184,75,.75)'; g.setLineDash([4,3]);
+      g.beginPath(); g.moveTo(X(i),padT); g.lineTo(X(i),padT+priceH+gap+volH); g.stroke();
+      g.setLineDash([]); }
+  }
+
+  cv.onmousemove=e=>{
+    const r=cv.getBoundingClientRect();
+    const i=Math.round((e.clientX-r.left-padL-bw/2)/bw);
+    if(i<0||i>=cd.length){ hideTip(); return; }
+    showTip(i, e.clientX-r.left, e.clientY-r.top);
+  };
+  cv.onmouseleave=hideTip;
+  cv.onclick=e=>{
+    const r=cv.getBoundingClientRect();
+    const i=Math.round((e.clientX-r.left-padL-bw/2)/bw);
+    if(i>=0&&i<cd.length) pickDay(cd[i].time);
+  };
+}
+
+function hideTip(){const t=document.getElementById('tip'); if(t) t.classList.remove('on');}
+
+function showTip(i,mx,my){
+  const t=document.getElementById('tip'); if(!t) return;
+  const c=KD.candles[i], prev=KD.candles[i-1];
+  const chg=prev&&prev.close?((c.close/prev.close-1)*100):0;
+  const fl=(KD.flow||{})[c.time];
+  const at=(KD.byDate||{})[c.time]||[];
+  const kd=(KD.keydays||[]).find(k=>k.date===c.time);
+  const lead=at.find(a=>a.sign!==0)||at[0];
+  t.innerHTML=`<div class="d">${esc(c.time)}</div>
+    <div class="r"><span>종가</span><b class="num">${c.close.toLocaleString()}
+      <span class="${chg>0?'up':chg<0?'dn':''}">${chg>0?'+':''}${chg.toFixed(1)}%</span></b></div>
+    ${fl?`<div class="r"><span>외국인</span><b class="num ${fl.frgn>0?'up':'dn'}">${fl.frgn>0?'+':''}${fl.frgn.toLocaleString()}억</b></div>
+        <div class="r"><span>기관</span><b class="num ${fl.orgn>0?'up':'dn'}">${fl.orgn>0?'+':''}${fl.orgn.toLocaleString()}억</b></div>`:''}
+    ${at.length?`<div class="r"><span>발언</span><b>${at.length}건</b></div>`:''}
+    ${kd?`<div class="why">⚡ ${esc(kd.why.join(' · '))}</div>`:''}
+    ${lead?`<div class="q">“${esc(lead.content.slice(0,70))}${lead.content.length>70?'…':''}”</div>`:''}`;
+  t.classList.add('on');
+  const w=t.offsetWidth||260;
+  t.style.left=Math.max(4,Math.min(mx+14, (GEO?GEO.W:600)-w-8))+'px';
+  t.style.top=Math.max(4,my-10)+'px';
+}
+
+function pickDay(d){
+  SELDAY=(SELDAY===d)?null:d;
+  render();
+}
+
+function dayPanel(){
+  if(!SELDAY||!KD) return '';
+  const at=(KD.byDate||{})[SELDAY]||[];
+  const fl=(KD.flow||{})[SELDAY];
+  const kd=(KD.keydays||[]).find(k=>k.date===SELDAY);
+  const c=(KD.candles||[]).find(x=>x.time===SELDAY);
+  return `<div class="dayp">
+    <div class="dayh">
+      <div><div class="t">${esc(SELDAY)}</div>
+        <div class="m">${c?`종가 ${c.close.toLocaleString()}원`:''}
+          ${kd?` · ${esc(kd.why.join(' · '))}`:''}
+          ${fl?` · 외국인 ${fl.frgn>0?'+':''}${fl.frgn.toLocaleString()}억 · 기관 ${fl.orgn>0?'+':''}${fl.orgn.toLocaleString()}억`:''}</div></div>
+      <button class="lay" onclick="pickDay('${SELDAY}')">✕ 닫기</button>
+    </div>
+    <div class="dayl">${at.length?at.map(a=>`
+      <div class="qi">${esc(a.content)}
+        <div class="qm"><span class="dot ${cls(a.sign)}"></span><span>${esc(a.who||a.src)}</span>
+          ${a.relay?`<span class="chip">↻ ${esc(a.relay)}</span>`:''}
+          ${a.tp?`<span class="chip">🎯 ${esc(a.tp)}</span>`:''}</div></div>`).join('')
+      :`<div class="qi" style="color:var(--dim)">이 날짜에는 수집된 발언이 없습니다.
+         ${(KD.coverage||{}).atoms_from&&SELDAY<KD.coverage.atoms_from?'발언 수집 시작(' + esc(KD.coverage.atoms_from) + ') 이전입니다.':''}</div>`}
+    </div></div>`;
+}
 
 /* ① 일정 */
 function secSchedule(b){
