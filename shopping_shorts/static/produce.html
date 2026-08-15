@@ -851,6 +851,19 @@
           <div id="mixPreviewPanel" class="previewSlot" style="display:none">
             <div class="hint" style="margin-bottom:6px">🪞 ③ 미리보기 (9:16)</div>
             <div id="mixPreview"></div>
+            <!-- 장면 편집(타임프레임)에서 누른 칸을 여기서 재생한다(2026-08-15 사장님
+                 "렌더했던 썸네일 자리 거기서 그냥 재생"). 재생 코드는 /scene_play.js 한 벌을
+                 장면 편집 화면과 함께 쓴다 — 복사본을 만들지 않는다(0순위-B). -->
+            <div id="player" style="display:none">
+              <div class="phead" style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:6px">
+                <b>장면 미리보기</b><span class="x" style="cursor:pointer;color:var(--sub)" onclick="stopPlay()">닫기 ✕</span></div>
+              <div id="vidbox" onclick="togglePause(event)" style="position:relative;background:#000;border-radius:10px;overflow:hidden;aspect-ratio:9/16;cursor:pointer"></div>
+              <input type="range" id="seek" min="0" max="1000" value="0" oninput="seekInput(this.value)" style="width:100%;margin-top:8px">
+              <div id="trimbar" style="display:none"></div>
+              <div id="subbox" style="margin-top:6px;font-size:13px;line-height:1.5"></div>
+              <audio id="bgaudio"></audio>
+              <div class="hint" id="pinfo" style="margin-top:4px"></div>
+            </div>
           </div>
           <div id="mixPreviewHint" class="hint" style="margin-top:6px"></div>
         </div>
@@ -4180,6 +4193,21 @@ document.addEventListener('keydown', e=>{
     if(box && box.getAttribute('data-wide')==='1') toggleSceneLabWide();
   }
 });
+// 장면 편집(iframe) → 제작소: "이 칸 재생해줘". 데이터도 같이 받아 계산을 한 벌로 맞춘다.
+window.addEventListener('message', ev => {
+  if (ev.origin !== location.origin) return;              // 남의 페이지 메시지는 무시
+  const d = ev.data; if (!d || d.type !== 'sceneLab:play') return;
+  try{
+    DATA = d.DATA; lists = d.lists; onePerSeg = !!d.onePerSeg;
+    Object.keys(STRETCH).forEach(k => delete STRETCH[k]);
+    Object.assign(STRETCH, d.STRETCH || {});
+    Object.keys(TRIMS).forEach(k => delete TRIMS[k]);
+    Object.assign(TRIMS, d.TRIMS || {});
+    SL.server = true; SL.job = (typeof MIX_JOB !== 'undefined' && MIX_JOB) || SL.job;
+    const pv = document.getElementById('mixPreview'); if (pv) pv.style.display = 'none';
+    playBeat(d.beat);
+  }catch(e){ console.warn('장면 미리보기 실패', e); }
+});
 function _syncSceneLab(on){
   const box=document.getElementById('sceneLabBox'), f=document.getElementById('sceneLabFrame');
   const link=document.getElementById('sceneLabLink');
@@ -6299,6 +6327,7 @@ window.IS_ADMIN=false;
 fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{ if(d && d.customer_id===0){ window.IS_ADMIN=true;
   const b=document.getElementById('openVoiceTune'); if(b) b.style.display=''; } }).catch(()=>{});
 </script>
+<script src="/scene_play.js"></script>
 <script src="/loader.js"></script>
 <script src="/sidebar.js?v=2"></script>
 </body>
