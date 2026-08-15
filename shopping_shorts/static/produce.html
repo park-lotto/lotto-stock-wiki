@@ -368,11 +368,19 @@
     /* ── 🔎 소스 분석 카드(2026-08-16, 9단계 개편의 1단계 본체) ──────────────
        담은 영상마다 "무엇을 보여주는 영상인가"를 카드로 편다. 넓은 화면에서는 2~3열로
        자동으로 늘어난다(가로폭 상한을 없앤 뒤라 본문을 넓게 쓸 수 있다). */
-    .srcGrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+    /* ★정렬 원칙(2026-08-16 사장님): 모서리가 한 줄로 떨어질 것 · 빈 여백 덩어리 없을 것 ·
+       상자 밖으로 튀어나오는 것 0. 간격은 4/8px 배수로만 쓴다.
+       grid-auto-rows:1fr = 같은 줄 카드의 **높이를 강제로 맞춘다**(내용이 짧아도 늘어난다).
+       안 하면 카드마다 제 높이라 아래가 계단처럼 어긋난다(실측: 282/282/92/92). */
+    .srcGrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(304px,1fr));
+      grid-auto-rows:1fr;align-items:stretch}
     .srcCard{background:var(--inset);border:1px solid var(--line);border-radius:12px;
-      padding:13px 14px;transition:border-color .15s}
+      padding:12px 16px;transition:border-color .15s;
+      display:flex;flex-direction:column;min-width:0;overflow:hidden}
     .srcCard:hover{border-color:var(--accent)}
     .srcCard.pend{opacity:.72;border-style:dashed}
+    .srcPend{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      text-align:center;font-size:12.5px;color:var(--sub);line-height:1.7;gap:4px}
     .srcHead{display:flex;align-items:center;gap:8px;margin-bottom:9px}
     .srcNo{flex:0 0 auto;font-size:11px;font-weight:900;color:var(--accent);
       background:rgba(62,224,191,.12);border:1px solid rgba(62,224,191,.4);
@@ -384,13 +392,21 @@
     .srcV{flex:1;min-width:0;word-break:keep-all}
     .srcV.strong{font-weight:800;color:var(--accent2)}
     .srcSum{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);
-      font-size:12.5px;line-height:1.65;color:var(--sub);word-break:keep-all}
-    .srcScenes{margin-top:9px}
+      font-size:12.5px;line-height:1.6;color:var(--sub);word-break:keep-all;
+      /* 요약 길이가 카드마다 달라 바닥선을 흔든다 → 4줄에서 자른다(전문은 title로) */
+      display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+    /* 장면 목록을 남는 공간에 붙여 바닥까지 채운다 — 카드 아래가 휑하지 않게.
+       ★min-height:0이 없으면 flex 자식이 안 줄어들어 목록이 카드 밖으로 흘러나간다
+       (실측: UL이 아래로 146px 삐져나왔다). overflow는 목록 안에서만 일어나야 한다. */
+    .srcScenes{margin-top:auto;padding-top:8px;min-height:0;display:flex;flex-direction:column}
     .srcScenes>summary{cursor:pointer;font-size:12px;color:var(--sub);
       padding:5px 0;list-style:none}
     .srcScenes>summary::-webkit-details-marker{display:none}
     .srcScenes>summary:hover{color:var(--accent)}
-    .srcScenes ul{margin:6px 0 0;padding:0;list-style:none;max-height:230px;overflow:auto}
+    /* ★접혔을 때 목록이 카드 밖으로 새는 것을 막는다(실측: UL이 아래로 146px 삐져나왔다).
+       details가 닫혀도 flex 자식인 ul이 자리를 차지했다 — 닫힘 상태를 명시적으로 감춘다. */
+    .srcScenes:not([open]) ul{display:none}
+    .srcScenes ul{margin:6px 0 0;padding:0;list-style:none;overflow:auto;min-height:0;flex:1}
     .srcScenes li{display:flex;align-items:center;gap:7px;padding:4px 0;
       font-size:12px;border-bottom:1px solid rgba(255,255,255,.04)}
     .srcT{flex:0 0 76px;color:var(--dim);font-variant-numeric:tabular-nums;font-size:11px}
@@ -3484,8 +3500,10 @@ function _srcCard(it, i){
   const head = `<div class="srcHead"><span class="srcNo">소스 ${i+1}</span>
       <span class="srcName" title="${name}">${name}</span></div>`;
   if(!d){
+    // 분석 전 카드도 같은 높이를 갖는다(grid-auto-rows:1fr). 안내를 가운데에 둬 빈 칸이
+    // 위아래로 갈리지 않게 한다 — 사장님 정렬 기준 "빈 여백 덩어리 없을 것".
     return `<div class="srcCard pend">${head}
-      <div class="hint" style="margin-top:8px">아직 분석 전이에요 — ⚡ 대본 만들기를 누르면 함께 분석됩니다.</div>
+      <div class="srcPend">아직 분석 전이에요<br><span class="hint">⚡ 대본 만들기를 누르면 함께 분석됩니다</span></div>
     </div>`;
   }
   const b = d.brief || {};
@@ -3503,8 +3521,8 @@ function _srcCard(it, i){
     ${row('제품', b.product, 'strong')}
     ${row('역할', b.role)}
     ${row('핵심', b.core)}
-    ${b.summary ? `<div class="srcSum">${esc(b.summary)}</div>` : ''}
-    ${segs.length ? `<details class="srcScenes"><summary>장면 ${segs.length}개 ▾</summary>
+    ${b.summary ? `<div class="srcSum" title="${esc(b.summary)}">${esc(b.summary)}</div>` : ''}
+    ${segs.length ? `<details class="srcScenes" open><summary>장면 ${segs.length}개 ▾</summary>
        <ul>${scenes}</ul></details>` : ''}
   </div>`;
 }

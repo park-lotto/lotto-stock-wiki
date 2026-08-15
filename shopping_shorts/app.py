@@ -3345,6 +3345,9 @@ def api_mix_scene_lab_data(job_id: str):
         "segments": {sid: {
             "video_id": v["video_id"], "start": v["start"], "end": v["end"],
             "scene_desc": v.get("scene_desc", ""), "text": v.get("text", ""),
+            # 짧은 이름(2026-08-16) — 카드 밑 긴 묘사는 2줄에서 잘려 안 읽힌다.
+            # 옛 추출본엔 없어 ""(화면이 알아서 이 줄을 안 그린다).
+            "label": (v.get("label") or ""),
             "shot_role": v.get("shot_role") or "기타", "is_key": bool(v.get("is_key")),
             "action": v.get("action") or "", "change": v.get("change") or "",
             "benefits": v.get("product_benefits") or [],
