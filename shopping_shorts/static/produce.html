@@ -852,7 +852,7 @@
             <div class="hint" style="margin-bottom:6px">🪞 ③ 미리보기 (9:16)</div>
             <div id="mixPreview"></div>
           </div>
-          <div id="mixPreviewHint" class="hint" style="margin-top:6px">②까지 확인하고 아래 <b>🎬 대본 × 영상 믹스 미리보기</b>를 누르면 여기서 재생됩니다.</div>
+          <div id="mixPreviewHint" class="hint" style="margin-top:6px"></div>
         </div>
         <!-- ▶ 우측: ①②③ 순서대로 위→아래 -->
         <div style="flex:1 1 300px;min-width:280px">
@@ -2664,7 +2664,7 @@ function _renderPreviewVideo(job){
   const pvPanel=document.getElementById('mixPreviewPanel'); if(pvPanel) pvPanel.style.display='';
   box.innerHTML = '<video controls muted playsinline autoplay style="display:block;width:100%;border-radius:12px;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.4)"'
     + ' src="/api/produce/mix/preview/'+encodeURIComponent(job)+'?t='+Date.now()+'"></video>'
-    + '<div class="hint" style="margin-top:6px">원본 자막이 남아 있는 건 정상입니다 — 다음 단계에서 지웁니다.</div>';
+;   // 안내 문구 없음(2026-08-15 사장님 "랜더 아래쪽 문구들은 다 지워")
   const btn = document.getElementById('btnPreview'); if(btn) btn.disabled = false;
 }
 // 편집안(#mixReview) 렌더 본체 — loadMixReview(새 매칭)와 _restoreMixContext(복원)가 공유한다.
@@ -4294,10 +4294,10 @@ function _candLabelOf(list, idx){
 function _syncPreviewCandHint(label, phase){
   const h = document.getElementById('mixPreviewHint');
   if(!h) return;
-  const base = '②까지 확인하고 아래 <b>🎬 대본 × 영상 믹스 미리보기</b>를 누르면 여기서 재생됩니다.';
+  const base = '';   // 2026-08-15 사장님: 미리보기 아래 안내 문구 전부 제거
   const tag = !label ? '' : (phase==='switching'
     ? `<div style="color:var(--accent);font-weight:800;margin-bottom:6px">🔄 <b>${esc(label)}</b> 대본으로 바꾸는 중…</div>`
-    : `<div style="color:var(--accent);font-weight:800;margin-bottom:6px">🎬 <b>${esc(label)}</b> 대본으로 미리보기를 만들어요</div>`);
+    : '');   // '○안 대본으로 미리보기를 만들어요'도 제거(대본 카드에 이미 '선택됨'이 있다)
   h.innerHTML = tag + base;
 }
 // 추출이 빈약한 소스를 후보 카드 위에 알린다(2026-07-31). 서버가 커버리지를 재서
