@@ -4288,6 +4288,10 @@ function _sceneLabPrep(lab){
   const pv = document.getElementById('mixPreview');
   if (pv) pv.style.display = 'none';
 }
+// 전체 재생 — 1번 칸부터 끝까지 이어서(소스를 바꾼 뒤 전체를 확인할 때)
+function sceneLabPlayAll(lab){
+  try{ _sceneLabPrep(lab); playAll(); }catch(e){ console.warn('전체 재생 실패', e); }
+}
 // 장면 하나 미리보기(왼쪽 소스 조각 클릭)
 function sceneLabPlaySeg(sid, lab){
   try{ _sceneLabPrep(lab); playSeg(sid); }catch(e){ console.warn('장면 미리보기 실패', e); }

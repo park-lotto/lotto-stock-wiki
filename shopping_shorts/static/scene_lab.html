@@ -228,7 +228,11 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
   <div class="tbhead">
     <b>내 영상 전체</b>
     <span class="tbtot" id="tbtot"></span>
-    <button type="button" id="ttsBtn" class="act" style="margin-left:12px;padding:3px 10px;font-size:11.5px"
+    <button type="button" id="pball2" class="act play" style="margin-left:12px;padding:3px 12px;font-size:12px"
+            onclick="playAllHere(event)" title="1번 칸부터 끝까지 이어서 봅니다">▶️ 전체 재생</button>
+    <label style="cursor:pointer;font-size:11.5px;color:var(--dim)" title="장면마다 컷 하나씩, 멘트 시간을 길이 비례로 나눕니다">
+      <input type="checkbox" onchange="toggleOne(this.checked)"> 1장=1컷</label>
+    <button type="button" id="ttsBtn" class="act" style="padding:3px 10px;font-size:11.5px"
             onclick="makeTts()" title="음성이 없는 칸의 음성을 만듭니다(1~2분)">🔊 음성 만들기</button>
     <span class="tbhint" id="tbhint">조각을 누르면 그 칸이 재생됩니다 · 주황 = 재료가 모자라 늘어난 컷</span>
   </div>
@@ -461,6 +465,19 @@ function playSegHere(sid){
     }
   }catch(e){ console.warn('바깥 재생 실패 — 이 화면에서 재생합니다', e); }
   playSeg(sid);
+}
+
+function playAllHere(ev){
+  if (ev) ev.stopPropagation();
+  try{
+    const up = window.parent;
+    if (up && up !== window && typeof up.sceneLabPlayAll === 'function'){
+      up.sceneLabPlayAll({DATA, lists, STRETCH, TRIMS, onePerSeg});
+      playKey = 'all'; renderBand();
+      return;
+    }
+  }catch(e){ console.warn('바깥 재생 실패 — 이 화면에서 재생합니다', e); }
+  playAll(ev);
 }
 
 function playBeatHere(i, ev){
