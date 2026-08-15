@@ -9142,13 +9142,23 @@ def _pwa_manifest():
     return FileResponse(_STATIC / "manifest.webmanifest",
                         media_type="application/manifest+json")
 
+# 롱폼→쇼츠 API(2026-08-15). 라우트 정의는 longform_api.py에 모아두고 여기서 붙이기만 한다
+# — app.py가 이미 9천 줄이라 새 기능을 여기에 또 쌓으면 찾기 어려워진다.
+# 게이트는 미들웨어(_verify_session)가 이미 /api/* 전체를 막으므로 여기선 통과 함수만 넘긴다.
+try:
+    from shopping_shorts import longform_api as _lf_api
+    _lf_api.register(app, lambda _req: None)
+except Exception:                                  # noqa: BLE001 — 이 기능이 앱 기동을 막지 않는다
+    traceback.print_exc()
+
+
 # 클린 URL — /library, /mix 등 확장자(.html) 없이 접근. (index는 루트 '/'로 자동)
 # 기존 /xxx.html 경로도 아래 StaticFiles 마운트로 계속 동작(백워드 호환).
 # no-cache: UI 배포 후 브라우저가 옛 HTML을 캐시로 재사용해 "고쳤는데 안 바뀜"이
 # 반복됨(2026-07-14 역할배정·사이드바 등 실사고) → 매 요청 서버 재검증 강제.
 _NOCACHE = {"Cache-Control": "no-cache, must-revalidate"}
 for _pg in ("discover", "find", "library", "mix", "outreach", "produce", "collection",
-            "scene_library", "pattern_bank"):
+            "scene_library", "pattern_bank", "longform"):
     app.add_api_route(
         f"/{_pg}",
         (lambda n=_pg: FileResponse(_STATIC / f"{n}.html", media_type="text/html",
