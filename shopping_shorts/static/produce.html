@@ -565,7 +565,7 @@
          예전엔 영상마다 📝뽑기/🎬담기를 따로 눌러야 했다 — 이제 카드를 켜두기만 하면(자동담김)
          AI가 그중 완성도 1위 대본을 스스로 골라 보여준다(AI PICK). 담긴 게 없으면 빈 상태. -->
     <section class="panel" data-step="0">
-      <h3>1 · 영상/대본출력</h3>
+      <h3 data-steptitle="source">1 · 영상/대본출력</h3>
       <div class="sub">쓸 영상만 켜두세요(✓) — AI가 그중 완성도 1위 대본을 골라 보여줍니다.</div>
       <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
         <!-- ◀ 왼쪽: 미리보기(장면 매칭 후) + 재료 그리드 -->
@@ -613,7 +613,7 @@
       </div>
     </section>
     <section class="panel" data-step="1">
-      <h3>3 · 고품질 자막제거</h3>
+      <h3 data-steptitle="subtitle">3 · 고품질 자막제거</h3>
       <div class="hero rise">
         <div class="hero-in">
           <label class="hbar">
@@ -649,7 +649,7 @@
       </div>
     </section>
     <section class="panel" data-step="2">
-      <h3>4 · TTS음성</h3>
+      <h3 data-steptitle="tts">4 · TTS음성</h3>
       <div class="sub">성우 프리셋을 고르면 톤·속도·감도가 한 번에 세팅됩니다. 들어보고 다음으로.</div>
       <button id="openVoiceTune" style="display:none" class="btn-prev" onclick="window.open('/voice_tune','_blank')">🩺 발음교정 작업대 열기</button>
       <label style="display:flex;align-items:center;gap:8px;margin:8px 0;cursor:pointer">
@@ -708,7 +708,7 @@
       <button class="btn-next" style="margin-top:12px;padding:8px 16px" onclick="vpGateNext()">다음 단계 (꾸미기) →</button>
     </section>
     <section class="panel" data-step="3">
-      <h3>5 · 자막꾸미기</h3>
+      <h3 data-steptitle="deco">5 · 자막꾸미기</h3>
       <div class="sub">아래 <b>완성 스타일</b>을 고르면 바로 완성돼요. 실제 장면 위에서 미리보고, 더 손보고 싶으면 <b>직접 다듬기</b>를 펼치세요.</div>
       <!-- 🪞 피팅룸: 좌(큰 미러) + 우(문구·스타일카드·강조·고급) -->
       <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-top:12px">
@@ -920,7 +920,7 @@
       </div>
     </section>
     <section class="panel" data-step="4">
-      <h3>6 · 썸네일</h3>
+      <h3 data-steptitle="thumb">6 · 썸네일</h3>
       <div class="sub">영상에서 프레임을 고르고 텍스트를 올려 썸네일을 만드세요.</div>
 
       <div style="font-size:12px;color:var(--sub);margin:10px 0 6px">배경 프레임 선택 <span id="thumbFrameCount"></span></div>
@@ -958,7 +958,7 @@
       <div id="thumbGallery" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div>
     </section>
     <section class="panel" data-step="5">
-      <h3>7 · SEO해시테크</h3>
+      <h3 data-steptitle="seo">7 · SEO해시테크</h3>
       <div class="sub">제목·설명·태그를 만들고, 키워드를 유튜브에서 실제로 재서 근거를 붙입니다.</div>
       <div class="seoBar">
         <button class="btn primary" id="seoGenAll" onclick="seoGenerate()">AI로 전체 생성</button>
@@ -969,7 +969,7 @@
       <div id="seoBody" class="seoBody"></div>
     </section>
     <section class="panel" data-step="6">
-      <h3>8 · 최종렌더</h3>
+      <h3 data-steptitle="final">8 · 최종렌더</h3>
       <div class="sub">확정 대본·장면매칭·음성·자막제거 설정을 최종 영상으로 렌더합니다.</div>
       <div id="finalSummary" class="hint" style="margin-bottom:10px"></div>
       <!-- 인포크링크 등록 대기(2026-07-28) — 쿠팡 링크는 영상에 안 들어간다. 완성 후
@@ -1001,7 +1001,7 @@
          위→아래 한 방향: ① 새 대본 고르기(가로카드, 추천이 이미 선택돼 있음) ② 장면 확인(문장↔화면,
          상세 편집은 접힘) ③ 좌측 레일 미리보기 → 확인되면 "다음(음성)". -->
     <section class="panel" data-step="7">
-      <h3>2 · 영상대본MIX</h3>
+      <h3 data-steptitle="mix">2 · 영상대본MIX</h3>
       <div class="sub">대본 후보를 고르고, 문장마다 어떤 화면이 붙는지 확인하세요. 확인되면 왼쪽에서 미리보기가 재생됩니다.</div>
       <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
         <!-- ◀ 좌측 레일: ③ 미리보기(9:16) — 편집안이 뜨면(loadMixReview) 여기가 프리뷰 자리가 된다.
@@ -1073,6 +1073,21 @@
     </section>
     <!-- ── 화면 붙이기 끝(패널) ── -->
 
+    <!-- ── 대본 패널(신설 2026-08-16, 사장님 "단계를 3개로 늘려서 대본쪽도 강화") ──
+         화면 2번째 = 이 패널. 물리 번호는 8을 새로 받았다 — ★기존 패널의 data-step은
+         절대 다시 매기지 않는다(cur===n 분기가 파일 곳곳에 박혀 있다. 화면 순서는
+         ORB_TO_PANEL이 정하므로 물리 번호를 건드릴 이유가 없다. 2026-07-23 매칭 패널을
+         7로 붙인 것과 같은 방식).
+         ★안쪽 내용은 **대본 세션이 채운다** — 이 세션은 골격만 만든다(동시 편집 충돌 방지). -->
+    <section class="panel" data-step="8">
+      <h3 data-steptitle="script">2 · 대본</h3>
+      <div class="sub">쓸 대본을 고르고 다듬습니다.</div>
+      <div id="scriptStagePlaceholder" class="hint" style="margin-top:14px">
+        여기에 대본 고르기·고치기가 들어옵니다(작업 중).
+      </div>
+    </section>
+    <!-- ── 대본 패널 끝 ── -->
+
     <div class="nav">
       <button class="btn-prev" id="btnPrev" onclick="go(-1)">← 이전</button>
       <button class="btn-next" id="btnNext" onclick="go(1)">다음 →</button>
@@ -1125,10 +1140,32 @@
 // 패널 인덱스는 물리적으로 안 바뀐다 — jump/go가 매핑을 경유한다. 지금은 오브 8개=물리 패널 8개로
 // 축이 같아졌지만(PANEL_COUNT===STEP_LABELS.length), 되돌리기/작업복원은 계속 PANEL_COUNT를
 // 쓴다 — "패널" 인덱스를 바운드하는 게 맞는 축이라는 원칙은 라벨 개수가 우연히 같아져도 안 바뀐다.
-const STEP_LABELS = ["영상/대본출력","영상대본MIX","고품질 자막제거","TTS음성","자막꾸미기","썸네일","SEO해시테크","최종렌더"];
-// 표시 오브 → 실제 패널 data-step (매칭=신규 7이 자막제거=1보다 앞에 옴)
-const ORB_TO_PANEL = [0, 7, 1, 2, 3, 4, 5, 6];
+// ★9단계 개편(2026-08-16, 사장님 "단계를 3개로 늘려서 대본쪽도 강화"):
+//   1단계에 '영상 고르기'와 'AI 대본 선택'이 뭉쳐 있어 대본이 제 자리를 못 가졌다.
+//   대본(신규 패널 8)을 2번째로 세우고, 장면 편집(패널 7)을 3번째로 민다.
+//   ★물리 패널 번호(data-step)는 그대로 두고 이 매핑만 바꾼다 — cur===n 분기가
+//   파일 곳곳에 박혀 있어 번호를 다시 매기면 전부 어긋난다.
+const STEP_LABELS = ["영상추출/분석","대본","영상대본MIX","고품질 자막제거","TTS음성","자막꾸미기","썸네일","SEO해시테크","최종렌더"];
+// 표시 오브 → 실제 패널 data-step (대본=신규 8이 2번째, 매칭=7이 3번째)
+const ORB_TO_PANEL = [0, 8, 7, 1, 2, 3, 4, 5, 6];
 const PANEL_TO_ORB = Object.fromEntries(ORB_TO_PANEL.map((p,o)=>[p,o]));
+// ★안내 문구가 단계 번호를 직접 쓰지 않게 한다(2026-08-16). 예전엔 "1단계에서 영상 매칭을
+//   먼저 하세요" 같은 문장이 16곳에 손으로 박혀 있었는데, 9단계 개편으로 매칭이 3단계가
+//   되면서 **전부 거짓말이 됐다**. 다음에 순서가 또 바뀌어도 여기만 맞으면 문구가 따라온다
+//   (CLAUDE.md 0순위-B: 같은 판단을 두 곳에 적지 마라).
+//   쓰는 법: stepName('mix') → "3단계(영상대본MIX)"
+const PANEL_BY_KEY = {source:0, script:8, mix:7, subtitle:1, tts:2, deco:3, thumb:4, seo:5, final:6};
+function stepOrb(key){ return PANEL_TO_ORB[PANEL_BY_KEY[key]] ?? 0; }
+function stepName(key){ const o = stepOrb(key); return `${o+1}단계(${STEP_LABELS[o]})`; }
+function stepGo(key){ jump(stepOrb(key)); }
+// 패널 제목(<h3 data-steptitle="mix">)의 번호·이름도 STEP_LABELS에서 채운다. 손으로 적으면
+// 순서가 바뀔 때마다 어긋난다 — 실제로 9단계 개편 직후 "오브 4인데 제목은 3 · 자막제거"였다.
+function syncPanelTitles(){
+  document.querySelectorAll('h3[data-steptitle]').forEach(h => {
+    const o = stepOrb(h.dataset.steptitle);
+    h.textContent = `${o+1} · ${STEP_LABELS[o]}`;
+  });
+}
 function orbIndex(){ return PANEL_TO_ORB[cur] ?? 0; }
 // 물리 패널 수(=<section class="panel">의 실제 개수, 지금 8). cur는 "패널" 인덱스이므로
 // 되돌리기(revertWork)·작업복원(_restoreWork)의 범위 체크는 반드시 이걸 써야 한다 —
@@ -1141,6 +1178,7 @@ let cur = 0;
 // 라벨을 항상 같이 그린다(예전엔 title=hover 툴팁뿐이라 라벨이 안 보였다). 진행선(.orbfill)
 // 폭은 현재 오브 인덱스/전체 오브 수로 계산(마지막 오브에서 100%).
 function renderSteps(){
+  syncPanelTitles();          // 패널 제목의 번호·이름을 STEP_LABELS에 맞춘다(한 벌 원칙)
   const el = document.getElementById('steps');
   if(!el) return;
   const oi = orbIndex();
@@ -1181,7 +1219,8 @@ function initMatch(){
     const rev = document.getElementById('mixReview'); if(rev) rev.innerHTML = '';
     try{ _syncSceneLab(false); }catch(_){ }   // 잡이 없으면 실험실도 없다
     const st = document.getElementById('mixStatus');
-    if(st) st.textContent = '아직 매칭을 시작하지 않았어요 — 1단계에서 ⚡ 이 메인 영상으로 대본 3안 만들기를 눌러주세요.';
+    if(st) st.textContent = '아직 매칭을 시작하지 않았어요 — ' + stepName('source')
+      + '에서 ⚡ 이 메인 영상으로 대본 3안 만들기를 눌러주세요.';
     return;
   }
   // 매칭 진행/완료 중 — 이미 그려진 게 있으면(폴링·자동전환이 이미 채웠다) 손대지 않는다.
@@ -1235,7 +1274,7 @@ async function initSeo(){
 }
 
 async function seoGenerate(only){
-  if(!MIX_JOB){ alert('1단계에서 대본을 먼저 확정하세요'); return; }
+  if(!MIX_JOB){ alert(stepName('script')+'에서 대본을 먼저 확정하세요'); return; }
   const msg = document.getElementById('seoMsg');
   const btn = document.getElementById('seoGenAll');
   msg.textContent = only ? '다시 쓰는 중…' : '생성 중… (키워드 실측까지 20초쯤 걸립니다)';
@@ -1398,11 +1437,11 @@ function seoTagDel(i){
 async function seoAppendCoupang(){
   const msg=document.getElementById('seoCoupangMsg');
   const set=(t,color)=>{ if(msg){ msg.textContent=t; msg.style.color=color||''; } };
-  if(!MIX_JOB){ set('2단계 영상 매칭을 먼저 하세요','var(--fire)'); return; }
+  if(!MIX_JOB){ set(stepName('mix')+' 영상 매칭을 먼저 하세요','var(--fire)'); return; }
   let d;
   try{ d=await (await fetch('/api/mix/product/'+encodeURIComponent(MIX_JOB))).json(); }
   catch(e){ set('네트워크 오류','var(--fire)'); return; }
-  if(!d || !d.ok || !d.product){ set('연결할 쿠팡 상품이 없습니다 — 2단계 편집안에서 지정하세요','var(--fire)'); return; }
+  if(!d || !d.ok || !d.product){ set('연결할 쿠팡 상품이 없습니다 — '+stepName('mix')+' 편집안에서 지정하세요','var(--fire)'); return; }
   const block=d.description_block||'';
   if(!block){ set('링크가 비어 있습니다','var(--fire)'); return; }
   const cur=(SEO && SEO.description) || '';
@@ -1524,7 +1563,7 @@ function toggleFxAdv(){
   document.getElementById('fxWizard').style.display = on ? 'block' : 'none';
 }
 async function fxSuggest(){
-  if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); return; }
+  if(!MIX_JOB){ alert(stepName('mix')+'에서 영상 매칭을 먼저 실행하세요'); return; }
   const msg=document.getElementById('fxSuggestMsg'); msg.textContent='추천 중…';
   try{
     const r=await fetch('/api/produce/fx/suggest',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -1985,7 +2024,7 @@ function bindExtraDrag(){
 // 🎵 BGM 업로드(즉시 job work dir에 저장) → 렌더 시 나레이션 위에 믹스
 async function uploadBgm(input){
   const f=input.files&&input.files[0]; if(!f) return;
-  if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); input.value=''; return; }
+  if(!MIX_JOB){ alert(stepName('mix')+'에서 영상 매칭을 먼저 실행하세요'); input.value=''; return; }
   const st=document.getElementById('bgmStatus'); st.textContent='업로드 중…';
   const fd=new FormData(); fd.append('job_id',MIX_JOB); fd.append('file',f);
   try{ const r=await (await fetch('/api/produce/mix/bgm',{method:'POST',body:fd})).json();
@@ -2000,7 +2039,7 @@ function toggleSceneBg(silent){
   const on=document.getElementById('sceneBg').checked;
   const img=document.getElementById('hcPreviewBg'), pv=document.getElementById('hcPreview');
   if(!on){ img.style.display='none'; pv.style.background='#ffffff'; return; }
-  if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); document.getElementById('sceneBg').checked=false; return; }
+  if(!MIX_JOB){ alert(stepName('mix')+'에서 영상 매칭을 먼저 실행하세요'); document.getElementById('sceneBg').checked=false; return; }
   img.onload=()=>{ img.style.display='block'; };
   img.onerror=()=>{ img.style.display='none'; document.getElementById('sceneBg').checked=false; if(!silent) alert('실장면 배경을 불러오지 못했습니다(매칭 완료 후 가능)'); };
   img.src='/api/produce/mix/poster/'+MIX_JOB+'?t='+Date.now();
@@ -2010,7 +2049,7 @@ function clearBgm(){ if(STATE.deco) STATE.deco.bgm=null; const el=document.getEl
 let OV_OBJ_URL=null;
 async function uploadOverlay(input){
   const f=input.files&&input.files[0]; if(!f) return;
-  if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); input.value=''; return; }
+  if(!MIX_JOB){ alert(stepName('mix')+'에서 영상 매칭을 먼저 실행하세요'); input.value=''; return; }
   const st=document.getElementById('ovStatus'); st.textContent='업로드 중…';
   const fd=new FormData(); fd.append('job_id',MIX_JOB); fd.append('file',f);
   try{ const r=await (await fetch('/api/produce/mix/overlay',{method:'POST',body:fd})).json();
@@ -4250,7 +4289,7 @@ async function setSmartMix(on){
 loadSmartMix();
 
 async function startProduceMix(){
-  if(!STATE.script){ alert('1단계에서 대본을 먼저 확정하세요'); return; }
+  if(!STATE.script){ alert(stepName('script')+'에서 대본을 먼저 확정하세요'); return; }
   // ★옛 대본 캐리오버 게이트(2026-07-25 실사고): 이전 작업에서 복원된 대본을 한 번도 안 고친 채
   //   새 영상과 매칭하면, 나레이션·썸네일 제목이 전부 옛 영상 주제로 나온다(새 영상에 '6만원대
   //   책상' 제목). 여기서 한 번 확인받는다 — 편집하거나 새로 뽑으면 이 게이트는 안 걸린다.
@@ -4363,7 +4402,10 @@ async function pollMix(){
       //   재료가 없었는데 화면엔 표시가 없어 "왜 A로만 만들어졌지?"로만 보였다.
       showWeakSources(d.weak_sources);
       clearInterval(MIX_POLL); renderCandidates(d.candidates||[]); loadMixReview();
-      jump(1);   // 오브 인덱스 1 = 화면 붙이기(매칭, ORB_TO_PANEL[1]=7). Task 6: 매칭 완료 시 자동 이동.
+      // 매칭이 끝나면 대본(오브 1 = 패널8)으로 데려간다 — 9단계 개편 전엔 곧장 장면
+      // 편집으로 갔지만, 이제 흐름이 **대본 → 장면**이라 대본을 건너뛰면 단계를 나눈
+      // 의미가 없다(2026-08-16). 장면 편집은 그 다음(오브 2)이다.
+      jump(1);
     }
     // 실패 표시: 사용자에겐 순화된 d.error만. d.error_detail은 서버가 **관리자에게만** 채워
     // 내려주므로(2026-08-04), 있으면 원문을 접이식으로 덧붙인다 — 사고를 눈으로 바로 잡으라고.
@@ -5045,7 +5087,9 @@ function stepLocked(i){
   // ★Task 6(2026-07-23): 화면 붙이기(매칭, 패널7)는 게이트 예외다 — 후보를 고르고 장면을 확인해
   // 미리보기를 "만드는" 자리 자체가 이 패널이라, 여기서 막으면 미리보기를 영영 못 만든다(예전엔
   // 이 UI가 패널0에 있어서 0단계=허브와 함께 안 잠겼다 — 패널7로 이사하며 이 예외도 같이 옮겨왔다).
-  if(i === 7) return false;
+  // ★대본(패널8, 2026-08-16 신설)도 같은 이유로 예외다 — 미리보기를 **만들기 전에**
+  //   거치는 자리라 여기서 막으면 미리보기를 영영 못 만든다(패널7과 같은 논리).
+  if(i === 7 || i === 8) return false;
   // 0단계(허브)는 항상 열림. 나머지(2~6단계: 음성·꾸미기·썸네일·SEO·완성)는 '매칭(MIX_JOB) 후 ·
   // 미리보기 확인 전'에만 잠근다 — 유료 자막제거 우회 방지. 매칭 전(MIX_JOB 없음)엔 안
   // 잠근다(기존 설계 유지: 그땐 자유 이동, 빈 단계는 T7a 잠금 카드가 받는다).
@@ -5378,7 +5422,7 @@ function onNoVoice(){
 }
 async function previewVoice(){
   const el=document.getElementById('voicePreview');
-  if(!MIX_JOB){ el.innerHTML='<span class="hint">🎬 2단계 영상 매칭 후 사용할 수 있어요. 지금은 위 카드의 ▶로 샘플을 들어보세요.</span>'; return; }
+  if(!MIX_JOB){ el.innerHTML='<span class="hint">🎬 '+stepName('mix')+' 영상 매칭 후 사용할 수 있어요. 지금은 위 카드의 ▶로 샘플을 들어보세요.</span>'; return; }
   el.textContent='⏳ 생성 중…';
   try{
     const r=await fetch('/api/mix/voice/preview',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -5390,7 +5434,7 @@ async function previewVoice(){
 }
 async function applyVoice(){
   const el=document.getElementById('voicePreview');
-  if(!MIX_JOB){ el.innerHTML='<span class="hint">🎬 2단계 영상 매칭 후 사용할 수 있어요.</span>'; return; }
+  if(!MIX_JOB){ el.innerHTML='<span class="hint">🎬 '+stepName('mix')+' 영상 매칭 후 사용할 수 있어요.</span>'; return; }
   el.textContent='⏳ 전체 음성 생성 중…';
   try{
     await fetch('/api/mix/voice',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -5596,7 +5640,9 @@ function vpGateNext(){
   const yellow=(VP_BEATS||[]).map((b,i)=>i).filter(i=>!(Array.isArray(VP_BEATS[i].cap_durs)&&VP_BEATS[i].cap_durs.length));
   const unheard=yellow.filter(i=>!_vpHeard.has(i));
   if(unheard.length && !confirm('🟡 '+unheard.length+'개 장면을 아직 안 들어봤어요. 그냥 다음으로 갈까요?')) return;
-  jump(3);   // 꾸미기(4단계, index 3)로 — 기존 스텝 내비게이션 재사용, go()/jump() 자체는 건드리지 않는다
+  // 자막꾸미기로. ★9단계 개편(2026-08-16)으로 오브가 한 칸씩 밀렸다 — 예전 3 → 지금 5
+  //   (STEP_LABELS: 0영상추출 1대본 2MIX 3자막제거 4TTS **5자막꾸미기**).
+  jump(5);
 }
 // ▶ 전체 재생 — 비트 음성을 순서대로 이어 재생하며 현재 비트의 프레임+자막을 갱신(가라오케식)
 function playAllBeats(){
@@ -5624,7 +5670,7 @@ async function refreshInpock(){
   catch(e){ el.innerHTML='<div class="hint" style="color:var(--fire)">상품 정보 로드 실패</div>'; return; }
   const p=(d&&d.ok)?d.product:null;
   if(!p){
-    el.innerHTML='<div class="hint">🛒 연결할 쿠팡 상품이 없습니다 — 2단계 편집안 검토에서 지정하면 여기에 등록용 링크가 뜹니다.</div>';
+    el.innerHTML='<div class="hint">🛒 연결할 쿠팡 상품이 없습니다 — '+stepName('mix')+' 편집안 검토에서 지정하면 여기에 등록용 링크가 뜹니다.</div>';
     return;
   }
   el.innerHTML=`<div style="border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--inset)">
@@ -5903,7 +5949,7 @@ function _finalIdleSlot(){
     </div>`;
 }
 async function renderFinal(){
-  if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); return; }
+  if(!MIX_JOB){ alert(stepName('mix')+'에서 영상 매칭을 먼저 실행하세요'); return; }
   const btn=document.getElementById('btnFinalRender');
   if(btn){ if(btn.dataset.orig==null) btn.dataset.orig=btn.innerHTML; btn.disabled=true; btn.innerHTML='<span class="skm-spin">🔄</span> 렌더 중…'; }
   const st=document.getElementById('finalStatus'); if(st){ st.className='match-progress'; st.innerHTML='<span class="dot"></span><span>렌더 준비 중…</span>'; }
@@ -6074,7 +6120,7 @@ async function _loadThumbFrames(){
   // 몰랐다(실측: 영상 매칭 안 한 작업을 열어 5단계로 오면 이 상태). 무엇을 해야 하는지 알려준다.
   if (!MIX_JOB){
     hintEl.innerHTML = '🎬 먼저 <b>1단계</b>에서 <b>영상 매칭</b>을 해야 썸네일에 쓸 프레임이 나와요. '
-      + '<a href="#" onclick="jump(0);return false" style="color:var(--accent2);font-weight:700">1단계로 가기 →</a>';
+      + '<a href="#" onclick="stepGo(&quot;source&quot;);return false" style="color:var(--accent2);font-weight:700">'+stepName('source')+'로 가기 →</a>';
     document.getElementById('thumbFrameCount').textContent = '';
     document.getElementById('thumbFrames').innerHTML = '';
     return;
@@ -6106,7 +6152,7 @@ async function _loadThumbFrames(){
   if (!d.ok){
     // job은 있는데 서버가 거절(영상 미완성 등) — 원문 에러에 갈 곳까지 얹는다.
     hintEl.innerHTML = (d.error || '프레임 추출 실패')
-      + ' — <a href="#" onclick="jump(0);return false" style="color:var(--accent2);font-weight:700">1단계에서 영상 매칭 확인 →</a>';
+      + ' — <a href="#" onclick="stepGo(&quot;mix&quot;);return false" style="color:var(--accent2);font-weight:700">'+stepName('mix')+'에서 영상 매칭 확인 →</a>';
     return;
   }
   // ★프레임이 그대로면 다시 그리지 않는다(2026-07-30) — 아래에서 5단계 진입마다 서버에
@@ -6259,7 +6305,7 @@ async function suggestThumbTitles(){
         + 'background:#3a2f14;border-radius:8px;padding:8px 10px;line-height:1.4">'
         + '⚠️ 1단계 대본을 고치셨네요. 제목은 <b>지금 영상</b> 기준으로 맞춰 만들었어요. '
         + '고친 <b>1단계 내용을 영상에도 넣으려면</b> '
-        + '<a href="#" onclick="jump(0);return false" style="color:#ffd08a;font-weight:700">영상 매칭을 다시</a> 하세요.</div>'
+        + '<a href="#" onclick="stepGo(&quot;mix&quot;);return false" style="color:#ffd08a;font-weight:700">영상 매칭을 다시</a> 하세요.</div>'
       : '';
     box.innerHTML = _warn + '<div class="hint" style="margin-bottom:2px">마음에 드는 제목을 누르면 바로 얹어져요 ↓</div>' +
       d.titles.map((t, i) => {
