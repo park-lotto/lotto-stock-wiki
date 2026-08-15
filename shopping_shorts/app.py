@@ -7772,6 +7772,39 @@ def _forced_backbone(work_id, cid):
     return state.get("backbone_main") or None
 
 
+@app.get("/api/produce/source_brief")
+def api_produce_source_brief(request: Request, shortcode: str):
+    """1단계 소스 분석 카드용 — **저장된 추출 결과만** 읽어 준다(2026-08-16).
+
+    ★비용 0원을 구조로 보장한다: 여기서는 Gemini를 절대 부르지 않는다. 없으면 없다고
+    답할 뿐(`ok:false, pending:true`)이고, 실제 추출은 기존 자동적재 경로(api_produce_autoload)가
+    맡는다. 1단계 화면을 열기만 해도 크레딧이 타는 일을 원천 차단하려는 것 —
+    /api/extract_script는 캐시미스에 과금하므로 그걸 그대로 쓰면 안 된다.
+
+    반환: {ok, brief:{product,role,core,summary}, segments:[{start,end,label,scene_desc,is_key}]}
+    옛 추출본엔 source_brief·label이 없다 → brief={} / label="" 로 나가고 화면이 알아서 견딘다.
+    """
+    store = Store(DB_PATH)
+    data = None
+    for code in (shortcode, _media_code(shortcode)):
+        if not code:
+            continue
+        data = store.get_script(code)
+        if data:
+            break
+    if not data:
+        return {"ok": False, "pending": True}
+    segs = []
+    for s in (data.get("segments") or []):
+        segs.append({
+            "start": s.get("start"), "end": s.get("end"),
+            "label": (s.get("label") or ""),
+            "scene_desc": s.get("scene_desc") or "",
+            "is_key": bool(s.get("is_key")),
+        })
+    return {"ok": True, "brief": data.get("source_brief") or {}, "segments": segs}
+
+
 @app.get("/api/produce/aipick")
 def api_produce_aipick(request: Request, work_id: str = "", forced: str = ""):
     """1단계 "AI가 미리 픽 추천" 조회 — 지금 담긴 소스를 pick_backbone/score_backbones/
