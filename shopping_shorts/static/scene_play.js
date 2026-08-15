@@ -364,19 +364,26 @@ function step(){
     // ★시크가 **끝난 뒤에** 보여준다(2026-08-14 사장님 "3번 솔루션 끝나는 장면 마지막에
     //   2번 첫 장면이 잠깐 보인다"). 칸2와 칸4가 같은 소스(s0)를 쓰는데, 칸4로 넘어갈 때
     //   s0가 칸2에서 멈춰 있던 위치(견과류 얹는 장면)를 한 프레임 노출하고 나서 이동했다.
-    const show = () => { showVid(v); v.play().catch(()=>{}); };
-    if (Math.abs(v.currentTime - c.start) < 0.05) show();
+    // ★컷 시간은 **화면이 실제로 그 자리에 도착한 뒤** 재기 시작한다(2026-08-15 사장님
+    //   "재생돼도 안 움직이고"). 예전엔 시크가 끝나기 전에 타이머가 먼저 흘러, 화면은 멈춰
+    //   있는데 컷만 넘어가 '재생이 안 된다'로 보였다(실측: 영상 시각 19.74에서 정지인데
+    //   pinfo는 컷 3/3). 폴백도 200ms는 너무 짧아 첫 재생에서 늘 걸렸다.
+    const show = () => {
+      showVid(v);
+      v.play().catch(()=>{});
+      paintCut();
+      if (seq[seqI + 1]) seat(seq[seqI + 1]);   // 다음 컷은 숨은 재생기에 미리 앉힌다
+      schedStep(c.dur * 1000);                  // ← 여기서부터 시간을 잰다
+    };
+    if (Math.abs(v.currentTime - c.start) < 0.05 && v.readyState >= 2) show();
     else {
       let done = false;
-      const once = () => { if (done) return; done = true; v.onseeked = null; show(); };
+      const once = () => { if (done) return; done = true; v.onseeked = null; v.oncanplay = null; show(); };
       v.onseeked = once;
+      v.oncanplay = once;
       v.currentTime = c.start;
-      setTimeout(once, 200);       // seeked가 안 와도 멈추지 않게(폴백)
+      setTimeout(once, 1500);      // 그래도 안 오면(느린 네트워크) 1.5초 뒤 진행
     }
-    paintCut();
-    // 다음 컷을 **숨은 재생기**에 미리 앉힌다 — 전환 순간에 할 일이 남지 않는다.
-    if (seq[seqI + 1]) seat(seq[seqI + 1]);
-    schedStep(c.dur * 1000);
   };
   if (v.readyState >= 1) go();           // 이미 열려 있으면 즉시
   else v.onloadedmetadata = go;
