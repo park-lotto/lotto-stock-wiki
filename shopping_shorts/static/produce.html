@@ -874,6 +874,12 @@
             <div class="hint" style="margin-top:4px">왼쪽 장면을 끌어다 칸에 담고 ✂로 자르고 ▶️로 확인한 뒤,
               <b>📤 서버에 반영</b>을 누르면 다음 미리보기·렌더부터 이 편성으로 나옵니다(↩로 언제든 복구).</div>
           </div>
+          <!-- 시험 중인 새 장면 편집 화면으로 가는 링크(2026-08-15 사장님 "주소를 손으로 치지 마라").
+               임베드(SCENE_LAB_EMBED)를 켜면 화면이 여기 바로 뜨므로 이 링크는 자동으로 숨는다. -->
+          <a id="sceneLabLink" href="#" target="_blank" rel="noopener"
+             style="display:none;font-size:12px;color:var(--sub);text-decoration:none;
+                    border:1px dashed var(--line);border-radius:8px;padding:6px 10px;margin-bottom:8px">
+            🧪 새 장면 편집 화면 열어보기 <span style="opacity:.7">(시험 중 · 새 창)</span></a>
           <details id="matchSceneDetails">
             <summary style="cursor:pointer;font-size:12px;color:var(--sub);font-weight:800">장면 바꾸기 · 전체 보기 ▾</summary>
             <div id="mixReview" style="margin-top:10px"></div>
@@ -4131,8 +4137,20 @@ async function pollMix(){
 const SCENE_LAB_EMBED = false;
 function _syncSceneLab(on){
   const box=document.getElementById('sceneLabBox'), f=document.getElementById('sceneLabFrame');
+  const link=document.getElementById('sceneLabLink');
+  // 잡이 있을 때만 의미가 있다(잡ID가 주소에 들어간다). 임베드를 켜면 링크는 필요 없다.
+  const has = on && typeof MIX_JOB!=='undefined' && MIX_JOB;
+  if(link){
+    if(has && !SCENE_LAB_EMBED){
+      link.href='/scene_lab.html?job='+encodeURIComponent(MIX_JOB);
+      link.style.display='inline-block';
+    }else{
+      link.style.display='none';
+      link.setAttribute('href','#');
+    }
+  }
   if(!box||!f) return;
-  if(!SCENE_LAB_EMBED||!on||typeof MIX_JOB==='undefined'||!MIX_JOB){
+  if(!SCENE_LAB_EMBED||!has){
     box.style.display='none';
     if(f.getAttribute('src')) f.setAttribute('src','about:blank');
     return;
