@@ -9,7 +9,11 @@
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);
-     font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;font-size:14px}
+     font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;font-size:14px;
+     height:100vh;display:flex;flex-direction:column;overflow:hidden}
+#topzone{flex:none}                 /* 타임라인 — 고정(가로로만 스크롤) */
+.wrap{flex:1;min-height:0}          /* 소스 — 남은 높이를 다 쓰고 여기서만 세로 스크롤 */
+footer{flex:none}
 header{padding:12px 18px;border-bottom:1px solid var(--line);display:flex;
        align-items:center;gap:18px;flex-wrap:wrap;background:var(--panel)}
 h1{font-size:16px;margin:0;font-weight:700}
@@ -44,9 +48,9 @@ h1{font-size:16px;margin:0;font-weight:700}
 .tbcut.long .s{background:var(--warn);color:#3a2a08;font-weight:700}
 .tbeat.empty{border-style:dashed}
 .tbempty{color:var(--dim);font-size:11.5px;padding:14px 10px}
-.wrap{display:block;height:auto}   /* 아래는 소스 전용 — 전체 폭(2026-08-15 사장님) */
+.wrap{display:block}   /* 아래는 소스 전용 — 전체 폭(2026-08-15 사장님) */
 .pane.rightcol{display:none}       /* 오른쪽 칼럼 폐지: 미리보기는 위(타임라인 옆)로 갔다 */
-.pane{overflow-y:auto;padding:14px}
+.pane{overflow-y:auto;height:100%;padding:14px}
 .pane.left{background:var(--panel);border:1px solid var(--line);border-radius:10px}
 .srcgroup{margin-bottom:18px}
 .srchead{font-size:17px;color:var(--ink);font-weight:800;margin-bottom:8px;display:flex;align-items:baseline;justify-content:space-between;gap:8px;position:sticky;top:0;background:var(--panel);padding:8px 4px;border-bottom:1px solid var(--line);z-index:2}
@@ -395,15 +399,18 @@ function toggleOne(on){ onePerSeg = on; render(); }
 // 제작소 안(iframe)이면 바깥 큰 미리보기 자리로 넘기고, 혼자 열렸으면 이 페이지에서 재생한다.
 function playBeatHere(i, ev){
   if (ev) ev.stopPropagation();
-  const outside = window.parent && window.parent !== window;
-  if (outside){
-    try{
-      window.parent.postMessage({type:'sceneLab:play', beat:i,
-        DATA, lists, STRETCH, TRIMS, onePerSeg}, location.origin);
+  // 제작소 안(iframe)이면 **바깥 큰 미리보기 자리**에서 재생시킨다.
+  // ★postMessage가 아니라 부모 함수 직접 호출 — 같은 도메인이라 가능하고, 값 복사(구조화 복제)
+  //   과정이 없어 실패 지점이 없다(2026-08-15 실측: postMessage 경로가 조용히 실패해
+  //   iframe 안에서 소리만 나고 화면은 안 보였다).
+  try{
+    const up = window.parent;
+    if (up && up !== window && typeof up.sceneLabPlay === 'function'){
+      up.sceneLabPlay(i, window);
       playKey = 'beat:' + i; renderBand();
       return;
-    }catch(e){ /* 실패하면 아래 자체 재생으로 떨어진다 */ }
-  }
+    }
+  }catch(e){ console.warn('바깥 재생 실패 — 이 화면에서 재생합니다', e); }
   playBeat(i, ev);
 }
 

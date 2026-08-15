@@ -239,6 +239,7 @@ function stopPlay(){
   document.querySelectorAll('.item.playing').forEach(el => el.classList.remove('playing'));
   updatePlayBtns();
   document.getElementById('player').classList.remove('on');
+  if (typeof sceneLabPlayClosed === 'function') sceneLabPlayClosed();
 }
 function playSeg(sid, ev){
   if (ev) ev.stopPropagation();
