@@ -4145,10 +4145,24 @@ def insights_page():
         return f.read()
 
 
-# ── 인사이트2 (신규 UI 초안, 운영자 전용) ─────────────────────
+# ── 인사이트2 (신규 UI 초안, ★운영자 전용) ────────────────────
 # 기존 /insights 는 그대로 두고 옆에 새로 만든다. 완성되면 교체 판단.
+#
+# 접근제어: /insights2 와 /api/insights2/ 를 _USER_PAGES·_USER_API_PREFIX 에
+# **일부러 넣지 않았다** → 미들웨어(_user_allowed)가 일반 사용자를 자동 차단한다
+# (페이지는 /home 리다이렉트, API는 403). admin_page(:707)와 같은 방식.
+# 아래 _require_admin 은 그 방어선이 뚫렸을 때를 대비한 2중 잠금이다
+# (미들웨어를 나중에 누가 고치다 초안이 외부로 새는 걸 막는다).
+def _ins2_require_admin(request: Request):
+    """운영자가 아니면 True(차단해야 함). 미완성 초안이라 외부 노출 금지."""
+    uid = _verify_session(request.cookies.get("dash_auth", ""))
+    return uid is None or not _is_admin(uid)
+
+
 @app.get("/insights2", response_class=HTMLResponse)
-def insights2_page():
+def insights2_page(request: Request):
+    if _ins2_require_admin(request):
+        return RedirectResponse("/home")
     p = os.path.join(HERE, "insights2.html")
     if not os.path.exists(p):
         return "<h1>insights2.html 준비중</h1>"
@@ -4429,14 +4443,17 @@ def _ins2_latest_date(conn, type_cond: str) -> str:
 
 
 @app.get("/api/insights2/daily")
-def api_insights2_daily(category: str = "youtube", date: str = ""):
-    """인사이트2 한 화면 분량을 통째로.
+def api_insights2_daily(request: Request, category: str = "youtube", date: str = ""):
+    """인사이트2 한 화면 분량을 통째로. ★운영자 전용(초안).
 
     반환: {date, counts, market, sectors[], stocks[], videos[], atoms[]}
       - atoms[]  : 발언 원자 (video 인덱스로 영상과 연결)
       - sectors[]: [{name, plus, minus}]  ← 막대 그래프용
       - videos[] : [{title, source, url, n}]
     """
+    if _ins2_require_admin(request):
+        return JSONResponse(content={"error": "forbidden"}, status_code=403)
+
     conn = _ins_conn()
     if conn is None:
         return JSONResponse(content={"error": "atoms.db 없음"}, status_code=503)
