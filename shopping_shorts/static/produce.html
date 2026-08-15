@@ -4381,7 +4381,7 @@ function renderCandidates(list){
     + list.length + '개 만들었어요 — <b style="color:var(--accent)">카드를 눌러 하나를 고르세요</b>(추천이 이미 선택돼 있어요)</div>'
     // ★지금 어떤 대본으로 미리보기를 만드는지 항상 보이는 상태줄(2026-07-25 사장님: "체크가 됐는지 모르겠다").
     + `<div id="candStatus" style="font-size:12px;font-weight:800;margin-bottom:8px;padding:6px 10px;border-radius:8px;background:rgba(62,224,191,.10);border:1px solid rgba(62,224,191,.35);color:var(--accent)">🎬 지금 <b>${_candLabelOf(list,selIdx)}</b> 대본으로 미리보기를 만들어요</div>`
-    + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;min-height:470px">'
     + list.map((c,i) => {
         const on = (c.index===selIdx);
         const badge = (c.recommended && on) ? '<span class="rec">👍 추천 · 선택됨</span>'
@@ -4408,7 +4408,7 @@ function renderCandidates(list){
             + `✏ 글자는 자유롭게 고치세요. <b>문장 칸을 비우지 마세요</b>(비우면 그 문장은 원래대로 둡니다).<br>`
             + `문장 <b>개수는 화면 배정에 묶여 있어</b> 칸 수를 그대로 둡니다 — 많이 길게 쓰면 자막이 밀릴 수 있어요.</div>`
           : `<p style="white-space:pre-wrap">${esc(lines.join(' ') || c.script || c.hook || '')}</p>`;
-        return `<div class="cand${on?' on':''}" data-cidx="${c.index}" onclick="pickCandidate(${c.index})" style="cursor:pointer;flex:1 1 260px;min-width:0">`
+        return `<div class="cand${on?' on':''}" data-cidx="${c.index}" onclick="pickCandidate(${c.index})" style="cursor:pointer;flex:1 1 260px;min-width:0;display:flex;flex-direction:column;font-size:14.5px;line-height:1.62">`
           + `<div class="cb">${CAND_LBL[i]||('후보 '+(i+1))}${badge}</div>`
           + body
           // ⏱ 예상 영상시간(2026-07-25 사장님): 이 대본을 읽으면 나올 영상 길이 — A/B/C 아래마다.
