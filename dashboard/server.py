@@ -7,7 +7,7 @@
 """
 import os, sys, json, glob, re, shutil, subprocess, uuid, time, threading
 from collections import deque
-from datetime import datetime
+from datetime import datetime, timedelta
 import requests
 
 # 프로젝트 루트를 sys.path에 추가 (python dashboard/server.py 로 실행 시 pipeline import 가능하게)
@@ -3357,6 +3357,71 @@ def _live_osc_fallback(code: str):
         return None
 
 
+# 빈집(수급 오실레이터)을 어디서 가져올지 **한 군데서만** 정한다.
+#
+# 엑셀 경로가 등급(A완전빈집/B반빈집/C정상/D과매수)까지 주지만, 전종목 분포가 있어야
+# 백분위가 나오므로 실시간 경로는 방향(↑재진입 등)만 준다.
+# ⚠️ 실측(2026-08-15): taerini_stock.json에 종목은 132개 있는데 **osc 키를 가진 종목이 0개**다
+#    (엑셀 산출물이 2026-05-27에서 멈춤). 그래서 "엑셀에 종목이 있다"만 보고 판단하면
+#    빈집 칸이 조용히 빈다 — 반드시 osc 값 자체가 있는지를 확인하고 없으면 실시간으로 넘긴다.
+def _vacuum_for(code: str) -> dict | None:
+    """{osc, pct, grade, trend, series, source} — 못 구하면 None."""
+    code = (code or "").strip().zfill(6) if (code or "").strip().isdigit() else (code or "").strip()
+    if not code:
+        return None
+
+    entry, source = None, ""
+    try:
+        if os.path.exists(TAERINI_STOCK_PATH):
+            with open(TAERINI_STOCK_PATH, encoding="utf-8") as f:
+                data = json.load(f)
+            cand = (data.get("stocks") or {}).get(code) or {}
+            if cand.get("osc") is not None:
+                entry, source = cand, "excel"
+    except Exception:
+        entry = None
+
+    if entry is None:
+        entry = _live_osc_fallback(code)
+        source = "live"
+    if not entry:
+        return None
+
+    # ⚠️ 두 경로가 모양이 다르다 — taerini(엑셀)는 osc 값을 평평하게 담고,
+    #    osc_live.live_osc_entry()는 {"osc": {...}} 로 한 겹 감싸 준다.
+    #    안 풀면 osc가 dict로 들어가 trend·series가 조용히 빈다(실측으로 잡음).
+    inner = entry.get("osc")
+    if isinstance(inner, dict):
+        entry = inner
+    if entry.get("osc") is None:
+        return None
+
+    pct = entry.get("pct")
+    return {
+        "osc": entry.get("osc"),
+        "pct": pct,
+        "grade": _vacuum_grade(pct),
+        "trend": entry.get("trend") or "",
+        "series": entry.get("series") or [],
+        "group": entry.get("group") or "",
+        "source": source,
+    }
+
+
+def _vacuum_grade(pct) -> str:
+    """백분위 → 등급. calc_oscillator.grade()와 같은 경계(10/25/75)를 쓴다.
+    백분위가 없으면(실시간 경로) 등급을 지어내지 않고 빈 문자열."""
+    if pct is None:
+        return ""
+    if pct <= 10:
+        return "A 완전빈집"
+    if pct <= 25:
+        return "B 반빈집"
+    if pct <= 75:
+        return "C 정상"
+    return "D 과매수"
+
+
 @app.get("/api/taerini_consensus")
 def api_taerini_consensus(code: str = ""):
     """종목별 주간 컨센 시계열(12MF/FY1/FY2) — 차트 오버레이용."""
@@ -4166,6 +4231,19 @@ def _ins2_require_admin(request: Request):
     return uid is None or not _is_admin(uid)
 
 
+@app.get("/stock", response_class=HTMLResponse)
+def stock_page(request: Request):
+    """종목검색 브리프. insights2와 같은 2중 잠금(초안이라 외부 노출 금지)."""
+    if _ins2_require_admin(request):
+        return RedirectResponse("/home")
+    p = os.path.join(HERE, "stock.html")
+    if not os.path.exists(p):
+        return "<h1>stock.html 준비중</h1>"
+    with open(p, encoding="utf-8") as f:
+        html = f.read()
+    return HTMLResponse(content=html, headers={"Cache-Control": "no-cache, must-revalidate"})
+
+
 @app.get("/insights2", response_class=HTMLResponse)
 def insights2_page(request: Request):
     if _ins2_require_admin(request):
@@ -4505,6 +4583,138 @@ def _ins2_latest_date(conn, type_cond: str) -> str:
         f"SELECT MAX(date) d FROM atoms WHERE {type_cond} AND date IS NOT NULL AND date != ''"
     ).fetchone()
     return (row["d"] if row and row["d"] else "") or ""
+
+
+@app.get("/api/insights2/stock")
+def api_insights2_stock(request: Request, q: str = "", days: int = 45):
+    """종목검색 한 화면 분량의 **재료**를 한 번에. ★운영자 전용(초안).
+
+    종합(5칸 문장)은 여기서 하지 않는다 — 재료와 종합을 갈라둬야
+    LLM이 죽어도 화면은 원문으로 살아남는다.
+
+    반환: {q, canonical, code, too_short, counts, atoms[], flow, vacuum}
+    """
+    if _ins2_require_admin(request):
+        return JSONResponse(content={"error": "forbidden"}, status_code=403)
+
+    q = (q or "").strip()
+    if not q:
+        return JSONResponse(content={"error": "검색어가 없습니다"}, status_code=400)
+
+    from pipeline.atoms import stock_search
+    from pipeline.atoms.codemap import code_for
+
+    conn = _ins_conn()
+    if conn is None:
+        return JSONResponse(content={"error": "atoms.db 없음"}, status_code=503)
+
+    try:
+        canonical = stock_search.canonical_name(q)
+        since = (datetime.now() - timedelta(days=max(1, days))).strftime("%Y-%m-%d")
+        rows = stock_search.search(conn, q, since=since, limit=240)
+
+        atoms, srcs = [], {}
+        for r in rows:
+            head = _ins2_split_head(r.get("content") or "")
+            srcs[r.get("source_type") or "?"] = srcs.get(r.get("source_type") or "?", 0) + 1
+            atoms.append({
+                "id": r.get("id"),
+                "date": r.get("date") or "",
+                "src": r.get("source_type") or "",
+                "who": r.get("source_name") or "",
+                "sector": r.get("sector") or "",
+                "asset": r.get("asset") or "",
+                "sign": _sign_of(r.get("signal")),
+                "signal": r.get("signal") or "",
+                "ts": (r.get("yt_timestamp") or "") or (r.get("msg_ts") or ""),
+                "deeplink": r.get("deeplink") or "",
+                "content": head["text"],
+                "relay": head["relay"],
+                "tp": head["tp"],
+                "opinion": head["opinion"],
+                "rel": r.get("rel", 0),
+            })
+
+        dates = [a["date"] for a in atoms if a["date"]]
+        code = code_for(canonical) or ""
+
+        # 수급 — 종목코드를 못 찾으면 건너뛴다(키워드가 종목이 아닐 수 있다)
+        flow, vacuum = {}, None
+        if code:
+            try:
+                import stock_flow
+                flow = stock_flow.flow_summary(code)
+            except Exception as e:
+                flow = {"error": f"{type(e).__name__}: {e}", "rows": []}
+            vacuum = _vacuum_for(code)
+
+        return JSONResponse(content={
+            "q": q,
+            "canonical": canonical,
+            "code": code,
+            "too_short": stock_search.is_too_short(q),
+            "counts": {
+                "atoms": len(atoms),
+                "sources": srcs,
+                "date_from": min(dates) if dates else "",
+                "date_to": max(dates) if dates else "",
+                "days": days,
+            },
+            "atoms": atoms,
+            "flow": flow,
+            "vacuum": vacuum,
+        })
+    finally:
+        conn.close()
+
+
+# 종합 결과 캐시 — 같은 종목을 다시 열 때 LLM을 또 부르지 않는다.
+# 발언은 하루 단위로 쌓이므로 날짜가 바뀌면 자연히 갱신된다.
+_BRIEF_CACHE: dict = {}
+_BRIEF_TTL = 60 * 60 * 6  # 6시간
+
+
+@app.get("/api/insights2/brief")
+def api_insights2_brief(request: Request, q: str = "", days: int = 45, force: int = 0):
+    """5칸 종합. ★운영자 전용.
+
+    LLM은 **슬롯 값만** 만든다(stock_brief 참조) — 화면을 다시 쓰게 하지 않는다.
+    실패해도 `ok:false`만 돌아가고, 화면은 /stock 재료로 그대로 그려진다.
+    """
+    if _ins2_require_admin(request):
+        return JSONResponse(content={"error": "forbidden"}, status_code=403)
+    q = (q or "").strip()
+    if not q:
+        return JSONResponse(content={"error": "검색어가 없습니다"}, status_code=400)
+
+    key = f"{q}|{days}|{datetime.now().strftime('%Y-%m-%d')}"
+    hit = _BRIEF_CACHE.get(key)
+    if hit and not force and (time.time() - hit["at"]) < _BRIEF_TTL:
+        return JSONResponse(content={**hit["data"], "cached": True})
+
+    import stock_brief
+
+    # 재료는 위 엔드포인트와 같은 함수를 쓴다 — 두 벌로 갈라지면 언젠가 어긋난다
+    src = api_insights2_stock(request, q=q, days=days)
+    if getattr(src, "status_code", 200) != 200:
+        return src
+    mat = json.loads(bytes(src.body).decode("utf-8"))
+    if mat.get("error"):
+        return JSONResponse(content=mat, status_code=400)
+
+    atoms = mat.get("atoms") or []
+    if not atoms:
+        return JSONResponse(content={"ok": False, "reason": "발언이 없습니다", "q": q})
+
+    prompt = stock_brief.build_prompt(q, atoms, mat.get("flow") or {}, mat.get("vacuum"))
+    res = _gemini_text(prompt, _summary_keys(), timeout=90)
+    if res.get("error"):
+        return JSONResponse(content={"ok": False, "reason": res["error"], "q": q})
+
+    slots = stock_brief.parse(res.get("analysis") or "")
+    data = {**slots, "q": q, "model": res.get("model", ""), "cached": False}
+    _BRIEF_CACHE[key] = {"at": time.time(), "data": data}
+    return JSONResponse(content=data)
 
 
 @app.get("/api/insights2/daily")

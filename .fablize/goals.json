@@ -1,27 +1,41 @@
 {
- "brief": "숏템메이커 인증을 dashboard/server.py에 이식: 고객 SQLite+구글 OAuth+세션쿠키, fail-closed, 일반유저는 /market·/insights만, 관리자는 전체. 로컬 구동으로 검증.",
- "created": "2026-08-06T04:05:19.313975+00:00",
+ "brief": "종목검색 페이지 구현 — 키워드로 발언+수급을 모아 5칸(일정/판단/쟁점/수급/깨지는조건)으로 정리",
+ "created": "2026-08-15T05:59:28.267192+00:00",
  "goals": [
   {
    "id": "G001",
-   "title": "인증이식",
-   "objective": "customers 저장소+구글 OAuth+세션쿠키를 server.py에 이식, 하드코딩 시크릿 제거·fail-closed",
+   "title": "검색기",
+   "objective": "종목명 정규화(별칭 확장+증권사명 오염 제외). 현대차 실측으로 오염 0건 확인",
    "status": "complete",
-   "evidence": "server.py 인증블록 v2 교체(OAuth+users.db+세션쿠키, 하드코딩 시크릿 제거), ast.parse 통과"
+   "evidence": "실측: 현대차 503건(오염58)→462건(오염0) / 현대자동차 18건→462건(누락 25배 회수) / 하이닉스→SK하이닉스 정규화. stock_search.py 신규, 별칭사전 5→20개(적재·검색 공용 1파일)"
   },
   {
    "id": "G002",
-   "title": "접근제어",
-   "objective": "일반유저 /market·/insights(+API)만 허용, 관리자 전체, 로그인 페이지",
+   "title": "재료API",
+   "objective": "/api/insights2/stock — 발언 + 빈집osc + 5/20일 주체별 순매수를 한 번에 반환",
    "status": "complete",
-   "evidence": "_user_allowed 경로게이트 + 운영자 deny + 공유상태 GET-only, 로그인페이지에 구글 버튼"
+   "evidence": "GET /api/insights2/stock?q=현대차 → 200. atoms 186(report75·news36·telegram36·restore20·youtube18·blog1), code 005380 자동해결, vacuum osc 0.00552 ↑재진입 series30(live), flow 외국인 5일+1395/20일+1761·기관 -489/-1090·개인 -950/-656. 중첩버그(live_osc_entry가 {osc:{...}}로 감싸 trend·series가 조용히 비던 것) 실측으로 잡아 수정"
   },
   {
    "id": "G003",
-   "title": "검증",
-   "objective": "로컬 구동으로 비로그인 차단·로그인 접근·권한분리 확인",
+   "title": "LLM종합",
+   "objective": "구조화 JSON 슬롯만 반환(페이지 재작성 금지). 결과 캐시",
    "status": "complete",
-   "evidence": "라이브 검증 15/15 PASS"
+   "evidence": "GET /api/insights2/brief?q=현대차 → ok=true, model gemini-3-flash-preview. 슬롯 추출 성공: 판단1·근거3·일정1·쟁점(A실적반등론 vs B경쟁심화우려론+pivot)·조건2. ★8월26일 CEO 인베스터데이를 자료에서 정확히 포착, 근거 하나가 수급 인용('외국인 20일 1,761억 순매수')→발언+수급 결합 실증. 각 항목이 원자 id 배열 보유. LLM은 슬롯만 만들고 화면은 코드가 그린다(2026-06-22 페이지파괴 사고 재발 차단). 6시간 캐시"
+  },
+  {
+   "id": "G004",
+   "title": "화면",
+   "objective": "목업 v2 이식. 본문 16px·폭 1440px 가독성 기준 준수",
+   "status": "pending",
+   "evidence": null
+  },
+  {
+   "id": "G005",
+   "title": "검증",
+   "objective": "브라우저 실측 + 게이트 통과 후 main 병합",
+   "status": "pending",
+   "evidence": null
   }
  ]
 }
