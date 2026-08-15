@@ -372,15 +372,20 @@
        상자 밖으로 튀어나오는 것 0. 간격은 4/8px 배수로만 쓴다.
        grid-auto-rows:1fr = 같은 줄 카드의 **높이를 강제로 맞춘다**(내용이 짧아도 늘어난다).
        안 하면 카드마다 제 높이라 아래가 계단처럼 어긋난다(실측: 282/282/92/92). */
+    /* ★grid-auto-rows:1fr을 쓰지 않는다(2026-08-16 실측): 모든 줄에 같은 높이를 강제해
+       두 번째 줄(70px 대기 카드만 있는 줄)에도 280px이 잡혀 **210px이 빈 채로 남았다**.
+       align-items:stretch만으로도 **같은 줄 안에서는** 높이가 맞는다 — 사장님 기준
+       "모서리 한 줄"은 지키면서 줄마다 제 높이를 갖는다. */
     .srcGrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(304px,1fr));
-      grid-auto-rows:1fr;align-items:stretch}
+      align-items:stretch}
     .srcCard{background:var(--inset);border:1px solid var(--line);border-radius:12px;
       padding:12px 16px;transition:border-color .15s;
       display:flex;flex-direction:column;min-width:0;overflow:hidden}
     .srcCard:hover{border-color:var(--accent)}
-    .srcCard.pend{opacity:.72;border-style:dashed}
-    .srcPend{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-      text-align:center;font-size:12.5px;color:var(--sub);line-height:1.7;gap:4px}
+    /* ★분석 대기 카드는 자기 크기만 갖는다(grid-row 늘림에서 뺀다) — 한 문장짜리
+       내용에 280px을 주면 큰 빈 상자가 된다. align-self:start가 1fr 늘림을 끊는다. */
+    .srcCard.pend{opacity:.7;border-style:dashed;align-self:start;padding:10px 16px}
+    .srcPend{font-size:12px;color:var(--sub);line-height:1.5}
     .srcHead{display:flex;align-items:center;gap:8px;margin-bottom:9px}
     .srcNo{flex:0 0 auto;font-size:11px;font-weight:900;color:var(--accent);
       background:rgba(62,224,191,.12);border:1px solid rgba(62,224,191,.4);
@@ -418,6 +423,10 @@
     /* ★담은 영상 상단 배치(2026-08-16 사장님 "가로 5개까지 들어가는 크기").
        예전엔 왼쪽 320px 칸에 갇혀 64px이라 5~8개를 담으면 뭘 담았는지 알아볼 수 없었다.
        5열 고정 — auto-fill이면 화면 폭에 따라 개수가 널뛰어 크기를 못 정한다. */
+    /* ★hidden 속성이 display를 못 이기던 것(2026-08-16 실측): theme.css의
+       .match-progress{display:flex}가 hidden보다 뒤에 로드돼, 숨겨야 할 요소가
+       22px 자리를 차지하고 있었다. hidden은 "없는 것"이어야 한다. */
+    .main [hidden]{display:none !important}
     .srcStage{background:var(--inset);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
     .srcStageHead{display:flex;align-items:center;gap:10px;margin-bottom:10px;
       font-size:13px;font-weight:800}
@@ -667,9 +676,15 @@
                담은 영상마다 "무슨 제품인지·무엇을 보여주는 영상인지"를 카드로 편다.
                ★타임스탬프 목록은 뺐다(사장님) — 구간 확인은 3단계 장면 편집이 한다.
                ★옛 작업엔 source_brief가 없다 → 그 카드는 장면 수만 뜬다. -->
-          <div id="srcAnalysis" style="margin-bottom:18px"></div>
-          <div style="font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">결과 ▶</div>
-          <div id="aiPick"></div>
+          <div id="srcAnalysis"></div>
+          <!-- ★AI PICK(대본 고르기)은 2단계 담당이다(9단계 개편) — 1단계에선 감춘다.
+               영상을 담았는데도 "아직 담긴 영상이 없어요" CTA가 떠서 화면 아래 1/3을
+               빈 채로 먹고 있었다. 요소는 남긴다: renderAiPick/renderEmptyState가 이
+               자리에 그리므로 지우면 그 코드가 죽는다. 2단계 세션이 옮겨갈 자리다. -->
+          <div id="aiPickWrap" style="display:none">
+            <div style="font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">결과 ▶</div>
+            <div id="aiPick"></div>
+          </div>
           <details style="margin-top:10px">
             <summary style="cursor:pointer;font-size:12px;color:var(--sub)">고급 ▾</summary>
             <label style="display:flex;align-items:center;gap:8px;margin:8px 0;font-size:12px;cursor:pointer">
@@ -3525,10 +3540,11 @@ function _srcCard(it, i){
   const head = `<div class="srcHead"><span class="srcNo">소스 ${i+1}</span>
       <span class="srcName" title="${name}">${name}</span></div>`;
   if(!d){
-    // 분석 전 카드도 같은 높이를 갖는다(grid-auto-rows:1fr). 안내를 가운데에 둬 빈 칸이
-    // 위아래로 갈리지 않게 한다 — 사장님 정렬 기준 "빈 여백 덩어리 없을 것".
+    // 분석 전 카드는 **한 줄로** 접는다(2026-08-16). 분석된 카드와 같은 높이(280px)를
+    // 주면 "아직 분석 전이에요" 한 문장이 큰 빈 상자를 만든다 — 사장님 정렬 기준
+    // "빈 여백 덩어리 없을 것"에 어긋난다. 정보량에 맞는 크기를 준다.
     return `<div class="srcCard pend">${head}
-      <div class="srcPend">아직 분석 전이에요<br><span class="hint">⚡ 대본 만들기를 누르면 함께 분석됩니다</span></div>
+      <div class="srcPend">⏳ 분석 대기 — ⚡ 대본 만들기를 누르면 함께 분석됩니다</div>
     </div>`;
   }
   const b = d.brief || {};
