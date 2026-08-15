@@ -60,10 +60,13 @@ h1{font-size:16px;margin:0;font-weight:700}
 .pane{overflow-y:auto;height:100%;padding:14px}
 .pane.left{background:var(--panel);border:1px solid var(--line);border-radius:10px}
 .srcgroup{margin-bottom:18px}
-.srchead{font-size:17px;color:var(--ink);font-weight:800;margin-bottom:8px;display:flex;align-items:baseline;justify-content:space-between;gap:8px;position:sticky;top:0;background:var(--panel);padding:8px 4px;border-bottom:1px solid var(--line);z-index:2}
+.srchead{font-size:17px;color:var(--ink);font-weight:800;margin-bottom:8px;display:flex;
+  align-items:baseline;justify-content:space-between;gap:8px;position:sticky;top:-14px;
+  background:var(--panel);padding:22px 4px 8px;margin-left:-14px;margin-right:-14px;
+  padding-left:18px;padding-right:18px;border-bottom:1px solid var(--line);z-index:6}
 .srchead .cnt{font-size:13px;color:var(--dim);font-weight:400}
 .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-.seg{display:block}
+.seg{display:block;z-index:1}
 .seg{border:1px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;
      background:var(--panel2);position:relative;transition:.12s}
 .seg:hover{border-color:var(--accent);transform:translateY(-2px)}
