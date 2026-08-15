@@ -8,10 +8,45 @@ STYLE = {
         "hook": ["이것 때문에 {가족}한테 욕 바가지로 먹을 뻔했어요",
                  "{장소} 갔다가 진짜 충격 받았어요"],
         "reveal": ["알고 보니 {전문가}가 추천해준 {제품}이라고 하더라구요"],
-        "cta": ["댓글에 {단어} 남겨주세요"],
+        "cta": ["댓글에 {단어} 남겨주시면 {받는것} 보내드릴게요", "댓글에 {단어} 남겨주세요"],
     },
     "chars_per_30s": 300,
 }
+
+# ★라이브 실측 회귀(2026-08-15) — 실제 제미니 출력이 게이트에 걸렸던 사례들.
+#   전부 "정상인데 FAIL로 잡힌" 오탐이었고, 원인이 서로 달라 하나씩 박아 둔다.
+LIVE_OK = [
+    # ① 모델이 틀 앞머리를 소재에 맞게 바꾸고 중간에 살을 붙였다 — 서명 어구는 그대로.
+    ("주방 청소하다가 시어머니한테 기름때 다 안 지워졌다고 욕 바가지로 먹을 뻔했어요", "hook"),
+    # ② 어미 표기 흔들림: 틀은 "하더라구요", 출력은 "하더라고요".
+    ("알고 보니 살림 고수님이 추천해준 전용 세제라고 하더라고요", "reveal"),
+    # ③ 기존 헌장이 요구하는 CTA 형태("남겨주시면 …드릴게요")를 내 틀이 못 받아들였다.
+    ("댓글에 '청소' 남겨주시면 기름때 지우는 세제 구입처 바로 보내드릴게요", "cta"),
+]
+LIVE_NO = [
+    ("제가 직접 써보니 좋더라고요", "reveal"),
+    ("아니 이거 저만 몰랐나 봐요", "hook"),
+    ("요즘 아이들 사이에서 이게 난리래요", "hook"),
+    ("이 제품 정말 좋아요 꼭 써보세요", "cta"),
+]
+
+
+def test_라이브_실측_정상문장은_통과한다():
+    for text, role in LIVE_OK:
+        assert script_gate.template_matches(text, STYLE["templates"][role]), (role, text)
+
+
+def test_라이브_실측_다른문장은_차단한다():
+    for text, role in LIVE_NO:
+        assert not script_gate.template_matches(text, STYLE["templates"][role]), (role, text)
+
+
+def test_CTA는_헌장형_남겨주시면도_인정한다():
+    """기존 규칙(_STORY_RULES_CORE)이 '받는 것을 말하라'고 요구한다 — 그게 옳다."""
+    beats = [{"role": r, "text": "가" * 60} for r in STYLE["beat_roles"]]
+    beats[-1]["text"] = "댓글에 '청소' 남겨주시면 구입처 보내드릴게요"
+    checks, _ = script_gate.check(STYLE, beats)
+    assert [c for c in checks if c["name"] == "CTA 단어유도"][0]["ok"]
 
 
 def _beats(**over):
