@@ -1,0 +1,19 @@
+{
+  "target_kind": "market",
+  "market_direction": "중립",
+  "macro_events": [
+    {
+      "fact": "중국 정치국회의 이후 내수 부양책 강화 기대감",
+      "ts": "2026-08-03",
+      "quote": "정치국회의 이후...중국 내수 부양책 강화?, 중국증시는?"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "중국",
+      "stance": "긍정",
+      "comment": "중국 내수 부양책 강화 여부에 따른 증시 영향 주목"
+    }
+  ],
+  "quote": "정치국회의 이후...중국 내수 부양책 강화?, 중국증시는?"
+}

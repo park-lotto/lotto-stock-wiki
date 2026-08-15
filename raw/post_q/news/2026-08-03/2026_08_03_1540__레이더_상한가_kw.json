@@ -1,0 +1,34 @@
+{
+  "target_kind": "market",
+  "market_direction": "null",
+  "macro_events": [
+    {
+      "fact": "코스피 18% 급등 ‘역대 최대’…SK하이닉스 상한가",
+      "ts": "2026-07-31",
+      "quote": "코스피 18% 급등 ‘역대 최대’…SK하이닉스 상한가"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "반도체",
+      "stance": "긍정",
+      "comment": "SK하이닉스 및 삼성전자 등 반도체 종목 변동성 확대"
+    },
+    {
+      "sector": "소비내수",
+      "stance": "긍정",
+      "comment": "폭염으로 인한 냉방가전 수요 증가"
+    },
+    {
+      "sector": "바이오",
+      "stance": "긍정",
+      "comment": "펩트론 릴리 2공장 연계 기대감"
+    },
+    {
+      "sector": "IT",
+      "stance": "긍정",
+      "comment": "삼성전기 구조적 이익 개선세 지속"
+    }
+  ],
+  "quote": "日 카시오 실적 상향에 주가 상한가… 5년 만에 최고치"
+}
