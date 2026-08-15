@@ -1480,8 +1480,10 @@ def _seg_benefits(seg):
 _INVENTORY_LABEL_HINT = (
     "'쓰임:' 칸은 그 장면이 **원본 영상에서 하던 역할**이다"
     "(예: 도입 훅 / 기능 실증 / 결과 확인 / 마무리). "
-    "화면 설명이 서로 비슷할 때 이 칸으로 갈라라 — 지금 쓰는 문장이 무슨 대목인지 보고 "
-    "그 대목에 맞는 쓰임의 장면을 골라라."
+    "'활용:' 칸은 **이 장면을 어디에 어떻게 쓰면 좋은지 이미 판단해 둔 것**이다 — "
+    "네가 다시 고민하지 말고 이 문장을 근거로 골라라. "
+    "화면 설명이 서로 비슷할 때 이 두 칸으로 갈라라 — 지금 쓰는 문장이 무슨 대목인지 보고 "
+    "그 대목에 맞는 장면을 골라라."
 )
 
 
@@ -1511,6 +1513,9 @@ def _build_inventory(source_scripts):
                 # 짧은 이름(2026-08-16). 옛 추출본엔 없어 ""(fail-open) — 아래 라인 조립이
                 # 빈 값이면 그 칸을 통째로 생략하므로 기존 잡은 종전과 완전히 같은 줄을 받는다.
                 "label": (seg.get("label") or "").strip(),
+                # 활용 포인트(2026-08-16) — "이 장면을 어디에 어떻게 쓰면 좋은가"를
+                # 추출 때 미리 판단해 둔 것. 매칭이 같은 판단을 다시 하지 않아도 된다.
+                "use_point": (seg.get("use_point") or "").strip(),
                 "action": seg.get("action"),
                 "change": (seg.get("change") or "").strip(),
                 "is_key": bool(seg.get("is_key")),
@@ -1547,9 +1552,14 @@ def _build_inventory(source_scripts):
             #   (모션·역할과 같은 이유, 위 주석 참조). 반드시 별도 suffix로만.
             _lab = (seg.get("label") or "").strip()
             _lab_s = f" | 쓰임:{_lab}" if _lab else ""
+            # ★활용 포인트(2026-08-16 사장님 "어떤 활용포인트를 줄까에 대한 질문까지 해야
+            #   매칭할 때 좋은 거 아닌가"): 추출 단계에서 **어디에 어떻게 쓸지**를 이미
+            #   판단해 뒀다. 매칭이 그 판단을 다시 하지 않고 읽기만 하면 된다.
+            _up = (seg.get("use_point") or "").strip()
+            _up_s = f" | 활용:{_up}" if _up else ""
             lines.append(
                 f"[{sid}] ({length}s) 화면:{seg.get('scene_desc','')} | 말:{seg.get('text','')}"
-                f"{_lab_s}{_act_s}{_chg_s}{_ben_s}{_ml_s}{_role_s}{_key_s}"
+                f"{_lab_s}{_up_s}{_act_s}{_chg_s}{_ben_s}{_ml_s}{_role_s}{_key_s}"
             )
     return seg_map, "\n".join(lines)
 
