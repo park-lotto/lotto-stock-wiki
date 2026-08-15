@@ -404,6 +404,19 @@ function toggleOne(on){ onePerSeg = on; render(); }
 // (이 부분은 /scene_play.js 로 옮겼다 — 제작소와 공용)
 // 재생을 어디서 할지 한 곳에서 정한다(0순위-B: 같은 판단을 두 번 적지 않는다).
 // 제작소 안(iframe)이면 바깥 큰 미리보기 자리로 넘기고, 혼자 열렸으면 이 페이지에서 재생한다.
+// 장면 하나 미리보기 — 칸 재생과 같은 규칙으로 바깥 큰 화면에 넘긴다.
+function playSegHere(sid){
+  try{
+    const up = window.parent;
+    if (up && up !== window && typeof up.sceneLabPlaySeg === 'function'){
+      up.sceneLabPlaySeg(sid, {DATA, lists, STRETCH, TRIMS, onePerSeg});
+      playKey = 'seg:' + sid; renderBand();
+      return;
+    }
+  }catch(e){ console.warn('바깥 재생 실패 — 이 화면에서 재생합니다', e); }
+  playSeg(sid);
+}
+
 function playBeatHere(i, ev){
   if (ev) ev.stopPropagation();
   // 제작소 안(iframe)이면 **바깥 큰 미리보기 자리**에서 재생시킨다.
@@ -731,7 +744,7 @@ let clickTimer = null;
 function clickPlay(sid, ev){
   if (ev) ev.stopPropagation();
   clearTimeout(clickTimer);
-  clickTimer = setTimeout(() => playSeg(sid), 230);
+  clickTimer = setTimeout(() => playSegHere(sid), 230);
 }
 let palDrag = null;                  // 지금 끌고 있는 팔레트 장면
 function palDragStart(sid, ev){
