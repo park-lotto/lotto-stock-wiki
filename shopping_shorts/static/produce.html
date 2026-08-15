@@ -866,7 +866,7 @@
             <div id="player">
               <div class="phead" style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:6px">
                 <b>장면 미리보기</b><span class="x" style="cursor:pointer;color:var(--sub)" onclick="stopPlay()">닫기 ✕</span></div>
-              <div id="vidbox" onclick="togglePause(event)" style="position:relative;background:#000;border-radius:10px;overflow:hidden;aspect-ratio:9/16;cursor:pointer"></div>
+              <div id="vidbox" onclick="togglePause(event)" style="position:relative;background:#000;border-radius:10px;overflow:hidden;aspect-ratio:9/16;max-height:520px;width:auto;margin:0 auto;cursor:pointer"></div>
               <input type="range" id="seek" min="0" max="1000" value="0" oninput="seekInput(this.value)" style="width:100%;margin-top:8px">
               <div id="trimbar" style="display:none"></div>
               <div id="subbox" style="margin-top:6px;font-size:13px;line-height:1.5"></div>
