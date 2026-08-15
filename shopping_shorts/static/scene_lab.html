@@ -36,7 +36,12 @@ h1{font-size:16px;margin:0;font-weight:700}
 .tbeat:hover{border-color:var(--accent)}
 .tbeat.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
 .tbeat.sel{border-color:var(--good)}
-.tbeat .picked{margin-left:auto;font-size:10.5px;color:var(--good);font-weight:700}
+.tbeat .picked{font-size:10.5px;color:var(--good);font-weight:700}
+.tbtools{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--dim)}
+.tbtools button{background:var(--panel2);border:1px solid var(--line);color:var(--dim);
+  border-radius:5px;padding:1px 6px;cursor:pointer;font-size:10.5px}
+.tbtools button:hover{border-color:var(--accent);color:var(--ink)}
+.tbtools label{display:flex;align-items:center;gap:3px;cursor:pointer}
 .tbeat .h{display:flex;align-items:baseline;gap:7px;font-size:12.5px;margin-bottom:6px}
 .tbeat .h b{font-size:13.5px}
 .tbeat .h .d{color:var(--dim);font-family:ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
@@ -419,6 +424,16 @@ function playBeatHere(i, ev){
   playBeat(i, ev);
 }
 
+function bandDragStart(i, segId, ev){
+  const k = (lists[i] || []).indexOf(segId);
+  if (k < 0) return;
+  dragStart(i, k, ev);          // 기존 로직 그대로 — 왼쪽 소스가 휴지통이 되는 것도 함께 따라온다
+}
+function bandDrop(i, segId, ev){
+  const k = (lists[i] || []).indexOf(segId);
+  if (k < 0) return;
+  dragDrop(i, k, ev);           // 같은 칸 안에서 자리 바꾸기(기존 로직)
+}
 function dropCutFromBand(i, segId){
   const l = lists[i] || [];
   const k = l.indexOf(segId);
@@ -434,8 +449,13 @@ function renderBand(){
     total += sec;
     const cuts = clips.length
       ? clips.map((c, ci) => `<div class="tbcut ${c.dur > LONG_CUT ? 'long' : ''}"
+             draggable="true"
+             ondragstart="event.stopPropagation();bandDragStart(${i}, '${c.seg_id}', event)"
+             ondragend="itemDragEnd()"
+             ondragover="if(dragFrom){event.preventDefault();event.dataTransfer.dropEffect='move';}"
+             ondrop="bandDrop(${i}, '${c.seg_id}', event)"
              ondblclick="event.stopPropagation();dropCutFromBand(${i}, '${c.seg_id}')"
-             title="${c.video_id} ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 두 번 클릭 = 이 장면 빼기">
+             title="${c.video_id} ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 끌어서 순서 바꾸기 · 아래 소스로 끌면 빼기 · 두 번 클릭도 빼기">
              <img src="${SL.thumb(c.seg_id)}" loading="lazy"><span class="s">${c.dur.toFixed(1)}</span></div>`).join('')
       : `<div class="tbempty">장면을 담아주세요</div>`;
     // 담기·빼기는 기존 기능(add/delSeg)을 그대로 쓴다 — 아래 소스에서 끌어다 놓거나 두 번 클릭.
@@ -444,7 +464,13 @@ function renderBand(){
                  ondragover="if(palDrag){event.preventDefault();event.dataTransfer.dropEffect='copy';}"
                  ondrop="beatDrop(${i}, event)"
                  title="누르면 재생 · 아래 소스를 끌어다 놓거나 두 번 클릭하면 이 칸에 담깁니다">
-        <div class="h"><b>${i+1}. ${b.role || '칸'}</b><span class="d">${sec.toFixed(1)}초</span>${sel === i ? '<span class="picked">여기에 담깁니다</span>' : ''}</div>
+        <div class="h"><b>${i+1}. ${b.role || '칸'}</b><span class="d">${sec.toFixed(1)}초</span>${sel === i ? '<span class="picked">여기에 담깁니다</span>' : ''}
+          <span class="tbtools" onclick="event.stopPropagation()">
+            <label title="재료가 모자랄 때 마지막 컷만 늘리지 않고 전체를 고르게 늘립니다"><input type="checkbox" ${STRETCH[i] ? 'checked' : ''} onchange="toggleStretch(${i}, this.checked)"> 늘려 채우기</label>
+            <button title="이 칸을 왼쪽으로" onclick="move(${i}, -1)">◀</button>
+            <button title="이 칸을 오른쪽으로" onclick="move(${i}, 1)">▶</button>
+            <button title="이 칸에 담은 장면을 모두 뺍니다" onclick="clearBeat(${i})">비우기</button>
+          </span></div>
         <div class="tbcuts">${cuts}</div>
       </div>`;
   }).join('');
