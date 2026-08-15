@@ -372,15 +372,20 @@
        상자 밖으로 튀어나오는 것 0. 간격은 4/8px 배수로만 쓴다.
        grid-auto-rows:1fr = 같은 줄 카드의 **높이를 강제로 맞춘다**(내용이 짧아도 늘어난다).
        안 하면 카드마다 제 높이라 아래가 계단처럼 어긋난다(실측: 282/282/92/92). */
+    /* ★grid-auto-rows:1fr을 쓰지 않는다(2026-08-16 실측): 모든 줄에 같은 높이를 강제해
+       두 번째 줄(70px 대기 카드만 있는 줄)에도 280px이 잡혀 **210px이 빈 채로 남았다**.
+       align-items:stretch만으로도 **같은 줄 안에서는** 높이가 맞는다 — 사장님 기준
+       "모서리 한 줄"은 지키면서 줄마다 제 높이를 갖는다. */
     .srcGrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(304px,1fr));
-      grid-auto-rows:1fr;align-items:stretch}
+      align-items:stretch}
     .srcCard{background:var(--inset);border:1px solid var(--line);border-radius:12px;
       padding:12px 16px;transition:border-color .15s;
       display:flex;flex-direction:column;min-width:0;overflow:hidden}
     .srcCard:hover{border-color:var(--accent)}
-    .srcCard.pend{opacity:.72;border-style:dashed}
-    .srcPend{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-      text-align:center;font-size:12.5px;color:var(--sub);line-height:1.7;gap:4px}
+    /* ★분석 대기 카드는 자기 크기만 갖는다(grid-row 늘림에서 뺀다) — 한 문장짜리
+       내용에 280px을 주면 큰 빈 상자가 된다. align-self:start가 1fr 늘림을 끊는다. */
+    .srcCard.pend{opacity:.7;border-style:dashed;align-self:start;padding:10px 16px}
+    .srcPend{font-size:12px;color:var(--sub);line-height:1.5}
     .srcHead{display:flex;align-items:center;gap:8px;margin-bottom:9px}
     .srcNo{flex:0 0 auto;font-size:11px;font-weight:900;color:var(--accent);
       background:rgba(62,224,191,.12);border:1px solid rgba(62,224,191,.4);
@@ -415,8 +420,30 @@
       border:1px solid rgba(255,208,138,.45);border-radius:99px;padding:1px 6px}
 
     /* ── Task 4: 1단계 재구성 — 재료 그리드(✓뱃지 토글) · AI PICK · 빈 상태 ── */
-    .poolGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}
-    .pool-card{position:relative;border-radius:8px;overflow:hidden;cursor:pointer;aspect-ratio:9/16;
+    /* ★담은 영상 상단 배치(2026-08-16 사장님 "가로 5개까지 들어가는 크기").
+       예전엔 왼쪽 320px 칸에 갇혀 64px이라 5~8개를 담으면 뭘 담았는지 알아볼 수 없었다.
+       5열 고정 — auto-fill이면 화면 폭에 따라 개수가 널뛰어 크기를 못 정한다. */
+    /* ★hidden 속성이 display를 못 이기던 것(2026-08-16 실측): theme.css의
+       .match-progress{display:flex}가 hidden보다 뒤에 로드돼, 숨겨야 할 요소가
+       22px 자리를 차지하고 있었다. hidden은 "없는 것"이어야 한다. */
+    .main [hidden]{display:none !important}
+    .srcStage{background:var(--inset);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+    .srcStageHead{display:flex;align-items:center;gap:10px;margin-bottom:10px;
+      font-size:13px;font-weight:800}
+    /* ★사장님 "가로 5개까지 들어가는 크기" = 칸 하나를 그 크기로 잡는다는 뜻.
+       auto-fill이라 화면이 넓으면 6·7개도 들어가 오른쪽이 안 비고, 좁으면 알아서 준다.
+       ★상한 168px: 9:16이라 폭 220px이면 높이 391px로 화면 절반을 먹었다(실측).
+       담은 영상은 "알아볼" 정도면 되고 주인공은 아래 분석이다. */
+    .poolGrid{display:grid;gap:12px;
+      grid-template-columns:repeat(auto-fill,minmax(clamp(96px,16vw,168px),1fr))}
+    /* 장면 수 요약 — 타임스탬프 목록을 뺀 자리에 "재료가 얼마나 되나"만 남긴다 */
+    .srcStat{margin-top:auto;padding-top:10px;display:flex;align-items:baseline;gap:6px}
+    .srcStatN{font-size:22px;font-weight:900;color:var(--accent2);line-height:1}
+    .srcStatK{font-size:12px;color:var(--sub)}
+    /* ★4:5로 자른다(2026-08-16). 9:16 그대로면 폭 181px에 높이 322px — 담은 영상 칸만
+       410px로 화면을 먹는다(실측). 어떤 영상인지 알아보는 게 목적이지 전체를 보는 게
+       아니다(전체는 3단계 장면 편집에서 본다). object-fit:cover라 가운데가 남는다. */
+    .pool-card{position:relative;border-radius:8px;overflow:hidden;cursor:pointer;aspect-ratio:4/5;
       background:#000;border:2px solid var(--line);opacity:.5;transition:opacity .15s,border-color .15s}
     .pool-card:hover{opacity:.85}
     .pool-card.on{opacity:1;border-color:var(--accent)}
@@ -424,7 +451,7 @@
     .pool-card .badge{position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;
       background:var(--accent);color:#04201b;display:flex;align-items:center;justify-content:center;
       font-size:11px;font-weight:900}
-    .pool-ghost{aspect-ratio:9/16;border-radius:8px;border:2px dashed var(--line);opacity:.4}
+    .pool-ghost{aspect-ratio:4/5;border-radius:8px;border:2px dashed var(--line);opacity:.4}
     .tiles{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
     .skm-card.empty{text-align:center;padding:26px 18px}
     .skm-card.empty h2{font-size:15px;line-height:1.5;margin:0 0 16px;color:var(--txt);font-weight:800}
@@ -616,16 +643,20 @@
     <section class="panel" data-step="0">
       <h3 data-steptitle="source">1 · 영상/대본출력</h3>
       <div class="sub">쓸 영상을 담으면 AI가 <b>영상마다 무엇을 보여주는지</b> 분석합니다 — 어떤 재료가 모였는지 여기서 확인하세요.</div>
-      <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
-        <!-- ◀ 왼쪽: 미리보기(장면 매칭 후) + 재료 그리드 -->
-        <div style="flex:1 1 240px;min-width:220px;max-width:320px;align-self:stretch">
-          <!-- 🪞 미리보기(#mixPreviewPanel/#mixPreview)는 Task 6에서 화면 붙이기(매칭, data-step=7)
-               패널의 좌측 레일로 옮겨갔다 — 매칭 리뷰·후보 선택 UI가 통째로 그리로 이사했기
-               때문이다. 이 자리(제작소)엔 더는 미리보기 슬롯이 없다. -->
-          <div style="font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">◀ 넘어온 영상 (재료) · 뺄 건 클릭</div>
-          <div id="poolList" class="poolGrid"></div>
-          <div id="poolEmpty" class="hint" style="display:none;margin-top:6px">즐겨찾기에서 영상을 보내거나, 아래에 URL을 직접 넣으세요.</div>
-          <div id="footageList" class="hint" style="margin:8px 0"></div>
+      <!-- ★상하 2단(2026-08-16 사장님): "상단 소스 자리에 추가된 썸네일들을 배치하고
+           하단에 기존처럼 분석된 틀을 잡으면 될 것 같다. 상단 썸네일 가로에 배치는
+           5개까지 들어가는 크기로."
+           예전엔 좌우 2단이라 썸네일이 왼쪽 320px 칸에 갇혀 64px로 작았다 — 영상을
+           5~8개까지 담으면 뭘 담았는지 알아볼 수가 없다. -->
+      <div class="srcStage">
+        <div class="srcStageHead">
+          <span>🎬 담은 영상</span>
+          <span class="hint" id="poolCount"></span>
+          <span class="hint" style="margin-left:auto">뺄 건 우상단 ✕ · 누르면 메인으로</span>
+        </div>
+        <div id="poolList" class="poolGrid"></div>
+        <div id="poolEmpty" class="hint" style="display:none;margin-top:8px">즐겨찾기에서 영상을 보내거나, 아래에 URL을 직접 넣으세요.</div>
+        <div id="footageList" class="hint" style="margin:8px 0"></div>
           <details style="margin-top:6px">
             <summary style="cursor:pointer;font-size:12px;color:var(--sub)">🔗 URL 직접 추가 ▾</summary>
             <div style="margin-top:8px">
@@ -638,16 +669,22 @@
               </div>
             </div>
           </details>
-        </div>
-        <!-- 결과 ▶ — 소스 분석 카드 + AI PICK(2단계로 이사 예정) -->
-        <div style="flex:1 1 300px;min-width:280px">
+      </div>
+      <!-- ▼ 하단: 소스 분석 + AI PICK(2단계로 이사 예정) -->
+      <div style="margin-top:18px">
           <!-- 🔎 소스 분석(2026-08-16 신설, 9단계 개편의 1단계 본체).
-               담은 영상마다 "무슨 제품인지·무엇을 보여주는 영상인지·어떤 장면이 들었는지"를
-               카드로 편다. 데이터는 script_extract의 source_brief + segments[].label.
-               ★옛 작업(이미 태깅된 것)엔 source_brief가 없다 → 그 카드는 장면 목록만 뜬다. -->
-          <div id="srcAnalysis" style="margin-bottom:18px"></div>
-          <div style="font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">결과 ▶</div>
-          <div id="aiPick"></div>
+               담은 영상마다 "무슨 제품인지·무엇을 보여주는 영상인지"를 카드로 편다.
+               ★타임스탬프 목록은 뺐다(사장님) — 구간 확인은 3단계 장면 편집이 한다.
+               ★옛 작업엔 source_brief가 없다 → 그 카드는 장면 수만 뜬다. -->
+          <div id="srcAnalysis"></div>
+          <!-- ★AI PICK(대본 고르기)은 2단계 담당이다(9단계 개편) — 1단계에선 감춘다.
+               영상을 담았는데도 "아직 담긴 영상이 없어요" CTA가 떠서 화면 아래 1/3을
+               빈 채로 먹고 있었다. 요소는 남긴다: renderAiPick/renderEmptyState가 이
+               자리에 그리므로 지우면 그 코드가 죽는다. 2단계 세션이 옮겨갈 자리다. -->
+          <div id="aiPickWrap" style="display:none">
+            <div style="font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">결과 ▶</div>
+            <div id="aiPick"></div>
+          </div>
           <details style="margin-top:10px">
             <summary style="cursor:pointer;font-size:12px;color:var(--sub)">고급 ▾</summary>
             <label style="display:flex;align-items:center;gap:8px;margin:8px 0;font-size:12px;cursor:pointer">
@@ -663,7 +700,6 @@
                그 패널7로 옮겨갔다(아래 참조). -->
           <div id="theater" hidden style="margin-top:12px"></div>
           <div id="matchProgress" class="match-progress" hidden style="margin-top:10px"></div>
-        </div>
       </div>
     </section>
     <section class="panel" data-step="1">
@@ -3398,8 +3434,12 @@ function _recommendedBbIdx(){
 function renderPool(){
   const box=document.getElementById('poolList'); if(!box) return;
   const empty=document.getElementById('poolEmpty');
+  // 담은 개수 — 5~8개까지 담는 흐름이라 지금 몇 개인지 항상 보여야 한다(2026-08-16)
+  const cnt=document.getElementById('poolCount');
+  if(cnt) cnt.textContent = HANDOFF.length ? `${HANDOFF.filter(h=>h.useFootage).length}개` : '';
   if(!HANDOFF.length){
-    box.innerHTML = '<div class="pool-ghost"></div><div class="pool-ghost"></div><div class="pool-ghost"></div>';
+    box.innerHTML = '<div class="pool-ghost"></div><div class="pool-ghost"></div><div class="pool-ghost"></div>'
+      + '<div class="pool-ghost"></div><div class="pool-ghost"></div>';   // 5열에 맞춰 5칸
     if(empty) empty.style.display='block';
     return;
   }
@@ -3500,30 +3540,30 @@ function _srcCard(it, i){
   const head = `<div class="srcHead"><span class="srcNo">소스 ${i+1}</span>
       <span class="srcName" title="${name}">${name}</span></div>`;
   if(!d){
-    // 분석 전 카드도 같은 높이를 갖는다(grid-auto-rows:1fr). 안내를 가운데에 둬 빈 칸이
-    // 위아래로 갈리지 않게 한다 — 사장님 정렬 기준 "빈 여백 덩어리 없을 것".
+    // 분석 전 카드는 **한 줄로** 접는다(2026-08-16). 분석된 카드와 같은 높이(280px)를
+    // 주면 "아직 분석 전이에요" 한 문장이 큰 빈 상자를 만든다 — 사장님 정렬 기준
+    // "빈 여백 덩어리 없을 것"에 어긋난다. 정보량에 맞는 크기를 준다.
     return `<div class="srcCard pend">${head}
-      <div class="srcPend">아직 분석 전이에요<br><span class="hint">⚡ 대본 만들기를 누르면 함께 분석됩니다</span></div>
+      <div class="srcPend">⏳ 분석 대기 — ⚡ 대본 만들기를 누르면 함께 분석됩니다</div>
     </div>`;
   }
   const b = d.brief || {};
   const segs = d.segments || [];
   const row = (k, v, cls) => v ? `<div class="srcRow"><span class="srcK">${k}</span>
       <span class="srcV ${cls||''}">${esc(v)}</span></div>` : '';
-  // 장면 목록 — 시간 + 짧은 이름(label). label이 없는 옛 추출본은 화면 설명으로 되돌린다.
-  const scenes = segs.map(s => {
-    const lab = (s.label || '').trim() || (s.scene_desc || '').slice(0, 14);
-    const key = s.is_key ? '<span class="srcKey" title="제품 기능을 화면으로 실증하는 장면">실증</span>' : '';
-    return `<li><span class="srcT">${(+s.start||0).toFixed(1)}~${(+s.end||0).toFixed(1)}초</span>
-      <span class="srcLab">${esc(lab)}</span>${key}</li>`;
-  }).join('');
+  // ★타임스탬프 목록은 1단계에서 뺐다(2026-08-16 사장님 "소스 타임스탬프 추출된 걸
+  //   보여줄 필요는 없고"). 구간별 확인은 3단계 장면 편집이 하는 일이다. 여기서는
+  //   "이 영상이 무엇을 보여주는가"와 재료가 얼마나 되는지(장면 수·실증 수)만 본다.
+  const keyN = segs.filter(s => s.is_key).length;
   return `<div class="srcCard">${head}
     ${row('제품', b.product, 'strong')}
     ${row('역할', b.role)}
     ${row('핵심', b.core)}
     ${b.summary ? `<div class="srcSum" title="${esc(b.summary)}">${esc(b.summary)}</div>` : ''}
-    ${segs.length ? `<details class="srcScenes" open><summary>장면 ${segs.length}개 ▾</summary>
-       <ul>${scenes}</ul></details>` : ''}
+    ${segs.length ? `<div class="srcStat">
+       <span class="srcStatN">${segs.length}</span><span class="srcStatK">장면</span>
+       ${keyN ? `<span class="srcKey" title="제품 기능을 화면으로 실증하는 장면">실증 ${keyN}</span>` : ''}
+     </div>` : ''}
   </div>`;
 }
 // 페이지 로드당 1회 래치(모듈 변수) — HANDOFF 배열이 통째로 재대입돼도 이 값은 안 날아간다.
