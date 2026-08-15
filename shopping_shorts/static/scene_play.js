@@ -428,6 +428,20 @@ function updatePlayBtns(){
 //   seqBounds에서 찾아 seqI를 옮기고, 그 컷 안 오프셋으로 영상·음성을 맞춘 뒤 타이머를
 //   남은 시간으로 다시 건다. 자막(tickSub)은 음성 시각을 따르므로 저절로 맞는다.
 let seekDrag = false, posTimer = null;
+// 진행바를 잡으면 **재생을 멈춘다**(2026-08-15 사장님 "마우스로 앞쪽으로 끌어당기면 멈추게").
+// 예전엔 이 배선이 장면 편집 화면에만 있어, 제작소 큰 화면에서는 끌어도 계속 재생됐다.
+// 문서 전체에 한 번만 걸어(위임) 어느 화면에서 열리든 같게 동작한다 — 두 벌로 갈리지 않게.
+(function(){
+  if (window.__seekBarWired) return;
+  window.__seekBarWired = true;
+  document.addEventListener('pointerdown', e => {
+    const el = e.target;
+    if (!el || el.id !== 'seek') return;
+    seekDrag = true;
+    if (!seqPaused && seq.length) togglePause();     // 끌기 시작 = 일시정지
+  }, true);
+  window.addEventListener('pointerup', () => { seekDrag = false; });
+})();
 function seqTotal(){ return seqBounds.length ? seqBounds[seqBounds.length - 1][1] : 0; }
 function curT(){
   if (!seq.length) return 0;
