@@ -847,7 +847,7 @@
       <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
         <!-- ◀ 좌측 레일: ③ 미리보기(9:16) — 편집안이 뜨면(loadMixReview) 여기가 프리뷰 자리가 된다.
              T8: 다른 패널의 .previewSlot과 같은 규약(sticky) 공유. -->
-        <div style="flex:1 1 240px;min-width:220px;max-width:320px;align-self:stretch">
+        <div style="flex:1 1 300px;min-width:280px;max-width:400px;align-self:stretch">
           <div id="mixPreviewPanel" class="previewSlot" style="display:none">
             <div class="hint" style="margin-bottom:6px">🪞 ③ 미리보기 (9:16)</div>
             <div id="mixPreview"></div>
@@ -2661,7 +2661,7 @@ async function _restoreWork(workId){
 function _renderPreviewVideo(job){
   const box=document.getElementById('mixPreview'); if(!box) return;
   const pvPanel=document.getElementById('mixPreviewPanel'); if(pvPanel) pvPanel.style.display='';
-  box.innerHTML = '<video controls muted playsinline autoplay style="display:block;width:100%;max-height:330px;object-fit:contain;border-radius:12px;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.4)"'
+  box.innerHTML = '<video controls muted playsinline autoplay style="display:block;width:100%;max-height:520px;object-fit:contain;border-radius:12px;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.4)"'
     + ' src="/api/produce/mix/preview/'+encodeURIComponent(job)+'?t='+Date.now()+'"></video>'
 ;   // 안내 문구 없음(2026-08-15 사장님 "랜더 아래쪽 문구들은 다 지워")
   const btn = document.getElementById('btnPreview'); if(btn) btn.disabled = false;
