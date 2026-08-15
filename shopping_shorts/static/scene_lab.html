@@ -557,7 +557,7 @@ function renderBand(){
   const row = document.getElementById('tbrow'); if (!row) return;
   let total = 0;
   const html = DATA.beats.map((b, i) => {
-    const clips = planClips(lists[i] || [], b.target_seconds || 3, STRETCH[i]);
+    const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i]);
     const sec = clips.reduce((a, c) => a + c.dur, 0);
     total += sec;
     const cuts = clips.length
@@ -643,7 +643,7 @@ function render(){
   const _why = (DATA.picks || {}).why || [];
   document.getElementById('film').innerHTML = DATA.beats.map((b, i) => {
     const ids = lists[i] || [];
-    const clips = planClips(ids, b.target_seconds || 3, STRETCH[i]);
+    const clips = planClips(ids, beatDur(i), STRETCH[i]);
     totCuts += clips.length;
     const bdur = clips.reduce((a,c) => a + c.dur, 0);
     totDur += bdur;
@@ -659,7 +659,7 @@ function render(){
     //   잘라냈는데 '가진 시간'이 그대로라 부족 경고가 안 뜬다.
     const have = okIds.reduce((a,id) => a + effLen(id), 0);
     const tinyN = ids.length - okIds.length;
-    const needSec = b.target_seconds || 3;
+    const needSec = beatDur(i);
     const lack = Math.max(0, needSec - have);
     // 실제로 화면에 나온 장면 = 컷에 등장한 것. 담았어도 시간이 모자라면 안 나온다.
     const used = new Set(clips.map(c => c.seg_id));
@@ -1037,7 +1037,7 @@ function autoFill(i){
     delete AUTOADD[i]; render(); return;
   }
   const ids = lists[i] || [];
-  const need = DATA.beats[i].target_seconds || 3;
+  const need = beatDur(i);
   let have = ids.filter(id => DATA.segments[id] && !tooShort(id))
                 .reduce((a, id) => a + effLen(id), 0);
   if (need - have < 0.1) return;

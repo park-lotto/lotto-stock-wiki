@@ -184,6 +184,17 @@ function playTts(a, i){
   a.play().catch(warn);
 }
 
+// 칸의 길이 = **실제 음성 길이**. 음성이 아직 없으면 대본 추정치(target_seconds).
+// ★2026-08-15 사장님 "장면이 남고 tts가 먼저 끝나고 멈춤" — 화면이 추정치로 컷을 짜서
+//   음성보다 길었다. 서버는 이미 실제 길이(tts_dur)를 주고 있었는데 안 쓰고 있었다.
+//   라이브 렌더도 실제 음성 길이(_beat_effective_dur)를 쓰므로 이래야 렌더와 맞는다.
+function beatDur(i){
+  const d = ((DATA && DATA.tts_dur) || {})[String(i)];
+  if (d && d > 0.05) return d;
+  const b = (DATA && DATA.beats && DATA.beats[i]) || {};
+  return b.target_seconds || 3;
+}
+
 // ── 미리보기 재생 엔진 (공용)
 // ※ render()는 장면 편집 화면에만 있다 — 제작소에서 돌 때를 위해 있을 때만 부른다. ────────────────────────────────────────────────
 // 2026-08-15 분리: 사장님 "미리보기를 렌더 썸네일 자리에서 재생해 달라".
@@ -274,7 +285,7 @@ function playSeg(sid, ev){
 }
 function playBeat(i, ev){
   if (ev) ev.stopPropagation();
-  const clips = planClips(lists[i] || [], DATA.beats[i].target_seconds || 3, STRETCH[i]);
+  const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i]);
   if (!clips.length) return;
   // ★재생 버튼을 다시 누르면 **일시정지/재개** 토글(2026-08-15 사장님 "누르면 일시정지").
   //   완전 정지는 미리보기 창의 닫기 ✕. 끝까지 다 돈 뒤에 누르면 처음부터 다시.
@@ -316,7 +327,7 @@ function playAll(ev){
 function runAllFrom(i){
   if (playKey !== 'all') return;
   if (i >= DATA.beats.length){ stopPlay(); return; }
-  const clips = planClips(lists[i] || [], DATA.beats[i].target_seconds || 3, STRETCH[i]);
+  const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i]);
   seqBeat = i; sel = i;
   seqLabel = `전체 재생 - 칸 ${i+1}/${DATA.beats.length} (${DATA.beats[i].role || ''})`;
   if (!clips.length){ runAllFrom(i + 1); return; }
@@ -324,7 +335,7 @@ function runAllFrom(i){
   // 다음 칸의 첫 컷도 지금 미리 앉혀 둔다(칸을 넘을 때도 누수 0).
   const nx = DATA.beats[i + 1];
   if (nx){
-    const ncl = planClips(lists[i + 1] || [], nx.target_seconds || 3, STRETCH[i + 1]);
+    const ncl = planClips(lists[i + 1] || [], beatDur(i + 1), STRETCH[i + 1]);
     if (ncl[0]){ ncl[0]._slot = 0; seat(ncl[0]); }
   }
   const a = audio();
