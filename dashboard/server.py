@@ -4668,6 +4668,159 @@ def api_insights2_stock(request: Request, q: str = "", days: int = 45):
         conn.close()
 
 
+FLOW_DB_PATH = os.path.join(ROOT, "data", "flow.db")
+
+
+def _flow_by_date(code: str) -> dict:
+    """{YYYY-MM-DD: {frgn, orgn, prsn}} — 억원. 적재 전이면 빈 dict."""
+    if not code or not os.path.exists(FLOW_DB_PATH):
+        return {}
+    import sqlite3          # 이 파일은 최상위에서 sqlite3를 import하지 않는다(기존 관례)
+    try:
+        conn = sqlite3.connect(FLOW_DB_PATH, timeout=5)
+        rows = conn.execute(
+            "SELECT date, frgn, orgn, prsn FROM stock_flow_daily WHERE code=?", (code,)
+        ).fetchall()
+        conn.close()
+    except Exception:
+        return {}
+    out = {}
+    for d, f, g, p in rows:
+        # 저장은 KIS 원표기(YYYYMMDD)·백만원. 화면은 YYYY-MM-DD·억원을 쓴다.
+        out[f"{d[:4]}-{d[4:6]}-{d[6:8]}"] = {
+            "frgn": round((f or 0) / 100), "orgn": round((g or 0) / 100),
+            "prsn": round((p or 0) / 100),
+        }
+    return out
+
+
+# 「중요한 날」 점수 — 하나라도 걸리면 마커, 합이 클수록 굵게.
+# 매일 찍으면 못 보므로 사건이 있었던 날만 남긴다.
+_KEYDAY_MIN_SCORE = 2
+
+
+def _score_days(candles: list, atoms_by_date: dict, flow: dict) -> list:
+    """[{date, score, why[], chg, volx, atoms, frgn, orgn}] — 점수순."""
+    if len(candles) < 5:
+        return []
+    closes = [c.get("close") or 0 for c in candles]
+    vols = [c.get("value") or 0 for c in candles]
+    n_atoms = [len(atoms_by_date.get(c["time"], [])) for c in candles]
+    avg_atoms = (sum(n_atoms) / len(n_atoms)) if n_atoms else 0
+    frgns = sorted(abs(v["frgn"]) for v in flow.values()) if flow else []
+    big_flow = frgns[int(len(frgns) * 0.9)] if len(frgns) >= 10 else None
+
+    out = []
+    for i, c in enumerate(candles):
+        if i == 0:
+            continue
+        d = c["time"]
+        prev = closes[i - 1] or 0
+        chg = ((closes[i] / prev) - 1) * 100 if prev else 0
+        base = vols[max(0, i - 60):i]
+        volx = (vols[i] / (sum(base) / len(base))) if base and sum(base) else 0
+        na = n_atoms[i]
+        fl = flow.get(d) or {}
+
+        score, why = 0, []
+        if abs(chg) >= 5:
+            score += 3; why.append(f"{chg:+.1f}% 급등락")
+        elif abs(chg) >= 3:
+            score += 2; why.append(f"{chg:+.1f}%")
+        if volx >= 3:
+            score += 3; why.append(f"거래량 {volx:.1f}배")
+        elif volx >= 2:
+            score += 2; why.append(f"거래량 {volx:.1f}배")
+        if avg_atoms and na >= max(3, avg_atoms * 2):
+            score += 2; why.append(f"발언 {na}건")
+        if big_flow and fl and abs(fl.get("frgn", 0)) >= big_flow:
+            score += 2
+            why.append(f"외국인 {fl['frgn']:+,}억")
+        # 60일 신고가·신저가
+        win = closes[max(0, i - 59):i + 1]
+        if len(win) >= 20 and closes[i] == max(win):
+            score += 2; why.append("60일 신고가")
+        elif len(win) >= 20 and closes[i] == min(win):
+            score += 2; why.append("60일 신저가")
+
+        if score >= _KEYDAY_MIN_SCORE:
+            out.append({
+                "date": d, "score": score, "why": why,
+                "chg": round(chg, 2), "volx": round(volx, 1),
+                "atoms": na, "close": closes[i],
+                "frgn": fl.get("frgn"), "orgn": fl.get("orgn"),
+            })
+    out.sort(key=lambda x: (-x["score"], x["date"]))
+    return out
+
+
+@app.get("/api/insights2/keydays")
+def api_insights2_keydays(request: Request, q: str = "", days: int = 180, top: int = 30):
+    """차트 + 그날 있었던 일. ★운영자 전용.
+
+    반환: {code, candles[], flow{}, byDate{}, keydays[], coverage{}}
+      - byDate: 날짜별 발언(마커 호버·클릭이 이걸 쓴다)
+      - coverage: 발언·수급이 **언제부터** 있는지. 없는 구간을 화면이 흐리게 처리해야
+        "조용한 시기"로 오해하지 않는다.
+    """
+    if _ins2_require_admin(request):
+        return JSONResponse(content={"error": "forbidden"}, status_code=403)
+    q = (q or "").strip()
+    if not q:
+        return JSONResponse(content={"error": "검색어가 없습니다"}, status_code=400)
+
+    from pipeline.atoms import stock_search
+    from pipeline.atoms.codemap import code_for
+
+    canonical = stock_search.canonical_name(q)
+    code = code_for(canonical) or ""
+    if not code:
+        return JSONResponse(content={"error": f"「{canonical}」 종목코드를 찾지 못했습니다",
+                                     "canonical": canonical}, status_code=404)
+
+    # 캔들 — 이미 있는 엔드포인트를 그대로 쓴다(키움→KIS→네이버 3중 폴백이 붙어 있다)
+    try:
+        raw = json.loads(bytes(api_stock_candles(code=code, tf="D").body).decode("utf-8"))
+        candles = (raw.get("candles") or [])[-max(30, days):]
+    except Exception as e:
+        return JSONResponse(content={"error": f"캔들 조회 실패: {e}"}, status_code=503)
+
+    # 발언 — 날짜별로 묶는다
+    by_date: dict = {}
+    conn = _ins_conn()
+    if conn is not None:
+        try:
+            since = candles[0]["time"] if candles else ""
+            for r in stock_search.search(conn, q, since=since, limit=1500):
+                d = (r.get("date") or "").strip()
+                if len(d) != 10 or d.startswith("0000"):
+                    continue  # 깨진 날짜(atoms에 '0000-00-00'이 섞여 있다)는 버린다
+                head = _ins2_split_head(r.get("content") or "")
+                by_date.setdefault(d, []).append({
+                    "content": head["text"], "who": r.get("source_name") or "",
+                    "src": r.get("source_type") or "", "sign": _sign_of(r.get("signal")),
+                    "relay": head["relay"], "tp": head["tp"],
+                })
+        finally:
+            conn.close()
+
+    flow = _flow_by_date(code)
+    keydays = _score_days(candles, by_date, flow)[:max(5, top)]
+
+    return JSONResponse(content={
+        "q": q, "canonical": canonical, "code": code,
+        "candles": candles,
+        "flow": flow,
+        "byDate": by_date,
+        "keydays": keydays,
+        "coverage": {
+            "atoms_from": min(by_date) if by_date else "",
+            "flow_from": min(flow) if flow else "",
+            "candles_from": candles[0]["time"] if candles else "",
+        },
+    })
+
+
 # 종합 결과 캐시 — 같은 종목을 다시 열 때 LLM을 또 부르지 않는다.
 # 발언은 하루 단위로 쌓이므로 날짜가 바뀌면 자연히 갱신된다.
 _BRIEF_CACHE: dict = {}
