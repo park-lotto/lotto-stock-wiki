@@ -150,3 +150,22 @@ def test_rotation_session_not_overridden_by_config(tmp_path, monkeypatch):
 
     # 위 재현이 실제 코드와 어긋나지 않게, 가드 자체가 소스에 있는지도 잠근다.
     assert 'if not ctx_kw.get("storage_state")' in inspect.getsource(IP._scrape_one_playwright)
+
+
+# ── 발굴 팔로워 조회도 로테이션을 써야 한다 (2026-08-15 실사고) ──
+# 해시태그 검색(_search_hashtag_playwright)은 2026-08-10에 로테이션으로 옮겼는데
+# 프로필 조회(_fetch_profiles_playwright)만 구 단일 세션에 남아 있었다. 그 계정이
+# 로그아웃되자 프로필 페이지가 계정선택 화면으로 떨어져 graphql 캡처가 0건이 됐고,
+# 발굴 카드의 팔로워·팔로워당댓글이 전부 0으로 굳었다(실측: 피드 49건 전원 0).
+# 세션·프록시는 반드시 _discover_session_proxy()가 **짝으로** 정해야 한다(0순위-B).
+def test_fetch_profiles_uses_rotation_session():
+    """팔로워 조회가 구 단일 세션(config)이 아니라 로테이션 짝을 써야 한다."""
+    import inspect
+    from shopping_shorts import instagram_playwright as IP
+
+    src = inspect.getsource(IP._fetch_profiles_playwright)
+    assert "_discover_session_proxy()" in src, \
+        "팔로워 조회도 검색과 같은 로테이션 세션·프록시 짝을 써야 한다"
+    # 계정↔IP는 함께 정해져야 한다 — 세션만 로테이션하고 프록시가 어긋나면 챌린지가 뜬다.
+    assert "playwright_proxy_kw(proxy)" in src, \
+        "로테이션 세션에는 그 슬롯의 프록시를 짝으로 붙여야 한다"

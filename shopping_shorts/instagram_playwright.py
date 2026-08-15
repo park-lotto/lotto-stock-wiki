@@ -507,10 +507,21 @@ def _fetch_profiles_playwright(usernames):
 
     launch_kw = {"headless": True, "args": ["--disable-blink-features=AutomationControlled"]}
     ctx_kw = {}
-    if config.INSTAGRAM_SESSION_PATH and os.path.exists(config.INSTAGRAM_SESSION_PATH):
-        ctx_kw["storage_state"] = config.INSTAGRAM_SESSION_PATH
+    # ★세션·프록시는 _discover_session_proxy()가 짝으로 정한다(2026-08-15).
+    # 해시태그 검색은 2026-08-10에 로테이션으로 옮겼는데 **여기만 구 단일 세션
+    # (INSTAGRAM_SESSION_PATH)에 남아 있었다** — 그 세션이 로그아웃되면서 프로필
+    # 페이지가 계정선택 화면("Continue as …")으로 떨어져 graphql 응답이 0건이 됐고,
+    # 발굴 카드의 팔로워·참여밀도가 전부 0으로 굳었다(실측 2026-08-15: 피드 49건
+    # 전원 followers=0). A/B: 구 단일세션=캡처 실패 / ig_sessions 슬롯=1,846 정상.
+    from shopping_shorts.channel_archive import playwright_proxy_kw
+    session_path, proxy = _discover_session_proxy()
+    if session_path and os.path.exists(session_path):
+        ctx_kw["storage_state"] = session_path
+        # 인증은 분리해서 넘긴다 — {"server": "http://u:p@h"}는 Playwright가 조용히 무시한다.
+        _pk = playwright_proxy_kw(proxy)
+        if _pk:
+            ctx_kw["proxy"] = _pk
     elif config.INSTAGRAM_PROXY:
-        from shopping_shorts.channel_archive import playwright_proxy_kw
         _pk = playwright_proxy_kw(config.INSTAGRAM_PROXY)
         if _pk:
             ctx_kw["proxy"] = _pk
