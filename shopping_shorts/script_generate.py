@@ -302,11 +302,18 @@ _STYLE_SCHEMA = {
 STYLE_REWRITES = 2       # 게이트 실패 시 다시 쓰는 횟수. 그래도 안 되면 실패로 남긴다.
 
 
-def generate_one_style(sources, style, target_seconds=30, bank_context=""):
+def generate_one_style(sources, style, target_seconds=30, bank_context="", facts_block=""):
     """스타일 1개로 대본 1안. → {beats, script, hook, checks, passed, tries, style_id, style_name}
 
     ★조용히 통과시키지 않는다: 게이트를 못 넘으면 passed=False로 **표시해서** 돌려준다.
-      기존 라이브의 병이 '규칙을 어겨도 아무도 모르는 것'이었다."""
+      기존 라이브의 병이 '규칙을 어겨도 아무도 모르는 것'이었다.
+
+    facts_block: `product_facts.prompt_block()` 결과(쿠팡 상세·리뷰에서 확인된 사실).
+      **빈 문자열이면 기존 경로 그대로 = 회귀 0.** 재료가 없다고 생성이 막히면 안 된다.
+      실측 효과(2026-08-16 A/B): 없을 때 "툭하면 떨어져서 시끄럽고"(AI가 상상한 불편)·
+      "펜이 수십 자루" → 있을 때 "애가 필통을 네 개씩 들고 다니니"(리뷰 실제 사연)·
+      "볼펜 65자루랑 20cm 자까지".
+    """
     from shopping_shorts import bank_assemble, script_gate
 
     seconds = max(5, min(int(target_seconds or 30), 90))
@@ -317,6 +324,7 @@ def generate_one_style(sources, style, target_seconds=30, bank_context=""):
                                seconds=seconds, words=max(15, round(seconds * 2.3)), n=1,
                                bank=("\n\n" + bank_context) if bank_context else "")
             + _style_extra()
+            + (("\n" + facts_block) if facts_block else "")
             + "\n\n" + head
             + "\n\n출력은 위 칸 순서대로 beats 배열 하나만. 각 원소는 {role, text}.")
 
@@ -340,12 +348,14 @@ def generate_one_style(sources, style, target_seconds=30, bank_context=""):
     }
 
 
-def generate_by_styles(sources, styles, target_seconds=30, bank_context=""):
-    """스타일 목록(보통 2개) → 각 1안. 실패한 스타일은 건너뛴다(하나라도 나오면 화면은 산다)."""
+def generate_by_styles(sources, styles, target_seconds=30, bank_context="", facts_block=""):
+    """스타일 목록(보통 2개) → 각 1안. 실패한 스타일은 건너뛴다(하나라도 나오면 화면은 산다).
+
+    facts_block은 그대로 흘려보낸다 — 빈 값이면 기존 경로(회귀 0)."""
     out = []
     for st in styles or []:
         try:
-            d = generate_one_style(sources, st, target_seconds, bank_context)
+            d = generate_one_style(sources, st, target_seconds, bank_context, facts_block)
         except Exception as e:      # noqa: BLE001 — 한 스타일 실패로 나머지를 죽이지 않는다
             print(f"generate_by_styles 실패(style={st.get('id')}): {e}")
             d = None
