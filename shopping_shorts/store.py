@@ -938,6 +938,18 @@ class Store:
                     updated_at TEXT
                 )
             """)
+            # 대본 스타일 강제선택(2026-08-15) — spine을 '스타일 저장소'로 재사용한다.
+            # ★새 테이블을 만들지 않는 이유(0순위-B): 스파인 31행이 이미 name·상황·비트체인·
+            #   적합카테고리·perf·승인상태를 갖고 있다. 같은 판단을 두 표에 나눠 적으면 어긋난다.
+            # beat_chain_json은 **사람이 읽는 설명**(자연어 문장), beat_roles_json은
+            # **기계가 대조하는 키**다. 기존 31행이 이미 자연어라 파싱하면 깨지므로 나눠 둔다.
+            for _col, _ddl in (("beat_roles_json", "TEXT"),      # ["hook","before",...]
+                               ("templates_json", "TEXT"),       # {"hook":["...{가족}..."]}
+                               ("chars_per_30s", "INTEGER")):    # 이 스타일 히트작의 실측 말 밀도
+                try:
+                    c.execute(f"ALTER TABLE spine ADD COLUMN {_col} {_ddl}")
+                except sqlite3.OperationalError:
+                    pass  # 이미 있으면 무시
             c.execute("""
                 CREATE TABLE IF NOT EXISTS script_usage (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -947,6 +959,12 @@ class Store:
                     created_at TEXT
                 )
             """)
+            # 어느 스타일로 만든 대본인지 남긴다 → 나중에 그 영상 실적으로 spine.perf_score 갱신.
+            # 남의 성공(조회수)으로 시작해 **우리 데이터로 정렬**하기 위한 최소 기록.
+            try:
+                c.execute("ALTER TABLE script_usage ADD COLUMN spine_id INTEGER")
+            except sqlite3.OperationalError:
+                pass
             c.execute("""
                 CREATE TABLE IF NOT EXISTS pron_reports (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -3055,10 +3073,34 @@ class Store:
                  status, now, now))
             return cur.lastrowid
 
+    def set_spine_style(self, spine_id, beat_roles=None, templates=None, chars_per_30s=None):
+        """스파인에 **기계가 검사할** 스타일 정보를 붙인다(2026-08-15).
+
+        beat_roles = ["hook","before",...] · templates = {"hook":["...{가족}..."]} ·
+        chars_per_30s = 그 스타일 히트작의 실측 말 밀도. None은 안 건드린다."""
+        sets, args = [], []
+        if beat_roles is not None:
+            sets.append("beat_roles_json=?")
+            args.append(json.dumps(beat_roles, ensure_ascii=False))
+        if templates is not None:
+            sets.append("templates_json=?")
+            args.append(json.dumps(templates, ensure_ascii=False))
+        if chars_per_30s is not None:
+            sets.append("chars_per_30s=?")
+            args.append(int(chars_per_30s))
+        if not sets:
+            return
+        sets.append("updated_at=?")
+        args.append(datetime.now(timezone.utc).isoformat())
+        args.append(spine_id)
+        with self._conn() as c:
+            c.execute("UPDATE spine SET %s WHERE id=?" % ", ".join(sets), args)
+
     def list_spines(self, status=None):
         q = ("SELECT id, name, situation_type, character_roles_json, beat_chain_json, "
              "emotion_arc, appeal, fit_categories_json, source_count, perf_score, "
-             "status, created_at, updated_at FROM spine")
+             "status, created_at, updated_at, beat_roles_json, templates_json, "
+             "chars_per_30s FROM spine")
         args = []
         if status is not None:
             q += " WHERE status=?"
@@ -3073,9 +3115,29 @@ class Store:
              "emotion_arc": r[5], "appeal": r[6],
              "fit_categories": json.loads(r[7]) if r[7] else None,
              "source_count": r[8], "perf_score": r[9], "status": r[10],
-             "created_at": r[11], "updated_at": r[12]}
+             "created_at": r[11], "updated_at": r[12],
+             "beat_roles": json.loads(r[13]) if r[13] else None,
+             "templates": json.loads(r[14]) if r[14] else None,
+             "chars_per_30s": r[15]}
             for r in rows
         ]
+
+    def list_style_spines(self, category=None, status="approved"):
+        """**스타일로 쓸 수 있는** 스파인만 — beat_roles가 붙은 것.
+
+        ★카테고리 잠금(2026-08-15 실측 근거): 무선 이어폰 소재에 살림용 '시월드형'을 씌우니
+          구조 검사는 6/6 통과했는데 읽으면 어색했다("남편한테 욕 바가지"+"음향 전문가 추천").
+          게이트로는 못 잡는 종류의 실패라 **애초에 목록에 안 띄운다.**
+          fit_categories가 비어 있으면 범용으로 보고 통과시킨다(기존 pick_spine_for_category와 같은 규칙)."""
+        out = []
+        for sp in self.list_spines(status=status):
+            if not sp.get("beat_roles"):
+                continue
+            fits = sp.get("fit_categories") or []
+            if category and fits and category not in fits:
+                continue
+            out.append(sp)
+        return out
 
     def set_spine_status(self, spine_id, status):
         now = datetime.now(timezone.utc).isoformat()
@@ -3637,15 +3699,17 @@ class Store:
             c.execute("UPDATE pron_reports SET resolved=1 WHERE id=?", (report_id,))
 
     # ── novelty 메모리(P0-3): 최근 영상이 쓴 훅·인물·CTA를 기록해 다음 생성에서 회피 ──
-    def record_script_usage(self, hook="", person="", cta=""):
+    def record_script_usage(self, hook="", person="", cta="", spine_id=None):
         """방금 만든 영상 대본의 (훅·인물·CTA 키워드)를 기록. 전부 비면 안 넣는다.
-        빈 필드는 그대로 저장하되 recent 조회에서 걸러진다(빈 문자열 반환 방지)."""
+        빈 필드는 그대로 저장하되 recent 조회에서 걸러진다(빈 문자열 반환 방지).
+        spine_id(2026-08-15) = 어느 스타일로 썼나 — 나중에 실적으로 perf_score를 매기는 근거."""
         hook, person, cta = (hook or "").strip(), (person or "").strip(), (cta or "").strip()
-        if not (hook or person or cta):
+        if not (hook or person or cta or spine_id):
             return
         with self._conn() as c:
-            c.execute("INSERT INTO script_usage(hook, person, cta, created_at) VALUES(?,?,?,?)",
-                      (hook, person, cta, datetime.now(timezone.utc).isoformat()))
+            c.execute("INSERT INTO script_usage(hook, person, cta, spine_id, created_at) "
+                      "VALUES(?,?,?,?,?)",
+                      (hook, person, cta, spine_id, datetime.now(timezone.utc).isoformat()))
 
     def recent_script_usage(self, limit=8):
         """최근 사용 (훅·인물·CTA) → {hooks, persons, ctas}. 최신순, 각 필드는 빈값 제외.

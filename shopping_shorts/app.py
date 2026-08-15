@@ -2236,10 +2236,39 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     # 마스터 스위치(ping_pong_enabled)가 켜져 있으면 자동 주입(위키담기로 쌓인 걸 바로 활용).
     _gen_kw = dict(mode=mode, my_topic=my_topic, subject=subject, n=n)
     _use_bank = body.get("use_bank") or (store.get_setting("ping_pong_enabled", "") == "1")
+    _bank_ctx = ""
     if _use_bank:
         _bank = bank_assemble.assemble_bank_context(store, it.get("category") or "")
         if _bank:
             _gen_kw["bank_context"] = _bank
+            _bank_ctx = _bank
+    # ★스타일 강제 경로(2026-08-15) — style_ids가 오면 스타일마다 1안씩 만들고 script_gate로
+    #   구조를 대조한다. 안 오면 기존 경로 그대로라 회귀 0(호출부가 안 보내면 아무 일도 없다).
+    #   기존 경로와 다른 점: 같은 프롬프트를 n번 굴리는 게 아니라 **스타일마다 프롬프트가 갈려**
+    #   서로 다른 구조가 보장되고, 어긴 결과는 재작성이 걸린다.
+    _style_ids = [int(x) for x in (body.get("style_ids") or []) if str(x).isdigit()]
+    if _style_ids:
+        _by_id = {s["id"]: s for s in store.list_style_spines(category=it.get("category") or None)}
+        _picked = [_by_id[i] for i in _style_ids if i in _by_id]
+        if not _picked:
+            return JSONResponse(status_code=422, content={
+                "ok": False, "error": "고른 스타일을 쓸 수 없음(승인·구조·카테고리 확인)"})
+        _src = [{"name": it.get("category") or "", "full_text": it.get("full_text") or "",
+                 "structure": it.get("structure") or {}}]
+        _styled = script_generate.generate_by_styles(
+            _src, _picked, target_seconds=body.get("target_seconds") or 30,
+            bank_context=_bank_ctx)
+        if not _styled:
+            return JSONResponse(status_code=502, content={
+                "ok": False, "error": "생성 실패(키 소진 또는 응답 오류) — 잠시 후 재시도"})
+        _cid_ = _cid(request)
+        for dr in _styled:
+            did = uuid.uuid4().hex[:12]
+            store.save_draft(did, _cid_, shortcode, None, dr.get("hook", ""),
+                             dr.get("script", ""), None, "style")
+            dr["draft_id"] = did
+            store.record_script_usage(hook=dr.get("hook", ""), spine_id=dr.get("style_id"))
+        return {"ok": True, "drafts": _styled, "mode": "style"}
     drafts = script_generate.generate_variations(
         it.get("structure") or {}, it.get("full_text") or "", elem_modes, category_lookup, **_gen_kw)
     if not drafts:
@@ -7412,6 +7441,31 @@ def api_produce_script_mix(request: Request, body: dict):
         sources = [wiki[sc] for sc in shortcodes if sc in wiki]
     if len(sources) < 2:
         return JSONResponse(status_code=422, content={"ok": False, "error": "선택한 대본을 찾을 수 없음"})
+    # ★스타일 강제 경로(2026-08-15) — body.style_ids가 오면 스타일마다 1안씩 만들고
+    #   script_gate로 구조를 대조한다. 안 오면 기존 경로 그대로(회귀 0).
+    #   기본 off인 이유: 검증 안 된 플래그를 라이브에 켜서 사고 난 적이 있다
+    #   (memory feedback_no_unverified_flag_in_live).
+    style_ids = [int(x) for x in (body.get("style_ids") or []) if str(x).isdigit()]
+    if style_ids:
+        _st = Store(DB_PATH)
+        _by_id = {s["id"]: s for s in _st.list_style_spines()}
+        picked = [_by_id[i] for i in style_ids if i in _by_id]
+        if not picked:
+            return JSONResponse(status_code=422,
+                                content={"ok": False, "error": "고른 스타일을 찾을 수 없음(승인·구조 필요)"})
+        styled = script_generate.generate_by_styles(
+            sources, picked, target_seconds=body.get("target_seconds") or 20)
+        if not styled:
+            return JSONResponse(status_code=502,
+                                content={"ok": False, "error": "생성 실패(키 소진 또는 응답 오류)"})
+        cid = _cid(request)
+        for dr in styled:
+            did = uuid.uuid4().hex[:12]
+            _st.save_draft(did, cid, None, None, dr.get("hook", ""), dr.get("script", ""),
+                           None, "style")
+            dr["draft_id"] = did
+            _st.record_script_usage(hook=dr.get("hook", ""), spine_id=dr.get("style_id"))
+        return {"ok": True, "drafts": styled, "mode": "style"}
     drafts = script_generate.generate_mix(
         sources, target_seconds=body.get("target_seconds") or 20, n=body.get("n") or 3)
     if not drafts:
@@ -9098,6 +9152,22 @@ def api_pattern_buckets():
 def api_pattern_spines(status: str = None):
     """매크로 스파인 목록. status로 필터."""
     return {"ok": True, "spines": Store(DB_PATH).list_spines(status=status or None)}
+
+
+@app.get("/api/script/styles")
+def api_script_styles(category: str = None):
+    """대본 생성에서 고를 수 있는 **스타일** 목록(2026-08-15).
+
+    조건: 승인됨 + beat_roles가 붙어 있음(=기계가 검사 가능) + 카테고리 적합.
+    카테고리 잠금이 여기 있는 이유: 톤이 안 맞는 조합(이어폰에 '시월드형')은 구조 검사를
+    통과해버려 게이트로 못 잡는다 — 애초에 목록에 안 띄운다."""
+    styles = Store(DB_PATH).list_style_spines(category=category or None)
+    return {"ok": True, "styles": [
+        {"id": s["id"], "name": s["name"], "situation_type": s["situation_type"],
+         "beat_roles": s["beat_roles"], "chars_per_30s": s["chars_per_30s"],
+         "fit_categories": s["fit_categories"], "source_count": s["source_count"],
+         "perf_score": s["perf_score"]}
+        for s in styles]}
 
 
 @app.post("/api/pattern/spine/status")

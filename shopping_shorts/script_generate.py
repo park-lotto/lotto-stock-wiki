@@ -278,6 +278,82 @@ def generate_mix(sources, target_seconds=30, n=3, max_key_tries=3, bank_context=
     return _verify_and_fix(_generate_drafts(prompt), seconds)
 
 
+# ---------------- 스타일 강제 생성(2026-08-15) ----------------
+# 기존 generate_mix는 **같은 프롬프트를 n번 굴려 운 좋은 걸 고르는** 구조라 3안이 다 비슷할
+# 수 있었다. 여기는 스타일마다 프롬프트가 갈리므로 **서로 다른 구조가 보장**되고, 나온 결과를
+# script_gate가 대조해 어기면 재작성을 건다. 기존 경로는 그대로 두고 새 함수로 나란히 둔다
+# (플래그 off면 아무도 안 부른다 = 회귀 0).
+
+_STYLE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "beats": {
+            "type": "array", "minItems": 3,
+            "items": {
+                "type": "object",
+                "properties": {"role": {"type": "string"}, "text": {"type": "string"}},
+                "required": ["role", "text"],
+            },
+        },
+    },
+    "required": ["beats"],
+}
+
+STYLE_REWRITES = 2       # 게이트 실패 시 다시 쓰는 횟수. 그래도 안 되면 실패로 남긴다.
+
+
+def generate_one_style(sources, style, target_seconds=30, bank_context=""):
+    """스타일 1개로 대본 1안. → {beats, script, hook, checks, passed, tries, style_id, style_name}
+
+    ★조용히 통과시키지 않는다: 게이트를 못 넘으면 passed=False로 **표시해서** 돌려준다.
+      기존 라이브의 병이 '규칙을 어겨도 아무도 모르는 것'이었다."""
+    from shopping_shorts import bank_assemble, script_gate
+
+    seconds = max(5, min(int(target_seconds or 30), 90))
+    head = bank_assemble.style_block(style, seconds=seconds)
+    if not head:
+        return None
+    base = (_MIX_PROMPT.format(sources=_mix_source_block((sources or [])[:3]),
+                               seconds=seconds, words=max(15, round(seconds * 2.3)), n=1,
+                               bank=("\n\n" + bank_context) if bank_context else "")
+            + _style_extra()
+            + "\n\n" + head
+            + "\n\n출력은 위 칸 순서대로 beats 배열 하나만. 각 원소는 {role, text}.")
+
+    extra, tries, res, checks, full = "", [], None, [], ""
+    for _ in range(STYLE_REWRITES + 1):
+        data = _call_json(base + extra, _STYLE_SCHEMA)
+        res = (data or {}).get("beats") or []
+        if not res:
+            break
+        checks, full = script_gate.check(style, res)
+        tries.append({"chars": len(script_gate.norm(full)),
+                      "fails": [c["name"] for c in checks if not c["ok"]]})
+        if script_gate.passed(checks):
+            break
+        extra = script_gate.gate_feedback(checks)
+
+    return {
+        "style_id": style.get("id"), "style_name": style.get("name"),
+        "beats": res or [], "script": full, "hook": (res or [{}])[0].get("text", ""),
+        "checks": checks, "passed": script_gate.passed(checks), "tries": tries,
+    }
+
+
+def generate_by_styles(sources, styles, target_seconds=30, bank_context=""):
+    """스타일 목록(보통 2개) → 각 1안. 실패한 스타일은 건너뛴다(하나라도 나오면 화면은 산다)."""
+    out = []
+    for st in styles or []:
+        try:
+            d = generate_one_style(sources, st, target_seconds, bank_context)
+        except Exception as e:      # noqa: BLE001 — 한 스타일 실패로 나머지를 죽이지 않는다
+            print(f"generate_by_styles 실패(style={st.get('id')}): {e}")
+            d = None
+        if d and d.get("beats"):
+            out.append(d)
+    return out
+
+
 def _elem_lines(structure, elem_modes, category_lookup):
     """요소별 지시 라인 생성. elem_modes: {element_key: mode_string}, mode_string은
     "keep"(원본유지) / "free"(AI 자유즉흥) / "random"(학습된 카테고리 중 랜덤) /

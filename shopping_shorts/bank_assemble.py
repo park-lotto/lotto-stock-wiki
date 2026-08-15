@@ -198,6 +198,43 @@ def winners_block(store, category, k=2, max_chars=420):
             + "\n\n".join(lines))
 
 
+def style_block(style, seconds=30):
+    """★스타일(스파인+beat_roles) → **칸을 못 박는** 프롬프트 블록(2026-08-15).
+
+    `spine_charter`와 다른 점이 핵심이다. charter는 "이 골격을 따르라"는 **권유**라 AI가
+    매번 새로 구성했다. 여기는 칸 이름(role)을 출력에 그대로 돌려받아 `script_gate`가
+    대조하므로, 어긋나면 재작성이 걸린다 — 부탁이 판정으로 바뀐다.
+
+    말 밀도를 함께 박는 이유(실측): 일반 기준 4.5자/초면 30초에 135자인데 채이홈 히트작은
+    264~377자였다. 규칙 위반이 아니라 아무 경고 없이 **히트작의 1/3로 헐거운** 대본이
+    나오고 있었다. 칸당 평균 글자수까지 줘야 실제로 채워진다(117자 → 269자, 실측).
+    """
+    if not style or not style.get("beat_roles"):
+        return ""
+    roles = style["beat_roles"]
+    templates = style.get("templates") or {}
+    # 칸 설명은 기존 beat_chain_json(사람이 읽는 자연어)을 순서대로 빌려 쓴다 —
+    # 같은 내용을 두 곳에 적지 않기 위해서다(0순위-B). 개수가 안 맞으면 있는 만큼만.
+    descs = style.get("beat_descs") or dict(zip(roles, style.get("beat_chain") or []))
+    lines = []
+    for i, role in enumerate(roles, 1):
+        tmpl = templates.get(role) or []
+        tail = ("\n     쓸 수 있는 문장틀(빈칸만 우리 소재에 맞게 채워라. 틀 자체를 새로 짓지 마라): "
+                + " / ".join('"%s"' % _sanitize(x) for x in tmpl)) if tmpl else ""
+        lines.append('  %d) role="%s" — %s%s' % (i, role, _sanitize(descs.get(role, "")), tail))
+    chars = style.get("chars_per_30s") or 0
+    dens = ""
+    if chars:
+        target = int(chars * seconds / 30)
+        dens = ("\n- 전체 %d초에 **%d자 안팎**으로 꽉 채워라(이 스타일 히트작의 실제 밀도다). "
+                "칸 하나에 평균 %d자 — 한 문장으로 끝내지 말고 2~3문장씩 써라. "
+                "말이 비면 이 스타일이 아니다." % (seconds, target, max(1, target // len(roles))))
+    return ("★[스타일: %s] — 아래 칸을 **이 순서 그대로** 채워라(순서를 바꾸거나 칸을 빼면 반려된다).\n"
+            % _sanitize(style.get("name") or "")
+            + "\n".join(lines)
+            + "\n- 각 칸의 role 값을 위와 **똑같이** 돌려줘라(검사기가 대조한다)." + dens)
+
+
 def assemble_bank_context(store, category, k=5):
     """스파인 charter + 부품 top-k + ★우승 대본 few-shot 합본. 없으면 ''(호출부는 빈 문자열이면
     기존 헌장만 써서 회귀0)."""
