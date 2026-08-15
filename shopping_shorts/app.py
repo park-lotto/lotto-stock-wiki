@@ -16,7 +16,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import requests
 from fastapi import BackgroundTasks, FastAPI, Request, UploadFile, File, Form
-from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse, Response
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse, Response, StreamingResponse
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from shopping_shorts import service
@@ -3336,9 +3336,60 @@ def api_mix_scene_lab_phash(job_id: str):
     return {"ok": True, "phash": _lab_phash_load(_MIX_WORK_DIR / job_id)}
 
 
+def _range_mp4_response(path, request):
+    """mp4를 Range(부분 요청)까지 지원해 내보낸다 — 브라우저가 구간 시크를 하려면 필수.
+
+    ★2026-08-15 실사고: 예전엔 FileResponse만 돌려주고 주석에 "FileResponse가 Range를
+      처리해 구간 시크가 된다"고 적어뒀는데 **사실이 아니었다**. 서버 starlette 0.36.3의
+      FileResponse에는 range 처리 코드가 아예 없다(실측: 소스에 'range' 문자열 0건.
+      Range 지원은 starlette 0.37+). 그래서 서버는 늘 200에 파일 전체를 주고
+      Accept-Ranges도 안 보냈다 → 브라우저가 시크를 못 해 **어떤 장면을 골라도 0초부터
+      재생**됐다(실측 job 8a5a4732d77b: 담은 구간 4.7~8.8초인데 0~3.0초가 재생,
+      s0의 3.0초 프레임과 화면이 픽셀 단위로 일치).
+      starlette 업그레이드는 앱 전체에 영향이 가므로 여기서만 Range를 직접 처리한다.
+    """
+    p = Path(path)
+    size = p.stat().st_size
+    raw = (request.headers.get("range") or "").strip() if request is not None else ""
+    base = {"accept-ranges": "bytes", "content-type": "video/mp4"}
+    if not raw.startswith("bytes="):
+        return FileResponse(str(p), media_type="video/mp4", headers={"accept-ranges": "bytes"})
+    # "bytes=시작-끝" 한 구간만 다룬다(브라우저 영상 재생은 이 형태만 쓴다).
+    try:
+        s_txt, _, e_txt = raw[6:].split(",")[0].partition("-")
+        if s_txt:
+            start = int(s_txt)
+            end = int(e_txt) if e_txt else size - 1
+        else:                       # "bytes=-500" = 뒤에서 500바이트
+            start = max(0, size - int(e_txt))
+            end = size - 1
+    except Exception:
+        return FileResponse(str(p), media_type="video/mp4", headers={"accept-ranges": "bytes"})
+    if start >= size:
+        return Response(status_code=416, headers={"content-range": f"bytes */{size}"})
+    end = min(end, size - 1)
+    length = end - start + 1
+
+    def _chunks():
+        with open(p, "rb") as f:
+            f.seek(start)
+            left = length
+            while left > 0:
+                buf = f.read(min(262144, left))
+                if not buf:
+                    break
+                left -= len(buf)
+                yield buf
+
+    headers = dict(base)
+    headers["content-range"] = f"bytes {start}-{end}/{size}"
+    headers["content-length"] = str(length)
+    return StreamingResponse(_chunks(), status_code=206, headers=headers)
+
+
 @app.get("/api/mix/src/{job_id}/{video_id}")
-def api_mix_src(job_id: str, video_id: str):
-    """실험실 미리보기용 소스 원본 mp4. FileResponse가 Range를 처리해 구간 시크가 된다.
+def api_mix_src(job_id: str, video_id: str, request: Request):
+    """실험실 미리보기용 소스 원본 mp4(구간 시크 지원 — _range_mp4_response 주석 참고).
     video_id는 _resolve_sources 맵에 있는 것만(경로 방어 — 임의 파일명 불가)."""
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job:
@@ -3349,7 +3400,7 @@ def api_mix_src(job_id: str, video_id: str):
         src = None
     if not src or not Path(src).exists():
         return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
-    return FileResponse(src, media_type="video/mp4")
+    return _range_mp4_response(src, request)
 
 
 @app.post("/api/mix/scene_lab/{job_id}/apply")
