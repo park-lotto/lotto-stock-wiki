@@ -166,6 +166,24 @@ function planClips(segIds, ttsDur, spread){
 // 타임프레임 한 줄 — 실제 컷을 시간 순서대로. 계산은 planClips 하나만 쓴다(아래 필름과 동일).
 
 
+// 음성 틀기 — 없으면 그 사실을 알린다(조용한 무음이 제일 헷갈린다).
+function playTts(a, i){
+  a.src = SL.tts(i);
+  a.currentTime = 0;
+  const warn = () => {
+    const box = document.getElementById('subbox');
+    if (box && !box.querySelector('.nott')) {
+      const d = document.createElement('div');
+      d.className = 'nott';
+      d.style.cssText = 'margin-top:4px;font-size:12px;color:#f0b429;font-weight:700';
+      d.textContent = '🔇 이 작업은 아직 음성이 없어 소리 없이 나옵니다 — 미리보기를 한 번 만들면 음성이 붙습니다';
+      box.appendChild(d);
+    }
+  };
+  a.onerror = warn;
+  a.play().catch(warn);
+}
+
 // ── 미리보기 재생 엔진 (공용)
 // ※ render()는 장면 편집 화면에만 있다 — 제작소에서 돌 때를 위해 있을 때만 부른다. ────────────────────────────────────────────────
 // 2026-08-15 분리: 사장님 "미리보기를 렌더 썸네일 자리에서 재생해 달라".
@@ -267,9 +285,7 @@ function playBeat(i, ev){
   startSeq(clips);
   // 음성은 화면과 별개 트랙 — 같이 0초부터 튼다(캡컷의 오디오 트랙과 같은 개념).
   const a = audio();
-  a.src = SL.tts(i);
-  a.currentTime = 0;
-  a.play().catch(()=>{});
+  playTts(a, i);
   tickSub();
 }
 // 자막은 음성 시각을 따라간다(화면 컷이 몇 개로 쪼개지든 무관).
@@ -313,9 +329,7 @@ function runAllFrom(i){
   }
   const a = audio();
   a.onended = () => { if (playKey === 'all') runAllFrom(i + 1); };
-  a.src = SL.tts(i);
-  a.currentTime = 0;
-  a.play().catch(()=>{});
+  playTts(a, i);
   tickSub();
 }
 function startSeq(clips){
