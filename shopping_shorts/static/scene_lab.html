@@ -18,7 +18,32 @@ h1{font-size:16px;margin:0;font-weight:700}
 .mode{padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);
       color:var(--dim);cursor:pointer;font-size:13px;line-height:1.4;text-align:center}
 .mode.on{border-color:var(--accent);color:#fff;background:#1b2a3d}
-.wrap{display:grid;grid-template-columns:var(--libw,520px) 1fr;height:calc(100vh - 130px)}
+/* ── 타임프레임(내 영상 전체) ─────────────────────────────────────────────
+   위=전체 한 줄, 아래=고를 조각. 사장님 손그림 구조. 띠는 가로로만 스크롤한다. */
+#timeband{border:1px solid var(--line);border-radius:10px;background:var(--panel);
+  margin:0 0 10px;padding:8px 10px 10px}
+.tbhead{display:flex;align-items:baseline;gap:10px;font-size:12.5px;margin-bottom:7px;flex-wrap:wrap}
+.tbtot{font-family:ui-monospace,Menlo,monospace;color:var(--dim);font-variant-numeric:tabular-nums}
+.tbhint{color:var(--dim);font-size:11.5px;margin-left:auto}
+.tbrow{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;align-items:flex-start}
+.tbeat{flex:0 0 auto;border:1px solid var(--line);border-radius:8px;padding:6px 7px 7px;
+  background:var(--bg);cursor:pointer}
+.tbeat:hover{border-color:var(--accent)}
+.tbeat.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.tbeat .h{display:flex;align-items:baseline;gap:7px;font-size:11.5px;margin-bottom:5px}
+.tbeat .h b{font-size:12px}
+.tbeat .h .d{color:var(--dim);font-family:ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+.tbcuts{display:flex;gap:5px}
+.tbcut{position:relative;width:62px;flex:0 0 auto}
+.tbcut img{width:100%;aspect-ratio:9/16;object-fit:cover;display:block;border-radius:5px;
+  border:1px solid var(--line);background:#000}
+.tbcut .s{position:absolute;left:3px;top:3px;background:#000c;color:#fff;font-size:9.5px;
+  padding:0 4px;border-radius:4px;font-family:ui-monospace,Menlo,monospace}
+.tbcut.long img{border-color:var(--warn)}
+.tbcut.long .s{background:var(--warn);color:#3a2a08;font-weight:700}
+.tbeat.empty{border-style:dashed}
+.tbempty{color:var(--dim);font-size:11.5px;padding:14px 10px}
+.wrap{display:grid;grid-template-columns:var(--libw,520px) 1fr;height:calc(100vh - 230px);min-height:420px}
 .pane{overflow-y:auto;padding:14px}
 .pane.left{border-right:1px solid var(--line);background:var(--panel)}
 .srcgroup{margin-bottom:18px}
@@ -174,6 +199,19 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
     <div class="mode" id="m-pick" onclick="setMode('pick')" style="display:none">④ 대본에 맞게<br><span class="sub">대사 보고 고른 배치</span></div>
   </div>
 </header>
+
+<!-- ── 타임프레임: 내 영상 전체 (2026-08-15 사장님 "한눈에 안 보이고 어려워") ──────────────
+     칸(멘트) 5개가 세로로 흩어져 있어 "내 영상이 지금 어떤 그림들로 채워졌나"를 볼 자리가
+     없었다. 그래서 실제 컷을 **시간 순서 한 줄**로 깐다. 계산은 아래 필름과 똑같은
+     planClips 하나만 쓴다(0순위-B — 같은 판단을 두 번 적지 않는다). -->
+<div id="timeband">
+  <div class="tbhead">
+    <b>내 영상 전체</b>
+    <span class="tbtot" id="tbtot"></span>
+    <span class="tbhint">조각을 누르면 그 칸이 재생됩니다 · 주황 = 재료가 모자라 늘어난 컷</span>
+  </div>
+  <div class="tbrow" id="tbrow"></div>
+</div>
 
 <div class="wrap">
   <div class="pane left"
@@ -500,9 +538,33 @@ function planClips(segIds, ttsDur, spread){
   return clips;
 }
 
+// 타임프레임 한 줄 — 실제 컷을 시간 순서대로. 계산은 planClips 하나만 쓴다(아래 필름과 동일).
+function renderBand(){
+  const row = document.getElementById('tbrow'); if (!row) return;
+  let total = 0;
+  const html = DATA.beats.map((b, i) => {
+    const clips = planClips(lists[i] || [], b.target_seconds || 3, STRETCH[i]);
+    const sec = clips.reduce((a, c) => a + c.dur, 0);
+    total += sec;
+    const cuts = clips.length
+      ? clips.map(c => `<div class="tbcut ${c.dur > LONG_CUT ? 'long' : ''}" title="${c.video_id} ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초">
+             <img src="${SL.thumb(c.seg_id)}" loading="lazy"><span class="s">${c.dur.toFixed(1)}</span></div>`).join('')
+      : `<div class="tbempty">장면을 담아주세요</div>`;
+    return `<div class="tbeat ${clips.length ? '' : 'empty'} ${playKey === 'beat:' + i ? 'on' : ''}"
+                 onclick="playBeat(${i}, event)" title="누르면 이 칸이 재생됩니다">
+        <div class="h"><b>${i+1}. ${b.role || '칸'}</b><span class="d">${sec.toFixed(1)}초</span></div>
+        <div class="tbcuts">${cuts}</div>
+      </div>`;
+  }).join('');
+  row.innerHTML = html;
+  const t = document.getElementById('tbtot');
+  if (t) t.textContent = `· 총 ${total.toFixed(1)}초 · 컷 ${row.querySelectorAll('.tbcut').length}개`;
+}
+
 function render(){
   document.getElementById('jobline').textContent =
     `멘트 칸 ${DATA.beats.length}개 · 고를 수 있는 장면 ${Object.keys(DATA.segments).length}개`;
+  renderBand();
 
   // 팔레트
   const byRole = {};
