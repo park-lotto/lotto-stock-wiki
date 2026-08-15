@@ -4154,7 +4154,14 @@ def insights_page():
 # 아래 _require_admin 은 그 방어선이 뚫렸을 때를 대비한 2중 잠금이다
 # (미들웨어를 나중에 누가 고치다 초안이 외부로 새는 걸 막는다).
 def _ins2_require_admin(request: Request):
-    """운영자가 아니면 True(차단해야 함). 미완성 초안이라 외부 노출 금지."""
+    """운영자가 아니면 True(차단해야 함). 미완성 초안이라 외부 노출 금지.
+
+    인증 OFF(로컬 개발: DASH_PASS·GOOGLE_CLIENT_ID 둘 다 없음)일 땐 통과시킨다 —
+    다른 관리자 경로(:744, :818)와 같은 판단이다. 라이브는 둘 다 설정돼 있으므로
+    _AUTH_ON=True → 아래 쿠키 검사가 그대로 걸린다(잠금 그대로).
+    """
+    if not _AUTH_ON:
+        return False
     uid = _verify_session(request.cookies.get("dash_auth", ""))
     return uid is None or not _is_admin(uid)
 
@@ -4433,6 +4440,64 @@ def _sign_of(signal: str) -> int:
     return _SIGN_MAP.get((signal or "").strip().lower(), 0)
 
 
+# 텔레 원자 머리말 분해 — 한 군데에서만 판단한다(0순위-B).
+#
+# 실측(2026-08-15, atoms.db): 텔레 content 상당수가 아래 모양으로 시작한다.
+#   "[중계:신한투자증권] 목표가 18,000원 매수 / 12MF BPS ..."
+#   "[중계:그로쓰리서치] 목표가 None None / 삼성바이오로직스와 셀트리온 ..."
+#   "[긍정] 구리 가격 1만 4,000달러 근접 ..."
+# 즉 머리말은 **구조 정보**(중계처·목표가·의견)인데 문자열로 박혀 있다.
+# 화면에서 걷어내기만 하면 정보를 버리는 것이고, 그대로 두면 'None None'이 보인다.
+# → 필드로 쪼개서 값이 있는 것만 배지로 쓴다. None은 자연히 사라진다.
+#
+# 8월 표본 971건 중: [중계:*] 94 / [긍정]·[중립]·[부정] 41 / 'None' 포함 140
+_RE_RELAY = re.compile(r"\[중계:([^\]]*)\]\s*")
+_RE_TP = re.compile(r"^목표가\s+(\S+)(?:\s+(\S+))?\s*/\s*")
+# 부호 접두어는 두 가지 모양으로 온다 — "[긍정] ..." 과 "긍정: ..." (실측 둘 다 존재).
+# 한쪽만 걷으면 화면에 섞여 나온다.
+_RE_TONE = re.compile(r"^(?:\[(?:긍정|중립|부정|None)\]|(?:긍정|중립|부정)\s*:)\s*")
+
+# 원자화가 값 없음을 문자열로 흘린다 — 실측(2026-08-05 텔레): 'None' 60건, 'null' 8건.
+# 판정을 여기 한 군데서만 한다(0순위-B: 같은 판단을 두 번 적지 않는다).
+_EMPTYISH = {"", "none", "null", "n/a", "-", "미정"}
+
+
+def _ins2_blank(v: str) -> bool:
+    return (v or "").strip().lower() in _EMPTYISH
+
+
+def _ins2_split_head(content: str) -> dict:
+    """{text, relay, tp, opinion} — 값이 없으면 빈 문자열."""
+    t = (content or "").strip()
+    relay = tp = opinion = ""
+
+    m = _RE_TONE.match(t)
+    if m:
+        t = t[m.end():]  # 부호는 화면의 점(dot)이 이미 보여준다 → 글자로 반복하지 않는다
+
+    m = _RE_RELAY.search(t)
+    if m:
+        if not _ins2_blank(m.group(1)):
+            relay = m.group(1).strip()
+        t = (t[:m.start()] + t[m.end():]).strip()
+
+        # '목표가 ...' 는 [중계:*] 바로 뒤에만 온다. 앞에 붙은 '글로벌 램리서치: ' 같은
+        # 문맥은 살려야 하므로, 잘라낸 자리 이후만 본다.
+        head = t[m.start():]
+        m2 = _RE_TP.match(head)
+        if m2:
+            for val, slot in ((m2.group(1), "tp"), (m2.group(2), "opinion")):
+                if _ins2_blank(val):
+                    continue
+                if slot == "tp":
+                    tp = val.strip()
+                else:
+                    opinion = val.strip()
+            t = (t[:m.start()] + head[m2.end():]).strip()
+
+    return {"text": t, "relay": relay, "tp": tp, "opinion": opinion}
+
+
 def _ins2_latest_date(conn, type_cond: str) -> str:
     """데이터가 있는 가장 최근 날짜. 오늘 크롤이 아직이면 화면이 비니까,
     '오늘'을 고집하지 않고 실제로 있는 마지막 날을 쓴다."""
@@ -4473,10 +4538,10 @@ def api_insights2_daily(request: Request, category: str = "youtube", date: str =
 
         rows = conn.execute(
             f"""SELECT id, date, source_name, raw_file, sector, asset, signal,
-                       content, speaker, yt_timestamp, deeplink
+                       content, speaker, yt_timestamp, msg_ts, deeplink
                 FROM atoms
                 WHERE {type_cond} AND date = ?
-                ORDER BY raw_file, yt_timestamp, id""",
+                ORDER BY COALESCE(NULLIF(yt_timestamp,''), msg_ts, ''), raw_file, id""",
             (day,),
         ).fetchall()
 
@@ -4499,16 +4564,23 @@ def api_insights2_daily(request: Request, category: str = "youtube", date: str =
             if not videos[i]["url"] and r["deeplink"]:
                 videos[i]["url"] = str(r["deeplink"]).split("&t=")[0]
 
+            # ⏱ 시각은 소스마다 의미가 다르다 — 유튜브 yt_timestamp = 영상 재생위치(딥링크 가능),
+            # 텔레 msg_ts = 메시지 발송 시각(딥링크 없음, 시간순 정렬용). 값은 같은 칸에 담되
+            # 뜻은 ts_kind로 알린다(화면이 ▶01:53 / 🕘09:58 로 갈라 그린다).
+            head = _ins2_split_head(r["content"] or "")
             atoms.append({
                 "video": i,
-                "ts": r["yt_timestamp"] or "",
+                "ts": (r["yt_timestamp"] or "") or (r["msg_ts"] or ""),
                 "deeplink": r["deeplink"] or "",
                 "speaker": r["speaker"] or "",
                 "sector": r["sector"] or "",
                 "asset": r["asset"] or "",
                 "sign": _sign_of(r["signal"]),
                 "signal": r["signal"] or "",
-                "content": r["content"] or "",
+                "content": head["text"],
+                "relay": head["relay"],
+                "tp": head["tp"],
+                "opinion": head["opinion"],
                 "source": r["source_name"] or "",
             })
 
@@ -4543,6 +4615,7 @@ def api_insights2_daily(request: Request, category: str = "youtube", date: str =
 
         return JSONResponse(content={
             "date": day,
+            "ts_kind": "play" if category in ("youtube", "yt") else "clock",
             "counts": {
                 "videos": len(videos),
                 "atoms": len(atoms),
