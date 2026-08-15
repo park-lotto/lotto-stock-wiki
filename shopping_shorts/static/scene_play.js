@@ -167,32 +167,29 @@ function planClips(segIds, ttsDur, spread){
 
 
 // 음성 틀기 — 없으면 그 사실을 알린다(조용한 무음이 제일 헷갈린다).
+// ★대본을 바꾸면 그 칸 음성은 다시 만들어야 한다 — 파일이 없으면 브라우저는 오류도 안 내고
+//   조용히 멈춰 있다(2026-08-15 실측: paused=false인데 readyState=0, 시간 0에서 안 흐름).
+//   그래서 '에러'가 아니라 **일정 시간 안에 안 흐르면** 안내한다.
+function ttsWarn(msg){
+  const box = document.getElementById('subbox');
+  if (!box || box.querySelector('.nott')) return;
+  const d = document.createElement('div');
+  d.className = 'nott';
+  d.style.cssText = 'margin-top:4px;font-size:12px;color:#f0b429;font-weight:700';
+  d.textContent = msg;
+  box.appendChild(d);
+}
 function playTts(a, i){
   a.src = SL.tts(i);
   a.currentTime = 0;
-  const warn = () => {
-    const box = document.getElementById('subbox');
-    if (box && !box.querySelector('.nott')) {
-      const d = document.createElement('div');
-      d.className = 'nott';
-      d.style.cssText = 'margin-top:4px;font-size:12px;color:#f0b429;font-weight:700';
-      d.textContent = '🔇 이 작업은 아직 음성이 없어 소리 없이 나옵니다 — 미리보기를 한 번 만들면 음성이 붙습니다';
-      box.appendChild(d);
-    }
-  };
+  const warn = () => ttsWarn('🔇 이 칸은 음성이 없어요 — 위 🔊 음성 만들기를 눌러주세요');
   a.onerror = warn;
   a.play().catch(warn);
-}
-
-// 칸의 길이 = **실제 음성 길이**. 음성이 아직 없으면 대본 추정치(target_seconds).
-// ★2026-08-15 사장님 "장면이 남고 tts가 먼저 끝나고 멈춤" — 화면이 추정치로 컷을 짜서
-//   음성보다 길었다. 서버는 이미 실제 길이(tts_dur)를 주고 있었는데 안 쓰고 있었다.
-//   라이브 렌더도 실제 음성 길이(_beat_effective_dur)를 쓰므로 이래야 렌더와 맞는다.
-function beatDur(i){
-  const d = ((DATA && DATA.tts_dur) || {})[String(i)];
-  if (d && d > 0.05) return d;
-  const b = (DATA && DATA.beats && DATA.beats[i]) || {};
-  return b.target_seconds || 3;
+  // 2.5초 안에 준비가 안 되면(파일 없음) 알린다.
+  clearTimeout(a._noTtsTimer);
+  a._noTtsTimer = setTimeout(() => {
+    if (a.readyState === 0 || !(a.duration > 0)) warn();
+  }, 2500);
 }
 
 // ── 미리보기 재생 엔진 (공용)
