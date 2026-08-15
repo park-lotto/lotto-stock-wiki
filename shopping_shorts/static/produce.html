@@ -884,7 +884,15 @@
            페이지라, 제작소 6천 줄 JS에 인라인하면 이름·스타일이 충돌한다(0순위-B: 화면 원본은
            scene_lab.html 한 파일 — 로컬 실험실 tools/scene_lab과 공유). -->
       <div id="sceneLabBox" style="display:none;margin-top:18px">
-        <div style="font-size:13px;font-weight:800;margin:0 0 6px">🎬 장면 편집 — 어떤 화면이 언제 나올지 여기서 정하고 미리 봅니다</div>
+        <div style="display:flex;align-items:center;gap:10px;margin:0 0 6px">
+          <div style="font-size:13px;font-weight:800">🎬 장면 편집 — 어떤 화면이 언제 나올지 여기서 정하고 미리 봅니다</div>
+          <!-- 넓게 보기(2026-08-15 사장님 "왼쪽 사이드바까지 사용하면 안되나"): 패널은
+               max-width 1120px이고 사이드바가 270px을 먹어 왼쪽이 남는다. 이 버튼은
+               편집 화면만 화면 전체로 띄운다(사이드바·패널 여백까지 전부 사용). -->
+          <button type="button" id="sceneLabWideBtn" class="btn"
+                  style="margin-left:auto;padding:6px 12px;font-size:12px;background:var(--inset);border:1px solid var(--line);color:var(--sub)"
+                  onclick="toggleSceneLabWide()">⛶ 넓게 보기</button>
+        </div>
         <iframe id="sceneLabFrame" title="장면 편집"
                 style="width:100%;height:88vh;min-height:600px;border:1px solid var(--line);border-radius:12px;background:#0f1115"></iframe>
         <div class="hint" style="margin-top:4px">왼쪽 장면을 끌어다 칸에 담고 ✂로 자르고 ▶️로 확인한 뒤,
@@ -4147,6 +4155,31 @@ const SCENE_LAB_EMBED = true;
 const SHOW_OLD_SCENE_TOOLS = false;
 // ①은 HTML에 이미 있는 요소라 여기서 바로 감춘다(이 <script>는 그 요소보다 뒤에 있다).
 try{ if(!SHOW_OLD_SCENE_TOOLS){ const _md=document.getElementById('matchSceneDetails'); if(_md) _md.style.display='none'; } }catch(_){ }
+// ⛶ 넓게 보기 — 편집 화면만 브라우저 전체로. 다시 누르거나 ESC로 제자리.
+// iframe은 src를 안 건드린다(다시 읽히면 담아둔 편성이 날아간다 — position만 바꾼다).
+function toggleSceneLabWide(){
+  const box=document.getElementById('sceneLabBox'), f=document.getElementById('sceneLabFrame');
+  const btn=document.getElementById('sceneLabWideBtn');
+  if(!box||!f) return;
+  const on = box.getAttribute('data-wide')!=='1';
+  if(on){
+    box.setAttribute('data-wide','1');
+    box.style.cssText='display:block;position:fixed;inset:0;z-index:9998;background:var(--bg,#0b0e14);padding:8px 10px 10px;margin:0;overflow:auto';
+    f.style.height='calc(100vh - 46px)';
+    if(btn) btn.textContent='✕ 원래대로';
+  }else{
+    box.removeAttribute('data-wide');
+    box.style.cssText='display:block;margin-top:18px';
+    f.style.height='88vh';
+    if(btn) btn.textContent='⛶ 넓게 보기';
+  }
+}
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){
+    const box=document.getElementById('sceneLabBox');
+    if(box && box.getAttribute('data-wide')==='1') toggleSceneLabWide();
+  }
+});
 function _syncSceneLab(on){
   const box=document.getElementById('sceneLabBox'), f=document.getElementById('sceneLabFrame');
   const link=document.getElementById('sceneLabLink');
