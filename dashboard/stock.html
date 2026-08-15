@@ -196,6 +196,24 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
 .tip .why{margin-top:6px;padding-top:6px;border-top:1px solid var(--line);color:var(--gold);font-size:12.5px}
 .tip .q{margin-top:6px;padding-top:6px;border-top:1px solid var(--line);color:var(--mut);font-size:13px}
 .cnote{padding:10px var(--s3);border-top:1px solid var(--line);font-size:13px;color:var(--dim)}
+/* 차트 구조 요약 */
+.tabox{border-top:1px solid var(--line);padding:var(--s3) var(--s3) var(--s4)}
+.tachips{font-size:15px;color:var(--mut);margin-bottom:var(--s3)}
+.tachips b{color:var(--txt)}
+.tachips .sep{color:var(--dim);margin:0 9px}
+.tagrid{display:grid;grid-template-columns:1fr 1fr;gap:var(--s4)}
+@media(max-width:900px){.tagrid{grid-template-columns:1fr;gap:var(--s3)}}
+.tahd{font-size:13px;color:var(--dim);margin-bottom:8px}
+.tahd span{color:#5f6b7c}
+.tarow{display:flex;gap:10px;align-items:center;padding:7px 0;
+  border-bottom:1px solid rgba(37,45,58,.5);font-size:14.5px}
+.tarow:last-child{border-bottom:none}
+.tarow.off{opacity:.55}
+.tarow .k{font-size:12.5px;color:var(--mut);background:var(--bg3);border-radius:4px;
+  padding:2px 8px;white-space:nowrap}
+.tarow .k.r{color:#e74c3c}.tarow .k.s{color:#4f96ff}
+.tabreak{margin-top:var(--s3);background:var(--bg3);border:1px solid var(--line2);
+  border-radius:9px;padding:13px 15px;font-size:14.5px;line-height:1.6}
 
 /* 중요한 날 목록 — 차트를 안 봐도 되게 */
 .kd{margin-top:var(--s3);display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:var(--s2)}
@@ -371,7 +389,7 @@ function pend(what){return `<div class="msg">${what} — 종합을 기다리는 
    라이브러리 없이 캔버스로 직접 그린다(이 대시보드는 프레임워크를 안 쓴다).
    레이어는 기본 꺼짐 — 켜야 마커가 보인다. */
 let KD=null;                                  // keydays API 응답
-let LAY={key:true, atom:false, flow:false};   // 켜진 레이어
+let LAY={key:true, atom:false, flow:false, ta:false};   // 켜진 레이어
 let SELDAY=null;                              // 클릭해 고정한 날짜
 let GEO=null;                                 // 캔들 x좌표 등 히트테스트용
 
@@ -399,6 +417,7 @@ function secChart(){
           <button class="lay ${LAY.key?'on':''}" onclick="tgl('key')">⚡ 중요한 날 ${(KD.keydays||[]).length}</button>
           <button class="lay ${LAY.atom?'on':''}" onclick="tgl('atom')">💬 발언 ${nAtomDays}일</button>
           <button class="lay ${LAY.flow?'on':''}" onclick="tgl('flow')">📈 수급 ${nFlowDays}일</button>
+          <button class="lay ${LAY.ta?'on':''}" onclick="tgl('ta')">📐 지지·저항 ${((KD.ta||{}).levels||[]).length}</button>
         </div>
       </div>
       <div class="cbody">
@@ -407,6 +426,7 @@ function secChart(){
       </div>
       <div class="cnote">${coverNote()}</div>
     </div>
+    ${taSummary()}
     ${LAY.key?`<div class="kd" id="kdlist">${(KD.keydays||[]).slice(0,12).map(kdCard).join('')}</div>`:''}
     <div id="dayp"></div>
   </section>`;
@@ -423,6 +443,46 @@ function coverNote(){
 }
 
 function tgl(k){ LAY[k]=!LAY[k]; render(); }
+
+/* 차트 구조 요약 — A층(사실)과 B층(계산)을 갈라서 보여준다.
+   B층은 R²를 반드시 같이 띄우고, 못 쓰는 선은 이유를 달아 흐리게 쓴다. */
+function taSummary(){
+  const t=KD.ta||{};
+  if(t.error) return `<div class="cnote" style="border-top:none">📐 구조 분석 실패 — ${esc(t.error)}</div>`;
+  const ma=t.ma||{}, lv=t.levels||[], tr=t.trends||{}, b=t.breakout;
+  const chips=[];
+  if(ma.order) chips.push(`이평 <b>${esc(ma.order)}</b>`);
+  if(t.rsi!=null) chips.push(`RSI <b class="num">${t.rsi}</b>`);
+  if(t.pos!=null) chips.push(`구간 위치 <b class="num">${t.pos}%</b>`);
+  if(t.volx!=null) chips.push(`거래대금 <b class="num">${Math.round(t.volx*100)}%</b><span style="color:var(--dim)">(60일 평균 대비)</span>`);
+
+  const lvHtml=lv.map(x=>`<div class="tarow">
+      <span class="k ${x.kind==='저항'?'r':'s'}">${x.kind}</span>
+      <b class="num">${x.price.toLocaleString()}</b>
+      <span class="num" style="color:var(--gold)">${x.touches}회 접촉</span>
+      <span class="num" style="color:var(--dim);margin-left:auto">${x.dist_pct>0?'+':''}${x.dist_pct}%</span>
+    </div>`).join('') || `<div style="color:var(--dim);font-size:14px">여러 번 닿은 가격대가 없습니다.</div>`;
+
+  const trHtml=Object.entries(tr).map(([k,x])=>`<div class="tarow ${x.usable?'':'off'}">
+      <span class="k">${k==='high'?'고점선':'저점선'}</span>
+      <b>${esc(x.dir)}</b>
+      <span class="num" style="color:${x.r2>=0.5?'var(--mint)':'var(--dim)'}">R²=${x.r2}</span>
+      <span class="num" style="color:var(--dim)">종가와 ${x.gap_pct>0?'+':''}${x.gap_pct}%</span>
+      ${x.usable?'':`<span style="margin-left:auto;color:var(--gold);font-size:13px">⚠️ ${esc(x.why_not)} — 안 그림</span>`}
+    </div>`).join('');
+
+  return `<div class="tabox">
+    <div class="tachips">${chips.join('<span class="sep">·</span>')}</div>
+    <div class="tagrid">
+      <div><div class="tahd">지지·저항 <span>스윙이 여러 번 닿은 가격대</span></div>${lvHtml}</div>
+      <div><div class="tahd">추세선 <span>R²가 낮거나 현재가에서 멀면 안 그린다</span></div>${trHtml||'<div style="color:var(--dim);font-size:14px">추세선을 만들 스윙이 부족합니다.</div>'}</div>
+    </div>
+    ${b?`<div class="tabreak">🚀 <b>${esc(b.date)}</b> 하락추세선 돌파 —
+      종가 <b class="num">${Math.round(b.close).toLocaleString()}</b> (선 ${b.line.toLocaleString()})
+      → ${b.pullback_pct>=-0.5?'<b>돌파 후 고점 부근</b>':`이후 고점 대비 <b class="num">${b.pullback_pct}%</b> 눌림`}
+      <button class="lay" style="margin-left:10px" onclick="pickDay('${esc(b.date)}')">그날 무슨 일이 있었나 ▸</button></div>`:''}
+  </div>`;
+}
 
 function kdCard(k){
   const cls=k.chg>0?'up':k.chg<0?'dn':'';
@@ -489,6 +549,34 @@ function drawChart(){
     const y1=Y(Math.max(c.open,c.close)), y2=Y(Math.min(c.open,c.close));
     g.fillRect(x-bw*0.32, y1, Math.max(1,bw*0.64), Math.max(1,y2-y1));
   });
+
+  // 지지·저항 + 추세선 — 켰을 때만. 못 쓰는 선(usable=false)은 그리지 않는다.
+  if(LAY.ta && KD.ta && !KD.ta.error){
+    const t=KD.ta;
+    g.save();
+    (t.levels||[]).forEach(lv=>{
+      const y=Y(lv.price);
+      if(y<padT||y>padT+priceH) return;
+      g.strokeStyle=lv.kind==='저항'?'rgba(231,76,60,.65)':'rgba(79,150,255,.6)';
+      g.setLineDash([5,4]); g.lineWidth=1.4;
+      g.beginPath(); g.moveTo(padL,y); g.lineTo(W-padR,y); g.stroke();
+      g.setLineDash([]);
+      g.fillStyle=lv.kind==='저항'?'#e74c3c':'#4f96ff'; g.font='bold 11px system-ui';
+      g.fillText(`${lv.kind} ${lv.price.toLocaleString()} (${lv.touches}회)`, padL+5, y-4);
+    });
+    Object.values(t.trends||{}).forEach(tr=>{
+      if(!tr.usable) return;                 // 믿을 수 없는 선은 안 그린다
+      g.strokeStyle='rgba(229,184,75,.75)'; g.lineWidth=1.6;
+      g.beginPath(); g.moveTo(X(tr.x0),Y(tr.y0)); g.lineTo(X(tr.x1),Y(tr.y1)); g.stroke();
+    });
+    const b=t.breakout;
+    if(b && b.idx>=0 && b.idx<cd.length){
+      const x=X(b.idx), y=Y(b.close);
+      g.fillStyle='#e5b84b'; g.beginPath(); g.arc(x,y,5,0,Math.PI*2); g.fill();
+      g.strokeStyle='rgba(229,184,75,.9)'; g.lineWidth=2; g.stroke();
+    }
+    g.restore();
+  }
 
   // 마커 — 켠 레이어만
   const my=padT+priceH+3;

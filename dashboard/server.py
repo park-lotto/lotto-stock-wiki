@@ -4807,12 +4807,21 @@ def api_insights2_keydays(request: Request, q: str = "", days: int = 180, top: i
     flow = _flow_by_date(code)
     keydays = _score_days(candles, by_date, flow)[:max(5, top)]
 
+    # 차트 구조(A·B층) — 실패해도 화면은 캔들만으로 살아야 한다
+    try:
+        import chart_ta
+        ta = chart_ta.analyze(candles)
+        ta["lines"] = chart_ta.describe(ta)
+    except Exception as e:
+        ta = {"error": f"{type(e).__name__}: {e}"}
+
     return JSONResponse(content={
         "q": q, "canonical": canonical, "code": code,
         "candles": candles,
         "flow": flow,
         "byDate": by_date,
         "keydays": keydays,
+        "ta": ta,
         "coverage": {
             "atoms_from": min(by_date) if by_date else "",
             "flow_from": min(flow) if flow else "",
