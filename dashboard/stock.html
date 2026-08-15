@@ -1,0 +1,464 @@
+<!doctype html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>종목 브리프 — STOCK BRAIN</title>
+<style>
+/* 가독성 기준(2026-08-15 확정, handoff/인사이트2.md 참조):
+   본문 16px · 폭 1440px · --mut #aab6c6 · --dim #7d8a9c · 읽는 문장은 940px로 따로 제한 */
+:root{
+  --bg:#0e1116;--bg2:#151a22;--bg3:#1c232e;--line:#252d3a;--line2:#323c4c;
+  --txt:#e7ecf3;--mut:#aab6c6;--dim:#7d8a9c;
+  --gold:#e5b84b;--mint:#4fd1c5;--red:#ff6b6b;--grn:#7ee08a;--violet:#9d8cf0;
+  --s2:10px;--s3:16px;--s4:24px;--s5:36px;--s6:52px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif;
+  font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1440px;margin:0 auto;padding:0 20px var(--s6)}
+.num{font-variant-numeric:tabular-nums}
+a{color:inherit}
+code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var(--bg3);
+  border-radius:4px;padding:1px 6px;color:var(--mut)}
+
+.top{border-bottom:1px solid var(--line);background:rgba(14,17,22,.97);
+  position:sticky;top:0;z-index:40;backdrop-filter:blur(10px)}
+.tin{max-width:1440px;margin:0 auto;padding:11px 20px;display:flex;align-items:center;gap:16px}
+.bd{font-weight:800}.bd i{color:var(--gold);font-style:normal}
+.nv{display:flex;gap:2px;margin-left:6px}
+.nv a{color:var(--mut);text-decoration:none;padding:6px 11px;border-radius:6px;font-size:14.5px}
+.nv a:hover{background:var(--bg3);color:var(--txt)}
+.nv a.on{color:var(--gold);background:rgba(229,184,75,.1)}
+
+/* 검색 */
+.bar{display:flex;gap:var(--s2);align-items:center;padding:var(--s4) 0 var(--s3)}
+.qbox{flex:1;display:flex;align-items:center;gap:var(--s2);background:var(--bg2);
+  border:1px solid var(--line2);border-radius:9px;padding:9px 14px}
+.qbox input{flex:1;background:none;border:none;color:var(--txt);font-size:19px;font-weight:700;
+  font-family:inherit;outline:none;letter-spacing:-.3px}
+.qbox input::placeholder{color:var(--dim);font-weight:400}
+.gobtn{background:var(--bg3);border:1px solid var(--line2);color:var(--txt);font-family:inherit;
+  font-size:15px;padding:10px 20px;border-radius:9px;cursor:pointer}
+.gobtn:hover{border-color:var(--mint);color:var(--mint)}
+.gobtn:focus-visible,.qbox input:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
+.px{font-size:15px;color:var(--mut);white-space:nowrap}
+.px b{color:var(--txt)}.px .up{color:var(--grn)}.px .dn{color:var(--red)}
+
+.meta{display:flex;gap:var(--s3);flex-wrap:wrap;align-items:baseline;font-size:13.5px;
+  color:var(--dim);padding-bottom:var(--s4);border-bottom:1px solid var(--line)}
+.meta b{color:var(--mut);font-weight:600}
+.meta .warn{color:var(--gold)}
+
+.blk{padding:var(--s5) 0;border-bottom:1px solid var(--line)}
+.blk:last-of-type{border-bottom:none}
+.lab{font-size:12.5px;letter-spacing:1.6px;color:var(--dim);margin-bottom:var(--s3);
+  display:flex;align-items:center;gap:var(--s2)}
+.lab .n{color:var(--mut);letter-spacing:0}
+
+/* 출처 칩 — 클릭하면 원문 펼침 */
+.src{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.chip{font-size:12.5px;padding:3px 10px;border-radius:999px;background:var(--bg3);
+  color:var(--mut);border:1px solid var(--line);cursor:pointer;font-family:inherit}
+.chip:hover{border-color:var(--mint);color:var(--mint)}
+.chip.hot{border-color:rgba(229,184,75,.4);color:var(--gold);background:rgba(229,184,75,.08)}
+
+/* 원문 펼침 */
+.quo{display:none;margin-top:var(--s2);background:#0b0e13;border:1px solid var(--line2);
+  border-radius:9px;overflow:hidden}
+.quo.on{display:block}
+.quo .qi{padding:11px 14px;border-bottom:1px solid rgba(37,45,58,.6);font-size:14.5px;line-height:1.6}
+.quo .qi:last-child{border-bottom:none}
+.quo .qm{font-size:12.5px;color:var(--dim);margin-top:5px;display:flex;gap:9px;flex-wrap:wrap}
+
+/* 일정 */
+.cal{display:flex;flex-direction:column;gap:var(--s2)}
+.ev{display:grid;grid-template-columns:100px 1fr;gap:var(--s3);background:var(--bg2);
+  border:1px solid var(--line);border-radius:10px;padding:var(--s3)}
+.ev.soon{border-color:rgba(229,184,75,.45);
+  background:linear-gradient(100deg,rgba(229,184,75,.09),var(--bg2) 55%)}
+.dday{text-align:center;border-right:1px solid var(--line);padding-right:var(--s3)}
+/* D-day 칸은 줄바꿈 금지 — "8월 26일"이 세로로 접히면 카드가 망가진다(실측) */
+.dday .d{font-size:26px;font-weight:800;letter-spacing:-1px;line-height:1.1;white-space:nowrap}
+.ev.soon .dday .d{color:var(--gold)}
+.dday .w{font-size:12.5px;color:var(--dim);margin-top:3px}
+.ev .h{font-size:18px;font-weight:700;margin-bottom:5px}
+.ev .b{font-size:15.5px;color:var(--mut);line-height:1.6;max-width:940px}
+
+/* 판단 */
+.verdict{font-size:30px;font-weight:800;line-height:1.35;letter-spacing:-.6px;
+  text-wrap:balance;max-width:1100px}
+.tally{display:flex;gap:var(--s3);margin-top:var(--s3);font-size:14px;color:var(--mut)}
+.tally i{font-style:normal;display:inline-flex;align-items:center;gap:5px}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.dot.p{background:var(--grn)}.dot.n{background:var(--red)}.dot.z{background:#4d5766}
+.grounds{display:flex;flex-direction:column;gap:var(--s2);margin-top:var(--s4)}
+.g{background:var(--bg2);border:1px solid var(--line);border-left:2px solid var(--line2);
+  border-radius:0 8px 8px 0;padding:13px 15px}
+.g.p{border-left-color:var(--grn)}.g.n{border-left-color:var(--red)}
+.g .t{font-size:17px;line-height:1.55;max-width:940px}
+
+/* 쟁점 */
+.duel{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3)}
+.side{background:var(--bg2);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.side header{padding:12px 16px;font-size:13.5px;font-weight:700;letter-spacing:.4px;
+  border-bottom:1px solid var(--line)}
+.side.a header{background:rgba(126,224,138,.08);color:var(--grn)}
+.side.b header{background:rgba(255,107,107,.08);color:var(--red)}
+.side ul{list-style:none;margin:0;padding:0}
+.side li{padding:14px 16px;border-bottom:1px solid rgba(37,45,58,.55);font-size:15.5px;line-height:1.55}
+.side li:last-child{border-bottom:none}
+.pivot{margin-top:var(--s3);background:var(--bg3);border:1px solid var(--line2);
+  border-radius:9px;padding:16px 18px;font-size:15.5px;line-height:1.7;max-width:940px}
+.pivot b{color:var(--gold)}
+
+/* 수급 */
+.vac{background:var(--bg2);border:1px solid var(--line);border-radius:11px;overflow:hidden}
+.vac-h{padding:var(--s3) var(--s4);border-bottom:1px solid var(--line);
+  display:flex;align-items:baseline;gap:var(--s3);flex-wrap:wrap}
+.vac-h .ttl{font-size:17px;font-weight:700}
+.vac-h .def{font-size:15px;color:var(--dim);line-height:1.5}
+.vac-b{padding:var(--s4)}
+.vtop{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:var(--s5);align-items:start}
+@media(max-width:1100px){.vtop{grid-template-columns:1fr;gap:var(--s4)}}
+.gtrack{position:relative;height:36px;border-radius:7px;overflow:hidden;display:flex}
+.gtrack i{display:block;height:100%;font-style:normal}
+.gA{background:rgba(126,224,138,.42);flex:10}
+.gB{background:rgba(126,224,138,.20);flex:15}
+.gC{background:#232b37;flex:50}
+.gD{background:rgba(255,107,107,.28);flex:25}
+.gpin{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--gold);
+  border-radius:2px;box-shadow:0 0 0 3px rgba(229,184,75,.18)}
+.glabels{display:flex;margin-top:6px;font-size:12px;color:var(--dim)}
+.glabels span{text-align:center}
+.glabels .lA{flex:10}.glabels .lB{flex:15}.glabels .lC{flex:50}.glabels .lD{flex:25}
+.gnow{margin-top:var(--s3);display:flex;gap:var(--s3);align-items:flex-start;background:var(--bg3);
+  border:1px solid var(--line2);border-radius:9px;padding:14px 16px}
+/* 등급 배지는 줄바꿈 금지 — 폭이 줄면 "C 정상"이 한 글자씩 세로로 흐른다(실측) */
+.gnow .badge{flex:0 0 auto;text-align:center;padding-right:var(--s3);
+  border-right:1px solid var(--line);white-space:nowrap;min-width:118px}
+.gnow .badge .g2{font-size:19px;font-weight:800;color:var(--gold);letter-spacing:-.3px}
+.gnow .badge .p{font-size:12.5px;color:var(--dim);margin-top:2px}
+.gnow .say{font-size:15.5px;line-height:1.75;max-width:940px}
+.gnow .say b{color:var(--gold)}
+.spark{display:flex;gap:2px;align-items:flex-end;height:46px;margin-top:var(--s3)}
+.spark i{flex:1;display:block;border-radius:1px;background:#2c3746;min-height:2px}
+.spark i.p{background:rgba(126,224,138,.65)}.spark i.n{background:rgba(255,107,107,.6)}
+.ftab{width:100%;max-width:760px;border-collapse:collapse;font-size:15px}
+.ftab th{font-size:12px;letter-spacing:1px;color:var(--dim);font-weight:500;text-align:right;
+  padding:0 0 var(--s2);border-bottom:1px solid var(--line)}
+.ftab th:first-child{text-align:left}
+.ftab td{padding:12px 0;border-bottom:1px solid rgba(37,45,58,.5);text-align:right}
+.ftab td:first-child{text-align:left;font-weight:600}
+.ftab tr:last-child td{border-bottom:none}
+.up{color:var(--grn)}.dn{color:var(--red)}
+.mini{display:inline-flex;gap:2px;align-items:flex-end;height:20px;vertical-align:middle}
+.mini i{width:7px;display:block;border-radius:1px}
+.mini i.p{background:var(--grn)}.mini i.n{background:var(--red)}
+
+.read{margin-top:var(--s4);background:linear-gradient(100deg,rgba(157,140,240,.10),var(--bg3) 60%);
+  border:1px solid rgba(157,140,240,.35);border-radius:10px;padding:16px 18px;max-width:1100px}
+.read .k{font-size:12.5px;letter-spacing:1.4px;color:var(--violet);margin-bottom:7px}
+.read .t{font-size:16.5px;line-height:1.75}
+.read .t b{color:var(--violet)}
+
+.checks{display:flex;flex-direction:column;gap:var(--s2)}
+.ck{display:grid;grid-template-columns:22px 1fr;gap:var(--s2);align-items:start;
+  background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:13px 15px}
+.ck .m{color:var(--gold);font-size:14px;line-height:1.5}
+.ck .t{font-size:15.5px;line-height:1.6;max-width:940px}
+
+.msg{padding:60px 20px;text-align:center;color:var(--dim);font-size:15px}
+.warn{margin:var(--s3) 0;padding:12px 15px;border-radius:8px;font-size:14.5px;line-height:1.6;
+  background:rgba(229,184,75,.08);border:1px solid rgba(229,184,75,.28);color:#e8d9a8;max-width:1100px}
+.warn b{color:var(--gold)}
+.empty{background:var(--bg2);border:1px dashed var(--line2);border-radius:10px;
+  padding:var(--s4);text-align:center}
+.empty .big{font-size:16px;font-weight:700;color:var(--mut)}
+.empty .why{font-size:14.5px;color:var(--dim);margin-top:8px;line-height:1.65}
+footer{padding-top:var(--s5);font-size:13.5px;color:var(--dim);line-height:1.75}
+footer b{color:var(--mut)}
+@media(max-width:760px){.duel{grid-template-columns:1fr}.verdict{font-size:21px}
+  .ev{grid-template-columns:74px 1fr}.gnow{flex-direction:column}}
+</style></head><body>
+
+<div class="top"><div class="tin">
+  <div class="bd"><i>⚡</i> STOCK BRAIN</div>
+  <div class="nv"><a href="/">딸깍</a><a href="/market">섹터맵</a>
+    <a href="/insights">인사이트</a><a href="/insights2">인사이트2</a>
+    <a href="/stock" class="on">종목검색</a></div>
+</div></div>
+
+<div class="wrap">
+  <div class="bar">
+    <div class="qbox">
+      <input id="q" placeholder="종목명을 입력하세요 — 예: 현대차, 하이닉스" autocomplete="off">
+      <span class="px" id="px"></span>
+    </div>
+    <button class="gobtn" onclick="go()">찾기</button>
+  </div>
+  <div id="app"><div class="msg">종목명을 입력하고 찾기를 누르세요.</div></div>
+</div>
+
+<script>
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const cls=s=>s>0?'p':s<0?'n':'z';
+const nf=n=>(n>0?'+':'')+Number(n).toLocaleString();
+let MAT=null, BRIEF=null, BYID={};
+
+document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
+
+// 주소에 ?q= 가 있으면 바로 검색 — 다른 화면에서 종목명 링크로 넘어올 수 있게
+const _p=new URLSearchParams(location.search);
+if(_p.get('q')){document.getElementById('q').value=_p.get('q'); go();}
+
+async function go(){
+  const q=document.getElementById('q').value.trim();
+  if(!q) return;
+  history.replaceState(null,'','/stock?q='+encodeURIComponent(q));
+  const app=document.getElementById('app');
+  app.innerHTML='<div class="msg">발언과 수급을 모으는 중…</div>';
+  document.getElementById('px').textContent='';
+  try{
+    const r=await fetch('/api/insights2/stock?q='+encodeURIComponent(q));
+    MAT=await r.json();
+    if(MAT.error) throw new Error(MAT.error);
+    BYID={}; (MAT.atoms||[]).forEach(a=>BYID[a.id]=a);
+    BRIEF=null;
+    render();
+    // 종합은 시간이 걸리니 재료를 먼저 그리고 뒤에 채운다 — LLM이 죽어도 화면은 산다
+    fetch('/api/insights2/brief?q='+encodeURIComponent(q))
+      .then(x=>x.json()).then(b=>{BRIEF=b; render();})
+      .catch(()=>{BRIEF={ok:false,reason:'종합 호출 실패'}; render();});
+  }catch(e){
+    app.innerHTML='<div class="msg">불러오지 못했습니다 — '+esc(e.message)+'</div>';
+  }
+}
+
+/* ── 원문 되짚기 ── */
+function quotes(ids,key){
+  const list=(ids||[]).map(i=>BYID[i]).filter(Boolean);
+  if(!list.length) return '';
+  const chip=`<span class="src"><button class="chip" onclick="tog('${key}')">📄 근거 ${list.length}건</button></span>`;
+  const body=list.map(a=>`<div class="qi">${esc(a.content)}
+    <div class="qm"><span class="dot ${cls(a.sign)}"></span><span>${esc(a.date)}</span>
+      <span>${esc(a.who||a.src)}</span>${a.ts?`<span>🕘${esc(a.ts)}</span>`:''}
+      ${a.deeplink?`<a href="${esc(a.deeplink)}" target="_blank" rel="noopener" style="color:var(--mint)">▶ 원본</a>`:''}
+    </div></div>`).join('');
+  return chip+`<div class="quo" id="${key}">${body}</div>`;
+}
+function tog(k){const el=document.getElementById(k); if(el) el.classList.toggle('on');}
+
+/* ── D-day ── */
+/* 날짜 표기가 제각각으로 온다 — LLM은 자료에 적힌 대로 옮기기 때문이다.
+   "2026-08-26" / "8월 26일" / "2027년 2~3분기" 전부 들어온다.
+   연도가 없으면 올해로 본다(이미 지난 달이면 내년). 못 읽으면 null → 화면이 원문을 그대로 쓴다. */
+function dday(when){
+  const s=String(when||'');
+  const now=new Date(); now.setHours(0,0,0,0);
+  let y,mo,d;
+  let m=/(\d{4})\s*[-.\/년]\s*(\d{1,2})\s*[-.\/월]\s*(\d{1,2})?/.exec(s);
+  if(m){ y=+m[1]; mo=+m[2]; d=+(m[3]||1); }
+  else{
+    m=/(\d{1,2})\s*월\s*(\d{1,2})\s*일/.exec(s);
+    if(!m) return null;
+    mo=+m[1]; d=+m[2]; y=now.getFullYear();
+    if(new Date(y,mo-1,d) < now) y+=1;   // 이미 지난 날짜면 내년 같은 날
+  }
+  if(!(mo>=1&&mo<=12&&d>=1&&d<=31)) return null;
+  return Math.round((new Date(y,mo-1,d)-now)/86400000);
+}
+
+function render(){
+  const c=MAT.counts||{}, f=MAT.flow||{}, v=MAT.vacuum;
+  const b=BRIEF||{};
+  if(f.close) document.getElementById('px').innerHTML=
+    `종가 <b class="num">${Number(f.close).toLocaleString()}</b>원
+     <span class="${f.change>0?'up':'dn'} num">${nf(f.change)}</span>`;
+
+  const srcTxt=Object.entries(c.sources||{}).map(([k,n])=>`${k} ${n}`).join(' · ');
+  document.getElementById('app').innerHTML=`
+  <div class="meta">
+    <span><b class="num">${c.atoms||0}</b>건의 발언</span>
+    <span>${esc(srcTxt||'—')}</span>
+    <span>${esc(c.date_from||'')} ~ ${esc(c.date_to||'')}</span>
+    ${MAT.code?`<span>종목코드 <b class="num">${esc(MAT.code)}</b></span>`:''}
+    ${MAT.q!==MAT.canonical?`<span class="warn">「${esc(MAT.q)}」→ <b>${esc(MAT.canonical)}</b>로 찾았습니다</span>`:''}
+  </div>
+  ${MAT.too_short?`<div class="warn"><b>검색어가 짧습니다.</b> 「${esc(MAT.q)}」로 시작하는 다른 종목까지 섞일 수 있습니다.</div>`:''}
+  ${!c.atoms?`<div class="msg">이 종목에 대한 발언이 아직 없습니다.</div>`:`
+    ${secSchedule(b)}
+    ${secVerdict(b,c)}
+    ${secDebate(b)}
+    ${secFlow(f,v)}
+    ${secRisks(b)}
+  `}
+  <footer>
+    <b>발언</b> · atoms.db에서 「${esc(MAT.canonical)}」 정규화 검색(별칭 확장 + 접두어가 같은 다른 법인 제외).
+    ${b.model?`<br><b>종합</b> · ${esc(b.model)} — 정해진 칸의 값만 뽑고 화면은 코드가 그립니다.`:''}
+    ${f.date_from?`<br><b>수급</b> · KIS 투자자별 일별 ${esc(f.date_from)}~${esc(f.date_to)} (${f.days||0}일)`:''}
+  </footer>`;
+}
+
+function pend(what){return `<div class="msg">${what} — 종합을 기다리는 중…</div>`;}
+
+/* ① 일정 */
+function secSchedule(b){
+  if(!BRIEF) return `<section class="blk"><div class="lab">① 앞으로 있을 일</div>${pend('일정')}</section>`;
+  const list=b.schedule||[];
+  return `<section class="blk">
+    <div class="lab">① 앞으로 있을 일 <span class="n">— 네이버·종토방·유튜브 어디서도 모아주지 않는 것</span></div>
+    ${!list.length?`<div class="empty"><div class="big">예정된 일정이 발언에 없습니다</div>
+      <div class="why">실적 발표·인베스터 데이 같은 예정 일정이 언급되면 여기 모입니다.</div></div>`
+    :`<div class="cal">${list.map((s,i)=>{
+      const d=dday(s.when), soon=(d!==null&&d>=0&&d<=45);
+      return `<div class="ev ${soon?'soon':''}">
+        <div class="dday">
+          <div class="d num">${d!==null&&d>=0?('D-'+d):esc((s.when||'').slice(0,7))}</div>
+          <div class="w">${esc(s.when||'')}</div></div>
+        <div><div class="h">${esc(s.title||'')}</div>
+          <div class="b">${esc(s.detail||'')}</div>
+          ${quotes(s.ids,'sch'+i)}</div></div>`;
+    }).join('')}</div>`}
+  </section>`;
+}
+
+/* ② 판단 */
+function secVerdict(b,c){
+  if(!BRIEF) return `<section class="blk"><div class="lab">② 지금 판단</div>${pend('판단')}</section>`;
+  if(!b.ok&&!b.verdict) return `<section class="blk"><div class="lab">② 지금 판단</div>
+    <div class="empty"><div class="big">종합을 만들지 못했습니다</div>
+    <div class="why">${esc(b.reason||'알 수 없는 이유')} — 아래 수급과 원문은 그대로 볼 수 있습니다.</div></div></section>`;
+  const gs=b.grounds||[];
+  const p=gs.filter(g=>g.sign>0).length, n=gs.filter(g=>g.sign<0).length;
+  return `<section class="blk">
+    <div class="lab">② 지금 판단 <span class="n">— 발언과 수급을 합치면</span></div>
+    <div class="verdict">${esc(b.verdict||'')}</div>
+    <div class="tally">
+      <i><span class="dot p"></span> 강세 근거 <span class="num">${p}</span></i>
+      <i><span class="dot n"></span> 약세 근거 <span class="num">${n}</span></i>
+      <i><span class="dot z"></span> 수집 발언 <span class="num">${c.atoms||0}</span></i></div>
+    <div class="grounds">${gs.map((g,i)=>`
+      <div class="g ${cls(g.sign)==='p'?'p':cls(g.sign)==='n'?'n':''}">
+        <div class="t">${esc(g.text||'')}</div>${quotes(g.ids,'gr'+i)}</div>`).join('')}</div>
+  </section>`;
+}
+
+/* ③ 쟁점 */
+function secDebate(b){
+  if(!BRIEF) return '';
+  const d=b.debate||{};
+  if(!d.topic) return '';
+  const side=(arr,key)=>(arr||[]).map((x,i)=>`<li>${esc(x.text||'')}${quotes(x.ids,key+i)}</li>`).join('');
+  return `<section class="blk">
+    <div class="lab">③ 지금 갈리는 지점 <span class="n">— ${esc(d.topic)}</span></div>
+    <div class="duel">
+      <div class="side a"><header>${esc(d.a_label||'찬성')}</header><ul>${side(d.a,'da')}</ul></div>
+      <div class="side b"><header>${esc(d.b_label||'반대')}</header><ul>${side(d.b,'db')}</ul></div>
+    </div>
+    ${d.pivot?`<div class="pivot"><b>차이의 핵심.</b> ${esc(d.pivot)}</div>`:''}
+  </section>`;
+}
+
+/* ④ 수급 */
+function secFlow(f,v){
+  const rows=f.rows||[];
+  if(!rows.length&&!v) return `<section class="blk"><div class="lab">④ 수급</div>
+    <div class="empty"><div class="big">수급 자료가 없습니다</div>
+    <div class="why">종목코드를 찾지 못했거나 시세 API가 응답하지 않았습니다.</div></div></section>`;
+
+  // 빈집 게이지 — 백분위가 없으면(실시간 경로) 핀 대신 방향만 말한다
+  const pct=(v&&v.pct!=null)?v.pct:null;
+  const grade=(v&&v.grade)||'';
+  const trend=(v&&v.trend)||'';
+  const ser=(v&&v.series)||[];
+  const mx=Math.max(...ser.map(Math.abs),1e-9);
+
+  const gauge=`
+    <div class="gtrack"><i class="gA"></i><i class="gB"></i><i class="gC"></i><i class="gD"></i>
+      ${pct!=null?`<span class="gpin" style="left:${Math.max(0,Math.min(100,pct))}%"></span>`:''}</div>
+    <div class="glabels"><span class="lA">A 완전빈집</span><span class="lB">B 반빈집</span>
+      <span class="lC">C 정상</span><span class="lD">D 과매수</span></div>
+    <div class="gnow">
+      <div class="badge"><div class="g2">${esc(grade||'등급 미산출')}</div>
+        <div class="p num">${pct!=null?('상위 '+Math.round(pct)+'%'):'백분위 없음'}</div></div>
+      <div class="say">${vacSay(grade,trend,pct)}</div>
+    </div>
+    ${ser.length?`<div class="spark" title="빈집 오실레이터 추이">${ser.map(x=>
+      `<i class="${x>0?'p':x<0?'n':''}" style="height:${Math.max(2,Math.abs(x)/mx*42)}px"></i>`).join('')}</div>`:''}`;
+
+  const tbl=`<table class="ftab">
+    <thead><tr><th>주체</th><th>최근 5일</th><th>최근 20일</th><th style="width:110px">5일 일별</th></tr></thead>
+    <tbody>${rows.map(r=>{
+      const m=Math.max(...r.daily5.map(Math.abs),1);
+      return `<tr><td>${esc(r.name)}</td>
+        <td class="num ${r.w5>0?'up':r.w5<0?'dn':''}">${nf(r.w5)}</td>
+        <td class="num ${r.w20>0?'up':r.w20<0?'dn':''}">${nf(r.w20)}</td>
+        <td><span class="mini">${r.daily5.map(x=>
+          `<i class="${x>=0?'p':'n'}" style="height:${Math.max(3,Math.abs(x)/m*18)}px"></i>`).join('')}</span></td></tr>`;
+    }).join('')}</tbody></table>`;
+
+  return `<section class="blk">
+    <div class="lab">④ 수급 <span class="n">— 남들이 못 보는 칸</span></div>
+    <div class="vac">
+      <div class="vac-h"><span class="ttl">수급 빈집 게이지</span>
+        <span class="def">기관·외국인이 이 종목을 <b>얼마나 비워뒀는지</b>를 시가총액 대비로 잰 값.
+          <b>왼쪽일수록 비었고(살 여지), 오른쪽일수록 꽉 찼습니다(이미 담음).</b></span></div>
+      <div class="vac-b">
+        <div class="vtop"><div>${gauge}</div><div>${tbl}</div></div>
+        ${flowRead(rows,trend)}
+        ${(v&&v.source==='live')?`<div class="warn"><b>등급은 아직 못 냅니다.</b>
+          백분위(A/B/C/D)는 전종목 분포가 있어야 나오는데, 엑셀 오실레이터 산출물이 멈춰 있어
+          지금은 <b>방향(${esc(trend||'—')})</b>만 계산했습니다.</div>`:''}
+      </div></div>
+  </section>`;
+}
+
+function vacSay(grade,trend,pct){
+  let s='';
+  if(grade.startsWith('A')) s='기관·외국인이 이 종목을 <b>거의 비웠습니다</b>. 팔 사람이 적어 반등하면 가볍지만, 아직 살 주체도 안 왔습니다.';
+  else if(grade.startsWith('B')) s='물량이 <b>상당히 비워진</b> 상태입니다. 바닥권에서 주체가 들어오는지 보는 구간입니다.';
+  else if(grade.startsWith('C')) s='쏠림이 크지 않습니다. <b>수급만으로는 판단 근거가 약한</b> 자리입니다.';
+  else if(grade.startsWith('D')) s='기관·외국인이 <b>이미 많이 담았습니다(꽉 참)</b>. 새로 살 주체보다 차익실현 물량이 나올 자리입니다.';
+  else s='전종목 분포가 없어 등급은 못 냈습니다. <b>방향만</b> 보십시오.';
+  if(trend.includes('재진입')) s+=' 추세는 <b>↑ 재진입</b> — 비었던 자리를 다시 채우는 중입니다.';
+  else if(trend.includes('심화')) s+=' 추세는 <b>↓ 빈집심화</b> — 계속 비워지는 중이라 아직 바닥 확인 전입니다.';
+  else if(trend) s+=` 추세는 <b>${esc(trend)}</b>입니다.`;
+  return s;
+}
+
+/* 갈라 읽기 — 이 화면의 값어치가 여기 있다 */
+function flowRead(rows,trend){
+  const get=n=>rows.find(r=>r.name===n)||{w5:0,w20:0};
+  const f=get('외국인'), g=get('기관'), p=get('개인');
+  if(!rows.length) return '';
+  const sum20=f.w20+g.w20;
+  let t='';
+  if(f.w20>0&&g.w20<0) t=`빈집 게이지는 기관과 외국인을 <b>하나로 묶어</b> 계산합니다. 갈라보면
+    <b>외국인이 20일 ${nf(f.w20)}억을 담는 동안 기관은 ${nf(g.w20)}억을 팔았습니다</b>
+    (합치면 ${nf(sum20)}억). 게이지 움직임은 사실상 외국인 한 축이 만든 것입니다.`;
+  else if(f.w20<0&&g.w20>0) t=`<b>기관이 20일 ${nf(g.w20)}억을 담는 동안 외국인은 ${nf(f.w20)}억을 팔았습니다.</b>
+    국내 기관이 받아주는 그림이라, 외국인 매도가 멈추는지가 관건입니다.`;
+  else if(f.w20>0&&g.w20>0) t=`<b>외국인 ${nf(f.w20)}억 · 기관 ${nf(g.w20)}억으로 양대 주체가 같은 방향</b>입니다.
+    개인이 ${nf(p.w20)}억으로 반대편에 서 있습니다. 수급이 한쪽으로 정리된 상태입니다.`;
+  else t=`<b>외국인 ${nf(f.w20)}억 · 기관 ${nf(g.w20)}억으로 양대 주체가 함께 파는 중</b>입니다.
+    개인이 ${nf(p.w20)}억을 받고 있습니다.`;
+  // 최근 5일이 20일 대부분을 차지하면 추세가 아니라 단기 베팅일 수 있다
+  if(f.w20>0&&f.w5>0){
+    const share=Math.round(f.w5/f.w20*100);
+    if(share>=60) t+=` 게다가 외국인 매수의 <b>${share}%가 최근 5일</b>에 몰려 있어, 굳은 추세라기보다
+      <b>임박한 일정을 앞둔 단기 베팅</b>일 가능성을 함께 봐야 합니다.`;
+  }
+  return `<div class="read"><div class="k">합쳐서 읽으면</div><div class="t">${t}</div></div>`;
+}
+
+/* ⑤ 깨지는 조건 */
+function secRisks(b){
+  if(!BRIEF||!(b.risks||[]).length) return '';
+  return `<section class="blk">
+    <div class="lab">⑤ 이 판단이 틀리는 조건 <span class="n">— 무엇을 보면 생각을 바꿔야 하나</span></div>
+    <div class="checks">${b.risks.map((r,i)=>`
+      <div class="ck"><span class="m">◆</span>
+        <span class="t">${esc(r.text||'')}${quotes(r.ids,'rk'+i)}</span></div>`).join('')}</div>
+  </section>`;
+}
+</script>
+</body></html>
