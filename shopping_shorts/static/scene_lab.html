@@ -20,8 +20,9 @@ h1{font-size:16px;margin:0;font-weight:700}
 .mode.on{border-color:var(--accent);color:#fff;background:#1b2a3d}
 /* ── 타임프레임(내 영상 전체) ─────────────────────────────────────────────
    위=전체 한 줄, 아래=고를 조각. 사장님 손그림 구조. 띠는 가로로만 스크롤한다. */
+#topzone{display:grid;grid-template-columns:1fr 300px;gap:10px;align-items:start;margin:0 0 10px}
 #timeband{border:1px solid var(--line);border-radius:10px;background:var(--panel);
-  margin:0 0 10px;padding:8px 10px 10px}
+  margin:0;padding:8px 10px 10px;min-width:0}
 .tbhead{display:flex;align-items:baseline;gap:10px;font-size:12.5px;margin-bottom:7px;flex-wrap:wrap}
 .tbtot{font-family:ui-monospace,Menlo,monospace;color:var(--dim);font-variant-numeric:tabular-nums}
 .tbhint{color:var(--dim);font-size:11.5px;margin-left:auto}
@@ -43,14 +44,14 @@ h1{font-size:16px;margin:0;font-weight:700}
 .tbcut.long .s{background:var(--warn);color:#3a2a08;font-weight:700}
 .tbeat.empty{border-style:dashed}
 .tbempty{color:var(--dim);font-size:11.5px;padding:14px 10px}
-.wrap{display:grid;grid-template-columns:1fr 330px;gap:10px;height:calc(100vh - 330px);min-height:360px}
-.pane.rightcol{display:flex;flex-direction:column;gap:8px;overflow:auto}
+.wrap{display:block;height:auto}   /* 아래는 소스 전용 — 전체 폭(2026-08-15 사장님) */
+.pane.rightcol{display:none}       /* 오른쪽 칼럼 폐지: 미리보기는 위(타임라인 옆)로 갔다 */
 .pane{overflow-y:auto;padding:14px}
-.pane.left{border-right:1px solid var(--line);background:var(--panel)}
+.pane.left{background:var(--panel);border:1px solid var(--line);border-radius:10px}
 .srcgroup{margin-bottom:18px}
 .srchead{font-size:17px;color:var(--ink);font-weight:800;margin-bottom:8px;display:flex;align-items:baseline;justify-content:space-between;gap:8px;position:sticky;top:0;background:var(--panel);padding:8px 4px;border-bottom:1px solid var(--line);z-index:2}
 .srchead .cnt{font-size:13px;color:var(--dim);font-weight:400}
-.thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .seg{display:block}
 .seg{border:1px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;
      background:var(--panel2);position:relative;transition:.12s}
@@ -141,8 +142,9 @@ button.act.play{font-size:16px;font-weight:700;padding:8px 16px;background:#1b2a
       border-color:#2f6db3;color:#9fd0ff;border-radius:9px}
 button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 .ord{display:flex;gap:3px;margin-left:auto}
-#player{position:relative;width:100%;background:var(--panel);align-self:start;
-        border:1px solid var(--accent);border-radius:10px;padding:8px;display:none;overflow:auto;max-height:100%}
+#player{position:relative;width:100%;background:var(--panel);
+        border:1px solid var(--accent);border-radius:10px;padding:8px;display:none}
+#playerhost{display:flex;flex-direction:column;gap:8px;min-width:0}
 #player.on{display:block}
 #player #vidbox{position:relative;background:#000;border-radius:6px;overflow:hidden;aspect-ratio:9/16;
         cursor:pointer}   /* 화면 클릭 = 정지/재생(2026-08-15) */
@@ -188,7 +190,7 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
 .pane.left.bin #binmsg{display:block}
 </style></head><body>
 
-<header>
+<header style="display:none">
   <div>
     <h1>장면 편집 <span class="sub">— 영상에 나올 화면을 직접 고르고 바꿔봅니다</span></h1>
     <div class="sub" id="jobline"></div>
@@ -200,11 +202,13 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
     <div class="mode" id="m-pick" onclick="setMode('pick')" style="display:none">④ 대본에 맞게<br><span class="sub">대사 보고 고른 배치</span></div>
   </div>
 </header>
+<!-- 머리글·모드 버튼 감춤(2026-08-15 사장님) — 안의 요소는 코드가 참조하므로 지우지 않는다 -->
 
 <!-- ── 타임프레임: 내 영상 전체 (2026-08-15 사장님 "한눈에 안 보이고 어려워") ──────────────
      칸(멘트) 5개가 세로로 흩어져 있어 "내 영상이 지금 어떤 그림들로 채워졌나"를 볼 자리가
      없었다. 그래서 실제 컷을 **시간 순서 한 줄**로 깐다. 계산은 아래 필름과 똑같은
      planClips 하나만 쓴다(0순위-B — 같은 판단을 두 번 적지 않는다). -->
+<div id="topzone">
 <div id="timeband">
   <div class="tbhead">
     <b>내 영상 전체</b>
@@ -212,6 +216,21 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
     <span class="tbhint">조각을 누르면 그 칸이 재생됩니다 · 주황 = 재료가 모자라 늘어난 컷</span>
   </div>
   <div class="tbrow" id="tbrow"></div>
+</div>
+<div id="playerhost">
+  <div class="lbl" style="display:flex;align-items:center;gap:14px"><button class="act play" id="pball" onclick="playAll(event)">▶️ 전체 재생</button><label style="cursor:pointer" title="전체에 적용: 장면마다 컷 하나씩, 멘트 시간을 길이 비례로 나눕니다."><input type="checkbox" onchange="toggleOne(this.checked)"> 1장=1컷</label></div>
+  <div id="player">
+      <div class="phead"><b>미리보기</b> <span class="x" onclick="stopPlay()">닫기 ✕</span></div>
+      <div id="vidbox" onclick="togglePause(event)"></div>
+      <input type="range" id="seek" min="0" max="1000" value="0" oninput="seekInput(this.value)">
+      <div id="trimbar" style="display:none"></div>
+      <div id="subbox"></div>
+      <audio id="bgaudio"></audio>
+      <div class="pinfo" id="pinfo">화면 클릭 = 정지/재생<br>
+        <label style="cursor:pointer"><input type="checkbox" id="subcut" checked
+          onchange="subPerCut=this.checked"> 컷 번호</label></div>
+    </div>
+</div>
 </div>
 
 <div class="wrap">
@@ -224,20 +243,7 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
   </div>
   <!-- 미리보기 — 예전엔 떠다니는 창(position:fixed)이라 타임프레임을 가렸다.
        오른쪽 칼럼에 붙여 겹칠 일을 없앤다(2026-08-15 사장님 "오버랩으로 안 보이고"). -->
-  <div class="pane rightcol">
-    <div class="lbl" style="display:flex;align-items:center;gap:14px"><button class="act play" id="pball" onclick="playAll(event)">▶️ 전체 재생</button><label style="cursor:pointer" title="전체에 적용: 장면마다 컷 하나씩, 멘트 시간을 길이 비례로 나눕니다."><input type="checkbox" onchange="toggleOne(this.checked)"> 1장=1컷</label></div>
-    <div id="player">
-      <div class="phead"><b>미리보기</b> <span class="x" onclick="stopPlay()">닫기 ✕</span></div>
-      <div id="vidbox" onclick="togglePause(event)"></div>
-      <input type="range" id="seek" min="0" max="1000" value="0" oninput="seekInput(this.value)">
-      <div id="trimbar" style="display:none"></div>
-      <div id="subbox"></div>
-      <audio id="bgaudio"></audio>
-      <div class="pinfo" id="pinfo">화면 클릭 = 정지/재생<br>
-        <label style="cursor:pointer"><input type="checkbox" id="subcut" checked
-          onchange="subPerCut=this.checked"> 컷 번호</label></div>
-    </div>
-    <div id="film" style="display:none"></div>
+  <div class="pane rightcol"><div id="film" style="display:none"></div>
   </div>
 </div>
 
