@@ -76,11 +76,38 @@ _RESPONSE_SCHEMA = {
         },
         "full_text": {"type": "string"},
         "product_benefits": {"type": "array", "items": {"type": "string"}},
+        # ★영상 단위 요약(2026-08-16). 지금까진 최상위에 특장점 2~3개뿐이라 "이 영상이
+        #   무슨 영상인가"가 한 덩어리로 없었다. 소스가 3~8개일 때 각 소스가 전체에서
+        #   맡는 몫이 안 보여 대본 생성이 소스를 골고루 못 쓴다(실측 A/B: 3개 중 평균 2.6종).
+        #   장면 label도 이 큰 그림 위에서 지어야 어긋남이 준다.
+        "source_brief": {
+            "type": "object",
+            "properties": {
+                "product": {"type": "string"},   # 무슨 제품/결과물을 보여주는 영상인가
+                "role": {"type": "string"},      # 이 영상이 보여주는 몫(구성 확인·비교·기능 실증…)
+                "core": {"type": "string"},      # 이 영상의 요지 한 줄
+                "summary": {"type": "string"},   # 2~3문장 요약
+            },
+        },
     },
     "required": ["segments", "full_text"],
 }
 
 _PROMPT = """이 영상을 보고 시간 순서대로 세그먼트로 나눠 대본을 추출해라.
+
+★순서를 지켜라: **영상 전체를 먼저 파악**(source_brief)한 뒤, 그 큰 그림 위에서 세그먼트를
+나누고 각 장면의 쓰임(label)을 정해라. 전체를 모르면 "도입"인지 "마무리"인지 알 수 없다.
+
+[source_brief — 이 영상이 무슨 영상인지 먼저 한 덩어리로 정리한다]
+- product: 이 영상이 보여주는 **제품/결과물의 이름**(한국어). 영어·중국어 자막이어도 한국어로.
+           자막이 하나도 없어도 화면만 보고 정해라(예: "긍정 강화 보상 별 통", "휴대용 에스프레소 메이커").
+- role: 이 영상이 **무엇을 보여주는 영상인지** 한 줄(예: "제품 구성 및 조립 시연",
+        "크기·디자인 비교 확인", "기능 실증과 결과 확인", "사용 후기·반응"). 여러 소스를
+        섞어 쓸 때 이 영상이 맡을 몫을 가리는 기준이 된다.
+- core: 이 영상의 요지 한 줄(가장 중요한 장면·기능이 무엇인지).
+- summary: 2~3문장 요약. 무엇을 어떤 순서로 보여주고 무엇이 핵심 기능인지.
+★셋 다 **화면에 실제로 보이는 것**으로만 채워라. 자막·나레이션이 없어도 화면만 보고 쓴다.
+
 
 캡션(참고용, 영상 내용이 우선): {caption}
 
@@ -112,8 +139,9 @@ _PROMPT = """이 영상을 보고 시간 순서대로 세그먼트로 나눠 대
   진짜 강아지가 보여도, 주 제품은 여전히 "선풍기"다.
 - label: ★그 구간이 **이 영상에서 하는 일**을 짧은 이름으로 붙여라(**12자 이내**, 한국어).
   scene_desc가 "무엇이 보이나"(묘사)라면 label은 **"왜 이 장면이 여기 있나"(역할)**다.
-  영상 전체를 먼저 훑고, 이 장면이 **전체 흐름의 어느 대목인지**를 반영해라 —
-  같은 그림이라도 맨 앞이면 "도입", 맨 뒤면 "마무리"다.
+  ★위에서 정한 source_brief(제품·역할·핵심)를 기준으로 삼아라 — 이 영상이 맡은 몫 안에서
+  이 장면이 어느 대목인지 적는 것이다. 같은 그림이라도 맨 앞이면 "도입", 맨 뒤면 "마무리".
+  brief의 role이 "크기 비교"인 영상이면 그 비교 흐름 속 위치로 이름을 지어라.
   형식: `대상 + 무엇을 하는 대목` (…시연 / …강조 / …확인 / …설명 / …비교 / …소개 / …예고).
   · 좋은 예: "제품 개봉·구성품 확인" "자석 부착 시연" "크기 비교 시연" "바텀업 추출 시연"
              "기존 제품 작동 시연" "완성품 클로즈업" "고객 반응 강조" "마무리·CTA"
@@ -186,6 +214,28 @@ def _norm_shot_role(raw):
 # 짧은 이름(2026-08-16). 카드 밑에 그대로 찍히므로 길이를 여기서 한 번만 통제한다
 # (표시하는 쪽마다 자르면 곳마다 달라진다 — CLAUDE.md 0순위-B).
 _LABEL_MAX = 16          # 프롬프트는 12자를 요구한다. 조금 넘겨도 버리지 않되 여기서 끊는다.
+
+
+_BRIEF_KEYS = ("product", "role", "core", "summary")
+_BRIEF_MAX = {"product": 40, "role": 60, "core": 80, "summary": 400}
+
+
+def _norm_brief(raw):
+    """모델이 준 영상 단위 요약 → 표시·프롬프트용 dict(순수함수, fail-open).
+    없음/형식이상 → {}. 옛 추출본엔 이 필드가 없으므로 읽는 쪽은 빈 dict를 견뎌야 한다."""
+    if not isinstance(raw, dict):
+        return {}
+    out = {}
+    for k in _BRIEF_KEYS:
+        v = raw.get(k)
+        if not isinstance(v, str):
+            continue
+        s = " ".join(v.split())
+        if not s:
+            continue
+        cap = _BRIEF_MAX[k]
+        out[k] = s if len(s) <= cap else s[:cap - 1] + "…"
+    return out
 
 
 def _norm_label(raw):
@@ -371,7 +421,11 @@ def storable(result):
     r = result or {}
     return {"full_text": r.get("full_text", "") or "",
             "segments": r.get("segments") or [],
-            "tag_qa": r.get("tag_qa") or {}}
+            "tag_qa": r.get("tag_qa") or {},
+            # 영상 단위 요약(2026-08-16) — 1단계 화면이 소스별로 이걸 보여주고,
+            # 대본 생성이 "이 소스가 맡은 몫"으로 읽는다. 여기 안 넣으면 저장 순간 버려진다
+            # (2026-08-01 tag_qa가 정확히 그렇게 사라졌던 자리다).
+            "source_brief": _norm_brief(r.get("source_brief"))}
 
 
 def _pick_better_extract(first, second, duration):
@@ -466,6 +520,8 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 "segments": segments,
                 "full_text": data.get("full_text", ""),
                 "product_benefits": benefits,
+                # 영상 단위 요약(2026-08-16). 없으면 {} — 읽는 쪽이 빈 dict를 견딘다.
+                "source_brief": _norm_brief(data.get("source_brief")),
             }
             # ★태깅 QA(2026-08-01). 지금까진 스키마만 통과하면 무조건 채택했다 — 프롬프트의
             #   지침(0초 훅·받아쓰기·shot_role·change)이 지켜졌는지 아무도 안 봤다. 슬롯 기반
