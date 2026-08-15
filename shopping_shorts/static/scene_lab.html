@@ -35,6 +35,8 @@ h1{font-size:16px;margin:0;font-weight:700}
   background:var(--bg);cursor:pointer}
 .tbeat:hover{border-color:var(--accent)}
 .tbeat.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.tbeat.sel{border-color:var(--good)}
+.tbeat .picked{margin-left:auto;font-size:10.5px;color:var(--good);font-weight:700}
 .tbeat .h{display:flex;align-items:baseline;gap:7px;font-size:12.5px;margin-bottom:6px}
 .tbeat .h b{font-size:13.5px}
 .tbeat .h .d{color:var(--dim);font-family:ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
@@ -417,6 +419,12 @@ function playBeatHere(i, ev){
   playBeat(i, ev);
 }
 
+function dropCutFromBand(i, segId){
+  const l = lists[i] || [];
+  const k = l.indexOf(segId);
+  if (k >= 0) delSeg(i, k);
+}
+
 function renderBand(){
   const row = document.getElementById('tbrow'); if (!row) return;
   let total = 0;
@@ -425,12 +433,18 @@ function renderBand(){
     const sec = clips.reduce((a, c) => a + c.dur, 0);
     total += sec;
     const cuts = clips.length
-      ? clips.map(c => `<div class="tbcut ${c.dur > LONG_CUT ? 'long' : ''}" title="${c.video_id} ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초">
+      ? clips.map((c, ci) => `<div class="tbcut ${c.dur > LONG_CUT ? 'long' : ''}"
+             ondblclick="event.stopPropagation();dropCutFromBand(${i}, '${c.seg_id}')"
+             title="${c.video_id} ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 두 번 클릭 = 이 장면 빼기">
              <img src="${SL.thumb(c.seg_id)}" loading="lazy"><span class="s">${c.dur.toFixed(1)}</span></div>`).join('')
       : `<div class="tbempty">장면을 담아주세요</div>`;
-    return `<div class="tbeat ${clips.length ? '' : 'empty'} ${playKey === 'beat:' + i ? 'on' : ''}"
-                 onclick="playBeatHere(${i}, event)" title="누르면 이 칸이 재생됩니다">
-        <div class="h"><b>${i+1}. ${b.role || '칸'}</b><span class="d">${sec.toFixed(1)}초</span></div>
+    // 담기·빼기는 기존 기능(add/delSeg)을 그대로 쓴다 — 아래 소스에서 끌어다 놓거나 두 번 클릭.
+    return `<div class="tbeat ${clips.length ? '' : 'empty'} ${playKey === 'beat:' + i ? 'on' : ''} ${sel === i ? 'sel' : ''}"
+                 onclick="selBeat(${i});playBeatHere(${i}, event)"
+                 ondragover="if(palDrag){event.preventDefault();event.dataTransfer.dropEffect='copy';}"
+                 ondrop="beatDrop(${i}, event)"
+                 title="누르면 재생 · 아래 소스를 끌어다 놓거나 두 번 클릭하면 이 칸에 담깁니다">
+        <div class="h"><b>${i+1}. ${b.role || '칸'}</b><span class="d">${sec.toFixed(1)}초</span>${sel === i ? '<span class="picked">여기에 담깁니다</span>' : ''}</div>
         <div class="tbcuts">${cuts}</div>
       </div>`;
   }).join('');
