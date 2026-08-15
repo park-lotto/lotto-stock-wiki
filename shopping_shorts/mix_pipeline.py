@@ -22,6 +22,7 @@ from shopping_shorts.scene_match import match_scene_assets, match_sfx
 from shopping_shorts import tts
 from shopping_shorts import audio_post
 from shopping_shorts import config
+from shopping_shorts import usage_meter
 from shopping_shorts import single_source
 from shopping_shorts import script_lang
 from shopping_shorts.video_assemble import assemble, _beat_timeline, _beat_material, _probe_duration, _MAX_SLOWMO, preview_preset
@@ -526,6 +527,23 @@ def _prepare_sources(urls, work, store=None):
 
 def run_mix_job(job_id, db_path, work_root):
     """다운로드→추출→EDL→TTS. 완료 시 status='ready_for_review'."""
+    # 이 job 안에서 나가는 모든 Gemini 콜에 job_id·customer_id를 붙인다(2026-08-16).
+    # 호출부 34곳을 안 고치고 "영상 1편 = 얼마"를 집계하기 위한 문맥이다.
+    with usage_meter.track(job_id=job_id,
+                           customer_id=_job_customer_id(db_path, job_id),
+                           op="제작"):
+        return _run_mix_job_inner(job_id, db_path, work_root)
+
+
+def _job_customer_id(db_path, job_id):
+    try:
+        job = Store(db_path).get_mix_job(job_id) or {}
+        return job.get("customer_id")
+    except Exception:      # noqa: BLE001 — 계측용이라 실패해도 본작업은 돈다
+        return None
+
+
+def _run_mix_job_inner(job_id, db_path, work_root):
     store = Store(db_path)
     _gpron = pron_corrections.load(store)
     job = store.get_mix_job(job_id)
