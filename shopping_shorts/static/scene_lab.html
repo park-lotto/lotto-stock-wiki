@@ -53,6 +53,12 @@ h1{font-size:16px;margin:0;font-weight:700}
   padding:1px 5px;border-radius:5px;font-family:ui-monospace,Menlo,monospace}
 .tbcut.long img{border-color:var(--warn)}
 .tbcut.long .s{background:var(--warn);color:#3a2a08;font-weight:700}
+/* 출처 번호(2026-08-16) — 몇 번째 소스 영상에서 온 컷인지. 초(.s)는 왼쪽 위라
+   오른쪽 위에 놓아 서로 안 가린다. 같은 제품을 찍은 영상 여러 개를 섞어 쓰므로
+   "지금 어느 영상이 어디 쓰였나"가 보여야 골고루 쓸 수 있다. */
+.tbcut .n{position:absolute;right:4px;top:4px;background:rgba(62,224,191,.9);color:#04201b;
+  font-size:10px;font-weight:900;min-width:16px;text-align:center;
+  padding:1px 5px;border-radius:5px;font-family:ui-monospace,Menlo,monospace}
 .tbeat.empty{border-style:dashed}
 .tbempty{color:var(--dim);font-size:11.5px;padding:14px 10px}
 .wrap{display:block}   /* 아래는 소스 전용 — 전체 폭(2026-08-15 사장님) */
@@ -65,15 +71,27 @@ h1{font-size:16px;margin:0;font-weight:700}
   background:var(--panel);padding:22px 4px 8px;margin-left:-14px;margin-right:-14px;
   padding-left:18px;padding-right:18px;border-bottom:1px solid var(--line);z-index:6}
 .srchead .cnt{font-size:13px;color:var(--dim);font-weight:400}
-.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-.seg{display:block;z-index:1}
+/* ★정렬(2026-08-16 사장님 "모서리가 한 줄로 떨어질 것"): grid-auto-rows:1fr로 같은 줄
+   카드 높이를 맞춘다. 안 하면 짧은 이름이 있는 카드와 없는 카드가 43px 어긋난다(실측). */
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;
+  grid-auto-rows:1fr;align-items:stretch}
+/* ★display를 여기서 정하지 않는다 — 아래 규칙이 flex로 덮는다(두 번 적으면 어긋난다). */
+.seg{z-index:1}
 .seg{border:1px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;
-     background:var(--panel2);position:relative;transition:.12s}
+     background:var(--panel2);position:relative;transition:.12s;
+     /* 높이가 맞춰진 뒤 남는 공간을 설명 영역이 먹게 한다 — 카드 아래가 휑하지 않게 */
+     display:flex;flex-direction:column;min-width:0}
 .seg:hover{border-color:var(--accent);transform:translateY(-2px)}
 .seg.playing{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
-.seg .cutbtn{position:absolute;right:5px;top:5px;z-index:3;background:#000c;color:#ffd08f;
-  border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:12px;cursor:pointer}
-.seg .cutbtn:hover{background:var(--warn);color:#3a2a08}
+/* ★자르기 발견성(2026-08-16 사장님도 못 찾으셨다). 예전엔 ✂ 한 글자에 12px·흐린 색이라
+   "누를 수 있는 것"으로 안 보였다. 글자를 붙여 무슨 버튼인지 알리고, 손가락으로 누를
+   크기(높이 28px)를 준다. 트림바는 이 버튼을 눌러야만 뜨므로 여기가 유일한 입구다. */
+.seg .cutbtn{position:absolute;right:5px;top:5px;z-index:3;
+  background:rgba(255,208,143,.92);color:#3a2a08;font-weight:800;
+  border:1px solid rgba(255,208,143,.5);border-radius:8px;
+  padding:4px 9px;font-size:11.5px;line-height:1.3;cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.seg .cutbtn:hover{background:var(--warn);color:#3a2a08;transform:scale(1.04)}
 .seg img{width:100%;display:block;aspect-ratio:9/16;object-fit:cover}
 .seg .meta{padding:6px 7px;font-size:12px;color:var(--ink);line-height:1.45;display:flex;flex-direction:column;gap:3px}
 /* 짧은 이름(2026-08-16) — "이 장면이 무엇을 하는가"를 한 줄로. 밑의 긴 묘사(.d)는
@@ -85,6 +103,12 @@ h1{font-size:16px;margin:0;font-weight:700}
 .utag.key{border-color:var(--good);color:var(--good)}
 .dur{position:absolute;left:5px;top:5px;background:#000c;color:#fff;font-size:11px;
      padding:2px 6px;border-radius:4px;z-index:2}
+/* ★썸네일 전용 상자(2026-08-16) — 배지들의 기준을 이미지로 못박는다.
+   예전엔 .seg(썸네일+설명 전체)가 기준이라 bottom으로 잡으면 설명 텍스트 밑에 붙었다.
+   4모서리를 나눠 쓴다: 왼위=초 · 오른위=✂ · 오른아래=출처. */
+.segthumb{position:relative;line-height:0}
+.segthumb .srcno{position:absolute;right:5px;bottom:5px;z-index:2;background:rgba(62,224,191,.92);
+     color:#04201b;font-size:10px;font-weight:900;padding:2px 7px;border-radius:99px;line-height:1.4}
 .seg.inthis{border-color:var(--good);box-shadow:0 0 0 1px var(--good) inset}
 /* 소스 영상 길이를 넘어가는 세그먼트 — 렌더하면 검은 화면/정지가 된다(2026-08-14 발각) */
 .seg.oor,.item.oor{border-color:var(--bad)}
@@ -321,6 +345,24 @@ function groupOf(sid){
     return _BAKE.some(w => d.includes(w)) ? '굽기' : '재료';
   }
   return GROUPS.some(g => g.key === r) ? r : '기타';
+}
+// ★출처(2026-08-16): 이 장면이 **몇 번째 소스 영상**에서 왔는지. 결(GROUPS)로만 묶여
+//   있어서 "이게 어느 영상 거지?"를 알 방법이 없었다 — 같은 제품을 찍은 영상 3~8개를
+//   섞어 쓰는 게 이 도구의 핵심인데 출처가 안 보이면 골고루 쓰고 있는지 알 수 없다.
+//   video_id를 등장 순서대로 1,2,3…으로 매긴다(1단계 '소스 N' 카드와 같은 번호).
+let _SRC_NO = null;
+function srcNo(sid){
+  if (_SRC_NO === null){
+    _SRC_NO = {};
+    // beats의 등장 순서가 아니라 segments 키 순서 = 인벤토리 순서(소스별로 뭉쳐 있다)
+    let n = 0;
+    for (const k of Object.keys(DATA.segments || {})){
+      const v = DATA.segments[k].video_id;
+      if (v && _SRC_NO[v] === undefined) _SRC_NO[v] = ++n;
+    }
+  }
+  const s0 = DATA.segments[sid] || {};
+  return _SRC_NO[s0.video_id] || 0;
 }
 // 용도 배지 — 위 결에서 바로 파생한 **제안**이다(강제 아님, 담는 건 사장님 판단).
 function useTags(sid){
@@ -592,8 +634,8 @@ function renderBand(){
              ondragover="if(dragFrom){event.preventDefault();event.dataTransfer.dropEffect='move';}"
              ondrop="bandDrop(${i}, '${c.seg_id}', event)"
              ondblclick="event.stopPropagation();dropCutFromBand(${i}, '${c.seg_id}')"
-             title="${c.video_id} ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 끌어서 순서 바꾸기 · 아래 소스로 끌면 빼기 · 두 번 클릭도 빼기">
-             <img src="${SL.thumb(c.seg_id)}" loading="lazy"><span class="s">${c.dur.toFixed(1)}</span></div>`).join('')
+             title="소스 ${srcNo(c.seg_id)} · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 끌어서 순서 바꾸기 · 아래 소스로 끌면 빼기 · 두 번 클릭도 빼기">
+             <img src="${SL.thumb(c.seg_id)}" loading="lazy"><span class="n">${srcNo(c.seg_id)}</span><span class="s">${c.dur.toFixed(1)}</span></div>`).join('')
       : `<div class="tbempty">장면을 담아주세요</div>`;
     // 담기·빼기는 기존 기능(add/delSeg)을 그대로 쓴다 — 아래 소스에서 끌어다 놓거나 두 번 클릭.
     return `<div class="tbeat ${clips.length ? '' : 'empty'} ${playKey === 'beat:' + i ? 'on' : ''} ${sel === i ? 'sel' : ''}"
@@ -651,10 +693,13 @@ function render(){
              onclick="clickPlay('${s.sid}',event)"
              ondblclick="event.stopPropagation();clearTimeout(clickTimer);add('${s.sid}')"
              title="끌어다 오른쪽 칸에 놓으면 담깁니다 · 클릭 = 재생 · 두 번 클릭 = 선택된 칸에 담기">
-          <img src="${SL.thumb(s.sid)}" loading="lazy">
-          <span class="dur">${(s.end-s.start).toFixed(1)}초${TRIMS[s.sid]?' ✂':''}</span>
-          <button class="cutbtn" title="큰 화면에서 이 장면을 보며 앞뒤를 잘라냅니다"
-                  onclick="event.stopPropagation();clearTimeout(clickTimer);stopCardPlay();playSegHere('${s.sid}')">✂</button>
+          <div class="segthumb">
+            <img src="${SL.thumb(s.sid)}" loading="lazy">
+            <span class="dur">${(s.end-s.start).toFixed(1)}초${TRIMS[s.sid]?' ✂':''}</span>
+            <button class="cutbtn" title="큰 화면에서 이 장면을 재생하며 필요 없는 구간을 잘라냅니다"
+                    onclick="event.stopPropagation();clearTimeout(clickTimer);stopCardPlay();playSegHere('${s.sid}')">✂ 자르기</button>
+            <span class="srcno" title="${srcNo(s.sid)}번째 소스 영상에서 온 장면">소스 ${srcNo(s.sid)}</span>
+          </div>
           <div class="meta">
             <div>${useTags(s.sid).map(t=>`<span class="utag${t==='실증'?' key':''}">${t}</span>`).join('')}</div>
             ${tooShort(s.sid)?`<div class="oorbadge">⚠ 너무 짧아서(0.8초 미만) 담아도 화면에 안 나와요</div>`:''}
@@ -1140,6 +1185,7 @@ function reset(){
 //   표시 보정 — 음성 길이에서 잘라 그린다(계산 로직 불변). 예전엔 build.py(파이썬)가
 //   했는데 서버 모드가 생기며 여기(한 곳)로 옮겼다 — 두 벌이 되면 어긋난다(0순위-B).
 function normalizeData(){
+  _SRC_NO = null;          // 소스 번호 캐시를 새 데이터 기준으로 다시 매긴다(2026-08-16)
   const caps = DATA.captions || {}, td = DATA.tts_dur || {};
   for (const i of Object.keys(caps)){
     const dur = td[i];
