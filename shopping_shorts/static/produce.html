@@ -67,7 +67,11 @@
     .previewSlot{position:sticky;top:12px;align-self:flex-start;z-index:7}
 
     /* 진행바 — 크게(60대 최우선). 완료=채운 민트+체크, 현재=링+숨쉬기(색이 아니라 형태로도 구분) */
-    .steps{margin:26px 0 30px;max-width:1120px}  /* 컨테이너는 블록 — 안의 .orbbar(theme.css)가 100% 채워 오브를 균등 분배 */
+    /* ★가로폭 상한을 없앴다(2026-08-15 사장님 "레퍼런스 랭킹처럼 크게").
+       랭킹 페이지(index.html)는 .main{flex:1}만 쓰고 상한이 없어 화면 끝까지 채운다 —
+       제작소만 1120px에 묶여 오른쪽이 통째로 비어 있었다. 세로 영상(9:16) 레일은
+       각자 max-width를 그대로 두므로, 늘어난 폭은 옆의 대본·결과 칼럼이 먹는다. */
+    .steps{margin:26px 0 30px}  /* 컨테이너는 블록 — 안의 .orbbar(theme.css)가 100% 채워 오브를 균등 분배 */
     .step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;cursor:pointer}
     .step .dot{width:52px;height:52px;border-radius:50%;background:var(--panel);border:2px solid var(--line);
       display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--sub);z-index:1;
@@ -109,7 +113,7 @@
                   aspect-ratio:9/16;object-fit:contain;position:absolute;inset:0}
     #player .x:hover{color:var(--txt)}
     #subbox b{color:var(--accent)}
-    .panel{display:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;max-width:1120px}
+    .panel{display:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
     .panel.show{display:block}
     .panel h3{margin:0 0 4px;font-size:18px}
     .panel .sub{color:var(--sub);font-size:14px;margin-bottom:16px}
@@ -121,7 +125,7 @@
     .lockcard .lc-h{font-size:14px;color:var(--sub);margin-top:6px;line-height:1.5}
 
     /* 하단 네비 */
-    .nav{display:flex;justify-content:space-between;margin:18px 0 40px;max-width:1120px}
+    .nav{display:flex;justify-content:space-between;margin:18px 0 40px}
     button{font-family:inherit;border:0;border-radius:9px;padding:11px 20px;cursor:pointer;font-size:14px}
     .btn-prev{background:var(--panel);border:1px solid var(--line);color:var(--txt)}
     .btn-next{background:var(--grad);color:#fff}
@@ -920,9 +924,9 @@
       <div id="sceneLabBox" style="display:none;margin-top:18px">
         <div style="display:flex;align-items:center;gap:10px;margin:0 0 6px">
           <div style="font-size:13px;font-weight:800">🎬 장면 편집 — 어떤 화면이 언제 나올지 여기서 정하고 미리 봅니다</div>
-          <!-- 넓게 보기(2026-08-15 사장님 "왼쪽 사이드바까지 사용하면 안되나"): 패널은
-               max-width 1120px이고 사이드바가 270px을 먹어 왼쪽이 남는다. 이 버튼은
-               편집 화면만 화면 전체로 띄운다(사이드바·패널 여백까지 전부 사용). -->
+          <!-- 넓게 보기(2026-08-15 사장님 "왼쪽 사이드바까지 사용하면 안되나"): 패널 폭
+               상한은 없앴지만 사이드바가 270px을 계속 먹는다. 이 버튼은 편집 화면만
+               화면 전체로 띄운다(사이드바·패널 여백까지 전부 사용). -->
           <button type="button" id="sceneLabWideBtn" class="btn"
                   style="margin-left:auto;padding:6px 12px;font-size:12px;background:var(--inset);border:1px solid var(--line);color:var(--sub)"
                   onclick="toggleSceneLabWide()">⛶ 넓게 보기</button>
