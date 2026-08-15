@@ -142,6 +142,34 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
 .spark{display:flex;gap:2px;align-items:flex-end;height:46px;margin-top:var(--s3)}
 .spark i{flex:1;display:block;border-radius:1px;background:#2c3746;min-height:2px}
 .spark i.p{background:rgba(126,224,138,.65)}.spark i.n{background:rgba(255,107,107,.6)}
+/* 또래 비교 — 이름칸은 넉넉히(글자 커지면 잘린다, 판세 이름칸에서 이미 겪음) */
+.peers{display:flex;flex-direction:column;gap:7px}
+.prow{display:grid;grid-template-columns:150px minmax(0,1fr) 74px;align-items:center;gap:var(--s3)}
+@media(max-width:700px){.prow{grid-template-columns:110px minmax(0,1fr) 66px;gap:var(--s2)}}
+.prow .pn{font-size:14.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .pb{background:#1a212c;border-radius:4px;height:16px;overflow:hidden}
+.prow .pb i{display:block;height:100%;border-radius:4px}
+.prow .pb i.up{background:rgba(231,76,60,.75)}
+.prow .pb i.dn{background:rgba(79,150,255,.7)}
+.prow .pv{font-size:14.5px;text-align:right;font-weight:600}
+/* 나 자신은 금색으로 — 또래 사이에서 눈이 바로 찾아야 한다 */
+.prow.meRow .pn{color:var(--gold);font-weight:700}
+.prow.meRow .pb{box-shadow:0 0 0 1px rgba(229,184,75,.45)}
+
+/* 공매도 카드 — 수급 블록 안에 이어 붙는다(같은 ④칸의 다른 각도) */
+.shrt{background:var(--bg2);border:1px solid var(--line);border-radius:11px;
+  overflow:hidden;margin-top:var(--s4)}
+.scards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:var(--s3)}
+.sc{background:var(--bg3);border:1px solid var(--line2);border-radius:9px;padding:13px 15px}
+.sc .k{font-size:12.5px;color:var(--dim);letter-spacing:.5px}
+.sc .v{font-size:25px;font-weight:800;letter-spacing:-.5px;margin:3px 0 2px}
+.sc .v.hot{color:var(--gold)}
+.sc .d{font-size:13px;color:var(--mut);line-height:1.5}
+.sbar{display:flex;gap:2px;align-items:flex-end;height:44px;margin-top:var(--s3)}
+.sbar i{flex:1;display:block;border-radius:1px;background:rgba(157,140,240,.55);min-height:2px}
+.sread{margin-top:var(--s3);font-size:15.5px;line-height:1.75;max-width:940px;color:var(--mut)}
+.sread b{color:var(--txt)}
+.sread .cav{display:inline-block;font-size:13.5px;color:var(--dim);margin-top:4px}
 .ftab{width:100%;max-width:760px;border-collapse:collapse;font-size:15px}
 .ftab th{font-size:12px;letter-spacing:1px;color:var(--dim);font-weight:500;text-align:right;
   padding:0 0 var(--s2);border-bottom:1px solid var(--line)}
@@ -378,7 +406,7 @@ function dday(when){
 }
 
 function render(){
-  const c=MAT.counts||{}, f=MAT.flow||{}, v=MAT.vacuum;
+  const c=MAT.counts||{}, f=MAT.flow||{}, v=MAT.vacuum, sh=MAT.short||{}, pe=MAT.peers||{};
   const b=BRIEF||{};
   if(f.close) document.getElementById('px').innerHTML=
     `종가 <b class="num">${Number(f.close).toLocaleString()}</b>원
@@ -399,13 +427,16 @@ function render(){
     ${secSchedule(b)}
     ${secVerdict(b,c)}
     ${secDebate(b)}
-    ${secFlow(f,v)}
+    ${secFlow(f,v,sh)}
+    ${secPeers(pe)}
     ${secRisks(b)}
   `}
   <footer>
     <b>발언</b> · atoms.db에서 「${esc(MAT.canonical)}」 정규화 검색(별칭 확장 + 접두어가 같은 다른 법인 제외).
     ${b.model?`<br><b>종합</b> · ${esc(b.model)} — 정해진 칸의 값만 뽑고 화면은 코드가 그립니다.`:''}
     ${f.date_from?`<br><b>수급</b> · KIS 투자자별 일별 ${esc(f.date_from)}~${esc(f.date_to)} (${f.days||0}일)`:''}
+    ${sh.date_from?`<br><b>공매도</b> · KIS 공매도 일별추이 ${esc(sh.date_from)}~${esc(sh.date_to)} (${sh.days||0}일) — 잔고가 아니라 일별 체결분입니다`:''}
+    ${pe.found?`<br><b>또래</b> · watchlist.json ${esc(pe.sector)}${pe.widened?' 전체':' / '+esc(pe.sub)} 기준, 등락률은 KIS 현재가`:''}
   </footer>`;
 
   // innerHTML 이후에 캔버스가 존재하므로 여기서 그린다
@@ -768,12 +799,106 @@ function secDebate(b){
   </section>`;
 }
 
+/* ⑤ 또래 비교 — "이 종목만 그런가, 업종이 다 그런가" */
+function secPeers(p){
+  if(!p||!p.found){
+    if(p&&p.reason) return `<section class="blk"><div class="lab">⑤ 또래 비교</div>
+      <div class="empty"><div class="big">또래를 찾지 못했습니다</div>
+      <div class="why">${esc(p.reason)} — 관심종목 목록(watchlist)에 넣으면 비교가 됩니다.</div></div></section>`;
+    return '';
+  }
+  const rows=p.rows||[];
+  if(!rows.length) return `<section class="blk"><div class="lab">⑤ 또래 비교</div>
+    <div class="empty"><div class="big">또래 시세를 못 받았습니다</div>
+    <div class="why">${esc(p.error||'시세 API가 응답하지 않았습니다')}</div></div></section>`;
+
+  const me=(p.me||{}).rate;
+  const mx=Math.max(...rows.map(r=>Math.abs(r.rate)), Math.abs(me||0), 1e-9);
+  // 나를 또래 사이에 끼워 같은 자로 그린다 — 순위가 눈에 보여야 한다
+  const all=rows.concat([{name:'★ '+(MAT.canonical||'이 종목'),code:p.me.code,rate:me,me:true}])
+                .sort((a,b)=>b.rate-a.rate);
+  const bars=all.map(r=>`
+    <div class="prow ${r.me?'meRow':''}">
+      <div class="pn">${esc(r.name)}</div>
+      <div class="pb"><i class="${r.rate>=0?'up':'dn'}" style="width:${Math.abs(r.rate)/mx*100}%"></i></div>
+      <div class="pv num ${r.rate>0?'up':r.rate<0?'dn':''}">${r.rate>0?'+':''}${r.rate}%</div>
+    </div>`).join('');
+
+  let read;
+  if(me==null) read='이 종목의 시세를 못 받아 순위는 못 냅니다.';
+  else if(me>p.avg+1) read=`<b>또래보다 앞섭니다.</b> 업종 평균은 ${p.avg>0?'+':''}${p.avg}%인데
+    이 종목은 ${me>0?'+':''}${me}%로 <b>${p.of}종목 중 ${p.rank}위</b>입니다 —
+    업종 전체가 아니라 <b>이 종목에만 붙은 이유</b>가 있다는 뜻입니다.`;
+  else if(me<p.avg-1) read=`<b>또래보다 뒤집니다.</b> 업종 평균 ${p.avg>0?'+':''}${p.avg}% 대비
+    이 종목은 ${me>0?'+':''}${me}%로 <b>${p.of}종목 중 ${p.rank}위</b>입니다 —
+    업종은 도는데 이 종목만 못 따라가는 자리입니다.`;
+  else read=`업종 평균 ${p.avg>0?'+':''}${p.avg}%와 <b>비슷하게 움직입니다</b>
+    (${p.of}종목 중 ${p.rank}위). 지금 움직임은 <b>이 종목 고유의 것이라기보다 업종 흐름</b>입니다.`;
+
+  return `<section class="blk">
+    <div class="lab">⑤ 또래 비교 <span class="n">— 이 종목만 그런가, 업종이 다 그런가</span></div>
+    <div class="vac">
+      <div class="vac-h"><span class="ttl">${esc(p.sector)}${p.scope==='서브섹터'?' · '+esc(p.sub):''}</span>
+        <span class="def">오늘 등락률을 같은 업종 종목들과 나란히 세운 것입니다.
+          ${p.widened?`<b>${esc(p.sub)}</b>가 ${'너무 적어'} <b>${esc(p.sector)} 전체</b>로 넓혔습니다.`:''}</span></div>
+      <div class="vac-b">
+        <div class="peers">${bars}</div>
+        <div class="sread">${read}
+          ${(p.also||[]).length?`<br><span class="cav">이 종목은 <b>${esc((p.also||[]).join(', '))}</b>에도 들어 있습니다 —
+            테마로 묶인 것이라 또래는 본업(${esc(p.sector)}) 기준으로 골랐습니다.</span>`:''}
+          <br><span class="cav">등락률은 현재 시세 기준이며, 장중에는 계속 바뀝니다.</span></div>
+      </div></div>
+  </section>`;
+}
+
+/* ④-2 공매도 — '누가 판다'가 아니라 '얼마나 몰린다'를 본다.
+   ★이름을 정확히: 이건 잔고(대차잔고)가 아니라 **일별 공매도 체결 비중**이다. */
+function shortCard(s){
+  if(!s||s.error||!(s.series||[]).length) return '';
+  const ser=s.series, mx=Math.max(...ser.map(x=>x.ratio),1e-9);
+  const last=ser[ser.length-1];
+  // 비중은 '거래량 중 몇 %'라 거래가 터지면 수량이 늘어도 비중은 내려간다.
+  // 그래서 비중과 수량을 **같이** 보여준다(하나만 보면 반대로 읽힌다).
+  const trendTxt = s.trend==='늘는 중'
+      ? `최근 5일 평균 <b>${s.ratio_avg5}%</b>가 20일 평균 <b>${s.ratio_avg20}%</b>보다 높습니다 — <b>공매도가 늘고 있습니다.</b>`
+    : s.trend==='주는 중'
+      ? `최근 5일 평균 <b>${s.ratio_avg5}%</b>가 20일 평균 <b>${s.ratio_avg20}%</b>보다 낮습니다 — <b>공매도가 줄고 있습니다.</b>`
+      : `최근 5일 평균 <b>${s.ratio_avg5}%</b>와 20일 평균 <b>${s.ratio_avg20}%</b>가 비슷합니다 — <b>특별한 변화는 없습니다.</b>`;
+  return `
+  <div class="shrt">
+    <div class="vac-h"><span class="ttl">공매도</span>
+      <span class="def">그날 거래된 물량 중 <b>공매도가 차지한 비중</b>.
+        높을수록 주가 하락에 베팅한 물량이 많았다는 뜻입니다.</span></div>
+    <div class="vac-b">
+      <div class="scards">
+        <div class="sc"><div class="k">최근 비중</div>
+          <div class="v num ${s.heavy?'hot':''}">${last.ratio}%</div>
+          <div class="d">${esc(last.date)} 기준 ${s.heavy?'— 10%가 넘어 <b>높은 편</b>입니다':'— 10% 아래라 <b>보통 수준</b>입니다'}</div></div>
+        <div class="sc"><div class="k">기간 평균</div>
+          <div class="v num">${s.ratio_avg}%</div>
+          <div class="d">${esc(s.date_from)}~${esc(s.date_to)} ${s.days}일 평균</div></div>
+        <div class="sc"><div class="k">최근 5일 공매도 대금</div>
+          <div class="v num">${Number(s.amt_eok_5).toLocaleString()}억</div>
+          <div class="d">5거래일 동안 공매도로 나간 금액</div></div>
+      </div>
+      <div class="sbar" title="일별 공매도 비중">${ser.map(x=>
+        `<i style="height:${Math.max(2,x.ratio/mx*40)}px" title="${esc(x.date)} ${x.ratio}%"></i>`).join('')}</div>
+      <div class="sread">${trendTxt}
+        <br>같은 날 공매도 수량은 <b>${Number(last.qty).toLocaleString()}주</b>였습니다.
+        <span class="cav">비중은 <b>거래량 대비</b>라 거래가 크게 터진 날은 수량이 늘어도 비중이 내려갑니다 — 둘을 같이 보십시오.</span>
+        <br><span class="cav">${esc(s.note||'')}.</span></div>
+    </div>
+  </div>`;
+}
+
 /* ④ 수급 */
-function secFlow(f,v){
+function secFlow(f,v,s){
   const rows=f.rows||[];
+  const sc=shortCard(s);
+  // 투자자별 수급이 비어도 공매도가 있으면 그것만이라도 보여준다(하나가 죽어도 나머지는 산다)
   if(!rows.length&&!v) return `<section class="blk"><div class="lab">④ 수급</div>
-    <div class="empty"><div class="big">수급 자료가 없습니다</div>
-    <div class="why">종목코드를 찾지 못했거나 시세 API가 응답하지 않았습니다.</div></div></section>`;
+    ${sc||`<div class="empty"><div class="big">수급 자료가 없습니다</div>
+    <div class="why">종목코드를 찾지 못했거나 시세 API가 응답하지 않았습니다.</div></div>`}</section>`;
 
   // 빈집 게이지 — 백분위가 없으면(실시간 경로) 핀 대신 방향만 말한다
   const pct=(v&&v.pct!=null)?v.pct:null;
@@ -819,6 +944,7 @@ function secFlow(f,v){
           다른 종목들과 견줘야 순위가 나오는데 그 자료가 아직 없어서,
           지금은 <b>방향(${esc(trend||'—')})</b>만 알려드립니다.</div>`:''}
       </div></div>
+    ${sc}
   </section>`;
 }
 
