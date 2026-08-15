@@ -99,6 +99,11 @@
                     color:#fff;text-shadow:0 2px 6px #000,0 0 3px #000}
     #player #subbox .nott{position:static;color:#f0b429;font-size:12px;text-shadow:none}
     #player #pinfo{font-size:11px;color:var(--sub);margin-top:4px}
+    #trimbar{display:none;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
+    #trimbar .act{background:var(--inset);border:1px solid var(--line);color:var(--txt);
+                  border-radius:8px;padding:5px 11px;font-size:12px;cursor:pointer}
+    #trimbar .act:hover{border-color:var(--accent);color:var(--accent)}
+    #trimbar .hint{font-size:11.5px;color:var(--sub)}
     /* 엔진이 만드는 <video>는 크기를 CSS에 맡긴다 — 이 규칙이 없으면 화면이 안 잡힌다. */
     #player video{width:100%;height:100%;border-radius:10px;background:#000;display:block;
                   aspect-ratio:9/16;object-fit:contain;position:absolute;inset:0}
@@ -4298,6 +4303,17 @@ function sceneLabPlaySeg(sid, lab){
 }
 function sceneLabPlay(beat, lab){
   try{ _sceneLabPrep(lab); playBeat(beat); }catch(e){ console.warn('장면 미리보기 실패', e); }
+}
+// ✂ 자르기 — 큰 화면에서 정한 구간을 장면 편집 화면에 반영한다(2026-08-15).
+//   자르기 계산·저장은 편집 화면이 주인이라, 여기서 정한 값을 그쪽 TRIMS에 옮기고 다시 그린다.
+function onTrimChanged(){
+  try{
+    const f = document.getElementById('sceneLabFrame');
+    const w = f && f.contentWindow;
+    if (!w || typeof w.eval !== 'function') return;
+    w.eval('(function(t){ Object.keys(TRIMS).forEach(k=>delete TRIMS[k]); Object.assign(TRIMS, t); render(); })('
+           + JSON.stringify(TRIMS) + ')');
+  }catch(e){ console.warn('자르기 반영 실패', e); }
 }
 // 재생을 닫으면 렌더 결과 영상 자리를 되돌린다.
 function sceneLabPlayClosed(){
