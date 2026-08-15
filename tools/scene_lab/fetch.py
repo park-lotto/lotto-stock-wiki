@@ -90,6 +90,9 @@ out={{'job_id':'{job_id}','beats':plan['beats'],'urls':json.loads(r[2]),
      'syll_per_sec':ep._SYLLABLES_PER_SEC,
      'segments':{{k:{{'video_id':v['video_id'],'start':v['start'],'end':v['end'],
                     'scene_desc':v.get('scene_desc',''),'text':v.get('text',''),
+                    # 짧은 이름(2026-08-16) — 라이브 API와 같은 필드를 실어야 로컬 실험실
+                    # 화면이 같게 보인다(한쪽만 넣으면 여기서만 라벨이 안 뜬다).
+                    'label':v.get('label') or '',
                     # ★추출이 이미 태깅한 결(2026-08-14 사장님 "완성품·조리 이런 식으로 나누고
                     #   후킹용·조리용·CTA용 태그"). 실험실이 안 받아와서 세밀한 묘사만 보였다.
                     'shot_role':v.get('shot_role') or '기타','is_key':bool(v.get('is_key')),
