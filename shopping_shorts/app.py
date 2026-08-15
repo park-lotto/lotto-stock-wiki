@@ -2620,6 +2620,10 @@ def api_mix_candidate(body: dict):
             if not n or n == (b.get("narration") or "").strip():
                 continue
             b["narration"] = n
+            # ★대본이 바뀌면 옛 자막 메타를 반드시 버린다(2026-08-15). 안 지우면 렌더가
+            #   옛 대본 기준 caption_lines·cap_durs·cap_lead로 자막을 그려 음성과 어긋난다
+            #   (실사고 409f894230c6: 구절 수 전 칸 불일치 + 낡은 lead → 자막이 mp3보다 늦게 끝남).
+            mix_pipeline.invalidate_caption_meta(b)
             edited = True
     # ★고친 대본을 **후보 목록에도** 되쓴다(2026-08-10). 안 하면 다른 후보를 눌렀다 돌아오는
     #   순간 이 endpoint가 DB의 원본 plan을 다시 꽂아 편집이 조용히 날아간다(같은 이유로
@@ -3143,6 +3147,10 @@ def api_mix_segments(job_id: str):
     used = {b["primary"]["seg_id"]
             for b in (job.get("edit_plan") or {}).get("beats", [])
             if b.get("primary")}
+    # 장면실험실 이식(2026-08-15): shot_role·is_key·phash를 **추가**한다(기존 키는 그대로 —
+    # 이 응답을 쓰는 기존 피커 화면이 있다. 제거·이름변경 금지). phash는 seg_thumb이
+    # 썸네일을 만들 때 함께 계산해 캐시한 것만 싣는다(없으면 "" — 소비자는 접기만 끈다).
+    phash = _lab_phash_load(_MIX_WORK_DIR / job_id)
     segs = [{
         "seg_id": sid, "video_id": seg["video_id"],
         "start": seg["start"], "end": seg["end"],
@@ -3150,6 +3158,9 @@ def api_mix_segments(job_id: str):
         "scene_desc": seg.get("scene_desc", ""), "text": seg.get("text", ""),
         "thumb_url": f"/api/mix/seg_thumb/{job_id}/{sid}",
         "used": sid in used,
+        "shot_role": seg.get("shot_role") or "기타",
+        "is_key": bool(seg.get("is_key")),
+        "phash": phash.get(sid, ""),
     } for sid, seg in seg_map.items()]
     return {"ok": True, "segments": segs}
 
@@ -3176,7 +3187,196 @@ def api_mix_seg_thumb(job_id: str, seg_id: str):
         frame = extract_frame_at(src, work / "seg_thumbs", mid, filename=f"{seg_id}.jpg")
         if not frame:
             return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
+    # 장면실험실(2026-08-15): 썸네일이 확보된 김에 phash(8x8 평균해시)도 함께 캐시한다.
+    # 응답마다 ffmpeg을 새로 돌리지 않게 캐시 파일(phash.json)에 한 번만. 실패해도 썸네일은 나간다.
+    _lab_phash_ensure(work, seg_id, cached)
     return FileResponse(str(cached), media_type="image/jpeg")
+
+
+# ── 장면실험실(scene_lab) 서버 배선 (2026-08-15) ─────────────────────────────────
+# 로컬 실험실(tools/scene_lab)이 SSH로 빼가던 데이터를 제작소 2단계 iframe
+# (/scene_lab.html?job=…)이 API로 받는다. 데이터 모양은 fetch.py가 만들던 data.json과
+# 1:1 동일 — UI(scene_lab.html)가 모드 분기 없이 같은 코드로 돌기 위해서다(0순위-B).
+
+_LAB_PHASH_LOCK = __import__("threading").Lock()
+
+
+def _lab_phash_bits(raw):
+    """8x8 흑백 rawvideo(64바이트) → 평균해시 64비트 문자열.
+    tools/scene_lab/fetch.py가 쓰던 것과 같은 규칙 — 로컬에서 만든 해시와 호환된다."""
+    if not raw or len(raw) < 64:
+        return ""
+    px = list(raw[:64])
+    avg = sum(px) / 64.0
+    return "".join("1" if v > avg else "0" for v in px)
+
+
+def _lab_phash_from_jpg(jpg_path):
+    """썸네일 jpg → phash. 썸네일은 세그 중간 프레임 그 자체라(추출 시각 동일) 소스를
+    다시 시크하는 것보다 훨씬 싸다. 실패하면 ""(소비자는 중복접기만 끈다)."""
+    import subprocess
+    p = Path(jpg_path)
+    if not p.exists():
+        return ""
+    try:
+        # 외부 도구 호출엔 반드시 timeout(memory: ffmpeg 무한대기).
+        r = subprocess.run(
+            ["ffmpeg", "-y", "-loglevel", "error", "-i", str(p),
+             "-vf", "scale=8:8,format=gray", "-frames:v", "1", "-f", "rawvideo", "-"],
+            capture_output=True, timeout=20)
+        return _lab_phash_bits(r.stdout or b"")
+    except Exception:
+        return ""
+
+
+def _lab_phash_load(work):
+    """{seg_id: 64비트 문자열} 캐시 읽기(없으면 {})."""
+    import json
+    f = Path(work) / "seg_thumbs" / "phash.json"
+    try:
+        return json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
+    except Exception:
+        return {}
+
+
+def _lab_phash_ensure(work, seg_id, jpg_path):
+    """seg_id의 phash가 캐시에 없으면 jpg에서 계산해 저장(read-modify-write는 락으로 직렬화 —
+    피커·실험실이 썸네일 수십 장을 병렬로 당기므로 안 잠그면 서로 덮어쓴다)."""
+    import json
+    try:
+        with _LAB_PHASH_LOCK:
+            cache = _lab_phash_load(work)
+            if cache.get(seg_id):
+                return cache[seg_id]
+            bits = _lab_phash_from_jpg(jpg_path)
+            if not bits:
+                return ""
+            cache[seg_id] = bits
+            f = Path(work) / "seg_thumbs" / "phash.json"
+            f.parent.mkdir(parents=True, exist_ok=True)
+            f.write_text(json.dumps(cache), encoding="utf-8")
+            return bits
+    except Exception:
+        return ""
+
+
+def _lab_captions(plan):
+    """비트별 자막 구절 [{text,start,end}] + tts 실길이 — fetch.py [3/5]와 같은 계산.
+    ★라이브 렌더와 같은 함수(_caption_segments/_caption_durations/_adjust_caps_for_trim)를
+    호출해 결과만 싣는다. JS로 다시 나누면 두 벌이 되어 반드시 어긋난다(0순위-B)."""
+    caps, tts_dur = {}, {}
+    for b in plan.get("beats") or []:
+        i = b["beat_idx"]
+        segs = video_assemble._caption_segments(b.get("narration") or "",
+                                                b.get("caption_lines"))
+        dur = 0.0
+        tp = b.get("tts_path")
+        if tp and Path(tp).exists():
+            dur = video_assemble._probe_duration(tp) or 0.0
+        tts_dur[str(i)] = round(dur, 3) if dur else None
+        lead, rd = video_assemble._adjust_caps_for_trim(b)
+        durs = video_assemble._caption_durations(
+            segs, dur or (b.get("target_seconds") or 3.0), real_durs=rd)
+        t = float(lead or 0.0)
+        rows = []
+        for seg, dd in zip(segs, durs):
+            rows.append({"text": seg, "start": round(t, 3), "end": round(t + dd, 3)})
+            t += dd
+        caps[str(i)] = rows
+    return caps, tts_dur
+
+
+@app.get("/api/mix/scene_lab/{job_id}")
+def api_mix_scene_lab_data(job_id: str):
+    """실험실 페이지용 데이터 한 방 — fetch.py가 SSH로 만들던 data.json과 같은 모양."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("extract"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "데이터 없음"})
+    plan = job.get("edit_plan")
+    if not plan:
+        return JSONResponse(status_code=404,
+                            content={"ok": False, "error": "편집안이 아직 없어요 — 매칭을 먼저 완료하세요"})
+    seg_map, _ = _edit_plan._build_inventory(list(job["extract"].values()))
+    work = _MIX_WORK_DIR / job_id
+    # 소스 실길이 — 범위초과 세그(실체 없는 화면) 표시용. 소스가 없으면 {}로 폴백(표시만 꺼진다).
+    src_duration = {}
+    try:
+        for vid, p in _resolve_sources(job, work).items():
+            d = video_assemble._probe_duration(p)
+            if d:
+                src_duration[vid] = round(d, 2)
+    except Exception:
+        pass
+    caps, tts_dur = _lab_captions(plan)
+    return {"ok": True, "data": {
+        "job_id": job_id,
+        "beats": plan.get("beats") or [],
+        "urls": job.get("urls") or [],
+        "syll_per_sec": _edit_plan._SYLLABLES_PER_SEC,
+        "segments": {sid: {
+            "video_id": v["video_id"], "start": v["start"], "end": v["end"],
+            "scene_desc": v.get("scene_desc", ""), "text": v.get("text", ""),
+            "shot_role": v.get("shot_role") or "기타", "is_key": bool(v.get("is_key")),
+            "action": v.get("action") or "", "change": v.get("change") or "",
+            "benefits": v.get("product_benefits") or [],
+        } for sid, v in seg_map.items()},
+        "phash": _lab_phash_load(work),      # 썸네일 캐시가 채워지는 대로 /phash로 늦채움
+        "src_duration": src_duration,
+        "captions": caps,
+        "tts_dur": tts_dur,
+    }}
+
+
+@app.get("/api/mix/scene_lab/{job_id}/phash")
+def api_mix_scene_lab_phash(job_id: str):
+    """phash 늦채움 폴링 — 썸네일(seg_thumb)이 만들어질 때마다 캐시가 늘어난다."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    return {"ok": True, "phash": _lab_phash_load(_MIX_WORK_DIR / job_id)}
+
+
+@app.get("/api/mix/src/{job_id}/{video_id}")
+def api_mix_src(job_id: str, video_id: str):
+    """실험실 미리보기용 소스 원본 mp4. FileResponse가 Range를 처리해 구간 시크가 된다.
+    video_id는 _resolve_sources 맵에 있는 것만(경로 방어 — 임의 파일명 불가)."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    try:
+        src = _resolve_sources(job, _MIX_WORK_DIR / job_id).get(video_id)
+    except Exception:
+        src = None
+    if not src or not Path(src).exists():
+        return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
+    return FileResponse(src, media_type="video/mp4")
+
+
+@app.post("/api/mix/scene_lab/{job_id}/apply")
+def api_mix_scene_lab_apply(job_id: str, body: dict):
+    """실험실 편성을 edit_plan에 얹는다/걷는다(edit_plan.apply_scene_lab/revert_scene_lab).
+    body = {"payload": {"beats": [...], "trims": {...}}} 또는 {"revert": true}.
+    원본 primary/alternates는 안 건드리므로 언제든 100% 복구된다."""
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "편집안 없음"})
+    # 렌더·생성 중엔 편집안을 바꾸지 않는다(tts_regen과 같은 가드 — 진행 중 잡의 발밑을 빼면 안 된다).
+    if job.get("status") in _MIX_ACTIVE_STAGES + ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409,
+                            content={"ok": False, "error": "생성·렌더 중에는 반영할 수 없어요"})
+    plan = job["edit_plan"]
+    if body.get("revert"):
+        _edit_plan.revert_scene_lab(plan)
+        store.update_mix_job(job_id, edit_plan=plan)
+        return {"ok": True, "reverted": True}
+    payload = body.get("payload") or {}
+    if not payload.get("beats"):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "payload.beats 필요"})
+    seg_map, _ = _edit_plan._build_inventory(list((job.get("extract") or {}).values()))
+    _edit_plan.apply_scene_lab(plan, seg_map, payload)
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True, "applied": (plan.get("scene_lab") or {}).get("applied", 0)}
 
 
 @app.post("/api/mix/render")
@@ -7889,9 +8089,8 @@ def api_produce_mix_shorten(job_id: str, body: dict):
     hit = next((b for b in beats if b.get("beat_idx") == bi), None)
     if hit is None:
         return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 범위 밖"})
-    # 화면 예산 = (primary+alternates 구간 합) × 슬로모 상한. 대사를 여기 맞춘다(_conform_beats와 동일).
-    segs = [hit.get("primary")] + list(hit.get("alternates") or [])
-    budget = sum(max(0.0, float(s["end"]) - float(s["start"])) for s in segs if s) * mix_pipeline._MAX_SLOWMO
+    # 화면 예산 = 공용 헬퍼(0순위-B: _conform_beats와 같은 한 곳) — 실험실 편성·트림 반영.
+    budget = mix_pipeline.beat_screen_budget(hit)
     if budget <= 0:
         return JSONResponse(status_code=422, content={"ok": False, "error": "화면 길이를 알 수 없어요"})
     new_n = _edit_plan.conform_narration(hit.get("narration", ""), budget)
@@ -7912,7 +8111,9 @@ def api_produce_mix_shorten(job_id: str, body: dict):
     except Exception as e:  # noqa: BLE001 — 실패해도 원문 유지(불일치 안 만든다)
         return JSONResponse(status_code=500, content={"ok": False, "error": f"재합성 실패: {e}"})
     hit["narration"] = new_n
-    hit["caption_lines"] = None                     # 대사 바뀜 → 자막줄 무효(정규식 폴백)
+    # 대사 바뀜 → 자막 메타(caption_lines·cap_durs·cap_lead) 통째 무효(2026-08-15).
+    # 종전엔 caption_lines만 지워 cap_durs·cap_lead가 옛 대본 기준으로 남았다 → 자막 드리프트.
+    mix_pipeline.invalidate_caption_meta(hit)
     hit["tts_path"] = str(out)
     if dur and dur > 0:
         hit["target_seconds"] = round(dur, 1)

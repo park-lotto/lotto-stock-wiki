@@ -374,6 +374,43 @@ def _extend_last_clip_for_runout(plan, segs, runout=_LAST_RUNOUT):
     return plan
 
 
+def _beat_material(beat):
+    """비트의 화면 재료(순서 구간 리스트)를 **한 곳에서** 정한다(0순위-B).
+
+    ★장면실험실 배선(2026-08-15 사장님 "거기서 어떻게 되는지를 보고 판단해야해"):
+    사람이 실험실에서 편성·트림한 결과(beat["scene_override"])가 있으면 그 구간들이 재료다.
+    원본 primary/alternates는 **그대로 두고 얹는 형태**라, scene_override를 지우면 원래대로
+    돌아간다(edit_plan.revert_scene_lab). 트림(✂ 가운데 잘라내기)은 적용 시점에 이미
+    '구멍 뺀 두 토막'으로 갈라져 들어오므로 여기서는 그냥 구간 목록일 뿐이다 —
+    아래 _plan_beat_clips의 계산 규칙은 아무것도 달라지지 않는다(재료만 바뀐다).
+    override가 없는 기존 잡은 예전과 바이트 동일하게 동작한다."""
+    over = beat.get("scene_override")
+    if over:
+        return [dict(s) for s in over if s]
+    return [s for s in ([beat.get("primary")] + list(beat.get("alternates") or [])) if s]
+
+
+def _spread_stretch(plan, eps=1e-3):
+    """늘려 채우기(scene_lab 칸별 토글 beat["stretch_fill"]) — 재료가 모자라 화면을 늘려야
+    할 때(out_dur 합 > src_dur 합), 그 부족분을 마지막 컷에 몰지 않고 **전 컷에 재료 길이
+    비례로** 나눈다(2026-08-15 사장님 "마지막 컷에만 몰아주지 않기"). 총 out_dur 합은
+    그대로라 오디오·자막 싱크 불변이고, 각 컷은 _speed_and_freeze가 균등하게 완만히
+    늘린다. 플래그가 없는 기존 잡은 이 함수에 오지도 않는다(호출부 gate)."""
+    if not plan or len(plan) < 2:
+        return plan
+    tot_out = sum(float(c.get("out_dur", 0.0)) for c in plan)
+    tot_src = sum(float(c.get("src_dur", 0.0)) for c in plan)
+    if tot_src <= eps or tot_out - tot_src <= eps:
+        return plan                      # 부족분이 없으면 그대로(재배분할 것이 없다)
+    sc = tot_out / tot_src
+    acc = 0.0
+    for c in plan[:-1]:
+        c["out_dur"] = float(c["src_dur"]) * sc
+        acc += c["out_dur"]
+    plan[-1]["out_dur"] = max(eps, tot_out - acc)   # 반올림 오차는 마지막이 흡수(합 보존)
+    return plan
+
+
 def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None, max_shot=None,
                      one_per_seg=False):
     """비트의 순서 구간 리스트 → 나레이션 길이(tts_dur)에 맞춘 클립 계획.
@@ -927,6 +964,8 @@ def _apply_hook_inpoint(edit_plan, source_video_paths, work):
         beats = edit_plan.get("beats") or []
         if not beats:
             return
+        if (beats[0] or {}).get("scene_override"):
+            return   # ★실험실 편성이 있으면 사람 선택이 이긴다 — 훅 시작점 자동이동 안 함
         prim = (beats[0] or {}).get("primary")
         if not prim or prim.get("video_id") not in source_video_paths:
             return
@@ -970,9 +1009,10 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             continue
         tts_dur = _beat_effective_dur(beat, tts)
         _head_trim = beat.get("head_trim", 0.0)
-        # 순서 구간 리스트 = [primary] + alternates. 소스에 실재하고 + 디코드 가능한 것만.
+        # 순서 구간 리스트 = _beat_material(기본: [primary]+alternates / 실험실 편성이 있으면
+        # scene_override). 소스에 실재하고 + 디코드 가능한 것만.
         # 손상/빈 소스(_src_dur=0)는 여기서 걸러야 아래 -ss 렌더가 예외로 죽지 않는다(2026-07-19).
-        segs = [s for s in ([beat["primary"]] + list(beat.get("alternates", [])))
+        segs = [s for s in _beat_material(beat)
                 if s and s.get("video_id") in source_video_paths
                 and _src_dur(s["video_id"]) > 0.05]
         if not segs:
@@ -987,6 +1027,10 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
         _one = bool(getattr(_cfg, "ONE_CLIP_PER_SEGMENT", False))
         plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs, max_shot=_max_shot,
                                 one_per_seg=_one)
+        # ★늘려 채우기(실험실 칸별 토글): 부족분을 전 컷에 고르게 — 여운(runout)보다 먼저.
+        #   여운은 일부러 붙이는 무성 꼬리라 재배분 대상이 아니다. 플래그 없으면 그대로.
+        if beat.get("stretch_fill"):
+            _spread_stretch(plan)
         # 마지막 비트 여운: 실프레임 여유는 1배속으로, 부족분은 아래 slowmo/freeze 기계가 흡수.
         runout = _LAST_RUNOUT if idx == _runout_idx else 0.0
         if runout > 0:

@@ -863,6 +863,17 @@
                #mixPreviewCta와 같은 규약으로 패널의 항상 보이는 자리에 둔다. -->
           <div id="coupangSlot" style="margin-top:14px"></div>
           <div style="font-size:13px;font-weight:800;margin:16px 0 6px">② 장면 확인</div>
+          <!-- 장면실험실 이식(2026-08-15, 사장님 B안): 접힌 '장면 확인'에 묻혀 있던 장면 UI를
+               정식 화면으로. 실험실(scene_lab.html)을 iframe으로 띄운다 — 같은 파일을 로컬
+               실험실(tools/scene_lab)과 공유하므로 화면이 두 벌로 갈라지지 않는다(0순위-B).
+               iframe인 이유: 실험실은 자체 다크 테마·전역 JS(render/reset/add…)를 가진 완결
+               페이지라, 제작소 6천 줄 JS에 인라인하면 이름·스타일이 충돌한다. -->
+          <div id="sceneLabBox" style="display:none;margin-bottom:10px">
+            <iframe id="sceneLabFrame" title="장면 편집"
+                    style="width:100%;height:76vh;min-height:520px;border:1px solid var(--line);border-radius:12px;background:#0f1115"></iframe>
+            <div class="hint" style="margin-top:4px">왼쪽 장면을 끌어다 칸에 담고 ✂로 자르고 ▶️로 확인한 뒤,
+              <b>📤 서버에 반영</b>을 누르면 다음 미리보기·렌더부터 이 편성으로 나옵니다(↩로 언제든 복구).</div>
+          </div>
           <details id="matchSceneDetails">
             <summary style="cursor:pointer;font-size:12px;color:var(--sub);font-weight:800">장면 바꾸기 · 전체 보기 ▾</summary>
             <div id="mixReview" style="margin-top:10px"></div>
@@ -972,6 +983,7 @@ function initMatch(){
     // 매칭을 아직 시작 안 했다 — 자유 이동은 허용하되(T7 규약) 빈 화면 대신 안내를 준다.
     const cands = document.getElementById('mixCandidates'); if(cands) cands.innerHTML = '';
     const rev = document.getElementById('mixReview'); if(rev) rev.innerHTML = '';
+    try{ _syncSceneLab(false); }catch(_){ }   // 잡이 없으면 실험실도 없다
     const st = document.getElementById('mixStatus');
     if(st) st.textContent = '아직 매칭을 시작하지 않았어요 — 1단계에서 ⚡ 이 메인 영상으로 대본 3안 만들기를 눌러주세요.';
     return;
@@ -2875,6 +2887,7 @@ async function coupangSave(opts){
 
 function _renderMixReviewBody(d){
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
+  try{ _syncSceneLab(true); }catch(_){ }   // ② 장면실험실 iframe(정의는 loadMixReview 위)
   if(typeof window!=='undefined') window._mixBeats = d.beats || [];   // 조각 전체 보기(paletteStats)가 읽는다 — 실제 쓴 컷 집계용
   const el=document.getElementById('mixReview');
   // ★P1/P2(2026-07-24): 조용한 폴백·불변식 위반을 화면에 띄운다. 예전엔 개선 생성기가 실패해도
@@ -2938,6 +2951,7 @@ function cancelMixReview(){
   try{ clearInterval(PREVIEW_POLL); }catch(_){ } PREVIEW_POLL=null;
   try{ ++PREVIEW_GEN; }catch(_){ }
   PREVIEW_STATUS=null; MIX_JOB=null;
+  try{ _syncSceneLab(false); }catch(_){ }   // 실험실 iframe도 내린다(옛 잡을 계속 보여주면 안 된다)
   const el=document.getElementById('mixReview'); if(el) el.innerHTML='';
   const mc=document.getElementById('mixCandidates'); if(mc) mc.innerHTML='';
   const st=document.getElementById('mixStatus'); if(st){ st.textContent=''; st._sblPipe=null; }
@@ -3985,6 +3999,7 @@ async function startProduceMix(){
   try{ logPick('S3', {picked: 'mix_start', sources: urls, source_n: urls.length}); }catch(e){}
   const st=document.getElementById('mixStatus'); st.textContent='⏳ 시작 중…';
   document.getElementById('mixReview').innerHTML='';
+  try{ _syncSceneLab(false); }catch(_){ }   // 새 매칭 시작 — 옛 잡의 실험실을 내린다(완료되면 다시 뜬다)
   const _mcEl=document.getElementById('mixCandidates'); if(_mcEl) _mcEl.innerHTML='';
   try{
     // scene_first(2026-07-20, Task7): 장면 우선 대본 모드 — 팔레트+헌장으로 후보 n개를 만들어
@@ -4099,6 +4114,32 @@ async function pollMix(){
       }
       clearInterval(MIX_POLL); }
   }catch(e){}
+}
+// ② 장면실험실 iframe 동기화(2026-08-15 B안). on=true면 지금 MIX_JOB으로 띄우고,
+// false(취소·새 매칭·잡 없음)면 숨긴다. src는 잡이 같으면 다시 안 건드린다 —
+// 편집안을 다시 그릴 때마다 iframe을 리로드하면 사장님이 조립 중인 화면이 날아간다
+// (실험실은 자체 localStorage 저장이 있어 리로드에도 복원되지만, 흐름이 끊긴다).
+// ★정의를 _renderMixReviewBody(호출부) 옆이 아니라 여기 둔 이유: 복원 계열 node 슬라이스
+//   테스트가 [_restoreWork ~ _consumeProduceHandoff) 구간을 `node -e` 인자로 실행하는데,
+//   윈도우 명령줄 32KB 한계에 이미 바짝 붙어 있다(실측: 함수를 그 구간에 넣자 WinError 206).
+//   호출부는 전부 try/catch라 슬라이스에 이 정의가 없어도 죽지 않는다.
+// ★2단계 임베드는 아직 잠가 둔다(2026-08-15 사장님 "기존껀 쓰다가 완료되면 교체하게").
+//   장면 편집 화면은 서버에 올라가 있지만 **직접 주소로만** 연다:
+//       /scene_lab.html?job=<job_id>
+//   그래서 제작소 2단계 흐름은 종전과 100% 같다(기존 '문장별 상세'가 계속 주인공).
+//   ⚡교체하는 법: 아래 한 줄을 지우면 2단계에 바로 붙는다. 되돌리려면 다시 넣으면 된다.
+const SCENE_LAB_EMBED = false;
+function _syncSceneLab(on){
+  const box=document.getElementById('sceneLabBox'), f=document.getElementById('sceneLabFrame');
+  if(!box||!f) return;
+  if(!SCENE_LAB_EMBED||!on||typeof MIX_JOB==='undefined'||!MIX_JOB){
+    box.style.display='none';
+    if(f.getAttribute('src')) f.setAttribute('src','about:blank');
+    return;
+  }
+  box.style.display='';
+  const u='/scene_lab.html?job='+encodeURIComponent(MIX_JOB);
+  if(f.getAttribute('src')!==u) f.setAttribute('src',u);
 }
 async function loadMixReview(){
   const d=await (await fetch('/api/mix/result/'+MIX_JOB)).json();

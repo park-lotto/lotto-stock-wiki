@@ -38,13 +38,27 @@ class RangeHandler(SimpleHTTPRequestHandler):
         """★'음성·자막 다시 뽑기'(2026-08-14). 브라우저는 서버에 SSH를 못 하니 이 로컬 서버가
         대신 부른다. 라이브와 같은 코드(tts.synthesize_tts / _caption_segments)로 만들어
         받아오므로 자막이 어긋날 수 없다 — JS로 다시 나누면 두 벌이 된다(0순위-B)."""
-        if self.path != "/retts":
+        if self.path not in ("/retts", "/apply"):
             self.send_error(404)
             return
         try:
             n = int(self.headers.get("Content-Length") or 0)
             body = json.loads(self.rfile.read(n).decode("utf-8"))
             job = os.path.basename(BASE)
+            if self.path == "/apply":
+                # ★서버 반영(2026-08-15 사장님 "거기서 어떻게 되는지를 보고 판단해야해").
+                #   편성·트림·늘려채우기를 라이브 잡 edit_plan에 얹는다(apply.py가 SSH로).
+                #   body["revert"]=true면 얹은 것만 걷어내 원래 편집안으로.
+                import apply as _apply
+                msg = _apply.apply(job, payload=body.get("payload"),
+                                   revert=bool(body.get("revert")))
+                out = json.dumps({"ok": True, "msg": str(msg)[-300:]}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(out)))
+                self.end_headers()
+                self.wfile.write(out)
+                return
             import retts as _retts
             meta = _retts.retts(job, int(body["beat_idx"]), body["text"])
             out = json.dumps({"ok": True, "dur": meta["dur"],

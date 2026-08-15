@@ -24,7 +24,7 @@ from shopping_shorts import audio_post
 from shopping_shorts import config
 from shopping_shorts import single_source
 from shopping_shorts import script_lang
-from shopping_shorts.video_assemble import assemble, _beat_timeline, _probe_duration, _MAX_SLOWMO, preview_preset
+from shopping_shorts.video_assemble import assemble, _beat_timeline, _beat_material, _probe_duration, _MAX_SLOWMO, preview_preset
 from shopping_shorts.motion_assets import resolve_layers, DEFAULT_ASSETS_DIR
 from shopping_shorts.motion_packs import build_plan, load_packs
 from shopping_shorts.vmake_client import remove_subtitles
@@ -273,6 +273,24 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
           f"(workers={workers})", file=sys.stderr)
 
 
+def invalidate_caption_meta(beat):
+    """대본(narration)이 바뀌는 **모든 경로**가 반드시 부른다 — 옛 대본 기준의 자막 메타를 지운다.
+
+    ★왜(2026-08-15 실사고, 잡 409f894230c6): cap_durs·cap_lead는 합성 시점에 한 번 계산되고
+    그 뒤 무효화가 없었다. 대본 편집(app.py 후보선택 편집·자동 줄이기)이 narration만 바꾸고
+    이 메타를 남겨서, 렌더가 옛 대본 기준 타이밍(구절 수 불일치 + 낡은 lead)으로 자막을 그려
+    자막이 음성보다 늦게까지 남았다(칸1 자막끝 6.360 vs mp3 6.144).
+
+    지우면 어떻게 되나: caption_lines은 정규식 분할 폴백, cap_durs는 글자수 비례 폴백,
+    cap_lead 0.0 — 전부 **현재 대본** 기준이라 정확하진 않아도 어긋나진 않는다. 재합성 경로
+    (_synthesize_beats·콘폼)가 돌면 ASR 실측으로 다시 채운다.
+
+    ⚠️ 같은 판단을 두 군데 적지 마라(CLAUDE.md 0순위-B) — 새 편집 경로가 생기면 이 함수를 불러라."""
+    beat["caption_lines"] = None
+    beat["cap_durs"] = None
+    beat["cap_lead"] = 0.0
+
+
 def _sources_is_recipe(sources):
     """소스 category 다수결이 '레시피'면 True(장면 결 맞춤 분기). 비면 False.
     입력이 dict거나 원소가 dict가 아니어도 크래시하지 않는다(fail-open=False) — 실호출은
@@ -338,10 +356,22 @@ def _refill_beats_to_tts(beats, source_scripts, tts_dir):
 _CONFORM_MIN_GAP = 0.8
 
 
+def beat_screen_budget(beat):
+    """비트의 화면 예산(초) = 재료 구간 길이 합 × _MAX_SLOWMO — **한 곳에서만** 계산(0순위-B).
+
+    종전엔 _conform_beats와 app.py shorten이 같은 식을 따로 적고 있었다. ★장면실험실
+    편성(scene_override, 2026-08-15)이 있으면 그 구간들이 재료다 — 트림(✂)으로 잘라낸
+    구멍은 적용 시점에 이미 빠져 있으므로, 여기서 반영하지 않으면 없는 화면만큼 대본을
+    길게 뽑는다(docstring "이 예산이 영상으로 채울 수 있는 최대"가 깨진다)."""
+    segs = _beat_material(beat)
+    return sum(max(0.0, float(s["end"]) - float(s["start"])) for s in segs if s) * _MAX_SLOWMO
+
+
 def _conform_beats(beats, tts_dir, *, voice, global_pron=None):
     """싱크 콘폼 패스(2026-07-20 설계 T3) — 대사가 영상 예산을 넘는 비트만 표면 재단.
 
-    예산 = Σ(primary+alternates 구간 길이) × _MAX_SLOWMO. _plan_beat_clips가 세그먼트를
+    예산 = beat_screen_budget(재료 구간 길이 합 × _MAX_SLOWMO — 실험실 편성·트림 반영).
+    _plan_beat_clips가 세그먼트를
     전부 소진한 뒤에만 얼리므로 이 예산이 "영상으로 채울 수 있는 최대"다(코드 검증) —
     즉 초과분은 영상으로 못 채우고, 남은 유일한 레버는 대본 길이다.
 
@@ -355,8 +385,8 @@ def _conform_beats(beats, tts_dir, *, voice, global_pron=None):
         tp = beat.get("tts_path")
         if not tp:
             continue
-        segs = [beat.get("primary")] + list(beat.get("alternates") or [])
-        budget = sum(max(0.0, float(s["end"]) - float(s["start"])) for s in segs if s) * _MAX_SLOWMO
+        # 예산은 공용 헬퍼 한 곳에서(0순위-B) — 실험실 편성·트림이 있으면 자동 반영된다.
+        budget = beat_screen_budget(beat)
         if budget <= 0:
             continue
         try:
@@ -384,15 +414,13 @@ def _conform_beats(beats, tts_dir, *, voice, global_pron=None):
             continue   # 재TTS 실패 → narration 미교체(문장/음성 일치 유지)
         beat["narration"] = new_n
         beat["conformed"] = True
-        beat["caption_lines"] = None   # 나레이션이 바뀌면 AI 자막줄은 무효 → 정규식 폴백
+        invalidate_caption_meta(beat)   # 대본 바뀜 → 옛 자막 메타 무효(아래에서 ASR로 재계산)
         beat["tts_path"] = str(out)
-        beat["cap_durs"] = None
         new_dur = _probe_duration(str(out))
         # UI 표시 초 = 실제 발화초(빠른 보이스 speed까지 반영). 추정(글자÷5.7)은 speed를
         # 못 봐 오차가 커서 실측으로 둔다(2026-07-21). 실측 실패 시에만 추정 폴백.
         beat["target_seconds"] = round(new_dur, 1) if new_dur and new_dur > 0 \
             else round(max(1.5, len(new_n.strip()) / _SYLLABLES_PER_SEC), 1)
-        beat["cap_lead"] = 0.0
         words = _beat_words(str(out), new_dur, removed=tts_timestamps.load_removed(str(out)))
         if words:
             _t = caption_sync.phrase_durs_from_words(new_n, words, new_dur)

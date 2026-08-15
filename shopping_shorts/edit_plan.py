@@ -4475,3 +4475,72 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         _cta_fix_narration(_c)
         _strip_mid_cta(_c)      # 비CTA 비트에 샌 댓글 유도 제거(2026-08-03 "CTA 두 번 반복")
     return {"candidates": cands, "detected_type": detected}
+
+
+# ── 장면실험실(scene_lab) 편성 반영 (2026-08-15) ─────────────────────────────────
+# 사람이 실험실(tools/scene_lab)에서 만든 칸별 편성(lists)·가운데 트림(trims)·늘려 채우기
+# (stretch)를 edit_plan에 **얹는다**. 원본 primary/alternates는 절대 건드리지 않는다 —
+# beat["scene_override"](재료 구간 목록)·beat["stretch_fill"](토글)·plan["scene_lab"]
+# (원본 payload, 근거·재적용용)만 새로 쓰고, revert_scene_lab이 그 셋을 지우면 원래대로다.
+# 렌더는 video_assemble._beat_material이, 예산은 mix_pipeline.beat_screen_budget이 읽는다.
+# 이 세 필드를 모르는 기존 코드·기존 잡은 지금과 100% 동일하게 동작한다(없으면 무시).
+
+def _lab_trim_pieces(seg, trim, eps=1e-3):
+    """장면 구간 하나를 트림 구멍 [a,b](장면 시작 기준 초) 뺀 토막들로 — 실험실
+    build.py trimPieces와 같은 규칙(0순위-B: 두 벌이 되면 어긋난다. 규칙 변경 시 양쪽 함께).
+    구멍이 없거나 전부 잘려 나가면 원본 한 토막 그대로."""
+    if not trim:
+        return [dict(seg)]
+    a, b = float(trim[0]), float(trim[1])
+    s, e = float(seg["start"]), float(seg["end"])
+    pieces = []
+    if a > eps:
+        pieces.append({**seg, "end": round(s + a, 3)})            # 앞토막 [0 ~ a]
+    if e - (s + b) > eps:
+        pieces.append({**seg, "start": round(s + b, 3)})          # 뒤토막 [b ~ 끝]
+    return pieces if pieces else [dict(seg)]
+
+
+def apply_scene_lab(plan, seg_map, edits):
+    """실험실 편성 payload를 plan에 얹는다(제자리 수정, 반환 동일 객체).
+
+    edits = {"beats": [{"beat_idx": int, "list": [seg_id...], "stretch": bool}, ...],
+             "trims": {seg_id: [a, b]}}
+    - list가 빈 칸은 건드리지 않는다(원본 유지 — 실수로 비운 칸이 렌더를 죽이지 않게).
+    - seg_map에 없는 seg_id는 조용히 거른다(환각·옛 id 방어, _ground_ref와 같은 원칙).
+    """
+    trims = edits.get("trims") or {}
+    by_idx = {b.get("beat_idx"): b for b in (plan.get("beats") or [])}
+    applied = 0
+    for eb in edits.get("beats") or []:
+        beat = by_idx.get(eb.get("beat_idx"))
+        ids = [sid for sid in (eb.get("list") or []) if sid in seg_map]
+        if beat is None or not ids:
+            continue
+        over = []
+        for sid in ids:
+            seg = seg_map[sid]
+            entry = {"video_id": seg["video_id"], "seg_id": sid,
+                     "start": seg["start"], "end": seg["end"],
+                     "scene_desc": seg.get("scene_desc", ""),
+                     "is_key": bool(seg.get("is_key")),
+                     "shot_role": seg.get("shot_role") or "기타"}
+            over.extend(_lab_trim_pieces(entry, trims.get(sid)))
+        beat["scene_override"] = over
+        if eb.get("stretch"):
+            beat["stretch_fill"] = True
+        else:
+            beat.pop("stretch_fill", None)
+        applied += 1
+    plan["scene_lab"] = {"beats": edits.get("beats") or [], "trims": trims,
+                         "applied": applied}
+    return plan
+
+
+def revert_scene_lab(plan):
+    """실험실 편성을 전부 걷어내 원래 편집안으로 되돌린다(제자리 수정)."""
+    for beat in plan.get("beats") or []:
+        beat.pop("scene_override", None)
+        beat.pop("stretch_fill", None)
+    plan.pop("scene_lab", None)
+    return plan
