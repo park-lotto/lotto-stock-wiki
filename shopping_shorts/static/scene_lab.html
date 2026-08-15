@@ -797,8 +797,7 @@ function render(){
   // 진행바를 끄는 동안은 자동 갱신이 손을 안 덮게 표시해 둔다.
   const sk = document.getElementById('seek');
   if (sk){
-    sk.addEventListener('pointerdown', () => { seekDrag = true; });
-    window.addEventListener('pointerup', () => { seekDrag = false; });
+    // (진행바 배선은 /scene_play.js 로 옮겼다 — 제작소 큰 화면에서도 같게 동작해야 한다)
   }
 })();
 
