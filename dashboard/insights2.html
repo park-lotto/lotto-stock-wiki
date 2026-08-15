@@ -1,0 +1,376 @@
+<!doctype html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>인사이트2 — STOCK BRAIN</title>
+<style>
+:root{
+  --bg:#0e1116;--bg2:#151a22;--bg3:#1c232e;--line:#252d3a;
+  --txt:#e7ecf3;--mut:#8b97a8;--dim:#5a6575;
+  --gold:#e5b84b;--mint:#4fd1c5;--red:#ff6b6b;--grn:#7ee08a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif;
+  font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 70px}
+a{color:inherit}
+
+.top{border-bottom:1px solid var(--line);background:rgba(14,17,22,.97);
+  position:sticky;top:0;z-index:40;backdrop-filter:blur(10px)}
+.tin{max-width:1180px;margin:0 auto;padding:11px 20px;display:flex;align-items:center;gap:16px}
+.bd{font-weight:800}.bd i{color:var(--gold);font-style:normal}
+.nv{display:flex;gap:2px;margin-left:6px}
+.nv a{color:var(--mut);text-decoration:none;padding:6px 11px;border-radius:6px;font-size:13px}
+.nv a:hover{background:var(--bg3);color:var(--txt)}
+.nv a.on{color:var(--gold);background:rgba(229,184,75,.1)}
+.dt{margin-left:auto;font-size:12px;color:var(--dim)}
+
+/* 소스 탭 */
+.src{display:flex;gap:6px;padding:14px 0 0;flex-wrap:wrap}
+.sb{background:var(--bg2);border:1px solid var(--line);color:var(--mut);
+  padding:7px 15px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit}
+.sb:hover{border-color:#3b4658;color:var(--txt)}
+.sb.on{background:var(--bg3);border-color:var(--mint);color:var(--mint);font-weight:600}
+
+/* 헤드라인 */
+.hero{padding:22px 0 20px;border-bottom:1px solid var(--line)}
+.hlab{font-size:11px;color:var(--dim);letter-spacing:1.4px;margin-bottom:9px}
+.hmain{font-size:26px;font-weight:800;line-height:1.38;letter-spacing:-.5px}
+.hmain em{font-style:normal}
+.hmain .up{color:var(--grn)}.hmain .dn{color:var(--red)}.hmain .wr{color:var(--gold)}
+.hsub{margin-top:11px;font-size:13px;color:var(--dim)}
+
+/* 판세 3칸 */
+.tri{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--line)}
+.tc{padding:20px 22px;border-right:1px solid var(--line);min-width:0}
+.tc:last-child{border-right:none}
+.tlab{font-size:11px;color:var(--dim);letter-spacing:1px;margin-bottom:13px}
+.mood{display:flex;align-items:baseline;gap:9px;margin-bottom:12px;cursor:pointer;
+  border-radius:6px;padding:2px 6px;margin-left:-6px}
+.mood:hover{background:var(--bg2)}
+.mval{font-size:29px;font-weight:800;letter-spacing:-1px;line-height:1}
+.mval.dn{color:var(--red)}.mval.up{color:var(--grn)}
+.mtag{font-size:12px;color:var(--mut)}
+.mcar{font-size:11px;color:var(--dim);margin-left:auto;transition:.2s}
+.mood.open .mcar{transform:rotate(180deg)}
+.mbar{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px;margin-bottom:8px}
+.mbar i{display:block}
+.mbar .b1{background:var(--red)}.mbar .b2{background:#48525f}.mbar .b3{background:var(--grn)}
+.mleg{display:flex;justify-content:space-between;font-size:11px;color:var(--dim)}
+.rk{display:flex;flex-direction:column;gap:1px}
+.ri{display:grid;grid-template-columns:78px 1fr 46px 12px;gap:9px;align-items:center;
+  padding:6px;cursor:pointer;border-radius:5px;margin:0 -6px}
+.ri:hover,.ri.open{background:var(--bg2)}
+.rn{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rb{height:7px;background:#1e2530;border-radius:4px;overflow:hidden;display:flex}
+.rb i{display:block;height:100%}
+.rb .p{background:var(--grn)}.rb .n{background:var(--red)}
+.rv{font-size:12px;color:var(--mut);text-align:right;font-variant-numeric:tabular-nums}
+.rv.cf{color:var(--gold)}
+.rc{font-size:10px;color:var(--dim);transition:.2s;text-align:center}
+.ri.open .rc{transform:rotate(180deg)}
+
+/* 제자리 펼침 */
+.exp{display:none;background:#0b0e13;border:1px solid var(--line);border-radius:9px;
+  margin:8px -6px 4px;overflow:hidden}
+.exp.on{display:block}
+.exph{padding:9px 13px;background:var(--bg2);border-bottom:1px solid var(--line);
+  font-size:12px;color:var(--mut);display:flex;justify-content:space-between;align-items:center}
+.exph b{color:var(--txt)}
+.expx{background:none;border:none;color:var(--dim);cursor:pointer;font-size:14px;
+  font-family:inherit;padding:0 2px;line-height:1}
+.expx:hover{color:var(--txt)}
+.expl{max-height:300px;overflow-y:auto}
+.ev{padding:9px 13px;border-bottom:1px solid rgba(37,45,58,.5);cursor:pointer}
+.ev:last-child{border-bottom:none}
+.ev:hover{background:var(--bg2)}
+.evq{font-size:13px;line-height:1.5;margin-bottom:4px}
+.evm{font-size:11px;color:var(--dim);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.evt{color:var(--mint);font-weight:600;font-variant-numeric:tabular-nums}
+.dot{width:6px;height:6px;border-radius:50%;flex:0 0 auto}
+.dot.p{background:var(--grn)}.dot.n{background:var(--red)}.dot.z{background:#4d5766}
+
+/* 섹션 */
+.sec{display:flex;align-items:center;gap:12px;margin:26px 0 12px}
+.sh{font-size:13px;font-weight:700;color:var(--mut)}
+.sf{display:flex;gap:5px;margin-left:auto}
+.ch{background:transparent;border:1px solid var(--line);color:var(--dim);
+  padding:4px 11px;border-radius:999px;font-size:12px;cursor:pointer;font-family:inherit}
+.ch:hover{color:var(--txt);border-color:#3b4658}
+.ch.on{background:rgba(79,209,197,.13);border-color:var(--mint);color:var(--mint)}
+
+/* 영상 그리드 */
+.vg{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:16px;align-items:start}
+.vc{cursor:pointer;display:flex;flex-direction:column;height:100%}
+.vth{aspect-ratio:16/9;background:linear-gradient(135deg,#222b38,#161d26);border-radius:9px;
+  position:relative;display:flex;align-items:center;justify-content:center;
+  color:#3a4453;font-size:11px;margin-bottom:9px;overflow:hidden;transition:.15s}
+.vth img{width:100%;height:100%;object-fit:cover}
+.vc:hover .vth{outline:1.5px solid var(--mint)}
+.vc.open .vth{outline:2px solid var(--gold)}
+.vn{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);
+  padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:700;color:var(--mint)}
+.vt{font-size:13px;font-weight:600;line-height:1.4;margin-bottom:5px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vm{font-size:11.5px;color:var(--dim);margin-bottom:8px}
+.vins{font-size:12px;line-height:1.55;color:var(--mut);background:#0b0e13;
+  border-left:2px solid var(--mint);border-radius:0 6px 6px 0;padding:8px 10px;margin-bottom:8px}
+.vins b{color:var(--txt);font-weight:600}
+.vtg{display:flex;gap:4px;flex-wrap:wrap;margin-top:auto}
+.tag{font-size:10.5px;padding:2px 7px;border-radius:4px;background:var(--bg3);color:var(--mut)}
+.tag.p{background:rgba(126,224,138,.13);color:var(--grn)}
+.tag.n{background:rgba(255,107,107,.13);color:var(--red)}
+
+/* 영상 펼침 */
+.vx{grid-column:1/-1;display:none;background:#0b0e13;border:1px solid var(--gold);
+  border-radius:11px;overflow:hidden}
+.vx.on{display:block}
+.vxh{padding:13px 16px;background:linear-gradient(135deg,rgba(229,184,75,.09),transparent);
+  border-bottom:1px solid var(--line);display:flex;justify-content:space-between;
+  align-items:flex-start;gap:14px}
+.vxt{font-size:15px;font-weight:700;line-height:1.4;margin-bottom:4px}
+.vxm{font-size:11.5px;color:var(--dim)}
+.vxa{display:flex;gap:6px;align-items:center;flex:0 0 auto}
+.vxb{background:transparent;border:1px solid var(--line);color:var(--mut);padding:5px 11px;
+  border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;
+  text-decoration:none;display:inline-block}
+.vxb:hover{border-color:var(--mint);color:var(--mint)}
+.vxc{background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer;
+  font-family:inherit;line-height:1;padding:2px 4px}
+.vxc:hover{color:var(--txt)}
+.vxl{max-height:360px;overflow-y:auto}
+.tr{display:grid;grid-template-columns:58px 1fr;gap:14px;padding:10px 16px;
+  border-bottom:1px solid rgba(37,45,58,.55)}
+.tr:last-child{border-bottom:none}
+.tr:hover{background:var(--bg2)}
+.tm{color:var(--mint);font-size:12px;font-variant-numeric:tabular-nums;font-weight:600;
+  height:fit-content;text-decoration:none}
+.tm:hover{text-decoration:underline}
+.tm.no{color:var(--dim)}
+.tq{font-size:13.5px;line-height:1.5;margin-bottom:5px}
+.tmt{font-size:11.5px;color:var(--dim);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{font-size:11px;padding:1px 7px;border-radius:4px;background:var(--bg3);color:var(--mut)}
+
+.msg{padding:50px 20px;text-align:center;color:var(--dim);font-size:13px}
+.warn{margin:14px 0;padding:10px 14px;border-radius:8px;font-size:12.5px;
+  background:rgba(229,184,75,.08);border:1px solid rgba(229,184,75,.28);color:#e8d9a8}
+
+@media(max-width:860px){.tri{grid-template-columns:1fr}
+  .tc{border-right:none;border-bottom:1px solid var(--line)}}
+@media(max-width:600px){.hmain{font-size:20px}.vg{grid-template-columns:1fr}
+  .vxh{flex-direction:column}}
+</style></head><body>
+
+<div class="top"><div class="tin">
+  <div class="bd"><i>⚡</i> STOCK BRAIN</div>
+  <div class="nv"><a href="/">딸깍</a><a href="/market">섹터맵</a>
+    <a href="/insights">인사이트</a><a href="/insights2" class="on">인사이트2</a></div>
+  <div class="dt" id="dt">—</div>
+</div></div>
+
+<div class="wrap">
+  <div class="src" id="src"></div>
+  <div id="app"><div class="msg">불러오는 중…</div></div>
+</div>
+
+<script>
+const CATS=[['youtube','▶ 유튜브'],['telegram','💬 텔레'],['report','📑 리포트'],
+            ['news','🗞 뉴스'],['blog','✍ 블로그']];
+let CAT='youtube', D=null;
+
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const cls=s=>s>0?'p':s<0?'n':'z';
+
+document.getElementById('src').innerHTML=CATS.map(([id,lb])=>
+  `<button class="sb ${id===CAT?'on':''}" data-c="${id}" onclick="pick('${id}')">${lb}</button>`).join('');
+
+function pick(c){
+  CAT=c;
+  document.querySelectorAll('.sb').forEach(b=>b.classList.toggle('on',b.dataset.c===c));
+  load();
+}
+
+async function load(){
+  document.getElementById('app').innerHTML='<div class="msg">불러오는 중…</div>';
+  try{
+    const r=await fetch(`/api/insights2/daily?category=${encodeURIComponent(CAT)}`);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    D=await r.json();
+    if(D.error) throw new Error(D.error);
+    render();
+  }catch(e){
+    document.getElementById('app').innerHTML=
+      `<div class="msg">불러오지 못했습니다 — ${esc(e.message)}</div>`;
+  }
+}
+
+function verdict(){
+  // 섹터 상위 3개를 한 줄로. 데이터에서 직접 만든다(사람이 안 씀).
+  const s=(D.sectors||[]).slice(0,3);
+  if(!s.length) return '오늘은 섹터로 갈릴 만한 발언이 없습니다.';
+  return s.map(x=>{
+    const w = x.minus>0 && x.plus>0 ? 'wr' : x.plus>x.minus ? 'up' : x.minus>x.plus ? 'dn' : '';
+    const t = x.minus>0 && x.plus>0 ? '갈림' : x.plus>x.minus ? '강세' : x.minus>x.plus ? '약세' : '중립';
+    return `${esc(x.name)}는 <em class="${w}">${t}</em>`;
+  }).join(', ');
+}
+
+function rkHtml(arr,box){
+  if(!arr||!arr.length) return '<div style="color:var(--dim);font-size:12.5px">해당 발언 없음</div>';
+  const mx=Math.max(...arr.map(x=>x.plus+x.minus))||1;
+  return arr.map((x,i)=>`
+    <div class="ri" id="${box}r${i}" onclick="ex('${box}',${i})">
+      <span class="rn" title="${esc(x.name)}">${esc(x.name)}</span>
+      <span class="rb"><i class="p" style="width:${x.plus/mx*100}%"></i><i class="n" style="width:${x.minus/mx*100}%"></i></span>
+      <span class="rv ${x.minus&&x.plus?'cf':''}">${x.minus&&x.plus?`${x.plus}·${x.minus}`:(x.plus+x.minus)||x.n}</span>
+      <span class="rc">▾</span></div>
+    <div class="exp" id="${box}e${i}"></div>`).join('');
+}
+
+function render(){
+  const c=D.counts||{}, m=D.market||{};
+  document.getElementById('dt').textContent=D.date||'—';
+  if(!D.date||!c.atoms){
+    document.getElementById('app').innerHTML='<div class="msg">이 소스에는 아직 데이터가 없습니다.</div>';
+    return;
+  }
+  const tot=(m.plus||0)+(m.minus||0)+(m.zero||0);
+  const mw = m.minus>m.plus ? 'dn' : m.plus>m.minus ? 'up' : '';
+  const mlab = m.minus>m.plus ? '비관' : m.plus>m.minus ? '낙관' : tot?'중립':'—';
+
+  document.getElementById('app').innerHTML=`
+  <div class="hero">
+    <div class="hlab">${D.date} · ${esc(CATS.find(x=>x[0]===CAT)[1])}</div>
+    <div class="hmain">${verdict()}</div>
+    <div class="hsub">채널 ${c.channels||0} · 문서 ${c.videos||0} · 발언 ${c.atoms||0}
+      ${c.with_ts?` · ⏱ 타임스탬프 ${c.with_ts}`:''}</div>
+  </div>
+  ${c.with_ts===0?`<div class="warn">⏱ 이 날짜에는 타임스탬프가 붙은 발언이 없습니다 —
+    시각 링크는 비활성으로 표시됩니다.</div>`:''}
+  <div class="tri">
+    <div class="tc">
+      <div class="tlab">시장</div>
+      <div class="mood" id="mkbtn" onclick="mk()">
+        <span class="mval ${mw}">${mlab}</span>
+        <span class="mtag">발언 ${m.n||0}</span><span class="mcar">▾</span></div>
+      <div class="mbar">
+        <i class="b1" style="flex:${m.minus||0}"></i>
+        <i class="b2" style="flex:${m.zero||0}"></i>
+        <i class="b3" style="flex:${m.plus||0}"></i></div>
+      <div class="mleg"><span>약세 ${m.minus||0}</span><span>중립 ${m.zero||0}</span><span>강세 ${m.plus||0}</span></div>
+      <div class="exp" id="mkexp"></div>
+    </div>
+    <div class="tc"><div class="tlab">섹터</div>
+      <div class="rk" id="rsec">${rkHtml(D.sectors,'rsec')}</div></div>
+    <div class="tc"><div class="tlab">종목</div>
+      <div class="rk" id="rstk">${rkHtml(D.stocks,'rstk')}</div></div>
+  </div>
+
+  <div class="sec"><span class="sh">문서 ${c.videos||0}</span></div>
+  <div class="vg" id="vg">${vgHtml()}</div>`;
+}
+
+function vgHtml(){
+  return (D.videos||[]).map((v,i)=>{
+    const mine=D.atoms.filter(a=>a.video===i);
+    // 카드에 보여줄 결론: 부호가 붙은 발언 우선, 없으면 첫 발언
+    const lead=mine.find(a=>a.sign!==0)||mine[0];
+    // 태그: 이 문서에서 언급된 섹터·종목
+    const tg=[];
+    const seen=new Set();
+    mine.forEach(a=>{
+      [[a.sector,'s'],[a.asset,'a']].forEach(([val])=>{
+        (val||'').split(',').map(x=>x.trim()).filter(x=>x&&x!=='기타').forEach(n=>{
+          if(seen.has(n)) return; seen.add(n);
+          const rel=mine.filter(b=>(b.sector===n)||((b.asset||'').split(',').map(y=>y.trim()).includes(n)));
+          const p=rel.filter(b=>b.sign>0).length, mn=rel.filter(b=>b.sign<0).length;
+          tg.push([n, p>mn?1:mn>p?-1:0]);
+        });
+      });
+    });
+    return `<div class="vc" id="vc${i}" onclick="openV(${i})">
+      <div class="vth">썸네일 없음<span class="vn">발언 ${v.n}</span></div>
+      <div class="vt">${esc(v.title)}</div>
+      <div class="vm">${esc(v.source)}</div>
+      ${lead?`<div class="vins">${esc(lead.content).slice(0,140)}${lead.content.length>140?'…':''}</div>`:''}
+      <div class="vtg">${tg.slice(0,4).map(([n,s])=>
+        `<span class="tag ${cls(s)==='p'?'p':cls(s)==='n'?'n':''}">${esc(n)}</span>`).join('')}</div>
+    </div>
+    <div class="vx" id="vx${i}"></div>`}).join('');
+}
+
+/* ── 제자리 펼침 ── */
+function evRow(a){
+  const link=a.deeplink?`<a class="evt" href="${esc(a.deeplink)}" target="_blank" rel="noopener"
+      onclick="event.stopPropagation()">▶${esc(a.ts)}</a>`
+    :`<span class="evt" style="color:var(--dim)">—</span>`;
+  return `<div class="ev" onclick="openV(${a.video})">
+    <div class="evq">${esc(a.content)}</div>
+    <div class="evm"><span class="dot ${cls(a.sign)}"></span>${link}
+      <span>${esc(a.source)}</span>${a.speaker?`<span>${esc(a.speaker)}</span>`:''}</div></div>`;
+}
+function closeAll(){
+  document.querySelectorAll('.exp').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ri').forEach(r=>r.classList.remove('open'));
+  const b=document.getElementById('mkbtn'); if(b) b.classList.remove('open');
+}
+function ex(box,i){
+  const arr=(box==='rsec'?D.sectors:D.stocks)||[];
+  const item=arr[i]; if(!item) return;
+  const pan=document.getElementById(box+'e'+i), row=document.getElementById(box+'r'+i);
+  const was=pan.classList.contains('on');
+  closeAll(); if(was) return;
+  const name=item.name;
+  const hits=D.atoms.filter(a=> box==='rsec'
+    ? a.sector===name
+    : (a.asset||'').split(',').map(x=>x.trim()).includes(name));
+  pan.innerHTML=`<div class="exph"><span><b>${esc(name)}</b> · 발언 ${hits.length}</span>
+    <button class="expx" onclick="event.stopPropagation();closeAll()">✕</button></div>
+    <div class="expl">${hits.map(evRow).join('')||'<div class="ev">발언 없음</div>'}</div>`;
+  pan.classList.add('on'); row.classList.add('open');
+}
+function mk(){
+  const pan=document.getElementById('mkexp'), btn=document.getElementById('mkbtn');
+  const was=pan.classList.contains('on');
+  closeAll(); if(was) return;
+  const hits=D.atoms.filter(a=>a.sector==='시장');
+  pan.innerHTML=`<div class="exph"><span><b>시장</b> · 발언 ${hits.length}</span>
+    <button class="expx" onclick="event.stopPropagation();closeAll()">✕</button></div>
+    <div class="expl">${hits.map(evRow).join('')||'<div class="ev">발언 없음</div>'}</div>`;
+  pan.classList.add('on'); btn.classList.add('open');
+}
+function closeV(){
+  document.querySelectorAll('.vx').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.vc').forEach(c=>c.classList.remove('open'));
+}
+function openV(i){
+  const pan=document.getElementById('vx'+i); if(!pan) return;
+  const was=pan.classList.contains('on');
+  closeV(); if(was) return;
+  const v=D.videos[i], hits=D.atoms.filter(a=>a.video===i);
+  pan.innerHTML=`
+    <div class="vxh">
+      <div><div class="vxt">${esc(v.title)}</div>
+        <div class="vxm">${esc(v.source)} · 발언 ${hits.length}</div></div>
+      <div class="vxa">
+        ${v.url?`<a class="vxb" href="${esc(v.url)}" target="_blank" rel="noopener"
+           onclick="event.stopPropagation()">▶ 원본</a>`:''}
+        <button class="vxc" onclick="event.stopPropagation();closeV()">✕</button></div>
+    </div>
+    <div class="vxl">${hits.map(a=>`
+      <div class="tr" onclick="event.stopPropagation()">
+        ${a.deeplink?`<a class="tm" href="${esc(a.deeplink)}" target="_blank" rel="noopener">▶${esc(a.ts)}</a>`
+          :`<span class="tm no">—</span>`}
+        <span><div class="tq">${esc(a.content)}</div>
+          <div class="tmt"><span class="dot ${cls(a.sign)}"></span>
+            ${a.sector?`<span class="pill">${esc(a.sector)}</span>`:''}
+            ${a.asset?`<span class="pill">${esc(a.asset)}</span>`:''}
+            ${a.speaker?`<span>${esc(a.speaker)}</span>`:''}</div></span>
+      </div>`).join('')}</div>`;
+  pan.classList.add('on');
+  document.getElementById('vc'+i).classList.add('open');
+  pan.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeAll();closeV()}});
+load();
+</script>
+</body></html>

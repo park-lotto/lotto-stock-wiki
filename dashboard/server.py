@@ -4145,6 +4145,18 @@ def insights_page():
         return f.read()
 
 
+# ── 인사이트2 (신규 UI 초안, 운영자 전용) ─────────────────────
+# 기존 /insights 는 그대로 두고 옆에 새로 만든다. 완성되면 교체 판단.
+@app.get("/insights2", response_class=HTMLResponse)
+def insights2_page():
+    p = os.path.join(HERE, "insights2.html")
+    if not os.path.exists(p):
+        return "<h1>insights2.html 준비중</h1>"
+    with open(p, encoding="utf-8") as f:
+        html = f.read()
+    return HTMLResponse(content=html, headers={"Cache-Control": "no-cache, must-revalidate"})
+
+
 # ── 인사이트 헬퍼 ────────────────────────────────────────────
 
 _CAT_TYPE_MAP = {
@@ -4382,6 +4394,149 @@ def api_insights_overview():
             "today": today,
             "categories": categories,
             "feed": feed_items,
+        })
+    finally:
+        conn.close()
+
+
+# ══════════════════════════════════════════════════════════════
+# 인사이트2 API — 화면 하나가 필요한 걸 한 번에 준다
+#
+# 설계 의도: 기존 /api/insights/* 는 "카테고리→소스→문서→상세" 드릴다운용이라
+# 화면을 그리려면 4번 호출해야 한다. 인사이트2는 한 화면에 다 펼치므로
+# 한 방에 필요한 모양(판세 3칸 + 영상별 발언)으로 만들어 준다.
+# ══════════════════════════════════════════════════════════════
+
+# 신호 → 부호. 화면의 초록/빨강 점이 이걸로 갈린다.
+_SIGN_MAP = {
+    "bullish": 1, "momentum": 1,
+    "bearish": -1, "risk": -1, "volatility": -1,
+    # neutral·data·catalyst 등은 0 (기본값)
+}
+
+
+def _sign_of(signal: str) -> int:
+    return _SIGN_MAP.get((signal or "").strip().lower(), 0)
+
+
+def _ins2_latest_date(conn, type_cond: str) -> str:
+    """데이터가 있는 가장 최근 날짜. 오늘 크롤이 아직이면 화면이 비니까,
+    '오늘'을 고집하지 않고 실제로 있는 마지막 날을 쓴다."""
+    row = conn.execute(
+        f"SELECT MAX(date) d FROM atoms WHERE {type_cond} AND date IS NOT NULL AND date != ''"
+    ).fetchone()
+    return (row["d"] if row and row["d"] else "") or ""
+
+
+@app.get("/api/insights2/daily")
+def api_insights2_daily(category: str = "youtube", date: str = ""):
+    """인사이트2 한 화면 분량을 통째로.
+
+    반환: {date, counts, market, sectors[], stocks[], videos[], atoms[]}
+      - atoms[]  : 발언 원자 (video 인덱스로 영상과 연결)
+      - sectors[]: [{name, plus, minus}]  ← 막대 그래프용
+      - videos[] : [{title, source, url, n}]
+    """
+    conn = _ins_conn()
+    if conn is None:
+        return JSONResponse(content={"error": "atoms.db 없음"}, status_code=503)
+
+    type_cond = _CAT_TYPE_MAP.get(category)
+    if type_cond is None:
+        return JSONResponse(content={"error": "unknown category"}, status_code=400)
+
+    try:
+        day = date or _ins2_latest_date(conn, type_cond)
+        if not day:
+            return JSONResponse(content={
+                "date": "", "counts": {"videos": 0, "atoms": 0, "channels": 0},
+                "market": {"plus": 0, "minus": 0, "zero": 0},
+                "sectors": [], "stocks": [], "videos": [], "atoms": [],
+            })
+
+        rows = conn.execute(
+            f"""SELECT id, date, source_name, raw_file, sector, asset, signal,
+                       content, speaker, yt_timestamp, deeplink
+                FROM atoms
+                WHERE {type_cond} AND date = ?
+                ORDER BY raw_file, yt_timestamp, id""",
+            (day,),
+        ).fetchall()
+
+        # 영상(raw_file) 단위로 묶는다 — 화면의 썸네일 카드 하나 = raw_file 하나
+        videos, vidx = [], {}
+        atoms = []
+        for r in rows:
+            rf = r["raw_file"] or ""
+            if rf not in vidx:
+                vidx[rf] = len(videos)
+                videos.append({
+                    "title": _build_doc_title(rf, r["source_name"] or "", day, category),
+                    "source": r["source_name"] or "",
+                    "doc_key": _doc_key(category, r["source_name"] or "", day, rf),
+                    "url": "", "n": 0,
+                })
+            i = vidx[rf]
+            videos[i]["n"] += 1
+            # 영상 URL은 딥링크에서 역산 (&t= 앞부분)
+            if not videos[i]["url"] and r["deeplink"]:
+                videos[i]["url"] = str(r["deeplink"]).split("&t=")[0]
+
+            atoms.append({
+                "video": i,
+                "ts": r["yt_timestamp"] or "",
+                "deeplink": r["deeplink"] or "",
+                "speaker": r["speaker"] or "",
+                "sector": r["sector"] or "",
+                "asset": r["asset"] or "",
+                "sign": _sign_of(r["signal"]),
+                "signal": r["signal"] or "",
+                "content": r["content"] or "",
+                "source": r["source_name"] or "",
+            })
+
+        # 판세 집계 — '시장'은 따로 빼고, 나머지를 섹터/종목으로 센다
+        def tally(key: str, skip=("", "기타")):
+            acc = {}
+            for a in atoms:
+                v = (a.get(key) or "").strip()
+                if not v or v in skip:
+                    continue
+                # asset은 "삼성전자, SK하이닉스" 처럼 여러 개가 한 칸에 들어있다
+                for name in ([x.strip() for x in v.split(",")] if key == "asset" else [v]):
+                    if not name or name in skip:
+                        continue
+                    d = acc.setdefault(name, {"name": name, "plus": 0, "minus": 0, "n": 0})
+                    d["n"] += 1
+                    if a["sign"] > 0:
+                        d["plus"] += 1
+                    elif a["sign"] < 0:
+                        d["minus"] += 1
+            out = list(acc.values())
+            out.sort(key=lambda d: (-(d["plus"] + d["minus"]), -d["n"], d["name"]))
+            return out
+
+        market_atoms = [a for a in atoms if (a["sector"] or "") == "시장"]
+        market = {
+            "plus": sum(1 for a in market_atoms if a["sign"] > 0),
+            "minus": sum(1 for a in market_atoms if a["sign"] < 0),
+            "zero": sum(1 for a in market_atoms if a["sign"] == 0),
+            "n": len(market_atoms),
+        }
+
+        return JSONResponse(content={
+            "date": day,
+            "counts": {
+                "videos": len(videos),
+                "atoms": len(atoms),
+                "channels": len({v["source"] for v in videos if v["source"]}),
+                "with_ts": sum(1 for a in atoms if a["ts"]),
+            },
+            "market": market,
+            "sectors": tally("sector", skip=("", "기타", "시장"))[:8],
+            "stocks": tally("asset", skip=("", "기타", "시장"))[:8],
+            "videos": videos,
+            "atoms": atoms,
         })
     finally:
         conn.close()
