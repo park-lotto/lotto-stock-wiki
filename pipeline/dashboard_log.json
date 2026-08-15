@@ -229,5 +229,19 @@
     "track": "장면실험실",
     "summary": "★main 병합·푸시 완료(239839b1c, 게이트 신규실패 0 / 전체 3557 통과, 기준선 1건 유지). 라이브 영상 동작 변화 0(ONE_CLIP_PER_SEGMENT=False로 꺼둠). ★집에서 이어하기 대비: 조립본은 브라우저 localStorage라 PC에 묶여 있어 안 넘어감 → 사장님 조립(칸별 3·3·3·3·2=14장)을 tools/scene_lab/saved/409f894230c6.json으로 빼서 git에 실음(out/만 gitignore). build가 data.saved로 실어주고 열 때 ①이 PC 저장본 ②saved/ 파일('📦다른 PC에서 만든 조립') ③기본배치 순으로 복원. 저장본 삭제 상태로 재현 검증 완료. 오늘 실험실 작업 전부 포함: 대본편집·retts(미나 성우)·비례배분·전환프레임·그룹태그·중복묶기 등.",
     "next": "집에서: git pull → py tools/scene_lab/fetch.py 409f894230c6 (영상·음성은 용량상 git 제외, 5분 소요) → serve.py로 열면 조립 그대로. 이어서 ①비례 배분 vs 라운드로빈 결정(칸4 3.8초 컷) ②좋으면 ONE_CLIP_PER_SEGMENT=True ③조립·대본 패턴을 자동 배치·생성에 이관 ④소스 밖 세그 원인"
+  },
+  {
+    "date": "2026-08-15",
+    "category": "스탁브레인",
+    "track": "main·위키/조사",
+    "summary": "git pull 실행 — 이미 최신(Already up to date), main 브랜치",
+    "next": "다음 작업 지시 대기"
+  },
+  {
+    "date": "2026-08-15",
+    "category": "스탁브레인",
+    "track": "장면실험실",
+    "summary": "2단계 UI 현역 여부 코드확인: '장면 바꾸기·전체보기'(#mixReview)=아직 살아있음(새 화면이 대체 예정), 훅 시작점(hook_inpoint_delta, 서버 렌더가 읽음)·다시 만들기(cancelMixReview)=현역. 제거 후보는 mixReview 하나뿐",
+    "next": "사장님 새 화면 실기 판단 → 자르기(✂) 발견성 수정 / SCENE_LAB_EMBED=true 전환 결정"
   }
 ]
