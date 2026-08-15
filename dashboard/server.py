@@ -4638,14 +4638,38 @@ def api_insights2_stock(request: Request, q: str = "", days: int = 45):
         dates = [a["date"] for a in atoms if a["date"]]
         code = code_for(canonical) or ""
 
-        # 수급 — 종목코드를 못 찾으면 건너뛴다(키워드가 종목이 아닐 수 있다)
-        flow, vacuum = {}, None
+        # 수급·공매도 — 종목코드를 못 찾으면 건너뛴다(키워드가 종목이 아닐 수 있다)
+        # 둘 다 KIS 왕복이고 서로를 안 쓴다 → 순차로 돌면 대기시간이 그냥 더해진다.
+        # 스레드 2개로 겹쳐 부른다(kis_api가 전역 레이트게이트를 갖고 있어 안전).
+        flow, short, peers, vacuum = {}, {}, {}, None
         if code:
-            try:
-                import stock_flow
-                flow = stock_flow.flow_summary(code)
-            except Exception as e:
-                flow = {"error": f"{type(e).__name__}: {e}", "rows": []}
+            def _get_flow():
+                try:
+                    import stock_flow
+                    return stock_flow.flow_summary(code)
+                except Exception as e:
+                    return {"error": f"{type(e).__name__}: {e}", "rows": []}
+
+            def _get_short():
+                try:
+                    import stock_short
+                    return stock_short.short_summary(code)
+                except Exception as e:
+                    return {"error": f"{type(e).__name__}: {e}", "series": []}
+
+            def _get_peers():
+                try:
+                    import stock_peers
+                    return stock_peers.compare(code)
+                except Exception as e:
+                    return {"found": False, "error": f"{type(e).__name__}: {e}", "peers": []}
+
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(max_workers=3) as ex:
+                fu_flow = ex.submit(_get_flow)
+                fu_short = ex.submit(_get_short)
+                fu_peers = ex.submit(_get_peers)
+                flow, short, peers = fu_flow.result(), fu_short.result(), fu_peers.result()
             vacuum = _vacuum_for(code)
 
         return JSONResponse(content={
@@ -4662,6 +4686,8 @@ def api_insights2_stock(request: Request, q: str = "", days: int = 45):
             },
             "atoms": atoms,
             "flow": flow,
+            "short": short,
+            "peers": peers,
             "vacuum": vacuum,
         })
     finally:
