@@ -32,6 +32,8 @@ from pathlib import Path
 CHUNK_SECONDS = 150          # 조각 길이. 이보다 길면 504가 나기 시작한다(실측 741초=사망)
 CHUNK_WORKERS = 3            # 동시 업로드 수. 늘리면 429가 몰린다(autoload와 같은 이유)
 COLD_OPEN_MIN_OFFSET = 8.0   # 콜드오픈은 구간 시작에서 이만큼 뒤에서 고른다(아래 설명)
+HOLD_SECONDS = 1.5           # 맨 앞 '하이라이트 카드' 정지 시간(_hold 주석 참고)
+BUMPER_SECONDS = 0.8         # 하이라이트와 본문 사이에 끼우는 로고 범퍼(_bumper 주석 참고)
 
 
 # ────────────────────────────────────────────────────────────
@@ -280,7 +282,7 @@ def _txtfile(work, name, text):
 
 
 def render_short(video_path, short, out_path, template=DEFAULT_TEMPLATE,
-                 channel_name="", work_dir=None, cta="SUBSCRIBE"):
+                 channel_name="", work_dir=None, cta="SUBSCRIBE", logo_path=None):
     """설계 1편 → 9:16 mp4. 콜드오픈을 앞에 붙이고 템플릿을 입힌다."""
     tpl = TEMPLATES.get(template) or TEMPLATES[DEFAULT_TEMPLATE]
     work = Path(work_dir or tempfile.mkdtemp(prefix="lfrender_"))
@@ -290,11 +292,19 @@ def render_short(video_path, short, out_path, template=DEFAULT_TEMPLATE,
     cs, ce = float(co.get("start", s)), float(co.get("end", s))
     cold_len = max(0.0, round(ce - cs, 1))
 
-    # 4-1) 조각을 잘라 이어붙인다(콜드오픈 + 본편). 재인코딩해야 concat이 안전하다.
+    # 4-1) 조각을 잘라 이어붙인다(훅 카드 + 콜드오픈 + 본편). 재인코딩해야 concat이 안전하다.
     parts = []
+    if HOLD_SECONDS > 0:
+        _hold(video_path, cs if cold_len > 0 else s, HOLD_SECONDS, work / "hold.mp4")
+        parts.append("hold.mp4")
     if cold_len > 0:
         _reenc(video_path, cs, cold_len, work / "co.mp4")
         parts.append("co.mp4")
+        # 하이라이트 → 본문 사이 로고 범퍼. 이게 없으면 같은 장면이 두 번 이어져
+        # "영상이 되감겼나?"로 읽힌다(잘 되는 채널들이 여기에 로고·전환을 끼운다).
+        if BUMPER_SECONDS > 0:
+            _bumper(BUMPER_SECONDS, work / "bump.mp4", channel_name, tpl, logo_path)
+            parts.append("bump.mp4")
     _reenc(video_path, s, e - s, work / "main.mp4")
     parts.append("main.mp4")
     (work / "list.txt").write_text("".join(f"file '{p}'\n" for p in parts), encoding="utf-8")
@@ -302,13 +312,72 @@ def render_short(video_path, short, out_path, template=DEFAULT_TEMPLATE,
     subprocess.run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(work / "list.txt"),
                     "-c", "copy", str(joined), "-loglevel", "error"], check=True)
 
-    total = cold_len + (e - s)
-    fg = _filtergraph(work, short, tpl, cold_len, s, total, channel_name, cta)
+    bump_len = BUMPER_SECONDS if cold_len > 0 else 0.0
+    total = HOLD_SECONDS + cold_len + bump_len + (e - s)
+    fg = _filtergraph(work, short, tpl, cold_len, s, total, channel_name, cta, bump_len)
     (work / "fg.txt").write_text(fg, encoding="utf-8")
     subprocess.run(["ffmpeg", "-y", "-i", str(joined), "-filter_complex_script", str(work / "fg.txt"),
                     "-map", "[v]", "-map", "0:a?", "-c:v", "libx264", "-preset", "veryfast",
                     "-crf", "23", "-c:a", "aac", str(out_path), "-loglevel", "error"], check=True)
-    return {"path": str(out_path), "seconds": round(total, 1), "cold_open_seconds": cold_len}
+    return {"path": str(out_path), "seconds": round(total, 1), "cold_open_seconds": cold_len,
+            "hold_seconds": HOLD_SECONDS, "bumper_seconds": bump_len}
+
+
+def _hold(src, at, dur, dst):
+    """맨 앞에 세울 '훅 카드' — 그 지점의 정지 화면 + 무음을 dur초.
+
+    ★왜 필요한가(2026-08-15 사장님 지적). 이게 없으면 0초부터 영상이 곧바로 움직이는데,
+      상단 훅 문구를 읽기도 전에 화면이 튀어 **재생 오류처럼 보인다**. 1.5초만 정지해
+      두면 눈이 훅을 먼저 읽고, 그 다음 콜드오픈이 시작되는 것으로 읽힌다.
+      검은 화면이 아니라 **그 장면의 첫 프레임을 세워두는** 이유: 검은 화면은 '아직
+      로딩 중'으로 보이고, 정지 프레임은 '멈춰 있다가 시작한다'로 보인다.
+
+    ★한 번에 만들려다 틀렸다(2026-08-15). `-frames:v 1`을 출력 옵션으로 걸면 **결과가
+      1프레임짜리**가 되어 홀드가 사실상 0초가 된다(실측: 0.3초와 1.0초 프레임이 서로
+      달랐다 = 정지가 아니라 그냥 재생 중이었다). 그래서 두 단계로 나눈다:
+      프레임을 png로 뽑고 → 그 png를 dur초 동안 반복해 영상으로 만든다.
+    """
+    still = Path(dst).with_suffix(".png")
+    subprocess.run(["ffmpeg", "-y", "-ss", str(at), "-i", str(src), "-frames:v", "1",
+                    str(still), "-loglevel", "error"], check=True)
+    subprocess.run(
+        ["ffmpeg", "-y", "-loop", "1", "-t", str(dur), "-i", str(still),
+         "-f", "lavfi", "-t", str(dur), "-i", "anullsrc=r=48000:cl=stereo",
+         "-map", "0:v:0", "-map", "1:a:0", "-r", "30",
+         "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p",
+         "-c:a", "aac", "-ar", "48000", "-shortest", str(dst), "-loglevel", "error"],
+        check=True)
+
+
+def _bumper(dur, dst, channel_name, tpl, logo_path=None):
+    """하이라이트와 본문 사이에 끼우는 짧은 로고 화면.
+
+    ★왜 넣나(2026-08-15 사장님 지적). 하이라이트를 앞에 복제해 붙이면 그 장면이 본문에서
+      곧 다시 나온다 — 사이에 아무것도 없으면 "영상이 되감겼나?"로 읽혀 오류처럼 보인다.
+      잘 되는 채널들은 여기에 로고나 전환 장면을 0.5~1초 끼워 "여기서부터 본편"이라는
+      구분을 준다. 로고 이미지가 있으면 그걸 쓰고, 없으면 채널명 카드로 대신한다.
+    """
+    bg = tpl.get("bg") or "black"
+    accent = tpl.get("line") or tpl.get("h2") or "white"
+    if logo_path and Path(logo_path).exists():
+        vin = ["-loop", "1", "-t", str(dur), "-i", str(logo_path)]
+        vf = (f"scale=560:-1,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:{bg},"
+              f"format=yuv420p")
+    else:
+        card = Path(dst).with_suffix(".txt")
+        card.write_text(channel_name or " ", encoding="utf-8")
+        tf = str(card).replace("\\", "/").replace(":", chr(92) + ":", 1)
+        vin = ["-f", "lavfi", "-t", str(dur), "-i", f"color=c={bg}:s=1080x1920:r=30"]
+        vf = (f"drawtext=fontfile='{_FONT}':textfile='{tf}':fontsize=64:fontcolor=white"
+              f":x=(w-tw)/2:y=(h-th)/2,"
+              f"drawbox=x=390:y=1080:w=300:h=8:color={accent}:t=fill,format=yuv420p")
+    subprocess.run(
+        ["ffmpeg", "-y", *vin,
+         "-f", "lavfi", "-t", str(dur), "-i", "anullsrc=r=48000:cl=stereo",
+         "-map", "0:v:0", "-map", "1:a:0", "-r", "30", "-vf", vf,
+         "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p",
+         "-c:a", "aac", "-ar", "48000", "-shortest", str(dst), "-loglevel", "error"],
+        check=True)
 
 
 def _reenc(src, start, dur, dst):
@@ -324,7 +393,7 @@ def _dt(src, dst, tf, size, color, x, y, enable=None, border=(4, "black")):
             f":fontcolor={color}:x={x}:y={y}{b}{en}[{dst}];")
 
 
-def _filtergraph(work, short, tpl, cold_len, win_start, total, channel_name, cta):
+def _filtergraph(work, short, tpl, cold_len, win_start, total, channel_name, cta, bump_len=0.0):
     L = []
     if tpl["blur_bg"]:
         L += ["[0:v]split=2[a][b];",
@@ -364,16 +433,20 @@ def _filtergraph(work, short, tpl, cold_len, win_start, total, channel_name, cta
     # 콜드오픈 구간 배지 — 같은 장면이 뒤에 또 나오는 이유를 보는 사람이 알게
     if cold_len > 0:
         d = nxt()
-        L.append(f"[{cur}]drawbox=x=60:y=170:w=210:h=64:color=0xE23B3B:t=fill:enable='lt(t,{cold_len})'[{d}];")
+        # 배지는 훅 카드가 끝난 뒤(콜드오픈 구간)에만 뜬다
+        _b0, _b1 = HOLD_SECONDS, HOLD_SECONDS + cold_len
+        L.append(f"[{cur}]drawbox=x=60:y=170:w=210:h=64:color=0xE23B3B:t=fill"
+                 f":enable='between(t,{_b0},{_b1})'[{d}];")
         cur = d
         d2 = nxt()
         L.append(_dt(cur, d2, _txtfile(work, "cobadge", "다시 보기"), 38, "white", 95, 182,
-                     enable=f"lt(t,{cold_len})", border=None))
+                     enable=f"between(t,{_b0},{_b1})", border=None))
         cur = d2
     # 자막 — 원본 타임라인 → 새 타임라인(콜드오픈 길이만큼 밀림)
     for i, c in enumerate(short.get("captions") or []):
-        a = float(c.get("start", win_start)) - win_start + cold_len
-        b = float(c.get("end", win_start)) - win_start + cold_len
+        _off = HOLD_SECONDS + cold_len + bump_len
+        a = float(c.get("start", win_start)) - win_start + _off
+        b = float(c.get("end", win_start)) - win_start + _off
         for j, (line, col, y) in enumerate([(c.get("line1", ""), tpl["cap1"], 1420),
                                             (c.get("line2", ""), tpl["cap2"], 1500)]):
             if not line:
