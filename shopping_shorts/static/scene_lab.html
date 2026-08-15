@@ -406,7 +406,10 @@ function playBeatHere(i, ev){
   try{
     const up = window.parent;
     if (up && up !== window && typeof up.sceneLabPlay === 'function'){
-      up.sceneLabPlay(i, window);
+      // ★window에서 꺼내 쓰면 안 된다 — let/const로 선언한 전역은 window의 속성이 아니라서
+      //   바깥에서 읽으면 undefined다(2026-08-15 실측: lists가 undefined라 재생이 죽었다).
+      //   같은 도메인이라 객체를 그대로 건넬 수 있다(복사 아님 — 참조가 그대로 간다).
+      up.sceneLabPlay(i, {DATA, lists, STRETCH, TRIMS, onePerSeg});
       playKey = 'beat:' + i; renderBand();
       return;
     }
