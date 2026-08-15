@@ -399,15 +399,18 @@ function toggleOne(on){ onePerSeg = on; render(); }
 // 제작소 안(iframe)이면 바깥 큰 미리보기 자리로 넘기고, 혼자 열렸으면 이 페이지에서 재생한다.
 function playBeatHere(i, ev){
   if (ev) ev.stopPropagation();
-  const outside = window.parent && window.parent !== window;
-  if (outside){
-    try{
-      window.parent.postMessage({type:'sceneLab:play', beat:i,
-        DATA, lists, STRETCH, TRIMS, onePerSeg}, location.origin);
+  // 제작소 안(iframe)이면 **바깥 큰 미리보기 자리**에서 재생시킨다.
+  // ★postMessage가 아니라 부모 함수 직접 호출 — 같은 도메인이라 가능하고, 값 복사(구조화 복제)
+  //   과정이 없어 실패 지점이 없다(2026-08-15 실측: postMessage 경로가 조용히 실패해
+  //   iframe 안에서 소리만 나고 화면은 안 보였다).
+  try{
+    const up = window.parent;
+    if (up && up !== window && typeof up.sceneLabPlay === 'function'){
+      up.sceneLabPlay(i, window);
       playKey = 'beat:' + i; renderBand();
       return;
-    }catch(e){ /* 실패하면 아래 자체 재생으로 떨어진다 */ }
-  }
+    }
+  }catch(e){ console.warn('바깥 재생 실패 — 이 화면에서 재생합니다', e); }
   playBeat(i, ev);
 }
 
