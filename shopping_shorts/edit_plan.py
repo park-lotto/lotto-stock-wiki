@@ -1495,6 +1495,9 @@ def _build_inventory(source_scripts):
                 "video_id": vid, "seg_id": sid,
                 "start": seg["start"], "end": seg["end"],
                 "text": seg.get("text", ""), "scene_desc": seg.get("scene_desc", ""),
+                # 짧은 이름(2026-08-16). 옛 추출본엔 없어 ""(fail-open) — 아래 라인 조립이
+                # 빈 값이면 그 칸을 통째로 생략하므로 기존 잡은 종전과 완전히 같은 줄을 받는다.
+                "label": (seg.get("label") or "").strip(),
                 "action": seg.get("action"),
                 "change": (seg.get("change") or "").strip(),
                 "is_key": bool(seg.get("is_key")),
@@ -1524,9 +1527,16 @@ def _build_inventory(source_scripts):
             # ★scene_desc 문자열엔 절대 안 섞는다(_claim_key 토큰 오염) — 모션처럼 별도 suffix로만.
             _role_s = f" | 역할:{seg.get('shot_role') or '기타'}"
             _key_s = f" | 실증:{'Y' if seg.get('is_key') else 'N'}"
+            # ★짧은 이름(2026-08-16): 장면이 수십 개면 '화면:' 묘사가 서로 비슷해 고를 축이
+            #   흐려진다(실측: 완성품 5개가 전부 "크레마가 얹어진 잔/덮인 컵/표면"). 이 장면이
+            #   영상에서 하는 일을 12자로 실어 대본 문장과 **의미끼리** 견주게 한다.
+            #   ★scene_desc 문자열엔 안 섞는다 — _claim_key 토큰이 오염돼 앵커 dedup이 엉킨다
+            #   (모션·역할과 같은 이유, 위 주석 참조). 반드시 별도 suffix로만.
+            _lab = (seg.get("label") or "").strip()
+            _lab_s = f" | 쓰임:{_lab}" if _lab else ""
             lines.append(
                 f"[{sid}] ({length}s) 화면:{seg.get('scene_desc','')} | 말:{seg.get('text','')}"
-                f"{_act_s}{_chg_s}{_ben_s}{_ml_s}{_role_s}{_key_s}"
+                f"{_lab_s}{_act_s}{_chg_s}{_ben_s}{_ml_s}{_role_s}{_key_s}"
             )
     return seg_map, "\n".join(lines)
 
