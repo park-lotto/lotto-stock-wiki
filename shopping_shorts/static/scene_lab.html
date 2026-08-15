@@ -471,6 +471,12 @@ async function makeTts(){
     }
     if (!need.length){ say('✅ 모든 칸에 음성이 이미 있어요'); return; }
     say(`🔊 음성 만드는 중… 칸 ${need.length}개 (1~2분)`);
+    // ★반드시 한 칸씩, 앞이 끝난 뒤에 다음을 보낸다.
+    //   서버의 재합성(resynth_one_beat)은 끝날 때 **편집안 전체를 덮어쓴다**
+    //   (mix_pipeline.py: store.update_mix_job(job_id, edit_plan=plan)).
+    //   한꺼번에 보내면 나중 것이 앞의 결과를 지워 마지막 하나만 남는다
+    //   (2026-08-15 실측: 5칸을 동시에 보냈더니 4번 칸만 생겼다).
+    let done = 0;
     for (const i of need){
       const r = await fetch(`/api/mix/tts/${SL.job}/${i}/regen`, {
         method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
@@ -479,16 +485,17 @@ async function makeTts(){
         say('⚠ ' + (j.error || '음성을 만들지 못했어요') + ' — 생성·렌더가 끝난 뒤 다시 눌러주세요');
         return;
       }
-    }
-    // 서버가 뒤에서 만든다 — 다 만들어질 때까지 지켜본다.
-    for (let n = 0; n < 60; n++){
-      await new Promise(r => setTimeout(r, 3000));
-      let done = 0;
-      for (const i of need){ const r = await fetch(SL.tts(i), {method:'GET'}); if (r.ok) done++; }
+      // 이 칸이 실제로 생길 때까지 기다린다(최대 90초).
+      let ok = false;
+      for (let n = 0; n < 30; n++){
+        await new Promise(r2 => setTimeout(r2, 3000));
+        if ((await fetch(SL.tts(i), {method:'GET'})).ok){ ok = true; break; }
+      }
+      if (!ok){ say(`⏳ 칸 ${i+1} 음성이 늦어지고 있어요 — 잠시 뒤 다시 눌러주세요`); return; }
+      done++;
       say(`🔊 음성 만드는 중… ${done}/${need.length}`);
-      if (done === need.length){ say('✅ 음성이 준비됐어요 — 이제 소리와 함께 재생됩니다'); return; }
     }
-    say('⏳ 아직 만드는 중이에요 — 잠시 뒤 다시 재생해보세요');
+    say('✅ 음성이 준비됐어요 — 이제 소리와 함께 재생됩니다');
   }catch(e){
     say('⚠ 음성 만들기 실패: ' + (e.message || e));
   }finally{
