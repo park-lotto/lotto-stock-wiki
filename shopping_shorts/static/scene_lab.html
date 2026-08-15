@@ -72,7 +72,10 @@ h1{font-size:16px;margin:0;font-weight:700}
    '몇 초 나오는지'와 '끝에 또 나오는지'는 카드 위 칩으로 얹는다(정보는 안 잃는다).
    배지 규칙: 왼쪽 위=검정 칩(순번 · 초, 내가 담은 건 초록 ✓), 오른쪽 위=상태 칩
    ('끝에 +N초 또 나옴'/'늘어짐' 주황 > '대표' 파랑). oor(실체 없는 장면)만 빨간 테두리. */
-.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,210px));gap:8px}
+/* 담긴 장면 카드 폭 = 왼쪽 팔레트 조각과 같은 크기로(2026-08-15 사장님 "오른쪽 썸네일을
+   왼쪽 장면조각 크기로 줄여도 될듯"). 왼쪽은 라이브러리 520px를 3열로 나눠 약 165px인데
+   오른쪽은 210px까지 커져 세로를 더 먹었다. 상한을 165px로 맞춰 한 화면에 더 들어오게. */
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,165px));gap:8px}
 .item{position:relative;border:1px solid var(--line);border-radius:6px;overflow:hidden;
       background:#000;cursor:pointer}
 .item:hover{border-color:var(--accent)}
