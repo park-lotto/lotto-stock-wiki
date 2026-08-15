@@ -86,9 +86,15 @@ function trimMark(ev){
   if (b - a < 0.05){ updateTrimBar(); return; }          // 같은 자리 두 번 = 취소
   TRIMS[sid] = [Math.round(a * 100) / 100, Math.round(b * 100) / 100];
   (typeof render === 'function' && render());                                              // saveWork까지 — 새로고침에도 남는다
+  if (typeof onTrimChanged === 'function') onTrimChanged();
   updateTrimBar();
 }
-function unTrim(sid){ delete TRIMS[sid]; trimA = null; (typeof render === 'function' && render()); updateTrimBar(); }
+function unTrim(sid){
+  delete TRIMS[sid]; trimA = null;
+  (typeof render === 'function' && render());
+  if (typeof onTrimChanged === 'function') onTrimChanged();
+  updateTrimBar();
+}
 
 // video_assemble._plan_beat_clips 이식(라운드로빈 + shortfall 1순위 근사)
 let onePerSeg = false;   
