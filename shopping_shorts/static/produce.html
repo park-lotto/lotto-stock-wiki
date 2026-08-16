@@ -379,41 +379,44 @@
     .srcGrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(304px,1fr));
       align-items:stretch}
     .srcCard{background:var(--inset);border:1px solid var(--line);border-radius:12px;
-      padding:12px 16px;transition:border-color .15s;cursor:pointer;
+      padding:14px 18px;transition:border-color .15s;cursor:pointer;
       display:flex;flex-direction:column;min-width:0;overflow:hidden}
     .srcCard:hover{border-color:var(--accent)}
     /* ★접었다 폈다(2026-08-16 사장님). 영상을 5~8개 담으면 요약이 다 펼쳐져 화면을
        길게 먹는다 — 기본은 "제품 한 줄 + 장면 수"만, 누르면 역할·핵심·요약이 나온다. */
     .srcMore{display:none}
     .srcCard.open .srcMore{display:block}
-    .srcCaret{margin-left:auto;font-size:11px;color:var(--sub);white-space:nowrap}
+    .srcCaret{margin-left:auto;font-size:12px;color:var(--txt);opacity:.6;white-space:nowrap}
     .srcCard:hover .srcCaret{color:var(--accent)}
     /* ★분석 대기 카드는 자기 크기만 갖는다(grid-row 늘림에서 뺀다) — 한 문장짜리
        내용에 280px을 주면 큰 빈 상자가 된다. align-self:start가 1fr 늘림을 끊는다. */
     .srcCard.pend{opacity:.7;border-style:dashed;align-self:start;padding:10px 16px}
     .srcPend{font-size:12px;color:var(--sub);line-height:1.5}
     .srcHead{display:flex;align-items:center;gap:8px;margin-bottom:9px}
-    .srcNo{flex:0 0 auto;font-size:11px;font-weight:900;color:var(--accent);
+    .srcNo{flex:0 0 auto;font-size:12px;font-weight:900;color:var(--accent);
       background:rgba(62,224,191,.12);border:1px solid rgba(62,224,191,.4);
       border-radius:99px;padding:2px 9px}
-    .srcName{flex:1;min-width:0;font-size:12px;color:var(--sub);overflow:hidden;
+    .srcName{flex:1;min-width:0;font-size:12.5px;color:var(--txt);opacity:.7;overflow:hidden;
       text-overflow:ellipsis;white-space:nowrap}
-    .srcRow{display:flex;gap:8px;margin-bottom:5px;font-size:13px;line-height:1.5}
-    /* 칸 이름이 우리 말로 길어졌다(무엇을/하는 일/내세울 것) — 34px이면 두 줄로 접힌다 */
-    .srcK{flex:0 0 58px;color:var(--sub);font-size:11.5px;font-weight:800;padding-top:2px;
+    .srcRow{display:flex;gap:10px;margin-bottom:7px;font-size:14px;line-height:1.55}
+    /* 칸 이름(재료·Key·상세) — 짧아져서 폭을 줄이고, 흐려서 안 읽히던 것을 키웠다 */
+    .srcK{flex:0 0 40px;color:var(--sub);font-size:12.5px;font-weight:800;padding-top:2px;
       word-break:keep-all}
     /* 재료로서의 성질(2026-08-17): 말 유무·길이·화면 구성. 접혀 있어도 보인다 —
        고를 때 필요한 건 요약 세 줄이 아니라 이 세 가지다. */
     .srcFacts{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 6px}
-    .srcChip{font-size:11px;line-height:1.6;padding:1px 8px;border-radius:99px;
-      border:1px solid var(--line);background:var(--panel);color:var(--sub);white-space:nowrap}
+    .srcChip{font-size:12px;font-weight:600;line-height:1.7;padding:2px 9px;border-radius:99px;
+      border:1px solid var(--line);background:var(--panel);color:var(--txt);opacity:.82;
+      white-space:nowrap}
     .srcChip.mute{opacity:.65}
-    .srcV{flex:1;min-width:0;word-break:keep-all}
+    .srcV{flex:1;min-width:0;word-break:keep-all;color:var(--txt)}
     .srcV.strong{font-weight:800;color:var(--accent2)}
-    .srcSum{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);
-      font-size:12.5px;line-height:1.6;color:var(--sub);word-break:keep-all;
-      /* 요약 길이가 카드마다 달라 바닥선을 흔든다 → 4줄에서 자른다(전문은 title로) */
-      display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+    /* ★요약이 가장 안 읽혔다(2026-08-17 사장님) — 12.5px 회색이었다.
+       기본이 펼침으로 바뀌어 이 글이 늘 보이므로 본문 대접을 한다: 13.5px + 밝은 색.
+       길이가 카드마다 달라 바닥선을 흔드니 6줄에서 자른다(전문은 title로). */
+    .srcSum{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);
+      font-size:13.5px;line-height:1.7;color:var(--txt);opacity:.88;word-break:keep-all;
+      display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
     /* 장면 목록을 남는 공간에 붙여 바닥까지 채운다 — 카드 아래가 휑하지 않게.
        ★min-height:0이 없으면 flex 자식이 안 줄어들어 목록이 카드 밖으로 흘러나간다
        (실측: UL이 아래로 146px 삐져나왔다). overflow는 목록 안에서만 일어나야 한다. */
@@ -453,7 +456,7 @@
     /* 장면 수 요약 — 타임스탬프 목록을 뺀 자리에 "재료가 얼마나 되나"만 남긴다 */
     .srcStat{margin-top:auto;padding-top:10px;display:flex;align-items:baseline;gap:6px}
     .srcStatN{font-size:22px;font-weight:900;color:var(--accent2);line-height:1}
-    .srcStatK{font-size:12px;color:var(--sub)}
+    .srcStatK{font-size:12.5px;color:var(--txt);opacity:.75}
     /* ★4:5로 자른다(2026-08-16). 9:16 그대로면 폭 181px에 높이 322px — 담은 영상 칸만
        410px로 화면을 먹는다(실측). 어떤 영상인지 알아보는 게 목적이지 전체를 보는 게
        아니다(전체는 3단계 장면 편집에서 본다). object-fit:cover라 가운데가 남는다. */
@@ -3744,9 +3747,12 @@ async function refreshStep0(){
 //   아직 분석 안 된 영상은 "분석 대기"로 두고, 실제 추출은 기존 자동적재 경로가 한다.
 //   여기서 추출을 트리거하면 1단계를 열기만 해도 크레딧이 타므로 절대 하지 않는다.
 const _SRC_BRIEF = {};       // shortcode → {brief, segs} (페이지당 1회만 받아 쓴다)
-const _SRC_OPEN = new Set(); // 펼쳐 둔 카드(2026-08-16 사장님 "누르면 접었다 펴졌다")
+// ★기본은 **펼침**이다(2026-08-17 사장님 "기본으로 펼치고"). 그래서 집합의 뜻을
+//   뒤집었다 — 예전엔 '펼친 카드'를 모았는데(기본 접힘), 이제 '접은 카드'를 모은다.
+//   비어 있으면 전부 펼쳐진 상태 = 처음 화면. 누르면 그 카드만 접힌다.
+const _SRC_CLOSED = new Set();
 function toggleSrcCard(code){
-  if (_SRC_OPEN.has(code)) _SRC_OPEN.delete(code); else _SRC_OPEN.add(code);
+  if (_SRC_CLOSED.has(code)) _SRC_CLOSED.delete(code); else _SRC_CLOSED.add(code);
   renderSourceAnalysis();    // 이미 받아 둔 데이터로 다시 그린다(서버 재요청 없음)
 }
 async function renderSourceAnalysis(){
@@ -3776,7 +3782,7 @@ async function renderSourceAnalysis(){
 function _srcCard(it, i){
   const d = _SRC_BRIEF[it.shortcode];
   const name = esc(it.name || ('영상 ' + (i+1)));
-  const head = `<div class="srcHead"><span class="srcNo">재료 ${i+1}</span>
+  const head = `<div class="srcHead"><span class="srcNo">영상 ${i+1}</span>
       <span class="srcName" title="${name}">${name}</span></div>`;
   if(!d){
     // 분석 전 카드는 **한 줄로** 접는다(2026-08-16). 분석된 카드와 같은 높이(280px)를
@@ -3809,14 +3815,14 @@ function _srcCard(it, i){
   // ★카드를 눌러 접었다 폈다(2026-08-16 사장님). 영상을 5~8개 담으면 요약이 다 펼쳐져
   //   화면을 길게 먹는다 — 기본은 접어서 "제품 한 줄 + 장면 수"만 보이고, 자세히 볼 것만
   //   펼친다. 접힘 상태는 화면에만 남기면 되므로 DOM 클래스로만 관리한다.
-  const open = _SRC_OPEN.has(it.shortcode);
+  const open = !_SRC_CLOSED.has(it.shortcode);
   // ★칸 이름은 우리 말로 쓴다(2026-08-17 사장님 "이름 다 바꾸고 디벨롭해").
   //   제품/역할/핵심은 태깅 필드 이름을 그대로 화면에 옮긴 것이라 남의 프로그램과
   //   똑같아 보였다. 사장님이 이 카드를 보며 하는 판단("이 영상을 쓸까 말까")의
   //   말로 바꾼다. 데이터 필드명(product/role/core)은 그대로다 — 화면 말만 바뀐다.
   return `<div class="srcCard${open ? ' open' : ''}" onclick="toggleSrcCard('${esc(it.shortcode)}')"
        title="${open ? '눌러서 접기' : '눌러서 자세히 보기'}">${head}
-    ${row('무엇을', b.product, 'strong')}
+    ${row('재료', b.product, 'strong')}
     <div class="srcFacts">
       <span class="srcChip ${chars ? '' : 'mute'}"
             title="${chars ? `말이 들어 있는 영상 — 자막 ${chars}자를 대본 재료로 쓸 수 있습니다`
@@ -3826,8 +3832,8 @@ function _srcCard(it, i){
       ${mix}
     </div>
     <div class="srcMore">
-      ${row('하는 일', b.role)}
-      ${row('내세울 것', b.core)}
+      ${row('Key', b.role)}
+      ${row('상세', b.core)}
       ${b.summary ? `<div class="srcSum">${esc(b.summary)}</div>` : ''}
     </div>
     ${segs.length ? `<div class="srcStat">
