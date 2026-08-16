@@ -46,7 +46,8 @@ from shopping_shorts.channels import load_channels, username_from_url, merge_tra
 from shopping_shorts import video_analysis
 from shopping_shorts.video_analysis import (analyze_video, translate_keyword, cn_search_keyword,
                                             cn_search_keyword_vision, judge_same_product,
-                                            cn_search_candidates, expand_search_keywords)
+                                            cn_search_candidates, expand_search_keywords,
+                                            subject_tags_vision)
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts import coupang_partners
@@ -5265,39 +5266,86 @@ async def api_lens_cn_search(request: Request, keyword: str = Form(""),
     return {"ok": True, **res}
 
 
+def _yt_keywords(subject_result, cn_result, caption):
+    """유튜브 검색어 목록(최대 2개: 기본검색어 + 보조검색어)을 만든다.
+
+    ★실측 A/B(사장님 라이브 썸네일 4건) — cn_search_keyword_vision의 product는
+    샤오홍슈/도우인용 프롬프트라 '제품 특정(색·형태·브랜드)'을 요구해 유튜브에서
+    과도하게 구체적인 복합어가 되어 결과가 없거나(강아지목욕: same0,no5) 엉뚱한
+    영상을 잡았다. subject_tags_vision의 subject는 애초에 "검색어로 이 영상이
+    잡히게" 만드는 게 목표라 전부 개선(수납침대 2→5건, 제모기 no3→no0).
+
+    우선순위: subject → (실패시) product → (실패시) 캡션 앞토큰(_cn_keyword)
+    ★기존 동작(product→캡션 폴백)은 그대로 보존 — subject 쪽이 실패해도 오늘보다
+    나빠지지 않는다.
+    """
+    primary = (subject_result or {}).get("subject", "") or ""
+    primary = primary.strip()
+    if not primary:
+        primary = ((cn_result or {}).get("product") or "").strip()
+    if not primary:
+        primary = _cn_keyword(caption)
+    if not primary:
+        return []
+    keywords = [primary]
+    for kw in (subject_result or {}).get("keywords") or []:
+        kw = (kw or "").strip()
+        if kw and kw != primary:
+            keywords.append(kw)
+            break
+    return keywords
+
+
 @app.post("/api/lens/yt")
 async def api_lens_yt(request: Request, frame: UploadFile = File(None),
                        source_caption: str = Form(""), max_results: int = Form(12)):
     """프레임+캡션으로 유튜브를 키워드 검색해 렌즈 결과에 합류할 항목. YouTube Data API라
-    무료(쿼터 내) → 월 호출가드 없음. 검색어는 cn_search_keyword_vision의 product
-    (프롬프트가 '한국어 제품명'을 명시) → 캡션 앞토큰(_cn_keyword) 폴백."""
-    keyword = ""
+    무료(쿼터 내) → 월 호출가드 없음. 검색어는 subject_tags_vision의 subject(★2026-08-17
+    변경 — "검색어로 이 영상이 잡히게"가 목표인 프롬프트라 유튜브에 맞다) → 실패 시
+    cn_search_keyword_vision의 product(기존 동작 그대로 보존) → 캡션 앞토큰(_cn_keyword) 폴백.
+    subject_tags_vision의 keywords 중 subject와 다른 첫 항목으로 보조 검색까지 돌려 커버리지를 넓힌다."""
+    subject_result, cn_result = {}, {}
     if frame is not None:
         try:
             raw = await frame.read()
             # ★ to_thread — 아래 youtube_search와 함께 블로킹 호출이라 루프를 막는다
             #   (/api/lens/cn/keywords와 동시에 돌아야 렌즈가 빨리 뜬다, 2026-08-16)
-            v = await asyncio.to_thread(cn_search_keyword_vision, raw, source_caption)
-            keyword = (v.get("product") or "").strip()
+            subject_result = await asyncio.to_thread(subject_tags_vision, raw, source_caption)
+            if not (subject_result or {}).get("subject"):
+                # 폴백도 비전 1회로 해결 — 프레임을 다시 읽을 필요 없이 같은 raw 재사용
+                cn_result = await asyncio.to_thread(cn_search_keyword_vision, raw, source_caption)
         except Exception:
-            keyword = ""
-    if not keyword:
-        keyword = _cn_keyword(source_caption)
-    if not keyword:
+            subject_result, cn_result = {}, {}
+    keywords = _yt_keywords(subject_result, cn_result, source_caption)
+    if not keywords:
         return {"ok": True, "items": [], "count": 0, "note": "검색어를 만들지 못했습니다"}
+    keyword = keywords[0]
     # ★상한 12 — 40개는 유튜브만 화면을 도배했다(실측 2026-08-16: 유튜브 43개인데
     #   틱톡 5·인스타 1·샤오홍슈 0·도우인 1). 아래 채점이 관련도순으로 정렬하므로
     #   위쪽 12개면 충분하다. 캐시된 옛 화면이 40을 보내도 여기서 잘린다.
     n = max(1, min(int(max_results or 12), 12))
-    try:
-        # ★videoDuration=short(4분 미만) + relevanceLanguage=ko (2026-08-16 사장님 제보)
-        #   예전엔 필터가 하나도 없어 일반 롱폼·외국어 영상까지 그대로 딸려왔다
-        #   (실측: 유튜브 43개 vs 틱톡 5·인스타 1·샤오홍슈 0·도우인 1).
-        #   둘 다 API가 공짜로 주는 파라미터라 쿼터·비용은 그대로다.
-        rows = await asyncio.to_thread(youtube_search.search, keyword, max_results=n,
-                                       duration="short", language="ko")
-    except Exception:
-        rows = []
+    rows = []
+    seen_urls = set()
+    for kw in keywords:
+        if len(rows) >= n:
+            break
+        try:
+            # ★videoDuration=short(4분 미만) + relevanceLanguage=ko (2026-08-16 사장님 제보)
+            #   예전엔 필터가 하나도 없어 일반 롱폼·외국어 영상까지 그대로 딸려왔다
+            #   (실측: 유튜브 43개 vs 틱톡 5·인스타 1·샤오홍슈 0·도우인 1).
+            #   둘 다 API가 공짜로 주는 파라미터라 쿼터·비용은 그대로다.
+            part = await asyncio.to_thread(youtube_search.search, kw, max_results=n,
+                                           duration="short", language="ko")
+        except Exception:
+            part = []
+        for r in part:
+            url = r.get("url")
+            if url in seen_urls:
+                continue
+            seen_urls.add(url)
+            rows.append(r)
+            if len(rows) >= n:
+                break
     for r in rows:
         r["platform"] = "youtube"
         r["match"] = None
@@ -5306,7 +5354,7 @@ async def api_lens_yt(request: Request, frame: UploadFile = File(None),
     #   빠져 있었다. match가 전부 None이라 프론트의 '⚠️ 다른주제 숨기기'가 유튜브를
     #   **한 개도 못 걸렀다**(index.html은 match!==false만 거른다). 같은 함수를 그대로 쓴다.
     #   텍스트 전용 + 가벼운 모델(_TRANSLATE_MODEL) 1회라 비용은 0.5원 안쪽.
-    #   (여기선 keyword가 곧 제품명이다 — 위에서 비전의 product를 그대로 넣었다)
+    #   (기본검색어=keyword 기준으로 채점 — 보조검색어로 찾은 결과도 같은 기준으로 잰다)
     if keyword and rows:
         try:
             verdicts = await asyncio.to_thread(
