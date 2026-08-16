@@ -1,7 +1,9 @@
 """소스 URL을 플랫폼별로 다운로드 — instagram=Apify, youtube/tiktok=yt-dlp(무료)."""
 import json
+import os
 import re
 import subprocess
+import threading
 import sys
 import time
 import urllib.parse
@@ -233,11 +235,40 @@ def _download_instagram(url, dest_dir):
         f"만료됐을 수 있습니다. 관리자 확인이 필요합니다.")
 
 
-def _download_douyin(url, dest_dir, timeout=600):
+# ★도우인 동시 실행 상한(2026-08-16 사장님 지시 "동시에 2개").
+#   도우인만 **영상 하나당 헤드리스 크롬 + ffmpeg 변환**을 돌린다 — 유튜브·인스타·틱톡보다
+#   훨씬 무겁다. 서버는 4코어인데 자동적재는 고객마다 3개씩 병렬로 던진다(_AUTOLOAD_MAX_WORKERS)
+#   → 고객 5명이 동시에 담으면 크롬 15개가 한꺼번에 뜬다. 그러면 다 같이 기어가고
+#   결국 시간 초과로 **전부** 실패한다(빨리 하려다 하나도 못 얻는다).
+#   그래서 **서버 전체 기준**으로 묶는다 — 고객 수와 무관하다. 3번째부터는 줄을 선다.
+#   ※프로세스 단위 세마포어라 워커가 여러 개면 워커당 상한이다(현재 단일 프로세스).
+_DOUYIN_SLOTS = threading.BoundedSemaphore(
+    int(os.getenv("DOUYIN_MAX_CONCURRENT", "2")))
+
+
+class DouyinBusy(RuntimeError):
+    """지금은 자리가 없다 — 실패가 아니라 **잠시 후 다시**라는 뜻.
+    화면이 이 둘을 구별해야 사장님이 '망한 건가' 하지 않는다."""
+
+
+def _download_douyin(url, dest_dir, timeout=600, wait=0):
     """도우인 다운로드 → (mp4경로, ""). douyin_fetch를 **서브프로세스**로 돌린다 —
     호출부(FastAPI 백그라운드)가 asyncio 루프 위라 sync_playwright를 인프로세스로
     못 돌리기 때문(yt-dlp를 서브프로세스로 부르는 기존 패턴과 동일). 상세 근거는
     douyin_fetch.py 도크스트링."""
+    # 자리를 못 잡으면 곧바로 물러난다 — 붙들고 기다리면 요청만 쌓이고,
+    # 화면은 그동안 아무 말도 못 한다. 물러나야 '잠시 후 다시'라고 말할 수 있다.
+    got = (_DOUYIN_SLOTS.acquire(timeout=wait) if wait
+           else _DOUYIN_SLOTS.acquire(blocking=False))
+    if not got:
+        raise DouyinBusy("도우인 영상은 한 번에 2개씩 받습니다 — 잠시 후 자동으로 시작해요")
+    try:
+        return _download_douyin_inner(url, dest_dir, timeout)
+    finally:
+        _DOUYIN_SLOTS.release()
+
+
+def _download_douyin_inner(url, dest_dir, timeout):
     # ★제한 시간 180 → 600초(2026-08-16 실측). 45초짜리 영상이 **108초** 걸렸다
     #   (헤드리스 크롬 기동 + 18.7MB 받기 + h264 변환). 20초짜리는 35초였다.
     #   즉 길이에 비례해 늘어나므로 짧은 영상 기준으로 잡으면 긴 영상만 조용히 죽는다 —

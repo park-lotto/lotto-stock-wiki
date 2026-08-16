@@ -59,7 +59,7 @@ from shopping_shorts import douyin_search, xiaohongshu_search
 from shopping_shorts import youtube_search
 from shopping_shorts.config import APIFY_TOKENS
 from shopping_shorts.media_download import (resolve_media_url, download_any, probe_grab_meta,
-                                            _is_direct_video)
+                                            _is_direct_video, DouyinBusy)
 from shopping_shorts import edit_plan as _edit_plan
 from shopping_shorts import edit_plan
 from shopping_shorts import voice_presets, audio_post
@@ -8197,6 +8197,13 @@ def api_produce_autoload(request: Request, body: dict):
             try:
                 e["video_path"], dl_caption = download_any(
                     item.get("video_url") or e["url"], str(work_dir))
+            except DouyinBusy as ex:
+                # ★자리가 없을 뿐 실패가 아니다(2026-08-16 사장님 "잠시후 다시 시도해달라고
+                #   표시하고 그 영상 다시 받게"). 실패로 적으면 시도 횟수를 까먹고 결국
+                #   영영 못 받는다 — 래치를 되돌려 다음에 온전히 다시 시도하게 한다.
+                e["status"], e["error"] = "busy", str(ex)
+                e["rollback_latch"] = True
+                return e
             except Exception as ex:  # noqa: BLE001 — 만료·비공개·차단
                 e["status"], e["error"] = "failed_download", str(ex)
                 return e

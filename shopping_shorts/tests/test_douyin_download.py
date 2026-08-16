@@ -137,3 +137,45 @@ def test_timeout_is_generous_enough_for_long_clips():
     from shopping_shorts import media_download as md
     sig = inspect.signature(md._download_douyin)
     assert sig.parameters["timeout"].default >= 420
+
+
+def test_only_two_at_once(monkeypatch, tmp_path):
+    """★도우인은 서버 전체에서 동시 2개까지(2026-08-16 사장님 지시).
+
+    도우인만 영상 하나당 헤드리스 크롬+ffmpeg를 돌린다. 서버는 4코어인데 자동적재는
+    고객마다 3개씩 던지므로, 고객 5명이 동시에 담으면 크롬 15개가 뜬다 —
+    다 같이 기어가다 시간 초과로 **전부** 실패한다(빨리 하려다 하나도 못 얻는다).
+    """
+    from shopping_shorts import media_download as md
+
+    started, release = [], []
+
+    def slow(url, dest_dir, timeout):
+        started.append(url)
+        return "x.mp4", ""
+
+    monkeypatch.setattr(md, "_download_douyin_inner", slow)
+    # 2개는 자리를 차지한 채로 둔다
+    assert md._DOUYIN_SLOTS.acquire(blocking=False)
+    assert md._DOUYIN_SLOTS.acquire(blocking=False)
+    try:
+        try:
+            md._download_douyin("https://www.douyin.com/video/3", tmp_path)
+        except md.DouyinBusy as e:
+            assert "2개" in str(e), "왜 기다리는지 사람 말로 알려야 한다"
+        else:
+            raise AssertionError("3번째가 통과했다 — 상한이 안 걸린다")
+        assert not started, "자리가 없으면 아예 시작하지 않아야 한다"
+    finally:
+        md._DOUYIN_SLOTS.release()
+        md._DOUYIN_SLOTS.release()
+
+
+def test_busy_is_not_failure(tmp_path):
+    """대기는 실패와 다르다 — 자동적재가 시도 횟수를 깎으면 안 된다."""
+    import pathlib as _p
+    src = (_p.Path(__file__).resolve().parents[1] / "app.py").read_text(encoding="utf-8")
+    i = src.index("except DouyinBusy")
+    win = src[i:i + 400]
+    assert '"busy"' in win
+    assert "rollback_latch" in win, "래치를 돌려주지 않으면 결국 영영 못 받는다"
