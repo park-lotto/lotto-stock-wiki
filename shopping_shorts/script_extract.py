@@ -236,6 +236,26 @@ _BRIEF_KEYS = ("product", "role", "core", "summary")
 _BRIEF_MAX = {"product": 40, "role": 60, "core": 80, "summary": 400}
 
 
+def has_usable_result(result):
+    """이 추출 결과를 저장·사용할 값어치가 있나(=재료가 나왔나).
+
+    ★예전엔 `full_text`(말)만 봤다. 그래서 **말이 없는 영상은 통째로 버려졌다** —
+      도우인·틱톡의 무음 제품 영상이 여기 걸린다(2026-08-16 실측:
+      "전사 결과 없음(음성 없음·자막 불가)"로 실패 처리).
+      그런데 우리 추출은 **화면만 보고도** 장면을 태깅한다(이 파일 프롬프트가 그렇게
+      돼 있고, 실제로 자막 0자 소스가 세그 10개·label 10개로 성공한 기록이 있다).
+      즉 되는 걸 게이트가 막고 있었다.
+    그래서 **말 또는 화면 중 하나라도 건졌으면** 쓸 수 있다고 본다.
+    둘 다 없으면 종전대로 실패다(빈 대본이 캐시로 굳는 것은 여전히 막아야 한다)."""
+    if not isinstance(result, dict):
+        return False
+    if (result.get("full_text") or "").strip():
+        return True
+    segs = result.get("segments") or []
+    # 화면 묘사가 실제로 담긴 세그가 하나라도 있어야 한다(빈 껍데기 방지)
+    return any((s.get("scene_desc") or "").strip() for s in segs if isinstance(s, dict))
+
+
 def _norm_brief(raw):
     """모델이 준 영상 단위 요약 → 표시·프롬프트용 dict(순수함수, fail-open).
     없음/형식이상 → {}. 옛 추출본엔 이 필드가 없으므로 읽는 쪽은 빈 dict를 견뎌야 한다."""

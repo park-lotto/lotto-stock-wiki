@@ -34,7 +34,7 @@ from shopping_shorts.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGL
 from shopping_shorts.frame_extract import (download_video, extract_frames,
                                            extract_frame_at, extract_grid_frames)
 from shopping_shorts.script_extract import (extract_script, extract_auto, storable,
-                                            KeyPoolExhausted)
+                                            KeyPoolExhausted, has_usable_result)
 from shopping_shorts.structure_analyze import analyze_structure
 from shopping_shorts import backbone
 from shopping_shorts.aipick import build_aipick
@@ -8192,14 +8192,19 @@ def api_produce_autoload(request: Request, body: dict):
             except Exception as ex:  # noqa: BLE001
                 e["status"], e["error"] = "failed_download", str(ex)
                 return e
-            # ★full_text가 비면 저장하지 않는다 — 저장하면 "빈 대본"이 캐시로 굳어
-            #   다음부터 캐시히트로 영원히 빈값을 돌려준다(사고 당시 실제 증상).
-            if not (result.get("full_text") or "").strip():
+            # ★재료가 하나도 안 나왔을 때만 버린다(2026-08-16 기준 교체).
+            #   예전엔 full_text(말)만 봐서 **무음 영상이 통째로 버려졌다** — 도우인
+            #   제품 영상이 여기 걸렸다. 화면 태깅만 나와도 쓸 수 있는 재료다.
+            #   빈 대본이 캐시로 굳는 것은 has_usable_result가 그대로 막는다.
+            if not has_usable_result(result):
                 e["status"] = "failed_empty"
-                e["error"] = "전사 결과 없음(음성 없음·자막 불가)"
-                # ★분석 결과는 남긴다(2026-08-17) — 저장(캐시)은 여전히 안 한다.
-                #   무자막이라 말은 없어도 **화면 분석은 됐다**(product·product_benefits).
-                #   쿠팡 선수집이 이 이름을 쓴다. 판정·저장 로직은 그대로다.
+                e["error"] = "쓸 만한 재료가 안 나왔어요(화면·말 모두 비어 있음)"
+                # ★분석 결과는 남긴다(2026-08-17, 쿠팡선수집 세션) — 저장(캐시)은 안 한다.
+                #   쿠팡 선수집이 product·product_benefits를 쓴다.
+                #   ⚠️여기까지 오는 경우가 줄었다(2026-08-16, 장면라벨 세션): 판정이
+                #   full_text(말)에서 has_usable_result(말 **또는** 화면)로 바뀌어,
+                #   화면 태깅이 나온 무자막 영상은 이제 위에서 정상 저장된다.
+                #   이 분기는 말도 화면도 못 건진 진짜 빈 결과일 때만 탄다.
                 e["result"] = result
                 # 카테고리도 채워 둔다 — 선수집이 홈템·기타만 거르는 데 쓴다.
                 e["category"] = item.get("category") or categorize(
