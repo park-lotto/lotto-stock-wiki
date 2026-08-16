@@ -42,8 +42,46 @@ def _post(path, payload, timeout=20):
         return json.load(r)
 
 
+def handle_detail(job):
+    """상품 상세·리뷰 수집(2026-08-17) — 1단계에서 미리 걸어둔 일감.
+
+    ★서버로 **결론만** 보낸다. 상세페이지는 글자가 아니라 이미지라 그대로 올리면
+      용량이 크다 — 여기(PC)서 긁고 여기서 제미니 분석까지 끝내고 JSON만 보낸다.
+    ★검색 → 1위 상품 → 상세·리뷰 순으로 간다. 상품을 못 찾으면 빈 결과를 보낸다
+      (대본은 재료 없이도 나와야 하므로 실패를 예외로 만들지 않는다).
+    """
+    from shopping_shorts import product_facts
+
+    p = job.get("payload") or {}
+    product = (p.get("product") or job.get("q") or "").strip()
+    print(f"  [상품재료] {product} — 검색 중…", flush=True)
+    facts, picked = {}, {}
+    try:
+        found = coupang_search.search(product, limit=1)
+        items = found.get("items") or []
+        if items:
+            picked = items[0]
+            url = picked.get("url") or ""
+            print(f"  [상품재료] {picked.get('name','')[:40]} — 상세·리뷰 수집(2~3분)…", flush=True)
+            work = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                ".coupang_facts", (p.get("shortcode") or "tmp"))
+            facts = product_facts.collect_and_analyze(url, work, name=picked.get("name") or "")
+        else:
+            print("  [상품재료] 상품을 못 찾음", flush=True)
+    except Exception as exc:                       # 릴레이가 죽으면 안 된다
+        print(f"  [상품재료] 실패: {type(exc).__name__} {str(exc)[:80]}", flush=True)
+    n = sum(len(facts.get(k) or []) for k in ("specs", "pain", "satisfy", "voice")) if facts else 0
+    print(f"  [상품재료] 완료 — 재료 {n}건", flush=True)
+    _post("/api/coupang/relay/result", {
+        "token": TOKEN, "id": job.get("id"), "ok": bool(facts),
+        "facts": facts, "product": picked}, timeout=60)
+
+
 def handle(job):
     """일감 하나 처리 — 로컬(한국 IP)에서 실제로 쿠팡을 긁는다."""
+    if (job.get("kind") or "search") == "detail":
+        handle_detail(job)
+        return
     q = job.get("q") or ""
     print(f"  [검색] {q} …", flush=True)
     try:
