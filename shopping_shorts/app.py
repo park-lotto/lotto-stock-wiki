@@ -2282,7 +2282,11 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         #   그래서 "어느 대본을 씨앗으로 골랐냐"가 결과를 좌우했다(사장님: "하나의 대본을
         #   지정하면 편협하게 나온다 / 사용자는 뭐가 좋은 대본인지 모르고 잘못 고르면 낭패").
         #   담긴 것을 전부 넣으면 그 복불복 자체가 사라진다.
-        _job = store.get_mix_job((body.get("job_id") or "").strip()) if body.get("job_id") else None
+        # ★타입을 믿지 마라(work_id 사고와 같은 유형): job_id도 클라이언트 값이라
+        #   문자열이 아닐 수 있다 — dict가 오면 .strip()에서 500, 대본이 통째로 안 나온다.
+        _jid = body.get("job_id")
+        _jid = _jid.strip() if isinstance(_jid, str) else ""
+        _job = store.get_mix_job(_jid) if _jid else None
         # 옛 작업이라 스냅샷에 장면 태깅이 없으면 캐시에서 보충한다 —
         # 이게 없으면 사장님이 1단계부터 다시 담아야 새 재료가 붙는다.
         _job = _enrich_job_extract(_job, store)
@@ -2305,7 +2309,7 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         # ★제품 재료 주입(2026-08-16) — 이 작업에 연결된 쿠팡 상품에서 미리 긁어둔
         #   스펙·리뷰가 있으면 프롬프트에 얹는다. 없으면 ''이라 기존 경로 그대로(회귀 0).
         #   여기서 긁지 않는다 — 수집은 /api/product/facts/collect가 미리 해둔다(2~3분).
-        _facts_block = _facts_block_for_job(body.get("job_id") or "", store)
+        _facts_block = _facts_block_for_job(_jid, store)
         # ★1단계 장면 태깅을 대본에도 준다(2026-08-17). label=이 장면이 무엇인가,
         #   use_point=이 장면을 어디에 어떻게 써먹나. 지금까지는 화면 붙일 때(edit_plan)만
         #   쓰고 대본 생성엔 안 실렸다 — 재료를 반만 쓰고 있었다.
@@ -2333,7 +2337,7 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                     "sources": [{"chars": len(s.get("full_text") or ""),
                                  "head": (s.get("full_text") or "")[:40]} for s in _src],
                     "scene_points": _scene_block.count("\n· ") if _scene_block else 0,
-                    "product_facts": bool(_facts_block_for_job(body.get("job_id") or "", store)),
+                    "product_facts": bool(_facts_block_for_job(_jid, store)),
                     "styles": [s.get("name") for s in _picked],
                 }}
     drafts = script_generate.generate_variations(
@@ -8010,6 +8014,8 @@ def api_produce_source_brief(request: Request, shortcode: str):
                             if stalled else ""))}
     segs = []
     for s in (data.get("segments") or []):
+        if not isinstance(s, dict):   # 깨진 세그로 카드 전체가 500 나지 않게
+            continue
         segs.append({
             "start": s.get("start"), "end": s.get("end"),
             "label": (s.get("label") or ""),
@@ -8159,13 +8165,18 @@ def api_produce_autoload(request: Request, body: dict):
         # 추출이 이미 있는데도 래치가 앞에 있어 skipped_latched → 도서관 적재가 영영 안 돼
         # AI PICK(대본 3안 버튼)이 안 떴다. 캐시 히트는 제미니 비용 0이라 래치(비용 폭주
         # 차단 장치)가 막을 이유가 없다.
+        # ★캐시 유효 판정은 has_usable_result 한 곳으로(0순위-B). full_text만 보면
+        #   무자막 영상은 저장돼 있어도 캐시미스가 돼 매번 제미니를 다시 태우고, 시도
+        #   횟수만 쌓여 결국 영구 래치된다(2026-08-16 저장 기준을 '말 또는 화면'으로
+        #   바꾼 것과 짝인데, 읽는 쪽 두 곳이 옛 기준으로 남아 있었다).
         cached = store.get_extract(code)
-        if not (cached and (cached.get("full_text") or "").strip()):
+        cache_ok = has_usable_result(cached)
+        if not cache_ok:
             # ②-b DB 래치 — 상한까지 실패한 영상은 다시 태우지 않는다(무한루프 차단의 핵심)
             if tried.get(code, 0) >= _AUTOLOAD_MAX_ATTEMPTS:
                 slots[i] = {"shortcode": code, "status": "skipped_latched"}
                 continue
-        if cached and (cached.get("full_text") or "").strip():
+        if cache_ok:
             # 캐시 히트 — 제미니 비용도 상한도 안 쓴다(담기 예열이 채워둔 경우가 이것).
             todo.append({"i": i, "item": item, "code": code, "url": url, "charged": False,
                          "script": {"full_text": cached.get("full_text", ""),
@@ -9645,7 +9656,7 @@ def _facts_block_for_job(job_id, store=None):
 
     ★여기서 크롤을 돌리지 않는다. 수집은 2~3분이 걸리므로 대본 생성 경로에 끼우면
       사장님이 그만큼 기다리게 된다 — 수집은 /api/product/facts/collect가 미리 해둔다."""
-    job_id = (job_id or "").strip()
+    job_id = job_id.strip() if isinstance(job_id, str) else ""   # 타입을 믿지 않는다
     if not job_id:
         return ""
     try:
@@ -9712,7 +9723,8 @@ def _sources_for_generate(item, job, limit=3):
         txt = (ex.get("full_text") or "").strip()
         if not txt:
             txt = " ".join((s.get("text") or "").strip()
-                           for s in (ex.get("segments") or [])).strip()
+                           for s in (ex.get("segments") or [])
+                           if isinstance(s, dict)).strip()
         _add(item.get("category") or "", txt, ex.get("structure"))
     return out[:limit]
 
@@ -9764,7 +9776,8 @@ def _enrich_job_extract(job, store=None):
     # 이미 태깅이 있으면 손대지 않는다(스냅샷이 최신인 경우 = 대부분).
     def _tagged(e):
         return bool(isinstance(e, dict) and (e.get("source_brief") or any(
-            (s.get("use_point") or "").strip() for s in (e.get("segments") or []))))
+            (s.get("use_point") or "").strip() for s in (e.get("segments") or [])
+            if isinstance(s, dict))))
     if any(_tagged(v) for v in ex.values()):
         return job
     try:
@@ -9831,6 +9844,8 @@ def _scene_points_block(job, limit=14):
         if brief:
             lines.append("· [영상 요약] " + brief)
         for seg in (ex.get("segments") or []):
+            if not isinstance(seg, dict):   # 세그가 문자열 등으로 깨져 있어도 500 내지 않는다
+                continue
             if len(lines) >= limit:
                 break
             up = (seg.get("use_point") or "").strip()

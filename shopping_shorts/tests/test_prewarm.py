@@ -132,3 +132,26 @@ def test_queue_has_pending_dedupes(store):
 def _p(store):
     """테스트 Store가 쓰는 DB 경로(생성자 인자 그대로)."""
     return store.db_path
+
+
+def test_silent_video_cache_hits(store, gate, monkeypatch):
+    """★무자막(말 없음·화면 태깅만) 저장본도 유효 캐시다(2026-08-16 리뷰에서 발견).
+
+    저장 기준은 has_usable_result(말 **또는** 화면)로 바뀌었는데 캐시 판정이
+    full_text만 보면, 무자막 영상은 저장돼 있어도 매번 캐시미스로 제미니를 다시
+    태우고 시도 횟수만 쌓여 결국 영구 래치된다(서버 실측: lens_tiktok_1cfb55 —
+    태깅 저장본이 있는데 attempts=2까지 다시 탔다).
+    """
+    store.save_script("sil1", {"full_text": "", "segments": [
+        {"seg_id": "sil1-0", "start": 0.0, "end": 1.0, "text": "",
+         "scene_desc": "제품을 눌러 보여준다"}]})
+
+    import shopping_shorts.media_download as md
+
+    def boom(*a, **k):
+        raise AssertionError("유효 캐시가 있는데 다운로드·추출을 다시 태웠다")
+
+    monkeypatch.setattr(md, "download_any", boom)
+    got = prewarm.run_prewarm("sil1", "https://x", db_path=store.db_path)
+    assert got == "already"
+    assert gate["count"] == 0, "캐시 히트에 크레딧이 나가면 안 된다"
