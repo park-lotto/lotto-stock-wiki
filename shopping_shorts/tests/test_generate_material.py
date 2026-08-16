@@ -77,3 +77,32 @@ def test_bad_work_id_never_breaks_generation():
     win = src[i - 700:i + 200]
     assert "isinstance(_wid, str)" in win, "문자열인지 먼저 확인해야 한다"
     assert "except Exception" in win, "보강이 실패해도 생성은 계속돼야 한다"
+
+
+def test_brief_can_be_dict_or_string():
+    """★영상 요약은 dict다 — 문자열로 가정하면 대본이 통째로 안 나온다.
+
+    2026-08-16 실사고: _scene_points_block이 source_brief에 바로 .strip()을 불러
+    AttributeError로 500이 났다(화면엔 '네트워크 오류'만, 대본 0줄). 옛 작업엔 이
+    값이 없어 잠자던 버그였는데, 캐시에서 최신 추출본을 끌어오자 진짜 값이 들어와 터졌다.
+    """
+    from shopping_shorts.app import _brief_line
+    got = _brief_line({"product": "고독스 C100", "role": "측광기 시연",
+                       "core": "투명 뷰파인더", "summary": "여기는 길어서 안 넣는다"})
+    assert "고독스 C100" in got and "측광기 시연" in got
+    assert "여기는 길어서" not in got, "요약 전문까지 넣으면 프롬프트가 부푼다"
+    assert _brief_line(" 옛 형식 ") == "옛 형식"          # 문자열도 견딘다
+    for bad in (None, {}, 123, []):
+        assert _brief_line(bad) == ""
+
+
+def test_scene_block_survives_real_extract():
+    """실제 추출본 모양(dict brief + 태깅 세그)을 그대로 넣어도 터지지 않는다."""
+    from shopping_shorts.app import _scene_points_block
+    job = {"extract": {"a": {
+        "source_brief": {"product": "투명 뷰파인더", "role": "촬영 시연", "core": "감성 색감"},
+        "segments": [{"label": "제품 쥐는 손", "use_point": "훅에 쓰기 좋습니다"},
+                     {"label": "결과 사진 확인", "use_point": ""}],
+    }}}
+    out = _scene_points_block(job)
+    assert "투명 뷰파인더" in out and "훅에 쓰기 좋습니다" in out
