@@ -3809,12 +3809,21 @@ function _srcCard(it, i){
     if (r && r.gave_up){
       return `<div class="srcCard pend fail">${head}
         <div class="srcPend" style="color:var(--fire)">❌ ${esc(r.reason || '영상 분석에 실패했습니다')}
-          <div style="color:var(--sub);margin-top:4px">이 영상은 재료로 쓸 수 없어요 — 빼고 진행하시거나 다른 영상을 담아주세요.</div>
+          <div style="color:var(--sub);margin-top:4px">${
+            /로그인/.test(r.reason || '')
+              ? '그 사이트에서 <b>영상을 열어 재생되는 화면</b>에서 다시 담으면 받을 수 있어요.'
+              : '이 영상은 재료로 쓸 수 없어요 — 빼고 진행하시거나 다른 영상을 담아주세요.'}</div>
         </div>
       </div>`;
     }
+    // ★"대본 만들기를 누르면"은 옛 흐름의 낡은 안내였다(2026-08-17 사장님 지적).
+    //   1단계는 담는 즉시 자동으로 분석한다 — 화면이 실제 동작과 다른 말을 하고 있었다.
+    //   실패했다 다시 시도 중인 것도 그냥 '대기'로 보였으니 몇 번째인지도 밝힌다.
+    const tryTxt = (r && r.attempts > 1) ? ` (${r.attempts}번째 시도)` : '';
     return `<div class="srcCard pend">${head}
-      <div class="srcPend">⏳ 분석 대기 — ⚡ 대본 만들기를 누르면 함께 분석됩니다</div>
+      <div class="srcPend">⏳ 분석 중이에요${tryTxt} — 30초~1분쯤 걸립니다
+        <div style="color:var(--sub);margin-top:4px">담으면 자동으로 분석돼요. 이 화면에 그대로 계셔도 됩니다.</div>
+      </div>
     </div>`;
   }
   const b = d.brief || {};
