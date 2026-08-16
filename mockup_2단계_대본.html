@@ -11,27 +11,23 @@
   · 단독 실행 목업. 실제 붙일 곳: produce.html <section class="panel" data-step="8"> 안쪽.
   · CSS 토큰(:root)은 produce.html:12~19 그대로 복사 — 통합 시 :root 블록은 버린다.
   · 새 클래스 전부 s2- 접두사 — produce.html 기존 클래스와 충돌 0.
-  · ⚠️ produce.html의 var(--mut)은 정의가 없다(실측) — 이 목업은 전부 --sub.
+  · ⚠️ produce.html의 var(--mut)은 정의가 없다(실측) — 이 목업은 --sub/--s2-sub만.
 
-  ★사장님 수정 지시 반영(v3):
-  ① 정렬 "가로세로 딱딱 + 빈 곳 없고 튀어나오는 곳 없고"
-     → 좌/우 2단 컬럼 폐기(높이 불일치의 뿌리). 풀폭 밴드 4줄로:
-       ①씨앗 카드줄 / ②스타일 카드줄 / ②보조줄(훅틀·CTA 나란히) / ③대본 행들.
-     → 같은 줄 카드 = flex:1 1 0(같은 폭) + stretch(같은 높이) + 푸터 margin-top:auto(바닥 정렬).
-     → 8px 그리드: 여백·간격 8/16/24만, radius 겉 12/속 8, 대본 행 min-height 80px,
-       보조줄·틀 행 높이 48px 고정.
-     → 내용 적은 카드(분석 중·직접 쓰기)도 같은 골격(아이콘줄/스트립/태그줄/푸터)으로 채움.
-     → 긴 문장·칩은 ellipsis, 가로 스크롤 금지(데스크톱·375px 검증).
-  ② [바꾸기] 후보 = 완성 문장이 아니라 "틀"(빈칸 {가족}·{장소}가 보임).
-     은행 완성문장 폐기(훅 534건 중 소재태그 0건 실측 — 소재로 못 거른다).
-     훅 틀 4개는 가족갈등 반전형(id=52)의 DB 실물. 반전·약속 칸 틀은 예시.
-  ③ 축 조합(훅/전개/CTA 따로) 철회 — 스타일은 통짜(훅·전개·CTA가 한 몸).
-     "훅만 다른 틀로"는 같은 스타일의 틀 안에서만. 전개 칸 삭제.
+  ★v5 — 결과 대본 2안(라이브 실측: 기존 n:2 / 스타일 2개=2안):
+  · ③이 1안 편집기 → A·B 2안으로. 데모 토글 [탭]/[좌우] 둘 다 구현(기본 탭 — "a로 먼저").
+  · 좌우 모드 행높이 동기화: .s2-drafts=grid 2칼럼 + .s2-draft{display:contents}
+    → 두 칼럼의 같은 순번 행이 같은 grid row track을 공유 = A의 미끼와 B의 미끼가
+    같은 선에서 시작·같은 높이(JS 동기화 불필요, 리사이즈에도 안 깨짐).
+  · 좌우 모드 [바꾸기] 팝오버 = absolute 오버레이(반대쪽 칼럼을 안 밀어냄). 탭/모바일은 인라인.
+  · 375px: 좌우 모드는 위아래 스택(A→B), 가로 스크롤 금지.
+  · 확정: 탭 모드=하단 바(현재 안 이름 표시) / 좌우 모드=칼럼마다 "이 안으로 확정".
+  · 실패 데모는 B안만 실패(한쪽만 — 대비가 보이게).
+  · A안=가족갈등 반전형(id=52, 틀 4개는 DB 실물) / B안=단정 명령형(id=53,
+    훅 "여러분 애들 아침에 쌀 밥 절대 안 돼요" = 실제 557만회. B의 틀 3개는 예시).
 
-  · §6 확정 반영: 옛 1단계 #aiPick이 ① 씨앗 밴드로 합류. 매칭 시작(startProduceMix)·
-    #theater·#matchProgress는 3단계 소관 — 확정 버튼은 "3단계로 간다"만 표현.
-  · 데이터: 스타일 3종(id 52·53·54)·대본 예문·훅 틀 4개는 실측/실물.
-    씨앗 카드 채널명·수치, 반전·약속 틀은 화면 구성용 예시.
+  ★v4 유지 — 설명글 제거(남는 글자는 데이터뿐, 설명은 title 툴팁) · 가독(--s2-sub 9.2:1,
+    본문 16px 16.5:1) · 8px 그리드 정렬(같은 줄=같은 폭·같은 높이·바닥 정렬).
+  ★v3 — 풀폭 밴드 / 틀 교체 / 통짜 스타일. §6 — 씨앗 밴드 합류, 매칭·#theater는 3단계.
   ══════════════════════════════════════════════════════════════════
 -->
 <style>
@@ -50,9 +46,8 @@
   .btn-prev{background:var(--panel);border:1px solid var(--line);color:var(--txt)}
   .btn-next{background:var(--grad);color:#fff}
   .hint{color:var(--sub);font-size:12px;margin-top:8px}
-  /* ★가독(사장님 지시): --sub(#8fa1a0, inset 대비 7.0:1)가 작은 글자에서 묽어 보여
-     이 화면 전용 밝은 서브톤을 둔다. #a8bab8 = inset 대비 9.3:1 (AA 여유).
-     통합 시엔 .panel[data-step="8"]에 정의하면 이 화면에만 적용된다. */
+  /* ★가독: --sub(#8fa1a0, inset 대비 6.9:1)가 작은 글자에서 묽어 보여 이 화면 전용
+     밝은 서브톤. #a8bab8 = inset 대비 9.2:1. 통합 시 .panel[data-step="8"]에 정의. */
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;--s2-sub:#a8bab8}
   :root[data-theme="light"] .panel{--s2-sub:#4a635d}   /* light inset 대비 5.9:1 */
   .panel h3{margin:0 0 16px;font-size:18px}
@@ -62,21 +57,22 @@
     display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--sub)}
   .demo-bar button{padding:6px 12px;font-size:12.5px;background:var(--inset);border:1px solid var(--line);color:var(--txt)}
   .demo-bar button.on{background:var(--sel-bg);border-color:var(--accent);color:var(--sel-fg)}
+  .demo-bar .dv{color:var(--line)}
 
   /* ════════════════════════════════════════════════════════
      여기부터가 실제로 produce.html에 들어갈 s2-* 규칙
-     ★정렬 원칙: 풀폭 밴드 — 같은 줄은 같은 폭·같은 높이·바닥 정렬.
+     ★정렬: 풀폭 밴드 — 같은 줄은 같은 폭·같은 높이·바닥 정렬.
        8px 그리드(여백 8/16/24), radius 겉 12/속 8,
-       대본 행 80px·보조줄 48px·틀 행 48px 고정.
+       대본 행 min 80px·보조줄 48px·틀 행 48px·탭 48px.
      ════════════════════════════════════════════════════════ */
   .s2-label{font-size:12px;color:var(--s2-sub);text-transform:uppercase;letter-spacing:.04em;height:24px;line-height:24px;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .s2-band{margin-bottom:24px}
 
-  /* 공용 카드줄 — ①씨앗·②스타일이 같은 문법: flex 1 1 0(같은 폭) + stretch(같은 높이) */
+  /* 공용 카드줄 — ①씨앗·②스타일: flex 1 1 0(같은 폭) + stretch(같은 높이) */
   .s2-cardrow{display:flex;gap:16px;align-items:stretch;flex-wrap:wrap}
   .s2-cardrow>*{flex:1 1 0;min-width:216px}
 
-  /* ── ① 씨앗 카드 — 4장 전부 같은 골격(아이콘줄/스트립/태그줄/푸터) → 빈 상자 없음 ── */
+  /* ── ① 씨앗 카드 — 4장 같은 골격(아이콘줄/스트립/태그줄/푸터) → 빈 상자 없음 ── */
   .s2-scard{border:1px solid var(--line);border-radius:12px;background:var(--inset);padding:16px;
     cursor:pointer;position:relative;transition:.15s;display:flex;flex-direction:column}
   .s2-scard:hover{border-color:var(--accent2)}
@@ -100,7 +96,24 @@
   .s2-sfoot button:hover{border-color:var(--accent);color:var(--accent)}
   .s2-sfoot .ghostbtn{border-style:dashed;cursor:default}
 
-  /* ── ② 스타일 카드줄 — 통짜 스타일 4장(AI맡김 포함), 같은 골격/같은 높이 ── */
+  /* ── ① 씨앗 뼈대 상세 — 고른 씨앗의 스타일이 구체적으로 보인다(사장님 지시).
+     펼침식이 아니라 카드줄 아래 ★상시 밴드★ — 열고 닫힘이 없어 카드줄 높이가 안 흔들린다.
+     내용은 전부 데이터: 실제 첫 문장 / 이름 달린 칸 구성 / 밀도 / CTA / 결 맞는 스타일 */
+  .s2-seedinfo{border:1px solid var(--accent2);border-radius:12px;background:var(--inset);padding:16px;margin-top:16px}
+  .si-top{display:flex;align-items:center;gap:16px;min-height:24px}
+  .si-quote{flex:1;min-width:0;font-size:16px;font-weight:700;color:var(--gold);line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .si-quote::before{content:"“"}.si-quote::after{content:"”"}
+  .si-style{flex:none;font-size:12.5px;font-weight:700;color:var(--sel-fg);background:var(--sel-bg);border:1px solid var(--accent2);border-radius:999px;padding:5px 12px;white-space:nowrap}
+  .si-strip{display:flex;height:24px;border-radius:8px;overflow:hidden;gap:1px;margin-top:16px}
+  .si-strip i{display:flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;font-weight:700;overflow:hidden;white-space:nowrap}
+  .si-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--s2-sub);margin-top:16px;min-height:17px}
+  .si-meta b{color:var(--txt);font-weight:700}
+
+  /* ── ② 스타일 카드줄 — 통짜, 같은 골격/같은 높이.
+     ★정렬 규칙(사장님 확정): [AI에게 맡김] → [우리 검증 스타일(fit=검증·source_count↑)] →
+       [사용자 추가 스타일(👤, 뒤로)]. 렌더 시 이 순서로 정렬해 붙인다. ── */
+  .s2-badge.user{color:var(--s2-sub);background:rgba(168,186,184,.14)}
+  .s2-card.user{border-style:dashed;opacity:.75}
   .s2-card{border:1px solid var(--line);border-radius:12px;background:var(--inset);padding:16px;cursor:pointer;
     transition:.15s;display:flex;flex-direction:column;position:relative}
   .s2-card:hover{border-color:var(--accent2)}
@@ -122,7 +135,7 @@
   .s2-gap{display:inline-block;font-style:normal;font-size:.92em;font-weight:700;color:var(--sel-fg);
     background:var(--sel-bg);border:1px dashed var(--accent2);border-radius:4px;padding:0 5px;margin:0 1px;line-height:1.4}
 
-  /* ── ② 보조줄 — [훅만 다른 틀로]와 [CTA 헌장 고정]을 나란히, 둘 다 48px ── */
+  /* ── ② 보조줄 — [훅만 다른 틀로]+[CTA 헌장 고정] 나란히, 둘 다 48px ── */
   .s2-subrow{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px}
   .s2-axis{flex:1 1 320px;min-width:280px;border:1px solid var(--line);border-radius:12px;background:var(--inset);overflow:hidden;align-self:flex-start}
   .s2-axis-head{display:flex;align-items:center;gap:8px;padding:0 16px;height:48px;cursor:pointer;user-select:none}
@@ -137,21 +150,47 @@
   .s2-cards{display:none;padding:0 16px 16px;flex-direction:column;gap:8px}
   .s2-axis.open .s2-cards{display:flex}
 
-  /* ── ③ 대본 행 — 높이 80px 고정 그리드, [바꾸기] 열 88px 고정 ── */
+  /* ── ③ 결과 대본 2안 — 탭/좌우 두 모드 ─────────────────── */
   .s2-head{display:flex;align-items:center;gap:16px;flex-wrap:wrap;min-height:24px;margin-bottom:8px}
   .s2-head .s2-label{margin-bottom:0;flex:1;min-width:200px}
+
+  /* 탭(48px) — produce의 .tab 문법(inset→sel-bg) */
+  .s2-tabs{display:flex;gap:16px;margin-bottom:8px}
+  .s2-tab{flex:1;height:48px;background:var(--inset);border:1px solid var(--line);color:var(--txt);
+    border-radius:12px;font-size:13.5px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;
+    white-space:nowrap;overflow:hidden}
+  .s2-tab.on{background:var(--sel-bg);border-color:var(--accent);color:var(--sel-fg)}
+  body.mode-side .s2-tabs{display:none}
+
+  /* 안(draft) 헤더 — 이름(라벨체) + 게이트 뱃지. 높이 24px 고정 */
+  .s2-dhead{display:flex;align-items:center;gap:16px;height:24px;margin-bottom:8px}
+  .s2-dname{font-size:12px;color:var(--s2-sub);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .s2-gate{margin-left:auto;font-size:12.5px;font-weight:700;display:none;align-items:center;gap:6px;white-space:nowrap}
   .s2-gate.pass{color:var(--ok)}
   .s2-gate.fail{color:var(--fire)}
-  body.state-pass .s2-gate.pass{display:inline-flex}
-  body.state-fail .s2-gate.fail{display:inline-flex}
-  .s2-gate small{font-weight:400;color:var(--sub)}
+  .s2-gate small{font-weight:400;color:var(--s2-sub)}
+  .s2-gate.ga{display:inline-flex}                       /* A안: 항상 통과(데모) */
+  body.state-pass .s2-gate.gb-pass{display:inline-flex}  /* B안: 상태 토글 */
+  body.state-fail .s2-gate.gb-fail{display:inline-flex}
+
+  /* 모드: 탭 = 켠 안만 / 좌우 = grid 2칼럼 + display:contents
+     ★display:contents로 두 안의 행들이 같은 grid row track을 공유
+       → 같은 순번 행 = 같은 시작선·같은 높이(자동 동기화) */
+  body.mode-tab .s2-draft{display:none}
+  body.mode-tab .s2-draft.on{display:block}
+  /* dense 필수: A(1열) 7개가 행 1~7을 먼저 차지한 뒤에도 B(2열)가 행 1부터 되채워지게 */
+  body.mode-side .s2-drafts{display:grid;grid-template-columns:1fr 1fr;column-gap:16px;grid-auto-flow:row dense}
+  body.mode-side .s2-draft{display:contents}
+  body.mode-side .s2-draft.da>*{grid-column:1}
+  body.mode-side .s2-draft.db>*{grid-column:2}
+  /* stretch된 행(짝 행이 더 클 때)도 내용은 세로 중앙 */
+  body.mode-side .s2-row{display:flex;flex-direction:column;justify-content:center}
 
   .s2-row{border:1px solid var(--line);border-radius:12px;background:var(--inset);margin-bottom:8px;
-    padding:0 16px;transition:border-color .2s}
+    padding:0 16px;transition:border-color .2s;position:relative}
   .s2-row-in{display:grid;grid-template-columns:96px 1fr 88px;gap:16px;align-items:center;min-height:80px}
   .s2-role .rn{font-size:14px;font-weight:700;white-space:nowrap}
-  /* ★대본 본문 = 화면의 주인공(사장님 지시): 16px·--txt(#eaf3f0, inset 대비 15.7:1) */
+  /* ★대본 본문 = 화면의 주인공: 16px·--txt(#eaf3f0, inset 대비 16.5:1) */
   .s2-sent{min-width:0;font-size:16px;line-height:1.65;outline:none;border-radius:8px;padding:4px 8px;margin:0 -8px;overflow-wrap:break-word}
   .s2-sent:hover{background:var(--hover)}
   .s2-sent:focus{background:var(--panel);box-shadow:0 0 0 1.5px var(--accent)}
@@ -159,34 +198,41 @@
   .s2-swap{justify-self:stretch;font-size:12px;color:var(--accent);background:none;border:1px solid var(--line);border-radius:8px;padding:8px 0;text-align:center;white-space:nowrap}
   .s2-swap:hover{border-color:var(--accent)}
 
-  /* 게이트 실패 — 그 칸만 짚는다(체크리스트 없음) */
-  body.state-fail .s2-row[data-role="hook"]{border-color:var(--fire)}
+  /* 게이트 실패(데모: B안 훅만) — 그 칸을 짚는다(체크리스트 없음) */
+  body.state-fail #rowHookB{border-color:var(--fire)}
   .s2-fix{display:none;border-top:1px dashed var(--line);padding:16px 0}
-  body.state-fail .s2-row[data-role="hook"] .s2-fix{display:block}
+  body.state-fail #rowHookB .s2-fix{display:block}
   .s2-fix .fx-t{font-size:13px;font-weight:700;color:var(--fire)}
   .s2-fix .fx-d{font-size:12.5px;color:var(--s2-sub);margin:4px 0 8px;line-height:1.55}
-  .s2-fix button{font-size:12.5px;padding:8px 16px;margin-right:8px}
+  .s2-fix button{font-size:12.5px;padding:8px 16px;margin-right:8px;margin-bottom:4px}
   .s2-fix .fx-bank{background:var(--sel-bg);border:1px solid var(--accent);color:var(--sel-fg);font-weight:700}
   .s2-fix .fx-re{background:var(--panel);border:1px solid var(--line);color:var(--txt)}
 
-  /* [바꾸기] → 그 자리에 열리는 "틀" 목록(48px 행 고정, 클릭=AI가 소재를 채움) */
+  /* [바꾸기] → 틀 목록. 탭/모바일=인라인, ★좌우=오버레이(반대 칼럼을 안 밀어냄) */
   .s2-bank{display:none;border:1px solid var(--accent2);border-radius:8px;background:var(--panel);
     padding:16px;margin-bottom:16px}
   .s2-row.bank-open .s2-bank{display:block}
+  body.mode-side .s2-row.bank-open .s2-bank{position:absolute;left:-1px;right:-1px;top:calc(100% + 4px);
+    margin:0;z-index:20;box-shadow:0 16px 40px rgba(0,0,0,.55)}
   .s2-bank .bk-t{font-size:11.5px;color:var(--s2-sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .s2-cand{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;
     height:48px;padding:0 16px;margin-bottom:8px;cursor:pointer;font-size:13.5px;line-height:1.4;transition:.12s;
     white-space:nowrap;overflow:hidden}
-  .s2-cand>span:first-child,.s2-cand .tx{overflow:hidden;text-overflow:ellipsis}
+  .s2-cand:last-child{margin-bottom:0}
+  .s2-cand .tx{overflow:hidden;text-overflow:ellipsis}
   .s2-cand:hover{border-color:var(--accent);background:var(--hover)}
   .s2-cand.re{color:var(--accent);font-weight:700}
   .s2-cand .fq{margin-left:auto;flex:none;font-size:11px;color:var(--s2-sub);background:var(--inset);border-radius:4px;padding:2px 7px;white-space:nowrap}
 
-  /* 재생성/확정 — 풀폭 바 2줄 */
+  /* 좌우 모드 칼럼 푸터 — "이 안으로 확정" (탭 모드에선 숨김·하단 바가 대신) */
+  .s2-dfoot{display:none}
+  body.mode-side .s2-dfoot{display:flex;margin-bottom:8px}
+  .s2-dfoot .btn-next{width:100%;font-weight:700}
+
+  /* 재생성/확정 — 풀폭 바 */
   .s2-regen{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:8px;border-top:1px solid var(--line);padding-top:16px}
-  .s2-regen .hint{margin-top:0;flex:1;min-width:200px}
   .s2-confirm{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:24px;border-top:1px solid var(--line);padding-top:24px}
-  .s2-confirm .hint{margin-top:0;flex:1;min-width:200px}
+  body.mode-side .s2-confirm{display:none}
 
   @media(max-width:760px){
     body{padding:16px}
@@ -194,29 +240,38 @@
     .s2-row-in{grid-template-columns:88px 1fr;min-height:80px}
     .s2-swap{grid-column:2;justify-self:end;padding:8px 16px}
     .s2-cand{white-space:normal;height:auto;min-height:48px;padding:8px 16px}
+    .s2-tabs{gap:8px}
+    /* 씨앗 뼈대: 좁은 화면에선 훅 문장을 줄바꿈으로 온전히(핵심 데이터라 못 자른다) */
+    .si-top{flex-wrap:wrap}
+    .si-quote{white-space:normal}
+    /* ★좌우 모드는 모바일에서 위아래 스택(A→B), 팝오버는 인라인 복귀 */
+    body.mode-side .s2-drafts{display:block}
+    body.mode-side .s2-draft{display:block}
+    body.mode-side .s2-row.bank-open .s2-bank{position:static;box-shadow:none;margin-bottom:16px}
   }
 </style>
 </head>
-<body class="state-pass">
+<body class="state-pass mode-tab">
 
   <!-- 🧪 목업 전용 — 실제 화면엔 없다 -->
   <div class="demo-bar">
-    🧪 목업 컨트롤 · 게이트 상태 전환:
-    <button id="dPass" class="on" onclick="setState('pass')">✅ 통과 상태</button>
-    <button id="dFail" onclick="setState('fail')">⚠️ 실패 상태</button>
-    <span>· 문장 클릭=바로 수정 · [바꾸기]=틀 고르기(AI가 소재를 채움) · 실패 상태에서 틀을 고르면 통과로 바뀝니다</span>
+    🧪 목업 · 게이트:
+    <button id="dPass" class="on" onclick="setState('pass')">✅ 통과</button>
+    <button id="dFail" onclick="setState('fail')">⚠️ 실패(B안)</button>
+    <span class="dv">|</span> 2안 보기:
+    <button id="dTab" class="on" onclick="setMode('tab')">🗂 탭</button>
+    <button id="dSide" onclick="setMode('side')">↔ 좌우</button>
   </div>
 
   <!-- ▼▼ 여기부터가 <section class="panel" data-step="8"> 안쪽 ▼▼ -->
   <section class="panel">
     <h3>2 · 대본생성</h3>
-    <!-- ★사용법 설명문은 전부 제거(사장님 지시 "필요없는 설명 글자 다 빼고") — 남는 글자는 데이터뿐 -->
 
-    <!-- ① 씨앗 대본 — 옛 1단계 #aiPick의 후계. 4장 같은 골격 → 같은 높이·같은 폭 -->
+    <!-- ① 씨앗 대본 — 옛 1단계 #aiPick의 후계 -->
     <div class="s2-band">
       <div class="s2-label">① 씨앗 대본 — 어느 영상에서 출발할까요</div>
       <div class="s2-cardrow">
-        <div class="s2-scard sel" onclick="pickSeed(this)">
+        <div class="s2-scard sel" data-seed="0" onclick="pickSeed(this)">
           <span class="s2-spick">🤖 AI PICK · 완성도 1위</span>
           <div class="s2-swho"><div class="s2-sth">🍳</div>
             <div><div class="s2-snm">요리하는 은지</div><div class="s2-ssub">레시피 · 팔로워 24만</div></div></div>
@@ -224,7 +279,7 @@
           <div class="s2-stags">🎙 단정형 훅 · 참여밀도 3.1%</div>
           <div class="s2-sfoot"><button onclick="event.stopPropagation();alert('목업: 원본 대본 전문 오버레이(기존 showCandidateScript 재사용)')">📄 원문</button><button onclick="event.stopPropagation();alert('목업: 미리보기 재생(previewMaterial 재사용)')">▶ 미리보기</button></div>
         </div>
-        <div class="s2-scard" onclick="pickSeed(this)">
+        <div class="s2-scard" data-seed="1" onclick="pickSeed(this)">
           <div class="s2-swho"><div class="s2-sth">🏠</div>
             <div><div class="s2-snm">살림템연구소</div><div class="s2-ssub">홈템 · 팔로워 18만</div></div></div>
           <div class="s2-strip"><i style="flex:18;background:#f0c453"></i><i style="flex:30;background:#37e0bd"></i><i style="flex:28;background:#1f9e7a"></i><i style="flex:24;background:#8fa1a0"></i></div>
@@ -246,24 +301,34 @@
           <div class="s2-sfoot"><button onclick="event.stopPropagation();alert('목업: 입력창 열기')">✍️ 입력 열기</button></div>
         </div>
       </div>
+
+      <!-- 고른 씨앗의 뼈대 — 상시 밴드(펼침 없음 = 카드줄 높이 불변). pickSeed가 내용을 갈아끼운다 -->
+      <div class="s2-seedinfo" id="seedInfo">
+        <div class="si-top">
+          <div class="si-quote" id="siQuote">여러분 애들 아침에 쌀 밥 절대 안 돼요</div>
+          <span class="si-style" id="siStyle">결: 단정 명령형 ✅</span>
+        </div>
+        <div class="si-strip" id="siStrip"></div>
+        <div class="si-meta" id="siMeta"></div>
+      </div>
     </div>
 
-    <!-- ② 스타일 — 통짜 하나만(축 조합 철회: 훅·전개·CTA가 한 몸, 쪼개면 맥락이 깨진다) -->
+    <!-- ② 스타일 — 통짜(축 조합 철회). 2개 고르면 안이 2개(A·B) 나온다 -->
     <div class="s2-band">
-      <div class="s2-label">② 대본 스타일 — 훅·전개·CTA가 한 몸 · 하나만 고릅니다</div>
+      <div class="s2-label">② 대본 스타일 — 훅·전개·CTA가 한 몸 · 고른 만큼 안이 나옵니다</div>
       <div class="s2-cardrow" id="styleRow">
         <div class="s2-card" data-name="AI에게 맡김" onclick="pickStyle(this)" title="스타일 고르기까지 AI에게 맡깁니다">
           <div class="t">🤖 AI에게 맡김 <span class="sp"></span><span class="s2-badge ok">기본값</span></div>
           <div class="s2-quote plain">추천: 가족갈등 반전형</div>
           <div class="s2-meta"><span class="r">훅</span><span class="r">전개</span><span class="r">CTA</span><span class="d">자동 선택</span></div>
         </div>
-        <div class="s2-card sel" data-name="가족갈등 반전형" onclick="pickStyle(this)" title="가족에게 혼난 얘기로 열고 → 알고 보니 그 물건 덕분이라는 반전으로 갚는다">
-          <div class="t">가족갈등 반전형 <span class="sp"></span><span class="s2-badge ok">✅ 검증</span></div>
+        <div class="s2-card sel" data-name="가족갈등 반전형" onclick="pickStyle(this)" title="가족에게 혼난 얘기로 열고 → 알고 보니 그 물건 덕분이라는 반전으로 갚는다 · 지금 A안">
+          <div class="t">가족갈등 반전형 <span class="sp"></span><span class="s2-badge ok">✅ 검증 · A안</span></div>
           <div class="s2-quote">이것 때문에 <i class="s2-gap">가족</i>한테 욕 바가지로 먹을 뻔했어요</div>
           <div class="s2-meta"><span class="r">훅</span><span class="r">갈등</span><span class="r">반전</span><span class="r">결과</span><span class="r">CTA</span><span class="d">틀 4 · 300자/30초</span></div>
         </div>
-        <div class="s2-card" data-name="단정 명령형" onclick="pickStyle(this)" title="단정으로 열고 → 아는 전문가가 알려준 걸로 뒤집는다">
-          <div class="t">단정 명령형 <span class="sp"></span><span class="s2-badge ok">✅ 검증</span></div>
+        <div class="s2-card sel" data-name="단정 명령형" onclick="pickStyle(this)" title="단정으로 열고 → 아는 전문가가 알려준 걸로 뒤집는다 · 지금 B안">
+          <div class="t">단정 명령형 <span class="sp"></span><span class="s2-badge ok">✅ 검증 · B안</span></div>
           <div class="s2-quote">여러분 애들 아침에 쌀 밥 절대 안 돼요</div>
           <div class="s2-meta"><span class="r">훅</span><span class="r">문제</span><span class="r">반전</span><span class="r">결과</span><span class="r">CTA</span><span class="d">557만회 · 틀 10 · 240자/30초</span></div>
         </div>
@@ -272,12 +337,18 @@
           <div class="s2-quote">모마가 선정한 지우개가 있다는데</div>
           <div class="s2-meta"><span class="r">훅</span><span class="r">시연</span><span class="r">결과</span><span class="r">CTA</span><span class="d">틀 16 · 254자/30초</span></div>
         </div>
+        <!-- 사용자 추가 스타일(예정 기능) — ★항상 검증 스타일 뒤에 배치. 예시 카드 -->
+        <div class="s2-card user" onclick="alert('목업: 사용자 추가 스타일 — 기능 준비 중')" title="내가 추가한 스타일 — 검증 전이라 뒤에 배치됩니다">
+          <div class="t">우리집 리뷰형 <span class="sp"></span><span class="s2-badge user">👤 내 스타일</span></div>
+          <div class="s2-quote">언박싱부터 보여드릴게요</div>
+          <div class="s2-meta"><span class="r">훅</span><span class="r">시연</span><span class="r">CTA</span><span class="d">검증 전 · 근거 0편</span></div>
+        </div>
       </div>
 
-      <!-- ② 보조줄 — 훅 틀 오버라이드(같은 스타일 안에서만) + CTA 헌장 고정. 둘 다 48px -->
+      <!-- ② 보조줄 — 훅 틀(A안 스타일의 틀만) + CTA 헌장 고정 -->
       <div class="s2-subrow">
         <div class="s2-axis" id="axHookTpl">
-          <div class="s2-axis-head" onclick="toggleAxis('axHookTpl')">
+          <div class="s2-axis-head" onclick="toggleAxis('axHookTpl')" title="같은 스타일(A안·가족갈등 반전형)의 틀 안에서만 — 맥락이 안 깨집니다">
             <span class="s2-axis-name">└ 훅만 다른 틀로</span>
             <span class="s2-chip" id="chipTmpl">🤖 스타일 기본 (AI가 고름)</span>
             <span class="s2-caret">▼</span>
@@ -300,91 +371,178 @@
       </div>
     </div>
 
-    <!-- ③ 결과 대본 — 역할이 보이는 행(높이 80px 고정) -->
+    <!-- ③ 결과 대본 — 2안(A·B). 탭/좌우 모드 -->
     <div class="s2-band" style="margin-bottom:0">
       <div class="s2-head">
-        <div class="s2-label">③ 결과 대본 <span style="text-transform:none;letter-spacing:0">— 씨앗: 요리하는 은지</span></div>
-        <span class="s2-gate pass" title="게이트 통과 — 스타일 구조를 지켰습니다">✅ 가족갈등 반전형 <small id="gateSub"></small></span>
-        <span class="s2-gate fail">⚠️ 미끼(훅)가 스타일에서 벗어났어요</span>
+        <div class="s2-label">③ 결과 대본 <span style="text-transform:none;letter-spacing:0">— 씨앗: 요리하는 은지 · 2안</span></div>
       </div>
 
-      <!-- 🎣 훅 -->
-      <div class="s2-row" data-role="hook" id="rowHook">
-        <div class="s2-row-in">
-          <div class="s2-role"><div class="rn">🎣 미끼</div></div>
-          <div class="s2-sent" contenteditable="true" id="sentHook">아침밥 이걸로 바꿨다고 남편한테 한 소리 들었거든요</div>
-          <button class="s2-swap" onclick="toggleBank('rowHook')">바꾸기</button>
-        </div>
-        <!-- 게이트 실패 시에만 — 그 칸을 짚고, 고칠 버튼을 그 자리에 -->
-        <div class="s2-fix">
-          <div class="fx-t">⚠️ 훅이 '가족갈등 반전형'에서 벗어났어요</div>
-          <div class="fx-d">이 스타일은 <b>가족한테 혼난 얘기로 열어야</b> 하는데, 밋밋한 감상으로 시작했어요.</div>
-          <button class="fx-bank" onclick="toggleBank('rowHook')">🧩 틀에서 훅 바꾸기</button>
-          <button class="fx-re" onclick="redoHook()">🔄 훅만 다시 쓰기</button>
-        </div>
-        <div class="s2-bank">
-          <div class="bk-t" title="틀을 고르면 빈칸을 AI가 이 대본 소재로 채워 교체합니다">🧩 미끼 틀 · 가족갈등 반전형 4개</div>
-          <div class="s2-cand re" onclick="redoHook()"><span class="tx">🔄 AI로 이 칸만 다시 쓰기</span><span class="fq">다른 칸 유지</span></div>
-          <div class="s2-cand" data-fill="이것 때문에 남편한테 욕 바가지로 먹을 뻔했어요" onclick="pickCand(this,'rowHook')"><span class="tx">이것 때문에 <i class="s2-gap">가족</i>한테 욕 바가지로 먹을 뻔했어요</span></div>
-          <div class="s2-cand" data-fill="학부모 모임 갔다가 진짜 충격 받았어요" onclick="pickCand(this,'rowHook')"><span class="tx"><i class="s2-gap">장소</i> 갔다가 진짜 충격 받았어요</span></div>
-          <div class="s2-cand" data-fill="남편 때문에 진짜 충격 받았어요" onclick="pickCand(this,'rowHook')"><span class="tx"><i class="s2-gap">가족</i> 때문에 진짜 충격 받았어요</span></div>
-          <div class="s2-cand" data-fill="이거 몰라서 애들 아침 다 망칠 뻔했어요" onclick="pickCand(this,'rowHook')"><span class="tx">이거 몰라서 <i class="s2-gap">손해</i> 날릴 뻔했어요</span></div>
-        </div>
+      <!-- 탭 모드 전환 바 -->
+      <div class="s2-tabs">
+        <button class="s2-tab on" id="tabA" onclick="pickDraft('a')">A안 · 가족갈등 반전형 <span id="tabGateA">✅</span></button>
+        <button class="s2-tab" id="tabB" onclick="pickDraft('b')">B안 · 단정 명령형 <span id="tabGateB">✅</span></button>
       </div>
 
-      <!-- 😰 찔림 -->
-      <div class="s2-row" data-role="before" id="rowBefore">
-        <div class="s2-row-in">
-          <div class="s2-role"><div class="rn">😰 찔림</div></div>
-          <div class="s2-sent" contenteditable="true">저도 매일 쌀 밥에 김 싸서 먹였는데, 아침마다 애가 축 처져 있더라고요</div>
-          <button class="s2-swap" onclick="toggleBank('rowBefore')">바꾸기</button>
-        </div>
-        <div class="s2-bank">
-          <div class="bk-t" title="틀이 쌓이면 여기 나옵니다">🧩 찔림 틀 · 아직 없음</div>
-          <div class="s2-cand re" onclick="closeAllBanks()"><span class="tx">🔄 AI로 이 칸만 다시 쓰기</span><span class="fq">다른 칸 유지</span></div>
-        </div>
-      </div>
+      <div class="s2-drafts">
+        <!-- ═══ A안 · 가족갈등 반전형 ═══ -->
+        <div class="s2-draft da on" id="draftA">
+          <div class="s2-dhead">
+            <span class="s2-dname">A안 · 가족갈등 반전형</span>
+            <span class="s2-gate pass ga" title="게이트 통과 — 스타일 구조를 지켰습니다">✅ 구조 지킴</span>
+          </div>
 
-      <!-- 💡 반전 -->
-      <div class="s2-row" data-role="reveal" id="rowReveal">
-        <div class="s2-row-in">
-          <div class="s2-role"><div class="rn">💡 반전</div></div>
-          <div class="s2-sent" contenteditable="true">단골 소아과 선생님 말씀이, 아침 혈당을 확 올리는 게 문제였대요</div>
-          <button class="s2-swap" onclick="toggleBank('rowReveal')">바꾸기</button>
-        </div>
-        <div class="s2-bank">
-          <div class="bk-t" title="틀을 고르면 빈칸을 AI가 이 대본 소재로 채워 교체합니다">🧩 반전 틀 · 가족갈등 반전형 8개</div>
-          <div class="s2-cand re" onclick="closeAllBanks()"><span class="tx">🔄 AI로 이 칸만 다시 쓰기</span><span class="fq">다른 칸 유지</span></div>
-          <div class="s2-cand" data-fill="알고 보니 문제는 반찬이 아니라 밥 그 자체였어요" onclick="pickCand(this,'rowReveal')"><span class="tx">알고 보니 문제는 <i class="s2-gap">A</i>가 아니라 <i class="s2-gap">B</i>였어요</span></div>
-          <div class="s2-cand" data-fill="단골 소아과 선생님이 딱 한 가지를 짚어줬어요" onclick="pickCand(this,'rowReveal')"><span class="tx"><i class="s2-gap">전문가</i>가 딱 한 가지를 짚어줬어요</span></div>
-        </div>
-      </div>
+          <div class="s2-row" data-role="hook" id="rowHookA">
+            <div class="s2-row-in">
+              <div class="s2-role"><div class="rn">🎣 미끼</div></div>
+              <div class="s2-sent" contenteditable="true" id="sentHookA">아침밥 이걸로 바꿨다고 남편한테 한 소리 들었거든요</div>
+              <button class="s2-swap" onclick="toggleBank('rowHookA')">바꾸기</button>
+            </div>
+            <div class="s2-bank">
+              <div class="bk-t" title="틀을 고르면 빈칸을 AI가 이 대본 소재로 채워 교체합니다">🧩 미끼 틀 · 가족갈등 반전형 4개</div>
+              <div class="s2-cand re" onclick="mockRedo('sentHookA','이것 때문에 남편한테 욕 바가지로 먹을 뻔했어요')"><span class="tx">🔄 AI로 이 칸만 다시 쓰기</span><span class="fq">다른 칸 유지</span></div>
+              <div class="s2-cand" data-fill="이것 때문에 남편한테 욕 바가지로 먹을 뻔했어요" onclick="pickCand(this,'rowHookA')"><span class="tx">이것 때문에 <i class="s2-gap">가족</i>한테 욕 바가지로 먹을 뻔했어요</span></div>
+              <div class="s2-cand" data-fill="학부모 모임 갔다가 진짜 충격 받았어요" onclick="pickCand(this,'rowHookA')"><span class="tx"><i class="s2-gap">장소</i> 갔다가 진짜 충격 받았어요</span></div>
+              <div class="s2-cand" data-fill="남편 때문에 진짜 충격 받았어요" onclick="pickCand(this,'rowHookA')"><span class="tx"><i class="s2-gap">가족</i> 때문에 진짜 충격 받았어요</span></div>
+              <div class="s2-cand" data-fill="이거 몰라서 애들 아침 다 망칠 뻔했어요" onclick="pickCand(this,'rowHookA')"><span class="tx">이거 몰라서 <i class="s2-gap">손해</i> 날릴 뻔했어요</span></div>
+            </div>
+          </div>
 
-      <!-- ✨ 증거 -->
-      <div class="s2-row" data-role="after" id="rowAfter">
-        <div class="s2-row-in">
-          <div class="s2-role"><div class="rn">✨ 증거</div></div>
-          <div class="s2-sent" contenteditable="true">바꾸고 일주일, 이제는 그 남편이 아침마다 먼저 챙겨요</div>
-          <button class="s2-swap" onclick="toggleBank('rowAfter')">바꾸기</button>
-        </div>
-        <div class="s2-bank">
-          <div class="bk-t" title="틀이 쌓이면 여기 나옵니다">🧩 증거 틀 · 아직 없음</div>
-          <div class="s2-cand re" onclick="closeAllBanks()"><span class="tx">🔄 AI로 이 칸만 다시 쓰기</span><span class="fq">다른 칸 유지</span></div>
-        </div>
-      </div>
+          <div class="s2-row" data-role="before" id="rowBeforeA">
+            <div class="s2-row-in">
+              <div class="s2-role"><div class="rn">😰 찔림</div></div>
+              <div class="s2-sent" contenteditable="true">저도 매일 쌀 밥에 김 싸서 먹였는데, 아침마다 애가 축 처져 있더라고요</div>
+              <button class="s2-swap" onclick="toggleBank('rowBeforeA')">바꾸기</button>
+            </div>
+            <div class="s2-bank">
+              <div class="bk-t" title="틀이 쌓이면 여기 나옵니다">🧩 찔림 틀 · 아직 없음</div>
+              <div class="s2-cand re" onclick="closeAllBanks()"><span class="tx">🔄 AI로 이 칸만 다시 쓰기</span><span class="fq">다른 칸 유지</span></div>
+            </div>
+          </div>
 
-      <!-- 📢 약속 -->
-      <div class="s2-row" data-role="cta" id="rowCta">
-        <div class="s2-row-in">
-          <div class="s2-role"><div class="rn">📢 약속</div></div>
-          <div class="s2-sent" contenteditable="true">댓글에 '한끼' 남겨주시면 바꾼 레시피 그대로 드릴게요<span class="s2-chk" contenteditable="false">✅ 받는 것 명시됨 — 헌장 OK</span></div>
-          <button class="s2-swap" onclick="toggleBank('rowCta')">바꾸기</button>
+          <div class="s2-row" data-role="reveal" id="rowRevealA">
+            <div class="s2-row-in">
+              <div class="s2-role"><div class="rn">💡 반전</div></div>
+              <div class="s2-sent" contenteditable="true">단골 소아과 선생님 말씀이, 아침 혈당을 확 올리는 게 문제였대요</div>
+              <button class="s2-swap" onclick="toggleBank('rowRevealA')">바꾸기</button>
+            </div>
+            <div class="s2-bank">
+              <div class="bk-t" title="틀을 고르면 빈칸을 AI가 이 대본 소재로 채워 교체합니다">🧩 반전 틀 · 가족갈등 반전형 8개</div>
+              <div class="s2-cand re" onclick="closeAllBanks()"><span class="tx">🔄 AI로 이 칸만 다시 쓰기</span><span class="fq">다른 칸 유지</span></div>
+              <div class="s2-cand" data-fill="알고 보니 문제는 반찬이 아니라 밥 그 자체였어요" onclick="pickCand(this,'rowRevealA')"><span class="tx">알고 보니 문제는 <i class="s2-gap">A</i>가 아니라 <i class="s2-gap">B</i>였어요</span></div>
+              <div class="s2-cand" data-fill="단골 소아과 선생님이 딱 한 가지를 짚어줬어요" onclick="pickCand(this,'rowRevealA')"><span class="tx"><i class="s2-gap">전문가</i>가 딱 한 가지를 짚어줬어요</span></div>
+            </div>
+          </div>
+
+          <div class="s2-row" data-role="after" id="rowAfterA">
+            <div class="s2-row-in">
+              <div class="s2-role"><div class="rn">✨ 증거</div></div>
+              <div class="s2-sent" contenteditable="true">바꾸고 일주일, 이제는 그 남편이 아침마다 먼저 챙겨요</div>
+              <button class="s2-swap" onclick="toggleBank('rowAfterA')">바꾸기</button>
+            </div>
+            <div class="s2-bank">
+              <div class="bk-t" title="틀이 쌓이면 여기 나옵니다">🧩 증거 틀 · 아직 없음</div>
+              <div class="s2-cand re" onclick="closeAllBanks()"><span class="tx">🔄 AI로 이 칸만 다시 쓰기</span><span class="fq">다른 칸 유지</span></div>
+            </div>
+          </div>
+
+          <div class="s2-row" data-role="cta" id="rowCtaA">
+            <div class="s2-row-in">
+              <div class="s2-role"><div class="rn">📢 약속</div></div>
+              <div class="s2-sent" contenteditable="true">댓글에 '한끼' 남겨주시면 바꾼 레시피 그대로 드릴게요<span class="s2-chk" contenteditable="false">✅ 받는 것 명시됨 — 헌장 OK</span></div>
+              <button class="s2-swap" onclick="toggleBank('rowCtaA')">바꾸기</button>
+            </div>
+            <div class="s2-bank">
+              <div class="bk-t" title="헌장 위반(받는 것 없음·팔로우 유도) 틀은 없습니다">🧩 약속 틀 · 가족갈등 반전형 6개</div>
+              <div class="s2-cand re" onclick="closeAllBanks()"><span class="tx">🔄 AI로 이 칸만 다시 쓰기</span><span class="fq">다른 칸 유지</span></div>
+              <div class="s2-cand" data-fill="댓글에 '아침' 남겨주시면 일주일 식단표 보내드려요" onclick="pickCand(this,'rowCtaA')"><span class="tx">댓글에 '<i class="s2-gap">키워드</i>' 남겨주시면 <i class="s2-gap">받는 것</i> 보내드려요</span></div>
+              <div class="s2-cand" data-fill="궁금한 재료 댓글로 남기시면 제가 쓰는 제품 그대로 알려드려요" onclick="pickCand(this,'rowCtaA')"><span class="tx">궁금한 <i class="s2-gap">주제</i> 댓글로 남기시면 <i class="s2-gap">받는 것</i> 알려드려요</span></div>
+            </div>
+          </div>
+
+          <div class="s2-dfoot"><button class="btn-next" onclick="alert('목업: A안 확정 → 3단계(장면 붙이기)')" title="3단계에서 이 대본에 장면을 붙입니다">✔ A안으로 확정</button></div>
         </div>
-        <div class="s2-bank">
-          <div class="bk-t" title="헌장 위반(받는 것 없음·팔로우 유도) 틀은 없습니다">🧩 약속 틀 · 가족갈등 반전형 6개</div>
-          <div class="s2-cand re" onclick="closeAllBanks()"><span class="tx">🔄 AI로 이 칸만 다시 쓰기</span><span class="fq">다른 칸 유지</span></div>
-          <div class="s2-cand" data-fill="댓글에 '아침' 남겨주시면 일주일 식단표 보내드려요" onclick="pickCand(this,'rowCta')"><span class="tx">댓글에 '<i class="s2-gap">키워드</i>' 남겨주시면 <i class="s2-gap">받는 것</i> 보내드려요</span></div>
-          <div class="s2-cand" data-fill="궁금한 재료 댓글로 남기시면 제가 쓰는 제품 그대로 알려드려요" onclick="pickCand(this,'rowCta')"><span class="tx">궁금한 <i class="s2-gap">주제</i> 댓글로 남기시면 <i class="s2-gap">받는 것</i> 알려드려요</span></div>
+
+        <!-- ═══ B안 · 단정 명령형 ═══ -->
+        <div class="s2-draft db" id="draftB">
+          <div class="s2-dhead">
+            <span class="s2-dname">B안 · 단정 명령형</span>
+            <span class="s2-gate pass gb-pass" title="게이트 통과 — 스타일 구조를 지켰습니다">✅ 구조 지킴 <small id="gateSub"></small></span>
+            <span class="s2-gate fail gb-fail">⚠️ 미끼(훅)가 스타일에서 벗어났어요</span>
+          </div>
+
+          <div class="s2-row" data-role="hook" id="rowHookB">
+            <div class="s2-row-in">
+              <div class="s2-role"><div class="rn">🎣 미끼</div></div>
+              <div class="s2-sent" contenteditable="true" id="sentHookB">여러분 애들 아침에 쌀 밥 절대 안 돼요</div>
+              <button class="s2-swap" onclick="toggleBank('rowHookB')">바꾸기</button>
+            </div>
+            <!-- 게이트 실패 시에만(데모: B안) — 그 칸을 짚고, 고칠 버튼을 그 자리에 -->
+            <div class="s2-fix">
+              <div class="fx-t">⚠️ 훅이 '단정 명령형'에서 벗어났어요</div>
+              <div class="fx-d">이 스타일은 <b>단정으로 열어야</b> 하는데, 밋밋한 감상으로 시작했어요.</div>
+              <button class="fx-bank" onclick="toggleBank('rowHookB')">🧩 틀에서 훅 바꾸기</button>
+              <button class="fx-re" onclick="redoHookB()">🔄 훅만 다시 쓰기</button>
+            </div>
+            <div class="s2-bank">
+              <div class="bk-t" title="틀을 고르면 빈칸을 AI가 이 대본 소재로 채워 교체합니다">🧩 미끼 틀 · 단정 명령형 10개</div>
+              <div class="s2-cand re" onclick="redoHookB()"><span class="tx">🔄 AI로 이 칸만 다시 쓰기</span><span class="fq">다른 칸 유지</span></div>
+              <div class="s2-cand" data-fill="여러분 애들 아침에 쌀 밥 절대 안 돼요" onclick="pickCand(this,'rowHookB')"><span class="tx">여러분 <i class="s2-gap">대상</i> <i class="s2-gap">행동</i> 절대 안 돼요</span></div>
+              <div class="s2-cand" data-fill="애들 아침은 무조건 이렇게 챙기세요" onclick="pickCand(this,'rowHookB')"><span class="tx"><i class="s2-gap">주제</i>는 무조건 이렇게 하세요</span></div>
+              <div class="s2-cand" data-fill="쌀 밥 그냥 주는 거, 그거 큰일 나요" onclick="pickCand(this,'rowHookB')"><span class="tx"><i class="s2-gap">행동</i>, 그거 큰일 나요</span></div>
+            </div>
+          </div>
+
+          <div class="s2-row" data-role="before" id="rowBeforeB">
+            <div class="s2-row-in">
+              <div class="s2-role"><div class="rn">😰 찔림</div></div>
+              <div class="s2-sent" contenteditable="true">쌀 밥이 제일 든든한 줄 알고 저도 몇 년을 그렇게 먹였어요</div>
+              <button class="s2-swap" onclick="toggleBank('rowBeforeB')">바꾸기</button>
+            </div>
+            <div class="s2-bank">
+              <div class="bk-t" title="틀이 쌓이면 여기 나옵니다">🧩 찔림 틀 · 아직 없음</div>
+              <div class="s2-cand re" onclick="closeAllBanks()"><span class="tx">🔄 AI로 이 칸만 다시 쓰기</span><span class="fq">다른 칸 유지</span></div>
+            </div>
+          </div>
+
+          <div class="s2-row" data-role="reveal" id="rowRevealB">
+            <div class="s2-row-in">
+              <div class="s2-role"><div class="rn">💡 반전</div></div>
+              <div class="s2-sent" contenteditable="true">소아과 선생님들은 아침 혈당 롤러코스터부터 잡으라고 해요</div>
+              <button class="s2-swap" onclick="toggleBank('rowRevealB')">바꾸기</button>
+            </div>
+            <div class="s2-bank">
+              <div class="bk-t" title="틀을 고르면 빈칸을 AI가 이 대본 소재로 채워 교체합니다">🧩 반전 틀 · 단정 명령형 15개</div>
+              <div class="s2-cand re" onclick="closeAllBanks()"><span class="tx">🔄 AI로 이 칸만 다시 쓰기</span><span class="fq">다른 칸 유지</span></div>
+              <div class="s2-cand" data-fill="소아과 선생님들이 하나같이 짚는 게 아침 혈당이에요" onclick="pickCand(this,'rowRevealB')"><span class="tx"><i class="s2-gap">전문가</i>들이 하나같이 짚는 게 <i class="s2-gap">핵심</i>이에요</span></div>
+            </div>
+          </div>
+
+          <div class="s2-row" data-role="after" id="rowAfterB">
+            <div class="s2-row-in">
+              <div class="s2-role"><div class="rn">✨ 증거</div></div>
+              <div class="s2-sent" contenteditable="true">바꾼 지 일주일 만에 아침에 깨우는 전쟁이 없어졌어요</div>
+              <button class="s2-swap" onclick="toggleBank('rowAfterB')">바꾸기</button>
+            </div>
+            <div class="s2-bank">
+              <div class="bk-t" title="틀이 쌓이면 여기 나옵니다">🧩 증거 틀 · 아직 없음</div>
+              <div class="s2-cand re" onclick="closeAllBanks()"><span class="tx">🔄 AI로 이 칸만 다시 쓰기</span><span class="fq">다른 칸 유지</span></div>
+            </div>
+          </div>
+
+          <div class="s2-row" data-role="cta" id="rowCtaB">
+            <div class="s2-row-in">
+              <div class="s2-role"><div class="rn">📢 약속</div></div>
+              <div class="s2-sent" contenteditable="true">댓글에 '아침' 남겨주시면 바꾼 식단 그대로 보내드려요<span class="s2-chk" contenteditable="false">✅ 받는 것 명시됨 — 헌장 OK</span></div>
+              <button class="s2-swap" onclick="toggleBank('rowCtaB')">바꾸기</button>
+            </div>
+            <div class="s2-bank">
+              <div class="bk-t" title="헌장 위반(받는 것 없음·팔로우 유도) 틀은 없습니다">🧩 약속 틀 · 단정 명령형 6개</div>
+              <div class="s2-cand re" onclick="closeAllBanks()"><span class="tx">🔄 AI로 이 칸만 다시 쓰기</span><span class="fq">다른 칸 유지</span></div>
+              <div class="s2-cand" data-fill="댓글에 '식단' 남겨주시면 일주일 아침 메뉴 보내드려요" onclick="pickCand(this,'rowCtaB')"><span class="tx">댓글에 '<i class="s2-gap">키워드</i>' 남겨주시면 <i class="s2-gap">받는 것</i> 보내드려요</span></div>
+            </div>
+          </div>
+
+          <div class="s2-dfoot"><button class="btn-next" onclick="alert('목업: B안 확정 → 3단계(장면 붙이기)')" title="3단계에서 이 대본에 장면을 붙입니다">✔ B안으로 확정</button></div>
         </div>
       </div>
 
@@ -394,44 +552,57 @@
       </div>
     </div>
 
-    <!-- 확정 → 3단계. ★여기서 매칭(startProduceMix)을 걸지 않는다 — 매칭 시작은 3단계 소관.
-         #theater·#matchProgress도 3단계로 간다(사양서 §6). -->
-    <div class="s2-confirm">
-      <button class="btn-next" onclick="alert('목업: 대본 확정 → 3단계(영상대본MIX, 장면 붙이기)로 이동합니다. 매칭 시작은 3단계에서.')" title="3단계에서 이 대본에 장면을 붙입니다 — 게이트가 ⚠️여도 확정은 막지 않습니다">✔ 이 대본으로 확정 — 장면 붙이기로</button>
+    <!-- 확정(탭 모드) → 3단계. ★매칭(startProduceMix)은 안 건다 — 3단계 소관(사양서 §6).
+         좌우 모드에선 칼럼마다 "✔ N안으로 확정"이 대신한다. -->
+    <div class="s2-confirm" id="confirmBar">
+      <button class="btn-next" id="confirmBtn" onclick="alert('목업: 대본 확정 → 3단계(영상대본MIX, 장면 붙이기)로 이동합니다. 매칭 시작은 3단계에서.')" title="3단계에서 이 대본에 장면을 붙입니다 — 게이트가 ⚠️여도 확정은 막지 않습니다">✔ A안으로 확정 — 장면 붙이기로</button>
     </div>
   </section>
   <!-- ▲▲ 여기까지 data-step=8 안쪽 ▲▲ -->
 
 <script>
 // ── 목업 동작(실서비스에선 API 배선으로 대체) ──────────────────
-const GOOD_HOOK = "아침밥 이걸로 바꿨다고 남편한테 한 소리 들었거든요";
-const BAD_HOOK  = "이 제품 정말 좋아요";   // 사양서 §3의 실패 예문
+const GOOD_HOOK_B = "여러분 애들 아침에 쌀 밥 절대 안 돼요";
+const BAD_HOOK_B  = "이 제품 정말 좋아요";   // 사양서 §3의 실패 예문 — 데모는 B안만 실패
 
 function setState(s, keepText){
-  document.body.className = 'state-' + s;
+  document.body.classList.remove('state-pass','state-fail');
+  document.body.classList.add('state-'+s);
   document.getElementById('dPass').classList.toggle('on', s==='pass');
   document.getElementById('dFail').classList.toggle('on', s==='fail');
-  if(!keepText) document.getElementById('sentHook').textContent = (s==='fail') ? BAD_HOOK : GOOD_HOOK;
-  if(s==='fail') closeAllBanks();
+  if(!keepText) document.getElementById('sentHookB').textContent = (s==='fail') ? BAD_HOOK_B : GOOD_HOOK_B;
+  document.getElementById('tabGateB').textContent = (s==='fail') ? '⚠️' : '✅';
+  if(s==='fail'){ closeAllBanks(); pickDraft('b'); }   // 실패한 안이 보이게(탭 모드 데모)
+}
+function setMode(m){
+  document.body.classList.remove('mode-tab','mode-side');
+  document.body.classList.add('mode-'+m);
+  document.getElementById('dTab').classList.toggle('on', m==='tab');
+  document.getElementById('dSide').classList.toggle('on', m==='side');
+  closeAllBanks();
+}
+function pickDraft(k){
+  document.getElementById('draftA').classList.toggle('on', k==='a');
+  document.getElementById('draftB').classList.toggle('on', k==='b');
+  document.getElementById('tabA').classList.toggle('on', k==='a');
+  document.getElementById('tabB').classList.toggle('on', k==='b');
+  document.getElementById('confirmBtn').textContent = '✔ '+(k==='a'?'A':'B')+'안으로 확정 — 장면 붙이기로';
+  closeAllBanks();
 }
 function toggleAxis(id){
   const ax = document.getElementById(id);
   if(!ax || !ax.querySelector('.s2-cards')) return;
   ax.classList.toggle('open');
 }
-// ② 스타일 카드 — 통짜 하나만 선택. 실서비스: 바꾸면 "훅만 다른 틀로" 목록도 그 스타일 틀로 갈린다.
-function pickStyle(card){
-  document.querySelectorAll('#styleRow .s2-card').forEach(c=>c.classList.remove('sel'));
-  card.classList.add('sel');
-}
-// 훅 틀 오버라이드(② 보조줄) — 같은 스타일 안의 틀만. 고르면 칩 갱신 + 훅 문장을 채워서 교체
+// ② 스타일 카드 — 고른 만큼 안이 나온다(목업은 A·B 2안 고정 표시)
+function pickStyle(card){ card.classList.toggle('sel'); }
+// 훅 틀 오버라이드(② 보조줄) — A안(가족갈등 반전형)의 틀만. 칩 갱신 + A안 훅 교체
 function pickTmpl(el){
   const chip = document.getElementById('chipTmpl');
   const tx = el.querySelector('.tx');
   chip.innerHTML = tx ? tx.innerHTML : el.innerHTML;
-  const isAI = /스타일 기본/.test(el.textContent);
-  chip.classList.toggle('set', !isAI);
-  if(el.dataset.fill) document.getElementById('sentHook').textContent = el.dataset.fill;
+  chip.classList.toggle('set', !/스타일 기본/.test(el.textContent));
+  if(el.dataset.fill) document.getElementById('sentHookA').textContent = el.dataset.fill;
   el.closest('.s2-axis').classList.remove('open');
 }
 function closeAllBanks(){ document.querySelectorAll('.s2-row').forEach(r=>r.classList.remove('bank-open')); }
@@ -450,29 +621,49 @@ function pickCand(el, rowId){
   sent.textContent = txt;
   if(chk) sent.appendChild(chk);
   row.classList.remove('bank-open');
-  // 실패 상태에서 훅을 교체하면 → 게이트 재검사 통과(목업에선 즉시 통과로 전환)
-  if(document.body.classList.contains('state-fail') && rowId==='rowHook'){
-    setState('pass', true);   // 고른 문장을 유지한 채 통과로
-    document.getElementById('gateSub').textContent = '· 방금 틀에서 교체';
+  // 실패 상태(B안 훅)에서 틀을 고르면 → 게이트 재검사 통과
+  if(document.body.classList.contains('state-fail') && rowId==='rowHookB'){
+    setState('pass', true);
+    document.getElementById('gateSub').textContent = '· 틀에서 교체';
   }
 }
-function redoHook(){
-  document.getElementById('sentHook').textContent = "이것 때문에 남편한테 욕 바가지로 먹을 뻔했어요";
+function redoHookB(){
+  document.getElementById('sentHookB').textContent = "아직도 애들 아침에 쌀 밥 주세요? 그거 큰일 나요";
   closeAllBanks();
   if(document.body.classList.contains('state-fail')){
     setState('pass', true);
-    document.getElementById('gateSub').textContent = '· 훅만 다시 씀';
+    document.getElementById('gateSub').textContent = '· 다시 씀';
   }
 }
-function mockWholeRegen(){ alert('목업: 실서비스에선 고른 스타일 그대로 대본 전체를 새로 뽑습니다.'); }
+function mockRedo(sentId, txt){ document.getElementById(sentId).textContent = txt; closeAllBanks(); }
+function mockWholeRegen(){ alert('목업: 실서비스에선 고른 스타일 그대로 두 안을 새로 뽑습니다.'); }
+// 씨앗 뼈대 데이터(실서비스: 소스 구조분석 캐시가 준다). 구간 이름·색·비율 = 데이터.
+const SEEDS = [
+  { hook:"여러분 애들 아침에 쌀 밥 절대 안 돼요", style:"결: 단정 명령형 ✅",
+    strip:[["훅",14,"#f0c453","#04201b"],["문제",22,"#37e0bd","#04201b"],["반전",34,"#1f9e7a","#04201b"],["결과",20,"#2b6f5e","#eaf3f0"],["CTA",10,"#8fa1a0","#04201b"]],
+    meta:'<span>🎙 <b>단정형 훅</b>으로 연다</span><span>말 밀도 <b>240자/30초</b></span><span>CTA <b>받는 것 명시</b> ✅</span><span>원본 <b>32초</b></span>' },
+  { hook:"이 지우개 다이소에만 있는 거 아시죠", style:"결: 물건 발견형 ⚠️",
+    strip:[["훅",18,"#f0c453","#04201b"],["시연",30,"#37e0bd","#04201b"],["결과",28,"#1f9e7a","#04201b"],["CTA",24,"#8fa1a0","#04201b"]],
+    meta:'<span>🎙 <b>발견형 훅</b>으로 연다</span><span>말 밀도 <b>254자/30초</b></span><span>CTA <b>받는 것 없음</b> ⚠️</span><span>원본 <b>41초</b></span>' }
+];
+function renderSeedInfo(i){
+  const s = SEEDS[i]; if(!s) return;
+  document.getElementById('siQuote').textContent = s.hook;
+  document.getElementById('siStyle').textContent = s.style;
+  document.getElementById('siStrip').innerHTML = s.strip.map(([lb,pct,bg,fg])=>
+    `<i style="flex:${pct};background:${bg};color:${fg}" title="${lb} ${pct}%">${lb}</i>`).join('');
+  document.getElementById('siMeta').innerHTML = s.meta;
+}
 function pickSeed(card){
   if(card.classList.contains('pending')) return;
   document.querySelectorAll('.s2-scard').forEach(c=>c.classList.remove('sel'));
   card.classList.add('sel');
+  renderSeedInfo(Number(card.dataset.seed));
   const nm = card.querySelector('.s2-snm');
   const head = document.querySelector('.s2-head .s2-label span');
-  if(nm && head) head.textContent = '— 씨앗: ' + nm.textContent;
+  if(nm && head) head.textContent = '— 씨앗: ' + nm.textContent + ' · 2안';
 }
+renderSeedInfo(0);   // 첫 화면 = AI PICK 씨앗의 뼈대
 </script>
 </body>
 </html>
