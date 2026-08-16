@@ -466,6 +466,14 @@ class Store:
                 c.execute("ALTER TABLE mix_basket ADD COLUMN meta_json TEXT")
             except sqlite3.OperationalError:
                 pass
+            # ★영상 파일 직접 주소(2026-08-17). 도우인은 yt-dlp가 쿠키를 요구해 페이지
+            # URL로는 못 받는다(서버·로컬 PC 양쪽에서 재현, IP 문제 아님). 대신 사장님
+            # 브라우저에는 CDN 주소가 그대로 있으므로 담을 때 함께 받아 둔다 —
+            # download_any가 video_url을 우선 쓰고 zjcdn/douyinvod를 직접 영상으로 인식한다.
+            try:
+                c.execute("ALTER TABLE mix_basket ADD COLUMN video_url TEXT")
+            except sqlite3.OperationalError:
+                pass
             # 고객 계정(2026-07-13 멀티테넌시). 비밀번호는 pbkdf2-sha256(솔트별도)로만
             # 저장 — 평문 저장 금지.
             c.execute("""
@@ -1698,7 +1706,7 @@ class Store:
             return True
 
     def mix_basket_add(self, shortcode, url="", thumbnail="", name="", caption="",
-                       customer_id=LEGACY_CUSTOMER_ID):
+                       customer_id=LEGACY_CUSTOMER_ID, video_url=""):
         """있으면 그대로 두고(멱등), 없으면 추가. 새로 담겼으면 True.
         원클릭 담기(북마클릿·유저스크립트)용 — 토글과 달리 중복 클릭해도 안 빠진다."""
         with self._conn() as c:
@@ -1709,9 +1717,9 @@ class Store:
             if exists:
                 return False
             c.execute(
-                "INSERT INTO mix_basket(customer_id, shortcode, url, thumbnail, name, caption, added_at) "
-                "VALUES(?,?,?,?,?,?, datetime('now'))",
-                (customer_id, shortcode, url, thumbnail, name, caption),
+                "INSERT INTO mix_basket(customer_id, shortcode, url, thumbnail, name, caption, "
+                "video_url, added_at) VALUES(?,?,?,?,?,?,?, datetime('now'))",
+                (customer_id, shortcode, url, thumbnail, name, caption, video_url or ""),
             )
             return True
 
@@ -1725,13 +1733,17 @@ class Store:
         """이 고객이 담은 순서(added_at)대로 항목 dict 리스트. meta_json은 풀어서 병합."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT shortcode, url, thumbnail, name, caption, meta_json FROM mix_basket "
-                "WHERE customer_id=? ORDER BY added_at ASC, rowid ASC",
+                "SELECT shortcode, url, thumbnail, name, caption, meta_json, video_url "
+                "FROM mix_basket WHERE customer_id=? ORDER BY added_at ASC, rowid ASC",
                 (customer_id,),
             ).fetchall()
         out = []
         for r in rows:
             item = {"shortcode": r[0], "url": r[1], "thumbnail": r[2], "name": r[3], "caption": r[4]}
+            # 담을 때 확보한 영상 파일 직접 주소(도우인처럼 페이지 URL로는 못 받는 소스용).
+            # 옛 항목엔 없어 빈 문자열 — 그러면 종전대로 페이지 URL로 간다(회귀 없음).
+            if len(r) > 6 and r[6]:
+                item["video_url"] = r[6]
             if r[5]:
                 try:
                     item["meta"] = json.loads(r[5])
