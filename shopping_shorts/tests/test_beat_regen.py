@@ -73,7 +73,7 @@ class TestPrompt:
         spy["replies"] = [{"text": "새 문장이에요"}]
         sg.regen_one_beat(SRC, STYLE, "before", BEATS)
         p = spy["prompts"][0]
-        assert "[현재 대본]" in p
+        assert "[현재 대본" in p
         assert "★지금 다시 쓸 칸" in p
         assert "알고 보니 요거트로" in p          # 다른 칸이 문맥으로 들어간다
 
@@ -134,6 +134,52 @@ class TestGuards:
 
     def test_없는_칸이면_None(self, spy):
         assert sg.regen_one_beat(SRC, STYLE, "없는칸", BEATS) is None
+
+    # ── 칸 하나가 대본 전체를 삼키는 폭주 (2026-08-17 사장님 제보) ──
+    # 미끼 칸에 문제제기·시연·증거·CTA가 통째로 들어가 5줄이 됐다. 원인은 프롬프트가
+    # `_MIX_PROMPT`("약 30초 분량의 새 대본을 만들어라 … 0초 훅 → 끝 CTA")를 깔고
+    # 있어서 '한 줄만'을 덧붙여도 앞의 지시가 이겼기 때문. 프롬프트를 갈아엎었지만
+    # **프롬프트는 부탁이라 언젠가 또 어긋난다** — 판정으로 되돌려야 한다.
+    RUNAWAY = ("요즘 여행 좀 다닌다는 엄마들이 만들어서 학부모들 사이에서 난리 난 투명 필카 "
+               "카메라가 있어요. 여행 갈 때마다 아이가 스마트폰만 찾아서 답답했는데 이거 "
+               "쥐어주니 화면 대신 풍경에 몰입하는 거예요. 심지어 5만 원도 안 하는 가격에 "
+               "감성까지 담기니까 다들 어디 거냐고 난리인데, 궁금하신 분들은 댓글에 '카메라' "
+               "남겨주시면 제가 산 좌표 바로 쏴드릴게요.")
+
+    def test_대본_전체를_삼키면_실패다(self, spy):
+        """★한 칸만 다시 쓰라고 했는데 대본 한 편이 오면 실패로 돌려보낸다."""
+        spy["replies"] = [{"text": self.RUNAWAY}]
+        assert sg.regen_one_beat(SRC, STYLE, "hook", BEATS) is None
+
+    def test_폭주해도_다시_쓰면_살아난다(self, spy):
+        good = "맘카페에서 난리 났다는 어린이 카메라 보고 욕 바가지로 먹을 뻔했어요"
+        spy["replies"] = [{"text": self.RUNAWAY}, {"text": good}]
+        out = sg.regen_one_beat(SRC, STYLE, "hook", BEATS,
+                                template="이것 때문에 {가족}한테 욕 바가지로 먹을 뻔했어요")
+        assert out and out["text"] == good
+        assert len(spy["prompts"]) == 2
+        assert "너무 길다" in spy["prompts"][1]
+
+    def test_CTA를_다른_칸이_가져가면_실패다(self, spy):
+        """댓글 유도는 마지막 칸 몫이다 — 훅이 CTA를 하면 대본 구조가 무너진다."""
+        spy["replies"] = [{"text": "댓글에 카메라 남겨주시면 좌표 보내 드릴게요"}]
+        assert sg.regen_one_beat(SRC, STYLE, "hook", BEATS) is None
+
+    def test_마지막_칸에서는_CTA가_정상이다(self, spy):
+        """★오탐 금지 — cta 칸에서 '남겨주'는 지켜야 할 규칙이지 위반이 아니다."""
+        spy["replies"] = [{"text": "댓글에 '요거트' 남겨주시면 레시피 보내 드릴게요"}]
+        out = sg.regen_one_beat(SRC, STYLE, "cta", BEATS)
+        assert out is not None
+
+    def test_프롬프트가_대본_한편을_요구하지_않는다(self, spy):
+        """★진원지 회귀 — `_MIX_PROMPT`의 '새 대본 초안 N개를 만들어라'가 섞이면
+        모델이 훅 칸에 대본 전체를 쓴다."""
+        spy["replies"] = [{"text": "새 문장이에요"}]
+        sg.regen_one_beat(SRC, STYLE, "hook", BEATS)
+        p = spy["prompts"][0]
+        assert "새 대본 초안" not in p
+        assert "딱 한 칸" in p
+        assert "그 칸 하나만" in p
 
     def test_응답이_비면_None(self, spy):
         spy["replies"] = [{}]
