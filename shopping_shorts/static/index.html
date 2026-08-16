@@ -2496,10 +2496,25 @@ function _igKw(kw){
   // ⚠️ 위치: test_lens_cn_js가 _lensSearchUrl~renderLens 구간을 잘라 node로 돌리므로
   // 이 함수는 그 구간 안에 있어야 한다(호이스팅으로 호출 순서는 무관).
   let s=String(kw||'').trim();
-  const tails=/(만들기|만드는\s*법|싸는\s*법|하는\s*법|먹는\s*법|방법|레시피|꿀팁|비법|조합|추천)$/;
-  const advs=/(맛있게|쉽게|간단하게|예쁘게|빠르게|완벽하게)$/;
+  const tails=/(만들기|만드는\s*법|싸는\s*법|하는\s*법|먹는\s*법|방법|레시피|꿀팁|비법|조합|추천|사용법|사용기|후기|리뷰|언박싱|개봉기|체험|비교|정리|모음)$/;
+  const advs=/(맛있게|쉽게|간단하게|예쁘게|빠르게|완벽하게|감성)$/;
   for(let i=0;i<3;i++){ s=s.replace(tails,'').trim(); s=s.replace(advs,'').trim(); }
+  // ★3어절 이상이면 '첫 어절 + 마지막 어절'만 남긴다 (2026-08-16 실측).
+  //   인스타 검색은 **사람들이 실제로 쓰는 말**에만 반응한다 — 길이 문제가 아니라
+  //   '지어낸 조합'이 문제다. 라이브 인스타에서 직접 세어본 결과:
+  //     고독스 아동용 카메라 0 → 고독스 카메라 18 / 고독스 토이 카메라 0 → 고독스 카메라 18
+  //     아이 장난감 카메라 0 → 아이 카메라 15 / 어린이 사진 촬영은 원래 18
+  //   (가운데 수식어가 '지어낸' 부분이라 그걸 떨어뜨리는 게 가장 잘 맞았다: 4/5)
+  const t=s.split(/\s+/).filter(Boolean);
+  if(t.length>=3) s=t[0]+' '+t[t.length-1];
   return s||String(kw||'').trim();
+}
+// 그래도 0건인 2어절(브랜드+합성어)을 위한 마지막 안전망 — 핵심 명사 한 단어.
+// 실측: '고독스 픽스플레이' 0 → 픽스플레이 13 / '고독스 뷰파인더' 0 → 뷰파인더 15
+//       '감성 키즈카메라' 0 → 키즈카메라 15. 3전 3승이라 버튼 하나를 더 둔다.
+function _igShortKw(kw){
+  const t=_igKw(kw).split(/\s+/).filter(Boolean);
+  return t.length>=2 ? t[t.length-1] : '';
 }
 // 인스타 결과가 '0건이거나 왕창이거나'로 튀는 이유를 화면에서 갈라 보여준다(2026-08-14).
 // 서버 diag가 세어준다: 렌즈 원본에 인스타 링크가 몇 개였나(ig_raw), 그중 개별 게시물이
@@ -2599,7 +2614,8 @@ function renderLens(shortcode){
             ${c.zh?`<a href="${xhs}" target="_blank" rel="noopener" style="${lnk}">📕 샤오홍슈</a>
             <a href="${dy}" target="_blank" rel="noopener" style="${lnk}">🎬 도우인</a>`:''}
             ${kw?`<a href="${tk}" target="_blank" rel="noopener" style="${lnk}">🎵 틱톡</a>
-            <a href="${ig}" target="_blank" rel="noopener" style="${lnk}">📷 인스타</a>`:''}</div>`;
+            <a href="${ig}" target="_blank" rel="noopener" title="인스타는 '${_igKw(kw)}'로 엽니다 — 지어낸 조합은 결과가 0건이라 실제 쓰는 말로 줄입니다" style="${lnk}">📷 인스타</a>
+            ${_igShortKw(kw)?`<a href="${_lensSearchUrl('instagram', _igShortKw(kw))}" target="_blank" rel="noopener" title="인스타에서 결과가 없을 때 — '${_igShortKw(kw)}' 한 단어로 넓게 봅니다" style="${lnk};opacity:.75">📷 짧게</a>`:''}`:''}</div>`;
         }).join('')}
         ${(st.cnCands||[]).length?'':`<div style="font-size:11px;color:var(--sub)">아직 검색어가 없습니다 — 위에 소재를 넣고 <b>✨ 검색어 조합 만들기</b>를 누르거나, 화면에서 자동으로 뽑히길 기다려 보세요.</div>`}
       </div>
