@@ -1740,6 +1740,38 @@ class Store:
             c.execute("DELETE FROM mix_basket WHERE customer_id=? AND shortcode=?",
                       (customer_id, shortcode))
 
+    def shortcodes_for_url(self, url, limit=4):
+        """이 URL로 **저장돼 있는** shortcode들(담기·위키 기록 기준). 없으면 [].
+
+        ★왜 DB를 보나(2026-08-17 실측): 캐시 키를 URL에서 정규식으로 만들어내면
+          **정규식에 없는 플랫폼은 통째로 빠진다**. 실측 — 담긴 394건 중 도우인 8·
+          샤오홍슈 47 = 55건(14%)이 캐시 키를 하나도 못 만들었고, 그래서
+          `product_facts_grab_douyin_b26e5b24ee36`처럼 **재료가 있는데도 못 찾았다**
+          (고독스 C100: 상세4·리뷰8까지 다 긁어 저장해뒀는데 대본에 한 번도 안 실렸다).
+        ★근본 원인은 저장과 조회가 서로 다른 규칙을 쓴 것이다(0순위-B). 저장은
+          `e["code"]`(DB의 shortcode 그대로), 조회는 URL 추론 — 어긋날 수밖에 없다.
+          `grab_douyin_…`·`lens_tiktok_1jw6i6i` 같은 키는 URL에서 유도가 **불가능**하다.
+        그래서 추론하지 않고 **적혀 있는 것을 읽는다**. 짝으로 저장된 값을 짝으로 읽는다.
+        """
+        url = (url or "").strip()
+        if not url:
+            return []
+        out, seen = [], set()
+        with self._conn() as c:
+            for sql in ("SELECT shortcode FROM mix_basket WHERE url=? ORDER BY rowid DESC",
+                        "SELECT shortcode FROM script_wiki WHERE source_url=? ORDER BY rowid DESC"):
+                try:
+                    rows = c.execute(sql, (url,)).fetchall()
+                except sqlite3.Error:      # 옛 스키마에 컬럼이 없어도 조회가 죽지 않는다
+                    continue
+                for (sc,) in rows:
+                    if sc and sc not in seen:
+                        seen.add(sc)
+                        out.append(sc)
+                        if len(out) >= limit:
+                            return out
+        return out
+
     def mix_basket_list(self, customer_id=LEGACY_CUSTOMER_ID):
         """이 고객이 담은 순서(added_at)대로 항목 dict 리스트. meta_json은 풀어서 병합."""
         with self._conn() as c:
