@@ -3591,7 +3591,12 @@ def api_mix_scene_lab_fill(job_id: str, body: dict):
         # 음성이 아직 없으면 tts 실길이가 None이다 — 그때는 계획 길이로 대신한다.
         _caps, _tts = _lab_captions(job["edit_plan"])
         need = (_tts or {}).get(str(bi)) or beats[bi].get("target_seconds")
-    picks = _edit_plan.fill_beat_scenes(narration, need, seg_map, pool, taken_ids=sorted(taken))
+    # ★칸의 역할(훅·CTA·결과…)을 함께 넘긴다(2026-08-17 사장님 "훅부터 기준이 뭘로 한 건지").
+    #   대사만으로는 감정·상황을 말하는 훅에 아무 화면이나 붙는다 — 역할을 알아야
+    #   "훅엔 시선 끄는 완성품"처럼 고를 수 있다(edit_plan._ROLE_WANT_SHOTS).
+    picks = _edit_plan.fill_beat_scenes(narration, need, seg_map, pool,
+                                        taken_ids=sorted(taken),
+                                        role=beats[bi].get("role") or "")
     return {"ok": True, "picks": picks}
 
 
