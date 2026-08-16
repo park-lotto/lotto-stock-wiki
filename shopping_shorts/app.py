@@ -2285,40 +2285,9 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         #   그래서 "어느 대본을 씨앗으로 골랐냐"가 결과를 좌우했다(사장님: "하나의 대본을
         #   지정하면 편협하게 나온다 / 사용자는 뭐가 좋은 대본인지 모르고 잘못 고르면 낭패").
         #   담긴 것을 전부 넣으면 그 복불복 자체가 사라진다.
-        # ★타입을 믿지 마라(work_id 사고와 같은 유형): job_id도 클라이언트 값이라
-        #   문자열이 아닐 수 있다 — dict가 오면 .strip()에서 500, 대본이 통째로 안 나온다.
-        _jid = body.get("job_id")
-        _jid = _jid.strip() if isinstance(_jid, str) else ""
-        _job = store.get_mix_job(_jid) if _jid else None
-        # 옛 작업이라 스냅샷에 장면 태깅이 없으면 캐시에서 보충한다 —
-        # 이게 없으면 사장님이 1단계부터 다시 담아야 새 재료가 붙는다.
-        _job = _enrich_job_extract(_job, store)
-        # ★3단계를 아직 안 돌렸으면 job이 없다 — 그때는 **담긴 영상 전부**를 직접 모은다
-        #   (2026-08-16). 안 그러면 재료가 씨앗 1편으로 줄어 모델이 나머지를 지어낸다.
-        # ★타입을 믿지 마라(2026-08-16 내 실사고): body는 클라이언트가 주는 값이라
-        #   work_id가 문자열이 아닐 수 있다. 그대로 .strip()을 불러 500이 났고
-        #   사장님 화면엔 '네트워크 오류'만 떴다 — 재료 보강은 있으면 좋은 것이지
-        #   대본 생성을 막을 이유가 전혀 없다.
-        _wid = body.get("work_id")
-        _wid = _wid.strip() if isinstance(_wid, str) else ""
-        if not (_job or {}).get("extract") and _wid:
-            try:
-                _wex = _extract_from_work(_wid, _cid(request), store)
-            except Exception:  # noqa: BLE001 — 재료 보강 실패가 생성을 막지 않는다
-                _wex = None
-            if _wex:
-                _job = dict(_job or {}, extract=_wex)
-        _src = _sources_for_generate(it, _job)
-        # ★제품 재료 주입(2026-08-16) — 이 작업에 연결된 쿠팡 상품에서 미리 긁어둔
-        #   스펙·리뷰가 있으면 프롬프트에 얹는다. 없으면 ''이라 기존 경로 그대로(회귀 0).
-        #   여기서 긁지 않는다 — 수집은 /api/product/facts/collect가 미리 해둔다(2~3분).
-        _facts_block = _facts_block_for_job(_jid, store)
-        # ★1단계 장면 태깅을 대본에도 준다(2026-08-17). label=이 장면이 무엇인가,
-        #   use_point=이 장면을 어디에 어떻게 써먹나. 지금까지는 화면 붙일 때(edit_plan)만
-        #   쓰고 대본 생성엔 안 실렸다 — 재료를 반만 쓰고 있었다.
-        _scene_block = _scene_points_block(_job)
-        if _scene_block:
-            _facts_block = (_facts_block + "\n\n" + _scene_block) if _facts_block else _scene_block
+        # 재료 조립은 `_materials_for_generate`가 한 곳에서 정한다(0순위-B) —
+        # [바꾸기] 부분 재생성(/api/script/beat/regen)도 **같은 함수**를 쓴다.
+        _src, _facts_block, _job, _jid = _materials_for_generate(it, body, store, _cid(request))
         _styled = script_generate.generate_by_styles(
             _src, _picked, target_seconds=body.get("target_seconds") or 30,
             bank_context=_bank_ctx, facts_block=_facts_block)
@@ -9781,6 +9750,50 @@ def _sources_for_generate(item, job, limit=3):
     return out[:limit]
 
 
+def _materials_for_generate(item, body, store, cid):
+    """대본 생성에 넣을 **재료 한 벌** → (sources, facts_block, job, job_id)
+
+    ★왜 함수로 뽑았나(2026-08-17): 원래 이 조립이 `/api/wiki/generate` 안에 통째로
+      적혀 있었는데, [바꾸기] 부분 재생성(`/api/script/beat/regen`)도 **똑같은 재료**가
+      필요해졌다. 두 곳에 각각 적으면 언젠가 반드시 어긋나고(0순위-B), 어긋나면
+      "왜 전체 생성과 [바꾸기] 결과의 결이 다르냐"로 나타난다 — 조용해서 더 나쁘다.
+      한 군데서만 정하게 만든다.
+
+    담기는 것: 담긴 영상 전부(최대 3편) + 쿠팡 상세·리뷰 + 1단계 장면 태깅.
+    ★타입을 믿지 마라(work_id 사고와 같은 유형): job_id·work_id는 클라이언트 값이라
+      문자열이 아닐 수 있다 — dict가 오면 .strip()에서 500이 나고 대본이 통째로 안 나온다.
+    """
+    _jid = body.get("job_id")
+    _jid = _jid.strip() if isinstance(_jid, str) else ""
+    _job = store.get_mix_job(_jid) if _jid else None
+    # 옛 작업이라 스냅샷에 장면 태깅이 없으면 캐시에서 보충한다 —
+    # 이게 없으면 사장님이 1단계부터 다시 담아야 새 재료가 붙는다.
+    _job = _enrich_job_extract(_job, store)
+    # ★3단계를 아직 안 돌렸으면 job이 없다 — 그때는 **담긴 영상 전부**를 직접 모은다
+    #   (2026-08-16). 안 그러면 재료가 씨앗 1편으로 줄어 모델이 나머지를 지어낸다.
+    _wid = body.get("work_id")
+    _wid = _wid.strip() if isinstance(_wid, str) else ""
+    if not (_job or {}).get("extract") and _wid:
+        try:
+            _wex = _extract_from_work(_wid, cid, store)
+        except Exception:  # noqa: BLE001 — 재료 보강 실패가 생성을 막지 않는다
+            _wex = None
+        if _wex:
+            _job = dict(_job or {}, extract=_wex)
+    _src = _sources_for_generate(item, _job)
+    # ★제품 재료 주입(2026-08-16) — 이 작업에 연결된 쿠팡 상품에서 미리 긁어둔
+    #   스펙·리뷰가 있으면 프롬프트에 얹는다. 없으면 ''이라 기존 경로 그대로(회귀 0).
+    #   여기서 긁지 않는다 — 수집은 /api/product/facts/collect가 미리 해둔다(2~3분).
+    _facts_block = _facts_block_for_job(_jid, store)
+    # ★1단계 장면 태깅을 대본에도 준다(2026-08-17). label=이 장면이 무엇인가,
+    #   use_point=이 장면을 어디에 어떻게 써먹나. 지금까지는 화면 붙일 때(edit_plan)만
+    #   쓰고 대본 생성엔 안 실렸다 — 재료를 반만 쓰고 있었다.
+    _scene_block = _scene_points_block(_job)
+    if _scene_block:
+        _facts_block = (_facts_block + "\n\n" + _scene_block) if _facts_block else _scene_block
+    return _src, _facts_block, _job, _jid
+
+
 def _extract_from_work(work_id, cid, store):
     """3단계(매칭)를 아직 안 돌린 작업의 **담긴 영상 전부**를 job.extract 모양으로 만든다.
 
@@ -10043,6 +10056,75 @@ def api_script_style_templates(spine_id: int, role: str = None):
         })
     return {"ok": True, "spine_id": spine_id, "name": sp.get("name") or "",
             "chars_per_30s": sp.get("chars_per_30s"), "roles": roles, "slots": out}
+
+
+@app.post("/api/script/beat/regen")
+def api_script_beat_regen(request: Request, body: dict):
+    """[바꾸기] — 대본의 **한 칸만** 다시 쓴다(2026-08-17 사장님 B안).
+
+    body: {shortcode, style_id, role, beats:[{role,text}], template?,
+           job_id?, work_id?, target_seconds?, structure?, base_script?, category?}
+
+    ## 왜 이게 필요했나
+
+    지금까지 [바꾸기]는 문장틀을 **원문 그대로** 칸에 꽂았다. 그래서 화면에
+    `이것 때문에 {가족}한테 욕 바가지로 먹을 뻔했어요`처럼 중괄호가 박혔다.
+    설계는 원래 "빈칸은 AI가 이 대본 소재로 채운다"였는데(위 `templates` 주석)
+    **그 채우는 단계가 미구현**이었다(handoff/대본UI2단계.md ⏭ 4번).
+
+    사장님이 B안을 고르셨다 — 빈칸만 치환하는 게 아니라 **틀의 구조만 빌려 그 칸을
+    새로 쓴다**. 빈칸 치환은 한 단어만 바뀌어 "바꿔도 바뀐 느낌이 안 나고"(실측: 미끼
+    틀 4개 중 2개가 슬롯만 다른 같은 문장), 재생성은 같은 틀이라도 매번 다른 문장이
+    나온다. 이게 곧 `[훅만 다시]` 부분 재생성이라 두 기능이 한 벌이 된다.
+
+    ★재료는 `_materials_for_generate`로 **전체 생성과 같은 한 벌**을 쓴다(0순위-B).
+    ★실패를 조용히 넘기지 않는다 — 못 만들면 502로 알려 화면이 "다시 시도"를 띄운다.
+      (반쪽짜리 문장이나 중괄호가 남은 문장을 성공인 척 돌려주면 이 기능의 존재 이유가 없다)
+    """
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    role = (body.get("role") or "").strip()
+    if not role:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "role 필요"})
+    try:
+        style_id = int(body.get("style_id"))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "style_id 필요"})
+    beats = [b for b in (body.get("beats") or []) if isinstance(b, dict)]
+    if not beats:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beats 필요"})
+
+    style = next((s for s in store.list_style_spines(category=None) if s["id"] == style_id), None)
+    if not style:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 스타일"})
+
+    # 재료 — 전체 생성과 같은 경로로 씨앗 항목을 찾는다(위키에 없으면 body 폴백도 동일).
+    shortcode = (body.get("shortcode") or "").strip()
+    it = store.get_wiki_item(shortcode, customer_id=cid) if shortcode else None
+    if not it:
+        _structure = body.get("structure")
+        it = {"structure": _structure if isinstance(_structure, dict) else {},
+              "full_text": body.get("base_script") or "",
+              "category": body.get("category") or ""}
+    _src, _facts_block, _job, _jid = _materials_for_generate(it, body, store, cid)
+
+    _bank_ctx = ""
+    if store.get_setting("ping_pong_enabled", "") == "1":
+        _bank_ctx = bank_assemble.assemble_bank_context(store, it.get("category") or "") or ""
+
+    try:
+        out = script_generate.regen_one_beat(
+            _src, style, role, beats,
+            template=body.get("template") or "",
+            target_seconds=body.get("target_seconds") or 30,
+            bank_context=_bank_ctx, facts_block=_facts_block)
+    except Exception as e:  # noqa: BLE001 — 실패해도 화면이 살아야 한다(원본 문장 유지)
+        print(f"beat regen 실패(style={style_id}, role={role}): {e}")
+        out = None
+    if not out:
+        return JSONResponse(status_code=502, content={
+            "ok": False, "error": "문장을 다시 만들지 못했어요 — 잠시 후 다시 시도해 주세요"})
+    return {"ok": True, **out}
 
 
 @app.post("/api/pattern/spine/status")
