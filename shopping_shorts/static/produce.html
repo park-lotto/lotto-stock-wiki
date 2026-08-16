@@ -3718,6 +3718,11 @@ async function refreshStep0(){
     clearTimeout(_workTimer); _workTimer = null;
     try{ await _pushWork(); }catch(e){}
   }
+  // ★먼저 한 번 그린다(2026-08-17). 아래 aipick·자동분석은 30초~1분이 걸리는데,
+  //   그동안 1단계 아래가 통째로 비어 있었다. 이미 분석된 영상은 즉시 카드로 뜨고,
+  //   아직인 것은 "⏳ 분석 대기"로 자리를 잡는다(서버 재요청 없음 — 받아 둔 것만 그린다).
+  //   ★await한다 — 안 하면 이 fetch가 늦게 끝나 아래 "분석 중" 안내를 덮어버린다.
+  try{ await renderSourceAnalysis(); }catch(e){}
   try{
     // 사장님이 썸네일을 클릭해 특정 영상을 AI PICK으로 지정(bbMain)했으면 서버에도 강제한다
     // (안 그러면 완성도 자동선정이 클릭을 덮어씀 — forced가 지정 시 최우선, app.py 참조).
@@ -3897,7 +3902,13 @@ async function autoloadAllFootage(){
 // 자동적재가 도는 동안 보여줄 과도 상태 — 폴백 안내를 먼저 띄웠다가 곧 카드로 바뀌면
 // 사용자가 "에러가 났다가 고쳐졌나?"로 읽는다. 분석 중임을 명시한다.
 function renderAutoloadingState(total){
-  const el=document.getElementById('aiPick'); if(!el) return;
+  // ★#aiPick이 아니라 #srcAnalysis에 그린다(2026-08-17 사장님 "영상분석은?").
+  //   1단계에서 #aiPickWrap은 display:none이라(9단계 개편) 여기 그리면 아무도 못 본다 —
+  //   실제로 담자마자 화면 아래가 통째로 비어 "분석이 도는지" 알 수가 없었다.
+  //   진행 표시는 그 단계의 **보이는 자리**에 있어야 한다. 끝나면 renderSourceAnalysis가
+  //   같은 자리를 카드로 덮는다(자리 하나, 상태 하나 — 두 군데에 그리지 않는다).
+  const el=document.getElementById('srcAnalysis') || document.getElementById('aiPick');
+  if(!el) return;
   const n = Number(total)||0;
   el.innerHTML = `<div class="skm-card empty">
       <h2><span class="skm-spin">🔄</span> 담은 영상 ${n?('<b>'+n+'개</b> '):''}대본을 분석하고 있어요</h2>
