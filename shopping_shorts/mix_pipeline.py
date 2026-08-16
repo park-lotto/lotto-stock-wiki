@@ -1182,9 +1182,51 @@ def _resolve_sources(job, work):
     return source_video_paths
 
 
-def _vmake_key(store):
-    """등록된 VMake 개인키(DB settings). 없으면 빈 문자열."""
-    return store.get_setting("vmake_api_key", "") or ""
+def _vmake_key(store, customer_id=0):
+    """자막제거에 쓸 키. 사용자가 등록했으면 그 키, 아니면 사장님 키.
+    ★keyroute가 유일한 판단처다 — 여기서 따로 고르지 마라(0순위-B)."""
+    from shopping_shorts import keyroute
+    keys, _ = keyroute.keys_for(store, customer_id, "vmake")
+    return keys[0] if keys else ""
+
+
+class NotEnoughPoints(Exception):
+    """포인트가 모자라 시작조차 못 함. 반만 청소되는 것보다 아예 안 하는 게 낫다."""
+
+
+def _charge_clean(store, customer_id, n_sources):
+    """자막제거 선차감. 깎은 액수를 반환(0=무료). 모자라면 NotEnoughPoints.
+
+    ★소스 개수만큼 곱한다 — VMake는 소스 1편당 1콜이다(_ensure_clean_sources).
+      job당 1회로 계산하면 소스 3개짜리에서 1,000원을 손해 본다.
+    """
+    from shopping_shorts import keyroute, points, pricing
+    if n_sources <= 0:
+        return 0
+    # ★cid 0 = 사장님 본인(store.LEGACY_CUSTOMER_ID). 자기 키로 자기한테 청구하는 꼴이라
+    #   과금 대상이 아니다. keyroute도 cid 0은 개인키 조회를 아예 건너뛴다.
+    #   cid는 int 0과 문자열 "0"이 섞여 오므로 정규화해서 본다(keyroute와 같은 이유).
+    try:
+        cid = int(customer_id)
+    except (TypeError, ValueError):
+        cid = 0
+    if not cid:
+        return 0
+    if not keyroute.should_charge(store, customer_id, "vmake"):
+        return 0                                    # 내 키 → 무료
+    need = pricing.cost(store, pricing.OP_VMAKE) * n_sources
+    if not points.deduct(store, customer_id, need, "vmake"):
+        raise NotEnoughPoints(
+            f"포인트가 부족합니다 (필요 {pricing.to_display(need)}P, "
+            f"보유 {pricing.to_display(points.balance(store, customer_id))}P)")
+    return need
+
+
+def _refund_clean(store, customer_id, amount):
+    """청소 실패 시 돌려준다. ★과금한 만큼만 — 안 깎은 호출자까지 환불하면 원장이 갉힌다."""
+    from shopping_shorts import points
+    if amount > 0:
+        points.refund(store, customer_id, amount, "vmake")
 
 
 def _apply_motion_pack(deco, caption_style, timeline, packs):
@@ -1254,7 +1296,7 @@ def _clean_one(item, key, work):
     return vid, clean_path, region
 
 
-def _ensure_clean_sources(store, job, job_id, work, key):
+def _ensure_clean_sources(store, job, job_id, work, key, customer_id=0):
     """clean_sources 맵을 채워 반환. 이미 있고 파일이 존재하면 스킵(재과금 0).
     각 스레드는 remove_subtitles만 하고 경로를 반환 → DB 저장은 취합 후 메인에서 1회(경합 없음)."""
     source_map = _resolve_sources(job, Path(work))
@@ -1263,18 +1305,25 @@ def _ensure_clean_sources(store, job, job_id, work, key):
     regions = dict((job.get("clean_regions") or {}).get("sources") or {})
     todo = [(vid, src) for vid, src in source_map.items()
             if not (cached.get(vid) and Path(cached[vid]).exists())]
-    if todo:
-        with ThreadPoolExecutor(max_workers=len(todo)) as ex:
-            for vid, out, region in ex.map(lambda t: _clean_one(t, key, work), todo):
-                cached[vid] = out
-                if region:
-                    regions[vid] = region
-                else:
-                    regions.pop(vid, None)   # 이 소스엔 지속 변화 없음(원본에 자막 없었음)
-        # 넓고 자주 쓰인 위치를 1번으로 — 소스마다 자막 위치가 달라도 대표 한 자리를 고른다.
-        primary = sub_region.pick_primary(list(regions.values()))
-        store.update_mix_job(job_id, clean_sources=cached,
-                             clean_regions={"sources": regions, "primary": primary})
+    # ★todo가 확정된 뒤에 과금한다 — 캐시된 소스는 VMake를 안 타니 돈도 안 나간다.
+    #   라우트에선 소스 개수를 모르므로(큐에 넣기만 한다) 여기가 유일한 계량 지점이다.
+    charged = _charge_clean(store, customer_id, len(todo))
+    try:
+        if todo:
+            with ThreadPoolExecutor(max_workers=len(todo)) as ex:
+                for vid, out, region in ex.map(lambda t: _clean_one(t, key, work), todo):
+                    cached[vid] = out
+                    if region:
+                        regions[vid] = region
+                    else:
+                        regions.pop(vid, None)   # 이 소스엔 지속 변화 없음(원본에 자막 없었음)
+            # 넓고 자주 쓰인 위치를 1번으로 — 소스마다 자막 위치가 달라도 대표 한 자리를 고른다.
+            primary = sub_region.pick_primary(list(regions.values()))
+            store.update_mix_job(job_id, clean_sources=cached,
+                                 clean_regions={"sources": regions, "primary": primary})
+    except Exception:
+        _refund_clean(store, customer_id, charged)   # 실패했으면 돌려준다
+        raise
     return cached
 
 
@@ -1321,13 +1370,18 @@ def run_clean_sources(job_id, db_path, work_root):
     try:
         work = Path(work_root) / job_id
         work.mkdir(parents=True, exist_ok=True)
-        key = _vmake_key(store)
+        # ★워커는 HTTP 요청이 없어 request.state가 없다 — job 레코드에서 읽는다.
+        customer_id = job.get("customer_id") or 0
+        key = _vmake_key(store, customer_id)
         if not key:
             store.update_mix_job(job_id, clean_status="failed",
                                  clean_error="AI 자막 제거 설정이 완료되지 않았습니다 (관리자 문의)")
             return
-        clean_map = _ensure_clean_sources(store, job, job_id, work, key)
+        clean_map = _ensure_clean_sources(store, job, job_id, work, key, customer_id)
         store.update_mix_job(job_id, clean_status="ready", clean_error=None)
+    except NotEnoughPoints as e:
+        store.update_mix_job(job_id, clean_status="failed", clean_error=str(e))
+        return
     except Exception as e:  # noqa: BLE001 — BackgroundTasks라 밖에서 아무도 안 받는다
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, clean_status="failed", clean_error=str(e))
@@ -1423,10 +1477,13 @@ def run_render(job_id, db_path, work_root):
         # 자막제거: 소스 원본을 미리(2단계) 또는 여기서(버튼 미사용 시) 청소해 그 소스로 조립한다.
         # mix_raw 위 clean_fn(구방식)은 폐기 — 소스단위여야 TTS/컷과 무관하게 캐시가 성립한다.
         if job.get("subtitle_removal"):
-            key = _vmake_key(store)
+            # ★2단계 버튼을 안 거치고 바로 렌더로 오는 경로도 VMake를 탄다 — 여기도 과금해야
+            #   구멍이 안 남는다(2단계에서 이미 청소됐으면 todo가 비어 자동으로 0원).
+            customer_id = job.get("customer_id") or 0
+            key = _vmake_key(store, customer_id)
             if not key:
                 raise RuntimeError("자막 제거가 켜져 있으나 설정이 완료되지 않았습니다 (관리자 문의)")
-            clean_map = _ensure_clean_sources(store, job, job_id, work, key)
+            clean_map = _ensure_clean_sources(store, job, job_id, work, key, customer_id)
             store.update_mix_job(job_id, clean_status="ready", clean_error=None)
             source_video_paths = {vid: clean_map.get(vid, p)
                                   for vid, p in source_video_paths.items()}
