@@ -253,12 +253,21 @@ _CAP_WRAP = 19          # 아주 긴 단일 어절 방어용(한 줄 최대 글�
 # 실측(칸 4.4초, "요거트, 계란, 전분으로 만드는 일본식 요거트 식빵, 지금 확인해보세요!"):
 #   요거트 0.40s / 계란 0.27s / 식빵 0.27s ← 눈으로 못 읽고 번쩍인다.
 # 하한을 채운 시간은 _caption_durations가 다른 구절에서 비례로 빼 오므로 **총 길이는 안 변한다**.
-_CAP_MIN_DUR = float(os.environ.get("CAPTION_MIN_DUR", "0.7") or 0.7)
+# 2026-08-17 2차: 0.7초도 "휙휙 지나간다"(사장님). 1.0초로 올린다.
+_CAP_MIN_DUR = float(os.environ.get("CAPTION_MIN_DUR", "1.0") or 1.0)
 # 쉼표에서 끊을 최소 글자수(공백 제외). 나열형("요거트, 계란, 전분으로…")에서 1~2자 파편이
 # 쏟아지던 것을 막는다 — 앞 구절이 이 길이 미만이면 쉼표를 넘겨 이어붙인다.
 # _CAP_LEAD_MINCHARS·_CAP_HEAD_MINCHARS와 **같은 방식의 방어**인데 쉼표에만 빠져 있었다.
 # 문장 끝(. ? ! …)은 대상이 아니다 — 문장 경계는 짧아도 끊는 게 맞다.
 _CAP_COMMA_MINCHARS = int(os.environ.get("CAPTION_COMMA_MINCHARS", "6") or 6)
+# ★쉼표 나열은 통째로 묶는다(2026-08-17 2차). 위 최소글자수만으로는 항목이 4개 이상일 때
+# 나열이 **중간에서** 잘렸다 — 실측 "아침, 풍신, | 빵, 나도 중 댓글 | 남겨주시면"
+# (누적 6자에 도달하는 순간 끊겨서 나열이 두 동강 난다).
+# 그래서 '쉼표로 이어진 짧은 항목들'은 이 글자수까지 한 덩어리로 붙인다.
+# 한 줄 표시 폭(_CAP_WRAP)을 넘지 않는 선에서만 — 넘으면 종전 규칙대로 끊는다.
+_CAP_LIST_MAXCHARS = int(os.environ.get("CAPTION_LIST_MAXCHARS", "18") or 18)
+# 나열 항목 하나로 볼 최대 글자수. 이보다 길면 '짧은 나열'이 아니라 정상 절이므로 종전대로.
+_CAP_LIST_ITEMCHARS = int(os.environ.get("CAPTION_LIST_ITEMCHARS", "4") or 4)
 
 # 한글 폰트 후보(먼저 발견되는 것 사용). repo에 NanumGothic을 번들하므로 서버·로컬
 # 어디서든 별도 설치 없이 자막이 나온다(env로 다른 폰트 강제 가능).
@@ -737,6 +746,23 @@ def _caption_segments(narration, preset=None):
         hard_break = cur[-1].endswith((".", "?", "!", "…"))
         comma_break = (cur[-1].endswith((",", "、"))
                        and cur_chars >= _CAP_COMMA_MINCHARS)
+        # ★나열 이어가기(2026-08-17 2차): 위 최소글자수만으로는 항목이 4개 이상일 때
+        #   나열이 **중간에서** 잘렸다("아침, 풍신, | 빵, 나도 중 댓글 | 남겨주시면").
+        #   지금 구절이 '짧은 항목들이 쉼표로 이어진 나열'이면, 한 줄 폭(_CAP_LIST_MAXCHARS)
+        #   까지는 계속 붙여 나열을 한 덩어리로 유지한다.
+        #   판정: 구절 안의 모든 쉼표 항목이 짧고(_CAP_LIST_ITEMCHARS 이하), 붙여도 폭 이내.
+        if comma_break:
+            items = [x for x in " ".join(cur).replace("、", ",").split(",") if x.strip()]
+            short_list = (len(items) >= 2
+                          and all(len(x.replace(" ", "")) <= _CAP_LIST_ITEMCHARS
+                                  for x in items))
+            if short_list and len("".join(cur + [w])) <= _CAP_LIST_MAXCHARS:
+                comma_break = False      # 나열을 이어간다
+                # 나열을 이어가기로 했으면 글자수·어절수 상한도 이 폭까지 함께 풀어준다.
+                # 안 그러면 not room / not under_cap 이 대신 끊어 같은 자리에서 잘린다
+                # (실측: 상한만 남겨두면 "아침, 풍신," 뒤에서 그대로 끊겼다).
+                room = True
+                under_cap = True
         sent_break = hard_break or comma_break
         # ★의존명사는 구절 머리가 될 수 없다(2026-08-06 실렌더 "…사 드시는 | 거 이제"):
         #   끊을 자리라도 다음 단어가 의존명사면 상한을 한 어절 넘겨서라도 데려간 뒤 끊는다.
