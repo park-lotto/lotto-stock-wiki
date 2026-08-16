@@ -17,12 +17,16 @@ _SCHEMA_KEYS = ("url", "title", "thumbnail", "play_url",
 
 
 def _num(v):
-    """정수로 바꿀 수 있으면 int, 아니면 None. '1.2만' 같은 문자값은 버린다."""
+    """정수로 바꿀 수 있으면 int, 아니면 None. '1.2만' 같은 문자값은 버린다.
+
+    ★OverflowError까지 잡는다 — float('inf')는 ValueError가 아니라 OverflowError다.
+    normalize는 백엔드가 행마다 부르므로, 여기서 예외가 새면 그 백엔드 결과가
+    통째로 죽는다(모듈 계약: 백엔드는 예외를 밖으로 던지지 않는다)."""
     if isinstance(v, bool):
         return None
     try:
         return int(float(v))
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return None
 
 

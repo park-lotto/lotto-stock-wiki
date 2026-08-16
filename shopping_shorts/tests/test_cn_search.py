@@ -14,3 +14,13 @@ def test_normalize_fills_all_schema_keys():
     assert row["platform"] == "douyin"
     assert row["likes"] is None          # 없으면 None(0으로 위조하지 않는다)
     assert row["is_short"] is True       # duration 불명 → 숏폼으로 본다
+
+
+def test_num_survives_infinity_and_nan():
+    """★inf는 ValueError가 아니라 OverflowError다. 여기서 예외가 새면
+    백엔드 결과가 통째로 죽는다(2026-08-17 코드리뷰 발견)."""
+    for bad in ("inf", "-inf", "nan", float("inf"), 1e400):
+        row = cn_backends.normalize({"likes": bad, "duration": bad}, "douyin")
+        assert row["likes"] is None, f"{bad!r} → likes가 None이어야 한다"
+        assert row["duration"] is None
+        assert row["is_short"] is True      # duration 불명 → 숏폼 취급
