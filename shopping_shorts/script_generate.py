@@ -334,7 +334,9 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
         res = (data or {}).get("beats") or []
         if not res:
             break
-        checks, full = script_gate.check(style, res)
+        # ★facts_block을 게이트에도 넘긴다 — 재료를 줬으면 대본의 수치가 그 안에 있는지
+        #   대조한다(지어낸 수치 차단). 안 줬으면 그 검사는 건너뛴다(회귀 0).
+        checks, full = script_gate.check(style, res, facts_text=facts_block)
         tries.append({"chars": len(script_gate.norm(full)),
                       "fails": [c["name"] for c in checks if not c["ok"]]})
         if script_gate.passed(checks):
