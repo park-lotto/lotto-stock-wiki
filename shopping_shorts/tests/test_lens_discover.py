@@ -27,8 +27,10 @@ def test_filters_to_five_video_platforms(monkeypatch):
     platforms = [i["platform"] for i in out]
     assert platforms == ["youtube", "tiktok", "instagram", "xiaohongshu", "douyin"]
     # is_photo(카드뉴스 후보) 추가 2026-07-30 — 프론트 '🎬 영상만' 토글이 이 키를 본다.
+    # is_short/duration 추가 2026-08-16 — 롱폼 서버컷용. 길이를 모르면 None·숏폼 취급.
     assert out[0] == {"platform": "youtube", "url": "https://www.youtube.com/watch?v=abc",
-                      "title": "yt", "thumbnail": "t1", "match": None, "is_photo": False}
+                      "title": "yt", "thumbnail": "t1", "match": None, "is_photo": False,
+                      "is_short": True, "duration": None}
 
 
 def test_youtu_be_and_xhslink_and_iesdouyin(monkeypatch):
@@ -79,7 +81,9 @@ def test_excludes_instagram_non_permalink_pages(monkeypatch):
     monkeypatch.setattr(lens_discover.requests, "get", lambda *a, **k: _fake_response(matches))
     out = lens_discover.search_similar_videos("https://ex.com/f.jpg")
     urls = [i["url"] for i in out]
-    assert urls == ["https://www.instagram.com/reel/DkAbc123/", "https://www.instagram.com/p/CyXyZ00/"]
+    # /p/(카드뉴스)는 2026-08-16부터 **서버가 잘라낸다**(사장님 "사진은 자체 커트").
+    # 예전엔 통과시키고 프론트 토글로 가리기만 했다.
+    assert urls == ["https://www.instagram.com/reel/DkAbc123/"]
 
 
 def test_requests_type_visual_matches(monkeypatch):
@@ -106,10 +110,12 @@ def test_requests_type_visual_matches(monkeypatch):
     # 로케일 — 2026-08-16부터 ko/kr + en/us 두 벌을 돈다(사장님 "다른 프로그램은
     # 자막없는 원본을 가져온다"). ko만 쓰면 한국어 자막판만 올라온다.
     # 실측 A/B: 같은 이미지 9건 → 27건, 늘어난 18건은 전부 비한글 제목.
-    # ※이 응답은 빈 결과라 로케일마다 _MAX_ATTEMPTS만큼 재시도한다 — 순서만 본다.
-    assert seen[0] == "ko" and "en" in seen, f"로케일 2벌을 안 돈다: {seen}"
-    assert set(seen) == {"ko", "en"}
-    assert captured["params"]["country"] == "us"   # 마지막 호출이 en/us
+    # ※이 응답은 **빈 결과**라 ko에서 _MAX_ATTEMPTS(3)만큼 재시도하며 호출예산
+    #   (_MAX_CALLS_PER_SEARCH=3)을 다 쓴다 → en·zh는 건너뛴다. 그게 상한의 목적이다
+    #   (2026-08-16 "무조건 한번클릭에 3회"). 여기선 ko로 시작하는 것과 상한만 본다.
+    assert seen[0] == "ko"
+    assert len(seen) <= lens_discover._MAX_CALLS_PER_SEARCH, f"상한 초과: {seen}"
+    # 결과가 정상일 때 로케일 3벌을 도는지는 test_lens_merge_locales.py가 본다.
 
 
 def test_retries_when_lens_returns_no_results_then_succeeds(monkeypatch):
@@ -342,8 +348,11 @@ def test_is_photo_post_flags_instagram_p_only():
     assert is_photo_post("instagram", "") is False
 
 
-def test_search_similar_videos_attaches_is_photo(monkeypatch):
-    """결과 항목마다 is_photo가 실려야 프론트 '🎬 영상만' 토글이 동작한다."""
+def test_search_similar_videos_cuts_photo_posts(monkeypatch):
+    """카드뉴스(/p/)는 **결과에서 아예 빠진다**(2026-08-16 사장님 "사진은 자체 커트").
+
+    예전엔 is_photo=True로 실어 보내고 프론트 토글이 가리기만 했다 — 개수엔 계속
+    잡히고 토글을 끄면 다시 나왔다. 이제 서버가 잘라 남은 항목은 전부 is_photo=False."""
     from shopping_shorts import lens_discover
 
     class _R:
@@ -357,5 +366,8 @@ def test_search_similar_videos_attaches_is_photo(monkeypatch):
             return None
 
     monkeypatch.setattr(lens_discover.requests, "get", lambda *a, **k: _R())
-    out = lens_discover.search_similar_videos("http://img/x.jpg", api_key="k")
-    assert [i["is_photo"] for i in out] == [True, False]
+    st = {}
+    out = lens_discover.search_similar_videos("http://img/x.jpg", api_key="k", stats=st)
+    assert [i["url"] for i in out] == ["https://www.instagram.com/reel/BBB222/"]
+    assert [i["is_photo"] for i in out] == [False]
+    assert st["cut_photo"] == 1

@@ -371,7 +371,10 @@ def test_lens_search_reports_instagram_dropoff(tmp_path, monkeypatch):
     assert d["diag"]["ig_raw"] == 4
     assert d["diag"]["ig_dropped_not_post"] == 2      # /popular/, 프로필
     assert d["diag"]["ig_photo"] == 1                 # /p/
-    assert len(d["items"]) == 2                       # reel + /p/(가리기는 프론트 토글)
+    # 2026-08-16부터 카드뉴스(/p/)는 **서버가 잘라낸다**(사장님 "사진은 자체 커트").
+    # 예전엔 통과시키고 프론트 토글이 가리기만 했다 → 이제 릴스 1건만 남는다.
+    assert d["diag"]["cut_photo"] == 1
+    assert len(d["items"]) == 1
 
 
 def _run_real(lens_discover, raw_matches, stats):
