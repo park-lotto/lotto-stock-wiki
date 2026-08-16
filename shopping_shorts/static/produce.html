@@ -7375,7 +7375,12 @@ function s2RenderDrafts(){
       if(m.scene_points) bits.push('장면 '+m.scene_points+'개');
       if(m.product_facts) bits.push('쿠팡 재료');
       used = bits.length ? (' · 재료: '+esc(bits.join(' + '))) : ' · <span style="color:var(--gold)">재료 없음(AI가 지어냅니다)</span>';
-      if(srcs.length) used += '<div class="hint" style="margin-top:4px">첫 문장: “'+esc(srcs[0].head)+'…”</div>';
+      // ★재료 편마다 첫 문장을 보여준다 — 서로 다른 제품이 섞였는지는 이걸 봐야 안다
+      //   (2026-08-17 실측: 치아바타 1편 + 도마 2편이 한 작업에 담겨 도마로 끌려갔다).
+      //   맨 위 = 주제로 쓰이는 대본이다.
+      if(srcs.length) used += '<div class="hint" style="margin-top:4px;line-height:1.7">'
+        + srcs.map((s,i)=>(i===0?'<b>주제</b> ':'참고 ')+'“'+esc(s.head)+'…” <span style="opacity:.7">'+s.chars+'자</span>').join('<br>')
+        + '</div>';
     }
     label.innerHTML='③ 결과 대본 <span style="text-transform:none;letter-spacing:0">— '
       + S2.drafts.length + '안' + used + '</span>';

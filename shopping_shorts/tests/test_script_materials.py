@@ -153,3 +153,19 @@ class TestEnrichJobExtract:
         from shopping_shorts.app import _enrich_job_extract
         job = {"urls": ["https://www.tiktok.com/@a/video/123"], "extract": {"s0": {"segments": []}}}
         assert _enrich_job_extract(job, self._Store({})) is job
+
+
+class TestTopicLock:
+    """여러 편을 넣을 때 주제는 [대본 1]로 고정 (2026-08-17 '치아바타 뽑았는데 도마' 제보)."""
+
+    def test_한_편이면_주제_문구가_없다(self):
+        from shopping_shorts.script_generate import _mix_source_block
+        out = _mix_source_block([{"name": "", "full_text": "치아바타", "structure": {}}])
+        assert "주제는 반드시" not in out
+
+    def test_여러_편이면_1번으로_못박는다(self):
+        from shopping_shorts.script_generate import _mix_source_block
+        out = _mix_source_block([{"name": "", "full_text": "치아바타", "structure": {}},
+                                 {"name": "", "full_text": "접이식 도마", "structure": {}}])
+        assert "주제는 반드시 [대본 1]" in out
+        assert "섞지 마라" in out
