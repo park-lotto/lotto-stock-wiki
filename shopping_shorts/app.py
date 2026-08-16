@@ -3340,11 +3340,21 @@ def api_mix_scene_lab_data(job_id: str):
                 src_duration[vid] = round(d, 2)
     except Exception:
         pass
+    # 소스별 갈래(2026-08-17) — 팔레트를 '결'이 아니라 **어느 영상에서 왔나**로 묶을 때
+    # 머리글에 제품명을 찍으려고 싣는다. 옛 추출본엔 source_brief가 없어 {}가 되고,
+    # 그러면 화면은 '소스 N'만 찍는다(fail-open, 회귀 없음).
+    src_brief = {}
+    for _s in (job.get("extract") or {}).values():
+        _v = (_s or {}).get("video_id") or ""
+        _b = (_s or {}).get("source_brief") or {}
+        if _v and _b:
+            src_brief[_v] = _b
     caps, tts_dur = _lab_captions(plan)
     return {"ok": True, "data": {
         "job_id": job_id,
         "beats": plan.get("beats") or [],
         "urls": job.get("urls") or [],
+        "src_brief": src_brief,
         "syll_per_sec": _edit_plan._SYLLABLES_PER_SEC,
         "segments": {sid: {
             "video_id": v["video_id"], "start": v["start"], "end": v["end"],

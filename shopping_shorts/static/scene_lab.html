@@ -86,6 +86,11 @@ h1{font-size:16px;margin:0;font-weight:700}
   background:var(--panel);padding:22px 4px 8px;margin-left:-14px;margin-right:-14px;
   padding-left:18px;padding-right:18px;border-bottom:1px solid var(--line);z-index:6}
 .srchead .cnt{font-size:13px;color:var(--dim);font-weight:400}
+/* 묶는 기준 토글(2026-08-17) — 결별 / 소스별. 슬라이더 말고 버튼(사장님 시니어 원칙). */
+.gmode{margin-left:12px;color:var(--dim);font-size:12px;white-space:nowrap}
+.gmode .gm{margin-left:4px;padding:3px 10px;font-size:12px;font-weight:700;cursor:pointer;
+  border-radius:999px;border:1px solid var(--line);background:var(--inset);color:var(--dim)}
+.gmode .gm.on{border-color:var(--accent);color:var(--accent);background:rgba(62,224,191,.12)}
 /* ★정렬(2026-08-16 사장님 "모서리가 한 줄로 떨어질 것"): grid-auto-rows:1fr로 같은 줄
    카드 높이를 맞춘다. 안 하면 짧은 이름이 있는 카드와 없는 카드가 43px 어긋난다(실측). */
 /* ★grid-auto-rows:1fr은 쓰지 않는다 — 모든 줄에 같은 높이를 강제해 내용이 짧은 줄에
@@ -133,6 +138,8 @@ h1{font-size:16px;margin:0;font-weight:700}
 .seg .slabrow .srcno{flex:0 0 auto;background:rgba(62,224,191,.16);color:var(--accent);
      border:1px solid rgba(62,224,191,.5);font-size:10px;font-weight:900;
      min-width:17px;text-align:center;padding:1px 5px;border-radius:99px;line-height:1.5}
+/* 소스별로 묶었을 땐 이 배지가 번호 대신 **결**을 알린다(축이 반대로 필요해진다) */
+.seg .slabrow .srcno.rol{font-size:12px;line-height:1.25;padding:0 4px}
 .seg.inthis{border-color:var(--good);box-shadow:0 0 0 1px var(--good) inset}
 /* 소스 영상 길이를 넘어가는 세그먼트 — 렌더하면 검은 화면/정지가 된다(2026-08-14 발각) */
 .seg.oor,.item.oor{border-color:var(--bad)}
@@ -394,6 +401,45 @@ function groupOf(sid){
     return _BAKE.some(w => d.includes(w)) ? '굽기' : '재료';
   }
   return GROUPS.some(g => g.key === r) ? r : '기타';
+}
+function groupTitle(k){ const g = GROUPS.find(x => x.key === k); return g ? g.title : k; }
+// 결 배지용 아이콘 — GROUPS.title 앞머리의 이모지 한 글자. 없으면(그 밖의 장면) 점.
+function groupEmoji(k){
+  const t = groupTitle(k), m = t.match(/^\P{ASCII}/u);
+  return (m && !/[가-힣]/.test(m[0])) ? m[0] : '·';
+}
+
+// ── 묶는 기준(2026-08-17): 결별 / 소스별 ────────────────────────────────────
+// 사장님 지적: "장면 편집 아래가 결로만 묶여 있어 어느 영상에서 왔는지 모른다."
+// 카드 배지(srcNo)만으로는 **한 소스에 쏠렸는지**가 안 보인다 — 묶음 자체를 갈라야 보인다.
+let groupMode = 'role';
+function setGroupMode(m){ if (groupMode === m) return; groupMode = m; render(); }
+// 소스 머리글 — source_brief.product가 있으면 제품명을 같이 찍는다.
+// 옛 추출본엔 source_brief가 없어 '소스 N'만 나온다(fail-open).
+function srcHead(vid){
+  const b = ((DATA.src_brief || {})[vid]) || {};
+  return {title: `🎞 소스 ${(_SRC_NO || {})[vid] || '?'}${b.product ? ` — ${b.product}` : ''}`,
+          hint: b.role || ''};
+}
+// byRole(결→세그) → 화면에 그릴 그룹 목록. 카드 렌더는 이 아래에서 한 벌로 돈다.
+function paletteGroups(byRole){
+  const all = Object.values(byRole).flat();
+  if (groupMode === 'src'){
+    all.forEach(s => srcNo(s.sid));            // _SRC_NO 채우기(번호 매김은 여기 한 곳)
+    const byVid = {};
+    for (const s of all) (byVid[s.video_id] ||= []).push(s);
+    return Object.keys(byVid)
+      .sort((a, b) => (_SRC_NO[a] || 0) - (_SRC_NO[b] || 0))
+      .map(vid => {
+        const segs = byVid[vid].sort((a, b) => a.start - b.start);   // 영상 안에서는 시간순
+        return {...srcHead(vid), segs};
+      });
+  }
+  return GROUPS.filter(g => (byRole[g.key] || []).length).map(g => {
+    const segs = byRole[g.key].sort((a, b) => a.video_id === b.video_id
+      ? a.start - b.start : a.video_id.localeCompare(b.video_id));
+    return {title: g.title, hint: g.hint, segs};
+  });
 }
 // ★출처(2026-08-16): 이 장면이 **몇 번째 소스 영상**에서 왔는지. 결(GROUPS)로만 묶여
 //   있어서 "이게 어느 영상 거지?"를 알 방법이 없었다 — 같은 제품을 찍은 영상 3~8개를
@@ -739,15 +785,22 @@ function render(){
   const dropMsg = document.getElementById('dropmsg');
   if (dropMsg) dropMsg.innerHTML =
     `<label style="cursor:pointer;color:var(--dim)"><input type="checkbox" ${hideDup?'checked':''}
-        onchange="toggleDup(this.checked)"> 비슷한 그림 접기${folded ? ` (${folded}장)` : ''}</label>`;
+        onchange="toggleDup(this.checked)"> 비슷한 그림 접기${folded ? ` (${folded}장)` : ''}</label>
+     <span class="gmode">묶는 기준
+       <button type="button" class="gm ${groupMode==='role'?'on':''}" onclick="setGroupMode('role')"
+               title="완성품·굽기 같은 장면의 성격으로 묶습니다">결별</button>
+       <button type="button" class="gm ${groupMode==='src'?'on':''}" onclick="setGroupMode('src')"
+               title="어느 소스 영상에서 온 장면인지로 묶습니다 — 여러 영상을 골고루 쓰는지 보입니다">소스별</button>
+     </span>`;
   const cur = new Set(lists[sel] || []);
 
-  // 결 그룹 순서로 묶어 보여준다 — 같은 성격끼리 모여 있어야 고르기 쉽다.
-  // 그룹 안에서는 소스별·시간순이라 과정 순서(준비→반죽→굽기)가 자연히 보인다.
-  document.getElementById('palette').innerHTML = GROUPS.filter(g => (byRole[g.key]||[]).length).map(g => {
-    const segs = byRole[g.key];
-    segs.sort((a,b) => a.video_id === b.video_id ? a.start - b.start
-                                                 : a.video_id.localeCompare(b.video_id));
+  // 묶는 기준 두 가지(2026-08-17). 카드를 그리는 코드는 **한 벌**이고 그룹 목록만 갈린다
+  // (0순위-B: 같은 판단을 두 번 적지 않는다).
+  //  · 결별  = 같은 성격끼리. 그룹 안은 소스별·시간순이라 과정 순서가 자연히 보인다.
+  //  · 소스별 = 어느 영상에서 왔나. 소스 3~8개를 섞어 쓰는 게 이 도구의 핵심인데
+  //            결로만 묶여 있으면 한 영상만 잔뜩 쓰고 있어도 알 수가 없었다.
+  document.getElementById('palette').innerHTML = paletteGroups(byRole).map(g => {
+    const segs = g.segs;
     return `<div class="srcgroup"><div class="srchead"><span>${g.title}${g.hint?` <span class="cnt">· ${g.hint}</span>`:''}</span><span class="cnt">${segs.length}개</span></div>
       <div class="thumbs">${segs.map(s => `
         <div class="seg ${cur.has(s.sid)?'inthis':''} ${(outOfRange(s.sid)||tooShort(s.sid))?'oor':''}"
@@ -767,7 +820,9 @@ function render(){
             ${tooShort(s.sid)?`<div class="oorbadge">⚠ 너무 짧아서(0.8초 미만) 담아도 화면에 안 나와요</div>`:''}
             ${dupMates(s.sid).length?`<div class="utag" style="border-color:var(--accent);color:var(--accent)">비슷한 그림 ${dupMates(s.sid).length}장 접힘</div>`:''}
             <div class="slabrow">
-              <span class="srcno" title="${srcNo(s.sid)}번째 소스 영상에서 온 장면">${srcNo(s.sid)}</span>
+              ${groupMode==='src'
+                ? `<span class="srcno rol" title="이 장면의 결: ${esc(groupTitle(groupOf(s.sid)))}">${esc(groupEmoji(groupOf(s.sid)))}</span>`
+                : `<span class="srcno" title="${srcNo(s.sid)}번째 소스 영상에서 온 장면">${srcNo(s.sid)}</span>`}
               ${s.label ? `<span class="slab">${esc(s.label)}</span>`
                         : `<span class="slab dim">이름 없음</span>`}
             </div>
