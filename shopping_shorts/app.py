@@ -7988,11 +7988,17 @@ def api_produce_source_brief(request: Request, shortcode: str):
         #   영상이 1~2회 동안 '분석 대기'로 보여 사장님이 오지 않을 결과를 기다렸다.
         #   로그인·비공개처럼 원인이 분명한 것은 몇 번을 더 해도 결과가 같다.
         att = info.get("attempts", 0)
+        # ★시도를 다 썼는데 **결과도 오류도 없으면 도중에 끊긴 것**이다(2026-08-16 실측).
+        #   긴 영상이 다운로드 도중 시간 초과로 죽으면 여기 걸린다 — 그때 화면이 계속
+        #   "분석 중"이라고 하면 사장님은 오지 않을 결과를 기다린다(실제로 그랬다).
+        stalled = (not err) and att >= _AUTOLOAD_MAX_ATTEMPTS
         return {"ok": False, "pending": True,
                 "attempts": att,
-                "gave_up": bool(err) and (att >= _AUTOLOAD_MAX_ATTEMPTS
-                                          or _is_hopeless_error(err)),
-                "reason": _autoload_reason_ko(err)}
+                "gave_up": stalled or (bool(err) and (att >= _AUTOLOAD_MAX_ATTEMPTS
+                                                      or _is_hopeless_error(err))),
+                "reason": (_autoload_reason_ko(err) if err else
+                           ("분석이 도중에 끊겼어요 — 긴 영상은 더 오래 걸립니다"
+                            if stalled else ""))}
     segs = []
     for s in (data.get("segments") or []):
         segs.append({
