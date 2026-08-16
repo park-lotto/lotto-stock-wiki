@@ -1291,8 +1291,12 @@ function autoFill(i){
   const cand = () => Object.keys(DATA.segments).filter(id =>
     !inAny.has(id) && !tooShort(id) && !outOfRange(id)
     && !reps.has((dupMap()[id] || {}).rep || id));
+  // ★남은 부족분이 MIN_CLIP(0.8초)보다 작으면 **더 담지 않는다**(2026-08-16 실측).
+  //   0.8초 미만 토막은 planClips가 만들지 않고 앞 컷들에 나눠 흡수시킨다 — 그래서 한 장 더
+  //   담아도 화면엔 안 나오고 '담았는데 안 나온다'가 된다. 라이브 실측(job d679cd53a330):
+  //   problem 5.02초 칸이 3장 담겼는데 컷은 2개(2.51+2.51)뿐이었다. 0.1로 두면 늘 한 장이 뜬다.
   const added = []; let guard = 0;
-  while (need - have >= 0.1 && guard++ < 20){
+  while (need - have >= MIN_CLIP - EPS && guard++ < 20){
     const pool = cand();
     if (!pool.length) break;
     // 고르는 순서: ①이 칸의 결 + 역할에 맞는 것 → ②역할에 맞는 것 → ③이 칸의 결과 같은 것
