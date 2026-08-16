@@ -19,6 +19,7 @@ CDN URL엔 만료 서명이 있으므로 **뽑자마자 바로 받는다**(저�
 """
 import json
 import re
+import subprocess
 import sys
 import urllib.parse
 import uuid
@@ -100,7 +101,50 @@ def download(url, dest_dir):
             f.write(chunk)
     if path.stat().st_size < 50_000:   # 챌린지 HTML 등 쓰레기 응답 방지
         raise RuntimeError(f"도우인 다운로드 산출물이 비정상적으로 작음({path.stat().st_size}B)")
-    return str(path)
+    return _normalize(path)
+
+
+def _normalize(path):
+    """도우인 원본 → 우리 파이프라인이 안심하고 쓸 수 있는 mp4로 맞춘다.
+
+    ★왜 필요한가(2026-08-16 실측): 도우인이 주는 최고화질은 **hevc(H.265) 2160x2880**이었다.
+      · hevc는 **크롬에서 재생될 수도, 안 될 수도 있다** — OS·하드웨어 지원에 달렸다.
+        고객마다 갈리는 성질이라, 어떤 고객은 3단계 장면 편집에서 화면이 통째로 검게 뜬다.
+      · 2160x2880은 세로 4K다. 우리 결과물은 1080x1920이라 그 위는 버려지는 화소인데
+        미리보기·편집 내내 그 무게를 브라우저가 진다(이 파일로 실제 브라우저가 두 번 얼었다).
+    그래서 **h264 + 높이 1920 상한**으로 맞춘다. 화질 손해는 결과물 기준으로 0이다
+    (어차피 1080x1920으로 렌더된다).
+
+    ffmpeg가 없거나 변환이 실패하면 **원본을 그대로 쓴다** — 받아 온 것을 잃지 않는다.
+    """
+    try:
+        probe = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "v:0",
+             "-show_entries", "stream=codec_name,height", "-of", "csv=p=0", str(path)],
+            capture_output=True, text=True, timeout=60)
+        info = (probe.stdout or "").strip().split(",")
+        codec = info[0] if info else ""
+        height = int(info[1]) if len(info) > 1 and info[1].isdigit() else 0
+    except Exception:  # noqa: BLE001 — ffprobe가 없으면 손대지 않는다
+        return str(path)
+    if codec == "h264" and height <= 1920:
+        return str(path)                      # 이미 안전한 모양이면 그대로
+    out = path.with_name(path.stem + "_h264.mp4")
+    try:
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", str(path),
+             "-vf", "scale=-2:'min(1920,ih)'", "-c:v", "libx264", "-preset", "veryfast",
+             "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k",
+             "-movflags", "+faststart", str(out)],
+            capture_output=True, text=True, timeout=600, check=True)
+    except Exception:  # noqa: BLE001 — 변환 실패는 치명적이지 않다(원본으로 간다)
+        out.unlink(missing_ok=True)
+        return str(path)
+    if not out.exists() or out.stat().st_size < 10000:
+        out.unlink(missing_ok=True)
+        return str(path)
+    path.unlink(missing_ok=True)
+    return str(out)
 
 
 def main():

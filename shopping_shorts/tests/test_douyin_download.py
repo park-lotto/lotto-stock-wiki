@@ -45,3 +45,65 @@ def test_best_play_url_picks_highest_res():
 
 def test_best_play_url_empty():
     assert df.best_play_url("<html>challenge</html>") == ""
+
+
+def test_normalize_keeps_safe_file_untouched(monkeypatch, tmp_path):
+    """이미 h264·1920 이하면 변환하지 않는다(쓸데없이 시간·화질을 버리지 않게)."""
+    from shopping_shorts import douyin_fetch as df
+    src = tmp_path / "a.mp4"
+    src.write_bytes(b"x" * 20000)
+    calls = []
+
+    class R:
+        stdout = "h264,1920\n"
+
+    def fake_run(cmd, **kw):
+        calls.append(cmd[0])
+        if cmd[0] == "ffprobe":
+            return R()
+        raise AssertionError("변환이 돌면 안 된다")
+
+    monkeypatch.setattr(df.subprocess, "run", fake_run)
+    assert df._normalize(src) == str(src)
+    assert calls == ["ffprobe"]
+
+
+def test_normalize_converts_hevc(monkeypatch, tmp_path):
+    """★도우인 최고화질은 hevc 2160x2880이었다(실측). 그대로 두면 크롬이
+    재생 못 할 수 있고(고객 환경마다 갈림) 편집 화면이 무거워진다 → h264로 맞춘다."""
+    from shopping_shorts import douyin_fetch as df
+    src = tmp_path / "b.mp4"
+    src.write_bytes(b"x" * 20000)
+
+    class R:
+        stdout = "hevc,2880\n"
+
+    def fake_run(cmd, **kw):
+        if cmd[0] == "ffprobe":
+            return R()
+        (tmp_path / "b_h264.mp4").write_bytes(b"y" * 30000)   # ffmpeg가 만든 셈
+        return R()
+
+    monkeypatch.setattr(df.subprocess, "run", fake_run)
+    out = df._normalize(src)
+    assert out.endswith("_h264.mp4")
+    assert not src.exists(), "원본은 지워 디스크를 아낀다"
+
+
+def test_normalize_falls_back_when_ffmpeg_fails(monkeypatch, tmp_path):
+    """변환이 깨져도 **받아 온 원본은 잃지 않는다** — 못 쓰는 것보단 낫다."""
+    from shopping_shorts import douyin_fetch as df
+    src = tmp_path / "c.mp4"
+    src.write_bytes(b"x" * 20000)
+
+    class R:
+        stdout = "hevc,2880\n"
+
+    def fake_run(cmd, **kw):
+        if cmd[0] == "ffprobe":
+            return R()
+        raise RuntimeError("ffmpeg 없음")
+
+    monkeypatch.setattr(df.subprocess, "run", fake_run)
+    assert df._normalize(src) == str(src)
+    assert src.exists()
