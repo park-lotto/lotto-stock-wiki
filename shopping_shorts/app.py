@@ -2287,7 +2287,8 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         #   담긴 것을 전부 넣으면 그 복불복 자체가 사라진다.
         # 재료 조립은 `_materials_for_generate`가 한 곳에서 정한다(0순위-B) —
         # [바꾸기] 부분 재생성(/api/script/beat/regen)도 **같은 함수**를 쓴다.
-        _src, _facts_block, _job, _jid = _materials_for_generate(it, body, store, _cid(request))
+        _src, _facts_block, _job, _jid, _scene_block = _materials_for_generate(
+            it, body, store, _cid(request))
         _styled = script_generate.generate_by_styles(
             _src, _picked, target_seconds=body.get("target_seconds") or 30,
             bank_context=_bank_ctx, facts_block=_facts_block)
@@ -9777,7 +9778,7 @@ def _sources_for_generate(item, job, limit=3):
 
 
 def _materials_for_generate(item, body, store, cid):
-    """대본 생성에 넣을 **재료 한 벌** → (sources, facts_block, job, job_id)
+    """대본 생성에 넣을 **재료 한 벌** → (sources, facts_block, job, job_id, scene_block)
 
     ★왜 함수로 뽑았나(2026-08-17): 원래 이 조립이 `/api/wiki/generate` 안에 통째로
       적혀 있었는데, [바꾸기] 부분 재생성(`/api/script/beat/regen`)도 **똑같은 재료**가
@@ -9817,7 +9818,10 @@ def _materials_for_generate(item, body, store, cid):
     _scene_block = _scene_points_block(_job)
     if _scene_block:
         _facts_block = (_facts_block + "\n\n" + _scene_block) if _facts_block else _scene_block
-    return _src, _facts_block, _job, _jid
+    # ★`_scene_block`도 돌려준다 — 호출부가 응답의 `materials.scene_points`(화면에 "장면 N개"로
+    #   표시)를 만들 때 쓴다. 여기서 안 주면 호출부가 `_scene_points_block`을 **한 번 더**
+    #   부르게 되고, 그러면 같은 판단이 두 곳이 된다(0순위-B).
+    return _src, _facts_block, _job, _jid, _scene_block
 
 
 def _extract_from_work(work_id, cid, store):
@@ -10132,7 +10136,7 @@ def api_script_beat_regen(request: Request, body: dict):
         it = {"structure": _structure if isinstance(_structure, dict) else {},
               "full_text": body.get("base_script") or "",
               "category": body.get("category") or ""}
-    _src, _facts_block, _job, _jid = _materials_for_generate(it, body, store, cid)
+    _src, _facts_block, _job, _jid, _scene_block = _materials_for_generate(it, body, store, cid)
 
     _bank_ctx = ""
     if store.get_setting("ping_pong_enabled", "") == "1":
