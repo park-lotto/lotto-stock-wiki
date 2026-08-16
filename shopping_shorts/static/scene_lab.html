@@ -72,7 +72,10 @@ h1{font-size:16px;margin:0;font-weight:700}
 /* ★[미리보기 | 영상조각] 좌우(2026-08-16 사장님). 영상 조각이 아래로 길게 늘어지는 게
    보기 싫다 하셨으므로 **여기 안에서만** 세로 스크롤한다 — 바깥 페이지는 안 늘어난다. */
 .wrap{display:flex;gap:12px;align-items:stretch;min-height:0}
-#playerhost{flex:0 0 300px;max-width:300px;overflow:auto;padding:14px 0 14px 14px}
+/* ★미리보기 칸은 스크롤이 없어야 한다(2026-08-16 사장님) — 안의 영상이 남는 높이에
+   맞춰 줄어든다(아래 #player/#vidbox). overflow:auto를 쓰면 스크롤바가 생긴다. */
+#playerhost{flex:0 0 300px;max-width:300px;overflow:hidden;padding:14px 0 14px 14px;
+  display:flex;flex-direction:column;gap:8px;min-width:0;min-height:0}
 .pane.left{flex:1;min-width:0}
 .pane.rightcol{display:none}       /* 오른쪽 칼럼 폐지: 미리보기가 왼쪽으로 왔다 */
 .pane{overflow-y:auto;height:100%;padding:14px}
@@ -210,18 +213,29 @@ button.act.play{font-size:16px;font-weight:700;padding:8px 16px;background:#1b2a
 button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 .ord{display:flex;gap:3px;margin-left:auto}
 #player{position:relative;width:100%;background:var(--panel);
-        border:1px solid var(--accent);border-radius:10px;padding:8px;display:none}
-#playerhost{display:flex;flex-direction:column;gap:8px;min-width:0}
-#player.on{display:block}
+        border:1px solid var(--accent);border-radius:10px;padding:8px;display:none;
+        /* ★스크롤 없이 칸 안에 다 들어가게(2026-08-16 사장님). 세로로 쌓인 것들
+           (제목·영상·진행바·자르기·자막·안내) 중 **영상만** 남는 높이를 먹고 줄어든다. */
+        flex-direction:column;min-height:0}
+/* 플레이어가 칸의 남는 높이를 채운다 — 안 그러면 내용만큼만 커져서 영상이 min에 붙는다 */
+#player.on{display:flex;flex:1 1 auto}
 /* 재생 전 안내 — 9:16 비율로 자리를 잡아 재생이 켜져도 칸이 안 흔들린다.
    :has()로 "플레이어가 켜지면 사라진다"를 CSS 한 줄로(JS 토글을 또 만들지 않는다). */
-#playerIdle{width:100%;aspect-ratio:9/16;max-height:520px;border:1px dashed var(--line);
+/* 안내도 남는 높이에 맞춘다 — 고정 높이를 주면 칸을 넘어 스크롤이 생긴다. */
+#playerIdle{flex:1 1 auto;min-height:0;width:100%;border:1px dashed var(--line);
   border-radius:10px;background:var(--panel);display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:10px;color:var(--dim);text-align:center}
 #playerhost:has(#player.on) #playerIdle{display:none}
 .pidleIcon{font-size:30px;opacity:.55}
 .pidleTxt{font-size:12px;line-height:1.7}
-#player #vidbox{position:relative;background:#000;border-radius:6px;overflow:hidden;aspect-ratio:9/16;
+/* ★영상만 남는 높이를 먹는다(2026-08-16 사장님 "미리보기쪽 높이는 스크롤 없이").
+   예전엔 폭 기준 9:16 고정이라 300px 폭 → 533px 높이가 되어, 아래 진행바·자르기·
+   자막·안내를 더하면 칸을 넘어 스크롤바가 생겼다. 이제 세로 공간이 모자라면 영상이
+   먼저 줄고(min-height:0), 가로는 비율을 지켜 가운데 선다. */
+#player #vidbox{position:relative;background:#000;border-radius:6px;overflow:hidden;
+        /* ★flex:1 + aspect-ratio를 함께 쓰면 높이가 0으로 붕괴한다(실측). 높이를 먼저
+           주고(자리 확보) 비율은 max-width로 지킨다 — 세로가 모자라면 폭이 준다. */
+        flex:1 1 0;min-height:120px;max-width:100%;aspect-ratio:9/16;margin:0 auto;
         cursor:pointer}   /* 화면 클릭 = 정지/재생(2026-08-15) */
 #player .phead{cursor:default}   /* 오른쪽 칼럼에 고정됐다 — 더는 끌어 옮길 필요가 없다 */
 #player video{width:100%;height:100%;border-radius:6px;background:#000;display:block;aspect-ratio:9/16;object-fit:contain;position:absolute;inset:0}
