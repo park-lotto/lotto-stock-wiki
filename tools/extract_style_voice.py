@@ -116,6 +116,43 @@ def _texts_for_channel(db_path, username, top_n=TOP_N):
     return out
 
 
+# ★CTA는 표현 사전에 들어오면 안 된다(2026-08-17 실측). 첫 추출에서 세 채널 모두
+#   endings에 "~남겨주세요"가 딸려 왔다 — CTA는 **헌장이 따로 정한다**("남겨주시면
+#   [받는 것] 드릴게요", 2026-08-04 사장님 확정). 말버릇으로 섞어 두면 게이트가 잡는
+#   CTA 규칙과 프롬프트가 서로 다른 말을 하게 된다(0순위-B: 같은 판단을 두 곳에 적지 마라).
+_CTA_WORDS = ("남겨주세요", "남겨주시면", "댓글", "구독", "팔로우", "저장")
+
+
+def _clean(vals):
+    """표현만 남긴다 — 문장부호 제거·중복 제거·CTA 제외·너무 긴 것 제외."""
+    out, seen = [], set()
+    for raw in vals or []:
+        v = str(raw).strip().rstrip(".。!?").strip()
+        if not v or len(v) > 12:                       # 12자 넘으면 표현이 아니라 문장이다
+            continue
+        if any(w in v for w in _CTA_WORDS):
+            continue
+        key = v.lstrip("~").strip()
+        if not key or key in seen:                     # "~더라고요" / "~더라고요." 중복 제거
+            continue
+        seen.add(key)
+        out.append(v)
+    return out
+
+
+def clean_voice(voice):
+    """제미니 원본 → 저장할 표현 사전. 비면 그 칸을 아예 빼서 프롬프트가 깔끔하게 한다."""
+    out = {}
+    for k in ("onomatopoeia", "intensifier", "exclaim", "endings"):
+        vals = _clean(voice.get(k))
+        if vals:
+            out[k] = vals[:8]
+    tone = str(voice.get("tone_note") or "").strip()
+    if tone:
+        out["tone_note"] = tone
+    return out
+
+
 def extract_voice(texts):
     """전사 목록 → 표현 사전 dict. 키가 없거나 실패하면 {} (호출부가 건너뛴다)."""
     from shopping_shorts import script_generate      # 키풀·모델을 한 곳에서만 정한다(0순위-B)
@@ -128,8 +165,9 @@ def extract_voice(texts):
         used += len(chunk)
     if not body:
         return {}
-    return script_generate._call_json(
+    raw = script_generate._call_json(
         _PROMPT.format(n=len(body), body="\n\n".join(body)), _SCHEMA) or {}
+    return clean_voice(raw) if raw else {}
 
 
 def run_one(store, db_path, spine_id, username, label, dry=False):

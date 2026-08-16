@@ -83,3 +83,33 @@ class TestVoiceBlock:
                  "voice": {"onomatopoeia": ["쫙"], "tone_note": "t"}}
         blk = bank_assemble.style_block(style, seconds=30)
         assert "쫙" in blk and blk.index("쫙") > blk.index("role=")
+
+
+class TestVoiceClean:
+    """표현 사전 정제 — 첫 추출에서 실제로 섞여 온 잡음들(2026-08-17 실측)."""
+
+    def _clean(self, v):
+        import importlib.util
+        import pathlib
+        p = pathlib.Path(__file__).resolve().parents[2] / "tools" / "extract_style_voice.py"
+        spec = importlib.util.spec_from_file_location("_esv", p)
+        m = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(m)
+        return m.clean_voice(v)
+
+    def test_cta가_말버릇에_섞이면_뺀다(self):
+        """세 채널 전부 endings에 '~남겨주세요'가 딸려 왔다 — CTA는 헌장이 따로 정한다."""
+        out = self._clean({"endings": ["~더라고요", "~남겨주세요", "댓글 남겨주시면"]})
+        assert out["endings"] == ["~더라고요"]
+
+    def test_마침표_변종은_한_번만(self):
+        out = self._clean({"endings": ["~더라고요", "~더라고요.", "~더라고요?"]})
+        assert len(out["endings"]) == 1
+
+    def test_문장은_표현이_아니다(self):
+        out = self._clean({"endings": ["~거든요", "~더라고 하더라고요 정말로 그랬어요"]})
+        assert out["endings"] == ["~거든요"]
+
+    def test_빈_칸은_아예_뺀다(self):
+        out = self._clean({"exclaim": [], "onomatopoeia": ["쫙"], "tone_note": "t"})
+        assert "exclaim" not in out and out["onomatopoeia"] == ["쫙"]
