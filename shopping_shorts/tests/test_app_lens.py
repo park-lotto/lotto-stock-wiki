@@ -375,7 +375,11 @@ def test_lens_search_reports_instagram_dropoff(tmp_path, monkeypatch):
 
 
 def _run_real(lens_discover, raw_matches, stats):
-    """search_similar_videos의 '후처리 루프'만 실제로 태운다(SerpApi 호출 없이)."""
+    """search_similar_videos의 '후처리 루프'만 실제로 태운다(SerpApi 호출 없이).
+
+    ★로케일 1벌로 고정한다 — 2026-08-16부터 기본이 ko+en 2벌이라, 같은 가짜 응답을
+      두 번 주면 계측치(ig_raw 등)가 정확히 배로 부풀어 무엇을 세는지 흐려진다.
+      이 헬퍼를 쓰는 테스트들은 '인스타 드롭오프 계측'을 보는 것이지 로케일이 아니다."""
     import requests
 
     class _R:
@@ -383,11 +387,14 @@ def _run_real(lens_discover, raw_matches, stats):
         def json(self): return {"visual_matches": raw_matches}
         def raise_for_status(self): pass
     orig = requests.get
+    orig_locales = lens_discover._LENS_LOCALES
     requests.get = lambda *a, **k: _R()
+    lens_discover._LENS_LOCALES = (("ko", "kr"),)
     try:
         return lens_discover.search_similar_videos("https://img/x.jpg", api_key="k", stats=stats)
     finally:
         requests.get = orig
+        lens_discover._LENS_LOCALES = orig_locales
 
 
 def test_lens_cn_keywords_empty_without_frame_or_caption(tmp_path, monkeypatch):

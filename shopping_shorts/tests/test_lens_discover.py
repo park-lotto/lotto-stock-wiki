@@ -91,8 +91,11 @@ def test_requests_type_visual_matches(monkeypatch):
     monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
     captured = {}
 
+    seen = []
+
     def fake_get(url, params=None, timeout=None):
         captured["params"] = params
+        seen.append((params or {}).get("hl"))
         return _fake_response([])
     monkeypatch.setattr(lens_discover.requests, "get", fake_get)
 
@@ -100,9 +103,13 @@ def test_requests_type_visual_matches(monkeypatch):
     # type=visual_matches를 넣으면 안 된다 — 그 별도 엔드포인트는 많은 프레임에서 "no results"를
     # 준다(2026-07-14 실측: type 있으면 0개, 없는 all모드면 59~60개). 기본 all모드로 부른다.
     assert "type" not in captured["params"]
-    # 로케일(hl=ko&country=kr) 필수 — 없으면 한국어 콘텐츠 매칭이 약하다(실측).
-    assert captured["params"]["hl"] == "ko"
-    assert captured["params"]["country"] == "kr"
+    # 로케일 — 2026-08-16부터 ko/kr + en/us 두 벌을 돈다(사장님 "다른 프로그램은
+    # 자막없는 원본을 가져온다"). ko만 쓰면 한국어 자막판만 올라온다.
+    # 실측 A/B: 같은 이미지 9건 → 27건, 늘어난 18건은 전부 비한글 제목.
+    # ※이 응답은 빈 결과라 로케일마다 _MAX_ATTEMPTS만큼 재시도한다 — 순서만 본다.
+    assert seen[0] == "ko" and "en" in seen, f"로케일 2벌을 안 돈다: {seen}"
+    assert set(seen) == {"ko", "en"}
+    assert captured["params"]["country"] == "us"   # 마지막 호출이 en/us
 
 
 def test_retries_when_lens_returns_no_results_then_succeeds(monkeypatch):
@@ -112,6 +119,9 @@ def test_retries_when_lens_returns_no_results_then_succeeds(monkeypatch):
     monkeypatch.setattr(lens_discover, "SERPAPI_KEYS", ["fake"])
     monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
     monkeypatch.setattr(lens_discover.time, "sleep", lambda s: None)  # 테스트 대기 제거
+    # 이 테스트가 보는 건 '재시도'다 — 로케일 2벌(2026-08-16)이 섞이면 호출 수가
+    # 배로 늘어 무엇을 세는지 흐려진다. 로케일 1벌로 고정하고 재시도만 검증한다.
+    monkeypatch.setattr(lens_discover, "_LENS_LOCALES", (("ko", "kr"),))
     calls = {"n": 0}
 
     class R:
@@ -243,6 +253,9 @@ def test_rotates_to_next_key_when_first_exhausted(monkeypatch):
         return R(200, {"visual_matches": matches})
 
     monkeypatch.setattr(lens_discover, "SERPAPI_KEYS", ["k1", "k2"])
+    # 이 테스트가 보는 건 '키 로테이션'이다 — 로케일 2벌이면 k1,k2가 두 번씩
+    # 찍혀 무엇을 세는지 흐려진다. 로케일 1벌로 고정한다(2026-08-16).
+    monkeypatch.setattr(lens_discover, "_LENS_LOCALES", (("ko", "kr"),))
     monkeypatch.setattr(lens_discover.requests, "get", fake_get)
 
     out = lens_discover.search_similar_videos("https://ex.com/f.jpg")
