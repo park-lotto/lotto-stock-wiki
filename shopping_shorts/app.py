@@ -56,7 +56,8 @@ from shopping_shorts.lens_discover import search_similar_videos, upload_frame
 from shopping_shorts import douyin_search, xiaohongshu_search
 from shopping_shorts import youtube_search
 from shopping_shorts.config import APIFY_TOKENS
-from shopping_shorts.media_download import resolve_media_url, download_any, probe_grab_meta
+from shopping_shorts.media_download import (resolve_media_url, download_any, probe_grab_meta,
+                                            _is_direct_video)
 from shopping_shorts import edit_plan as _edit_plan
 from shopping_shorts import edit_plan
 from shopping_shorts import voice_presets, audio_post
@@ -7205,7 +7206,7 @@ def _enrich_grab(url, sc, cid):
 
 @app.get("/api/grab", include_in_schema=False)
 def api_grab(request: Request, background_tasks: BackgroundTasks,
-             url: str = "", thumbnail: str = "", title: str = ""):
+             url: str = "", thumbnail: str = "", title: str = "", video_url: str = ""):
     """북마클릿/유저스크립트가 여는 팝업 대상. 세션쿠키로 고객을 직접 식별(_AUTH_ALLOW라
     미들웨어가 customer_id를 안 채우므로 여기서 검증). 영상 즐겨찾기(mix_basket)에 멱등 추가하고
     백그라운드로 메타(썸네일·조회수 등)를 보강한다(팝업은 즉시 반환)."""
@@ -7225,9 +7226,16 @@ def api_grab(request: Request, background_tasks: BackgroundTasks,
     if not platform:
         return _grab_popup_html(False, "담을 수 없는 링크예요", "유튜브·틱톡·샤오홍슈·도우인 영상 페이지에서 눌러주세요")
     sc = "grab_" + platform + "_" + hashlib.sha1(url.encode("utf-8", "ignore")).hexdigest()[:12]
+    # ★영상 파일 직접 주소(2026-08-17) — 담기 스크립트가 보내면 함께 보관한다.
+    #   도우인은 yt-dlp가 쿠키를 요구해 페이지 URL로는 못 받는다(서버·PC 양쪽 재현).
+    #   브라우저에는 CDN 주소가 그대로 있으므로 담는 순간 받아 두는 것이 유일하게 확실한 길.
+    #   아무나 임의 주소를 넣지 못하게 **알려진 영상 CDN만** 받아들인다.
+    vurl = (video_url or "").strip()
+    if vurl and not _is_grabbable_media(vurl):
+        vurl = ""
     added = Store(DB_PATH).mix_basket_add(
         sc, url=url, thumbnail=thumbnail or "", name=(title or "")[:120],
-        caption=(title or "")[:200], customer_id=cid)
+        caption=(title or "")[:200], customer_id=cid, video_url=vurl)
     background_tasks.add_task(_enrich_grab, url, sc, cid)   # 썸네일·조회수 등 보강
     _enqueue_prewarm(Store(DB_PATH), sc, url, caption=(title or "")[:200], customer_id=cid)
     return _grab_popup_html(True, "영상 즐겨찾기에 담겼어요!" if added else "이미 담겨 있어요",
@@ -7910,6 +7918,30 @@ def api_produce_aipick(request: Request, work_id: str = "", forced: str = ""):
 _AUTOLOAD_MAX_PER_CALL = 4      # 한 번 호출로 새로 태울 수 있는 영상 수
 # 1 → 3 (2026-08-04): prewarm과 같은 완화 — 인스타 일시 실패 1번으로 영구 스킵되면
 # 재담기가 조용히 죽는다. 3회면 폭주 차단은 유지하면서 일시 실패를 흡수한다.
+def _is_grabbable_media(u):
+    """담기가 보낸 '영상 파일 직접 주소'로 받아들일지. https + 알려진 영상 CDN만.
+
+    ★왜 좁게 받나: 이 값은 그대로 서버가 내려받는 주소가 된다. 임의 주소를 허용하면
+    내부망을 찌르는 통로가 된다(_ssrf_guard와 같은 취지). blob:은 브라우저 안에서만
+    유효하므로 애초에 걸러야 한다 — 서버가 받을 수 없다."""
+    u = (u or "").strip()
+    if not u.lower().startswith("https://"):
+        return False
+    # ★확장자(.mp4)로 판단하지 않는다 — 그러면 아무 도메인이나 통과한다(evil.example.com/a.mp4).
+    #   담기가 보낼 수 있는 것은 우리가 아는 소스 CDN뿐이다. 호스트로 좁힌다.
+    try:
+        host = urllib.parse.urlparse(u).hostname or ""
+    except ValueError:
+        return False
+    host = host.lower()
+    return any(host == h or host.endswith("." + h) for h in _GRAB_MEDIA_HOSTS)
+
+
+# 담기가 보낸 영상 주소로 받아들일 CDN(도우인=zjcdn/douyinvod, 샤오홍슈=xhscdn).
+# ★여기 없는 호스트는 조용히 버린다 — 그러면 종전대로 페이지 URL로 간다(회귀 없음).
+_GRAB_MEDIA_HOSTS = ("zjcdn.com", "douyinvod.com", "xhscdn.com", "douyinpic.com")
+
+
 _AUTOLOAD_MAX_ATTEMPTS = 3      # shortcode당 자동추출 총 시도 횟수(넘으면 영구 스킵)
 
 
