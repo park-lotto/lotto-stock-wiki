@@ -82,6 +82,9 @@ _SHORTCODE_RES = (
     re.compile(r"(?:youtube\.com/shorts/|youtu\.be/|youtube\.com/watch\?v=)([A-Za-z0-9_-]+)"),
     re.compile(r"tiktok\.com/(?:@[^/]+/video/|v/)(\d+)"),
 )
+# 위 정규식과 짝을 이루는 플랫폼 이름 — 렌즈 경로가 저장한 키의 접두사를 만들 때 쓴다.
+# ★반드시 _SHORTCODE_RES와 같은 순서·같은 길이여야 한다(짝으로 움직이는 값, 0순위-B).
+_SHORTCODE_PLATFORMS = ("instagram", "youtube", "tiktok")
 
 
 def _cache_key_for_url(url):
@@ -91,6 +94,31 @@ def _cache_key_for_url(url):
         if m:
             return m.group(1)
     return None
+
+
+def _cache_keys_for_url(url):
+    """이 URL로 저장돼 있을 수 있는 캐시 키 **후보 전부**(앞에 올수록 우선).
+
+    ★왜 하나가 아닌가(2026-08-17 실측): 같은 영상이 경로에 따라 다른 키로 저장된다.
+      담기 경로  → `7458060642738605355`      (URL에서 뽑은 ID 그대로)
+      렌즈 경로  → `lens_tiktok_7458060642738605355`  (플랫폼 접두사가 붙는다)
+    조회는 앞의 형태만 찾아서, **틱톡 소스는 캐시에 있는데도 한 번도 안 맞았다**
+    (실측 job 8873eeb48a08: 인스타 1건 적중 / 틱톡 2건 불발. 두 틱톡 모두 DB에
+    label 10·use_point 10·source_brief까지 갖춘 채 `lens_tiktok_…` 키로 있었다).
+    그 결과 재태깅을 해도 대본 쪽은 옛 재료를 보고, 매번 Gemini로 다시 뽑았다.
+
+    ⚠️ 렌즈 경로엔 짧은 해시 키(`lens_tiktok_1jw6i6i`)도 있는데 그건 URL에서
+    만들어낼 수 없다 — 못 맞히면 종전대로 재추출한다(회귀 없음, 조용한 실패 아님).
+    """
+    keys = []
+    for rx, plat in zip(_SHORTCODE_RES, _SHORTCODE_PLATFORMS):
+        m = rx.search(url or "")
+        if m:
+            code = m.group(1)
+            keys.append(code)
+            keys.append(f"lens_{plat}_{code}")
+            break
+    return keys
 
 
 # 성우 미선택(2단계 미리보기 등) 기본 성우 = 미나·표현(kr-mina-expressive, 2026-07-25 사장님 확정).
@@ -584,9 +612,10 @@ def run_mix_job(job_id, db_path, work_root):
                 try:
                     # ★캐시 키는 shortcode다(2026-08-06 수정). 예전엔 vid("s0")로 찾아
                     #   **한 번도 적중하지 않았다** — 위 _cache_key_for_url 주석 참고.
-                    _ck = _cache_key_for_url(_url_of.get(vid))
-                    if _ck:
+                    for _ck in _cache_keys_for_url(_url_of.get(vid)):
                         cached = store.get_extract(_ck)
+                        if cached is not None:
+                            break
                     if cached is None:
                         cached = store.get_extract(vid)      # 옛 방식도 남겨둔다(하위호환)
                 except Exception:
@@ -602,6 +631,14 @@ def run_mix_job(job_id, db_path, work_root):
                     segs = None
                 if segs and all(s.get("seg_id") for s in segs):
                     r = {"segments": segs, "full_text": (cached.get("full_text") or "")}
+                    # ★영상 단위 요약을 함께 물려준다(2026-08-17). 여기서 캐시의 **일부
+                    #   필드만** 골라 담기 때문에 source_brief가 통째로 떨어져 나갔다 —
+                    #   도서관 추출본엔 있는데 job의 extract엔 없어서, 재태깅을 해도
+                    #   대본 쪽에서는 영영 못 보는 상태였다(실측 job 8873eeb48a08:
+                    #   s0·s1·s2 셋 다 source_brief 없음, 같은 소스의 도서관 캐시엔 있음).
+                    #   옛 캐시엔 이 필드가 없어 {}가 되고 읽는 쪽은 그대로 견딘다.
+                    if cached.get("source_brief"):
+                        r["source_brief"] = cached["source_brief"]
                     # 무자막 소스 특장점(2026-07-26): 캐시엔 최상위 필드가 없을 수 있으므로
                     # 세그별 product_benefits로 집계 폴백. 이 필드 추가 전 캐시는 빈 리스트 —
                     # full_text도 비었다면 그 소스는 예전처럼 화면 재료로만 쓰인다(무해).

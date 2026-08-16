@@ -3340,11 +3340,21 @@ def api_mix_scene_lab_data(job_id: str):
                 src_duration[vid] = round(d, 2)
     except Exception:
         pass
+    # 소스별 갈래(2026-08-17) — 팔레트를 '결'이 아니라 **어느 영상에서 왔나**로 묶을 때
+    # 머리글에 제품명을 찍으려고 싣는다. 옛 추출본엔 source_brief가 없어 {}가 되고,
+    # 그러면 화면은 '소스 N'만 찍는다(fail-open, 회귀 없음).
+    src_brief = {}
+    for _s in (job.get("extract") or {}).values():
+        _v = (_s or {}).get("video_id") or ""
+        _b = (_s or {}).get("source_brief") or {}
+        if _v and _b:
+            src_brief[_v] = _b
     caps, tts_dur = _lab_captions(plan)
     return {"ok": True, "data": {
         "job_id": job_id,
         "beats": plan.get("beats") or [],
         "urls": job.get("urls") or [],
+        "src_brief": src_brief,
         "syll_per_sec": _edit_plan._SYLLABLES_PER_SEC,
         "segments": {sid: {
             "video_id": v["video_id"], "start": v["start"], "end": v["end"],
@@ -7808,6 +7818,11 @@ def api_produce_source_brief(request: Request, shortcode: str):
             "label": (s.get("label") or ""),
             "scene_desc": s.get("scene_desc") or "",
             "is_key": bool(s.get("is_key")),
+            # 카드가 "이 영상이 어떤 재료인지"를 스스로 세어 보여주려고 싣는다(2026-08-17).
+            # shot_role = 화면 구성(완성품·과정·전후), text 길이 = 말이 있는 영상인지.
+            # 무자막·외국어 소스도 화면만 보고 태깅되므로 '말 없음'은 결함이 아니라 성질이다.
+            "shot_role": s.get("shot_role") or "기타",
+            "chars": len((s.get("text") or "").strip()),
         })
     return {"ok": True, "brief": data.get("source_brief") or {}, "segments": segs}
 

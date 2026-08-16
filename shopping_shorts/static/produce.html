@@ -399,7 +399,15 @@
     .srcName{flex:1;min-width:0;font-size:12px;color:var(--sub);overflow:hidden;
       text-overflow:ellipsis;white-space:nowrap}
     .srcRow{display:flex;gap:8px;margin-bottom:5px;font-size:13px;line-height:1.5}
-    .srcK{flex:0 0 34px;color:var(--sub);font-size:11.5px;font-weight:800;padding-top:2px}
+    /* 칸 이름이 우리 말로 길어졌다(무엇을/하는 일/내세울 것) — 34px이면 두 줄로 접힌다 */
+    .srcK{flex:0 0 58px;color:var(--sub);font-size:11.5px;font-weight:800;padding-top:2px;
+      word-break:keep-all}
+    /* 재료로서의 성질(2026-08-17): 말 유무·길이·화면 구성. 접혀 있어도 보인다 —
+       고를 때 필요한 건 요약 세 줄이 아니라 이 세 가지다. */
+    .srcFacts{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 6px}
+    .srcChip{font-size:11px;line-height:1.6;padding:1px 8px;border-radius:99px;
+      border:1px solid var(--line);background:var(--panel);color:var(--sub);white-space:nowrap}
+    .srcChip.mute{opacity:.65}
     .srcV{flex:1;min-width:0;word-break:keep-all}
     .srcV.strong{font-weight:800;color:var(--accent2)}
     .srcSum{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);
@@ -3760,15 +3768,15 @@ async function renderSourceAnalysis(){
   const done = items.filter(it => _SRC_BRIEF[it.shortcode]).length;
   box.innerHTML =
     `<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
-       <span style="font-size:13px;font-weight:800">🔎 소스 분석</span>
-       <span class="hint">${done}/${items.length}개 분석됨 — 영상마다 무엇을 보여주는지</span>
+       <span style="font-size:13px;font-weight:800">🔎 담은 영상 뜯어보기</span>
+       <span class="hint">${done}/${items.length}개 읽음 — 어떤 재료가 모였고, 뭘 쓸 수 있는지</span>
      </div>`
     + `<div class="srcGrid">` + items.map((it, i) => _srcCard(it, i)).join('') + `</div>`;
 }
 function _srcCard(it, i){
   const d = _SRC_BRIEF[it.shortcode];
   const name = esc(it.name || ('영상 ' + (i+1)));
-  const head = `<div class="srcHead"><span class="srcNo">소스 ${i+1}</span>
+  const head = `<div class="srcHead"><span class="srcNo">재료 ${i+1}</span>
       <span class="srcName" title="${name}">${name}</span></div>`;
   if(!d){
     // 분석 전 카드는 **한 줄로** 접는다(2026-08-16). 분석된 카드와 같은 높이(280px)를
@@ -3782,6 +3790,18 @@ function _srcCard(it, i){
   const segs = d.segments || [];
   const row = (k, v, cls) => v ? `<div class="srcRow"><span class="srcK">${k}</span>
       <span class="srcV ${cls||''}">${esc(v)}</span></div>` : '';
+  // ── 카드가 스스로 세는 값(2026-08-17) ─────────────────────────────────────
+  // 요약 세 줄은 "이 영상이 무슨 영상인가"만 말해준다. 정작 고를 때 필요한
+  // "재료로서 어떤가"(말이 있나·길이가 되나·무슨 그림이 많나)는 아무 데도 없었다.
+  const secs  = segs.reduce((t, s) => t + Math.max(0, (s.end || 0) - (s.start || 0)), 0);
+  const chars = segs.reduce((t, s) => t + (s.chars || 0), 0);
+  // 화면 구성 — shot_role을 사람 말로. 무슨 그림이 많은 영상인지 한눈에 본다.
+  const ROLE_KO = {'완성': '완성 장면', '사용중': '쓰는 장면', 'after': '결과 장면',
+                   'before': '전 상황', '기타': '그 밖'};
+  const cnt = {};
+  segs.forEach(s => { cnt[s.shot_role] = (cnt[s.shot_role] || 0) + 1; });
+  const mix = Object.entries(cnt).sort((a, b2) => b2[1] - a[1]).slice(0, 3)
+    .map(([k, n]) => `<span class="srcChip">${esc(ROLE_KO[k] || k)} ${n}</span>`).join('');
   // ★타임스탬프 목록은 1단계에서 뺐다(2026-08-16 사장님 "소스 타임스탬프 추출된 걸
   //   보여줄 필요는 없고"). 구간별 확인은 3단계 장면 편집이 하는 일이다. 여기서는
   //   "이 영상이 무엇을 보여주는가"와 재료가 얼마나 되는지(장면 수·실증 수)만 본다.
@@ -3790,17 +3810,29 @@ function _srcCard(it, i){
   //   화면을 길게 먹는다 — 기본은 접어서 "제품 한 줄 + 장면 수"만 보이고, 자세히 볼 것만
   //   펼친다. 접힘 상태는 화면에만 남기면 되므로 DOM 클래스로만 관리한다.
   const open = _SRC_OPEN.has(it.shortcode);
+  // ★칸 이름은 우리 말로 쓴다(2026-08-17 사장님 "이름 다 바꾸고 디벨롭해").
+  //   제품/역할/핵심은 태깅 필드 이름을 그대로 화면에 옮긴 것이라 남의 프로그램과
+  //   똑같아 보였다. 사장님이 이 카드를 보며 하는 판단("이 영상을 쓸까 말까")의
+  //   말로 바꾼다. 데이터 필드명(product/role/core)은 그대로다 — 화면 말만 바뀐다.
   return `<div class="srcCard${open ? ' open' : ''}" onclick="toggleSrcCard('${esc(it.shortcode)}')"
        title="${open ? '눌러서 접기' : '눌러서 자세히 보기'}">${head}
-    ${row('제품', b.product, 'strong')}
+    ${row('무엇을', b.product, 'strong')}
+    <div class="srcFacts">
+      <span class="srcChip ${chars ? '' : 'mute'}"
+            title="${chars ? `말이 들어 있는 영상 — 자막 ${chars}자를 대본 재료로 쓸 수 있습니다`
+                           : '말이 없는 영상 — 화면만 보고 태깅했습니다. 그림 재료로 씁니다'}"
+        >${chars ? `🗣 말 있음 ${chars}자` : '🔇 말 없음'}</span>
+      ${secs ? `<span class="srcChip" title="담긴 장면들의 길이를 다 더한 것">⏱ ${secs.toFixed(0)}초</span>` : ''}
+      ${mix}
+    </div>
     <div class="srcMore">
-      ${row('역할', b.role)}
-      ${row('핵심', b.core)}
+      ${row('하는 일', b.role)}
+      ${row('내세울 것', b.core)}
       ${b.summary ? `<div class="srcSum">${esc(b.summary)}</div>` : ''}
     </div>
     ${segs.length ? `<div class="srcStat">
-       <span class="srcStatN">${segs.length}</span><span class="srcStatK">장면</span>
-       ${keyN ? `<span class="srcKey" title="제품 기능을 화면으로 실증하는 장면">실증 ${keyN}</span>` : ''}
+       <span class="srcStatN">${segs.length}</span><span class="srcStatK">쓸 장면</span>
+       ${keyN ? `<span class="srcKey" title="제품이 하는 일을 화면으로 직접 보여주는 장면 — 대본이 가장 먼저 집어 갑니다">보여주는 장면 ${keyN}</span>` : ''}
        <span class="srcCaret">${open ? '접기 ▴' : '자세히 ▾'}</span>
      </div>` : ''}
   </div>`;
