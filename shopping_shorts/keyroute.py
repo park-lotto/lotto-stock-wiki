@@ -29,18 +29,24 @@ SVC_YOUTUBE = "youtube"
 SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_YOUTUBE)
 
 
-def _as_cid(customer_id):
+def as_cid(customer_id):
     """cid는 int 0과 문자열 "0"이 섞여 온다(app.py:6813의 2026-07-30 실사고).
     정규화 안 하면 사용자 키를 못 찾고 조용히 사장님 키로 샌다.
 
     숫자로 못 읽으면 0(사장님)으로 떨어뜨리되 **로그를 남긴다** — 이 경우
     사용자가 키를 등록해뒀어도 조회를 건너뛰고 과금 대상이 되므로,
-    조용히 넘기면 "왜 내 키를 안 쓰지"의 원인을 못 찾는다."""
+    조용히 넘기면 "왜 내 키를 안 쓰지"의 원인을 못 찾는다.
+
+    ★공개 함수다 — 과금하는 쪽(mix_pipeline._charge_clean 등)도 같은 규칙으로
+      cid를 봐야 한다. 각자 int()를 부르면 같은 판단이 두 곳에 흩어진다(0순위-B)."""
     try:
         return int(customer_id)
     except (TypeError, ValueError):
         logging.warning("cid를 숫자로 못 읽어 0(사장님)으로 처리한다: %r", customer_id)
         return 0
+
+
+_as_cid = as_cid        # 기존 호출부 하위호환
 
 
 def _owner_keys(service):
@@ -82,7 +88,7 @@ def keys_for(store, customer_id, service):
         raise ValueError(
             f"모르는 service: {service!r}. keyroute.SVC_* 상수를 써라 "
             f"(가능한 값: {', '.join(SERVICES)})")
-    cid = _as_cid(customer_id)
+    cid = as_cid(customer_id)
     if cid:                                   # cid 0 = 사장님 본인이라 조회 안 함
         mine = store.get_customer_keys_plain(cid, service)
         if mine:

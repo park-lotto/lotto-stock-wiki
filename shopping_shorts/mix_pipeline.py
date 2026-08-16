@@ -1205,12 +1205,9 @@ def _charge_clean(store, customer_id, n_sources):
         return 0
     # ★cid 0 = 사장님 본인(store.LEGACY_CUSTOMER_ID). 자기 키로 자기한테 청구하는 꼴이라
     #   과금 대상이 아니다. keyroute도 cid 0은 개인키 조회를 아예 건너뛴다.
-    #   cid는 int 0과 문자열 "0"이 섞여 오므로 정규화해서 본다(keyroute와 같은 이유).
-    try:
-        cid = int(customer_id)
-    except (TypeError, ValueError):
-        cid = 0
-    if not cid:
+    #   정규화는 keyroute.as_cid를 그대로 쓴다 — 여기서 int()를 또 부르면
+    #   같은 판단이 두 곳에 흩어진다(0순위-B).
+    if not keyroute.as_cid(customer_id):
         return 0
     if not keyroute.should_charge(store, customer_id, keyroute.SVC_VMAKE):
         return 0                                    # 내 키 → 무료
@@ -1298,7 +1295,11 @@ def _clean_one(item, key, work):
 
 def _ensure_clean_sources(store, job, job_id, work, key, customer_id=0):
     """clean_sources 맵을 채워 반환. 이미 있고 파일이 존재하면 스킵(재과금 0).
-    각 스레드는 remove_subtitles만 하고 경로를 반환 → DB 저장은 취합 후 메인에서 1회(경합 없음)."""
+    각 스레드는 remove_subtitles만 하고 경로를 반환 → DB 저장은 취합 후 메인에서 1회(경합 없음).
+
+    ★돈이 나가는 함수다 — 청소할 소스 1편당 VMake 1콜(실비용 500원)이고
+      여기서 **선차감**한다(_charge_clean). 자막제거의 유일한 계량 지점이라
+      run_clean_sources·run_render 어느 쪽으로 들어와도 여기를 지난다."""
     source_map = _resolve_sources(job, Path(work))
     cached = dict(job.get("clean_sources") or {})
     # 지워진 자막영역: 소스별 박스 맵 + 1등(primary). 이미 있으면 이어붙인다(재청소 안 한 소스는 유지).
@@ -1322,7 +1323,13 @@ def _ensure_clean_sources(store, job, job_id, work, key, customer_id=0):
             store.update_mix_job(job_id, clean_sources=cached,
                                  clean_regions={"sources": regions, "primary": primary})
     except Exception:
-        _refund_clean(store, customer_id, charged)   # 실패했으면 돌려준다
+        # ★전액 환불이 의도된 것이다 — 부분 환불로 "고치지" 마라.
+        #   소스 3개 중 2번째가 실패해도 1·2번 VMake는 실제로 돌아 1,000원이 나갔다.
+        #   그런데 결과를 저장하는 update_mix_job이 이 try 안쪽이라 **아무것도
+        #   캐시되지 않는다** — 사용자는 못 쓰는 결과에 돈만 낸 꼴이 되고,
+        #   재시도하면 3개분을 다시 낸다. 못 쓰는 작업에 청구하는 게 더 나쁘다.
+        #   손실은 "실패 전까지 처리된 소스"로 한정되고 재시도 1회분뿐이다.
+        _refund_clean(store, customer_id, charged)
         raise
     return cached
 
