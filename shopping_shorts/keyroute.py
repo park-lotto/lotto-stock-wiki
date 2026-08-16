@@ -9,15 +9,37 @@ should_charge()는 그 두 번째 값을 뒤집기만 한다. 과금을 따로 �
 ★폴백 없음 (사장님 확정)
 사용자 키가 있으면 그 키만 쓴다. 소진돼도 사장님 키로 안 넘어간다.
 넘어가면 "키 등록했는데 사장님 돈이 나가는" 상태가 조용히 생긴다.
+
+★호출할 땐 문자열 대신 아래 SVC_* 상수를 써라. 오타(`"vmakee"`)를 조용히
+  "키 없음"으로 처리하면 과금 여부까지 뒤집혀 원인을 못 찾는다.
+
+※ pricing.OP_* 와 이름이 겹쳐 보여도 **다른 축이다.**
+  서비스 = 키를 발급하는 곳(vmake·gemini·elevenlabs·youtube)
+  작업   = 사용자가 누르는 버튼(vmake·mix·tts·lens·script)
+  영상제작 1건(OP_MIX)은 SVC_GEMINI + SVC_ELEVENLABS 둘을 쓴다 — 1:1이 아니다.
 """
+
+import logging
+
+SVC_GEMINI = "gemini"
+SVC_VMAKE = "vmake"
+SVC_ELEVENLABS = "elevenlabs"
+SVC_YOUTUBE = "youtube"
+
+SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_YOUTUBE)
 
 
 def _as_cid(customer_id):
     """cid는 int 0과 문자열 "0"이 섞여 온다(app.py:6813의 2026-07-30 실사고).
-    정규화 안 하면 사용자 키를 못 찾고 조용히 사장님 키로 샌다."""
+    정규화 안 하면 사용자 키를 못 찾고 조용히 사장님 키로 샌다.
+
+    숫자로 못 읽으면 0(사장님)으로 떨어뜨리되 **로그를 남긴다** — 이 경우
+    사용자가 키를 등록해뒀어도 조회를 건너뛰고 과금 대상이 되므로,
+    조용히 넘기면 "왜 내 키를 안 쓰지"의 원인을 못 찾는다."""
     try:
         return int(customer_id)
     except (TypeError, ValueError):
+        logging.warning("cid를 숫자로 못 읽어 0(사장님)으로 처리한다: %r", customer_id)
         return 0
 
 
@@ -27,11 +49,11 @@ def _owner_keys(service):
     먼저 여기를 거치므로, 실제 vmake는 여기선 빈 목록이고 keys_for가
     _owner_vmake_key로 대신 채운다(아래 참고)."""
     from shopping_shorts import config
-    if service == "gemini":
+    if service == SVC_GEMINI:
         return list(config.SHORTS_GEMINI_KEYS)
-    if service == "youtube":
+    if service == SVC_YOUTUBE:
         return list(config.YOUTUBE_API_KEYS)
-    if service == "elevenlabs":
+    if service == SVC_ELEVENLABS:
         k = getattr(config, "ELEVENLABS_API_KEY", "")
         return [k] if k else []
     return []
@@ -52,14 +74,21 @@ def keys_for(store, customer_id, service):
     ★사장님 키는 항상 _owner_keys(service)를 먼저 거친다(vmake 포함).
     env 기반 서비스는 여기서 바로 나온다. vmake만 env에 없어서 빈 목록이
     돌아오는데, 그 경우에만 store 설정 기반 _owner_vmake_key로 채운다.
+
+    모르는 service는 ValueError로 즉시 터진다 — 조용히 ([], False)를 주면
+    오타가 "키 없음 + 과금함"으로 둔갑해 원인을 못 찾는다.
     """
+    if service not in SERVICES:
+        raise ValueError(
+            f"모르는 service: {service!r}. keyroute.SVC_* 상수를 써라 "
+            f"(가능한 값: {', '.join(SERVICES)})")
     cid = _as_cid(customer_id)
     if cid:                                   # cid 0 = 사장님 본인이라 조회 안 함
         mine = store.get_customer_keys_plain(cid, service)
         if mine:
             return mine, True                 # ★여기서 끝. 사장님 키를 섞지 않는다
     owner = _owner_keys(service)
-    if not owner and service == "vmake":
+    if not owner and service == SVC_VMAKE:
         owner = _owner_vmake_key(store)
     return owner, False
 
