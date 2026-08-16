@@ -640,6 +640,8 @@ _KW_EXPAND_PROMPT = """사용자가 찾으려는 소재: "{keyword}"
 - ★인스타·틱톡용 한국어(ko)는 '만들기·하는 법' 같은 동사꼬리를 빼고 **명사 중심**으로 \
 짧게(인스타 키워드 검색이 긴 구문에 매우 약하다)
 - 중국어(zh)는 축자번역이 아니라 중국 창작자가 실제로 쓰는 표현으로
+- ★**첫 번째 후보의 ko는 사용자가 넣은 말 그대로** "{keyword}" 여야 한다(한 글자도 바꾸지 마라).
+  그 zh는 그 말의 자연스러운 중국어 표현으로. 조합·확장은 두 번째 후보부터.
 - JSON만: {{"candidates": [{{"ko": "한국어 검색어", "zh": "중국어 검색어"}}, ...]}}"""
 
 _KW_EXPAND_SCHEMA = {
@@ -697,6 +699,14 @@ def expand_search_keywords(keyword, n=6, exclude=None, max_retries=3, quota_slee
                     continue
                 out.append({"ko": ko, "zh": zh})
                 seen.update(x for x in (ko, zh) if x)
+            # ★사장님이 넣은 말 **그대로**를 반드시 1번 후보로 둔다(2026-08-16).
+            #   프롬프트로만 시키면 모델이 확률적으로 안 지킨다 — 실제로 '고독스 뷰파인더'를
+            #   넣었는데 목록엔 확장 조합만 있고 원문이 없었다. 여기서 강제한다.
+            #   (이미 보여준 것이면 seen에 있으니 다시 넣지 않는다 — '더' 눌러도 중복 안 쌓임)
+            #   zh는 비워 둔다 — 남의 후보 중국어를 빌려오면 📕/🎬 버튼이 **다른 뜻**으로
+            #   열린다. 화면은 zh가 없으면 인스타·틱톡 버튼만 그린다.
+            if kw not in {(c.get("ko") or "").strip() for c in out} and kw not in seen:
+                out.insert(0, {"ko": kw, "zh": ""})
             return out
         except Exception as e:
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
