@@ -3580,7 +3580,7 @@ def api_mix_scene_lab_fill(job_id: str, body: dict):
         # 음성이 아직 없으면 tts 실길이가 None이다 — 그때는 계획 길이로 대신한다.
         _caps, _tts = _lab_captions(job["edit_plan"])
         need = (_tts or {}).get(str(bi)) or beats[bi].get("target_seconds")
-    picks = _edit_plan.fill_beat_scenes(narration, need, seg_map, pool)
+    picks = _edit_plan.fill_beat_scenes(narration, need, seg_map, pool, taken_ids=sorted(taken))
     return {"ok": True, "picks": picks}
 
 
@@ -8199,6 +8199,16 @@ def api_produce_autoload(request: Request, body: dict):
             if not has_usable_result(result):
                 e["status"] = "failed_empty"
                 e["error"] = "쓸 만한 재료가 안 나왔어요(화면·말 모두 비어 있음)"
+                # ★분석 결과는 남긴다(2026-08-17, 쿠팡선수집 세션) — 저장(캐시)은 안 한다.
+                #   쿠팡 선수집이 product·product_benefits를 쓴다.
+                #   ⚠️여기까지 오는 경우가 줄었다(2026-08-16, 장면라벨 세션): 판정이
+                #   full_text(말)에서 has_usable_result(말 **또는** 화면)로 바뀌어,
+                #   화면 태깅이 나온 무자막 영상은 이제 위에서 정상 저장된다.
+                #   이 분기는 말도 화면도 못 건진 진짜 빈 결과일 때만 탄다.
+                e["result"] = result
+                # 카테고리도 채워 둔다 — 선수집이 홈템·기타만 거르는 데 쓴다.
+                e["category"] = item.get("category") or categorize(
+                    item.get("name") or "", item.get("caption") or "") or None
                 return e
             e["category"] = item.get("category") or categorize(
                 item.get("name") or "", item.get("caption") or "") or None
@@ -8285,6 +8295,41 @@ def api_produce_autoload(request: Request, body: dict):
 _PREFETCH_CATEGORIES = ("홈템", "기타")
 
 
+def _lens_product_name(shortcode, hint="", src_path=None):
+    """영상 화면을 Google Lens로 역검색해 **브랜드·모델까지** 잡는다(2026-08-17).
+
+    ★왜 필요한가(사장님 지적): 무자막 해외 영상은 태깅이 뽑는 이름이 "실리콘 접이식 도마"
+      수준에서 멈춘다. 그걸로 쿠팡을 치면 엉뚱한 게 잡힌다. 렌즈는 화면을 실제로
+      역검색하므로 자막이 없어도 상품을 특정한다.
+    ⚠️ **유료(SerpApi 프레임당 1콜)**라 아무 때나 부르지 않는다 — 태깅 이름으로 친
+      쿠팡 검색이 빈손일 때만 승격한다(`_queue_product_prefetch`의 lens 폴백).
+    ⚠️ `/api/coupang/lens`와 같은 원리지만 job이 필요 없다 — 1단계엔 job이 아직 없고,
+      도서관 적재본이 서버에 있으므로 그 파일로 프레임을 뽑는다(판정 로직은 공용 함수 재사용).
+    """
+    code = (shortcode or "").strip()
+    if not code:
+        return ""
+    # ★영상 경로를 두 곳에서 찾는다: 도서관 영구보관본 → 없으면 방금 받은 임시본.
+    #   무자막 영상은 전사가 비어 `failed_empty`로 끝나 **영구보관까지 못 간다**(그 앞에서
+    #   return한다). 그런데 화면은 방금 받아 놨다 — 그 파일이 살아 있는 동안에 뽑아야 한다.
+    src = _WIKI_MEDIA_DIR / f"{hashlib.sha1(code.encode()).hexdigest()[:16]}.mp4"
+    if not src.exists():
+        src = Path(src_path) if src_path else None
+        if not src or not src.exists():
+            return ""
+    work_id = f"prefetch_{code}"
+    lens_dir = _FIND_TMP_DIR / work_id
+    try:
+        frames = frame_extract.extract_frames(str(src), lens_dir, max_frames=6)
+        if not frames:
+            return ""
+        urls = [f"{PUBLIC_BASE_URL}/api/find/frame/{work_id}/{p.name}" for p in frames]
+        return identify_product_from_lines(fetch_lens_lines(urls), caption=hint or "") or ""
+    except Exception as e:      # noqa: BLE001 — 유료 경로가 죽어도 선수집은 계속 간다
+        print("[product_prefetch] 렌즈 실패: %s %s" % (type(e).__name__, str(e)[:100]))
+        return ""
+
+
 def _queue_product_prefetch(store, done, cid):
     """1단계 분석 결과 → 쿠팡 상세·리뷰 선수집을 릴레이 큐에 걸어둔다.
 
@@ -8304,38 +8349,67 @@ def _queue_product_prefetch(store, done, cid):
     """
     from shopping_shorts import coupang_relay
     for e in done or []:
-        if e.get("status") != "added":
-            continue
+        # ★`added`만 보지 않는다(2026-08-17 사장님 지적 "무자막 외국 영상도 되나").
+        #   무자막 영상은 전사가 비어 적재가 `failed_empty`로 끝나지만(app.py의 빈 대본
+        #   캐시 방지 — 그 판정은 옳고 안 건드린다), **제품은 화면으로 이미 잡혀 있다**
+        #   (`script_extract`가 자막 없어도 product·product_benefits를 뽑는다).
+        #   재료가 제일 아쉬운 게 바로 그런 영상이라 여기서 빼면 안 된다.
+        if e.get("status") in ("skipped_latched", "failed_limit", "failed_download"):
+            continue                     # 영상을 못 받았으면 화면도 없다
         cat = (e.get("category") or "").strip()
         if cat not in _PREFETCH_CATEGORIES:
             continue                     # 레시피·뷰티는 팔 물건이 아니라 건너뛴다
-        name = ((e.get("script") or {}).get("source_brief") or {})
-        product = ""
-        if isinstance(name, dict):
-            product = (name.get("product") or "").strip()
-        if not product:
-            continue                     # 무슨 제품인지 못 잡았으면 검색할 말이 없다
+        brief = ((e.get("script") or e.get("result") or {}).get("source_brief") or {})
+        product = (brief.get("product") or "").strip() if isinstance(brief, dict) else ""
         code = e.get("code") or ""
+        if not product:
+            # 태깅이 이름을 못 잡았으면 화면 역검색으로 승격한다(유료라 이때만).
+            product = _lens_product_name(code, hint=cat, src_path=e.get("video_path"))
+        if not product:
+            continue                     # 그래도 모르면 검색할 말이 없다
         if store.get_setting("product_prefetch_%s" % code, ""):
             continue                     # 같은 영상으로 두 번 긁지 않는다(쿠팡 두들김 방지)
         store.set_setting("product_prefetch_%s" % code, "queued")
 
-        def _save(payload, meta, _code=code, _cid=cid):
-            """릴레이가 보낸 결과를 도서관 캐시에 심는다 — job이 아직 없어도 남는다."""
-            facts = (payload or {}).get("facts") or {}
-            st = Store(DB_PATH)
-            st.set_setting("product_prefetch_%s" % _code,
-                           "done" if facts else "empty")
-            if facts:
-                st.set_setting("product_facts_%s" % _code,
-                               json.dumps({"facts": facts,
-                                           "product": (payload or {}).get("product") or {}},
-                                          ensure_ascii=False))
+        _enqueue_prefetch(code, product, cat)
 
-        coupang_relay.QUEUE.submit_async(
-            "detail", {"product": product, "shortcode": code, "category": cat},
-            q=product, on_done=_save)
-        print("[product_prefetch] 큐잉: %s (%s / %s)" % (product, cat, code))
+
+def _enqueue_prefetch(code, product, cat, lens_tried=False):
+    """상품 재료 수집 일감 하나를 큐에 건다(결과 저장 콜백 포함).
+
+    ★렌즈 승격(2026-08-17): 태깅 이름으로 친 검색이 **빈손**이면 화면 역검색으로 이름을
+      다시 잡아 한 번 더 시도한다. 무자막 해외 영상은 태깅 이름이 뭉뚱그려져("실리콘 도마")
+      엉뚱한 게 잡히거나 아예 안 잡히는데, 렌즈는 화면을 보므로 브랜드·모델까지 간다.
+    ★유료라 **한 번만** 승격한다(`lens_tried`) — 무한 재시도가 곧 요금이다.
+    """
+    from shopping_shorts import coupang_relay
+
+    def _save(payload, meta, _code=code, _cat=cat, _tried=lens_tried):
+        """릴레이가 보낸 결과를 도서관 캐시에 심는다 — job이 아직 없어도 남는다."""
+        st = Store(DB_PATH)
+        facts = (payload or {}).get("facts") or {}
+        picked = (payload or {}).get("product") or {}
+        if facts:
+            st.set_setting("product_prefetch_%s" % _code, "done")
+            st.set_setting("product_facts_%s" % _code,
+                           json.dumps({"facts": facts, "product": picked}, ensure_ascii=False))
+            return
+        # 빈손 — 상품 자체를 못 찾은 경우에만 렌즈로 한 번 더 간다.
+        # (상품은 찾았는데 분석이 빈 경우는 이름 문제가 아니므로 다시 긁지 않는다)
+        if not _tried and not picked:
+            lens_name = _lens_product_name(_code, hint=_cat)
+            if lens_name:
+                st.set_setting("product_prefetch_%s" % _code, "lens")
+                print("[product_prefetch] 렌즈 승격: %s (%s)" % (lens_name, _code))
+                _enqueue_prefetch(_code, lens_name, _cat, lens_tried=True)
+                return
+        st.set_setting("product_prefetch_%s" % _code, "empty")
+
+    coupang_relay.QUEUE.submit_async(
+        "detail", {"product": product, "shortcode": code, "category": cat},
+        q=product, on_done=_save)
+    print("[product_prefetch] 큐잉: %s (%s / %s%s)"
+          % (product, cat, code, " · 렌즈" if lens_tried else ""))
 
 
 @app.post("/api/produce/mix/start")
