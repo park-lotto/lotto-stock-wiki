@@ -7822,7 +7822,19 @@ def api_produce_source_brief(request: Request, shortcode: str):
         if data:
             break
     if not data:
-        return {"ok": False, "pending": True}
+        # ★왜 아직 없는지까지 알려준다(2026-08-17 사장님 "영상분석은?").
+        #   추출이 없는 데는 두 가지가 있는데 화면은 둘을 구별할 수 없었다:
+        #     · 아직 도는 중        → 기다리면 된다
+        #     · 받기부터 실패해 포기 → 기다려도 영원히 안 온다
+        #   구별을 못 하니 실패한 영상도 계속 "분석 대기"로 보였다(실측: 도우인 4건이
+        #   'Fresh cookies needed'로 3회 실패·래치됐는데 화면은 아무 말도 안 했다).
+        st = Store(DB_PATH).autoload_status([shortcode, _media_code(shortcode)])
+        info = st.get(shortcode) or st.get(_media_code(shortcode)) or {}
+        err = info.get("last_error") or ""
+        return {"ok": False, "pending": True,
+                "attempts": info.get("attempts", 0),
+                "gave_up": bool(err) and info.get("attempts", 0) >= _AUTOLOAD_MAX_ATTEMPTS,
+                "reason": _autoload_reason_ko(err)}
     segs = []
     for s in (data.get("segments") or []):
         segs.append({
@@ -7866,6 +7878,28 @@ _AUTOLOAD_MAX_PER_CALL = 4      # 한 번 호출로 새로 태울 수 있는 영
 # 1 → 3 (2026-08-04): prewarm과 같은 완화 — 인스타 일시 실패 1번으로 영구 스킵되면
 # 재담기가 조용히 죽는다. 3회면 폭주 차단은 유지하면서 일시 실패를 흡수한다.
 _AUTOLOAD_MAX_ATTEMPTS = 3      # shortcode당 자동추출 총 시도 횟수(넘으면 영구 스킵)
+
+
+def _autoload_reason_ko(err):
+    """자동적재 실패 원문 → 사장님이 읽을 한 줄. 실패가 아니면 "".
+
+    ★원문을 그대로 화면에 던지지 않는다 — 'Fresh cookies (not necessarily logged in)
+    are needed'를 보고 무엇을 해야 할지 알 수 있는 사람은 없다. 대신 **무엇이
+    막혔는지**를 말한다. 모르는 오류는 숨기지 말고 앞부분을 그대로 보여준다
+    (조용히 삼키면 또 '왜 안 되지'가 된다)."""
+    e = (err or "").strip()
+    if not e:
+        return ""
+    low = e.lower()
+    if "cookie" in low or "login" in low or "sign in" in low:
+        return "이 사이트가 로그인을 요구해 영상을 받지 못했습니다"
+    if "private" in low or "unavailable" in low or "removed" in low:
+        return "원본이 비공개이거나 삭제돼 받지 못했습니다"
+    if "yt-dlp" in low or "download" in low or "다운로드" in e:
+        return "영상을 내려받지 못했습니다"
+    if "timeout" in low or "timed out" in low:
+        return "시간이 초과돼 받지 못했습니다"
+    return "영상 분석에 실패했습니다 — " + (e[:60] + ("…" if len(e) > 60 else ""))
 # 동시에 추출할 영상 수(2026-07-30). 대기의 정체가 제미니 응답이라 동시에 올리면 총 시간이
 # '가장 느린 1개'로 수렴한다. 다만 무제한으로 올리면 제미니 429가 몰려 오히려 느려지고 키가
 # 소진되므로 3으로 묶는다(_AUTOLOAD_MAX_PER_CALL=4와는 다른 축 — 그건 '총 몇 개').

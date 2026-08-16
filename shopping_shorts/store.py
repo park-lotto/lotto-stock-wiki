@@ -1835,6 +1835,24 @@ class Store:
             ).fetchall()
         return {r[0]: r[1] or 0 for r in rows}
 
+    def autoload_status(self, shortcodes):
+        """{shortcode: {attempts, last_error}} — 자동적재가 몇 번 시도했고 왜 실패했나.
+
+        ★화면이 실패를 말할 수 있게 하려고 뽑는다(2026-08-17). 이 값이 없어서
+        다운로드가 막힌 영상도 화면엔 계속 '분석 대기'로 보였다 — 사장님은 끝나지
+        않는 것을 기다리게 된다(실측: 도우인 4건이 'Fresh cookies needed'로 3회
+        실패해 래치됐는데 화면은 아무 말도 안 했다)."""
+        scs = [s for s in dict.fromkeys(shortcodes or []) if s]
+        if not scs:
+            return {}
+        ph = ",".join("?" * len(scs))
+        with self._conn() as c:
+            rows = c.execute(
+                f"SELECT shortcode, attempts, last_error FROM produce_autoload "
+                f"WHERE shortcode IN ({ph})", scs
+            ).fetchall()
+        return {r[0]: {"attempts": r[1] or 0, "last_error": r[2] or ""} for r in rows}
+
     def autoload_mark_attempt(self, shortcode):
         """추출을 **시작하기 전에** 시도 횟수를 올린다(선(先)래치).
         나중에 올리면 타임아웃·프로세스 재시작으로 표시가 안 남아 재시도 루프가 산다."""
