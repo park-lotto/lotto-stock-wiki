@@ -22,6 +22,8 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -31,9 +33,6 @@ from pathlib import Path
 
 CHUNK_SECONDS = 150          # 조각 길이. 이보다 길면 504가 나기 시작한다(실측 741초=사망)
 CHUNK_WORKERS = 3            # 동시 업로드 수. 늘리면 429가 몰린다(autoload와 같은 이유)
-COLD_OPEN_MIN_OFFSET = 8.0   # 콜드오픈은 구간 시작에서 이만큼 뒤에서 고른다(아래 설명)
-HOLD_SECONDS = 1.5           # 맨 앞 '하이라이트 카드' 정지 시간(_hold 주석 참고)
-BUMPER_SECONDS = 0.8         # 하이라이트와 본문 사이에 끼우는 로고 범퍼(_bumper 주석 참고)
 
 
 # ────────────────────────────────────────────────────────────
@@ -98,10 +97,10 @@ def _duration(path):
 # ────────────────────────────────────────────────────────────
 # ② 설계
 # ────────────────────────────────────────────────────────────
-# ★콜드오픈 제약이 왜 프롬프트에 박혀 있나(2026-08-15 실측). 제약 없이 시켰더니 5편 중
-#   2편이 cold_open을 **구간 시작과 같은 지점**으로 골랐다(0.0~5.4, 352~358). 그러면
-#   같은 화면이 연달아 두 번 나올 뿐 콜드오픈이 아니다. "뒤쪽에서 고르라"를 문장으로
-#   못박고, 아래 _fix_cold_open이 계산으로 한 번 더 강제한다(LLM이 어겨도 결과가 옳게).
+# ★콜드오픈(하이라이트 복제)은 2026-08-15에 폐기했다. 이 롱폼은 상당 부분이 '검은 배경 +
+#   큰 자막'이라 "가장 센 구간"이 시각적으로는 글자 카드다. 그걸 앞에 복제해 붙이면 훅이
+#   아니라 맥락 없는 도청이 되고, 같은 장면이 곧 또 나와 "되감겼나?"로 읽힌다. 문장 훅은
+#   영상 복제가 아니라 **상단 헤드카피 텍스트**로 보여주는 게 이음매 0개로 같은 효과를 낸다.
 _PROMPT = """아래는 유튜브 롱폼의 전사문이다. [시작초-끝초] 타임코드가 붙어 있고,
 일부 줄에는 (화면: ...) 로 그 순간 화면에 무엇이 보이는지 적혀 있다.
 
@@ -121,9 +120,8 @@ _PROMPT = """아래는 유튜브 롱폼의 전사문이다. [시작초-끝초] �
 - start, end: 초 (전사문 타임코드 기준)
 - why: 왜 이 구간인가 (한 문장)
 - screen: 이 구간 화면이 볼 만한 이유 (한 문장)
-- cold_open: {{start, end}} — 맨 앞에 복제해 붙일 가장 센 3~7초.
-  ★반드시 구간 시작보다 {off}초 이상 뒤에서 골라라. 구간 앞부분을 그대로 고르면
-  같은 장면이 두 번 나와 아무 효과가 없다. 구간 후반의 결정적 순간을 골라라.
+- layout: "textcard" 또는 "screencast" — (화면: ...) 설명상 '검은 배경에 큰 자막이
+  뜨는 화면'이면 textcard, 프로그램·웹 화면 녹화면 screencast.
 - headline: [1줄, 2줄] — 상단 헤드카피. 각 줄 12자 이내. 2줄째가 훅
 - captions: [{{start, end, line1, line2}}] — 요약 자막. 각 줄 12자 이내,
   둘째 줄이 없으면 빈 문자열. 전사를 그대로 옮기지 말고 짧게 압축하라.
@@ -163,7 +161,7 @@ def plan_shorts(segs, n_shorts=5, api_key=None, model=None):
     keys = [api_key] if api_key else list(SHORTS_GEMINI_KEYS)
     if not keys:
         raise RuntimeError("longform_shorts: SHORTS_GEMINI_KEY가 설정되지 않았습니다")
-    prompt = _PROMPT.format(n=n_shorts, off=int(COLD_OPEN_MIN_OFFSET)) + _transcript_block(segs)
+    prompt = _PROMPT.format(n=n_shorts) + _transcript_block(segs)
     last = None
     for i, key in enumerate(keys):
         try:
@@ -179,29 +177,8 @@ def plan_shorts(segs, n_shorts=5, api_key=None, model=None):
         raise RuntimeError(f"longform_shorts: 키 {len(keys)}개 모두 실패 — {last}")
     plan = json.loads(r.text)
     for sh in plan.get("shorts") or []:
-        _fix_cold_open(sh)
         sh["captions"] = snap_captions(sh.get("captions") or [], segs, sh["start"], sh["end"])
     return plan
-
-
-def _fix_cold_open(sh):
-    """콜드오픈이 구간 앞부분이면 뒤쪽으로 밀어낸다(LLM이 제약을 어겨도 결과는 옳게).
-
-    앞부분을 복제하면 같은 화면이 연달아 두 번 나온다 — 콜드오픈의 목적(뒤의 결정적
-    장면을 먼저 보여줘 끝까지 보게 만들기)이 통째로 사라진다. 그래서 규칙을 말로만
-    두지 않고 여기서 강제한다.
-    """
-    s, e = float(sh["start"]), float(sh["end"])
-    co = sh.get("cold_open") or {}
-    cs, ce = float(co.get("start", s)), float(co.get("end", s + 5))
-    dur = max(3.0, min(7.0, ce - cs))
-    if cs < s + COLD_OPEN_MIN_OFFSET:
-        # 구간 후반부(뒤에서 1/3 지점)로 옮긴다. 끝은 넘지 않는다.
-        cs = max(s + COLD_OPEN_MIN_OFFSET, e - (e - s) / 3.0)
-        cs = min(cs, e - dur)
-        sh["cold_open_fixed"] = True        # 조용히 고치지 않는다 — 화면이 알 수 있게
-    sh["cold_open"] = {"start": round(cs, 1), "end": round(min(cs + dur, e), 1)}
-    return sh
 
 
 # ────────────────────────────────────────────────────────────
@@ -234,238 +211,309 @@ def snap_captions(caps, segs, win_start, win_end, tol=2.5):
 
 
 # ────────────────────────────────────────────────────────────
-# ④ 렌더
+# ④ 렌더 (2026-08-15 전면 재작성)
 # ────────────────────────────────────────────────────────────
-# 템플릿은 '코드'가 아니라 '값'이다 — 새 디자인 추가는 이 사전에 항목 하나를 더하는 일이고
-# 아래 렌더 함수는 손대지 않는다(2026-08-15 사장님: "템플릿은 갈아끼우면 되는 거니").
+# ★왜 갈아엎었나. 1차 설계는 "실사 영상"을 전제했다 — 하이라이트 정지 카드, 콜드오픈
+#   복제, 로고 범퍼. 그런데 실제 롱폼은 **검은 배경 + 대형 자막**과 **자막이 이미 구워진
+#   화면녹화**로 이뤄져 있었다. 그래서 전제가 통째로 어긋났다(실측된 증상):
+#     - 자막 3중첩: 헤드카피 + 원본에 구워진 자막 + 우리 요약자막이 한 화면에
+#     - 콜드오픈이 '검은 글자카드 7초'가 되어 훅이 아니라 맥락 없는 도청
+#     - 정지 카드 1.2초: 오디오 완전 무음(-163 LUFS) + 1.05→1.00 역방향 줌 점프
+#     - 로고 스팅이 9:16 화면 속 작은 16:9 띠 안에 갇힘
+#     - 화면의 68%가 빈 검정 (잘 되는 채널들의 '여백 최소'와 정반대)
+#   그래서 콜드오픈·정지카드·범퍼를 **전부 버리고** 아래 구조로 다시 짰다.
+#
+# 새 구조 — 이음매가 하나뿐이다(엔드카드 진입). 이음매가 적을수록 어색할 자리가 없다.
+#     [ 본문 그대로 ] + [ 엔드카드 2초 ]
+#       └ 첫 HEADLINE_SECONDS 동안만 상단에 헤드카피가 얹힌다(별도 클립이 아니다)
+#       └ 오디오는 0.00초부터 나온다
+#
+# 화면은 원본 장면 성격에 따라 두 모드로 갈린다(_pick_layout):
+#     textcard  : 원본이 '검은 배경 + 큰 자막' → 9:16으로 **꽉 채워** 크롭. 자막 안 얹는다
+#                 (원본 글자가 이미 크게 살아난다. 여기에 또 얹으면 3중첩)
+#     screencast: 원본이 화면녹화 UI → 5:4로 크롭해 **크게** 배치. 요약자막을 얹는다
+#                 (1080x608로 줄이면 UI 글자가 뭉갠다 — 원본 픽셀을 살린다)
+
+HEADLINE_SECONDS = 2.2       # 상단 헤드카피가 떠 있는 시간
+ENDCARD_SECONDS = 2.0        # 마지막 채널 카드
+SETTLE_FRAMES = 5            # 컷 직후 1.03→1.00 정착(하드컷을 매끄럽게)
+LUFS_TARGET = -14.0          # 쇼츠 표준. 데드에어·볼륨 널뛰기를 여기서 잡는다
+
+# 템플릿은 '값'이다 — 새 디자인은 항목 하나 추가, 렌더 함수는 안 건드린다.
 TEMPLATES = {
-    "cinema_gold": {
-        "label": "블러시네마 · 금",
-        "blur_bg": True, "bg": None,
-        "line": "0xF5C451", "h1": "white", "h2": "0xF5C451",
-        "cap1": "white", "cap2": "0x3EE0BF", "ch": "white",
-        "head_x": 60, "head_align": "left",
+    "mono_gold": {
+        "label": "검정 · 금색",
+        "bg": "black", "h1": "white", "h2": "0xF5C451",
+        "cap1": "white", "cap2": "0xF5C451", "ch": "0xF5C451",
     },
-    "dark_yellow": {
-        "label": "형광강조 · 노랑",
-        "blur_bg": False, "bg": "black",
-        "line": None, "h1": "white", "h2": "0xFFE14D",
-        "cap1": "white", "cap2": "0xFFE14D", "ch": "white",
-        "head_x": 100, "head_align": "left",
+    "mono_yellow": {
+        "label": "검정 · 형광노랑",
+        "bg": "black", "h1": "white", "h2": "0xFFE14D",
+        "cap1": "white", "cap2": "0xFFE14D", "ch": "0xFFE14D",
     },
-    "dark_red": {
-        "label": "레드임팩트",
-        "blur_bg": False, "bg": "black",
-        "line": None, "h1": "0xE01B24", "h2": "white",
+    "mono_red": {
+        "label": "검정 · 레드",
+        "bg": "black", "h1": "0xE01B24", "h2": "white",
         "cap1": "white", "cap2": "0xE01B24", "ch": "0xAAAAAA",
-        "head_x": None, "head_align": "center",
     },
-    "terminal_mint": {
-        "label": "터미널 · 민트",
-        "blur_bg": False, "bg": "0x0A1220",
-        "line": "0x3EE0BF", "h1": "white", "h2": "0x3EE0BF",
+    "mono_mint": {
+        "label": "검정 · 민트",
+        "bg": "black", "h1": "white", "h2": "0x3EE0BF",
         "cap1": "white", "cap2": "0x3EE0BF", "ch": "0x3EE0BF",
-        "head_x": 60, "head_align": "left",
     },
 }
-DEFAULT_TEMPLATE = "cinema_gold"
+DEFAULT_TEMPLATE = "mono_gold"
 
 _FONT = os.environ.get("LFSHORTS_FONT", r"C\:/Windows/Fonts/malgunbd.ttf")
-VIDEO_TOP = 656          # 1080x608(16:9)을 1920 캔버스 정중앙에 놓는 y좌표
+W, H = 1080, 1920
 
 
 def _txtfile(work, name, text):
     p = Path(work) / f"{name}.txt"
     p.write_text(text or "", encoding="utf-8")
-    # ffmpeg 필터 인자에 들어가므로 슬래시로 통일하고 드라이브 콜론을 이스케이프한다
-    return str(p).replace("\\", "/").replace(":", chr(92)+":", 1)
+    return str(p).replace("\\", "/").replace(":", chr(92) + ":", 1)
+
+
+# ── 레이아웃 판정 ────────────────────────────────────────────
+_TEXTCARD_HINTS = ("검은 배경", "검정 배경", "검은색 배경", "텍스트가", "문구가", "자막이",
+                   "글씨가", "흰색 텍스트", "타이포")
+
+
+def _pick_layout(short, segs):
+    """이 구간이 '글자카드'인가 '화면녹화'인가.
+
+    전사에 이미 있는 scene_desc를 센다 — 새로 AI를 부르지 않는다(무과금·즉시).
+    애매하면 screencast로 둔다: 자막을 얹어도 원본에 글자가 없으면 손해가 없지만,
+    반대로 글자카드에 자막을 얹으면 곧바로 3중첩이 된다(더 나쁜 쪽을 피한다).
+    """
+    if short.get("layout") in ("textcard", "screencast"):
+        return short["layout"]                     # 사람이 지정했으면 그대로
+    s, e = float(short["start"]), float(short["end"])
+    hit = tot = 0
+    for g in segs:
+        if float(g.get("end", 0)) < s or float(g.get("start", 0)) > e:
+            continue
+        tot += 1
+        d = (g.get("scene_desc") or "")
+        if any(k in d for k in _TEXTCARD_HINTS):
+            hit += 1
+    return "textcard" if tot and hit / tot >= 0.6 else "screencast"
+
+
+def _source_chain(layout):
+    """원본 프레임 → 1080x1920 화면. 레터박스를 쓰지 않는다.
+
+    ★1차 설계는 16:9를 1080x608로 줄여 화면 한가운데 놓았다(세로의 31.7%). 나머지
+      68%가 빈 검정이었고, 화면녹화 UI 글자는 1920→1080 축소로 뭉갰다. 두 모드 다
+      **크롭**으로 바꿔 원본 픽셀을 그대로 쓴다.
+    """
+    if layout == "textcard":
+        # 9:16 꽉 채우기. 글자카드는 가운데에 글자가 있으므로 좌우를 잘라도 안전하다.
+        return (f"scale={W}:{H}:force_original_aspect_ratio=increase,"
+                f"crop={W}:{H},setsar=1")
+    # 화면녹화: 아래 20%(원본 자막이 구워진 띠)를 잘라내고, 가로도 5:4가 되게 좁혀
+    # **화면을 크게** 만든다. 1차 설계처럼 16:9를 1080x608로 줄이면 UI 글자가 뭉갠다.
+    #   2560x1440 기준: 1440x1152 크롭 → 1080x864 (1차의 608px보다 42% 큼)
+    return (f"crop=w='min(iw,ih*0.8*1.25)':h='ih*0.8':x='(iw-ow)/2':y=0,"
+            f"scale={W}:-2,setsar=1,"
+            f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:black")
 
 
 def render_short(video_path, short, out_path, template=DEFAULT_TEMPLATE,
-                 channel_name="", work_dir=None, cta="SUBSCRIBE", logo_path=None):
-    """설계 1편 → 9:16 mp4. 콜드오픈을 앞에 붙이고 템플릿을 입힌다."""
+                 channel_name="", work_dir=None, logo_path=None, segs=None,
+                 layout=None, gate=True):
+    """설계 1편 → 9:16 mp4 + 품질 게이트 결과.
+
+    gate=True면 렌더 뒤 shorts_gate로 검사하고, 걸리면 결과에 실패 목록을 담는다.
+    (파일은 남긴다 — 뭐가 틀렸는지 눈으로도 봐야 고칠 수 있다. 다만 ok=False다.)
+    """
     tpl = TEMPLATES.get(template) or TEMPLATES[DEFAULT_TEMPLATE]
     work = Path(work_dir or tempfile.mkdtemp(prefix="lfrender_"))
     work.mkdir(parents=True, exist_ok=True)
-    s, e = float(short["start"]), float(short["end"])
-    co = short.get("cold_open") or {}
-    cs, ce = float(co.get("start", s)), float(co.get("end", s))
-    cold_len = max(0.0, round(ce - cs, 1))
+    segs = segs or []
+    lay = layout or _pick_layout(short, segs)
 
-    # 4-1) 조각을 잘라 이어붙인다(훅 카드 + 콜드오픈 + 본편). 재인코딩해야 concat이 안전하다.
-    parts = []
-    if HOLD_SECONDS > 0:
-        _hold(video_path, cs if cold_len > 0 else s, HOLD_SECONDS, work / "hold.mp4")
-        parts.append("hold.mp4")
-    if cold_len > 0:
-        _reenc(video_path, cs, cold_len, work / "co.mp4")
-        parts.append("co.mp4")
-        # 하이라이트 → 본문 사이 로고 범퍼. 이게 없으면 같은 장면이 두 번 이어져
-        # "영상이 되감겼나?"로 읽힌다(잘 되는 채널들이 여기에 로고·전환을 끼운다).
-        if BUMPER_SECONDS > 0:
-            _bumper(BUMPER_SECONDS, work / "bump.mp4", channel_name, tpl, logo_path)
-            parts.append("bump.mp4")
-    _reenc(video_path, s, e - s, work / "main.mp4")
-    parts.append("main.mp4")
-    (work / "list.txt").write_text("".join(f"file '{p}'\n" for p in parts), encoding="utf-8")
-    joined = work / "joined.mp4"
-    subprocess.run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(work / "list.txt"),
-                    "-c", "copy", str(joined), "-loglevel", "error"], check=True)
+    # ★컷은 문장 경계에 붙인다. 정수 초로 자르면 말 중간에 켜지고 말 중간에 죽는다
+    #   (1차 결과물의 "이어지는 구간이 이상하다"의 한 축).
+    s, e = _snap_cut(float(short["start"]), float(short["end"]), segs)
+    body = round(e - s, 2)
 
-    bump_len = BUMPER_SECONDS if cold_len > 0 else 0.0
-    total = HOLD_SECONDS + cold_len + bump_len + (e - s)
-    fg = _filtergraph(work, short, tpl, cold_len, s, total, channel_name, cta, bump_len)
+    _reenc(video_path, s, body, work / "body.mp4")
+    _endcard(ENDCARD_SECONDS, work / "end.mp4", channel_name, tpl, logo_path)
+
+    total = body + ENDCARD_SECONDS
+    # 오디오 게인을 **미리 재서 고정값으로** 건다(아래 _filtergraph 주석 참고).
+    gain = _gain_to_target(work / "body.mp4")
+    fg = _filtergraph(work, short, tpl, s, total, body, channel_name, lay, gain)
     (work / "fg.txt").write_text(fg, encoding="utf-8")
-    subprocess.run(["ffmpeg", "-y", "-i", str(joined), "-filter_complex_script", str(work / "fg.txt"),
-                    "-map", "[v]", "-map", "0:a?", "-c:v", "libx264", "-preset", "veryfast",
-                    "-crf", "23", "-c:a", "aac", str(out_path), "-loglevel", "error"], check=True)
-    return {"path": str(out_path), "seconds": round(total, 1), "cold_open_seconds": cold_len,
-            "hold_seconds": HOLD_SECONDS, "bumper_seconds": bump_len}
-
-
-def _hold(src, at, dur, dst):
-    """맨 앞에 세울 '훅 카드' — 그 지점의 정지 화면 + 무음을 dur초.
-
-    ★왜 필요한가(2026-08-15 사장님 지적). 이게 없으면 0초부터 영상이 곧바로 움직이는데,
-      상단 훅 문구를 읽기도 전에 화면이 튀어 **재생 오류처럼 보인다**. 1.5초만 정지해
-      두면 눈이 훅을 먼저 읽고, 그 다음 콜드오픈이 시작되는 것으로 읽힌다.
-      검은 화면이 아니라 **그 장면의 첫 프레임을 세워두는** 이유: 검은 화면은 '아직
-      로딩 중'으로 보이고, 정지 프레임은 '멈춰 있다가 시작한다'로 보인다.
-
-    ★한 번에 만들려다 틀렸다(2026-08-15). `-frames:v 1`을 출력 옵션으로 걸면 **결과가
-      1프레임짜리**가 되어 홀드가 사실상 0초가 된다(실측: 0.3초와 1.0초 프레임이 서로
-      달랐다 = 정지가 아니라 그냥 재생 중이었다). 그래서 두 단계로 나눈다:
-      프레임을 png로 뽑고 → 그 png를 dur초 동안 반복해 영상으로 만든다.
-    """
-    still = Path(dst).with_suffix(".png")
-    subprocess.run(["ffmpeg", "-y", "-ss", str(at), "-i", str(src), "-frames:v", "1",
-                    str(still), "-loglevel", "error"], check=True)
     subprocess.run(
-        ["ffmpeg", "-y", "-loop", "1", "-t", str(dur), "-i", str(still),
-         "-f", "lavfi", "-t", str(dur), "-i", "anullsrc=r=48000:cl=stereo",
-         "-map", "0:v:0", "-map", "1:a:0", "-r", "30",
-         "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p",
-         "-c:a", "aac", "-ar", "48000", "-shortest", str(dst), "-loglevel", "error"],
-        check=True)
+        ["ffmpeg", "-y", "-i", str(work / "body.mp4"), "-i", str(work / "end.mp4"),
+         "-filter_complex_script", str(work / "fg.txt"),
+         "-map", "[v]", "-map", "[a]",
+         "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-pix_fmt", "yuv420p",
+         "-profile:v", "high", "-level", "4.2", "-movflags", "+faststart",
+         "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
+         str(out_path), "-loglevel", "error"], check=True)
+
+    info = {"path": str(out_path), "seconds": round(total, 1), "layout": lay,
+            "body_seconds": body, "endcard_seconds": ENDCARD_SECONDS,
+            "cut": {"start": s, "end": e}}
+    if gate:
+        from shopping_shorts import shorts_gate
+        # 끝 = 페이드아웃 0.6초 + 무음 엔드카드. 의도한 마무리라 검사에서 뺀다.
+        g = shorts_gate.run(out_path, ignore_tail=ENDCARD_SECONDS + 0.8)
+        info["gate"] = g.to_dict()
+        info["ok"] = g.ok
+        if not g.ok:
+            print("[longform] 품질 게이트 불합격:\n" + g.report(), file=sys.stderr)
+    return info
 
 
-def _bumper(dur, dst, channel_name, tpl, logo_path=None):
-    """하이라이트와 본문 사이에 끼우는 짧은 로고 화면.
+def _snap_cut(s, e, segs, tol=2.0):
+    """구간 시작·끝을 전사 경계로 당긴다. 붙일 경계가 없으면 원래 값을 둔다."""
+    if not segs:
+        return round(s, 2), round(e, 2)
+    starts = sorted({float(g["start"]) for g in segs})
+    ends = sorted({float(g["end"]) for g in segs})
 
-    ★왜 넣나(2026-08-15 사장님 지적). 하이라이트를 앞에 복제해 붙이면 그 장면이 본문에서
-      곧 다시 나온다 — 사이에 아무것도 없으면 "영상이 되감겼나?"로 읽혀 오류처럼 보인다.
-      잘 되는 채널들은 여기에 로고나 전환 장면을 0.5~1초 끼워 "여기서부터 본편"이라는
-      구분을 준다. 로고 이미지가 있으면 그걸 쓰고, 없으면 채널명 카드로 대신한다.
-    """
-    bg = tpl.get("bg") or "black"
-    accent = tpl.get("line") or tpl.get("h2") or "white"
-    if logo_path and Path(logo_path).exists():
-        vin = ["-loop", "1", "-t", str(dur), "-i", str(logo_path)]
-        vf = (f"scale=560:-1,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:{bg},"
-              f"format=yuv420p")
-    else:
-        card = Path(dst).with_suffix(".txt")
-        card.write_text(channel_name or " ", encoding="utf-8")
-        tf = str(card).replace("\\", "/").replace(":", chr(92) + ":", 1)
-        vin = ["-f", "lavfi", "-t", str(dur), "-i", f"color=c={bg}:s=1080x1920:r=30"]
-        vf = (f"drawtext=fontfile='{_FONT}':textfile='{tf}':fontsize=64:fontcolor=white"
-              f":x=(w-tw)/2:y=(h-th)/2,"
-              f"drawbox=x=390:y=1080:w=300:h=8:color={accent}:t=fill,format=yuv420p")
-    subprocess.run(
-        ["ffmpeg", "-y", *vin,
-         "-f", "lavfi", "-t", str(dur), "-i", "anullsrc=r=48000:cl=stereo",
-         "-map", "0:v:0", "-map", "1:a:0", "-r", "30", "-vf", vf,
-         "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p",
-         "-c:a", "aac", "-ar", "48000", "-shortest", str(dst), "-loglevel", "error"],
-        check=True)
+    def near(v, pool):
+        c = min(pool, key=lambda x: abs(x - v))
+        return c if abs(c - v) <= tol else v
+
+    ns, ne = near(s, starts), near(e, ends)
+    return (round(ns, 2), round(ne, 2)) if ne - ns > 8 else (round(s, 2), round(e, 2))
 
 
 def _reenc(src, start, dur, dst):
+    # 중간 산출물은 넉넉히 — 최종에서 한 번 더 인코딩되므로 여기서 아끼면 손실이 겹친다.
     subprocess.run(["ffmpeg", "-y", "-ss", str(start), "-t", str(dur), "-i", str(src),
-                    "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
-                    "-c:a", "aac", "-ar", "48000", str(dst), "-loglevel", "error"], check=True)
+                    "-c:v", "libx264", "-preset", "medium", "-crf", "16",
+                    "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
+                    str(dst), "-loglevel", "error"], check=True)
 
 
-def _dt(src, dst, tf, size, color, x, y, enable=None, border=(4, "black")):
+def _endcard(dur, dst, channel_name, tpl, logo_path=None):
+    """마지막 채널 카드. 여기만 소리를 뺀다(본문 페이드아웃이 이 앞에서 끝난다)."""
+    bg = tpl.get("bg") or "black"
+    accent = tpl.get("ch") or "white"
+    tf = _txtfile(Path(dst).parent, "endname", channel_name or " ")
+    vf = (f"drawtext=fontfile='{_FONT}':textfile='{tf}':fontsize=64:fontcolor=white"
+          f":x=(w-tw)/2:y=(h-th)/2,"
+          f"drawbox=x={W // 2 - 130}:y={H // 2 + 70}:w=260:h=6:color={accent}:t=fill,"
+          f"format=yuv420p")
+    ins = ["-f", "lavfi", "-t", str(dur), "-i", f"color=c={bg}:s={W}x{H}:r=30"]
+    subprocess.run(
+        ["ffmpeg", "-y", *ins,
+         "-f", "lavfi", "-t", str(dur), "-i", "anullsrc=r=48000:cl=stereo",
+         "-map", "0:v:0", "-map", "1:a:0", "-vf", vf,
+         "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p",
+         "-c:a", "aac", "-ar", "48000", "-shortest", str(dst), "-loglevel", "error"],
+        check=True)
+
+
+def _dt(src, dst, tf, size, color, x, y, enable=None, border=(5, "black")):
     b = f":borderw={border[0]}:bordercolor={border[1]}" if border else ""
     en = f":enable='{enable}'" if enable else ""
     return (f"[{src}]drawtext=fontfile='{_FONT}':textfile='{tf}':fontsize={size}"
             f":fontcolor={color}:x={x}:y={y}{b}{en}[{dst}];")
 
 
-def _filtergraph(work, short, tpl, cold_len, win_start, total, channel_name, cta, bump_len=0.0):
+def _gain_to_target(path):
+    """이 오디오를 LUFS_TARGET에 맞추려면 몇 dB 올려야 하나(정적 게인).
+
+    ★loudnorm을 쓰다 걷어냈다(2026-08-15 실측). loudnorm 단일 패스는 **적응형**이라
+      스스로 볼륨을 올렸다 내렸다 한다 — 원본 구간의 라우드니스 점프가 7.9 LU였는데
+      loudnorm을 통과하니 19.0 LU가 됐다. 목표는 '레벨 맞추기'지 '압축'이 아니므로,
+      한 번 재서 **고정 게인**을 건다. 고정 게인은 정의상 점프를 만들 수 없다.
+    """
+    out = subprocess.run(
+        ["ffmpeg", "-v", "error", "-i", str(path), "-af", "loudnorm=print_format=json",
+         "-f", "null", "-"], capture_output=True, text=True).stderr
+    m = re.search(r"\{[^{}]*input_i[^{}]*\}", out, re.S)
+    if not m:
+        return 0.0
+    try:
+        cur = float(json.loads(m.group(0))["input_i"])
+    except Exception:                              # noqa: BLE001
+        return 0.0
+    if cur < -70:                                  # 사실상 무음이면 건드리지 않는다
+        return 0.0
+    return max(-12.0, min(12.0, LUFS_TARGET - cur))
+
+
+def _filtergraph(work, short, tpl, win_start, total, body, channel_name, layout, gain=0.0):
     L = []
-    if tpl["blur_bg"]:
-        L += ["[0:v]split=2[a][b];",
-              "[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
-              "gblur=sigma=50,eq=brightness=-0.55:saturation=0.4[bgb];",
-              "[b]scale=1080:-2[fg];",
-              f"[bgb][fg]overlay=0:{VIDEO_TOP}[p0];"]
-    else:
-        L += [f"[0:v]scale=1080:-2,pad=1080:1920:0:{VIDEO_TOP}:{tpl['bg']}[p0];"]
-    cur = "p0"
-    k = 0
+    # 본문·엔드카드를 같은 규격으로 맞춘 뒤 이어붙인다.
+    # ★concat 디먹서(-c copy)를 쓰지 마라 — 조각들 파라미터가 달라 타임스탬프가 망가진다
+    #   (실측: 38초여야 할 결과가 58.3초, 스팅이 통째로 소멸).
+    L.append(f"[0:v]{_source_chain(layout)},fps=30,format=yuv420p[b0];")
+    L.append(f"[1:v]scale={W}:{H},fps=30,format=yuv420p,setsar=1[e0];")
+    # 오디오: 본문은 끝 0.6초 페이드아웃, 엔드카드는 무음
+    L.append(f"[0:a]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,"
+             f"afade=t=out:st={max(0.0, body - 0.6):.2f}:d=0.6[ba];")
+    L.append("[1:a]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo[ea];")
+    L.append("[b0][ba][e0][ea]concat=n=2:v=1:a=1[cv][ca];")
+    # 라우드니스 정규화 — 데드에어·볼륨 널뛰기를 여기서 잡는다(쇼츠 표준 -14 LUFS)
+    # ★dynaudnorm을 걸었다가 뺐다(2026-08-15 실측). 원본 구간의 라우드니스 점프는
+    #   7.9 LU로 이미 기준(12) 안이었는데, dynaudnorm이 조용한 부분을 끌어올리다
+    #   창 경계에서 튀어 **17.5 LU로 악화**시켰다. 멀쩡한 것을 건드려 망친 경우다.
+    #   레벨만 맞추면 된다 — 원본의 강약(LRA)은 화자의 연기라 뭉개면 안 된다.
+    L.append(f"[ca]volume={gain:.2f}dB,alimiter=limit=0.89[a];")
+
+    cur, k = "cv", 0
 
     def nxt():
-        nonlocal cur, k
+        nonlocal k
         k += 1
         return f"z{k}"
 
-    if tpl["line"]:
-        for y in (0, 1912):
-            d = nxt()
-            L.append(f"[{cur}]drawbox=x=0:y={y}:w=1080:h=8:color={tpl['line']}:t=fill[{d}];")
-            cur = d
+    # 컷 직후 정착 — 하드컷이 툭 끊기지 않게 5프레임만 1.03→1.00
+    d = nxt()
+    L.append(f"[{cur}]scale=w='iw*(1+0.03*max(0,1-t*{30 / SETTLE_FRAMES:.2f}))':"
+             f"h=-2:eval=frame,crop={W}:{H}[{d}];")
+    cur = d
+
+    # 상단 헤드카피 — 처음 몇 초만. 화면에 계속 두면 영상을 가린다.
+    # ★두 줄이 시차를 두고 **아래에서 올라온다**. 이유가 둘이다:
+    #   ㉠ 글자가 0프레임에 통째로 박혀 있으면 '정지 화면'으로 읽힌다 — 게이트의
+    #      '첫 3초 정지' 검사가 실제로 이걸 잡았다(0.57초, 기준 0.5초 초과).
+    #   ㉡ 시차 등장은 읽는 순서를 만든다(1줄 상황 → 2줄 훅).
     head = short.get("headline") or ["", ""]
-    hx = "(w-tw)/2" if tpl["head_align"] == "center" else str(tpl["head_x"])
-    for i, (line, col, y) in enumerate([(head[0], tpl["h1"], 300),
-                                        (head[1] if len(head) > 1 else "", tpl["h2"], 400)]):
+    for i, (line, col, y) in enumerate([(head[0], tpl["h1"], 150),
+                                        (head[1] if len(head) > 1 else "", tpl["h2"], 250)]):
         if not line:
             continue
+        t0 = 0.10 + i * 0.22                       # 줄마다 시차
         d = nxt()
-        L.append(_dt(cur, d, _txtfile(work, f"h{i}", line), 78, col, hx, y, border=(3, "black")))
+        # y가 t0부터 0.35초 동안 아래(+70px)에서 제자리로 온다
+        yexpr = f"{y}+70*max(0{chr(92)},1-(t-{t0:.2f})/0.35)"
+        L.append(_dt(cur, d, _txtfile(work, f"h{i}", line), 76, col,
+                     "(w-tw)/2", yexpr,
+                     enable=f"between(t,{t0:.2f},{HEADLINE_SECONDS})", border=(6, "black")))
         cur = d
-    # 진행바 — "얼마나 남았나"가 보이면 이탈이 준다
-    if tpl["line"]:
-        d = nxt()
-        L.append(f"[{cur}]drawbox=x=0:y=1330:w='1080*t/{total}':h=10:color={tpl['line']}:t=fill[{d}];")
-        cur = d
-    # 콜드오픈 구간 배지 — 같은 장면이 뒤에 또 나오는 이유를 보는 사람이 알게
-    if cold_len > 0:
-        d = nxt()
-        # 배지는 훅 카드가 끝난 뒤(콜드오픈 구간)에만 뜬다
-        _b0, _b1 = HOLD_SECONDS, HOLD_SECONDS + cold_len
-        L.append(f"[{cur}]drawbox=x=60:y=170:w=210:h=64:color=0xE23B3B:t=fill"
-                 f":enable='between(t,{_b0},{_b1})'[{d}];")
-        cur = d
-        d2 = nxt()
-        L.append(_dt(cur, d2, _txtfile(work, "cobadge", "다시 보기"), 38, "white", 95, 182,
-                     enable=f"between(t,{_b0},{_b1})", border=None))
-        cur = d2
-    # 자막 — 원본 타임라인 → 새 타임라인(콜드오픈 길이만큼 밀림)
-    for i, c in enumerate(short.get("captions") or []):
-        _off = HOLD_SECONDS + cold_len + bump_len
-        a = float(c.get("start", win_start)) - win_start + _off
-        b = float(c.get("end", win_start)) - win_start + _off
-        for j, (line, col, y) in enumerate([(c.get("line1", ""), tpl["cap1"], 1420),
-                                            (c.get("line2", ""), tpl["cap2"], 1500)]):
-            if not line:
+
+    # 요약 자막 — 화면녹화 모드에서만. 글자카드에 또 얹으면 자막 3중첩이 된다.
+    if layout != "textcard":
+        for i, c in enumerate(short.get("captions") or []):
+            a = float(c.get("start", win_start)) - win_start
+            b = float(c.get("end", win_start)) - win_start
+            if b <= 0 or a >= body:
                 continue
-            d = nxt()
-            L.append(_dt(cur, d, _txtfile(work, f"c{i}_{j}", line), 58, col,
-                         "(w-tw)/2", y, enable=f"between(t,{a:.1f},{b:.1f})"))
-            cur = d
+            for j, (line, col, y) in enumerate([(c.get("line1", ""), tpl["cap1"], 1560),
+                                                (c.get("line2", ""), tpl["cap2"], 1650)]):
+                if not line:
+                    continue
+                d = nxt()
+                L.append(_dt(cur, d, _txtfile(work, f"c{i}_{j}", line), 60, col,
+                             "(w-tw)/2", y, enable=f"between(t,{a:.2f},{b:.2f})"))
+                cur = d
+
+    # 채널 워터마크 — 범퍼 대신 상시 노출. 우상단 작게.
     if channel_name:
         d = nxt()
-        L.append(_dt(cur, d, _txtfile(work, "ch", channel_name), 46, tpl["ch"], 60, 1740, border=None))
+        L.append(_dt(cur, d, _txtfile(work, "wm", channel_name), 34, "0xFFFFFF",
+                     f"{W}-tw-40", 56, enable=f"lt(t,{body:.2f})", border=(4, "black")))
         cur = d
-    if cta:
-        d = nxt()
-        L.append(f"[{cur}]drawbox=x=700:y=1730:w=320:h=72:color=0xE23B3B:t=fill[{d}];")
-        cur = d
-        d2 = nxt()
-        L.append(_dt(cur, d2, _txtfile(work, "cta", cta), 34, "white", 737, 1750, border=None))
-        cur = d2
-    # 마지막 출력 라벨을 [v]로 바꾼다
+
     L[-1] = L[-1].rsplit("[", 1)[0] + "[v]"
     return "\n".join(L)
