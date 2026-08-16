@@ -3811,9 +3811,11 @@ function _srcCard(it, i){
       return `<div class="srcCard pend fail">${head}
         <div class="srcPend" style="color:var(--fire)">❌ ${esc(r.reason || '영상 분석에 실패했습니다')}
           <div style="color:var(--sub);margin-top:4px">${
-            /로그인/.test(r.reason || '')
-              ? '그 사이트에서 <b>영상을 열어 재생되는 화면</b>에서 다시 담으면 받을 수 있어요.'
-              : '이 영상은 재료로 쓸 수 없어요 — 빼고 진행하시거나 다른 영상을 담아주세요.'}</div>
+            /끊겼/.test(r.reason || '')
+              ? '<b>다시 담으면</b> 처음부터 새로 시도해요(긴 영상은 2~3분 걸릴 수 있어요).'
+              : /로그인/.test(r.reason || '')
+                ? '그 사이트에서 <b>영상을 열어 재생되는 화면</b>에서 다시 담으면 받을 수 있어요.'
+                : '이 영상은 재료로 쓸 수 없어요 — 빼고 진행하시거나 다른 영상을 담아주세요.'}</div>
         </div>
       </div>`;
     }

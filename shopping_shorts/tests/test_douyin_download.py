@@ -107,3 +107,33 @@ def test_normalize_falls_back_when_ffmpeg_fails(monkeypatch, tmp_path):
     monkeypatch.setattr(df.subprocess, "run", fake_run)
     assert df._normalize(src) == str(src)
     assert src.exists()
+
+
+def test_timeout_says_why(monkeypatch, tmp_path):
+    """★시간 초과는 **이유를 남긴다** — 조용히 죽으면 화면이 영원히 '분석 중'이다.
+
+    2026-08-16 실측: 45초짜리 도우인 영상은 다운로드+변환에 108초가 걸린다(20초짜리는 35초).
+    옛 제한(180초)에 긴 영상이 걸려 죽었는데 오류 기록이 없어, 사장님 화면엔
+    '분석 중(3번째 시도)'만 떠 있고 실제로는 아무것도 돌지 않았다.
+    """
+    import subprocess
+    from shopping_shorts import media_download as md
+
+    def boom(*a, **k):
+        raise subprocess.TimeoutExpired(cmd="x", timeout=600)
+
+    monkeypatch.setattr(md.subprocess, "run", boom)
+    try:
+        md._download_douyin("https://www.douyin.com/video/1", tmp_path)
+    except RuntimeError as e:
+        assert "시간 초과" in str(e) and "600" in str(e)
+    else:
+        raise AssertionError("시간 초과가 조용히 지나갔다")
+
+
+def test_timeout_is_generous_enough_for_long_clips():
+    """제한 시간이 실측(108초)보다 넉넉해야 한다 — 짧은 영상 기준으로 잡으면 긴 것만 죽는다."""
+    import inspect
+    from shopping_shorts import media_download as md
+    sig = inspect.signature(md._download_douyin)
+    assert sig.parameters["timeout"].default >= 420

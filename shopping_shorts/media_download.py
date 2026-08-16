@@ -233,14 +233,23 @@ def _download_instagram(url, dest_dir):
         f"만료됐을 수 있습니다. 관리자 확인이 필요합니다.")
 
 
-def _download_douyin(url, dest_dir, timeout=180):
+def _download_douyin(url, dest_dir, timeout=600):
     """도우인 다운로드 → (mp4경로, ""). douyin_fetch를 **서브프로세스**로 돌린다 —
     호출부(FastAPI 백그라운드)가 asyncio 루프 위라 sync_playwright를 인프로세스로
     못 돌리기 때문(yt-dlp를 서브프로세스로 부르는 기존 패턴과 동일). 상세 근거는
     douyin_fetch.py 도크스트링."""
-    r = subprocess.run(
-        [sys.executable, "-m", "shopping_shorts.douyin_fetch", url, str(dest_dir)],
-        capture_output=True, text=True, encoding="utf-8", timeout=timeout)
+    # ★제한 시간 180 → 600초(2026-08-16 실측). 45초짜리 영상이 **108초** 걸렸다
+    #   (헤드리스 크롬 기동 + 18.7MB 받기 + h264 변환). 20초짜리는 35초였다.
+    #   즉 길이에 비례해 늘어나므로 짧은 영상 기준으로 잡으면 긴 영상만 조용히 죽는다 —
+    #   실제로 사장님 화면에서 한 편만 분석되고 다른 편은 '분석 중'으로 멈춰 있었다.
+    try:
+        r = subprocess.run(
+            [sys.executable, "-m", "shopping_shorts.douyin_fetch", url, str(dest_dir)],
+            capture_output=True, text=True, encoding="utf-8", timeout=timeout)
+    except subprocess.TimeoutExpired:
+        # ★이유를 남긴다 — 조용히 죽으면 화면은 영원히 '분석 중'이고 아무도 원인을 모른다.
+        raise RuntimeError(
+            f"도우인 다운로드 시간 초과({timeout}초, {url}) — 영상이 길면 더 걸립니다") from None
     if r.returncode != 0:
         raise RuntimeError(f"도우인 다운로드 실패({url}): {(r.stderr or '')[-300:]}")
     try:
