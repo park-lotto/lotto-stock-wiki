@@ -62,8 +62,41 @@ def test_하한을_줘도_총길이는_안_변한다():
 
 def test_상수가_읽을_수_있는_값이다():
     """0.25초처럼 사실상 없는 하한으로 되돌아가지 않게 못을 박는다."""
-    assert _CAP_MIN_DUR >= 0.6, "표시시간 하한이 다시 낮아졌다"
+    assert _CAP_MIN_DUR >= 0.9, "표시시간 하한이 다시 낮아졌다"
     assert _CAP_COMMA_MINCHARS >= 4, "쉼표 최소 글자수가 다시 낮아졌다"
+
+
+# ── 2차(2026-08-17): 항목 4개 이상인 나열이 중간에서 잘리던 것 ──────────────
+# 사장님: "CTA쪽 바바 / 아침/빵/퐁신 다 따로따로 너무 휙휙 지나가"
+NARR_CTA = ("장모님과 아이도 5kg 감량한 고소한 아침 레시피! "
+            "아침, 풍신, 빵, 나도 중 댓글 남겨주시면 단백질 케이크 비법 링크 보내드려요.")
+
+
+def test_긴_나열은_중간에서_안_잘린다():
+    """'아침, 풍신,' 에서 끊겨 나열이 두 동강 나던 것(누적 6자 도달 순간 끊김)."""
+    segs = _caption_segments(NARR_CTA)
+    assert "아침, 풍신," not in segs, f"나열이 중간에서 잘렸다: {segs}"
+    joined = [s for s in segs if "아침," in s]
+    assert joined, f"나열 구절을 못 찾겠다: {segs}"
+    # 네 항목이 한 구절에 다 들어와야 한다
+    assert all(k in joined[0] for k in ("아침", "풍신", "빵", "나도")), \
+        f"나열이 흩어졌다: {joined}"
+
+
+def test_나열을_묶어도_한줄_폭을_안_넘는다():
+    """묶기가 폭주해 화면 밖으로 나가면 안 된다."""
+    from shopping_shorts.video_assemble import _CAP_LIST_MAXCHARS
+    for s in _caption_segments(NARR_CTA):
+        assert len(s.replace(" ", "")) <= max(_CAP_LIST_MAXCHARS, 19), \
+            f"한 줄이 너무 길다: {s!r}"
+
+
+def test_CTA도_하한을_지킨다():
+    segs = _caption_segments(NARR_CTA)
+    durs = _caption_durations(segs, 9.7)
+    assert min(durs) >= _CAP_MIN_DUR - 1e-6, \
+        f"{min(durs):.2f}s 짜리가 있다 → {list(zip(segs, durs))}"
+    assert abs(sum(durs) - 9.7) < 0.01
 
 
 def test_아주_짧은_칸은_하한보다_균등분배가_우선():
