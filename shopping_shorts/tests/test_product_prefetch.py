@@ -132,3 +132,51 @@ class TestPrefetchedFactsForJob:
         from shopping_shorts.app import _prefetched_facts_for_job
         st = _Store({"product_facts_123": "{깨진"})
         assert _prefetched_facts_for_job({"urls": ["https://www.tiktok.com/@a/video/123"]}, st) == {}
+
+
+class TestAnalyzeRelayRaw:
+    """릴레이가 올린 원본을 **서버가** 분석한다 (2026-08-17 실측으로 역할을 갈랐다).
+
+    PC가 분석까지 하게 짰다가 `제미니 키 0개`로 멈췄다 — 그 키는 서버에만 있다.
+    """
+
+    def test_원본이_비면_None(self):
+        from shopping_shorts.app import _analyze_relay_raw
+        assert _analyze_relay_raw(None) is None
+        assert _analyze_relay_raw({"images_b64": [], "reviews": []}) is None
+
+    def test_리뷰만_있어도_분석을_시도한다(self, monkeypatch):
+        """상세 이미지를 못 받아도 리뷰만으로 재료가 나온다 — 빈손보다 낫다."""
+        from shopping_shorts import app as appmod
+        from shopping_shorts import product_facts
+        called = {}
+
+        def _fake(raw, *, name="", log=print):
+            called["raw"] = raw
+            return {"pain": ["아이가 필통을 네 개씩"]}
+        monkeypatch.setattr(product_facts, "analyze", _fake, raising=False)
+        out = appmod._analyze_relay_raw({"images_b64": [], "reviews": ["리뷰1"], "title": "t"})
+        assert out["pain"] == ["아이가 필통을 네 개씩"]
+        assert called["raw"]["reviews"] == ["리뷰1"]
+
+    def test_깨진_이미지는_건너뛴다(self, monkeypatch):
+        from shopping_shorts import app as appmod
+        from shopping_shorts import product_facts
+        seen = {}
+
+        def _fake(raw, *, name="", log=print):
+            seen["n"] = len(raw["detail_images"])
+            return {}
+        monkeypatch.setattr(product_facts, "analyze", _fake, raising=False)
+        appmod._analyze_relay_raw({"images_b64": ["!!not-base64!!"], "reviews": ["r"]})
+        assert seen["n"] == 0        # 깨진 장은 빠지고 나머지로 분석은 진행
+
+    def test_분석이_터져도_None만_돌려준다(self, monkeypatch):
+        """재료 실패가 대본 생성을 막으면 안 된다."""
+        from shopping_shorts import app as appmod
+        from shopping_shorts import product_facts
+
+        def _boom(raw, *, name="", log=print):
+            raise RuntimeError("제미니 오류")
+        monkeypatch.setattr(product_facts, "analyze", _boom, raising=False)
+        assert appmod._analyze_relay_raw({"images_b64": [], "reviews": ["r"]}) is None
