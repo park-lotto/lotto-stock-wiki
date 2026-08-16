@@ -146,7 +146,13 @@ _TIKTOK_COST_PER_ITEM = 0.0017
 _TIKTOK_LANG_KINDS = {"ko", "en", "ja", "zh", "ru"}   # 키워드 시드의 언어코드 kind
 
 # ── 렌즈(SerpApi Google Lens) 유사영상 발굴 (2026-07-14) ──
-_LENS_MONTH_LIMIT_PER_KEY = 100   # SerpApi 무료 계정당 100회/월
+# SerpApi 계정당 월 한도. ★실측값이다(2026-08-16, account API로 직접 확인):
+#   키1 플랜 250회 · 키2 플랜 250회 → 계정당 250회.
+#   예전 값 100은 실제와 달라, 우리 카운터가 200에 닿으면 **아직 300회가 남았는데도**
+#   렌즈를 막았다. 플랜이 바뀌면 이 값도 같이 고쳐야 한다
+#   (더 정확한 방법: https://serpapi.com/account?api_key= 로 실잔량을 읽는 것.
+#    지금은 렌즈 호출 경로에 매번 왕복을 더하고 싶지 않아 상수로 둔다 — 환경변수로 조절).
+_LENS_MONTH_LIMIT_PER_KEY = int(os.environ.get("LENS_MONTH_LIMIT_PER_KEY", "250"))
 
 
 def _lens_month_limit(store):

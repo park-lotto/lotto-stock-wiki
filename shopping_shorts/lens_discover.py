@@ -224,13 +224,23 @@ def verify_matches(items, keywords=None):
 #   LENS_LOCALES="ko:kr,en:us"  → 기본값
 _LENS_LOCALES = tuple(
     tuple((p.split(":", 1) + ["kr"])[:2])
-    for p in os.environ.get("LENS_LOCALES", "ko:kr,en:us,zh-cn:cn").split(",") if p.strip()
+    # ⚠️ 중국어는 country=**tw**다. 본토(cn)는 구글이 서비스하지 않아 90초를 끌다
+    #    503("We couldn't get valid results")을 뱉는다 — 실측 2026-08-16:
+    #      zh-cn/cn  90.3초 → 503, 0건
+    #      zh-cn/tw   4.0초 → 200, 60건 ✅
+    #    zh 단독(hl=zh)은 400 "Unsupported hl parameter". zh-cn 표기가 맞다.
+    for p in os.environ.get("LENS_LOCALES", "ko:kr,en:us,zh-cn:tw").split(",") if p.strip()
 ) or (("ko", "kr"),)
 
 # ★렌즈 1번 클릭당 SerpApi 호출 **총 상한**(2026-08-16 사장님 "무조건 한번클릭에 3회로").
 #   로케일 3벌 × 재시도(_MAX_ATTEMPTS 3) = 최대 9회까지 불어날 수 있어서 뚜껑을 씌운다.
-#   상한에 닿으면 남은 로케일은 건너뛴다 — 한도가 조용히 배로 새는 걸 막는 안전장치다.
 _MAX_CALLS_PER_SEARCH = int(os.environ.get("LENS_MAX_CALLS", "3"))
+
+# ★로케일마다 **최소 1회는 보장**한다(2026-08-16 사장님 "중국어가 얼마나 나올지 보고싶다").
+#   상한만 두면 앞 로케일이 재시도로 예산을 다 먹어 뒤 로케일(zh)이 아예 안 돈다
+#   — 실제로 그래서 zh가 한 번도 실행되지 않았다. 재시도는 "남는 예산"으로만 한다.
+#   즉 로케일이 3개면 각 1회씩은 확보하고, 예산이 남을 때만 빈 결과를 재시도한다.
+_RESERVE_PER_LOCALE = True
 
 # 구글렌즈 응답에서 결과가 들어오는 리스트들.
 # ★visual_matches만 읽다가 40%를 버리고 있었다(2026-08-16 실측):
@@ -373,14 +383,23 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
     # 이번 검색에서 소진으로 확인된 키 — 로케일마다 같은 죽은 키를 다시 찌르지 않는다
     # (라이브 실측: 로케일 3벌이면 죽은 키를 3번 찔러 왕복만 낭비했다).
     dead = set()
-    for hl, country in _LENS_LOCALES:
+    for i, (hl, country) in enumerate(_LENS_LOCALES):
         if budget[0] <= 0:
             break                        # 예산 소진 → 남은 로케일은 건너뛴다
-        got = _lens_call(image_url, keys, hl, country, timeout, budget, dead)
+        # ★뒤 로케일 몫을 남겨둔다 — 앞 로케일의 재시도가 예산을 다 먹으면
+        #   zh가 아예 안 돈다(사장님 "중국어가 얼마나 나올지 보고싶다").
+        #   남은 로케일 수만큼 예약해두고, 이번 로케일은 나머지만 쓴다.
+        reserve = (len(_LENS_LOCALES) - i - 1) if _RESERVE_PER_LOCALE else 0
+        allow = max(1, budget[0] - reserve)
+        sub = [min(allow, budget[0])]
+        got = _lens_call(image_url, keys, hl, country, timeout, sub, dead)
+        budget[0] -= (min(allow, budget[0]) - sub[0])   # 실제로 쓴 만큼만 차감
         matches.extend(got)
         if stats is not None and isinstance(stats, dict):
             stats[f"raw_{hl}"] = len(got)
     if stats is not None and isinstance(stats, dict):
+        # 실제로 '검색을 해준' 호출 수(소진 키 왕복은 환불되므로 여기 안 잡힌다).
+        # 한도에 실제로 찍히는 건 이 숫자다.
         stats["serpapi_calls"] = _MAX_CALLS_PER_SEARCH - budget[0]
     # ★인스타 편차 계측(2026-08-14 사장님 "인스타는 0건이거나 왕창이거나 편차가 심하다").
     #   추측하지 않으려면 어디서 사라지는지 세야 한다. 렌즈 원본(visual_matches) 중

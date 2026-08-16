@@ -452,14 +452,20 @@ def test_lens_cn_search_survives_one_actor_error(tmp_path, monkeypatch):
 
 
 def test_lens_month_limit_scales_with_keys(tmp_path, monkeypatch):
-    """렌즈 월 한도 = 키 개수 × 100(무료 계정당). 설정 override 있으면 그 값."""
+    """렌즈 월 한도 = 키 개수 × 250(계정당). 설정 override 있으면 그 값.
+
+    ★250은 실측값이다(2026-08-16, SerpApi account API로 직접 확인: 두 키 다 플랜 250).
+      예전 상수 100은 실제와 달라, 카운터가 200에 닿으면 **아직 300회가 남았는데도**
+      렌즈를 막았다."""
+    per = appmod._LENS_MONTH_LIMIT_PER_KEY
+    assert per == 250, "실측 플랜과 어긋나면 멀쩡한데 막힌다"
     s = Store(str(tmp_path / "t.db"))
     import shopping_shorts.config as cfg
     monkeypatch.setattr(cfg, "SERPAPI_KEYS", ["k1"])
-    assert appmod._lens_month_limit(s) == 100
+    assert appmod._lens_month_limit(s) == per
     monkeypatch.setattr(cfg, "SERPAPI_KEYS", ["k1", "k2"])
-    assert appmod._lens_month_limit(s) == 200          # 2번째 키 넣으면 자동 200
+    assert appmod._lens_month_limit(s) == per * 2       # 2번째 키 넣으면 자동 2배
     monkeypatch.setattr(cfg, "SERPAPI_KEYS", [])
-    assert appmod._lens_month_limit(s) == 100          # 키 0개여도 최소 100
+    assert appmod._lens_month_limit(s) == per           # 키 0개여도 최소 1키분
     s.set_setting("lens_month_limit", "50")
     assert appmod._lens_month_limit(s) == 50            # 설정 override 우선

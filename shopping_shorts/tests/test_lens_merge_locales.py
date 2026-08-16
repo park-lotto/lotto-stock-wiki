@@ -153,7 +153,9 @@ def test_같은_영상의_사소한_차이는_무시한다():
 
 # ── ⑤ 호출 상한 — 한 번 클릭에 SerpApi 3회까지 ───────────────────────────
 def test_로케일은_ko_en_zh_세벌이다():
-    assert LD._LENS_LOCALES == (("ko", "kr"), ("en", "us"), ("zh-cn", "cn"))
+    """★중국어는 country=**tw**다. 본토(cn)는 구글이 서비스하지 않아 90초를 끌다
+    503을 뱉는다 — 실측 2026-08-16: zh-cn/cn 90.3초 503·0건 / zh-cn/tw 4.0초 60건."""
+    assert LD._LENS_LOCALES == (("ko", "kr"), ("en", "us"), ("zh-cn", "tw"))
 
 
 def test_한번_검색에_최대_3회만_호출한다(monkeypatch):
@@ -209,6 +211,36 @@ def test_소진된_키는_예산을_먹지_않는다(monkeypatch):
     # 로케일 3벌이 모두 실제 결과를 받았다 = 굶은 로케일 없음
     assert st["raw_ko"] and st["raw_en"] and st["raw_zh-cn"], st
     assert len(rows) == 3
+
+
+def test_앞_로케일_재시도가_뒤_로케일을_굶기지_않는다(monkeypatch):
+    """★중국어(zh)가 아예 안 도는 문제(2026-08-16 사장님 "중국어가 얼마나 나올지 보고싶다").
+
+    ko가 빈 결과로 재시도를 돌면 예산 3회를 혼자 다 먹어 en·zh 차례가 안 왔다.
+    로케일마다 최소 1회는 보장해야 한다."""
+    hit = []
+
+    def fake_get(url, params=None, timeout=None):
+        hl = params["hl"]
+        hit.append(hl)
+        if hl == "ko":
+            return _FakeResp({"visual_matches": []})       # 빈 결과 → 재시도 유발
+        return _FakeResp({"visual_matches": [
+            _match(f"https://www.instagram.com/reel/{hl.upper()}/")]})
+
+    monkeypatch.setattr(LD.requests, "get", fake_get)
+    monkeypatch.setattr(LD, "SERPAPI_KEYS", ["K1"], raising=False)
+    monkeypatch.setattr(LD.serpapi_client, "is_exhausted", lambda *a, **k: False)
+    monkeypatch.setattr(LD, "verify_matches", lambda out, keywords=None: out)
+    monkeypatch.setattr(LD.time, "sleep", lambda s: None)
+    monkeypatch.setattr(LD, "_LENS_LOCALES", (("ko", "kr"), ("en", "us"), ("zh-cn", "cn")))
+
+    st = {}
+    rows = LD.search_similar_videos("http://img", stats=st)
+    assert "zh-cn" in hit, f"중국어가 한 번도 안 돌았다: {hit}"
+    assert "en" in hit, f"영어가 안 돌았다: {hit}"
+    assert st["serpapi_calls"] <= LD._MAX_CALLS_PER_SEARCH   # 상한은 그대로 지킨다
+    assert len(rows) == 2          # en + zh (ko는 빈 결과)
 
 
 def test_결과가_바로_나오면_로케일마다_한번씩만(monkeypatch, spy):
