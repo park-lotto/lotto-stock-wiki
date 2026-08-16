@@ -233,6 +233,25 @@ def _download_instagram(url, dest_dir):
         f"만료됐을 수 있습니다. 관리자 확인이 필요합니다.")
 
 
+def _download_douyin(url, dest_dir, timeout=180):
+    """도우인 다운로드 → (mp4경로, ""). douyin_fetch를 **서브프로세스**로 돌린다 —
+    호출부(FastAPI 백그라운드)가 asyncio 루프 위라 sync_playwright를 인프로세스로
+    못 돌리기 때문(yt-dlp를 서브프로세스로 부르는 기존 패턴과 동일). 상세 근거는
+    douyin_fetch.py 도크스트링."""
+    r = subprocess.run(
+        [sys.executable, "-m", "shopping_shorts.douyin_fetch", url, str(dest_dir)],
+        capture_output=True, text=True, encoding="utf-8", timeout=timeout)
+    if r.returncode != 0:
+        raise RuntimeError(f"도우인 다운로드 실패({url}): {(r.stderr or '')[-300:]}")
+    try:
+        path = json.loads(r.stdout.strip().splitlines()[-1])["path"]
+    except Exception as e:  # noqa: BLE001
+        raise RuntimeError(f"도우인 다운로드 출력 해석 실패({url}): {r.stdout[-200:]}") from e
+    if not Path(path).exists():
+        raise RuntimeError(f"도우인 다운로드 산출물 없음: {path}")
+    return path, ""
+
+
 def _download_ytdlp(url, dest_dir, max_attempts=3):
     """유튜브/틱톡 다운로드 → (mp4경로, caption). yt-dlp 경로는 캡션 없음(빈 문자열).
 
@@ -345,6 +364,15 @@ def download_any(url, dest_dir):
     # _proxy_arg로 프록시를 붙인다) PC 릴레이를 건너뛴다 — PC 의존 없이 고객 다중 처리 가능.
     if config.YT_RELAY_ENABLED and not config.YTDLP_PROXY and ("youtube.com" in u or "youtu.be" in u):
         return _download_via_relay(url, dest_dir)
+    # ★도우인은 yt-dlp가 서버·가정 IP 양쪽에서 "Fresh cookies needed"로 전멸(2026-08-16 실측,
+    # 최신·master 동일). 유일하게 되는 경로 = headless chromium으로 modal_id 페이지 SSR에서
+    # 서명 CDN URL을 뽑아 직접 받는 것(douyin_fetch, 서버서 1080p mp4 실증). 실패하면 종전
+    # 동작(yt-dlp) 그대로 폴백해 회귀 0.
+    if "douyin.com" in u or "iesdouyin.com" in u:
+        try:
+            return _download_douyin(url, dest_dir)
+        except Exception:  # noqa: BLE001 — 폴백 사유일 뿐, 최종 에러는 yt-dlp가 말한다
+            pass
     if any(s in u for s in ("youtube.com", "youtu.be", "tiktok.com",
                              "xiaohongshu.com", "xhslink.com", "douyin.com",
                              "iesdouyin.com", "rednote.com")):
