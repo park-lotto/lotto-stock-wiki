@@ -1102,9 +1102,11 @@
       <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
         <!-- ◀ 좌측 레일: ③ 미리보기(9:16) — 편집안이 뜨면(loadMixReview) 여기가 프리뷰 자리가 된다.
              T8: 다른 패널의 .previewSlot과 같은 규약(sticky) 공유. -->
-        <!-- ★미리보기 폭을 340px로 줄였다(2026-08-16) — 옆에 장면 편집이 서므로 그쪽에
-             폭을 몰아준다. 9:16 세로 영상이라 340px이면 높이 604px로 충분히 크다. -->
-        <div style="flex:0 0 340px;min-width:280px;max-width:340px;align-self:stretch">
+        <!-- ★미리보기를 장면 편집 화면 **안으로** 넣었다(2026-08-16 사장님 배치 지시:
+             맨 위 타임프레임 / 그 아래 [미리보기 + 영상조각]). 그래서 제작소 쪽의 이
+             슬롯은 감춘다 — 요소는 남긴다(#player/#vidbox를 scene_play.js가 참조하고,
+             다른 단계의 미리보기도 같은 규약을 쓴다. 지우면 그 코드가 죽는다). -->
+        <div id="mixPreviewRail" style="display:none;flex:0 0 340px;min-width:280px;max-width:340px;align-self:stretch">
           <div id="mixPreviewPanel" class="previewSlot" style="display:none;min-height:520px">
             <div class="hint" style="margin-bottom:6px">🪞 ③ 미리보기 (9:16)</div>
             <div id="mixPreview"></div>

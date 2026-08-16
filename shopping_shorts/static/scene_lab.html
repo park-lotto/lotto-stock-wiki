@@ -11,15 +11,14 @@
 body{margin:0;background:var(--bg);color:var(--ink);
      font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;font-size:14px;
      height:100vh;display:flex;flex-direction:column;overflow:hidden}
-/* ★배치(2026-08-16 사장님 "미리보기썸네일 + 소스 + 영상전체 가로 타임프레임 형태 /
-   영상 전체 타임프레임은 한 줄로 쭉"): 소스를 먼저 보고 아래 띠에서 결과를 확인한다.
-        [소스 조각]            ← 위(제작소 안에선 왼쪽에 미리보기가 함께 선다)
-        [영상 전체 타임프레임]  ← 아래, 전체 폭 한 줄
-   예전엔 타임프레임이 맨 위라 소스를 고르는 동안 시선이 위아래로 오갔다.
-   ★DOM은 안 옮긴다(참조·이벤트가 깨진다) — order로 순서만 바꾼다. */
-#topzone{flex:none;order:2}         /* 타임프레임 — 맨 아래(고정, 가로로만 스크롤) */
-.wrap{flex:1;min-height:0;order:1}  /* 소스 — 남은 높이를 다 쓰고 여기서만 세로 스크롤 */
-footer{flex:none;order:3}
+/* ★배치(2026-08-16 사장님 "맨 위로 전체 타임스탬프가 위치"):
+        [영상 전체 타임프레임]  ← 맨 위, 전체 폭 한 줄(고정)
+        [소스 조각]            ← 아래(여기서만 세로 스크롤)
+   내가 만들고 있는 영상이 지금 어떤 그림들로 채워졌는지가 항상 위에 보이고,
+   그걸 보며 아래에서 소스를 고른다. */
+#topzone{flex:none}                 /* 타임프레임 — 맨 위 고정(가로로만 스크롤) */
+.wrap{flex:1;min-height:0}          /* 소스 — 남은 높이를 다 쓰고 여기서만 세로 스크롤 */
+footer{flex:none}
 header{padding:12px 18px;border-bottom:1px solid var(--line);display:flex;
        align-items:center;gap:18px;flex-wrap:wrap;background:var(--panel)}
 h1{font-size:16px;margin:0;font-weight:700}
@@ -30,7 +29,10 @@ h1{font-size:16px;margin:0;font-weight:700}
 .mode.on{border-color:var(--accent);color:#fff;background:#1b2a3d}
 /* ── 타임프레임(내 영상 전체) ─────────────────────────────────────────────
    위=전체 한 줄, 아래=고를 조각. 사장님 손그림 구조. 띠는 가로로만 스크롤한다. */
-#topzone{display:grid;grid-template-columns:1fr 300px;gap:10px;align-items:start;margin:0 0 10px}
+/* ★2026-08-16 사장님 배치: 맨 위 타임프레임이 **썸네일 왼쪽 끝부터 오른쪽 끝까지**
+   전체 폭 한 줄. 그 아래가 [미리보기 + 영상조각]이다. 예전엔 여기가 2열이라
+   타임프레임이 미리보기(300px) 옆에서 시작해 왼쪽 끝까지 안 갔다. */
+#topzone{display:block;margin:0 0 10px}
 #timeband{border:1px solid var(--line);border-radius:10px;background:var(--panel);
   margin:0;padding:8px 10px 10px;min-width:0}
 .tbhead{display:flex;align-items:baseline;gap:10px;font-size:12.5px;margin-bottom:7px;flex-wrap:wrap}
@@ -67,8 +69,12 @@ h1{font-size:16px;margin:0;font-weight:700}
   padding:1px 5px;border-radius:5px;font-family:ui-monospace,Menlo,monospace}
 .tbeat.empty{border-style:dashed}
 .tbempty{color:var(--dim);font-size:11.5px;padding:14px 10px}
-.wrap{display:block}   /* 아래는 소스 전용 — 전체 폭(2026-08-15 사장님) */
-.pane.rightcol{display:none}       /* 오른쪽 칼럼 폐지: 미리보기는 위(타임라인 옆)로 갔다 */
+/* ★[미리보기 | 영상조각] 좌우(2026-08-16 사장님). 영상 조각이 아래로 길게 늘어지는 게
+   보기 싫다 하셨으므로 **여기 안에서만** 세로 스크롤한다 — 바깥 페이지는 안 늘어난다. */
+.wrap{display:flex;gap:12px;align-items:stretch;min-height:0}
+#playerhost{flex:0 0 300px;max-width:300px;overflow:auto;padding:14px 0 14px 14px}
+.pane.left{flex:1;min-width:0}
+.pane.rightcol{display:none}       /* 오른쪽 칼럼 폐지: 미리보기가 왼쪽으로 왔다 */
 .pane{overflow-y:auto;height:100%;padding:14px}
 .pane.left{background:var(--panel);border:1px solid var(--line);border-radius:10px}
 .srcgroup{margin-bottom:18px}
@@ -207,6 +213,14 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
         border:1px solid var(--accent);border-radius:10px;padding:8px;display:none}
 #playerhost{display:flex;flex-direction:column;gap:8px;min-width:0}
 #player.on{display:block}
+/* 재생 전 안내 — 9:16 비율로 자리를 잡아 재생이 켜져도 칸이 안 흔들린다.
+   :has()로 "플레이어가 켜지면 사라진다"를 CSS 한 줄로(JS 토글을 또 만들지 않는다). */
+#playerIdle{width:100%;aspect-ratio:9/16;max-height:520px;border:1px dashed var(--line);
+  border-radius:10px;background:var(--panel);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;color:var(--dim);text-align:center}
+#playerhost:has(#player.on) #playerIdle{display:none}
+.pidleIcon{font-size:30px;opacity:.55}
+.pidleTxt{font-size:12px;line-height:1.7}
 #player #vidbox{position:relative;background:#000;border-radius:6px;overflow:hidden;aspect-ratio:9/16;
         cursor:pointer}   /* 화면 클릭 = 정지/재생(2026-08-15) */
 #player .phead{cursor:default}   /* 오른쪽 칼럼에 고정됐다 — 더는 끌어 옮길 필요가 없다 */
@@ -286,6 +300,12 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
 </div>
 <div id="playerhost" data-embed-hide>
   <div class="lbl" style="display:flex;align-items:center;gap:14px"><button class="act play" id="pball" onclick="playAll(event)">▶️ 전체 재생</button><label style="cursor:pointer" title="전체에 적용: 장면마다 컷 하나씩, 멘트 시간을 길이 비례로 나눕니다."><input type="checkbox" onchange="toggleOne(this.checked)"> 1장=1컷</label></div>
+  <!-- 재생 전 안내(2026-08-16) — 미리보기 칸이 통째로 비어 있으면 "여기가 뭐 하는
+       자리인지" 알 수 없다. #player가 켜지면(.on) 이건 자동으로 숨는다. -->
+  <div id="playerIdle">
+    <div class="pidleIcon">🪞</div>
+    <div class="pidleTxt">위 <b>띠의 조각</b>이나 아래 <b>장면</b>을 누르면<br>여기서 재생됩니다</div>
+  </div>
   <div id="player">
       <div class="phead"><b>미리보기</b> <span class="x" onclick="stopPlay()">닫기 ✕</span></div>
       <div id="vidbox" onclick="togglePause(event)"></div>
@@ -519,10 +539,24 @@ function playSegInCard(sid){
   if (v.readyState >= 1) go(); else v.onloadedmetadata = go;
 }
 
-function playSegHere(sid){
+// ★바깥(제작소) 큰 화면에서 재생할지, 이 화면 안에서 재생할지 — **한 곳에서만** 정한다.
+//   2026-08-16 배치 변경으로 미리보기가 이 화면 안으로 들어왔다: 부모가 자기 미리보기
+//   슬롯(#mixPreviewRail)을 감췄으면 넘겨봤자 보이지 않으므로 여기서 튼다.
+//   세 군데(playSegHere/playAllHere/playBeatHere)가 각자 판정하면 언젠가 어긋난다(0순위-B).
+function _outerPlayer(){
   try{
     const up = window.parent;
-    if (up && up !== window && typeof up.sceneLabPlaySeg === 'function'){
+    if (!up || up === window) return null;
+    const rail = up.document && up.document.getElementById('mixPreviewRail');
+    if (rail && getComputedStyle(rail).display === 'none') return null;   // 부모가 감췄다 → 여기서
+    return up;
+  }catch(e){ return null; }
+}
+
+function playSegHere(sid){
+  try{
+    const up = _outerPlayer();
+    if (up && typeof up.sceneLabPlaySeg === 'function'){
       up.sceneLabPlaySeg(sid, {DATA, lists, STRETCH, TRIMS, onePerSeg});
       playKey = 'seg:' + sid; renderBand();
       return;
@@ -534,8 +568,8 @@ function playSegHere(sid){
 function playAllHere(ev){
   if (ev) ev.stopPropagation();
   try{
-    const up = window.parent;
-    if (up && up !== window && typeof up.sceneLabPlayAll === 'function'){
+    const up = _outerPlayer();
+    if (up && typeof up.sceneLabPlayAll === 'function'){
       up.sceneLabPlayAll({DATA, lists, STRETCH, TRIMS, onePerSeg});
       playKey = 'all'; renderBand();
       return;
@@ -551,8 +585,8 @@ function playBeatHere(i, ev){
   //   과정이 없어 실패 지점이 없다(2026-08-15 실측: postMessage 경로가 조용히 실패해
   //   iframe 안에서 소리만 나고 화면은 안 보였다).
   try{
-    const up = window.parent;
-    if (up && up !== window && typeof up.sceneLabPlay === 'function'){
+    const up = _outerPlayer();
+    if (up && typeof up.sceneLabPlay === 'function'){
       // ★window에서 꺼내 쓰면 안 된다 — let/const로 선언한 전역은 window의 속성이 아니라서
       //   바깥에서 읽으면 undefined다(2026-08-15 실측: lists가 undefined라 재생이 죽었다).
       //   같은 도메인이라 객체를 그대로 건넬 수 있다(복사 아님 — 참조가 그대로 간다).
@@ -878,13 +912,23 @@ function render(){
 //   예전에 저장해 둔 좌표가 남아 있으면 relative 배치를 밀어내므로 여기서 지운다.
 (function(){
   try{ localStorage.removeItem('sceneLab:playerPos'); }catch(e){}
-  // 제작소 안이면 이 페이지의 작은 미리보기는 감춘다 — 바깥 큰 화면에서 재생한다.
-  if (window.parent && window.parent !== window){
-    const ph = document.getElementById('playerhost');
-    if (ph) ph.style.display = 'none';
-    const tz = document.getElementById('topzone');
-    if (tz) tz.style.gridTemplateColumns = '1fr';
-  }
+  // ★2026-08-16 사장님 배치 지시로 **이 페이지 안에서** 재생한다(예전엔 제작소 안이면
+  //   여기 미리보기를 감추고 바깥 큰 화면에서 틀었다). 배치가
+  //   [맨 위 타임프레임] / [미리보기 + 영상조각]이라 미리보기가 이 화면 안에 있어야
+  //   조각을 고르며 바로 볼 수 있다. 바깥으로 넘기는 경로(playBeatHere 등)는 그대로
+  //   두되, 부모가 미리보기 슬롯을 감췄으면(#mixPreviewRail) 여기서 재생한다.
+  document.body.classList.add('inside-studio');
+  // ★배치(2026-08-16 사장님): 맨 위 타임프레임 / 그 아래 [미리보기 + 영상조각].
+  //   #playerhost는 마크업상 #topzone(타임프레임) 안에 있어 CSS로는 못 옮긴다 —
+  //   .wrap의 **첫 자식**으로 한 번만 이동시킨다(그 뒤 재생 코드는 id로 찾으므로 무관).
+  try{
+    const host = document.getElementById('playerhost');
+    const wrap = document.querySelector('.wrap');
+    if (host && wrap && host.parentElement !== wrap){
+      host.style.display = '';            // 위에서 감추던 것을 되살린다
+      wrap.insertBefore(host, wrap.firstChild);
+    }
+  }catch(e){ console.warn('미리보기 이동 실패', e); }
   const p = document.getElementById('player');
   if (p){ p.style.left = ''; p.style.top = ''; p.style.right = ''; p.style.bottom = ''; }
   // 진행바를 끄는 동안은 자동 갱신이 손을 안 덮게 표시해 둔다.
