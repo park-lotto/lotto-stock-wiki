@@ -41,6 +41,14 @@ h1{font-size:16px;margin:0;font-weight:700}
 .tbrow{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;align-items:flex-start}
 .tbeat{flex:0 0 auto;border:1px solid var(--line);border-radius:8px;padding:6px 7px 7px;
   background:var(--bg);cursor:pointer}
+/* 이 칸에서 나올 말(2026-08-16 사장님 "아래쪽에 대본 들어갈 수 있게 해줘").
+   화면만 보고는 "이 그림이 이 말에 맞나"를 판단할 수 없다 — 컷 바로 밑에 붙여
+   눈이 위아래로만 오가면 되게 한다. 칸 폭은 컷들이 정하므로 말은 그 안에서 접힌다.
+   ★여기선 읽기만 — 대본 고치기는 2단계(제작소)가 주인이다. 두 곳에서 고치면 어긋난다. */
+.tbsay{margin-top:6px;font-size:11.5px;line-height:1.5;color:var(--ink);opacity:.92;
+  background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:5px 7px;
+  max-height:4.5em;overflow-y:auto;white-space:pre-wrap;word-break:break-word}
+.tbsay.none{color:var(--dim);font-style:italic}
 .tbeat:hover{border-color:var(--accent)}
 .tbeat.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
 .tbeat.sel{border-color:var(--good)}
@@ -778,6 +786,8 @@ function renderBand(){
               onclick="autoFill(${i})">${AUTOADD[i] ? `↩ 담은 ${AUTOADD[i].length}장 빼기` : '✨ 채우기'}</button>
           </span></div>
         <div class="tbcuts">${cuts}</div>
+        <div class="tbsay ${narrOf(i) ? '' : 'none'}" title="이 칸에서 나올 말">${
+          esc(narrOf(i)) || '이 칸엔 멘트가 없어요'}</div>
       </div>`;
   }).join('');
   row.innerHTML = html;
