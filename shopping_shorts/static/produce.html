@@ -1553,8 +1553,26 @@ function initMatch(){
     const rev = document.getElementById('mixReview'); if(rev) rev.innerHTML = '';
     try{ _syncSceneLab(false); }catch(_){ }   // 잡이 없으면 실험실도 없다
     const st = document.getElementById('mixStatus');
-    if(st) st.textContent = '아직 매칭을 시작하지 않았어요 — ' + stepName('source')
-      + '에서 ⚡ 이 메인 영상으로 대본 3안 만들기를 눌러주세요.';
+    // ★여기서 **시작할 수 있게** 한다(2026-08-17 사장님 제보 "이건 왜 이러냐" — 1·2단계는
+    //   ✓인데 3단계가 1단계로 되돌아가라고 했다). 매칭을 걸 방법이 통째로 없는 구멍이었다:
+    //     · 2단계 확정(s2Confirm) → "매칭은 3단계 소관"이라며 안 건다(사양서 §6)
+    //     · 3단계               → 시작 버튼이 HTML에 아예 없다
+    //     · 1단계 ⚡ 버튼        → startFromAiPick = **AI PICK 전용** 경로
+    //   즉 2단계에서 대본을 뽑아 확정한 사람은 어디서도 매칭을 시작할 수 없었다
+    //   (실측 work fee24c3b51c9: step=7·script 361자·담긴 영상 4건인데 mixJob=None).
+    //   대본이 있으면 그걸로 바로 시작하면 된다 — startProduceMix는 STATE.script와
+    //   담긴 URL만 있으면 돌아간다. 없을 때만 대본 단계로 안내한다.
+    const ready = !!(STATE.script || '').trim();
+    if(st){
+      if(ready){
+        st.innerHTML = '대본이 준비됐어요 — 담은 영상에 <b>문장별로 화면을 붙입니다</b>.'
+          + '<div style="margin-top:10px"><button class="cta-shine" onclick="startProduceMix()">'
+          + '⚡ 이 대본으로 화면 붙이기 시작</button></div>';
+      }else{
+        st.textContent = '아직 대본이 없어요 — ' + stepName('script')
+          + '에서 대본을 먼저 만들고 확정해주세요.';
+      }
+    }
     return;
   }
   // 매칭 진행/완료 중 — 이미 그려진 게 있으면(폴링·자동전환이 이미 채웠다) 손대지 않는다.
