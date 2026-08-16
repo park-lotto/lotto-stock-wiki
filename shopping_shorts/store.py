@@ -4579,15 +4579,31 @@ class Store:
         ★건너뛸 땐 반드시 로그를 남긴다 — 조용히 넘기면 '화면엔 키가 보이는데
           실제로는 안 쓰이는' 상태가 생기고 아무도 이유를 모른다. 침묵 except가
           SQL 오류를 삼켜 라이브 0건이 된 2026-08-10 사고와 같은 모양이다."""
-        from shopping_shorts import keycrypt
         with self._conn() as c:
             rows = c.execute(
                 "SELECT id, key_enc FROM customer_keys WHERE customer_id=? AND service=? "
                 "ORDER BY id", (int(customer_id), service)).fetchall()
+        return [plain for _kid, plain in self._decrypt_rows(rows, customer_id, service)]
+
+    def get_customer_keys_with_id(self, customer_id, service):
+        """[(key_id, 평문), ...] — 어느 행의 키인지 알아야 할 때 쓴다.
+
+        ★평문 목록과 화면 목록을 zip으로 짝짓지 마라. 복호 실패한 행은 평문
+          쪽에서만 빠져 순서가 밀리고, **엉뚱한 키에 상태가 박힌다**. id를
+          함께 받아야 짝이 어긋나지 않는다(0순위-B: 짝은 함께 정한다)."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT id, key_enc FROM customer_keys WHERE customer_id=? AND service=? "
+                "ORDER BY id", (int(customer_id), service)).fetchall()
+        return self._decrypt_rows(rows, customer_id, service)
+
+    def _decrypt_rows(self, rows, customer_id, service):
+        """(id, key_enc) 행들을 복호해 [(id, 평문)]으로. 깨진 행은 로그 후 건너뛴다."""
+        from shopping_shorts import keycrypt
         out = []
         for key_id, enc in rows:
             try:
-                out.append(keycrypt.decrypt(enc))
+                out.append((key_id, keycrypt.decrypt(enc)))
             except Exception as e:      # noqa: BLE001 — 한 키가 깨져도 나머지는 쓴다
                 logging.warning(
                     "customer_keys 복호 실패 — cid=%s service=%s key_id=%s (%s). "

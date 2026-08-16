@@ -83,3 +83,22 @@ def test_set_status(store):
 def test_status_defaults_to_unknown(store):
     store.add_customer_key(1, "gemini", "fresh")
     assert store.list_customer_keys(1, "gemini")[0]["status"] == "unknown"
+
+
+def test_broken_key_does_not_shift_others(store):
+    """★복호 실패한 행이 있어도 나머지 키의 id가 밀리면 안 된다.
+
+    실증(2026-08-17): 화면목록과 평문목록을 zip으로 짝지으면 깨진 행이
+    평문 쪽에서만 빠져 한 칸씩 밀린다 — id 2(깨진 키)에 key-C의 검증
+    결과가 박혔다. 그러면 멀쩡한 키가 'bad'로 보인다. id를 함께 받아야 한다."""
+    import sqlite3
+    for k in ("key-A", "key-B", "key-C"):
+        store.add_customer_key(1, "gemini", k)
+    ids = [r["id"] for r in store.list_customer_keys(1, "gemini")]
+
+    with sqlite3.connect(store.db_path) as c:      # 가운데 키를 깨뜨린다
+        c.execute("UPDATE customer_keys SET key_enc='broken' WHERE id=?", (ids[1],))
+
+    pairs = store.get_customer_keys_with_id(1, "gemini")
+    assert pairs == [(ids[0], "key-A"), (ids[2], "key-C")]
+    assert ids[1] not in [kid for kid, _ in pairs]   # 깨진 건 아예 빠진다

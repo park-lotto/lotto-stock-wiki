@@ -2929,18 +2929,21 @@ def api_verify_keys(request: Request, body: dict):
         return err
     store = Store(DB_PATH)
     cid = keyroute.as_cid(_cid(request))
-    keys, is_user = keyroute.keys_for(store, cid, service)
+    # 키 목록 자체는 아래에서 id와 짝으로 다시 받는다 — 여기선 '내 키인가'만 본다.
+    _keys, is_user = keyroute.keys_for(store, cid, service)
     if not is_user:
         # 사장님 키는 고객이 검증할 대상이 아니다(남의 키 상태를 알려줄 이유도 없다).
         return {"ok": True, "results": [], "keys": store.list_customer_keys(cid)}
 
-    rows = store.list_customer_keys(cid, service)
+    # ★id와 평문을 짝으로 받는다 — 화면 목록과 zip으로 맞추면 복호 실패한 행이
+    #   평문 쪽에서만 빠져 순서가 밀리고 **엉뚱한 키에 상태가 박힌다**(0순위-B).
+    labels = {r["id"]: r["label"] for r in store.list_customer_keys(cid, service)}
     results = []
-    for row, plain in zip(rows, keys):      # keys_for와 같은 id 순서(둘 다 ORDER BY id)
+    for key_id, plain in store.get_customer_keys_with_id(cid, service):
         alive = _probe_user_key(service, plain)
-        store.set_customer_key_status(row["id"], "ok" if alive else "bad")
+        store.set_customer_key_status(key_id, "ok" if alive else "bad")
         # ★평문은 안 싣는다. 화면은 label로 어느 키인지 알아본다.
-        results.append({"id": row["id"], "label": row["label"], "ok": alive})
+        results.append({"id": key_id, "label": labels.get(key_id, ""), "ok": alive})
     return {"ok": True, "results": results, "keys": store.list_customer_keys(cid)}
 
 
