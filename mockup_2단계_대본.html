@@ -50,9 +50,12 @@
   .btn-prev{background:var(--panel);border:1px solid var(--line);color:var(--txt)}
   .btn-next{background:var(--grad);color:#fff}
   .hint{color:var(--sub);font-size:12px;margin-top:8px}
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px}
-  .panel h3{margin:0 0 4px;font-size:18px}
-  .panel .sub{color:var(--sub);font-size:14px;margin-bottom:24px}
+  /* ★가독(사장님 지시): --sub(#8fa1a0, inset 대비 7.0:1)가 작은 글자에서 묽어 보여
+     이 화면 전용 밝은 서브톤을 둔다. #a8bab8 = inset 대비 9.3:1 (AA 여유).
+     통합 시엔 .panel[data-step="8"]에 정의하면 이 화면에만 적용된다. */
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;--s2-sub:#a8bab8}
+  :root[data-theme="light"] .panel{--s2-sub:#4a635d}   /* light inset 대비 5.9:1 */
+  .panel h3{margin:0 0 16px;font-size:18px}
 
   /* ── 목업 전용 컨트롤(실제 화면엔 없다) ── */
   .demo-bar{border:1px dashed var(--line);border-radius:8px;padding:8px 16px;margin-bottom:16px;
@@ -66,7 +69,7 @@
        8px 그리드(여백 8/16/24), radius 겉 12/속 8,
        대본 행 80px·보조줄 48px·틀 행 48px 고정.
      ════════════════════════════════════════════════════════ */
-  .s2-label{font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;height:24px;line-height:24px;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .s2-label{font-size:12px;color:var(--s2-sub);text-transform:uppercase;letter-spacing:.04em;height:24px;line-height:24px;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .s2-band{margin-bottom:24px}
 
   /* 공용 카드줄 — ①씨앗·②스타일이 같은 문법: flex 1 1 0(같은 폭) + stretch(같은 높이) */
@@ -86,13 +89,13 @@
   .s2-sth{flex:none;width:40px;height:40px;border-radius:8px;background:var(--panel);border:1px solid var(--line);
     display:flex;align-items:center;justify-content:center;font-size:17px}
   .s2-snm{font-size:13px;font-weight:700;line-height:1.3}
-  .s2-ssub{font-size:10.5px;color:var(--sub);margin-top:2px}
+  .s2-ssub{font-size:11.5px;color:var(--s2-sub);margin-top:2px}
   .s2-strip{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:16px;gap:1px}
   .s2-strip i{display:block;height:100%}
   .s2-strip.ghost{border:1px dashed var(--line);background:none}
-  .s2-stags{font-size:10.5px;color:var(--sub);margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .s2-stags{font-size:11.5px;color:var(--s2-sub);margin-top:8px;min-height:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .s2-sfoot{display:flex;gap:8px;margin-top:auto;padding-top:16px}
-  .s2-sfoot button,.s2-sfoot .ghostbtn{font-size:10.5px;color:var(--sub);background:none;border:1px solid var(--line);
+  .s2-sfoot button,.s2-sfoot .ghostbtn{font-size:11px;color:var(--s2-sub);background:none;border:1px solid var(--line);
     border-radius:6px;padding:4px 8px;white-space:nowrap}
   .s2-sfoot button:hover{border-color:var(--accent);color:var(--accent)}
   .s2-sfoot .ghostbtn{border-style:dashed;cursor:default}
@@ -107,13 +110,13 @@
   .s2-badge{flex:none;font-size:10.5px;font-weight:700;border-radius:6px;padding:2px 7px;white-space:nowrap}
   .s2-badge.ok{color:var(--ok);background:rgba(55,224,189,.12)}
   .s2-badge.warn{color:var(--gold);background:rgba(240,196,83,.12)}
-  .s2-quote{margin:8px 0 0;font-size:13.5px;font-weight:700;line-height:1.5;color:var(--gold)}
+  .s2-quote{margin:8px 0 0;font-size:14px;font-weight:700;line-height:1.5;color:var(--gold)}
   .s2-quote::before{content:"“"}.s2-quote::after{content:"”"}
-  .s2-quote-src{font-size:11px;color:var(--sub);margin:2px 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .s2-desc{font-size:12px;color:var(--sub);line-height:1.55}
+  .s2-quote.plain{color:var(--txt)}
+  .s2-quote.plain::before,.s2-quote.plain::after{content:none}
   .s2-meta{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:auto;padding-top:16px}
-  .s2-meta .r{font-size:10.5px;color:var(--sub);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:2px 6px;white-space:nowrap}
-  .s2-meta .d{margin-left:auto;font-size:10.5px;color:var(--sub);white-space:nowrap}
+  .s2-meta .r{font-size:11px;color:var(--s2-sub);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:2px 6px;white-space:nowrap}
+  .s2-meta .d{margin-left:auto;font-size:11px;color:var(--s2-sub);white-space:nowrap}
 
   /* 틀(템플릿) 빈칸 — {가족}·{장소}가 눈에 보이게 */
   .s2-gap{display:inline-block;font-style:normal;font-size:.92em;font-weight:700;color:var(--sel-fg);
@@ -126,10 +129,10 @@
   .s2-axis-head.lock{cursor:default}
   .s2-axis-head:not(.lock):hover{background:var(--hover)}
   .s2-axis-name{font-size:12.5px;font-weight:700;flex:none;white-space:nowrap}
-  .s2-chip{flex:1;min-width:0;font-size:12.5px;color:var(--sub);background:var(--panel);border:1px solid var(--line);
+  .s2-chip{flex:1;min-width:0;font-size:12.5px;color:var(--s2-sub);background:var(--panel);border:1px solid var(--line);
     border-radius:999px;padding:5px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .s2-chip.set{background:var(--sel-bg);border-color:var(--accent);color:var(--sel-fg);font-weight:700}
-  .s2-caret{flex:none;color:var(--sub);font-size:11px;transition:.2s}
+  .s2-caret{flex:none;color:var(--s2-sub);font-size:11px;transition:.2s}
   .s2-axis.open .s2-caret{transform:rotate(180deg)}
   .s2-cards{display:none;padding:0 16px 16px;flex-direction:column;gap:8px}
   .s2-axis.open .s2-cards{display:flex}
@@ -146,10 +149,10 @@
 
   .s2-row{border:1px solid var(--line);border-radius:12px;background:var(--inset);margin-bottom:8px;
     padding:0 16px;transition:border-color .2s}
-  .s2-row-in{display:grid;grid-template-columns:112px 1fr 88px;gap:16px;align-items:center;min-height:80px}
+  .s2-row-in{display:grid;grid-template-columns:96px 1fr 88px;gap:16px;align-items:center;min-height:80px}
   .s2-role .rn{font-size:14px;font-weight:700;white-space:nowrap}
-  .s2-role .rs{font-size:10.5px;color:var(--sub);margin-top:2px;line-height:1.4}
-  .s2-sent{min-width:0;font-size:14.5px;line-height:1.65;outline:none;border-radius:8px;padding:4px 8px;margin:0 -8px;overflow-wrap:break-word}
+  /* ★대본 본문 = 화면의 주인공(사장님 지시): 16px·--txt(#eaf3f0, inset 대비 15.7:1) */
+  .s2-sent{min-width:0;font-size:16px;line-height:1.65;outline:none;border-radius:8px;padding:4px 8px;margin:0 -8px;overflow-wrap:break-word}
   .s2-sent:hover{background:var(--hover)}
   .s2-sent:focus{background:var(--panel);box-shadow:0 0 0 1.5px var(--accent)}
   .s2-chk{display:block;font-size:11px;font-weight:400;color:var(--ok);margin-top:4px}
@@ -161,7 +164,7 @@
   .s2-fix{display:none;border-top:1px dashed var(--line);padding:16px 0}
   body.state-fail .s2-row[data-role="hook"] .s2-fix{display:block}
   .s2-fix .fx-t{font-size:13px;font-weight:700;color:var(--fire)}
-  .s2-fix .fx-d{font-size:12px;color:var(--sub);margin:4px 0 8px;line-height:1.55}
+  .s2-fix .fx-d{font-size:12.5px;color:var(--s2-sub);margin:4px 0 8px;line-height:1.55}
   .s2-fix button{font-size:12.5px;padding:8px 16px;margin-right:8px}
   .s2-fix .fx-bank{background:var(--sel-bg);border:1px solid var(--accent);color:var(--sel-fg);font-weight:700}
   .s2-fix .fx-re{background:var(--panel);border:1px solid var(--line);color:var(--txt)}
@@ -170,15 +173,14 @@
   .s2-bank{display:none;border:1px solid var(--accent2);border-radius:8px;background:var(--panel);
     padding:16px;margin-bottom:16px}
   .s2-row.bank-open .s2-bank{display:block}
-  .s2-bank .bk-t{font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .s2-bank .bk-t{font-size:11.5px;color:var(--s2-sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .s2-cand{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;
     height:48px;padding:0 16px;margin-bottom:8px;cursor:pointer;font-size:13.5px;line-height:1.4;transition:.12s;
     white-space:nowrap;overflow:hidden}
   .s2-cand>span:first-child,.s2-cand .tx{overflow:hidden;text-overflow:ellipsis}
   .s2-cand:hover{border-color:var(--accent);background:var(--hover)}
   .s2-cand.re{color:var(--accent);font-weight:700}
-  .s2-cand .fq{margin-left:auto;flex:none;font-size:10.5px;color:var(--sub);background:var(--inset);border-radius:4px;padding:2px 7px;white-space:nowrap}
-  .s2-bank .bk-h{font-size:11px;color:var(--sub)}
+  .s2-cand .fq{margin-left:auto;flex:none;font-size:11px;color:var(--s2-sub);background:var(--inset);border-radius:4px;padding:2px 7px;white-space:nowrap}
 
   /* 재생성/확정 — 풀폭 바 2줄 */
   .s2-regen{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:8px;border-top:1px solid var(--line);padding-top:16px}
@@ -207,8 +209,8 @@
 
   <!-- ▼▼ 여기부터가 <section class="panel" data-step="8"> 안쪽 ▼▼ -->
   <section class="panel">
-    <h3>2 · 대본</h3>
-    <div class="sub">① 씨앗 대본을 고르고 → ② 스타일을 정하면 → ③ 대본이 역할별로 나옵니다. 마음에 안 드는 칸만 바꾸세요 — 문장은 클릭해서 고치고, [바꾸기]는 그 스타일의 틀을 줍니다(소재는 AI가 채워요).</div>
+    <h3>2 · 대본생성</h3>
+    <!-- ★사용법 설명문은 전부 제거(사장님 지시 "필요없는 설명 글자 다 빼고") — 남는 글자는 데이터뿐 -->
 
     <!-- ① 씨앗 대본 — 옛 1단계 #aiPick의 후계. 4장 같은 골격 → 같은 높이·같은 폭 -->
     <div class="s2-band">
@@ -229,55 +231,46 @@
           <div class="s2-stags">🎙 발견형 훅 · 참여밀도 1.2%</div>
           <div class="s2-sfoot"><button onclick="event.stopPropagation();alert('목업: 원본 대본 전문')">📄 원문</button><button onclick="event.stopPropagation();alert('목업: 미리보기')">▶ 미리보기</button></div>
         </div>
-        <div class="s2-scard pending">
+        <div class="s2-scard pending" title="대본 분석이 끝나면 자동으로 후보가 됩니다">
           <div class="s2-swho"><div class="s2-sth">⏳</div>
-            <div><div class="s2-snm">분석 중인 영상</div><div class="s2-ssub">30초~1분쯤 걸려요</div></div></div>
+            <div><div class="s2-snm">분석 중인 영상</div><div class="s2-ssub">30초~1분</div></div></div>
           <div class="s2-strip ghost"></div>
-          <div class="s2-stags">대본 분석이 끝나면 후보가 됩니다</div>
-          <div class="s2-sfoot"><span class="ghostbtn">⏳ 끝나면 자동으로 나타나요</span></div>
+          <div class="s2-stags">⏳ 자동으로 나타나요</div>
+          <div class="s2-sfoot"><span class="ghostbtn">분석 중</span></div>
         </div>
         <div class="s2-scard manual" onclick="alert('목업: ✍️ 직접 쓰기 — 씨앗 대본을 텍스트로 입력(기존 scriptModeBody 재사용)')">
           <div class="s2-swho"><div class="s2-sth">✍️</div>
             <div><div class="s2-snm">직접 쓰기</div><div class="s2-ssub">내 대본을 씨앗으로</div></div></div>
           <div class="s2-strip ghost"></div>
-          <div class="s2-stags">붙여넣기 한 번이면 끝나요</div>
+          <div class="s2-stags">&nbsp;</div>
           <div class="s2-sfoot"><button onclick="event.stopPropagation();alert('목업: 입력창 열기')">✍️ 입력 열기</button></div>
         </div>
       </div>
-      <div class="hint">씨앗을 바꾸면 아래 대본이 그 영상 기준으로 새로 나옵니다. 스타일 지정(②)은 유지돼요.</div>
     </div>
 
     <!-- ② 스타일 — 통짜 하나만(축 조합 철회: 훅·전개·CTA가 한 몸, 쪼개면 맥락이 깨진다) -->
     <div class="s2-band">
       <div class="s2-label">② 대본 스타일 — 훅·전개·CTA가 한 몸 · 하나만 고릅니다</div>
       <div class="s2-cardrow" id="styleRow">
-        <div class="s2-card" data-name="AI에게 맡김" onclick="pickStyle(this)">
+        <div class="s2-card" data-name="AI에게 맡김" onclick="pickStyle(this)" title="스타일 고르기까지 AI에게 맡깁니다">
           <div class="t">🤖 AI에게 맡김 <span class="sp"></span><span class="s2-badge ok">기본값</span></div>
-          <div class="s2-quote">소재에 제일 잘 맞는 스타일로</div>
-          <div class="s2-quote-src">이 소재 기준 추천: 가족갈등 반전형</div>
-          <div class="s2-desc">스타일 고르기까지 AI에게 맡깁니다. 대부분은 이걸로 충분해요.</div>
+          <div class="s2-quote plain">추천: 가족갈등 반전형</div>
           <div class="s2-meta"><span class="r">훅</span><span class="r">전개</span><span class="r">CTA</span><span class="d">자동 선택</span></div>
         </div>
-        <div class="s2-card sel" data-name="가족갈등 반전형" onclick="pickStyle(this)">
+        <div class="s2-card sel" data-name="가족갈등 반전형" onclick="pickStyle(this)" title="가족에게 혼난 얘기로 열고 → 알고 보니 그 물건 덕분이라는 반전으로 갚는다">
           <div class="t">가족갈등 반전형 <span class="sp"></span><span class="s2-badge ok">✅ 검증</span></div>
           <div class="s2-quote">이것 때문에 <i class="s2-gap">가족</i>한테 욕 바가지로 먹을 뻔했어요</div>
-          <div class="s2-quote-src">실제 히트작에서 뽑은 훅 틀 · 4개 보유</div>
-          <div class="s2-desc">가족에게 혼난 얘기로 열고 → 알고 보니 그 물건 덕분이라는 반전으로 갚는다</div>
-          <div class="s2-meta"><span class="r">훅</span><span class="r">갈등</span><span class="r">반전</span><span class="r">결과</span><span class="r">CTA</span><span class="d">홈템 · 300자/30초</span></div>
+          <div class="s2-meta"><span class="r">훅</span><span class="r">갈등</span><span class="r">반전</span><span class="r">결과</span><span class="r">CTA</span><span class="d">틀 4 · 300자/30초</span></div>
         </div>
-        <div class="s2-card" data-name="단정 명령형" onclick="pickStyle(this)">
+        <div class="s2-card" data-name="단정 명령형" onclick="pickStyle(this)" title="단정으로 열고 → 아는 전문가가 알려준 걸로 뒤집는다">
           <div class="t">단정 명령형 <span class="sp"></span><span class="s2-badge ok">✅ 검증</span></div>
           <div class="s2-quote">여러분 애들 아침에 쌀 밥 절대 안 돼요</div>
-          <div class="s2-quote-src">실제 557만회 영상의 첫마디 · 틀 10개 보유</div>
-          <div class="s2-desc">단정으로 열고 → 아는 전문가가 알려준 걸로 뒤집는다</div>
-          <div class="s2-meta"><span class="r">훅</span><span class="r">문제</span><span class="r">반전</span><span class="r">결과</span><span class="r">CTA</span><span class="d">근거 12편 · 240자/30초</span></div>
+          <div class="s2-meta"><span class="r">훅</span><span class="r">문제</span><span class="r">반전</span><span class="r">결과</span><span class="r">CTA</span><span class="d">557만회 · 틀 10 · 240자/30초</span></div>
         </div>
-        <div class="s2-card" data-name="물건 발견형" onclick="pickStyle(this)">
+        <div class="s2-card" data-name="물건 발견형" onclick="pickStyle(this)" title="&quot;이런 게 있다는데?&quot;로 호기심을 열고 → 써 보며 확인">
           <div class="t">물건 발견형 <span class="sp"></span><span class="s2-badge warn">⚠️ 타소재 검증</span></div>
           <div class="s2-quote">모마가 선정한 지우개가 있다는데</div>
-          <div class="s2-quote-src">여는 방식 예시 · 틀 16개 보유</div>
-          <div class="s2-desc">"이런 게 있다는데?"로 호기심을 열고 → 써 보며 확인</div>
-          <div class="s2-meta"><span class="r">훅</span><span class="r">시연</span><span class="r">결과</span><span class="r">CTA</span><span class="d">홈템·기타 · 254자/30초</span></div>
+          <div class="s2-meta"><span class="r">훅</span><span class="r">시연</span><span class="r">결과</span><span class="r">CTA</span><span class="d">틀 16 · 254자/30초</span></div>
         </div>
       </div>
 

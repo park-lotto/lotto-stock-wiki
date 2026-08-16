@@ -1170,7 +1170,7 @@
          7로 붙인 것과 같은 방식).
          ★안쪽 내용은 **대본 세션이 채운다** — 이 세션은 골격만 만든다(동시 편집 충돌 방지). -->
     <section class="panel" data-step="8">
-      <h3 data-steptitle="script">2 · 대본</h3>
+      <h3 data-steptitle="script">2 · 대본생성</h3>
       <div class="sub">쓸 대본을 고르고 다듬습니다.</div>
       <div id="scriptStagePlaceholder" class="hint" style="margin-top:14px">
         여기에 대본 고르기·고치기가 들어옵니다(작업 중).
@@ -1235,7 +1235,7 @@
 //   대본(신규 패널 8)을 2번째로 세우고, 장면 편집(패널 7)을 3번째로 민다.
 //   ★물리 패널 번호(data-step)는 그대로 두고 이 매핑만 바꾼다 — cur===n 분기가
 //   파일 곳곳에 박혀 있어 번호를 다시 매기면 전부 어긋난다.
-const STEP_LABELS = ["영상추출/분석","대본","영상대본MIX","고품질 자막제거","TTS음성","자막꾸미기","썸네일","SEO해시테크","최종렌더"];
+const STEP_LABELS = ["영상추출/분석","대본생성","영상대본MIX","고품질 자막제거","TTS음성","자막꾸미기","썸네일","SEO해시테크","최종렌더"];
 // 표시 오브 → 실제 패널 data-step (대본=신규 8이 2번째, 매칭=7이 3번째)
 const ORB_TO_PANEL = [0, 8, 7, 1, 2, 3, 4, 5, 6];
 const PANEL_TO_ORB = Object.fromEntries(ORB_TO_PANEL.map((p,o)=>[p,o]));
