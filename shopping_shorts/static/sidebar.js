@@ -43,6 +43,10 @@
     { label: "소통", items: [
       { icon: "💬", text: "인스타 소통공간", href: "/outreach" },
     ] },
+    // free:true — 포인트를 충전하려면 무료 등급도 들어올 수 있어야 한다(결제 게이트 제외).
+    { label: "설정", items: [
+      { icon: "⚙️", text: "내 설정",  href: "/settings", free: true },
+    ] },
   ];
 
   // 현재 경로 정규화: '/index.html'·'/'→'/', '/mix.html'→'/mix'

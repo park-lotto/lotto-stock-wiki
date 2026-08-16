@@ -78,6 +78,7 @@ from shopping_shorts.video_assemble import _probe_duration, _effective_dur, _TRI
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
 from shopping_shorts import frame_extract, scene_assets, scene_cut
 from shopping_shorts import effect_match, remotion_render, points
+from shopping_shorts import keycrypt, keyroute, points, pricing      # BYOK(사용자 키·포인트)
 from shopping_shorts import video_assemble
 from shopping_shorts import seo_generate, seo_probe
 from shopping_shorts import pattern_bank
@@ -1702,6 +1703,9 @@ def api_extract_script(request: Request, shortcode: str):
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 대본 추출 횟수를 다 썼어요. 결제하면 더 쓸 수 있어요."})
+    _denied = _charge_or_402(cid, pricing.OP_SCRIPT, keyroute.SVC_GEMINI)
+    if _denied:
+        return _denied
     global_incr_and_alert("script")
     ok = False
     try:
@@ -1737,6 +1741,7 @@ def api_extract_script(request: Request, shortcode: str):
     finally:
         if not ok:
             refund_credit(cid, "script")   # 실패·미달 → 크레딧 되돌림(전역 하드캡이 재시도 남용을 캡)
+            _refund_points(cid, pricing.OP_SCRIPT, keyroute.SVC_GEMINI)
 
 
 def _backfill_extract_structure(db_path, shortcode, full_text):
@@ -1879,6 +1884,9 @@ def api_produce_extract_from_url(request: Request, body: dict, background_tasks:
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 대본 추출 횟수를 다 썼어요. 결제하면 더 쓸 수 있어요."})
+    _denied = _charge_or_402(cid, pricing.OP_SCRIPT, keyroute.SVC_GEMINI)
+    if _denied:
+        return _denied
     global_incr_and_alert("script")
     ok = False
     try:
@@ -1918,6 +1926,7 @@ def api_produce_extract_from_url(request: Request, body: dict, background_tasks:
     finally:
         if not ok:
             refund_credit(cid, "script")
+            _refund_points(cid, pricing.OP_SCRIPT, keyroute.SVC_GEMINI)
 
 
 def _relearn_category(db_path, category):
@@ -2653,6 +2662,9 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
+    _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI)
+    if _denied:
+        return _denied
     global_incr_and_alert("render")
     job_id = uuid.uuid4().hex[:12]
     # render_charge_day: '오늘 render를 과금했다'는 표식(+환불할 날짜). run_mix_job이 실패하면 딱
@@ -2785,6 +2797,9 @@ def api_mix_candidate_clone(request: Request, body: dict):
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
+    _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI)
+    if _denied:
+        return _denied
     global_incr_and_alert("render")
     urls = src.get("urls") or []
     new_id = uuid.uuid4().hex[:12]
@@ -2823,6 +2838,150 @@ def api_set_vmake_key(body: dict):
 def api_get_vmake_key():
     key = Store(DB_PATH).get_setting("vmake_api_key", "")
     return {"ok": True, "configured": bool(key)}      # 원문은 노출하지 않음
+
+
+# ─────────────────────────────────────────────────────────────────────
+# BYOK — 사용자가 자기 API 키를 등록하면 포인트를 안 깎는다 (2026-08-17)
+#
+# ★위 /api/settings/vmake_key 와 헷갈리지 마라. 저건 **사장님 전역 키**(회사 부담)이고
+#   아래는 **고객별 키**다. 둘 다 살아있어야 한다 — keyroute.keys_for가 사용자 키가
+#   없을 때 전역 키로 내려간다(keyroute._owner_vmake_key).
+#
+# ★평문은 GET으로 절대 안 나간다. list_customer_keys가 key_enc를 아예 안 싣고,
+#   평문 경로는 keyroute.keys_for(→get_customer_keys_plain) 하나뿐이다.
+# ─────────────────────────────────────────────────────────────────────
+
+def _probe_user_key(service: str, key: str) -> bool:
+    """등록된 키가 실제로 도는가. 판정만 하고 예외를 밖으로 안 흘린다.
+
+    ★gemini는 comment_gen._probe_key_alive(REST)를 그대로 쓴다 — SDK models.list는
+      살아있는 키도 전부 실패로 만든다(2026-08-07 실측, comment_gen.py:95 주석).
+      같은 판단을 여기 또 적으면 어긋난다(CLAUDE.md 0순위-B).
+    ★vmake는 형식만 본다. 실호출이 크레딧을 먹으므로 '확인' 버튼이 돈을 쓰면 안 된다.
+    """
+    if service == keyroute.SVC_GEMINI:
+        from shopping_shorts.comment_gen import _probe_key_alive
+        return _probe_key_alive(key)
+    if service == keyroute.SVC_VMAKE:
+        return ":" in key           # ak:sk 형식. 실호출 안 함(크레딧 소모)
+    if service == keyroute.SVC_ELEVENLABS:
+        url, kw = "https://api.elevenlabs.io/v1/user", {"headers": {"xi-api-key": key}}
+    elif service == keyroute.SVC_YOUTUBE:
+        url = ("https://www.googleapis.com/youtube/v3/videos"
+               f"?part=id&id=dQw4w9WgXcQ&key={urllib.parse.quote(key)}")
+        kw = {}
+    else:
+        raise ValueError(f"모르는 service: {service!r}")
+    try:
+        return requests.get(url, timeout=10, **kw).status_code == 200
+    except requests.RequestException:
+        # ★네트워크 실패는 '검증 실패'라는 판정이지 버그 은폐가 아니다.
+        #   requests 예외만 잡는다 — 코드 오류(TypeError 등)까지 삼키면 원인을 못 찾는다.
+        return False
+
+
+def _svc_or_err(body: dict):
+    """(service, 에러응답) — 모르는 값이면 (None, 422 응답).
+
+    ★그냥 받으면 customer_keys에 영영 안 쓰이는 쓰레기 행이 쌓인다.
+    ★이 파일은 HTTPException을 안 쓴다(app.py:4486 주석) — JSONResponse로 맞춘다."""
+    service = (body.get("service") or "").strip()
+    if service not in keyroute.SERVICES:
+        return None, JSONResponse(status_code=422, content={
+            "ok": False, "error": f"모르는 서비스입니다 (가능: {', '.join(keyroute.SERVICES)})"})
+    return service, None
+
+
+@app.get("/api/settings/keys")
+def api_list_keys(request: Request):
+    """등록된 키 목록. ★label(마스킹)만 나가고 평문·암호문은 안 나간다."""
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    return {"ok": True, "enabled": keycrypt.enabled(),
+            "keys": store.list_customer_keys(cid)}
+
+
+@app.post("/api/settings/keys")
+def api_add_keys(request: Request, body: dict):
+    """키 등록. gemini만 여러 개를 한 번에 받는다.
+
+    ★gemini 외에는 쪼개지 않는다 — vmake는 'ak:sk' 한 덩어리라 구분자로 자르면
+      반쪽짜리 키 두 개가 저장되고, 화면엔 등록된 것처럼 보이는데 실제로는 안 된다."""
+    if not keycrypt.enabled():
+        # 평문 저장으로 조용히 폴백하지 않는다(keycrypt.py 주석과 같은 원칙).
+        return JSONResponse(status_code=503, content={
+            "ok": False, "error": "키 저장이 설정되지 않았습니다 (관리자 문의)"})
+    service, err = _svc_or_err(body)
+    if err:
+        return err
+    raw = (body.get("key") or "").strip()
+    if not raw:
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "키를 입력하세요"})
+
+    if service == keyroute.SVC_GEMINI:
+        parts = [p.strip() for p in re.split(r"[\s,]+", raw) if p.strip()]
+    else:
+        parts = [raw]
+
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    added = sum(1 for p in parts if store.add_customer_key(cid, service, p))
+    return {"ok": True, "added": added, "keys": store.list_customer_keys(cid)}
+
+
+@app.post("/api/settings/keys/delete")
+def api_delete_key(request: Request, body: dict):
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    # store가 customer_id를 DELETE 조건에 넣는다 → id만 알아도 남의 키는 못 지운다.
+    store.delete_customer_key(cid, int(body.get("id") or 0))
+    return {"ok": True, "keys": store.list_customer_keys(cid)}
+
+
+@app.post("/api/settings/keys/verify")
+def api_verify_keys(request: Request, body: dict):
+    """등록한 키가 실제로 도는지 확인하고 status를 박는다.
+
+    ★keyroute.keys_for로 가져온다 — '어떤 키를 쓰는가'의 판단처가 하나여야
+      "확인은 통과했는데 정작 다른 키로 돈다"가 안 생긴다."""
+    service, err = _svc_or_err(body)
+    if err:
+        return err
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    # 키 목록 자체는 아래에서 id와 짝으로 다시 받는다 — 여기선 '내 키인가'만 본다.
+    _keys, is_user = keyroute.keys_for(store, cid, service)
+    if not is_user:
+        # 사장님 키는 고객이 검증할 대상이 아니다(남의 키 상태를 알려줄 이유도 없다).
+        return {"ok": True, "results": [], "keys": store.list_customer_keys(cid)}
+
+    # ★id와 평문을 짝으로 받는다 — 화면 목록과 zip으로 맞추면 복호 실패한 행이
+    #   평문 쪽에서만 빠져 순서가 밀리고 **엉뚱한 키에 상태가 박힌다**(0순위-B).
+    labels = {r["id"]: r["label"] for r in store.list_customer_keys(cid, service)}
+    results = []
+    for key_id, plain in store.get_customer_keys_with_id(cid, service):
+        alive = _probe_user_key(service, plain)
+        store.set_customer_key_status(key_id, "ok" if alive else "bad")
+        # ★평문은 안 싣는다. 화면은 label로 어느 키인지 알아본다.
+        results.append({"id": key_id, "label": labels.get(key_id, ""), "ok": alive})
+    return {"ok": True, "results": results, "keys": store.list_customer_keys(cid)}
+
+
+@app.get("/api/settings/points")
+def api_points(request: Request):
+    """잔액·단가표·최근 사용내역. ★전부 화면용 단위로 바꿔서 내보낸다 —
+    내부값(포인트×100)을 그대로 주면 5P가 500으로 보인다."""
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    ops = (pricing.OP_VMAKE, pricing.OP_MIX, pricing.OP_TTS,
+           pricing.OP_LENS, pricing.OP_SCRIPT)
+    history = [{**h, "delta": pricing.to_display(h["delta"])}
+               for h in store.points_history(cid, 20)]
+    return {"ok": True,
+            "balance": pricing.to_display(points.balance(store, cid)),
+            "prices": {op: pricing.to_display(pricing.cost(store, op)) for op in ops},
+            "history": history}
 
 
 @app.get("/api/settings/smart_mix")
@@ -4916,6 +5075,9 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 렌즈 검색 횟수를 다 썼어요. 결제하면 더 쓸 수 있어요."})
+    _denied = _charge_or_402(cid, pricing.OP_LENS, keyroute.SVC_GEMINI)
+    if _denied:
+        return _denied
     global_incr_and_alert("lens")
     try:
         raw = await frame.read()
@@ -4942,6 +5104,7 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
         return {"ok": True, "items": items, "count": len(items), "diag": diag}
     except Exception:
         refund_credit(cid, "lens")   # 업로드·검색 실패 → 예약한 크레딧 되돌림(성공한 검색만 과금)
+        _refund_points(cid, pricing.OP_LENS, keyroute.SVC_GEMINI)
         raise
 
 
@@ -5073,6 +5236,9 @@ def api_lens_trace_url(request: Request, body: dict):
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 렌즈 검색 횟수를 다 썼어요. 결제하면 더 쓸 수 있어요."})
+    _denied = _charge_or_402(cid, pricing.OP_LENS, keyroute.SVC_GEMINI)
+    if _denied:
+        return _denied
     global_incr_and_alert("lens")
     ok = False
     try:
@@ -5107,6 +5273,7 @@ def api_lens_trace_url(request: Request, body: dict):
     finally:
         if not ok:
             refund_credit(cid, "lens")
+            _refund_points(cid, pricing.OP_LENS, keyroute.SVC_GEMINI)
 
 
 # 캡션 → 중국 플랫폼 검색어. 구글렌즈는 시각검색이라 키워드가 없지만 샤오홍슈/도우인은
@@ -6896,8 +7063,10 @@ def _is_trial(customer_id, now=None):
 
 
 # ── 유료게이트 비용 방어: 계정별 일일 크레딧 + 전역 상한 ──
-_CREDIT_DEFAULTS = {"lens": 5, "render": 2, "script": 10}
-_CREDIT_PRO_DEFAULTS = {"lens": 100, "render": 10, "script": 200}  # 하루 영상 최대 10개(돌려쓰기 상한, 2026-07-22)
+# 사장님 지시(2026-08-17): 본인 키가 있어도 영상제작·렌즈검색은 하루 10회.
+# 서버 보호 목적이라 포인트와 별개로 유지한다. admin 설정으로 조정 가능.
+_CREDIT_DEFAULTS = {"lens": 10, "render": 10, "script": 10}
+_CREDIT_PRO_DEFAULTS = {"lens": 10, "render": 10, "script": 200}  # 하루 영상 최대 10개(돌려쓰기 상한, 2026-07-22)
 _GLOBAL_CAP_DEFAULTS = {"lens": 200, "render": 100, "script": 400}
 
 
@@ -6962,6 +7131,53 @@ def check_and_count(customer_id, op):
         return False
     st.usage_incr(customer_id, op, day)
     return True
+
+
+def _charge_or_402(customer_id, op, service):
+    """포인트를 깎는다. 부족하면 402 응답을 반환(호출부가 그대로 return).
+    깎을 필요가 없으면(사용자가 자기 키 등록) None.
+
+    ★차감 여부는 keyroute가 정한다 — 여기서 따로 판단하면 어긋난다(0순위-B).
+    ★일일 상한(check_and_count)과 별개다. 상한은 서버 보호, 이건 비용 회수.
+      그래서 상한을 통과한 뒤에도 이걸 또 부른다 — 둘 다 통과해야 실행된다.
+
+    cid 0(사장님 본인)은 keyroute가 개인키 조회를 건너뛰고 사장님 키를 주므로
+    should_charge가 True를 준다. 하지만 자기 키로 자기한테 청구하는 꼴이라
+    과금 대상이 아니다 — mix_pipeline._charge_clean과 같은 판단을 쓴다."""
+    if not keyroute.as_cid(customer_id):
+        return None
+    store = Store(DB_PATH)
+    if not keyroute.should_charge(store, customer_id, service):
+        return None
+    need = pricing.cost(store, op)
+    if points.deduct(store, customer_id, need, op):
+        return None
+    return JSONResponse(status_code=402, content={
+        "ok": False,
+        "error": f"포인트가 부족합니다 (필요 {pricing.to_display(need)}P, "
+                 f"보유 {pricing.to_display(points.balance(store, customer_id))}P)"})
+
+
+def _refund_points(customer_id, op, service):
+    """_charge_or_402가 깎은 포인트를 실패 시 되돌린다 — refund_credit(일일 크레딧)과 대칭.
+
+    ★"성공한 작업만 과금한다"는 기존 규칙을 포인트에도 그대로 적용한다. 크레딧만
+      돌려주고 포인트는 안 돌려주면, 실패한 요청마다 잔액이 조용히 갉힌다.
+    ★깎는 조건과 **같은 조건**으로만 돌려준다(cid 0·사용자 키는 애초에 안 깎았으니
+      환불도 없다). 여기서 따로 판단하면 안 깎은 사람에게 돈이 생긴다(0순위-B).
+    ★핸들러의 finally에서 불리므로 자체 예외를 삼킨다 — 환불 중 DB 락이 나도
+      원래 응답/예외를 가리면 안 된다(refund_credit과 같은 이유)."""
+    try:
+        if not keyroute.as_cid(customer_id):
+            return
+        store = Store(DB_PATH)
+        if not keyroute.should_charge(store, customer_id, service):
+            return
+        points.refund(store, customer_id, pricing.cost(store, op), op)
+    except Exception:
+        import sys as _s
+        import traceback
+        traceback.print_exc(file=_s.stderr)
 
 
 def global_incr_and_alert(op):
@@ -8294,7 +8510,7 @@ def api_produce_autoload(request: Request, body: dict):
     body: {items:[{url, shortcode?, video_url?, name?, thumbnail?, caption?, category?,
                    followers?, comments?}]}
     반환: {ok, results:[{shortcode, status}], added} — status: already|added|skipped_latched|
-          failed_download|failed_empty|failed_limit.
+          failed_download|failed_empty|failed_limit|failed_points(포인트 부족).
     ⚠️ 이 엔드포인트는 **자기 자신이나 프론트 재귀를 유발하지 않는다**. 프론트는 페이지
        로드당 1회만 부르고, 응답 뒤 aipick을 딱 한 번 다시 조회한다."""
     cid = _cid(request)
@@ -8362,6 +8578,12 @@ def api_produce_autoload(request: Request, body: dict):
         # 캐시미스 → 실제 Gemini 비용. 크레딧 확인 후 태운다(실패 시 C단계에서 환불).
         if _global_over_cap("script") or not check_and_count(cid, "script"):
             slots[i] = {"shortcode": code, "status": "failed_limit"}
+            continue
+        # ★여기는 라우트가 아니라 **항목 루프 안**이다 — 402를 그대로 return하면 남은
+        #   영상까지 통째로 죽는다. 포인트가 모자란 항목만 접고 나머지는 계속 돌린다
+        #   (위 failed_limit·skipped_cap과 같은 모양).
+        if _charge_or_402(cid, pricing.OP_SCRIPT, keyroute.SVC_GEMINI):
+            slots[i] = {"shortcode": code, "status": "failed_points"}
             continue
         global_incr_and_alert("script")
         burned += 1
@@ -8469,6 +8691,7 @@ def api_produce_autoload(request: Request, body: dict):
                 store.autoload_mark_error(code, e["error"])
             if e["charged"]:
                 refund_credit(cid, "script")         # 실패는 환불
+                _refund_points(cid, pricing.OP_SCRIPT, keyroute.SVC_GEMINI)
             slots[e["i"]] = {"shortcode": code, "status": e["status"]}
             continue
         if e.get("save_script"):
@@ -8660,6 +8883,9 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
+    _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI)
+    if _denied:
+        return _denied
     global_incr_and_alert("render")
     # 장면 우선 대본 모드(2026-07-20, Task7): produce.html "우리 시스템으로 믹스"는 항상 이 값을
     # true로 보낸다. mix_pipeline._plan_and_tts가 build_scene_first_plan으로 후보 n개를 만들고
@@ -10338,7 +10564,7 @@ except Exception:                                  # noqa: BLE001 — 이 기능
 # 반복됨(2026-07-14 역할배정·사이드바 등 실사고) → 매 요청 서버 재검증 강제.
 _NOCACHE = {"Cache-Control": "no-cache, must-revalidate"}
 for _pg in ("discover", "find", "library", "mix", "outreach", "produce", "collection",
-            "scene_library", "pattern_bank", "longform"):
+            "scene_library", "pattern_bank", "longform", "settings"):
     app.add_api_route(
         f"/{_pg}",
         (lambda n=_pg: FileResponse(_STATIC / f"{n}.html", media_type="text/html",

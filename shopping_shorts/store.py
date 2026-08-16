@@ -1,6 +1,7 @@
 """SQLite 수집 이력 저장소."""
 import hashlib
 import json
+import logging
 import os
 import secrets
 import sqlite3
@@ -778,6 +779,27 @@ class Store:
                     created_at TEXT DEFAULT (datetime('now'))
                 )
             """)
+            # 사용자별 API 키(2026-08-17, BYOK) — settings는 key가 PK라 customer_id 축이
+            # 없어 재사용 불가. key_enc는 Fernet 암호문이고 평문은 어디에도 안 남는다.
+            # key_hash로 식별하는 이유: 인덱스 번호를 쓰면 사용자별 풀이 섞인다
+            # (comment_gen.py:68이 인덱스 기반이라 겪는 문제).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS customer_keys (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    customer_id INTEGER NOT NULL,
+                    service TEXT NOT NULL,
+                    key_enc TEXT NOT NULL,
+                    key_hash TEXT NOT NULL,
+                    label TEXT,
+                    status TEXT NOT NULL DEFAULT 'unknown',
+                    checked_at INTEGER,
+                    created_at INTEGER NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS ix_ck_cust "
+                      "ON customer_keys(customer_id, service)")
+            c.execute("CREATE UNIQUE INDEX IF NOT EXISTS ux_ck_dup "
+                      "ON customer_keys(customer_id, service, key_hash)")
             # 픽로그(2026-07-18, 트랙1) — 사장님이 고른 것/버린 것을 append-only로 남긴다.
             # 트랙7 LLM 심사의 취향 예시 + B전환 승인률 지표의 원천. 수정·삭제 없음.
             c.execute("""
@@ -4553,3 +4575,132 @@ class Store:
                 "INSERT INTO points_ledger(customer_id, delta, reason) VALUES(?,?,?)",
                 (customer_id, delta, reason),
             )
+
+    def points_try_deduct(self, customer_id, amount, reason=""):
+        """잔액이 충분할 때만 차감하고 True. 모자라면 아무것도 안 하고 False.
+
+        ★조회와 삽입을 SQL 한 문장으로 묶는다 — 파이썬에서 balance()를 읽고
+          points_add()를 부르면 그 사이에 다른 워커가 끼어들어 **둘 다 통과**한다.
+          실측(2026-08-17): 잔액 10P에 5P 차감 5개를 동시에 던지니 3건이 성공해
+          잔액이 -5P가 됐다. 워커 3개가 도는 환경이라 이론이 아니라 실제로 난다.
+          _conn()이 호출마다 새 연결을 열어 두 문장 사이엔 트랜잭션이 없다.
+
+        WHERE 절의 SUM이 INSERT와 같은 문장 안에서 평가되므로, SQLite가 쓰기
+        잠금을 잡은 상태에서 판정한다 → 동시에 들어와도 한 건만 성공한다."""
+        if amount <= 0:
+            return True                     # 무료 작업은 원장을 더럽히지 않는다
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO points_ledger(customer_id, delta, reason) "
+                "SELECT ?, ?, ? WHERE "
+                "(SELECT COALESCE(SUM(delta),0) FROM points_ledger WHERE customer_id=?) >= ?",
+                (customer_id, -amount, reason, customer_id, amount),
+            )
+            return cur.rowcount > 0
+
+    # ── 사용자별 API 키(2026-08-17, BYOK) ──
+    # 평문은 이 클래스 밖으로 나가는 경로가 get_customer_keys_plain 하나뿐이다.
+    # 화면용 list_customer_keys는 key_enc를 아예 안 실어 보낸다.
+    def add_customer_key(self, customer_id, service, plain):
+        """키 1개 저장. 이미 있는 키면 False(중복 거절)."""
+        from shopping_shorts import keycrypt
+        import time
+        try:
+            with self._conn() as c:
+                c.execute(
+                    "INSERT INTO customer_keys"
+                    "(customer_id, service, key_enc, key_hash, label, created_at) "
+                    "VALUES(?,?,?,?,?,?)",
+                    (int(customer_id), service, keycrypt.encrypt(plain),
+                     keycrypt.fingerprint(plain), keycrypt.mask(plain), int(time.time())),
+                )
+            return True
+        except sqlite3.IntegrityError as e:
+            # ★중복(ux_ck_dup)만 False로 삼킨다. NOT NULL 위반 같은 다른 무결성
+            #   오류까지 False로 덮으면 "service를 안 넘긴 버그"가 "중복입니다"로
+            #   둔갑해 조용히 묻힌다 — 침묵 except가 사고를 만든 전례가 있다.
+            if "UNIQUE" not in str(e).upper():
+                raise
+            return False
+
+    def list_customer_keys(self, customer_id, service=None):
+        """화면용 목록. ★key_enc를 안 싣는다 — 평문 경로는 여기가 아니다."""
+        q = ("SELECT id, service, label, status, checked_at, created_at "
+             "FROM customer_keys WHERE customer_id=?")
+        args = [int(customer_id)]
+        if service:
+            q += " AND service=?"
+            args.append(service)
+        q += " ORDER BY id"
+        with self._conn() as c:
+            rows = c.execute(q, args).fetchall()
+        return [{"id": r[0], "service": r[1], "label": r[2], "status": r[3],
+                 "checked_at": r[4], "created_at": r[5]} for r in rows]
+
+    def get_customer_keys_plain(self, customer_id, service):
+        """실제 호출에 쓸 평문 키 목록. 복호 실패한 행은 건너뛴다(마스터키 교체 등).
+
+        ★건너뛸 땐 반드시 로그를 남긴다 — 조용히 넘기면 '화면엔 키가 보이는데
+          실제로는 안 쓰이는' 상태가 생기고 아무도 이유를 모른다. 침묵 except가
+          SQL 오류를 삼켜 라이브 0건이 된 2026-08-10 사고와 같은 모양이다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT id, key_enc FROM customer_keys WHERE customer_id=? AND service=? "
+                "ORDER BY id", (int(customer_id), service)).fetchall()
+        return [plain for _kid, plain in self._decrypt_rows(rows, customer_id, service)]
+
+    def get_customer_keys_with_id(self, customer_id, service):
+        """[(key_id, 평문), ...] — 어느 행의 키인지 알아야 할 때 쓴다.
+
+        ★평문 목록과 화면 목록을 zip으로 짝짓지 마라. 복호 실패한 행은 평문
+          쪽에서만 빠져 순서가 밀리고, **엉뚱한 키에 상태가 박힌다**. id를
+          함께 받아야 짝이 어긋나지 않는다(0순위-B: 짝은 함께 정한다)."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT id, key_enc FROM customer_keys WHERE customer_id=? AND service=? "
+                "ORDER BY id", (int(customer_id), service)).fetchall()
+        return self._decrypt_rows(rows, customer_id, service)
+
+    def _decrypt_rows(self, rows, customer_id, service):
+        """(id, key_enc) 행들을 복호해 [(id, 평문)]으로. 깨진 행은 로그 후 건너뛴다."""
+        from shopping_shorts import keycrypt
+        out = []
+        for key_id, enc in rows:
+            try:
+                out.append((key_id, keycrypt.decrypt(enc)))
+            except Exception as e:      # noqa: BLE001 — 한 키가 깨져도 나머지는 쓴다
+                logging.warning(
+                    "customer_keys 복호 실패 — cid=%s service=%s key_id=%s (%s). "
+                    "BYOK_MASTER_KEY가 바뀌었는지 확인하라.",
+                    customer_id, service, key_id, type(e).__name__)
+                continue
+        return out
+
+    def delete_customer_key(self, customer_id, key_id):
+        """★customer_id를 조건에 반드시 넣는다 — 안 넣으면 id만 알면 남의 키를 지운다."""
+        with self._conn() as c:
+            c.execute("DELETE FROM customer_keys WHERE id=? AND customer_id=?",
+                      (int(key_id), int(customer_id)))
+
+    def set_customer_key_status(self, key_id, status):
+        import time
+        with self._conn() as c:
+            c.execute("UPDATE customer_keys SET status=?, checked_at=? WHERE id=?",
+                      (status, int(time.time()), int(key_id)))
+
+    def count_customer_keys(self, customer_id, service):
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT COUNT(*) FROM customer_keys WHERE customer_id=? AND service=?",
+                (int(customer_id), service)).fetchone()
+        return int(row[0])
+
+    def points_history(self, customer_id, limit=50):
+        """포인트 사용 내역(최신순). 화면의 '최근 사용'과 문의 대응에 쓴다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT delta, reason, created_at FROM points_ledger "
+                "WHERE customer_id=? ORDER BY rowid DESC LIMIT ?",
+                (int(customer_id), int(limit)),
+            ).fetchall()
+        return [{"delta": r[0], "reason": r[1], "created_at": r[2]} for r in rows]
