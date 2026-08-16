@@ -371,7 +371,10 @@ def test_lens_search_reports_instagram_dropoff(tmp_path, monkeypatch):
     assert d["diag"]["ig_raw"] == 4
     assert d["diag"]["ig_dropped_not_post"] == 2      # /popular/, 프로필
     assert d["diag"]["ig_photo"] == 1                 # /p/
-    assert len(d["items"]) == 2                       # reel + /p/(가리기는 프론트 토글)
+    # 2026-08-16부터 카드뉴스(/p/)는 **서버가 잘라낸다**(사장님 "사진은 자체 커트").
+    # 예전엔 통과시키고 프론트 토글이 가리기만 했다 → 이제 릴스 1건만 남는다.
+    assert d["diag"]["cut_photo"] == 1
+    assert len(d["items"]) == 1
 
 
 def _run_real(lens_discover, raw_matches, stats):
@@ -449,14 +452,20 @@ def test_lens_cn_search_survives_one_actor_error(tmp_path, monkeypatch):
 
 
 def test_lens_month_limit_scales_with_keys(tmp_path, monkeypatch):
-    """렌즈 월 한도 = 키 개수 × 100(무료 계정당). 설정 override 있으면 그 값."""
+    """렌즈 월 한도 = 키 개수 × 250(계정당). 설정 override 있으면 그 값.
+
+    ★250은 실측값이다(2026-08-16, SerpApi account API로 직접 확인: 두 키 다 플랜 250).
+      예전 상수 100은 실제와 달라, 카운터가 200에 닿으면 **아직 300회가 남았는데도**
+      렌즈를 막았다."""
+    per = appmod._LENS_MONTH_LIMIT_PER_KEY
+    assert per == 250, "실측 플랜과 어긋나면 멀쩡한데 막힌다"
     s = Store(str(tmp_path / "t.db"))
     import shopping_shorts.config as cfg
     monkeypatch.setattr(cfg, "SERPAPI_KEYS", ["k1"])
-    assert appmod._lens_month_limit(s) == 100
+    assert appmod._lens_month_limit(s) == per
     monkeypatch.setattr(cfg, "SERPAPI_KEYS", ["k1", "k2"])
-    assert appmod._lens_month_limit(s) == 200          # 2번째 키 넣으면 자동 200
+    assert appmod._lens_month_limit(s) == per * 2       # 2번째 키 넣으면 자동 2배
     monkeypatch.setattr(cfg, "SERPAPI_KEYS", [])
-    assert appmod._lens_month_limit(s) == 100          # 키 0개여도 최소 100
+    assert appmod._lens_month_limit(s) == per           # 키 0개여도 최소 1키분
     s.set_setting("lens_month_limit", "50")
     assert appmod._lens_month_limit(s) == 50            # 설정 override 우선

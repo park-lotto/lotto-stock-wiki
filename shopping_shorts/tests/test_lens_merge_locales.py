@@ -50,10 +50,16 @@ def spy(monkeypatch):
                 "organic_results": [_match("https://www.tiktok.com/@a/video/111")],
                 "short_videos": [_match("https://www.youtube.com/watch?v=KOV")],
             })
-        return _FakeResp({   # en — 겹치지 않는 다른 영상들
-            "visual_matches": [_match("https://www.instagram.com/reel/EN1/")],
-            "organic_results": [_match("https://www.tiktok.com/@b/video/222")],
-            "short_videos": [_match("https://www.youtube.com/watch?v=ENV")],
+        if hl == "en":
+            return _FakeResp({   # en — 겹치지 않는 다른 영상들
+                "visual_matches": [_match("https://www.instagram.com/reel/EN1/")],
+                "organic_results": [_match("https://www.tiktok.com/@b/video/222")],
+                "short_videos": [_match("https://www.youtube.com/watch?v=ENV")],
+            })
+        return _FakeResp({   # zh — 또 다른 영상들
+            "visual_matches": [_match("https://www.instagram.com/reel/ZH1/")],
+            "organic_results": [_match("https://www.tiktok.com/@c/video/333")],
+            "short_videos": [_match("https://www.youtube.com/watch?v=ZHV")],
         })
 
     monkeypatch.setattr(LD.requests, "get", fake_get)
@@ -143,6 +149,160 @@ def test_같은_영상의_사소한_차이는_무시한다():
     k = LD._dedup_key("https://www.instagram.com/reel/ABC/")
     assert k == LD._dedup_key("https://www.instagram.com/reel/ABC")
     assert k == LD._dedup_key("https://www.instagram.com/reel/ABC/?utm_source=x")
+
+
+# ── ⑤ 호출 상한 — 한 번 클릭에 SerpApi 3회까지 ───────────────────────────
+def test_로케일은_ko_en_zh_세벌이다():
+    """★중국어는 country=**tw**다. 본토(cn)는 구글이 서비스하지 않아 90초를 끌다
+    503을 뱉는다 — 실측 2026-08-16: zh-cn/cn 90.3초 503·0건 / zh-cn/tw 4.0초 60건."""
+    assert LD._LENS_LOCALES == (("ko", "kr"), ("en", "us"), ("zh-cn", "tw"))
+
+
+def test_한번_검색에_최대_3회만_호출한다(monkeypatch):
+    """★로케일 3벌 × 재시도 3회 = 최대 9회까지 불어날 수 있다.
+
+    빈 결과가 계속 오는 최악의 경우에도 상한을 넘으면 안 된다
+    (2026-08-16 사장님 "무조건 한번클릭에 3회로 상한")."""
+    calls = []
+
+    def fake_get(url, params=None, timeout=None):
+        calls.append((params or {}).get("hl"))
+        return _FakeResp({"visual_matches": []})      # 항상 빈 결과 → 재시도 유발
+
+    monkeypatch.setattr(LD.requests, "get", fake_get)
+    monkeypatch.setattr(LD, "SERPAPI_KEYS", ["K1"], raising=False)
+    monkeypatch.setattr(LD.serpapi_client, "is_exhausted", lambda *a, **k: False)
+    monkeypatch.setattr(LD, "verify_matches", lambda out, keywords=None: out)
+    monkeypatch.setattr(LD.time, "sleep", lambda s: None)
+
+    st = {}
+    LD.search_similar_videos("http://img", stats=st)
+    assert len(calls) <= LD._MAX_CALLS_PER_SEARCH, f"상한 초과: {len(calls)}회 {calls}"
+    assert st["serpapi_calls"] == len(calls)
+
+
+def test_소진된_키는_예산을_먹지_않는다(monkeypatch):
+    """★소진 키(429)는 검색을 안 해주므로 예산에서 빼면 안 된다.
+
+    라이브에서 실제로 터진 버그(2026-08-16): 키1이 소진 상태였는데 로케일마다
+    그 키를 찔러 예산을 깎아, ko 한 벌만 돌고 **en·zh가 통째로 굶었다**
+    (ko 69건 / en 0건 / zh 미실행). 죽은 키는 예산을 돌려주고 다음부터 건너뛴다."""
+    hit = []
+
+    def fake_get(url, params=None, timeout=None):
+        key, hl = params["api_key"], params["hl"]
+        hit.append((hl, key))
+        if key == "DEAD":
+            return _FakeResp({"error": "Your account has run out of searches."})
+        return _FakeResp({"visual_matches": [
+            _match(f"https://www.instagram.com/reel/{hl.upper()}/")]})
+
+    monkeypatch.setattr(LD.requests, "get", fake_get)
+    monkeypatch.setattr(LD, "SERPAPI_KEYS", ["DEAD", "LIVE"], raising=False)
+    monkeypatch.setattr(LD.serpapi_client, "is_exhausted",
+                        lambda status, data: "run out" in str(data.get("error", "")))
+    monkeypatch.setattr(LD, "verify_matches", lambda out, keywords=None: out)
+    monkeypatch.setattr(LD, "_LENS_LOCALES", (("ko", "kr"), ("en", "us"), ("zh-cn", "cn")))
+
+    st = {}
+    rows = LD.search_similar_videos("http://img", stats=st)
+    # 죽은 키는 **한 번만** 찔린다(첫 로케일). 이후 로케일은 바로 LIVE로 간다.
+    assert [k for _, k in hit].count("DEAD") == 1, f"죽은 키를 여러 번 찔렀다: {hit}"
+    # 로케일 3벌이 모두 실제 결과를 받았다 = 굶은 로케일 없음
+    assert st["raw_ko"] and st["raw_en"] and st["raw_zh-cn"], st
+    assert len(rows) == 3
+
+
+def test_앞_로케일_재시도가_뒤_로케일을_굶기지_않는다(monkeypatch):
+    """★중국어(zh)가 아예 안 도는 문제(2026-08-16 사장님 "중국어가 얼마나 나올지 보고싶다").
+
+    ko가 빈 결과로 재시도를 돌면 예산 3회를 혼자 다 먹어 en·zh 차례가 안 왔다.
+    로케일마다 최소 1회는 보장해야 한다."""
+    hit = []
+
+    def fake_get(url, params=None, timeout=None):
+        hl = params["hl"]
+        hit.append(hl)
+        if hl == "ko":
+            return _FakeResp({"visual_matches": []})       # 빈 결과 → 재시도 유발
+        return _FakeResp({"visual_matches": [
+            _match(f"https://www.instagram.com/reel/{hl.upper()}/")]})
+
+    monkeypatch.setattr(LD.requests, "get", fake_get)
+    monkeypatch.setattr(LD, "SERPAPI_KEYS", ["K1"], raising=False)
+    monkeypatch.setattr(LD.serpapi_client, "is_exhausted", lambda *a, **k: False)
+    monkeypatch.setattr(LD, "verify_matches", lambda out, keywords=None: out)
+    monkeypatch.setattr(LD.time, "sleep", lambda s: None)
+    monkeypatch.setattr(LD, "_LENS_LOCALES", (("ko", "kr"), ("en", "us"), ("zh-cn", "cn")))
+
+    st = {}
+    rows = LD.search_similar_videos("http://img", stats=st)
+    assert "zh-cn" in hit, f"중국어가 한 번도 안 돌았다: {hit}"
+    assert "en" in hit, f"영어가 안 돌았다: {hit}"
+    assert st["serpapi_calls"] <= LD._MAX_CALLS_PER_SEARCH   # 상한은 그대로 지킨다
+    assert len(rows) == 2          # en + zh (ko는 빈 결과)
+
+
+def test_결과가_바로_나오면_로케일마다_한번씩만(monkeypatch, spy):
+    """정상 상황(첫 호출에 결과 있음)에선 로케일당 1회 = 정확히 3회."""
+    monkeypatch.setattr(LD.time, "sleep", lambda s: None)
+    st = {}
+    LD.search_similar_videos("http://img", stats=st)
+    assert st["serpapi_calls"] == 3
+
+
+# ── ⑥ 사진·롱폼은 서버가 잘라낸다 ────────────────────────────────────────
+def _one_locale(monkeypatch, payload):
+    monkeypatch.setattr(LD.requests, "get",
+                        lambda url, params=None, timeout=None: _FakeResp(payload))
+    monkeypatch.setattr(LD, "SERPAPI_KEYS", ["K1"], raising=False)
+    monkeypatch.setattr(LD.serpapi_client, "is_exhausted", lambda *a, **k: False)
+    monkeypatch.setattr(LD, "verify_matches", lambda out, keywords=None: out)
+    monkeypatch.setattr(LD, "_LENS_LOCALES", (("ko", "kr"),))
+
+
+def test_인스타_카드뉴스는_결과에서_빠진다(monkeypatch):
+    """예전엔 프론트에서 '가리기'만 해 개수엔 잡혔다 — 이제 서버가 잘라낸다."""
+    _one_locale(monkeypatch, {"visual_matches": [
+        _match("https://www.instagram.com/p/PHOTO1/"),      # 카드뉴스 → 컷
+        _match("https://www.instagram.com/reel/REEL1/"),    # 영상 → 통과
+    ]})
+    st = {}
+    rows = LD.search_similar_videos("http://img", stats=st)
+    assert [r["url"] for r in rows] == ["https://www.instagram.com/reel/REEL1/"]
+    assert st["cut_photo"] == 1
+
+
+def test_롱폼은_결과에서_빠진다(monkeypatch):
+    """short_videos의 duration으로 판정한다("0:13"·"1:02:33" 형태)."""
+    _one_locale(monkeypatch, {"short_videos": [
+        {**_match("https://www.youtube.com/watch?v=SHORT"), "duration": "0:45"},
+        {**_match("https://www.youtube.com/watch?v=LONG"), "duration": "12:30"},
+        {**_match("https://www.youtube.com/watch?v=VLONG"), "duration": "1:02:33"},
+    ]})
+    st = {}
+    rows = LD.search_similar_videos("http://img", stats=st)
+    assert [r["url"] for r in rows] == ["https://www.youtube.com/watch?v=SHORT"]
+    assert st["cut_longform"] == 2
+
+
+def test_길이를_모르면_자르지_않는다(monkeypatch):
+    """visual_matches엔 duration이 없다 — 모른다고 자르면 멀쩡한 릴스가 사라진다."""
+    _one_locale(monkeypatch, {"visual_matches": [
+        _match("https://www.instagram.com/reel/NODUR/"),
+    ]})
+    st = {}
+    rows = LD.search_similar_videos("http://img", stats=st)
+    assert len(rows) == 1 and st["cut_longform"] == 0
+    assert rows[0]["is_short"] is True          # 모르면 숏폼 취급(토글이 안 가리게)
+
+
+@pytest.mark.parametrize("raw,secs", [
+    ("0:13", 13), ("1:02:33", 3753), ("45", 45), (45, 45),
+    (None, None), ("", None), ("N/A", None),
+])
+def test_길이_문자열_파싱(raw, secs):
+    assert LD._duration_secs(raw) == secs
 
 
 # ── ④ 기존 안전장치가 살아있다 ───────────────────────────────────────────

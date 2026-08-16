@@ -224,8 +224,23 @@ def verify_matches(items, keywords=None):
 #   LENS_LOCALES="ko:kr,en:us"  → 기본값
 _LENS_LOCALES = tuple(
     tuple((p.split(":", 1) + ["kr"])[:2])
-    for p in os.environ.get("LENS_LOCALES", "ko:kr,en:us").split(",") if p.strip()
+    # ⚠️ 중국어는 country=**tw**다. 본토(cn)는 구글이 서비스하지 않아 90초를 끌다
+    #    503("We couldn't get valid results")을 뱉는다 — 실측 2026-08-16:
+    #      zh-cn/cn  90.3초 → 503, 0건
+    #      zh-cn/tw   4.0초 → 200, 60건 ✅
+    #    zh 단독(hl=zh)은 400 "Unsupported hl parameter". zh-cn 표기가 맞다.
+    for p in os.environ.get("LENS_LOCALES", "ko:kr,en:us,zh-cn:tw").split(",") if p.strip()
 ) or (("ko", "kr"),)
+
+# ★렌즈 1번 클릭당 SerpApi 호출 **총 상한**(2026-08-16 사장님 "무조건 한번클릭에 3회로").
+#   로케일 3벌 × 재시도(_MAX_ATTEMPTS 3) = 최대 9회까지 불어날 수 있어서 뚜껑을 씌운다.
+_MAX_CALLS_PER_SEARCH = int(os.environ.get("LENS_MAX_CALLS", "3"))
+
+# ★로케일마다 **최소 1회는 보장**한다(2026-08-16 사장님 "중국어가 얼마나 나올지 보고싶다").
+#   상한만 두면 앞 로케일이 재시도로 예산을 다 먹어 뒤 로케일(zh)이 아예 안 돈다
+#   — 실제로 그래서 zh가 한 번도 실행되지 않았다. 재시도는 "남는 예산"으로만 한다.
+#   즉 로케일이 3개면 각 1회씩은 확보하고, 예산이 남을 때만 빈 결과를 재시도한다.
+_RESERVE_PER_LOCALE = True
 
 # 구글렌즈 응답에서 결과가 들어오는 리스트들.
 # ★visual_matches만 읽다가 40%를 버리고 있었다(2026-08-16 실측):
@@ -235,6 +250,29 @@ _LENS_LOCALES = tuple(
 #   합치면 인12 틱11 유10 = 19건→33건. **추가 비용 0원**(이미 받은 응답이다).
 #   "유튜브·틱톡이 렌즈로 안 나온다"의 진짜 원인이 이것이었다.
 _RESULT_FIELDS = ("visual_matches", "organic_results", "short_videos")
+
+
+# 렌즈에서 잘라낼 길이 기준(초). short_videos 항목엔 duration이 "0:13"·"1:02:33"
+# 형태로 온다(실측). 이보다 길면 롱폼으로 보고 아예 결과에서 뺀다 — 렌즈는 숏폼
+# 소재를 찾는 자리다. 길이를 모르는 항목(visual_matches·organic_results)은 건드리지
+# 않는다(모르는 것을 자르면 멀쩡한 릴스가 통째로 사라진다).
+_LONGFORM_MAX_SECS = float(os.environ.get("LENS_LONGFORM_MAX", "180"))
+_SHORT_MAX_SECS = 90        # '숏폼만' 토글 기준(다른 모듈과 같은 값)
+
+
+def _duration_secs(raw):
+    """ "0:13" / "1:02:33" / 45 → 초. 못 읽으면 None(=길이 모름, 자르지 않는다)."""
+    if raw is None or raw == "":
+        return None
+    if isinstance(raw, (int, float)):
+        return float(raw)
+    parts = str(raw).strip().split(":")
+    if not all(p.isdigit() for p in parts) or not 1 <= len(parts) <= 3:
+        return None
+    secs = 0.0
+    for p in parts:                      # 앞에서부터 60배씩 누적 → 시:분:초 모두 처리
+        secs = secs * 60 + int(p)
+    return secs
 
 
 def _dedup_key(link):
@@ -257,8 +295,11 @@ def _dedup_key(link):
     return base
 
 
-def _lens_call(image_url, keys, hl, country, timeout):
+def _lens_call(image_url, keys, hl, country, timeout, budget=None, dead=None):
     """로케일 1개로 구글렌즈 1회 호출 → 결과 dict 리스트(필드 3개 합침).
+
+    budget: [남은 호출 수] 리스트(호출부와 공유). 실제로 SerpApi를 때릴 때마다
+    1씩 깎고, 0이 되면 즉시 멈춘다 — 재시도가 예산을 넘어 새지 않게 한다.
 
     키 로테이션(2026-07-26): 현재 키가 월 한도를 소진하면(429 등) 다음 키로 넘어간다.
     소진이 아닌 진짜 빈 결과("no results")는 같은 키로 재시도(_MAX_ATTEMPTS) — 갓
@@ -269,16 +310,30 @@ def _lens_call(image_url, keys, hl, country, timeout):
       type 없는 기본 all모드 → 모든 프레임 59~60개 ✅
     즉 type을 넣으면 오히려 깨진다. all모드 응답에서 필드들을 꺼내 쓴다."""
     for key in keys:
+        if dead is not None and key in dead:
+            continue                     # 이번 검색에서 이미 소진 확인된 키 — 건너뛴다
         params = {"engine": "google_lens", "hl": hl, "country": country,
                   "url": image_url, "api_key": key}
         exhausted = False
         for attempt in range(_MAX_ATTEMPTS):
+            if budget is not None:
+                if budget[0] <= 0:
+                    return []            # 예산 소진 — 더 때리지 않는다
+                budget[0] -= 1
             try:
                 r = requests.get(_LENS_ENDPOINT, params=params, timeout=timeout)
                 data = r.json()
             except (requests.RequestException, ValueError):
                 return []
             if serpapi_client.is_exhausted(getattr(r, "status_code", 200), data):
+                # ★소진된 키는 **검색을 안 해준다** — 예산을 돌려준다(2026-08-16).
+                #   안 그러면 소진 키 하나가 로케일 예산을 먹어치워, 실제로는
+                #   ko 한 벌만 돌고 en·zh가 통째로 굶는다(라이브에서 실제로 발생:
+                #   ko 69건 / en 0건 / zh 미실행).
+                if budget is not None:
+                    budget[0] += 1
+                if dead is not None:
+                    dead.add(key)  # 다음 로케일이 같은 키를 또 찌르지 않게
                 exhausted = True   # 이 키 소진 → 바깥 루프에서 다음 키로
                 break
             try:
@@ -322,11 +377,30 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
     #   겹침이 1건 남짓이라 합치면 결과가 두 배가 된다. 대신 SerpApi를 로케일당
     #   1회씩 쓴다(렌즈 1번 = 2회 차감). 아래 _LENS_LOCALES로 조절 가능.
     matches = []
-    for hl, country in _LENS_LOCALES:
-        got = _lens_call(image_url, keys, hl, country, timeout)
+    # ★호출 예산 — 로케일들이 **공유**한다. 재시도까지 합쳐 총 _MAX_CALLS_PER_SEARCH회.
+    #   리스트로 넘겨 _lens_call 안에서 깎는다(정수는 값 복사라 안 깎인다).
+    budget = [_MAX_CALLS_PER_SEARCH]
+    # 이번 검색에서 소진으로 확인된 키 — 로케일마다 같은 죽은 키를 다시 찌르지 않는다
+    # (라이브 실측: 로케일 3벌이면 죽은 키를 3번 찔러 왕복만 낭비했다).
+    dead = set()
+    for i, (hl, country) in enumerate(_LENS_LOCALES):
+        if budget[0] <= 0:
+            break                        # 예산 소진 → 남은 로케일은 건너뛴다
+        # ★뒤 로케일 몫을 남겨둔다 — 앞 로케일의 재시도가 예산을 다 먹으면
+        #   zh가 아예 안 돈다(사장님 "중국어가 얼마나 나올지 보고싶다").
+        #   남은 로케일 수만큼 예약해두고, 이번 로케일은 나머지만 쓴다.
+        reserve = (len(_LENS_LOCALES) - i - 1) if _RESERVE_PER_LOCALE else 0
+        allow = max(1, budget[0] - reserve)
+        sub = [min(allow, budget[0])]
+        got = _lens_call(image_url, keys, hl, country, timeout, sub, dead)
+        budget[0] -= (min(allow, budget[0]) - sub[0])   # 실제로 쓴 만큼만 차감
         matches.extend(got)
         if stats is not None and isinstance(stats, dict):
             stats[f"raw_{hl}"] = len(got)
+    if stats is not None and isinstance(stats, dict):
+        # 실제로 '검색을 해준' 호출 수(소진 키 왕복은 환불되므로 여기 안 잡힌다).
+        # 한도에 실제로 찍히는 건 이 숫자다.
+        stats["serpapi_calls"] = _MAX_CALLS_PER_SEARCH - budget[0]
     # ★인스타 편차 계측(2026-08-14 사장님 "인스타는 0건이거나 왕창이거나 편차가 심하다").
     #   추측하지 않으려면 어디서 사라지는지 세야 한다. 렌즈 원본(visual_matches) 중
     #   인스타 링크가 몇 개였고, 그중 몇 개가 개별 게시물이 아니라(프로필·/explore·
@@ -337,6 +411,8 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
     st["ig_raw"] = 0
     st["ig_dropped_not_post"] = 0
     st["ig_photo"] = 0
+    st["cut_photo"] = 0        # 사진·카드뉴스로 잘라낸 수
+    st["cut_longform"] = 0     # 롱폼(길이 초과)으로 잘라낸 수
     out = []
     # ★중복 제거 — 로케일 2벌 + 필드 3개를 합치므로 같은 영상이 여러 번 올라온다.
     #   URL 기준(쿼리스트링 제외)으로 처음 것만 남긴다. 안 하면 화면에 같은 카드가
@@ -355,8 +431,20 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
         if key_url in seen_urls:
             continue
         seen_urls.add(key_url)
-        if platform == "instagram" and is_photo_post(platform, link):
-            st["ig_photo"] += 1
+
+        # ★사진·롱폼은 **서버에서 잘라낸다** (2026-08-16 사장님 "그냥 자체 커트").
+        #   예전엔 프론트 토글로 '가리기'만 해서 개수에는 계속 잡히고, 토글을 끄면
+        #   다시 나왔다. 렌즈는 숏폼 소재를 찾는 자리라 애초에 담을 이유가 없다.
+        if is_photo_post(platform, link):
+            st["cut_photo"] += 1
+            if platform == "instagram":
+                st["ig_photo"] += 1
+            continue
+        dur = _duration_secs(m.get("duration"))
+        if dur is not None and dur > _LONGFORM_MAX_SECS:
+            st["cut_longform"] += 1
+            continue
+
         title = m.get("title", "")
         out.append({
             "platform": platform,
@@ -366,8 +454,11 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
             # 프론트가 알아서 처리한다. 있는 필드(visual_matches·short_videos)는 그대로.
             "thumbnail": m.get("thumbnail", ""),
             "match": _title_matches(keywords, title),
-            # 카드뉴스(사진) 후보 표시 — 프론트의 '🎬 영상만' 토글이 이걸로 가린다.
-            "is_photo": is_photo_post(platform, link),
+            # 위에서 이미 잘라냈으므로 항상 False — 프론트 '🎬 영상만' 토글 호환용으로 남긴다.
+            "is_photo": False,
+            # 길이를 아는 것만 채운다(short_videos에만 있다). 프론트 '숏폼만' 토글이 본다.
+            "is_short": True if dur is None else dur <= _SHORT_MAX_SECS,
+            "duration": dur,
         })
     st["merged_total"] = len(matches)
     st["after_dedup"] = len(out)
