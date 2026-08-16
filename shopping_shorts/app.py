@@ -2253,12 +2253,24 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         if not _picked:
             return JSONResponse(status_code=422, content={
                 "ok": False, "error": "고른 스타일을 쓸 수 없음(승인·구조·카테고리 확인)"})
-        _src = [{"name": it.get("category") or "", "full_text": it.get("full_text") or "",
-                 "structure": it.get("structure") or {}}]
+        # ★재료를 **담긴 영상 전부**로 넓힌다(2026-08-17 사장님 지시).
+        #   여기는 원래 `[{...}]` 하나뿐이었는데 바로 아래 `_mix_source_block`은 `sources[:3]`
+        #   으로 3편까지 받게 돼 있었다 — **3개 그릇에 1개만 넣고 있었다.**
+        #   그래서 "어느 대본을 씨앗으로 골랐냐"가 결과를 좌우했다(사장님: "하나의 대본을
+        #   지정하면 편협하게 나온다 / 사용자는 뭐가 좋은 대본인지 모르고 잘못 고르면 낭패").
+        #   담긴 것을 전부 넣으면 그 복불복 자체가 사라진다.
+        _job = store.get_mix_job((body.get("job_id") or "").strip()) if body.get("job_id") else None
+        _src = _sources_for_generate(it, _job)
         # ★제품 재료 주입(2026-08-16) — 이 작업에 연결된 쿠팡 상품에서 미리 긁어둔
         #   스펙·리뷰가 있으면 프롬프트에 얹는다. 없으면 ''이라 기존 경로 그대로(회귀 0).
         #   여기서 긁지 않는다 — 수집은 /api/product/facts/collect가 미리 해둔다(2~3분).
         _facts_block = _facts_block_for_job(body.get("job_id") or "", store)
+        # ★1단계 장면 태깅을 대본에도 준다(2026-08-17). label=이 장면이 무엇인가,
+        #   use_point=이 장면을 어디에 어떻게 써먹나. 지금까지는 화면 붙일 때(edit_plan)만
+        #   쓰고 대본 생성엔 안 실렸다 — 재료를 반만 쓰고 있었다.
+        _scene_block = _scene_points_block(_job)
+        if _scene_block:
+            _facts_block = (_facts_block + "\n\n" + _scene_block) if _facts_block else _scene_block
         _styled = script_generate.generate_by_styles(
             _src, _picked, target_seconds=body.get("target_seconds") or 30,
             bank_context=_bank_ctx, facts_block=_facts_block)
@@ -9241,6 +9253,75 @@ def _facts_block_for_job(job_id, store=None):
         return product_facts.prompt_block(facts)
     except Exception:      # noqa: BLE001 — 재료 조회 실패가 대본 생성을 막으면 안 된다
         return ""
+
+
+def _sources_for_generate(item, job, limit=3):
+    """대본 생성에 넣을 **재료 대본 목록**. 담긴 영상 전부(최대 limit편) + 씨앗 항목.
+
+    ★왜 여러 편인가(2026-08-17 사장님 지시): 한 편만 넣으면 그 한 편의 인물·상황에
+      끌려가 편협해지고, **어느 편을 고르느냐가 결과를 좌우**한다(사용자는 뭐가 좋은
+      대본인지 모른다). 담긴 것을 다 넣으면 고를 일이 없어진다 = 복불복이 사라진다.
+    ★`_mix_source_block`이 원래 `sources[:3]`으로 3편까지 받게 돼 있다 — 그릇에 맞춰 채운다.
+    ★job이 없으면(위키 직행 등) 종전대로 항목 하나. 회귀 0.
+    """
+    out, seen = [], set()
+
+    def _add(name, full_text, structure):
+        txt = (full_text or "").strip()
+        if not txt or txt in seen:
+            return
+        seen.add(txt)
+        out.append({"name": name or "", "full_text": txt, "structure": structure or {}})
+
+    _add(item.get("category") or "", item.get("full_text"), item.get("structure"))
+    for _vid, ex in sorted(((job or {}).get("extract") or {}).items()):
+        if len(out) >= limit:
+            break
+        if not isinstance(ex, dict):
+            continue
+        txt = (ex.get("full_text") or "").strip()
+        if not txt:
+            txt = " ".join((s.get("text") or "").strip()
+                           for s in (ex.get("segments") or [])).strip()
+        _add(item.get("category") or "", txt, ex.get("structure"))
+    return out[:limit]
+
+
+def _scene_points_block(job, limit=14):
+    """1단계 장면 태깅 → 대본 프롬프트 재료 블록. 없으면 ''(기존 경로 그대로 = 회귀 0).
+
+    label     = 이 장면이 **무엇인가**(정체)
+    use_point = 이 장면을 새 영상에서 **어디에 어떻게 써먹나**(쓸모)
+
+    지금까지 이 둘은 화면 붙이기(`edit_plan`)에서만 쓰이고 대본 생성엔 안 실렸다.
+    대본이 장면을 모른 채 쓰이면 "말과 화면이 따로 노는" 결과가 된다 — 같은 재료를
+    양쪽이 보게 한다.
+
+    ⚠️ 장면을 **그대로 나열하라는 지시가 아니다.** 사실 재료로만 준다(표현은 스타일 몫).
+    """
+    lines = []
+    for _vid, ex in sorted(((job or {}).get("extract") or {}).items()):
+        if not isinstance(ex, dict):
+            continue
+        brief = (ex.get("source_brief") or "").strip()
+        if brief:
+            lines.append("· [영상 요약] " + brief)
+        for seg in (ex.get("segments") or []):
+            if len(lines) >= limit:
+                break
+            up = (seg.get("use_point") or "").strip()
+            lb = (seg.get("label") or "").strip()
+            if up:
+                lines.append("· %s%s" % (up, (" (%s)" % lb) if lb else ""))
+            elif lb:
+                lines.append("· " + lb)
+        if len(lines) >= limit:
+            break
+    if not lines:
+        return ""
+    return ("[이 영상들에 실제로 있는 장면]\n" + "\n".join(lines[:limit])
+            + "\n※ 여기 있는 장면으로 말이 되게 써라. 없는 장면을 지어내지 마라. "
+              "장면 이름을 그대로 나열하지 말고 **말로 풀어라**.")
 
 
 @app.post("/api/product/facts/collect")

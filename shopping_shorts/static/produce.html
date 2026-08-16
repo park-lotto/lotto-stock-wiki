@@ -1346,9 +1346,13 @@
            body에 붙였지만 여기선 한 패널일 뿐이라 전역을 더럽히면 안 된다. -->
       <div id="s2Root" class="mode-tab">
 
-        <!-- ① 씨앗 대본 — 어느 영상에서 출발할까 (옛 1단계 #aiPick의 후계) -->
+        <!-- ① 재료 — ★고르는 자리가 아니다(2026-08-17 사장님 지시로 '씨앗 선택' 폐지).
+             대본 1편을 지정하면 그 편에 끌려가 편협해지고, 무엇보다 **어느 편을 고르냐가
+             결과를 좌우**한다("사용자는 뭐가 좋은 대본인지 모르고 잘못 고르면 낭패").
+             담긴 것을 전부 재료로 쓰면 고를 일이 없어진다 = 복불복이 사라진다.
+             여기 카드는 **무엇이 재료로 들어가는지 보여주는 확인용**이다. -->
         <div class="s2-band">
-          <div class="s2-label">① 씨앗 대본 — 어느 영상에서 출발할까요</div>
+          <div class="s2-label" id="s2SeedLabel">① 재료 — 담긴 영상을 전부 씁니다</div>
           <div class="s2-cardrow" id="s2SeedRow"></div>
           <div class="s2-seedinfo" id="s2SeedInfo" style="display:none">
             <div class="si-top">
@@ -7115,8 +7119,9 @@ function s2RenderSeeds(){
                 s.tiles.engagement_rate!=null?('참여밀도 '+s.tiles.engagement_rate+'%'):''].filter(Boolean).join(' · ');
     const th=s.thumb?`<img src="${s.thumb.includes('gstatic.com')?s.thumb:('/api/thumb?url='+encodeURIComponent(s.thumb))}" referrerpolicy="no-referrer" onerror="this.style.display='none'">`:'🎬';
     const sub=[s.category, (s.followers!=null?('팔로워 '+fmtNum(s.followers)):'')].filter(Boolean).join(' · ');
-    return `<div class="s2-scard${S2.seed&&S2.seed.shortcode===s.shortcode?' sel':''}" onclick="s2PickSeed(${i})">
-      ${s.pick?'<span class="s2-spick">🤖 AI PICK · 완성도 1위</span>':''}
+    // ★클릭으로 고르지 않는다 — 담긴 것이 전부 재료다. 카드는 확인용.
+    return `<div class="s2-scard${s.pick?' sel':''}" title="담긴 영상은 전부 재료로 들어갑니다 — 고르지 않아도 됩니다">
+      ${s.pick?'<span class="s2-spick">🤖 대표 · 완성도 1위</span>':''}
       <div class="s2-swho"><div class="s2-sth">${th}</div>
         <div><div class="s2-snm">${esc(s.title)}</div>${sub?`<div class="s2-ssub">${esc(sub)}</div>`:''}</div></div>
       ${strip}
@@ -7138,9 +7143,13 @@ function s2RenderSeeds(){
     <div class="s2-strip ghost"></div><div class="s2-stags">&nbsp;</div>
     <div class="s2-sfoot"><span class="ghostbtn">입력 열기</span></div></div>`);
   row.innerHTML=cards.join('');
+  // 재료가 몇 편인지 라벨이 말해준다 — "전부 쓴다"를 글로만 말하면 안 믿긴다.
+  const lb=document.getElementById('s2SeedLabel');
+  if(lb) lb.textContent = S2.seeds.length
+    ? ('① 재료 — 담긴 영상 ' + S2.seeds.length + '편을 전부 씁니다 (고르지 않아도 됩니다)')
+    : '① 재료 — 1단계에서 영상을 담아주세요';
   s2RenderSeedInfo();
 }
-function s2PickSeed(i){ S2.seed=S2.seeds[i]||null; s2RenderSeeds(); }
 function s2ShowSeedText(i){
   const s=S2.seeds[i]; if(!s) return;
   if(!s.text){ toast('이 영상의 대본 원문이 아직 없습니다'); return; }
@@ -7247,6 +7256,10 @@ async function s2Generate(){
   try{
     const body={mode:'A', my_topic:'', subject:'', n:2, elem_modes:{},
       structure:null, base_script:s.text||'', category:s.category||PM_CATEGORY||''};
+    // ★job_id를 반드시 실어라(2026-08-17). 서버는 이걸로 ①담긴 영상 전부의 대본
+    //   ②쿠팡 상세·리뷰 재료 ③1단계 장면 태깅(label·use_point)을 붙인다.
+    //   안 보내면 코드가 다 있어도 **재료가 빈 채로** 대본이 나온다(내가 처음에 빠뜨린 것).
+    if(typeof MIX_JOB!=='undefined' && MIX_JOB) body.job_id=MIX_JOB;
     if(S2.picked.length) body.style_ids=S2.picked;   // 없으면 키 자체를 안 보낸다(기존 경로 유지)
     const d=await (await fetch('/api/wiki/generate?shortcode='+encodeURIComponent(s.shortcode),
       {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
