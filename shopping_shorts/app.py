@@ -2895,6 +2895,21 @@ def _user_facing_error(msg):
     return "처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요."
 
 
+def _script_hash(text):
+    """대본의 지문 — "이 job이 지금 화면의 대본으로 만들어진 것인가"만 판별한다.
+
+    ★프론트(produce.html `_scriptHash`)와 **같은 규칙이어야 한다**(0순위-B: 짝으로
+      움직이는 값). 규칙이 어긋나면 항상 '바뀐 것'으로 보여 매칭이 무한 재실행되고,
+      매칭은 과금(render 1회 차감)이라 그대로 요금이 된다.
+    규칙: 앞뒤 공백 제거 + 줄바꿈 정규화(CRLF→LF) + 줄별 끝공백 제거 → sha1 앞 16자.
+    (줄 끝 공백·CRLF는 편집기·저장 경로에 따라 저절로 생겼다 사라진다. 그걸로
+     "대본이 바뀌었다"고 보면 안 된다 — 사람이 보기에 같은 글이면 같아야 한다.)
+    """
+    s = (text or "").replace("\r\n", "\n").replace("\r", "\n").strip()
+    s = "\n".join(line.rstrip() for line in s.split("\n"))
+    return hashlib.sha1(s.encode("utf-8")).hexdigest()[:16] if s else ""
+
+
 @app.get("/api/mix/status/{job_id}")
 def api_mix_status(job_id: str, request: Request):
     store = Store(DB_PATH)
@@ -2983,6 +2998,10 @@ def api_mix_status(job_id: str, request: Request):
             # 지금 고른 후보(2026-07-30). 다른 단계 갔다 돌아온 복원 경로가 카드를 원래 선택 상태로
             # 다시 그리는 데 쓴다. 아직 아무것도 안 골랐으면 None → 프론트가 recommended를 따른다.
             "selected_index": (job.get("edit_plan") or {}).get("candidate_index"),
+            # ★이 job이 어떤 대본으로 매칭됐는지의 지문(2026-08-17). 3단계가 들어올 때마다
+            #   화면 대본과 대조해 **바뀌었으면 자동으로 다시 붙이려고** 쓴다(사장님 결정 A).
+            #   원문을 실으면 응답만 무거워진다 — 같은지 다른지만 알면 되므로 해시로 보낸다.
+            "script_hash": _script_hash(job.get("given_script") or ""),
             "candidates": candidates}
 
 

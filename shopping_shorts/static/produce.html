@@ -1546,32 +1546,46 @@ function showPanel(){
 // ①(#mixCandidates)②(#mixReview)③(#mixPreviewPanel)은 전부 startProduceMix/pollMix/
 // loadMixReview/startPreview가 이미 채운다(패널이 옮겨왔을 뿐 로직은 그대로) — 이 함수는
 // "이 패널에 막 들어왔는데 아직 아무것도 없다"는 두 경우만 보충한다.
-function initMatch(){
+// 대본 지문 — 서버 `_script_hash`(app.py)와 **같은 규칙이어야 한다**(0순위-B: 짝으로
+// 움직이는 값). 어긋나면 늘 '바뀐 것'으로 보여 매칭이 무한 재실행되고, 매칭은 과금이라
+// 그대로 요금이 된다. 규칙: 트림 + CRLF→LF + 줄끝 공백 제거 → sha1 앞 16자.
+async function _scriptHash(text){
+  let s = (text || '').replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim();
+  s = s.split('\n').map(l => l.replace(/\s+$/,'')).join('\n');
+  if(!s) return '';
+  const buf = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(s));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,16);
+}
+async function initMatch(){
   if(!MIX_JOB){
     // 매칭을 아직 시작 안 했다 — 자유 이동은 허용하되(T7 규약) 빈 화면 대신 안내를 준다.
     const cands = document.getElementById('mixCandidates'); if(cands) cands.innerHTML = '';
     const rev = document.getElementById('mixReview'); if(rev) rev.innerHTML = '';
     try{ _syncSceneLab(false); }catch(_){ }   // 잡이 없으면 실험실도 없다
     const st = document.getElementById('mixStatus');
-    // ★여기서 **시작할 수 있게** 한다(2026-08-17 사장님 제보 "이건 왜 이러냐" — 1·2단계는
-    //   ✓인데 3단계가 1단계로 되돌아가라고 했다). 매칭을 걸 방법이 통째로 없는 구멍이었다:
+    // ★들어오면 **알아서 시작한다**(2026-08-17 사장님 "3단계에서도 버튼을 눌러야 하는거야?").
+    //   원래 매칭을 걸 방법이 통째로 없었다 — 세 곳이 서로 "저쪽 소관"이라 미뤘다:
     //     · 2단계 확정(s2Confirm) → "매칭은 3단계 소관"이라며 안 건다(사양서 §6)
     //     · 3단계               → 시작 버튼이 HTML에 아예 없다
     //     · 1단계 ⚡ 버튼        → startFromAiPick = **AI PICK 전용** 경로
-    //   즉 2단계에서 대본을 뽑아 확정한 사람은 어디서도 매칭을 시작할 수 없었다
-    //   (실측 work fee24c3b51c9: step=7·script 361자·담긴 영상 4건인데 mixJob=None).
-    //   대본이 있으면 그걸로 바로 시작하면 된다 — startProduceMix는 STATE.script와
-    //   담긴 URL만 있으면 돌아간다. 없을 때만 대본 단계로 안내한다.
-    const ready = !!(STATE.script || '').trim();
-    if(st){
-      if(ready){
-        st.innerHTML = '대본이 준비됐어요 — 담은 영상에 <b>문장별로 화면을 붙입니다</b>.'
-          + '<div style="margin-top:10px"><button class="cta-shine" onclick="startProduceMix()">'
-          + '⚡ 이 대본으로 화면 붙이기 시작</button></div>';
-      }else{
-        st.textContent = '아직 대본이 없어요 — ' + stepName('script')
-          + '에서 대본을 먼저 만들고 확정해주세요.';
-      }
+    //   (실측 work fee24c3b51c9: step=7·script 361자·담긴 영상 4건인데 mixJob=None)
+    //   여기까지 넘어온 것 자체가 "이 대본으로 가자"는 결정이다 → 버튼을 또 누를 이유가 없다.
+    //   ⚠️ 2단계 확정 시점에 걸지 않는 이유는 그대로 유효하다: 대본을 다듬기도 전에
+    //      시작하면 2단계가 존재 이유를 잃고, 대본이 바뀌면 매칭을 버려야 한다(=과금 낭비).
+    if(!(STATE.script || '').trim()){
+      if(st) st.textContent = '아직 대본이 없어요 — ' + stepName('script')
+        + '에서 대본을 먼저 만들고 확정해주세요.';
+      return;
+    }
+    if(_MIX_AUTOSTARTED) return;    // 실패한 뒤 다시 안 들어오게(요금·무한루프 방지)
+    _MIX_AUTOSTARTED = true;
+    if(st) st.textContent = '⏳ 대본에 화면을 붙이는 중이에요…';
+    try{ await startProduceMix(); }
+    catch(e){
+      _MIX_AUTOSTARTED = false;     // 진짜 실패는 다시 시도할 수 있어야 한다
+      if(st) st.innerHTML = '❌ 화면 붙이기를 시작하지 못했어요.'
+        + '<div style="margin-top:10px"><button class="cta-shine" onclick="initMatch()">'
+        + '다시 시도</button></div>';
     }
     return;
   }
@@ -1579,6 +1593,25 @@ function initMatch(){
   // 비어 있으면(예: 새로고침 없이 이 패널로 막 들어옴, 또는 서버 복원 전) 결과를 다시 채운다.
   const rev = document.getElementById('mixReview');
   if(rev && !rev.innerHTML.trim()) _restoreMixContext();
+  // ★대본을 고치고 되돌아왔으면 **자동으로 다시 붙인다**(2026-08-17 사장님 결정 A).
+  //   안 그러면 화면엔 옛 대본으로 만든 편집안이 남아, 고친 대본과 다른 영상이 나온다.
+  //   판정은 서버 job의 given_script 지문과 대조한다 — 화면 기억이 아니라 실제 매칭에
+  //   쓰인 값이라 새로고침·다른 기기에서도 정확하다.
+  try{ await _remixIfScriptChanged(); }catch(e){}
+}
+// 지금 job이 **지금 대본**으로 만들어진 것인지 확인하고, 아니면 다시 매칭한다.
+async function _remixIfScriptChanged(){
+  if(!MIX_JOB || !(STATE.script || '').trim()) return;
+  const s = await (await fetch('/api/mix/status/'+encodeURIComponent(MIX_JOB))).json();
+  if(!s || !s.ok) return;
+  // 아직 도는 중이면 건드리지 않는다 — 끝나고 나서 판단해도 늦지 않다(중복 과금 방지).
+  if(!/^(ready_for_review|done|failed)$/.test(s.status || '')) return;
+  if(typeof s.script_hash !== 'string' || !s.script_hash) return;   // 옛 job엔 지문이 없다 → 그대로 둔다
+  const now = await _scriptHash(STATE.script);
+  if(!now || now === s.script_hash) return;                          // 안 바뀌었다
+  const st = document.getElementById('mixStatus');
+  if(st) st.textContent = '✏️ 대본이 바뀌었어요 — 화면을 다시 붙이는 중이에요…';
+  await startProduceMix();
 }
 // ── 화면 붙이기 끝 ──
 
@@ -2904,6 +2937,9 @@ function openGenFromWiki(){
 
 // ── 1단계 제작소: 영상믹스(given_script 매칭) ──────────────
 let MIX_JOB=null, MIX_POLL=null;
+// 3단계 자동 시작을 이 작업에서 이미 걸었나 — 실패 후 재진입으로 매칭이 두 번 걸리는 걸 막는다.
+// 매칭은 과금(render 1회)이라 "혹시 몰라 한 번 더"가 그대로 요금이 된다.
+let _MIX_AUTOSTARTED=false;
 let VP_BEATS=[]; let _vpHeard=new Set();
 const MIX_LABEL={downloading:'영상 다운로드 중…',extracting:'대본 분석 중…',planning:'장면 매칭 중…',tts:'음성 생성 중…',ready_for_review:'매칭 완료',rendering:'최종 렌더 중…',done:'완료',failed:'실패'};
 // 동적 로딩 파이프라인(loader.js) 단계 순서. 파이프라인 컨트롤러 자체는 최상위 변수로 두지 않고
