@@ -117,3 +117,39 @@ class TestVoiceClean:
     def test_빈_칸은_아예_뺀다(self):
         out = self._clean({"exclaim": [], "onomatopoeia": ["쫙"], "tone_note": "t"})
         assert "exclaim" not in out and out["onomatopoeia"] == ["쫙"]
+
+
+class TestEnrichJobExtract:
+    """옛 작업 스냅샷에 태깅이 없으면 캐시에서 보충한다 (2026-08-17 실측 job 8873eeb48a08)."""
+
+    class _Store:
+        def __init__(self, by_key):
+            self.by_key = by_key
+
+        def get_extract(self, k):
+            return self.by_key.get(k)
+
+    def test_태깅이_이미_있으면_손대지_않는다(self):
+        from shopping_shorts.app import _enrich_job_extract
+        job = {"urls": ["https://www.tiktok.com/@a/video/123"],
+               "extract": {"s0": {"segments": [{"use_point": "원래 있던 것"}]}}}
+        out = _enrich_job_extract(job, self._Store({"123": {"segments": [{"use_point": "캐시"}]}}))
+        assert out["extract"]["s0"]["segments"][0]["use_point"] == "원래 있던 것"
+
+    def test_비어있으면_캐시에서_채운다(self):
+        from shopping_shorts.app import _enrich_job_extract
+        job = {"urls": ["https://www.tiktok.com/@a/video/123"],
+               "extract": {"s0": {"segments": [{"label": "옛 라벨"}], "full_text": "본문"}}}
+        # ★렌즈 경로는 접두사가 붙은 키로 저장된다 — 그쪽에만 있어도 찾아야 한다
+        store = self._Store({"lens_tiktok_123": {"segments": [{"use_point": "새 쓸모"}],
+                                                 "source_brief": "요약"}})
+        out = _enrich_job_extract(job, store)
+        assert out["extract"]["s0"]["segments"][0]["use_point"] == "새 쓸모"
+        assert out["extract"]["s0"]["source_brief"] == "요약"
+        assert out["extract"]["s0"]["full_text"] == "본문"      # 기존 값은 안 덮는다
+        assert job["extract"]["s0"].get("source_brief") is None  # 원본 불변
+
+    def test_캐시에도_없으면_그대로(self):
+        from shopping_shorts.app import _enrich_job_extract
+        job = {"urls": ["https://www.tiktok.com/@a/video/123"], "extract": {"s0": {"segments": []}}}
+        assert _enrich_job_extract(job, self._Store({})) is job
