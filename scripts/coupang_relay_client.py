@@ -21,6 +21,16 @@ import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# ★윈도우 콘솔은 기본이 cp949라 '—'(em dash) 한 글자에 **시작하자마자 죽는다**
+#   (2026-08-17 실측: UnicodeEncodeError로 릴레이가 첫 print에서 종료됐다).
+#   안내문에서 특수문자를 빼는 건 답이 아니다 — 상품명·리뷰에 어떤 글자가 올지 모른다.
+#   출력 스트림 자체를 UTF-8로 돌리고, 그래도 못 찍는 글자는 물음표로 흘린다.
+for _s in (sys.stdout, sys.stderr):
+    try:
+        _s.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:      # noqa: BLE001 — 파이프로 넘길 땐 reconfigure가 없을 수 있다
+        pass
+
 from shopping_shorts import coupang_search  # noqa: E402
 
 SERVER = os.getenv("COUPANG_RELAY_SERVER", "https://shoppingshorts.duckdns.org").rstrip("/")
