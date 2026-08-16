@@ -102,6 +102,10 @@ class TestVoiceClean:
         out = self._clean({"endings": ["~더라고요", "~남겨주세요", "댓글 남겨주시면"]})
         assert out["endings"] == ["~더라고요"]
 
+    def test_띄어쓴_cta도_뺀다(self):
+        """첫 실행에서 '남겨 주세요'가 띄어쓰기로 필터를 뚫고 저장됐다(2026-08-17 실측)."""
+        assert "endings" not in self._clean({"endings": ["남겨 주세요"]})
+
     def test_마침표_변종은_한_번만(self):
         out = self._clean({"endings": ["~더라고요", "~더라고요.", "~더라고요?"]})
         assert len(out["endings"]) == 1
