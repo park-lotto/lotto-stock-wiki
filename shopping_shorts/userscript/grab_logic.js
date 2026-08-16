@@ -28,11 +28,36 @@
     return e ? e.content : "";
   }
 
-  function openGrab(url, thumb, title) {
+  // ★지금 보는 영상의 **파일 직접 주소**(2026-08-17). 도우인은 yt-dlp가 쿠키를 요구해
+  //   페이지 URL만으로는 서버가 영상을 못 받는다(서버·PC 양쪽에서 재현 — IP 문제가 아니다).
+  //   그런데 브라우저에는 CDN 주소가 그대로 있다. 담는 순간 그걸 함께 보내면 서버가
+  //   그 주소로 바로 받는다(download_any가 video_url을 우선 쓴다).
+  //   blob:은 이 탭 안에서만 유효하므로 보내지 않는다 — 서버가 받을 수 없다.
+  var _MEDIA_HOSTS = ["zjcdn.com", "douyinvod.com", "xhscdn.com"];
+  function currentVideoSrc() {
+    try {
+      var vs = document.querySelectorAll("video");
+      for (var i = 0; i < vs.length; i++) {
+        var cand = [vs[i].currentSrc, vs[i].src];
+        var ss = vs[i].querySelectorAll("source");
+        for (var k = 0; k < ss.length; k++) cand.push(ss[k].src);
+        for (var j = 0; j < cand.length; j++) {
+          var u = cand[j] || "";
+          if (u.indexOf("https://") !== 0) continue;      // blob:·상대경로 제외
+          for (var h = 0; h < _MEDIA_HOSTS.length; h++) {
+            if (u.indexOf(_MEDIA_HOSTS[h]) >= 0) return u;
+          }
+        }
+      }
+    } catch (e) {}
+    return "";
+  }
+  function openGrab(url, thumb, title, videoUrl) {
     window.open(
       BASE + "/api/grab?url=" + encodeURIComponent(url) +
         "&thumbnail=" + encodeURIComponent(thumb || "") +
-        "&title=" + encodeURIComponent((title || "").slice(0, 120)),
+        "&title=" + encodeURIComponent((title || "").slice(0, 120)) +
+        (videoUrl ? "&video_url=" + encodeURIComponent(videoUrl) : ""),
       "ss_grab", "width=380,height=220"
     );
   }
@@ -461,7 +486,8 @@
       "font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer;font-family:system-ui,sans-serif";
     b.addEventListener("click", function (e) {
       e.preventDefault();
-      openGrab(location.href, meta("og:image"), meta("og:title") || document.title || "");
+      openGrab(location.href, meta("og:image"), meta("og:title") || document.title || "",
+               currentVideoSrc());
     });
     document.body.appendChild(b);
   }
@@ -615,8 +641,25 @@
     window.__ssDouyinMW = true;
     var BASE = "https://shoppingshorts.duckdns.org";
     function isGrid() { return /(^|\/)(search|explore|tag)(\/|$|\?)/.test(location.pathname + location.search) || /\/search_result/.test(location.pathname); }
-    function openGrab(url, thumb, title) {
-      window.open(BASE + "/api/grab?url=" + encodeURIComponent(url) + "&thumbnail=" + encodeURIComponent(thumb || "") + "&title=" + encodeURIComponent((title || "").slice(0, 120)), "ss_grab", "width=380,height=220");
+    // 메인월드는 별도 스코프라 위 헬퍼를 못 쓴다 — 같은 규칙을 여기서도 지킨다.
+    // (그리드 카드는 대개 재생 전이라 빈 값이고, 그때는 종전대로 페이지 URL만 간다)
+    var _MEDIA_HOSTS = ["zjcdn.com", "douyinvod.com", "xhscdn.com"];
+    function currentVideoSrc() {
+      try {
+        var vs = document.querySelectorAll("video");
+        for (var i = 0; i < vs.length; i++) {
+          var cand = [vs[i].currentSrc, vs[i].src];
+          for (var j = 0; j < cand.length; j++) {
+            var u = cand[j] || "";
+            if (u.indexOf("https://") !== 0) continue;
+            for (var h = 0; h < _MEDIA_HOSTS.length; h++) if (u.indexOf(_MEDIA_HOSTS[h]) >= 0) return u;
+          }
+        }
+      } catch (e) {}
+      return "";
+    }
+    function openGrab(url, thumb, title, videoUrl) {
+      window.open(BASE + "/api/grab?url=" + encodeURIComponent(url) + "&thumbnail=" + encodeURIComponent(thumb || "") + "&title=" + encodeURIComponent((title || "").slice(0, 120)) + (videoUrl ? "&video_url=" + encodeURIComponent(videoUrl) : ""), "ss_grab", "width=380,height=220");
     }
     function deepFindId(o, d) {
       if (!o || d > 4) return null;
@@ -655,7 +698,7 @@
           b.addEventListener("click", function (e) {
             e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
             var id = findId(img);
-            if (id) openGrab("https://www.douyin.com/video/" + id, img.src || "", img.alt || "");
+            if (id) openGrab("https://www.douyin.com/video/" + id, img.src || "", img.alt || "", currentVideoSrc());
           }, true);
         })(img);
         box.appendChild(b);

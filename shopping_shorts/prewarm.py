@@ -94,7 +94,8 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
           failed_download | failed_empty | failed_error | done
     예외를 밖으로 던지지 않는다 — 예열은 보조작업이라 실패해도 무해해야 한다."""
     from shopping_shorts.media_download import download_any
-    from shopping_shorts.script_extract import extract_auto, storable, KeyPoolExhausted
+    from shopping_shorts.script_extract import (extract_auto, storable, KeyPoolExhausted,
+                                                has_usable_result)
     from shopping_shorts.structure_analyze import analyze_structure
 
     code = (shortcode or "").strip()
@@ -103,8 +104,12 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
     store = Store(db_path or DB_PATH)
 
     # ①-a 이미 유효 캐시가 있으면 아무것도 안 한다(중복 과금 차단).
+    # ★판정은 has_usable_result 한 곳으로(0순위-B, 2026-08-16 저장 기준과 짝).
+    #   full_text만 보면 **무자막 영상은 저장돼 있어도 캐시미스**가 돼 매번 다시 태우고,
+    #   시도 횟수만 쌓여 결국 영구 래치된다(서버 실측: lens_tiktok_1cfb55 —
+    #   화면 태깅이 저장돼 있는데 attempts=2까지 다시 탔다).
     cached = store.get_extract(code)
-    if cached and (cached.get("full_text") or "").strip():
+    if has_usable_result(cached):
         if not cached.get("structure"):
             _fill_structure(store, code, cached.get("full_text") or "", analyze_structure)
         return "already"
@@ -143,10 +148,14 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
         except Exception as e:  # noqa: BLE001
             store.autoload_mark_error(code, f"예열 추출 실패: {e}")
             return "failed_error"
-        full_text = (result.get("full_text") or "").strip()
-        if not full_text:                    # ③빈 대본은 저장 금지
-            store.autoload_mark_error(code, "예열: 전사 결과 없음(음성 없음·자막 불가)")
+        # ③재료가 하나도 안 나왔을 때만 버린다(2026-08-16) — 말이 없어도 화면
+        #   태깅이 나왔으면 쓸 수 있다. 판정은 script_extract 한 곳에서만 한다.
+        if not has_usable_result(result):
+            store.autoload_mark_error(code, "예열: 쓸 만한 재료가 안 나왔어요(화면·말 모두 비어 있음)")
             return "failed_empty"
+        # 구조분석은 '말'을 읽는 것이라 여전히 full_text가 필요하다(아래 _fill_structure).
+        # 무자막 영상은 빈 문자열 → 구조분석만 조용히 건너뛴다(추출·태깅은 이미 저장됐다).
+        full_text = (result.get("full_text") or "").strip()
         # storable()로 추린다 — 손으로 dict를 다시 만들면 tag_qa가 저장에서 누락된다
         # (담기 예열이 라이브 주경로라 여기서 새면 QA 점수가 아예 안 쌓인다).
         store.save_script(code, storable(result), category=category)

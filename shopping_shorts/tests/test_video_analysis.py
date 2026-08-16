@@ -368,7 +368,9 @@ def test_expand_search_keywords_drops_already_seen(monkeypatch):
     _fake_gemini(monkeypatch, '{"candidates":[{"ko":"시금치 빵","zh":"菠菜面包"},'
                               '{"ko":"시금치 스콘","zh":"菠菜司康"}]}', cap)
     out = video_analysis.expand_search_keywords("시금치", exclude=["菠菜面包"])
-    assert [c["zh"] for c in out] == ["菠菜司康"]
+    # 맨 앞은 사장님이 넣은 말 그대로(2026-08-16 추가) — zh는 비어 있다.
+    assert out[0] == {"ko": "시금치", "zh": ""}
+    assert [c["zh"] for c in out[1:]] == ["菠菜司康"]
     assert "菠菜面包" in cap["prompt"]        # 제외 목록이 프롬프트에도 실린다
 
 
@@ -377,3 +379,54 @@ def test_expand_search_keywords_empty_without_keyword_or_keys(monkeypatch):
     assert video_analysis.expand_search_keywords("") == []
     monkeypatch.setattr(video_analysis, "SHORTS_GEMINI_KEYS", [])
     assert video_analysis.expand_search_keywords("시금치") == []
+
+
+# ── 사장님이 넣은 말 그대로가 1번 후보로 보장되나 (2026-08-16) ──
+def test_expand_keywords_forces_literal_first(monkeypatch):
+    """모델이 확장 조합만 돌려줘도 원문이 맨 앞에 들어가야 한다.
+
+    실제 제보: '고독스 뷰파인더'를 넣었는데 목록엔 조합만 있고 원문이 없었다.
+    """
+    import shopping_shorts.video_analysis as va
+
+    class _Resp:
+        text = '{"candidates":[{"ko":"고독스 아동용 카메라","zh":"儿童相机"}]}'
+
+    class _Models:
+        def generate_content(self, **kw):
+            return _Resp()
+
+    class _Client:
+        models = _Models()
+
+    monkeypatch.setattr(va, "SHORTS_GEMINI_KEYS", ["k"], raising=False)
+    monkeypatch.setattr(va.comment_gen, "_next_live_key_and_idx", lambda: ("k", 0))
+    monkeypatch.setattr(va, "_client_for_key", lambda k: _Client())
+
+    out = va.expand_search_keywords("고독스 뷰파인더")
+    assert out[0]["ko"] == "고독스 뷰파인더"
+    # 남의 중국어를 빌려오면 안 된다(버튼이 다른 뜻으로 열린다)
+    assert out[0]["zh"] == ""
+    assert any(c["ko"] == "고독스 아동용 카메라" for c in out)
+
+
+def test_expand_keywords_literal_not_duplicated_when_seen(monkeypatch):
+    """'더' 눌러 이미 보여준 원문이 exclude로 오면 다시 넣지 않는다."""
+    import shopping_shorts.video_analysis as va
+
+    class _Resp:
+        text = '{"candidates":[{"ko":"고독스 카메라","zh":"高达相机"}]}'
+
+    class _Models:
+        def generate_content(self, **kw):
+            return _Resp()
+
+    class _Client:
+        models = _Models()
+
+    monkeypatch.setattr(va, "SHORTS_GEMINI_KEYS", ["k"], raising=False)
+    monkeypatch.setattr(va.comment_gen, "_next_live_key_and_idx", lambda: ("k", 0))
+    monkeypatch.setattr(va, "_client_for_key", lambda k: _Client())
+
+    out = va.expand_search_keywords("고독스 뷰파인더", exclude=["고독스 뷰파인더"])
+    assert all(c["ko"] != "고독스 뷰파인더" for c in out)

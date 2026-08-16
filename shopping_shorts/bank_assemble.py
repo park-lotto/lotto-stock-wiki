@@ -232,7 +232,49 @@ def style_block(style, seconds=30):
     return ("★[스타일: %s] — 아래 칸을 **이 순서 그대로** 채워라(순서를 바꾸거나 칸을 빼면 반려된다).\n"
             % _sanitize(style.get("name") or "")
             + "\n".join(lines)
-            + "\n- 각 칸의 role 값을 위와 **똑같이** 돌려줘라(검사기가 대조한다)." + dens)
+            + "\n- 각 칸의 role 값을 위와 **똑같이** 돌려줘라(검사기가 대조한다)." + dens
+            + voice_block(style))
+
+
+def voice_block(style):
+    """표현 사전 → 프롬프트 블록(2026-08-17). 없으면 ''(기존 경로 그대로 = 회귀 0).
+
+    ## 왜 이게 따로 있나 — 사실과 표현을 가른다 (사장님 모델)
+
+        사실 = "녹는다"             ← 재료(대본·리뷰·상세페이지)에서 온다
+        표현 = "사르르 / 퐁신퐁신"   ← 채널 말버릇. 스타일이 갖는다. 어느 제품에나 쓴다
+        결과 = "사르르 녹는데 퐁신퐁신해서"
+
+    합쳐진 완제품("입에서 사르르 녹는")을 **재료**로 주면 원본을 그대로 베끼게 된다.
+    갈라 놓으면 원본에 없던 표현을 **새로 만들어** 쓴다.
+
+    3안 실측(2026-08-16, 계란+요거트 빵 3편·가족갈등 반전형):
+      A 대본 통째 → 말버릇 4개(전부 원본에서 베낌)·383자
+      B 사실만    → 말버릇 1개·게이트 **실패**(고조)·254자
+      C 사실+사전 → 말버릇 **8개**·통과·**323자** ← 원본에 없던 "퐁신퐁신·쫙"을 새로 만들었다
+    ★밀도 문제도 같이 풀렸다 — 억지로 늘린 게 아니라 말맛이 살면서 자연히 붙는다.
+    """
+    v = (style or {}).get("voice") or {}
+    if not v:
+        return ""
+    rows = []
+    for key, label in (("onomatopoeia", "의성·의태어"), ("intensifier", "강조어"),
+                       ("exclaim", "감탄"), ("endings", "종결 말버릇")):
+        vals = [x for x in (v.get(key) or []) if str(x).strip()]
+        if vals:
+            rows.append("  · %s: %s" % (label, " / ".join(_sanitize(str(x)) for x in vals)))
+    tone = _sanitize(str(v.get("tone_note") or "").strip())
+    if not rows and not tone:
+        return ""
+    out = "\n★[이 스타일의 말버릇] — 아래 표현을 **사실에 얹어** 써라."
+    if tone:
+        out += "\n  · 말투: " + tone
+    if rows:
+        out += "\n" + "\n".join(rows)
+    # ★재료(사실)와 섞이지 않게 못을 박는다 — 이 구분이 무너지면 원본 베끼기로 되돌아간다.
+    out += ("\n  ※ 사실(무엇이 좋은가)은 재료에서 가져오고, 위 표현은 **말맛**으로만 얹어라. "
+            "재료 문장을 그대로 옮기지 말고, 사실 + 위 표현으로 **새 문장을 지어라**.")
+    return out
 
 
 def assemble_bank_context(store, category, k=5):

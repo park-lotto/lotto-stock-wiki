@@ -1,7 +1,9 @@
 """소스 URL을 플랫폼별로 다운로드 — instagram=Apify, youtube/tiktok=yt-dlp(무료)."""
 import json
+import os
 import re
 import subprocess
+import threading
 import sys
 import time
 import urllib.parse
@@ -233,6 +235,63 @@ def _download_instagram(url, dest_dir):
         f"만료됐을 수 있습니다. 관리자 확인이 필요합니다.")
 
 
+# ★도우인 동시 실행 상한(2026-08-16 사장님 지시 "동시에 2개").
+#   도우인만 **영상 하나당 헤드리스 크롬 + ffmpeg 변환**을 돌린다 — 유튜브·인스타·틱톡보다
+#   훨씬 무겁다. 서버는 4코어인데 자동적재는 고객마다 3개씩 병렬로 던진다(_AUTOLOAD_MAX_WORKERS)
+#   → 고객 5명이 동시에 담으면 크롬 15개가 한꺼번에 뜬다. 그러면 다 같이 기어가고
+#   결국 시간 초과로 **전부** 실패한다(빨리 하려다 하나도 못 얻는다).
+#   그래서 **서버 전체 기준**으로 묶는다 — 고객 수와 무관하다. 3번째부터는 줄을 선다.
+#   ※프로세스 단위 세마포어라 워커가 여러 개면 워커당 상한이다(현재 단일 프로세스).
+_DOUYIN_SLOTS = threading.BoundedSemaphore(
+    int(os.getenv("DOUYIN_MAX_CONCURRENT", "2")))
+
+
+class DouyinBusy(RuntimeError):
+    """지금은 자리가 없다 — 실패가 아니라 **잠시 후 다시**라는 뜻.
+    화면이 이 둘을 구별해야 사장님이 '망한 건가' 하지 않는다."""
+
+
+def _download_douyin(url, dest_dir, timeout=600, wait=0):
+    """도우인 다운로드 → (mp4경로, ""). douyin_fetch를 **서브프로세스**로 돌린다 —
+    호출부(FastAPI 백그라운드)가 asyncio 루프 위라 sync_playwright를 인프로세스로
+    못 돌리기 때문(yt-dlp를 서브프로세스로 부르는 기존 패턴과 동일). 상세 근거는
+    douyin_fetch.py 도크스트링."""
+    # 자리를 못 잡으면 곧바로 물러난다 — 붙들고 기다리면 요청만 쌓이고,
+    # 화면은 그동안 아무 말도 못 한다. 물러나야 '잠시 후 다시'라고 말할 수 있다.
+    got = (_DOUYIN_SLOTS.acquire(timeout=wait) if wait
+           else _DOUYIN_SLOTS.acquire(blocking=False))
+    if not got:
+        raise DouyinBusy("도우인 영상은 한 번에 2개씩 받습니다 — 잠시 후 자동으로 시작해요")
+    try:
+        return _download_douyin_inner(url, dest_dir, timeout)
+    finally:
+        _DOUYIN_SLOTS.release()
+
+
+def _download_douyin_inner(url, dest_dir, timeout):
+    # ★제한 시간 180 → 600초(2026-08-16 실측). 45초짜리 영상이 **108초** 걸렸다
+    #   (헤드리스 크롬 기동 + 18.7MB 받기 + h264 변환). 20초짜리는 35초였다.
+    #   즉 길이에 비례해 늘어나므로 짧은 영상 기준으로 잡으면 긴 영상만 조용히 죽는다 —
+    #   실제로 사장님 화면에서 한 편만 분석되고 다른 편은 '분석 중'으로 멈춰 있었다.
+    try:
+        r = subprocess.run(
+            [sys.executable, "-m", "shopping_shorts.douyin_fetch", url, str(dest_dir)],
+            capture_output=True, text=True, encoding="utf-8", timeout=timeout)
+    except subprocess.TimeoutExpired:
+        # ★이유를 남긴다 — 조용히 죽으면 화면은 영원히 '분석 중'이고 아무도 원인을 모른다.
+        raise RuntimeError(
+            f"도우인 다운로드 시간 초과({timeout}초, {url}) — 영상이 길면 더 걸립니다") from None
+    if r.returncode != 0:
+        raise RuntimeError(f"도우인 다운로드 실패({url}): {(r.stderr or '')[-300:]}")
+    try:
+        path = json.loads(r.stdout.strip().splitlines()[-1])["path"]
+    except Exception as e:  # noqa: BLE001
+        raise RuntimeError(f"도우인 다운로드 출력 해석 실패({url}): {r.stdout[-200:]}") from e
+    if not Path(path).exists():
+        raise RuntimeError(f"도우인 다운로드 산출물 없음: {path}")
+    return path, ""
+
+
 def _download_ytdlp(url, dest_dir, max_attempts=3):
     """유튜브/틱톡 다운로드 → (mp4경로, caption). yt-dlp 경로는 캡션 없음(빈 문자열).
 
@@ -345,6 +404,20 @@ def download_any(url, dest_dir):
     # _proxy_arg로 프록시를 붙인다) PC 릴레이를 건너뛴다 — PC 의존 없이 고객 다중 처리 가능.
     if config.YT_RELAY_ENABLED and not config.YTDLP_PROXY and ("youtube.com" in u or "youtu.be" in u):
         return _download_via_relay(url, dest_dir)
+    # ★도우인은 yt-dlp가 서버·가정 IP 양쪽에서 "Fresh cookies needed"로 전멸(2026-08-16 실측,
+    # 최신·master 동일). 유일하게 되는 경로 = headless chromium으로 modal_id 페이지 SSR에서
+    # 서명 CDN URL을 뽑아 직접 받는 것(douyin_fetch, 서버서 1080p mp4 실증). 실패하면 종전
+    # 동작(yt-dlp) 그대로 폴백해 회귀 0.
+    if "douyin.com" in u or "iesdouyin.com" in u:
+        try:
+            return _download_douyin(url, dest_dir)
+        except DouyinBusy:
+            # ★'자리 없음'은 실패가 아니라 신호다 — 삼키고 yt-dlp로 가면 (도우인은 yt-dlp가
+            #   전멸이라) 확정 실패가 되고, 호출부의 busy 처리(app.py autoload의
+            #   `except DouyinBusy` → 래치 롤백·화면 '순서 대기')가 통째로 죽는다.
+            raise
+        except Exception:  # noqa: BLE001 — 폴백 사유일 뿐, 최종 에러는 yt-dlp가 말한다
+            pass
     if any(s in u for s in ("youtube.com", "youtu.be", "tiktok.com",
                              "xiaohongshu.com", "xhslink.com", "douyin.com",
                              "iesdouyin.com", "rednote.com")):

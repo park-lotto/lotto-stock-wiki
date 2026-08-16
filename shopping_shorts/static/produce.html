@@ -379,33 +379,47 @@
     .srcGrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(304px,1fr));
       align-items:stretch}
     .srcCard{background:var(--inset);border:1px solid var(--line);border-radius:12px;
-      padding:12px 16px;transition:border-color .15s;cursor:pointer;
+      padding:14px 18px;transition:border-color .15s;cursor:pointer;
       display:flex;flex-direction:column;min-width:0;overflow:hidden}
     .srcCard:hover{border-color:var(--accent)}
     /* ★접었다 폈다(2026-08-16 사장님). 영상을 5~8개 담으면 요약이 다 펼쳐져 화면을
        길게 먹는다 — 기본은 "제품 한 줄 + 장면 수"만, 누르면 역할·핵심·요약이 나온다. */
     .srcMore{display:none}
     .srcCard.open .srcMore{display:block}
-    .srcCaret{margin-left:auto;font-size:11px;color:var(--sub);white-space:nowrap}
+    .srcCaret{margin-left:auto;font-size:12px;color:var(--txt);opacity:.6;white-space:nowrap}
     .srcCard:hover .srcCaret{color:var(--accent)}
     /* ★분석 대기 카드는 자기 크기만 갖는다(grid-row 늘림에서 뺀다) — 한 문장짜리
        내용에 280px을 주면 큰 빈 상자가 된다. align-self:start가 1fr 늘림을 끊는다. */
     .srcCard.pend{opacity:.7;border-style:dashed;align-self:start;padding:10px 16px}
+    /* 받기부터 실패한 영상 — 기다려도 안 온다는 것을 색으로도 말한다 */
+    .srcCard.pend.fail{opacity:1;border-style:solid;border-color:var(--fire)}
     .srcPend{font-size:12px;color:var(--sub);line-height:1.5}
     .srcHead{display:flex;align-items:center;gap:8px;margin-bottom:9px}
-    .srcNo{flex:0 0 auto;font-size:11px;font-weight:900;color:var(--accent);
+    .srcNo{flex:0 0 auto;font-size:12px;font-weight:900;color:var(--accent);
       background:rgba(62,224,191,.12);border:1px solid rgba(62,224,191,.4);
       border-radius:99px;padding:2px 9px}
-    .srcName{flex:1;min-width:0;font-size:12px;color:var(--sub);overflow:hidden;
+    .srcName{flex:1;min-width:0;font-size:12.5px;color:var(--txt);opacity:.7;overflow:hidden;
       text-overflow:ellipsis;white-space:nowrap}
-    .srcRow{display:flex;gap:8px;margin-bottom:5px;font-size:13px;line-height:1.5}
-    .srcK{flex:0 0 34px;color:var(--sub);font-size:11.5px;font-weight:800;padding-top:2px}
-    .srcV{flex:1;min-width:0;word-break:keep-all}
+    .srcRow{display:flex;gap:10px;margin-bottom:7px;font-size:14px;line-height:1.55}
+    /* 칸 이름(재료·Key·상세) — 짧아져서 폭을 줄이고, 흐려서 안 읽히던 것을 키웠다 */
+    .srcK{flex:0 0 40px;color:var(--sub);font-size:12.5px;font-weight:800;padding-top:2px;
+      word-break:keep-all}
+    /* 재료로서의 성질(2026-08-17): 말 유무·길이·화면 구성. 접혀 있어도 보인다 —
+       고를 때 필요한 건 요약 세 줄이 아니라 이 세 가지다. */
+    .srcFacts{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 6px}
+    .srcChip{font-size:12px;font-weight:600;line-height:1.7;padding:2px 9px;border-radius:99px;
+      border:1px solid var(--line);background:var(--panel);color:var(--txt);opacity:.82;
+      white-space:nowrap}
+    .srcChip.mute{opacity:.65}
+    .srcV{flex:1;min-width:0;word-break:keep-all;color:var(--txt)}
     .srcV.strong{font-weight:800;color:var(--accent2)}
-    .srcSum{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);
-      font-size:12.5px;line-height:1.6;color:var(--sub);word-break:keep-all;
-      /* 요약 길이가 카드마다 달라 바닥선을 흔든다 → 4줄에서 자른다(전문은 title로) */
-      display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+    /* ★요약이 가장 안 읽혔다(2026-08-17 사장님) — 12.5px 회색이었다.
+       기본이 펼침으로 바뀌어 이 글이 늘 보이므로 본문 대접을 한다: 13.5px + 밝은 색.
+       ★줄 수로 자르지 않는다(2026-08-17 2차 사장님 "끝에 글이 짤림"). 요약은 이 영상을
+       쓸지 정하는 근거라 끝이 잘리면 그 판단을 못 한다. 카드 길이를 맞추자고 내용을
+       숨기는 건 앞뒤가 바뀐 것 — 같은 줄 카드는 stretch가 알아서 바닥을 맞춘다. */
+    .srcSum{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);
+      font-size:13.5px;line-height:1.7;color:var(--txt);opacity:.88;word-break:keep-all}
     /* 장면 목록을 남는 공간에 붙여 바닥까지 채운다 — 카드 아래가 휑하지 않게.
        ★min-height:0이 없으면 flex 자식이 안 줄어들어 목록이 카드 밖으로 흘러나간다
        (실측: UL이 아래로 146px 삐져나왔다). overflow는 목록 안에서만 일어나야 한다. */
@@ -445,7 +459,7 @@
     /* 장면 수 요약 — 타임스탬프 목록을 뺀 자리에 "재료가 얼마나 되나"만 남긴다 */
     .srcStat{margin-top:auto;padding-top:10px;display:flex;align-items:baseline;gap:6px}
     .srcStatN{font-size:22px;font-weight:900;color:var(--accent2);line-height:1}
-    .srcStatK{font-size:12px;color:var(--sub)}
+    .srcStatK{font-size:12.5px;color:var(--txt);opacity:.75}
     /* ★4:5로 자른다(2026-08-16). 9:16 그대로면 폭 181px에 높이 322px — 담은 영상 칸만
        410px로 화면을 먹는다(실측). 어떤 영상인지 알아보는 게 목적이지 전체를 보는 게
        아니다(전체는 3단계 장면 편집에서 본다). object-fit:cover라 가운데가 남는다. */
@@ -599,6 +613,159 @@
       textarea{font-size:16px}   /* iOS는 16px 미만이면 포커스 시 화면을 확대한다 */
       input[type=text]{font-size:16px}
     }
+
+  /* ══════════════════════════════════════════════════════════════
+     2단계 "대본" 패널(data-step=8) 전용 — 목업(mockup_2단계_대본.html)에서 이식.
+     ★새 클래스는 전부 s2- 접두사 = 기존 클래스와 충돌 0.
+     ★모드 클래스(mode-tab/mode-side, state-*)는 body가 아니라 #s2Root에 붙인다 —
+       목업은 단독 페이지라 body를 썼지만 여기선 한 패널일 뿐이라 전역을 더럽히면 안 된다.
+     ★--s2-sub: --sub(#8fa1a0)는 작은 글자에서 묽다. inset 대비 9.2:1로 올린 이 화면 전용 톤.
+     ══════════════════════════════════════════════════════════════ */
+  .panel[data-step="8"]{--s2-sub:#a8bab8}
+  :root[data-theme="light"] .panel[data-step="8"]{--s2-sub:#4a635d}
+  .s2-label{font-size:12px;color:var(--s2-sub);text-transform:uppercase;letter-spacing:.04em;height:24px;line-height:24px;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .s2-band{margin-bottom:24px}
+  .s2-cardrow{display:flex;gap:16px;align-items:stretch;flex-wrap:wrap}
+  .s2-cardrow>*{flex:1 1 0;min-width:216px}
+  /* ① 씨앗 카드 */
+  .s2-scard{border:1px solid var(--line);border-radius:12px;background:var(--inset);padding:16px;
+    cursor:pointer;position:relative;transition:.15s;display:flex;flex-direction:column}
+  .s2-scard:hover{border-color:var(--accent2)}
+  .s2-scard.sel{border-color:var(--accent);background:var(--sel-bg)}
+  .s2-scard.pending{opacity:.6;cursor:default}
+  .s2-scard.manual{border-style:dashed}
+  .s2-spick{position:absolute;top:-10px;left:12px;font-size:10.5px;font-weight:800;color:#04201b;
+    background:var(--grad);border-radius:6px;padding:2px 8px;white-space:nowrap}
+  .s2-swho{display:flex;align-items:center;gap:8px;min-height:40px}
+  .s2-sth{flex:none;width:40px;height:40px;border-radius:8px;background:var(--panel);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:17px;overflow:hidden}
+  .s2-sth img{width:100%;height:100%;object-fit:cover}
+  /* ★캡션 전문이 제목으로 오는 재료가 있다(라이브 실측: 일본어 해시태그 한 줄 전체).
+     2줄에서 자른다 — 카드 높이가 재료마다 널뛰면 카드줄이 통째로 흔들린다. */
+  .s2-snm{font-size:13px;font-weight:700;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .s2-ssub{font-size:11.5px;color:var(--s2-sub);margin-top:2px}
+  .s2-strip{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:16px;gap:1px}
+  .s2-strip i{display:block;height:100%}
+  .s2-strip.ghost{border:1px dashed var(--line);background:none}
+  .s2-stags{font-size:11.5px;color:var(--s2-sub);margin-top:8px;min-height:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .s2-sfoot{display:flex;gap:8px;margin-top:auto;padding-top:16px}
+  .s2-sfoot button,.s2-sfoot .ghostbtn{font-size:11px;color:var(--s2-sub);background:none;border:1px solid var(--line);
+    border-radius:6px;padding:4px 8px;white-space:nowrap}
+  .s2-sfoot button:hover{border-color:var(--accent);color:var(--accent)}
+  .s2-sfoot .ghostbtn{border-style:dashed;cursor:default}
+  /* ① 씨앗 뼈대 상세 — 상시 밴드(펼침 없음 = 카드줄 높이가 안 흔들린다) */
+  .s2-seedinfo{border:1px solid var(--accent2);border-radius:12px;background:var(--inset);padding:16px;margin-top:16px}
+  .si-top{display:flex;align-items:center;gap:16px;min-height:24px}
+  .si-quote{flex:1;min-width:0;font-size:16px;font-weight:700;color:var(--gold);line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .si-quote:not(:empty)::before{content:"\201C"}.si-quote:not(:empty)::after{content:"\201D"}
+  .si-style{flex:none;font-size:12.5px;font-weight:700;color:var(--sel-fg);background:var(--sel-bg);border:1px solid var(--accent2);border-radius:999px;padding:5px 12px;white-space:nowrap}
+  .si-strip{display:flex;height:24px;border-radius:8px;overflow:hidden;gap:1px;margin-top:16px}
+  .si-strip i{display:flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;font-weight:700;overflow:hidden;white-space:nowrap}
+  .si-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--s2-sub);margin-top:16px;min-height:17px}
+  .si-meta b{color:var(--txt);font-weight:700}
+  /* ② 스타일 카드 */
+  .s2-card{border:1px solid var(--line);border-radius:12px;background:var(--inset);padding:16px;cursor:pointer;
+    transition:.15s;display:flex;flex-direction:column;position:relative}
+  .s2-card:hover{border-color:var(--accent2)}
+  .s2-card.sel{border-color:var(--accent);background:var(--sel-bg)}
+  .s2-card .t{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;height:24px;white-space:nowrap;overflow:hidden}
+  .s2-card .t .sp{flex:1}
+  .s2-badge{flex:none;font-size:10.5px;font-weight:700;border-radius:6px;padding:2px 7px;white-space:nowrap}
+  .s2-badge.ok{color:var(--ok);background:rgba(55,224,189,.12)}
+  .s2-badge.warn{color:var(--gold);background:rgba(240,196,83,.12)}
+  .s2-quote{margin:8px 0 0;font-size:14px;font-weight:700;line-height:1.5;color:var(--gold)}
+  .s2-quote:not(:empty)::before{content:"\201C"}.s2-quote:not(:empty)::after{content:"\201D"}
+  .s2-quote.plain{color:var(--txt)}
+  .s2-quote.plain::before,.s2-quote.plain::after{content:none}
+  .s2-meta{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:auto;padding-top:16px}
+  .s2-meta .r{font-size:11px;color:var(--s2-sub);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:2px 6px;white-space:nowrap}
+  .s2-meta .d{margin-left:auto;font-size:11px;color:var(--s2-sub);white-space:nowrap}
+  /* 틀 빈칸 {가족}·{장소} */
+  .s2-gap{display:inline-block;font-style:normal;font-size:.92em;font-weight:700;color:var(--sel-fg);
+    background:var(--sel-bg);border:1px dashed var(--accent2);border-radius:4px;padding:0 5px;margin:0 1px;line-height:1.4}
+  /* ② 보조줄 — CTA 헌장 고정 */
+  .s2-subrow{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px}
+  .s2-axis{flex:1 1 320px;min-width:280px;border:1px solid var(--line);border-radius:12px;background:var(--inset);overflow:hidden;align-self:flex-start}
+  .s2-axis-head{display:flex;align-items:center;gap:8px;padding:0 16px;height:48px;user-select:none}
+  .s2-axis-name{font-size:12.5px;font-weight:700;flex:none;white-space:nowrap}
+  .s2-chip{flex:1;min-width:0;font-size:12.5px;color:var(--s2-sub);background:var(--panel);border:1px solid var(--line);
+    border-radius:999px;padding:5px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .s2-chip.set{background:var(--sel-bg);border-color:var(--accent);color:var(--sel-fg);font-weight:700}
+  /* ③ 결과 대본 */
+  .s2-head{display:flex;align-items:center;gap:16px;flex-wrap:wrap;min-height:24px;margin-bottom:8px}
+  .s2-head .s2-label{margin-bottom:0;flex:1;min-width:200px}
+  .s2-tabs{display:flex;gap:16px;margin-bottom:8px}
+  .s2-tab{flex:1;height:48px;background:var(--inset);border:1px solid var(--line);color:var(--txt);
+    border-radius:12px;font-size:13.5px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;
+    white-space:nowrap;overflow:hidden;cursor:pointer}
+  .s2-tab.on{background:var(--sel-bg);border-color:var(--accent);color:var(--sel-fg)}
+  #s2Root.mode-side .s2-tabs{display:none}
+  .s2-dhead{display:flex;align-items:center;gap:16px;height:24px;margin-bottom:8px}
+  .s2-dname{font-size:12px;color:var(--s2-sub);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .s2-gate{margin-left:auto;font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .s2-gate.pass{color:var(--ok)}
+  .s2-gate.fail{color:var(--fire)}
+  .s2-gate small{font-weight:400;color:var(--s2-sub)}
+  #s2Root.mode-tab .s2-draft{display:none}
+  #s2Root.mode-tab .s2-draft.on{display:block}
+  /* dense: A(1열)가 행을 먼저 차지해도 B(2열)가 행 1부터 되채워지게 */
+  #s2Root.mode-side .s2-drafts{display:grid;grid-template-columns:1fr 1fr;column-gap:16px;grid-auto-flow:row dense}
+  #s2Root.mode-side .s2-draft{display:contents}
+  #s2Root.mode-side .s2-draft.da>*{grid-column:1}
+  #s2Root.mode-side .s2-draft.db>*{grid-column:2}
+  #s2Root.mode-side .s2-row{display:flex;flex-direction:column;justify-content:center}
+  .s2-row{border:1px solid var(--line);border-radius:12px;background:var(--inset);margin-bottom:8px;
+    padding:0 16px;transition:border-color .2s;position:relative}
+  .s2-row.bad{border-color:var(--fire)}
+  .s2-row-in{display:grid;grid-template-columns:96px 1fr 88px;gap:16px;align-items:center;min-height:80px}
+  .s2-role .rn{font-size:14px;font-weight:700;white-space:nowrap}
+  .s2-sent{min-width:0;font-size:16px;line-height:1.65;outline:none;border-radius:8px;padding:4px 8px;margin:0 -8px;overflow-wrap:break-word}
+  .s2-sent:hover{background:var(--hover)}
+  .s2-sent:focus{background:var(--panel);box-shadow:0 0 0 1.5px var(--accent)}
+  .s2-chk{display:block;font-size:11px;font-weight:400;color:var(--ok);margin-top:4px}
+  .s2-swap{justify-self:stretch;font-size:12px;color:var(--accent);background:none;border:1px solid var(--line);border-radius:8px;padding:8px 0;text-align:center;white-space:nowrap;cursor:pointer}
+  .s2-swap:hover{border-color:var(--accent)}
+  /* 게이트 실패 = 성적표가 아니라 "고칠 곳 안내" */
+  .s2-fix{border-top:1px dashed var(--line);padding:16px 0}
+  .s2-fix .fx-t{font-size:13px;font-weight:700;color:var(--fire)}
+  .s2-fix .fx-d{font-size:12.5px;color:var(--s2-sub);margin:4px 0 8px;line-height:1.55}
+  .s2-fix button{font-size:12.5px;padding:8px 16px;margin-right:8px;margin-bottom:4px;cursor:pointer}
+  .s2-fix .fx-bank{background:var(--sel-bg);border:1px solid var(--accent);color:var(--sel-fg);font-weight:700}
+  .s2-fix .fx-re{background:var(--panel);border:1px solid var(--line);color:var(--txt)}
+  /* [바꾸기] → 틀 목록. 탭/모바일=인라인, 좌우=오버레이(반대 칼럼을 안 밀어냄) */
+  .s2-bank{display:none;border:1px solid var(--accent2);border-radius:8px;background:var(--panel);
+    padding:16px;margin-bottom:16px}
+  .s2-row.bank-open .s2-bank{display:block}
+  #s2Root.mode-side .s2-row.bank-open .s2-bank{position:absolute;left:-1px;right:-1px;top:calc(100% + 4px);
+    margin:0;z-index:20;box-shadow:0 16px 40px rgba(0,0,0,.55)}
+  .s2-bank .bk-t{font-size:11.5px;color:var(--s2-sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .s2-cand{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;
+    min-height:48px;padding:0 16px;margin-bottom:8px;cursor:pointer;font-size:13.5px;line-height:1.4;transition:.12s}
+  .s2-cand:last-child{margin-bottom:0}
+  .s2-cand .tx{overflow:hidden;text-overflow:ellipsis}
+  .s2-cand:hover{border-color:var(--accent);background:var(--hover)}
+  .s2-cand.re{color:var(--accent);font-weight:700}
+  .s2-cand .fq{margin-left:auto;flex:none;font-size:11px;color:var(--s2-sub);background:var(--inset);border-radius:4px;padding:2px 7px;white-space:nowrap}
+  .s2-dfoot{display:none}
+  #s2Root.mode-side .s2-dfoot{display:flex;margin-bottom:8px}
+  .s2-dfoot .btn-next{width:100%;font-weight:700}
+  .s2-regen{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:8px;border-top:1px solid var(--line);padding-top:16px}
+  .s2-confirm{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:24px;border-top:1px solid var(--line);padding-top:24px}
+  #s2Root.mode-side .s2-confirm{display:none}
+  .s2-modes{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--s2-sub)}
+  .s2-modes button{padding:6px 12px;font-size:12px;background:var(--inset);border:1px solid var(--line);color:var(--txt);cursor:pointer}
+  .s2-modes button.on{background:var(--sel-bg);border-color:var(--accent);color:var(--sel-fg)}
+  @media(max-width:760px){
+    .panel[data-step="8"] .s2-cardrow>*{min-width:100%}
+    .s2-row-in{grid-template-columns:88px 1fr}
+    .s2-swap{grid-column:2;justify-self:end;padding:8px 16px}
+    .s2-tabs{gap:8px}
+    .si-top{flex-wrap:wrap}
+    .si-quote{white-space:normal}
+    #s2Root.mode-side .s2-drafts{display:block}
+    #s2Root.mode-side .s2-draft{display:block}
+    #s2Root.mode-side .s2-row.bank-open .s2-bank{position:static;box-shadow:none;margin-bottom:16px}
+  }
   </style>
   <link rel="stylesheet" href="theme.css?v=1">
 </head>
@@ -1189,8 +1356,67 @@
     <section class="panel" data-step="8">
       <h3 data-steptitle="script">2 · 대본생성</h3>
       <div class="sub">쓸 대본을 고르고 다듬습니다.</div>
-      <div id="scriptStagePlaceholder" class="hint" style="margin-top:14px">
-        여기에 대본 고르기·고치기가 들어옵니다(작업 중).
+      <!-- ★모드 클래스(mode-tab/mode-side)는 이 컨테이너에 붙는다 — 목업은 단독 페이지라
+           body에 붙였지만 여기선 한 패널일 뿐이라 전역을 더럽히면 안 된다. -->
+      <div id="s2Root" class="mode-tab">
+
+        <!-- ① 재료 — ★고르는 자리가 아니다(2026-08-17 사장님 지시로 '씨앗 선택' 폐지).
+             대본 1편을 지정하면 그 편에 끌려가 편협해지고, 무엇보다 **어느 편을 고르냐가
+             결과를 좌우**한다("사용자는 뭐가 좋은 대본인지 모르고 잘못 고르면 낭패").
+             담긴 것을 전부 재료로 쓰면 고를 일이 없어진다 = 복불복이 사라진다.
+             여기 카드는 **무엇이 재료로 들어가는지 보여주는 확인용**이다. -->
+        <div class="s2-band">
+          <div class="s2-label" id="s2SeedLabel">① 재료 — 담긴 영상을 전부 씁니다</div>
+          <div class="s2-cardrow" id="s2SeedRow"></div>
+          <div class="s2-seedinfo" id="s2SeedInfo" style="display:none">
+            <div class="si-top">
+              <div class="si-quote" id="s2SeedQuote"></div>
+              <span class="si-style" id="s2SeedStyle" style="display:none"></span>
+            </div>
+            <div class="si-strip" id="s2SeedStrip"></div>
+            <div class="si-meta" id="s2SeedMeta"></div>
+          </div>
+        </div>
+
+        <!-- ② 대본 스타일 — 통짜(훅·전개·CTA 한 몸). 고른 만큼 안이 나온다(최대 2) -->
+        <div class="s2-band">
+          <div class="s2-label">② 대본 스타일 — 훅·전개·CTA가 한 몸 · 고른 만큼 안이 나옵니다</div>
+          <div class="s2-cardrow" id="s2StyleRow"><div class="hint">스타일 불러오는 중…</div></div>
+          <div class="s2-subrow">
+            <div class="s2-axis">
+              <div class="s2-axis-head" title="헌장 고정 — 저장·팔로우 유도 금지, 무조건 댓글에 뭘 남기면 뭘 받는지 (2026-08-04 확정)">
+                <span class="s2-axis-name">📢 CTA</span>
+                <span class="s2-chip set">받는 것 명시형 🔒</span>
+              </div>
+            </div>
+          </div>
+          <div class="s2-regen">
+            <button class="btn-next" id="s2GenBtn" onclick="s2Generate()">✨ 이 스타일로 대본 만들기</button>
+            <span class="hint" id="s2GenHint" style="margin:0"></span>
+          </div>
+        </div>
+
+        <!-- ③ 결과 대본 — 안마다 역할이 보이는 행. 게이트는 성적표가 아니라 고칠 곳 안내 -->
+        <div class="s2-band" id="s2ResultBand" style="margin-bottom:0;display:none">
+          <div class="s2-head">
+            <div class="s2-label" id="s2ResultLabel">③ 결과 대본</div>
+            <div class="s2-modes">
+              보기
+              <button id="s2ModeTab" class="on" onclick="s2SetMode('tab')">🗂 탭</button>
+              <button id="s2ModeSide" onclick="s2SetMode('side')">↔ 좌우</button>
+            </div>
+          </div>
+          <div class="s2-tabs" id="s2Tabs"></div>
+          <div class="s2-drafts" id="s2Drafts"></div>
+          <div class="s2-regen">
+            <button class="btn-prev" onclick="s2Generate()" title="스타일은 유지되지만 모든 문장이 새로 나옵니다 — 웬만하면 칸만 바꾸는 게 빠릅니다">🔄 전체 다시 만들기</button>
+          </div>
+        </div>
+
+        <!-- 확정(탭 모드) → 3단계. ★매칭(startProduceMix)은 여기서 안 건다 — 3단계 소관 -->
+        <div class="s2-confirm" id="s2ConfirmBar" style="display:none">
+          <button class="btn-next" id="s2ConfirmBtn" onclick="s2Confirm()" title="3단계에서 이 대본에 장면을 붙입니다 — 게이트가 ⚠️여도 확정은 막지 않습니다">✔ 이 대본으로 확정 — 장면 붙이기로</button>
+        </div>
       </div>
     </section>
     <!-- ── 대본 패널 끝 ── -->
@@ -1314,6 +1540,7 @@ function showPanel(){
   if(cur===5) initSeo();
   if(cur===6) refreshFinal();
   if(cur===7) initMatch();   // 화면 붙이기(매칭) 패널 — 신규(Task 6)
+  if(cur===8) s2Enter();     // 대본 패널 — 신규(2026-08-16). 물리 8 = 화면 2단계(ORB_TO_PANEL[1])
 }
 // 매칭 패널(data-step=7, 신규) 초기화 — Task 6. showPanel()이 cur===7일 때마다 부른다.
 // ①(#mixCandidates)②(#mixReview)③(#mixPreviewPanel)은 전부 startProduceMix/pollMix/
@@ -3494,6 +3721,11 @@ async function refreshStep0(){
     clearTimeout(_workTimer); _workTimer = null;
     try{ await _pushWork(); }catch(e){}
   }
+  // ★먼저 한 번 그린다(2026-08-17). 아래 aipick·자동분석은 30초~1분이 걸리는데,
+  //   그동안 1단계 아래가 통째로 비어 있었다. 이미 분석된 영상은 즉시 카드로 뜨고,
+  //   아직인 것은 "⏳ 분석 대기"로 자리를 잡는다(서버 재요청 없음 — 받아 둔 것만 그린다).
+  //   ★await한다 — 안 하면 이 fetch가 늦게 끝나 아래 "분석 중" 안내를 덮어버린다.
+  try{ await renderSourceAnalysis(); }catch(e){}
   try{
     // 사장님이 썸네일을 클릭해 특정 영상을 AI PICK으로 지정(bbMain)했으면 서버에도 강제한다
     // (안 그러면 완성도 자동선정이 클릭을 덮어씀 — forced가 지정 시 최우선, app.py 참조).
@@ -3527,9 +3759,12 @@ async function refreshStep0(){
 //   아직 분석 안 된 영상은 "분석 대기"로 두고, 실제 추출은 기존 자동적재 경로가 한다.
 //   여기서 추출을 트리거하면 1단계를 열기만 해도 크레딧이 타므로 절대 하지 않는다.
 const _SRC_BRIEF = {};       // shortcode → {brief, segs} (페이지당 1회만 받아 쓴다)
-const _SRC_OPEN = new Set(); // 펼쳐 둔 카드(2026-08-16 사장님 "누르면 접었다 펴졌다")
+// ★기본은 **펼침**이다(2026-08-17 사장님 "기본으로 펼치고"). 그래서 집합의 뜻을
+//   뒤집었다 — 예전엔 '펼친 카드'를 모았는데(기본 접힘), 이제 '접은 카드'를 모은다.
+//   비어 있으면 전부 펼쳐진 상태 = 처음 화면. 누르면 그 카드만 접힌다.
+const _SRC_CLOSED = new Set();
 function toggleSrcCard(code){
-  if (_SRC_OPEN.has(code)) _SRC_OPEN.delete(code); else _SRC_OPEN.add(code);
+  if (_SRC_CLOSED.has(code)) _SRC_CLOSED.delete(code); else _SRC_CLOSED.add(code);
   renderSourceAnalysis();    // 이미 받아 둔 데이터로 다시 그린다(서버 재요청 없음)
 }
 async function renderSourceAnalysis(){
@@ -3545,34 +3780,71 @@ async function renderSourceAnalysis(){
     try{
       const r = await fetch('/api/produce/source_brief?shortcode=' + encodeURIComponent(code));
       const d = await r.json();
-      _SRC_BRIEF[code] = (d && d.ok) ? d : null;
+      // ★실패 응답도 버리지 않고 담는다(2026-08-17). 예전엔 ok가 아니면 null로 뭉개서
+      //   '아직 도는 중'과 '받기부터 실패해 포기'를 화면이 구별할 수 없었다.
+      _SRC_BRIEF[code] = d || null;
     }catch(e){ _SRC_BRIEF[code] = null; }
   }));
-  const done = items.filter(it => _SRC_BRIEF[it.shortcode]).length;
+  const done = items.filter(it => (_SRC_BRIEF[it.shortcode] || {}).ok).length;
   box.innerHTML =
     `<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
-       <span style="font-size:13px;font-weight:800">🔎 소스 분석</span>
-       <span class="hint">${done}/${items.length}개 분석됨 — 영상마다 무엇을 보여주는지</span>
+       <span style="font-size:13px;font-weight:800">🔎 담은 영상 뜯어보기</span>
+       <span class="hint">${done}/${items.length}개 읽음 — 어떤 재료가 모였고, 뭘 쓸 수 있는지</span>
      </div>`
     + `<div class="srcGrid">` + items.map((it, i) => _srcCard(it, i)).join('') + `</div>`;
 }
 function _srcCard(it, i){
-  const d = _SRC_BRIEF[it.shortcode];
+  const r = _SRC_BRIEF[it.shortcode];
+  const d = (r && r.ok) ? r : null;
   const name = esc(it.name || ('영상 ' + (i+1)));
-  const head = `<div class="srcHead"><span class="srcNo">소스 ${i+1}</span>
+  const head = `<div class="srcHead"><span class="srcNo">영상 ${i+1}</span>
       <span class="srcName" title="${name}">${name}</span></div>`;
   if(!d){
     // 분석 전 카드는 **한 줄로** 접는다(2026-08-16). 분석된 카드와 같은 높이(280px)를
     // 주면 "아직 분석 전이에요" 한 문장이 큰 빈 상자를 만든다 — 사장님 정렬 기준
     // "빈 여백 덩어리 없을 것"에 어긋난다. 정보량에 맞는 크기를 준다.
+    // ★기다리면 되는 것과 기다려도 소용없는 것을 갈라 말한다(2026-08-17 사장님
+    //   "영상분석은?"). 실패한 영상까지 "분석 대기"로 두면 화면이 거짓말을 한다 —
+    //   사장님은 오지 않을 결과를 계속 기다리게 된다(실측: 도우인 4건이 로그인 요구로
+    //   3회 실패·포기 상태였는데 화면은 아무 말도 안 했다).
+    if (r && r.gave_up){
+      return `<div class="srcCard pend fail">${head}
+        <div class="srcPend" style="color:var(--fire)">❌ ${esc(r.reason || '영상 분석에 실패했습니다')}
+          <div style="color:var(--sub);margin-top:4px">${
+            /끊겼/.test(r.reason || '')
+              ? '<b>다시 담으면</b> 처음부터 새로 시도해요(긴 영상은 2~3분 걸릴 수 있어요).'
+              : /로그인/.test(r.reason || '')
+                ? '그 사이트에서 <b>영상을 열어 재생되는 화면</b>에서 다시 담으면 받을 수 있어요.'
+                : '이 영상은 재료로 쓸 수 없어요 — 빼고 진행하시거나 다른 영상을 담아주세요.'}</div>
+        </div>
+      </div>`;
+    }
+    // ★"대본 만들기를 누르면"은 옛 흐름의 낡은 안내였다(2026-08-17 사장님 지적).
+    //   1단계는 담는 즉시 자동으로 분석한다 — 화면이 실제 동작과 다른 말을 하고 있었다.
+    //   실패했다 다시 시도 중인 것도 그냥 '대기'로 보였으니 몇 번째인지도 밝힌다.
+    const tryTxt = (r && r.attempts > 1) ? ` (${r.attempts}번째 시도)` : '';
     return `<div class="srcCard pend">${head}
-      <div class="srcPend">⏳ 분석 대기 — ⚡ 대본 만들기를 누르면 함께 분석됩니다</div>
+      <div class="srcPend">⏳ 분석 중이에요${tryTxt} — 30초~1분쯤 걸립니다
+        <div style="color:var(--sub);margin-top:4px">담으면 자동으로 분석돼요. 이 화면에 그대로 계셔도 됩니다.</div>
+      </div>
     </div>`;
   }
   const b = d.brief || {};
   const segs = d.segments || [];
   const row = (k, v, cls) => v ? `<div class="srcRow"><span class="srcK">${k}</span>
       <span class="srcV ${cls||''}">${esc(v)}</span></div>` : '';
+  // ── 카드가 스스로 세는 값(2026-08-17) ─────────────────────────────────────
+  // 요약 세 줄은 "이 영상이 무슨 영상인가"만 말해준다. 정작 고를 때 필요한
+  // "재료로서 어떤가"(말이 있나·길이가 되나·무슨 그림이 많나)는 아무 데도 없었다.
+  const secs  = segs.reduce((t, s) => t + Math.max(0, (s.end || 0) - (s.start || 0)), 0);
+  const chars = segs.reduce((t, s) => t + (s.chars || 0), 0);
+  // 화면 구성 — shot_role을 사람 말로. 무슨 그림이 많은 영상인지 한눈에 본다.
+  const ROLE_KO = {'완성': '완성 장면', '사용중': '쓰는 장면', 'after': '결과 장면',
+                   'before': '전 상황', '기타': '그 밖'};
+  const cnt = {};
+  segs.forEach(s => { cnt[s.shot_role] = (cnt[s.shot_role] || 0) + 1; });
+  const mix = Object.entries(cnt).sort((a, b2) => b2[1] - a[1]).slice(0, 3)
+    .map(([k, n]) => `<span class="srcChip">${esc(ROLE_KO[k] || k)} ${n}</span>`).join('');
   // ★타임스탬프 목록은 1단계에서 뺐다(2026-08-16 사장님 "소스 타임스탬프 추출된 걸
   //   보여줄 필요는 없고"). 구간별 확인은 3단계 장면 편집이 하는 일이다. 여기서는
   //   "이 영상이 무엇을 보여주는가"와 재료가 얼마나 되는지(장면 수·실증 수)만 본다.
@@ -3580,18 +3852,30 @@ function _srcCard(it, i){
   // ★카드를 눌러 접었다 폈다(2026-08-16 사장님). 영상을 5~8개 담으면 요약이 다 펼쳐져
   //   화면을 길게 먹는다 — 기본은 접어서 "제품 한 줄 + 장면 수"만 보이고, 자세히 볼 것만
   //   펼친다. 접힘 상태는 화면에만 남기면 되므로 DOM 클래스로만 관리한다.
-  const open = _SRC_OPEN.has(it.shortcode);
+  const open = !_SRC_CLOSED.has(it.shortcode);
+  // ★칸 이름은 우리 말로 쓴다(2026-08-17 사장님 "이름 다 바꾸고 디벨롭해").
+  //   제품/역할/핵심은 태깅 필드 이름을 그대로 화면에 옮긴 것이라 남의 프로그램과
+  //   똑같아 보였다. 사장님이 이 카드를 보며 하는 판단("이 영상을 쓸까 말까")의
+  //   말로 바꾼다. 데이터 필드명(product/role/core)은 그대로다 — 화면 말만 바뀐다.
   return `<div class="srcCard${open ? ' open' : ''}" onclick="toggleSrcCard('${esc(it.shortcode)}')"
        title="${open ? '눌러서 접기' : '눌러서 자세히 보기'}">${head}
-    ${row('제품', b.product, 'strong')}
+    ${row('재료', b.product, 'strong')}
+    <div class="srcFacts">
+      <span class="srcChip ${chars ? '' : 'mute'}"
+            title="${chars ? `말이 들어 있는 영상 — 자막 ${chars}자를 대본 재료로 쓸 수 있습니다`
+                           : '말이 없는 영상 — 화면만 보고 태깅했습니다. 그림 재료로 씁니다'}"
+        >${chars ? `🗣 말 있음 ${chars}자` : '🔇 말 없음'}</span>
+      ${secs ? `<span class="srcChip" title="담긴 장면들의 길이를 다 더한 것">⏱ ${secs.toFixed(0)}초</span>` : ''}
+      ${mix}
+    </div>
     <div class="srcMore">
-      ${row('역할', b.role)}
-      ${row('핵심', b.core)}
+      ${row('Key', b.role)}
+      ${row('상세', b.core)}
       ${b.summary ? `<div class="srcSum">${esc(b.summary)}</div>` : ''}
     </div>
     ${segs.length ? `<div class="srcStat">
-       <span class="srcStatN">${segs.length}</span><span class="srcStatK">장면</span>
-       ${keyN ? `<span class="srcKey" title="제품 기능을 화면으로 실증하는 장면">실증 ${keyN}</span>` : ''}
+       <span class="srcStatN">${segs.length}</span><span class="srcStatK">쓸 장면</span>
+       ${keyN ? `<span class="srcKey" title="제품이 하는 일을 화면으로 직접 보여주는 장면 — 대본이 가장 먼저 집어 갑니다">보여주는 장면 ${keyN}</span>` : ''}
        <span class="srcCaret">${open ? '접기 ▴' : '자세히 ▾'}</span>
      </div>` : ''}
   </div>`;
@@ -3621,6 +3905,9 @@ async function autoloadFootageScripts(){
 // ★유한 반복(최대 3배치=12개). refreshStep0을 재귀로 부르지 않는다(2026-07-26 사고 방지).
 async function autoloadAllFootage(){
   let added=0, already=0, failed=[];
+  // ★대기(busy)는 배치 횟수를 깎지 않는다 — 도우인 5개를 담으면 2개씩 세 번은 기다려야
+  //   하는데, 옛 상한(3회)을 대기로 다 써버리면 뒤의 영상이 영영 안 돌아간다.
+  let waits=0;
   for(let batch=0; batch<3; batch++){
     const items = HANDOFF.filter(h=>h.useFootage && h.url).map(h=>({
       url: h.url, video_url: h.video_url||'', shortcode: h.shortcode||'', name: h.name||'',
@@ -3638,15 +3925,43 @@ async function autoloadAllFootage(){
     added += (d && d.added) || 0;
     already += results.filter(x=>x.status==='already').length;
     failed.push(...results.filter(x=>/^failed_/.test(x.status)).map(x=>x.shortcode));
+    // ★도우인은 서버 전체에서 동시 2개까지만 받는다(무거워서). 자리가 없으면 'busy'로
+    //   돌아오는데 **실패가 아니라 순서를 기다리는 것**이다(2026-08-16 사장님 지시:
+    //   "잠시 후 다시 시도해달라고 표시하고 그 영상 다시 받게"). 잠깐 쉬고 다시 던진다 —
+    //   사장님이 다시 담을 필요가 없다. 서버도 시도 횟수를 안 깎으므로 손해가 없다.
+    const busy = results.filter(x=>x.status==='busy').map(x=>x.shortcode);
+    if(busy.length && waits < 30){                 // 최대 10분쯤(20초 x 30) 기다린다
+      waits++; batch--;                            // 대기는 배치 횟수로 세지 않는다
+      renderQueuedState(busy.length);
+      await new Promise(r=>setTimeout(r, 20000));   // 앞 영상이 끝날 만큼만 기다린다
+      continue;
+    }
     // 상한에 걸려 못 태운 게 남았을 때만 다음 배치. 없으면 끝.
     if(!results.some(x=>x.status==='skipped_cap')) break;
   }
   return { added, already, failed, analyzed: (added>0 || already>0) };
 }
+// 순서를 기다리는 중 — '실패'와 확실히 구별되게 말한다(기다리면 된다는 뜻).
+function renderQueuedState(n){
+  const el=document.getElementById('srcAnalysis') || document.getElementById('aiPick');
+  if(!el) return;
+  el.innerHTML = `<div class="skm-card empty">
+      <h2><span class="skm-spin">⏳</span> ${n}개가 순서를 기다리고 있어요</h2>
+      <div class="hint" style="text-align:center;color:var(--sub)">
+        도우인 영상은 서버가 <b>한 번에 2개씩</b> 받습니다(무거워서요).
+        앞 영상이 끝나면 <b>자동으로 이어서</b> 시작해요 — 이 화면에 그대로 계셔도 됩니다.</div>
+    </div>`;
+}
 // 자동적재가 도는 동안 보여줄 과도 상태 — 폴백 안내를 먼저 띄웠다가 곧 카드로 바뀌면
 // 사용자가 "에러가 났다가 고쳐졌나?"로 읽는다. 분석 중임을 명시한다.
 function renderAutoloadingState(total){
-  const el=document.getElementById('aiPick'); if(!el) return;
+  // ★#aiPick이 아니라 #srcAnalysis에 그린다(2026-08-17 사장님 "영상분석은?").
+  //   1단계에서 #aiPickWrap은 display:none이라(9단계 개편) 여기 그리면 아무도 못 본다 —
+  //   실제로 담자마자 화면 아래가 통째로 비어 "분석이 도는지" 알 수가 없었다.
+  //   진행 표시는 그 단계의 **보이는 자리**에 있어야 한다. 끝나면 renderSourceAnalysis가
+  //   같은 자리를 카드로 덮는다(자리 하나, 상태 하나 — 두 군데에 그리지 않는다).
+  const el=document.getElementById('srcAnalysis') || document.getElementById('aiPick');
+  if(!el) return;
   const n = Number(total)||0;
   el.innerHTML = `<div class="skm-card empty">
       <h2><span class="skm-spin">🔄</span> 담은 영상 ${n?('<b>'+n+'개</b> '):''}대본을 분석하고 있어요</h2>
@@ -6846,6 +7161,379 @@ function renderEnrich(d){
   const cmtBlock = cmts?`<details style="margin-top:4px"><summary style="cursor:pointer">인기 댓글 ${d.top_comments.length}</summary>${cmts}</details>`:'';
   const capBlock = d.caption?`<details style="margin-top:4px"><summary style="cursor:pointer">원문 캡션</summary><div style="white-space:pre-wrap;margin-top:2px">${esc(d.caption)}</div></details>`:'';
   return `${ch?('<div style="font-size:12px;line-height:1.7">'+ch+'</div>'):''}${stat?('<div style="display:flex;flex-wrap:wrap;gap:4px 6px;font-size:12px;line-height:1.7;margin-top:3px">'+stat+'</div>'):''}${cmtBlock}${capBlock}`;
+}
+// ══════════════════════════════════════════════════════════════════════
+// 2단계 "대본" 패널(data-step=8) — 목업 mockup_2단계_대본.html 이식 + 실배선.
+// 설계: 기획_2단계_대본UI_페이블인계.md
+//   1) 저쪽(경쟁 프로그램)처럼 1~7 나열하지 않는다 — **역할이 보이는** 행으로 보여준다
+//   2) 고치는 건 타이핑이 아니라 클릭(스타일이 가진 **문장틀**에서 고른다)
+//   3) 게이트는 성적표가 아니라 **고칠 곳 안내** — 통과는 뱃지 하나, 실패는 그 칸을 짚는다
+// ★매칭(startProduceMix)은 여기서 안 건다 — 3단계 소관(사양서 §6).
+// ══════════════════════════════════════════════════════════════════════
+const S2 = { seed:null, seeds:[], styles:[], picked:[], drafts:[], curDraft:0, loadedStyles:false };
+// 역할 라벨 — 내부값(beat_roles)은 hook/before/reveal/after/cta, 화면 이름은 여기서 붙인다.
+// ★사장님 지시 "재미있게". 모르는 역할은 그 값을 그대로 쓴다(빈 칸으로 두지 않는다).
+const S2_ROLE = {hook:'🎣 미끼', before:'😰 찔림', problem:'😰 찔림', reveal:'💡 반전',
+  twist:'💡 반전', after:'✨ 증거', result:'✨ 결과', proof:'✨ 증거', demo:'🔧 시연',
+  conflict:'🔥 갈등', cta:'📢 약속'};
+function s2RoleName(r){ return S2_ROLE[r] || ('· ' + (r||'')); }
+// 문장틀의 {빈칸}을 눈에 보이게 — "여긴 우리 소재로 채워진다"를 화면이 말해준다.
+function s2Tmpl(t){
+  return esc(t||'').replace(/\{([^}]+)\}/g, (m,k)=>'<i class="s2-gap">'+k+'</i>');
+}
+function s2SetMode(m){
+  const root=document.getElementById('s2Root'); if(!root) return;
+  root.classList.remove('mode-tab','mode-side'); root.classList.add('mode-'+m);
+  const a=document.getElementById('s2ModeTab'), b=document.getElementById('s2ModeSide');
+  if(a) a.classList.toggle('on', m==='tab');
+  if(b) b.classList.toggle('on', m==='side');
+  s2CloseBanks();
+}
+function s2CloseBanks(){ document.querySelectorAll('#s2Root .s2-row.bank-open').forEach(r=>r.classList.remove('bank-open')); }
+
+// ── 패널 진입 ─────────────────────────────────────────────────
+// showPanel()이 cur===8마다 부른다. 스타일 목록은 한 번만 읽고(카테고리가 바뀌면 다시),
+// 씨앗은 매번 다시 그린다(1단계에서 방금 담았을 수 있다).
+function s2Enter(){
+  s2RenderSeeds();
+  if(!S2.loadedStyles) s2LoadStyles();
+  s2RenderDrafts();
+}
+// ── ① 씨앗 ───────────────────────────────────────────────────
+// 출처는 AI PICK(window._aiPick) 하나뿐이다 — 카드의 숫자·이름·대본이 같은 응답에서
+// 나오므로 어긋날 수가 없다(startFromAiPick이 pick_text를 1순위로 쓰는 것과 같은 원천).
+function s2RenderSeeds(){
+  const row=document.getElementById('s2SeedRow'); if(!row) return;
+  const d=window._aiPick;
+  S2.seeds=[];
+  if(d && d.pick_id){
+    const pm=d.pick_meta||{};
+    S2.seeds.push({shortcode:d.pick_id, title:pm.title||'선택 영상', thumb:pm.thumbnail||'',
+      category:pm.category||'', followers:pm.followers, text:d.pick_text||'',
+      structure:d.structure||{}, tiles:d.tiles||{}, pick:true});
+  }
+  if(!S2.seed && S2.seeds.length) S2.seed=S2.seeds[0];
+  const cards=S2.seeds.map((s,i)=>{
+    const seg=(s.structure.segments)||[];
+    const strip=seg.length?`<div class="s2-strip">${seg.map(g=>`<i style="flex:${g.pct};background:${g.color}"></i>`).join('')}</div>`
+                          :'<div class="s2-strip ghost"></div>';
+    const tags=[s.structure.hook_type?('🎙 '+esc(s.structure.hook_type)+' 훅'):'',
+                s.tiles.engagement_rate!=null?('참여밀도 '+s.tiles.engagement_rate+'%'):''].filter(Boolean).join(' · ');
+    const th=s.thumb?`<img src="${s.thumb.includes('gstatic.com')?s.thumb:('/api/thumb?url='+encodeURIComponent(s.thumb))}" referrerpolicy="no-referrer" onerror="this.style.display='none'">`:'🎬';
+    const sub=[s.category, (s.followers!=null?('팔로워 '+fmtNum(s.followers)):'')].filter(Boolean).join(' · ');
+    // ★클릭으로 고르지 않는다 — 담긴 것이 전부 재료다. 카드는 확인용.
+    return `<div class="s2-scard${s.pick?' sel':''}" title="담긴 영상은 전부 재료로 들어갑니다 — 고르지 않아도 됩니다">
+      ${s.pick?'<span class="s2-spick">🤖 대표 · 완성도 1위</span>':''}
+      <div class="s2-swho"><div class="s2-sth">${th}</div>
+        <div><div class="s2-snm">${esc(s.title)}</div>${sub?`<div class="s2-ssub">${esc(sub)}</div>`:''}</div></div>
+      ${strip}
+      <div class="s2-stags">${tags||'&nbsp;'}</div>
+      <div class="s2-sfoot"><button onclick="event.stopPropagation();s2ShowSeedText(${i})">📄 원문</button></div>
+    </div>`;
+  });
+  // 아직 분석이 안 끝난 상태 — 빈 화면 대신 "기다리면 나온다"를 그대로 보여준다.
+  if(!cards.length){
+    cards.push(`<div class="s2-scard pending" title="1단계에서 영상을 담고 분석이 끝나면 자동으로 후보가 됩니다">
+      <div class="s2-swho"><div class="s2-sth">⏳</div>
+        <div><div class="s2-snm">분석 중인 영상</div><div class="s2-ssub">1단계에서 담아주세요</div></div></div>
+      <div class="s2-strip ghost"></div><div class="s2-stags">⏳ 자동으로 나타나요</div>
+      <div class="s2-sfoot"><span class="ghostbtn">분석 대기</span></div></div>`);
+  }
+  cards.push(`<div class="s2-scard manual" onclick="s2ManualSeed()" title="내 대본을 직접 씨앗으로 씁니다">
+    <div class="s2-swho"><div class="s2-sth">✍️</div>
+      <div><div class="s2-snm">직접 쓰기</div><div class="s2-ssub">내 대본을 씨앗으로</div></div></div>
+    <div class="s2-strip ghost"></div><div class="s2-stags">&nbsp;</div>
+    <div class="s2-sfoot"><span class="ghostbtn">입력 열기</span></div></div>`);
+  row.innerHTML=cards.join('');
+  // 재료가 몇 편인지 라벨이 말해준다 — "전부 쓴다"를 글로만 말하면 안 믿긴다.
+  const lb=document.getElementById('s2SeedLabel');
+  if(lb) lb.textContent = S2.seeds.length
+    ? ('① 재료 — 담긴 영상 ' + S2.seeds.length + '편을 전부 씁니다 (고르지 않아도 됩니다)')
+    : '① 재료 — 1단계에서 영상을 담아주세요';
+  s2RenderSeedInfo();
+}
+function s2ShowSeedText(i){
+  const s=S2.seeds[i]; if(!s) return;
+  if(!s.text){ toast('이 영상의 대본 원문이 아직 없습니다'); return; }
+  alert(s.text.slice(0,4000));
+}
+function s2ManualSeed(){
+  const t=prompt('씨앗으로 쓸 대본을 붙여넣으세요');
+  if(!t || !t.trim()) return;
+  S2.seed={shortcode:'', title:'직접 쓴 대본', thumb:'', category:PM_CATEGORY||'', text:t.trim(), structure:{}, tiles:{}};
+  S2.seeds.push(S2.seed); s2RenderSeeds();
+}
+// 고른 씨앗의 뼈대 — 첫 문장·칸 구성·밀도. 전부 데이터다(설명글을 늘리지 않는다).
+function s2RenderSeedInfo(){
+  const box=document.getElementById('s2SeedInfo'); if(!box) return;
+  const s=S2.seed;
+  if(!s){ box.style.display='none'; return; }
+  // ★라이브 실측(2026-08-16): pick_text·structure가 없는 재료가 실제로 있다(캡션만 있는 영상).
+  //   그러면 이 밴드가 **큰 빈 상자**로 뜬다 — 빈 상자는 "고장난 화면"으로 읽힌다.
+  //   빈칸을 억지로 채우지 말고, 왜 비었고 뭘 하면 되는지 한 줄로 말해준다.
+  const hasBones = !!(s.text||'').trim() || (((s.structure||{}).segments)||[]).length;
+  if(!hasBones){
+    box.style.display='';
+    document.getElementById('s2SeedQuote').textContent='';
+    document.getElementById('s2SeedStrip').innerHTML='';
+    document.getElementById('s2SeedMeta').innerHTML=
+      '이 영상은 <b>대본 원문이 아직 없어요</b> — 1단계에서 분석이 끝나면 뼈대가 여기 나옵니다.'
+      + (s.tiles && s.tiles.seconds!=null ? ('길이 <b>'+s.tiles.seconds+'초</b>') : '');
+    document.getElementById('s2SeedStyle').style.display='none';
+    return;
+  }
+  box.style.display='';
+  const first=(s.text||'').split(/[\n.!?。]/).map(x=>x.trim()).filter(Boolean)[0]||'';
+  document.getElementById('s2SeedQuote').textContent=first;
+  const seg=(s.structure.segments)||[];
+  document.getElementById('s2SeedStrip').innerHTML=seg.map(g=>
+    `<i style="flex:${g.pct};background:${g.color}">${esc(g.label||'')}</i>`).join('');
+  const chars=(s.text||'').replace(/\s/g,'').length;
+  const meta=[];
+  if(s.structure.hook_type) meta.push(`훅 유형 <b>${esc(s.structure.hook_type)}</b>`);
+  if(chars) meta.push(`원본 <b>${chars}자</b>`);
+  if(s.tiles.seconds!=null) meta.push(`길이 <b>${s.tiles.seconds}초</b>`);
+  if(s.tiles.views!=null) meta.push(`조회 <b>${fmtNum(s.tiles.views)}</b>`);
+  document.getElementById('s2SeedMeta').innerHTML=meta.join('');
+  // '결 맞춤'(씨앗 훅 ↔ 스타일) 판정은 아직 서버에 없다 — 없는 걸 있는 척 채우지 않는다.
+  document.getElementById('s2SeedStyle').style.display='none';
+}
+// ── ② 스타일 ─────────────────────────────────────────────────
+async function s2LoadStyles(){
+  const row=document.getElementById('s2StyleRow'); if(!row) return;
+  const cat=(S2.seed&&S2.seed.category)||PM_CATEGORY||'';
+  try{
+    const d=await (await fetch('/api/script/styles'+(cat?('?category='+encodeURIComponent(cat)):''))).json();
+    if(!d.ok){ row.innerHTML='<div class="hint" style="color:var(--fire)">스타일을 불러오지 못했습니다</div>'; return; }
+    S2.styles=d.styles||[]; S2.loadedStyles=true;
+    // 기본 = AI에게 맡김(고른 스타일 0개). 사장님이 고른 만큼 안이 나온다.
+    s2RenderStyles();
+  }catch(e){ row.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
+}
+function s2RenderStyles(){
+  const row=document.getElementById('s2StyleRow'); if(!row) return;
+  const auto=`<div class="s2-card${S2.picked.length?'':' sel'}" onclick="s2ClearStyles()" title="스타일 고르기까지 AI에게 맡깁니다 — 기존 생성 경로 그대로">
+    <div class="t">🤖 AI에게 맡김 <span class="sp"></span><span class="s2-badge ok">기본값</span></div>
+    <div class="s2-quote plain">${S2.styles.length?('추천: '+esc(S2.styles[0].name)):'AI가 알아서'}</div>
+    <div class="s2-meta"><span class="r">훅</span><span class="r">전개</span><span class="r">CTA</span><span class="d">자동 선택</span></div>
+  </div>`;
+  const cards=S2.styles.map(st=>{
+    const on=S2.picked.indexOf(st.id)>=0;
+    const nth=on?(' · '+String.fromCharCode(65+S2.picked.indexOf(st.id))+'안'):'';
+    const badge=st.fit==='검증'?`<span class="s2-badge ok">✅ 검증${nth}</span>`
+                               :`<span class="s2-badge warn">⚠️ 타소재${nth}</span>`;
+    const roles=(st.beat_roles||[]).map(r=>`<span class="r">${esc(s2RoleName(r).replace(/^\S+\s/,''))}</span>`).join('');
+    const d=[st.source_count?('근거 '+st.source_count+'편'):'', st.chars_per_30s?(st.chars_per_30s+'자/30초'):''].filter(Boolean).join(' · ');
+    return `<div class="s2-card${on?' sel':''}" onclick="s2ToggleStyle(${st.id})" title="${esc(st.situation_type||'')}">
+      <div class="t">${esc(st.name)} <span class="sp"></span>${badge}</div>
+      <div class="s2-quote plain">${esc(st.situation_type||'')}</div>
+      <div class="s2-meta">${roles}<span class="d">${esc(d)}</span></div>
+    </div>`;
+  }).join('');
+  row.innerHTML=auto+cards;
+  const hint=document.getElementById('s2GenHint');
+  if(hint) hint.textContent = S2.picked.length
+    ? (S2.picked.length+'개 스타일 → '+S2.picked.length+'안이 나옵니다')
+    : 'AI가 스타일까지 골라 2안을 만듭니다';
+}
+function s2ClearStyles(){ S2.picked=[]; s2RenderStyles(); }
+function s2ToggleStyle(id){
+  const i=S2.picked.indexOf(id);
+  if(i>=0) S2.picked.splice(i,1);
+  else{
+    if(S2.picked.length>=2){ toast('스타일은 2개까지 — 하나를 해제하고 고르세요'); return; }
+    S2.picked.push(id);
+  }
+  s2RenderStyles();
+}
+// ── 생성 ─────────────────────────────────────────────────────
+// ★생성 경로는 기존 pmRunGen과 **같은 엔드포인트**를 쓴다(판정·프롬프트가 한 벌, 0순위-B).
+async function s2Generate(){
+  const s=S2.seed;
+  if(!s || !s.shortcode){ toast('먼저 씨앗 영상을 고르세요 (직접 쓴 대본은 아직 생성 대상이 아닙니다)'); return; }
+  const btn=document.getElementById('s2GenBtn'), hint=document.getElementById('s2GenHint');
+  const orig=btn?btn.textContent:'';
+  if(btn){ btn.disabled=true; btn.textContent='⏳ 대본 만드는 중… (15~40초)'; }
+  if(hint) hint.textContent='';
+  try{
+    const body={mode:'A', my_topic:'', subject:'', n:2, elem_modes:{},
+      structure:null, base_script:s.text||'', category:s.category||PM_CATEGORY||''};
+    // ★job_id를 반드시 실어라(2026-08-17). 서버는 이걸로 ①담긴 영상 전부의 대본
+    //   ②쿠팡 상세·리뷰 재료 ③1단계 장면 태깅(label·use_point)을 붙인다.
+    //   안 보내면 코드가 다 있어도 **재료가 빈 채로** 대본이 나온다(내가 처음에 빠뜨린 것).
+    if(typeof MIX_JOB!=='undefined' && MIX_JOB) body.job_id=MIX_JOB;
+    // ★work_id도 함께(2026-08-16). 3단계를 아직 안 돌렸으면 job이 없어 재료가 씨앗
+    //   1편으로 줄고, 모자란 만큼 모델이 지어낸다(사장님 제보: 카메라 영상인데
+    //   발뒤꿈치 각질 대본). work_id가 있으면 서버가 담긴 영상 전부를 재료로 모은다.
+    if(typeof WORK_ID!=='undefined' && WORK_ID) body.work_id=WORK_ID;
+    // 스타일을 골랐으면 그대로, 안 골랐으면(=AI에게 맡김) 서버가 추천 상위에서 자동으로 집는다.
+    // ★어느 쪽이든 스타일 경로를 타야 역할 칸·게이트·표현사전이 붙는다(2026-08-17).
+    if(S2.picked.length) body.style_ids=S2.picked;
+    else body.auto_style=true;
+    const d=await (await fetch('/api/wiki/generate?shortcode='+encodeURIComponent(s.shortcode),
+      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+    if(!d.ok){ if(hint) hint.innerHTML='<span style="color:var(--fire)">⚠️ '+esc(d.error||'생성 실패')+'</span>'; return; }
+    S2.drafts=d.drafts||[]; S2.curDraft=0; S2.materials=d.materials||null;
+    // ★고른 스타일 수와 나온 안의 수가 다르면 조용히 넘어가지 마라 — 실제로 2개를 골랐는데
+    //   1안만 나온 적이 있다(서버가 카테고리로 걸러냈다). 조용한 실패가 제일 나쁘다.
+    if(S2.picked.length && S2.drafts.length < S2.picked.length && hint){
+      hint.innerHTML='<span style="color:var(--gold)">⚠️ 스타일 '+S2.picked.length
+        +'개 중 '+S2.drafts.length+'개만 만들어졌어요 — 나머지는 생성에 실패했습니다(다시 시도해 보세요)</span>';
+    }
+    s2RenderDrafts();
+  }catch(e){ if(hint) hint.innerHTML='<span style="color:var(--fire)">네트워크 오류</span>'; }
+  finally{ if(btn){ btn.disabled=false; btn.textContent=orig; } }
+}
+// ── ③ 결과 대본 ───────────────────────────────────────────────
+// beats가 있으면(스타일 경로) 역할 행으로, 없으면(기존 생성) 문단을 행으로 나눈다.
+function s2Beats(dr){
+  if(dr.beats && dr.beats.length) return dr.beats;
+  // ★'AI에게 맡김'(스타일 미지정)은 **옛 생성기**라 칸(beats)을 안 준다 — 대본이 통짜
+  //   한 덩어리로 온다. 그대로 넣으면 행이 1개뿐이라 "나열식"으로 보인다(사장님 제보).
+  //   개행이 있으면 문단으로, 없으면 **문장 끝(다/요/죠 + 마침표)**으로 끊어 행을 만든다.
+  //   ⚠️ 역할 이름은 붙이지 않는다 — 이 경로는 어느 칸인지 아무도 모른다. 모르면 비운다.
+  const s=(dr.script||'').trim();
+  if(!s) return [];
+  let parts = s.split(/\n+/).map(t=>t.trim()).filter(Boolean);
+  if(parts.length<2){
+    parts = s.split(/(?<=[다요죠]\.)\s+|(?<=[.!?])\s+/).map(t=>t.trim()).filter(Boolean);
+  }
+  return parts.map(t=>({role:'', text:t}));
+}
+function s2RenderDrafts(){
+  const band=document.getElementById('s2ResultBand'), tabs=document.getElementById('s2Tabs'),
+        box=document.getElementById('s2Drafts'), bar=document.getElementById('s2ConfirmBar');
+  if(!band) return;
+  if(!S2.drafts.length){ band.style.display='none'; if(bar) bar.style.display='none'; return; }
+  band.style.display=''; if(bar) bar.style.display='';
+  // ★"이 대본이 무엇으로 만들어졌나"를 화면이 말한다(사장님 제보 "무슨 영상인지 모르겠다").
+  //   재료가 어긋나도 대본만 봐서는 알 수 없다 — 쓴 재료를 그대로 보여줘야 어긋남이 보인다.
+  const label=document.getElementById('s2ResultLabel');
+  if(label){
+    const m=S2.materials;
+    let used='';
+    if(m){
+      const srcs=(m.sources||[]).filter(s=>s.chars>0);
+      const bits=[];
+      if(srcs.length) bits.push('대본 '+srcs.length+'편('+srcs.map(s=>s.chars+'자').join('·')+')');
+      if(m.scene_points) bits.push('장면 '+m.scene_points+'개');
+      if(m.product_facts) bits.push('쿠팡 재료');
+      used = bits.length ? (' · 재료: '+esc(bits.join(' + '))) : ' · <span style="color:var(--gold)">재료 없음(AI가 지어냅니다)</span>';
+      // ★재료 편마다 첫 문장을 보여준다 — 서로 다른 제품이 섞였는지는 이걸 봐야 안다
+      //   (2026-08-17 실측: 치아바타 1편 + 도마 2편이 한 작업에 담겨 도마로 끌려갔다).
+      //   맨 위 = 주제로 쓰이는 대본이다.
+      if(srcs.length) used += '<div class="hint" style="margin-top:4px;line-height:1.7">'
+        + srcs.map((s,i)=>(i===0?'<b>주제</b> ':'참고 ')+'“'+esc(s.head)+'…” <span style="opacity:.7">'+s.chars+'자</span>').join('<br>')
+        + '</div>';
+    }
+    label.innerHTML='③ 결과 대본 <span style="text-transform:none;letter-spacing:0">— '
+      + S2.drafts.length + '안' + used + '</span>';
+  }
+  tabs.innerHTML=S2.drafts.map((dr,i)=>{
+    const nm=String.fromCharCode(65+i)+'안'+(dr.style_name?(' · '+esc(dr.style_name)):'');
+    const g=(dr.checks&&dr.checks.length)?(dr.passed?'✅':'⚠️'):'';
+    return `<button class="s2-tab${i===S2.curDraft?' on':''}" onclick="s2PickDraft(${i})">${nm} <span>${g}</span></button>`;
+  }).join('');
+  box.innerHTML=S2.drafts.map((dr,i)=>s2DraftHtml(dr,i)).join('');
+  const cb=document.getElementById('s2ConfirmBtn');
+  if(cb) cb.textContent='✔ '+String.fromCharCode(65+S2.curDraft)+'안으로 확정 — 장면 붙이기로';
+}
+function s2DraftHtml(dr,i){
+  const beats=s2Beats(dr);
+  const bad=(dr.checks||[]).filter(c=>!c.ok);
+  const tries=(dr.tries||[]).length;
+  const again=tries>1?(' <small>· 다시 쓴 횟수 '+(tries-1)+'</small>'):'';
+  // 통과는 조용히 뱃지 하나. 실패는 못 지킨 항목을 그대로 — 조용히 통과시키지 않는 게 핵심.
+  const gate=(dr.checks&&dr.checks.length)
+    ? (dr.passed
+        ? `<span class="s2-gate pass" title="게이트 통과 — 스타일 구조를 지켰습니다">✅ 구조 지킴${again}</span>`
+        : `<span class="s2-gate fail">⚠️ ${esc(bad.map(c=>c.name).join(' · '))}</span>`)
+    : '';
+  const rows=beats.map((b,j)=>{
+    const isBad=!dr.passed && bad.some(c=>(c.name||'').indexOf(b.role)>=0);
+    const chk=(b.role==='cta')?'<span class="s2-chk" contenteditable="false">📢 헌장: 댓글에 뭘 남기면 뭘 받는지</span>':'';
+    return `<div class="s2-row${isBad?' bad':''}" id="s2r-${i}-${j}" data-role="${esc(b.role||'')}">
+      <div class="s2-row-in">
+        <div class="s2-role"><div class="rn">${esc(s2RoleName(b.role))}</div></div>
+        <div class="s2-sent" contenteditable="true" oninput="s2EditBeat(${i},${j},this)">${esc(b.text||'')}${chk}</div>
+        <button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>
+      </div>
+      <div class="s2-bank" id="s2b-${i}-${j}"><div class="hint">불러오는 중…</div></div>
+    </div>`;
+  }).join('');
+  const fix=(!dr.passed && bad.length)
+    ? `<div class="s2-fix">
+         <div class="fx-t">⚠️ ${esc(bad.map(c=>c.name).join(' · '))} — 이 스타일에서 벗어났어요</div>
+         <div class="fx-d">그대로 써도 되지만, 위 칸의 <b>바꾸기</b>로 틀에서 고르거나 전체를 다시 만들면 더 맞습니다.</div>
+         <button class="fx-re" onclick="s2Generate()">🔄 전체 다시 만들기</button>
+       </div>` : '';
+  return `<div class="s2-draft ${i===0?'da':'db'}${i===S2.curDraft?' on':''}" id="s2d-${i}">
+    <div class="s2-dhead"><span class="s2-dname">${String.fromCharCode(65+i)}안${dr.style_name?(' · '+esc(dr.style_name)):''}</span>${gate}</div>
+    ${rows}${fix}
+    <div class="s2-dfoot"><button class="btn-next" onclick="s2Confirm(${i})">✔ ${String.fromCharCode(65+i)}안으로 확정</button></div>
+  </div>`;
+}
+function s2PickDraft(i){ S2.curDraft=i; s2RenderDrafts(); }
+// 문장 편집 — beats가 원본이고 script는 거기서 다시 만든다(두 벌 유지 금지, 0순위-B).
+function s2EditBeat(i,j,el){
+  const dr=S2.drafts[i]; if(!dr) return;
+  const beats=s2Beats(dr); if(!beats[j]) return;
+  // .s2-chk(헌장 안내)는 대본이 아니다 — 텍스트에서 뺀다.
+  const clone=el.cloneNode(true);
+  clone.querySelectorAll('.s2-chk').forEach(n=>n.remove());
+  beats[j].text=(clone.textContent||'').trim();
+  dr.beats=beats;
+  dr.script=beats.map(b=>b.text).filter(Boolean).join('\n');
+}
+// [바꾸기] — 그 스타일이 가진 **문장틀**을 준다(은행 완성문장이 아니다: 쌀밥 대본에
+// 삼겹살 훅이 뜨던 문제. 빈칸은 이 대본 소재로 채워 쓴다 — app.py:9288 설명 참조).
+async function s2OpenBank(i,j){
+  const row=document.getElementById('s2r-'+i+'-'+j), bank=document.getElementById('s2b-'+i+'-'+j);
+  if(!row||!bank) return;
+  if(row.classList.contains('bank-open')){ row.classList.remove('bank-open'); return; }
+  s2CloseBanks(); row.classList.add('bank-open');
+  const dr=S2.drafts[i], role=row.dataset.role||'';
+  if(!dr || !dr.style_id){
+    bank.innerHTML='<div class="hint">이 안은 스타일 없이 만들어져 틀 후보가 없습니다 — ② 에서 스타일을 골라 다시 만들면 틀이 붙습니다.</div>';
+    return;
+  }
+  bank.innerHTML='<div class="hint">불러오는 중…</div>';
+  try{
+    const d=await (await fetch('/api/script/style/templates?spine_id='+dr.style_id
+      + (role?('&role='+encodeURIComponent(role)):''))).json();
+    // ★서버 문구를 그대로 쏟지 않는다("없는 스타일" 같은 개발자 말이 사장님 화면에 뜬다).
+    if(!d.ok){ bank.innerHTML='<div class="hint">이 스타일의 틀을 불러오지 못했어요 — 문장을 직접 고치거나 전체를 다시 만들어 주세요.</div>'; return; }
+    const slot=(d.slots||[])[0]||{templates:[]};
+    const list=(slot.templates||[]);
+    bank.innerHTML=`<div class="bk-t" title="틀을 고르면 그 문장이 이 칸에 들어갑니다 — {빈칸}은 이 대본 소재로 채워 쓰세요">🧩 ${esc(s2RoleName(role))} 틀 · ${esc(d.name||'')} ${list.length}개</div>`
+      + (list.length?list.map((t,k)=>`<div class="s2-cand" onclick="s2PickTmpl(${i},${j},${k})"><span class="tx">${s2Tmpl(t)}</span></div>`).join('')
+                    :'<div class="hint">이 칸은 틀이 없습니다 — 문장을 직접 고치세요(그 칸은 구조를 강제하지 않습니다).</div>');
+    S2._tmpl=list;
+  }catch(e){ bank.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
+}
+function s2PickTmpl(i,j,k){
+  const t=(S2._tmpl||[])[k]; if(t==null) return;
+  const dr=S2.drafts[i]; const beats=s2Beats(dr);
+  beats[j].text=t; dr.beats=beats; dr.script=beats.map(b=>b.text).filter(Boolean).join('\n');
+  s2CloseBanks(); s2RenderDrafts();
+  toast('틀을 넣었습니다 — {빈칸}을 이 대본 소재로 채워주세요');
+}
+// ── 확정 → 3단계 ──────────────────────────────────────────────
+// ★여기서 매칭(startProduceMix)을 걸지 않는다 — 대본을 손보기도 전에 매칭이 시작되면
+//   2단계가 존재 이유를 잃는다(사양서 §6). 매칭 시작은 3단계 소관.
+function s2Confirm(i){
+  const idx=(i==null)?S2.curDraft:i;
+  const dr=S2.drafts[idx];
+  if(!dr){ toast('먼저 대본을 만들어 주세요'); return; }
+  STATE.script=(dr.script||'').trim();
+  if(!STATE.script){ toast('대본이 비어 있습니다'); return; }
+  STATE.script_from_wiki=(S2.seed&&S2.seed.shortcode)||'';
+  STATE.script_carryover=false;
+  try{ setScriptMode('manual'); }catch(e){}
+  try{ refreshFinalPeek(); }catch(e){}
+  saveWork();
+  try{ logPick('S2', {picked: idx, source:'style', candidates: S2.drafts.map(d=>d&&d.hook)}); }catch(e){}
+  jump(PANEL_TO_ORB[7]);   // 3단계 = 화면 붙이기(물리 패널 7). 번호를 손으로 적지 않는다.
 }
 // 관리자(사장님 cid0) 판별 — 비유튜브 재료의 "정보 채우기" 버튼 노출 조건(index.html과 동일 플래그명).
 window.IS_ADMIN=false;

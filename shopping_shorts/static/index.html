@@ -2072,31 +2072,52 @@ async function lensSearch(btn, shortcode){
   if(!cv){ openScript('<div style="padding:10px;color:var(--sub)">이미지를 준비하지 못했습니다. 썸네일이 로드된 뒤 다시 눌러주세요.</div>','🔍 렌즈 유사영상',true); return; }
   openScript('<div class="sm-loading">🔍 렌즈 검색 중… (5~15초)</div>','🔍 렌즈 유사영상',true);
   const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.85));
-  const fd=new FormData(); fd.append('frame', blob, 'f.jpg');
   const srcItem=findItem(shortcode);
   const caption=(srcItem && srcItem.caption) || '';
+  // ★ 상태를 **먼저** 만들고 비전 두 갈래(유튜브·중국앱 검색어)를 즉시 쏜다 (2026-08-16).
+  //   예전엔 /api/lens/search(5~15초)와 /api/mix/basket이 끝나야 비로소 발사해서,
+  //   샤오홍슈·틱톡·도우인 검색어 버튼이 20초쯤 뒤에야 떴다(사장님 제보).
+  //   이제 셋이 동시에 출발하고 **먼저 오는 것부터** 화면에 합류한다.
+  //   렌즈 결과는 나중에 st.items로 밀어넣는다 — 담기키(savesc) 기준 중복 제거라 순서 무관.
+  LENS_STATE[shortcode]={items:[], on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved:new Set(),
+                         sel:new Set(), shortsOnly:false, foreignOnly:false, videoOnly:true, hideOfftopic:false,
+                         ytLoading:true, lensLoading:true, lensErr:'', keyword:'', caption,
+                         cnCands:[], frameBlob:blob, cnLoading:true, diag:null};
+  renderLens(shortcode);
+  fetchLensYt(shortcode, caption, blob);            // ▶️ 유튜브 무료 키워드 자동합류(비동기)
+  fetchLensCnKeywords(shortcode, caption, blob);    // 📕🎬 중국앱 후보 검색어 자동합류(비동기)
+  // 담김 표시용 바구니도 병렬로 — 늦게 와도 재렌더로 체크가 채워진다.
+  fetch('/api/mix/basket').then(r=>r.json()).then(d=>{
+    const st=LENS_STATE[shortcode]; if(!st) return;
+    st.saved=new Set(d.shortcodes||[]); _lensRerender(shortcode);
+  }).catch(()=>{});
+  const fd=new FormData(); fd.append('frame', blob, 'f.jpg');
   if(caption) fd.append('source_caption', caption);
   try{
     const r=await fetch('/api/lens/search',{method:'POST',body:fd});
-    const body=document.getElementById('scriptBody');
-    if(r.status===429){ const d=await r.json(); body.innerHTML=`<div style="padding:10px;color:#e0623d">💰 ${d.error||'이번 달 렌즈 한도 초과'}</div>`; return; }
+    const st=LENS_STATE[shortcode]; if(!st) return;   // 사용자가 닫았을 수 있음
+    st.lensLoading=false;
+    if(r.status===429){ const d=await r.json(); st.lensErr='💰 '+(d.error||'이번 달 렌즈 한도 초과'); _lensRerender(shortcode); return; }
     const d=await r.json();
-    if(!d.ok){ body.innerHTML='<div style="padding:10px;color:#e0623d">❌ 렌즈 검색 실패</div>'; return; }
-    const items=(d.items||[]);
+    if(!d.ok){ st.lensErr='❌ 렌즈 검색 실패'; _lensRerender(shortcode); return; }
     // 렌즈 결과는 우리 DB shortcode가 없어 담기 바구니 키를 URL기반으로 합성한다
     // (플랫폼 프리픽스+url 해시 — 같은 URL 재검색해도 같은 키라 담김상태가 유지됨).
-    items.forEach(i=>{ i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); });
-    let saved=new Set();
-    try{ saved=new Set((await (await fetch('/api/mix/basket')).json()).shortcodes||[]); }catch(e){}
-    // 프레임이 있으면 항상 유튜브를 키워드로 덧댄다(비전이 화면 글자로 제품을 특정하므로
-    // 캡션이 없어도 됨). ytLoading=true로 두고 renderLens가 '불러오는 중'을 보여준다.
-    LENS_STATE[shortcode]={items, on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
-                           sel:new Set(), shortsOnly:false, foreignOnly:false, videoOnly:true, hideOfftopic:false, ytLoading:true, keyword:'', caption,
-                           cnCands:[], frameBlob:blob, cnLoading:false, diag:(d.diag||null)};
-    renderLens(shortcode);
-    fetchLensYt(shortcode, caption, blob);   // ▶️ 유튜브 무료 키워드 자동합류(비동기)
-    fetchLensCnKeywords(shortcode, caption, blob);   // 📕🎬 중국앱 후보 검색어 자동합류(비동기)
-  }catch(e){ document.getElementById('scriptBody').innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
+    const add=(d.items||[]);
+    add.forEach(i=>{ i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); });
+    const have=new Set(st.items.map(i=>i.savesc));
+    st.items.push(...add.filter(i=>!have.has(i.savesc)));
+    st.diag=d.diag||null;
+    _lensRerender(shortcode);
+  }catch(e){
+    const st=LENS_STATE[shortcode]; if(!st) return;
+    st.lensLoading=false; st.lensErr='❌ '+e.message; _lensRerender(shortcode);
+  }
+}
+// 늦게 도착한 응답이 **다른 카드의 렌즈 모달**을 덮어쓰지 않게 하는 공용 가드.
+// (fetchLensYt·fetchLensCnKeywords가 쓰던 root.dataset.sc 검사와 같은 규칙 — 한 곳에 모았다)
+function _lensRerender(shortcode){
+  const root=document.getElementById('lensRoot');
+  if(root && root.dataset.sc===shortcode) renderLens(shortcode);
 }
 // ── URL 붙여넣기 → 구글렌즈 원본/유사 역추적(2026-07-19) ─── TRACE-START
 // 프레임 캡처 대신 서버가 URL을 받아 중간 프레임을 뽑는다(/api/lens/trace_url). 결과 형태는
@@ -2475,10 +2496,25 @@ function _igKw(kw){
   // ⚠️ 위치: test_lens_cn_js가 _lensSearchUrl~renderLens 구간을 잘라 node로 돌리므로
   // 이 함수는 그 구간 안에 있어야 한다(호이스팅으로 호출 순서는 무관).
   let s=String(kw||'').trim();
-  const tails=/(만들기|만드는\s*법|싸는\s*법|하는\s*법|먹는\s*법|방법|레시피|꿀팁|비법|조합|추천)$/;
-  const advs=/(맛있게|쉽게|간단하게|예쁘게|빠르게|완벽하게)$/;
+  const tails=/(만들기|만드는\s*법|싸는\s*법|하는\s*법|먹는\s*법|방법|레시피|꿀팁|비법|조합|추천|사용법|사용기|후기|리뷰|언박싱|개봉기|체험|비교|정리|모음)$/;
+  const advs=/(맛있게|쉽게|간단하게|예쁘게|빠르게|완벽하게|감성)$/;
   for(let i=0;i<3;i++){ s=s.replace(tails,'').trim(); s=s.replace(advs,'').trim(); }
+  // ★3어절 이상이면 '첫 어절 + 마지막 어절'만 남긴다 (2026-08-16 실측).
+  //   인스타 검색은 **사람들이 실제로 쓰는 말**에만 반응한다 — 길이 문제가 아니라
+  //   '지어낸 조합'이 문제다. 라이브 인스타에서 직접 세어본 결과:
+  //     고독스 아동용 카메라 0 → 고독스 카메라 18 / 고독스 토이 카메라 0 → 고독스 카메라 18
+  //     아이 장난감 카메라 0 → 아이 카메라 15 / 어린이 사진 촬영은 원래 18
+  //   (가운데 수식어가 '지어낸' 부분이라 그걸 떨어뜨리는 게 가장 잘 맞았다: 4/5)
+  const t=s.split(/\s+/).filter(Boolean);
+  if(t.length>=3) s=t[0]+' '+t[t.length-1];
   return s||String(kw||'').trim();
+}
+// 그래도 0건인 2어절(브랜드+합성어)을 위한 마지막 안전망 — 핵심 명사 한 단어.
+// 실측: '고독스 픽스플레이' 0 → 픽스플레이 13 / '고독스 뷰파인더' 0 → 뷰파인더 15
+//       '감성 키즈카메라' 0 → 키즈카메라 15. 3전 3승이라 버튼 하나를 더 둔다.
+function _igShortKw(kw){
+  const t=_igKw(kw).split(/\s+/).filter(Boolean);
+  return t.length>=2 ? t[t.length-1] : '';
 }
 // 인스타 결과가 '0건이거나 왕창이거나'로 튀는 이유를 화면에서 갈라 보여준다(2026-08-14).
 // 서버 diag가 세어준다: 렌즈 원본에 인스타 링크가 몇 개였나(ig_raw), 그중 개별 게시물이
@@ -2539,6 +2575,8 @@ function renderLens(shortcode){
       <button onclick="lensBulkSave('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">📥 선택 담기(${selCount})</button>
       <button onclick="lensBulkDelete('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">🗑 선택 삭제(${selCount})</button>
       ${(()=>{const nYt=shown.filter(i=>i.platform==='youtube').length; return nYt?`<button onclick="lensBenchAllYoutube('${shortcode}')" title="이 렌즈 결과의 유튜브 채널들(짜집기 채널)을 전부 벤치 리스트에 등록 → 채널기반 수집에 편입" style="${btnCss};border-color:var(--accent);color:var(--accent);font-weight:700">➕ 유튜브 채널 전부 벤치등록(${nYt})</button>`:'';})()}
+      ${st.lensLoading?'<span style="color:var(--sub)">🔍 렌즈 결과 불러오는 중…</span>':''}
+      ${st.lensErr?`<span style="color:#e0623d">${st.lensErr}</span>`:''}
       ${st.ytLoading?'<span style="color:var(--sub)">▶️ 유튜브 불러오는 중…</span>':''}
       ${_lensIgDiag(st)}
       <a href="/grab" target="_blank" rel="noopener" title="샤오홍슈·도우인·틱톡·인스타 영상에 '📥 담기' 버튼이 안 뜨면 여기서 1회 켜기" style="text-decoration:none;font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--accent);background:#1f6feb1a;color:var(--accent);font-weight:700;margin-left:auto;white-space:nowrap">📥 담기 버튼 켜기</a>
@@ -2576,7 +2614,8 @@ function renderLens(shortcode){
             ${c.zh?`<a href="${xhs}" target="_blank" rel="noopener" style="${lnk}">📕 샤오홍슈</a>
             <a href="${dy}" target="_blank" rel="noopener" style="${lnk}">🎬 도우인</a>`:''}
             ${kw?`<a href="${tk}" target="_blank" rel="noopener" style="${lnk}">🎵 틱톡</a>
-            <a href="${ig}" target="_blank" rel="noopener" style="${lnk}">📷 인스타</a>`:''}</div>`;
+            <a href="${ig}" target="_blank" rel="noopener" title="인스타는 '${_igKw(kw)}'로 엽니다 — 지어낸 조합은 결과가 0건이라 실제 쓰는 말로 줄입니다" style="${lnk}">📷 인스타</a>
+            ${_igShortKw(kw)?`<a href="${_lensSearchUrl('instagram', _igShortKw(kw))}" target="_blank" rel="noopener" title="인스타에서 결과가 없을 때 — '${_igShortKw(kw)}' 한 단어로 넓게 봅니다" style="${lnk};opacity:.75">📷 짧게</a>`:''}`:''}</div>`;
         }).join('')}
         ${(st.cnCands||[]).length?'':`<div style="font-size:11px;color:var(--sub)">아직 검색어가 없습니다 — 위에 소재를 넣고 <b>✨ 검색어 조합 만들기</b>를 누르거나, 화면에서 자동으로 뽑히길 기다려 보세요.</div>`}
       </div>
@@ -2623,7 +2662,7 @@ function renderLens(shortcode){
              style="font-size:11px;color:var(--sub);margin-top:6px"></div>
       </div>
     </div>`;
-  }).join('') || (st.ytLoading?'<div style="font-size:12px;color:var(--sub);padding:10px">불러오는 중…</div>':'<div style="font-size:12px;color:var(--sub);padding:10px">켠 플랫폼 결과 없음 — 위 🔗 바로가기로 찾아 담으세요</div>');
+  }).join('') || ((st.ytLoading||st.lensLoading)?'<div style="font-size:12px;color:var(--sub);padding:10px">불러오는 중…</div>':'<div style="font-size:12px;color:var(--sub);padding:10px">켠 플랫폼 결과 없음 — 위 🔗 바로가기로 찾아 담으세요</div>');
   box.innerHTML=`<div id="lensRoot" data-sc="${shortcode}">${bar}<div class="cards">${cards}</div></div>`;
   box._lensCurSC=shortcode;
   const io=new IntersectionObserver((ents)=>{ents.forEach(e=>{ if(e.isIntersecting){ enrichCard(e.target); io.unobserve(e.target);} });},{rootMargin:'100px'});

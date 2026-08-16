@@ -466,6 +466,14 @@ class Store:
                 c.execute("ALTER TABLE mix_basket ADD COLUMN meta_json TEXT")
             except sqlite3.OperationalError:
                 pass
+            # ★영상 파일 직접 주소(2026-08-17). 도우인은 yt-dlp가 쿠키를 요구해 페이지
+            # URL로는 못 받는다(서버·로컬 PC 양쪽에서 재현, IP 문제 아님). 대신 사장님
+            # 브라우저에는 CDN 주소가 그대로 있으므로 담을 때 함께 받아 둔다 —
+            # download_any가 video_url을 우선 쓰고 zjcdn/douyinvod를 직접 영상으로 인식한다.
+            try:
+                c.execute("ALTER TABLE mix_basket ADD COLUMN video_url TEXT")
+            except sqlite3.OperationalError:
+                pass
             # 고객 계정(2026-07-13 멀티테넌시). 비밀번호는 pbkdf2-sha256(솔트별도)로만
             # 저장 — 평문 저장 금지.
             c.execute("""
@@ -945,7 +953,14 @@ class Store:
             # **기계가 대조하는 키**다. 기존 31행이 이미 자연어라 파싱하면 깨지므로 나눠 둔다.
             for _col, _ddl in (("beat_roles_json", "TEXT"),      # ["hook","before",...]
                                ("templates_json", "TEXT"),       # {"hook":["...{가족}..."]}
-                               ("chars_per_30s", "INTEGER")):    # 이 스타일 히트작의 실측 말 밀도
+                               ("chars_per_30s", "INTEGER"),     # 이 스타일 히트작의 실측 말 밀도
+                               # ★표현 사전(2026-08-17) — 채널의 **말버릇**. 사실과 표현을 가른다:
+                               #   사실 "녹는다"는 재료(대본·리뷰·상세)에서 오고, 표현 "사르르·퐁신퐁신"은
+                               #   스타일이 갖는다(어느 제품에나 쓴다). 합쳐진 완제품("입에서 사르르 녹는")을
+                               #   재료로 주면 원본을 그대로 베낀다 — 사장님이 짚으신 지점.
+                               #   3안 실측(2026-08-16): 사전 없음=말버릇 1개·게이트 실패·254자 /
+                               #   사전 있음=말버릇 8개·통과·323자. 원본에 없던 "퐁신퐁신"을 새로 만들었다.
+                               ("voice_json", "TEXT")):          # {onomatopoeia,intensifier,exclaim,endings,tone_note}
                 try:
                     c.execute(f"ALTER TABLE spine ADD COLUMN {_col} {_ddl}")
                 except sqlite3.OperationalError:
@@ -1691,7 +1706,7 @@ class Store:
             return True
 
     def mix_basket_add(self, shortcode, url="", thumbnail="", name="", caption="",
-                       customer_id=LEGACY_CUSTOMER_ID):
+                       customer_id=LEGACY_CUSTOMER_ID, video_url=""):
         """있으면 그대로 두고(멱등), 없으면 추가. 새로 담겼으면 True.
         원클릭 담기(북마클릿·유저스크립트)용 — 토글과 달리 중복 클릭해도 안 빠진다."""
         with self._conn() as c:
@@ -1700,11 +1715,22 @@ class Store:
                 (customer_id, shortcode),
             ).fetchone()
             if exists:
+                # ★이미 담긴 항목이라도 **영상 주소는 채워 넣는다**(2026-08-17).
+                #   shortcode는 URL 해시라 같은 영상을 다시 담으면 여기로 떨어지는데,
+                #   그냥 return하면 사장님이 아무리 다시 담아도 주소가 영영 안 들어온다
+                #   (도우인은 그 주소가 있어야 받을 수 있다). 빈 값일 때만 채워
+                #   기존 값을 덮어쓰지 않는다 — 다시 담기가 곧 구제 수단이 된다.
+                if video_url:
+                    c.execute(
+                        "UPDATE mix_basket SET video_url=? "
+                        "WHERE customer_id=? AND shortcode=? AND COALESCE(video_url,'')=''",
+                        (video_url, customer_id, shortcode),
+                    )
                 return False
             c.execute(
-                "INSERT INTO mix_basket(customer_id, shortcode, url, thumbnail, name, caption, added_at) "
-                "VALUES(?,?,?,?,?,?, datetime('now'))",
-                (customer_id, shortcode, url, thumbnail, name, caption),
+                "INSERT INTO mix_basket(customer_id, shortcode, url, thumbnail, name, caption, "
+                "video_url, added_at) VALUES(?,?,?,?,?,?,?, datetime('now'))",
+                (customer_id, shortcode, url, thumbnail, name, caption, video_url or ""),
             )
             return True
 
@@ -1718,13 +1744,17 @@ class Store:
         """이 고객이 담은 순서(added_at)대로 항목 dict 리스트. meta_json은 풀어서 병합."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT shortcode, url, thumbnail, name, caption, meta_json FROM mix_basket "
-                "WHERE customer_id=? ORDER BY added_at ASC, rowid ASC",
+                "SELECT shortcode, url, thumbnail, name, caption, meta_json, video_url "
+                "FROM mix_basket WHERE customer_id=? ORDER BY added_at ASC, rowid ASC",
                 (customer_id,),
             ).fetchall()
         out = []
         for r in rows:
             item = {"shortcode": r[0], "url": r[1], "thumbnail": r[2], "name": r[3], "caption": r[4]}
+            # 담을 때 확보한 영상 파일 직접 주소(도우인처럼 페이지 URL로는 못 받는 소스용).
+            # 옛 항목엔 없어 빈 문자열 — 그러면 종전대로 페이지 URL로 간다(회귀 없음).
+            if len(r) > 6 and r[6]:
+                item["video_url"] = r[6]
             if r[5]:
                 try:
                     item["meta"] = json.loads(r[5])
@@ -1827,6 +1857,35 @@ class Store:
                 f"SELECT shortcode, attempts FROM produce_autoload WHERE shortcode IN ({ph})", scs
             ).fetchall()
         return {r[0]: r[1] or 0 for r in rows}
+
+    def autoload_reset(self, shortcode):
+        """이 영상의 자동적재 실패 기록을 지운다 → 다음에 다시 시도한다.
+
+        ★왜 필요한가(2026-08-16): 실패 횟수가 차면 그 영상은 영영 다시 안 뽑는다
+        (비용 폭주 차단 장치). 그런데 **받는 방법 자체가 바뀌면** 그 기록은 낡은
+        판정이 된다 — 도우인이 정확히 그랬다. 새 경로를 배포했는데도 옛 래치 때문에
+        시도조차 안 해, 화면엔 오전에 찍힌 '로그인 요구' 실패가 계속 떠 있었다.
+        사장님이 **다시 담는 행위 = 다시 해보라는 뜻**이므로 그때 풀어 준다."""
+        with self._conn() as c:
+            c.execute("DELETE FROM produce_autoload WHERE shortcode=?", (shortcode,))
+
+    def autoload_status(self, shortcodes):
+        """{shortcode: {attempts, last_error}} — 자동적재가 몇 번 시도했고 왜 실패했나.
+
+        ★화면이 실패를 말할 수 있게 하려고 뽑는다(2026-08-17). 이 값이 없어서
+        다운로드가 막힌 영상도 화면엔 계속 '분석 대기'로 보였다 — 사장님은 끝나지
+        않는 것을 기다리게 된다(실측: 도우인 4건이 'Fresh cookies needed'로 3회
+        실패해 래치됐는데 화면은 아무 말도 안 했다)."""
+        scs = [s for s in dict.fromkeys(shortcodes or []) if s]
+        if not scs:
+            return {}
+        ph = ",".join("?" * len(scs))
+        with self._conn() as c:
+            rows = c.execute(
+                f"SELECT shortcode, attempts, last_error FROM produce_autoload "
+                f"WHERE shortcode IN ({ph})", scs
+            ).fetchall()
+        return {r[0]: {"attempts": r[1] or 0, "last_error": r[2] or ""} for r in rows}
 
     def autoload_mark_attempt(self, shortcode):
         """추출을 **시작하기 전에** 시도 횟수를 올린다(선(先)래치).
@@ -3073,11 +3132,13 @@ class Store:
                  status, now, now))
             return cur.lastrowid
 
-    def set_spine_style(self, spine_id, beat_roles=None, templates=None, chars_per_30s=None):
+    def set_spine_style(self, spine_id, beat_roles=None, templates=None, chars_per_30s=None,
+                        voice=None):
         """스파인에 **기계가 검사할** 스타일 정보를 붙인다(2026-08-15).
 
         beat_roles = ["hook","before",...] · templates = {"hook":["...{가족}..."]} ·
-        chars_per_30s = 그 스타일 히트작의 실측 말 밀도. None은 안 건드린다."""
+        chars_per_30s = 그 스타일 히트작의 실측 말 밀도. None은 안 건드린다.
+        voice = 표현 사전(2026-08-17) {onomatopoeia,intensifier,exclaim,endings,tone_note}."""
         sets, args = [], []
         if beat_roles is not None:
             sets.append("beat_roles_json=?")
@@ -3088,6 +3149,9 @@ class Store:
         if chars_per_30s is not None:
             sets.append("chars_per_30s=?")
             args.append(int(chars_per_30s))
+        if voice is not None:
+            sets.append("voice_json=?")
+            args.append(json.dumps(voice, ensure_ascii=False))
         if not sets:
             return
         sets.append("updated_at=?")
@@ -3100,7 +3164,7 @@ class Store:
         q = ("SELECT id, name, situation_type, character_roles_json, beat_chain_json, "
              "emotion_arc, appeal, fit_categories_json, source_count, perf_score, "
              "status, created_at, updated_at, beat_roles_json, templates_json, "
-             "chars_per_30s FROM spine")
+             "chars_per_30s, voice_json FROM spine")
         args = []
         if status is not None:
             q += " WHERE status=?"
@@ -3118,7 +3182,8 @@ class Store:
              "created_at": r[11], "updated_at": r[12],
              "beat_roles": json.loads(r[13]) if r[13] else None,
              "templates": json.loads(r[14]) if r[14] else None,
-             "chars_per_30s": r[15]}
+             "chars_per_30s": r[15],
+             "voice": json.loads(r[16]) if r[16] else None}
             for r in rows
         ]
 
