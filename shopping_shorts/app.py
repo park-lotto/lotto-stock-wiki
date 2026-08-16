@@ -997,7 +997,10 @@ def _enqueue_prewarm(store, shortcode, url, *, caption="", customer_id="0", cate
         if not (shortcode and (url or "").strip()):
             return False
         cached = store.get_extract(shortcode)
-        if cached and (cached.get("full_text") or "").strip():
+        # ★'유효 캐시'의 기준은 한 곳에서만 정한다(2026-08-16 리뷰). 여기만 full_text로
+        #   보고 있어, 무자막 영상(화면 태깅만 있는 것)은 이미 저장돼 있는데도 매번
+        #   "캐시 없음"으로 큐에 다시 들어갔다. 워커가 걸러 재과금은 없지만 큐가 더러워진다.
+        if has_usable_result(cached):
             return False
         if store.queue_has_pending("prewarm", "shortcode", shortcode):
             return False

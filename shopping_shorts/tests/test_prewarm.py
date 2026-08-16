@@ -155,3 +155,18 @@ def test_silent_video_cache_hits(store, gate, monkeypatch):
     got = prewarm.run_prewarm("sil1", "https://x", db_path=store.db_path)
     assert got == "already"
     assert gate["count"] == 0, "캐시 히트에 크레딧이 나가면 안 된다"
+
+
+def test_enqueue_gate_uses_shared_cache_judgment():
+    """★'유효 캐시' 기준은 한 곳에서만 정한다(2026-08-16 리뷰 후속).
+
+    예열 큐잉 게이트만 full_text로 판정해, 무자막 영상(화면 태깅만 있는 것)이
+    이미 저장돼 있는데도 매번 큐에 다시 들어갔다. 워커가 걸러 재과금은 없지만
+    같은 판단이 두 벌이면 언젠가 어긋난다(CLAUDE.md 0순위-B).
+    """
+    import pathlib
+    src = (pathlib.Path(__file__).resolve().parents[1] / "app.py").read_text(encoding="utf-8")
+    i = src.index("queue_has_pending(\"prewarm\"")
+    win = src[i - 600:i]
+    assert "has_usable_result(cached)" in win, "공용 판정을 써야 한다"
+    assert 'cached.get("full_text") or "").strip()' not in win, "옛 판정이 남아 있다"
