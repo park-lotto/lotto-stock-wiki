@@ -130,7 +130,10 @@ def _clean(vals):
         v = str(raw).strip().rstrip(".。!?").strip()
         if not v or len(v) > 12:                       # 12자 넘으면 표현이 아니라 문장이다
             continue
-        if any(w in v for w in _CTA_WORDS):
+        # ★공백을 지우고 검사한다 — 첫 실행에서 "남겨 주세요"가 띄어쓰기 때문에 필터를
+        #   통과해 그대로 저장됐다(실측). 표기 흔들림으로 뚫리는 필터는 없는 필터다.
+        flat = v.replace(" ", "")
+        if any(w in flat for w in _CTA_WORDS):
             continue
         key = v.lstrip("~").strip()
         if not key or key in seen:                     # "~더라고요" / "~더라고요." 중복 제거
