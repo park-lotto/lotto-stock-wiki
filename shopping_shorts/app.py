@@ -2288,8 +2288,17 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         _job = _enrich_job_extract(_job, store)
         # ★3단계를 아직 안 돌렸으면 job이 없다 — 그때는 **담긴 영상 전부**를 직접 모은다
         #   (2026-08-16). 안 그러면 재료가 씨앗 1편으로 줄어 모델이 나머지를 지어낸다.
-        if not (_job or {}).get("extract") and (body.get("work_id") or "").strip():
-            _wex = _extract_from_work(body["work_id"].strip(), _cid(request), store)
+        # ★타입을 믿지 마라(2026-08-16 내 실사고): body는 클라이언트가 주는 값이라
+        #   work_id가 문자열이 아닐 수 있다. 그대로 .strip()을 불러 500이 났고
+        #   사장님 화면엔 '네트워크 오류'만 떴다 — 재료 보강은 있으면 좋은 것이지
+        #   대본 생성을 막을 이유가 전혀 없다.
+        _wid = body.get("work_id")
+        _wid = _wid.strip() if isinstance(_wid, str) else ""
+        if not (_job or {}).get("extract") and _wid:
+            try:
+                _wex = _extract_from_work(_wid, _cid(request), store)
+            except Exception:  # noqa: BLE001 — 재료 보강 실패가 생성을 막지 않는다
+                _wex = None
             if _wex:
                 _job = dict(_job or {}, extract=_wex)
         _src = _sources_for_generate(it, _job)

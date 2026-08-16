@@ -62,3 +62,18 @@ def test_missing_work_id_is_harmless():
         def get_produce_work(self, *a, **k):
             raise RuntimeError("DB 오류")
     assert _extract_from_work("w1", 0, Boom()) == {}
+
+
+def test_bad_work_id_never_breaks_generation():
+    """★재료 보강은 '있으면 좋은 것'이다 — 절대 대본 생성을 막으면 안 된다.
+
+    2026-08-16 내 실사고: body["work_id"]에 바로 .strip()을 불렀는데 dict가 와서
+    AttributeError로 500이 났다. 사장님 화면엔 '네트워크 오류'만 떴고 대본은
+    한 줄도 안 나왔다. 클라이언트가 주는 값의 타입을 믿으면 안 된다.
+    """
+    import pathlib as _p
+    src = (_p.Path(__file__).resolve().parents[1] / "app.py").read_text(encoding="utf-8")
+    i = src.index("_extract_from_work(_wid")
+    win = src[i - 700:i + 200]
+    assert "isinstance(_wid, str)" in win, "문자열인지 먼저 확인해야 한다"
+    assert "except Exception" in win, "보강이 실패해도 생성은 계속돼야 한다"
