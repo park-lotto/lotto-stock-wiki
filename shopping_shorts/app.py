@@ -77,6 +77,7 @@ from shopping_shorts.video_assemble import _probe_duration, _effective_dur, _TRI
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
 from shopping_shorts import frame_extract, scene_assets, scene_cut
 from shopping_shorts import effect_match, remotion_render, points
+from shopping_shorts import keycrypt, keyroute, pricing      # BYOK(사용자 키·포인트)
 from shopping_shorts import video_assemble
 from shopping_shorts import seo_generate, seo_probe
 from shopping_shorts import pattern_bank
@@ -2816,6 +2817,147 @@ def api_set_vmake_key(body: dict):
 def api_get_vmake_key():
     key = Store(DB_PATH).get_setting("vmake_api_key", "")
     return {"ok": True, "configured": bool(key)}      # 원문은 노출하지 않음
+
+
+# ─────────────────────────────────────────────────────────────────────
+# BYOK — 사용자가 자기 API 키를 등록하면 포인트를 안 깎는다 (2026-08-17)
+#
+# ★위 /api/settings/vmake_key 와 헷갈리지 마라. 저건 **사장님 전역 키**(회사 부담)이고
+#   아래는 **고객별 키**다. 둘 다 살아있어야 한다 — keyroute.keys_for가 사용자 키가
+#   없을 때 전역 키로 내려간다(keyroute._owner_vmake_key).
+#
+# ★평문은 GET으로 절대 안 나간다. list_customer_keys가 key_enc를 아예 안 싣고,
+#   평문 경로는 keyroute.keys_for(→get_customer_keys_plain) 하나뿐이다.
+# ─────────────────────────────────────────────────────────────────────
+
+def _probe_user_key(service: str, key: str) -> bool:
+    """등록된 키가 실제로 도는가. 판정만 하고 예외를 밖으로 안 흘린다.
+
+    ★gemini는 comment_gen._probe_key_alive(REST)를 그대로 쓴다 — SDK models.list는
+      살아있는 키도 전부 실패로 만든다(2026-08-07 실측, comment_gen.py:95 주석).
+      같은 판단을 여기 또 적으면 어긋난다(CLAUDE.md 0순위-B).
+    ★vmake는 형식만 본다. 실호출이 크레딧을 먹으므로 '확인' 버튼이 돈을 쓰면 안 된다.
+    """
+    if service == keyroute.SVC_GEMINI:
+        from shopping_shorts.comment_gen import _probe_key_alive
+        return _probe_key_alive(key)
+    if service == keyroute.SVC_VMAKE:
+        return ":" in key           # ak:sk 형식. 실호출 안 함(크레딧 소모)
+    if service == keyroute.SVC_ELEVENLABS:
+        url, kw = "https://api.elevenlabs.io/v1/user", {"headers": {"xi-api-key": key}}
+    elif service == keyroute.SVC_YOUTUBE:
+        url = ("https://www.googleapis.com/youtube/v3/videos"
+               f"?part=id&id=dQw4w9WgXcQ&key={urllib.parse.quote(key)}")
+        kw = {}
+    else:
+        raise ValueError(f"모르는 service: {service!r}")
+    try:
+        return requests.get(url, timeout=10, **kw).status_code == 200
+    except requests.RequestException:
+        # ★네트워크 실패는 '검증 실패'라는 판정이지 버그 은폐가 아니다.
+        #   requests 예외만 잡는다 — 코드 오류(TypeError 등)까지 삼키면 원인을 못 찾는다.
+        return False
+
+
+def _svc_or_err(body: dict):
+    """(service, 에러응답) — 모르는 값이면 (None, 422 응답).
+
+    ★그냥 받으면 customer_keys에 영영 안 쓰이는 쓰레기 행이 쌓인다.
+    ★이 파일은 HTTPException을 안 쓴다(app.py:4486 주석) — JSONResponse로 맞춘다."""
+    service = (body.get("service") or "").strip()
+    if service not in keyroute.SERVICES:
+        return None, JSONResponse(status_code=422, content={
+            "ok": False, "error": f"모르는 서비스입니다 (가능: {', '.join(keyroute.SERVICES)})"})
+    return service, None
+
+
+@app.get("/api/settings/keys")
+def api_list_keys(request: Request):
+    """등록된 키 목록. ★label(마스킹)만 나가고 평문·암호문은 안 나간다."""
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    return {"ok": True, "enabled": keycrypt.enabled(),
+            "keys": store.list_customer_keys(cid)}
+
+
+@app.post("/api/settings/keys")
+def api_add_keys(request: Request, body: dict):
+    """키 등록. gemini만 여러 개를 한 번에 받는다.
+
+    ★gemini 외에는 쪼개지 않는다 — vmake는 'ak:sk' 한 덩어리라 구분자로 자르면
+      반쪽짜리 키 두 개가 저장되고, 화면엔 등록된 것처럼 보이는데 실제로는 안 된다."""
+    if not keycrypt.enabled():
+        # 평문 저장으로 조용히 폴백하지 않는다(keycrypt.py 주석과 같은 원칙).
+        return JSONResponse(status_code=503, content={
+            "ok": False, "error": "키 저장이 설정되지 않았습니다 (관리자 문의)"})
+    service, err = _svc_or_err(body)
+    if err:
+        return err
+    raw = (body.get("key") or "").strip()
+    if not raw:
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "키를 입력하세요"})
+
+    if service == keyroute.SVC_GEMINI:
+        parts = [p.strip() for p in re.split(r"[\s,]+", raw) if p.strip()]
+    else:
+        parts = [raw]
+
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    added = sum(1 for p in parts if store.add_customer_key(cid, service, p))
+    return {"ok": True, "added": added, "keys": store.list_customer_keys(cid)}
+
+
+@app.post("/api/settings/keys/delete")
+def api_delete_key(request: Request, body: dict):
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    # store가 customer_id를 DELETE 조건에 넣는다 → id만 알아도 남의 키는 못 지운다.
+    store.delete_customer_key(cid, int(body.get("id") or 0))
+    return {"ok": True, "keys": store.list_customer_keys(cid)}
+
+
+@app.post("/api/settings/keys/verify")
+def api_verify_keys(request: Request, body: dict):
+    """등록한 키가 실제로 도는지 확인하고 status를 박는다.
+
+    ★keyroute.keys_for로 가져온다 — '어떤 키를 쓰는가'의 판단처가 하나여야
+      "확인은 통과했는데 정작 다른 키로 돈다"가 안 생긴다."""
+    service, err = _svc_or_err(body)
+    if err:
+        return err
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    keys, is_user = keyroute.keys_for(store, cid, service)
+    if not is_user:
+        # 사장님 키는 고객이 검증할 대상이 아니다(남의 키 상태를 알려줄 이유도 없다).
+        return {"ok": True, "results": [], "keys": store.list_customer_keys(cid)}
+
+    rows = store.list_customer_keys(cid, service)
+    results = []
+    for row, plain in zip(rows, keys):      # keys_for와 같은 id 순서(둘 다 ORDER BY id)
+        alive = _probe_user_key(service, plain)
+        store.set_customer_key_status(row["id"], "ok" if alive else "bad")
+        # ★평문은 안 싣는다. 화면은 label로 어느 키인지 알아본다.
+        results.append({"id": row["id"], "label": row["label"], "ok": alive})
+    return {"ok": True, "results": results, "keys": store.list_customer_keys(cid)}
+
+
+@app.get("/api/settings/points")
+def api_points(request: Request):
+    """잔액·단가표·최근 사용내역. ★전부 화면용 단위로 바꿔서 내보낸다 —
+    내부값(포인트×100)을 그대로 주면 5P가 500으로 보인다."""
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    ops = (pricing.OP_VMAKE, pricing.OP_MIX, pricing.OP_TTS,
+           pricing.OP_LENS, pricing.OP_SCRIPT)
+    history = [{**h, "delta": pricing.to_display(h["delta"])}
+               for h in store.points_history(cid, 20)]
+    return {"ok": True,
+            "balance": pricing.to_display(points.balance(store, cid)),
+            "prices": {op: pricing.to_display(pricing.cost(store, op)) for op in ops},
+            "history": history}
 
 
 @app.get("/api/settings/smart_mix")
