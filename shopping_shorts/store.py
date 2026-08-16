@@ -1715,6 +1715,17 @@ class Store:
                 (customer_id, shortcode),
             ).fetchone()
             if exists:
+                # ★이미 담긴 항목이라도 **영상 주소는 채워 넣는다**(2026-08-17).
+                #   shortcode는 URL 해시라 같은 영상을 다시 담으면 여기로 떨어지는데,
+                #   그냥 return하면 사장님이 아무리 다시 담아도 주소가 영영 안 들어온다
+                #   (도우인은 그 주소가 있어야 받을 수 있다). 빈 값일 때만 채워
+                #   기존 값을 덮어쓰지 않는다 — 다시 담기가 곧 구제 수단이 된다.
+                if video_url:
+                    c.execute(
+                        "UPDATE mix_basket SET video_url=? "
+                        "WHERE customer_id=? AND shortcode=? AND COALESCE(video_url,'')=''",
+                        (video_url, customer_id, shortcode),
+                    )
                 return False
             c.execute(
                 "INSERT INTO mix_basket(customer_id, shortcode, url, thumbnail, name, caption, "
