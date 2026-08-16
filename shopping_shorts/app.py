@@ -7872,9 +7872,15 @@ def api_produce_source_brief(request: Request, shortcode: str):
         st = Store(DB_PATH).autoload_status([shortcode, _media_code(shortcode)])
         info = st.get(shortcode) or st.get(_media_code(shortcode)) or {}
         err = info.get("last_error") or ""
+        # ★재시도해도 소용없는 실패는 **1회만에** 알린다(2026-08-17 사장님 "대본 만들기를
+        #   눌러야 분석이 된다고?"). 3회를 채워야 알리게 해뒀더니, 이미 로그인벽에 막힌
+        #   영상이 1~2회 동안 '분석 대기'로 보여 사장님이 오지 않을 결과를 기다렸다.
+        #   로그인·비공개처럼 원인이 분명한 것은 몇 번을 더 해도 결과가 같다.
+        att = info.get("attempts", 0)
         return {"ok": False, "pending": True,
-                "attempts": info.get("attempts", 0),
-                "gave_up": bool(err) and info.get("attempts", 0) >= _AUTOLOAD_MAX_ATTEMPTS,
+                "attempts": att,
+                "gave_up": bool(err) and (att >= _AUTOLOAD_MAX_ATTEMPTS
+                                          or _is_hopeless_error(err)),
                 "reason": _autoload_reason_ko(err)}
     segs = []
     for s in (data.get("segments") or []):
@@ -7943,6 +7949,14 @@ _GRAB_MEDIA_HOSTS = ("zjcdn.com", "douyinvod.com", "xhscdn.com", "douyinpic.com"
 
 
 _AUTOLOAD_MAX_ATTEMPTS = 3      # shortcode당 자동추출 총 시도 횟수(넘으면 영구 스킵)
+
+
+def _is_hopeless_error(err):
+    """더 시도해도 결과가 같은 실패인가(로그인벽·비공개·삭제).
+    네트워크 흔들림 같은 일시적 실패와 갈라, 이런 것만 즉시 사장님께 알린다."""
+    low = (err or "").lower()
+    return any(k in low for k in ("cookie", "login", "sign in", "private",
+                                  "unavailable", "removed", "deleted"))
 
 
 def _autoload_reason_ko(err):

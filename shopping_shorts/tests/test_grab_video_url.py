@@ -80,3 +80,16 @@ def test_regrab_does_not_overwrite_existing_video_url(tmp_path):
     s.mix_basket_add("grab_d", url="https://www.douyin.com/video/2",
                      video_url="https://v3-dy-o.zjcdn.com/second?sig=2", customer_id=0)
     assert s.mix_basket_list(customer_id=0)[0]["video_url"] == first
+
+
+def test_hopeless_errors_are_reported_at_once():
+    """로그인벽·비공개는 몇 번을 더 해도 결과가 같다 — 3회를 기다리지 말고 바로 알린다.
+
+    사장님 지적('대본 만들기를 눌러야 분석이 된다고?')의 뿌리: 이미 막힌 영상이
+    시도 1~2회 동안 '분석 대기'로 보여, 오지 않을 결과를 기다리게 했다.
+    """
+    from shopping_shorts.app import _is_hopeless_error
+    assert _is_hopeless_error("ERROR: [Douyin] Fresh cookies (not necessarily logged in) are needed")
+    assert _is_hopeless_error("Video unavailable")
+    assert not _is_hopeless_error("Connection reset by peer")   # 일시적 — 더 해보면 될 수 있다
+    assert not _is_hopeless_error("")
