@@ -3,6 +3,7 @@
 ★실브라우저·실Apify를 부르지 않는다. 백엔드를 주입해 대체한다
 (test_xiaohongshu_playwright.py와 동일 원칙)."""
 from shopping_shorts import cn_backends
+from shopping_shorts import cn_search
 
 
 def test_normalize_fills_all_schema_keys():
@@ -135,3 +136,97 @@ def test_douyin_rows_survives_garbage():
     assert cn_backends._douyin_rows([{}]) == []
     assert cn_backends._douyin_rows([{"data": "not-a-list"}]) == []
     assert cn_backends._douyin_rows([{"data": [None, "x"]}]) == []
+
+
+def test_falls_back_when_first_backend_returns_empty():
+    """0건이면 다음 백엔드로 넘어간다(A안 — 빈손도 폴백 사유)."""
+    calls = []
+
+    def empty(kw, n):
+        calls.append("empty"); return []
+
+    def ok(kw, n):
+        calls.append("ok")
+        return [{"platform": "douyin", "url": "u", "title": "t"}]
+
+    rows, meta = cn_search._run_chain([empty, ok], "kw", 8)
+    assert calls == ["empty", "ok"]
+    assert len(rows) == 1
+    assert meta["backend"] == "ok"
+
+
+def test_stops_at_first_backend_that_returns_rows():
+    """1순위가 성공하면 유료 백엔드를 부르지 않는다(돈 안 쓴다)."""
+    calls = []
+
+    def ok(kw, n):
+        calls.append("ok")
+        return [{"platform": "xiaohongshu", "url": "u", "title": "t"}]
+
+    def paid(kw, n):
+        calls.append("paid"); return []
+
+    rows, meta = cn_search._run_chain([ok, paid], "kw", 8)
+    assert calls == ["ok"]
+    assert meta["backend"] == "ok"
+
+
+def test_backend_exception_falls_through():
+    """백엔드가 예외를 던져도 사슬이 죽지 않는다."""
+    def boom(kw, n):
+        raise RuntimeError("network down")
+
+    def ok(kw, n):
+        return [{"platform": "douyin", "url": "u", "title": "t"}]
+
+    rows, meta = cn_search._run_chain([boom, ok], "kw", 8)
+    assert len(rows) == 1
+    assert meta["backend"] == "ok"
+
+
+def test_all_backends_empty_returns_empty_not_error():
+    rows, meta = cn_search._run_chain([lambda k, n: [], lambda k, n: []], "kw", 8)
+    assert rows == []
+    assert meta["backend"] is None
+    assert meta["cost_usd"] == 0
+
+
+def test_meta_reports_cost_for_paid_backend():
+    """유료 백엔드가 돌면 비용이 meta에 실린다(조용히 새지 않게)."""
+    rows, meta = cn_search._run_chain([cn_search.cn_backends.apify_douyin], "kw", 8)
+    # 로컬엔 APIFY 토큰이 없어 0건 → backend None. 비용표에 키가 있는지만 본다.
+    assert "apify_douyin" in cn_search._COST
+
+
+def test_search_merges_platforms_and_reports_meta(monkeypatch):
+    """호출부는 백엔드를 모른다 — items 하나와 meta만 받는다."""
+    monkeypatch.setattr(cn_search, "_CHAIN", {
+        "xiaohongshu": [lambda k, n: [{"platform": "xiaohongshu", "url": "x", "title": "a"}]],
+        "douyin": [lambda k, n: [{"platform": "douyin", "url": "d", "title": "b"}]],
+    })
+    res = cn_search.search("蒜泥保存", max_results=8)
+    assert res["count"] == 2
+    assert {i["platform"] for i in res["items"]} == {"xiaohongshu", "douyin"}
+    assert res["meta"]["xiaohongshu"]["n"] == 1
+
+
+def test_search_empty_keyword_short_circuits():
+    """빈 검색어로 백엔드를 부르지 않는다(헛돈 방지)."""
+    res = cn_search.search("   ")
+    assert res["count"] == 0
+    assert res["items"] == []
+    assert res["meta"] == {}
+
+
+def test_search_one_platform_failing_does_not_kill_other(monkeypatch):
+    """한 플랫폼이 통째로 죽어도 다른 플랫폼 결과는 살아남는다."""
+    def boom(k, n):
+        raise RuntimeError("down")
+
+    monkeypatch.setattr(cn_search, "_CHAIN", {
+        "xiaohongshu": [lambda k, n: [{"platform": "xiaohongshu", "url": "x", "title": "a"}]],
+        "douyin": [boom],
+    })
+    res = cn_search.search("kw")
+    assert res["count"] == 1
+    assert res["meta"]["douyin"]["backend"] is None
