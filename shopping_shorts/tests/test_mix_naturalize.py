@@ -3,9 +3,17 @@ from shopping_shorts import mix_pipeline
 
 def test_beat_tts_applies_naturalize_and_continuity(monkeypatch, tmp_path):
     """_synthesize_beats가 각 비트에 naturalize 적용 + previous/next_text 전달."""
-    seen = []
+    # ★비트별로 **키를 붙여** 담는다(2026-08-17). 예전엔 리스트에 append하고
+    #   seen[0]을 "첫째"라고 단정했는데, _synthesize_beats는 ThreadPoolExecutor
+    #   (max_workers=config.TTS_MAX_WORKERS=3)로 **병렬** 실행한다 — CPU가 붐비면
+    #   둘째가 먼저 스텁에 닿아 순서가 뒤집힌다. 그래서 전체 스위트에서만 가끔
+    #   빨간 줄이 떴다(단독 12회는 전부 통과 — 한가하면 거의 순서대로 도니까).
+    #   검사하려는 것은 순서가 아니라 "각 비트에 무엇이 전달됐나"이므로 원문으로 찾는다.
+    seen = {}
     def fake_synth_best(text, out_path, **kw):
-        seen.append({"text": text, "prev": kw.get("previous_text"), "next": kw.get("next_text")})
+        # naturalize 스텁이 "N:"을 붙이므로 떼어내면 그 비트의 원문이 키가 된다
+        seen[text.removeprefix("N:")] = {
+            "text": text, "prev": kw.get("previous_text"), "next": kw.get("next_text")}
         open(out_path, "wb").write(b"x")
         return out_path
     monkeypatch.setattr(mix_pipeline.tts, "synthesize_best", fake_synth_best)
@@ -19,9 +27,10 @@ def test_beat_tts_applies_naturalize_and_continuity(monkeypatch, tmp_path):
     voice = {"voice_id": "v", "settings": None, "speed": 1.0, "silence_trim": "off",
              "naturalize_profile": {"n_best": 1, "seed": 5}}
     mix_pipeline._synthesize_beats(beats, tmp_path, voice=voice)
-    assert seen[0]["text"] == "N:첫째"           # naturalize 적용됨
-    assert seen[0]["next"] == "둘째"             # 다음 비트 원문이 next_text
-    assert seen[1]["prev"] == "첫째"             # 이전 비트 원문이 previous_text
+    assert set(seen) == {"첫째", "둘째"}          # 두 비트 다 합성됨(순서는 안 본다)
+    assert seen["첫째"]["text"] == "N:첫째"       # naturalize 적용됨
+    assert seen["첫째"]["next"] == "둘째"         # 다음 비트 원문이 next_text
+    assert seen["둘째"]["prev"] == "첫째"         # 이전 비트 원문이 previous_text
     import os
     # 파일명은 내용해시 키잉(beat_0_{hash}.mp3) — 후보 스위치 시 음성 교차오염 방지(2026-07-27)
     assert os.path.basename(beats[0]["tts_path"]).startswith("beat_0_")
