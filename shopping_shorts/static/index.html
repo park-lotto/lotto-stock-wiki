@@ -2030,10 +2030,15 @@ function _embedInstagram(el, shortcode){
 function playInstagram(img, shortcode){ _playViaMedia(img, shortcode, 'instagram', _embedInstagram); }
 // ── 렌즈 유사영상 발굴(2026-07-14) ──────────────────────
 // 재생중/멈춘 <video>의 현재 프레임을 canvas 캡처 → 구글렌즈 → 5플랫폼 유사영상.
+// 표시 순서 = 정확도 순(2026-08-16 사장님). 인스타가 매번 가장 정확하고,
+// 유튜브는 렌즈가 2건 남짓만 주므로 맨 뒤. 칩 순서와 카드 정렬을 같은 배열로 맞춘다
+// — 두 곳에 따로 적으면 언젠가 어긋난다(CLAUDE.md 0순위-B).
 const LENS_PLATFORMS=[
-  {k:'youtube',label:'▶️ 유튜브'},{k:'tiktok',label:'🎵 틱톡'},
-  {k:'instagram',label:'📷 인스타'},{k:'xiaohongshu',label:'📕 샤오홍슈'},
-  {k:'douyin',label:'🎶 도우인'}];
+  {k:'instagram',label:'📷 인스타'},{k:'tiktok',label:'🎵 틱톡'},
+  {k:'xiaohongshu',label:'📕 샤오홍슈'},{k:'douyin',label:'🎶 도우인'},
+  {k:'youtube',label:'▶️ 유튜브'}];
+// 카드 정렬용 우선순위 — ★위 배열에서 자동 생성한다(손으로 또 적지 않는다).
+const _LENS_ORDER=Object.fromEntries(LENS_PLATFORMS.map((p,i)=>[p.k,i]));
 let LENS_STATE={};   // shortcode → {items, on:Set, saved:Set}
 // 짧고 안정적인(같은 url→같은 값) 해시 — 담기 바구니 합성키용. 암호학적 용도 아님.
 function _lensHash(s){
@@ -2074,17 +2079,23 @@ async function lensSearch(btn, shortcode){
   const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.85));
   const srcItem=findItem(shortcode);
   const caption=(srcItem && srcItem.caption) || '';
-  // ★ 상태를 **먼저** 만들고 비전 두 갈래(유튜브·중국앱 검색어)를 즉시 쏜다 (2026-08-16).
+  // ★ 상태를 **먼저** 만들고 중국앱 검색어 비전을 즉시 쏜다 (2026-08-16).
   //   예전엔 /api/lens/search(5~15초)와 /api/mix/basket이 끝나야 비로소 발사해서,
   //   샤오홍슈·틱톡·도우인 검색어 버튼이 20초쯤 뒤에야 떴다(사장님 제보).
-  //   이제 셋이 동시에 출발하고 **먼저 오는 것부터** 화면에 합류한다.
+  //   이제 동시에 출발하고 **먼저 오는 것부터** 화면에 합류한다.
   //   렌즈 결과는 나중에 st.items로 밀어넣는다 — 담기키(savesc) 기준 중복 제거라 순서 무관.
+  //
+  // ★유튜브 키워드 자동합류(fetchLensYt)는 **폐지**했다 (2026-08-16 사장님).
+  //   렌즈는 "화면이 시각적으로 닮은 것"을 찾는 자리인데, 그건 제품명 한 단어로
+  //   유튜브 제목을 검색하는 것이라 성격이 달랐다 — 그래서 유튜브만 40여 개가
+  //   주제 흩어진 채 쏟아졌다. 이제 유튜브는 **구글렌즈가 실제로 물어온 것만** 뜬다
+  //   (실측: 렌즈 원본 60건 중 유튜브 2건 — 적지만 그게 진짜 닮은 것이다).
+  //   함수 자체는 아래에 남겨둔다(되살릴 때 대비). 서버의 /api/lens/yt도 그대로다.
   LENS_STATE[shortcode]={items:[], on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved:new Set(),
                          sel:new Set(), shortsOnly:false, foreignOnly:false, videoOnly:true, hideOfftopic:false,
-                         ytLoading:true, lensLoading:true, lensErr:'', keyword:'', caption,
+                         ytLoading:false, lensLoading:true, lensErr:'', keyword:'', caption,
                          cnCands:[], frameBlob:blob, cnLoading:true, diag:null};
   renderLens(shortcode);
-  fetchLensYt(shortcode, caption, blob);            // ▶️ 유튜브 무료 키워드 자동합류(비동기)
   fetchLensCnKeywords(shortcode, caption, blob);    // 📕🎬 중국앱 후보 검색어 자동합류(비동기)
   // 담김 표시용 바구니도 병렬로 — 늦게 와도 재렌더로 체크가 채워진다.
   fetch('/api/mix/basket').then(r=>r.json()).then(d=>{
@@ -2234,6 +2245,35 @@ async function lensExpandKeyword(shortcode){
     const st3=LENS_STATE[shortcode]; if(st3) st3.cnLoading=false;
     const root=document.getElementById('lensRoot');
     if(root && root.dataset.sc===shortcode) renderLens(shortcode);
+  }
+}
+// 📕🎬 인앱 CN 검색(2026-08-17) — 후보를 눌러도 **페이지를 떠나지 않는다**.
+// 서버 cn_search가 무료(Playwright)를 먼저 쓰고 0건일 때만 Apify로 폴백하므로
+// 프론트는 어느 백엔드가 돌았는지 몰라도 된다(meta로 비용만 표시).
+// ★zh를 onclick 문자열에 직접 박지 않고 cnCands 배열 인덱스만 넘긴다 — zh는 이 파일에서
+//   esc() 없이 그대로 렌더되는 원문(따옴표 포함 가능)이라 인라인 문자열 인자로 넘기면
+//   onclick="...('...')" 따옴표 충돌로 깨질 수 있다(2026-07-19 zh 이스케이프 사고와 같은 종류).
+async function lensCnSearch(shortcode, idx){
+  const st=LENS_STATE[shortcode]; if(!st || st.cnSearching) return;
+  const cand=(st.cnCands||[])[idx]; const zh=cand && cand.zh; if(!zh) return;
+  st.cnSearching=true; st.cnSearchKw=zh; _lensRerender(shortcode);
+  try{
+    const fd=new FormData();
+    fd.append('keyword', zh);
+    fd.append('max_results', 8);
+    const d=await (await fetch('/api/lens/cn/search',{method:'POST',body:fd})).json();
+    const st2=LENS_STATE[shortcode]; if(!st2) return;
+    const got=(d.items||[]);
+    // 렌즈 결과와 같은 담기키 규칙(savesc)을 붙여야 선택·담기·중복제거가 동일하게 동작한다
+    // (형제 fetchLensYt·lensSearch와 같은 규약).
+    got.forEach(i=>{ if(!i.savesc) i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); });
+    const have=new Set((st2.items||[]).map(i=>i.savesc));
+    st2.items.push(...got.filter(i=>i.savesc && !have.has(i.savesc)));
+    st2.cnCost=(d.meta&&Object.values(d.meta).reduce((a,m)=>a+((m&&m.cost_usd)||0),0))||0;
+  }catch(e){ /* 실패해도 렌즈 나머지는 정상 */ }
+  finally{
+    const st3=LENS_STATE[shortcode]; if(st3) st3.cnSearching=false;
+    _lensRerender(shortcode);   // 형제 fetchLensYt·fetchLensCnKeywords와 동일한 늦은응답 가드
   }
 }
 // 🔄 다른 검색어 — 같은 프레임으로 비전에 다시 묻되 '이미 본 것 빼고'를 넘긴다.
@@ -2553,6 +2593,11 @@ function renderLens(shortcode){
   // 죽은 링크(oEmbed 404 = 삭제·비공개) — 열면 엉뚱한 피드로 떨어져 항상 가린다(2026-08-03).
   shown=shown.filter(i=>i.link_ok!==false);
   if(st.hideOfftopic) shown=shown.filter(i=>i.match!==false);
+  // ★플랫폼 정렬 — 인스타 → 틱톡 → 샤오홍슈 → 도우인 → 유튜브 (2026-08-16 사장님).
+  //   실측상 인스타가 가장 정확도가 높고(렌즈가 물어온 것 중 개별 릴스),
+  //   유튜브는 렌즈가 2건 정도만 주므로 맨 뒤로 보낸다.
+  //   같은 플랫폼 안에서는 원래 순서(렌즈 유사도순)를 유지한다 — sort는 안정정렬이다.
+  shown=shown.slice().sort((a,b)=>(_LENS_ORDER[a.platform]??9)-(_LENS_ORDER[b.platform]??9));
   const nPhoto=st.items.filter(i=>st.on.has(i.platform) && i.is_photo===true).length;
   const nOff=st.items.filter(i=>st.on.has(i.platform) && i.match===false).length;
   st._shown=shown;
@@ -2598,8 +2643,10 @@ function renderLens(shortcode){
         ${st.frameBlob?`<button onclick="lensMoreCnKeywords('${shortcode}')" ${st.cnLoading?'disabled':''} title="같은 장면으로 다른 각도의 검색어를 더 뽑습니다(이미 나온 건 빼고 아래에 쌓입니다). 무료 — 추가 비용 없음" style="${btnCss};border-color:var(--accent);color:var(--accent)">${st.cnLoading?'⏳ 뽑는 중…':'🔄 다른 검색어 더'}</button>`:''}
         ${st.cnNoNew?'<span style="font-size:11px;color:var(--sub)">더 나올 게 없어요 — 이 장면에서 뽑을 각도는 다 나왔습니다</span>':''}
       </div>
+      ${st.cnSearching?`<div style="font-size:11px;color:var(--sub);margin:4px 0">🔎 ${esc(st.cnSearchKw||'')} 검색 중… (10~30초)</div>`:''}
+      ${(!st.cnSearching&&st.cnCost!=null)?`<div style="font-size:11px;color:var(--sub);margin:4px 0">${st.cnCost>0?('이번 검색 $'+st.cnCost.toFixed(3)):'무료 검색'}</div>`:''}
       <div style="display:flex;flex-direction:column;gap:6px">
-        ${(st.cnCands||[]).map(c=>{
+        ${(st.cnCands||[]).map((c,idx)=>{
           // 샤오훙슈 검색은 로그아웃 방문자를 로그인으로 막는다(登录后查看搜索结果). 해외판
           // rednote.com 검색은 같은 결과를 로그인 벽 없이 보여준다(2026-07-19 실측). 빌더·백엔드는
           // 그대로 두고 '여는 링크'만 _openUrl로 rednote 치환. 도우인은 해외판 없어 그대로.
@@ -2613,8 +2660,9 @@ function renderLens(shortcode){
           return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <div style="min-width:120px"><div style="font-size:14px;font-weight:600">${kw}</div>
               <div style="font-size:11px;color:var(--sub)">${c.zh||''}</div></div>
-            ${c.zh?`<a href="${xhs}" target="_blank" rel="noopener" style="${lnk}">📕 샤오홍슈</a>
-            <a href="${dy}" target="_blank" rel="noopener" style="${lnk}">🎬 도우인</a>`:''}
+            ${c.zh?`<button onclick="lensCnSearch('${shortcode}',${idx})" ${st.cnSearching?'disabled':''} title="샤오홍슈·도우인 결과를 이 페이지 안에 카드로 바로 불러옵니다(외부 이동 없음)" style="${lnk};cursor:pointer;border:1px solid var(--line);background:transparent">📕🎬 여기서 찾기</button>
+            <a href="${xhs}" target="_blank" rel="noopener" title="샤오홍슈 사이트에서 열기" style="${lnk};opacity:.6">↗</a>
+            <a href="${dy}" target="_blank" rel="noopener" title="도우인 사이트에서 열기" style="${lnk};opacity:.6">↗</a>`:''}
             ${kw?`<a href="${tk}" target="_blank" rel="noopener" style="${lnk}">🎵 틱톡</a>
             <a href="${ig}" target="_blank" rel="noopener" title="인스타는 '${_igKw(kw)}'로 엽니다 — 지어낸 조합은 결과가 0건이라 실제 쓰는 말로 줄입니다" style="${lnk}">📷 인스타</a>
             ${_igShortKw(kw)?`<a href="${_lensSearchUrl('instagram', _igShortKw(kw))}" target="_blank" rel="noopener" title="인스타에서 결과가 없을 때 — '${_igShortKw(kw)}' 한 단어로 넓게 봅니다" style="${lnk};opacity:.75">📷 짧게</a>`:''}`:''}</div>`;

@@ -55,7 +55,7 @@ from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, 
                                           _source_video_id, resynth_tts_job, resynth_one_beat,
                                           run_clean_sources, _resolve_sources)
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
-from shopping_shorts import douyin_search, xiaohongshu_search
+from shopping_shorts import cn_search, douyin_search, xiaohongshu_search
 from shopping_shorts import youtube_search
 from shopping_shorts.config import APIFY_TOKENS
 from shopping_shorts.media_download import (resolve_media_url, download_any, probe_grab_meta,
@@ -3750,7 +3750,12 @@ def api_mix_scene_lab_fill(job_id: str, body: dict):
         # 음성이 아직 없으면 tts 실길이가 None이다 — 그때는 계획 길이로 대신한다.
         _caps, _tts = _lab_captions(job["edit_plan"])
         need = (_tts or {}).get(str(bi)) or beats[bi].get("target_seconds")
-    picks = _edit_plan.fill_beat_scenes(narration, need, seg_map, pool, taken_ids=sorted(taken))
+    # ★칸의 역할(훅·CTA·결과…)을 함께 넘긴다(2026-08-17 사장님 "훅부터 기준이 뭘로 한 건지").
+    #   대사만으로는 감정·상황을 말하는 훅에 아무 화면이나 붙는다 — 역할을 알아야
+    #   "훅엔 시선 끄는 완성품"처럼 고를 수 있다(edit_plan._ROLE_WANT_SHOTS).
+    picks = _edit_plan.fill_beat_scenes(narration, need, seg_map, pool,
+                                        taken_ids=sorted(taken),
+                                        role=beats[bi].get("role") or "")
     return {"ok": True, "picks": picks}
 
 
@@ -3940,6 +3945,63 @@ def api_mix_tts_regen(job_id: str, beat_idx: int, body: dict, background_tasks: 
             override[k] = body.get(k)
     background_tasks.add_task(resynth_one_beat, job_id, beat_idx, override, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True}
+
+
+@app.post("/api/mix/scene_lab/{job_id}/narration/{beat_idx}")
+def api_mix_scene_lab_narration(job_id: str, beat_idx: int, body: dict,
+                                background_tasks: BackgroundTasks):
+    """3단계(장면 편집)에서 **대본을 그 자리에서 고친다** — 2026-08-17 사장님
+    "3단계에서 대본 몇 글자 수정하려고 2단계로 갔다 오는 방법밖에 없나".
+
+    없어서 못 하던 게 아니라 **저장할 곳이 없었다**: 화면(scene_lab.html)엔 편집 장치가
+    다 있었는데(NARR/editNarr/retts) 라이브에선 `SL.server`로 잠겨 있었고, 안내는
+    "① 새 대본 고르기에서"를 가리키는데 그 UI는 9단계 개편에서 display:none 이 됐다
+    (produce.html `#mixScriptPick`). 즉 앱 어디에서도 대본을 못 고치는 상태였다.
+
+    ★새로 만든 건 이 저장구멍 하나뿐이다. 음성·자막 재생성은 **이미 있는**
+    `resynth_one_beat`을 그대로 쓴다(그 함수가 beat["narration"]을 읽어 TTS를 다시 만들고
+    cap_durs·cap_lead·tts_ver까지 갱신한다). 자막 분할을 여기서 다시 계산하지 않는다 —
+    두 벌이 되면 렌더와 반드시 어긋난다(0순위-B).
+
+    body = {"text": "고친 대본", "regen": true}
+      regen=false면 문장만 저장한다(음성은 옛것 → 자막·소리가 어긋난 채로 남으므로
+      화면이 경고를 띄운다). 기본은 True — 고쳤으면 다시 뽑는 게 정상 흐름이다.
+    """
+    text = (body.get("text") or "").strip()
+    if not text:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "대본이 비었어요"})
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    # /apply·tts_regen과 **같은 가드**. 진행 중 잡의 대본을 바꾸면 만들던 음성과 어긋난다.
+    if job.get("status") in _MIX_ACTIVE_STAGES + ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409,
+                            content={"ok": False, "error": "생성·렌더 중에는 대본을 고칠 수 없어요"})
+    plan = job["edit_plan"]
+    beat = next((b for b in plan["beats"] if b["beat_idx"] == beat_idx), None)
+    if beat is None:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "비트 없음"})
+    if text == (beat.get("narration") or "").strip():
+        return {"ok": True, "unchanged": True}
+    beat["narration"] = text
+    # ★대본이 바뀌면 옛 문장 기준으로 계산된 자막 타이밍은 **전부 무효**다. 지워야
+    #   _lab_captions·렌더가 새 문장으로 다시 계산한다(안 지우면 옛 구절 수에 맞춰
+    #   zip이 잘려 자막이 중간에서 끊긴다).
+    beat["cap_durs"] = None
+    beat["cap_lead"] = 0.0
+    # AI가 미리 끊어준 호흡 줄도 옛 문장 것이라 버린다 — 안 버리면 _caption_segments가
+    # preset을 대조(공백 무시 일치)에서 떨어뜨려 조용히 규칙 폴백으로 내려간다.
+    beat["caption_lines"] = None
+    store.update_mix_job(job_id, edit_plan=plan)
+    if body.get("regen") is False:
+        return {"ok": True, "saved": True, "regen": False}
+    # 음성·자막 다시 뽑기 = 이미 있는 경로. voice는 job 스냅샷을 그대로 물려준다
+    # (통째로 새 dict를 만들면 이 비트만 소리가 달라진다 — tts_regen 주석과 같은 이유).
+    background_tasks.add_task(resynth_one_beat, job_id, beat_idx,
+                              dict(job.get("voice") or {}), DB_PATH, _MIX_WORK_DIR)
+    return {"ok": True, "saved": True, "regen": True,
+            "tts_ver": beat.get("tts_ver") or 0}
 
 
 @app.post("/api/mix/caption_offset/{job_id}/{beat_idx}")
@@ -5348,30 +5410,20 @@ async def api_lens_kw_expand(request: Request, keyword: str = Form(""),
 @app.post("/api/lens/cn/search")
 async def api_lens_cn_search(request: Request, keyword: str = Form(""),
                               max_results: int = Form(8)):
-    """중국어 검색어 1개 → 샤오홍슈+도우인 병렬 검색. Gemini 안 부름(후보는 사람이 고름).
-    프론트가 후보 버튼 클릭 시 호출한다(2026-07-19)."""
+    """중국어 검색어 1개 → 샤오홍슈+도우인. **백엔드는 cn_search가 정한다**
+    (Playwright 무료 우선 → 0건이면 Apify 폴백). 2026-08-17 통합.
+
+    프론트는 어느 백엔드가 돌았는지 몰라도 되고, meta로 비용만 표시한다."""
     kw = (keyword or "").strip()
     if not kw:
-        return {"ok": True, "items": [], "count": 0, "keyword": ""}
-    if not APIFY_TOKENS:
-        return {"ok": True, "items": [], "count": 0, "keyword": kw, "note": "APIFY 토큰 없음"}
+        return {"ok": True, "items": [], "count": 0, "keyword": "", "meta": {}}
     n = max(1, min(int(max_results or 8), 60))
-
-    def _run(platform, mod):
-        try:
-            rows = mod.search(kw, max_results=n)
-        except Exception:
-            return []
-        for r in rows:
-            r["platform"] = platform
-            r["match"] = None
-        return rows
-
-    with ThreadPoolExecutor(max_workers=2) as ex:
-        fx = ex.submit(_run, "xiaohongshu", xiaohongshu_search)
-        fd = ex.submit(_run, "douyin", douyin_search)
-        items = fx.result() + fd.result()
-    return {"ok": True, "items": items, "count": len(items), "keyword": kw}
+    # ★to_thread 필수 — 백엔드가 Playwright·Apify를 **블로킹**으로 부른다.
+    #   안 하면 이벤트루프가 막혀 다른 렌즈 요청이 전부 굶는다(/api/lens/yt와 같은 이유).
+    res = await asyncio.to_thread(cn_search.search, kw, n)
+    for r in res["items"]:
+        r["match"] = None          # 렌즈 카드 계약(제목 매칭은 프론트가 안 씀)
+    return {"ok": True, **res}
 
 
 @app.post("/api/lens/yt")
@@ -8066,6 +8118,23 @@ def api_produce_works_get(request: Request, work_id: str):
                         "subtitle_removal": job.get("subtitle_removal")}
     return {"ok": True, "state": w["state"], "job_id": w["job_id"], "step": w["step"],
             "settings": settings}
+
+
+@app.post("/api/produce/works/{work_id}/rename")
+def api_produce_works_rename(request: Request, work_id: str, body: dict):
+    # 작업 이름 바꾸기(2026-08-17) — 목록이 '(제목 없음)' 투성이라 구분이 안 됐다.
+    # ★제목 계산은 store._work_title 한 곳에만 있다(0순위-B). 여기선 이름을 넘길 뿐이다.
+    #   빈 문자열이면 직접 지은 이름을 지워 자동 제목(대본 앞 20자)으로 되돌린다 —
+    #   그래서 name이 없다고 422로 막지 않는다(그게 '해제' 경로다).
+    name = body.get("name")
+    if name is not None and not isinstance(name, str):
+        # ★타입을 확인하고 부른다 — dict가 와서 .strip()이 500을 내던 사고가 이 앱에서
+        #   이미 세 번 났다(handoff/장면라벨.md). 모르는 모양이면 받지 않는다.
+        return JSONResponse(status_code=422, content={"ok": False, "error": "name은 문자열"})
+    title = Store(DB_PATH).rename_produce_work(work_id, name or "", customer_id=_cid(request))
+    if title is None:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    return {"ok": True, "title": title}
 
 
 @app.post("/api/produce/works/{work_id}/delete")

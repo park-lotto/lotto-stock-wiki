@@ -8,7 +8,7 @@ import re
 import time
 import requests
 from concurrent.futures import ThreadPoolExecutor
-from urllib.parse import urlparse, quote
+from urllib.parse import urlparse, quote, parse_qs
 from shopping_shorts import serpapi_client
 from shopping_shorts.config import SERPAPI_KEY, SERPAPI_KEYS
 
@@ -218,32 +218,59 @@ def verify_matches(items, keywords=None):
     return items
 
 
-def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=None, stats=None):
-    """공개 이미지 URL → [{platform, url, title, thumbnail, match}]. 5개 동영상 플랫폼만.
-    키 없음·호출 실패 시 [].
+# 렌즈 호출 로케일. ko=한국어 자막판, en=자막 없는 해외 원본(2026-08-16 실측).
+# 환경변수로 줄이거나 늘릴 수 있다 — SerpApi를 로케일당 1회씩 쓴다.
+#   LENS_LOCALES="ko:kr"        → 예전처럼 1회만(한도 아낄 때)
+#   LENS_LOCALES="ko:kr,en:us"  → 기본값
+_LENS_LOCALES = tuple(
+    tuple((p.split(":", 1) + ["kr"])[:2])
+    for p in os.environ.get("LENS_LOCALES", "ko:kr,en:us").split(",") if p.strip()
+) or (("ko", "kr"),)
 
-    match: source_caption 키워드가 결과 제목에 있으면 True, 있는데 없으면 False,
-    (캡션 없음 등으로) 판정 자체가 불가하면 None. 렌즈는 시각 유사도만 보기 때문에
-    장르는 같지만 다른 주제인 결과가 섞이는 문제(2026-07-14 실측)를 프론트에서
-    표시용으로 구분하기 위함 — 결과를 제거하진 않는다(교차언어 플랫폼은 매칭 불가라
-    False가 나올 수 있어 하드 필터링하면 회수율이 떨어짐)."""
-    keys = [api_key] if api_key else (SERPAPI_KEYS or ([SERPAPI_KEY] if SERPAPI_KEY else []))
-    if not keys:
-        return []
-    keywords = _extract_keywords(source_caption)
-    # 파라미터가 결과를 좌우한다(2026-07-14 라이브 실측, 6프레임 대조):
-    #   type=visual_matches (별도 엔드포인트) → 많은 프레임에서 0개("no results")
-    #   type 없는 기본 all모드 + hl=ko&country=kr → 모든 프레임 59~60개 ✅
-    # 즉 type=visual_matches를 넣으면 오히려 깨진다. all모드 응답의 visual_matches를 쓴다.
-    # 로케일(hl=ko&country=kr)은 한국 콘텐츠 매칭에 필요. 드물게 첫 호출이 비면 재시도.
-    #
-    # 키 로테이션(2026-07-26): 현재 키가 월 무료한도(100회)를 소진하면(429 등) 다음
-    # 키로 넘어간다. 소진이 아닌 진짜 빈 결과("no results")는 같은 키로 재시도(_MAX_ATTEMPTS)
-    # 해야 하므로, 인덱싱 재시도는 키별 안쪽 루프로 돈다.
-    matches = []
+# 구글렌즈 응답에서 결과가 들어오는 리스트들.
+# ★visual_matches만 읽다가 40%를 버리고 있었다(2026-08-16 실측):
+#     visual_matches  60건 → 인7 틱6 유6
+#     organic_results  8건 → 인3 틱2 유0   ← 안 읽었음
+#     short_videos    10건 → 인2 틱3 유4   ← 안 읽었음(숏폼 전용인데!)
+#   합치면 인12 틱11 유10 = 19건→33건. **추가 비용 0원**(이미 받은 응답이다).
+#   "유튜브·틱톡이 렌즈로 안 나온다"의 진짜 원인이 이것이었다.
+_RESULT_FIELDS = ("visual_matches", "organic_results", "short_videos")
+
+
+def _dedup_key(link):
+    """같은 영상인지 판정할 키. 로케일 2벌·필드 3개를 합치므로 중복이 반드시 생긴다.
+
+    ⚠️ 쿼리스트링을 무조건 버리면 **유튜브가 뭉개진다** — 유튜브는 영상 ID가
+       경로가 아니라 쿼리(`/watch?v=XXX`)에 있어서, ?앞만 자르면 서로 다른
+       영상이 전부 'youtube.com/watch'라는 같은 키가 돼 1개만 남는다
+       (2026-08-16 테스트가 잡아냄 — 라이브에 나갔으면 유튜브가 1개로 보였다).
+       그래서 유튜브만 v 파라미터를 키에 포함한다."""
+    if not link:
+        return ""
+    parsed = urlparse(link)
+    base = f"{parsed.netloc}{parsed.path}".rstrip("/").lower()
+    if _platform_of(link) == "youtube":
+        vid = parse_qs(parsed.query).get("v", [""])[0]
+        if vid:
+            return f"{base}?v={vid}"
+        # youtu.be/XXX·/shorts/XXX 는 경로에 ID가 있어 base로 충분
+    return base
+
+
+def _lens_call(image_url, keys, hl, country, timeout):
+    """로케일 1개로 구글렌즈 1회 호출 → 결과 dict 리스트(필드 3개 합침).
+
+    키 로테이션(2026-07-26): 현재 키가 월 한도를 소진하면(429 등) 다음 키로 넘어간다.
+    소진이 아닌 진짜 빈 결과("no results")는 같은 키로 재시도(_MAX_ATTEMPTS) — 갓
+    호스팅된 이미지가 인덱싱될 시간을 준다. 그래서 재시도는 키별 안쪽 루프로 돈다.
+
+    파라미터가 결과를 좌우한다(2026-07-14 라이브 실측, 6프레임 대조):
+      type=visual_matches (별도 엔드포인트) → 많은 프레임에서 0개("no results")
+      type 없는 기본 all모드 → 모든 프레임 59~60개 ✅
+    즉 type을 넣으면 오히려 깨진다. all모드 응답에서 필드들을 꺼내 쓴다."""
     for key in keys:
-        params = {"engine": "google_lens",
-                  "hl": "ko", "country": "kr", "url": image_url, "api_key": key}
+        params = {"engine": "google_lens", "hl": hl, "country": country,
+                  "url": image_url, "api_key": key}
         exhausted = False
         for attempt in range(_MAX_ATTEMPTS):
             try:
@@ -258,14 +285,48 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
                 r.raise_for_status()
             except requests.RequestException:
                 return []
-            matches = data.get("visual_matches") or []
-            if matches:
-                break
+            out = []
+            for field in _RESULT_FIELDS:
+                v = data.get(field)
+                if isinstance(v, list):
+                    out.extend(m for m in v if isinstance(m, dict))
+            if out:
+                return out
             if attempt < _MAX_ATTEMPTS - 1:
                 time.sleep(_RETRY_SLEEP)   # 인덱싱 대기 후 재시도
         if exhausted:
             continue                       # 다음 키로
-        break                              # 이 키로 처리 완료(결과 유무 무관)
+        return []                          # 이 키로 처리 완료(결과 없음)
+    return []
+
+
+def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=None, stats=None):
+    """공개 이미지 URL → [{platform, url, title, thumbnail, match}]. 5개 동영상 플랫폼만.
+    키 없음·호출 실패 시 [].
+
+    match: source_caption 키워드가 결과 제목에 있으면 True, 있는데 없으면 False,
+    (캡션 없음 등으로) 판정 자체가 불가하면 None. 렌즈는 시각 유사도만 보기 때문에
+    장르는 같지만 다른 주제인 결과가 섞이는 문제(2026-07-14 실측)를 프론트에서
+    표시용으로 구분하기 위함 — 결과를 제거하진 않는다(교차언어 플랫폼은 매칭 불가라
+    False가 나올 수 있어 하드 필터링하면 회수율이 떨어짐)."""
+    keys = [api_key] if api_key else (SERPAPI_KEYS or ([SERPAPI_KEY] if SERPAPI_KEY else []))
+    if not keys:
+        return []
+    keywords = _extract_keywords(source_caption)
+
+    # ★로케일 2벌(2026-08-16 사장님 "다른 프로그램은 자막없는 원본을 가져온다").
+    #   ko/kr만 쓰면 **한국어 자막판**만 올라온다. en/us는 같은 이미지에 대해
+    #   거의 겹치지 않는 **해외 원본**을 준다 — 라이브 실측 2장:
+    #     이미지1  ko 19건(한글제목16) / en 16건(한글1·그외14) → 합집합 34건
+    #     이미지2  ko 15건(한글8)      / en 24건(한글0·그외24) → 합집합 38건
+    #   겹침이 1건 남짓이라 합치면 결과가 두 배가 된다. 대신 SerpApi를 로케일당
+    #   1회씩 쓴다(렌즈 1번 = 2회 차감). 아래 _LENS_LOCALES로 조절 가능.
+    matches = []
+    for hl, country in _LENS_LOCALES:
+        got = _lens_call(image_url, keys, hl, country, timeout)
+        matches.extend(got)
+        if stats is not None and isinstance(stats, dict):
+            stats[f"raw_{hl}"] = len(got)
     # ★인스타 편차 계측(2026-08-14 사장님 "인스타는 0건이거나 왕창이거나 편차가 심하다").
     #   추측하지 않으려면 어디서 사라지는지 세야 한다. 렌즈 원본(visual_matches) 중
     #   인스타 링크가 몇 개였고, 그중 몇 개가 개별 게시물이 아니라(프로필·/explore·
@@ -277,24 +338,37 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
     st["ig_dropped_not_post"] = 0
     st["ig_photo"] = 0
     out = []
+    # ★중복 제거 — 로케일 2벌 + 필드 3개를 합치므로 같은 영상이 여러 번 올라온다.
+    #   URL 기준(쿼리스트링 제외)으로 처음 것만 남긴다. 안 하면 화면에 같은 카드가
+    #   두 번씩 뜬다(ko/en이 같은 영상을 줄 때).
+    seen_urls = set()
     for m in matches:
-        platform = _platform_of(m.get("link"))
+        link = m.get("link") or ""
+        platform = _platform_of(link)
         if platform == "instagram":
             st["ig_raw"] += 1
-        if not platform or not _is_watchable(platform, m.get("link")):
+        if not platform or not _is_watchable(platform, link):
             if platform == "instagram":
                 st["ig_dropped_not_post"] += 1
             continue
-        if platform == "instagram" and is_photo_post(platform, m.get("link")):
+        key_url = _dedup_key(link)
+        if key_url in seen_urls:
+            continue
+        seen_urls.add(key_url)
+        if platform == "instagram" and is_photo_post(platform, link):
             st["ig_photo"] += 1
         title = m.get("title", "")
         out.append({
             "platform": platform,
-            "url": m.get("link", ""),
+            "url": link,
             "title": title,
+            # organic_results엔 thumbnail이 없다(실측) — 없으면 빈 문자열로 두고
+            # 프론트가 알아서 처리한다. 있는 필드(visual_matches·short_videos)는 그대로.
             "thumbnail": m.get("thumbnail", ""),
             "match": _title_matches(keywords, title),
             # 카드뉴스(사진) 후보 표시 — 프론트의 '🎬 영상만' 토글이 이걸로 가린다.
-            "is_photo": is_photo_post(platform, m.get("link")),
+            "is_photo": is_photo_post(platform, link),
         })
+    st["merged_total"] = len(matches)
+    st["after_dedup"] = len(out)
     return verify_matches(out, keywords=keywords)

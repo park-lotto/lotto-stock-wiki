@@ -109,9 +109,13 @@
     ".ss-work-bar{display:flex;gap:2px;margin-top:5px}" +
     ".ss-work-seg{flex:1;height:3px;border-radius:2px;background:var(--line,#1e2735)}" +
     ".ss-work-seg.on{background:var(--accent,#37e0bd)}" +
-    ".ss-work-del{flex-shrink:0;cursor:pointer;color:var(--sub,#8b98a9);opacity:0;padding:2px 4px;font-size:13px}" +
-    ".ss-work:hover .ss-work-del{opacity:.65}" +
+    // ✏ 이름수정·✕ 삭제 — 같은 자리·같은 hover 규칙(모양이 다르면 하나만 있는 줄 안다).
+    // ★모바일(터치)엔 hover가 없다 — 아래 @media에서 항상 보이게 한다.
+    ".ss-work-del,.ss-work-ren{flex-shrink:0;cursor:pointer;color:var(--sub,#8b98a9);opacity:0;padding:2px 4px;font-size:13px}" +
+    ".ss-work:hover .ss-work-del,.ss-work:hover .ss-work-ren{opacity:.65}" +
     ".ss-work-del:hover{opacity:1;color:#ff6b6b}" +
+    ".ss-work-ren:hover{opacity:1;color:var(--accent,#37e0bd)}" +
+    "@media(max-width:760px){.ss-work-del,.ss-work-ren{opacity:.65}}" +
     // 데스크톱: 상단 계정 카드에 '⚙️ 내 계정'이 있어 이 메뉴는 중복 → 숨김. 모바일은 카드가
     // 숨겨지므로(.ss-acct display:none) 이 메뉴를 노출한다(2026-07-24).
     "@media(min-width:761px){.ss-group-acct{display:none}}" +
@@ -237,6 +241,39 @@
       })
       .catch(function () { window.alert("삭제 실패"); });
   };
+  // 작업 이름 바꾸기(2026-08-17) — 사장님 "내 작업에 작업명 수정할수있게".
+  // 목록이 '(제목 없음)' 여러 줄이라 어느 게 뭔지 구분이 안 됐다(자동 제목은 대본 앞 20자인데,
+  // 대본을 아직 안 뽑은 작업은 재료가 없다).
+  // ★서버가 제목을 정한다(store._work_title) — 여기서 이름을 계산하지 않고 **응답을 받아 그린다**.
+  //   두 군데서 계산하면 반드시 어긋난다(CLAUDE.md 0순위-B).
+  window.__ssRenWork = function (ev, wid) {
+    if (ev && ev.stopPropagation) ev.stopPropagation();
+    var node = document.querySelector('.ss-work[data-wid="' + wid + '"]');
+    var nameEl = node ? node.querySelector(".ss-work-name") : null;
+    // 현재 이름을 기본값으로 넣어준다 — '· '는 화면 장식이라 뺀다.
+    var now = nameEl ? nameEl.textContent.replace(/^·\s*/, "") : "";
+    if (now === "(제목 없음)") now = "";
+    var next = window.prompt("작업 이름을 입력하세요 (비우면 대본 앞부분으로 자동)", now);
+    if (next === null) return;   // 취소 — 빈 문자열('')은 '자동으로 되돌리기'라 통과시킨다
+    fetch("/api/produce/works/" + encodeURIComponent(wid) + "/rename", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: next })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.ok) { window.alert("이름을 바꾸지 못했어요"); return; }
+        var t = d.title || "(제목 없음)";
+        if (nameEl) nameEl.textContent = "· " + t;
+        var open = node ? node.querySelector(".ss-work-open") : null;
+        if (open) open.title = t;
+        // ★지금 열려 있는 작업이면 제작소에도 알린다(2026-08-17). produce.html의 STATE는
+        //   title_manual을 모르는 채라, 다음 saveWork()가 그 필드 없는 state를 덮어써
+        //   **방금 지은 이름이 조용히 사라진다**. STATE에 심어 두면 이후 저장에도 실려 나간다.
+        //   훅이 없는 페이지(제작소 밖)에선 그냥 넘어간다 — 그 페이지엔 덮어쓸 STATE가 없다.
+        try { if (window.__ssApplyWorkTitle) window.__ssApplyWorkTitle(wid, next); } catch (e) {}
+      })
+      .catch(function () { window.alert("이름을 바꾸지 못했어요"); });
+  };
   // 제작소 작업파일 목록(2026-07-17) — 사장님 제보 "내일 다시 들어와도 기록남고 그대로".
   // T6(2026-07-19): /produce 전용 가드 제거 → 전 페이지 노출. 어느 화면에서도 진행 중 작업으로
   //   바로 복귀. 숫자 'N단계'는 7칸 미니 진행바로 바꿔 진척을 형태로 보인다.
@@ -268,6 +305,10 @@
              ' title="' + name + '">' +
              '<span class="ss-work-name">· ' + name + '</span>' +
              '<span class="ss-work-bar">' + bar + '</span></span>' +
+             '<span class="ss-work-ren" title="이름 바꾸기"' +
+             // ★U+FE0F(VS16)를 반드시 붙인다 — 맨 ✏(U+270F)는 윈도우 크롬에서 **옆으로 누운
+             //   막대**로 그려진다(실측 스크린샷으로 확인). 붙이면 제대로 된 연필이 된다.
+             " onclick=\"window.__ssRenWork(event,'" + esc(w.work_id) + "')\">✏️</span>" +
              '<span class="ss-work-del" title="이 작업 삭제"' +
              " onclick=\"window.__ssDelWork(event,'" + esc(w.work_id) + "')\">✕</span>" +
              "</div>";

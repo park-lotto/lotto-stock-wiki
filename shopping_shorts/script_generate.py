@@ -368,6 +368,10 @@ _BEAT_SCHEMA = {
 }
 
 BEAT_REGEN_TRIES = 2     # 틀 준수를 못 지켰을 때 다시 쓰는 횟수. generate_one_style과 같은 사상.
+# 한 칸이 원래 길이의 몇 배까지 허용되나. 표현을 바꾸면 길이는 자연히 출렁이므로 넉넉히 두되,
+# **대본 전체를 삼키는 폭주**(실측: 한 줄 훅 → 5줄)는 잡는다. 짧은 칸은 배수만으론 너무
+# 빡빡해서 `+40자`와 큰 쪽을 쓴다(20자 칸이 30자가 되는 건 정상이다).
+_BEAT_LEN_MAX = 1.8
 
 
 def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
@@ -444,7 +448,7 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
         #   소독해 버리면 AI가 `(가족)`을 그냥 괄호 낀 낱말로 읽어 채울 자리를 잃는다.
         #   `style_block`은 소독해도 됐다(거기는 "빈칸만 채워라"가 지시문에 따로 있다).
         #   format()에 안 태우고 **문자열로 이어붙이기만** 하므로 중괄호가 남아도 안전하다
-        #   (아래 base는 `_MIX_PROMPT.format(...)` 결과에 `+`로 붙인다 — 재포맷이 없다).
+        #   (아래 base는 어디서도 `.format()`을 부르지 않는다 — 재포맷이 없다).
         # ★틀을 하나만 고른 경우 "이 틀로 바꿔라"를 못 박는다(2026-08-17 실측).
         #   느슨하게 주니 모델이 **지금 칸에 이미 있던 다른 틀**("…욕 바가지로 먹을 뻔했어요")을
         #   그대로 유지하고 고른 틀을 무시했다 — 실측 4개 중 2개가 그랬다.
@@ -459,14 +463,25 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
             + "\n  틀의 **특징 어구**(예: '…한테 욕 바가지로 먹을 뻔했어요')는 살리되, "
               "앞머리와 살은 이 대본 소재에 맞게 새로 써라. 틀을 통째로 베끼지 마라.")
 
+    # ★`_MIX_PROMPT`를 쓰지 않는다(2026-08-17 사장님 제보로 수정 — 미끼 칸에 대본 전체가
+    #   들어갔다). 그 프롬프트는 **"약 30초 분량의 새 대본 초안을 만들어라 … 0초 훅 → …
+    #   → 끝 CTA"** 라고 지시하고 헌장(`_STORY_RULES_CORE`)에 CTA 규칙까지 들어 있다.
+    #   뒤에 "한 줄만 다시 쓴다"를 덧붙여도 **앞의 '대본 한 편을 써라'가 그대로 살아 있어서**
+    #   모델이 훅 칸 하나에 문제제기·시연·증거·CTA를 전부 담았다(실측: 5줄짜리 훅 +
+    #   아래 칸들과 내용 중복 + "댓글에 '카메라' 남겨주시면"까지).
+    #   ★한 칸만 쓸 때 필요한 것은 **재료(무엇에 대한 대본인가)뿐**이고, '대본을 통째로
+    #     써라'는 지시는 해롭다. 그래서 재료 블록만 직접 가져다 쓴다.
+    #   (`_style_extra`·`voice_block`·`facts_block`은 표현·사실 재료라 그대로 둔다)
     base = (
-        _MIX_PROMPT.format(sources=_mix_source_block((sources or [])[:3]),
-                           seconds=seconds, words=max(15, round(seconds * 2.3)), n=1,
-                           bank=("\n\n" + bank_context) if bank_context else "")
+        "너는 한국 쇼핑 숏폼 대본 작가다. 지금 **이미 완성된 대본 한 편**이 있고,\n"
+        "그중 **딱 한 칸(한두 문장)만** 다시 쓰는 일을 한다.\n"
+        "★새 대본을 쓰는 게 아니다. 훅부터 CTA까지 다 쓰지 마라 — **그 칸 하나만** 쓴다.\n\n"
+        "[이 대본의 재료 — 무엇에 대한 영상인지 알기 위한 참고자료다]\n"
+        + _mix_source_block((sources or [])[:3])
+        + (("\n\n" + bank_context) if bank_context else "")
         + _style_extra()
         + (("\n" + facts_block) if facts_block else "")
-        + "\n\n★★지금은 새 대본을 쓰는 게 아니다. 아래 대본에서 **'%s' 칸 한 줄만** 다시 쓴다.\n" % role
-        + "[현재 대본]\n" + "\n".join(ctx)
+        + "\n\n[현재 대본 — 이 중 ★표시한 칸 하나만 바꾼다]\n" + "\n".join(ctx)
         + "\n\n[다시 쓸 칸] role=\"%s\" — %s" % (role, bank_assemble._sanitize(descs.get(role, "")))
         + tmpl_line
         # ★"2~3문장씩"을 여기선 요구하지 않는다 — 그 지시는 대본 **전체**를 채울 때 것이고,
@@ -474,9 +489,12 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
         + (("\n★분량: **%d자 안팎**(지금 이 칸과 비슷한 길이로. 길게 늘이지 마라 — "
             "이 칸이 길어지면 대본 전체 호흡이 무너진다)." % per) if per else "")
         + bank_assemble.voice_block(style)
-        + "\n\n★다른 칸은 건드리지 마라. 앞뒤 칸과 자연스럽게 이어지되 **그 칸들이 이미 한 말을 "
-          "되풀이하지 마라**. 지금 이 칸에 적혀 있던 문장과도 **다르게** 써라.\n"
-          "출력은 {\"text\": \"...\"} 하나만. role은 돌려주지 마라."
+        + "\n\n★반드시 지켜라:\n"
+          "- **이 칸의 역할만** 하라. 다른 칸이 할 말(문제제기·시연·증거·CTA)을 여기에 끌어오지 마라.\n"
+          "- 앞뒤 칸이 **이미 한 말을 되풀이하지 마라**. 자연스럽게 이어지기만 하면 된다.\n"
+          "- 댓글 유도(CTA)는 마지막 칸 몫이다. 그 칸이 아니면 **CTA를 쓰지 마라**.\n"
+          "- 지금 이 칸에 적혀 있던 문장과도 **다르게** 써라.\n"
+          "출력은 {\"text\": \"...\"} 하나만. 그 칸의 대사만 넣어라. role은 돌려주지 마라."
     )
 
     extra, tries, out = "", [], ""
@@ -493,10 +511,19 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
         #   눌렀는데 한 글자도 안 바뀌면 화면상 '먹통'이다 — 기능이 도는지조차 알 수 없다.
         #   실제로 원래 문장이 이미 그 틀을 쓰고 있을 때 모델이 그대로 되돌려줬다.
         same = bool(prev_text) and script_gate.norm(out) == script_gate.norm(prev_text)
-        tries.append({"chars": len(script_gate.norm(out)),
+        # ★칸 하나가 대본 전체를 삼키는 것을 막는다(2026-08-17 사장님 제보로 추가).
+        #   미끼 칸에 문제제기·시연·증거·CTA가 통째로 들어와 5줄이 됐다. 프롬프트로
+        #   부탁만 해서는 안 된다 — **판정해서 되돌려야** 고쳐진다(게이트와 같은 사상).
+        n_out = len(script_gate.norm(out))
+        too_long = bool(per) and n_out > max(per * _BEAT_LEN_MAX, per + 40)
+        # CTA는 마지막 칸 몫이다. 다른 칸이 댓글 유도를 하면 그 칸의 역할을 벗어난 것이다.
+        cta_role = roles[-1] if roles else ""
+        stole_cta = (role != cta_role) and ("남겨주" in script_gate.norm(out))
+        tries.append({"chars": n_out,
                       "fails": ([] if ok_t else ["문장틀"]) + (["빈칸"] if left else [])
-                               + (["그대로"] if same else [])})
-        if ok_t and not left and not same:
+                               + (["그대로"] if same else []) + (["길이"] if too_long else [])
+                               + (["CTA침범"] if stole_cta else [])})
+        if ok_t and not left and not same and not too_long and not stole_cta:
             break
         # ★재작성 지시는 **무엇을 어겼는지 그대로** 보여준다(2026-08-15 게이트와 같은 사상:
         #   부탁이 아니라 되돌리기). 실측(2026-08-17)에서 "틀을 살려라"만으로는 2/4가 계속
@@ -518,11 +545,23 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
         if same:
             extra += ("- 원래 있던 문장을 **그대로 돌려줬다**. 사용자는 '바꿔달라'고 누른 것이다. "
                       "같은 뜻이라도 표현·어순·시작하는 말을 확실히 다르게 써라.\n")
-    # ★조용히 반쪽을 주지 않는다 — 중괄호가 남았거나 한 글자도 안 바뀐 결과는 실패로
-    #   돌려보내 화면이 "다시 시도"를 말하게 한다. 성공인 척하는 게 제일 나쁘다.
+        if too_long:
+            extra += ("- **너무 길다(%d자). 이 칸은 %d자 안팎이어야 한다.** 대본 전체를 쓰지 마라 — "
+                      "이 칸 하나의 대사만 써라. 다른 칸이 할 말은 빼라.\n" % (n_out, per))
+        if stole_cta:
+            extra += ("- **댓글 유도(CTA)를 여기에 썼다.** CTA는 마지막 '%s' 칸 몫이다. "
+                      "이 칸에서는 빼라.\n" % cta_role)
+    # ★조용히 반쪽을 주지 않는다 — 중괄호가 남았거나, 한 글자도 안 바뀌었거나, 칸 하나가
+    #   대본 전체를 삼킨 결과는 실패로 돌려보내 화면이 "다시 시도"를 말하게 한다.
+    #   성공인 척하고 화면에 꽂는 게 제일 나쁘다(사장님이 5줄짜리 훅을 그대로 받았다).
     if not out or "{" in out or "}" in out:
         return None
     if prev_text and script_gate.norm(out) == script_gate.norm(prev_text):
+        return None
+    _n = len(script_gate.norm(out))
+    if per and _n > max(per * _BEAT_LEN_MAX, per + 40):
+        return None
+    if roles and role != roles[-1] and "남겨주" in script_gate.norm(out):
         return None
     return {"text": out, "template": picked, "role": role,
             "matched": (not want) or script_gate.template_matches(out, want), "tries": tries}

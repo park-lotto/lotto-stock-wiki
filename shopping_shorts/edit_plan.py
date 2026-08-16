@@ -2285,7 +2285,38 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         # 결과 비트에서 또 썼다. 훅은 말이 먼저 나오기 쉬워 여기서 제일 잘 어긋난다.
         "- ★훅은 특히 조심해라. 하려는 말에 맞는 화면이 없으면 **말을 바꿔라** — 화면에 있는 "
         "것으로 훅을 다시 써라. 없는 화면을 상상해서 말하지 마라.\n"
-        "- 훅에 쓴 화면을 결과 비트에서 또 쓰지 마라(같은 장면이 두 번 나오면 김이 샌다).\n\n"
+        "- 훅에 쓴 화면을 결과 비트에서 또 쓰지 마라(같은 장면이 두 번 나오면 김이 샌다).\n"
+        # ★화면 배치 축(2026-08-17 사장님 지시로 **다시 넣는다**). 2026-07-31에 걷어냈던
+        #   규칙이지만, 그때와 조건이 달라졌다 — 사장님 지적: "그때랑은 많이 달라진 거
+        #   아닌가? 지금은 1차 분석이 완전 달라졌잖아."
+        #   실제로 그 뒤 추출이 이만큼 늘었다(실측, lens_instagram_r7vro4):
+        #     · source_brief(영상 단위 제품·핵심·요약)   0793a6604
+        #     · label(장면 짧은 이름) "필기감 및 번짐 방지 테스트"  53889ed62
+        #     · use_point(활용 포인트) "도입부에서 시선 사로잡기 좋음"  95b0b5792
+        #     · change(변화) "문질러도 잉크가 전혀 번지지 않는다"  20821d1d0
+        #     · 태깅 QA 2단계 + 커버리지 0.55→0.75
+        #   07-31에 걷어낸 이유는 "규칙끼리 싸운다"였는데, 그건 **스타일** 규칙 얘기다
+        #   (어미 4종·감각어 개수·글자수). 이건 화면 배치라 문체와 안 부딪히고,
+        #   무엇보다 지금은 가리킬 근거(역할·실증)가 실제로 인벤토리에 있다.
+        #
+        # ★축은 원본이 정한다 — 쇼곰(DcAm4RETl_T) 12구간 실측이 정확히 이 모양이다:
+        #     0.0~ 6.6s 결=완성   유선지 뜯기·칼로 자르기·단면 가르기
+        #     6.6~15.7s 결=사용중 반죽·거품기·올리기·틀에 붓기·오븐
+        #    15.7~22.3s 결=완성   단면 가르기·탄력 테스트·마무리
+        #   사장님: "훅은 시각적으로 완성된 걸 보여주고 / 분기점이 되는 지점은 해결·결과
+        #   부분 **즉 조리를 하는 구간**에서만 맞으면 영상이 맞아 보인다 / CTA는 조리
+        #   완성되는 이미지들(오븐에서 꺼내거나 그릇에 담거나 완성되었다거나)."
+        "\n[화면 배치 — 인벤토리의 `역할:`·`실증:`을 보고 고른다]\n"
+        "- 훅(beats[0])은 **'역할:완성' 또는 '실증:Y'**인 장면으로 연다. 준비동작·계량"
+        "(재료 붓기·무게 재기·빈 그릇·포장 뜯기)으로 훅을 열지 마라 — 스크롤이 안 멈춘다. "
+        "완성/절정 장면이 영상 뒤쪽에 있어도 첫 화면으로 당겨라(훅은 시간순을 깨도 된다).\n"
+        "- 해결·결과 비트는 **'역할:사용중'**(실제로 만들고 쓰는 구간)을 쓴다. 여기가 "
+        "완성품 그림으로 채워지면 '무엇을 하는 영상인지'가 사라진다.\n"
+        "- CTA(마지막)는 다시 **완성되는 그림**으로 닫는다(꺼내기·담기·완성 단면).\n"
+        "- 문제 비트에 맞는 장면(쓰기 전·불편)이 인벤토리에 없으면 **억지로 고르지 마라** — "
+        "그럴 땐 재료·준비 장면을 쓰거나 그 비트를 짧게 넘겨라.\n"
+        "- 한 비트에 여러 장을 붙일 땐 **같은 영상끼리 모아 시간 순서대로** 놓아라"
+        "(섞기 → 붓기 → 굽기). 순서가 뒤집히면 만드는 과정이 거꾸로 보인다.\n\n"
         "[길이]\n"
         f"- 이 영상은 {target_seconds}초짜리다. 참고 대본들의 호흡을 보고 **그중 가장 잘 읽히는 "
         f"길이**로 맞춰라(대략 {lo}~{hi}자). 기계적으로 채우지 말고 이야기가 끝나는 데서 끝내라.\n\n"
@@ -3262,8 +3293,83 @@ _FILL_SCHEMA = {
 }
 
 
+# ── 비트 역할 → 그 칸에 어울리는 장면 결(shot_role) ────────────────────────
+# ★왜 필요한가(2026-08-17 사장님 "장면 매칭이 훅부터 기준이 뭘로 한 건지"):
+#   매칭은 "대사의 행위 = 화면의 행위"로 맞추는데, 그 판정이 동사 사전 30개
+#   (자르다·붓다·섞다·굽다…)라 **요리·살림 영상 전용**이다. 스토리형 대본은
+#   동작 동사가 없어 대사 행위가 통째로 None이 된다.
+#   실측(job 832a5ffa80d9): 5개 비트 **전부** 대사행위 None →
+#     · beat_action_mismatch는 "한쪽이 없으면 판정 보류"라 어긋남을 못 잡고
+#     · ping_pong도 "대사 행위 없으면 손 안 댐"이라 고칠 기회가 없다
+#   그래서 훅에 "OTG 케이블 연결 화면"이 붙어도 아무도 안 막았다(사실상 무작위).
+#
+# ★답은 이미 있었다: `shot_role` 태그가 5,634개(전체 83%) 채워져 있고,
+#   **장면 실험실(scene_lab.html useTags)은 이미 이 규칙으로 칸을 채운다**
+#   — 훅 칸엔 후킹용(완성·after), CTA 칸엔 CTA용. 서버 자동매칭만 그걸 안 썼다.
+#   여기서 판단을 새로 만들지 않는다 — 실험실과 **같은 표**를 쓴다(0순위-B).
+#   ⚠️ scene_lab.html의 useTags를 고치면 여기도 같이 고쳐야 한다(짝으로 움직이는 값).
+# ★축은 원본이 정한다(2026-08-17 사장님: "정답은 지금 축으로 잡혀있는 쇼곰 영상을 보면
+#   답이 나온다"). 쇼곰(DcAm4RETl_T) 12구간 실측 — **완성 → 조리 → 완성 샌드위치**다:
+#     0.0~ 6.6s  결=완성    유선지 뜯기 · 칼로 자르기 · **단면 가르기**      ← 훅
+#     6.6~15.7s  결=사용중  반죽 · 거품기 · 올리기 · 틀에 붓기 · **오븐**    ← 해결/결과(조리)
+#    15.7~22.3s  결=완성    단면 가르기 · 탄력 테스트 · 숟가락 마무리        ← CTA
+#
+#   사장님 지시 그대로: "훅은 시각적으로 완성된 걸 보여주고 / 분기점이 되는 지점은
+#   해결·결과 부분 **즉 조리를 하는 구간이 생기는 지점**에서만 맞으면 영상이 맞아 보인다 /
+#   CTA는 조리 완성되는 이미지들(오븐에 넣고 꺼내거나 그릇에 담거나 완성되었다거나)".
+#   ⚠️ 예전 표는 해결·결과를 (after, 완성)으로 봤다 — 그러면 조리 구간이 통째로 안 쓰여
+#      "완성품만 계속 나오는" 영상이 된다. 원본 축과 어긋난 건 이 줄이었다.
+#
+#   ★"문제"는 매칭이 없는 게 정상이다(사장님: "문제 같은 부분도 당연히 매칭이 되는 게
+#     없을 거야 레시피니까"). 실측으로도 이 작업 4개 영상에 before·문제 결이 **0건**이다.
+#     없는 결을 1순위로 걸어두면 모델이 억지로 아무거나 집는다 → 차선(fallback)을 준다.
+#     차선까지 없으면 대사 의미로만 고르게 둔다(억지 배정 금지).
+#   ⚠️ scene_lab.html의 useTags와 짝이다 — 한쪽만 고치면 화면과 서버가 다른 걸 고른다.
+_ROLE_WANT_SHOTS = (
+    # (역할 낱말들, 1순위 shot_role, 차선 shot_role, 사람이 읽을 설명)
+    (("훅", "hook"), ("완성", "after"), (),
+     "시선을 끄는 **완성된 그림**(단면·완성품·전후 변화)"),
+    (("cta", "마무리"), ("완성", "after"), (),
+     "완성되는 그림(오븐에서 꺼내기·그릇에 담기·완성 단면)"),
+    # ★해결·결과 = 조리(사용중) 구간. 여기가 영상이 맞아 보이는지를 가르는 분기점이다.
+    (("해결", "solution", "결과", "result", "resolution", "반전"),
+     ("사용중", "조리"), ("완성", "after"),
+     "실제로 만드는·쓰는 구간(섞기·붓기·오븐) — 여기가 맞아야 영상이 맞아 보인다"),
+    (("전개", "process", "과정", "경험", "story"), ("사용중", "조리"), (),
+     "실제로 쓰는 장면"),
+    # 레시피엔 before/문제 태그가 거의 없다 → 없으면 조리 앞부분(재료·준비)으로 대신한다.
+    (("문제", "problem", "페인", "pain"), ("before", "문제"), ("사용중", "조리"),
+     "쓰기 전 상황 — 없으면 재료·준비 장면"),
+)
+
+
+def _want_shots_for_role(role, available=None):
+    """이 역할에 어울리는 shot_role 튜플과 설명. 모르는 역할이면 (None, "").
+
+    available: 지금 후보에 **실제로 있는** shot_role 집합(선택).
+      주면 1순위가 하나도 없을 때 차선으로 내려간다 — 없는 결을 가리키면
+      모델이 억지로 아무거나 집기 때문이다(레시피의 before·문제가 정확히 그 경우).
+      차선도 없으면 (None, "")로 두어 **대사 의미로만** 고르게 한다.
+    """
+    r = (role or "").strip().lower()
+    if not r:
+        return None, ""
+    for words, shots, alt, why in _ROLE_WANT_SHOTS:
+        if not any(w in r for w in words):
+            continue
+        if available is None:
+            return shots, why
+        have = set(available or ())
+        if any(s in have for s in shots):
+            return shots, why
+        if alt and any(s in have for s in alt):
+            return alt, why + " (1순위 결이 이 영상엔 없어 차선)"
+        return None, ""      # 억지로 배정하지 않는다
+    return None, ""
+
+
 def fill_beat_scenes(narration, need_sec, seg_map, pool_ids, taken_ids=None,
-                     call=_vault_call, max_shot=2.2, min_fit=3):
+                     call=_vault_call, max_shot=2.2, min_fit=3, role=""):
     """칸 하나를 **대사에 맞는 화면들로** 채운다 — 순서대로 여러 장.
 
     ★왜 따로 있나(2026-08-16 사장님 "당연히 대본이랑 태깅까지 보면서 매칭을 해야지"):
@@ -3284,10 +3390,14 @@ def fill_beat_scenes(narration, need_sec, seg_map, pool_ids, taken_ids=None,
         return []
     # 한 컷은 길어야 max_shot이므로 필요한 장수는 이만큼이다(화면의 안내문과 같은 셈법).
     want = max(1, int(math.ceil(need / max_shot))) if need > 0 else 1
+    # ★결(shot_role)을 후보 줄에 싣는다(2026-08-17) — 아래 [이 칸에 어울리는 화면]이
+    #   가리키는 값이라, 안 보여주면 모델이 무엇을 골라야 하는지 대조할 수가 없다.
     cand_lines = "\n".join(
-        "[{sid}] {name}{desc}{ch}{up}{say} ({sec}초)".format(
+        "[{sid}] {name}{sr}{desc}{ch}{up}{say} ({sec}초)".format(
             sid=sid,
             name=(seg_map[sid].get("label") or "").strip()[:24],
+            sr=(" | 결:" + str(seg_map[sid].get("shot_role"))[:8])
+               if seg_map[sid].get("shot_role") else "",
             desc=(" | 화면:" + (seg_map[sid].get("scene_desc") or "")[:60])
                  if seg_map[sid].get("scene_desc") else "",
             ch=(" | 변화:" + seg_map[sid]["change"][:30]) if seg_map[sid].get("change") else "",
@@ -3313,9 +3423,24 @@ def fill_beat_scenes(narration, need_sec, seg_map, pool_ids, taken_ids=None,
                                desc=(": " + (seg_map[t].get("scene_desc") or "")[:50])
                                     if seg_map[t].get("scene_desc") else "")
                            for t in _tk) + "\n")
+    # ★이 칸이 무슨 역할인지 알려준다(2026-08-17). 종전엔 역할을 안 줘서 훅이든 CTA든
+    #   똑같이 "대사에 맞는 화면"만 골랐다 — 스토리형 대사("전쟁 치를 뻔한 거 있죠?")는
+    #   가리키는 사물이 없어 사실상 아무거나 붙었다(실측: 훅에 OTG 케이블 연결 화면).
+    # ★후보에 **실제로 있는** 결만 가리킨다 — 없는 결(레시피의 before·문제)을 1순위로
+    #   걸어두면 모델이 억지로 아무거나 집는다(사장님: "문제 같은 부분도 당연히 매칭이
+    #   되는 게 없을 거야 레시피니까"). 없으면 차선으로, 그것도 없으면 지시를 빼서
+    #   대사 의미로만 고르게 한다.
+    _avail = {(seg_map[s] or {}).get("shot_role") for s in pool_ids if s in seg_map}
+    _want_shots, _want_why = _want_shots_for_role(role, available=_avail)
+    role_block = ""
+    if _want_shots:
+        role_block = (f"\n[이 칸의 역할] {role} — {_want_why}.\n"
+                      f"후보의 `결:`이 {'·'.join(_want_shots)} 인 화면을 **먼저** 본다. "
+                      "대사가 가리키는 사물이 뚜렷하지 않으면(감정·상황만 말하는 훅 등) "
+                      "역할에 맞는 결을 우선한다.\n")
     prompt = (
         "아래 대사가 흐르는 동안 보여줄 화면을 후보에서 골라라. **대사는 바꾸지 않는다.**\n"
-        f"[대사]\n{narration}\n{taken_block}\n"
+        f"[대사]\n{narration}\n{role_block}{taken_block}\n"
         f"[조건] 이 대사는 약 {need:.1f}초다. 한 컷은 길어야 {max_shot}초라 "
         f"**{want}장 정도**가 필요하다. 화면이 이어지도록 **보여줄 순서대로** 고른다.\n"
         "- 대사가 말하는 것을 실제로 보여주는 화면을 고른다. 분위기만 비슷한 건 안 된다.\n"
@@ -3335,7 +3460,42 @@ def fill_beat_scenes(narration, need_sec, seg_map, pool_ids, taken_ids=None,
         if sid in seg_map and sid in pool_ids and sid not in used and fit >= min_fit:
             used.add(sid)
             out.append({"seg_id": sid, "fit": fit, "why": str(p.get("why") or "")[:40]})
-    return out
+    return _order_picks(out, seg_map)
+
+
+def _order_picks(picks, seg_map):
+    """고른 장면을 **소스별로 묶고 그 안에서 시간순**으로 세운다(2026-08-17 사장님 지시).
+
+    ★왜(사장님): "그 안에서 정렬을 할 거는 1번 영상 시간순 / 2번 영상 시간순 마킹하고
+      뒤죽박죽 되지 않게 해줘야 **조리 시간순 배열을 할 때도 이상함을 못 느낀다**."
+      결(완성/조리/재료)로 묶는 것까지는 맞는데, 한 칸 안에서 순서가 섞이면
+      '틀에 붓기 → 거품기로 섞기'처럼 **거꾸로 된 조리 순서**가 나온다.
+
+    ★AI가 뱉은 순서를 그대로 쓰지 않는다. 모델은 후보 목록을 훑는 순서대로 답하기 쉬워
+      시간 흐름과 무관하다. 조리는 순서가 곧 의미다 — 코드가 정한다.
+    ★소스가 섞이면 영상이 왔다갔다 하므로 **소스 단위로 뭉친다**. 소스 등장 순서는
+      먼저 고른 쪽을 앞에 둔다(AI가 판단한 '이 칸의 주된 소스'를 존중).
+    화면(scene_lab.html buildGroups)도 같은 규칙으로 정렬한다 — 짝으로 움직이는 값.
+    """
+    if len(picks) < 2:
+        return picks
+    order, seen = [], set()
+    for p in picks:                       # 소스 등장 순서 = AI가 먼저 고른 순
+        vid = (seg_map.get(p["seg_id"]) or {}).get("video_id") or ""
+        if vid not in seen:
+            seen.add(vid)
+            order.append(vid)
+    rank = {v: i for i, v in enumerate(order)}
+
+    def _key(p):
+        s = seg_map.get(p["seg_id"]) or {}
+        try:
+            start = float(s.get("start") or 0)
+        except (TypeError, ValueError):
+            start = 0.0
+        return (rank.get(s.get("video_id") or "", 0), start)
+
+    return sorted(picks, key=_key)
 
 
 def _repick_weak_beats(beats, seg_map, call=_vault_call, min_fit=4):
@@ -3364,20 +3524,32 @@ def _repick_weak_beats(beats, seg_map, call=_vault_call, min_fit=4):
     pool = [sid for sid in seg_map if sid not in (taken - weak_own)]
     if not pool:
         return beats
+    # 결(shot_role)을 함께 보여준다 — 아래 비트 줄의 '어울리는 결'과 대조할 수 있어야 한다.
     cand_lines = "\n".join(
-        "[{sid}] 화면:{desc}{ch}{say}".format(
+        "[{sid}]{sr} 화면:{desc}{ch}{say}".format(
             sid=sid,
+            sr=(" 결:" + str(seg_map[sid].get("shot_role"))[:8])
+               if seg_map[sid].get("shot_role") else "",
             desc=(seg_map[sid].get("scene_desc") or "")[:60],
             ch=(" | 변화:" + seg_map[sid]["change"][:30]) if seg_map[sid].get("change") else "",
             say=(" | 말:" + (seg_map[sid].get("text") or "")[:40]) if seg_map[sid].get("text") else "")
         for sid in pool)
-    beat_lines = "\n".join(
-        f"[{b['beat_idx']}] 대사:{b.get('narration','')} (현재화면:{(b.get('primary') or {}).get('scene_desc','')})"
-        for b in weak)
+
+    def _beat_line(b):
+        # ★역할과 어울리는 결을 비트마다 붙인다(2026-08-17) — 스토리형 대사는 가리키는
+        #   사물이 없어 "대사가 말하는 것"만으로는 고를 수가 없다(실측: 훅 5/5 대사행위 None).
+        shots, why = _want_shots_for_role(b.get("role"))
+        tail = (f" [역할:{b.get('role')} — {why}. 결 {'·'.join(shots)} 우선]"
+                if shots else "")
+        return (f"[{b['beat_idx']}] 대사:{b.get('narration','')} "
+                f"(현재화면:{(b.get('primary') or {}).get('scene_desc','')}){tail}")
+
+    beat_lines = "\n".join(_beat_line(b) for b in weak)
     prompt = (
         "아래 비트들은 대사와 화면이 어긋난다. **대사는 절대 바꾸지 말고**, 후보 목록에서 "
         "그 대사가 말하는 것을 실제로 보여주는 화면을 다시 골라라.\n"
         "- 대사의 핵심 동작·결과가 화면에 실제로 보이는 것을 고른다. 분위기만 비슷한 건 안 된다.\n"
+        "- 대사가 감정·상황만 말해 가리키는 사물이 없으면(훅 등) **[역할:…]의 결**을 우선한다.\n"
         "- 지금 화면보다 확실히 나은 후보가 없으면 그 비트는 **출력에서 빼라**(억지로 고르지 마라).\n"
         "- fit은 새로 고른 화면과 대사가 맞는 정도(1~5)를 솔직하게.\n"
         f"[비트]\n{beat_lines}\n\n[후보 화면]\n{cand_lines}\n\n출력은 picks 배열의 JSON만.")
@@ -3674,7 +3846,8 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         beats = single_source.apply_restyle(beats, _c,
                                             style_name=_sp0.candidate_style(i),
                                             report=_restyle_rep,
-                                            facts_block=_facts_block)
+                                            facts_block=_facts_block,
+                                            where="1소스c%d" % (i + 1))
         _hap_style = _sp0.candidate_style(i)
         # ★빈 나레이션 비트는 **커버 배정 전에** 걸러낸다(2026-08-04 라이브 실측 job
         #   bcdf871a6d57: 추천 후보가 16.8초 — 버려진 비트의 컷이 같이 사라져 하한 미달).
@@ -4398,7 +4571,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         plan["beats"] = _ss1.apply_restyle(plan["beats"], _call,
                                            style_name=_sp1.candidate_style(_ci),
                                            report=_restyle_rep,
-                                           facts_block=_sf_facts_block)
+                                           facts_block=_sf_facts_block,
+                                           where="장면우선c%d" % (_ci + 1))
         # ★홈테리어픽 서명 보장(2026-08-09, 1소스와 동일 배선): CTA 직전 문장을 합쇼체로.
         #   리라이트 **뒤**에 둔다(리라이트가 어미를 도로 요체로 되돌린다).
         #   해당 스타일이 아니면 no-op(회귀 0). 1소스 실측: 프롬프트만으론 7/10 → 보장 후 10/10.
