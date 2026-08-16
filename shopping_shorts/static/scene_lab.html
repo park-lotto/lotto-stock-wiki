@@ -51,6 +51,14 @@ h1{font-size:16px;margin:0;font-weight:700}
   background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:5px 7px;
   max-height:4.5em;overflow-y:auto;white-space:pre-wrap;word-break:break-word}
 .tbsay.none{color:var(--dim);font-style:italic}
+/* ✏대본수정 중 — 편집칸임을 한눈에(2026-08-17). max-height를 풀어 긴 문장도 다 보인다. */
+.tbsay.editing{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;
+  background:#0a1018;color:var(--txt);font-style:normal;cursor:text;
+  max-height:none;outline:none}
+.tbedit{margin-top:5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;max-width:380px}
+/* ⚠️.tbhint(위 40행)는 머리글 안내문이 이미 쓰는 클래스다 — 덮어쓰면 그쪽이 깨진다.
+   편집칸 안내는 전용 클래스를 쓴다(같은 이름 두 벌 금지). */
+.tbehint{font-size:10px;color:var(--dim);line-height:1.4}
 .tbeat:hover{border-color:var(--accent)}
 .tbeat.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
 .tbeat.sel{border-color:var(--good)}
@@ -778,8 +786,11 @@ function renderBand(){
         <div class="h"><b>${i+1}. ${b.role || '칸'}</b><span class="d">${sec.toFixed(1)}초</span>${sel === i ? '<span class="picked">여기에 담깁니다</span>' : ''}
           <span class="tbtools" onclick="event.stopPropagation()">
             <label title="재료가 모자랄 때 마지막 컷만 늘리지 않고 전체를 고르게 늘립니다"><input type="checkbox" ${STRETCH[i] ? 'checked' : ''} onchange="toggleStretch(${i}, this.checked)"> 늘려 채우기</label>
-            <button title="이 칸을 왼쪽으로" onclick="move(${i}, -1)">◀</button>
-            <button title="이 칸을 오른쪽으로" onclick="move(${i}, 1)">▶</button>
+            <!-- ★칸 순서 바꾸기(◀▶)를 뺐다(2026-08-17 사장님 "필요없는 기능이고 그자리에
+                 대본수정 만들고"). 그 자리에 대본수정을 둔다 — 3단계에서 자막을 보다가
+                 몇 글자 고치려고 2단계를 왕복하던 것을 없앤다. -->
+            <button title="이 칸의 대본을 고칩니다 — 아래 대본을 눌러 수정하세요"
+              onclick="openNarrEdit(${i})">✏ 대본수정</button>
             ${pickCount(i) ? `<button class="danger" title="체크한 장면만 이 칸에서 뺍니다"
                onclick="dropPicked(${i})">🗑 고른 것 빼기 (${pickCount(i)})</button>` : ''}
             <button title="이 칸에 담은 장면을 모두 뺍니다" onclick="clearBeat(${i})">비우기</button>
@@ -788,8 +799,21 @@ function renderBand(){
               onclick="autoFill(${i})">${AUTOADD[i] ? `↩ 담은 ${AUTOADD[i].length}장 빼기` : '✨ 채우기'}</button>
           </span></div>
         <div class="tbcuts">${cuts}</div>
-        <div class="tbsay ${narrOf(i) ? '' : 'none'}" title="이 칸에서 나올 말">${
-          esc(narrOf(i)) || '이 칸엔 멘트가 없어요'}</div>
+        <!-- ★썸네일 아래 대본 — ✏대본수정을 누르면 여기가 편집칸이 된다(2026-08-17 사장님
+             "누르면 썸네일아래 대본 수정되게"). 읽기 전용일 때는 종전과 같은 모양이다. -->
+        <div class="tbsay ${narrOf(i) ? '' : 'none'}${NARR_EDIT[i] ? ' editing' : ''}"
+             title="${NARR_EDIT[i] ? '고친 뒤 [저장]을 누르세요' : '이 칸에서 나올 말'}"
+             ${NARR_EDIT[i] ? `contenteditable="true" spellcheck="false" data-i="${i}"
+               onclick="event.stopPropagation()" onkeydown="narrKey(event,${i})"` : ''}>${
+          esc(narrOf(i)) || (NARR_EDIT[i] ? '' : '이 칸엔 멘트가 없어요')}</div>
+        ${NARR_EDIT[i] ? `<div class="tbedit" onclick="event.stopPropagation()">
+             <button class="act" style="border-color:var(--good);color:var(--good)"
+               onclick="saveNarr(${i})">💾 저장 + 음성·자막 다시 뽑기</button>
+             <button class="act" onclick="closeNarrEdit(${i})">취소</button>
+             <span class="tbehint">Ctrl+Enter 저장 · Esc 취소 · 길게 쓰면 자막이 밀립니다</span>
+           </div>` : ''}
+        ${NARR_BUSY[i] ? `<div class="tbedit"><span class="tbehint"
+             style="color:var(--warn)">🔊 음성·자막 다시 뽑는 중… (10~20초)</span></div>` : ''}
       </div>`;
   }).join('');
   row.innerHTML = html;
@@ -1164,6 +1188,83 @@ function loadSaved(){
 // 바뀌는지 라이브와 같은 기준(글자수 ÷ 초당 글자수)으로 보여주는 것**까지가 여기의 몫이다.
 // 고친 대본은 '전체 대본 복사'로 가져가 제작소에 넣으면 음성·자막이 새로 만들어진다.
 const NARR = {};                       // beat_idx → 고친 대본
+// ── ✏ 대본수정(2026-08-17 사장님) — 라이브 3단계에서 그 자리에서 고친다 ────────────
+// 예전엔 라이브(SL.server)에서 편집이 잠겨 있었고 안내는 "① 새 대본 고르기에서"를
+// 가리켰는데, 그 UI는 9단계 개편에서 감춰져(produce.html #mixScriptPick display:none)
+// **앱 어디에서도 대본을 못 고치는 상태**였다. 그래서 저장구멍을 새로 뚫었다:
+//   POST /api/mix/scene_lab/{job}/narration/{beat}  → 저장 + resynth_one_beat(이미 있던 함수)
+// ★자막을 JS로 다시 나누지 않는다 — 서버가 라이브와 같은 코드로 만들어 준다(0순위-B).
+const NARR_EDIT = {};                  // beat_idx → 편집칸 열림
+const NARR_BUSY = {};                  // beat_idx → 음성·자막 재생성 중
+// 머리글 안내문에 상태를 쓴다. makeTts의 say는 그 함수 안의 지역 클로저라 여기서 못 쓴다
+// (이름만 같다고 쓸 수 있는 게 아니다 — 실제로 확인하고 전용 헬퍼를 뒀다).
+function nsay(t){ const h = document.getElementById('tbhint'); if (h) h.textContent = t; }
+function openNarrEdit(i){
+  if (!SL.server){ nsay('이 화면(오프라인)에서는 아래 대본을 눌러 바로 고칠 수 있어요'); return; }
+  if (NARR_BUSY[i]) return;
+  NARR_EDIT[i] = true; renderBand();
+  // 렌더 후 포커스 — 누르자마자 타이핑되게(사장님이 두 번 클릭할 필요 없다)
+  setTimeout(() => {
+    const el = document.querySelector(`.tbsay.editing[data-i="${i}"]`);
+    if (el){ el.focus();
+      const r = document.createRange(); r.selectNodeContents(el);
+      r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  }, 0);
+}
+function closeNarrEdit(i){ delete NARR_EDIT[i]; renderBand(); }
+function narrKey(ev, i){
+  ev.stopPropagation();
+  if (ev.key === 'Escape'){ ev.preventDefault(); closeNarrEdit(i); }
+  else if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)){ ev.preventDefault(); saveNarr(i); }
+}
+// 저장 = 서버에 대본을 심고 그 칸만 음성·자막을 다시 뽑는다.
+async function saveNarr(i){
+  const el = document.querySelector(`.tbsay.editing[data-i="${i}"]`);
+  if (!el) return;
+  const text = (el.innerText || '').trim();
+  if (!text){ nsay('대본이 비었어요 — 취소하거나 문장을 넣어주세요'); return; }
+  if (text === (DATA.beats[i].narration || '').trim()){ closeNarrEdit(i); return; }
+  const job = SL.job;
+  if (!job){ nsay('작업 ID를 몰라 저장할 수 없어요'); return; }
+  delete NARR_EDIT[i]; NARR_BUSY[i] = true; renderBand();
+  nsay(`✏ 칸 ${i+1} 대본 저장 중…`);
+  try{
+    const r = await fetch(`/api/mix/scene_lab/${job}/narration/${i}`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text, regen:true})});
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || '저장 실패');
+    // 화면 데이터도 즉시 새 문장으로(서버가 이미 저장했다). 자막·길이는 아래 폴링이 갱신한다.
+    DATA.beats[i].narration = text; delete NARR[i];
+    nsay(`🔊 칸 ${i+1} 음성·자막 다시 뽑는 중… (10~20초)`);
+    await waitNarrRegen(i, j.tts_ver || 0);
+  }catch(e){
+    nsay('⚠ 대본 저장 실패: ' + (e.message || e));
+  }
+  delete NARR_BUSY[i]; renderBand();
+}
+// 재생성 완료는 tts_ver(단조 증가)로 안다 — mp3는 같은 경로라 겉으로 구분이 안 된다
+// (mix_pipeline.resynth_one_beat이 끝에서 이 값을 올린다).
+async function waitNarrRegen(i, ver0){
+  for (let n = 0; n < 40; n++){                 // 최대 ~40초
+    await new Promise(r => setTimeout(r, 1000));
+    try{
+      const d = await (await fetch(`/api/mix/scene_lab/${SL.job}`, {cache:'no-store'})).json();
+      if (!d.ok) continue;
+      const b = (d.data.beats || []).find(x => x.beat_idx === i);
+      if (b && (b.tts_ver || 0) > ver0){
+        // 새 자막·길이를 통째로 갈아끼운다(서버 계산 결과가 유일한 진실).
+        DATA.beats = d.data.beats; DATA.captions = d.data.captions;
+        DATA.tts_dur = d.data.tts_dur;
+        nsay(`✅ 칸 ${i+1} 대본·음성·자막 반영 완료`);
+        saveWork(); render();
+        return true;
+      }
+    }catch(e){}
+  }
+  nsay(`⚠ 칸 ${i+1} 재생성이 오래 걸려요 — 잠시 뒤 새로고침해 확인해주세요`);
+  return false;
+}
 function narrOf(i){ return NARR[i] != null ? NARR[i] : (DATA.beats[i].narration || ''); }
 function narrChanged(i){ return NARR[i] != null && NARR[i] !== (DATA.beats[i].narration || ''); }
 function estSec(t){
