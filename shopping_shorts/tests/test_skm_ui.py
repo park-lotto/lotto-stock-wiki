@@ -52,7 +52,9 @@ def test_orb_labels_and_mapping():
     m = re.search(r"const STEP_LABELS\s*=\s*(\[[^\]]*\])", HTML)
     assert m, "STEP_LABELS 선언을 못 찾음"
     labels = json.loads(m.group(1))
-    assert labels == ["영상추출/분석", "대본", "영상대본MIX", "고품질 자막제거", "TTS음성",
+    # 2026-08-16 사장님 지시로 2번째 라벨 "대본" → "대본생성"(하는 일을 이름에 넣는다).
+    # 패널 h3(data-steptitle="script")도 같이 바꿨다 — 한쪽만 고치면 오브와 제목이 어긋난다.
+    assert labels == ["영상추출/분석", "대본생성", "영상대본MIX", "고품질 자막제거", "TTS음성",
                       "자막꾸미기", "썸네일", "SEO해시테크", "최종렌더"], labels
 
 
