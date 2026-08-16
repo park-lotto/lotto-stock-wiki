@@ -2248,7 +2248,13 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     #   서로 다른 구조가 보장되고, 어긴 결과는 재작성이 걸린다.
     _style_ids = [int(x) for x in (body.get("style_ids") or []) if str(x).isdigit()]
     if _style_ids:
-        _by_id = {s["id"]: s for s in store.list_style_spines(category=it.get("category") or None)}
+        # ★카테고리로 거르지 않는다(2026-08-17 사장님 제보로 수정).
+        #   화면 방침은 2026-08-15에 **잠금 해제 → 등급 표시**(✅검증/⚠️타소재)로 바뀌어
+        #   타소재도 고를 수 있게 보여주는데, 여기만 옛 잠금이 남아 **고른 스타일이 조용히
+        #   사라졌다** — 사장님이 2개를 골랐는데 1안만 나왔다(실측: ⚠️타소재 2개가 버려지고
+        #   ✅검증 1개만 생성). 같은 판단이 화면과 서버 두 곳에 다르게 적혀 있던 것(0순위-B).
+        #   경고는 화면이 이미 했다. 고른 건 그대로 존중한다.
+        _by_id = {s["id"]: s for s in store.list_style_spines(category=None)}
         _picked = [_by_id[i] for i in _style_ids if i in _by_id]
         if not _picked:
             return JSONResponse(status_code=422, content={
@@ -2287,7 +2293,17 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                              dr.get("script", ""), None, "style")
             dr["draft_id"] = did
             store.record_script_usage(hook=dr.get("hook", ""), spine_id=dr.get("style_id"))
-        return {"ok": True, "drafts": _styled, "mode": "style"}
+        # ★무엇을 재료로 썼는지 화면에 돌려준다(2026-08-17 사장님 제보 "대본이 무슨
+        #   영상인지 모르겠다"). 재료가 어긋나도 화면이 말을 안 하면 아무도 모른다 —
+        #   대본만 보고는 "어느 영상에서 나온 건지" 판별할 방법이 없다.
+        return {"ok": True, "drafts": _styled, "mode": "style",
+                "materials": {
+                    "sources": [{"chars": len(s.get("full_text") or ""),
+                                 "head": (s.get("full_text") or "")[:40]} for s in _src],
+                    "scene_points": _scene_block.count("\n· ") if _scene_block else 0,
+                    "product_facts": bool(_facts_block_for_job(body.get("job_id") or "", store)),
+                    "styles": [s.get("name") for s in _picked],
+                }}
     drafts = script_generate.generate_variations(
         it.get("structure") or {}, it.get("full_text") or "", elem_modes, category_lookup, **_gen_kw)
     if not drafts:

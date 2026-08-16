@@ -7329,7 +7329,13 @@ async function s2Generate(){
     const d=await (await fetch('/api/wiki/generate?shortcode='+encodeURIComponent(s.shortcode),
       {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
     if(!d.ok){ if(hint) hint.innerHTML='<span style="color:var(--fire)">⚠️ '+esc(d.error||'생성 실패')+'</span>'; return; }
-    S2.drafts=d.drafts||[]; S2.curDraft=0;
+    S2.drafts=d.drafts||[]; S2.curDraft=0; S2.materials=d.materials||null;
+    // ★고른 스타일 수와 나온 안의 수가 다르면 조용히 넘어가지 마라 — 실제로 2개를 골랐는데
+    //   1안만 나온 적이 있다(서버가 카테고리로 걸러냈다). 조용한 실패가 제일 나쁘다.
+    if(S2.picked.length && S2.drafts.length < S2.picked.length && hint){
+      hint.innerHTML='<span style="color:var(--gold)">⚠️ 스타일 '+S2.picked.length
+        +'개 중 '+S2.drafts.length+'개만 만들어졌어요 — 나머지는 생성에 실패했습니다(다시 시도해 보세요)</span>';
+    }
     s2RenderDrafts();
   }catch(e){ if(hint) hint.innerHTML='<span style="color:var(--fire)">네트워크 오류</span>'; }
   finally{ if(btn){ btn.disabled=false; btn.textContent=orig; } }
@@ -7338,7 +7344,17 @@ async function s2Generate(){
 // beats가 있으면(스타일 경로) 역할 행으로, 없으면(기존 생성) 문단을 행으로 나눈다.
 function s2Beats(dr){
   if(dr.beats && dr.beats.length) return dr.beats;
-  return (dr.script||'').split(/\n+/).map(t=>t.trim()).filter(Boolean).map(t=>({role:'', text:t}));
+  // ★'AI에게 맡김'(스타일 미지정)은 **옛 생성기**라 칸(beats)을 안 준다 — 대본이 통짜
+  //   한 덩어리로 온다. 그대로 넣으면 행이 1개뿐이라 "나열식"으로 보인다(사장님 제보).
+  //   개행이 있으면 문단으로, 없으면 **문장 끝(다/요/죠 + 마침표)**으로 끊어 행을 만든다.
+  //   ⚠️ 역할 이름은 붙이지 않는다 — 이 경로는 어느 칸인지 아무도 모른다. 모르면 비운다.
+  const s=(dr.script||'').trim();
+  if(!s) return [];
+  let parts = s.split(/\n+/).map(t=>t.trim()).filter(Boolean);
+  if(parts.length<2){
+    parts = s.split(/(?<=[다요죠]\.)\s+|(?<=[.!?])\s+/).map(t=>t.trim()).filter(Boolean);
+  }
+  return parts.map(t=>({role:'', text:t}));
 }
 function s2RenderDrafts(){
   const band=document.getElementById('s2ResultBand'), tabs=document.getElementById('s2Tabs'),
@@ -7346,9 +7362,24 @@ function s2RenderDrafts(){
   if(!band) return;
   if(!S2.drafts.length){ band.style.display='none'; if(bar) bar.style.display='none'; return; }
   band.style.display=''; if(bar) bar.style.display='';
+  // ★"이 대본이 무엇으로 만들어졌나"를 화면이 말한다(사장님 제보 "무슨 영상인지 모르겠다").
+  //   재료가 어긋나도 대본만 봐서는 알 수 없다 — 쓴 재료를 그대로 보여줘야 어긋남이 보인다.
   const label=document.getElementById('s2ResultLabel');
-  if(label) label.innerHTML='③ 결과 대본 <span style="text-transform:none;letter-spacing:0">— 씨앗: '
-    + esc((S2.seed&&S2.seed.title)||'') + ' · ' + S2.drafts.length + '안</span>';
+  if(label){
+    const m=S2.materials;
+    let used='';
+    if(m){
+      const srcs=(m.sources||[]).filter(s=>s.chars>0);
+      const bits=[];
+      if(srcs.length) bits.push('대본 '+srcs.length+'편('+srcs.map(s=>s.chars+'자').join('·')+')');
+      if(m.scene_points) bits.push('장면 '+m.scene_points+'개');
+      if(m.product_facts) bits.push('쿠팡 재료');
+      used = bits.length ? (' · 재료: '+esc(bits.join(' + '))) : ' · <span style="color:var(--gold)">재료 없음(AI가 지어냅니다)</span>';
+      if(srcs.length) used += '<div class="hint" style="margin-top:4px">첫 문장: “'+esc(srcs[0].head)+'…”</div>';
+    }
+    label.innerHTML='③ 결과 대본 <span style="text-transform:none;letter-spacing:0">— '
+      + S2.drafts.length + '안' + used + '</span>';
+  }
   tabs.innerHTML=S2.drafts.map((dr,i)=>{
     const nm=String.fromCharCode(65+i)+'안'+(dr.style_name?(' · '+esc(dr.style_name)):'');
     const g=(dr.checks&&dr.checks.length)?(dr.passed?'✅':'⚠️'):'';
