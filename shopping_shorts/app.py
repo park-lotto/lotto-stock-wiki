@@ -1,4 +1,5 @@
 """FastAPI: 수집 API + 정적 프론트 서빙."""
+import asyncio
 import base64
 import hmac
 import hashlib
@@ -4753,7 +4754,9 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
         # Google Lens는 갓 호스팅된 우리서버 이미지를 인덱싱 전이라 못 읽어 0개를 준다(실측).
         # imgbb·imgur은 Google이 상시 크롤링하는 도메인이라 즉시 매칭 → imgbb(전용키) 1순위,
         # imgur(공유 공개ID) 2순위로 업로드, 실패 시에만 우리서버 URL 폴백(2026-07-14).
-        image_url = upload_frame(raw)
+        # ★ to_thread — imgbb/imgur 업로드는 블로킹 requests다. 루프에서 그냥 부르면
+        #   프론트가 동시에 던진 비전 요청(/api/lens/yt·/cn/keywords)이 뒤에서 굶는다.
+        image_url = await asyncio.to_thread(upload_frame, raw)
         if not image_url:
             work_dir = _FIND_TMP_DIR / "lens"
             work_dir.mkdir(parents=True, exist_ok=True)
@@ -4761,8 +4764,11 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
             (work_dir / name).write_bytes(raw)
             image_url = f"{PUBLIC_BASE_URL}/api/find/frame/lens/{name}"
         diag = {}
-        items = _lens_finalize(
-            search_similar_videos(image_url, source_caption=source_caption, stats=diag), store)
+        # SerpApi 호출도 블로킹(+빈결과 재시도 2.5초×3) — 스레드로 뺀다. _lens_finalize는
+        # DB 조회뿐(같은 스레드 sqlite 제약)이라 루프에 남긴다.
+        rows = await asyncio.to_thread(
+            search_similar_videos, image_url, source_caption=source_caption, stats=diag)
+        items = _lens_finalize(rows, store)
         store.bump_lens(month)
         # diag: 인스타 결과가 0/왕창으로 튀는 이유를 화면에서 갈라 보기 위한 계측(2026-08-14).
         return {"ok": True, "items": items, "count": len(items), "diag": diag}
@@ -5043,7 +5049,10 @@ async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
     # exclude: 프론트 '🔄 다른 검색어'가 이미 보여준 후보를 개행으로 붙여 보낸다.
     seen = [s.strip() for s in (exclude or "").split("\n") if s.strip()][:20]
     try:
-        v = cn_search_candidates(raw, source_caption, exclude=seen)
+        # ★ to_thread 필수 — cn_search_candidates는 Gemini SDK를 **블로킹**으로 부른다.
+        #   async def 안에서 그냥 부르면 이벤트루프가 그 5~10초 동안 통째로 멈춰,
+        #   프론트가 동시에 던진 /api/lens/yt가 뒤에서 줄을 서 20초가 됐다(2026-08-16 실측).
+        v = await asyncio.to_thread(cn_search_candidates, raw, source_caption, exclude=seen)
     except Exception:
         v = {}
     return {"ok": True, "product": v.get("product", ""),
@@ -5064,7 +5073,7 @@ async def api_lens_kw_expand(request: Request, keyword: str = Form(""),
         return {"ok": True, "keyword": "", "candidates": []}
     seen = [s.strip() for s in (exclude or "").split("\n") if s.strip()][:20]
     try:
-        cands = expand_search_keywords(kw, n=n, exclude=seen)
+        cands = await asyncio.to_thread(expand_search_keywords, kw, n=n, exclude=seen)   # 블로킹 Gemini
     except Exception:                       # noqa: BLE001 — 실패해도 렌즈는 정상
         cands = []
     return {"ok": True, "keyword": kw, "candidates": cands}
@@ -5109,7 +5118,9 @@ async def api_lens_yt(request: Request, frame: UploadFile = File(None),
     if frame is not None:
         try:
             raw = await frame.read()
-            v = cn_search_keyword_vision(raw, source_caption)
+            # ★ to_thread — 아래 youtube_search와 함께 블로킹 호출이라 루프를 막는다
+            #   (/api/lens/cn/keywords와 동시에 돌아야 렌즈가 빨리 뜬다, 2026-08-16)
+            v = await asyncio.to_thread(cn_search_keyword_vision, raw, source_caption)
             keyword = (v.get("product") or "").strip()
         except Exception:
             keyword = ""
@@ -5119,7 +5130,7 @@ async def api_lens_yt(request: Request, frame: UploadFile = File(None),
         return {"ok": True, "items": [], "count": 0, "note": "검색어를 만들지 못했습니다"}
     n = max(1, min(int(max_results or 40), 60))
     try:
-        rows = youtube_search.search(keyword, max_results=n)
+        rows = await asyncio.to_thread(youtube_search.search, keyword, max_results=n)
     except Exception:
         rows = []
     for r in rows:
