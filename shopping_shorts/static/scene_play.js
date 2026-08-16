@@ -18,8 +18,25 @@ const MAX_SHOT = 2.2, MIN_CLIP = 0.8, EPS = 1e-3, LONG_CUT = MAX_SHOT + 0.05;   
 //   CTA용 태그"). 새 판단을 만들지 않는다 — 추출이 이미 붙여둔 shot_role/is_key를 그대로 쓴다
 //   (완성 / after=결과·증거 / 사용중=조리·사용 / 기타). 실측 분포 9·5·41·1.
 
-let audioEl = null;
-function audio(){ return audioEl || (audioEl = document.getElementById('bgaudio')); }
+// ★음성도 화면과 똑같이 재생기를 2개(A/B) 둔다(2026-08-16 사장님 "전체 재생을 하면 버퍼가 생긴다").
+//   전에는 음성 재생기가 하나뿐이라 칸이 넘어가는 **그 순간에** a.src를 갈아끼웠다 — mp3를 그때부터
+//   받기 시작하니 이음매마다 멈췄다. 화면은 warmVideos()로 미리 열어둬서 안 막히는데 음성만 막혔고,
+//   curT()·자막이 **음성 시각을 시계로 쓰므로** 진행바까지 통째로 서서 '버퍼'로 보였다.
+//   처방: 칸 i는 슬롯 i%2를 쓰고, 칸 i를 트는 동안 **다음 칸 음성을 숨은 쪽에 미리 받아둔다**.
+//   ★바깥은 여전히 audio() 하나만 본다 — '지금 음성이 누구냐'를 두 군데서 정하지 않는다(0순위-B).
+let audioEl = null, curAud = null;
+function ttsEl(slot){
+  if (!audioEl) audioEl = document.getElementById('bgaudio');
+  if (!slot) return audioEl;
+  if (!audioEl._alt){
+    const b = document.createElement('audio');
+    b.preload = 'auto';
+    audioEl.parentNode.insertBefore(b, audioEl.nextSibling);
+    audioEl._alt = b;
+  }
+  return audioEl._alt;
+}
+function audio(){ return curAud || ttsEl(0); }
 function capsOf(i){ return (DATA.captions || {})[String(i)] || []; }
 // 구간 [a,b)에 걸치는 자막 구절들 — 자르지 않고 구절 통째로 돌려준다.
 function capsIn(i, a, b){
@@ -201,9 +218,18 @@ function ttsWarn(msg){
   d.textContent = msg;
   box.appendChild(d);
 }
-function playTts(a, i){
-  a.src = SL.tts(i);
-  a.currentTime = 0;
+// 칸 i의 음성을 슬롯에 **앉히기만** 한다(재생 안 함). 같은 파일이면 다시 받지 않는다.
+// 이걸 한 칸 앞서 불러두면 이음매에서 받을 게 없어 바로 시작한다.
+function seatTts(i, slot){
+  const a = ttsEl(slot), k = SL.job + '#' + i;     // 잡이 바뀌면 키도 바뀐다(옛 음성 재사용 방지)
+  if (a._ttsKey !== k){ a._ttsKey = k; a.src = SL.tts(i); a.load(); }
+  return a;
+}
+function playTts(i, slot){
+  const a = seatTts(i, slot || 0);
+  if (curAud && curAud !== a) curAud.pause();      // 앞 칸 음성은 여기서 확실히 끈다
+  curAud = a;
+  try { a.currentTime = 0; } catch(e){}
   const warn = () => ttsWarn('🔇 이 칸은 음성이 없어요 — 위 🔊 음성 만들기를 눌러주세요');
   a.onerror = warn;
   a.play().catch(warn);
@@ -212,6 +238,7 @@ function playTts(a, i){
   a._noTtsTimer = setTimeout(() => {
     if (a.readyState === 0 || !(a.duration > 0)) warn();
   }, 2500);
+  return a;
 }
 
 // ── 미리보기 재생 엔진 (공용)
@@ -277,9 +304,9 @@ function warmVideos(){
 function stopPlay(){
   clearTimeout(seqTimer); seqTimer = null; seq = [];
   playKey = null; seqPaused = false;
-  const a0 = audio(); if (a0) a0.onended = null;    // 전체 재생 체인 끊기
+  // 전체 재생 체인 끊기 — 음성 재생기가 A/B 두 개이므로 **양쪽 다** 끊고 멈춘다.
+  [ttsEl(0), ttsEl(1)].forEach(a => { if (a){ a.onended = null; a.pause(); } });
   clearInterval(subTimer); seqBeat = null;
-  const a = audio(); if (a){ a.pause(); }
   const sb = document.getElementById('subbox'); if (sb) sb.innerHTML = '';
   const v = vid(); if (v) v.pause();
   clearInterval(posTimer);
@@ -314,8 +341,7 @@ function playBeat(i, ev){
   seqBeat = i;
   startSeq(clips);
   // 음성은 화면과 별개 트랙 — 같이 0초부터 튼다(캡컷의 오디오 트랙과 같은 개념).
-  const a = audio();
-  playTts(a, i);
+  playTts(i, 0);
   tickSub();
 }
 // 자막은 음성 시각을 따라간다(화면 컷이 몇 개로 쪼개지든 무관).
@@ -341,6 +367,7 @@ function playAll(ev){
   if (ev) ev.stopPropagation();
   if (playKey === 'all'){ togglePause(); return; }   // 다시 누르면 일시정지/재개
   playKey = 'all';
+  preSeated = -1;          // 처음부터 다시 트는 것이니 미리 앉힌 기록도 비운다
   runAllFrom(0);
 }
 function runAllFrom(i){
@@ -350,25 +377,39 @@ function runAllFrom(i){
   seqBeat = i; sel = i;
   seqLabel = `전체 재생 - 칸 ${i+1}/${DATA.beats.length} (${DATA.beats[i].role || ''})`;
   if (!clips.length){ runAllFrom(i + 1); return; }
-  startSeq(clips);
-  // 다음 칸의 첫 컷도 지금 미리 앉혀 둔다(칸을 넘을 때도 누수 0).
+  startSeq(clips, preSeated === i ? handoffSlot(i) : undefined);
+  // 다음 칸의 첫 컷·음성을 지금 미리 앉혀 둔다(칸을 넘을 때도 누수 0).
+  // ★예전엔 다음 칸 첫 컷에 _slot=0을 못 박았는데, 지금 칸의 컷0도 슬롯 0이었다 —
+  //   두 칸이 **같은 소스**를 쓰면 vidFor가 같은 <video>를 돌려줘, 화면에 보이는 그 재생기에
+  //   currentTime을 꽂아 재생 중인 장면이 튀거나 시크 대기로 멈췄다(2026-08-16).
+  //   그래서 칸 넘김 전용 슬롯을 따로 두고 칸마다 번갈아 쓴다(handoffSlot) → 절대 안 겹친다.
   const nx = DATA.beats[i + 1];
   if (nx){
     const ncl = planClips(lists[i + 1] || [], beatDur(i + 1), STRETCH[i + 1]);
-    if (ncl[0]){ ncl[0]._slot = 0; seat(ncl[0]); }
+    if (ncl[0]){ ncl[0]._slot = handoffSlot(i + 1); seat(ncl[0]); preSeated = i + 1; }
+    seatTts(i + 1, (i + 1) % 2);      // ← 이음매의 버퍼를 없애는 핵심 한 줄
   }
-  const a = audio();
+  const a = playTts(i, i % 2);
   a.onended = () => { if (playKey === 'all') runAllFrom(i + 1); };
-  playTts(a, i);
   tickSub();
 }
-function startSeq(clips){
+// 칸 넘김 전용 재생기 슬롯 — 칸마다 2↔3으로 번갈아 쓴다. 칸 안에서 쓰는 0·1과 겹치지 않고,
+// 이웃한 칸끼리도 안 겹친다(칸 i가 2를 쓰는 동안 칸 i+1을 3에 앉힌다).
+function handoffSlot(i){ return 2 + (i % 2); }
+// 어느 칸을 미리 앉혀 뒀는지. 전체 재생의 **첫 칸**은 앉혀둔 게 없으므로 예전대로 슬롯 0을 써야
+// 한다 — warmVideos()가 데워 둔 게 0·1뿐이라, 첫 칸부터 새 슬롯을 쓰면 첫 화면이 되레 늦다.
+let preSeated = -1;
+// slot0을 주면 **첫 컷만** 그 재생기를 쓴다(전체 재생에서 미리 앉혀둔 것을 그대로 이어받는다).
+// 안 주면 예전 그대로 0·1 번갈아 — 칸별 재생·장면 미리보기는 동작이 안 바뀐다.
+function startSeq(clips, slot0){
   clearTimeout(seqTimer);
   seq = clips; seqI = 0; seqPaused = false;
   // 컷 경계 누적(자막을 컷 단위로 끊어 보여주려면 각 컷의 [시작,끝) 초가 필요하다)
   let off = 0;
   seqBounds = clips.map(c => { const a = off; off += c.dur; return [a, off]; });
-  clips.forEach((c, k) => { c._slot = k % 2; });   // 이웃한 컷은 다른 재생기 → 미리 앉히기 가능
+  // 이웃한 컷은 다른 재생기 → 미리 앉히기 가능. 첫 컷만 slot0이 주어지면 그것을 쓴다
+  // (2·3은 0·1과 다른 값이라 이웃 구분은 그대로 유지된다).
+  clips.forEach((c, k) => { c._slot = (k === 0 && slot0 != null) ? slot0 : k % 2; });
   if (clips[0]) seat(clips[0]);
   if (clips[1]) seat(clips[1]);
   document.getElementById('player').classList.add('on');
