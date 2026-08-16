@@ -108,15 +108,42 @@ def _cache_keys_for_url(url):
     그 결과 재태깅을 해도 대본 쪽은 옛 재료를 보고, 매번 Gemini로 다시 뽑았다.
 
     ⚠️ 렌즈 경로엔 짧은 해시 키(`lens_tiktok_1jw6i6i`)도 있는데 그건 URL에서
-    만들어낼 수 없다 — 못 맞히면 종전대로 재추출한다(회귀 없음, 조용한 실패 아님).
+    만들어낼 수 없다 — 그래서 **DB에 적힌 것을 먼저 읽는다**(아래 store 조회).
+
+    ★★2026-08-17 실측 — 정규식만으로는 플랫폼이 통째로 빠진다.
+      `_SHORTCODE_RES`에 인스타·유튜브·틱톡 셋뿐이라 **도우인·샤오홍슈는 키가 0개**였다.
+      담긴 394건 중 55건(도우인 8·샤오홍슈 47 = 14%)이 여기 해당한다. 그 결과
+      고독스 C100(`grab_douyin_b26e5b24ee36`)은 상세4·리뷰8까지 긁어 저장해뒀는데도
+      `product_facts_…`를 **한 번도 못 찾아** 대본에 재료가 안 실렸다.
+      저장은 DB의 shortcode 그대로(`grab_douyin_…`), 조회는 URL 추론 — 같은 판단을
+      두 군데서 다르게 내린 것이다(0순위-B). 그래서 **추론 전에 적힌 것을 읽는다**.
+      플랫폼이 늘어도 여기를 다시 안 고쳐도 된다 = 썩지 않는다.
     """
-    keys = []
+    keys, seen = [], set()
+
+    def _add(k):
+        if k and k not in seen:
+            seen.add(k)
+            keys.append(k)
+
+    # ① DB에 저장된 shortcode 우선 — 담기·위키가 URL과 짝으로 적어둔 값이다.
+    #    추론으로는 절대 못 만드는 키(grab_douyin_…·lens_tiktok_1jw6i6i)가 여기서 나온다.
+    try:
+        # ⚠️ DB 경로는 config에서 — app에서 가져오면 app→mix_pipeline 순환 import가 된다.
+        from shopping_shorts.config import DB_PATH
+        from shopping_shorts.store import Store
+        for sc in Store(DB_PATH).shortcodes_for_url(url):
+            _add(sc)
+    except Exception:      # noqa: BLE001 — 캐시 조회 실패가 파이프라인을 막으면 안 된다
+        pass               #    (못 찾으면 아래 추론 + 종전대로 재추출로 간다)
+
+    # ② URL 추론 폴백 — DB에 기록이 없는 경로(위키 직행 등)도 종전대로 맞힌다.
     for rx, plat in zip(_SHORTCODE_RES, _SHORTCODE_PLATFORMS):
         m = rx.search(url or "")
         if m:
             code = m.group(1)
-            keys.append(code)
-            keys.append(f"lens_{plat}_{code}")
+            _add(code)
+            _add(f"lens_{plat}_{code}")
             break
     return keys
 
