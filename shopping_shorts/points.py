@@ -17,13 +17,12 @@ def add(store, customer_id, amount, reason="add"):
 
 
 def deduct(store, customer_id, amount, reason="fx_render"):
-    """잔액이 모자라면 아무것도 안 하고 False. 0원 작업은 원장을 안 더럽힌다."""
-    if amount <= 0:
-        return True
-    if store.points_balance(customer_id) < amount:
-        return False
-    store.points_add(customer_id, -amount, reason)
-    return True
+    """잔액이 모자라면 아무것도 안 하고 False. 0원 작업은 원장을 안 더럽힌다.
+
+    ★판정과 차감을 store에서 SQL 한 문장으로 처리한다 — 여기서 balance()를
+      읽고 add()를 부르면 워커 두 개가 같은 잔액을 보고 **둘 다 통과**한다.
+      실측(2026-08-17): 10P에 5P 차감 5개 동시 → 3건 성공, 잔액 -5P."""
+    return store.points_try_deduct(customer_id, amount, reason)
 
 
 def refund(store, customer_id, amount, reason="fx"):

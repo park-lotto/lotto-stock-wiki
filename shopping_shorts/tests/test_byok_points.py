@@ -1,4 +1,6 @@
 """포인트 차감 — 어디에 썼는지 남고, 실패하면 돌려받는다."""
+import threading
+
 import pytest
 from shopping_shorts import points
 from shopping_shorts.store import Store
@@ -7,6 +9,34 @@ from shopping_shorts.store import Store
 @pytest.fixture
 def store(tmp_path):
     return Store(str(tmp_path / "t.db"))
+
+
+def test_concurrent_deduct_cannot_overdraw(tmp_path):
+    """★워커 여러 개가 동시에 깎아도 잔액이 음수가 되면 안 된다.
+
+    실사고 재현(2026-08-17): 판정과 차감이 SQL 두 문장으로 갈려 있으면
+    워커들이 같은 잔액을 읽고 전부 통과한다. 실측으로 10P에 5P 차감 5개를
+    던졌더니 3건이 성공해 잔액이 -5P가 됐다. 자막제거는 소스 3개면 15P를
+    한 번에 깎으므로 피해가 크다 — 이 테스트가 재발을 막는다."""
+    db = str(tmp_path / "race.db")
+    seed = Store(db)
+    points.add(seed, 1, 1000)                  # 10P → 5P짜리 2건만 가능
+
+    results, lock = [], threading.Lock()
+
+    def worker():
+        ok = points.deduct(Store(db), 1, 500, "vmake")
+        with lock:
+            results.append(ok)
+
+    threads = [threading.Thread(target=worker) for _ in range(5)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert sum(results) == 2, "잔액상 2건만 성공해야 한다"
+    assert points.balance(seed, 1) == 0, "잔액이 음수가 되면 안 된다"
 
 
 def test_deduct_records_reason(store):

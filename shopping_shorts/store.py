@@ -4512,6 +4512,28 @@ class Store:
                 (customer_id, delta, reason),
             )
 
+    def points_try_deduct(self, customer_id, amount, reason=""):
+        """잔액이 충분할 때만 차감하고 True. 모자라면 아무것도 안 하고 False.
+
+        ★조회와 삽입을 SQL 한 문장으로 묶는다 — 파이썬에서 balance()를 읽고
+          points_add()를 부르면 그 사이에 다른 워커가 끼어들어 **둘 다 통과**한다.
+          실측(2026-08-17): 잔액 10P에 5P 차감 5개를 동시에 던지니 3건이 성공해
+          잔액이 -5P가 됐다. 워커 3개가 도는 환경이라 이론이 아니라 실제로 난다.
+          _conn()이 호출마다 새 연결을 열어 두 문장 사이엔 트랜잭션이 없다.
+
+        WHERE 절의 SUM이 INSERT와 같은 문장 안에서 평가되므로, SQLite가 쓰기
+        잠금을 잡은 상태에서 판정한다 → 동시에 들어와도 한 건만 성공한다."""
+        if amount <= 0:
+            return True                     # 무료 작업은 원장을 더럽히지 않는다
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO points_ledger(customer_id, delta, reason) "
+                "SELECT ?, ?, ? WHERE "
+                "(SELECT COALESCE(SUM(delta),0) FROM points_ledger WHERE customer_id=?) >= ?",
+                (customer_id, -amount, reason, customer_id, amount),
+            )
+            return cur.rowcount > 0
+
     # ── 사용자별 API 키(2026-08-17, BYOK) ──
     # 평문은 이 클래스 밖으로 나가는 경로가 get_customer_keys_plain 하나뿐이다.
     # 화면용 list_customer_keys는 key_enc를 아예 안 실어 보낸다.
