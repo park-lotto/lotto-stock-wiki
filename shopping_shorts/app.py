@@ -9848,7 +9848,7 @@ def _scene_points_block(job, limit=14):
               "장면 이름을 그대로 나열하지 말고 **말로 풀어라**.")
 
 
-@app.post("/api/product/prefetch/retry")
+@app.post("/api/coupang/relay/prefetch_retry")
 def api_product_prefetch_retry(body: dict):
     """상품 재료 선수집을 **다시** 건다(2026-08-17). body: {shortcode, product?, category?}.
 
@@ -9859,6 +9859,11 @@ def api_product_prefetch_retry(body: dict):
 
     product를 안 주면 그 영상 태깅에서 다시 찾고, 그래도 없으면 화면 역검색(유료 1회).
     """
+    # ★경로를 /api/coupang/relay/ 아래에 둔 이유: 이건 화면 버튼이 아니라 **운영 도구**라
+    #   로그인 세션이 없다. 그 접두사는 미들웨어 예외이고 대신 **엔드포인트가 토큰을 검사**한다
+    #   (릴레이 next/result와 같은 규칙 — 인증 방식을 새로 만들지 않는다).
+    if not config.COUPANG_RELAY_TOKEN or body.get("token") != config.COUPANG_RELAY_TOKEN:
+        return JSONResponse(status_code=403, content={"ok": False, "error": "토큰 불일치"})
     code = (body.get("shortcode") or "").strip()
     if not code:
         return JSONResponse(status_code=422, content={"ok": False, "error": "shortcode 필요"})
