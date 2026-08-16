@@ -3758,7 +3758,9 @@ async function refreshStep0(){
 // ★비용 0원: /api/extract_script는 캐시 우선이고, 여기선 **캐시 히트만** 쓴다(cache_only).
 //   아직 분석 안 된 영상은 "분석 대기"로 두고, 실제 추출은 기존 자동적재 경로가 한다.
 //   여기서 추출을 트리거하면 1단계를 열기만 해도 크레딧이 타므로 절대 하지 않는다.
-const _SRC_BRIEF = {};       // shortcode → {brief, segs} (페이지당 1회만 받아 쓴다)
+const _SRC_BRIEF = {};       // shortcode → 서버 응답. ★완성(ok)만 캐시로 굳고, 미완은 다시 묻는다
+const _SRC_INFLIGHT = new Set();   // 지금 요청 중인 shortcode — 중복 요청은 이걸로 막는다
+let _SRC_POLL = null;              // 미완이 남았을 때만 도는 재확인 타이머(끝나면 스스로 멈춘다)
 // ★기본은 **펼침**이다(2026-08-17 사장님 "기본으로 펼치고"). 그래서 집합의 뜻을
 //   뒤집었다 — 예전엔 '펼친 카드'를 모았는데(기본 접힘), 이제 '접은 카드'를 모은다.
 //   비어 있으면 전부 펼쳐진 상태 = 처음 화면. 누르면 그 카드만 접힌다.
@@ -3772,18 +3774,31 @@ async function renderSourceAnalysis(){
   if(!box) return;
   const items = HANDOFF.filter(h => h.useFootage);
   if(!items.length){ box.innerHTML = ''; return; }
-  // 아직 안 받아온 것만 조회(이미 받은 건 재요청 안 함)
+  // ★완성된 것만 캐시한다 — 아직 안 된 것은 다음에 다시 묻는다(2026-08-17 사장님
+  //   "인스타 4개인데 한개만?"). 예전엔 응답을 무조건 `_SRC_BRIEF`에 넣고 재조회 조건이
+  //   `!== undefined`라, **첫 조회 때 아직 분석 전이던 영상은 그 상태로 박제**됐다.
+  //   실제 흐름이 정확히 그 순서다:
+  //     ① 자동분석 **전에** 먼저 그린다(위 3728행) → 미완 영상이 ok:false로 박힘
+  //     ② 자동분석이 30초~1분 돌아 전부 완성된다
+  //     ③ 끝나고 다시 그리지만(3753행) 캐시가 있어 **재조회를 안 한다** → 영원히 "분석 중"
+  //   실측(2026-08-16 요거트 4건): 서버는 4개 다 ok:true·source_brief까지 완비인데
+  //   화면만 "1/4개 읽음"이었다. 새로고침해야만 풀렸다 — 데이터가 아니라 화면의 거짓말.
+  //   ⚠️ 중복 요청 차단은 캐시가 아니라 `_SRC_INFLIGHT`가 맡는다(둘을 겸하면 위 사고가 난다).
   await Promise.all(items.map(async it => {
     const code = it.shortcode;
-    if(!code || _SRC_BRIEF[code] !== undefined) return;
-    _SRC_BRIEF[code] = null;                       // 진행 중 표시(중복 요청 차단)
+    if(!code) return;
+    if((_SRC_BRIEF[code] || {}).ok) return;        // 이미 완성 = 다시 안 묻는다
+    if(_SRC_INFLIGHT.has(code)) return;            // 지금 요청 중 = 중복 방지
+    _SRC_INFLIGHT.add(code);
     try{
       const r = await fetch('/api/produce/source_brief?shortcode=' + encodeURIComponent(code));
       const d = await r.json();
-      // ★실패 응답도 버리지 않고 담는다(2026-08-17). 예전엔 ok가 아니면 null로 뭉개서
-      //   '아직 도는 중'과 '받기부터 실패해 포기'를 화면이 구별할 수 없었다.
+      // ★실패 응답도 버리지 않고 담는다(2026-08-17). ok가 아니면 null로 뭉개면
+      //   '아직 도는 중'과 '받기부터 실패해 포기'를 화면이 구별할 수 없다.
+      //   포기(gave_up)까지 실려 있어야 "기다려도 소용없다"를 말해줄 수 있다.
       _SRC_BRIEF[code] = d || null;
     }catch(e){ _SRC_BRIEF[code] = null; }
+    finally{ _SRC_INFLIGHT.delete(code); }
   }));
   const done = items.filter(it => (_SRC_BRIEF[it.shortcode] || {}).ok).length;
   box.innerHTML =
@@ -3792,6 +3807,20 @@ async function renderSourceAnalysis(){
        <span class="hint">${done}/${items.length}개 읽음 — 어떤 재료가 모였고, 뭘 쓸 수 있는지</span>
      </div>`
     + `<div class="srcGrid">` + items.map((it, i) => _srcCard(it, i)).join('') + `</div>`;
+
+  // ★아직 도는 게 남았으면 **스스로 다시 확인한다**(2026-08-17). 분석은 영상마다 끝나는
+  //   시각이 다른데 다시 그리는 시점은 자동적재 직후 한 번뿐이라, 그때 안 끝난 영상은
+  //   여전히 "분석 중"으로 굳었다(사장님이 새로고침해야만 풀렸다).
+  //   ⚠️ 포기(gave_up)한 것은 세지 않는다 — 오지 않을 결과를 영원히 폴링하면 안 된다.
+  const waiting = items.filter(it => {
+    const r = _SRC_BRIEF[it.shortcode];
+    return !(r || {}).ok && !(r || {}).gave_up;
+  }).length;
+  clearTimeout(_SRC_POLL);
+  if(waiting){
+    // 분석은 30초~1분 — 8초마다 보면 충분하고 서버도 안 두들긴다(저장된 것만 읽는 API라 비용 0).
+    _SRC_POLL = setTimeout(() => { renderSourceAnalysis().catch(()=>{}); }, 8000);
+  }
 }
 function _srcCard(it, i){
   const r = _SRC_BRIEF[it.shortcode];
