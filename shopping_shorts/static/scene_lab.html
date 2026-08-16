@@ -388,11 +388,11 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
   <div class="kpi" id="k-long-wrap">늘어진 컷 <b id="k-long">-</b></div>
   <div class="kpi" id="k-own-wrap">내가 고른 화면 <b id="k-own">-</b></div>
   <button class="act" onclick="reset()">처음부터 다시</button>
-  <button class="act" id="applybtn" style="border-color:var(--accent);color:#9fd0ff"
-          title="지금 화면의 편성·트림·늘려채우기를 이 작업에 얹습니다(원본은 안 건드림 — 옆 ↩ 반영 취소로 언제든 복구). 다음 렌더부터 반영됩니다."
-          onclick="applyServer()">📤 서버에 반영</button>
+  <!-- ★[📤 서버에 반영] 버튼을 없앴다(2026-08-17 사장님 "이걸 사용자들이 어떻게 누르나
+       자동으로 되게 하고 없애야지"). 이제 편집이 멈추면 1.2초 뒤 saveWork→autoApply가
+       알아서 올린다. 안 눌러서 화면과 렌더가 어긋나던 사고(job 03c6639b1198)의 원인 제거. -->
   <button class="act" onclick="revertServer()"
-          title="서버에 얹었던 실험실 편성을 걷어내 원래 편집안으로 되돌립니다(원본은 안 건드렸으므로 100% 복구)">↩ 반영 취소</button>
+          title="내가 고친 편성을 걷어내고 AI가 처음 배치한 편집안으로 되돌립니다(원본은 안 건드렸으므로 100% 복구)">↩ AI 배치로 되돌리기</button>
   <span id="savedmsg" class="hint" style="color:var(--good)"></span>
   <div class="hint">왼쪽 장면: 끌어다 놓기·두 번 클릭 = 담기 · 오른쪽 장면: 왼쪽으로 끌기·두 번 클릭 = 빼기 · 클릭 = 재생</div>
 </footer>
@@ -486,6 +486,32 @@ function srcNo(sid){
   const s0 = DATA.segments[sid] || {};
   return _SRC_NO[s0.video_id] || 0;
 }
+// ★조각 번호(2026-08-17 사장님: "영상 썸네일에 1번영상 1번조각 2.1초 이런 식으로 마킹을
+//   처음부터 해버리면 나열이 쉽지 않나"). 그 영상 **안에서 시간순 몇 번째**인지다.
+//   왜 필요한가: 배지에 영상번호만 있으면 같은 영상 조각끼리 순서가 안 보인다 —
+//   '틀에 붓기 → 거품기로 섞기'처럼 거꾸로 담겨도 눈으로 못 잡는다. 1-3·1-5로 적으면
+//   번호만 훑어도 뒤죽박죽인지 바로 보인다(조리 시간순 배열이 곧 의미인 레시피에 특히).
+//   ⚠️ seg_id 꼬리숫자를 쓰지 않는다 — 소스마다 채번 규칙이 달라(짧은해시 등) 믿을 수 없다.
+//      실제 start 시각으로 세운다(서버 _order_picks와 같은 축, 0순위-B).
+let _SEG_NO = null;
+function segNo(sid){
+  if (_SEG_NO === null){
+    _SEG_NO = {};
+    const byVid = {};
+    for (const k of Object.keys(DATA.segments || {})){
+      const v = (DATA.segments[k] || {}).video_id || '';
+      (byVid[v] = byVid[v] || []).push(k);
+    }
+    for (const v of Object.keys(byVid)){
+      byVid[v]
+        .sort((a, b) => (DATA.segments[a].start || 0) - (DATA.segments[b].start || 0))
+        .forEach((k, i) => { _SEG_NO[k] = i + 1; });
+    }
+  }
+  return _SEG_NO[sid] || 0;
+}
+// 카드에 찍는 마킹 — "1-3" (1번 영상의 3번째 조각)
+function segMark(sid){ return srcNo(sid) + '-' + segNo(sid); }
 // 용도 배지 — 위 결에서 바로 파생한 **제안**이다(강제 아님, 담는 건 사장님 판단).
 function useTags(sid){
   const s0 = DATA.segments[sid] || {}, r = groupOf(sid), t = [];
@@ -770,8 +796,8 @@ function renderBand(){
              ondragover="if(dragFrom){event.preventDefault();event.dataTransfer.dropEffect='move';}"
              ondrop="bandDrop(${i}, '${c.seg_id}', event)"
              ondblclick="event.stopPropagation();dropCutFromBand(${i}, '${c.seg_id}')"
-             title="영상 ${srcNo(c.seg_id)} · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 끌어서 순서 바꾸기 · 아래 소스로 끌면 빼기 · 두 번 클릭도 빼기">
-             <img src="${SL.thumb(c.seg_id)}" loading="lazy"><span class="n">${srcNo(c.seg_id)}</span><span class="s">${c.dur.toFixed(1)}</span
+             title="${segMark(c.seg_id)} = 영상 ${srcNo(c.seg_id)}의 ${segNo(c.seg_id)}번째 조각 · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 끌어서 순서 바꾸기 · 아래 소스로 끌면 빼기 · 두 번 클릭도 빼기">
+             <img src="${SL.thumb(c.seg_id)}" loading="lazy"><span class="n">${segMark(c.seg_id)}</span><span class="s">${c.dur.toFixed(1)}</span
              ><input type="checkbox" class="pk" title="빼려면 체크 — 여러 장 고르고 위 [고른 것 빼기]를 누르세요"
                     ${isPicked(i, c.seg_id) ? 'checked' : ''}
                     onclick="event.stopPropagation();togglePick(${i}, '${c.seg_id}', this.checked)"
@@ -876,7 +902,7 @@ function render(){
             <div class="slabrow">
               ${groupMode==='src'
                 ? `<span class="srcno rol" title="이 장면의 결: ${esc(groupTitle(groupOf(s.sid)))}">${esc(groupEmoji(groupOf(s.sid)))}</span>`
-                : `<span class="srcno" title="영상 ${srcNo(s.sid)}번에서 온 장면">${srcNo(s.sid)}</span>`}
+                : `<span class="srcno" title="${segMark(s.sid)} = 영상 ${srcNo(s.sid)}의 ${segNo(s.sid)}번째 조각(시간순)">${segMark(s.sid)}</span>`}
               ${s.label ? `<span class="slab">${esc(s.label)}</span>`
                         : `<span class="slab dim">이름 없음</span>`}
             </div>
@@ -1131,6 +1157,19 @@ function saveWork(){
   }catch(e){}
   const el = document.getElementById('savedmsg');
   if (el) el.textContent = '💾 내 편집 저장됨 (새로고침해도 남습니다)';
+  autoApply();          // ★서버에도 자동으로 얹는다(아래)
+}
+// ★[서버에 반영]을 사람이 누르게 두지 않는다(2026-08-17 사장님: "서버에 반영 버튼 이걸
+//   사용자들이 어떻게 누르나 자동으로 되게 하고 없애야지").
+//   실제로 그 버튼을 안 누른 채 다음 단계로 가면 화면에서 고친 편성이 **렌더에 안 들어간다**
+//   — 실측(job 03c6639b1198): 화면엔 거품기·반죽 붓기가 담겼는데 서버 편집안은 여전히
+//   '칼로 빵 조각내는 손'이었다. 사용자는 화면대로 나올 줄 알고 넘어간다 = 조용한 어긋남.
+//   편집이 멈춘 뒤 1.2초에 한 번만 보낸다(끌어놓는 중에 매번 SSH를 때리면 느려진다).
+let _autoApplyTimer = null, _autoApplyBusy = false, _autoApplyAgain = false;
+function autoApply(){
+  if (!SL.server) return;                 // 로컬 실험실은 얹을 서버가 없다
+  clearTimeout(_autoApplyTimer);
+  _autoApplyTimer = setTimeout(() => { applyServer({auto: true}); }, 1200);
 }
 function loadWork(){
   try{
@@ -1301,22 +1340,33 @@ async function retts(i){
 // 지금 화면의 편성·트림·늘려채우기를 라이브 잡 edit_plan에 얹는다(serve.py /apply → apply.py
 // SSH → edit_plan.apply_scene_lab). 원본 primary/alternates는 안 건드리므로 되돌릴 수 있다.
 // 칸 순서를 바꿨어도 beat_idx로 짝을 맞춰 보낸다(화면 순서 ≠ 서버 순서 어긋남 방지).
-async function applyServer(){
+async function applyServer(opt){
+  const auto = !!(opt && opt.auto);
+  // 보내는 중에 또 고쳤으면 끝나고 한 번 더 보낸다(마지막 상태가 반드시 서버에 남게).
+  if (_autoApplyBusy){ _autoApplyAgain = true; return; }
+  _autoApplyBusy = true;
   const msg = document.getElementById('savedmsg');
   const payload = {
     beats: DATA.beats.map((b, i) => ({beat_idx: b.beat_idx,
       list: (lists[i] || []).slice(), stretch: !!STRETCH[i]})),
     trims: TRIMS,
   };
-  if (msg) msg.textContent = '📤 서버에 반영하는 중… (SSH, 몇 초)';
+  if (msg) msg.textContent = auto ? '💾 저장 중…' : '📤 서버에 반영하는 중… (SSH, 몇 초)';
   try{
     const r = await fetch(SL.applyUrl(), {method:'POST', headers:{'Content-Type':'application/json'},
                                      body: JSON.stringify({payload})});
     const j = await r.json();
     if (!j.ok) throw new Error(j.error || '실패');
-    if (msg) msg.textContent = '✅ 서버에 반영됨 — 다음 렌더(미리보기/완성)부터 이 편성으로 나옵니다';
+    if (msg) msg.textContent = auto
+      ? '✅ 저장됨 — 이 편성 그대로 영상이 만들어집니다'
+      : '✅ 서버에 반영됨 — 다음 렌더(미리보기/완성)부터 이 편성으로 나옵니다';
   }catch(e){
-    if (msg) msg.textContent = '⚠ 반영 실패: ' + (e.message || e);
+    // ★자동이라고 조용히 넘기지 않는다 — 안 올라간 걸 모르면 화면과 렌더가 어긋난다.
+    if (msg) msg.textContent = '⚠ 저장 실패: ' + (e.message || e) + ' — 잠시 뒤 다시 시도돼요';
+    if (auto) setTimeout(autoApply, 5000);      // 네트워크 일시장애면 곧 성공한다
+  }finally{
+    _autoApplyBusy = false;
+    if (_autoApplyAgain){ _autoApplyAgain = false; autoApply(); }
   }
 }
 // ↩ 얹은 편성을 걷어내 원래 편집안으로(edit_plan.revert_scene_lab — 원본 무파괴라 항상 된다).

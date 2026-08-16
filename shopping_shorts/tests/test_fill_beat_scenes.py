@@ -55,11 +55,35 @@ def test_필요_장수를_컷상한으로_알려준다():
     assert "3장 정도" in seen["prompt"]
 
 
-def test_고른_순서를_지킨다():
-    call, _ = _stub([{"seg_id": "s1-3", "fit": 4},
-                     {"seg_id": "s1-1", "fit": 4}])
+def test_한_소스_안에서는_시간순으로_세운다():
+    """★2026-08-17 사장님 지시로 규칙이 바뀌었다 — 예전엔 'AI가 고른 순서를 지킨다'였다.
+
+    "1번 영상 시간순 / 2번 영상 시간순 마킹하고 뒤죽박죽 되지 않게 해줘야
+     조리 시간순 배열을 할 때도 이상함을 못 느낀다."
+    모델은 후보 목록을 훑는 순서로 답하기 쉬워 시간 흐름과 무관하다. 그대로 쓰면
+    '완성 접시 → 반죽 치대기'처럼 **거꾸로 된 조리 순서**가 화면에 나간다.
+    """
+    call, _ = _stub([{"seg_id": "s1-3", "fit": 4},      # 6.0s (완성)
+                     {"seg_id": "s1-1", "fit": 4}])     # 0.0s (반죽)
     out = edit_plan.fill_beat_scenes("멘트", 4.0, SEGS, list(SEGS), call=call)
-    assert [p["seg_id"] for p in out] == ["s1-3", "s1-1"]
+    assert [p["seg_id"] for p in out] == ["s1-1", "s1-3"], "시간순으로 세워야 한다"
+
+
+def test_소스는_뭉치고_소스순서는_먼저_고른쪽():
+    """소스가 섞이면 영상이 왔다갔다 한다 — 소스 단위로 뭉친다.
+    어느 소스를 앞에 둘지는 AI가 먼저 고른 쪽(그 칸의 주된 소스)을 존중한다."""
+    segs = dict(SEGS)
+    segs["s2-1"] = {"seg_id": "s2-1", "video_id": "v2", "start": 1.0, "end": 3.0,
+                    "scene_desc": "다른 영상 앞부분", "label": "", "text": ""}
+    segs["s2-2"] = {"seg_id": "s2-2", "video_id": "v2", "start": 5.0, "end": 7.0,
+                    "scene_desc": "다른 영상 뒷부분", "label": "", "text": ""}
+    # AI가 v2를 먼저 골랐다 → v2 묶음이 앞, 각 묶음 안은 시간순
+    call, _ = _stub([{"seg_id": "s2-2", "fit": 4},
+                     {"seg_id": "s1-3", "fit": 4},
+                     {"seg_id": "s2-1", "fit": 4},
+                     {"seg_id": "s1-1", "fit": 4}])
+    out = edit_plan.fill_beat_scenes("멘트", 8.0, segs, list(segs), call=call)
+    assert [p["seg_id"] for p in out] == ["s2-1", "s2-2", "s1-1", "s1-3"]
 
 
 def test_후보밖_중복_저품질은_버린다():
