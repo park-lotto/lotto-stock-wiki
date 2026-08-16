@@ -3123,6 +3123,43 @@ def api_coupang_suggest(body: dict):
     return {"ok": True, "queries": qs}
 
 
+def _analyze_relay_raw(raw, product=None):
+    """릴레이가 올린 원본(상세 이미지 base64 + 리뷰) → product_facts 분석 결과.
+
+    ★왜 서버가 분석하나: 분석 키(`SHORTS_GEMINI_KEY`)는 서버에만 있다. PC는 쿠팡이
+      막는 부분(긁기)만 맡는다 — 키를 두 곳에 두면 관리가 갈린다(0순위-B).
+    ★실패해도 예외를 안 낸다 — 재료가 없다고 대본 생성이 막히면 안 된다.
+    """
+    raw = raw or {}
+    imgs_b64 = raw.get("images_b64") or []
+    reviews = raw.get("reviews") or []
+    if not imgs_b64 and not reviews:
+        return None
+    import base64
+    import tempfile
+    from shopping_shorts import product_facts
+    tmpdir = tempfile.mkdtemp(prefix="relay_facts_")
+    paths = []
+    try:
+        for i, b64 in enumerate(imgs_b64):
+            try:
+                p = os.path.join(tmpdir, "detail_%02d.jpg" % i)
+                with open(p, "wb") as f:
+                    f.write(base64.b64decode(b64))
+                paths.append(p)
+            except Exception:      # noqa: BLE001 — 이미지 한 장 깨져도 나머지로 간다
+                continue
+        return product_facts.analyze(
+            {"detail_images": paths, "reviews": reviews,
+             "title": raw.get("title") or "", "url": raw.get("url") or ""},
+            name=((product or {}).get("name") or raw.get("title") or ""))
+    except Exception as e:      # noqa: BLE001
+        print("[relay_facts] 분석 실패: %s %s" % (type(e).__name__, str(e)[:120]))
+        return None
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+
 @app.get("/api/coupang/relay/next")
 def api_coupang_relay_next(token: str = "", wait: int = 25):
     """릴레이(사장님 PC)가 일감을 받아가는 롱폴링 창구. 없으면 job:null."""
@@ -3148,10 +3185,10 @@ def api_coupang_relay_result(body: dict):
     payload = {"ok": bool(body.get("ok")), "items": body.get("items") or [],
                "search_url": body.get("search_url") or "", "source": "relay",
                "notice": body.get("notice") or "",
-               # 상세·리뷰 수집(kind="detail") 결과 — 릴레이 PC가 제미니 분석까지 끝낸 JSON.
-               # ★이미지를 서버로 올리지 않는다: 상세페이지는 이미지라 용량이 크고, 분석에
-               #   필요한 건 결과 문장뿐이다. PC가 긁고 PC가 분석해서 결론만 보낸다.
-               "facts": body.get("facts") or None,
+               # 상세·리뷰 수집(kind="detail") 결과.
+               # ★PC는 긁기만, 분석은 여기서 한다 — 분석 키(SHORTS_GEMINI_KEY)가 서버에만
+               #   있기 때문이다(키를 PC로 복사하면 관리 지점이 둘이 된다, 0순위-B).
+               "facts": _analyze_relay_raw(body.get("raw"), body.get("product")),
                "product": body.get("product") or None}
     delivered = coupang_relay.QUEUE.complete((body.get("id") or "").strip(), payload)
     # 이미 타임아웃으로 접힌 요청이면 delivered=False — 릴레이 잘못이 아니니 200으로 알린다.
