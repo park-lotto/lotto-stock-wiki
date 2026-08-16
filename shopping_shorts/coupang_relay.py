@@ -34,15 +34,22 @@ import uuid
 
 
 class _Job:
-    __slots__ = ("id", "q", "limit", "done", "result", "taken_at")
+    # ★kind·payload·on_done 추가(2026-08-17) — 일감이 '검색' 하나뿐이 아니게 됐다.
+    #   kind="search"  기존 그대로(웹 요청이 결과를 기다린다)
+    #   kind="detail"  상품 상세·리뷰 수집 — **아무도 안 기다린다**(1단계에서 미리 걸어둔다).
+    #                  결과가 오면 on_done(payload)로 서버가 job에 저장한다.
+    __slots__ = ("id", "kind", "q", "limit", "payload", "done", "result", "taken_at", "on_done")
 
-    def __init__(self, q, limit):
+    def __init__(self, q, limit, kind="search", payload=None, on_done=None):
         self.id = uuid.uuid4().hex[:12]
+        self.kind = kind
         self.q = q
         self.limit = limit
+        self.payload = payload or {}
         self.done = threading.Event()
         self.result = None
         self.taken_at = 0.0
+        self.on_done = on_done
 
 
 class RelayQueue:
@@ -94,7 +101,25 @@ class RelayQueue:
             return False
         job.result = payload
         job.done.set()
+        # ★기다리는 사람이 없는 일감(kind="detail")은 여기서 뒷정리까지 해야 한다 —
+        #   결과를 job에 저장하는 건 콜백이 한다. 콜백이 터져도 릴레이 응답은 200이어야
+        #   릴레이가 다음 일감으로 넘어간다(저장 실패로 릴레이를 세우지 않는다).
+        if job.on_done:
+            try:
+                job.on_done(payload, job.payload)
+            except Exception as e:      # noqa: BLE001
+                print("[coupang_relay] on_done 실패: %s %s" % (type(e).__name__, str(e)[:120]))
         return True
+
+    def submit_async(self, kind, payload, q="", on_done=None):
+        """결과를 **안 기다리고** 큐에만 넣는다(1단계 선수집용). 넣은 일감 id를 준다.
+
+        기존 submit은 웹 요청이 그 자리에서 결과를 기다리는 구조라, 2~3분 걸리는
+        상세·리뷰 수집에는 못 쓴다(사장님을 그만큼 세워둔다). 그래서 넣고 잊는다."""
+        job = _Job(q, None, kind=kind, payload=payload, on_done=on_done)
+        with self._lock:
+            self._waiting.append(job)
+        return job.id
 
     # ── 상태 ──
     def status(self):

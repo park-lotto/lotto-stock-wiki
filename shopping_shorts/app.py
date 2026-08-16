@@ -3,6 +3,7 @@ import base64
 import hmac
 import hashlib
 import ipaddress
+import json
 import os
 import re
 import secrets
@@ -3130,7 +3131,11 @@ def api_coupang_relay_next(token: str = "", wait: int = 25):
     job = coupang_relay.QUEUE.take(max(1, min(wait, 55)))
     if job is None:
         return {"ok": True, "job": None}
-    return {"ok": True, "job": {"id": job.id, "q": job.q, "limit": job.limit}}
+    # kind·payload를 함께 내려준다(2026-08-17). 옛 릴레이 클라이언트는 이 키를 무시하고
+    # 종전대로 q로 검색하므로, 릴레이를 안 올려도 검색은 그대로 돈다(회귀 0).
+    return {"ok": True, "job": {"id": job.id, "q": job.q, "limit": job.limit,
+                                "kind": getattr(job, "kind", "search"),
+                                "payload": getattr(job, "payload", {}) or {}}}
 
 
 @app.post("/api/coupang/relay/result")
@@ -3141,7 +3146,12 @@ def api_coupang_relay_result(body: dict):
         return JSONResponse(status_code=403, content={"ok": False, "error": "토큰 불일치"})
     payload = {"ok": bool(body.get("ok")), "items": body.get("items") or [],
                "search_url": body.get("search_url") or "", "source": "relay",
-               "notice": body.get("notice") or ""}
+               "notice": body.get("notice") or "",
+               # 상세·리뷰 수집(kind="detail") 결과 — 릴레이 PC가 제미니 분석까지 끝낸 JSON.
+               # ★이미지를 서버로 올리지 않는다: 상세페이지는 이미지라 용량이 크고, 분석에
+               #   필요한 건 결과 문장뿐이다. PC가 긁고 PC가 분석해서 결론만 보낸다.
+               "facts": body.get("facts") or None,
+               "product": body.get("product") or None}
     delivered = coupang_relay.QUEUE.complete((body.get("id") or "").strip(), payload)
     # 이미 타임아웃으로 접힌 요청이면 delivered=False — 릴레이 잘못이 아니니 200으로 알린다.
     return {"ok": True, "delivered": delivered}
@@ -8163,7 +8173,72 @@ def api_produce_autoload(request: Request, body: dict):
         slots[e["i"]] = {"shortcode": code, "status": "added"}
 
     results = [s for s in slots if s]
+    # ★쿠팡 선수집(2026-08-17 사장님 지시 "1단계에서 뒤에서 상세·리뷰까지 뽑자").
+    #   분석이 끝난 이 자리에 걸어두면, 사장님이 2단계로 넘어올 때쯤 재료가 준비돼 있다.
+    #   대본 만들 때 긁으면 2~3분을 그 자리에서 기다리게 된다.
+    try:
+        _queue_product_prefetch(store, done, cid)
+    except Exception as e:      # noqa: BLE001 — 선수집 실패가 영상 적재를 망치면 안 된다
+        print("[product_prefetch] 큐잉 실패: %s %s" % (type(e).__name__, str(e)[:120]))
     return {"ok": True, "results": results, "added": added}
+
+
+# 상품 재료를 미리 긁을 카테고리 — 사장님 지시로 **상품 관련만**(레시피·뷰티 제외).
+# ⚠️ 라이브에 실재하는 라벨만 쓴다(홈템/레시피/뷰티/기타). 없는 라벨을 적으면 조용히 0건이 된다.
+_PREFETCH_CATEGORIES = ("홈템", "기타")
+
+
+def _queue_product_prefetch(store, done, cid):
+    """1단계 분석 결과 → 쿠팡 상세·리뷰 선수집을 릴레이 큐에 걸어둔다.
+
+    ## 왜 1단계인가 (사장님 설계)
+    상품 재료 수집은 2~3분이 걸린다. 대본 만들 때 돌리면 그 시간을 사장님이 그대로
+    기다린다. 영상 분석이 이미 도는 이 자리에 얹으면 **대기가 겹쳐 사라진다.**
+
+    ## 검색어를 어디서 얻나 — 3단계를 기다릴 필요가 없다
+    지금까지 상품은 3단계 편집안의 `affiliate_target`에서 왔다. 그런데 1단계 태깅이
+    이미 **`product`(이 영상이 파는 제품 이름)**를 뽑고 있다(`script_extract.py:92`).
+    그걸 검색어로 쓰면 1단계에서 바로 시작할 수 있다.
+
+    ## 왜 서버가 직접 안 긁나
+    쿠팡은 서버를 막는다 — AWS 서울(**한국 IP**)에서도 403(2026-08-17 실측).
+    IP가 아니라 브라우저 지문을 본다. 그래서 사장님 PC 릴레이가 대신 돈다.
+    릴레이가 꺼져 있으면 큐에 남아 있다가 켜질 때 처리된다(아무것도 안 깨진다).
+    """
+    from shopping_shorts import coupang_relay
+    for e in done or []:
+        if e.get("status") != "added":
+            continue
+        cat = (e.get("category") or "").strip()
+        if cat not in _PREFETCH_CATEGORIES:
+            continue                     # 레시피·뷰티는 팔 물건이 아니라 건너뛴다
+        name = ((e.get("script") or {}).get("source_brief") or {})
+        product = ""
+        if isinstance(name, dict):
+            product = (name.get("product") or "").strip()
+        if not product:
+            continue                     # 무슨 제품인지 못 잡았으면 검색할 말이 없다
+        code = e.get("code") or ""
+        if store.get_setting("product_prefetch_%s" % code, ""):
+            continue                     # 같은 영상으로 두 번 긁지 않는다(쿠팡 두들김 방지)
+        store.set_setting("product_prefetch_%s" % code, "queued")
+
+        def _save(payload, meta, _code=code, _cid=cid):
+            """릴레이가 보낸 결과를 도서관 캐시에 심는다 — job이 아직 없어도 남는다."""
+            facts = (payload or {}).get("facts") or {}
+            st = Store(DB_PATH)
+            st.set_setting("product_prefetch_%s" % _code,
+                           "done" if facts else "empty")
+            if facts:
+                st.set_setting("product_facts_%s" % _code,
+                               json.dumps({"facts": facts,
+                                           "product": (payload or {}).get("product") or {}},
+                                          ensure_ascii=False))
+
+        coupang_relay.QUEUE.submit_async(
+            "detail", {"product": product, "shortcode": code, "category": cat},
+            q=product, on_done=_save)
+        print("[product_prefetch] 큐잉: %s (%s / %s)" % (product, cat, code))
 
 
 @app.post("/api/produce/mix/start")
@@ -9376,11 +9451,39 @@ def _facts_block_for_job(job_id, store=None):
         return ""
     try:
         from shopping_shorts import product_facts
-        job = (store or Store(DB_PATH)).get_mix_job(job_id)
+        st = store or Store(DB_PATH)
+        job = st.get_mix_job(job_id)
         facts = ((job or {}).get("product") or {}).get("facts") or {}
+        # ★1단계 선수집분 폴백(2026-08-17) — 3단계에서 상품을 고르기 전에도 재료가 있다.
+        #   1단계가 담긴 영상별로 긁어 캐시에 심어두므로, job에 상품이 아직 없으면 거기서 꺼낸다.
+        #   담긴 영상 여러 개 중 **재료가 있는 첫 번째**를 쓴다(주제는 [대본 1]이므로 그 순서).
+        if not facts:
+            facts = _prefetched_facts_for_job(job, st)
         return product_facts.prompt_block(facts)
     except Exception:      # noqa: BLE001 — 재료 조회 실패가 대본 생성을 막으면 안 된다
         return ""
+
+
+def _prefetched_facts_for_job(job, store):
+    """1단계가 미리 긁어둔 상품 재료 — 이 작업에 담긴 영상들의 캐시에서 찾는다.
+
+    없으면 {}. 캐시 키는 `product_facts_<shortcode>`(1단계 `_queue_product_prefetch`가 심는다).
+    ⚠️ 여기서 새로 긁지 않는다 — 이 함수는 대본 생성 경로라 기다림이 그대로 사장님 몫이 된다.
+    """
+    from shopping_shorts import mix_pipeline
+    for url in ((job or {}).get("urls") or []):
+        for key in mix_pipeline._cache_keys_for_url(url):
+            raw = store.get_setting("product_facts_%s" % key, "")
+            if not raw:
+                continue
+            try:
+                d = json.loads(raw)
+            except Exception:      # noqa: BLE001 — 깨진 캐시로 대본을 막지 않는다
+                continue
+            facts = (d or {}).get("facts") or {}
+            if facts:
+                return facts
+    return {}
 
 
 def _sources_for_generate(item, job, limit=3):
