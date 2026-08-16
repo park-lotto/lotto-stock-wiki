@@ -974,6 +974,30 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 소스 다수결이 레시피면 화면을 요리 시간순으로 재배치(장면 결 맞춤) — build_edit_plan 경로에 전달.
     is_recipe = _sources_is_recipe(source_scripts)
     _rec_cands = None   # 후보목록(카드) — conform 뒤 재저장해 카드=TTS 일치시키려고 잡아둔다
+    # ★확정 대본이 있으면 **새로 쓰지 않는다**(2026-08-17 사장님: "어이없게 대본을 또 쓰냐 /
+    #   당연히 대본은 확정해서 믹스 버튼을 누른 거지 / 거기서 대본 수정까지 마무리한 거니까").
+    #
+    #   이 함수 docstring이 원래 그렇게 적혀 있다 — "given_script: 있으면 확정 대본을 그대로
+    #   비트로 쪼개 영상만 매칭(영상제작 2단계)". 그런데 `if scene_first:`가 **먼저** 걸려서
+    #   그 분기를 못 탔다. produce.html은 scene_first를 **항상 true**로 보낸다(4950행).
+    #   given_script와 reference_text에 같은 값이 들어가는데, scene_first 경로는 given_script를
+    #   안 보고 reference_text를 '참고 대본'으로만 써서 후보 3~4개를 **새로 쓴다**.
+    #
+    #   실측 피해 둘:
+    #     ① 2단계가 무의미해진다 — 확정 371자가 3단계에서 전혀 다른 162자로 바뀌었다
+    #        (job 832a5ffa80d9: "요즘 인스타 감성…" → "저 이거 때문에 외출할 때마다…")
+    #     ② 시간이 여기서 다 간다 — job 0bd83269a8ca 8분 48초 중 대본 생성+리라이트가
+    #        460초(7.7분). 그나마 restyle 실호출은 78초뿐이고 나머지가 대본 새로 쓰기다.
+    #        후보가 c1~c5까지 늘어나며(품질 미달 재생성) 매번 길이초과로 3~4회씩 재요청했다.
+    #
+    #   → 확정 대본이 오면 scene_first를 끄고 build_edit_plan(given_script 경로)으로 간다.
+    #     대본은 2단계 것 그대로, 3단계는 **화면만 붙인다**(화면 설명 "문장마다 어떤 화면이
+    #     붙는지 정하고 미리 봅니다"와도 이제 일치).
+    #   ⚠️ 대본 없이 오는 경로(위키 직행·자동배치 등)는 종전대로 scene_first가 돈다(회귀 0).
+    if scene_first and (given_script or "").strip():
+        print("[mix] 확정 대본이 있어 scene_first를 끈다 — 대본은 그대로, 화면만 매칭"
+              " (%d자)" % len((given_script or "").strip()), file=sys.stderr)
+        scene_first = False
     if scene_first:
         from shopping_shorts.edit_plan import build_scene_first_plan
         # 부품은행 주입(P0-2): 설정 bank_enabled=1일 때만 승인 훅·어미·부사·CTA·스파인을 조립해
