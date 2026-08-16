@@ -2,6 +2,7 @@
 
 sidebar.js는 페이지 6개가 공유한다 — 목록 주입이 다른 페이지를 깨면 안 된다.
 """
+import json
 import os
 import pathlib
 import shutil
@@ -253,3 +254,162 @@ def test_angle_brackets_in_title_do_not_become_tags():
                  {work_id:'w1', title:'감자 레시피 <꿀팁>', step:0, job_id:null, updated_at:'2026-07-17T01:00:00+00:00'}]};''')
     assert "<꿀팁>" not in out, "꺾쇠가 그대로 나가 태그가 된다"
     assert "&lt;" in out
+
+
+# ── 이름 바꾸기 ✏ (2026-08-17) ─────────────────────────────────────
+# 사장님 "내 작업에 작업명 수정할수있게". 목록이 '(제목 없음)' 여러 줄이라 구분이 안 됐다.
+# ★문자열 검사로 끝내지 않는다 — 이 파일 주석의 경고대로 "코드에 그 문자열이 있다"가
+#   런타임 동작을 보장하지 않는다(슬라이스 섀도잉으로 실제로 한 번 속았다). 핸들러를
+#   **직접 불러** 무엇을 POST하고 화면을 어떻게 고치는지 본다.
+_RENAME_HS = _NAV_QS + """
+// 행(.ss-work[data-wid=..])과 그 안의 이름 칸을 찾아주는 최소 DOM.
+var _rows = {};
+function _mkRow(wid, label){
+  var nameEl = { textContent: '· ' + label };
+  var openEl = { title: label };
+  var row = { querySelector: function(sel){
+    if (sel === '.ss-work-name') return nameEl;
+    if (sel === '.ss-work-open') return openEl;
+    return null; } };
+  row._name = nameEl; row._open = openEl;
+  _rows[wid] = row; return row;
+}
+_mkRow('w1', '협탁 인테리어 대본');
+_mkRow('w2', '(제목 없음)');
+document.querySelector = function(sel){
+  if (sel === '.ss-nav') return _nav;
+  var m = /data-wid="([^"]+)"/.exec(sel || '');
+  if (m) return _rows[m[1]] || null;
+  return null;
+};
+var PROMPT_ARGS = null, PROMPT_RET = '새 이름';
+window.prompt = function(msg, def){ PROMPT_ARGS = {msg: msg, def: def}; return PROMPT_RET; };
+window.alert = function(m){ console.log('ALERT:' + m); };
+var POSTED = [];
+var RENAME_RESPONSE = null;   // null이면 서버가 준 이름을 그대로 되돌려준다
+var _origFetch = fetch;
+fetch = async function(url, opt){
+  if (String(url).indexOf('/rename') !== -1){
+    POSTED.push({url: url, opt: opt});
+    var body = JSON.parse(opt.body);
+    var d = RENAME_RESPONSE || {ok: true, title: body.name || '자동제목'};
+    return { json: async () => d };
+  }
+  return _origFetch(url, opt);
+};
+"""
+
+
+def test_rename_button_is_rendered():
+    out = _run("console.log(_nav.innerHTML.indexOf('__ssRenWork') !== -1 ? 'has-btn' : 'missing');")
+    assert out == "has-btn", "✏ 버튼이 목록에 안 그려졌다 — 이름을 바꿀 손잡이가 없다"
+
+
+def test_rename_posts_new_name_and_updates_row():
+    """✏ → 이름 입력 → 서버에 POST → 화면의 그 행이 즉시 바뀐다(새로고침 없이)."""
+    out = _run("""
+      PROMPT_RET = '요거트케이크 A안';
+      window.__ssRenWork({stopPropagation(){}}, 'w2');
+      await new Promise(r=>setTimeout(r,20));
+      console.log(JSON.stringify({
+        posted: POSTED.length,
+        url: POSTED[0] && POSTED[0].url,
+        sent: POSTED[0] && JSON.parse(POSTED[0].opt.body).name,
+        method: POSTED[0] && POSTED[0].opt.method,
+        name: _rows['w2']._name.textContent,
+        title: _rows['w2']._open.title,
+      }));
+    """, harness_override=_RENAME_HS)
+    d = json.loads(out)
+    assert d["posted"] == 1 and d["method"] == "POST"
+    assert d["url"] == "/api/produce/works/w2/rename"
+    assert d["sent"] == "요거트케이크 A안"
+    assert d["name"] == "· 요거트케이크 A안", f"행 이름이 안 바뀌었다: {d}"
+    assert d["title"] == "요거트케이크 A안", "title 속성(툴팁)도 같이 바뀌어야 한다"
+
+
+def test_rename_cancel_does_not_post():
+    """취소(prompt가 null)면 아무 일도 없어야 한다 — 빈 이름으로 지워버리면 안 된다."""
+    out = _run("""
+      PROMPT_RET = null;
+      window.__ssRenWork({stopPropagation(){}}, 'w1');
+      await new Promise(r=>setTimeout(r,20));
+      console.log(JSON.stringify({posted: POSTED.length, name: _rows['w1']._name.textContent}));
+    """, harness_override=_RENAME_HS)
+    d = json.loads(out)
+    assert d["posted"] == 0, "취소했는데 서버로 보냈다"
+    assert d["name"] == "· 협탁 인테리어 대본"
+
+
+def test_rename_empty_string_is_sent_as_reset():
+    """빈 문자열은 취소가 아니라 '자동 제목으로 되돌리기'다 — 서버까지 가야 한다."""
+    out = _run("""
+      PROMPT_RET = '';
+      window.__ssRenWork({stopPropagation(){}}, 'w1');
+      await new Promise(r=>setTimeout(r,20));
+      console.log(JSON.stringify({posted: POSTED.length,
+                                  sent: POSTED[0] && JSON.parse(POSTED[0].opt.body).name}));
+    """, harness_override=_RENAME_HS)
+    d = json.loads(out)
+    assert d["posted"] == 1 and d["sent"] == ""
+
+
+def test_rename_prefills_current_name_without_bullet():
+    """현재 이름이 기본값으로 뜬다. '· '는 화면 장식이라 빼고, '(제목 없음)'은 빈 칸으로."""
+    out = _run("""
+      window.__ssRenWork({stopPropagation(){}}, 'w1');
+      await new Promise(r=>setTimeout(r,20));
+      const a = PROMPT_ARGS.def;
+      window.__ssRenWork({stopPropagation(){}}, 'w2');
+      await new Promise(r=>setTimeout(r,20));
+      console.log(JSON.stringify({w1: a, w2: PROMPT_ARGS.def}));
+    """, harness_override=_RENAME_HS)
+    d = json.loads(out)
+    assert d["w1"] == "협탁 인테리어 대본", f"현재 이름이 기본값으로 안 떴다: {d}"
+    assert d["w2"] == "", "'(제목 없음)'은 지울 필요 없이 빈 칸이어야 한다"
+
+
+def test_rename_uses_server_title_not_local_guess():
+    """★제목은 서버(store._work_title)가 정한다 — 화면이 따로 계산하면 어긋난다(0순위-B).
+    서버가 다른 제목을 주면 화면은 **그 값**을 따라야 한다."""
+    out = _run("""
+      PROMPT_RET = '';
+      RENAME_RESPONSE = {ok:true, title:'서버가 정한 자동제목'};
+      window.__ssRenWork({stopPropagation(){}}, 'w1');
+      await new Promise(r=>setTimeout(r,20));
+      console.log(_rows['w1']._name.textContent);
+    """, harness_override=_RENAME_HS)
+    assert out == "· 서버가 정한 자동제목"
+
+
+def test_rename_notifies_producer_page():
+    """지금 열려 있는 작업이면 제작소 STATE에도 심어야 한다 — 안 그러면 다음 자동저장이
+    이름 없는 state를 덮어써 방금 지은 이름이 조용히 사라진다."""
+    out = _run("""
+      var GOT = null;
+      window.__ssApplyWorkTitle = function(wid, name){ GOT = {wid: wid, name: name}; };
+      PROMPT_RET = '내 이름';
+      window.__ssRenWork({stopPropagation(){}}, 'w2');
+      await new Promise(r=>setTimeout(r,20));
+      console.log(JSON.stringify(GOT));
+    """, harness_override=_RENAME_HS)
+    assert json.loads(out) == {"wid": "w2", "name": "내 이름"}
+
+
+def test_rename_failure_does_not_change_row():
+    """서버가 거절하면 화면을 고치지 않는다 — 바뀐 척하면 새로고침에 되돌아가 혼란만 준다."""
+    out = _run("""
+      PROMPT_RET = '새 이름';
+      RENAME_RESPONSE = {ok:false, error:'작업 없음'};
+      window.__ssRenWork({stopPropagation(){}}, 'w1');
+      await new Promise(r=>setTimeout(r,20));
+      console.log(_rows['w1']._name.textContent);
+    """, harness_override=_RENAME_HS)
+    assert out.endswith("협탁 인테리어 대본"), f"실패했는데 행이 바뀌었다: {out}"
+
+
+def test_rename_pencil_has_variation_selector():
+    """★맨 ✏(U+270F)는 윈도우 크롬에서 '옆으로 누운 막대'로 그려진다(실측 스크린샷).
+    U+FE0F(VS16)를 붙여야 연필 모양이 된다 — 아이콘이 뭔지 모르면 아무도 안 누른다."""
+    src = SIDEBAR_JS.read_text(encoding="utf-8")
+    assert "\u270f\ufe0f" in src, "✏에 VS16(U+FE0F)이 빠졌다 — 막대기로 보인다"

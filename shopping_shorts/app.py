@@ -7852,6 +7852,23 @@ def api_produce_works_get(request: Request, work_id: str):
             "settings": settings}
 
 
+@app.post("/api/produce/works/{work_id}/rename")
+def api_produce_works_rename(request: Request, work_id: str, body: dict):
+    # 작업 이름 바꾸기(2026-08-17) — 목록이 '(제목 없음)' 투성이라 구분이 안 됐다.
+    # ★제목 계산은 store._work_title 한 곳에만 있다(0순위-B). 여기선 이름을 넘길 뿐이다.
+    #   빈 문자열이면 직접 지은 이름을 지워 자동 제목(대본 앞 20자)으로 되돌린다 —
+    #   그래서 name이 없다고 422로 막지 않는다(그게 '해제' 경로다).
+    name = body.get("name")
+    if name is not None and not isinstance(name, str):
+        # ★타입을 확인하고 부른다 — dict가 와서 .strip()이 500을 내던 사고가 이 앱에서
+        #   이미 세 번 났다(handoff/장면라벨.md). 모르는 모양이면 받지 않는다.
+        return JSONResponse(status_code=422, content={"ok": False, "error": "name은 문자열"})
+    title = Store(DB_PATH).rename_produce_work(work_id, name or "", customer_id=_cid(request))
+    if title is None:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    return {"ok": True, "title": title}
+
+
 @app.post("/api/produce/works/{work_id}/delete")
 def api_produce_works_delete(request: Request, work_id: str):
     if not Store(DB_PATH).delete_produce_work(work_id, customer_id=_cid(request)):
