@@ -3543,6 +3543,47 @@ def api_mix_src(job_id: str, video_id: str, request: Request):
     return _range_mp4_response(src, request)
 
 
+@app.post("/api/mix/scene_lab/{job_id}/fill")
+def api_mix_scene_lab_fill(job_id: str, body: dict):
+    """칸 하나를 **대사에 맞는 화면들로** 채운다(2026-08-16 사장님 "당연히 대본이랑
+    태깅까지 보면서 매칭을 해야지").
+
+    body = {"beat_idx": 0, "need": 3.8, "taken": ["s1-1", ...]}
+      need  = 그 칸의 나레이션 길이(초). 없으면 서버가 편집안에서 읽는다.
+      taken = 이미 어느 칸에든 담긴 장면들 — 후보에서 뺀다(같은 화면 되풀이 방지).
+    돌려주는 것 = {"picks": [{"seg_id", "fit", "why"}]} · 순서대로.
+
+    ★고르는 판단은 edit_plan.fill_beat_scenes 한 곳에만 있다. 화면(scene_lab.html)은
+    이 결과를 그대로 담기만 하고, 실패하면 제 규칙 기반 채우기로 내려간다(fail-open).
+    """
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "편집안 없음"})
+    try:
+        bi = int(body.get("beat_idx"))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 필요"})
+    beats = job["edit_plan"].get("beats") or []
+    if not (0 <= bi < len(beats)):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "없는 칸"})
+    narration = (beats[bi].get("narration") or "").strip()
+    if not narration:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "이 칸엔 멘트가 없어요"})
+    seg_map, _ = _edit_plan._build_inventory(list((job.get("extract") or {}).values()))
+    taken = {str(s) for s in (body.get("taken") or [])}
+    pool = [sid for sid in seg_map if sid not in taken]
+    if not pool:
+        return {"ok": True, "picks": [], "reason": "남은 장면이 없어요"}
+    need = body.get("need")
+    if need is None:
+        # 화면이 안 보내면 편집안의 그 비트 길이로 대신한다(기준을 두 벌로 두지 않는다).
+        # 음성이 아직 없으면 tts 실길이가 None이다 — 그때는 계획 길이로 대신한다.
+        _caps, _tts = _lab_captions(job["edit_plan"])
+        need = (_tts or {}).get(str(bi)) or beats[bi].get("target_seconds")
+    picks = _edit_plan.fill_beat_scenes(narration, need, seg_map, pool)
+    return {"ok": True, "picks": picks}
+
+
 @app.post("/api/mix/scene_lab/{job_id}/apply")
 def api_mix_scene_lab_apply(job_id: str, body: dict):
     """실험실 편성을 edit_plan에 얹는다/걷는다(edit_plan.apply_scene_lab/revert_scene_lab).

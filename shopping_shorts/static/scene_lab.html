@@ -773,8 +773,8 @@ function renderBand(){
             ${pickCount(i) ? `<button class="danger" title="체크한 장면만 이 칸에서 뺍니다"
                onclick="dropPicked(${i})">🗑 고른 것 빼기 (${pickCount(i)})</button>` : ''}
             <button title="이 칸에 담은 장면을 모두 뺍니다" onclick="clearBeat(${i})">비우기</button>
-            <button title="${AUTOADD[i] ? '방금 자동으로 담은 장면만 도로 뺍니다'
-              : '모자란 초만큼 아직 안 쓴 장면을 골라 담습니다 — 다른 칸에 나온 것·같은 그림은 피합니다'}"
+            <button id="fill-${i}" title="${AUTOADD[i] ? '방금 담은 장면만 도로 뺍니다'
+              : '이 칸의 대사를 AI가 읽고, 그 말이 실제로 보이는 화면을 골라 담습니다'}"
               onclick="autoFill(${i})">${AUTOADD[i] ? `↩ 담은 ${AUTOADD[i].length}장 빼기` : '✨ 채우기'}</button>
           </span></div>
         <div class="tbcuts">${cuts}</div>
@@ -1251,12 +1251,48 @@ function delSeg(i, k){ lists[i].splice(k, 1); render(); }
 // 채우기' 단계는 따로 없다 — 라운드로빈이 여러 바퀴 돌며 담긴 재료를 이미 다 쓰므로,
 // 부족(lack)은 곧 재료 부족이다. 같은 버튼을 다시 누르면 담아준 것만 도로 뺀다(되돌리기).
 const AUTOADD = {};                 // beat_idx → 버튼이 담아준 sid들(순서대로)
-function autoFill(i){
+// ★AI 채우기(2026-08-16 사장님 "당연히 대본이랑 태깅까지 보면서 매칭을 해야지").
+//   서버가 그 칸의 **대사 + 장면 태깅(이름·쓸모·화면묘사·변화·말)**을 함께 주고 고르게 한다
+//   (edit_plan.fill_beat_scenes — 판단은 거기 한 곳에만 있다).
+//   실패·키없음·로컬모드면 아래 규칙 기반 채우기로 그대로 내려간다(fail-open).
+//   ⚠️왜 규칙 기반을 남겨두나: AI가 죽었을 때 버튼이 아무 일도 안 하면 사장님이 멈춘다.
+const FILLWHY = {};                 // sid → AI가 적은 고른 이유(카드 툴팁)
+async function aiPicks(i){
+  if (!SL.server) return null;                          // 로컬 실험실엔 서버가 없다
+  try{
+    const r = await fetch(`/api/mix/scene_lab/${SL.job}/fill`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({beat_idx: i, need: beatDur(i), taken: lists.flat()})
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    const ok = (j.picks || []).filter(p => p && DATA.segments[p.seg_id]);
+    ok.forEach(p => { if (p.why) FILLWHY[p.seg_id] = p.why; });
+    return ok.length ? ok.map(p => p.seg_id) : null;
+  }catch(e){ return null; }
+}
+async function autoFill(i){
   if (AUTOADD[i] && AUTOADD[i].length){                  // 두 번째 누름 = 되돌리기
     const rm = new Set(AUTOADD[i]);
     lists[i] = lists[i].filter(id => !rm.has(id));
     delete AUTOADD[i]; render(); return;
   }
+  // ① 먼저 AI에게 물어본다 — 대사를 읽고 고른다.
+  const btn = document.getElementById('fill-' + i);
+  if (btn){ btn.disabled = true; btn.textContent = '🤖 대사 읽는 중…'; }
+  const ai = await aiPicks(i);
+  if (btn) btn.disabled = false;
+  if (ai && ai.length){
+    const fresh = ai.filter(sid => !lists.flat().includes(sid));
+    if (fresh.length){
+      lists[i].push(...fresh); AUTOADD[i] = fresh; sel = i; render();
+      const el0 = document.getElementById('savedmsg');
+      if (el0) el0.textContent =
+        `🤖 대사에 맞춰 장면 ${fresh.length}장을 담았습니다 — 같은 버튼으로 되돌릴 수 있어요`;
+      return;
+    }
+  }
+  // ② AI가 못 고르면(키 없음·오류·후보 없음) 태그 기준으로 채운다.
   const ids = lists[i] || [];
   const need = beatDur(i);
   // ★한 장면이 이 칸에 실제로 보태는 시간은 **길어야 MAX_SHOT**이다(2026-08-16 사장님
@@ -1317,7 +1353,7 @@ function autoFill(i){
   render();                         // saveWork가 문구를 덮으므로 안내는 render 뒤에
   const el = document.getElementById('savedmsg');
   if (el) el.textContent = added.length
-    ? `✨ 칸 ${i+1}에 장면 ${added.length}장을 담았습니다 — 같은 버튼으로 되돌릴 수 있어요`
+    ? `✨ 칸 ${i+1}에 장면 ${added.length}장을 담았습니다(태그 기준 — 대사 읽기는 실패) — 같은 버튼으로 되돌릴 수 있어요`
     : '⚠ 담을 만한 안 쓴 장면이 없습니다';
 }
 function moveSeg(i, k, d){

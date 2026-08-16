@@ -11,6 +11,7 @@ build_edit_plan(Gemini 콜)은 Task 4에서 추가.
 
 import inspect
 import json
+import math
 import os
 import re
 import sys
@@ -3224,6 +3225,77 @@ _REPICK_SCHEMA = {
         "required": ["beat_idx", "seg_id", "fit"]}}},
     "required": ["picks"],
 }
+
+
+_FILL_SCHEMA = {
+    "type": "object",
+    "properties": {"picks": {"type": "array", "items": {
+        "type": "object",
+        "properties": {"seg_id": {"type": "string"}, "fit": {"type": "integer"},
+                       "why": {"type": "string"}},
+        "required": ["seg_id", "fit"]}}},
+    "required": ["picks"],
+}
+
+
+def fill_beat_scenes(narration, need_sec, seg_map, pool_ids,
+                     call=_vault_call, max_shot=2.2, min_fit=3):
+    """칸 하나를 **대사에 맞는 화면들로** 채운다 — 순서대로 여러 장.
+
+    ★왜 따로 있나(2026-08-16 사장님 "당연히 대본이랑 태깅까지 보면서 매칭을 해야지"):
+    `_repick_weak_beats`는 어긋난 비트의 **대표 화면 1장을 바꾸는** 갈래라, 비운 칸을
+    여러 장으로 채우지 못한다. 여기서는 같은 원리(대사를 주고 화면을 고르게)를 쓰되
+    **몇 장**을 순서대로 고르게 한다. 판단 기준·프롬프트 어조는 저쪽과 맞춰 둔다.
+
+    화면 쪽 단서는 추출이 이미 붙여둔 것을 그대로 준다 — 이름(label)·쓸모(use_point)·
+    화면묘사·변화·그 장면에서 나온 말. 여기서 새로 판단을 만들지 않는다(0순위-B).
+
+    실패하면 빈 목록을 돌려준다(fail-open) — 부르는 쪽이 규칙 기반 채우기로 내려간다.
+    """
+    if not narration or not seg_map or not pool_ids:
+        return []
+    try:
+        need = max(0.0, float(need_sec or 0))
+    except (TypeError, ValueError):
+        return []
+    # 한 컷은 길어야 max_shot이므로 필요한 장수는 이만큼이다(화면의 안내문과 같은 셈법).
+    want = max(1, int(math.ceil(need / max_shot))) if need > 0 else 1
+    cand_lines = "\n".join(
+        "[{sid}] {name}{desc}{ch}{up}{say} ({sec}초)".format(
+            sid=sid,
+            name=(seg_map[sid].get("label") or "").strip()[:24],
+            desc=(" | 화면:" + (seg_map[sid].get("scene_desc") or "")[:60])
+                 if seg_map[sid].get("scene_desc") else "",
+            ch=(" | 변화:" + seg_map[sid]["change"][:30]) if seg_map[sid].get("change") else "",
+            up=(" | 쓸모:" + seg_map[sid]["use_point"][:40]) if seg_map[sid].get("use_point") else "",
+            say=(" | 말:" + (seg_map[sid].get("text") or "")[:40]) if seg_map[sid].get("text") else "",
+            sec=round(float(seg_map[sid].get("end") or 0) - float(seg_map[sid].get("start") or 0), 1))
+        for sid in pool_ids if sid in seg_map)
+    if not cand_lines:
+        return []
+    prompt = (
+        "아래 대사가 흐르는 동안 보여줄 화면을 후보에서 골라라. **대사는 바꾸지 않는다.**\n"
+        f"[대사]\n{narration}\n\n"
+        f"[조건] 이 대사는 약 {need:.1f}초다. 한 컷은 길어야 {max_shot}초라 "
+        f"**{want}장 정도**가 필요하다. 화면이 이어지도록 **보여줄 순서대로** 고른다.\n"
+        "- 대사가 말하는 것을 실제로 보여주는 화면을 고른다. 분위기만 비슷한 건 안 된다.\n"
+        "- 같은 그림이 되풀이되지 않게 서로 다른 장면을 고른다.\n"
+        f"- 맞는 게 {want}장보다 적으면 **적게 골라라**. 억지로 채우지 마라.\n"
+        "- fit은 그 화면과 대사가 맞는 정도(1~5)를 솔직하게. why는 15자 이내.\n"
+        f"\n[후보 화면]\n{cand_lines}\n\n출력은 picks 배열의 JSON만.")
+    raw = call(prompt, _FILL_SCHEMA)
+    if not raw or not isinstance(raw, dict):
+        return []
+    out, used = [], set()
+    for p in raw.get("picks", []):
+        try:
+            sid, fit = str(p["seg_id"]).strip(), int(p.get("fit") or 0)
+        except (KeyError, TypeError, ValueError):
+            continue
+        if sid in seg_map and sid in pool_ids and sid not in used and fit >= min_fit:
+            used.add(sid)
+            out.append({"seg_id": sid, "fit": fit, "why": str(p.get("why") or "")[:40]})
+    return out
 
 
 def _repick_weak_beats(beats, seg_map, call=_vault_call, min_fit=4):
