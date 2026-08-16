@@ -3277,25 +3277,63 @@ _FILL_SCHEMA = {
 #   — 훅 칸엔 후킹용(완성·after), CTA 칸엔 CTA용. 서버 자동매칭만 그걸 안 썼다.
 #   여기서 판단을 새로 만들지 않는다 — 실험실과 **같은 표**를 쓴다(0순위-B).
 #   ⚠️ scene_lab.html의 useTags를 고치면 여기도 같이 고쳐야 한다(짝으로 움직이는 값).
+# ★축은 원본이 정한다(2026-08-17 사장님: "정답은 지금 축으로 잡혀있는 쇼곰 영상을 보면
+#   답이 나온다"). 쇼곰(DcAm4RETl_T) 12구간 실측 — **완성 → 조리 → 완성 샌드위치**다:
+#     0.0~ 6.6s  결=완성    유선지 뜯기 · 칼로 자르기 · **단면 가르기**      ← 훅
+#     6.6~15.7s  결=사용중  반죽 · 거품기 · 올리기 · 틀에 붓기 · **오븐**    ← 해결/결과(조리)
+#    15.7~22.3s  결=완성    단면 가르기 · 탄력 테스트 · 숟가락 마무리        ← CTA
+#
+#   사장님 지시 그대로: "훅은 시각적으로 완성된 걸 보여주고 / 분기점이 되는 지점은
+#   해결·결과 부분 **즉 조리를 하는 구간이 생기는 지점**에서만 맞으면 영상이 맞아 보인다 /
+#   CTA는 조리 완성되는 이미지들(오븐에 넣고 꺼내거나 그릇에 담거나 완성되었다거나)".
+#   ⚠️ 예전 표는 해결·결과를 (after, 완성)으로 봤다 — 그러면 조리 구간이 통째로 안 쓰여
+#      "완성품만 계속 나오는" 영상이 된다. 원본 축과 어긋난 건 이 줄이었다.
+#
+#   ★"문제"는 매칭이 없는 게 정상이다(사장님: "문제 같은 부분도 당연히 매칭이 되는 게
+#     없을 거야 레시피니까"). 실측으로도 이 작업 4개 영상에 before·문제 결이 **0건**이다.
+#     없는 결을 1순위로 걸어두면 모델이 억지로 아무거나 집는다 → 차선(fallback)을 준다.
+#     차선까지 없으면 대사 의미로만 고르게 둔다(억지 배정 금지).
+#   ⚠️ scene_lab.html의 useTags와 짝이다 — 한쪽만 고치면 화면과 서버가 다른 걸 고른다.
 _ROLE_WANT_SHOTS = (
-    # (역할에 들어있으면 매칭되는 낱말들, 권장 shot_role, 사람이 읽을 설명)
-    (("훅", "hook"), ("완성", "after"), "시선을 끄는 완성품·전후 변화"),
-    (("cta", "마무리"), ("완성",), "완성품(사고 싶어지는 그림)"),
-    (("결과", "result", "resolution", "해결", "solution", "반전"), ("after", "완성"),
-     "달라진 결과·완성품"),
-    (("문제", "problem", "페인", "pain"), ("before", "문제"), "문제 상황·쓰기 전"),
-    (("전개", "process", "과정", "경험", "story"), ("사용중", "조리"), "실제로 쓰는 장면"),
+    # (역할 낱말들, 1순위 shot_role, 차선 shot_role, 사람이 읽을 설명)
+    (("훅", "hook"), ("완성", "after"), (),
+     "시선을 끄는 **완성된 그림**(단면·완성품·전후 변화)"),
+    (("cta", "마무리"), ("완성", "after"), (),
+     "완성되는 그림(오븐에서 꺼내기·그릇에 담기·완성 단면)"),
+    # ★해결·결과 = 조리(사용중) 구간. 여기가 영상이 맞아 보이는지를 가르는 분기점이다.
+    (("해결", "solution", "결과", "result", "resolution", "반전"),
+     ("사용중", "조리"), ("완성", "after"),
+     "실제로 만드는·쓰는 구간(섞기·붓기·오븐) — 여기가 맞아야 영상이 맞아 보인다"),
+    (("전개", "process", "과정", "경험", "story"), ("사용중", "조리"), (),
+     "실제로 쓰는 장면"),
+    # 레시피엔 before/문제 태그가 거의 없다 → 없으면 조리 앞부분(재료·준비)으로 대신한다.
+    (("문제", "problem", "페인", "pain"), ("before", "문제"), ("사용중", "조리"),
+     "쓰기 전 상황 — 없으면 재료·준비 장면"),
 )
 
 
-def _want_shots_for_role(role):
-    """이 비트 역할에 어울리는 shot_role 튜플과 설명. 모르는 역할이면 (None, "")."""
+def _want_shots_for_role(role, available=None):
+    """이 역할에 어울리는 shot_role 튜플과 설명. 모르는 역할이면 (None, "").
+
+    available: 지금 후보에 **실제로 있는** shot_role 집합(선택).
+      주면 1순위가 하나도 없을 때 차선으로 내려간다 — 없는 결을 가리키면
+      모델이 억지로 아무거나 집기 때문이다(레시피의 before·문제가 정확히 그 경우).
+      차선도 없으면 (None, "")로 두어 **대사 의미로만** 고르게 한다.
+    """
     r = (role or "").strip().lower()
     if not r:
         return None, ""
-    for words, shots, why in _ROLE_WANT_SHOTS:
-        if any(w in r for w in words):
+    for words, shots, alt, why in _ROLE_WANT_SHOTS:
+        if not any(w in r for w in words):
+            continue
+        if available is None:
             return shots, why
+        have = set(available or ())
+        if any(s in have for s in shots):
+            return shots, why
+        if alt and any(s in have for s in alt):
+            return alt, why + " (1순위 결이 이 영상엔 없어 차선)"
+        return None, ""      # 억지로 배정하지 않는다
     return None, ""
 
 
@@ -3357,7 +3395,12 @@ def fill_beat_scenes(narration, need_sec, seg_map, pool_ids, taken_ids=None,
     # ★이 칸이 무슨 역할인지 알려준다(2026-08-17). 종전엔 역할을 안 줘서 훅이든 CTA든
     #   똑같이 "대사에 맞는 화면"만 골랐다 — 스토리형 대사("전쟁 치를 뻔한 거 있죠?")는
     #   가리키는 사물이 없어 사실상 아무거나 붙었다(실측: 훅에 OTG 케이블 연결 화면).
-    _want_shots, _want_why = _want_shots_for_role(role)
+    # ★후보에 **실제로 있는** 결만 가리킨다 — 없는 결(레시피의 before·문제)을 1순위로
+    #   걸어두면 모델이 억지로 아무거나 집는다(사장님: "문제 같은 부분도 당연히 매칭이
+    #   되는 게 없을 거야 레시피니까"). 없으면 차선으로, 그것도 없으면 지시를 빼서
+    #   대사 의미로만 고르게 한다.
+    _avail = {(seg_map[s] or {}).get("shot_role") for s in pool_ids if s in seg_map}
+    _want_shots, _want_why = _want_shots_for_role(role, available=_avail)
     role_block = ""
     if _want_shots:
         role_block = (f"\n[이 칸의 역할] {role} — {_want_why}.\n"
@@ -3386,7 +3429,42 @@ def fill_beat_scenes(narration, need_sec, seg_map, pool_ids, taken_ids=None,
         if sid in seg_map and sid in pool_ids and sid not in used and fit >= min_fit:
             used.add(sid)
             out.append({"seg_id": sid, "fit": fit, "why": str(p.get("why") or "")[:40]})
-    return out
+    return _order_picks(out, seg_map)
+
+
+def _order_picks(picks, seg_map):
+    """고른 장면을 **소스별로 묶고 그 안에서 시간순**으로 세운다(2026-08-17 사장님 지시).
+
+    ★왜(사장님): "그 안에서 정렬을 할 거는 1번 영상 시간순 / 2번 영상 시간순 마킹하고
+      뒤죽박죽 되지 않게 해줘야 **조리 시간순 배열을 할 때도 이상함을 못 느낀다**."
+      결(완성/조리/재료)로 묶는 것까지는 맞는데, 한 칸 안에서 순서가 섞이면
+      '틀에 붓기 → 거품기로 섞기'처럼 **거꾸로 된 조리 순서**가 나온다.
+
+    ★AI가 뱉은 순서를 그대로 쓰지 않는다. 모델은 후보 목록을 훑는 순서대로 답하기 쉬워
+      시간 흐름과 무관하다. 조리는 순서가 곧 의미다 — 코드가 정한다.
+    ★소스가 섞이면 영상이 왔다갔다 하므로 **소스 단위로 뭉친다**. 소스 등장 순서는
+      먼저 고른 쪽을 앞에 둔다(AI가 판단한 '이 칸의 주된 소스'를 존중).
+    화면(scene_lab.html buildGroups)도 같은 규칙으로 정렬한다 — 짝으로 움직이는 값.
+    """
+    if len(picks) < 2:
+        return picks
+    order, seen = [], set()
+    for p in picks:                       # 소스 등장 순서 = AI가 먼저 고른 순
+        vid = (seg_map.get(p["seg_id"]) or {}).get("video_id") or ""
+        if vid not in seen:
+            seen.add(vid)
+            order.append(vid)
+    rank = {v: i for i, v in enumerate(order)}
+
+    def _key(p):
+        s = seg_map.get(p["seg_id"]) or {}
+        try:
+            start = float(s.get("start") or 0)
+        except (TypeError, ValueError):
+            start = 0.0
+        return (rank.get(s.get("video_id") or "", 0), start)
+
+    return sorted(picks, key=_key)
 
 
 def _repick_weak_beats(beats, seg_map, call=_vault_call, min_fit=4):

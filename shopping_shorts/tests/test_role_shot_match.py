@@ -55,21 +55,44 @@ def test_훅은_시선끄는_완성품을_고른다():
     assert shots == ("완성", "after")
 
 
-def test_cta는_완성품():
-    """실험실: 완성 → CTA용."""
-    assert _want_shots_for_role("CTA")[0] == ("완성",)
-    assert _want_shots_for_role("마무리")[0] == ("완성",)
+def test_cta는_완성되는_그림():
+    """사장님: "CTA는 조리 완성되는 이미지들 — 오븐에서 꺼내거나 그릇에 담거나 완성"."""
+    assert _want_shots_for_role("CTA")[0] == ("완성", "after")
+    assert _want_shots_for_role("마무리")[0] == ("완성", "after")
 
 
-def test_문제는_before():
-    """쓰기 전 상황 — 완성품을 붙이면 문제가 안 보인다."""
-    assert "before" in _want_shots_for_role("문제")[0]
+def test_해결과_결과는_조리구간():
+    """★영상이 맞아 보이는지를 가르는 분기점(2026-08-17 사장님):
+    "분기점이 되는 지점은 해결/결과 부분 즉 **조리를 하는 구간이 생기는 지점**에서만
+     맞으면 영상이 맞아 보인다."
+    쇼곰 원본 실측도 6.6~15.7초가 결=사용중(반죽·거품기·틀에 붓기·오븐)이다.
+    여기를 (after, 완성)으로 두면 조리 구간이 통째로 안 쓰여 완성품만 반복된다."""
+    assert _want_shots_for_role("해결")[0] == ("사용중", "조리")
+    assert _want_shots_for_role("결과")[0] == ("사용중", "조리")
+
+
+def test_문제는_before_없으면_재료로_내려간다():
+    """사장님: "문제 같은 부분도 당연히 매칭이 되는 게 없을 거야 레시피니까".
+    실측(이 작업 4개 영상): before·문제 결 **0건**. 없는 결을 1순위로 걸어두면
+    모델이 억지로 아무거나 집는다 → 차선(재료·준비)으로 내려간다."""
+    assert "before" in _want_shots_for_role("문제")[0]          # available 미지정 = 종전대로
+    # 이 영상엔 before가 없다 → 조리 앞부분으로
+    assert _want_shots_for_role("문제", available={"완성", "사용중", "after"})[0] == ("사용중", "조리")
+    # before가 있으면 1순위 그대로
+    assert _want_shots_for_role("문제", available={"before", "완성"})[0] == ("before", "문제")
+
+
+def test_차선도_없으면_억지배정하지_않는다():
+    """1순위도 차선도 없으면 (None,"") — 대사 의미로만 고르게 둔다."""
+    shots, why = _want_shots_for_role("문제", available={"완성"})
+    assert shots is None and why == ""
 
 
 def test_영문_역할도_잡는다():
     """모델이 한글·영문 아무거나 쓴다(_KNOWN_ROLE_WORDS와 같은 전제)."""
     assert _want_shots_for_role("hook")[0] == ("완성", "after")
-    assert _want_shots_for_role("cta")[0] == ("완성",)
+    assert _want_shots_for_role("cta")[0] == ("완성", "after")
+    assert _want_shots_for_role("solution")[0] == ("사용중", "조리")
     assert "before" in _want_shots_for_role("problem")[0]
 
 
