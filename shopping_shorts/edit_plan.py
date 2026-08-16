@@ -3674,7 +3674,8 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         beats = single_source.apply_restyle(beats, _c,
                                             style_name=_sp0.candidate_style(i),
                                             report=_restyle_rep,
-                                            facts_block=_facts_block)
+                                            facts_block=_facts_block,
+                                            where="1소스c%d" % (i + 1))
         _hap_style = _sp0.candidate_style(i)
         # ★빈 나레이션 비트는 **커버 배정 전에** 걸러낸다(2026-08-04 라이브 실측 job
         #   bcdf871a6d57: 추천 후보가 16.8초 — 버려진 비트의 컷이 같이 사라져 하한 미달).
@@ -4398,7 +4399,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         plan["beats"] = _ss1.apply_restyle(plan["beats"], _call,
                                            style_name=_sp1.candidate_style(_ci),
                                            report=_restyle_rep,
-                                           facts_block=_sf_facts_block)
+                                           facts_block=_sf_facts_block,
+                                           where="장면우선c%d" % (_ci + 1))
         # ★홈테리어픽 서명 보장(2026-08-09, 1소스와 동일 배선): CTA 직전 문장을 합쇼체로.
         #   리라이트 **뒤**에 둔다(리라이트가 어미를 도로 요체로 되돌린다).
         #   해당 스타일이 아니면 no-op(회귀 0). 1소스 실측: 프롬프트만으론 7/10 → 보장 후 10/10.
