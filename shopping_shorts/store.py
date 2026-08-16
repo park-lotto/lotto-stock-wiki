@@ -945,7 +945,14 @@ class Store:
             # **기계가 대조하는 키**다. 기존 31행이 이미 자연어라 파싱하면 깨지므로 나눠 둔다.
             for _col, _ddl in (("beat_roles_json", "TEXT"),      # ["hook","before",...]
                                ("templates_json", "TEXT"),       # {"hook":["...{가족}..."]}
-                               ("chars_per_30s", "INTEGER")):    # 이 스타일 히트작의 실측 말 밀도
+                               ("chars_per_30s", "INTEGER"),     # 이 스타일 히트작의 실측 말 밀도
+                               # ★표현 사전(2026-08-17) — 채널의 **말버릇**. 사실과 표현을 가른다:
+                               #   사실 "녹는다"는 재료(대본·리뷰·상세)에서 오고, 표현 "사르르·퐁신퐁신"은
+                               #   스타일이 갖는다(어느 제품에나 쓴다). 합쳐진 완제품("입에서 사르르 녹는")을
+                               #   재료로 주면 원본을 그대로 베낀다 — 사장님이 짚으신 지점.
+                               #   3안 실측(2026-08-16): 사전 없음=말버릇 1개·게이트 실패·254자 /
+                               #   사전 있음=말버릇 8개·통과·323자. 원본에 없던 "퐁신퐁신"을 새로 만들었다.
+                               ("voice_json", "TEXT")):          # {onomatopoeia,intensifier,exclaim,endings,tone_note}
                 try:
                     c.execute(f"ALTER TABLE spine ADD COLUMN {_col} {_ddl}")
                 except sqlite3.OperationalError:
@@ -3073,11 +3080,13 @@ class Store:
                  status, now, now))
             return cur.lastrowid
 
-    def set_spine_style(self, spine_id, beat_roles=None, templates=None, chars_per_30s=None):
+    def set_spine_style(self, spine_id, beat_roles=None, templates=None, chars_per_30s=None,
+                        voice=None):
         """스파인에 **기계가 검사할** 스타일 정보를 붙인다(2026-08-15).
 
         beat_roles = ["hook","before",...] · templates = {"hook":["...{가족}..."]} ·
-        chars_per_30s = 그 스타일 히트작의 실측 말 밀도. None은 안 건드린다."""
+        chars_per_30s = 그 스타일 히트작의 실측 말 밀도. None은 안 건드린다.
+        voice = 표현 사전(2026-08-17) {onomatopoeia,intensifier,exclaim,endings,tone_note}."""
         sets, args = [], []
         if beat_roles is not None:
             sets.append("beat_roles_json=?")
@@ -3088,6 +3097,9 @@ class Store:
         if chars_per_30s is not None:
             sets.append("chars_per_30s=?")
             args.append(int(chars_per_30s))
+        if voice is not None:
+            sets.append("voice_json=?")
+            args.append(json.dumps(voice, ensure_ascii=False))
         if not sets:
             return
         sets.append("updated_at=?")
@@ -3100,7 +3112,7 @@ class Store:
         q = ("SELECT id, name, situation_type, character_roles_json, beat_chain_json, "
              "emotion_arc, appeal, fit_categories_json, source_count, perf_score, "
              "status, created_at, updated_at, beat_roles_json, templates_json, "
-             "chars_per_30s FROM spine")
+             "chars_per_30s, voice_json FROM spine")
         args = []
         if status is not None:
             q += " WHERE status=?"
@@ -3118,7 +3130,8 @@ class Store:
              "created_at": r[11], "updated_at": r[12],
              "beat_roles": json.loads(r[13]) if r[13] else None,
              "templates": json.loads(r[14]) if r[14] else None,
-             "chars_per_30s": r[15]}
+             "chars_per_30s": r[15],
+             "voice": json.loads(r[16]) if r[16] else None}
             for r in rows
         ]
 
