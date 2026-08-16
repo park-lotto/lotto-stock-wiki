@@ -10,6 +10,8 @@
 """
 import os
 
+from shopping_shorts import douyin_search, xiaohongshu_search
+
 _SHORT_MAX_SECS = 90
 
 _SCHEMA_KEYS = ("url", "title", "thumbnail", "play_url",
@@ -46,3 +48,23 @@ def normalize(row, platform):
     out["duration"] = dur
     out["is_short"] = dur is None or dur <= _SHORT_MAX_SECS
     return out
+
+
+def _apify(mod, platform, keyword, max_results):
+    """Apify 액터 1회 실행. 실패는 빈 리스트로 삼킨다(계약).
+
+    비용(2026-08-17 실측): 도우인 $0.04005/회 · 샤오홍슈 $0.098/회.
+    무료 한도는 계정당 월 $5이고 **이월되지 않는다**(안 쓰면 소멸)."""
+    try:
+        rows = mod.search(keyword, max_results=max_results) or []
+        return [normalize(r, platform) for r in rows]
+    except Exception:
+        return []
+
+
+def apify_douyin(keyword, max_results):
+    return _apify(douyin_search, "douyin", keyword, max_results)
+
+
+def apify_xiaohongshu(keyword, max_results):
+    return _apify(xiaohongshu_search, "xiaohongshu", keyword, max_results)

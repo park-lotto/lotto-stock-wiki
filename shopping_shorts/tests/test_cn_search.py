@@ -24,3 +24,29 @@ def test_num_survives_infinity_and_nan():
         assert row["likes"] is None, f"{bad!r} → likes가 None이어야 한다"
         assert row["duration"] is None
         assert row["is_short"] is True      # duration 불명 → 숏폼 취급
+
+
+def test_apify_backend_normalizes_and_swallows_errors(monkeypatch):
+    """Apify가 터져도 예외가 밖으로 안 나간다(폴백은 cn_search가 판단)."""
+    class Boom:
+        @staticmethod
+        def search(keyword, max_results=10):
+            raise RuntimeError("APIFY_TOKEN이 설정되지 않았습니다")
+
+    monkeypatch.setattr(cn_backends, "douyin_search", Boom)
+    assert cn_backends.apify_douyin("蒜泥保存", 8) == []
+
+
+def test_apify_backend_maps_rows(monkeypatch):
+    class Ok:
+        @staticmethod
+        def search(keyword, max_results=10):
+            return [{"url": "https://www.douyin.com/video/1", "title": "t",
+                     "likes": "12", "duration": 30}]
+
+    monkeypatch.setattr(cn_backends, "douyin_search", Ok)
+    rows = cn_backends.apify_douyin("蒜泥保存", 8)
+    assert len(rows) == 1
+    assert rows[0]["platform"] == "douyin"
+    assert rows[0]["likes"] == 12
+    assert rows[0]["is_short"] is True
