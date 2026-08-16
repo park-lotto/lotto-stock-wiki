@@ -7325,7 +7325,10 @@ async function s2Generate(){
     //   ②쿠팡 상세·리뷰 재료 ③1단계 장면 태깅(label·use_point)을 붙인다.
     //   안 보내면 코드가 다 있어도 **재료가 빈 채로** 대본이 나온다(내가 처음에 빠뜨린 것).
     if(typeof MIX_JOB!=='undefined' && MIX_JOB) body.job_id=MIX_JOB;
-    if(S2.picked.length) body.style_ids=S2.picked;   // 없으면 키 자체를 안 보낸다(기존 경로 유지)
+    // 스타일을 골랐으면 그대로, 안 골랐으면(=AI에게 맡김) 서버가 추천 상위에서 자동으로 집는다.
+    // ★어느 쪽이든 스타일 경로를 타야 역할 칸·게이트·표현사전이 붙는다(2026-08-17).
+    if(S2.picked.length) body.style_ids=S2.picked;
+    else body.auto_style=true;
     const d=await (await fetch('/api/wiki/generate?shortcode='+encodeURIComponent(s.shortcode),
       {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
     if(!d.ok){ if(hint) hint.innerHTML='<span style="color:var(--fire)">⚠️ '+esc(d.error||'생성 실패')+'</span>'; return; }
