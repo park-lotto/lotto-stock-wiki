@@ -53,3 +53,30 @@ def test_grabbable_media_guard_is_host_based():
     assert not _is_grabbable_media("https://zjcdn.com.evil.com/a")     # 접미 위장
     assert not _is_grabbable_media("blob:https://www.douyin.com/x")    # 브라우저 안에서만 유효
     assert not _is_grabbable_media("http://v3-dy-o.zjcdn.com/a")       # https만
+
+
+def test_regrab_fills_missing_video_url(tmp_path):
+    """★이미 담긴 영상을 다시 담으면 영상 주소가 **채워져야** 한다.
+
+    shortcode는 URL 해시라 같은 영상을 다시 담으면 '이미 있음'으로 떨어진다.
+    거기서 그냥 return하면 사장님이 아무리 다시 담아도 주소가 영영 안 들어와
+    도우인은 계속 못 받는다 — 다시 담기가 유일한 구제 수단인데 그게 막힌다.
+    """
+    s = _store(tmp_path)
+    s.mix_basket_add("grab_douyin_1", url="https://www.douyin.com/video/1", customer_id=0)
+    assert not s.mix_basket_list(customer_id=0)[0].get("video_url")
+    u = "https://v3-dy-o.zjcdn.com/abc?sig=1"
+    s.mix_basket_add("grab_douyin_1", url="https://www.douyin.com/video/1",
+                     video_url=u, customer_id=0)
+    assert s.mix_basket_list(customer_id=0)[0]["video_url"] == u
+
+
+def test_regrab_does_not_overwrite_existing_video_url(tmp_path):
+    """이미 주소가 있으면 덮어쓰지 않는다(서명 만료된 새 값으로 멀쩡한 값을 밀어내지 않게)."""
+    s = _store(tmp_path)
+    first = "https://v3-dy-o.zjcdn.com/first?sig=1"
+    s.mix_basket_add("grab_d", url="https://www.douyin.com/video/2",
+                     video_url=first, customer_id=0)
+    s.mix_basket_add("grab_d", url="https://www.douyin.com/video/2",
+                     video_url="https://v3-dy-o.zjcdn.com/second?sig=2", customer_id=0)
+    assert s.mix_basket_list(customer_id=0)[0]["video_url"] == first
