@@ -2541,8 +2541,32 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
             txt = f"{s.get('change') or ''} {s.get('scene_desc') or ''}"
             return len(words & set(_claim_key(txt)))
 
+        # ★이미 쓴 화면과 **같아 보이는** 것은 뒤로 민다(2026-08-16 사장님 "왜 같은데 2장이
+        #   붙지"). 소스를 여러 개 올리면 같은 장면이 소스마다 있고 seg_id가 달라, 종전의
+        #   `sid in used` 검사로는 못 걸렀다 — 그림이 같은데 두 번 나온다.
+        #   ⚠️그림 해시로는 못 가른다(실측 job 8873eeb48a08, 465쌍: 같은 장면 쌍이 거리 11인데
+        #     거리 13에 전혀 다른 쌍이 있다). 그래서 **설명이 겹치는가**로 본다.
+        #   ★막지 않고 순서만 미는 이유: 막으면 붙일 게 동나 아래 재사용 폴백으로 떨어지는데,
+        #     그건 **똑같은 컷을 그대로 또 쓰는** 것이라 더 나쁘다. 뒤로 밀면 다른 화면이
+        #     있을 때만 그것이 먼저 쓰이고, 없으면 종전과 같이 쓰인다(회귀 0).
+        def _same_look(s):
+            a = set(_claim_key(f"{s.get('label') or ''} {s.get('scene_desc') or ''} "
+                               f"{s.get('change') or ''}"))
+            if not a:
+                return 0
+            for sid0 in used:
+                u = seg_map.get(sid0) or {}
+                bset = set(_claim_key(f"{u.get('label') or ''} {u.get('scene_desc') or ''} "
+                                      f"{u.get('change') or ''}"))
+                if not bset:
+                    continue
+                if len(a & bset) / len(a | bset) >= 0.6:   # 설명이 대부분 겹친다 = 같은 그림
+                    return 1
+            return 0
+
         pool = sorted(seg_map.values(),
-                      key=lambda s: (-_rel(s), s.get("video_id") != home, s.get("start") or 0))
+                      key=lambda s: (_same_look(s), -_rel(s),
+                                     s.get("video_id") != home, s.get("start") or 0))
         alts = list(b.get("alternates") or [])
         for s in pool:
             if have >= need or len(alts) >= max_alts:
