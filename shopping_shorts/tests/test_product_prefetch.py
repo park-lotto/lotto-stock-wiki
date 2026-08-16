@@ -62,9 +62,11 @@ class TestQueueProductPrefetch:
         _queue_product_prefetch(_Store(), _done("홈템", ""), cid=0)
         assert _drain() == []
 
-    def test_분석_실패한_영상은_안_건다(self):
+    def test_전사만_실패한_영상은_오히려_건다(self):
+        """★2026-08-17 방침 변경 — 무자막 해외영상이 바로 이 상태다(전사 0, 화면 분석 O).
+        재료가 제일 아쉬운 경우라 여기서 빼면 안 된다. 영상 자체를 못 받은 상태만 제외한다."""
         _queue_product_prefetch(_Store(), _done("홈템", "도마", status="failed_empty"), cid=0)
-        assert _drain() == []
+        assert len(_drain()) == 1
 
     def test_같은_영상을_두_번_긁지_않는다(self):
         """쿠팡을 반복해 두들기면 소프트 차단에 걸린다(검색 쪽에서 이미 겪은 함정)."""
@@ -180,3 +182,64 @@ class TestAnalyzeRelayRaw:
             raise RuntimeError("제미니 오류")
         monkeypatch.setattr(product_facts, "analyze", _boom, raising=False)
         assert appmod._analyze_relay_raw({"images_b64": [], "reviews": ["r"]}) is None
+
+
+class TestNoSubtitleAndLens:
+    """무자막 해외영상 + 렌즈 승격 (2026-08-17 사장님 지시 '둘 다')."""
+
+    def setup_method(self):
+        _drain()
+
+    def test_무자막이라_적재실패여도_큐에_건다(self):
+        """전사가 비면 status=failed_empty지만 **화면 분석은 됐다** — 재료가 제일 아쉬운 경우다."""
+        from shopping_shorts.app import _queue_product_prefetch
+        done = [{"status": "failed_empty", "code": "v9", "category": "홈템",
+                 "result": {"source_brief": {"product": "접이식 실리콘 도마"}}}]
+        _queue_product_prefetch(_Store(), done, cid=0)
+        jobs = _drain()
+        assert len(jobs) == 1 and jobs[0].payload["product"] == "접이식 실리콘 도마"
+
+    def test_영상을_못받았으면_안_건다(self):
+        """화면이 없으면 렌즈도 못 쓴다."""
+        from shopping_shorts.app import _queue_product_prefetch
+        for st in ("failed_download", "skipped_latched", "failed_limit"):
+            _queue_product_prefetch(_Store(), [{"status": st, "code": "v1", "category": "홈템",
+                                                "result": {"source_brief": {"product": "도마"}}}],
+                                    cid=0)
+        assert _drain() == []
+
+    def test_이름을_못잡으면_렌즈로_승격(self, monkeypatch):
+        from shopping_shorts import app as appmod
+        monkeypatch.setattr(appmod, "_lens_product_name",
+                            lambda code, hint="", src_path=None: "OKO 접이식 도마 XL")
+        appmod._queue_product_prefetch(
+            _Store(), [{"status": "added", "code": "v1", "category": "홈템",
+                        "script": {"source_brief": {"product": ""}}}], cid=0)
+        jobs = _drain()
+        assert len(jobs) == 1 and jobs[0].payload["product"] == "OKO 접이식 도마 XL"
+
+    def test_검색이_빈손이면_렌즈로_한번만_재시도(self, monkeypatch):
+        """★유료다 — 무한 재시도가 곧 요금이다."""
+        from shopping_shorts import app as appmod
+        monkeypatch.setattr(appmod, "_lens_product_name",
+                            lambda code, hint="", src_path=None: "렌즈이름")
+        monkeypatch.setattr(appmod, "Store", lambda *a, **k: _Store())
+        appmod._enqueue_prefetch("v1", "뭉뚱그린이름", "홈템")
+        job = coupang_relay.QUEUE.take(0)
+        coupang_relay.QUEUE.complete(job.id, {"ok": False, "facts": {}, "product": {}})
+        again = _drain()
+        assert len(again) == 1 and again[0].payload["product"] == "렌즈이름"
+        # 두 번째도 빈손 — 이번엔 승격하지 않는다
+        coupang_relay.QUEUE.complete(again[0].id, {"ok": False, "facts": {}, "product": {}})
+        assert _drain() == []
+
+    def test_상품은_찾았는데_분석만_비면_렌즈를_안_쓴다(self, monkeypatch):
+        """이름 문제가 아니므로 다시 긁을 이유가 없다."""
+        from shopping_shorts import app as appmod
+        monkeypatch.setattr(appmod, "_lens_product_name",
+                            lambda code, hint="", src_path=None: "렌즈이름")
+        monkeypatch.setattr(appmod, "Store", lambda *a, **k: _Store())
+        appmod._enqueue_prefetch("v2", "도마", "홈템")
+        job = coupang_relay.QUEUE.take(0)
+        coupang_relay.QUEUE.complete(job.id, {"ok": False, "facts": {}, "product": {"name": "찾음"}})
+        assert _drain() == []
