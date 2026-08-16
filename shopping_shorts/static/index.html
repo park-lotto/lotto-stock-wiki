@@ -2236,6 +2236,35 @@ async function lensExpandKeyword(shortcode){
     if(root && root.dataset.sc===shortcode) renderLens(shortcode);
   }
 }
+// 📕🎬 인앱 CN 검색(2026-08-17) — 후보를 눌러도 **페이지를 떠나지 않는다**.
+// 서버 cn_search가 무료(Playwright)를 먼저 쓰고 0건일 때만 Apify로 폴백하므로
+// 프론트는 어느 백엔드가 돌았는지 몰라도 된다(meta로 비용만 표시).
+// ★zh를 onclick 문자열에 직접 박지 않고 cnCands 배열 인덱스만 넘긴다 — zh는 이 파일에서
+//   esc() 없이 그대로 렌더되는 원문(따옴표 포함 가능)이라 인라인 문자열 인자로 넘기면
+//   onclick="...('...')" 따옴표 충돌로 깨질 수 있다(2026-07-19 zh 이스케이프 사고와 같은 종류).
+async function lensCnSearch(shortcode, idx){
+  const st=LENS_STATE[shortcode]; if(!st || st.cnSearching) return;
+  const cand=(st.cnCands||[])[idx]; const zh=cand && cand.zh; if(!zh) return;
+  st.cnSearching=true; st.cnSearchKw=zh; _lensRerender(shortcode);
+  try{
+    const fd=new FormData();
+    fd.append('keyword', zh);
+    fd.append('max_results', 8);
+    const d=await (await fetch('/api/lens/cn/search',{method:'POST',body:fd})).json();
+    const st2=LENS_STATE[shortcode]; if(!st2) return;
+    const got=(d.items||[]);
+    // 렌즈 결과와 같은 담기키 규칙(savesc)을 붙여야 선택·담기·중복제거가 동일하게 동작한다
+    // (형제 fetchLensYt·lensSearch와 같은 규약).
+    got.forEach(i=>{ if(!i.savesc) i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); });
+    const have=new Set((st2.items||[]).map(i=>i.savesc));
+    st2.items.push(...got.filter(i=>i.savesc && !have.has(i.savesc)));
+    st2.cnCost=(d.meta&&Object.values(d.meta).reduce((a,m)=>a+((m&&m.cost_usd)||0),0))||0;
+  }catch(e){ /* 실패해도 렌즈 나머지는 정상 */ }
+  finally{
+    const st3=LENS_STATE[shortcode]; if(st3) st3.cnSearching=false;
+    _lensRerender(shortcode);   // 형제 fetchLensYt·fetchLensCnKeywords와 동일한 늦은응답 가드
+  }
+}
 // 🔄 다른 검색어 — 같은 프레임으로 비전에 다시 묻되 '이미 본 것 빼고'를 넘긴다.
 // 검색어가 렌즈 열 때마다 복불복으로 바뀌던 걸(2026-08-14 사장님) 쌓아가는 방식으로 바꾼 것.
 // Gemini 무료쿼터만 쓴다 — Apify·SerpApi 비용 0(후보는 '링크 여는 버튼'일 뿐).
@@ -2598,8 +2627,10 @@ function renderLens(shortcode){
         ${st.frameBlob?`<button onclick="lensMoreCnKeywords('${shortcode}')" ${st.cnLoading?'disabled':''} title="같은 장면으로 다른 각도의 검색어를 더 뽑습니다(이미 나온 건 빼고 아래에 쌓입니다). 무료 — 추가 비용 없음" style="${btnCss};border-color:var(--accent);color:var(--accent)">${st.cnLoading?'⏳ 뽑는 중…':'🔄 다른 검색어 더'}</button>`:''}
         ${st.cnNoNew?'<span style="font-size:11px;color:var(--sub)">더 나올 게 없어요 — 이 장면에서 뽑을 각도는 다 나왔습니다</span>':''}
       </div>
+      ${st.cnSearching?`<div style="font-size:11px;color:var(--sub);margin:4px 0">🔎 ${esc(st.cnSearchKw||'')} 검색 중… (10~30초)</div>`:''}
+      ${(!st.cnSearching&&st.cnCost!=null)?`<div style="font-size:11px;color:var(--sub);margin:4px 0">${st.cnCost>0?('이번 검색 $'+st.cnCost.toFixed(3)):'무료 검색'}</div>`:''}
       <div style="display:flex;flex-direction:column;gap:6px">
-        ${(st.cnCands||[]).map(c=>{
+        ${(st.cnCands||[]).map((c,idx)=>{
           // 샤오훙슈 검색은 로그아웃 방문자를 로그인으로 막는다(登录后查看搜索结果). 해외판
           // rednote.com 검색은 같은 결과를 로그인 벽 없이 보여준다(2026-07-19 실측). 빌더·백엔드는
           // 그대로 두고 '여는 링크'만 _openUrl로 rednote 치환. 도우인은 해외판 없어 그대로.
@@ -2613,8 +2644,9 @@ function renderLens(shortcode){
           return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <div style="min-width:120px"><div style="font-size:14px;font-weight:600">${kw}</div>
               <div style="font-size:11px;color:var(--sub)">${c.zh||''}</div></div>
-            ${c.zh?`<a href="${xhs}" target="_blank" rel="noopener" style="${lnk}">📕 샤오홍슈</a>
-            <a href="${dy}" target="_blank" rel="noopener" style="${lnk}">🎬 도우인</a>`:''}
+            ${c.zh?`<button onclick="lensCnSearch('${shortcode}',${idx})" ${st.cnSearching?'disabled':''} title="샤오홍슈·도우인 결과를 이 페이지 안에 카드로 바로 불러옵니다(외부 이동 없음)" style="${lnk};cursor:pointer;border:1px solid var(--line);background:transparent">📕🎬 여기서 찾기</button>
+            <a href="${xhs}" target="_blank" rel="noopener" title="샤오홍슈 사이트에서 열기" style="${lnk};opacity:.6">↗</a>
+            <a href="${dy}" target="_blank" rel="noopener" title="도우인 사이트에서 열기" style="${lnk};opacity:.6">↗</a>`:''}
             ${kw?`<a href="${tk}" target="_blank" rel="noopener" style="${lnk}">🎵 틱톡</a>
             <a href="${ig}" target="_blank" rel="noopener" title="인스타는 '${_igKw(kw)}'로 엽니다 — 지어낸 조합은 결과가 0건이라 실제 쓰는 말로 줄입니다" style="${lnk}">📷 인스타</a>
             ${_igShortKw(kw)?`<a href="${_lensSearchUrl('instagram', _igShortKw(kw))}" target="_blank" rel="noopener" title="인스타에서 결과가 없을 때 — '${_igShortKw(kw)}' 한 단어로 넓게 봅니다" style="${lnk};opacity:.75">📷 짧게</a>`:''}`:''}</div>`;
