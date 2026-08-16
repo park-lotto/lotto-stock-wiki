@@ -9848,6 +9848,38 @@ def _scene_points_block(job, limit=14):
               "장면 이름을 그대로 나열하지 말고 **말로 풀어라**.")
 
 
+@app.post("/api/product/prefetch/retry")
+def api_product_prefetch_retry(body: dict):
+    """상품 재료 선수집을 **다시** 건다(2026-08-17). body: {shortcode, product?, category?}.
+
+    ## 왜 필요한가
+    선수집은 1단계 담기 때 자동으로 한 번만 걸린다(같은 영상을 두 번 긁으면 쿠팡이
+    소프트 차단한다). 그래서 **릴레이가 꺼져 있었거나 중간에 실패한 영상**은 되살릴
+    길이 없었다 — 실제로 릴레이가 옛 코드로 돌아 재료 0건으로 끝난 건이 있었다.
+
+    product를 안 주면 그 영상 태깅에서 다시 찾고, 그래도 없으면 화면 역검색(유료 1회).
+    """
+    code = (body.get("shortcode") or "").strip()
+    if not code:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "shortcode 필요"})
+    store = Store(DB_PATH)
+    cat = (body.get("category") or "").strip()
+    product = (body.get("product") or "").strip()
+    if not product:
+        ex = store.get_extract(code) or {}
+        product = ((ex.get("source_brief") or {}) or {}).get("product") or ""
+        cat = cat or (ex.get("category") or "")
+        product = product.strip()
+    if not product:
+        product = _lens_product_name(code, hint=cat)
+    if not product:
+        return {"ok": False, "error": "제품 이름을 잡지 못했습니다(태깅·렌즈 모두 실패)"}
+    # 재시도니까 중복 가드를 푼다 — 사람이 명시적으로 요청한 것이다.
+    store.set_setting("product_prefetch_%s" % code, "")
+    _enqueue_prefetch(code, product, cat or "기타")
+    return {"ok": True, "queued": product}
+
+
 @app.post("/api/product/facts/collect")
 def api_product_facts_collect(body: dict):
     """쿠팡 상품 → **대본 재료**(스펙·리뷰) 수집·분석해 product_json에 심는다(2026-08-16).
