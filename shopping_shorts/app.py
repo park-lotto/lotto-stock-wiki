@@ -2260,6 +2260,9 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         #   지정하면 편협하게 나온다 / 사용자는 뭐가 좋은 대본인지 모르고 잘못 고르면 낭패").
         #   담긴 것을 전부 넣으면 그 복불복 자체가 사라진다.
         _job = store.get_mix_job((body.get("job_id") or "").strip()) if body.get("job_id") else None
+        # 옛 작업이라 스냅샷에 장면 태깅이 없으면 캐시에서 보충한다 —
+        # 이게 없으면 사장님이 1단계부터 다시 담아야 새 재료가 붙는다.
+        _job = _enrich_job_extract(_job, store)
         _src = _sources_for_generate(it, _job)
         # ★제품 재료 주입(2026-08-16) — 이 작업에 연결된 쿠팡 상품에서 미리 긁어둔
         #   스펙·리뷰가 있으면 프롬프트에 얹는다. 없으면 ''이라 기존 경로 그대로(회귀 0).
@@ -9300,6 +9303,51 @@ def _sources_for_generate(item, job, limit=3):
                            for s in (ex.get("segments") or [])).strip()
         _add(item.get("category") or "", txt, ex.get("structure"))
     return out[:limit]
+
+
+def _enrich_job_extract(job, store=None):
+    """job 스냅샷에 장면 태깅이 없으면 **캐시(script_extracts)에서 보충**한다(2026-08-17).
+
+    ★왜 필요한가(실측): job의 `extract`는 **그때 찍힌 스냅샷**이라, 나중에 재태깅으로
+      `use_point`·`source_brief`가 쌓여도 옛 작업에는 소급되지 않는다.
+      실측 job `8873eeb48a08` — 스냅샷은 장면 37개에 use_point **0건**인데,
+      같은 영상이 캐시엔 `lens_tiktok_…` 키로 use_point 10건씩 갖춘 채 있었다.
+      이걸 안 보충하면 **사장님이 1단계부터 다시 담아야** 새 재료를 쓴다.
+
+    ⚠️ 원본을 안 건드린다(얕은 복사). DB에 쓰지도 않는다 — 읽기 전용 보충이다.
+    ⚠️ 캐시 키 후보는 `mix_pipeline._cache_keys_for_url`이 정한다(같은 판단 1벌, 0순위-B).
+    """
+    ex = dict((job or {}).get("extract") or {})
+    if not ex:
+        return job
+    # 이미 태깅이 있으면 손대지 않는다(스냅샷이 최신인 경우 = 대부분).
+    def _tagged(e):
+        return bool(isinstance(e, dict) and (e.get("source_brief") or any(
+            (s.get("use_point") or "").strip() for s in (e.get("segments") or []))))
+    if any(_tagged(v) for v in ex.values()):
+        return job
+    try:
+        from shopping_shorts import mix_pipeline
+        st = store or Store(DB_PATH)
+        urls = list((job or {}).get("urls") or [])
+        keys = [k for u in urls for k in mix_pipeline._cache_keys_for_url(u)]
+        cached = [c for c in (st.get_extract(k) for k in keys) if c and _tagged(c)]
+        if not cached:
+            return job
+        # 소스 순서(s0·s1…)와 캐시 순서를 맞춰 얹는다. 개수가 다르면 있는 만큼만.
+        for (vid, old), new in zip(sorted(ex.items()), cached):
+            merged = dict(old if isinstance(old, dict) else {})
+            merged["segments"] = new.get("segments") or merged.get("segments") or []
+            if new.get("source_brief"):
+                merged["source_brief"] = new["source_brief"]
+            if not (merged.get("full_text") or "").strip() and new.get("full_text"):
+                merged["full_text"] = new["full_text"]
+            ex[vid] = merged
+        out = dict(job)
+        out["extract"] = ex
+        return out
+    except Exception:      # noqa: BLE001 — 보충 실패가 대본 생성을 막으면 안 된다
+        return job
 
 
 def _scene_points_block(job, limit=14):
