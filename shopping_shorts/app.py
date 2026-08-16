@@ -2286,6 +2286,12 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         # 옛 작업이라 스냅샷에 장면 태깅이 없으면 캐시에서 보충한다 —
         # 이게 없으면 사장님이 1단계부터 다시 담아야 새 재료가 붙는다.
         _job = _enrich_job_extract(_job, store)
+        # ★3단계를 아직 안 돌렸으면 job이 없다 — 그때는 **담긴 영상 전부**를 직접 모은다
+        #   (2026-08-16). 안 그러면 재료가 씨앗 1편으로 줄어 모델이 나머지를 지어낸다.
+        if not (_job or {}).get("extract") and (body.get("work_id") or "").strip():
+            _wex = _extract_from_work(body["work_id"].strip(), _cid(request), store)
+            if _wex:
+                _job = dict(_job or {}, extract=_wex)
         _src = _sources_for_generate(it, _job)
         # ★제품 재료 주입(2026-08-16) — 이 작업에 연결된 쿠팡 상품에서 미리 긁어둔
         #   스펙·리뷰가 있으면 프롬프트에 얹는다. 없으면 ''이라 기존 경로 그대로(회귀 0).
@@ -9687,6 +9693,35 @@ def _sources_for_generate(item, job, limit=3):
                            for s in (ex.get("segments") or [])).strip()
         _add(item.get("category") or "", txt, ex.get("structure"))
     return out[:limit]
+
+
+def _extract_from_work(work_id, cid, store):
+    """3단계(매칭)를 아직 안 돌린 작업의 **담긴 영상 전부**를 job.extract 모양으로 만든다.
+
+    ★왜 필요한가(2026-08-16 사장님 제보 "대본에 엉뚱한 얘기가 나온다"):
+      대본 재료는 job(3단계 매칭 결과)에서 나온다. 그런데 1단계에서 담고 **바로 2단계로
+      가면 job이 아직 없어서** 재료가 씨앗 1편으로 줄어든다 — 실측 work `ba20ea764254`는
+      담긴 3편 중 216자짜리가 있었는데도 대표로 뽑힌 20자짜리 하나만 실렸고,
+      모자란 만큼 모델이 지어내 카메라 영상에서 발뒤꿈치 각질 대본이 나왔다.
+      화면은 "담긴 영상 N편을 전부 씁니다"라고 적혀 있었으니 화면도 거짓이었다.
+    담긴 영상의 추출본은 캐시에 이미 있다 — job이 없을 때 그걸 대신 쓴다.
+    """
+    out = {}
+    try:
+        work = store.get_produce_work(work_id, customer_id=cid)
+        state = (work or {}).get("state") or {}
+        for e in (state.get("handoff") or []):
+            if not isinstance(e, dict) or not e.get("useFootage"):
+                continue
+            sc = (e.get("shortcode") or "").strip()
+            if not sc:
+                continue
+            ex = store.get_script(sc)
+            if isinstance(ex, dict) and (ex.get("segments") or ex.get("full_text")):
+                out[sc] = ex
+    except Exception:  # noqa: BLE001 — 재료 보강 실패가 생성을 막지 않는다
+        return {}
+    return out
 
 
 def _enrich_job_extract(job, store=None):

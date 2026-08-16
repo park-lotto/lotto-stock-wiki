@@ -7335,6 +7335,10 @@ async function s2Generate(){
     //   ②쿠팡 상세·리뷰 재료 ③1단계 장면 태깅(label·use_point)을 붙인다.
     //   안 보내면 코드가 다 있어도 **재료가 빈 채로** 대본이 나온다(내가 처음에 빠뜨린 것).
     if(typeof MIX_JOB!=='undefined' && MIX_JOB) body.job_id=MIX_JOB;
+    // ★work_id도 함께(2026-08-16). 3단계를 아직 안 돌렸으면 job이 없어 재료가 씨앗
+    //   1편으로 줄고, 모자란 만큼 모델이 지어낸다(사장님 제보: 카메라 영상인데
+    //   발뒤꿈치 각질 대본). work_id가 있으면 서버가 담긴 영상 전부를 재료로 모은다.
+    if(typeof WORK_ID!=='undefined' && WORK_ID) body.work_id=WORK_ID;
     // 스타일을 골랐으면 그대로, 안 골랐으면(=AI에게 맡김) 서버가 추천 상위에서 자동으로 집는다.
     // ★어느 쪽이든 스타일 경로를 타야 역할 칸·게이트·표현사전이 붙는다(2026-08-17).
     if(S2.picked.length) body.style_ids=S2.picked;
