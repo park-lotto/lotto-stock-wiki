@@ -321,3 +321,6 @@ COUPANG_RELAY_WAIT_SEC = int(os.getenv("COUPANG_RELAY_WAIT_SEC", "60"))
 # 크롬 프로필 폴더(쿠키·PCID 유지). 매번 새 프로필로 들어가면 '처음 온 손님'이라
 # 차단 임계가 훨씬 낮다. 비우면 레포 안 .coupang_profile 를 쓴다(git 비추적).
 COUPANG_PROFILE_DIR = os.getenv("COUPANG_PROFILE_DIR", "")
+
+# 도우인 로그인 세션(Playwright storage_state). 없으면 CN 검색은 Apify로 폴백한다.
+DOUYIN_SESSION_PATH = os.getenv("DOUYIN_SESSION_PATH", "/home/ubuntu/douyin_session.json")

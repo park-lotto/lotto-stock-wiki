@@ -11,6 +11,7 @@
 import os
 
 from shopping_shorts import config, douyin_search, xiaohongshu_search
+from shopping_shorts.channel_archive import playwright_proxy_kw
 
 _SHORT_MAX_SECS = 90
 
@@ -132,3 +133,98 @@ def pw_xiaohongshu(keyword, max_results):
     except Exception:
         return []
     return _pw_xhs_rows(cards)[:max_results]
+
+
+# 도우인 전용 출구 국가. 한국 IP로는 캡차+로그인벽이 뜨고, CN/HK면 사라진다(2026-08-17 실측).
+_DOUYIN_CC = os.getenv("DOUYIN_PROXY_COUNTRY", "cn")
+
+
+def douyin_context_kw(session_path):
+    """★계정(세션)과 프록시를 **함께** 돌려준다.
+
+    따로 정하면 어긋난다 — 2026-08-09 인스타 실사고에서 계정은 로테이션이 고르고
+    프록시는 다른 코드가 정해 계정↔IP가 틀어졌고, 그게 본인확인 챌린지로 나타났다.
+    한 함수에서 같이 정하면 그 사고가 성립하지 않는다."""
+    kw = {"storage_state": session_path, "locale": "zh-CN",
+          "timezone_id": "Asia/Shanghai"}
+    user, pw = os.getenv("WEBSHARE_USER", ""), os.getenv("WEBSHARE_PASS", "")
+    if user and pw:
+        host = os.getenv("WEBSHARE_HOST", "p.webshare.io:80")
+        kw["proxy"] = playwright_proxy_kw(f"http://{user}-{_DOUYIN_CC}-1:{pw}@{host}")
+    return kw
+
+
+def _douyin_rows(payloads):
+    """검색 API 응답 → 스키마 dict(중복 aweme_id 제거).
+
+    ★DOM이 아니라 네트워크 응답을 쓴다 — 도우인 검색카드에는 href도 aweme_id도
+    없어서(2026-07-19·08-17 실측) DOM 파싱이 원리적으로 불가능하다."""
+    seen, out = set(), []
+    for data in payloads or []:
+        if not isinstance(data, dict):
+            continue
+        lst = data.get("data") or data.get("aweme_list") or []
+        if not isinstance(lst, list):
+            continue
+        for it in lst:
+            if not isinstance(it, dict):
+                continue
+            aw = it.get("aweme_info") or it.get("aweme") or it
+            if not isinstance(aw, dict):
+                continue
+            aid = aw.get("aweme_id")
+            if not aid or aid in seen:
+                continue
+            seen.add(aid)
+            stats = aw.get("statistics") or {}
+            out.append(normalize({
+                "url": f"https://www.douyin.com/video/{aid}",
+                "title": aw.get("desc"),
+                "channel": (aw.get("author") or {}).get("nickname"),
+                "likes": stats.get("digg_count"),
+                "views": stats.get("play_count"),
+            }, "douyin"))
+    return out
+
+
+def pw_douyin(keyword, max_results):
+    """도우인 검색을 CN프록시+세션으로 긁는다.
+
+    ⚠️2026-08-17 현재 도우인 세션이 없어 항상 빈손이고 Apify로 폴백된다.
+    세션이 생기면(QR 로그인) 이 경로가 그대로 살아나 비용이 0이 된다 —
+    _CHAIN도 호출부도 프론트도 고칠 필요가 없다."""
+    from urllib.parse import quote
+
+    session = getattr(config, "DOUYIN_SESSION_PATH", "")
+    if not session or not os.path.exists(session):
+        return []
+
+    captured = []
+
+    def _on_response(resp):
+        try:
+            if "/aweme/" in resp.url and "search" in resp.url:
+                captured.append(resp.json())
+        except Exception:
+            pass          # 응답 하나가 JSON이 아니어도 수집은 계속된다
+
+    try:
+        from playwright.sync_api import sync_playwright
+
+        with sync_playwright() as p:
+            browser = p.chromium.launch(
+                headless=True,
+                args=["--disable-blink-features=AutomationControlled"])
+            ctx = browser.new_context(**douyin_context_kw(session))
+            ctx.add_init_script(
+                "Object.defineProperty(navigator,'webdriver',{get:()=>undefined});")
+            page = ctx.new_page()
+            page.on("response", _on_response)
+            page.goto(f"https://www.douyin.com/search/{quote(keyword)}",
+                      timeout=70000, wait_until="domcontentloaded")
+            page.wait_for_timeout(12000)
+            ctx.close()
+            browser.close()
+    except Exception:
+        return []
+    return _douyin_rows(captured)[:max_results]
