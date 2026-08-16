@@ -2255,9 +2255,13 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                 "ok": False, "error": "고른 스타일을 쓸 수 없음(승인·구조·카테고리 확인)"})
         _src = [{"name": it.get("category") or "", "full_text": it.get("full_text") or "",
                  "structure": it.get("structure") or {}}]
+        # ★제품 재료 주입(2026-08-16) — 이 작업에 연결된 쿠팡 상품에서 미리 긁어둔
+        #   스펙·리뷰가 있으면 프롬프트에 얹는다. 없으면 ''이라 기존 경로 그대로(회귀 0).
+        #   여기서 긁지 않는다 — 수집은 /api/product/facts/collect가 미리 해둔다(2~3분).
+        _facts_block = _facts_block_for_job(body.get("job_id") or "", store)
         _styled = script_generate.generate_by_styles(
             _src, _picked, target_seconds=body.get("target_seconds") or 30,
-            bank_context=_bank_ctx)
+            bank_context=_bank_ctx, facts_block=_facts_block)
         if not _styled:
             return JSONResponse(status_code=502, content={
                 "ok": False, "error": "생성 실패(키 소진 또는 응답 오류) — 잠시 후 재시도"})
@@ -3345,6 +3349,9 @@ def api_mix_scene_lab_data(job_id: str):
         "segments": {sid: {
             "video_id": v["video_id"], "start": v["start"], "end": v["end"],
             "scene_desc": v.get("scene_desc", ""), "text": v.get("text", ""),
+            # 짧은 이름(2026-08-16) — 카드 밑 긴 묘사는 2줄에서 잘려 안 읽힌다.
+            # 옛 추출본엔 없어 ""(화면이 알아서 이 줄을 안 그린다).
+            "label": (v.get("label") or ""),
             "shot_role": v.get("shot_role") or "기타", "is_key": bool(v.get("is_key")),
             "action": v.get("action") or "", "change": v.get("change") or "",
             "benefits": v.get("product_benefits") or [],
@@ -7772,6 +7779,39 @@ def _forced_backbone(work_id, cid):
     return state.get("backbone_main") or None
 
 
+@app.get("/api/produce/source_brief")
+def api_produce_source_brief(request: Request, shortcode: str):
+    """1단계 소스 분석 카드용 — **저장된 추출 결과만** 읽어 준다(2026-08-16).
+
+    ★비용 0원을 구조로 보장한다: 여기서는 Gemini를 절대 부르지 않는다. 없으면 없다고
+    답할 뿐(`ok:false, pending:true`)이고, 실제 추출은 기존 자동적재 경로(api_produce_autoload)가
+    맡는다. 1단계 화면을 열기만 해도 크레딧이 타는 일을 원천 차단하려는 것 —
+    /api/extract_script는 캐시미스에 과금하므로 그걸 그대로 쓰면 안 된다.
+
+    반환: {ok, brief:{product,role,core,summary}, segments:[{start,end,label,scene_desc,is_key}]}
+    옛 추출본엔 source_brief·label이 없다 → brief={} / label="" 로 나가고 화면이 알아서 견딘다.
+    """
+    store = Store(DB_PATH)
+    data = None
+    for code in (shortcode, _media_code(shortcode)):
+        if not code:
+            continue
+        data = store.get_script(code)
+        if data:
+            break
+    if not data:
+        return {"ok": False, "pending": True}
+    segs = []
+    for s in (data.get("segments") or []):
+        segs.append({
+            "start": s.get("start"), "end": s.get("end"),
+            "label": (s.get("label") or ""),
+            "scene_desc": s.get("scene_desc") or "",
+            "is_key": bool(s.get("is_key")),
+        })
+    return {"ok": True, "brief": data.get("source_brief") or {}, "segments": segs}
+
+
 @app.get("/api/produce/aipick")
 def api_produce_aipick(request: Request, work_id: str = "", forced: str = ""):
     """1단계 "AI가 미리 픽 추천" 조회 — 지금 담긴 소스를 pick_backbone/score_backbones/
@@ -9184,6 +9224,116 @@ def api_script_styles(category: str = None):
         })
     out.sort(key=lambda x: (x["fit"] != "검증", -(x["perf_score"] or 0), -(x["source_count"] or 0)))
     return {"ok": True, "styles": out}
+
+
+def _facts_block_for_job(job_id, store=None):
+    """job에 미리 긁어둔 제품 재료 → 프롬프트 블록. 없으면 ''(호출부는 기존 경로 그대로).
+
+    ★여기서 크롤을 돌리지 않는다. 수집은 2~3분이 걸리므로 대본 생성 경로에 끼우면
+      사장님이 그만큼 기다리게 된다 — 수집은 /api/product/facts/collect가 미리 해둔다."""
+    job_id = (job_id or "").strip()
+    if not job_id:
+        return ""
+    try:
+        from shopping_shorts import product_facts
+        job = (store or Store(DB_PATH)).get_mix_job(job_id)
+        facts = ((job or {}).get("product") or {}).get("facts") or {}
+        return product_facts.prompt_block(facts)
+    except Exception:      # noqa: BLE001 — 재료 조회 실패가 대본 생성을 막으면 안 된다
+        return ""
+
+
+@app.post("/api/product/facts/collect")
+def api_product_facts_collect(body: dict):
+    """쿠팡 상품 → **대본 재료**(스펙·리뷰) 수집·분석해 product_json에 심는다(2026-08-16).
+
+    body: {job_id, force?}  — 이미 facts가 있으면 그대로 준다(force=true면 다시 긁는다).
+
+    ## 왜 이 자리인가
+    사장님이 8단계에서 쿠팡 상품을 고르는 흐름이 이미 있다(`/api/coupang/product`).
+    **그 상품을 대상으로 한 번만** 긁어두면 대본을 몇 번 만들든 재사용한다.
+    대본 만들 때 실시간으로 돌리면 2~3분을 기다리게 되므로 그렇게 하지 않는다.
+
+    ## ⚠️ 사장님 PC에서만 수집된다
+    쿠팡은 **한국 IP만** 받는다(coupang_relay.py 실측: 서버 직결·독일 주거용 프록시 모두 403).
+    서버에서 부르면 크롤이 빈 결과가 되고 facts도 빈 채로 저장된다 — 그래도 **예외는 안 낸다**
+    (재료가 없다고 대본 생성이 막히면 안 된다. `prompt_block`이 ''를 주면 기존 경로 그대로).
+
+    소요(실측 2026-08-16, 필통): 상세 60~90초 + 리뷰 23초 + 제미니 30~50초 = **약 2~3분**.
+    화면은 이 호출을 **백그라운드로** 띄우고 기다리지 마라.
+    """
+    from shopping_shorts import product_facts
+
+    job_id = (body.get("job_id") or "").strip()
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id) if job_id else None
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    product = job.get("product") or {}
+    url = product.get("url") or ""
+    if not url:
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "이 작업에 연결된 쿠팡 상품이 없습니다"})
+    if product.get("facts") and not body.get("force"):
+        return {"ok": True, "facts": product["facts"], "cached": True}
+
+    work = _MIX_WORK_DIR / job_id / "product_facts"
+    facts = product_facts.collect_and_analyze(url, str(work), name=product.get("name") or "")
+    product["facts"] = facts
+    store.set_mix_product(job_id, product)
+    return {"ok": True, "facts": facts, "cached": False,
+            "empty": not any(facts.get(k) for k in ("specs", "pain", "voice", "satisfy"))}
+
+
+@app.get("/api/script/style/templates")
+def api_script_style_templates(spine_id: int, role: str = None):
+    """[바꾸기] 후보 — **그 스타일이 가진 문장틀**을 준다(2026-08-16 사장님 지시).
+
+    ## 왜 은행 완성문장이 아니라 '틀'인가 (실측 근거)
+
+    처음엔 은행(`pattern_item`)의 완성문장을 후보로 띄우려 했는데, 사장님이 목업을 보고
+    바로 짚으셨다 — *"쌀밥 대본인데 훅 샘플에 안 맞는 것들이 많다"*.
+    실측해보니 그 지적이 맞았다:
+
+      · 은행 훅 534건 중 **소재 태그(`tags_json`)가 있는 건 0건** → 소재로 거를 방법이 없다
+      · 문장틀로만 걸러도 74건이 남는데 거기에 "냉동 삼겹살은 절대 해동하지 마세요",
+        "여러분 다이소 가면 이거 무조건 사오세요"가 섞인다
+        → **쌀밥 대본에 삼겹살 훅을 후보로 띄우게 된다**
+
+    틀을 주면 이 문제가 통째로 사라진다. 빈칸(`{가족}`·`{제품}`)은 **AI가 이 대본 소재에
+    맞게 채우므로** 소재 태그가 아예 필요 없고, 남의 문장을 복사하는 게 아니라 **구조만
+    빌려 창작**하게 된다. 틀은 이미 `spine.templates_json`에 있고, 생성 프롬프트도 이미
+    같은 틀을 "빈칸만 채워라"로 쓰고 있다(`bank_assemble.style_block`) — 화면과 프롬프트가
+    **같은 원천**을 보게 되므로 어긋날 수가 없다(0순위-B).
+
+    role을 주면 그 칸만, 안 주면 칸 전체를 준다.
+    ★틀이 없는 칸은 **빈 배열**로 준다(그 칸은 문장을 강제하지 않는다는 뜻이지 고장이 아니다).
+    """
+    sp = None
+    for s in Store(DB_PATH).list_spines():
+        if s["id"] == spine_id:
+            sp = s
+            break
+    if not sp:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 스타일"})
+    templates = sp.get("templates") or {}
+    roles = sp.get("beat_roles") or []
+    # 칸 설명은 beat_chain(사람이 읽는 자연어)에서 순서대로 빌린다 — style_block과 같은 규칙.
+    descs = dict(zip(roles, sp.get("beat_chain") or []))
+    want = [role] if role else roles
+    out = []
+    for r in want:
+        if r not in roles:
+            continue
+        out.append({
+            "role": r,
+            "desc": descs.get(r, ""),
+            # 빈칸이 보이게 그대로 준다 — 화면에서 "{가족}" 같은 자리를 표시해야
+            # 사용자가 "여긴 우리 소재로 채워진다"를 안다.
+            "templates": list(templates.get(r) or []),
+        })
+    return {"ok": True, "spine_id": spine_id, "name": sp.get("name") or "",
+            "chars_per_30s": sp.get("chars_per_30s"), "roles": roles, "slots": out}
 
 
 @app.post("/api/pattern/spine/status")

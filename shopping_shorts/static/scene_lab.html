@@ -11,7 +11,12 @@
 body{margin:0;background:var(--bg);color:var(--ink);
      font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;font-size:14px;
      height:100vh;display:flex;flex-direction:column;overflow:hidden}
-#topzone{flex:none}                 /* 타임라인 — 고정(가로로만 스크롤) */
+/* ★배치(2026-08-16 사장님 "맨 위로 전체 타임스탬프가 위치"):
+        [영상 전체 타임프레임]  ← 맨 위, 전체 폭 한 줄(고정)
+        [소스 조각]            ← 아래(여기서만 세로 스크롤)
+   내가 만들고 있는 영상이 지금 어떤 그림들로 채워졌는지가 항상 위에 보이고,
+   그걸 보며 아래에서 소스를 고른다. */
+#topzone{flex:none}                 /* 타임프레임 — 맨 위 고정(가로로만 스크롤) */
 .wrap{flex:1;min-height:0}          /* 소스 — 남은 높이를 다 쓰고 여기서만 세로 스크롤 */
 footer{flex:none}
 header{padding:12px 18px;border-bottom:1px solid var(--line);display:flex;
@@ -24,7 +29,10 @@ h1{font-size:16px;margin:0;font-weight:700}
 .mode.on{border-color:var(--accent);color:#fff;background:#1b2a3d}
 /* ── 타임프레임(내 영상 전체) ─────────────────────────────────────────────
    위=전체 한 줄, 아래=고를 조각. 사장님 손그림 구조. 띠는 가로로만 스크롤한다. */
-#topzone{display:grid;grid-template-columns:1fr 300px;gap:10px;align-items:start;margin:0 0 10px}
+/* ★2026-08-16 사장님 배치: 맨 위 타임프레임이 **썸네일 왼쪽 끝부터 오른쪽 끝까지**
+   전체 폭 한 줄. 그 아래가 [미리보기 + 영상조각]이다. 예전엔 여기가 2열이라
+   타임프레임이 미리보기(300px) 옆에서 시작해 왼쪽 끝까지 안 갔다. */
+#topzone{display:block;margin:0 0 10px}
 #timeband{border:1px solid var(--line);border-radius:10px;background:var(--panel);
   margin:0;padding:8px 10px 10px;min-width:0}
 .tbhead{display:flex;align-items:baseline;gap:10px;font-size:12.5px;margin-bottom:7px;flex-wrap:wrap}
@@ -53,10 +61,23 @@ h1{font-size:16px;margin:0;font-weight:700}
   padding:1px 5px;border-radius:5px;font-family:ui-monospace,Menlo,monospace}
 .tbcut.long img{border-color:var(--warn)}
 .tbcut.long .s{background:var(--warn);color:#3a2a08;font-weight:700}
+/* 출처 번호(2026-08-16) — 몇 번째 소스 영상에서 온 컷인지. 초(.s)는 왼쪽 위라
+   오른쪽 위에 놓아 서로 안 가린다. 같은 제품을 찍은 영상 여러 개를 섞어 쓰므로
+   "지금 어느 영상이 어디 쓰였나"가 보여야 골고루 쓸 수 있다. */
+.tbcut .n{position:absolute;right:4px;top:4px;background:rgba(62,224,191,.9);color:#04201b;
+  font-size:10px;font-weight:900;min-width:16px;text-align:center;
+  padding:1px 5px;border-radius:5px;font-family:ui-monospace,Menlo,monospace}
 .tbeat.empty{border-style:dashed}
 .tbempty{color:var(--dim);font-size:11.5px;padding:14px 10px}
-.wrap{display:block}   /* 아래는 소스 전용 — 전체 폭(2026-08-15 사장님) */
-.pane.rightcol{display:none}       /* 오른쪽 칼럼 폐지: 미리보기는 위(타임라인 옆)로 갔다 */
+/* ★[미리보기 | 영상조각] 좌우(2026-08-16 사장님). 영상 조각이 아래로 길게 늘어지는 게
+   보기 싫다 하셨으므로 **여기 안에서만** 세로 스크롤한다 — 바깥 페이지는 안 늘어난다. */
+.wrap{display:flex;gap:12px;align-items:stretch;min-height:0}
+/* ★미리보기 칸은 스크롤이 없어야 한다(2026-08-16 사장님) — 안의 영상이 남는 높이에
+   맞춰 줄어든다(아래 #player/#vidbox). overflow:auto를 쓰면 스크롤바가 생긴다. */
+#playerhost{flex:0 0 300px;max-width:300px;overflow:hidden;padding:14px 0 14px 14px;
+  display:flex;flex-direction:column;gap:8px;min-width:0;min-height:0}
+.pane.left{flex:1;min-width:0}
+.pane.rightcol{display:none}       /* 오른쪽 칼럼 폐지: 미리보기가 왼쪽으로 왔다 */
 .pane{overflow-y:auto;height:100%;padding:14px}
 .pane.left{background:var(--panel);border:1px solid var(--line);border-radius:10px}
 .srcgroup{margin-bottom:18px}
@@ -65,22 +86,53 @@ h1{font-size:16px;margin:0;font-weight:700}
   background:var(--panel);padding:22px 4px 8px;margin-left:-14px;margin-right:-14px;
   padding-left:18px;padding-right:18px;border-bottom:1px solid var(--line);z-index:6}
 .srchead .cnt{font-size:13px;color:var(--dim);font-weight:400}
-.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-.seg{display:block;z-index:1}
+/* ★정렬(2026-08-16 사장님 "모서리가 한 줄로 떨어질 것"): grid-auto-rows:1fr로 같은 줄
+   카드 높이를 맞춘다. 안 하면 짧은 이름이 있는 카드와 없는 카드가 43px 어긋난다(실측). */
+/* ★grid-auto-rows:1fr은 쓰지 않는다 — 모든 줄에 같은 높이를 강제해 내용이 짧은 줄에
+   빈 공간이 남는다(1단계에서 210px 실측). align-items:stretch만으로 **같은 줄 안에서는**
+   높이가 맞는다(사장님 기준 "모서리 한 줄"은 그대로). */
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;
+  align-items:stretch}
+/* ★display를 여기서 정하지 않는다 — 아래 규칙이 flex로 덮는다(두 번 적으면 어긋난다). */
+.seg{z-index:1}
 .seg{border:1px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;
-     background:var(--panel2);position:relative;transition:.12s}
+     background:var(--panel2);position:relative;transition:.12s;
+     /* 높이가 맞춰진 뒤 남는 공간을 설명 영역이 먹게 한다 — 카드 아래가 휑하지 않게 */
+     display:flex;flex-direction:column;min-width:0}
 .seg:hover{border-color:var(--accent);transform:translateY(-2px)}
 .seg.playing{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
-.seg .cutbtn{position:absolute;right:5px;top:5px;z-index:3;background:#000c;color:#ffd08f;
-  border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:12px;cursor:pointer}
-.seg .cutbtn:hover{background:var(--warn);color:#3a2a08}
-.seg img{width:100%;display:block;aspect-ratio:9/16;object-fit:cover}
+/* ★자르기 발견성(2026-08-16 사장님도 못 찾으셨다). 예전엔 ✂ 한 글자에 12px·흐린 색이라
+   "누를 수 있는 것"으로 안 보였다. 글자를 붙여 무슨 버튼인지 알리고, 손가락으로 누를
+   크기(높이 28px)를 준다. 트림바는 이 버튼을 눌러야만 뜨므로 여기가 유일한 입구다. */
+.seg .cutbtn{position:absolute;right:5px;top:5px;z-index:3;
+  background:rgba(255,208,143,.92);color:#3a2a08;font-weight:800;
+  border:1px solid rgba(255,208,143,.5);border-radius:8px;
+  padding:4px 9px;font-size:11.5px;line-height:1.3;cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.seg .cutbtn:hover{background:var(--warn);color:#3a2a08;transform:scale(1.04)}
+/* ★4:5로 자른다(2026-08-16). 9:16 그대로면 카드가 세로로 길어 한 화면에 9개뿐이라
+   장면 30~50개를 훑으려면 스크롤이 끝없이 길어진다(실측: 팔레트 1821px = 화면의 1.8배).
+   여기선 "어떤 그림인지 알아보고 고르는" 게 목적이고, 전체 프레임은 재생으로 본다. */
+.seg img{width:100%;display:block;aspect-ratio:4/5;object-fit:cover}
 .seg .meta{padding:6px 7px;font-size:12px;color:var(--ink);line-height:1.45;display:flex;flex-direction:column;gap:3px}
+/* 짧은 이름(2026-08-16) — "이 장면이 무엇을 하는가"를 한 줄로. 밑의 긴 묘사(.d)는
+   2줄에서 잘려 안 읽히므로, 눈이 먼저 닿는 자리에 굵게 놓는다. 없으면 안 그린다. */
+.seg .meta .slab{flex:1;min-width:0;color:var(--ink);font-size:12.5px;font-weight:800;
+  line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seg .meta .slab.dim{color:var(--dim);font-weight:600}
 .seg .meta .d{color:var(--dim);font-size:12px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .utag{display:inline-block;font-size:10.5px;padding:2px 7px;border-radius:99px;margin:2px 3px 0 0;border:1px solid var(--line);color:var(--dim)}
 .utag.key{border-color:var(--good);color:var(--good)}
 .dur{position:absolute;left:5px;top:5px;background:#000c;color:#fff;font-size:11px;
      padding:2px 6px;border-radius:4px;z-index:2}
+/* 썸네일 전용 상자(2026-08-16) — 배지 기준을 이미지로 못박는다(왼위=초 · 오른위=✂). */
+.segthumb{position:relative;line-height:0}
+/* ★출처는 썸네일 위가 아니라 **설명 첫 줄**에 짧은 이름과 나란히 둔다(2026-08-16 실측:
+   썸네일 아래 모서리에 두니 눈에 안 들어왔다). 번호만으로 충분하다 — "소스"는 반복이다. */
+.seg .slabrow{display:flex;align-items:center;gap:5px;min-width:0}
+.seg .slabrow .srcno{flex:0 0 auto;background:rgba(62,224,191,.16);color:var(--accent);
+     border:1px solid rgba(62,224,191,.5);font-size:10px;font-weight:900;
+     min-width:17px;text-align:center;padding:1px 5px;border-radius:99px;line-height:1.5}
 .seg.inthis{border-color:var(--good);box-shadow:0 0 0 1px var(--good) inset}
 /* 소스 영상 길이를 넘어가는 세그먼트 — 렌더하면 검은 화면/정지가 된다(2026-08-14 발각) */
 .seg.oor,.item.oor{border-color:var(--bad)}
@@ -161,10 +213,29 @@ button.act.play{font-size:16px;font-weight:700;padding:8px 16px;background:#1b2a
 button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 .ord{display:flex;gap:3px;margin-left:auto}
 #player{position:relative;width:100%;background:var(--panel);
-        border:1px solid var(--accent);border-radius:10px;padding:8px;display:none}
-#playerhost{display:flex;flex-direction:column;gap:8px;min-width:0}
-#player.on{display:block}
-#player #vidbox{position:relative;background:#000;border-radius:6px;overflow:hidden;aspect-ratio:9/16;
+        border:1px solid var(--accent);border-radius:10px;padding:8px;display:none;
+        /* ★스크롤 없이 칸 안에 다 들어가게(2026-08-16 사장님). 세로로 쌓인 것들
+           (제목·영상·진행바·자르기·자막·안내) 중 **영상만** 남는 높이를 먹고 줄어든다. */
+        flex-direction:column;min-height:0}
+/* 플레이어가 칸의 남는 높이를 채운다 — 안 그러면 내용만큼만 커져서 영상이 min에 붙는다 */
+#player.on{display:flex;flex:1 1 auto}
+/* 재생 전 안내 — 9:16 비율로 자리를 잡아 재생이 켜져도 칸이 안 흔들린다.
+   :has()로 "플레이어가 켜지면 사라진다"를 CSS 한 줄로(JS 토글을 또 만들지 않는다). */
+/* 안내도 남는 높이에 맞춘다 — 고정 높이를 주면 칸을 넘어 스크롤이 생긴다. */
+#playerIdle{flex:1 1 auto;min-height:0;width:100%;border:1px dashed var(--line);
+  border-radius:10px;background:var(--panel);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;color:var(--dim);text-align:center}
+#playerhost:has(#player.on) #playerIdle{display:none}
+.pidleIcon{font-size:30px;opacity:.55}
+.pidleTxt{font-size:12px;line-height:1.7}
+/* ★영상만 남는 높이를 먹는다(2026-08-16 사장님 "미리보기쪽 높이는 스크롤 없이").
+   예전엔 폭 기준 9:16 고정이라 300px 폭 → 533px 높이가 되어, 아래 진행바·자르기·
+   자막·안내를 더하면 칸을 넘어 스크롤바가 생겼다. 이제 세로 공간이 모자라면 영상이
+   먼저 줄고(min-height:0), 가로는 비율을 지켜 가운데 선다. */
+#player #vidbox{position:relative;background:#000;border-radius:6px;overflow:hidden;
+        /* ★flex:1 + aspect-ratio를 함께 쓰면 높이가 0으로 붕괴한다(실측). 높이를 먼저
+           주고(자리 확보) 비율은 max-width로 지킨다 — 세로가 모자라면 폭이 준다. */
+        flex:1 1 0;min-height:120px;max-width:100%;aspect-ratio:9/16;margin:0 auto;
         cursor:pointer}   /* 화면 클릭 = 정지/재생(2026-08-15) */
 #player .phead{cursor:default}   /* 오른쪽 칼럼에 고정됐다 — 더는 끌어 옮길 필요가 없다 */
 #player video{width:100%;height:100%;border-radius:6px;background:#000;display:block;aspect-ratio:9/16;object-fit:contain;position:absolute;inset:0}
@@ -243,6 +314,12 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
 </div>
 <div id="playerhost" data-embed-hide>
   <div class="lbl" style="display:flex;align-items:center;gap:14px"><button class="act play" id="pball" onclick="playAll(event)">▶️ 전체 재생</button><label style="cursor:pointer" title="전체에 적용: 장면마다 컷 하나씩, 멘트 시간을 길이 비례로 나눕니다."><input type="checkbox" onchange="toggleOne(this.checked)"> 1장=1컷</label></div>
+  <!-- 재생 전 안내(2026-08-16) — 미리보기 칸이 통째로 비어 있으면 "여기가 뭐 하는
+       자리인지" 알 수 없다. #player가 켜지면(.on) 이건 자동으로 숨는다. -->
+  <div id="playerIdle">
+    <div class="pidleIcon">🪞</div>
+    <div class="pidleTxt">위 <b>띠의 조각</b>이나 아래 <b>장면</b>을 누르면<br>여기서 재생됩니다</div>
+  </div>
   <div id="player">
       <div class="phead"><b>미리보기</b> <span class="x" onclick="stopPlay()">닫기 ✕</span></div>
       <div id="vidbox" onclick="togglePause(event)"></div>
@@ -317,6 +394,24 @@ function groupOf(sid){
     return _BAKE.some(w => d.includes(w)) ? '굽기' : '재료';
   }
   return GROUPS.some(g => g.key === r) ? r : '기타';
+}
+// ★출처(2026-08-16): 이 장면이 **몇 번째 소스 영상**에서 왔는지. 결(GROUPS)로만 묶여
+//   있어서 "이게 어느 영상 거지?"를 알 방법이 없었다 — 같은 제품을 찍은 영상 3~8개를
+//   섞어 쓰는 게 이 도구의 핵심인데 출처가 안 보이면 골고루 쓰고 있는지 알 수 없다.
+//   video_id를 등장 순서대로 1,2,3…으로 매긴다(1단계 '소스 N' 카드와 같은 번호).
+let _SRC_NO = null;
+function srcNo(sid){
+  if (_SRC_NO === null){
+    _SRC_NO = {};
+    // beats의 등장 순서가 아니라 segments 키 순서 = 인벤토리 순서(소스별로 뭉쳐 있다)
+    let n = 0;
+    for (const k of Object.keys(DATA.segments || {})){
+      const v = DATA.segments[k].video_id;
+      if (v && _SRC_NO[v] === undefined) _SRC_NO[v] = ++n;
+    }
+  }
+  const s0 = DATA.segments[sid] || {};
+  return _SRC_NO[s0.video_id] || 0;
 }
 // 용도 배지 — 위 결에서 바로 파생한 **제안**이다(강제 아님, 담는 건 사장님 판단).
 function useTags(sid){
@@ -458,10 +553,24 @@ function playSegInCard(sid){
   if (v.readyState >= 1) go(); else v.onloadedmetadata = go;
 }
 
-function playSegHere(sid){
+// ★바깥(제작소) 큰 화면에서 재생할지, 이 화면 안에서 재생할지 — **한 곳에서만** 정한다.
+//   2026-08-16 배치 변경으로 미리보기가 이 화면 안으로 들어왔다: 부모가 자기 미리보기
+//   슬롯(#mixPreviewRail)을 감췄으면 넘겨봤자 보이지 않으므로 여기서 튼다.
+//   세 군데(playSegHere/playAllHere/playBeatHere)가 각자 판정하면 언젠가 어긋난다(0순위-B).
+function _outerPlayer(){
   try{
     const up = window.parent;
-    if (up && up !== window && typeof up.sceneLabPlaySeg === 'function'){
+    if (!up || up === window) return null;
+    const rail = up.document && up.document.getElementById('mixPreviewRail');
+    if (rail && getComputedStyle(rail).display === 'none') return null;   // 부모가 감췄다 → 여기서
+    return up;
+  }catch(e){ return null; }
+}
+
+function playSegHere(sid){
+  try{
+    const up = _outerPlayer();
+    if (up && typeof up.sceneLabPlaySeg === 'function'){
       up.sceneLabPlaySeg(sid, {DATA, lists, STRETCH, TRIMS, onePerSeg});
       playKey = 'seg:' + sid; renderBand();
       return;
@@ -473,8 +582,8 @@ function playSegHere(sid){
 function playAllHere(ev){
   if (ev) ev.stopPropagation();
   try{
-    const up = window.parent;
-    if (up && up !== window && typeof up.sceneLabPlayAll === 'function'){
+    const up = _outerPlayer();
+    if (up && typeof up.sceneLabPlayAll === 'function'){
       up.sceneLabPlayAll({DATA, lists, STRETCH, TRIMS, onePerSeg});
       playKey = 'all'; renderBand();
       return;
@@ -490,8 +599,8 @@ function playBeatHere(i, ev){
   //   과정이 없어 실패 지점이 없다(2026-08-15 실측: postMessage 경로가 조용히 실패해
   //   iframe 안에서 소리만 나고 화면은 안 보였다).
   try{
-    const up = window.parent;
-    if (up && up !== window && typeof up.sceneLabPlay === 'function'){
+    const up = _outerPlayer();
+    if (up && typeof up.sceneLabPlay === 'function'){
       // ★window에서 꺼내 쓰면 안 된다 — let/const로 선언한 전역은 window의 속성이 아니라서
       //   바깥에서 읽으면 undefined다(2026-08-15 실측: lists가 undefined라 재생이 죽었다).
       //   같은 도메인이라 객체를 그대로 건넬 수 있다(복사 아님 — 참조가 그대로 간다).
@@ -588,8 +697,8 @@ function renderBand(){
              ondragover="if(dragFrom){event.preventDefault();event.dataTransfer.dropEffect='move';}"
              ondrop="bandDrop(${i}, '${c.seg_id}', event)"
              ondblclick="event.stopPropagation();dropCutFromBand(${i}, '${c.seg_id}')"
-             title="${c.video_id} ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 끌어서 순서 바꾸기 · 아래 소스로 끌면 빼기 · 두 번 클릭도 빼기">
-             <img src="${SL.thumb(c.seg_id)}" loading="lazy"><span class="s">${c.dur.toFixed(1)}</span></div>`).join('')
+             title="소스 ${srcNo(c.seg_id)} · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 끌어서 순서 바꾸기 · 아래 소스로 끌면 빼기 · 두 번 클릭도 빼기">
+             <img src="${SL.thumb(c.seg_id)}" loading="lazy"><span class="n">${srcNo(c.seg_id)}</span><span class="s">${c.dur.toFixed(1)}</span></div>`).join('')
       : `<div class="tbempty">장면을 담아주세요</div>`;
     // 담기·빼기는 기존 기능(add/delSeg)을 그대로 쓴다 — 아래 소스에서 끌어다 놓거나 두 번 클릭.
     return `<div class="tbeat ${clips.length ? '' : 'empty'} ${playKey === 'beat:' + i ? 'on' : ''} ${sel === i ? 'sel' : ''}"
@@ -647,14 +756,21 @@ function render(){
              onclick="clickPlay('${s.sid}',event)"
              ondblclick="event.stopPropagation();clearTimeout(clickTimer);add('${s.sid}')"
              title="끌어다 오른쪽 칸에 놓으면 담깁니다 · 클릭 = 재생 · 두 번 클릭 = 선택된 칸에 담기">
-          <img src="${SL.thumb(s.sid)}" loading="lazy">
-          <span class="dur">${(s.end-s.start).toFixed(1)}초${TRIMS[s.sid]?' ✂':''}</span>
-          <button class="cutbtn" title="큰 화면에서 이 장면을 보며 앞뒤를 잘라냅니다"
-                  onclick="event.stopPropagation();clearTimeout(clickTimer);stopCardPlay();playSegHere('${s.sid}')">✂</button>
+          <div class="segthumb">
+            <img src="${SL.thumb(s.sid)}" loading="lazy">
+            <span class="dur">${(s.end-s.start).toFixed(1)}초${TRIMS[s.sid]?' ✂':''}</span>
+            <button class="cutbtn" title="큰 화면에서 이 장면을 재생하며 필요 없는 구간을 잘라냅니다"
+                    onclick="event.stopPropagation();clearTimeout(clickTimer);stopCardPlay();playSegHere('${s.sid}')">✂ 자르기</button>
+          </div>
           <div class="meta">
             <div>${useTags(s.sid).map(t=>`<span class="utag${t==='실증'?' key':''}">${t}</span>`).join('')}</div>
             ${tooShort(s.sid)?`<div class="oorbadge">⚠ 너무 짧아서(0.8초 미만) 담아도 화면에 안 나와요</div>`:''}
             ${dupMates(s.sid).length?`<div class="utag" style="border-color:var(--accent);color:var(--accent)">비슷한 그림 ${dupMates(s.sid).length}장 접힘</div>`:''}
+            <div class="slabrow">
+              <span class="srcno" title="${srcNo(s.sid)}번째 소스 영상에서 온 장면">${srcNo(s.sid)}</span>
+              ${s.label ? `<span class="slab">${esc(s.label)}</span>`
+                        : `<span class="slab dim">이름 없음</span>`}
+            </div>
             <div class="d">${esc(s.scene_desc||'(설명 없음)')}</div>
             </div>
         </div>`).join('')}</div></div>`;
@@ -810,13 +926,23 @@ function render(){
 //   예전에 저장해 둔 좌표가 남아 있으면 relative 배치를 밀어내므로 여기서 지운다.
 (function(){
   try{ localStorage.removeItem('sceneLab:playerPos'); }catch(e){}
-  // 제작소 안이면 이 페이지의 작은 미리보기는 감춘다 — 바깥 큰 화면에서 재생한다.
-  if (window.parent && window.parent !== window){
-    const ph = document.getElementById('playerhost');
-    if (ph) ph.style.display = 'none';
-    const tz = document.getElementById('topzone');
-    if (tz) tz.style.gridTemplateColumns = '1fr';
-  }
+  // ★2026-08-16 사장님 배치 지시로 **이 페이지 안에서** 재생한다(예전엔 제작소 안이면
+  //   여기 미리보기를 감추고 바깥 큰 화면에서 틀었다). 배치가
+  //   [맨 위 타임프레임] / [미리보기 + 영상조각]이라 미리보기가 이 화면 안에 있어야
+  //   조각을 고르며 바로 볼 수 있다. 바깥으로 넘기는 경로(playBeatHere 등)는 그대로
+  //   두되, 부모가 미리보기 슬롯을 감췄으면(#mixPreviewRail) 여기서 재생한다.
+  document.body.classList.add('inside-studio');
+  // ★배치(2026-08-16 사장님): 맨 위 타임프레임 / 그 아래 [미리보기 + 영상조각].
+  //   #playerhost는 마크업상 #topzone(타임프레임) 안에 있어 CSS로는 못 옮긴다 —
+  //   .wrap의 **첫 자식**으로 한 번만 이동시킨다(그 뒤 재생 코드는 id로 찾으므로 무관).
+  try{
+    const host = document.getElementById('playerhost');
+    const wrap = document.querySelector('.wrap');
+    if (host && wrap && host.parentElement !== wrap){
+      host.style.display = '';            // 위에서 감추던 것을 되살린다
+      wrap.insertBefore(host, wrap.firstChild);
+    }
+  }catch(e){ console.warn('미리보기 이동 실패', e); }
   const p = document.getElementById('player');
   if (p){ p.style.left = ''; p.style.top = ''; p.style.right = ''; p.style.bottom = ''; }
   // 진행바를 끄는 동안은 자동 갱신이 손을 안 덮게 표시해 둔다.
@@ -1135,6 +1261,7 @@ function reset(){
 //   표시 보정 — 음성 길이에서 잘라 그린다(계산 로직 불변). 예전엔 build.py(파이썬)가
 //   했는데 서버 모드가 생기며 여기(한 곳)로 옮겼다 — 두 벌이 되면 어긋난다(0순위-B).
 function normalizeData(){
+  _SRC_NO = null;          // 소스 번호 캐시를 새 데이터 기준으로 다시 매긴다(2026-08-16)
   const caps = DATA.captions || {}, td = DATA.tts_dur || {};
   for (const i of Object.keys(caps)){
     const dur = td[i];

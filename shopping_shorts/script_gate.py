@@ -96,11 +96,56 @@ def template_matches(text, templates, min_ratio=0.5):
     return False
 
 
-def check(style, beats):
+# ★고조 연결어(2026-08-16 추가). 헌장(_STORY_RULES_CORE, 2026-08-04 사장님 확정)이
+#   "해결을 보여준 뒤 한 단계 더 올라가는 문장을 반드시 하나 두라"고 요구하는데
+#   **검사하는 코드가 없어 밋밋해도 통과**했다(실측: 고조어 0개 대본이 6항목 전부 OK).
+#   메종홈디노 히트작 12편 중 6편이 이 구조로 터진다("심지어 100% 방수에…7일이나 유지").
+_ESCALATORS = ("심지어", "더대박", "더놀라운", "더좋은건", "미친포인트", "놀랍게도",
+               "더군다나", "이럴수가있나싶게", "이걸왜몰랐는지", "진짜미쳐")
+
+# 숫자가 붙는 단위 — 대본에 수치가 나왔는데 재료에 없으면 지어낸 것이다(그라운딩 검사).
+_NUM_UNIT = re.compile(
+    r"(\d[\d,.]*)\s*(mm|cm|m|kg|g|ml|l|초|분|시간|일|주|개월|년|개|장|자루|명|인|배|퍼센트|%|원)")
+
+
+def _escalation(full):
+    """고조 연결어가 **몇 번** 쓰였나. 헌장은 '한 번만'이다(남발하면 죽는다)."""
+    n = norm(full)
+    return sum(n.count(w) for w in _ESCALATORS)
+
+
+def grounding_check(full, facts_text):
+    """대본의 수치가 **재료에 실제로 있는 것인가** — 지어낸 수치를 잡는다.
+
+    ★왜 필요한가(2026-08-16 A/B 실측): 재료를 안 준 대본이 "조리 시간이 5분도 안 걸려서"를
+      만들어냈는데 원본 4편 어디에도 5분이 없었다. 필통에서도 "펜이 수십 자루"처럼
+      근거 없는 수를 붙였다. **수치는 신뢰의 핵심이라 지어내면 안 된다**(헌장도
+      "없는 가격·할인·한정수량 지어내기 금지").
+
+    facts_text가 비면(재료를 안 준 경우) **검사하지 않는다** — 재료가 없는데 수치를
+    금지하면 정상 대본까지 튕긴다. 재료를 준 경우에만 대조한다.
+    반환: (ok, 지어낸것으로 보이는 수치 리스트)
+    """
+    if not (facts_text or "").strip():
+        return True, []
+    hay = norm(facts_text)
+    bad = []
+    for num, unit in _NUM_UNIT.findall(full or ""):
+        token = norm(num + unit)
+        # 재료에 같은 숫자+단위가 있으면 통과. 숫자만 있어도 인정(단위 표기가 흔들린다)
+        if token in hay or norm(num) in hay:
+            continue
+        bad.append(num + unit)
+    return (not bad), bad
+
+
+def check(style, beats, facts_text=""):
     """(checks, full_text) 반환. checks = [{name, ok, detail}, ...]
 
     style: {"beat_roles": [...], "templates": {role: [...]}, "chars_per_30s": int}
     beats: [{"role": "...", "text": "..."}, ...]  ← 모델이 돌려준 것
+    facts_text: 이 대본에 준 **재료 원문**(product_facts 등). 주면 수치 그라운딩을
+        검사한다. 안 주면 그 검사는 건너뛴다 — 기존 호출부는 그대로 = 회귀 0.
     """
     beats = beats or []
     want = list(style.get("beat_roles") or [])
@@ -132,6 +177,22 @@ def check(style, beats):
     n = len(norm(full))
     checks.append({"name": "말 밀도(%d~%d자)" % (lo, hi), "ok": lo <= n <= hi,
                    "detail": "%d자 / 이 스타일 히트작 %d자" % (n, tgt)})
+
+    # ★고조 심화(2026-08-16) — 헌장은 "한 단계 더 올라가는 문장을 반드시 하나, 한 번만".
+    #   0회면 밋밋하고, 2회 이상이면 남발이라 오히려 죽는다(헌장 문구 그대로).
+    esc = _escalation(full)
+    checks.append({"name": "고조 심화(1회)", "ok": esc == 1,
+                   "detail": ("고조 연결어가 없다 — 해결 뒤에 '심지어/더 대박인 건'으로 "
+                              "새로운 장점 하나를 더 얹어라" if esc == 0
+                              else ("%d번 나왔다 — 한 번만 써라(남발하면 죽는다)" % esc
+                                    if esc > 1 else "OK"))})
+
+    # ★수치 그라운딩(2026-08-16) — 재료를 준 경우에만. 지어낸 수치를 잡는다.
+    ok_g, bad = grounding_check(full, facts_text)
+    if (facts_text or "").strip():
+        checks.append({"name": "수치 근거", "ok": ok_g,
+                       "detail": ("재료에 없는 수치: " + ", ".join(bad[:5])
+                                  + " — 지어내지 말고 확인된 것만 써라") if bad else "OK"})
     return checks, full
 
 

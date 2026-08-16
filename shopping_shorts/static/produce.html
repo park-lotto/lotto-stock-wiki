@@ -67,7 +67,11 @@
     .previewSlot{position:sticky;top:12px;align-self:flex-start;z-index:7}
 
     /* 진행바 — 크게(60대 최우선). 완료=채운 민트+체크, 현재=링+숨쉬기(색이 아니라 형태로도 구분) */
-    .steps{margin:26px 0 30px;max-width:1120px}  /* 컨테이너는 블록 — 안의 .orbbar(theme.css)가 100% 채워 오브를 균등 분배 */
+    /* ★가로폭 상한을 없앴다(2026-08-15 사장님 "레퍼런스 랭킹처럼 크게").
+       랭킹 페이지(index.html)는 .main{flex:1}만 쓰고 상한이 없어 화면 끝까지 채운다 —
+       제작소만 1120px에 묶여 오른쪽이 통째로 비어 있었다. 세로 영상(9:16) 레일은
+       각자 max-width를 그대로 두므로, 늘어난 폭은 옆의 대본·결과 칼럼이 먹는다. */
+    .steps{margin:26px 0 30px}  /* 컨테이너는 블록 — 안의 .orbbar(theme.css)가 100% 채워 오브를 균등 분배 */
     .step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;cursor:pointer}
     .step .dot{width:52px;height:52px;border-radius:50%;background:var(--panel);border:2px solid var(--line);
       display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--sub);z-index:1;
@@ -109,7 +113,7 @@
                   aspect-ratio:9/16;object-fit:contain;position:absolute;inset:0}
     #player .x:hover{color:var(--txt)}
     #subbox b{color:var(--accent)}
-    .panel{display:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;max-width:1120px}
+    .panel{display:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
     .panel.show{display:block}
     .panel h3{margin:0 0 4px;font-size:18px}
     .panel .sub{color:var(--sub);font-size:14px;margin-bottom:16px}
@@ -121,7 +125,7 @@
     .lockcard .lc-h{font-size:14px;color:var(--sub);margin-top:6px;line-height:1.5}
 
     /* 하단 네비 */
-    .nav{display:flex;justify-content:space-between;margin:18px 0 40px;max-width:1120px}
+    .nav{display:flex;justify-content:space-between;margin:18px 0 40px}
     button{font-family:inherit;border:0;border-radius:9px;padding:11px 20px;cursor:pointer;font-size:14px}
     .btn-prev{background:var(--panel);border:1px solid var(--line);color:var(--txt)}
     .btn-next{background:var(--grad);color:#fff}
@@ -361,9 +365,91 @@
       .cp-compare .cp-cell,.cp-arrow,.chip{opacity:1}
     }
 
+    /* ── 🔎 소스 분석 카드(2026-08-16, 9단계 개편의 1단계 본체) ──────────────
+       담은 영상마다 "무엇을 보여주는 영상인가"를 카드로 편다. 넓은 화면에서는 2~3열로
+       자동으로 늘어난다(가로폭 상한을 없앤 뒤라 본문을 넓게 쓸 수 있다). */
+    /* ★정렬 원칙(2026-08-16 사장님): 모서리가 한 줄로 떨어질 것 · 빈 여백 덩어리 없을 것 ·
+       상자 밖으로 튀어나오는 것 0. 간격은 4/8px 배수로만 쓴다.
+       grid-auto-rows:1fr = 같은 줄 카드의 **높이를 강제로 맞춘다**(내용이 짧아도 늘어난다).
+       안 하면 카드마다 제 높이라 아래가 계단처럼 어긋난다(실측: 282/282/92/92). */
+    /* ★grid-auto-rows:1fr을 쓰지 않는다(2026-08-16 실측): 모든 줄에 같은 높이를 강제해
+       두 번째 줄(70px 대기 카드만 있는 줄)에도 280px이 잡혀 **210px이 빈 채로 남았다**.
+       align-items:stretch만으로도 **같은 줄 안에서는** 높이가 맞는다 — 사장님 기준
+       "모서리 한 줄"은 지키면서 줄마다 제 높이를 갖는다. */
+    .srcGrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(304px,1fr));
+      align-items:stretch}
+    .srcCard{background:var(--inset);border:1px solid var(--line);border-radius:12px;
+      padding:12px 16px;transition:border-color .15s;cursor:pointer;
+      display:flex;flex-direction:column;min-width:0;overflow:hidden}
+    .srcCard:hover{border-color:var(--accent)}
+    /* ★접었다 폈다(2026-08-16 사장님). 영상을 5~8개 담으면 요약이 다 펼쳐져 화면을
+       길게 먹는다 — 기본은 "제품 한 줄 + 장면 수"만, 누르면 역할·핵심·요약이 나온다. */
+    .srcMore{display:none}
+    .srcCard.open .srcMore{display:block}
+    .srcCaret{margin-left:auto;font-size:11px;color:var(--sub);white-space:nowrap}
+    .srcCard:hover .srcCaret{color:var(--accent)}
+    /* ★분석 대기 카드는 자기 크기만 갖는다(grid-row 늘림에서 뺀다) — 한 문장짜리
+       내용에 280px을 주면 큰 빈 상자가 된다. align-self:start가 1fr 늘림을 끊는다. */
+    .srcCard.pend{opacity:.7;border-style:dashed;align-self:start;padding:10px 16px}
+    .srcPend{font-size:12px;color:var(--sub);line-height:1.5}
+    .srcHead{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+    .srcNo{flex:0 0 auto;font-size:11px;font-weight:900;color:var(--accent);
+      background:rgba(62,224,191,.12);border:1px solid rgba(62,224,191,.4);
+      border-radius:99px;padding:2px 9px}
+    .srcName{flex:1;min-width:0;font-size:12px;color:var(--sub);overflow:hidden;
+      text-overflow:ellipsis;white-space:nowrap}
+    .srcRow{display:flex;gap:8px;margin-bottom:5px;font-size:13px;line-height:1.5}
+    .srcK{flex:0 0 34px;color:var(--sub);font-size:11.5px;font-weight:800;padding-top:2px}
+    .srcV{flex:1;min-width:0;word-break:keep-all}
+    .srcV.strong{font-weight:800;color:var(--accent2)}
+    .srcSum{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);
+      font-size:12.5px;line-height:1.6;color:var(--sub);word-break:keep-all;
+      /* 요약 길이가 카드마다 달라 바닥선을 흔든다 → 4줄에서 자른다(전문은 title로) */
+      display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+    /* 장면 목록을 남는 공간에 붙여 바닥까지 채운다 — 카드 아래가 휑하지 않게.
+       ★min-height:0이 없으면 flex 자식이 안 줄어들어 목록이 카드 밖으로 흘러나간다
+       (실측: UL이 아래로 146px 삐져나왔다). overflow는 목록 안에서만 일어나야 한다. */
+    .srcScenes{margin-top:auto;padding-top:8px;min-height:0;display:flex;flex-direction:column}
+    .srcScenes>summary{cursor:pointer;font-size:12px;color:var(--sub);
+      padding:5px 0;list-style:none}
+    .srcScenes>summary::-webkit-details-marker{display:none}
+    .srcScenes>summary:hover{color:var(--accent)}
+    /* ★접혔을 때 목록이 카드 밖으로 새는 것을 막는다(실측: UL이 아래로 146px 삐져나왔다).
+       details가 닫혀도 flex 자식인 ul이 자리를 차지했다 — 닫힘 상태를 명시적으로 감춘다. */
+    .srcScenes:not([open]) ul{display:none}
+    .srcScenes ul{margin:6px 0 0;padding:0;list-style:none;overflow:auto;min-height:0;flex:1}
+    .srcScenes li{display:flex;align-items:center;gap:7px;padding:4px 0;
+      font-size:12px;border-bottom:1px solid rgba(255,255,255,.04)}
+    .srcT{flex:0 0 76px;color:var(--dim);font-variant-numeric:tabular-nums;font-size:11px}
+    .srcLab{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .srcKey{flex:0 0 auto;font-size:10px;font-weight:900;color:#ffd08a;
+      border:1px solid rgba(255,208,138,.45);border-radius:99px;padding:1px 6px}
+
     /* ── Task 4: 1단계 재구성 — 재료 그리드(✓뱃지 토글) · AI PICK · 빈 상태 ── */
-    .poolGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}
-    .pool-card{position:relative;border-radius:8px;overflow:hidden;cursor:pointer;aspect-ratio:9/16;
+    /* ★담은 영상 상단 배치(2026-08-16 사장님 "가로 5개까지 들어가는 크기").
+       예전엔 왼쪽 320px 칸에 갇혀 64px이라 5~8개를 담으면 뭘 담았는지 알아볼 수 없었다.
+       5열 고정 — auto-fill이면 화면 폭에 따라 개수가 널뛰어 크기를 못 정한다. */
+    /* ★hidden 속성이 display를 못 이기던 것(2026-08-16 실측): theme.css의
+       .match-progress{display:flex}가 hidden보다 뒤에 로드돼, 숨겨야 할 요소가
+       22px 자리를 차지하고 있었다. hidden은 "없는 것"이어야 한다. */
+    .main [hidden]{display:none !important}
+    .srcStage{background:var(--inset);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+    .srcStageHead{display:flex;align-items:center;gap:10px;margin-bottom:10px;
+      font-size:13px;font-weight:800}
+    /* ★사장님 "가로 5개까지 들어가는 크기" = 칸 하나를 그 크기로 잡는다는 뜻.
+       auto-fill이라 화면이 넓으면 6·7개도 들어가 오른쪽이 안 비고, 좁으면 알아서 준다.
+       ★상한 168px: 9:16이라 폭 220px이면 높이 391px로 화면 절반을 먹었다(실측).
+       담은 영상은 "알아볼" 정도면 되고 주인공은 아래 분석이다. */
+    .poolGrid{display:grid;gap:12px;
+      grid-template-columns:repeat(auto-fill,minmax(clamp(96px,16vw,168px),1fr))}
+    /* 장면 수 요약 — 타임스탬프 목록을 뺀 자리에 "재료가 얼마나 되나"만 남긴다 */
+    .srcStat{margin-top:auto;padding-top:10px;display:flex;align-items:baseline;gap:6px}
+    .srcStatN{font-size:22px;font-weight:900;color:var(--accent2);line-height:1}
+    .srcStatK{font-size:12px;color:var(--sub)}
+    /* ★4:5로 자른다(2026-08-16). 9:16 그대로면 폭 181px에 높이 322px — 담은 영상 칸만
+       410px로 화면을 먹는다(실측). 어떤 영상인지 알아보는 게 목적이지 전체를 보는 게
+       아니다(전체는 3단계 장면 편집에서 본다). object-fit:cover라 가운데가 남는다. */
+    .pool-card{position:relative;border-radius:8px;overflow:hidden;cursor:pointer;aspect-ratio:4/5;
       background:#000;border:2px solid var(--line);opacity:.5;transition:opacity .15s,border-color .15s}
     .pool-card:hover{opacity:.85}
     .pool-card.on{opacity:1;border-color:var(--accent)}
@@ -371,13 +457,148 @@
     .pool-card .badge{position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;
       background:var(--accent);color:#04201b;display:flex;align-items:center;justify-content:center;
       font-size:11px;font-weight:900}
-    .pool-ghost{aspect-ratio:9/16;border-radius:8px;border:2px dashed var(--line);opacity:.4}
+    .pool-ghost{aspect-ratio:4/5;border-radius:8px;border:2px dashed var(--line);opacity:.4}
     .tiles{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
     .skm-card.empty{text-align:center;padding:26px 18px}
     .skm-card.empty h2{font-size:15px;line-height:1.5;margin:0 0 16px;color:var(--txt);font-weight:800}
     .empty-cta{display:flex;flex-direction:column;gap:8px;max-width:280px;margin:0 auto}
-    .empty-cta .cta-shine{display:block;padding:11px;box-sizing:border-box;text-decoration:none;font-size:14px}
+    /* padding:11px면 높이가 41px로 44px 터치타깃에 3px 모자란다(2026-08-15 실측) → 13px */
+    .empty-cta .cta-shine{display:block;padding:13px;min-height:44px;box-sizing:border-box;text-decoration:none;font-size:14px}
     .aiPickCta{display:block;box-sizing:border-box;margin-top:12px;text-align:center}
+
+    /* ══════════════════════════════════════════════════════════════════════
+       T2 · 손가락 타깃 44px (2026-08-15 사장님 "큼직하게")
+       기준: 터치 타깃 최소 44×44px. 60대가 주 사용자라 데스크톱에서도 같이 키운다.
+       ★크기는 여기서만 정한다 — JS가 만드는 버튼에 인라인 style로 크기를 적으면
+         CSS를 이겨 이 규칙이 통째로 죽는다(0순위-B: 같은 판단 두 벌 금지).
+       실측(전): .cand .ghost 23px · #revertBtn 29px · .urlDel 21px ·
+                 .workBtn 35px · .ss-toggle-btn 37px · .ss-acct-link 34px
+       ══════════════════════════════════════════════════════════════════════ */
+    /* 대본 카드 본문 15.5px — 4516줄 템플릿의 인라인 style에 있던 걸 여기로 옮겼다.
+       인라인이면 CSS(넓은 화면 16px 확대)를 이겨버려 확대가 죽는다. theme.css의
+       `.cand{font-size:12px}`를 이겨야 하므로 .main을 붙여 특이도를 올린다. */
+    .main .cand{font-size:15.5px}
+    /* 대본 카드의 ✏고치기 / 🎞따로만들기 — 사장님이 가장 자주 누르는 자리(카드마다 2개) */
+    .cand .ghost{min-height:44px;padding:11px 16px;font-size:13px;font-weight:700;
+      background:var(--inset);border:1px solid var(--line);color:var(--txt);
+      border-radius:9px;cursor:pointer;width:100%;text-align:center;line-height:1.2}
+    .cand .ghost:hover{border-color:var(--accent);color:var(--accent)}
+    /* ↩ 되돌리기 */
+    #revertBtn{min-height:44px;padding:10px 16px}
+    /* ✕ 칸 지우기 — 인라인 style이 3곳(449·2392·3648)에 복붙돼 있어 크기만 CSS로 올린다.
+       인라인은 background/border/color만 정하고 크기는 여기 한 곳이 정한다. */
+    .urlDel{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+    /* 📂 내 작업목록 / ＋ 새 작업 */
+    .workBtn{min-height:44px;padding:12px 16px}
+    /* ← 이전 / 다음 → (42px) + URL추가·✔확정(36px, 인라인 padding:8px 14px).
+       인라인 style은 padding만 정하고 height는 안 정하므로 min-height로 한 번에 올린다. */
+    .btn-prev,.btn-next{min-height:44px}
+    /* 사이드바(sidebar.js 주입) — 테마토글·계정링크. 사이드바 자체 규칙은 sidebar.js가
+       단일 소스지만 높이만 여기서 보정하면 6개 페이지가 어긋난다 → sidebar.js에서 고쳤다.
+       (여기엔 남기지 않는다 — 0순위-B) */
+
+    /* ══════════════════════════════════════════════════════════════════════
+       T1 · 넓은 화면에서 큼직하게 (2026-08-15)
+       ★min-width:1600px 안에서만 올린다 — 노트북(1280·1440)은 지금 그대로라 회귀 0.
+       실측(전, 2000px): 패널 1666px인데 h3 18px·본문 11~12px이 20개 = 폭만 넓고 글자는 작았다.
+       ══════════════════════════════════════════════════════════════════════ */
+    @media (min-width:1600px){
+      body{font-size:16px}
+      .main{padding:28px 40px}
+      .head h2{font-size:26px}
+      .head .desc{font-size:15px}
+      .panel{padding:26px}
+      .panel h3{font-size:23px}
+      .panel .sub{font-size:16px;margin-bottom:18px}
+      /* 11~12px 무리(칩·힌트·라벨)를 12.5~13px로. 9px 1개는 최소 11px */
+      .hint{font-size:13px}
+      .chip{font-size:13px}
+      /* ★theme.css가 뒤에 링크돼(504줄) 같은 특이도면 진다 — .main을 붙여 한 단 올린다.
+         (.cmp-title/.stat-tile span/.stt .k/.cand p/.orb .lb/.cand는 전부 theme.css에도 있다) */
+      .main .cmp-title,.main .orbbar .orb .lb{font-size:12.5px}
+      .main .stat-tile span,.main .stt .k,.main .cand p{font-size:12.5px}
+      .demotag{font-size:11px}
+      .cp-lbl{font-size:11px}
+      /* 읽는 글 = 대본 카드 본문. 여기가 제일 중요하다.
+         ★.cand는 인라인 style에도 font-size:15.5px가 박혀 있다(4516줄 템플릿) — 인라인이
+           CSS를 이기므로 여기서 키워도 안 먹는다. 그래서 인라인 쪽에서 뺐다(아래 주석 참고). */
+      .main .cand{font-size:16px}
+      .tab{font-size:15px;padding:14px 20px}
+      textarea{font-size:15px}
+      button{font-size:15px}
+      /* 진행바 오브도 같이 큼직하게 — 패널이 1650px인데 오브만 36px이면 작아 보인다.
+         ★theme.css가 이 <style> **뒤에** 링크돼 있어(504줄) 같은 특이도면 theme.css가 이긴다.
+           실측: `.orb .ball{width:44px}`은 통째로 무시됐다(36x36 그대로). 그래서 .orbbar를
+           앞에 붙여 특이도를 한 단 올린다(!important 없이 이기는 정공법). */
+      .orbbar .orb .ball{width:44px;height:44px;font-size:15px}
+      .orbbar .orbline{top:24px}
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       T3 · 모바일 (≤768px) — 2026-08-15 신설. 제작소엔 폭 기반 미디어쿼리가 0건이었다.
+       ★사이드바는 여기서 손대지 않는다: sidebar.js가 이미 @media(max-width:760px)로
+         가로띠 규칙을 갖고 있고(6개 페이지 공용 단일 소스), 여기 또 적으면 두 벌이 된다.
+         실측으로 확인함 — 390px에서 .ss-nav 높이 91px·가로스크롤(scrollWidth 1477) 정상 동작.
+         (index.html의 .sidebar/.menu-item 모바일 규칙은 죽은 코드다 — sidebar.js가
+          aside.sidebar를 제거하고 aside.ss-nav를 주입하므로 그 셀렉터엔 아무것도 안 걸린다)
+       ══════════════════════════════════════════════════════════════════════ */
+    @media (max-width:768px){
+      /* M4: 여백을 줄여 좁은 폭을 내용에 준다 */
+      .main{padding:14px 12px}
+      .panel{padding:14px 12px;border-radius:12px}
+      .head h2{font-size:19px}
+      .head .desc{font-size:12.5px}
+      .panel h3{font-size:17px}
+      .panel .sub{font-size:13.5px;margin-bottom:12px}
+
+      /* M2: 8단계 진행바 — 균등분배를 풀고 가로 스크롤 띠로.
+         실측(전): 390px에서 라벨 높이 45px = 3줄로 쪼개짐("영상/대 본출력").
+         flex:1을 풀고 각 오브에 최소폭을 줘 라벨이 한 줄로 서게 한다. 넘치는 만큼
+         .orbbar가 가로로 스크롤된다(단계 이동이 핵심 조작이라 8개 전부 눌러야 한다). */
+      /* ★theme.css가 이 <style> 뒤에 링크돼 있어(504줄) 같은 특이도면 theme.css가 이긴다.
+         실측: `.orbbar{justify-content:flex-start}`·`.orb{flex:0 0 auto}`가 통째로 무시됐다
+         (computed로 space-between·1 1 0% 그대로). theme.css가 안 정한 overflow-x·min-width만
+         살아남아 "우연히" 스크롤이 됐던 것 — 셀렉터를 한 단 올려 확실히 이기게 한다. */
+      .main .orbbar{overflow-x:auto;overflow-y:hidden;justify-content:flex-start;
+        gap:2px;margin:0 0 14px;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;
+        scrollbar-width:thin}
+      .main .orbbar .orb{flex:0 0 auto;min-width:64px;padding:0 2px}
+      .main .orbbar .orb .lb{font-size:11px;white-space:nowrap}
+      /* 진행선은 스크롤 컨테이너 기준 절대배치라 스크롤 시 어긋난다 → 모바일에선 숨기고
+         오브 자체 색(done/cur)으로만 진척을 보인다 */
+      .main .orbbar .orbline,.main .orbbar .orbfill{display:none}
+      .main .orbbar .orb .ball{width:40px;height:40px}
+      /* 옛 .step 진행바(쓰는 화면이 남아 있으면)도 같이 */
+      .step .lbl{font-size:12px}
+
+      /* M3: 빈 미리보기가 세로 520px을 먹어 스크롤이 무의미하게 길었다.
+         inline style="min-height:520px"이라 !important 없이는 못 이긴다(실측). */
+      #mixPreviewPanel{min-height:0!important}
+      /* 세로영상 레일(9:16)은 모바일에선 상한을 풀어 폭을 다 쓴다 — 옆에 설 칼럼이 없다.
+         ★데스크톱의 320/400px 상한은 그대로 둔다(지우면 9:16이 가로로 늘어난다). */
+      .panel > div > div[style*="max-width:320px"],
+      .panel > div > div[style*="max-width:400px"]{max-width:none!important}
+      /* sticky는 모바일에서 화면을 눌러 먹으므로 해제(reference_렌즈모달_sticky함정) */
+      .previewSlot{position:static}
+
+      /* M4: 손가락 타깃 — 좁은 화면에선 더 확실히 */
+      .tab{min-height:44px;flex:1 1 100%;min-width:0}
+      .btn-prev,.btn-next{min-height:46px;padding:12px 16px}
+      .nav{gap:8px;margin:14px 0 28px}
+      .workBtns{width:100%}
+      .workBtn{flex:1 1 0;min-height:46px}
+      /* 대본 카드는 세로로 한 장씩(390px에 3장은 못 넣는다) */
+      .cand{flex:1 1 100%!important}
+      /* 비포/애프터 프레임이 좌우로 흩어지면 둘 다 너무 작아진다 */
+      .cp-frame{width:min(150px,42vw)}
+      .cp-arrow{width:34px;font-size:20px}
+      .cp-scan{width:132px;height:234px}
+      /* 모달은 화면 폭을 다 쓴다 */
+      #worksBg,.gen-bg{padding:10px}
+      .worksBox{padding:14px}
+      textarea{font-size:16px}   /* iOS는 16px 미만이면 포커스 시 화면을 확대한다 */
+      input[type=text]{font-size:16px}
+    }
   </style>
   <link rel="stylesheet" href="theme.css?v=1">
 </head>
@@ -426,18 +647,22 @@
          예전엔 영상마다 📝뽑기/🎬담기를 따로 눌러야 했다 — 이제 카드를 켜두기만 하면(자동담김)
          AI가 그중 완성도 1위 대본을 스스로 골라 보여준다(AI PICK). 담긴 게 없으면 빈 상태. -->
     <section class="panel" data-step="0">
-      <h3>1 · 영상/대본출력</h3>
-      <div class="sub">쓸 영상만 켜두세요(✓) — AI가 그중 완성도 1위 대본을 골라 보여줍니다.</div>
-      <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
-        <!-- ◀ 왼쪽: 미리보기(장면 매칭 후) + 재료 그리드 -->
-        <div style="flex:1 1 240px;min-width:220px;max-width:320px;align-self:stretch">
-          <!-- 🪞 미리보기(#mixPreviewPanel/#mixPreview)는 Task 6에서 화면 붙이기(매칭, data-step=7)
-               패널의 좌측 레일로 옮겨갔다 — 매칭 리뷰·후보 선택 UI가 통째로 그리로 이사했기
-               때문이다. 이 자리(제작소)엔 더는 미리보기 슬롯이 없다. -->
-          <div style="font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">◀ 넘어온 영상 (재료) · 뺄 건 클릭</div>
-          <div id="poolList" class="poolGrid"></div>
-          <div id="poolEmpty" class="hint" style="display:none;margin-top:6px">즐겨찾기에서 영상을 보내거나, 아래에 URL을 직접 넣으세요.</div>
-          <div id="footageList" class="hint" style="margin:8px 0"></div>
+      <h3 data-steptitle="source">1 · 영상/대본출력</h3>
+      <div class="sub">쓸 영상을 담으면 AI가 <b>영상마다 무엇을 보여주는지</b> 분석합니다 — 어떤 재료가 모였는지 여기서 확인하세요.</div>
+      <!-- ★상하 2단(2026-08-16 사장님): "상단 소스 자리에 추가된 썸네일들을 배치하고
+           하단에 기존처럼 분석된 틀을 잡으면 될 것 같다. 상단 썸네일 가로에 배치는
+           5개까지 들어가는 크기로."
+           예전엔 좌우 2단이라 썸네일이 왼쪽 320px 칸에 갇혀 64px로 작았다 — 영상을
+           5~8개까지 담으면 뭘 담았는지 알아볼 수가 없다. -->
+      <div class="srcStage">
+        <div class="srcStageHead">
+          <span>🎬 담은 영상</span>
+          <span class="hint" id="poolCount"></span>
+          <span class="hint" style="margin-left:auto">뺄 건 우상단 ✕ · 누르면 메인으로</span>
+        </div>
+        <div id="poolList" class="poolGrid"></div>
+        <div id="poolEmpty" class="hint" style="display:none;margin-top:8px">즐겨찾기에서 영상을 보내거나, 아래에 URL을 직접 넣으세요.</div>
+        <div id="footageList" class="hint" style="margin:8px 0"></div>
           <details style="margin-top:6px">
             <summary style="cursor:pointer;font-size:12px;color:var(--sub)">🔗 URL 직접 추가 ▾</summary>
             <div style="margin-top:8px">
@@ -450,11 +675,22 @@
               </div>
             </div>
           </details>
-        </div>
-        <!-- 결과 ▶ — AI PICK 또는 빈 상태(refreshStep0이 채운다) -->
-        <div style="flex:1 1 300px;min-width:280px">
-          <div style="font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">결과 ▶</div>
-          <div id="aiPick"></div>
+      </div>
+      <!-- ▼ 하단: 소스 분석 + AI PICK(2단계로 이사 예정) -->
+      <div style="margin-top:18px">
+          <!-- 🔎 소스 분석(2026-08-16 신설, 9단계 개편의 1단계 본체).
+               담은 영상마다 "무슨 제품인지·무엇을 보여주는 영상인지"를 카드로 편다.
+               ★타임스탬프 목록은 뺐다(사장님) — 구간 확인은 3단계 장면 편집이 한다.
+               ★옛 작업엔 source_brief가 없다 → 그 카드는 장면 수만 뜬다. -->
+          <div id="srcAnalysis"></div>
+          <!-- ★AI PICK(대본 고르기)은 2단계 담당이다(9단계 개편) — 1단계에선 감춘다.
+               영상을 담았는데도 "아직 담긴 영상이 없어요" CTA가 떠서 화면 아래 1/3을
+               빈 채로 먹고 있었다. 요소는 남긴다: renderAiPick/renderEmptyState가 이
+               자리에 그리므로 지우면 그 코드가 죽는다. 2단계 세션이 옮겨갈 자리다. -->
+          <div id="aiPickWrap" style="display:none">
+            <div style="font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">결과 ▶</div>
+            <div id="aiPick"></div>
+          </div>
           <details style="margin-top:10px">
             <summary style="cursor:pointer;font-size:12px;color:var(--sub)">고급 ▾</summary>
             <label style="display:flex;align-items:center;gap:8px;margin:8px 0;font-size:12px;cursor:pointer">
@@ -470,11 +706,10 @@
                그 패널7로 옮겨갔다(아래 참조). -->
           <div id="theater" hidden style="margin-top:12px"></div>
           <div id="matchProgress" class="match-progress" hidden style="margin-top:10px"></div>
-        </div>
       </div>
     </section>
     <section class="panel" data-step="1">
-      <h3>3 · 고품질 자막제거</h3>
+      <h3 data-steptitle="subtitle">3 · 고품질 자막제거</h3>
       <div class="hero rise">
         <div class="hero-in">
           <label class="hbar">
@@ -510,7 +745,7 @@
       </div>
     </section>
     <section class="panel" data-step="2">
-      <h3>4 · TTS음성</h3>
+      <h3 data-steptitle="tts">4 · TTS음성</h3>
       <div class="sub">성우 프리셋을 고르면 톤·속도·감도가 한 번에 세팅됩니다. 들어보고 다음으로.</div>
       <button id="openVoiceTune" style="display:none" class="btn-prev" onclick="window.open('/voice_tune','_blank')">🩺 발음교정 작업대 열기</button>
       <label style="display:flex;align-items:center;gap:8px;margin:8px 0;cursor:pointer">
@@ -569,7 +804,7 @@
       <button class="btn-next" style="margin-top:12px;padding:8px 16px" onclick="vpGateNext()">다음 단계 (꾸미기) →</button>
     </section>
     <section class="panel" data-step="3">
-      <h3>5 · 자막꾸미기</h3>
+      <h3 data-steptitle="deco">5 · 자막꾸미기</h3>
       <div class="sub">아래 <b>완성 스타일</b>을 고르면 바로 완성돼요. 실제 장면 위에서 미리보고, 더 손보고 싶으면 <b>직접 다듬기</b>를 펼치세요.</div>
       <!-- 🪞 피팅룸: 좌(큰 미러) + 우(문구·스타일카드·강조·고급) -->
       <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-top:12px">
@@ -781,7 +1016,7 @@
       </div>
     </section>
     <section class="panel" data-step="4">
-      <h3>6 · 썸네일</h3>
+      <h3 data-steptitle="thumb">6 · 썸네일</h3>
       <div class="sub">영상에서 프레임을 고르고 텍스트를 올려 썸네일을 만드세요.</div>
 
       <div style="font-size:12px;color:var(--sub);margin:10px 0 6px">배경 프레임 선택 <span id="thumbFrameCount"></span></div>
@@ -819,7 +1054,7 @@
       <div id="thumbGallery" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div>
     </section>
     <section class="panel" data-step="5">
-      <h3>7 · SEO해시테크</h3>
+      <h3 data-steptitle="seo">7 · SEO해시테크</h3>
       <div class="sub">제목·설명·태그를 만들고, 키워드를 유튜브에서 실제로 재서 근거를 붙입니다.</div>
       <div class="seoBar">
         <button class="btn primary" id="seoGenAll" onclick="seoGenerate()">AI로 전체 생성</button>
@@ -830,7 +1065,7 @@
       <div id="seoBody" class="seoBody"></div>
     </section>
     <section class="panel" data-step="6">
-      <h3>8 · 최종렌더</h3>
+      <h3 data-steptitle="final">8 · 최종렌더</h3>
       <div class="sub">확정 대본·장면매칭·음성·자막제거 설정을 최종 영상으로 렌더합니다.</div>
       <div id="finalSummary" class="hint" style="margin-bottom:10px"></div>
       <!-- 인포크링크 등록 대기(2026-07-28) — 쿠팡 링크는 영상에 안 들어간다. 완성 후
@@ -862,12 +1097,16 @@
          위→아래 한 방향: ① 새 대본 고르기(가로카드, 추천이 이미 선택돼 있음) ② 장면 확인(문장↔화면,
          상세 편집은 접힘) ③ 좌측 레일 미리보기 → 확인되면 "다음(음성)". -->
     <section class="panel" data-step="7">
-      <h3>2 · 영상대본MIX</h3>
-      <div class="sub">대본 후보를 고르고, 문장마다 어떤 화면이 붙는지 확인하세요. 확인되면 왼쪽에서 미리보기가 재생됩니다.</div>
+      <h3 data-steptitle="mix">2 · 영상대본MIX</h3>
+      <div class="sub">문장마다 어떤 화면이 붙는지 정하고 미리 봅니다 — 아래 타임프레임이 <b>영상 전체의 흐름</b>입니다.</div>
       <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
         <!-- ◀ 좌측 레일: ③ 미리보기(9:16) — 편집안이 뜨면(loadMixReview) 여기가 프리뷰 자리가 된다.
              T8: 다른 패널의 .previewSlot과 같은 규약(sticky) 공유. -->
-        <div style="flex:1 1 300px;min-width:280px;max-width:400px;align-self:stretch">
+        <!-- ★미리보기를 장면 편집 화면 **안으로** 넣었다(2026-08-16 사장님 배치 지시:
+             맨 위 타임프레임 / 그 아래 [미리보기 + 영상조각]). 그래서 제작소 쪽의 이
+             슬롯은 감춘다 — 요소는 남긴다(#player/#vidbox를 scene_play.js가 참조하고,
+             다른 단계의 미리보기도 같은 규약을 쓴다. 지우면 그 코드가 죽는다). -->
+        <div id="mixPreviewRail" style="display:none;flex:0 0 340px;min-width:280px;max-width:340px;align-self:stretch">
           <div id="mixPreviewPanel" class="previewSlot" style="display:none;min-height:520px">
             <div class="hint" style="margin-bottom:6px">🪞 ③ 미리보기 (9:16)</div>
             <div id="mixPreview"></div>
@@ -887,16 +1126,22 @@
           </div>
           <div id="mixPreviewHint" class="hint" style="margin-top:6px"></div>
         </div>
-        <!-- ▶ 우측: ①②③ 순서대로 위→아래 -->
+        <!-- ▶ 우측: 장면 편집(iframe)이 온다 -->
         <div style="flex:1 1 300px;min-width:280px">
           <div id="mixStatus" class="hint"></div>
-          <div style="font-size:13px;font-weight:800;margin:8px 0 6px">① 새 대본 고르기</div>
-          <div id="mixCandidates"></div>
+          <!-- ★대본 고르기는 2단계 담당이다(2026-08-16 사장님 "3단계에 대본은 들어갈
+               필요 없다"). 감춰만 둔다 — renderCandidates()가 #mixCandidates에 그리므로
+               지우면 그 코드가 죽는다. 2단계 세션이 이 요소를 그리로 옮긴다. -->
+          <div id="mixScriptPick" style="display:none">
+            <div style="font-size:13px;font-weight:800;margin:8px 0 6px">① 새 대본 고르기</div>
+            <div id="mixCandidates"></div>
+          </div>
           <!-- 쿠팡 연결(2026-07-28) — 2026-08-15 사장님 "쿠팡은 따로 단계로 뺄꺼야 여기있을필요없어".
                ★슬롯 자체는 남긴다: renderCoupangSlot()이 이 요소에 그리므로 지우면 그 코드가 죽는다.
                감춰만 두고, 별도 단계를 만들 때 그 자리로 옮긴다(그때 이 줄을 지운다). -->
           <div id="coupangSlot" style="display:none;margin-top:14px"></div>
-          <div style="font-size:13px;font-weight:800;margin:16px 0 6px">② 장면 확인 <span style="font-weight:500;color:var(--sub)">— 아래 타임프레임에서</span></div>
+          <!-- ★"② 장면 확인" 소제목은 뗐다(2026-08-16) — 대본(①)이 2단계로 가면서
+               번호가 혼자 남았고, 장면 편집 화면이 바로 아래 붙어 있어 중복이다. -->
           <!-- 시험 중인 새 장면 편집 화면으로 가는 링크(2026-08-15 사장님 "주소를 손으로 치지 마라").
                임베드(SCENE_LAB_EMBED)를 켜면 화면이 여기 바로 뜨므로 이 링크는 자동으로 숨는다. -->
           <a id="sceneLabLink" href="#" target="_blank" rel="noopener"
@@ -909,20 +1154,19 @@
           </details>
           <div id="mixPreviewCta" style="margin-top:16px"></div>
           <!-- 중복 제거(2026-07-23 사장님): in-card '다음' 버튼은 맨 아래 전역 '다음 →'(#btnNext)와 go(1) 동일 + 라벨(음성)도 오브 재정렬로 stale였음. 하단 전역 nav로 일원화. -->
-        </div>
-      </div>
-      <!-- 장면 편집(실험실) — 좌우 2단 **아래**에 패널 전체 폭으로 깐다(2026-08-15 사장님
-           "아래쪽에 전체적으로 보이게 넣어줘"). 오른쪽 칼럼(폭 절반) 안에 넣으면 실험실이
-           가로로 넓게 쓰는 화면이라 답답하다 — 그래서 flex 컨테이너 **밖**으로 뺐다.
-           iframe인 이유: 실험실은 자체 다크 테마·전역 JS(render/reset/add…)를 가진 완결
-           페이지라, 제작소 6천 줄 JS에 인라인하면 이름·스타일이 충돌한다(0순위-B: 화면 원본은
-           scene_lab.html 한 파일 — 로컬 실험실 tools/scene_lab과 공유). -->
-      <div id="sceneLabBox" style="display:none;margin-top:18px">
+      <!-- ★장면 편집을 **미리보기 옆**으로 올렸다(2026-08-16 사장님 "미리보기썸네일 +
+           소스 + 영상전체 가로 타임프레임 형태"). 대본이 2단계로 가면서 오른쪽 칼럼
+           781px이 통째로 비었다(실측) — 그 자리를 장면 편집이 쓴다.
+           예전엔 좌우 2단 **아래**에 깔았는데(2026-08-15), 그때는 오른쪽에 대본이 있어
+           자리가 없었기 때문이다. 이제 옆에 서므로 미리보기를 보며 바로 고칠 수 있다.
+           iframe인 이유는 그대로: 실험실은 자체 테마·전역 JS를 가진 완결 페이지라
+           제작소 6천 줄 JS에 인라인하면 충돌한다(0순위-B). -->
+      <div id="sceneLabBox" style="display:none">
         <div style="display:flex;align-items:center;gap:10px;margin:0 0 6px">
           <div style="font-size:13px;font-weight:800">🎬 장면 편집 — 어떤 화면이 언제 나올지 여기서 정하고 미리 봅니다</div>
-          <!-- 넓게 보기(2026-08-15 사장님 "왼쪽 사이드바까지 사용하면 안되나"): 패널은
-               max-width 1120px이고 사이드바가 270px을 먹어 왼쪽이 남는다. 이 버튼은
-               편집 화면만 화면 전체로 띄운다(사이드바·패널 여백까지 전부 사용). -->
+          <!-- 넓게 보기(2026-08-15 사장님 "왼쪽 사이드바까지 사용하면 안되나"): 패널 폭
+               상한은 없앴지만 사이드바가 270px을 계속 먹는다. 이 버튼은 편집 화면만
+               화면 전체로 띄운다(사이드바·패널 여백까지 전부 사용). -->
           <button type="button" id="sceneLabWideBtn" class="btn"
                   style="margin-left:auto;padding:6px 12px;font-size:12px;background:var(--inset);border:1px solid var(--line);color:var(--sub)"
                   onclick="toggleSceneLabWide()">⛶ 넓게 보기</button>
@@ -931,8 +1175,25 @@
                 style="width:100%;height:88vh;min-height:600px;border:1px solid var(--line);border-radius:12px;background:#0f1115"></iframe>
         <!-- 안내 문구 삭제(2026-08-15 사장님) -->
       </div>
+        </div><!-- /오른쪽 칼럼 -->
+      </div><!-- /좌우 flex -->
     </section>
     <!-- ── 화면 붙이기 끝(패널) ── -->
+
+    <!-- ── 대본 패널(신설 2026-08-16, 사장님 "단계를 3개로 늘려서 대본쪽도 강화") ──
+         화면 2번째 = 이 패널. 물리 번호는 8을 새로 받았다 — ★기존 패널의 data-step은
+         절대 다시 매기지 않는다(cur===n 분기가 파일 곳곳에 박혀 있다. 화면 순서는
+         ORB_TO_PANEL이 정하므로 물리 번호를 건드릴 이유가 없다. 2026-07-23 매칭 패널을
+         7로 붙인 것과 같은 방식).
+         ★안쪽 내용은 **대본 세션이 채운다** — 이 세션은 골격만 만든다(동시 편집 충돌 방지). -->
+    <section class="panel" data-step="8">
+      <h3 data-steptitle="script">2 · 대본생성</h3>
+      <div class="sub">쓸 대본을 고르고 다듬습니다.</div>
+      <div id="scriptStagePlaceholder" class="hint" style="margin-top:14px">
+        여기에 대본 고르기·고치기가 들어옵니다(작업 중).
+      </div>
+    </section>
+    <!-- ── 대본 패널 끝 ── -->
 
     <div class="nav">
       <button class="btn-prev" id="btnPrev" onclick="go(-1)">← 이전</button>
@@ -986,10 +1247,32 @@
 // 패널 인덱스는 물리적으로 안 바뀐다 — jump/go가 매핑을 경유한다. 지금은 오브 8개=물리 패널 8개로
 // 축이 같아졌지만(PANEL_COUNT===STEP_LABELS.length), 되돌리기/작업복원은 계속 PANEL_COUNT를
 // 쓴다 — "패널" 인덱스를 바운드하는 게 맞는 축이라는 원칙은 라벨 개수가 우연히 같아져도 안 바뀐다.
-const STEP_LABELS = ["영상/대본출력","영상대본MIX","고품질 자막제거","TTS음성","자막꾸미기","썸네일","SEO해시테크","최종렌더"];
-// 표시 오브 → 실제 패널 data-step (매칭=신규 7이 자막제거=1보다 앞에 옴)
-const ORB_TO_PANEL = [0, 7, 1, 2, 3, 4, 5, 6];
+// ★9단계 개편(2026-08-16, 사장님 "단계를 3개로 늘려서 대본쪽도 강화"):
+//   1단계에 '영상 고르기'와 'AI 대본 선택'이 뭉쳐 있어 대본이 제 자리를 못 가졌다.
+//   대본(신규 패널 8)을 2번째로 세우고, 장면 편집(패널 7)을 3번째로 민다.
+//   ★물리 패널 번호(data-step)는 그대로 두고 이 매핑만 바꾼다 — cur===n 분기가
+//   파일 곳곳에 박혀 있어 번호를 다시 매기면 전부 어긋난다.
+const STEP_LABELS = ["영상추출/분석","대본생성","영상대본MIX","고품질 자막제거","TTS음성","자막꾸미기","썸네일","SEO해시테크","최종렌더"];
+// 표시 오브 → 실제 패널 data-step (대본=신규 8이 2번째, 매칭=7이 3번째)
+const ORB_TO_PANEL = [0, 8, 7, 1, 2, 3, 4, 5, 6];
 const PANEL_TO_ORB = Object.fromEntries(ORB_TO_PANEL.map((p,o)=>[p,o]));
+// ★안내 문구가 단계 번호를 직접 쓰지 않게 한다(2026-08-16). 예전엔 "1단계에서 영상 매칭을
+//   먼저 하세요" 같은 문장이 16곳에 손으로 박혀 있었는데, 9단계 개편으로 매칭이 3단계가
+//   되면서 **전부 거짓말이 됐다**. 다음에 순서가 또 바뀌어도 여기만 맞으면 문구가 따라온다
+//   (CLAUDE.md 0순위-B: 같은 판단을 두 곳에 적지 마라).
+//   쓰는 법: stepName('mix') → "3단계(영상대본MIX)"
+const PANEL_BY_KEY = {source:0, script:8, mix:7, subtitle:1, tts:2, deco:3, thumb:4, seo:5, final:6};
+function stepOrb(key){ return PANEL_TO_ORB[PANEL_BY_KEY[key]] ?? 0; }
+function stepName(key){ const o = stepOrb(key); return `${o+1}단계(${STEP_LABELS[o]})`; }
+function stepGo(key){ jump(stepOrb(key)); }
+// 패널 제목(<h3 data-steptitle="mix">)의 번호·이름도 STEP_LABELS에서 채운다. 손으로 적으면
+// 순서가 바뀔 때마다 어긋난다 — 실제로 9단계 개편 직후 "오브 4인데 제목은 3 · 자막제거"였다.
+function syncPanelTitles(){
+  document.querySelectorAll('h3[data-steptitle]').forEach(h => {
+    const o = stepOrb(h.dataset.steptitle);
+    h.textContent = `${o+1} · ${STEP_LABELS[o]}`;
+  });
+}
 function orbIndex(){ return PANEL_TO_ORB[cur] ?? 0; }
 // 물리 패널 수(=<section class="panel">의 실제 개수, 지금 8). cur는 "패널" 인덱스이므로
 // 되돌리기(revertWork)·작업복원(_restoreWork)의 범위 체크는 반드시 이걸 써야 한다 —
@@ -1002,6 +1285,7 @@ let cur = 0;
 // 라벨을 항상 같이 그린다(예전엔 title=hover 툴팁뿐이라 라벨이 안 보였다). 진행선(.orbfill)
 // 폭은 현재 오브 인덱스/전체 오브 수로 계산(마지막 오브에서 100%).
 function renderSteps(){
+  syncPanelTitles();          // 패널 제목의 번호·이름을 STEP_LABELS에 맞춘다(한 벌 원칙)
   const el = document.getElementById('steps');
   if(!el) return;
   const oi = orbIndex();
@@ -1042,7 +1326,8 @@ function initMatch(){
     const rev = document.getElementById('mixReview'); if(rev) rev.innerHTML = '';
     try{ _syncSceneLab(false); }catch(_){ }   // 잡이 없으면 실험실도 없다
     const st = document.getElementById('mixStatus');
-    if(st) st.textContent = '아직 매칭을 시작하지 않았어요 — 1단계에서 ⚡ 이 메인 영상으로 대본 3안 만들기를 눌러주세요.';
+    if(st) st.textContent = '아직 매칭을 시작하지 않았어요 — ' + stepName('source')
+      + '에서 ⚡ 이 메인 영상으로 대본 3안 만들기를 눌러주세요.';
     return;
   }
   // 매칭 진행/완료 중 — 이미 그려진 게 있으면(폴링·자동전환이 이미 채웠다) 손대지 않는다.
@@ -1096,7 +1381,7 @@ async function initSeo(){
 }
 
 async function seoGenerate(only){
-  if(!MIX_JOB){ alert('1단계에서 대본을 먼저 확정하세요'); return; }
+  if(!MIX_JOB){ alert(stepName('script')+'에서 대본을 먼저 확정하세요'); return; }
   const msg = document.getElementById('seoMsg');
   const btn = document.getElementById('seoGenAll');
   msg.textContent = only ? '다시 쓰는 중…' : '생성 중… (키워드 실측까지 20초쯤 걸립니다)';
@@ -1259,11 +1544,11 @@ function seoTagDel(i){
 async function seoAppendCoupang(){
   const msg=document.getElementById('seoCoupangMsg');
   const set=(t,color)=>{ if(msg){ msg.textContent=t; msg.style.color=color||''; } };
-  if(!MIX_JOB){ set('2단계 영상 매칭을 먼저 하세요','var(--fire)'); return; }
+  if(!MIX_JOB){ set(stepName('mix')+' 영상 매칭을 먼저 하세요','var(--fire)'); return; }
   let d;
   try{ d=await (await fetch('/api/mix/product/'+encodeURIComponent(MIX_JOB))).json(); }
   catch(e){ set('네트워크 오류','var(--fire)'); return; }
-  if(!d || !d.ok || !d.product){ set('연결할 쿠팡 상품이 없습니다 — 2단계 편집안에서 지정하세요','var(--fire)'); return; }
+  if(!d || !d.ok || !d.product){ set('연결할 쿠팡 상품이 없습니다 — '+stepName('mix')+' 편집안에서 지정하세요','var(--fire)'); return; }
   const block=d.description_block||'';
   if(!block){ set('링크가 비어 있습니다','var(--fire)'); return; }
   const cur=(SEO && SEO.description) || '';
@@ -1385,7 +1670,7 @@ function toggleFxAdv(){
   document.getElementById('fxWizard').style.display = on ? 'block' : 'none';
 }
 async function fxSuggest(){
-  if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); return; }
+  if(!MIX_JOB){ alert(stepName('mix')+'에서 영상 매칭을 먼저 실행하세요'); return; }
   const msg=document.getElementById('fxSuggestMsg'); msg.textContent='추천 중…';
   try{
     const r=await fetch('/api/produce/fx/suggest',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -1846,7 +2131,7 @@ function bindExtraDrag(){
 // 🎵 BGM 업로드(즉시 job work dir에 저장) → 렌더 시 나레이션 위에 믹스
 async function uploadBgm(input){
   const f=input.files&&input.files[0]; if(!f) return;
-  if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); input.value=''; return; }
+  if(!MIX_JOB){ alert(stepName('mix')+'에서 영상 매칭을 먼저 실행하세요'); input.value=''; return; }
   const st=document.getElementById('bgmStatus'); st.textContent='업로드 중…';
   const fd=new FormData(); fd.append('job_id',MIX_JOB); fd.append('file',f);
   try{ const r=await (await fetch('/api/produce/mix/bgm',{method:'POST',body:fd})).json();
@@ -1861,7 +2146,7 @@ function toggleSceneBg(silent){
   const on=document.getElementById('sceneBg').checked;
   const img=document.getElementById('hcPreviewBg'), pv=document.getElementById('hcPreview');
   if(!on){ img.style.display='none'; pv.style.background='#ffffff'; return; }
-  if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); document.getElementById('sceneBg').checked=false; return; }
+  if(!MIX_JOB){ alert(stepName('mix')+'에서 영상 매칭을 먼저 실행하세요'); document.getElementById('sceneBg').checked=false; return; }
   img.onload=()=>{ img.style.display='block'; };
   img.onerror=()=>{ img.style.display='none'; document.getElementById('sceneBg').checked=false; if(!silent) alert('실장면 배경을 불러오지 못했습니다(매칭 완료 후 가능)'); };
   img.src='/api/produce/mix/poster/'+MIX_JOB+'?t='+Date.now();
@@ -1871,7 +2156,7 @@ function clearBgm(){ if(STATE.deco) STATE.deco.bgm=null; const el=document.getEl
 let OV_OBJ_URL=null;
 async function uploadOverlay(input){
   const f=input.files&&input.files[0]; if(!f) return;
-  if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); input.value=''; return; }
+  if(!MIX_JOB){ alert(stepName('mix')+'에서 영상 매칭을 먼저 실행하세요'); input.value=''; return; }
   const st=document.getElementById('ovStatus'); st.textContent='업로드 중…';
   const fd=new FormData(); fd.append('job_id',MIX_JOB); fd.append('file',f);
   try{ const r=await (await fetch('/api/produce/mix/overlay',{method:'POST',body:fd})).json();
@@ -3166,8 +3451,12 @@ function _recommendedBbIdx(){
 function renderPool(){
   const box=document.getElementById('poolList'); if(!box) return;
   const empty=document.getElementById('poolEmpty');
+  // 담은 개수 — 5~8개까지 담는 흐름이라 지금 몇 개인지 항상 보여야 한다(2026-08-16)
+  const cnt=document.getElementById('poolCount');
+  if(cnt) cnt.textContent = HANDOFF.length ? `${HANDOFF.filter(h=>h.useFootage).length}개` : '';
   if(!HANDOFF.length){
-    box.innerHTML = '<div class="pool-ghost"></div><div class="pool-ghost"></div><div class="pool-ghost"></div>';
+    box.innerHTML = '<div class="pool-ghost"></div><div class="pool-ghost"></div><div class="pool-ghost"></div>'
+      + '<div class="pool-ghost"></div><div class="pool-ghost"></div>';   // 5열에 맞춰 5칸
     if(empty) empty.style.display='block';
     return;
   }
@@ -3229,6 +3518,83 @@ async function refreshStep0(){
     }
     renderAiPick(d, hasFootage);
   }catch(e){ renderEmptyState(); }
+  renderSourceAnalysis();     // 🔎 소스 분석 카드(2026-08-16) — 실패해도 위 흐름과 무관
+}
+
+// ── 🔎 소스 분석(2026-08-16, 9단계 개편의 1단계 본체) ─────────────────────
+// 담은 영상마다 "무슨 제품인지 · 무엇을 보여주는 영상인지 · 어떤 장면이 들었는지"를 편다.
+// ★비용 0원: /api/extract_script는 캐시 우선이고, 여기선 **캐시 히트만** 쓴다(cache_only).
+//   아직 분석 안 된 영상은 "분석 대기"로 두고, 실제 추출은 기존 자동적재 경로가 한다.
+//   여기서 추출을 트리거하면 1단계를 열기만 해도 크레딧이 타므로 절대 하지 않는다.
+const _SRC_BRIEF = {};       // shortcode → {brief, segs} (페이지당 1회만 받아 쓴다)
+const _SRC_OPEN = new Set(); // 펼쳐 둔 카드(2026-08-16 사장님 "누르면 접었다 펴졌다")
+function toggleSrcCard(code){
+  if (_SRC_OPEN.has(code)) _SRC_OPEN.delete(code); else _SRC_OPEN.add(code);
+  renderSourceAnalysis();    // 이미 받아 둔 데이터로 다시 그린다(서버 재요청 없음)
+}
+async function renderSourceAnalysis(){
+  const box = document.getElementById('srcAnalysis');
+  if(!box) return;
+  const items = HANDOFF.filter(h => h.useFootage);
+  if(!items.length){ box.innerHTML = ''; return; }
+  // 아직 안 받아온 것만 조회(이미 받은 건 재요청 안 함)
+  await Promise.all(items.map(async it => {
+    const code = it.shortcode;
+    if(!code || _SRC_BRIEF[code] !== undefined) return;
+    _SRC_BRIEF[code] = null;                       // 진행 중 표시(중복 요청 차단)
+    try{
+      const r = await fetch('/api/produce/source_brief?shortcode=' + encodeURIComponent(code));
+      const d = await r.json();
+      _SRC_BRIEF[code] = (d && d.ok) ? d : null;
+    }catch(e){ _SRC_BRIEF[code] = null; }
+  }));
+  const done = items.filter(it => _SRC_BRIEF[it.shortcode]).length;
+  box.innerHTML =
+    `<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+       <span style="font-size:13px;font-weight:800">🔎 소스 분석</span>
+       <span class="hint">${done}/${items.length}개 분석됨 — 영상마다 무엇을 보여주는지</span>
+     </div>`
+    + `<div class="srcGrid">` + items.map((it, i) => _srcCard(it, i)).join('') + `</div>`;
+}
+function _srcCard(it, i){
+  const d = _SRC_BRIEF[it.shortcode];
+  const name = esc(it.name || ('영상 ' + (i+1)));
+  const head = `<div class="srcHead"><span class="srcNo">소스 ${i+1}</span>
+      <span class="srcName" title="${name}">${name}</span></div>`;
+  if(!d){
+    // 분석 전 카드는 **한 줄로** 접는다(2026-08-16). 분석된 카드와 같은 높이(280px)를
+    // 주면 "아직 분석 전이에요" 한 문장이 큰 빈 상자를 만든다 — 사장님 정렬 기준
+    // "빈 여백 덩어리 없을 것"에 어긋난다. 정보량에 맞는 크기를 준다.
+    return `<div class="srcCard pend">${head}
+      <div class="srcPend">⏳ 분석 대기 — ⚡ 대본 만들기를 누르면 함께 분석됩니다</div>
+    </div>`;
+  }
+  const b = d.brief || {};
+  const segs = d.segments || [];
+  const row = (k, v, cls) => v ? `<div class="srcRow"><span class="srcK">${k}</span>
+      <span class="srcV ${cls||''}">${esc(v)}</span></div>` : '';
+  // ★타임스탬프 목록은 1단계에서 뺐다(2026-08-16 사장님 "소스 타임스탬프 추출된 걸
+  //   보여줄 필요는 없고"). 구간별 확인은 3단계 장면 편집이 하는 일이다. 여기서는
+  //   "이 영상이 무엇을 보여주는가"와 재료가 얼마나 되는지(장면 수·실증 수)만 본다.
+  const keyN = segs.filter(s => s.is_key).length;
+  // ★카드를 눌러 접었다 폈다(2026-08-16 사장님). 영상을 5~8개 담으면 요약이 다 펼쳐져
+  //   화면을 길게 먹는다 — 기본은 접어서 "제품 한 줄 + 장면 수"만 보이고, 자세히 볼 것만
+  //   펼친다. 접힘 상태는 화면에만 남기면 되므로 DOM 클래스로만 관리한다.
+  const open = _SRC_OPEN.has(it.shortcode);
+  return `<div class="srcCard${open ? ' open' : ''}" onclick="toggleSrcCard('${esc(it.shortcode)}')"
+       title="${open ? '눌러서 접기' : '눌러서 자세히 보기'}">${head}
+    ${row('제품', b.product, 'strong')}
+    <div class="srcMore">
+      ${row('역할', b.role)}
+      ${row('핵심', b.core)}
+      ${b.summary ? `<div class="srcSum">${esc(b.summary)}</div>` : ''}
+    </div>
+    ${segs.length ? `<div class="srcStat">
+       <span class="srcStatN">${segs.length}</span><span class="srcStatK">장면</span>
+       ${keyN ? `<span class="srcKey" title="제품 기능을 화면으로 실증하는 장면">실증 ${keyN}</span>` : ''}
+       <span class="srcCaret">${open ? '접기 ▴' : '자세히 ▾'}</span>
+     </div>` : ''}
+  </div>`;
 }
 // 페이지 로드당 1회 래치(모듈 변수) — HANDOFF 배열이 통째로 재대입돼도 이 값은 안 날아간다.
 // 그게 사고의 핵심이었다: 성공 표시를 HANDOFF 객체 필드에 두면 _restoreWork가 덮어 지운다.
@@ -4111,7 +4477,7 @@ async function setSmartMix(on){
 loadSmartMix();
 
 async function startProduceMix(){
-  if(!STATE.script){ alert('1단계에서 대본을 먼저 확정하세요'); return; }
+  if(!STATE.script){ alert(stepName('script')+'에서 대본을 먼저 확정하세요'); return; }
   // ★옛 대본 캐리오버 게이트(2026-07-25 실사고): 이전 작업에서 복원된 대본을 한 번도 안 고친 채
   //   새 영상과 매칭하면, 나레이션·썸네일 제목이 전부 옛 영상 주제로 나온다(새 영상에 '6만원대
   //   책상' 제목). 여기서 한 번 확인받는다 — 편집하거나 새로 뽑으면 이 게이트는 안 걸린다.
@@ -4224,7 +4590,10 @@ async function pollMix(){
       //   재료가 없었는데 화면엔 표시가 없어 "왜 A로만 만들어졌지?"로만 보였다.
       showWeakSources(d.weak_sources);
       clearInterval(MIX_POLL); renderCandidates(d.candidates||[]); loadMixReview();
-      jump(1);   // 오브 인덱스 1 = 화면 붙이기(매칭, ORB_TO_PANEL[1]=7). Task 6: 매칭 완료 시 자동 이동.
+      // 매칭이 끝나면 대본(오브 1 = 패널8)으로 데려간다 — 9단계 개편 전엔 곧장 장면
+      // 편집으로 갔지만, 이제 흐름이 **대본 → 장면**이라 대본을 건너뛰면 단계를 나눈
+      // 의미가 없다(2026-08-16). 장면 편집은 그 다음(오브 2)이다.
+      jump(1);
     }
     // 실패 표시: 사용자에겐 순화된 d.error만. d.error_detail은 서버가 **관리자에게만** 채워
     // 내려주므로(2026-08-04), 있으면 원문을 접이식으로 덧붙인다 — 사고를 눈으로 바로 잡으라고.
@@ -4509,20 +4878,25 @@ function renderCandidates(list){
             + `✏ 글자는 자유롭게 고치세요. <b>문장 칸을 비우지 마세요</b>(비우면 그 문장은 원래대로 둡니다).<br>`
             + `문장 <b>개수는 화면 배정에 묶여 있어</b> 칸 수를 그대로 둡니다 — 많이 길게 쓰면 자막이 밀릴 수 있어요.</div>`
           : `<p style="white-space:pre-wrap">${esc(lines.join(' ') || c.script || c.hook || '')}</p>`;
-        return `<div class="cand${on?' on':''}" data-cidx="${c.index}" onclick="pickCandidate(${c.index})" style="cursor:pointer;flex:1 1 260px;min-width:0;display:flex;flex-direction:column;font-size:15.5px;line-height:1.75;letter-spacing:-.2px;padding:14px 16px;word-break:keep-all">`
+        // ★font-size를 인라인에서 뺐다(2026-08-15) — 인라인은 CSS를 이겨서 넓은 화면
+        //   확대(@media min-width:1600px의 .main .cand{font-size:16px})가 통째로 죽었다.
+        //   기본 15.5px은 아래 CSS `.cand`가 정한다(같은 판단 두 벌 금지, 0순위-B).
+        return `<div class="cand${on?' on':''}" data-cidx="${c.index}" onclick="pickCandidate(${c.index})" style="cursor:pointer;flex:1 1 260px;min-width:0;display:flex;flex-direction:column;line-height:1.75;letter-spacing:-.2px;padding:14px 16px;word-break:keep-all">`
           + `<div class="cb">${CAND_LBL[i]||('후보 '+(i+1))}${badge}</div>`
           + body
           // ⏱ 예상 영상시간(2026-07-25 사장님): 이 대본을 읽으면 나올 영상 길이 — A/B/C 아래마다.
           + `<div class="candlen" style="margin-top:6px;font-size:11px;color:var(--accent2);font-weight:800">${open?(lenText(lines.join(' ').trim())+' · '):''}⏱ 예상 영상시간 약 ${_candSecs(c)}초</div>`
           + `<div class="canddirty" style="margin-top:3px;font-size:10px;color:var(--accent);font-weight:800">${dirty?'✏ 고쳐 씀 — 이 카드를 눌러야 반영됩니다':''}</div>`
-          + `<div style="margin-top:6px"><button type="button" class="ghost" style="font-size:11px;padding:4px 8px"`
+          // 버튼 크기는 CSS `.cand .ghost`가 정한다(2026-08-15 T2, 44px 터치타깃) — 인라인
+          // style로 적으면 CSS를 이기므로 여기선 클래스만 준다(같은 판단 두 벌 금지, 0순위-B).
+          + `<div style="margin-top:6px"><button type="button" class="ghost"`
           + ` onclick="event.stopPropagation();toggleCandEdit(${c.index})">${open?'✕ 편집 닫기':'✏ 대본 고치기'}</button></div>`
           + `<div style="margin-top:3px;font-size:10px;color:#6b7488">${c.story_person?esc(c.story_person):''}${c.score!=null?(c.story_person?' · ':'')+`점수 ${c.score}`:''}</div>`
           + `<div class="pickhint" style="font-size:11px;color:${on?'var(--accent)':'var(--sub)'};margin-top:6px">${on?'✅ 이 대본으로 만드는 중':'👆 이 대본으로 고르기'}</div>`
           // ★따로 만들기(2026-07-30 사장님 "3개 다 만들고 싶다"). 같은 job에서 후보만 바꿔
           //   렌더하면 출력이 final.mp4 고정경로라 앞 영상을 덮어쓴다 — 그래서 별도 작업으로 뗀다.
           //   onclick 전파를 막아야 카드 클릭(pickCandidate)과 겹치지 않는다.
-          + `<div style="margin-top:6px"><button type="button" class="ghost" style="font-size:11px;padding:4px 8px"`
+          + `<div style="margin-top:6px"><button type="button" class="ghost"`
           + ` onclick="event.stopPropagation();cloneCandidate(${c.index})">🎞 이 대본으로 따로 만들기</button></div>`
           + `</div>`;
       }).join('')
@@ -4901,7 +5275,9 @@ function stepLocked(i){
   // ★Task 6(2026-07-23): 화면 붙이기(매칭, 패널7)는 게이트 예외다 — 후보를 고르고 장면을 확인해
   // 미리보기를 "만드는" 자리 자체가 이 패널이라, 여기서 막으면 미리보기를 영영 못 만든다(예전엔
   // 이 UI가 패널0에 있어서 0단계=허브와 함께 안 잠겼다 — 패널7로 이사하며 이 예외도 같이 옮겨왔다).
-  if(i === 7) return false;
+  // ★대본(패널8, 2026-08-16 신설)도 같은 이유로 예외다 — 미리보기를 **만들기 전에**
+  //   거치는 자리라 여기서 막으면 미리보기를 영영 못 만든다(패널7과 같은 논리).
+  if(i === 7 || i === 8) return false;
   // 0단계(허브)는 항상 열림. 나머지(2~6단계: 음성·꾸미기·썸네일·SEO·완성)는 '매칭(MIX_JOB) 후 ·
   // 미리보기 확인 전'에만 잠근다 — 유료 자막제거 우회 방지. 매칭 전(MIX_JOB 없음)엔 안
   // 잠근다(기존 설계 유지: 그땐 자유 이동, 빈 단계는 T7a 잠금 카드가 받는다).
@@ -5234,7 +5610,7 @@ function onNoVoice(){
 }
 async function previewVoice(){
   const el=document.getElementById('voicePreview');
-  if(!MIX_JOB){ el.innerHTML='<span class="hint">🎬 2단계 영상 매칭 후 사용할 수 있어요. 지금은 위 카드의 ▶로 샘플을 들어보세요.</span>'; return; }
+  if(!MIX_JOB){ el.innerHTML='<span class="hint">🎬 '+stepName('mix')+' 영상 매칭 후 사용할 수 있어요. 지금은 위 카드의 ▶로 샘플을 들어보세요.</span>'; return; }
   el.textContent='⏳ 생성 중…';
   try{
     const r=await fetch('/api/mix/voice/preview',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -5246,7 +5622,7 @@ async function previewVoice(){
 }
 async function applyVoice(){
   const el=document.getElementById('voicePreview');
-  if(!MIX_JOB){ el.innerHTML='<span class="hint">🎬 2단계 영상 매칭 후 사용할 수 있어요.</span>'; return; }
+  if(!MIX_JOB){ el.innerHTML='<span class="hint">🎬 '+stepName('mix')+' 영상 매칭 후 사용할 수 있어요.</span>'; return; }
   el.textContent='⏳ 전체 음성 생성 중…';
   try{
     await fetch('/api/mix/voice',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -5452,7 +5828,9 @@ function vpGateNext(){
   const yellow=(VP_BEATS||[]).map((b,i)=>i).filter(i=>!(Array.isArray(VP_BEATS[i].cap_durs)&&VP_BEATS[i].cap_durs.length));
   const unheard=yellow.filter(i=>!_vpHeard.has(i));
   if(unheard.length && !confirm('🟡 '+unheard.length+'개 장면을 아직 안 들어봤어요. 그냥 다음으로 갈까요?')) return;
-  jump(3);   // 꾸미기(4단계, index 3)로 — 기존 스텝 내비게이션 재사용, go()/jump() 자체는 건드리지 않는다
+  // 자막꾸미기로. ★9단계 개편(2026-08-16)으로 오브가 한 칸씩 밀렸다 — 예전 3 → 지금 5
+  //   (STEP_LABELS: 0영상추출 1대본 2MIX 3자막제거 4TTS **5자막꾸미기**).
+  jump(5);
 }
 // ▶ 전체 재생 — 비트 음성을 순서대로 이어 재생하며 현재 비트의 프레임+자막을 갱신(가라오케식)
 function playAllBeats(){
@@ -5480,7 +5858,7 @@ async function refreshInpock(){
   catch(e){ el.innerHTML='<div class="hint" style="color:var(--fire)">상품 정보 로드 실패</div>'; return; }
   const p=(d&&d.ok)?d.product:null;
   if(!p){
-    el.innerHTML='<div class="hint">🛒 연결할 쿠팡 상품이 없습니다 — 2단계 편집안 검토에서 지정하면 여기에 등록용 링크가 뜹니다.</div>';
+    el.innerHTML='<div class="hint">🛒 연결할 쿠팡 상품이 없습니다 — '+stepName('mix')+' 편집안 검토에서 지정하면 여기에 등록용 링크가 뜹니다.</div>';
     return;
   }
   el.innerHTML=`<div style="border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--inset)">
@@ -5759,7 +6137,7 @@ function _finalIdleSlot(){
     </div>`;
 }
 async function renderFinal(){
-  if(!MIX_JOB){ alert('2단계에서 영상 매칭을 먼저 실행하세요'); return; }
+  if(!MIX_JOB){ alert(stepName('mix')+'에서 영상 매칭을 먼저 실행하세요'); return; }
   const btn=document.getElementById('btnFinalRender');
   if(btn){ if(btn.dataset.orig==null) btn.dataset.orig=btn.innerHTML; btn.disabled=true; btn.innerHTML='<span class="skm-spin">🔄</span> 렌더 중…'; }
   const st=document.getElementById('finalStatus'); if(st){ st.className='match-progress'; st.innerHTML='<span class="dot"></span><span>렌더 준비 중…</span>'; }
@@ -5930,7 +6308,7 @@ async function _loadThumbFrames(){
   // 몰랐다(실측: 영상 매칭 안 한 작업을 열어 5단계로 오면 이 상태). 무엇을 해야 하는지 알려준다.
   if (!MIX_JOB){
     hintEl.innerHTML = '🎬 먼저 <b>1단계</b>에서 <b>영상 매칭</b>을 해야 썸네일에 쓸 프레임이 나와요. '
-      + '<a href="#" onclick="jump(0);return false" style="color:var(--accent2);font-weight:700">1단계로 가기 →</a>';
+      + '<a href="#" onclick="stepGo(&quot;source&quot;);return false" style="color:var(--accent2);font-weight:700">'+stepName('source')+'로 가기 →</a>';
     document.getElementById('thumbFrameCount').textContent = '';
     document.getElementById('thumbFrames').innerHTML = '';
     return;
@@ -5962,7 +6340,7 @@ async function _loadThumbFrames(){
   if (!d.ok){
     // job은 있는데 서버가 거절(영상 미완성 등) — 원문 에러에 갈 곳까지 얹는다.
     hintEl.innerHTML = (d.error || '프레임 추출 실패')
-      + ' — <a href="#" onclick="jump(0);return false" style="color:var(--accent2);font-weight:700">1단계에서 영상 매칭 확인 →</a>';
+      + ' — <a href="#" onclick="stepGo(&quot;mix&quot;);return false" style="color:var(--accent2);font-weight:700">'+stepName('mix')+'에서 영상 매칭 확인 →</a>';
     return;
   }
   // ★프레임이 그대로면 다시 그리지 않는다(2026-07-30) — 아래에서 5단계 진입마다 서버에
@@ -6115,7 +6493,7 @@ async function suggestThumbTitles(){
         + 'background:#3a2f14;border-radius:8px;padding:8px 10px;line-height:1.4">'
         + '⚠️ 1단계 대본을 고치셨네요. 제목은 <b>지금 영상</b> 기준으로 맞춰 만들었어요. '
         + '고친 <b>1단계 내용을 영상에도 넣으려면</b> '
-        + '<a href="#" onclick="jump(0);return false" style="color:#ffd08a;font-weight:700">영상 매칭을 다시</a> 하세요.</div>'
+        + '<a href="#" onclick="stepGo(&quot;mix&quot;);return false" style="color:#ffd08a;font-weight:700">영상 매칭을 다시</a> 하세요.</div>'
       : '';
     box.innerHTML = _warn + '<div class="hint" style="margin-bottom:2px">마음에 드는 제목을 누르면 바로 얹어져요 ↓</div>' +
       d.titles.map((t, i) => {

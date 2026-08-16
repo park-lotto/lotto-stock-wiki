@@ -1472,6 +1472,21 @@ def _seg_benefits(seg):
     return [t.strip() for t in raw if isinstance(t, str) and t.strip()]
 
 
+# 인벤토리 줄에서 '쓰임:' 칸을 어떻게 쓰라는 지시(2026-08-16). 프롬프트가 세 곳이라
+# 문구를 한 곳에서만 정의한다 — 세 벌로 적으면 언젠가 어긋난다(CLAUDE.md 0순위-B).
+# ★왜 필요한가: 칸만 늘리면 모델이 안 쓴다. 실측(커피 job, A/B 각 5회) — 데이터만 넣었을 때
+#   컷 11.6→11.4·소스 2.40→2.60종으로 **차이 없음**. '말:' 칸처럼 무엇에 쓰는 칸인지
+#   말해줘야 판단 축이 된다.
+_INVENTORY_LABEL_HINT = (
+    "'쓰임:' 칸은 그 장면이 **원본 영상에서 하던 역할**이다"
+    "(예: 도입 훅 / 기능 실증 / 결과 확인 / 마무리). "
+    "'활용:' 칸은 **이 장면을 어디에 어떻게 쓰면 좋은지 이미 판단해 둔 것**이다 — "
+    "네가 다시 고민하지 말고 이 문장을 근거로 골라라. "
+    "화면 설명이 서로 비슷할 때 이 두 칸으로 갈라라 — 지금 쓰는 문장이 무슨 대목인지 보고 "
+    "그 대목에 맞는 장면을 골라라."
+)
+
+
 def _build_inventory(source_scripts):
     """소스 대본들 → (seg_map, prompt_block).
 
@@ -1495,6 +1510,12 @@ def _build_inventory(source_scripts):
                 "video_id": vid, "seg_id": sid,
                 "start": seg["start"], "end": seg["end"],
                 "text": seg.get("text", ""), "scene_desc": seg.get("scene_desc", ""),
+                # 짧은 이름(2026-08-16). 옛 추출본엔 없어 ""(fail-open) — 아래 라인 조립이
+                # 빈 값이면 그 칸을 통째로 생략하므로 기존 잡은 종전과 완전히 같은 줄을 받는다.
+                "label": (seg.get("label") or "").strip(),
+                # 활용 포인트(2026-08-16) — "이 장면을 어디에 어떻게 쓰면 좋은가"를
+                # 추출 때 미리 판단해 둔 것. 매칭이 같은 판단을 다시 하지 않아도 된다.
+                "use_point": (seg.get("use_point") or "").strip(),
                 "action": seg.get("action"),
                 "change": (seg.get("change") or "").strip(),
                 "is_key": bool(seg.get("is_key")),
@@ -1524,9 +1545,21 @@ def _build_inventory(source_scripts):
             # ★scene_desc 문자열엔 절대 안 섞는다(_claim_key 토큰 오염) — 모션처럼 별도 suffix로만.
             _role_s = f" | 역할:{seg.get('shot_role') or '기타'}"
             _key_s = f" | 실증:{'Y' if seg.get('is_key') else 'N'}"
+            # ★짧은 이름(2026-08-16): 장면이 수십 개면 '화면:' 묘사가 서로 비슷해 고를 축이
+            #   흐려진다(실측: 완성품 5개가 전부 "크레마가 얹어진 잔/덮인 컵/표면"). 이 장면이
+            #   영상에서 하는 일을 12자로 실어 대본 문장과 **의미끼리** 견주게 한다.
+            #   ★scene_desc 문자열엔 안 섞는다 — _claim_key 토큰이 오염돼 앵커 dedup이 엉킨다
+            #   (모션·역할과 같은 이유, 위 주석 참조). 반드시 별도 suffix로만.
+            _lab = (seg.get("label") or "").strip()
+            _lab_s = f" | 쓰임:{_lab}" if _lab else ""
+            # ★활용 포인트(2026-08-16 사장님 "어떤 활용포인트를 줄까에 대한 질문까지 해야
+            #   매칭할 때 좋은 거 아닌가"): 추출 단계에서 **어디에 어떻게 쓸지**를 이미
+            #   판단해 뒀다. 매칭이 그 판단을 다시 하지 않고 읽기만 하면 된다.
+            _up = (seg.get("use_point") or "").strip()
+            _up_s = f" | 활용:{_up}" if _up else ""
             lines.append(
                 f"[{sid}] ({length}s) 화면:{seg.get('scene_desc','')} | 말:{seg.get('text','')}"
-                f"{_act_s}{_chg_s}{_ben_s}{_ml_s}{_role_s}{_key_s}"
+                f"{_lab_s}{_up_s}{_act_s}{_chg_s}{_ben_s}{_ml_s}{_role_s}{_key_s}"
             )
     return seg_map, "\n".join(lines)
 
@@ -1870,6 +1903,7 @@ _PROMPT = """너는 숏폼 쇼핑 영상 편집 감독이다. 아래 여러 소�
 인벤토리를 보고, 목표 길이 {target_seconds}초짜리 새 영상의 편집안(EDL)을 만들어라.
 
 [소스 세그먼트 인벤토리] — 각 줄이 하나의 구간이다. 대괄호 안이 seg_id다.
+{label_hint}
 {inventory}
 
 {structure_instruction}
@@ -1925,6 +1959,7 @@ _SCRIPTED_PROMPT = """너는 숏폼 쇼핑 영상 편집 감독이다. **나레�
 {given_script}
 
 [소스 세그먼트 인벤토리] — 각 줄이 하나의 구간이다. 대괄호 안이 seg_id다.
+{label_hint}
 {inventory}
 
 규칙(반드시 지켜라):
@@ -2185,7 +2220,8 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         #   없는 사건이 나오고(실측: 훅이 '벽지가 번들거린다'인데 화면은 씻기는 장면),
         #   모델은 없는 화면을 만들 수 없으니 아무 컷이나 붙인다. 재료는 원본이다.
         "→ 스펙을 그대로 나열하지 말고, **원본 영상들이 실제로 한 말**을 재료로 이야기를 엮어라.\n\n"
-        "[우리 장면 팔레트 — 이 seg_id 화면만 쓸 수 있다. '말:' 칸이 원본에서 실제로 한 말이다]\n"
+        "[우리 장면 팔레트 — 이 seg_id 화면만 쓸 수 있다. '말:' 칸이 원본에서 실제로 한 말이다. "
+        f"{_INVENTORY_LABEL_HINT}]\n"
         f"{inventory_text}\n\n"
         "[★원본에서 가져와라 — 지어내지 마라]\n"
         "- 스토리도 대사도 **위 인벤토리의 '말:'과 '변화:'에서 가져와 재구성**하는 것이다. "
@@ -3287,13 +3323,15 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
         video_type = _normalize_video_type(video_type)  # 옛 key 흡수
         n_alternates = _SCRIPTED_N_ALT
         prompt = _SCRIPTED_PROMPT.format(
-            given_script=given_script.strip()[:4000], inventory=inventory, n_alternates=n_alternates)
+            given_script=given_script.strip()[:4000], inventory=inventory, n_alternates=n_alternates,
+            label_hint=_INVENTORY_LABEL_HINT)
     else:
         if video_type is None:
             video_type = detect_video_type(source_scripts)
         video_type = _normalize_video_type(video_type)  # 옛 key 흡수(감지값·인자 모두)
         prompt = _PROMPT.format(
             target_seconds=target_seconds, inventory=inventory, n_alternates=n_alternates,
+            label_hint=_INVENTORY_LABEL_HINT,
             char_target=int(target_seconds * _SYLLABLES_PER_SEC),
             structure_instruction=(_TEMPLATE_INSTR if structure == "template" else _FREE_INSTR),
             type_strategy=VIDEO_TYPES[video_type]["strategy"],

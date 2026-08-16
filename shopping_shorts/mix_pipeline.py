@@ -22,6 +22,7 @@ from shopping_shorts.scene_match import match_scene_assets, match_sfx
 from shopping_shorts import tts
 from shopping_shorts import audio_post
 from shopping_shorts import config
+from shopping_shorts import usage_meter
 from shopping_shorts import single_source
 from shopping_shorts import script_lang
 from shopping_shorts.video_assemble import assemble, _beat_timeline, _beat_material, _probe_duration, _MAX_SLOWMO, preview_preset
@@ -524,146 +525,161 @@ def _prepare_sources(urls, work, store=None):
     return video_paths, captions, skipped
 
 
+def _job_customer_id(db_path, job_id):
+    try:
+        job = Store(db_path).get_mix_job(job_id) or {}
+        return job.get("customer_id")
+    except Exception:      # noqa: BLE001 — 계측용이라 실패해도 본작업은 돈다
+        return None
+
+
 def run_mix_job(job_id, db_path, work_root):
     """다운로드→추출→EDL→TTS. 완료 시 status='ready_for_review'."""
-    store = Store(db_path)
-    _gpron = pron_corrections.load(store)
-    job = store.get_mix_job(job_id)
-    if not job:
-        return
-    work = Path(work_root) / job_id
-    work.mkdir(parents=True, exist_ok=True)
-    try:
-        # 1) 다운로드 — 사용자가 붙여넣은 URL은 플랫폼별 페이지/공유 주소라 그대로
-        # download_video 하면 영상이 아니라 HTML을 받아 Gemini가 state=FAILED로
-        # 거부하는 경우가 있다(2026-07-12 라이브 실측, 인스타그램). 이제
-        # media_download.download_any가 플랫폼별로(인스타=Apify로 CDN videoUrl
-        # 해석 후 다운로드, 유튜브/틱톡=yt-dlp) 알아서 처리한다.
-        store.update_mix_job(job_id, status="downloading")
-        # video_id -> mp4 path, video_id -> caption(인스타만 채워짐, 유튜브/틱톡은 "").
-        # extract_script가 caption을 힌트로 쓰고 없어도 영상 재전사로 동작 — .get(vid, "")로 안전 기본값.
-        # 소스별 예외격리: 불량 URL은 스킵되고 최소 1개만 살면 계속(2026-07-19).
-        video_paths, captions, skipped = _prepare_sources(job["urls"], work, store=store)
-        if skipped:
-            print(f"run_mix_job[{job_id}]: {len(skipped)}개 소스 스킵 "
-                  f"(불량 URL) — {[u for u, _ in skipped]}", file=sys.stderr)
+    # 이 job 안에서 나가는 모든 Gemini 콜에 job_id·customer_id를 붙인다(2026-08-16).
+    # 호출부 34곳을 안 고치고 "영상 1편 = 얼마"를 집계하기 위한 문맥이다.
+    # ⚠️ 본문을 딴 함수로 빼지 마라 — test_mix_pipeline_has_the_guard가
+    #    inspect.getsource(run_mix_job)로 가드 코드를 검사한다(2026-08-16 실측).
+    _meter = usage_meter.track(job_id=job_id, op="제작",
+                               customer_id=_job_customer_id(db_path, job_id))
+    with _meter:
+        store = Store(db_path)
+        _gpron = pron_corrections.load(store)
+        job = store.get_mix_job(job_id)
+        if not job:
+            return
+        work = Path(work_root) / job_id
+        work.mkdir(parents=True, exist_ok=True)
+        try:
+            # 1) 다운로드 — 사용자가 붙여넣은 URL은 플랫폼별 페이지/공유 주소라 그대로
+            # download_video 하면 영상이 아니라 HTML을 받아 Gemini가 state=FAILED로
+            # 거부하는 경우가 있다(2026-07-12 라이브 실측, 인스타그램). 이제
+            # media_download.download_any가 플랫폼별로(인스타=Apify로 CDN videoUrl
+            # 해석 후 다운로드, 유튜브/틱톡=yt-dlp) 알아서 처리한다.
+            store.update_mix_job(job_id, status="downloading")
+            # video_id -> mp4 path, video_id -> caption(인스타만 채워짐, 유튜브/틱톡은 "").
+            # extract_script가 caption을 힌트로 쓰고 없어도 영상 재전사로 동작 — .get(vid, "")로 안전 기본값.
+            # 소스별 예외격리: 불량 URL은 스킵되고 최소 1개만 살면 계속(2026-07-19).
+            video_paths, captions, skipped = _prepare_sources(job["urls"], work, store=store)
+            if skipped:
+                print(f"run_mix_job[{job_id}]: {len(skipped)}개 소스 스킵 "
+                      f"(불량 URL) — {[u for u, _ in skipped]}", file=sys.stderr)
 
-        # 2) 대본 추출(병렬)
-        store.update_mix_job(job_id, status="extracting")
-        # 프레임 태깅 추출전환(B1, 2026-07-29): 켜면 영상 통째 업로드 대신 파이썬 컷+프레임+오디오
-        # 전사로 추출한다(느림·PROCESSING실패 근본해소). 기본 off=회귀0. 실측 후 승격.
-        # 설계: docs/superpowers/specs/2026-07-29-프레임태깅-추출전환-design.md
-        _use_frames = store.get_setting("frame_extract_enabled", "") == "1"
-        # vid("s0") → 원래 URL. 캐시 키(shortcode)를 되찾는 데 쓴다.
-        _url_of = {_source_video_id(i): u for i, u in enumerate(job["urls"])}
+            # 2) 대본 추출(병렬)
+            store.update_mix_job(job_id, status="extracting")
+            # 프레임 태깅 추출전환(B1, 2026-07-29): 켜면 영상 통째 업로드 대신 파이썬 컷+프레임+오디오
+            # 전사로 추출한다(느림·PROCESSING실패 근본해소). 기본 off=회귀0. 실측 후 승격.
+            # 설계: docs/superpowers/specs/2026-07-29-프레임태깅-추출전환-design.md
+            _use_frames = store.get_setting("frame_extract_enabled", "") == "1"
+            # vid("s0") → 원래 URL. 캐시 키(shortcode)를 되찾는 데 쓴다.
+            _url_of = {_source_video_id(i): u for i, u in enumerate(job["urls"])}
 
-        def _extract(item):
-            vid, path = item
-            # 캐시 재사용(2026-07-24): 이 소스 대본을 담기/AI PICK/뽑기 때 이미 뽑아
-            # script_extracts에 저장했으면 그대로 쓴다 — Gemini/Whisper 재전사 스킵(속도↑).
-            # ★품질 무해 가드: extract_script와 동일한 {segments(seg_id 포함), full_text} 형태를
-            #   그대로 저장했으므로 동일 데이터다. 단 seg_id가 다 있어야 장면매칭이 성립하므로,
-            #   segments가 비었거나 seg_id 없는 항목이 하나라도 있으면 캐시를 버리고 새로 추출한다.
-            cached = None
-            try:
-                # ★캐시 키는 shortcode다(2026-08-06 수정). 예전엔 vid("s0")로 찾아
-                #   **한 번도 적중하지 않았다** — 위 _cache_key_for_url 주석 참고.
-                _ck = _cache_key_for_url(_url_of.get(vid))
-                if _ck:
-                    cached = store.get_extract(_ck)
-                if cached is None:
-                    cached = store.get_extract(vid)      # 옛 방식도 남겨둔다(하위호환)
-            except Exception:
+            def _extract(item):
+                vid, path = item
+                # 캐시 재사용(2026-07-24): 이 소스 대본을 담기/AI PICK/뽑기 때 이미 뽑아
+                # script_extracts에 저장했으면 그대로 쓴다 — Gemini/Whisper 재전사 스킵(속도↑).
+                # ★품질 무해 가드: extract_script와 동일한 {segments(seg_id 포함), full_text} 형태를
+                #   그대로 저장했으므로 동일 데이터다. 단 seg_id가 다 있어야 장면매칭이 성립하므로,
+                #   segments가 비었거나 seg_id 없는 항목이 하나라도 있으면 캐시를 버리고 새로 추출한다.
                 cached = None
-            segs = (cached or {}).get("segments")
-            # ★스키마 승격(2026-07-31): change('사물이 무엇이 됐나') 필드가 생기기 전 캐시는
-            #   영상의 진짜 포인트(갈라지다→매끈해지다·튀다·모찌처럼 늘어난다)를 하나도 안 갖고
-            #   있다. 그대로 쓰면 도서관에 쌓인 옛 영상만 영원히 옛 품질로 남아 "어떤 건 되고
-            #   어떤 건 안 되네"가 반복된다 → 필드 자체가 없으면 옛 스키마로 보고 다시 뽑는다.
-            #   영상당 딱 한 번(재추출 결과가 캐시를 덮어씀). 값이 빈 문자열인 건 모델이 '변화
-            #   없음'이라 판단한 정상 결과이므로 재추출하지 않는다(키 유무로만 판별).
-            if segs and not any("change" in s for s in segs):
-                segs = None
-            if segs and all(s.get("seg_id") for s in segs):
-                r = {"segments": segs, "full_text": (cached.get("full_text") or "")}
-                # 무자막 소스 특장점(2026-07-26): 캐시엔 최상위 필드가 없을 수 있으므로
-                # 세그별 product_benefits로 집계 폴백. 이 필드 추가 전 캐시는 빈 리스트 —
-                # full_text도 비었다면 그 소스는 예전처럼 화면 재료로만 쓰인다(무해).
-                r["product_benefits"] = (script_extract._norm_benefits(
-                    cached.get("product_benefits")) or script_extract._collect_benefits(segs))
-            elif _use_frames:
-                from shopping_shorts import frame_script
-                r = frame_script.extract_script_frames(path, vid, caption=captions.get(vid, ""))
-                # 프레임 경로가 세그먼트를 못 만들면(컷 감지 실패 등) 기존 영상추출로 폴백 — 빈 결과 금지.
-                if not r.get("segments"):
+                try:
+                    # ★캐시 키는 shortcode다(2026-08-06 수정). 예전엔 vid("s0")로 찾아
+                    #   **한 번도 적중하지 않았다** — 위 _cache_key_for_url 주석 참고.
+                    _ck = _cache_key_for_url(_url_of.get(vid))
+                    if _ck:
+                        cached = store.get_extract(_ck)
+                    if cached is None:
+                        cached = store.get_extract(vid)      # 옛 방식도 남겨둔다(하위호환)
+                except Exception:
+                    cached = None
+                segs = (cached or {}).get("segments")
+                # ★스키마 승격(2026-07-31): change('사물이 무엇이 됐나') 필드가 생기기 전 캐시는
+                #   영상의 진짜 포인트(갈라지다→매끈해지다·튀다·모찌처럼 늘어난다)를 하나도 안 갖고
+                #   있다. 그대로 쓰면 도서관에 쌓인 옛 영상만 영원히 옛 품질로 남아 "어떤 건 되고
+                #   어떤 건 안 되네"가 반복된다 → 필드 자체가 없으면 옛 스키마로 보고 다시 뽑는다.
+                #   영상당 딱 한 번(재추출 결과가 캐시를 덮어씀). 값이 빈 문자열인 건 모델이 '변화
+                #   없음'이라 판단한 정상 결과이므로 재추출하지 않는다(키 유무로만 판별).
+                if segs and not any("change" in s for s in segs):
+                    segs = None
+                if segs and all(s.get("seg_id") for s in segs):
+                    r = {"segments": segs, "full_text": (cached.get("full_text") or "")}
+                    # 무자막 소스 특장점(2026-07-26): 캐시엔 최상위 필드가 없을 수 있으므로
+                    # 세그별 product_benefits로 집계 폴백. 이 필드 추가 전 캐시는 빈 리스트 —
+                    # full_text도 비었다면 그 소스는 예전처럼 화면 재료로만 쓰인다(무해).
+                    r["product_benefits"] = (script_extract._norm_benefits(
+                        cached.get("product_benefits")) or script_extract._collect_benefits(segs))
+                elif _use_frames:
+                    from shopping_shorts import frame_script
+                    r = frame_script.extract_script_frames(path, vid, caption=captions.get(vid, ""))
+                    # 프레임 경로가 세그먼트를 못 만들면(컷 감지 실패 등) 기존 영상추출로 폴백 — 빈 결과 금지.
+                    if not r.get("segments"):
+                        r = extract_script(path, vid, caption=captions.get(vid, ""))
+                else:
                     r = extract_script(path, vid, caption=captions.get(vid, ""))
-            else:
-                r = extract_script(path, vid, caption=captions.get(vid, ""))
-            # ★조용한 추출 실패 잡기(2026-07-31 사장님: "실제 영상은 20초가 넘는데 추출이
-            #   실패한 거라 사용자는 알 수가 없다"). 실측 job 8226822c5b09: 21초짜리 B영상이
-            #   2구간 7.4초로 뭉쳐 나와 재료가 사실상 없었고, 화면엔 아무 표시도 없어서
-            #   "왜 A로만 만들어졌지?"로만 보였다. → 커버리지를 재서 낮으면 한 번 다시 뽑고,
-            #   그래도 낮으면 결과에 표시를 남겨 상류가 사장님께 알릴 수 있게 한다.
-            # ★추출 커버리지는 **같은 영상·같은 조건에서도 크게 흔들린다**(2026-08-06 실측).
-            #   Dbjk5BXToB7(21.1초)을 5회 반복: 67% / 95% / 55% / 55% / 55% — 평균 65%.
-            #   영상이나 힌트 문제가 아니라 모델 출력의 확률적 편차다(한때 '힌트가 범인'
-            #   이라고 봤으나 표본 1개짜리 오판이었다). 뒷부분이 통째로 날아가면 사장님
-            #   결과물이 11~16초로 짧아진다 — 원본 21초가 멀쩡히 있는데도.
-            #   그래서 **낮으면 여러 번 다시 뽑고 가장 좋은 것을 쓴다**. 재시도는 조건을
-            #   바꿔가며(힌트 on/off 번갈아) 한다 — 같은 조건 반복은 같은 실패를 부른다.
-            cov = _extract_coverage(r, path)
-            for _try in range(_EXTRACT_RETRIES):
-                if cov is None or cov >= _MIN_COVERAGE:
-                    break
-                r2 = extract_script(path, vid, caption=captions.get(vid, ""),
-                                    use_boundaries=bool(_try % 2))
-                cov2 = _extract_coverage(r2, path)
-                if cov2 is not None and cov2 > (cov or 0):
-                    print(f"[extract] {vid} 재추출 {_try + 1}회차로 개선: "
-                          f"{cov:.0%} → {cov2:.0%}", flush=True)
-                    r, cov = r2, cov2
-            r["coverage"] = cov
-            r["weak_extract"] = bool(cov is not None and cov < _MIN_COVERAGE)
-            if r["weak_extract"]:
-                print(f"[extract] ⚠️ {vid} 추출 빈약 — 영상의 {cov:.0%}만 구간화됨"
-                      f"(구간 {len(r.get('segments') or [])}개). 재료로 거의 못 쓴다.", flush=True)
-            r["video_id"] = vid
-            # category(ai_categorize가 script_extracts.category에 저장) 전달 → 장면 결 맞춤(is_recipe) 분기용.
-            # cached는 위에서 이미 조회했다(segments가 못써도 category 컬럼은 실려온다).
-            r["category"] = (cached or {}).get("category")
-            return vid, r
-        with ThreadPoolExecutor(max_workers=max(1, len(video_paths))) as ex:
-            extracts = dict(ex.map(_extract, video_paths.items()))
-        store.update_mix_job(job_id, extract=extracts)
+                # ★조용한 추출 실패 잡기(2026-07-31 사장님: "실제 영상은 20초가 넘는데 추출이
+                #   실패한 거라 사용자는 알 수가 없다"). 실측 job 8226822c5b09: 21초짜리 B영상이
+                #   2구간 7.4초로 뭉쳐 나와 재료가 사실상 없었고, 화면엔 아무 표시도 없어서
+                #   "왜 A로만 만들어졌지?"로만 보였다. → 커버리지를 재서 낮으면 한 번 다시 뽑고,
+                #   그래도 낮으면 결과에 표시를 남겨 상류가 사장님께 알릴 수 있게 한다.
+                # ★추출 커버리지는 **같은 영상·같은 조건에서도 크게 흔들린다**(2026-08-06 실측).
+                #   Dbjk5BXToB7(21.1초)을 5회 반복: 67% / 95% / 55% / 55% / 55% — 평균 65%.
+                #   영상이나 힌트 문제가 아니라 모델 출력의 확률적 편차다(한때 '힌트가 범인'
+                #   이라고 봤으나 표본 1개짜리 오판이었다). 뒷부분이 통째로 날아가면 사장님
+                #   결과물이 11~16초로 짧아진다 — 원본 21초가 멀쩡히 있는데도.
+                #   그래서 **낮으면 여러 번 다시 뽑고 가장 좋은 것을 쓴다**. 재시도는 조건을
+                #   바꿔가며(힌트 on/off 번갈아) 한다 — 같은 조건 반복은 같은 실패를 부른다.
+                cov = _extract_coverage(r, path)
+                for _try in range(_EXTRACT_RETRIES):
+                    if cov is None or cov >= _MIN_COVERAGE:
+                        break
+                    r2 = extract_script(path, vid, caption=captions.get(vid, ""),
+                                        use_boundaries=bool(_try % 2))
+                    cov2 = _extract_coverage(r2, path)
+                    if cov2 is not None and cov2 > (cov or 0):
+                        print(f"[extract] {vid} 재추출 {_try + 1}회차로 개선: "
+                              f"{cov:.0%} → {cov2:.0%}", flush=True)
+                        r, cov = r2, cov2
+                r["coverage"] = cov
+                r["weak_extract"] = bool(cov is not None and cov < _MIN_COVERAGE)
+                if r["weak_extract"]:
+                    print(f"[extract] ⚠️ {vid} 추출 빈약 — 영상의 {cov:.0%}만 구간화됨"
+                          f"(구간 {len(r.get('segments') or [])}개). 재료로 거의 못 쓴다.", flush=True)
+                r["video_id"] = vid
+                # category(ai_categorize가 script_extracts.category에 저장) 전달 → 장면 결 맞춤(is_recipe) 분기용.
+                # cached는 위에서 이미 조회했다(segments가 못써도 category 컬럼은 실려온다).
+                r["category"] = (cached or {}).get("category")
+                return vid, r
+            with ThreadPoolExecutor(max_workers=max(1, len(video_paths))) as ex:
+                extracts = dict(ex.map(_extract, video_paths.items()))
+            store.update_mix_job(job_id, extract=extracts)
 
-        # 3~4) 통합 EDL 생성 + 비트별 TTS (video_type=None → 자동 유형 감지)
-        # given_script이 있으면(영상제작 2단계) 나레이션을 새로 쓰지 않고 그 대본으로 매칭.
-        source_scripts = list(extracts.values())
-        _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
-                      job["structure"], None, work, given_script=job.get("given_script"),
-                      voice=job.get("voice"), customer_id=job.get("customer_id", 0),
-                      scene_first=job.get("scene_first", False),
-                      reference_text=job.get("given_script") or "",
-                      # 핑퐁(대본↔장면 왕복 행위매칭): 전역 설정으로 on/off(기본 off·회귀0).
-                      # 스키마 컬럼 없이 한 스위치로 켠다 — store.set_setting('ping_pong_enabled','1').
-                      ping_pong=(store.get_setting("ping_pong_enabled", "") == "1"),
-                      # 백본-베이스(2026-07-21 확정스펙): 켜면 레퍼런스 자유생성 대신 백본 흐름 위에
-                      # 100% 우리 대본을 생성한다. 스마트 믹스 토글이 이 설정도 함께 켠다.
-                      backbone_base=(store.get_setting("backbone_base_enabled", "") == "1"),
-                      # 백본 선정: URL로 플랫폼 판별(인스타/유튜브만 백본, 샤오홍슈 서브)
-                      # + 참여도(수집캐시 댓글수) + 사장님 지정.
-                      backbone_meta=_backbone_meta_from_job(job, extracts, store=store),
-                      backbone_forced=_resolve_backbone_forced(job, extracts),
-                      global_pron=_gpron)
-    except Exception as e:
-        traceback.print_exc(file=sys.stderr)
-        store.update_mix_job(job_id, status="failed", error=str(e))
-        # 유료게이트: 렌더 실패 → 예약한 'render' 크레딧 환불(계정+전역). 실패했는데 크레딧만
-        # 날아가면 시니어에겐 '고장'으로 읽힌다(하루 2회뿐). points 실패환불(_fx_render_job)과 대칭.
-        # ★render_charge_day가 있는 job만(=/api/mix/start가 실제 과금한 것) 환불하고, 딱 그 날짜로
-        #   되돌린다. produce 2단계·auto_run·retype는 과금 안 해 이 값이 없다 → 오환불로 전역
-        #   카운터를 갉아 다른 유저 과금을 상쇄하는 일을 막는다(리뷰 B/F).
-        _refund_render_charge(store, job.get("customer_id", 0), job.get("render_charge_day"))
+            # 3~4) 통합 EDL 생성 + 비트별 TTS (video_type=None → 자동 유형 감지)
+            # given_script이 있으면(영상제작 2단계) 나레이션을 새로 쓰지 않고 그 대본으로 매칭.
+            source_scripts = list(extracts.values())
+            _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
+                          job["structure"], None, work, given_script=job.get("given_script"),
+                          voice=job.get("voice"), customer_id=job.get("customer_id", 0),
+                          scene_first=job.get("scene_first", False),
+                          reference_text=job.get("given_script") or "",
+                          # 핑퐁(대본↔장면 왕복 행위매칭): 전역 설정으로 on/off(기본 off·회귀0).
+                          # 스키마 컬럼 없이 한 스위치로 켠다 — store.set_setting('ping_pong_enabled','1').
+                          ping_pong=(store.get_setting("ping_pong_enabled", "") == "1"),
+                          # 백본-베이스(2026-07-21 확정스펙): 켜면 레퍼런스 자유생성 대신 백본 흐름 위에
+                          # 100% 우리 대본을 생성한다. 스마트 믹스 토글이 이 설정도 함께 켠다.
+                          backbone_base=(store.get_setting("backbone_base_enabled", "") == "1"),
+                          # 백본 선정: URL로 플랫폼 판별(인스타/유튜브만 백본, 샤오홍슈 서브)
+                          # + 참여도(수집캐시 댓글수) + 사장님 지정.
+                          backbone_meta=_backbone_meta_from_job(job, extracts, store=store),
+                          backbone_forced=_resolve_backbone_forced(job, extracts),
+                          global_pron=_gpron)
+        except Exception as e:
+            traceback.print_exc(file=sys.stderr)
+            store.update_mix_job(job_id, status="failed", error=str(e))
+            # 유료게이트: 렌더 실패 → 예약한 'render' 크레딧 환불(계정+전역). 실패했는데 크레딧만
+            # 날아가면 시니어에겐 '고장'으로 읽힌다(하루 2회뿐). points 실패환불(_fx_render_job)과 대칭.
+            # ★render_charge_day가 있는 job만(=/api/mix/start가 실제 과금한 것) 환불하고, 딱 그 날짜로
+            #   되돌린다. produce 2단계·auto_run·retype는 과금 안 해 이 값이 없다 → 오환불로 전역
+            #   카운터를 갉아 다른 유저 과금을 상쇄하는 일을 막는다(리뷰 B/F).
+            _refund_render_charge(store, job.get("customer_id", 0), job.get("render_charge_day"))
 
 
 def _refund_render_charge(store, customer_id, charge_day):

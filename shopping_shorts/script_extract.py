@@ -59,6 +59,18 @@ _RESPONSE_SCHEMA = {
                     #   "프린팅이 갈라지다→매끈해지다" / "양념이 튀다·가림막이 막아주다" /
                     #   "촉감이 모찌같다". ACTION_VOCAB 30개는 전부 사람 손동작이라 하나도 못 담는다.
                     "change": {"type": "string"},
+                    # ★2026-08-16: scene_desc는 "무엇이 보이나"(묘사)라 길고, 카드 밑에 넣으면
+                    #   잘려서 안 읽힌다(실측: "메탈 플레이트 중앙의 하트 문양에서 에스프레소가
+                    #   아래에서 위로 솟아오르는 클로즈업" 31자). label은 "이 장면이 영상에서
+                    #   무슨 일을 하나"(역할)를 12자 안쪽으로 — 카드 밑에 그대로 찍고,
+                    #   대본↔장면 매칭에도 의미끼리 붙게 한다.
+                    "label": {"type": "string"},
+                    # ★2026-08-16 사장님: "어떤 활용포인트를 줄까에 대한 질문까지 해야
+                    #   매칭할 때 좋은 거 아닌가". label은 "무슨 장면인가"(정체)뿐이라
+                    #   대본 어느 대목에 쓸지는 여전히 모델이 매번 추론해야 했다.
+                    #   use_point는 **"이 장면을 어디에 어떻게 쓰면 좋은가"**(쓸모)를 미리
+                    #   판단해 둔다 — 매칭이 판단을 다시 하지 않고 읽기만 하면 된다.
+                    "use_point": {"type": "string"},
                     "has_effect": {"type": "boolean"},
                     "is_key": {"type": "boolean"},
                     "shot_role": {"type": "string",
@@ -70,11 +82,38 @@ _RESPONSE_SCHEMA = {
         },
         "full_text": {"type": "string"},
         "product_benefits": {"type": "array", "items": {"type": "string"}},
+        # ★영상 단위 요약(2026-08-16). 지금까진 최상위에 특장점 2~3개뿐이라 "이 영상이
+        #   무슨 영상인가"가 한 덩어리로 없었다. 소스가 3~8개일 때 각 소스가 전체에서
+        #   맡는 몫이 안 보여 대본 생성이 소스를 골고루 못 쓴다(실측 A/B: 3개 중 평균 2.6종).
+        #   장면 label도 이 큰 그림 위에서 지어야 어긋남이 준다.
+        "source_brief": {
+            "type": "object",
+            "properties": {
+                "product": {"type": "string"},   # 무슨 제품/결과물을 보여주는 영상인가
+                "role": {"type": "string"},      # 이 영상이 보여주는 몫(구성 확인·비교·기능 실증…)
+                "core": {"type": "string"},      # 이 영상의 요지 한 줄
+                "summary": {"type": "string"},   # 2~3문장 요약
+            },
+        },
     },
     "required": ["segments", "full_text"],
 }
 
 _PROMPT = """이 영상을 보고 시간 순서대로 세그먼트로 나눠 대본을 추출해라.
+
+★순서를 지켜라: **영상 전체를 먼저 파악**(source_brief)한 뒤, 그 큰 그림 위에서 세그먼트를
+나누고 각 장면의 쓰임(label)을 정해라. 전체를 모르면 "도입"인지 "마무리"인지 알 수 없다.
+
+[source_brief — 이 영상이 무슨 영상인지 먼저 한 덩어리로 정리한다]
+- product: 이 영상이 보여주는 **제품/결과물의 이름**(한국어). 영어·중국어 자막이어도 한국어로.
+           자막이 하나도 없어도 화면만 보고 정해라(예: "긍정 강화 보상 별 통", "휴대용 에스프레소 메이커").
+- role: 이 영상이 **무엇을 보여주는 영상인지** 한 줄(예: "제품 구성 및 조립 시연",
+        "크기·디자인 비교 확인", "기능 실증과 결과 확인", "사용 후기·반응"). 여러 소스를
+        섞어 쓸 때 이 영상이 맡을 몫을 가리는 기준이 된다.
+- core: 이 영상의 요지 한 줄(가장 중요한 장면·기능이 무엇인지).
+- summary: 2~3문장 요약. 무엇을 어떤 순서로 보여주고 무엇이 핵심 기능인지.
+★셋 다 **화면에 실제로 보이는 것**으로만 채워라. 자막·나레이션이 없어도 화면만 보고 쓴다.
+
 
 캡션(참고용, 영상 내용이 우선): {caption}
 
@@ -104,6 +143,27 @@ _PROMPT = """이 영상을 보고 시간 순서대로 세그먼트로 나눠 대
   프레임 안의 진짜 동물·사람**은 맥락일 뿐 제품이 아니다 — 이런 것에 낚여 "강아지 선풍기"처럼
   실제 제품과 무관한 이름을 지어내지 마라. 예: 손에 들고 사용 중인 선풍기 옆에 강아지 인형이나
   진짜 강아지가 보여도, 주 제품은 여전히 "선풍기"다.
+- label: ★그 구간이 **이 영상에서 하는 일**을 짧은 이름으로 붙여라(**12자 이내**, 한국어).
+  scene_desc가 "무엇이 보이나"(묘사)라면 label은 **"왜 이 장면이 여기 있나"(역할)**다.
+  ★위에서 정한 source_brief(제품·역할·핵심)를 기준으로 삼아라 — 이 영상이 맡은 몫 안에서
+  이 장면이 어느 대목인지 적는 것이다. 같은 그림이라도 맨 앞이면 "도입", 맨 뒤면 "마무리".
+  brief의 role이 "크기 비교"인 영상이면 그 비교 흐름 속 위치로 이름을 지어라.
+  형식: `대상 + 무엇을 하는 대목` (…시연 / …강조 / …확인 / …설명 / …비교 / …소개 / …예고).
+  · 좋은 예: "제품 개봉·구성품 확인" "자석 부착 시연" "크기 비교 시연" "바텀업 추출 시연"
+             "기존 제품 작동 시연" "완성품 클로즈업" "고객 반응 강조" "마무리·CTA"
+  · 나쁜 예: "손이 컵을 든다"(그냥 묘사) / "커피"(무엇을 하는지 없음) /
+             "메탈 플레이트 중앙의 하트 문양에서 커피가 솟는 클로즈업"(너무 길다)
+  ★화면에 실제로 보이는 것만으로 지어라. 안 보이는 걸 추측해 이름 붙이지 마라.
+- use_point: ★이 장면을 **새 영상에서 어디에 어떻게 쓰면 좋은지** 한 문장(한국어, 40~70자).
+  label이 "무슨 장면인가"(정체)라면 use_point는 **"어떻게 써먹나"(쓸모)**다.
+  대본의 어느 대목(훅·문제 제기·기능 설명·결과 확인·마무리)에 어울리는지와, 그 이유를
+  화면에 보이는 근거로 함께 적어라.
+  · 좋은 예: "영상 도입부에서 제품 목적과 구성품을 빠르게 보여주어 시청자의 흥미를 끌기 좋습니다"
+             "기존 방식과 나란히 보여주므로 '뭐가 다른데?'라는 의문을 푸는 대목에 쓰기 좋습니다"
+             "크레마가 차오르는 변화가 또렷해 결과를 확인시키는 마무리 대목에 어울립니다"
+  · 나쁜 예: "좋은 장면입니다"(근거 없음) / "제품을 보여줍니다"(scene_desc 반복) /
+             "훅"(한 단어 — 왜 그런지가 없다)
+  ★화면에 실제로 보이는 것을 근거로만 판단해라. 안 보이는 효능을 지어내지 마라.
 - action: 그 구간의 주요 손동작을 하나 골라라(당기다·붓다·바르다·펴다·자르다·섞다·닦다·
   누르다·끼우다·열다·담다·닫다). 해당 없으면 "없음".
 - change: ★이 구간에서 **화면 속 사물에 무슨 일이 일어났는지** 한국어 한 줄로 적어라.
@@ -167,6 +227,57 @@ def _norm_shot_role(raw):
     return _SHOT_ROLE_ALIASES.get(raw, "기타")
 
 
+# 짧은 이름(2026-08-16). 카드 밑에 그대로 찍히므로 길이를 여기서 한 번만 통제한다
+# (표시하는 쪽마다 자르면 곳마다 달라진다 — CLAUDE.md 0순위-B).
+_LABEL_MAX = 16          # 프롬프트는 12자를 요구한다. 조금 넘겨도 버리지 않되 여기서 끊는다.
+
+
+_BRIEF_KEYS = ("product", "role", "core", "summary")
+_BRIEF_MAX = {"product": 40, "role": 60, "core": 80, "summary": 400}
+
+
+def _norm_brief(raw):
+    """모델이 준 영상 단위 요약 → 표시·프롬프트용 dict(순수함수, fail-open).
+    없음/형식이상 → {}. 옛 추출본엔 이 필드가 없으므로 읽는 쪽은 빈 dict를 견뎌야 한다."""
+    if not isinstance(raw, dict):
+        return {}
+    out = {}
+    for k in _BRIEF_KEYS:
+        v = raw.get(k)
+        if not isinstance(v, str):
+            continue
+        s = " ".join(v.split())
+        if not s:
+            continue
+        cap = _BRIEF_MAX[k]
+        out[k] = s if len(s) <= cap else s[:cap - 1] + "…"
+    return out
+
+
+def _norm_label(raw):
+    """모델이 준 짧은 이름 → 표시용 한 줄(순수함수, fail-open).
+    없음/None/공백 → "". 줄바꿈은 공백으로, 너무 길면 잘라 말줄임."""
+    if not isinstance(raw, str):
+        return ""
+    s = " ".join(raw.split())            # 줄바꿈·연속공백 정리
+    if not s:
+        return ""
+    return s if len(s) <= _LABEL_MAX else s[:_LABEL_MAX - 1] + "…"
+
+
+_USE_POINT_MAX = 140     # 한 문장 권장 40~70자. 넘겨도 버리지 않되 여기서 끊는다.
+
+
+def _norm_use_point(raw):
+    """활용 포인트 → 한 줄(순수함수, fail-open). 없음/형식이상 → ""."""
+    if not isinstance(raw, str):
+        return ""
+    s = " ".join(raw.split())
+    if not s:
+        return ""
+    return s if len(s) <= _USE_POINT_MAX else s[:_USE_POINT_MAX - 1] + "…"
+
+
 def _collect_benefits(segments):
     """세그먼트별 product_benefits → 소스 단위 집계(순서 보존 중복제거, 순수함수).
     무자막 영상은 full_text가 0자라 이 집계가 대본 생성의 유일한 언어 재료다."""
@@ -194,6 +305,12 @@ def _assign_seg_ids(video_id, raw_segments, motion_map=None):
             "end": float(seg.get("end") or 0.0),
             "text": seg.get("text", ""),
             "scene_desc": seg.get("scene_desc", ""),
+            # 짧은 이름(2026-08-16). 옛 추출본엔 없어 ""로 떨어진다(fail-open) — 표시하는 쪽이
+            # 비면 scene_desc로 되돌아가므로 기존 잡은 지금과 똑같이 보인다.
+            "label": _norm_label(seg.get("label")),
+            # 활용 포인트(2026-08-16) — 이 장면을 어디에 어떻게 쓰면 좋은지 한 문장.
+            # 옛 추출본엔 없어 ""(fail-open) — 읽는 쪽이 빈 문자열을 견딘다.
+            "use_point": _norm_use_point(seg.get("use_point")),
             "action": raw_action,  # str 동사 or None
             # 사물이 주어인 변화·감각 한 줄(2026-07-31). 옛 추출본엔 없어서 ""로 떨어진다(fail-open)
             # — 하류(_build_inventory)가 빈 값이면 그 칸을 통째로 생략하므로 회귀 없음.
@@ -336,7 +453,11 @@ def storable(result):
     r = result or {}
     return {"full_text": r.get("full_text", "") or "",
             "segments": r.get("segments") or [],
-            "tag_qa": r.get("tag_qa") or {}}
+            "tag_qa": r.get("tag_qa") or {},
+            # 영상 단위 요약(2026-08-16) — 1단계 화면이 소스별로 이걸 보여주고,
+            # 대본 생성이 "이 소스가 맡은 몫"으로 읽는다. 여기 안 넣으면 저장 순간 버려진다
+            # (2026-08-01 tag_qa가 정확히 그렇게 사라졌던 자리다).
+            "source_brief": _norm_brief(r.get("source_brief"))}
 
 
 def _pick_better_extract(first, second, duration):
@@ -431,6 +552,8 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 "segments": segments,
                 "full_text": data.get("full_text", ""),
                 "product_benefits": benefits,
+                # 영상 단위 요약(2026-08-16). 없으면 {} — 읽는 쪽이 빈 dict를 견딘다.
+                "source_brief": _norm_brief(data.get("source_brief")),
             }
             # ★태깅 QA(2026-08-01). 지금까진 스키마만 통과하면 무조건 채택했다 — 프롬프트의
             #   지침(0초 훅·받아쓰기·shot_role·change)이 지켜졌는지 아무도 안 봤다. 슬롯 기반
