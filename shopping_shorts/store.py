@@ -1,6 +1,7 @@
 """SQLite 수집 이력 저장소."""
 import hashlib
 import json
+import logging
 import os
 import secrets
 import sqlite3
@@ -4528,7 +4529,12 @@ class Store:
                      keycrypt.fingerprint(plain), keycrypt.mask(plain), int(time.time())),
                 )
             return True
-        except sqlite3.IntegrityError:      # ux_ck_dup — 같은 사용자가 같은 키를 또 넣음
+        except sqlite3.IntegrityError as e:
+            # ★중복(ux_ck_dup)만 False로 삼킨다. NOT NULL 위반 같은 다른 무결성
+            #   오류까지 False로 덮으면 "service를 안 넘긴 버그"가 "중복입니다"로
+            #   둔갑해 조용히 묻힌다 — 침묵 except가 사고를 만든 전례가 있다.
+            if "UNIQUE" not in str(e).upper():
+                raise
             return False
 
     def list_customer_keys(self, customer_id, service=None):
@@ -4546,17 +4552,25 @@ class Store:
                  "checked_at": r[4], "created_at": r[5]} for r in rows]
 
     def get_customer_keys_plain(self, customer_id, service):
-        """실제 호출에 쓸 평문 키 목록. 복호 실패한 행은 건너뛴다(마스터키 교체 등)."""
+        """실제 호출에 쓸 평문 키 목록. 복호 실패한 행은 건너뛴다(마스터키 교체 등).
+
+        ★건너뛸 땐 반드시 로그를 남긴다 — 조용히 넘기면 '화면엔 키가 보이는데
+          실제로는 안 쓰이는' 상태가 생기고 아무도 이유를 모른다. 침묵 except가
+          SQL 오류를 삼켜 라이브 0건이 된 2026-08-10 사고와 같은 모양이다."""
         from shopping_shorts import keycrypt
         with self._conn() as c:
             rows = c.execute(
-                "SELECT key_enc FROM customer_keys WHERE customer_id=? AND service=? "
+                "SELECT id, key_enc FROM customer_keys WHERE customer_id=? AND service=? "
                 "ORDER BY id", (int(customer_id), service)).fetchall()
         out = []
-        for (enc,) in rows:
+        for key_id, enc in rows:
             try:
                 out.append(keycrypt.decrypt(enc))
-            except Exception:
+            except Exception as e:      # noqa: BLE001 — 한 키가 깨져도 나머지는 쓴다
+                logging.warning(
+                    "customer_keys 복호 실패 — cid=%s service=%s key_id=%s (%s). "
+                    "BYOK_MASTER_KEY가 바뀌었는지 확인하라.",
+                    customer_id, service, key_id, type(e).__name__)
                 continue
         return out
 
