@@ -633,12 +633,30 @@
   //   돌아 페이지가 DOM 노드에 박은 그 내부 프로퍼티가 '안 보인다'(2026-07-19 실측: sandbox에선
   //   첫 카드만 간헐 성공 = 사장님이 본 "맨 앞 하나만"의 정체). unsafeWindow로도 불안정했다.
   //   → 도우인만은 페이지 '메인월드'에 자립 스크립트를 주입한다. 메인월드에선 fiber가 다 보여
-  //   20/20 카드에서 aweme_id 추출·버튼부착을 실측 확인했고, 도우인 CSP는 인라인 스크립트를
-  //   막지 않는다(실측). 주입 스크립트가 자체 interval로 유지하며, 클릭 시 BASE/api/grab로 바로
+  //   20/20 카드에서 aweme_id 추출·버튼부착을 실측 확인했다.
+  //   주입 스크립트가 자체 interval로 유지하며, 클릭 시 BASE/api/grab로 바로
   //   담는다(sandbox와의 데이터 왕래 불필요). 주입 실패 시 버튼이 안 생기고 플로팅으로 폴백된다.
+  //
+  // ⚠️★2026-08-17 정정 — "도우인 CSP는 인라인을 막지 않는다"는 옛 주석은 **틀렸다**.
+  //   막는 주체는 도우인이 아니라 **확장 자신의 CSP**다. 격리월드(콘텐츠 스크립트) 코드가
+  //   스스로 만든 <script>는 확장 CSP('unsafe-inline' 없음)의 검사를 받아 차단된다.
+  //   사장님 콘솔 실측:
+  //     grab_logic.js:716 Executing inline script violates ... 'script-src 'self'
+  //     'wasm-unsafe-eval' 'inline-speculation-rules' http://localhost:* http://127.0.0.1:*
+  //     chrome-extension://9adf66a6-.../'  → The action has been blocked.
+  //   (localhost·chrome-extension: 이 소스에 있는 CSP는 도우인이 보낼 수 없다 = 확장 것)
+  //   결과: 메인월드 도달 실패 → fiber 못 읽음 → 카드버튼 0개 → 플로팅만 남았다
+  //   ("샤오·틱톡·인스타는 되는데 도우인만 안 된다"의 정체. 나머지는 DOM만 써서 주입이 불필요).
+  //   ★해법: 확장은 manifest에 world:"MAIN" 으로 douyin_main.js를 **크롬이 직접** 주입한다
+  //   (확장 CSP의 인라인 검사를 아예 타지 않는다). 그 경우 아래 주입은 건너뛴다 —
+  //   같은 판단을 두 번 하지 않기 위해 __ssDouyinMW 플래그 하나로만 갈린다(0순위-B).
+  //   유저스크립트(텀퍼몽키)는 world 선언이 없으므로 종전 주입 경로를 그대로 쓴다.
   function _douyinMainWorld() {
     if (window.__ssDouyinMW) return;
     window.__ssDouyinMW = true;
+    // 격리월드는 페이지 window를 못 보므로 DOM에 표식을 남긴다(두 월드가 공유하는 유일한 통로).
+    // 이걸 보고 addDouyinCardBtns가 중복 주입을 멈춘다.
+    try { document.documentElement.setAttribute("data-ss-douyin-mw", "1"); } catch (e) {}
     var BASE = "https://shoppingshorts.duckdns.org";
     function isGrid() { return /(^|\/)(search|explore|tag)(\/|$|\?)/.test(location.pathname + location.search) || /\/search_result/.test(location.pathname); }
     // 메인월드는 별도 스코프라 위 헬퍼를 못 쓴다 — 같은 규칙을 여기서도 지킨다.
@@ -708,6 +726,14 @@
   }
   function addDouyinCardBtns() {
     if (location.host.indexOf("douyin") < 0) return;
+    // ★확장(world:"MAIN")이 이미 메인월드에서 돌고 있으면 주입하지 않는다.
+    //   __ssDouyinMW는 메인월드에서 세워지는 플래그다. 격리월드에선 페이지 window가
+    //   분리돼 이 값이 안 보이므로, 확장 경로에선 douyin_main.js가 DOM에 표식을 남기고
+    //   여기서 그 표식을 읽는다(DOM은 두 월드가 공유한다 — 유일하게 확실한 통로).
+    try {
+      if (document.documentElement.getAttribute("data-ss-douyin-mw") === "1") return;
+    } catch (e) {}
+    if (window.__ssDouyinMW) return;         // 유저스크립트 unsafeWindow 등에서 보이는 경우
     if (window.__ssDouyinInjected) return;   // 한 번만 주입(주입된 스크립트가 자체 interval로 유지)
     window.__ssDouyinInjected = true;
     try {
@@ -715,6 +741,11 @@
       sc.textContent = "(" + _douyinMainWorld.toString() + ")();";
       (document.head || document.documentElement).appendChild(sc);
       sc.remove();
+      // ⚠️확장 CSP가 막으면 위 appendChild는 **예외를 안 던지고** 조용히 실행만 안 된다
+      //   (콘솔에 CSP 위반만 찍힌다). 그래서 catch로는 실패를 알 수 없다 —
+      //   실패해도 다음 tick에 재시도하도록 플래그를 되돌린다. 성공했다면 메인월드가
+      //   표식을 남기므로 위 return에서 걸러진다(무한 재주입 안 함).
+      window.__ssDouyinInjected = false;
     } catch (e) { window.__ssDouyinInjected = false; }   // 실패 시 다음 tick에 재시도(폴백=플로팅)
   }
 

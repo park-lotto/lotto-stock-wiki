@@ -7273,10 +7273,36 @@ def _serve_grab_extension():
     # extension/ 안의 사본은 개발용 편의일 뿐이고, 배포물엔 항상 원본이 들어가야 한다.
     # (두 벌을 손으로 관리하면 반드시 어긋나고, 그럼 확장 사용자만 옛 로직을 쓰게 된다.)
     logic_src = Path(__file__).parent / "userscript" / "grab_logic.js"
+    # ★도우인 메인월드 스크립트(2026-08-17) — manifest가 world:"MAIN"으로 크롬에게 직접
+    # 주입시키는 파일. 격리월드에서 <script>를 만드는 종전 방식은 **확장 자신의 CSP**
+    # ('unsafe-inline' 없음)에 차단됐다(사장님 콘솔 실측: grab_logic.js:716 blocked).
+    # 도우인 CSP가 아니라 확장 CSP였다 — 그래서 world:"MAIN"이면 그 검사를 아예 안 탄다.
+    #
+    # 이 파일을 손으로 관리하지 않는다: grab_logic.js의 _douyinMainWorld 본문을 **그때그때
+    # 잘라내 만든다**. 두 벌을 손으로 두면 반드시 어긋나고, 그러면 도우인만 옛 로직을 쓴다
+    # (0순위-B: 같은 판단을 두 군데 적지 마라).
+    def _douyin_main_js(logic_text: str) -> str:
+        """grab_logic.js에서 _douyinMainWorld 함수를 떼어내 즉시실행 스크립트로 만든다."""
+        head = "  function _douyinMainWorld() {"
+        i = logic_text.find(head)
+        if i < 0:
+            return ""                      # 함수가 사라졌으면 빈 문자열 → zip에 넣지 않는다
+        # 함수 끝 = 같은 들여쓰기(2칸)의 닫는 중괄호 첫 줄
+        rest = logic_text[i + len(head):]
+        end = rest.find("\n  }")
+        if end < 0:
+            return ""
+        body = rest[:end]
+        return ("// ⚠️자동 생성 파일 — 손으로 고치지 마라.\n"
+                "// 원본: userscript/grab_logic.js 의 _douyinMainWorld()\n"
+                "// /grab_extension.zip 이 요청마다 원본에서 다시 잘라 만든다.\n"
+                "// world:\"MAIN\" 으로 크롬이 직접 주입 → 확장 CSP의 인라인 검사를 타지 않는다.\n"
+                "(function () {" + body + "\n})();\n")
     # store/ 는 **웹스토어 제출용 자료**(스크린샷·제출가이드)라 배포물에 넣지 않는다.
     # 넣으면 사용자 zip에 내부 문서와 이미지 수백 KB가 딸려 나간다(2026-08-04 실측으로 발견).
+    # douyin_main.js도 자동 생성물이라 extension/ 안의 사본은 담지 않는다(grab_logic.js와 같은 이유).
     files = sorted(p for p in edir.rglob("*")
-                   if p.is_file() and p.name != "grab_logic.js"
+                   if p.is_file() and p.name not in ("grab_logic.js", "douyin_main.js")
                    and "store" not in p.relative_to(edir).parts)
     stamp = str(max([p.stat().st_mtime_ns for p in files]
                     + [logic_src.stat().st_mtime_ns if logic_src.exists() else 0], default=0))
@@ -7287,7 +7313,11 @@ def _serve_grab_extension():
             for p in files:
                 z.write(p, p.relative_to(edir).as_posix())
             if logic_src.exists():
-                z.writestr("grab_logic.js", logic_src.read_text(encoding="utf-8"))
+                _logic_text = logic_src.read_text(encoding="utf-8")
+                z.writestr("grab_logic.js", _logic_text)
+                _dy = _douyin_main_js(_logic_text)
+                if _dy:
+                    z.writestr("douyin_main.js", _dy)
         cached = (stamp, buf.getvalue())
         _serve_grab_extension._cache = cached
     return Response(
