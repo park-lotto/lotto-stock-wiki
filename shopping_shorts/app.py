@@ -55,7 +55,7 @@ from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, 
                                           _source_video_id, resynth_tts_job, resynth_one_beat,
                                           run_clean_sources, _resolve_sources)
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
-from shopping_shorts import douyin_search, xiaohongshu_search
+from shopping_shorts import cn_search, douyin_search, xiaohongshu_search
 from shopping_shorts import youtube_search
 from shopping_shorts.config import APIFY_TOKENS
 from shopping_shorts.media_download import (resolve_media_url, download_any, probe_grab_meta,
@@ -5181,30 +5181,20 @@ async def api_lens_kw_expand(request: Request, keyword: str = Form(""),
 @app.post("/api/lens/cn/search")
 async def api_lens_cn_search(request: Request, keyword: str = Form(""),
                               max_results: int = Form(8)):
-    """중국어 검색어 1개 → 샤오홍슈+도우인 병렬 검색. Gemini 안 부름(후보는 사람이 고름).
-    프론트가 후보 버튼 클릭 시 호출한다(2026-07-19)."""
+    """중국어 검색어 1개 → 샤오홍슈+도우인. **백엔드는 cn_search가 정한다**
+    (Playwright 무료 우선 → 0건이면 Apify 폴백). 2026-08-17 통합.
+
+    프론트는 어느 백엔드가 돌았는지 몰라도 되고, meta로 비용만 표시한다."""
     kw = (keyword or "").strip()
     if not kw:
-        return {"ok": True, "items": [], "count": 0, "keyword": ""}
-    if not APIFY_TOKENS:
-        return {"ok": True, "items": [], "count": 0, "keyword": kw, "note": "APIFY 토큰 없음"}
+        return {"ok": True, "items": [], "count": 0, "keyword": "", "meta": {}}
     n = max(1, min(int(max_results or 8), 60))
-
-    def _run(platform, mod):
-        try:
-            rows = mod.search(kw, max_results=n)
-        except Exception:
-            return []
-        for r in rows:
-            r["platform"] = platform
-            r["match"] = None
-        return rows
-
-    with ThreadPoolExecutor(max_workers=2) as ex:
-        fx = ex.submit(_run, "xiaohongshu", xiaohongshu_search)
-        fd = ex.submit(_run, "douyin", douyin_search)
-        items = fx.result() + fd.result()
-    return {"ok": True, "items": items, "count": len(items), "keyword": kw}
+    # ★to_thread 필수 — 백엔드가 Playwright·Apify를 **블로킹**으로 부른다.
+    #   안 하면 이벤트루프가 막혀 다른 렌즈 요청이 전부 굶는다(/api/lens/yt와 같은 이유).
+    res = await asyncio.to_thread(cn_search.search, kw, n)
+    for r in res["items"]:
+        r["match"] = None          # 렌즈 카드 계약(제목 매칭은 프론트가 안 씀)
+    return {"ok": True, **res}
 
 
 @app.post("/api/lens/yt")
