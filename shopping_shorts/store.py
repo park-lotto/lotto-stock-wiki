@@ -756,6 +756,27 @@ class Store:
                     created_at TEXT DEFAULT (datetime('now'))
                 )
             """)
+            # 사용자별 API 키(2026-08-17, BYOK) — settings는 key가 PK라 customer_id 축이
+            # 없어 재사용 불가. key_enc는 Fernet 암호문이고 평문은 어디에도 안 남는다.
+            # key_hash로 식별하는 이유: 인덱스 번호를 쓰면 사용자별 풀이 섞인다
+            # (comment_gen.py:68이 인덱스 기반이라 겪는 문제).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS customer_keys (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    customer_id INTEGER NOT NULL,
+                    service TEXT NOT NULL,
+                    key_enc TEXT NOT NULL,
+                    key_hash TEXT NOT NULL,
+                    label TEXT,
+                    status TEXT NOT NULL DEFAULT 'unknown',
+                    checked_at INTEGER,
+                    created_at INTEGER NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS ix_ck_cust "
+                      "ON customer_keys(customer_id, service)")
+            c.execute("CREATE UNIQUE INDEX IF NOT EXISTS ux_ck_dup "
+                      "ON customer_keys(customer_id, service, key_hash)")
             # 픽로그(2026-07-18, 트랙1) — 사장님이 고른 것/버린 것을 append-only로 남긴다.
             # 트랙7 LLM 심사의 취향 예시 + B전환 승인률 지표의 원천. 수정·삭제 없음.
             c.execute("""
@@ -4489,3 +4510,71 @@ class Store:
                 "INSERT INTO points_ledger(customer_id, delta, reason) VALUES(?,?,?)",
                 (customer_id, delta, reason),
             )
+
+    # ── 사용자별 API 키(2026-08-17, BYOK) ──
+    # 평문은 이 클래스 밖으로 나가는 경로가 get_customer_keys_plain 하나뿐이다.
+    # 화면용 list_customer_keys는 key_enc를 아예 안 실어 보낸다.
+    def add_customer_key(self, customer_id, service, plain):
+        """키 1개 저장. 이미 있는 키면 False(중복 거절)."""
+        from shopping_shorts import keycrypt
+        import time
+        try:
+            with self._conn() as c:
+                c.execute(
+                    "INSERT INTO customer_keys"
+                    "(customer_id, service, key_enc, key_hash, label, created_at) "
+                    "VALUES(?,?,?,?,?,?)",
+                    (int(customer_id), service, keycrypt.encrypt(plain),
+                     keycrypt.fingerprint(plain), keycrypt.mask(plain), int(time.time())),
+                )
+            return True
+        except sqlite3.IntegrityError:      # ux_ck_dup — 같은 사용자가 같은 키를 또 넣음
+            return False
+
+    def list_customer_keys(self, customer_id, service=None):
+        """화면용 목록. ★key_enc를 안 싣는다 — 평문 경로는 여기가 아니다."""
+        q = ("SELECT id, service, label, status, checked_at, created_at "
+             "FROM customer_keys WHERE customer_id=?")
+        args = [int(customer_id)]
+        if service:
+            q += " AND service=?"
+            args.append(service)
+        q += " ORDER BY id"
+        with self._conn() as c:
+            rows = c.execute(q, args).fetchall()
+        return [{"id": r[0], "service": r[1], "label": r[2], "status": r[3],
+                 "checked_at": r[4], "created_at": r[5]} for r in rows]
+
+    def get_customer_keys_plain(self, customer_id, service):
+        """실제 호출에 쓸 평문 키 목록. 복호 실패한 행은 건너뛴다(마스터키 교체 등)."""
+        from shopping_shorts import keycrypt
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT key_enc FROM customer_keys WHERE customer_id=? AND service=? "
+                "ORDER BY id", (int(customer_id), service)).fetchall()
+        out = []
+        for (enc,) in rows:
+            try:
+                out.append(keycrypt.decrypt(enc))
+            except Exception:
+                continue
+        return out
+
+    def delete_customer_key(self, customer_id, key_id):
+        """★customer_id를 조건에 반드시 넣는다 — 안 넣으면 id만 알면 남의 키를 지운다."""
+        with self._conn() as c:
+            c.execute("DELETE FROM customer_keys WHERE id=? AND customer_id=?",
+                      (int(key_id), int(customer_id)))
+
+    def set_customer_key_status(self, key_id, status):
+        import time
+        with self._conn() as c:
+            c.execute("UPDATE customer_keys SET status=?, checked_at=? WHERE id=?",
+                      (status, int(time.time()), int(key_id)))
+
+    def count_customer_keys(self, customer_id, service):
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT COUNT(*) FROM customer_keys WHERE customer_id=? AND service=?",
+                (int(customer_id), service)).fetchone()
+        return int(row[0])
