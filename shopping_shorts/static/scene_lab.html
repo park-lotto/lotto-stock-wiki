@@ -11,9 +11,15 @@
 body{margin:0;background:var(--bg);color:var(--ink);
      font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;font-size:14px;
      height:100vh;display:flex;flex-direction:column;overflow:hidden}
-#topzone{flex:none}                 /* 타임라인 — 고정(가로로만 스크롤) */
-.wrap{flex:1;min-height:0}          /* 소스 — 남은 높이를 다 쓰고 여기서만 세로 스크롤 */
-footer{flex:none}
+/* ★배치(2026-08-16 사장님 "미리보기썸네일 + 소스 + 영상전체 가로 타임프레임 형태 /
+   영상 전체 타임프레임은 한 줄로 쭉"): 소스를 먼저 보고 아래 띠에서 결과를 확인한다.
+        [소스 조각]            ← 위(제작소 안에선 왼쪽에 미리보기가 함께 선다)
+        [영상 전체 타임프레임]  ← 아래, 전체 폭 한 줄
+   예전엔 타임프레임이 맨 위라 소스를 고르는 동안 시선이 위아래로 오갔다.
+   ★DOM은 안 옮긴다(참조·이벤트가 깨진다) — order로 순서만 바꾼다. */
+#topzone{flex:none;order:2}         /* 타임프레임 — 맨 아래(고정, 가로로만 스크롤) */
+.wrap{flex:1;min-height:0;order:1}  /* 소스 — 남은 높이를 다 쓰고 여기서만 세로 스크롤 */
+footer{flex:none;order:3}
 header{padding:12px 18px;border-bottom:1px solid var(--line);display:flex;
        align-items:center;gap:18px;flex-wrap:wrap;background:var(--panel)}
 h1{font-size:16px;margin:0;font-weight:700}
