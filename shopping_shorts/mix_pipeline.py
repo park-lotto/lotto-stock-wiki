@@ -1186,7 +1186,7 @@ def _vmake_key(store, customer_id=0):
     """자막제거에 쓸 키. 사용자가 등록했으면 그 키, 아니면 사장님 키.
     ★keyroute가 유일한 판단처다 — 여기서 따로 고르지 마라(0순위-B)."""
     from shopping_shorts import keyroute
-    keys, _ = keyroute.keys_for(store, customer_id, "vmake")
+    keys, _ = keyroute.keys_for(store, customer_id, keyroute.SVC_VMAKE)
     return keys[0] if keys else ""
 
 
@@ -1212,10 +1212,10 @@ def _charge_clean(store, customer_id, n_sources):
         cid = 0
     if not cid:
         return 0
-    if not keyroute.should_charge(store, customer_id, "vmake"):
+    if not keyroute.should_charge(store, customer_id, keyroute.SVC_VMAKE):
         return 0                                    # 내 키 → 무료
     need = pricing.cost(store, pricing.OP_VMAKE) * n_sources
-    if not points.deduct(store, customer_id, need, "vmake"):
+    if not points.deduct(store, customer_id, need, pricing.OP_VMAKE):
         raise NotEnoughPoints(
             f"포인트가 부족합니다 (필요 {pricing.to_display(need)}P, "
             f"보유 {pricing.to_display(points.balance(store, customer_id))}P)")
@@ -1224,9 +1224,9 @@ def _charge_clean(store, customer_id, n_sources):
 
 def _refund_clean(store, customer_id, amount):
     """청소 실패 시 돌려준다. ★과금한 만큼만 — 안 깎은 호출자까지 환불하면 원장이 갉힌다."""
-    from shopping_shorts import points
+    from shopping_shorts import points, pricing
     if amount > 0:
-        points.refund(store, customer_id, amount, "vmake")
+        points.refund(store, customer_id, amount, pricing.OP_VMAKE)
 
 
 def _apply_motion_pack(deco, caption_style, timeline, packs):
