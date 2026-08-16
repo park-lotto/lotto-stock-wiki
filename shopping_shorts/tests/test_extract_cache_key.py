@@ -55,3 +55,34 @@ def test_호출부가_shortcode로_조회한다():
     src = inspect.getsource(mix_pipeline.run_mix_job)
     assert "_cache_key_for_url" in src, "캐시 조회가 shortcode 키를 써야 한다"
     assert "_url_of" in src, "vid→URL 매핑이 있어야 한다"
+
+
+# ── 렌즈 접두사 키도 후보에 든다(2026-08-17) ────────────────────────────────
+# 같은 영상이 담기 경로에선 `<id>`, 렌즈 경로에선 `lens_<플랫폼>_<id>`로 저장된다.
+# 앞 형태만 찾던 탓에 틱톡 소스는 캐시에 재태깅본이 있는데도 한 번도 안 맞았다
+# (실측 job 8873eeb48a08: 인스타 1건 적중 / 틱톡 2건 불발 → 고친 뒤 3건 전부 적중).
+def test_cache_keys_include_lens_prefixed_form():
+    from shopping_shorts.mix_pipeline import _cache_keys_for_url
+    ks = _cache_keys_for_url("https://www.tiktok.com/@runnnn_official/video/7458060642738605355")
+    assert ks[0] == "7458060642738605355", "담기 경로 키가 먼저 와야 한다"
+    assert "lens_tiktok_7458060642738605355" in ks, "렌즈 경로 키가 후보에 없으면 영원히 빗나간다"
+
+
+def test_cache_keys_cover_every_platform():
+    from shopping_shorts.mix_pipeline import (_cache_keys_for_url, _SHORTCODE_RES,
+                                              _SHORTCODE_PLATFORMS)
+    # 정규식과 플랫폼 이름은 짝으로 움직인다 — 길이가 어긋나면 zip이 조용히 잘라먹는다
+    assert len(_SHORTCODE_RES) == len(_SHORTCODE_PLATFORMS)
+    for url, plat, code in (
+        ("https://www.instagram.com/reel/Db_2V-mzT44/", "instagram", "Db_2V-mzT44"),
+        ("https://youtube.com/shorts/abc123XYZ", "youtube", "abc123XYZ"),
+    ):
+        assert _cache_keys_for_url(url) == [code, f"lens_{plat}_{code}"]
+
+
+def test_cache_keys_empty_when_unknown():
+    from shopping_shorts.mix_pipeline import _cache_keys_for_url
+    # 알아볼 수 없는 URL은 빈 목록 — 호출부의 for가 그냥 안 돌고 재추출로 간다
+    assert _cache_keys_for_url("https://example.com/whatever") == []
+    assert _cache_keys_for_url("s0") == []
+    assert _cache_keys_for_url(None) == []
