@@ -1259,31 +1259,55 @@ function autoFill(i){
   }
   const ids = lists[i] || [];
   const need = beatDur(i);
+  // ★한 장면이 이 칸에 실제로 보태는 시간은 **길어야 MAX_SHOT**이다(2026-08-16 사장님
+  //   "다 비우고 채우기 하니까 한개만 찬다"). planClips가 장면이 2개 이상이면
+  //   take = min(avail, MAX_SHOT, 남은시간)으로 돌려 담기 때문이다(scene_play.js).
+  //   종전엔 effLen(장면 전체 길이)을 그대로 더해서, 8.8초짜리 하나만 담으면 3.8초 칸이
+  //   '다 찼다'가 돼 컷 1개로 끝났다 — 화면이 안 바뀌는 통짜 영상이 나온다.
+  //   화면 아래 안내문도 이미 `Math.ceil(부족분 / MAX_SHOT)장 더 담아주세요`로 세고 있다.
+  const addLen = id => Math.min(effLen(id), MAX_SHOT);
   let have = ids.filter(id => DATA.segments[id] && !tooShort(id))
-                .reduce((a, id) => a + effLen(id), 0);
+                .reduce((a, id) => a + addLen(id), 0);
   if (need - have < 0.1) return;
   const inAny = new Set(lists.flat());                   // 다른 칸에 나온 장면은 안 쓴다(되풀이 방지)
   // 같은 그림(phash 중복) 방지 — 이 칸만 아니라 **모든 칸** 기준. 실측: 칸1에 s3-20을 담으면
   // 칸4의 s3-2와 그림이 똑같아(거리0) 영상에 같은 화면이 두 번 나온다.
   const reps = new Set(lists.flat().map(id => (dupMap()[id] || {}).rep || id));
   const grps = new Set(ids.map(groupOf));                // 이 칸의 결(굽기·재료…)
+  // ★비운 칸에는 결(grps)이 없어 아무거나 집었다(2026-08-16 사장님 "완전 엉뚱한거 채움").
+  //   담긴 장면이 없으면 남는 단서는 **그 칸의 역할**뿐이다 — 훅 칸엔 후킹용, CTA 칸엔 CTA용.
+  //   판단을 새로 만들지 않는다: 용도 배지(useTags)가 이미 결→용도를 정해 두었으므로 그것을
+  //   그대로 쓴다. 역할 이름은 모델이 한글·영문 아무거나 쓰므로 낱말 포함으로 본다
+  //   (서버 edit_plan._KNOWN_ROLE_WORDS와 같은 방식).
+  const rl = String((DATA.beats[i] || {}).role || '').toLowerCase();
+  const has = (...ws) => ws.some(w => rl.includes(w));
+  const want = has('훅', 'hook') ? ['후킹용']
+             : has('cta', '마무리') ? ['CTA용', '마무리용']
+             : has('결과', 'result', 'resolution', '해결', 'solution', '반전') ? ['결과용', 'CTA용']
+             : has('문제', 'problem', '페인', 'pain') ? ['조리용', '굽기용']
+             : has('전개', 'process', '과정', '경험', 'story') ? ['조리용', '굽기용', '마무리용']
+             : [];
+  const fitsRole = id => want.length && useTags(id).some(t => want.includes(t));
   const cand = () => Object.keys(DATA.segments).filter(id =>
     !inAny.has(id) && !tooShort(id) && !outOfRange(id)
     && !reps.has((dupMap()[id] || {}).rep || id));
   const added = []; let guard = 0;
   while (need - have >= 0.1 && guard++ < 20){
-    const lack = need - have, pool = cand();
+    const pool = cand();
     if (!pool.length) break;
-    // 이 칸에 이미 있는 결과 같은 결 먼저 → 부족분을 한 번에 덮는 가장 짧은 것 →
-    // 못 덮으면 가장 긴 것(다음 바퀴에서 마저 채운다).
-    const pref = pool.filter(id => grps.has(groupOf(id)));
-    const from = pref.length ? pref : pool;
-    const cover = from.filter(id => effLen(id) >= lack - EPS)
-                      .sort((a, b) => effLen(a) - effLen(b));
-    const pick = cover[0] || from.sort((a, b) => effLen(b) - effLen(a))[0];
+    // 고르는 순서: ①이 칸의 결 + 역할에 맞는 것 → ②역할에 맞는 것 → ③이 칸의 결과 같은 것
+    // → ④남은 전부. 어느 단계도 **강제가 아니라 우선**이다(비면 다음으로 내려간다).
+    const byBoth = pool.filter(id => grps.has(groupOf(id)) && fitsRole(id));
+    const byRole = pool.filter(fitsRole);
+    const byGrp  = pool.filter(id => grps.has(groupOf(id)));
+    const from = byBoth.length ? byBoth : byRole.length ? byRole : byGrp.length ? byGrp : pool;
+    // 한 컷을 꽉(MAX_SHOT) 채울 수 있는 장면 먼저 — 짧아서 늘려야 하는 것은 뒤로.
+    // 종전엔 '부족분을 한 번에 덮는 것'을 먼저 집어 긴 장면 하나로 끝나버렸다.
+    const pick = from.slice().sort((a, b) => addLen(b) - addLen(a))[0];
     lists[i].push(pick); added.push(pick);
     inAny.add(pick); reps.add((dupMap()[pick] || {}).rep || pick);
-    have += effLen(pick);
+    grps.add(groupOf(pick));                             // 첫 장을 집으면 그 결이 기준이 된다
+    have += addLen(pick);
   }
   if (added.length) AUTOADD[i] = added;
   render();                         // saveWork가 문구를 덮으므로 안내는 render 뒤에
