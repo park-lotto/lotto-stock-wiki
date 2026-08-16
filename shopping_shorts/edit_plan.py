@@ -3238,7 +3238,7 @@ _FILL_SCHEMA = {
 }
 
 
-def fill_beat_scenes(narration, need_sec, seg_map, pool_ids,
+def fill_beat_scenes(narration, need_sec, seg_map, pool_ids, taken_ids=None,
                      call=_vault_call, max_shot=2.2, min_fit=3):
     """칸 하나를 **대사에 맞는 화면들로** 채운다 — 순서대로 여러 장.
 
@@ -3273,9 +3273,25 @@ def fill_beat_scenes(narration, need_sec, seg_map, pool_ids,
         for sid in pool_ids if sid in seg_map)
     if not cand_lines:
         return []
+    # ★이미 이 영상에 나오는 화면을 **설명까지 붙여** 알려준다(2026-08-16 사장님 "왜 같은데
+    #   2장이 붙지"). 종전엔 담긴 것을 후보에서 빼기만 해서, 모델은 "무엇이 이미 나왔는지"를
+    #   몰랐다 — 소스를 여러 개 올리면 같은 장면이 소스마다 있어(seg_id는 다르다) 그림이
+    #   겹치는 것을 막을 방법이 없었다. 그림 해시로는 못 가른다(실측 job 8873eeb48a08:
+    #   같은 장면 쌍 거리 11인데, 거리 13에 전혀 다른 장면 쌍이 있어 문턱을 못 올린다).
+    taken_block = ""
+    _tk = [t for t in (taken_ids or []) if t in seg_map]
+    if _tk:
+        taken_block = ("\n[이미 이 영상에 나오는 화면 — 이것들과 **같은 내용**은 고르지 마라. "
+                       "소스가 달라도 같은 장면이면 안 된다]\n"
+                       + "\n".join(
+                           "- {name}{desc}".format(
+                               name=(seg_map[t].get("label") or "").strip()[:24],
+                               desc=(": " + (seg_map[t].get("scene_desc") or "")[:50])
+                                    if seg_map[t].get("scene_desc") else "")
+                           for t in _tk) + "\n")
     prompt = (
         "아래 대사가 흐르는 동안 보여줄 화면을 후보에서 골라라. **대사는 바꾸지 않는다.**\n"
-        f"[대사]\n{narration}\n\n"
+        f"[대사]\n{narration}\n{taken_block}\n"
         f"[조건] 이 대사는 약 {need:.1f}초다. 한 컷은 길어야 {max_shot}초라 "
         f"**{want}장 정도**가 필요하다. 화면이 이어지도록 **보여줄 순서대로** 고른다.\n"
         "- 대사가 말하는 것을 실제로 보여주는 화면을 고른다. 분위기만 비슷한 건 안 된다.\n"

@@ -3580,7 +3580,7 @@ def api_mix_scene_lab_fill(job_id: str, body: dict):
         # 음성이 아직 없으면 tts 실길이가 None이다 — 그때는 계획 길이로 대신한다.
         _caps, _tts = _lab_captions(job["edit_plan"])
         need = (_tts or {}).get(str(bi)) or beats[bi].get("target_seconds")
-    picks = _edit_plan.fill_beat_scenes(narration, need, seg_map, pool)
+    picks = _edit_plan.fill_beat_scenes(narration, need, seg_map, pool, taken_ids=sorted(taken))
     return {"ok": True, "picks": picks}
 
 

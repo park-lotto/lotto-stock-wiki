@@ -1266,8 +1266,19 @@ async function aiPicks(i){
     });
     if (!r.ok) return null;
     const j = await r.json();
-    const ok = (j.picks || []).filter(p => p && DATA.segments[p.seg_id]);
-    ok.forEach(p => { if (p.why) FILLWHY[p.seg_id] = p.why; });
+    // ★AI가 고른 것도 **같은 그림 차단을 똑같이 거친다**(2026-08-16). 종전엔 규칙 기반
+    //   경로에만 이 검사가 있어, 판단이 두 벌로 갈려 있었다(0순위-B). 서버는 그림 해시를
+    //   모르므로(설명만 본다) 이 마지막 관문은 화면 쪽에 둔다.
+    const reps = new Set(lists.flat().map(id => (dupMap()[id] || {}).rep || id));
+    const ok = [];
+    for (const p of (j.picks || [])){
+      if (!p || !DATA.segments[p.seg_id]) continue;
+      const rep = (dupMap()[p.seg_id] || {}).rep || p.seg_id;
+      if (reps.has(rep)) continue;                    // 이미 나온 그림 — 건너뛴다
+      reps.add(rep);
+      if (p.why) FILLWHY[p.seg_id] = p.why;
+      ok.push(p);
+    }
     return ok.length ? ok.map(p => p.seg_id) : null;
   }catch(e){ return null; }
 }

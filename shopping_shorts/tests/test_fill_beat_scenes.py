@@ -101,3 +101,22 @@ def test_재료가_없으면_모델을_안_부른다():
     assert edit_plan.fill_beat_scenes("멘트", 4.0, {}, list(SEGS), call=call) == []
     assert edit_plan.fill_beat_scenes("멘트", 4.0, SEGS, [], call=call) == []
     assert not called
+
+
+def test_이미_나온_화면을_설명까지_알려준다():
+    """소스가 여러 개면 같은 장면이 소스마다 있다(seg_id는 다르다). 후보에서 빼는 것만으론
+    막을 수 없어, 이미 나온 화면을 **설명과 함께** 알려준다(2026-08-16 사장님 제보)."""
+    call, seen = _stub([])
+    edit_plan.fill_beat_scenes("멘트", 4.0, SEGS, ["s1-1"],
+                               taken_ids=["s1-2", "s1-3"], call=call)
+    p = seen["prompt"]
+    assert "이미 이 영상에 나오는 화면" in p
+    assert "오븐에서 꺼내기" in p                       # 담긴 것의 이름
+    assert "노릇하게 구워진 빵을 오븐에서" in p          # 담긴 것의 화면 묘사
+    assert "소스가 달라도 같은 장면이면 안 된다" in p
+
+
+def test_담긴게_없으면_그_블록은_안_붙는다():
+    call, seen = _stub([])
+    edit_plan.fill_beat_scenes("멘트", 4.0, SEGS, list(SEGS), taken_ids=[], call=call)
+    assert "이미 이 영상에 나오는 화면" not in seen["prompt"]
