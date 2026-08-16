@@ -411,6 +411,11 @@ def download_any(url, dest_dir):
     if "douyin.com" in u or "iesdouyin.com" in u:
         try:
             return _download_douyin(url, dest_dir)
+        except DouyinBusy:
+            # ★'자리 없음'은 실패가 아니라 신호다 — 삼키고 yt-dlp로 가면 (도우인은 yt-dlp가
+            #   전멸이라) 확정 실패가 되고, 호출부의 busy 처리(app.py autoload의
+            #   `except DouyinBusy` → 래치 롤백·화면 '순서 대기')가 통째로 죽는다.
+            raise
         except Exception:  # noqa: BLE001 — 폴백 사유일 뿐, 최종 에러는 yt-dlp가 말한다
             pass
     if any(s in u for s in ("youtube.com", "youtu.be", "tiktok.com",

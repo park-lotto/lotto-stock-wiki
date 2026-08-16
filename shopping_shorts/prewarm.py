@@ -104,8 +104,12 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
     store = Store(db_path or DB_PATH)
 
     # ①-a 이미 유효 캐시가 있으면 아무것도 안 한다(중복 과금 차단).
+    # ★판정은 has_usable_result 한 곳으로(0순위-B, 2026-08-16 저장 기준과 짝).
+    #   full_text만 보면 **무자막 영상은 저장돼 있어도 캐시미스**가 돼 매번 다시 태우고,
+    #   시도 횟수만 쌓여 결국 영구 래치된다(서버 실측: lens_tiktok_1cfb55 —
+    #   화면 태깅이 저장돼 있는데 attempts=2까지 다시 탔다).
     cached = store.get_extract(code)
-    if cached and (cached.get("full_text") or "").strip():
+    if has_usable_result(cached):
         if not cached.get("structure"):
             _fill_structure(store, code, cached.get("full_text") or "", analyze_structure)
         return "already"

@@ -106,3 +106,27 @@ def test_scene_block_survives_real_extract():
     }}}
     out = _scene_points_block(job)
     assert "투명 뷰파인더" in out and "훅에 쓰기 좋습니다" in out
+
+
+def test_broken_segment_shape_does_not_crash():
+    """세그가 dict가 아니어도(깨진 캐시·옛 데이터) 500을 내지 않는다 —
+    source_brief dict 사고(2026-08-16)와 같은 유형의 타입 미확인을 막는다."""
+    item = {"full_text": "", "structure": {}, "category": "홈템"}
+    job = {"extract": {"a": {"full_text": "", "segments": ["문자열세그", {"text": "가"}]}}}
+    srcs = _sources_for_generate(item, job)
+    assert any("가" in s["full_text"] for s in srcs)
+
+    from shopping_shorts.app import _scene_points_block, _enrich_job_extract
+    block = _scene_points_block(
+        {"extract": {"a": {"segments": ["깨짐", {"use_point": "훅으로", "label": "제품"}]}}})
+    assert "훅으로" in block
+    # _enrich_job_extract의 _tagged도 같은 모양을 견뎌야 한다(try 밖에서 돈다)
+    _enrich_job_extract({"extract": {"a": {"segments": ["깨짐"]}}, "urls": []})
+
+
+def test_job_id_wrong_type_is_harmless():
+    """job_id가 dict로 와도(클라이언트 값) .strip() 500을 내지 않는다 —
+    body["work_id"].strip() 사고(2026-08-16)와 같은 유형."""
+    from shopping_shorts.app import _facts_block_for_job
+    assert _facts_block_for_job({"oops": 1}, store=None) == ""
+    assert _facts_block_for_job(None, store=None) == ""

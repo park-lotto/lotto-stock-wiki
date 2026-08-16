@@ -179,3 +179,27 @@ def test_busy_is_not_failure(tmp_path):
     win = src[i:i + 400]
     assert '"busy"' in win
     assert "rollback_latch" in win, "래치를 돌려주지 않으면 결국 영영 못 받는다"
+
+
+def test_busy_passes_through_download_any(monkeypatch, tmp_path):
+    """★DouyinBusy는 download_any를 **그대로 통과**해야 한다(2026-08-16 리뷰에서 발견).
+
+    폴백 except가 DouyinBusy까지 삼키면 yt-dlp로 떨어지는데, 도우인은 yt-dlp가
+    전멸이라 '자리 없음'이 확정 실패로 둔갑한다 — autoload의 busy 처리(래치 롤백·
+    화면 '순서 대기')가 통째로 죽고, 3번 만에 그 영상은 영구 래치된다.
+    """
+    from shopping_shorts import media_download as md
+
+    def busy(url, dest_dir):
+        raise md.DouyinBusy("자리 없음")
+
+    monkeypatch.setattr(md, "_download_douyin", busy)
+    monkeypatch.setattr(md, "_download_ytdlp",
+                        lambda url, d: (_ for _ in ()).throw(
+                            AssertionError("busy가 yt-dlp로 새면 안 된다")))
+    try:
+        md.download_any("https://www.douyin.com/video/7", str(tmp_path))
+    except md.DouyinBusy:
+        pass
+    else:
+        raise AssertionError("DouyinBusy가 삼켜졌다")
