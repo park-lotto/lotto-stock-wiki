@@ -10360,7 +10360,7 @@ except Exception:                                  # noqa: BLE001 — 이 기능
 # 반복됨(2026-07-14 역할배정·사이드바 등 실사고) → 매 요청 서버 재검증 강제.
 _NOCACHE = {"Cache-Control": "no-cache, must-revalidate"}
 for _pg in ("discover", "find", "library", "mix", "outreach", "produce", "collection",
-            "scene_library", "pattern_bank", "longform"):
+            "scene_library", "pattern_bank", "longform", "settings"):
     app.add_api_route(
         f"/{_pg}",
         (lambda n=_pg: FileResponse(_STATIC / f"{n}.html", media_type="text/html",
