@@ -4592,3 +4592,13 @@ class Store:
                 "SELECT COUNT(*) FROM customer_keys WHERE customer_id=? AND service=?",
                 (int(customer_id), service)).fetchone()
         return int(row[0])
+
+    def points_history(self, customer_id, limit=50):
+        """포인트 사용 내역(최신순). 화면의 '최근 사용'과 문의 대응에 쓴다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT delta, reason, created_at FROM points_ledger "
+                "WHERE customer_id=? ORDER BY rowid DESC LIMIT ?",
+                (int(customer_id), int(limit)),
+            ).fetchall()
+        return [{"delta": r[0], "reason": r[1], "created_at": r[2]} for r in rows]
