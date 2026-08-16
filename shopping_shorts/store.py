@@ -27,6 +27,28 @@ PATTERN_BUCKETS = ("hook", "ending", "adverb", "cta", "price",
                    "evidence", "conflict", "emotion")
 
 
+WORK_TITLE_MAX = 40   # 직접 지은 이름 상한. 자동 제목(대본 앞 20자)보다 넉넉하게 준다.
+
+
+def _work_title(state):
+    """작업 목록에 뜰 이름을 정한다 — **이 함수가 유일한 판정처**다(CLAUDE.md 0순위-B).
+
+    ① 사장님이 직접 지은 이름(state['title_manual'])이 있으면 그것.
+    ② 없으면 종전대로 대본(state['script']) 앞 20자.
+
+    ★①이 있는 동안은 대본을 아무리 고쳐도 이름이 안 바뀐다(2026-08-17 사장님 결정).
+      직접 지은 이름을 자동 제목이 덮으면 "이름을 바꿨는데 되돌아간다"가 된다.
+      이름을 지우고 자동으로 되돌리고 싶으면 title_manual에 빈 문자열을 보내면 된다 —
+      그러면 ②로 떨어진다(별도 '해제' API를 만들지 않는다).
+    """
+    if not isinstance(state, dict):
+        return ""
+    manual = state.get("title_manual")
+    if isinstance(manual, str) and manual.strip():
+        return manual.strip()[:WORK_TITLE_MAX]
+    return (state.get("script") or "")[:20]
+
+
 def _normalize_canonical(text, bucket=None):
     """dedup 키 — strip + 소문자 + 연속 공백 1개. 공백·대소문자만 다른 문구는
     같은 부품으로 합쳐(freq로 쌓아) 목록이 중복으로 붓지 않게 한다.
@@ -3594,6 +3616,12 @@ class Store:
         state: 클라이언트 작업상태 dict(sessionStorage.produce_work 스키마 + step).
         ★title은 서버가 state['script'] 앞 20자에서 뽑는다 — 클라이언트가 매번 보내면
         대본을 고쳤을 때 목록 이름과 어긋난다(스펙 §4.6).
+        ★단, 사장님이 직접 지은 이름(state['title_manual'])이 있으면 그것을 쓴다
+        (2026-08-17). 대본 앞 20자는 '(제목 없음)'이 여러 줄 쌓이고 무슨 작업인지 구분이
+        안 돼서 이름을 직접 달 수 있게 했다. 자동 제목은 **직접 지은 이름이 없을 때만**
+        돈다 — 안 그러면 대본을 고칠 때마다 지어준 이름이 조용히 지워진다.
+        판정을 여기 한 곳에만 두는 이유: 제목을 정하는 코드가 두 군데면 반드시 어긋난다
+        (CLAUDE.md 0순위-B). API·클라이언트는 state에 값을 실을 뿐 제목을 계산하지 않는다.
         job_id/step: UPDATE 경로에서는 update_mix_job과 같은 관례 — 넘어온 필드만 갱신한다.
         안 넘기면(_UNSET) 기존 값 보존, job_id=None/step=0을 명시적으로 넘기면 그 값으로 덮어쓴다
         (부분 저장이 job_id·step을 조용히 리셋하던 버그 수정, 2026-07-17).
@@ -3603,7 +3631,7 @@ class Store:
         INSERT 폴백으로 떨어지는데, work_id는 전역 PRIMARY KEY라 남의 id로 INSERT하면
         IntegrityError(500)가 난다 — 그래서 UPDATE 전에 소유자를 먼저 물어본다(2026-07-17 재리뷰)."""
         now = datetime.now(timezone.utc).isoformat()
-        title = (state.get("script") or "")[:20] if isinstance(state, dict) else ""
+        title = _work_title(state)
         payload = json.dumps(state, ensure_ascii=False)
         with self._conn() as c:
             if work_id:
@@ -3660,6 +3688,42 @@ class Store:
             ).fetchall()
         return [{"work_id": r[0], "title": r[1], "step": r[2], "job_id": r[3],
                  "updated_at": r[4]} for r in rows]
+
+    def rename_produce_work(self, work_id, name, customer_id=LEGACY_CUSTOMER_ID):
+        """작업 이름 바꾸기(2026-08-17). 성공하면 확정된 제목 문자열, 남의 것/없으면 None.
+
+        ★state_json 안의 title_manual까지 같이 고친다 — title 컬럼만 고치면 다음 저장
+        (upsert_produce_work)이 state를 보고 제목을 다시 계산해 **되돌아간다**.
+        제목의 진실은 state에 있고 title 컬럼은 목록용 사본이다(둘을 함께 갱신하는 이유).
+        빈 이름을 주면 title_manual을 지워 자동 제목(대본 앞 20자)으로 되돌린다.
+
+        ⚠️ 읽고-고쳐-쓰기를 **한 트랜잭션 안에서** 한다. 밖에서 읽어 오면 그 사이 저장이
+        끼어들 때 그 저장분을 통째로 덮어쓴다(대본이 날아간다)."""
+        name = (name or "").strip()[:WORK_TITLE_MAX] if isinstance(name, str) else ""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT state_json FROM produce_works WHERE work_id=? AND customer_id=?",
+                (work_id, customer_id),
+            ).fetchone()
+            if not row:
+                return None
+            try:
+                state = json.loads(row[0])
+            except Exception:
+                state = {}
+            if not isinstance(state, dict):
+                state = {}
+            if name:
+                state["title_manual"] = name
+            else:
+                state.pop("title_manual", None)
+            title = _work_title(state)
+            c.execute(
+                "UPDATE produce_works SET title=?, state_json=?, updated_at=? WHERE work_id=?",
+                (title, json.dumps(state, ensure_ascii=False),
+                 datetime.now(timezone.utc).isoformat(), work_id),
+            )
+        return title
 
     def delete_produce_work(self, work_id, customer_id=LEGACY_CUSTOMER_ID):
         """지운다. 실제로 지워졌으면(내 것이었으면) True — 남의 것은 지워지지 않는다."""
