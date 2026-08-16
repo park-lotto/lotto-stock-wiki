@@ -418,7 +418,7 @@ function setGroupMode(m){ if (groupMode === m) return; groupMode = m; render(); 
 // 옛 추출본엔 source_brief가 없어 '소스 N'만 나온다(fail-open).
 function srcHead(vid){
   const b = ((DATA.src_brief || {})[vid]) || {};
-  return {title: `🎞 소스 ${(_SRC_NO || {})[vid] || '?'}${b.product ? ` — ${b.product}` : ''}`,
+  return {title: `🎞 재료 ${(_SRC_NO || {})[vid] || '?'}${b.product ? ` — ${b.product}` : ''}`,
           hint: b.role || ''};
 }
 // byRole(결→세그) → 화면에 그릴 그룹 목록. 카드 렌더는 이 아래에서 한 벌로 돈다.
@@ -743,7 +743,7 @@ function renderBand(){
              ondragover="if(dragFrom){event.preventDefault();event.dataTransfer.dropEffect='move';}"
              ondrop="bandDrop(${i}, '${c.seg_id}', event)"
              ondblclick="event.stopPropagation();dropCutFromBand(${i}, '${c.seg_id}')"
-             title="소스 ${srcNo(c.seg_id)} · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 끌어서 순서 바꾸기 · 아래 소스로 끌면 빼기 · 두 번 클릭도 빼기">
+             title="재료 ${srcNo(c.seg_id)} · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 끌어서 순서 바꾸기 · 아래 소스로 끌면 빼기 · 두 번 클릭도 빼기">
              <img src="${SL.thumb(c.seg_id)}" loading="lazy"><span class="n">${srcNo(c.seg_id)}</span><span class="s">${c.dur.toFixed(1)}</span></div>`).join('')
       : `<div class="tbempty">장면을 담아주세요</div>`;
     // 담기·빼기는 기존 기능(add/delSeg)을 그대로 쓴다 — 아래 소스에서 끌어다 놓거나 두 번 클릭.
@@ -822,7 +822,7 @@ function render(){
             <div class="slabrow">
               ${groupMode==='src'
                 ? `<span class="srcno rol" title="이 장면의 결: ${esc(groupTitle(groupOf(s.sid)))}">${esc(groupEmoji(groupOf(s.sid)))}</span>`
-                : `<span class="srcno" title="${srcNo(s.sid)}번째 소스 영상에서 온 장면">${srcNo(s.sid)}</span>`}
+                : `<span class="srcno" title="재료 ${srcNo(s.sid)}번 영상에서 온 장면">${srcNo(s.sid)}</span>`}
               ${s.label ? `<span class="slab">${esc(s.label)}</span>`
                         : `<span class="slab dim">이름 없음</span>`}
             </div>

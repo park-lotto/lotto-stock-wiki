@@ -7818,6 +7818,11 @@ def api_produce_source_brief(request: Request, shortcode: str):
             "label": (s.get("label") or ""),
             "scene_desc": s.get("scene_desc") or "",
             "is_key": bool(s.get("is_key")),
+            # 카드가 "이 영상이 어떤 재료인지"를 스스로 세어 보여주려고 싣는다(2026-08-17).
+            # shot_role = 화면 구성(완성품·과정·전후), text 길이 = 말이 있는 영상인지.
+            # 무자막·외국어 소스도 화면만 보고 태깅되므로 '말 없음'은 결함이 아니라 성질이다.
+            "shot_role": s.get("shot_role") or "기타",
+            "chars": len((s.get("text") or "").strip()),
         })
     return {"ok": True, "brief": data.get("source_brief") or {}, "segments": segs}
 
