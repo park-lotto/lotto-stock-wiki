@@ -3788,6 +3788,63 @@ def api_mix_tts_regen(job_id: str, beat_idx: int, body: dict, background_tasks: 
     return {"ok": True}
 
 
+@app.post("/api/mix/scene_lab/{job_id}/narration/{beat_idx}")
+def api_mix_scene_lab_narration(job_id: str, beat_idx: int, body: dict,
+                                background_tasks: BackgroundTasks):
+    """3단계(장면 편집)에서 **대본을 그 자리에서 고친다** — 2026-08-17 사장님
+    "3단계에서 대본 몇 글자 수정하려고 2단계로 갔다 오는 방법밖에 없나".
+
+    없어서 못 하던 게 아니라 **저장할 곳이 없었다**: 화면(scene_lab.html)엔 편집 장치가
+    다 있었는데(NARR/editNarr/retts) 라이브에선 `SL.server`로 잠겨 있었고, 안내는
+    "① 새 대본 고르기에서"를 가리키는데 그 UI는 9단계 개편에서 display:none 이 됐다
+    (produce.html `#mixScriptPick`). 즉 앱 어디에서도 대본을 못 고치는 상태였다.
+
+    ★새로 만든 건 이 저장구멍 하나뿐이다. 음성·자막 재생성은 **이미 있는**
+    `resynth_one_beat`을 그대로 쓴다(그 함수가 beat["narration"]을 읽어 TTS를 다시 만들고
+    cap_durs·cap_lead·tts_ver까지 갱신한다). 자막 분할을 여기서 다시 계산하지 않는다 —
+    두 벌이 되면 렌더와 반드시 어긋난다(0순위-B).
+
+    body = {"text": "고친 대본", "regen": true}
+      regen=false면 문장만 저장한다(음성은 옛것 → 자막·소리가 어긋난 채로 남으므로
+      화면이 경고를 띄운다). 기본은 True — 고쳤으면 다시 뽑는 게 정상 흐름이다.
+    """
+    text = (body.get("text") or "").strip()
+    if not text:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "대본이 비었어요"})
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    # /apply·tts_regen과 **같은 가드**. 진행 중 잡의 대본을 바꾸면 만들던 음성과 어긋난다.
+    if job.get("status") in _MIX_ACTIVE_STAGES + ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409,
+                            content={"ok": False, "error": "생성·렌더 중에는 대본을 고칠 수 없어요"})
+    plan = job["edit_plan"]
+    beat = next((b for b in plan["beats"] if b["beat_idx"] == beat_idx), None)
+    if beat is None:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "비트 없음"})
+    if text == (beat.get("narration") or "").strip():
+        return {"ok": True, "unchanged": True}
+    beat["narration"] = text
+    # ★대본이 바뀌면 옛 문장 기준으로 계산된 자막 타이밍은 **전부 무효**다. 지워야
+    #   _lab_captions·렌더가 새 문장으로 다시 계산한다(안 지우면 옛 구절 수에 맞춰
+    #   zip이 잘려 자막이 중간에서 끊긴다).
+    beat["cap_durs"] = None
+    beat["cap_lead"] = 0.0
+    # AI가 미리 끊어준 호흡 줄도 옛 문장 것이라 버린다 — 안 버리면 _caption_segments가
+    # preset을 대조(공백 무시 일치)에서 떨어뜨려 조용히 규칙 폴백으로 내려간다.
+    beat["caption_lines"] = None
+    store.update_mix_job(job_id, edit_plan=plan)
+    if body.get("regen") is False:
+        return {"ok": True, "saved": True, "regen": False}
+    # 음성·자막 다시 뽑기 = 이미 있는 경로. voice는 job 스냅샷을 그대로 물려준다
+    # (통째로 새 dict를 만들면 이 비트만 소리가 달라진다 — tts_regen 주석과 같은 이유).
+    background_tasks.add_task(resynth_one_beat, job_id, beat_idx,
+                              dict(job.get("voice") or {}), DB_PATH, _MIX_WORK_DIR)
+    return {"ok": True, "saved": True, "regen": True,
+            "tts_ver": beat.get("tts_ver") or 0}
+
+
 @app.post("/api/mix/caption_offset/{job_id}/{beat_idx}")
 def api_mix_caption_offset(job_id: str, beat_idx: int, body: dict):
     """비트 자막의 수동 시각 보정값(초)을 저장. 최종 _burn_captions가 읽어 반영."""
