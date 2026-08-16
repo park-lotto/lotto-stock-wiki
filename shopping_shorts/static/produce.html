@@ -415,10 +415,11 @@
     .srcV.strong{font-weight:800;color:var(--accent2)}
     /* ★요약이 가장 안 읽혔다(2026-08-17 사장님) — 12.5px 회색이었다.
        기본이 펼침으로 바뀌어 이 글이 늘 보이므로 본문 대접을 한다: 13.5px + 밝은 색.
-       길이가 카드마다 달라 바닥선을 흔드니 6줄에서 자른다(전문은 title로). */
+       ★줄 수로 자르지 않는다(2026-08-17 2차 사장님 "끝에 글이 짤림"). 요약은 이 영상을
+       쓸지 정하는 근거라 끝이 잘리면 그 판단을 못 한다. 카드 길이를 맞추자고 내용을
+       숨기는 건 앞뒤가 바뀐 것 — 같은 줄 카드는 stretch가 알아서 바닥을 맞춘다. */
     .srcSum{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);
-      font-size:13.5px;line-height:1.7;color:var(--txt);opacity:.88;word-break:keep-all;
-      display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+      font-size:13.5px;line-height:1.7;color:var(--txt);opacity:.88;word-break:keep-all}
     /* 장면 목록을 남는 공간에 붙여 바닥까지 채운다 — 카드 아래가 휑하지 않게.
        ★min-height:0이 없으면 flex 자식이 안 줄어들어 목록이 카드 밖으로 흘러나간다
        (실측: UL이 아래로 146px 삐져나왔다). overflow는 목록 안에서만 일어나야 한다. */
