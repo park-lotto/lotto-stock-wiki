@@ -1858,6 +1858,17 @@ class Store:
             ).fetchall()
         return {r[0]: r[1] or 0 for r in rows}
 
+    def autoload_reset(self, shortcode):
+        """이 영상의 자동적재 실패 기록을 지운다 → 다음에 다시 시도한다.
+
+        ★왜 필요한가(2026-08-16): 실패 횟수가 차면 그 영상은 영영 다시 안 뽑는다
+        (비용 폭주 차단 장치). 그런데 **받는 방법 자체가 바뀌면** 그 기록은 낡은
+        판정이 된다 — 도우인이 정확히 그랬다. 새 경로를 배포했는데도 옛 래치 때문에
+        시도조차 안 해, 화면엔 오전에 찍힌 '로그인 요구' 실패가 계속 떠 있었다.
+        사장님이 **다시 담는 행위 = 다시 해보라는 뜻**이므로 그때 풀어 준다."""
+        with self._conn() as c:
+            c.execute("DELETE FROM produce_autoload WHERE shortcode=?", (shortcode,))
+
     def autoload_status(self, shortcodes):
         """{shortcode: {attempts, last_error}} — 자동적재가 몇 번 시도했고 왜 실패했나.
 

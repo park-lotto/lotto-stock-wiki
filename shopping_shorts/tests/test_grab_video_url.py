@@ -93,3 +93,19 @@ def test_hopeless_errors_are_reported_at_once():
     assert _is_hopeless_error("Video unavailable")
     assert not _is_hopeless_error("Connection reset by peer")   # 일시적 — 더 해보면 될 수 있다
     assert not _is_hopeless_error("")
+
+
+def test_autoload_reset_clears_failure(tmp_path):
+    """★다시 담으면 실패 기록이 지워져 한 번 더 시도한다.
+
+    실패 횟수가 차면 그 영상은 영영 다시 안 뽑는다(비용 폭주 차단). 그런데 받는
+    방법 자체가 바뀌면 그 기록은 낡은 판정이 된다 — 도우인이 정확히 그랬다.
+    새 경로를 배포했는데도 옛 래치 때문에 시도조차 안 해, 화면엔 오전에 찍힌
+    '로그인 요구' 실패가 그대로 떠 있었다(서버 로그 실측: 배포 후 시도 0건).
+    """
+    s = _store(tmp_path)
+    s.autoload_mark_attempt("grab_douyin_x")
+    s.autoload_mark_attempt("grab_douyin_x")
+    assert s.autoload_status(["grab_douyin_x"])["grab_douyin_x"]["attempts"] == 2
+    s.autoload_reset("grab_douyin_x")
+    assert "grab_douyin_x" not in s.autoload_status(["grab_douyin_x"])

@@ -7332,9 +7332,15 @@ def api_grab(request: Request, background_tasks: BackgroundTasks,
     vurl = (video_url or "").strip()
     if vurl and not _is_grabbable_media(vurl):
         vurl = ""
-    added = Store(DB_PATH).mix_basket_add(
+    store = Store(DB_PATH)
+    added = store.mix_basket_add(
         sc, url=url, thumbnail=thumbnail or "", name=(title or "")[:120],
         caption=(title or "")[:200], customer_id=cid, video_url=vurl)
+    # ★다시 담으면 실패 기록을 지워 한 번 더 해본다(2026-08-16).
+    #   실패 횟수가 차면 영영 안 뽑는 장치가 있는데, 받는 방법이 바뀌어도 그 옛 판정이
+    #   남아 시도조차 막았다(도우인 실사고: 새 경로 배포 후에도 로그 0건, 화면엔 오전에
+    #   찍힌 실패가 계속 떠 있었다). 사장님이 다시 담는 건 '다시 해보라'는 뜻이다.
+    store.autoload_reset(sc)
     background_tasks.add_task(_enrich_grab, url, sc, cid)   # 썸네일·조회수 등 보강
     _enqueue_prewarm(Store(DB_PATH), sc, url, caption=(title or "")[:200], customer_id=cid)
     return _grab_popup_html(True, "영상 즐겨찾기에 담겼어요!" if added else "이미 담겨 있어요",
