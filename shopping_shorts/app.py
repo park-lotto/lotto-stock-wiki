@@ -5220,7 +5220,7 @@ async def api_lens_cn_search(request: Request, keyword: str = Form(""),
 
 @app.post("/api/lens/yt")
 async def api_lens_yt(request: Request, frame: UploadFile = File(None),
-                       source_caption: str = Form(""), max_results: int = Form(40)):
+                       source_caption: str = Form(""), max_results: int = Form(12)):
     """프레임+캡션으로 유튜브를 키워드 검색해 렌즈 결과에 합류할 항목. YouTube Data API라
     무료(쿼터 내) → 월 호출가드 없음. 검색어는 cn_search_keyword_vision의 product
     (프롬프트가 '한국어 제품명'을 명시) → 캡션 앞토큰(_cn_keyword) 폴백."""
@@ -5238,14 +5238,40 @@ async def api_lens_yt(request: Request, frame: UploadFile = File(None),
         keyword = _cn_keyword(source_caption)
     if not keyword:
         return {"ok": True, "items": [], "count": 0, "note": "검색어를 만들지 못했습니다"}
-    n = max(1, min(int(max_results or 40), 60))
+    # ★상한 12 — 40개는 유튜브만 화면을 도배했다(실측 2026-08-16: 유튜브 43개인데
+    #   틱톡 5·인스타 1·샤오홍슈 0·도우인 1). 아래 채점이 관련도순으로 정렬하므로
+    #   위쪽 12개면 충분하다. 캐시된 옛 화면이 40을 보내도 여기서 잘린다.
+    n = max(1, min(int(max_results or 12), 12))
     try:
-        rows = await asyncio.to_thread(youtube_search.search, keyword, max_results=n)
+        # ★videoDuration=short(4분 미만) + relevanceLanguage=ko (2026-08-16 사장님 제보)
+        #   예전엔 필터가 하나도 없어 일반 롱폼·외국어 영상까지 그대로 딸려왔다
+        #   (실측: 유튜브 43개 vs 틱톡 5·인스타 1·샤오홍슈 0·도우인 1).
+        #   둘 다 API가 공짜로 주는 파라미터라 쿼터·비용은 그대로다.
+        rows = await asyncio.to_thread(youtube_search.search, keyword, max_results=n,
+                                       duration="short", language="ko")
     except Exception:
         rows = []
     for r in rows:
         r["platform"] = "youtube"
         r["match"] = None
+
+    # ★유사도 채점 — 샤오홍슈·도우인(/api/lens/cn/search)엔 원래 있는데 유튜브에만
+    #   빠져 있었다. match가 전부 None이라 프론트의 '⚠️ 다른주제 숨기기'가 유튜브를
+    #   **한 개도 못 걸렀다**(index.html은 match!==false만 거른다). 같은 함수를 그대로 쓴다.
+    #   텍스트 전용 + 가벼운 모델(_TRANSLATE_MODEL) 1회라 비용은 0.5원 안쪽.
+    #   (여기선 keyword가 곧 제품명이다 — 위에서 비전의 product를 그대로 넣었다)
+    if keyword and rows:
+        try:
+            verdicts = await asyncio.to_thread(
+                judge_same_product, keyword, [r.get("title", "") for r in rows])
+        except Exception:
+            verdicts = []
+        if len(verdicts) == len(rows):
+            for r, vd in zip(rows, verdicts):
+                r["sim"] = vd
+                r["match"] = True if vd == "same" else (False if vd == "no" else None)
+            rank = {"same": 0, "similar": 1, "no": 2}
+            rows.sort(key=lambda r: rank.get(r.get("sim"), 1))   # 관련있는 것부터
     return {"ok": True, "items": rows, "count": len(rows), "keyword": keyword}
 
 

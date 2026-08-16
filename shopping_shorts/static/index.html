@@ -2155,7 +2155,9 @@ async function fetchLensYt(shortcode, caption, blob){
     const fd=new FormData();
     if(blob) fd.append('frame', blob, 'f.jpg');   // 비전으로 화면 제품명 추출
     if(caption) fd.append('source_caption', caption);
-    fd.append('max_results', '40');
+    // 12개 — 40개는 유튜브만 화면을 도배했다(실측: 유튜브 43 vs 틱톡 5·인스타 1).
+    // 서버가 관련도순으로 정렬해 주므로 위쪽 12개면 충분하다(2026-08-16 사장님).
+    fd.append('max_results', '12');
     const d=await (await fetch('/api/lens/yt',{method:'POST',body:fd})).json();
     const st=LENS_STATE[shortcode]; if(!st) return;   // 사용자가 닫았을 수 있음
     st.keyword=d.keyword||'';
