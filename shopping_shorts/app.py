@@ -2247,6 +2247,20 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     #   기존 경로와 다른 점: 같은 프롬프트를 n번 굴리는 게 아니라 **스타일마다 프롬프트가 갈려**
     #   서로 다른 구조가 보장되고, 어긴 결과는 재작성이 걸린다.
     _style_ids = [int(x) for x in (body.get("style_ids") or []) if str(x).isdigit()]
+    # ★'AI에게 맡김'도 스타일 경로를 탄다(2026-08-17 사장님 제보 "AI로 뽑으면 이모티콘 없어짐").
+    #   스타일을 안 고르면 옛 생성기로 가는데, 그 경로는 **칸(beats)을 안 준다** → 화면이
+    #   어느 줄이 훅인지 몰라 역할 라벨이 빈다. 그러면 이 화면의 존재 이유가 통째로 죽는다.
+    #   "맡긴다"는 **고르기 귀찮다**는 뜻이지 품질을 포기한다는 뜻이 아니다 —
+    #   추천 순서(검증 먼저, 그다음 실적순 = list_style_spines 정렬) 상위에서 자동으로 집는다.
+    #   ⚠️ auto_style을 보내는 호출부에서만 동작한다(도서관 pmRunGen 등 기존 경로는 회귀 0).
+    if not _style_ids and body.get("auto_style"):
+        try:
+            _n_auto = max(1, min(int(body.get("n") or 2), 2))
+        except (TypeError, ValueError):
+            _n_auto = 2
+        _auto = store.list_style_spines(category=it.get("category") or None) \
+            or store.list_style_spines(category=None)
+        _style_ids = [s["id"] for s in _auto[:_n_auto]]
     if _style_ids:
         # ★카테고리로 거르지 않는다(2026-08-17 사장님 제보로 수정).
         #   화면 방침은 2026-08-15에 **잠금 해제 → 등급 표시**(✅검증/⚠️타소재)로 바뀌어

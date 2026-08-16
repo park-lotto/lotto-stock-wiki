@@ -169,3 +169,21 @@ class TestTopicLock:
                                  {"name": "", "full_text": "접이식 도마", "structure": {}}])
         assert "주제는 반드시 [대본 1]" in out
         assert "섞지 마라" in out
+
+
+class TestAutoStyle:
+    """'AI에게 맡김'도 스타일 경로를 탄다 (2026-08-17 '이모티콘 없어짐' 제보).
+
+    옛 경로는 beats를 안 줘 역할 라벨이 빈다 — 맡긴다는 건 고르기 귀찮다는 뜻이지
+    품질을 포기한다는 뜻이 아니다.
+    """
+
+    def test_화면_요청에_auto_style이_실린다(self):
+        import pathlib
+        import re
+        p = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"
+        src = p.read_text(encoding="utf-8")
+        fn = src[src.index("async function s2Generate"):]
+        fn = fn[:fn.index("\n}\n")]
+        assert re.search(r"else\s+body\.auto_style\s*=\s*true", fn)
+        assert "if(S2.picked.length) body.style_ids=S2.picked;" in fn
