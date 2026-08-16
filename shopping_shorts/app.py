@@ -78,7 +78,7 @@ from shopping_shorts.video_assemble import _probe_duration, _effective_dur, _TRI
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
 from shopping_shorts import frame_extract, scene_assets, scene_cut
 from shopping_shorts import effect_match, remotion_render, points
-from shopping_shorts import keycrypt, keyroute, points, pricing      # BYOK(사용자 키·포인트)
+from shopping_shorts import keycrypt, keyroute, pricing      # BYOK(사용자 키·포인트). points는 위에서 이미 import
 from shopping_shorts import video_assemble
 from shopping_shorts import seo_generate, seo_probe
 from shopping_shorts import pattern_bank

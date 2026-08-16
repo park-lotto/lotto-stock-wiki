@@ -744,6 +744,33 @@ def run_mix_job(job_id, db_path, work_root):
             #   되돌린다. produce 2단계·auto_run·retype는 과금 안 해 이 값이 없다 → 오환불로 전역
             #   카운터를 갉아 다른 유저 과금을 상쇄하는 일을 막는다(리뷰 B/F).
             _refund_render_charge(store, job.get("customer_id", 0), job.get("render_charge_day"))
+            _refund_mix_points(store, job.get("customer_id", 0), job.get("render_charge_day"))
+
+
+def _refund_mix_points(store, customer_id, charge_day):
+    """영상제작 실패 → 차감한 포인트 환불. 크레딧 환불(_refund_render_charge)과 대칭.
+
+    ★charge_day가 표식이다 — /api/mix/start 계열이 과금할 때만 채워지므로,
+      과금 안 한 경로(produce 2단계·auto_run·retype)까지 환불해 잔액을
+      부풀리는 일이 없다. 크레딧 환불이 쓰는 것과 같은 표식을 재사용한다.
+
+    ★왜 필요한가: 이 코드베이스의 규칙은 '실패하면 돌려준다'다 — 크레딧도
+      (_refund_render_charge), 자막제거 포인트도(_refund_clean) 돌려준다.
+      영상제작 포인트(3P)만 빠지면 가장 비싼 작업이 실패할 때 잔액이
+      조용히 갉힌다."""
+    if not charge_day:
+        return
+    from shopping_shorts import keyroute, points, pricing
+    if not keyroute.as_cid(customer_id):
+        return                       # 사장님(cid 0)은 애초에 과금 안 했다
+    try:
+        # 차감할 때와 같은 조건으로 되묻는다 — 사용자 키를 쓰는 사람은 안 깎였으니
+        # 환불하면 없던 포인트가 생긴다(_charge_or_402와 짝).
+        if keyroute.should_charge(store, customer_id, keyroute.SVC_GEMINI):
+            points.refund(store, customer_id,
+                          pricing.cost(store, pricing.OP_MIX), pricing.OP_MIX)
+    except Exception:
+        traceback.print_exc(file=sys.stderr)
 
 
 def _refund_render_charge(store, customer_id, charge_day):
