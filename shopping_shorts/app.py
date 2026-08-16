@@ -9791,6 +9791,21 @@ def _enrich_job_extract(job, store=None):
         return job
 
 
+def _brief_line(brief):
+    """영상 요약(dict 또는 문자열) → 프롬프트에 넣을 한 줄. 없으면 "".
+
+    형식이 둘인 이유: 추출기는 {product, role, core, summary} dict로 주는데,
+    옛 데이터·다른 경로에서는 문자열이 오기도 한다. 읽는 쪽이 둘 다 견뎌야 한다.
+    """
+    if isinstance(brief, str):
+        return brief.strip()
+    if not isinstance(brief, dict):
+        return ""
+    parts = [str(brief.get(k) or "").strip()
+             for k in ("product", "role", "core")]
+    return " · ".join(p for p in parts if p)
+
+
 def _scene_points_block(job, limit=14):
     """1단계 장면 태깅 → 대본 프롬프트 재료 블록. 없으면 ''(기존 경로 그대로 = 회귀 0).
 
@@ -9807,7 +9822,12 @@ def _scene_points_block(job, limit=14):
     for _vid, ex in sorted(((job or {}).get("extract") or {}).items()):
         if not isinstance(ex, dict):
             continue
-        brief = (ex.get("source_brief") or "").strip()
+        # ★source_brief는 **dict**다(product/role/core/summary) — 문자열이 아니다.
+        #   여기서 .strip()을 바로 불러 500이 났다(2026-08-16 실사고: 대본이 통째로
+        #   안 나오고 화면엔 '네트워크 오류'만). 옛 작업엔 이 값이 없어 안 터지다가,
+        #   캐시에서 최신 추출본을 끌어오면서 진짜 값이 들어오자 드러났다.
+        #   문자열로 와도(옛 형식) 그대로 받아들인다.
+        brief = _brief_line(ex.get("source_brief"))
         if brief:
             lines.append("· [영상 요약] " + brief)
         for seg in (ex.get("segments") or []):
