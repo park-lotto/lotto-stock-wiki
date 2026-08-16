@@ -288,7 +288,6 @@
             <div class="s2-cand" data-fill="학부모 모임 갔다가 진짜 충격 받았어요" onclick="pickTmpl(this)"><span class="tx"><i class="s2-gap">장소</i> 갔다가 진짜 충격 받았어요</span></div>
             <div class="s2-cand" data-fill="남편 때문에 진짜 충격 받았어요" onclick="pickTmpl(this)"><span class="tx"><i class="s2-gap">가족</i> 때문에 진짜 충격 받았어요</span></div>
             <div class="s2-cand" data-fill="이거 몰라서 애들 아침 다 망칠 뻔했어요" onclick="pickTmpl(this)"><span class="tx">이거 몰라서 <i class="s2-gap">손해</i> 날릴 뻔했어요</span></div>
-            <div class="bk-h hint" style="margin:0">가족갈등 반전형의 틀만 나옵니다 — 빈칸(<i class="s2-gap">가족</i>)은 AI가 이 대본 소재로 채워요.</div>
           </div>
         </div>
         <div class="s2-axis">
@@ -299,21 +298,20 @@
           </div>
         </div>
       </div>
-      <div class="hint">스타일은 하나만 — 쪼개면 맥락이 깨집니다. 훅은 <b>같은 스타일의 다른 틀</b>로만 교체 · CTA는 헌장 고정(저장·팔로우 금지, 무조건 댓글에 뭘 남기면 뭘 받는지).</div>
     </div>
 
     <!-- ③ 결과 대본 — 역할이 보이는 행(높이 80px 고정) -->
     <div class="s2-band" style="margin-bottom:0">
       <div class="s2-head">
         <div class="s2-label">③ 결과 대본 <span style="text-transform:none;letter-spacing:0">— 씨앗: 요리하는 은지</span></div>
-        <span class="s2-gate pass">✅ 가족갈등 반전형 구조 지킴 <small id="gateSub">· 1회 재작성 후 통과</small></span>
+        <span class="s2-gate pass" title="게이트 통과 — 스타일 구조를 지켰습니다">✅ 가족갈등 반전형 <small id="gateSub"></small></span>
         <span class="s2-gate fail">⚠️ 미끼(훅)가 스타일에서 벗어났어요</span>
       </div>
 
       <!-- 🎣 훅 -->
       <div class="s2-row" data-role="hook" id="rowHook">
         <div class="s2-row-in">
-          <div class="s2-role"><div class="rn">🎣 미끼</div><div class="rs">엄지를 멈추는<br>첫마디</div></div>
+          <div class="s2-role"><div class="rn">🎣 미끼</div></div>
           <div class="s2-sent" contenteditable="true" id="sentHook">아침밥 이걸로 바꿨다고 남편한테 한 소리 들었거든요</div>
           <button class="s2-swap" onclick="toggleBank('rowHook')">바꾸기</button>
         </div>
@@ -325,88 +323,81 @@
           <button class="fx-re" onclick="redoHook()">🔄 훅만 다시 쓰기</button>
         </div>
         <div class="s2-bank">
-          <div class="bk-t">🧩 미끼 틀 — 가족갈등 반전형의 훅 틀 4개 · 고르면 AI가 이 대본 소재로 채웁니다</div>
+          <div class="bk-t" title="틀을 고르면 빈칸을 AI가 이 대본 소재로 채워 교체합니다">🧩 미끼 틀 · 가족갈등 반전형 4개</div>
           <div class="s2-cand re" onclick="redoHook()"><span class="tx">🔄 AI로 이 칸만 다시 쓰기</span><span class="fq">다른 칸 유지</span></div>
           <div class="s2-cand" data-fill="이것 때문에 남편한테 욕 바가지로 먹을 뻔했어요" onclick="pickCand(this,'rowHook')"><span class="tx">이것 때문에 <i class="s2-gap">가족</i>한테 욕 바가지로 먹을 뻔했어요</span></div>
           <div class="s2-cand" data-fill="학부모 모임 갔다가 진짜 충격 받았어요" onclick="pickCand(this,'rowHook')"><span class="tx"><i class="s2-gap">장소</i> 갔다가 진짜 충격 받았어요</span></div>
           <div class="s2-cand" data-fill="남편 때문에 진짜 충격 받았어요" onclick="pickCand(this,'rowHook')"><span class="tx"><i class="s2-gap">가족</i> 때문에 진짜 충격 받았어요</span></div>
           <div class="s2-cand" data-fill="이거 몰라서 애들 아침 다 망칠 뻔했어요" onclick="pickCand(this,'rowHook')"><span class="tx">이거 몰라서 <i class="s2-gap">손해</i> 날릴 뻔했어요</span></div>
-          <div class="bk-h">틀을 고르면 그 자리에서 빈칸을 채워 교체합니다 — 타이핑 없이.</div>
         </div>
       </div>
 
       <!-- 😰 찔림 -->
       <div class="s2-row" data-role="before" id="rowBefore">
         <div class="s2-row-in">
-          <div class="s2-role"><div class="rn">😰 찔림</div><div class="rs">"어, 나도<br>그런데"</div></div>
+          <div class="s2-role"><div class="rn">😰 찔림</div></div>
           <div class="s2-sent" contenteditable="true">저도 매일 쌀 밥에 김 싸서 먹였는데, 아침마다 애가 축 처져 있더라고요</div>
           <button class="s2-swap" onclick="toggleBank('rowBefore')">바꾸기</button>
         </div>
         <div class="s2-bank">
-          <div class="bk-t">🧩 찔림 틀 — 이 칸은 아직 틀이 없어요</div>
+          <div class="bk-t" title="틀이 쌓이면 여기 나옵니다">🧩 찔림 틀 · 아직 없음</div>
           <div class="s2-cand re" onclick="closeAllBanks()"><span class="tx">🔄 AI로 이 칸만 다시 쓰기</span><span class="fq">다른 칸 유지</span></div>
-          <div class="bk-h">틀이 쌓이면 여기 나옵니다. 지금은 AI가 스타일에 맞춰 다시 씁니다.</div>
         </div>
       </div>
 
       <!-- 💡 반전 -->
       <div class="s2-row" data-role="reveal" id="rowReveal">
         <div class="s2-row-in">
-          <div class="s2-role"><div class="rn">💡 반전</div><div class="rs">아는 사람만<br>아는 비밀</div></div>
+          <div class="s2-role"><div class="rn">💡 반전</div></div>
           <div class="s2-sent" contenteditable="true">단골 소아과 선생님 말씀이, 아침 혈당을 확 올리는 게 문제였대요</div>
           <button class="s2-swap" onclick="toggleBank('rowReveal')">바꾸기</button>
         </div>
         <div class="s2-bank">
-          <div class="bk-t">🧩 반전 틀 — 가족갈등 반전형 · 8개 중 (아래는 예시)</div>
+          <div class="bk-t" title="틀을 고르면 빈칸을 AI가 이 대본 소재로 채워 교체합니다">🧩 반전 틀 · 가족갈등 반전형 8개</div>
           <div class="s2-cand re" onclick="closeAllBanks()"><span class="tx">🔄 AI로 이 칸만 다시 쓰기</span><span class="fq">다른 칸 유지</span></div>
           <div class="s2-cand" data-fill="알고 보니 문제는 반찬이 아니라 밥 그 자체였어요" onclick="pickCand(this,'rowReveal')"><span class="tx">알고 보니 문제는 <i class="s2-gap">A</i>가 아니라 <i class="s2-gap">B</i>였어요</span></div>
           <div class="s2-cand" data-fill="단골 소아과 선생님이 딱 한 가지를 짚어줬어요" onclick="pickCand(this,'rowReveal')"><span class="tx"><i class="s2-gap">전문가</i>가 딱 한 가지를 짚어줬어요</span></div>
-          <div class="bk-h">틀을 고르면 그 자리에서 빈칸을 채워 교체합니다 — 타이핑 없이.</div>
         </div>
       </div>
 
       <!-- ✨ 증거 -->
       <div class="s2-row" data-role="after" id="rowAfter">
         <div class="s2-row-in">
-          <div class="s2-role"><div class="rn">✨ 증거</div><div class="rs">그래서 뭐가<br>달라졌나</div></div>
+          <div class="s2-role"><div class="rn">✨ 증거</div></div>
           <div class="s2-sent" contenteditable="true">바꾸고 일주일, 이제는 그 남편이 아침마다 먼저 챙겨요</div>
           <button class="s2-swap" onclick="toggleBank('rowAfter')">바꾸기</button>
         </div>
         <div class="s2-bank">
-          <div class="bk-t">🧩 증거 틀 — 이 칸은 아직 틀이 없어요</div>
+          <div class="bk-t" title="틀이 쌓이면 여기 나옵니다">🧩 증거 틀 · 아직 없음</div>
           <div class="s2-cand re" onclick="closeAllBanks()"><span class="tx">🔄 AI로 이 칸만 다시 쓰기</span><span class="fq">다른 칸 유지</span></div>
-          <div class="bk-h">틀이 쌓이면 여기 나옵니다. 지금은 AI가 스타일에 맞춰 다시 씁니다.</div>
         </div>
       </div>
 
       <!-- 📢 약속 -->
       <div class="s2-row" data-role="cta" id="rowCta">
         <div class="s2-row-in">
-          <div class="s2-role"><div class="rn">📢 약속</div><div class="rs">댓글 달면<br>받는 것</div></div>
+          <div class="s2-role"><div class="rn">📢 약속</div></div>
           <div class="s2-sent" contenteditable="true">댓글에 '한끼' 남겨주시면 바꾼 레시피 그대로 드릴게요<span class="s2-chk" contenteditable="false">✅ 받는 것 명시됨 — 헌장 OK</span></div>
           <button class="s2-swap" onclick="toggleBank('rowCta')">바꾸기</button>
         </div>
         <div class="s2-bank">
-          <div class="bk-t">🧩 약속 틀 — 가족갈등 반전형 · 6개 중 (아래는 예시) · 헌장 위반 틀은 없습니다</div>
+          <div class="bk-t" title="헌장 위반(받는 것 없음·팔로우 유도) 틀은 없습니다">🧩 약속 틀 · 가족갈등 반전형 6개</div>
           <div class="s2-cand re" onclick="closeAllBanks()"><span class="tx">🔄 AI로 이 칸만 다시 쓰기</span><span class="fq">다른 칸 유지</span></div>
           <div class="s2-cand" data-fill="댓글에 '아침' 남겨주시면 일주일 식단표 보내드려요" onclick="pickCand(this,'rowCta')"><span class="tx">댓글에 '<i class="s2-gap">키워드</i>' 남겨주시면 <i class="s2-gap">받는 것</i> 보내드려요</span></div>
           <div class="s2-cand" data-fill="궁금한 재료 댓글로 남기시면 제가 쓰는 제품 그대로 알려드려요" onclick="pickCand(this,'rowCta')"><span class="tx">궁금한 <i class="s2-gap">주제</i> 댓글로 남기시면 <i class="s2-gap">받는 것</i> 알려드려요</span></div>
-          <div class="bk-h">틀을 고르면 그 자리에서 빈칸을 채워 교체합니다 — 타이핑 없이.</div>
         </div>
       </div>
 
       <!-- 재생성 — 전체 다시는 마지막 수단 -->
       <div class="s2-regen">
-        <button class="btn-prev" onclick="mockWholeRegen()">🔄 전체 다시 만들기</button>
-        <div class="hint">고른 스타일은 유지됩니다. 단, 마음에 든 문장까지 새로 나와요 — 웬만하면 그 칸만 바꾸는 게 빠릅니다.</div>
+        <button class="btn-prev" onclick="mockWholeRegen()" title="스타일은 유지되지만 모든 문장이 새로 나옵니다 — 웬만하면 칸만 바꾸는 게 빠릅니다">🔄 전체 다시 만들기</button>
       </div>
     </div>
 
     <!-- 확정 → 3단계. ★여기서 매칭(startProduceMix)을 걸지 않는다 — 매칭 시작은 3단계 소관.
          #theater·#matchProgress도 3단계로 간다(사양서 §6). -->
     <div class="s2-confirm">
-      <button class="btn-next" onclick="alert('목업: 대본 확정 → 3단계(영상대본MIX, 장면 붙이기)로 이동합니다. 매칭 시작은 3단계에서.')">✔ 이 대본으로 확정 — 장면 붙이기로</button>
-      <div class="hint">확정하면 3단계에서 이 대본에 장면을 붙입니다. 게이트가 ⚠️여도 확정은 막지 않아요 — 최종 판단은 사장님 몫.</div>
+      <button class="btn-next" onclick="alert('목업: 대본 확정 → 3단계(영상대본MIX, 장면 붙이기)로 이동합니다. 매칭 시작은 3단계에서.')" title="3단계에서 이 대본에 장면을 붙입니다 — 게이트가 ⚠️여도 확정은 막지 않습니다">✔ 이 대본으로 확정 — 장면 붙이기로</button>
     </div>
   </section>
   <!-- ▲▲ 여기까지 data-step=8 안쪽 ▲▲ -->
