@@ -10,7 +10,7 @@
 """
 import os
 
-from shopping_shorts import douyin_search, xiaohongshu_search
+from shopping_shorts import config, douyin_search, xiaohongshu_search
 
 _SHORT_MAX_SECS = 90
 
@@ -68,3 +68,67 @@ def apify_douyin(keyword, max_results):
 
 def apify_xiaohongshu(keyword, max_results):
     return _apify(xiaohongshu_search, "xiaohongshu", keyword, max_results)
+
+
+_XHS_BASE = "https://www.rednote.com"
+
+# rednote.com 검색결과 카드에서 뽑을 것. 셀렉터는 2026-08-17 서버 실측으로 확정
+# (section.note-item 18개 중 a.cover[href] 17개). xiaohongshu.com(중국 내수 도메인)은
+# 비중국 IP를 하드 차단하므로 국제용 rednote.com만 쓴다(2026-07-29 실측).
+_XHS_EXTRACT = """
+() => [...document.querySelectorAll('section.note-item')].map(el => {
+  const a = el.querySelector('a.cover[href]') || el.querySelector('a[href]');
+  const img = el.querySelector('img');
+  const t = el.querySelector('.title, [class*=title]');
+  const like = el.querySelector('.like-wrapper, [class*=like]');
+  return {
+    url: a ? a.getAttribute('href') : null,
+    title: (t ? t.innerText : (el.innerText || '').split('\\n')[0] || '').trim(),
+    thumb: img ? img.getAttribute('src') : null,
+    likes: like ? (like.innerText || '').trim() : null,
+  };
+})
+"""
+
+
+def _pw_xhs_rows(cards):
+    """추출된 카드 배열 → 스키마 dict. URL 없는 카드는 버린다."""
+    out = []
+    for c in cards or []:
+        href = (c or {}).get("url")
+        if not href:
+            continue
+        url = href if href.startswith("http") else _XHS_BASE + href
+        out.append(normalize({"url": url, "title": c.get("title"),
+                              "thumbnail": c.get("thumb"),
+                              "likes": c.get("likes")}, "xiaohongshu"))
+    return out
+
+
+def pw_xiaohongshu(keyword, max_results):
+    """로그인 세션으로 rednote 검색결과를 긁는다. 비용 0.
+
+    세션이 죽으면 카드가 0개가 되고, cn_search가 Apify로 폴백한다.
+    ⚠️세션 판정을 `"loggedIn":false` 문자열로 하지 마라 — HTML 다른 곳에도 그 문자열이
+    있어 오탐한다(2026-08-17 실측). 판정은 **카드 수**로 한다."""
+    from urllib.parse import quote
+
+    session = getattr(config, "XIAOHONGSHU_SESSION_PATH", "")
+    if not session or not os.path.exists(session):
+        return []
+    url = f"{_XHS_BASE}/search_result?keyword={quote(keyword)}"
+    try:
+        from playwright.sync_api import sync_playwright
+
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            ctx = browser.new_context(storage_state=session)
+            page = ctx.new_page()
+            page.goto(url, timeout=60000, wait_until="domcontentloaded")
+            page.wait_for_timeout(9000)      # SSR 카드가 채워질 여유(서버 실측값)
+            cards = page.evaluate(_XHS_EXTRACT)
+            ctx.close()
+            browser.close()
+    except Exception:
+        return []
+    return _pw_xhs_rows(cards)[:max_results]

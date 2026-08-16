@@ -50,3 +50,33 @@ def test_apify_backend_maps_rows(monkeypatch):
     assert rows[0]["platform"] == "douyin"
     assert rows[0]["likes"] == 12
     assert rows[0]["is_short"] is True
+
+
+def test_pw_xiaohongshu_builds_absolute_urls():
+    """카드가 주는 href는 상대경로(/search_result/…) → 절대 URL로 만들어야 담기가 된다."""
+    cards = [{"url": "/search_result/abc?xsec_token=T", "title": "蒜泥",
+              "thumb": "https://img/1.jpg", "likes": "12"}]
+    rows = cn_backends._pw_xhs_rows(cards)
+    assert rows[0]["url"] == "https://www.rednote.com/search_result/abc?xsec_token=T"
+    assert rows[0]["platform"] == "xiaohongshu"
+    assert rows[0]["thumbnail"] == "https://img/1.jpg"
+    assert rows[0]["likes"] == 12
+
+
+def test_pw_xiaohongshu_drops_cards_without_url():
+    """URL 없는 카드는 버린다(담기가 불가능한 카드를 화면에 올리지 않는다)."""
+    assert cn_backends._pw_xhs_rows([{"url": None, "title": "x"}]) == []
+
+
+def test_pw_xiaohongshu_keeps_absolute_urls_unchanged():
+    """이미 절대 URL이면 그대로 둔다(BASE를 두 번 붙이지 않는다)."""
+    rows = cn_backends._pw_xhs_rows(
+        [{"url": "https://www.rednote.com/explore/xyz", "title": "t"}])
+    assert rows[0]["url"] == "https://www.rednote.com/explore/xyz"
+
+
+def test_pw_xiaohongshu_returns_empty_without_session(monkeypatch):
+    """세션 파일이 없으면 브라우저를 아예 띄우지 않는다(헛시간 방지)."""
+    monkeypatch.setattr(cn_backends.config, "XIAOHONGSHU_SESSION_PATH", "",
+                        raising=False)
+    assert cn_backends.pw_xiaohongshu("蒜泥保存", 8) == []
