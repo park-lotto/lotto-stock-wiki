@@ -1794,6 +1794,26 @@ class Store:
                             return out
         return out
 
+    def wiki_category_for_url(self, url):
+        """이 URL 소재의 카테고리(홈템·레시피·뷰티·기타). 모르면 None.
+
+        ★왜(2026-08-17 사장님 "레시피 틀로 고정돼서 재료·반죽 준비 이런 게 들어왔다"):
+          실험실 팔레트 머리글이 요리 전용으로 하드코딩돼, 젤펜 영상인데 '🥣 재료·반죽
+          준비 · 섞기·짜기'가 떴다(실측 job 202377f690d9: 소스 4개 전부 cat=기타).
+          판정을 새로 만들지 않는다 — 추출이 이미 정해둔 값을 읽기만 한다(0순위-B).
+        """
+        url = (url or "").strip()
+        if not url:
+            return None
+        with self._conn() as c:
+            try:
+                r = c.execute(
+                    "SELECT category FROM script_wiki WHERE source_url=? AND category IS NOT NULL "
+                    "ORDER BY rowid DESC LIMIT 1", (url,)).fetchone()
+            except sqlite3.Error:      # 옛 스키마에 컬럼이 없어도 실험실이 안 죽는다
+                return None
+        return (r[0] or "").strip() or None if r else None
+
     def mix_basket_list(self, customer_id=LEGACY_CUSTOMER_ID):
         """이 고객이 담은 순서(added_at)대로 항목 dict 리스트. meta_json은 풀어서 병합."""
         with self._conn() as c:

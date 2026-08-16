@@ -3455,8 +3455,24 @@ def api_mix_scene_lab_data(job_id: str):
         if _v and _b:
             src_brief[_v] = _b
     caps, tts_dur = _lab_captions(plan)
+    # ★소재 종류(2026-08-17 사장님 "레시피 틀로 고정돼서 재료·반죽 준비 이런 게 들어왔다").
+    #   실험실 팔레트 머리글이 요리 전용으로 하드코딩돼 있어, 젤펜 영상인데도
+    #   '🥣 재료·반죽 준비 · 섞기·짜기'가 떴다(실측 job 202377f690d9: 소스 4개 전부 cat=기타).
+    #   판정을 새로 만들지 않는다 — 추출이 이미 붙여둔 카테고리를 그대로 넘겨
+    #   화면이 그에 맞는 머리글을 고르게 한다(scene_lab.html GROUPS_BY_CAT).
+    _cats = []
+    for _u in (job.get("urls") or []):
+        try:
+            _row = Store(DB_PATH).wiki_category_for_url(_u)
+        except Exception:      # noqa: BLE001 — 라벨 하나 때문에 실험실이 안 열리면 안 된다
+            _row = None
+        if _row:
+            _cats.append(_row)
+    # 다수결(소스가 섞이면 제일 많은 쪽). 하나도 못 찾으면 ""(화면이 중립 라벨로 간다).
+    category = max(set(_cats), key=_cats.count) if _cats else ""
     return {"ok": True, "data": {
         "job_id": job_id,
+        "category": category,
         "beats": plan.get("beats") or [],
         "urls": job.get("urls") or [],
         "src_brief": src_brief,

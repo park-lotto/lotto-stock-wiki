@@ -404,14 +404,54 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
 //   로컬 실험실(build.py가 채움), null이면 제작소 임베드 — ?job=으로 서버 API에서 받는다.
 //   UI·계산 코드는 이 어댑터(SL) 말고는 모드를 모른다(두 벌 금지, 0순위-B).
 // (이 부분은 /scene_play.js 로 옮겼다 — 제작소와 공용)
-const GROUPS = [
-  {key:'완성',   title:'🏆 완성품',          hint:'훅·CTA에 좋다'},
-  {key:'after',  title:'✅ 결과·증거',       hint:'쪼갠 단면·먹는 반응 — 결과 칸에 좋다'},
-  {key:'굽기',   title:'🔥 굽기·완성 직전',  hint:'오븐·가열 — 과정의 절정'},
-  {key:'마무리', title:'🍫 마무리·데코',      hint:'초콜릿·토핑 — 완성 직전 한 끗'},
-  {key:'재료',   title:'🥣 재료·반죽 준비',  hint:'섞기·짜기 — 해결 칸에 좋다'},
-  {key:'기타',   title:'그 밖의 장면',       hint:''},
-];
+// ★소재 종류에 맞는 머리글을 쓴다(2026-08-17 사장님: "레시피 틀로 고정돼서 재료·반죽
+//   준비 이런 게 들어왔다. 상황에 맞게 몇 개 만들어놔야 할 듯").
+//   실측(job 202377f690d9): 젤펜 영상 4개 전부 cat=기타인데 '🥣 재료·반죽 준비 ·
+//   섞기·짜기'가 떴다 — 팔레트가 요리 전용으로 하드코딩돼 있었다.
+//   ★키(완성/after/굽기/마무리/재료/기타)는 **바꾸지 않는다** — groupOf·useTags·
+//     서버 _ROLE_WANT_SHOTS가 그 키로 돈다. 사람이 읽는 title·hint만 갈아끼운다.
+const _GROUPS_BASE = {
+  '완성':   {title:'🏆 완성품',      hint:'훅·CTA에 좋다'},
+  'after':  {title:'✅ 결과·증거',   hint:'전후 비교 — 결과 칸에 좋다'},
+  '기타':   {title:'그 밖의 장면',   hint:''},
+};
+// 카테고리별로 다른 것 = 조리/사용 구간의 이름. 나머지는 위 공통을 쓴다.
+const GROUPS_BY_CAT = {
+  '레시피': {
+    '굽기':   {title:'🔥 굽기·완성 직전', hint:'오븐·가열 — 과정의 절정'},
+    '마무리': {title:'🍫 마무리·데코',    hint:'초콜릿·토핑 — 완성 직전 한 끗'},
+    '재료':   {title:'🥣 재료·반죽 준비', hint:'섞기·짜기 — 해결 칸에 좋다'},
+    'after':  {title:'✅ 결과·증거',      hint:'쪼갠 단면·먹는 반응 — 결과 칸에 좋다'},
+  },
+  '홈템': {
+    '굽기':   {title:'⚡ 작동·성능',   hint:'돌리고 켜는 순간 — 과정의 절정'},
+    '마무리': {title:'✨ 정리·마무리', hint:'제자리에 놓고 정돈 — 완성 직전 한 끗'},
+    '재료':   {title:'🖐 쓰는 장면',   hint:'실제로 써보는 컷 — 해결 칸에 좋다'},
+    'after':  {title:'✅ 전후 비교',   hint:'쓰기 전후가 달라진 그림 — 결과 칸에 좋다'},
+  },
+  '뷰티': {
+    '굽기':   {title:'💧 발색·흡수',   hint:'바른 직후 변화 — 과정의 절정'},
+    '마무리': {title:'✨ 마무리 터치', hint:'세팅·정돈 — 완성 직전 한 끗'},
+    '재료':   {title:'🖐 바르는 장면', hint:'덜고 펴바르는 컷 — 해결 칸에 좋다'},
+    'after':  {title:'✅ 전후 비교',   hint:'before/after — 결과 칸에 좋다'},
+  },
+};
+// 기타·미지정: 소재를 모르니 요리·뷰티 낱말을 쓰지 않는 **중립 이름**으로 간다.
+const _GROUPS_NEUTRAL = {
+  '굽기':   {title:'⚡ 핵심 순간',   hint:'제일 결정적인 장면 — 과정의 절정'},
+  '마무리': {title:'✨ 마무리',      hint:'정돈·완성 직전 한 끗'},
+  '재료':   {title:'🖐 쓰는 장면',   hint:'실제로 쓰는 컷 — 해결 칸에 좋다'},
+};
+function _groups(){
+  const cat = (DATA && DATA.category) || '';
+  const set = Object.assign({}, _GROUPS_BASE, _GROUPS_NEUTRAL,
+                            GROUPS_BY_CAT[cat] || {});
+  // 순서는 고정(완성 → 결과 → 절정 → 마무리 → 쓰는장면 → 그 밖)
+  return ['완성', 'after', '굽기', '마무리', '재료', '기타']
+    .map(k => Object.assign({key: k}, set[k]));
+}
+// 기존 코드가 GROUPS를 상수처럼 쓰므로 이름은 유지한다(호출 시점에 카테고리 반영).
+let GROUPS = _groups();
 // ★조리(shot_role='사용중')를 '굽기'와 '재료 준비'로 한 겹 더 가른다(2026-08-14 사장님
 //   "완성품 조리랑 재료조리는 구분해서 나와야"). 이건 **실험실에서 고르기 쉬우라고 하는
 //   화면 분류**일 뿐 배치 로직과 무관하다 — 라이브 판단을 새로 만드는 게 아니다.
@@ -1614,6 +1654,8 @@ function reset(){
 //   했는데 서버 모드가 생기며 여기(한 곳)로 옮겼다 — 두 벌이 되면 어긋난다(0순위-B).
 function normalizeData(){
   _SRC_NO = null;          // 소스 번호 캐시를 새 데이터 기준으로 다시 매긴다(2026-08-16)
+  _SEG_NO = null;          // 조각 번호도 같이(2026-08-17) — 안 지우면 옛 job 번호가 남는다
+  GROUPS = _groups();      // 소재 종류(DATA.category)에 맞는 팔레트 머리글로 갈아끼운다
   const caps = DATA.captions || {}, td = DATA.tts_dur || {};
   for (const i of Object.keys(caps)){
     const dur = td[i];
