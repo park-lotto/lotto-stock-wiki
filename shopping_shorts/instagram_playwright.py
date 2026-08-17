@@ -30,7 +30,14 @@ from shopping_shorts.instagram_parse import (
 
 # 마지막 실행의 분류 집계 — 호출부(service/app)가 job 결과에 담아 화면·보고에 쓴다.
 # ★이 숫자가 부계정(B안) 도입 여부의 판단 근거다.
-LAST_TALLY = {"ok": 0, "login_wall": 0, "not_found": 0, "error": 0}
+LAST_TALLY = {"ok": 0, "login_wall": 0, "unknown": 0, "error": 0}
+
+# 마지막 실행의 **채널별** 판정 [(username, verdict, page_url), ...].
+# ★왜 필요한가(2026-08-17 실사고): 집계 숫자만 남기던 탓에 "61채널 실패"는 알아도
+# **어느 채널이었는지 복구할 방법이 없었다**. 원인 조사에서 실패 목록을 다시 만들려고
+# 등급 계산을 되돌려봤지만 329개가 나와 실제 런 110개와 맞지 않았다(=조사 불가).
+# 숫자가 아니라 목록을 남겨야 다음에 바로 재시도·확인할 수 있다.
+LAST_VERDICTS = []
 
 # 인스타가 릴스 목록을 채울 때 부르는 내부 API 경로 조각. 이 중 하나가 들어간
 # 응답만 JSON으로 읽는다(이미지·폰트 등 나머지는 무시).
@@ -129,7 +136,21 @@ def _scrape_one_playwright(username, session_path=None, proxy=None):
             page.on("response", _on_response)
             page.goto(url, timeout=config.INSTAGRAM_PW_TIMEOUT_MS,
                       wait_until="domcontentloaded")
-            page.wait_for_timeout(2500)          # 릴스 목록 XHR이 도착할 여유
+            # ★잠들지 말고 지켜본다(2026-08-17 수리). 예전엔 wait_for_timeout(2500)으로
+            # **2.5초 자고 일어나 있으면 쓰고 없으면 빈손**으로 나갔다. 인스타 응답이
+            # 2.5초를 넘기는 순간 nodes=0 → classify가 "unknown"으로 떨어뜨리고,
+            # 그게 예전 이름 not_found여서 "채널이 없어졌다"로 오독됐다.
+            #   실측(같은 슬롯·같은 14채널): 2.5초 5/14 → 10초 14/14.
+            #   실측(수확 0이던 채널 30개, 15초): 30/30 전부 12건 회수.
+            # 이제 응답이 잡히면 **즉시** 진행하므로 빠른 채널은 2.5초도 안 기다린다
+            # (전체 시간은 느린 채널에서만 늘어난다).
+            _deadline_ms = config.INSTAGRAM_PW_LIST_WAIT_MS
+            _waited = 0
+            while _waited < _deadline_ms:
+                if captured:
+                    break
+                page.wait_for_timeout(250)
+                _waited += 250
             # 간헐 챌린지 재시도(2026-08-09): 같은 계정·프록시로 단독 방문은 정상인데
             # 수집 경로에서만 update_risky_contactpoint가 간헐적으로 뜬다(실측).
             # 챌린지면 잠깐 쉬고 최대 2회 재진입 — 대개 두 번째엔 정상 페이지가 온다.
@@ -461,7 +482,8 @@ def fetch_reels(usernames, on_progress=None, _scrape_one=None):
     names = [(u or "").strip().lstrip("@") for u in (usernames or [])]
     names = [u for u in names if u]
     total = len(names)
-    tally = {"ok": 0, "login_wall": 0, "not_found": 0, "error": 0}
+    tally = {"ok": 0, "login_wall": 0, "unknown": 0, "error": 0}
+    verdicts = []
     items = []
     # 계정 로테이션(2026-08-09): 기본은 기존 단일 계정(서버 IP 직결) — 사장님 지시로
     # 아카이브 크롤이 끝나기 전까지 그 3계정을 수집에 돌려쓰지 않는다. 아카이브 종료 후
@@ -486,6 +508,8 @@ def fetch_reels(usernames, on_progress=None, _scrape_one=None):
             nodes, page_url, error = scrape(uname)
         verdict = classify_channel_result(nodes, page_url, error)
         tally[verdict] = tally.get(verdict, 0) + 1
+        # 채널별로 남긴다 — 숫자만 남기면 나중에 "어느 채널이 실패했나"를 못 되살린다.
+        verdicts.append((uname, verdict, page_url or ""))
         if verdict == "ok":
             for n in nodes[:config.RESULTS_PER_CHANNEL]:
                 d = parse_reel_node(n, uname)
@@ -495,6 +519,15 @@ def fetch_reels(usernames, on_progress=None, _scrape_one=None):
             on_progress(i, total, len(items), dict(tally))
     LAST_TALLY.clear()
     LAST_TALLY.update(tally)
+    LAST_VERDICTS[:] = verdicts
+    # 실패한 채널은 이름과 도달 URL을 그대로 찍는다 — 로그만 보면 바로 재시도할 수 있다.
+    _bad = [(u, v, url) for u, v, url in verdicts if v != "ok"]
+    if _bad:
+        print(f"[수집] 실패 {len(_bad)}채널: " +
+              ", ".join(f"{u}({v})" for u, v, _ in _bad[:40]) +
+              (" …" if len(_bad) > 40 else ""))
+        for u, v, url in _bad[:10]:
+            print(f"  - {u} {v} {url}")
     return items
 
 

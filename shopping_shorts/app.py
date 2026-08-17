@@ -687,7 +687,7 @@ _DURFILL_LAST = 0.0
 
 @app.get("/api/reference")
 def api_reference(platform: str = "instagram", days: int = 0, min_comments: int = 500,
-                  archive: int = 0):
+                  archive: int = 0, max_comments: int = 0):
     """마지막 수집 결과 반환 (프론트 초기 로드용). platform=플랫폼(기본 인스타).
 
     days>0이면 '최근 N일 중 터진 것'을 대신 준다(2026-08-17) — 추가 크롤 0이고
@@ -700,7 +700,8 @@ def api_reference(platform: str = "instagram", days: int = 0, min_comments: int 
     if archive:
         if platform != "instagram":
             return {"ok": True, "items": [], "collected_at": None}
-        items, collected_at = store.archive_hits(min_comments=min_comments), None
+        items, collected_at = store.archive_hits(
+            min_comments=min_comments, max_comments=max_comments), None
     elif days > 0:
         if platform != "instagram":
             return {"ok": True, "items": [], "collected_at": None}
@@ -2968,7 +2969,14 @@ def api_list_keys(request: Request):
     store = Store(DB_PATH)
     cid = keyroute.as_cid(_cid(request))
     return {"ok": True, "enabled": keycrypt.enabled(),
-            "keys": store.list_customer_keys(cid)}
+            "keys": store.list_customer_keys(cid),
+            # ★화면이 사실을 말하려면 서버가 알려줘야 한다(2026-08-17 실사고).
+            #   personal=False면 이 세션은 cid 0(관리자)이라 keyroute가 등록 키를
+            #   조회조차 안 한다 — 저장은 되는데 안 쓰인다. 그걸 모르고 화면이
+            #   "N개 등록됨"을 띄워 사장님이 '넣었는데 왜 안 되냐'로 반나절을 썼다.
+            #   wired = 등록 키가 실제 호출에 쓰이는 서비스(나머지는 저장만 된다).
+            "personal": bool(cid),
+            "wired": list(keyroute.WIRED)}
 
 
 @app.post("/api/settings/keys")

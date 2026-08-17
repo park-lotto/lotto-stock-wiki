@@ -64,8 +64,9 @@ class TestApiWiring:
         seen = {}
 
         class _S:
-            def archive_hits(self, min_comments=10000):
+            def archive_hits(self, min_comments=10000, max_comments=0):
                 seen["min"] = min_comments
+                seen["max"] = max_comments
                 return []
 
             def removed_usernames(self):
@@ -76,7 +77,12 @@ class TestApiWiring:
         monkeypatch.setattr(app_mod, "_attach_durations", lambda *a, **k: None)
         monkeypatch.setattr(app_mod, "_attach_posted_at", lambda *a, **k: None)
         app_mod.api_reference(platform="instagram", archive=1, min_comments=10000)
-        assert seen == {"min": 10000}
+        assert seen == {"min": 10000, "max": 0}      # 상한 미지정=1만+ 전부
+
+        # 구간 버튼(3천대)은 상한까지 함께 넘어가야 1만+와 안 겹친다
+        app_mod.api_reference(platform="instagram", archive=1,
+                              min_comments=3000, max_comments=9999)
+        assert seen == {"min": 3000, "max": 9999}
 
     def test_archive_기본은_꺼짐(self):
         # 켜져 있으면 첫 화면이 통째로 아카이브가 된다

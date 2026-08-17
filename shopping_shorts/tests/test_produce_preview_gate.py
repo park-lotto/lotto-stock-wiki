@@ -139,6 +139,17 @@ _SCENARIO_GATE = r"""
   if (canGoNext() !== true) fails.push('미리보기가 나왔는데도 다음이 잠겨 있다 — 진행 불가');
   PREVIEW_STATUS = 'failed';
   if (canGoNext() !== true) fails.push('렌더 실패인데 탈출구가 없다 — ffmpeg 문제 하나로 갇힌다(스펙 §7.1)');
+  // ★전체재생 완주 통과(2026-08-17). 렌더 1분35초를 기다리는 대신 실제 재생만으로 연다 —
+  //   사장님이 확인하는 셋(조각이 튀나/자막이 장면당 맞나/TTS와 속도가 같나)이 전부 보이고,
+  //   자막 계산이 렌더와 같은 함수(app.py _lab_captions)라 싱크가 동일하기 때문이다.
+  PREVIEW_STATUS = null; WATCHED_ALL = false;
+  if (canGoNext() !== false) fails.push('아무것도 안 했는데 다음이 열려 있다');
+  onPlayAllFinished();
+  if (WATCHED_ALL !== true) fails.push('전체재생을 끝까지 봤는데 WATCHED_ALL이 안 섰다');
+  if (canGoNext() !== true) fails.push('전체재생을 끝까지 봤는데도 다음이 잠겨 있다 — 1분35초를 또 기다려야 한다');
+  // ★버튼만 눌러선 안 열린다: 완주 콜백이 오기 전엔 그대로 잠김(안 보고 열리면 게이트가 무의미).
+  WATCHED_ALL = false;
+  if (canGoNext() !== false) fails.push('완주 전인데 게이트가 열렸다 — 안 보고도 유료 단계로 간다');
   if (fails.length) { console.error('FAIL: ' + fails.join(' / ')); process.exit(1); }
   console.log('PASS');
 })();
