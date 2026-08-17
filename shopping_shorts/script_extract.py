@@ -309,6 +309,86 @@ def _collect_benefits(segments):
     return out
 
 
+def _merge_too_short(raw_segments, min_clip=None):
+    """0.8초 미만 구간을 인접 구간에 합친다 — 태어날 때부터 못 쓰는 조각을 안 만든다.
+
+    ★2026-08-17 사장님 지적("0.8초 미만은 안 되게 돼 있던데 조각낼 때부터 방지 못 하나").
+      실측: 최근 80영상 1,164구간 중 131개(11.3%)가 0.8초 미만이었다. 이 조각들은
+      라운드로빈이 건너뛰어 **화면에 안 나온다** — 담아도 사라지고, 그 몫을 메우느라
+      다른 컷이 길게 늘어난다(handoff/칸채우기.md 실사고).
+      원인은 태깅이 **대사 단위**로 쪼개는 것: "도자기라" 같은 짧은 말이 0.7초 구간이 된다.
+
+    왜 늘리지 않고 합치나: 구간이 빈틈없이 붙어 있다(실측 인접쌍 505개 전부 간격 0).
+    끝을 늘리면 옆 구간을 침범한다.
+
+    합치는 규칙 — 뜻이 덜 상하는 쪽으로:
+      1) 인접(앞·뒤) 중 **같은 shot_role**이 있으면 그쪽. 화면 성격이 같아야 설명이 안 어긋난다.
+      2) 없으면 **짧은 쪽**. 긴 구간을 더 부풀리지 않는다.
+      3) 대사는 이어붙이고, 설명·이름(scene_desc·label)은 **원래 길었던 쪽** 것을 남긴다
+         — 0.7초가 4초를 밀어내면 카드 설명이 실제 화면과 어긋난다.
+    min_clip 기본값은 video_assemble._MIN_CLIP을 그대로 쓴다(같은 판단을 두 군데 적지 않는다).
+    """
+    from shopping_shorts import video_assemble as _va
+    if min_clip is None:
+        min_clip = _va._MIN_CLIP
+    segs = [dict(s) for s in (raw_segments or [])]
+    if len(segs) < 2:
+        return segs                       # 합칠 상대가 없다(원본 그대로 — 회귀 0)
+
+    def _len(s):
+        try:
+            return float(s.get("end") or 0.0) - float(s.get("start") or 0.0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _join(a, b):
+        """a·b를 하나로. 시간은 바깥쪽, 나머지는 '원래 길었던 쪽'을 대표로."""
+        big, small = (a, b) if _len(a) >= _len(b) else (b, a)
+        out = dict(big)
+        out["start"] = min(float(a.get("start") or 0.0), float(b.get("start") or 0.0))
+        out["end"] = max(float(a.get("end") or 0.0), float(b.get("end") or 0.0))
+        # 대사는 시간순으로 이어붙인다(둘 다 있으면 공백 하나로).
+        t1 = (a.get("text") or "").strip()
+        t2 = (b.get("text") or "").strip()
+        out["text"] = (t1 + " " + t2).strip() if (t1 and t2) else (t1 or t2)
+        # 실증·효과는 한쪽만 있어도 살린다(정보를 잃지 않는 방향).
+        out["is_key"] = bool(a.get("is_key")) or bool(b.get("is_key"))
+        out["has_effect"] = bool(a.get("has_effect")) or bool(b.get("has_effect"))
+        _pb = list(_norm_benefits(big.get("product_benefits")))
+        for x in _norm_benefits(small.get("product_benefits")):
+            if x not in _pb:
+                _pb.append(x)
+        out["product_benefits"] = _pb
+        return out
+
+    changed = True
+    while changed and len(segs) >= 2:
+        changed = False
+        for i, s in enumerate(segs):
+            if _len(s) >= min_clip - 1e-6:
+                continue
+            prev_s, next_s = (segs[i - 1] if i > 0 else None), (segs[i + 1] if i + 1 < len(segs) else None)
+            role = s.get("shot_role")
+            # ① 같은 역할 우선(앞을 먼저 본다 — 시간순 흐름이 덜 끊긴다)
+            pick = None
+            if prev_s is not None and prev_s.get("shot_role") == role:
+                pick = i - 1
+            elif next_s is not None and next_s.get("shot_role") == role:
+                pick = i + 1
+            else:
+                # ② 짧은 쪽
+                cands = [(j, _len(segs[j])) for j in (i - 1, i + 1) if 0 <= j < len(segs)]
+                if cands:
+                    pick = min(cands, key=lambda x: x[1])[0]
+            if pick is None:
+                continue
+            lo, hi = (pick, i) if pick < i else (i, pick)
+            segs[lo:hi + 1] = [_join(segs[lo], segs[hi])]
+            changed = True
+            break                          # 목록이 바뀌었으니 처음부터 다시 훑는다
+    return segs
+
+
 def _assign_seg_ids(video_id, raw_segments, motion_map=None):
     """모델이 준 세그먼트 목록에 seg_id 부여 + 숫자 필드 float 캐스팅(순수함수).
     motion_map({seg_id: level|None})이 오면 그 값을 motion_level로 싣는다(P2, 2026-07-29)."""
@@ -563,8 +643,12 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 ),
             )
             data = json.loads(resp.text)
-            motion_map = _compute_motion_map(video_path, _cuts, _fps, data.get("segments", []), video_id)
-            segments = _assign_seg_ids(video_id, data.get("segments", []), motion_map=motion_map)
+            # ★못 쓰는 조각을 애초에 안 만든다(2026-08-17) — 0.8초 미만은 화면에 안 나온다.
+            #   ⚠️순서 주의: motion_map이 세그먼트 순번으로 seg_id를 만들므로 **병합을 먼저** 해야
+            #   한다. 뒤에 하면 모션레벨이 엉뚱한 조각에 붙는다.
+            _segs_raw = _merge_too_short(data.get("segments", []))
+            motion_map = _compute_motion_map(video_path, _cuts, _fps, _segs_raw, video_id)
+            segments = _assign_seg_ids(video_id, _segs_raw, motion_map=motion_map)
             # 소스 단위 특장점: 모델의 최상위 요약을 우선하고, 없으면 세그별 집계로 폴백.
             # 무자막 영상(full_text 0자)이 대본 생성에서 통째로 빠지던 것을 막는 재료다.
             benefits = _norm_benefits(data.get("product_benefits")) or _collect_benefits(segments)
