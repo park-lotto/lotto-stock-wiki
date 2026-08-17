@@ -173,6 +173,34 @@ def test_search_covers_three_platforms(monkeypatch):
     assert res["keyword"] == "감자칩"
 
 
+def test_cost_is_keyed_by_backend_function_name():
+    """★비용표는 '플랫폼'이 아니라 **백엔드 함수 이름**으로 찾는다(run_chain이
+    fn.__name__으로 조회). 이름을 바꾸면 비용이 조용히 0원으로 보고된다 —
+    돈이 새는 걸 화면에서 못 보게 되므로 여기서 못박는다."""
+    assert kw_backends.tiktok.__name__ in kw_search._COST
+    assert kw_search._COST[kw_backends.tiktok.__name__] > 0
+
+
+def test_tiktok_cost_surfaces_in_meta(monkeypatch):
+    """실제로 meta에 비용이 실려 나오나(프론트가 이 값을 더해 화면에 띄운다)."""
+    import shopping_shorts.tiktok_search as ts
+    monkeypatch.setattr(ts, "search", lambda kw, n: [
+        {"url": "https://www.tiktok.com/@a/video/1", "title": "t"}])
+    monkeypatch.setattr(kw_search, "_CHAIN", {"tiktok": [kw_backends.tiktok]})
+    res = kw_search.search("감자칩", 5)
+    assert res["meta"]["tiktok"]["cost_usd"] == kw_search._COST["tiktok"]
+
+
+def test_free_platforms_report_zero_cost(monkeypatch):
+    """인스타·유튜브는 0원으로 보고돼야 한다(공짜인데 돈이 든 것처럼 보이면 안 된다)."""
+    import shopping_shorts.youtube_search as ys
+    monkeypatch.setattr(ys, "search", lambda kw, n, duration=None, language=None: [
+        {"url": "https://youtu.be/x", "title": "t", "thumbnail": ""}])
+    monkeypatch.setattr(kw_search, "_CHAIN", {"youtube": [kw_backends.youtube]})
+    res = kw_search.search("감자칩", 5)
+    assert res["meta"]["youtube"]["cost_usd"] == 0
+
+
 def test_real_chain_has_the_three_platforms():
     """실제 배선이 세 플랫폼을 다 갖고 있나(모킹된 테스트만 통과하면 의미 없다)."""
     assert set(kw_search._CHAIN) == {"instagram", "tiktok", "youtube"}
