@@ -5132,6 +5132,10 @@ function _sceneLabPrep(lab){
 function sceneLabPlayAll(lab){
   try{ _sceneLabPrep(lab); playAll(); }catch(e){ console.warn('전체 재생 실패', e); }
 }
+// 조각 여러 개 이어 보기(팔레트 '이어 보기' 버튼) — 2026-08-17
+function sceneLabPlaySegs(sids, label, lab){
+  try{ _sceneLabPrep(lab); playSegs(sids, label); }catch(e){ console.warn('이어 보기 실패', e); }
+}
 // 장면 하나 미리보기(왼쪽 소스 조각 클릭)
 function sceneLabPlaySeg(sid, lab){
   try{ _sceneLabPrep(lab); playSeg(sid); }catch(e){ console.warn('장면 미리보기 실패', e); }

@@ -775,6 +775,25 @@ function playSegHere(sid){
   playSeg(sid);
 }
 
+// 조각 여러 개를 큰 미리보기에서 이어 본다(팔레트 '이어 보기'). 위 playSegHere와 같은 모양.
+function playSegsHere(sids, label, ev){
+  if (ev) ev.stopPropagation();
+  try{
+    const up = _outerPlayer();
+    if (up && typeof up.sceneLabPlaySegs === 'function'){
+      up.sceneLabPlaySegs(sids, label, {DATA, lists, STRETCH, TRIMS, onePerSeg});
+      playKey = 'segs:' + sids.join(','); renderBand();
+      return;
+    }
+  }catch(e){ console.warn('바깥 재생 실패 — 이 화면에서 재생합니다', e); }
+  playSegs(sids, label);
+}
+// 지금 팔레트에 보이는 조각 전부(접힌 것 제외)를 순서대로 — 상단 '보이는 것 다 보기'.
+function playVisibleSegs(ev){
+  const sids = paletteGroups(_byRoleCache || {}).flatMap(g => g.segs.map(s => s.sid));
+  if (!sids.length) return;
+  playSegsHere(sids, `보이는 조각 ${sids.length}개 이어 보기`, ev);
+}
 function playAllHere(ev){
   if (ev) ev.stopPropagation();
   try{
@@ -960,6 +979,11 @@ function render(){
     if (hideDup && isDupOf(sid)){ folded++; continue; }   // 비슷한 것은 대표만 보인다
     (byRole[groupOf(sid)] ||= []).push({sid, ...s});
   }
+  // 지금 화면에 실제로 보이는 목록을 남긴다 — 상단 '이어 보기'가 이걸 그대로 쓴다
+  // (판단을 두 번 하지 않는다: 범위밖·중복접기 걸러낸 결과가 여기 하나뿐이다).
+  _byRoleCache = byRole;
+  {
+  }
   const dropMsg = document.getElementById('dropmsg');
   if (dropMsg) dropMsg.innerHTML =
     `<label style="cursor:pointer;color:var(--dim)"><input type="checkbox" ${hideDup?'checked':''}
@@ -969,7 +993,10 @@ function render(){
                title="완성품·굽기 같은 장면의 성격으로 묶습니다">결별</button>
        <button type="button" class="gm ${groupMode==='src'?'on':''}" onclick="setGroupMode('src')"
                title="어느 소스 영상에서 온 장면인지로 묶습니다 — 여러 영상을 골고루 쓰는지 보입니다">소스별</button>
-     </span>`;
+     </span>
+     <button type="button" class="act play" onclick="playVisibleSegs(event)"
+             title="지금 보이는 조각을 순서대로 큰 미리보기에서 이어 봅니다 — 담기 전에 흐름을 확인하세요"
+             style="margin-left:10px">▶️ 이어 보기</button>`;
   const cur = new Set(lists[sel] || []);
 
   // 묶는 기준 두 가지(2026-08-17). 카드를 그리는 코드는 **한 벌**이고 그룹 목록만 갈린다
@@ -979,7 +1006,11 @@ function render(){
   //            결로만 묶여 있으면 한 영상만 잔뜩 쓰고 있어도 알 수가 없었다.
   document.getElementById('palette').innerHTML = paletteGroups(byRole).map(g => {
     const segs = g.segs;
-    return `<div class="srcgroup"><div class="srchead"><span>${g.title}${g.hint?` <span class="cnt">· ${g.hint}</span>`:''}</span><span class="cnt">${segs.length}개</span></div>
+    const _gs = segs.map(x => x.sid);
+    return `<div class="srcgroup"><div class="srchead"><span>${g.title}${g.hint?` <span class="cnt">· ${g.hint}</span>`:''}</span>`
+      + `<span class="cnt"><button type="button" class="act play" style="padding:2px 8px;font-size:11.5px;margin-right:8px"`
+      + ` onclick='playSegsHere(${JSON.stringify(_gs)}, ${JSON.stringify(g.title + " 이어 보기")}, event)'`
+      + ` title="이 묶음의 조각을 순서대로 이어 봅니다">▶️ 쭉 보기</button>${segs.length}개</span></div>
       <div class="thumbs">${segs.map(s => `
         <div class="seg ${cur.has(s.sid)?'inthis':''} ${(outOfRange(s.sid)||tooShort(s.sid))?'oor':''}"
              data-sid="${s.sid}"
@@ -1241,6 +1272,7 @@ function bandCutClick(sid, ev){
   clearTimeout(clickTimer);
   clickTimer = setTimeout(() => playSegHere(sid), 230);
 }
+let _byRoleCache = {};               // 화면에 보이는 조각 목록(상단 이어 보기용)
 let palDrag = null;                  // 지금 끌고 있는 팔레트 장면
 function palDragStart(sid, ev){
   palDrag = sid;
