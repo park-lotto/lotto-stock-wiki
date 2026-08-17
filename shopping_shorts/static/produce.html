@@ -1012,6 +1012,17 @@
         </div>
         <!-- 우: 컨트롤 -->
         <div style="flex:1;min-width:300px">
+          <!-- ✍ 고정카피 후보 — 대본에서 AI가 뽑는다. ★누를 때만 textarea에 들어간다
+               (2026-07-19에 '자동 재채움'을 일부러 없앴다 — 자동으로 밀어넣으면 그 버그가 되살아난다) -->
+          <div id="hcCopyBox" style="margin-bottom:10px">
+            <div style="font-size:13px;font-weight:800;margin-bottom:6px">✍ 고정카피
+              <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 아래 칸에 들어갑니다</span>
+              <button type="button" class="tab" onclick="loadHeadcopySuggest(true)"
+                style="min-width:auto;padding:3px 10px;font-size:11px;margin-left:6px">↻ 다시 뽑기</button>
+            </div>
+            <div id="hcCopyCards" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+            <div id="hcCopyMsg" class="hint" style="margin-top:4px"></div>
+          </div>
           <div style="font-size:13px;margin-bottom:4px">헤드카피 문구 <span class="hint" style="font-size:11px">— Enter로 줄바꿈, 길면 자동으로 줄이 나뉘어요</span></div>
           <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
             style="width:100%;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.4"></textarea>
@@ -1176,6 +1187,16 @@
                   <span id="bgmStatus" class="hint"></span>
                   <label style="font-size:12px;color:var(--sub)">볼륨 <input id="bgmVol" type="range" min="0" max="60" value="15" oninput="updateBgmVol()"> <span id="bgmVolV">15</span>%</label>
                   <button onclick="clearBgm()" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:12px">제거</button>
+                </div>
+                <!-- 🖼 템플릿 — 기본제공 12종. 사장님이 올린 로고(아래 이미지 오버레이)와 **별개**로 함께 얹힌다. -->
+                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
+                  <div style="font-size:13px;font-weight:800;margin-bottom:6px">🖼 템플릿
+                    <span style="font-size:11px;color:var(--sub);font-weight:400">— 영상 위에 얹는 틀</span></div>
+                  <div id="tplCards" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>
+                  <div style="font-size:12px;color:var(--sub)">표시 구간
+                    <label style="margin-left:8px;cursor:pointer"><input type="radio" name="tplSpan" value="full" checked onchange="setTemplateSpan('full')"> 영상 전체</label>
+                    <label style="margin-left:8px;cursor:pointer"><input type="radio" name="tplSpan" value="first" onchange="setTemplateSpan('first')"> 첫 장면만</label>
+                  </div>
                 </div>
                 <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-top:1px dashed var(--line);padding-top:12px">
                   <span style="font-size:13px;font-weight:600">🖼 이미지 오버레이</span>
@@ -1919,6 +1940,96 @@ function seoCopyYoutube(){
 // 이력: 2026-07-24 f08c18aec가 출력을 720→1080으로 올릴 때 이 값과 UI값 환산을 빠뜨려
 //       실제 렌더 자막이 미리보기의 67%로 나왔다(2026-07-30 수정).
 const PREVIEW_W=380, VIDEO_W=720;
+// ✍ 고정카피 — 확정 대본에서 후보 4개. 캐시는 서버가 한다(같은 대본이면 호출 0회).
+// ★textarea를 자동으로 채우지 않는다. 카드를 누를 때만 들어간다(2026-07-19 결정).
+let HC_COPY_LOADED_HASH = null;
+async function loadHeadcopySuggest(force){
+  const box=document.getElementById('hcCopyCards'), msg=document.getElementById('hcCopyMsg');
+  if(!box) return;
+  const script=(STATE.script||'').trim();
+  if(!script){ box.innerHTML=''; if(msg) msg.textContent='대본을 먼저 확정하면 문구를 뽑아드려요.'; return; }
+  let h=''; try{ h=await _scriptHash(script); }catch(e){}
+  if(!force && h && h===HC_COPY_LOADED_HASH) return;
+  if(msg) msg.textContent='문구 뽑는 중…';
+  try{
+    const d=await (await fetch('/api/produce/headcopy/suggest',
+      {method:'POST',headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({script})})).json();
+    const list=(d&&d.copies)||[];
+    if(!list.length){
+      box.innerHTML='';
+      if(msg) msg.innerHTML='<span style="color:var(--gold)">문구를 못 뽑았어요 — 아래 칸에 직접 입력하시거나 ↻ 다시 뽑기를 눌러주세요</span>';
+      return;
+    }
+    HC_COPY_LOADED_HASH=h;
+    window._hcCopies=list;
+    box.innerHTML=list.map((c,i)=>
+      `<button type="button" class="tab" onclick="useHeadcopy(${i})" style="min-width:auto;padding:7px 12px;font-size:12px;text-align:left;max-width:220px">`
+      + `<span style="color:var(--accent2);font-size:10px">#${i+1} ${esc(c.label||'')}</span><br>${esc(c.text||'')}</button>`).join('');
+    if(msg) msg.textContent='';
+  }catch(e){
+    box.innerHTML='';
+    if(msg) msg.innerHTML='<span style="color:var(--fire)">문구를 불러오지 못했어요(네트워크)</span>';
+  }
+}
+function useHeadcopy(i){
+  const c=(window._hcCopies||[])[i]; if(!c) return;
+  const t=document.getElementById('hcText'); if(!t) return;
+  t.value=c.text||'';
+  updateHC();          // 미리보기·STATE 반영은 기존 경로 그대로(새로 만들지 않는다)
+  try{ logPick('S6copy', {picked:i, candidates:(window._hcCopies||[]).map(x=>x.text)}); }catch(e){}
+}
+// 🖼 템플릿 — 목록은 서버가 준다(정의처는 deco_templates 하나). 선택은 STATE.deco.template.
+let TPL_LIST=[];
+async function loadTemplates(){
+  const box=document.getElementById('tplCards'); if(!box) return;
+  if(!TPL_LIST.length){
+    try{ const d=await (await fetch('/api/produce/templates')).json(); TPL_LIST=(d&&d.templates)||[]; }
+    catch(e){ box.innerHTML='<span class="hint" style="color:var(--fire)">템플릿을 불러오지 못했어요</span>'; return; }
+  }
+  renderTemplateCards();
+}
+function renderTemplateCards(){
+  const box=document.getElementById('tplCards'); if(!box) return;
+  const cur=(STATE.deco&&STATE.deco.template&&STATE.deco.template.id)||'';
+  const none=`<button type="button" class="tab${cur?'':' on'}" onclick="pickTemplate('')"
+    style="min-width:auto;padding:6px 12px;font-size:12px">없음</button>`;
+  box.innerHTML = none + TPL_LIST.map(t=>
+    `<button type="button" class="tab${cur===t.id?' on':''}" onclick="pickTemplate('${t.id}')" title="${esc(t.name)}"
+      style="min-width:auto;padding:0;overflow:hidden;width:52px;height:92px;background:#0a1017;position:relative">
+      <img src="${t.url}" alt="${esc(t.name)}" style="width:100%;height:100%;object-fit:cover"></button>`).join('');
+  const cs=(STATE.deco&&STATE.deco.template&&STATE.deco.template.span)||'full';
+  const radio=document.querySelector('input[name="tplSpan"][value="'+cs+'"]');
+  if(radio) radio.checked=true;
+}
+function pickTemplate(id){
+  if(!STATE.deco) STATE.deco={extra_texts:[], motion:null};
+  if(!id){ STATE.deco.template=null; }
+  else {
+    const span=(STATE.deco.template&&STATE.deco.template.span)||'full';
+    STATE.deco.template={id:id, span:span};
+  }
+  renderTemplateCards(); renderTemplatePreview(); saveHeadcopy();
+}
+function setTemplateSpan(span){
+  if(!STATE.deco||!STATE.deco.template) return;   // 고른 템플릿이 없으면 저장할 것도 없다
+  STATE.deco.template.span=span;
+  saveHeadcopy();
+}
+// 미리보기 — 실제 렌더와 같은 그림을 보여준다(9:16 위에 그대로 덮는다).
+function renderTemplatePreview(){
+  const pv=document.getElementById('hcPreview'); if(!pv) return;
+  let el=document.getElementById('tplPreview');
+  const t=STATE.deco&&STATE.deco.template;
+  if(!t||!t.id){ if(el) el.style.display='none'; return; }
+  const meta=TPL_LIST.find(x=>x.id===t.id); if(!meta) return;
+  if(!el){
+    el=document.createElement('img'); el.id='tplPreview';
+    el.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:4';
+    pv.appendChild(el);
+  }
+  el.src=meta.url; el.style.display='';
+}
 function initHeadcopy(){
   const t=document.getElementById('hcText');
   // 헤드카피는 빈칸으로 시작한다. 내가 입력한 값(STATE.headcopy.text)만 복원하고,
@@ -1953,6 +2064,9 @@ function initHeadcopy(){
   ensureCleanRegions();         // 지워진 자막 자리 표시 + 자막 자동정렬(미터치 시)
   loadBeatsPreview();
   syncMotionPicker();
+  loadHeadcopySuggest(false);   // 진입 시 자동(같은 대본이면 서버 캐시가 받아 호출 0회)
+  loadTemplates();              // 템플릿 카드(목록은 1회만 읽고 캐시)
+  renderTemplatePreview();      // 복원된 선택을 미리보기에 반영
 }
 // 모션 팩 목록(서버 packs.json과 id가 일치해야 함 — Task7에서 확정)
 const MOTION_PACKS=[{id:'dynamic_pop',name:'다이나믹 팝'},{id:'minimal_chic',name:'미니멀 시크'}];
