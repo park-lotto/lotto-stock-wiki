@@ -37,3 +37,10 @@ def test_노드가_0건이면_조용히_0을_돌려준다(tmp_path, monkeypatch)
     monkeypatch.setattr(tp, "_fetch_profile_nodes", lambda *a, **k: [])
     s = Store(str(tmp_path / "t.db"))
     assert tp.collect_account("x", s) == {"posts": 0, "new": 0}
+
+
+def test_네트워크가_실패해도_예외없이_0을_돌려준다(tmp_path, monkeypatch):
+    """fetch_html이 실패(빈 문자열)해도 collect_account는 예외 없이 계속 돈다."""
+    monkeypatch.setattr(tp, "fetch_html", lambda *a, **k: "")
+    s = Store(str(tmp_path / "t.db"))
+    assert tp.collect_account("x", s) == {"posts": 0, "new": 0}

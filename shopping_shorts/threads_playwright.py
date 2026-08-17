@@ -15,6 +15,7 @@
   게시물 마커(caption/like_count/video_versions)가 있는지**로 거른다.
 """
 import json
+import sys
 
 from playwright.sync_api import sync_playwright
 
@@ -88,13 +89,23 @@ BROWSER_HEADERS = {
 
 
 def fetch_html(url, timeout=30):
-    """쓰레드 페이지 HTML을 받는다. 실패하면 빈 문자열(성패는 호출부가 건수로 본다)."""
+    """쓰레드 페이지 HTML을 받는다. 실패하면 빈 문자열(성패는 호출부가 건수로 본다).
+
+    ★조용한 실패 금지: 예외는 삼키되(호출부가 계속 돌아야 한다), 어떤 URL에서
+      무슨 종류의 실패였는지는 한 줄 남긴다. HTTPError는 상태코드까지 남긴다.
+    """
+    import urllib.error
     import urllib.request
     try:
         req = urllib.request.Request(url, headers=BROWSER_HEADERS)
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return r.read().decode("utf-8", "ignore")
-    except Exception:
+    except urllib.error.HTTPError as e:
+        print(f"[threads_playwright] fetch_html 실패 status={e.code} url={url}",
+              file=sys.stderr)
+        return ""
+    except Exception as e:
+        print(f"[threads_playwright] fetch_html 실패 {e!r} url={url}", file=sys.stderr)
         return ""
 
 
@@ -103,9 +114,18 @@ def _fetch_profile_nodes(username, session_path="", proxy=""):
 
     session_path·proxy는 받아만 두고 이 경로에선 쓰지 않는다 — 로그아웃 뷰가 더 많이 준다.
     메타가 헤더 요구를 강화해 이 길이 막히면 그때 Playwright 경로로 폴백한다.
+
+    ★조용한 실패 금지: "HTML을 아예 못 받았다"(네트워크·차단)와 "받았는데 노드가
+      0개다"(파서가 구조 변화를 못 따라감)는 원인이 다르다 — 로그에서 갈라 보이게
+      HTML 길이와 뽑은 노드 수를 함께 남긴다.
     """
     html = fetch_html(f"{THREADS_BASE}/@{username}")
-    return extract_post_nodes(html)
+    nodes = extract_post_nodes(html)
+    if not nodes:
+        reason = "HTML 수신 실패(0바이트)" if not html else "파서가 노드를 못 찾음(구조 변화 의심)"
+        print(f"[threads_playwright] _fetch_profile_nodes 0건 username={username} "
+              f"html_len={len(html)} nodes=0 ({reason})", file=sys.stderr)
+    return nodes
 
 
 def collect_account(username, store, session_path="", proxy=""):
@@ -131,6 +151,9 @@ def fetch_video_url(code, username, session_path="", proxy=""):
       주소만 얻으면 그대로 받을 수 있다.
     ★이 주소는 만료된다. 영구 주소로 믿지 말고, 필요할 때 다시 부른다.
     """
+    from playwright.sync_api import TimeoutError as PWTimeoutError
+    src = ""
+    logged = False
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         ctx = browser.new_context(**_context_kw(session_path, proxy))
@@ -140,8 +163,19 @@ def fetch_video_url(code, username, session_path="", proxy=""):
                       wait_until="domcontentloaded", timeout=60000)
             page.wait_for_selector("video", timeout=20000)
             src = page.eval_on_selector("video", "v => v.currentSrc || v.src || ''")
-        except Exception:
-            src = ""
+        except PWTimeoutError as e:
+            print(f"[threads_playwright] fetch_video_url 타임아웃 code={code} "
+                  f"username={username} {e!r}", file=sys.stderr)
+            src, logged = "", True
+        except Exception as e:
+            print(f"[threads_playwright] fetch_video_url 실패 code={code} "
+                  f"username={username} {e!r}", file=sys.stderr)
+            src, logged = "", True
         finally:
             browser.close()
-    return src if isinstance(src, str) and src.startswith("https://") else ""
+    if not (isinstance(src, str) and src.startswith("https://")):
+        if not logged:
+            print(f"[threads_playwright] fetch_video_url video 태그 없음/빈 src "
+                  f"code={code} username={username}", file=sys.stderr)
+        return ""
+    return src
