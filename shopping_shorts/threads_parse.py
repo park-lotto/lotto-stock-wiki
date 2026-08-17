@@ -180,3 +180,46 @@ def quality_score(post, text_level=""):
     if text_level == "none":
         score += 1
     return score
+
+
+_COUPANG_RE = re.compile(r"(?:https?://)?(link\.coupang\.com/\S+)")
+
+
+def find_coupang(text):
+    """캡션에서 쿠팡 링크를 뽑는다. 없으면 빈 문자열."""
+    if not isinstance(text, str):
+        return ""
+    m = _COUPANG_RE.search(text)
+    if not m:
+        return ""
+    return "https://" + m.group(1).rstrip(").,")
+
+
+def merge_thread_tail(posts):
+    """이어진 글(2/2)을 앞 글(1/2)에 접는다.
+
+    접는 조건(전부 만족해야 한다):
+      - 같은 사람
+      - 뒤 글에 영상이 없다(영상이 있으면 그것도 독립된 재료다)
+      - 바로 다음 글이다
+    ★이 판단은 여기서만 한다. 수집기·화면에서 또 판단하면 언젠가 어긋난다(0순위-B).
+    """
+    out = []
+    for p in posts:
+        if not isinstance(p, dict):
+            continue
+        p = dict(p)
+        p.setdefault("tail_caption", "")
+        p.setdefault("coupang_url", p.get("coupang_url") or "")
+        prev = out[-1] if out else None
+        foldable = (prev is not None
+                    and prev.get("username") == p.get("username")
+                    and p.get("media_kind") != "video"
+                    and prev.get("media_kind") == "video")
+        if foldable:
+            prev["tail_caption"] = p.get("caption") or ""
+            prev["coupang_url"] = prev.get("coupang_url") or find_coupang(p.get("caption"))
+            continue
+        p["coupang_url"] = p["coupang_url"] or find_coupang(p.get("caption"))
+        out.append(p)
+    return out
