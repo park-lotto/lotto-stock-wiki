@@ -1559,23 +1559,16 @@ function render(opts){
     if(STATE.filters.fresh)  items = items.filter(i=> (i.age_hours ?? 999) < 24);
     if(STATE.filters.rising) items = items.filter(i=> (i.speed||0) >= cut);
   }
-  const _fc = document.getElementById("fcount");
-  if(_fc){
-    // ★숨긴 건 반드시 숫자로 알린다 — 안 그러면 "영상이 사라졌다"로 읽힌다.
-    const parts = [];
-    if(STATE.filters.fresh || STATE.filters.rising)
-      parts.push(`${_beforeFilter}건 중 ${items.length}건 표시 중`);
-    if(_perChCut > 0)
-      parts.push(`채널당 ${PER_CHANNEL_MAX}개만 (${_perChCut}건 접힘)`);
-    _fc.textContent = parts.join(" · ");
-  }
-
   items.sort((a,b)=> sortKey(b)-sortKey(a));
   // ★채널당 상한 — 반드시 **정렬 뒤에** 자른다(0순위-B: 기준을 두 번 적지 않는다).
   //   정렬은 sortKey 한 곳이 정하므로, 여기선 "앞에서부터 채널당 N개"만 남기면
   //   최신순 탭이면 최신 2개, 조회수순 탭이면 조회수 상위 2개가 자동으로 남는다.
   //   실측: 5,681장 → 1,347장(-76%), 채널 888개는 그대로 유지.
   //   검색 중에는 끄지 않는다 — 검색은 원래 전역이라 도배가 더 거슬린다.
+  // ★★이 블록은 아래 '접힘 건수' 표시보다 **위에** 있어야 한다(2026-08-18 실사고).
+  //   순서가 뒤집히면 _perChCut을 선언 전에 읽어(let=TDZ) render()가 통째로 죽고
+  //   전 플랫폼 카드가 빈 화면이 된다. 문법은 유효해서 node --check로도 안 잡힌다.
+  //   회귀 검사: tests/test_ranking_render_tdz.py
   let _perChCut = 0;
   if(PER_CHANNEL_ON){
     const seen = {}; const kept = [];
@@ -1586,6 +1579,17 @@ function render(opts){
     }
     _perChCut = items.length - kept.length;
     items = kept;
+  }
+
+  const _fc = document.getElementById("fcount");
+  if(_fc){
+    // ★숨긴 건 반드시 숫자로 알린다 — 안 그러면 "영상이 사라졌다"로 읽힌다.
+    const parts = [];
+    if(STATE.filters.fresh || STATE.filters.rising)
+      parts.push(`${_beforeFilter}건 중 ${items.length}건 표시 중`);
+    if(_perChCut > 0)
+      parts.push(`채널당 ${PER_CHANNEL_MAX}개만 (${_perChCut}건 접힘)`);
+    _fc.textContent = parts.join(" · ");
   }
   // 배지용 백분위 컨텍스트 — 지금 보이는 항목 기준(정렬·필터 반영)
   const _bctx={ vs:items.map(i=>i.views||0).sort((a,b)=>a-b),
