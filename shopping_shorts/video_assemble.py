@@ -1593,6 +1593,16 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     # 모션(전환·스티커 등 타임드 투명 레이어)과 색감 필터
     motion = deco.get("motion") or {}
     motion_layers = [L for L in (motion.get("layers") or []) if L.get("_abspath")]
+    # 🖼 꾸미기 템플릿 — 모션 레이어와 **같은 배관**에 얹는다(0순위-B: 합성 로직을
+    # 두 벌로 만들지 않는다). dur이 있으면 그 구간만(첫 장면), 없으면 영상 전체.
+    # ★deco.overlay(사장님이 올린 로고)와 **별도 슬롯**이다 — 둘 다 얹힌다.
+    tpl = deco.get("template") or {}
+    if tpl.get("_abspath"):
+        tl = {"_abspath": tpl["_abspath"], "x": 50, "y": 50,
+              "alpha": tpl.get("alpha", 1), "start": 0}
+        if tpl.get("dur"):
+            tl["dur"] = float(tpl["dur"])
+        motion_layers = list(motion_layers) + [tl]
     has_motion = bool(motion_layers)
     # 효과음(sfx): 비트별 position → 절대 오프셋(초)을 캡션과 **같은 함수**로 계산한다
     # (별도 계산 금지 — 저장위치=읽기위치). first=0.0 / last=마지막 세그먼트 직전까지의 합
