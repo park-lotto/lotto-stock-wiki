@@ -330,6 +330,29 @@ function playSeg(sid, ev){
   const sb0 = document.getElementById('subbox'); if (sb0) sb0.innerHTML = '';
   startSeq([{seg_id: sid, video_id: s.video_id, start: s.start, dur: s.end - s.start}]);
 }
+// ★조각 여러 개를 순서대로 이어 본다(2026-08-17 사장님 "여기서 전체 재생을 만들어서
+//   미리보기에서 재생을 할 수 있게"). 팔레트에서 '이 영상이 어떤 순서로 흘러가나'를
+//   담기 전에 확인하는 용도 — 담아서 보고 되돌리는 수고를 없앤다.
+//   새 재생기를 만들지 않는다: startSeq가 이미 clips 배열을 순차로 잇는다(0순위-B).
+//   ✂트림된 조각은 trimPieces로 갈라 넣어 편집 화면과 같은 그림이 나오게 한다.
+function playSegs(sids, label){
+  const clips = [];
+  for (const sid of (sids || [])){
+    for (const p of trimPieces(sid)){
+      const d = p.end - p.start;
+      if (d > EPS) clips.push({seg_id: sid, video_id: p.video_id, start: p.start, dur: d});
+    }
+  }
+  if (!clips.length) return;
+  const key = 'segs:' + (sids || []).join(',');
+  if (playKey === key && !vid().paused){ stopPlay(); return; }   // 같은 것 다시 누르면 정지
+  playKey = key;
+  seqLabel = label || `이어 보기 - 조각 ${clips.length}개`;
+  clearInterval(subTimer); seqBeat = null;
+  const a0 = audio(); if (a0) a0.pause();
+  const sb0 = document.getElementById('subbox'); if (sb0) sb0.innerHTML = '';
+  startSeq(clips);
+}
 function playBeat(i, ev){
   if (ev) ev.stopPropagation();
   const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i]);
