@@ -85,6 +85,7 @@ from shopping_shorts import seo_generate, seo_probe
 from shopping_shorts import pattern_bank
 from shopping_shorts import bank_assemble
 from shopping_shorts import thumb_title
+from shopping_shorts import headcopy_gen
 import uuid
 
 app = FastAPI(title="숏템메이커 레퍼런스 랭킹")   # /docs 노출 제목 — 브랜드 통일(2026-07-25)
@@ -9207,6 +9208,35 @@ def api_produce_mix_settings(body: dict):
     if fields:
         store.update_mix_job(job_id, **fields)
     return {"ok": True}
+
+
+# 고정카피(헤드카피 후보) — 확정 대본에서 AI가 4개 뽑는다.
+# ★캐시가 핵심이다: 꾸미기에 들어올 때마다 자동 생성이라, 캐시가 없으면 사장님이
+#   6단계를 오갈 때마다 과금된다. 키는 **기존 _script_hash**를 쓴다(새 규칙을 만들지
+#   않는다 — 0순위-B. 프론트 _scriptHash와도 같은 규칙이라 나중에 대조할 수 있다).
+# ⚠️ 프로세스 메모리 캐시다. 재시작하면 비지만, "한 세션에서 오가는 동안 과금 0"이라는
+#    목적은 달성한다. DB 컬럼을 새로 파지 않는 쪽을 택했다(스키마 변경 위험 > 이득).
+_HEADCOPY_CACHE = {}
+_HEADCOPY_CACHE_MAX = 200
+
+
+@app.post("/api/produce/headcopy/suggest")
+def api_produce_headcopy_suggest(body: dict):
+    """확정 대본 → 헤드카피 후보. {script} → {ok, cached, copies:[{label,text}]}"""
+    script = (body.get("script") or "").strip()
+    if not script:
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "대본이 비어 있습니다"})
+    key = _script_hash(script)
+    if key in _HEADCOPY_CACHE:
+        return {"ok": True, "cached": True, "copies": _HEADCOPY_CACHE[key]}
+    copies = headcopy_gen.suggest(script)
+    # 못 뽑은 것도 캐시하면 "다시 시도"가 영영 막힌다 → 성공했을 때만 담는다.
+    if copies:
+        if len(_HEADCOPY_CACHE) >= _HEADCOPY_CACHE_MAX:
+            _HEADCOPY_CACHE.clear()      # 단순 상한 — LRU를 쓸 만큼 크지 않다
+        _HEADCOPY_CACHE[key] = copies
+    return {"ok": True, "cached": False, "copies": copies}
 
 
 @app.post("/api/produce/mix/bgm")
