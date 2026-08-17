@@ -3470,16 +3470,29 @@ def api_coupang_relay_status():
 
 @app.get("/api/mix/product/{job_id}")
 def api_mix_product_get(job_id: str):
-    """SEO 설명란·최종렌더 단계가 "인포크에 넣을 링크"와 설명 블록을 꺼내 쓴다."""
+    """SEO 설명란·최종렌더 단계가 "인포크에 넣을 링크"와 설명 블록을 꺼내 쓴다.
+
+    ★2026-08-18: 상품 확정 UI가 3단계에서 8단계(SEO)로 옮겨오면서 `affiliate_target`·
+    `coupang_search_url`을 여기에 더했다. 그 둘은 원래 `/api/mix/result`에만 있었는데,
+    그건 edit_plan이 없으면 404이고 beats 전체를 실어 보내는 무거운 응답이라
+    "상품 확정" 하나 때문에 부르기엔 과하다. 검색 URL 만드는 규칙을 프런트에 또 적으면
+    같은 판단이 두 곳이 된다(0순위-B) → 서버 한 곳에서만 만든다.
+    기존 key는 하나도 안 바꿨다(인포크 등록 화면이 이 응답을 읽는다).
+    """
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     product = job.get("product")
+    # edit_plan은 아직 없을 수 있다(매칭 전) — 그때는 빈 문자열로 두고 화면이 폼을 그린다.
+    plan = job.get("edit_plan") or {}
+    target = plan.get("affiliate_target", "") if isinstance(plan, dict) else ""
     return {"ok": True, "product": product,
             "final_link": coupang_partners.final_link(product),
             "description_block": coupang_partners.description_block(product),
             "partners_link_page": coupang_partners.PARTNERS_LINK_PAGE,
-            "inpock_page": coupang_partners.INPOCK_PAGE}
+            "inpock_page": coupang_partners.INPOCK_PAGE,
+            "affiliate_target": target,
+            "coupang_search_url": coupang_partners.search_url(target)}
 
 
 @app.post("/api/mix/retype")
