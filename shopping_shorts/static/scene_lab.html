@@ -1977,19 +1977,29 @@ function wireBandPan(){
   const row = document.getElementById('tbrow');
   if (!row || row._panWired) return;
   row._panWired = true;
-  let on = false, x0 = 0, left0 = 0, moved = 0, scrolled = 0;
+  // ★캡처는 **실제로 끌기 시작한 뒤에만** 건다(2026-08-17 브라우저 실측으로 확정).
+  //   종전엔 pointerdown 즉시 row.setPointerCapture를 걸었는데, 캡처 중에는 click이
+  //   자식(.tbeat)으로 가지 않아 **칸·대본을 눌러도 재생이 아예 안 됐다**.
+  //   실측: JS로 click 이벤트를 보내면 재생됨(playKey=beat:0) / 진짜 마우스 클릭은
+  //   playKey=null — 캡처가 삼킨 것. 4px 넘게 움직였을 때 캡처하면 끌기는 그대로 되고
+  //   단순 클릭은 살아난다.
+  const PAN_MIN = 4;
+  let on = false, cap = false, x0 = 0, left0 = 0, moved = 0, scrolled = 0;
   const skip = t => !t || (t.closest && t.closest('.tbcut, button, input, label, [contenteditable="true"]'));
   row.style.cursor = 'grab';
   row.addEventListener('pointerdown', e => {
     if (e.button !== 0 || skip(e.target)) return;
-    on = true; moved = 0; scrolled = 0; x0 = e.clientX; left0 = row.scrollLeft;
-    row.style.cursor = 'grabbing';
-    row.setPointerCapture(e.pointerId);
+    on = true; cap = false; moved = 0; scrolled = 0; x0 = e.clientX; left0 = row.scrollLeft;
   });
   row.addEventListener('pointermove', e => {
     if (!on) return;
     const dx = e.clientX - x0;
     if (Math.abs(dx) > moved) moved = Math.abs(dx);
+    if (!cap){
+      if (moved < PAN_MIN) return;              // 아직 '누른 것' — 캡처하지 않는다
+      cap = true; row.style.cursor = 'grabbing';
+      try{ row.setPointerCapture(e.pointerId); }catch(err){}
+    }
     row.scrollLeft = left0 - dx;
     // 실제로 옆으로 갔는지도 함께 잰다 — 끝에 닿아 안 움직였으면 '끈 것'이 아니다.
     if (Math.abs(row.scrollLeft - left0) > scrolled) scrolled = Math.abs(row.scrollLeft - left0);
@@ -1997,7 +2007,8 @@ function wireBandPan(){
   const end = e => {
     if (!on) return;
     on = false; row.style.cursor = 'grab';
-    try{ row.releasePointerCapture(e.pointerId); }catch(err){}
+    if (cap){ try{ row.releasePointerCapture(e.pointerId); }catch(err){} }
+    cap = false;
   };
   row.addEventListener('pointerup', end);
   row.addEventListener('pointercancel', end);
