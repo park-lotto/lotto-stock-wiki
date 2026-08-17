@@ -87,14 +87,43 @@ function isMergedInto(id){
   return null;
 }
 let trimA = null, trimSid = null;  // 첫 번째 체크 지점 / 지금 트림바가 보는 장면
+// ★합친 것을 다시 멤버 경계로 가른다(2026-08-17 사장님 "3장을 합쳤으면 3장 재생이 되야").
+//   mergeSpan은 합치기를 **한 개의 긴 구간**으로 만든다(그래야 길이·트림 판단이 한 벌).
+//   그런데 재생 계획(planClips)은 구간이 하나면 앞에서부터 칸 길이만큼만 쓰므로
+//   8초를 합쳐 5초 칸에 넣으면 **첫 조각만** 보였다(사장님 제보).
+//   여기서 멤버 경계로 되갈라 주면 planClips가 '여러 장'으로 보고 칸 시간을 나눈다
+//   — 분배 규칙은 손대지 않는다(0순위-B: 나누는 판단은 planClips 한 곳에만 있다).
+//   덤: 멤버 사이가 떨어져 있으면 그 공백이 자연히 빠진다(예전엔 통째로 포함됐다).
+function mergeParts(id){
+  const s = (DATA.segments || {})[id];
+  const m = MERGES[id];
+  if (!s || !m || !m.length) return [];
+  const arr = [s].concat(m.map(x => (DATA.segments || {})[x]).filter(Boolean));
+  return arr.map(x => [x.start, x.end]).sort((a, b) => a[0] - b[0]);
+}
+function splitByMembers(id, span){
+  const parts = mergeParts(id);
+  if (!parts.length) return [span];
+  const out = [];
+  for (const pr of parts){
+    const st = Math.max(span.start, pr[0]), en = Math.min(span.end, pr[1]);
+    if (en - st > EPS) out.push({...span, start: st, end: en});
+  }
+  return out.length ? out : [span];
+}
 function trimPieces(id){
   const s = mergeSpan(id); if (!s) return [];
   const t = TRIMS[id];
-  if (!t) return [s];
-  const p = [];
-  if (t[0] > EPS) p.push({...s, end: s.start + t[0]});                 // 앞토막 [0 ~ a]
-  if (s.end - (s.start + t[1]) > EPS) p.push({...s, start: s.start + t[1]});  // 뒤토막 [b ~ 끝]
-  return p.length ? p : [s];       // 전부 잘려 나가면 트림 무시(원본)
+  const spans = [];
+  if (!t){
+    spans.push(s);
+  } else {
+    if (t[0] > EPS) spans.push({...s, end: s.start + t[0]});                 // 앞토막 [0 ~ a]
+    if (s.end - (s.start + t[1]) > EPS) spans.push({...s, start: s.start + t[1]});  // 뒤토막 [b ~ 끝]
+    if (!spans.length) spans.push(s);   // 전부 잘려 나가면 트림 무시(원본)
+  }
+  // 합친 것이면 멤버 경계로 되가른다(안 합쳤으면 그대로 1개)
+  return spans.reduce((acc, sp) => acc.concat(splitByMembers(id, sp)), []);
 }
 // '가진 시간'용 실제 가용 길이 — 0.8초 미만 토막은 어차피 안 나오므로 뺀다.
 function effLen(id){
