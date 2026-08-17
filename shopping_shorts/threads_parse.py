@@ -156,3 +156,27 @@ def extract_post_nodes(payload):
     else:
         _walk_nodes(payload, out, seen, set())
     return out
+
+
+CAPTION_MIN = 40        # 말맛 재료가 되는 최소 길이
+
+
+def quality_score(post, text_level=""):
+    """재료로서 쓸모 있는가. 지표(좋아요)는 여기 안 들어간다 — 동점일 때 순서만 가른다.
+
+    문턱은 여기서 정하지 않는다. 200~300건 모은 뒤 분위수로 정한다(표본 4건으로
+    정하면 틀린다). 이 함수는 점수만 낸다.
+    """
+    if not isinstance(post, dict):
+        return 0
+    score = 0
+    if post.get("media_kind") == "video":
+        score += 3
+    if post.get("coupang_url"):
+        score += 2
+    cap = post.get("caption")
+    if isinstance(cap, str) and len(cap) >= CAPTION_MIN:
+        score += 2
+    if text_level == "none":
+        score += 1
+    return score
