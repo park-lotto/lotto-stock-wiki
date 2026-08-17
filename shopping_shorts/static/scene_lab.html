@@ -591,6 +591,16 @@ function labelTags(sid){
   }
   return out;
 }
+// ★배지 이모지(2026-08-17 사장님 "후킹구간 스토리구간 cta구간 이런 걸 이모티콘 배지로").
+//   글자만 있으면 스무 장을 훑을 때 눈이 안 걸린다 — 영상 하나를 쭉 내려보며 '이 영상은
+//   🎣로 열고 ⚠로 문제 던지고 🔧로 보여주고 📣로 닫았구나'가 한눈에 보이게 한다.
+//   판단은 useTags 한 곳에서만 하고 여기는 **표시**만 붙인다(0순위-B).
+const _TAG_EMOJI = {
+  '후킹용': '🎣', '문제용': '⚠️', '사용법용': '🔧', '결과용': '✨', 'CTA용': '📣',
+  '실증': '✅', '제품샷': '📦', '구매처': '🛒', '제조공정': '🏭', '반응샷': '😮',
+  '활용예시': '💡', '비교용': '⚖️', '굽기용': '🔥', '마무리용': '🎬',
+};
+function tagLabel(t){ return (_TAG_EMOJI[t] ? _TAG_EMOJI[t] + ' ' : '') + t; }
 // 용도 배지 — 위 결에서 바로 파생한 **제안**이다(강제 아님, 담는 건 사장님 판단).
 function useTags(sid){
   const s0 = DATA.segments[sid] || {}, r = groupOf(sid), t = [];
@@ -984,12 +994,16 @@ function render(){
                     onclick="event.stopPropagation();clearTimeout(clickTimer);stopCardPlay();playSegHere('${s.sid}')">✂ 자르기</button>
           </div>
           <div class="meta">
-            <div>${useTags(s.sid).map(t=>`<span class="utag${t==='실증'?' key':''}">${t}</span>`).join('')}</div>
+            <div>${useTags(s.sid).map(t=>`<span class="utag${t==='실증'?' key':''}">${esc(tagLabel(t))}</span>`).join('')}</div>
             ${tooShort(s.sid)?`<div class="oorbadge">⚠ 너무 짧아서(0.8초 미만) 담아도 화면에 안 나와요</div>`:''}
             ${dupMates(s.sid).length?`<div class="utag" style="border-color:var(--accent);color:var(--accent)">비슷한 그림 ${dupMates(s.sid).length}장 접힘</div>`:''}
             <div class="slabrow">
+              ${/* ★소스별에서도 순번을 보여준다(2026-08-17 사장님 "순서표시가 안 나오고").
+                    종전엔 결 이모지와 배타적이라 소스별에서 1-1이 통째로 사라졌다 — 정렬은
+                    시간순이 맞는데(위 paletteGroups) 그게 눈에 안 보였다. 둘 다 싣는다. */''}
               ${groupMode==='src'
-                ? `<span class="srcno rol" title="이 장면의 결: ${esc(groupTitle(groupOf(s.sid)))}">${esc(groupEmoji(groupOf(s.sid)))}</span>`
+                ? `<span class="srcno" title="${segMark(s.sid)} = 영상 ${srcNo(s.sid)}의 ${segNo(s.sid)}번째 조각(시간순)">${segMark(s.sid)}</span>`
+                  + `<span class="srcno rol" title="이 장면의 결: ${esc(groupTitle(groupOf(s.sid)))}">${esc(groupEmoji(groupOf(s.sid)))}</span>`
                 : `<span class="srcno" title="${segMark(s.sid)} = 영상 ${srcNo(s.sid)}의 ${segNo(s.sid)}번째 조각(시간순)">${segMark(s.sid)}</span>`}
               ${s.label ? `<span class="slab">${esc(s.label)}</span>`
                         : `<span class="slab dim">이름 없음</span>`}
