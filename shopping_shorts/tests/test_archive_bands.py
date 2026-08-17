@@ -55,3 +55,22 @@ def test_상한_0이면_예전처럼_문턱_이상_전부(store):
     """기존 호출부(상한 없이 부르던 곳)가 그대로 동작해야 한다."""
     assert _c(store.archive_hits(min_comments=1000, max_comments=0)) == \
         [1000, 1500, 2999, 3000, 5000, 9999, 12000, 50000]
+
+
+def test_역대탭에_채널_카테고리가_붙는다(store):
+    """아카이브엔 category 컬럼이 없어 카테고리를 누르면 결과 0건이었다(2026-08-17).
+
+    20만 건을 AI로 태깅하는 대신 채널 단위로 붙인다 — 카테고리는 릴스보다 채널의
+    성질에 가깝고, 실측 커버리지 79.5%에 추가 비용이 0이다.
+    """
+    with store._conn() as c:
+        c.execute("INSERT OR REPLACE INTO discovered_channels(username, category)"
+                  " VALUES('u','홈템')")
+    got = {r["category"] for r in store.archive_hits(min_comments=1000)}
+    assert got == {"홈템"}
+
+
+def test_카테고리를_모르는_채널은_빈값이라_전체탭에만_보인다(store):
+    """없는 걸 지어내면 잘못된 갈래로 걸러진다 — 모르면 비워 둔다."""
+    got = {r["category"] for r in store.archive_hits(min_comments=1000)}
+    assert got == {""}

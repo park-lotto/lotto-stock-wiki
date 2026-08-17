@@ -113,6 +113,19 @@ h1{font-size:16px;margin:0;font-weight:700}
 .pane{overflow-y:auto;height:100%;padding:14px}
 .pane.left{background:var(--panel);border:1px solid var(--line);border-radius:10px}
 .srcgroup{margin-bottom:18px}
+/* ★담을 칸 고정줄(2026-08-17 사장님 "영상2번 3번도 써야하는데 스크롤 내리면 다시 올라와야 돼서
+   불편"). 담기는 lists[sel] = **위에서 고른 칸**으로 들어가는데, 그 선택기가 화면 위쪽에만
+   있어서 조각을 고를 때마다 위아래로 왕복해야 했다. 머리줄을 스크롤에 붙여 어디까지
+   내려가도 '지금 어느 칸에 담기는지'가 보이고 거기서 바로 칸을 바꿀 수 있게 한다. */
+#dropmsg{position:sticky;top:0;z-index:6;background:var(--bg);padding:6px 0;
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px;box-shadow:0 6px 10px -8px #000a}
+.slotbtn{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:6px;
+  padding:3px 8px;font-size:12px;cursor:pointer}
+.slotbtn.on{border-color:var(--accent);color:var(--accent);font-weight:700}
+.seg .addbtn{width:100%;margin-top:4px;border:1px solid var(--accent);background:transparent;
+  color:var(--accent);border-radius:6px;padding:3px 0;font-size:12px;cursor:pointer}
+.seg .addbtn:hover{background:var(--accent);color:#08121f}
+.seg .addbtn.done{border-color:var(--good);color:var(--good)}
 .srchead{font-size:17px;color:var(--ink);font-weight:800;margin-bottom:8px;display:flex;
   align-items:baseline;justify-content:space-between;gap:8px;position:sticky;top:-14px;
   background:var(--panel);padding:22px 4px 8px;margin-left:-14px;margin-right:-14px;
@@ -563,6 +576,24 @@ function segNo(sid){
 }
 // 카드에 찍는 마킹 — "1-3" (1번 영상의 3번째 조각)
 function segMark(sid){ return srcNo(sid) + '-' + segNo(sid); }
+// ★"영상 1번 끝에가 짤림, 뒤에 더 남아있는데"(2026-08-17 사장님) — 조각이 사라진 게 아니라
+//   '비슷한 그림 접기'와 '소스 밖 구간'으로 걸러진 것인데, 머리글에 남은 개수(18개)만
+//   찍혀 있어 잘린 것처럼 보였다. **몇 개 중 몇 개가 보이고 왜 빠졌는지**를 적는다.
+//   (거르는 판단은 render 한 곳 그대로 — 여기는 세기만 한다. 0순위-B)
+function groupCount(g, segs){
+  if (groupMode !== 'src') return `${segs.length}개`;
+  const vid = (segs[0] || {}).video_id;
+  const all = Object.keys(DATA.segments || {}).filter(k => (DATA.segments[k] || {}).video_id === vid);
+  if (all.length === segs.length) return `${segs.length}개`;
+  const why = [];
+  const dup = all.filter(k => hideDup && isDupOf(k)).length;
+  const oor = all.filter(k => outOfRange(k)).length;
+  const mg  = all.filter(k => isMergedInto(k)).length;
+  if (dup) why.push(`비슷 ${dup}`);   // ↓ 아래 머리글에서 눌러 바로 펼칠 수 있다
+  if (oor) why.push(`소스밖 ${oor}`);
+  if (mg)  why.push(`합침 ${mg}`);
+  return `${segs.length}/${all.length}개${why.length ? ` (${why.join(' · ')} 가림)` : ''}`;
+}
 // ★label에서 뽑는 세부 성격(2026-08-17 사장님 "모든 장면이 저 틀에 되는 게 아니라
 //   더 만들어야 하는 거 아닌가"). 실측이 지적을 뒷받침했다 — 최근 60영상에서 shot_role이
 //   '기타'인 88건(10.5%)에 뚜렷한 역할이 잔뜩 숨어 있었다(제품 실물 확인·마트 진열 현황·
@@ -656,7 +687,8 @@ function isDupOf(sid){ const d = dupMap()[sid]; return (d && d.rep !== sid) ? d.
 function dupMates(sid){ const d = dupMap()[sid]; return d ? d.mates : []; }
 function toggleDup(on){ hideDup = on; render(); }
 function tooShort(sid){
-  const s0 = DATA.segments[sid]; if (!s0) return false;
+  // ★합친 조각은 '합친 길이'로 본다(mergeSpan 한 곳에서만 늘린다 — 0순위-B).
+  const s0 = mergeSpan(sid); if (!s0) return false;
   return (s0.end - s0.start) < MIN_CLIP - EPS;
 }
 function outOfRange(sid){
@@ -665,6 +697,72 @@ function outOfRange(sid){
   return !!d && s0.end > d + 0.2;
 }
 function esc(t){ return String(t==null?'':t).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+// ── 🔗 조각 합치기(2026-08-17) ────────────────────────────────────────────────
+// 사장님: "0.5초 같은 건 못 쓰니까 짤리자나 3개 합쳐서 훅에 넣으려고" → 팔레트에서
+// **한 장의 카드처럼 보이게** 합친다(고른 안 '가'). 합친 카드를 담으면 서버엔 조각
+// 하나(긴 구간)로 가므로 편성·렌더에 특별 처리가 0이다.
+// ★연속만 허용한다 — 같은 영상에서 조각번호가 이어진 것들만. 떨어진 구간을 억지로
+//   이어 붙이면 화면이 튀고(장면이 갑자기 점프) 사장님이 확인할 수 없다. 막고 이유를 보여준다.
+const _MSEL = new Set();                 // 지금 합치기용으로 고른 조각들
+function toggleMsel(sid, ev){
+  if (ev){ ev.stopPropagation(); clearTimeout(clickTimer); }
+  if (_MSEL.has(sid)) _MSEL.delete(sid); else _MSEL.add(sid);
+  render();
+}
+// 고른 것이 '같은 영상 · 조각번호 연속'인지 — 되면 시간순 목록, 안 되면 이유 문자열.
+function mselCheck(){
+  const ids = [...mselOrder()];
+  if (ids.length < 2) return {ok: false, why: '두 장 이상 골라야 합쳐집니다'};
+  const vid = (DATA.segments[ids[0]] || {}).video_id;
+  if (ids.some(x => (DATA.segments[x] || {}).video_id !== vid))
+    return {ok: false, why: '다른 영상끼리는 못 합칩니다 — 화면이 튑니다'};
+  for (let k = 1; k < ids.length; k++){
+    if (segNo(ids[k]) !== segNo(ids[k - 1]) + 1)
+      return {ok: false, why: `${segMark(ids[k-1])} 다음이 ${segMark(ids[k])} 가 아닙니다 — 붙어 있는 조각만 합칩니다`};
+  }
+  return {ok: true, ids};
+}
+function mselOrder(){
+  return [..._MSEL].sort((a, b) => (DATA.segments[a] || {}).start - (DATA.segments[b] || {}).start);
+}
+function doMerge(){
+  const c = mselCheck();
+  if (!c.ok){ alertMerge(c.why); return; }
+  const [lead, ...rest] = c.ids;
+  MERGES[lead] = rest;
+  // 이미 어느 칸에 담겨 있던 멤버는 **대표로 갈아 끼운다** — 안 그러면 같은 구간이
+  // 대표(긴 구간)와 멤버(짧은 조각)로 두 번 들어가 화면에 겹쳐 나온다.
+  lists = lists.map(l => {
+    if (!Array.isArray(l) || !l.some(x => rest.indexOf(x) >= 0)) return l;
+    const out = [];
+    for (const x of l){
+      const y = (rest.indexOf(x) >= 0) ? lead : x;
+      if (out.indexOf(y) < 0) out.push(y);
+    }
+    return out;
+  });
+  _MSEL.clear();
+  render();                              // saveWork까지 — 새로고침에도 남는다
+  if (typeof onTrimChanged === 'function') onTrimChanged();   // 서버 반영도 트림과 같은 길
+}
+function unMerge(lead, ev){
+  if (ev){ ev.stopPropagation(); clearTimeout(clickTimer); }
+  delete MERGES[lead];
+  render();
+  if (typeof onTrimChanged === 'function') onTrimChanged();
+}
+function alertMerge(why){
+  const el = document.getElementById('mergemsg');
+  if (el) el.textContent = '⚠ ' + why;
+}
+// 합친 카드에 찍을 문구 — "1-3~1-5 · 3장 합침 · 1.6초"
+function mergeBadge(lead){
+  const m = MERGES[lead] || [];
+  if (!m.length) return '';
+  const last = m[m.length - 1], sp = mergeSpan(lead);
+  return `🔗 ${segMark(lead)}~${segMark(last)} · ${m.length + 1}장 합침 · ${(sp.end - sp.start).toFixed(1)}초`;
+}
 
 // ── 자막·음성 트랙(2026-08-14 사장님 "결국 자막이랑 맞아떨어지는 걸 봐야 한다") ──────
 // 렌더를 다시 돌리지 않는다. 서버가 이미 만들어 둔 것을 그대로 겹쳐 재생한다:
@@ -767,7 +865,7 @@ function playSegHere(sid){
   try{
     const up = _outerPlayer();
     if (up && typeof up.sceneLabPlaySeg === 'function'){
-      up.sceneLabPlaySeg(sid, {DATA, lists, STRETCH, TRIMS, onePerSeg});
+      up.sceneLabPlaySeg(sid, {DATA, lists, STRETCH, TRIMS, MERGES, onePerSeg});
       playKey = 'seg:' + sid; renderBand();
       return;
     }
@@ -775,12 +873,31 @@ function playSegHere(sid){
   playSeg(sid);
 }
 
+// 조각 여러 개를 큰 미리보기에서 이어 본다(팔레트 '이어 보기'). 위 playSegHere와 같은 모양.
+function playSegsHere(sids, label, ev){
+  if (ev) ev.stopPropagation();
+  try{
+    const up = _outerPlayer();
+    if (up && typeof up.sceneLabPlaySegs === 'function'){
+      up.sceneLabPlaySegs(sids, label, {DATA, lists, STRETCH, TRIMS, MERGES, onePerSeg});
+      playKey = 'segs:' + sids.join(','); renderBand();
+      return;
+    }
+  }catch(e){ console.warn('바깥 재생 실패 — 이 화면에서 재생합니다', e); }
+  playSegs(sids, label);
+}
+// 지금 팔레트에 보이는 조각 전부(접힌 것 제외)를 순서대로 — 상단 '보이는 것 다 보기'.
+function playVisibleSegs(ev){
+  const sids = paletteGroups(_byRoleCache || {}).flatMap(g => g.segs.map(s => s.sid));
+  if (!sids.length) return;
+  playSegsHere(sids, `보이는 조각 ${sids.length}개 이어 보기`, ev);
+}
 function playAllHere(ev){
   if (ev) ev.stopPropagation();
   try{
     const up = _outerPlayer();
     if (up && typeof up.sceneLabPlayAll === 'function'){
-      up.sceneLabPlayAll({DATA, lists, STRETCH, TRIMS, onePerSeg});
+      up.sceneLabPlayAll({DATA, lists, STRETCH, TRIMS, MERGES, onePerSeg});
       playKey = 'all'; renderBand();
       return;
     }
@@ -800,7 +917,7 @@ function playBeatHere(i, ev){
       // ★window에서 꺼내 쓰면 안 된다 — let/const로 선언한 전역은 window의 속성이 아니라서
       //   바깥에서 읽으면 undefined다(2026-08-15 실측: lists가 undefined라 재생이 죽었다).
       //   같은 도메인이라 객체를 그대로 건넬 수 있다(복사 아님 — 참조가 그대로 간다).
-      up.sceneLabPlay(i, {DATA, lists, STRETCH, TRIMS, onePerSeg});
+      up.sceneLabPlay(i, {DATA, lists, STRETCH, TRIMS, MERGES, onePerSeg});
       playKey = 'beat:' + i; renderBand();
       return;
     }
@@ -958,7 +1075,13 @@ function render(){
     //   실체가 없는 화면이라 후보로 보일 이유가 없다. 몇 개 뺐는지는 위에 알린다.
     if (outOfRange(sid)){ dropped++; continue; }
     if (hideDup && isDupOf(sid)){ folded++; continue; }   // 비슷한 것은 대표만 보인다
+    if (isMergedInto(sid)) continue;                      // 🔗 합쳐진 조각은 대표 카드에 들어갔다
     (byRole[groupOf(sid)] ||= []).push({sid, ...s});
+  }
+  // 지금 화면에 실제로 보이는 목록을 남긴다 — 상단 '이어 보기'가 이걸 그대로 쓴다
+  // (판단을 두 번 하지 않는다: 범위밖·중복접기 걸러낸 결과가 여기 하나뿐이다).
+  _byRoleCache = byRole;
+  {
   }
   const dropMsg = document.getElementById('dropmsg');
   if (dropMsg) dropMsg.innerHTML =
@@ -969,7 +1092,19 @@ function render(){
                title="완성품·굽기 같은 장면의 성격으로 묶습니다">결별</button>
        <button type="button" class="gm ${groupMode==='src'?'on':''}" onclick="setGroupMode('src')"
                title="어느 소스 영상에서 온 장면인지로 묶습니다 — 여러 영상을 골고루 쓰는지 보입니다">소스별</button>
-     </span>`;
+     </span>
+     <button type="button" class="act play" onclick="playVisibleSegs(event)"
+             title="지금 보이는 조각을 순서대로 큰 미리보기에서 이어 봅니다 — 담기 전에 흐름을 확인하세요"
+             style="margin-left:10px">▶️ 이어 보기</button>
+     <span id="mergebar" style="margin-left:10px;color:var(--dim)">${
+       _MSEL.size
+         ? `🔗 ${_MSEL.size}장 고름 <button type="button" class="act" onclick="doMerge()"
+                title="붙어 있는 조각들을 한 장처럼 합칩니다 — 0.8초 미만이라 안 나오던 조각을 쓸 수 있습니다"
+                >합치기</button> <button type="button" class="gm" onclick="_MSEL.clear();render()">취소</button>`
+         : `<span title="카드의 🔗를 눌러 붙어 있는 조각 2장 이상을 고르면 합칠 수 있습니다">🔗 짧은 조각 합치기</span>`
+     } <span id="mergemsg" style="color:var(--accent)"></span></span>
+     <span style="color:var(--dim)" title="끌어다 오른쪽 칸에 놓거나, 카드를 두 번 클릭하면 선택된 칸에 담깁니다"
+        >지금 담기는 칸: <b style="color:var(--accent)">${sel+1}. ${esc(slotName(sel))}</b></span>`;
   const cur = new Set(lists[sel] || []);
 
   // 묶는 기준 두 가지(2026-08-17). 카드를 그리는 코드는 **한 벌**이고 그룹 목록만 갈린다
@@ -979,9 +1114,17 @@ function render(){
   //            결로만 묶여 있으면 한 영상만 잔뜩 쓰고 있어도 알 수가 없었다.
   document.getElementById('palette').innerHTML = paletteGroups(byRole).map(g => {
     const segs = g.segs;
-    return `<div class="srcgroup"><div class="srchead"><span>${g.title}${g.hint?` <span class="cnt">· ${g.hint}</span>`:''}</span><span class="cnt">${segs.length}개</span></div>
+    const _gs = segs.map(x => x.sid);
+    return `<div class="srcgroup"><div class="srchead"><span>${g.title}${g.hint?` <span class="cnt">· ${g.hint}</span>`:''}</span>`
+      + `<span class="cnt"><button type="button" class="act play" style="padding:2px 8px;font-size:11.5px;margin-right:8px"`
+      + ` onclick='playSegsHere(${JSON.stringify(_gs)}, ${JSON.stringify(g.title + " 이어 보기")}, event)'`
+      + ` title="이 묶음의 조각을 순서대로 이어 봅니다">▶️ 쭉 보기</button>`
+      + `<button type="button" class="slotbtn" onclick="toggleDup(${hideDup?'false':'true'})"
+           title="${hideDup ? '눌러서 가려진 조각까지 전부 펼칩니다' : '눌러서 비슷한 그림을 다시 접습니다'}"
+           >${esc(groupCount(g, segs))}</button></span></div>
       <div class="thumbs">${segs.map(s => `
         <div class="seg ${cur.has(s.sid)?'inthis':''} ${(outOfRange(s.sid)||tooShort(s.sid))?'oor':''}"
+             style="${_MSEL.has(s.sid)?'outline:2px solid var(--accent);outline-offset:1px':''}"
              data-sid="${s.sid}"
              draggable="true" ondragstart="palDragStart('${s.sid}',event)" ondragend="palDragEnd()"
              onclick="clickPlay('${s.sid}',event)"
@@ -989,14 +1132,26 @@ function render(){
              title="끌어다 오른쪽 칸에 놓으면 담깁니다 · 클릭 = 재생 · 두 번 클릭 = 선택된 칸에 담기">
           <div class="segthumb">
             <img src="${SL.thumb(s.sid)}" loading="lazy">
-            <span class="dur">${(s.end-s.start).toFixed(1)}초${TRIMS[s.sid]?' ✂':''}</span>
+            <span class="dur">${(mergeSpan(s.sid).end-s.start).toFixed(1)}초${TRIMS[s.sid]?' ✂':''}${MERGES[s.sid]?' 🔗':''}</span>
             <button class="cutbtn" title="큰 화면에서 이 장면을 재생하며 필요 없는 구간을 잘라냅니다"
                     onclick="event.stopPropagation();clearTimeout(clickTimer);stopCardPlay();playSegHere('${s.sid}')">✂ 자르기</button>
+            <button class="cutbtn" style="left:4px;right:auto"
+                    title="붙어 있는 조각끼리 합치려면 여기를 누르세요 — 0.8초 미만이라 화면에 안 나오던 조각을 살립니다"
+                    onclick="toggleMsel('${s.sid}',event)">${_MSEL.has(s.sid)?'🔗 골랐음':'🔗 고르기'}</button>
+            ${/* ★합치기 버튼을 **카드 위에** 둔다(2026-08-17 사장님 "영상2로 내려서 3개 선택해도
+                  합치기 버튼이 없음"). 종전엔 팔레트 머리줄(sticky)에만 있었는데, 실제 스크롤은
+                  iframe 안이 아니라 제작소 페이지에서 일어나 **iframe 안 sticky는 따라오지 않는다**.
+                  고른 카드마다 같은 버튼을 붙이면 어디까지 내려가도 손이 닿는다. */''}
+            ${_MSEL.has(s.sid) ? `<button class="cutbtn" style="left:4px;right:auto;top:auto;bottom:4px;
+                    border-color:var(--accent);color:var(--accent)"
+                    onclick="event.stopPropagation();clearTimeout(clickTimer);doMerge()"
+                    title="고른 ${_MSEL.size}장을 한 장처럼 합칩니다">🔗 ${_MSEL.size}장 합치기</button>` : ''}
           </div>
           <div class="meta">
-            <div>${useTags(s.sid).map(t=>`<span class="utag${t==='실증'?' key':''}">${esc(tagLabel(t))}</span>`).join('')}</div>
-            ${tooShort(s.sid)?`<div class="oorbadge">⚠ 너무 짧아서(0.8초 미만) 담아도 화면에 안 나와요</div>`:''}
-            ${dupMates(s.sid).length?`<div class="utag" style="border-color:var(--accent);color:var(--accent)">비슷한 그림 ${dupMates(s.sid).length}장 접힘</div>`:''}
+            ${/* ★번호줄을 **맨 위 고정**(2026-08-17 사장님 "순서대로 안 되어있는데?").
+                  번호는 오름차순이 맞았는데 위 배지(용도·너무짧음·합침·비슷접힘) 개수가
+                  카드마다 달라 번호의 세로 위치가 지그재그로 흔들려 어긋나 보였다.
+                  첫 줄로 올리면 모든 카드에서 같은 높이에 온다(정렬 규칙은 안 건드림). */''}
             <div class="slabrow">
               ${/* ★소스별에서도 순번을 보여준다(2026-08-17 사장님 "순서표시가 안 나오고").
                     종전엔 결 이모지와 배타적이라 소스별에서 1-1이 통째로 사라졌다 — 정렬은
@@ -1008,6 +1163,11 @@ function render(){
               ${s.label ? `<span class="slab">${esc(s.label)}</span>`
                         : `<span class="slab dim">이름 없음</span>`}
             </div>
+            <div>${useTags(s.sid).map(t=>`<span class="utag${t==='실증'?' key':''}">${esc(tagLabel(t))}</span>`).join('')}</div>
+            ${MERGES[s.sid]?`<div class="oorbadge" style="border-color:var(--accent);color:var(--accent)">${esc(mergeBadge(s.sid))}
+               <button type="button" class="gm" onclick="unMerge('${s.sid}',event)">해제</button></div>`:''}
+            ${tooShort(s.sid)?`<div class="oorbadge">⚠ 너무 짧아서(0.8초 미만) 담아도 화면에 안 나와요</div>`:''}
+            ${dupMates(s.sid).length?`<div class="utag" style="border-color:var(--accent);color:var(--accent)">비슷한 그림 ${dupMates(s.sid).length}장 접힘</div>`:''}
             <div class="d">${esc(s.scene_desc||'(설명 없음)')}</div>
             </div>
         </div>`).join('')}</div></div>`;
@@ -1065,7 +1225,7 @@ function render(){
         <div class="narrwrap">${SL.server ? '' : `<span class="edmark" title="대본 수정"
              onclick="event.stopPropagation();this.nextElementSibling.focus()">✏</span>`}<div class="narr" contenteditable="${SL.server ? 'false' : 'true'}" spellcheck="false"
              data-i="${i}" onblur="editNarr(${i}, this)"
-             onclick="event.stopPropagation()"
+             onclick="event.stopPropagation();${SL.server ? `selBeat(${i});playBeatHere(${i}, event)` : ''}"
              style="${SL.server ? 'cursor:default' : ''}"
              title="${SL.server ? '대본 수정은 위 ① 새 대본 고르기에서' : '눌러서 대본을 바로 고칠 수 있어요'}">${esc(narrOf(i))}</div></div>
         ${narrChanged(i) ? `<div class="why" style="color:var(--warn);border-color:#5a4520;background:#2a2113">
@@ -1241,6 +1401,7 @@ function bandCutClick(sid, ev){
   clearTimeout(clickTimer);
   clickTimer = setTimeout(() => playSegHere(sid), 230);
 }
+let _byRoleCache = {};               // 화면에 보이는 조각 목록(상단 이어 보기용)
 let palDrag = null;                  // 지금 끌고 있는 팔레트 장면
 function palDragStart(sid, ev){
   palDrag = sid;
@@ -1263,7 +1424,7 @@ function beatDrop(i, ev){
 function saveWork(){
   try{
     localStorage.setItem(SAVE_KEY, JSON.stringify({
-      mode, lists, chosen: [...chosen], narr: NARR, trims: TRIMS,
+      mode, lists, chosen: [...chosen], narr: NARR, trims: TRIMS, merges: MERGES,
       stretch: STRETCH, autoadd: AUTOADD, at: new Date().toISOString()
     }));
   }catch(e){}
@@ -1296,6 +1457,9 @@ function loadWork(){
     Object.assign(NARR, w.narr || {});
     Object.keys(TRIMS).forEach(k => delete TRIMS[k]);   // ✂ 옛 저장본엔 trims가 없다 → {} 그대로
     Object.assign(TRIMS, w.trims || {});
+    // 🔗 합친 조각도 같이 — 옛 저장본엔 merges가 없다 → {} 그대로(옛 편집이 안 깨진다)
+    Object.keys(MERGES).forEach(k => delete MERGES[k]);
+    Object.assign(MERGES, w.merges || {});
     // 늘려 채우기·자동 채우기도 저장본에서 — 옛 저장본엔 없다 → {} 그대로(깨지지 않는다)
     Object.keys(STRETCH).forEach(k => delete STRETCH[k]);
     Object.assign(STRETCH, w.stretch || {});
@@ -1322,6 +1486,8 @@ function loadSaved(){
   Object.assign(NARR, w.narr || {});
   Object.keys(TRIMS).forEach(k => delete TRIMS[k]);
   Object.assign(TRIMS, w.trims || {});
+  Object.keys(MERGES).forEach(k => delete MERGES[k]);
+  Object.assign(MERGES, w.merges || {});
   Object.keys(STRETCH).forEach(k => delete STRETCH[k]);
   Object.assign(STRETCH, w.stretch || {});
   Object.keys(AUTOADD).forEach(k => delete AUTOADD[k]);
@@ -1462,6 +1628,7 @@ async function applyServer(opt){
     beats: DATA.beats.map((b, i) => ({beat_idx: b.beat_idx,
       list: (lists[i] || []).slice(), stretch: !!STRETCH[i]})),
     trims: TRIMS,
+    merges: MERGES,          // 🔗 합친 조각(대표 → 이어 붙일 조각들) — 서버는 긴 구간 하나로 받는다
   };
   if (msg) msg.textContent = auto ? '💾 저장 중…' : '📤 서버에 반영하는 중… (SSH, 몇 초)';
   try{
@@ -1504,6 +1671,14 @@ function copyScript(){
     () => {});
 }
 function selBeat(i){ sel = i; render(); }
+// 고정줄 버튼에 쓸 짧은 칸 이름 — 대본 첫 어절(최대 6자). 대본을 고쳤으면 고친 것으로.
+function slotName(i){
+  const b = (DATA.beats || [])[i] || {};
+  const t = String(NARR[i] != null ? NARR[i] : (b.narration || '')).trim();
+  if (!t) return '칸';
+  const w = t.split(/\s+/)[0];
+  return w.length > 6 ? w.slice(0, 6) + '…' : w;
+}
 function add(sid){
   // ★담을 때 지금 배치를 절대 초기화하지 않는다(2026-08-14 사장님 "4장면 있었는데 하나
   //   추가하니 2개로 변했다"). 예전엔 setMode('hand')를 불렀는데 그게 initLists()로 전 칸을
@@ -1715,6 +1890,7 @@ function setMode(m){
 function reset(){
   clearWork();
   Object.keys(TRIMS).forEach(k => delete TRIMS[k]);   // ✂ 잘라낸 것도 처음으로
+  Object.keys(MERGES).forEach(k => delete MERGES[k]);  // 🔗 합친 것도 처음으로
   Object.keys(STRETCH).forEach(k => delete STRETCH[k]);
   Object.keys(AUTOADD).forEach(k => delete AUTOADD[k]);
   const el = document.getElementById('savedmsg'); if (el) el.textContent = '';
@@ -1801,30 +1977,51 @@ function wireBandPan(){
   const row = document.getElementById('tbrow');
   if (!row || row._panWired) return;
   row._panWired = true;
-  let on = false, x0 = 0, left0 = 0, moved = 0;
+  // ★캡처는 **실제로 끌기 시작한 뒤에만** 건다(2026-08-17 브라우저 실측으로 확정).
+  //   종전엔 pointerdown 즉시 row.setPointerCapture를 걸었는데, 캡처 중에는 click이
+  //   자식(.tbeat)으로 가지 않아 **칸·대본을 눌러도 재생이 아예 안 됐다**.
+  //   실측: JS로 click 이벤트를 보내면 재생됨(playKey=beat:0) / 진짜 마우스 클릭은
+  //   playKey=null — 캡처가 삼킨 것. 4px 넘게 움직였을 때 캡처하면 끌기는 그대로 되고
+  //   단순 클릭은 살아난다.
+  const PAN_MIN = 4;
+  let on = false, cap = false, x0 = 0, left0 = 0, moved = 0, scrolled = 0;
   const skip = t => !t || (t.closest && t.closest('.tbcut, button, input, label, [contenteditable="true"]'));
   row.style.cursor = 'grab';
   row.addEventListener('pointerdown', e => {
     if (e.button !== 0 || skip(e.target)) return;
-    on = true; moved = 0; x0 = e.clientX; left0 = row.scrollLeft;
-    row.style.cursor = 'grabbing';
-    row.setPointerCapture(e.pointerId);
+    on = true; cap = false; moved = 0; scrolled = 0; x0 = e.clientX; left0 = row.scrollLeft;
   });
   row.addEventListener('pointermove', e => {
     if (!on) return;
     const dx = e.clientX - x0;
     if (Math.abs(dx) > moved) moved = Math.abs(dx);
+    if (!cap){
+      if (moved < PAN_MIN) return;              // 아직 '누른 것' — 캡처하지 않는다
+      cap = true; row.style.cursor = 'grabbing';
+      try{ row.setPointerCapture(e.pointerId); }catch(err){}
+    }
     row.scrollLeft = left0 - dx;
+    // 실제로 옆으로 갔는지도 함께 잰다 — 끝에 닿아 안 움직였으면 '끈 것'이 아니다.
+    if (Math.abs(row.scrollLeft - left0) > scrolled) scrolled = Math.abs(row.scrollLeft - left0);
   });
   const end = e => {
     if (!on) return;
     on = false; row.style.cursor = 'grab';
-    try{ row.releasePointerCapture(e.pointerId); }catch(err){}
+    if (cap){ try{ row.releasePointerCapture(e.pointerId); }catch(err){} }
+    cap = false;
   };
   row.addEventListener('pointerup', end);
   row.addEventListener('pointercancel', end);
-  // 4px 넘게 끌었으면 '끈 것'이지 '누른 것'이 아니다 → 칸 재생을 막는다(캡처 단계).
-  row.addEventListener('click', e => { if (moved > 4){ e.stopPropagation(); e.preventDefault(); moved = 0; } }, true);
+  // ★삼키는 조건을 정확히 한다(2026-08-17 사장님 "단락별로 저 칸을 누르면 미리보기 재생이
+  //   되었는데 지금은 안 된다"). 원인: 칸의 빈 자리(썸네일 바깥)가 곧 pan 시작 지점인데
+  //   skip 목록에 .tbcut·버튼·입력칸만 있고 **칸 배경(.tbeat)은 없다**. 그래서 칸을 누를 때
+  //   마우스가 4px만 흔들려도 '끈 것'으로 보고 재생을 막았다 — 손을 완벽히 고정해야만 재생.
+  //   처방: ①손떨림 여유를 10px로 ②**실제로 옆으로 스크롤됐을 때만** 삼킨다.
+  //   둘 다여야 삼키므로, 제자리에서 살짝 흔든 클릭은 그대로 재생으로 간다.
+  row.addEventListener('click', e => {
+    if (moved > 10 && scrolled > 2){ e.stopPropagation(); e.preventDefault(); }
+    moved = 0; scrolled = 0;      // 다음 클릭에 옛 값이 남지 않게 항상 비운다
+  }, true);
 }
 boot();
 </script></body></html>

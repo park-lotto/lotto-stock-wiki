@@ -4961,7 +4961,47 @@ _ALLOWED_THUMB_HOSTS = ("cdninstagram.com", "fbcdn.net", "ytimg.com",
                         # 유튜브·인스타 결과만 검게 보인 이유도 이것 — 틱톡 결과는 렌즈가
                         # 원본 tiktokcdn 주소를 주는 경우가 있어 우연히 통과했다.
                         "gstatic.com")
-_ALLOWED_VIDEO_HOSTS = ("cdninstagram.com", "fbcdn.net")
+_ALLOWED_VIDEO_HOSTS = ("cdninstagram.com", "fbcdn.net",
+                        # 틱톡·도우인 mp4(2026-08-17). 렌즈 카드 인라인 재생에 필요하다 —
+                        # CDN 주소를 브라우저에 직접 주면 리퍼러·IP를 따져 막히고(그래서
+                        # 세로로 긴 임베드로 떨어졌다), 이 프록시를 타면 서버가 알맞은
+                        # Referer로 받아 same-origin으로 흘려준다.
+                        "tiktokcdn.com", "tiktokcdn-us.com", "tiktokv.com",
+                        "douyinvod.com", "douyinpic.com")
+
+
+# HEIC은 크롬·파이어폭스가 못 그린다(사파리만). 도우인 커버가 image/heic으로 온다
+# (2026-08-17 실측: Content-Type image/heic, URL 확장자를 .jpeg로 바꾸면 서명이 깨져 403,
+#  서버 ffmpeg도 HEIF 컨테이너를 못 읽는다) → 서버에서 JPEG로 바꿔 내려준다.
+# pillow-heif가 없으면 **조용히 원본을 그대로** 준다(지금까지와 동일 동작 = 안 나빠진다).
+_HEIF_READY = None
+
+
+def _thumb_to_web_format(body: bytes, ctype: str):
+    """브라우저가 못 그리는 이미지를 JPEG로. (bytes, content_type) 반환.
+
+    변환 실패·미설치는 원본을 그대로 돌려준다 — 썸네일 하나 때문에 카드를 죽이지 않는다."""
+    global _HEIF_READY
+    if "heic" not in (ctype or "").lower() and "heif" not in (ctype or "").lower():
+        return body, ctype
+    if _HEIF_READY is None:
+        try:
+            import pillow_heif
+            pillow_heif.register_heif_opener()
+            _HEIF_READY = True
+        except Exception:
+            _HEIF_READY = False
+    if not _HEIF_READY:
+        return body, ctype
+    try:
+        import io as _io
+        from PIL import Image
+        im = Image.open(_io.BytesIO(body))
+        buf = _io.BytesIO()
+        im.convert("RGB").save(buf, "JPEG", quality=85)
+        return buf.getvalue(), "image/jpeg"
+    except Exception:
+        return body, ctype
 
 
 @app.get("/api/thumb64")
@@ -5002,14 +5042,31 @@ _THUMB_CACHE_DIR = Path(__file__).parent / "data" / "thumb_cache"
 
 
 def _thumb_cache_path(url: str):
+    """썸네일 디스크 캐시 경로. **키를 무엇으로 잡는지가 호스트마다 다르다.**
+
+    ★2026-08-17 실사고: 키를 항상 '경로의 파일명'으로 잡고 있었는데, 구글 렌즈 썸네일은
+      `encrypted-tbn0.gstatic.com/images?q=tbn:ANd9Gc…` 처럼 **경로가 전부 `/images`**이고
+      구분값이 쿼리스트링에만 있다. 그래서 렌즈 결과의 **모든 썸네일이 같은 키**가 되어
+      처음 저장된 그림 하나가 전 카드에 재사용됐다(사장님 실측: 유튜브 카드 3장이 전부
+      같은 강아지 사진, 영상은 제목대로 정상). 인스타 CDN은 파일명이 고유해 안 걸렸다.
+
+    - 인스타·페북 CDN: **파일명**으로 잡는다(그대로 유지). 서명(`oe=`)만 바뀌고 파일명은
+      같으므로, 만료 URL이 새로 와도 캐시가 히트한다 — `_thumb_via_oembed` 자가복구가
+      이 성질에 기대고 있다(2026-08-09). 여기를 전체 URL로 바꾸면 그 이점이 깨진다.
+    - 그 외(gstatic 등): 쿼리까지 포함한 **전체 URL**로 잡는다. 파일명이 구분값이 아니다.
+    """
     try:
-        name = (urllib.parse.urlparse(url).path or "").rsplit("/", 1)[-1]
+        parsed = urllib.parse.urlparse(url)
     except ValueError:
         return None
-    if not name or len(name) > 200:
+    name = (parsed.path or "").rsplit("/", 1)[-1]
+    host = (parsed.netloc or "").lower()
+    keyed_by_filename = any(h in host for h in ("cdninstagram.com", "fbcdn.net"))
+    key = name if keyed_by_filename else url
+    if not key or (keyed_by_filename and (not name or len(name) > 200)):
         return None
     import hashlib
-    return _THUMB_CACHE_DIR / (hashlib.sha1(name.encode()).hexdigest() + ".jpg")
+    return _THUMB_CACHE_DIR / (hashlib.sha1(key.encode()).hexdigest() + ".jpg")
 
 
 # 인스타 웹이 자기 자신도 쓰는 공개 앱ID(비밀 아님) — oembed 호출에 필요.
@@ -5094,15 +5151,18 @@ def api_thumb(url: str, v: str | None = None, shortcode: str | None = None):
         })
         r.raise_for_status()
         ctype = r.headers.get("Content-Type", "image/jpeg")
+        # ★브라우저가 못 그리는 포맷(도우인 커버는 image/heic)은 여기서 JPEG로 바꾼다.
+        #   변환분을 캐시에도 넣어야 다음 요청이 다시 변환하지 않는다.
+        body, ctype = _thumb_to_web_format(r.content, ctype)
         if cache is not None and ctype.startswith("image/"):
             try:
                 _THUMB_CACHE_DIR.mkdir(parents=True, exist_ok=True)
                 tmp = cache.with_suffix(".tmp")
-                tmp.write_bytes(r.content)
+                tmp.write_bytes(body)
                 tmp.replace(cache)
             except OSError:
                 pass    # 캐시 실패는 서빙에 영향 없음
-        return Response(content=r.content, media_type=ctype,
+        return Response(content=body, media_type=ctype,
                         headers={"Cache-Control": "public, max-age=86400"})
     except Exception:
         # ★만료 자가복구(2026-08-09): CDN 서명(oe=)은 ~4일이면 만료돼 저장된 URL이 전부
@@ -5132,9 +5192,16 @@ def api_video(url: str):
     if _reject_cdn_proxy(url, _ALLOWED_VIDEO_HOSTS):
         return Response(status_code=400, content=b"invalid host")
     try:
+        # 호스트에 맞는 Referer(2026-08-17) — /api/thumb가 이미 같은 규칙을 쓴다.
+        # 인스타 리퍼러를 틱톡 CDN에 보내면 막힐 수 있어 자기 도메인으로 보낸다.
+        ref = "https://www.instagram.com/"
+        if "tiktok" in url:
+            ref = "https://www.tiktok.com/"
+        elif "douyin" in url:
+            ref = "https://www.douyin.com/"
         r = requests.get(url, timeout=30, headers={
             "User-Agent": "Mozilla/5.0",
-            "Referer": "https://www.instagram.com/",
+            "Referer": ref,
         })
         r.raise_for_status()
         ctype = r.headers.get("Content-Type", "video/mp4")
@@ -5142,6 +5209,60 @@ def api_video(url: str):
                         headers={"Cache-Control": "public, max-age=3600"})
     except Exception:
         return Response(status_code=404, content=b"")
+
+
+_PLAY_CACHE_DIR = Path(__file__).parent / "data" / "play_cache"
+_PLAY_CACHE_MAX = int(os.environ.get("PLAY_CACHE_MAX_FILES", "300"))
+_PLAY_PAGE = {
+    "tiktok": "https://www.tiktok.com/@x/video/{id}",
+    "youtube": "https://www.youtube.com/watch?v={id}",
+    "instagram": "https://www.instagram.com/reel/{id}/",
+}
+
+
+def _play_cache_trim():
+    """오래된 것부터 지워 파일 수를 상한 이하로. 디스크가 조용히 차는 걸 막는다."""
+    try:
+        files = sorted(_PLAY_CACHE_DIR.glob("*.mp4"), key=lambda p: p.stat().st_mtime)
+        for p in files[:-_PLAY_CACHE_MAX]:
+            p.unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
+@app.get("/api/play")
+def api_play(platform: str, id: str):
+    """영상을 **서버가 받아서** 파일로 서빙한다(카드 안 인라인 재생용, 2026-08-17).
+
+    왜 필요한가 — 틱톡은 `/api/media`가 준 mp4 주소를 **다른 요청으로 재사용하면 403**이다
+    (서버 실측: 리퍼러를 틱톡으로 줘도 403, 인스타 리퍼러도 403 = IP·세션 바인딩).
+    그래서 브라우저 직접재생도, `/api/video` 프록시도 안 되고 세로로 긴 임베드로
+    떨어졌다("틱톡 여전히 썸네일 크기" 제보). yt-dlp로 **내려받는 것은 된다**
+    (실측 4.4초·353KB) → 받아서 우리 파일로 주면 카드 안에서 작게 재생된다.
+
+    FileResponse라 Range(탐색)도 된다. 같은 영상은 캐시에서 즉시 나간다."""
+    from fastapi.responses import FileResponse, Response
+    page = _PLAY_PAGE.get((platform or "").lower())
+    if not page or not re.fullmatch(r"[A-Za-z0-9_-]{5,64}", id or ""):
+        return Response(status_code=400, content=b"bad request")
+    key = hashlib.sha1(f"{platform}:{id}".encode()).hexdigest()[:16]
+    out = _PLAY_CACHE_DIR / f"{key}.mp4"
+    if not out.exists():
+        _PLAY_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        tmp_dir = _PLAY_CACHE_DIR / f"tmp_{key}"
+        try:
+            tmp_dir.mkdir(parents=True, exist_ok=True)
+            got, _cap = download_any(page.format(id=id), tmp_dir)
+            if not got or not Path(got).exists():
+                return Response(status_code=404, content=b"")
+            Path(got).replace(out)
+        except Exception:
+            return Response(status_code=404, content=b"")
+        finally:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+        _play_cache_trim()
+    return FileResponse(str(out), media_type="video/mp4",
+                        headers={"Cache-Control": "public, max-age=86400"})
 
 
 @app.get("/api/media")

@@ -468,6 +468,7 @@ body.is-admin .blockbtn{display:inline-block}
       <div class="tab" data-tab="fan_density" title="댓글 ÷ 팔로워수 — 구독자 규모 대비 얼마나 뜨거웠는지. 작은 채널의 대박을 잡는 눈(조회수당댓글과 보는 게 다릅니다)">🙌 팔로워당댓글</div>
       <span class="tab-div"></span>
       <span class="tab-grp">단순 지표</span>
+      <div class="tab" data-tab="recent" title="최근에 올라온 순 — 발행 시각이 새로운 것부터">🕒 최신순</div>
       <div class="tab" data-tab="rawcomments" title="댓글 수가 많은 순 (절대값)">💬 댓글순</div>
       <div class="tab" data-tab="followers" title="채널 팔로워(구독자)가 많은 순">👥 팔로워순</div>
       <div class="tab" data-tab="views" title="조회수가 많은 순">👁 조회수순</div>
@@ -1098,12 +1099,26 @@ document.querySelectorAll('.tab').forEach(x=> x.onclick=()=>setTab(x.dataset.tab
 //   (이번 조회수 − 직전 조회수, ranking.py의 5개 플랫폼 빌더 전부에 있음)를 쓰면
 //   "오늘 가장 많이 오른 영상"이 위로 올라와 매일 순서가 실제로 바뀐다.
 //   ?? 폴백: delta 없는 옛 캐시 items가 섞여도 예전 기준(누적 댓글수)으로 자연히 되돌아간다.
+// 최신순 정렬키 — 클 수록 최신. 시간 판단은 여기 한 곳에서만 한다(0순위-B):
+// 카드의 'X시간 전' 표시(아래 1606행 근처)도 같은 우선순위(posted_at > age_hours)를 쓴다.
+function recencyKey(i){
+  if (i.posted_at){
+    const t = Date.parse(i.posted_at);
+    if (!isNaN(t)) return t;                       // epoch ms — 클수록 최신
+  }
+  if (i.age_hours != null) return -i.age_hours;    // 경과가 적을수록 최신 → 부호를 뒤집는다
+  return -1e15;                                    // 시간을 모르는 것은 맨 뒤
+}
 function sortKey(i){
   return {comments:(i.delta ?? i.comments), speed:i.speed, accel:(i.accel??-1), density:i.density,
           fan_density:(i.fan_density||0),
           // 단순정렬 3종(2026-07-30) — 지표 계산 없이 절대값 그대로 내림차순.
           // '전체'는 오늘 증가분(delta) 기준이라, 누적 절대값으로 보고 싶을 때 쓴다.
-          rawcomments:(i.comments||0), followers:(i.followers||0), views:(i.views||0)}[STATE.tab] || 0;
+          rawcomments:(i.comments||0), followers:(i.followers||0), views:(i.views||0),
+          // 최신순(2026-08-17 사장님) — 내림차순 정렬이므로 '새것일수록 큰 값'이어야 한다.
+          // posted_at(발행 UTC)이 정본이고, 없으면 age_hours(수집 시점 경과시간)로 뒤집어 쓴다.
+          // 둘 다 없으면 -Infinity가 아니라 아주 작은 값으로 두어 맨 뒤로 밀린다(정렬 안정).
+          recent: recencyKey(i)}[STATE.tab] || 0;
 }
 // 랭킹 검색(2026-07-18, 개선 2026-07-18) — 한국어 단어경계 인식 부분일치.
 // 왜: 단순 substring은 "가지"가 "들어가지"(동사)·"2가지"(수량)·"여러 가지"에 다 걸려
@@ -1455,7 +1470,23 @@ async function resumeOverseasStatusIfRunning(){
 // 전부 안 먹힌다"로 보인다 — 카드 한 장의 결측이 페이지 전체를 멈추면 안 된다.
 function _num(v, d){ return (typeof v === 'number' && isFinite(v)) ? v.toFixed(d) : '—'; }
 function _pct(v){ return (typeof v === 'number' && isFinite(v)) ? (v*100).toFixed(2)+'%' : '—'; }
+// ★재생 중인 것을 먼저 멈춘다(2026-08-17 사장님 제보).
+// 브라우저는 재생 중인 <video>를 DOM에서 지워도 **재생을 멈추지 않는다** — 화면에선
+// 사라졌는데 소리만 계속 흐른다. 그래서 홈템에서 미리보기를 튼 뒤 '전체'를 누르면
+// 안 보이는 영상 소리가 이어졌다. 새로 그리기 전에 명시적으로 세워야 한다.
+// iframe(임베드 폴백)도 같다 — src를 비워야 안에서 돌던 재생이 끊긴다.
+function stopAllMedia(root){
+  const box = root || document;
+  box.querySelectorAll('video, audio').forEach(v=>{
+    try{ v.pause(); v.removeAttribute('src'); v.load(); }catch(e){}
+  });
+  box.querySelectorAll('iframe').forEach(f=>{
+    try{ f.src = 'about:blank'; }catch(e){}
+  });
+}
+
 function render(){
+  stopAllMedia(document.getElementById('cards'));
   let items = STATE.items.slice();
   if(BLOCKED.size) items = items.filter(i=> !BLOCKED.has(_normUser(i.username)));  // 차단 채널은 항상 가린다
   const searching = !!(STATE.q && STATE.q.trim());
@@ -2077,7 +2108,10 @@ function _thumbLoading(box){
   if(getComputedStyle(box).position==='static') box.style.position='relative';
   box.appendChild(d); return d;
 }
-async function _playViaMedia(img, videoId, platform, embedFn){
+// viaProxy=true면 해석된 mp4를 **/api/video 프록시로** 재생한다(2026-08-17 렌즈).
+// 틱톡 CDN은 리퍼러·IP를 따져 브라우저 직접재생이 막히고, 그러면 embed(세로로 긴 화면)로
+// 떨어진다. 기본값 false라 랭킹·즐겨찾기 동작은 그대로다.
+async function _playViaMedia(img, videoId, platform, embedFn, viaProxy){
   if(!videoId) return;
   const box=img.parentElement;
   const badge=box && box.querySelector('.play-badge'); if(badge) badge.remove();
@@ -2087,7 +2121,8 @@ async function _playViaMedia(img, videoId, platform, embedFn){
     if(_load) _load.remove();
     if(d.ok && d.url){
       const v=document.createElement('video');
-      v.src=d.url; v.controls=true; v.autoplay=true; v.playsInline=true;
+      v.src=viaProxy?('/api/video?url='+encodeURIComponent(d.url)):d.url;
+      v.controls=true; v.autoplay=true; v.playsInline=true;
       v.setAttribute('playsinline',''); v.setAttribute('crossorigin','anonymous');
       v.className='thumb-video';
       v.onerror=()=>embedFn(v, videoId);   // mp4 재생 실패 시 embed 폴백
@@ -2825,7 +2860,14 @@ function renderLens(shortcode){
     <div class="card" style="${isSel?'outline:2px solid var(--accent)':''}">
       <div class="thumb" style="position:relative">
         <input type="checkbox" ${isSel?'checked':''} onclick="event.stopPropagation();toggleLensSelect('${shortcode}','${i.savesc}')" style="position:absolute;top:6px;left:6px;z-index:2;width:18px;height:18px;cursor:pointer">
-        <img src="${i.thumbnail||''}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'" onclick="lensPlayInline('${shortcode}','${i.savesc}',this)" style="cursor:pointer">
+        <!-- ★썸네일은 /api/thumb 프록시로 받는다(2026-08-17 사장님 "도우인 썸네일 안 나옴").
+             도우인 커버(pN-sign.douyinpic.com)·샤오홍슈(xhscdn)는 **핫링크를 막아** 직접
+             걸면 검은 칸이 된다. 랭킹 카드는 원래 이 프록시(thumbURL)를 쓰는데 렌즈만
+             직접 걸고 있었다 — 같은 일이 두 군데인 0순위-B 사례.
+             실패하면 예전 방식(직접 URL·no-referrer)으로 한 번 더 시도한다(회귀 방지). -->
+        <img src="${thumbURL(i.thumbnail)}" data-raw="${esc(i.thumbnail||'')}" referrerpolicy="no-referrer" loading="lazy"
+             onerror="if(this.dataset.raw&&this.src!==this.dataset.raw){this.src=this.dataset.raw;}else{this.style.visibility='hidden';}"
+             onclick="lensPlayInline('${shortcode}','${i.savesc}',this)" style="cursor:pointer">
         <span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px">${plabel}</span>
         ${i.sim==='same'?'<span title="AI 유사도 판정: 같은 제품" style="position:absolute;bottom:6px;left:6px;background:#1f9d55;color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">✅같은제품</span>':''}
         ${i.match===false?'<span title="AI 유사도 판정: 무관 — 다른 제품일 수 있음" style="position:absolute;bottom:6px;right:6px;background:#e0623d;color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">⚠️다른주제?</span>':''}
@@ -2937,14 +2979,55 @@ function lensPlayInline(shortcode, savesc, img){
   const it=st.items.find(i=>i.savesc===savesc); if(!it) return;
   if(!img || !img.parentElement) return lensPreview(shortcode, savesc);
   // ① 이미 직접 mp4를 아는 경우(샤오홍슈·도우인) — 해석 왕복 없이 즉시 재생.
-  if(it.play_url){ img.dataset.vurl=it.play_url; return playInline(img); }
-  // ② 유튜브·틱톡·인스타 — 랭킹 카드와 똑같은 경로.
+  //    ★CDN 주소를 <video src>에 직접 넣지 않는다 — 리퍼러·IP를 따져 막힌다.
+  //      랭킹 카드가 쓰는 /api/video 프록시를 그대로 태운다(2026-08-17).
+  if(it.play_url){ img.dataset.vurl='/api/video?url='+encodeURIComponent(it.play_url); return playInline(img); }
+  // ② 유튜브·틱톡·인스타 — 해석은 랭킹 카드와 똑같은 경로(/api/media)를 쓰고,
+  //    **폴백만** 렌즈에 맞게 바꾼다(2026-08-17 사장님 실사용 제보 2건).
   const id=_lensMediaId(it.platform, it.url);
-  if(id && it.platform==='youtube')   return playYoutube(img, id);
-  if(id && it.platform==='tiktok')    return playTiktok(img, id);
-  if(id && it.platform==='instagram') return playInstagram(img, id);
+  if(id && it.platform==='youtube')   return playYoutube(img, id);   // 잘 된다(제보 확인)
+  // ★틱톡은 서버가 받아준 파일로 재생한다(2026-08-17). 틱톡 mp4 주소는 우리 서버가
+  //   다시 받으면 403(IP·세션 바인딩, 실측)이라 브라우저 직접재생도 /api/video 프록시도
+  //   안 되고 세로로 긴 임베드로 떨어졌다. yt-dlp 다운로드는 되므로(4.4초·353KB) 그걸 쓴다.
+  if(id && it.platform==='tiktok')    return _playViaFile(img, id, 'tiktok', _lensEmbedTiktok);
+  if(id && it.platform==='instagram')
+    // ★랭킹의 _embedInstagram은 새 탭으로 나간다 — 렌즈에선 "새 페이지로 넘어가고 안 됨"이
+    //   된다(제보). 나가지 않고 우리 오버레이(썸네일+원본 링크)로 떨어뜨린다.
+    return _playViaMedia(img, id, 'instagram', ()=>lensPreview(shortcode, savesc), true);
   // ③ 그 외(id를 못 뽑는 모양) — 종전 오버레이로 떨어진다(나빠지지 않는다).
   return lensPreview(shortcode, savesc);
+}
+// 서버가 받아둔 파일(/api/play)로 카드 안에서 재생. 실패하면 embedFn으로 떨어진다.
+// 다운로드가 붙으므로 기다리는 표시를 반드시 띄운다(실측 4~5초).
+async function _playViaFile(img, videoId, platform, embedFn){
+  if(!videoId || !img || !img.parentElement) return;
+  const box=img.parentElement;
+  const badge=box && box.querySelector('.play-badge'); if(badge) badge.remove();
+  const _load=_thumbLoading(box);
+  const src='/api/play?platform='+encodeURIComponent(platform)+'&id='+encodeURIComponent(videoId);
+  try{
+    const head=await fetch(src, {method:'GET', headers:{'Range':'bytes=0-1'}});
+    if(_load) _load.remove();
+    if(head.ok || head.status===206){
+      const v=document.createElement('video');
+      v.src=src; v.controls=true; v.autoplay=true; v.playsInline=true;
+      v.setAttribute('playsinline',''); v.className='thumb-video';
+      v.onerror=()=>embedFn(v, videoId);
+      img.replaceWith(v); return;
+    }
+  }catch(e){}
+  if(_load) _load.remove();
+  embedFn(img, videoId);
+}
+// 틱톡 임베드는 세로로 길다. 랭킹용 _embedTiktok은 220px라 렌즈 카드에선 **안쪽 스크롤을
+// 내려서 재생버튼을 눌러야** 했다(2026-08-17 제보). 랭킹 동작은 그대로 두고 렌즈만 키운다.
+// mp4 해석(/api/media)이 성공하면 애초에 이 임베드는 안 쓰인다 — 여기는 폴백 경로다.
+function _lensEmbedTiktok(el, videoId){
+  const f=document.createElement('iframe');
+  f.src='https://www.tiktok.com/embed/v2/'+encodeURIComponent(videoId);
+  f.style.cssText='width:100%;height:560px;border:0;display:block;background:#000';
+  f.allow='autoplay; encrypted-media; picture-in-picture'; f.allowFullscreen=true;
+  el.replaceWith(f);
 }
 function lensPreview(shortcode, savesc){
   const st=LENS_STATE[shortcode]; if(!st) return;
@@ -2959,8 +3042,14 @@ function lensPreview(shortcode, savesc){
     inner=`<video src="${it.play_url}" controls autoplay playsinline referrerpolicy="no-referrer" style="max-width:100%;max-height:68vh;border-radius:8px"></video>
       <div style="color:var(--sub);font-size:12px;margin-top:6px">재생이 안 되면(플랫폼 차단) 아래 원본에서 확인하세요.</div>`;
   }else{
-    inner=`<img src="${it.thumbnail||''}" referrerpolicy="no-referrer" style="max-width:100%;max-height:60vh;border-radius:8px">
-      <div style="color:var(--sub);font-size:12px;margin-top:6px">이 플랫폼은 인앱 미리보기가 지원되지 않아요 — 원본에서 확인하세요.</div>`;
+    // ★샤오홍슈는 **검색 결과에 영상 주소가 없다**(2026-08-17 서버 실측: pw_xiaohongshu가
+    //   주는 항목의 play_url이 전부 빈값, 도우인은 반대로 다 들어온다). 그래서 재생이 아니라
+    //   커버 이미지 + 원본 링크가 맞다 — "지원되지 않아요"보다 이유를 적어둔다.
+    const why = it.platform==='xiaohongshu'
+      ? '샤오홍슈는 검색 결과에 영상 주소를 주지 않아요 — 원본에서 재생하세요.'
+      : '이 영상은 주소를 못 가져와 카드 안에서 재생할 수 없어요 — 원본에서 확인하세요.';
+    inner=`<img src="${thumbURL(it.thumbnail)||''}" referrerpolicy="no-referrer" onerror="this.src='${(it.thumbnail||'').replace(/'/g,'%27')}'" style="max-width:100%;max-height:60vh;border-radius:8px">
+      <div style="color:var(--sub);font-size:12px;margin-top:6px">${why}</div>`;
   }
   const head=`<div style="margin-bottom:10px;font-size:13px">${LENS_PLATFORMS.find(p=>p.k===it.platform)?.label||''} · ${esc((it.title||'').slice(0,90))}</div>`;
   const foot=`<div style="margin-top:12px"><a href="${_openUrl(it.url)}" target="_blank" style="color:var(--accent)">🔗 원본 열기</a></div>`;

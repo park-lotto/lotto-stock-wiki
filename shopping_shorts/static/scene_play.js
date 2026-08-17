@@ -58,15 +58,72 @@ const chosen = new Set();    // 사람이 손으로 담은 seg_id
 
 
 const TRIMS = {};                  // sid → [a, b] (장면 시작 기준 초)
+// ★조각 합치기(2026-08-17 사장님 "0.5초 같은 건 못 쓰니까 짤리자나 3개 합쳐서 훅에 넣으려고").
+//   0.8초 미만 조각은 라운드로빈이 건너뛰어 담아도 화면에 안 나온다. 새 추출본은
+//   script_extract._merge_too_short가 자동으로 합치지만, **이미 뽑아 둔 잡**과 "자동으론
+//   안 합쳐졌는데 내가 보기엔 이어 붙여야 하는 것"은 사람이 손으로 합쳐야 한다.
+//   구간이 원본에서 **붙어 있으므로**(인접쌍 간격 0) 합치기 = 그냥 **한 개의 긴 구간**이다.
+//   → 새 자료구조·새 개념이 필요 없다. 대표 조각의 end만 마지막 멤버의 end까지 늘린다.
+//   ⚠️ 늘린 구간을 만드는 곳은 mergeSpan 한 곳뿐이다(0순위-B). 재생·계획(planClips)·
+//      길이 표시·너무짧음 판정이 전부 trimPieces/mergeSpan을 지나므로 판단이 한 벌이다.
+const MERGES = {};                 // 대표 sid → 뒤에 이어 붙일 sid 목록(같은 영상·시간순 인접)
+function mergeSpan(id){
+  const s = (DATA.segments || {})[id];
+  if (!s) return null;
+  const m = MERGES[id];
+  if (!m || !m.length) return s;
+  let end = s.end;
+  for (const x of m){
+    const t = (DATA.segments || {})[x];
+    if (t && t.end > end) end = t.end;
+  }
+  return {...s, end};
+}
+// 다른 조각에 합쳐져 **대표가 아닌** 조각인가 — 팔레트에서 감추는 판단도 여기 한 곳.
+function isMergedInto(id){
+  for (const lead of Object.keys(MERGES)){
+    if ((MERGES[lead] || []).indexOf(id) >= 0) return lead;
+  }
+  return null;
+}
 let trimA = null, trimSid = null;  // 첫 번째 체크 지점 / 지금 트림바가 보는 장면
+// ★합친 것을 다시 멤버 경계로 가른다(2026-08-17 사장님 "3장을 합쳤으면 3장 재생이 되야").
+//   mergeSpan은 합치기를 **한 개의 긴 구간**으로 만든다(그래야 길이·트림 판단이 한 벌).
+//   그런데 재생 계획(planClips)은 구간이 하나면 앞에서부터 칸 길이만큼만 쓰므로
+//   8초를 합쳐 5초 칸에 넣으면 **첫 조각만** 보였다(사장님 제보).
+//   여기서 멤버 경계로 되갈라 주면 planClips가 '여러 장'으로 보고 칸 시간을 나눈다
+//   — 분배 규칙은 손대지 않는다(0순위-B: 나누는 판단은 planClips 한 곳에만 있다).
+//   덤: 멤버 사이가 떨어져 있으면 그 공백이 자연히 빠진다(예전엔 통째로 포함됐다).
+function mergeParts(id){
+  const s = (DATA.segments || {})[id];
+  const m = MERGES[id];
+  if (!s || !m || !m.length) return [];
+  const arr = [s].concat(m.map(x => (DATA.segments || {})[x]).filter(Boolean));
+  return arr.map(x => [x.start, x.end]).sort((a, b) => a[0] - b[0]);
+}
+function splitByMembers(id, span){
+  const parts = mergeParts(id);
+  if (!parts.length) return [span];
+  const out = [];
+  for (const pr of parts){
+    const st = Math.max(span.start, pr[0]), en = Math.min(span.end, pr[1]);
+    if (en - st > EPS) out.push({...span, start: st, end: en});
+  }
+  return out.length ? out : [span];
+}
 function trimPieces(id){
-  const s = DATA.segments[id]; if (!s) return [];
+  const s = mergeSpan(id); if (!s) return [];
   const t = TRIMS[id];
-  if (!t) return [s];
-  const p = [];
-  if (t[0] > EPS) p.push({...s, end: s.start + t[0]});                 // 앞토막 [0 ~ a]
-  if (s.end - (s.start + t[1]) > EPS) p.push({...s, start: s.start + t[1]});  // 뒤토막 [b ~ 끝]
-  return p.length ? p : [s];       // 전부 잘려 나가면 트림 무시(원본)
+  const spans = [];
+  if (!t){
+    spans.push(s);
+  } else {
+    if (t[0] > EPS) spans.push({...s, end: s.start + t[0]});                 // 앞토막 [0 ~ a]
+    if (s.end - (s.start + t[1]) > EPS) spans.push({...s, start: s.start + t[1]});  // 뒤토막 [b ~ 끝]
+    if (!spans.length) spans.push(s);   // 전부 잘려 나가면 트림 무시(원본)
+  }
+  // 합친 것이면 멤버 경계로 되가른다(안 합쳤으면 그대로 1개)
+  return spans.reduce((acc, sp) => acc.concat(splitByMembers(id, sp)), []);
 }
 // '가진 시간'용 실제 가용 길이 — 0.8초 미만 토막은 어차피 안 나오므로 뺀다.
 function effLen(id){
@@ -329,6 +386,29 @@ function playSeg(sid, ev){
   const a0 = audio(); if (a0) a0.pause();
   const sb0 = document.getElementById('subbox'); if (sb0) sb0.innerHTML = '';
   startSeq([{seg_id: sid, video_id: s.video_id, start: s.start, dur: s.end - s.start}]);
+}
+// ★조각 여러 개를 순서대로 이어 본다(2026-08-17 사장님 "여기서 전체 재생을 만들어서
+//   미리보기에서 재생을 할 수 있게"). 팔레트에서 '이 영상이 어떤 순서로 흘러가나'를
+//   담기 전에 확인하는 용도 — 담아서 보고 되돌리는 수고를 없앤다.
+//   새 재생기를 만들지 않는다: startSeq가 이미 clips 배열을 순차로 잇는다(0순위-B).
+//   ✂트림된 조각은 trimPieces로 갈라 넣어 편집 화면과 같은 그림이 나오게 한다.
+function playSegs(sids, label){
+  const clips = [];
+  for (const sid of (sids || [])){
+    for (const p of trimPieces(sid)){
+      const d = p.end - p.start;
+      if (d > EPS) clips.push({seg_id: sid, video_id: p.video_id, start: p.start, dur: d});
+    }
+  }
+  if (!clips.length) return;
+  const key = 'segs:' + (sids || []).join(',');
+  if (playKey === key && !vid().paused){ stopPlay(); return; }   // 같은 것 다시 누르면 정지
+  playKey = key;
+  seqLabel = label || `이어 보기 - 조각 ${clips.length}개`;
+  clearInterval(subTimer); seqBeat = null;
+  const a0 = audio(); if (a0) a0.pause();
+  const sb0 = document.getElementById('subbox'); if (sb0) sb0.innerHTML = '';
+  startSeq(clips);
 }
 function playBeat(i, ev){
   if (ev) ev.stopPropagation();
