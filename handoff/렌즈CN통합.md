@@ -212,9 +212,30 @@ JS는 `node --check` 통과, 라우트 `/api/lens/kw/search` 등록 확인.
 
 ### 🔴 사장님 몫
 
-- [ ] **`SERPAPI_KEY_3` 서버 env 추가.** 실잔량 **131회 ≈ 43클릭**밖에 안 남았다.
-      코드가 키 개수로 자동 스케일하므로 **env에 한 줄만** 넣으면 된다.
-      이제 잔량은 상수가 아니라 **실제로 읽으니** 키를 넣는 즉시 반영된다.
+- [x] ✅ **SerpApi 키 3개 등록 완료** (2026-08-17) — ★**서버 env 변경이라 git에 안 남는다**
+
+  | 변수 | 계정 | 끝 6자리 |
+  |---|---|---|
+  | `SERPAPI_KEY_3` | parklotto900@gmail.com | `fd2c06` |
+  | `SERPAPI_KEY_4` | parklotto901@gmail.com | `ab59d2` |
+  | `SERPAPI_KEY_5` | parklotto902@gmail.com | `eec3bb` |
+
+  넣기 **전에** 세 개 다 account API로 유효성을 확인했다(각 250/250 미사용).
+  죽은 키를 넣으면 로테이션이 앞에서 헛때려 느려지고 원인이 숨는다 —
+  Apify 토큰 9개가 지금 그 상태라 같은 실수를 반복하지 않으려고 먼저 쟀다.
+
+  - env 백업: `/etc/shopping-shorts.env.bak.20260817-*` (편집 전 생성)
+  - restart 후 실측: **키풀 5개 · 실잔량 869회**(= 기존 119 + 250×3)
+    → 렌즈 1클릭 = 3회이므로 **약 289클릭**, 하루 11.6클릭 기준 **약 25일치**
+  - 서버 워킹트리는 건드리지 않았다(배포가 조용히 멈추는 사고 방지)
+
+  ⚠️ 잔량은 짐작하지 말고 이렇게 읽어라(키 값은 안 찍힌다):
+  ```bash
+  cd /home/ubuntu/lotto-stock-wiki && set -a && . /etc/shopping-shorts.env && set +a && python3 -c '
+  import sys; sys.path.insert(0,".")
+  from shopping_shorts import config, lens_discover as L
+  print(len(config.SERPAPI_KEYS), L.account_searches_left(force=True))'
+  ```
 - [ ] **죽은 Apify 토큰 정리 승인** — 17개 중 6개가 401 무효, 6개 중복
       (목록은 `handoff/CN검색통합.md`). 무효 토큰이 로테이션 앞쪽에 있으면
       매 검색마다 헛때려 느려진다. ⚠️ `/etc/shopping-shorts.env` 변경은 git에 안 남으니
