@@ -47,11 +47,13 @@ global.WORK_ID = null;
 global.MIX_JOB = null;
 global.cur = 0;
 global.PREVIEW_STATUS = null;
+// 전체재생 완주 플래그(2026-08-17) — _restoreWork가 PREVIEW_STATUS와 짝으로 되돌린다.
+global.WATCHED_ALL = false;
 global.PANEL_COUNT = 8;
 global.STATE = { script:'', script_src_idx:null, script_from_wiki:null,
                  deco:{extra_texts:[],motion:null} };
 global.PENDING_STYLE_RESTORE = false;
-global.canGoNext = ()=> PREVIEW_STATUS==='ready' || PREVIEW_STATUS==='failed';
+global.canGoNext = ()=> PREVIEW_STATUS==='ready' || PREVIEW_STATUS==='failed' || WATCHED_ALL;
 global.stepLocked = (i)=>{ if(i===7) return false; return i>=1 && !!MIX_JOB && !canGoNext(); };
 // 저장 호출을 관찰한다 — "복원이 도로 덮어쓰는가"가 이 버그의 핵심이라 payload를 남긴다.
 global.SAVED = [];

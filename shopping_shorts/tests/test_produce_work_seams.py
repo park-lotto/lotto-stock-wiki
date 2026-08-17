@@ -151,7 +151,7 @@ const STEP_LABELS = ['대본','화면 붙이기','TTS','꾸미기','최종'];
 // Task 6(2026-07-23): cur 바운드는 PANEL_COUNT(물리 패널 수, 지금 8)를 쓴다 — STEP_LABELS.length
 // (오브 라벨 수)와는 다른 축이다.
 const PANEL_COUNT = 8;
-let cur = 0, MIX_JOB = null, WORK_ID = null, PREVIEW_STATUS = null;
+let cur = 0, MIX_JOB = null, WORK_ID = null, PREVIEW_STATUS = null, WATCHED_ALL = false;
 // ★꾸미기 패널은 DOM을 진실의 원천으로 읽는다 — 복원이 STATE만 채우면 initHeadcopy가
 // DOM/기본값에서 스타일을 재구성해 덮는다. 그래서 복원 시 이 플래그를 세워, 패널 진입 때
 // applyConfig로 DOM 입력칸을 채우고 STYLE_TOUCHED로 기본프리셋 자동적용을 막는다(C-2 잔여).

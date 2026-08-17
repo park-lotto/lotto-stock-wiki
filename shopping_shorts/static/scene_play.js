@@ -373,7 +373,17 @@ function playAll(ev){
 }
 function runAllFrom(i){
   if (playKey !== 'all') return;
-  if (i >= DATA.beats.length){ stopPlay(); return; }
+  if (i >= DATA.beats.length){
+    // ★끝까지 봤다 — 미리보기 게이트를 여는 신호(2026-08-17 사장님 지시).
+    //   렌더 1분35초를 기다리지 않아도 사장님이 확인하는 세 가지(조각이 튀나 / 자막이
+    //   장면당 적절히 붙나 / TTS와 자막 속도가 같나)는 전체재생으로 다 보인다 —
+    //   자막 계산이 렌더와 **같은 함수**(app.py _lab_captions)이고 TTS 실길이가 기준이라
+    //   싱크는 동일하기 때문이다. 다른 건 화면상 픽셀 위치뿐이고 그건 확인 대상이 아니다.
+    //   ※scene_lab.html 단독으로 열었을 땐 이 콜백이 없다 — optional call이라 그냥 지나간다.
+    // typeof는 미선언 식별자에도 에러가 안 난다 — window를 안 거치므로 node에서도 안전.
+    try{ if (typeof onPlayAllFinished === 'function') onPlayAllFinished(); }catch(e){}
+    stopPlay(); return;
+  }
   const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i]);
   seqBeat = i; sel = i;
   seqLabel = `전체 재생 - 칸 ${i+1}/${DATA.beats.length} (${DATA.beats[i].role || ''})`;

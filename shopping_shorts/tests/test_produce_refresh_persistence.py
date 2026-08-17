@@ -42,7 +42,7 @@ def _run(js, body):
 # ── 저장 side: 단계 이동이 서버에 남는가 ────────────────────────
 _NAV_HARNESS = r"""
 'use strict';
-let cur = 0, MIX_JOB = null, PREVIEW_STATUS = null, _saves = 0;
+let cur = 0, MIX_JOB = null, PREVIEW_STATUS = null, WATCHED_ALL = false, _saves = 0;
 // Task 2(2026-07-23): jump/go가 오브 표시축(STEP_LABELS)과 실제 패널축(ORB_TO_PANEL)을 나눠
 // 쓴다 — 슬라이스에 안 담기는 심볼이라 실제 소스와 같은 값으로 여기서 준다.
 const STEP_LABELS = ['대본','화면 붙이기','TTS','꾸미기','썸네일','SEO','최종'];
@@ -126,7 +126,7 @@ def test_start_mix_persists_job_id():
 # ── 복원 side: 새로고침이 미리보기 video·편집안·단계를 되살리는가 ──
 _RESTORE_HARNESS = r"""
 'use strict';
-let HANDOFF = [], cur = 0, MIX_JOB = null, WORK_ID = null, PREVIEW_STATUS = null;
+let HANDOFF = [], cur = 0, MIX_JOB = null, WORK_ID = null, PREVIEW_STATUS = null, WATCHED_ALL = false;
 let STYLE_TOUCHED = false, PENDING_STYLE_RESTORE = false, MIX_REVIEW_SUGGESTIONS = [];
 const STATE = { script:'', script_src_idx:null, script_from_wiki:null,
                 subtitleRemoval:false, headcopy:null, captionStyle:null,
