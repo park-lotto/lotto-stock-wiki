@@ -250,16 +250,24 @@
 /* 탭 두 묶음을 눈에 띄게 가른다(2026-08-14) — 얇은 선 하나로는 구분이 안 보였다.
    왼쪽 '강도 지표'=계산해서 순위를 매기는 것 / 오른쪽 '단순 정렬'=절대값 그대로 줄세우기. */
 .tab-div{flex:0 0 auto;align-self:center;width:1px;height:26px;background:var(--line);margin:0 14px;opacity:.9}
-.tab-grp{flex:0 0 auto;align-self:center;font-size:11px;font-weight:700;letter-spacing:.02em;
-         color:var(--sub);opacity:.75;padding:2px 8px;margin-right:2px;border-radius:6px;
-         background:rgba(255,255,255,.05);white-space:nowrap}
+/* ★라벨을 읽히게(2026-08-17 사장님 "네모친 부분도 지금 너무 안보임") — 11px에
+   opacity .75였다. 글자를 키우고 흐림을 걷고 테두리를 줘 '줄 이름'임이 보이게 한다.
+   기간·강도 지표·단순 지표·카테고리 네 라벨이 이 한 클래스를 함께 쓴다(0순위-B). */
+.tab-grp{flex:0 0 auto;align-self:center;font-size:12.5px;font-weight:800;letter-spacing:.02em;
+         color:#cfe6df;opacity:1;padding:4px 10px;margin-right:6px;border-radius:7px;
+         background:rgba(255,255,255,.09);border:1px solid var(--line);white-space:nowrap}
 /* 🚫 차단 = 관리자 전용. 기본 숨김이고 body.is-admin일 때만 뜬다(구독자 화면 플래시 방지) */
 .blockbtn{display:none;flex-shrink:0;background:var(--inset);border:1px solid var(--line);color:var(--sub);
   font-size:11px;padding:3px 7px;border-radius:6px;cursor:pointer;line-height:1;margin-left:auto}
 .blockbtn:hover{color:#fff;background:#da3633;border-color:#da3633}
 body.is-admin .blockbtn{display:inline-block}
 .tab:hover{color:var(--txt);background:rgba(255,255,255,.04)}
-.tab.active{color:var(--accent)!important;border-bottom-color:transparent!important}
+/* ★고른 탭을 확실히 보이게(2026-08-17 사장님 "48시간 히트작이 메인이니 잘보이게").
+   글자색만 바뀌어 어느 걸 보고 있는지 한눈에 안 들어왔다 — 알약 배경+테두리를 준다. */
+.tab.active{color:#052018!important;border-bottom-color:transparent!important;
+  background:linear-gradient(180deg,#45efc0,#20c596)!important;
+  box-shadow:0 2px 10px rgba(62,224,191,.28);border-radius:9px!important}
+.tab.active:hover{color:#052018!important}
 .tab-ink{position:absolute;bottom:-1px;left:0;width:0;height:2.5px;border-radius:3px;background:var(--accent);
   box-shadow:0 0 12px var(--accent);pointer-events:none;
   transition:left .28s cubic-bezier(.3,.9,.3,1),width .28s cubic-bezier(.3,.9,.3,1)}
@@ -318,7 +326,10 @@ body.is-admin .blockbtn{display:inline-block}
          그래서 **지우지도 숨기지도 않고 접는다** — <details>는 닫혀 있을 뿐 요소는
          살아 있어 계약(노출 가능)도, 사장님 요구(평소 안 보임)도 함께 지킨다.
          PLATFORM 기본값 instagram + switchPlatform 로직은 그대로. -->
-    <details id="platformFold" style="margin-bottom:12px">
+    <!-- ★2026-08-17(2차) 사장님 "아예 안보이게 하줘 필요없음" — 접기(▾)조차 뗐다.
+         details 통째로 display:none. 요소·switchPlatform 로직은 그대로라 이 한 줄만
+         지우면 즉시 돌아온다. 계약 이력은 tests/test_ranking_platform_tabs.py 참조. -->
+    <details id="platformFold" style="margin-bottom:12px;display:none">
       <summary style="cursor:pointer;font-size:12px;color:var(--sub);list-style:none;
                       display:inline-block;padding:4px 10px;border:1px dashed var(--line);
                       border-radius:999px;user-select:none">🌐 플랫폼 바꾸기 ▾</summary>
@@ -422,7 +433,8 @@ body.is-admin .blockbtn{display:inline-block}
         <div id="refAdded" style="font-size:12px;color:var(--sub);margin-top:8px"></div>
       </div>
     </details>
-    <details id="refTrace" style="margin:4px 0 12px;border:1px solid var(--line);border-radius:8px;background:#0d131c">
+    <!-- ★숨김(2026-08-17 사장님 "필요없음"). traceByUrl 로직은 보존 — display:none만 지우면 돌아온다. -->
+    <details id="refTrace" style="display:none;margin:4px 0 12px;border:1px solid var(--line);border-radius:8px;background:#0d131c">
       <summary style="padding:9px 12px;cursor:pointer;font-size:12px;color:var(--sub)">🔗 URL로 레퍼런스 추적 (원본·유사 영상 찾기)</summary>
       <div style="padding:0 12px 10px">
         <div style="font-size:11px;color:var(--sub);margin-bottom:6px">해외 영상(유튜브·틱톡·인스타·샤오홍슈) <b>링크</b>를 붙여넣으면, 그 장면으로 <b>구글렌즈</b>가 원본/비슷한 영상을 찾아줍니다 — 채널 등록·수집 없이 바로. 결과는 <b>담기</b>로 소스에 넣을 수 있어요. (SerpApi 월 100회)</div>
