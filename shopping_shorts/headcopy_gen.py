@@ -58,11 +58,14 @@ def suggest(script, want=_WANT):
     for c in copies:
         if not isinstance(c, dict):
             continue
-        text = (c.get("text") or "").strip()
+        text = c.get("text")
+        text = text.strip() if isinstance(text, str) else ""
         if not text or len(text) > _MAX_LEN or text in seen:
             continue
+        label = c.get("label")
+        label = label.strip() if isinstance(label, str) else ""
         seen.add(text)
-        out.append({"label": (c.get("label") or "").strip() or "제안", "text": text})
+        out.append({"label": label or "제안", "text": text})
         if len(out) >= want:
             break
     return out

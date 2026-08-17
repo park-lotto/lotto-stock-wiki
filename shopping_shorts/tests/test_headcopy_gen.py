@@ -81,3 +81,37 @@ def test_skips_bad_item_keeps_valid_one(monkeypatch):
         "junk", {"label": "a", "text": "정상 문구"},
     ]})
     assert [c["text"] for c in headcopy_gen.suggest("대본")] == ["정상 문구"]
+
+
+def test_int_label_and_text_returns_empty(monkeypatch):
+    """스키마는 string을 요구해도 Gemini가 int를 줄 수 있다 — truthy라 `or ""`를 안 타고 .strip()에서 죽는다."""
+    monkeypatch.setattr(headcopy_gen, "_call_json", lambda p, s: {"copies": [
+        {"label": 5, "text": 7},
+    ]})
+    assert headcopy_gen.suggest("대본") == []
+
+
+def test_list_text_returns_empty(monkeypatch):
+    """text가 리스트처럼 문자열이 아닌 truthy 값이어도 .strip()에서 죽지 않고 걸러져야 한다."""
+    monkeypatch.setattr(headcopy_gen, "_call_json", lambda p, s: {"copies": [
+        {"label": "정상", "text": ["리스트"]},
+    ]})
+    assert headcopy_gen.suggest("대본") == []
+
+
+def test_bad_label_falls_back_but_keeps_good_text(monkeypatch):
+    """label만 이상해도(text는 멀쩡) 그 카피 전체를 버리면 안 된다 — label은 '제안'으로 대체."""
+    monkeypatch.setattr(headcopy_gen, "_call_json", lambda p, s: {"copies": [
+        {"label": {"d": 1}, "text": "정상 문구"},
+    ]})
+    out = headcopy_gen.suggest("대본")
+    assert out == [{"label": "제안", "text": "정상 문구"}]
+
+
+def test_mixed_batch_int_text_and_valid_item(monkeypatch):
+    """배치 하나에 int text 불량 항목과 정상 항목이 섞이면, 정상 항목만 살아남는다."""
+    monkeypatch.setattr(headcopy_gen, "_call_json", lambda p, s: {"copies": [
+        {"label": "a", "text": 999},
+        {"label": "b", "text": "정상 문구"},
+    ]})
+    assert [c["text"] for c in headcopy_gen.suggest("대본")] == ["정상 문구"]
