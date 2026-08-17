@@ -104,6 +104,25 @@ def test_두_축이_동시에_걸리면_증거에_둘_다():
     assert out[0]["fit_evidence"] == "action+role_mismatch"
 
 
+def test_옛경로도_fit을_검증한다():
+    """★build_edit_plan(generator="legacy")에도 _verify_fits가 있어야 한다.
+
+    실사고(2026-08-18): 새 판정축을 배포한 **뒤에** 돈 잡 a4e619328313이 훅에 '사용중'을
+    달고 fit=5·evidence 없음으로 나왔다. 원인은 축이 아니라 **경로**였다 —
+    _verify_fits가 scene_first 경로에만 있어, 옛 경로는 Gemini 자기신고 fit 5가 그대로
+    남고 바로 뒤 _repick_weak_beats(fit<=3)가 대상 0개로 헛돌았다.
+
+    순서까지 지킨다: 깎기가 재픽 **앞**이어야 재픽이 그 비트를 본다.
+    """
+    import inspect
+    src = inspect.getsource(edit_plan.build_edit_plan)
+    body = "\n".join(l for l in src.splitlines() if not l.strip().startswith("#"))
+    assert '_verify_fits(grounded["beats"])' in body, "옛 경로에서 fit 검증이 빠졌다"
+    assert (body.index('_verify_fits(grounded["beats"]')
+            < body.index('_repick_weak_beats(grounded["beats"]')), \
+        "_verify_fits가 _repick_weak_beats보다 뒤에 있으면 재픽이 깎인 비트를 못 본다"
+
+
 def test_판정표를_복사하지_않았다():
     """0순위-B — 표는 _ROLE_WANT_SHOTS 한 곳만. 여기서 shot_role 문자열을 하드코딩해
     판정하면 표를 고쳐도 이 축은 옛 규칙으로 돈다."""
