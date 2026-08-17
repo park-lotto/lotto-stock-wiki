@@ -1000,6 +1000,35 @@ async function makeTts(){
   }
 }
 
+// ★칸이 자막을 채웠나 — **판단은 여기 한 곳에서만** 한다(CLAUDE.md 0순위-B).
+//   같은 계산이 타임프레임 줄과 아래 편집 뷰 두 군데에 따로 적혀 있었다: 한쪽은 담은 id
+//   전부로 재료를 세고(lists[i]), 다른 쪽은 tooShort를 뺀 뒤 셌다(okIds).
+//   실측(2026-08-17) — 두 기준은 **0.6초 이상 0.8초 미만** 장면에서만 갈린다.
+//     effLen이 이미 MIN_CLIP(0.6) 미만 토막을 버리므로 0.5초짜리는 양쪽 다 빠지고,
+//     0.9초짜리는 양쪽 다 들어간다. 딱 그 틈(예: 0.7초)에서만 위=2.70 아래=2.00으로 어긋났다.
+//   좁은 틈이지만 같은 칸에 두 숫자가 뜨는 건 그대로 버그다 → okIds 기준으로 통일한다
+//   (0.8초 미만은 담아도 화면에 안 나오므로 재료로 세면 안 된다).
+//
+//   need : 자막(음성) 길이 — 채워야 하는 시간
+//   have : 늘리기 전 진짜 재료 — 화면에 실제로 쓸 수 있는 길이
+//   lack : 모자란 시간. planClips가 이만큼을 늘려서 때운다(마지막 컷 or 전 컷 비례배분)
+//   stretching : '늘려 채우는 중'이 참인가. ★컷이 0장이면 planClips가 보정을 통째로
+//                건너뛰어(clips.length 검사) 실제로는 무음 화면이다 — 토글이 켜져 있어도
+//                '늘려 채움'이라고 하면 거짓말이므로 여기서 함께 가른다.
+function beatFill(i, clips){
+  const ids = lists[i] || [];
+  const okIds = ids.filter(id => DATA.segments[id] && !tooShort(id));
+  const need = beatDur(i);
+  const have = okIds.reduce((a, id) => a + effLen(id), 0);
+  const cuts = clips || planClips(ids, need, STRETCH[i]);
+  return { ids, okIds, need, have,
+           lack: Math.max(0, need - have),
+           over: Math.max(0, have - need),
+           tinyN: ids.length - okIds.length,
+           empty: cuts.length === 0,
+           stretching: !!STRETCH[i] && cuts.length > 0 };
+}
+
 function renderBand(){
   const row = document.getElementById('tbrow'); if (!row) return;
   let total = 0;
@@ -1011,12 +1040,9 @@ function renderBand(){
     //   0으로 만들어(마지막 컷에 몰거나 spread로 비례 배분) sec는 늘 need와 같다 —
     //   그래서 sec/need를 보여주면 항상 5.0/5.0이라 아무것도 알려주지 않는다.
     //   진짜 궁금한 건 "늘리기 전 재료가 얼마였나"이므로 have(=effLen 합)를 왼쪽에 둔다.
-    const need = beatDur(i);
-    const have = (lists[i] || []).reduce((a, id) => a + effLen(id), 0);
-    const lack = Math.max(0, need - have);
-    // ★컷이 0장이면 늘릴 대상이 없다 — planClips가 보정을 아예 건너뛰어(clips.length 검사)
-    //   실제로는 무음 화면이 된다. 토글이 켜져 있어도 '늘려 채움'이라 하면 거짓말이다.
-    const stretching = STRETCH[i] && clips.length > 0;
+    //   계산은 beatFill 하나만 쓴다(아래 편집 뷰와 동일 — 0순위-B).
+    const f = beatFill(i, clips);
+    const { need, have, lack, stretching } = f;
     const cuts = clips.length
       ? clips.map((c, ci) => `<div class="tbcut ${c.dur > LONG_CUT ? 'long' : ''} ${isPicked(i, c.seg_id) ? 'picked' : ''}"
              draggable="true"
@@ -1041,16 +1067,16 @@ function renderBand(){
                  title="누르면 재생 · 아래 소스를 끌어다 놓거나 두 번 클릭하면 이 칸에 담깁니다">
         <div class="h"><b>${i+1}. ${b.role || '칸'}</b><span class="d ${
              lack > 0.1 ? (stretching ? 'dwarn' : 'dbad') : 'dok'}" title="${
-             !clips.length
+             f.empty
                ? `이 칸엔 장면이 없어 자막 ${need.toFixed(1)}초 동안 화면이 비어 있습니다. 아래 소스에서 장면을 담아주세요.`
                : lack > 0.1
                  ? `담은 장면은 ${have.toFixed(1)}초인데 자막은 ${need.toFixed(1)}초 — ${lack.toFixed(1)}초 모자랍니다. `
                    + (stretching ? '지금은 담긴 장면 전부를 고르게 늘려 채우는 중이라 화면이 그만큼 느리게 흐릅니다.'
                                  : '모자란 만큼 마지막 컷이 늘어나 그 장면만 오래 나옵니다. 장면을 더 담거나 [늘려 채우기]를 켜세요.')
                  : `담은 장면 ${have.toFixed(1)}초로 자막 ${need.toFixed(1)}초를 다 채웠습니다.`
-                   + (have - need > 0.1 ? ` 남는 ${(have - need).toFixed(1)}초는 안 나옵니다.` : '')
+                   + (f.over > 0.1 ? ` 남는 ${f.over.toFixed(1)}초는 안 나옵니다.` : '')
              }">${have.toFixed(1)}/${need.toFixed(1)}초${
-             !clips.length ? ' · 장면 없음'
+             f.empty ? ' · 장면 없음'
                : lack > 0.1 ? (stretching ? ' · 늘려 채움' : ` · ${lack.toFixed(1)}초 모자람`) : ''}</span>${sel === i ? '<span class="picked">여기에 담깁니다</span>' : ''}
           <span class="tbtools" onclick="event.stopPropagation()">
             <label title="재료가 모자랄 때 마지막 컷만 늘리지 않고 전체를 고르게 늘립니다"><input type="checkbox" ${STRETCH[i] ? 'checked' : ''} onchange="toggleStretch(${i}, this.checked)"> 늘려 채우기</label>
@@ -1216,13 +1242,12 @@ function render(){
     //   장면이 0.9초짜리면 3장을 담아도 2.7초뿐이라 5.8초 멘트를 못 채우고 마지막 컷이 늘어난다.
     // ★0.8초 미만은 어차피 버려지므로 '가진 시간'에서 뺀다(2026-08-14 사장님 "하나를 추가하면
     //   저렇게 된다 부족인데"). 담긴 장수만 세면 왜 계속 부족한지 알 수 없다.
-    const okIds = ids.filter(id => DATA.segments[id] && !tooShort(id));
     // ✂ 트림했으면 구멍 뺀 실제 가용 길이로 센다(0.8초 미만 토막도 뺀다) — 안 그러면
     //   잘라냈는데 '가진 시간'이 그대로라 부족 경고가 안 뜬다.
-    const have = okIds.reduce((a,id) => a + effLen(id), 0);
-    const tinyN = ids.length - okIds.length;
-    const needSec = beatDur(i);
-    const lack = Math.max(0, needSec - have);
+    //   계산은 beatFill 하나만 쓴다(위 타임프레임 줄과 동일 — 0순위-B).
+    const f = beatFill(i, clips);
+    const { okIds, have, tinyN, lack, stretching } = f;
+    const needSec = f.need;
     // 실제로 화면에 나온 장면 = 컷에 등장한 것. 담았어도 시간이 모자라면 안 나온다.
     const used = new Set(clips.map(c => c.seg_id));
     const unused = ids.filter(id => !used.has(id)).length;
@@ -1231,8 +1256,9 @@ function render(){
       <div class="bhead">
         <span class="role">${i+1}. ${b.role || '칸'}</span>
         ${i===sel ? '<span class="selbadge">✔ 선택됨 — 여기에 담깁니다</span>' : ''}
-        <span class="chip ${lack > 0.1 ? (STRETCH[i] ? 'warn' : 'bad') : 'good'}">멘트 ${needSec.toFixed(1)}초${
-          lack > 0.1 ? (STRETCH[i] ? ` · 재료 ${lack.toFixed(1)}초 모자라 늘려 채우는 중`
+        <span class="chip ${lack > 0.1 ? (stretching ? 'warn' : 'bad') : 'good'}">재료 ${have.toFixed(1)}/멘트 ${needSec.toFixed(1)}초${
+          f.empty ? ` · <b>장면이 없어요 — 아래에서 담아주세요</b>`
+                  : lack > 0.1 ? (stretching ? ` · 재료 ${lack.toFixed(1)}초 모자라 늘려 채우는 중`
                                    : ` · <b>${lack.toFixed(1)}초 부족 — 장면 ${Math.ceil(lack / MAX_SHOT)}장 더 담아주세요</b>`) : ' · 다 채웠어요'}</span>
         ${(lack > 0.1 || AUTOADD[i]) ? `<button class="act" style="${AUTOADD[i]?'':'border-color:var(--good);color:var(--good)'}"
           title="${AUTOADD[i] ? '자동으로 담아준 장면을 도로 뺍니다 — 내가 담은 것은 그대로'
