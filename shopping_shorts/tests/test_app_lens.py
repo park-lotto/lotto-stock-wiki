@@ -26,7 +26,7 @@ def _client(tmp_path, monkeypatch, items=None, limit_reached=False):
     monkeypatch.setattr(appmod, "DB_PATH", db)
     monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
     monkeypatch.setattr(appmod, "search_similar_videos",
-                        lambda url, source_caption="", stats=None: items if items is not None else [])
+                        lambda url, api_key=None, source_caption="", stats=None: items if items is not None else [])
     # imgur 업로드는 네트워크라 목킹 — None 반환 시 서버URL 폴백 경로를 탄다
     monkeypatch.setattr(appmod, "upload_frame", lambda raw: None)
     if limit_reached:
@@ -59,7 +59,7 @@ def test_lens_search_forwards_source_caption(tmp_path, monkeypatch):
     monkeypatch.setattr(appmod, "upload_frame", lambda raw: None)
     captured = {}
 
-    def fake_search(url, source_caption="", stats=None):
+    def fake_search(url, api_key=None, source_caption="", stats=None):
         captured["source_caption"] = source_caption
         return []
     monkeypatch.setattr(appmod, "search_similar_videos", fake_search)
@@ -364,7 +364,7 @@ def test_lens_search_reports_instagram_dropoff(tmp_path, monkeypatch):
     ]
     monkeypatch.setattr(lens_discover, "verify_matches", lambda items, keywords=None: items)
     monkeypatch.setattr(appmod, "search_similar_videos",
-                        lambda url, source_caption="", stats=None:
+                        lambda url, api_key=None, source_caption="", stats=None:
                         _run_real(lens_discover, raw_matches, stats))
     c = TestClient(appmod.app)
     d = _post_img(c).json()

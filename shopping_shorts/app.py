@@ -1,6 +1,7 @@
 """FastAPI: 수집 API + 정적 프론트 서빙."""
 import asyncio
 import base64
+import functools
 import hmac
 import hashlib
 import ipaddress
@@ -2870,6 +2871,11 @@ def _probe_user_key(service: str, key: str) -> bool:
         url = ("https://www.googleapis.com/youtube/v3/videos"
                f"?part=id&id=dQw4w9WgXcQ&key={urllib.parse.quote(key)}")
         kw = {}
+    elif service == keyroute.SVC_SERPAPI:
+        # ★계정 정보 조회(account.json)로 확인한다 — 검색을 실제로 돌리면 '확인'
+        #   버튼 한 번이 월 250회 무료분을 깎는다. 이 엔드포인트는 검색이 아니다.
+        url = f"https://serpapi.com/account.json?api_key={urllib.parse.quote(key)}"
+        kw = {}
     else:
         raise ValueError(f"모르는 service: {service!r}")
     try:
@@ -5091,7 +5097,7 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 렌즈 검색 횟수를 다 썼어요. 결제하면 더 쓸 수 있어요."})
-    _denied = _charge_or_402(cid, pricing.OP_LENS, keyroute.SVC_GEMINI)
+    _denied = _charge_or_402(cid, pricing.OP_LENS, keyroute.SVC_SERPAPI)
     if _denied:
         return _denied
     global_incr_and_alert("lens")
@@ -5113,14 +5119,16 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
         # SerpApi 호출도 블로킹(+빈결과 재시도 2.5초×3) — 스레드로 뺀다. _lens_finalize는
         # DB 조회뿐(같은 스레드 sqlite 제약)이라 루프에 남긴다.
         rows = await asyncio.to_thread(
-            search_similar_videos, image_url, source_caption=source_caption, stats=diag)
+            functools.partial(search_similar_videos, image_url,
+                              api_key=_lens_api_keys(cid),
+                              source_caption=source_caption, stats=diag))
         items = _lens_finalize(rows, store)
         store.bump_lens(month)
         # diag: 인스타 결과가 0/왕창으로 튀는 이유를 화면에서 갈라 보기 위한 계측(2026-08-14).
         return {"ok": True, "items": items, "count": len(items), "diag": diag}
     except Exception:
         refund_credit(cid, "lens")   # 업로드·검색 실패 → 예약한 크레딧 되돌림(성공한 검색만 과금)
-        _refund_points(cid, pricing.OP_LENS, keyroute.SVC_GEMINI)
+        _refund_points(cid, pricing.OP_LENS, keyroute.SVC_SERPAPI)
         raise
 
 
@@ -5252,7 +5260,7 @@ def api_lens_trace_url(request: Request, body: dict):
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 렌즈 검색 횟수를 다 썼어요. 결제하면 더 쓸 수 있어요."})
-    _denied = _charge_or_402(cid, pricing.OP_LENS, keyroute.SVC_GEMINI)
+    _denied = _charge_or_402(cid, pricing.OP_LENS, keyroute.SVC_SERPAPI)
     if _denied:
         return _denied
     global_incr_and_alert("lens")
@@ -5271,7 +5279,8 @@ def api_lens_trace_url(request: Request, body: dict):
             return JSONResponse(status_code=502, content={
                 "ok": False, "error": "영상/썸네일을 가져오지 못했습니다(봇차단·만료·미지원 URL)"})
         items = _lens_finalize(
-            search_similar_videos(image_url, source_caption=caption), store)
+            search_similar_videos(image_url, api_key=_lens_api_keys(cid),
+                                  source_caption=caption), store)
         # 📕🎬 중국앱 키워드 후보(비전). 렌즈 유사영상은 프론트가 프레임으로 뽑지만 trace는
         # 프레임이 서버에만 있다(유튜브는 아예 썸네일 URL·caption 없음) → 서버가 image_url에서
         # 바이트를 받아 직접 만든다. cn_search_candidates는 image_bytes가 없으면 빈 리스트라
@@ -5289,7 +5298,7 @@ def api_lens_trace_url(request: Request, body: dict):
     finally:
         if not ok:
             refund_credit(cid, "lens")
-            _refund_points(cid, pricing.OP_LENS, keyroute.SVC_GEMINI)
+            _refund_points(cid, pricing.OP_LENS, keyroute.SVC_SERPAPI)
 
 
 # 캡션 → 중국 플랫폼 검색어. 구글렌즈는 시각검색이라 키워드가 없지만 샤오홍슈/도우인은
@@ -5637,7 +5646,12 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout"}
 # GET만 무료(레퍼런스 랭킹 '조회') — POST/PUT 등 데이터변경은 같은 경로여도 차단.
 _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/api/thumb", "/api/video",
-                   "/api/channel/history"}   # 채널 히스토리='지난 한 달' 조회 = 랭킹 열람의 연장(무료 허용)
+                   "/api/channel/history",   # 채널 히스토리='지난 한 달' 조회 = 랭킹 열람의 연장(무료 허용)
+                   # ★2026-08-17 마이페이지(/settings)로 /account를 합치면서 함께 연다.
+                   #   안 열면 무료 등급이 자기 계정·포인트를 못 본다 —
+                   #   충전하려면 들어올 수 있어야 하는데 충전 화면이 유료 뒤에 있는 꼴이 된다.
+                   #   ⚠️ GET만이다. 키 등록(POST /api/settings/keys)은 그대로 막힌다.
+                   "/settings", "/api/settings/points", "/api/settings/keys"}
 # 경계있는 prefix만(과다매칭 방지 — 트레일링 슬래시).
 _FREE_PREFIX = ("/static/", "/auth/google/")
 
@@ -6757,9 +6771,15 @@ def _pricing_page():
     return _with_pay(_PRICING_HTML)   # 공개 요금·이용권 페이지(비로그인 방문자 포함) + 결제링크 주입
 
 
-@app.get("/account", response_class=HTMLResponse)
+@app.get("/account")
 def _account_page():
-    return _ACCOUNT_HTML   # 로그인 유저 자기 계정(플랜·한도·문의). 데이터는 JS가 /api/me로 채움
+    """★2026-08-17: 계정 화면을 마이페이지(/settings)의 '내 계정' 탭으로 합쳤다.
+
+    사장님 제보 — "내 계정"과 "내 설정"이 따로 있어 키 등록표를 못 찾으셨다.
+    같은 데이터(/api/me)를 두 화면이 각자 그리면 언젠가 어긋나기도 한다(0순위-B).
+    옛 주소로 들어온 사람(북마크·외부 링크)이 끊기지 않게 넘겨준다.
+    _ACCOUNT_HTML(=_ACCOUNT_TMPL)은 일부러 남겨뒀다 — 되돌릴 때 이 함수만 되돌리면 된다."""
+    return RedirectResponse("/settings", status_code=307)
 
 
 @app.get("/signup", response_class=HTMLResponse)
@@ -7211,6 +7231,18 @@ def global_incr_and_alert(op):
         except Exception:
             pass
     return n
+
+
+def _lens_api_keys(customer_id):
+    """렌즈 검색에 쓸 SerpApi 키 목록. **여기 한 곳에서만 정한다**(0순위-B).
+
+    사용자가 마이페이지에 SerpApi 키를 등록했으면 그 키만, 아니면 사장님 env 키.
+    폴백 없음은 keyroute가 지킨다 — 여기서 섞지 마라.
+
+    ★과금 판단(OP_LENS를 깎을지)도 같은 SVC_SERPAPI를 봐야 한다. 키를 고르는 쪽과
+      과금하는 쪽이 다른 서비스를 보면 "키 등록했는데 포인트도 깎임"이 난다."""
+    keys, _ = keyroute.keys_for(Store(DB_PATH), customer_id, keyroute.SVC_SERPAPI)
+    return keys
 
 
 def _global_over_cap(op):
