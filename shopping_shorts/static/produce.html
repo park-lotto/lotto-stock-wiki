@@ -6926,6 +6926,56 @@ function thumbFit(ctx, L, W, H){
   return {lines, size, family};
 }
 
+// ── ✨ 강조 효과(2026-08-18) — 눈에 확 들어오는 '포인트'를 글자에 얹는다 ──────────────
+// 사장님 요청: 밑줄·형광펜 같은 시선 장치. 캔버스가 최종 PNG를 그리므로(서버 합성 없음)
+// 전부 여기서 그린다 — 미리보기와 결과가 같은 코드를 타야 어긋나지 않는다.
+//
+// L.fx = {underline:'none'|'line'|'brush', marker:null|{color}, glow:null|{color}}
+// 없으면(구 레이어·구 저장본) 아무것도 안 그린다 = 종전 그림 그대로(회귀 0).
+//
+// ★그리는 순서가 곧 쌓임 순서다: 형광펜(글자 뒤) → 외곽선 → 글자 → 밑줄(글자 아래 획).
+//   형광펜을 글자 뒤에 깔지 않으면 글자를 덮어 못 읽는다.
+function _fxMarker(ctx, line, y, size, fx){
+  if (!fx || !fx.marker) return;
+  const w = ctx.measureText(line).width;
+  ctx.save();
+  // 실제 형광펜처럼 글자 아래쪽 절반만 덮고, 곱하기 합성으로 글자가 비쳐 보이게 한다.
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = fx.marker.color || '#FFE100';
+  const h = size * 0.52, pad = size * 0.08;
+  ctx.fillRect(-w / 2 - pad, y + size * 0.06, w + pad * 2, h);
+  ctx.restore();
+}
+
+function _fxUnderline(ctx, line, y, size, fx, color){
+  if (!fx || !fx.underline || fx.underline === 'none') return;
+  const w = ctx.measureText(line).width;
+  // ★형광펜을 같이 켜면 밑줄을 그 아래로 내린다(2026-08-18 실측). 형광펜 띠가 y+0.06~+0.58을
+  //   덮는데 밑줄 기본 위치가 +0.46이라 띠 **안**에 그어져, 색이 달라도 묻혀 안 보였다.
+  //   색을 바꾸는 걸로는 못 고친다 — 자리를 띠 바깥으로 옮겨야 한다.
+  const uy = y + size * (fx.marker ? 0.66 : 0.46);   // 글자 아래 (baseline=middle 기준)
+  ctx.save();
+  ctx.strokeStyle = fx.underline_color || color || '#FFE100';
+  ctx.lineCap = 'round';
+  // 밑줄이 배경에 묻히지 않게 얇은 검정 그림자를 깐다(외곽선과 같은 원리).
+  ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = size * 0.06; ctx.shadowOffsetY = size * 0.02;
+  if (fx.underline === 'brush'){
+    // 손으로 그은 붓 느낌 — 가운데가 굵고 끝이 얇아지게 두 번 겹쳐 긋는다.
+    ctx.lineWidth = size * 0.11;
+    ctx.beginPath();
+    ctx.moveTo(-w / 2, uy + size * 0.02);
+    ctx.quadraticCurveTo(0, uy - size * 0.05, w / 2, uy + size * 0.01);
+    ctx.stroke();
+  } else {
+    ctx.lineWidth = size * 0.075;
+    ctx.beginPath();
+    ctx.moveTo(-w / 2, uy); ctx.lineTo(w / 2, uy);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function drawThumb(ctx, img, layers, W, H){
   const s = W / THUMB_W;                    // 캔버스 배율 — 외곽선·박스 여백용
   // ★매 렌더마다 먼저 지운다(2026-07-18 라이브 실측) — job 없을 때 드래그 잔상이 쌓이던 것 봉인.
@@ -6951,6 +7001,7 @@ function drawThumb(ctx, img, layers, W, H){
         ctx.fillRect(-w/2 - pad, y - size/2 - pad*0.6, w + pad*2, size + pad*1.2);
         ctx.globalAlpha = 1;
       }
+      _fxMarker(ctx, line, y, size, L.fx);        // ✨형광펜은 글자 뒤 — 먼저 깐다
       // 레퍼런스 룩: 은은한 그림자 + 폰트 크기에 비례한 두꺼운 외곽선(작아도 커도 비율 유지).
       // fixed px(외곽선 슬라이더)보다 얇아지지 않게 max로 바닥을 깐다 — 큰 글자에 얇은 테두리 방지.
       if (L.outline && L.outline.w){
@@ -6962,8 +7013,19 @@ function drawThumb(ctx, img, layers, W, H){
         ctx.strokeText(line, 0, y);
         ctx.restore();
       }
-      ctx.fillStyle = (li > 0 && L.color2) ? L.color2 : L.color;   // 1줄=color, 2줄부터=color2(2색 룩)
+      const _fill = (li > 0 && L.color2) ? L.color2 : L.color;     // 1줄=color, 2줄부터=color2(2색 룩)
+      // ✨네온 글로우 — 글자 자체를 발광시킨다. 그림자를 색으로 깔고 여러 번 겹쳐 진하게.
+      if (L.fx && L.fx.glow){
+        ctx.save();
+        ctx.shadowColor = L.fx.glow.color || '#2EE6C5';
+        ctx.shadowBlur = size * 0.35;
+        ctx.fillStyle = _fill;
+        for (let g = 0; g < 3; g++) ctx.fillText(line, 0, y);      // 겹쳐야 눈에 띄게 빛난다
+        ctx.restore();
+      }
+      ctx.fillStyle = _fill;
       ctx.fillText(line, 0, y);
+      _fxUnderline(ctx, line, y, size, L.fx, _fill);   // ✨밑줄은 글자 위 획 — 마지막
     });
     ctx.restore();
   });
@@ -7134,6 +7196,7 @@ function applyThumbPreset(i){
   // y를 빼먹으면 드래그로 잡은 세로 위치가 프리셋의 기본값(상단 12%)으로 튄다.
   // x만 살아남아 "왜 위아래만 튀지"가 된다 — 위 주석이 선언한 계약을 지키려면 셋 다 필요하다.
   styled.x = cur.x; styled.y = cur.y; styled.rot = cur.rot;
+  styled.fx = cur.fx;   // 강조 효과도 사장님 것 — 색 프리셋을 바꿔도 밑줄·형광펜이 안 사라진다
   THUMB_STATE.layers[THUMB_STATE.sel] = styled;
   renderThumbLayers(); renderThumbCanvas();
 }
@@ -7160,6 +7223,7 @@ function setThumbPos(where){
 // 🪄 원본 영상 대본을 AI에게 보내 짧은 썸네일 제목 후보를 받아 클릭 얹기용으로 보여준다.
 // 60대가 제목을 못 떠올려도 "추천 버튼 → 마음에 드는 것 클릭"이면 끝. 과금 없음(미리보기).
 let THUMB_TITLES_LOADING = false;
+let THUMB_TITLE_SEED = 0;   // 다시 누른 횟수 = 참고 훅 회전 시드(서버가 조각을 바꿔 뽑는다)
 async function suggestThumbTitles(){
   const box = document.getElementById('thumbTitleSuggest'); if (!box) return;
   if (!MIX_JOB){
@@ -7174,7 +7238,8 @@ async function suggestThumbTitles(){
       method: 'POST', headers: {'Content-Type': 'application/json'},
       // ★화면 대본(STATE.script)을 함께 보낸다(2026-07-24). job.given_script는 매칭 시점에
       //   고정돼, 대본을 새 영상에 맞게 고쳐도 제목이 옛 영상 주제로 나오던 사고를 막는다.
-      body: JSON.stringify({job_id: MIX_JOB, script: (STATE.script || '')}),
+      // seed: 다시 누를 때마다 참고 훅이 회전해 다른 각도의 제목이 나온다(같은 5개 반복 방지).
+      body: JSON.stringify({job_id: MIX_JOB, script: (STATE.script || ''), seed: (THUMB_TITLE_SEED++)}),
     });
     const d = await r.json().catch(() => ({ok: false}));
     if (!r.ok || !d.ok || !(d.titles || []).length){
@@ -7255,7 +7320,56 @@ function renderThumbLayers(){
     </div>
     <label style="font-size:11px;color:var(--sub)">외곽선 ${L.outline ? L.outline.w : 0}px</label>
     <input type="range" min="0" max="20" value="${L.outline ? L.outline.w : 0}"
-           oninput="setThumbField('outline_w', this.value)" style="width:100%">`;
+           oninput="setThumbField('outline_w', this.value)" style="width:100%">
+    <div style="font-size:12px;color:var(--sub);margin:12px 0 4px">✨ 강조 효과 — 누르면 켜지고, 다시 누르면 꺼져요</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+      ${THUMB_FX_BTNS.map((b, i) => `<button class="tab"
+        style="flex:0 0 auto;min-width:auto;padding:6px 11px;font-size:12px;${_fxOn(L, b) ? 'outline:2px solid var(--accent2)' : ''}"
+        onclick="toggleThumbFx(${i})">${b.label}</button>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <label style="font-size:11px;color:var(--sub)">효과 색</label>
+      <input type="color" value="${(L.fx && (L.fx.underline_color || (L.fx.marker && L.fx.marker.color) || (L.fx.glow && L.fx.glow.color))) || '#FFE100'}"
+             oninput="setThumbFxColor(this.value)">
+      <span class="hint" style="font-size:10px;opacity:.7">밑줄·형광펜·네온에 함께 적용</span>
+    </div>`;
+}
+
+// ✨강조 효과 버튼 — 고민 없이 딸깍(꾸미기 프리셋 철학). 켜짐/꺼짐 토글이라 되돌리기도 한 번.
+const THUMB_FX_BTNS = [
+  {key: 'underline', val: 'line',  label: '밑줄'},
+  {key: 'underline', val: 'brush', label: '붓 밑줄'},
+  {key: 'marker',    val: true,    label: '형광펜'},
+  {key: 'glow',      val: true,    label: '네온'},
+];
+
+function _fxOn(L, b){
+  const fx = L && L.fx; if (!fx) return false;
+  return b.key === 'underline' ? fx.underline === b.val : !!fx[b.key];
+}
+
+function toggleThumbFx(i){
+  const b = THUMB_FX_BTNS[i], L = THUMB_STATE.layers[THUMB_STATE.sel];
+  if (!b || !L) return;
+  L.fx = L.fx || {};
+  const color = L.fx.underline_color || (L.fx.marker && L.fx.marker.color)
+             || (L.fx.glow && L.fx.glow.color) || '#FFE100';
+  if (b.key === 'underline'){
+    // 밑줄과 붓밑줄은 서로 배타 — 같은 자리에 두 획을 그으면 지저분해진다.
+    L.fx.underline = (L.fx.underline === b.val) ? 'none' : b.val;
+    L.fx.underline_color = color;
+  } else {
+    L.fx[b.key] = L.fx[b.key] ? null : {color};
+  }
+  renderThumbLayers(); renderThumbCanvas();
+}
+
+function setThumbFxColor(v){
+  const L = THUMB_STATE.layers[THUMB_STATE.sel]; if (!L || !L.fx) return;
+  L.fx.underline_color = v;
+  if (L.fx.marker) L.fx.marker.color = v;
+  if (L.fx.glow) L.fx.glow.color = v;
+  renderThumbCanvas();
 }
 
 // 드래그 = 비율 좌표를 바꾼다(픽셀이 아니라) — 그래야 1080 결과가 같은 자리에 찍힌다.
