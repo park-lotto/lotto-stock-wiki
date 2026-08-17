@@ -414,6 +414,11 @@ def fill_intensity(items, now=None):
     이미 값이 있으면 건드리지 않는다(수집 경로의 값이 늘 우선).
     """
     for it in items or []:
+        # ★썸네일 이름 맞추기(2026-08-17): 화면은 i.thumbnail을 읽는데 기간(hits_since)·
+        # 역대(archive_hits)는 컬럼명 그대로 thumb으로 준다 → 카드가 전부 검게 빈다.
+        # 같은 것을 두 이름으로 부르면 반드시 한쪽이 빠진다(0순위-B). 여기서 한 번만 맞춘다.
+        if not it.get("thumbnail") and it.get("thumb"):
+            it["thumbnail"] = it["thumb"]
         comments = int(it.get("comments") or 0)
         views = int(it.get("views") or 0)
         followers = int(it.get("followers") or 0)

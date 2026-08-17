@@ -50,3 +50,16 @@ def test_화면이_쓰는_키가_전부_채워진다():
     fill_intensity([it])
     for k in ("speed", "density", "fan_density", "delta", "accel", "views", "likes", "followers"):
         assert it[k] is not None, k
+
+
+def test_썸네일_이름을_화면_기준으로_맞춘다():
+    """화면은 i.thumbnail을 읽는데 기간·역대는 thumb으로 준다 → 카드가 전부 검게 빈다."""
+    it = {"comments": 1, "thumb": "https://x/y.jpg"}
+    fill_intensity([it])
+    assert it["thumbnail"] == "https://x/y.jpg"
+
+
+def test_이미_thumbnail이_있으면_안_덮는다():
+    it = {"comments": 1, "thumbnail": "원본", "thumb": "다른것"}
+    fill_intensity([it])
+    assert it["thumbnail"] == "원본"
