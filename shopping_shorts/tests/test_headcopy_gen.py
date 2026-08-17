@@ -47,3 +47,37 @@ def test_dedupes_identical_text(monkeypatch):
         {"label": "c", "text": "다른 문구"},
     ]})
     assert [c["text"] for c in headcopy_gen.suggest("대본")] == ["같은 문구", "다른 문구"]
+
+
+def test_copies_not_a_list_returns_empty(monkeypatch):
+    """copies가 배열이 아니라 문자열이면(스키마 위반) 문자 단위로 순회되며 .get()이 터진다 — 실제로 잡았던 크래시."""
+    monkeypatch.setattr(headcopy_gen, "_call_json", lambda p, s: {"copies": "not a list"})
+    assert headcopy_gen.suggest("대본") == []
+
+
+def test_copy_item_empty_dict_returns_empty(monkeypatch):
+    """항목이 label/text 없는 빈 dict여도 죽지 않고 그냥 걸러진다."""
+    monkeypatch.setattr(headcopy_gen, "_call_json", lambda p, s: {"copies": [{}]})
+    assert headcopy_gen.suggest("대본") == []
+
+
+def test_copies_none_returns_empty(monkeypatch):
+    """copies 키 값 자체가 None이면(스키마상 있어야 할 배열이 null) 빈 리스트로 취급한다."""
+    monkeypatch.setattr(headcopy_gen, "_call_json", lambda p, s: {"copies": None})
+    assert headcopy_gen.suggest("대본") == []
+
+
+def test_call_json_returns_non_dict_returns_empty(monkeypatch):
+    """_call_json 자체가 dict가 아닌 값(None·문자열)을 주면 fail-open 계약이 깨진 것 — 그래도 죽지 않아야 한다."""
+    monkeypatch.setattr(headcopy_gen, "_call_json", lambda p, s: None)
+    assert headcopy_gen.suggest("대본") == []
+    monkeypatch.setattr(headcopy_gen, "_call_json", lambda p, s: "junk")
+    assert headcopy_gen.suggest("대본") == []
+
+
+def test_skips_bad_item_keeps_valid_one(monkeypatch):
+    """섞여 들어온 이상한 항목 하나 때문에 나머지 정상 항목까지 통째로 버려지면 안 된다."""
+    monkeypatch.setattr(headcopy_gen, "_call_json", lambda p, s: {"copies": [
+        "junk", {"label": "a", "text": "정상 문구"},
+    ]})
+    assert [c["text"] for c in headcopy_gen.suggest("대본")] == ["정상 문구"]
