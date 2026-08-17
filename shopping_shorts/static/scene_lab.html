@@ -113,6 +113,19 @@ h1{font-size:16px;margin:0;font-weight:700}
 .pane{overflow-y:auto;height:100%;padding:14px}
 .pane.left{background:var(--panel);border:1px solid var(--line);border-radius:10px}
 .srcgroup{margin-bottom:18px}
+/* ★담을 칸 고정줄(2026-08-17 사장님 "영상2번 3번도 써야하는데 스크롤 내리면 다시 올라와야 돼서
+   불편"). 담기는 lists[sel] = **위에서 고른 칸**으로 들어가는데, 그 선택기가 화면 위쪽에만
+   있어서 조각을 고를 때마다 위아래로 왕복해야 했다. 머리줄을 스크롤에 붙여 어디까지
+   내려가도 '지금 어느 칸에 담기는지'가 보이고 거기서 바로 칸을 바꿀 수 있게 한다. */
+#dropmsg{position:sticky;top:0;z-index:6;background:var(--bg);padding:8px 0;
+  display:flex;flex-wrap:wrap;align-items:center;gap:6px;box-shadow:0 6px 10px -8px #000a}
+.slotbtn{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:6px;
+  padding:3px 8px;font-size:12px;cursor:pointer}
+.slotbtn.on{border-color:var(--accent);color:var(--accent);font-weight:700}
+.seg .addbtn{width:100%;margin-top:4px;border:1px solid var(--accent);background:transparent;
+  color:var(--accent);border-radius:6px;padding:3px 0;font-size:12px;cursor:pointer}
+.seg .addbtn:hover{background:var(--accent);color:#08121f}
+.seg .addbtn.done{border-color:var(--good);color:var(--good)}
 .srchead{font-size:17px;color:var(--ink);font-weight:800;margin-bottom:8px;display:flex;
   align-items:baseline;justify-content:space-between;gap:8px;position:sticky;top:-14px;
   background:var(--panel);padding:22px 4px 8px;margin-left:-14px;margin-right:-14px;
@@ -563,6 +576,24 @@ function segNo(sid){
 }
 // 카드에 찍는 마킹 — "1-3" (1번 영상의 3번째 조각)
 function segMark(sid){ return srcNo(sid) + '-' + segNo(sid); }
+// ★"영상 1번 끝에가 짤림, 뒤에 더 남아있는데"(2026-08-17 사장님) — 조각이 사라진 게 아니라
+//   '비슷한 그림 접기'와 '소스 밖 구간'으로 걸러진 것인데, 머리글에 남은 개수(18개)만
+//   찍혀 있어 잘린 것처럼 보였다. **몇 개 중 몇 개가 보이고 왜 빠졌는지**를 적는다.
+//   (거르는 판단은 render 한 곳 그대로 — 여기는 세기만 한다. 0순위-B)
+function groupCount(g, segs){
+  if (groupMode !== 'src') return `${segs.length}개`;
+  const vid = (segs[0] || {}).video_id;
+  const all = Object.keys(DATA.segments || {}).filter(k => (DATA.segments[k] || {}).video_id === vid);
+  if (all.length === segs.length) return `${segs.length}개`;
+  const why = [];
+  const dup = all.filter(k => hideDup && isDupOf(k)).length;
+  const oor = all.filter(k => outOfRange(k)).length;
+  const mg  = all.filter(k => isMergedInto(k)).length;
+  if (dup) why.push(`비슷 ${dup}`);
+  if (oor) why.push(`소스밖 ${oor}`);
+  if (mg)  why.push(`합침 ${mg}`);
+  return `${segs.length}/${all.length}개${why.length ? ` (${why.join(' · ')} 가림)` : ''}`;
+}
 // ★label에서 뽑는 세부 성격(2026-08-17 사장님 "모든 장면이 저 틀에 되는 게 아니라
 //   더 만들어야 하는 거 아닌가"). 실측이 지적을 뒷받침했다 — 최근 60영상에서 shot_role이
 //   '기타'인 88건(10.5%)에 뚜렷한 역할이 잔뜩 숨어 있었다(제품 실물 확인·마트 진열 현황·
@@ -1071,7 +1102,15 @@ function render(){
                 title="붙어 있는 조각들을 한 장처럼 합칩니다 — 0.8초 미만이라 안 나오던 조각을 쓸 수 있습니다"
                 >합치기</button> <button type="button" class="gm" onclick="_MSEL.clear();render()">취소</button>`
          : `<span title="카드의 🔗를 눌러 붙어 있는 조각 2장 이상을 고르면 합칠 수 있습니다">🔗 짧은 조각 합치기</span>`
-     } <span id="mergemsg" style="color:var(--accent)"></span></span>`;
+     } <span id="mergemsg" style="color:var(--accent)"></span></span>
+     <span style="flex-basis:100%;height:0"></span>
+     ${/* ★담을 칸 — 여기서 고르고 카드의 [＋담기]를 누르면 바로 그 칸에 들어간다.
+           스크롤을 아무리 내려도 이 줄은 붙어 있다(위 #dropmsg sticky). */''}
+     <span style="color:var(--dim)">담을 칸 →</span>
+     ${DATA.beats.map((b, i) => `<button type="button" class="slotbtn ${i===sel?'on':''}"
+        onclick="selBeat(${i})"
+        title="${esc((NARR[i] != null ? NARR[i] : (b.narration || '')).slice(0, 40))}"
+        >${i+1}. ${esc(slotName(i))}${(lists[i]||[]).length?` <b>${(lists[i]||[]).length}</b>`:''}</button>`).join('')}`;
   const cur = new Set(lists[sel] || []);
 
   // 묶는 기준 두 가지(2026-08-17). 카드를 그리는 코드는 **한 벌**이고 그룹 목록만 갈린다
@@ -1085,7 +1124,7 @@ function render(){
     return `<div class="srcgroup"><div class="srchead"><span>${g.title}${g.hint?` <span class="cnt">· ${g.hint}</span>`:''}</span>`
       + `<span class="cnt"><button type="button" class="act play" style="padding:2px 8px;font-size:11.5px;margin-right:8px"`
       + ` onclick='playSegsHere(${JSON.stringify(_gs)}, ${JSON.stringify(g.title + " 이어 보기")}, event)'`
-      + ` title="이 묶음의 조각을 순서대로 이어 봅니다">▶️ 쭉 보기</button>${segs.length}개</span></div>
+      + ` title="이 묶음의 조각을 순서대로 이어 봅니다">▶️ 쭉 보기</button>${esc(groupCount(g, segs))}</span></div>
       <div class="thumbs">${segs.map(s => `
         <div class="seg ${cur.has(s.sid)?'inthis':''} ${(outOfRange(s.sid)||tooShort(s.sid))?'oor':''}"
              style="${_MSEL.has(s.sid)?'outline:2px solid var(--accent);outline-offset:1px':''}"
@@ -1121,6 +1160,10 @@ function render(){
                         : `<span class="slab dim">이름 없음</span>`}
             </div>
             <div class="d">${esc(s.scene_desc||'(설명 없음)')}</div>
+            <button type="button" class="addbtn ${cur.has(s.sid)?'done':''}"
+              onclick="event.stopPropagation();clearTimeout(clickTimer);add('${s.sid}')"
+              title="위 고정줄에서 고른 칸(${sel+1}. ${esc(slotName(sel))})에 담습니다"
+              >${cur.has(s.sid)?'✓ 이 칸에 담김':`＋ ${sel+1}번 칸에 담기`}</button>
             </div>
         </div>`).join('')}</div></div>`;
   }).join('');
@@ -1623,6 +1666,14 @@ function copyScript(){
     () => {});
 }
 function selBeat(i){ sel = i; render(); }
+// 고정줄 버튼에 쓸 짧은 칸 이름 — 대본 첫 어절(최대 6자). 대본을 고쳤으면 고친 것으로.
+function slotName(i){
+  const b = (DATA.beats || [])[i] || {};
+  const t = String(NARR[i] != null ? NARR[i] : (b.narration || '')).trim();
+  if (!t) return '칸';
+  const w = t.split(/\s+/)[0];
+  return w.length > 6 ? w.slice(0, 6) + '…' : w;
+}
 function add(sid){
   // ★담을 때 지금 배치를 절대 초기화하지 않는다(2026-08-14 사장님 "4장면 있었는데 하나
   //   추가하니 2개로 변했다"). 예전엔 setMode('hand')를 불렀는데 그게 initLists()로 전 칸을
