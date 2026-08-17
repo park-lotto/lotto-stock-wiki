@@ -3660,12 +3660,23 @@ def _verify_fits(beats):
     나와 — 화면의 '매칭 5/5' 표시, 추천점수의 avg_fit(50%), fit≤2 스왑버튼, fit≤3 약비트
     재작성이 전부 무력화돼 있었다(banana 실사고: '썰어' 대사에 '뒤집는' 화면이 fit5).
     행위 증거가 있을 때만 정직하게 깎는다: 나레이션 행위 ≠ 화면 행위(둘 다 검출) → fit≤2.
-    모호하면(행위 미검출) 보류 = 오탐 없음. ping_pong이 스왑으로 고치면 fit=5로 복원된다."""
+    모호하면(행위 미검출) 보류 = 오탐 없음. ping_pong이 스왑으로 고치면 fit=5로 복원된다.
+
+    ★두 번째 축(2026-08-18): 위 행위 판정은 **동사사전 30개**에 매달려 있어 스토리형 대본에선
+    통째로 보류된다 — 라이브 실측(잡 30개·비트 168건)에서 대사행위가 **148건(88%) None**이었다.
+    그 결과 훅·CTA 58건 중 **27건이 어긋났는데 fit>=4로 남아** 재픽(fit<=3) 대상에서 빠졌다.
+    그래서 동사가 없어도 도는 `beat_role_mismatch`(역할↔결)를 함께 본다. 둘 중 하나만 걸려도
+    깎는다 — 판정 근거는 `fit_evidence`에 남겨 어느 축이 잡았는지 사후에 가를 수 있게 한다."""
     from shopping_shorts import backbone
     for b in beats:
-        if backbone.beat_action_mismatch(b):
-            b["fit"] = min(int(b.get("fit") or 0), 2)
-            b["fit_evidence"] = "action_mismatch"
+        act_bad = backbone.beat_action_mismatch(b)
+        role_bad = backbone.beat_role_mismatch(b)
+        if not (act_bad or role_bad):
+            continue
+        b["fit"] = min(int(b.get("fit") or 0), 2)
+        b["fit_evidence"] = ("action_mismatch" if act_bad and not role_bad else
+                             "role_mismatch" if role_bad and not act_bad else
+                             "action+role_mismatch")
     return beats
 
 

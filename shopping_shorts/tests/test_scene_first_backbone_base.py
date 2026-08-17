@@ -25,8 +25,15 @@ def test_backbone_base_uses_rich_generator_with_order_block():
     # 백본은 '순서 블록'으로만 개입 — 프롬프트에 스토리 헌장+은행+순서 뼈대가 전부 실려야 한다.
     seen = {}
 
+    # ★"마지막 call"이 아니라 **생성 프롬프트**를 집는다(2026-08-18).
+    #   종전엔 매번 덮어써 마지막 call을 봤는데, 그러면 생성 뒤에 도는 단계가 하나 늘 때마다
+    #   이 테스트가 깨진다 — 실제로 restyle 때 한 번 깨져 SCRIPT_STYLE=off 우회를 넣었고
+    #   (아래 주석), 이번엔 fit 판정축이 늘며 재픽 프롬프트가 마지막이 됐다.
+    #   관심사는 "생성 프롬프트에 백본 블록이 실렸나"이므로 그 프롬프트만 골라 잡는다.
     def _cap(prompt, schema):
-        seen["prompt"], seen["schema"] = prompt, schema
+        seen.setdefault("all", []).append(prompt)
+        if "[이야기]" in prompt:          # 생성 프롬프트의 표식
+            seen["prompt"], seen["schema"] = prompt, schema
         return _RICH
     # ★옛 경로 전용(2026-07-31): 리라이트 믹스가 켜져 있으면 그쪽이 순서 뼈대를 소유한다
     #   (원본 타임라인 = 백본의 상위 개념). 백본 블록은 리라이트가 재료 부족으로 못 만들 때의
@@ -58,14 +65,16 @@ def test_backbone_base_uses_rich_generator_with_order_block():
 
 
 def test_backbone_base_off_has_no_order_block():
-    seen = {}
+    # 여기도 마지막 call이 아니라 **모든** 프롬프트를 본다 — 순서 뼈대는 어디에도 없어야 한다.
+    seen = {"all": []}
 
     def _cap(prompt, schema):
-        seen["prompt"] = prompt
+        seen["all"].append(prompt)
         return _RICH
     edit_plan.build_scene_first_plan(_SOURCES, "ref", 20, n_candidates=1, call=_cap,
                                      backbone_base=False)
-    assert "화면 순서 뼈대" not in seen["prompt"]
+    assert seen["all"], "생성 호출이 한 번도 없었다"
+    assert not any("화면 순서 뼈대" in p for p in seen["all"])
 
 
 def test_backbone_order_block_empty_when_backbone_missing():
