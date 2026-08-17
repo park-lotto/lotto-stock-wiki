@@ -19,10 +19,13 @@ import sys
 
 from playwright.sync_api import sync_playwright
 
-from shopping_shorts.threads_parse import (extract_post_nodes, merge_thread_tail,
-                                           parse_post_node, quality_score)
-
-THREADS_BASE = "https://www.threads.com"
+# ★BROWSER_HEADERS·THREADS_BASE·fetch_html은 threads_parse.py가 정본이다(순수 HTTP,
+#   playwright 비의존). 여기서는 재수출만 한다 — 기존 호출부(threads_playwright.fetch_html
+#   등)가 그대로 동작하게(2026-08-17, 담기 메타보강 1건마다 playwright를 끌어오던 문제 해소).
+from shopping_shorts.threads_parse import (BROWSER_HEADERS, THREADS_BASE,
+                                           extract_post_nodes, fetch_html,
+                                           merge_thread_tail, parse_post_node,
+                                           quality_score)
 
 
 def _context_kw(session_path="", proxy=""):
@@ -69,44 +72,6 @@ def dump_profile_payloads(username, out_path, session_path="", proxy=""):
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(seen, f, ensure_ascii=False)
     return len(seen)
-
-
-# ★Ruling 2(2026-08-17 실측): 브라우저도 로그인도 필요 없다. 이 헤더를 갖춘 익명 GET이
-#   200 / 1,080,480바이트로 like_count 18 · video_versions 19 · 쿠팡링크 26을 그대로 준다
-#   (Playwright 캡처본과 같은 마커 수). UA만 보내고 Accept·Sec-Fetch를 빼면 메타가 껍데기를
-#   준다 — 이 헤더 묶음이 통째로 열쇠다. 하나라도 빼지 마라.
-BROWSER_HEADERS = {
-    "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                   "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"),
-    "Accept": ("text/html,application/xhtml+xml,application/xml;q=0.9,"
-               "image/avif,image/webp,*/*;q=0.8"),
-    "Accept-Language": "ko-KR,ko;q=0.9",
-    "Sec-Fetch-Dest": "document",
-    "Sec-Fetch-Mode": "navigate",
-    "Sec-Fetch-Site": "none",
-    "Upgrade-Insecure-Requests": "1",
-}
-
-
-def fetch_html(url, timeout=30):
-    """쓰레드 페이지 HTML을 받는다. 실패하면 빈 문자열(성패는 호출부가 건수로 본다).
-
-    ★조용한 실패 금지: 예외는 삼키되(호출부가 계속 돌아야 한다), 어떤 URL에서
-      무슨 종류의 실패였는지는 한 줄 남긴다. HTTPError는 상태코드까지 남긴다.
-    """
-    import urllib.error
-    import urllib.request
-    try:
-        req = urllib.request.Request(url, headers=BROWSER_HEADERS)
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            return r.read().decode("utf-8", "ignore")
-    except urllib.error.HTTPError as e:
-        print(f"[threads_playwright] fetch_html 실패 status={e.code} url={url}",
-              file=sys.stderr)
-        return ""
-    except Exception as e:
-        print(f"[threads_playwright] fetch_html 실패 {e!r} url={url}", file=sys.stderr)
-        return ""
 
 
 def _fetch_profile_nodes(username, session_path="", proxy=""):

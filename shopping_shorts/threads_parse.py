@@ -1,9 +1,54 @@
-"""쓰레드 응답 → 우리 계약 dict. 네트워크 없음(그래서 fixture로 테스트된다)."""
+"""쓰레드 응답 → 우리 계약 dict. 순수 파싱은 네트워크 없음(fixture로 테스트된다).
+
+★fetch_html은 순수 HTTP(urllib)라 여기 산다 — playwright는 안 끌어온다(2026-08-17).
+  예전엔 threads_playwright.py에 있었는데, 그 파일이 최상단에서
+  `from playwright.sync_api import sync_playwright`를 하므로 담기 메타보강
+  1건마다 playwright를 끌어왔다. playwright가 (미설치·버전꼬임 등으로) 깨지면
+  순수 HTTP 경로까지 같이 죽는 게 문제였다 — 의존성 없는 이 파일로 옮긴다.
+  threads_playwright.py는 이 심볼들을 그대로 import해 재수출한다(호출부 무변경)."""
 import json
 import re
+import sys
 from datetime import datetime, timezone
 
 THREADS_BASE = "https://www.threads.com"
+
+# ★Ruling 2(2026-08-17 실측): 브라우저도 로그인도 필요 없다. 이 헤더를 갖춘 익명 GET이
+#   200 / 1,080,480바이트로 like_count 18 · video_versions 19 · 쿠팡링크 26을 그대로 준다
+#   (Playwright 캡처본과 같은 마커 수). UA만 보내고 Accept·Sec-Fetch를 빼면 메타가 껍데기를
+#   준다 — 이 헤더 묶음이 통째로 열쇠다. 하나라도 빼지 마라.
+BROWSER_HEADERS = {
+    "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                   "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"),
+    "Accept": ("text/html,application/xhtml+xml,application/xml;q=0.9,"
+               "image/avif,image/webp,*/*;q=0.8"),
+    "Accept-Language": "ko-KR,ko;q=0.9",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Upgrade-Insecure-Requests": "1",
+}
+
+
+def fetch_html(url, timeout=30):
+    """쓰레드 페이지 HTML을 받는다. 실패하면 빈 문자열(성패는 호출부가 건수로 본다).
+
+    ★조용한 실패 금지: 예외는 삼키되(호출부가 계속 돌아야 한다), 어떤 URL에서
+      무슨 종류의 실패였는지는 한 줄 남긴다. HTTPError는 상태코드까지 남긴다.
+    """
+    import urllib.error
+    import urllib.request
+    try:
+        req = urllib.request.Request(url, headers=BROWSER_HEADERS)
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return r.read().decode("utf-8", "ignore")
+    except urllib.error.HTTPError as e:
+        print(f"[threads_parse] fetch_html 실패 status={e.code} url={url}",
+              file=sys.stderr)
+        return ""
+    except Exception as e:
+        print(f"[threads_parse] fetch_html 실패 {e!r} url={url}", file=sys.stderr)
+        return ""
 
 _SJS_RE = re.compile(
     r'<script[^>]+type="application/json"[^>]*>(.*?)</script>', re.S)

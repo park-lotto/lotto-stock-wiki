@@ -50,8 +50,10 @@ def _fixture_html(code="DcAbc", username="user1"):
 def test_쓰레드_메타_보강이_썸네일_제목을_채운다(monkeypatch):
     from shopping_shorts import media_download
 
-    from shopping_shorts import threads_playwright
-    monkeypatch.setattr(threads_playwright, "fetch_html",
+    # ★fetch_html은 threads_parse가 정본이다(2026-08-17 리뷰 — playwright 비의존화).
+    #   media_download가 그쪽을 직접 import해 쓰므로 여기서 몽키패치한다.
+    from shopping_shorts import threads_parse
+    monkeypatch.setattr(threads_parse, "fetch_html",
                          lambda url, timeout=30: _fixture_html())
     out = media_download._probe_threads_meta(
         "https://www.threads.com/@user1/post/DcAbc")
