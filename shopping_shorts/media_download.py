@@ -122,6 +122,15 @@ def probe_grab_meta(url, timeout=40):
     """원클릭 담기 URL → {thumbnail,title,channel,views,likes,comments,duration}(있는 것만).
     yt-dlp -j(유튜브·샤오홍슈 등은 통계까지 무료) 우선, 실패·썸네일없음 시 oEmbed(틱톡·유튜브)
     폴백. 전부 실패하면 {}. 백그라운드 보강용이라 조용히 실패."""
+    # ★쓰레드는 yt-dlp가 지원하지 않는다(2026-08-17 실측: threads extractor NONE,
+    #   generic 폴백도 Unsupported URL). 아래 yt-dlp 경로로 보내면 조용히 {}가 되어
+    #   썸네일·제목이 영영 안 채워진다. 우리 수집기로 갈라 보낸다.
+    host = (urllib.parse.urlparse(url or "").hostname or "").lower()
+    # ★app.py의 _grab_platform과 같은 방식(정확일치 또는 .호스트 서픽스)으로 판정한다.
+    #   endswith("threads.com")만 쓰면 evilthreads.com도 통과한다(0순위-B: 같은 판단
+    #   두 곳에 다르게 적지 마라).
+    if any(host == d or host.endswith("." + d) for d in ("threads.com", "threads.net")):
+        return _probe_threads_meta(url, timeout=timeout)
     out = {}
     try:
         r = subprocess.run([sys.executable, "-m", "yt_dlp", "-j", "--no-warnings",
@@ -150,6 +159,80 @@ def probe_grab_meta(url, timeout=40):
         if oe.get("author_name"):
             out.setdefault("channel", oe["author_name"])
     return {k: v for k, v in out.items() if v not in (None, "")}
+
+
+def _fetch_threads_post(url, timeout=30):
+    """쓰레드 게시물 URL → 계약 dict(threads_parse.parse_post_node) 또는 None.
+
+    ★HTML 수신 실패/노드 0건/code 불일치를 원인별로 구분해 로그를 남긴다
+    (0순위 규칙: 조용한 실패 금지). username·code는 여기서 한 번만 뽑아
+    _probe_threads_meta·_download_threads가 같은 판단을 두 번 적지 않게 한다."""
+    m = re.search(r"/@([^/]+)/post/([A-Za-z0-9_-]+)", url or "")
+    if not m:
+        print(f"[media_download] _fetch_threads_post URL 형식 아님 url={url}",
+              file=sys.stderr)
+        return None
+    username, code = m.group(1), m.group(2)
+    # ★fetch_html은 threads_parse가 정본이다(순수 HTTP, playwright 비의존) — 담기
+    #   1건마다 playwright를 끌어오지 않도록 여기서도 그쪽을 쓴다(2026-08-17 리뷰).
+    from shopping_shorts.threads_parse import extract_post_nodes, fetch_html, parse_post_node
+    html = fetch_html(url, timeout=timeout)
+    if not html:
+        print(f"[media_download] _fetch_threads_post HTML 수신 실패 code={code} url={url}",
+              file=sys.stderr)
+        return None
+    nodes = extract_post_nodes(html)
+    for node in nodes:
+        parsed = parse_post_node(node, username)
+        if parsed and parsed.get("code") == code:
+            return parsed
+    print(f"[media_download] _fetch_threads_post code 불일치(구조 변화 의심) "
+          f"code={code} nodes={len(nodes)} url={url}", file=sys.stderr)
+    return None
+
+
+def _probe_threads_meta(url, timeout=30):
+    """쓰레드 게시물 URL → {thumbnail,title,video_url}(있는 것만). 실패하면 {}(조용히
+    — 백그라운드 보강용이라 예외를 밖으로 내지 않는다. 원인은 _fetch_threads_post가 로그로 남긴다).
+
+    ★Playwright(fetch_video_url)를 안 쓴다 — 브라우저를 띄워도 {"video_url":...}만
+    돌아와 호출부(_enrich_grab)가 thumbnail/title만 저장하는 계약이라 통째로 버려졌다
+    (2026-08-17 리뷰 발견). fetch_html(HTTP만)로 받은 페이지에서 code가 일치하는
+    게시물을 찾아 thumbnail·title(캡션)까지 함께 돌려준다 — 브라우저도 안 띄워 더 빠르다."""
+    try:
+        post = _fetch_threads_post(url, timeout=timeout)
+    except Exception as e:
+        print(f"[media_download] _probe_threads_meta 실패 url={url} {e!r}",
+              file=sys.stderr)
+        return {}
+    if not post:
+        return {}
+    out = {}
+    if post.get("thumb"):
+        out["thumbnail"] = post["thumb"]
+    if post.get("caption"):
+        out["title"] = post["caption"][:120]
+    if post.get("video_url"):
+        out["video_url"] = post["video_url"]
+    return out
+
+
+def _download_threads(url, dest_dir, timeout=30):
+    """쓰레드 게시물 URL 다운로드 → (mp4경로, caption).
+
+    yt-dlp는 쓰레드를 지원하지 않는다(2026-08-17 실측: extractor 없음, generic
+    폴백도 Unsupported URL). threads_parse(HTTP만)로 게시물을 찾아 video_url을
+    뽑고, 이미 있는 직접 mp4 다운로드 경로(frame_extract.download_video —
+    _is_direct_video 분기·_download_instagram이 쓰는 것과 같은 함수)로 받는다.
+    영상이 없는 글·게시물을 못 찾은 경우엔 원인이 구분되는 에러를 낸다."""
+    from shopping_shorts.frame_extract import download_video
+    post = _fetch_threads_post(url, timeout=timeout)
+    if not post:
+        raise RuntimeError(f"쓰레드 게시물을 찾지 못했습니다: {url}")
+    video_url = post.get("video_url")
+    if not video_url:
+        raise RuntimeError(f"영상이 없는 글입니다: {url}")
+    return str(download_video(video_url, Path(dest_dir))), post.get("caption", "")
 
 
 _IG_CODE_RE = re.compile(r"instagram\.com/(?:reel|reels|p|tv)/([A-Za-z0-9_-]+)")
@@ -375,8 +458,10 @@ def _is_direct_video(u):
     path = u.split("?", 1)[0]
     if path.endswith((".mp4", ".m4v", ".mov", ".webm")):
         return True
-    # 알려진 영상 CDN 호스트(샤오홍슈=xhscdn, 도우인=zjcdn/douyinvod). 페이지 도메인은 제외.
-    return any(h in u for h in ("xhscdn.com", "sns-video", "zjcdn.com", "douyinvod.com"))
+    # 알려진 영상 CDN 호스트(샤오홍슈=xhscdn, 도우인=zjcdn/douyinvod, 인스타·쓰레드=
+    # cdninstagram — 쓰레드 영상도 이 CDN에서 나온다). 페이지 도메인은 제외.
+    return any(h in u for h in ("xhscdn.com", "sns-video", "zjcdn.com", "douyinvod.com",
+                                "cdninstagram.com"))
 
 
 def download_any(url, dest_dir):
@@ -395,7 +480,14 @@ def download_any(url, dest_dir):
     if "xiaohongshu.com" in u and "/search_result/" in u:
         url = url.replace("/search_result/", "/explore/")
         u = url.lower()
-    if "instagram.com" in u:
+    # ★호스트 기반 판정(app.py의 _grab_platform과 같은 방식 — 0순위-B: 같은 판단을
+    #   두 곳에 다르게 적지 마라). "instagram.com" in u 같은 부분문자열 검사는
+    #   scontent-xxx.**cdninstagram**.com(인스타·쓰레드 영상 CDN)도 참이 돼, 쓰레드
+    #   mp4가 인스타 세션/쿠키 경로로 잘못 새어 들어간다(2026-08-17 리뷰 발견).
+    host = (urllib.parse.urlparse(url or "").hostname or "").lower()
+    if any(host == d or host.endswith("." + d) for d in ("threads.com", "threads.net")):
+        return _download_threads(url, dest_dir)
+    if host == "instagram.com" or host.endswith(".instagram.com"):
         return _download_instagram(url, dest_dir)
     # 직접 mp4(예: 샤오홍슈 url_720p) — 담긴 샤오홍슈 url은 rednote.com/search_result 검색결과
     # '페이지'라 yt-dlp로 못 받는다. 프론트가 이미 확보한 직접 mp4(play_url)를 넘기면 이 경로로

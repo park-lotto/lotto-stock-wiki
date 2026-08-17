@@ -7919,6 +7919,7 @@ _GRAB_DOMAINS = [
     ("instagram", ("instagram.com",)),
     ("xiaohongshu", ("xiaohongshu.com", "xhslink.com", "rednote.com")),
     ("douyin", ("douyin.com", "iesdouyin.com")),
+    ("threads", ("threads.com", "threads.net")),
 ]
 
 
@@ -7977,7 +7978,7 @@ def api_grab(request: Request, background_tasks: BackgroundTasks,
         return _grab_popup_html(False, title, msg)
     platform = _grab_platform(url)
     if not platform:
-        return _grab_popup_html(False, "담을 수 없는 링크예요", "유튜브·틱톡·샤오홍슈·도우인 영상 페이지에서 눌러주세요")
+        return _grab_popup_html(False, "담을 수 없는 링크예요", "유튜브·틱톡·인스타·쓰레드·샤오홍슈·도우인 영상 페이지에서 눌러주세요")
     sc = "grab_" + platform + "_" + hashlib.sha1(url.encode("utf-8", "ignore")).hexdigest()[:12]
     # ★영상 파일 직접 주소(2026-08-17) — 담기 스크립트가 보내면 함께 보관한다.
     #   도우인은 yt-dlp가 쿠키를 요구해 페이지 URL로는 못 받는다(서버·PC 양쪽 재현).
@@ -8728,8 +8729,10 @@ def _is_grabbable_media(u):
 
 
 # 담기가 보낸 영상 주소로 받아들일 CDN(도우인=zjcdn/douyinvod, 샤오홍슈=xhscdn).
-# ★여기 없는 호스트는 조용히 버린다 — 그러면 종전대로 페이지 URL로 간다(회귀 없음).
-_GRAB_MEDIA_HOSTS = ("zjcdn.com", "douyinvod.com", "xhscdn.com", "douyinpic.com")
+# ★cdninstagram = 인스타·쓰레드 공용(2026-08-17 실측: 쓰레드 mp4가 이 CDN이다).
+#   여기 없으면 _is_grabbable_media가 False를 내고 영상 주소가 조용히 버려진다.
+_GRAB_MEDIA_HOSTS = ("zjcdn.com", "douyinvod.com", "xhscdn.com", "douyinpic.com",
+                     "cdninstagram.com")
 
 
 _AUTOLOAD_MAX_ATTEMPTS = 3      # shortcode당 자동추출 총 시도 횟수(넘으면 영구 스킵)
