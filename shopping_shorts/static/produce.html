@@ -333,11 +333,20 @@
     .htitle{font-size:18px;font-weight:800;letter-spacing:-.2px;display:flex;align-items:center;gap:8px}
     .hpill{font-size:10px;font-weight:700;color:#04120e;background:linear-gradient(90deg,var(--gold),#e8b53a);padding:2px 7px;border-radius:20px}
     .htag{color:var(--sub);font-size:12.5px}
-    .show{display:flex;align-items:center;gap:0;margin:16px 0 2px;background:#0a0e0c;border:1px solid var(--line);
+    /* ★gap:0 + justify-content:center (2026-08-18) — .demo가 flex:1로 화면을 반씩
+       나눠 갖던 걸 내용 크기로 바꿨으므로, 남는 폭은 여기서 양옆으로 균등 분배한다.
+       예전엔 칸이 폭을 다 먹어 프레임이 양 끝으로 밀렸다(가운데 456px 빔). */
+    .show{display:flex;align-items:center;justify-content:center;gap:18px;margin:16px 0 2px;background:#0a0e0c;border:1px solid var(--line);
       border-radius:13px;padding:16px 10px;position:relative}
     .demotag{position:absolute;top:8px;left:11px;font-size:9.5px;color:var(--sub);letter-spacing:.05em;text-transform:uppercase}
-    .demo{flex:1;display:flex;flex-direction:column;align-items:center}
-    .dframe{position:relative;width:100%;max-width:124px;aspect-ratio:9/16;border-radius:10px;overflow:hidden;
+    /* ★데모 프레임 확대(2026-08-18 사장님 "이 크기가 맞는건가? 맞다면 더 크게").
+       실측 문제: .demo{flex:1}이라 칸은 536px씩 먹는데 .dframe은 max-width:124px(22%)라
+       두 프레임이 **양 끝으로 밀리고 가운데 456px이 텅 비었다**.
+       고침 — 칸을 내용만큼만(flex:0 1 auto) 쓰고 .show가 가운데로 모은다(justify-content).
+       프레임은 실제 미리보기(.cp-frame)와 같은 방식으로 키운다: 세로 상한(vh)을 같이
+       걸어야 9:16이라 폭만 키웠을 때 화면 밖으로 안 넘친다. */
+    .demo{flex:0 1 auto;display:flex;flex-direction:column;align-items:center}
+    .dframe{position:relative;width:min(240px,26vw,30vh);aspect-ratio:9/16;border-radius:10px;overflow:hidden;
       background:linear-gradient(160deg,#2a3a44,#141c22);border:1px solid #0006}
     .dframe .sky{position:absolute;inset:0;background:radial-gradient(120px 80px at 30% 22%,#3a5566,transparent),radial-gradient(90px 90px at 72% 68%,#4a3b52,transparent)}
     .dframe .subbar{position:absolute;left:7px;right:7px;bottom:12px;text-align:center}
