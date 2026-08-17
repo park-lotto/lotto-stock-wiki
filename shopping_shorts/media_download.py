@@ -122,6 +122,12 @@ def probe_grab_meta(url, timeout=40):
     """원클릭 담기 URL → {thumbnail,title,channel,views,likes,comments,duration}(있는 것만).
     yt-dlp -j(유튜브·샤오홍슈 등은 통계까지 무료) 우선, 실패·썸네일없음 시 oEmbed(틱톡·유튜브)
     폴백. 전부 실패하면 {}. 백그라운드 보강용이라 조용히 실패."""
+    # ★쓰레드는 yt-dlp가 지원하지 않는다(2026-08-17 실측: threads extractor NONE,
+    #   generic 폴백도 Unsupported URL). 아래 yt-dlp 경로로 보내면 조용히 {}가 되어
+    #   썸네일·제목이 영영 안 채워진다. 우리 수집기로 갈라 보낸다.
+    host = (urllib.parse.urlparse(url or "").hostname or "").lower()
+    if host.endswith("threads.com") or host.endswith("threads.net"):
+        return _probe_threads_meta(url)
     out = {}
     try:
         r = subprocess.run([sys.executable, "-m", "yt_dlp", "-j", "--no-warnings",
@@ -150,6 +156,22 @@ def probe_grab_meta(url, timeout=40):
         if oe.get("author_name"):
             out.setdefault("channel", oe["author_name"])
     return {k: v for k, v in out.items() if v not in (None, "")}
+
+
+def _probe_threads_meta(url):
+    """쓰레드 게시물 URL → {thumbnail,title,video_url}. 실패하면 {}(조용히)."""
+    m = re.search(r"/@([^/]+)/post/([A-Za-z0-9_-]+)", url or "")
+    if not m:
+        return {}
+    username, code = m.group(1), m.group(2)
+    try:
+        from shopping_shorts import config
+        from shopping_shorts.threads_playwright import fetch_video_url
+        vurl = fetch_video_url(code, username,
+                               session_path=getattr(config, "INSTAGRAM_SESSION_PATH", ""))
+    except Exception:
+        return {}
+    return {"video_url": vurl} if vurl else {}
 
 
 _IG_CODE_RE = re.compile(r"instagram\.com/(?:reel|reels|p|tv)/([A-Za-z0-9_-]+)")
