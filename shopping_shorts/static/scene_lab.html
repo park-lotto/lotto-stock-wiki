@@ -1148,11 +1148,10 @@ function render(){
                     title="고른 ${_MSEL.size}장을 한 장처럼 합칩니다">🔗 ${_MSEL.size}장 합치기</button>` : ''}
           </div>
           <div class="meta">
-            <div>${useTags(s.sid).map(t=>`<span class="utag${t==='실증'?' key':''}">${esc(tagLabel(t))}</span>`).join('')}</div>
-            ${MERGES[s.sid]?`<div class="oorbadge" style="border-color:var(--accent);color:var(--accent)">${esc(mergeBadge(s.sid))}
-               <button type="button" class="gm" onclick="unMerge('${s.sid}',event)">해제</button></div>`:''}
-            ${tooShort(s.sid)?`<div class="oorbadge">⚠ 너무 짧아서(0.8초 미만) 담아도 화면에 안 나와요</div>`:''}
-            ${dupMates(s.sid).length?`<div class="utag" style="border-color:var(--accent);color:var(--accent)">비슷한 그림 ${dupMates(s.sid).length}장 접힘</div>`:''}
+            ${/* ★번호줄을 **맨 위 고정**(2026-08-17 사장님 "순서대로 안 되어있는데?").
+                  번호는 오름차순이 맞았는데 위 배지(용도·너무짧음·합침·비슷접힘) 개수가
+                  카드마다 달라 번호의 세로 위치가 지그재그로 흔들려 어긋나 보였다.
+                  첫 줄로 올리면 모든 카드에서 같은 높이에 온다(정렬 규칙은 안 건드림). */''}
             <div class="slabrow">
               ${/* ★소스별에서도 순번을 보여준다(2026-08-17 사장님 "순서표시가 안 나오고").
                     종전엔 결 이모지와 배타적이라 소스별에서 1-1이 통째로 사라졌다 — 정렬은
@@ -1164,6 +1163,11 @@ function render(){
               ${s.label ? `<span class="slab">${esc(s.label)}</span>`
                         : `<span class="slab dim">이름 없음</span>`}
             </div>
+            <div>${useTags(s.sid).map(t=>`<span class="utag${t==='실증'?' key':''}">${esc(tagLabel(t))}</span>`).join('')}</div>
+            ${MERGES[s.sid]?`<div class="oorbadge" style="border-color:var(--accent);color:var(--accent)">${esc(mergeBadge(s.sid))}
+               <button type="button" class="gm" onclick="unMerge('${s.sid}',event)">해제</button></div>`:''}
+            ${tooShort(s.sid)?`<div class="oorbadge">⚠ 너무 짧아서(0.8초 미만) 담아도 화면에 안 나와요</div>`:''}
+            ${dupMates(s.sid).length?`<div class="utag" style="border-color:var(--accent);color:var(--accent)">비슷한 그림 ${dupMates(s.sid).length}장 접힘</div>`:''}
             <div class="d">${esc(s.scene_desc||'(설명 없음)')}</div>
             </div>
         </div>`).join('')}</div></div>`;
