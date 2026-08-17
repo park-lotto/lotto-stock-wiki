@@ -1,0 +1,19 @@
+{
+  "target_kind": "market",
+  "market_direction": "neutral",
+  "macro_events": [
+    {
+      "fact": "트럼프의 금리 인하 압박에도 워시 이사가 인플레이션 지속을 강조함",
+      "ts": "2026-07-29",
+      "quote": "트럼프 '금리 인하' 압박 안 통했다…워시 \"인플레 지속\" 강조"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "기타",
+      "stance": "neutral",
+      "comment": "금리 정책 관련 언급만 존재함"
+    }
+  ],
+  "quote": "트럼프 '금리 인하' 압박 안 통했다…워시 \"인플레 지속\" 강조"
+}

@@ -1,0 +1,53 @@
+{
+  "target_kind": "sector",
+  "sector_name": "반도체",
+  "sector_view": "긍정",
+  "points": [
+    "SK하이닉스와 TSMC의 HBM4 기술 협력을 통한 AI 반도체 생태계 강화",
+    "인텔의 EMIB 등 첨단 패키징 기술 확산에 따른 공급망 다변화",
+    "엔비디아 AI 가속기 수요 증가에 따른 HBM3E 및 HBM4 시장 주도권 경쟁"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "SK하이닉스",
+      "comment": "HBM 시장 1위 지위 강화 및 TSMC와 협업하여 HBM4 2026년 양산 목표",
+      "ts": "2026-08-03",
+      "quote": "SK하이닉스, TSMC와 손잡고 'HBM4' 개발…”2026년 양산\"",
+      "sector": "반도체"
+    },
+    {
+      "name": "삼성전자",
+      "comment": "TSMC와의 패키징 경쟁 및 AI 반도체 공급망 참여",
+      "ts": null,
+      "quote": "보기만 해도 숨 막히는 TSMC vs 삼성 0.001㎜ 패키징 전쟁",
+      "sector": "반도체"
+    },
+    {
+      "name": "피에스케이홀딩스",
+      "comment": "CoWoS 및 HBM 동시 수혜 종목으로 평가",
+      "ts": "2024-03-16",
+      "quote": "피에스케이홀딩스, 목표가 15만원 상향…\"CoWoS·HBM 동시 수혜\"",
+      "sector": "반도체"
+    },
+    {
+      "name": "브로드컴",
+      "comment": "구글 TPU 장기 계약 및 ASIC 시장 성장에 따른 수혜",
+      "ts": "2024-04-09",
+      "quote": "브로드컴(AVGO.N), 구글 TPU 장기 계약 체결.. 삼성전자와 SK하이닉스 수혜",
+      "sector": "반도체"
+    }
+  ],
+  "events": [
+    {
+      "fact": "SK하이닉스와 TSMC, HBM4 개발을 위한 기술 협력 체결",
+      "ts": "2024-04-19",
+      "quote": "SK하이닉스, TSMC와 손잡고 'HBM4' 개발…”2026년 양산\""
+    },
+    {
+      "fact": "SK하이닉스, 인텔 EMIB 기술 검증 확대",
+      "ts": "2024-05-13",
+      "quote": "SK하이닉스, 인텔 'EMIB' 기술 검증 확대…첨단 패키징 대응력 강화 주목"
+    }
+  ],
+  "quote": "SK하이닉스, 차세대 HBM에 TSMC 패키징 기술 'CoWoS' 선택"
+}

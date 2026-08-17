@@ -1,0 +1,29 @@
+{
+  "target_kind": "market",
+  "market_direction": "mixed",
+  "macro_events": [
+    {
+      "fact": "도 넘는 널뛰기 장세 속 은행주 목표가 일제 상향",
+      "ts": "2026-08-01",
+      "quote": "도 넘는 널뛰기 장에 은행株 홀로 웃는다…목표가 일제 상향"
+    },
+    {
+      "fact": "국내증시 하락으로 인한 코스피 고점 이후 목표주가 하향",
+      "ts": "2026-07-30",
+      "quote": "국내증시 하락에…코스피 고점 이후 목표주가 하향 잇달아"
+    }
+  ],
+  "sectors_mentioned": [
+    {
+      "sector": "기타",
+      "stance": "긍정",
+      "comment": "은행주는 변동성 장세 속에서 목표가가 상향되며 긍정적인 흐름을 보임"
+    },
+    {
+      "sector": "IT",
+      "stance": "긍정",
+      "comment": "Amazon, Microsoft 등 주요 IT 기업들은 AWS 및 Azure 성장세를 바탕으로 목표가 상향이 집중됨"
+    }
+  ],
+  "quote": "도 넘는 널뛰기 장에 은행株 홀로 웃는다…목표가 일제 상향"
+}
