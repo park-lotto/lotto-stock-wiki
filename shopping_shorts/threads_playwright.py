@@ -18,6 +18,9 @@ import json
 
 from playwright.sync_api import sync_playwright
 
+from shopping_shorts.threads_parse import (extract_post_nodes, merge_thread_tail,
+                                           parse_post_node, quality_score)
+
 THREADS_BASE = "https://www.threads.com"
 
 
@@ -65,3 +68,80 @@ def dump_profile_payloads(username, out_path, session_path="", proxy=""):
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(seen, f, ensure_ascii=False)
     return len(seen)
+
+
+# ★Ruling 2(2026-08-17 실측): 브라우저도 로그인도 필요 없다. 이 헤더를 갖춘 익명 GET이
+#   200 / 1,080,480바이트로 like_count 18 · video_versions 19 · 쿠팡링크 26을 그대로 준다
+#   (Playwright 캡처본과 같은 마커 수). UA만 보내고 Accept·Sec-Fetch를 빼면 메타가 껍데기를
+#   준다 — 이 헤더 묶음이 통째로 열쇠다. 하나라도 빼지 마라.
+BROWSER_HEADERS = {
+    "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                   "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"),
+    "Accept": ("text/html,application/xhtml+xml,application/xml;q=0.9,"
+               "image/avif,image/webp,*/*;q=0.8"),
+    "Accept-Language": "ko-KR,ko;q=0.9",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Upgrade-Insecure-Requests": "1",
+}
+
+
+def fetch_html(url, timeout=30):
+    """쓰레드 페이지 HTML을 받는다. 실패하면 빈 문자열(성패는 호출부가 건수로 본다)."""
+    import urllib.request
+    try:
+        req = urllib.request.Request(url, headers=BROWSER_HEADERS)
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return r.read().decode("utf-8", "ignore")
+    except Exception:
+        return ""
+
+
+def _fetch_profile_nodes(username, session_path="", proxy=""):
+    """프로필 HTML을 받아 게시물 노드를 모은다(순서 보존).
+
+    session_path·proxy는 받아만 두고 이 경로에선 쓰지 않는다 — 로그아웃 뷰가 더 많이 준다.
+    메타가 헤더 요구를 강화해 이 길이 막히면 그때 Playwright 경로로 폴백한다.
+    """
+    html = fetch_html(f"{THREADS_BASE}/@{username}")
+    return extract_post_nodes(html)
+
+
+def collect_account(username, store, session_path="", proxy=""):
+    """계정 하나를 수집해 저장한다. {"posts": 저장대상 수, "new": 새로 들어온 수}."""
+    nodes = _fetch_profile_nodes(username, session_path, proxy)
+    parsed = [p for p in (parse_post_node(n, username) for n in nodes) if p]
+    merged = merge_thread_tail(parsed)
+    new = 0
+    for post in merged:
+        post["quality"] = quality_score(post)
+        post["source"] = "account"
+        if store.threads_upsert(post):
+            new += 1
+    return {"posts": len(merged), "new": new}
+
+
+def fetch_video_url(code, username, session_path="", proxy=""):
+    """/post/{code}/media 로 들어가 mp4 직링크를 회수한다. 실패하면 빈 문자열.
+
+    ★이 경로가 있는 이유(2026-08-17 실측): 프로필 목록엔 <video>가 아예 없고
+      커버 이미지만 있다. 이 URL로 들어가야 <video>가 뜬다. 그리고 쓰레드 영상은
+      blob/MSE가 아니라 통짜 mp4(content-type video/mp4, ftypisom, Range 206)라
+      주소만 얻으면 그대로 받을 수 있다.
+    ★이 주소는 만료된다. 영구 주소로 믿지 말고, 필요할 때 다시 부른다.
+    """
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        ctx = browser.new_context(**_context_kw(session_path, proxy))
+        page = ctx.new_page()
+        try:
+            page.goto(f"{THREADS_BASE}/@{username}/post/{code}/media",
+                      wait_until="domcontentloaded", timeout=60000)
+            page.wait_for_selector("video", timeout=20000)
+            src = page.eval_on_selector("video", "v => v.currentSrc || v.src || ''")
+        except Exception:
+            src = ""
+        finally:
+            browser.close()
+    return src if isinstance(src, str) and src.startswith("https://") else ""
