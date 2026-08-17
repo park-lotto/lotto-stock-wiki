@@ -2209,6 +2209,31 @@ class Store:
             "first_seen": r[9] or "", "upload_ts": r[10] or "",
         } for r in rows]
 
+    def archive_hits(self, min_comments=10000, limit=400):
+        """역대 히트작 — 누적 아카이브에서 크게 터진 것만. 추가 크롤 0.
+
+        hits_since(최근 N일, reel_history)와 소스가 다르다. 이쪽은 channel_archive
+        누적분(실측 2026-08-17: 206,672건, 댓글 1만+ 1,235건)이고 수집은 이미 끝나
+        크론도 꺼져 있다 — 그냥 갖고 있는 걸 보여줄 뿐이다.
+
+        ⚠️ category·표시명이 없다(아카이브 크롤이 안 저장했다) → 화면의 카테고리
+        걸러내기는 이 탭에서 안 걸린다. 20만 건 태깅은 Gemini 비용이라 보류했다.
+        컬럼명 thumbnail은 카드가 쓰는 thumb으로 바꿔서 넘긴다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT shortcode, username, url, thumbnail, views, likes,"
+                "       comments, posted_at "
+                "FROM channel_archive WHERE comments >= ? "
+                "ORDER BY comments DESC LIMIT ?",
+                (min_comments, int(limit))
+            ).fetchall()
+        return [{
+            "shortcode": r[0], "username": r[1], "name": "",
+            "category": "", "url": r[2] or "", "thumb": r[3] or "",
+            "caption": "", "views": r[4] or 0, "likes": r[5] or 0,
+            "comments": r[6] or 0, "upload_ts": r[7] or "",
+        } for r in rows]
+
     def save_script(self, shortcode, script, category=None):
         """대본추출 결과({segments, full_text}) 저장(덮어쓰기). category가 오면
         같이 저장(학습소재 통계의 그룹핑 키, 2026-07-13). 구조분석은 별도
