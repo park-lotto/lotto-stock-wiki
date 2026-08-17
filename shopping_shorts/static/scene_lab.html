@@ -1801,12 +1801,12 @@ function wireBandPan(){
   const row = document.getElementById('tbrow');
   if (!row || row._panWired) return;
   row._panWired = true;
-  let on = false, x0 = 0, left0 = 0, moved = 0;
+  let on = false, x0 = 0, left0 = 0, moved = 0, scrolled = 0;
   const skip = t => !t || (t.closest && t.closest('.tbcut, button, input, label, [contenteditable="true"]'));
   row.style.cursor = 'grab';
   row.addEventListener('pointerdown', e => {
     if (e.button !== 0 || skip(e.target)) return;
-    on = true; moved = 0; x0 = e.clientX; left0 = row.scrollLeft;
+    on = true; moved = 0; scrolled = 0; x0 = e.clientX; left0 = row.scrollLeft;
     row.style.cursor = 'grabbing';
     row.setPointerCapture(e.pointerId);
   });
@@ -1815,6 +1815,8 @@ function wireBandPan(){
     const dx = e.clientX - x0;
     if (Math.abs(dx) > moved) moved = Math.abs(dx);
     row.scrollLeft = left0 - dx;
+    // 실제로 옆으로 갔는지도 함께 잰다 — 끝에 닿아 안 움직였으면 '끈 것'이 아니다.
+    if (Math.abs(row.scrollLeft - left0) > scrolled) scrolled = Math.abs(row.scrollLeft - left0);
   });
   const end = e => {
     if (!on) return;
@@ -1823,8 +1825,16 @@ function wireBandPan(){
   };
   row.addEventListener('pointerup', end);
   row.addEventListener('pointercancel', end);
-  // 4px 넘게 끌었으면 '끈 것'이지 '누른 것'이 아니다 → 칸 재생을 막는다(캡처 단계).
-  row.addEventListener('click', e => { if (moved > 4){ e.stopPropagation(); e.preventDefault(); moved = 0; } }, true);
+  // ★삼키는 조건을 정확히 한다(2026-08-17 사장님 "단락별로 저 칸을 누르면 미리보기 재생이
+  //   되었는데 지금은 안 된다"). 원인: 칸의 빈 자리(썸네일 바깥)가 곧 pan 시작 지점인데
+  //   skip 목록에 .tbcut·버튼·입력칸만 있고 **칸 배경(.tbeat)은 없다**. 그래서 칸을 누를 때
+  //   마우스가 4px만 흔들려도 '끈 것'으로 보고 재생을 막았다 — 손을 완벽히 고정해야만 재생.
+  //   처방: ①손떨림 여유를 10px로 ②**실제로 옆으로 스크롤됐을 때만** 삼킨다.
+  //   둘 다여야 삼키므로, 제자리에서 살짝 흔든 클릭은 그대로 재생으로 간다.
+  row.addEventListener('click', e => {
+    if (moved > 10 && scrolled > 2){ e.stopPropagation(); e.preventDefault(); }
+    moved = 0; scrolled = 0;      // 다음 클릭에 옛 값이 남지 않게 항상 비운다
+  }, true);
 }
 boot();
 </script></body></html>
