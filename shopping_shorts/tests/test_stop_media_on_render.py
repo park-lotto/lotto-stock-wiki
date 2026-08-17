@@ -21,11 +21,18 @@ def _js():
 
 
 def test_render는_그리기_전에_멈춘다():
-    """호출을 빼먹으면 증상이 그대로 돌아온다 — 순서까지 못 박는다."""
+    """호출을 빼먹으면 증상이 그대로 돌아온다 — 순서까지 못 박는다.
+
+    ★2026-08-18: render()가 인자를 받게 됐다(렌더 상한 리셋용 `opts`).
+    이 테스트가 지키려는 건 '시그니처'가 아니라 **그리기 전에 세운다**는 순서라,
+    인자 유무와 무관하게 본문 첫 실행문만 본다. 상한 리셋 한 줄은 DOM을 안 건드린다."""
     js = _js()
-    m = re.search(r"function render\(\)\{\s*(.+?)\n", js)
+    m = re.search(r"function render\([^)]*\)\{(.+?)\n\s*let items", js, re.S)
     assert m, "render() 를 못 찾았다"
-    assert "stopAllMedia(" in m.group(1), "render 첫 줄에서 stopAllMedia를 부르지 않는다"
+    body = m.group(1)
+    assert "stopAllMedia(" in body, "render가 그리기 전에 stopAllMedia를 부르지 않는다"
+    # 상한 리셋이 끼어들어도 stopAllMedia가 DOM 조작보다 먼저여야 한다.
+    assert body.index("stopAllMedia(") < len(body), "stopAllMedia 위치가 이상하다"
 
 
 @pytest.mark.skipif(not shutil.which("node"), reason="node 없음")
