@@ -1368,6 +1368,18 @@ class Store:
             ).fetchall()
         return {r[0]: {"last": r[1] or "", "name": r[2] or ""} for r in rows}
 
+    def reel_history_rows(self):
+        """등급 산정용 원자료 — [{"username","comments","first_seen"}].
+
+        reel_history는 30일 롤링(prune_reel_history)이라 자연히 '최근 한 달 성적'만 남는다.
+        판정 자체는 하지 않는다 — 등급 기준이 두 군데에 적히면 언젠가 어긋난다(0순위-B).
+        기준은 channel_tier 한 곳에만 둔다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT username, comments, first_seen FROM reel_history"
+            ).fetchall()
+        return [{"username": r[0], "comments": r[1], "first_seen": r[2]} for r in rows]
+
     def channel_name_map(self):
         """{username: 한글 표시명} — 아카이브(히트작) 카드가 @아이디 대신 한글 이름을 쓰려고 읽는다.
 
@@ -2171,6 +2183,31 @@ class Store:
         if not row:
             return [], None
         return json.loads(row[0]), row[1]
+
+    def hits_since(self, days, min_comments=500, limit=400, platform="instagram"):
+        """최근 N일 수집분 중 '터진 것'만 → 카드 items(마지막수집과 같은 모양).
+
+        ★추가 크롤 0 — 이미 받아둔 reel_history를 다시 보여줄 뿐이다. 상단(48시간 신규)이
+        등급제로 얇아져도 이 줄이 재고를 메운다(실측: 7일 댓글500+ 182건, 30일 1000+ 360건).
+
+        댓글 기준인 이유: 사장님이 실제 제작에 쓴 영상의 댓글 중앙값이 1,473(전체 P90 579)
+        이라 조회수보다 손이 가는 것을 잘 가른다(channel_tier 참고).
+        reel_history는 30일 롤링이라 days=30이 사실상 전체다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT shortcode, username, name, category, url, thumb, caption, "
+                "       views, comments, first_seen, upload_ts "
+                "FROM reel_history "
+                "WHERE comments >= ? AND first_seen >= datetime('now', ?) "
+                "ORDER BY comments DESC LIMIT ?",
+                (min_comments, f"-{int(days)} day", int(limit))
+            ).fetchall()
+        return [{
+            "shortcode": r[0], "username": r[1], "name": r[2] or "",
+            "category": r[3] or "", "url": r[4] or "", "thumb": r[5] or "",
+            "caption": r[6] or "", "views": r[7] or 0, "comments": r[8] or 0,
+            "first_seen": r[9] or "", "upload_ts": r[10] or "",
+        } for r in rows]
 
     def save_script(self, shortcode, script, category=None):
         """대본추출 결과({segments, full_text}) 저장(덮어쓰기). category가 오면
