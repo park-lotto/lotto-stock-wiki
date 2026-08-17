@@ -33,12 +33,25 @@
 #      워커 3개가 4분 전 코드로 계속 돌았다). 고객 작업(mix·render·retype·preview·clean)이
 #      돌 때만 미룬다 — 그건 죽이면 사장님이 만들던 영상이 날아가니까. 배경작업은 죽어도
 #      다음 크론이 다시 큐에 넣으므로 잃는 게 없다.
+#
+# ★2026-08-17 ⑤ **담기 분석(prewarm)도 미룬다 — 단 상한을 둔다.**
+#   ④의 전제 "배경작업은 죽어도 다음 크론이 다시 큐에 넣으므로 잃는 게 없다"가
+#   prewarm에는 **거짓**이었다. 실측: 19:08:26에 담긴 영상의 prewarm이 19:11:12 배포
+#   재시작에 죽어 job_queue에 `state=failed, error='워커가 중단됐습니다'`로 남았고,
+#   아무도 다시 큐에 넣지 않아 화면엔 "❌ 분석이 도중에 끊겼어요"만 떴다(사장님이 손으로
+#   다시 담아야 복구됨). 같은 일이 08-16에도 3건 있었다 = 반복 사고.
+#   prewarm은 이름만 배경작업이지 **사장님이 방금 담아서 생긴 일**이라 사실상 고객 작업이다.
+#   ⚠️ 그렇다고 ④를 통째로 되돌리면 08-06 무한연기가 재발한다. 그래서 둘로 가른다:
+#     · durfill·overseas = 진짜 배경작업(하루 50건씩 끊임없이 이어짐) → 종전대로 안 미룸
+#     · prewarm = 담을 때만 생기는 버스트 → 미루되 $PREWARM_MAX_DEFER_SEC 상한
+#   상한이 있으므로 "배포가 영영 안 감"(이 repo 최악 사고)은 구조적으로 불가능하다.
 set -uo pipefail
 REPO=/home/ubuntu/lotto-stock-wiki
 LOG=/tmp/auto_deploy.log
 PENDING=/tmp/ss_pending_restart      # 한 줄에 유닛 하나: stockbrain|shopping-shorts|shopping-shorts-worker
 SINCE=/tmp/ss_pending_since          # 최초 연기 시각(epoch) — 강제 재시작 판정 기준
 MAX_DEFER_SEC=1800                   # 30분 넘게 못 재시작하면 웹은 강제 재시작
+PREWARM_MAX_DEFER_SEC=900            # 담기 분석 때문에 워커를 미루는 상한(15분). 넘으면 진행
 DB="$REPO/shopping_shorts/data/reference.db"
 ACTIVE_WINDOW_SEC=300                # 이 시간 안에 활동한 고객이 있으면 '접속 중'으로 본다
 exec 9>/tmp/auto_deploy.lock
@@ -89,6 +102,27 @@ try:
     sys.exit(0 if n > 0 else 1)   # exit 0 = 진행 중 → 연기
 except Exception as e:
     print("queue_check 오류(배포진행): %r" % e)
+    sys.exit(1)
+PY
+}
+
+# ── 담기 분석(prewarm) 진행 확인 ──────────────────────────────────
+# ★2026-08-17 신설. _worker_busy와 **일부러 따로 둔다** — 둘은 성격이 다르다:
+#   _worker_busy(고객작업) = 죽으면 만들던 영상이 날아감 → 무제한 연기
+#   _prewarm_busy(담기분석) = 죽으면 다시 담아야 함     → 연기하되 상한
+# 판정 규칙(heartbeat 2분 좀비 가드·DB 실패 시 '없음')은 _worker_busy와 똑같이 간다.
+_prewarm_busy() {
+  python3 - "$DB" <<'PY' 2>>"$LOG"
+import sqlite3, sys
+try:
+    con = sqlite3.connect(sys.argv[1], timeout=5)
+    n = con.execute(
+        "SELECT COUNT(*) FROM job_queue "
+        "WHERE state='running' AND task='prewarm' "
+        "AND datetime(heartbeat_at) > datetime('now','-2 minutes')").fetchone()[0]
+    sys.exit(0 if n > 0 else 1)   # exit 0 = 진행 중 → 연기
+except Exception as e:
+    print("prewarm_check 오류(배포진행): %r" % e)
     sys.exit(1)
 PY
 }
@@ -175,9 +209,18 @@ fi
 # 워커: 진행 중 작업이 있으면 연기 — 재시작하면 그 작업(렌더 등)이 죽는다.
 # 강제하지 않는다. 좀비 가드(heartbeat 2분)가 죽은 job을 걸러내므로 영영 막히지 않는다.
 if _pending_has shopping-shorts-worker; then
+  # ★담기 분석(prewarm)도 미룬다(2026-08-17) — 단 상한 안에서만. 상한을 넘기면 진행해
+  #   "배포가 영영 안 감"을 구조적으로 막는다. 고객작업은 종전대로 무제한 연기.
+  PREWARM_HOLD=0
+  if [ "$AGE" -lt "$PREWARM_MAX_DEFER_SEC" ] && _prewarm_busy; then PREWARM_HOLD=1; fi
   if _worker_busy; then
     echo "$(date '+%F %T') worker 재시작 연기(고객작업 진행 중, ${AGE}초 경과) $HEADSHORT" >>"$LOG"
+  elif [ "$PREWARM_HOLD" = "1" ]; then
+    echo "$(date '+%F %T') worker 재시작 연기(담기 분석 중, ${AGE}초 경과/상한 ${PREWARM_MAX_DEFER_SEC}초) $HEADSHORT" >>"$LOG"
   else
+    if [ "$AGE" -ge "$PREWARM_MAX_DEFER_SEC" ] && _prewarm_busy; then
+      echo "$(date '+%F %T') ⚠️ 담기 분석 중이지만 연기 상한 ${PREWARM_MAX_DEFER_SEC}초 초과 → 진행(끊긴 건 다시 담아야 함) $HEADSHORT" >>"$LOG"
+    fi
     # ★살아있는 워커 유닛을 systemd에 물어본다(2026-08-06). 워커는 템플릿 인스턴스
     #   (worker@1/2/3)로 바뀌었고 구 이름 `shopping-shorts-worker`는 유닛이 없어져
     #   restart가 실패한다. 이름을 코드에 박으면 인스턴스 수가 바뀔 때마다 또 깨진다.
