@@ -687,7 +687,7 @@ _DURFILL_LAST = 0.0
 
 @app.get("/api/reference")
 def api_reference(platform: str = "instagram", days: int = 0, min_comments: int = 500,
-                  archive: int = 0):
+                  archive: int = 0, max_comments: int = 0):
     """마지막 수집 결과 반환 (프론트 초기 로드용). platform=플랫폼(기본 인스타).
 
     days>0이면 '최근 N일 중 터진 것'을 대신 준다(2026-08-17) — 추가 크롤 0이고
@@ -700,7 +700,8 @@ def api_reference(platform: str = "instagram", days: int = 0, min_comments: int 
     if archive:
         if platform != "instagram":
             return {"ok": True, "items": [], "collected_at": None}
-        items, collected_at = store.archive_hits(min_comments=min_comments), None
+        items, collected_at = store.archive_hits(
+            min_comments=min_comments, max_comments=max_comments), None
     elif days > 0:
         if platform != "instagram":
             return {"ok": True, "items": [], "collected_at": None}

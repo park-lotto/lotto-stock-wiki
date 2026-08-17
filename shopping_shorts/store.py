@@ -2209,7 +2209,7 @@ class Store:
             "first_seen": r[9] or "", "upload_ts": r[10] or "",
         } for r in rows]
 
-    def archive_hits(self, min_comments=10000, limit=400):
+    def archive_hits(self, min_comments=10000, limit=400, max_comments=0):
         """역대 히트작 — 누적 아카이브에서 크게 터진 것만. 추가 크롤 0.
 
         hits_since(최근 N일, reel_history)와 소스가 다르다. 이쪽은 channel_archive
@@ -2218,15 +2218,25 @@ class Store:
 
         ⚠️ category·표시명이 없다(아카이브 크롤이 안 저장했다) → 화면의 카테고리
         걸러내기는 이 탭에서 안 걸린다. 20만 건 태깅은 Gemini 비용이라 보류했다.
-        컬럼명 thumbnail은 카드가 쓰는 thumb으로 바꿔서 넘긴다."""
+        컬럼명 thumbnail은 카드가 쓰는 thumb으로 바꿔서 넘긴다.
+
+        ★max_comments(2026-08-17 추가) — 문턱 버튼이 서로 겹치지 않게 하는 상한.
+        예전엔 문턱만 낮추는 구조라 1만+/3천+/1천+ 셋 다 **같은 400건**이 나왔다
+        (댓글 내림차순 상위 400을 자르니 문턱을 낮춰도 얼굴이 그대로다 — 실측:
+        세 버튼 모두 400건·1위 _miso.home 132,424로 동일해 눌러도 화면이 안 바뀌었다).
+        구간으로 끊으면 1만+ / 3천~9,999 / 1천~2,999가 서로 다른 것만 보여준다.
+        0이면 상한 없음(기존 동작)."""
         with self._conn() as c:
-            rows = c.execute(
-                "SELECT shortcode, username, url, thumbnail, views, likes,"
-                "       comments, posted_at "
-                "FROM channel_archive WHERE comments >= ? "
-                "ORDER BY comments DESC LIMIT ?",
-                (min_comments, int(limit))
-            ).fetchall()
+            sql = ("SELECT shortcode, username, url, thumbnail, views, likes,"
+                   "       comments, posted_at "
+                   "FROM channel_archive WHERE comments >= ? ")
+            args = [min_comments]
+            if max_comments:
+                sql += "AND comments <= ? "
+                args.append(int(max_comments))
+            sql += "ORDER BY comments DESC LIMIT ?"
+            args.append(int(limit))
+            rows = c.execute(sql, tuple(args)).fetchall()
         return [{
             "shortcode": r[0], "username": r[1], "name": "",
             "category": "", "url": r[2] or "", "thumb": r[3] or "",
