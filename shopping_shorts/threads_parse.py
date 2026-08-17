@@ -198,10 +198,16 @@ def find_coupang(text):
 def merge_thread_tail(posts):
     """이어진 글(2/2)을 앞 글(1/2)에 접는다.
 
-    접는 조건(전부 만족해야 한다):
+    접는 조건(전부 만족해야 한다, 컨트롤러 Ruling 5):
       - 같은 사람
       - 뒤 글에 영상이 없다(영상이 있으면 그것도 독립된 재료다)
-      - 바로 다음 글이다
+      - 앞 글이 아직 꼬리를 안 받았다(prev["tail_caption"]이 비어 있다)
+        → 3연속(A영상+B링크+C텍스트)에서 C가 A에 다시 접혀 B의 tail을
+          덮어쓰는 걸 막는다. 한 번 접힌 글은 더 안 접는다.
+      - 앞 글에 미디어가 있다(video 또는 image)
+        → "영상"이 아니라 "미디어 있음"으로 넓힌 이유: 이미지 본문 + 쿠팡링크
+          조합(실데이터에 있음)도 살리기 위함. 텍스트 본문 + 링크는 여전히
+          안 접히는데, 그런 글은 영상이 없어 애초에 재료로 안 쓰므로 감수한다.
     ★이 판단은 여기서만 한다. 수집기·화면에서 또 판단하면 언젠가 어긋난다(0순위-B).
     """
     out = []
@@ -215,7 +221,8 @@ def merge_thread_tail(posts):
         foldable = (prev is not None
                     and prev.get("username") == p.get("username")
                     and p.get("media_kind") != "video"
-                    and prev.get("media_kind") == "video")
+                    and not prev.get("tail_caption")
+                    and prev.get("media_kind") in ("video", "image"))
         if foldable:
             prev["tail_caption"] = p.get("caption") or ""
             prev["coupang_url"] = prev.get("coupang_url") or find_coupang(p.get("caption"))
