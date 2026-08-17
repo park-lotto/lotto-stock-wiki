@@ -395,3 +395,45 @@ def build_overseas_items(raw, prev_base, prev_delta, now=None, window_hours=336)
             "text_level": r.get("text_level"),
         })
     return items
+
+
+def fill_intensity(items, now=None):
+    """강도 지표(시간당댓글·조회수당댓글·팔로워당댓글)가 없는 항목에 채워 넣는다.
+
+    ★왜 필요한가(2026-08-17 실사고): 기간 탭(hits_since)·역대 탭(archive_hits)은
+    build_items를 안 거치고 DB에서 바로 꺼내므로 speed/density가 없다. 그런데 화면은
+    `i.speed.toFixed(1)`을 무조건 부른다 → **첫 카드에서 render가 통째로 죽고**
+    화면이 이전 상태로 얼어붙었다. 증상은 "탭을 눌러도 안 넘어간다 / 지표·카테고리도
+    안 먹는다"로 나타나 버퍼 문제처럼 보였지만, 실제로는 그리는 단계의 예외 하나였다.
+
+    식은 build_items(:83, :97)와 같은 정의를 쓴다 — 이름이 같은데 값이 다르면
+    "저기선 왜 이렇고 여기선 왜 이러냐"가 된다(0순위-B).
+      시간당댓글  = 댓글 / 경과시간
+      조회수당댓글 = 댓글 / 조회수
+      팔로워당댓글 = 댓글 / 팔로워
+    이미 값이 있으면 건드리지 않는다(수집 경로의 값이 늘 우선).
+    """
+    for it in items or []:
+        comments = int(it.get("comments") or 0)
+        views = int(it.get("views") or 0)
+        followers = int(it.get("followers") or 0)
+        if it.get("age_hours") is None:
+            # 발행시각이 없거나 모양이 깨진 항목이 섞여 있다(아카이브 20만 건 실측).
+            # 여기서 예외가 나면 또 화면 전체가 죽으므로 0으로 떨군다.
+            try:
+                it["age_hours"] = round(
+                    hours_since(it.get("upload_ts") or it.get("posted_at") or "", now), 1)
+            except Exception:      # noqa: BLE001
+                it["age_hours"] = 0
+        if it.get("speed") is None:
+            age = it.get("age_hours") or 0
+            it["speed"] = (comments / age) if age > 0 else float(comments)
+        if it.get("density") is None:
+            it["density"] = (comments / views) if views else 0.0
+        if it.get("fan_density") is None:
+            it["fan_density"] = (comments / followers) if followers else 0.0
+        for k, v in (("delta", 0), ("accel", 0.0), ("is_new", False),
+                     ("likes", 0), ("views", 0), ("followers", 0)):
+            if it.get(k) is None:
+                it[k] = v
+    return items

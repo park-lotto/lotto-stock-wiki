@@ -710,6 +710,12 @@ def api_reference(platform: str = "instagram", days: int = 0, min_comments: int 
         items, collected_at = store.load_last_run()
     else:
         items, collected_at = store.load_last_run_platform(platform)
+    if archive or days > 0:
+        # ★이 두 경로는 DB에서 바로 꺼내와 build_items를 안 거친다 = 강도 지표가 없다.
+        # 화면은 i.speed.toFixed(1)을 무조건 부르므로 없으면 render가 통째로 죽어
+        # "탭을 눌러도 안 넘어간다"가 된다(2026-08-17 실사고). 식은 ranking 한 곳에만.
+        from shopping_shorts import ranking as _rk
+        _rk.fill_intensity(items)
     # 🚫 영구차단(2026-07-30) — 카드의 차단 버튼이 넣은 removed_channels를 여기서 걸러낸다.
     # 수집(merge_tracked)도 같은 목록을 보지만, 이미 저장된 last_run에는 남아 있어
     # 차단 후 새로고침·업데이트 때 다시 뜨는 걸 막으려면 이 조회 경로에서도 잘라야 한다.
