@@ -86,6 +86,7 @@ from shopping_shorts import pattern_bank
 from shopping_shorts import bank_assemble
 from shopping_shorts import thumb_title
 from shopping_shorts import headcopy_gen
+from shopping_shorts import deco_templates
 import uuid
 
 app = FastAPI(title="숏템메이커 레퍼런스 랭킹")   # /docs 노출 제목 — 브랜드 통일(2026-07-25)
@@ -9237,6 +9238,20 @@ def api_produce_headcopy_suggest(body: dict):
             _HEADCOPY_CACHE.clear()      # 단순 상한 — LRU를 쓸 만큼 크지 않다
         _HEADCOPY_CACHE[key] = copies
     return {"ok": True, "cached": False, "copies": copies}
+
+
+@app.get("/api/produce/templates")
+def api_produce_templates():
+    """꾸미기 템플릿 12종 목록. 정의처는 deco_templates 하나뿐이다(0순위-B).
+
+    ⚠️ 정적 파일은 루트에 마운트돼 있다(app.mount("/", ...)) — URL은 /static/... 이 아니라
+       /templates/... 다. 여기를 /static/으로 쓰면 카드 12개가 전부 깨진 이미지로 뜬다.
+    """
+    return {"ok": True, "templates": [
+        {"id": t["id"], "name": t["name"], "shape": t["shape"], "color": t["color"],
+         "url": f"/templates/{t['file']}"}
+        for t in deco_templates.TEMPLATES
+    ]}
 
 
 @app.post("/api/produce/mix/bgm")
