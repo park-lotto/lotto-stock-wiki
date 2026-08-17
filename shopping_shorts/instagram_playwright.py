@@ -21,6 +21,8 @@ import os
 from contextlib import contextmanager
 
 from shopping_shorts import config
+# 자산차단은 channel_archive에 한 벌만 둔다(0순위-B) — 여기서 가져다 쓴다.
+from shopping_shorts.channel_archive import block_heavy_assets
 from shopping_shorts.instagram_parse import (
     classify_channel_result, extract_follower_count, extract_hashtag_search_items,
     extract_reel_nodes, parse_hashtag_search_item, parse_reel_node,
@@ -93,6 +95,11 @@ def _scrape_one_playwright(username, session_path=None, proxy=None):
             ctx = browser.new_context(**ctx_kw)
             Stealth().apply_stealth_sync(ctx)
             page = ctx.new_page()
+            # ★프록시 대역폭 절감(2026-08-17) — 이미지·미디어·폰트는 우리가 안 쓴다
+            #   (데이터는 아래 _on_response graphql 후킹으로만 받는다).
+            #   8/09 로테이션 도입 뒤 293채널이 전부 유료 프록시로 나가 4일에 25.4GB를
+            #   태웠다(402 Payment Required). 판단은 channel_archive에 한 벌만 둔다.
+            block_heavy_assets(page)
 
             def _on_response(resp):
                 if not any(h in resp.url for h in _REEL_API_HINTS):
@@ -268,6 +275,11 @@ def _reel_detail_via_page(ctx, code, timeout_ms=60000):
     갈아엎힘에 강하다."""
     found = {}
     page = ctx.new_page()
+    # ★프록시 대역폭 절감(2026-08-17) — 이미지·미디어·폰트는 우리가 안 쓴다
+    #   (데이터는 아래 _on_response graphql 후킹으로만 받는다).
+    #   8/09 로테이션 도입 뒤 293채널이 전부 유료 프록시로 나가 4일에 25.4GB를
+    #   태웠다(402 Payment Required). 판단은 channel_archive에 한 벌만 둔다.
+    block_heavy_assets(page)
 
     def _on_resp(res):
         if found:
@@ -370,6 +382,11 @@ def _search_hashtag_playwright(tag):
             ctx = browser.new_context(**ctx_kw)
             Stealth().apply_stealth_sync(ctx)
             page = ctx.new_page()
+            # ★프록시 대역폭 절감(2026-08-17) — 이미지·미디어·폰트는 우리가 안 쓴다
+            #   (데이터는 아래 _on_response graphql 후킹으로만 받는다).
+            #   8/09 로테이션 도입 뒤 293채널이 전부 유료 프록시로 나가 4일에 25.4GB를
+            #   태웠다(402 Payment Required). 판단은 channel_archive에 한 벌만 둔다.
+            block_heavy_assets(page)
 
             def _on_response(resp):
                 if "graphql" not in resp.url:
@@ -534,6 +551,11 @@ def _fetch_profiles_playwright(usernames):
             for uname in usernames:
                 captured = {}
                 page = ctx.new_page()
+                # ★프록시 대역폭 절감(2026-08-17) — 이미지·미디어·폰트는 우리가 안 쓴다
+                #   (데이터는 아래 _on_response graphql 후킹으로만 받는다).
+                #   8/09 로테이션 도입 뒤 293채널이 전부 유료 프록시로 나가 4일에 25.4GB를
+                #   태웠다(402 Payment Required). 판단은 channel_archive에 한 벌만 둔다.
+                block_heavy_assets(page)
 
                 def _on_response(resp, captured=captured):
                     if "graphql" not in resp.url:
