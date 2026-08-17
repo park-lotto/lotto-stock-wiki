@@ -3814,12 +3814,165 @@ function renderPool(){
   const _anyPick = HANDOFF.some(h=>h.bbMain);
   box.innerHTML=HANDOFF.map((it,i)=>{
     const isPick = it.bbMain || (!_anyPick && it.shortcode && window._aiPick && it.shortcode===window._aiPick.pick_id);
+    // ★썸네일 자리 그대로 재생(2026-08-17 사장님 "레퍼런스 페이지 영상들 재생이랑 똑같은방식").
+    //   레퍼런스 랭킹(index.html render())과 같은 배선이다: ▶ 배지를 얹고, 배지를 누르면
+    //   <img>가 <video>로 **교체**돼 그 칸에서 바로 돈다(오버레이 아님 — 화면을 안 떠난다).
+    //   카드 본체 클릭은 종전대로 pickFootage(메인 지정) — 배지만 stopPropagation.
+    const canPlay = _poolCanPlay(it);
     return `<div class="pool-card${it.useFootage?' on':''}${isPick?' pick':''}" onclick="pickFootage(${i})" title="${esc(it.name||('영상 '+(i+1)))}">`
       + (it.thumbnail?`<img src="${it.thumbnail.includes('gstatic.com')?it.thumbnail:('/api/thumb?url='+encodeURIComponent(it.thumbnail))}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">`:'')
+      + (canPlay?`<span class="pool-play" title="미리보기 재생" onclick="event.stopPropagation();poolPlay(this,${i})">▶</span>`:'')
       + (isPick?'<span class="pickbadge">🤖 AI PICK</span>':'<span class="badge">'+(it.useFootage?'✓':'')+'</span>')
       + `<button class="pool-x" title="빼기" onclick="event.stopPropagation();dropFootage(${i})">✕</button>`
       + `</div>`;
   }).join('');
+}
+// ── 담은 영상 인라인 재생(2026-08-17) — 레퍼런스 랭킹과 같은 방식 ─────────────
+// 재생 가능 판정: 직접 mp4(play_url)가 있거나, 원본 URL로 서버가 해석해 줄 수 있는
+// 플랫폼이면 ▶를 붙인다. URL조차 없는 항목(직접 입력 전)은 누를 게 없으므로 뺀다.
+function _poolCanPlay(it){
+  if(!it) return false;
+  if(it.play_url) return true;
+  return !!(it.url || it.shortcode);
+}
+// ▶ 클릭 → 그 칸의 <img>를 <video>로 교체해 바로 재생(화면 이동 없음).
+//   ①play_url 있으면 즉시(/api/video 프록시 — CDN이 리퍼러·IP를 따져 직접재생을 막는다)
+//   ②없으면 /api/media로 해석(yt-dlp) → 그 mp4로 재생 → 실패하면 embed(iframe) 폴백.
+//   ★이 3단은 랭킹(index.html playInline·_playViaMedia)이 쓰는 그 순서 그대로다.
+//     /api/media 응답은 {ok, url}뿐이다(app.py:5268) — 다른 필드를 짐작해 읽지 마라.
+//   ★해석은 수 초~수십 초 걸린다 → 표시가 없으면 "눌러도 반응 없다"가 된다
+//     (2026-07-31 랭킹 실제 제보). 기다리는 동안 ⏳를 띄운다.
+async function poolPlay(badge, i){
+  const it = HANDOFF[i]; if(!it) return;
+  const card = badge.parentElement; if(!card) return;
+  if(card.dataset.playing) return;                 // 더블클릭 방어(해석 2번 도는 걸 막는다)
+  card.dataset.playing = '1';
+  badge.remove();
+  // ★썸네일이 없는 항목도 재생돼야 한다(2026-08-17 실측). renderPool은 thumbnail이 빈
+  //   항목에 <img>를 아예 안 그리는데, 여기서 img를 필수로 잡으면 **조용히 아무 일도
+  //   안 일어난다**(배지만 사라짐). URL 직접 추가로 담은 영상이 정확히 이 모양이다.
+  //   img가 있으면 그 자리를 대체하고, 없으면 카드 맨 앞에 넣는다.
+  const img = card.querySelector('img');
+  const plat = _poolPlatformOf(it.url);
+  const id   = it.shortcode || _poolVideoIdOf(it.url);
+  const put = (el)=>{ if(img && img.parentElement) img.replaceWith(el); else card.insertBefore(el, card.firstChild); };
+  const swap = (src, onFail)=>{
+    const v=document.createElement('video');
+    v.src=src; v.controls=true; v.autoplay=true; v.playsInline=true;
+    v.setAttribute('playsinline',''); v.setAttribute('crossorigin','anonymous');
+    v.style.cssText='width:100%;height:100%;object-fit:contain;display:block;background:#000';
+    v.onerror=()=>onFail(v);
+    put(v);
+  };
+  // ① 직접 mp4를 이미 들고 있는 경우(랭킹 playInline과 동일)
+  if(it.play_url){
+    swap('/api/video?url='+encodeURIComponent(it.play_url),
+         (v)=>_poolFallback(card, v, i, plat, id));
+    return;
+  }
+  // ② 서버 해석
+  const load = _poolLoading(card);
+  try{
+    if(!plat || !id) throw new Error('no-source');
+    // ★틱톡은 /api/media가 준 mp4 주소가 **우리 서버에서 재요청하면 403**이다(IP·세션
+    //   바인딩, 2026-08-17 렌즈 실측) → 직접재생도 /api/video 프록시도 안 되고 세로로
+    //   긴 임베드로 떨어졌다. yt-dlp로 받아둔 파일을 주는 /api/play를 쓴다(렌즈와 동일).
+    if(plat==='tiktok'){
+      const src='/api/play?platform=tiktok&id='+encodeURIComponent(id);
+      const head=await fetch(src,{method:'GET',headers:{'Range':'bytes=0-1'}});
+      if(load) load.remove();
+      if(head.ok || head.status===206){
+        swap(src, (v)=>_poolFallback(card, v, i, plat, id));
+        return;
+      }
+      throw new Error('play-failed');
+    }
+    const d = await (await fetch(`/api/media?platform=${plat}&id=${encodeURIComponent(id)}`)).json();
+    if(load) load.remove();
+    if(d && d.ok && d.url){
+      // ★프록시를 무조건 씌우면 안 된다 — /api/video는 화이트리스트라 유튜브
+      //   (googlevideo.com)는 400 "invalid host"로 통째로 막힌다(app.py:4964
+      //   _ALLOWED_VIDEO_HOSTS엔 인스타·틱톡·도우인만 있다). 랭킹도 같은 이유로
+      //   해석된 mp4는 직접 재생한다(_playViaMedia viaProxy 기본값 false).
+      swap(d.url, (v)=>_poolFallback(card, v, i, plat, id));
+      return;
+    }
+    throw new Error('no-url');
+  }catch(e){
+    if(load) load.remove();
+    _poolFallback(card, img, i, plat, id);
+  }
+}
+// ③ mp4가 안 되면 embed(iframe) — 유튜브·틱톡은 이걸로 대부분 재생된다(랭킹과 동일).
+//    embed조차 없는 플랫폼(인스타·샤오홍슈·도우인)은 안내 + 원본 링크로 떨어진다.
+//    ★el은 없을 수 있다(썸네일 없는 항목이 해석 단계에서 실패한 경우) — 넣을 자리를
+//      직접 고른다. el.replaceWith를 무조건 부르면 여기서 TypeError로 죽는다.
+function _poolFallback(card, el, i, plat, id){
+  const put = (node)=>{ if(el && el.parentElement) el.replaceWith(node);
+                        else card.insertBefore(node, card.firstChild); };
+  if((plat==='youtube' || plat==='tiktok') && id){
+    const f=document.createElement('iframe');
+    f.src = plat==='youtube'
+      ? 'https://www.youtube.com/embed/'+encodeURIComponent(id)+'?autoplay=1&playsinline=1'
+      : 'https://www.tiktok.com/embed/v2/'+encodeURIComponent(id);
+    f.style.cssText='width:100%;height:100%;border:0;display:block;background:#000';
+    f.allow='autoplay; encrypted-media; picture-in-picture'; f.allowFullscreen=true;
+    put(f);
+    return;
+  }
+  // 재생도 embed도 안 되면 썸네일로 되돌린다 — 실패한 <video>를 그대로 두면 검은 칸이
+  // 남아 "영상이 사라졌다"로 보인다(어떤 영상을 담았는지가 이 화면의 본래 목적이다).
+  if(el && el.tagName==='VIDEO'){
+    const it=HANDOFF[i]||{};
+    if(it.thumbnail){
+      const img=document.createElement('img');
+      img.src = it.thumbnail.includes('gstatic.com') ? it.thumbnail
+              : ('/api/thumb?url='+encodeURIComponent(it.thumbnail));
+      img.setAttribute('referrerpolicy','no-referrer');
+      img.onerror=()=>{ img.style.visibility='hidden'; };
+      el.replaceWith(img);
+    }else{ el.remove(); }
+  }
+  card.dataset.playing='';
+  _poolPlayFail(card, i, '이 영상은 인앱 재생 소스가 없어요');
+}
+function _poolLoading(card){
+  const d=document.createElement('div');
+  d.textContent='⏳ 불러오는 중…';
+  d.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;'
+    +'background:rgba(0,0,0,.55);color:#fff;font-size:11px;border-radius:8px;z-index:3';
+  card.appendChild(d); return d;
+}
+// 재생 실패 — ▶를 되살려 다시 시도할 수 있게 하고, 원본 링크를 안내한다.
+function _poolPlayFail(card, i, msg){
+  const it=HANDOFF[i]||{};
+  const d=document.createElement('div');
+  d.style.cssText='position:absolute;left:0;right:0;bottom:0;padding:5px 6px;background:rgba(0,0,0,.78);'
+    +'color:#fff;font-size:10.5px;line-height:1.35;text-align:center;z-index:4';
+  d.innerHTML = esc(msg) + (it.url?` · <a href="${esc(it.url)}" target="_blank" rel="noopener" style="color:var(--accent)" onclick="event.stopPropagation()">원본 ↗</a>`:'');
+  card.appendChild(d);
+  setTimeout(()=>{ d.remove(); if(_poolCanPlay(it) && !card.querySelector('video')){
+    const b=document.createElement('span'); b.className='pool-play'; b.title='미리보기 재생'; b.textContent='▶';
+    b.onclick=(e)=>{ e.stopPropagation(); poolPlay(b, i); };
+    card.appendChild(b);
+  } }, 4000);
+}
+// 플랫폼·영상ID 판정 — /api/media가 받는 값에 맞춘다(app.py).
+function _poolPlatformOf(u){
+  const s=String(u||'');
+  if(/youtube\.com|youtu\.be/i.test(s)) return 'youtube';
+  if(/tiktok\.com/i.test(s))            return 'tiktok';
+  if(/instagram\.com/i.test(s))         return 'instagram';
+  return '';
+}
+// ★URL에서 짧은해시를 만들어내려 하지 마라(도우인·샤오홍슈는 URL로 유도 불가 — 메모리
+//   reference_캐시키_URL추론금지). 여기선 shortcode가 없을 때의 마지막 폴백으로만 쓴다.
+function _poolVideoIdOf(u){
+  const s=String(u||'');
+  let m=s.match(/(?:youtube\.com\/(?:shorts|watch\?v=|embed)\/?|youtu\.be\/)([\w-]{6,})/i); if(m) return m[1];
+  m=s.match(/instagram\.com\/(?:reel|reels|p|tv)\/([\w-]+)/i); if(m) return m[1];
+  m=s.match(/tiktok\.com\/.*?\/video\/(\d+)/i); if(m) return m[1];
+  return '';
 }
 // ── Task 4(2026-07-23): 자동담김 도착 감지 → AI PICK 또는 빈 상태 ──────────
 // 담긴(useFootage) 재료가 하나라도 있으면 서버(/api/produce/aipick)에 "지금 담긴 것 중
