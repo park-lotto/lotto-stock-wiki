@@ -662,10 +662,18 @@ _DURFILL_LAST = 0.0
 
 
 @app.get("/api/reference")
-def api_reference(platform: str = "instagram"):
-    """마지막 수집 결과 반환 (프론트 초기 로드용). platform=플랫폼(기본 인스타)."""
+def api_reference(platform: str = "instagram", days: int = 0, min_comments: int = 500):
+    """마지막 수집 결과 반환 (프론트 초기 로드용). platform=플랫폼(기본 인스타).
+
+    days>0이면 '최근 N일 중 터진 것'을 대신 준다(2026-08-17) — 추가 크롤 0이고
+    이미 받아둔 reel_history를 다시 보여줄 뿐이다. 등급제로 상단(48시간)이 얇아져도
+    이 줄이 재고를 메운다. days=0(기본)은 종전과 완전히 같은 동작이다."""
     store = Store(DB_PATH)
-    if platform == "instagram":
+    if days > 0:
+        if platform != "instagram":
+            return {"ok": True, "items": [], "collected_at": None}
+        items, collected_at = store.hits_since(days, min_comments=min_comments), None
+    elif platform == "instagram":
         items, collected_at = store.load_last_run()
     else:
         items, collected_at = store.load_last_run_platform(platform)
