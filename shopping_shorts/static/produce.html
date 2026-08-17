@@ -2797,7 +2797,10 @@ function jump(o){
   //   onclick="vpGateNext()"에만 걸려 있었다 — 버튼만 지우면 검사가 통째로 사라진다.
   //   여기로 옮기면 공용 [다음 →]든 상단 오브 클릭이든 **어느 경로로 나가도** 검사한다.
   //   뒤로 가는 건 안 막는다(다시 들으러 돌아가는 길을 경고로 막으면 안 된다).
-  if(cur === 2 && p > cur && !vpGateNext()) return;
+  //   ★typeof 가드 필수 — jump/go만 잘라 돌리는 테스트 하네스엔 vpGateNext가 없어서
+  //     맨몸으로 부르면 ReferenceError로 죽는다(실측: test_step_navigation_persists_
+  //     and_gate_holds가 이걸로 실패했다. 메모리 reference_슬라이스하네스_window금지).
+  if(cur === 2 && p > cur && typeof vpGateNext === 'function' && !vpGateNext()) return;
   cur=p;
   // ★사용자가 스스로 옮긴 단계다 — 서버 기준선도 같이 옮겨 "게이트 강등"과 구분한다(2026-08-07).
   //   이게 없으면 앞 단계로 돌아간 이동이 강등으로 오인돼 서버에 저장되지 않는다.
