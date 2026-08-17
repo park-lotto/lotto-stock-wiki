@@ -3636,6 +3636,13 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
         return empty
     raw.setdefault("structure", structure)
     grounded = _validate_and_ground(raw, seg_map, n_alternates, is_recipe=is_recipe)
+    # ★fit 정직화를 여기서도 한다(2026-08-18). 종전엔 scene_first 경로(build_scene_first_plan)
+    #   에만 있어, 이 옛 경로로 만든 잡은 **fit이 Gemini 자기신고 그대로 5** 였다 →
+    #   바로 아래 _repick_weak_beats(fit<=3)가 대상 0개로 헛돌았다.
+    #   실측(잡 a4e619328313, generator="legacy"): 훅에 '사용중'이 붙었는데 fit=5·evidence 없음
+    #   → 새 판정축을 배포한 뒤에 돈 잡인데도 교정이 한 건도 안 걸렸다.
+    #   ⚠️ 순서가 중요하다 — 반드시 _repick_weak_beats **앞**에서 깎아야 재픽이 그 비트를 본다.
+    grounded["beats"] = _verify_fits(grounded["beats"])
     # ★대본을 고치기 전에 **화면부터 다시 고른다**(2026-08-14). 더 맞는 화면을 찾으면 fit이
     #   올라가 아래 재작성 대상에서 자연히 빠지고, 못 찾은 비트만 종전대로 대사를 고친다.
     grounded["beats"] = _repick_weak_beats(grounded["beats"], seg_map)
