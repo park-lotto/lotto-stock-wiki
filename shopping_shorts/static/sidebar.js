@@ -43,10 +43,9 @@
     { label: "소통", items: [
       { icon: "💬", text: "인스타 소통공간", href: "/outreach" },
     ] },
-    // free:true — 포인트를 충전하려면 무료 등급도 들어올 수 있어야 한다(결제 게이트 제외).
-    { label: "설정", items: [
-      { icon: "⚙️", text: "내 설정",  href: "/settings", free: true },
-    ] },
+    // ★2026-08-17 '설정 > 내 설정' 그룹을 없앴다. 상단 계정 카드의 '마이페이지'와
+    //   같은 곳(/settings)인데 이름만 달라서, 사장님이 키 등록표를 못 찾으셨다.
+    //   진입점을 하나로 둔다 — 계정 카드(아래 _accountCard)와 모바일 메뉴뿐이다.
   ];
 
   // 현재 경로 정규화: '/index.html'·'/'→'/', '/mix.html'→'/mix'
@@ -183,8 +182,8 @@
   // 내 계정 메뉴 — 데스크톱에선 상단 계정 카드(_accountCard)의 '⚙️ 내 계정'과 중복이라 숨긴다.
   // 단 모바일(≤760px)에선 그 카드(.ss-acct)가 공간 부족으로 display:none이라, 이 메뉴가 /account·
   // 로그아웃에 닿는 유일한 통로다 → 모바일에만 노출(ss-item-acct + 아래 @media)(2026-07-24).
-  html += '<div class="ss-group ss-group-acct"><div class="ss-item ss-item-acct" data-ss-href="/account" data-ss-free="1"' +
-          ' onclick="location.href=\'/account\'">👤 내 계정</div></div>';
+  html += '<div class="ss-group ss-group-acct"><div class="ss-item ss-item-acct" data-ss-href="/settings" data-ss-free="1"' +
+          ' onclick="location.href=\'/settings\'">👤 마이페이지</div></div>';
 
   // 테마 토글(민트-블랙 ↔ 화이트-민트). data-theme + localStorage로 전 페이지 공유.
   // 최종 FOUC 방지는 각 페이지 <head> 인라인 스니펫이 하고(렌더 전 실행), 여기선 라벨 동기화만.
@@ -428,7 +427,7 @@
       '<div class="ss-acct-sub">' + escHtml(sub) + "</div>" + usage + member +
       '<div class="ss-acct-links">' +
         (admin ? '<a href="/admin" target="_blank" rel="noopener" class="ss-acct-link wide" style="color:#ffd97a;border-color:#5a4a1e">🔐 관리페이지</a>' : '') +
-        '<a href="/account" class="ss-acct-link">⚙️ 내 계정</a>' +
+        '<a href="/settings" class="ss-acct-link">👤 마이페이지</a>' +
         '<a href="#" class="ss-acct-link" onclick="window.__ssLogout();return false">↩ 로그아웃</a></div>';
     var h1 = nav.querySelector("h1");
     if (h1 && h1.nextSibling) nav.insertBefore(card, h1.nextSibling);

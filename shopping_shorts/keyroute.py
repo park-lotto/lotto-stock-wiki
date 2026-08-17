@@ -25,8 +25,9 @@ SVC_GEMINI = "gemini"
 SVC_VMAKE = "vmake"
 SVC_ELEVENLABS = "elevenlabs"
 SVC_YOUTUBE = "youtube"
+SVC_SERPAPI = "serpapi"
 
-SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_YOUTUBE)
+SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_YOUTUBE, SVC_SERPAPI)
 
 
 def as_cid(customer_id):
@@ -62,6 +63,9 @@ def _owner_keys(service):
     if service == SVC_ELEVENLABS:
         k = getattr(config, "ELEVENLABS_API_KEY", "")
         return [k] if k else []
+    if service == SVC_SERPAPI:
+        # 렌즈 검색용. gemini/youtube와 같은 env 다중키 방식(SERPAPI_KEY~_30).
+        return list(getattr(config, "SERPAPI_KEYS", []) or [])
     return []
 
 

@@ -20,9 +20,10 @@ def _client(monkeypatch, tmp_path):
 
 
 def _capture_search(monkeypatch, calls):
-    def _fake_search(image_url, source_caption=None):
+    def _fake_search(image_url, api_key=None, source_caption=None):
         calls["img"] = image_url
         calls["cap"] = source_caption
+        calls["api_key"] = api_key
         return [{"platform": "youtube", "url": "https://youtu.be/AAA",
                  "title": "원본", "thumbnail": "t", "match": 0.9}]
     monkeypatch.setattr(app_module, "search_similar_videos", _fake_search)

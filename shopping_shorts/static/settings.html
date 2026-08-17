@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>⚙️ 내 설정 · 숏템메이커</title>
+<title>👤 마이페이지 · 숏템메이커</title>
 <!-- FOUC 방지: 저장된 테마를 렌더 전에 즉시 반영(sidebar.js는 body 주입이라 늦음) -->
 <script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <style>
@@ -127,17 +127,46 @@
 <main class="main">
  <div class="wrap">
   <div class="head">
-    <h2>⚙️ 내 설정</h2>
-    <div class="desc">포인트 잔액을 확인하고, 원하시면 내 API 키를 등록해 포인트를 아낄 수 있습니다.</div>
+    <h2>👤 마이페이지</h2>
+    <div class="desc">내 이용권과 포인트를 확인하고, 원하시면 내 API 키를 등록해 포인트를 아낄 수 있습니다.</div>
   </div>
 
   <div class="tabs">
-    <button class="tab on" id="tabPoints" onclick="showTab('points')">💎 포인트</button>
+    <button class="tab on" id="tabAccount" onclick="showTab('account')">👤 내 계정</button>
+    <button class="tab" id="tabPoints" onclick="showTab('points')">💎 포인트</button>
     <button class="tab" id="tabKeys" onclick="showTab('keys')">🔑 내 키 등록</button>
   </div>
 
+  <!-- ═══════ 👤 내 계정 ═══════
+       예전 /account 페이지(app.py _ACCOUNT_TMPL)를 그대로 흡수한 탭이다.
+       같은 데이터(/api/me)를 두 화면이 각자 그리면 언젠가 어긋난다(0순위-B) —
+       /account 는 여기로 넘긴다. -->
+  <section class="pane on" id="paneAccount">
+    <div class="balCard">
+      <div class="lbl">현재 플랜</div>
+      <div class="balRow">
+        <div class="balNum" style="font-size:32px"><span id="acctPlan">–</span></div>
+      </div>
+      <div class="balSub" id="acctPlanSub">불러오는 중…</div>
+    </div>
+
+    <div class="secTitle">하루 이용 한도</div>
+    <div class="secDesc">서버를 지키기 위한 안전장치입니다. 내 키를 등록하셔도 이 한도는 그대로입니다.</div>
+    <div class="misc">
+      <div class="miscRow"><span>🎞️ 영상 제작</span><span class="miscCost"><span id="limRender">–</span> 회</span></div>
+      <div class="miscRow"><span>🔎 렌즈로 찾기</span><span class="miscCost"><span id="limLens">–</span> 회</span></div>
+      <div class="miscRow"><span>📝 대본 뽑기</span><span class="miscCost"><span id="limScript">–</span> 회</span></div>
+    </div>
+
+    <div class="msg err" id="acctErr"></div>
+
+    <form method="post" action="/logout" style="margin-top:24px">
+      <button class="btn" type="submit" style="width:100%;padding:14px">↩ 로그아웃</button>
+    </form>
+  </section>
+
   <!-- ═══════ 💎 포인트 ═══════ -->
-  <section class="pane on" id="panePoints">
+  <section class="pane" id="panePoints">
     <div class="balCard">
       <div class="lbl">남은 포인트</div>
       <div class="balRow">
@@ -226,7 +255,8 @@ var GUIDE_VIDEO = {
   gemini: "",      // 구글(제미나이) 키 받는 법
   vmake: "",       // VMake 키 받는 법
   elevenlabs: "",  // ElevenLabs 키 받는 법
-  youtube: ""      // 유튜브 Data API 키 받는 법
+  youtube: "",     // 유튜브 Data API 키 받는 법
+  serpapi: ""      // SerpApi 키 받는 법(렌즈 검색)
 };
 
 /* 서비스 정의 — 이름·설명·복수허용 여부를 한 곳에서만 정한다(CLAUDE.md 0순위-B). */
@@ -239,7 +269,15 @@ var SERVICES = [
   { id: "elevenlabs", icon: "🔊", name: "목소리 (ElevenLabs)",
     desc: "영상에 넣을 목소리를 만듭니다", multi: false, ph: "키 붙여넣기" },
   { id: "youtube",    icon: "📺", name: "유튜브",
-    desc: "유튜브 영상 정보를 가져올 때 씁니다", multi: false, ph: "키 붙여넣기" }
+    desc: "유튜브 영상 정보를 가져올 때 씁니다", multi: false, ph: "키 붙여넣기" },
+  /* ★렌즈 검색은 클릭 1번에 SerpApi를 3회 씁니다 — 코드에 박힌 값입니다
+     (lens_discover.py: 로케일 ko/en/zh-cn 3벌, _MAX_CALLS_PER_SEARCH=3 하드캡).
+     그래서 무료 250회 = 실제 검색 약 83번입니다. 숫자를 부풀리지 않습니다. */
+  { id: "serpapi",    icon: "🔎", name: "렌즈 검색 (SerpApi)",
+    desc: "비슷한 영상 찾기에 씁니다. 검색 1번에 3회가 쓰입니다(한국어·영어·중국어로 각각 찾기)",
+    multi: true, ph: "여러 개를 한 번에 붙여넣어도 됩니다", freeOp: "lens",
+    note: "가입하면 <b>월 250회 무료</b>입니다 — 검색으로 치면 한 달에 약 83번. " +
+          "등록하셔도 <b>하루 10번</b> 제한은 그대로입니다(서버 보호)." }
 ];
 
 var STATUS = {
@@ -265,12 +303,19 @@ function askGuide(svc){
 }
 
 /* ── 탭 ─────────────────────────────────────────────── */
+/* 탭이 3개가 되면서 "isPoints ? A : B" 식 이분법은 못 쓴다 —
+   탭을 하나 더 늘렸을 때 조용히 어긋나지 않도록 목록으로 돈다(0순위-B). */
+var TABS = [
+  { key: "account", pane: "paneAccount", tab: "tabAccount" },
+  { key: "points",  pane: "panePoints",  tab: "tabPoints"  },
+  { key: "keys",    pane: "paneKeys",    tab: "tabKeys"    }
+];
 function showTab(which){
-  var isP = (which === "points");
-  el("panePoints").classList.toggle("on", isP);
-  el("paneKeys").classList.toggle("on", !isP);
-  el("tabPoints").classList.toggle("on", isP);
-  el("tabKeys").classList.toggle("on", !isP);
+  TABS.forEach(function(t){
+    var on = (t.key === which);
+    el(t.pane).classList.toggle("on", on);
+    el(t.tab).classList.toggle("on", on);
+  });
   window.scrollTo(0, 0);
 }
 
@@ -349,11 +394,13 @@ function renderKeys(){
       ? '<span class="svcBadge on">✓ ' + mine.length + '개 등록됨</span>'
       : '<span class="svcBadge off">포인트로 사용중</span>';
 
-    /* 설명 — vmake는 단가를 실제 값으로 보여준다(하드코딩하지 않는다). */
+    /* 설명 — 단가는 실제 값으로 보여준다(하드코딩하지 않는다).
+       ★예전엔 freeOp가 있으면 desc를 통째로 덮어썼다. 렌즈처럼 desc에 꼭 필요한
+         설명("검색 1번에 3회")이 있는 서비스가 생기면서 그 설명이 사라진다 —
+         덮어쓰지 말고 한 줄 더 붙인다(0순위-B: 조건부 값을 무조건 덮어쓰지 마라). */
     var desc = s.desc;
-    if (s.freeOp && PRICES[s.freeOp] != null) {
-      desc = "등록하면 1편당 " + num(PRICES[s.freeOp]) + "P가 0P로";
-    }
+    var freeTxt = (s.freeOp && PRICES[s.freeOp] != null)
+      ? "등록하면 " + num(PRICES[s.freeOp]) + "P → 0P" : "";
 
     var rows = mine.map(function(k){
       var st = STATUS[k.status] || STATUS.unknown;
@@ -383,6 +430,10 @@ function renderKeys(){
     return '<div class="svcCard">' +
       '<div class="svcHead"><div class="svcName">' + s.icon + ' ' + esc(s.name) + '</div>' + badge + '</div>' +
       (desc ? '<div class="svcDesc">' + esc(desc) + '</div>' : '') +
+      (freeTxt ? '<div class="svcDesc" style="color:var(--accent);font-weight:700">' + esc(freeTxt) + '</div>' : '') +
+      /* note는 우리가 SERVICES에 직접 적은 문구뿐이라 <b> 태그를 그대로 살린다.
+         ★사용자 입력을 여기 넣지 마라 — 넣는 순간 XSS 구멍이 된다. */
+      (s.note ? '<div class="hint" style="margin:8px 0">' + s.note + '</div>' : '') +
       form +
       (rows ? '<div class="keyList">' + rows + '</div>' : '') +
       foot +
@@ -447,6 +498,31 @@ async function verifyKeys(svc, quiet){
   }
 }
 
+/* ── 👤 내 계정 ─────────────────────────────────────────
+   예전 /account 페이지와 **같은 API(/api/me)**를 본다. 데이터를 두 곳에서
+   따로 만들면 어긋난다 — 화면만 옮겨온 것이다. */
+var PLAN_LABEL = { pro: "Pro 이용권", trial: "체험 중", free: "무료" };
+
+async function loadAccount(){
+  clearErr("acctErr");
+  try {
+    var d = await getJSON("/api/me");
+    var plan = String(d.plan || "free");
+    el("acctPlan").textContent = PLAN_LABEL[plan] || plan;
+    el("acctPlanSub").textContent = (d.days_left != null)
+      ? ("남은 기간 " + num(d.days_left) + "일")
+      : "전 기능 이용중";
+    var lim = d.limits || {};
+    el("limRender").textContent  = num(lim.render);
+    el("limLens").textContent    = num(lim.lens);
+    el("limScript").textContent  = num(lim.script);
+  } catch (e) {
+    el("acctPlanSub").textContent = "";
+    showErr("acctErr", "계정 정보를 불러오지 못했습니다: " + e.message);
+  }
+}
+
+loadAccount();
 loadPoints();
 loadKeys();
 </script>
