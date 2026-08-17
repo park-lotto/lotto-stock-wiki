@@ -1012,6 +1012,14 @@
         </div>
         <!-- 우: 컨트롤 -->
         <div style="flex:1;min-width:300px">
+          <!-- 🗂 4탭 — 우측 컨트롤만 가른다. 좌측 미러는 탭 밖(항상 보인다). -->
+          <div id="decoTabs" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+            <button type="button" class="tab on" data-decotab="copy" onclick="decoTab('copy')" style="min-width:auto;padding:7px 14px;font-size:12px">✍ 문구</button>
+            <button type="button" class="tab" data-decotab="style" onclick="decoTab('style')" style="min-width:auto;padding:7px 14px;font-size:12px">🎯 스타일</button>
+            <button type="button" class="tab" data-decotab="tpl" onclick="decoTab('tpl')" style="min-width:auto;padding:7px 14px;font-size:12px">🖼 템플릿</button>
+            <button type="button" class="tab" data-decotab="fx" onclick="decoTab('fx')" style="min-width:auto;padding:7px 14px;font-size:12px">✨ 효과</button>
+          </div>
+          <div id="decoPaneCopy">
           <!-- ✍ 고정카피 후보 — 대본에서 AI가 뽑는다. ★누를 때만 textarea에 들어간다
                (2026-07-19에 '자동 재채움'을 일부러 없앴다 — 자동으로 밀어넣으면 그 버그가 되살아난다) -->
           <div id="hcCopyBox" style="margin-bottom:10px">
@@ -1026,6 +1034,14 @@
           <div style="font-size:13px;margin-bottom:4px">헤드카피 문구 <span class="hint" style="font-size:11px">— Enter로 줄바꿈, 길면 자동으로 줄이 나뉘어요</span></div>
           <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
             style="width:100%;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.4"></textarea>
+          <!-- 강조 단어(노출 유지) -->
+          <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:2px">🎯 강조 단어 <span style="font-size:11px;color:var(--sub);font-weight:400">— 헤드카피 + 자막 공통(키워드 일치 시 자동 강조)</span></div>
+            <div id="highlightRuleList" style="margin-top:6px"></div>
+            <button class="tab" onclick="addHighlightRule()" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:12px;margin-top:4px">+ 강조 단어 추가</button>
+          </div>
+          </div>
+          <div id="decoPaneStyle" style="display:none">
           <!-- 🎯 완성 스타일 카드(Task2가 renderStyleCards로 채움) -->
           <div style="font-size:13px;font-weight:800;margin-bottom:6px">🎯 완성 스타일 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 그대로 완성</span></div>
           <div id="fullPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>
@@ -1038,27 +1054,6 @@
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               <input id="myPresetName" type="text" placeholder="예: 내 채널 기본형" style="flex:1;min-width:150px;background:#0a1017;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px 10px;font-size:13px">
               <button class="tab" onclick="saveMyPreset()" style="flex:0 0 auto;min-width:auto;padding:8px 16px;font-size:13px;white-space:nowrap;background:var(--sel-bg);border-color:var(--accent)">💾 지금 스타일 저장</button>
-            </div>
-          </div>
-          <!-- 강조 단어(노출 유지) -->
-          <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
-            <div style="font-size:13px;font-weight:700;margin-bottom:2px">🎯 강조 단어 <span style="font-size:11px;color:var(--sub);font-weight:400">— 헤드카피 + 자막 공통(키워드 일치 시 자동 강조)</span></div>
-            <div id="highlightRuleList" style="margin-top:6px"></div>
-            <button class="tab" onclick="addHighlightRule()" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:12px;margin-top:4px">+ 강조 단어 추가</button>
-          </div>
-          <!-- ✨ 고급효과(리모션) — 항상 보이는 자리·선택·프리미엄. 켜면 자동 추천 → 렌더 -->
-          <div id="fxAdvBox" style="background:linear-gradient(135deg,#1c1436,var(--inset));border:1px solid #6b4fa0;border-radius:10px;padding:10px 12px;margin-bottom:12px">
-            <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;cursor:pointer">
-              <input id="fxAdvOn" type="checkbox" onchange="toggleFxAdv()">
-              ✨ 고급효과 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 대본에 맞춰 움직이는 효과 자동 배치 · 렌더당 10P</span>
-            </label>
-            <div id="fxWizard" style="display:none;margin-top:10px;font-size:12px">
-              <button type="button" class="tab" onclick="fxSuggest()" style="min-width:auto;padding:7px 16px;font-size:12px;background:linear-gradient(90deg,#3a2b6b,#241a45);border-color:#6b4fa0">✨ 효과 자동 추천</button>
-              <span id="fxSuggestMsg" class="hint" style="margin-left:6px"></span>
-              <div id="fxPlanBox" style="margin-top:8px"></div>
-              <button type="button" id="fxRenderBtn" onclick="fxRender()" style="display:none;margin-top:8px;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 18px;cursor:pointer;font-weight:700">고급 렌더 (10P)</button>
-              <div id="fxRenderMsg" class="hint" style="margin-top:6px"></div>
-              <div id="fxResult" style="display:none;margin-top:10px"></div>
             </div>
           </div>
           <details id="advDetails" style="margin-bottom:4px">
@@ -1188,6 +1183,13 @@
                   <label style="font-size:12px;color:var(--sub)">볼륨 <input id="bgmVol" type="range" min="0" max="60" value="15" oninput="updateBgmVol()"> <span id="bgmVolV">15</span>%</label>
                   <button onclick="clearBgm()" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:12px">제거</button>
                 </div>
+                </div>
+              </details>
+
+            </div>
+          </details>
+          </div>
+          <div id="decoPaneTpl" style="display:none">
                 <!-- 🖼 템플릿 — 기본제공 12종. 사장님이 올린 로고(아래 이미지 오버레이)와 **별개**로 함께 얹힌다. -->
                 <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
                   <div style="font-size:13px;font-weight:800;margin-bottom:6px">🖼 템플릿
@@ -1207,11 +1209,24 @@
                   <button onclick="clearOverlay()" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:12px">제거</button>
                   <span class="hint">미리보기에서 <b>드래그</b>로 이동</span>
                 </div>
-                </div>
-              </details>
-
+          </div>
+          <div id="decoPaneFx" style="display:none">
+          <!-- ✨ 고급효과(리모션) — 항상 보이는 자리·선택·프리미엄. 켜면 자동 추천 → 렌더 -->
+          <div id="fxAdvBox" style="background:linear-gradient(135deg,#1c1436,var(--inset));border:1px solid #6b4fa0;border-radius:10px;padding:10px 12px;margin-bottom:12px">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;cursor:pointer">
+              <input id="fxAdvOn" type="checkbox" onchange="toggleFxAdv()">
+              ✨ 고급효과 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 대본에 맞춰 움직이는 효과 자동 배치 · 렌더당 10P</span>
+            </label>
+            <div id="fxWizard" style="display:none;margin-top:10px;font-size:12px">
+              <button type="button" class="tab" onclick="fxSuggest()" style="min-width:auto;padding:7px 16px;font-size:12px;background:linear-gradient(90deg,#3a2b6b,#241a45);border-color:#6b4fa0">✨ 효과 자동 추천</button>
+              <span id="fxSuggestMsg" class="hint" style="margin-left:6px"></span>
+              <div id="fxPlanBox" style="margin-top:8px"></div>
+              <button type="button" id="fxRenderBtn" onclick="fxRender()" style="display:none;margin-top:8px;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 18px;cursor:pointer;font-weight:700">고급 렌더 (10P)</button>
+              <div id="fxRenderMsg" class="hint" style="margin-top:6px"></div>
+              <div id="fxResult" style="display:none;margin-top:10px"></div>
             </div>
-          </details>
+          </div>
+          </div>
         </div>
       </div>
     </section>
@@ -2029,6 +2044,17 @@ function renderTemplatePreview(){
     pv.appendChild(el);
   }
   el.src=meta.url; el.style.display='';
+}
+// 🗂 탭 전환 — 보이기/숨기기만 한다. 상태(STATE)는 아무것도 안 바꾼다.
+function decoTab(name){
+  const panes={copy:'decoPaneCopy', style:'decoPaneStyle', tpl:'decoPaneTpl', fx:'decoPaneFx'};
+  Object.keys(panes).forEach(k=>{
+    const el=document.getElementById(panes[k]);
+    if(el) el.style.display=(k===name)?'':'none';
+  });
+  document.querySelectorAll('#decoTabs [data-decotab]').forEach(b=>{
+    b.classList.toggle('on', b.getAttribute('data-decotab')===name);
+  });
 }
 function initHeadcopy(){
   const t=document.getElementById('hcText');
