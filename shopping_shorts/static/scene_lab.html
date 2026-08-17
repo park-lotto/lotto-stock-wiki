@@ -656,7 +656,8 @@ function isDupOf(sid){ const d = dupMap()[sid]; return (d && d.rep !== sid) ? d.
 function dupMates(sid){ const d = dupMap()[sid]; return d ? d.mates : []; }
 function toggleDup(on){ hideDup = on; render(); }
 function tooShort(sid){
-  const s0 = DATA.segments[sid]; if (!s0) return false;
+  // ★합친 조각은 '합친 길이'로 본다(mergeSpan 한 곳에서만 늘린다 — 0순위-B).
+  const s0 = mergeSpan(sid); if (!s0) return false;
   return (s0.end - s0.start) < MIN_CLIP - EPS;
 }
 function outOfRange(sid){
@@ -665,6 +666,72 @@ function outOfRange(sid){
   return !!d && s0.end > d + 0.2;
 }
 function esc(t){ return String(t==null?'':t).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+// ── 🔗 조각 합치기(2026-08-17) ────────────────────────────────────────────────
+// 사장님: "0.5초 같은 건 못 쓰니까 짤리자나 3개 합쳐서 훅에 넣으려고" → 팔레트에서
+// **한 장의 카드처럼 보이게** 합친다(고른 안 '가'). 합친 카드를 담으면 서버엔 조각
+// 하나(긴 구간)로 가므로 편성·렌더에 특별 처리가 0이다.
+// ★연속만 허용한다 — 같은 영상에서 조각번호가 이어진 것들만. 떨어진 구간을 억지로
+//   이어 붙이면 화면이 튀고(장면이 갑자기 점프) 사장님이 확인할 수 없다. 막고 이유를 보여준다.
+const _MSEL = new Set();                 // 지금 합치기용으로 고른 조각들
+function toggleMsel(sid, ev){
+  if (ev){ ev.stopPropagation(); clearTimeout(clickTimer); }
+  if (_MSEL.has(sid)) _MSEL.delete(sid); else _MSEL.add(sid);
+  render();
+}
+// 고른 것이 '같은 영상 · 조각번호 연속'인지 — 되면 시간순 목록, 안 되면 이유 문자열.
+function mselCheck(){
+  const ids = [...mselOrder()];
+  if (ids.length < 2) return {ok: false, why: '두 장 이상 골라야 합쳐집니다'};
+  const vid = (DATA.segments[ids[0]] || {}).video_id;
+  if (ids.some(x => (DATA.segments[x] || {}).video_id !== vid))
+    return {ok: false, why: '다른 영상끼리는 못 합칩니다 — 화면이 튑니다'};
+  for (let k = 1; k < ids.length; k++){
+    if (segNo(ids[k]) !== segNo(ids[k - 1]) + 1)
+      return {ok: false, why: `${segMark(ids[k-1])} 다음이 ${segMark(ids[k])} 가 아닙니다 — 붙어 있는 조각만 합칩니다`};
+  }
+  return {ok: true, ids};
+}
+function mselOrder(){
+  return [..._MSEL].sort((a, b) => (DATA.segments[a] || {}).start - (DATA.segments[b] || {}).start);
+}
+function doMerge(){
+  const c = mselCheck();
+  if (!c.ok){ alertMerge(c.why); return; }
+  const [lead, ...rest] = c.ids;
+  MERGES[lead] = rest;
+  // 이미 어느 칸에 담겨 있던 멤버는 **대표로 갈아 끼운다** — 안 그러면 같은 구간이
+  // 대표(긴 구간)와 멤버(짧은 조각)로 두 번 들어가 화면에 겹쳐 나온다.
+  lists = lists.map(l => {
+    if (!Array.isArray(l) || !l.some(x => rest.indexOf(x) >= 0)) return l;
+    const out = [];
+    for (const x of l){
+      const y = (rest.indexOf(x) >= 0) ? lead : x;
+      if (out.indexOf(y) < 0) out.push(y);
+    }
+    return out;
+  });
+  _MSEL.clear();
+  render();                              // saveWork까지 — 새로고침에도 남는다
+  if (typeof onTrimChanged === 'function') onTrimChanged();   // 서버 반영도 트림과 같은 길
+}
+function unMerge(lead, ev){
+  if (ev){ ev.stopPropagation(); clearTimeout(clickTimer); }
+  delete MERGES[lead];
+  render();
+  if (typeof onTrimChanged === 'function') onTrimChanged();
+}
+function alertMerge(why){
+  const el = document.getElementById('mergemsg');
+  if (el) el.textContent = '⚠ ' + why;
+}
+// 합친 카드에 찍을 문구 — "1-3~1-5 · 3장 합침 · 1.6초"
+function mergeBadge(lead){
+  const m = MERGES[lead] || [];
+  if (!m.length) return '';
+  const last = m[m.length - 1], sp = mergeSpan(lead);
+  return `🔗 ${segMark(lead)}~${segMark(last)} · ${m.length + 1}장 합침 · ${(sp.end - sp.start).toFixed(1)}초`;
+}
 
 // ── 자막·음성 트랙(2026-08-14 사장님 "결국 자막이랑 맞아떨어지는 걸 봐야 한다") ──────
 // 렌더를 다시 돌리지 않는다. 서버가 이미 만들어 둔 것을 그대로 겹쳐 재생한다:
@@ -977,6 +1044,7 @@ function render(){
     //   실체가 없는 화면이라 후보로 보일 이유가 없다. 몇 개 뺐는지는 위에 알린다.
     if (outOfRange(sid)){ dropped++; continue; }
     if (hideDup && isDupOf(sid)){ folded++; continue; }   // 비슷한 것은 대표만 보인다
+    if (isMergedInto(sid)) continue;                      // 🔗 합쳐진 조각은 대표 카드에 들어갔다
     (byRole[groupOf(sid)] ||= []).push({sid, ...s});
   }
   // 지금 화면에 실제로 보이는 목록을 남긴다 — 상단 '이어 보기'가 이걸 그대로 쓴다
@@ -996,7 +1064,14 @@ function render(){
      </span>
      <button type="button" class="act play" onclick="playVisibleSegs(event)"
              title="지금 보이는 조각을 순서대로 큰 미리보기에서 이어 봅니다 — 담기 전에 흐름을 확인하세요"
-             style="margin-left:10px">▶️ 이어 보기</button>`;
+             style="margin-left:10px">▶️ 이어 보기</button>
+     <span id="mergebar" style="margin-left:10px;color:var(--dim)">${
+       _MSEL.size
+         ? `🔗 ${_MSEL.size}장 고름 <button type="button" class="act" onclick="doMerge()"
+                title="붙어 있는 조각들을 한 장처럼 합칩니다 — 0.8초 미만이라 안 나오던 조각을 쓸 수 있습니다"
+                >합치기</button> <button type="button" class="gm" onclick="_MSEL.clear();render()">취소</button>`
+         : `<span title="카드의 🔗를 눌러 붙어 있는 조각 2장 이상을 고르면 합칠 수 있습니다">🔗 짧은 조각 합치기</span>`
+     } <span id="mergemsg" style="color:var(--accent)"></span></span>`;
   const cur = new Set(lists[sel] || []);
 
   // 묶는 기준 두 가지(2026-08-17). 카드를 그리는 코드는 **한 벌**이고 그룹 목록만 갈린다
@@ -1013,6 +1088,7 @@ function render(){
       + ` title="이 묶음의 조각을 순서대로 이어 봅니다">▶️ 쭉 보기</button>${segs.length}개</span></div>
       <div class="thumbs">${segs.map(s => `
         <div class="seg ${cur.has(s.sid)?'inthis':''} ${(outOfRange(s.sid)||tooShort(s.sid))?'oor':''}"
+             style="${_MSEL.has(s.sid)?'outline:2px solid var(--accent);outline-offset:1px':''}"
              data-sid="${s.sid}"
              draggable="true" ondragstart="palDragStart('${s.sid}',event)" ondragend="palDragEnd()"
              onclick="clickPlay('${s.sid}',event)"
@@ -1020,12 +1096,17 @@ function render(){
              title="끌어다 오른쪽 칸에 놓으면 담깁니다 · 클릭 = 재생 · 두 번 클릭 = 선택된 칸에 담기">
           <div class="segthumb">
             <img src="${SL.thumb(s.sid)}" loading="lazy">
-            <span class="dur">${(s.end-s.start).toFixed(1)}초${TRIMS[s.sid]?' ✂':''}</span>
+            <span class="dur">${(mergeSpan(s.sid).end-s.start).toFixed(1)}초${TRIMS[s.sid]?' ✂':''}${MERGES[s.sid]?' 🔗':''}</span>
             <button class="cutbtn" title="큰 화면에서 이 장면을 재생하며 필요 없는 구간을 잘라냅니다"
                     onclick="event.stopPropagation();clearTimeout(clickTimer);stopCardPlay();playSegHere('${s.sid}')">✂ 자르기</button>
+            <button class="cutbtn" style="left:4px;right:auto"
+                    title="붙어 있는 조각끼리 합치려면 여기를 누르세요 — 0.8초 미만이라 화면에 안 나오던 조각을 살립니다"
+                    onclick="toggleMsel('${s.sid}',event)">${_MSEL.has(s.sid)?'🔗 골랐음':'🔗 고르기'}</button>
           </div>
           <div class="meta">
             <div>${useTags(s.sid).map(t=>`<span class="utag${t==='실증'?' key':''}">${esc(tagLabel(t))}</span>`).join('')}</div>
+            ${MERGES[s.sid]?`<div class="oorbadge" style="border-color:var(--accent);color:var(--accent)">${esc(mergeBadge(s.sid))}
+               <button type="button" class="gm" onclick="unMerge('${s.sid}',event)">해제</button></div>`:''}
             ${tooShort(s.sid)?`<div class="oorbadge">⚠ 너무 짧아서(0.8초 미만) 담아도 화면에 안 나와요</div>`:''}
             ${dupMates(s.sid).length?`<div class="utag" style="border-color:var(--accent);color:var(--accent)">비슷한 그림 ${dupMates(s.sid).length}장 접힘</div>`:''}
             <div class="slabrow">
@@ -1295,7 +1376,7 @@ function beatDrop(i, ev){
 function saveWork(){
   try{
     localStorage.setItem(SAVE_KEY, JSON.stringify({
-      mode, lists, chosen: [...chosen], narr: NARR, trims: TRIMS,
+      mode, lists, chosen: [...chosen], narr: NARR, trims: TRIMS, merges: MERGES,
       stretch: STRETCH, autoadd: AUTOADD, at: new Date().toISOString()
     }));
   }catch(e){}
@@ -1328,6 +1409,9 @@ function loadWork(){
     Object.assign(NARR, w.narr || {});
     Object.keys(TRIMS).forEach(k => delete TRIMS[k]);   // ✂ 옛 저장본엔 trims가 없다 → {} 그대로
     Object.assign(TRIMS, w.trims || {});
+    // 🔗 합친 조각도 같이 — 옛 저장본엔 merges가 없다 → {} 그대로(옛 편집이 안 깨진다)
+    Object.keys(MERGES).forEach(k => delete MERGES[k]);
+    Object.assign(MERGES, w.merges || {});
     // 늘려 채우기·자동 채우기도 저장본에서 — 옛 저장본엔 없다 → {} 그대로(깨지지 않는다)
     Object.keys(STRETCH).forEach(k => delete STRETCH[k]);
     Object.assign(STRETCH, w.stretch || {});
@@ -1354,6 +1438,8 @@ function loadSaved(){
   Object.assign(NARR, w.narr || {});
   Object.keys(TRIMS).forEach(k => delete TRIMS[k]);
   Object.assign(TRIMS, w.trims || {});
+  Object.keys(MERGES).forEach(k => delete MERGES[k]);
+  Object.assign(MERGES, w.merges || {});
   Object.keys(STRETCH).forEach(k => delete STRETCH[k]);
   Object.assign(STRETCH, w.stretch || {});
   Object.keys(AUTOADD).forEach(k => delete AUTOADD[k]);
@@ -1494,6 +1580,7 @@ async function applyServer(opt){
     beats: DATA.beats.map((b, i) => ({beat_idx: b.beat_idx,
       list: (lists[i] || []).slice(), stretch: !!STRETCH[i]})),
     trims: TRIMS,
+    merges: MERGES,          // 🔗 합친 조각(대표 → 이어 붙일 조각들) — 서버는 긴 구간 하나로 받는다
   };
   if (msg) msg.textContent = auto ? '💾 저장 중…' : '📤 서버에 반영하는 중… (SSH, 몇 초)';
   try{
@@ -1747,6 +1834,7 @@ function setMode(m){
 function reset(){
   clearWork();
   Object.keys(TRIMS).forEach(k => delete TRIMS[k]);   // ✂ 잘라낸 것도 처음으로
+  Object.keys(MERGES).forEach(k => delete MERGES[k]);  // 🔗 합친 것도 처음으로
   Object.keys(STRETCH).forEach(k => delete STRETCH[k]);
   Object.keys(AUTOADD).forEach(k => delete AUTOADD[k]);
   const el = document.getElementById('savedmsg'); if (el) el.textContent = '';

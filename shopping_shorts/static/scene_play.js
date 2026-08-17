@@ -58,9 +58,37 @@ const chosen = new Set();    // 사람이 손으로 담은 seg_id
 
 
 const TRIMS = {};                  // sid → [a, b] (장면 시작 기준 초)
+// ★조각 합치기(2026-08-17 사장님 "0.5초 같은 건 못 쓰니까 짤리자나 3개 합쳐서 훅에 넣으려고").
+//   0.8초 미만 조각은 라운드로빈이 건너뛰어 담아도 화면에 안 나온다. 새 추출본은
+//   script_extract._merge_too_short가 자동으로 합치지만, **이미 뽑아 둔 잡**과 "자동으론
+//   안 합쳐졌는데 내가 보기엔 이어 붙여야 하는 것"은 사람이 손으로 합쳐야 한다.
+//   구간이 원본에서 **붙어 있으므로**(인접쌍 간격 0) 합치기 = 그냥 **한 개의 긴 구간**이다.
+//   → 새 자료구조·새 개념이 필요 없다. 대표 조각의 end만 마지막 멤버의 end까지 늘린다.
+//   ⚠️ 늘린 구간을 만드는 곳은 mergeSpan 한 곳뿐이다(0순위-B). 재생·계획(planClips)·
+//      길이 표시·너무짧음 판정이 전부 trimPieces/mergeSpan을 지나므로 판단이 한 벌이다.
+const MERGES = {};                 // 대표 sid → 뒤에 이어 붙일 sid 목록(같은 영상·시간순 인접)
+function mergeSpan(id){
+  const s = (DATA.segments || {})[id];
+  if (!s) return null;
+  const m = MERGES[id];
+  if (!m || !m.length) return s;
+  let end = s.end;
+  for (const x of m){
+    const t = (DATA.segments || {})[x];
+    if (t && t.end > end) end = t.end;
+  }
+  return {...s, end};
+}
+// 다른 조각에 합쳐져 **대표가 아닌** 조각인가 — 팔레트에서 감추는 판단도 여기 한 곳.
+function isMergedInto(id){
+  for (const lead of Object.keys(MERGES)){
+    if ((MERGES[lead] || []).indexOf(id) >= 0) return lead;
+  }
+  return null;
+}
 let trimA = null, trimSid = null;  // 첫 번째 체크 지점 / 지금 트림바가 보는 장면
 function trimPieces(id){
-  const s = DATA.segments[id]; if (!s) return [];
+  const s = mergeSpan(id); if (!s) return [];
   const t = TRIMS[id];
   if (!t) return [s];
   const p = [];
