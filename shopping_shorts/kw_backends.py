@@ -11,9 +11,11 @@
   인스타   : $0 (Playwright + 우리 프록시. 바이트 요금은 프록시 쪽에서 나간다)
   틱톡     : Apify 유료 — 회당 실측값은 kw_search._COST 참조
 """
+import os
 import re
 
-from shopping_shorts import cn_backends
+from shopping_shorts import cn_backends, config
+from shopping_shorts.channel_archive import block_heavy_assets, playwright_proxy_kw
 
 # 인스타는 '해시태그' 한 덩어리만 받는다(띄어쓰기·특수문자 불가).
 # "에어프라이어 감자칩" → "에어프라이어감자칩"
@@ -55,7 +57,85 @@ def instagram(keyword, max_results):
     return out
 
 
-def tiktok(keyword, max_results):
+_TIKTOK_EXTRACT = """
+() => [...document.querySelectorAll('a[href*="/video/"]')].map(a => {
+  const card = a.closest('[data-e2e="search_top-item"], [data-e2e*="search"], div');
+  const img = card ? card.querySelector('img') : null;
+  const t = card ? card.querySelector('[data-e2e*="desc"], [class*=desc]') : null;
+  return {
+    url: a.href,
+    title: (t ? t.innerText : '').trim(),
+    thumb: img ? img.getAttribute('src') : null,
+  };
+})
+"""
+
+
+def pw_tiktok(keyword, max_results):
+    """틱톡 검색을 프록시+세션으로 긁는다. 비용 0.
+
+    ⚠️2026-08-17 현재 **세션 파일이 없어 항상 빈손**이고 Apify로 폴백된다.
+    도우인(pw_douyin)과 같은 상태다 — 세션이 생기면 이 경로가 그대로 살아나
+    비용이 0이 되고, _CHAIN도 엔드포인트도 프론트도 안 고친다.
+
+    ★서버 실측(2026-08-17)으로 갈라둔 것 — "프록시가 막힌다"가 아니다:
+      · 프록시(kr)로 검색 페이지 도달 O, 제목도 한국어로 정상
+      · `/api/search/general/full/` 도 **200** 으로 온다
+      · 그런데 **본문이 비어** 있고 로그인 모달이 뜬다 → 세션 문제
+    그래서 세션 없이 부르면 브라우저를 띄우지 않고 즉시 0건으로 접는다
+    (괜히 띄우면 프록시 바이트만 버린다)."""
+    session = getattr(config, "TIKTOK_SESSION_PATH", "")
+    if not session or not os.path.exists(session):
+        return []
+    from urllib.parse import quote
+    url = "https://www.tiktok.com/search?q=" + quote(keyword)
+    try:
+        from playwright.sync_api import sync_playwright
+
+        with sync_playwright() as p:
+            browser = p.chromium.launch(
+                headless=True,
+                args=["--disable-blink-features=AutomationControlled"])
+            ctx = browser.new_context(storage_state=session, locale="ko-KR",
+                                      **_tiktok_proxy_kw())
+            page = ctx.new_page()
+            block_heavy_assets(page)
+            page.goto(url, timeout=60000, wait_until="domcontentloaded")
+            page.wait_for_timeout(9000)      # 검색 카드가 채워질 여유(샤오홍슈와 같은 값)
+            cards = page.evaluate(_TIKTOK_EXTRACT)
+            ctx.close()
+            browser.close()
+    except Exception:
+        return []
+    out = []
+    seen = set()
+    for c in cards or []:
+        u = (c or {}).get("url")
+        if not u or u in seen:
+            continue
+        seen.add(u)
+        out.append(cn_backends.normalize({
+            "url": u, "title": c.get("title"), "thumbnail": c.get("thumb"),
+        }, "tiktok"))
+    return out[:max_results]
+
+
+def _tiktok_proxy_kw():
+    """틱톡 출구 프록시(한국). 프록시 설정이 없으면 직결.
+
+    ★계정(세션)과 프록시를 **한 함수에서 같이** 정한다 — 따로 정하면 어긋난다
+    (2026-08-09 인스타 실사고: 계정↔IP 불일치가 본인확인 챌린지로 나타났다).
+    """
+    user, pw = os.getenv("WEBSHARE_USER", ""), os.getenv("WEBSHARE_PASS", "")
+    if not (user and pw):
+        return {}
+    host = os.getenv("WEBSHARE_HOST", "p.webshare.io:80")
+    cc = os.getenv("TIKTOK_PROXY_COUNTRY", "kr")
+    proxy = playwright_proxy_kw(f"http://{user}-{cc}-1:{pw}@{host}")
+    return {"proxy": proxy} if proxy else {}
+
+
+def apify_tiktok(keyword, max_results):
     """틱톡 키워드 검색(Apify — 유료). 토큰이 없으면 조용히 0건."""
     from shopping_shorts import tiktok_search
     try:
