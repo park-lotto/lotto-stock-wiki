@@ -131,6 +131,50 @@ def final_link(product):
     return product.get("partner_url") or product.get("url") or ""
 
 
+# ── 인포크 자동 DM 세트 (2026-08-18) ────────────────────────────────────
+def dm_set(number, name):
+    """인포크에 붙여넣을 세 줄을 만든다 — 등록 이름 · DM 타이틀 · 버튼 이름.
+
+    사장님 실제 운영 방식(채이홈 대조로 확인):
+      DM 도착 → 인포크 페이지 검색창에 번호 입력 → 상품 클릭 → 쿠팡
+
+    번호는 **상품 이름 앞에 직접 붙인다**(`588. 스마트 미니세탁기`). 인포크 검색이
+    이름을 훑으므로 그 숫자로 걸린다. 그래서 영상마다 바뀌는 건 번호와 상품명뿐이고
+    DM 버튼 URL·고지문구·답글은 전부 고정이다(자동화를 한 번만 세팅하면 되는 이유).
+
+    ★한 번호에 상품이 여러 개일 수 있다(채이홈 588. 이 2개 — 가성비형·기본형).
+      번호는 '영상 번호'지 '상품 하나'가 아니다.
+    """
+    n = str(number or "").strip()
+    nm = " ".join((name or "").split())
+    if not n or not nm:
+        return None
+    return {
+        "number": n,
+        # 인포크 상품 등록란에 그대로 넣는 이름. 검색이 이 문자열을 훑는다.
+        "listing_name": f"{n}. {nm}",
+        # 자동 DM 카드 타이틀.
+        "dm_title": f"({n}번) {nm}",
+        # 카드 버튼 이름 — 누르면 인포크 페이지로 가고, 거기서 번호로 찾는다.
+        "dm_button": f"✅ ({n}번 검색) 제품 확인하기",
+        # 카드 설명 = 대가성 고지. 매번 같다.
+        "dm_desc": DISCLOSURE,
+    }
+
+
+def next_number(last):
+    """마지막으로 쓴 번호 다음 값. 처음이면 1부터.
+
+    사장님 지시(2026-08-18): "마지막번호 다음으로 하면 되는 거야".
+    숫자가 아니거나 비어 있으면 1로 되돌린다 — 빈 값에 +1을 시도해 깨지지 않게.
+    """
+    try:
+        v = int(str(last).strip())
+    except (TypeError, ValueError):
+        return 1
+    return v + 1 if v >= 1 else 1
+
+
 def description_block(product):
     """영상 설명란에 붙일 블록(상품 링크 + 대가성 고지). 상품이 없으면 빈 문자열.
 
