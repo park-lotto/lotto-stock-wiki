@@ -329,16 +329,21 @@ body.is-admin .blockbtn{display:inline-block}
     <!-- ★2026-08-17(2차) 사장님 "아예 안보이게 하줘 필요없음" — 접기(▾)조차 뗐다.
          details 통째로 display:none. 요소·switchPlatform 로직은 그대로라 이 한 줄만
          지우면 즉시 돌아온다. 계약 이력은 tests/test_ranking_platform_tabs.py 참조. -->
-    <details id="platformFold" style="margin-bottom:12px;display:none">
-      <summary style="cursor:pointer;font-size:12px;color:var(--sub);list-style:none;
-                      display:inline-block;padding:4px 10px;border:1px dashed var(--line);
-                      border-radius:999px;user-select:none">🌐 플랫폼 바꾸기 ▾</summary>
-    <div class="ctypes" id="platformTabs" style="margin-top:8px;margin-bottom:12px">
+    <!-- ★2026-08-17(3차) 사장님 "인스타랑 유튜브 쓰레드탭 3개를만들어" —
+         인스타·유튜브는 결이 완전히 달라(48h·댓글 vs 14일·조회수) 탭을 갈라 관리한다.
+         쓰레드는 다른 세션이 기초작업 중이라 자리만 잡아두고 비활성(준비중)으로 둔다.
+         틱톡·샤오홍슈·도우인은 요소를 남긴 채 숨긴다 — switchPlatform·트렌드카드가
+         이 요소들을 잡으므로 지우면 그 코드가 죽는다(2026-07-21 선례와 같은 이유). -->
+    <details id="platformFold" open style="margin-bottom:12px">
+      <summary style="display:none">🌐 플랫폼</summary>
+    <div class="ctypes" id="platformTabs" style="margin-top:0;margin-bottom:12px">
       <div class="ctype active" data-platform="instagram" onclick="switchPlatform('instagram',this)">📷 인스타</div>
       <div class="ctype" data-platform="youtube" onclick="switchPlatform('youtube',this)">▶️ 유튜브</div>
-      <div class="ctype" data-platform="tiktok" onclick="switchPlatform('tiktok',this)">🎵 틱톡</div>
-      <div class="ctype" data-platform="xiaohongshu" onclick="switchPlatform('xiaohongshu',this)">📕 샤오홍슈</div>
-      <div class="ctype" data-platform="douyin" onclick="switchPlatform('douyin',this)">🎬 도우인</div>
+      <div class="ctype" data-platform="threads" title="다른 세션에서 기초작업 중 — 곧 열립니다"
+           style="opacity:.45;cursor:not-allowed">🧵 쓰레드 <span style="font-size:11px">(준비중)</span></div>
+      <div class="ctype" data-platform="tiktok" onclick="switchPlatform('tiktok',this)" style="display:none">🎵 틱톡</div>
+      <div class="ctype" data-platform="xiaohongshu" onclick="switchPlatform('xiaohongshu',this)" style="display:none">📕 샤오홍슈</div>
+      <div class="ctype" data-platform="douyin" onclick="switchPlatform('douyin',this)" style="display:none">🎬 도우인</div>
     </div>
     </details>
     <div id="seedPanel" style="display:none;margin-bottom:12px">
