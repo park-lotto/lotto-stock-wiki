@@ -4842,18 +4842,42 @@ def apply_scene_lab(plan, seg_map, edits):
     - seg_map에 없는 seg_id는 조용히 거른다(환각·옛 id 방어, _ground_ref와 같은 원칙).
     """
     trims = edits.get("trims") or {}
+    # 🔗 합친 조각(2026-08-17) — {대표 seg_id: [뒤에 이어 붙일 seg_id...]}.
+    # 화면 mergeSpan과 같은 규칙: **대표의 end를 마지막 멤버의 end까지 늘린다.** 원본에서
+    # 붙어 있는 구간이라 이어 붙이기 = 긴 구간 하나이고, scene_override는 원래부터 임의
+    # 구간 목록이므로 새 개념이 필요 없다(0순위-B: 규칙 변경 시 scene_play.js와 함께).
+    merges = edits.get("merges") or {}
+    member_of = {}
+    for lead, mem in merges.items():
+        for m in (mem or []):
+            member_of[m] = lead
+
+    def _span(sid):
+        seg = seg_map[sid]
+        end = float(seg["end"])
+        for m in (merges.get(sid) or []):
+            other = seg_map.get(m)
+            if other and float(other["end"]) > end:
+                end = float(other["end"])
+        return end
+
     by_idx = {b.get("beat_idx"): b for b in (plan.get("beats") or [])}
     applied = 0
     for eb in edits.get("beats") or []:
         beat = by_idx.get(eb.get("beat_idx"))
-        ids = [sid for sid in (eb.get("list") or []) if sid in seg_map]
+        # 멤버가 목록에 남아 있으면 대표로 바꾼다(중복 구간 방지 — 화면 doMerge와 같은 처리).
+        ids = []
+        for sid in (eb.get("list") or []):
+            sid = member_of.get(sid, sid)
+            if sid in seg_map and sid not in ids:
+                ids.append(sid)
         if beat is None or not ids:
             continue
         over = []
         for sid in ids:
             seg = seg_map[sid]
             entry = {"video_id": seg["video_id"], "seg_id": sid,
-                     "start": seg["start"], "end": seg["end"],
+                     "start": seg["start"], "end": _span(sid),
                      "scene_desc": seg.get("scene_desc", ""),
                      "is_key": bool(seg.get("is_key")),
                      "shot_role": seg.get("shot_role") or "기타"}
@@ -4865,7 +4889,7 @@ def apply_scene_lab(plan, seg_map, edits):
             beat.pop("stretch_fill", None)
         applied += 1
     plan["scene_lab"] = {"beats": edits.get("beats") or [], "trims": trims,
-                         "applied": applied}
+                         "merges": merges, "applied": applied}
     return plan
 
 
