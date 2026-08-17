@@ -82,7 +82,11 @@ def parse_post_node(node, username):
         "video_url": video_url,
         "thumb": _best_image(node),
         "likes": _int(node.get("like_count")),
-        "comments": _int(info.get("direct_reply_count") or node.get("comment_count")),
+        "comments": _int(
+            info.get("direct_reply_count")
+            if info.get("direct_reply_count") is not None
+            else node.get("comment_count")
+        ),
         "reposts": _int(info.get("repost_count")),
         "shares": _int(info.get("reshare_count")),
         "views": _int(node.get("play_count") or node.get("view_count")),
@@ -99,12 +103,33 @@ def _iter_json_blobs(html):
             continue
 
 
-def _walk_nodes(obj, out, seen):
+_MAX_WALK_DEPTH = 60  # Relay 트리는 보통 이 정도면 바닥. 넘으면 그 가지만 포기(전체 실패 금지)
+
+
+def _walk_nodes(obj, out, seen, visited, depth=0):
     """게시물처럼 생긴 dict를 모양으로 찾는다(경로 하드코딩 금지).
 
     조건: code가 있고, 지표(like_count 또는 text_post_app_info)가 함께 있다.
+
+    ★오탐 가정(이번 fixture 1개에서만 관찰됨 — 메타가 바꾸면 깨질 수 있다):
+    캐러셀(앨범) 아이템(node["carousel_media"][i])에는 code는 있지만
+    like_count/text_post_app_info가 없어서 여기서 독립 게시물로 안 잡힌다.
+    메타가 캐러셀 아이템에 like_count까지 넣게 바뀌면 캐러셀 아이템이
+    "게시물 수 부풀림"으로 이중 집계될 수 있다 — 게시물 수가 갑자기
+    늘어나면 이 조건부터 의심할 것.
+
+    ★순환/과도한 깊이 방어: Relay 트리는 보통 DAG(순환 없음)이지만 방어가
+    없으면 한 번 순환이 생겼을 때 무한루프로 프로세스가 멈춘다. id()로
+    방문 이력을 남기고, 깊이 상한(_MAX_WALK_DEPTH)에 걸리면 그 가지만
+    조용히 포기한다(전체를 실패시키지 않는다).
     """
+    if depth > _MAX_WALK_DEPTH:
+        return
     if isinstance(obj, dict):
+        obj_id = id(obj)
+        if obj_id in visited:
+            return
+        visited.add(obj_id)
         code = obj.get("code")
         if (isinstance(code, str) and code
                 and ("like_count" in obj or "text_post_app_info" in obj)):
@@ -112,10 +137,14 @@ def _walk_nodes(obj, out, seen):
                 seen.add(code)
                 out.append(obj)
         for v in obj.values():
-            _walk_nodes(v, out, seen)
+            _walk_nodes(v, out, seen, visited, depth + 1)
     elif isinstance(obj, list):
+        obj_id = id(obj)
+        if obj_id in visited:
+            return
+        visited.add(obj_id)
         for v in obj:
-            _walk_nodes(v, out, seen)
+            _walk_nodes(v, out, seen, visited, depth + 1)
 
 
 def extract_post_nodes(payload):
@@ -123,7 +152,7 @@ def extract_post_nodes(payload):
     out, seen = [], set()
     if isinstance(payload, str):
         for blob in _iter_json_blobs(payload):
-            _walk_nodes(blob, out, seen)
+            _walk_nodes(blob, out, seen, set())
     else:
-        _walk_nodes(payload, out, seen)
+        _walk_nodes(payload, out, seen, set())
     return out

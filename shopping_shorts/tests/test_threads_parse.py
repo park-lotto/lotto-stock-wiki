@@ -57,6 +57,37 @@ def test_노드가_dict가_아니면_None():
     assert parse_post_node("문자열", "u") is None
 
 
+def test_답글0건은_comment_count로_새지_않는다():
+    # direct_reply_count=0은 falsy라 `or` 폴백을 쓰면 comment_count로 새어나간다.
+    node = dict(_NODE, text_post_app_info={"direct_reply_count": 0, "repost_count": 2})
+    node["comment_count"] = 999
+    assert parse_post_node(node, "u")["comments"] == 0
+
+
+def test_캐러셀_아이템의_video_versions를_폴백으로_쓴다():
+    # 실측: media_type=8(캐러셀) 게시물은 최상위 video_versions가 None이고
+    # 실제 URL은 carousel_media[i]["video_versions"]에 있다.
+    node = dict(_NODE)
+    node.pop("video_versions")
+    node["carousel_media"] = [
+        {"image_versions2": {"candidates": [{"url": "https://cdn/c0.jpg", "width": 100}]}},
+        {"video_versions": [{"url": "https://cdn/carousel.mp4", "width": 480}]},
+    ]
+    p = parse_post_node(node, "u")
+    assert p["media_kind"] == "video"
+    assert p["video_url"] == "https://cdn/carousel.mp4"
+
+
+def test_순환참조여도_무한루프_없이_끝난다():
+    from shopping_shorts.threads_parse import extract_post_nodes, _walk_nodes
+
+    cyclic = {"code": "X", "like_count": 1}
+    cyclic["self"] = cyclic  # 순환
+    out = []
+    _walk_nodes(cyclic, out, set(), set())
+    assert len(out) == 1 and out[0]["code"] == "X"
+
+
 def test_실페이로드에서_노드가_한_개_이상_나온다():
     import json
     import pathlib
