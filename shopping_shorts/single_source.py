@@ -366,7 +366,12 @@ def restyle_prompt(beats, length_note="", style_name=None, facts_block=""):
     covers(컷 매핑)가 그대로 유효하다."""
     import json
     from shopping_shorts import style_profiles
-    cur = [{"n": i + 1, "narration": (b.get("narration") or "")}
+    # ★문장별 상한(2026-08-17 실측): 종전엔 "전체를 ±15%로"라는 **총량** 지시뿐이라
+    #   모델이 어디를 얼마나 줄일지 몰라 재시도가 무작위로 튀었다(서버 로그 실측:
+    #   1.49→1.71→1.84 / 1.54→1.76→1.39 — 줄어드는 경향 자체가 없다). 총량은 사람이
+    #   못 세지만 **문장별 상한은 셀 수 있다** → 각 문장에 max를 박아 준다.
+    cur = [{"n": i + 1, "narration": (b.get("narration") or ""),
+            "max": int(len(b.get("narration") or "") * 1.15) + 2}
            for i, b in enumerate(beats)]
     total = sum(len(c["narration"]) for c in cur)
     return (style_profiles.style_block(style_name)
@@ -379,8 +384,10 @@ def restyle_prompt(beats, length_note="", style_name=None, facts_block=""):
             "★제품이 무엇이고 어떻게 쓰는 물건인지(착용/바르는/먹는)를 절대 바꾸지 마라 — "
             "원래 문장에 없는 동사로 제품을 쓰게 하면 화면과 어긋난다. 등장 인물도 원래 "
             "문장의 인물 그대로(아내를 친구로 바꾸지 마라).\n"
-            f"3. ★전체 길이는 지금({total}자)의 ±15% 안 — 이 나레이션은 화면 길이에 묶여 "
-            "있어 길어지면 영상이 끝났는데 말이 남는다. 각 문장도 원래 문장과 비슷한 길이로. "
+            f"3. ★길이 — 아래 각 문장에 적힌 `max`가 그 문장의 **글자수 상한**이다. "
+            "n번 문장을 고쳐 쓴 뒤 글자를 세어 max 이하인지 확인하고, 넘으면 그 문장에서 "
+            f"군더더기를 덜어라(전체 합계는 {total}자 근처가 된다). 이 나레이션은 화면 "
+            "길이에 묶여 있어 길어지면 영상이 끝났는데 말이 남는다. "
             "결을 살리되 **바꿔 쓰는 것이지 늘려 쓰는 게 아니다**.\n"
             + (f"   {length_note}\n" if length_note else "")
             + "4. ★마지막 문장(CTA)은 반드시 \"댓글에 '키워드' 남겨주시면 [받는 것] "
@@ -427,6 +434,7 @@ def apply_restyle(beats, call, max_tries=3, style_name=None, report=None,
     old_total = sum(len(b.get("narration") or "") for b in beats)
     note = ""
     best = None
+    best_why = None         # 왜 best로 잡혔나 — "길이"면 아래 압축패스를 한 번 더 태운다
     closest = None          # 구조는 멀쩡하나 길이 밖인 스타일본 중 1.0배에 가장 근접한 것
     closest_ratio = None
     for _ in range(max_tries):
@@ -448,37 +456,55 @@ def apply_restyle(beats, call, max_tries=3, style_name=None, report=None,
         if closest is None or abs(ratio - 1) < abs(closest_ratio - 1):
             closest, closest_ratio = out, ratio
         if ratio > 1.25:
-            note = (f"직전 결과가 원본의 {ratio:.2f}배로 너무 길었다 — 결은 유지하되 "
-                    f"군더더기를 덜어 {old_total}자 근처로 줄여라.")
-            best = best or (out if ratio <= 1.45 else None)   # 아주 심하지 않으면 예비 보관
+            # ★어느 문장이 넘쳤는지 짚어 준다(2026-08-17 실측): "전체를 줄여라"만으로는
+            #   모델이 어디를 손댈지 몰라 재시도가 무작위였다. 초과 문장과 초과 글자수를
+            #   명시하면 고칠 대상이 하나로 정해진다.
+            over = []
+            for i, b in enumerate(beats):
+                lim = int(len(b.get("narration") or "") * 1.15) + 2
+                got_len = len(by_n[i + 1])
+                if got_len > lim:
+                    over.append(f"{i + 1}번({got_len}자→{lim}자 이하)")
+            note = (f"직전 결과가 원본의 {ratio:.2f}배로 너무 길었다. "
+                    + (f"상한을 넘긴 문장: {', '.join(over)}. 그 문장들만 군더더기를 덜어라"
+                       if over else f"결은 유지하되 {old_total}자 근처로 줄여라")
+                    + " — 문장 수·순서·내용은 그대로.")
+            if best is None and ratio <= 1.45:   # 아주 심하지 않으면 예비 보관
+                best, best_why = out, "길이"
             continue
         if ratio < 0.75:
             note = f"직전 결과가 원본의 {ratio:.2f}배로 너무 짧았다 — {old_total}자 근처로."
             continue
         if any(c in v for v in by_n.values() for c in _CLICHE):
             note = "직전 결과에 금지 상투어(꿀템·삶의 질 등)가 남았다 — 전부 제거하라."
-            best = out
+            best, best_why = out, "상투어"
             continue
         last = by_n[len(beats)]
         if "댓글" in last and not re.search(r"드릴게요|보내드|알려드", last):
             note = ("직전 결과의 마지막 CTA가 보상 없이 끝났다 — 반드시 "
                     "\"남겨주시면 [받는 것] 드릴게요\" 형태로.")
-            best = out
+            best, best_why = out, "CTA"
             continue
         return _done(out, True, "정상")
-    if best is not None:
-        return _done(best, True, "재시도 소진(길이·상투어·CTA)")
+    # ★길이 때문에 잡힌 best는 그냥 내보내지 않는다(2026-08-17 실측): 게이트는 1.25인데
+    #   best 보관선이 1.45라 **1.39~1.45짜리가 그대로 라이브로 나가고 있었다** — 기준이
+    #   사실상 두 개였던 셈(0순위-B). 상투어·CTA 사유는 길이가 이미 정상이라 그대로 반환.
+    if best is not None and best_why != "길이":
+        return _done(best, True, f"재시도 소진({best_why})")
     # ★마지막 압축 패스(2026-08-07): 재시도가 전부 길이 밖이면 종전엔 스타일을 통째로
     # 버리고 원본 복귀 → trio가 같은 결로 수렴("메종/채이/홈테리어 매칭이 안 됨" 실사고,
     # job 11:38 maison·chae 실패 로그). 스타일이 입혀진 최근접본을 붙잡고 "문체는 두고
     # 길이만 줄여라"를 한 번 더 태운다 — 스타일과 화면 길이를 둘 다 지키는 마지막 기회.
     if closest is not None:
         import json as _json
-        cur = [{"n": i + 1, "narration": (b.get("narration") or "")}
+        # 여기도 문장별 상한을 준다 — 총량 지시가 안 먹힌다는 실측은 이 패스에도 같다.
+        cur = [{"n": i + 1, "narration": (b.get("narration") or ""),
+                "max": int(len(beats[i].get("narration") or "") * 1.15) + 2}
                for i, b in enumerate(closest)]
         resp = call(
             ("아래 나레이션의 **문체·어미·결은 그대로** 두고, 각 문장의 군더더기만 "
-             f"덜어 전체를 {old_total}자(±15%) 안으로 맞춰라. 문장 수·순서·내용 유지, "
+             "덜어 각 문장을 그 문장의 `max` 글자수 이하로 맞춰라"
+             f"(전체 합계는 {old_total}자 근처가 된다). 문장 수·순서·내용 유지, "
              "사실 추가 금지, 마지막 문장의 댓글 CTA 형태 유지.\n"
              "JSON만: {\"beats\":[{\"n\":1,\"narration\":\"...\"}]}\n\n")
             + _json.dumps(cur, ensure_ascii=False, indent=1), RESTYLE_SCHEMA)
@@ -494,6 +520,11 @@ def apply_restyle(beats, call, max_tries=3, style_name=None, report=None,
                         nb["narration"] = by_n[i + 1]
                         out.append(nb)
                     return _done(out, True, f"압축패스({closest_ratio:.2f}→{ratio:.2f}배)")
+    # ★압축이 실패해도 예비본이 있으면 스타일을 살린다(2026-08-17 실측): 08-17 04:31
+    #   maison은 최근접 1.50배라 best(≤1.45)도 없어 원본 복귀 = 스타일 통째 폐기였다.
+    #   1.45 이하 예비본이 있으면 원본보다 그쪽이 낫다(원본 복귀는 trio 수렴 사고의 원인).
+    if best is not None:
+        return _done(best, True, "압축실패→예비본(길이 1.45배 이내)")
     return _done(beats, False,
                  f"재시도 소진(최근접 {closest_ratio:.2f}배)" if closest_ratio
                  else "재시도 소진(길이·상투어·CTA)")
