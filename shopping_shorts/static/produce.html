@@ -252,19 +252,24 @@
       font-weight:600;font-size:13px;padding:10px 16px;border-radius:9px;cursor:pointer}
     /* 처리중 */
     .cp-run{position:relative}
-    .cp-bar{height:7px;border-radius:6px;background:var(--panel);overflow:hidden;position:relative;border:1px solid var(--line)}
+    .cp-bar{height:7px;border-radius:6px;background:var(--panel);overflow:hidden;position:relative;border:1px solid var(--line);margin-top:14px}
     .cp-run-lbl{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--txt);margin-top:10px}
     .cp-run-lbl .cp-dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
     .cp-run-sub{font-size:11.5px;color:var(--sub);margin-top:4px}
-    /* 진행중 썸네일 — 좌측 구석에 작게 있던 걸 키우고 가운데로(2026-08-10 사장님) */
-    .cp-scan{position:relative;width:170px;height:302px;border-radius:9px;overflow:hidden;margin:0 auto 12px;
-      background:linear-gradient(160deg,#2a3a44,#141c22);border:1px solid #0006}
-    .cp-scan img{width:100%;height:100%;object-fit:cover;display:block}
+    /* 진행중 칸 — ★크기는 여기서 안 정한다(2026-08-18). .cp-frame과 **같이** 쓰므로
+       크기 기준은 .cp-frame 한 곳뿐이다(0순위-B: 같은 판단 두 벌 금지). 여기는
+       "지우는 중"으로 보이게 하는 **효과**만 담당한다(어두운 배경 + 아래 ::after 스캔선).
+       예전엔 170×302 고정이라 화면이 넓어도 안 커졌다 — 실측 시 칸 1138px 중 15%만 씀. */
+    .cp-scan{background:linear-gradient(160deg,#2a3a44,#141c22)}
+    .cp-scan img{width:100%;height:100%;object-fit:cover;display:block;opacity:.55}
     /* 완료 C 비교 */
     /* 비포/애프터 — 좌우로 흩어져 작게 보이던 걸 키우고 가운데로 모음(2026-08-10 사장님) */
-    .cp-compare{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:2px}
+    /* ★2026-08-18 같이 키움: 진행중(.cp-scan)만 키우면 "돌 때는 크다가 끝나면 작아진다"가
+       된다 — 두 화면은 같은 자리를 쓰므로 크기 기준도 같이 정해야 한다(0순위-B).
+       비교는 프레임이 2개(+화살표)라 폭 여유가 절반이므로 vw·vh 계수를 그만큼 줄인다. */
+    .cp-compare{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:2px;flex-wrap:wrap}
     .cp-cell{flex:0 1 auto;display:flex;flex-direction:column;align-items:center}
-    .cp-frame{position:relative;width:min(260px,38vw);aspect-ratio:9/16;border-radius:10px;overflow:hidden;
+    .cp-frame{position:relative;width:min(340px,34vw,34vh);aspect-ratio:9/16;border-radius:10px;overflow:hidden;
       background:#000;border:1px solid #0006}
     .cp-frame img{width:100%;height:100%;object-fit:cover;display:block}
     .cp-lbl{position:absolute;top:8px;left:8px;font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.55);color:#fff}
@@ -1020,7 +1025,11 @@
           <button id="openVoiceTune" style="display:none" class="btn-prev" onclick="window.open('/voice_tune','_blank')">🩺 발음교정 작업대 열기</button>
         </div>
       </details>
-      <button class="btn-next" style="margin-top:12px;padding:8px 16px" onclick="vpGateNext()">다음 단계 (꾸미기) →</button>
+      <!-- ★패널 안 '다음 단계' 버튼을 뺐다(2026-08-18 사장님 "두개는 중복이니까 하나만").
+           화면 아래 공용 네비의 [다음 →]와 나란히 두 개가 떠 있었다. 공용 네비만 남겨
+           모든 단계가 같은 자리·같은 버튼으로 넘어가게 한다.
+           ⚠️ vpGateNext()는 지우지 않는다 — "완성본을 들어봤나" 게이트가 이 함수에 있고
+              공용 [다음 →]이 그 검사를 거쳐야 한다(아래 배선 확인). -->
     </section>
     <section class="panel" data-step="3">
       <h3 data-steptitle="deco">5 · 자막꾸미기</h3>
@@ -2783,6 +2792,12 @@ function jump(o){
   // "자막제거" 칩 한 번 클릭으로 게이트가 통째로 우회됐다. 뒤로(완료 단계)는 자유 — 잠긴 단계는
   // 항상 미완 프런티어 위쪽이라 뒤는 애초에 안 잠긴다.
   if(stepLocked(p)){ toast(stepLockMsg()); return; }
+  // ★TTS(패널2)를 **앞으로** 떠날 때 "안 들어본 장면" 확인(2026-08-18).
+  //   패널 안에 있던 [다음 단계(꾸미기)] 버튼을 중복이라 뺐는데(사장님), 그 경고가 거기
+  //   onclick="vpGateNext()"에만 걸려 있었다 — 버튼만 지우면 검사가 통째로 사라진다.
+  //   여기로 옮기면 공용 [다음 →]든 상단 오브 클릭이든 **어느 경로로 나가도** 검사한다.
+  //   뒤로 가는 건 안 막는다(다시 들으러 돌아가는 길을 경고로 막으면 안 된다).
+  if(cur === 2 && p > cur && !vpGateNext()) return;
   cur=p;
   // ★사용자가 스스로 옮긴 단계다 — 서버 기준선도 같이 옮겨 "게이트 강등"과 구분한다(2026-08-07).
   //   이게 없으면 앞 단계로 돌아간 이동이 강등으로 오인돼 서버에 저장되지 않는다.
@@ -6130,8 +6145,17 @@ async function startCleanPreview(){
   const myGen=++CLEAN_GEN, myJob=MIX_JOB;
   if(btn) btn.disabled=true;
   const _sc=document.getElementById('cleanShowcase'); if(_sc) _sc.style.display='none';  // 실결과 뜨는 동안 데모 숨김
+  // ★진행 중에도 **완료 후와 같은 2칸 틀**로 그린다(2026-08-18 사장님 "공간활용").
+  //   예전엔 가운데 작은 썸네일 한 칸(170px)뿐이라 양옆 968px이 통째로 비었고, 끝나는
+  //   순간 1칸→2칸으로 화면이 확 바뀌어 어디를 봐야 할지 튀었다. 왼쪽=원본 그대로,
+  //   오른쪽=지우는 중(스캔) → 끝나면 **오른쪽만** AFTER로 바뀐다.
+  //   틀(.cp-compare/.cp-cell/.cp-frame)을 완료 화면과 공유하므로 크기 기준이 한 곳이다.
   box.innerHTML='<div class="cp-run rise">'
-    +'<div class="cp-scan"><img src="/api/produce/mix/clean_thumb/'+encodeURIComponent(myJob)+'?kind=original&t='+Date.now()+'" onerror="this.style.display=\'none\'"></div>'
+    +'<div class="cp-compare">'
+    +  '<div class="cp-cell"><div class="cp-frame"><img src="/api/produce/mix/clean_thumb/'+encodeURIComponent(myJob)+'?kind=original&t='+Date.now()+'" onerror="this.style.display=\'none\'"><span class="cp-lbl">BEFORE</span></div><div class="cp-cap">원본</div></div>'
+    +  '<div class="cp-arrow">→<span>AI</span></div>'
+    +  '<div class="cp-cell"><div class="cp-frame cp-scan"><img src="/api/produce/mix/clean_thumb/'+encodeURIComponent(myJob)+'?kind=original&t='+Date.now()+'" onerror="this.style.display=\'none\'"></div><div class="cp-cap">지금 지우는 중…</div></div>'
+    +'</div>'
     +'<div class="cp-bar"></div>'
     +'<div class="cp-run-lbl"><span class="cp-dot"></span>AI가 자막 영역을 자연스럽게 복원하는 중…</div>'
     +'<div class="cp-run-sub">보통 몇 분, 길면 수십 분 걸릴 수 있어요. 다른 단계 먼저 진행해도 돼요.</div>'
@@ -6436,24 +6460,24 @@ async function renderTtsBeats(){
     _vpHeard = _vpHeard || new Set();
     // ▶전체 재생을 미리보기 프레임 '바로 아래' 큰 버튼으로 — 오른쪽 구석에 있어 못 찾던 문제
     //   (2026-07-25 사장님)과 '이 대본으로 다시 듣기'와의 혼동을 함께 해소(완성본임을 이름에 명시).
+    // ★썸네일을 뺐다(2026-08-18 사장님 "완성본전체듣기 썸네일은 필요없고 전체 재생버튼만
+    //   상단에 올리고"). 여기 미리보기 프레임은 왼쪽 220px을 세로로 길게(391px) 차지하면서
+    //   정작 이 단계에서 볼 것은 **소리**다 — 화면 확인은 6단계 자막꾸미기·9단계 최종렌더가 한다.
+    //   ★#vpFrame·#vpCap은 지우지 않고 **숨겨서** 남긴다: playAllBeats/_vpDriveCaption이
+    //   재생 중 이 두 요소에 프레임·자막을 그린다(없으면 재생이 죽는다 — 실측으로 확인).
     el.innerHTML=`
-      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
-        <div style="flex:0 0 auto;width:220px">
-          <div style="position:relative;width:220px;aspect-ratio:9/16;background:#000;border-radius:10px;overflow:hidden">
-            <img id="vpFrame" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
-            <div id="vpCap" style="position:absolute;left:0;right:0;bottom:8%;text-align:center;color:#fff;font-weight:700;font-size:13px;text-shadow:0 2px 4px #000;padding:0 6px"></div>
-          </div>
-          <button onclick="playAllBeats()" class="btn-next" style="display:block;width:220px;margin-top:8px;padding:11px 0;font-size:15px;font-weight:700" title="방금 만든 완성 음성을 처음부터 끝까지 화면과 함께 재생합니다">▶ 완성본 전체 듣기</button>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px">
+        <button onclick="playAllBeats()" class="btn-next" style="padding:13px 22px;font-size:15px;font-weight:700;min-height:44px" title="방금 만든 완성 음성을 처음부터 끝까지 재생합니다">▶ 완성본 전체 듣기</button>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div><span class="hint">영상 길이</span> <b style="color:var(--accent2)">${vidLen.toFixed(1)}초</b></div>
+          <div><span class="hint">음성 길이</span> <b id="voiceLen" style="color:var(--ok)">…</b></div>
+          <div id="fitMsg" class="hint">음성 길이 측정 중…</div>
         </div>
-        <div style="flex:1;min-width:220px">
-          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
-            <div><span class="hint">영상 길이</span> <b style="color:var(--accent2)">${vidLen.toFixed(1)}초</b></div>
-            <div><span class="hint">음성 길이</span> <b id="voiceLen" style="color:var(--ok)">…</b></div>
-            <div id="fitMsg" class="hint">음성 길이 측정 중…</div>
-          </div>
-          ${rows}
-        </div>
-      </div>`;
+      </div>
+      <div style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)" aria-hidden="true">
+        <img id="vpFrame" onerror="this.style.display='none'"><div id="vpCap"></div>
+      </div>
+      ${rows}`;
     _updateVoiceLen(beats.length, vidLen);
   }catch(e){ el.innerHTML='<div class="hint" style="color:var(--fire)">로드 실패</div>'; }
 }
@@ -6581,13 +6605,16 @@ function pronReport(btn,i){
     }catch(e){ wrap.textContent='제보 실패'; }
   };
 }
+// TTS를 떠나도 되나 — **판정만** 하고 이동은 안 한다(true=가도 된다).
+// ★2026-08-18에 역할이 바뀌었다: 예전엔 패널 안 [다음 단계] 버튼의 onclick이라 스스로
+//   jump(5)까지 했는데, 그 버튼이 하단 공용 [다음 →]와 중복이라 빠졌다(사장님 지시).
+//   지금은 jump()가 TTS를 앞으로 떠나기 직전에 이 함수를 물어본다 — 어느 경로로 나가도
+//   같은 검사를 거친다. ★이동을 여기서 하면 jump와 두 벌이 된다(0순위-B) → 판정만 한다.
 function vpGateNext(){
   const yellow=(VP_BEATS||[]).map((b,i)=>i).filter(i=>!(Array.isArray(VP_BEATS[i].cap_durs)&&VP_BEATS[i].cap_durs.length));
   const unheard=yellow.filter(i=>!_vpHeard.has(i));
-  if(unheard.length && !confirm('🟡 '+unheard.length+'개 장면을 아직 안 들어봤어요. 그냥 다음으로 갈까요?')) return;
-  // 자막꾸미기로. ★9단계 개편(2026-08-16)으로 오브가 한 칸씩 밀렸다 — 예전 3 → 지금 5
-  //   (STEP_LABELS: 0영상추출 1대본 2MIX 3자막제거 4TTS **5자막꾸미기**).
-  jump(5);
+  if(unheard.length && !confirm('🟡 '+unheard.length+'개 장면을 아직 안 들어봤어요. 그냥 다음으로 갈까요?')) return false;
+  return true;
 }
 // ▶ 전체 재생 — 비트 음성을 순서대로 이어 재생하며 현재 비트의 프레임+자막을 갱신(가라오케식)
 function playAllBeats(){
