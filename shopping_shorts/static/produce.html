@@ -7391,6 +7391,19 @@ function _s2Hydrate(w){
     if(s.seed) S2.seed = s.seed;
   } else {
     S2.drafts = []; S2.curDraft = 0; S2.picked = []; S2.materials = null;
+    // ★옛 작업 구제(2026-08-17, 사장님 제보 "확정 대본도 안 보인다").
+    //   이 배포 **전에** 만든 작업엔 s2 스냅샷이 없다 — 후보 A안·B안은 저장된 적이 없어
+    //   물리적으로 못 되살린다. 하지만 **확정한 대본(w.script)은 예전부터 저장돼 있었다.**
+    //   그걸 ③에 한 안으로 돌려놓는다: 없는 걸 지어내는 게 아니라 **있는 걸 보여주는 것**.
+    //   ⚠️ 반드시 `w.script`(그 작업의 저장값)만 쓴다 — STATE.script를 쓰면 다른 작업으로
+    //      갈아탔을 때 앞 작업 대본이 딸려와 캐리오버 사고가 된다.
+    //   ⚠️ beats는 안 만든다(역할을 모른다) — s2Beats가 문장 단위로 나눠 그린다. 모르면 비운다.
+    const _old = (w && typeof w.script === 'string') ? w.script.trim() : '';
+    if(_old){
+      S2.drafts = [{script:_old, hook:(_old.split(/\n/)[0]||'').trim(),
+                    style_name:'확정한 대본', beats:[], checks:[], tries:[], restored:true}];
+      S2.curDraft = 0;
+    }
   }
   // 지금 2단계를 보고 있으면 즉시 다시 그린다. 다른 단계면 s2Enter()가 들어올 때 그린다
   // (showPanel의 cur===8 분기 — 여기서 또 부르면 같은 판단이 두 곳이 된다).
