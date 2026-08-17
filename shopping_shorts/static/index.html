@@ -2077,7 +2077,10 @@ function _thumbLoading(box){
   if(getComputedStyle(box).position==='static') box.style.position='relative';
   box.appendChild(d); return d;
 }
-async function _playViaMedia(img, videoId, platform, embedFn){
+// viaProxy=true면 해석된 mp4를 **/api/video 프록시로** 재생한다(2026-08-17 렌즈).
+// 틱톡 CDN은 리퍼러·IP를 따져 브라우저 직접재생이 막히고, 그러면 embed(세로로 긴 화면)로
+// 떨어진다. 기본값 false라 랭킹·즐겨찾기 동작은 그대로다.
+async function _playViaMedia(img, videoId, platform, embedFn, viaProxy){
   if(!videoId) return;
   const box=img.parentElement;
   const badge=box && box.querySelector('.play-badge'); if(badge) badge.remove();
@@ -2087,7 +2090,8 @@ async function _playViaMedia(img, videoId, platform, embedFn){
     if(_load) _load.remove();
     if(d.ok && d.url){
       const v=document.createElement('video');
-      v.src=d.url; v.controls=true; v.autoplay=true; v.playsInline=true;
+      v.src=viaProxy?('/api/video?url='+encodeURIComponent(d.url)):d.url;
+      v.controls=true; v.autoplay=true; v.playsInline=true;
       v.setAttribute('playsinline',''); v.setAttribute('crossorigin','anonymous');
       v.className='thumb-video';
       v.onerror=()=>embedFn(v, videoId);   // mp4 재생 실패 시 embed 폴백
@@ -2944,16 +2948,19 @@ function lensPlayInline(shortcode, savesc, img){
   const it=st.items.find(i=>i.savesc===savesc); if(!it) return;
   if(!img || !img.parentElement) return lensPreview(shortcode, savesc);
   // ① 이미 직접 mp4를 아는 경우(샤오홍슈·도우인) — 해석 왕복 없이 즉시 재생.
-  if(it.play_url){ img.dataset.vurl=it.play_url; return playInline(img); }
+  //    ★CDN 주소를 <video src>에 직접 넣지 않는다 — 리퍼러·IP를 따져 막힌다.
+  //      랭킹 카드가 쓰는 /api/video 프록시를 그대로 태운다(2026-08-17).
+  if(it.play_url){ img.dataset.vurl='/api/video?url='+encodeURIComponent(it.play_url); return playInline(img); }
   // ② 유튜브·틱톡·인스타 — 해석은 랭킹 카드와 똑같은 경로(/api/media)를 쓰고,
   //    **폴백만** 렌즈에 맞게 바꾼다(2026-08-17 사장님 실사용 제보 2건).
   const id=_lensMediaId(it.platform, it.url);
   if(id && it.platform==='youtube')   return playYoutube(img, id);   // 잘 된다(제보 확인)
-  if(id && it.platform==='tiktok')    return _playViaMedia(img, id, 'tiktok', _lensEmbedTiktok);
+  // 틱톡은 프록시로 재생한다 — 직접 CDN 재생이 막혀 세로로 긴 임베드로 떨어졌다(제보).
+  if(id && it.platform==='tiktok')    return _playViaMedia(img, id, 'tiktok', _lensEmbedTiktok, true);
   if(id && it.platform==='instagram')
     // ★랭킹의 _embedInstagram은 새 탭으로 나간다 — 렌즈에선 "새 페이지로 넘어가고 안 됨"이
     //   된다(제보). 나가지 않고 우리 오버레이(썸네일+원본 링크)로 떨어뜨린다.
-    return _playViaMedia(img, id, 'instagram', ()=>lensPreview(shortcode, savesc));
+    return _playViaMedia(img, id, 'instagram', ()=>lensPreview(shortcode, savesc), true);
   // ③ 그 외(id를 못 뽑는 모양) — 종전 오버레이로 떨어진다(나빠지지 않는다).
   return lensPreview(shortcode, savesc);
 }
