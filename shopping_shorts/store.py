@@ -1457,6 +1457,35 @@ class Store:
             rows = c.execute("SELECT username, category FROM channel_categories").fetchall()
         return {r[0]: r[1] for r in rows if r[1]}
 
+    def category_by_channel(self):
+        """{username(정규화): category} — 채널 하나가 어느 갈래인지 한 곳에서 정한다.
+
+        ★왜 여러 곳을 겹쳐 보나(2026-08-17): 역대 히트작 탭(channel_archive)은
+        category 컬럼이 아예 없어 카테고리를 누르면 **결과 0건**이 됐다. 20만 건을
+        Gemini로 태깅하는 안도 있었지만, 카테고리는 릴스보다 **채널의 성질**에
+        가까워서 채널 단위로 붙이면 충분하다(ranking._category_of가 이미 같은 판단을
+        한다 — 캡션이 없으면 채널 카테고리로 폴백). 실측 커버리지 79.5%
+        (아카이브 206,807건 중 164,513건), 추가 크롤·AI 비용 0.
+
+        우선순위: 손으로 지정한 것 > 발굴 채널 기록 > 수집 이력.
+        (앞의 것이 뒤를 덮는다 — 사람이 고친 값이 항상 이긴다)
+        """
+        m = {}
+        with self._conn() as c:
+            for sql in (
+                "SELECT username, category FROM reel_history",
+                "SELECT username, category FROM discovered_channels",
+                "SELECT username, category FROM channel_categories",
+            ):
+                try:
+                    rows = c.execute(sql).fetchall()
+                except Exception:      # noqa: BLE001 — 테이블이 없는 배포본도 있다
+                    continue
+                for u, cat in rows:
+                    if cat:
+                        m[self._norm_user(u)] = cat
+        return m
+
     # ── 채널 활동성(2026-07-22) — 센서스가 채우는 자동 선별 레이어 ──
     @staticmethod
     def _norm_user(username):
@@ -2237,9 +2266,12 @@ class Store:
             sql += "ORDER BY comments DESC LIMIT ?"
             args.append(int(limit))
             rows = c.execute(sql, tuple(args)).fetchall()
+        # 아카이브엔 category 컬럼이 없다 → 채널 단위로 붙인다(추가 크롤·AI 0).
+        cats = self.category_by_channel()
         return [{
             "shortcode": r[0], "username": r[1], "name": "",
-            "category": "", "url": r[2] or "", "thumb": r[3] or "",
+            "category": cats.get(self._norm_user(r[1]), ""),
+            "url": r[2] or "", "thumb": r[3] or "",
             "caption": "", "views": r[4] or 0, "likes": r[5] or 0,
             "comments": r[6] or 0, "upload_ts": r[7] or "",
         } for r in rows]
