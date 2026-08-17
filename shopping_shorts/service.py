@@ -1,5 +1,6 @@
 """수집 오케스트레이션: 채널→Apify→랭킹→저장→CSV 아카이브."""
 import csv
+import sys as _sys
 from pathlib import Path
 from datetime import datetime, timezone, timedelta, date
 from concurrent.futures import ThreadPoolExecutor
@@ -25,6 +26,7 @@ from shopping_shorts.tiktok_client import fetch_account_videos as tt_fetch
 from shopping_shorts.tiktok_search import search_full as tt_search_full
 from shopping_shorts.xiaohongshu_playwright import fetch_notes as _xhs_fetch_notes
 from shopping_shorts import xiaohongshu_search, xiaohongshu_discovery, overseas_seeds
+from shopping_shorts import threads_playwright
 from shopping_shorts.instagram_playwright import search_hashtag as _ig_search_hashtag
 from shopping_shorts import instagram_discovery
 
@@ -268,6 +270,73 @@ def _collect_xiaohongshu():
     return items
 
 
+THREADS_BASE_URL = "https://www.threads.com"
+
+
+def _threads_row_to_reel(row):
+    """threads_posts 한 줄 → ranking.build_items가 읽는 reel 모양으로 옮긴다.
+
+    ★이름이 어긋나는 곳이라 사고가 나기 쉽다(2026-08-17). build_items는
+      timestamp·shortcode·commentsCount를 읽는데 우리 표는 posted_at·code·comments다.
+      특히 timestamp가 비면 build_items가 그 항목을 통째로 건너뛰어(ranking.py:47)
+      "수집은 됐는데 카드가 0건"이 된다 — 조용해서 안 드러난다.
+    """
+    code = row.get("code") or ""
+    return {
+        "timestamp": row.get("posted_at"),
+        "shortcode": code,
+        "commentsCount": row.get("comments") or 0,
+        "likesCount": row.get("likes") or 0,
+        "videoViewCount": row.get("views") or 0,
+        "displayUrl": row.get("thumb") or "",
+        "videoUrl": row.get("video_url") or "",
+        "url": f"{THREADS_BASE_URL}/@{row.get('username') or ''}/post/{code}",
+        "caption": row.get("caption") or "",
+    }
+
+
+def _collect_threads():
+    """등록한 쓰레드 계정의 최근 48h 게시물 → 댓글기반 랭킹(무료 익명 GET).
+
+    사장님 결정(2026-08-17): 지표·창을 **인스타와 동일**하게(댓글 기준·48h) 본다.
+    그래서 참여합산식 build_overseas_items가 아니라 build_items를 재사용한다.
+
+    수집(HTTP)과 랭킹(DB 조회)을 나눈 이유: 계정 하나가 막혀도 이미 쌓인 게시물로
+    카드는 떠야 한다. 그래서 계정별 수집 실패를 격리하고, 랭킹은 표에서 다시 읽는다.
+    """
+    store = Store(DB_PATH)
+    usernames = [s["value"] for s in store.list_seeds("threads") if s["kind"] == "account"]
+    if not usernames:
+        return []
+    for u in usernames:
+        try:
+            threads_playwright.collect_account(u, store)
+        except Exception as e:
+            # 한 계정이 막혀도 나머지는 계속 — 통째로 0건이 되면 원인을 못 가른다.
+            print(f"[service] 쓰레드 수집 실패 username={u} {e!r}", file=_sys.stderr)
+    now = datetime.now(timezone.utc)
+    rows = store.threads_list(limit=500)
+    by_user = {}
+    for r in rows:
+        by_user.setdefault(r.get("username") or "", []).append(r)
+    items = []
+    for username, urows in by_user.items():
+        items += build_items(
+            [_threads_row_to_reel(r) for r in urows],
+            {"name": username, "username": username, "inpock": "", "followers": 0},
+            prev_comments=lambda sc: store.prev_base_platform("threads", sc),
+            prev_delta=lambda sc: store.prev_delta_platform("threads", sc),
+            now=now, window_hours=WINDOW_HOURS,
+        )
+    apply_grades(items)
+    run_date = now.strftime("%Y-%m-%d %H:%M")
+    store.save_run_platform("threads", run_date,
+                            [{"shortcode": i["shortcode"], "base": i["comments"],
+                              "delta": i["delta"]} for i in items])
+    store.save_last_run_platform("threads", items, now.isoformat())
+    return items
+
+
 # ── 샤오홍슈 계정 발굴(리더보드·담기·삭제·자동등록) ──
 # 설계: docs/superpowers/specs/2026-07-29-샤오홍슈-계정발굴-design.md
 # 검색 발굴(포스트)을 작성자별로 집계해 '잘하는 계정'을 모아준다 → 레퍼런스에 등록.
@@ -460,6 +529,8 @@ def collect(platform="instagram", categories=None, limit_channels=None, on_progr
         return _collect_tiktok()
     if platform == "xiaohongshu":
         return _collect_xiaohongshu()
+    if platform == "threads":
+        return _collect_threads()
     if platform != "instagram":
         return []   # 미구현 플랫폼이 인스타 Apify 스크레이프로 흘러들지 않게
 
