@@ -153,7 +153,11 @@ def search_shorts(keywords, published_after_iso, max_per_kw=20, token=None, lang
     for kw in keywords:
         while True:
             status, items = _search_page(kw, published_after_iso, max_per_kw, tok, region, lang)
-            if status == 403 and tok_idx + 1 < len(tokens):
+            # ★429도 로테이션 대상이다(2026-08-17 실사고). 403(쿼터/권한)만 넘기던 탓에
+            # 키 1개가 429(rateLimitExceeded)면 **모든 검색이 조용히 0건**을 반환했다.
+            # 실측: 키 10개 중 6개가 멀쩡한데 1번 키 하나로 검색 경로가 통째로 죽었다
+            # (기본 로테이션 0건 / 키2 지정 50건). 예외도 안 나는 조용한 실패라 더 위험하다.
+            if status in (403, 429) and tok_idx + 1 < len(tokens):
                 tok_idx += 1
                 tok = tokens[tok_idx]
                 continue  # 다음 키로 이 키워드부터 재시도
