@@ -104,7 +104,9 @@ h1{font-size:16px;margin:0;font-weight:700}
 /* ★미리보기 칸을 키웠다(2026-08-17 사장님 "썸네일이 너무 작다") — 300 → 440px.
    폭이 커진 만큼 안의 영상(#vidbox)도 커진다. 오른쪽 소스 칸은 iframe 높이를
    같이 늘려(제작소 #sceneLabFrame 124vh) 한 화면에 더 많이 들어오게 했다. */
-#playerhost{flex:0 0 440px;max-width:440px;overflow:hidden;padding:14px 0 14px 14px;
+/* ★영상을 폭 기준으로 키운 만큼(위 #vidbox) 세로가 넘칠 수 있다 — 여기서 스크롤한다.
+   2026-08-16의 overflow:hidden은 영상이 남는 높이에 맞춰 줄던 시절의 짝이었다. */
+#playerhost{flex:0 0 440px;max-width:440px;overflow-y:auto;overflow-x:hidden;padding:14px 0 14px 14px;
   display:flex;flex-direction:column;gap:8px;min-width:0;min-height:0}
 .pane.left{flex:1;min-width:0}
 .pane.rightcol{display:none}       /* 오른쪽 칼럼 폐지: 미리보기가 왼쪽으로 왔다 */
@@ -265,14 +267,13 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
 #playerhost:has(#player.on) #playerIdle{display:none}
 .pidleIcon{font-size:30px;opacity:.55}
 .pidleTxt{font-size:12px;line-height:1.7}
-/* ★영상만 남는 높이를 먹는다(2026-08-16 사장님 "미리보기쪽 높이는 스크롤 없이").
-   예전엔 폭 기준 9:16 고정이라 300px 폭 → 533px 높이가 되어, 아래 진행바·자르기·
-   자막·안내를 더하면 칸을 넘어 스크롤바가 생겼다. 이제 세로 공간이 모자라면 영상이
-   먼저 줄고(min-height:0), 가로는 비율을 지켜 가운데 선다. */
+/* ★영상은 **칸 폭을 꽉 채운다** — 크기가 1순위(2026-08-17 사장님 "최대로 키워 자꾸
+   건들지말고"). 2026-08-16엔 반대로 "스크롤 없이"를 1순위로 두고 flex:1 1 0으로 남는
+   높이에 맞췄는데, 아래에 진행바·시간·자르기·자막·안내가 쌓여 영상이 폭 197px까지
+   쪼그라들었다(실측 캡처). 이제 폭 고정(width:100%) + 9:16이라 높이가 따라오고,
+   세로가 모자라면 #playerhost가 스크롤한다 — 작아지는 것보다 스크롤이 낫다는 판단. */
 #player #vidbox{position:relative;background:#000;border-radius:6px;overflow:hidden;
-        /* ★flex:1 + aspect-ratio를 함께 쓰면 높이가 0으로 붕괴한다(실측). 높이를 먼저
-           주고(자리 확보) 비율은 max-width로 지킨다 — 세로가 모자라면 폭이 준다. */
-        flex:1 1 0;min-height:120px;max-width:100%;aspect-ratio:9/16;margin:0 auto;
+        flex:0 0 auto;width:100%;aspect-ratio:9/16;margin:0 auto;
         cursor:pointer}   /* 화면 클릭 = 정지/재생(2026-08-15) */
 #player .phead{cursor:default}   /* 오른쪽 칼럼에 고정됐다 — 더는 끌어 옮길 필요가 없다 */
 #player video{width:100%;height:100%;border-radius:6px;background:#000;display:block;aspect-ratio:9/16;object-fit:contain;position:absolute;inset:0}
@@ -284,7 +285,12 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
 #subbox{margin-top:6px;min-height:56px;font-size:18px;line-height:1.5;font-weight:700;
   background:#000a;border-radius:6px;padding:8px 10px;word-break:keep-all;text-align:center}
 /* 구간 이동 진행바(2026-08-15 사장님 "미리보기 켜질 때 구간이동") */
-#seek{width:100%;margin:8px 0 0;accent-color:var(--accent);cursor:pointer;display:block}
+/* ★진행바를 두툼하게(2026-08-17) — 얇으면 마우스로 잡기가 어렵다(시니어 원칙) */
+#seek{width:100%;margin:8px 0 0;accent-color:var(--accent);cursor:pointer;display:block;height:20px}
+/* 재생 시간 0:03 / 0:39 — 진행바 바로 아래, 오른쪽 정렬 */
+#ptime{font-size:12px;color:var(--dim);text-align:right;margin-top:2px;
+  font-family:ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;min-height:16px}
+#ptime b{color:var(--ink);font-size:13px}
 /* 지금 재생 중인 컷의 카드 — "컷 4/4"가 어느 장면인지 필름에서 바로 보인다 */
 .item.playing{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
 #subbox .subtag{font-size:10px;color:var(--accent);font-weight:600;margin-bottom:3px}
@@ -345,7 +351,7 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
       <input type="checkbox" onchange="toggleOne(this.checked)"> 1장=1컷</label>
     <button type="button" id="ttsBtn" class="act" style="padding:3px 10px;font-size:11.5px"
             onclick="makeTts()" title="음성이 없는 칸의 음성을 만듭니다(1~2분)">🔊 음성 만들기</button>
-    <span class="tbhint" id="tbhint">조각을 누르면 그 칸이 재생됩니다 · 주황 = 재료가 모자라 늘어난 컷</span>
+    <span class="tbhint" id="tbhint">조각을 누르면 그 조각만 · 아래 대본을 누르면 그 칸 전체가 재생됩니다 · 주황 = 재료가 모자라 늘어난 컷</span>
   </div>
   <div class="tbrow" id="tbrow"></div>
 </div>
@@ -361,6 +367,8 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
       <div class="phead"><b>미리보기</b> <span class="x" onclick="stopPlay()">닫기 ✕</span></div>
       <div id="vidbox" onclick="togglePause(event)"></div>
       <input type="range" id="seek" min="0" max="1000" value="0" oninput="seekInput(this.value)">
+      <!-- 재생 시간(2026-08-17 사장님 "미리보기에 영상길이표시") — scene_play.js paintTime()이 채운다 -->
+      <div id="ptime"></div>
       <div id="trimbar" style="display:none"></div>
       <div id="subbox"></div>
       <audio id="bgaudio"></audio>
@@ -838,8 +846,9 @@ function renderBand(){
              ondragend="itemDragEnd()"
              ondragover="if(dragFrom){event.preventDefault();event.dataTransfer.dropEffect='move';}"
              ondrop="bandDrop(${i}, '${c.seg_id}', event)"
-             ondblclick="event.stopPropagation();dropCutFromBand(${i}, '${c.seg_id}')"
-             title="${segMark(c.seg_id)} = 영상 ${srcNo(c.seg_id)}의 ${segNo(c.seg_id)}번째 조각 · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 끌어서 순서 바꾸기 · 아래 소스로 끌면 빼기 · 두 번 클릭도 빼기">
+             onclick="bandCutClick('${c.seg_id}', event)"
+             ondblclick="event.stopPropagation();clearTimeout(clickTimer);dropCutFromBand(${i}, '${c.seg_id}')"
+             title="${segMark(c.seg_id)} = 영상 ${srcNo(c.seg_id)}의 ${segNo(c.seg_id)}번째 조각 · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 누르면 이 조각만 미리보기 · 끌어서 순서 바꾸기 · 아래 소스로 끌면 빼기 · 두 번 클릭도 빼기">
              <img src="${SL.thumb(c.seg_id)}" loading="lazy"><span class="n">${segMark(c.seg_id)}</span><span class="s">${c.dur.toFixed(1)}</span
              ><input type="checkbox" class="pk" title="빼려면 체크 — 여러 장 고르고 위 [고른 것 빼기]를 누르세요"
                     ${isPicked(i, c.seg_id) ? 'checked' : ''}
@@ -1171,6 +1180,16 @@ function clickPlay(sid, ev){
   if (ev) ev.stopPropagation();
   clearTimeout(clickTimer);
   clickTimer = setTimeout(() => playSegInCard(sid), 230);
+}
+// ★타임프레임 조각(.tbcut) 클릭 = **그 조각만** 미리보기에서 재생(2026-08-17 사장님
+//   "조각 한 장면을 누르면 그안에서 미리보기 재생 / 아래 대본부분을 클릭하면 훅 전체장면").
+//   예전엔 조각을 눌러도 부모(.tbeat)로 버블해 **칸 전체**가 재생돼, 한 컷만 보고 싶을 때
+//   방법이 없었다. 대본(.tbsay)·칸 여백은 그대로 부모로 버블 = 칸 전체 재생(기존 그대로).
+//   두 번 클릭(빼기)과 겹치지 않게 소스 카드와 **같은 규칙**으로 230ms 기다린다.
+function bandCutClick(sid, ev){
+  if (ev) ev.stopPropagation();
+  clearTimeout(clickTimer);
+  clickTimer = setTimeout(() => playSegHere(sid), 230);
 }
 let palDrag = null;                  // 지금 끌고 있는 팔레트 장면
 function palDragStart(sid, ev){
@@ -1718,6 +1737,44 @@ async function boot(){
   else if (DATA.picks && (DATA.picks.lists || []).length) setMode('pick');
   else { initLists(); render(); }
   if (SL.server) pollPhash();
+  wireBandPan();
+}
+
+// ── 타임프레임 좌우 끌기(2026-08-17 사장님 "마우스로 잡고 오른쪽 왼쪽 끌어당기면
+//    좌우스크롤 이동 되게") ────────────────────────────────────────────────────────
+// 칸이 18개라 아래 스크롤바를 정확히 집어야만 옆으로 갈 수 있었다. 이제 띠의 **빈 자리**를
+// 잡고 끌면 따라온다.
+// ★조각(.tbcut)·버튼·체크박스·편집칸 위에서는 걸지 않는다 — 거기엔 이미 각자의 조작이
+//   있다(조각 끌기=순서 바꾸기, 두 번 클릭=빼기). 그 위에서 pan을 켜면 기존 기능이 죽는다.
+// ★끌고 난 뒤의 click은 삼킨다 — 안 그러면 손을 떼는 순간 그 칸이 재생된다.
+function wireBandPan(){
+  const row = document.getElementById('tbrow');
+  if (!row || row._panWired) return;
+  row._panWired = true;
+  let on = false, x0 = 0, left0 = 0, moved = 0;
+  const skip = t => !t || (t.closest && t.closest('.tbcut, button, input, label, [contenteditable="true"]'));
+  row.style.cursor = 'grab';
+  row.addEventListener('pointerdown', e => {
+    if (e.button !== 0 || skip(e.target)) return;
+    on = true; moved = 0; x0 = e.clientX; left0 = row.scrollLeft;
+    row.style.cursor = 'grabbing';
+    row.setPointerCapture(e.pointerId);
+  });
+  row.addEventListener('pointermove', e => {
+    if (!on) return;
+    const dx = e.clientX - x0;
+    if (Math.abs(dx) > moved) moved = Math.abs(dx);
+    row.scrollLeft = left0 - dx;
+  });
+  const end = e => {
+    if (!on) return;
+    on = false; row.style.cursor = 'grab';
+    try{ row.releasePointerCapture(e.pointerId); }catch(err){}
+  };
+  row.addEventListener('pointerup', end);
+  row.addEventListener('pointercancel', end);
+  // 4px 넘게 끌었으면 '끈 것'이지 '누른 것'이 아니다 → 칸 재생을 막는다(캡처 단계).
+  row.addEventListener('click', e => { if (moved > 4){ e.stopPropagation(); e.preventDefault(); moved = 0; } }, true);
 }
 boot();
 </script></body></html>

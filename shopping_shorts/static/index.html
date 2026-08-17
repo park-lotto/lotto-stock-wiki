@@ -419,6 +419,21 @@ body.is-admin .blockbtn{display:inline-block}
         </div>
       </div>
     </details>
+    <!-- 기간 탭(2026-08-17) — 정렬 탭과 다른 축이다. 여기는 '어느 기간을 볼까',
+         아래는 '무엇으로 줄세울까'. 데이터는 이미 받아둔 것이라 추가 크롤 0. -->
+    <div class="tabs" id="spanTabs" style="margin-bottom:8px">
+      <span class="tab-grp">기간</span>
+      <div class="tab active" data-span="0" title="마지막 수집분 — 48시간 안에 올라온 새 릴스">🆕 방금 들어온 것</div>
+      <div class="tab" data-span="7" title="최근 7일 수집분 중 댓글 500개 넘은 것 — 이미 받아둔 데이터라 새로 긁지 않습니다">🔥 이번 주 터진 것</div>
+      <div class="tab" data-span="30" title="최근 30일 중 댓글 1000개 넘은 것">👑 이번 달 명예의전당</div>
+      <div class="tab" data-span="-1" title="지금까지 모아둔 20만 건 중 댓글 1만개 넘은 것 — 새로 긁지 않습니다">🏆 역대 히트작</div>
+      <!-- 역대 탭에서만 뜨는 문턱 버튼. 아카이브엔 카테고리가 없어 아래 걸러내기는 안 걸린다. -->
+      <span id="arcThresh" style="display:none;align-self:center;margin-left:10px;font-size:12px">
+        <button class="arcT" data-min="10000">1만+</button>
+        <button class="arcT" data-min="3000">3천+</button>
+        <button class="arcT" data-min="1000">1천+</button>
+      </span>
+    </div>
     <div class="tabs" id="tabs">
       <span class="tab-grp">강도 지표</span>
       <div class="tab active" data-tab="comments" title="오늘 늘어난 조회수(직전 수집 대비 증가분) 순 — 매일 순위가 바뀝니다">📊 전체</div>
@@ -1868,16 +1883,59 @@ async function doCensus(){
   };
   setTimeout(poll, 2000);
 }
+// 기간 탭 상태(2026-08-17). 0=마지막 수집분(종전 동작), 7·30=이미 받아둔 이력에서 터진 것.
+// 30일은 문턱을 1000으로 올린다 — 500으로 두면 692건이라 '명예의전당'이 안 된다(실측).
+// SPAN_DAYS: 0=마지막 수집분, 7·30=기간별 히트, -1=역대 히트작(누적 아카이브)
+let SPAN_DAYS = 0;
+let ARC_MIN = 10000;                 // 역대 탭 문턱(1만+ 기본). 실측 1,235건
+const _SPAN_MIN_COMMENTS = {7: 500, 30: 1000};
+
 async function loadLast(){
-  const d = await (await fetch("/api/reference?platform="+PLATFORM)).json();
+  let url = "/api/reference?platform="+PLATFORM;
+  if(SPAN_DAYS < 0){
+    url += "&archive=1&min_comments="+ARC_MIN;
+  } else if(SPAN_DAYS > 0){
+    url += "&days="+SPAN_DAYS+"&min_comments="+(_SPAN_MIN_COMMENTS[SPAN_DAYS]||500);
+  }
+  const d = await (await fetch(url)).json();
   STATE.items = d.items || [];   // 결과 없어도 무조건 갈아끼움 — 이전 플랫폼 카드 잔존 방지
   render();
-  if(STATE.items.length){
-    document.getElementById("status").textContent=`마지막 수집: ${fmtTime(d.collected_at)}`;
+  const st = document.getElementById("status");
+  if(!STATE.items.length){
+    st.textContent = SPAN_DAYS !== 0
+      ? "이 조건에 맞는 영상이 없습니다."
+      : "아직 수집 결과가 없습니다. (관리자 수집 대기)";
+  } else if(SPAN_DAYS < 0){
+    st.textContent = `역대 · 댓글 ${ARC_MIN.toLocaleString()}개 이상 ${STATE.items.length}건 (새로 긁지 않음)`;
+  } else if(SPAN_DAYS > 0){
+    st.textContent = `최근 ${SPAN_DAYS}일 · 댓글 ${(_SPAN_MIN_COMMENTS[SPAN_DAYS]||500).toLocaleString()}개 이상 ${STATE.items.length}건`;
   } else {
-    document.getElementById("status").textContent="아직 수집 결과가 없습니다. (관리자 수집 대기)";
+    st.textContent = `마지막 수집: ${fmtTime(d.collected_at)}`;
   }
 }
+
+// 기간 탭 클릭 — 서버를 다시 부르는 이유: 7·30일 데이터는 마지막 수집분에 없다(다른 테이블).
+document.addEventListener("click", (e)=>{
+  const t = e.target.closest("#spanTabs .tab");
+  if(!t) return;
+  document.querySelectorAll("#spanTabs .tab").forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");
+  SPAN_DAYS = parseInt(t.dataset.span || "0", 10);
+  // 문턱 버튼은 역대 탭에서만 — 기간 탭은 문턱이 고정이라 보여줄 게 없다
+  const th = document.getElementById("arcThresh");
+  if(th) th.style.display = (SPAN_DAYS < 0) ? "inline-block" : "none";
+  loadLast();
+});
+
+// 역대 탭 문턱 전환(1만/3천/1천)
+document.addEventListener("click", (e)=>{
+  const b = e.target.closest("#arcThresh .arcT");
+  if(!b) return;
+  ARC_MIN = parseInt(b.dataset.min || "10000", 10);
+  document.querySelectorAll("#arcThresh .arcT").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");
+  loadLast();
+});
 function goComment(sc){ location.href = '/outreach?focus=' + encodeURIComponent(sc); }
 async function copyLink(url, btn){
   try{ await navigator.clipboard.writeText(url); }
@@ -2276,6 +2334,30 @@ async function lensCnSearch(shortcode, idx){
     _lensRerender(shortcode);   // 형제 fetchLensYt·fetchLensCnKeywords와 동일한 늦은응답 가드
   }
 }
+// 📷🎵▶ 여기서 찾기 — 인스타·틱톡·유튜브를 한국어 검색어로 돌려 이 페이지 안에 합류.
+// lensCnSearch(샤오홍슈·도우인)의 형제다. 다른 건 **검색어 언어(ko)와 엔드포인트**뿐이라
+// 담기키·중복제거·늦은응답 가드는 같은 규약을 그대로 따른다(형제끼리 어긋나면 안 된다).
+async function lensKwSearch(shortcode, idx){
+  const st=LENS_STATE[shortcode]; if(!st || st.kwSearching) return;
+  const cand=(st.cnCands||[])[idx]; const ko=cand && (cand.ko||cand.zh); if(!ko) return;
+  st.kwSearching=true; st.kwSearchKw=ko; _lensRerender(shortcode);
+  try{
+    const fd=new FormData();
+    fd.append('keyword', ko);
+    fd.append('max_results', 8);
+    const d=await (await fetch('/api/lens/kw/search',{method:'POST',body:fd})).json();
+    const st2=LENS_STATE[shortcode]; if(!st2) return;
+    const got=(d.items||[]);
+    got.forEach(i=>{ if(!i.savesc) i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); });
+    const have=new Set((st2.items||[]).map(i=>i.savesc));
+    st2.items.push(...got.filter(i=>i.savesc && !have.has(i.savesc)));
+    st2.kwCost=(d.meta&&Object.values(d.meta).reduce((a,m)=>a+((m&&m.cost_usd)||0),0))||0;
+  }catch(e){ /* 실패해도 렌즈 나머지는 정상 */ }
+  finally{
+    const st3=LENS_STATE[shortcode]; if(st3) st3.kwSearching=false;
+    _lensRerender(shortcode);
+  }
+}
 // 🔄 다른 검색어 — 같은 프레임으로 비전에 다시 묻되 '이미 본 것 빼고'를 넘긴다.
 // 검색어가 렌즈 열 때마다 복불복으로 바뀌던 걸(2026-08-14 사장님) 쌓아가는 방식으로 바꾼 것.
 // Gemini 무료쿼터만 쓴다 — Apify·SerpApi 비용 0(후보는 '링크 여는 버튼'일 뿐).
@@ -2663,7 +2745,8 @@ function renderLens(shortcode){
             ${c.zh?`<button onclick="lensCnSearch('${shortcode}',${idx})" ${st.cnSearching?'disabled':''} title="샤오홍슈·도우인 결과를 이 페이지 안에 카드로 바로 불러옵니다(외부 이동 없음)" style="${lnk};cursor:pointer;border:1px solid var(--line);background:transparent">📕🎬 여기서 찾기</button>
             <a href="${xhs}" target="_blank" rel="noopener" title="샤오홍슈 사이트에서 열기" style="${lnk};opacity:.6">↗</a>
             <a href="${dy}" target="_blank" rel="noopener" title="도우인 사이트에서 열기" style="${lnk};opacity:.6">↗</a>`:''}
-            ${kw?`<a href="${tk}" target="_blank" rel="noopener" style="${lnk}">🎵 틱톡</a>
+            ${kw?`<button onclick="lensKwSearch('${shortcode}',${idx})" ${st.kwSearching?'disabled':''} title="인스타·틱톡·유튜브 결과를 이 페이지 안에 카드로 바로 불러옵니다(외부 이동 없음)" style="${lnk};cursor:pointer;border:1px solid var(--line);background:transparent">📷🎵▶ 여기서 찾기</button>
+            <a href="${tk}" target="_blank" rel="noopener" style="${lnk}">🎵 틱톡</a>
             <a href="${ig}" target="_blank" rel="noopener" title="인스타는 '${_igKw(kw)}'로 엽니다 — 지어낸 조합은 결과가 0건이라 실제 쓰는 말로 줄입니다" style="${lnk}">📷 인스타</a>
             ${_igShortKw(kw)?`<a href="${_lensSearchUrl('instagram', _igShortKw(kw))}" target="_blank" rel="noopener" title="인스타에서 결과가 없을 때 — '${_igShortKw(kw)}' 한 단어로 넓게 봅니다" style="${lnk};opacity:.75">📷 짧게</a>`:''}`:''}</div>`;
         }).join('')}

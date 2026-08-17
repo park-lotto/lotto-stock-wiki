@@ -311,6 +311,7 @@ function stopPlay(){
   const v = vid(); if (v) v.pause();
   clearInterval(posTimer);
   const sk = document.getElementById('seek'); if (sk) sk.value = 0;
+  const pt = document.getElementById('ptime'); if (pt) pt.textContent = '';
   document.querySelectorAll('.item.playing').forEach(el => el.classList.remove('playing'));
   updatePlayBtns();
   document.getElementById('player').classList.remove('on');
@@ -426,9 +427,10 @@ function startSeq(clips, slot0){
   // 진행바 갱신 — 끌고 있는 동안(seekDrag)은 안 덮어쓴다.
   clearInterval(posTimer);
   posTimer = setInterval(() => {
-    if (seekDrag) return;
+    if (seekDrag){ paintTime(); return; }   // 끌 때도 시간 글자는 따라온다(진행바만 안 덮어쓴다)
     const el = document.getElementById('seek'), tot = seqTotal();
     if (el && tot) el.value = Math.round(Math.min(1, curT() / tot) * 1000);
+    paintTime();
   }, 120);
   updatePlayBtns();
   step();
@@ -524,6 +526,19 @@ let seekDrag = false, posTimer = null;
   window.addEventListener('pointerup', () => { seekDrag = false; });
 })();
 function seqTotal(){ return seqBounds.length ? seqBounds[seqBounds.length - 1][1] : 0; }
+// ── 재생 시간 표시(2026-08-17 사장님 "미리보기에 영상길이표시") ──────────────────────
+// 진행바만 있고 숫자가 없어 "지금 몇 초인지 / 이게 몇 초짜리인지"를 알 수 없었다.
+// #ptime 요소가 있는 화면에서만 그린다 — 없으면 조용히 아무것도 안 한다(옛 화면 무해).
+function fmtT(s){
+  s = Math.max(0, s || 0);
+  return Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+}
+function paintTime(){
+  const el = document.getElementById('ptime'); if (!el) return;
+  const tot = seqTotal();
+  if (!seq.length || !tot){ el.textContent = ''; return; }
+  el.innerHTML = `<b>${fmtT(Math.min(curT(), tot))}</b> / ${fmtT(tot)}`;
+}
 function curT(){
   if (!seq.length) return 0;
   if (seqBeat != null) return audio().currentTime || 0;   // 음성이 시계(자막과 같은 기준)
@@ -552,7 +567,21 @@ function seekTo(t){
     // ★브라우저가 아직 버퍼 안 된 구간 시크를 조용히 당겨 앉힌다(첫 재생 직후 실측:
     //   6.5초 요청 → 5.7초 안착). 음성이 시계이므로 **실제 앉은 지점**을 다시 읽어
     //   그 시각 기준으로 컷·영상을 맞춘다 — 안 그러면 화면과 음성·자막이 어긋난다.
-    if (Math.abs(a.currentTime - t) > 0.05) t = a.currentTime;
+    // ★단 **시킹이 끝난 뒤에만** 읽는다(2026-08-17 사장님 "시간을 마우스로 이동시키는게
+    //   안된다"). currentTime을 넣은 **직후**엔 아직 seeking 중이라 브라우저가 옛 값을
+    //   그대로 돌려준다 — 그걸 t로 되받으면 방금 끈 위치가 통째로 버려지고 화면이
+    //   원래 자리로 돌아온다. 그래서 이동이 아예 안 먹는 것처럼 보였다.
+    if (!a.seeking && Math.abs(a.currentTime - t) > 0.05){
+      t = a.currentTime;
+    } else if (a.seeking){
+      // 시킹이 끝난 뒤 실제 안착점이 많이 다르면(버퍼 없음) 그때 한 번만 다시 맞춘다.
+      // 두 번째 호출은 seeking이 false라 여기로 다시 들어오지 않는다(무한루프 없음).
+      const want = t;
+      a.onseeked = () => {
+        a.onseeked = null;
+        if (!seekDrag && Math.abs(a.currentTime - want) > 0.25) seekTo(a.currentTime);
+      };
+    }
   }
   let k = seqBounds.findIndex(([x, y]) => t >= x && t < y);
   if (k < 0) k = seq.length - 1;
@@ -572,6 +601,7 @@ function seekTo(t){
   }
   if (seq[k + 1]) seat(seq[k + 1]);              // 다음 컷 미리 앉히기(step과 동일)
   paintCut();
+  paintTime();                                   // 끄는 동안에도 숫자가 바로 따라온다
 }
 
 // ── 미리보기 정지/재생·창 옮기기(2026-08-15 사장님 "화면 누르면 정지 재생 / 화면 이동") ──

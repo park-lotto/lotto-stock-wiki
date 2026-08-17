@@ -232,6 +232,15 @@ YOUTUBE_MAX_PER_KW = 50     # 키워드당 검색 상한(YouTube API 한 호출 
 RESULTS_PER_CHANNEL = 3    # 채널당 최신 상한
 ONLY_NEWER_THAN = "2 days" # Apify 날짜필터 (창 + 여유)
 
+# 채널 등급제(2026-08-17) — 과거 성적으로 방문 주기를 가른다. 상세·실측근거: channel_tier.py
+# 기본 OFF: 로직은 서버 실데이터로 검증했지만 수집 경로 통과는 미검증이라, 라이브에서
+# 하루 돌려보고 켠다(feedback_no_unverified_flag_in_live — 미검증 플래그 라이브 점화 사고).
+# 켜기: /etc/shopping-shorts.env 에 REFERENCE_TIER=1
+REFERENCE_TIER = os.getenv("REFERENCE_TIER", "") in ("1", "true", "on")
+# 재료가 부족하면 A를 넓힌다 — 코드 수정·재배포 없이 되돌릴 수 있게 env로 뺀다.
+REFERENCE_TIER_HIT_COMMENTS = int(os.getenv("REFERENCE_TIER_HIT_COMMENTS", "500"))
+REFERENCE_TIER_HIT_COUNT = int(os.getenv("REFERENCE_TIER_HIT_COUNT", "2"))
+
 # 벤치마킹 엑셀 채널 수 상한(2026-07-13, 비용 관리용). ⚠️ 2026-07-22 활동성 선별로
 # 전환하며 선별에서 미사용 — 팔로워 컷 대신 활동성(최근 업로드)으로 거른다. 기존
 # cap_channels/merge_tracked 테스트 보존용으로 상수만 남긴다.
@@ -324,3 +333,10 @@ COUPANG_PROFILE_DIR = os.getenv("COUPANG_PROFILE_DIR", "")
 
 # 도우인 로그인 세션(Playwright storage_state). 없으면 CN 검색은 Apify로 폴백한다.
 DOUYIN_SESSION_PATH = os.getenv("DOUYIN_SESSION_PATH", "/home/ubuntu/douyin_session.json")
+# 틱톡 로그인 세션(Playwright storage_state). 없으면 키워드 검색은 Apify로 폴백한다.
+# ★2026-08-17 서버 실측 — 막는 것은 IP가 아니라 **세션**이다:
+#   프록시(kr)로 검색 페이지·`/api/search/general/full/` 모두 200으로 도달하는데,
+#   응답 **본문이 비어** 있고 화면엔 로그인 모달과 "문제가 발생했습니다"가 뜬다.
+#   즉 샤오홍슈(세션 있음 → 무료 성공)와 도우인(세션 없음 → Apify)의 차이와 같다.
+#   이 파일이 생기는 순간 kw_search가 자동으로 무료 경로를 먼저 타고 비용이 0이 된다.
+TIKTOK_SESSION_PATH = os.getenv("TIKTOK_SESSION_PATH", "/home/ubuntu/tiktok_session.json")
