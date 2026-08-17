@@ -46,7 +46,8 @@ from shopping_shorts.channels import load_channels, username_from_url, merge_tra
 from shopping_shorts import video_analysis
 from shopping_shorts.video_analysis import (analyze_video, translate_keyword, cn_search_keyword,
                                             cn_search_keyword_vision, judge_same_product,
-                                            cn_search_candidates, expand_search_keywords)
+                                            cn_search_candidates, expand_search_keywords,
+                                            subject_tags_vision)
 from shopping_shorts.product_identify import fetch_lens_lines, identify_product_from_lines
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts import coupang_partners
@@ -55,7 +56,7 @@ from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, 
                                           _source_video_id, resynth_tts_job, resynth_one_beat,
                                           run_clean_sources, _resolve_sources)
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
-from shopping_shorts import douyin_search, xiaohongshu_search
+from shopping_shorts import cn_search, douyin_search, xiaohongshu_search
 from shopping_shorts import youtube_search
 from shopping_shorts.config import APIFY_TOKENS
 from shopping_shorts.media_download import (resolve_media_url, download_any, probe_grab_meta,
@@ -77,6 +78,7 @@ from shopping_shorts.video_assemble import _probe_duration, _effective_dur, _TRI
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
 from shopping_shorts import frame_extract, scene_assets, scene_cut
 from shopping_shorts import effect_match, remotion_render, points
+from shopping_shorts import keycrypt, keyroute, pricing      # BYOK(사용자 키·포인트). points는 위에서 이미 import
 from shopping_shorts import video_assemble
 from shopping_shorts import seo_generate, seo_probe
 from shopping_shorts import pattern_bank
@@ -146,7 +148,13 @@ _TIKTOK_COST_PER_ITEM = 0.0017
 _TIKTOK_LANG_KINDS = {"ko", "en", "ja", "zh", "ru"}   # 키워드 시드의 언어코드 kind
 
 # ── 렌즈(SerpApi Google Lens) 유사영상 발굴 (2026-07-14) ──
-_LENS_MONTH_LIMIT_PER_KEY = 100   # SerpApi 무료 계정당 100회/월
+# SerpApi 계정당 월 한도. ★실측값이다(2026-08-16, account API로 직접 확인):
+#   키1 플랜 250회 · 키2 플랜 250회 → 계정당 250회.
+#   예전 값 100은 실제와 달라, 우리 카운터가 200에 닿으면 **아직 300회가 남았는데도**
+#   렌즈를 막았다. 플랜이 바뀌면 이 값도 같이 고쳐야 한다
+#   (더 정확한 방법: https://serpapi.com/account?api_key= 로 실잔량을 읽는 것.
+#    지금은 렌즈 호출 경로에 매번 왕복을 더하고 싶지 않아 상수로 둔다 — 환경변수로 조절).
+_LENS_MONTH_LIMIT_PER_KEY = int(os.environ.get("LENS_MONTH_LIMIT_PER_KEY", "250"))
 
 
 def _lens_month_limit(store):
@@ -1695,6 +1703,9 @@ def api_extract_script(request: Request, shortcode: str):
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 대본 추출 횟수를 다 썼어요. 결제하면 더 쓸 수 있어요."})
+    _denied = _charge_or_402(cid, pricing.OP_SCRIPT, keyroute.SVC_GEMINI)
+    if _denied:
+        return _denied
     global_incr_and_alert("script")
     ok = False
     try:
@@ -1730,6 +1741,7 @@ def api_extract_script(request: Request, shortcode: str):
     finally:
         if not ok:
             refund_credit(cid, "script")   # 실패·미달 → 크레딧 되돌림(전역 하드캡이 재시도 남용을 캡)
+            _refund_points(cid, pricing.OP_SCRIPT, keyroute.SVC_GEMINI)
 
 
 def _backfill_extract_structure(db_path, shortcode, full_text):
@@ -1872,6 +1884,9 @@ def api_produce_extract_from_url(request: Request, body: dict, background_tasks:
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 대본 추출 횟수를 다 썼어요. 결제하면 더 쓸 수 있어요."})
+    _denied = _charge_or_402(cid, pricing.OP_SCRIPT, keyroute.SVC_GEMINI)
+    if _denied:
+        return _denied
     global_incr_and_alert("script")
     ok = False
     try:
@@ -1911,6 +1926,7 @@ def api_produce_extract_from_url(request: Request, body: dict, background_tasks:
     finally:
         if not ok:
             refund_credit(cid, "script")
+            _refund_points(cid, pricing.OP_SCRIPT, keyroute.SVC_GEMINI)
 
 
 def _relearn_category(db_path, category):
@@ -2285,40 +2301,10 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         #   그래서 "어느 대본을 씨앗으로 골랐냐"가 결과를 좌우했다(사장님: "하나의 대본을
         #   지정하면 편협하게 나온다 / 사용자는 뭐가 좋은 대본인지 모르고 잘못 고르면 낭패").
         #   담긴 것을 전부 넣으면 그 복불복 자체가 사라진다.
-        # ★타입을 믿지 마라(work_id 사고와 같은 유형): job_id도 클라이언트 값이라
-        #   문자열이 아닐 수 있다 — dict가 오면 .strip()에서 500, 대본이 통째로 안 나온다.
-        _jid = body.get("job_id")
-        _jid = _jid.strip() if isinstance(_jid, str) else ""
-        _job = store.get_mix_job(_jid) if _jid else None
-        # 옛 작업이라 스냅샷에 장면 태깅이 없으면 캐시에서 보충한다 —
-        # 이게 없으면 사장님이 1단계부터 다시 담아야 새 재료가 붙는다.
-        _job = _enrich_job_extract(_job, store)
-        # ★3단계를 아직 안 돌렸으면 job이 없다 — 그때는 **담긴 영상 전부**를 직접 모은다
-        #   (2026-08-16). 안 그러면 재료가 씨앗 1편으로 줄어 모델이 나머지를 지어낸다.
-        # ★타입을 믿지 마라(2026-08-16 내 실사고): body는 클라이언트가 주는 값이라
-        #   work_id가 문자열이 아닐 수 있다. 그대로 .strip()을 불러 500이 났고
-        #   사장님 화면엔 '네트워크 오류'만 떴다 — 재료 보강은 있으면 좋은 것이지
-        #   대본 생성을 막을 이유가 전혀 없다.
-        _wid = body.get("work_id")
-        _wid = _wid.strip() if isinstance(_wid, str) else ""
-        if not (_job or {}).get("extract") and _wid:
-            try:
-                _wex = _extract_from_work(_wid, _cid(request), store)
-            except Exception:  # noqa: BLE001 — 재료 보강 실패가 생성을 막지 않는다
-                _wex = None
-            if _wex:
-                _job = dict(_job or {}, extract=_wex)
-        _src = _sources_for_generate(it, _job)
-        # ★제품 재료 주입(2026-08-16) — 이 작업에 연결된 쿠팡 상품에서 미리 긁어둔
-        #   스펙·리뷰가 있으면 프롬프트에 얹는다. 없으면 ''이라 기존 경로 그대로(회귀 0).
-        #   여기서 긁지 않는다 — 수집은 /api/product/facts/collect가 미리 해둔다(2~3분).
-        _facts_block = _facts_block_for_job(_jid, store)
-        # ★1단계 장면 태깅을 대본에도 준다(2026-08-17). label=이 장면이 무엇인가,
-        #   use_point=이 장면을 어디에 어떻게 써먹나. 지금까지는 화면 붙일 때(edit_plan)만
-        #   쓰고 대본 생성엔 안 실렸다 — 재료를 반만 쓰고 있었다.
-        _scene_block = _scene_points_block(_job)
-        if _scene_block:
-            _facts_block = (_facts_block + "\n\n" + _scene_block) if _facts_block else _scene_block
+        # 재료 조립은 `_materials_for_generate`가 한 곳에서 정한다(0순위-B) —
+        # [바꾸기] 부분 재생성(/api/script/beat/regen)도 **같은 함수**를 쓴다.
+        _src, _facts_block, _job, _jid, _scene_block = _materials_for_generate(
+            it, body, store, _cid(request))
         _styled = script_generate.generate_by_styles(
             _src, _picked, target_seconds=body.get("target_seconds") or 30,
             bank_context=_bank_ctx, facts_block=_facts_block)
@@ -2676,6 +2662,9 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
+    _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI)
+    if _denied:
+        return _denied
     global_incr_and_alert("render")
     job_id = uuid.uuid4().hex[:12]
     # render_charge_day: '오늘 render를 과금했다'는 표식(+환불할 날짜). run_mix_job이 실패하면 딱
@@ -2808,6 +2797,9 @@ def api_mix_candidate_clone(request: Request, body: dict):
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
+    _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI)
+    if _denied:
+        return _denied
     global_incr_and_alert("render")
     urls = src.get("urls") or []
     new_id = uuid.uuid4().hex[:12]
@@ -2846,6 +2838,150 @@ def api_set_vmake_key(body: dict):
 def api_get_vmake_key():
     key = Store(DB_PATH).get_setting("vmake_api_key", "")
     return {"ok": True, "configured": bool(key)}      # 원문은 노출하지 않음
+
+
+# ─────────────────────────────────────────────────────────────────────
+# BYOK — 사용자가 자기 API 키를 등록하면 포인트를 안 깎는다 (2026-08-17)
+#
+# ★위 /api/settings/vmake_key 와 헷갈리지 마라. 저건 **사장님 전역 키**(회사 부담)이고
+#   아래는 **고객별 키**다. 둘 다 살아있어야 한다 — keyroute.keys_for가 사용자 키가
+#   없을 때 전역 키로 내려간다(keyroute._owner_vmake_key).
+#
+# ★평문은 GET으로 절대 안 나간다. list_customer_keys가 key_enc를 아예 안 싣고,
+#   평문 경로는 keyroute.keys_for(→get_customer_keys_plain) 하나뿐이다.
+# ─────────────────────────────────────────────────────────────────────
+
+def _probe_user_key(service: str, key: str) -> bool:
+    """등록된 키가 실제로 도는가. 판정만 하고 예외를 밖으로 안 흘린다.
+
+    ★gemini는 comment_gen._probe_key_alive(REST)를 그대로 쓴다 — SDK models.list는
+      살아있는 키도 전부 실패로 만든다(2026-08-07 실측, comment_gen.py:95 주석).
+      같은 판단을 여기 또 적으면 어긋난다(CLAUDE.md 0순위-B).
+    ★vmake는 형식만 본다. 실호출이 크레딧을 먹으므로 '확인' 버튼이 돈을 쓰면 안 된다.
+    """
+    if service == keyroute.SVC_GEMINI:
+        from shopping_shorts.comment_gen import _probe_key_alive
+        return _probe_key_alive(key)
+    if service == keyroute.SVC_VMAKE:
+        return ":" in key           # ak:sk 형식. 실호출 안 함(크레딧 소모)
+    if service == keyroute.SVC_ELEVENLABS:
+        url, kw = "https://api.elevenlabs.io/v1/user", {"headers": {"xi-api-key": key}}
+    elif service == keyroute.SVC_YOUTUBE:
+        url = ("https://www.googleapis.com/youtube/v3/videos"
+               f"?part=id&id=dQw4w9WgXcQ&key={urllib.parse.quote(key)}")
+        kw = {}
+    else:
+        raise ValueError(f"모르는 service: {service!r}")
+    try:
+        return requests.get(url, timeout=10, **kw).status_code == 200
+    except requests.RequestException:
+        # ★네트워크 실패는 '검증 실패'라는 판정이지 버그 은폐가 아니다.
+        #   requests 예외만 잡는다 — 코드 오류(TypeError 등)까지 삼키면 원인을 못 찾는다.
+        return False
+
+
+def _svc_or_err(body: dict):
+    """(service, 에러응답) — 모르는 값이면 (None, 422 응답).
+
+    ★그냥 받으면 customer_keys에 영영 안 쓰이는 쓰레기 행이 쌓인다.
+    ★이 파일은 HTTPException을 안 쓴다(app.py:4486 주석) — JSONResponse로 맞춘다."""
+    service = (body.get("service") or "").strip()
+    if service not in keyroute.SERVICES:
+        return None, JSONResponse(status_code=422, content={
+            "ok": False, "error": f"모르는 서비스입니다 (가능: {', '.join(keyroute.SERVICES)})"})
+    return service, None
+
+
+@app.get("/api/settings/keys")
+def api_list_keys(request: Request):
+    """등록된 키 목록. ★label(마스킹)만 나가고 평문·암호문은 안 나간다."""
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    return {"ok": True, "enabled": keycrypt.enabled(),
+            "keys": store.list_customer_keys(cid)}
+
+
+@app.post("/api/settings/keys")
+def api_add_keys(request: Request, body: dict):
+    """키 등록. gemini만 여러 개를 한 번에 받는다.
+
+    ★gemini 외에는 쪼개지 않는다 — vmake는 'ak:sk' 한 덩어리라 구분자로 자르면
+      반쪽짜리 키 두 개가 저장되고, 화면엔 등록된 것처럼 보이는데 실제로는 안 된다."""
+    if not keycrypt.enabled():
+        # 평문 저장으로 조용히 폴백하지 않는다(keycrypt.py 주석과 같은 원칙).
+        return JSONResponse(status_code=503, content={
+            "ok": False, "error": "키 저장이 설정되지 않았습니다 (관리자 문의)"})
+    service, err = _svc_or_err(body)
+    if err:
+        return err
+    raw = (body.get("key") or "").strip()
+    if not raw:
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "키를 입력하세요"})
+
+    if service == keyroute.SVC_GEMINI:
+        parts = [p.strip() for p in re.split(r"[\s,]+", raw) if p.strip()]
+    else:
+        parts = [raw]
+
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    added = sum(1 for p in parts if store.add_customer_key(cid, service, p))
+    return {"ok": True, "added": added, "keys": store.list_customer_keys(cid)}
+
+
+@app.post("/api/settings/keys/delete")
+def api_delete_key(request: Request, body: dict):
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    # store가 customer_id를 DELETE 조건에 넣는다 → id만 알아도 남의 키는 못 지운다.
+    store.delete_customer_key(cid, int(body.get("id") or 0))
+    return {"ok": True, "keys": store.list_customer_keys(cid)}
+
+
+@app.post("/api/settings/keys/verify")
+def api_verify_keys(request: Request, body: dict):
+    """등록한 키가 실제로 도는지 확인하고 status를 박는다.
+
+    ★keyroute.keys_for로 가져온다 — '어떤 키를 쓰는가'의 판단처가 하나여야
+      "확인은 통과했는데 정작 다른 키로 돈다"가 안 생긴다."""
+    service, err = _svc_or_err(body)
+    if err:
+        return err
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    # 키 목록 자체는 아래에서 id와 짝으로 다시 받는다 — 여기선 '내 키인가'만 본다.
+    _keys, is_user = keyroute.keys_for(store, cid, service)
+    if not is_user:
+        # 사장님 키는 고객이 검증할 대상이 아니다(남의 키 상태를 알려줄 이유도 없다).
+        return {"ok": True, "results": [], "keys": store.list_customer_keys(cid)}
+
+    # ★id와 평문을 짝으로 받는다 — 화면 목록과 zip으로 맞추면 복호 실패한 행이
+    #   평문 쪽에서만 빠져 순서가 밀리고 **엉뚱한 키에 상태가 박힌다**(0순위-B).
+    labels = {r["id"]: r["label"] for r in store.list_customer_keys(cid, service)}
+    results = []
+    for key_id, plain in store.get_customer_keys_with_id(cid, service):
+        alive = _probe_user_key(service, plain)
+        store.set_customer_key_status(key_id, "ok" if alive else "bad")
+        # ★평문은 안 싣는다. 화면은 label로 어느 키인지 알아본다.
+        results.append({"id": key_id, "label": labels.get(key_id, ""), "ok": alive})
+    return {"ok": True, "results": results, "keys": store.list_customer_keys(cid)}
+
+
+@app.get("/api/settings/points")
+def api_points(request: Request):
+    """잔액·단가표·최근 사용내역. ★전부 화면용 단위로 바꿔서 내보낸다 —
+    내부값(포인트×100)을 그대로 주면 5P가 500으로 보인다."""
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    ops = (pricing.OP_VMAKE, pricing.OP_MIX, pricing.OP_TTS,
+           pricing.OP_LENS, pricing.OP_SCRIPT)
+    history = [{**h, "delta": pricing.to_display(h["delta"])}
+               for h in store.points_history(cid, 20)]
+    return {"ok": True,
+            "balance": pricing.to_display(points.balance(store, cid)),
+            "prices": {op: pricing.to_display(pricing.cost(store, op)) for op in ops},
+            "history": history}
 
 
 @app.get("/api/settings/smart_mix")
@@ -2893,6 +3029,21 @@ def _user_facing_error(msg):
         if any(k in low for k in keys):
             return friendly
     return "처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요."
+
+
+def _script_hash(text):
+    """대본의 지문 — "이 job이 지금 화면의 대본으로 만들어진 것인가"만 판별한다.
+
+    ★프론트(produce.html `_scriptHash`)와 **같은 규칙이어야 한다**(0순위-B: 짝으로
+      움직이는 값). 규칙이 어긋나면 항상 '바뀐 것'으로 보여 매칭이 무한 재실행되고,
+      매칭은 과금(render 1회 차감)이라 그대로 요금이 된다.
+    규칙: 앞뒤 공백 제거 + 줄바꿈 정규화(CRLF→LF) + 줄별 끝공백 제거 → sha1 앞 16자.
+    (줄 끝 공백·CRLF는 편집기·저장 경로에 따라 저절로 생겼다 사라진다. 그걸로
+     "대본이 바뀌었다"고 보면 안 된다 — 사람이 보기에 같은 글이면 같아야 한다.)
+    """
+    s = (text or "").replace("\r\n", "\n").replace("\r", "\n").strip()
+    s = "\n".join(line.rstrip() for line in s.split("\n"))
+    return hashlib.sha1(s.encode("utf-8")).hexdigest()[:16] if s else ""
 
 
 @app.get("/api/mix/status/{job_id}")
@@ -2983,6 +3134,10 @@ def api_mix_status(job_id: str, request: Request):
             # 지금 고른 후보(2026-07-30). 다른 단계 갔다 돌아온 복원 경로가 카드를 원래 선택 상태로
             # 다시 그리는 데 쓴다. 아직 아무것도 안 골랐으면 None → 프론트가 recommended를 따른다.
             "selected_index": (job.get("edit_plan") or {}).get("candidate_index"),
+            # ★이 job이 어떤 대본으로 매칭됐는지의 지문(2026-08-17). 3단계가 들어올 때마다
+            #   화면 대본과 대조해 **바뀌었으면 자동으로 다시 붙이려고** 쓴다(사장님 결정 A).
+            #   원문을 실으면 응답만 무거워진다 — 같은지 다른지만 알면 되므로 해시로 보낸다.
+            "script_hash": _script_hash(job.get("given_script") or ""),
             "candidates": candidates}
 
 
@@ -3466,8 +3621,24 @@ def api_mix_scene_lab_data(job_id: str):
         if _v and _b:
             src_brief[_v] = _b
     caps, tts_dur = _lab_captions(plan)
+    # ★소재 종류(2026-08-17 사장님 "레시피 틀로 고정돼서 재료·반죽 준비 이런 게 들어왔다").
+    #   실험실 팔레트 머리글이 요리 전용으로 하드코딩돼 있어, 젤펜 영상인데도
+    #   '🥣 재료·반죽 준비 · 섞기·짜기'가 떴다(실측 job 202377f690d9: 소스 4개 전부 cat=기타).
+    #   판정을 새로 만들지 않는다 — 추출이 이미 붙여둔 카테고리를 그대로 넘겨
+    #   화면이 그에 맞는 머리글을 고르게 한다(scene_lab.html GROUPS_BY_CAT).
+    _cats = []
+    for _u in (job.get("urls") or []):
+        try:
+            _row = Store(DB_PATH).wiki_category_for_url(_u)
+        except Exception:      # noqa: BLE001 — 라벨 하나 때문에 실험실이 안 열리면 안 된다
+            _row = None
+        if _row:
+            _cats.append(_row)
+    # 다수결(소스가 섞이면 제일 많은 쪽). 하나도 못 찾으면 ""(화면이 중립 라벨로 간다).
+    category = max(set(_cats), key=_cats.count) if _cats else ""
     return {"ok": True, "data": {
         "job_id": job_id,
+        "category": category,
         "beats": plan.get("beats") or [],
         "urls": job.get("urls") or [],
         "src_brief": src_brief,
@@ -3602,7 +3773,12 @@ def api_mix_scene_lab_fill(job_id: str, body: dict):
         # 음성이 아직 없으면 tts 실길이가 None이다 — 그때는 계획 길이로 대신한다.
         _caps, _tts = _lab_captions(job["edit_plan"])
         need = (_tts or {}).get(str(bi)) or beats[bi].get("target_seconds")
-    picks = _edit_plan.fill_beat_scenes(narration, need, seg_map, pool, taken_ids=sorted(taken))
+    # ★칸의 역할(훅·CTA·결과…)을 함께 넘긴다(2026-08-17 사장님 "훅부터 기준이 뭘로 한 건지").
+    #   대사만으로는 감정·상황을 말하는 훅에 아무 화면이나 붙는다 — 역할을 알아야
+    #   "훅엔 시선 끄는 완성품"처럼 고를 수 있다(edit_plan._ROLE_WANT_SHOTS).
+    picks = _edit_plan.fill_beat_scenes(narration, need, seg_map, pool,
+                                        taken_ids=sorted(taken),
+                                        role=beats[bi].get("role") or "")
     return {"ok": True, "picks": picks}
 
 
@@ -3792,6 +3968,63 @@ def api_mix_tts_regen(job_id: str, beat_idx: int, body: dict, background_tasks: 
             override[k] = body.get(k)
     background_tasks.add_task(resynth_one_beat, job_id, beat_idx, override, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True}
+
+
+@app.post("/api/mix/scene_lab/{job_id}/narration/{beat_idx}")
+def api_mix_scene_lab_narration(job_id: str, beat_idx: int, body: dict,
+                                background_tasks: BackgroundTasks):
+    """3단계(장면 편집)에서 **대본을 그 자리에서 고친다** — 2026-08-17 사장님
+    "3단계에서 대본 몇 글자 수정하려고 2단계로 갔다 오는 방법밖에 없나".
+
+    없어서 못 하던 게 아니라 **저장할 곳이 없었다**: 화면(scene_lab.html)엔 편집 장치가
+    다 있었는데(NARR/editNarr/retts) 라이브에선 `SL.server`로 잠겨 있었고, 안내는
+    "① 새 대본 고르기에서"를 가리키는데 그 UI는 9단계 개편에서 display:none 이 됐다
+    (produce.html `#mixScriptPick`). 즉 앱 어디에서도 대본을 못 고치는 상태였다.
+
+    ★새로 만든 건 이 저장구멍 하나뿐이다. 음성·자막 재생성은 **이미 있는**
+    `resynth_one_beat`을 그대로 쓴다(그 함수가 beat["narration"]을 읽어 TTS를 다시 만들고
+    cap_durs·cap_lead·tts_ver까지 갱신한다). 자막 분할을 여기서 다시 계산하지 않는다 —
+    두 벌이 되면 렌더와 반드시 어긋난다(0순위-B).
+
+    body = {"text": "고친 대본", "regen": true}
+      regen=false면 문장만 저장한다(음성은 옛것 → 자막·소리가 어긋난 채로 남으므로
+      화면이 경고를 띄운다). 기본은 True — 고쳤으면 다시 뽑는 게 정상 흐름이다.
+    """
+    text = (body.get("text") or "").strip()
+    if not text:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "대본이 비었어요"})
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    # /apply·tts_regen과 **같은 가드**. 진행 중 잡의 대본을 바꾸면 만들던 음성과 어긋난다.
+    if job.get("status") in _MIX_ACTIVE_STAGES + ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409,
+                            content={"ok": False, "error": "생성·렌더 중에는 대본을 고칠 수 없어요"})
+    plan = job["edit_plan"]
+    beat = next((b for b in plan["beats"] if b["beat_idx"] == beat_idx), None)
+    if beat is None:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "비트 없음"})
+    if text == (beat.get("narration") or "").strip():
+        return {"ok": True, "unchanged": True}
+    beat["narration"] = text
+    # ★대본이 바뀌면 옛 문장 기준으로 계산된 자막 타이밍은 **전부 무효**다. 지워야
+    #   _lab_captions·렌더가 새 문장으로 다시 계산한다(안 지우면 옛 구절 수에 맞춰
+    #   zip이 잘려 자막이 중간에서 끊긴다).
+    beat["cap_durs"] = None
+    beat["cap_lead"] = 0.0
+    # AI가 미리 끊어준 호흡 줄도 옛 문장 것이라 버린다 — 안 버리면 _caption_segments가
+    # preset을 대조(공백 무시 일치)에서 떨어뜨려 조용히 규칙 폴백으로 내려간다.
+    beat["caption_lines"] = None
+    store.update_mix_job(job_id, edit_plan=plan)
+    if body.get("regen") is False:
+        return {"ok": True, "saved": True, "regen": False}
+    # 음성·자막 다시 뽑기 = 이미 있는 경로. voice는 job 스냅샷을 그대로 물려준다
+    # (통째로 새 dict를 만들면 이 비트만 소리가 달라진다 — tts_regen 주석과 같은 이유).
+    background_tasks.add_task(resynth_one_beat, job_id, beat_idx,
+                              dict(job.get("voice") or {}), DB_PATH, _MIX_WORK_DIR)
+    return {"ok": True, "saved": True, "regen": True,
+            "tts_ver": beat.get("tts_ver") or 0}
 
 
 @app.post("/api/mix/caption_offset/{job_id}/{beat_idx}")
@@ -4858,6 +5091,9 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 렌즈 검색 횟수를 다 썼어요. 결제하면 더 쓸 수 있어요."})
+    _denied = _charge_or_402(cid, pricing.OP_LENS, keyroute.SVC_GEMINI)
+    if _denied:
+        return _denied
     global_incr_and_alert("lens")
     try:
         raw = await frame.read()
@@ -4884,6 +5120,7 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
         return {"ok": True, "items": items, "count": len(items), "diag": diag}
     except Exception:
         refund_credit(cid, "lens")   # 업로드·검색 실패 → 예약한 크레딧 되돌림(성공한 검색만 과금)
+        _refund_points(cid, pricing.OP_LENS, keyroute.SVC_GEMINI)
         raise
 
 
@@ -5015,6 +5252,9 @@ def api_lens_trace_url(request: Request, body: dict):
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 렌즈 검색 횟수를 다 썼어요. 결제하면 더 쓸 수 있어요."})
+    _denied = _charge_or_402(cid, pricing.OP_LENS, keyroute.SVC_GEMINI)
+    if _denied:
+        return _denied
     global_incr_and_alert("lens")
     ok = False
     try:
@@ -5049,6 +5289,7 @@ def api_lens_trace_url(request: Request, body: dict):
     finally:
         if not ok:
             refund_credit(cid, "lens")
+            _refund_points(cid, pricing.OP_LENS, keyroute.SVC_GEMINI)
 
 
 # 캡션 → 중국 플랫폼 검색어. 구글렌즈는 시각검색이라 키워드가 없지만 샤오홍슈/도우인은
@@ -5192,60 +5433,123 @@ async def api_lens_kw_expand(request: Request, keyword: str = Form(""),
 @app.post("/api/lens/cn/search")
 async def api_lens_cn_search(request: Request, keyword: str = Form(""),
                               max_results: int = Form(8)):
-    """중국어 검색어 1개 → 샤오홍슈+도우인 병렬 검색. Gemini 안 부름(후보는 사람이 고름).
-    프론트가 후보 버튼 클릭 시 호출한다(2026-07-19)."""
+    """중국어 검색어 1개 → 샤오홍슈+도우인. **백엔드는 cn_search가 정한다**
+    (Playwright 무료 우선 → 0건이면 Apify 폴백). 2026-08-17 통합.
+
+    프론트는 어느 백엔드가 돌았는지 몰라도 되고, meta로 비용만 표시한다."""
     kw = (keyword or "").strip()
     if not kw:
-        return {"ok": True, "items": [], "count": 0, "keyword": ""}
-    if not APIFY_TOKENS:
-        return {"ok": True, "items": [], "count": 0, "keyword": kw, "note": "APIFY 토큰 없음"}
+        return {"ok": True, "items": [], "count": 0, "keyword": "", "meta": {}}
     n = max(1, min(int(max_results or 8), 60))
+    # ★to_thread 필수 — 백엔드가 Playwright·Apify를 **블로킹**으로 부른다.
+    #   안 하면 이벤트루프가 막혀 다른 렌즈 요청이 전부 굶는다(/api/lens/yt와 같은 이유).
+    res = await asyncio.to_thread(cn_search.search, kw, n)
+    for r in res["items"]:
+        r["match"] = None          # 렌즈 카드 계약(제목 매칭은 프론트가 안 씀)
+    return {"ok": True, **res}
 
-    def _run(platform, mod):
-        try:
-            rows = mod.search(kw, max_results=n)
-        except Exception:
-            return []
-        for r in rows:
-            r["platform"] = platform
-            r["match"] = None
-        return rows
 
-    with ThreadPoolExecutor(max_workers=2) as ex:
-        fx = ex.submit(_run, "xiaohongshu", xiaohongshu_search)
-        fd = ex.submit(_run, "douyin", douyin_search)
-        items = fx.result() + fd.result()
-    return {"ok": True, "items": items, "count": len(items), "keyword": kw}
+def _yt_keywords(subject_result, cn_result, caption):
+    """유튜브 검색어 목록(최대 2개: 기본검색어 + 보조검색어)을 만든다.
+
+    ★실측 A/B(사장님 라이브 썸네일 4건) — cn_search_keyword_vision의 product는
+    샤오홍슈/도우인용 프롬프트라 '제품 특정(색·형태·브랜드)'을 요구해 유튜브에서
+    과도하게 구체적인 복합어가 되어 결과가 없거나(강아지목욕: same0,no5) 엉뚱한
+    영상을 잡았다. subject_tags_vision의 subject는 애초에 "검색어로 이 영상이
+    잡히게" 만드는 게 목표라 전부 개선(수납침대 2→5건, 제모기 no3→no0).
+
+    우선순위: subject → (실패시) product → (실패시) 캡션 앞토큰(_cn_keyword)
+    ★기존 동작(product→캡션 폴백)은 그대로 보존 — subject 쪽이 실패해도 오늘보다
+    나빠지지 않는다.
+    """
+    primary = (subject_result or {}).get("subject", "") or ""
+    primary = primary.strip()
+    if not primary:
+        primary = ((cn_result or {}).get("product") or "").strip()
+    if not primary:
+        primary = _cn_keyword(caption)
+    if not primary:
+        return []
+    keywords = [primary]
+    for kw in (subject_result or {}).get("keywords") or []:
+        kw = (kw or "").strip()
+        if kw and kw != primary:
+            keywords.append(kw)
+            break
+    return keywords
 
 
 @app.post("/api/lens/yt")
 async def api_lens_yt(request: Request, frame: UploadFile = File(None),
-                       source_caption: str = Form(""), max_results: int = Form(40)):
+                       source_caption: str = Form(""), max_results: int = Form(12)):
     """프레임+캡션으로 유튜브를 키워드 검색해 렌즈 결과에 합류할 항목. YouTube Data API라
-    무료(쿼터 내) → 월 호출가드 없음. 검색어는 cn_search_keyword_vision의 product
-    (프롬프트가 '한국어 제품명'을 명시) → 캡션 앞토큰(_cn_keyword) 폴백."""
-    keyword = ""
+    무료(쿼터 내) → 월 호출가드 없음. 검색어는 subject_tags_vision의 subject(★2026-08-17
+    변경 — "검색어로 이 영상이 잡히게"가 목표인 프롬프트라 유튜브에 맞다) → 실패 시
+    cn_search_keyword_vision의 product(기존 동작 그대로 보존) → 캡션 앞토큰(_cn_keyword) 폴백.
+    subject_tags_vision의 keywords 중 subject와 다른 첫 항목으로 보조 검색까지 돌려 커버리지를 넓힌다."""
+    subject_result, cn_result = {}, {}
     if frame is not None:
         try:
             raw = await frame.read()
             # ★ to_thread — 아래 youtube_search와 함께 블로킹 호출이라 루프를 막는다
             #   (/api/lens/cn/keywords와 동시에 돌아야 렌즈가 빨리 뜬다, 2026-08-16)
-            v = await asyncio.to_thread(cn_search_keyword_vision, raw, source_caption)
-            keyword = (v.get("product") or "").strip()
+            subject_result = await asyncio.to_thread(subject_tags_vision, raw, source_caption)
+            if not (subject_result or {}).get("subject"):
+                # 폴백도 비전 1회로 해결 — 프레임을 다시 읽을 필요 없이 같은 raw 재사용
+                cn_result = await asyncio.to_thread(cn_search_keyword_vision, raw, source_caption)
         except Exception:
-            keyword = ""
-    if not keyword:
-        keyword = _cn_keyword(source_caption)
-    if not keyword:
+            subject_result, cn_result = {}, {}
+    keywords = _yt_keywords(subject_result, cn_result, source_caption)
+    if not keywords:
         return {"ok": True, "items": [], "count": 0, "note": "검색어를 만들지 못했습니다"}
-    n = max(1, min(int(max_results or 40), 60))
-    try:
-        rows = await asyncio.to_thread(youtube_search.search, keyword, max_results=n)
-    except Exception:
-        rows = []
+    keyword = keywords[0]
+    # ★상한 12 — 40개는 유튜브만 화면을 도배했다(실측 2026-08-16: 유튜브 43개인데
+    #   틱톡 5·인스타 1·샤오홍슈 0·도우인 1). 아래 채점이 관련도순으로 정렬하므로
+    #   위쪽 12개면 충분하다. 캐시된 옛 화면이 40을 보내도 여기서 잘린다.
+    n = max(1, min(int(max_results or 12), 12))
+    rows = []
+    seen_urls = set()
+    for kw in keywords:
+        if len(rows) >= n:
+            break
+        try:
+            # ★videoDuration=short(4분 미만) + relevanceLanguage=ko (2026-08-16 사장님 제보)
+            #   예전엔 필터가 하나도 없어 일반 롱폼·외국어 영상까지 그대로 딸려왔다
+            #   (실측: 유튜브 43개 vs 틱톡 5·인스타 1·샤오홍슈 0·도우인 1).
+            #   둘 다 API가 공짜로 주는 파라미터라 쿼터·비용은 그대로다.
+            part = await asyncio.to_thread(youtube_search.search, kw, max_results=n,
+                                           duration="short", language="ko")
+        except Exception:
+            part = []
+        for r in part:
+            url = r.get("url")
+            if url in seen_urls:
+                continue
+            seen_urls.add(url)
+            rows.append(r)
+            if len(rows) >= n:
+                break
     for r in rows:
         r["platform"] = "youtube"
         r["match"] = None
+
+    # ★유사도 채점 — 샤오홍슈·도우인(/api/lens/cn/search)엔 원래 있는데 유튜브에만
+    #   빠져 있었다. match가 전부 None이라 프론트의 '⚠️ 다른주제 숨기기'가 유튜브를
+    #   **한 개도 못 걸렀다**(index.html은 match!==false만 거른다). 같은 함수를 그대로 쓴다.
+    #   텍스트 전용 + 가벼운 모델(_TRANSLATE_MODEL) 1회라 비용은 0.5원 안쪽.
+    #   (기본검색어=keyword 기준으로 채점 — 보조검색어로 찾은 결과도 같은 기준으로 잰다)
+    if keyword and rows:
+        try:
+            verdicts = await asyncio.to_thread(
+                judge_same_product, keyword, [r.get("title", "") for r in rows])
+        except Exception:
+            verdicts = []
+        if len(verdicts) == len(rows):
+            for r, vd in zip(rows, verdicts):
+                r["sim"] = vd
+                r["match"] = True if vd == "same" else (False if vd == "no" else None)
+            rank = {"same": 0, "similar": 1, "no": 2}
+            rows.sort(key=lambda r: rank.get(r.get("sim"), 1))   # 관련있는 것부터
     return {"ok": True, "items": rows, "count": len(rows), "keyword": keyword}
 
 
@@ -6775,8 +7079,10 @@ def _is_trial(customer_id, now=None):
 
 
 # ── 유료게이트 비용 방어: 계정별 일일 크레딧 + 전역 상한 ──
-_CREDIT_DEFAULTS = {"lens": 5, "render": 2, "script": 10}
-_CREDIT_PRO_DEFAULTS = {"lens": 100, "render": 10, "script": 200}  # 하루 영상 최대 10개(돌려쓰기 상한, 2026-07-22)
+# 사장님 지시(2026-08-17): 본인 키가 있어도 영상제작·렌즈검색은 하루 10회.
+# 서버 보호 목적이라 포인트와 별개로 유지한다. admin 설정으로 조정 가능.
+_CREDIT_DEFAULTS = {"lens": 10, "render": 10, "script": 10}
+_CREDIT_PRO_DEFAULTS = {"lens": 10, "render": 10, "script": 200}  # 하루 영상 최대 10개(돌려쓰기 상한, 2026-07-22)
 _GLOBAL_CAP_DEFAULTS = {"lens": 200, "render": 100, "script": 400}
 
 
@@ -6841,6 +7147,53 @@ def check_and_count(customer_id, op):
         return False
     st.usage_incr(customer_id, op, day)
     return True
+
+
+def _charge_or_402(customer_id, op, service):
+    """포인트를 깎는다. 부족하면 402 응답을 반환(호출부가 그대로 return).
+    깎을 필요가 없으면(사용자가 자기 키 등록) None.
+
+    ★차감 여부는 keyroute가 정한다 — 여기서 따로 판단하면 어긋난다(0순위-B).
+    ★일일 상한(check_and_count)과 별개다. 상한은 서버 보호, 이건 비용 회수.
+      그래서 상한을 통과한 뒤에도 이걸 또 부른다 — 둘 다 통과해야 실행된다.
+
+    cid 0(사장님 본인)은 keyroute가 개인키 조회를 건너뛰고 사장님 키를 주므로
+    should_charge가 True를 준다. 하지만 자기 키로 자기한테 청구하는 꼴이라
+    과금 대상이 아니다 — mix_pipeline._charge_clean과 같은 판단을 쓴다."""
+    if not keyroute.as_cid(customer_id):
+        return None
+    store = Store(DB_PATH)
+    if not keyroute.should_charge(store, customer_id, service):
+        return None
+    need = pricing.cost(store, op)
+    if points.deduct(store, customer_id, need, op):
+        return None
+    return JSONResponse(status_code=402, content={
+        "ok": False,
+        "error": f"포인트가 부족합니다 (필요 {pricing.to_display(need)}P, "
+                 f"보유 {pricing.to_display(points.balance(store, customer_id))}P)"})
+
+
+def _refund_points(customer_id, op, service):
+    """_charge_or_402가 깎은 포인트를 실패 시 되돌린다 — refund_credit(일일 크레딧)과 대칭.
+
+    ★"성공한 작업만 과금한다"는 기존 규칙을 포인트에도 그대로 적용한다. 크레딧만
+      돌려주고 포인트는 안 돌려주면, 실패한 요청마다 잔액이 조용히 갉힌다.
+    ★깎는 조건과 **같은 조건**으로만 돌려준다(cid 0·사용자 키는 애초에 안 깎았으니
+      환불도 없다). 여기서 따로 판단하면 안 깎은 사람에게 돈이 생긴다(0순위-B).
+    ★핸들러의 finally에서 불리므로 자체 예외를 삼킨다 — 환불 중 DB 락이 나도
+      원래 응답/예외를 가리면 안 된다(refund_credit과 같은 이유)."""
+    try:
+        if not keyroute.as_cid(customer_id):
+            return
+        store = Store(DB_PATH)
+        if not keyroute.should_charge(store, customer_id, service):
+            return
+        points.refund(store, customer_id, pricing.cost(store, op), op)
+    except Exception:
+        import sys as _s
+        import traceback
+        traceback.print_exc(file=_s.stderr)
 
 
 def global_incr_and_alert(op):
@@ -7254,10 +7607,36 @@ def _serve_grab_extension():
     # extension/ 안의 사본은 개발용 편의일 뿐이고, 배포물엔 항상 원본이 들어가야 한다.
     # (두 벌을 손으로 관리하면 반드시 어긋나고, 그럼 확장 사용자만 옛 로직을 쓰게 된다.)
     logic_src = Path(__file__).parent / "userscript" / "grab_logic.js"
+    # ★도우인 메인월드 스크립트(2026-08-17) — manifest가 world:"MAIN"으로 크롬에게 직접
+    # 주입시키는 파일. 격리월드에서 <script>를 만드는 종전 방식은 **확장 자신의 CSP**
+    # ('unsafe-inline' 없음)에 차단됐다(사장님 콘솔 실측: grab_logic.js:716 blocked).
+    # 도우인 CSP가 아니라 확장 CSP였다 — 그래서 world:"MAIN"이면 그 검사를 아예 안 탄다.
+    #
+    # 이 파일을 손으로 관리하지 않는다: grab_logic.js의 _douyinMainWorld 본문을 **그때그때
+    # 잘라내 만든다**. 두 벌을 손으로 두면 반드시 어긋나고, 그러면 도우인만 옛 로직을 쓴다
+    # (0순위-B: 같은 판단을 두 군데 적지 마라).
+    def _douyin_main_js(logic_text: str) -> str:
+        """grab_logic.js에서 _douyinMainWorld 함수를 떼어내 즉시실행 스크립트로 만든다."""
+        head = "  function _douyinMainWorld() {"
+        i = logic_text.find(head)
+        if i < 0:
+            return ""                      # 함수가 사라졌으면 빈 문자열 → zip에 넣지 않는다
+        # 함수 끝 = 같은 들여쓰기(2칸)의 닫는 중괄호 첫 줄
+        rest = logic_text[i + len(head):]
+        end = rest.find("\n  }")
+        if end < 0:
+            return ""
+        body = rest[:end]
+        return ("// ⚠️자동 생성 파일 — 손으로 고치지 마라.\n"
+                "// 원본: userscript/grab_logic.js 의 _douyinMainWorld()\n"
+                "// /grab_extension.zip 이 요청마다 원본에서 다시 잘라 만든다.\n"
+                "// world:\"MAIN\" 으로 크롬이 직접 주입 → 확장 CSP의 인라인 검사를 타지 않는다.\n"
+                "(function () {" + body + "\n})();\n")
     # store/ 는 **웹스토어 제출용 자료**(스크린샷·제출가이드)라 배포물에 넣지 않는다.
     # 넣으면 사용자 zip에 내부 문서와 이미지 수백 KB가 딸려 나간다(2026-08-04 실측으로 발견).
+    # douyin_main.js도 자동 생성물이라 extension/ 안의 사본은 담지 않는다(grab_logic.js와 같은 이유).
     files = sorted(p for p in edir.rglob("*")
-                   if p.is_file() and p.name != "grab_logic.js"
+                   if p.is_file() and p.name not in ("grab_logic.js", "douyin_main.js")
                    and "store" not in p.relative_to(edir).parts)
     stamp = str(max([p.stat().st_mtime_ns for p in files]
                     + [logic_src.stat().st_mtime_ns if logic_src.exists() else 0], default=0))
@@ -7268,7 +7647,11 @@ def _serve_grab_extension():
             for p in files:
                 z.write(p, p.relative_to(edir).as_posix())
             if logic_src.exists():
-                z.writestr("grab_logic.js", logic_src.read_text(encoding="utf-8"))
+                _logic_text = logic_src.read_text(encoding="utf-8")
+                z.writestr("grab_logic.js", _logic_text)
+                _dy = _douyin_main_js(_logic_text)
+                if _dy:
+                    z.writestr("douyin_main.js", _dy)
         cached = (stamp, buf.getvalue())
         _serve_grab_extension._cache = cached
     return Response(
@@ -7807,6 +8190,23 @@ def api_produce_works_get(request: Request, work_id: str):
             "settings": settings}
 
 
+@app.post("/api/produce/works/{work_id}/rename")
+def api_produce_works_rename(request: Request, work_id: str, body: dict):
+    # 작업 이름 바꾸기(2026-08-17) — 목록이 '(제목 없음)' 투성이라 구분이 안 됐다.
+    # ★제목 계산은 store._work_title 한 곳에만 있다(0순위-B). 여기선 이름을 넘길 뿐이다.
+    #   빈 문자열이면 직접 지은 이름을 지워 자동 제목(대본 앞 20자)으로 되돌린다 —
+    #   그래서 name이 없다고 422로 막지 않는다(그게 '해제' 경로다).
+    name = body.get("name")
+    if name is not None and not isinstance(name, str):
+        # ★타입을 확인하고 부른다 — dict가 와서 .strip()이 500을 내던 사고가 이 앱에서
+        #   이미 세 번 났다(handoff/장면라벨.md). 모르는 모양이면 받지 않는다.
+        return JSONResponse(status_code=422, content={"ok": False, "error": "name은 문자열"})
+    title = Store(DB_PATH).rename_produce_work(work_id, name or "", customer_id=_cid(request))
+    if title is None:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    return {"ok": True, "title": title}
+
+
 @app.post("/api/produce/works/{work_id}/delete")
 def api_produce_works_delete(request: Request, work_id: str):
     if not Store(DB_PATH).delete_produce_work(work_id, customer_id=_cid(request)):
@@ -8126,7 +8526,7 @@ def api_produce_autoload(request: Request, body: dict):
     body: {items:[{url, shortcode?, video_url?, name?, thumbnail?, caption?, category?,
                    followers?, comments?}]}
     반환: {ok, results:[{shortcode, status}], added} — status: already|added|skipped_latched|
-          failed_download|failed_empty|failed_limit.
+          failed_download|failed_empty|failed_limit|failed_points(포인트 부족).
     ⚠️ 이 엔드포인트는 **자기 자신이나 프론트 재귀를 유발하지 않는다**. 프론트는 페이지
        로드당 1회만 부르고, 응답 뒤 aipick을 딱 한 번 다시 조회한다."""
     cid = _cid(request)
@@ -8194,6 +8594,12 @@ def api_produce_autoload(request: Request, body: dict):
         # 캐시미스 → 실제 Gemini 비용. 크레딧 확인 후 태운다(실패 시 C단계에서 환불).
         if _global_over_cap("script") or not check_and_count(cid, "script"):
             slots[i] = {"shortcode": code, "status": "failed_limit"}
+            continue
+        # ★여기는 라우트가 아니라 **항목 루프 안**이다 — 402를 그대로 return하면 남은
+        #   영상까지 통째로 죽는다. 포인트가 모자란 항목만 접고 나머지는 계속 돌린다
+        #   (위 failed_limit·skipped_cap과 같은 모양).
+        if _charge_or_402(cid, pricing.OP_SCRIPT, keyroute.SVC_GEMINI):
+            slots[i] = {"shortcode": code, "status": "failed_points"}
             continue
         global_incr_and_alert("script")
         burned += 1
@@ -8301,6 +8707,7 @@ def api_produce_autoload(request: Request, body: dict):
                 store.autoload_mark_error(code, e["error"])
             if e["charged"]:
                 refund_credit(cid, "script")         # 실패는 환불
+                _refund_points(cid, pricing.OP_SCRIPT, keyroute.SVC_GEMINI)
             slots[e["i"]] = {"shortcode": code, "status": e["status"]}
             continue
         if e.get("save_script"):
@@ -8492,6 +8899,9 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
+    _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI)
+    if _denied:
+        return _denied
     global_incr_and_alert("render")
     # 장면 우선 대본 모드(2026-07-20, Task7): produce.html "우리 시스템으로 믹스"는 항상 이 값을
     # true로 보낸다. mix_pipeline._plan_and_tts가 build_scene_first_plan으로 후보 n개를 만들고
@@ -9732,6 +10142,53 @@ def _sources_for_generate(item, job, limit=3):
     return out[:limit]
 
 
+def _materials_for_generate(item, body, store, cid):
+    """대본 생성에 넣을 **재료 한 벌** → (sources, facts_block, job, job_id, scene_block)
+
+    ★왜 함수로 뽑았나(2026-08-17): 원래 이 조립이 `/api/wiki/generate` 안에 통째로
+      적혀 있었는데, [바꾸기] 부분 재생성(`/api/script/beat/regen`)도 **똑같은 재료**가
+      필요해졌다. 두 곳에 각각 적으면 언젠가 반드시 어긋나고(0순위-B), 어긋나면
+      "왜 전체 생성과 [바꾸기] 결과의 결이 다르냐"로 나타난다 — 조용해서 더 나쁘다.
+      한 군데서만 정하게 만든다.
+
+    담기는 것: 담긴 영상 전부(최대 3편) + 쿠팡 상세·리뷰 + 1단계 장면 태깅.
+    ★타입을 믿지 마라(work_id 사고와 같은 유형): job_id·work_id는 클라이언트 값이라
+      문자열이 아닐 수 있다 — dict가 오면 .strip()에서 500이 나고 대본이 통째로 안 나온다.
+    """
+    _jid = body.get("job_id")
+    _jid = _jid.strip() if isinstance(_jid, str) else ""
+    _job = store.get_mix_job(_jid) if _jid else None
+    # 옛 작업이라 스냅샷에 장면 태깅이 없으면 캐시에서 보충한다 —
+    # 이게 없으면 사장님이 1단계부터 다시 담아야 새 재료가 붙는다.
+    _job = _enrich_job_extract(_job, store)
+    # ★3단계를 아직 안 돌렸으면 job이 없다 — 그때는 **담긴 영상 전부**를 직접 모은다
+    #   (2026-08-16). 안 그러면 재료가 씨앗 1편으로 줄어 모델이 나머지를 지어낸다.
+    _wid = body.get("work_id")
+    _wid = _wid.strip() if isinstance(_wid, str) else ""
+    if not (_job or {}).get("extract") and _wid:
+        try:
+            _wex = _extract_from_work(_wid, cid, store)
+        except Exception:  # noqa: BLE001 — 재료 보강 실패가 생성을 막지 않는다
+            _wex = None
+        if _wex:
+            _job = dict(_job or {}, extract=_wex)
+    _src = _sources_for_generate(item, _job)
+    # ★제품 재료 주입(2026-08-16) — 이 작업에 연결된 쿠팡 상품에서 미리 긁어둔
+    #   스펙·리뷰가 있으면 프롬프트에 얹는다. 없으면 ''이라 기존 경로 그대로(회귀 0).
+    #   여기서 긁지 않는다 — 수집은 /api/product/facts/collect가 미리 해둔다(2~3분).
+    _facts_block = _facts_block_for_job(_jid, store)
+    # ★1단계 장면 태깅을 대본에도 준다(2026-08-17). label=이 장면이 무엇인가,
+    #   use_point=이 장면을 어디에 어떻게 써먹나. 지금까지는 화면 붙일 때(edit_plan)만
+    #   쓰고 대본 생성엔 안 실렸다 — 재료를 반만 쓰고 있었다.
+    _scene_block = _scene_points_block(_job)
+    if _scene_block:
+        _facts_block = (_facts_block + "\n\n" + _scene_block) if _facts_block else _scene_block
+    # ★`_scene_block`도 돌려준다 — 호출부가 응답의 `materials.scene_points`(화면에 "장면 N개"로
+    #   표시)를 만들 때 쓴다. 여기서 안 주면 호출부가 `_scene_points_block`을 **한 번 더**
+    #   부르게 되고, 그러면 같은 판단이 두 곳이 된다(0순위-B).
+    return _src, _facts_block, _job, _jid, _scene_block
+
+
 def _extract_from_work(work_id, cid, store):
     """3단계(매칭)를 아직 안 돌린 작업의 **담긴 영상 전부**를 job.extract 모양으로 만든다.
 
@@ -9996,6 +10453,75 @@ def api_script_style_templates(spine_id: int, role: str = None):
             "chars_per_30s": sp.get("chars_per_30s"), "roles": roles, "slots": out}
 
 
+@app.post("/api/script/beat/regen")
+def api_script_beat_regen(request: Request, body: dict):
+    """[바꾸기] — 대본의 **한 칸만** 다시 쓴다(2026-08-17 사장님 B안).
+
+    body: {shortcode, style_id, role, beats:[{role,text}], template?,
+           job_id?, work_id?, target_seconds?, structure?, base_script?, category?}
+
+    ## 왜 이게 필요했나
+
+    지금까지 [바꾸기]는 문장틀을 **원문 그대로** 칸에 꽂았다. 그래서 화면에
+    `이것 때문에 {가족}한테 욕 바가지로 먹을 뻔했어요`처럼 중괄호가 박혔다.
+    설계는 원래 "빈칸은 AI가 이 대본 소재로 채운다"였는데(위 `templates` 주석)
+    **그 채우는 단계가 미구현**이었다(handoff/대본UI2단계.md ⏭ 4번).
+
+    사장님이 B안을 고르셨다 — 빈칸만 치환하는 게 아니라 **틀의 구조만 빌려 그 칸을
+    새로 쓴다**. 빈칸 치환은 한 단어만 바뀌어 "바꿔도 바뀐 느낌이 안 나고"(실측: 미끼
+    틀 4개 중 2개가 슬롯만 다른 같은 문장), 재생성은 같은 틀이라도 매번 다른 문장이
+    나온다. 이게 곧 `[훅만 다시]` 부분 재생성이라 두 기능이 한 벌이 된다.
+
+    ★재료는 `_materials_for_generate`로 **전체 생성과 같은 한 벌**을 쓴다(0순위-B).
+    ★실패를 조용히 넘기지 않는다 — 못 만들면 502로 알려 화면이 "다시 시도"를 띄운다.
+      (반쪽짜리 문장이나 중괄호가 남은 문장을 성공인 척 돌려주면 이 기능의 존재 이유가 없다)
+    """
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    role = (body.get("role") or "").strip()
+    if not role:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "role 필요"})
+    try:
+        style_id = int(body.get("style_id"))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "style_id 필요"})
+    beats = [b for b in (body.get("beats") or []) if isinstance(b, dict)]
+    if not beats:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beats 필요"})
+
+    style = next((s for s in store.list_style_spines(category=None) if s["id"] == style_id), None)
+    if not style:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 스타일"})
+
+    # 재료 — 전체 생성과 같은 경로로 씨앗 항목을 찾는다(위키에 없으면 body 폴백도 동일).
+    shortcode = (body.get("shortcode") or "").strip()
+    it = store.get_wiki_item(shortcode, customer_id=cid) if shortcode else None
+    if not it:
+        _structure = body.get("structure")
+        it = {"structure": _structure if isinstance(_structure, dict) else {},
+              "full_text": body.get("base_script") or "",
+              "category": body.get("category") or ""}
+    _src, _facts_block, _job, _jid, _scene_block = _materials_for_generate(it, body, store, cid)
+
+    _bank_ctx = ""
+    if store.get_setting("ping_pong_enabled", "") == "1":
+        _bank_ctx = bank_assemble.assemble_bank_context(store, it.get("category") or "") or ""
+
+    try:
+        out = script_generate.regen_one_beat(
+            _src, style, role, beats,
+            template=body.get("template") or "",
+            target_seconds=body.get("target_seconds") or 30,
+            bank_context=_bank_ctx, facts_block=_facts_block)
+    except Exception as e:  # noqa: BLE001 — 실패해도 화면이 살아야 한다(원본 문장 유지)
+        print(f"beat regen 실패(style={style_id}, role={role}): {e}")
+        out = None
+    if not out:
+        return JSONResponse(status_code=502, content={
+            "ok": False, "error": "문장을 다시 만들지 못했어요 — 잠시 후 다시 시도해 주세요"})
+    return {"ok": True, **out}
+
+
 @app.post("/api/pattern/spine/status")
 def api_pattern_spine_status(body: dict):
     """스파인 승인/기각. body: {id, status}. 승격게이트(source_count>=3 AND approved)의
@@ -10054,7 +10580,7 @@ except Exception:                                  # noqa: BLE001 — 이 기능
 # 반복됨(2026-07-14 역할배정·사이드바 등 실사고) → 매 요청 서버 재검증 강제.
 _NOCACHE = {"Cache-Control": "no-cache, must-revalidate"}
 for _pg in ("discover", "find", "library", "mix", "outreach", "produce", "collection",
-            "scene_library", "pattern_bank", "longform"):
+            "scene_library", "pattern_bank", "longform", "settings"):
     app.add_api_route(
         f"/{_pg}",
         (lambda n=_pg: FileResponse(_STATIC / f"{n}.html", media_type="text/html",

@@ -3,8 +3,11 @@ tubefactory와의 차별화 핵심(설계문서 §1 참고). 전용 키 풀(comm
 
 comment_gen.py와 같은 SHORTS_GEMINI_KEYS 풀을 사용하므로, 두 모듈은 같은
 shorts_gemini_state.json 상태 파일을 공유해 하루 내 키 소진 추적을 동기화한다."""
+import hashlib
 import json
+import os
 import sys
+import threading
 import time
 from google import genai
 from google.genai import types
@@ -15,6 +18,19 @@ from pipeline.atoms import key_vault
 
 _MODEL = "gemini-3.5-flash"  # 비디오 입력 지원 모델 — "gemini-3-flash"는 실존하지 않는 모델명이었음
 # (2026-07-09 배포 후 실단말 검증 중 404 NOT_FOUND로 발견, 실제 사용 가능 모델 목록에서 확인 후 교체)
+
+# ★렌즈(정지 이미지 1장) 전용 모델 — 영상분석용 _MODEL과 분리한다 (2026-08-16).
+#   _MODEL이 무거운 이유는 **영상 입력**을 받아야 해서다. 렌즈는 프레임 JPEG 한 장만
+#   보내므로 그 무게가 필요 없는데, 같은 파일에 있다는 이유로 딸려 쓰고 있었다.
+#   (_TRANSLATE_MODEL이 같은 이유로 이미 분리돼 있다 — 그 선례를 따른다)
+#
+#   라이브 실측(2026-08-16, 같은 프레임·같은 프롬프트·같은 스키마):
+#     속도   26.2초 → 3.0초   (cn_search_keyword_vision 3회 평균)
+#     비용   1.0122원 → 0.5208원 (입력 토큰 1,308로 동일, 단가가 정확히 절반)
+#     품질   동일 — 둘 다 '에어프라이어 감자칩 / 空气炸锅薯片'
+#     무료한도 하루 20건 → 500건 (키당. 3.5-flash가 25배 빡빡하다)
+#   ⚠️ 이 값을 _MODEL로 되돌리지 마라. 렌즈가 20초씩 걸리고 키가 금방 마른다.
+_LENS_MODEL = "gemini-3.1-flash-lite"
 
 # 5개 언어(2026-07-10, "다른 프로그램보다 정확도 떨어짐" 피드백 대응) — ko/en만
 # 검색에 쓰던 걸 5개어로 확장. zh는 원래도 생성만 하고 검색엔 안 쓰고 있었음
@@ -503,10 +519,93 @@ def fetch_thumb_bytes(url, timeout=15):
         return None
 
 
+# 렌즈 비전 호출 1회의 상한(초). 이걸 넘으면 그 호출을 끊고 다음 키로 재시도한다.
+#
+# ★왜 필요한가 (2026-08-16 라이브 실측): 같은 프레임을 6번 돌렸더니
+#   85.1s / 8.9s / 2.1s / 15.0s / 8.9s / 3.2s 로 **한 번씩 통째로 멈춘다**.
+#   85초짜리도 키를 1번만 집었다 = 재시도·429가 아니라 **단일 왕복이 그냥 안 끝난 것**.
+#   SDK 기본값은 무한대기라 사장님은 그 85초를 그대로 기다리고 있었다.
+#   (같은 성격의 사고: memory `reference_ffmpeg_무한대기` — 외부 도구엔 반드시 timeout)
+_LENS_TIMEOUT_S = float(os.environ.get("LENS_VISION_TIMEOUT", "20"))
+
+
+def _lens_http_options():
+    """google-genai HTTP 옵션 — timeout은 **밀리초**다(초로 주면 20ms가 돼 전부 실패한다)."""
+    return types.HttpOptions(timeout=int(_LENS_TIMEOUT_S * 1000))
+
+
+# ── 렌즈 비전 결과 캐시 (같은 프레임을 두 번 분석하지 않기 위함, 2026-08-16) ──
+#
+# 왜: 렌즈를 한 번 열면 프론트가 /api/lens/yt 와 /api/lens/cn/keywords 를 **동시에** 던지고,
+#     둘 다 같은 프레임으로 같은 비전을 부른다(전자는 cn_search_keyword_vision,
+#     후자는 cn_search_candidates). 그런데 cn_search_candidates 응답에 이미 product가
+#     들어있다 → 한 번만 부르고 나눠 쓰면 호출이 정확히 절반이 된다.
+#
+# ⚠️ 캐시키 함정(memory `reference_캐시키_불일치함정`): 저장 키와 조회 키가 다르면
+#    "캐시가 있는데 한 번도 안 쓰인다"가 조용히 난다. 그래서 키 만드는 곳을
+#    _frame_cache_key() **한 함수로만** 두고 양쪽이 그걸 부른다.
+_LENS_CACHE_TTL_S = 180.0        # 렌즈 한 번 여는 동안만 유효하면 된다
+_LENS_CACHE_MAX = 32
+_lens_cache = {}                 # key → (저장시각, product, zh)
+_lens_cache_lock = threading.Lock()
+
+
+def _frame_cache_key(image_bytes, caption):
+    """프레임+캡션 → 캐시 키. ★저장·조회가 반드시 이 함수를 거친다."""
+    h = hashlib.sha1(image_bytes or b"").hexdigest()
+    return f"{h}:{(caption or '')[:400]}"
+
+
+def _lens_cache_get(key):
+    now = time.time()
+    with _lens_cache_lock:
+        hit = _lens_cache.get(key)
+        if not hit:
+            return None
+        ts, product, zh = hit
+        if now - ts > _LENS_CACHE_TTL_S:
+            _lens_cache.pop(key, None)
+            return None
+        return {"product": product, "zh": zh}
+
+
+def _lens_cache_put(key, product, zh):
+    """product가 있을 때만 저장한다 — 빈 결과를 캐시하면 실패가 TTL 동안 굳는다."""
+    if not (product or "").strip():
+        return
+    with _lens_cache_lock:
+        if len(_lens_cache) >= _LENS_CACHE_MAX:      # 오래된 것부터 버린다
+            for k in sorted(_lens_cache, key=lambda k: _lens_cache[k][0])[:_LENS_CACHE_MAX // 2]:
+                _lens_cache.pop(k, None)
+        _lens_cache[key] = (time.time(), product, zh or "")
+
+
+def _is_timeout_error(e):
+    """이 예외가 '시간 초과'인가. 판정은 **여기 한 곳에서만** 한다 (CLAUDE.md 0순위-B).
+
+    타임아웃은 SDK 버전·전송계층에 따라 httpx.TimeoutException / socket.timeout /
+    TimeoutError 등 여러 타입으로 올라온다. 타입 하나만 잡으면 나머지가 조용히
+    '알 수 없는 오류'로 빠져 재시도 없이 빈 값이 된다 → 타입과 메시지를 같이 본다."""
+    if isinstance(e, TimeoutError):          # socket.timeout·asyncio.TimeoutError의 부모
+        return True
+    name = type(e).__name__.lower()
+    if "timeout" in name:                    # httpx.ReadTimeout·ConnectTimeout 등
+        return True
+    return "timeout" in str(e).lower() or "timed out" in str(e).lower()
+
+
 def cn_search_keyword_vision(image_bytes, caption, max_retries=3, quota_sleep=8):
-    """프레임 이미지(+캡션) → {"product","zh"}. 화면 글자·제품 생김새까지 반영. 실패 시 {}."""
+    """프레임 이미지(+캡션) → {"product","zh"}. 화면 글자·제품 생김새까지 반영. 실패 시 {}.
+
+    ★같은 프레임을 cn_search_candidates가 방금 분석했으면 그 결과를 그대로 쓴다
+      (렌즈 열 때 /api/lens/yt·/api/lens/cn/keywords가 동시에 오는데 둘 다 같은
+       프레임을 본다 — 비전을 두 번 부를 이유가 없다, 2026-08-16)."""
     if not image_bytes or not SHORTS_GEMINI_KEYS:
         return {}
+    ckey = _frame_cache_key(image_bytes, caption)
+    cached = _lens_cache_get(ckey)
+    if cached:
+        return cached
     prompt = _CN_VISION_PROMPT.format(caption=(caption or "(캡션 없음)")[:400])
     for attempt in range(max_retries):
         key, idx = comment_gen._next_live_key_and_idx()
@@ -515,10 +614,11 @@ def cn_search_keyword_vision(image_bytes, caption, max_retries=3, quota_sleep=8)
         try:
             client = _client_for_key(key)
             resp = client.models.generate_content(
-                model=_MODEL,
+                model=_LENS_MODEL,
                 contents=[prompt, types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")],
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
+                    http_options=_lens_http_options(),
                     response_schema={
                         "type": "object",
                         "properties": {"product": {"type": "string"}, "zh": {"type": "string"}},
@@ -527,8 +627,10 @@ def cn_search_keyword_vision(image_bytes, caption, max_retries=3, quota_sleep=8)
                 ),
             )
             data = json.loads(resp.text)
-            return {"product": (data.get("product") or "").strip(),
-                    "zh": (data.get("zh") or "").strip()}
+            product = (data.get("product") or "").strip()
+            zh = (data.get("zh") or "").strip()
+            _lens_cache_put(ckey, product, zh)
+            return {"product": product, "zh": zh}
         except Exception as e:
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
                 comment_gen._mark_key_exhausted(idx)
@@ -539,6 +641,8 @@ def cn_search_keyword_vision(image_bytes, caption, max_retries=3, quota_sleep=8)
                 # 429로 타버렸고, 결과가 조용한 빈 값이라 태거가 0/40건만 찍었다.
                 time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
                 continue
+            if _is_timeout_error(e) and attempt < max_retries - 1:
+                continue          # 멈춘 호출은 버리고 **다른 키로 즉시** 다시 (sleep 없음)
             if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
                 continue
@@ -588,6 +692,7 @@ def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8, exc
     if not image_bytes or not SHORTS_GEMINI_KEYS:
         return empty
     seen = {str(s).strip() for s in (exclude or []) if str(s or "").strip()}
+    seen_initial = bool(seen)   # '🔄 다른 검색어' 재요청인가 (아래 캐시 저장 판단에 쓴다)
     prompt = _CN_CANDIDATES_PROMPT.format(caption=(caption or "(캡션 없음)")[:400])
     if seen:
         prompt += ("\n\n※ 아래 검색어들은 **이미 사용자에게 보여준 것**이다. 이것들과 "
@@ -601,10 +706,11 @@ def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8, exc
         try:
             client = _client_for_key(key)
             resp = client.models.generate_content(
-                model=_MODEL,
+                model=_LENS_MODEL,
                 contents=[prompt, types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")],
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
+                    http_options=_lens_http_options(),
                     response_schema=_CN_CANDIDATES_SCHEMA,
                 ),
             )
@@ -615,7 +721,15 @@ def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8, exc
                 if zh and zh not in seen and (not ko or ko not in seen):
                     cands.append({"ko": ko, "zh": zh})
                     seen.add(zh)          # 같은 응답 안의 중복도 막는다
-            return {"product": (data.get("product") or "").strip(), "candidates": cands}
+            product = (data.get("product") or "").strip()
+            # ★여기서 채워두면 /api/lens/yt가 부르는 cn_search_keyword_vision이
+            #   비전을 다시 안 부르고 이 값을 그대로 쓴다(호출 2회 → 1회).
+            #   ⚠️ exclude(=🔄 다른 검색어)로 온 요청은 캐시에 넣지 마라 —
+            #      그건 '다른 각도'를 뽑는 재요청이라 product가 흔들릴 수 있다.
+            if not seen_initial:
+                _lens_cache_put(_frame_cache_key(image_bytes, caption),
+                                product, cands[0]["zh"] if cands else "")
+            return {"product": product, "candidates": cands}
         except Exception as e:
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
                 comment_gen._mark_key_exhausted(idx)
@@ -626,6 +740,8 @@ def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8, exc
                 # 429로 타버렸고, 결과가 조용한 빈 값이라 태거가 0/40건만 찍었다.
                 time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
                 continue
+            if _is_timeout_error(e) and attempt < max_retries - 1:
+                continue          # 멈춘 호출은 버리고 **다른 키로 즉시** 다시 (sleep 없음)
             if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
                 continue

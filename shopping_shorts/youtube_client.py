@@ -5,6 +5,7 @@
 """
 import re
 import requests
+from shopping_shorts import config
 from shopping_shorts.config import YOUTUBE_API_KEYS
 
 # YouTube URL → video_id 파서
@@ -115,7 +116,21 @@ def _search_page(kw, published_after_iso, max_per_kw, tok, region="KR", lang="ko
     return r.status_code, items
 
 
-def search_shorts(keywords, published_after_iso, max_per_kw=20, token=None, lang="ko"):
+def _tokens_for(customer_id=0):
+    """유튜브 키 — 사용자가 등록했으면 그것만(폴백 없음). 없으면 사장님 풀 그대로.
+
+    ★keyroute가 유일한 판단처다 — 여기서 따로 고르지 마라(0순위-B).
+    cid 0(크론·발굴)이면 config.YOUTUBE_API_KEYS가 그대로 나와 기존 로테이션이
+    안 바뀐다."""
+    from shopping_shorts import keyroute
+    from shopping_shorts.store import Store
+    keys, _ = keyroute.keys_for(Store(config.DB_PATH), customer_id,
+                                keyroute.SVC_YOUTUBE)
+    return keys
+
+
+def search_shorts(keywords, published_after_iso, max_per_kw=20, token=None, lang="ko",
+                  customer_id=0):
     """키워드별로 최신·인기 영상 검색 → 통계 채운 원시 dict 리스트.
 
     lang: 검색 언어(ko/en/ja/zh/ru). 지역(regionCode)은 언어에 매핑(기본 한국/한국어)
@@ -124,8 +139,10 @@ def search_shorts(keywords, published_after_iso, max_per_kw=20, token=None, lang
     쿼터 초과(403) 시 다음 키로 로테이션: 검색 요청이 403이면 그 토큰은
     이후 검색에도 다시 시도하지 않고 다음 토큰으로 전체 검색을 재시도한다.
     모든 토큰이 실패해야 포기(마지막 실패 결과로 빈 처리). 호출부가 명시적으로
-    token=을 넘기면(단일 토큰) 로테이션 없이 그 토큰만 사용하는 기존 동작 유지."""
-    tokens = [token] if token else list(YOUTUBE_API_KEYS)
+    token=을 넘기면(단일 토큰) 로테이션 없이 그 토큰만 사용하는 기존 동작 유지.
+
+    customer_id: 누구 키로 검색하나. 0(기본)=사장님 풀 — 기존 호출부는 안 바뀐다."""
+    tokens = [token] if token else _tokens_for(customer_id)
     if not tokens:
         raise RuntimeError("YOUTUBE_API_KEY 미설정")
     region = _LANG_REGION.get(lang, "KR")
