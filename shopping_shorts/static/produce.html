@@ -3028,6 +3028,13 @@ function _workState(){
           script_from_wiki:STATE.script_from_wiki, step:cur, work_id:WORK_ID,
           hook_inpoint_delta:(STATE.hook_inpoint_delta||0)};   // 3초 훅 미세조정(P1, 서버 render가 읽음)
   if(STATE.title_manual) _st.title_manual = STATE.title_manual;
+  // ★2단계 결과 대본(2026-08-17): 안 실으면 새로고침·재방문 때 S2.drafts가 빈 배열이라
+  //   s2RenderDrafts가 ③밴드를 통째로 display:none 처리한다 = "만든 대본이 사라졌다"
+  //   (사장님 제보). STATE.script는 **확정한 1편의 텍스트뿐**이라 A안·B안·역할 칸(beats)·
+  //   게이트 결과를 되살릴 수 없다 — 그래서 초안 묶음을 따로 싣는다.
+  //   ⚠️ 여기서 만들지 말고 _s2Snapshot() 하나만 쓴다(0순위-B: 담는 모양은 한 곳에서 정한다).
+  const _s2 = (typeof _s2Snapshot === 'function') ? _s2Snapshot() : null;
+  if(_s2) _st.s2 = _s2;
   return _st;
 }
 // 사이드바 ✏가 이름을 바꾸면 이 화면의 STATE에도 심는다(2026-08-17). 안 심으면 위 _workState가
@@ -3044,7 +3051,9 @@ if(typeof window !== 'undefined') window.__ssApplyWorkTitle = _applyWorkTitle;
 async function _pushWork(){
   // 디바운스가 끝난 시점의 **최신** 상태를 보낸다(예약 시점의 스냅샷이 아니다).
   const st = _workState();
-  if(!HANDOFF.length && !st.script) return;
+  // ★saveWork의 가드와 **같은 조건**이어야 한다(0순위-B). 여기만 빠뜨리면 로컬엔 남고
+  //   서버엔 안 올라가 "이 PC에선 보이는데 다른 데선 없다"가 된다.
+  if(!HANDOFF.length && !st.script && !st.s2) return;
   try{
     // ★job_id는 **알 때만** 보낸다(2026-08-03 실사고: 배포 재시작 직후 MIX_JOB이 비어 있는
     //   순간의 자동저장이 null을 보내 서버의 job 연결을 지웠다 — 사장님 작업이 "빈 작업"이 됨.
@@ -3095,7 +3104,10 @@ function saveWork(){
   // 저장을 불렀다 — 영상을 안 담고 대본만 확정한 작업은 저장 자체가 안 됐다. 사장님이 잃어버린 게 그 구간이다.
   // 조건도 넓혔다: 영상이 없어도 **대본이 있으면 작업이다**.
   const st = _workState();
-  if(!HANDOFF.length && !st.script) return;
+  // ★"만든 대본(초안)"도 작업이다(2026-08-17). 2단계에서 대본을 뽑았지만 아직 **확정 전**이면
+  //   st.script는 여전히 ''이라, 영상풀까지 비어 있으면 이 가드가 저장을 통째로 걸렀다 —
+  //   돈 들여 뽑은 초안이 새로고침 한 번에 사라진다(위 2026-07-17 사고와 정확히 같은 모양).
+  if(!HANDOFF.length && !st.script && !st.s2) return;
   try{ sessionStorage.setItem('produce_work', JSON.stringify(st)); }catch(e){}   // 로컬은 즉시
   _markSaving();                                                                 // T8: 편집됨 → 곧 저장
   clearTimeout(_workTimer);
@@ -3213,6 +3225,7 @@ function revertWork(){
   //   title_manual 없는 state를 보내 이름이 자동 제목으로 되돌아간다. 없으면 지운다(옛 값 잔류 금지).
   if(typeof w.title_manual === 'string' && w.title_manual) STATE.title_manual = w.title_manual;
   else delete STATE.title_manual;
+  if(typeof _s2Hydrate === 'function') _s2Hydrate(w);   // ★2단계 결과 대본 복원(스냅샷이 담는 것과 한 쌍)
   if(STATE.script) setScriptMode('manual');
   renderPool(); syncFootageToMixUrls(); refreshFinalPeek();
   const st = w.step;
@@ -3243,6 +3256,7 @@ async function _restoreWork(workId){
   //   title_manual 없는 state를 보내 이름이 자동 제목으로 되돌아간다. 없으면 지운다(옛 값 잔류 금지).
   if(typeof w.title_manual === 'string' && w.title_manual) STATE.title_manual = w.title_manual;
   else delete STATE.title_manual;
+  if(typeof _s2Hydrate === 'function') _s2Hydrate(w);   // ★2단계 결과 대본 복원(스냅샷이 담는 것과 한 쌍)
   if(STATE.script) setScriptMode('manual');
   renderPool(); syncFootageToMixUrls(); refreshFinalPeek();
   // Task4: 서버복원 경로도 AI PICK/빈 상태를 다시 계산한다. typeof 가드 — 이 함수를 앵커
@@ -3686,6 +3700,10 @@ function _consumeProduceHandoff(){
     //   안 되살리면 그 저장이 이름 없는 state를 보내 자동 제목으로 되돌아간다(서버 복원 경로와 동일).
     if(typeof w.title_manual === 'string' && w.title_manual) STATE.title_manual = w.title_manual;
     else delete STATE.title_manual;
+    // ★2단계 결과 대본 복원. 여기(base 복원 블록 안)에 두는 이유: 아래 3718행에
+    //   `!HANDOFF.length && !savedScript` 조기 return이 있어, 뒤에 두면 **대본만 만들고
+    //   아직 확정 안 한 작업**(script='')이 그 return에 걸려 초안을 못 되살린다.
+    if(typeof _s2Hydrate === 'function') _s2Hydrate(w);
   }
   // 2) 신규 핸드오프를 누적(중복 제거: shortcode 우선, 없으면 url). 플래그·대본 보존.
   let arrived=0;
@@ -7349,6 +7367,37 @@ function renderEnrich(d){
 // ★매칭(startProduceMix)은 여기서 안 건다 — 3단계 소관(사양서 §6).
 // ══════════════════════════════════════════════════════════════════════
 const S2 = { seed:null, seeds:[], styles:[], picked:[], drafts:[], curDraft:0, loadedStyles:false };
+// ── 결과 대본 보존 (2026-08-17, 사장님 제보 "믹스까지 했는데 2단계로 오면 대본이 없다") ──
+// S2는 순수 메모리라 새로고침·재방문이면 통째로 초기값이 된다. 저장되는 건 STATE.script
+// (확정한 1편의 텍스트)뿐이라 A안·B안·역할 칸·게이트 결과는 되살릴 길이 없었다.
+// ★담는 모양과 되살리는 모양을 **여기 한 쌍에서만** 정한다 — 복원 경로가 3개(_restoreWork·
+//   _consumeProduceHandoff·revertWork)라 각자 적으면 반드시 어긋난다(0순위-B).
+// ⚠️ styles(카드 목록)는 안 담는다 — s2LoadStyles가 서버에서 다시 읽는 시세성 데이터고,
+//    담으면 옛 스타일 목록이 화면에 굳는다. 담는 건 **사장님이 만든 것**뿐이다.
+function _s2Snapshot(){
+  if(!S2.drafts || !S2.drafts.length) return null;   // 만든 게 없으면 키 자체를 안 만든다
+  return {drafts:S2.drafts, curDraft:S2.curDraft||0, picked:S2.picked||[],
+          materials:S2.materials||null, seed:S2.seed||null};
+}
+// 되살리기. ★없으면 **지운다** — 다른 작업으로 갈아탔는데 앞 작업의 대본이 남아 있으면
+//   그게 곧 2026-07-25 '캐리오버' 사고(옛 대본이 새 영상에 실려 나감)와 같은 모양이 된다.
+function _s2Hydrate(w){
+  const s = (w && w.s2) || null;
+  if(s && s.drafts && s.drafts.length){
+    S2.drafts = s.drafts;
+    S2.curDraft = (typeof s.curDraft === 'number' && s.curDraft >= 0 && s.curDraft < s.drafts.length) ? s.curDraft : 0;
+    S2.picked = Array.isArray(s.picked) ? s.picked : [];
+    S2.materials = s.materials || null;
+    if(s.seed) S2.seed = s.seed;
+  } else {
+    S2.drafts = []; S2.curDraft = 0; S2.picked = []; S2.materials = null;
+  }
+  // 지금 2단계를 보고 있으면 즉시 다시 그린다. 다른 단계면 s2Enter()가 들어올 때 그린다
+  // (showPanel의 cur===8 분기 — 여기서 또 부르면 같은 판단이 두 곳이 된다).
+  if(typeof cur !== 'undefined' && cur === 8 && typeof s2RenderDrafts === 'function'){
+    try{ s2RenderDrafts(); }catch(e){}
+  }
+}
 // 역할 라벨 — 내부값(beat_roles)은 hook/before/reveal/after/cta, 화면 이름은 여기서 붙인다.
 // ★사장님 지시 "재미있게". 모르는 역할은 그 값을 그대로 쓴다(빈 칸으로 두지 않는다).
 const S2_ROLE = {hook:'🎣 미끼', before:'😰 찔림', problem:'😰 찔림', reveal:'💡 반전',
@@ -7559,6 +7608,9 @@ async function s2Generate(){
         +'개 중 '+S2.drafts.length+'개만 만들어졌어요 — 나머지는 생성에 실패했습니다(다시 시도해 보세요)</span>';
     }
     s2RenderDrafts();
+    // ★만들자마자 남긴다(2026-08-17). 여기서 저장 안 하면 확정(s2Confirm) 전에 새로고침한
+    //   순간 **돈 들여 뽑은 대본이 통째로 날아간다** — 사장님 제보의 핵심 경로다.
+    saveWork();
   }catch(e){ if(hint) hint.innerHTML='<span style="color:var(--fire)">네트워크 오류</span>'; }
   finally{ if(btn){ btn.disabled=false; btn.textContent=orig; } }
 }
@@ -7651,7 +7703,7 @@ function s2DraftHtml(dr,i){
     <div class="s2-dfoot"><button class="btn-next" onclick="s2Confirm(${i})">✔ ${String.fromCharCode(65+i)}안으로 확정</button></div>
   </div>`;
 }
-function s2PickDraft(i){ S2.curDraft=i; s2RenderDrafts(); }
+function s2PickDraft(i){ S2.curDraft=i; s2RenderDrafts(); saveWork(); }   // 보던 안도 그대로 돌아오게
 // 문장 편집 — beats가 원본이고 script는 거기서 다시 만든다(두 벌 유지 금지, 0순위-B).
 function s2EditBeat(i,j,el){
   const dr=S2.drafts[i]; if(!dr) return;
@@ -7662,6 +7714,7 @@ function s2EditBeat(i,j,el){
   beats[j].text=(clone.textContent||'').trim();
   dr.beats=beats;
   dr.script=beats.map(b=>b.text).filter(Boolean).join('\n');
+  saveWork();   // ★손으로 고친 문장도 남긴다(디바운스 1초 — 타이핑마다 서버로 안 나간다)
 }
 // [바꾸기] — 그 스타일이 가진 **문장틀**을 준다(은행 완성문장이 아니다: 쌀밥 대본에
 // 삼겹살 훅이 뜨던 문제. 빈칸은 이 대본 소재로 채워 쓴다 — app.py:9288 설명 참조).
@@ -7748,6 +7801,7 @@ async function s2RegenBeat(i,j,tmpl){
     beats[j].text=d.text; dr.beats=beats;
     dr.script=beats.map(b=>b.text).filter(Boolean).join('\n');
     s2RenderDrafts();
+    saveWork();   // ★[바꾸기]로 다시 쓴 칸도 남긴다 — 돈 든 결과다(Gemini 호출)
     toast('이 칸을 다시 썼습니다');
   }catch(e){
     if(tx) tx.textContent=prev;
