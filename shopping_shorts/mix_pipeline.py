@@ -1306,6 +1306,27 @@ def _apply_motion_pack(deco, caption_style, timeline, packs):
     return deco, caption_style
 
 
+def _template_layer(tpl, first_beat_dur=0):
+    """꾸미기 템플릿 → 렌더가 쓸 레이어 dict. 없거나 모르는 id면 None.
+
+    ★span('full'|'first')을 dur(초)로 바꾸는 **유일한 지점**이다(0순위-B).
+    화면은 'first'라고 말하고 렌더는 dur만 안다 — 변환이 두 곳에 생기면 어긋난다.
+    """
+    from shopping_shorts import deco_templates
+    tpl = tpl or {}
+    tid = tpl.get("id")
+    if not tid:
+        return None
+    p = deco_templates.abs_path(tid)
+    if not p or not p.exists():
+        return None
+    out = {"_abspath": str(p), "id": tid, "alpha": tpl.get("alpha", 1)}
+    # 'first'인데 비트 길이를 모르면 전체로 둔다 — dur=0을 주면 화면에서 아예 안 보인다.
+    if tpl.get("span") == "first" and first_beat_dur and first_beat_dur > 0:
+        out["dur"] = float(first_beat_dur)
+    return out
+
+
 def _resolve_cutaway_paths(store, plan, customer_id):
     """비트에 붙은 cutaway asset_id → media_path. 저장위치(match가 쓴 beat['cutaway'])
     = 읽기위치(여기). run_render와 run_preview 둘 다 이걸 써서 미리보기와 최종본이
@@ -1558,6 +1579,17 @@ def run_render(job_id, db_path, work_root):
             op = work / ov["file"]
             if op.exists():
                 deco = {**deco, "overlay": {**ov, "_abspath": str(op)}}
+        # 템플릿은 job 폴더가 아니라 **정적 자산**이다(모두가 같은 12장을 쓴다).
+        # span→dur 변환은 _template_layer 한 곳에서만 한다.
+        _first = 0
+        try:
+            _tb = (job.get("edit_plan") or {}).get("beats") or []
+            _first = float(_tb[0].get("dur") or 0) if _tb else 0
+        except Exception:
+            _first = 0
+        _tl = _template_layer(deco.get("template"), first_beat_dur=_first)
+        if _tl:
+            deco = {**deco, "template": {**(deco.get("template") or {}), **_tl}}
         # 모션 팩: pack_id → 비트 타임라인으로 레이어 생성(렌더 시점에만 알 수 있음)
         # pack_id 없으면 _apply_motion_pack이 무변경으로 통과하므로, 그 경우 불필요한
         # ffprobe 호출(_beat_timeline)을 피한다 — 수동 layers만 쓰는 기존 deco를 위해 필수.
