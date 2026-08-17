@@ -2970,14 +2970,38 @@ function lensPlayInline(shortcode, savesc, img){
   //    **폴백만** 렌즈에 맞게 바꾼다(2026-08-17 사장님 실사용 제보 2건).
   const id=_lensMediaId(it.platform, it.url);
   if(id && it.platform==='youtube')   return playYoutube(img, id);   // 잘 된다(제보 확인)
-  // 틱톡은 프록시로 재생한다 — 직접 CDN 재생이 막혀 세로로 긴 임베드로 떨어졌다(제보).
-  if(id && it.platform==='tiktok')    return _playViaMedia(img, id, 'tiktok', _lensEmbedTiktok, true);
+  // ★틱톡은 서버가 받아준 파일로 재생한다(2026-08-17). 틱톡 mp4 주소는 우리 서버가
+  //   다시 받으면 403(IP·세션 바인딩, 실측)이라 브라우저 직접재생도 /api/video 프록시도
+  //   안 되고 세로로 긴 임베드로 떨어졌다. yt-dlp 다운로드는 되므로(4.4초·353KB) 그걸 쓴다.
+  if(id && it.platform==='tiktok')    return _playViaFile(img, id, 'tiktok', _lensEmbedTiktok);
   if(id && it.platform==='instagram')
     // ★랭킹의 _embedInstagram은 새 탭으로 나간다 — 렌즈에선 "새 페이지로 넘어가고 안 됨"이
     //   된다(제보). 나가지 않고 우리 오버레이(썸네일+원본 링크)로 떨어뜨린다.
     return _playViaMedia(img, id, 'instagram', ()=>lensPreview(shortcode, savesc), true);
   // ③ 그 외(id를 못 뽑는 모양) — 종전 오버레이로 떨어진다(나빠지지 않는다).
   return lensPreview(shortcode, savesc);
+}
+// 서버가 받아둔 파일(/api/play)로 카드 안에서 재생. 실패하면 embedFn으로 떨어진다.
+// 다운로드가 붙으므로 기다리는 표시를 반드시 띄운다(실측 4~5초).
+async function _playViaFile(img, videoId, platform, embedFn){
+  if(!videoId || !img || !img.parentElement) return;
+  const box=img.parentElement;
+  const badge=box && box.querySelector('.play-badge'); if(badge) badge.remove();
+  const _load=_thumbLoading(box);
+  const src='/api/play?platform='+encodeURIComponent(platform)+'&id='+encodeURIComponent(videoId);
+  try{
+    const head=await fetch(src, {method:'GET', headers:{'Range':'bytes=0-1'}});
+    if(_load) _load.remove();
+    if(head.ok || head.status===206){
+      const v=document.createElement('video');
+      v.src=src; v.controls=true; v.autoplay=true; v.playsInline=true;
+      v.setAttribute('playsinline',''); v.className='thumb-video';
+      v.onerror=()=>embedFn(v, videoId);
+      img.replaceWith(v); return;
+    }
+  }catch(e){}
+  if(_load) _load.remove();
+  embedFn(img, videoId);
 }
 // 틱톡 임베드는 세로로 길다. 랭킹용 _embedTiktok은 220px라 렌즈 카드에선 **안쪽 스크롤을
 // 내려서 재생버튼을 눌러야** 했다(2026-08-17 제보). 랭킹 동작은 그대로 두고 렌즈만 키운다.
