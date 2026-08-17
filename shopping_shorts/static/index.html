@@ -2308,6 +2308,30 @@ async function lensCnSearch(shortcode, idx){
     _lensRerender(shortcode);   // 형제 fetchLensYt·fetchLensCnKeywords와 동일한 늦은응답 가드
   }
 }
+// 📷🎵▶ 여기서 찾기 — 인스타·틱톡·유튜브를 한국어 검색어로 돌려 이 페이지 안에 합류.
+// lensCnSearch(샤오홍슈·도우인)의 형제다. 다른 건 **검색어 언어(ko)와 엔드포인트**뿐이라
+// 담기키·중복제거·늦은응답 가드는 같은 규약을 그대로 따른다(형제끼리 어긋나면 안 된다).
+async function lensKwSearch(shortcode, idx){
+  const st=LENS_STATE[shortcode]; if(!st || st.kwSearching) return;
+  const cand=(st.cnCands||[])[idx]; const ko=cand && (cand.ko||cand.zh); if(!ko) return;
+  st.kwSearching=true; st.kwSearchKw=ko; _lensRerender(shortcode);
+  try{
+    const fd=new FormData();
+    fd.append('keyword', ko);
+    fd.append('max_results', 8);
+    const d=await (await fetch('/api/lens/kw/search',{method:'POST',body:fd})).json();
+    const st2=LENS_STATE[shortcode]; if(!st2) return;
+    const got=(d.items||[]);
+    got.forEach(i=>{ if(!i.savesc) i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); });
+    const have=new Set((st2.items||[]).map(i=>i.savesc));
+    st2.items.push(...got.filter(i=>i.savesc && !have.has(i.savesc)));
+    st2.kwCost=(d.meta&&Object.values(d.meta).reduce((a,m)=>a+((m&&m.cost_usd)||0),0))||0;
+  }catch(e){ /* 실패해도 렌즈 나머지는 정상 */ }
+  finally{
+    const st3=LENS_STATE[shortcode]; if(st3) st3.kwSearching=false;
+    _lensRerender(shortcode);
+  }
+}
 // 🔄 다른 검색어 — 같은 프레임으로 비전에 다시 묻되 '이미 본 것 빼고'를 넘긴다.
 // 검색어가 렌즈 열 때마다 복불복으로 바뀌던 걸(2026-08-14 사장님) 쌓아가는 방식으로 바꾼 것.
 // Gemini 무료쿼터만 쓴다 — Apify·SerpApi 비용 0(후보는 '링크 여는 버튼'일 뿐).
@@ -2695,7 +2719,8 @@ function renderLens(shortcode){
             ${c.zh?`<button onclick="lensCnSearch('${shortcode}',${idx})" ${st.cnSearching?'disabled':''} title="샤오홍슈·도우인 결과를 이 페이지 안에 카드로 바로 불러옵니다(외부 이동 없음)" style="${lnk};cursor:pointer;border:1px solid var(--line);background:transparent">📕🎬 여기서 찾기</button>
             <a href="${xhs}" target="_blank" rel="noopener" title="샤오홍슈 사이트에서 열기" style="${lnk};opacity:.6">↗</a>
             <a href="${dy}" target="_blank" rel="noopener" title="도우인 사이트에서 열기" style="${lnk};opacity:.6">↗</a>`:''}
-            ${kw?`<a href="${tk}" target="_blank" rel="noopener" style="${lnk}">🎵 틱톡</a>
+            ${kw?`<button onclick="lensKwSearch('${shortcode}',${idx})" ${st.kwSearching?'disabled':''} title="인스타·틱톡·유튜브 결과를 이 페이지 안에 카드로 바로 불러옵니다(외부 이동 없음)" style="${lnk};cursor:pointer;border:1px solid var(--line);background:transparent">📷🎵▶ 여기서 찾기</button>
+            <a href="${tk}" target="_blank" rel="noopener" style="${lnk}">🎵 틱톡</a>
             <a href="${ig}" target="_blank" rel="noopener" title="인스타는 '${_igKw(kw)}'로 엽니다 — 지어낸 조합은 결과가 0건이라 실제 쓰는 말로 줄입니다" style="${lnk}">📷 인스타</a>
             ${_igShortKw(kw)?`<a href="${_lensSearchUrl('instagram', _igShortKw(kw))}" target="_blank" rel="noopener" title="인스타에서 결과가 없을 때 — '${_igShortKw(kw)}' 한 단어로 넓게 봅니다" style="${lnk};opacity:.75">📷 짧게</a>`:''}`:''}</div>`;
         }).join('')}
