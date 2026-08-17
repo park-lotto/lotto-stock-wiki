@@ -1449,6 +1449,12 @@ async function resumeOverseasStatusIfRunning(){
   }catch(e){ /* 상태 조회 실패는 조용히 무시 — 다음 진입 때 다시 시도 */ }
 }
 
+// ★값이 없어도 화면이 죽지 않게(2026-08-17 실사고). 예전엔 i.speed.toFixed(1)을
+// 무조건 불러, 지표가 없는 기간·역대 탭에서 **첫 카드에서 render가 통째로 죽었다**.
+// 그러면 새 데이터를 받아와도 화면이 이전 상태로 얼어붙어 "탭·지표·카테고리가
+// 전부 안 먹힌다"로 보인다 — 카드 한 장의 결측이 페이지 전체를 멈추면 안 된다.
+function _num(v, d){ return (typeof v === 'number' && isFinite(v)) ? v.toFixed(d) : '—'; }
+function _pct(v){ return (typeof v === 'number' && isFinite(v)) ? (v*100).toFixed(2)+'%' : '—'; }
 function render(){
   let items = STATE.items.slice();
   if(BLOCKED.size) items = items.filter(i=> !BLOCKED.has(_normUser(i.username)));  // 차단 채널은 항상 가린다
@@ -1518,9 +1524,9 @@ function render(){
         <div class="folw"><span title="채널 팔로워(구독자) 수 — 수집이 실어온 실시간 값">👥 팔로워 ${i.followers?i.followers.toLocaleString():'—'}</span>${i.duration!=null?`<span class="dur" title="영상 길이">🎬 ${_fmtDur(i.duration)}</span>`:''}</div>
         ${i.views?`<div class="stat" title="조회수 — 옆의 +숫자는 직전 수집 대비 증가분(= '전체' 탭 정렬 기준)"><span>조회수</span><b>${i.views.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>`:''}
         <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${i.comments.toLocaleString()}${i.views?'':` <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span>`}</b></div>
-        <div class="stat" title="댓글 ÷ 경과시간 — 게시 후 시간당 평균"><span>시간당댓글</span><b>${i.speed.toFixed(1)}</b></div>
-        <div class="stat" title="댓글 ÷ 조회수 — 본 사람 중 댓글 단 비율"><span>조회수당댓글</span><b>${(i.density*100).toFixed(2)}%</b></div>
-        ${i.fan_density?`<div class="stat" title="댓글 ÷ 팔로워수 — 구독자 규모 대비 반응"><span>팔로워당댓글</span><b>${(i.fan_density*100).toFixed(2)}%</b></div>`:""}
+        <div class="stat" title="댓글 ÷ 경과시간 — 게시 후 시간당 평균"><span>시간당댓글</span><b>${_num(i.speed,1)}</b></div>
+        <div class="stat" title="댓글 ÷ 조회수 — 본 사람 중 댓글 단 비율"><span>조회수당댓글</span><b>${_pct(i.density)}</b></div>
+        ${i.fan_density?`<div class="stat" title="댓글 ÷ 팔로워수 — 구독자 규모 대비 반응"><span>팔로워당댓글</span><b>${_pct(i.fan_density)}</b></div>`:""}
         ${i.inpock?`<div style="margin-top:6px"><a href="${i.inpock}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🛒 판매채널</a></div>`:''}
         <div class="actions">
           <div class="btns">
