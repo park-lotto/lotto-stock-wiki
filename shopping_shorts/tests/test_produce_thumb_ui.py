@@ -187,6 +187,123 @@ def test_glow_sets_colored_shadow():
     assert len([c for c in calls if c[0] == "fillText"]) > 1, "겹쳐 그리지 않으면 안 빛난다"
 
 
+# ── 😀 이모지 스티커 레이어 ────────────────────────────────
+
+def _sticker_trace(layers_js):
+    script = _slice_source() + """
+function trace(layers){
+  const calls = [];
+  const ctx = new Proxy({}, {
+    get(t, k){
+      if (k === 'measureText') return () => ({width: 100});
+      if (['save','restore','translate','rotate','drawImage','strokeText','fillText',
+           'fillRect','beginPath','moveTo','lineTo','stroke','quadraticCurveTo','clearRect'].includes(k))
+        return (...a) => calls.push([k, ...a]);
+      return undefined;
+    }, set(t, k, v){ calls.push(['set:' + k, v]); return true; }
+  });
+  drawThumb(ctx, null, layers, 1080, 1920);
+  return calls;
+}
+console.log(JSON.stringify(trace(%s)));
+""" % layers_js
+    return json.loads(_run_node(script))
+
+
+def test_sticker_draws_emoji_at_ratio_position():
+    """스티커도 비율 좌표 계약을 따른다 — x=0.25,y=0.75 → (270, 1440)."""
+    calls = _sticker_trace(
+        "[{kind:'sticker', emoji:'🔥', size:20, x:0.25, y:0.75, rot:0}]")
+    tr = [c for c in calls if c[0] == "translate"]
+    assert tr, "스티커가 안 그려졌다"
+    assert tr[0][1] == pytest.approx(270)
+    assert tr[0][2] == pytest.approx(1440)
+    assert ["fillText", "🔥", 0, 0] in calls
+
+
+def test_sticker_size_is_percent_of_width():
+    """size=20 → 캔버스 폭의 20%(1080*0.2=216px). 프리뷰든 결과든 같은 비율."""
+    calls = _sticker_trace("[{kind:'sticker', emoji:'⭐', size:20, x:0.5, y:0.5, rot:0}]")
+    font = [c[1] for c in calls if c[0] == "set:font"][0]
+    assert font.startswith("216px"), font
+
+
+def test_sticker_skips_text_pipeline():
+    """★스티커는 자동 줄나눔·폭맞춤을 타면 안 된다(글자 레이어에 이모지를 넣으면 공백에서
+    줄이 쪼개져 흩어진다 — 그래서 레이어를 나눈 것). 외곽선·형광펜도 안 그린다."""
+    calls = _sticker_trace("[{kind:'sticker', emoji:'😱', size:18, x:0.5, y:0.5, rot:0}]")
+    names = [c[0] for c in calls]
+    assert "strokeText" not in names, "컬러 이모지엔 외곽선이 안 먹는데 그렸다"
+    assert len([c for c in calls if c[0] == "fillText"]) == 1, "한 번만 그려야 한다"
+
+
+def test_empty_sticker_draws_nothing():
+    calls = _sticker_trace("[{kind:'sticker', emoji:'', size:18, x:0.5, y:0.5, rot:0}]")
+    assert not [c for c in calls if c[0] == "fillText"]
+
+
+def test_sticker_and_text_layers_coexist():
+    """글자 레이어와 스티커가 한 캔버스에 같이 그려진다(실사용 모양)."""
+    calls = _sticker_trace(
+        "[{text:'대박', font:'BMJUA.ttf', size:100, color:'#fff', outline:null, box:null,"
+        " rot:0, x:0.5, y:0.3},"
+        " {kind:'sticker', emoji:'🔥', size:18, x:0.2, y:0.8, rot:-15}]")
+    drawn = [c[1] for c in calls if c[0] == "fillText"]
+    assert "대박" in drawn and "🔥" in drawn
+
+
+def test_add_sticker_appends_selected_layer():
+    script = _slice_source() + """
+THUMB_STATE.layers = []; THUMB_STATE.sel = 0;
+renderThumbLayers = () => {}; renderThumbCanvas = () => {};
+addThumbSticker('🔥');
+console.log(JSON.stringify({n: THUMB_STATE.layers.length, sel: THUMB_STATE.sel,
+                            L: THUMB_STATE.layers[0]}));
+"""
+    out = json.loads(_run_node(script))
+    assert out["n"] == 1
+    assert out["sel"] == 0, "새로 얹은 스티커가 선택돼야 바로 크기·위치를 조절한다"
+    assert out["L"]["kind"] == "sticker" and out["L"]["emoji"] == "🔥"
+    assert 0 <= out["L"]["x"] <= 1 and 0 <= out["L"]["y"] <= 1
+
+
+_STICKER_SEL = """
+var HC_PRESETS = [{cat:'썸네일', name:'흰→노랑', font:'BMDOHYEON.ttf', color:'#FFFFFF',
+                   color2:'#FFD400', size:92, y:14, outline:true, outline_color:'#000000', outline_w:12}];
+renderThumbLayers = () => {}; renderThumbCanvas = () => {};
+"""
+
+
+def test_preset_does_not_destroy_selected_sticker():
+    """★스티커를 고른 채 색 프리셋을 누르면 빈 글자 레이어로 바뀌어 조용히 사라졌다."""
+    script = _slice_source() + _STICKER_SEL + """
+THUMB_STATE.layers = [{kind:'sticker', emoji:'🔥', size:18, x:0.3, y:0.7, rot:0}];
+THUMB_STATE.sel = 0;
+applyThumbPreset(0);
+console.log(JSON.stringify(THUMB_STATE.layers[0]));
+"""
+    L = json.loads(_run_node(script))
+    assert L["kind"] == "sticker" and L["emoji"] == "🔥", "스티커가 글자 레이어로 덮였다"
+
+
+def test_title_click_targets_text_layer_not_sticker():
+    """★스티커를 고른 채 추천 제목을 누르면 스티커에 문구가 박혀 그림이 사라졌다.
+    제목은 글자 레이어로 가야 한다."""
+    script = _slice_source() + _STICKER_SEL + """
+THUMB_STATE.layers = [{text:'', font:'BMJUA.ttf', size:92, color:'#fff', outline:null,
+                       box:null, rot:0, x:0.5, y:0.3},
+                      {kind:'sticker', emoji:'🔥', size:18, x:0.3, y:0.7, rot:0}];
+THUMB_STATE.sel = 1;                       // 스티커를 고른 상태
+THUMB_STATE.title_cands = [{text:'속옷 빨래\\n이제 안 해요', why:'타깃'}];
+applyThumbTitle(0);
+console.log(JSON.stringify({text: THUMB_STATE.layers[0].text,
+                            sticker: THUMB_STATE.layers[1]}));
+"""
+    out = json.loads(_run_node(script))
+    assert out["text"] == "속옷 빨래\n이제 안 해요", "제목이 글자 레이어에 안 얹혔다"
+    assert out["sticker"]["emoji"] == "🔥", "스티커가 문구로 덮였다"
+
+
 def test_fx_survives_preset_change():
     """색 프리셋을 바꿔도 밑줄·형광펜이 사라지면 안 된다(사장님이 준 설정이 우선)."""
     # HC_PRESETS는 슬라이스 밖(자막 꾸미기 쪽)에 선언돼 있다 — 하네스엔 최소 1종만 심는다.
