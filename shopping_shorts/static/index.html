@@ -331,7 +331,7 @@ body.is-admin .blockbtn{display:inline-block}
          지우면 즉시 돌아온다. 계약 이력은 tests/test_ranking_platform_tabs.py 참조. -->
     <!-- ★2026-08-17(3차) 사장님 "인스타랑 유튜브 쓰레드탭 3개를만들어" —
          인스타·유튜브는 결이 완전히 달라(48h·댓글 vs 14일·조회수) 탭을 갈라 관리한다.
-         쓰레드는 다른 세션이 기초작업 중이라 자리만 잡아두고 비활성(준비중)으로 둔다.
+         쓰레드는 2026-08-17 배선 완료 — 인스타와 같은 잣대(댓글 기준·48h)로 본다.
          틱톡·샤오홍슈·도우인은 요소를 남긴 채 숨긴다 — switchPlatform·트렌드카드가
          이 요소들을 잡으므로 지우면 그 코드가 죽는다(2026-07-21 선례와 같은 이유). -->
     <details id="platformFold" open style="margin-bottom:12px">
@@ -339,8 +339,7 @@ body.is-admin .blockbtn{display:inline-block}
     <div class="ctypes" id="platformTabs" style="margin-top:0;margin-bottom:12px">
       <div class="ctype active" data-platform="instagram" onclick="switchPlatform('instagram',this)">📷 인스타</div>
       <div class="ctype" data-platform="youtube" onclick="switchPlatform('youtube',this)">▶️ 유튜브</div>
-      <div class="ctype" data-platform="threads" title="다른 세션에서 기초작업 중 — 곧 열립니다"
-           style="opacity:.45;cursor:not-allowed">🧵 쓰레드 <span style="font-size:11px">(준비중)</span></div>
+      <div class="ctype" data-platform="threads" onclick="switchPlatform('threads',this)">🧵 쓰레드</div>
       <div class="ctype" data-platform="tiktok" onclick="switchPlatform('tiktok',this)" style="display:none">🎵 틱톡</div>
       <div class="ctype" data-platform="xiaohongshu" onclick="switchPlatform('xiaohongshu',this)" style="display:none">📕 샤오홍슈</div>
       <div class="ctype" data-platform="douyin" onclick="switchPlatform('douyin',this)" style="display:none">🎬 도우인</div>
@@ -623,12 +622,14 @@ const DESC_BY_PLATFORM = {
   tiktok:    '등록한 <b>시드 계정</b>의 최근 <b>14일</b> 숏폼을 조회수 기반 강도로 랭킹합니다. (무료 수집)',
   youtube:   '<b>키워드 시드</b>로 발굴한 최근 <b>14일</b> Shorts를 조회수 기반 강도로 랭킹합니다.',
   xiaohongshu: '등록한 <b>샤오홍슈 채널</b>의 최근 <b>48시간</b> 이내 노트를 참여도 기반 강도로 랭킹합니다. (무료 수집)',
+  threads:   '등록한 <b>쓰레드 계정</b>의 최근 <b>48시간</b> 이내 게시물을 댓글 기반 강도로 랭킹합니다. (무료 수집)',
 };
 const TAB_TIP = {
   instagram: {speed:'댓글 ÷ 경과시간', density:'댓글 ÷ 조회수', fan_density:'댓글 ÷ 팔로워수'},
   tiktok:    {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
   youtube:   {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
   xiaohongshu: {speed:'(좋아요+댓글+수집+공유) ÷ 경과시간', density:'(수집+공유) ÷ (좋아요+댓글+수집+공유)'},
+  threads:   {speed:'댓글 ÷ 경과시간', density:'댓글 ÷ 조회수'},
 };
 function updatePlatformCopy(p){
   const descEl=document.querySelector('.desc'); if(descEl) descEl.innerHTML = DESC_BY_PLATFORM[p] || DESC_BY_PLATFORM.instagram;
@@ -951,6 +952,10 @@ function ttModeChange(){
     if(kw) document.getElementById('seedHint').textContent='선택 언어로 검색 — 한국어가 부족하면 영어 등 다른 언어로 확장';
   } else if(PLATFORM==='xiaohongshu' && si){
     si.placeholder = '샤오홍슈 프로필 URL (예: https://www.rednote.com/user/profile/아이디)';
+  } else if(PLATFORM==='threads' && si){
+    // 쓰레드 시드는 키워드가 아니라 계정 아이디다(@는 떼고 저장 — addSeed가 아니라
+    // 여기서 안내만 한다). 기본 문구('검색 키워드')를 두면 URL을 넣어 0건이 된다.
+    si.placeholder = '쓰레드 계정 아이디 (예: jiniggultem)';
   } else if(si){
     si.placeholder = '검색 키워드 (예: 살림꿀팁)';
   }
@@ -987,6 +992,14 @@ async function addSeed(){
   const raw=document.getElementById('seedInput').value.trim(); if(!raw) return;
   if(PLATFORM==='tiktok' && ttMode()==='account'){
     await fetch('/api/seeds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:'tiktok',kind:'account',value:raw})});
+    document.getElementById('seedInput').value=''; return loadSeeds();
+  }
+  // ★쓰레드는 계정 시드다 — 아래 기본 경로로 흘리면 kind가 언어코드('ko')로 저장돼
+  //   service._collect_threads의 kind=='account' 필터에 안 걸려 **조용히 0건**이 된다.
+  //   덤으로 계정 아이디가 키워드 번역 API로 넘어간다. 그래서 여기서 끊는다.
+  if(PLATFORM==='threads'){
+    const v=raw.replace(/^@+/,'').trim(); if(!v) return;   // @는 떼고 저장(수집기가 @없는 아이디를 받는다)
+    await fetch('/api/seeds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform:'threads',kind:'account',value:v})});
     document.getElementById('seedInput').value=''; return loadSeeds();
   }
   // 유튜브 + 틱톡 키워드모드 공통: 선택 언어로 저장(비한국어는 번역), kind=언어코드
