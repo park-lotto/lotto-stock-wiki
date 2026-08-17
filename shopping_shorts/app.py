@@ -169,6 +169,29 @@ def _lens_month_limit(store):
     return _LENS_MONTH_LIMIT_PER_KEY * max(1, len(SERPAPI_KEYS))
 
 
+def _lens_quota_guard(store, month):
+    """렌즈 월 가드 — 막아야 하면 429 JSONResponse, 통과면 None.
+
+    ★판정을 여기 한 곳에서만 한다(0순위-B). /api/lens/search와 /api/lens/trace_url
+    두 곳이 같은 판정을 따로 적고 있었다.
+
+    순서: ① SerpApi **실잔량**(있으면 이게 진실) → ② 못 읽으면 우리 카운터 × 상수.
+    ①이 필요한 이유는 `lens_discover.account_searches_left` 독스트링 참조 —
+    우리 카운터는 클릭당 1인데 실제로는 최대 3회가 나가 어긋난다."""
+    from shopping_shorts import lens_discover
+    left = lens_discover.account_searches_left()
+    if left is not None and left <= 0:
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "lens_limit",
+            "error": "이번 달 렌즈 검색 한도를 다 썼습니다(SerpApi 잔량 0)"})
+    limit = _lens_month_limit(store)
+    if store.lens_month_count(month) >= limit:
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "lens_limit",
+            "error": f"이번 달 렌즈 검색 한도({limit}회)를 다 썼습니다"})
+    return None
+
+
 def _tiktok_knobs(store):
     """설정 3노브를 타입 정규화해 반환(없으면 기본값)."""
     return {
@@ -5076,11 +5099,9 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
     store = Store(DB_PATH)
     now = datetime.now(timezone.utc)
     month = now.strftime("%Y-%m")
-    limit = _lens_month_limit(store)
-    if store.lens_month_count(month) >= limit:
-        return JSONResponse(status_code=429, content={
-            "ok": False, "error_code": "lens_limit",
-            "error": f"이번 달 렌즈 검색 한도({limit}회)를 다 썼습니다"})
+    _over = _lens_quota_guard(store, month)
+    if _over:
+        return _over
     # 유료게이트: 전역 상한(다계정이 SerpApi를 태우는 것 실차단) → 계정별 일일 상한.
     cid = getattr(request.state, "customer_id", 0)
     if _global_over_cap("lens"):
@@ -5236,11 +5257,9 @@ def api_lens_trace_url(request: Request, body: dict):
         return blocked
     store = Store(DB_PATH)
     month = datetime.now(timezone.utc).strftime("%Y-%m")
-    limit = _lens_month_limit(store)
-    if store.lens_month_count(month) >= limit:
-        return JSONResponse(status_code=429, content={
-            "ok": False, "error_code": "lens_limit",
-            "error": f"이번 달 렌즈 검색 한도({limit}회)를 다 썼습니다"})
+    _over = _lens_quota_guard(store, month)
+    if _over:
+        return _over
     # 유료게이트: trace_url도 /api/lens/search와 같은 SerpApi 비용 → 같은 lens 크레딧을 건다
     # (전역 실차단 → 계정 일일). 여기가 비어 있으면 lens 일일상한을 우회하는 구멍이 된다.
     cid = getattr(request.state, "customer_id", 0)

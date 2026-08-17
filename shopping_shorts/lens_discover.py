@@ -24,6 +24,11 @@ _IMGUR_ENDPOINT = "https://api.imgur.com/3/image"
 _IMGUR_CLIENT_ID = os.environ.get("IMGUR_CLIENT_ID", "546c25a59c58ad7")
 _IMGBB_ENDPOINT = "https://api.imgbb.com/1/upload"
 _IMGBB_API_KEY = os.environ.get("IMGBB_API_KEY", "")
+_ACCOUNT_ENDPOINT = "https://serpapi.com/account"
+# 실잔량 조회 캐시(초). 렌즈 호출마다 SerpApi를 한 번 더 왕복하면 체감지연이 늘어나므로
+# 캐시한다. 렌즈 1클릭이 최대 _MAX_CALLS(3)회를 태우니 TTL 동안 최대 그만큼만 어긋난다.
+_QUOTA_TTL_S = float(os.environ.get("LENS_QUOTA_TTL", "600"))
+_quota_cache = {"at": 0.0, "left": None}
 _MAX_ATTEMPTS = 3          # 일시적 'no results'에 대한 재시도 횟수
 _RETRY_SLEEP = 2.5         # 재시도 전 대기(초) — 갓 호스팅된 이미지가 인덱싱될 시간
 
@@ -35,6 +40,46 @@ _PLATFORM_DOMAINS = [
     ("xiaohongshu", ("xiaohongshu.com", "xhslink.com")),
     ("douyin", ("douyin.com", "iesdouyin.com")),
 ]
+
+
+def account_searches_left(force=False):
+    """SerpApi **실잔량**(모든 키의 total_searches_left 합). 못 읽으면 None.
+
+    왜 필요한가 — 우리 `lens_count`는 사장님 클릭 1회당 1만 올리는데 실제로는
+    로케일 3벌 × 재시도로 **최대 3회**가 나간다. 2026-08-17 서버 실측:
+    우리 카운터 196/500인데 실제 SerpApi는 369/500 소진(남은 131).
+    상수 × 키개수로는 이 어긋남을 영영 못 따라잡고, 키가 다 죽는 순간
+    렌즈는 '한도 초과' 안내도 없이 조용히 빈손이 된다.
+
+    조회 실패(네트워크·키 오류)는 **None**으로 돌려 호출부가 기존 상수 방식으로
+    폴백하게 한다 — 잔량을 못 읽었다고 렌즈를 막아버리면 더 나쁘다."""
+    now = time.time()
+    if not force and _quota_cache["left"] is not None \
+            and now - _quota_cache["at"] < _QUOTA_TTL_S:
+        return _quota_cache["left"]
+    keys = [k for k in (SERPAPI_KEYS or ([SERPAPI_KEY] if SERPAPI_KEY else [])) if k]
+    if not keys:
+        return None
+    total = 0
+    seen = False
+    for k in keys:
+        try:
+            r = requests.get(_ACCOUNT_ENDPOINT, params={"api_key": k}, timeout=15)
+            data = r.json() if r.status_code == 200 else None
+        except (requests.RequestException, ValueError):
+            continue
+        if not isinstance(data, dict):
+            continue
+        left = data.get("total_searches_left")
+        if isinstance(left, bool) or not isinstance(left, (int, float)):
+            continue       # 문자열·None을 숫자로 넘겨받아 0으로 뭉개지 않는다
+        total += max(0, int(left))
+        seen = True
+    if not seen:
+        return None        # 한 키도 못 읽었다 = 모른다 (0이 아니다)
+    _quota_cache["at"] = now
+    _quota_cache["left"] = total
+    return total
 
 
 def upload_to_imgur(image_bytes, client_id=None):
