@@ -57,7 +57,7 @@ from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, 
                                           _source_video_id, resynth_tts_job, resynth_one_beat,
                                           run_clean_sources, _resolve_sources)
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
-from shopping_shorts import cn_search, douyin_search, xiaohongshu_search
+from shopping_shorts import cn_search, kw_search, douyin_search, xiaohongshu_search
 from shopping_shorts import youtube_search
 from shopping_shorts.config import APIFY_TOKENS
 from shopping_shorts.media_download import (resolve_media_url, download_any, probe_grab_meta,
@@ -5472,6 +5472,26 @@ async def api_lens_cn_search(request: Request, keyword: str = Form(""),
     # ★to_thread 필수 — 백엔드가 Playwright·Apify를 **블로킹**으로 부른다.
     #   안 하면 이벤트루프가 막혀 다른 렌즈 요청이 전부 굶는다(/api/lens/yt와 같은 이유).
     res = await asyncio.to_thread(cn_search.search, kw, n)
+    for r in res["items"]:
+        r["match"] = None          # 렌즈 카드 계약(제목 매칭은 프론트가 안 씀)
+    return {"ok": True, **res}
+
+
+@app.post("/api/lens/kw/search")
+async def api_lens_kw_search(request: Request, keyword: str = Form(""),
+                              max_results: int = Form(8)):
+    """한국어 검색어 1개 → 인스타+틱톡+유튜브. **백엔드는 kw_search가 정한다.**
+    2026-08-17 — 샤오홍슈·도우인(/api/lens/cn/search)을 마무리한 것과 같은 모양이다.
+
+    유료게이트를 CN과 **같은 기준**으로 건다(틱톡이 Apify 유료라 공짜가 아니다).
+    프론트는 어느 백엔드가 돌았는지 몰라도 되고, meta로 비용만 표시한다."""
+    kw = (keyword or "").strip()
+    if not kw:
+        return {"ok": True, "items": [], "count": 0, "keyword": "", "meta": {}}
+    n = max(1, min(int(max_results or 8), 60))
+    # ★to_thread 필수 — 백엔드가 Playwright·Apify·HTTP를 **블로킹**으로 부른다.
+    #   안 하면 이벤트루프가 막혀 다른 렌즈 요청이 전부 굶는다(cn/search와 같은 이유).
+    res = await asyncio.to_thread(kw_search.search, kw, n)
     for r in res["items"]:
         r["match"] = None          # 렌즈 카드 계약(제목 매칭은 프론트가 안 씀)
     return {"ok": True, **res}
