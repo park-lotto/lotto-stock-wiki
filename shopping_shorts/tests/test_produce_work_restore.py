@@ -7,6 +7,7 @@
 import pathlib
 import shutil
 import subprocess
+import tempfile
 
 import pytest
 
@@ -75,12 +76,28 @@ def js():
 
 
 def _run(js, body):
-    # encoding="utf-8", errors="replace": 기본(cp949) 캡처는 한글 console.log를 못 읽어 죽는다
-    # (test_produce_preview_gate.py와 같은 저장소 전역 함정, 336번 줄 참고).
-    r = subprocess.run([NODE, "-e", js + "\n(async()=>{\n" + body + "\n})();"],
-                       capture_output=True, text=True, timeout=30,
-                       encoding="utf-8", errors="replace",
-                       stdin=subprocess.DEVNULL)
+    """★`node -e`로 넘기지 않는다 — 임시파일에 써서 실행한다(2026-08-18).
+
+    윈도우 명령줄 상한이 약 32,767자다. 슬라이스한 JS를 인자로 실어 보내다가
+    produce.html이 커지자 `WinError 206 파일 이름이나 확장명이 너무 깁니다`로 죽었다
+    — **한 줄만 늘어도 다시 터지는 시한폭탄**이다. `test_produce_refresh_persistence`가
+    같은 이유로 먼저 고쳤고(쿠팡 UI 8단계 이사), 이번엔 인포크 문구 UI를 얹다 이 파일이
+    터졌다. 줄을 깎아 상한 밑으로 되돌리는 건 다음 사람이 또 밟는다 → 파일로 넘겨
+    상한 자체를 없앤다.
+
+    encoding="utf-8", errors="replace": 기본(cp949) 캡처는 한글 console.log를 못 읽어 죽는다
+    (test_produce_preview_gate.py와 같은 저장소 전역 함정).
+    """
+    src = js + "\n(async()=>{\n" + body + "\n})();"
+    with tempfile.TemporaryDirectory() as td:
+        # 확장자는 .js — `node -e`와 같은 CommonJS 문맥을 유지한다(.mjs면 ESM이 되어
+        # 하네스의 최상위 선언·await 규칙이 달라진다).
+        f = pathlib.Path(td) / "harness.js"
+        f.write_text(src, encoding="utf-8")
+        r = subprocess.run([NODE, str(f)],
+                           capture_output=True, text=True, timeout=30,
+                           encoding="utf-8", errors="replace",
+                           stdin=subprocess.DEVNULL)
     assert r.returncode == 0, r.stderr
     return r.stdout.strip()
 
