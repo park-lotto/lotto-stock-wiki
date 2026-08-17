@@ -1,6 +1,6 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-08-03-a  (틱톡 뷰어 카드버튼 잔존 정리 + 빈 앵커 버튼 차단)
+// 로직 버전: 2026-08-17-a  (도우인 커버 폴백 currentPoster — og:image 없는 SPA 대응)
 (function () {
   "use strict";
   if (window.__ssGrabLoaded) return;   // 로더가 중복 실행돼도 한 번만
@@ -49,6 +49,40 @@
           }
         }
       }
+    } catch (e) {}
+    return "";
+  }
+  // ★지금 보는 영상의 **커버 이미지**(2026-08-17 사장님 "도우인은 썸네일이 없음").
+  //   도우인 영상 페이지는 SPA라 og:image가 없다(og:title도 "观看更多精彩视频 - 抖音"
+  //   라는 기본값이 그대로 담겨 있었다 → 담긴 카드가 제목·썸네일 둘 다 기본값/빈값).
+  //   서버 보강(_enrich_grab→yt-dlp)도 도우인은 쿠키를 요구해 못 채운다.
+  //   브라우저에는 커버가 <video poster> 또는 douyinpic 이미지로 이미 떠 있으므로
+  //   담는 순간 그걸 함께 보낸다(video_url을 같이 보내는 것과 같은 원리).
+  // ⚠️호스트를 넓히지 마라 — collection.html thumbSrc()가 no-referrer 직접로드로
+  //   통과시키는 CDN(douyinpic·xhscdn)만 받는다. 나머지는 /api/thumb 프록시를 타는데
+  //   허용호스트가 아니면 400이 나 카드가 다시 빈칸이 된다.
+  var _IMG_HOSTS = ["douyinpic.com", "xhscdn.com"];
+  function _knownImg(u) {
+    if (!u || u.indexOf("https://") !== 0) return "";   // data:·blob:·상대경로 제외
+    for (var h = 0; h < _IMG_HOSTS.length; h++) if (u.indexOf(_IMG_HOSTS[h]) >= 0) return u;
+    return "";
+  }
+  function currentPoster() {
+    try {
+      var vs = document.querySelectorAll("video");
+      for (var i = 0; i < vs.length; i++) {
+        var p = _knownImg(vs[i].poster || "");
+        if (p) return p;
+      }
+      // poster가 비면 화면에서 가장 큰(=커버) 이미지를 쓴다.
+      var imgs = document.querySelectorAll("img"), best = "", bestA = 0;
+      for (var j = 0; j < imgs.length; j++) {
+        var u = _knownImg(imgs[j].currentSrc || imgs[j].src || "");
+        if (!u) continue;
+        var r = imgs[j].getBoundingClientRect(), a = r.width * r.height;
+        if (r.width >= 120 && a > bestA) { bestA = a; best = u; }
+      }
+      return best;
     } catch (e) {}
     return "";
   }
@@ -486,7 +520,8 @@
       "font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer;font-family:system-ui,sans-serif";
     b.addEventListener("click", function (e) {
       e.preventDefault();
-      openGrab(location.href, meta("og:image"), meta("og:title") || document.title || "",
+      openGrab(location.href, meta("og:image") || currentPoster(),
+               meta("og:title") || document.title || "",
                currentVideoSrc());
     });
     document.body.appendChild(b);
