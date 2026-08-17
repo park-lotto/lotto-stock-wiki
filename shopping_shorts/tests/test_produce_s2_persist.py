@@ -190,16 +190,24 @@ def test_roundtrip_restores_everything(js):
 
 
 def test_hydrate_clears_when_absent(js):
-    """★s2 없는 payload로 복원하면 **비운다**. 옛 작업 대본이 새 작업에 눌어붙으면 안 된다."""
+    """★대본이 아예 없는 작업으로 갈아타면 **비운다**. 앞 작업 대본이 눌어붙으면 안 된다.
+
+    ⚠️ payload에 script가 있으면 그건 '옛 작업 구제'가 도는 정상 경로다
+    (test_old_work_recovers_confirmed_script). 여기서 잠그는 건 **아무것도 없는 작업**이
+    앞 작업의 초안을 물려받지 않는가다.
+    """
     out = _run(js, """
       S2.drafts = mkDrafts(); S2.curDraft = 1; S2.picked = [54];
-      _s2Hydrate({script:'다른 작업'});         // s2 키가 없는 옛/타 작업 payload
-      console.log(JSON.stringify({n:S2.drafts.length, cur:S2.curDraft, picked:S2.picked.length}));
+      S2.materials = {sources:[]};
+      _s2Hydrate({handoff:[]});                 // s2도 script도 없는 작업
+      console.log(JSON.stringify({n:S2.drafts.length, cur:S2.curDraft,
+                                  picked:S2.picked.length, mat:!!S2.materials}));
     """)
     import json
     d = json.loads(out)
     assert d["n"] == 0, "다른 작업으로 갈아탔는데 앞 작업 대본이 남아 있다(캐리오버 사고와 같은 모양)"
     assert d["cur"] == 0 and d["picked"] == 0
+    assert d["mat"] is False, "앞 작업의 재료 표시가 남으면 '무슨 영상인지'가 거짓말이 된다"
 
 
 def test_hydrate_clamps_bad_curdraft(js):
@@ -239,6 +247,64 @@ def test_saves_before_confirm_with_empty_pool(js):
     assert d["localN"] == 2, "확정 전 초안이 로컬(sessionStorage)에 안 남는다 — 새로고침에 사라진다"
     assert d["posts"] == 1, "확정 전 초안이 서버로 안 올라간다 — 다른 기기·재방문에서 사라진다"
     assert d["serverN"] == 2, "서버 payload에 초안이 실려야 한다"
+
+
+def test_old_work_recovers_confirmed_script(js):
+    """★이 배포 **전에** 만든 작업 구제 — 후보는 못 되살려도 '확정한 대본'은 보여준다.
+
+    사장님 제보: "확정 대본도 안 보인다". s2 스냅샷이 없는 옛 작업이라도 `w.script`
+    (확정본)는 예전부터 저장돼 있었다 — 없는 걸 지어내는 게 아니라 있는 걸 보여준다.
+    """
+    out = _run(js, """
+      S2.drafts = [];
+      _s2Hydrate({script:'이거 진짜 미친 물건이에요\\n손목이 편해집니다', handoff:[]});
+      const d = S2.drafts[0] || {};
+      console.log(JSON.stringify({
+        n: S2.drafts.length, cur: S2.curDraft,
+        script: d.script, hook: d.hook, name: d.style_name,
+        checks: (d.checks||[]).length,      // 게이트 결과는 모른다 → 뱃지 안 뜬다
+        beats: (d.beats||[]).length,        // 역할도 모른다 → 비운다(s2Beats가 문장으로 나눔)
+      }));
+    """)
+    import json
+    d = json.loads(out)
+    assert d["n"] == 1, "확정한 대본이 있는데 ③가 비어 있다 — 사장님이 보신 화면"
+    assert d["script"].startswith("이거 진짜 미친 물건이에요")
+    assert d["hook"] == "이거 진짜 미친 물건이에요", "첫 줄이 훅으로 잡혀야 탭·요약이 산다"
+    assert d["name"] == "확정한 대본", "옛 안인지 새 안인지 라벨로 구분돼야 한다"
+    assert d["checks"] == 0, "모르는 게이트 결과를 ✅/⚠️로 지어내면 안 된다"
+    assert d["beats"] == 0, "모르는 역할을 붙이면 안 된다(모르면 비운다)"
+
+
+def test_old_work_recovery_uses_payload_not_global(js):
+    """★구제가 캐리오버를 만들면 안 된다 — 반드시 그 작업의 저장값(w.script)만 쓴다.
+
+    STATE.script(전역, 앞 작업 잔재일 수 있음)를 보고 만들면 다른 작업으로 갈아탔을 때
+    앞 작업 대본이 딸려온다(2026-07-25 사고와 같은 모양).
+    """
+    out = _run(js, """
+      STATE.script = '앞 작업의 확정 대본';     // 전역엔 앞 작업 잔재가 남아 있다
+      S2.drafts = mkDrafts();
+      _s2Hydrate({handoff:[]});                 // 새 작업: script도 s2도 없다
+      console.log(JSON.stringify({n:S2.drafts.length, first:(S2.drafts[0]||{}).script||null}));
+    """)
+    import json
+    d = json.loads(out)
+    assert d["n"] == 0, "대본 없는 작업에 앞 작업 대본이 딸려왔다(캐리오버)"
+    assert d["first"] is None
+
+
+def test_new_snapshot_wins_over_recovery(js):
+    """s2 스냅샷이 있으면 그게 이긴다 — 구제는 **없을 때만** 도는 폴백이다."""
+    out = _run(js, """
+      _s2Hydrate({s2:{drafts:mkDrafts(), curDraft:1}, script:'확정본 텍스트'});
+      console.log(JSON.stringify({n:S2.drafts.length, cur:S2.curDraft,
+                                  name:S2.drafts[0].style_name}));
+    """)
+    import json
+    d = json.loads(out)
+    assert d["n"] == 2 and d["cur"] == 1, "스냅샷이 있는데 폴백이 덮어썼다"
+    assert d["name"] == "물건 발견형", "실제 스타일 이름이 '확정한 대본'으로 뭉개지면 안 된다"
 
 
 def test_hydrate_survives_empty_drafts_array(js):
