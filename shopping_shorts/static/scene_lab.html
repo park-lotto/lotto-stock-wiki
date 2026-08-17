@@ -865,7 +865,7 @@ function playSegHere(sid){
   try{
     const up = _outerPlayer();
     if (up && typeof up.sceneLabPlaySeg === 'function'){
-      up.sceneLabPlaySeg(sid, {DATA, lists, STRETCH, TRIMS, onePerSeg});
+      up.sceneLabPlaySeg(sid, {DATA, lists, STRETCH, TRIMS, MERGES, onePerSeg});
       playKey = 'seg:' + sid; renderBand();
       return;
     }
@@ -879,7 +879,7 @@ function playSegsHere(sids, label, ev){
   try{
     const up = _outerPlayer();
     if (up && typeof up.sceneLabPlaySegs === 'function'){
-      up.sceneLabPlaySegs(sids, label, {DATA, lists, STRETCH, TRIMS, onePerSeg});
+      up.sceneLabPlaySegs(sids, label, {DATA, lists, STRETCH, TRIMS, MERGES, onePerSeg});
       playKey = 'segs:' + sids.join(','); renderBand();
       return;
     }
@@ -897,7 +897,7 @@ function playAllHere(ev){
   try{
     const up = _outerPlayer();
     if (up && typeof up.sceneLabPlayAll === 'function'){
-      up.sceneLabPlayAll({DATA, lists, STRETCH, TRIMS, onePerSeg});
+      up.sceneLabPlayAll({DATA, lists, STRETCH, TRIMS, MERGES, onePerSeg});
       playKey = 'all'; renderBand();
       return;
     }
@@ -917,7 +917,7 @@ function playBeatHere(i, ev){
       // ★window에서 꺼내 쓰면 안 된다 — let/const로 선언한 전역은 window의 속성이 아니라서
       //   바깥에서 읽으면 undefined다(2026-08-15 실측: lists가 undefined라 재생이 죽었다).
       //   같은 도메인이라 객체를 그대로 건넬 수 있다(복사 아님 — 참조가 그대로 간다).
-      up.sceneLabPlay(i, {DATA, lists, STRETCH, TRIMS, onePerSeg});
+      up.sceneLabPlay(i, {DATA, lists, STRETCH, TRIMS, MERGES, onePerSeg});
       playKey = 'beat:' + i; renderBand();
       return;
     }
@@ -1138,6 +1138,14 @@ function render(){
             <button class="cutbtn" style="left:4px;right:auto"
                     title="붙어 있는 조각끼리 합치려면 여기를 누르세요 — 0.8초 미만이라 화면에 안 나오던 조각을 살립니다"
                     onclick="toggleMsel('${s.sid}',event)">${_MSEL.has(s.sid)?'🔗 골랐음':'🔗 고르기'}</button>
+            ${/* ★합치기 버튼을 **카드 위에** 둔다(2026-08-17 사장님 "영상2로 내려서 3개 선택해도
+                  합치기 버튼이 없음"). 종전엔 팔레트 머리줄(sticky)에만 있었는데, 실제 스크롤은
+                  iframe 안이 아니라 제작소 페이지에서 일어나 **iframe 안 sticky는 따라오지 않는다**.
+                  고른 카드마다 같은 버튼을 붙이면 어디까지 내려가도 손이 닿는다. */''}
+            ${_MSEL.has(s.sid) ? `<button class="cutbtn" style="left:4px;right:auto;top:auto;bottom:4px;
+                    border-color:var(--accent);color:var(--accent)"
+                    onclick="event.stopPropagation();clearTimeout(clickTimer);doMerge()"
+                    title="고른 ${_MSEL.size}장을 한 장처럼 합칩니다">🔗 ${_MSEL.size}장 합치기</button>` : ''}
           </div>
           <div class="meta">
             <div>${useTags(s.sid).map(t=>`<span class="utag${t==='실증'?' key':''}">${esc(tagLabel(t))}</span>`).join('')}</div>

@@ -5119,6 +5119,11 @@ function _sceneLabPrep(lab){
   Object.assign(STRETCH, lab.STRETCH || {});
   Object.keys(TRIMS).forEach(k => delete TRIMS[k]);
   Object.assign(TRIMS, lab.TRIMS || {});
+  // 🔗 합친 조각(2026-08-17 사장님 "합치기해서 훅으로 가져다가 재생하면 맨앞장만 재생").
+  // 미리보기 계산은 **이 바깥 화면**이 한다 — TRIMS만 받아오고 MERGES를 빠뜨려 실험실에선
+  // 합쳐 보이는데 재생은 원본 0.5초만 나왔다. 짝으로 움직이는 값이라 함께 복사한다(0순위-B).
+  Object.keys(MERGES).forEach(k => delete MERGES[k]);
+  Object.assign(MERGES, lab.MERGES || {});
   SL.server = true;
   SL.job = (typeof MIX_JOB !== 'undefined' && MIX_JOB) || SL.job;
   const pvPanel = document.getElementById('mixPreviewPanel');
