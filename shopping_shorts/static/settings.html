@@ -283,6 +283,9 @@ var SERVICES = [
 var STATUS = {
   ok:      { cls: "ok",      text: "● 정상" },
   bad:     { cls: "bad",     text: "● 키가 틀렸습니다" },
+  /* ★키는 멀쩡한데 이번 달 무료분을 다 쓴 상태. '정상'으로 두면 검색이 0건인데
+     이유를 모른다(라이브 실측 2026-08-17). '틀렸다'도 거짓이라 따로 표시한다. */
+  empty:   { cls: "bad",     text: "● 이번 달 무료분을 다 썼습니다" },
   unknown: { cls: "unknown", text: "● 확인 전" }
 };
 

@@ -24,7 +24,11 @@
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;cursor:default}
   .card.sel{border-color:var(--accent2);box-shadow:0 0 0 2px rgba(109,59,239,.35)}
-  .thumb{position:relative;cursor:pointer;background:#000}
+  /* ★min-height 필수(2026-08-17 사장님 "미리보기 재생하면 화면 안 나온다").
+     .thumb의 높이는 안쪽 img(220px)에서만 나왔다 → 재생 시 img를 지우고 <video>를
+     position:absolute로 얹으면 상자가 0px로 접혀 영상이 아예 안 보였다.
+     썸네일이 없는 카드(도우인)도 같은 이유로 ▶ 버튼조차 안 보였다(.card는 overflow:hidden). */
+  .thumb{position:relative;cursor:pointer;background:#000;min-height:220px}
   .thumb img{width:100%;height:220px;object-fit:cover;display:block}
   .thumb .chk{position:absolute;top:8px;left:8px;font-size:18px;filter:drop-shadow(0 1px 3px rgba(0,0,0,.8))}
   .body{padding:12px;flex:1;display:flex;flex-direction:column}

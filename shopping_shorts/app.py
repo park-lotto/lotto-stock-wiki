@@ -57,7 +57,7 @@ from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, 
                                           _source_video_id, resynth_tts_job, resynth_one_beat,
                                           run_clean_sources, _resolve_sources)
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
-from shopping_shorts import cn_search, douyin_search, xiaohongshu_search
+from shopping_shorts import cn_search, kw_search, douyin_search, xiaohongshu_search
 from shopping_shorts import youtube_search
 from shopping_shorts.config import APIFY_TOKENS
 from shopping_shorts.media_download import (resolve_media_url, download_any, probe_grab_meta,
@@ -686,10 +686,26 @@ _DURFILL_LAST = 0.0
 
 
 @app.get("/api/reference")
-def api_reference(platform: str = "instagram"):
-    """마지막 수집 결과 반환 (프론트 초기 로드용). platform=플랫폼(기본 인스타)."""
+def api_reference(platform: str = "instagram", days: int = 0, min_comments: int = 500,
+                  archive: int = 0):
+    """마지막 수집 결과 반환 (프론트 초기 로드용). platform=플랫폼(기본 인스타).
+
+    days>0이면 '최근 N일 중 터진 것'을 대신 준다(2026-08-17) — 추가 크롤 0이고
+    이미 받아둔 reel_history를 다시 보여줄 뿐이다. 등급제로 상단(48시간)이 얇아져도
+    이 줄이 재고를 메운다. days=0(기본)은 종전과 완전히 같은 동작이다.
+
+    archive=1이면 누적 아카이브(20만건)에서 역대 히트작을 준다. 이쪽도 추가 크롤 0
+    (수집이 끝나 크론도 꺼져 있다). days보다 먼저 본다 — 둘 다 오면 아카이브가 이긴다."""
     store = Store(DB_PATH)
-    if platform == "instagram":
+    if archive:
+        if platform != "instagram":
+            return {"ok": True, "items": [], "collected_at": None}
+        items, collected_at = store.archive_hits(min_comments=min_comments), None
+    elif days > 0:
+        if platform != "instagram":
+            return {"ok": True, "items": [], "collected_at": None}
+        items, collected_at = store.hits_since(days, min_comments=min_comments), None
+    elif platform == "instagram":
         items, collected_at = store.load_last_run()
     else:
         items, collected_at = store.load_last_run_platform(platform)
@@ -2909,6 +2925,31 @@ def _probe_user_key(service: str, key: str) -> bool:
         return False
 
 
+def _key_status(service: str, key: str) -> str:
+    """화면에 박을 상태 문자열: ok / empty / bad. **여기서만 정한다**(0순위-B).
+
+    ★왜 empty가 필요한가 (2026-08-17 라이브 실측):
+      SerpApi 키가 이번 달 250회를 다 쓴 상태(plan_searches_left=0)여도
+      account.json은 200을 준다 → '● 정상'으로 떴다. 그런데 검색을 걸면
+      첫 호출에서 소진 판정이 나 **0건**이 돌아온다. 폴백이 없으니(설계상
+      의도) 사장님 키로도 안 넘어간다 = "정상이라며 왜 결과가 없냐"가 된다.
+      키는 멀쩡하므로 'bad'(키가 틀렸습니다)도 거짓이다. 그래서 셋으로 가른다.
+
+    잔량 조회가 실패하면 ok로 둔다 — 확인 못 한 것을 소진으로 단정하지 않는다."""
+    if not _probe_user_key(service, key):
+        return "bad"
+    if service == keyroute.SVC_SERPAPI:
+        try:
+            d = requests.get("https://serpapi.com/account.json",
+                             params={"api_key": key}, timeout=10).json()
+            left = d.get("total_searches_left", d.get("plan_searches_left"))
+            if left is not None and int(left) <= 0:
+                return "empty"
+        except (requests.RequestException, ValueError, TypeError):
+            pass
+    return "ok"
+
+
 def _svc_or_err(body: dict):
     """(service, 에러응답) — 모르는 값이면 (None, 422 응답).
 
@@ -2990,10 +3031,12 @@ def api_verify_keys(request: Request, body: dict):
     labels = {r["id"]: r["label"] for r in store.list_customer_keys(cid, service)}
     results = []
     for key_id, plain in store.get_customer_keys_with_id(cid, service):
-        alive = _probe_user_key(service, plain)
-        store.set_customer_key_status(key_id, "ok" if alive else "bad")
+        status = _key_status(service, plain)
+        store.set_customer_key_status(key_id, status)
         # ★평문은 안 싣는다. 화면은 label로 어느 키인지 알아본다.
-        results.append({"id": key_id, "label": labels.get(key_id, ""), "ok": alive})
+        # ok는 "쓸 수 있는가" — 무료분이 바닥난 키(empty)는 검색이 0건이라 False다.
+        results.append({"id": key_id, "label": labels.get(key_id, ""),
+                        "ok": status == "ok", "status": status})
     return {"ok": True, "results": results, "keys": store.list_customer_keys(cid)}
 
 
@@ -5472,6 +5515,26 @@ async def api_lens_cn_search(request: Request, keyword: str = Form(""),
     # ★to_thread 필수 — 백엔드가 Playwright·Apify를 **블로킹**으로 부른다.
     #   안 하면 이벤트루프가 막혀 다른 렌즈 요청이 전부 굶는다(/api/lens/yt와 같은 이유).
     res = await asyncio.to_thread(cn_search.search, kw, n)
+    for r in res["items"]:
+        r["match"] = None          # 렌즈 카드 계약(제목 매칭은 프론트가 안 씀)
+    return {"ok": True, **res}
+
+
+@app.post("/api/lens/kw/search")
+async def api_lens_kw_search(request: Request, keyword: str = Form(""),
+                              max_results: int = Form(8)):
+    """한국어 검색어 1개 → 인스타+틱톡+유튜브. **백엔드는 kw_search가 정한다.**
+    2026-08-17 — 샤오홍슈·도우인(/api/lens/cn/search)을 마무리한 것과 같은 모양이다.
+
+    유료게이트를 CN과 **같은 기준**으로 건다(틱톡이 Apify 유료라 공짜가 아니다).
+    프론트는 어느 백엔드가 돌았는지 몰라도 되고, meta로 비용만 표시한다."""
+    kw = (keyword or "").strip()
+    if not kw:
+        return {"ok": True, "items": [], "count": 0, "keyword": "", "meta": {}}
+    n = max(1, min(int(max_results or 8), 60))
+    # ★to_thread 필수 — 백엔드가 Playwright·Apify·HTTP를 **블로킹**으로 부른다.
+    #   안 하면 이벤트루프가 막혀 다른 렌즈 요청이 전부 굶는다(cn/search와 같은 이유).
+    res = await asyncio.to_thread(kw_search.search, kw, n)
     for r in res["items"]:
         r["match"] = None          # 렌즈 카드 계약(제목 매칭은 프론트가 안 씀)
     return {"ok": True, **res}
