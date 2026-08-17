@@ -364,7 +364,13 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
     장르는 같지만 다른 주제인 결과가 섞이는 문제(2026-07-14 실측)를 프론트에서
     표시용으로 구분하기 위함 — 결과를 제거하진 않는다(교차언어 플랫폼은 매칭 불가라
     False가 나올 수 있어 하드 필터링하면 회수율이 떨어짐)."""
-    keys = [api_key] if api_key else (SERPAPI_KEYS or ([SERPAPI_KEY] if SERPAPI_KEY else []))
+    # api_key는 문자열 하나 또는 목록. ★사용자 등록키(BYOK)가 오면 그것만 쓴다 —
+    # 여기서 사장님 키를 섞으면 keyroute의 "폴백 없음"이 조용히 깨진다(0순위-B).
+    if api_key:
+        keys = list(api_key) if isinstance(api_key, (list, tuple)) else [api_key]
+        keys = [k for k in keys if k]
+    else:
+        keys = SERPAPI_KEYS or ([SERPAPI_KEY] if SERPAPI_KEY else [])
     if not keys:
         return []
     keywords = _extract_keywords(source_caption)
