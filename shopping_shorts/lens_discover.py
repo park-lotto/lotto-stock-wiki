@@ -207,28 +207,48 @@ def is_photo_post(platform, link):
 # 틱톡·유튜브는 공식 oEmbed가 무료·무인증이라, 결과 URL을 실조회해 **실제로 열리는
 # 영상의 제목·썸네일로 교체**한다 → 보이는 것과 열리는 것이 항상 일치. 404(삭제·비공개)는
 # link_ok=False로 표시해 프론트가 숨긴다. 타임아웃·기타 실패는 원본 유지(no-op) —
-# 검증 불가가 회수율을 깎으면 안 된다. 인스타는 공개 oEmbed가 없어 대상 외.
+# 검증 불가가 회수율을 깎으면 안 된다.
+#
+# ★인스타도 대상이다(2026-08-18 사장님 "중국어 인스타는 썸네일과 영상이 다르다").
+#   여기 주석은 오래 "인스타는 공개 oEmbed가 없어 대상 외"라고 적혀 있었는데, 정작
+#   같은 저장소의 `app._thumb_via_oembed`가 **로그인 없이 되는** 인스타 oEmbed를
+#   이미 쓰고 있었다(만료 썸네일 자가복구, 2026-08-09). 즉 한쪽만 고쳐진 0순위-B였다.
+#   서버 실측(2026-08-18) 게시물 3건 전부 200 + 진짜 제목·썸네일 회수.
+#   ⚠️ 인스타만 `x-ig-app-id` 헤더를 요구한다 — 없으면 거절당한다.
 _OEMBED_TIMEOUT = 4
+# app._thumb_via_oembed와 같은 값. 인스타 웹앱이 공개적으로 쓰는 상수다.
+_IG_OEMBED_APP_ID = "936619743392459"
+_IG_OEMBED_HEADERS = {"User-Agent": "Mozilla/5.0", "x-ig-app-id": _IG_OEMBED_APP_ID}
 
 
 def _oembed_endpoint(platform, link):
+    """(url) — 헤더가 필요한 플랫폼은 _oembed_headers가 따로 준다."""
     if platform == "tiktok":
         return "https://www.tiktok.com/oembed?url=" + quote(link, safe="")
     if platform == "youtube":
         return "https://www.youtube.com/oembed?format=json&url=" + quote(link, safe="")
+    if platform == "instagram":
+        return "https://www.instagram.com/api/v1/oembed/?url=" + quote(link, safe="")
     return None
 
 
+def _oembed_headers(platform):
+    """인스타는 앱ID 헤더가 없으면 거절한다. 나머지는 헤더 불필요."""
+    return dict(_IG_OEMBED_HEADERS) if platform == "instagram" else None
+
+
 def verify_matches(items, keywords=None):
-    """틱톡·유튜브 항목을 oEmbed로 실조회해 제목·썸네일을 실제 값으로 교체(in-place).
+    """틱톡·유튜브·인스타 항목을 oEmbed로 실조회해 제목·썸네일을 실제 값으로 교체(in-place).
 
     제목이 바뀌면 match(키워드 일치)도 실제 제목 기준으로 다시 판정한다."""
     def _one(i):
-        ep = _oembed_endpoint(i.get("platform"), i.get("url") or "")
+        platform = i.get("platform")
+        ep = _oembed_endpoint(platform, i.get("url") or "")
         if not ep:
             return
         try:
-            r = requests.get(ep, timeout=_OEMBED_TIMEOUT)
+            r = requests.get(ep, timeout=_OEMBED_TIMEOUT,
+                             headers=_oembed_headers(platform))
         except requests.RequestException:
             return
         status = getattr(r, "status_code", None)   # 테스트 더블이 상태코드 없이 올 수 있다
@@ -255,7 +275,8 @@ def verify_matches(items, keywords=None):
             _one(i)
         except Exception:
             pass
-    targets = [i for i in items if i.get("platform") in ("tiktok", "youtube")]
+    targets = [i for i in items
+               if i.get("platform") in ("tiktok", "youtube", "instagram")]
     if not targets:
         return items
     with ThreadPoolExecutor(max_workers=8) as ex:
