@@ -7,8 +7,13 @@
   다 설계하고싶다". 틱톡 무료 자동수집(yt-dlp 계정시드)이 실증되며 숨길 이유가 사라졌다.
   → 이제 **탭이 보이는 것**이 지켜야 할 계약이다. 다시 숨기려면 이 파일부터 고쳐라.
 
-보존 계약(양쪽 시기 공통): PLATFORM 기본값 instagram + switchPlatform 로직.
-탭을 보이든 숨기든 랭킹 첫 화면은 인스타로 떠야 한다.
+- 2026-08-17: 사장님 "접어놔줘 나중에 뭐할지 모르니 안보이게".
+  지우거나 display:none으로 되돌리지 않고 <details id="platformFold">로 **접었다**.
+  요소는 살아 있고(계약 유지) 평소엔 안 보인다(사장님 요구) — 한쪽을 버리지 않는 답.
+  → 이제 계약이 둘이다: ①display:none 금지 ②접힘(details) 유지.
+
+보존 계약(모든 시기 공통): PLATFORM 기본값 instagram + switchPlatform 로직.
+탭을 보이든 숨기든 접든 랭킹 첫 화면은 인스타로 떠야 한다.
 """
 import pathlib
 
@@ -30,3 +35,12 @@ def test_platform_still_defaults_instagram():
     assert "PLATFORM='instagram'" in html or 'PLATFORM = "instagram"' in html, \
         "PLATFORM 기본값 instagram이 사라졌다"
     assert "function switchPlatform" in html, "switchPlatform 로직은 보존해야 한다"
+
+
+def test_platform_tabs_folded():
+    """평소엔 접혀 있어야 한다(2026-08-17 사장님). open 속성을 주면 펼쳐진 채 뜬다."""
+    html = INDEX.read_text(encoding="utf-8")
+    i = html.find('id="platformFold"')
+    assert i != -1, "platformFold(<details>)를 못 찾음 — 접기가 사라졌다"
+    tag = html[html.rfind("<details", 0, i): html.find(">", i) + 1]
+    assert " open" not in tag, "플랫폼 줄이 펼쳐진 채로 뜬다 — 사장님은 안 보이길 원했다"

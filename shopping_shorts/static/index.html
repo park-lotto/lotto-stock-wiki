@@ -311,16 +311,25 @@ body.is-admin .blockbtn{display:inline-block}
       <div class="ctype active" id="modeRanking" onclick="toggleOverseas(false)">🏠 레퍼런스 랭킹</div>
       <div class="ctype" id="modeOverseas" onclick="toggleOverseas(true)">🌍 해외HOT</div>
     </div>
-    <!-- 플랫폼 전환 토글 숨김(사장님 2026-07-21, 미사용) — 삭제 아님. switchPlatform·PLATFORM
-         로직은 보존해 PLATFORM 기본값 instagram으로 랭킹·수집이 계속 동작하고, 되살리려면
-         display:none만 지우면 된다. -->
-    <div class="ctypes" id="platformTabs" style="margin-bottom:12px">
+    <!-- 플랫폼 전환 토글 — 계약 이력(지우지 마라, 왜 이 모양인지가 중요하다):
+         2026-07-21 숨김 → 2026-07-24 사장님이 뒤집어 노출(5플랫폼 다 설계하고 싶다,
+         test_ranking_platform_tabs.py가 그때부터 display:none을 막는다)
+         → ★2026-08-17 사장님 "접어놔줘 나중에 뭐할지 모르니 안보이게".
+         그래서 **지우지도 숨기지도 않고 접는다** — <details>는 닫혀 있을 뿐 요소는
+         살아 있어 계약(노출 가능)도, 사장님 요구(평소 안 보임)도 함께 지킨다.
+         PLATFORM 기본값 instagram + switchPlatform 로직은 그대로. -->
+    <details id="platformFold" style="margin-bottom:12px">
+      <summary style="cursor:pointer;font-size:12px;color:var(--sub);list-style:none;
+                      display:inline-block;padding:4px 10px;border:1px dashed var(--line);
+                      border-radius:999px;user-select:none">🌐 플랫폼 바꾸기 ▾</summary>
+    <div class="ctypes" id="platformTabs" style="margin-top:8px;margin-bottom:12px">
       <div class="ctype active" data-platform="instagram" onclick="switchPlatform('instagram',this)">📷 인스타</div>
       <div class="ctype" data-platform="youtube" onclick="switchPlatform('youtube',this)">▶️ 유튜브</div>
       <div class="ctype" data-platform="tiktok" onclick="switchPlatform('tiktok',this)">🎵 틱톡</div>
       <div class="ctype" data-platform="xiaohongshu" onclick="switchPlatform('xiaohongshu',this)">📕 샤오홍슈</div>
       <div class="ctype" data-platform="douyin" onclick="switchPlatform('douyin',this)">🎬 도우인</div>
     </div>
+    </details>
     <div id="seedPanel" style="display:none;margin-bottom:12px">
       <div id="ttMode" style="display:none;margin-bottom:6px">
         <label style="font-size:12px;color:var(--sub);cursor:pointer"><input type="radio" name="ttmode" value="keyword" onclick="ttModeChange()"> 🔎 키워드 검색발굴 (유료 · 현재 꺼짐)</label>
