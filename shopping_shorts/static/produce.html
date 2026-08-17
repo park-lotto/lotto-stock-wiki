@@ -177,6 +177,9 @@
     .gen-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:flex-start;justify-content:center;padding:24px;overflow:auto}
     .gen-bg.open{display:flex}
     .gen-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;width:min(760px,100%);display:flex;flex-direction:column;max-height:92vh}
+    /* 인포크 관리화면은 좌측메뉴+편집+미리보기 3단이라 760px에선 눌린다(실측). 화면을 거의
+       꽉 채워 원래 레이아웃 그대로 보이게 한다. .gen-box를 고치지 않고 변형만 얹는다. */
+    .gen-box-wide{width:min(1440px,100%);height:92vh}
     .gen-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
     .gen-head b{font-size:15px}
     .gen-head .x{background:none;border:none;color:var(--sub);font-size:20px;cursor:pointer}
@@ -1580,6 +1583,28 @@
         </div>
         <button class="gen-run" id="pmRun" onclick="pmRunGen()">✨ 초안 생성 (15~40초)</button>
         <div class="gen-results" id="pmResults"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📦 인포크링크 등록 모달(2026-08-18) — 창을 옮겨 다닐 필요 없이 여기서 바로 올린다.
+       실측으로 확인하고 넣었다: link.inpock.co.kr은 X-Frame-Options·CSP·meta CSP·프레임버스팅이
+       **하나도 없고**, 로그인 세션 쿠키도 iframe 안에서 그대로 유지된다(사장님 계정 실확인).
+       모달 구조는 pmModal(.gen-bg/.gen-box)을 그대로 따른다 — 새 규약을 만들지 않는다(0순위-B).
+       다만 인포크 관리화면은 좌측메뉴+편집+미리보기 3단이라 760px로는 눌린다 → .gen-box-wide. -->
+  <div class="gen-bg" id="inpockModal">
+    <div class="gen-box gen-box-wide">
+      <div class="gen-head">
+        <b>📦 인포크링크에 등록</b>
+        <button class="x" onclick="inpockModalClose()">✕</button>
+      </div>
+      <!-- 링크는 모달을 열 때 이미 복사돼 있다. 인포크에서 붙여넣기(Ctrl+V)만 하면 된다. -->
+      <div id="inpockModalBar" style="padding:10px 18px;border-bottom:1px solid var(--line);
+           display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12px"></div>
+      <div style="flex:1;min-height:0">
+        <!-- src는 열 때 넣는다. 미리 박아두면 페이지 로드마다 인포크를 불러 느려진다. -->
+        <iframe id="inpockFrame" title="인포크링크 관리"
+                style="display:block;width:100%;height:100%;border:0;background:#fff"></iframe>
       </div>
     </div>
   </div>
@@ -3582,12 +3607,13 @@ async function _loadBankInjected(){
 //   8단계(SEO)로 옮겼다 — 링크를 붙일 설명란과 같은 화면이다. 실제 링크는 그 설명란과
 //   9단계 인포크 등록에서 꺼내 쓴다. (단계 번호를 손으로 적지 마라 → stepName())
 let COUPANG={target:'',search_url:'',partners_page:'',product:null,editing:false,
-              results:[],opened:false,autoFor:null,chips:null,seoLoadedFor:null};
+              results:[],opened:false,autoFor:null,chips:null,seoLoadedFor:null,dm_set:null};
 function renderCoupangSlot(d){
   COUPANG.target=d.affiliate_target||'';
   COUPANG.search_url=d.coupang_search_url||'';
   COUPANG.partners_page=d.partners_link_page||'';
   COUPANG.product=d.product||null;
+  COUPANG.dm_set=d.dm_set||null;   // 인포크 붙여넣기용 3줄(서버가 번호까지 붙여 보낸다)
   COUPANG.editing=false;
   const slot=document.getElementById('coupangSlot');
   if(!slot) return;
@@ -3646,9 +3672,55 @@ function coupangInner(){
         <button class="btn-prev" style="padding:6px 12px;font-size:12px" onclick="coupangCopy()">📋 링크 복사</button>
         <button class="btn-prev" style="padding:6px 12px;font-size:12px" onclick="coupangEdit()">수정</button>
         <button class="btn-prev" style="padding:6px 12px;font-size:12px" onclick="coupangSave({clear:true})">해제</button>
-      </div></div>`;
+      </div>${coupangDmSet()}</div>`;
   }
   return head+coupangForm();
+}
+// 📦 인포크에 붙여넣을 세 줄(2026-08-18) — 저장이 끝나면 이미 완성돼 있다.
+// 번호는 서버가 "마지막 번호 다음"으로 자동 부여하고, 한 번 받으면 고정이다.
+// 이름은 지어내지 않는다 — 쿠팡 검색 카드를 고를 때 들어온 **실제 상품명**을 쓴다.
+function coupangDmSet(){
+  const d=COUPANG.dm_set; if(!d) return '';
+  const p=COUPANG.product||{};
+  // 파트너스 링크가 없으면 올려봐야 수수료가 안 붙는다 → 먼저 만들라고 안내한다.
+  if(!p.partner_url){
+    return `<div class="hint" style="margin-top:10px;padding:8px 10px;border:1px dashed var(--line);border-radius:8px">
+      📦 인포크 등록 문구는 <b>파트너스 링크를 넣은 뒤</b> 나옵니다 — 지금 올리면 수수료가 안 붙습니다.</div>`;
+  }
+  const row=(label,val)=>`<div style="display:flex;gap:6px;align-items:center;margin-top:5px">
+      <span class="hint" style="min-width:74px">${label}</span>
+      <input readonly value="${esc(val)}" onclick="this.select()"
+             style="flex:1;min-width:0;background:var(--inset);border:1px solid var(--line);
+                    border-radius:6px;padding:6px 8px;color:var(--txt);font-size:12px">
+      <button class="btn-prev" style="padding:5px 9px;font-size:11px"
+              onclick="dmCopy(this,'${esc(val).replace(/'/g,"\\'")}')">복사</button>
+    </div>`;
+  return `<div style="margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--inset)">
+    <div style="font-weight:600;font-size:13px">📦 인포크에 넣을 문구 <span class="hint">— ${esc(d.number)}번</span></div>
+    ${row('등록 이름', d.listing_name)}
+    ${row('DM 타이틀', d.dm_title)}
+    ${row('버튼 이름', d.dm_button)}
+    ${row('설명(고지)', d.dm_desc)}
+    <div class="hint" style="margin-top:8px">번호는 자동으로 매겨집니다(마지막 번호 다음). 인포크에 이 이름으로 올리면 시청자가 <b>${esc(d.number)}</b>을 검색해 찾습니다.</div>
+  </div>`;
+}
+async function dmCopy(btn, text){
+  // ★writeText는 Promise다 — 동기 try/catch로는 거부를 못 잡아 unhandled rejection이
+  //   페이지 에러로 뜬다(권한 거부·비보안 컨텍스트에서 실제로 발생). await로 잡는다.
+  let ok=true;
+  try{ await navigator.clipboard.writeText(text); }
+  catch(e){
+    try{  // 막혔으면 옛 방식으로 한 번 더(인포크 모달과 같은 폴백)
+      const ta=document.createElement('textarea');
+      ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      ok=document.execCommand('copy');
+      document.body.removeChild(ta);
+    }catch(e2){ ok=false; }
+  }
+  const old=btn.textContent;
+  btn.textContent = ok ? '복사됨' : '복사 실패';   // 실패를 성공으로 보이지 않게
+  setTimeout(()=>{ btn.textContent=old; }, 1200);
 }
 function coupangForm(){
   const p=COUPANG.product||{};
@@ -3808,7 +3880,8 @@ async function coupangSave(opts){
     const r=await fetch('/api/mix/product',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const d=await r.json().catch(()=>({ok:false,error:'응답 파싱 실패'}));
     if(!r.ok||!d.ok){ if(msg) msg.textContent=d.error||'저장 실패'; return; }
-    COUPANG.product=d.product; COUPANG.editing=false; redrawCoupang();
+    COUPANG.product=d.product; COUPANG.dm_set=d.dm_set||null;
+    COUPANG.editing=false; redrawCoupang();
   }catch(e){ if(msg) msg.textContent='네트워크 오류'; }
 }
 // ── 쿠팡 연결 끝 ── COUPANG-END
@@ -6801,7 +6874,9 @@ async function refreshInpock(){
   catch(e){ el.innerHTML='<div class="hint" style="color:var(--fire)">상품 정보 로드 실패</div>'; return; }
   const p=(d&&d.ok)?d.product:null;
   if(!p){
-    el.innerHTML='<div class="hint">🛒 연결할 쿠팡 상품이 없습니다 — '+stepName('mix')+' 편집안 검토에서 지정하면 여기에 등록용 링크가 뜹니다.</div>';
+    // ★상품 확정 UI는 8단계 SEO(#coupangSlot)에 있다 — 2026-08-18 쿠파스 트랙이 3단계에서
+    //   이사했다. 여기가 계속 3단계를 가리키면 "가라는 곳이 빈 화면"이 된다(그쪽이 고친 것과 같은 함정).
+    el.innerHTML='<div class="hint">🛒 연결할 쿠팡 상품이 없습니다 — '+stepName('seo')+' 🛒 상품 확정에서 지정하면 여기에 등록용 링크가 뜹니다.</div>';
     return;
   }
   el.innerHTML=`<div style="border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--inset)">
@@ -6812,9 +6887,10 @@ async function refreshInpock(){
         : '<span style="color:var(--fire)"> · 파트너스 링크 없음 — 이대로 올리면 수수료가 안 붙습니다</span>'}</div>
     <div style="word-break:break-all;color:var(--accent);font-size:12px;margin:6px 0">${esc(d.final_link||'')}</div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <button class="btn-prev" style="padding:7px 13px;font-size:12px" onclick="inpockCopy()">📋 링크 복사</button>
-      <a class="btn-prev" style="padding:7px 13px;font-size:12px;text-decoration:none" target="_blank" rel="noopener"
-         href="${esc(d.inpock_page||'https://link.inpock.co.kr')}">인포크링크 열기 ↗</a>
+      <!-- ★여기서 바로 올린다(2026-08-18). 누르면 링크가 복사된 채 인포크 관리화면이 뜬다.
+           새 탭으로 나가는 링크는 "창 옮겨 다니기"라 남겨두지 않는다 — 한 곳에서만 하게. -->
+      <button class="btn-next" style="padding:7px 13px;font-size:12px" onclick="inpockModalOpen()">📦 인포크에 등록하기</button>
+      <button class="btn-prev" style="padding:7px 13px;font-size:12px" onclick="inpockCopy()">📋 링크만 복사</button>
       <label style="font-size:13px;display:flex;gap:6px;align-items:center;cursor:pointer">
         <input type="checkbox" ${p.inpock_registered?'checked':''} onchange="markInpock(this.checked)"> 등록 완료
       </label>
@@ -6825,6 +6901,68 @@ async function refreshInpock(){
   window._inpockLink=d.final_link||'';
 }
 function inpockCopy(){ try{ navigator.clipboard.writeText(window._inpockLink||''); }catch(e){} }
+
+// ── 📦 인포크 등록 모달(2026-08-18) ──────────────────────────────────────
+// 창을 옮겨 다니지 않고 제작소 안에서 바로 올린다. 실측 근거는 모달 HTML 주석 참조.
+// ★복사는 "됐다고 치지" 않는다 — clipboard는 권한·비보안컨텍스트에서 조용히 실패한다.
+//   실패했는데 "복사됨"이라고 띄우면 사장님이 빈 클립보드로 붙여넣게 된다.
+async function inpockCopyChecked(){
+  const link = window._inpockLink || '';
+  if(!link) return false;
+  try{
+    await navigator.clipboard.writeText(link);
+    return true;
+  }catch(e){
+    // http(비보안) 접속 등에서 clipboard API가 막힌다 → 옛 방식으로 한 번 더.
+    try{
+      const ta=document.createElement('textarea');
+      ta.value=link; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      const ok=document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    }catch(e2){ return false; }
+  }
+}
+async function inpockModalOpen(){
+  const modal=document.getElementById('inpockModal');
+  const frame=document.getElementById('inpockFrame');
+  const bar=document.getElementById('inpockModalBar');
+  if(!modal||!frame) return;
+  const link = window._inpockLink || '';
+  // ★올릴 링크가 없으면 열지 않는다. 상품이 있어도 url·partner_url이 둘 다 비면
+  //   final_link가 빈 문자열이라(coupang_partners.final_link) 버튼은 그려지고 링크만 없다.
+  //   그 상태로 열면 붙여넣을 게 없는 채 인포크만 떠서 헛걸음이 된다.
+  if(!link){
+    alert('올릴 링크가 없습니다 — '+stepName('seo')+' 🛒 상품 확정에서 쿠팡 상품을 먼저 지정하세요.');
+    return;
+  }
+  const copied = await inpockCopyChecked();
+  // 링크는 바에도 그대로 보여준다 — 복사가 막혔어도 눈으로 보고 옮길 수 있어야 한다.
+  bar.innerHTML = `
+    <span style="${copied?'color:var(--ok)':'color:var(--fire)'};font-weight:600">
+      ${copied?'📋 링크가 복사됐습니다 — 인포크에서 붙여넣기(Ctrl+V)':'⚠️ 자동복사 실패 — 아래 링크를 직접 복사하세요'}</span>
+    <input readonly value="${esc(link)}" onclick="this.select()"
+           style="flex:1;min-width:220px;background:var(--inset);border:1px solid var(--line);
+                  border-radius:6px;padding:6px 9px;color:var(--txt);font-size:12px">
+    <label style="display:flex;gap:6px;align-items:center;cursor:pointer;white-space:nowrap">
+      <input type="checkbox" id="inpockModalDone" onchange="markInpock(this.checked)"> 등록 완료
+    </label>`;
+  // 등록완료 체크는 박스와 같은 값을 보여야 한다(두 곳이 어긋나면 중복등록으로 이어진다).
+  const box=document.querySelector('#inpockBox input[type=checkbox]');
+  const done=document.getElementById('inpockModalDone');
+  if(box && done) done.checked = box.checked;
+  // src는 열 때 넣는다 — 페이지 로드마다 인포크를 부르지 않게.
+  if(!frame.src) frame.src = 'https://link.inpock.co.kr/admin';
+  modal.classList.add('open');
+}
+function inpockModalClose(){
+  const modal=document.getElementById('inpockModal');
+  if(modal) modal.classList.remove('open');
+  // ★프레임은 살려둔다 — src를 비우면 다시 열 때마다 인포크에 재로그인 흐름을 타야 한다.
+  //   닫아도 세션이 남아 있어야 "올리고 닫고 또 올리고"가 매끄럽다.
+  refreshInpock();   // 모달에서 체크한 '등록 완료'를 9단계 박스에도 반영
+}
 async function markInpock(checked){
   if(!MIX_JOB) return;
   try{

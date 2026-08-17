@@ -23,6 +23,7 @@ C-2: 복원이 **렌더설정을 안 되살려** [렌더]가 서버 꾸미기를
 import pathlib
 import shutil
 import subprocess
+import tempfile
 
 import pytest
 from fastapi.testclient import TestClient
@@ -41,10 +42,23 @@ def _slice(src, start, end):
 
 
 def _run(js, body):
-    # encoding="utf-8": 기본(cp949) 캡처는 한글 console.log를 못 읽고 죽는다(저장소 전역 함정).
-    r = subprocess.run([NODE, "-e", js + "\n(async()=>{\n" + body + "\n})();"],
-                       capture_output=True, text=True, timeout=30,
-                       encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL)
+    """★`node -e`로 넘기지 않는다 — 임시파일에 써서 실행한다(2026-08-18).
+
+    윈도우 명령줄 상한(약 32,767자)을 슬라이스한 JS가 넘어 `WinError 206
+    파일 이름이나 확장명이 너무 깁니다`로 죽었다. produce.html이 커질 때마다
+    **한 줄만 늘어도 다시 터지는 시한폭탄**이라 상한 자체를 없앤다
+    (test_produce_refresh_persistence·test_produce_work_restore가 같은 이유로 먼저 고쳤다).
+
+    encoding="utf-8": 기본(cp949) 캡처는 한글 console.log를 못 읽고 죽는다(저장소 전역 함정).
+    """
+    src = js + "\n(async()=>{\n" + body + "\n})();"
+    with tempfile.TemporaryDirectory() as td:
+        # 확장자는 .js — `node -e`와 같은 CommonJS 문맥을 유지한다(.mjs면 ESM이 된다).
+        f = pathlib.Path(td) / "harness.js"
+        f.write_text(src, encoding="utf-8")
+        r = subprocess.run([NODE, str(f)],
+                           capture_output=True, text=True, timeout=30,
+                           encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL)
     assert r.returncode == 0, r.stderr
     return r.stdout.strip()
 

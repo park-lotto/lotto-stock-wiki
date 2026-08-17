@@ -3291,10 +3291,21 @@ def api_mix_product(body: dict):
     prev = job.get("product") or {}
     product["inpock_registered"] = bool(
         body.get("inpock_registered", prev.get("inpock_registered", False)))
+    # ── 인포크 번호 자동 부여 (2026-08-18, 사장님 "마지막번호 다음으로") ──
+    # 8단계에서 저장이 끝나는 순간 번호가 붙어, 인포크에 넣을 문구가 이미 완성돼 있다.
+    # ★한 번 받은 번호는 고정이다 — 링크를 고칠 때마다 번호가 바뀌면 이미 인포크에
+    #   등록해둔 것과 어긋나 사장님이 찾지 못한다(등록완료 플래그와 같은 이유).
+    num = prev.get("inpock_number") or body.get("inpock_number")
+    if not num:
+        num = coupang_partners.next_number(store.get_setting("inpock_last_number"))
+        store.set_setting("inpock_last_number", str(num))
+    product["inpock_number"] = str(num)
     store.set_mix_product(job_id, product)
     return {"ok": True, "product": product,
             "final_link": coupang_partners.final_link(product),
-            "description_block": coupang_partners.description_block(product)}
+            "description_block": coupang_partners.description_block(product),
+            "dm_set": coupang_partners.dm_set(product.get("inpock_number"),
+                                              product.get("name"))}
 
 
 @app.get("/api/coupang/search")
@@ -3494,7 +3505,10 @@ def api_mix_product_get(job_id: str):
             "partners_link_page": coupang_partners.PARTNERS_LINK_PAGE,
             "inpock_page": coupang_partners.INPOCK_PAGE,
             "affiliate_target": target,
-            "coupang_search_url": coupang_partners.search_url(target)}
+            "coupang_search_url": coupang_partners.search_url(target),
+            # 인포크에 붙여넣을 세 줄(등록이름·DM 타이틀·버튼). 상품이 없으면 None.
+            "dm_set": coupang_partners.dm_set((product or {}).get("inpock_number"),
+                                              (product or {}).get("name"))}
 
 
 @app.post("/api/mix/retype")
