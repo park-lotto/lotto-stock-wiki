@@ -113,7 +113,9 @@
   #noticeBg.on{display:flex}
   .noticeBox{background:var(--panel);border:1px solid var(--line);border-radius:16px;
     max-width:400px;width:100%;padding:24px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
-  .noticeBox p{margin:0 0 20px;font-size:16px;line-height:1.7}
+  /* ★white-space:pre-line — 문구를 textContent로 넣으므로(XSS 방지) \n이 그냥 씹힌다.
+     팝업이 한 덩어리 글이면 시니어 타깃이 안 읽는다. 줄바꿈은 CSS로 살린다. */
+  .noticeBox p{margin:0 0 20px;font-size:16px;line-height:1.7;white-space:pre-line}
   .noticeBox .btn{width:100%}
 
   @media(max-width:640px){
@@ -465,10 +467,47 @@ async function addKey(svc){
     renderKeys();
     svcMsg(svc, "저장했습니다 (" + d.added + "개). 확인하는 중…", "ok");
     /* ★저장 즉시 verify — 사장님 확정. "등록은 됐는데 되는지 모름"을 없앤다. */
-    await verifyKeys(svc, true);
+    var res = await verifyKeys(svc, true);
+    /* ★결과를 팝업으로도 알린다(2026-08-17 사장님 지시). 카드 안 작은 글씨 한 줄은
+       시니어 타깃이 놓친다 — 등록은 자주 하는 일이 아니라 확실히 알려야 한다. */
+    notice(addResultText(svc, res));
   } catch (e) {
     svcMsg(svc, "⚠️ 저장하지 못했습니다: " + e.message, "err");
+    notice("키를 저장하지 못했습니다.\n\n" + e.message);
   }
+}
+
+/* 등록 직후 팝업 문구 — 상태를 사람 말로 옮기는 유일한 곳(0순위-B).
+   res는 verifyKeys가 돌려준 [{ok, status, label}, ...]. */
+function addResultText(svc, res){
+  var s = SERVICES.filter(function(x){ return x.id === svc; })[0] || {};
+  var name = s.name || svc;
+  if (!res || !res.length) {
+    /* 사장님 키를 쓰는 상태면 서버가 results를 빈 배열로 준다(남의 키 상태는 안 알려준다). */
+    return "✅ " + name + " 키를 저장했습니다.\n\n확인 결과를 받지 못했습니다 — 카드의 [전체 확인]을 눌러 다시 확인해 주세요.";
+  }
+  var bad   = res.filter(function(r){ return r.status === "bad"; }).length;
+  var empty = res.filter(function(r){ return r.status === "empty"; }).length;
+  var good  = res.filter(function(r){ return r.ok; }).length;
+
+  if (bad && !good) {
+    return "❌ 키가 맞지 않습니다.\n\n" + name + " 키를 다시 확인해서 붙여넣어 주세요.\n" +
+           "저장은 됐지만 이 상태로는 쓸 수 없습니다 — 틀린 키는 [삭제]해 주세요.";
+  }
+  if (empty && !good) {
+    return "⚠️ 키는 맞는데 이번 달 무료분을 다 썼습니다.\n\n" +
+           "다음 달에 다시 채워지고, 그때까지는 포인트로 그냥 쓰실 수 있습니다.";
+  }
+  var head = "✅ 테스트 통과 — " + name + " 키가 정상 작동합니다.\n\n";
+  var body = (s.freeOp && PRICES[s.freeOp] != null)
+    ? "이제 이 작업은 포인트가 안 깎입니다 (" + num(PRICES[s.freeOp]) + "P → 0P)."
+    : "이제 이 작업은 사장님 키 대신 내 키로 돕니다.";
+  if (bad || empty) {
+    body += "\n\n다만 " + res.length + "개 중 " + good + "개만 정상입니다" +
+            (empty ? " (" + empty + "개는 무료분 소진)" : "") +
+            (bad ? " (" + bad + "개는 키가 틀림)" : "") + ".";
+  }
+  return head + body;
 }
 
 async function delKey(id){
@@ -481,6 +520,7 @@ async function delKey(id){
   }
 }
 
+/* 결과 배열을 돌려준다 — 등록 직후 팝업이 같은 결과를 쓴다(두 번 확인하지 않는다). */
 async function verifyKeys(svc, quiet){
   if (!quiet) svcMsg(svc, "확인하는 중…", "ok");
   try {
@@ -496,8 +536,13 @@ async function verifyKeys(svc, quiet){
     } else {
       svcMsg(svc, "⚠️ " + res.length + "개 중 " + good + "개만 정상입니다. 틀린 키는 삭제하고 다시 등록해 주세요.", "err");
     }
+    /* 사용자가 [전체 확인]을 직접 눌렀을 때도 결과를 확실히 알린다. */
+    if (!quiet) notice(addResultText(svc, res));
+    return res;
   } catch (e) {
     svcMsg(svc, "⚠️ 확인하지 못했습니다: " + e.message, "err");
+    if (!quiet) notice("확인하지 못했습니다.\n\n" + e.message);
+    return null;
   }
 }
 

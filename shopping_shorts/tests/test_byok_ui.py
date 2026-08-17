@@ -31,6 +31,22 @@ def test_account_tab_merged_into_mypage():
         assert el_id in txt, f"{el_id} 자리가 없다"
 
 
+def test_add_key_shows_result_popup():
+    """★2026-08-17 사장님 지시 — 고객이 키를 추가하면 통과 여부를 팝업으로 알린다.
+    카드 안 작은 글씨 한 줄은 시니어 타깃이 놓친다."""
+    txt = _HTML.read_text(encoding="utf-8")
+    assert "addResultText" in txt, "등록 결과 팝업 문구 함수가 없다"
+    # 저장 → 확인 → 팝업 순서가 실제로 코드에 있는가(문구만 만들고 안 띄우면 소용없다)
+    assert "notice(addResultText(" in txt, "결과를 팝업으로 안 띄운다"
+    assert "await verifyKeys(svc, true)" in txt, "저장 후 자동 확인이 빠졌다"
+    # 세 갈래가 다 사람 말로 갈리는가
+    assert "테스트 통과" in txt
+    assert "키가 맞지 않습니다" in txt
+    assert "무료분을 다 썼습니다" in txt
+    # textContent라 \n이 씹힌다 — CSS로 살려야 줄바꿈이 보인다
+    assert "white-space:pre-line" in txt, "팝업 줄바꿈이 안 보인다"
+
+
 def test_no_coupang_or_buffer_tab():
     """연동이 없는 서비스의 빈 탭을 만들지 않는다."""
     txt = _HTML.read_text(encoding="utf-8")
