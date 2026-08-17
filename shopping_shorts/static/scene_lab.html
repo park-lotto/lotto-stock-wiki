@@ -1737,6 +1737,44 @@ async function boot(){
   else if (DATA.picks && (DATA.picks.lists || []).length) setMode('pick');
   else { initLists(); render(); }
   if (SL.server) pollPhash();
+  wireBandPan();
+}
+
+// ── 타임프레임 좌우 끌기(2026-08-17 사장님 "마우스로 잡고 오른쪽 왼쪽 끌어당기면
+//    좌우스크롤 이동 되게") ────────────────────────────────────────────────────────
+// 칸이 18개라 아래 스크롤바를 정확히 집어야만 옆으로 갈 수 있었다. 이제 띠의 **빈 자리**를
+// 잡고 끌면 따라온다.
+// ★조각(.tbcut)·버튼·체크박스·편집칸 위에서는 걸지 않는다 — 거기엔 이미 각자의 조작이
+//   있다(조각 끌기=순서 바꾸기, 두 번 클릭=빼기). 그 위에서 pan을 켜면 기존 기능이 죽는다.
+// ★끌고 난 뒤의 click은 삼킨다 — 안 그러면 손을 떼는 순간 그 칸이 재생된다.
+function wireBandPan(){
+  const row = document.getElementById('tbrow');
+  if (!row || row._panWired) return;
+  row._panWired = true;
+  let on = false, x0 = 0, left0 = 0, moved = 0;
+  const skip = t => !t || (t.closest && t.closest('.tbcut, button, input, label, [contenteditable="true"]'));
+  row.style.cursor = 'grab';
+  row.addEventListener('pointerdown', e => {
+    if (e.button !== 0 || skip(e.target)) return;
+    on = true; moved = 0; x0 = e.clientX; left0 = row.scrollLeft;
+    row.style.cursor = 'grabbing';
+    row.setPointerCapture(e.pointerId);
+  });
+  row.addEventListener('pointermove', e => {
+    if (!on) return;
+    const dx = e.clientX - x0;
+    if (Math.abs(dx) > moved) moved = Math.abs(dx);
+    row.scrollLeft = left0 - dx;
+  });
+  const end = e => {
+    if (!on) return;
+    on = false; row.style.cursor = 'grab';
+    try{ row.releasePointerCapture(e.pointerId); }catch(err){}
+  };
+  row.addEventListener('pointerup', end);
+  row.addEventListener('pointercancel', end);
+  // 4px 넘게 끌었으면 '끈 것'이지 '누른 것'이 아니다 → 칸 재생을 막는다(캡처 단계).
+  row.addEventListener('click', e => { if (moved > 4){ e.stopPropagation(); e.preventDefault(); moved = 0; } }, true);
 }
 boot();
 </script></body></html>
