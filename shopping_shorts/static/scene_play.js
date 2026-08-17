@@ -379,7 +379,8 @@ function runAllFrom(i){
     //   자막 계산이 렌더와 **같은 함수**(app.py _lab_captions)이고 TTS 실길이가 기준이라
     //   싱크는 동일하기 때문이다. 다른 건 화면상 픽셀 위치뿐이고 그건 확인 대상이 아니다.
     //   ※scene_lab.html 단독으로 열었을 땐 이 콜백이 없다 — optional call이라 그냥 지나간다.
-    try{ if (typeof window.onPlayAllFinished === 'function') window.onPlayAllFinished(); }catch(e){}
+    // typeof는 미선언 식별자에도 에러가 안 난다 — window를 안 거치므로 node에서도 안전.
+    try{ if (typeof onPlayAllFinished === 'function') onPlayAllFinished(); }catch(e){}
     stopPlay(); return;
   }
   const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i]);

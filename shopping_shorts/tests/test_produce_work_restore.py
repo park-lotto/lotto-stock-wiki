@@ -24,7 +24,7 @@ const STEP_LABELS = ['대본','화면 붙이기','TTS','꾸미기','최종'];
 // ★Task 6(2026-07-23): cur(패널 인덱스) 범위 체크는 STEP_LABELS.length(오브 라벨 수)가 아니라
 // PANEL_COUNT(물리 패널 수)를 쓴다 — 신규 매칭 패널(data-step=7)이 생겨 둘이 갈라졌다(7 vs 8).
 const PANEL_COUNT = 8;
-let cur = 0, MIX_JOB = null, WORK_ID = null, PREVIEW_STATUS = null;
+let cur = 0, MIX_JOB = null, WORK_ID = null, PREVIEW_STATUS = null, WATCHED_ALL = false;
 let STYLE_TOUCHED = false, PENDING_STYLE_RESTORE = false;   // 꾸미기 스타일 복원 플래그(C-2 잔여)
 function canGoNext(){ return PREVIEW_STATUS === 'ready' || PREVIEW_STATUS === 'failed'; }
 // _restoreWork의 게이트 재동기는 stepLocked() 하나만 본다(2026-07-26) — 소스와 동일 스텁.
