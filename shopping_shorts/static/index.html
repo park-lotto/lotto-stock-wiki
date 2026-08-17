@@ -491,6 +491,12 @@ body.is-admin .blockbtn{display:inline-block}
               title="올라온 지 24시간 안 된 것만 — 남들보다 먼저 잡으려면 여기">🆕 신작</button>
       <button class="ftog" data-f="rising" onclick="toggleFilter('rising')"
               title="시간당 댓글이 쌓이는 속도가 지금 보이는 것 중 상위 25% — 터지는 중인 것만">🔥 급상승</button>
+      <!-- 채널당 상한(2026-08-18 사장님 "체널당 최신영상 2개까지만 배치하면").
+           한 채널이 최대 53장까지 화면을 도배하던 걸 막는다(실측 5,681장 → 1,347장).
+           ★어떤 2장을 남길지는 여기서 안 정한다 — 지금 켠 정렬 탭이 정한다.
+           최신순 탭이면 최신 2장, 조회수순이면 터진 2장(실측 겹침 62% = 탭마다 다르다). -->
+      <button class="ftog on" data-f="perch" onclick="togglePerChannel()"
+              title="채널마다 상위 2개만 — 한 채널이 화면을 도배하는 걸 막습니다. 어떤 2개인지는 지금 켠 정렬 탭이 정합니다(최신순이면 최신 2개, 조회수순이면 조회수 상위 2개). 끄면 전부 봅니다">📺 채널당 2개</button>
       <span class="fcount" id="fcount"></span>
     </div>
     <!-- 카테고리 줄 — 라벨은 renderCtypes()가 함께 그린다(2026-08-17 사장님 "기간/강도지표/단순지표/카테고리") -->
@@ -602,8 +608,11 @@ function toggleFilter(k){
   renderFilterButtons(); render();
 }
 function renderFilterButtons(){
-  document.querySelectorAll("#filters .ftog").forEach(b=>
-    b.classList.toggle("on", !!STATE.filters[b.dataset.f]));
+  document.querySelectorAll("#filters .ftog").forEach(b=>{
+    // perch(채널당 N개)는 STATE.filters가 아니라 전용 플래그로 산다 — 덮어쓰지 않는다.
+    if(b.dataset.f === "perch"){ b.classList.toggle("on", PER_CHANNEL_ON); return; }
+    b.classList.toggle("on", !!STATE.filters[b.dataset.f]);
+  });
 }
 // 🔥급상승 = 고정 임계값이 아니라 **지금 목록 안에서의 상위 25%**.
 // 고정값(예: 속도 8/h)을 쓰면 회차마다 분포가 달라 어떤 날은 3건, 어떤 날은 200건이 된다.
@@ -619,6 +628,17 @@ let PLATFORM='instagram';
 // [더 보기]를 누를 때마다 이만큼씩 늘어난다 — 데이터를 자르는 게 아니라 그리기만 나눠 한다.
 const RENDER_STEP = 200;
 let RENDER_CAP = RENDER_STEP;
+// 채널당 상한(2026-08-18). 한 채널이 최대 53장까지 도배하던 것 차단 — 실측 5,681→1,347장.
+// 기본 켜짐. 끄면 전량으로 돌아간다(되돌리기가 한 번의 클릭이어야 한다).
+const PER_CHANNEL_MAX = 2;
+let PER_CHANNEL_ON = (localStorage.getItem('ss_perch') !== '0');
+function togglePerChannel(){
+  PER_CHANNEL_ON = !PER_CHANNEL_ON;
+  localStorage.setItem('ss_perch', PER_CHANNEL_ON ? '1' : '0');
+  const b = document.querySelector('.ftog[data-f="perch"]');
+  if(b) b.classList.toggle('on', PER_CHANNEL_ON);
+  render();
+}
 // ── 플랫폼별 안내문구·지표 툴팁(2026-07-24, 토글 노출 대응) — 인스타 기준 문구를
 // 그대로 두면 틱톡/유튜브(시드계정·키워드+14일창, 조회수기반)에 거짓 설명이 된다. ──
 const DESC_BY_PLATFORM = {
@@ -1540,10 +1560,33 @@ function render(opts){
     if(STATE.filters.rising) items = items.filter(i=> (i.speed||0) >= cut);
   }
   const _fc = document.getElementById("fcount");
-  if(_fc) _fc.textContent = (STATE.filters.fresh||STATE.filters.rising)
-    ? `${_beforeFilter}건 중 ${items.length}건 표시 중` : "";
+  if(_fc){
+    // ★숨긴 건 반드시 숫자로 알린다 — 안 그러면 "영상이 사라졌다"로 읽힌다.
+    const parts = [];
+    if(STATE.filters.fresh || STATE.filters.rising)
+      parts.push(`${_beforeFilter}건 중 ${items.length}건 표시 중`);
+    if(_perChCut > 0)
+      parts.push(`채널당 ${PER_CHANNEL_MAX}개만 (${_perChCut}건 접힘)`);
+    _fc.textContent = parts.join(" · ");
+  }
 
   items.sort((a,b)=> sortKey(b)-sortKey(a));
+  // ★채널당 상한 — 반드시 **정렬 뒤에** 자른다(0순위-B: 기준을 두 번 적지 않는다).
+  //   정렬은 sortKey 한 곳이 정하므로, 여기선 "앞에서부터 채널당 N개"만 남기면
+  //   최신순 탭이면 최신 2개, 조회수순 탭이면 조회수 상위 2개가 자동으로 남는다.
+  //   실측: 5,681장 → 1,347장(-76%), 채널 888개는 그대로 유지.
+  //   검색 중에는 끄지 않는다 — 검색은 원래 전역이라 도배가 더 거슬린다.
+  let _perChCut = 0;
+  if(PER_CHANNEL_ON){
+    const seen = {}; const kept = [];
+    for(const i of items){
+      const u = _normUser(i.username) || '?';
+      seen[u] = (seen[u]||0) + 1;
+      if(seen[u] <= PER_CHANNEL_MAX) kept.push(i);
+    }
+    _perChCut = items.length - kept.length;
+    items = kept;
+  }
   // 배지용 백분위 컨텍스트 — 지금 보이는 항목 기준(정렬·필터 반영)
   const _bctx={ vs:items.map(i=>i.views||0).sort((a,b)=>a-b),
                 ds:items.map(i=>i.density||0).sort((a,b)=>a-b),
