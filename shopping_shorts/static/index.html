@@ -1470,7 +1470,23 @@ async function resumeOverseasStatusIfRunning(){
 // 전부 안 먹힌다"로 보인다 — 카드 한 장의 결측이 페이지 전체를 멈추면 안 된다.
 function _num(v, d){ return (typeof v === 'number' && isFinite(v)) ? v.toFixed(d) : '—'; }
 function _pct(v){ return (typeof v === 'number' && isFinite(v)) ? (v*100).toFixed(2)+'%' : '—'; }
+// ★재생 중인 것을 먼저 멈춘다(2026-08-17 사장님 제보).
+// 브라우저는 재생 중인 <video>를 DOM에서 지워도 **재생을 멈추지 않는다** — 화면에선
+// 사라졌는데 소리만 계속 흐른다. 그래서 홈템에서 미리보기를 튼 뒤 '전체'를 누르면
+// 안 보이는 영상 소리가 이어졌다. 새로 그리기 전에 명시적으로 세워야 한다.
+// iframe(임베드 폴백)도 같다 — src를 비워야 안에서 돌던 재생이 끊긴다.
+function stopAllMedia(root){
+  const box = root || document;
+  box.querySelectorAll('video, audio').forEach(v=>{
+    try{ v.pause(); v.removeAttribute('src'); v.load(); }catch(e){}
+  });
+  box.querySelectorAll('iframe').forEach(f=>{
+    try{ f.src = 'about:blank'; }catch(e){}
+  });
+}
+
 function render(){
+  stopAllMedia(document.getElementById('cards'));
   let items = STATE.items.slice();
   if(BLOCKED.size) items = items.filter(i=> !BLOCKED.has(_normUser(i.username)));  // 차단 채널은 항상 가린다
   const searching = !!(STATE.q && STATE.q.trim());
