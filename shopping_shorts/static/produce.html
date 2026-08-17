@@ -1278,6 +1278,10 @@
     <section class="panel" data-step="7">
       <h3 data-steptitle="mix">2 · 영상대본MIX</h3>
       <div class="sub">문장마다 어떤 화면이 붙는지 정하고 미리 봅니다 — 아래 타임프레임이 <b>영상 전체의 흐름</b>입니다.</div>
+      <!-- ★미리보기 버튼은 **머리글 바로 아래**(2026-08-17 사장님) — 예전엔 단계바 한참
+           아래에 있어 빈 공간을 사이에 두고 떨어져 있었다. 자리만 옮기고 그리는 코드
+           (#mixPreviewCta에 innerHTML)는 그대로다 — 이 id는 화면에 하나뿐이어야 한다. -->
+      <div id="mixPreviewCta" style="margin:10px 0 4px"></div>
       <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
         <!-- ◀ 좌측 레일: ③ 미리보기(9:16) — 편집안이 뜨면(loadMixReview) 여기가 프리뷰 자리가 된다.
              T8: 다른 패널의 .previewSlot과 같은 규약(sticky) 공유. -->
@@ -1331,7 +1335,7 @@
             <summary style="cursor:pointer;font-size:12px;color:var(--sub);font-weight:800">장면 바꾸기 · 전체 보기 ▾</summary>
             <div id="mixReview" style="margin-top:10px"></div>
           </details>
-          <div id="mixPreviewCta" style="margin-top:16px"></div>
+          <!-- (미리보기 버튼은 위 머리글 아래로 옮겼다 — 2026-08-17) -->
           <!-- 중복 제거(2026-07-23 사장님): in-card '다음' 버튼은 맨 아래 전역 '다음 →'(#btnNext)와 go(1) 동일 + 라벨(음성)도 오브 재정렬로 stale였음. 하단 전역 nav로 일원화. -->
       <!-- ★장면 편집을 **미리보기 옆**으로 올렸다(2026-08-16 사장님 "미리보기썸네일 +
            소스 + 영상전체 가로 타임프레임 형태"). 대본이 2단계로 가면서 오른쪽 칼럼
@@ -1351,7 +1355,7 @@
                   onclick="toggleSceneLabWide()">⛶ 넓게 보기</button>
         </div>
         <iframe id="sceneLabFrame" title="장면 편집"
-                style="width:100%;height:88vh;min-height:600px;border:1px solid var(--line);border-radius:12px;background:#0f1115"></iframe>
+                style="width:100%;height:124vh;min-height:900px;border:1px solid var(--line);border-radius:12px;background:#0f1115"></iframe>
         <!-- 안내 문구 삭제(2026-08-15 사장님) -->
       </div>
         </div><!-- /오른쪽 칼럼 -->

@@ -101,7 +101,10 @@ h1{font-size:16px;margin:0;font-weight:700}
 .wrap{display:flex;gap:12px;align-items:stretch;min-height:0}
 /* ★미리보기 칸은 스크롤이 없어야 한다(2026-08-16 사장님) — 안의 영상이 남는 높이에
    맞춰 줄어든다(아래 #player/#vidbox). overflow:auto를 쓰면 스크롤바가 생긴다. */
-#playerhost{flex:0 0 300px;max-width:300px;overflow:hidden;padding:14px 0 14px 14px;
+/* ★미리보기 칸을 키웠다(2026-08-17 사장님 "썸네일이 너무 작다") — 300 → 440px.
+   폭이 커진 만큼 안의 영상(#vidbox)도 커진다. 오른쪽 소스 칸은 iframe 높이를
+   같이 늘려(제작소 #sceneLabFrame 124vh) 한 화면에 더 많이 들어오게 했다. */
+#playerhost{flex:0 0 440px;max-width:440px;overflow:hidden;padding:14px 0 14px 14px;
   display:flex;flex-direction:column;gap:8px;min-width:0;min-height:0}
 .pane.left{flex:1;min-width:0}
 .pane.rightcol{display:none}       /* 오른쪽 칼럼 폐지: 미리보기가 왼쪽으로 왔다 */
