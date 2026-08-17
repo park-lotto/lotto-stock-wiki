@@ -925,39 +925,80 @@
     </section>
     <section class="panel" data-step="2">
       <h3 data-steptitle="tts">4 · TTS음성</h3>
-      <div class="sub">성우 프리셋을 고르면 톤·속도·감도가 한 번에 세팅됩니다. 들어보고 다음으로.</div>
-      <button id="openVoiceTune" style="display:none" class="btn-prev" onclick="window.open('/voice_tune','_blank')">🩺 발음교정 작업대 열기</button>
-      <label style="display:flex;align-items:center;gap:8px;margin:8px 0;cursor:pointer">
-        <input type="checkbox" id="noVoice" onchange="onNoVoice()"> <b>자막/음성 없이 진행</b>
-        <span class="hint">켜면 TTS·자막 없이 영상만 내보냅니다</span>
-      </label>
-      <!-- 기본 접힘(2026-07-27 사장님): 1단계에서 이미 기본 성우로 완성돼 이 단계가 '빈 성우선택'으로
-           보이던 문제 — 완성본(아래 #ttsBeats)이 앞에 오고, 목소리를 바꿀 사람만 펼치게 한다. -->
-      <details style="margin:8px 0">
-        <summary style="cursor:pointer;font-weight:600">🎙 목소리 바꾸기 <span style="font-weight:400;color:var(--sub)">— 이미 기본 성우로 완성됐어요. 바꾸려면 눌러서 펼치기</span></summary>
+      <div class="sub">이미 기본 성우로 만들어져 있어요 — <b>들어보고 괜찮으면 다음</b>으로 넘어가세요.</div>
+      <!-- ══════════════════════════════════════════════════════════════════
+           ★들어보기 중심 재배치 (2026-08-18 사장님 "복잡해서 뭐부터 할지 모름 / 정렬 엉망")
+           실측한 문제:
+             ① 좌측 안내문이 폭 1226px을 먹는데 높이는 47px → 그 아래 **세로 381px 빈 구멍**
+                (좌측 안내문 끝 266px ↔ 완성미리보기 시작 647px). 스크린샷의 큰 검은 자리.
+             ② 우측 성우카드는 633px까지 내려오는데 좌측은 266px에서 끝나 **367px 어긋남**.
+             ③ 첫 화면 선택지가 5갈래(발음교정/자막없이/목소리바꾸기/성우14명/다음) —
+                정작 이 단계에서 할 일은 대개 "들어보고 다음"인데 그게 맨 아래 있었다.
+           고친 방식: **순서만 바꾼다.** id는 하나도 안 지운다(전부 JS가 참조 중 —
+           voiceUI·voiceHint·voiceControls·presetCards·ttsBeats·noVoice·openVoiceTune 등).
+             ①완성본 듣기(#ttsBeats)를 맨 위 주인공으로
+             ②목소리 바꾸기는 접힌 채 그 아래 — 지금 성우 이름을 요약에 띄운다
+             ③자막없이·발음교정은 '그 밖 설정'으로 묶어 첫 화면에서 뺀다
+           ══════════════════════════════════════════════════════════════════ -->
+      <!-- ① 완성 음성 미리보기 — 이 단계의 주인공. renderTtsBeats()가 이 안을 통째로 다시
+           그리므로(6340줄) 안쪽은 건드리지 않는다. 자리만 맨 위로 올렸다. -->
+      <div id="ttsBeats" style="margin:14px 0 4px">
+        <!-- ★대기 상태 안내는 **프레임 오른쪽**에 둔다(2026-08-18). 예전엔 220px 프레임 안에
+             글을 우겨넣어 4줄로 접히고, 그 오른쪽 1357px(줄 폭의 86%)이 통째로 비었다(실측).
+             음성이 만들어지면 renderTtsBeats가 그 자리를 장면 목록으로 채우므로, 대기 때도
+             같은 자리에 안내를 놓아야 화면이 바뀌는 방식이 예측된다. -->
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:stretch">
+          <div style="width:220px;aspect-ratio:9/16;border:1px dashed var(--line);border-radius:10px;background:var(--inset);display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;box-sizing:border-box;flex:0 0 auto">
+            <div class="hint">🎬 완성 음성<br>미리보기 자리</div>
+          </div>
+          <div style="flex:1 1 320px;min-width:280px;display:flex;flex-direction:column;justify-content:center;gap:10px;padding:16px 18px;border:1px dashed var(--line);border-radius:10px;background:var(--inset);box-sizing:border-box">
+            <div style="font-size:15px;font-weight:800;color:var(--txt)">아직 완성 음성이 없어요</div>
+            <div class="hint" style="line-height:1.6">아래 <b>🎙 목소리 바꾸기</b>에서 성우를 고르고<br><b>[이 음성으로 전체 생성]</b>을 누르면<br>여기에 <b>▶ 완성본 전체 듣기</b>와 장면별 목록이 생깁니다.</div>
+          </div>
+        </div>
+      </div>
+      <!-- ② 목소리 바꾸기 — 접힌 채. summary에 **지금 성우**를 띄워 "뭐로 만들어졌는지"를
+           펼치지 않고도 알게 한다(#curVoiceName은 pickPreset/loadTtsBeats가 갱신). -->
+      <details style="margin:10px 0 0">
+        <summary style="cursor:pointer;font-weight:600;padding:10px 0;min-height:44px;box-sizing:border-box;display:flex;align-items:center;gap:6px;flex-wrap:wrap">🎙 목소리 바꾸기 <span id="curVoiceName" style="font-weight:400;color:var(--sub)">— 기본 성우로 완성됨</span></summary>
+      <!-- ★좌우를 뒤집었다(2026-08-18). 예전엔 [설정 | 성우카드] 순서라, 성우를 고르기 전
+           왼쪽 큰 칸이 안내문 한 줄(높이 47px)만 담은 채 폭 1226px을 먹어 **세로 381px짜리
+           빈 구멍**이 생겼다(실측). 순서를 [성우카드 | 설정]으로 바꾸면 먼저 할 일(고르기)이
+           왼쪽에 오고, 아직 안 고른 상태에서 오른쪽 안내문은 좁은 칸에만 머문다.
+           align-items:flex-start는 그대로 — 두 칸 높이를 억지로 맞추지 않는다. -->
+      <!-- ★안내문은 두 칸 **위 한 줄**로 뺐다(2026-08-18). 오른쪽 칸 안에 두면 그 칸이
+           폭 1226px을 잡은 채 높이는 47px뿐이라, 420px짜리 성우카드와 **367px 어긋난다**
+           (좌우 뒤집기만으로는 안 없어졌다 — 실측으로 확인). 성우를 고르면 이 줄이 사라지고
+           (#voiceHint display:none, pickPreset) 오른쪽 칸을 설정이 실제 내용으로 채운다. -->
+      <div id="voiceHint" class="hint" style="margin-top:8px;padding:12px 14px;border:1px dashed var(--line);border-radius:9px;background:var(--inset)">아래에서 <b>성우</b>를 고르면 오른쪽에 속도·미리듣기 설정이 나타납니다.</div>
       <div id="voiceUI" style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin-top:8px">
-        <!-- ◀ 좌: 미리듣기·설정 (성우를 고르면 나타난다). 우측 성우카드와 나란히 — 스크롤 없이 한 화면 -->
+        <!-- ◀ 좌: 성우 카드 (⭐베스트 5 상시 + ＋더보기로 나머지 9명) — 먼저 하는 일 -->
+        <div style="flex:0 0 320px;min-width:260px;max-width:360px">
+          <div id="presetCards">불러오는 중…</div>
+        </div>
+        <!-- ▶ 우: 미리듣기·설정 (성우를 고르면 나타난다) -->
         <div style="flex:1 1 300px;min-width:280px;position:sticky;top:8px">
-          <div id="voiceHint" class="hint" style="padding:14px;border:1px dashed var(--line);border-radius:9px;background:var(--inset)">오른쪽에서 <b>성우</b>를 고르면 여기서 속도·미리듣기를 설정합니다.</div>
           <div id="voiceControls" style="display:none">
           <div style="font-size:12px;color:var(--sub)">속도</div>
           <div id="speedBtns" style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px"></div>
           <div style="font-size:12px;color:var(--sub)">무음 삭제</div>
           <div id="silenceBtns" style="display:flex;gap:6px;margin:4px 0 10px"></div>
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub);margin:2px 0 10px;cursor:pointer">
+          <!-- 44px 터치타깃(2026-08-18) — 주 사용자가 60대라 체크박스 13px은 누르기 어렵다.
+               라벨 전체가 클릭 영역이므로 라벨 높이를 키운다(체크박스 자체는 그대로). -->
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub);margin:2px 0 6px;cursor:pointer;min-height:44px">
             <input type="checkbox" id="paceMode" checked onchange="setPace(this.checked)">
             ⚡ 속도감 모드 <span style="opacity:.7">(무음 컷·타이트 이음)</span>
           </label>
           <!-- whisper role 선택(#whisperRoleControls)은 여기 없다 — 2026-07-17 결함① 수정으로
                renderPresetCards()가 선택된 whisper 카드 "안"에 직접 그린다. 예전엔 여기(카드
                14개 전부 밑)에 있어 화면 밖으로 밀려났었다. -->
-          <details style="margin:8px 0">
-            <summary style="cursor:pointer;font-size:13px;color:var(--sub)">고급 ▾</summary>
+          <details style="margin:2px 0 8px">
+            <summary style="cursor:pointer;font-size:13px;color:var(--sub);min-height:44px;display:flex;align-items:center">고급 ▾</summary>
             <div style="padding:8px 0;display:flex;flex-direction:column;gap:8px">
               <label>Stability <input type="range" id="advStability" min="0" max="1" step="0.05" oninput="onAdv()"> <span id="advStabilityV"></span></label>
               <label>Similarity <input type="range" id="advSimilarity" min="0" max="1" step="0.05" oninput="onAdv()"> <span id="advSimilarityV"></span></label>
               <label>Style <input type="range" id="advStyle" min="0" max="1" step="0.05" oninput="onAdv()"> <span id="advStyleV"></span></label>
-              <label><input type="checkbox" id="advBoost" onchange="onAdv()"> Speaker boost</label>
+              <label style="display:flex;align-items:center;gap:6px;min-height:44px;cursor:pointer"><input type="checkbox" id="advBoost" onchange="onAdv()"> Speaker boost</label>
             </div>
           </details>
           <button onclick="previewVoice()" class="btn-prev" style="padding:8px 14px;margin-right:8px" title="이 성우·설정으로 대본 일부만 짧게 들어봅니다 (완성본 아님)">🎧 목소리만 미리듣기</button>
@@ -965,21 +1006,20 @@
           <div id="voicePreview" style="margin-top:8px"></div>
           </div>
         </div>
-        <!-- ▶ 우: 성우 카드 (⭐베스트 5 상시 + ＋더보기로 나머지 9명) -->
-        <div style="flex:0 0 320px;min-width:260px;max-width:360px">
-          <div id="presetCards">불러오는 중…</div>
-        </div>
       </div>
       </details>
-      <!-- 완성 음성 미리보기 슬롯 — 처음부터 큰 자리를 잡아둔다(생성 후 재생기가 '여기' 나타난다는
-           예고 + 레이아웃 점프 방지). renderTtsBeats()가 같은 자리(왼쪽 프레임+큰 재생버튼)로 채운다. -->
-      <div id="ttsBeats" style="margin-top:14px">
-        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
-          <div style="width:220px;aspect-ratio:9/16;border:1px dashed var(--line);border-radius:10px;background:var(--inset);display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;box-sizing:border-box;flex:0 0 auto">
-            <div class="hint">🎬 완성 음성 미리보기 자리<br><br>성우를 고르고 <b>[이 음성으로 전체 생성]</b>을 누르면<br>여기에 <b>▶ 완성본 전체 듣기</b>가 생겨요</div>
-          </div>
+      <!-- ③ 그 밖 설정 — 자주 안 쓰는 것을 첫 화면에서 뺀다. 안의 id(noVoice·openVoiceTune)는
+           그대로다: onNoVoice()와 관리자 노출 코드가 그 id로 찾는다(지우면 죽는다). -->
+      <details style="margin:6px 0 0">
+        <summary style="cursor:pointer;font-weight:600;padding:10px 0;min-height:44px;box-sizing:border-box;display:flex;align-items:center;color:var(--sub)">⚙ 그 밖 설정</summary>
+        <div style="padding:4px 0 2px">
+          <label style="display:flex;align-items:center;gap:8px;margin:8px 0;cursor:pointer;min-height:44px">
+            <input type="checkbox" id="noVoice" onchange="onNoVoice()"> <b>자막/음성 없이 진행</b>
+            <span class="hint">켜면 TTS·자막 없이 영상만 내보냅니다</span>
+          </label>
+          <button id="openVoiceTune" style="display:none" class="btn-prev" onclick="window.open('/voice_tune','_blank')">🩺 발음교정 작업대 열기</button>
         </div>
-      </div>
+      </details>
       <button class="btn-next" style="margin-top:12px;padding:8px 16px" onclick="vpGateNext()">다음 단계 (꾸미기) →</button>
     </section>
     <section class="panel" data-step="3">
@@ -6192,6 +6232,7 @@ async function loadTtsBeats(){
     const d=await (await fetch('/api/voice-presets?lang=KR')).json();
     VOICE_GROUPS=d.groups||[];
     renderPresetCards();
+    syncCurVoiceName();   // 처음 뜰 때도 접힌 줄에 지금 성우를 띄운다(2026-08-18)
   }catch(e){ document.getElementById('presetCards').innerHTML='<div class="hint" style="color:var(--fire)">프리셋 로드 실패</div>'; return; }
   renderTtsBeats();
 }
@@ -6247,6 +6288,18 @@ function pickVariant(gid, variant){
   pickPreset(gid); // 버튼으로 톤 전환 시 바로 적용
 }
 
+// 접힌 '🎙 목소리 바꾸기' 줄에 **지금 무슨 성우로 만들어졌는지**를 띄운다(2026-08-18).
+// 펼치지 않고도 알 수 있어야 "복잡해서 뭐부터 할지 모름"이 준다 — 사장님이 이 단계에서
+// 확인하고 싶은 건 대개 그거 하나다. 이름을 정하는 곳은 **여기 한 군데**로 둔다(0순위-B):
+// pickPreset(고를 때)과 loadTtsBeats(처음 뜰 때)가 같은 함수를 부른다.
+function syncCurVoiceName(){
+  const el=document.getElementById('curVoiceName'); if(!el) return;
+  const g=(VOICE_GROUPS||[]).find(x=>x.group_id===VOICE.group_id);
+  if(!g){ el.textContent='— 기본 성우로 완성됨'; return; }
+  const tone=VARIANT_LABELS[VOICE.variant]||'';
+  el.textContent='— 지금: '+g.name+(tone?(' · '+tone):'');
+}
+
 function pickPreset(gid){
   const g=VOICE_GROUPS.find(x=>x.group_id===gid);
   if(!g) return;
@@ -6257,7 +6310,8 @@ function pickPreset(gid){
          settings:Object.assign({}, v.voice_settings), speed:v.default_speed,
          silence_trim:v.default_silence_trim, pace_mode:VOICE.pace_mode!==false, group_id:gid, variant};
   document.getElementById('voiceControls').style.display='block';
-  { const _vh=document.getElementById('voiceHint'); if(_vh) _vh.style.display='none'; }  // 성우 고르면 좌측 안내문 → 컨트롤
+  { const _vh=document.getElementById('voiceHint'); if(_vh) _vh.style.display='none'; }  // 성우 고르면 안내문 → 컨트롤
+  syncCurVoiceName();     // 접힌 '🎙 목소리 바꾸기' 줄에 지금 성우를 띄운다(2026-08-18)
   pickHighlight();
   renderPresetCards();  // whisper role 선택도 이 안에서 카드와 같이 그려진다(결함① 수정, 별도 호출 불필요)
   const vs=VOICE.settings||{};
@@ -6340,10 +6394,17 @@ async function applyVoice(){
 async function renderTtsBeats(){
   const el=document.getElementById('ttsBeats');
   // 매칭 전에도 큰 미리보기 자리는 유지한다(처음 상태에서 자리 예약 — 2026-07-25 사장님 요청).
+  // ★대기 화면 모양은 HTML 초기값(#ttsBeats 안)과 **같은 틀**을 쓴다(2026-08-18).
+  //   여기만 옛 모양(220px 프레임 하나)으로 두면, 화면을 처음 열었을 때와 이 함수가 다시
+  //   그린 뒤가 서로 다르게 보인다 — 같은 판단을 두 벌로 적으면 반드시 어긋난다(0순위-B).
   if(!MIX_JOB){ el.innerHTML=`
-    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
+    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:stretch">
       <div style="width:220px;aspect-ratio:9/16;border:1px dashed var(--line);border-radius:10px;background:var(--inset);display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;box-sizing:border-box;flex:0 0 auto">
-        <div class="hint">🎬 완성 음성 미리보기 자리<br><br>2단계 <b>영상 매칭</b>을 완료하면<br>여기서 완성본을 듣습니다</div>
+        <div class="hint">🎬 완성 음성<br>미리보기 자리</div>
+      </div>
+      <div style="flex:1 1 320px;min-width:280px;display:flex;flex-direction:column;justify-content:center;gap:10px;padding:16px 18px;border:1px dashed var(--line);border-radius:10px;background:var(--inset);box-sizing:border-box">
+        <div style="font-size:15px;font-weight:800;color:var(--txt)">아직 완성 음성이 없어요</div>
+        <div class="hint" style="line-height:1.6">먼저 <b>3단계 영상대본MIX</b>에서 영상 매칭을 끝내면<br>여기서 완성본을 듣습니다.</div>
       </div>
     </div>`; return; }
   try{
