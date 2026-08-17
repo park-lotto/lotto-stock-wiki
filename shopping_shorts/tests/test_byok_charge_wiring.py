@@ -31,9 +31,13 @@ def test_lens_charges_when_owner_key(store, monkeypatch):
 
 
 def test_script_free_with_user_key(store, monkeypatch):
+    """★2026-08-17 SVC_GEMINI → SVC_VMAKE로 바꿨다. 제미나이 키는 실제 호출에
+    안 쓰이는데(key_vault 경유) 면제만 해주고 있었다 = 회사 키로 돌면서 돈은
+    안 받는 구멍. 이 테스트가 그 구멍을 '정상'으로 박아두고 있었다.
+    면제는 **진짜 쓰이는 서비스**(keyroute.WIRED)에서만 성립한다."""
     monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님키"])
-    store.add_customer_key(4, keyroute.SVC_GEMINI, "내키")
-    assert keyroute.should_charge(store, 4, keyroute.SVC_GEMINI) is False
+    store.add_customer_key(4, keyroute.SVC_VMAKE, "내키")
+    assert keyroute.should_charge(store, 4, keyroute.SVC_VMAKE) is False
 
 
 # ── 일일 상한 기본값 (사장님 지시 2026-08-17) ─────────────────────────
@@ -133,9 +137,9 @@ def test_402_body_has_need_and_have(charge):
 def test_charge_free_with_user_key(charge):
     """★사용자 키가 있으면 None이고 잔액도 그대로다(잔액 0이어도 통과)."""
     _charge_or_402, st = charge
-    st.add_customer_key(4, keyroute.SVC_GEMINI, "내키")
+    st.add_customer_key(4, keyroute.SVC_SERPAPI, "내키")   # 렌즈는 serpapi 키를 실제로 쓴다
     assert points.balance(st, 4) == 0
-    assert _charge_or_402(4, pricing.OP_LENS, keyroute.SVC_GEMINI) is None
+    assert _charge_or_402(4, pricing.OP_LENS, keyroute.SVC_SERPAPI) is None
     assert points.balance(st, 4) == 0, "내 키를 쓰는데 포인트가 깎이면 안 된다"
 
 
@@ -153,8 +157,8 @@ def test_charge_owner_cid_zero_not_charged(charge):
 def test_charge_cid_string_normalized(charge):
     """cid가 문자열 "4"로 와도 같은 사람이다(2026-07-30 실사고 계열)."""
     _charge_or_402, st = charge
-    st.add_customer_key(4, keyroute.SVC_GEMINI, "내키")
-    assert _charge_or_402("4", pricing.OP_LENS, keyroute.SVC_GEMINI) is None
+    st.add_customer_key(4, keyroute.SVC_SERPAPI, "내키")
+    assert _charge_or_402("4", pricing.OP_LENS, keyroute.SVC_SERPAPI) is None
     assert points.balance(st, 4) == 0
 
 
@@ -191,9 +195,9 @@ def test_refund_restores_points(refund):
 def test_refund_noop_for_user_key(refund):
     """★안 깎은 사람에게 돈이 생기면 안 된다 — 사용자 키는 환불도 없다."""
     _charge, _refund_points, st = refund
-    st.add_customer_key(4, keyroute.SVC_GEMINI, "내키")
-    assert _charge(4, pricing.OP_LENS, keyroute.SVC_GEMINI) is None
-    _refund_points(4, pricing.OP_LENS, keyroute.SVC_GEMINI)
+    st.add_customer_key(4, keyroute.SVC_SERPAPI, "내키")
+    assert _charge(4, pricing.OP_LENS, keyroute.SVC_SERPAPI) is None
+    _refund_points(4, pricing.OP_LENS, keyroute.SVC_SERPAPI)
     assert points.balance(st, 4) == 0
 
 

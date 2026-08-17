@@ -29,6 +29,25 @@ SVC_SERPAPI = "serpapi"
 
 SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_YOUTUBE, SVC_SERPAPI)
 
+# ★등록은 받지만 **실제 호출에 쓰이는** 서비스는 아직 이 둘뿐이다(2026-08-17 실측).
+#   - vmake     : mix_pipeline.py:1432-1433 job의 customer_id → _vmake_key → keys_for
+#   - serpapi   : app.py _lens_api_keys(cid) → 렌즈 호출부 2곳
+#   나머지 셋은 **저장만 된다** — 호출부가 customer_id를 안 넘겨 항상 사장님 키로 돈다:
+#   - elevenlabs: mix_pipeline.py:196 synthesize_line 시그니처에 customer_id가 아예 없음
+#   - youtube   : service.py:176·179 yt_search 호출에 customer_id 없음
+#   - gemini    : 실제 키 선택은 key_vault/SHORTS_GEMINI_KEYS 경유(호출부 ~80곳)
+#
+# ⚠️여기 이름을 옮기기 전에 **호출부에 cid가 진짜 닿는지 먼저 확인해라.**
+#   이 목록이 앞서가면 아래 should_charge가 '안 쓰이는 키'로 과금을 면제한다 =
+#   회사 키로 돌면서 돈은 안 받는 구멍이 된다(2026-08-17에 실제로 그 상태였다).
+WIRED = (SVC_VMAKE, SVC_SERPAPI)
+
+
+def uses_customer_key(service):
+    """등록한 키가 실제 작업에 쓰이는 서비스인가. 화면 문구도 이걸 봐야
+    "등록하면 0P"라는 거짓말이 안 나간다(0순위-B: 판단은 한 곳에서)."""
+    return service in WIRED
+
 
 def as_cid(customer_id):
     """cid는 int 0과 문자열 "0"이 섞여 온다(app.py:6813의 2026-07-30 실사고).
@@ -106,6 +125,13 @@ def keys_for(store, customer_id, service):
 def should_charge(store, customer_id, service):
     """포인트를 깎아야 하는가. 사용자 키를 쓰면 안 깎는다.
 
-    ★keys_for의 판단을 그대로 뒤집기만 한다 — 여기서 따로 판단하면 어긋난다."""
+    ★keys_for의 판단을 그대로 뒤집기만 한다 — 여기서 따로 판단하면 어긋난다.
+
+    ★단 '실제로 안 쓰이는 서비스'는 등록돼 있어도 과금한다(2026-08-17 실사고).
+      대본·영상제작은 SVC_GEMINI 기준으로 면제하는데 제미나이 키는 실제 호출에
+      안 쓰인다 → 고객이 키만 등록하면 **회사 키로 돌면서 포인트는 0**이었다.
+      배선이 끝나 WIRED에 들어가는 순간 이 예외는 저절로 사라진다."""
+    if not uses_customer_key(service):
+        return True
     _, is_user = keys_for(store, customer_id, service)
     return not is_user
