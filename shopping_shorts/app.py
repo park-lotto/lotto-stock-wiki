@@ -10149,7 +10149,13 @@ def api_thumb_titles(body: dict):
     # 제목은 이미 edit_plan(영상)으로 지어 영상과 일치하므로, 이 경고는 순수히 '네 1단계 수정은
     # 영상에 아직 안 들어갔다'는 안내다(같으면=안 고쳤으면 안 뜬다 → 정상 흐름은 조용하다).
     mismatch = bool(screen_script and job_script and screen_script != job_script)
-    titles = thumb_title.generate(job_for_titles)
+    # 다시 누르면 다른 각도가 나오게 참고 훅을 회전시킨다(프런트가 누른 횟수를 seed로 보낸다).
+    # 정수가 아니면 0 — 사용자 입력이라 믿지 않는다.
+    try:
+        seed = int(body.get("seed") or 0)
+    except (TypeError, ValueError):
+        seed = 0
+    titles = thumb_title.generate(job_for_titles, seed=seed)
     if titles is None:
         return JSONResponse(status_code=502,
                             content={"ok": False, "error": "제목 생성 실패 — 잠시 후 다시 눌러보세요"})

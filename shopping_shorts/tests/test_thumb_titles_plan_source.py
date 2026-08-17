@@ -22,7 +22,7 @@ def _capture_generate(monkeypatch):
     """thumb_title.generate가 실제로 받은 대본을 잡아 돌려준다."""
     captured = {}
 
-    def fake_generate(job):
+    def fake_generate(job, seed=0):      # seed=참고 훅 회전(2026-08-18 추가)
         captured["script"] = job.get("given_script")
         return [{"text": "하얀\n비밀", "why": "호기심"}]
 

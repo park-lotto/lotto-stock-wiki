@@ -1268,6 +1268,9 @@
           </div>
           <div id="thumbLayers" style="display:flex;flex-direction:column;gap:4px"></div>
 
+          <div style="font-size:12px;color:var(--sub);margin:10px 0 4px">😀 스티커 — 누르면 썸네일에 얹혀요 (드래그로 옮기고, 크기 조절)</div>
+          <div id="thumbStickers" style="display:flex;gap:4px;flex-wrap:wrap"></div>
+
           <button class="btn-next" style="width:100%;margin:10px 0 4px;padding:10px;font-size:14px"
                   onclick="suggestThumbTitles()">🪄 원본 영상 보고 제목 추천받기</button>
           <div id="thumbTitleSuggest" style="display:flex;flex-direction:column;gap:5px"></div>
@@ -7026,12 +7029,85 @@ function thumbFit(ctx, L, W, H){
   return {lines, size, family};
 }
 
+// ── ✨ 강조 효과(2026-08-18) — 눈에 확 들어오는 '포인트'를 글자에 얹는다 ──────────────
+// 사장님 요청: 밑줄·형광펜 같은 시선 장치. 캔버스가 최종 PNG를 그리므로(서버 합성 없음)
+// 전부 여기서 그린다 — 미리보기와 결과가 같은 코드를 타야 어긋나지 않는다.
+//
+// L.fx = {underline:'none'|'line'|'brush', marker:null|{color}, glow:null|{color}}
+// 없으면(구 레이어·구 저장본) 아무것도 안 그린다 = 종전 그림 그대로(회귀 0).
+//
+// ★그리는 순서가 곧 쌓임 순서다: 형광펜(글자 뒤) → 외곽선 → 글자 → 밑줄(글자 아래 획).
+//   형광펜을 글자 뒤에 깔지 않으면 글자를 덮어 못 읽는다.
+function _fxMarker(ctx, line, y, size, fx){
+  if (!fx || !fx.marker) return;
+  const w = ctx.measureText(line).width;
+  ctx.save();
+  // 실제 형광펜처럼 글자 아래쪽 절반만 덮고, 곱하기 합성으로 글자가 비쳐 보이게 한다.
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = fx.marker.color || '#FFE100';
+  const h = size * 0.52, pad = size * 0.08;
+  ctx.fillRect(-w / 2 - pad, y + size * 0.06, w + pad * 2, h);
+  ctx.restore();
+}
+
+function _fxUnderline(ctx, line, y, size, fx, color){
+  if (!fx || !fx.underline || fx.underline === 'none') return;
+  const w = ctx.measureText(line).width;
+  // ★형광펜을 같이 켜면 밑줄을 그 아래로 내린다(2026-08-18 실측). 형광펜 띠가 y+0.06~+0.58을
+  //   덮는데 밑줄 기본 위치가 +0.46이라 띠 **안**에 그어져, 색이 달라도 묻혀 안 보였다.
+  //   색을 바꾸는 걸로는 못 고친다 — 자리를 띠 바깥으로 옮겨야 한다.
+  const uy = y + size * (fx.marker ? 0.66 : 0.46);   // 글자 아래 (baseline=middle 기준)
+  ctx.save();
+  ctx.strokeStyle = fx.underline_color || color || '#FFE100';
+  ctx.lineCap = 'round';
+  // 밑줄이 배경에 묻히지 않게 얇은 검정 그림자를 깐다(외곽선과 같은 원리).
+  ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = size * 0.06; ctx.shadowOffsetY = size * 0.02;
+  if (fx.underline === 'brush'){
+    // 손으로 그은 붓 느낌 — 가운데가 굵고 끝이 얇아지게 두 번 겹쳐 긋는다.
+    ctx.lineWidth = size * 0.11;
+    ctx.beginPath();
+    ctx.moveTo(-w / 2, uy + size * 0.02);
+    ctx.quadraticCurveTo(0, uy - size * 0.05, w / 2, uy + size * 0.01);
+    ctx.stroke();
+  } else {
+    ctx.lineWidth = size * 0.075;
+    ctx.beginPath();
+    ctx.moveTo(-w / 2, uy); ctx.lineTo(w / 2, uy);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// ── 😀 이모지 스티커 레이어(2026-08-18) ──────────────────────────────
+// ★글자 레이어에 이모지를 타이핑하면 안 된다 — 실측: '🔥 대박 😱'을 넣으면 thumbAutoLines가
+//   **공백에서 줄을 쪼개** 🔥·대박·😱이 3줄로 흩어지고, grow-to-fill이 폭에 맞추느라 통째로
+//   작아진다. 그래서 스티커는 별도 레이어(kind:'sticker')로 두고 자동줄나눔·폭맞춤을 안 태운다.
+// 이모지는 컬러 글리프라 fillStyle·strokeText가 안 먹는다(실측) — 색·외곽선 UI를 안 보여준다.
+// L = {kind:'sticker', emoji:'🔥', size:(캔버스 폭 대비 %), x, y, rot}
+function drawSticker(ctx, L, W, H){
+  const px = W * ((L.size != null ? L.size : 18) / 100);
+  ctx.save();
+  ctx.translate(L.x * W, L.y * H);
+  if (L.rot) ctx.rotate(L.rot * Math.PI / 180);
+  // 배경이 밝든 어둡든 스티커가 뜨게 은은한 그림자를 깐다(글자 외곽선과 같은 역할).
+  ctx.shadowColor = 'rgba(0,0,0,0.45)';
+  ctx.shadowBlur = px * 0.12; ctx.shadowOffsetY = px * 0.04;
+  // 이모지 폰트를 명시하지 않으면 OS 기본으로 떨어져 흑백 글리프가 나오는 환경이 있다.
+  ctx.font = `${px}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(L.emoji, 0, 0);
+  ctx.restore();
+}
+
 function drawThumb(ctx, img, layers, W, H){
   const s = W / THUMB_W;                    // 캔버스 배율 — 외곽선·박스 여백용
   // ★매 렌더마다 먼저 지운다(2026-07-18 라이브 실측) — job 없을 때 드래그 잔상이 쌓이던 것 봉인.
   ctx.clearRect(0, 0, W, H);
   if (img) ctx.drawImage(img, 0, 0, W, H);
   (layers || []).forEach(L => {
+    if (L.kind === 'sticker'){ if (L.emoji) drawSticker(ctx, L, W, H); return; }
     if (!L.text) return;
     const {lines, size, family} = thumbFit(ctx, L, W, H);      // 자동 2줄 + grow-to-fill
     const lh = size * 1.16;                                     // 줄 간격
@@ -7051,6 +7127,7 @@ function drawThumb(ctx, img, layers, W, H){
         ctx.fillRect(-w/2 - pad, y - size/2 - pad*0.6, w + pad*2, size + pad*1.2);
         ctx.globalAlpha = 1;
       }
+      _fxMarker(ctx, line, y, size, L.fx);        // ✨형광펜은 글자 뒤 — 먼저 깐다
       // 레퍼런스 룩: 은은한 그림자 + 폰트 크기에 비례한 두꺼운 외곽선(작아도 커도 비율 유지).
       // fixed px(외곽선 슬라이더)보다 얇아지지 않게 max로 바닥을 깐다 — 큰 글자에 얇은 테두리 방지.
       if (L.outline && L.outline.w){
@@ -7062,8 +7139,19 @@ function drawThumb(ctx, img, layers, W, H){
         ctx.strokeText(line, 0, y);
         ctx.restore();
       }
-      ctx.fillStyle = (li > 0 && L.color2) ? L.color2 : L.color;   // 1줄=color, 2줄부터=color2(2색 룩)
+      const _fill = (li > 0 && L.color2) ? L.color2 : L.color;     // 1줄=color, 2줄부터=color2(2색 룩)
+      // ✨네온 글로우 — 글자 자체를 발광시킨다. 그림자를 색으로 깔고 여러 번 겹쳐 진하게.
+      if (L.fx && L.fx.glow){
+        ctx.save();
+        ctx.shadowColor = L.fx.glow.color || '#2EE6C5';
+        ctx.shadowBlur = size * 0.35;
+        ctx.fillStyle = _fill;
+        for (let g = 0; g < 3; g++) ctx.fillText(line, 0, y);      // 겹쳐야 눈에 띄게 빛난다
+        ctx.restore();
+      }
+      ctx.fillStyle = _fill;
       ctx.fillText(line, 0, y);
+      _fxUnderline(ctx, line, y, size, L.fx, _fill);   // ✨밑줄은 글자 위 획 — 마지막
     });
     ctx.restore();
   });
@@ -7189,7 +7277,9 @@ function pickThumbFrame(i){
 const THUMB_LOADED_FONTS = new Set();
 async function ensureThumbFontsLoaded(layers){
   if (typeof document === 'undefined' || !document.fonts) return;  // Node 슬라이스 테스트엔 폰트 로더가 없다
-  const families = new Set((layers || []).filter(L => L.text).map(L => thumbFontCss(L.font)));
+  // 스티커는 글자 폰트를 안 쓴다(컬러 이모지 폰트는 OS 것) — 여기서 걸러야 없는 family를 로드하지 않는다.
+  const families = new Set((layers || []).filter(L => L.text && L.kind !== 'sticker')
+                                         .map(L => thumbFontCss(L.font)));
   await Promise.all(Array.from(families).filter(f => !THUMB_LOADED_FONTS.has(f)).map(async f => {
     try { await document.fonts.load(`900 100px ${f}`); THUMB_LOADED_FONTS.add(f); } catch(e){ /* 로드 실패 시 다음 렌더에서 재시도 */ }
   }));
@@ -7215,6 +7305,20 @@ function addThumbLayer(){
   renderThumbLayers(); renderThumbCanvas();
 }
 
+// 😀 썸네일에서 실제로 쓰이는 것만 골랐다 — 감정 강조·시선 유도·가격/체크 표시.
+// 이모지 전체를 늘어놓으면 고르는 데 시간이 든다(딸깍 철학: 고민 없이 누르면 끝).
+const THUMB_EMOJIS = [
+  '🔥','😱','😳','🤯','😍','🥹','👀','💥','✨','⭐','❗','❓',
+  '👉','👇','✅','❌','💯','💸','🎁','👍','🙌','🤫','😭','🤣',
+];
+
+function addThumbSticker(emoji){
+  // 글자 레이어 위에 겹치지 않게 기본 위치를 살짝 아래·오른쪽으로 둔다(바로 드래그 가능).
+  THUMB_STATE.layers.push({kind: 'sticker', emoji, size: 18, x: 0.5, y: 0.72, rot: 0});
+  THUMB_STATE.sel = THUMB_STATE.layers.length - 1;
+  renderThumbLayers(); renderThumbCanvas();
+}
+
 function selectThumbLayer(i){ THUMB_STATE.sel = i; renderThumbLayers(); }
 function removeThumbLayer(i){
   THUMB_STATE.layers.splice(i, 1);
@@ -7229,11 +7333,15 @@ function applyThumbPreset(i){
   const p = HC_PRESETS.filter(x => x.cat === '썸네일')[i]; if (!p) return;
   if (!THUMB_STATE.layers.length) addThumbLayer();   // 레이어 없어도 샘플 누르면 바로 만들어 적용
   const cur = THUMB_STATE.layers[THUMB_STATE.sel]; if (!cur) return;
+  // ★스티커를 고른 채 색 프리셋을 누르면 스티커가 빈 글자 레이어로 바뀌어 조용히 사라진다.
+  //   글자 스타일은 스티커와 무관하니 그냥 무시한다(사장님 것을 지우지 않는다).
+  if (cur.kind === 'sticker') return;
   const styled = thumbPresetToLayer(p);
   styled.text = cur.text;          // 스타일만 바꾼다 — 문구·위치는 사장님 것
   // y를 빼먹으면 드래그로 잡은 세로 위치가 프리셋의 기본값(상단 12%)으로 튄다.
   // x만 살아남아 "왜 위아래만 튀지"가 된다 — 위 주석이 선언한 계약을 지키려면 셋 다 필요하다.
   styled.x = cur.x; styled.y = cur.y; styled.rot = cur.rot;
+  styled.fx = cur.fx;   // 강조 효과도 사장님 것 — 색 프리셋을 바꿔도 밑줄·형광펜이 안 사라진다
   THUMB_STATE.layers[THUMB_STATE.sel] = styled;
   renderThumbLayers(); renderThumbCanvas();
 }
@@ -7260,6 +7368,7 @@ function setThumbPos(where){
 // 🪄 원본 영상 대본을 AI에게 보내 짧은 썸네일 제목 후보를 받아 클릭 얹기용으로 보여준다.
 // 60대가 제목을 못 떠올려도 "추천 버튼 → 마음에 드는 것 클릭"이면 끝. 과금 없음(미리보기).
 let THUMB_TITLES_LOADING = false;
+let THUMB_TITLE_SEED = 0;   // 다시 누른 횟수 = 참고 훅 회전 시드(서버가 조각을 바꿔 뽑는다)
 async function suggestThumbTitles(){
   const box = document.getElementById('thumbTitleSuggest'); if (!box) return;
   if (!MIX_JOB){
@@ -7274,7 +7383,8 @@ async function suggestThumbTitles(){
       method: 'POST', headers: {'Content-Type': 'application/json'},
       // ★화면 대본(STATE.script)을 함께 보낸다(2026-07-24). job.given_script는 매칭 시점에
       //   고정돼, 대본을 새 영상에 맞게 고쳐도 제목이 옛 영상 주제로 나오던 사고를 막는다.
-      body: JSON.stringify({job_id: MIX_JOB, script: (STATE.script || '')}),
+      // seed: 다시 누를 때마다 참고 훅이 회전해 다른 각도의 제목이 나온다(같은 5개 반복 방지).
+      body: JSON.stringify({job_id: MIX_JOB, script: (STATE.script || ''), seed: (THUMB_TITLE_SEED++)}),
     });
     const d = await r.json().catch(() => ({ok: false}));
     if (!r.ok || !d.ok || !(d.titles || []).length){
@@ -7310,6 +7420,13 @@ async function suggestThumbTitles(){
 function applyThumbTitle(i){
   const t = (THUMB_STATE.title_cands || [])[i]; if (!t) return;
   if (!THUMB_STATE.layers.length) addThumbLayer();   // 레이어가 없으면 하나 만들어 얹는다
+  // ★스티커를 고른 채 추천 제목을 누르면 스티커에 문구가 박혀 그림이 사라진다.
+  //   제목은 글자 레이어의 것이니, 글자 레이어를 찾아 얹고(없으면 새로 만든다) 그걸 선택한다.
+  if ((THUMB_STATE.layers[THUMB_STATE.sel] || {}).kind === 'sticker'){
+    const ti = THUMB_STATE.layers.findIndex(L => L.kind !== 'sticker');
+    if (ti >= 0) THUMB_STATE.sel = ti;
+    else { addThumbLayer(); }
+  }
   const L = THUMB_STATE.layers[THUMB_STATE.sel]; if (!L) return;
   L.text = t.text || '';
   renderThumbLayers();    // 입력칸(textarea)·레이어 목록 갱신
@@ -7321,15 +7438,45 @@ function renderThumbLayers(){
     <div onclick="selectThumbLayer(${i})" style="display:flex;justify-content:space-between;
          align-items:center;padding:6px 9px;border-radius:6px;cursor:pointer;
          background:${i === THUMB_STATE.sel ? 'var(--accent)' : '#2a2a3a'}">
-      <span style="font-size:12px">${esc(L.text) || '(빈 문구)'}</span>
+      <span style="font-size:12px">${L.kind === 'sticker'
+        ? L.emoji + ' <span style="opacity:.6">스티커</span>'
+        : (esc(L.text) || '(빈 문구)')}</span>
       <span onclick="event.stopPropagation();removeThumbLayer(${i})" style="cursor:pointer">✕</span>
     </div>`).join('');
+  const _sb = document.getElementById('thumbStickers');
+  if (_sb) _sb.innerHTML = THUMB_EMOJIS.map(e =>
+    `<button class="tab" style="flex:0 0 auto;min-width:auto;padding:4px 7px;font-size:17px"
+      onclick="addThumbSticker('${e}')">${e}</button>`).join('');
   document.getElementById('thumbPresets').innerHTML =
     HC_PRESETS.filter(p => p.cat === '썸네일').map((p, i) =>
       `<button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 11px;font-size:12px;
         border-left:10px solid ${p.box ? p.box_color : (p.color2 || p.color)}"
         onclick="applyThumbPreset(${i})">${p.name}</button>`).join('');
   const L = THUMB_STATE.layers[THUMB_STATE.sel];
+  // 스티커는 편집 항목이 다르다 — 폰트·색·외곽선은 컬러 이모지에 안 먹으므로 아예 안 보여준다
+  // (있는데 안 되는 버튼이 제일 나쁘다). 크기·회전·위치만 준다.
+  if (L && L.kind === 'sticker'){
+    document.getElementById('thumbEdit').innerHTML = `
+      <div style="font-size:12px;color:var(--sub);margin-bottom:4px">스티커 바꾸기</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
+        ${THUMB_EMOJIS.map(e => `<button class="tab" style="flex:0 0 auto;min-width:auto;
+          padding:4px 7px;font-size:17px;${e === L.emoji ? 'outline:2px solid var(--accent2)' : ''}"
+          onclick="setThumbField('emoji', '${e}')">${e}</button>`).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--sub);margin-bottom:3px">위치 — 눌러서 옮기기 (드래그도 됩니다)</div>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <button class="tab" style="flex:1;min-width:auto;padding:8px 0" onclick="setThumbPos('top')">⬆ 위</button>
+        <button class="tab" style="flex:1;min-width:auto;padding:8px 0" onclick="setThumbPos('mid')">⏺ 가운데</button>
+        <button class="tab" style="flex:1;min-width:auto;padding:8px 0" onclick="setThumbPos('bot')">⬇ 아래</button>
+      </div>
+      <label style="font-size:11px;color:var(--sub)">크기</label>
+      <input type="range" min="5" max="60" value="${L.size}"
+             oninput="setThumbField('size', this.value)" style="width:100%">
+      <label style="font-size:11px;color:var(--sub)">회전 ${L.rot}°</label>
+      <input type="range" min="-180" max="180" value="${L.rot}"
+             oninput="setThumbField('rot', this.value)" style="width:100%">`;
+    return;
+  }
   document.getElementById('thumbEdit').innerHTML = !L ? '' : `
     <textarea oninput="setThumbField('text', this.value)" rows="2"
       style="width:100%;padding:8px;margin-bottom:6px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.3"
@@ -7355,7 +7502,56 @@ function renderThumbLayers(){
     </div>
     <label style="font-size:11px;color:var(--sub)">외곽선 ${L.outline ? L.outline.w : 0}px</label>
     <input type="range" min="0" max="20" value="${L.outline ? L.outline.w : 0}"
-           oninput="setThumbField('outline_w', this.value)" style="width:100%">`;
+           oninput="setThumbField('outline_w', this.value)" style="width:100%">
+    <div style="font-size:12px;color:var(--sub);margin:12px 0 4px">✨ 강조 효과 — 누르면 켜지고, 다시 누르면 꺼져요</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+      ${THUMB_FX_BTNS.map((b, i) => `<button class="tab"
+        style="flex:0 0 auto;min-width:auto;padding:6px 11px;font-size:12px;${_fxOn(L, b) ? 'outline:2px solid var(--accent2)' : ''}"
+        onclick="toggleThumbFx(${i})">${b.label}</button>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <label style="font-size:11px;color:var(--sub)">효과 색</label>
+      <input type="color" value="${(L.fx && (L.fx.underline_color || (L.fx.marker && L.fx.marker.color) || (L.fx.glow && L.fx.glow.color))) || '#FFE100'}"
+             oninput="setThumbFxColor(this.value)">
+      <span class="hint" style="font-size:10px;opacity:.7">밑줄·형광펜·네온에 함께 적용</span>
+    </div>`;
+}
+
+// ✨강조 효과 버튼 — 고민 없이 딸깍(꾸미기 프리셋 철학). 켜짐/꺼짐 토글이라 되돌리기도 한 번.
+const THUMB_FX_BTNS = [
+  {key: 'underline', val: 'line',  label: '밑줄'},
+  {key: 'underline', val: 'brush', label: '붓 밑줄'},
+  {key: 'marker',    val: true,    label: '형광펜'},
+  {key: 'glow',      val: true,    label: '네온'},
+];
+
+function _fxOn(L, b){
+  const fx = L && L.fx; if (!fx) return false;
+  return b.key === 'underline' ? fx.underline === b.val : !!fx[b.key];
+}
+
+function toggleThumbFx(i){
+  const b = THUMB_FX_BTNS[i], L = THUMB_STATE.layers[THUMB_STATE.sel];
+  if (!b || !L) return;
+  L.fx = L.fx || {};
+  const color = L.fx.underline_color || (L.fx.marker && L.fx.marker.color)
+             || (L.fx.glow && L.fx.glow.color) || '#FFE100';
+  if (b.key === 'underline'){
+    // 밑줄과 붓밑줄은 서로 배타 — 같은 자리에 두 획을 그으면 지저분해진다.
+    L.fx.underline = (L.fx.underline === b.val) ? 'none' : b.val;
+    L.fx.underline_color = color;
+  } else {
+    L.fx[b.key] = L.fx[b.key] ? null : {color};
+  }
+  renderThumbLayers(); renderThumbCanvas();
+}
+
+function setThumbFxColor(v){
+  const L = THUMB_STATE.layers[THUMB_STATE.sel]; if (!L || !L.fx) return;
+  L.fx.underline_color = v;
+  if (L.fx.marker) L.fx.marker.color = v;
+  if (L.fx.glow) L.fx.glow.color = v;
+  renderThumbCanvas();
 }
 
 // 드래그 = 비율 좌표를 바꾼다(픽셀이 아니라) — 그래야 1080 결과가 같은 자리에 찍힌다.
