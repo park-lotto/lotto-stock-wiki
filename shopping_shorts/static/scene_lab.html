@@ -104,7 +104,9 @@ h1{font-size:16px;margin:0;font-weight:700}
 /* ★미리보기 칸을 키웠다(2026-08-17 사장님 "썸네일이 너무 작다") — 300 → 440px.
    폭이 커진 만큼 안의 영상(#vidbox)도 커진다. 오른쪽 소스 칸은 iframe 높이를
    같이 늘려(제작소 #sceneLabFrame 124vh) 한 화면에 더 많이 들어오게 했다. */
-#playerhost{flex:0 0 440px;max-width:440px;overflow:hidden;padding:14px 0 14px 14px;
+/* ★영상을 폭 기준으로 키운 만큼(위 #vidbox) 세로가 넘칠 수 있다 — 여기서 스크롤한다.
+   2026-08-16의 overflow:hidden은 영상이 남는 높이에 맞춰 줄던 시절의 짝이었다. */
+#playerhost{flex:0 0 440px;max-width:440px;overflow-y:auto;overflow-x:hidden;padding:14px 0 14px 14px;
   display:flex;flex-direction:column;gap:8px;min-width:0;min-height:0}
 .pane.left{flex:1;min-width:0}
 .pane.rightcol{display:none}       /* 오른쪽 칼럼 폐지: 미리보기가 왼쪽으로 왔다 */
@@ -265,14 +267,13 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
 #playerhost:has(#player.on) #playerIdle{display:none}
 .pidleIcon{font-size:30px;opacity:.55}
 .pidleTxt{font-size:12px;line-height:1.7}
-/* ★영상만 남는 높이를 먹는다(2026-08-16 사장님 "미리보기쪽 높이는 스크롤 없이").
-   예전엔 폭 기준 9:16 고정이라 300px 폭 → 533px 높이가 되어, 아래 진행바·자르기·
-   자막·안내를 더하면 칸을 넘어 스크롤바가 생겼다. 이제 세로 공간이 모자라면 영상이
-   먼저 줄고(min-height:0), 가로는 비율을 지켜 가운데 선다. */
+/* ★영상은 **칸 폭을 꽉 채운다** — 크기가 1순위(2026-08-17 사장님 "최대로 키워 자꾸
+   건들지말고"). 2026-08-16엔 반대로 "스크롤 없이"를 1순위로 두고 flex:1 1 0으로 남는
+   높이에 맞췄는데, 아래에 진행바·시간·자르기·자막·안내가 쌓여 영상이 폭 197px까지
+   쪼그라들었다(실측 캡처). 이제 폭 고정(width:100%) + 9:16이라 높이가 따라오고,
+   세로가 모자라면 #playerhost가 스크롤한다 — 작아지는 것보다 스크롤이 낫다는 판단. */
 #player #vidbox{position:relative;background:#000;border-radius:6px;overflow:hidden;
-        /* ★flex:1 + aspect-ratio를 함께 쓰면 높이가 0으로 붕괴한다(실측). 높이를 먼저
-           주고(자리 확보) 비율은 max-width로 지킨다 — 세로가 모자라면 폭이 준다. */
-        flex:1 1 0;min-height:120px;max-width:100%;aspect-ratio:9/16;margin:0 auto;
+        flex:0 0 auto;width:100%;aspect-ratio:9/16;margin:0 auto;
         cursor:pointer}   /* 화면 클릭 = 정지/재생(2026-08-15) */
 #player .phead{cursor:default}   /* 오른쪽 칼럼에 고정됐다 — 더는 끌어 옮길 필요가 없다 */
 #player video{width:100%;height:100%;border-radius:6px;background:#000;display:block;aspect-ratio:9/16;object-fit:contain;position:absolute;inset:0}
