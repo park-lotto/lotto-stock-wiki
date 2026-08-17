@@ -304,4 +304,9 @@ def classify_channel_result(nodes, page_url, error):
     url = page_url or ""
     if any(h in url for h in _LOGIN_WALL_URL_HINTS):
         return "login_wall"
-    return "not_found"
+    # ★이름을 not_found → unknown으로 바꿨다(2026-08-17). 여기는 판정이 아니라
+    # **나머지 통**이다 — 채널이 없는지 확인하는 코드는 이 함수 어디에도 없다.
+    # 그런데 이름이 "채널이 없다"로 읽혀 두 번 오독됐다(08-09 199채널, 08-17 61채널).
+    # 두 번 다 채널은 멀쩡했고 원인은 우리 쪽이었다(계정↔IP 불일치 / 2.5초 고정대기).
+    # 모르면 모른다고 적어야 다음 사람이 원인을 찾으러 간다.
+    return "unknown"

@@ -84,6 +84,10 @@ INSTAGRAM_SESSION_PATH = os.getenv("INSTAGRAM_SESSION_PATH", "")
 INSTAGRAM_PW_CONTEXTS = int(os.getenv("INSTAGRAM_PW_CONTEXTS", "5"))
 # 채널 1개 처리 상한(ms). 넘으면 그 채널만 error로 접고 다음으로 간다(전체가 죽지 않게).
 INSTAGRAM_PW_TIMEOUT_MS = int(os.getenv("INSTAGRAM_PW_TIMEOUT_MS", "20000"))
+# 릴스 목록 XHR을 최대 몇 ms까지 기다리나(응답이 잡히면 즉시 진행 — 상한일 뿐이다).
+# ★2.5초 고정 대기가 수집 실패 55%의 원인이었다(2026-08-17 실측: 2.5초 5/14 → 10초 14/14).
+# 상한을 올려도 빠른 채널은 그만큼 안 기다리므로 전체 시간은 느린 채널에서만 늘어난다.
+INSTAGRAM_PW_LIST_WAIT_MS = int(os.getenv("INSTAGRAM_PW_LIST_WAIT_MS", "12000"))
 
 # 샤오홍슈 레퍼런스 채널 크롤(2026-07-29) — 로그인 세션 재사용, 서버 직결(프록시 불필요,
 # Phase 0 스파이크 검증 완료). 세션 만료 시 수동 재로그인 → 이 경로에 storageState() 재저장.

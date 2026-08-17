@@ -134,9 +134,9 @@ def test_classify_error_takes_priority_over_empty():
     assert classify_channel_result([], "https://www.instagram.com/u/reels/", "Timeout") == "error"
 
 
-def test_classify_not_found_when_empty_without_error():
+def test_classify_unknown_when_empty_without_error():
     """비공개·삭제 계정 — 로그인벽과 구분해야 한다(부계정을 붙여도 안 되는 쪽)."""
-    assert classify_channel_result([], "https://www.instagram.com/u/reels/", None) == "not_found"
+    assert classify_channel_result([], "https://www.instagram.com/u/reels/", None) == "unknown"
 
 
 # ── 해시태그 탐색 발굴(2026-07-30) — 서버 실측: /explore/tags/{tag}/ 진입 시
@@ -227,7 +227,7 @@ def test_classify_gate_url_is_not_confused_with_missing_channel():
     gate = classify_channel_result(
         [], "https://www.instagram.com/accounts/update_risky_contactpoint/", None)
     gone = classify_channel_result([], "https://www.instagram.com/u/reels/", None)
-    assert gate == "login_wall" and gone == "not_found" and gate != gone
+    assert gate == "login_wall" and gone == "unknown" and gate != gone
 
 
 def test_extract_follower_count_graphql_user():
