@@ -468,6 +468,7 @@ body.is-admin .blockbtn{display:inline-block}
       <div class="tab" data-tab="fan_density" title="댓글 ÷ 팔로워수 — 구독자 규모 대비 얼마나 뜨거웠는지. 작은 채널의 대박을 잡는 눈(조회수당댓글과 보는 게 다릅니다)">🙌 팔로워당댓글</div>
       <span class="tab-div"></span>
       <span class="tab-grp">단순 지표</span>
+      <div class="tab" data-tab="recent" title="최근에 올라온 순 — 발행 시각이 새로운 것부터">🕒 최신순</div>
       <div class="tab" data-tab="rawcomments" title="댓글 수가 많은 순 (절대값)">💬 댓글순</div>
       <div class="tab" data-tab="followers" title="채널 팔로워(구독자)가 많은 순">👥 팔로워순</div>
       <div class="tab" data-tab="views" title="조회수가 많은 순">👁 조회수순</div>
@@ -1098,12 +1099,26 @@ document.querySelectorAll('.tab').forEach(x=> x.onclick=()=>setTab(x.dataset.tab
 //   (이번 조회수 − 직전 조회수, ranking.py의 5개 플랫폼 빌더 전부에 있음)를 쓰면
 //   "오늘 가장 많이 오른 영상"이 위로 올라와 매일 순서가 실제로 바뀐다.
 //   ?? 폴백: delta 없는 옛 캐시 items가 섞여도 예전 기준(누적 댓글수)으로 자연히 되돌아간다.
+// 최신순 정렬키 — 클 수록 최신. 시간 판단은 여기 한 곳에서만 한다(0순위-B):
+// 카드의 'X시간 전' 표시(아래 1606행 근처)도 같은 우선순위(posted_at > age_hours)를 쓴다.
+function recencyKey(i){
+  if (i.posted_at){
+    const t = Date.parse(i.posted_at);
+    if (!isNaN(t)) return t;                       // epoch ms — 클수록 최신
+  }
+  if (i.age_hours != null) return -i.age_hours;    // 경과가 적을수록 최신 → 부호를 뒤집는다
+  return -1e15;                                    // 시간을 모르는 것은 맨 뒤
+}
 function sortKey(i){
   return {comments:(i.delta ?? i.comments), speed:i.speed, accel:(i.accel??-1), density:i.density,
           fan_density:(i.fan_density||0),
           // 단순정렬 3종(2026-07-30) — 지표 계산 없이 절대값 그대로 내림차순.
           // '전체'는 오늘 증가분(delta) 기준이라, 누적 절대값으로 보고 싶을 때 쓴다.
-          rawcomments:(i.comments||0), followers:(i.followers||0), views:(i.views||0)}[STATE.tab] || 0;
+          rawcomments:(i.comments||0), followers:(i.followers||0), views:(i.views||0),
+          // 최신순(2026-08-17 사장님) — 내림차순 정렬이므로 '새것일수록 큰 값'이어야 한다.
+          // posted_at(발행 UTC)이 정본이고, 없으면 age_hours(수집 시점 경과시간)로 뒤집어 쓴다.
+          // 둘 다 없으면 -Infinity가 아니라 아주 작은 값으로 두어 맨 뒤로 밀린다(정렬 안정).
+          recent: recencyKey(i)}[STATE.tab] || 0;
 }
 // 랭킹 검색(2026-07-18, 개선 2026-07-18) — 한국어 단어경계 인식 부분일치.
 // 왜: 단순 substring은 "가지"가 "들어가지"(동사)·"2가지"(수량)·"여러 가지"에 다 걸려
