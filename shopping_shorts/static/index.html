@@ -615,6 +615,10 @@ function _risingCut(list){
   return v[Math.min(v.length-1, Math.floor(v.length*RISING_PCTL))];
 }
 let PLATFORM='instagram';
+// 한 번에 그릴 카드 수 상한(2026-08-18). 유튜브는 5,681장이라 전부 그리면 탭 전환이 멈춘다.
+// [더 보기]를 누를 때마다 이만큼씩 늘어난다 — 데이터를 자르는 게 아니라 그리기만 나눠 한다.
+const RENDER_STEP = 200;
+let RENDER_CAP = RENDER_STEP;
 // ── 플랫폼별 안내문구·지표 툴팁(2026-07-24, 토글 노출 대응) — 인스타 기준 문구를
 // 그대로 두면 틱톡/유튜브(시드계정·키워드+14일창, 조회수기반)에 거짓 설명이 된다. ──
 const DESC_BY_PLATFORM = {
@@ -1503,7 +1507,15 @@ function stopAllMedia(root){
   });
 }
 
-function render(){
+function showMoreCards(){
+  RENDER_CAP += RENDER_STEP;
+  render({keepCap:true});          // 상한만 늘리고 다시 그린다
+}
+
+function render(opts){
+  // ★상한 리셋 — 탭·검색·필터가 바뀌면 처음부터 다시 본다는 뜻이라 상한도 돌려놔야 한다.
+  //   안 하면 유튜브에서 [더 보기]를 눌러 5,000장까지 늘린 상태가 인스타 탭까지 따라간다.
+  if(!(opts && opts.keepCap)) RENDER_CAP = RENDER_STEP;
   stopAllMedia(document.getElementById('cards'));
   let items = STATE.items.slice();
   if(BLOCKED.size) items = items.filter(i=> !BLOCKED.has(_normUser(i.username)));  // 차단 채널은 항상 가린다
@@ -1560,6 +1572,15 @@ function render(){
         ${_needFan?'팔로워를 수집이 실어오기 시작한 게 오늘부터라':'조회수 기준 계산이 바뀌어'}
         <b>다음 수집(내일 오전 9시)</b>부터 채워집니다.</div>`
     : '';
+  // ★렌더 상한(2026-08-18 사장님 "인스타에서 유튜브 넘어가면 버퍼가 엄청심해").
+  // 원인: 카드 수가 플랫폼마다 35배 차이다 — 실측 인스타 161장 / 유튜브 5,681장.
+  // 서버는 0.14초로 멀쩡했고(프로파일: load 0.06 · vision 0.01 · durations 0.01 · dumps 0.06),
+  // 느린 곳은 브라우저였다. 5,681장을 innerHTML 한 방에 만들면서 이미지 5,681개가
+  // 동시에 걸려 탭 전환이 몇 초씩 멈춘다.
+  // 상한만 두고 정렬·필터·검색은 그대로 — items는 이미 sortKey로 정렬돼 있어
+  // '상위 N장'이 곧 사장님이 보려던 것이다. 더 보고 싶으면 [더 보기]로 이어붙인다.
+  const _total = items.length;
+  if(items.length > RENDER_CAP) items = items.slice(0, RENDER_CAP);
   el.innerHTML = _notice + items.map((i,idx)=>`
     <div class="card">
       <div class="thumb">
@@ -1588,6 +1609,15 @@ function render(){
         </div>
       </div>
     </div>`).join("");
+  // 잘린 게 있으면 [더 보기]로 이어붙인다 — 데이터는 그대로 있고 그리기만 나눠 한다.
+  if(_total > items.length){
+    el.insertAdjacentHTML("beforeend",
+      `<div style="grid-column:1/-1;text-align:center;padding:16px 0">
+         <button onclick="showMoreCards()" style="padding:10px 22px;border-radius:999px;
+           border:1px solid var(--line);background:var(--inset);color:var(--txt);cursor:pointer">
+           더 보기 <span style="color:var(--sub)">(${items.length} / ${_total})</span>
+         </button></div>`);
+  }
   markSavedButtons();
   // 채널 모드 감지 — 검색 결과가 한 채널로 수렴하면 그 채널의 '지난 한 달'을 아래에 붙인다.
   const users = [...new Set(items.map(i=>_normUser(i.username)).filter(Boolean))];
