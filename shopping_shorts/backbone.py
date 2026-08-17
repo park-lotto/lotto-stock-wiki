@@ -223,6 +223,46 @@ def beat_action_mismatch(beat):
     return bool(n_act and s_act and n_act != s_act)
 
 
+def beat_role_mismatch(beat):
+    """비트의 **역할**과 배정 화면의 **결(shot_role)**이 어긋나면 True.
+
+    ★왜 두 번째 축이 필요한가(2026-08-18 사장님 "장면매칭이 왜 이렇게 힘드냐"):
+      기존 판정축은 `beat_action_mismatch` 하나뿐인데 그건 **동사사전 30개**에 매달려 있다.
+      사전이 요리·살림 전용(자르다·붓다·섞다·굽다…)이라 스토리형 대사
+      ("전쟁 치를 뻔한 거 있죠?")엔 동사가 없어 판정이 통째로 보류된다.
+      라이브 실측(2026-08-18, 최근 잡 30개·비트 168건): **대사행위 None이 148건(88%)**.
+      → 어긋남 미검출 → `_verify_fits`가 fit을 못 깎음 → fit 5로 남음
+      → `_repick_weak_beats`(fit<=3 대상)에 안 걸림 → **아무도 안 고친다.**
+      실측 결과 훅·CTA 58건 중 **27건이 어긋났는데 fit>=4라 교정 대상에서 빠졌다**
+      (fit=5 자기신고 37건 중 26건 = 70%가 실제로는 결이 어긋남).
+
+    그래서 동사가 없어도 도는 축을 하나 더 세운다. 근거는 `shot_role`(라이브 실측 채움률
+    **100%**) — 훅·CTA엔 완성/after, 해결·결과엔 사용중/조리가 와야 한다.
+
+    ★판단표를 새로 만들지 않는다(0순위-B) — `edit_plan._ROLE_WANT_SHOTS` 한 곳만 쓴다.
+      그 표는 `scene_lab.html`의 useTags와도 짝이라, 여기서 또 적으면 세 벌이 된다.
+
+    보수적으로 판정한다(오탐이 나면 멀쩡한 화면을 갈아치운다):
+      · 역할을 모르면(표에 없는 역할) 보류
+      · 화면에 shot_role이 없으면 보류
+      · **1순위·차선 어디에도 안 들면** 그때만 어긋남
+        ★차선까지 봐주는 이유: 소재에 1순위 결이 아예 없어 정당하게 차선을 고른 경우가 있다
+          (레시피엔 before·문제가 0건 — `_ROLE_WANT_SHOTS` 주석의 실측). 그걸 어긋남으로
+          치면 고칠 수 없는 걸 계속 재픽하게 된다.
+    """
+    from shopping_shorts import edit_plan
+    role = (beat.get("role") or "").strip().lower()
+    if not role:
+        return False
+    sr = ((beat.get("primary") or {}).get("shot_role") or "").strip()
+    if not sr:
+        return False
+    for words, shots, alt, _why in edit_plan._ROLE_WANT_SHOTS:
+        if any(w in role for w in words):
+            return sr not in (set(shots) | set(alt))
+    return False      # 표에 없는 역할 → 보류
+
+
 def reconcile_beat_by_action(beat, pool_sources, exclude_seg_ids=None):
     """핑퐁 장면-쪽: 나레이션 행위에 맞는 클립을 풀에서 찾아 화면 스왑.
     → (new_beat, need_rewrite). 찾으면 primary 교체+action_fixed, 못 찾으면 need_rewrite=True
