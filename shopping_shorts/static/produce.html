@@ -7573,9 +7573,16 @@ function _s2Hydrate(w){
     S2.curDraft = (typeof s.curDraft === 'number' && s.curDraft >= 0 && s.curDraft < s.drafts.length) ? s.curDraft : 0;
     S2.picked = Array.isArray(s.picked) ? s.picked : [];
     S2.materials = s.materials || null;
-    if(s.seed) S2.seed = s.seed;
+    S2.seed = s.seed || null;
   } else {
-    S2.drafts = []; S2.curDraft = 0; S2.picked = []; S2.materials = null;
+    // ★seed도 **함께** 지운다(2026-08-18 사장님 "왠 다이소청소쪽이 연결이 되나").
+    //   drafts만 지우고 seed를 남겼더니, 새 작업에서 s2RenderSeeds()의
+    //   `if(!S2.seed && ...)` 가드에 걸려 새 AI PICK이 씨앗을 갱신하지 못했다.
+    //   실측(work 735812dd8958): 담긴 건 카메라 5편인데 seed는 옛 작업의
+    //   홈데코랩(DbmCnyTTobw)이 그대로 살아, 대본이 통째로 다이소 주방청소로
+    //   나왔다(materials.sources 3편 중 2편이 무관한 옛 영상).
+    //   seed와 drafts는 한 작업의 짝이다 — 따로 정하면 반드시 어긋난다(0순위-B).
+    S2.drafts = []; S2.curDraft = 0; S2.picked = []; S2.materials = null; S2.seed = null;
     // ★옛 작업 구제(2026-08-17, 사장님 제보 "확정 대본도 안 보인다").
     //   이 배포 **전에** 만든 작업엔 s2 스냅샷이 없다 — 후보 A안·B안은 저장된 적이 없어
     //   물리적으로 못 되살린다. 하지만 **확정한 대본(w.script)은 예전부터 저장돼 있었다.**
@@ -7583,6 +7590,8 @@ function _s2Hydrate(w){
     //   ⚠️ 반드시 `w.script`(그 작업의 저장값)만 쓴다 — STATE.script를 쓰면 다른 작업으로
     //      갈아탔을 때 앞 작업 대본이 딸려와 캐리오버 사고가 된다.
     //   ⚠️ beats는 안 만든다(역할을 모른다) — s2Beats가 문장 단위로 나눠 그린다. 모르면 비운다.
+    //   ⚠️ 대본은 되살려도 **seed는 되살리지 않는다**(위에서 null) — 옛 작업의 씨앗이
+    //      살아나면 그게 곧 위의 다이소 사고다. 구제 대상은 '확정한 대본'뿐이다.
     const _old = (w && typeof w.script === 'string') ? w.script.trim() : '';
     if(_old){
       S2.drafts = [{script:_old, hook:(_old.split(/\n/)[0]||'').trim(),
@@ -7637,7 +7646,18 @@ function s2RenderSeeds(){
       category:pm.category||'', followers:pm.followers, text:d.pick_text||'',
       structure:d.structure||{}, tiles:d.tiles||{}, pick:true});
   }
-  if(!S2.seed && S2.seeds.length) S2.seed=S2.seeds[0];
+  // ★씨앗은 **지금 담긴 영상**을 따라간다(2026-08-18). 예전엔 `!S2.seed`일 때만
+  //   채워서, 한 번 정해진 씨앗이 1단계에서 영상을 바꿔도 그대로 굳었다 —
+  //   담긴 영상과 무관한 옛 영상이 대표로 남아 대본이 그쪽으로 끌려갔다.
+  //   ⚠️ 사장님이 직접 쓴 대본(shortcode:'')은 AI PICK이 덮으면 안 된다 —
+  //      그건 담긴 영상에서 나온 값이 아니라 손으로 넣은 것이다.
+  const _manualSeed = S2.seed && !S2.seed.shortcode;
+  if(S2.seeds.length && !_manualSeed){
+    // 지금 AI PICK이 가리키는 영상과 다르면 갈아탄다(같으면 그대로 둔다).
+    if(!S2.seed || S2.seed.shortcode !== S2.seeds[0].shortcode) S2.seed = S2.seeds[0];
+  } else if(!S2.seed && S2.seeds.length){
+    S2.seed = S2.seeds[0];
+  }
   const cards=S2.seeds.map((s,i)=>{
     const seg=(s.structure.segments)||[];
     const strip=seg.length?`<div class="s2-strip">${seg.map(g=>`<i style="flex:${g.pct};background:${g.color}"></i>`).join('')}</div>`
