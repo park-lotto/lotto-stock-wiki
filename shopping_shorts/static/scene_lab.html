@@ -74,6 +74,11 @@ h1{font-size:16px;margin:0;font-weight:700}
 .tbeat .h{display:flex;align-items:baseline;gap:7px;font-size:12.5px;margin-bottom:6px}
 .tbeat .h b{font-size:13.5px}
 .tbeat .h .d{color:var(--dim);font-family:ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+/* ★자막 길이 짝표기 색 — 담은 재료(왼쪽)가 자막(오른쪽)을 채웠나로 갈린다.
+   dok=다 채움 / dwarn=모자라지만 늘려 채우는 중 / dbad=모자란 채 마지막 컷만 늘어남 */
+.tbeat .h .d.dok{color:var(--good)}
+.tbeat .h .d.dwarn{color:#ffd08f}
+.tbeat .h .d.dbad{color:#ffb9b9;font-weight:700}
 .tbcuts{display:flex;gap:5px}
 .tbcut{position:relative;width:104px;flex:0 0 auto}
 .tbcut img{width:100%;aspect-ratio:9/16;object-fit:cover;display:block;border-radius:5px;
@@ -1002,6 +1007,16 @@ function renderBand(){
     const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i]);
     const sec = clips.reduce((a, c) => a + c.dur, 0);
     total += sec;
+    // ★자막 길이 짝표기(2026-08-17 사장님 "4.9/5로 표시"). planClips는 부족분을 반드시
+    //   0으로 만들어(마지막 컷에 몰거나 spread로 비례 배분) sec는 늘 need와 같다 —
+    //   그래서 sec/need를 보여주면 항상 5.0/5.0이라 아무것도 알려주지 않는다.
+    //   진짜 궁금한 건 "늘리기 전 재료가 얼마였나"이므로 have(=effLen 합)를 왼쪽에 둔다.
+    const need = beatDur(i);
+    const have = (lists[i] || []).reduce((a, id) => a + effLen(id), 0);
+    const lack = Math.max(0, need - have);
+    // ★컷이 0장이면 늘릴 대상이 없다 — planClips가 보정을 아예 건너뛰어(clips.length 검사)
+    //   실제로는 무음 화면이 된다. 토글이 켜져 있어도 '늘려 채움'이라 하면 거짓말이다.
+    const stretching = STRETCH[i] && clips.length > 0;
     const cuts = clips.length
       ? clips.map((c, ci) => `<div class="tbcut ${c.dur > LONG_CUT ? 'long' : ''} ${isPicked(i, c.seg_id) ? 'picked' : ''}"
              draggable="true"
@@ -1024,7 +1039,19 @@ function renderBand(){
                  ondragover="if(palDrag){event.preventDefault();event.dataTransfer.dropEffect='copy';}"
                  ondrop="beatDrop(${i}, event)"
                  title="누르면 재생 · 아래 소스를 끌어다 놓거나 두 번 클릭하면 이 칸에 담깁니다">
-        <div class="h"><b>${i+1}. ${b.role || '칸'}</b><span class="d">${sec.toFixed(1)}초</span>${sel === i ? '<span class="picked">여기에 담깁니다</span>' : ''}
+        <div class="h"><b>${i+1}. ${b.role || '칸'}</b><span class="d ${
+             lack > 0.1 ? (stretching ? 'dwarn' : 'dbad') : 'dok'}" title="${
+             !clips.length
+               ? `이 칸엔 장면이 없어 자막 ${need.toFixed(1)}초 동안 화면이 비어 있습니다. 아래 소스에서 장면을 담아주세요.`
+               : lack > 0.1
+                 ? `담은 장면은 ${have.toFixed(1)}초인데 자막은 ${need.toFixed(1)}초 — ${lack.toFixed(1)}초 모자랍니다. `
+                   + (stretching ? '지금은 담긴 장면 전부를 고르게 늘려 채우는 중이라 화면이 그만큼 느리게 흐릅니다.'
+                                 : '모자란 만큼 마지막 컷이 늘어나 그 장면만 오래 나옵니다. 장면을 더 담거나 [늘려 채우기]를 켜세요.')
+                 : `담은 장면 ${have.toFixed(1)}초로 자막 ${need.toFixed(1)}초를 다 채웠습니다.`
+                   + (have - need > 0.1 ? ` 남는 ${(have - need).toFixed(1)}초는 안 나옵니다.` : '')
+             }">${have.toFixed(1)}/${need.toFixed(1)}초${
+             !clips.length ? ' · 장면 없음'
+               : lack > 0.1 ? (stretching ? ' · 늘려 채움' : ` · ${lack.toFixed(1)}초 모자람`) : ''}</span>${sel === i ? '<span class="picked">여기에 담깁니다</span>' : ''}
           <span class="tbtools" onclick="event.stopPropagation()">
             <label title="재료가 모자랄 때 마지막 컷만 늘리지 않고 전체를 고르게 늘립니다"><input type="checkbox" ${STRETCH[i] ? 'checked' : ''} onchange="toggleStretch(${i}, this.checked)"> 늘려 채우기</label>
             <!-- ★칸 순서 바꾸기(◀▶)를 뺐다(2026-08-17 사장님 "필요없는 기능이고 그자리에
