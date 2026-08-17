@@ -71,6 +71,25 @@ def test_open_refuses_when_no_link():
     assert "stepName(" in guard          # 단계 번호를 손으로 안 적는다(0순위-B)
 
 
+def test_product_guidance_points_at_where_the_ui_actually_is():
+    """상품이 없을 때 "어디로 가라"가 실제 UI 위치와 같아야 한다.
+
+    상품 확정 UI(#coupangSlot)는 2026-08-18 쿠파스 트랙이 3단계 → 8단계 SEO로 이사했다.
+    안내가 옛 자리를 가리키면 '가라는 곳이 빈 화면'이 된다 — 그쪽이 방금 고친 그 함정이다.
+    번호는 stepName()으로 뽑아 순서가 또 바뀌어도 문구가 따라오게 한다(0순위-B).
+    """
+    html = _html()
+    # 슬롯이 실제로 SEO 패널(data-step=5) 안에 있다
+    seo_panel = html.split('<section class="panel" data-step="5">')[1].split("</section>")[0]
+    assert 'id="coupangSlot"' in seo_panel
+
+    # 인포크 쪽 두 안내(박스·모달 가드)가 그 패널을 가리킨다
+    box = html.split("async function refreshInpock(")[1].split("function inpockCopy(")[0]
+    assert "stepName('seo')" in box and "stepName('mix')" not in box
+    guard = html.split("async function inpockModalOpen(")[1].split("const copied")[0]
+    assert "stepName('seo')" in guard and "stepName('mix')" not in guard
+
+
 def test_copy_result_is_checked_not_assumed():
     """복사 성공을 '됐다고 치지' 않는다 — 실패하면 화면이 실패라고 말해야 한다.
 
