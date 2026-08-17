@@ -23,21 +23,25 @@ def _rgba(hex_color, alpha=255):
 
 
 def draw(t):
+    # ★PIL의 rectangle([x0,y0,x1,y1])은 양끝 좌표를 **포함**해서 칠한다(끝점 inclusive).
+    # 그래서 bar=190이면 [0,190]은 191px가 칠해진다 — 먼 쪽 좌표에서 1을 빼야
+    # 선언한 px 수와 실제로 칠해진 px 수가 정확히 같아진다.
     im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
     col = _rgba(t["color"])
     if t["shape"] == "top":
-        d.rectangle([0, 0, W, t["geom"]["bar"]], fill=col)
+        b = t["geom"]["bar"]
+        d.rectangle([0, 0, W, b - 1], fill=col)
     elif t["shape"] == "topbottom":
         b = t["geom"]["bar"]
-        d.rectangle([0, 0, W, b], fill=col)
-        d.rectangle([0, H - b, W, H], fill=col)
+        d.rectangle([0, 0, W, b - 1], fill=col)
+        d.rectangle([0, H - b, W, H - 1], fill=col)
     else:  # frame
         b = t["geom"]["border"]
-        d.rectangle([0, 0, W, b], fill=col)
-        d.rectangle([0, H - b, W, H], fill=col)
-        d.rectangle([0, 0, b, H], fill=col)
-        d.rectangle([W - b, 0, W, H], fill=col)
+        d.rectangle([0, 0, W, b - 1], fill=col)
+        d.rectangle([0, H - b, W, H - 1], fill=col)
+        d.rectangle([0, 0, b - 1, H], fill=col)
+        d.rectangle([W - b, 0, W - 1, H], fill=col)
     return im
 
 

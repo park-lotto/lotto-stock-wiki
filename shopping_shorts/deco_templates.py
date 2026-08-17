@@ -6,6 +6,9 @@
 import pathlib
 
 # 1080x1920 기준. bar=띠 높이(px), border=테두리 두께(px).
+# ★id는 (shape, color) 순서에서 나온 위치값(tpl_01..tpl_12) — 사용자 저장작업이 id를
+#   그대로 들고 있으므로 두 리스트 다 **뒤에만 추가**한다. 중간 삽입·순서변경 금지
+#   (예: _COLORS에 5번째 색을 앞에 끼우면 tpl_02가 딴 색으로 바뀐다 = 저장된 선택이 조용히 뒤바뀜).
 _COLORS = [
     ("코랄", "#FF5A5F"),
     ("민트", "#22C7B8"),
@@ -29,8 +32,8 @@ for _shape, _slabel, _geom in _SHAPES:
             "name": f"{_slabel} · {_cname}",
             "shape": _shape,
             "color": _hex,
-            "geom": _geom,
-            "file": _tid + ".png",
+            "geom": dict(_geom),   # ★복사본. 원본을 그대로 넣으면 같은 shape의 4색이 dict 하나를 공유해
+            "file": _tid + ".png",  #   한 템플릿의 geom 수정이 나머지 3개도 조용히 바꾼다(별칭 버그).
         })
 
 _BY_ID = {t["id"]: t for t in TEMPLATES}
