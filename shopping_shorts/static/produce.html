@@ -7388,9 +7388,16 @@ function _s2Hydrate(w){
     S2.curDraft = (typeof s.curDraft === 'number' && s.curDraft >= 0 && s.curDraft < s.drafts.length) ? s.curDraft : 0;
     S2.picked = Array.isArray(s.picked) ? s.picked : [];
     S2.materials = s.materials || null;
-    if(s.seed) S2.seed = s.seed;
+    S2.seed = s.seed || null;
   } else {
-    S2.drafts = []; S2.curDraft = 0; S2.picked = []; S2.materials = null;
+    // ★seed도 **함께** 지운다(2026-08-18 사장님 "왠 다이소청소쪽이 연결이 되나").
+    //   drafts만 지우고 seed를 남겼더니, 새 작업에서 s2RenderSeeds()의
+    //   `if(!S2.seed && ...)` 가드에 걸려 새 AI PICK이 씨앗을 갱신하지 못했다.
+    //   실측(work 735812dd8958): 담긴 건 카메라 5편인데 seed는 옛 작업의
+    //   홈데코랩(DbmCnyTTobw)이 그대로 살아, 대본이 통째로 다이소 주방청소로
+    //   나왔다(materials.sources 3편 중 2편이 무관한 옛 영상).
+    //   seed와 drafts는 한 작업의 짝이다 — 따로 정하면 반드시 어긋난다(0순위-B).
+    S2.drafts = []; S2.curDraft = 0; S2.picked = []; S2.materials = null; S2.seed = null;
   }
   // 지금 2단계를 보고 있으면 즉시 다시 그린다. 다른 단계면 s2Enter()가 들어올 때 그린다
   // (showPanel의 cur===8 분기 — 여기서 또 부르면 같은 판단이 두 곳이 된다).
@@ -7439,7 +7446,18 @@ function s2RenderSeeds(){
       category:pm.category||'', followers:pm.followers, text:d.pick_text||'',
       structure:d.structure||{}, tiles:d.tiles||{}, pick:true});
   }
-  if(!S2.seed && S2.seeds.length) S2.seed=S2.seeds[0];
+  // ★씨앗은 **지금 담긴 영상**을 따라간다(2026-08-18). 예전엔 `!S2.seed`일 때만
+  //   채워서, 한 번 정해진 씨앗이 1단계에서 영상을 바꿔도 그대로 굳었다 —
+  //   담긴 영상과 무관한 옛 영상이 대표로 남아 대본이 그쪽으로 끌려갔다.
+  //   ⚠️ 사장님이 직접 쓴 대본(shortcode:'')은 AI PICK이 덮으면 안 된다 —
+  //      그건 담긴 영상에서 나온 값이 아니라 손으로 넣은 것이다.
+  const _manualSeed = S2.seed && !S2.seed.shortcode;
+  if(S2.seeds.length && !_manualSeed){
+    // 지금 AI PICK이 가리키는 영상과 다르면 갈아탄다(같으면 그대로 둔다).
+    if(!S2.seed || S2.seed.shortcode !== S2.seeds[0].shortcode) S2.seed = S2.seeds[0];
+  } else if(!S2.seed && S2.seeds.length){
+    S2.seed = S2.seeds[0];
+  }
   const cards=S2.seeds.map((s,i)=>{
     const seg=(s.structure.segments)||[];
     const strip=seg.length?`<div class="s2-strip">${seg.map(g=>`<i style="flex:${g.pct};background:${g.color}"></i>`).join('')}</div>`
