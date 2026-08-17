@@ -126,7 +126,10 @@ def probe_grab_meta(url, timeout=40):
     #   generic 폴백도 Unsupported URL). 아래 yt-dlp 경로로 보내면 조용히 {}가 되어
     #   썸네일·제목이 영영 안 채워진다. 우리 수집기로 갈라 보낸다.
     host = (urllib.parse.urlparse(url or "").hostname or "").lower()
-    if host.endswith("threads.com") or host.endswith("threads.net"):
+    # ★app.py의 _grab_platform과 같은 방식(정확일치 또는 .호스트 서픽스)으로 판정한다.
+    #   endswith("threads.com")만 쓰면 evilthreads.com도 통과한다(0순위-B: 같은 판단
+    #   두 곳에 다르게 적지 마라).
+    if any(host == d or host.endswith("." + d) for d in ("threads.com", "threads.net")):
         return _probe_threads_meta(url)
     out = {}
     try:
@@ -159,19 +162,42 @@ def probe_grab_meta(url, timeout=40):
 
 
 def _probe_threads_meta(url):
-    """쓰레드 게시물 URL → {thumbnail,title,video_url}. 실패하면 {}(조용히)."""
+    """쓰레드 게시물 URL → {thumbnail,title,video_url}(있는 것만). 실패하면 {}(조용히).
+
+    ★Playwright(fetch_video_url)를 안 쓴다 — 브라우저를 띄워도 {"video_url":...}만
+    돌아와 호출부(_enrich_grab)가 thumbnail/title만 저장하는 계약이라 통째로 버려졌다
+    (2026-08-17 리뷰 발견). fetch_html(HTTP만)로 받은 페이지에서 code가 일치하는
+    게시물을 찾아 thumbnail·title(캡션)까지 함께 돌려준다 — 브라우저도 안 띄워 더 빠르다.
+    video_url은 지금 호출부가 안 받지만(호출부 변경은 이 태스크 범위 밖) 나중에
+    받아쓸 수 있게 반환 dict에는 계속 넣는다."""
     m = re.search(r"/@([^/]+)/post/([A-Za-z0-9_-]+)", url or "")
     if not m:
         return {}
     username, code = m.group(1), m.group(2)
     try:
-        from shopping_shorts import config
-        from shopping_shorts.threads_playwright import fetch_video_url
-        vurl = fetch_video_url(code, username,
-                               session_path=getattr(config, "INSTAGRAM_SESSION_PATH", ""))
-    except Exception:
+        from shopping_shorts.threads_playwright import fetch_html
+        from shopping_shorts.threads_parse import extract_post_nodes, parse_post_node
+        html = fetch_html(url)
+        post = None
+        for node in extract_post_nodes(html):
+            parsed = parse_post_node(node, username)
+            if parsed and parsed.get("code") == code:
+                post = parsed
+                break
+    except Exception as e:
+        print(f"[media_download] _probe_threads_meta 실패 code={code} {e!r}",
+              file=sys.stderr)
         return {}
-    return {"video_url": vurl} if vurl else {}
+    if not post:
+        return {}
+    out = {}
+    if post.get("thumb"):
+        out["thumbnail"] = post["thumb"]
+    if post.get("caption"):
+        out["title"] = post["caption"][:120]
+    if post.get("video_url"):
+        out["video_url"] = post["video_url"]
+    return out
 
 
 _IG_CODE_RE = re.compile(r"instagram\.com/(?:reel|reels|p|tv)/([A-Za-z0-9_-]+)")
