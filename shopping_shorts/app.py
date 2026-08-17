@@ -5211,6 +5211,60 @@ def api_video(url: str):
         return Response(status_code=404, content=b"")
 
 
+_PLAY_CACHE_DIR = Path(__file__).parent / "data" / "play_cache"
+_PLAY_CACHE_MAX = int(os.environ.get("PLAY_CACHE_MAX_FILES", "300"))
+_PLAY_PAGE = {
+    "tiktok": "https://www.tiktok.com/@x/video/{id}",
+    "youtube": "https://www.youtube.com/watch?v={id}",
+    "instagram": "https://www.instagram.com/reel/{id}/",
+}
+
+
+def _play_cache_trim():
+    """오래된 것부터 지워 파일 수를 상한 이하로. 디스크가 조용히 차는 걸 막는다."""
+    try:
+        files = sorted(_PLAY_CACHE_DIR.glob("*.mp4"), key=lambda p: p.stat().st_mtime)
+        for p in files[:-_PLAY_CACHE_MAX]:
+            p.unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
+@app.get("/api/play")
+def api_play(platform: str, id: str):
+    """영상을 **서버가 받아서** 파일로 서빙한다(카드 안 인라인 재생용, 2026-08-17).
+
+    왜 필요한가 — 틱톡은 `/api/media`가 준 mp4 주소를 **다른 요청으로 재사용하면 403**이다
+    (서버 실측: 리퍼러를 틱톡으로 줘도 403, 인스타 리퍼러도 403 = IP·세션 바인딩).
+    그래서 브라우저 직접재생도, `/api/video` 프록시도 안 되고 세로로 긴 임베드로
+    떨어졌다("틱톡 여전히 썸네일 크기" 제보). yt-dlp로 **내려받는 것은 된다**
+    (실측 4.4초·353KB) → 받아서 우리 파일로 주면 카드 안에서 작게 재생된다.
+
+    FileResponse라 Range(탐색)도 된다. 같은 영상은 캐시에서 즉시 나간다."""
+    from fastapi.responses import FileResponse, Response
+    page = _PLAY_PAGE.get((platform or "").lower())
+    if not page or not re.fullmatch(r"[A-Za-z0-9_-]{5,64}", id or ""):
+        return Response(status_code=400, content=b"bad request")
+    key = hashlib.sha1(f"{platform}:{id}".encode()).hexdigest()[:16]
+    out = _PLAY_CACHE_DIR / f"{key}.mp4"
+    if not out.exists():
+        _PLAY_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        tmp_dir = _PLAY_CACHE_DIR / f"tmp_{key}"
+        try:
+            tmp_dir.mkdir(parents=True, exist_ok=True)
+            got, _cap = download_any(page.format(id=id), tmp_dir)
+            if not got or not Path(got).exists():
+                return Response(status_code=404, content=b"")
+            Path(got).replace(out)
+        except Exception:
+            return Response(status_code=404, content=b"")
+        finally:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+        _play_cache_trim()
+    return FileResponse(str(out), media_type="video/mp4",
+                        headers={"Cache-Control": "public, max-age=86400"})
+
+
 @app.get("/api/media")
 def api_media(platform: str, id: str):
     """유튜브/틱톡 영상 → 진행형 mp4 direct URL(프론트 <video>가 embed 대신 이 URL로
