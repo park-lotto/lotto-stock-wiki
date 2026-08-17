@@ -236,7 +236,57 @@ JS는 `node --check` 통과, 라우트 `/api/lens/kw/search` 등록 확인.
   from shopping_shorts import config, lens_discover as L
   print(len(config.SERPAPI_KEYS), L.account_searches_left(force=True))'
   ```
-- [ ] **죽은 Apify 토큰 정리 승인** — 17개 중 6개가 401 무효, 6개 중복
+- [x] ✅ **Apify 토큰 정리 완료** (2026-08-17, ★서버 env = git에 안 남는다)
+
+  **17개 → 5개.** 넣기 전 재실측(살아있음 5 / 401 죽음 9 / 중복 3 = 17, 앞선 실측과 동일).
+
+  | 남긴 것 | 계정 | 끝 6자리 |
+  |---|---|---|
+  | `APIFY_TOKEN` | ceremonial_anhinga | `4DT6FN` |
+  | `APIFY_TOKEN_2` | wondrous_pawpaw_xqt | `4w7hFQ` |
+  | `APIFY_TOKEN_3` | vernacular_sugarmaple | `1atbro` (월한도 소진, 09-08 리셋) |
+  | `APIFY_TOKEN_4` | onyx_cichlid | `3VmSdD` |
+  | `APIFY_TOKEN_5` | invaluable_donkey_8tl | `0liNLo` ← 옛 `_8` |
+
+  지운 것: 401 무효 9개(`1vUZQD` `0bKVDt` `4DpAJV` ×2벌, `2lBaDI` `21MkD4` `1HSxOh`)
+  + 중복 3개(옛 `_9`=`_2`, `_10`=`_3`, `_11`=`_4`).
+  번호를 1~5로 **재정렬**했다(풀 스캔은 빈 번호를 건너뛰므로 기능상 필수는 아니지만,
+  17개 중 5개만 살아있는 상태를 사람이 읽기 어려웠다).
+
+  - env 백업: `/etc/shopping-shorts.env.bak.apify.20260817-161436`
+  - **APIFY 외 변수는 전부 동일**함을 백업과 `diff`로 대조 확인(다른 걸 안 다쳤다)
+  - restart 후 실측: 코드가 읽은 토큰 5개 전부 OK, 서비스 active
+  - 서버 워킹트리 무변(untracked `backups/`·`out/…`는 내 것이 아니라 원래 있던 것)
+
+  ### ★정리 직후 도우인이 0건이 났는데, 정리 탓이 아니었다 (원인 확정)
+
+  정리 후 CN 검색에서 도우인만 0건이 나왔다. 층을 갈라 봤다:
+
+  | 확인 | 결과 |
+  |---|---|
+  | 토큰1 잔액 | $4.255 남음 — **돈 문제 아님** |
+  | 그 run 상태 | `SUCCEEDED` 인데 비용 **$0.00006**(정상은 $0.04005) = 즉시 빈손 종료 |
+  | **run 로그** | `You have used all 15 free runs. Upgrade to a paying plan to continue.` |
+
+  → 도우인 액터(`3TJaaOJDU1AMiOoJM`)엔 **월 $5 크레딧과 별개로 "계정당 무료 15회"**
+    제한이 있고, 계정1이 그걸 다 썼다. 정리와 무관하고 시점만 겹쳤다.
+
+  **★진짜 함정 — 로테이션이 이걸 못 넘는다.** 액터가 `SUCCEEDED` + 0건으로 끝나므로
+  `apify_client.py:150-153`이 **성공으로 보고 그대로 반환**한다. 그래서 다른 계정에
+  무료 실행이 남아 있어도 넘어가지 않는다(실측: 계정 2·4·5는 각 3건 정상, 계정1만 0건).
+  "성공했는데 빈손"이 조용히 통과하는 이 자리는 이 프로젝트에서 반복되는 사고 유형이다.
+
+  **지금 한 조치(코드 무수정·즉시 복구)**: 저장된 풀 포인터를 계정1(0)→계정2(1)로 옮겼다
+  (`shopping_shorts/data/apify_key_index.json`). 검증: CN 검색 10건
+  (샤오홍슈 5 무료 + 도우인 5 `$0.04005`).
+  ⚠️ **임시 조치다.** 계정2의 무료 15회가 마르면 같은 증상이 재발한다.
+
+  **권하는 근본 수정(미착수)**: `_run_with_rotation`이 "0건 + run 비용 ≈ 0"을
+  소진 신호로 보고 다음 토큰으로 넘어가게 한다. 비용이 든 진짜 0건(=검색결과 없음)과
+  갈라지므로 유료 run을 낭비하지 않는다. 사장님 판단 필요 — 로테이션 의미가 바뀌는
+  변경이고 인스타 등 다른 액터도 같은 함수를 쓴다.
+
+- [ ] ~~**죽은 Apify 토큰 정리 승인**~~ — (위에서 완료) 17개 중 6개가 401 무효, 6개 중복
       (목록은 `handoff/CN검색통합.md`). 무효 토큰이 로테이션 앞쪽에 있으면
       매 검색마다 헛때려 느려진다. ⚠️ `/etc/shopping-shorts.env` 변경은 git에 안 남으니
       건드리면 반드시 거기에 적을 것.
