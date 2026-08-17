@@ -668,6 +668,30 @@ class Store:
                 )
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_psnap ON platform_snapshots(platform, shortcode, id)")
+            # 쓰레드 게시물(2026-08-17) — 인스타 표(channel_archive·reel_history)와
+            # 섞지 않는다. 저 표들은 플랫폼 컬럼 없이 인스타 전용이고, hits_since는
+            # platform 인자를 받으면서 SQL에서 쓰지 않는다 → 섞으면 인스타 랭킹이
+            # 조용히 오염된다. 씨앗·delta는 platform_seeds/platform_snapshots 재사용.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS threads_posts (
+                    code TEXT PRIMARY KEY,
+                    username TEXT NOT NULL,
+                    caption TEXT,
+                    tail_caption TEXT,
+                    coupang_url TEXT,
+                    media_kind TEXT,
+                    video_url TEXT,
+                    thumb TEXT,
+                    likes INTEGER, comments INTEGER, reposts INTEGER, shares INTEGER,
+                    views INTEGER,
+                    posted_at TEXT,
+                    first_seen TEXT, last_seen TEXT,
+                    quality INTEGER DEFAULT 0,
+                    source TEXT
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_threads_quality "
+                      "ON threads_posts(quality DESC, first_seen DESC)")
             # 샤오홍슈 계정 발굴 누적 로그(2026-07-29) — 하루 1행/계정(같은날 재발굴은 덮어씀).
             # '며칠째 반복해서 뜨나'(appear_days)로 우연 1회를 검증된 계정과 구분한다.
             c.execute("""
@@ -1677,6 +1701,40 @@ class Store:
             rows = c.execute("SELECT kind, value, added_at FROM platform_seeds WHERE platform=? "
                              "ORDER BY added_at ASC, rowid ASC", (platform,)).fetchall()
         return [{"kind": r[0], "value": r[1], "added_at": r[2] or ""} for r in rows]
+
+    # ── 쓰레드 게시물 ──
+    _THREADS_COLS = ("code", "username", "caption", "tail_caption", "coupang_url",
+                     "media_kind", "video_url", "thumb", "likes", "comments",
+                     "reposts", "shares", "views", "posted_at", "quality", "source")
+
+    def threads_upsert(self, post):
+        """새로 넣었으면 True, 이미 있던 걸 갱신했으면 False."""
+        code = (post or {}).get("code")
+        if not code:
+            return False
+        vals = [post.get(k) if k != "quality" else int(post.get(k) or 0)
+                for k in self._THREADS_COLS]
+        with self._conn() as c:
+            row = c.execute("SELECT 1 FROM threads_posts WHERE code=?", (code,)).fetchone()
+            if row:
+                sets = ", ".join(f"{k}=?" for k in self._THREADS_COLS[1:])
+                c.execute(f"UPDATE threads_posts SET {sets}, last_seen=datetime('now') "
+                          "WHERE code=?", (*vals[1:], code))
+                return False
+            cols = ", ".join(self._THREADS_COLS)
+            qs = ",".join("?" * len(self._THREADS_COLS))
+            c.execute(f"INSERT INTO threads_posts({cols}, first_seen, last_seen) "
+                      f"VALUES({qs}, datetime('now'), datetime('now'))", vals)
+            return True
+
+    def threads_list(self, limit=200, min_quality=0):
+        cols = ", ".join(self._THREADS_COLS)
+        with self._conn() as c:
+            rows = c.execute(
+                f"SELECT {cols} FROM threads_posts WHERE quality >= ? "
+                "ORDER BY quality DESC, first_seen DESC LIMIT ?",
+                (int(min_quality), int(limit))).fetchall()
+        return [dict(zip(self._THREADS_COLS, r)) for r in rows]
 
     # ── 샤오홍슈 계정 발굴 블랙리스트(사장님이 쳐낸 계정 영구 제외) ──
     # platform_seeds 재사용: platform="xiaohongshu", kind="xhs_blacklist", value=userid.
