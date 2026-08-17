@@ -145,7 +145,7 @@ def test_tiktok_missing_token_returns_empty(monkeypatch):
         raise RuntimeError("tiktok_search: APIFY_TOKEN이 설정되지 않았습니다")
 
     monkeypatch.setattr(ts, "search", boom)
-    assert kw_backends.tiktok("감자칩", 5) == []
+    assert kw_backends.apify_tiktok("감자칩", 5) == []
 
 
 def test_tiktok_rows_match_schema(monkeypatch):
@@ -154,7 +154,7 @@ def test_tiktok_rows_match_schema(monkeypatch):
         {"url": "https://www.tiktok.com/@a/video/1", "title": "칩", "thumbnail": "t"},
         {"title": "url 없음"},
     ])
-    rows = kw_backends.tiktok("감자칩", 5)
+    rows = kw_backends.apify_tiktok("감자칩", 5)
     assert len(rows) == 1 and _CARD_KEYS.issubset(rows[0].keys())
     assert rows[0]["platform"] == "tiktok"
 
@@ -177,8 +177,8 @@ def test_cost_is_keyed_by_backend_function_name():
     """★비용표는 '플랫폼'이 아니라 **백엔드 함수 이름**으로 찾는다(run_chain이
     fn.__name__으로 조회). 이름을 바꾸면 비용이 조용히 0원으로 보고된다 —
     돈이 새는 걸 화면에서 못 보게 되므로 여기서 못박는다."""
-    assert kw_backends.tiktok.__name__ in kw_search._COST
-    assert kw_search._COST[kw_backends.tiktok.__name__] > 0
+    assert kw_backends.apify_tiktok.__name__ in kw_search._COST
+    assert kw_search._COST[kw_backends.apify_tiktok.__name__] > 0
 
 
 def test_tiktok_cost_surfaces_in_meta(monkeypatch):
@@ -186,9 +186,9 @@ def test_tiktok_cost_surfaces_in_meta(monkeypatch):
     import shopping_shorts.tiktok_search as ts
     monkeypatch.setattr(ts, "search", lambda kw, n: [
         {"url": "https://www.tiktok.com/@a/video/1", "title": "t"}])
-    monkeypatch.setattr(kw_search, "_CHAIN", {"tiktok": [kw_backends.tiktok]})
+    monkeypatch.setattr(kw_search, "_CHAIN", {"tiktok": [kw_backends.apify_tiktok]})
     res = kw_search.search("감자칩", 5)
-    assert res["meta"]["tiktok"]["cost_usd"] == kw_search._COST["tiktok"]
+    assert res["meta"]["tiktok"]["cost_usd"] == kw_search._COST["apify_tiktok"]
 
 
 def test_free_platforms_report_zero_cost(monkeypatch):
@@ -201,9 +201,52 @@ def test_free_platforms_report_zero_cost(monkeypatch):
     assert res["meta"]["youtube"]["cost_usd"] == 0
 
 
+def test_pw_tiktok_skips_browser_without_session(monkeypatch, tmp_path):
+    """세션이 없으면 **브라우저를 아예 안 띄운다** — 띄워봐야 빈손이고
+    프록시 바이트만 버린다(2026-08-17 실측: 세션 없이는 API 본문이 빈다)."""
+    from shopping_shorts import config as cfg
+    monkeypatch.setattr(cfg, "TIKTOK_SESSION_PATH", str(tmp_path / "없는파일.json"))
+    called = []
+    import shopping_shorts.kw_backends as kb
+    monkeypatch.setattr(kb, "playwright_proxy_kw", lambda p: called.append(p))
+    assert kw_backends.pw_tiktok("감자칩", 5) == []
+    assert called == [], "세션이 없는데 프록시·브라우저를 건드렸다"
+
+
+def test_tiktok_falls_back_to_apify_when_free_path_empty(monkeypatch):
+    """★사장님 질문("틱톡도 프록시 되잖아")의 답이 코드에 박혀 있나 —
+    무료(pw)를 **먼저** 시도하고, 0건일 때만 Apify로 간다."""
+    order = []
+
+    def fake_pw(kw, n):
+        order.append("pw")
+        return []                     # 세션 없음 = 지금 상태
+
+    def fake_apify(kw, n):
+        order.append("apify")
+        return [{"url": "u", "platform": "tiktok"}]
+
+    monkeypatch.setattr(kw_search, "_CHAIN", {"tiktok": [fake_pw, fake_apify]})
+    res = kw_search.search("감자칩", 5)
+    assert order == ["pw", "apify"], "무료 경로를 먼저 타지 않았다"
+    assert res["meta"]["tiktok"]["backend"] == "fake_apify"
+
+
+def test_tiktok_free_path_wins_when_it_returns_rows(monkeypatch):
+    """세션이 생기면 Apify를 **안 부른다**(그 순간부터 비용 0)."""
+    called = []
+    monkeypatch.setattr(kw_search, "_CHAIN", {"tiktok": [
+        lambda kw, n: [{"url": "free", "platform": "tiktok"}],
+        lambda kw, n: called.append("apify") or [{"url": "paid"}],
+    ]})
+    res = kw_search.search("감자칩", 5)
+    assert called == [], "무료로 결과가 나왔는데 유료를 또 불렀다"
+    assert res["meta"]["tiktok"]["cost_usd"] == 0
+
+
 def test_real_chain_has_the_three_platforms():
     """실제 배선이 세 플랫폼을 다 갖고 있나(모킹된 테스트만 통과하면 의미 없다)."""
     assert set(kw_search._CHAIN) == {"instagram", "tiktok", "youtube"}
     assert kw_search._CHAIN["instagram"] == [kw_backends.instagram]
-    assert kw_search._CHAIN["tiktok"] == [kw_backends.tiktok]
+    assert kw_search._CHAIN["tiktok"] == [kw_backends.pw_tiktok, kw_backends.apify_tiktok]
     assert kw_search._CHAIN["youtube"] == [kw_backends.youtube]

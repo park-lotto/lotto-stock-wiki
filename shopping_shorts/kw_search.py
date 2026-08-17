@@ -20,11 +20,16 @@ from shopping_shorts import kw_backends, search_chain
 #   개수에 따라 늘어나므로 기본 8건이면 대략 $0.03 언저리다 — 정확한 값이 필요하면
 #   Apify 콘솔의 run usageTotalUsd를 다시 재라(여기 숫자를 짐작으로 고치지 마라).
 #   참고: 샤오홍슈 $0.098 · 도우인 $0.04005보다는 싸다.
-_COST = {"tiktok": 0.0195}
+# ⚠️키는 **백엔드 함수 이름**이다(run_chain이 fn.__name__으로 찾는다).
+_COST = {"apify_tiktok": 0.0195}
 
 _CHAIN = {
     "instagram": [kw_backends.instagram],
-    "tiktok": [kw_backends.tiktok],
+    # 틱톡도 프록시로 간다 — 다만 **세션이 있어야** 데이터가 온다(2026-08-17 실측:
+    # 프록시로 페이지·API 모두 200인데 본문이 비고 로그인 모달이 뜬다).
+    # 세션 파일이 생기는 순간 pw_tiktok이 성공하기 시작해 자동으로 $0이 된다 —
+    # 샤오홍슈가 그렇게 무료로 돌고 있고, 도우인이 그 반대 상태다.
+    "tiktok": [kw_backends.pw_tiktok, kw_backends.apify_tiktok],
     "youtube": [kw_backends.youtube],
 }
 

@@ -333,3 +333,10 @@ COUPANG_PROFILE_DIR = os.getenv("COUPANG_PROFILE_DIR", "")
 
 # 도우인 로그인 세션(Playwright storage_state). 없으면 CN 검색은 Apify로 폴백한다.
 DOUYIN_SESSION_PATH = os.getenv("DOUYIN_SESSION_PATH", "/home/ubuntu/douyin_session.json")
+# 틱톡 로그인 세션(Playwright storage_state). 없으면 키워드 검색은 Apify로 폴백한다.
+# ★2026-08-17 서버 실측 — 막는 것은 IP가 아니라 **세션**이다:
+#   프록시(kr)로 검색 페이지·`/api/search/general/full/` 모두 200으로 도달하는데,
+#   응답 **본문이 비어** 있고 화면엔 로그인 모달과 "문제가 발생했습니다"가 뜬다.
+#   즉 샤오홍슈(세션 있음 → 무료 성공)와 도우인(세션 없음 → Apify)의 차이와 같다.
+#   이 파일이 생기는 순간 kw_search가 자동으로 무료 경로를 먼저 타고 비용이 0이 된다.
+TIKTOK_SESSION_PATH = os.getenv("TIKTOK_SESSION_PATH", "/home/ubuntu/tiktok_session.json")
