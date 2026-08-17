@@ -117,8 +117,8 @@ h1{font-size:16px;margin:0;font-weight:700}
    불편"). 담기는 lists[sel] = **위에서 고른 칸**으로 들어가는데, 그 선택기가 화면 위쪽에만
    있어서 조각을 고를 때마다 위아래로 왕복해야 했다. 머리줄을 스크롤에 붙여 어디까지
    내려가도 '지금 어느 칸에 담기는지'가 보이고 거기서 바로 칸을 바꿀 수 있게 한다. */
-#dropmsg{position:sticky;top:0;z-index:6;background:var(--bg);padding:8px 0;
-  display:flex;flex-wrap:wrap;align-items:center;gap:6px;box-shadow:0 6px 10px -8px #000a}
+#dropmsg{position:sticky;top:0;z-index:6;background:var(--bg);padding:6px 0;
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px;box-shadow:0 6px 10px -8px #000a}
 .slotbtn{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:6px;
   padding:3px 8px;font-size:12px;cursor:pointer}
 .slotbtn.on{border-color:var(--accent);color:var(--accent);font-weight:700}
@@ -589,7 +589,7 @@ function groupCount(g, segs){
   const dup = all.filter(k => hideDup && isDupOf(k)).length;
   const oor = all.filter(k => outOfRange(k)).length;
   const mg  = all.filter(k => isMergedInto(k)).length;
-  if (dup) why.push(`비슷 ${dup}`);
+  if (dup) why.push(`비슷 ${dup}`);   // ↓ 아래 머리글에서 눌러 바로 펼칠 수 있다
   if (oor) why.push(`소스밖 ${oor}`);
   if (mg)  why.push(`합침 ${mg}`);
   return `${segs.length}/${all.length}개${why.length ? ` (${why.join(' · ')} 가림)` : ''}`;
@@ -1103,14 +1103,8 @@ function render(){
                 >합치기</button> <button type="button" class="gm" onclick="_MSEL.clear();render()">취소</button>`
          : `<span title="카드의 🔗를 눌러 붙어 있는 조각 2장 이상을 고르면 합칠 수 있습니다">🔗 짧은 조각 합치기</span>`
      } <span id="mergemsg" style="color:var(--accent)"></span></span>
-     <span style="flex-basis:100%;height:0"></span>
-     ${/* ★담을 칸 — 여기서 고르고 카드의 [＋담기]를 누르면 바로 그 칸에 들어간다.
-           스크롤을 아무리 내려도 이 줄은 붙어 있다(위 #dropmsg sticky). */''}
-     <span style="color:var(--dim)">담을 칸 →</span>
-     ${DATA.beats.map((b, i) => `<button type="button" class="slotbtn ${i===sel?'on':''}"
-        onclick="selBeat(${i})"
-        title="${esc((NARR[i] != null ? NARR[i] : (b.narration || '')).slice(0, 40))}"
-        >${i+1}. ${esc(slotName(i))}${(lists[i]||[]).length?` <b>${(lists[i]||[]).length}</b>`:''}</button>`).join('')}`;
+     <span style="color:var(--dim)" title="끌어다 오른쪽 칸에 놓거나, 카드를 두 번 클릭하면 선택된 칸에 담깁니다"
+        >지금 담기는 칸: <b style="color:var(--accent)">${sel+1}. ${esc(slotName(sel))}</b></span>`;
   const cur = new Set(lists[sel] || []);
 
   // 묶는 기준 두 가지(2026-08-17). 카드를 그리는 코드는 **한 벌**이고 그룹 목록만 갈린다
@@ -1124,7 +1118,10 @@ function render(){
     return `<div class="srcgroup"><div class="srchead"><span>${g.title}${g.hint?` <span class="cnt">· ${g.hint}</span>`:''}</span>`
       + `<span class="cnt"><button type="button" class="act play" style="padding:2px 8px;font-size:11.5px;margin-right:8px"`
       + ` onclick='playSegsHere(${JSON.stringify(_gs)}, ${JSON.stringify(g.title + " 이어 보기")}, event)'`
-      + ` title="이 묶음의 조각을 순서대로 이어 봅니다">▶️ 쭉 보기</button>${esc(groupCount(g, segs))}</span></div>
+      + ` title="이 묶음의 조각을 순서대로 이어 봅니다">▶️ 쭉 보기</button>`
+      + `<button type="button" class="slotbtn" onclick="toggleDup(${hideDup?'false':'true'})"
+           title="${hideDup ? '눌러서 가려진 조각까지 전부 펼칩니다' : '눌러서 비슷한 그림을 다시 접습니다'}"
+           >${esc(groupCount(g, segs))}</button></span></div>
       <div class="thumbs">${segs.map(s => `
         <div class="seg ${cur.has(s.sid)?'inthis':''} ${(outOfRange(s.sid)||tooShort(s.sid))?'oor':''}"
              style="${_MSEL.has(s.sid)?'outline:2px solid var(--accent);outline-offset:1px':''}"
@@ -1160,10 +1157,6 @@ function render(){
                         : `<span class="slab dim">이름 없음</span>`}
             </div>
             <div class="d">${esc(s.scene_desc||'(설명 없음)')}</div>
-            <button type="button" class="addbtn ${cur.has(s.sid)?'done':''}"
-              onclick="event.stopPropagation();clearTimeout(clickTimer);add('${s.sid}')"
-              title="위 고정줄에서 고른 칸(${sel+1}. ${esc(slotName(sel))})에 담습니다"
-              >${cur.has(s.sid)?'✓ 이 칸에 담김':`＋ ${sel+1}번 칸에 담기`}</button>
             </div>
         </div>`).join('')}</div></div>`;
   }).join('');
@@ -1220,7 +1213,7 @@ function render(){
         <div class="narrwrap">${SL.server ? '' : `<span class="edmark" title="대본 수정"
              onclick="event.stopPropagation();this.nextElementSibling.focus()">✏</span>`}<div class="narr" contenteditable="${SL.server ? 'false' : 'true'}" spellcheck="false"
              data-i="${i}" onblur="editNarr(${i}, this)"
-             onclick="event.stopPropagation()"
+             onclick="event.stopPropagation();${SL.server ? `selBeat(${i});playBeatHere(${i}, event)` : ''}"
              style="${SL.server ? 'cursor:default' : ''}"
              title="${SL.server ? '대본 수정은 위 ① 새 대본 고르기에서' : '눌러서 대본을 바로 고칠 수 있어요'}">${esc(narrOf(i))}</div></div>
         ${narrChanged(i) ? `<div class="why" style="color:var(--warn);border-color:#5a4520;background:#2a2113">
