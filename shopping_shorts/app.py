@@ -2917,6 +2917,31 @@ def _probe_user_key(service: str, key: str) -> bool:
         return False
 
 
+def _key_status(service: str, key: str) -> str:
+    """화면에 박을 상태 문자열: ok / empty / bad. **여기서만 정한다**(0순위-B).
+
+    ★왜 empty가 필요한가 (2026-08-17 라이브 실측):
+      SerpApi 키가 이번 달 250회를 다 쓴 상태(plan_searches_left=0)여도
+      account.json은 200을 준다 → '● 정상'으로 떴다. 그런데 검색을 걸면
+      첫 호출에서 소진 판정이 나 **0건**이 돌아온다. 폴백이 없으니(설계상
+      의도) 사장님 키로도 안 넘어간다 = "정상이라며 왜 결과가 없냐"가 된다.
+      키는 멀쩡하므로 'bad'(키가 틀렸습니다)도 거짓이다. 그래서 셋으로 가른다.
+
+    잔량 조회가 실패하면 ok로 둔다 — 확인 못 한 것을 소진으로 단정하지 않는다."""
+    if not _probe_user_key(service, key):
+        return "bad"
+    if service == keyroute.SVC_SERPAPI:
+        try:
+            d = requests.get("https://serpapi.com/account.json",
+                             params={"api_key": key}, timeout=10).json()
+            left = d.get("total_searches_left", d.get("plan_searches_left"))
+            if left is not None and int(left) <= 0:
+                return "empty"
+        except (requests.RequestException, ValueError, TypeError):
+            pass
+    return "ok"
+
+
 def _svc_or_err(body: dict):
     """(service, 에러응답) — 모르는 값이면 (None, 422 응답).
 
@@ -2998,10 +3023,12 @@ def api_verify_keys(request: Request, body: dict):
     labels = {r["id"]: r["label"] for r in store.list_customer_keys(cid, service)}
     results = []
     for key_id, plain in store.get_customer_keys_with_id(cid, service):
-        alive = _probe_user_key(service, plain)
-        store.set_customer_key_status(key_id, "ok" if alive else "bad")
+        status = _key_status(service, plain)
+        store.set_customer_key_status(key_id, status)
         # ★평문은 안 싣는다. 화면은 label로 어느 키인지 알아본다.
-        results.append({"id": key_id, "label": labels.get(key_id, ""), "ok": alive})
+        # ok는 "쓸 수 있는가" — 무료분이 바닥난 키(empty)는 검색이 0건이라 False다.
+        results.append({"id": key_id, "label": labels.get(key_id, ""),
+                        "ok": status == "ok", "status": status})
     return {"ok": True, "results": results, "keys": store.list_customer_keys(cid)}
 
 

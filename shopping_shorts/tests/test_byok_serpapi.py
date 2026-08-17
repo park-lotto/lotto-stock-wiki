@@ -84,6 +84,51 @@ def test_search_uses_given_keys_only(monkeypatch):
     assert set(used) == {"mine-1"}, f"사장님 키가 샜다: {used}"
 
 
+def _fake_account(monkeypatch, payload, probe_ok=True):
+    from shopping_shorts import app as appmod
+
+    class _R:
+        def json(self):
+            return payload
+
+    monkeypatch.setattr(appmod, "_probe_user_key", lambda svc, key: probe_ok)
+    monkeypatch.setattr(appmod.requests, "get", lambda *a, **k: _R())
+    return appmod
+
+
+def test_exhausted_serpapi_key_is_not_reported_as_ok(monkeypatch):
+    """★라이브 실측 2026-08-17: 250회를 다 쓴 키도 account.json은 200을 준다.
+    '정상'으로 표시하면 검색이 0건인데 이유를 모른다 — 폴백이 없어 사장님 키로도
+    안 넘어간다. 키 자체는 멀쩡하니 'bad'도 거짓이다."""
+    appmod = _fake_account(monkeypatch, {"plan_searches_left": 0,
+                                         "total_searches_left": 0})
+    assert appmod._key_status(keyroute.SVC_SERPAPI, "k") == "empty"
+
+
+def test_live_serpapi_key_is_ok(monkeypatch):
+    appmod = _fake_account(monkeypatch, {"total_searches_left": 125})
+    assert appmod._key_status(keyroute.SVC_SERPAPI, "k") == "ok"
+
+
+def test_quota_lookup_failure_does_not_become_empty(monkeypatch):
+    """확인 못 한 것을 소진으로 단정하지 않는다 — 멀쩡한 키가 경고로 뜨면 더 나쁘다."""
+    appmod = _fake_account(monkeypatch, {})          # 잔량 필드 자체가 없음
+    assert appmod._key_status(keyroute.SVC_SERPAPI, "k") == "ok"
+
+
+def test_wrong_key_is_bad_before_quota_is_asked(monkeypatch):
+    appmod = _fake_account(monkeypatch, {"total_searches_left": 0}, probe_ok=False)
+    assert appmod._key_status(keyroute.SVC_SERPAPI, "k") == "bad"
+
+
+def test_ui_has_a_word_for_the_empty_state():
+    """상태 문자열을 서버가 새로 주는데 화면에 그 칸이 없으면 '확인 전'으로 보인다."""
+    from pathlib import Path
+    from shopping_shorts import app as appmod
+    txt = (Path(appmod.__file__).parent / "static" / "settings.html").read_text(encoding="utf-8")
+    assert "empty:" in txt, "settings.html STATUS에 empty가 없다"
+
+
 def test_lens_call_count_matches_the_ui_copy():
     """화면에 '검색 1번에 3회'라고 적어뒀다. 코드가 그 숫자여야 한다 —
     로케일이나 캡을 바꾸면 이 테스트가 먼저 깨져서 문구도 같이 고치게 된다."""
