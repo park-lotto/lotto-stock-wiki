@@ -1,7 +1,7 @@
 """수집 오케스트레이션: 채널→Apify→랭킹→저장→CSV 아카이브."""
 import csv
 from pathlib import Path
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, date
 from concurrent.futures import ThreadPoolExecutor
 from shopping_shorts.config import (DB_PATH, WINDOW_HOURS, DRAFT_BATCH_SIZE, MAX_CHANNELS,
                                     YOUTUBE_WINDOW_HOURS, YOUTUBE_MAX_PER_KW,
@@ -15,6 +15,7 @@ from shopping_shorts.instagram_playwright import LAST_TALLY as _PW_TALLY
 from shopping_shorts.ranking import (build_items, build_youtube_items, build_tiktok_items,
                                      build_overseas_items, apply_grades, aggregate_channels)
 from shopping_shorts.channel_fitness import channel_fitness
+from shopping_shorts import channel_tier
 from shopping_shorts.store import Store
 from shopping_shorts.comment_gen import generate as _gen_comments
 from shopping_shorts import ai_categorize, topic_grouper
@@ -471,6 +472,24 @@ def collect(platform="instagram", categories=None, limit_channels=None, on_progr
     channels = select_tracked(channels, _store.discovered_channels(),
                               removed=_store.removed_usernames(),
                               dead=_store.dead_usernames())
+
+    # 등급제(2026-08-17): 오늘 안 돌 채널은 여기서 뺀다.
+    # ★비용은 '문을 여는 순간' 나간다(프록시=바이트, Apify=run당 고정) — 가져오는 개수를
+    # 줄여도 절감 0이라 안 여는 것만이 유일한 절감 수단이다. 실측: C등급 227채널은 26일간
+    # 히트 0건인데 매일 열고 있었다. 판정은 channel_tier 한 곳에서만 한다(0순위-B).
+    _tiers = {}
+    if config.REFERENCE_TIER:
+        _tiers = channel_tier.compute_tiers(
+            _store.reel_history_rows(),
+            hit_comments=config.REFERENCE_TIER_HIT_COMMENTS,
+            hit_min_count=config.REFERENCE_TIER_HIT_COUNT)
+        _due = channel_tier.due_today(_tiers, date.today().toordinal(),
+                                      known=[c["username"] for c in channels])
+        _before = len(channels)
+        channels = [c for c in channels
+                    if (c["username"] or "").strip().lstrip("@").lower() in _due]
+        print(f"[등급제] {_before} → {len(channels)}채널 "
+              f"(등급 {channel_tier.tier_counts(_tiers)})")
 
     if limit_channels:
         channels = channels[:limit_channels]

@@ -1368,6 +1368,18 @@ class Store:
             ).fetchall()
         return {r[0]: {"last": r[1] or "", "name": r[2] or ""} for r in rows}
 
+    def reel_history_rows(self):
+        """등급 산정용 원자료 — [{"username","comments","first_seen"}].
+
+        reel_history는 30일 롤링(prune_reel_history)이라 자연히 '최근 한 달 성적'만 남는다.
+        판정 자체는 하지 않는다 — 등급 기준이 두 군데에 적히면 언젠가 어긋난다(0순위-B).
+        기준은 channel_tier 한 곳에만 둔다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT username, comments, first_seen FROM reel_history"
+            ).fetchall()
+        return [{"username": r[0], "comments": r[1], "first_seen": r[2]} for r in rows]
+
     def channel_name_map(self):
         """{username: 한글 표시명} — 아카이브(히트작) 카드가 @아이디 대신 한글 이름을 쓰려고 읽는다.
 
