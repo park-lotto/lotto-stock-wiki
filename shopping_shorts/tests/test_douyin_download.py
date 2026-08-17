@@ -47,6 +47,40 @@ def test_best_play_url_empty():
     assert df.best_play_url("<html>challenge</html>") == ""
 
 
+def _frag(*variants):
+    """(w, h, size, src) 목록 → SSR HTML 조각(URL인코딩)."""
+    import urllib.parse
+    body = " ... ".join(
+        f'"dataSize":{s},"width":{w},"height":{h},"playAddr":[{{"src":"{u}"}}]'
+        for w, h, s, u in variants)
+    return urllib.parse.quote(body)
+
+
+def test_best_play_url_skips_4k_when_1080_available():
+    """★2026-08-17 서버 실측 — 4K를 받으면 _normalize가 141초를 쓴다.
+
+    도우인은 같은 영상에 1080x1920 h264를 함께 내놓으므로 그걸 고르면 변환이 0초다.
+    최종 렌더가 1080x1920이라 화질 손해도 없다."""
+    html = _frag((1080, 1920, 14_523_172, "https://v5.zjcdn.com/fhd"),
+                 (2160, 3840, 20_149_027, "https://v5.zjcdn.com/4k"),
+                 (720, 1280, 3_001_491, "https://v5.zjcdn.com/hd"))
+    assert df.best_play_url(html) == "https://v5.zjcdn.com/fhd"
+
+
+def test_best_play_url_falls_back_to_oversized_when_only_4k():
+    """1920 이하가 하나도 없으면 종전대로 최댓값을 받는다(_normalize가 변환) — 회귀 0."""
+    html = _frag((2160, 3840, 20_000_000, "https://v5.zjcdn.com/4k"),
+                 (1440, 2560, 11_544_377, "https://v5.zjcdn.com/2k"))
+    assert df.best_play_url(html) == "https://v5.zjcdn.com/4k"
+
+
+def test_best_play_url_prefers_larger_file_at_same_fit_height():
+    """같은 규격 안에서는 종전 기준(화소→용량) 그대로 최고 품질을 고른다."""
+    html = _frag((1080, 1920, 9_000_000, "https://v5.zjcdn.com/fhd-small"),
+                 (1080, 1920, 14_000_000, "https://v5.zjcdn.com/fhd-big"))
+    assert df.best_play_url(html) == "https://v5.zjcdn.com/fhd-big"
+
+
 def test_normalize_keeps_safe_file_untouched(monkeypatch, tmp_path):
     """이미 h264·1920 이하면 변환하지 않는다(쓸데없이 시간·화질을 버리지 않게)."""
     from shopping_shorts import douyin_fetch as df

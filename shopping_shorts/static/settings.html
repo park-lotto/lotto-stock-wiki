@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>⚙️ 내 설정 · 숏템메이커</title>
+<!-- FOUC 방지: 저장된 테마를 렌더 전에 즉시 반영(sidebar.js는 body 주입이라 늦음) -->
+<script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<style>
+  /* 스탁브레인 민트-블랙 투톤(다크 기본). produce.html과 동일 토큰 — 색을 따로 만들지 않는다. */
+:root{--bg:#0a0f0d;--panel:#101815;--line:#1e2b26;--txt:#eaf3f0;--sub:#8fa1a0;--accent:#37e0bd;--accent2:#1f9e7a;--fire:#ff6b6b;--ok:#37e0bd;--gold:#f0c453;--inset:#0c1412;--sel-bg:linear-gradient(90deg,#123a30,#0c221c);--sel-fg:#6ff0d6;--grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--hover:#131d19;color-scheme:dark;}
+:root[data-theme="light"]{--bg:#f4faf7;--panel:#ffffff;--line:#d5e6df;--txt:#0f1a16;--sub:#5c726d;--accent:#12b886;--accent2:#0ca678;--fire:#e0524a;--ok:#12b886;--gold:#b8860b;--inset:#eef7f3;--sel-bg:linear-gradient(90deg,#d8f2ea,#eafaf5);--sel-fg:#0a7d66;--grad:linear-gradient(135deg,#19c9ab,#0a8f79);--hover:#eef7f3;color-scheme:light;}
+  *{box-sizing:border-box}
+  /* 시니어 타이포: 15px 기준(produce.html과 동일) */
+  body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic',system-ui,sans-serif;margin:0;min-height:100vh;font-size:15px}
+  .main{flex:1;padding:24px 32px;overflow:auto}
+  .wrap{max-width:760px}
+  .head{margin-bottom:20px}
+  .head h2{margin:0;font-size:22px}
+  .head .desc{color:var(--sub);font-size:14px;margin-top:4px}
+
+  /* ── 탭 ────────────────────────────────────────────── */
+  .tabs{display:flex;gap:8px;border-bottom:1px solid var(--line);margin-bottom:24px}
+  .tab{font-family:inherit;font-size:16px;font-weight:700;background:none;border:0;
+    border-bottom:3px solid transparent;color:var(--sub);padding:12px 20px;cursor:pointer;
+    border-radius:8px 8px 0 0;margin-bottom:-1px}
+  .tab:hover{color:var(--txt);background:var(--hover)}
+  .tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+  .pane{display:none}
+  .pane.on{display:block}
+
+  /* ── 잔액 카드 ─────────────────────────────────────── */
+  .balCard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px}
+  .balCard .lbl{color:var(--sub);font-size:14px}
+  .balRow{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:8px}
+  .balNum{font-size:44px;font-weight:900;letter-spacing:-1px;line-height:1.1;
+    background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .balNum .unit{font-size:24px;font-weight:800;margin-left:4px}
+  .balSub{color:var(--sub);font-size:14px;margin-top:12px}
+  .btn{font-family:inherit;border:1px solid var(--line);border-radius:10px;cursor:pointer;
+    background:var(--panel);color:var(--txt);font-size:14px;font-weight:700;padding:10px 18px}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn-mint{background:var(--grad);border:0;color:#06211b}
+  .btn-mint:hover{color:#06211b;filter:brightness(1.08)}
+
+  /* ── 단가표 ────────────────────────────────────────── */
+  .secTitle{font-size:18px;font-weight:800;margin:32px 0 4px}
+  .secDesc{color:var(--sub);font-size:14px;margin-bottom:16px}
+  .priceBig{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--gold);
+    border-radius:12px;padding:16px 20px;margin-bottom:12px}
+  .priceHead{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  .priceName{font-size:17px;font-weight:800}
+  .priceCost{font-size:20px;font-weight:900;color:var(--gold);white-space:nowrap}
+  .priceWhy{color:var(--sub);font-size:14px;margin-top:6px}
+  .freeBadge{display:inline-block;margin-top:12px;background:var(--sel-bg);color:var(--sel-fg);
+    border:1px solid var(--accent2);border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;
+    cursor:pointer;font-family:inherit}
+  .freeBadge:hover{filter:brightness(1.15)}
+  .misc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 20px}
+  .miscRow{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:12px 0;border-bottom:1px solid var(--line);font-size:15px}
+  .miscRow:last-child{border-bottom:0}
+  .miscCost{font-weight:800;color:var(--txt);white-space:nowrap}
+  .freeLine{color:var(--ok);font-size:15px;font-weight:700;margin-top:16px}
+  .weBear{color:var(--sub);font-size:14px;margin-top:8px}
+  .notice{color:var(--sub);font-size:12px;line-height:1.8;margin-top:32px;
+    border-top:1px solid var(--line);padding-top:16px}
+  .notice li{margin-bottom:4px}
+  .notice ul{margin:0;padding-left:18px}
+
+  /* ── 키 등록 ───────────────────────────────────────── */
+  .hint{background:var(--inset);border:1px solid var(--line);border-radius:12px;
+    padding:16px 20px;font-size:15px;line-height:1.7;margin-bottom:20px}
+  .hint b{color:var(--accent)}
+  .warnBox{background:var(--inset);border:1px solid var(--fire);border-radius:12px;
+    padding:16px 20px;font-size:15px;color:var(--txt);margin-bottom:20px}
+  .svcCard{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:20px;margin-bottom:16px}
+  .svcHead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .svcName{font-size:17px;font-weight:800}
+  .svcBadge{font-size:13px;font-weight:700;border-radius:8px;padding:5px 12px;white-space:nowrap}
+  .svcBadge.on{background:var(--sel-bg);color:var(--sel-fg);border:1px solid var(--accent2)}
+  .svcBadge.off{background:var(--inset);color:var(--sub);border:1px solid var(--line)}
+  .svcDesc{color:var(--sub);font-size:14px;margin-top:6px}
+  .keyForm{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+  .keyForm input,.keyForm textarea{flex:1;min-width:220px;font-family:inherit;font-size:14px;
+    background:var(--inset);border:1px solid var(--line);color:var(--txt);
+    border-radius:10px;padding:11px 14px}
+  .keyForm textarea{resize:vertical;min-height:80px}
+  .keyForm input:focus,.keyForm textarea:focus{outline:0;border-color:var(--accent)}
+  .keyList{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+  .keyRow{display:flex;align-items:center;gap:12px;background:var(--inset);
+    border:1px solid var(--line);border-radius:10px;padding:10px 14px;flex-wrap:wrap}
+  .keyLabel{flex:1;min-width:140px;font-family:Consolas,monospace;font-size:14px;
+    word-break:break-all}
+  .keyStat{font-size:13px;font-weight:700;white-space:nowrap}
+  .keyStat.ok{color:var(--ok)}
+  .keyStat.bad{color:var(--fire)}
+  .keyStat.unknown{color:var(--sub)}
+  .keyDel{background:none;border:1px solid var(--line);color:var(--sub);font-family:inherit;
+    font-size:13px;border-radius:8px;padding:6px 12px;cursor:pointer}
+  .keyDel:hover{border-color:var(--fire);color:var(--fire)}
+  .svcFoot{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+  .svcFoot .btn{font-size:13px;padding:8px 14px;font-weight:600}
+  .msg{margin-top:12px;font-size:14px;font-weight:700;display:none}
+  .msg.on{display:block}
+  .msg.ok{color:var(--ok)}
+  .msg.err{color:var(--fire)}
+
+  /* ── 알림 모달(alert 대체 — 60대가 읽을 수 있게 크게) ── */
+  #noticeBg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;
+    align-items:center;justify-content:center;padding:24px}
+  #noticeBg.on{display:flex}
+  .noticeBox{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    max-width:400px;width:100%;padding:24px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+  .noticeBox p{margin:0 0 20px;font-size:16px;line-height:1.7}
+  .noticeBox .btn{width:100%}
+
+  @media(max-width:640px){
+    .main{padding:16px}
+    .balNum{font-size:36px}
+    .tab{padding:10px 12px;font-size:15px}
+  }
+</style>
+</head>
+<body>
+<main class="main">
+ <div class="wrap">
+  <div class="head">
+    <h2>⚙️ 내 설정</h2>
+    <div class="desc">포인트 잔액을 확인하고, 원하시면 내 API 키를 등록해 포인트를 아낄 수 있습니다.</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" id="tabPoints" onclick="showTab('points')">💎 포인트</button>
+    <button class="tab" id="tabKeys" onclick="showTab('keys')">🔑 내 키 등록</button>
+  </div>
+
+  <!-- ═══════ 💎 포인트 ═══════ -->
+  <section class="pane on" id="panePoints">
+    <div class="balCard">
+      <div class="lbl">남은 포인트</div>
+      <div class="balRow">
+        <div class="balNum"><span id="balNum">–</span><span class="unit">P</span></div>
+        <button class="btn btn-mint" onclick="askCharge()">＋ 충전</button>
+      </div>
+      <div class="balSub" id="balSub">불러오는 중…</div>
+    </div>
+
+    <div class="secTitle">무엇에 얼마가 드나요</div>
+    <div class="secDesc">저희가 외부에 내는 실제 요금만큼만 받습니다.</div>
+
+    <div class="priceBig">
+      <div class="priceHead">
+        <div class="priceName">🎬 자막 지우기</div>
+        <div class="priceCost"><span id="pVmake">–</span> P</div>
+      </div>
+      <div class="priceWhy">VMake AI에 영상 1편당 요금 발생</div>
+      <button class="freeBadge" onclick="showTab('keys')">🔑 내 VMake 키 등록하면 0 P</button>
+    </div>
+
+    <div class="priceBig">
+      <div class="priceHead">
+        <div class="priceName">🎞️ 영상 제작 (1편 완성)</div>
+        <div class="priceCost"><span id="pMix">–</span> P</div>
+      </div>
+      <div class="priceWhy">대본 + 목소리 + 합성까지 한 번에</div>
+      <button class="freeBadge" onclick="showTab('keys')">🔑 구글 키 + 목소리 키 등록하면 0 P</button>
+    </div>
+
+    <div class="secTitle">그 밖에</div>
+    <div class="secDesc">작은 작업들입니다.</div>
+    <div class="misc">
+      <div class="miscRow"><span>🔊 목소리 만들기</span><span class="miscCost"><span id="pTts">–</span> P</span></div>
+      <div class="miscRow"><span>🔎 렌즈로 찾기</span><span class="miscCost"><span id="pLens">–</span> P</span></div>
+      <div class="miscRow"><span>📝 대본 뽑기</span><span class="miscCost"><span id="pScript">–</span> P</span></div>
+    </div>
+
+    <div class="freeLine">✓ 영상 찾기 · 즐겨찾기 · 내보내기는 무료</div>
+    <div class="weBear">수집·태깅처럼 저희가 알아서 도는 작업은 회사가 부담합니다.</div>
+
+    <div class="msg err" id="pointsErr"></div>
+
+    <div class="notice">
+      <ul>
+        <li>포인트는 충전해서 사용하며, 원칙적으로 환불되지 않습니다</li>
+        <li>서비스 오류로 잘못 차감된 포인트는 확인 후 복구해 드립니다</li>
+        <li>포인트 차감 정책은 변경될 수 있습니다</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ═══════ 🔑 내 키 등록 ═══════ -->
+  <section class="pane" id="paneKeys">
+    <div class="hint">
+      💡 등록하면 그 작업은 포인트가 안 깎입니다.<br/>
+      <b>안 하셔도 포인트로 그냥 쓰실 수 있어요.</b>
+    </div>
+    <div class="warnBox" id="keysDisabled" style="display:none">
+      지금은 키 등록을 받을 수 없습니다. 잠시 후 다시 시도하시거나 관리자에게 문의해 주세요.
+      그동안에도 포인트로 모든 기능을 그대로 쓰실 수 있습니다.
+    </div>
+    <div id="svcCards"></div>
+    <div class="msg err" id="keysErr"></div>
+  </section>
+ </div>
+</main>
+
+<div id="noticeBg" onclick="if(event.target===this)closeNotice()">
+  <div class="noticeBox">
+    <p id="noticeText"></p>
+    <button class="btn btn-mint" onclick="closeNotice()">확인</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* 설정 화면 — 순수 바닐라(이 프로젝트엔 빌드 도구가 없다).
+   백엔드(Task 8)는 이미 사람이 읽는 값을 준다: balance·prices·history[].delta 모두
+   그대로 찍으면 된다(app.py api_points가 pricing.to_display로 변환해서 보낸다). */
+
+/* ▶ 받는 방법 영상 — 아직 URL이 없다. 나중에 여기만 채우면 버튼이 살아난다.
+   빈 앵커 링크로 두면 눌렀을 때 페이지가 위로 튀고 "고장난 링크"로 보인다 —
+   그래서 링크가 아니라 버튼이고, URL이 없으면 안내 문구를 띄운다. */
+var GUIDE_VIDEO = {
+  gemini: "",      // 구글(제미나이) 키 받는 법
+  vmake: "",       // VMake 키 받는 법
+  elevenlabs: "",  // ElevenLabs 키 받는 법
+  youtube: ""      // 유튜브 Data API 키 받는 법
+};
+
+/* 서비스 정의 — 이름·설명·복수허용 여부를 한 곳에서만 정한다(CLAUDE.md 0순위-B). */
+var SERVICES = [
+  { id: "gemini",     icon: "🤖", name: "구글 (제미나이)",
+    desc: "대본 뽑기 · 영상 분석 · 썸네일에 씁니다", multi: true,
+    ph: "여러 개를 한 번에 붙여넣어도 됩니다" },
+  { id: "vmake",      icon: "🎬", name: "자막 지우기 (VMake)",
+    desc: "", multi: false, ph: "키 붙여넣기", freeOp: "vmake" },
+  { id: "elevenlabs", icon: "🔊", name: "목소리 (ElevenLabs)",
+    desc: "영상에 넣을 목소리를 만듭니다", multi: false, ph: "키 붙여넣기" },
+  { id: "youtube",    icon: "📺", name: "유튜브",
+    desc: "유튜브 영상 정보를 가져올 때 씁니다", multi: false, ph: "키 붙여넣기" }
+];
+
+var STATUS = {
+  ok:      { cls: "ok",      text: "● 정상" },
+  bad:     { cls: "bad",     text: "● 키가 틀렸습니다" },
+  unknown: { cls: "unknown", text: "● 확인 전" }
+};
+
+var PRICES = {};      // 포인트 탭에서 받은 단가(키 카드의 "1편당 N P가 0P로"에 쓴다)
+var KEYS_ENABLED = true;
+
+function esc(s){ return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function el(id){ return document.getElementById(id); }
+
+/* ── 알림 모달 (alert 대체) ─────────────────────────── */
+function notice(text){ el("noticeText").textContent = text; el("noticeBg").classList.add("on"); }
+function closeNotice(){ el("noticeBg").classList.remove("on"); }
+function askCharge(){ notice("충전은 준비 중입니다. 관리자에게 문의해 주세요."); }
+function askGuide(svc){
+  var url = GUIDE_VIDEO[svc];
+  if (url) { window.open(url, "_blank", "noopener"); return; }
+  notice("영상 준비 중입니다. 조금만 기다려 주세요.");
+}
+
+/* ── 탭 ─────────────────────────────────────────────── */
+function showTab(which){
+  var isP = (which === "points");
+  el("panePoints").classList.toggle("on", isP);
+  el("paneKeys").classList.toggle("on", !isP);
+  el("tabPoints").classList.toggle("on", isP);
+  el("tabKeys").classList.toggle("on", !isP);
+  window.scrollTo(0, 0);
+}
+
+/* ── 에러 표시 — 침묵 금지. 실패는 사용자에게 보인다 ── */
+function showErr(id, text){
+  var box = el(id);
+  box.textContent = "⚠️ " + text;
+  box.classList.add("on");
+}
+function clearErr(id){ el(id).classList.remove("on"); }
+
+async function getJSON(url, opt){
+  var r = await fetch(url, opt);
+  var d = null;
+  try { d = await r.json(); } catch (e) { d = null; }
+  if (!r.ok || !d || d.ok === false) {
+    throw new Error((d && d.error) || ("서버 오류 (" + r.status + ")"));
+  }
+  return d;
+}
+function postJSON(url, body){
+  return getJSON(url, { method: "POST", headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(body) });
+}
+
+/* ── 💎 포인트 ──────────────────────────────────────── */
+function num(v){ return (v == null) ? "–" : Number(v).toLocaleString("ko-KR"); }
+
+async function loadPoints(){
+  clearErr("pointsErr");
+  try {
+    var d = await getJSON("/api/settings/points");
+    PRICES = d.prices || {};
+    el("balNum").textContent = num(d.balance);
+    /* "자막 지우기 N편 분량" — 0으로 나누지 않는다. 단가가 0이거나 없으면 문구를 감춘다. */
+    var vp = Number(PRICES.vmake);
+    if (vp > 0 && d.balance != null) {
+      el("balSub").textContent = "자막 지우기 " + Math.floor(Number(d.balance) / vp).toLocaleString("ko-KR") + "편 분량";
+    } else {
+      el("balSub").textContent = "";
+    }
+    el("pVmake").textContent  = num(PRICES.vmake);
+    el("pMix").textContent    = num(PRICES.mix);
+    el("pTts").textContent    = num(PRICES.tts);
+    el("pLens").textContent   = num(PRICES.lens);
+    el("pScript").textContent = num(PRICES.script);
+    renderKeys(null);   // 단가가 들어왔으니 키 카드의 "N P가 0P로" 문구를 갱신
+  } catch (e) {
+    el("balSub").textContent = "";
+    showErr("pointsErr", "포인트를 불러오지 못했습니다: " + e.message);
+  }
+}
+
+/* ── 🔑 내 키 등록 ──────────────────────────────────── */
+var KEYS = [];   // [{id,service,label,status,...}]
+
+async function loadKeys(){
+  clearErr("keysErr");
+  try {
+    var d = await getJSON("/api/settings/keys");
+    KEYS_ENABLED = (d.enabled !== false);
+    KEYS = d.keys || [];
+    renderKeys();
+  } catch (e) {
+    showErr("keysErr", "등록된 키를 불러오지 못했습니다: " + e.message);
+  }
+}
+
+function keysOf(svc){ return KEYS.filter(function(k){ return k.service === svc; }); }
+
+function renderKeys(){
+  el("keysDisabled").style.display = KEYS_ENABLED ? "none" : "";
+  el("svcCards").innerHTML = SERVICES.map(function(s){
+    var mine = keysOf(s.id);
+    var badge = mine.length
+      ? '<span class="svcBadge on">✓ ' + mine.length + '개 등록됨</span>'
+      : '<span class="svcBadge off">포인트로 사용중</span>';
+
+    /* 설명 — vmake는 단가를 실제 값으로 보여준다(하드코딩하지 않는다). */
+    var desc = s.desc;
+    if (s.freeOp && PRICES[s.freeOp] != null) {
+      desc = "등록하면 1편당 " + num(PRICES[s.freeOp]) + "P가 0P로";
+    }
+
+    var rows = mine.map(function(k){
+      var st = STATUS[k.status] || STATUS.unknown;
+      return '<div class="keyRow">' +
+        '<span class="keyLabel">' + esc(k.label) + '</span>' +
+        '<span class="keyStat ' + st.cls + '">' + st.text + '</span>' +
+        '<button class="keyDel" onclick="delKey(' + Number(k.id) + ')">삭제</button>' +
+      '</div>';
+    }).join("");
+
+    /* enabled=false면 등록란을 아예 감춘다(눌러도 503만 나므로). */
+    var form = "";
+    if (KEYS_ENABLED) {
+      var input = s.multi
+        ? '<textarea id="in_' + s.id + '" placeholder="' + esc(s.ph) + '"></textarea>'
+        : '<input type="password" id="in_' + s.id + '" placeholder="' + esc(s.ph) + '" autocomplete="off"/>';
+      form = '<div class="keyForm">' + input +
+             '<button class="btn btn-mint" onclick="addKey(\'' + s.id + '\')">' +
+             (s.multi ? "추가" : "저장") + '</button></div>';
+    }
+
+    var foot = '<div class="svcFoot">' +
+      '<button class="btn" onclick="askGuide(\'' + s.id + '\')">▶ 받는 방법 영상</button>' +
+      (mine.length ? '<button class="btn" onclick="verifyKeys(\'' + s.id + '\')">전체 확인</button>' : '') +
+    '</div>';
+
+    return '<div class="svcCard">' +
+      '<div class="svcHead"><div class="svcName">' + s.icon + ' ' + esc(s.name) + '</div>' + badge + '</div>' +
+      (desc ? '<div class="svcDesc">' + esc(desc) + '</div>' : '') +
+      form +
+      (rows ? '<div class="keyList">' + rows + '</div>' : '') +
+      foot +
+      '<div class="msg" id="msg_' + s.id + '"></div>' +
+    '</div>';
+  }).join("");
+}
+
+function svcMsg(svc, text, kind){
+  var box = el("msg_" + svc);
+  if (!box) return;
+  box.textContent = text;
+  box.className = "msg on " + (kind || "ok");
+}
+
+async function addKey(svc){
+  var input = el("in_" + svc);
+  if (!input) return;
+  var raw = (input.value || "").trim();
+  if (!raw) { svcMsg(svc, "⚠️ 키를 붙여넣어 주세요.", "err"); return; }
+  svcMsg(svc, "저장하는 중…", "ok");
+  try {
+    var d = await postJSON("/api/settings/keys", { service: svc, key: raw });
+    KEYS = d.keys || KEYS;
+    input.value = "";
+    renderKeys();
+    svcMsg(svc, "저장했습니다 (" + d.added + "개). 확인하는 중…", "ok");
+    /* ★저장 즉시 verify — 사장님 확정. "등록은 됐는데 되는지 모름"을 없앤다. */
+    await verifyKeys(svc, true);
+  } catch (e) {
+    svcMsg(svc, "⚠️ 저장하지 못했습니다: " + e.message, "err");
+  }
+}
+
+async function delKey(id){
+  try {
+    var d = await postJSON("/api/settings/keys/delete", { id: id });
+    KEYS = d.keys || [];
+    renderKeys();
+  } catch (e) {
+    showErr("keysErr", "삭제하지 못했습니다: " + e.message);
+  }
+}
+
+async function verifyKeys(svc, quiet){
+  if (!quiet) svcMsg(svc, "확인하는 중…", "ok");
+  try {
+    var d = await postJSON("/api/settings/keys/verify", { service: svc });
+    KEYS = d.keys || KEYS;
+    renderKeys();
+    var res = d.results || [];
+    var good = res.filter(function(r){ return r.ok; }).length;
+    if (!res.length) {
+      svcMsg(svc, "확인할 키가 없습니다.", "err");
+    } else if (good === res.length) {
+      svcMsg(svc, "✓ " + good + "개 모두 정상입니다.", "ok");
+    } else {
+      svcMsg(svc, "⚠️ " + res.length + "개 중 " + good + "개만 정상입니다. 틀린 키는 삭제하고 다시 등록해 주세요.", "err");
+    }
+  } catch (e) {
+    svcMsg(svc, "⚠️ 확인하지 못했습니다: " + e.message, "err");
+  }
+}
+
+loadPoints();
+loadKeys();
+</script>
+<script src="/sidebar.js?v=2"></script>
+</body>
+</html>

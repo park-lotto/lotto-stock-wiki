@@ -54,7 +54,7 @@ def test_render_on_uses_clean_sources(monkeypatch, tmp_path):
     store = FakeStore(job)
     monkeypatch.setattr(mp, "Store", lambda p: store)
     monkeypatch.setattr(mp, "_resolve_sources", lambda job, work: {"s0": "orig.mp4"})
-    monkeypatch.setattr(mp, "_vmake_key", lambda store: "appkey:secret")
+    monkeypatch.setattr(mp, "_vmake_key", lambda store, customer_id=0: "appkey:secret")
     removed = []
     def fake_remove(video, key, out_path, **kw):
         removed.append(video); open(out_path, "w").write("clean"); return out_path
@@ -78,7 +78,7 @@ def test_render_on_no_key_fails(monkeypatch, tmp_path):
     store = FakeStore(job)
     monkeypatch.setattr(mp, "Store", lambda p: store)
     monkeypatch.setattr(mp, "_resolve_sources", lambda job, work: {"s0": "x.mp4"})
-    monkeypatch.setattr(mp, "_vmake_key", lambda store: "")
+    monkeypatch.setattr(mp, "_vmake_key", lambda store, customer_id=0: "")
     monkeypatch.setattr(mp, "assemble", lambda *a, **k: open(k.get("out") or a[3], "w").write("v"))
 
     mp.run_render("j", str(tmp_path / "db"), str(tmp_path))

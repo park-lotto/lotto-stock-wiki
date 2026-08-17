@@ -108,15 +108,42 @@ def _cache_keys_for_url(url):
     그 결과 재태깅을 해도 대본 쪽은 옛 재료를 보고, 매번 Gemini로 다시 뽑았다.
 
     ⚠️ 렌즈 경로엔 짧은 해시 키(`lens_tiktok_1jw6i6i`)도 있는데 그건 URL에서
-    만들어낼 수 없다 — 못 맞히면 종전대로 재추출한다(회귀 없음, 조용한 실패 아님).
+    만들어낼 수 없다 — 그래서 **DB에 적힌 것을 먼저 읽는다**(아래 store 조회).
+
+    ★★2026-08-17 실측 — 정규식만으로는 플랫폼이 통째로 빠진다.
+      `_SHORTCODE_RES`에 인스타·유튜브·틱톡 셋뿐이라 **도우인·샤오홍슈는 키가 0개**였다.
+      담긴 394건 중 55건(도우인 8·샤오홍슈 47 = 14%)이 여기 해당한다. 그 결과
+      고독스 C100(`grab_douyin_b26e5b24ee36`)은 상세4·리뷰8까지 긁어 저장해뒀는데도
+      `product_facts_…`를 **한 번도 못 찾아** 대본에 재료가 안 실렸다.
+      저장은 DB의 shortcode 그대로(`grab_douyin_…`), 조회는 URL 추론 — 같은 판단을
+      두 군데서 다르게 내린 것이다(0순위-B). 그래서 **추론 전에 적힌 것을 읽는다**.
+      플랫폼이 늘어도 여기를 다시 안 고쳐도 된다 = 썩지 않는다.
     """
-    keys = []
+    keys, seen = [], set()
+
+    def _add(k):
+        if k and k not in seen:
+            seen.add(k)
+            keys.append(k)
+
+    # ① DB에 저장된 shortcode 우선 — 담기·위키가 URL과 짝으로 적어둔 값이다.
+    #    추론으로는 절대 못 만드는 키(grab_douyin_…·lens_tiktok_1jw6i6i)가 여기서 나온다.
+    try:
+        # ⚠️ DB 경로는 config에서 — app에서 가져오면 app→mix_pipeline 순환 import가 된다.
+        from shopping_shorts.config import DB_PATH
+        from shopping_shorts.store import Store
+        for sc in Store(DB_PATH).shortcodes_for_url(url):
+            _add(sc)
+    except Exception:      # noqa: BLE001 — 캐시 조회 실패가 파이프라인을 막으면 안 된다
+        pass               #    (못 찾으면 아래 추론 + 종전대로 재추출로 간다)
+
+    # ② URL 추론 폴백 — DB에 기록이 없는 경로(위키 직행 등)도 종전대로 맞힌다.
     for rx, plat in zip(_SHORTCODE_RES, _SHORTCODE_PLATFORMS):
         m = rx.search(url or "")
         if m:
             code = m.group(1)
-            keys.append(code)
-            keys.append(f"lens_{plat}_{code}")
+            _add(code)
+            _add(f"lens_{plat}_{code}")
             break
     return keys
 
@@ -947,6 +974,30 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 소스 다수결이 레시피면 화면을 요리 시간순으로 재배치(장면 결 맞춤) — build_edit_plan 경로에 전달.
     is_recipe = _sources_is_recipe(source_scripts)
     _rec_cands = None   # 후보목록(카드) — conform 뒤 재저장해 카드=TTS 일치시키려고 잡아둔다
+    # ★확정 대본이 있으면 **새로 쓰지 않는다**(2026-08-17 사장님: "어이없게 대본을 또 쓰냐 /
+    #   당연히 대본은 확정해서 믹스 버튼을 누른 거지 / 거기서 대본 수정까지 마무리한 거니까").
+    #
+    #   이 함수 docstring이 원래 그렇게 적혀 있다 — "given_script: 있으면 확정 대본을 그대로
+    #   비트로 쪼개 영상만 매칭(영상제작 2단계)". 그런데 `if scene_first:`가 **먼저** 걸려서
+    #   그 분기를 못 탔다. produce.html은 scene_first를 **항상 true**로 보낸다(4950행).
+    #   given_script와 reference_text에 같은 값이 들어가는데, scene_first 경로는 given_script를
+    #   안 보고 reference_text를 '참고 대본'으로만 써서 후보 3~4개를 **새로 쓴다**.
+    #
+    #   실측 피해 둘:
+    #     ① 2단계가 무의미해진다 — 확정 371자가 3단계에서 전혀 다른 162자로 바뀌었다
+    #        (job 832a5ffa80d9: "요즘 인스타 감성…" → "저 이거 때문에 외출할 때마다…")
+    #     ② 시간이 여기서 다 간다 — job 0bd83269a8ca 8분 48초 중 대본 생성+리라이트가
+    #        460초(7.7분). 그나마 restyle 실호출은 78초뿐이고 나머지가 대본 새로 쓰기다.
+    #        후보가 c1~c5까지 늘어나며(품질 미달 재생성) 매번 길이초과로 3~4회씩 재요청했다.
+    #
+    #   → 확정 대본이 오면 scene_first를 끄고 build_edit_plan(given_script 경로)으로 간다.
+    #     대본은 2단계 것 그대로, 3단계는 **화면만 붙인다**(화면 설명 "문장마다 어떤 화면이
+    #     붙는지 정하고 미리 봅니다"와도 이제 일치).
+    #   ⚠️ 대본 없이 오는 경로(위키 직행·자동배치 등)는 종전대로 scene_first가 돈다(회귀 0).
+    if scene_first and (given_script or "").strip():
+        print("[mix] 확정 대본이 있어 scene_first를 끈다 — 대본은 그대로, 화면만 매칭"
+              " (%d자)" % len((given_script or "").strip()), file=sys.stderr)
+        scene_first = False
     if scene_first:
         from shopping_shorts.edit_plan import build_scene_first_plan
         # 부품은행 주입(P0-2): 설정 bank_enabled=1일 때만 승인 훅·어미·부사·CTA·스파인을 조립해
@@ -1155,9 +1206,48 @@ def _resolve_sources(job, work):
     return source_video_paths
 
 
-def _vmake_key(store):
-    """등록된 VMake 개인키(DB settings). 없으면 빈 문자열."""
-    return store.get_setting("vmake_api_key", "") or ""
+def _vmake_key(store, customer_id=0):
+    """자막제거에 쓸 키. 사용자가 등록했으면 그 키, 아니면 사장님 키.
+    ★keyroute가 유일한 판단처다 — 여기서 따로 고르지 마라(0순위-B)."""
+    from shopping_shorts import keyroute
+    keys, _ = keyroute.keys_for(store, customer_id, keyroute.SVC_VMAKE)
+    return keys[0] if keys else ""
+
+
+class NotEnoughPoints(Exception):
+    """포인트가 모자라 시작조차 못 함. 반만 청소되는 것보다 아예 안 하는 게 낫다."""
+
+
+def _charge_clean(store, customer_id, n_sources):
+    """자막제거 선차감. 깎은 액수를 반환(0=무료). 모자라면 NotEnoughPoints.
+
+    ★소스 개수만큼 곱한다 — VMake는 소스 1편당 1콜이다(_ensure_clean_sources).
+      job당 1회로 계산하면 소스 3개짜리에서 1,000원을 손해 본다.
+    """
+    from shopping_shorts import keyroute, points, pricing
+    if n_sources <= 0:
+        return 0
+    # ★cid 0 = 사장님 본인(store.LEGACY_CUSTOMER_ID). 자기 키로 자기한테 청구하는 꼴이라
+    #   과금 대상이 아니다. keyroute도 cid 0은 개인키 조회를 아예 건너뛴다.
+    #   정규화는 keyroute.as_cid를 그대로 쓴다 — 여기서 int()를 또 부르면
+    #   같은 판단이 두 곳에 흩어진다(0순위-B).
+    if not keyroute.as_cid(customer_id):
+        return 0
+    if not keyroute.should_charge(store, customer_id, keyroute.SVC_VMAKE):
+        return 0                                    # 내 키 → 무료
+    need = pricing.cost(store, pricing.OP_VMAKE) * n_sources
+    if not points.deduct(store, customer_id, need, pricing.OP_VMAKE):
+        raise NotEnoughPoints(
+            f"포인트가 부족합니다 (필요 {pricing.to_display(need)}P, "
+            f"보유 {pricing.to_display(points.balance(store, customer_id))}P)")
+    return need
+
+
+def _refund_clean(store, customer_id, amount):
+    """청소 실패 시 돌려준다. ★과금한 만큼만 — 안 깎은 호출자까지 환불하면 원장이 갉힌다."""
+    from shopping_shorts import points, pricing
+    if amount > 0:
+        points.refund(store, customer_id, amount, pricing.OP_VMAKE)
 
 
 def _apply_motion_pack(deco, caption_style, timeline, packs):
@@ -1227,27 +1317,44 @@ def _clean_one(item, key, work):
     return vid, clean_path, region
 
 
-def _ensure_clean_sources(store, job, job_id, work, key):
+def _ensure_clean_sources(store, job, job_id, work, key, customer_id=0):
     """clean_sources 맵을 채워 반환. 이미 있고 파일이 존재하면 스킵(재과금 0).
-    각 스레드는 remove_subtitles만 하고 경로를 반환 → DB 저장은 취합 후 메인에서 1회(경합 없음)."""
+    각 스레드는 remove_subtitles만 하고 경로를 반환 → DB 저장은 취합 후 메인에서 1회(경합 없음).
+
+    ★돈이 나가는 함수다 — 청소할 소스 1편당 VMake 1콜(실비용 500원)이고
+      여기서 **선차감**한다(_charge_clean). 자막제거의 유일한 계량 지점이라
+      run_clean_sources·run_render 어느 쪽으로 들어와도 여기를 지난다."""
     source_map = _resolve_sources(job, Path(work))
     cached = dict(job.get("clean_sources") or {})
     # 지워진 자막영역: 소스별 박스 맵 + 1등(primary). 이미 있으면 이어붙인다(재청소 안 한 소스는 유지).
     regions = dict((job.get("clean_regions") or {}).get("sources") or {})
     todo = [(vid, src) for vid, src in source_map.items()
             if not (cached.get(vid) and Path(cached[vid]).exists())]
-    if todo:
-        with ThreadPoolExecutor(max_workers=len(todo)) as ex:
-            for vid, out, region in ex.map(lambda t: _clean_one(t, key, work), todo):
-                cached[vid] = out
-                if region:
-                    regions[vid] = region
-                else:
-                    regions.pop(vid, None)   # 이 소스엔 지속 변화 없음(원본에 자막 없었음)
-        # 넓고 자주 쓰인 위치를 1번으로 — 소스마다 자막 위치가 달라도 대표 한 자리를 고른다.
-        primary = sub_region.pick_primary(list(regions.values()))
-        store.update_mix_job(job_id, clean_sources=cached,
-                             clean_regions={"sources": regions, "primary": primary})
+    # ★todo가 확정된 뒤에 과금한다 — 캐시된 소스는 VMake를 안 타니 돈도 안 나간다.
+    #   라우트에선 소스 개수를 모르므로(큐에 넣기만 한다) 여기가 유일한 계량 지점이다.
+    charged = _charge_clean(store, customer_id, len(todo))
+    try:
+        if todo:
+            with ThreadPoolExecutor(max_workers=len(todo)) as ex:
+                for vid, out, region in ex.map(lambda t: _clean_one(t, key, work), todo):
+                    cached[vid] = out
+                    if region:
+                        regions[vid] = region
+                    else:
+                        regions.pop(vid, None)   # 이 소스엔 지속 변화 없음(원본에 자막 없었음)
+            # 넓고 자주 쓰인 위치를 1번으로 — 소스마다 자막 위치가 달라도 대표 한 자리를 고른다.
+            primary = sub_region.pick_primary(list(regions.values()))
+            store.update_mix_job(job_id, clean_sources=cached,
+                                 clean_regions={"sources": regions, "primary": primary})
+    except Exception:
+        # ★전액 환불이 의도된 것이다 — 부분 환불로 "고치지" 마라.
+        #   소스 3개 중 2번째가 실패해도 1·2번 VMake는 실제로 돌아 1,000원이 나갔다.
+        #   그런데 결과를 저장하는 update_mix_job이 이 try 안쪽이라 **아무것도
+        #   캐시되지 않는다** — 사용자는 못 쓰는 결과에 돈만 낸 꼴이 되고,
+        #   재시도하면 3개분을 다시 낸다. 못 쓰는 작업에 청구하는 게 더 나쁘다.
+        #   손실은 "실패 전까지 처리된 소스"로 한정되고 재시도 1회분뿐이다.
+        _refund_clean(store, customer_id, charged)
+        raise
     return cached
 
 
@@ -1294,13 +1401,18 @@ def run_clean_sources(job_id, db_path, work_root):
     try:
         work = Path(work_root) / job_id
         work.mkdir(parents=True, exist_ok=True)
-        key = _vmake_key(store)
+        # ★워커는 HTTP 요청이 없어 request.state가 없다 — job 레코드에서 읽는다.
+        customer_id = job.get("customer_id") or 0
+        key = _vmake_key(store, customer_id)
         if not key:
             store.update_mix_job(job_id, clean_status="failed",
                                  clean_error="AI 자막 제거 설정이 완료되지 않았습니다 (관리자 문의)")
             return
-        clean_map = _ensure_clean_sources(store, job, job_id, work, key)
+        clean_map = _ensure_clean_sources(store, job, job_id, work, key, customer_id)
         store.update_mix_job(job_id, clean_status="ready", clean_error=None)
+    except NotEnoughPoints as e:
+        store.update_mix_job(job_id, clean_status="failed", clean_error=str(e))
+        return
     except Exception as e:  # noqa: BLE001 — BackgroundTasks라 밖에서 아무도 안 받는다
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, clean_status="failed", clean_error=str(e))
@@ -1396,10 +1508,13 @@ def run_render(job_id, db_path, work_root):
         # 자막제거: 소스 원본을 미리(2단계) 또는 여기서(버튼 미사용 시) 청소해 그 소스로 조립한다.
         # mix_raw 위 clean_fn(구방식)은 폐기 — 소스단위여야 TTS/컷과 무관하게 캐시가 성립한다.
         if job.get("subtitle_removal"):
-            key = _vmake_key(store)
+            # ★2단계 버튼을 안 거치고 바로 렌더로 오는 경로도 VMake를 탄다 — 여기도 과금해야
+            #   구멍이 안 남는다(2단계에서 이미 청소됐으면 todo가 비어 자동으로 0원).
+            customer_id = job.get("customer_id") or 0
+            key = _vmake_key(store, customer_id)
             if not key:
                 raise RuntimeError("자막 제거가 켜져 있으나 설정이 완료되지 않았습니다 (관리자 문의)")
-            clean_map = _ensure_clean_sources(store, job, job_id, work, key)
+            clean_map = _ensure_clean_sources(store, job, job_id, work, key, customer_id)
             store.update_mix_job(job_id, clean_status="ready", clean_error=None)
             source_video_paths = {vid: clean_map.get(vid, p)
                                   for vid, p in source_video_paths.items()}

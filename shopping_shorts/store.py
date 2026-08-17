@@ -1,6 +1,7 @@
 """SQLite 수집 이력 저장소."""
 import hashlib
 import json
+import logging
 import os
 import secrets
 import sqlite3
@@ -25,6 +26,28 @@ _UNSET = object()
 # 모듈 상수로 못박아 pattern_bucket_counts·UI 탭·추출 스키마가 같은 출처를 쓴다.
 PATTERN_BUCKETS = ("hook", "ending", "adverb", "cta", "price",
                    "evidence", "conflict", "emotion")
+
+
+WORK_TITLE_MAX = 40   # 직접 지은 이름 상한. 자동 제목(대본 앞 20자)보다 넉넉하게 준다.
+
+
+def _work_title(state):
+    """작업 목록에 뜰 이름을 정한다 — **이 함수가 유일한 판정처**다(CLAUDE.md 0순위-B).
+
+    ① 사장님이 직접 지은 이름(state['title_manual'])이 있으면 그것.
+    ② 없으면 종전대로 대본(state['script']) 앞 20자.
+
+    ★①이 있는 동안은 대본을 아무리 고쳐도 이름이 안 바뀐다(2026-08-17 사장님 결정).
+      직접 지은 이름을 자동 제목이 덮으면 "이름을 바꿨는데 되돌아간다"가 된다.
+      이름을 지우고 자동으로 되돌리고 싶으면 title_manual에 빈 문자열을 보내면 된다 —
+      그러면 ②로 떨어진다(별도 '해제' API를 만들지 않는다).
+    """
+    if not isinstance(state, dict):
+        return ""
+    manual = state.get("title_manual")
+    if isinstance(manual, str) and manual.strip():
+        return manual.strip()[:WORK_TITLE_MAX]
+    return (state.get("script") or "")[:20]
 
 
 def _normalize_canonical(text, bucket=None):
@@ -756,6 +779,27 @@ class Store:
                     created_at TEXT DEFAULT (datetime('now'))
                 )
             """)
+            # 사용자별 API 키(2026-08-17, BYOK) — settings는 key가 PK라 customer_id 축이
+            # 없어 재사용 불가. key_enc는 Fernet 암호문이고 평문은 어디에도 안 남는다.
+            # key_hash로 식별하는 이유: 인덱스 번호를 쓰면 사용자별 풀이 섞인다
+            # (comment_gen.py:68이 인덱스 기반이라 겪는 문제).
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS customer_keys (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    customer_id INTEGER NOT NULL,
+                    service TEXT NOT NULL,
+                    key_enc TEXT NOT NULL,
+                    key_hash TEXT NOT NULL,
+                    label TEXT,
+                    status TEXT NOT NULL DEFAULT 'unknown',
+                    checked_at INTEGER,
+                    created_at INTEGER NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS ix_ck_cust "
+                      "ON customer_keys(customer_id, service)")
+            c.execute("CREATE UNIQUE INDEX IF NOT EXISTS ux_ck_dup "
+                      "ON customer_keys(customer_id, service, key_hash)")
             # 픽로그(2026-07-18, 트랙1) — 사장님이 고른 것/버린 것을 append-only로 남긴다.
             # 트랙7 LLM 심사의 취향 예시 + B전환 승인률 지표의 원천. 수정·삭제 없음.
             c.execute("""
@@ -1739,6 +1783,58 @@ class Store:
         with self._conn() as c:
             c.execute("DELETE FROM mix_basket WHERE customer_id=? AND shortcode=?",
                       (customer_id, shortcode))
+
+    def shortcodes_for_url(self, url, limit=4):
+        """이 URL로 **저장돼 있는** shortcode들(담기·위키 기록 기준). 없으면 [].
+
+        ★왜 DB를 보나(2026-08-17 실측): 캐시 키를 URL에서 정규식으로 만들어내면
+          **정규식에 없는 플랫폼은 통째로 빠진다**. 실측 — 담긴 394건 중 도우인 8·
+          샤오홍슈 47 = 55건(14%)이 캐시 키를 하나도 못 만들었고, 그래서
+          `product_facts_grab_douyin_b26e5b24ee36`처럼 **재료가 있는데도 못 찾았다**
+          (고독스 C100: 상세4·리뷰8까지 다 긁어 저장해뒀는데 대본에 한 번도 안 실렸다).
+        ★근본 원인은 저장과 조회가 서로 다른 규칙을 쓴 것이다(0순위-B). 저장은
+          `e["code"]`(DB의 shortcode 그대로), 조회는 URL 추론 — 어긋날 수밖에 없다.
+          `grab_douyin_…`·`lens_tiktok_1jw6i6i` 같은 키는 URL에서 유도가 **불가능**하다.
+        그래서 추론하지 않고 **적혀 있는 것을 읽는다**. 짝으로 저장된 값을 짝으로 읽는다.
+        """
+        url = (url or "").strip()
+        if not url:
+            return []
+        out, seen = [], set()
+        with self._conn() as c:
+            for sql in ("SELECT shortcode FROM mix_basket WHERE url=? ORDER BY rowid DESC",
+                        "SELECT shortcode FROM script_wiki WHERE source_url=? ORDER BY rowid DESC"):
+                try:
+                    rows = c.execute(sql, (url,)).fetchall()
+                except sqlite3.Error:      # 옛 스키마에 컬럼이 없어도 조회가 죽지 않는다
+                    continue
+                for (sc,) in rows:
+                    if sc and sc not in seen:
+                        seen.add(sc)
+                        out.append(sc)
+                        if len(out) >= limit:
+                            return out
+        return out
+
+    def wiki_category_for_url(self, url):
+        """이 URL 소재의 카테고리(홈템·레시피·뷰티·기타). 모르면 None.
+
+        ★왜(2026-08-17 사장님 "레시피 틀로 고정돼서 재료·반죽 준비 이런 게 들어왔다"):
+          실험실 팔레트 머리글이 요리 전용으로 하드코딩돼, 젤펜 영상인데 '🥣 재료·반죽
+          준비 · 섞기·짜기'가 떴다(실측 job 202377f690d9: 소스 4개 전부 cat=기타).
+          판정을 새로 만들지 않는다 — 추출이 이미 정해둔 값을 읽기만 한다(0순위-B).
+        """
+        url = (url or "").strip()
+        if not url:
+            return None
+        with self._conn() as c:
+            try:
+                r = c.execute(
+                    "SELECT category FROM script_wiki WHERE source_url=? AND category IS NOT NULL "
+                    "ORDER BY rowid DESC LIMIT 1", (url,)).fetchone()
+            except sqlite3.Error:      # 옛 스키마에 컬럼이 없어도 실험실이 안 죽는다
+                return None
+        return (r[0] or "").strip() or None if r else None
 
     def mix_basket_list(self, customer_id=LEGACY_CUSTOMER_ID):
         """이 고객이 담은 순서(added_at)대로 항목 dict 리스트. meta_json은 풀어서 병합."""
@@ -3562,6 +3658,12 @@ class Store:
         state: 클라이언트 작업상태 dict(sessionStorage.produce_work 스키마 + step).
         ★title은 서버가 state['script'] 앞 20자에서 뽑는다 — 클라이언트가 매번 보내면
         대본을 고쳤을 때 목록 이름과 어긋난다(스펙 §4.6).
+        ★단, 사장님이 직접 지은 이름(state['title_manual'])이 있으면 그것을 쓴다
+        (2026-08-17). 대본 앞 20자는 '(제목 없음)'이 여러 줄 쌓이고 무슨 작업인지 구분이
+        안 돼서 이름을 직접 달 수 있게 했다. 자동 제목은 **직접 지은 이름이 없을 때만**
+        돈다 — 안 그러면 대본을 고칠 때마다 지어준 이름이 조용히 지워진다.
+        판정을 여기 한 곳에만 두는 이유: 제목을 정하는 코드가 두 군데면 반드시 어긋난다
+        (CLAUDE.md 0순위-B). API·클라이언트는 state에 값을 실을 뿐 제목을 계산하지 않는다.
         job_id/step: UPDATE 경로에서는 update_mix_job과 같은 관례 — 넘어온 필드만 갱신한다.
         안 넘기면(_UNSET) 기존 값 보존, job_id=None/step=0을 명시적으로 넘기면 그 값으로 덮어쓴다
         (부분 저장이 job_id·step을 조용히 리셋하던 버그 수정, 2026-07-17).
@@ -3571,7 +3673,7 @@ class Store:
         INSERT 폴백으로 떨어지는데, work_id는 전역 PRIMARY KEY라 남의 id로 INSERT하면
         IntegrityError(500)가 난다 — 그래서 UPDATE 전에 소유자를 먼저 물어본다(2026-07-17 재리뷰)."""
         now = datetime.now(timezone.utc).isoformat()
-        title = (state.get("script") or "")[:20] if isinstance(state, dict) else ""
+        title = _work_title(state)
         payload = json.dumps(state, ensure_ascii=False)
         with self._conn() as c:
             if work_id:
@@ -3628,6 +3730,42 @@ class Store:
             ).fetchall()
         return [{"work_id": r[0], "title": r[1], "step": r[2], "job_id": r[3],
                  "updated_at": r[4]} for r in rows]
+
+    def rename_produce_work(self, work_id, name, customer_id=LEGACY_CUSTOMER_ID):
+        """작업 이름 바꾸기(2026-08-17). 성공하면 확정된 제목 문자열, 남의 것/없으면 None.
+
+        ★state_json 안의 title_manual까지 같이 고친다 — title 컬럼만 고치면 다음 저장
+        (upsert_produce_work)이 state를 보고 제목을 다시 계산해 **되돌아간다**.
+        제목의 진실은 state에 있고 title 컬럼은 목록용 사본이다(둘을 함께 갱신하는 이유).
+        빈 이름을 주면 title_manual을 지워 자동 제목(대본 앞 20자)으로 되돌린다.
+
+        ⚠️ 읽고-고쳐-쓰기를 **한 트랜잭션 안에서** 한다. 밖에서 읽어 오면 그 사이 저장이
+        끼어들 때 그 저장분을 통째로 덮어쓴다(대본이 날아간다)."""
+        name = (name or "").strip()[:WORK_TITLE_MAX] if isinstance(name, str) else ""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT state_json FROM produce_works WHERE work_id=? AND customer_id=?",
+                (work_id, customer_id),
+            ).fetchone()
+            if not row:
+                return None
+            try:
+                state = json.loads(row[0])
+            except Exception:
+                state = {}
+            if not isinstance(state, dict):
+                state = {}
+            if name:
+                state["title_manual"] = name
+            else:
+                state.pop("title_manual", None)
+            title = _work_title(state)
+            c.execute(
+                "UPDATE produce_works SET title=?, state_json=?, updated_at=? WHERE work_id=?",
+                (title, json.dumps(state, ensure_ascii=False),
+                 datetime.now(timezone.utc).isoformat(), work_id),
+            )
+        return title
 
     def delete_produce_work(self, work_id, customer_id=LEGACY_CUSTOMER_ID):
         """지운다. 실제로 지워졌으면(내 것이었으면) True — 남의 것은 지워지지 않는다."""
@@ -4457,3 +4595,132 @@ class Store:
                 "INSERT INTO points_ledger(customer_id, delta, reason) VALUES(?,?,?)",
                 (customer_id, delta, reason),
             )
+
+    def points_try_deduct(self, customer_id, amount, reason=""):
+        """잔액이 충분할 때만 차감하고 True. 모자라면 아무것도 안 하고 False.
+
+        ★조회와 삽입을 SQL 한 문장으로 묶는다 — 파이썬에서 balance()를 읽고
+          points_add()를 부르면 그 사이에 다른 워커가 끼어들어 **둘 다 통과**한다.
+          실측(2026-08-17): 잔액 10P에 5P 차감 5개를 동시에 던지니 3건이 성공해
+          잔액이 -5P가 됐다. 워커 3개가 도는 환경이라 이론이 아니라 실제로 난다.
+          _conn()이 호출마다 새 연결을 열어 두 문장 사이엔 트랜잭션이 없다.
+
+        WHERE 절의 SUM이 INSERT와 같은 문장 안에서 평가되므로, SQLite가 쓰기
+        잠금을 잡은 상태에서 판정한다 → 동시에 들어와도 한 건만 성공한다."""
+        if amount <= 0:
+            return True                     # 무료 작업은 원장을 더럽히지 않는다
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO points_ledger(customer_id, delta, reason) "
+                "SELECT ?, ?, ? WHERE "
+                "(SELECT COALESCE(SUM(delta),0) FROM points_ledger WHERE customer_id=?) >= ?",
+                (customer_id, -amount, reason, customer_id, amount),
+            )
+            return cur.rowcount > 0
+
+    # ── 사용자별 API 키(2026-08-17, BYOK) ──
+    # 평문은 이 클래스 밖으로 나가는 경로가 get_customer_keys_plain 하나뿐이다.
+    # 화면용 list_customer_keys는 key_enc를 아예 안 실어 보낸다.
+    def add_customer_key(self, customer_id, service, plain):
+        """키 1개 저장. 이미 있는 키면 False(중복 거절)."""
+        from shopping_shorts import keycrypt
+        import time
+        try:
+            with self._conn() as c:
+                c.execute(
+                    "INSERT INTO customer_keys"
+                    "(customer_id, service, key_enc, key_hash, label, created_at) "
+                    "VALUES(?,?,?,?,?,?)",
+                    (int(customer_id), service, keycrypt.encrypt(plain),
+                     keycrypt.fingerprint(plain), keycrypt.mask(plain), int(time.time())),
+                )
+            return True
+        except sqlite3.IntegrityError as e:
+            # ★중복(ux_ck_dup)만 False로 삼킨다. NOT NULL 위반 같은 다른 무결성
+            #   오류까지 False로 덮으면 "service를 안 넘긴 버그"가 "중복입니다"로
+            #   둔갑해 조용히 묻힌다 — 침묵 except가 사고를 만든 전례가 있다.
+            if "UNIQUE" not in str(e).upper():
+                raise
+            return False
+
+    def list_customer_keys(self, customer_id, service=None):
+        """화면용 목록. ★key_enc를 안 싣는다 — 평문 경로는 여기가 아니다."""
+        q = ("SELECT id, service, label, status, checked_at, created_at "
+             "FROM customer_keys WHERE customer_id=?")
+        args = [int(customer_id)]
+        if service:
+            q += " AND service=?"
+            args.append(service)
+        q += " ORDER BY id"
+        with self._conn() as c:
+            rows = c.execute(q, args).fetchall()
+        return [{"id": r[0], "service": r[1], "label": r[2], "status": r[3],
+                 "checked_at": r[4], "created_at": r[5]} for r in rows]
+
+    def get_customer_keys_plain(self, customer_id, service):
+        """실제 호출에 쓸 평문 키 목록. 복호 실패한 행은 건너뛴다(마스터키 교체 등).
+
+        ★건너뛸 땐 반드시 로그를 남긴다 — 조용히 넘기면 '화면엔 키가 보이는데
+          실제로는 안 쓰이는' 상태가 생기고 아무도 이유를 모른다. 침묵 except가
+          SQL 오류를 삼켜 라이브 0건이 된 2026-08-10 사고와 같은 모양이다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT id, key_enc FROM customer_keys WHERE customer_id=? AND service=? "
+                "ORDER BY id", (int(customer_id), service)).fetchall()
+        return [plain for _kid, plain in self._decrypt_rows(rows, customer_id, service)]
+
+    def get_customer_keys_with_id(self, customer_id, service):
+        """[(key_id, 평문), ...] — 어느 행의 키인지 알아야 할 때 쓴다.
+
+        ★평문 목록과 화면 목록을 zip으로 짝짓지 마라. 복호 실패한 행은 평문
+          쪽에서만 빠져 순서가 밀리고, **엉뚱한 키에 상태가 박힌다**. id를
+          함께 받아야 짝이 어긋나지 않는다(0순위-B: 짝은 함께 정한다)."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT id, key_enc FROM customer_keys WHERE customer_id=? AND service=? "
+                "ORDER BY id", (int(customer_id), service)).fetchall()
+        return self._decrypt_rows(rows, customer_id, service)
+
+    def _decrypt_rows(self, rows, customer_id, service):
+        """(id, key_enc) 행들을 복호해 [(id, 평문)]으로. 깨진 행은 로그 후 건너뛴다."""
+        from shopping_shorts import keycrypt
+        out = []
+        for key_id, enc in rows:
+            try:
+                out.append((key_id, keycrypt.decrypt(enc)))
+            except Exception as e:      # noqa: BLE001 — 한 키가 깨져도 나머지는 쓴다
+                logging.warning(
+                    "customer_keys 복호 실패 — cid=%s service=%s key_id=%s (%s). "
+                    "BYOK_MASTER_KEY가 바뀌었는지 확인하라.",
+                    customer_id, service, key_id, type(e).__name__)
+                continue
+        return out
+
+    def delete_customer_key(self, customer_id, key_id):
+        """★customer_id를 조건에 반드시 넣는다 — 안 넣으면 id만 알면 남의 키를 지운다."""
+        with self._conn() as c:
+            c.execute("DELETE FROM customer_keys WHERE id=? AND customer_id=?",
+                      (int(key_id), int(customer_id)))
+
+    def set_customer_key_status(self, key_id, status):
+        import time
+        with self._conn() as c:
+            c.execute("UPDATE customer_keys SET status=?, checked_at=? WHERE id=?",
+                      (status, int(time.time()), int(key_id)))
+
+    def count_customer_keys(self, customer_id, service):
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT COUNT(*) FROM customer_keys WHERE customer_id=? AND service=?",
+                (int(customer_id), service)).fetchone()
+        return int(row[0])
+
+    def points_history(self, customer_id, limit=50):
+        """포인트 사용 내역(최신순). 화면의 '최근 사용'과 문의 대응에 쓴다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT delta, reason, created_at FROM points_ledger "
+                "WHERE customer_id=? ORDER BY rowid DESC LIMIT ?",
+                (int(customer_id), int(limit)),
+            ).fetchall()
+        return [{"delta": r[0], "reason": r[1], "created_at": r[2]} for r in rows]

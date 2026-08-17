@@ -80,8 +80,11 @@ def test_nontrial_render_uses_daily_limit(tmp_path, monkeypatch):
     s = _store(tmp_path)
     cid = s.create_customer("appr", "pw12")   # 승인+체험중(full, 미이벤트)
     assert app._is_trial(cid) is False
-    assert app.check_and_count(cid, "render") is True
-    assert app.check_and_count(cid, "render") is True
+    # ★체험(1회 고정)과 달리 일일 상한을 그대로 쓴다 — 그게 이 테스트의 요지다.
+    #   횟수를 하드코딩하면 상한을 조정할 때마다 깨진다(2026-08-17 실제로 2→10에서 깨졌다).
+    limit = app._CREDIT_DEFAULTS["render"]
+    for _ in range(limit):
+        assert app.check_and_count(cid, "render") is True
     assert app.check_and_count(cid, "render") is False
 
 

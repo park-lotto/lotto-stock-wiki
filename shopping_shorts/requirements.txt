@@ -9,3 +9,4 @@ alibabacloud_oss_v2  # VMake SDK(vmake_sdk) OSS 업로드용 — 자막제거 �
 yt-dlp  # 유튜브/틱톡 무료 다운로드(media_download)
 python-multipart  # /api/lens/search 프레임 캡처 업로드(UploadFile)
 Pillow  # 단어별 강조(highlight_rules) 폰트 폭 측정(video_assemble._segmented_drawtext)
+cryptography  # BYOK 키 암복호(keycrypt.py) — Fernet

@@ -68,15 +68,41 @@ def _fetch_modal_html(vid, timeout_ms=45000):
             b.close()
 
 
+#: 우리 결과물 높이. 이 위는 렌더에서 어차피 버려지는 화소다(_normalize와 같은 기준).
+_TARGET_H = 1920
+
+
 def best_play_url(html):
-    """SSR HTML → 최고 해상도(동급이면 최대 용량) playAddr URL. 없으면 ""."""
-    best = None
+    """SSR HTML → 받을 playAddr URL. 없으면 "".
+
+    ★**최고 해상도가 아니라 '우리 규격에 맞는 것 중 최고'를 고른다**(2026-08-17 서버 실측).
+
+    왜 바꿨나 — 도우인은 같은 영상을 여러 화질로 내놓는데, 그 목록에 **이미 1080x1920
+    h264가 들어 있다.** 그런데 종전 코드는 무조건 최댓값을 골라 **2160x3840 hevc**를
+    받아왔고, `_normalize()`가 그걸 다시 1080x1920 h264로 되돌리느라 **141초**를 썼다.
+    즉 공짜로 받을 수 있는 결과물을 141초 들여 만들고 있었다(서버 4코어·GPU 없음).
+
+    실측(54초 영상, `7662301406170830245` — SSR이 준 화질 목록):
+        2160x3840 hevc 20.1MB  ← 종전 선택. 받은 뒤 변환 141초
+        1440x2560       11.5MB
+        1080x1920 h264 14.5MB  ← 지금 선택. 변환 0초(_normalize가 그대로 통과)
+         720x1280 …
+
+    화질 손해는 0이다 — 최종 렌더가 1080x1920이라 그 위는 어차피 버린다.
+    2160만 있는(=1920 이하가 하나도 없는) 영상은 종전대로 최댓값을 받아 `_normalize`가
+    변환한다 → 받지 못하는 영상은 생기지 않는다(회귀 0).
+    """
+    best_fit = None      # 높이 <= _TARGET_H 중 최고 (변환 없이 바로 쓸 후보)
+    best_any = None      # 전체 최고 (위가 하나도 없을 때의 폴백)
     for m in _PLAY_RE.finditer(urllib.parse.unquote(html)):
         size, w, h, src = int(m.group(1)), int(m.group(2)), int(m.group(3)), m.group(4)
         key = (w * h, size)
-        if best is None or key > best[0]:
-            best = (key, src)
-    return best[1] if best else ""
+        if best_any is None or key > best_any[0]:
+            best_any = (key, src)
+        if h <= _TARGET_H and (best_fit is None or key > best_fit[0]):
+            best_fit = (key, src)
+    chosen = best_fit or best_any
+    return chosen[1] if chosen else ""
 
 
 def download(url, dest_dir):

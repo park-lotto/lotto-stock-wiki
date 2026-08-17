@@ -407,7 +407,7 @@ def restyle_prompt(beats, length_note="", style_name=None, facts_block=""):
 
 
 def apply_restyle(beats, call, max_tries=3, style_name=None, report=None,
-                  facts_block=""):
+                  facts_block="", where=""):
     """스타일 리라이트 — 길이 초과·상투어는 버리지 말고 피드백 재시도(최대 3회).
 
     ★첫 구현은 길이 밖이면 조용히 원본 복귀였는데, 메종 문체가 원문보다 길어
@@ -419,15 +419,32 @@ def apply_restyle(beats, call, max_tries=3, style_name=None, report=None,
     {"ok": bool, "style": str, "why": str}. 실패가 조용히 원본으로 남으면 trio가
     전부 같은 결로 수렴하는데 로그 0줄이라 진단 불가였다(2026-08-06 서버 실측)."""
     import sys
+    import time as _time
     from shopping_shorts import style_profiles
 
+    # ★계측(2026-08-17 사장님 "시간이 너무 오래 걸린다"): 실측 결과 매칭 10분 중
+    #   9분 11초(91%)가 restyle이었다. 그런데 로그가 "재시도 소진(길이·상투어·CTA)"로
+    #   뭉뚱그려져 **무엇 때문에 다시 돌았는지**를 알 수 없어 어디를 고쳐야 할지 못 정했다.
+    #   회차마다 사유·길이비·초를 남긴다 — 원인을 알아야 그것만 정확히 고친다(추측 금지).
+    _t0 = _time.time()
+    _trace = []          # [(회차, 사유, ratio, 초)] — 아래 _done이 한 줄로 찍는다
+
     def _done(out, ok, why):
+        el = _time.time() - _t0
         if report is not None:
             report.update(ok=ok, style=style_name or style_profiles.active_style(),
-                          why=why)
-        print(f"[restyle] 스타일={style_name} {'성공' if ok else '실패'}({why})",
+                          why=why, seconds=round(el, 1), tries=len(_trace),
+                          trace=list(_trace))
+        # 예) [restyle] 스타일=maison 성공(재시도 소진) 102.3초 4회 | 1:길이초과 1.42 24.1s …
+        _tr = " | ".join("%d:%s%s %.1fs" % (n, w, ("" if r is None else " %.2f" % r), s)
+                         for n, w, r, s in _trace)
+        print(f"[restyle]{('[' + where + ']') if where else ''} 스타일={style_name} "
+              f"{'성공' if ok else '실패'}({why}) {el:.1f}초 {len(_trace)}회 | {_tr}",
               file=sys.stderr)
         return out
+
+    def _mark(n, why, ratio, t_start):
+        _trace.append((n, why, ratio, _time.time() - t_start))
 
     if not style_profiles.active_style() or not beats:
         return beats
@@ -437,15 +454,18 @@ def apply_restyle(beats, call, max_tries=3, style_name=None, report=None,
     best_why = None         # 왜 best로 잡혔나 — "길이"면 아래 압축패스를 한 번 더 태운다
     closest = None          # 구조는 멀쩡하나 길이 밖인 스타일본 중 1.0배에 가장 근접한 것
     closest_ratio = None
-    for _ in range(max_tries):
+    for _try in range(1, max_tries + 1):
+        _ts = _time.time()
         resp = call(restyle_prompt(beats, length_note=note, style_name=style_name,
                                    facts_block=facts_block),
                     RESTYLE_SCHEMA)
         got = (resp or {}).get("beats") if isinstance(resp, dict) else None
         if not got or len(got) != len(beats):
+            _mark(_try, "빈응답·비트수", None, _ts)
             return _done(best or beats, best is not None, "빈 응답·비트수 불일치")
         by_n = {int(g.get("n", 0)): (g.get("narration") or "").strip() for g in got}
         if sorted(by_n) != list(range(1, len(beats) + 1)) or not all(by_n.values()):
+            _mark(_try, "번호불일치", None, _ts)
             return _done(best or beats, best is not None, "번호 불일치·빈 나레이션")
         out = []
         for i, b in enumerate(beats):
@@ -456,6 +476,7 @@ def apply_restyle(beats, call, max_tries=3, style_name=None, report=None,
         if closest is None or abs(ratio - 1) < abs(closest_ratio - 1):
             closest, closest_ratio = out, ratio
         if ratio > 1.25:
+            _mark(_try, "길이초과", ratio, _ts)
             # ★어느 문장이 넘쳤는지 짚어 준다(2026-08-17 실측): "전체를 줄여라"만으로는
             #   모델이 어디를 손댈지 몰라 재시도가 무작위였다. 초과 문장과 초과 글자수를
             #   명시하면 고칠 대상이 하나로 정해진다.
@@ -473,18 +494,23 @@ def apply_restyle(beats, call, max_tries=3, style_name=None, report=None,
                 best, best_why = out, "길이"
             continue
         if ratio < 0.75:
+            _mark(_try, "길이부족", ratio, _ts)
             note = f"직전 결과가 원본의 {ratio:.2f}배로 너무 짧았다 — {old_total}자 근처로."
             continue
-        if any(c in v for v in by_n.values() for c in _CLICHE):
+        _hit = [c for v in by_n.values() for c in _CLICHE if c in v]
+        if _hit:
+            _mark(_try, "상투어:" + ",".join(sorted(set(_hit))[:3]), ratio, _ts)
             note = "직전 결과에 금지 상투어(꿀템·삶의 질 등)가 남았다 — 전부 제거하라."
             best, best_why = out, "상투어"
             continue
         last = by_n[len(beats)]
         if "댓글" in last and not re.search(r"드릴게요|보내드|알려드", last):
+            _mark(_try, "CTA보상없음", ratio, _ts)
             note = ("직전 결과의 마지막 CTA가 보상 없이 끝났다 — 반드시 "
                     "\"남겨주시면 [받는 것] 드릴게요\" 형태로.")
             best, best_why = out, "CTA"
             continue
+        _mark(_try, "통과", ratio, _ts)
         return _done(out, True, "정상")
     # ★길이 때문에 잡힌 best는 그냥 내보내지 않는다(2026-08-17 실측): 게이트는 1.25인데
     #   best 보관선이 1.45라 **1.39~1.45짜리가 그대로 라이브로 나가고 있었다** — 기준이
@@ -497,6 +523,7 @@ def apply_restyle(beats, call, max_tries=3, style_name=None, report=None,
     # 길이만 줄여라"를 한 번 더 태운다 — 스타일과 화면 길이를 둘 다 지키는 마지막 기회.
     if closest is not None:
         import json as _json
+        _ts = _time.time()      # 계측: 이건 max_tries 밖의 **+1회 추가 호출**이다
         # 여기도 문장별 상한을 준다 — 총량 지시가 안 먹힌다는 실측은 이 패스에도 같다.
         cur = [{"n": i + 1, "narration": (b.get("narration") or ""),
                 "max": int(len(beats[i].get("narration") or "") * 1.15) + 2}
@@ -519,7 +546,9 @@ def apply_restyle(beats, call, max_tries=3, style_name=None, report=None,
                         nb = dict(b)
                         nb["narration"] = by_n[i + 1]
                         out.append(nb)
+                    _mark(max_tries + 1, "압축패스성공", ratio, _ts)
                     return _done(out, True, f"압축패스({closest_ratio:.2f}→{ratio:.2f}배)")
+        _mark(max_tries + 1, "압축패스실패", None, _ts)
     # ★압축이 실패해도 예비본이 있으면 스타일을 살린다(2026-08-17 실측): 08-17 04:31
     #   maison은 최근접 1.50배라 best(≤1.45)도 없어 원본 복귀 = 스타일 통째 폐기였다.
     #   1.45 이하 예비본이 있으면 원본보다 그쪽이 낫다(원본 복귀는 trio 수렴 사고의 원인).

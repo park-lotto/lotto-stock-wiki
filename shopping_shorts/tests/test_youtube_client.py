@@ -68,7 +68,11 @@ def test_key_rotation_on_quota_403(monkeypatch):
         return R(200, stats_resp)
 
     monkeypatch.setattr(yc.requests, "get", fake_get)
+    # ★search_shorts의 키 선택은 keyroute를 거친다(2026-08-17 BYOK). keyroute._owner_keys가
+    #   읽는 곳은 config.YOUTUBE_API_KEYS라 모듈 전역만 갈아끼우면 안 먹는다.
+    #   yc.YOUTUBE_API_KEYS도 같이 두는 이유: _first_ok 등 다른 경로는 아직 모듈 전역을 본다.
     monkeypatch.setattr(yc, "YOUTUBE_API_KEYS", ["KEY1", "KEY2"])
+    monkeypatch.setattr(yc.config, "YOUTUBE_API_KEYS", ["KEY1", "KEY2"])
 
     items = yc.search_shorts(["살림꿀팁"], "2026-07-11T00:00:00Z", max_per_kw=20)
     assert len(items) == 1

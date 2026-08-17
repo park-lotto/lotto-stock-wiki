@@ -35,6 +35,15 @@ _JOSA = ("이라고", "한테서", "에게서", "한테", "에게", "께서", "�
 #   같은 말인데 한 글자 차이로 FAIL이 났다. 표기 흔들림은 스타일 위반이 아니다.
 _EMI_FIX = (("구요", "고요"), ("구여", "고요"), ("드라구", "드라고"))
 
+# ★문장틀 **끝의 종결어미**는 갈아끼워도 같은 틀이다(2026-08-17 실측).
+#   틀이 "…먹을 뻔했어요"인데 생성이 "…먹을 뻔했거든요"로 끝나면 서명 어구가 통째로
+#   깨져 FAIL이 났다. 그런데 `~거든요`는 **이 스타일의 말버릇 사전에 든 어미**다 —
+#   즉 스타일을 잘 지킨 문장이 스타일 검사에서 벌을 받는 구조였다(같은 유형의 사고:
+#   메모리 `스타일감점_스타일무지함정`). 틀이 정하는 것은 **뼈대**이지 어미가 아니다.
+#   서명 어구의 꼬리에서만 떼어낸다 — 문장 중간의 어미는 건드리지 않는다.
+_TAIL_EMI = ("거든요", "더라고요", "더라구요", "었어요", "았어요", "네요", "어요", "아요",
+             "예요", "에요", "구요", "고요", "죠", "요", "다")
+
 # 말 밀도 허용 폭 — 스타일 히트작 밀도의 70~140%. 밖이면 "그 스타일이 아니다".
 DENSITY_LO, DENSITY_HI = 0.7, 1.4
 DEFAULT_CHARS_PER_30S = 135      # 스타일에 실측값이 없을 때만(일반 기준 4.5자/초)
@@ -66,6 +75,49 @@ def _chunks(template):
     return out
 
 
+def _strip_tail_emi(chunk):
+    """고정 어구의 **꼬리 종결어미**를 떼어낸다. 뗄 게 없으면 그대로.
+
+    ★왜(2026-08-17 실측): 틀 "…먹을 뻔했어요" vs 생성 "…먹을 뻔했거든요"는 같은 틀인데
+      서명 어구가 안 맞아 FAIL이었다. 게다가 `~거든요`는 그 스타일의 **말버릇 사전에 든
+      어미**라, 스타일을 지킨 문장이 스타일 검사에서 떨어지는 모순이 생긴다.
+    ★3자 미만으로 줄어들면 떼지 않는다 — "요"만 남기면 아무 문장에나 걸려 판정이 무의미해진다
+      (`_chunks`가 2자 이하를 버리는 것과 같은 이유).
+    """
+    for e in _TAIL_EMI:
+        if chunk.endswith(e) and len(chunk) - len(e) >= 3:
+            return chunk[:-len(e)]
+    return chunk
+
+
+def _signature_split_ok(sig, n_text, max_gap=12):
+    """서명 어구가 **한 군데 끊겨** 들어간 경우를 살린다(2026-08-17 실측).
+
+    ★왜: 틀 "{가족} 때문에 진짜 충격 받았어요"는 빈칸 뒤가 한 덩어리라 슬롯이 문장 맨
+      앞에만 올 수 있다. 그런데 모델은 "…식습관 때문에 **엄마한테** 진짜 충격 받았어요"처럼
+      덩어리 **중간에** 말을 끼워 넣는다 — 사람이 읽으면 명백히 그 틀인데 판정만 못 따라가
+      정상 문장이 FAIL로 떨어졌다(실측 4개 중 1개). `_SLOT` 주석이 이미 같은 취지로
+      "모델이 빈칸에 살을 붙인다 / 틀의 뼈대만 지키면 된다"고 적어둔 것의 연장이다.
+
+    ★느슨해지지 않게 못을 박는다:
+      · 끊는 곳은 **한 군데만**. 두 군데 이상 갈라지면 그건 다른 문장이다.
+      · 끼워 넣은 말은 max_gap자까지(`_SLOT`의 28자보다 좁게 — 여긴 빈칸이 아니라
+        어구 **안쪽**이라 더 엄격해야 한다).
+      · 갈라진 두 조각 모두 3자 이상이어야 한다. 짧은 조각은 아무 문장에나 걸린다.
+    """
+    for i in range(3, len(sig) - 2):
+        head, tail = sig[:i], sig[i:]
+        if len(tail) < 3:
+            break
+        at = n_text.find(head)
+        if at < 0:
+            continue
+        nxt = n_text.find(tail, at + len(head))
+        if nxt >= 0 and (nxt - (at + len(head))) <= max_gap:
+            return True
+    return False
+
+
 def template_matches(text, templates, min_ratio=0.5):
     """문장이 문장틀 중 하나를 **실제로 쓴 것인가**.
 
@@ -82,8 +134,12 @@ def template_matches(text, templates, min_ratio=0.5):
         chunks = _chunks(t)
         if not chunks:
             continue
+        # ★어구의 꼬리 종결어미를 떼고 대조한다(2026-08-17) — 틀이 정하는 건 뼈대이지
+        #   어미가 아니다. 어미까지 강제하면 스타일의 말버릇(`~거든요`)을 쓴 문장이
+        #   그 스타일 검사에서 떨어지는 모순이 난다.
+        chunks = [_strip_tail_emi(c) for c in chunks]
         longest = max(chunks, key=len)
-        if longest not in n_text:
+        if longest not in n_text and not _signature_split_ok(longest, n_text):
             continue                      # 서명 어구가 없으면 그 틀이 아니다
         matched, pos = 0, 0
         for ch in chunks:
@@ -91,6 +147,10 @@ def template_matches(text, templates, min_ratio=0.5):
             if at >= 0:
                 matched += len(ch)
                 pos = at + len(ch)        # 순서 보장
+            elif ch is longest and _signature_split_ok(ch, n_text[pos:]):
+                # 서명 어구가 한 군데 끊겨 들어간 경우 — 위에서 이미 인정했으므로
+                # 여기서도 세어 준다(안 그러면 ratio가 0이 돼 결국 FAIL로 떨어진다).
+                matched += len(ch)
         if matched >= sum(len(c) for c in chunks) * min_ratio:
             return True
     return False
