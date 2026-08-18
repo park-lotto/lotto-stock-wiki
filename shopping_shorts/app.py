@@ -8952,7 +8952,8 @@ def _adopt_into_ranking(store, platform, url, meta):
 
 
 @app.get("/api/reference/adopt", response_class=HTMLResponse)
-def api_reference_adopt(request: Request, url: str = ""):
+def api_reference_adopt(request: Request, url: str = "", views: int = 0, likes: int = 0,
+                        comments: int = 0, followers: int = 0):
     """⭐ 레퍼런스 등록 — 영상 1건 + 그 채널을 한 번에(2026-08-18 사장님 요청).
 
     "인스타 보다가 좋은 영상을 발견하면 바로 레퍼런스에 반영해서 정렬까지" 를 위해
@@ -8970,6 +8971,15 @@ def api_reference_adopt(request: Request, url: str = ""):
         return HTMLResponse(_chadd_html("❌ 지원하지 않는 주소",
                                         "유튜브·틱톡·인스타·쓰레드·샤오홍슈·도우인 영상에서 눌러주세요."))
     meta = probe_grab_meta(u) or {}
+    # ★화면에서 읽어 보낸 숫자로 **빈 칸만** 채운다(2026-08-18 사장님 A안).
+    #   서버는 인스타를 로그인 없이 읽어 조회수·팔로워가 0으로 온다(실측: 채이홈 항목).
+    #   그러면 조회수당댓글·팔로워당댓글이 계산되지 않아 정렬에서 불리해진다.
+    #   ⚠️ 서버가 제대로 읽은 값은 덮지 않는다 — 화면 글자 파싱은 근사치라 더 정확한
+    #      값을 밀어내면 안 된다(0순위-B: 어느 쪽이 진짜인지 한 곳에서만 정한다).
+    for key, got in (("views", views), ("likes", likes),
+                     ("comments", comments), ("followers", followers)):
+        if got and not meta.get(key):
+            meta[key] = int(got)
     store = Store(DB_PATH)
     item = None
     try:

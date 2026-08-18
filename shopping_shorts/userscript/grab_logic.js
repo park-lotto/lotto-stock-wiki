@@ -562,13 +562,59 @@
       _miniBtn("ss-adopt-btn", "⭐ 레퍼런스 등록",
                "이 영상을 랭킹에 바로 넣고 채널도 등록합니다", 226, "#c9922e",
                function () {
-                 window.open(BASE + "/api/reference/adopt?url=" + encodeURIComponent(location.href),
+                 window.open(BASE + "/api/reference/adopt?url=" + encodeURIComponent(location.href)
+                             + _pageStatsQuery(),
                              "ss_adopt", "width=420,height=260");
                });
     }
   }
   // 이 화면이 '영상 한 편'인가 — 유튜브 쇼츠·watch, 인스타 릴스/게시물, 틱톡 video,
   // 쓰레드 post. 채널수집(_chQuery)과 달리 프로필은 제외한다(등록할 영상이 없다).
+
+  // ── 화면에 떠 있는 숫자를 같이 보낸다(2026-08-18 사장님 A안) ─────────────────
+  // 왜: 서버(yt-dlp)는 로그인 없이 인스타를 읽어 **조회수·팔로워가 0**으로 들어왔다
+  //     (실측: 채이홈 항목 views 0 / followers 0 / 제목 "Video by chae2home").
+  //     그러면 조회수당댓글·팔로워당댓글이 계산되지 않아 정렬에서 불리해진다.
+  //     그런데 사장님 화면에는 그 숫자가 이미 떠 있다 — 담는 순간 함께 보내면 된다.
+  // ⚠️ 화면 글자를 읽는 근사치다. 못 읽으면 안 보낸다(서버는 받은 값이 없으면 종전대로).
+  function _num(t) {
+    if (!t) return 0;
+    var s = String(t).replace(/[,\s]/g, "");
+    var m = s.match(/([\d.]+)\s*(만|천|억|K|M|k|m)?/);
+    if (!m) return 0;
+    var n = parseFloat(m[1]);
+    if (!isFinite(n)) return 0;
+    var u = m[2] || "";
+    if (u === "만") n *= 10000;
+    else if (u === "천") n *= 1000;
+    else if (u === "억") n *= 100000000;
+    else if (u === "K" || u === "k") n *= 1000;
+    else if (u === "M" || u === "m") n *= 1000000;
+    return Math.round(n);
+  }
+  function _pageStats() {
+    var out = {};
+    try {
+      // 화면 글자 전체에서 '조회수 12,345' 같은 짝을 찾는다(한국어·영어 둘 다).
+      var txt = (document.body && document.body.innerText || "").slice(0, 20000);
+      var pats = [
+        ["views", /(?:조회수|조회|views?)\s*[:\s]?\s*([\d.,]+\s*[만천억KkMm]?)/],
+        ["likes", /(?:좋아요|likes?)\s*[:\s]?\s*([\d.,]+\s*[만천억KkMm]?)/],
+        ["comments", /(?:댓글|comments?)\s*[:\s]?\s*([\d.,]+\s*[만천억KkMm]?)/],
+        ["followers", /(?:팔로워|followers?)\s*[:\s]?\s*([\d.,]+\s*[만천억KkMm]?)/]
+      ];
+      for (var i = 0; i < pats.length; i++) {
+        var m = txt.match(pats[i][1]);
+        if (m) { var v = _num(m[1]); if (v > 0) out[pats[i][0]] = v; }
+      }
+    } catch (e) {}
+    return out;
+  }
+  function _pageStatsQuery() {
+    var st = _pageStats(), q = "";
+    for (var k in st) if (st[k] > 0) q += "&" + k + "=" + st[k];
+    return q;
+  }
   function _isVideoPage() {
     var p = location.pathname;
     if (/\/(p|reel|reels|tv|video)\/[^/]+/.test(p)) return true;          // 인스타·틱톡
