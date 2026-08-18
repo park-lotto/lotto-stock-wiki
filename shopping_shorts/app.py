@@ -8874,6 +8874,130 @@ def _analysis_state(store, shortcode):
     return None, {"state": "idle", "reason": "", "attempts": 0}
 
 
+def _adopt_into_ranking(store, platform, url, meta):
+    """수동으로 찾은 영상 1건을 **지금 랭킹에 끼워 넣는다**(2026-08-18 사장님 요청).
+
+    랭킹 화면은 '마지막 수집 스냅샷'(last_run)을 읽는다. 그래서 새로 발견한 영상은
+    다음 수집(09/15/21시)까지 안 보였다 — 채널만 등록해두면 영상은 하루를 기다려야 했다.
+    여기서는 그 스냅샷에 같은 모양의 항목을 만들어 끼워 넣어, 지표·정렬에 바로 참여시킨다.
+
+    ★항목을 손으로 만들지 않는다 — 수집이 쓰는 `build_items`를 그대로 태운다.
+      손으로 dict를 지으면 지표 계산(속도·밀도·가속)이 수집분과 달라져, 같은 화면에서
+      두 가지 잣대가 섞인다(0순위-B).
+    ★창(48h)은 여기서만 크게 잡는다 — 사장님이 고른 영상은 오래됐어도 등록돼야 한다.
+    반환: 만들어진 item 또는 None(시각을 못 읽어 지표를 못 만들 때).
+    """
+    from shopping_shorts.ranking import build_items
+
+    ts = meta.get("ts")
+    if not ts:
+        return None
+    # ★build_items는 **ISO 문자열**을 받는다(hours_since가 fromisoformat을 쓴다).
+    #   probe_grab_meta는 유닉스 초(int)를 주므로 여기서 한 번만 바꿔 넘긴다 —
+    #   안 바꾸면 'int has no attribute replace'로 조용히 실패한다(실측).
+    if isinstance(ts, (int, float)):
+        ts = datetime.fromtimestamp(float(ts), tz=timezone.utc).isoformat()
+    # shortcode는 **그 플랫폼 수집이 쓰는 것과 같은 모양**이어야 한다 — 안 그러면
+    # 다음 수집이 같은 영상을 다른 코드로 다시 넣어 랭킹에 두 줄이 된다.
+    #   인스타=_media_code / 유튜브=영상id / 쓰레드=post 코드 / 틱톡=video id
+    code = ""
+    if platform == "instagram":
+        code = _media_code(url)
+    elif platform == "youtube":
+        m = re.search(r"(?:youtu\.be/|/shorts/|/live/|[?&]v=)([A-Za-z0-9_-]{6,})", url or "")
+        code = m.group(1) if m else ""
+    elif platform == "threads":
+        m = re.search(r"/post/([A-Za-z0-9_-]+)", url or "")
+        code = m.group(1) if m else ""
+    elif platform == "tiktok":
+        m = re.search(r"/video/(\d+)", url or "")
+        code = m.group(1) if m else ""
+    code = code or _media_code(url) or url
+    reel = {
+        "shortcode": code, "url": url, "timestamp": ts,
+        "commentsCount": meta.get("comments") or 0,
+        "likesCount": meta.get("likes") or 0,
+        "videoViewCount": meta.get("views") or 0,
+        "ownerFollowers": meta.get("followers") or 0,
+        "displayUrl": meta.get("thumbnail") or "",
+        "caption": meta.get("title") or "",
+        "videoDuration": meta.get("duration") or 0,
+    }
+    who = (meta.get("channel") or "").strip()
+    if platform == "instagram":
+        prev_c, prev_d = store.prev_comments, store.prev_delta
+    else:
+        prev_c = lambda sc: store.prev_base_platform(platform, sc)      # noqa: E731
+        prev_d = lambda sc: store.prev_delta_platform(platform, sc)     # noqa: E731
+    items = build_items([reel], {"name": who, "username": who, "inpock": "",
+                                 "followers": meta.get("followers") or 0},
+                        prev_comments=prev_c, prev_delta=prev_d,
+                        window_hours=24 * 365)
+    if not items:
+        return None
+    item = items[0]
+    item["manual"] = True          # 화면이 '직접 등록'임을 표시할 수 있게
+    if platform == "instagram":
+        old, _at = store.load_last_run()
+    else:
+        old, _at = store.load_last_run_platform(platform)
+    kept = [i for i in (old or []) if i.get("shortcode") != item["shortcode"]]
+    merged = [item] + kept
+    now_iso = datetime.now(timezone.utc).isoformat()
+    if platform == "instagram":
+        store.save_last_run(merged, now_iso)
+    else:
+        store.save_last_run_platform(platform, merged, now_iso)
+    return item
+
+
+@app.get("/api/reference/adopt", response_class=HTMLResponse)
+def api_reference_adopt(request: Request, url: str = ""):
+    """⭐ 레퍼런스 등록 — 영상 1건 + 그 채널을 한 번에(2026-08-18 사장님 요청).
+
+    "인스타 보다가 좋은 영상을 발견하면 바로 레퍼런스에 반영해서 정렬까지" 를 위해
+    ①채널을 추적목록/시드에 등록(다음 수집부터 자동으로 따라온다)
+    ②그 영상은 **지금** 랭킹 스냅샷에 끼워 넣어 바로 보이게 한다.
+    확장/유저스크립트가 popup으로 여는 GET이라 세션 쿠키가 실린다(담기·채널수집과 같은 방식).
+    """
+    denied = _require_admin(request)
+    if denied:
+        return HTMLResponse(_chadd_html("⛔ 관리자 로그인 필요",
+                                        "shoppingshorts.duckdns.org에 관리자로 로그인 후 다시 눌러주세요."))
+    u = (url or "").strip()
+    platform = _grab_platform(u)
+    if not platform:
+        return HTMLResponse(_chadd_html("❌ 지원하지 않는 주소",
+                                        "유튜브·틱톡·인스타·쓰레드·샤오홍슈·도우인 영상에서 눌러주세요."))
+    meta = probe_grab_meta(u) or {}
+    store = Store(DB_PATH)
+    item = None
+    try:
+        item = _adopt_into_ranking(store, platform, u, meta)
+    except Exception as e:  # noqa: BLE001 — 영상 편입이 실패해도 채널 등록은 살린다
+        import sys as _sys
+        print(f"[adopt] 랭킹 편입 실패(무해) {u}: {e!r}", file=_sys.stderr)
+    # 채널 등록은 기존 경로를 그대로 쓴다(플랫폼별 표 판단이 거기 한 곳에 있다).
+    ch_html = api_discover_add_by_url(request, url=u)
+    ch_msg = "채널도 등록했어요"
+    try:
+        body = ch_html.body.decode("utf-8")
+        if "이미 등록된" in body:
+            ch_msg = "채널은 이미 등록돼 있어요"
+        elif "못 찾았" in body or "❌" in body:
+            ch_msg = "채널은 못 찾았어요(영상만 등록)"
+    except Exception:
+        pass
+    if item:
+        return HTMLResponse(_chadd_html(
+            "✅ 레퍼런스에 등록했어요",
+            f"영상이 랭킹에 바로 들어갔습니다 — {ch_msg}. "
+            f"(댓글 {item.get('comments', 0)} · 조회 {item.get('views', 0)})"))
+    return HTMLResponse(_chadd_html(
+        "⚠️ 채널만 등록했어요",
+        f"영상 지표를 못 읽어 랭킹엔 못 넣었습니다(로그인벽·비공개일 수 있어요). {ch_msg}."))
+
+
 @app.get("/api/lens/single")
 def api_lens_single(request: Request, url: str = ""):
     """주소 하나 → **그 영상 카드 1장**(2026-08-18 사장님: "주소 넣으면 이렇게 뜨게").
