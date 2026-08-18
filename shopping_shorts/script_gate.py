@@ -276,8 +276,18 @@ def check(style, beats, facts_text="", product="", seconds=30):
     _cap = int(SPEECH_CHARS_PER_SEC * max(5, min(int(seconds or 30), 90)))
     lo, hi = int(tgt * DENSITY_LO), min(int(tgt * DENSITY_HI), _cap)
     n = len(norm(full))
+    # ★방향을 말해준다(2026-08-18 사장님 "40초 대본이 나오는데 고친 거 아니었나").
+    #   예전 detail은 "300자 / 히트작 245자"라 넘쳤는지 모자란지가 안 드러났고, 재작성
+    #   지시문도 "모자라면 채워라"만 있어 모델이 계속 길게 썼다 — 판정은 맞는데 고칠
+    #   방향을 안 알려주니 재작성이 소용없었다.
+    if n > hi:
+        _d = "%d자 — %d자를 **넘겼다**. %d자 이하로 줄여라(영상 길이 규격)." % (n, hi, hi)
+    elif n < lo:
+        _d = "%d자 — %d자에 모자란다. %d자 이상으로 채워라." % (n, lo, lo)
+    else:
+        _d = "%d자 / 이 스타일 히트작 %d자" % (n, tgt)
     checks.append({"name": "말 밀도(%d~%d자)" % (lo, hi), "ok": lo <= n <= hi,
-                   "detail": "%d자 / 이 스타일 히트작 %d자" % (n, tgt)})
+                   "detail": _d, "over": n > hi})
 
     # ★고조 심화(2026-08-16) — 헌장은 "한 단계 더 올라가는 문장을 반드시 하나, 한 번만".
     #   0회면 밋밋하고, 2회 이상이면 남발이라 오히려 죽는다(헌장 문구 그대로).
@@ -329,5 +339,8 @@ def gate_feedback(checks):
         return ""
     return ("\n\n[재작성 지시 — 방금 쓴 것이 아래를 어겼다. 그대로 고쳐라]\n"
             + "\n".join("- %s: %s" % (c["name"], c["detail"]) for c in bad)
-            + "\n분량이 모자라면 문장을 더 쪼개고 상황 묘사를 늘려 채워라. "
-              "구조·문장틀은 그대로 두고 살만 붙여라.")
+            + ("\n분량이 넘쳤다 — **문장을 덜어내거나 짧게 줄여라**. 칸 개수·순서는 "
+               "그대로 두고 설명을 압축해라. 길이는 영상 규격이라 못 넘긴다."
+               if any(c.get("over") for c in bad) else
+               "\n분량이 모자라면 문장을 더 쪼개고 상황 묘사를 늘려 채워라. "
+               "구조·문장틀은 그대로 두고 살만 붙여라."))
