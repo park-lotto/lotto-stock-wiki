@@ -2,6 +2,12 @@
 from shopping_shorts import headcopy_gen
 
 
+# ★2026-08-18부터 문구는 **두 줄**로 접혀 나온다(two_lines). 아래 비교들은 줄 수가 아니라
+#   "걸러내기가 제대로 되는가"를 보는 것이므로, 줄바꿈만 공백으로 되돌려 비교한다.
+def _flat(t):
+    return " ".join(t.split())
+
+
 def test_returns_four_copies(monkeypatch):
     monkeypatch.setattr(headcopy_gen, "_call_json", lambda p, s: {"copies": [
         {"label": "짧은 훅형", "text": "이거 모르면 손해"},
@@ -11,7 +17,7 @@ def test_returns_four_copies(monkeypatch):
     ]})
     out = headcopy_gen.suggest("대본 텍스트입니다")
     assert len(out) == 4
-    assert out[0]["text"] == "이거 모르면 손해"
+    assert _flat(out[0]["text"]) == "이거 모르면 손해"
     assert out[0]["label"] == "짧은 훅형"
 
 
@@ -37,7 +43,7 @@ def test_drops_blank_and_overlong(monkeypatch):
         {"label": "c", "text": "가" * 200},
     ]})
     out = headcopy_gen.suggest("대본")
-    assert [c["text"] for c in out] == ["정상 문구"]
+    assert [_flat(c["text"]) for c in out] == ["정상 문구"]
 
 
 def test_dedupes_identical_text(monkeypatch):
@@ -46,7 +52,7 @@ def test_dedupes_identical_text(monkeypatch):
         {"label": "b", "text": "같은 문구"},
         {"label": "c", "text": "다른 문구"},
     ]})
-    assert [c["text"] for c in headcopy_gen.suggest("대본")] == ["같은 문구", "다른 문구"]
+    assert [_flat(c["text"]) for c in headcopy_gen.suggest("대본")] == ["같은 문구", "다른 문구"]
 
 
 def test_copies_not_a_list_returns_empty(monkeypatch):
@@ -80,7 +86,7 @@ def test_skips_bad_item_keeps_valid_one(monkeypatch):
     monkeypatch.setattr(headcopy_gen, "_call_json", lambda p, s: {"copies": [
         "junk", {"label": "a", "text": "정상 문구"},
     ]})
-    assert [c["text"] for c in headcopy_gen.suggest("대본")] == ["정상 문구"]
+    assert [_flat(c["text"]) for c in headcopy_gen.suggest("대본")] == ["정상 문구"]
 
 
 def test_int_label_and_text_returns_empty(monkeypatch):
@@ -105,7 +111,8 @@ def test_bad_label_falls_back_but_keeps_good_text(monkeypatch):
         {"label": {"d": 1}, "text": "정상 문구"},
     ]})
     out = headcopy_gen.suggest("대본")
-    assert out == [{"label": "제안", "text": "정상 문구"}]
+    assert [{"label": c["label"], "text": _flat(c["text"])} for c in out] \
+        == [{"label": "제안", "text": "정상 문구"}]
 
 
 def test_mixed_batch_int_text_and_valid_item(monkeypatch):
@@ -114,4 +121,17 @@ def test_mixed_batch_int_text_and_valid_item(monkeypatch):
         {"label": "a", "text": 999},
         {"label": "b", "text": "정상 문구"},
     ]})
-    assert [c["text"] for c in headcopy_gen.suggest("대본")] == ["정상 문구"]
+    assert [_flat(c["text"]) for c in headcopy_gen.suggest("대본")] == ["정상 문구"]
+
+
+def test_two_lines_always_two_and_balanced():
+    """★썸네일 문구는 두 줄이 전부다. AI가 한 줄로 뱉어도 여기서 접는다."""
+    from shopping_shorts.headcopy_gen import two_lines
+    out = two_lines("똥손도 샵 퀄리티 내는 다이소의 의외의 정체")
+    assert out.count("\n") == 1
+    a, b = out.split("\n")
+    assert a and b
+    assert abs(len(a) - len(b)) <= 6          # 한쪽만 길면 썸네일이 안 예쁘다
+    assert two_lines("한방에") == "한방에"     # 어절 하나면 접을 수 없다
+    assert two_lines("") == ""
+    assert two_lines("이미 두\n줄인것").count("\n") == 1

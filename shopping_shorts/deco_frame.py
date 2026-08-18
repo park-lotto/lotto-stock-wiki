@@ -29,6 +29,7 @@ PRESETS = {
 DEFAULTS = {
     "preset": "news_coral",
     "bar_h": 190,          # 상단 띠 높이(px)
+    "bottom_h": 0,         # 하단 띠 높이(px) — 0이면 없음
     "channel": "",         # 가짜 채널명
     "ad_badge": False,     # [광고] 뱃지
     "icons": True,         # ☰ / 🔍
@@ -68,11 +69,13 @@ def normalize(spec):
             s[k] = v
     if s["preset"] not in PRESETS:
         s["preset"] = DEFAULTS["preset"]
-    try:
-        s["bar_h"] = int(s["bar_h"])
-    except (TypeError, ValueError):
-        s["bar_h"] = DEFAULTS["bar_h"]
-    s["bar_h"] = max(0, min(400, s["bar_h"]))     # 0이면 띠 없음, 400 넘으면 화면을 먹는다
+    # 위·아래 띠는 **같은 규칙**으로 자른다 — 한쪽만 다르게 자르면 언젠가 어긋난다
+    for k in ("bar_h", "bottom_h"):
+        try:
+            s[k] = int(s[k])
+        except (TypeError, ValueError):
+            s[k] = DEFAULTS[k]
+        s[k] = max(0, min(400, s[k]))    # 0이면 띠 없음, 400 넘으면 화면을 먹는다
     for k in ("channel", "title", "views", "comments"):
         s[k] = str(s[k] or "").strip()[:60]
     s["ad_badge"] = bool(s["ad_badge"])
@@ -140,6 +143,9 @@ def render(spec):
             if s["ad_badge"]:
                 fb = _font("meta", 24)
                 d.text((W / 2 + tw / 2 + 16, cy), "[광고]", font=fb, fill=on_bar, anchor="lm")
+
+    if s["bottom_h"] > 0:
+        d.rectangle([0, H - s["bottom_h"], W, H - 1], fill=bar_col)
 
     # 제목·메타가 얹히는 흰 블록 — 내용이 있을 때만 그린다(빈 블록이 영상을 가리면 손해).
     y = bar_h
