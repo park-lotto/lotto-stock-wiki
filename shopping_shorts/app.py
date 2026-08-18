@@ -8698,17 +8698,25 @@ def _load_work_sources(work_id, cid):
     #   계정 전체 픽으로 폴백(회귀0).
     codes = None
     entry_by_code = {}       # shortcode → handoff 항목(추출 전에도 이름·썸네일·URL을 아는 유일한 출처)
+    work_known = False       # ★이 work의 재료 목록을 실제로 읽었는가(읽었으면 폴백 금지)
     if work_id:
         work = store.get_produce_work(work_id, customer_id=cid)
         if work and isinstance(work.get("state"), dict):
+            work_known = True
             handoff = work["state"].get("handoff") or []
             # 순서 보존(핸드오프 순서 = 재료 바구니 순서 → pick 카드의 이름·썸네일 정합).
             codes = [e.get("shortcode") for e in handoff
                      if isinstance(e, dict) and e.get("shortcode")]
             entry_by_code = {e["shortcode"]: e for e in handoff
                              if isinstance(e, dict) and e.get("shortcode")}
-    if not codes:
+    # ★폴백은 '이 work이 뭔지 모를 때'만이다(2026-08-18 사장님 제보 "또 홈데코랩이 뜬다").
+    #   work을 찾았는데 재료가 비어 있으면 그건 **아직 안 담은 것**이지 "계정 전체 도서관 픽을
+    #   대신 쓰라"는 뜻이 아니다. 예전엔 여기서 조용히 폴백해, 담은 적 없는 옛 도서관 픽
+    #   (실측: DbmCnyTTobw '홈데코랩')이 대표 재료로 앉아 대본이 그쪽으로 끌려갔다.
+    #   빈 목록이면 화면이 "1단계에서 담아주세요"를 말한다(build_aipick의 빈 상태).
+    if not codes and not work_known:
         codes = list(store.produce_pick_shortcodes(customer_id=cid))
+    codes = codes or []
     # ★후보 = '넘어온 영상(handoff)' 전부. 예전엔 wiki_list(도서관) ∩ codes로 좁혀,
     #   도서관에 저장 안 된 영상은 후보에서 통째로 탈락했다(2026-07-27 실측 사고:
     #   넘어온 3개 중 도서관에 없던 '홈스텐다드'가 빠지고, 도서관 즐겨찾기인 금손여신·
