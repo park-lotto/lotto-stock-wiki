@@ -2123,16 +2123,23 @@ async function loadTemplates(){
 function renderTemplateCards(){
   const box=document.getElementById('tplCards'); if(!box) return;
   const cur=(STATE.deco&&STATE.deco.template&&STATE.deco.template.id)||'';
+  // ★샘플은 크게 보여준다(2026-08-18 사장님 지시). 종전 52x92는 상단 띠가 몇 px짜리 선으로
+  //   뭉개져 12장이 전부 같은 회색칸으로 보였다 — 고를 수가 없다. 9:16 그대로 키우고 이름을 붙인다.
+  const CW=108, CH=Math.round(CW*16/9);   // 카드 한 장의 그림 크기(9:16 유지)
   const none=`<button type="button" class="tab${cur?'':' on'}" onclick="pickTemplate('')"
-    style="min-width:auto;padding:6px 12px;font-size:12px">없음</button>`;
+    style="min-width:auto;padding:0;width:${CW}px;height:${CH+22}px;display:flex;
+           flex-direction:column;align-items:center;justify-content:center;font-size:12px">없음</button>`;
   // ★카드 배경은 **밝은 회색**이어야 한다(2026-08-18 실화면 확인). 템플릿 PNG는 가운데가
   //   투명이라, 어두운 배경에 얹으면 띠까지 까맣게 묻혀 **12장이 전부 빈 검정칸으로 보인다**
   //   (테두리형만 겨우 보였다). 실제로는 영상 위에 얹히므로 '영상 자리'를 밝게 깔아준다.
   // ★object-fit은 contain — cover면 9:16을 카드 비율에 맞춰 잘라내 띠가 화면 밖으로 나간다.
   box.innerHTML = none + TPL_LIST.map(t=>
     `<button type="button" class="tab${cur===t.id?' on':''}" onclick="pickTemplate('${t.id}')" title="${esc(t.name)}"
-      style="min-width:auto;padding:0;overflow:hidden;width:52px;height:92px;background:#c9ced6;position:relative">
-      <img src="${t.url}" alt="${esc(t.name)}" style="width:100%;height:100%;object-fit:contain;display:block"></button>`).join('');
+      style="min-width:auto;padding:0;overflow:hidden;width:${CW}px;position:relative">
+      <span style="display:block;width:100%;height:${CH}px;background:#c9ced6">
+        <img src="${t.url}" alt="${esc(t.name)}" style="width:100%;height:100%;object-fit:contain;display:block"></span>
+      <span style="display:block;font-size:11px;line-height:22px;height:22px;white-space:nowrap;
+                   overflow:hidden;text-overflow:ellipsis;padding:0 4px">${esc(t.name)}</span></button>`).join('');
   const cs=(STATE.deco&&STATE.deco.template&&STATE.deco.template.span)||'full';
   const radio=document.querySelector('input[name="tplSpan"][value="'+cs+'"]');
   if(radio) radio.checked=true;
