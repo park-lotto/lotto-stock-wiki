@@ -13,6 +13,14 @@
     --accent:#37e0bd;--accent2:#1f9e7a;--fire:#ff6b6b;--ok:#37e0bd;--gold:#f0c453;
     --inset:#0c1412;--sel-bg:linear-gradient(90deg,#123a30,#0c221c);--sel-fg:#6ff0d6;
     --grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--hover:#131d19;color-scheme:dark;}
+  /* ★쇼츠 미리보기 비율(2026-08-19 사장님 "유튜브 미리보기 크기가 안 맞는다 · 쇼츠 내용도 잘 안 보임").
+     원인: 썸네일(.card img)·재생(.thumb-video)·유튜브 iframe 폴백 **세 곳이 각자 height:220px**를
+     따로 적고 있었다. 쇼츠는 9:16(세로)인데 220px는 카드 폭(210~250px) 기준 거의 정사각이라
+       · 썸네일 <img>는 object-fit:cover라 위아래를 **잘라냈고**(훅 문구가 잘리는 원인)
+       · 유튜브 iframe은 잘라내는 대신 **레터박스**로 쪼그라들었다(크기가 안 맞아 보이던 원인)
+     같은 값을 세 군데 적으면 언젠가 어긋난다(CLAUDE.md 0순위-B) → 변수 하나로 모은다.
+     aspect-ratio를 쓰므로 카드 폭이 달라져도 항상 9:16이 유지된다(고정 px가 아니다). */
+  :root{--shorts-ar:9/16;}
   :root[data-theme="light"]{--bg:#f4faf7;--panel:#ffffff;--line:#d5e6df;--txt:#0f1a16;--sub:#5c726d;
     --accent:#12b886;--accent2:#0ca678;--fire:#e0524a;--ok:#12b886;--gold:#b8860b;
     --inset:#eef7f3;--sel-bg:linear-gradient(90deg,#d8f2ea,#eafaf5);--sel-fg:#0a7d66;
@@ -45,9 +53,12 @@
   .cat.active{background:var(--accent);color:#fff;border-color:var(--accent)}
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
-  .card img{width:100%;height:220px;object-fit:cover;background:#000}
+  .card img{width:100%;aspect-ratio:var(--shorts-ar);height:auto;object-fit:cover;background:#000}
   .thumb{position:relative;cursor:pointer}
-  .thumb-video{width:100%;height:220px;object-fit:cover;background:#000;display:block}
+  /* 트렌드 주제 카드만 예외 — 여긴 쇼츠 재생 칸이 아니라 '이 주제로 터진 영상들'의
+     대표 이미지다. 9:16으로 늘리면 목록만 길어지고 얻는 게 없어 옛 높이를 지킨다. */
+  .trend-card img{aspect-ratio:auto;height:220px}
+  .thumb-video{width:100%;aspect-ratio:var(--shorts-ar);height:auto;object-fit:cover;background:#000;display:block}
   .play-badge{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
               width:52px;height:52px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;
               font-size:20px;display:flex;align-items:center;justify-content:center;
@@ -2310,14 +2321,14 @@ async function _playViaMedia(img, videoId, platform, embedFn, viaProxy){
 function _embedYoutube(el, videoId){
   const f=document.createElement('iframe');
   f.src='https://www.youtube.com/embed/'+encodeURIComponent(videoId)+'?autoplay=1&playsinline=1';
-  f.style.cssText='width:100%;height:220px;border:0;display:block;background:#000';
+  f.style.cssText='width:100%;aspect-ratio:var(--shorts-ar);height:auto;border:0;display:block;background:#000';
   f.allow='autoplay; encrypted-media; picture-in-picture'; f.allowFullscreen=true;
   el.replaceWith(f);
 }
 function _embedTiktok(el, videoId){
   const f=document.createElement('iframe');
   f.src='https://www.tiktok.com/embed/v2/'+encodeURIComponent(videoId);
-  f.style.cssText='width:100%;height:220px;border:0;display:block;background:#000';
+  f.style.cssText='width:100%;aspect-ratio:var(--shorts-ar);height:auto;border:0;display:block;background:#000';
   f.allow='autoplay; encrypted-media; picture-in-picture'; f.allowFullscreen=true;
   el.replaceWith(f);
 }
@@ -2939,7 +2950,7 @@ async function renderTrendCards(){
     const pbadges = g.platforms.map(p=>PLAT_EMOJI[p]||'').join('');
     const thumb = thumbURL(rep.thumbnail, rep.shortcode);
     return `
-    <div class="card">
+    <div class="card trend-card">
       <div class="thumb"><img src="${thumb}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'"></div>
       <div class="body" style="padding:8px">
         <div style="font-weight:600">${esc(g.subjectKo)}${zh?` <span style="color:var(--sub);font-weight:400">· ${esc(zh)}</span>`:''}</div>
