@@ -141,3 +141,43 @@ def test_우승예시_금지문구에_구체소재가_없다():
     from shopping_shorts import bank_assemble
     src = inspect.getsource(bank_assemble.winners_block)
     assert "주방 가림막" not in src, "금지 문구가 구체 소재를 단정하면 모델이 그것을 우리 소재로 읽는다"
+
+
+def _fake_store():
+    class _S:
+        def pick_spine_for_category(self, c): return {"name": "x", "situation_type": "y"}
+        def list_pattern_items(self, **k): return []
+        def list_pattern_sources(self, **k): return []
+    return _S()
+
+
+def test_은행은_재료를_압도하지_못한다(monkeypatch):
+    """★2026-08-18 사고의 물리적 원인 — 재료 750자 vs 은행 2,822자(3.8배).
+
+    그 상태에선 은행 안의 구체 소재 하나만 있어도 대본이 그쪽으로 끌려간다
+    (재료가 전부 네일펜인데 A안이 통째로 '주방 기름 가림막').
+    예산을 넘으면 **뒤 블록부터 통째로** 뺀다 — 뒤로 갈수록 실제 문장이라 소재를 흘린다.
+    """
+    from shopping_shorts import bank_assemble as B
+    monkeypatch.setattr(B, "spine_charter", lambda s: "뼈대" * 50)      # 100자
+    monkeypatch.setattr(B, "parts_block", lambda s, k: "말버릇" * 100)   # 300자
+    monkeypatch.setattr(B, "content_block", lambda s: "전개" * 200)      # 400자
+    monkeypatch.setattr(B, "winners_block", lambda s, c: "ZZWIN" * 240)  # 1200자
+    full = B.assemble_bank_context(_fake_store(), "홈템")
+    tight = B.assemble_bank_context(_fake_store(), "홈템", source_chars=300)  # 예산 450자
+    assert len(tight) < len(full), "예산을 걸었는데 안 줄었다"
+    assert "ZZWIN" not in tight, "가장 소재를 흘리기 쉬운 뒤 블록부터 빠져야 한다"
+    assert "뼈대" in tight, "스파인(뼈대)은 무슨 일이 있어도 남아야 한다"
+    assert "[대본 1]" in tight, "못 박기는 잘려도 항상 붙어야 한다"
+
+
+def test_예산을_안_주면_종전_그대로다(monkeypatch):
+    """옛 호출부(source_chars 없음)는 동작이 바뀌면 안 된다 — 회귀 0."""
+    from shopping_shorts import bank_assemble as B
+    monkeypatch.setattr(B, "spine_charter", lambda s: "뼈대")
+    monkeypatch.setattr(B, "parts_block", lambda s, k: "말버릇")
+    monkeypatch.setattr(B, "content_block", lambda s: "전개")
+    monkeypatch.setattr(B, "winners_block", lambda s, c: "우승예시")
+    out = B.assemble_bank_context(_fake_store(), "홈템")
+    for kw in ("뼈대", "말버릇", "전개", "우승예시"):
+        assert kw in out

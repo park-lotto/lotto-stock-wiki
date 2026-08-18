@@ -2393,6 +2393,15 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         # [바꾸기] 부분 재생성(/api/script/beat/regen)도 **같은 함수**를 쓴다.
         _src, _facts_block, _job, _jid, _scene_block = _materials_for_generate(
             it, body, store, _cid(request))
+        # ★재료 분량을 알고 나서 은행을 다시 짠다(2026-08-18). 위(2351)에서는 재료를 아직
+        #   몰라 예산을 못 건다 — 그대로 두면 은행이 재료를 압도한 채 프롬프트에 실린다
+        #   (실측 사고: 재료 750자 vs 은행 2,822자 → 대본이 은행 소재로 끌려감).
+        #   여기서 source_chars를 넘겨 은행이 재료의 1.5배를 넘지 않게 자른다.
+        if _bank_ctx:
+            _sc = sum(len((s.get("full_text") or "")) for s in (_src or [])[:3])
+            if _sc:
+                _bank_ctx = bank_assemble.assemble_bank_context(
+                    store, it.get("category") or "", source_chars=_sc) or _bank_ctx
         _styled = script_generate.generate_by_styles(
             _src, _picked, target_seconds=body.get("target_seconds") or 30,
             bank_context=_bank_ctx, facts_block=_facts_block)
@@ -11044,7 +11053,11 @@ def api_script_beat_regen(request: Request, body: dict):
 
     _bank_ctx = ""
     if store.get_setting("ping_pong_enabled", "") == "1":
-        _bank_ctx = bank_assemble.assemble_bank_context(store, it.get("category") or "") or ""
+        # 전체 생성과 **같은 예산**을 건다(0순위-B: 한쪽만 걸면 [바꾸기]로 만든 칸만
+        # 은행 소재로 끌려가 전체와 결이 어긋난다).
+        _sc = sum(len((s.get("full_text") or "")) for s in (_src or [])[:3])
+        _bank_ctx = bank_assemble.assemble_bank_context(
+            store, it.get("category") or "", source_chars=_sc) or ""
 
     try:
         out = script_generate.regen_one_beat(
