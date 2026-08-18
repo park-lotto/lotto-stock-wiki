@@ -3567,9 +3567,14 @@ def _repick_weak_beats(beats, seg_map, call=_vault_call, min_fit=4):
     if not pool:
         return beats
     # 결(shot_role)을 함께 보여준다 — 아래 비트 줄의 '어울리는 결'과 대조할 수 있어야 한다.
+    # ★is_key를 후보에 표시한다(2026-08-18 사장님 "훅에 완성샷 중 제일 눈에 들어오는 걸").
+    #   1단계가 이미 '이 장면이 핵심인가'를 태깅해 두는데(채움률 62.9%), 슬롯 배치
+    #   (`_pick_for_slot`)는 그걸 쓰면서 **재픽만 안 썼다** — 또 같은 형태다(0순위-B).
+    #   그래서 재픽은 완성샷 중에서 아무거나 골랐다. 표시해 주면 고를 수 있다.
     cand_lines = "\n".join(
-        "[{sid}]{sr} 화면:{desc}{ch}{say}".format(
+        "[{sid}]{key}{sr} 화면:{desc}{ch}{say}".format(
             sid=sid,
+            key=" ★핵심" if seg_map[sid].get("is_key") else "",
             sr=(" 결:" + str(seg_map[sid].get("shot_role"))[:8])
                if seg_map[sid].get("shot_role") else "",
             desc=(seg_map[sid].get("scene_desc") or "")[:60],
@@ -3592,6 +3597,8 @@ def _repick_weak_beats(beats, seg_map, call=_vault_call, min_fit=4):
         "그 대사가 말하는 것을 실제로 보여주는 화면을 다시 골라라.\n"
         "- 대사의 핵심 동작·결과가 화면에 실제로 보이는 것을 고른다. 분위기만 비슷한 건 안 된다.\n"
         "- 대사가 감정·상황만 말해 가리키는 사물이 없으면(훅 등) **[역할:…]의 결**을 우선한다.\n"
+        "- ★같은 결이 여럿이면 **★핵심** 표시가 붙은 것을 고른다 — 훅·CTA는 시선을 끄는 "
+        "가장 잘 보이는 그림이어야 한다(그냥 조건만 맞는 밋밋한 컷 말고).\n"
         "- 지금 화면보다 확실히 나은 후보가 없으면 그 비트는 **출력에서 빼라**(억지로 고르지 마라).\n"
         "- fit은 새로 고른 화면과 대사가 맞는 정도(1~5)를 솔직하게.\n"
         f"[비트]\n{beat_lines}\n\n[후보 화면]\n{cand_lines}\n\n출력은 picks 배열의 JSON만.")
