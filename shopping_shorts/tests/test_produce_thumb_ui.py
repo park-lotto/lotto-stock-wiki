@@ -274,6 +274,45 @@ renderThumbLayers = () => {}; renderThumbCanvas = () => {};
 """
 
 
+def _grapheme(js_literal):
+    return json.loads(_run_node(
+        _slice_source() + f"console.log(JSON.stringify(firstGrapheme({js_literal})));"))
+
+
+def test_direct_input_keeps_multibyte_emoji_intact():
+    """★이모지는 서로게이트 쌍(2칸)이라 charAt/slice로 자르면 깨진 글자가 된다.
+    사람이 보는 '한 글자'가 통째로 나와야 한다."""
+    assert _grapheme("'🔥'") == "🔥"
+    assert _grapheme("'😱😱'") == "😱", "여러 개를 넣으면 첫 하나만"
+    assert _grapheme("'  ⭐  '") == "⭐", "앞뒤 공백은 무시"
+
+
+def test_direct_input_keeps_zwj_family_emoji_whole():
+    """👨‍👩‍👧 같은 ZWJ 결합 이모지는 7칸이 넘는다 — 쪼개면 사람 셋으로 흩어진다."""
+    assert _grapheme("'👨‍👩‍👧'") == "👨‍👩‍👧"
+
+
+def test_direct_input_rejects_empty():
+    assert _grapheme("''") == ""
+    assert _grapheme("'   '") == ""
+
+
+def test_direct_input_adds_sticker_and_clears_box():
+    """직접 입력칸에서 얹으면 스티커가 생기고 입력칸은 비워진다(연속 입력 대비)."""
+    script = _slice_source() + """
+THUMB_STATE.layers = []; THUMB_STATE.sel = 0;
+renderThumbLayers = () => {}; renderThumbCanvas = () => {};
+const box = {value: '🥲'}, hint = {textContent: ''};
+document = {getElementById: id => id === 'thumbStickerInput' ? box
+                              : id === 'thumbStickerInputHint' ? hint : null};
+addThumbStickerFromInput();
+console.log(JSON.stringify({emoji: THUMB_STATE.layers[0].emoji, left: box.value}));
+"""
+    out = json.loads(_run_node(script))
+    assert out["emoji"] == "🥲", "목록에 없는 이모지도 얹혀야 한다"
+    assert out["left"] == "", "입력칸이 안 비워지면 다음 것을 또 치기 번거롭다"
+
+
 def test_preset_does_not_destroy_selected_sticker():
     """★스티커를 고른 채 색 프리셋을 누르면 빈 글자 레이어로 바뀌어 조용히 사라졌다."""
     script = _slice_source() + _STICKER_SEL + """
