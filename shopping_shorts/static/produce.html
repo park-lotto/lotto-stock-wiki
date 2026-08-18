@@ -957,9 +957,19 @@
              ②목소리 바꾸기는 접힌 채 그 아래 — 지금 성우 이름을 요약에 띄운다
              ③자막없이·발음교정은 '그 밖 설정'으로 묶어 첫 화면에서 뺀다
            ══════════════════════════════════════════════════════════════════ -->
-      <!-- ① 완성 음성 미리보기 — 이 단계의 주인공. renderTtsBeats()가 이 안을 통째로 다시
-           그리므로(6340줄) 안쪽은 건드리지 않는다. 자리만 맨 위로 올렸다. -->
-      <div id="ttsBeats" style="margin:14px 0 4px">
+      <!-- ══════════════════════════════════════════════════════════════════
+           ★2단 배치 (2026-08-18 사장님 "오른쪽에 성우들 보이게 / 목소리 바꾸기 편하게")
+           실측 문제: 음성이 만들어진 뒤 장면 목록이 왼쪽 절반만 쓰고 **오른쪽이 통째로 빈다**
+           (캡처의 빨간 네모). 성우는 접힌 `details` 안이라 바꾸려면 두 번 눌러야 했다.
+           고친 방식: [좌=완성본·장면목록 | 우=성우 고르기(상시 노출·sticky)].
+           ⚠️ id는 하나도 안 지운다 — voiceUI·voiceHint·voiceControls·presetCards·
+              curVoiceName·noVoice·openVoiceTune 전부 JS가 참조 중이다.
+           ══════════════════════════════════════════════════════════════════ -->
+      <div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;margin-top:12px">
+      <!-- ◀ 좌: 완성 음성 미리보기 — 이 단계의 주인공. renderTtsBeats()가 이 안을 통째로 다시
+           그리므로 안쪽은 건드리지 않는다. -->
+      <div style="flex:1 1 520px;min-width:300px">
+      <div id="ttsBeats" style="margin:2px 0 4px">
         <!-- ★대기 상태 안내는 **프레임 오른쪽**에 둔다(2026-08-18). 예전엔 220px 프레임 안에
              글을 우겨넣어 4줄로 접히고, 그 오른쪽 1357px(줄 폭의 86%)이 통째로 비었다(실측).
              음성이 만들어지면 renderTtsBeats가 그 자리를 장면 목록으로 채우므로, 대기 때도
@@ -970,14 +980,20 @@
           </div>
           <div style="flex:1 1 320px;min-width:280px;display:flex;flex-direction:column;justify-content:center;gap:10px;padding:16px 18px;border:1px dashed var(--line);border-radius:10px;background:var(--inset);box-sizing:border-box">
             <div style="font-size:15px;font-weight:800;color:var(--txt)">아직 완성 음성이 없어요</div>
-            <div class="hint" style="line-height:1.6">아래 <b>🎙 목소리 바꾸기</b>에서 성우를 고르고<br><b>[이 음성으로 전체 생성]</b>을 누르면<br>여기에 <b>▶ 완성본 전체 듣기</b>와 장면별 목록이 생깁니다.</div>
+            <div class="hint" style="line-height:1.6">오른쪽 <b>🎙 목소리 바꾸기</b>에서 성우를 고르고<br><b>[이 음성으로 전체 생성]</b>을 누르면<br>여기에 <b>▶ 완성본 전체 듣기</b>와 장면별 목록이 생깁니다.</div>
           </div>
         </div>
       </div>
-      <!-- ② 목소리 바꾸기 — 접힌 채. summary에 **지금 성우**를 띄워 "뭐로 만들어졌는지"를
-           펼치지 않고도 알게 한다(#curVoiceName은 pickPreset/loadTtsBeats가 갱신). -->
-      <details style="margin:10px 0 0">
-        <summary style="cursor:pointer;font-weight:600;padding:10px 0;min-height:44px;box-sizing:border-box;display:flex;align-items:center;gap:6px;flex-wrap:wrap">🎙 목소리 바꾸기 <span id="curVoiceName" style="font-weight:400;color:var(--sub)">— 기본 성우로 완성됨</span></summary>
+      </div><!-- ◀ 좌 끝 -->
+      <!-- ▶ 우: 성우 고르기 — **항상 펼쳐 둔다**(2026-08-18). 예전엔 접힌 `details`라
+           성우를 바꾸려면 ①펼치기 ②고르기 ③생성 = 세 번이었고, 그 사이 이 자리는 빈 채였다.
+           sticky라 장면 목록을 아래로 훑어도 성우 칸이 따라온다.
+           #curVoiceName은 그대로 둔다 — syncCurVoiceName()이 이 id 하나만 찾는다. -->
+      <!-- ★flex는 `0 1 360px` — 넓은 화면에선 360px 고정(0=안 늘어남), 좁은 화면에선 줄어든다
+           (1=줄어듦). `0 0`으로 두면 390px 폰에서 칸이 안 줄어 가로로 넘친다(실측). -->
+      <aside style="flex:0 1 360px;min-width:0;max-width:420px;position:sticky;top:8px;border:1px solid var(--line);border-radius:12px;background:var(--inset);padding:14px;box-sizing:border-box">
+        <div style="font-weight:800;font-size:15px;display:flex;align-items:center;gap:6px">🎙 목소리 바꾸기</div>
+        <div id="curVoiceName" style="font-size:12px;color:var(--sub);margin-top:3px">— 기본 성우로 완성됨</div>
       <!-- ★좌우를 뒤집었다(2026-08-18). 예전엔 [설정 | 성우카드] 순서라, 성우를 고르기 전
            왼쪽 큰 칸이 안내문 한 줄(높이 47px)만 담은 채 폭 1226px을 먹어 **세로 381px짜리
            빈 구멍**이 생겼다(실측). 순서를 [성우카드 | 설정]으로 바꾸면 먼저 할 일(고르기)이
@@ -987,14 +1003,15 @@
            폭 1226px을 잡은 채 높이는 47px뿐이라, 420px짜리 성우카드와 **367px 어긋난다**
            (좌우 뒤집기만으로는 안 없어졌다 — 실측으로 확인). 성우를 고르면 이 줄이 사라지고
            (#voiceHint display:none, pickPreset) 오른쪽 칸을 설정이 실제 내용으로 채운다. -->
-      <div id="voiceHint" class="hint" style="margin-top:8px;padding:12px 14px;border:1px dashed var(--line);border-radius:9px;background:var(--inset)">아래에서 <b>성우</b>를 고르면 오른쪽에 속도·미리듣기 설정이 나타납니다.</div>
-      <div id="voiceUI" style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin-top:8px">
-        <!-- ◀ 좌: 성우 카드 (⭐베스트 5 상시 + ＋더보기로 나머지 9명) — 먼저 하는 일 -->
-        <div style="flex:0 0 320px;min-width:260px;max-width:360px">
+        <div id="voiceHint" class="hint" style="margin-top:8px;padding:10px 12px;border:1px dashed var(--line);border-radius:9px">아래에서 <b>성우</b>를 고르면 속도·미리듣기 설정이 나타납니다.</div>
+      <!-- ★한 칸 안에서는 세로로 쌓는다 — 360px 폭에 카드와 설정을 좌우로 나누면 둘 다 좁아진다. -->
+      <div id="voiceUI" style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
+        <!-- ① 성우 카드 (⭐베스트 5 상시 + ＋더보기로 나머지 9명) — 먼저 하는 일 -->
+        <div>
           <div id="presetCards">불러오는 중…</div>
         </div>
-        <!-- ▶ 우: 미리듣기·설정 (성우를 고르면 나타난다) -->
-        <div style="flex:1 1 300px;min-width:280px;position:sticky;top:8px">
+        <!-- ② 미리듣기·설정 (성우를 고르면 나타난다) -->
+        <div>
           <div id="voiceControls" style="display:none">
           <div style="font-size:12px;color:var(--sub)">속도</div>
           <div id="speedBtns" style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px"></div>
@@ -1019,12 +1036,11 @@
             </div>
           </details>
           <button onclick="previewVoice()" class="btn-prev" style="padding:8px 14px;margin-right:8px" title="이 성우·설정으로 대본 일부만 짧게 들어봅니다 (완성본 아님)">🎧 목소리만 미리듣기</button>
-          <button onclick="applyVoice()" class="btn-next" style="padding:8px 16px" title="이 성우로 대본 전체 음성을 만듭니다 — 완성되면 아래 미리보기에서 ▶ 완성본 전체 듣기">이 음성으로 전체 생성</button>
+          <button onclick="applyVoice()" class="btn-next" style="padding:8px 16px" title="이 성우로 대본 전체 음성을 만듭니다 — 완성되면 왼쪽에서 ▶ 완성본 전체 듣기">이 음성으로 전체 생성</button>
           <div id="voicePreview" style="margin-top:8px"></div>
           </div>
         </div>
       </div>
-      </details>
       <!-- ③ 그 밖 설정 — 자주 안 쓰는 것을 첫 화면에서 뺀다. 안의 id(noVoice·openVoiceTune)는
            그대로다: onNoVoice()와 관리자 노출 코드가 그 id로 찾는다(지우면 죽는다). -->
       <details style="margin:6px 0 0">
@@ -1037,6 +1053,8 @@
           <button id="openVoiceTune" style="display:none" class="btn-prev" onclick="window.open('/voice_tune','_blank')">🩺 발음교정 작업대 열기</button>
         </div>
       </details>
+      </aside><!-- ▶ 우 끝 -->
+      </div><!-- 2단 배치 끝 -->
       <!-- ★패널 안 '다음 단계' 버튼을 뺐다(2026-08-18 사장님 "두개는 중복이니까 하나만").
            화면 아래 공용 네비의 [다음 →]와 나란히 두 개가 떠 있었다. 공용 네비만 남겨
            모든 단계가 같은 자리·같은 버튼으로 넘어가게 한다.
