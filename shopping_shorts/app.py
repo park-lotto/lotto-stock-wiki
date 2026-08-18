@@ -4288,6 +4288,41 @@ async def api_admin_eleven_voice_register(request: Request):
     return {"ok": True, **res}
 
 
+@app.post("/api/admin/eleven-voices/preview")
+async def api_admin_eleven_voice_preview(request: Request):
+    """등록 전에 **우리 문장**으로 들어본다. 첫 1회만 실TTS(크레딧), 그 뒤엔 캐시 파일.
+
+    일레븐랩스 원본 preview_url은 보이스마다 언어·길이가 제각각이라 비교가 안 된다
+    (2026-08-18 사장님 "샘플이 이상한 것만 되어있다")."""
+    if (deny := _require_admin(request)) is not None:
+        return deny
+    from shopping_shorts import eleven_voices
+    body = await request.json()
+    voice_id = (body.get("voice_id") or "").strip()
+    if not voice_id:
+        return JSONResponse({"ok": False, "error": "voice_id 필요"}, status_code=400)
+    try:
+        _, cached = eleven_voices.make_preview(voice_id, force=bool(body.get("force")))
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": f"샘플 생성 실패: {e}"}, status_code=502)
+    return {"ok": True, "cached": cached,
+            "url": f"/api/admin/eleven-voices/preview/{voice_id}.mp3"}
+
+
+@app.get("/api/admin/eleven-voices/preview/{voice_id}.mp3")
+def api_admin_eleven_voice_preview_file(voice_id: str, request: Request):
+    if (deny := _require_admin(request)) is not None:
+        return deny
+    from shopping_shorts import eleven_voices
+    f = eleven_voices.preview_path(voice_id)
+    if not f.exists():
+        return JSONResponse({"ok": False}, status_code=404)
+    # no-cache: 같은 이름으로 다시 구울 수 있다(force) — 브라우저가 옛 소리를 들려주면
+    # "다시 만들었는데 그대로"가 된다(2026-07-17 샘플 캐시 실사고와 같은 함정).
+    return FileResponse(str(f), media_type="audio/mpeg",
+                        headers={"Cache-Control": "no-cache"})
+
+
 @app.delete("/api/admin/eleven-voices/{group_id}")
 def api_admin_eleven_voice_delete(group_id: str, request: Request):
     """등록 성우 삭제. origin='library'만 지운다 — 큐레이션 14그룹은 이 경로로 못 지운다."""
