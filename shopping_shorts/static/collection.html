@@ -158,7 +158,13 @@ async function _openSendModal(picks){
   _overlay(
     `<div style="font-weight:800;font-size:16px;margin-bottom:4px">🎬 어디로 보낼까요?</div>
      <div style="color:#aaa;font-size:13px;margin-bottom:12px">영상 ${picks.length}개</div>
-     <button onclick="_doSend('new')" style="width:100%;padding:12px;background:#1f6feb;color:#fff;border:none;border-radius:10px;font-weight:800;font-size:15px;cursor:pointer">➕ 새 작업으로 보내기</button>
+     <div style="border:1px solid #1f6feb;border-radius:10px;padding:10px;margin-bottom:2px">
+       <input id="newWorkName" type="text" maxlength="60" placeholder="새 작업 이름 (예: 게임패드 거치대)"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();_doSend('new');}"
+              style="width:100%;box-sizing:border-box;padding:10px;background:#0d1117;color:#e6edf3;border:1px solid #444;border-radius:8px;font-size:14px;margin-bottom:8px">
+       <button onclick="_doSend('new')" style="width:100%;padding:12px;background:#1f6feb;color:#fff;border:none;border-radius:10px;font-weight:800;font-size:15px;cursor:pointer">➕ 새 작업으로 보내기</button>
+       <div style="color:#888;font-size:12px;margin-top:6px">비워두면 대본을 뽑을 때 자동으로 이름이 붙어요.</div>
+     </div>
      <div style="color:#888;font-size:12px;margin:14px 0 2px">만들던 작업에 이어서 넣기</div>
      ${rows || '<div style="color:#777;font-size:13px;padding:8px 0">진행 중인 작업이 없습니다</div>'}`);
 }
@@ -167,6 +173,18 @@ function _doSend(target){
   if(!picks.length) return;
   sessionStorage.setItem('produce_handoff', JSON.stringify(picks));
   sessionStorage.setItem('produce_mix_urls', JSON.stringify(picks.map(p=>p.url).filter(Boolean)));
+  // 새 작업 이름(2026-08-19 사장님 요청): 여기서 미리 지어 보내면 '(제목 없음)'으로
+  // 쌓이지 않는다. 제작소가 이 값을 title_manual로 심는다(=사이드바 ✏와 같은 자리라
+  // 대본을 뽑아도 안 덮인다, 0순위-B: 제목 판정은 store._work_title 한 곳).
+  // 비우면 저장 안 함 → 종전대로 대본 앞 20자 자동 제목.
+  if(target === 'new'){
+    const el = document.getElementById('newWorkName');
+    const nm = el && el.value ? el.value.trim().slice(0, 60) : '';
+    try{
+      if(nm) sessionStorage.setItem('produce_new_name', nm);
+      else sessionStorage.removeItem('produce_new_name');   // 옛 값 잔류 금지
+    }catch(e){}
+  }
   _closeOverlay();
   // 새 작업은 ?new=1(직전 작업을 안 불러온다), 이어서는 ?work=<id> — 둘 다 이미 있는 길이다.
   location.href = (target === 'new') ? '/produce?new=1'
