@@ -3216,6 +3216,9 @@ def api_mix_status(job_id: str, request: Request):
             "preview_error": preview_error,
             "clean_status": clean_status,
             "clean_error": clean_error,
+            # 자막제거 확인용 소스 개수(2026-08-18) — 3단계가 "소스 1/N"으로 넘겨보는 데만 쓴다.
+            # 경로는 안 내보내고 개수만. 청소본이 있으면 그 개수, 없으면 담은 URL 개수.
+            "clean_source_count": len(job.get("clean_sources") or {}) or len(job.get("urls") or []),
             # 지워진 자막 위치(2026-07-25): 5단계 꾸미기가 자막 자동정렬·'원본 자막 있던 자리' 마커에 쓴다.
             # 좌표(%)뿐이라 안전 — 소스 경로 등 내부정보는 안 실린다.
             "clean_regions": job.get("clean_regions"),
@@ -4023,14 +4026,20 @@ def api_produce_mix_clean(background_tasks: BackgroundTasks, body: dict):
 
 
 @app.get("/api/produce/mix/clean_thumb/{job_id}")
-def api_produce_mix_clean_thumb(job_id: str, kind: str = "original"):
-    """대표 소스(첫 소스)의 중간지점 프레임 PNG. kind=original|clean.
-    clean은 clean_status=ready + 클린파일 존재일 때만(아니면 404). 양쪽 같은 t로 정렬."""
+def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
+                                si: int = 0, pos: float = 0.5):
+    """소스 si의 pos(0~1) 지점 프레임 JPG. kind=original|clean.
+    clean은 clean_status=ready + 클린파일 존재일 때만(아니면 404). 양쪽 같은 t로 정렬.
+    ★si·pos 추가(2026-08-18 사장님 "한 장만 샘플이라 다음 것도 넘겨 보고 싶다"):
+      자막제거는 **이미 끝난 파일**에서 뽑을 뿐이라 유료 재호출이 없다 — ffmpeg seek 1회.
+      파일명에 si·pos를 넣어야 서로 덮어쓰지 않는다(예전엔 '{kind}.jpg' 고정이었다)."""
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     work = _MIX_WORK_DIR / job_id
-    vid = _source_video_id(0)
+    si = max(0, int(si))
+    pos = min(0.98, max(0.02, float(pos)))
+    vid = _source_video_id(si)
     if kind == "clean":
         src = (job.get("clean_sources") or {}).get(vid)
         if job.get("clean_status") != "ready" or not src or not Path(src).exists():
@@ -4041,8 +4050,8 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original"):
         except Exception:
             return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
     dur = frame_extract._probe_duration(src) or 2.0
-    frame = frame_extract.extract_frame_at(src, work / "clean_thumb", dur / 2,
-                                           filename=f"{kind}.jpg")
+    frame = frame_extract.extract_frame_at(src, work / "clean_thumb", dur * pos,
+                                           filename=f"{kind}_{si}_{int(pos * 100)}.jpg")
     if not frame:
         return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
     return FileResponse(str(frame), media_type="image/jpeg")
