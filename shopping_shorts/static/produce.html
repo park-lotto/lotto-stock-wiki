@@ -6700,20 +6700,46 @@ async function loadElevenVoices(){
     return;
   }
   if(!(d.voices||[]).length){ el.innerHTML='<span class="hint">계정에 담긴 보이스가 없습니다.</span>'; return; }
+  // ★일레븐랩스 원본 preview_url은 안 쓴다(2026-08-18 사장님 "샘플이 이상한 것만 되어있다").
+  //   그건 보이스 주인이 올린 클립이라 영어거나 1초짜리이거나 아예 없어서 **성우끼리 비교가
+  //   안 된다**. 대신 '🎧 들어보기'가 큐레이션 14명과 같은 문장·같은 톤(stable)으로 구워준다.
+  // ★한 줄에 다 넣지 않는다 — 이 칸은 360px이라 [이름|오디오|버튼]을 가로로 늘어놓으면
+  //   실화면에서 이름이 두 줄로 접히고 버튼 글자가 세로로 쪼개졌다(사장님 캡처).
   el.innerHTML = d.voices.map(v=>{
     const reg = v.registered_group;
+    const vid = esc(v.voice_id);
     const btn = reg
-      ? `<button class="btn-prev" style="padding:3px 8px" onclick="removeElevenVoice('${esc(reg)}')">등록됨 · 빼기</button>`
-      : `<button class="btn-next" style="padding:3px 10px" onclick="addElevenVoice(this,'${esc(v.voice_id)}','${esc(v.name).replace(/'/g,"\\'")}')">＋ 추가</button>`;
-    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)">
-      <div style="flex:1 1 auto;min-width:0">
+      ? `<button class="btn-prev" style="padding:4px 10px;min-height:32px" onclick="removeElevenVoice('${esc(reg)}')">빼기</button>`
+      : `<button class="btn-next" style="padding:4px 12px;min-height:32px" onclick="addElevenVoice(this,'${vid}','${esc(v.name).replace(/'/g,"\\'")}')">＋ 추가</button>`;
+    return `<div style="padding:8px 0;border-bottom:1px solid var(--line)">
+      <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap">
         <b style="font-size:13px">${esc(v.name)}</b>
-        <span class="hint" style="margin-left:6px">${esc(v.category||'')}</span>
+        <span class="hint">${esc(v.category||'')}</span>
+        ${reg?'<span class="hint" style="color:var(--ok)">· 등록됨</span>':''}
       </div>
-      ${v.preview_url?`<audio src="${esc(v.preview_url)}" controls preload="none" style="height:28px;max-width:150px"></audio>`:''}
-      ${btn}
+      <div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap">
+        <button class="btn-prev" style="padding:4px 10px;min-height:32px" onclick="tryoutElevenVoice(this,'${vid}')">🎧 들어보기</button>
+        ${btn}
+        <span id="elvMsg-${vid}" class="hint"></span>
+      </div>
+      <div id="elvAudio-${vid}"></div>
     </div>`;
   }).join('');
+}
+// 등록 전에 우리 문장으로 들어본다. 첫 1회만 실TTS(크레딧), 그 뒤엔 서버 캐시라 즉시.
+async function tryoutElevenVoice(btn, voiceId){
+  const msg=document.getElementById('elvMsg-'+voiceId);
+  const slot=document.getElementById('elvAudio-'+voiceId);
+  btn.disabled=true; if(msg) msg.textContent='만드는 중…';
+  try{
+    const r=await fetch('/api/admin/eleven-voices/preview',{method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({voice_id:voiceId})});
+    const d=await r.json();
+    if(!d.ok){ if(msg) msg.textContent=d.error||'실패'; btn.disabled=false; return; }
+    if(msg) msg.textContent = d.cached ? '' : '새로 만들었어요';
+    if(slot) slot.innerHTML=`<audio src="${esc(d.url)}?t=${Date.now()}" controls autoplay style="width:100%;height:32px;margin-top:6px"></audio>`;
+  }catch(e){ if(msg) msg.textContent='실패: '+e; }
+  btn.disabled=false;
 }
 async function addElevenVoice(btn, voiceId, name){
   // 샘플 4개를 실제로 굽느라 20초 이상 걸린다 — 누른 티가 안 나면 두 번 누른다.
