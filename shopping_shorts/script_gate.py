@@ -53,14 +53,26 @@ DEFAULT_CHARS_PER_30S = 135      # 스타일에 실측값이 없을 때만(일�
 #   라이브 보이스의 실측 속도는 **8.19자/초**(edit_plan.py:4226, 라이브 렌더 20건)라
 #   300자 = 약 37초다. 즉 "30초짜리"를 시켜놓고 44초 대본을 받고 있었다.
 #   밀도는 스타일의 색이지만 길이는 플랫폼 규격이다 — 규격이 이긴다.
-SPEECH_CHARS_PER_SEC = 8.19
+# ★상수를 여기 또 박지 않는다(2026-08-18). 말속도는 edit_plan이 이미 정한다 —
+#   _SYLLABLES_PER_SEC(5.7, 성우 14명 실합성 측정) × _speech_speed()(라이브 배속 1.44).
+#   여기에 8.19를 따로 적어두면 배속을 튜닝한 날 화면·판정·계획이 서로 다른 초를 말한다
+#   (같은 판단이 두 곳에 적히면 반드시 어긋난다 = 0순위-B). 값 하나만 빌려 쓴다.
+def _speech_cps():
+    from shopping_shorts import edit_plan as _ep
+    return _ep._SYLLABLES_PER_SEC * _ep._speech_speed()
+
+
+def __getattr__(name):          # 모듈 속성 지연 평가 — import 순환을 피한다
+    if name == "SPEECH_CHARS_PER_SEC":
+        return _speech_cps()
+    raise AttributeError(name)
 
 
 def est_seconds(text):
     """이 문장이 우리 보이스로 몇 초인가(실측 8.19자/초). 화면 표시·판정이 **같은 상수**를
     쓰게 하려고 여기에 둔다(0순위-B) — 화면이 따로 계산하면 언젠가 다른 수를 말한다."""
     n = len(norm(text or ""))
-    return round(n / SPEECH_CHARS_PER_SEC, 1) if n else 0.0
+    return round(n / _speech_cps(), 1) if n else 0.0
 
 
 def density_target(style, seconds=30):
@@ -69,7 +81,7 @@ def density_target(style, seconds=30):
     "시킨 대로 썼는데 반려"가 난다."""
     sec = max(5, min(int(seconds or 30), 90))
     tgt = int(((style or {}).get("chars_per_30s") or DEFAULT_CHARS_PER_30S) * sec / 30)
-    return max(1, min(tgt, int(SPEECH_CHARS_PER_SEC * sec)))
+    return max(1, min(tgt, int(_speech_cps() * sec)))
 
 
 def norm(s):
@@ -273,7 +285,7 @@ def check(style, beats, facts_text="", product="", seconds=30):
     tgt = density_target(style, seconds)
     # ★위 천장(hi)은 말속도 환산 길이를 절대 못 넘는다 — 안 그러면 245자로 시켜놓고
     #   343자(=42초)까지 통과시켜 "30초짜리"가 다시 40초가 된다(2026-08-18).
-    _cap = int(SPEECH_CHARS_PER_SEC * max(5, min(int(seconds or 30), 90)))
+    _cap = int(_speech_cps() * max(5, min(int(seconds or 30), 90)))
     lo, hi = int(tgt * DENSITY_LO), min(int(tgt * DENSITY_HI), _cap)
     n = len(norm(full))
     # ★방향을 말해준다(2026-08-18 사장님 "40초 대본이 나오는데 고친 거 아니었나").
