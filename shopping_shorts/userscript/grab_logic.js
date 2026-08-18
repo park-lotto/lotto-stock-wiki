@@ -1,6 +1,6 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-08-18-a  (채널수집 버튼 확장 — 인스타·틱톡 + 유튜브·쓰레드)
+// 로직 버전: 2026-08-18-b  (⭐레퍼런스 등록 — 영상+채널 한 번에, 랭킹 즉시 반영)
 (function () {
   "use strict";
   // ── 중복 실행 방지 → '새 로직이 이긴다'로 교체(2026-08-18 실사고) ──────────
@@ -545,13 +545,36 @@
       });
   }
   function syncExtraBtns() {
-    if (!_snsHost()) return;
     var lens = document.getElementById("ss-lens-btn");
-    if (isSinglePost()) {
+    if (_snsHost() && isSinglePost()) {
       _miniBtn("ss-lens-btn", "🔍 렌즈", "이 영상으로 원본·유사 레퍼런스 역추적(화면 안에서)", 122, "#37b0e0",
                function () { _lensRun(location.href); });
     } else if (lens) { lens.remove(); }
     var coll = document.getElementById("ss-coll-btn"); if (coll) coll.remove();   // ⭐ 제거(담기와 중복)
+    // ── ⭐ 레퍼런스 등록(2026-08-18 사장님 "보다가 좋은 영상 발견하면 바로 반영해서 정렬")
+    //   담기(📥)는 내 즐겨찾기로만 가고, 채널수집(📌)은 다음 수집까지 기다려야 했다.
+    //   이 버튼은 **영상+채널을 한 번에** 넣고 그 영상을 지금 랭킹 스냅샷에 끼워 넣는다.
+    //   ★영상 페이지에서만 띄운다 — 피드·프로필에선 "어느 영상"이 정해지지 않는다.
+    var adopt = document.getElementById("ss-adopt-btn");
+    var wantAdopt = !!_chPlat() && _isVideoPage();
+    if (adopt && !wantAdopt) adopt.remove();
+    else if (!adopt && wantAdopt) {
+      _miniBtn("ss-adopt-btn", "⭐ 레퍼런스 등록",
+               "이 영상을 랭킹에 바로 넣고 채널도 등록합니다", 226, "#c9922e",
+               function () {
+                 window.open(BASE + "/api/reference/adopt?url=" + encodeURIComponent(location.href),
+                             "ss_adopt", "width=420,height=260");
+               });
+    }
+  }
+  // 이 화면이 '영상 한 편'인가 — 유튜브 쇼츠·watch, 인스타 릴스/게시물, 틱톡 video,
+  // 쓰레드 post. 채널수집(_chQuery)과 달리 프로필은 제외한다(등록할 영상이 없다).
+  function _isVideoPage() {
+    var p = location.pathname;
+    if (/\/(p|reel|reels|tv|video)\/[^/]+/.test(p)) return true;          // 인스타·틱톡
+    if (/^\/(shorts\/|watch|live\/)/.test(p)) return true;                 // 유튜브
+    if (location.host.indexOf("youtu.be") >= 0) return true;
+    return /^\/@[\w.\-]+\/post\//.test(p);                                // 쓰레드
   }
   function syncChannelBtn() {
     var b = document.getElementById("ss-chadd-btn");
