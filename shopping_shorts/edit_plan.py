@@ -2564,6 +2564,21 @@ def _beat_screen_secs(beat):
     return tot
 
 
+#: 채울 때 이 길이보다 짧은 컷은 뒤로 민다(막지는 않는다 — 재고가 동나면 쓴다).
+#  1.5초 근거(2026-08-18 실측): 라이브 컷 24개 중 1초 미만이 4개였고, 사장님이
+#  "눈이 아프다"고 한 구간이 정확히 0.8~1.3초 조각들이었다. 2초로 올리면 재고가 적은
+#  소재에서 채울 게 동나 재사용 폴백(같은 컷 반복)으로 떨어진다 — 그게 더 나쁘다.
+_MIN_CUT_SECONDS = 1.5
+
+
+def _seg_secs(s):
+    """세그먼트 길이(초). 값이 없으면 0."""
+    try:
+        return max(0.0, float(s.get("end") or 0) - float(s.get("start") or 0))
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def _fill_beat_screen_time(beats, seg_map, max_alts=None):
     """비트마다 **화면 길이 합 ≥ 대사 읽는 시간**이 되게 컷을 더 붙인다(2026-07-31).
 
@@ -2637,9 +2652,19 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
                     return 1
             return 0
 
+        # ★산만함 차단(2026-08-18 사장님 "짧은 거 여기저기서 붙여서 눈이 아프다").
+        #   실측(job 790bdd6dfe32): 컷 24개 평균 1.8초, **1초 미만 4개**, 8비트 중
+        #   5비트가 2~3개 소스 혼합 — 비트2는 s3(1.3초)→s1(2.4초)→s0(1.1초)로
+        #   1~2초마다 영상이 바뀌었다. 채우기가 '부족분만 채우고 어디서 가져올지는
+        #   안 따진' 결과다.
+        #   ①같은 소스를 **맨 앞 기준**으로 올린다(종전엔 세 번째 기준이라 힘이 없었다).
+        #     같은 영상에서 이어 쓰면 결이 안 튀고, 사장님 안("영상당 2장면씩")이 자연히 된다.
+        #   ②너무 짧은 조각은 뒤로 민다 — 막지는 않는다. 막으면 채울 게 동나 재사용
+        #     폴백(같은 컷 반복)으로 떨어지는데 그게 더 나쁘다(위 주석과 같은 판단).
         pool = sorted(seg_map.values(),
-                      key=lambda s: (_same_look(s), -_rel(s),
-                                     s.get("video_id") != home, s.get("start") or 0))
+                      key=lambda s: (s.get("video_id") != home,
+                                     _seg_secs(s) < _MIN_CUT_SECONDS,
+                                     _same_look(s), -_rel(s), s.get("start") or 0))
         alts = list(b.get("alternates") or [])
         for s in pool:
             if have >= need or len(alts) >= max_alts:
