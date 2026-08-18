@@ -138,3 +138,137 @@ def test_서버가_제대로_읽은_값은_덮지_않는다(db):
                _meta(views=100000), views=7)
     items, _at = Store(db).load_last_run()
     assert items[0]["views"] == 100000
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 2026-08-19 — "등록해도 기존 영상들이랑 동일한 포맷으로 저장되고 보이게 해줘"
+#
+# 실측한 증상(라이브 DB, shortcode DcIrfnOzHre):
+#     views 0 / followers 0 / grade None / caption 'Video by chae2home'
+# 원인은 adopt가 probe_grab_meta(yt-dlp)만 쓴 것 — yt-dlp는 로그인 없이 인스타를 읽어
+# 조회수·팔로워·캡션을 못 가져온다. 화면(index.html)은 값이 있을 때만 줄을 그리므로
+# (`${i.views? ...}`) 그 카드만 조회수·조회수당댓글·팔로워당댓글 줄이 통째로 빠졌다.
+#
+# 못박는 것: 인스타는 **정규 수집이 쓰는 fetch_reels**를 그대로 태워 값을 채운다(0순위-B).
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _reel(code="ABC123", **kw):
+    """instagram_playwright.fetch_reels가 돌려주는 모양(parse_reel_node 계약)."""
+    ts = (datetime.now(timezone.utc) - timedelta(hours=3)).isoformat()
+    out = {"shortcode": code, "url": f"https://www.instagram.com/reel/{code}/",
+           "timestamp": ts, "caption": "자석 네일펜 진짜 신기함",
+           "commentsCount": 9581, "likesCount": 4200, "videoViewCount": 569324,
+           "displayUrl": "real.jpg", "videoUrl": "", "duration": 29.0,
+           "ownerUsername": "chae2home", "ownerFullName": "채이홈",
+           "ownerFollowers": 342545}
+    out.update(kw)
+    return out
+
+
+def test_인스타는_수집경로로_지표를_채운다(db):
+    """yt-dlp가 0을 줘도 fetch_reels가 준 실제 값이 들어가야 한다.
+
+    이게 이 수정의 핵심 — 조회수·팔로워가 0이면 화면이 그 줄을 아예 안 그린다.
+    """
+    ytdlp_blank = {"ts": int((datetime.now(timezone.utc) - timedelta(hours=3)).timestamp()),
+                   "title": "Video by chae2home",      # yt-dlp 기본 문구
+                   "thumbnail": "ytdlp.jpg", "channel": "chae2home",
+                   "views": 0, "likes": 3, "comments": 9581, "followers": 0}
+    with patch("shopping_shorts.instagram_playwright.fetch_reels", return_value=[_reel()]):
+        meta, hit = ap._enrich_instagram_meta(
+            "https://www.instagram.com/reels/ABC123/", dict(ytdlp_blank))
+    assert hit is not None, "프로필에서 그 영상을 찾았어야 한다"
+    assert meta["views"] == 569324, "조회수가 0으로 남으면 화면에 조회수 줄이 안 그려진다"
+    assert meta["followers"] == 342545, "팔로워 0이면 팔로워당댓글 줄이 안 그려진다"
+    assert meta["title"] == "자석 네일펜 진짜 신기함", "'Video by ...' 기본문구를 실캡션이 밀어내야 한다"
+    assert meta["thumbnail"] == "real.jpg"
+    assert meta["channel"] == "채이홈", "카드에 뜨는 표시명은 한글 이름"
+    assert meta["_ig_username"] == "chae2home", "계정명은 따로 실어야 채널검색이 된다"
+
+
+def test_수집값이_yt_dlp의_0을_이긴다(db):
+    """0은 '값이 없다'는 뜻 — 진짜 값을 덮으면 안 된다(0순위-B: 정본은 한 곳)."""
+    with patch("shopping_shorts.instagram_playwright.fetch_reels", return_value=[_reel()]):
+        meta, _ = ap._enrich_instagram_meta(
+            "https://www.instagram.com/reels/ABC123/",
+            {"views": 0, "followers": 0, "channel": "chae2home"})
+    assert meta["views"] == 569324 and meta["followers"] == 342545
+
+
+def test_보강실패해도_등록은_살린다(db):
+    """스크레이퍼가 죽어도(계정 차단·세션만료) 등록 자체는 종전대로 돌아야 한다."""
+    base = {"views": 0, "channel": "chae2home", "comments": 5}
+    with patch("shopping_shorts.instagram_playwright.fetch_reels",
+               side_effect=RuntimeError("login wall")):
+        meta, hit = ap._enrich_instagram_meta("https://www.instagram.com/reels/ABC123/", dict(base))
+    assert hit is None and meta["views"] == 0, "실패하면 meta를 그대로 둔다"
+
+
+def test_다른영상은_가져오지_않는다(db):
+    """프로필엔 릴스가 여러 개 — shortcode가 맞는 것만 써야 한다.
+
+    안 그러면 등록한 영상에 옆 영상의 조회수가 붙는다(메모리: 렌즈썸네일 구글짝지음과 같은 함정).
+    """
+    others = [_reel(code="ZZZ999", videoViewCount=111), _reel(code="YYY888", videoViewCount=222)]
+    with patch("shopping_shorts.instagram_playwright.fetch_reels", return_value=others):
+        meta, hit = ap._enrich_instagram_meta(
+            "https://www.instagram.com/reels/ABC123/", {"views": 0, "channel": "chae2home"})
+    assert hit is None, "그 영상이 없으면 아무것도 안 가져와야 한다"
+    assert meta["views"] == 0, "남의 영상 조회수를 붙이면 안 된다"
+
+
+def test_계정명을_주소에서_뽑는다():
+    """프로필 경유 URL이면 주소만으로 계정을 안다 — yt-dlp가 실패해도 열 수 있다."""
+    assert ap._ig_username_from_url("https://www.instagram.com/chae2home/reel/ABC/") == "chae2home"
+    assert ap._ig_username_from_url("https://www.instagram.com/reel/ABC/") == "", "예약어는 계정이 아니다"
+    assert ap._ig_username_from_url("https://www.instagram.com/reels/ABC/") == ""
+
+
+def test_등급이_스냅샷_전체_기준으로_매겨진다(db):
+    """grade가 None이면 카드 채널명 옆이 빈 채로 남는다(실측: 채이홈 항목).
+
+    ★1건만 놓고 정규화하면 자기가 최대라 무조건 최고등급이 된다 —
+      합친 뒤에 한 번 매겨야 수집분과 같은 잣대가 된다.
+    """
+    store = Store(db)
+    # 먼저 수집분처럼 '아주 뜨거운' 항목을 스냅샷에 넣어둔다.
+    hot = ap._adopt_into_ranking(store, "instagram",
+                                 "https://www.instagram.com/reel/HOT1/",
+                                 _meta(comments=99999, views=100000))
+    assert hot is not None
+    # 그 다음 미지근한 항목을 등록한다.
+    mild = ap._adopt_into_ranking(store, "instagram",
+                                  "https://www.instagram.com/reel/MILD1/",
+                                  _meta(comments=1, views=100000))
+    assert mild is not None
+    items, _at = Store(db).load_last_run()
+    by = {i["shortcode"]: i for i in items}
+    assert by["HOT1"].get("grade"), "등급이 비면 카드에 등급 자리가 빈 채로 남는다"
+    assert by["MILD1"].get("grade"), "등급이 비면 카드에 등급 자리가 빈 채로 남는다"
+    assert by["HOT1"]["score"] > by["MILD1"]["score"], \
+        "합쳐서 매겨야 뜨거운 쪽이 더 높다(1건씩 매기면 둘 다 만점)"
+
+
+def test_표시명과_계정명을_따로_담는다(db):
+    """카드의 '이 채널 영상만 보기'는 username을 쓴다 — 표시명을 넣으면 0건이 된다."""
+    item = ap._adopt_into_ranking(
+        Store(db), "instagram", "https://www.instagram.com/reel/NAME1/",
+        _meta(channel="채이홈", _ig_username="chae2home"))
+    assert item["name"] == "채이홈" and item["username"] == "chae2home"
+
+
+def test_길이가_바로_카드에_뜬다(db):
+    """🎬 길이는 last_run이 아니라 reel_durations 캐시에서 붙는다(_attach_durations).
+
+    등록할 때 값을 들고 있으면 그 캐시에 넣어둬야 등록 직후에도 길이가 뜬다 —
+    안 넣으면 durfill 백필(최대 1시간에 1번)을 기다려야 한다.
+    """
+    store = Store(db)
+    ap._adopt_into_ranking(store, "instagram",
+                           "https://www.instagram.com/reel/DUR1/", _meta(duration=29))
+    assert Store(db).duration_map(["DUR1"]).get("DUR1") == 29.0
+
+    # 화면이 실제로 쓰는 결합 함수까지 태워서 확인한다(캐시에만 있고 안 붙으면 소용없다).
+    items = [{"shortcode": "DUR1"}]
+    ap._attach_durations(items, Store(db))
+    assert items[0]["duration"] == 29.0, "카드에 🎬 길이가 뜨려면 여기서 붙어야 한다"

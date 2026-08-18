@@ -8878,6 +8878,78 @@ def _analysis_state(store, shortcode):
     return None, {"state": "idle", "reason": "", "attempts": 0}
 
 
+def _ig_username_from_url(url):
+    """인스타 영상 URL → 그 영상 주인의 계정명(못 찾으면 "").
+
+    ★릴스 URL(/reel/CODE/)에는 계정명이 없다 — 프로필 경유 URL
+    (/{계정}/reel/CODE/)일 때만 주소만 보고 알 수 있다. 주소로 못 얻으면
+    호출부가 oEmbed/yt-dlp가 준 channel을 쓴다(같은 판단을 두 번 적지 않게
+    여기서는 '주소에서 얻을 수 있는가'만 답한다 — 0순위-B).
+    """
+    m = re.search(r"instagram\.com/([^/?#]+)/(?:reel|reels|p|tv)/", url or "", re.I)
+    if not m:
+        return ""
+    who = m.group(1).strip().lstrip("@")
+    # /reel/... 처럼 계정 자리에 예약어가 온 경우는 계정이 아니다.
+    return "" if who.lower() in ("reel", "reels", "p", "tv", "stories", "explore") else who
+
+
+def _enrich_instagram_meta(url, meta):
+    """인스타 1건의 지표를 **수집과 같은 경로**로 채운다(2026-08-19).
+
+    왜: adopt는 probe_grab_meta(yt-dlp)만 썼는데, yt-dlp는 로그인 없이 인스타를 읽어
+    **조회수·팔로워·캡션이 통째로 0/빈 값**으로 온다(실측: 채이홈 DcIrfnOzHre —
+    views 0 / followers 0 / caption 'Video by chae2home'). 그러면 화면이 조회수·
+    조회수당댓글·팔로워당댓글 줄을 아예 안 그려(index.html은 값이 있을 때만 그린다)
+    수동 등록분만 다른 포맷으로 보인다.
+
+    그래서 **정규 수집이 쓰는 fetch_reels를 그대로 태운다**(0순위-B: 같은 판단을 두 번
+    적지 않는다). 세션·프록시 로테이션·파싱이 전부 수집과 동일해져, 나온 값의 모양도
+    같아진다. 실패하면 meta를 그대로 둔다 — 등록 자체는 살린다.
+
+    반환: (meta, reel) — reel은 수집이 만드는 10키 dict(없으면 None).
+    """
+    code = _media_code(url)
+    if not code:
+        return meta, None
+    who = _ig_username_from_url(url) or (meta.get("channel") or "").strip().lstrip("@")
+    # ★계정명을 모르면 프로필을 열 수 없다 — 인스타 스크레이퍼는 계정 단위다.
+    #   (yt-dlp가 준 'chae2home' 같은 값이라도 있으면 그걸로 연다)
+    if not who:
+        return meta, None
+    try:
+        from shopping_shorts.instagram_playwright import fetch_reels as _pw_fetch_reels
+        reels = _pw_fetch_reels([who]) or []
+    except Exception as e:  # noqa: BLE001 — 보강 실패가 등록을 막지 않는다
+        import sys as _sys
+        print(f"[adopt] 인스타 보강 실패(무해) who={who} url={url}: {e!r}", file=_sys.stderr)
+        return meta, None
+    hit = next((r for r in reels if (r.get("shortcode") or "") == code), None)
+    if not hit:
+        import sys as _sys
+        print(f"[adopt] 인스타 보강: 프로필에서 그 영상을 못 찾음 "
+              f"who={who} code={code} reels={len(reels)}", file=_sys.stderr)
+        return meta, None
+    # ★수집이 준 값을 **정본으로** 쓴다. yt-dlp의 0/빈값이 이걸 덮으면 안 된다.
+    #   (화면 파싱값으로 빈 칸을 채우는 기존 규칙은 이 뒤에서 그대로 돈다)
+    for key, src in (("views", "videoViewCount"), ("likes", "likesCount"),
+                     ("comments", "commentsCount"), ("followers", "ownerFollowers"),
+                     ("duration", "duration")):
+        v = hit.get(src)
+        if v not in (None, "", 0):
+            meta[key] = v
+    if hit.get("caption"):
+        meta["title"] = hit["caption"]
+    if hit.get("displayUrl"):
+        meta["thumbnail"] = hit["displayUrl"]
+    if hit.get("timestamp"):
+        meta["ts"] = hit["timestamp"]
+    # 채널 표시명 — 수집 카드가 쓰는 한글 이름(ownerFullName)이 있으면 그걸 쓴다.
+    meta["channel"] = hit.get("ownerFullName") or hit.get("ownerUsername") or who
+    meta["_ig_username"] = hit.get("ownerUsername") or who
+    return meta, hit
+
+
 def _adopt_into_ranking(store, platform, url, meta):
     """수동으로 찾은 영상 1건을 **지금 랭킹에 끼워 넣는다**(2026-08-18 사장님 요청).
 
@@ -8927,14 +8999,18 @@ def _adopt_into_ranking(store, platform, url, meta):
         "caption": meta.get("title") or "",
         "videoDuration": meta.get("duration") or 0,
     }
-    who = (meta.get("channel") or "").strip()
+    # ★표시명(name)과 계정명(username)은 **다른 값**이다(2026-08-19).
+    #   수집 카드는 name='채이홈'(한글 표시명) / username='chae2home'(계정)으로 담는다.
+    #   둘 다 표시명으로 채우면 카드의 "이 채널 영상만 보기"가 계정을 못 찾아 0건이 된다.
+    who_name = (meta.get("channel") or "").strip()
+    who_user = (meta.get("_ig_username") or "").strip().lstrip("@") or who_name
     if platform == "instagram":
         prev_c, prev_d = store.prev_comments, store.prev_delta
     else:
         prev_c = lambda sc: store.prev_base_platform(platform, sc)      # noqa: E731
         prev_d = lambda sc: store.prev_delta_platform(platform, sc)     # noqa: E731
-    items = build_items([reel], {"name": who, "username": who, "inpock": "",
-                                 "followers": meta.get("followers") or 0},
+    items = build_items([reel], {"name": who_name or who_user, "username": who_user,
+                                 "inpock": "", "followers": meta.get("followers") or 0},
                         prev_comments=prev_c, prev_delta=prev_d,
                         window_hours=24 * 365)
     if not items:
@@ -8947,6 +9023,26 @@ def _adopt_into_ranking(store, platform, url, meta):
         old, _at = store.load_last_run_platform(platform)
     kept = [i for i in (old or []) if i.get("shortcode") != item["shortcode"]]
     merged = [item] + kept
+    # ★등급(grade)은 **스냅샷 전체를 놓고** 매긴다(2026-08-19).
+    #   apply_grades는 speed·density를 그 리스트의 최대값으로 정규화한다 — 1건만 넣으면
+    #   자기가 최대라 무조건 최고등급이 나오고, 아예 안 부르면 grade가 None이라 카드에
+    #   채널명 옆 등급('—' 자리)이 빈 채로 남는다(실측: 채이홈 DcIrfnOzHre grade=None).
+    #   수집분과 같은 잣대로 재려면 합친 뒤에 한 번 부르는 게 맞다(0순위-B).
+    try:
+        from shopping_shorts.ranking import apply_grades
+        apply_grades(merged)
+    except Exception as e:  # noqa: BLE001 — 등급 실패가 등록을 막지 않는다
+        import sys as _sys
+        print(f"[adopt] 등급 계산 실패(무해) {url}: {e!r}", file=_sys.stderr)
+    # ⏱ 길이는 last_run에 안 담긴다 — 화면에 뜨는 🎬는 조회할 때 reel_durations
+    #   캐시에서 붙는다(_attach_durations). 이미 값을 들고 있으면 그 캐시에 넣어둬야
+    #   등록 직후 카드에도 길이가 뜬다(안 넣으면 durfill 백필을 최대 1시간 기다린다).
+    if meta.get("duration"):
+        try:
+            store.set_reel_duration(item["shortcode"], meta["duration"])
+        except Exception as e:  # noqa: BLE001 — 길이 캐시 실패가 등록을 막지 않는다
+            import sys as _sys
+            print(f"[adopt] 길이 캐시 실패(무해) {url}: {e!r}", file=_sys.stderr)
     now_iso = datetime.now(timezone.utc).isoformat()
     if platform == "instagram":
         store.save_last_run(merged, now_iso)
@@ -8975,6 +9071,16 @@ def api_reference_adopt(request: Request, url: str = "", views: int = 0, likes: 
         return HTMLResponse(_chadd_html("❌ 지원하지 않는 주소",
                                         "유튜브·틱톡·인스타·쓰레드·샤오홍슈·도우인 영상에서 눌러주세요."))
     meta = probe_grab_meta(u) or {}
+    # ★인스타는 **수집과 같은 경로**로 한 번 더 채운다(2026-08-19 사장님 요청:
+    #   "등록해도 기존 영상들이랑 동일한 포맷으로 저장되고 보이게").
+    #   yt-dlp는 로그인 없이 인스타를 읽어 조회수·팔로워·캡션이 0/빈값으로 온다.
+    #   fetch_reels(정규 수집이 쓰는 그 함수)를 태우면 같은 값·같은 모양이 나온다.
+    if platform == "instagram":
+        try:
+            meta, _hit = _enrich_instagram_meta(u, meta)
+        except Exception as e:  # noqa: BLE001 — 보강 실패가 등록을 막지 않는다
+            import sys as _sys
+            print(f"[adopt] 인스타 보강 예외(무해) {u}: {e!r}", file=_sys.stderr)
     # ★화면에서 읽어 보낸 숫자로 **빈 칸만** 채운다(2026-08-18 사장님 A안).
     #   서버는 인스타를 로그인 없이 읽어 조회수·팔로워가 0으로 온다(실측: 채이홈 항목).
     #   그러면 조회수당댓글·팔로워당댓글이 계산되지 않아 정렬에서 불리해진다.
