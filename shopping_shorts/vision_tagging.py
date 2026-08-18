@@ -52,7 +52,12 @@ def tag_new_items(items, db_path, cap=VISION_TAG_CAP):
             continue
         tags = video_analysis.subject_tags_vision(img, it.get("caption", ""))
         if tags and (tags.get("subject") or tags.get("keywords")):
-            store.save_vision_tags(it["shortcode"], tags.get("subject", ""), tags.get("keywords", []))
+            # shot_type/face_prominent(2026-08-19): 같은 호출에 얹어 받은 값이라 추가 비용 0.
+            # 못 받았으면 None으로 넘어가 기존 값을 안 덮는다(store가 COALESCE로 지킨다).
+            store.save_vision_tags(
+                it["shortcode"], tags.get("subject", ""), tags.get("keywords", []),
+                shot_type=tags.get("shot_type") or None,
+                face_prominent=tags.get("face_prominent"))
             tagged += 1
     if len(todo) > len(capped):
         print(f"[vision_tags] {len(todo) - len(capped)}건 다음 수집으로 미룸(상한 {cap})")
