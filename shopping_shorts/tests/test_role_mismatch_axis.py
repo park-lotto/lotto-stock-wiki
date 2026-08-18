@@ -204,3 +204,16 @@ def test_옛경로도_화면길이를_보장한다():
     assert (body.index('_b["target_seconds"] =')
             < body.index('_fill_beat_screen_time(grounded["beats"]')), \
         "target_seconds 재계산보다 앞에서 채우면 need가 자기신고 초가 된다"
+
+
+def test_재픽_후보에_핵심표시가_실린다():
+    """★2026-08-18 사장님 "훅엔 완성샷 중 제일 눈에 들어오는 걸".
+
+    1단계가 is_key(이 장면이 핵심인가)를 이미 태깅해 둔다(채움률 62.9%). 슬롯 배치는
+    그 값을 쓰는데 **재픽만 안 썼다** — 그래서 완성샷 중 아무거나 골랐다(같은 형태의
+    누락이 반복된다, 0순위-B). 후보 목록에 표시해 주고 훅·CTA는 그것을 우선하게 한다.
+    """
+    import inspect
+    src = inspect.getsource(edit_plan._repick_weak_beats)
+    assert 'is_key' in src, "재픽 후보에 핵심 표시가 안 실린다"
+    assert '★핵심' in src, "표시가 후보 줄에 보이지 않으면 모델이 못 고른다"
