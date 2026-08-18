@@ -50,6 +50,8 @@
       <span id="selCount"></span>
       <button class="btn-ghost" onclick="selectAll()">전체선택</button>
       <button class="btn-ghost" onclick="selectNone()">선택해제</button>
+      <button class="btn-ghost" onclick="selectAnalyzed()" title="분석이 끝난 것만 골라줍니다">✅ 분석완료만 선택</button>
+      <button class="btn-ghost" onclick="analyzeSelected()" title="고른 영상을 미리 분석해 둡니다(천천히 돌아갑니다)">🔎 분석 시작</button>
       <button class="btn-send" onclick="sendToProduce()">🎬 영상제작으로 보내기</button>
     </div>
   </div>
@@ -64,10 +66,58 @@ async function loadItems(){
     const d=await (await fetch('/api/mix/basket')).json();
     ITEMS=(d.items||[]).slice().reverse();   // 최근에 담은 게 맨 위로
   }catch(e){ ITEMS=[]; }
+  render();                 // 목록부터 즉시 그리고(신호등은 잠깐 '분석 전'),
+  await loadAnalysis();     // 상태가 오면 다시 그린다 — 목록이 늦게 뜨는 걸 막는다.
   render();
 }
 function toggleSelect(sc){
   SELECTED.has(sc)?SELECTED.delete(sc):SELECTED.add(sc);
+  render();
+}
+
+// ── 분석 신호등(2026-08-18 사장님: "즐겨찾기에 미리 담아두면 천천히 되니까") ──────
+// 담아두기만 해도 서버가 알아서 예열하지만, 화면에 아무 표시가 없어 "된 건지" 알 수 없었다.
+// 여기서 상태만 읽어 보여주고(비용 0원), 안 된 것은 버튼으로 다시 걸 수 있게 한다.
+// 판정은 서버 _analysis_state 한 곳이 한다 — 제작소 1단계 카드와 같은 답을 쓴다.
+let ANALYSIS={};          // shortcode -> {state:'done'|'pending'|'gave_up', reason}
+let _pollTimer=null;
+async function loadAnalysis(){
+  const codes=ITEMS.map(i=>i.shortcode).filter(Boolean);
+  if(!codes.length){ ANALYSIS={}; return; }
+  try{
+    const d=await (await fetch('/api/basket/analysis_status?shortcodes='+
+      encodeURIComponent(codes.join(',')))).json();
+    if(d && d.ok) ANALYSIS=d.items||{};
+  }catch(e){}
+  // 도는 중인 게 남아 있으면 20초마다 다시 본다(다 끝나면 폴링을 멈춘다 — 서버 부담 0).
+  const pending=codes.some(c=>(ANALYSIS[c]||{}).state==='pending');
+  clearTimeout(_pollTimer);
+  if(pending) _pollTimer=setTimeout(()=>loadAnalysis().then(render), 20000);
+}
+function analysisBadge(sc){
+  const st=(ANALYSIS[sc]||{}).state;
+  if(st==='done')    return `<span style="background:#1f9d55;color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px">✅ 분석완료</span>`;
+  if(st==='pending') return `<span style="background:#8a6d3b;color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px">⏳ 분석 중</span>`;
+  if(st==='gave_up') return `<span title="${esc((ANALYSIS[sc]||{}).reason||'')}" style="background:#a03c2a;color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px">⚠ 분석 실패</span>`;
+  return `<span style="background:#3a3a3a;color:#bbb;font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px">· 분석 전</span>`;
+}
+async function analyzeCodes(codes){
+  codes=(codes||[]).filter(Boolean);
+  if(!codes.length){ alert('분석할 항목을 먼저 선택하세요'); return; }
+  codes.forEach(c=>{ ANALYSIS[c]={state:'pending',reason:''}; });   // 누른 즉시 표시
+  render();
+  try{
+    await fetch('/api/basket/analyze',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({shortcodes:codes})});
+  }catch(e){}
+  await loadAnalysis(); render();
+}
+function analyzeSelected(){ analyzeCodes([...SELECTED]); }
+function analyzeOne(sc){ analyzeCodes([sc]); }
+function selectAnalyzed(){
+  SELECTED.clear();
+  ITEMS.forEach(i=>{ if((ANALYSIS[i.shortcode]||{}).state==='done') SELECTED.add(i.shortcode); });
   render();
 }
 function selectAll(){ ITEMS.forEach(i=>SELECTED.add(i.shortcode)); render(); }
@@ -253,6 +303,7 @@ function render(){
         <span onclick="event.stopPropagation();playPreview(this,'${i.shortcode}')" title="미리보기 재생" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;background:rgba(0,0,0,.55);color:#fff;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer">▶</span>
       </div>
       <div class="body">
+        <div style="margin-bottom:5px">${analysisBadge(i.shortcode)}</div>
         <div class="rank" style="white-space:normal;line-height:1.4;min-height:2.6em">${esc((i.name||i.caption||'').slice(0,60))}</div>
         ${ml}
         ${reprobeBtn}
@@ -260,6 +311,8 @@ function render(){
           <button class="view" onclick="window.open('${esc(i.url||'#')}','_blank')">👁 보기</button>
           <button onclick="removeItem('${i.shortcode}')">🗑 빼기</button>
         </div>
+        ${(ANALYSIS[i.shortcode]||{}).state==='done' ? '' :
+          `<button onclick="analyzeOne('${i.shortcode}')" style="width:100%;margin-top:6px;padding:7px;background:#2d333b;color:#adbac7;border:1px solid #555;border-radius:8px;font-weight:700;cursor:pointer">🔎 ${(ANALYSIS[i.shortcode]||{}).state==='gave_up'?'다시 분석':'분석'}</button>`}
         <button onclick="sendOneToProduce('${i.shortcode}')" style="width:100%;margin-top:6px;padding:8px;background:#1f6feb;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">🎬 제작소로 보내기</button>
       </div>
     </div>`;
