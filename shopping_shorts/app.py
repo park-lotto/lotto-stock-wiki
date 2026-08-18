@@ -7555,9 +7555,13 @@ def _as_cid(customer_id):
 def check_and_count(customer_id, op):
     """유료 op(lens/render/script) 실행 전 호출. 일일 상한 초과면 False(막기),
     아니면 카운트+1 후 True. 관리자=무제한 / pro=limit_{op}_pro / 무료=limit_{op}."""
-    # 관리자(사장님·지정 관리자)는 영상 만들기(render) 무제한 — pro 하루 상한(10)에 안 걸린다.
-    # 렌즈(SerpApi)·대본(Gemini)은 실외부비용이라 관리자도 계량 유지(높은 pro 상한).
-    if op == "render" and _is_admin(customer_id):
+    # 관리자(사장님·지정 관리자)는 영상 만들기(render)·렌즈(lens) 무제한.
+    # ★렌즈 해제(2026-08-18 사장님 "관리자는 렌즈검색수 풀어줘") — 종전엔 실외부비용이라
+    #   관리자도 pro 일일 상한에 걸렸는데, 사장님이 테스트하다 막히는 게 더 손해다.
+    #   ⚠️ 이건 **계정별 일일 상한**만 푼다. SerpApi 월 100회(_lens_quota_guard)와 전역
+    #   상한(_global_over_cap)은 그대로 — 진짜 외부 한도라 여기서 풀면 그냥 실패한다.
+    # 대본(Gemini)은 종전대로 계량 유지.
+    if op in ("render", "lens") and _is_admin(customer_id):
         return True
     st = Store(DB_PATH)
     # 🎁 무료체험 이벤트: 체험 유저의 render는 '오늘' 대신 영구 "trial" 버킷으로 딱 1회.
