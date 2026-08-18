@@ -1,0 +1,195 @@
+# -*- coding: utf-8 -*-
+"""썰쇼핑 대본 재료 추출 (2026-08-19).
+
+사장님 지시: "대본 템플릿은 많이 만들어 놓았으니 **영상들에서 뭘 추출해야 대본을
+완성할 수 있는지**만 알면 되는 거니까 그걸 뽑아"
+
+## 무엇을 푸는가
+
+유튜브 썰쇼핑 스파인 2종(은폐형·오용형)이 요구하는 빈칸은 8종인데, 기존
+`product_facts`가 뽑는 것으로는 **4종만** 채워진다. 나머지 4종은 아무도 안 뽑는다:
+
+    {나라}    ← origin      (product_facts)     {본래용도}  ← 없음  ★
+    {제품}    ← title       (product_facts)     {속성}      ← 없음  ★
+    {효능}    ← why         (product_facts)     {용도}      ← 없음  ★
+    {효능2}   ← why         (product_facts)     {제품군}    ← 없음  ★
+
+빈칸이 안 채워지면 **모델이 지어낸다** — 그게 "AI 티 나는 대본"의 정체다.
+이 모듈은 그 4종을 실제 영상(자막·캡션)에서 뽑는다.
+
+## 왜 product_facts로는 안 되나
+
+`product_facts`는 **쿠팡 상세페이지·리뷰**를 읽는다(specs·why·origin / pain·trigger·satisfy).
+그건 "이 제품이 왜 좋은가"를 아는 데 맞다. 그런데 오용형 서사가 요구하는 건 다르다:
+
+    "이게 원래는 {본래용도}로 개발된 제품이었음"          ← 쿠팡은 '원래 용도'를 안 판다
+    "사람들은 {속성}을 눈치채고 엉뚱한 용도로 쓰기 시작"   ← 리뷰가 아니라 **영상**에 있다
+    "근데 미친 사용법은 따로 있었는데 {용도}"             ← 이것도 영상에 있다
+
+즉 재료의 **출처가 다르다**(상품페이지 vs 영상). 그래서 별도 모듈이다.
+0순위-B에 어긋나지 않는다 — 같은 판단을 두 번 하는 게 아니라 다른 것을 뽑는다.
+
+## 쓰는 법
+
+    facts = analyze_sul({"captions": [...자막/캡션 문자열...], "title": "..."})
+    block = sul_prompt_block(facts)        # 대본 프롬프트에 붙인다(비면 "")
+
+재료가 없으면 조용히 {} / "" 를 돌려준다 — 예외로 대본 생성을 죽이지 않는다.
+"""
+
+# ── 템플릿 빈칸 → 무엇으로 채우나 ────────────────────────────────────────
+# ★이 표가 seed_style_youtube.py의 {빈칸}과 **짝**이다.
+#   템플릿에 새 빈칸이 생기면 여기도 늘어야 한다 — test_sul_facts.py가 강제한다.
+#   (안 그러면 그 빈칸은 모델이 지어낸다 = 대본이 거짓말을 한다)
+SLOT_SOURCE = {
+    # 기존 product_facts가 이미 뽑는 것
+    "제품":   "product_facts.title      (상품명)",
+    "효능":   "product_facts.why[0]     (왜 좋은가)",
+    "효능2":  "product_facts.why[1]     (두 번째 셀링포인트 — 2차 반전용)",
+    "나라":   "product_facts.origin     (브랜드·기술·인증에서 나라)",
+    # ★이 모듈이 새로 뽑는 것 (영상에서)
+    "본래용도": "sul_facts.original_use   (원래 무엇을 하라고 만든 물건인가)",
+    "속성":   "sul_facts.hidden_property(사람들이 눈치챈 숨은 성질)",
+    "용도":   "sul_facts.misuses        (엉뚱하게 쓰는 실제 사례들)",
+    "제품군": "sul_facts.category_word  (제품을 안 밝힐 때 쓸 상위 분류어)",
+}
+
+SUL_PROMPT = """아래는 한국 쇼핑 쇼츠 영상의 자막·설명이다. 이 영상으로 **썰쇼핑 대본**을
+쓰려고 한다. 대본의 빈칸을 채울 재료만 뽑아라.
+
+★영상에 실제로 나온 것만 써라. 안 나온 건 **지어내지 마라** — 빈 배열로 두면 된다.
+  (지어내면 "천재가 만든 발명품" 같은 거짓말이 대본에 박힌다)
+
+뽑을 것:
+- original_use  : {본래용도} — 이 물건이 **원래** 무엇을 하라고 만들어진 것인가.
+                  (예: 의류 태그 부착용, 커튼 걸이용). 영상이 안 밝히면 빈 배열.
+- hidden_property: {속성} — 사람들이 눈치챈 **숨은 성질**. 왜 다른 용도로 쓸 수 있었나.
+                  (예: 옷감이 손상되지 않는다, 봉 없이 고리만으로 걸린다)
+- misuses       : {용도} — 원래 용도가 **아닌** 실제 사용처들. 짧은 명사구로 2~4개.
+                  (예: 바지 밑단 줄임, 커튼 길이 조절, 침대커버 고정)
+- category_word : {제품군} — 제품명을 숨기고 부를 상위 분류어 한 단어.
+                  (예: 주방템, 집게, 정리도구). 은폐형 훅에서 쓴다.
+- hook_points   : 어그로가 될 만한 지점 — 놀랍거나 반전인 사실 1~3개. 짧게.
+
+JSON만 출력:
+{"original_use": [], "hidden_property": [], "misuses": [], "category_word": "", "hook_points": []}
+
+자막·설명:
+"""
+# ★.format()을 쓰지 않는다(2026-08-19 실측으로 잡음).
+#   이 프롬프트에는 {본래용도}·{속성} 같은 **설명용 중괄호**가 들어 있어서
+#   SUL_PROMPT.format(body=...)를 하면 그것들을 치환 필드로 보고 KeyError로 죽는다.
+#   실측: 실제 자막 2건이 통째로 "추출 실패(빈 dict)"였다 — 예외를 삼키는 구조라
+#   오류도 안 보였다. 본문은 그냥 이어붙인다.
+
+SUL_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "original_use": {"type": "array", "items": {"type": "string"}},
+        "hidden_property": {"type": "array", "items": {"type": "string"}},
+        "misuses": {"type": "array", "items": {"type": "string"}},
+        "category_word": {"type": "string"},
+        "hook_points": {"type": "array", "items": {"type": "string"}},
+    },
+    # ★required를 비워둔다 — 모델이 일부를 못 채워도 나머지는 쓴다.
+    #   (product_facts와 같은 원칙: 재료가 부분만 있어도 대본은 나와야 한다)
+    "required": [],
+}
+
+_MAX_BODY = 4000
+
+
+def _body_of(raw):
+    """입력에서 대본 재료가 될 텍스트를 모은다. 없으면 ''."""
+    if not raw:
+        return ""
+    parts = []
+    for key in ("title", "caption", "description"):
+        v = (raw.get(key) or "").strip()
+        if v:
+            parts.append(v)
+    caps = raw.get("captions") or []
+    if isinstance(caps, str):
+        caps = [caps]
+    parts += [str(c).strip() for c in caps if str(c).strip()]
+    return "\n".join(parts)[:_MAX_BODY]
+
+
+def analyze_sul(raw, *, log=print):
+    """영상 자막·캡션 → 썰쇼핑 재료 dict. 재료가 없으면 {} (예외 없음)."""
+    body = _body_of(raw)
+    if not body:
+        return {}
+    try:
+        from shopping_shorts import video_analysis
+        from google.genai import types
+    except Exception:                       # noqa: BLE001 — 비전 모듈 없어도 죽지 않는다
+        return {}
+    keys = getattr(video_analysis, "SHORTS_GEMINI_KEYS", None)
+    if not keys:
+        return {}
+    try:
+        from shopping_shorts import comment_gen
+        key, _idx = comment_gen._next_live_key_and_idx()
+        if key is None:
+            return {}
+        client = video_analysis._client_for_key(key)
+        resp = client.models.generate_content(
+            model=video_analysis._TRANSLATE_MODEL,
+            contents=[SUL_PROMPT + body],
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=SUL_SCHEMA,
+            ),
+        )
+        import json as _json
+        data = _json.loads(resp.text) or {}
+    except Exception as e:                  # noqa: BLE001 — 실패해도 대본은 나와야 한다
+        try:
+            log("[sul_facts] 추출 실패: %s" % str(e)[:120])
+        except Exception:
+            pass
+        return {}
+
+    out = {}
+    for k in ("original_use", "hidden_property", "misuses", "hook_points"):
+        v = data.get(k) or []
+        if isinstance(v, str):
+            v = [v]
+        v = [str(x).strip() for x in v if str(x).strip()]
+        if v:
+            out[k] = v
+    cw = (data.get("category_word") or "").strip()
+    if cw:
+        out["category_word"] = cw
+    return out
+
+
+def sul_prompt_block(facts, max_items=4):
+    """썰 재료 → 대본 프롬프트에 붙일 블록. 비면 ''(호출부는 빈 문자열이면 회귀 0).
+
+    ★product_facts.prompt_block과 같은 규약이다 — 빈 문자열이면 기존 경로 그대로.
+    """
+    if not facts:
+        return ""
+
+    def _line(key, label):
+        v = facts.get(key)
+        if not v:
+            return ""
+        if isinstance(v, str):
+            v = [v]
+        v = [str(x).strip() for x in v if str(x).strip()][:max_items]
+        return ("\n- %s: " % label) + " / ".join(v) if v else ""
+
+    body = "".join([
+        _line("original_use", "원래 용도(이게 원래 무엇을 하라고 만든 물건인가)"),
+        _line("hidden_property", "숨은 성질(사람들이 눈치챈 것)"),
+        _line("misuses", "엉뚱한 사용처(실제 사례)"),
+        _line("category_word", "상위 분류어(제품명을 숨길 때 쓸 말)"),
+        _line("hook_points", "어그로 포인트(놀라운 사실)"),
+    ])
+    if not body:
+        return ""
+    return ("\n[이 영상에서 확인된 사실 — 대본의 빈칸은 여기 있는 것만 써라. "
+            "없는 건 지어내지 말고 그 칸을 비워라]" + body)
