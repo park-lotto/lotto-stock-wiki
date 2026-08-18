@@ -272,3 +272,66 @@ def test_길이가_바로_카드에_뜬다(db):
     items = [{"shortcode": "DUR1"}]
     ap._attach_durations(items, Store(db))
     assert items[0]["duration"] == 29.0, "카드에 🎬 길이가 뜨려면 여기서 붙어야 한다"
+
+
+# ── 2026-08-19 (2차) 실사고: 표시명으로 프로필을 열어 reels=0 ──────────────────
+# 라이브 로그 그대로:
+#   [adopt] 인스타 보강: 프로필에서 그 영상을 못 찾음 who=채이홈 code=DcF2lTqzeiu reels=0
+# 원인: /reels/CODE/ URL엔 계정명이 없어 meta['channel']로 폴백했는데, oEmbed의
+# channel은 **표시명**('채이홈')이지 계정('chae2home')이 아니다. 계정명은 제목
+# 'Video by chae2home'에 들어 있었다 — 그 문구를 '쓸모없는 기본값'으로만 보고
+# 지나쳤던 게 실수였다.
+
+def test_계정명은_제목에서_뽑는다():
+    """channel은 표시명이라 프로필 주소에 쓰면 0건이 된다(실사고 재현)."""
+    live = {"channel": "채이홈", "title": "Video by chae2home",
+            "views": None, "followers": None, "comments": 1729}
+    assert ap._ig_username_from_meta(live) == "chae2home"
+
+
+def test_표시명을_계정으로_오인하지_않는다():
+    """한글·공백이 섞이면 계정이 아니다 — 그걸로 프로필을 열면 reels=0."""
+    assert ap._ig_username_from_meta({"title": "", "channel": "채이홈"}) == ""
+    assert ap._ig_username_from_meta({"title": "", "channel": "채 이홈"}) == ""
+    # 영문 계정이 channel에 그대로 온 경우는 종전대로 쓴다.
+    assert ap._ig_username_from_meta({"title": "", "channel": "chae2home"}) == "chae2home"
+    assert ap._ig_username_from_meta({"title": "", "channel": "@chae2home"}) == "chae2home"
+
+
+def test_실캡션이면_계정으로_오인하지_않는다():
+    """보강이 한 번 성공해 title이 실캡션으로 바뀐 뒤 다시 불려도 안전해야 한다."""
+    assert ap._ig_username_from_meta({"title": "자석 네일펜 진짜 신기함",
+                                      "channel": "채이홈"}) == ""
+
+
+def test_reels_URL도_계정을_찾아_보강한다(db):
+    """/reels/CODE/ 엔 계정이 없다 — 그래도 제목에서 찾아 프로필을 열어야 한다."""
+    seen = {}
+
+    def fake_fetch(usernames, *a, **k):
+        seen["who"] = list(usernames)
+        return [_reel(code="DcF2lTqzeiu")]
+
+    ytdlp = {"channel": "채이홈", "title": "Video by chae2home",
+             "views": 0, "followers": 0, "comments": 1729,
+             "ts": int((datetime.now(timezone.utc) - timedelta(hours=3)).timestamp())}
+    with patch("shopping_shorts.instagram_playwright.fetch_reels", side_effect=fake_fetch):
+        meta, hit = ap._enrich_instagram_meta(
+            "https://www.instagram.com/reels/DcF2lTqzeiu/", dict(ytdlp))
+    assert seen["who"] == ["chae2home"], f"표시명으로 열면 0건이 된다(실사고): {seen}"
+    assert hit is not None and meta["views"] == 569324 and meta["followers"] == 342545
+
+
+def test_username에_한글표시명이_들어가지_않는다(db):
+    """카드의 '이 채널 영상만 보기'는 username을 쓴다 — 표시명이 들어가면 0건."""
+    ytdlp = {"channel": "채이홈", "title": "Video by chae2home",
+             "views": 0, "followers": 0, "comments": 1729,
+             "ts": int((datetime.now(timezone.utc) - timedelta(hours=3)).timestamp())}
+    with patch("shopping_shorts.instagram_playwright.fetch_reels",
+               return_value=[_reel(code="DcF2lTqzeiu")]):
+        meta, _ = ap._enrich_instagram_meta(
+            "https://www.instagram.com/reels/DcF2lTqzeiu/", dict(ytdlp))
+    item = ap._adopt_into_ranking(Store(db), "instagram",
+                                  "https://www.instagram.com/reels/DcF2lTqzeiu/", meta)
+    assert item["username"] == "chae2home", "계정명 자리에 표시명이 들어갔다"
+    assert item["name"] == "채이홈"

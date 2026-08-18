@@ -8909,6 +8909,23 @@ def _ig_username_from_url(url):
     return "" if who.lower() in ("reel", "reels", "p", "tv", "stories", "explore") else who
 
 
+def _ig_username_from_meta(meta):
+    """probe_grab_meta 결과 → 인스타 **계정명**(못 찾으면 "").
+
+    ★`channel`은 계정명이 아니다 — oEmbed는 **표시명**을 준다(실측 2026-08-19:
+      channel='채이홈' / 실제 계정='chae2home'). 그걸 그대로 프로필 주소에 넣으면
+      instagram.com/채이홈/reels/ 를 열어 **0건**이 돌아온다(실사고: reels=0).
+      계정명은 oEmbed 제목 'Video by {계정}'에 들어 있으므로 거기서 뽑는다.
+    ★한글·공백이 섞였으면 계정명이 아니다 — 인스타 계정은 영문·숫자·마침표·밑줄뿐.
+    """
+    m = re.search(r"video by\s+([A-Za-z0-9._]+)", (meta.get("title") or ""), re.I)
+    if m:
+        return m.group(1).strip(".")
+    ch = (meta.get("channel") or "").strip().lstrip("@")
+    # 표시명(한글·공백 포함)을 계정으로 오인해 프로필을 열지 않는다.
+    return ch if re.fullmatch(r"[A-Za-z0-9._]+", ch or "") else ""
+
+
 def _enrich_instagram_meta(url, meta):
     """인스타 1건의 지표를 **수집과 같은 경로**로 채운다(2026-08-19).
 
@@ -8927,10 +8944,12 @@ def _enrich_instagram_meta(url, meta):
     code = _media_code(url)
     if not code:
         return meta, None
-    who = _ig_username_from_url(url) or (meta.get("channel") or "").strip().lstrip("@")
+    who = _ig_username_from_url(url) or _ig_username_from_meta(meta)
     # ★계정명을 모르면 프로필을 열 수 없다 — 인스타 스크레이퍼는 계정 단위다.
-    #   (yt-dlp가 준 'chae2home' 같은 값이라도 있으면 그걸로 연다)
     if not who:
+        import sys as _sys
+        print(f"[adopt] 인스타 보강: 계정명을 못 구함 url={url} "
+              f"channel={meta.get('channel')!r} title={meta.get('title')!r}", file=_sys.stderr)
         return meta, None
     try:
         from shopping_shorts.instagram_playwright import fetch_reels as _pw_fetch_reels
