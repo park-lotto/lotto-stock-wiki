@@ -1373,7 +1373,7 @@
         </div>
 
         <div style="flex:0 0 300px">
-          <div class="hint" style="margin-bottom:4px">드래그로 이동 · 스티커를 누르면 ✕삭제 / ↔크기 / ↻방향 손잡이가 나옵니다</div>
+          <div class="hint" style="margin-bottom:4px">드래그로 이동 · 스티커를 누르면 ✕(왼쪽 위)=삭제, 나머지 모서리=끌면 크기·방향 동시</div>
           <!-- 손잡이는 캔버스 '위에 뜬 DOM'이다(2026-08-18). 캔버스에 그리면 저장 PNG에 같이 구워진다. -->
           <div id="thumbStage" style="position:relative;width:270px;height:480px">
           <canvas id="thumbCanvas" width="1080" height="1920"
@@ -7964,9 +7964,12 @@ function renderThumbHandles(){
   box.innerHTML =
     `<div style="position:absolute;${pos(L.x - hx, L.y - hy)};width:${(hx * 200).toFixed(2)}%;
         height:${(hy * 200).toFixed(2)}%;border:1.5px dashed rgba(255,255,255,.65);border-radius:4px"></div>` +
-    btn('del',  L.x + hx, L.y - hy, '✕', '삭제', 'pointer') +
-    btn('size', L.x + hx, L.y + hy, '↔', '끌어서 크기 조절', 'nwse-resize') +
-    btn('rot',  L.x - hx, L.y + hy, '↻', '끌어서 방향(각도) 돌리기', 'grab');
+    // 사장님 2차(2026-08-18): 삭제는 **왼쪽 위 한 곳**, 나머지 세 모서리는 전부
+    // "끌면 크기+방향이 같이" — 어느 모서리를 잡았는지 외울 필요가 없어진다.
+    btn('del', L.x - hx, L.y - hy, '✕', '삭제', 'pointer') +
+    btn('g-45', L.x + hx, L.y - hy, '⤢', '끌어서 크기·방향 동시', 'nesw-resize') +
+    btn('g45',  L.x + hx, L.y + hy, '⤢', '끌어서 크기·방향 동시', 'nwse-resize') +
+    btn('g135', L.x - hx, L.y + hy, '⤢', '끌어서 크기·방향 동시', 'nesw-resize');
 }
 
 // 손잡이 드래그 — 캔버스 드래그(이동)와 겹치지 않게 손잡이에서 시작한 것만 여기서 처리한다.
@@ -7991,14 +7994,12 @@ function initThumbHandleDrag(){
     const L = THUMB_STATE.layers[THUMB_STATE.sel]; if (!L) return;
     const p = to(e);
     const dx = (p.x - L.x) * THUMB_W, dy = (p.y - L.y) * THUMB_H;   // px 공간에서 재야 각도가 맞다
-    if (mode === 'size'){
-      // 중심에서 손잡이까지가 반각이므로, 끈 거리를 그대로 반각으로 삼는다(대각선 기준).
-      const s = Math.max(Math.abs(dx), Math.abs(dy)) / THUMB_W * 200;
-      L.size = Math.min(120, Math.max(4, Math.round(s)));
-    } else {
-      // ↻ 손잡이는 좌하단(캔버스 각도 135°)에 있다 → 그 차이가 곧 회전각.
-      L.rot = Math.round(Math.atan2(dy, dx) * 180 / Math.PI - 135);
-    }
+    // 세 모서리 손잡이는 이름이 곧 '원래 각도'다(g-45=우상, g45=우하, g135=좌하).
+    // 크기는 끈 거리, 방향은 그 각도에서 얼마나 돌았나 — 한 번의 드래그로 둘 다 잡힌다.
+    const base = Number(mode.slice(1));
+    const s = Math.max(Math.abs(dx), Math.abs(dy)) / THUMB_W * 200;
+    L.size = Math.min(120, Math.max(4, Math.round(s)));
+    L.rot = Math.round(Math.atan2(dy, dx) * 180 / Math.PI - base);
     renderThumbCanvas(); renderThumbLayers();
   });
 }
