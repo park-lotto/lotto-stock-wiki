@@ -561,8 +561,12 @@ class Store:
             # (실측: 클레이 토끼 → "레진 파츠"). 재질을 물으면 맞히므로 따로 저장한다.
             # made_by는 '직접만들기 vs 완제품' — 만드는 영상과 파는 물건이 안 섞이게
             # 하는 결정적 신호다(사장님 제보 케이스의 핵심 오답이었다).
+            # shot_type·face_prominent(2026-08-19): 재료로 쓸 수 있는 화면인가.
+            # 직촬(리뷰어 얼굴이 주인공)은 쇼핑 얘기를 제대로 해도 재료로 못 쓴다 —
+            # 쇼핑비율만 보는 정리 규칙으로는 오히려 우량으로 살아남는다(C단계 실측 17%).
             for col, ddl in (("product", "TEXT"), ("product_at", "TEXT"),
-                             ("material", "TEXT"), ("made_by", "TEXT")):
+                             ("material", "TEXT"), ("made_by", "TEXT"),
+                             ("shot_type", "TEXT"), ("face_prominent", "INTEGER")):
                 try:
                     c.execute(f"ALTER TABLE vision_tags ADD COLUMN {col} {ddl}")
                 except sqlite3.OperationalError:
@@ -2953,14 +2957,24 @@ class Store:
                 "top_comments": json.loads(row[8] or "[]"), "caption": row[9],
                 "status": row[10]}
 
-    def save_vision_tags(self, shortcode, subject, keywords):
-        """썸네일 비전 주제태그 저장(덮어쓰기). keywords: [str]."""
+    def save_vision_tags(self, shortcode, subject, keywords,
+                         shot_type=None, face_prominent=None):
+        """썸네일 비전 주제태그 저장(덮어쓰기). keywords: [str].
+
+        shot_type/face_prominent는 **선택**이다(2026-08-19) — 안 주면 기존 값을 유지한다.
+        기존 3-인자 호출부(vision_tagging 등)를 그대로 두기 위함이다."""
         with self._conn() as c:
             c.execute(
-                "INSERT INTO vision_tags(shortcode, subject, keywords_json, created_at) "
-                "VALUES(?,?,?,datetime('now')) ON CONFLICT(shortcode) DO UPDATE SET "
-                "subject=excluded.subject, keywords_json=excluded.keywords_json, created_at=excluded.created_at",
-                (shortcode, subject or "", json.dumps(keywords or [], ensure_ascii=False)),
+                "INSERT INTO vision_tags(shortcode, subject, keywords_json, created_at, "
+                "shot_type, face_prominent) "
+                "VALUES(?,?,?,datetime('now'),?,?) ON CONFLICT(shortcode) DO UPDATE SET "
+                "subject=excluded.subject, keywords_json=excluded.keywords_json, "
+                "created_at=excluded.created_at, "
+                # ★안 준 값은 덮어쓰지 않는다 — 옛 호출부가 판정을 지우면 안 된다.
+                "shot_type=COALESCE(excluded.shot_type, vision_tags.shot_type), "
+                "face_prominent=COALESCE(excluded.face_prominent, vision_tags.face_prominent)",
+                (shortcode, subject or "", json.dumps(keywords or [], ensure_ascii=False),
+                 shot_type, None if face_prominent is None else int(bool(face_prominent))),
             )
 
     def save_product(self, shortcode, product, category="", material="", made_by=""):
@@ -3040,10 +3054,13 @@ class Store:
             # sqlite 변수 상한(999) 회피 — 청크로 조회.
             for i in range(0, len(codes), 400):
                 chunk = codes[i:i + 400]
-                q = "SELECT shortcode, subject, keywords_json FROM vision_tags WHERE shortcode IN (%s)" % \
+                q = ("SELECT shortcode, subject, keywords_json, shot_type, face_prominent "
+                     "FROM vision_tags WHERE shortcode IN (%s)") % \
                     ",".join("?" * len(chunk))
-                for sc, subj, kj in c.execute(q, chunk).fetchall():
-                    out[sc] = {"subject": subj or "", "keywords": json.loads(kj or "[]")}
+                for sc, subj, kj, shot, face in c.execute(q, chunk).fetchall():
+                    out[sc] = {"subject": subj or "", "keywords": json.loads(kj or "[]"),
+                               # 옛 행은 이 컬럼이 NULL이다 — 빈값/False로 읽어 호출부가 안 터진다.
+                               "shot_type": shot or "", "face_prominent": bool(face)}
         return out
 
     # --- 영상 길이 캐시(reel_durations, 2026-08-04) — 랭킹 카드 ⏱ 표시용 ---
