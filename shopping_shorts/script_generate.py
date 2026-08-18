@@ -374,7 +374,8 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
         # ★소재 일치도 함께 본다(2026-08-18) — 재료의 제품명을 그대로 넘긴다.
         #   product가 비면 그 검사는 건너뛴다(회귀 0).
         checks, full = script_gate.check(style, res, facts_text=facts_block,
-                                         product=_sources_product(sources))
+                                         product=_sources_product(sources),
+                                         seconds=seconds)
         tries.append({"chars": len(script_gate.norm(full)),
                       "fails": [c["name"] for c in checks if not c["ok"]]})
         if script_gate.passed(checks):
