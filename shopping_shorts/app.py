@@ -4150,6 +4150,16 @@ def api_mix_tts(job_id: str, beat_idx: int):
         return JSONResponse(status_code=404, content={"ok": False})
     for b in job["edit_plan"]["beats"]:
         if b["beat_idx"] == beat_idx and b.get("tts_path") and Path(b["tts_path"]).exists():
+            # ★대본과 어긋난 음성은 **주지 않는다**(2026-08-19 사장님 "tts가 우리 대본을
+            #   읽고 딴소리한다"). 렌더 경로는 _synthesize_beats(skip_existing=True)가
+            #   현재 대본의 해시 경로로 스킵을 판정해 자동으로 다시 뽑지만, 미리보기는
+            #   tts_path를 **그대로** 틀어서 옛 소리가 그대로 들렸다(잡 f8d373618c0f beat2:
+            #   대본 '영양사 친구가 알려준…' / 소리 '치즈와 우유에 계란까지 톡 까서…').
+            #   조용히 틀면 사장님이 렌더까지 가서야 안다 → 여기서 드러낸다.
+            if not mix_pipeline.tts_matches_narration(b):
+                return JSONResponse(status_code=409, content={
+                    "ok": False, "stale": True,
+                    "error": "이 칸은 대본이 바뀐 뒤 음성을 다시 안 뽑았어요 — 🔊 음성 만들기를 눌러주세요"})
             return FileResponse(b["tts_path"])
     return JSONResponse(status_code=404, content={"ok": False})
 
@@ -10056,7 +10066,10 @@ def api_produce_mix_shorten(job_id: str, body: dict):
                 "note": "더 줄일 여지가 없어요(뜻 훼손 없이)"}
     # 그 비트만 재TTS(렌더와 동일 공유 경로) → 실제 발화초로 sync_gap 재계산.
     idx = beats.index(hit)
-    out = _MIX_WORK_DIR / job_id / "tts" / f"beat_{hit['beat_idx']}.mp3"
+    # ★파일명은 **줄인 뒤의 대본**으로 짓는다(2026-08-19, mix_pipeline._beat_tts_path 한 곳).
+    #   해시 없는 beat_{i}.mp3는 어느 대본의 음성인지 알 수 없어 어긋남 판정이 불가능했다.
+    out = Path(mix_pipeline._beat_tts_path(_MIX_WORK_DIR / job_id / "tts",
+                                           {**hit, "narration": new_n}))
     out.parent.mkdir(parents=True, exist_ok=True)
     try:
         mix_pipeline.synthesize_line(
