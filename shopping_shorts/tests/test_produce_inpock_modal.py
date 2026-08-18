@@ -121,6 +121,37 @@ def test_close_keeps_session():
     assert "refreshInpock()" in fn        # 모달에서 체크한 등록완료를 9단계 박스에 반영
 
 
+def test_login_expiry_is_guided_out_to_a_new_tab():
+    """틀 안에서는 로그인이 안 된다 — 새 탭으로 내보내는 안내가 있어야 한다.
+
+    실측(2026-08-18): 인포크 로그인 API(link-rest.inpock.co.kr)는 **자기 도메인 Origin만**
+    허용한다. 우리 도메인으로 프리플라이트를 보내면 Access-Control-Allow-Origin이 아예
+    안 온다 → 틀 안에서 로그인하면 인포크가 "네트워크 오류 💦"로 표시한다(계정 문제가 아니다).
+    새 탭(인포크 자기 도메인)에서 로그인하면 쿠키가 도메인 단위로 공유돼 틀에도 적용된다.
+
+    ⚠️크로스오리진이라 "지금 로그인 화면인가"를 코드가 알 수 없다 → 안내는 항상 떠 있어야 한다.
+    """
+    html = _html()
+    body = html.split("async function inpockModalOpen(")[1].split("function inpockFrameReload(")[0]
+    assert "link.inpock.co.kr/user/login" in body      # 새 탭으로 갈 로그인 주소
+    assert 'target="_blank"' in body                    # 틀 밖(새 탭)으로 나간다
+    assert "로그인" in body                              # 사장님이 읽을 문구
+
+
+def test_frame_reload_exists_for_after_login():
+    """새 탭에서 로그인한 뒤 틀을 다시 불러올 수단이 있어야 한다.
+
+    크로스오리진이라 contentWindow.location은 못 만진다 → src 재대입으로 다시 로드한다.
+    같은 URL을 그대로 넣으면 캐시된 로그인 화면이 다시 뜰 수 있어 쿼리로 갈라준다.
+    """
+    html = _html()
+    assert "function inpockFrameReload(" in html
+    fn = html.split("function inpockFrameReload(")[1].split("function inpockModalClose(")[0]
+    assert "f.src" in fn                    # src 재대입으로 재로드
+    assert "Date.now()" in fn               # 캐시 회피
+    assert "inpockFrameReload()" in html    # 버튼이 실제로 부른다
+
+
 @pytest.mark.skipif(not NODE, reason="node 없음")
 def test_produce_inline_js_syntax_ok(tmp_path):
     """제작소가 통째로 안 열리던 SyntaxError 사고 방지(기존 관례와 동일)."""
