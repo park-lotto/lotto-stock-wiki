@@ -518,10 +518,19 @@ body.is-admin .admin-only{display:block}
     </div>
     <!-- 카테고리 줄 — 라벨은 renderCtypes()가 함께 그린다(2026-08-17 사장님 "기간/강도지표/단순지표/카테고리") -->
     <div class="ctypes" id="ctypes"></div>
-    <input id="rankSearch" type="text" placeholder="🔍 숏템검색 — 채널명·소재·링크 (채이홈·피자·인스타링크…)"
-           oninput="setSearch(this.value)" onkeydown="if(event.key==='Enter')onSearchEnter(this.value)"
-           style="width:100%;max-width:420px;margin:8px 0;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
+    <!-- 검색 + 주소 넣기(2026-08-18 사장님). 주소는 원래도 엔터로 됐지만 "검색"처럼 보여
+         찾지 못하셨다 → 문구에 명시하고, 옆에 버튼을 둬 눈에 보이게 한다. -->
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0">
+      <input id="rankSearch" type="text" placeholder="🔍 숏템검색 — 채널명·소재 / 🔗 영상 주소 붙여넣기"
+             oninput="setSearch(this.value);_urlCardAutoClose(this.value)" onkeydown="if(event.key==='Enter')onSearchEnter(this.value)"
+             style="flex:1;min-width:240px;max-width:420px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
+      <button onclick="openUrlCard()" title="영상 주소를 넣으면 그 영상 카드를 보여줍니다(비슷한 영상 찾기는 그 안에서 따로)"
+              style="padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt);font-weight:700;cursor:pointer;white-space:nowrap">🔗 주소로 가져오기</button>
+    </div>
     <div class="cats" id="cats"></div>
+    <!-- 🔗 주소로 가져온 영상 전용 자리(2026-08-18). #cards는 display:grid라 여기에 그리면
+         머리줄과 렌즈 뭉치가 각각 한 칸씩 차지해 좌우로 갈라진다(실측). 따로 둔다. -->
+    <div id="urlCardBox" style="display:none"></div>
     <div class="cards" id="cards">
       <div class="empty">「지금 수집」을 눌러 시작하세요.</div>
     </div>
@@ -1375,8 +1384,27 @@ function badgeHTML(i, ctx){
 }
 // 검색창 하나로 채널명·소재·링크 — 링크면 엔터 시 원본·유사 영상 추적으로 보낸다(2026-07-22).
 // (채널명·소재는 oninput이 이미 필터링. 링크만 엔터라는 명시 동작이 필요 — 유료 렌즈 남용 방지.)
-function _looksLikeUrl(q){ return /^\s*https?:\/\//i.test(q||''); }
-function onSearchEnter(v){ if(_looksLikeUrl(v)) traceByUrl((v||'').trim()); }
+// ★https:// 가 없어도 링크로 본다(2026-08-18 사장님 "엔터가 안 먹는다").
+//   크롬 주소창은 https://를 감춰서 보여주고, 그 상태로 복사하면 스킴이 빠진 채 붙는다
+//   (실측: `youtube.com/shorts/_6v_...`). 종전 판정은 https:// 로 시작할 때만 링크라
+//   그 주소를 **검색어로 취급**해 아무 일도 안 일어났다.
+// ⚠️ 아무 글자나 받으면 채널명 검색이 링크로 오인된다 → 우리가 담을 수 있는 호스트만 본다
+//   (app.py _GRAB_DOMAINS와 같은 목록).
+var _URL_HOSTS = /^(?:https?:\/\/)?(?:www\.|m\.|vm\.|vt\.)?(?:youtube\.com|youtu\.be|instagram\.com|tiktok\.com|threads\.com|threads\.net|xiaohongshu\.com|xhslink\.com|rednote\.com|douyin\.com|iesdouyin\.com)\//i;
+function _looksLikeUrl(q){
+  const s=(q||'').trim();
+  return /^https?:\/\//i.test(s) || _URL_HOSTS.test(s);
+}
+// 스킴이 빠진 주소에 https://를 붙인다 — 서버는 hostname으로 플랫폼을 가리므로
+// 스킴이 없으면 hostname이 비어 422가 난다(그래서 여기서 한 번만 정규화한다).
+function _normUrl(q){
+  const s=(q||'').trim();
+  return /^https?:\/\//i.test(s) ? s : (s ? 'https://'+s.replace(/^\/+/,'') : '');
+}
+// ★2026-08-18: 링크를 넣으면 **먼저 그 영상 카드**를 보여준다(무료). 종전엔 곧바로
+//   렌즈(유료·유사영상)로 갔는데, 사장님이 원한 건 "넣은 그 영상"이었다. 유사 찾기는
+//   그 팝업 안의 버튼으로 남겼다 — 경로는 그대로 traceByUrl.
+function onSearchEnter(v){ if(_looksLikeUrl(v)) openUrlCard((v||'').trim()); }
 const OVERSEAS_CATS = ["전체","🖐 픽업","주방/레시피","살림/생활꿀템","인테리어/DIY","가전/도구","뷰티/셀프케어","정리/수납"];
 let overseasFilter = "전체";
 let overseasCleanOnly = false;
@@ -1630,7 +1658,7 @@ function render(opts){
   const el = document.getElementById("cards");
   if(!items.length){
     el.innerHTML = (searching && _looksLikeUrl(STATE.q))
-      ? '<div class="empty">🔗 링크 감지 — <b>엔터</b>를 누르면 이 영상의 원본·유사 영상을 찾아드려요.</div>'
+      ? '<div class="empty">🔗 링크 감지 — <b>엔터</b>를 누르면 <b>이 영상 카드</b>를 여기에 띄웁니다.<br><span style="font-size:12px">비슷한 영상 찾기는 카드 위 <b>🔍 숏템파워검색</b>으로 (그때만 렌즈를 씁니다)</span></div>'
       : ((STATE.filters.fresh||STATE.filters.rising)
           ? '<div class="empty">0건 — 걸러내기 때문입니다. 위의 <b>🆕 신작</b>·<b>🔥 급상승</b>을 꺼보세요.</div>'
           : '<div class="empty">결과 없음.</div>');
@@ -2431,7 +2459,23 @@ async function traceByUrl(urlArg){
     const r=await fetch('/api/lens/trace_url',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
     const body=document.getElementById('scriptBody');
     if(r.status===429){ const d=await r.json(); if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">💰 '+(d.error||'이번 달 렌즈 한도 초과')+'</div>'; return; }
-    const d=await r.json();
+    // ★JSON이 아닌 응답(로그인 페이지·프록시 오류 HTML)을 그대로 파싱하면 브라우저가
+    //   "Unexpected token '<'"만 던져 원인을 알 수 없다(2026-08-18 사장님 제보 — 서버
+    //   로그에는 요청 자체가 없어 어디서 막혔는지도 못 갈랐다). 상태코드와 응답 앞머리를
+    //   사람이 읽을 말로 바꿔 보여준다.
+    const raw=await r.text();
+    let d=null;
+    try{ d=JSON.parse(raw); }catch(_){
+      const head=(raw||'').replace(/\s+/g,' ').slice(0,120);
+      const why = r.status===401||r.status===403 ? '로그인이 풀렸어요 — 새로고침 후 다시 눌러주세요'
+                : r.status>=500 ? '서버가 오류를 냈어요('+r.status+')'
+                : r.status===404 ? '이 기능 주소를 못 찾았어요(배포 확인 필요)'
+                : '서버가 JSON이 아닌 응답을 보냈어요(' + r.status + ')';
+      if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">❌ '+why+
+        '</div><div style="padding:0 10px 10px;color:var(--sub);font-size:11px">응답 앞부분: '+
+        (head?head.replace(/</g,'&lt;'):'(빈 응답)')+'</div>';
+      return;
+    }
     if(!d.ok){ if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">❌ '+(d.error||'추적 실패')+'</div>'; return; }
     const items=(d.items||[]);
     items.forEach(i=>{ i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); });
@@ -2447,6 +2491,75 @@ async function traceByUrl(urlArg){
     renderLens('__trace__');
   }catch(e){ const body=document.getElementById('scriptBody'); if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
 }
+// ── 🔗 주소로 가져오기(2026-08-18 사장님: "주소 넣으면 이렇게 카드로 뜨게") ─────────
+// ★렌즈(SerpApi 월 100회·유료)를 타지 않는다. 사장님이 원한 건 "넣은 그 영상"이고,
+//   비슷한 영상은 아래 버튼으로 **누를 때만** 옛 경로(traceByUrl)를 부른다.
+// ★카드는 새로 만들지 않는다 — 렌즈 결과가 쓰는 renderLens를 그대로 쓴다.
+//   담기·숏템파워검색·영상보기가 이미 붙어 있고, 새로 그리면 언젠가 서로 달라진다(0순위-B).
+// ★팝업이 아니라 **랭킹 화면 카드 자리(#cards)에 바로** 그린다(2026-08-18 사장님:
+//   "여기서 그 영상만 나오게"). 목록이 사라지는 게 아니라, 검색어를 지우면 되돌아온다.
+async function openUrlCard(urlArg){
+  const pre = (typeof urlArg==='string' && urlArg.trim()) ? urlArg.trim()
+            : ((document.getElementById('rankSearch')||{}).value||'').trim();
+  const url = _looksLikeUrl(pre) ? _normUrl(pre) : '';   // 스킴 없는 주소도 받는다
+  const box = document.getElementById('urlCardBox');     // 전용 자리(#cards는 grid라 못 쓴다)
+  const grid = document.getElementById('cards');
+  if(!box) return;
+  const show = html => { box.style.display=''; box.innerHTML=html; if(grid) grid.style.display='none'; };
+  if(!url){ show('<div class="empty">🔗 영상 주소를 붙여넣고 <b>엔터</b>를 누르세요.</div>'); return; }
+  show('<div class="empty">🔗 영상 정보를 읽는 중… (10~20초)</div>');
+  let d=null;
+  try{ d=await (await fetch('/api/lens/single?url='+encodeURIComponent(url))).json(); }catch(e){}
+  if(!(d && d.ok && d.item)){
+    show('<div class="empty" style="color:#e0623d">❌ '+((d&&d.error)||'가져오지 못했어요 — 주소를 다시 확인해 주세요')+'</div>');
+    return;
+  }
+  const it=d.item;
+  it.savesc='lens_'+it.platform+'_'+_lensHash(it.url);
+  let saved=new Set();
+  try{ saved=new Set((await (await fetch('/api/mix/basket')).json()).shortcodes||[]); }catch(e){}
+  LENS_STATE['__single__']={items:[it], on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
+    sel:new Set(), shortsOnly:false, foreignOnly:false, videoOnly:false, hideOfftopic:false,
+    ytLoading:false, keyword:'', caption:'', cnCands:[]};
+  // 머리줄을 먼저 넣고, 렌즈 렌더러는 그 아래 전용 칸에 그린다.
+  // ★한 칸에 같이 넣지 않는다 — 렌즈 뭉치(#lensRoot)는 통짜 블록이라 형제로 두면
+  //   부모가 grid일 때 칸이 갈린다(2026-08-18 사장님 캡처: 좌우로 쪼개져 보였다).
+  box.innerHTML =
+    `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0 10px">
+       <span style="background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12px;color:var(--sub)">🔗 주소로 가져온 영상</span>
+       <button onclick="lensSearchByUrl('${url.replace(/'/g,"\'")}')"
+               style="padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt);font-weight:800;cursor:pointer">🔍 숏템파워검색</button>
+       <span style="color:var(--sub);font-size:12px">비슷한 영상 찾기 — 구글렌즈를 씁니다(월 100회 한도)</span>
+       <button onclick="closeUrlCard()"
+               style="margin-left:auto;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--sub);cursor:pointer">✕ 랭킹으로 돌아가기</button>
+     </div><div id="urlCardMount"></div>`;
+  renderLens('__single__', 'urlCardMount');
+  // 단일 카드에는 렌즈 도구줄(플랫폼 칩·전체선택·소재 넣기·검색어 조합)이 전부 군더더기다
+  // — 한 장뿐이라 고를 것도 거를 것도 없고, "아직 검색어가 없습니다" 같은 안내가 카드보다
+  // 위에 깔려 정작 눌러야 할 버튼이 화면 밖으로 밀린다(2026-08-18 사장님 캡처).
+  // → #lensRoot의 자식 중 **카드 격자(.cards)만 남기고** 나머지는 접는다.
+  const root=document.getElementById('urlCardMount');
+  const lens=root && root.querySelector('#lensRoot');
+  if(lens) Array.from(lens.children).forEach(el=>{
+    if(!el.classList.contains('cards')) el.style.display='none';
+  });
+}
+// 주소 카드를 띄운 채로 다른 검색어를 치면 랭킹 목록이 계속 숨겨져 "목록이 사라졌다"가 된다.
+// 링크가 아닌 글자를 치는 순간 자동으로 닫는다(닫기 버튼을 못 찾아도 빠져나올 수 있게).
+function _urlCardAutoClose(v){
+  const box=document.getElementById('urlCardBox');
+  if(box && box.style.display!=='none' && !_looksLikeUrl(v)) closeUrlCard();
+}
+function closeUrlCard(){
+  const box=document.getElementById('urlCardBox'), grid=document.getElementById('cards');
+  if(box){ box.style.display='none'; box.innerHTML=''; }
+  if(grid) grid.style.display='';
+  const s=document.getElementById('rankSearch'); if(s) s.value='';
+  try{ setSearch(''); }catch(e){}
+}
+// 숏템파워검색(주소용) — 카드의 lensSearch는 랭킹 항목(shortcode)용이라 주소엔 못 쓴다.
+// 실제 검색은 종전과 **같은** traceByUrl(=/api/lens/trace_url)을 그대로 부른다.
+function lensSearchByUrl(url){ traceByUrl(url); }
 // ─── TRACE-END
 // 프레임(비전)+캡션으로 유튜브를 키워드 검색해 렌즈 결과에 덧붙인다(무료, 비동기).
 async function fetchLensYt(shortcode, caption, blob){
@@ -2613,7 +2726,17 @@ function toggleLensShorts(shortcode){
 const _HANGUL_RE=/[가-힣]/;
 function toggleLensForeign(shortcode){
   const st=LENS_STATE[shortcode]; if(!st) return;
-  st.foreignOnly=!st.foreignOnly; renderLens(shortcode);
+  st.foreignOnly=!st.foreignOnly;
+  if(st.foreignOnly) st.koreanOnly=false;   // 둘 다 켜면 결과가 0이 된다(서로 배타)
+  renderLens(shortcode);
+}
+// 🇰🇷 한국만(2026-08-18 사장님 요청) — '해외만'의 반대. 제목에 한글이 있는 결과만 남긴다.
+// 판정은 해외만과 **같은 자(_HANGUL_RE)**를 쓴다 — 따로 만들면 한쪽만 고쳐져 어긋난다.
+function toggleLensKorean(shortcode){
+  const st=LENS_STATE[shortcode]; if(!st) return;
+  st.koreanOnly=!st.koreanOnly;
+  if(st.koreanOnly) st.foreignOnly=false;
+  renderLens(shortcode);
 }
 // 🎬 영상만 — 인스타 카드뉴스(사진·카러셀) 가리기(2026-07-30 사장님 제보 "카드뉴스가 많다").
 // 판정은 서버 lens_discover.is_photo_post가 URL 경로로 한다(/p/=사진 후보, /reel·/tv=영상).
@@ -2887,8 +3010,10 @@ function _lensIgDiag(st){
   if(photo) parts.push(`카드뉴스 ${photo}`);
   return `<span style="font-size:11px;color:var(--sub)" title="구글렌즈가 준 인스타 링크 중 개별 영상 게시물이 아닌 것들입니다. 카드뉴스는 위 '🎬 영상만'을 끄면 다시 보입니다">📷 렌즈 인스타 원본 ${d.ig_raw}건 → 표시 ${shownIg}건 (제외: ${parts.join(', ')})</span>`;
 }
-function renderLens(shortcode){
-  const box=document.getElementById('scriptBody');   // 모달 body에 렌더(인라인 X → UI 안 망가짐)
+function renderLens(shortcode, mountId){
+  // mountId를 주면 그 자리에 그린다(2026-08-18 '주소로 가져오기'는 팝업 말고 랭킹 화면
+  // 카드 자리에 바로 뜨게 해달라는 사장님 요청). 안 주면 종전대로 모달 body.
+  const box=document.getElementById(mountId||'scriptBody');
   const st=LENS_STATE[shortcode]; if(!st || !box) return;
   const chips=LENS_PLATFORMS.map(p=>{
     const active=st.on.has(p.k);
@@ -2900,6 +3025,7 @@ function renderLens(shortcode){
   let shown=st.items.filter(i=>st.on.has(i.platform));
   if(st.shortsOnly) shown=shown.filter(i=>i.is_short!==false);
   if(st.foreignOnly) shown=shown.filter(i=>!_HANGUL_RE.test(i.title||''));
+  if(st.koreanOnly) shown=shown.filter(i=>_HANGUL_RE.test(i.title||''));
   // 카드뉴스(인스타 /p/) 가리기 — 서버가 준 is_photo만 본다(undefined면 통과 = 옛 결과 안전).
   if(st.videoOnly!==false) shown=shown.filter(i=>i.is_photo!==true);
   // 죽은 링크(oEmbed 404 = 삭제·비공개) — 열면 엉뚱한 피드로 떨어져 항상 가린다(2026-08-03).
@@ -2929,11 +3055,14 @@ function renderLens(shortcode){
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px"><input type="checkbox" ${allSel?'checked':''} onclick="lensSelectAll('${shortcode}')"> 전체선택</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="영상 길이 90초 이하(또는 길이 불명)만 표시"><input type="checkbox" ${st.shortsOnly?'checked':''} onclick="toggleLensShorts('${shortcode}')"> 숏폼만</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="제목에 한글이 없는 결과만 표시 — 원본(해외) 영상 찾을 때. 채널명이 아닌 제목 기준 근사치라 완벽하진 않음"><input type="checkbox" ${st.foreignOnly?'checked':''} onclick="toggleLensForeign('${shortcode}')"> 🌍 해외만</label>
+      <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="제목에 한글이 있는 결과만 표시 — 국내 레퍼런스를 볼 때. '해외만'과 반대라 둘은 함께 켜지지 않습니다(제목 기준 근사치)"><input type="checkbox" ${st.koreanOnly?'checked':''} onclick="toggleLensKorean('${shortcode}')"> 🇰🇷 한국만</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="인스타 카드뉴스(사진·카러셀 게시물)를 가립니다. URL이 /p/면 사진으로 봅니다 — 렌즈 응답에 동영상 여부가 없어서 쓰는 근사치라, 드물게 /p/로 올라간 옛 동영상도 같이 가려집니다(끄면 다시 보임)"><input type="checkbox" ${st.videoOnly!==false?'checked':''} onclick="toggleLensVideoOnly('${shortcode}')"> 🎬 영상만${nPhoto?` <span style="color:var(--sub)">(카드뉴스 ${nPhoto})</span>`:''}</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="소재 키워드가 제목에 하나도 없는 결과(⚠️다른주제?)를 가립니다. 렌즈는 시각 유사도만 보기 때문에 엉뚱한 게시물이 섞입니다. ⚠️중국어·영어 제목은 키워드가 안 맞아 원본(해외) 후보까지 사라질 수 있어 기본 꺼짐"><input type="checkbox" ${st.hideOfftopic?'checked':''} onclick="toggleLensOfftopic('${shortcode}')"> ⚠️ 다른주제 숨기기${nOff?` <span style="color:var(--sub)">(${nOff})</span>`:''}</label>
       <button onclick="lensBulkSave('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">📥 선택 담기(${selCount})</button>
       <button onclick="lensBulkDelete('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">🗑 선택 삭제(${selCount})</button>
-      ${(()=>{const nYt=shown.filter(i=>i.platform==='youtube').length; return nYt?`<button onclick="lensBenchAllYoutube('${shortcode}')" title="이 렌즈 결과의 유튜브 채널들(짜집기 채널)을 전부 벤치 리스트에 등록 → 채널기반 수집에 편입" style="${btnCss};border-color:var(--accent);color:var(--accent);font-weight:700">➕ 유튜브 채널 전부 벤치등록(${nYt})</button>`:'';})()}
+      ${''/* ➕ 유튜브 채널 전부 벤치등록 — 2026-08-18 사장님 "이거 숨기고".
+             기능(lensBenchAllYoutube)은 남겨둔다. 되살릴 땐 이 자리에 버튼만 다시 넣으면 된다.
+             한 번에 15개 채널이 수집목록에 들어가 되돌리기 번거로운 버튼이라 앞줄에서 뺀다. */}
       ${st.lensLoading?'<span style="color:var(--sub)">🔍 렌즈 결과 불러오는 중…</span>':''}
       ${st.lensErr?`<span style="color:#e0623d">${st.lensErr}</span>`:''}
       ${st.ytLoading?'<span style="color:var(--sub)">▶️ 유튜브 불러오는 중…</span>':''}
@@ -3026,6 +3155,7 @@ function renderLens(shortcode){
           <button class="view" title="카드 안에서 바로 재생합니다(원본으로 안 나갑니다)" onclick="lensPlayInline('${shortcode}','${i.savesc}', this.closest('.card')?.querySelector('.thumb img'))">▶ 미리보기</button>
           <button class="save${isSaved?' saved':''}" onclick="toggleLensSave('${shortcode}','${i.savesc}',this)">${isSaved?'🎬 담김✓':'📥 담기'}</button>
           ${i.platform==='youtube'?`<button class="view" title="이 채널을 벤치 리스트에 등록(채널기반 수집 편입)" onclick="lensBenchOne(this,'${encodeURIComponent(i.url||'')}')">➕ 벤치</button>`:''}
+          ${shortcode==='__single__'?`<button class="script-btn" title="이 영상으로 비슷한 영상 찾기(구글렌즈 — 월 100회 한도)" onclick="lensSearchByUrl('${(i.url||'').replace(/'/g,"\\'")}')">🔍 숏템파워검색</button>`:''}
         </div>
         <div style="margin-top:4px"><a href="${_openUrl(i.url)}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🔗 원본 열기</a></div>
         <div class="enrich" data-url="${esc(i.url||'')}" data-platform="${esc(plabel||'')}"

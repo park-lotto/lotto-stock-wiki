@@ -65,6 +65,90 @@ def _normalize_canonical(text, bucket=None):
     return t
 
 
+def _apply_beat_sources(beats, structure, seg_map):
+    """2단계가 남긴 출처 장면(src_seg)을 비트 primary에 반영한다.
+
+    ★지어낸 번호는 무시한다 — seg_map에 실재하는 것만 쓴다(환각 방어).
+    ★이미 그 장면을 쓰고 있으면 그대로 둔다. 다른 장면이면 primary를 갈아끼우고
+      원래 primary는 alternates 맨 앞으로 살려 둔다(화면 재고를 버리지 않는다).
+    ★역할(role)이 맞는 것끼리만 짝짓는다 — 순서만 믿으면 비트 수가 다를 때 어긋난다.
+    """
+    srcs = (structure or {}).get("beat_sources")
+    if not srcs or not isinstance(srcs, list):
+        return beats
+    by_role = {}
+    for i, x in enumerate(srcs):
+        if isinstance(x, dict) and x.get("seg"):
+            by_role.setdefault(str(x.get("role") or "").lower(), []).append(x["seg"])
+    if not by_role:
+        return beats
+    from shopping_shorts import edit_plan as _ep
+    for b in beats:
+        role = str(b.get("role") or "").lower()
+        want = by_role.get(role)
+        if not want:
+            continue
+        sid = want.pop(0)
+        if sid not in seg_map:
+            continue                      # 지어낸 번호 — 무시하고 종전 화면을 쓴다
+        cur = (b.get("primary") or {}).get("seg_id")
+        if cur == sid:
+            continue
+        g = _ep._ground_ref({"seg_id": sid}, seg_map)
+        if not g:
+            continue
+        alts = list(b.get("alternates") or [])
+        if b.get("primary"):
+            alts.insert(0, b["primary"])
+        b["primary"] = g
+        b["alternates"] = [a for a in alts if (a or {}).get("seg_id") != sid]
+        b["src_seg_applied"] = sid        # 사후에 '출처를 따라갔는가'를 셀 수 있게 남긴다
+    return beats
+
+
+def _ensure_screen_time(plan, store, job_id):
+    """저장 직전 불변식: 비트마다 화면 길이 합 >= 대사 읽는 시간.
+
+    ★왜 store에 있나 — 여기가 **단일 출구**이기 때문이다. 계획을 만드는 경로는 여럿이고
+      (scene_first / 확정대본 / 단일소스) 앞으로 더 생길 수 있지만, 저장은 여기 하나를
+      지난다. 만드는 쪽마다 채우면 반드시 한 곳이 빠지고(오늘만 다섯 번 반복됐다),
+      채운 뒤 도는 후처리(재픽)가 되돌리면 그것도 못 잡는다.
+    ★실패해도 저장을 막지 않는다(fail-open) — 보장은 부가가치지 저장의 전제가 아니다.
+    """
+    try:
+        beats = (plan or {}).get("beats")
+        if not beats:
+            return plan
+        job = store.get_mix_job(job_id) or {}
+        extract = job.get("extract") or {}
+        if not extract:
+            return plan
+        from shopping_shorts import edit_plan as _ep
+        srcs = [{"video_id": vid, "segments": (ex or {}).get("segments") or []}
+                for vid, ex in extract.items() if isinstance(ex, dict)]
+        seg_map, _ = _ep._build_inventory(srcs)
+        if not seg_map:
+            return plan
+        # ★출처 장면 우선 적용(2026-08-18 사장님 "그 대본에 장면을 사용하면 좋다").
+        #   2단계가 문장마다 '어느 대목을 보고 썼는지'(src_seg)를 남기고, 그 값이
+        #   script_structure.beat_sources로 여기까지 온다. 짐작이 아니라 **원래 그 말이
+        #   나온 그림**이라 가장 정확하다. 화면 길이 채우기 **앞**에 둔다 — primary가
+        #   바뀌면 길이도 다시 재야 한다.
+        #   ⚠️여기(저장 출구)에 두는 이유는 화면길이와 같다: 계획을 만드는 경로가 여럿이라
+        #     만드는 쪽마다 적으면 반드시 한 곳이 빠진다(0순위-B).
+        beats = _apply_beat_sources(beats, (job.get("script_structure") or {}), seg_map)
+        # ★확정 대본을 지켰는지 여기서 검사한다(2026-08-18 사장님 "영상이랑 대본이랑 다르다").
+        #   프롬프트는 "그대로 써라"를 두 번 말하지만 지켰는지 보는 곳이 없었다 — 실측으로
+        #   훅·중간 비트가 장면 설명 말투로 창작돼 있었다. 화면길이·출처장면과 같은 이유로
+        #   저장 출구에 둔다(만드는 경로가 여럿, 0순위-B).
+        beats, _restored = _ep.enforce_scripted_narration(beats, job.get("given_script") or "")
+        out = dict(plan)
+        out["beats"] = _ep._fill_beat_screen_time(beats, seg_map)
+        return out
+    except Exception:      # noqa: BLE001 — 보장 실패가 저장을 막으면 안 된다
+        return plan
+
+
 class Store:
     def __init__(self, db_path):
         self.db_path = Path(db_path)
@@ -3681,6 +3765,18 @@ class Store:
             cols.append("clean_regions_json=?")
             vals.append(json.dumps(fields["clean_regions"], ensure_ascii=False)
                         if fields["clean_regions"] else None)
+        # ★화면 길이 불변식을 **저장 직전 한 곳**에서 보장한다(2026-08-18).
+        #   지금까지 `_fill_beat_screen_time`은 계획을 만드는 경로마다 따로 불렸다
+        #   (_ground_candidate / build_edit_plan / _single_source_candidates = 3곳).
+        #   그래서 경로가 갈릴 때마다 한쪽만 고쳐졌고, 같은 병이 오늘만 다섯 번 반복됐다
+        #   ("scene_first엔 있고 legacy엔 없다"). 게다가 scene_first는 fill **뒤에**
+        #   재픽이 화면을 갈아치워 길이가 다시 줄었다 — 만드는 쪽에서 아무리 채워도
+        #   그 뒤 단계가 되돌리면 소용이 없다.
+        #   ★edit_plan이 저장되려면 반드시 여기를 지난다 = 이게 단일 출구다.
+        #     여기서 보장하면 앞으로 어떤 경로·후처리가 생겨도 저장된 계획은 항상
+        #     '화면 길이 ≥ 대사 길이'를 만족한다. 실패해도 저장은 막지 않는다(fail-open).
+        if fields.get("edit_plan"):
+            fields = dict(fields, edit_plan=_ensure_screen_time(fields["edit_plan"], self, job_id))
         for k, col in (("extract", "extract_json"), ("edit_plan", "edit_plan_json")):
             if k in fields:
                 cols.append(f"{col}=?")

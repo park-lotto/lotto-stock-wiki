@@ -48,6 +48,41 @@ _TAIL_EMI = ("거든요", "더라고요", "더라구요", "었어요", "았어�
 DENSITY_LO, DENSITY_HI = 0.7, 1.4
 DEFAULT_CHARS_PER_30S = 135      # 스타일에 실측값이 없을 때만(일반 기준 4.5자/초)
 
+# ★말 밀도의 **천장**(2026-08-18 사장님: "계속 4초 이상 나온다 / 30초 이내가 릴스 기본").
+#   히트작 실측 밀도(chars_per_30s)를 그대로 목표로 주면 264~377자가 나오는데, 우리
+#   라이브 보이스의 실측 속도는 **8.19자/초**(edit_plan.py:4226, 라이브 렌더 20건)라
+#   300자 = 약 37초다. 즉 "30초짜리"를 시켜놓고 44초 대본을 받고 있었다.
+#   밀도는 스타일의 색이지만 길이는 플랫폼 규격이다 — 규격이 이긴다.
+# ★상수를 여기 또 박지 않는다(2026-08-18). 말속도는 edit_plan이 이미 정한다 —
+#   _SYLLABLES_PER_SEC(5.7, 성우 14명 실합성 측정) × _speech_speed()(라이브 배속 1.44).
+#   여기에 8.19를 따로 적어두면 배속을 튜닝한 날 화면·판정·계획이 서로 다른 초를 말한다
+#   (같은 판단이 두 곳에 적히면 반드시 어긋난다 = 0순위-B). 값 하나만 빌려 쓴다.
+def _speech_cps():
+    from shopping_shorts import edit_plan as _ep
+    return _ep._SYLLABLES_PER_SEC * _ep._speech_speed()
+
+
+def __getattr__(name):          # 모듈 속성 지연 평가 — import 순환을 피한다
+    if name == "SPEECH_CHARS_PER_SEC":
+        return _speech_cps()
+    raise AttributeError(name)
+
+
+def est_seconds(text):
+    """이 문장이 우리 보이스로 몇 초인가(실측 8.19자/초). 화면 표시·판정이 **같은 상수**를
+    쓰게 하려고 여기에 둔다(0순위-B) — 화면이 따로 계산하면 언젠가 다른 수를 말한다."""
+    n = len(norm(text or ""))
+    return round(n / _speech_cps(), 1) if n else 0.0
+
+
+def density_target(style, seconds=30):
+    """이 스타일·이 길이에서 목표 글자수. **한 곳에서만 정한다**(0순위-B) —
+    프롬프트(bank_assemble.style_block)와 판정(check)이 서로 다른 수를 쓰면
+    "시킨 대로 썼는데 반려"가 난다."""
+    sec = max(5, min(int(seconds or 30), 90))
+    tgt = int(((style or {}).get("chars_per_30s") or DEFAULT_CHARS_PER_30S) * sec / 30)
+    return max(1, min(tgt, int(_speech_cps() * sec)))
+
 
 def norm(s):
     """비교용 정규화 — 공백·문장부호 제거 + 어미 표기 흔들림 통일.
@@ -199,7 +234,22 @@ def grounding_check(full, facts_text):
     return (not bad), bad
 
 
-def check(style, beats, facts_text=""):
+#: 제품명에서 검사에 쓸 토큰을 뽑는다. 브랜드·수식어가 섞여 있어도 하나만 맞으면 된다.
+#  ★한 글자는 버린다 — '펜' 같은 조각은 아무 대본에나 걸려 검사가 무력해진다.
+#  ★'다이소'처럼 파는 곳 이름도 남긴다: 그 단어라도 나오면 우리 소재 얘기가 맞다.
+def _product_tokens(product):
+    raw = (product or "").strip()
+    if not raw:
+        return []
+    out = []
+    for t in re.split(r"[\s/·,()\[\]&]+", raw):
+        t = t.strip()
+        if len(t) >= 2:
+            out.append(norm(t))
+    return [t for t in out if t]
+
+
+def check(style, beats, facts_text="", product="", seconds=30):
     """(checks, full_text) 반환. checks = [{name, ok, detail}, ...]
 
     style: {"beat_roles": [...], "templates": {role: [...]}, "chars_per_30s": int}
@@ -232,11 +282,24 @@ def check(style, beats, facts_text=""):
     checks.append({"name": "CTA 단어유도", "ok": "남겨주" in norm(full),
                    "detail": full[-40:]})
 
-    tgt = style.get("chars_per_30s") or DEFAULT_CHARS_PER_30S
-    lo, hi = int(tgt * DENSITY_LO), int(tgt * DENSITY_HI)
+    tgt = density_target(style, seconds)
+    # ★위 천장(hi)은 말속도 환산 길이를 절대 못 넘는다 — 안 그러면 245자로 시켜놓고
+    #   343자(=42초)까지 통과시켜 "30초짜리"가 다시 40초가 된다(2026-08-18).
+    _cap = int(_speech_cps() * max(5, min(int(seconds or 30), 90)))
+    lo, hi = int(tgt * DENSITY_LO), min(int(tgt * DENSITY_HI), _cap)
     n = len(norm(full))
+    # ★방향을 말해준다(2026-08-18 사장님 "40초 대본이 나오는데 고친 거 아니었나").
+    #   예전 detail은 "300자 / 히트작 245자"라 넘쳤는지 모자란지가 안 드러났고, 재작성
+    #   지시문도 "모자라면 채워라"만 있어 모델이 계속 길게 썼다 — 판정은 맞는데 고칠
+    #   방향을 안 알려주니 재작성이 소용없었다.
+    if n > hi:
+        _d = "%d자 — %d자를 **넘겼다**. %d자 이하로 줄여라(영상 길이 규격)." % (n, hi, hi)
+    elif n < lo:
+        _d = "%d자 — %d자에 모자란다. %d자 이상으로 채워라." % (n, lo, lo)
+    else:
+        _d = "%d자 / 이 스타일 히트작 %d자" % (n, tgt)
     checks.append({"name": "말 밀도(%d~%d자)" % (lo, hi), "ok": lo <= n <= hi,
-                   "detail": "%d자 / 이 스타일 히트작 %d자" % (n, tgt)})
+                   "detail": _d, "over": n > hi})
 
     # ★고조 심화(2026-08-16) — 헌장은 "한 단계 더 올라가는 문장을 반드시 하나, 한 번만".
     #   0회면 밋밋하고, 2회 이상이면 남발이라 오히려 죽는다(헌장 문구 그대로).
@@ -246,6 +309,24 @@ def check(style, beats, facts_text=""):
                               "새로운 장점 하나를 더 얹어라" if esc == 0
                               else ("%d번 나왔다 — 한 번만 써라(남발하면 죽는다)" % esc
                                     if esc > 1 else "OK"))})
+
+    # ★소재 일치(2026-08-18) — **출구 검사**. 이번 사고("재료는 네일펜인데 대본은 주방
+    #   기름 가림막")를 막으려고 지금까지 한 것은 전부 프롬프트에 경고를 더 넣는 일이었다.
+    #   그건 통로를 하나씩 막는 두더지잡기라, 새 통로가 생기면 또 샌다.
+    #   여기서 잡으면 **어디서 새든 결과에서 걸린다** — 출구는 하나뿐이다.
+    #   판정은 느슨하게: 제품명 토큰이 **하나라도** 나오면 통과. 대본이 제품을 '이거'로만
+    #   부르는 건 정상이므로 전체 일치를 요구하면 멀쩡한 대본을 반려한다(오탐이 더 나쁘다).
+    #   product를 안 주면 검사 자체를 건너뛴다 = 회귀 0.
+    if _product_tokens(product):
+        toks = _product_tokens(product)
+        nf = norm(full)
+        # 토큰 그대로 못 찾으면 **앞 2글자**로도 본다 — '네일펜'을 대본이 '네일'로만
+        # 부르는 건 정상이다. 오탐(멀쩡한 대본 반려)이 미탐보다 나쁘므로 느슨하게 잡는다.
+        hit = [t for t in toks if t in nf or (len(t) >= 3 and t[:2] in nf)]
+        checks.append({"name": "소재 일치", "ok": bool(hit),
+                       "detail": ("OK(%s)" % ", ".join(hit[:3])) if hit else
+                                 ("대본에 「%s」 얘기가 한 번도 안 나온다 — 다른 소재로 "
+                                  "샜을 가능성이 높다(재료 밖 소재 금지)" % product)})
 
     # ★수치 그라운딩(2026-08-16) — 재료를 준 경우에만. 지어낸 수치를 잡는다.
     ok_g, bad = grounding_check(full, facts_text)
@@ -270,5 +351,8 @@ def gate_feedback(checks):
         return ""
     return ("\n\n[재작성 지시 — 방금 쓴 것이 아래를 어겼다. 그대로 고쳐라]\n"
             + "\n".join("- %s: %s" % (c["name"], c["detail"]) for c in bad)
-            + "\n분량이 모자라면 문장을 더 쪼개고 상황 묘사를 늘려 채워라. "
-              "구조·문장틀은 그대로 두고 살만 붙여라.")
+            + ("\n분량이 넘쳤다 — **문장을 덜어내거나 짧게 줄여라**. 칸 개수·순서는 "
+               "그대로 두고 설명을 압축해라. 길이는 영상 규격이라 못 넘긴다."
+               if any(c.get("over") for c in bad) else
+               "\n분량이 모자라면 문장을 더 쪼개고 상황 묘사를 늘려 채워라. "
+               "구조·문장틀은 그대로 두고 살만 붙여라."))

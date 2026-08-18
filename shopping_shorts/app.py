@@ -2327,9 +2327,16 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                 "full_text": _base_script or "",
                 "category": body.get("category") or "",
             }
+        elif (body.get("job_id") or body.get("work_id")):
+            # ★재료가 있는지는 _materials_for_generate가 정한다(0순위-B). 여기서 씨앗 1편의
+            #   원문만 보고 막으면, **담긴 다른 영상·쿠팡 재료·장면 태깅이 멀쩡히 있어도**
+            #   생성이 통째로 거부된다(2026-08-18 사장님 제보: 해외 영상처럼 씨앗의 대본
+            #   원문이 아직 안 뽑힌 경우 "위키에 없는 항목 — 먼저 S급으로 저장하세요"로 막혔다).
+            #   빈 껍데기로 통과시키고, 재료가 진짜 없으면 아래 스타일 경로가 정확히 말한다.
+            it = {"structure": {}, "full_text": "", "category": body.get("category") or ""}
         else:
             return JSONResponse(status_code=404, content={"ok": False, "error": "위키에 없는 항목 — 먼저 S급으로 저장하세요"})
-    if not (it.get("structure") or it.get("full_text")):
+    if not (it.get("structure") or it.get("full_text")) and not (body.get("job_id") or body.get("work_id")):
         return JSONResponse(status_code=422, content={"ok": False, "error": "구조분석/대본이 비어 생성 불가 — 재저장 필요"})
     mode = body.get("mode", "remake")
     my_topic = body.get("my_topic", "")
@@ -2393,6 +2400,22 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         # [바꾸기] 부분 재생성(/api/script/beat/regen)도 **같은 함수**를 쓴다.
         _src, _facts_block, _job, _jid, _scene_block = _materials_for_generate(
             it, body, store, _cid(request))
+        # 재료가 한 편도 없으면 여기서 멈춘다 — 이 상태로 생성하면 모델이 통째로 지어낸다.
+        # (씨앗의 대본 원문이 아직 안 뽑힌 영상은 1단계 분석이 끝나야 재료가 생긴다.)
+        if not [x for x in (_src or []) if (x.get("full_text") or "").strip()]:
+            return JSONResponse(status_code=422, content={
+                "ok": False,
+                "error": "재료(대본 원문)가 아직 없어요 — 1단계에서 담긴 영상의 대본 분석이 "
+                         "끝난 뒤 다시 눌러주세요. 급하면 '직접 쓰기'로 대본을 넣어도 됩니다."})
+        # ★재료 분량을 알고 나서 은행을 다시 짠다(2026-08-18). 위(2351)에서는 재료를 아직
+        #   몰라 예산을 못 건다 — 그대로 두면 은행이 재료를 압도한 채 프롬프트에 실린다
+        #   (실측 사고: 재료 750자 vs 은행 2,822자 → 대본이 은행 소재로 끌려감).
+        #   여기서 source_chars를 넘겨 은행이 재료의 1.5배를 넘지 않게 자른다.
+        if _bank_ctx:
+            _sc = sum(len((s.get("full_text") or "")) for s in (_src or [])[:3])
+            if _sc:
+                _bank_ctx = bank_assemble.assemble_bank_context(
+                    store, it.get("category") or "", source_chars=_sc) or _bank_ctx
         _styled = script_generate.generate_by_styles(
             _src, _picked, target_seconds=body.get("target_seconds") or 30,
             bank_context=_bank_ctx, facts_block=_facts_block)
@@ -2409,7 +2432,10 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         # ★무엇을 재료로 썼는지 화면에 돌려준다(2026-08-17 사장님 제보 "대본이 무슨
         #   영상인지 모르겠다"). 재료가 어긋나도 화면이 말을 안 하면 아무도 모른다 —
         #   대본만 보고는 "어느 영상에서 나온 건지" 판별할 방법이 없다.
-        return {"ok": True, "drafts": _styled, "mode": "style",
+        # ★화면이 "영상으로 몇 초"를 말하려면 같은 상수를 써야 한다(0순위-B).
+        #   문장을 고치면 초가 바뀌므로 값만이 아니라 환산 계수도 내려준다.
+        from shopping_shorts.script_gate import SPEECH_CHARS_PER_SEC as _CPS
+        return {"ok": True, "drafts": _styled, "mode": "style", "cps": _CPS,
                 "materials": {
                     "sources": [{"chars": len(s.get("full_text") or ""),
                                  "head": (s.get("full_text") or "")[:40]} for s in _src],
@@ -3985,6 +4011,12 @@ def api_mix_render(background_tasks: BackgroundTasks, body: dict):
     # removing_subtitles = VMake 유료 단계 진행 중. 여기서 재예약되면 그 돈이 두 번 나간다.
     if job.get("status") in ("rendering", "removing_subtitles") and not _render_is_stale(job):
         return {"ok": True, "status": job["status"]}
+    # 🖼 썸네일을 영상 맨 앞에 붙일지(2026-08-18 사장님 요청). 렌더 요청과 같이 받아
+    # thumbnail JSON에 적어둔다 — 컬럼을 새로 파지 않고, 다시 열어도 체크가 남는다.
+    if "thumb_intro" in body:
+        thumb = job.get("thumbnail") or {}
+        thumb["intro"] = bool(body.get("thumb_intro"))
+        store.update_mix_job(job_id, thumbnail=thumb)
     store.update_mix_job(job_id, status="rendering", error=None)
     Store(DB_PATH).enqueue("render", {"job_id": job_id})
     return {"ok": True, "status": "rendering"}
@@ -4286,6 +4318,41 @@ async def api_admin_eleven_voice_register(request: Request):
                                  lang=(body.get("lang") or "KR").strip() or "KR",
                                  bake=bool(body.get("bake", True)))
     return {"ok": True, **res}
+
+
+@app.post("/api/admin/eleven-voices/preview")
+async def api_admin_eleven_voice_preview(request: Request):
+    """등록 전에 **우리 문장**으로 들어본다. 첫 1회만 실TTS(크레딧), 그 뒤엔 캐시 파일.
+
+    일레븐랩스 원본 preview_url은 보이스마다 언어·길이가 제각각이라 비교가 안 된다
+    (2026-08-18 사장님 "샘플이 이상한 것만 되어있다")."""
+    if (deny := _require_admin(request)) is not None:
+        return deny
+    from shopping_shorts import eleven_voices
+    body = await request.json()
+    voice_id = (body.get("voice_id") or "").strip()
+    if not voice_id:
+        return JSONResponse({"ok": False, "error": "voice_id 필요"}, status_code=400)
+    try:
+        _, cached = eleven_voices.make_preview(voice_id, force=bool(body.get("force")))
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": f"샘플 생성 실패: {e}"}, status_code=502)
+    return {"ok": True, "cached": cached,
+            "url": f"/api/admin/eleven-voices/preview/{voice_id}.mp3"}
+
+
+@app.get("/api/admin/eleven-voices/preview/{voice_id}.mp3")
+def api_admin_eleven_voice_preview_file(voice_id: str, request: Request):
+    if (deny := _require_admin(request)) is not None:
+        return deny
+    from shopping_shorts import eleven_voices
+    f = eleven_voices.preview_path(voice_id)
+    if not f.exists():
+        return JSONResponse({"ok": False}, status_code=404)
+    # no-cache: 같은 이름으로 다시 구울 수 있다(force) — 브라우저가 옛 소리를 들려주면
+    # "다시 만들었는데 그대로"가 된다(2026-07-17 샘플 캐시 실사고와 같은 함정).
+    return FileResponse(str(f), media_type="audio/mpeg",
+                        headers={"Cache-Control": "no-cache"})
 
 
 @app.delete("/api/admin/eleven-voices/{group_id}")
@@ -5032,11 +5099,13 @@ def api_thumb_selected(job_id: str):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    thumb = job.get("thumbnail") or {}
+    intro = bool(thumb.get("intro"))          # 🖼 '영상 맨 앞에 넣기' 체크 복원용(2026-08-18)
     p = _selected_thumb_path(job)
     if not p:
-        return {"ok": True, "name": None, "url": None}
-    name = (job.get("thumbnail") or {}).get("selected")
-    return {"ok": True, "name": name,
+        return {"ok": True, "name": None, "url": None, "intro": intro}
+    name = thumb.get("selected")
+    return {"ok": True, "name": name, "intro": intro,
             "url": f"/api/produce/thumb/file/{job_id}/{name}"}
 
 
@@ -7486,9 +7555,13 @@ def _as_cid(customer_id):
 def check_and_count(customer_id, op):
     """유료 op(lens/render/script) 실행 전 호출. 일일 상한 초과면 False(막기),
     아니면 카운트+1 후 True. 관리자=무제한 / pro=limit_{op}_pro / 무료=limit_{op}."""
-    # 관리자(사장님·지정 관리자)는 영상 만들기(render) 무제한 — pro 하루 상한(10)에 안 걸린다.
-    # 렌즈(SerpApi)·대본(Gemini)은 실외부비용이라 관리자도 계량 유지(높은 pro 상한).
-    if op == "render" and _is_admin(customer_id):
+    # 관리자(사장님·지정 관리자)는 영상 만들기(render)·렌즈(lens) 무제한.
+    # ★렌즈 해제(2026-08-18 사장님 "관리자는 렌즈검색수 풀어줘") — 종전엔 실외부비용이라
+    #   관리자도 pro 일일 상한에 걸렸는데, 사장님이 테스트하다 막히는 게 더 손해다.
+    #   ⚠️ 이건 **계정별 일일 상한**만 푼다. SerpApi 월 100회(_lens_quota_guard)와 전역
+    #   상한(_global_over_cap)은 그대로 — 진짜 외부 한도라 여기서 풀면 그냥 실패한다.
+    # 대본(Gemini)은 종전대로 계량 유지.
+    if op in ("render", "lens") and _is_admin(customer_id):
         return True
     st = Store(DB_PATH)
     # 🎁 무료체험 이벤트: 체험 유저의 render는 '오늘' 대신 영구 "trial" 버킷으로 딱 1회.
@@ -8643,17 +8716,25 @@ def _load_work_sources(work_id, cid):
     #   계정 전체 픽으로 폴백(회귀0).
     codes = None
     entry_by_code = {}       # shortcode → handoff 항목(추출 전에도 이름·썸네일·URL을 아는 유일한 출처)
+    work_known = False       # ★이 work의 재료 목록을 실제로 읽었는가(읽었으면 폴백 금지)
     if work_id:
         work = store.get_produce_work(work_id, customer_id=cid)
         if work and isinstance(work.get("state"), dict):
+            work_known = True
             handoff = work["state"].get("handoff") or []
             # 순서 보존(핸드오프 순서 = 재료 바구니 순서 → pick 카드의 이름·썸네일 정합).
             codes = [e.get("shortcode") for e in handoff
                      if isinstance(e, dict) and e.get("shortcode")]
             entry_by_code = {e["shortcode"]: e for e in handoff
                              if isinstance(e, dict) and e.get("shortcode")}
-    if not codes:
+    # ★폴백은 '이 work이 뭔지 모를 때'만이다(2026-08-18 사장님 제보 "또 홈데코랩이 뜬다").
+    #   work을 찾았는데 재료가 비어 있으면 그건 **아직 안 담은 것**이지 "계정 전체 도서관 픽을
+    #   대신 쓰라"는 뜻이 아니다. 예전엔 여기서 조용히 폴백해, 담은 적 없는 옛 도서관 픽
+    #   (실측: DbmCnyTTobw '홈데코랩')이 대표 재료로 앉아 대본이 그쪽으로 끌려갔다.
+    #   빈 목록이면 화면이 "1단계에서 담아주세요"를 말한다(build_aipick의 빈 상태).
+    if not codes and not work_known:
         codes = list(store.produce_pick_shortcodes(customer_id=cid))
+    codes = codes or []
     # ★후보 = '넘어온 영상(handoff)' 전부. 예전엔 wiki_list(도서관) ∩ codes로 좁혀,
     #   도서관에 저장 안 된 영상은 후보에서 통째로 탈락했다(2026-07-27 실측 사고:
     #   넘어온 3개 중 도서관에 없던 '홈스텐다드'가 빠지고, 도서관 즐겨찾기인 금손여신·
@@ -8752,6 +8833,268 @@ def _forced_backbone(work_id, cid):
     return state.get("backbone_main") or None
 
 
+def _analysis_state(store, shortcode):
+    """이 영상의 분석이 '끝났나·도는 중인가·포기했나'를 판정한다(2026-08-18 분리).
+
+    ★판정은 여기 한 곳에서만 한다. 1단계 소스카드(source_brief)와 즐겨찾기 화면의
+    분석 신호등이 각자 판정하면 같은 영상을 한쪽은 '완료', 한쪽은 '대기'로 보여
+    사장님이 어느 쪽을 믿어야 할지 모르게 된다(0순위-B).
+
+    반환: (data|None, {state, reason, attempts})  state = done | pending | gave_up
+    """
+    data = None
+    for code in (shortcode, _media_code(shortcode)):
+        if not code:
+            continue
+        data = store.get_script(code)
+        if data:
+            break
+    if data:
+        return data, {"state": "done", "reason": "", "attempts": 0}
+    # 아직 결과가 없다 — 기다리면 되는지, 기다려도 소용없는지 갈라 준다.
+    st = store.autoload_status([shortcode, _media_code(shortcode)])
+    info = st.get(shortcode) or st.get(_media_code(shortcode)) or {}
+    err = info.get("last_error") or ""
+    att = info.get("attempts", 0)
+    stalled = (not err) and att >= _AUTOLOAD_MAX_ATTEMPTS
+    gave_up = stalled or (bool(err) and (att >= _AUTOLOAD_MAX_ATTEMPTS
+                                         or _is_hopeless_error(err)))
+    reason = (_autoload_reason_ko(err) if err else
+              ("분석이 도중에 끊겼어요 — 긴 영상은 더 오래 걸립니다" if stalled else ""))
+    if gave_up:
+        return None, {"state": "gave_up", "reason": reason, "attempts": att}
+    # ★'분석 중'과 '아직 안 걸림'을 가른다(2026-08-18). 결과가 없다는 것만으로 전부
+    #   '분석 중'이라고 하면, 아무도 안 건 영상 앞에서 사장님이 오지 않을 결과를
+    #   기다린다 — 오늘 실제로 그 화면을 만들 뻔했다. 판단 근거는 대기줄이다:
+    #   큐에 queued/running으로 있으면 진짜 도는 중, 없고 시도 흔적만 있으면 도중 중단,
+    #   둘 다 없으면 아직 아무도 안 건 것(=분석 전, 버튼을 눌러야 한다).
+    queued = False
+    for code in (shortcode, _media_code(shortcode)):
+        if code and store.queue_has_pending("prewarm", "shortcode", code):
+            queued = True
+            break
+    if queued or att > 0:
+        return None, {"state": "pending", "reason": reason, "attempts": att}
+    return None, {"state": "idle", "reason": "", "attempts": 0}
+
+
+def _adopt_into_ranking(store, platform, url, meta):
+    """수동으로 찾은 영상 1건을 **지금 랭킹에 끼워 넣는다**(2026-08-18 사장님 요청).
+
+    랭킹 화면은 '마지막 수집 스냅샷'(last_run)을 읽는다. 그래서 새로 발견한 영상은
+    다음 수집(09/15/21시)까지 안 보였다 — 채널만 등록해두면 영상은 하루를 기다려야 했다.
+    여기서는 그 스냅샷에 같은 모양의 항목을 만들어 끼워 넣어, 지표·정렬에 바로 참여시킨다.
+
+    ★항목을 손으로 만들지 않는다 — 수집이 쓰는 `build_items`를 그대로 태운다.
+      손으로 dict를 지으면 지표 계산(속도·밀도·가속)이 수집분과 달라져, 같은 화면에서
+      두 가지 잣대가 섞인다(0순위-B).
+    ★창(48h)은 여기서만 크게 잡는다 — 사장님이 고른 영상은 오래됐어도 등록돼야 한다.
+    반환: 만들어진 item 또는 None(시각을 못 읽어 지표를 못 만들 때).
+    """
+    from shopping_shorts.ranking import build_items
+
+    ts = meta.get("ts")
+    if not ts:
+        return None
+    # ★build_items는 **ISO 문자열**을 받는다(hours_since가 fromisoformat을 쓴다).
+    #   probe_grab_meta는 유닉스 초(int)를 주므로 여기서 한 번만 바꿔 넘긴다 —
+    #   안 바꾸면 'int has no attribute replace'로 조용히 실패한다(실측).
+    if isinstance(ts, (int, float)):
+        ts = datetime.fromtimestamp(float(ts), tz=timezone.utc).isoformat()
+    # shortcode는 **그 플랫폼 수집이 쓰는 것과 같은 모양**이어야 한다 — 안 그러면
+    # 다음 수집이 같은 영상을 다른 코드로 다시 넣어 랭킹에 두 줄이 된다.
+    #   인스타=_media_code / 유튜브=영상id / 쓰레드=post 코드 / 틱톡=video id
+    code = ""
+    if platform == "instagram":
+        code = _media_code(url)
+    elif platform == "youtube":
+        m = re.search(r"(?:youtu\.be/|/shorts/|/live/|[?&]v=)([A-Za-z0-9_-]{6,})", url or "")
+        code = m.group(1) if m else ""
+    elif platform == "threads":
+        m = re.search(r"/post/([A-Za-z0-9_-]+)", url or "")
+        code = m.group(1) if m else ""
+    elif platform == "tiktok":
+        m = re.search(r"/video/(\d+)", url or "")
+        code = m.group(1) if m else ""
+    code = code or _media_code(url) or url
+    reel = {
+        "shortcode": code, "url": url, "timestamp": ts,
+        "commentsCount": meta.get("comments") or 0,
+        "likesCount": meta.get("likes") or 0,
+        "videoViewCount": meta.get("views") or 0,
+        "ownerFollowers": meta.get("followers") or 0,
+        "displayUrl": meta.get("thumbnail") or "",
+        "caption": meta.get("title") or "",
+        "videoDuration": meta.get("duration") or 0,
+    }
+    who = (meta.get("channel") or "").strip()
+    if platform == "instagram":
+        prev_c, prev_d = store.prev_comments, store.prev_delta
+    else:
+        prev_c = lambda sc: store.prev_base_platform(platform, sc)      # noqa: E731
+        prev_d = lambda sc: store.prev_delta_platform(platform, sc)     # noqa: E731
+    items = build_items([reel], {"name": who, "username": who, "inpock": "",
+                                 "followers": meta.get("followers") or 0},
+                        prev_comments=prev_c, prev_delta=prev_d,
+                        window_hours=24 * 365)
+    if not items:
+        return None
+    item = items[0]
+    item["manual"] = True          # 화면이 '직접 등록'임을 표시할 수 있게
+    if platform == "instagram":
+        old, _at = store.load_last_run()
+    else:
+        old, _at = store.load_last_run_platform(platform)
+    kept = [i for i in (old or []) if i.get("shortcode") != item["shortcode"]]
+    merged = [item] + kept
+    now_iso = datetime.now(timezone.utc).isoformat()
+    if platform == "instagram":
+        store.save_last_run(merged, now_iso)
+    else:
+        store.save_last_run_platform(platform, merged, now_iso)
+    return item
+
+
+@app.get("/api/reference/adopt", response_class=HTMLResponse)
+def api_reference_adopt(request: Request, url: str = "", views: int = 0, likes: int = 0,
+                        comments: int = 0, followers: int = 0):
+    """⭐ 레퍼런스 등록 — 영상 1건 + 그 채널을 한 번에(2026-08-18 사장님 요청).
+
+    "인스타 보다가 좋은 영상을 발견하면 바로 레퍼런스에 반영해서 정렬까지" 를 위해
+    ①채널을 추적목록/시드에 등록(다음 수집부터 자동으로 따라온다)
+    ②그 영상은 **지금** 랭킹 스냅샷에 끼워 넣어 바로 보이게 한다.
+    확장/유저스크립트가 popup으로 여는 GET이라 세션 쿠키가 실린다(담기·채널수집과 같은 방식).
+    """
+    denied = _require_admin(request)
+    if denied:
+        return HTMLResponse(_chadd_html("⛔ 관리자 로그인 필요",
+                                        "shoppingshorts.duckdns.org에 관리자로 로그인 후 다시 눌러주세요."))
+    u = (url or "").strip()
+    platform = _grab_platform(u)
+    if not platform:
+        return HTMLResponse(_chadd_html("❌ 지원하지 않는 주소",
+                                        "유튜브·틱톡·인스타·쓰레드·샤오홍슈·도우인 영상에서 눌러주세요."))
+    meta = probe_grab_meta(u) or {}
+    # ★화면에서 읽어 보낸 숫자로 **빈 칸만** 채운다(2026-08-18 사장님 A안).
+    #   서버는 인스타를 로그인 없이 읽어 조회수·팔로워가 0으로 온다(실측: 채이홈 항목).
+    #   그러면 조회수당댓글·팔로워당댓글이 계산되지 않아 정렬에서 불리해진다.
+    #   ⚠️ 서버가 제대로 읽은 값은 덮지 않는다 — 화면 글자 파싱은 근사치라 더 정확한
+    #      값을 밀어내면 안 된다(0순위-B: 어느 쪽이 진짜인지 한 곳에서만 정한다).
+    for key, got in (("views", views), ("likes", likes),
+                     ("comments", comments), ("followers", followers)):
+        if got and not meta.get(key):
+            meta[key] = int(got)
+    store = Store(DB_PATH)
+    item = None
+    try:
+        item = _adopt_into_ranking(store, platform, u, meta)
+    except Exception as e:  # noqa: BLE001 — 영상 편입이 실패해도 채널 등록은 살린다
+        import sys as _sys
+        print(f"[adopt] 랭킹 편입 실패(무해) {u}: {e!r}", file=_sys.stderr)
+    # 채널 등록은 기존 경로를 그대로 쓴다(플랫폼별 표 판단이 거기 한 곳에 있다).
+    ch_html = api_discover_add_by_url(request, url=u)
+    ch_msg = "채널도 등록했어요"
+    try:
+        body = ch_html.body.decode("utf-8")
+        if "이미 등록된" in body:
+            ch_msg = "채널은 이미 등록돼 있어요"
+        elif "못 찾았" in body or "❌" in body:
+            ch_msg = "채널은 못 찾았어요(영상만 등록)"
+    except Exception:
+        pass
+    if item:
+        return HTMLResponse(_chadd_html(
+            "✅ 레퍼런스에 등록했어요",
+            f"영상이 랭킹에 바로 들어갔습니다 — {ch_msg}. "
+            f"(댓글 {item.get('comments', 0)} · 조회 {item.get('views', 0)})"))
+    return HTMLResponse(_chadd_html(
+        "⚠️ 채널만 등록했어요",
+        f"영상 지표를 못 읽어 랭킹엔 못 넣었습니다(로그인벽·비공개일 수 있어요). {ch_msg}."))
+
+
+@app.get("/api/lens/single")
+def api_lens_single(request: Request, url: str = ""):
+    """주소 하나 → **그 영상 카드 1장**(2026-08-18 사장님: "주소 넣으면 이렇게 뜨게").
+
+    ★렌즈(구글 이미지 역추적, SerpApi 월 100회·유료)를 **타지 않는다**. 사장님이 원한 건
+    "이 영상이 어떤 물건인지"이지 "비슷한 영상 찾기"가 아니다. 비슷한 것은 팝업 안의
+    버튼으로 그때만 /api/lens/trace_url을 부른다 — 안 쓰면 0원.
+
+    지표는 probe_grab_meta(yt-dlp 메타 / 쓰레드는 우리 수집기) 한 곳에서만 읽는다.
+    담기·카드가 쓰는 것과 같은 함수라 화면마다 숫자가 달라지지 않는다(0순위-B).
+    반환: {ok, item:{platform,url,title,thumbnail,views,likes,comments,duration,channel,followers,ts}}
+    """
+    u = (url or "").strip()
+    plat = _grab_platform(u)
+    if not plat:
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": "지원하지 않는 주소예요(유튜브·틱톡·인스타·쓰레드·샤오홍슈·도우인)"})
+    meta = probe_grab_meta(u) or {}
+    item = {"platform": plat, "url": u,
+            "title": meta.get("title") or "", "thumbnail": meta.get("thumbnail") or ""}
+    for k in ("views", "likes", "comments", "shares", "duration", "channel", "followers", "ts"):
+        if meta.get(k) not in (None, ""):
+            item[k] = meta[k]
+    # 지표가 하나도 안 나와도 카드는 준다 — 주소는 살아 있는데 로그인벽 등으로 메타만
+    # 못 읽는 경우가 흔하다(그때도 담기·숏템파워검색은 그대로 쓸 수 있어야 한다).
+    item["meta_ok"] = bool(meta)
+    # ★썸네일을 누르면 카드 안에서 바로 재생되게(2026-08-18 사장님 "레퍼런스 페이지랑 동일").
+    #   화면은 play_url이 있으면 해석 왕복 없이 그 자리에서 튼다(lensPlayInline ①번 길).
+    #   실패는 무해 — 없으면 종전대로 플랫폼별 해석 경로로 떨어진다.
+    try:
+        play = resolve_media_url(u)
+        if play:
+            item["play_url"] = play
+    except Exception:
+        pass
+    return {"ok": True, "item": item}
+
+
+@app.get("/api/basket/analysis_status")
+def api_basket_analysis_status(request: Request, shortcodes: str = ""):
+    """즐겨찾기 화면의 분석 신호등 — 여러 개를 한 번에 묻는다(2026-08-18 사장님 요청).
+
+    카드마다 source_brief를 부르면 20개면 20번이라 화면이 느리다. 판정은
+    `_analysis_state` 하나를 그대로 쓴다(비용 0원 — Gemini를 부르지 않는다).
+    반환: {ok, items:{shortcode:{state, reason}}}
+    """
+    codes = [c.strip() for c in (shortcodes or "").split(",") if c.strip()][:100]
+    store = Store(DB_PATH)
+    out = {}
+    for c in codes:
+        _data, st = _analysis_state(store, c)
+        out[c] = {"state": st["state"], "reason": st["reason"]}
+    return {"ok": True, "items": out}
+
+
+@app.post("/api/basket/analyze")
+def api_basket_analyze(request: Request, body: dict):
+    """즐겨찾기의 '분석' 버튼 — 고른 영상을 백그라운드 분석 대기줄에 넣는다.
+
+    담을 때 자동으로 거는 예열과 **같은 경로**(_enqueue_prewarm)를 쓴다. 새 경로를
+    만들면 담기예열과 버튼예열이 서로 다르게 동작하게 된다(0순위-B).
+    이미 끝난 것은 다시 걸지 않는다(state=done → skipped).
+    반환: {ok, queued, skipped, items:{shortcode:queued|done}}
+    """
+    cid = _cid(request)
+    codes = [c for c in (body.get("shortcodes") or []) if isinstance(c, str) and c.strip()][:100]
+    store = Store(DB_PATH)
+    basket = {i.get("shortcode"): i for i in store.mix_basket_list(customer_id=cid)}
+    out, queued, skipped = {}, 0, 0
+    for c in codes:
+        _data, st = _analysis_state(store, c)
+        if st["state"] == "done":
+            out[c] = "done"
+            skipped += 1
+            continue
+        it = basket.get(c) or {}
+        _enqueue_prewarm(store, c, it.get("url") or "",
+                         caption=it.get("caption") or "", customer_id=str(cid))
+        out[c] = "queued"
+        queued += 1
+    return {"ok": True, "queued": queued, "skipped": skipped, "items": out}
+
+
 @app.get("/api/produce/source_brief")
 def api_produce_source_brief(request: Request, shortcode: str):
     """1단계 소스 분석 카드용 — **저장된 추출 결과만** 읽어 준다(2026-08-16).
@@ -8765,13 +9108,7 @@ def api_produce_source_brief(request: Request, shortcode: str):
     옛 추출본엔 source_brief·label이 없다 → brief={} / label="" 로 나가고 화면이 알아서 견딘다.
     """
     store = Store(DB_PATH)
-    data = None
-    for code in (shortcode, _media_code(shortcode)):
-        if not code:
-            continue
-        data = store.get_script(code)
-        if data:
-            break
+    data, _st = _analysis_state(store, shortcode)   # 판정은 _analysis_state 한 곳에서만
     if not data:
         # ★왜 아직 없는지까지 알려준다(2026-08-17 사장님 "영상분석은?").
         #   추출이 없는 데는 두 가지가 있는데 화면은 둘을 구별할 수 없었다:
@@ -8779,25 +9116,11 @@ def api_produce_source_brief(request: Request, shortcode: str):
         #     · 받기부터 실패해 포기 → 기다려도 영원히 안 온다
         #   구별을 못 하니 실패한 영상도 계속 "분석 대기"로 보였다(실측: 도우인 4건이
         #   'Fresh cookies needed'로 3회 실패·래치됐는데 화면은 아무 말도 안 했다).
-        st = Store(DB_PATH).autoload_status([shortcode, _media_code(shortcode)])
-        info = st.get(shortcode) or st.get(_media_code(shortcode)) or {}
-        err = info.get("last_error") or ""
-        # ★재시도해도 소용없는 실패는 **1회만에** 알린다(2026-08-17 사장님 "대본 만들기를
-        #   눌러야 분석이 된다고?"). 3회를 채워야 알리게 해뒀더니, 이미 로그인벽에 막힌
-        #   영상이 1~2회 동안 '분석 대기'로 보여 사장님이 오지 않을 결과를 기다렸다.
-        #   로그인·비공개처럼 원인이 분명한 것은 몇 번을 더 해도 결과가 같다.
-        att = info.get("attempts", 0)
-        # ★시도를 다 썼는데 **결과도 오류도 없으면 도중에 끊긴 것**이다(2026-08-16 실측).
-        #   긴 영상이 다운로드 도중 시간 초과로 죽으면 여기 걸린다 — 그때 화면이 계속
-        #   "분석 중"이라고 하면 사장님은 오지 않을 결과를 기다린다(실제로 그랬다).
-        stalled = (not err) and att >= _AUTOLOAD_MAX_ATTEMPTS
+        #   (그 판정 본체는 _analysis_state로 옮겼다 — 즐겨찾기 신호등과 같은 답을 쓴다)
         return {"ok": False, "pending": True,
-                "attempts": att,
-                "gave_up": stalled or (bool(err) and (att >= _AUTOLOAD_MAX_ATTEMPTS
-                                                      or _is_hopeless_error(err))),
-                "reason": (_autoload_reason_ko(err) if err else
-                           ("분석이 도중에 끊겼어요 — 긴 영상은 더 오래 걸립니다"
-                            if stalled else ""))}
+                "attempts": _st["attempts"],
+                "gave_up": _st["state"] == "gave_up",
+                "reason": _st["reason"]}
     segs = []
     for s in (data.get("segments") or []):
         if not isinstance(s, dict):   # 깨진 세그로 카드 전체가 500 나지 않게
@@ -8839,7 +9162,11 @@ def api_produce_aipick(request: Request, work_id: str = "", forced: str = ""):
 #   ③ full_text가 비면 저장하지 않고 실패로 확정 — segments만 있는 저장은 "대본 없음"이
 #      영구 캐시돼 클라가 계속 미추출로 오인한다(인스타 릴스 실패의 정체)
 #   ④ 호출당 건수 상한 + 시도 횟수 상한 — 최악의 경우에도 소모가 유한하다
-_AUTOLOAD_MAX_PER_CALL = 4      # 한 번 호출로 새로 태울 수 있는 영상 수
+_AUTOLOAD_MAX_PER_CALL = int(os.environ.get("SHORTS_AUTOLOAD_PER_CALL", "6"))
+# ★4 → 6 (2026-08-18). 사장님이 5개를 담았는데 "4/5개 읽음"에서 멈춰 보였다 —
+#   상한이 4라 5번째는 다음 호출로 밀렸다. 담은 걸 한 번에 다 읽는 게 자연스럽다.
+#   키 로테이션이 살아난 뒤라(comment_gen._current_key_and_idx → 페이서 위임)
+#   키 12개를 나눠 쓰므로 429 위험은 예전보다 낮다. env로 되돌릴 수 있게 둔다.
 # 1 → 3 (2026-08-04): prewarm과 같은 완화 — 인스타 일시 실패 1번으로 영구 스킵되면
 # 재담기가 조용히 죽는다. 3회면 폭주 차단은 유지하면서 일시 실패를 흡수한다.
 def _is_grabbable_media(u):
@@ -8902,7 +9229,10 @@ def _autoload_reason_ko(err):
 # 동시에 추출할 영상 수(2026-07-30). 대기의 정체가 제미니 응답이라 동시에 올리면 총 시간이
 # '가장 느린 1개'로 수렴한다. 다만 무제한으로 올리면 제미니 429가 몰려 오히려 느려지고 키가
 # 소진되므로 3으로 묶는다(_AUTOLOAD_MAX_PER_CALL=4와는 다른 축 — 그건 '총 몇 개').
-_AUTOLOAD_MAX_WORKERS = 3
+_AUTOLOAD_MAX_WORKERS = int(os.environ.get("SHORTS_AUTOLOAD_WORKERS", "4"))
+# ★3 → 4 (2026-08-18). 3으로 묶은 근거는 "429가 몰린다"였는데, 그 429의 진짜 원인은
+#   동시성이 아니라 **셋이 같은 키를 때린 것**이었다(키 선택이 늘 live[0]). 키를 나눠
+#   쓰게 고친 뒤라 동시성을 조금 올린다. 더 올리려면 키를 늘리는 게 정석이다.
 
 
 @app.post("/api/produce/autoload")
@@ -9370,6 +9700,32 @@ def api_produce_templates():
          "url": f"/templates/{t['file']}"}
         for t in deco_templates.TEMPLATES
     ]}
+
+
+@app.get("/api/produce/frame/presets")
+def api_produce_frame_presets():
+    """'내용물 있는 틀' 프리셋 목록. 정의처는 deco_frame.PRESETS 하나(0순위-B)."""
+    from shopping_shorts import deco_frame
+    return {"ok": True,
+            "presets": [{"id": k, "name": v["name"], "bar": v["bar"]}
+                        for k, v in deco_frame.PRESETS.items()],
+            "defaults": deco_frame.DEFAULTS}
+
+
+@app.get("/api/produce/frame.png")
+def api_produce_frame_png(request: Request):
+    """틀 미리보기 PNG. ★화면은 이 그림을 그대로 얹는다 — 렌더도 같은 함수를 쓰므로
+    미리보기와 최종본이 구조적으로 같아진다(CSS로 흉내내면 언젠가 어긋난다)."""
+    from fastapi.responses import FileResponse
+    from shopping_shorts import deco_frame
+    q = dict(request.query_params)
+    spec = {k: q.get(k) for k in deco_frame.DEFAULTS if k in q}
+    for b in ("ad_badge", "icons"):
+        if b in spec:
+            spec[b] = str(spec[b]).lower() in ("1", "true", "on", "yes")
+    out = deco_frame.render_to(spec, deco_frame.cache_path(spec))
+    return FileResponse(str(out), media_type="image/png",
+                        headers={"Cache-Control": "public, max-age=31536000"})
 
 
 @app.post("/api/produce/mix/bgm")
@@ -10554,14 +10910,26 @@ def _sources_for_generate(item, job, limit=3):
     """
     out, seen = [], set()
 
-    def _add(name, full_text, structure):
+    def _add(name, full_text, structure, product="", segments=None):
         txt = (full_text or "").strip()
         if not txt or txt in seen:
             return
         seen.add(txt)
-        out.append({"name": name or "", "full_text": txt, "structure": structure or {}})
+        # ★product를 함께 싣는다(2026-08-18). 1단계 분석이 이미 뽑아 둔 값이다
+        #   (source_brief.product — 실측 "다이소 자석 네일펜"). 지금까지 이 값이
+        #   대본 생성에 한 번도 안 실려서, AI가 여러 텍스트 더미를 보고 **소재를 스스로
+        #   추론**해야 했다 — 그 추론이 학습 재료 쪽으로 새는 게 이번 사고였다.
+        #   아는 값을 안 주고 짐작하게 하는 구조 자체가 문제다.
+        out.append({"name": name or "", "full_text": txt, "structure": structure or {},
+                    "product": (product or "").strip(),
+                    # ★세그먼트도 싣는다(2026-08-18) — 대본이 '이 문장은 어느 대목을 보고
+                    #   썼는지'(src_seg)를 지목하려면 번호가 붙은 목록을 봐야 한다.
+                    #   무자막 소스는 text가 비어 있고 scene_desc만 있다 — 그것도 단서다.
+                    "segments": segments or []})
 
-    _add(item.get("category") or "", item.get("full_text"), item.get("structure"))
+    _add(item.get("category") or "", item.get("full_text"), item.get("structure"),
+         ((item.get("source_brief") or {}).get("product") if isinstance(item.get("source_brief"), dict) else ""),
+         item.get("segments"))
     for _vid, ex in sorted(((job or {}).get("extract") or {}).items()):
         if len(out) >= limit:
             break
@@ -10572,7 +10940,10 @@ def _sources_for_generate(item, job, limit=3):
             txt = " ".join((s.get("text") or "").strip()
                            for s in (ex.get("segments") or [])
                            if isinstance(s, dict)).strip()
-        _add(item.get("category") or "", txt, ex.get("structure"))
+        _brief = ex.get("source_brief")
+        _add(item.get("category") or "", txt, ex.get("structure"),
+             (_brief or {}).get("product") if isinstance(_brief, dict) else "",
+             ex.get("segments"))
     return out[:limit]
 
 
@@ -10939,7 +11310,11 @@ def api_script_beat_regen(request: Request, body: dict):
 
     _bank_ctx = ""
     if store.get_setting("ping_pong_enabled", "") == "1":
-        _bank_ctx = bank_assemble.assemble_bank_context(store, it.get("category") or "") or ""
+        # 전체 생성과 **같은 예산**을 건다(0순위-B: 한쪽만 걸면 [바꾸기]로 만든 칸만
+        # 은행 소재로 끌려가 전체와 결이 어긋난다).
+        _sc = sum(len((s.get("full_text") or "")) for s in (_src or [])[:3])
+        _bank_ctx = bank_assemble.assemble_bank_context(
+            store, it.get("category") or "", source_chars=_sc) or ""
 
     try:
         out = script_generate.regen_one_beat(

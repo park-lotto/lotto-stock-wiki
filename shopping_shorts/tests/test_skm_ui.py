@@ -369,13 +369,27 @@ def test_match_progress_style_in_css():
     assert ".match-progress" in CSS
 
 
-def test_start_from_ai_pick_calls_set_matching_ui_before_theater():
-    # 버튼을 누른 즉시(playTheater보다 먼저) before/after 변화 + 스피너가 켜져야 한다.
+def test_start_from_ai_pick_hands_off_to_step2_without_matching():
+    """1단계는 **대본 확보까지만** 하고 2단계로 넘긴다(2026-08-18 계약 변경).
+
+    예전엔 여기서 매칭(startProduceMix)까지 걸었다. 그러면 2단계에서 대본을 새로 뽑아
+    확정해도 3단계엔 1단계에서 이미 돌아간 옛 job이 붙어 있어, 사장님 눈에는
+    "2번 대본과 3번 대본이 다르게 들어간다"로 보인다. 매칭 시작점은 3단계 한 곳뿐이다.
+    """
     start = HTML.index("async function startFromAiPick(){")
     end = HTML.index("// ── AI PICK 끝 ──")
     body = HTML[start:end]
-    assert "setMatchingUI(true" in body
-    assert body.index("setMatchingUI(true") < body.index("playTheater(")
+    assert "startProduceMix(" not in body, "1단계가 다시 매칭을 걸고 있다 — 어긋남이 재발한다"
+    assert "PANEL_TO_ORB[8]" in body, "대본 확보 후 2단계로 넘기지 않는다"
+
+
+def test_step3_entry_starts_match_when_no_job():
+    """매칭의 유일한 시작점 = 3단계 진입(붙은 job이 없을 때만). 이미 job이 있는데 대본만
+    바뀐 경우는 두 번째 과금이라 자동으로 돌지 않고 어긋남 배너로 사람이 누른다."""
+    start = HTML.index("function jump(o){")
+    end = HTML.index("function go(d){", start)
+    body = HTML[start:end]
+    assert "p===7" in body and "!MIX_JOB" in body and "startProduceMix(" in body
 
 
 def test_poll_mix_mirrors_stage_to_panel0_and_restores_button():

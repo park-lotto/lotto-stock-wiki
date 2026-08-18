@@ -130,6 +130,36 @@ def bake_sample(preset):
     return out
 
 
+def preview_path(voice_id):
+    """등록 전 '한국어로 들어보기' mp3 경로. voice_id 하나당 파일 하나 = 두 번째부터는 공짜."""
+    safe = re.sub(r"[^A-Za-z0-9_-]", "", str(voice_id))[:64] or "x"
+    return voice_presets.SAMPLES_DIR / f"tryout-{safe}.mp3"
+
+
+def make_preview(voice_id, force=False):
+    """★등록 전에 **우리 문장**으로 들어본다 (2026-08-18 사장님 "샘플이 이상한 것만 되어있다").
+
+    일레븐랩스가 주는 preview_url은 보이스 주인이 올린 클립이라 영어거나 1초짜리이거나
+    아예 없다 — 성우끼리 비교가 안 된다. 큐레이션 14명과 **같은 문장·같은 설정(stable)**으로
+    구워야 나란히 놓고 고를 수 있다.
+
+    캐시: 파일이 있으면 다시 굽지 않는다(실TTS = 크레딧). force=True면 다시 굽는다.
+    반환: (path, cached)"""
+    out = preview_path(voice_id)
+    if out.exists() and not force:
+        return out, True
+    from shopping_shorts.mix_pipeline import synthesize_line
+    voice_presets.SAMPLES_DIR.mkdir(parents=True, exist_ok=True)
+    settings = dict(VARIANT_SPECS[0][1])          # stable — 등록 시 기본으로 잡히는 톤과 같게
+    synthesize_line(
+        DEMO_TEXT, out,
+        voice={"voice_id": voice_id, "settings": settings,
+               "speed": DEFAULT_SPEED, "silence_trim": DEFAULT_SILENCE_TRIM,
+               "naturalize_profile": None, "model_id": DEFAULT_MODEL_ID},
+        beat_role="훅", beat_index=0, beat_total=5)
+    return out, False
+
+
 def register(store, voice_id, name, one_liner="", lang="KR", bake=True):
     """보이스 등록 = 프리셋 4종 upsert (+ 샘플 굽기). 등록된 group_id와 실패한 샘플 목록 반환."""
     rows = build_group(voice_id, name, one_liner, lang)

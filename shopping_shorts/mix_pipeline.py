@@ -26,6 +26,7 @@ from shopping_shorts import usage_meter
 from shopping_shorts import single_source
 from shopping_shorts import script_lang
 from shopping_shorts.video_assemble import assemble, _beat_timeline, _beat_material, _probe_duration, _MAX_SLOWMO, preview_preset
+from shopping_shorts.video_assemble import prepend_still
 from shopping_shorts.motion_assets import resolve_layers, DEFAULT_ASSETS_DIR
 from shopping_shorts.motion_packs import build_plan, load_packs
 from shopping_shorts.vmake_client import remove_subtitles
@@ -1314,10 +1315,18 @@ def _template_layer(tpl, first_beat_dur=0):
     """
     from shopping_shorts import deco_templates
     tpl = tpl or {}
-    tid = tpl.get("id")
-    if not tid:
-        return None
-    p = deco_templates.abs_path(tid)
+    # ★'내용물 있는 틀'(채널명·제목·조회수)은 미리보기와 **같은 함수**가 그린다.
+    #   여기서 따로 그리면 화면과 결과가 갈린다(0순위-B). 옛 색띠 12종은 아래 경로 그대로.
+    frame = tpl.get("frame")
+    if frame:
+        from shopping_shorts import deco_frame
+        p = deco_frame.render_to(frame, deco_frame.cache_path(frame))
+        tid = "frame:" + deco_frame.cache_key(frame)
+    else:
+        tid = tpl.get("id")
+        if not tid:
+            return None
+        p = deco_templates.abs_path(tid)
     if not p or not p.exists():
         return None
     out = {"_abspath": str(p), "id": tid, "alpha": tpl.get("alpha", 1)}
@@ -1531,6 +1540,27 @@ def run_preview(job_id, db_path, work_root):
         store.update_mix_job(job_id, preview_status="failed", preview_error=str(e))
 
 
+def _thumb_intro_png(job, thumb):
+    """영상 앞에 붙일 썸네일 PNG 경로. 고른 것 우선, 안 골랐으면 마지막으로 만든 것.
+
+    ★'고른 썸네일이 어느 파일이냐'는 app._selected_thumb_path가 이미 정하고 있다(8단계
+    카드·카톡 전송이 그걸 쓴다). 여기서 경로를 다시 계산하면 언젠가 어긋난다(0순위-B)
+    — 그래서 그 함수를 그대로 부르고, 안 골랐을 때만 마지막 결과로 내려앉는다.
+    app import는 함수 안에서 한다(최상위면 순환 import)."""
+    from shopping_shorts.app import _selected_thumb_path, _thumb_dir
+    p = _selected_thumb_path(job)
+    if p and Path(p).exists():
+        return Path(p)
+    results = list((thumb or {}).get("results") or [])
+    if not results:
+        return None
+    d = _thumb_dir(job.get("job_id") or "")
+    if d is None:
+        return None
+    last = d / results[-1]
+    return last if last.exists() else None
+
+
 def run_render(job_id, db_path, work_root):
     """확인된 EDL을 최종 mp4로 렌더. subtitle_removal이 켜져 있으면 믹스 후
     VMake로 원본 자막을 제거하고 그 위에 우리 자막을 굽는다. 완료 시 status='done'."""
@@ -1609,6 +1639,20 @@ def run_render(job_id, db_path, work_root):
         assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=None,
                  headcopy=job.get("headcopy"), caption_style=caption_style,
                  deco=deco, cutaway_paths=cutaway_paths, sfx_paths=sfx_paths)
+        # 🖼 썸네일을 영상 맨 앞에 붙이기(2026-08-18 사장님 요청, 9단계 체크박스).
+        #   켠 경우에만 돈다. 실패해도 렌더 자체는 살린다 — 인트로 때문에 완성 영상을
+        #   통째로 잃는 게 더 나쁘다(실패는 로그로만 남기고 원본 final.mp4를 그대로 쓴다).
+        _thumb = job.get("thumbnail") or {}
+        if _thumb.get("intro"):
+            try:
+                _png = _thumb_intro_png(job, _thumb)
+                if _png:
+                    prepend_still(str(out_path), str(_png),
+                                                 seconds=float(_thumb.get("intro_sec") or 1.2))
+                else:
+                    print(f"[thumb-intro] {job_id}: 붙일 썸네일 PNG를 못 찾음", file=sys.stderr)
+            except Exception:
+                traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)

@@ -101,3 +101,61 @@ def test_쓰레드가_로더와_확장_양쪽에_등록돼_있다(dom):
     assert "https://*.%s/*" % dom in LOADER.read_text(encoding="utf-8")
     matches = json.loads(MANIFEST.read_text(encoding="utf-8"))["content_scripts"][0]["matches"]
     assert "https://*.%s/*" % dom in matches
+
+
+def test_레퍼런스_등록_버튼이_영상_페이지에서만_뜬다():
+    """⭐ 레퍼런스 등록(2026-08-18) — 피드·프로필에선 '어느 영상'인지 정해지지 않는다."""
+    if not shutil.which("node"):
+        pytest.skip("node 없음")
+    src = LOGIC.read_text(encoding="utf-8")
+    body = _fn(src, "_isVideoPage")
+    cases = ["https://www.instagram.com/reel/ABC/",
+             "https://www.instagram.com/",
+             "https://www.instagram.com/some_user/",
+             "https://www.youtube.com/shorts/_6v_D3MktcI",
+             "https://www.youtube.com/",
+             "https://www.threads.com/@shop/post/TH1",
+             "https://www.threads.com/@shop",
+             "https://www.tiktok.com/@h/video/7412345678901234567"]
+    script = ("var location;\n" + body + "\nvar out={};\n"
+              "for (var href of " + json.dumps(cases) + "){\n"
+              "  var u=new URL(href);\n"
+              "  location={host:u.host, pathname:u.pathname, search:u.search, href:href};\n"
+              "  out[href]=_isVideoPage();\n}\n"
+              "console.log(JSON.stringify(out));")
+    r = subprocess.run(["node", "-e", script], capture_output=True, text=True, timeout=60)
+    assert r.returncode == 0, r.stderr
+    out = json.loads(r.stdout)
+    assert out["https://www.instagram.com/reel/ABC/"] is True
+    assert out["https://www.youtube.com/shorts/_6v_D3MktcI"] is True
+    assert out["https://www.threads.com/@shop/post/TH1"] is True
+    assert out["https://www.tiktok.com/@h/video/7412345678901234567"] is True
+    assert out["https://www.instagram.com/"] is False
+    assert out["https://www.instagram.com/some_user/"] is False, "프로필엔 등록할 영상이 없다"
+    assert out["https://www.youtube.com/"] is False
+    assert out["https://www.threads.com/@shop"] is False
+
+
+def test_레퍼런스_등록_버튼이_같은_팝업_방식을_쓴다():
+    src = LOGIC.read_text(encoding="utf-8")
+    assert '"/api/reference/adopt?url="' in src.replace("'", '"'), \
+        "담기·채널수집과 같은 popup GET(세션 쿠키가 실린다)이어야 한다"
+    assert "ss-adopt-btn" in src
+
+
+def test_화면_숫자를_읽어_붙인다():
+    """A안(2026-08-18): 서버가 못 읽는 조회수·팔로워를 화면 글자에서 읽어 같이 보낸다.
+    '1.2만'·'22.1만' 같은 한국식 단위를 못 풀면 0이 되어 아무 소용이 없다."""
+    if not shutil.which("node"):
+        pytest.skip("node 없음")
+    src = LOGIC.read_text(encoding="utf-8")
+    body = "\n".join(_fn(src, n) for n in ("_num", "_pageStats", "_pageStatsQuery"))
+    page = "좋아요 207개 댓글 1,202개 조회수 1.2만회 팔로워 22.1만"
+    script = ("var document={body:{innerText:" + json.dumps(page) + "}};\n" + body +
+              "\nconsole.log(JSON.stringify([_pageStats(), _num('195만'), _num('6.3천'), _num('')]));")
+    r = subprocess.run(["node", "-e", script], capture_output=True, text=True, timeout=60)
+    assert r.returncode == 0, r.stderr
+    stats, man, chun, empty = json.loads(r.stdout)
+    assert stats == {"views": 12000, "likes": 207, "comments": 1202, "followers": 221000}
+    assert man == 1950000 and chun == 6300
+    assert empty == 0, "못 읽으면 0 — 서버는 0을 안 쓰고 종전 값을 유지한다"

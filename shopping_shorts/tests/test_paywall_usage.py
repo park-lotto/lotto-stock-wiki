@@ -40,12 +40,25 @@ def test_pro_gets_higher_limit(tmp_path, monkeypatch):
     assert [appmod.check_and_count(cid, "lens") for _ in range(4)] == [True, True, True, False]
 
 
-def test_admin_uses_pro_limit(tmp_path, monkeypatch):
+def test_admin_lens_is_unlimited(tmp_path, monkeypatch):
+    """관리자는 렌즈 일일 상한 없음(2026-08-18 사장님 지시로 render와 동일 취급).
+
+    SerpApi 월 한도·전역 상한은 별도 게이트라 여기서 풀리지 않는다.
+    """
     s = _s(tmp_path, monkeypatch)
     s.set_setting("limit_lens_pro", 2)
-    assert appmod.check_and_count(0, "lens") is True        # 사장님=pro 상한
-    assert appmod.check_and_count(0, "lens") is True
-    assert appmod.check_and_count(0, "lens") is False
+    for _ in range(5):
+        assert appmod.check_and_count(0, "lens") is True
+
+
+def test_normal_pro_still_capped_on_lens(tmp_path, monkeypatch):
+    """관리자만 풀린다 — 일반 pro 계정은 종전대로 상한에 걸려야 한다."""
+    s = _s(tmp_path, monkeypatch)
+    s.set_setting("limit_lens", 2)
+    monkeypatch.setattr(appmod, "_is_admin", lambda cid: False)
+    assert appmod.check_and_count(7, "lens") is True
+    assert appmod.check_and_count(7, "lens") is True
+    assert appmod.check_and_count(7, "lens") is False
 
 
 def test_global_incr_and_alert_counts(tmp_path, monkeypatch):

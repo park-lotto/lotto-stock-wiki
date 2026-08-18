@@ -47,22 +47,24 @@
     // 즉시 ACK — 로직은 1.5초 안에 ACK가 없으면 '브리지 없음'으로 보고 딥링크로 폴백한다.
     window.postMessage({ __ssGmAck: true, reqId: d.reqId }, "*");
 
-    var opt = {
-      method: d.method || "GET",
-      credentials: "include",          // 로그인 쿠키 — 크레딧·회원 가드에 필요
-      headers: d.headers || {}
-    };
-    if (d.body) opt.body = d.body;
-
-    fetch(d.url, opt)
-      .then(function (r) {
-        return r.text().then(function (t) {
-          window.postMessage({ __ssGmResult: true, reqId: d.reqId,
-                               status: r.status, text: t }, "*");
-        });
-      })
-      .catch(function () {
-        window.postMessage({ __ssGmResult: true, reqId: d.reqId, status: 0, text: "" }, "*");
+    // ★요청은 **백그라운드(서비스워커)**가 대신 보낸다(2026-08-18 실사고 수정).
+    //   MV3에서 콘텐츠 스크립트의 fetch는 **그 페이지와 똑같은 CORS 규칙**을 받는다.
+    //   그래서 instagram.com에서 우리 서버로 POST를 보내면 브라우저가 먼저 OPTIONS
+    //   (사전확인)를 쏘는데, 우리 로그인 가드가 그걸 401로 막아 요청이 아예 안 나갔다.
+    //   서버 로그 실측: `"OPTIONS /api/lens/trace_url" 401` → 화면엔 "서버 연결 실패".
+    //   서비스워커는 host_permissions로 CORS를 타지 않으므로 여기서만 보내면 된다.
+    //   (서버 쪽에서 instagram.com에 credentialed CORS를 열어주는 방법도 있지만,
+    //    그건 인스타의 아무 스크립트나 우리 쿠키로 API를 부를 수 있게 되는 길이다.)
+    chrome.runtime.sendMessage(
+      { __ssRelay: true, url: d.url, method: d.method || "GET",
+        headers: d.headers || {}, body: d.body || null },
+      function (res) {
+        if (chrome.runtime.lastError || !res) {
+          window.postMessage({ __ssGmResult: true, reqId: d.reqId, status: 0, text: "" }, "*");
+          return;
+        }
+        window.postMessage({ __ssGmResult: true, reqId: d.reqId,
+                             status: res.status || 0, text: res.text || "" }, "*");
       });
   });
 

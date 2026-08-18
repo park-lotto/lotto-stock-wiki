@@ -44,6 +44,35 @@ def test_delete_group_removes_only_library_rows(store):
     assert store.delete_voice_group("kr-mina") == 0
 
 
+def test_preview_path_blocks_path_escape():
+    """voice_id는 URL·파일명에 그대로 들어간다 — 경로 탈출 문자를 남기면 안 된다."""
+    p = ev.preview_path("../../etc/passwd")
+    assert p.name == "tryout-etcpasswd.mp3"
+    assert p.parent == ev.voice_presets.SAMPLES_DIR
+
+
+def test_preview_reuses_cached_file_instead_of_paying_again(tmp_path, monkeypatch):
+    """★두 번째 '들어보기'는 실TTS를 부르면 안 된다(크레딧). 캐시 파일이 있으면 그걸 준다."""
+    monkeypatch.setattr(ev.voice_presets, "SAMPLES_DIR", tmp_path)
+    calls = []
+
+    def fake_line(text, out, **kw):
+        calls.append(out)
+        out.write_bytes(b"mp3")
+        return text
+
+    import shopping_shorts.mix_pipeline as mp
+    monkeypatch.setattr(mp, "synthesize_line", fake_line)
+
+    p1, cached1 = ev.make_preview("VID1")
+    p2, cached2 = ev.make_preview("VID1")
+    assert (cached1, cached2) == (False, True)
+    assert len(calls) == 1 and p1 == p2
+    # force면 다시 굽는다(성우를 다시 들어보고 싶을 때)
+    ev.make_preview("VID1", force=True)
+    assert len(calls) == 2
+
+
 def test_list_account_voices_without_key_is_soft_failure(monkeypatch):
     """키가 없으면 예외가 아니라 사유를 돌려준다 — 화면이 빈 목록에 이유를 띄운다."""
     from shopping_shorts import tts

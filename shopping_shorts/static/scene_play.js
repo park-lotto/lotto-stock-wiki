@@ -4,7 +4,9 @@ const SL = {
   server: false, job: '',
   thumb: sid => SL.server ? `/api/mix/seg_thumb/${SL.job}/${encodeURIComponent(sid)}` : `thumbs/${sid}.jpg`,
   src:   vid => SL.server ? `/api/mix/src/${SL.job}/${encodeURIComponent(vid)}` : `src/${vid}.mp4`,
-  tts:   i   => SL.server ? `/api/mix/tts/${SL.job}/${i}` : `tts/beat_${i}.mp3`,
+  // ★버전을 URL에 붙인다(2026-08-18 사장님 "대본 고치고 다시 뽑아도 옛 음성이 나온다").
+  //   mp3 경로가 늘 같아서 브라우저 캐시가 옛 파일을 계속 준다 — 재생성해도 소리가 안 바뀐다.
+  tts:   (i, ver) => SL.server ? `/api/mix/tts/${SL.job}/${i}?v=${ver||0}` : `tts/beat_${i}.mp3`,
   applyUrl: () => SL.server ? `/api/mix/scene_lab/${SL.job}/apply` : '/apply',
 };
 const MAX_SHOT = 2.2, MIN_CLIP = 0.8, EPS = 1e-3, LONG_CUT = MAX_SHOT + 0.05;   // 상한을 넘긴 컷 = 소재가 모자라 늘린 것
@@ -277,9 +279,15 @@ function ttsWarn(msg){
 }
 // 칸 i의 음성을 슬롯에 **앉히기만** 한다(재생 안 함). 같은 파일이면 다시 받지 않는다.
 // 이걸 한 칸 앞서 불러두면 이음매에서 받을 게 없어 바로 시작한다.
+function ttsVer(i){
+  // 서버가 재생성할 때마다 올리는 값(mix_pipeline.resynth_one_beat). 이게 키와 URL에
+  // 같이 들어가야 "고쳤는데 옛 소리"가 안 난다.
+  const b = ((DATA && DATA.beats) || []).find(x => (x.beat_idx != null ? x.beat_idx : -1) === i);
+  return (b && b.tts_ver) || 0;
+}
 function seatTts(i, slot){
-  const a = ttsEl(slot), k = SL.job + '#' + i;     // 잡이 바뀌면 키도 바뀐다(옛 음성 재사용 방지)
-  if (a._ttsKey !== k){ a._ttsKey = k; a.src = SL.tts(i); a.load(); }
+  const a = ttsEl(slot), v = ttsVer(i), k = SL.job + '#' + i + '#' + v;   // 잡·칸·버전이 다르면 새로 받는다
+  if (a._ttsKey !== k){ a._ttsKey = k; a.src = SL.tts(i, v); a.load(); }
   return a;
 }
 function playTts(i, slot){

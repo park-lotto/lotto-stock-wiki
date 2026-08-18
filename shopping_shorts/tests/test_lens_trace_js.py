@@ -39,8 +39,14 @@ _DRIVER = r"""
   };
   let posted = null;
   global.fetch = async (url, opts)=>{
-    if(url==='/api/lens/trace_url'){ posted = JSON.parse(opts.body); return {status:200, json: async()=>({ok:true, items:[
-      {platform:'youtube', url:'https://youtu.be/AAA', title:'원본', thumbnail:'t', match:0.9}]})}; }
+    if(url==='/api/lens/trace_url'){
+      posted = JSON.parse(opts.body);
+      // 2026-08-18: traceByUrl은 이제 **text()로 먼저 받아** JSON인지 확인한다
+      // (로그인 페이지 HTML을 그대로 파싱해 "Unexpected token '<'"만 뜨던 문제).
+      const payload = {ok:true, items:[
+        {platform:'youtube', url:'https://youtu.be/AAA', title:'원본', thumbnail:'t', match:0.9}]};
+      return {status:200, text: async()=>JSON.stringify(payload), json: async()=>payload};
+    }
     if(url==='/api/mix/basket'){ return {json: async()=>({shortcodes:[]})}; }
     return {status:200, json: async()=>({ok:false})};
   };

@@ -1,14 +1,27 @@
-"""📦 인포크링크 등록 모달(2026-08-18) 회귀 가드.
+"""📦 인포크 등록 — **새 탭**으로 연다(2026-08-18). iframe 방식은 폐기했다.
 
-9단계(최종렌더)에서 창을 옮겨 다니지 않고 인포크에 바로 올린다.
-실측 근거(이 기능이 성립하는 전제): link.inpock.co.kr은 X-Frame-Options·CSP·meta CSP·
-프레임버스팅이 하나도 없고, 로그인 세션 쿠키가 iframe 안에서 유지된다(사장님 계정 실확인).
-→ 저쪽이 나중에 프레임 차단을 걸면 이 기능은 죽는다. 그때는 테스트가 아니라 화면이 먼저 알려준다.
+### 왜 iframe이 성립하지 않는가 (실측으로 확정 — 다시 시도하지 마라)
+
+프레임 삽입 자체는 막히지 않는다: `link.inpock.co.kr`은 X-Frame-Options·CSP·meta CSP·
+프레임버스팅이 **하나도 없다**. 실제로 틀 안에서 436개 엘리먼트가 렌더된다.
+
+진짜 벽은 **쿠키**다. 인포크가 발급하는 쿠키 11개가 **전부 `SameSite=Lax`**이고
+`SameSite=None`이 **0개**다(실측). Lax는 크로스사이트 iframe에 아예 안 실린다 →
+인포크 탭에서는 로그인 상태인데 **틀 안에서만** "로그인 정보가 만료되었습니다"가 뜬다.
+로그아웃 후 재로그인해도 새 쿠키도 Lax라 소용없다(사장님 실제로 겪음).
+
+부수적으로 로그인 API(`link-rest.inpock.co.kr`)도 자기 도메인 Origin만 허용한다
+(우리 도메인엔 `Access-Control-Allow-Origin`이 안 온다) → 틀 안 로그인 시도는
+"네트워크 오류 💦"로 끝난다.
+
+→ **우리가 고칠 수 있는 게 아니다.** 인포크가 `SameSite=None; Secure`로 바꾸지 않는 한
+   틀 안에서 로그인 상태를 쓸 수 없다. 새 탭이 유일한 방법이고, 원래 방식이 옳았다.
 """
 import pathlib
 import re
 import shutil
 import subprocess
+import tempfile
 
 import pytest
 
@@ -20,74 +33,56 @@ def _html():
     return PRODUCE.read_text(encoding="utf-8")
 
 
-def test_modal_markup_present():
+def test_iframe_modal_is_gone():
+    """iframe 모달의 잔해가 남아 있으면 안 된다 — 다음 사람이 되살리게 된다."""
     html = _html()
-    assert 'id="inpockModal"' in html          # 모달 컨테이너
-    assert 'id="inpockFrame"' in html          # 인포크가 뜰 iframe
-    assert 'id="inpockModalBar"' in html       # 링크·등록완료 바
-    assert "gen-box-wide" in html              # 3단 레이아웃이 눌리지 않을 넓은 변형
+    for dead in ('id="inpockModal"', 'id="inpockFrame"', 'id="inpockModalBar"',
+                 "inpockFrameReload", "gen-box-wide"):
+        assert dead not in html, dead
 
 
-def test_modal_follows_existing_gen_bg_convention():
-    """새 모달 규약을 만들지 않는다 — pmModal과 같은 .gen-bg/.gen-box/.open을 쓴다."""
+def test_reason_is_recorded_in_the_code():
+    """왜 iframe을 안 쓰는지 코드에 남아 있어야 한다(같은 시도 반복 방지)."""
     html = _html()
-    block = html.split('id="inpockModal"')[1].split("</div>")[0]
-    assert "gen-bg" in html.split('id="inpockModal"')[0][-40:]   # class="gen-bg" id="inpockModal"
-    assert "gen-box" in block
-    assert "inpockModalClose()" in block
-    assert ".gen-box-wide{" in html                              # 스타일이 실제로 정의돼 있다
+    assert "SameSite=Lax" in html or "SameSite" in html
 
 
-def test_open_close_functions_defined():
-    html = _html()
-    assert "async function inpockModalOpen(" in html
-    assert "function inpockModalClose(" in html
-    assert "async function inpockCopyChecked(" in html
+def test_opens_inpock_in_a_new_tab():
+    """★window.open의 반환값으로 성공을 판정하지 않는다.
 
-
-def test_button_wired_and_new_tab_link_removed():
-    """버튼이 모달을 부르고, 창 밖으로 내보내던 새 탭 링크는 사라져야 한다.
-
-    새 탭 링크가 남아 있으면 '창 옮겨 다니기'가 그대로라 이 작업의 목적이 사라진다.
+    `noopener`를 주면 window.open은 **성공해도 null**을 돌려준다(사양). 그걸 실패로 보면
+    창이 멀쩡히 열렸는데 "팝업 차단" 경고가 뜬다 — 실측으로 잡은 버그다.
+    대신 rel=noopener를 단 <a>를 만들어 클릭한다(보안은 유지, 판정은 브라우저에 맡긴다).
     """
     html = _html()
-    assert 'onclick="inpockModalOpen()"' in html
-    assert "인포크에 등록하기" in html
-    assert "인포크링크 열기" not in html          # 옛 새 탭 링크 제거 확인
+    body = html.split("async function inpockModalOpen(")[1].split("\n}")[0]
+    assert "link.inpock.co.kr" in body
+    assert "_blank" in body
+    assert "noopener" in body
+    assert "a.click()" in body
+    assert "window.open(" not in body      # 반환값 판정으로 되돌아가지 않게 못 박는다
 
 
 def test_open_refuses_when_no_link():
     """올릴 링크가 없으면 열지 않는다.
 
     상품이 있어도 url·partner_url이 둘 다 비면 final_link가 빈 문자열이라
-    (coupang_partners.final_link) 버튼은 그려지고 링크만 없다. 그대로 열면
-    붙여넣을 게 없는 채 인포크만 떠서 헛걸음이 된다.
+    (coupang_partners.final_link) 버튼은 그려지고 링크만 없다. 그대로 열면 헛걸음이다.
     """
     html = _html()
-    body = html.split("async function inpockModalOpen(")[1].split("function inpockModalClose(")[0]
+    body = html.split("async function inpockModalOpen(")[1].split("\n}")[0]
     guard = body.split("const copied")[0]
-    assert "if(!link)" in guard          # 링크 없으면
-    assert "return;" in guard            # 열지 않고 되돌아간다
+    assert "if(!link)" in guard
+    assert "return;" in guard
     assert "stepName(" in guard          # 단계 번호를 손으로 안 적는다(0순위-B)
 
 
-def test_product_guidance_points_at_where_the_ui_actually_is():
-    """상품이 없을 때 "어디로 가라"가 실제 UI 위치와 같아야 한다.
-
-    상품 확정 UI(#coupangSlot)는 2026-08-18 쿠파스 트랙이 3단계 → 8단계 SEO로 이사했다.
-    안내가 옛 자리를 가리키면 '가라는 곳이 빈 화면'이 된다 — 그쪽이 방금 고친 그 함정이다.
-    번호는 stepName()으로 뽑아 순서가 또 바뀌어도 문구가 따라오게 한다(0순위-B).
-    """
+def test_manual_open_link_stays_as_fallback():
+    """자동으로 열리지 않아도(팝업 차단 등) 손으로 열 링크가 박스에 남아 있어야 한다."""
     html = _html()
-    # 슬롯이 실제로 SEO 패널(data-step=5) 안에 있다
-    seo_panel = html.split('<section class="panel" data-step="5">')[1].split("</section>")[0]
-    assert 'id="coupangSlot"' in seo_panel
-
-    # 인포크 쪽 두 안내(박스·모달 가드)가 그 패널을 가리킨다
     box = html.split("async function refreshInpock(")[1].split("function inpockCopy(")[0]
-    assert "stepName('seo')" in box and "stepName('mix')" not in box
-    guard = html.split("async function inpockModalOpen(")[1].split("const copied")[0]
-    assert "stepName('seo')" in guard and "stepName('mix')" not in guard
+    assert "인포크만 열기" in box
+    assert 'target="_blank"' in box
 
 
 def test_copy_result_is_checked_not_assumed():
@@ -97,33 +92,44 @@ def test_copy_result_is_checked_not_assumed():
     '복사됨'이라고 띄우면 사장님이 빈 클립보드로 붙여넣게 된다.
     """
     html = _html()
-    fn = html.split("async function inpockCopyChecked(")[1].split("async function inpockModalOpen(")[0]
-    assert "return true" in fn and "return false" in fn      # 성공/실패를 갈라 돌려준다
-    assert "execCommand" in fn                                # 막혔을 때 옛 방식으로 한 번 더
-    body = html.split("async function inpockModalOpen(")[1].split("function inpockModalClose(")[0]
-    assert "copied?" in body                                  # 그 결과로 문구가 갈린다
+    fn = html.split("async function inpockCopyChecked(")[1].split("// 📦 인포크에 등록")[0]
+    assert "return true" in fn and "return false" in fn
+    assert "execCommand" in fn                       # 막혔을 때 옛 방식으로 한 번 더
+    body = html.split("async function inpockModalOpen(")[1].split("\n}")[0]
+    assert "copied ?" in body or "copied?" in body    # 그 결과로 문구가 갈린다
 
 
-def test_iframe_src_is_lazy():
-    """src를 미리 박아두면 제작소를 열 때마다 인포크를 불러 느려진다."""
+def test_manual_fallbacks_remain():
+    """자동이 막혀도 사람이 손으로 할 길이 남아 있어야 한다."""
     html = _html()
-    tag = html.split('id="inpockFrame"')[1].split(">")[0]
-    assert "src=" not in tag                                  # 마크업엔 src 없음
-    body = html.split("async function inpockModalOpen(")[1].split("function inpockModalClose(")[0]
-    assert "if(!frame.src)" in body                            # 열 때 한 번만 넣는다
+    box = html.split("async function refreshInpock(")[1].split("function inpockCopy(")[0]
+    assert "inpockCopy()" in box            # 링크만 복사
+    assert 'target="_blank"' in box         # 인포크만 열기
+    assert "inpock_registered" in box       # 등록 완료 체크
 
 
-def test_close_keeps_session():
-    """닫을 때 src를 비우면 다시 열 때마다 재로그인 흐름을 탄다 — 살려둬야 한다."""
+def test_product_guidance_points_at_where_the_ui_actually_is():
+    """상품이 없을 때 "어디로 가라"가 실제 UI 위치와 같아야 한다.
+
+    상품 확정 UI(#coupangSlot)는 2026-08-18 쿠파스 트랙이 3단계 → 8단계 SEO로 이사했다.
+    안내가 옛 자리를 가리키면 '가라는 곳이 빈 화면'이 된다.
+    """
     html = _html()
-    fn = html.split("function inpockModalClose(")[1].split("\n}")[0]
-    assert "frame.src=''" not in fn.replace(" ", "")
-    assert "refreshInpock()" in fn        # 모달에서 체크한 등록완료를 9단계 박스에 반영
+    seo_panel = html.split('<section class="panel" data-step="5">')[1].split("</section>")[0]
+    assert 'id="coupangSlot"' in seo_panel
+
+    box = html.split("async function refreshInpock(")[1].split("function inpockCopy(")[0]
+    assert "stepName('seo')" in box and "stepName('mix')" not in box
+    guard = html.split("async function inpockModalOpen(")[1].split("const copied")[0]
+    assert "stepName('seo')" in guard and "stepName('mix')" not in guard
 
 
 @pytest.mark.skipif(not NODE, reason="node 없음")
 def test_produce_inline_js_syntax_ok(tmp_path):
-    """제작소가 통째로 안 열리던 SyntaxError 사고 방지(기존 관례와 동일)."""
+    """제작소가 통째로 안 열리던 SyntaxError 사고 방지(기존 관례와 동일).
+
+    ★`node --check`에 파일로 넘긴다 — `-e`는 윈도우 명령줄 상한(WinError 206)에 걸린다.
+    """
     html = _html()
     blocks = re.findall(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", html, re.S)
     js = tmp_path / "inline.js"

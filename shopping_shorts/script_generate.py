@@ -250,6 +250,19 @@ def _mix_source_block(sources):
             f"- 주변인물: {chs}\n"
             f"- 말투/어미: {st.get('tone') or '(미상)'}\n"
             f"- 전체대본: {(s.get('full_text') or '')[:800]}")
+        # ★장면 목록(2026-08-18 사장님 "그 대본에 장면을 사용하면 좋다").
+        #   문장마다 '어느 대목을 보고 썼는지'(src_seg)를 지목하게 하려면 **번호가 붙은
+        #   목록**을 봐야 한다. 3단계는 그 번호의 장면을 1순위로 붙인다 — 짐작이 아니라
+        #   원래 그 말이 나온 그림이라 가장 정확하다.
+        #   ⚠️무자막 소스는 말(text)이 비고 화면 설명만 있다 — 그것도 단서라 함께 준다.
+        _segs = [x for x in (s.get("segments") or []) if isinstance(x, dict) and x.get("seg_id")]
+        if _segs:
+            block += "\n- 장면 목록(이 대본을 참고해 쓸 때 어느 대목인지 번호로 지목하라):\n" + "\n".join(
+                "  [{sid}] {say}{desc}".format(
+                    sid=x.get("seg_id"),
+                    say=("말:" + (x.get("text") or "").strip()[:40] + " ") if (x.get("text") or "").strip() else "",
+                    desc="화면:" + (x.get("scene_desc") or "").strip()[:40])
+                for x in _segs[:20])
         # 무자막 해외영상: 자막·나레이션이 없어 전체대본이 비고 특장점만 있다. 그 특장점을
         # "이 제품은 이런 장점이 있다"로 주입해 대본이 그걸 우리 말로 녹이게 한다(2026-07-26).
         benefits = _source_benefits(s)
@@ -263,6 +276,21 @@ def _mix_source_block(sources):
     #   서로 다른 제품이 담겨 있으면(치아바타 224자 + 도마 694·526자) 글이 긴 쪽으로 끌려간다.
     #   "여러 편을 보라"는 지시의 뜻은 **같은 제품을 여러 각도로 보라**는 것이지
     #   다른 제품을 섞으라는 게 아니다.
+    # ★소재를 코드가 못 박는다(2026-08-18). 지금까지는 "주제는 [대본 1]의 것"이라고
+    #   **말로만** 지시했다 — AI가 여러 텍스트 더미를 읽고 소재를 스스로 추론해야 했고,
+    #   그 추론이 학습 재료(부품은행) 쪽으로 새는 게 이번 사고였다(재료가 전부 네일펜인데
+    #   결과가 '주방 기름 가림막'). 1단계 분석이 제품명을 이미 뽑아 두는데
+    #   (source_brief.product — 실측 '다이소 자석 네일펜') 그 값을 생성에 한 번도 안 줬다.
+    #   **아는 값을 안 주고 짐작하게 한 것**이 뿌리다. 맨 앞에 박으면 추론할 여지가 없어진다.
+    _prod = ""
+    for _s in sources:
+        _p = (_s.get("product") or "").strip()
+        if _p:
+            _prod = _p
+            break
+    if _prod:
+        out = ("★★우리 영상의 제품 = 「" + _prod + "」. 대본은 이 제품 이야기여야 한다. "
+               "다른 제품·소재가 한 줄이라도 들어가면 반려된다.\n\n") + out
     if len(sources) > 1:
         out += ("\n\n★★주제는 반드시 [대본 1]의 제품·소재다. [대본 2] 이하는 **말투·전개·표현을 참고만** 하고, "
                 "거기 나오는 제품·기능·사례를 주제로 삼거나 섞지 마라. "
@@ -302,8 +330,14 @@ _STYLE_SCHEMA = {
             "type": "array", "minItems": 3,
             "items": {
                 "type": "object",
-                "properties": {"role": {"type": "string"}, "text": {"type": "string"}},
-                "required": ["role", "text"],
+                # ★src_seg(2026-08-18 사장님 "그 대본에 장면을 사용하면 좋다"):
+                #   이 문장을 쓸 때 **참고한 소스 세그먼트 번호**. 3단계가 이 번호의 장면을
+                #   1순위로 붙인다 — 짐작이 아니라 '원래 그 말이 나온 그림'이라 가장 정확하다.
+                #   지어낼 수 없게 후보 목록에 있는 것만 쓰라고 프롬프트에서 못 박는다.
+                #   못 고르면 빈 문자열(그때는 종전대로 3단계가 알아서 고른다 = 회귀 0).
+                "properties": {"role": {"type": "string"}, "text": {"type": "string"},
+                               "src_seg": {"type": "string"}},
+                "required": ["role", "text", "src_seg"],
             },
         },
     },
@@ -312,6 +346,15 @@ _STYLE_SCHEMA = {
 
 STYLE_REWRITES = 2       # 게이트 실패 시 다시 쓰는 횟수. 그래도 안 되면 실패로 남긴다.
 
+
+
+def _sources_product(sources):
+    """재료에서 우리 제품명 하나(첫 번째로 채워진 것). 없으면 ""."""
+    for s in (sources or []):
+        p = (s.get("product") or "").strip()
+        if p:
+            return p
+    return ""
 
 def generate_one_style(sources, style, target_seconds=30, bank_context="", facts_block=""):
     """스타일 1개로 대본 1안. → {beats, script, hook, checks, passed, tries, style_id, style_name}
@@ -337,9 +380,16 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
             + _style_extra()
             + (("\n" + facts_block) if facts_block else "")
             + "\n\n" + head
-            + "\n\n출력은 위 칸 순서대로 beats 배열 하나만. 각 원소는 {role, text}.")
+            + "\n\n각 칸마다 src_seg에 **그 문장을 쓸 때 참고한 장면 번호**를 적어라"
+              "([대본 N]의 '장면 목록'에 있는 번호만. 3단계가 그 장면을 화면으로 붙인다)."
+              " 참고한 대목이 딱히 없으면 빈 문자열."
+            + "\n\n출력은 위 칸 순서대로 beats 배열 하나만. 각 원소는 {role, text, src_seg}.")
 
     extra, tries, res, checks, full = "", [], None, [], ""
+    # ★재작성이 끝내 통과 못 하면 **마지막 시도**가 아니라 규격에 가장 가까운 시도를 쓴다
+    #   (2026-08-18 사장님 "40초 대본이 나오는데 고친 거 아니었나"). 예전엔 2번 고쳐 쓰고도
+    #   실패하면 그 마지막 판을 그대로 내보냈다 — 더 길어진 판이 나가는 일이 생긴다.
+    best = None
     for _ in range(STYLE_REWRITES + 1):
         data = _call_json(base + extra, _STYLE_SCHEMA)
         res = (data or {}).get("beats") or []
@@ -347,17 +397,55 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
             break
         # ★facts_block을 게이트에도 넘긴다 — 재료를 줬으면 대본의 수치가 그 안에 있는지
         #   대조한다(지어낸 수치 차단). 안 줬으면 그 검사는 건너뛴다(회귀 0).
-        checks, full = script_gate.check(style, res, facts_text=facts_block)
+        # ★소재 일치도 함께 본다(2026-08-18) — 재료의 제품명을 그대로 넘긴다.
+        #   product가 비면 그 검사는 건너뛴다(회귀 0).
+        checks, full = script_gate.check(style, res, facts_text=facts_block,
+                                         product=_sources_product(sources),
+                                         seconds=seconds)
         tries.append({"chars": len(script_gate.norm(full)),
                       "fails": [c["name"] for c in checks if not c["ok"]]})
         if script_gate.passed(checks):
             break
+        _n = len(script_gate.norm(full))
+        _tgt = script_gate.density_target(style, seconds)
+        if best is None or abs(_n - _tgt) < best[0]:
+            best = (abs(_n - _tgt), res, checks, full)
         extra = script_gate.gate_feedback(checks)
 
+    if not script_gate.passed(checks) and best and best[3] != full:
+        _, res, checks, full = best
+
+    # ★마지막 방어는 코드가 한다(2026-08-18 사장님 "계속 다시 살아나는데 원천 해결인가").
+    #   재작성은 부탁이라 언제든 어길 수 있다 — 여기서 길이만은 **결정적으로** 맞춘다.
+    #   edit_plan._trim_to_budget(군더더기 부사부터 덜어내 문법을 안 깨는 재단)을 그대로
+    #   재사용한다(0순위-B). 뺄 게 없으면 원문 유지 — 뜻을 훼손하면서까지 자르진 않는다.
+    _cap = script_gate.density_target(style, seconds)
+    if res and len(script_gate.norm(full)) > _cap:
+        from shopping_shorts.edit_plan import _trim_to_budget
+        _tot = sum(len(script_gate.norm(b.get("text", ""))) for b in res) or 1
+        for _b in res:
+            _n = len(script_gate.norm(_b.get("text", "")))
+            if not _n:
+                continue
+            _new = _trim_to_budget(_b.get("text", ""), max(6, int(_cap * _n / _tot)))
+            if _new:
+                _b["text"] = _new
+        checks, full = script_gate.check(style, res, facts_text=facts_block,
+                                         product=_sources_product(sources),
+                                         seconds=seconds)
+        tries.append({"chars": len(script_gate.norm(full)), "trimmed": True,
+                      "fails": [c["name"] for c in checks if not c["ok"]]})
+
+    # ★화면에 "영상으로 몇 초"를 띄우려면 초를 서버가 계산해 실어 보내야 한다
+    #   (2026-08-18 사장님). 화면이 자기 상수로 따로 계산하면 판정(밀도 게이트)과
+    #   다른 수를 말하게 된다 — 초 환산은 script_gate 한 곳에서만 한다(0순위-B).
+    for _b in (res or []):
+        _b["sec"] = script_gate.est_seconds(_b.get("text", ""))
     return {
         "style_id": style.get("id"), "style_name": style.get("name"),
         "beats": res or [], "script": full, "hook": (res or [{}])[0].get("text", ""),
         "checks": checks, "passed": script_gate.passed(checks), "tries": tries,
+        "chars": len(script_gate.norm(full)), "sec": script_gate.est_seconds(full),
     }
 
 

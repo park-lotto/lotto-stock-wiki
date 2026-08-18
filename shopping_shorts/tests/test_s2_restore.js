@@ -17,6 +17,8 @@ for (let k = src.indexOf('{', i); k < src.length; k++) {
   else if (src[k] === '}') { d--; if (d === 0) { body = src.slice(i, k + 1); break; } }
 }
 let S2 = { seed: null, seeds: [], drafts: [], curDraft: 0, picked: [], materials: null };
+// ★_s2Hydrate가 부르는 공용 리셋도 함께 실어야 실제 동작이 돈다(2026-08-18 공용화).
+function _s2Reset(){ S2.drafts=[]; S2.curDraft=0; S2.picked=[]; S2.materials=null; S2.seed=null; }
 eval(body);
 
 let p = 0, f = 0;

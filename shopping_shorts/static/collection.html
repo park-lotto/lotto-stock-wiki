@@ -50,6 +50,8 @@
       <span id="selCount"></span>
       <button class="btn-ghost" onclick="selectAll()">전체선택</button>
       <button class="btn-ghost" onclick="selectNone()">선택해제</button>
+      <button class="btn-ghost" onclick="selectAnalyzed()" title="분석이 끝난 것만 골라줍니다">✅ 분석완료만 선택</button>
+      <button class="btn-ghost" onclick="analyzeSelected()" title="고른 영상을 미리 분석해 둡니다(천천히 돌아갑니다)">🔎 분석 시작</button>
       <button class="btn-send" onclick="sendToProduce()">🎬 영상제작으로 보내기</button>
     </div>
   </div>
@@ -64,10 +66,65 @@ async function loadItems(){
     const d=await (await fetch('/api/mix/basket')).json();
     ITEMS=(d.items||[]).slice().reverse();   // 최근에 담은 게 맨 위로
   }catch(e){ ITEMS=[]; }
+  render();                 // 목록부터 즉시 그리고(신호등은 잠깐 '분석 전'),
+  await loadAnalysis();     // 상태가 오면 다시 그린다 — 목록이 늦게 뜨는 걸 막는다.
   render();
 }
 function toggleSelect(sc){
   SELECTED.has(sc)?SELECTED.delete(sc):SELECTED.add(sc);
+  render();
+}
+
+// ── 분석 신호등(2026-08-18 사장님: "즐겨찾기에 미리 담아두면 천천히 되니까") ──────
+// 담아두기만 해도 서버가 알아서 예열하지만, 화면에 아무 표시가 없어 "된 건지" 알 수 없었다.
+// 여기서 상태만 읽어 보여주고(비용 0원), 안 된 것은 버튼으로 다시 걸 수 있게 한다.
+// 판정은 서버 _analysis_state 한 곳이 한다 — 제작소 1단계 카드와 같은 답을 쓴다.
+let ANALYSIS={};          // shortcode -> {state:'done'|'pending'|'gave_up', reason}
+let _pollTimer=null;
+async function loadAnalysis(){
+  const codes=ITEMS.map(i=>i.shortcode).filter(Boolean);
+  if(!codes.length){ ANALYSIS={}; return; }
+  try{
+    const d=await (await fetch('/api/basket/analysis_status?shortcodes='+
+      encodeURIComponent(codes.join(',')))).json();
+    if(d && d.ok) ANALYSIS=d.items||{};
+  }catch(e){}
+  // 도는 중인 게 남아 있으면 20초마다 다시 본다(다 끝나면 폴링을 멈춘다 — 서버 부담 0).
+  const pending=codes.some(c=>(ANALYSIS[c]||{}).state==='pending');
+  clearTimeout(_pollTimer);
+  if(pending) _pollTimer=setTimeout(()=>loadAnalysis().then(render), 20000);
+}
+// 다른 페이지에 갔다 와도 진행 상태가 살아 있어야 한다(2026-08-18 사장님 요청).
+// ★분석 자체는 서버 대기줄(job_queue)에서 도니까 창을 닫아도 계속된다 — 화면이 할 일은
+//   돌아왔을 때 **서버 상태를 다시 읽는 것**뿐이다. 탭을 다시 보는 순간 갱신한다.
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden) loadAnalysis().then(render);
+});
+window.addEventListener('focus',()=>{ loadAnalysis().then(render); });
+function analysisBadge(sc){
+  const st=(ANALYSIS[sc]||{}).state;
+  if(st==='done')    return `<span style="background:#1f9d55;color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px">✅ 분석완료</span>`;
+  if(st==='pending') return `<span style="background:#8a6d3b;color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px">⏳ 분석 중</span>`;
+  if(st==='gave_up') return `<span title="${esc((ANALYSIS[sc]||{}).reason||'')}" style="background:#a03c2a;color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px">⚠ 분석 실패</span>`;
+  return `<span style="background:#3a3a3a;color:#bbb;font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px">· 분석 전</span>`;
+}
+async function analyzeCodes(codes){
+  codes=(codes||[]).filter(Boolean);
+  if(!codes.length){ alert('분석할 항목을 먼저 선택하세요'); return; }
+  codes.forEach(c=>{ ANALYSIS[c]={state:'pending',reason:''}; });   // 누른 즉시 표시
+  render();
+  try{
+    await fetch('/api/basket/analyze',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({shortcodes:codes})});
+  }catch(e){}
+  await loadAnalysis(); render();
+}
+function analyzeSelected(){ analyzeCodes([...SELECTED]); }
+function analyzeOne(sc){ analyzeCodes([sc]); }
+function selectAnalyzed(){
+  SELECTED.clear();
+  ITEMS.forEach(i=>{ if((ANALYSIS[i.shortcode]||{}).state==='done') SELECTED.add(i.shortcode); });
   render();
 }
 function selectAll(){ ITEMS.forEach(i=>SELECTED.add(i.shortcode)); render(); }
@@ -77,6 +134,44 @@ async function removeItem(sc){
   SELECTED.delete(sc);
   loadItems();
 }
+// ── 어디로 보낼지 고른다(2026-08-18 사장님: "만들던 곳에 합쳐지는 걸 막아야 해") ──
+// 종전엔 제작소가 **진행 중 작업에 무조건 이어 붙였다**(랭킹에서 두 번 보내면 앞 것이
+// 지워지던 2026-07-18 버그의 처방). 그 규칙 자체는 맞지만, 즐겨찾기에서 새 영상 묶음을
+// 보낼 때까지 옛 작업에 섞여 "만들던 영상에 엉뚱한 소스"가 들어갔다.
+// → 기본을 **새 작업**으로 바꾸고, 이어서 하고 싶을 때만 작업을 골라 보낸다.
+let _pendingPicks = null;
+async function _openSendModal(picks){
+  _pendingPicks = picks;
+  let works = [];
+  try{
+    const d = await (await fetch('/api/produce/works')).json();
+    works = (d && d.works) ? d.works.slice(0, 12) : [];   // 응답 키는 works다(제작소 모달과 동일)
+  }catch(e){}
+  const rows = works.map(w=>{
+    const name = esc((w.title && w.title.trim()) ? w.title.trim() : '제목 없음 (대본 미작성)');
+    const step = (typeof w.step === 'number') ? (w.step + 1) : 1;
+    const when = esc((w.updated_at || '').slice(5, 16).replace('T', ' '));
+    return `<div onclick="_doSend('${esc(w.work_id)}')" style="padding:10px 12px;border:1px solid #444;border-radius:8px;margin-top:6px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center">
+      <span style="font-weight:700">${name}</span>
+      <span style="color:#999;font-size:12px;white-space:nowrap">${when} · 단계 ${step}/8</span></div>`;
+  }).join('');
+  _overlay(
+    `<div style="font-weight:800;font-size:16px;margin-bottom:4px">🎬 어디로 보낼까요?</div>
+     <div style="color:#aaa;font-size:13px;margin-bottom:12px">영상 ${picks.length}개</div>
+     <button onclick="_doSend('new')" style="width:100%;padding:12px;background:#1f6feb;color:#fff;border:none;border-radius:10px;font-weight:800;font-size:15px;cursor:pointer">➕ 새 작업으로 보내기</button>
+     <div style="color:#888;font-size:12px;margin:14px 0 2px">만들던 작업에 이어서 넣기</div>
+     ${rows || '<div style="color:#777;font-size:13px;padding:8px 0">진행 중인 작업이 없습니다</div>'}`);
+}
+function _doSend(target){
+  const picks = _pendingPicks || [];
+  if(!picks.length) return;
+  sessionStorage.setItem('produce_handoff', JSON.stringify(picks));
+  sessionStorage.setItem('produce_mix_urls', JSON.stringify(picks.map(p=>p.url).filter(Boolean)));
+  _closeOverlay();
+  // 새 작업은 ?new=1(직전 작업을 안 불러온다), 이어서는 ?work=<id> — 둘 다 이미 있는 길이다.
+  location.href = (target === 'new') ? '/produce?new=1'
+                                     : '/produce?work=' + encodeURIComponent(target);
+}
 function sendToProduce(){
   // 영상당 역할(대본용/화면용)을 제작소에서 배정하려면 url뿐 아니라 shortcode·name·
   // thumbnail·caption도 넘겨야 한다(대본 추출은 shortcode로). 최대 5개(2단계 입력 상한).
@@ -84,10 +179,7 @@ function sendToProduce(){
     url:i.url||'', shortcode:i.shortcode||'', name:i.name||'',
     thumbnail:i.thumbnail||'', caption:i.caption||'', play_url:i.play_url||''}));
   if(!picks.length){ alert('보낼 항목을 먼저 선택하세요'); return; }
-  // 신규 형식(items)과 구버전 호환(urls) 둘 다 저장.
-  sessionStorage.setItem('produce_handoff', JSON.stringify(picks));
-  sessionStorage.setItem('produce_mix_urls', JSON.stringify(picks.map(p=>p.url).filter(Boolean)));
-  location.href='/produce';
+  _openSendModal(picks);   // 어디로 보낼지 고른 뒤 _doSend가 저장·이동한다
 }
 // 썸네일 소스: 렌즈 결과(gstatic)는 /api/thumb 프록시가 허용호스트가 아니라 400을
 // 주므로(검게 나옴) referrerpolicy=no-referrer로 직접 로드. 인스타·틱톡·유튜브 CDN은
@@ -202,9 +294,7 @@ function sendOneToProduce(sc){
   const i=ITEMS.find(x=>x.shortcode===sc); if(!i) return;
   const picks=[{url:i.url||'', shortcode:i.shortcode||'', name:i.name||'',
                 thumbnail:i.thumbnail||'', caption:i.caption||'', play_url:i.play_url||''}];
-  sessionStorage.setItem('produce_handoff', JSON.stringify(picks));
-  sessionStorage.setItem('produce_mix_urls', JSON.stringify(picks.map(p=>p.url).filter(Boolean)));
-  location.href='/produce';
+  _openSendModal(picks);   // 한 개를 보낼 때도 어디로 갈지 고른다(같은 길)
 }
 // 플랫폼 배지 — URL 호스트로 판별(app.py _GRAB_DOMAINS와 같은 도메인). 재생 로직이
 // 이미 URL로 플랫폼을 구분하고 있어(playPreview) 같은 판별을 배지로도 보여준다.
@@ -253,6 +343,7 @@ function render(){
         <span onclick="event.stopPropagation();playPreview(this,'${i.shortcode}')" title="미리보기 재생" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;background:rgba(0,0,0,.55);color:#fff;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer">▶</span>
       </div>
       <div class="body">
+        <div style="margin-bottom:5px">${analysisBadge(i.shortcode)}</div>
         <div class="rank" style="white-space:normal;line-height:1.4;min-height:2.6em">${esc((i.name||i.caption||'').slice(0,60))}</div>
         ${ml}
         ${reprobeBtn}
@@ -260,6 +351,8 @@ function render(){
           <button class="view" onclick="window.open('${esc(i.url||'#')}','_blank')">👁 보기</button>
           <button onclick="removeItem('${i.shortcode}')">🗑 빼기</button>
         </div>
+        ${(ANALYSIS[i.shortcode]||{}).state==='done' ? '' :
+          `<button onclick="analyzeOne('${i.shortcode}')" style="width:100%;margin-top:6px;padding:7px;background:#2d333b;color:#adbac7;border:1px solid #555;border-radius:8px;font-weight:700;cursor:pointer">🔎 ${(ANALYSIS[i.shortcode]||{}).state==='gave_up'?'다시 분석':'분석'}</button>`}
         <button onclick="sendOneToProduce('${i.shortcode}')" style="width:100%;margin-top:6px;padding:8px;background:#1f6feb;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">🎬 제작소로 보내기</button>
       </div>
     </div>`;
