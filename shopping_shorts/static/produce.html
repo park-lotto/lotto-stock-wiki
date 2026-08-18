@@ -3589,6 +3589,21 @@ function _applyWorkTitle(wid, name){
   const v = (typeof name === 'string') ? name.trim() : '';
   if(v) STATE.title_manual = v; else delete STATE.title_manual;   // 빈 값 = 자동 제목으로 되돌리기
 }
+// 즐겨찾기 '새 작업으로 보내기'에서 미리 지은 이름을 새 작업에 심는다(2026-08-19 사장님 요청).
+// 종전엔 새 작업이 늘 '(제목 없음)'으로 쌓여 목록에서 구분이 안 됐다(2026-08-17 ✏ 추가의 동기와 같은 문제,
+// 다만 그건 만든 뒤 고치는 길이고 이건 만들 때 짓는 길이다).
+// ★한 번 쓰면 지운다 — 안 지우면 다음에 이름 없이 보낸 새 작업에 옛 이름이 따라붙는다.
+function _applyPendingNewName(){
+  let nm = '';
+  try{
+    nm = sessionStorage.getItem('produce_new_name') || '';
+    sessionStorage.removeItem('produce_new_name');
+  }catch(e){ return; }
+  nm = (nm || '').trim();
+  if(!nm) return;                       // 안 지었으면 종전대로 자동 제목(대본 앞 20자)
+  STATE.title_manual = nm;
+  saveWork();                           // title_manual이 실린 state로 다시 저장(가드는 saveWork 안에)
+}
 if(typeof window !== 'undefined') window.__ssApplyWorkTitle = _applyWorkTitle;
 async function _pushWork(){
   // 디바운스가 끝난 시점의 **최신** 상태를 보낸다(예약 시점의 스냅샷이 아니다).
@@ -8935,6 +8950,13 @@ function _bootRestore(){
   } else if(isNew){
     // + 새 작업: clearWork 후 빈 새 작업. 계정싱크를 타면 직전 작업을 도로 불러와 hijack한다(C-1 재발).
     _consumeProduceHandoff();
+    // ★즐겨찾기에서 미리 지어 보낸 작업 이름(2026-08-19 사장님 요청).
+    //   여기서 STATE에 심어야 _consumeProduceHandoff 끝의 saveWork()가 title_manual까지
+    //   실어 보낸다 — 순서가 뒤바뀌면 이름 없는 state가 먼저 저장돼 '(제목 없음)'이 된다.
+    //   사이드바 ✏와 같은 자리(title_manual)라 대본을 뽑아도 안 덮인다.
+    //   ⚠️ typeof 가드: _bootRestore만 잘라 도는 하네스(test_produce_work_seams 등)엔
+    //      이 함수가 없어 맨몸으로 부르면 ReferenceError로 죽는다(실측 2건).
+    if(typeof _applyPendingNewName === 'function') _applyPendingNewName();
   } else {
     // 계정 크로스기기 싱크(2026-07-26): 그냥 /produce면 로컬 복원 후, 빈 기기일 때만 계정 최신작업 로드.
     _bootAccountLatestOrLocal();
