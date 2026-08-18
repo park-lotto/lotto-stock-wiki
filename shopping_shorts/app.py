@@ -8815,8 +8815,21 @@ def _analysis_state(store, shortcode):
                                          or _is_hopeless_error(err)))
     reason = (_autoload_reason_ko(err) if err else
               ("분석이 도중에 끊겼어요 — 긴 영상은 더 오래 걸립니다" if stalled else ""))
-    return None, {"state": "gave_up" if gave_up else "pending",
-                  "reason": reason, "attempts": att}
+    if gave_up:
+        return None, {"state": "gave_up", "reason": reason, "attempts": att}
+    # ★'분석 중'과 '아직 안 걸림'을 가른다(2026-08-18). 결과가 없다는 것만으로 전부
+    #   '분석 중'이라고 하면, 아무도 안 건 영상 앞에서 사장님이 오지 않을 결과를
+    #   기다린다 — 오늘 실제로 그 화면을 만들 뻔했다. 판단 근거는 대기줄이다:
+    #   큐에 queued/running으로 있으면 진짜 도는 중, 없고 시도 흔적만 있으면 도중 중단,
+    #   둘 다 없으면 아직 아무도 안 건 것(=분석 전, 버튼을 눌러야 한다).
+    queued = False
+    for code in (shortcode, _media_code(shortcode)):
+        if code and store.queue_has_pending("prewarm", "shortcode", code):
+            queued = True
+            break
+    if queued or att > 0:
+        return None, {"state": "pending", "reason": reason, "attempts": att}
+    return None, {"state": "idle", "reason": "", "attempts": 0}
 
 
 @app.get("/api/basket/analysis_status")

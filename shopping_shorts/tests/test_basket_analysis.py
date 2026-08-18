@@ -45,9 +45,19 @@ def test_결과가_있으면_분석완료로_보인다(db):
     assert out["items"]["ABC"]["state"] == "done"
 
 
-def test_결과가_없고_시도도_없으면_분석중이다(db):
+def test_아무도_안_건_영상은_분석전이다(db):
+    """결과가 없다고 전부 '분석 중'이라고 하면, 아무도 안 건 영상 앞에서
+    오지 않을 결과를 기다리게 된다 — 대기줄에 없으면 '분석 전'이어야 한다."""
     out = _status(db, ["ABC"])
-    assert out["items"]["ABC"]["state"] == "pending"
+    assert out["items"]["ABC"]["state"] == "idle"
+
+
+def test_대기줄에_있으면_분석중이다(db):
+    store = Store(db)
+    store.enqueue("prewarm", {"shortcode": "ABC", "url": "u"})
+    out = _status(db, ["ABC"])
+    assert out["items"]["ABC"]["state"] == "pending", \
+        "걸어둔 분석은 페이지를 옮겨도 '분석 중'으로 남아야 한다"
 
 
 def test_가망없는_실패는_실패로_보이고_이유가_붙는다(db):
