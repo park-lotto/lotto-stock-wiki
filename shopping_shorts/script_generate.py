@@ -250,6 +250,19 @@ def _mix_source_block(sources):
             f"- 주변인물: {chs}\n"
             f"- 말투/어미: {st.get('tone') or '(미상)'}\n"
             f"- 전체대본: {(s.get('full_text') or '')[:800]}")
+        # ★장면 목록(2026-08-18 사장님 "그 대본에 장면을 사용하면 좋다").
+        #   문장마다 '어느 대목을 보고 썼는지'(src_seg)를 지목하게 하려면 **번호가 붙은
+        #   목록**을 봐야 한다. 3단계는 그 번호의 장면을 1순위로 붙인다 — 짐작이 아니라
+        #   원래 그 말이 나온 그림이라 가장 정확하다.
+        #   ⚠️무자막 소스는 말(text)이 비고 화면 설명만 있다 — 그것도 단서라 함께 준다.
+        _segs = [x for x in (s.get("segments") or []) if isinstance(x, dict) and x.get("seg_id")]
+        if _segs:
+            block += "\n- 장면 목록(이 대본을 참고해 쓸 때 어느 대목인지 번호로 지목하라):\n" + "\n".join(
+                "  [{sid}] {say}{desc}".format(
+                    sid=x.get("seg_id"),
+                    say=("말:" + (x.get("text") or "").strip()[:40] + " ") if (x.get("text") or "").strip() else "",
+                    desc="화면:" + (x.get("scene_desc") or "").strip()[:40])
+                for x in _segs[:20])
         # 무자막 해외영상: 자막·나레이션이 없어 전체대본이 비고 특장점만 있다. 그 특장점을
         # "이 제품은 이런 장점이 있다"로 주입해 대본이 그걸 우리 말로 녹이게 한다(2026-07-26).
         benefits = _source_benefits(s)
@@ -317,8 +330,14 @@ _STYLE_SCHEMA = {
             "type": "array", "minItems": 3,
             "items": {
                 "type": "object",
-                "properties": {"role": {"type": "string"}, "text": {"type": "string"}},
-                "required": ["role", "text"],
+                # ★src_seg(2026-08-18 사장님 "그 대본에 장면을 사용하면 좋다"):
+                #   이 문장을 쓸 때 **참고한 소스 세그먼트 번호**. 3단계가 이 번호의 장면을
+                #   1순위로 붙인다 — 짐작이 아니라 '원래 그 말이 나온 그림'이라 가장 정확하다.
+                #   지어낼 수 없게 후보 목록에 있는 것만 쓰라고 프롬프트에서 못 박는다.
+                #   못 고르면 빈 문자열(그때는 종전대로 3단계가 알아서 고른다 = 회귀 0).
+                "properties": {"role": {"type": "string"}, "text": {"type": "string"},
+                               "src_seg": {"type": "string"}},
+                "required": ["role", "text", "src_seg"],
             },
         },
     },
@@ -361,7 +380,10 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
             + _style_extra()
             + (("\n" + facts_block) if facts_block else "")
             + "\n\n" + head
-            + "\n\n출력은 위 칸 순서대로 beats 배열 하나만. 각 원소는 {role, text}.")
+            + "\n\n각 칸마다 src_seg에 **그 문장을 쓸 때 참고한 장면 번호**를 적어라"
+              "([대본 N]의 '장면 목록'에 있는 번호만. 3단계가 그 장면을 화면으로 붙인다)."
+              " 참고한 대목이 딱히 없으면 빈 문자열."
+            + "\n\n출력은 위 칸 순서대로 beats 배열 하나만. 각 원소는 {role, text, src_seg}.")
 
     extra, tries, res, checks, full = "", [], None, [], ""
     for _ in range(STYLE_REWRITES + 1):
