@@ -252,3 +252,24 @@ def test_parse_reel_node_carries_follower():
     from shopping_shorts.instagram_parse import parse_reel_node
     d = parse_reel_node({"code": "abc", "pk": "1", "_owner_follower_count": 6653}, "u")
     assert d["ownerFollowers"] == 6653
+
+
+def test_reel_node_keeps_real_owner_not_requested_account():
+    """남의 릴이 섞여 오면 **그 릴의 진짜 주인**으로 저장돼야 한다.
+
+    2026-08-18 실사고: 카드엔 maison_homedino인데 [영상보기]를 누르면 chuuchuu_tem
+    영상이 열렸다(og:url 실측 3/3). 요청한 계정을 무조건 박은 게 원인.
+    팔로워도 짝으로 따라가야 한다 — 안 그러면 남의 영상에 이 채널 팔로워가 붙는다.
+    """
+    node = {"code": "DcKIB8UTf2g", "user": {"username": "chuuchuu_tem", "full_name": "츄츄템"},
+            "_owner_follower_count": 47588}
+    d = parse_reel_node(node, "maison_homedino")
+    assert d["ownerUsername"] == "chuuchuu_tem"
+    assert d["ownerFollowers"] == 0        # 연 프로필(maison)의 팔로워를 물려주면 안 된다
+
+
+def test_reel_node_falls_back_to_requested_account_when_node_has_no_owner():
+    node = {"code": "AAA111", "_owner_follower_count": 1234}
+    d = parse_reel_node(node, "maison_homedino")
+    assert d["ownerUsername"] == "maison_homedino"
+    assert d["ownerFollowers"] == 1234     # 주인이 같으면 종전대로 프로필 팔로워를 쓴다

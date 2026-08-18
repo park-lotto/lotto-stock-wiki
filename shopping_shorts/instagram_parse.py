@@ -113,6 +113,22 @@ def _best_video(node):
     return _first(node, "video_url", default="") or ""
 
 
+def _node_owner(node, username):
+    """이 릴의 **실제 주인** 계정. 없으면 요청한 계정으로 폴백.
+
+    ★오귀속 사고(2026-08-18 사장님 "영상보기를 누르면 다른 채널로 이동된다").
+      예전엔 요청한 계정(username)을 무조건 박았다. 그런데 인스타는 `/{계정}/reels/`
+      응답에 **다른 계정 릴**(추천·리믹스 등)을 섞어 내려준다 — 그게 전부 그 계정
+      것으로 저장돼, 카드엔 A 채널인데 링크를 누르면 B 채널 영상이 열렸다.
+      실측(og:url로 확인): DcKIB8UTf2g·DcIolALhSrn·DcGLHBcBClU 세 건 모두 DB엔
+      maison_homedino, 실제 주인은 chuuchuu_tem이었다. 썸네일 워터마크도 chuuchuu_tem.
+      응답이 이미 주인을 알려주므로(user.username) 추가 요청 0건으로 바로잡는다.
+    """
+    u = node.get("user")
+    real = (u.get("username") or "").strip().lstrip("@") if isinstance(u, dict) else ""
+    return real or username
+
+
 def parse_reel_node(node, username):
     """릴스 노드 1개 → 10키 dict. shortcode를 못 찾으면 None(호출부가 건너뛴다)."""
     if not isinstance(node, dict):
@@ -136,7 +152,8 @@ def parse_reel_node(node, username):
         # yt-dlp 백필(건당 수 초)로 채우던 것을 크롤이 지나가며 공짜로 채운다.
         "duration": (float(node.get("video_duration"))
                      if node.get("video_duration") else None),
-        "ownerUsername": username,
+        # ★요청한 계정이 아니라 **노드가 말하는 실제 주인**을 쓴다(_node_owner 참고).
+        "ownerUsername": _node_owner(node, username),
         # 채널 표시명(2026-08-06) — 아카이브 카드를 한글 이름으로 띄우려고 주워 담는다.
         # ★이미 받은 응답에서 꺼낼 뿐이라 **추가 요청이 0건**이다(parse_search_item도
         #   같은 user.full_name을 읽는다). 이 경로는 계정이 차단돼 세션을 돌려쓰는 중이라
@@ -147,10 +164,16 @@ def parse_reel_node(node, username):
         # 팔로워(2026-08-14) — instagram_playwright가 같은 페이지 응답에서 주워
         # 노드에 실어준 값(_owner_follower_count). 노드 자체의 user.follower_count도
         # 드물게 있어 함께 본다. 추가 요청 0건.
-        "ownerFollowers": _int(node.get("_owner_follower_count")
-                               or ((node.get("user") or {}).get("follower_count")
-                                   if isinstance(node.get("user"), dict) else 0)
-                               or 0),
+        # ★계정과 팔로워는 **짝으로** 정한다(0순위-B). _owner_follower_count는 '지금 연
+        #   프로필'의 값이라, 남의 릴이 섞여 들어왔을 때 그대로 쓰면 남의 영상에 이 채널
+        #   팔로워가 붙는다(실측: 다른 채널 영상 2장이 똑같이 47,588로 떴다).
+        #   주인이 다르면 노드 자신이 말하는 값만 쓰고, 없으면 0(화면은 0이면 안 띄운다).
+        "ownerFollowers": _int(
+            (node.get("_owner_follower_count")
+             if _node_owner(node, username) == username else 0)
+            or ((node.get("user") or {}).get("follower_count")
+                if isinstance(node.get("user"), dict) else 0)
+            or 0),
     }
 
 
