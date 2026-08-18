@@ -6003,6 +6003,10 @@ async function cloneCandidate(idx){
   // ★WORK_ID를 비워 **새 작업 레코드**가 생기게 한다. 안 비우면 지금 작업의 job_id가 덮여
   //   원본이 내 작업목록에서 길을 잃는다(그러면 3편을 따로 못 만든다 — 이 기능의 목적 자체).
   WORK_ID = null;
+  // ★2단계 상태도 함께 끊는다(2026-08-18). WORK_ID만 비우면 곧바로 도는 saveWork가
+  //   **옛 작업의 씨앗·대본을 새 작업에 담아** 저장한다 — 그게 이번 "2단계에서 아예 딴게
+  //   나온다"의 뿌리다. 새 작업은 재료도 대본도 처음부터다.
+  S2.drafts = []; S2.curDraft = 0; S2.picked = []; S2.materials = null; S2.seed = null;
   // ★고른 후보 대본을 STATE.script에 싣는다(2026-08-06). 작업 제목은 서버가
   //   state.script 앞 20자에서 뽑는다(upsert_produce_work) — 안 실으면 목록에
   //   '(제목 없음)'만 여러 줄 쌓여 어느 게 A안이고 C안인지 구분이 안 된다.
@@ -8651,13 +8655,26 @@ const S2 = { seed:null, seeds:[], styles:[], picked:[], drafts:[], curDraft:0, l
 //    담으면 옛 스타일 목록이 화면에 굳는다. 담는 건 **사장님이 만든 것**뿐이다.
 function _s2Snapshot(){
   if(!S2.drafts || !S2.drafts.length) return null;   // 만든 게 없으면 키 자체를 안 만든다
-  return {drafts:S2.drafts, curDraft:S2.curDraft||0, picked:S2.picked||[],
+  // ★주인을 새긴다(2026-08-18 사장님 "2단계에서 아예 딴게 나온다").
+  //   S2는 순수 메모리라 작업을 갈아타도 살아남는다. '따로 만들기'처럼 WORK_ID를 비워
+  //   **새 작업 레코드**를 만드는 분기(아래 참조)에서 곧바로 저장이 돌면, 옛 작업의
+  //   씨앗·대본이 그대로 새 작업에 담긴다.
+  //   실측(work 3b8e5099a22e): 담긴 건 다이소 자석 네일펜 5편인데 s2.seed는 옛 작업의
+  //   홈데코랩(DbmCnyTTobw), drafts는 또 다른 작업의 카드지갑 대본이었다 — 서버·AI PICK은
+  //   정상이었고(pick_id=DcIrfnOzHre 네일) 화면만 옛 스냅샷을 복원해 그린 것이다.
+  //   스냅샷에 work_id를 새겨 **남의 작업 것이면 복원하지 않는다**(_s2Hydrate).
+  return {work_id:(typeof WORK_ID !== 'undefined' ? (WORK_ID || null) : null),
+          drafts:S2.drafts, curDraft:S2.curDraft||0, picked:S2.picked||[],
           materials:S2.materials||null, seed:S2.seed||null};
 }
 // 되살리기. ★없으면 **지운다** — 다른 작업으로 갈아탔는데 앞 작업의 대본이 남아 있으면
 //   그게 곧 2026-07-25 '캐리오버' 사고(옛 대본이 새 영상에 실려 나감)와 같은 모양이 된다.
 function _s2Hydrate(w){
-  const s = (w && w.s2) || null;
+  let s = (w && w.s2) || null;
+  // ★남의 작업 스냅샷이면 버린다(2026-08-18). 스냅샷에 새긴 work_id와 지금 여는 작업이
+  //   다르면 그건 갈아타기 전 작업의 것이다 — 되살리면 씨앗·대본이 통째로 캐리오버된다.
+  //   ⚠️ work_id가 없는 옛 스냅샷은 그대로 복원한다(주인을 알 길이 없다 — 회귀 0).
+  if(s && s.work_id && w && w.work_id && s.work_id !== w.work_id) s = null;
   if(s && s.drafts && s.drafts.length){
     S2.drafts = s.drafts;
     S2.curDraft = (typeof s.curDraft === 'number' && s.curDraft >= 0 && s.curDraft < s.drafts.length) ? s.curDraft : 0;
