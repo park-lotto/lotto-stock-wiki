@@ -175,3 +175,23 @@ def test_단일카드에선_렌즈_도구줄을_접는다():
     i = src.index("async function openUrlCard(")
     body = src[i:src.index("\n// 주소 카드를 띄운 채로", i)]
     assert "classList.contains('cards')" in body, "카드 격자만 남기고 나머지는 접는다"
+
+
+def test_렌즈_실패를_사람이_읽을_말로_보여준다():
+    """2026-08-18 사장님 캡처: 렌즈가 "Unexpected token '<'"만 띄웠다.
+    JSON이 아닌 응답(로그인 페이지·프록시 오류 HTML)을 그대로 파싱한 결과라
+    로그인이 풀린 건지 서버가 죽은 건지 화면만 봐선 못 가른다."""
+    src = INDEX.read_text(encoding="utf-8")
+    i = src.index("async function traceByUrl(")
+    body = src[i:src.index("\n// ─── TRACE-END", i)]
+    assert "await r.text()" in body and "JSON.parse(raw)" in body, \
+        "응답을 먼저 글자로 받아 파싱 실패를 가려내야 한다"
+    assert "로그인이 풀렸어요" in body and "응답 앞부분" in body
+
+
+def test_주소카드가_재생주소도_같이_준다():
+    """썸네일을 누르면 카드 안에서 바로 재생 — play_url이 있으면 해석 왕복이 없다."""
+    src = pathlib.Path(ap.__file__).read_text(encoding="utf-8")
+    i = src.index("def api_lens_single(")
+    body = src[i:src.index("\n@app.", i)]
+    assert "resolve_media_url(u)" in body and '"play_url"' in body

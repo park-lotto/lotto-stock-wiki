@@ -2459,7 +2459,23 @@ async function traceByUrl(urlArg){
     const r=await fetch('/api/lens/trace_url',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
     const body=document.getElementById('scriptBody');
     if(r.status===429){ const d=await r.json(); if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">💰 '+(d.error||'이번 달 렌즈 한도 초과')+'</div>'; return; }
-    const d=await r.json();
+    // ★JSON이 아닌 응답(로그인 페이지·프록시 오류 HTML)을 그대로 파싱하면 브라우저가
+    //   "Unexpected token '<'"만 던져 원인을 알 수 없다(2026-08-18 사장님 제보 — 서버
+    //   로그에는 요청 자체가 없어 어디서 막혔는지도 못 갈랐다). 상태코드와 응답 앞머리를
+    //   사람이 읽을 말로 바꿔 보여준다.
+    const raw=await r.text();
+    let d=null;
+    try{ d=JSON.parse(raw); }catch(_){
+      const head=(raw||'').replace(/\s+/g,' ').slice(0,120);
+      const why = r.status===401||r.status===403 ? '로그인이 풀렸어요 — 새로고침 후 다시 눌러주세요'
+                : r.status>=500 ? '서버가 오류를 냈어요('+r.status+')'
+                : r.status===404 ? '이 기능 주소를 못 찾았어요(배포 확인 필요)'
+                : '서버가 JSON이 아닌 응답을 보냈어요(' + r.status + ')';
+      if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">❌ '+why+
+        '</div><div style="padding:0 10px 10px;color:var(--sub);font-size:11px">응답 앞부분: '+
+        (head?head.replace(/</g,'&lt;'):'(빈 응답)')+'</div>';
+      return;
+    }
     if(!d.ok){ if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">❌ '+(d.error||'추적 실패')+'</div>'; return; }
     const items=(d.items||[]);
     items.forEach(i=>{ i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); });
