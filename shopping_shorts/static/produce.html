@@ -1079,7 +1079,10 @@
         <div class="previewSlot" style="flex:0 0 auto">
           <div class="hint" style="margin-bottom:4px">🪞 실시간 미리보기 (9:16) — 글자를 <b>드래그</b>해 위치 이동
             <label style="cursor:pointer;margin-left:6px;color:var(--txt)"><input type="checkbox" id="sceneBg" onchange="toggleSceneBg()"> 실장면 배경</label></div>
-          <div id="hcPreview" style="position:relative;width:380px;aspect-ratio:9/16;background:#ffffff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
+          <!-- ★세로 크기는 화면 안에 들어와야 한다(2026-08-18 사장님 지시). 380px면 9:16이라
+               675px가 돼 노트북 화면에서 아래가 잘려 하단 띠·자막 위치를 확인할 수 없다.
+               폭 하나만 정하면 aspect-ratio가 높이를 따라온다 — 두 곳에 적지 않는다(0순위-B). -->
+          <div id="hcPreview" style="position:relative;width:min(300px,42vh);aspect-ratio:9/16;background:#ffffff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
             <img id="hcPreviewBg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" alt="">
 <!-- 2026-07-27 사장님: "원본 자막이 있던 자리" 점선 박스 제거(필요 없음). 자동 정렬
                  (applyErasedRegion)과 '다시 그 자리로' 버튼은 그대로 — 표시만 뺀 것. -->
