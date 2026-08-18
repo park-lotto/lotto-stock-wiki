@@ -8273,6 +8273,14 @@ function addThumbStickerFromInput(){
 }
 
 function selectThumbLayer(i){ THUMB_STATE.sel = i; renderThumbLayers(); renderThumbHandles(); }
+
+// 선택 해제 — 손잡이(점선 네모·✕·⤢)를 치운다. 고르는 판단은 여기 한 곳(0순위-B):
+// 빈 곳 클릭·Esc 둘 다 이 함수를 부른다.
+function deselectThumbLayer(){
+  const ti = (THUMB_STATE.layers || []).findIndex(L => !['sticker', 'shape'].includes(L.kind));
+  THUMB_STATE.sel = ti;               // 글자 레이어가 없으면 -1 → 손잡이도 편집칸도 없음
+  renderThumbLayers(); renderThumbHandles();   // 편집칸(#thumbEdit)도 renderThumbLayers가 같이 그린다
+}
 function removeThumbLayer(i){
   THUMB_STATE.layers.splice(i, 1);
   // 삭제 위치와 무관하게 줄이면, 안 지운 레이어를 고르고 있어도 편집창이 말없이 딴 레이어로 바뀐다
@@ -8575,7 +8583,16 @@ function initThumbDrag(){
       const d = (L.x - p.x) ** 2 + (L.y - p.y) ** 2;
       if (d < bestD){ bestD = d; best = i; }
     });
-    if (best < 0 || bestD > THUMB_GRAB_R2) return;   // 빈 곳 → 안 잡는다(순간이동 방지)
+    // 빈 곳 → 안 잡는다(순간이동 방지) + **선택을 푼다**(2026-08-18 사장님 "마우스 다른쪽
+    // 클릭하면 화살표에 설정된 네모박스가 없어지게"). 종전엔 그냥 return이라 점선 네모와
+    // ✕·⤢ 손잡이가 계속 떠 있어 썸네일 그림을 가렸다.
+    // ★sel=-1로 두지 않고 **글자 레이어로 되돌린다**: 손잡이는 스티커·도형일 때만 그리므로
+    //   네모박스는 사라지고, 글자 편집칸·추천제목·색 버튼(전부 THUMB_STATE.sel을 본다)은
+    //   그대로 산다. -1로 두면 그것들이 통째로 무동작이 된다(실제로 8곳이 sel을 참조).
+    if (best < 0 || bestD > THUMB_GRAB_R2){
+      deselectThumbLayer();
+      return;
+    }
     grabbed = best;
     THUMB_STATE.sel = best;                            // 잡은 글자를 선택으로
     const L = THUMB_STATE.layers[best];
@@ -8583,6 +8600,10 @@ function initThumbDrag(){
     renderThumbLayers(); renderThumbHandles();
   });
   window.addEventListener('mouseup', () => { grabbed = -1; });
+  // Esc로도 푼다 — 손잡이가 그림을 가려서 확인이 안 될 때 마우스를 옮기지 않고 치울 수 있다.
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.getElementById('thumbHandles')?.innerHTML) deselectThumbLayer();
+  });
   cv.addEventListener('mousemove', e => {
     if (grabbed < 0) return;
     const L = THUMB_STATE.layers[grabbed]; if (!L) return;
