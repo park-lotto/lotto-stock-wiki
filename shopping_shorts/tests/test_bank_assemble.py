@@ -108,3 +108,36 @@ def test_empty_category_still_injects_general_spine(tmp_path):
     assert "학습된 아크" in ctx                      # 아크가 주입돼야(예전엔 '')
     snap = BA.bank_usage_snapshot(s, "")
     assert snap["spine_present"] is True            # 계측도 spine_present=True
+
+
+def test_은행블록은_소재를_우리것으로_못박는다(monkeypatch):
+    """★2026-08-18 사장님 제보 "대본을 뽑으니 이상한 게 나온다".
+
+    실측(work 3b8e5099a22e): 재료 3편이 전부 다이소 네일펜인데 A안이 통째로
+    '주방 기름 가림막'으로 나왔다. 프롬프트 안에서 '주방 가림막'이라는 완성된 소재가
+    나오는 자리는 winners_block의 금지 예시 문구 하나뿐이었다 — 모델이 그것을
+    '우리 영상의 소재 선언'으로 읽을 수 있는 모양이었다.
+    ①그 예시에서 구체 소재를 빼고 ②블록 맨 끝에서 소재를 [대본 1]로 못 박는다.
+    """
+    from shopping_shorts import bank_assemble
+
+    class _S:
+        def pick_spine_for_category(self, c): return {"name": "x", "situation_type": "y"}
+        def list_pattern_items(self, **k): return []
+        def list_pattern_sources(self, **k): return []
+
+    monkeypatch.setattr(bank_assemble, "spine_charter", lambda s: "아크 블록")
+    monkeypatch.setattr(bank_assemble, "parts_block", lambda s, k: "")
+    monkeypatch.setattr(bank_assemble, "content_block", lambda s: "")
+    monkeypatch.setattr(bank_assemble, "winners_block", lambda s, c: "")
+    out = bank_assemble.assemble_bank_context(_S(), "홈템")
+    assert "[대본 1]" in out, "우리 소재를 [대본 1]로 못 박는 문장이 빠졌다"
+    assert out.rstrip().endswith("반려된다."), "못 박기는 **맨 끝**이어야 한다(마지막 지시가 가장 세다)"
+
+
+def test_우승예시_금지문구에_구체소재가_없다():
+    """금지 규칙이 스스로 소재를 흘리면 안 된다 — 그게 이번 사고의 통로였다."""
+    import inspect
+    from shopping_shorts import bank_assemble
+    src = inspect.getsource(bank_assemble.winners_block)
+    assert "주방 가림막" not in src, "금지 문구가 구체 소재를 단정하면 모델이 그것을 우리 소재로 읽는다"
