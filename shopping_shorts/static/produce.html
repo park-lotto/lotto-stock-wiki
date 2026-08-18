@@ -4280,8 +4280,15 @@ function _consumeProduceHandoff(){
   }
   // 2) 신규 핸드오프를 누적(중복 제거: shortcode 우선, 없으면 url). 플래그·대본 보존.
   const arrived = _mergeHandoffItems(items);
-  _clearHandoffStorage();
-  if(!HANDOFF.length && !savedScript){ renderPool(); return; }   // 받은 것도 복원할 것도 없음
+  // ★여기서 지우지 않는다(2026-08-18 사장님 "제작소로 보냈는데 분석이 안 되지" → 유실 사고).
+  //   종전엔 이 자리에서 sessionStorage를 지웠는데, 서버 저장(POST /api/produce/works)은
+  //   아래 saveWork()가 **1초 디바운스 뒤**에 하고 실패해도 조용했다. 그 사이 새로고침하면
+  //   sessionStorage엔 이미 없고 서버에도 없어 **담은 영상이 통째로 증발**한다.
+  //   실측(2026-08-18): 바구니 담기(17:14)는 있는데 그 뒤 works POST가 한 건도 없었고,
+  //   새로고침하니 재료가 비고 옛 작업(네일)이 복원됐다.
+  //   → 지우기는 **저장이 실제로 성공한 뒤**에 한다(아래). 중복 소비는 _mergeHandoffItems가
+  //     shortcode/url로 걸러내므로 두 번 읽혀도 안전하다.
+  if(!HANDOFF.length && !savedScript){ _clearHandoffStorage(); renderPool(); return; }   // 받은 것도 복원할 것도 없음
   if(restored && savedScript){
     STATE.script = savedScript; setScriptMode('manual');
     // ★캐리오버 표시(2026-07-25 실사고): 새 영상을 받아와도 이전 작업의 확정 대본이 그대로
@@ -4318,7 +4325,25 @@ function _consumeProduceHandoff(){
   // ★window 프로퍼티로 둔다 — `let`은 렉시컬 바인딩이라 슬라이스가 다른 테스트 하네스·부트 함수에서
   //   안 보이고(같은 함정을 sidebar.js WORK_ID에서 이미 밟았다), 선언 순서에도 안 걸린다.
   try{ window._PENDING_ARRIVED = arrived > 0; }catch(e){}
-  if(arrived > 0 || !WORK_ID) saveWork();
+  // ★저장이 **성공한 뒤에** 받은 것을 지운다(2026-08-18 유실 사고). 실패하면 그대로 남겨
+  //   두 다음 진입에서 다시 시도한다 — 담은 영상을 잃는 것보다 두 번 읽는 게 낫다.
+  //   (중복은 _mergeHandoffItems가 shortcode/url로 거른다)
+  if(arrived > 0 || !WORK_ID){
+    // 디바운스 예약분과 겹쳐 두 번 POST 되는 것 방지.
+    // ⚠️typeof 가드 — 테스트 하네스는 이 함수만 떼어 실행하므로 전역이 없을 수 있다.
+    if(typeof _workTimer !== 'undefined'){ clearTimeout(_workTimer); _workTimer = null; }
+    // ⚠️_pushWork는 예외를 삼키고 _markLocalOnly()로 끝난다(서버가 죽어도 작업을 막지
+    //   않으려는 기존 판단). 그래서 성공/실패는 **WORK_ID가 채워졌는가**로 본다 —
+    //   서버가 200으로 work_id를 준 경우에만 채워지므로 그게 진짜 저장 신호다.
+    Promise.resolve().then(() => (typeof _pushWork === 'function' ? _pushWork() : null)).then(() => {
+      if(WORK_ID){ _clearHandoffStorage(); return; }
+      const _b = document.getElementById('handoffBanner');
+      if(_b) _b.innerHTML = '⚠️ 서버 저장이 안 됐어요 — <b>담은 영상은 그대로 있습니다</b>. '
+        + '새로고침하면 다시 시도합니다.';
+    }).catch(() => {});
+  } else {
+    _clearHandoffStorage();
+  }
 }
 // ── 보내온 영상을 HANDOFF에 합치는 일은 여기 한 곳에서만 한다(2026-08-18) ──────────
 // 두 경로가 각자 합치면 반드시 어긋난다(0순위-B). 실제로 `?work=<id>`(기존 작업 열기)
