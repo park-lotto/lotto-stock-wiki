@@ -9316,6 +9316,32 @@ def api_produce_templates():
     ]}
 
 
+@app.get("/api/produce/frame/presets")
+def api_produce_frame_presets():
+    """'내용물 있는 틀' 프리셋 목록. 정의처는 deco_frame.PRESETS 하나(0순위-B)."""
+    from shopping_shorts import deco_frame
+    return {"ok": True,
+            "presets": [{"id": k, "name": v["name"], "bar": v["bar"]}
+                        for k, v in deco_frame.PRESETS.items()],
+            "defaults": deco_frame.DEFAULTS}
+
+
+@app.get("/api/produce/frame.png")
+def api_produce_frame_png(request: Request):
+    """틀 미리보기 PNG. ★화면은 이 그림을 그대로 얹는다 — 렌더도 같은 함수를 쓰므로
+    미리보기와 최종본이 구조적으로 같아진다(CSS로 흉내내면 언젠가 어긋난다)."""
+    from fastapi.responses import FileResponse
+    from shopping_shorts import deco_frame
+    q = dict(request.query_params)
+    spec = {k: q.get(k) for k in deco_frame.DEFAULTS if k in q}
+    for b in ("ad_badge", "icons"):
+        if b in spec:
+            spec[b] = str(spec[b]).lower() in ("1", "true", "on", "yes")
+    out = deco_frame.render_to(spec, deco_frame.cache_path(spec))
+    return FileResponse(str(out), media_type="image/png",
+                        headers={"Cache-Control": "public, max-age=31536000"})
+
+
 @app.post("/api/produce/mix/bgm")
 async def api_produce_mix_bgm(job_id: str = Form(...), file: UploadFile = File(...)):
     """BGM 오디오 업로드 → job work dir에 bgm.{ext}로 저장. deco.bgm.file로 참조·렌더 시 믹스."""
