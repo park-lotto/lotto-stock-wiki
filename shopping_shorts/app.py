@@ -2327,9 +2327,16 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                 "full_text": _base_script or "",
                 "category": body.get("category") or "",
             }
+        elif (body.get("job_id") or body.get("work_id")):
+            # ★재료가 있는지는 _materials_for_generate가 정한다(0순위-B). 여기서 씨앗 1편의
+            #   원문만 보고 막으면, **담긴 다른 영상·쿠팡 재료·장면 태깅이 멀쩡히 있어도**
+            #   생성이 통째로 거부된다(2026-08-18 사장님 제보: 해외 영상처럼 씨앗의 대본
+            #   원문이 아직 안 뽑힌 경우 "위키에 없는 항목 — 먼저 S급으로 저장하세요"로 막혔다).
+            #   빈 껍데기로 통과시키고, 재료가 진짜 없으면 아래 스타일 경로가 정확히 말한다.
+            it = {"structure": {}, "full_text": "", "category": body.get("category") or ""}
         else:
             return JSONResponse(status_code=404, content={"ok": False, "error": "위키에 없는 항목 — 먼저 S급으로 저장하세요"})
-    if not (it.get("structure") or it.get("full_text")):
+    if not (it.get("structure") or it.get("full_text")) and not (body.get("job_id") or body.get("work_id")):
         return JSONResponse(status_code=422, content={"ok": False, "error": "구조분석/대본이 비어 생성 불가 — 재저장 필요"})
     mode = body.get("mode", "remake")
     my_topic = body.get("my_topic", "")
@@ -2393,6 +2400,13 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         # [바꾸기] 부분 재생성(/api/script/beat/regen)도 **같은 함수**를 쓴다.
         _src, _facts_block, _job, _jid, _scene_block = _materials_for_generate(
             it, body, store, _cid(request))
+        # 재료가 한 편도 없으면 여기서 멈춘다 — 이 상태로 생성하면 모델이 통째로 지어낸다.
+        # (씨앗의 대본 원문이 아직 안 뽑힌 영상은 1단계 분석이 끝나야 재료가 생긴다.)
+        if not [x for x in (_src or []) if (x.get("full_text") or "").strip()]:
+            return JSONResponse(status_code=422, content={
+                "ok": False,
+                "error": "재료(대본 원문)가 아직 없어요 — 1단계에서 담긴 영상의 대본 분석이 "
+                         "끝난 뒤 다시 눌러주세요. 급하면 '직접 쓰기'로 대본을 넣어도 됩니다."})
         # ★재료 분량을 알고 나서 은행을 다시 짠다(2026-08-18). 위(2351)에서는 재료를 아직
         #   몰라 예산을 못 건다 — 그대로 두면 은행이 재료를 압도한 채 프롬프트에 실린다
         #   (실측 사고: 재료 750자 vs 은행 2,822자 → 대본이 은행 소재로 끌려감).
