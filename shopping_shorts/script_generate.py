@@ -263,6 +263,21 @@ def _mix_source_block(sources):
     #   서로 다른 제품이 담겨 있으면(치아바타 224자 + 도마 694·526자) 글이 긴 쪽으로 끌려간다.
     #   "여러 편을 보라"는 지시의 뜻은 **같은 제품을 여러 각도로 보라**는 것이지
     #   다른 제품을 섞으라는 게 아니다.
+    # ★소재를 코드가 못 박는다(2026-08-18). 지금까지는 "주제는 [대본 1]의 것"이라고
+    #   **말로만** 지시했다 — AI가 여러 텍스트 더미를 읽고 소재를 스스로 추론해야 했고,
+    #   그 추론이 학습 재료(부품은행) 쪽으로 새는 게 이번 사고였다(재료가 전부 네일펜인데
+    #   결과가 '주방 기름 가림막'). 1단계 분석이 제품명을 이미 뽑아 두는데
+    #   (source_brief.product — 실측 '다이소 자석 네일펜') 그 값을 생성에 한 번도 안 줬다.
+    #   **아는 값을 안 주고 짐작하게 한 것**이 뿌리다. 맨 앞에 박으면 추론할 여지가 없어진다.
+    _prod = ""
+    for _s in sources:
+        _p = (_s.get("product") or "").strip()
+        if _p:
+            _prod = _p
+            break
+    if _prod:
+        out = ("★★우리 영상의 제품 = 「" + _prod + "」. 대본은 이 제품 이야기여야 한다. "
+               "다른 제품·소재가 한 줄이라도 들어가면 반려된다.\n\n") + out
     if len(sources) > 1:
         out += ("\n\n★★주제는 반드시 [대본 1]의 제품·소재다. [대본 2] 이하는 **말투·전개·표현을 참고만** 하고, "
                 "거기 나오는 제품·기능·사례를 주제로 삼거나 섞지 마라. "
@@ -313,6 +328,15 @@ _STYLE_SCHEMA = {
 STYLE_REWRITES = 2       # 게이트 실패 시 다시 쓰는 횟수. 그래도 안 되면 실패로 남긴다.
 
 
+
+def _sources_product(sources):
+    """재료에서 우리 제품명 하나(첫 번째로 채워진 것). 없으면 ""."""
+    for s in (sources or []):
+        p = (s.get("product") or "").strip()
+        if p:
+            return p
+    return ""
+
 def generate_one_style(sources, style, target_seconds=30, bank_context="", facts_block=""):
     """스타일 1개로 대본 1안. → {beats, script, hook, checks, passed, tries, style_id, style_name}
 
@@ -347,7 +371,10 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
             break
         # ★facts_block을 게이트에도 넘긴다 — 재료를 줬으면 대본의 수치가 그 안에 있는지
         #   대조한다(지어낸 수치 차단). 안 줬으면 그 검사는 건너뛴다(회귀 0).
-        checks, full = script_gate.check(style, res, facts_text=facts_block)
+        # ★소재 일치도 함께 본다(2026-08-18) — 재료의 제품명을 그대로 넘긴다.
+        #   product가 비면 그 검사는 건너뛴다(회귀 0).
+        checks, full = script_gate.check(style, res, facts_text=facts_block,
+                                         product=_sources_product(sources))
         tries.append({"chars": len(script_gate.norm(full)),
                       "fails": [c["name"] for c in checks if not c["ok"]]})
         if script_gate.passed(checks):

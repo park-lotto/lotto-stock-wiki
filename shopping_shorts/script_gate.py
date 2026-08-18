@@ -199,7 +199,22 @@ def grounding_check(full, facts_text):
     return (not bad), bad
 
 
-def check(style, beats, facts_text=""):
+#: 제품명에서 검사에 쓸 토큰을 뽑는다. 브랜드·수식어가 섞여 있어도 하나만 맞으면 된다.
+#  ★한 글자는 버린다 — '펜' 같은 조각은 아무 대본에나 걸려 검사가 무력해진다.
+#  ★'다이소'처럼 파는 곳 이름도 남긴다: 그 단어라도 나오면 우리 소재 얘기가 맞다.
+def _product_tokens(product):
+    raw = (product or "").strip()
+    if not raw:
+        return []
+    out = []
+    for t in re.split(r"[\s/·,()\[\]&]+", raw):
+        t = t.strip()
+        if len(t) >= 2:
+            out.append(norm(t))
+    return [t for t in out if t]
+
+
+def check(style, beats, facts_text="", product=""):
     """(checks, full_text) 반환. checks = [{name, ok, detail}, ...]
 
     style: {"beat_roles": [...], "templates": {role: [...]}, "chars_per_30s": int}
@@ -246,6 +261,24 @@ def check(style, beats, facts_text=""):
                               "새로운 장점 하나를 더 얹어라" if esc == 0
                               else ("%d번 나왔다 — 한 번만 써라(남발하면 죽는다)" % esc
                                     if esc > 1 else "OK"))})
+
+    # ★소재 일치(2026-08-18) — **출구 검사**. 이번 사고("재료는 네일펜인데 대본은 주방
+    #   기름 가림막")를 막으려고 지금까지 한 것은 전부 프롬프트에 경고를 더 넣는 일이었다.
+    #   그건 통로를 하나씩 막는 두더지잡기라, 새 통로가 생기면 또 샌다.
+    #   여기서 잡으면 **어디서 새든 결과에서 걸린다** — 출구는 하나뿐이다.
+    #   판정은 느슨하게: 제품명 토큰이 **하나라도** 나오면 통과. 대본이 제품을 '이거'로만
+    #   부르는 건 정상이므로 전체 일치를 요구하면 멀쩡한 대본을 반려한다(오탐이 더 나쁘다).
+    #   product를 안 주면 검사 자체를 건너뛴다 = 회귀 0.
+    if _product_tokens(product):
+        toks = _product_tokens(product)
+        nf = norm(full)
+        # 토큰 그대로 못 찾으면 **앞 2글자**로도 본다 — '네일펜'을 대본이 '네일'로만
+        # 부르는 건 정상이다. 오탐(멀쩡한 대본 반려)이 미탐보다 나쁘므로 느슨하게 잡는다.
+        hit = [t for t in toks if t in nf or (len(t) >= 3 and t[:2] in nf)]
+        checks.append({"name": "소재 일치", "ok": bool(hit),
+                       "detail": ("OK(%s)" % ", ".join(hit[:3])) if hit else
+                                 ("대본에 「%s」 얘기가 한 번도 안 나온다 — 다른 소재로 "
+                                  "샜을 가능성이 높다(재료 밖 소재 금지)" % product)})
 
     # ★수치 그라운딩(2026-08-16) — 재료를 준 경우에만. 지어낸 수치를 잡는다.
     ok_g, bad = grounding_check(full, facts_text)
