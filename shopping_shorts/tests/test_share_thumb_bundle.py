@@ -144,7 +144,9 @@ def test_selected_endpoint_null_when_none(env):
     c, _s, _tp = env
     r = c.get("/api/produce/thumb/selected/j1")
     assert r.status_code == 200
-    assert r.json() == {"ok": True, "name": None, "url": None}
+    # intro = 🖼 '썸네일을 영상 맨 앞에 넣기' 체크 상태(2026-08-18 신설). 안 골랐어도 함께 준다
+    # — 8단계가 이 응답 하나로 카드와 체크박스를 같이 복원한다.
+    assert r.json() == {"ok": True, "name": None, "url": None, "intro": False}
 
 
 def test_selected_endpoint_404_unknown_job(env):

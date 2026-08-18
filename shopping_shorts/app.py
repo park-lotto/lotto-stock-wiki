@@ -3994,6 +3994,12 @@ def api_mix_render(background_tasks: BackgroundTasks, body: dict):
     # removing_subtitles = VMake 유료 단계 진행 중. 여기서 재예약되면 그 돈이 두 번 나간다.
     if job.get("status") in ("rendering", "removing_subtitles") and not _render_is_stale(job):
         return {"ok": True, "status": job["status"]}
+    # 🖼 썸네일을 영상 맨 앞에 붙일지(2026-08-18 사장님 요청). 렌더 요청과 같이 받아
+    # thumbnail JSON에 적어둔다 — 컬럼을 새로 파지 않고, 다시 열어도 체크가 남는다.
+    if "thumb_intro" in body:
+        thumb = job.get("thumbnail") or {}
+        thumb["intro"] = bool(body.get("thumb_intro"))
+        store.update_mix_job(job_id, thumbnail=thumb)
     store.update_mix_job(job_id, status="rendering", error=None)
     Store(DB_PATH).enqueue("render", {"job_id": job_id})
     return {"ok": True, "status": "rendering"}
@@ -5076,11 +5082,13 @@ def api_thumb_selected(job_id: str):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    thumb = job.get("thumbnail") or {}
+    intro = bool(thumb.get("intro"))          # 🖼 '영상 맨 앞에 넣기' 체크 복원용(2026-08-18)
     p = _selected_thumb_path(job)
     if not p:
-        return {"ok": True, "name": None, "url": None}
-    name = (job.get("thumbnail") or {}).get("selected")
-    return {"ok": True, "name": name,
+        return {"ok": True, "name": None, "url": None, "intro": intro}
+    name = thumb.get("selected")
+    return {"ok": True, "name": name, "intro": intro,
             "url": f"/api/produce/thumb/file/{job_id}/{name}"}
 
 
