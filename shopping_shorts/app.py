@@ -3220,11 +3220,21 @@ def api_mix_status(job_id: str, request: Request):
     # 안 건드리고 응답에서만 failed로 알려 pollClean이 재시도 UI를 연다(_render_is_stale는
     # updated_at 기반·단계무관, 이미 clean 재실행 가드에서 쓰인다).
     clean_status, clean_error = job.get("clean_status"), job.get("clean_error")
-    if clean_status == "cleaning" and _render_is_stale(job):
+    # ★하트비트 우선(2026-08-19): updated_at 경과(10분)만 보면 **오래 걸리는 정상 작업**이
+    #   실패로 둔갑한다. 워커는 도는 동안 job_queue.heartbeat_at만 찍고 mix_jobs.updated_at은
+    #   안 건드리기 때문이다. 실측 사고: 25분짜리 자막제거(15:52→16:17)가 10분 시점부터
+    #   "자막 제거에 실패했어요"를 띄웠으나 결과는 성공이었다(자막 3개 전부 제거됨).
+    #   → 워커가 살아 있으면(=하트비트가 뛰면) 시간이 얼마나 걸리든 '진행 중'으로 본다.
+    #   죽은 작업은 reap_stale(2분)이 큐에서 failed로 바꾸므로 여기 걸리지 않는다.
+    if clean_status == "cleaning" and _render_is_stale(job) \
+            and not store.task_is_alive("clean", {"job_id": job_id}):
         clean_status = "failed"
         clean_error = clean_error or "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."
     preview_status, preview_error = job.get("preview_status"), job.get("preview_error")
-    if preview_status == "rendering" and _render_is_stale(job):
+    # clean과 같은 이유로 하트비트를 함께 본다(위 주석 참조) — 오래 걸리는 정상 렌더를
+    # 실패로 표시하지 않기 위해. 같은 판단을 두 곳에 다르게 적지 않는다(0순위-B).
+    if preview_status == "rendering" and _render_is_stale(job) \
+            and not store.task_is_alive("preview", {"job_id": job_id}):
         preview_status = "failed"
         preview_error = preview_error or "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."
     # 장면 우선 대본 모드(2026-07-20, Task7): 후보 요약만 내려준다 — 전체 plan(beats 등)을
@@ -3284,6 +3294,11 @@ def api_mix_status(job_id: str, request: Request):
             # 자막제거 확인용 소스 개수(2026-08-18) — 3단계가 "소스 1/N"으로 넘겨보는 데만 쓴다.
             # 경로는 안 내보내고 개수만. 청소본이 있으면 그 개수, 없으면 담은 URL 개수.
             "clean_source_count": len(job.get("clean_sources") or {}) or len(job.get("urls") or []),
+            # 진행 표시용(2026-08-19): 자막제거는 소스 1편당 수 분씩 걸려 전체 25분도 정상이다.
+            # 그동안 화면에 아무 변화가 없어 "멈췄나"로 읽혔다(사장님 제보의 절반이 이것).
+            # 끝난 소스 수 / 전체를 내려보내 "2/5 완료"로 움직이는 걸 보이게 한다.
+            "clean_done": len(job.get("clean_sources") or {}),
+            "clean_total": len(job.get("urls") or []),
             # 지워진 자막 위치(2026-07-25): 5단계 꾸미기가 자막 자동정렬·'원본 자막 있던 자리' 마커에 쓴다.
             # 좌표(%)뿐이라 안전 — 소스 경로 등 내부정보는 안 실린다.
             "clean_regions": job.get("clean_regions"),
