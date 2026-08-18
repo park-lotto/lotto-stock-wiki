@@ -233,3 +233,22 @@ def test_screen_never_hardcodes_speech_speed():
     body = html[i:html.index("function s2RefreshSec(", i)]
     assert "8.19" not in body, "화면에 말속도 상수가 박혔다"
     assert "s2Cps()" in body
+
+
+def test_gate_feedback_tells_direction_when_over():
+    """넘쳤을 때 '채워라'라고 하면 모델이 더 길게 쓴다 — 방향을 반대로 말해야 한다."""
+    from shopping_shorts import script_gate as g
+    style = {"beat_roles": ["hook"], "chars_per_30s": 377}
+    over, _ = g.check(style, [{"role": "hook", "text": "A" * 340}], seconds=30)
+    fb = g.gate_feedback(over)
+    assert "줄여라" in fb and "채워라" not in fb
+    short, _ = g.check(style, [{"role": "hook", "text": "A" * 100}], seconds=30)
+    assert "채워라" in g.gate_feedback(short)
+
+
+def test_density_check_marks_over_flag():
+    from shopping_shorts import script_gate as g
+    style = {"beat_roles": ["hook"], "chars_per_30s": 377}
+    c, _ = g.check(style, [{"role": "hook", "text": "A" * 340}], seconds=30)
+    d = [x for x in c if x["name"].startswith("말 밀도")][0]
+    assert d["over"] is True and "넘겼다" in d["detail"]

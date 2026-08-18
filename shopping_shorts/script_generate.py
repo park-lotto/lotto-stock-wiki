@@ -386,6 +386,10 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
             + "\n\n출력은 위 칸 순서대로 beats 배열 하나만. 각 원소는 {role, text, src_seg}.")
 
     extra, tries, res, checks, full = "", [], None, [], ""
+    # ★재작성이 끝내 통과 못 하면 **마지막 시도**가 아니라 규격에 가장 가까운 시도를 쓴다
+    #   (2026-08-18 사장님 "40초 대본이 나오는데 고친 거 아니었나"). 예전엔 2번 고쳐 쓰고도
+    #   실패하면 그 마지막 판을 그대로 내보냈다 — 더 길어진 판이 나가는 일이 생긴다.
+    best = None
     for _ in range(STYLE_REWRITES + 1):
         data = _call_json(base + extra, _STYLE_SCHEMA)
         res = (data or {}).get("beats") or []
@@ -402,7 +406,14 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
                       "fails": [c["name"] for c in checks if not c["ok"]]})
         if script_gate.passed(checks):
             break
+        _n = len(script_gate.norm(full))
+        _tgt = script_gate.density_target(style, seconds)
+        if best is None or abs(_n - _tgt) < best[0]:
+            best = (abs(_n - _tgt), res, checks, full)
         extra = script_gate.gate_feedback(checks)
+
+    if not script_gate.passed(checks) and best and best[3] != full:
+        _, res, checks, full = best
 
     # ★화면에 "영상으로 몇 초"를 띄우려면 초를 서버가 계산해 실어 보내야 한다
     #   (2026-08-18 사장님). 화면이 자기 상수로 따로 계산하면 판정(밀도 게이트)과
