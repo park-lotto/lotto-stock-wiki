@@ -60,5 +60,14 @@ def test_whisper_samples_exist_and_are_real_audio():
     assert len(set(sizes)) > 1, "전부 같은 크기 = 무음 mock 의심"
 
 
-def test_total_is_47():
-    assert len(load_presets_file()) == 47      # 42 + 5
+def test_eleven_preset_total_is_47():
+    """일레븐랩스 큐레이션은 47건(42 + whisper 5)이다.
+
+    ★종전엔 파일 전체를 47로 잠갔는데, 그건 "엔진이 하나뿐"이라는 전제였다.
+    2026-08-19에 타입캐스트 성우 6명(x3톤=18건)이 붙으면서 그 수가 깨졌다 — 잠글 대상은
+    '파일 전체'가 아니라 '일레븐랩스 큐레이션 47건'이다. 다른 엔진을 더해도 이 판정은
+    그대로 유효하고, 일레븐랩스 쪽이 실수로 늘거나 줄면 여전히 잡힌다."""
+    from shopping_shorts import typecast_tts
+    eleven = [p for p in load_presets_file()
+              if not typecast_tts.is_typecast(p.get("model_id"))]
+    assert len(eleven) == 47      # 42 + 5

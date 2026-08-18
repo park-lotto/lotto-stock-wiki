@@ -203,6 +203,12 @@ ELEVENLABS_VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWA
 # 끄면 예전(ASR) 동작 그대로. 실패 시엔 켜져 있어도 일반 엔드포인트→ASR로 2단 폴백한다.
 ELEVENLABS_TIMESTAMPS = os.getenv("ELEVENLABS_TIMESTAMPS", "1") not in ("0", "false", "False")
 
+# 타입캐스트 TTS(2026-08-19) — 일레븐랩스와 **함께** 쓰는 두 번째 백엔드. 남자 성우
+# 라인업(필재·김건·박창수·용식이)이 일레븐랩스에 없어서 붙였다. 어느 쪽으로 나갈지는
+# 프리셋의 model_id가 정한다(`ssfm-*` → 타입캐스트) — tts.py의 _is_typecast 한 곳에서만
+# 판단한다(0순위-B). 키가 없으면 기존과 같이 무음 mock으로 내려앉는다.
+TYPECAST_API_KEY = os.environ.get("TYPECAST_API_KEY", "")
+
 # ASR 라운드트립 검증(튜닝 작업대) — Whisper로 TTS를 재전사해 오독 탐지. GROQ 우선.
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 

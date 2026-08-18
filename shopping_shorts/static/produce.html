@@ -6949,6 +6949,18 @@ const WHISPER_ROLE_PRESETS=[
 ];
 let WHISPER_PICK='reversal'; // 기본값 — 엔진 기본 프로파일(whisper.roles=['반전'])과 동일
 
+// 성우가 어느 엔진 것인지 카드에 배지로 띄운다(2026-08-19, 타입캐스트 추가).
+// ★판정은 서버(/api/voice-presets의 engine)가 한다 — 여기서 group_id로 추측하지 마라(0순위-B).
+// 옛 응답(engine 없음)은 일레븐랩스로 보고 배지를 안 단다 = 기존 화면 그대로.
+// ★이 함수는 cardHtml이 쓰므로 **whisper 하네스 슬라이스 구간 안**(WHISPER_ROLE_PRESETS ~
+//   pickHighlight)에 있어야 한다. 밖에 두면 잘라 도는 테스트 5건이 ReferenceError로 죽는다
+//   (reference_슬라이스하네스_window금지 — 2026-08-19에 실제로 밟았다).
+function engineBadge(g){
+  if(!g || g.engine!=='typecast') return '';
+  return ' <span title="타입캐스트 성우" style="font-size:10px;padding:1px 5px;border-radius:8px;'
+       + 'border:1px solid var(--line);color:var(--sub);vertical-align:middle">타입캐스트</span>';
+}
+
 // 성우 목록을 불러 카드까지 다시 그린다. **부르는 곳이 둘**이다(처음 열 때 loadTtsBeats,
 // 일레븐랩스에서 성우를 등록·삭제한 뒤 addElevenVoice/removeElevenVoice) — 그래서 fetch와
 // 렌더 순서를 여기 한 곳에만 적는다(0순위-B: 두 벌이면 한쪽만 고쳐져 어긋난다).
@@ -7002,7 +7014,7 @@ function renderPresetCards(){
     return `
       <div onclick="pickPreset('${g.group_id}')"
         style="border:1px solid ${active?'var(--accent2)':'var(--line)'};border-radius:9px;padding:9px;margin-bottom:6px;cursor:pointer;background:var(--inset)">
-        <b>${esc(g.name)}</b>${g.best?' <span title="사장님 청취 판정 베스트" style="color:var(--accent2)">⭐</span>':''} — ${esc(g.one_liner||'')}
+        <b>${esc(g.name)}</b>${g.best?' <span title="사장님 청취 판정 베스트" style="color:var(--accent2)">⭐</span>':''}${engineBadge(g)} — ${esc(g.one_liner||'')}
         <div style="display:flex;gap:4px;align-items:center;margin-top:6px;flex-wrap:wrap">
           ${tabs}
           ${v&&v.sample_url?`<audio controls src="${esc(v.sample_url)}" style="height:26px;vertical-align:middle;margin-left:4px"></audio>`:''}
