@@ -1591,7 +1591,9 @@
                   onclick="toggleSceneLabWide()">⛶ 넓게 보기</button>
         </div>
         <iframe id="sceneLabFrame" title="장면 편집"
-                style="width:100%;height:150vh;min-height:1100px;border:1px solid var(--line);border-radius:12px;background:#0f1115"></iframe>
+                style="width:100%;border:1px solid var(--line);border-radius:12px;background:#0f1115"></iframe>
+        <!-- ★높이는 마크업에 안 적는다 — _applySceneLabFrameSize(기준값 _SL_FRAME_H/_MINH)가
+             입힌다. 여기에 숫자를 다시 적으면 복귀부와 또 갈린다(2026-08-19 사고 원인). -->
         <!-- 안내 문구 삭제(2026-08-15 사장님) -->
       </div>
         </div><!-- /오른쪽 칼럼 -->
@@ -5941,6 +5943,23 @@ const SHOW_OLD_SCENE_TOOLS = false;
 try{ if(!SHOW_OLD_SCENE_TOOLS){ const _md=document.getElementById('matchSceneDetails'); if(_md) _md.style.display='none'; } }catch(_){ }
 // ⛶ 넓게 보기 — 편집 화면만 브라우저 전체로. 다시 누르거나 ESC로 제자리.
 // iframe은 src를 안 건드린다(다시 읽히면 담아둔 편성이 날아간다 — position만 바꾼다).
+// ★장면 편집(iframe) 크기 기준값은 **여기 한 곳**이다(2026-08-19 사장님 "무슨 작업만 하면
+//   크기가 변한다"). 종전엔 마크업이 150vh/1100px, [⛶넓게 보기] 복귀부가 88vh(min-height 없음)로
+//   **같은 판단이 두 곳에 다르게** 적혀 있었다 — 넓게 보기를 껐다 켜면 원래 크기로 안 돌아오고
+//   쪼그라들었다. 값을 고칠 일이 생기면 이 두 상수만 고친다(CLAUDE.md 0순위-B).
+const _SL_FRAME_H    = '150vh';
+const _SL_FRAME_MINH = '1100px';
+// 크기를 실제로 입히는 유일한 함수 — 첫 렌더도 복귀도 이 문을 지난다.
+function _applySceneLabFrameSize(f, wide){
+  if(!f || !f.style) return;
+  if(wide){
+    f.style.height = 'calc(100vh - 46px)';
+    f.style.minHeight = '0';            // 전체화면에선 하한이 오히려 스크롤을 만든다
+  }else{
+    f.style.height = _SL_FRAME_H;
+    f.style.minHeight = _SL_FRAME_MINH;
+  }
+}
 function toggleSceneLabWide(){
   const box=document.getElementById('sceneLabBox'), f=document.getElementById('sceneLabFrame');
   const btn=document.getElementById('sceneLabWideBtn');
@@ -5949,14 +5968,13 @@ function toggleSceneLabWide(){
   if(on){
     box.setAttribute('data-wide','1');
     box.style.cssText='display:block;position:fixed;inset:0;z-index:9998;background:var(--bg,#0b0e14);padding:8px 10px 10px;margin:0;overflow:auto';
-    f.style.height='calc(100vh - 46px)';
     if(btn) btn.textContent='✕ 원래대로';
   }else{
     box.removeAttribute('data-wide');
     box.style.cssText='display:block;margin-top:18px';
-    f.style.height='88vh';
     if(btn) btn.textContent='⛶ 넓게 보기';
   }
+  _applySceneLabFrameSize(f, on);
 }
 document.addEventListener('keydown', e=>{
   if(e.key==='Escape'){
@@ -6040,6 +6058,8 @@ function _syncSceneLab(on){
     return;
   }
   box.style.display='';
+  // 크기는 늘 기준값에서 온다 — 넓게 보기 상태면 그 크기로, 아니면 원래 크기로.
+  _applySceneLabFrameSize(f, box.getAttribute('data-wide')==='1');
   // ★캐시 무효화(2026-08-17 실측). 종전엔 job만 붙여서, 배포로 scene_lab.html이 바뀌어도
   //   같은 주소라 브라우저가 **처음 받아둔 옛 문서**를 계속 썼다(src가 같으니 재로드도 안 함).
   //   그래서 사장님이 하드리프레시를 해도 실험실 안의 새 기능이 안 나타났다 —

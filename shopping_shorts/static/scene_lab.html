@@ -1569,6 +1569,23 @@ const NARR_BUSY = {};                  // beat_idx → 음성·자막 재생성 
 // 머리글 안내문에 상태를 쓴다. makeTts의 say는 그 함수 안의 지역 클로저라 여기서 못 쓴다
 // (이름만 같다고 쓸 수 있는 게 아니다 — 실제로 확인하고 전용 헬퍼를 뒀다).
 function nsay(t){ const h = document.getElementById('tbhint'); if (h) h.textContent = t; }
+// ★편집 중에는 배경 다시그리기를 미룬다(2026-08-19 사장님 "아까 분명히 고쳤는데 안 된다").
+//   pollPhash()가 페이지를 연 뒤 4초마다 최대 20회 render()를 부르는데, render()는
+//   renderBand()로 칸 DOM을 **통째로 갈아끼운다** — 고치는 도중이면 contenteditable이
+//   사라져 커서와 입력 중이던 글자가 그대로 날아갔다. 저장까지 못 가니 "안 고쳐진다"로 보인다.
+//   ⚠️미루기만 하면 phash·자막 갱신이 영영 안 붙으므로, 편집을 닫을 때 **밀린 것을 한 번** 그린다.
+let _repaintPending = false;
+function isNarrEditing(){ return Object.keys(NARR_EDIT).length > 0; }
+// 배경(사람이 부른 게 아닌) 다시그리기는 전부 이 문을 지난다 — 직접 render()를 부르지 마라.
+function repaint(){
+  if (isNarrEditing()){ _repaintPending = true; return; }
+  render();
+}
+function flushRepaint(){
+  if (!_repaintPending || isNarrEditing()) return;
+  _repaintPending = false;
+  render();
+}
 function openNarrEdit(i){
   if (!SL.server){ nsay('이 화면(오프라인)에서는 아래 대본을 눌러 바로 고칠 수 있어요'); return; }
   if (NARR_BUSY[i]) return;
@@ -1581,7 +1598,8 @@ function openNarrEdit(i){
       r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
   }, 0);
 }
-function closeNarrEdit(i){ delete NARR_EDIT[i]; renderBand(); }
+// 닫을 때 밀린 배경 그리기를 갚는다 — 안 그러면 편집 중에 도착한 phash·자막이 영영 안 붙는다.
+function closeNarrEdit(i){ delete NARR_EDIT[i]; renderBand(); flushRepaint(); }
 function narrKey(ev, i){
   ev.stopPropagation();
   if (ev.key === 'Escape'){ ev.preventDefault(); closeNarrEdit(i); }
@@ -1627,7 +1645,9 @@ async function waitNarrRegen(i, ver0){
         DATA.beats = d.data.beats; DATA.captions = d.data.captions;
         DATA.tts_dur = d.data.tts_dur;
         nsay(`✅ 칸 ${i+1} 대본·음성·자막 반영 완료`);
-        saveWork(); render();
+        // ★repaint() — 이 폴링은 최대 40초 배경으로 돈다. 그 사이 사장님이 **다른 칸**을
+        //   고치고 있으면 render()가 그 편집칸을 날린다(같은 사고의 다른 입구).
+        saveWork(); repaint();
         return true;
       }
     }catch(e){}
@@ -1978,7 +1998,8 @@ async function pollPhash(){
     try{
       const d = await (await fetch(`/api/mix/scene_lab/${SL.job}/phash`)).json();
       if (d.ok && Object.keys(d.phash || {}).length > Object.keys(DATA.phash || {}).length){
-        DATA.phash = d.phash; DUPS = null; render();
+        // ★render()가 아니라 repaint() — 사람이 대본을 고치는 중이면 미룬다(위 주석).
+        DATA.phash = d.phash; DUPS = null; repaint();
       }
     }catch(e){ return; }
   }
