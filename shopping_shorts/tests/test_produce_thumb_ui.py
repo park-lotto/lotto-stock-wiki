@@ -684,10 +684,10 @@ console.log(JSON.stringify({html: HTML}));
 
 
 def test_handles_show_for_sticker_with_delete_size_rotate():
-    """스티커를 고르면 ✕삭제·↔크기·↻방향 세 손잡이가 뜬다."""
+    """스티커를 고르면 ✕삭제(좌상) + 크기·방향 동시 모서리 3개가 뜬다."""
     html = _handles_html({"kind": "sticker", "emoji": "F", "size": 20,
                           "x": 0.5, "y": 0.5, "rot": 0})
-    for h in ("del", "size", "rot"):
+    for h in ("del", "g-45", "g45", "g135"):
         assert f'data-h="{h}"' in html, f"{h} 손잡이가 없다"
 
 
@@ -706,6 +706,6 @@ def test_handle_positions_follow_size():
                           "color": "#FF3B30", "x": 0.5, "y": 0.5, "rot": 0})
     m = re.search(r'data-h="del"[^>]*?left:([\d.]+)%;top:([\d.]+)%', html, re.S)
     assert m, "삭제 손잡이 좌표를 못 읽었다"
-    assert float(m.group(1)) == pytest.approx(60.0, abs=0.1)     # x + 10%p
+    assert float(m.group(1)) == pytest.approx(40.0, abs=0.1)     # 삭제=좌상 → x - 10%p
     # y 반각은 캔버스 비율(1080/1920)만큼 작다 → 0.5 - 0.1*0.5625 = 0.44375
     assert float(m.group(2)) == pytest.approx(44.38, abs=0.1)
