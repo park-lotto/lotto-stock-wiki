@@ -1022,6 +1022,9 @@
         <div id="elvBox" style="display:none;margin-top:8px;border:1px solid var(--line);border-radius:9px;padding:10px;max-height:320px;overflow:auto">
           <div id="elvList" class="hint">불러오는 중…</div>
         </div>
+        <!-- 추가 직후 '이제 뭘 누르면 되나'를 한 줄로 알려준다 — 없으면 추가해도 화면이
+             안 바뀐 것처럼 보인다(사장님 질문 "추가를 하거나 이 성우로 적용을 하려면?"). -->
+        <div id="elvDone" class="hint" style="display:none;margin-top:8px;padding:8px 10px;border:1px solid var(--ok);border-radius:8px;line-height:1.5"></div>
       </div>
       <!-- ★한 칸 안에서는 세로로 쌓는다 — 360px 폭에 카드와 설정을 좌우로 나누면 둘 다 좁아진다. -->
       <div id="voiceUI" style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
@@ -6752,7 +6755,21 @@ async function addElevenVoice(btn, voiceId, name){
     if(!d.ok){ alert('등록 실패: '+(d.error||r.status)); btn.disabled=false; btn.textContent=old; return; }
     if((d.sample_failed||[]).length) console.warn('[성우등록] 샘플 실패', d.sample_failed);
     await loadPresets();          // 성우 카드 새로고침 — 방금 만든 성우가 바로 보인다
-    loadElevenVoices();
+    // ★추가만 하고 끝내지 않는다(2026-08-18 사장님 "추가를 하거나 이 성우로 적용을 하려면?").
+    //   종전엔 추가 → 목록에서 카드를 다시 찾아 클릭 → [이 음성으로 전체 생성]까지 3단계였고
+    //   화면상 아무 일도 안 일어난 것처럼 보였다. 방금 추가한 성우를 **바로 선택**하고
+    //   목록을 닫아 카드·생성버튼이 보이게 한다. 선택 판단은 pickPreset 한 곳뿐(0순위-B).
+    if(d.group_id) pickPreset(d.group_id);
+    { const box=document.getElementById('elvBox'); if(box) box.style.display='none'; }
+    { const c=document.getElementById('voiceControls');
+      if(c){ c.scrollIntoView({behavior:'smooth',block:'nearest'}); } }
+    { const m=document.getElementById('elvDone');
+      if(m){ m.style.display='block';
+             // ★[이 음성으로 전체 생성]은 영상 매칭(MIX_JOB) 전에는 아무것도 안 한다
+             //   (applyVoice가 그 자리에서 막는다). 그 상태에서 "누르세요"라고 하면 거짓말이 된다.
+             m.innerHTML = MIX_JOB
+               ? '✅ <b>'+esc(name)+'</b> 추가하고 골라뒀어요 — 아래 <b>[이 음성으로 전체 생성]</b>을 누르면 이 목소리로 다시 만들어집니다.'
+               : '✅ <b>'+esc(name)+'</b> 추가하고 골라뒀어요 — 먼저 <b>3단계 영상대본MIX</b>에서 영상 매칭을 끝내면 이 목소리로 만들 수 있어요.'; } }
   }catch(e){ alert('등록 실패: '+e); btn.disabled=false; btn.textContent=old; }
 }
 async function removeElevenVoice(groupId){
