@@ -1112,7 +1112,11 @@ class Store:
                                #   재료로 주면 원본을 그대로 베낀다 — 사장님이 짚으신 지점.
                                #   3안 실측(2026-08-16): 사전 없음=말버릇 1개·게이트 실패·254자 /
                                #   사전 있음=말버릇 8개·통과·323자. 원본에 없던 "퐁신퐁신"을 새로 만들었다.
-                               ("voice_json", "TEXT")):          # {onomatopoeia,intensifier,exclaim,endings,tone_note}
+                               ("voice_json", "TEXT"),          # {onomatopoeia,intensifier,exclaim,endings,tone_note}
+                               # CTA를 쓰지 않는 스타일인가(2026-08-19). 유튜브 썰쇼핑
+                               # (이븐쇼핑·살림킹왕짱)은 CTA가 없는 게 정답이라 게이트의
+                               # CTA 검사를 건너뛰어야 한다. 기본 0 = 기존 동작(검사 O).
+                               ("no_cta", "INTEGER")):
                 try:
                     c.execute(f"ALTER TABLE spine ADD COLUMN {_col} {_ddl}")
                 except sqlite3.OperationalError:
@@ -3475,7 +3479,7 @@ class Store:
             return cur.lastrowid
 
     def set_spine_style(self, spine_id, beat_roles=None, templates=None, chars_per_30s=None,
-                        voice=None):
+                        voice=None, no_cta=None):
         """스파인에 **기계가 검사할** 스타일 정보를 붙인다(2026-08-15).
 
         beat_roles = ["hook","before",...] · templates = {"hook":["...{가족}..."]} ·
@@ -3491,6 +3495,9 @@ class Store:
         if chars_per_30s is not None:
             sets.append("chars_per_30s=?")
             args.append(int(chars_per_30s))
+        if no_cta is not None:
+            sets.append("no_cta=?")
+            args.append(1 if no_cta else 0)
         if voice is not None:
             sets.append("voice_json=?")
             args.append(json.dumps(voice, ensure_ascii=False))
@@ -3506,7 +3513,7 @@ class Store:
         q = ("SELECT id, name, situation_type, character_roles_json, beat_chain_json, "
              "emotion_arc, appeal, fit_categories_json, source_count, perf_score, "
              "status, created_at, updated_at, beat_roles_json, templates_json, "
-             "chars_per_30s, voice_json FROM spine")
+             "chars_per_30s, voice_json, no_cta FROM spine")
         args = []
         if status is not None:
             q += " WHERE status=?"
@@ -3525,7 +3532,10 @@ class Store:
              "beat_roles": json.loads(r[13]) if r[13] else None,
              "templates": json.loads(r[14]) if r[14] else None,
              "chars_per_30s": r[15],
-             "voice": json.loads(r[16]) if r[16] else None}
+             "voice": json.loads(r[16]) if r[16] else None,
+             # ★게이트에 그대로 넘어가는 dict다 — 여기서 안 실으면 no_cta가 영영 None이라
+             #   유튜브 스파인이 CTA 검사에 계속 걸린다(오류가 안 나는 조용한 실패).
+             "no_cta": bool(r[17])}
             for r in rows
         ]
 
