@@ -4996,3 +4996,54 @@ def revert_scene_lab(plan):
         beat.pop("stretch_fill", None)
     plan.pop("scene_lab", None)
     return plan
+
+
+# ── 확정 대본 불변식 ────────────────────────────────────────────────
+# 사장님 제보(2026-08-18): "영상이랑 대본이랑 다르게 된다".
+# 실측(job c7e208afb699): EDL 7비트 중 hook·benefit 2개의 narration이 확정 대본에
+# **없는 문장**이었다("스마트폰에 어댑터를 장착해 …모습이 정말 신기하네요" — 장면 설명
+# 말투). 대본 쪽에서는 미끼 문장과 반전 후반부가 통째로 빠져 있었다.
+# _SCRIPTED_PROMPT는 "그대로 사용해라"를 두 번 말하지만 **지켰는지 검사하는 곳이 없었다.**
+# 프롬프트를 더 강하게 쓰는 건 두더지잡기다 — 저장 직전에 불변식으로 막는다.
+_SENT_SPLIT = re.compile(r"(?<=[.!?。！？])\s+|\n+")
+
+
+def _narr_key(s):
+    """비교용 정규화 — 공백·문장부호를 지운다(어미 손질 정도는 통과시키지 않는다)."""
+    return re.sub(r"[^0-9A-Za-z가-힣]+", "", s or "")
+
+
+def script_sentences(script):
+    """확정 대본을 문장 단위로. 빈 조각은 버린다."""
+    return [s.strip() for s in _SENT_SPLIT.split(script or "") if s.strip()]
+
+
+def enforce_scripted_narration(beats, given_script):
+    """확정 대본에 없는 문장을 EDL이 지어냈으면, 빠뜨린 대본 문장으로 되돌린다.
+
+    - 판정: 비트 narration의 정규화 문자열이 대본 정규화 문자열에 들어 있으면 정상
+      (대본 한 문장을 여러 비트로 쪼개는 것은 허용 — 프롬프트가 시키는 일이다).
+    - 교정: 창작 비트를 **아직 화면에 안 쓰인 대본 문장**으로 순서대로 갈아끼운다.
+      남는 창작 비트는 그대로 둔다(지우면 화면 길이가 무너진다) — 대신 표시를 남긴다.
+    반환: (고친 beats, 바꾼 개수)
+    """
+    beats = beats or []
+    if not (given_script or "").strip() or not beats:
+        return beats, 0
+    full = _narr_key(given_script)
+    bad = [i for i, b in enumerate(beats)
+           if _narr_key(b.get("narration")) and _narr_key(b.get("narration")) not in full]
+    if not bad:
+        return beats, 0
+    used = "".join(_narr_key(b.get("narration")) for i, b in enumerate(beats) if i not in bad)
+    missing = [s for s in script_sentences(given_script)
+               if _narr_key(s) and _narr_key(s)[:12] not in used]
+    fixed = 0
+    for i in bad:
+        if not missing:
+            beats[i]["narration_invented"] = True   # 되돌릴 재료가 없다 — 흔적을 남긴다
+            continue
+        beats[i]["narration"] = missing.pop(0)
+        beats[i]["narration_restored"] = True
+        fixed += 1
+    return beats, fixed

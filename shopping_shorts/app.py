@@ -9148,7 +9148,11 @@ def api_produce_aipick(request: Request, work_id: str = "", forced: str = ""):
 #   ③ full_text가 비면 저장하지 않고 실패로 확정 — segments만 있는 저장은 "대본 없음"이
 #      영구 캐시돼 클라가 계속 미추출로 오인한다(인스타 릴스 실패의 정체)
 #   ④ 호출당 건수 상한 + 시도 횟수 상한 — 최악의 경우에도 소모가 유한하다
-_AUTOLOAD_MAX_PER_CALL = 4      # 한 번 호출로 새로 태울 수 있는 영상 수
+_AUTOLOAD_MAX_PER_CALL = int(os.environ.get("SHORTS_AUTOLOAD_PER_CALL", "6"))
+# ★4 → 6 (2026-08-18). 사장님이 5개를 담았는데 "4/5개 읽음"에서 멈춰 보였다 —
+#   상한이 4라 5번째는 다음 호출로 밀렸다. 담은 걸 한 번에 다 읽는 게 자연스럽다.
+#   키 로테이션이 살아난 뒤라(comment_gen._current_key_and_idx → 페이서 위임)
+#   키 12개를 나눠 쓰므로 429 위험은 예전보다 낮다. env로 되돌릴 수 있게 둔다.
 # 1 → 3 (2026-08-04): prewarm과 같은 완화 — 인스타 일시 실패 1번으로 영구 스킵되면
 # 재담기가 조용히 죽는다. 3회면 폭주 차단은 유지하면서 일시 실패를 흡수한다.
 def _is_grabbable_media(u):
@@ -9211,7 +9215,10 @@ def _autoload_reason_ko(err):
 # 동시에 추출할 영상 수(2026-07-30). 대기의 정체가 제미니 응답이라 동시에 올리면 총 시간이
 # '가장 느린 1개'로 수렴한다. 다만 무제한으로 올리면 제미니 429가 몰려 오히려 느려지고 키가
 # 소진되므로 3으로 묶는다(_AUTOLOAD_MAX_PER_CALL=4와는 다른 축 — 그건 '총 몇 개').
-_AUTOLOAD_MAX_WORKERS = 3
+_AUTOLOAD_MAX_WORKERS = int(os.environ.get("SHORTS_AUTOLOAD_WORKERS", "4"))
+# ★3 → 4 (2026-08-18). 3으로 묶은 근거는 "429가 몰린다"였는데, 그 429의 진짜 원인은
+#   동시성이 아니라 **셋이 같은 키를 때린 것**이었다(키 선택이 늘 live[0]). 키를 나눠
+#   쓰게 고친 뒤라 동시성을 조금 올린다. 더 올리려면 키를 늘리는 게 정석이다.
 
 
 @app.post("/api/produce/autoload")
