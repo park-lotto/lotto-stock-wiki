@@ -1,6 +1,6 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-08-17-a  (도우인 커버 폴백 currentPoster — og:image 없는 SPA 대응)
+// 로직 버전: 2026-08-18-a  (채널수집 버튼 확장 — 인스타·틱톡 + 유튜브·쓰레드)
 (function () {
   "use strict";
   if (window.__ssGrabLoaded) return;   // 로더가 중복 실행돼도 한 번만
@@ -116,26 +116,64 @@
     var m = location.pathname.match(/^\/([^/]+)\/?(reels\/?)?$/);
     return (m && !_IG_RESERVED[m[1]]) ? m[1] : "";
   }
+  // ── 채널수집 버튼 — 인스타·틱톡에 이어 유튜브·쓰레드까지(2026-08-18 사장님 요청) ──
+  // 플랫폼마다 '어디에 넣어야 수집이 잡느냐'가 다르다(인스타=discovered_channels,
+  // 나머지=platform_seeds account). 그 갈래는 **서버 한 곳**(/api/discover/add_by_url)
+  // 에서만 정한다 — 여기서 또 정하면 0순위-B(같은 판단 두 곳)에 걸려 언젠가 어긋난다.
+  // 여기서 정하는 건 '지금 화면에 대상이 있느냐'와 '무엇을 보내느냐'뿐이다.
+  function _chPlat() {
+    var h = location.host;
+    if (h.indexOf("instagram.com") >= 0) return "instagram";
+    if (h.indexOf("tiktok.com") >= 0) return "tiktok";
+    if (h.indexOf("youtube.com") >= 0 || h.indexOf("youtu.be") >= 0) return "youtube";
+    if (h.indexOf("threads.com") >= 0 || h.indexOf("threads.net") >= 0) return "threads";
+    return "";
+  }
+  // 쓰레드는 프로필(/@핸들)이든 게시물(/@핸들/post/코드)이든 경로 맨 앞이 핸들이다.
+  function _thProfile() {
+    var m = location.pathname.match(/^\/@([\w.\-]+)/);
+    return m ? m[1] : "";
+  }
+  // 유튜브: 채널 페이지(/@핸들·/channel/·/c/·/user/)면 그 채널, 영상(watch·shorts·live)이면
+  // URL을 서버에 맡겨 yt-dlp가 소속 채널을 해석한다.
+  function _ytTarget() {
+    var p = location.pathname;
+    if (/^\/@[\w.\-]+/.test(p) || /^\/(channel|c|user)\//.test(p)) return "channel";
+    if (/^\/(watch|shorts\/|live\/)/.test(p) || location.host.indexOf("youtu.be") >= 0) return "video";
+    return "";
+  }
+  // 서버로 보낼 질의문자열. ""이면 대상이 모호한 화면(피드·탐색)이라 버튼을 안 띄운다.
+  function _chQuery() {
+    var plat = _chPlat();
+    if (plat === "instagram") {
+      var ig = _igProfileName();
+      if (ig) return "username=" + encodeURIComponent(ig);
+      return isSinglePost() ? "url=" + encodeURIComponent(location.href) : "";
+    }
+    if (plat === "tiktok")
+      return (_ttProfile() || isSinglePost()) ? "url=" + encodeURIComponent(location.href) : "";
+    if (plat === "threads")
+      return _thProfile() ? "url=" + encodeURIComponent(location.href) : "";
+    if (plat === "youtube")
+      return _ytTarget() ? "url=" + encodeURIComponent(location.href) : "";
+    return "";
+  }
   function addChannelBtn() {
-    var host = _snsHost();
-    if (!host) return;
     if (document.getElementById("ss-chadd-btn") || !document.body) return;
-    var prof = host === "instagram" ? _igProfileName() : _ttProfile();
-    if (!isSinglePost() && !prof) return;   // 피드/탐색에선 대상이 모호해 안 띄운다
+    if (!_chQuery()) return;
     var b = document.createElement("button");
     b.id = "ss-chadd-btn";
-    b.textContent = "📌 채널등록";
-    b.title = "이 게시물의 채널을 레퍼런스 추적목록에 등록";
+    b.textContent = "📌 채널수집";
+    b.title = "이 채널을 레퍼런스 수집 목록에 등록";
     b.style.cssText =
       "position:fixed;right:18px;bottom:70px;z-index:2147483647;background:#8250df;" +
       "color:#fff;border:none;border-radius:24px;padding:10px 16px;font-size:14px;" +
       "font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer;font-family:system-ui,sans-serif";
     b.addEventListener("click", function (e) {
       e.preventDefault();
-      // 틱톡은 URL에 @핸들이 들어 있어 서버가 URL만으로 채널을 뽑는다(시드 등록).
-      var p = _snsHost() === "instagram" ? _igProfileName() : "";
-      var q = p ? "username=" + encodeURIComponent(p)
-                : "url=" + encodeURIComponent(location.href);
+      // SPA라 붙일 때와 누를 때의 화면이 다를 수 있다 — 클릭 시점에 다시 읽는다.
+      var q = _chQuery();
+      if (!q) return;
       window.open(BASE + "/api/discover/add_by_url?" + q, "ss_chadd", "width=380,height=240");
     });
     document.body.appendChild(b);
@@ -500,9 +538,7 @@
   }
   function syncChannelBtn() {
     var b = document.getElementById("ss-chadd-btn");
-    var host = _snsHost();
-    var want = !!host && (isSinglePost() ||
-                          (host === "instagram" ? _igProfileName() : _ttProfile()));
+    var want = !!_chQuery();
     if (b && !want) b.remove();
     else if (!b && want) addChannelBtn();
   }

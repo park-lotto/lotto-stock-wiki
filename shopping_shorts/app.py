@@ -1469,6 +1469,45 @@ def api_discover_add_by_url(request: Request, url: str = "", username: str = "")
         store.add_seed("tiktok", "account", tname)
         return HTMLResponse(_chadd_html("✅ 틱톡 채널 등록 완료",
                                         f"@{tname} — 다음 틱톡 수집부터 랭킹에 잡힙니다."))
+    # 쓰레드(2026-08-18 사장님 '인스타·유튜브·쓰레드 3개 모두'): 쓰레드는 계정 시드
+    # (threads/account, 값=핸들)로 넣어야 _collect_threads가 잡는다 — 인스타
+    # discovered_channels에 섞으면 인스타 수집이 쓰레드 핸들을 긁으려다 실패한다.
+    if "threads.com" in (url or "") or "threads.net" in (url or ""):
+        m = re.search(r"threads\.(?:com|net)/@([\w.\-]+)", url or "")
+        tname = (username or (m.group(1) if m else "")).strip().lstrip("@")
+        if not tname:
+            return HTMLResponse(_chadd_html("❌ 채널을 못 찾았어요",
+                                            "쓰레드 프로필/게시물 화면에서 눌러주세요."))
+        existing = {(s2.get("value") or "").lstrip("@").lower()
+                    for s2 in store.list_seeds("threads") if s2.get("kind") == "account"}
+        if tname.lower() in existing:
+            return HTMLResponse(_chadd_html("✔ 이미 등록된 채널", f"@{tname} — 쓰레드 시드로 추적 중입니다."))
+        store.add_seed("threads", "account", tname)
+        return HTMLResponse(_chadd_html("✅ 쓰레드 채널 등록 완료",
+                                        f"@{tname} — 다음 쓰레드 수집부터 랭킹에 잡힙니다."))
+    # 유튜브(2026-08-18): 유튜브 시드(youtube/account, 값=채널 URL). 값 형식은
+    # /api/seeds/from_youtube_videos와 **똑같이** 맞춘다 — 다르면 같은 채널이 두 줄로
+    # 등록돼 수집이 두 번 돈다. 영상 페이지는 그 API가 쓰는 헬퍼를 그대로 재사용한다.
+    if "youtube.com" in (url or "") or "youtu.be" in (url or ""):
+        m = re.search(r"youtube\.com/(@[\w.\-]+|channel/[\w\-]+|c/[\w.\-]+|user/[\w.\-]+)",
+                      url or "")
+        ch_url = "https://www.youtube.com/" + m.group(1) if m else ""
+        ch_title = ""
+        if not ch_url:
+            chs = yt_channels_from_videos([url])
+            if chs:
+                ch_url, ch_title = chs[0]["channel_url"], chs[0].get("channel_title", "")
+        if not ch_url:
+            return HTMLResponse(_chadd_html("❌ 채널을 못 찾았어요",
+                                            "영상(watch·shorts) 또는 채널 화면에서 다시 눌러주세요."))
+        existing = {(s2.get("value") or "").lower()
+                    for s2 in store.list_seeds("youtube") if s2.get("kind") == "account"}
+        if ch_url.lower() in existing:
+            return HTMLResponse(_chadd_html("✔ 이미 등록된 채널",
+                                            f"{ch_title or ch_url} — 유튜브 시드로 추적 중입니다."))
+        store.add_seed("youtube", "account", ch_url)
+        return HTMLResponse(_chadd_html("✅ 유튜브 채널 등록 완료",
+                                        f"{ch_title or ch_url} — 다음 유튜브 수집부터 랭킹에 잡힙니다."))
     uname, disp = (username or "").strip().lstrip("@"), ""
     if not uname and url:
         try:
