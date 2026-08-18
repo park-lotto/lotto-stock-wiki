@@ -89,7 +89,10 @@
    유지해야 그리드가 계단지지 않는다(정렬 원칙). */
 .cap{font-size:13px;line-height:1.5;color:var(--txt);margin:6px 0 8px;
      display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;
-     overflow:hidden;white-space:pre-wrap;word-break:break-word}
+     overflow:hidden;white-space:pre-wrap;word-break:break-word;cursor:pointer}
+/* 접었다 펴기(2026-08-18) — 잘린 문구를 클릭하면 전문이 나온다. 툴팁은 모바일에서 안 뜬다. */
+.cap.open{-webkit-line-clamp:unset;display:block;overflow:visible}
+.capmore{font-size:11px;color:var(--accent);cursor:pointer;margin:-4px 0 8px;user-select:none}
 /* 썸네일이 없는 글 전용 — 사진 자리가 없으니 문구가 카드의 얼굴이다. 크게 보여준다.
    실측 194건(21%)이 글만 있고, 그중 좋아요 최대 17,595로 반응이 제일 크다. */
 .cap-only{font-size:15px;line-height:1.6;-webkit-line-clamp:8;margin-top:2px;
@@ -272,6 +275,9 @@
   font-size:11px;padding:3px 7px;border-radius:6px;cursor:pointer;line-height:1;margin-left:auto}
 .blockbtn:hover{color:#fff;background:#da3633;border-color:#da3633}
 body.is-admin .blockbtn{display:inline-block}
+/* 관리자 전용 블록(계정 목록 등) — 기본 숨김, cid0일 때만 노출 */
+.admin-only{display:none}
+body.is-admin .admin-only{display:block}
 .tab:hover{color:var(--txt);background:rgba(255,255,255,.04)}
 /* ★고른 탭을 확실히 보이게(2026-08-17 사장님 "48시간 히트작이 메인이니 잘보이게").
    글자색만 바뀌어 어느 걸 보고 있는지 한눈에 안 들어왔다 — 알약 배경+테두리를 준다. */
@@ -1003,7 +1009,9 @@ async function loadSeeds(){
   // 유튜브는 등록 채널(account)이 수백 개라 URL을 다 뿌리면 화면을 덮는다(2026-07-25).
   // account는 칩 대신 "채널 N개 · 지표 보기" 요약으로 접고, 키워드 시드만 칩으로 남긴다.
   const accounts = items.filter(s=>s.kind==='account');
-  const chips = (PLATFORM==='youtube') ? items.filter(s=>s.kind!=='account') : items;
+  // 쓰레드도 계정 칩을 화면에 안 뿌린다(2026-08-18 사장님) — 어느 계정을 긁는지가
+  // 우리 자산이라 구독자에게 보이면 그대로 복사된다. 관리자(body.is-admin)만 펼쳐 본다.
+  const chips = (PLATFORM==='youtube'||PLATFORM==='threads') ? items.filter(s=>s.kind!=='account') : items;
   const chipHtml = chips.map(s=>{
     const isLang = TT_LANG_KINDS.includes(s.kind);   // 틱톡 언어 시드 = 비용 대상
     return `<span class="${(PLATFORM==='tiktok'&&isLang)?'ttkw':''}" style="display:inline-block;background:#1a2230;border-radius:12px;padding:2px 8px;margin:2px 4px 0 0">
@@ -1016,7 +1024,16 @@ async function loadSeeds(){
          <span style="background:#132a1e;border:1px solid #1f9d55;border-radius:12px;padding:3px 10px;font-size:12px">📺 등록 채널 <b>${accounts.length}</b>개</span>
          <button onclick="openChannelBoard('views')" style="font-size:12px;padding:4px 12px;border-radius:8px;border:1px solid var(--accent);background:#1f6feb1a;color:var(--accent);font-weight:700;cursor:pointer">📊 채널 지표·관리 열기</button>
        </div>` : '';
-  el.innerHTML = (ytSummary + chipHtml) || '키워드 없음';
+  // 쓰레드: 개수만 공개 + 관리자에게만 계정 칩(접이식)
+  const thSummary = (PLATFORM==='threads' && accounts.length)
+    ? `<div style="margin:2px 0 4px">
+         <span style="background:#132a1e;border:1px solid #1f9d55;border-radius:12px;padding:3px 10px;font-size:12px">🧵 등록 계정 <b>${accounts.length}</b>개</span>
+       </div>
+       <details class="admin-only" style="margin:4px 0"><summary style="cursor:pointer;font-size:12px;color:var(--sub)">🔒 관리자 — 계정 목록 보기</summary>
+         <div style="margin-top:4px">${accounts.map(s=>`<span style="display:inline-block;background:#1a2230;border-radius:12px;padding:2px 8px;margin:2px 4px 0 0">🧵 ${s.value}
+           <span style="cursor:pointer;color:#e0623d" onclick="removeSeed('${s.value.replace(/'/g,"\\'")}')">✕</span></span>`).join('')}</div>
+       </details>` : '';
+  el.innerHTML = (ytSummary + thSummary + chipHtml) || '키워드 없음';
   if(PLATFORM==='tiktok') renderTtStatus();
   // 유튜브 + 틱톡 키워드모드에서 언어 선택기 노출(계정 모드는 ttModeChange가 숨김)
   const showLang = (PLATFORM==='youtube') || ttKeywordMode();
@@ -1648,7 +1665,7 @@ function render(opts){
       </div>`:''}
       <div class="body">
         <div class="rank"><span>#${idx+1} · ${i.category} · ${fmtAgo(i)}</span><button class="blockbtn" title="이 채널을 영구 차단 — 지금 바로 가리고, 다음 수집·업데이트에도 안 올라옵니다" onclick="blockChannel('${esc(i.username||'')}','${esc(i.name||'')}',this)">🚫 차단</button></div>
-        ${i.caption?`<div class="cap${i.thumbnail?'':' cap-only'}" title="${esc(i.caption)}">${esc(i.caption)}</div>`:''}
+        ${i.caption?`<div class="cap${i.thumbnail?'':' cap-only'}" onclick="toggleCap(this)">${esc(i.caption)}</div><div class="capmore" style="display:none" onclick="toggleCap(this.previousElementSibling)">⌄ 더보기</div>`:''}
         <div class="ch"><span class="chname" title="이 채널 영상만 보기(지난 한 달 포함)" style="cursor:pointer" onclick="searchChannel('${esc(i.username||'')}')">${i.name||i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${i.url}', this)">🔗 복사</button></div>
         ${(i.followers||i.duration!=null)?`<div class="folw">${i.followers?`<span title="채널 팔로워(구독자) 수 — 수집이 실어온 실시간 값">👥 팔로워 ${i.followers.toLocaleString()}</span>`:''}${i.duration!=null?`<span class="dur" title="영상 길이">🎬 ${_fmtDur(i.duration)}</span>`:''}</div>`:''}
         ${i.views?`<div class="stat" title="조회수 — 옆의 +숫자는 직전 수집 대비 증가분(= '전체' 탭 정렬 기준)"><span>조회수</span><b>${i.views.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>`:''}
@@ -1679,10 +1696,32 @@ function render(opts){
          </button></div>`);
   }
   markSavedButtons();
+  markCapOverflow();
   // 채널 모드 감지 — 검색 결과가 한 채널로 수렴하면 그 채널의 '지난 한 달'을 아래에 붙인다.
   const users = [...new Set(items.map(i=>_normUser(i.username)).filter(Boolean))];
   if(searching && users.length===1){
     _renderChannelHistory(users[0], items.map(i=>i.shortcode));
+  }
+}
+// 문구 접기/펴기(2026-08-18 사장님 "문구는 짤리는데 접었다 펴는걸로 글자 다 볼수있게")
+// 실제로 잘린 카드에만 [더보기]를 띄운다 — 안 잘린 카드에 버튼이 붙으면 거짓 안내가 된다.
+function markCapOverflow(){
+  document.querySelectorAll('.capmore').forEach(btn=>{
+    const cap = btn.previousElementSibling;
+    if(!cap) return;
+    const clipped = cap.scrollHeight > cap.clientHeight + 2;
+    btn.style.display = clipped ? '' : 'none';
+    btn.textContent = '⌄ 더보기';
+  });
+}
+function toggleCap(cap){
+  if(!cap) return;
+  const open = cap.classList.toggle('open');
+  const btn = cap.nextElementSibling;
+  if(btn && btn.classList.contains('capmore')){
+    btn.style.display = '';                       // 펼친 뒤엔 접는 길이 있어야 한다
+    btn.textContent = open ? '⌃ 접기' : '⌄ 더보기';
+    if(!open && cap.scrollHeight <= cap.clientHeight + 2) btn.style.display = 'none';
   }
 }
 // 카드의 채널명 클릭 → 그 채널만(검색어=아이디). matchesSearch가 그 채널을 통과시키고
