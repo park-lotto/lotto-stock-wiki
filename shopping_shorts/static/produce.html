@@ -783,7 +783,12 @@
   .s2-cand .fq{margin-left:auto;flex:none;font-size:11px;color:var(--s2-sub);background:var(--inset);border-radius:4px;padding:2px 7px;white-space:nowrap}
   .s2-dfoot{display:none}
   #s2Root.mode-side .s2-dfoot{display:flex;margin-bottom:8px}
-  .s2-dfoot .btn-next{width:100%;font-weight:700}
+  .s2-dfoot{gap:8px;flex-wrap:wrap}
+  .s2-dfoot .btn-next{flex:1 1 100%;font-weight:700}
+  /* 다채널용 '＋ 이 안으로 새 작업'(2026-08-18) — 확정 옆의 보조 버튼이라 눈에 덜 띄게 */
+  .s2-dfoot .btn-ghost, #s2NewWorkBtn{background:var(--inset);border:1px solid var(--line);
+    color:var(--txt);border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointer}
+  .s2-dfoot .btn-ghost{flex:1 1 100%}
   .s2-regen{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:8px;border-top:1px solid var(--line);padding-top:16px}
   .s2-confirm{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:24px;border-top:1px solid var(--line);padding-top:24px}
   #s2Root.mode-side .s2-confirm{display:none}
@@ -1593,6 +1598,10 @@
         <!-- 확정(탭 모드) → 3단계. ★매칭(startProduceMix)은 여기서 안 건다 — 3단계 소관 -->
         <div class="s2-confirm" id="s2ConfirmBar" style="display:none">
           <button class="btn-next" id="s2ConfirmBtn" onclick="s2Confirm()" title="3단계에서 이 대본에 장면을 붙입니다 — 게이트가 ⚠️여도 확정은 막지 않습니다">✔ 이 대본으로 확정 — 장면 붙이기로</button>
+          <!-- 다채널용: 지금 안을 '새 작업'으로 복제(2026-08-18). 탭 보기에선 카드 밑 버튼이
+               숨겨지므로(.s2-dfoot{display:none}) 여기에도 같이 둔다 — 없으면 탭으로 보는
+               사장님 화면에는 이 기능이 아예 안 보인다. -->
+          <button class="btn-ghost" id="s2NewWorkBtn" onclick="s2ConfirmToNewWork()" title="지금 작업은 그대로 두고, 담긴 영상까지 복제한 새 작업을 만들어 이 안을 넣습니다(같은 주제 2편)">＋ 이 안으로 새 작업</button>
         </div>
       </div>
     </section>
@@ -9052,7 +9061,10 @@ function s2DraftHtml(dr,i){
   return `<div class="s2-draft ${i===0?'da':'db'}${i===S2.curDraft?' on':''}" id="s2d-${i}">
     <div class="s2-dhead"><span class="s2-dname">${String.fromCharCode(65+i)}안${dr.style_name?(' · '+esc(dr.style_name)):''}</span>${gate}</div>
     ${rows}${fix}
-    <div class="s2-dfoot"><button class="btn-next" onclick="s2Confirm(${i})">✔ ${String.fromCharCode(65+i)}안으로 확정</button></div>
+    <div class="s2-dfoot">
+      <button class="btn-next" onclick="s2Confirm(${i})">✔ ${String.fromCharCode(65+i)}안으로 확정</button>
+      <button class="btn-ghost" title="지금 작업은 그대로 두고, 담긴 영상까지 그대로 복제한 새 작업을 만들어 이 안을 넣습니다(다채널용 2편)" onclick="s2ConfirmToNewWork(${i})">＋ 이 안으로 새 작업</button>
+    </div>
   </div>`;
 }
 function s2PickDraft(i){ S2.curDraft=i; s2RenderDrafts(); saveWork(); }   // 보던 안도 그대로 돌아오게
@@ -9163,6 +9175,35 @@ async function s2RegenBeat(i,j,tmpl){
 // ── 확정 → 3단계 ──────────────────────────────────────────────
 // ★여기서 매칭(startProduceMix)을 걸지 않는다 — 대본을 손보기도 전에 매칭이 시작되면
 //   2단계가 존재 이유를 잃는다(사양서 §6). 매칭 시작은 3단계 소관.
+// ── 한 재료로 여러 편 만들기(2026-08-18 사장님: "다채널이라 같은 주제로 두 개 이상") ──
+// 종전엔 A안·B안 중 **하나만 확정**하면 나머지는 버려졌다. 사장님은 그걸 손으로 복사해
+// 다른 작업에 붙여넣을 방법을 찾고 계셨다 — 붙여넣기는 소스·장면이 안 따라와서 반쪽이다.
+// → 지금 작업을 그대로 **복제**하고 대본만 그 안으로 바꾼 새 작업을 만든다.
+//   현재 작업은 손대지 않는다(확정도 안 한다) — A안은 여기, B안은 새 작업으로 각각 간다.
+async function s2ConfirmToNewWork(i){
+  const idx=(i==null)?S2.curDraft:i;
+  const dr=S2.drafts[idx];
+  if(!dr){ toast('먼저 대본을 만들어 주세요'); return; }
+  const script=(dr.script||'').trim();
+  if(!script){ toast('대본이 비어 있습니다'); return; }
+  try{ _pushWorkNow(); }catch(e){}          // 지금 작업부터 확실히 저장(디바운스 대기 금지)
+  const st=_workState();                    // 소스·장면·2안 스냅샷까지 그대로 복제
+  st.script=script;
+  st.script_from_wiki=(S2.seed&&S2.seed.shortcode)||'';
+  st.script_carryover=false;
+  delete st.title_manual;                   // 이름은 새로 자동 — 옛 이름을 물려주면 헷갈린다
+  const label=String.fromCharCode(65+idx)+'안';
+  toast(label+'으로 새 작업을 만드는 중…');
+  let d=null;
+  try{
+    // work_id를 안 보낸다 = 새 작업. job_id도 안 보낸다(믹스 결과는 작업마다 따로다).
+    d=await (await fetch('/api/produce/works',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({state:st, step:cur})})).json();
+  }catch(e){}
+  if(!(d && d.ok && d.work_id)){ toast('새 작업 만들기에 실패했어요'); return; }
+  location.href='/produce?work='+encodeURIComponent(d.work_id);
+}
 function s2Confirm(i){
   const idx=(i==null)?S2.curDraft:i;
   const dr=S2.drafts[idx];
