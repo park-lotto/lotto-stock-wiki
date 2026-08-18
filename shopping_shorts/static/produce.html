@@ -3877,9 +3877,24 @@ async function _restoreWork(workId){
 // ── 새로고침 복원 렌더 헬퍼(2026-07-19) ─────────────────────────
 // 미리보기 <video>는 pollPreview(막 만든 직후)와 _restoreMixContext(새로고침) 둘 다 여기서 그린다.
 // ★단일 출처: 이 markup을 두 곳에 복제하면 위 "하단 검정라인(display:block)" 수정이 한쪽만 반영돼 재발한다.
+// ★미리보기 자리를 실제로 연다(2026-08-18 사장님 "미리보기 성공하면 재생돼야 하는데 그게 없네").
+//   실측(브라우저): 렌더는 성공하고 <video>도 만들어졌는데 **크기가 0×0**이라 아무도 못 봤다.
+//   원인은 상위 #mixPreviewRail이 `display:none`인데 그걸 여는 코드가 **어디에도 없었다**는 것
+//   (grep 1건 = 선언뿐). 2026-08-16에 미리보기를 장면 편집 안으로 옮기며 이 슬롯을 감췄는데,
+//   그리는 코드는 그대로 이 감춰진 자리에 남아 결과가 영영 안 보이게 됐다.
+//   → 그릴 때 레일까지 함께 연다. 정의는 여기 한 곳(_pvOpen/_pvClose) — 여는 곳과 닫는 곳이
+//     따로 적히면 또 어긋난다(0순위-B).
+function _pvOpen(){
+  const rail=document.getElementById('mixPreviewRail'); if(rail) rail.style.display='';
+  const p=document.getElementById('mixPreviewPanel'); if(p) p.style.display='';
+}
+function _pvClose(){
+  const p=document.getElementById('mixPreviewPanel'); if(p) p.style.display='none';
+  const rail=document.getElementById('mixPreviewRail'); if(rail) rail.style.display='none';
+}
 function _renderPreviewVideo(job){
   const box=document.getElementById('mixPreview'); if(!box) return;
-  const pvPanel=document.getElementById('mixPreviewPanel'); if(pvPanel) pvPanel.style.display='';
+  if(typeof _pvOpen==='function') _pvOpen();
   box.innerHTML = '<video controls muted playsinline autoplay style="display:block;width:100%;max-height:520px;object-fit:contain;border-radius:12px;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.4)"'
     + ' src="/api/produce/mix/preview/'+encodeURIComponent(job)+'?t='+Date.now()+'"></video>'
 ;   // 안내 문구 없음(2026-08-15 사장님 "랜더 아래쪽 문구들은 다 지워")
@@ -4263,7 +4278,7 @@ function cancelMixReview(){
   const mc=document.getElementById('mixCandidates'); if(mc) mc.innerHTML='';
   const st=document.getElementById('mixStatus'); if(st){ st.textContent=''; st._sblPipe=null; }
   const _pvBox=document.getElementById('mixPreview'); if(_pvBox) _pvBox.innerHTML='';
-  const _pvPanel=document.getElementById('mixPreviewPanel'); if(_pvPanel) _pvPanel.style.display='none';
+  if(typeof _pvClose==='function') _pvClose();
   try{ refreshNextBtn(); }catch(_){ }   // 미리보기 사라졌으니 [다음] 다시 잠근다
   try{ saveWork(); }catch(_){ }
   const startBtn=document.querySelector('[onclick="startProduceMix()"]');
@@ -6682,7 +6697,7 @@ async function startPreview(){
   const myGen = ++PREVIEW_GEN;     // 이 시점부터 내가 주인 — 늦게 돌아오는 옛 continuation은 무효
   const myJob = MIX_JOB;           // 재매칭으로 MIX_JOB이 바뀌어도 내 응답은 내 job 것이다
   if(btn) btn.disabled = true;     // 렌더는 20초+ 걸린다 — 그 사이 재클릭을 막는다
-  const pvPanel=document.getElementById('mixPreviewPanel'); if(pvPanel) pvPanel.style.display='';  // 좌측 프리뷰 자리 확보
+  if(typeof _pvOpen==='function') _pvOpen();   // 좌측 프리뷰 자리 확보(레일까지 — 안 열면 렌더는 되는데 0x0이라 안 보인다)
   // 같은 9:16 자리에서 민트 로더가 돌게 한다(loader.js). 없으면 텍스트로 폴백.
   box.innerHTML = '<div id="pvLoadFrame" style="aspect-ratio:9/16;width:100%;border:1px solid var(--line);border-radius:16px;background:var(--inset);display:flex;align-items:center;justify-content:center;overflow:hidden"></div>';
   try{
