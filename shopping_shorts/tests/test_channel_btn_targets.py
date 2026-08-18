@@ -141,3 +141,21 @@ def test_레퍼런스_등록_버튼이_같은_팝업_방식을_쓴다():
     assert '"/api/reference/adopt?url="' in src.replace("'", '"'), \
         "담기·채널수집과 같은 popup GET(세션 쿠키가 실린다)이어야 한다"
     assert "ss-adopt-btn" in src
+
+
+def test_화면_숫자를_읽어_붙인다():
+    """A안(2026-08-18): 서버가 못 읽는 조회수·팔로워를 화면 글자에서 읽어 같이 보낸다.
+    '1.2만'·'22.1만' 같은 한국식 단위를 못 풀면 0이 되어 아무 소용이 없다."""
+    if not shutil.which("node"):
+        pytest.skip("node 없음")
+    src = LOGIC.read_text(encoding="utf-8")
+    body = "\n".join(_fn(src, n) for n in ("_num", "_pageStats", "_pageStatsQuery"))
+    page = "좋아요 207개 댓글 1,202개 조회수 1.2만회 팔로워 22.1만"
+    script = ("var document={body:{innerText:" + json.dumps(page) + "}};\n" + body +
+              "\nconsole.log(JSON.stringify([_pageStats(), _num('195만'), _num('6.3천'), _num('')]));")
+    r = subprocess.run(["node", "-e", script], capture_output=True, text=True, timeout=60)
+    assert r.returncode == 0, r.stderr
+    stats, man, chun, empty = json.loads(r.stdout)
+    assert stats == {"views": 12000, "likes": 207, "comments": 1202, "followers": 221000}
+    assert man == 1950000 and chun == 6300
+    assert empty == 0, "못 읽으면 0 — 서버는 0을 안 쓰고 종전 값을 유지한다"

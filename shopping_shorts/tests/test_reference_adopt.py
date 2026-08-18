@@ -107,3 +107,34 @@ def test_영상편입이_실패해도_채널등록은_한다(db):
         html = ap.api_reference_adopt(request=None, url="https://www.instagram.com/reel/ABC/")
     assert called.get("ch"), "영상이 깨져도 채널 등록은 시도해야 한다"
     assert "채널만 등록" in html.body.decode("utf-8")
+
+
+# ── A안: 화면에 떠 있는 숫자를 같이 보낸다(2026-08-18) ────────────────────────────
+# 서버는 인스타를 로그인 없이 읽어 조회수·팔로워가 0으로 왔다(실측: 채이홈 항목
+# views 0 / followers 0 / 제목 "Video by chae2home"). 그러면 조회수당댓글·팔로워당댓글이
+# 계산되지 않아 정렬에서 불리해진다. 사장님 화면엔 그 숫자가 이미 떠 있으니 함께 보낸다.
+def _adopt_api(db_path, url, meta, **q):
+    with patch.object(ap, "DB_PATH", db_path), \
+         patch.object(ap, "_require_admin", lambda r: None), \
+         patch.object(ap, "probe_grab_meta", lambda u, **k: dict(meta)), \
+         patch.object(ap, "api_discover_add_by_url",
+                      lambda req, url="", username="": ap.HTMLResponse("✅ 채널 등록 완료")):
+        return ap.api_reference_adopt(request=None, url=url, **q)
+
+
+def test_화면에서_보낸_숫자로_빈칸을_채운다(db):
+    _adopt_api(db, "https://www.instagram.com/reel/ABC123/",
+               _meta(views=0, followers=0, likes=0),
+               views=569324, followers=342545, likes=4200)
+    items, _at = Store(db).load_last_run()
+    got = items[0]
+    assert got["views"] == 569324 and got["followers"] == 342545, \
+        "0으로 비어 있던 칸은 화면 값으로 채워야 정렬 지표가 산다"
+
+
+def test_서버가_제대로_읽은_값은_덮지_않는다(db):
+    """화면 글자 파싱은 근사치다 — 더 정확한 값을 밀어내면 안 된다."""
+    _adopt_api(db, "https://www.instagram.com/reel/ABC123/",
+               _meta(views=100000), views=7)
+    items, _at = Store(db).load_last_run()
+    assert items[0]["views"] == 100000
