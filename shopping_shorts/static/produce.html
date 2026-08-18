@@ -1467,6 +1467,14 @@
         </div>
         <div style="flex:1 1 320px;min-width:260px">
           <button id="btnFinalRender" class="btn-next" style="padding:12px 22px" onclick="renderFinal()">🎬 최종 렌더</button>
+          <!-- 🖼 썸네일 인트로(2026-08-18 사장님 "렌더될때 썸네일 만든걸 영상 시작전에 시작하게").
+               체크는 렌더 요청과 같이 서버로 가고 thumbnail JSON에 남아, 다시 열어도 유지된다.
+               라벨 전체가 클릭 영역이고 44px — 주 사용자가 60대다. -->
+          <label id="thumbIntroWrap" style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;min-height:44px">
+            <input type="checkbox" id="thumbIntro">
+            <span style="font-size:13px">🖼 <b>썸네일을 영상 맨 앞에</b> 넣기
+              <span class="hint" style="margin-left:4px">약 1.2초 표지처럼 보여줍니다</span></span>
+          </label>
           <div id="finalStatus" class="hint" style="margin-top:10px"></div>
           <div id="exportBox" style="margin-top:14px"></div>
         </div>
@@ -7407,6 +7415,9 @@ async function refreshFinalThumb(){
   }
   try{
     const d=await (await fetch('/api/produce/thumb/selected/'+encodeURIComponent(MIX_JOB))).json();
+    // 🖼 '영상 맨 앞에 넣기' 체크 복원 — THUMB_STATE는 페이지 메모리라 새로고침하면 비지만
+    //    이 값은 DB(thumbnail_json)에서 온다. 이 API를 8단계가 이미 부르고 있어 여기 얹는다.
+    { const cb=document.getElementById('thumbIntro'); if(cb && d) cb.checked=!!d.intro; }
     if(d && d.ok && d.url){
       FINAL_THUMB_URL=d.url;
       box.innerHTML=`<img src="${esc(d.url)}" alt="선택 썸네일" style="width:100%;max-width:200px;border-radius:12px;display:block;border:2px solid var(--accent2)">`
@@ -7643,7 +7654,10 @@ async function renderFinal(){
   </div>`;
   _rfStart=Date.now(); clearInterval(_rfTimer); _rfTimer=setInterval(_rfTick,1000); _rfTick();
   await saveHeadcopy();   // 헤드카피 설정을 job에 반영 후 렌더
-  const r=await fetch('/api/mix/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:MIX_JOB})});
+  // 썸네일 인트로 체크는 렌더 요청과 **같이** 보낸다 — 따로 저장하는 경로를 만들면
+  // '체크했는데 안 붙었다'가 난다(저장 실패를 아무도 모른다).
+  const _intro = !!(document.getElementById('thumbIntro')||{}).checked;
+  const r=await fetch('/api/mix/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:MIX_JOB, thumb_intro:_intro})});
   const d=await r.json().catch(()=>({ok:false}));
   if(!r.ok||!d.ok){ _finalRenderRestore('❌ 렌더 시작 실패'); document.getElementById('finalVideo').innerHTML=''; return; }
   MIX_POLL=setInterval(pollFinal,3000); pollFinal();

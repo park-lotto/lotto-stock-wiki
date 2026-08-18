@@ -1694,3 +1694,52 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, 
         shutil.copyfile(base_video, out_path)
         return out_path
     return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco, sfx_paths=sfx_paths)
+
+
+def _probe_audio_params(path):
+    """final.mp4의 오디오 규격(샘플레이트·채널). 붙일 인트로를 여기 맞춰야 -c copy가 성립한다.
+
+    ★규격이 다르면 concat -c copy는 에러 없이 통과하고도 뒷부분 소리가 깨진다 —
+    그래서 기본값으로 찍지 않고 실제 파일에서 읽는다."""
+    cmd = ["ffprobe", "-v", "error", "-select_streams", "a:0",
+           "-show_entries", "stream=sample_rate,channels",
+           "-of", "csv=p=0", str(path)]
+    try:
+        out = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8",
+                             errors="replace").stdout.strip()
+        sr, ch = out.split(",")[:2]
+        return int(sr), int(ch)
+    except Exception:
+        return 44100, 2
+
+
+def prepend_still(video_path, image_path, seconds=1.2):
+    """영상 맨 앞에 정지 이미지(썸네일) 구간을 붙인다. 성공하면 video_path를 덮어쓴다.
+
+    왜 이렇게: 비트 클립을 잇는 기존 방식과 **같은 규격**(1080x1920 libx264/aac 30fps)으로
+    인트로를 만들어 concat -c copy로 붙인다. 전체 재인코딩은 2GB 서버에서 수십 초가 걸려
+    배포 재시작에 걸려 죽던 원인이다(2026-07-12 주석과 같은 이유).
+    """
+    video_path, image_path = Path(video_path), Path(image_path)
+    if not video_path.exists() or not image_path.exists():
+        return False
+    sr, ch = _probe_audio_params(video_path)
+    work = video_path.parent
+    intro = work / "thumb_intro.mp4"
+    _run_ffmpeg([
+        "ffmpeg", "-y",
+        "-loop", "1", "-t", f"{seconds:.3f}", "-i", str(image_path),
+        "-f", "lavfi", "-t", f"{seconds:.3f}",
+        "-i", f"anullsrc=channel_layout={'stereo' if ch >= 2 else 'mono'}:sample_rate={sr}",
+        "-vf", (f"scale={_OUT_W}:{_OUT_H}:force_original_aspect_ratio=increase,"
+                f"crop={_OUT_W}:{_OUT_H}"),
+        "-r", "30", "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), *_threads_args(),
+        "-pix_fmt", "yuv420p", "-c:a", "aac", "-ar", str(sr), "-ac", str(ch),
+        "-shortest", str(intro)])
+    lst = work / "concat_intro.txt"
+    lst.write_text(f"file '{intro.as_posix()}'\nfile '{video_path.as_posix()}'\n", encoding="utf-8")
+    merged = work / "final_with_intro.mp4"
+    _run_ffmpeg(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
+                 "-c", "copy", str(merged)])
+    merged.replace(video_path)      # 같은 폴더 = 원자적 교체
+    return True
