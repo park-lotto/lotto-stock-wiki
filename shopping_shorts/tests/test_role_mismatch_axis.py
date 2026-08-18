@@ -123,6 +123,59 @@ def test_옛경로도_fit을_검증한다():
         "_verify_fits가 _repick_weak_beats보다 뒤에 있으면 재픽이 깎인 비트를 못 본다"
 
 
+def test_화면배치_지시는_두_경로에_모두_실린다():
+    """★같은 병이 세 번째다 — "scene_first엔 있고 확정대본 경로엔 없다".
+
+    08-16 저녁부터 제작소는 확정 대본이 있으면 scene_first를 끄고 `build_edit_plan`으로
+    간다(`mix_pipeline.py:1024`, 사장님 "어이없게 대본을 또 쓰냐"). 그런데 화면 배치
+    지시가 `_scene_first_candidates` 안에만 인라인으로 있어, **사장님이 실제로 뽑는
+    영상은 그 지시를 한 번도 못 받았다** — "대사랑 어울리게 골라라" 한 줄뿐이었다.
+    실측(잡 a4e619328313, generator=legacy): 훅 "소리 질렀어요"에 세탁통 클로즈업.
+
+    두 경로가 **같은 상수**를 쓰는지 지킨다. 한쪽에 복사해 넣으면 이 테스트가 잡는다.
+    """
+    seen = {}
+
+    def _cap(prompt, schema):
+        seen.setdefault("all", []).append(prompt)
+        return {"candidates": []}
+
+    mark = "훅(첫 비트)은"
+    # ① 확정 대본 경로
+    scripted = edit_plan._SCRIPTED_PROMPT.format(
+        given_script="확정 대본", inventory="[S-1] 화면:x", n_alternates=2,
+        label_hint="", scene_placement=edit_plan._scene_placement_block())
+    assert mark in scripted, "확정 대본 경로에 화면 배치 지시가 없다"
+    # ② scene_first 경로
+    edit_plan._scene_first_candidates("[S-1] 화면:x", "ref", 20, n=1, call=_cap)
+    assert any(mark in p for p in seen["all"]), "scene_first 경로에 화면 배치 지시가 없다"
+    # ③ 두 경로가 같은 상수를 쓰는가 — 문장이 갈라지면 안 된다
+    assert edit_plan._SCENE_PLACEMENT_RULES.strip() in scripted
+
+
+def test_화면배치_스위치로_끌_수_있다(monkeypatch):
+    """A/B 비교용 스위치(관리자). 기본은 켜짐 — 끄면 08-17 이전 동작."""
+    monkeypatch.setenv("SCENE_GUIDE", "off")
+    assert edit_plan._scene_placement_block() == ""
+    monkeypatch.setenv("SCENE_GUIDE", "on")
+    assert "훅(첫 비트)은" in edit_plan._scene_placement_block()
+    monkeypatch.delenv("SCENE_GUIDE", raising=False)
+    assert "훅(첫 비트)은" in edit_plan._scene_placement_block(), "기본값이 꺼짐이면 안 된다"
+
+
+def test_사전지시와_사후판정이_같은_축을_가리킨다():
+    """★지시와 판정이 어긋나면 모델은 시킨 대로 하고 벌을 받는다.
+
+    사전 지시(화면배치)는 "훅=완성", 사후 판정(_ROLE_WANT_SHOTS)도 훅에 (완성, after).
+    한쪽만 고치면 이 테스트가 깨진다.
+    """
+    want, _ = edit_plan._want_shots_for_role("훅")
+    assert "완성" in want, f"판정축이 훅에 완성을 요구하지 않는다: {want}"
+    assert "완성" in edit_plan._SCENE_PLACEMENT_RULES, "지시문이 훅에 완성을 말하지 않는다"
+    cta, _ = edit_plan._want_shots_for_role("cta")
+    assert "완성" in cta
+
+
 def test_판정표를_복사하지_않았다():
     """0순위-B — 표는 _ROLE_WANT_SHOTS 한 곳만. 여기서 shot_role 문자열을 하드코딩해
     판정하면 표를 고쳐도 이 축은 옛 규칙으로 돈다."""
