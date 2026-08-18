@@ -177,9 +177,6 @@
     .gen-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:flex-start;justify-content:center;padding:24px;overflow:auto}
     .gen-bg.open{display:flex}
     .gen-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;width:min(760px,100%);display:flex;flex-direction:column;max-height:92vh}
-    /* 인포크 관리화면은 좌측메뉴+편집+미리보기 3단이라 760px에선 눌린다(실측). 화면을 거의
-       꽉 채워 원래 레이아웃 그대로 보이게 한다. .gen-box를 고치지 않고 변형만 얹는다. */
-    .gen-box-wide{width:min(1440px,100%);height:92vh}
     .gen-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
     .gen-head b{font-size:15px}
     .gen-head .x{background:none;border:none;color:var(--sub);font-size:20px;cursor:pointer}
@@ -1646,27 +1643,13 @@
     </div>
   </div>
 
-  <!-- 📦 인포크링크 등록 모달(2026-08-18) — 창을 옮겨 다닐 필요 없이 여기서 바로 올린다.
-       실측으로 확인하고 넣었다: link.inpock.co.kr은 X-Frame-Options·CSP·meta CSP·프레임버스팅이
-       **하나도 없고**, 로그인 세션 쿠키도 iframe 안에서 그대로 유지된다(사장님 계정 실확인).
-       모달 구조는 pmModal(.gen-bg/.gen-box)을 그대로 따른다 — 새 규약을 만들지 않는다(0순위-B).
-       다만 인포크 관리화면은 좌측메뉴+편집+미리보기 3단이라 760px로는 눌린다 → .gen-box-wide. -->
-  <div class="gen-bg" id="inpockModal">
-    <div class="gen-box gen-box-wide">
-      <div class="gen-head">
-        <b>📦 인포크링크에 등록</b>
-        <button class="x" onclick="inpockModalClose()">✕</button>
-      </div>
-      <!-- 링크는 모달을 열 때 이미 복사돼 있다. 인포크에서 붙여넣기(Ctrl+V)만 하면 된다. -->
-      <div id="inpockModalBar" style="padding:10px 18px;border-bottom:1px solid var(--line);
-           display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12px"></div>
-      <div style="flex:1;min-height:0">
-        <!-- src는 열 때 넣는다. 미리 박아두면 페이지 로드마다 인포크를 불러 느려진다. -->
-        <iframe id="inpockFrame" title="인포크링크 관리"
-                style="display:block;width:100%;height:100%;border:0;background:#fff"></iframe>
-      </div>
-    </div>
-  </div>
+  <!-- ❌ 인포크 iframe 모달은 폐기했다(2026-08-18). 남겨두면 다음 사람이 다시 시도한다.
+       프레임 삽입 자체는 막히지 않는다(X-Frame-Options·CSP·프레임버스팅 전부 없음).
+       진짜 벽은 **쿠키**다 — 인포크 쿠키 11개가 전부 `SameSite=Lax`이고 `None`이 0개라
+       크로스사이트 iframe에는 아예 안 실린다(실측). 그래서 인포크 탭에서는 로그인 상태인데
+       틀 안에서만 "로그인 정보가 만료되었습니다"가 뜬다. 재로그인해도 새 쿠키도 Lax라 소용없다.
+       → 우리가 고칠 수 있는 게 아니다. 인포크가 SameSite=None; Secure로 바꾸지 않는 한 불가.
+       지금은 **새 탭으로 연다**(원래 방식이 옳았다). 링크 복사·등록완료 체크는 그대로 산다. -->
 
 <script>
 // ── 오브 단계바(v6 목업 정렬, 2026-07-23) ────────────────────────────────
@@ -7111,16 +7094,20 @@ async function refreshInpock(){
         : '<span style="color:var(--fire)"> · 파트너스 링크 없음 — 이대로 올리면 수수료가 안 붙습니다</span>'}</div>
     <div style="word-break:break-all;color:var(--accent);font-size:12px;margin:6px 0">${esc(d.final_link||'')}</div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <!-- ★여기서 바로 올린다(2026-08-18). 누르면 링크가 복사된 채 인포크 관리화면이 뜬다.
-           새 탭으로 나가는 링크는 "창 옮겨 다니기"라 남겨두지 않는다 — 한 곳에서만 하게. -->
-      <button class="btn-next" style="padding:7px 13px;font-size:12px" onclick="inpockModalOpen()">📦 인포크에 등록하기</button>
+      <!-- ★새 탭으로 연다(2026-08-18). 창 안 iframe은 폐기 — 인포크 쿠키가 전부 SameSite=Lax라
+           크로스사이트 틀에는 안 실려 "로그인 만료"로만 보인다(실측). 대신 누르면 링크를
+           복사하고 창까지 한 번에 열어준다. -->
+      <button class="btn-next" style="padding:7px 13px;font-size:12px" onclick="inpockModalOpen()">📦 링크 복사 + 인포크 열기 ↗</button>
       <button class="btn-prev" style="padding:7px 13px;font-size:12px" onclick="inpockCopy()">📋 링크만 복사</button>
+      <a class="btn-prev" style="padding:7px 13px;font-size:12px;text-decoration:none" target="_blank" rel="noopener"
+         href="${esc(d.inpock_page||'https://link.inpock.co.kr')}">인포크만 열기 ↗</a>
       <label style="font-size:13px;display:flex;gap:6px;align-items:center;cursor:pointer">
         <input type="checkbox" ${p.inpock_registered?'checked':''} onchange="markInpock(this.checked)"> 등록 완료
       </label>
     </div>
+    <div id="inpockOpenMsg" class="hint" style="margin-top:6px"></div>
     <div class="hint" style="margin-top:8px">영상 설명란·고정댓글에는 인포크 프로필 링크 하나만 넣고, 상품은 인포크 안에서 관리합니다.
-      대가성 고지문구는 7단계 SEO 설명란의 <b>🛒 쿠팡 링크 + 고지문구 붙이기</b>로 넣으세요.</div>
+      대가성 고지문구는 ${stepName('seo')} 설명란의 <b>🛒 쿠팡 링크 + 고지문구 붙이기</b>로 넣으세요.</div>
   </div>`;
   window._inpockLink=d.final_link||'';
 }
@@ -7148,44 +7135,35 @@ async function inpockCopyChecked(){
     }catch(e2){ return false; }
   }
 }
+// 📦 인포크에 등록 — **새 탭**으로 연다(2026-08-18 iframe 폐기).
+// iframe으로 창 안에 띄우려 했으나 성립하지 않는다: 인포크 쿠키 11개가 전부 SameSite=Lax고
+// None이 0개라 크로스사이트 iframe에 아예 안 실린다(실측). 그래서 인포크 탭에서는 로그인
+// 상태인데 틀 안에서만 "로그인 정보가 만료되었습니다"가 뜬다 — 재로그인해도 소용없다.
+// 우리가 고칠 수 있는 게 아니므로(인포크가 SameSite=None; Secure로 바꿔야 함) 새 탭으로 돌린다.
+// 그래도 "링크 복사 → 창 열기"는 한 번에 해준다.
 async function inpockModalOpen(){
-  const modal=document.getElementById('inpockModal');
-  const frame=document.getElementById('inpockFrame');
-  const bar=document.getElementById('inpockModalBar');
-  if(!modal||!frame) return;
   const link = window._inpockLink || '';
   // ★올릴 링크가 없으면 열지 않는다. 상품이 있어도 url·partner_url이 둘 다 비면
   //   final_link가 빈 문자열이라(coupang_partners.final_link) 버튼은 그려지고 링크만 없다.
-  //   그 상태로 열면 붙여넣을 게 없는 채 인포크만 떠서 헛걸음이 된다.
   if(!link){
     alert('올릴 링크가 없습니다 — '+stepName('seo')+' 🛒 상품 확정에서 쿠팡 상품을 먼저 지정하세요.');
     return;
   }
   const copied = await inpockCopyChecked();
-  // 링크는 바에도 그대로 보여준다 — 복사가 막혔어도 눈으로 보고 옮길 수 있어야 한다.
-  bar.innerHTML = `
-    <span style="${copied?'color:var(--ok)':'color:var(--fire)'};font-weight:600">
-      ${copied?'📋 링크가 복사됐습니다 — 인포크에서 붙여넣기(Ctrl+V)':'⚠️ 자동복사 실패 — 아래 링크를 직접 복사하세요'}</span>
-    <input readonly value="${esc(link)}" onclick="this.select()"
-           style="flex:1;min-width:220px;background:var(--inset);border:1px solid var(--line);
-                  border-radius:6px;padding:6px 9px;color:var(--txt);font-size:12px">
-    <label style="display:flex;gap:6px;align-items:center;cursor:pointer;white-space:nowrap">
-      <input type="checkbox" id="inpockModalDone" onchange="markInpock(this.checked)"> 등록 완료
-    </label>`;
-  // 등록완료 체크는 박스와 같은 값을 보여야 한다(두 곳이 어긋나면 중복등록으로 이어진다).
-  const box=document.querySelector('#inpockBox input[type=checkbox]');
-  const done=document.getElementById('inpockModalDone');
-  if(box && done) done.checked = box.checked;
-  // src는 열 때 넣는다 — 페이지 로드마다 인포크를 부르지 않게.
-  if(!frame.src) frame.src = 'https://link.inpock.co.kr/admin';
-  modal.classList.add('open');
-}
-function inpockModalClose(){
-  const modal=document.getElementById('inpockModal');
-  if(modal) modal.classList.remove('open');
-  // ★프레임은 살려둔다 — src를 비우면 다시 열 때마다 인포크에 재로그인 흐름을 타야 한다.
-  //   닫아도 세션이 남아 있어야 "올리고 닫고 또 올리고"가 매끄럽다.
-  refreshInpock();   // 모달에서 체크한 '등록 완료'를 9단계 박스에도 반영
+  // ★`noopener`를 주면 window.open은 **성공해도 null**을 돌려준다(사양). 그걸 실패로 보면
+  //   창이 멀쩡히 열렸는데 "팝업 차단" 경고가 뜬다(실측으로 잡았다). → 반환값으로 판정하지
+  //   않는다. 대신 rel=noopener를 단 <a>를 만들어 클릭한다 — 보안(opener 차단)은 그대로 두고
+  //   차단 여부는 브라우저가 알아서 사장님에게 알린다.
+  const a=document.createElement('a');
+  a.href='https://link.inpock.co.kr/admin'; a.target='_blank'; a.rel='noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+  const el = document.getElementById('inpockOpenMsg');
+  if(el){
+    el.textContent = copied
+      ? '📋 링크를 복사했습니다 — 새로 열린 인포크 창에서 붙여넣기(Ctrl+V)'
+      : '⚠️ 자동복사 실패 — 위 링크를 직접 복사해 인포크에 붙여넣으세요.';
+    el.style.color = copied ? 'var(--ok)' : 'var(--fire)';
+  }
 }
 async function markInpock(checked){
   if(!MIX_JOB) return;
