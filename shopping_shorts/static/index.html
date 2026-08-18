@@ -1639,7 +1639,7 @@ function render(opts){
   const el = document.getElementById("cards");
   if(!items.length){
     el.innerHTML = (searching && _looksLikeUrl(STATE.q))
-      ? '<div class="empty">🔗 링크 감지 — <b>엔터</b>를 누르면 이 영상의 원본·유사 영상을 찾아드려요.</div>'
+      ? '<div class="empty">🔗 링크 감지 — <b>엔터</b>를 누르면 <b>이 영상 카드</b>를 여기에 띄웁니다.<br><span style="font-size:12px">비슷한 영상 찾기는 카드 위 <b>🔍 숏템파워검색</b>으로 (그때만 렌즈를 씁니다)</span></div>'
       : ((STATE.filters.fresh||STATE.filters.rising)
           ? '<div class="empty">0건 — 걸러내기 때문입니다. 위의 <b>🆕 신작</b>·<b>🔥 급상승</b>을 꺼보세요.</div>'
           : '<div class="empty">결과 없음.</div>');
@@ -2461,31 +2461,23 @@ async function traceByUrl(urlArg){
 //   비슷한 영상은 아래 버튼으로 **누를 때만** 옛 경로(traceByUrl)를 부른다.
 // ★카드는 새로 만들지 않는다 — 렌즈 결과가 쓰는 renderLens를 그대로 쓴다.
 //   담기·숏템파워검색·영상보기가 이미 붙어 있고, 새로 그리면 언젠가 서로 달라진다(0순위-B).
-function _urlCardShell(inner, url){
-  return `<div style="padding:4px 2px 2px">
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-      <input id="urlCardInput" type="text" value="${(url||'').replace(/"/g,'&quot;')}"
-             placeholder="https://… 인스타·유튜브·틱톡·쓰레드 주소"
-             onkeydown="if(event.key==='Enter')openUrlCard(this.value)"
-             style="flex:1;min-width:240px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
-      <button onclick="openUrlCard(document.getElementById('urlCardInput').value)"
-              style="padding:9px 14px;border-radius:8px;border:none;background:#1f6feb;color:#fff;font-weight:800;cursor:pointer">🔎 가져오기</button>
-    </div>${inner}</div>`;
-}
+// ★팝업이 아니라 **랭킹 화면 카드 자리(#cards)에 바로** 그린다(2026-08-18 사장님:
+//   "여기서 그 영상만 나오게"). 목록이 사라지는 게 아니라, 검색어를 지우면 되돌아온다.
 async function openUrlCard(urlArg){
   const pre = (typeof urlArg==='string' && urlArg.trim()) ? urlArg.trim()
             : ((document.getElementById('rankSearch')||{}).value||'').trim();
   const url = _looksLikeUrl(pre) ? pre : '';
-  openScript(_urlCardShell(url ? '<div class="sm-loading">🔗 영상 정보를 읽는 중… (10~20초)</div>'
-      : '<div style="padding:16px;color:var(--sub)">영상 주소를 붙여넣고 <b>가져오기</b>를 누르세요.</div>', url),
-    '🔗 주소로 영상 가져오기', true);
-  if(!url) return;
+  const box = document.getElementById('cards');
+  if(!url){
+    if(box) box.innerHTML='<div class="empty">🔗 영상 주소를 붙여넣고 <b>엔터</b>를 누르세요.</div>';
+    return;
+  }
+  if(box) box.innerHTML='<div class="empty">🔗 영상 정보를 읽는 중… (10~20초)</div>';
   let d=null;
   try{ d=await (await fetch('/api/lens/single?url='+encodeURIComponent(url))).json(); }catch(e){}
-  const body=document.getElementById('scriptBody');
   if(!(d && d.ok && d.item)){
-    if(body) body.innerHTML=_urlCardShell('<div style="padding:12px;color:#e0623d">❌ '+
-      ((d&&d.error)||'가져오지 못했어요 — 주소를 다시 확인해 주세요')+'</div>', url);
+    if(box) box.innerHTML='<div class="empty" style="color:#e0623d">❌ '+
+      ((d&&d.error)||'가져오지 못했어요 — 주소를 다시 확인해 주세요')+'</div>';
     return;
   }
   const it=d.item;
@@ -2495,18 +2487,24 @@ async function openUrlCard(urlArg){
   LENS_STATE['__single__']={items:[it], on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
     sel:new Set(), shortsOnly:false, foreignOnly:false, videoOnly:false, hideOfftopic:false,
     ytLoading:false, keyword:'', caption:'', cnCands:[]};
-  renderLens('__single__');
-  // renderLens가 body를 채운 뒤, 주소칸과 '비슷한 영상 찾기'를 위아래로 덧댄다.
-  if(body){
-    const inner=body.innerHTML;
-    body.innerHTML=_urlCardShell(inner, url)+
-      `<div style="border-top:1px solid var(--line);margin-top:14px;padding-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-         <button onclick="traceByUrl('${url.replace(/'/g,"\\'")}')"
-                 style="padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt);font-weight:800;cursor:pointer">🔍 비슷한 영상도 찾기</button>
-         <span style="color:var(--sub);font-size:12px">이건 구글렌즈를 써요(월 100회 한도) — 필요할 때만 누르세요</span>
-       </div>`;
+  renderLens('__single__', 'cards');           // 카드 자리에 그대로(팝업 없음)
+  // 카드 위아래로 '이 주소' 표시와 숏템파워검색(=우리 렌즈)을 덧댄다.
+  if(box){
+    const inner=box.innerHTML;
+    box.innerHTML =
+      `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0 10px">
+         <span style="background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12px;color:var(--sub)">🔗 주소로 가져온 영상</span>
+         <button onclick="lensSearchByUrl('${url.replace(/'/g,"\\'")}')"
+                 style="padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt);font-weight:800;cursor:pointer">🔍 숏템파워검색</button>
+         <span style="color:var(--sub);font-size:12px">비슷한 영상 찾기 — 구글렌즈를 씁니다(월 100회 한도)</span>
+         <button onclick="setSearch('');const s=document.getElementById('rankSearch'); if(s) s.value=''; render();"
+                 style="margin-left:auto;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--sub);cursor:pointer">✕ 랭킹으로 돌아가기</button>
+       </div>` + inner;
   }
 }
+// 숏템파워검색(주소용) — 카드의 lensSearch는 랭킹 항목(shortcode)용이라 주소엔 못 쓴다.
+// 실제 검색은 종전과 **같은** traceByUrl(=/api/lens/trace_url)을 그대로 부른다.
+function lensSearchByUrl(url){ traceByUrl(url); }
 // ─── TRACE-END
 // 프레임(비전)+캡션으로 유튜브를 키워드 검색해 렌즈 결과에 덧붙인다(무료, 비동기).
 async function fetchLensYt(shortcode, caption, blob){
@@ -2947,8 +2945,10 @@ function _lensIgDiag(st){
   if(photo) parts.push(`카드뉴스 ${photo}`);
   return `<span style="font-size:11px;color:var(--sub)" title="구글렌즈가 준 인스타 링크 중 개별 영상 게시물이 아닌 것들입니다. 카드뉴스는 위 '🎬 영상만'을 끄면 다시 보입니다">📷 렌즈 인스타 원본 ${d.ig_raw}건 → 표시 ${shownIg}건 (제외: ${parts.join(', ')})</span>`;
 }
-function renderLens(shortcode){
-  const box=document.getElementById('scriptBody');   // 모달 body에 렌더(인라인 X → UI 안 망가짐)
+function renderLens(shortcode, mountId){
+  // mountId를 주면 그 자리에 그린다(2026-08-18 '주소로 가져오기'는 팝업 말고 랭킹 화면
+  // 카드 자리에 바로 뜨게 해달라는 사장님 요청). 안 주면 종전대로 모달 body.
+  const box=document.getElementById(mountId||'scriptBody');
   const st=LENS_STATE[shortcode]; if(!st || !box) return;
   const chips=LENS_PLATFORMS.map(p=>{
     const active=st.on.has(p.k);
@@ -2993,7 +2993,9 @@ function renderLens(shortcode){
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="소재 키워드가 제목에 하나도 없는 결과(⚠️다른주제?)를 가립니다. 렌즈는 시각 유사도만 보기 때문에 엉뚱한 게시물이 섞입니다. ⚠️중국어·영어 제목은 키워드가 안 맞아 원본(해외) 후보까지 사라질 수 있어 기본 꺼짐"><input type="checkbox" ${st.hideOfftopic?'checked':''} onclick="toggleLensOfftopic('${shortcode}')"> ⚠️ 다른주제 숨기기${nOff?` <span style="color:var(--sub)">(${nOff})</span>`:''}</label>
       <button onclick="lensBulkSave('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">📥 선택 담기(${selCount})</button>
       <button onclick="lensBulkDelete('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">🗑 선택 삭제(${selCount})</button>
-      ${(()=>{const nYt=shown.filter(i=>i.platform==='youtube').length; return nYt?`<button onclick="lensBenchAllYoutube('${shortcode}')" title="이 렌즈 결과의 유튜브 채널들(짜집기 채널)을 전부 벤치 리스트에 등록 → 채널기반 수집에 편입" style="${btnCss};border-color:var(--accent);color:var(--accent);font-weight:700">➕ 유튜브 채널 전부 벤치등록(${nYt})</button>`:'';})()}
+      ${''/* ➕ 유튜브 채널 전부 벤치등록 — 2026-08-18 사장님 "이거 숨기고".
+             기능(lensBenchAllYoutube)은 남겨둔다. 되살릴 땐 이 자리에 버튼만 다시 넣으면 된다.
+             한 번에 15개 채널이 수집목록에 들어가 되돌리기 번거로운 버튼이라 앞줄에서 뺀다. */}
       ${st.lensLoading?'<span style="color:var(--sub)">🔍 렌즈 결과 불러오는 중…</span>':''}
       ${st.lensErr?`<span style="color:#e0623d">${st.lensErr}</span>`:''}
       ${st.ytLoading?'<span style="color:var(--sub)">▶️ 유튜브 불러오는 중…</span>':''}

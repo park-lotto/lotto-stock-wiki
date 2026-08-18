@@ -64,8 +64,8 @@ def test_렌즈를_타지_않는다():
     "openUrlCard((v||'').trim())",      # 검색창 엔터가 이리로 온다(옛 렌즈 직행 아님)
     "openUrlCard()",                    # 검색창 옆 버튼
     "'/api/lens/single?url='",          # 무료 단일조회
-    "renderLens('__single__')",         # 카드 렌더러 재사용(새로 그리지 않는다)
-    "🔍 비슷한 영상도 찾기",             # 유사 찾기는 눌러야만
+    "renderLens('__single__', 'cards')",  # 카드 렌더러 재사용 + 랭킹 카드 자리에 인라인
+    "lensSearchByUrl(",                 # 숏템파워검색 = 우리 렌즈(traceByUrl)
 ])
 def test_화면에_배선돼_있다(needle):
     assert needle in INDEX.read_text(encoding="utf-8")
@@ -76,3 +76,26 @@ def test_검색창_엔터가_렌즈로_직행하지_않는다():
     i = src.index("function onSearchEnter(")
     line = src[i:src.index("\n", i)]
     assert "traceByUrl" not in line, "링크 엔터가 곧장 유료 렌즈를 태우면 안 된다"
+
+
+def test_팝업이_아니라_카드_자리에_그린다():
+    """사장님 요청: "여기서 그 영상만 나오게" — 모달을 띄우지 않는다."""
+    src = INDEX.read_text(encoding="utf-8")
+    i = src.index("async function openUrlCard(")
+    body = src[i:src.index("\n// 숏템파워검색(주소용)", i)]
+    assert "openScript(" not in body, "팝업을 띄우면 랭킹 화면에서 벗어난다"
+    assert "getElementById('cards')" in body
+
+
+def test_숏템파워검색은_기존_렌즈경로를_쓴다():
+    """검색을 새로 짜면 렌즈 결과 화면·필터·담기가 두 벌이 된다."""
+    src = INDEX.read_text(encoding="utf-8")
+    i = src.index("function lensSearchByUrl(")
+    assert "traceByUrl(url)" in src[i:i + 200]
+
+
+def test_유튜브_채널_전부_벤치등록_버튼은_숨겨져_있다():
+    """사장님 '이거 숨기고' — 한 번에 15개가 수집목록에 들어가 되돌리기 번거롭다."""
+    src = INDEX.read_text(encoding="utf-8")
+    assert "유튜브 채널 전부 벤치등록(" not in src.replace(
+        "➕ 유튜브 채널 전부 벤치등록 — 2026-08-18", "")
