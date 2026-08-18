@@ -182,3 +182,25 @@ def test_판정표를_복사하지_않았다():
     import inspect
     src = inspect.getsource(backbone.beat_role_mismatch)
     assert "_ROLE_WANT_SHOTS" in src, "표를 참조하지 않고 자체 판단을 만들었다"
+
+
+def test_옛경로도_화면길이를_보장한다():
+    """★같은 병이 네 번째다 — "scene_first엔 있고 확정대본 경로엔 없다"(전수감사 1순위).
+
+    `_fill_beat_screen_time`은 비트마다 화면 합 ≥ 대사 읽는 시간을 보장한다. 그런데
+    scene_first(`_ground_candidate`)와 단일소스 경로에만 있었고, 08-16 저녁부터 실제로
+    도는 확정 대본 경로(`build_edit_plan`)엔 없었다 — 프롬프트가 seg_ids를 **개수로만**
+    요구하므로 1.3초 컷 하나로도 통과하고, 모자란 화면을 렌더가 다음 클립으로 메우며
+    비트마다 밀림이 누적된다(함수 주석 실측: 말 31.9초 vs 화면 13.8초).
+
+    순서까지 지킨다: need는 target_seconds라, 그 재계산 **뒤**에 불러야 한다.
+    앞에 두면 Gemini 자기신고 초로 재는 셈이 돼 보장이 헛돈다.
+    """
+    import inspect
+    src = inspect.getsource(edit_plan.build_edit_plan)
+    body = "\n".join(l for l in src.splitlines() if not l.strip().startswith("#"))
+    assert '_fill_beat_screen_time(grounded["beats"]' in body, \
+        "옛 경로에서 화면 길이 보장이 빠졌다"
+    assert (body.index('_b["target_seconds"] =')
+            < body.index('_fill_beat_screen_time(grounded["beats"]')), \
+        "target_seconds 재계산보다 앞에서 채우면 need가 자기신고 초가 된다"

@@ -3689,6 +3689,15 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
     for _b in grounded["beats"]:
         _n = len((_b.get("narration") or "").strip())
         _b["target_seconds"] = round(max(1.5, _n / _SYLLABLES_PER_SEC), 1)
+    # ★화면 길이 보장을 이 경로에도 배선한다(2026-08-18, 전수감사 1순위).
+    #   종전엔 scene_first 경로(_ground_candidate:2554)와 단일소스 경로에만 있었고,
+    #   확정 대본 경로(=08-16 저녁부터 실제로 도는 경로)엔 통째로 없었다.
+    #   → 프롬프트가 seg_ids를 **개수로만** 요구하므로 1.3초 컷 하나로도 통과하고,
+    #     모자란 화면을 렌더가 다음 클립으로 메우며 **비트마다 밀림이 누적**된다
+    #     (함수 주석의 실측: 말 31.9초 vs 화면 13.8초).
+    #   ⚠️반드시 target_seconds 재계산 **뒤**에 부른다 — need가 그 값이라, 앞에 두면
+    #     Gemini 자기신고 초로 재는 셈이 돼 보장이 헛돈다.
+    grounded["beats"] = _fill_beat_screen_time(grounded["beats"], seg_map)
     grounded["structure"] = structure
     grounded["detected_type"] = video_type
     grounded["affiliate_target"] = raw.get("affiliate_target", "")
