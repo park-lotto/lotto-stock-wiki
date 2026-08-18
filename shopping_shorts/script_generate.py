@@ -404,10 +404,16 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
             break
         extra = script_gate.gate_feedback(checks)
 
+    # ★화면에 "영상으로 몇 초"를 띄우려면 초를 서버가 계산해 실어 보내야 한다
+    #   (2026-08-18 사장님). 화면이 자기 상수로 따로 계산하면 판정(밀도 게이트)과
+    #   다른 수를 말하게 된다 — 초 환산은 script_gate 한 곳에서만 한다(0순위-B).
+    for _b in (res or []):
+        _b["sec"] = script_gate.est_seconds(_b.get("text", ""))
     return {
         "style_id": style.get("id"), "style_name": style.get("name"),
         "beats": res or [], "script": full, "hook": (res or [{}])[0].get("text", ""),
         "checks": checks, "passed": script_gate.passed(checks), "tries": tries,
+        "chars": len(script_gate.norm(full)), "sec": script_gate.est_seconds(full),
     }
 
 
