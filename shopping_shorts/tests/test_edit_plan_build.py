@@ -107,3 +107,26 @@ def test_detect_video_type_key_exhausted_falls_back_to_default(monkeypatch):
     monkeypatch.setattr(edit_plan, "SHORTS_GEMINI_KEYS", ["fake_key"])
     result = edit_plan.detect_video_type(_scripts())
     assert result == edit_plan._DEFAULT_TYPE
+
+
+def test_확정대본_경로도_화면이_대사보다_짧지_않다(monkeypatch):
+    """★전수감사 1순위(2026-08-18): 화면 길이 보장이 이 경로엔 없었다.
+
+    모델이 긴 대사에 1.5초 컷 하나만 붙여도 프롬프트는 통과한다(개수만 요구).
+    그러면 렌더가 모자란 화면을 다음 클립으로 메워 밀림이 누적된다.
+    이제 build_edit_plan도 _fill_beat_screen_time을 태워 남는 컷을 더 붙인다.
+    """
+    scripts = [{"video_id": "A", "full_text": "원문", "segments": [
+        {"seg_id": f"A-{i}", "start": float(i * 2), "end": float(i * 2 + 2),
+         "text": f"t{i}", "scene_desc": f"장면{i}"} for i in range(8)]}]
+    long_narr = "가" * 60          # ≈ 60/_SYLLABLES_PER_SEC 초 — 2초 컷 하나론 턱없다
+    payload = json.dumps({"structure": "free", "affiliate_target": "", "beats": [
+        {"role": "훅", "narration": long_narr, "target_seconds": 2,
+         "primary": {"seg_id": "A-1"}, "alternates": [], "effect": "cut"},
+    ]})
+    _fake_gemini(monkeypatch, payload)
+    out = edit_plan.build_edit_plan(scripts, target_seconds=20, structure="free",
+                                    video_type="generic", given_script=long_narr)
+    b = out["beats"][0]
+    assert edit_plan._beat_screen_secs(b) >= b["target_seconds"], \
+        "화면 길이가 대사 읽는 시간보다 짧다 — 렌더에서 밀림이 누적된다"
