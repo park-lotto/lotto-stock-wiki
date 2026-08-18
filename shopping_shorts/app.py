@@ -8787,6 +8787,83 @@ def _forced_backbone(work_id, cid):
     return state.get("backbone_main") or None
 
 
+def _analysis_state(store, shortcode):
+    """이 영상의 분석이 '끝났나·도는 중인가·포기했나'를 판정한다(2026-08-18 분리).
+
+    ★판정은 여기 한 곳에서만 한다. 1단계 소스카드(source_brief)와 즐겨찾기 화면의
+    분석 신호등이 각자 판정하면 같은 영상을 한쪽은 '완료', 한쪽은 '대기'로 보여
+    사장님이 어느 쪽을 믿어야 할지 모르게 된다(0순위-B).
+
+    반환: (data|None, {state, reason, attempts})  state = done | pending | gave_up
+    """
+    data = None
+    for code in (shortcode, _media_code(shortcode)):
+        if not code:
+            continue
+        data = store.get_script(code)
+        if data:
+            break
+    if data:
+        return data, {"state": "done", "reason": "", "attempts": 0}
+    # 아직 결과가 없다 — 기다리면 되는지, 기다려도 소용없는지 갈라 준다.
+    st = store.autoload_status([shortcode, _media_code(shortcode)])
+    info = st.get(shortcode) or st.get(_media_code(shortcode)) or {}
+    err = info.get("last_error") or ""
+    att = info.get("attempts", 0)
+    stalled = (not err) and att >= _AUTOLOAD_MAX_ATTEMPTS
+    gave_up = stalled or (bool(err) and (att >= _AUTOLOAD_MAX_ATTEMPTS
+                                         or _is_hopeless_error(err)))
+    reason = (_autoload_reason_ko(err) if err else
+              ("분석이 도중에 끊겼어요 — 긴 영상은 더 오래 걸립니다" if stalled else ""))
+    return None, {"state": "gave_up" if gave_up else "pending",
+                  "reason": reason, "attempts": att}
+
+
+@app.get("/api/basket/analysis_status")
+def api_basket_analysis_status(request: Request, shortcodes: str = ""):
+    """즐겨찾기 화면의 분석 신호등 — 여러 개를 한 번에 묻는다(2026-08-18 사장님 요청).
+
+    카드마다 source_brief를 부르면 20개면 20번이라 화면이 느리다. 판정은
+    `_analysis_state` 하나를 그대로 쓴다(비용 0원 — Gemini를 부르지 않는다).
+    반환: {ok, items:{shortcode:{state, reason}}}
+    """
+    codes = [c.strip() for c in (shortcodes or "").split(",") if c.strip()][:100]
+    store = Store(DB_PATH)
+    out = {}
+    for c in codes:
+        _data, st = _analysis_state(store, c)
+        out[c] = {"state": st["state"], "reason": st["reason"]}
+    return {"ok": True, "items": out}
+
+
+@app.post("/api/basket/analyze")
+def api_basket_analyze(request: Request, body: dict):
+    """즐겨찾기의 '분석' 버튼 — 고른 영상을 백그라운드 분석 대기줄에 넣는다.
+
+    담을 때 자동으로 거는 예열과 **같은 경로**(_enqueue_prewarm)를 쓴다. 새 경로를
+    만들면 담기예열과 버튼예열이 서로 다르게 동작하게 된다(0순위-B).
+    이미 끝난 것은 다시 걸지 않는다(state=done → skipped).
+    반환: {ok, queued, skipped, items:{shortcode:queued|done}}
+    """
+    cid = _cid(request)
+    codes = [c for c in (body.get("shortcodes") or []) if isinstance(c, str) and c.strip()][:100]
+    store = Store(DB_PATH)
+    basket = {i.get("shortcode"): i for i in store.mix_basket_list(customer_id=cid)}
+    out, queued, skipped = {}, 0, 0
+    for c in codes:
+        _data, st = _analysis_state(store, c)
+        if st["state"] == "done":
+            out[c] = "done"
+            skipped += 1
+            continue
+        it = basket.get(c) or {}
+        _enqueue_prewarm(store, c, it.get("url") or "",
+                         caption=it.get("caption") or "", customer_id=str(cid))
+        out[c] = "queued"
+        queued += 1
+    return {"ok": True, "queued": queued, "skipped": skipped, "items": out}
+
+
 @app.get("/api/produce/source_brief")
 def api_produce_source_brief(request: Request, shortcode: str):
     """1단계 소스 분석 카드용 — **저장된 추출 결과만** 읽어 준다(2026-08-16).
@@ -8800,13 +8877,7 @@ def api_produce_source_brief(request: Request, shortcode: str):
     옛 추출본엔 source_brief·label이 없다 → brief={} / label="" 로 나가고 화면이 알아서 견딘다.
     """
     store = Store(DB_PATH)
-    data = None
-    for code in (shortcode, _media_code(shortcode)):
-        if not code:
-            continue
-        data = store.get_script(code)
-        if data:
-            break
+    data, _st = _analysis_state(store, shortcode)   # 판정은 _analysis_state 한 곳에서만
     if not data:
         # ★왜 아직 없는지까지 알려준다(2026-08-17 사장님 "영상분석은?").
         #   추출이 없는 데는 두 가지가 있는데 화면은 둘을 구별할 수 없었다:
@@ -8814,25 +8885,11 @@ def api_produce_source_brief(request: Request, shortcode: str):
         #     · 받기부터 실패해 포기 → 기다려도 영원히 안 온다
         #   구별을 못 하니 실패한 영상도 계속 "분석 대기"로 보였다(실측: 도우인 4건이
         #   'Fresh cookies needed'로 3회 실패·래치됐는데 화면은 아무 말도 안 했다).
-        st = Store(DB_PATH).autoload_status([shortcode, _media_code(shortcode)])
-        info = st.get(shortcode) or st.get(_media_code(shortcode)) or {}
-        err = info.get("last_error") or ""
-        # ★재시도해도 소용없는 실패는 **1회만에** 알린다(2026-08-17 사장님 "대본 만들기를
-        #   눌러야 분석이 된다고?"). 3회를 채워야 알리게 해뒀더니, 이미 로그인벽에 막힌
-        #   영상이 1~2회 동안 '분석 대기'로 보여 사장님이 오지 않을 결과를 기다렸다.
-        #   로그인·비공개처럼 원인이 분명한 것은 몇 번을 더 해도 결과가 같다.
-        att = info.get("attempts", 0)
-        # ★시도를 다 썼는데 **결과도 오류도 없으면 도중에 끊긴 것**이다(2026-08-16 실측).
-        #   긴 영상이 다운로드 도중 시간 초과로 죽으면 여기 걸린다 — 그때 화면이 계속
-        #   "분석 중"이라고 하면 사장님은 오지 않을 결과를 기다린다(실제로 그랬다).
-        stalled = (not err) and att >= _AUTOLOAD_MAX_ATTEMPTS
+        #   (그 판정 본체는 _analysis_state로 옮겼다 — 즐겨찾기 신호등과 같은 답을 쓴다)
         return {"ok": False, "pending": True,
-                "attempts": att,
-                "gave_up": stalled or (bool(err) and (att >= _AUTOLOAD_MAX_ATTEMPTS
-                                                      or _is_hopeless_error(err))),
-                "reason": (_autoload_reason_ko(err) if err else
-                           ("분석이 도중에 끊겼어요 — 긴 영상은 더 오래 걸립니다"
-                            if stalled else ""))}
+                "attempts": _st["attempts"],
+                "gave_up": _st["state"] == "gave_up",
+                "reason": _st["reason"]}
     segs = []
     for s in (data.get("segments") or []):
         if not isinstance(s, dict):   # 깨진 세그로 카드 전체가 500 나지 않게
