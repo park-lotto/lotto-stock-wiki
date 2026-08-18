@@ -518,9 +518,15 @@ body.is-admin .admin-only{display:block}
     </div>
     <!-- 카테고리 줄 — 라벨은 renderCtypes()가 함께 그린다(2026-08-17 사장님 "기간/강도지표/단순지표/카테고리") -->
     <div class="ctypes" id="ctypes"></div>
-    <input id="rankSearch" type="text" placeholder="🔍 숏템검색 — 채널명·소재·링크 (채이홈·피자·인스타링크…)"
-           oninput="setSearch(this.value)" onkeydown="if(event.key==='Enter')onSearchEnter(this.value)"
-           style="width:100%;max-width:420px;margin:8px 0;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
+    <!-- 검색 + 주소 넣기(2026-08-18 사장님). 주소는 원래도 엔터로 됐지만 "검색"처럼 보여
+         찾지 못하셨다 → 문구에 명시하고, 옆에 버튼을 둬 눈에 보이게 한다. -->
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0">
+      <input id="rankSearch" type="text" placeholder="🔍 숏템검색 — 채널명·소재 / 🔗 영상 주소 붙여넣기"
+             oninput="setSearch(this.value)" onkeydown="if(event.key==='Enter')onSearchEnter(this.value)"
+             style="flex:1;min-width:240px;max-width:420px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
+      <button onclick="openUrlCard()" title="영상 주소를 넣으면 그 영상 카드를 보여줍니다(비슷한 영상 찾기는 그 안에서 따로)"
+              style="padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt);font-weight:700;cursor:pointer;white-space:nowrap">🔗 주소로 가져오기</button>
+    </div>
     <div class="cats" id="cats"></div>
     <div class="cards" id="cards">
       <div class="empty">「지금 수집」을 눌러 시작하세요.</div>
@@ -1376,7 +1382,10 @@ function badgeHTML(i, ctx){
 // 검색창 하나로 채널명·소재·링크 — 링크면 엔터 시 원본·유사 영상 추적으로 보낸다(2026-07-22).
 // (채널명·소재는 oninput이 이미 필터링. 링크만 엔터라는 명시 동작이 필요 — 유료 렌즈 남용 방지.)
 function _looksLikeUrl(q){ return /^\s*https?:\/\//i.test(q||''); }
-function onSearchEnter(v){ if(_looksLikeUrl(v)) traceByUrl((v||'').trim()); }
+// ★2026-08-18: 링크를 넣으면 **먼저 그 영상 카드**를 보여준다(무료). 종전엔 곧바로
+//   렌즈(유료·유사영상)로 갔는데, 사장님이 원한 건 "넣은 그 영상"이었다. 유사 찾기는
+//   그 팝업 안의 버튼으로 남겼다 — 경로는 그대로 traceByUrl.
+function onSearchEnter(v){ if(_looksLikeUrl(v)) openUrlCard((v||'').trim()); }
 const OVERSEAS_CATS = ["전체","🖐 픽업","주방/레시피","살림/생활꿀템","인테리어/DIY","가전/도구","뷰티/셀프케어","정리/수납"];
 let overseasFilter = "전체";
 let overseasCleanOnly = false;
@@ -2446,6 +2455,57 @@ async function traceByUrl(urlArg){
                              sel:new Set(), shortsOnly:false, foreignOnly:false, videoOnly:true, hideOfftopic:false, ytLoading:false, keyword:'', caption:tcap, cnCands:tcn};
     renderLens('__trace__');
   }catch(e){ const body=document.getElementById('scriptBody'); if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
+}
+// ── 🔗 주소로 가져오기(2026-08-18 사장님: "주소 넣으면 이렇게 카드로 뜨게") ─────────
+// ★렌즈(SerpApi 월 100회·유료)를 타지 않는다. 사장님이 원한 건 "넣은 그 영상"이고,
+//   비슷한 영상은 아래 버튼으로 **누를 때만** 옛 경로(traceByUrl)를 부른다.
+// ★카드는 새로 만들지 않는다 — 렌즈 결과가 쓰는 renderLens를 그대로 쓴다.
+//   담기·숏템파워검색·영상보기가 이미 붙어 있고, 새로 그리면 언젠가 서로 달라진다(0순위-B).
+function _urlCardShell(inner, url){
+  return `<div style="padding:4px 2px 2px">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+      <input id="urlCardInput" type="text" value="${(url||'').replace(/"/g,'&quot;')}"
+             placeholder="https://… 인스타·유튜브·틱톡·쓰레드 주소"
+             onkeydown="if(event.key==='Enter')openUrlCard(this.value)"
+             style="flex:1;min-width:240px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
+      <button onclick="openUrlCard(document.getElementById('urlCardInput').value)"
+              style="padding:9px 14px;border-radius:8px;border:none;background:#1f6feb;color:#fff;font-weight:800;cursor:pointer">🔎 가져오기</button>
+    </div>${inner}</div>`;
+}
+async function openUrlCard(urlArg){
+  const pre = (typeof urlArg==='string' && urlArg.trim()) ? urlArg.trim()
+            : ((document.getElementById('rankSearch')||{}).value||'').trim();
+  const url = _looksLikeUrl(pre) ? pre : '';
+  openScript(_urlCardShell(url ? '<div class="sm-loading">🔗 영상 정보를 읽는 중… (10~20초)</div>'
+      : '<div style="padding:16px;color:var(--sub)">영상 주소를 붙여넣고 <b>가져오기</b>를 누르세요.</div>', url),
+    '🔗 주소로 영상 가져오기', true);
+  if(!url) return;
+  let d=null;
+  try{ d=await (await fetch('/api/lens/single?url='+encodeURIComponent(url))).json(); }catch(e){}
+  const body=document.getElementById('scriptBody');
+  if(!(d && d.ok && d.item)){
+    if(body) body.innerHTML=_urlCardShell('<div style="padding:12px;color:#e0623d">❌ '+
+      ((d&&d.error)||'가져오지 못했어요 — 주소를 다시 확인해 주세요')+'</div>', url);
+    return;
+  }
+  const it=d.item;
+  it.savesc='lens_'+it.platform+'_'+_lensHash(it.url);
+  let saved=new Set();
+  try{ saved=new Set((await (await fetch('/api/mix/basket')).json()).shortcodes||[]); }catch(e){}
+  LENS_STATE['__single__']={items:[it], on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
+    sel:new Set(), shortsOnly:false, foreignOnly:false, videoOnly:false, hideOfftopic:false,
+    ytLoading:false, keyword:'', caption:'', cnCands:[]};
+  renderLens('__single__');
+  // renderLens가 body를 채운 뒤, 주소칸과 '비슷한 영상 찾기'를 위아래로 덧댄다.
+  if(body){
+    const inner=body.innerHTML;
+    body.innerHTML=_urlCardShell(inner, url)+
+      `<div style="border-top:1px solid var(--line);margin-top:14px;padding-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+         <button onclick="traceByUrl('${url.replace(/'/g,"\\'")}')"
+                 style="padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt);font-weight:800;cursor:pointer">🔍 비슷한 영상도 찾기</button>
+         <span style="color:var(--sub);font-size:12px">이건 구글렌즈를 써요(월 100회 한도) — 필요할 때만 누르세요</span>
+       </div>`;
+  }
 }
 // ─── TRACE-END
 // 프레임(비전)+캡션으로 유튜브를 키워드 검색해 렌즈 결과에 덧붙인다(무료, 비동기).
