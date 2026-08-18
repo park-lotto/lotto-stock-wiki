@@ -99,3 +99,44 @@ def test_유튜브_채널_전부_벤치등록_버튼은_숨겨져_있다():
     src = INDEX.read_text(encoding="utf-8")
     assert "유튜브 채널 전부 벤치등록(" not in src.replace(
         "➕ 유튜브 채널 전부 벤치등록 — 2026-08-18", "")
+
+
+# ── 스킴 없는 주소(2026-08-18 사장님 "엔터가 안 먹는다") ────────────────────────
+# 크롬 주소창은 https://를 감춰 보여주고, 그대로 복사하면 스킴이 빠진다.
+# 실측 입력: youtube.com/shorts/_6v_D3MktcI?si=... → 종전 판정은 '검색어'로 취급해 무동작.
+def _run_js(exprs):
+    import json as _json
+    import shutil as _sh
+    import subprocess as _sp
+    if not _sh.which("node"):
+        pytest.skip("node 없음")
+    src = INDEX.read_text(encoding="utf-8")
+    i = src.index("var _URL_HOSTS =")
+    j = src.index("function onSearchEnter(")
+    body = src[i:j]
+    script = body + "\nconsole.log(JSON.stringify([" + ",".join(exprs) + "]));"
+    r = _sp.run(["node", "-e", script], capture_output=True, text=True, timeout=60)
+    assert r.returncode == 0, r.stderr
+    return _json.loads(r.stdout)
+
+
+def test_스킴_없는_주소도_링크로_본다():
+    out = _run_js([
+        "_looksLikeUrl('youtube.com/shorts/_6v_D3MktcI?si=abc')",
+        "_looksLikeUrl('https://www.instagram.com/reel/ABC/')",
+        "_looksLikeUrl('www.threads.com/@shop/post/ABC')",
+        "_looksLikeUrl('채이홈')",
+        "_looksLikeUrl('피자 만들기')",
+    ])
+    assert out[:3] == [True, True, True], "스킴이 빠진 주소도 받아야 한다"
+    assert out[3:] == [False, False], "채널명·소재 검색이 링크로 오인되면 안 된다"
+
+
+def test_스킴을_붙여_보낸다():
+    out = _run_js([
+        "_normUrl('youtube.com/shorts/ABC')",
+        "_normUrl('https://youtu.be/ABC')",
+    ])
+    assert out[0] == "https://youtube.com/shorts/ABC", \
+        "서버는 hostname으로 플랫폼을 가린다 — 스킴이 없으면 422가 난다"
+    assert out[1] == "https://youtu.be/ABC"
