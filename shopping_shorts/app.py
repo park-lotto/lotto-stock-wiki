@@ -2418,7 +2418,10 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         # ★무엇을 재료로 썼는지 화면에 돌려준다(2026-08-17 사장님 제보 "대본이 무슨
         #   영상인지 모르겠다"). 재료가 어긋나도 화면이 말을 안 하면 아무도 모른다 —
         #   대본만 보고는 "어느 영상에서 나온 건지" 판별할 방법이 없다.
-        return {"ok": True, "drafts": _styled, "mode": "style",
+        # ★화면이 "영상으로 몇 초"를 말하려면 같은 상수를 써야 한다(0순위-B).
+        #   문장을 고치면 초가 바뀌므로 값만이 아니라 환산 계수도 내려준다.
+        from shopping_shorts.script_gate import SPEECH_CHARS_PER_SEC as _CPS
+        return {"ok": True, "drafts": _styled, "mode": "style", "cps": _CPS,
                 "materials": {
                     "sources": [{"chars": len(s.get("full_text") or ""),
                                  "head": (s.get("full_text") or "")[:40]} for s in _src],

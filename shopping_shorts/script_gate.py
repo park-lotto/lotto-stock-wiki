@@ -56,6 +56,13 @@ DEFAULT_CHARS_PER_30S = 135      # 스타일에 실측값이 없을 때만(일�
 SPEECH_CHARS_PER_SEC = 8.19
 
 
+def est_seconds(text):
+    """이 문장이 우리 보이스로 몇 초인가(실측 8.19자/초). 화면 표시·판정이 **같은 상수**를
+    쓰게 하려고 여기에 둔다(0순위-B) — 화면이 따로 계산하면 언젠가 다른 수를 말한다."""
+    n = len(norm(text or ""))
+    return round(n / SPEECH_CHARS_PER_SEC, 1) if n else 0.0
+
+
 def density_target(style, seconds=30):
     """이 스타일·이 길이에서 목표 글자수. **한 곳에서만 정한다**(0순위-B) —
     프롬프트(bank_assemble.style_block)와 판정(check)이 서로 다른 수를 쓰면

@@ -9185,6 +9185,7 @@ async function s2Generate(){
       {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
     if(!d.ok){ if(hint) hint.innerHTML='<span style="color:var(--fire)">⚠️ '+esc(d.error||'생성 실패')+'</span>'; return; }
     S2.drafts=d.drafts||[]; S2.curDraft=0; S2.materials=d.materials||null;
+    S2.cps=d.cps||null;   // 글자→초 환산계수(서버 상수). 없으면 초 표시를 아예 안 한다
     // ★고른 스타일 수와 나온 안의 수가 다르면 조용히 넘어가지 마라 — 실제로 2개를 골랐는데
     //   1안만 나온 적이 있다(서버가 카테고리로 걸러냈다). 조용한 실패가 제일 나쁘다.
     if(S2.picked.length && S2.drafts.length < S2.picked.length && hint){
@@ -9200,6 +9201,39 @@ async function s2Generate(){
 }
 // ── ③ 결과 대본 ───────────────────────────────────────────────
 // beats가 있으면(스타일 경로) 역할 행으로, 없으면(기존 생성) 문단을 행으로 나눈다.
+// ── ⏱ "영상으로 몇 초" (2026-08-18 사장님) ──────────────────────────────
+// 환산계수(자/초)는 **서버가 준 것만** 쓴다. 여기서 숫자를 박으면 판정(밀도 게이트)과
+// 다른 초를 말하게 된다(0순위-B). 없으면 그냥 안 보여준다 — 틀린 수보다 없는 게 낫다.
+// 새로고침하면 S2.cps가 없다(저장본엔 안 남는다) → 서버가 실어준 draft.sec/chars에서
+// 되찾는다. 어느 쪽이든 출처는 서버 상수 하나다.
+function s2Cps(){
+  if(S2.cps) return S2.cps;
+  const d=(S2.drafts||[]).find(x=>x && x.sec>0 && x.chars>0);
+  return d ? d.chars/d.sec : null;
+}
+function s2SecOf(text){
+  const cps=s2Cps(); if(!cps) return null;
+  const n=String(text||'').replace(/[\s\.,!?~'"]+/g,'').length;   // script_gate.norm과 같은 규칙
+  return n ? Math.round(n/cps*10)/10 : 0;
+}
+function s2SecTag(sec, target){
+  if(sec==null) return '';
+  const over = target && sec > target;
+  return `<span style="font-size:11px;color:${over?'var(--gold)':'var(--sub)'}">${over?'⚠️ ':''}${sec.toFixed(1)}초</span>`;
+}
+function s2DraftSec(dr){
+  const bs=s2Beats(dr);
+  if(!s2Cps()) return null;
+  return Math.round(bs.reduce((a,b)=>a+(s2SecOf(b.text)||0),0)*10)/10;
+}
+// 문장을 고치면 그 칸과 합계를 바로 고쳐 쓴다 — 다시 그리면 커서가 튄다(편집 중이다).
+function s2RefreshSec(i,j){
+  const one=document.getElementById(`s2sec-${i}-${j}`), tot=document.getElementById(`s2tot-${i}`);
+  const dr=S2.drafts[i]; if(!dr) return;
+  const bs=s2Beats(dr);
+  if(one && bs[j]) one.outerHTML=`<span id="s2sec-${i}-${j}">${s2SecTag(s2SecOf(bs[j].text))}</span>`;
+  if(tot) tot.outerHTML=`<span id="s2tot-${i}">${s2SecTag(s2DraftSec(dr), 30)}</span>`;
+}
 function s2Beats(dr){
   if(dr.beats && dr.beats.length) return dr.beats;
   // ★'AI에게 맡김'(스타일 미지정)은 **옛 생성기**라 칸(beats)을 안 준다 — 대본이 통짜
@@ -9268,7 +9302,7 @@ function s2DraftHtml(dr,i){
     const chk=(b.role==='cta')?'<span class="s2-chk" contenteditable="false">📢 헌장: 댓글에 뭘 남기면 뭘 받는지</span>':'';
     return `<div class="s2-row${isBad?' bad':''}" id="s2r-${i}-${j}" data-role="${esc(b.role||'')}">
       <div class="s2-row-in">
-        <div class="s2-role"><div class="rn">${esc(s2RoleName(b.role))}</div></div>
+        <div class="s2-role"><div class="rn">${esc(s2RoleName(b.role))}</div><span id="s2sec-${i}-${j}">${s2SecTag(s2SecOf(b.text))}</span></div>
         <div class="s2-sent" contenteditable="true" oninput="s2EditBeat(${i},${j},this)">${esc(b.text||'')}${chk}</div>
         <button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>
       </div>
@@ -9282,7 +9316,8 @@ function s2DraftHtml(dr,i){
          <button class="fx-re" onclick="s2Generate()">🔄 전체 다시 만들기</button>
        </div>` : '';
   return `<div class="s2-draft ${i===0?'da':'db'}${i===S2.curDraft?' on':''}" id="s2d-${i}">
-    <div class="s2-dhead"><span class="s2-dname">${String.fromCharCode(65+i)}안${dr.style_name?(' · '+esc(dr.style_name)):''}</span>${gate}</div>
+    <div class="s2-dhead"><span class="s2-dname">${String.fromCharCode(65+i)}안${dr.style_name?(' · '+esc(dr.style_name)):''}</span>
+      <span id="s2tot-${i}" title="우리 보이스 실측 속도로 환산한 예상 길이 — 릴스 기본은 30초 이내">${s2SecTag(s2DraftSec(dr), 30)}</span>${gate}</div>
     ${rows}${fix}
     <div class="s2-dfoot">
       <button class="btn-next" onclick="s2Confirm(${i})">✔ ${String.fromCharCode(65+i)}안으로 확정</button>
@@ -9301,6 +9336,7 @@ function s2EditBeat(i,j,el){
   beats[j].text=(clone.textContent||'').trim();
   dr.beats=beats;
   dr.script=beats.map(b=>b.text).filter(Boolean).join('\n');
+  try{ s2RefreshSec(i,j); }catch(e){}   // 고친 즉시 그 칸·합계 초를 다시 쓴다
   saveWork();   // ★손으로 고친 문장도 남긴다(디바운스 1초 — 타이핑마다 서버로 안 나간다)
 }
 // [바꾸기] — 그 스타일이 가진 **문장틀**을 준다(은행 완성문장이 아니다: 쌀밥 대본에

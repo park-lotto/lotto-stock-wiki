@@ -214,3 +214,22 @@ def test_prompt_and_gate_use_the_same_target():
     style = {"name": "테스트", "beat_roles": ["hook", "cta"],
              "beat_chain": ["훅", "약속"], "chars_per_30s": 377}
     assert str(density_target(style, 30)) in style_block(style, seconds=30)
+
+
+def test_est_seconds_matches_speech_constant():
+    from shopping_shorts.script_gate import est_seconds, SPEECH_CHARS_PER_SEC
+    assert est_seconds("") == 0.0
+    assert est_seconds("가" * 82) == round(82 / SPEECH_CHARS_PER_SEC, 1)
+    # 공백·문장부호는 안 센다(norm과 같은 규칙) — 화면이 같은 규칙으로 계산해야 수가 맞는다
+    assert est_seconds("가 나, 다.") == est_seconds("가나다")
+
+
+def test_screen_never_hardcodes_speech_speed():
+    """화면이 자기 숫자로 초를 계산하면 판정(밀도 게이트)과 다른 초를 말한다(0순위-B).
+    환산계수는 서버 응답(cps) 또는 draft.chars/draft.sec에서만 온다."""
+    import pathlib
+    html = (pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html").read_text(encoding="utf-8")
+    i = html.index("function s2SecOf(")
+    body = html[i:html.index("function s2RefreshSec(", i)]
+    assert "8.19" not in body, "화면에 말속도 상수가 박혔다"
+    assert "s2Cps()" in body
