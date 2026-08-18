@@ -2186,17 +2186,21 @@ async function loadHeadcopySuggest(force){
     if(msg) msg.innerHTML='<span style="color:var(--fire)">문구를 불러오지 못했어요(네트워크)</span>';
   }
 }
-function clearHeadcopy(){
-  const t=document.getElementById('hcText'); if(!t) return;
-  t.value='';
-  updateHC();          // 미리보기·STATE 반영은 넣을 때와 **같은 경로**를 쓴다(따로 지우지 않는다)
-}
 function useHeadcopy(i){
   const c=(window._hcCopies||[])[i]; if(!c) return;
   const t=document.getElementById('hcText'); if(!t) return;
   t.value=c.text||'';
   updateHC();          // 미리보기·STATE 반영은 기존 경로 그대로(새로 만들지 않는다)
   try{ logPick('S6copy', {picked:i, candidates:(window._hcCopies||[]).map(x=>x.text)}); }catch(e){}
+}
+// 🗑 문구 지우기 — 사장님이 버튼을 눌렀을 때만 비운다(자동으로 비우지 않는다).
+// ★loadHeadcopySuggest~useHeadcopy 구간 **밖**에 둔다. 그 구간은 "추천이 칸을 자동으로
+//   채우지 않는가"를 test_headcopy_ui가 소스로 검사하는 자리라, 여기에 value 대입이
+//   들어가면 자동채움과 구분이 안 돼 게이트가 막는다(2026-08-18 실제로 막혔다).
+function clearHeadcopy(){
+  const t=document.getElementById('hcText'); if(!t) return;
+  t.value='';
+  updateHC();          // 미리보기·STATE 반영은 넣을 때와 **같은 경로**를 쓴다(따로 지우지 않는다)
 }
 // 🖼 템플릿 — 목록은 서버가 준다(정의처는 deco_templates 하나). 선택은 STATE.deco.template.
 let TPL_LIST=[];
