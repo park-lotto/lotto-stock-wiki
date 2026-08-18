@@ -134,6 +134,44 @@ async function removeItem(sc){
   SELECTED.delete(sc);
   loadItems();
 }
+// ── 어디로 보낼지 고른다(2026-08-18 사장님: "만들던 곳에 합쳐지는 걸 막아야 해") ──
+// 종전엔 제작소가 **진행 중 작업에 무조건 이어 붙였다**(랭킹에서 두 번 보내면 앞 것이
+// 지워지던 2026-07-18 버그의 처방). 그 규칙 자체는 맞지만, 즐겨찾기에서 새 영상 묶음을
+// 보낼 때까지 옛 작업에 섞여 "만들던 영상에 엉뚱한 소스"가 들어갔다.
+// → 기본을 **새 작업**으로 바꾸고, 이어서 하고 싶을 때만 작업을 골라 보낸다.
+let _pendingPicks = null;
+async function _openSendModal(picks){
+  _pendingPicks = picks;
+  let works = [];
+  try{
+    const d = await (await fetch('/api/produce/works')).json();
+    works = (d && d.works) ? d.works.slice(0, 12) : [];   // 응답 키는 works다(제작소 모달과 동일)
+  }catch(e){}
+  const rows = works.map(w=>{
+    const name = esc((w.title && w.title.trim()) ? w.title.trim() : '제목 없음 (대본 미작성)');
+    const step = (typeof w.step === 'number') ? (w.step + 1) : 1;
+    const when = esc((w.updated_at || '').slice(5, 16).replace('T', ' '));
+    return `<div onclick="_doSend('${esc(w.work_id)}')" style="padding:10px 12px;border:1px solid #444;border-radius:8px;margin-top:6px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center">
+      <span style="font-weight:700">${name}</span>
+      <span style="color:#999;font-size:12px;white-space:nowrap">${when} · 단계 ${step}/8</span></div>`;
+  }).join('');
+  _overlay(
+    `<div style="font-weight:800;font-size:16px;margin-bottom:4px">🎬 어디로 보낼까요?</div>
+     <div style="color:#aaa;font-size:13px;margin-bottom:12px">영상 ${picks.length}개</div>
+     <button onclick="_doSend('new')" style="width:100%;padding:12px;background:#1f6feb;color:#fff;border:none;border-radius:10px;font-weight:800;font-size:15px;cursor:pointer">➕ 새 작업으로 보내기</button>
+     <div style="color:#888;font-size:12px;margin:14px 0 2px">만들던 작업에 이어서 넣기</div>
+     ${rows || '<div style="color:#777;font-size:13px;padding:8px 0">진행 중인 작업이 없습니다</div>'}`);
+}
+function _doSend(target){
+  const picks = _pendingPicks || [];
+  if(!picks.length) return;
+  sessionStorage.setItem('produce_handoff', JSON.stringify(picks));
+  sessionStorage.setItem('produce_mix_urls', JSON.stringify(picks.map(p=>p.url).filter(Boolean)));
+  _closeOverlay();
+  // 새 작업은 ?new=1(직전 작업을 안 불러온다), 이어서는 ?work=<id> — 둘 다 이미 있는 길이다.
+  location.href = (target === 'new') ? '/produce?new=1'
+                                     : '/produce?work=' + encodeURIComponent(target);
+}
 function sendToProduce(){
   // 영상당 역할(대본용/화면용)을 제작소에서 배정하려면 url뿐 아니라 shortcode·name·
   // thumbnail·caption도 넘겨야 한다(대본 추출은 shortcode로). 최대 5개(2단계 입력 상한).
@@ -141,10 +179,7 @@ function sendToProduce(){
     url:i.url||'', shortcode:i.shortcode||'', name:i.name||'',
     thumbnail:i.thumbnail||'', caption:i.caption||'', play_url:i.play_url||''}));
   if(!picks.length){ alert('보낼 항목을 먼저 선택하세요'); return; }
-  // 신규 형식(items)과 구버전 호환(urls) 둘 다 저장.
-  sessionStorage.setItem('produce_handoff', JSON.stringify(picks));
-  sessionStorage.setItem('produce_mix_urls', JSON.stringify(picks.map(p=>p.url).filter(Boolean)));
-  location.href='/produce';
+  _openSendModal(picks);   // 어디로 보낼지 고른 뒤 _doSend가 저장·이동한다
 }
 // 썸네일 소스: 렌즈 결과(gstatic)는 /api/thumb 프록시가 허용호스트가 아니라 400을
 // 주므로(검게 나옴) referrerpolicy=no-referrer로 직접 로드. 인스타·틱톡·유튜브 CDN은
@@ -259,9 +294,7 @@ function sendOneToProduce(sc){
   const i=ITEMS.find(x=>x.shortcode===sc); if(!i) return;
   const picks=[{url:i.url||'', shortcode:i.shortcode||'', name:i.name||'',
                 thumbnail:i.thumbnail||'', caption:i.caption||'', play_url:i.play_url||''}];
-  sessionStorage.setItem('produce_handoff', JSON.stringify(picks));
-  sessionStorage.setItem('produce_mix_urls', JSON.stringify(picks.map(p=>p.url).filter(Boolean)));
-  location.href='/produce';
+  _openSendModal(picks);   // 한 개를 보낼 때도 어디로 갈지 고른다(같은 길)
 }
 // 플랫폼 배지 — URL 호스트로 판별(app.py _GRAB_DOMAINS와 같은 도메인). 재생 로직이
 // 이미 URL로 플랫폼을 구분하고 있어(playPreview) 같은 판별을 배지로도 보여준다.

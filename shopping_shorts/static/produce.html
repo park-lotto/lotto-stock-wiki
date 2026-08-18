@@ -3548,6 +3548,14 @@ async function _restoreWork(workId){
   //   _stepDemoted가 강등을 못 알아봐 step=0이 서버 진행단계를 파괴한다(위 refreshStep0 주석).
   try{ if(typeof d.step === 'number' && d.step > 0) _serverStep = d.step; }catch(e){}
   HANDOFF = w.handoff || [];
+  // ★즐겨찾기에서 "이 작업으로 보내기"로 들어온 영상을 여기서 합친다(2026-08-18).
+  //   전엔 서버 작업으로 통째 덮어쓰기만 해서 방금 보낸 영상이 조용히 사라졌다.
+  //   합치는 규칙은 _mergeHandoffItems 한 곳(중복 제거 포함).
+  // typeof 가드 — 이 함수를 앵커로 잘라 도는 옛 테스트 하네스(헬퍼 미포함)에서
+  // ReferenceError 없이 통과한다(이 파일의 refreshStep0·_s2Hydrate와 같은 방식).
+  const _arrived = (typeof _mergeHandoffItems === 'function')
+    ? _mergeHandoffItems(_pendingHandoffItems()) : 0;
+  if(_arrived) _clearHandoffStorage();
   STATE.script = w.script || '';
   STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
   STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;
@@ -3559,6 +3567,9 @@ async function _restoreWork(workId){
   if(typeof _s2Hydrate === 'function') _s2Hydrate(w);   // ★2단계 결과 대본 복원(스냅샷이 담는 것과 한 쌍)
   if(STATE.script) setScriptMode('manual');
   renderPool(); syncFootageToMixUrls(); refreshFinalPeek();
+  // 합쳐 넣은 영상은 **바로 저장**한다 — sessionStorage에서 이미 지웠으므로,
+  // 저장 전에 새로고침하면 그대로 사라진다(이 화면은 편집해야 저장이 돈다).
+  if(_arrived && typeof saveWork === 'function') { try{ saveWork(); }catch(e){} }
   // Task4: 서버복원 경로도 AI PICK/빈 상태를 다시 계산한다. typeof 가드 — 이 함수를 앵커
   // 슬라이스하는 옛 테스트 하네스들(refreshStep0 미스텁)에서 ReferenceError 없이 통과한다.
   if(typeof refreshStep0==='function') refreshStep0();
@@ -4045,17 +4056,8 @@ function _consumeProduceHandoff(){
   // ★예전엔 신규가 있으면 진행 중 작업을 무시하고 통째 대체해서, 랭킹에서 영상을 두 번
   //   보내면 두 번째가 첫 번째를 지웠다(2026-07-18 라이브 버그). 그래서 작업을 먼저
   //   복원(base)하고 신규를 거기에 이어 붙인다(같은 영상은 중복으로 안 쌓는다).
-  let items, restored=false, savedScript='';
-  try{ items=JSON.parse(sessionStorage.getItem('produce_handoff')||'null'); }catch(e){ items=null; }
-  if(!(items && items.length)){
-    // 구버전 호환(urls만) — 신규 handoff가 없을 때만
-    let urls; try{ urls=JSON.parse(sessionStorage.getItem('produce_mix_urls')||'null'); }catch(e){ urls=null; }
-    if(urls && urls.length){
-      // Task4(2026-07-23) 자동담김: 넘어온 재료는 기본으로 화면에 쓴다(useFootage:true) —
-      // 예전엔 false라 카드마다 🎬담기를 따로 눌러야 AI PICK 후보가 됐다.
-      items = urls.map(u=>({url:u, shortcode:'', name:'', thumbnail:'', caption:'', pickScript:false, useFootage:true}));
-    }
-  }
+  let restored=false, savedScript='';
+  const items = _pendingHandoffItems();
   // 1) 진행 중 작업을 base로 복원(있으면). 신규는 여기에 누적된다.
   let w; try{ w=JSON.parse(sessionStorage.getItem('produce_work')||'null'); }catch(e){ w=null; }
   if(w && ((w.handoff && w.handoff.length) || w.script)){
@@ -4074,24 +4076,8 @@ function _consumeProduceHandoff(){
     if(typeof _s2Hydrate === 'function') _s2Hydrate(w);
   }
   // 2) 신규 핸드오프를 누적(중복 제거: shortcode 우선, 없으면 url). 플래그·대본 보존.
-  let arrived=0;
-  if(items && items.length){
-    const keyOf = it => it.shortcode || it.url || '';
-    const seen = new Set(HANDOFF.map(keyOf).filter(Boolean));
-    items.forEach(it=>{
-      const k = keyOf(it);
-      if(k && seen.has(k)) return;               // 이미 있는 영상은 안 겹쳐 넣는다
-      if(k) seen.add(k);
-      // Task4(2026-07-23) 자동담김: 기본 useFootage:true — 즐겨찾기(collection.html)에서
-      // 넘어온 항목은 useFootage를 안 실어 예전 기본값(false)에 걸려 곧장 빈 상태로
-      // 보였다. 레퍼런스 랭킹(index.html sendToProduce)은 이미 true를 명시해 보냈으니
-      // spread(...it)가 그대로 우선한다 — 여기 기본값만 바뀐다.
-      HANDOFF.push({pickScript:false, useFootage:true, ...it});   // 기본값 먼저, spread로 덮어써 useFootage/pickScript/script 보존
-      arrived++;
-    });
-  }
-  sessionStorage.removeItem('produce_handoff');
-  sessionStorage.removeItem('produce_mix_urls');
+  const arrived = _mergeHandoffItems(items);
+  _clearHandoffStorage();
   if(!HANDOFF.length && !savedScript){ renderPool(); return; }   // 받은 것도 복원할 것도 없음
   if(restored && savedScript){
     STATE.script = savedScript; setScriptMode('manual');
@@ -4130,6 +4116,42 @@ function _consumeProduceHandoff(){
   //   안 보이고(같은 함정을 sidebar.js WORK_ID에서 이미 밟았다), 선언 순서에도 안 걸린다.
   try{ window._PENDING_ARRIVED = arrived > 0; }catch(e){}
   if(arrived > 0 || !WORK_ID) saveWork();
+}
+// ── 보내온 영상을 HANDOFF에 합치는 일은 여기 한 곳에서만 한다(2026-08-18) ──────────
+// 두 경로가 각자 합치면 반드시 어긋난다(0순위-B). 실제로 `?work=<id>`(기존 작업 열기)
+// 경로는 서버 작업으로 HANDOFF를 통째 덮어써 **방금 보낸 영상을 조용히 버렸다** —
+// 즐겨찾기에서 "이 작업으로 보내기"를 만들려면 그것부터 막아야 한다.
+function _mergeHandoffItems(items){
+  if(!(items && items.length)) return 0;
+  const keyOf = it => it.shortcode || it.url || '';
+  const seen = new Set(HANDOFF.map(keyOf).filter(Boolean));
+  let arrived = 0;
+  items.forEach(it=>{
+    const k = keyOf(it);
+    if(k && seen.has(k)) return;               // 이미 있는 영상은 안 겹쳐 넣는다
+    if(k) seen.add(k);
+    // Task4(2026-07-23) 자동담김: 기본 useFootage:true — 즐겨찾기(collection.html)에서
+    // 넘어온 항목은 useFootage를 안 실어 예전 기본값(false)에 걸려 곧장 빈 상태로
+    // 보였다. 레퍼런스 랭킹(index.html sendToProduce)은 이미 true를 명시해 보냈으니
+    // spread(...it)가 그대로 우선한다 — 여기 기본값만 바뀐다.
+    HANDOFF.push({pickScript:false, useFootage:true, ...it});
+    arrived++;
+  });
+  return arrived;
+}
+function _pendingHandoffItems(){
+  let items=null;
+  try{ items=JSON.parse(sessionStorage.getItem('produce_handoff')||'null'); }catch(e){ items=null; }
+  if(items && items.length) return items;
+  let urls=null;   // 구버전 호환(urls만)
+  try{ urls=JSON.parse(sessionStorage.getItem('produce_mix_urls')||'null'); }catch(e){ urls=null; }
+  if(urls && urls.length)
+    return urls.map(u=>({url:u, shortcode:'', name:'', thumbnail:'', caption:'', pickScript:false, useFootage:true}));
+  return [];
+}
+function _clearHandoffStorage(){
+  try{ sessionStorage.removeItem('produce_handoff'); }catch(e){}
+  try{ sessionStorage.removeItem('produce_mix_urls'); }catch(e){}
 }
 // 왼쪽 영상 풀 렌더 — 각 영상에 📝뽑기 / 🎬담기(토글). 역할 미리배정 없음, 겸용 허용.
 // 메인 후보 적격 플랫폼 — 한글 대본이 있는 것만(인스타·유튜브). 나머지는 서브 전용.
