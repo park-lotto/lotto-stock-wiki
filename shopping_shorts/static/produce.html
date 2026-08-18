@@ -1985,12 +1985,38 @@ function seoStatBadge(kw){
        + `${v.icon} ${seoEsc(kw)} — ${v.label}${detail}</span>`;
 }
 
+// ★칸마다 복사 버튼(2026-08-18 사장님 "제목·설명엔 복사 버튼이 없는 거 아닌가").
+//   예전엔 '유튜브 전체 복사'와 인스타 캡션만 있어서, 제목만 / 설명만 올릴 땐 손으로 긁어야 했다.
+//   특히 폰에서는 긴 글을 손가락으로 끄는 게 사실상 불가능하다.
+//   ⚠️ 어느 칸이 무슨 글자인지는 여기 한 곳에서만 정한다(0순위-B) — 화면과 복사가 어긋나지 않게.
+function seoFieldText(id){
+  const hs = (SEO && SEO.hashtags) || {}, cta = (SEO && SEO.cta) || {};
+  const plat = [['youtube','유튜브'],['tiktok','틱톡'],['threads','쓰레드']];
+  if(id==='title')       return (SEO && SEO.title) || '';
+  if(id==='description') return (SEO && SEO.description) || '';
+  if(id==='tags')        return ((SEO && SEO.tags) || []).join(', ');
+  if(id==='hashtags')    return plat.map(([k,l])=>l+': '+((hs[k]||[]).join(' '))).join('\n');
+  if(id==='hook')        return [(SEO&&SEO.hook_line)||'', (SEO&&SEO.comment_bait)||''].filter(Boolean).join('\n');
+  if(id==='insta')       return _instaCaption();
+  if(id==='cta')         return plat.map(([k,l])=>l+':\n'+(cta[k]||'')).join('\n\n');
+  return '';
+}
+function seoCopyField(btn, id){ dmCopy(btn, seoFieldText(id)); }
+// 폰에서는 복사→앱전환보다 '공유'가 한 단계 짧다 — 유튜브·인스타 앱으로 글자를 바로 넘긴다.
+// 카톡에 붙여넣었다가 다시 여는 우회가 필요 없다. 지원하는 기기에서만 버튼이 뜬다(데스크톱엔 없음).
+const SEO_CAN_SHARE = !!(navigator.share);
+async function seoShareField(btn, id){
+  try{ await navigator.share({text: seoFieldText(id)}); }
+  catch(e){ /* 사용자가 취소하면 아무 일도 안 한다 */ }
+}
 function seoCard(id, title, inner){
   const on = !!((SEO && SEO.locked) || {})[id];
   return `<div class="seoCard">
     <div class="seoCardHead">
       <b>${seoEsc(title)}</b>
       <span>
+        <button class="mini" onclick="seoCopyField(this,'${id}')" title="이 칸만 복사">📋 복사</button>
+        ${SEO_CAN_SHARE?`<button class="mini" onclick="seoShareField(this,'${id}')" title="앱으로 바로 보내기">↗ 공유</button>`:''}
         <button class="mini" onclick="seoLock('${id}')">${on?'🔒':'🔓'}</button>
         <button class="mini" onclick="seoGenerate('${id}')" ${on?'disabled':''}>↻</button>
       </span>
