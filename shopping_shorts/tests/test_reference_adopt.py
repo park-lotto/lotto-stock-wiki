@@ -335,3 +335,84 @@ def test_username에_한글표시명이_들어가지_않는다(db):
                                   "https://www.instagram.com/reels/DcF2lTqzeiu/", meta)
     assert item["username"] == "chae2home", "계정명 자리에 표시명이 들어갔다"
     assert item["name"] == "채이홈"
+
+
+# ── 2026-08-19 (3차) 실사고: 프로필은 최신 3건만 판다 ─────────────────────────
+# 계정명을 바르게 구한 뒤에도 못 찾았다. 원인은 config.RESULTS_PER_CHANNEL=3 —
+# fetch_reels는 프로필의 **최신 3건만** 파싱한다. 사장님이 고른 영상은 대개 그
+# 밖이라 통째로 못 찾는다(실측: DcF2lTqzeiu는 3건에 없어 reels=3인데도 미검출).
+# 그래서 **그 영상 하나만** 직접 여는 경로(_ig_reel_one)를 1순위로 둔다.
+# 서버 실측: DcF2lTqzeiu → views 136,854 / caption 실물 / duration 24.3s.
+
+def _one(code="ABC123", **kw):
+    """_ig_reel_one이 돌려주는 모양(parse_reel_node 계약)."""
+    out = _reel(code=code)
+    out["ownerFollowers"] = 0        # ★릴 1건 응답엔 팔로워가 없다(서버 실측)
+    out.update(kw)
+    return out
+
+
+def test_릴1건_경로가_먼저_돈다(db):
+    """프로필(최신 3건)에 없어도 그 영상 하나만 열면 잡힌다 — 실사고의 해결책."""
+    calls = {"one": 0, "reels": 0}
+
+    def one(code):
+        calls["one"] += 1
+        return _one(code=code)
+
+    def reels(usernames, *a, **k):
+        calls["reels"] += 1
+        return []
+
+    with patch.object(ap, "_ig_reel_one", side_effect=one), \
+         patch("shopping_shorts.instagram_playwright.fetch_reels", side_effect=reels):
+        meta, hit = ap._enrich_instagram_meta(
+            "https://www.instagram.com/reels/DcF2lTqzeiu/",
+            {"title": "Video by chae2home", "channel": "채이홈", "views": 0})
+    assert calls["one"] == 1, "릴 1건 경로가 1순위여야 한다"
+    assert calls["reels"] == 0, "1순위가 성공하면 비싼 프로필 스크레이프를 안 해야 한다"
+    assert hit is not None and meta["views"] == 569324
+
+
+def test_릴1건_실패하면_프로필로_폴백(db):
+    """1순위가 죽어도(통로 폐지 등) 최신 영상이면 종전 경로로 잡힌다."""
+    calls = {"reels": 0}
+
+    def reels(usernames, *a, **k):
+        calls["reels"] += 1
+        assert list(usernames) == ["chae2home"], "표시명으로 열면 0건이 된다"
+        return [_reel(code="ABC123")]
+
+    with patch.object(ap, "_ig_reel_one", return_value=None), \
+         patch("shopping_shorts.instagram_playwright.fetch_reels", side_effect=reels):
+        meta, hit = ap._enrich_instagram_meta(
+            "https://www.instagram.com/reels/ABC123/",
+            {"title": "Video by chae2home", "channel": "채이홈", "views": 0})
+    assert calls["reels"] == 1 and hit is not None and meta["views"] == 569324
+
+
+def test_팔로워는_스냅샷에서_가져온다(db):
+    """릴 1건 응답엔 팔로워가 없다 — 같은 채널 수집분에서 빌려온다(인스타 요청 0건 추가).
+
+    안 채우면 화면이 '팔로워'와 '팔로워당댓글' 줄을 통째로 안 그린다.
+    """
+    store = Store(db)
+    # 같은 채널의 수집분이 이미 스냅샷에 있는 상황을 만든다.
+    store.save_last_run([{"shortcode": "OTHER1", "username": "chae2home",
+                          "followers": 342545, "name": "채이홈"}],
+                        datetime.now(timezone.utc).isoformat())
+    with patch.object(ap, "_ig_reel_one", return_value=_one(code="ABC123")):
+        meta, hit = ap._enrich_instagram_meta(
+            "https://www.instagram.com/reels/ABC123/",
+            {"title": "Video by chae2home", "channel": "채이홈"}, store=store)
+    assert meta["followers"] == 342545, "팔로워가 비면 팔로워당댓글 줄이 안 그려진다"
+
+
+def test_스냅샷에_없으면_팔로워를_지어내지_않는다(db):
+    """모르는 값은 0으로 둔다 — 화면이 '—'로 보여주는 게 거짓 숫자보다 낫다."""
+    store = Store(db)
+    with patch.object(ap, "_ig_reel_one", return_value=_one(code="ABC123")):
+        meta, _ = ap._enrich_instagram_meta(
+            "https://www.instagram.com/reels/ABC123/",
+            {"title": "Video by chae2home", "channel": "채이홈"}, store=store)
+    assert not meta.get("followers")

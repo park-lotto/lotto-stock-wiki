@@ -8909,6 +8909,32 @@ def _ig_username_from_url(url):
     return "" if who.lower() in ("reel", "reels", "p", "tv", "stories", "explore") else who
 
 
+def _ig_reel_one(code):
+    """인스타 **릴 1건**만 직접 읽어 수집과 같은 10키 dict로 돌려준다(없으면 None).
+
+    ★왜 프로필 스크레이프를 안 쓰나(2026-08-19 실측):
+      fetch_reels(계정)는 **최신 3건만** 판다(config.RESULTS_PER_CHANNEL=3).
+      사장님이 고른 영상은 대개 그 3건 밖이라 통째로 못 찾는다
+      (실사고: DcF2lTqzeiu 등록 → 프로필엔 최신 3건뿐이라 reels=0).
+      게다가 프로필 열기는 비싸고 연달아 부르면 인스타가 0건을 준다(실측: 2회차 0건).
+
+    그래서 **그 영상 하나만** 연다 — 다운로드·길이백필이 이미 쓰는 경로 그대로다
+    (shortcode → pk → _fetch_reel_detail). 계정명을 몰라도 되고, 오래된 영상도 잡힌다.
+    """
+    from shopping_shorts.instagram_parse import parse_reel_node, shortcode_to_pk
+    pk = shortcode_to_pk(code)
+    if not pk:
+        return None
+    from shopping_shorts.instagram_playwright import _detail_context, _fetch_reel_detail
+    with _detail_context() as ctx:
+        node = _fetch_reel_detail(ctx, pk, code)
+    if not node:
+        return None
+    # 주인(계정)은 노드가 스스로 말한다 — 표시명으로 넘겨 오염시키지 않는다.
+    owner = ((node.get("user") or {}).get("username") or "") if isinstance(node.get("user"), dict) else ""
+    return parse_reel_node(node, owner or "")
+
+
 def _ig_username_from_meta(meta):
     """probe_grab_meta 결과 → 인스타 **계정명**(못 찾으면 "").
 
@@ -8926,7 +8952,7 @@ def _ig_username_from_meta(meta):
     return ch if re.fullmatch(r"[A-Za-z0-9._]+", ch or "") else ""
 
 
-def _enrich_instagram_meta(url, meta):
+def _enrich_instagram_meta(url, meta, store=None):
     """인스타 1건의 지표를 **수집과 같은 경로**로 채운다(2026-08-19).
 
     왜: adopt는 probe_grab_meta(yt-dlp)만 썼는데, yt-dlp는 로그인 없이 인스타를 읽어
@@ -8944,26 +8970,33 @@ def _enrich_instagram_meta(url, meta):
     code = _media_code(url)
     if not code:
         return meta, None
-    who = _ig_username_from_url(url) or _ig_username_from_meta(meta)
-    # ★계정명을 모르면 프로필을 열 수 없다 — 인스타 스크레이퍼는 계정 단위다.
-    if not who:
-        import sys as _sys
-        print(f"[adopt] 인스타 보강: 계정명을 못 구함 url={url} "
-              f"channel={meta.get('channel')!r} title={meta.get('title')!r}", file=_sys.stderr)
-        return meta, None
+    import sys as _sys
+    # ① 그 영상 하나만 직접 읽는다 — 계정명이 필요 없고, 오래된 영상도 잡힌다.
+    #    ★프로필 스크레이프는 최신 3건만 파므로(RESULTS_PER_CHANNEL) 대개 못 찾는다.
+    hit = None
     try:
-        from shopping_shorts.instagram_playwright import fetch_reels as _pw_fetch_reels
-        reels = _pw_fetch_reels([who]) or []
+        hit = _ig_reel_one(code)
     except Exception as e:  # noqa: BLE001 — 보강 실패가 등록을 막지 않는다
-        import sys as _sys
-        print(f"[adopt] 인스타 보강 실패(무해) who={who} url={url}: {e!r}", file=_sys.stderr)
-        return meta, None
-    hit = next((r for r in reels if (r.get("shortcode") or "") == code), None)
+        print(f"[adopt] 인스타 릴 1건 조회 실패 code={code}: {e!r}", file=_sys.stderr)
+    # ② 폴백: 그 채널 프로필(최신분이면 여기서 잡힌다).
     if not hit:
-        import sys as _sys
-        print(f"[adopt] 인스타 보강: 프로필에서 그 영상을 못 찾음 "
-              f"who={who} code={code} reels={len(reels)}", file=_sys.stderr)
-        return meta, None
+        who = _ig_username_from_url(url) or _ig_username_from_meta(meta)
+        if not who:
+            print(f"[adopt] 인스타 보강 실패: 릴 1건 조회 실패 + 계정명도 못 구함 "
+                  f"url={url} channel={meta.get('channel')!r} title={meta.get('title')!r}",
+                  file=_sys.stderr)
+            return meta, None
+        try:
+            from shopping_shorts.instagram_playwright import fetch_reels as _pw_fetch_reels
+            reels = _pw_fetch_reels([who]) or []
+        except Exception as e:  # noqa: BLE001
+            print(f"[adopt] 인스타 보강 실패(무해) who={who} url={url}: {e!r}", file=_sys.stderr)
+            return meta, None
+        hit = next((r for r in reels if (r.get("shortcode") or "") == code), None)
+        if not hit:
+            print(f"[adopt] 인스타 보강: 릴 1건·프로필 둘 다 실패 "
+                  f"who={who} code={code} reels={len(reels)}", file=_sys.stderr)
+            return meta, None
     # ★수집이 준 값을 **정본으로** 쓴다. yt-dlp의 0/빈값이 이걸 덮으면 안 된다.
     #   (화면 파싱값으로 빈 칸을 채우는 기존 규칙은 이 뒤에서 그대로 돈다)
     for key, src in (("views", "videoViewCount"), ("likes", "likesCount"),
@@ -8979,8 +9012,21 @@ def _enrich_instagram_meta(url, meta):
     if hit.get("timestamp"):
         meta["ts"] = hit["timestamp"]
     # 채널 표시명 — 수집 카드가 쓰는 한글 이름(ownerFullName)이 있으면 그걸 쓴다.
-    meta["channel"] = hit.get("ownerFullName") or hit.get("ownerUsername") or who
-    meta["_ig_username"] = hit.get("ownerUsername") or who
+    uname = hit.get("ownerUsername") or _ig_username_from_url(url) or _ig_username_from_meta(meta)
+    meta["channel"] = hit.get("ownerFullName") or meta.get("channel") or uname
+    meta["_ig_username"] = uname
+    # ★팔로워는 릴 1건 응답에 없다(실측: 그 경로는 ownerFollowers=0). 같은 채널의
+    #   수집분이 스냅샷에 있으면 거기서 가져온다 — **인스타 요청을 늘리지 않는다**.
+    #   (없으면 0으로 두고, 화면파싱값 폴백이 뒤에서 채울 수도 있다)
+    if not meta.get("followers") and store is not None and uname:
+        try:
+            olds, _at = store.load_last_run()
+            for it in (olds or []):
+                if (it.get("username") or "").lower() == uname.lower() and it.get("followers"):
+                    meta["followers"] = it["followers"]
+                    break
+        except Exception:      # noqa: BLE001 — 폴백 실패는 무해
+            pass
     return meta, hit
 
 
@@ -9111,7 +9157,7 @@ def api_reference_adopt(request: Request, url: str = "", views: int = 0, likes: 
     #   fetch_reels(정규 수집이 쓰는 그 함수)를 태우면 같은 값·같은 모양이 나온다.
     if platform == "instagram":
         try:
-            meta, _hit = _enrich_instagram_meta(u, meta)
+            meta, _hit = _enrich_instagram_meta(u, meta, store=Store(DB_PATH))
         except Exception as e:  # noqa: BLE001 — 보강 실패가 등록을 막지 않는다
             import sys as _sys
             print(f"[adopt] 인스타 보강 예외(무해) {u}: {e!r}", file=_sys.stderr)
