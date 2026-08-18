@@ -149,8 +149,9 @@ def test_격자_안에_그리지_않는다():
     src = INDEX.read_text(encoding="utf-8")
     i = src.index("async function openUrlCard(")
     body = src[i:src.index("\nfunction closeUrlCard(", i)]
-    assert "'cards'" not in body.replace("getElementById('cards')", "grid"), \
-        "카드 격자에 직접 그리면 레이아웃이 깨진다"
+    assert "renderLens('__single__', 'cards')" not in body, \
+        "카드 격자에 직접 그리면 머리줄과 렌즈 뭉치가 좌우로 쪼개진다"
+    assert "renderLens('__single__', 'urlCardMount')" in body
 
 
 def test_랭킹으로_돌아가기가_목록을_되살린다():
@@ -159,3 +160,18 @@ def test_랭킹으로_돌아가기가_목록을_되살린다():
     body = src[i:i + 500]
     assert "display='none'" in body and "grid.style.display=''" in body, \
         "전용 칸을 감추고 랭킹 격자를 다시 보여야 한다"
+
+
+def test_카드_안에도_숏템파워검색이_있다():
+    """머리줄이 스크롤로 밀리면 못 찾는다 — 눌러야 할 버튼은 카드 옆에 있어야 한다
+    (2026-08-18 사장님 "왜 숏템검색이 없어졌나")."""
+    src = INDEX.read_text(encoding="utf-8")
+    assert "shortcode==='__single__'?" in src and "🔍 숏템파워검색" in src
+
+
+def test_단일카드에선_렌즈_도구줄을_접는다():
+    """'아직 검색어가 없습니다' 같은 안내가 카드 위에 깔리면 버튼이 화면 밖으로 밀린다."""
+    src = INDEX.read_text(encoding="utf-8")
+    i = src.index("async function openUrlCard(")
+    body = src[i:src.index("\n// 주소 카드를 띄운 채로", i)]
+    assert "classList.contains('cards')" in body, "카드 격자만 남기고 나머지는 접는다"
