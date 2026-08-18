@@ -662,3 +662,50 @@ console.log(JSON.stringify(ctx.log));
     assert log[0] == pytest.approx(3.14159265 / 2, rel=1e-4)
     assert log[1] == pytest.approx(0, abs=1e-6), \
         "회전이 앞 레이어에서 새어나왔다 — save/restore 짝이 안 맞는다"
+
+
+# ── 🖐 손잡이(2026-08-18 사장님: "삭제 간단히 / 끝부분 잡고 크기·방향") ──────────
+# 손잡이는 **캔버스가 아니라 그 위 DOM**이다. 캔버스에 그리면 generateThumb의 toBlob이
+# 손잡이까지 PNG에 구워버린다 — 그 계약을 여기서 잠근다.
+
+def _handles_html(layer, sel=0):
+    script = _slice_source() + r"""
+globalThis.HC_PRESETS = []; globalThis.HC_FONTS = []; globalThis.esc = s => s;
+globalThis.window = {};
+let HTML = '';
+globalThis.document = { getElementById: (id) => id === 'thumbHandles'
+  ? { set innerHTML(v){ HTML = v; }, get innerHTML(){ return HTML; } } : null };
+THUMB_STATE.layers = [__LAYER__];
+THUMB_STATE.sel = __SEL__;
+renderThumbHandles();
+console.log(JSON.stringify({html: HTML}));
+""".replace("__LAYER__", json.dumps(layer)).replace("__SEL__", str(sel))
+    return json.loads(_run_node(script))["html"]
+
+
+def test_handles_show_for_sticker_with_delete_size_rotate():
+    """스티커를 고르면 ✕삭제·↔크기·↻방향 세 손잡이가 뜬다."""
+    html = _handles_html({"kind": "sticker", "emoji": "F", "size": 20,
+                          "x": 0.5, "y": 0.5, "rot": 0})
+    for h in ("del", "size", "rot"):
+        assert f'data-h="{h}"' in html, f"{h} 손잡이가 없다"
+
+
+def test_handles_hidden_for_text_layer():
+    """글자 레이어엔 손잡이를 안 띄운다 — 글자는 편집창에서 다룬다(범위 고정)."""
+    html = _handles_html({"text": "A", "font": "X.ttf", "size": 78, "color": "#fff",
+                          "outline": None, "box": None, "rot": 0, "x": 0.5, "y": 0.2})
+    assert html == "", "글자 레이어에 손잡이가 떴다"
+
+
+def test_handle_positions_follow_size():
+    """손잡이는 도형 반각(size/200)만큼 떨어져 붙는다 — 키우면 같이 벌어져야
+    '끝부분을 잡는' 느낌이 유지된다. size=20 → 반각 10%p."""
+    import re
+    html = _handles_html({"kind": "shape", "shape": "arrow_bold", "size": 20,
+                          "color": "#FF3B30", "x": 0.5, "y": 0.5, "rot": 0})
+    m = re.search(r'data-h="del"[^>]*?left:([\d.]+)%;top:([\d.]+)%', html, re.S)
+    assert m, "삭제 손잡이 좌표를 못 읽었다"
+    assert float(m.group(1)) == pytest.approx(60.0, abs=0.1)     # x + 10%p
+    # y 반각은 캔버스 비율(1080/1920)만큼 작다 → 0.5 - 0.1*0.5625 = 0.44375
+    assert float(m.group(2)) == pytest.approx(44.38, abs=0.1)
