@@ -324,15 +324,15 @@
   {
     "date": "2026-08-17",
     "category": "스탁브레인",
-    "track": "쓰레드수집",
-    "summary": "★최종 수정 실동작 확인(컨트롤러 직접): 아까 RuntimeError로 죽던 바로 그 URL에서 download_any가 3,161,586바이트 mp4 + 제목까지 반환. 담기→다운로드→제작 재료 경로가 뚫림. 고친 것 4개: ①_download_threads 신설(yt-dlp 대신 fetch_html+threads_parse로 video_url 뽑아 직접 HTTP 다운로드)+화이트리스트에 threads 추가(호스트 정확일치/서픽스 방식) ②cdninstagram이 'instagram.com' 부분문자열에 걸려 인스타 세션 경로로 오배송되던 것 ③fetch_html·BROWSER_HEADERS를 playwright 의존 없는 threads_parse로 이관(담기 1건마다 playwright 끌어오던 것 제거) ④probe_grab_meta timeout 전달. 아직 미커밋 — 구현자에게 좁힌 테스트(-k 'grab or media or threads or download') 돌리고 인스타 테스트 안 깨졌을 때만 커밋하도록 지시(공유 코드라 여기가 위험).",
-    "next": "커밋 확인→범위 좁힌 재검토→★사장님 승인 받아 finish(main 병합→3분 뒤 라이브). 승인 전까지 라이브 무영향. 원장 판정 9건."
+    "track": "레퍼런스등급제",
+    "summary": "★마감 완료(집에서 이어감). 트랙 ec7ecc3c4 → main 병합, 미커밋·미병합 0건. main 폴더도 로컬=원격 4933a150f 일치(오늘 크롤 데이터 함께 푸시, 코드 0건이라 흡수 위험 없음 확인 후 커밋). 오늘 성과 2줄기: ①수집 실패 55% 근본수리 — not_found 61건은 죽은 채널이 아니라 고정 2.5초 대기로 못 긁은 실패(실측 2.5초 5/14→10초 14/14, 수확0 채널 30개는 15초에서 30/30 회수). 수리 후 81건→161건·45%→97%·시간은 단축 ②랭킹 화면 6건(render 예외 하나가 탭/지표/카테고리 전부 막던 것, 썸네일 이름 어긋남, 역대 문턱 구간분리, 역대탭 카테고리 복구 AI비용0, 소리 안꺼짐, 합친 3장 재생). 기록: handoff/레퍼런스등급제.md·wiki/log.d 신설, 메모리 2건(reference_catchall_bucket_hides_regression, reference_render_crash_looks_like_buffering)+MEMORY.md 등재.",
+    "next": "집PC: git pull → py tools/track.py start 레퍼런스등급제 → handoff 읽기. ①웹셰어 누적GB(사장님만 확인 가능 — API키·바이트로깅 둘 다 없음 실측) 받으면 오늘 소비량·월예상 산출 ②합치기 3장 재생 — 내 라이브 실측은 정상(2.08~4.07/6.49~8.48/9.00~9.74), 강력새로고침 후에도 안 되면 합친 조각 번호 받아 재현 ③남는 3% 재시도 부착 ④due 329 vs 실제 110 불일치 ⑤팔로워 미저장 ⑥이모지 배지"
   },
   {
     "date": "2026-08-17",
     "category": "스탁브레인",
-    "track": "레퍼런스등급제",
-    "summary": "★합치기 3장 재생을 라이브 브라우저에서 종단 실측 — 정상 동작 확인(872ff331a). 실제 job b198d0788398의 scene_lab에서 1-1/1-2/1-3을 MERGES로 묶고 playBeat(0) 실행 후 영상 currentTime을 0.22초 간격 샘플링: 2.08~4.07(1장) → 6.49~8.48(2장) → 9.00~9.74(3장)으로 세 구간을 차례로 훑음. 계획도 5.28초 칸을 2.2/2.2/0.88로 분배(고치기 전엔 4.4초 1컷). 서버 /scene_play.js에 splitByMembers 포함 확인, 캐시헤더 no-cache·must-revalidate 정상. ★따라서 사장님 화면이 그대로인 건 코드가 아니라 로드 시점 문제로 추정 — JS는 페이지 열 때 한 번만 읽고, 제작소는 장면편집을 iframe으로 띄워 일반 새로고침으론 안쪽이 안 바뀔 수 있음. 처방 안내=Ctrl+Shift+R → 안 되면 탭 완전히 닫고 재오픈.",
-    "next": "①사장님 강력새로고침 후 재확인 ②그래도 앞장만 나오면 '어떤 조각 3개를 합쳤는지'(카드 번호 1-1·1-4 등) 받아 그 조합으로 재현 — 내 실측과 다른 조건이 있다는 뜻 ③잔여: 팔로워 '—'(reel_history 미저장) / 웹셰어 누적GB(사장님) / 남는 3% 재시도 / due 329 vs 110 불일치 / 이모지 배지 / main 폴더 git pull"
+    "track": "쓰레드수집",
+    "summary": "★마감 — 쓰레드 수집 축 라이브 반영 완료(origin/main 9611fd3a3, 게이트 통과·실패증가 0, threads 파일 9개 main 확인). 오늘 하루에 조사→실측→설계→계획→8태스크 구현→리뷰 루프→병합까지 끝냄. 메모리 project_쓰레드수집.md 신설+MEMORY.md 등재(헤더가 열쇠·캐러셀 함정·담기 성공≠제작 가능·인스타 표 불가침 근거).",
+    "next": "사장님 실사용 판정(쓰레드 URL 담아보기). 미검증 3건(계정 1개만·담기→제작소 종단·Playwright 폴백), 문턱은 200~300건 뒤 분위수, 후속계획2(키워드검색·랭킹탭·크론). 전부 handoff/쓰레드수집.md."
   }
 ]
