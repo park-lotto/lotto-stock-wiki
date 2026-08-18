@@ -120,8 +120,11 @@ function trace(fx){
   const ctx = new Proxy({}, {
     get(t, k){
       if (k === 'measureText') return () => ({width: 100});
+      // 그라데이션은 도형이 쓴다 — 스텁이 없으면 '색이 안 먹는다'가 아니라 통째로 죽는다.
+      if (k === 'createLinearGradient') return () => ({addColorStop(){}});
       if (['save','restore','translate','rotate','drawImage','strokeText','fillText',
-           'fillRect','beginPath','moveTo','lineTo','stroke','quadraticCurveTo','clearRect'].includes(k))
+           'fillRect','beginPath','moveTo','lineTo','stroke','quadraticCurveTo','clearRect',
+           'fill','closePath','arc','arcTo','ellipse','bezierCurveTo'].includes(k))
         return (...a) => calls.push([k, ...a]);
       return undefined;
     }, set(t, k, v){ calls.push(['set:' + k, v]); return true; }
@@ -196,8 +199,11 @@ function trace(layers){
   const ctx = new Proxy({}, {
     get(t, k){
       if (k === 'measureText') return () => ({width: 100});
+      // 도형은 그라데이션을 쓴다 — 스텁이 없으면 '색이 안 먹는다'가 아니라 통째로 죽는다.
+      if (k === 'createLinearGradient') return () => ({addColorStop(){}});
       if (['save','restore','translate','rotate','drawImage','strokeText','fillText',
-           'fillRect','beginPath','moveTo','lineTo','stroke','quadraticCurveTo','clearRect'].includes(k))
+           'fillRect','beginPath','moveTo','lineTo','stroke','quadraticCurveTo','clearRect',
+           'fill','closePath','arc','arcTo','ellipse','bezierCurveTo'].includes(k))
         return (...a) => calls.push([k, ...a]);
       return undefined;
     }, set(t, k, v){ calls.push(['set:' + k, v]); return true; }
@@ -272,6 +278,88 @@ var HC_PRESETS = [{cat:'썸네일', name:'흰→노랑', font:'BMDOHYEON.ttf', c
                    color2:'#FFD400', size:92, y:14, outline:true, outline_color:'#000000', outline_w:12}];
 renderThumbLayers = () => {}; renderThumbCanvas = () => {};
 """
+
+
+# ── 🎨 고급 도형 스티커(곡선 화살표 등) ────────────────────────────────
+
+def test_every_listed_shape_has_a_drawer():
+    """목록에 있는데 그리는 함수가 없으면 눌러도 아무 일도 안 난다(조용한 실패)."""
+    out = json.loads(_run_node(_slice_source() + """
+console.log(JSON.stringify({list: THUMB_SHAPE_LIST.map(s => s.key),
+                            drawers: Object.keys(THUMB_SHAPES)}));"""))
+    missing = [k for k in out["list"] if k not in out["drawers"]]
+    assert not missing, f"그리는 함수가 없는 도형: {missing}"
+
+
+def test_shape_draws_and_respects_ratio_position():
+    calls = _sticker_trace(
+        "[{kind:'shape', shape:'arrow_curve', size:20, x:0.25, y:0.75, rot:0, color:'#FF3B30'}]")
+    tr = [c for c in calls if c[0] == "translate"]
+    assert tr, "도형이 안 그려졌다"
+    assert tr[0][1] == pytest.approx(270)
+    assert tr[0][2] == pytest.approx(1440)
+
+
+def test_curved_arrow_head_follows_curve_end():
+    """★촉을 곡선 끝의 접선에 맞춰 붙인다 — 손으로 좌표를 찍으면 촉이 몸통에서 떨어져
+    엉뚱한 곳을 가리킨다(실측으로 한 번 그렇게 나왔다)."""
+    calls = _sticker_trace(
+        "[{kind:'shape', shape:'arrow_curve', size:20, x:0.5, y:0.5, rot:0, color:'#FF3B30'}]")
+    names = [c[0] for c in calls]
+    assert "quadraticCurveTo" in names, "곡선이 아니다"
+    # 곡선을 그은 뒤 촉을 붙이려면 끝점으로 translate + 접선만큼 rotate 해야 한다
+    assert names.count("translate") >= 2, "촉을 곡선 끝으로 옮기지 않았다"
+    assert "rotate" in names, "촉을 접선 방향으로 돌리지 않았다"
+
+
+def test_shape_color_is_applied():
+    """도형은 이모지와 달리 색이 먹어야 한다(벡터로 직접 그리므로)."""
+    calls = _sticker_trace(
+        "[{kind:'shape', shape:'check', size:20, x:0.5, y:0.5, rot:0, color:'#2FD873'}]")
+    assert any(c[0] in ("set:strokeStyle", "set:fillStyle") for c in calls)
+
+
+def test_unknown_shape_draws_nothing():
+    """옛 저장본에 없는 도형 이름이 들어와도 죽지 않는다."""
+    calls = _sticker_trace("[{kind:'shape', shape:'없는도형', size:20, x:0.5, y:0.5, rot:0}]")
+    assert not [c for c in calls if c[0] in ("stroke", "fill", "fillText")]
+
+
+def test_add_shape_uses_list_default_color():
+    script = _slice_source() + """
+THUMB_STATE.layers = []; THUMB_STATE.sel = 0;
+renderThumbLayers = () => {}; renderThumbCanvas = () => {};
+addThumbShape('check');
+console.log(JSON.stringify(THUMB_STATE.layers[0]));
+"""
+    L = json.loads(_run_node(script))
+    assert L["kind"] == "shape" and L["shape"] == "check"
+    assert L["color"] == "#2FD873", "목록의 기본색으로 시작해야 바로 쓸 만하다"
+
+
+def test_preset_does_not_destroy_selected_shape():
+    """스티커와 같은 함정 — 도형을 고른 채 색 프리셋을 눌러도 사라지면 안 된다."""
+    script = _slice_source() + _STICKER_SEL + """
+THUMB_STATE.layers = [{kind:'shape', shape:'arrow_curve', size:20, x:0.3, y:0.7, rot:0, color:'#FF3B30'}];
+THUMB_STATE.sel = 0;
+applyThumbPreset(0);
+console.log(JSON.stringify(THUMB_STATE.layers[0]));
+"""
+    assert json.loads(_run_node(script))["kind"] == "shape"
+
+
+def test_title_click_skips_shape_layer():
+    script = _slice_source() + _STICKER_SEL + """
+THUMB_STATE.layers = [{text:'', font:'BMJUA.ttf', size:92, color:'#fff', outline:null,
+                       box:null, rot:0, x:0.5, y:0.3},
+                      {kind:'shape', shape:'check', size:20, x:0.3, y:0.7, rot:0, color:'#2FD873'}];
+THUMB_STATE.sel = 1;
+THUMB_STATE.title_cands = [{text:'제목', why:'w'}];
+applyThumbTitle(0);
+console.log(JSON.stringify({t: THUMB_STATE.layers[0].text, k: THUMB_STATE.layers[1].kind}));
+"""
+    out = json.loads(_run_node(script))
+    assert out["t"] == "제목" and out["k"] == "shape"
 
 
 def _grapheme(js_literal):
