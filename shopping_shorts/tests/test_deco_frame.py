@@ -57,3 +57,13 @@ def test_legacy_color_bar_templates_still_work():
     assert layer["id"] == "tpl_01"
     assert layer["dur"] == 3.5
     assert mp._template_layer({}) is None
+
+
+def test_bottom_bar_independent_of_top():
+    """위·아래 띠는 따로 조절된다. 같은 규칙으로 잘리는지도 함께 잠근다."""
+    im = df.render({"preset": "news_coral", "bar_h": 0, "bottom_h": 160})
+    assert im.getpixel((540, 5))[3] == 0        # 위는 없음
+    assert im.getpixel((540, 1900))[3] == 255   # 아래는 있음
+    assert im.getpixel((540, 1200))[3] == 0     # 가운데는 여전히 투명
+    assert df.normalize({"bottom_h": 9999})["bottom_h"] == 400
+    assert df.normalize({"bottom_h": "abc"})["bottom_h"] == df.DEFAULTS["bottom_h"]

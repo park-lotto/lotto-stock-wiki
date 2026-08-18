@@ -1136,6 +1136,10 @@
               <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 아래 칸에 들어갑니다</span>
               <button type="button" class="tab" onclick="loadHeadcopySuggest(true)"
                 style="min-width:auto;padding:3px 10px;font-size:11px;margin-left:6px">↻ 다시 뽑기</button>
+              <!-- ★넣을 수만 있고 뺄 수가 없었다(2026-08-18 사장님 지적). 한 번 넣으면
+                   지우려면 칸을 손으로 비워야 했다 — 넣기 옆에 빼기를 둔다. -->
+              <button type="button" class="tab" onclick="clearHeadcopy()"
+                style="min-width:auto;padding:3px 10px;font-size:11px;margin-left:4px">🗑 문구 지우기</button>
             </div>
             <div id="hcCopyCards" style="display:flex;gap:6px;flex-wrap:wrap"></div>
             <div id="hcCopyMsg" class="hint" style="margin-top:4px"></div>
@@ -1165,14 +1169,17 @@
               <button class="tab" onclick="saveMyPreset()" style="flex:0 0 auto;min-width:auto;padding:8px 16px;font-size:13px;white-space:nowrap;background:var(--sel-bg);border-color:var(--accent)">💾 지금 스타일 저장</button>
             </div>
           </div>
-          <details id="advDetails" style="margin-bottom:4px">
+          <!-- ★기본 펼침(2026-08-18). 사장님이 "폰트·색상·크기 조정이 없다"고 하셨는데
+               실제로는 여기 다 있었다 — 접힘 안에 또 접혀 있어 못 찾으신 것이다.
+               조절을 새로 만들면 같은 값이 두 군데 생겨 어긋난다(0순위-B) → 펼쳐서 보이게만 한다. -->
+          <details id="advDetails" style="margin-bottom:4px" open>
             <summary style="cursor:pointer;font-size:13px;color:var(--accent2);font-weight:700;padding:6px 0">✏️ 직접 다듬기 — 폰트·크기·위치·자막·내 프리셋 ▾</summary>
             <div id="advBody" style="margin-top:10px">
               <div class="sub" style="margin-bottom:8px;font-size:11px">필요한 것만 펼쳐 손보세요. 대부분은 위 <b>완성 스타일</b>만 눌러도 됩니다.</div>
 
               <!-- ── 🎨 헤드카피(상단 큰 글씨) ── -->
-              <details style="border-top:1px dashed var(--line);margin-top:2px">
-                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">🎨 헤드카피(상단 큰 글씨) 꾸미기</summary>
+              <details style="border-top:1px dashed var(--line);margin-top:2px" open>
+                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">🎨 헤드카피(상단 큰 글씨) 꾸미기 — 폰트·색상·굵기·크기</summary>
                 <div style="padding:2px 0 12px">
               <div id="hcPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
               <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
@@ -1327,11 +1334,18 @@
                     </div>
                     <!-- 띠 높이: 슬라이더는 시니어에게 어렵다(딸깍/시니어 북극성) → −/＋ 버튼을 같이 둔다 -->
                     <div style="display:flex;gap:8px;align-items:center;font-size:12px;margin-top:8px">
-                      <span>띠 높이</span>
-                      <button type="button" class="tab" onclick="frBar(-20)" style="min-width:auto;padding:4px 12px;font-size:14px">−</button>
+                      <span style="min-width:56px">⬆ 위 띠</span>
+                      <button type="button" class="tab" onclick="frBar('frBar',-20)" style="min-width:auto;padding:4px 12px;font-size:14px">−</button>
                       <input id="frBar" type="range" min="0" max="400" step="10" value="190" oninput="frUpdate()" style="width:150px">
-                      <button type="button" class="tab" onclick="frBar(20)" style="min-width:auto;padding:4px 12px;font-size:14px">＋</button>
+                      <button type="button" class="tab" onclick="frBar('frBar',20)" style="min-width:auto;padding:4px 12px;font-size:14px">＋</button>
                       <span id="frBarVal" style="color:var(--sub);min-width:52px">190px</span>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;font-size:12px;margin-top:6px">
+                      <span style="min-width:56px">⬇ 아래 띠</span>
+                      <button type="button" class="tab" onclick="frBar('frBottom',-20)" style="min-width:auto;padding:4px 12px;font-size:14px">−</button>
+                      <input id="frBottom" type="range" min="0" max="400" step="10" value="0" oninput="frUpdate()" style="width:150px">
+                      <button type="button" class="tab" onclick="frBar('frBottom',20)" style="min-width:auto;padding:4px 12px;font-size:14px">＋</button>
+                      <span id="frBottomVal" style="color:var(--sub);min-width:52px">0px</span>
                     </div>
                   </div>
                 </div>
@@ -2172,6 +2186,11 @@ async function loadHeadcopySuggest(force){
     if(msg) msg.innerHTML='<span style="color:var(--fire)">문구를 불러오지 못했어요(네트워크)</span>';
   }
 }
+function clearHeadcopy(){
+  const t=document.getElementById('hcText'); if(!t) return;
+  t.value='';
+  updateHC();          // 미리보기·STATE 반영은 넣을 때와 **같은 경로**를 쓴다(따로 지우지 않는다)
+}
 function useHeadcopy(i){
   const c=(window._hcCopies||[])[i]; if(!c) return;
   const t=document.getElementById('hcText'); if(!t) return;
@@ -2236,6 +2255,7 @@ function setTemplateSpan(span){
 let FR_PRESETS=[];
 function frameUrl(f){
   const q=new URLSearchParams({preset:f.preset||'news_coral', bar_h:f.bar_h??190,
+    bottom_h:f.bottom_h??0,
     channel:f.channel||'', title:f.title||'', views:f.views||'', comments:f.comments||'',
     ad_badge:f.ad_badge?'1':'0', icons:f.icons?'1':'0'});
   return '/api/produce/frame.png?'+q.toString();
@@ -2271,6 +2291,8 @@ function frFill(f){
   if(g('frIcons')) g('frIcons').checked=f.icons!==false;
   if(g('frBar')) g('frBar').value=f.bar_h??190;
   if(g('frBarVal')) g('frBarVal').textContent=(f.bar_h??190)+'px';
+  if(g('frBottom')) g('frBottom').value=f.bottom_h??0;
+  if(g('frBottomVal')) g('frBottomVal').textContent=(f.bottom_h??0)+'px';
 }
 function frPick(preset){
   if(!STATE.deco) STATE.deco={extra_texts:[], motion:null};
@@ -2281,6 +2303,7 @@ function frPick(preset){
     // 제목은 비어 있으면 헤드카피에서 한 번 가져다 놓는다(사장님이 지우면 그대로 빈칸).
     const hc=(document.getElementById('hcText')||{}).value||'';
     STATE.deco.template={span:span, frame:{preset:preset, bar_h:old.bar_h??190,
+      bottom_h:old.bottom_h??0,
       channel:old.channel||'', title:old.title||hc, views:old.views||'',
       comments:old.comments||'', ad_badge:!!old.ad_badge, icons:old.icons!==false}};
   }
@@ -2296,12 +2319,14 @@ function frUpdate(){
   f.ad_badge=!!(g('frAd')||{}).checked;
   f.icons=!!(g('frIcons')||{}).checked;
   f.bar_h=parseInt((g('frBar')||{}).value||190,10);
+  f.bottom_h=parseInt((g('frBottom')||{}).value||0,10);
   if(g('frBarVal')) g('frBarVal').textContent=f.bar_h+'px';
+  if(g('frBottomVal')) g('frBottomVal').textContent=f.bottom_h+'px';
   renderTemplatePreview(); saveHeadcopy();
 }
-function frBar(delta){
-  const el=document.getElementById('frBar'); if(!el) return;
-  el.value=Math.max(0, Math.min(400, parseInt(el.value||190,10)+delta));
+function frBar(id, delta){
+  const el=document.getElementById(id); if(!el) return;
+  el.value=Math.max(0, Math.min(400, parseInt(el.value||0,10)+delta));
   frUpdate();
 }
 function frFromHeadcopy(){
