@@ -4321,11 +4321,13 @@ function _consumeProduceHandoff(){
   //   두 다음 진입에서 다시 시도한다 — 담은 영상을 잃는 것보다 두 번 읽는 게 낫다.
   //   (중복은 _mergeHandoffItems가 shortcode/url로 거른다)
   if(arrived > 0 || !WORK_ID){
-    clearTimeout(_workTimer); _workTimer = null;     // 디바운스 예약분과 겹쳐 두 번 POST 방지
+    // 디바운스 예약분과 겹쳐 두 번 POST 되는 것 방지.
+    // ⚠️typeof 가드 — 테스트 하네스는 이 함수만 떼어 실행하므로 전역이 없을 수 있다.
+    if(typeof _workTimer !== 'undefined'){ clearTimeout(_workTimer); _workTimer = null; }
     // ⚠️_pushWork는 예외를 삼키고 _markLocalOnly()로 끝난다(서버가 죽어도 작업을 막지
     //   않으려는 기존 판단). 그래서 성공/실패는 **WORK_ID가 채워졌는가**로 본다 —
     //   서버가 200으로 work_id를 준 경우에만 채워지므로 그게 진짜 저장 신호다.
-    Promise.resolve().then(_pushWork).then(() => {
+    Promise.resolve().then(() => (typeof _pushWork === 'function' ? _pushWork() : null)).then(() => {
       if(WORK_ID){ _clearHandoffStorage(); return; }
       const _b = document.getElementById('handoffBanner');
       if(_b) _b.innerHTML = '⚠️ 서버 저장이 안 됐어요 — <b>담은 영상은 그대로 있습니다</b>. '
