@@ -415,6 +415,27 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     if not script_gate.passed(checks) and best and best[3] != full:
         _, res, checks, full = best
 
+    # ★마지막 방어는 코드가 한다(2026-08-18 사장님 "계속 다시 살아나는데 원천 해결인가").
+    #   재작성은 부탁이라 언제든 어길 수 있다 — 여기서 길이만은 **결정적으로** 맞춘다.
+    #   edit_plan._trim_to_budget(군더더기 부사부터 덜어내 문법을 안 깨는 재단)을 그대로
+    #   재사용한다(0순위-B). 뺄 게 없으면 원문 유지 — 뜻을 훼손하면서까지 자르진 않는다.
+    _cap = script_gate.density_target(style, seconds)
+    if res and len(script_gate.norm(full)) > _cap:
+        from shopping_shorts.edit_plan import _trim_to_budget
+        _tot = sum(len(script_gate.norm(b.get("text", ""))) for b in res) or 1
+        for _b in res:
+            _n = len(script_gate.norm(_b.get("text", "")))
+            if not _n:
+                continue
+            _new = _trim_to_budget(_b.get("text", ""), max(6, int(_cap * _n / _tot)))
+            if _new:
+                _b["text"] = _new
+        checks, full = script_gate.check(style, res, facts_text=facts_block,
+                                         product=_sources_product(sources),
+                                         seconds=seconds)
+        tries.append({"chars": len(script_gate.norm(full)), "trimmed": True,
+                      "fails": [c["name"] for c in checks if not c["ok"]]})
+
     # ★화면에 "영상으로 몇 초"를 띄우려면 초를 서버가 계산해 실어 보내야 한다
     #   (2026-08-18 사장님). 화면이 자기 상수로 따로 계산하면 판정(밀도 게이트)과
     #   다른 수를 말하게 된다 — 초 환산은 script_gate 한 곳에서만 한다(0순위-B).
