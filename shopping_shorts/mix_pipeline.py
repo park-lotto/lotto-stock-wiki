@@ -564,7 +564,12 @@ def _prepare_sources(urls, work, store=None):
         video_paths[vid] = path
         captions[vid] = caption
     if not video_paths:
-        detail = "\n".join(f"· {u}: {e}" for u, e in skipped)
+        # ★기술 문구 앞에 '사람이 할 수 있는 말'을 붙인다(2026-08-19 총점검).
+        #   원문은 지우지 않는다 — 디버깅에 필요하다.
+        def _line(u, e):
+            hint = _download_fail_hint(e)
+            return f"· {u}: {hint} ({e})" if hint else f"· {u}: {e}"
+        detail = "\n".join(_line(u, e) for u, e in skipped)
         # ★사람에게 밀어 올린다(2026-08-04). 08-03엔 이 실패가 조용히 DB에만 쌓여
         # 13:45부터 다음날까지 아무도 몰랐다. 소스를 하나도 못 받았다 = 통로가
         # 끊겼다는 뜻이고, 인스타는 이걸 한두 달 주기로 한다 — 즉시 알아야 한다.
@@ -588,6 +593,69 @@ def _job_customer_id(db_path, job_id):
         return job.get("customer_id")
     except Exception:      # noqa: BLE001 — 계측용이라 실패해도 본작업은 돈다
         return None
+
+
+def _download_fail_hint(err_text):
+    """다운로드 실패 원인 → **사람이 할 수 있는 말**(모르면 "").
+
+    ★2026-08-19 총점검. 실측 28건의 실패 문구가 전부 기술 용어라 사장님은 무엇이
+      잘못됐는지 알 수 없었다. 대표 예:
+        yt-dlp 실패(rednote.com/search_result/689e…): Unsupported URL:
+          https://www.rednote.com/404?source=/404/sec_PukRxsmn&redirectPath=…
+      ← 주소가 잘못된 게 아니다(그 경로는 정상 담기 경로다, test_grab 참조).
+        **404로 넘겨진 것** = 글이 지워졌거나 로그인벽에 막힌 것이다.
+      이걸 "yt-dlp 실패"로만 보여주면 사장님은 우리 코드가 고장난 줄 안다.
+
+    ⚠️ 원문을 지우지 않는다 — 힌트를 **앞에 덧붙일 뿐**이다(디버깅 정보 보존).
+    """
+    e = (err_text or "").lower()
+    if "/404" in e or "404?source=" in e:
+        return "원본이 지워졌거나 로그인해야 볼 수 있는 글이에요(주소는 정상)"
+    if "cookies" in e and "browser" in e:
+        return "이 영상은 로그인 쿠키가 있어야 받을 수 있어요"
+    if "private" in e or "login required" in e or "sign in" in e:
+        return "비공개이거나 로그인이 필요한 영상이에요"
+    if "unsupported url" in e:
+        return "이 주소에서는 영상을 찾지 못했어요 — 영상 페이지 주소인지 확인해 주세요"
+    if "unavailable" in e or "removed" in e or "deleted" in e:
+        return "원본이 삭제됐거나 더 이상 볼 수 없는 영상이에요"
+    if "timed out" in e or "timeout" in e:
+        return "받는 데 너무 오래 걸려 중단됐어요 — 잠시 후 다시 시도해 주세요"
+    if "403" in e or "forbidden" in e:
+        return "플랫폼이 접근을 막았어요(지역제한·차단)"
+    return ""
+
+
+def _edl_empty_reason(source_scripts, plan):
+    """EDL이 빈 이유를 **갈라서** 말한다(2026-08-19 사장님 총점검 지시).
+
+    ★종전 문구는 원인 2개를 뭉갰다: "대본 추출 실패 또는 Gemini 키 소진".
+      그래서 사장님도 나도 엉뚱한 데를 봤다. 실측(라이브 13건)에서 대부분은
+      **추출이 성공한 상태**였다 — extract_json 9,091자인데 edit_plan은 0이었다.
+      즉 진짜 실패 지점은 추출이 아니라 **편집안 생성**이다.
+
+    반환: (사유코드, 사람이 읽는 문구). 판정 근거는 '지금 손에 있는 것'뿐이다 —
+    소스 대본이 실제로 비었나 / 있는데 편집안만 비었나.
+    """
+    texts = [(s.get("full_text") or "").strip() for s in (source_scripts or [])]
+    chars = sum(len(t) for t in texts)
+    got = [t for t in texts if t]
+    gen = (plan or {}).get("generator") or ""
+    if not (source_scripts or []):
+        return ("no_source",
+                "소스 영상이 없습니다 — 담긴 영상을 확인해 주세요.")
+    if not got:
+        return ("extract_empty",
+                f"소스 {len(texts)}편에서 대본을 한 글자도 못 뽑았습니다"
+                " — 자막·음성이 없거나 추출이 막혔습니다(키 소진과는 다른 문제).")
+    if chars < 50:
+        return ("extract_thin",
+                f"뽑힌 대본이 너무 짧습니다({chars}자) — 편집안을 만들 재료가 부족합니다.")
+    # ★여기가 실측 다수 경로다. 추출은 됐는데 편집안이 비었다.
+    return ("plan_empty",
+            f"대본은 {chars}자 뽑혔는데 편집안(EDL)이 비었습니다"
+            f"{' [생성기=' + gen + ']' if gen else ''}"
+            " — Gemini 응답이 비었거나(키 소진·차단·과부하) 편집안 파싱에 실패했습니다.")
 
 
 def run_mix_job(job_id, db_path, work_root):
@@ -1123,18 +1191,27 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 오보고하지 않는다 — 성공처럼 보이는 빈 리뷰화면 대신 즉시 실패로 정상 종료
     # (2026-07-12 최종 전체리뷰 Important).
     if not plan["beats"]:
+        # ★사유를 갈라서 말한다(2026-08-19). 종전엔 "추출 실패 또는 키 소진"으로 뭉개서
+        #   실측 13건 중 대부분이 **추출은 성공한 상태**(9,091자)였는데도 "추출 실패"로
+        #   보였다 — 원인이 다르면 처방도 다르므로 여기서 갈라 기록·표시한다.
+        code, why = _edl_empty_reason(source_scripts, plan)
+        n_src = len(source_scripts or [])
+        n_chars = sum(len((s.get("full_text") or "")) for s in (source_scripts or []))
+        print(f"[EDL빈원인] code={code} sources={n_src} chars={n_chars} "
+              f"generator={(plan or {}).get('generator')!r}", file=sys.stderr)
         # 같은 이유로 사람에게 올린다(2026-08-04) — 08-03엔 Gemini 키 403(project denied)로
         # 이 실패가 2건 났는데 역시 조용히 DB에만 남았다. 키 소진/차단은 사람이 손대야 풀린다.
         try:
             from shopping_shorts import ops_alert
             ops_alert.raise_alert(
                 "edl_empty",
-                "편집안(EDL)을 만들지 못했습니다 — 대본 추출 실패 또는 Gemini 키 소진/차단",
-                "run_mix_job: EDL이 비어 있습니다. Gemini 키풀 상태(소진·403 PERMISSION_DENIED)와 "
-                "대본 추출 로그를 확인하세요.", store=store)
+                f"편집안(EDL)을 만들지 못했습니다 — {why}",
+                f"run_mix_job: EDL이 비어 있습니다. code={code} sources={n_src} chars={n_chars}. "
+                "plan_empty면 Gemini 키풀(소진·403 PERMISSION_DENIED)과 편집안 파싱을, "
+                "extract_empty면 소스 자막·음성 추출을 보세요.", store=store)
         except Exception:      # noqa: BLE001
             pass
-        raise RuntimeError("EDL 비어있음 — 대본 추출 실패 또는 Gemini 키 소진으로 편집안을 만들지 못함")
+        raise RuntimeError(f"EDL 비어있음({code}) — {why}")
 
     # 3.5/3.6) 장면 라이브러리 자동 배치(컷어웨이 + 효과음) — ★기본 OFF(2026-08-01 실사고).
     #

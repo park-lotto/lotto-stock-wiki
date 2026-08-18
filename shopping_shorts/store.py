@@ -4833,19 +4833,35 @@ class Store:
                 "UPDATE job_queue SET state=?, error=?, finished_at=datetime('now') WHERE id=?",
                 ("done" if ok else "failed", None if ok else (error or "알 수 없는 오류"), qid))
 
+    #: 배포 재시작으로 죽어도 **다음 크론이 다시 큐에 넣는** 배경작업(2026-08-19).
+    #  auto_deploy.sh가 이것들은 일부러 안 기다리고 죽인다("잃는 게 없다").
+    #  그래서 이 중단은 **고장이 아니다** — 같은 'failed'로 적으면 통계가 오염된다.
+    _BACKGROUND_TASKS = ("durfill", "prewarm", "overseas")
+
     def reap_stale(self, minutes=2):
-        """heartbeat가 minutes분 넘게 안 뛴 running을 failed로 정리하고 개수를 반환한다.
+        """heartbeat가 minutes분 넘게 안 뛴 running을 정리하고 개수를 반환한다.
 
         워커가 SIGKILL로 죽으면 heartbeat가 멈춘다 — 그걸 잡아 화면에 실패를 알린다.
-        (예전엔 조용히 멈춰 '되고 있나?'를 알 수 없었다, 2026-07-29 실사고)"""
+        (예전엔 조용히 멈춰 '되고 있나?'를 알 수 없었다, 2026-07-29 실사고)
+
+        ★사유를 갈라 적는다(2026-08-19 사장님 총점검 지시). 배경작업(durfill 등)은
+          배포 재시작에 일부러 희생시키는 것이라 중단이 **정상 동작**이다. 실측:
+          durfill done 248 / '중단' 33인데 길이 캐시는 24시간에 732건이 채워지고 있었다
+          = 일은 되고 있었다. 그런데 둘 다 'failed'로 적혀 오류표 1위(43건)로 올라와
+          진짜 고장(EDL 13건 등)을 가렸다. 상태는 그대로 두되 **문구로 구분**한다
+          — 화면·집계가 '중단(재시도됨)'을 고장으로 세지 않게."""
+        marks = ",".join("?" for _ in self._BACKGROUND_TASKS)
         with self._conn() as c:
             cur = c.execute(
-                "UPDATE job_queue SET state='failed', error='워커가 중단됐습니다', "
+                "UPDATE job_queue SET state='failed', "
+                "       error=CASE WHEN task IN (" + marks + ") "
+                "                  THEN '배포 재시작으로 중단됨(자동 재시도 대상 — 고장 아님)' "
+                "                  ELSE '워커가 중단됐습니다' END, "
                 "       finished_at=datetime('now') "
                 " WHERE state='running' "
                 "   AND (heartbeat_at IS NULL "
                 "        OR datetime(heartbeat_at) < datetime('now', ?))",
-                (f"-{int(minutes)} minutes",))
+                (*self._BACKGROUND_TASKS, f"-{int(minutes)} minutes"))
             return cur.rowcount
 
     def queue_status(self, task, args_match=None):
