@@ -8852,6 +8852,35 @@ def _analysis_state(store, shortcode):
     return None, {"state": "idle", "reason": "", "attempts": 0}
 
 
+@app.get("/api/lens/single")
+def api_lens_single(request: Request, url: str = ""):
+    """주소 하나 → **그 영상 카드 1장**(2026-08-18 사장님: "주소 넣으면 이렇게 뜨게").
+
+    ★렌즈(구글 이미지 역추적, SerpApi 월 100회·유료)를 **타지 않는다**. 사장님이 원한 건
+    "이 영상이 어떤 물건인지"이지 "비슷한 영상 찾기"가 아니다. 비슷한 것은 팝업 안의
+    버튼으로 그때만 /api/lens/trace_url을 부른다 — 안 쓰면 0원.
+
+    지표는 probe_grab_meta(yt-dlp 메타 / 쓰레드는 우리 수집기) 한 곳에서만 읽는다.
+    담기·카드가 쓰는 것과 같은 함수라 화면마다 숫자가 달라지지 않는다(0순위-B).
+    반환: {ok, item:{platform,url,title,thumbnail,views,likes,comments,duration,channel,followers,ts}}
+    """
+    u = (url or "").strip()
+    plat = _grab_platform(u)
+    if not plat:
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": "지원하지 않는 주소예요(유튜브·틱톡·인스타·쓰레드·샤오홍슈·도우인)"})
+    meta = probe_grab_meta(u) or {}
+    item = {"platform": plat, "url": u,
+            "title": meta.get("title") or "", "thumbnail": meta.get("thumbnail") or ""}
+    for k in ("views", "likes", "comments", "shares", "duration", "channel", "followers", "ts"):
+        if meta.get(k) not in (None, ""):
+            item[k] = meta[k]
+    # 지표가 하나도 안 나와도 카드는 준다 — 주소는 살아 있는데 로그인벽 등으로 메타만
+    # 못 읽는 경우가 흔하다(그때도 담기·숏템파워검색은 그대로 쓸 수 있어야 한다).
+    item["meta_ok"] = bool(meta)
+    return {"ok": True, "item": item}
+
+
 @app.get("/api/basket/analysis_status")
 def api_basket_analysis_status(request: Request, shortcodes: str = ""):
     """즐겨찾기 화면의 분석 신호등 — 여러 개를 한 번에 묻는다(2026-08-18 사장님 요청).
