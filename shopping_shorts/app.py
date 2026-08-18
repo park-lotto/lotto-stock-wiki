@@ -10668,14 +10668,21 @@ def _sources_for_generate(item, job, limit=3):
     """
     out, seen = [], set()
 
-    def _add(name, full_text, structure):
+    def _add(name, full_text, structure, product=""):
         txt = (full_text or "").strip()
         if not txt or txt in seen:
             return
         seen.add(txt)
-        out.append({"name": name or "", "full_text": txt, "structure": structure or {}})
+        # ★product를 함께 싣는다(2026-08-18). 1단계 분석이 이미 뽑아 둔 값이다
+        #   (source_brief.product — 실측 "다이소 자석 네일펜"). 지금까지 이 값이
+        #   대본 생성에 한 번도 안 실려서, AI가 여러 텍스트 더미를 보고 **소재를 스스로
+        #   추론**해야 했다 — 그 추론이 학습 재료 쪽으로 새는 게 이번 사고였다.
+        #   아는 값을 안 주고 짐작하게 하는 구조 자체가 문제다.
+        out.append({"name": name or "", "full_text": txt, "structure": structure or {},
+                    "product": (product or "").strip()})
 
-    _add(item.get("category") or "", item.get("full_text"), item.get("structure"))
+    _add(item.get("category") or "", item.get("full_text"), item.get("structure"),
+         ((item.get("source_brief") or {}).get("product") if isinstance(item.get("source_brief"), dict) else ""))
     for _vid, ex in sorted(((job or {}).get("extract") or {}).items()):
         if len(out) >= limit:
             break
@@ -10686,7 +10693,9 @@ def _sources_for_generate(item, job, limit=3):
             txt = " ".join((s.get("text") or "").strip()
                            for s in (ex.get("segments") or [])
                            if isinstance(s, dict)).strip()
-        _add(item.get("category") or "", txt, ex.get("structure"))
+        _brief = ex.get("source_brief")
+        _add(item.get("category") or "", txt, ex.get("structure"),
+             (_brief or {}).get("product") if isinstance(_brief, dict) else "")
     return out[:limit]
 
 
