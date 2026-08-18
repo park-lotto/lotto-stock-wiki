@@ -1376,9 +1376,13 @@
         </div>
 
         <div style="flex:0 0 300px">
-          <div class="hint" style="margin-bottom:4px">텍스트를 드래그하여 위치 이동</div>
+          <div class="hint" style="margin-bottom:4px">드래그로 이동 · 스티커를 누르면 ✕삭제 / ↔크기 / ↻방향 손잡이가 나옵니다</div>
+          <!-- 손잡이는 캔버스 '위에 뜬 DOM'이다(2026-08-18). 캔버스에 그리면 저장 PNG에 같이 구워진다. -->
+          <div id="thumbStage" style="position:relative;width:270px;height:480px">
           <canvas id="thumbCanvas" width="1080" height="1920"
                   style="width:270px;height:480px;border-radius:8px;cursor:move;background:#111"></canvas>
+          <div id="thumbHandles" style="position:absolute;inset:0;pointer-events:none"></div>
+          </div>
           <button class="btn-next" style="width:270px;margin-top:8px" onclick="generateThumb()">썸네일 생성</button>
           <div id="thumbSaveStatus" class="hint" style="margin-top:6px"></div>
         </div>
@@ -7957,6 +7961,68 @@ async function renderThumbCanvas(){
   if (gen !== THUMB_RENDER_GEN) return;   // 기다리는 사이 새 렌더가 예약됐다 — 이번 건 버린다
   const ctx = cv.getContext('2d');
   drawThumb(ctx, THUMB_STATE.img, THUMB_STATE.layers, THUMB_W, THUMB_H);
+  renderThumbHandles();
+}
+
+// ── 🖐 스티커·도형 손잡이(2026-08-18 사장님: "삭제 간단히 / 끝부분 잡고 크기·방향") ──
+// 캔버스가 아니라 그 위에 뜬 DOM 버튼이다 — 캔버스에 그리면 generateThumb의 toBlob이
+// 손잡이까지 PNG에 구워버린다(저장물 오염). 위치는 % 라 미리보기 크기가 바뀌어도 따라간다.
+// 반각(half)은 그리기 쪽과 같은 식을 쓴다: 스티커 px=W*size/100, 도형 r=W*size/200 → 둘 다 W*size/200.
+function _thumbHalf(L){
+  const hx = (L.size != null ? L.size : 18) / 200;   // x축 정규화 반각
+  return {hx, hy: hx * (THUMB_W / THUMB_H)};          // 캔버스가 세로로 길어 y는 비율만큼 작다
+}
+function renderThumbHandles(){
+  const box = document.getElementById('thumbHandles'); if (!box) return;
+  const L = (THUMB_STATE.layers || [])[THUMB_STATE.sel];
+  if (!L || !['sticker', 'shape'].includes(L.kind)){ box.innerHTML = ''; return; }
+  const {hx, hy} = _thumbHalf(L);
+  const pos = (x, y) => `left:${(x * 100).toFixed(2)}%;top:${(y * 100).toFixed(2)}%`;
+  const btn = (id, x, y, label, title, cur) =>
+    `<button data-h="${id}" title="${title}" style="position:absolute;${pos(x, y)};
+       transform:translate(-50%,-50%);pointer-events:auto;width:22px;height:22px;border-radius:50%;
+       border:1.5px solid #fff;background:#1b1b28;color:#fff;font-size:12px;line-height:1;
+       padding:0;cursor:${cur};box-shadow:0 1px 4px rgba(0,0,0,.6)">${label}</button>`;
+  box.innerHTML =
+    `<div style="position:absolute;${pos(L.x - hx, L.y - hy)};width:${(hx * 200).toFixed(2)}%;
+        height:${(hy * 200).toFixed(2)}%;border:1.5px dashed rgba(255,255,255,.65);border-radius:4px"></div>` +
+    btn('del',  L.x + hx, L.y - hy, '✕', '삭제', 'pointer') +
+    btn('size', L.x + hx, L.y + hy, '↔', '끌어서 크기 조절', 'nwse-resize') +
+    btn('rot',  L.x - hx, L.y + hy, '↻', '끌어서 방향(각도) 돌리기', 'grab');
+}
+
+// 손잡이 드래그 — 캔버스 드래그(이동)와 겹치지 않게 손잡이에서 시작한 것만 여기서 처리한다.
+function initThumbHandleDrag(){
+  const box = document.getElementById('thumbHandles'); if (!box || !box.addEventListener) return;
+  const cv = document.getElementById('thumbCanvas');
+  let mode = null;
+  const to = e => {
+    const r = cv.getBoundingClientRect();
+    return {x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height};
+  };
+  box.addEventListener('mousedown', e => {
+    const b = e.target.closest('button[data-h]'); if (!b) return;
+    e.preventDefault(); e.stopPropagation();      // 캔버스 이동 드래그가 같이 붙는 걸 막는다
+    const h = b.getAttribute('data-h');
+    if (h === 'del'){ removeThumbLayer(THUMB_STATE.sel); return; }
+    mode = h;
+  });
+  window.addEventListener('mouseup', () => { mode = null; });
+  window.addEventListener('mousemove', e => {
+    if (!mode) return;
+    const L = THUMB_STATE.layers[THUMB_STATE.sel]; if (!L) return;
+    const p = to(e);
+    const dx = (p.x - L.x) * THUMB_W, dy = (p.y - L.y) * THUMB_H;   // px 공간에서 재야 각도가 맞다
+    if (mode === 'size'){
+      // 중심에서 손잡이까지가 반각이므로, 끈 거리를 그대로 반각으로 삼는다(대각선 기준).
+      const s = Math.max(Math.abs(dx), Math.abs(dy)) / THUMB_W * 200;
+      L.size = Math.min(120, Math.max(4, Math.round(s)));
+    } else {
+      // ↻ 손잡이는 좌하단(캔버스 각도 135°)에 있다 → 그 차이가 곧 회전각.
+      L.rot = Math.round(Math.atan2(dy, dx) * 180 / Math.PI - 135);
+    }
+    renderThumbCanvas(); renderThumbLayers();
+  });
 }
 
 function addThumbLayer(){
@@ -8020,7 +8086,7 @@ function addThumbStickerFromInput(){
   if (hint) hint.textContent = one + ' 얹었어요 — 미리보기에서 드래그해 옮기세요';
 }
 
-function selectThumbLayer(i){ THUMB_STATE.sel = i; renderThumbLayers(); }
+function selectThumbLayer(i){ THUMB_STATE.sel = i; renderThumbLayers(); renderThumbHandles(); }
 function removeThumbLayer(i){
   THUMB_STATE.layers.splice(i, 1);
   // 삭제 위치와 무관하게 줄이면, 안 지운 레이어를 고르고 있어도 편집창이 말없이 딴 레이어로 바뀐다
@@ -8328,7 +8394,7 @@ function initThumbDrag(){
     THUMB_STATE.sel = best;                            // 잡은 글자를 선택으로
     const L = THUMB_STATE.layers[best];
     offX = L.x - p.x; offY = L.y - p.y;                // 잡은 지점과의 간격 유지 = 상대이동
-    renderThumbLayers();
+    renderThumbLayers(); renderThumbHandles();
   });
   window.addEventListener('mouseup', () => { grabbed = -1; });
   cv.addEventListener('mousemove', e => {
@@ -8437,7 +8503,7 @@ async function selectThumbResult(name){
 
 let THUMB_INITED = false;
 function initThumb(){
-  if (!THUMB_INITED){ initThumbDrag(); THUMB_INITED = true; }  // 리스너는 한 번만
+  if (!THUMB_INITED){ initThumbDrag(); initThumbHandleDrag(); THUMB_INITED = true; }  // 리스너는 한 번만
   // ★job이 바뀌었으면(재매칭·복원으로 MIX_JOB 교체) 이전 작업의 썸네일 상태를 버린다.
   // 안 그러면 프레임(=job_id로 새로 받음)은 새 영상인데 텍스트 레이어·제목추천은 이전 작업
   // 것이 남아 "타코 영상에 아침밥 제목"이 뜬다(2026-07-22 실측). 같은 job 재진입(단계 왕복)은
