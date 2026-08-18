@@ -84,6 +84,17 @@
           backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
   .card .body{padding:12px;flex:1;display:flex;flex-direction:column}
   .card .rank{font-size:12px;color:var(--sub);display:flex;align-items:center;gap:6px}
+/* 본문 문구(2026-08-18 사장님 "문구가 핵심이자나") — 쓰레드는 캡션이 콘텐츠 본체다.
+   4줄까지 보여주고 넘치면 …로 자른다(전문은 title 툴팁). 카드 높이를 일정하게
+   유지해야 그리드가 계단지지 않는다(정렬 원칙). */
+.cap{font-size:13px;line-height:1.5;color:var(--txt);margin:6px 0 8px;
+     display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;
+     overflow:hidden;white-space:pre-wrap;word-break:break-word}
+/* 썸네일이 없는 글 전용 — 사진 자리가 없으니 문구가 카드의 얼굴이다. 크게 보여준다.
+   실측 194건(21%)이 글만 있고, 그중 좋아요 최대 17,595로 반응이 제일 크다. */
+.cap-only{font-size:15px;line-height:1.6;-webkit-line-clamp:8;margin-top:2px;
+          padding:10px 12px;background:var(--inset);border-radius:8px;
+          border-left:3px solid var(--accent)}
   .card .ch{font-weight:600;font-size:14px;margin:4px 0;display:flex;align-items:center;justify-content:space-between;gap:6px}
   .card .ch .chname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .copy{flex-shrink:0;background:var(--inset);border:1px solid var(--line);color:var(--sub);font-size:12px;padding:4px 7px;border-radius:6px;cursor:pointer;line-height:1}
@@ -1630,19 +1641,21 @@ function render(opts){
   if(items.length > RENDER_CAP) items = items.slice(0, RENDER_CAP);
   el.innerHTML = _notice + items.map((i,idx)=>`
     <div class="card">
-      <div class="thumb">
+      ${i.thumbnail?`<div class="thumb">
         <img src="${thumbURL(i.thumbnail, i.shortcode)}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.platform==='youtube'?`onclick="playYoutube(this,'${i.shortcode}')"`:(i.platform==='tiktok'?`onclick="playTiktok(this,'${i.shortcode}')"`:((i.platform||PLATFORM)==='instagram'?`onclick="playInstagram(this,'${i.shortcode}')"`:'')))} loading="lazy" onerror="this.style.visibility='hidden'">
         ${badgeHTML(i, _bctx)}
         ${(i.video_url||i.platform==='youtube'||i.platform==='tiktok'||(i.platform||PLATFORM)==='instagram')?'<span class="play-badge">▶</span>':''}
-      </div>
+      </div>`:''}
       <div class="body">
         <div class="rank"><span>#${idx+1} · ${i.category} · ${fmtAgo(i)}</span><button class="blockbtn" title="이 채널을 영구 차단 — 지금 바로 가리고, 다음 수집·업데이트에도 안 올라옵니다" onclick="blockChannel('${esc(i.username||'')}','${esc(i.name||'')}',this)">🚫 차단</button></div>
+        ${i.caption?`<div class="cap${i.thumbnail?'':' cap-only'}" title="${esc(i.caption)}">${esc(i.caption)}</div>`:''}
         <div class="ch"><span class="chname" title="이 채널 영상만 보기(지난 한 달 포함)" style="cursor:pointer" onclick="searchChannel('${esc(i.username||'')}')">${i.name||i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${i.url}', this)">🔗 복사</button></div>
-        <div class="folw"><span title="채널 팔로워(구독자) 수 — 수집이 실어온 실시간 값">👥 팔로워 ${i.followers?i.followers.toLocaleString():'—'}</span>${i.duration!=null?`<span class="dur" title="영상 길이">🎬 ${_fmtDur(i.duration)}</span>`:''}</div>
+        ${(i.followers||i.duration!=null)?`<div class="folw">${i.followers?`<span title="채널 팔로워(구독자) 수 — 수집이 실어온 실시간 값">👥 팔로워 ${i.followers.toLocaleString()}</span>`:''}${i.duration!=null?`<span class="dur" title="영상 길이">🎬 ${_fmtDur(i.duration)}</span>`:''}</div>`:''}
         ${i.views?`<div class="stat" title="조회수 — 옆의 +숫자는 직전 수집 대비 증가분(= '전체' 탭 정렬 기준)"><span>조회수</span><b>${i.views.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>`:''}
         <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${i.comments.toLocaleString()}${i.views?'':` <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span>`}</b></div>
         <div class="stat" title="댓글 ÷ 경과시간 — 게시 후 시간당 평균"><span>시간당댓글</span><b>${_num(i.speed,1)}</b></div>
-        <div class="stat" title="댓글 ÷ 조회수 — 본 사람 중 댓글 단 비율"><span>조회수당댓글</span><b>${_pct(i.density)}</b></div>
+        ${i.views?`<div class="stat" title="댓글 ÷ 조회수 — 본 사람 중 댓글 단 비율"><span>조회수당댓글</span><b>${_pct(i.density)}</b></div>`:''}
+        ${(i.likes&&!i.views)?`<div class="stat" title="좋아요 수 그대로 — 쓰레드는 조회수를 안 준다"><span>좋아요</span><b>${i.likes.toLocaleString()}</b></div>`:''}
         ${i.fan_density?`<div class="stat" title="댓글 ÷ 팔로워수 — 구독자 규모 대비 반응"><span>팔로워당댓글</span><b>${_pct(i.fan_density)}</b></div>`:""}
         ${i.inpock?`<div style="margin-top:6px"><a href="${i.inpock}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🛒 판매채널</a></div>`:''}
         <div class="actions">
