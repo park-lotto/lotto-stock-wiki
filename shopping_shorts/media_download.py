@@ -567,5 +567,20 @@ def resolve_media_url(platform, video_id, timeout=30):
     # 열어주는 '추가 수단'이지 필수가 아니므로, 실패 시 무쿠키가 항상 더 나은 하한선이다.
     # 세션이 살아 있으면 첫 시도에서 끝나 이 경로는 안 탄다(비용 0).
     if _cookies_arg(page):
-        return _try(cookies=False)
+        url = _try(cookies=False)
+        if url:
+            return url
+    # ★인스타 마지막 안전망(2026-08-18 사장님 제보 "신규채널 픽업 #1 카드를 누르면
+    # 인스타 새 창이 뜬다"): yt-dlp는 게시물에 따라 'empty media response'로 죽는다
+    # (실측 DcGsKVxyzPv=실패 / DcGamFcBfLr·DcFd1c0pNaf=성공 — 로그아웃 접근이
+    # 막힌 게시물). 그러면 프론트(discover.html playInstagram)가 새 탭을 열어
+    # "왜 카드 안에서 안 나오지"로 보인다.
+    # 담기 경로(_download_instagram)는 이미 세션 REST 폴백을 갖고 있었는데
+    # 미리보기 경로에만 빠져 있었다 — 같은 판단이 두 군데로 갈린 형태(0순위-B).
+    # 같은 폴백을 여기에도 붙인다. 실측: 세션 경로는 그 게시물 mp4를 정상 회수한다.
+    if platform == "instagram":
+        try:
+            return _ig_video_via_session(video_id) or ""
+        except Exception:      # noqa: BLE001 — 마지막 폴백 실패는 ""와 동치
+            return ""
     return ""
