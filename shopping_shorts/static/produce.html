@@ -6006,7 +6006,7 @@ async function cloneCandidate(idx){
   // ★2단계 상태도 함께 끊는다(2026-08-18). WORK_ID만 비우면 곧바로 도는 saveWork가
   //   **옛 작업의 씨앗·대본을 새 작업에 담아** 저장한다 — 그게 이번 "2단계에서 아예 딴게
   //   나온다"의 뿌리다. 새 작업은 재료도 대본도 처음부터다.
-  S2.drafts = []; S2.curDraft = 0; S2.picked = []; S2.materials = null; S2.seed = null;
+  if(typeof _s2Reset === 'function') _s2Reset();
   // ★고른 후보 대본을 STATE.script에 싣는다(2026-08-06). 작업 제목은 서버가
   //   state.script 앞 20자에서 뽑는다(upsert_produce_work) — 안 실으면 목록에
   //   '(제목 없음)'만 여러 줄 쌓여 어느 게 A안이고 C안인지 구분이 안 된다.
@@ -8669,6 +8669,11 @@ function _s2Snapshot(){
 }
 // 되살리기. ★없으면 **지운다** — 다른 작업으로 갈아탔는데 앞 작업의 대본이 남아 있으면
 //   그게 곧 2026-07-25 '캐리오버' 사고(옛 대본이 새 영상에 실려 나감)와 같은 모양이 된다.
+// 2단계 상태를 처음으로 되돌린다. ★정의는 여기 한 곳뿐(0순위-B) — 새 작업 분기와
+//   복원 실패 분기가 각자 적으면 한쪽만 고쳐져 어긋난다.
+function _s2Reset(){
+  S2.drafts = []; S2.curDraft = 0; S2.picked = []; S2.materials = null; S2.seed = null;
+}
 function _s2Hydrate(w){
   let s = (w && w.s2) || null;
   // ★남의 작업 스냅샷이면 버린다(2026-08-18). 스냅샷에 새긴 work_id와 지금 여는 작업이
@@ -8689,7 +8694,7 @@ function _s2Hydrate(w){
     //   홈데코랩(DbmCnyTTobw)이 그대로 살아, 대본이 통째로 다이소 주방청소로
     //   나왔다(materials.sources 3편 중 2편이 무관한 옛 영상).
     //   seed와 drafts는 한 작업의 짝이다 — 따로 정하면 반드시 어긋난다(0순위-B).
-    S2.drafts = []; S2.curDraft = 0; S2.picked = []; S2.materials = null; S2.seed = null;
+    _s2Reset();
     // ★옛 작업 구제(2026-08-17, 사장님 제보 "확정 대본도 안 보인다").
     //   이 배포 **전에** 만든 작업엔 s2 스냅샷이 없다 — 후보 A안·B안은 저장된 적이 없어
     //   물리적으로 못 되살린다. 하지만 **확정한 대본(w.script)은 예전부터 저장돼 있었다.**

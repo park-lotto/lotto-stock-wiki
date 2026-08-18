@@ -24,6 +24,7 @@ function fn(name) {
 
 let S2 = { seed: null, seeds: [], drafts: [], curDraft: 0, picked: [], materials: null };
 let WORK_ID = null;
+eval(fn('_s2Reset'));
 eval(fn('_s2Snapshot'));
 eval(fn('_s2Hydrate'));
 

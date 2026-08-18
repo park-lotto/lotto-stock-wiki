@@ -24,6 +24,7 @@ const seedLogic=(()=>{
 })();
 
 let S2={seed:null,seeds:[],drafts:[],curDraft:0,picked:[],materials:null};
+function _s2Reset(){ S2.drafts=[]; S2.curDraft=0; S2.picked=[]; S2.materials=null; S2.seed=null; }
 eval(fnHydrate);
 
 function renderSeedsCore(aiPick){
