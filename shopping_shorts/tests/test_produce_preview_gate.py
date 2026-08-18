@@ -164,10 +164,15 @@ _SCENARIO_BTN = r"""
   // btnNext 게이트도 cur===0에서 cur===7로 같이 옮겨왔다 — 게이트는 여전히 "매칭 리뷰+미리보기를
   // 하는 그 패널"에 걸린다, 다만 그 패널이 이제 7번이다.
   PREVIEW_STATUS = null;  cur = 7;  refreshNextBtn();
-  if (b.disabled !== true) fails.push('화면 붙이기(매칭)·미리보기 전인데 btnNext가 안 잠겼다');
+  // ★2026-08-18부터 게이트는 disabled(회색)가 아니라 **버튼 문구**로 알린다(사장님 지시).
+  //   막는 판정 자체는 go()가 한다 — 여기선 "왜 못 넘어가는지 화면에 보이나"를 본다.
+  if (!/확정하세요/.test(String(b.textContent || '')))
+    fails.push('화면 붙이기(매칭)·미리보기 전인데 [다음]이 이유를 안 알려준다');
   if (!String(b.title || '').trim()) fails.push('왜 잠겼는지 안내(title)가 없다');
   PREVIEW_STATUS = 'ready'; refreshNextBtn();
   if (b.disabled !== false) fails.push('미리보기 후에도 btnNext가 잠겨 있다');
+  if (/확정하세요/.test(String(b.textContent || '')))
+    fails.push('미리보기를 봤는데도 [다음]이 아직 안내 문구다');
   // 다른 단계에선 이 게이트가 끼어들면 안 된다
   PREVIEW_STATUS = null; cur = 2; refreshNextBtn();
   if (b.disabled !== false) fails.push('3단계인데 화면 붙이기 게이트가 다음을 잠갔다');
@@ -360,8 +365,8 @@ _SCENARIO_REMATCH_RELOCKS_GATE = r"""
     fails.push('재매칭했는데 옛 job의 미리보기 상태가 남았다(' + PREVIEW_STATUS + ') — 새 영상을 못 본 채 게이트가 열린다');
   if (canGoNext() !== false)
     fails.push('재매칭 중인데 canGoNext()가 true — [다음]을 누르면 J2를 한 번도 못 본 채 유료 자막제거로 넘어간다');
-  if (btn.disabled !== true)
-    fails.push('재매칭 중인데 btnNext가 열려 있다');
+  if (!/확정하세요/.test(String(btn.textContent || '')))
+    fails.push('재매칭 중인데 btnNext가 열려 있다(안내 문구가 없다)');
 
   // 4) 옛 **미리보기** 폴러가 죽어야 한다(안 죽이면 옛 job을 2.5초마다 계속 두드린다).
   //    ⚠️ _timers 전체를 세면 안 된다 — startProduceMix가 MIX_POLL(매칭 폴러)을 **정당하게** 만든다.
