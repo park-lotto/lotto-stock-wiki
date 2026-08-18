@@ -10694,7 +10694,7 @@ def _sources_for_generate(item, job, limit=3):
     """
     out, seen = [], set()
 
-    def _add(name, full_text, structure, product=""):
+    def _add(name, full_text, structure, product="", segments=None):
         txt = (full_text or "").strip()
         if not txt or txt in seen:
             return
@@ -10705,10 +10705,15 @@ def _sources_for_generate(item, job, limit=3):
         #   추론**해야 했다 — 그 추론이 학습 재료 쪽으로 새는 게 이번 사고였다.
         #   아는 값을 안 주고 짐작하게 하는 구조 자체가 문제다.
         out.append({"name": name or "", "full_text": txt, "structure": structure or {},
-                    "product": (product or "").strip()})
+                    "product": (product or "").strip(),
+                    # ★세그먼트도 싣는다(2026-08-18) — 대본이 '이 문장은 어느 대목을 보고
+                    #   썼는지'(src_seg)를 지목하려면 번호가 붙은 목록을 봐야 한다.
+                    #   무자막 소스는 text가 비어 있고 scene_desc만 있다 — 그것도 단서다.
+                    "segments": segments or []})
 
     _add(item.get("category") or "", item.get("full_text"), item.get("structure"),
-         ((item.get("source_brief") or {}).get("product") if isinstance(item.get("source_brief"), dict) else ""))
+         ((item.get("source_brief") or {}).get("product") if isinstance(item.get("source_brief"), dict) else ""),
+         item.get("segments"))
     for _vid, ex in sorted(((job or {}).get("extract") or {}).items()):
         if len(out) >= limit:
             break
@@ -10721,7 +10726,8 @@ def _sources_for_generate(item, job, limit=3):
                            if isinstance(s, dict)).strip()
         _brief = ex.get("source_brief")
         _add(item.get("category") or "", txt, ex.get("structure"),
-             (_brief or {}).get("product") if isinstance(_brief, dict) else "")
+             (_brief or {}).get("product") if isinstance(_brief, dict) else "",
+             ex.get("segments"))
     return out[:limit]
 
 

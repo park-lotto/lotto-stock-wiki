@@ -65,6 +65,47 @@ def _normalize_canonical(text, bucket=None):
     return t
 
 
+def _apply_beat_sources(beats, structure, seg_map):
+    """2단계가 남긴 출처 장면(src_seg)을 비트 primary에 반영한다.
+
+    ★지어낸 번호는 무시한다 — seg_map에 실재하는 것만 쓴다(환각 방어).
+    ★이미 그 장면을 쓰고 있으면 그대로 둔다. 다른 장면이면 primary를 갈아끼우고
+      원래 primary는 alternates 맨 앞으로 살려 둔다(화면 재고를 버리지 않는다).
+    ★역할(role)이 맞는 것끼리만 짝짓는다 — 순서만 믿으면 비트 수가 다를 때 어긋난다.
+    """
+    srcs = (structure or {}).get("beat_sources")
+    if not srcs or not isinstance(srcs, list):
+        return beats
+    by_role = {}
+    for i, x in enumerate(srcs):
+        if isinstance(x, dict) and x.get("seg"):
+            by_role.setdefault(str(x.get("role") or "").lower(), []).append(x["seg"])
+    if not by_role:
+        return beats
+    from shopping_shorts import edit_plan as _ep
+    for b in beats:
+        role = str(b.get("role") or "").lower()
+        want = by_role.get(role)
+        if not want:
+            continue
+        sid = want.pop(0)
+        if sid not in seg_map:
+            continue                      # 지어낸 번호 — 무시하고 종전 화면을 쓴다
+        cur = (b.get("primary") or {}).get("seg_id")
+        if cur == sid:
+            continue
+        g = _ep._ground_ref({"seg_id": sid}, seg_map)
+        if not g:
+            continue
+        alts = list(b.get("alternates") or [])
+        if b.get("primary"):
+            alts.insert(0, b["primary"])
+        b["primary"] = g
+        b["alternates"] = [a for a in alts if (a or {}).get("seg_id") != sid]
+        b["src_seg_applied"] = sid        # 사후에 '출처를 따라갔는가'를 셀 수 있게 남긴다
+    return beats
+
+
 def _ensure_screen_time(plan, store, job_id):
     """저장 직전 불변식: 비트마다 화면 길이 합 >= 대사 읽는 시간.
 
@@ -88,6 +129,14 @@ def _ensure_screen_time(plan, store, job_id):
         seg_map, _ = _ep._build_inventory(srcs)
         if not seg_map:
             return plan
+        # ★출처 장면 우선 적용(2026-08-18 사장님 "그 대본에 장면을 사용하면 좋다").
+        #   2단계가 문장마다 '어느 대목을 보고 썼는지'(src_seg)를 남기고, 그 값이
+        #   script_structure.beat_sources로 여기까지 온다. 짐작이 아니라 **원래 그 말이
+        #   나온 그림**이라 가장 정확하다. 화면 길이 채우기 **앞**에 둔다 — primary가
+        #   바뀌면 길이도 다시 재야 한다.
+        #   ⚠️여기(저장 출구)에 두는 이유는 화면길이와 같다: 계획을 만드는 경로가 여럿이라
+        #     만드는 쪽마다 적으면 반드시 한 곳이 빠진다(0순위-B).
+        beats = _apply_beat_sources(beats, (job.get("script_structure") or {}), seg_map)
         out = dict(plan)
         out["beats"] = _ep._fill_beat_screen_time(beats, seg_map)
         return out
