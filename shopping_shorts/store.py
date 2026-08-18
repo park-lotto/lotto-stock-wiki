@@ -4854,6 +4854,39 @@ class Store:
             return {"id": qid, "state": state, "position": ahead, "error": error,
                     "progress": progress, "claimed_at": claimed_at}
 
+    def task_is_alive(self, task, args_match, stale_minutes=3):
+        """이 task+args 작업이 **지금 워커에서 살아 돌고 있나**(하트비트 기준).
+
+        ★왜 필요한가(2026-08-19 실사고): 화면의 '진행중 → 실패' 판정이 `updated_at`
+        경과시간(_PREVIEW_STALE_SEC=10분)만 봤다. 그런데 워커는 도는 동안
+        `job_queue.heartbeat_at`만 찍고 `mix_jobs.updated_at`은 안 건드린다 —
+        즉 **10분 넘게 걸리는 정상 작업은 무조건 '실패'로 표시**됐다.
+        실측: 자막제거 25분 작업(15:52→16:17)이 10분 시점부터 빨간 실패 문구를 띄웠고,
+        정작 결과는 성공이었다(자막 3개 전부 제거 확인). 사장님이 "왜 실패?"로 본 그 화면이다.
+
+        `reap_stale(minutes=2)`이 죽은 running을 failed로 바꾸므로, 하트비트가 살아 있다면
+        그건 **진짜로 돌고 있는 것**이다. 여유를 둬 기본 3분으로 본다(reap 2분 > 폴링 지연).
+        queued(아직 차례 대기)도 살아있는 것으로 친다 — 실패가 아니다.
+        """
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT state, heartbeat_at FROM job_queue "
+                " WHERE task=? AND args_json=? ORDER BY id DESC LIMIT 1",
+                (task, json.dumps(args_match, ensure_ascii=False))).fetchone()
+            if not row:
+                return False                      # 큐 기록이 없으면 판단 불가 → 기존 규칙에 맡긴다
+            state, hb = row
+            if state == "queued":
+                return True                       # 순번 대기 중 — 아직 시작도 안 했다
+            if state != "running":
+                return False                      # done/failed는 여기서 볼 게 없다
+            if not hb:
+                return False
+            alive = c.execute(
+                "SELECT datetime(?) > datetime('now', ?)",
+                (hb, f"-{int(stale_minutes)} minutes")).fetchone()[0]
+            return bool(alive)
+
     # ── 렌더 포인트 원장(2026-07-17, 자동매칭 고급효과 엔진 Task1) ──
     # 잔액 컬럼을 따로 두지 않고 delta 누적합으로 계산하는 원장(ledger) 방식.
     # points.py가 이 두 메서드만 통해 테이블에 접근한다(SQL은 store.py에 캡슐화).

@@ -8,6 +8,7 @@ import hashlib
 import re
 import subprocess
 import sys
+import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
@@ -1363,13 +1364,38 @@ def _resolve_sfx_paths(store, plan, customer_id):
     return out
 
 
+# VMake가 간헐적으로 뱉는 처리 실패 — 같은 영상을 다시 넣으면 대개 통과한다.
+# (실측 2026-07-23·08-18 두 건 모두 code 10101 "right reduce error", 잔액·인증은 정상이었다.
+#  성공 35건+ 대비 실패 3건이라 상시 고장이 아니라 간헐 오류로 본다.)
+_CLEAN_RETRY = 2          # 최초 1회 + 재시도 2회 = 최대 3번
+_CLEAN_RETRY_WAIT = 5     # 초. 곧바로 다시 때리면 같은 이유로 또 실패하기 쉽다.
+
+
 def _clean_one(item, key, work):
     """소스 하나를 VMake로 청소 → (video_id, 클린경로, 지워진자막박스|None). ThreadPool 워커용(DB 미접근).
     청소 직후 원본↔클린을 diff해 '어디가 지워졌나'를 그 자리에서 구한다 — VMake는 좌표를 안 주지만
-    우리가 before/after를 둘 다 쥐고 있어 계산 가능하다(best-effort, 실패해도 None으로 청소는 성공)."""
+    우리가 before/after를 둘 다 쥐고 있어 계산 가능하다(best-effort, 실패해도 None으로 청소는 성공).
+
+    ★간헐 실패 자동 재시도(2026-08-19): VMake는 멀쩡한 영상에도 가끔 10101을 준다.
+      예전엔 그 한 번으로 작업 전체가 실패로 끝나 사장님이 손으로 다시 눌러야 했다.
+      **재과금은 없다** — 과금은 호출부(_ensure_clean_sources)에서 소스 개수로 선차감하고
+      여기선 같은 소스를 다시 시도할 뿐이다. VMake 쪽도 실패한 작업은 크레딧을 안 깎는다
+      (실측: 실패 3건 동안 잔액이 그대로였다)."""
     vid, src = item
     out = str(Path(work) / f"clean_src_{vid}.mp4")
-    clean_path = remove_subtitles(src, key, out_path=out)
+    last = None
+    for attempt in range(_CLEAN_RETRY + 1):
+        try:
+            clean_path = remove_subtitles(src, key, out_path=out)
+            break
+        except Exception as e:
+            last = e
+            if attempt >= _CLEAN_RETRY:
+                print(f"[clean] {vid} 최종 실패({attempt + 1}회 시도): {e}", file=sys.stderr)
+                raise
+            print(f"[clean] {vid} 실패 — {_CLEAN_RETRY_WAIT}초 뒤 재시도"
+                  f"({attempt + 1}/{_CLEAN_RETRY}): {e}", file=sys.stderr)
+            time.sleep(_CLEAN_RETRY_WAIT)
     region = sub_region.detect_erased_region(src, clean_path, work)
     return vid, clean_path, region
 

@@ -6819,6 +6819,7 @@ async function restoreCleanPreview(){
       box.innerHTML='<div class="cp-run rise"><div class="cp-bar"></div>'
         +'<div class="cp-run-lbl"><span class="cp-dot"></span>AI가 자막 영역을 자연스럽게 복원하는 중…</div>'
         +'<div class="cp-run-sub">다른 단계 먼저 진행해도 돼요 — 끝나면 여기에 결과가 뜹니다.</div></div>';
+      updateCleanProgress(d);            // 돌아왔을 때도 "N편 중 M편 완료"를 바로 보여준다
       const myGen=++CLEAN_GEN;
       CLEAN_POLL=setInterval(()=>pollClean(myGen,job),3000);
     }
@@ -6856,12 +6857,25 @@ async function startCleanPreview(){
     CLEAN_POLL=setInterval(()=>pollClean(myGen,myJob),3000); pollClean(myGen,myJob);
   }catch(e){ if(CLEAN_GEN!==myGen) return; box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; if(btn) btn.disabled=false; }
 }
+// 진행 문구 갱신(2026-08-19). 자막제거는 소스 1편당 수 분이라 전체 25분이 걸려도 정상인데,
+// 예전엔 화면이 처음부터 끝까지 똑같아 "실패했나/멈췄나"로 읽혔다. 끝난 소스 수를 보여준다.
+function updateCleanProgress(d){
+  const el=document.querySelector('#cleanPreview .cp-run-sub');
+  if(!el) return;
+  const done=d.clean_done|0, total=d.clean_total|0;
+  el.textContent = total
+    ? `영상 ${total}편 중 ${done}편 완료 — 1편당 몇 분씩 걸려요(전체 20~30분도 정상). 다른 단계 먼저 진행해도 돼요.`
+    : '보통 몇 분, 길면 수십 분 걸릴 수 있어요. 다른 단계 먼저 진행해도 돼요.';
+}
 async function pollClean(gen,job){
   const box=document.getElementById('cleanPreview');
   const btn=document.getElementById('btnCleanPreview');
   try{
     const d=await (await fetch('/api/mix/status/'+job)).json();
     if(CLEAN_GEN!==gen || MIX_JOB!==job) return;
+    // 진행 표시(2026-08-19): 소스 1편당 수 분이라 전체 25분도 정상이다. 끝난 개수를
+    // 계속 갱신해 "멈춘 게 아니라 돌고 있다"를 보이게 한다.
+    if(d.clean_status==='cleaning') updateCleanProgress(d);
     if(d.clean_status==='ready'){
       clearInterval(CLEAN_POLL); CLEAN_POLL=null;
       if(d.clean_regions) CLEAN_REGIONS=d.clean_regions;   // 지워진 자막 자리(5단계 꾸미기가 씀)
