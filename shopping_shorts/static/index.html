@@ -2726,7 +2726,17 @@ function toggleLensShorts(shortcode){
 const _HANGUL_RE=/[가-힣]/;
 function toggleLensForeign(shortcode){
   const st=LENS_STATE[shortcode]; if(!st) return;
-  st.foreignOnly=!st.foreignOnly; renderLens(shortcode);
+  st.foreignOnly=!st.foreignOnly;
+  if(st.foreignOnly) st.koreanOnly=false;   // 둘 다 켜면 결과가 0이 된다(서로 배타)
+  renderLens(shortcode);
+}
+// 🇰🇷 한국만(2026-08-18 사장님 요청) — '해외만'의 반대. 제목에 한글이 있는 결과만 남긴다.
+// 판정은 해외만과 **같은 자(_HANGUL_RE)**를 쓴다 — 따로 만들면 한쪽만 고쳐져 어긋난다.
+function toggleLensKorean(shortcode){
+  const st=LENS_STATE[shortcode]; if(!st) return;
+  st.koreanOnly=!st.koreanOnly;
+  if(st.koreanOnly) st.foreignOnly=false;
+  renderLens(shortcode);
 }
 // 🎬 영상만 — 인스타 카드뉴스(사진·카러셀) 가리기(2026-07-30 사장님 제보 "카드뉴스가 많다").
 // 판정은 서버 lens_discover.is_photo_post가 URL 경로로 한다(/p/=사진 후보, /reel·/tv=영상).
@@ -3015,6 +3025,7 @@ function renderLens(shortcode, mountId){
   let shown=st.items.filter(i=>st.on.has(i.platform));
   if(st.shortsOnly) shown=shown.filter(i=>i.is_short!==false);
   if(st.foreignOnly) shown=shown.filter(i=>!_HANGUL_RE.test(i.title||''));
+  if(st.koreanOnly) shown=shown.filter(i=>_HANGUL_RE.test(i.title||''));
   // 카드뉴스(인스타 /p/) 가리기 — 서버가 준 is_photo만 본다(undefined면 통과 = 옛 결과 안전).
   if(st.videoOnly!==false) shown=shown.filter(i=>i.is_photo!==true);
   // 죽은 링크(oEmbed 404 = 삭제·비공개) — 열면 엉뚱한 피드로 떨어져 항상 가린다(2026-08-03).
@@ -3044,6 +3055,7 @@ function renderLens(shortcode, mountId){
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px"><input type="checkbox" ${allSel?'checked':''} onclick="lensSelectAll('${shortcode}')"> 전체선택</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="영상 길이 90초 이하(또는 길이 불명)만 표시"><input type="checkbox" ${st.shortsOnly?'checked':''} onclick="toggleLensShorts('${shortcode}')"> 숏폼만</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="제목에 한글이 없는 결과만 표시 — 원본(해외) 영상 찾을 때. 채널명이 아닌 제목 기준 근사치라 완벽하진 않음"><input type="checkbox" ${st.foreignOnly?'checked':''} onclick="toggleLensForeign('${shortcode}')"> 🌍 해외만</label>
+      <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="제목에 한글이 있는 결과만 표시 — 국내 레퍼런스를 볼 때. '해외만'과 반대라 둘은 함께 켜지지 않습니다(제목 기준 근사치)"><input type="checkbox" ${st.koreanOnly?'checked':''} onclick="toggleLensKorean('${shortcode}')"> 🇰🇷 한국만</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="인스타 카드뉴스(사진·카러셀 게시물)를 가립니다. URL이 /p/면 사진으로 봅니다 — 렌즈 응답에 동영상 여부가 없어서 쓰는 근사치라, 드물게 /p/로 올라간 옛 동영상도 같이 가려집니다(끄면 다시 보임)"><input type="checkbox" ${st.videoOnly!==false?'checked':''} onclick="toggleLensVideoOnly('${shortcode}')"> 🎬 영상만${nPhoto?` <span style="color:var(--sub)">(카드뉴스 ${nPhoto})</span>`:''}</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="소재 키워드가 제목에 하나도 없는 결과(⚠️다른주제?)를 가립니다. 렌즈는 시각 유사도만 보기 때문에 엉뚱한 게시물이 섞입니다. ⚠️중국어·영어 제목은 키워드가 안 맞아 원본(해외) 후보까지 사라질 수 있어 기본 꺼짐"><input type="checkbox" ${st.hideOfftopic?'checked':''} onclick="toggleLensOfftopic('${shortcode}')"> ⚠️ 다른주제 숨기기${nOff?` <span style="color:var(--sub)">(${nOff})</span>`:''}</label>
       <button onclick="lensBulkSave('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">📥 선택 담기(${selCount})</button>
