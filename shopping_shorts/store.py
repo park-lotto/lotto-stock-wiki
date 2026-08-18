@@ -137,6 +137,11 @@ def _ensure_screen_time(plan, store, job_id):
         #   ⚠️여기(저장 출구)에 두는 이유는 화면길이와 같다: 계획을 만드는 경로가 여럿이라
         #     만드는 쪽마다 적으면 반드시 한 곳이 빠진다(0순위-B).
         beats = _apply_beat_sources(beats, (job.get("script_structure") or {}), seg_map)
+        # ★확정 대본을 지켰는지 여기서 검사한다(2026-08-18 사장님 "영상이랑 대본이랑 다르다").
+        #   프롬프트는 "그대로 써라"를 두 번 말하지만 지켰는지 보는 곳이 없었다 — 실측으로
+        #   훅·중간 비트가 장면 설명 말투로 창작돼 있었다. 화면길이·출처장면과 같은 이유로
+        #   저장 출구에 둔다(만드는 경로가 여럿, 0순위-B).
+        beats, _restored = _ep.enforce_scripted_narration(beats, job.get("given_script") or "")
         out = dict(plan)
         out["beats"] = _ep._fill_beat_screen_time(beats, seg_map)
         return out
