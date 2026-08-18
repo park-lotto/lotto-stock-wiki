@@ -156,3 +156,26 @@ def test_저장한_대본이_새_자막으로_계산된다(monkeypatch, tmp_path
     joined = "".join(x["text"] for x in caps).replace(" ", "")
     assert "풍신" not in joined, f"옛 문장 자막이 남았다: {caps}"
     assert "궁금하시면" in joined
+
+
+# ── 재생성한 음성이 바로 들려야 한다(2026-08-18 사장님 "다시 뽑기 했는데 적용이 안 되네") ──
+# mp3 경로가 늘 같아 브라우저 캐시가 옛 파일을 계속 줬다. 게다가 오디오 재사용 키도
+# job+칸이라 버전이 올라가도 src를 다시 붙이지 않았다 — 두 겹으로 옛 소리가 남았다.
+
+def _play_js():
+    import pathlib
+    return (pathlib.Path(__file__).resolve().parents[1] / "static" / "scene_play.js").read_text(encoding="utf-8")
+
+
+def test_tts_url_carries_version():
+    js = _play_js()
+    i = js.index("tts:   (i, ver)")
+    line = js[i:js.index("\n", i)]
+    assert "?v=${ver||0}" in line, "tts URL에 버전이 없다 — 캐시가 옛 mp3를 계속 준다"
+
+
+def test_seat_tts_key_includes_version():
+    js = _play_js()
+    body = js[js.index("function seatTts("):js.index("function playTts(")]
+    assert "ttsVer(i)" in body and "'#' + v" in body, "오디오 재사용 키에 버전이 없다"
+    assert "SL.tts(i, v)" in body
