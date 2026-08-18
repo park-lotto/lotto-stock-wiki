@@ -8886,6 +8886,15 @@ def api_lens_single(request: Request, url: str = ""):
     # 지표가 하나도 안 나와도 카드는 준다 — 주소는 살아 있는데 로그인벽 등으로 메타만
     # 못 읽는 경우가 흔하다(그때도 담기·숏템파워검색은 그대로 쓸 수 있어야 한다).
     item["meta_ok"] = bool(meta)
+    # ★썸네일을 누르면 카드 안에서 바로 재생되게(2026-08-18 사장님 "레퍼런스 페이지랑 동일").
+    #   화면은 play_url이 있으면 해석 왕복 없이 그 자리에서 튼다(lensPlayInline ①번 길).
+    #   실패는 무해 — 없으면 종전대로 플랫폼별 해석 경로로 떨어진다.
+    try:
+        play = resolve_media_url(u)
+        if play:
+            item["play_url"] = play
+    except Exception:
+        pass
     return {"ok": True, "item": item}
 
 
