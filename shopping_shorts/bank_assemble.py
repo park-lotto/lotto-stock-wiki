@@ -278,7 +278,17 @@ def voice_block(style):
     return out
 
 
-def assemble_bank_context(store, category, k=5):
+#: 은행(학습 재료)이 재료 대본보다 몇 배까지 길어도 되는가.
+#  ★2026-08-18 사고의 물리적 원인이 이 비율이다 — 실측: 재료 750자(네일 3편) vs
+#  은행 2,822자(3.8배). 그 상태에선 은행 안의 구체적 소재 하나만 있어도 대본이
+#  그쪽으로 끌려간다(A안이 통째로 '주방 기름 가림막'). 부품이 더러워서가 아니라
+#  **학습 재료가 재료를 압도해서** 터진 것이다.
+#  1.5배로 잡은 근거: 은행은 '말투·구조'만 담당하므로 재료보다 길 이유가 없다.
+#  여유를 조금 두는 것은 스파인 헌장(뼈대)이 고정비로 들어가기 때문이다.
+_BANK_BUDGET_RATIO = 1.5
+
+
+def assemble_bank_context(store, category, k=5, source_chars=0):
     """스파인 charter + 부품 top-k + ★우승 대본 few-shot 합본. 없으면 ''(호출부는 빈 문자열이면
     기존 헌장만 써서 회귀0)."""
     # ★category 비어도(자동유형 경로는 video_type=None→"") 스파인을 건너뛰지 마라(2026-07-23
@@ -290,6 +300,16 @@ def assemble_bank_context(store, category, k=5):
                           winners_block(store, category)) if x]
     if not blocks:
         return ""
+    # ★예산 초과분은 **뒤에서부터 블록 단위로** 뺀다(2026-08-18).
+    #   순서가 곧 중요도다: 스파인 헌장(뼈대) > 말버릇 > 전개 패턴 > 우승 예시 전문.
+    #   뒤로 갈수록 '실제 문장'이라 소재를 흘릴 위험이 크고, 없어도 뼈대는 살아 있다.
+    #   ⚠️글자 단위로 자르지 않는다 — 문장 중간이 잘리면 지시가 반쪽이 돼 더 나쁘다.
+    #   ⚠️첫 블록(스파인)은 무슨 일이 있어도 남긴다. 그게 없으면 스타일 자체가 사라진다.
+    #   source_chars=0(안 넘긴 옛 호출)이면 종전 그대로 = 회귀 0.
+    if source_chars and source_chars > 0:
+        budget = int(source_chars * _BANK_BUDGET_RATIO)
+        while len(blocks) > 1 and sum(len(b) for b in blocks) > budget:
+            blocks.pop()
     # ★소재 오염 차단(2026-08-18 사장님 제보 "대본을 뽑으니 이상한 게 나온다").
     #   실측: 담긴 재료 3편이 전부 다이소 네일펜인데 A안이 통째로 '주방 기름 가림막'으로
     #   나왔다(work 3b8e5099a22e). 이 블록은 2,822자짜리 학습 재료라 재료 대본보다 길고
