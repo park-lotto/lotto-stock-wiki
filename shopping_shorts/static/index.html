@@ -1381,7 +1381,23 @@ function badgeHTML(i, ctx){
 }
 // 검색창 하나로 채널명·소재·링크 — 링크면 엔터 시 원본·유사 영상 추적으로 보낸다(2026-07-22).
 // (채널명·소재는 oninput이 이미 필터링. 링크만 엔터라는 명시 동작이 필요 — 유료 렌즈 남용 방지.)
-function _looksLikeUrl(q){ return /^\s*https?:\/\//i.test(q||''); }
+// ★https:// 가 없어도 링크로 본다(2026-08-18 사장님 "엔터가 안 먹는다").
+//   크롬 주소창은 https://를 감춰서 보여주고, 그 상태로 복사하면 스킴이 빠진 채 붙는다
+//   (실측: `youtube.com/shorts/_6v_...`). 종전 판정은 https:// 로 시작할 때만 링크라
+//   그 주소를 **검색어로 취급**해 아무 일도 안 일어났다.
+// ⚠️ 아무 글자나 받으면 채널명 검색이 링크로 오인된다 → 우리가 담을 수 있는 호스트만 본다
+//   (app.py _GRAB_DOMAINS와 같은 목록).
+var _URL_HOSTS = /^(?:https?:\/\/)?(?:www\.|m\.|vm\.|vt\.)?(?:youtube\.com|youtu\.be|instagram\.com|tiktok\.com|threads\.com|threads\.net|xiaohongshu\.com|xhslink\.com|rednote\.com|douyin\.com|iesdouyin\.com)\//i;
+function _looksLikeUrl(q){
+  const s=(q||'').trim();
+  return /^https?:\/\//i.test(s) || _URL_HOSTS.test(s);
+}
+// 스킴이 빠진 주소에 https://를 붙인다 — 서버는 hostname으로 플랫폼을 가리므로
+// 스킴이 없으면 hostname이 비어 422가 난다(그래서 여기서 한 번만 정규화한다).
+function _normUrl(q){
+  const s=(q||'').trim();
+  return /^https?:\/\//i.test(s) ? s : (s ? 'https://'+s.replace(/^\/+/,'') : '');
+}
 // ★2026-08-18: 링크를 넣으면 **먼저 그 영상 카드**를 보여준다(무료). 종전엔 곧바로
 //   렌즈(유료·유사영상)로 갔는데, 사장님이 원한 건 "넣은 그 영상"이었다. 유사 찾기는
 //   그 팝업 안의 버튼으로 남겼다 — 경로는 그대로 traceByUrl.
@@ -2466,7 +2482,7 @@ async function traceByUrl(urlArg){
 async function openUrlCard(urlArg){
   const pre = (typeof urlArg==='string' && urlArg.trim()) ? urlArg.trim()
             : ((document.getElementById('rankSearch')||{}).value||'').trim();
-  const url = _looksLikeUrl(pre) ? pre : '';
+  const url = _looksLikeUrl(pre) ? _normUrl(pre) : '';   // 스킴 없는 주소도 받는다
   const box = document.getElementById('cards');
   if(!url){
     if(box) box.innerHTML='<div class="empty">🔗 영상 주소를 붙여넣고 <b>엔터</b>를 누르세요.</div>';
