@@ -64,7 +64,7 @@ from shopping_shorts.media_download import (resolve_media_url, download_any, pro
                                             _is_direct_video, DouyinBusy)
 from shopping_shorts import edit_plan as _edit_plan
 from shopping_shorts import edit_plan
-from shopping_shorts import voice_presets, audio_post
+from shopping_shorts import voice_presets, audio_post, typecast_tts
 from shopping_shorts import pron_corrections
 from shopping_shorts.tts import synthesize_tts
 from shopping_shorts import tts, asr_check
@@ -4282,6 +4282,10 @@ def api_voice_presets(lang: str = "KR"):
             # 3~4개 variant 행은 모두 같은 값이다. 순서는 Store가 이미 정해서
             # 줬고(ORDER BY best DESC), dict가 삽입 순서를 보존하므로 여기선 보존만 한다.
             "best": bool(p.get("best", False)),
+            # 어느 엔진 성우인지 카드에 배지로 띄운다(2026-08-19). 판정은 서버가 한다 —
+            # 프론트가 group_id 접두사("tc-") 따위로 추측하면 판단이 두 곳이 된다(0순위-B).
+            "engine": ("typecast" if typecast_tts.is_typecast(p.get("model_id"))
+                       else "elevenlabs"),
             "default_variant": "stable", "variants": {},
         })
         g["variants"][p["variant"]] = {

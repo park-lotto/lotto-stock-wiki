@@ -21,6 +21,7 @@ from shopping_shorts.script_extract import extract_script
 from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC, build_edit_plan, conform_narration
 from shopping_shorts.scene_match import match_scene_assets, match_sfx
 from shopping_shorts import tts
+from shopping_shorts import typecast_tts
 from shopping_shorts import audio_post
 from shopping_shorts import config
 from shopping_shorts import usage_meter
@@ -182,7 +183,14 @@ def _voice_params(voice):
     빠지면 튜닝 작업대에서 동결한 값이 렌더에 도달하지 못한다(2026-07-15 whole-branch 리뷰 S1/S8)."""
     v = voice or _DEFAULT_VOICE
     speed = v.get("speed", 1.0)
-    extra_tempo = speed / 1.2 if speed > 1.2 else 1.0  # 1.2 초과분만 atempo로
+    model_id = v.get("model_id") or "eleven_v3"
+    # ★타입캐스트는 API가 tempo 0.5~2.0을 직접 받는다(2026-08-19). 일레븐랩스처럼
+    #   1.2 초과분을 후처리 atempo로 또 당기면 **이중 가속**이 된다(1.6배가 2.1배로
+    #   들린다). 엔진 판정은 typecast_tts.is_typecast 한 곳만 쓴다(0순위-B).
+    if typecast_tts.is_typecast(model_id):
+        extra_tempo = 1.0
+    else:
+        extra_tempo = speed / 1.2 if speed > 1.2 else 1.0  # 1.2 초과분만 atempo로
     return (v.get("voice_id"), v.get("settings"), speed, extra_tempo,
             v.get("silence_trim", "off"), v.get("naturalize_profile"),
             v.get("model_id") or "eleven_v3", v.get("pace_mode", False))
@@ -235,11 +243,16 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
                                         audio_post.measure_removed_spans(str(out_path)))
         except Exception:
             pass                  # 측정 실패 = 선형 폴백(기존 동작), 렌더는 계속
-    # 비트별 라우드니스 정규화는 실제 ElevenLabs 음성일 때만 — 키 없는 개발용 무음 mock에
+    # 비트별 라우드니스 정규화는 **실제 음성일 때만** — 키 없는 개발용 무음 mock에
     # loudnorm을 걸면 무음 바닥을 노이즈로 끌어올린다(reference_local_tts_silent_mock_trap).
+    # ★"실제 음성인가"는 그 비트가 쓰는 엔진의 키로 판정한다(2026-08-19). 종전엔
+    #   ELEVENLABS_API_KEY만 봐서, 타입캐스트 성우로 뽑은 진짜 음성이 일레븐랩스 키가
+    #   없다는 이유로 정규화를 건너뛰어 **혼자만 작게** 들렸다.
+    has_voice_key = (bool(typecast_tts.api_key()) if typecast_tts.is_typecast(model_id)
+                     else bool(config.ELEVENLABS_API_KEY))
     audio_post.post_process(str(out_path), str(out_path), tempo=extra_tempo,
                             silence_trim=trim, pace_mode=pace_mode,
-                            loudnorm=bool(config.ELEVENLABS_API_KEY))
+                            loudnorm=has_voice_key)
     return natural
 
 

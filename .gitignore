@@ -157,3 +157,8 @@ db/users.db
 
 # 쿠팡 선수집 임시 수집물(상세 이미지) — 커밋 대상 아님
 .coupang_facts/
+
+# 성우 샘플 옆 정렬 사이드카(2026-08-19) — TTS 합성 시 자동 생성되는 런타임 산출물이다.
+# mp3만 자산으로 커밋한다(일레븐랩스 47개도 mp3만 추적 중). 커밋하면 재굽기마다 diff가 난다.
+shopping_shorts/assets/voice_samples/*.align.json
+shopping_shorts/assets/voice_samples/*.cuts.json
