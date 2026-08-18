@@ -1013,6 +1013,16 @@
            (좌우 뒤집기만으로는 안 없어졌다 — 실측으로 확인). 성우를 고르면 이 줄이 사라지고
            (#voiceHint display:none, pickPreset) 오른쪽 칸을 설정이 실제 내용으로 채운다. -->
         <div id="voiceHint" class="hint" style="margin-top:8px;padding:10px 12px;border:1px dashed var(--line);border-radius:9px">아래에서 <b>성우</b>를 고르면 속도·미리듣기 설정이 나타납니다.</div>
+      <!-- ★일레븐랩스 계정 보이스 등록(2026-08-18, 관리자만). 종전엔 성우를 늘리려면
+           assets/voice_presets.json을 고치고 샘플을 굽고 배포해야 했다. 등록 한 번이 톤 4종
+           프리셋 + 미리듣기 샘플을 만든다(실TTS 4회 = 크레딧을 쓰므로 관리자 전용).
+           #elvBox는 기본 숨김이고 loadElevenVoices()가 열 때만 채운다. -->
+      <div id="elvAdmin" style="display:none;margin-top:8px">
+        <button class="btn-prev" style="padding:6px 12px;min-height:44px" onclick="toggleElevenPicker()">＋ 일레븐랩스에서 성우 추가</button>
+        <div id="elvBox" style="display:none;margin-top:8px;border:1px solid var(--line);border-radius:9px;padding:10px;max-height:320px;overflow:auto">
+          <div id="elvList" class="hint">불러오는 중…</div>
+        </div>
+      </div>
       <!-- ★한 칸 안에서는 세로로 쌓는다 — 360px 폭에 카드와 설정을 좌우로 나누면 둘 다 좁아진다. -->
       <div id="voiceUI" style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
         <!-- ① 성우 카드 (⭐베스트 5 상시 + ＋더보기로 나머지 9명) — 먼저 하는 일 -->
@@ -6593,14 +6603,28 @@ const WHISPER_ROLE_PRESETS=[
 ];
 let WHISPER_PICK='reversal'; // 기본값 — 엔진 기본 프로파일(whisper.roles=['반전'])과 동일
 
-async function loadTtsBeats(){
-  // 프리셋 카드는 job(영상매칭) 없이도 항상 표시 — 둘러보기·샘플 미리듣기 가능
+// 성우 목록을 불러 카드까지 다시 그린다. **부르는 곳이 둘**이다(처음 열 때 loadTtsBeats,
+// 일레븐랩스에서 성우를 등록·삭제한 뒤 addElevenVoice/removeElevenVoice) — 그래서 fetch와
+// 렌더 순서를 여기 한 곳에만 적는다(0순위-B: 두 벌이면 한쪽만 고쳐져 어긋난다).
+// 실패는 false를 반환하고 카드 자리에 표시한다.
+async function loadPresets(){
   try{
     const d=await (await fetch('/api/voice-presets?lang=KR')).json();
     VOICE_GROUPS=d.groups||[];
     renderPresetCards();
     syncCurVoiceName();   // 처음 뜰 때도 접힌 줄에 지금 성우를 띄운다(2026-08-18)
-  }catch(e){ document.getElementById('presetCards').innerHTML='<div class="hint" style="color:var(--fire)">프리셋 로드 실패</div>'; return; }
+    return true;
+  }catch(e){
+    document.getElementById('presetCards').innerHTML='<div class="hint" style="color:var(--fire)">프리셋 로드 실패</div>';
+    return false;
+  }
+}
+
+async function loadTtsBeats(){
+  // 프리셋 카드는 job(영상매칭) 없이도 항상 표시 — 둘러보기·샘플 미리듣기 가능
+  if(!await loadPresets()) return;
+  // 관리자에게만 '＋ 일레븐랩스에서 성우 추가'를 연다(등록은 실TTS 4회 = 크레딧).
+  { const a=document.getElementById('elvAdmin'); if(a && window.IS_ADMIN) a.style.display='block'; }
   renderTtsBeats();
 }
 
@@ -6653,6 +6677,65 @@ function renderPresetCards(){
 function pickVariant(gid, variant){
   SEL_VARIANT[gid]=variant;
   pickPreset(gid); // 버튼으로 톤 전환 시 바로 적용
+}
+
+// ── 일레븐랩스 계정 보이스 등록 (2026-08-18, 관리자 전용) ─────────────────────────
+// 성우를 늘리는 유일한 방법이 'JSON 고치고 샘플 굽고 배포'였다. 여기서 목록을 보고
+// 누르면 톤 4종 + 미리듣기가 만들어지고 아래 성우 카드에 바로 나타난다.
+// ★등록은 실제 TTS 4회(크레딧)라 되돌리기 쉽게 삭제 버튼을 같이 둔다.
+function toggleElevenPicker(){
+  const box=document.getElementById('elvBox'); if(!box) return;
+  const opening = box.style.display==='none';
+  box.style.display = opening ? 'block' : 'none';
+  if(opening) loadElevenVoices();
+}
+async function loadElevenVoices(){
+  const el=document.getElementById('elvList'); if(!el) return;
+  el.innerHTML='<span class="hint">불러오는 중…</span>';
+  let d;
+  try{ d=await (await fetch('/api/admin/eleven-voices')).json(); }
+  catch(e){ el.innerHTML='<span class="hint" style="color:var(--fire)">조회 실패</span>'; return; }
+  if(!d || !d.ok){
+    el.innerHTML='<span class="hint" style="color:var(--fire)">'+esc((d&&d.error)||'조회 실패')+'</span>';
+    return;
+  }
+  if(!(d.voices||[]).length){ el.innerHTML='<span class="hint">계정에 담긴 보이스가 없습니다.</span>'; return; }
+  el.innerHTML = d.voices.map(v=>{
+    const reg = v.registered_group;
+    const btn = reg
+      ? `<button class="btn-prev" style="padding:3px 8px" onclick="removeElevenVoice('${esc(reg)}')">등록됨 · 빼기</button>`
+      : `<button class="btn-next" style="padding:3px 10px" onclick="addElevenVoice(this,'${esc(v.voice_id)}','${esc(v.name).replace(/'/g,"\\'")}')">＋ 추가</button>`;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)">
+      <div style="flex:1 1 auto;min-width:0">
+        <b style="font-size:13px">${esc(v.name)}</b>
+        <span class="hint" style="margin-left:6px">${esc(v.category||'')}</span>
+      </div>
+      ${v.preview_url?`<audio src="${esc(v.preview_url)}" controls preload="none" style="height:28px;max-width:150px"></audio>`:''}
+      ${btn}
+    </div>`;
+  }).join('');
+}
+async function addElevenVoice(btn, voiceId, name){
+  // 샘플 4개를 실제로 굽느라 20초 이상 걸린다 — 누른 티가 안 나면 두 번 누른다.
+  btn.disabled=true; const old=btn.textContent; btn.textContent='만드는 중…';
+  try{
+    const r=await fetch('/api/admin/eleven-voices/register',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({voice_id:voiceId, name:name})});
+    const d=await r.json();
+    if(!d.ok){ alert('등록 실패: '+(d.error||r.status)); btn.disabled=false; btn.textContent=old; return; }
+    if((d.sample_failed||[]).length) console.warn('[성우등록] 샘플 실패', d.sample_failed);
+    await loadPresets();          // 성우 카드 새로고침 — 방금 만든 성우가 바로 보인다
+    loadElevenVoices();
+  }catch(e){ alert('등록 실패: '+e); btn.disabled=false; btn.textContent=old; }
+}
+async function removeElevenVoice(groupId){
+  if(!confirm('이 성우를 목록에서 빼시겠어요? (일레븐랩스 계정의 보이스는 그대로 남습니다)')) return;
+  try{
+    await fetch('/api/admin/eleven-voices/'+encodeURIComponent(groupId),{method:'DELETE'});
+    await loadPresets();
+    loadElevenVoices();
+  }catch(e){ alert('삭제 실패: '+e); }
 }
 
 // 접힌 '🎙 목소리 바꾸기' 줄에 **지금 무슨 성우로 만들어졌는지**를 띄운다(2026-08-18).

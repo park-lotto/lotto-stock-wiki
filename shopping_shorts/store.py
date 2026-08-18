@@ -4025,6 +4025,16 @@ class Store:
             c.execute(f"DELETE FROM voice_presets WHERE origin='curated' "
                       f"AND preset_id NOT IN ({placeholders})", keep)
 
+    def delete_voice_group(self, group_id, origin="library"):
+        """등록 성우 한 명(그룹=톤 4종)을 통째로 삭제. 지운 행 수 반환.
+
+        origin을 조건에 넣는다 — 관리자 화면의 삭제가 실수로 큐레이션 14그룹이나 튜닝
+        프리셋까지 지우지 못하게 막는다(기본 'library' = 일레븐랩스에서 등록한 것만)."""
+        with self._conn() as c:
+            cur = c.execute("DELETE FROM voice_presets WHERE group_id=? AND origin=?",
+                            (group_id, origin))
+            return cur.rowcount
+
     def get_setting(self, key, default=None):
         """전역 설정값 조회(예: vmake_api_key). 없으면 default."""
         with self._conn() as c:

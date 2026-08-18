@@ -4246,6 +4246,62 @@ def api_voice_presets(lang: str = "KR"):
     return {"ok": True, "groups": list(groups.values())}
 
 
+# ── 일레븐랩스 계정 보이스 → 성우 카드 등록 (2026-08-18, 관리자 전용) ─────────────
+# 종전엔 고를 수 있는 성우가 assets/voice_presets.json에 박힌 14그룹뿐이라, 일레븐랩스에서
+# 새 보이스를 담아도 파일 수정→샘플 굽기→배포를 거쳐야 화면에 나왔다. 아래 3개가 그 왕복을
+# 없앤다. 판단(톤 수치·샘플 굽는 법)은 전부 eleven_voices 모듈 한 곳에 있다(0순위-B).
+@app.get("/api/admin/eleven-voices")
+def api_admin_eleven_voices(request: Request):
+    """사장님 일레븐랩스 계정에 담긴 보이스 목록 + 이미 등록된 voice_id 표시."""
+    if (deny := _require_admin(request)) is not None:
+        return deny
+    from shopping_shorts import eleven_voices
+    res = eleven_voices.list_account_voices(0)
+    # 이미 등록된 것은 화면에서 '등록됨'으로 보여야 한다 — 같은 보이스를 두 번 등록하면
+    # 성우 카드가 중복으로 늘어난다.
+    registered = {}
+    for p in Store(DB_PATH).list_voice_presets():
+        if p.get("base_voice_id"):
+            registered[p["base_voice_id"]] = p.get("group_id")
+    for v in res["voices"]:
+        v["registered_group"] = registered.get(v["voice_id"])
+    return res
+
+
+@app.post("/api/admin/eleven-voices/register")
+async def api_admin_eleven_voice_register(request: Request):
+    """보이스 1개 등록 → 톤 4종(안정/자연/표현/속삭임) 프리셋 + 미리듣기 샘플 생성.
+
+    샘플 굽기는 실제 TTS 호출이라 크레딧을 쓴다(4건). 그래서 등록 버튼은 관리자만 누른다."""
+    if (deny := _require_admin(request)) is not None:
+        return deny
+    from shopping_shorts import eleven_voices
+    body = await request.json()
+    voice_id = (body.get("voice_id") or "").strip()
+    name = (body.get("name") or "").strip()
+    if not voice_id or not name:
+        return JSONResponse({"ok": False, "error": "voice_id·name 필요"}, status_code=400)
+    res = eleven_voices.register(Store(DB_PATH), voice_id, name,
+                                 one_liner=(body.get("one_liner") or "").strip(),
+                                 lang=(body.get("lang") or "KR").strip() or "KR",
+                                 bake=bool(body.get("bake", True)))
+    return {"ok": True, **res}
+
+
+@app.delete("/api/admin/eleven-voices/{group_id}")
+def api_admin_eleven_voice_delete(group_id: str, request: Request):
+    """등록 성우 삭제. origin='library'만 지운다 — 큐레이션 14그룹은 이 경로로 못 지운다."""
+    if (deny := _require_admin(request)) is not None:
+        return deny
+    n = Store(DB_PATH).delete_voice_group(group_id, origin=eleven_voices_origin())
+    return {"ok": True, "deleted": n}
+
+
+def eleven_voices_origin():
+    from shopping_shorts import eleven_voices
+    return eleven_voices.ORIGIN
+
+
 @app.get("/api/voice-presets/{preset_id}/sample")
 def api_voice_preset_sample(preset_id: str):
     p = Store(DB_PATH).get_voice_preset(preset_id)
