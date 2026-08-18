@@ -226,8 +226,11 @@ def style_block(style, seconds=30):
     chars = style.get("chars_per_30s") or 0
     dens = ""
     if chars:
-        target = int(chars * seconds / 30)
-        dens = ("\n- 전체 %d초에 **%d자 안팎**으로 꽉 채워라(이 스타일 히트작의 실제 밀도다). "
+        # 목표 글자수는 script_gate가 한 곳에서 정한다(0순위-B) — 프롬프트와 판정이 다른
+        # 수를 쓰면 "시킨 대로 썼는데 반려"가 난다. 그 안에 말속도 천장(8.19자/초)이 있다.
+        from shopping_shorts.script_gate import density_target
+        target = density_target(style, seconds)
+        dens = ("\n- 전체 %d초에 **%d자를 넘기지 마라** — 이 길이가 플랫폼 규격이다(히트작 밀도를 말속도로 환산한 값). "
                 "칸 하나에 평균 %d자 — 한 문장으로 끝내지 말고 2~3문장씩 써라. "
                 "말이 비면 이 스타일이 아니다." % (seconds, target, max(1, target // len(roles))))
     return ("★[스타일: %s] — 아래 칸을 **이 순서 그대로** 채워라(순서를 바꾸거나 칸을 빼면 반려된다).\n"

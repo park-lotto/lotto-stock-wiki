@@ -181,3 +181,36 @@ def test_예산을_안_주면_종전_그대로다(monkeypatch):
     out = B.assemble_bank_context(_fake_store(), "홈템")
     for kw in ("뼈대", "말버릇", "전개", "우승예시"):
         assert kw in out
+
+
+# ── 말 밀도 천장(2026-08-18 사장님: "계속 4초 이상 / 30초 이내가 릴스 기본") ──────────
+# 히트작 실측 밀도(264~377자/30초)를 그대로 목표로 주면 우리 보이스 실측 8.19자/초로
+# 32~46초짜리가 나온다. 길이는 플랫폼 규격이라 밀도보다 우선한다.
+
+def test_density_target_capped_by_speech_speed():
+    from shopping_shorts.script_gate import density_target, SPEECH_CHARS_PER_SEC
+    cap = int(SPEECH_CHARS_PER_SEC * 30)
+    assert density_target({"chars_per_30s": 377}, 30) == cap
+    assert density_target({"chars_per_30s": 264}, 30) == cap
+    # 천장 아래인 스타일은 그대로 존중한다(회귀 0)
+    assert density_target({"chars_per_30s": 135}, 30) == 135
+    # 길이를 늘려 잡으면 천장도 같이 올라간다
+    assert density_target({"chars_per_30s": 377}, 60) == int(SPEECH_CHARS_PER_SEC * 60)
+
+
+def test_gate_upper_bound_never_exceeds_speech_cap():
+    """통과 상한(DENSITY_HI 1.4배)이 천장을 넘으면 '30초짜리'가 다시 42초가 된다."""
+    from shopping_shorts import script_gate as g
+    style = {"beat_roles": ["hook"], "chars_per_30s": 377}
+    checks, _ = g.check(style, [{"role": "hook", "text": "가" * 300}], seconds=30)
+    dens = [c for c in checks if c["name"].startswith("말 밀도")]
+    assert dens and not dens[0]["ok"], "300자(=36.6초)가 30초 대본으로 통과했다"
+
+
+def test_prompt_and_gate_use_the_same_target():
+    """프롬프트가 시킨 글자수와 판정 기준이 다르면 '시킨 대로 썼는데 반려'가 난다."""
+    from shopping_shorts.bank_assemble import style_block
+    from shopping_shorts.script_gate import density_target
+    style = {"name": "테스트", "beat_roles": ["hook", "cta"],
+             "beat_chain": ["훅", "약속"], "chars_per_30s": 377}
+    assert str(density_target(style, 30)) in style_block(style, seconds=30)

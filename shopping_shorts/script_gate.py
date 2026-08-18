@@ -48,6 +48,22 @@ _TAIL_EMI = ("거든요", "더라고요", "더라구요", "었어요", "았어�
 DENSITY_LO, DENSITY_HI = 0.7, 1.4
 DEFAULT_CHARS_PER_30S = 135      # 스타일에 실측값이 없을 때만(일반 기준 4.5자/초)
 
+# ★말 밀도의 **천장**(2026-08-18 사장님: "계속 4초 이상 나온다 / 30초 이내가 릴스 기본").
+#   히트작 실측 밀도(chars_per_30s)를 그대로 목표로 주면 264~377자가 나오는데, 우리
+#   라이브 보이스의 실측 속도는 **8.19자/초**(edit_plan.py:4226, 라이브 렌더 20건)라
+#   300자 = 약 37초다. 즉 "30초짜리"를 시켜놓고 44초 대본을 받고 있었다.
+#   밀도는 스타일의 색이지만 길이는 플랫폼 규격이다 — 규격이 이긴다.
+SPEECH_CHARS_PER_SEC = 8.19
+
+
+def density_target(style, seconds=30):
+    """이 스타일·이 길이에서 목표 글자수. **한 곳에서만 정한다**(0순위-B) —
+    프롬프트(bank_assemble.style_block)와 판정(check)이 서로 다른 수를 쓰면
+    "시킨 대로 썼는데 반려"가 난다."""
+    sec = max(5, min(int(seconds or 30), 90))
+    tgt = int(((style or {}).get("chars_per_30s") or DEFAULT_CHARS_PER_30S) * sec / 30)
+    return max(1, min(tgt, int(SPEECH_CHARS_PER_SEC * sec)))
+
 
 def norm(s):
     """비교용 정규화 — 공백·문장부호 제거 + 어미 표기 흔들림 통일.
@@ -214,7 +230,7 @@ def _product_tokens(product):
     return [t for t in out if t]
 
 
-def check(style, beats, facts_text="", product=""):
+def check(style, beats, facts_text="", product="", seconds=30):
     """(checks, full_text) 반환. checks = [{name, ok, detail}, ...]
 
     style: {"beat_roles": [...], "templates": {role: [...]}, "chars_per_30s": int}
@@ -247,8 +263,11 @@ def check(style, beats, facts_text="", product=""):
     checks.append({"name": "CTA 단어유도", "ok": "남겨주" in norm(full),
                    "detail": full[-40:]})
 
-    tgt = style.get("chars_per_30s") or DEFAULT_CHARS_PER_30S
-    lo, hi = int(tgt * DENSITY_LO), int(tgt * DENSITY_HI)
+    tgt = density_target(style, seconds)
+    # ★위 천장(hi)은 말속도 환산 길이를 절대 못 넘는다 — 안 그러면 245자로 시켜놓고
+    #   343자(=42초)까지 통과시켜 "30초짜리"가 다시 40초가 된다(2026-08-18).
+    _cap = int(SPEECH_CHARS_PER_SEC * max(5, min(int(seconds or 30), 90)))
+    lo, hi = int(tgt * DENSITY_LO), min(int(tgt * DENSITY_HI), _cap)
     n = len(norm(full))
     checks.append({"name": "말 밀도(%d~%d자)" % (lo, hi), "ok": lo <= n <= hi,
                    "detail": "%d자 / 이 스타일 히트작 %d자" % (n, tgt)})
