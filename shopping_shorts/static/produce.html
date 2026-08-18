@@ -3056,6 +3056,14 @@ function jump(o){
   try{ _syncServerStep(); }catch(e){}
   try{ renderScriptDrift(); }catch(e){}   // 3단계로 들어올 때마다 대본 어긋남 재판정
   renderSteps(); showPanel(); saveWork();   // ★단계를 서버에 남긴다(2026-07-19) — 안 남기면 새로고침이 1단계로 되돌린다
+  // ★3단계에 들어왔는데 붙은 job이 없으면 **확정 대본 그대로** 매칭을 시작한다.
+  //   (1단계가 매칭을 안 걸게 됐으므로 여기가 유일한 시작점이다. 과금 총량은 종전과 같다 —
+  //    예전엔 1단계에서 한 번 걸리던 것이 이제 여기서 한 번 걸린다.)
+  //   이미 job이 있는데 대본만 바뀐 경우는 자동으로 안 돈다 — 그건 두 번째 과금이라
+  //   위의 어긋남 배너 버튼으로 사람이 누르게 한다.
+  try{
+    if(p===7 && STATE.script && !MIX_JOB && typeof startProduceMix==='function'){ startProduceMix(); }
+  }catch(e){}
 }
 function go(d){
   // 오브 순서로 ±d 이동 → 매핑을 경유해 jump(o)에 위임한다. 게이트 가드는 jump 안에 있다
@@ -4853,19 +4861,12 @@ async function startFromAiPick(){
   }
   if(!STATE.script){ alert('대본을 확보하지 못했습니다 — 아래 "✍️ 직접 쓰기"로 입력해 주세요.'); return; }
   refreshFinalPeek(); saveWork();
-  setMatchingUI(true, '매칭 준비 중…');   // ★Task8: 버튼 즉시 before/after 변화 + 패널0 스피너
-  playTheater(window._aiPick && window._aiPick.structure);   // 대기시간 동안 원본 구조 해부 연출(Task5)
-  try{
-    await startProduceMix();
-  }catch(e){
-    setMatchingUI(false);
-    const mp=document.getElementById('matchProgress');
-    if(mp){ mp.hidden=false; mp.innerHTML='<span>❌ 매칭을 시작하지 못했어요. 다시 시도해 주세요.</span>'; }
-  }
-  // ★Task 6: 여기서 곧장 jump(1)하지 않는다 — startProduceMix()는 job만 걸고 바로 돌아온다
-  // (매칭은 폴링으로 백그라운드에서 돈다). 즉시 넘어가면 아직 아무것도 없는 빈 패널7만 보인다.
-  // 극장(Task5)이 보이는 이 패널(0)에 그대로 머물다가, 매칭이 실제로 끝나면(ready_for_review)
-  // pollMix가 화면 붙이기(패널7)로 데려간다.
+  // ★여기서 매칭을 걸지 않는다(2026-08-18 사장님 제보 "2번 대본과 3번 대본이 다르다").
+  //   예전엔 이 함수가 대본 확보 + playTheater + startProduceMix까지 한 덩어리라, 2단계에서
+  //   대본을 새로 뽑아 확정해도 3단계엔 **1단계에서 이미 돌아간 옛 job**이 붙어 있었다.
+  //   이제 1단계는 재료(대본 원문) 확보까지만 하고 2단계로 넘긴다 — 매칭은 3단계 소관(기획 §6).
+  //   두 곳에서 매칭을 걸지 않는다 = 어긋날 자리가 없다(0순위-B).
+  jump(PANEL_TO_ORB[8]);   // 2단계 = 대본(물리 패널 8)
 }
 // ⚡ 클릭 후 대기 동안 패널0(사용자가 보는 화면)에 "매칭 중" 동적 피드백을 준다.
 // 진짜 단계 진행(#mixStatus·loader.js)은 패널7에 있어 대기 중엔 안 보이므로, 여기서 미러링한다(Task8).
