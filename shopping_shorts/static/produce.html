@@ -285,6 +285,15 @@
     .cp-arrow span{display:block;font-size:10px;color:var(--sub);margin-top:3px}
     .cp-redo{margin-top:14px;background:none;border:1px solid var(--line);color:var(--sub);font-size:12px;
       padding:7px 13px;border-radius:8px;cursor:pointer}
+    /* 확인 지점 넘기기(장면·영상) — 시니어 타깃이라 슬라이더 대신 큼직한 버튼 */
+    .cp-pgbar{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px}
+    .cp-pg{background:none;border:1px solid var(--line);color:var(--sub);font-size:13px;
+      padding:9px 15px;border-radius:9px;cursor:pointer;min-width:44px}
+    .cp-pg:hover:not(:disabled){border-color:var(--accent);color:var(--txt)}
+    .cp-pg.on{border-color:var(--accent);color:var(--txt);background:rgba(45,212,191,.12)}
+    .cp-pg:disabled{opacity:.35;cursor:default}
+    .cp-pgsep{width:1px;height:22px;background:var(--line);margin:0 4px}
+    .cp-pgnum{font-size:12.5px;color:var(--sub);min-width:78px;text-align:center}
     .cp-fail{background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.35);border-radius:10px;
       padding:12px;font-size:12.5px;color:#ffb4b4}
     .cp-fail b{color:#fff}
@@ -6383,14 +6392,35 @@ async function pollPreview(gen, job){
 let CLEAN_POLL=null, CLEAN_GEN=0;
 // 완료 화면(BEFORE/AFTER 2칸)을 그리는 곳은 한 군데뿐이다 — 폴러가 끝났을 때와
 // 다른 단계 갔다 돌아왔을 때(restoreCleanPreview)가 같은 함수를 쓴다.
+// 확인 지점(2026-08-18 사장님: "한 장만 샘플이라 다음 것들도 넘겨서 확인하고 싶다").
+// 유료 재호출 없음 — 이미 청소가 끝난 파일에서 ffmpeg로 프레임만 다시 꺼낸다(app.py clean_thumb).
+const CLEAN_POSNAMES=[['0.15','앞부분'],['0.5','가운데'],['0.85','뒷부분']];
+let CLEAN_VIEW={si:0, pos:0.5}, CLEAN_SRC_N=1;
+function cleanGo(si,pos){
+  CLEAN_VIEW={si:Math.max(0,Math.min(CLEAN_SRC_N-1,si)), pos:pos};
+  renderCleanReady(CLEAN_VIEW.job||MIX_JOB);
+}
 function renderCleanReady(job){
   const box=document.getElementById('cleanPreview'); if(!box) return;
-  const t=Date.now(), u='/api/produce/mix/clean_thumb/'+encodeURIComponent(job);
+  CLEAN_VIEW.job=job;
+  const si=CLEAN_VIEW.si, pos=CLEAN_VIEW.pos;
+  const t=Date.now(), u='/api/produce/mix/clean_thumb/'+encodeURIComponent(job)
+    +'?si='+si+'&pos='+pos+'&t='+t;
+  const posBtns=CLEAN_POSNAMES.map(([p,lbl])=>
+    '<button class="cp-pg'+(Math.abs(pos-parseFloat(p))<0.01?' on':'')+'" onclick="cleanGo('+si+','+p+')">'+lbl+'</button>').join('');
+  const srcNav = CLEAN_SRC_N>1
+    ? '<span class="cp-pgsep"></span>'
+      +'<button class="cp-pg" onclick="cleanGo('+(si-1)+','+pos+')"'+(si<=0?' disabled':'')+'>◀</button>'
+      +'<span class="cp-pgnum">영상 '+(si+1)+' / '+CLEAN_SRC_N+'</span>'
+      +'<button class="cp-pg" onclick="cleanGo('+(si+1)+','+pos+')"'+(si>=CLEAN_SRC_N-1?' disabled':'')+'>▶</button>'
+    : '';
   box.innerHTML='<div class="cp-compare">'
-    +'<div class="cp-cell"><div class="cp-frame"><img src="'+u+'?kind=original&t='+t+'"><span class="cp-lbl">BEFORE</span></div><div class="cp-cap">원본</div></div>'
+    +'<div class="cp-cell"><div class="cp-frame"><img src="'+u+'&kind=original"><span class="cp-lbl">BEFORE</span></div><div class="cp-cap">원본</div></div>'
     +'<div class="cp-arrow">→<span>AI 제거</span></div>'
-    +'<div class="cp-cell"><div class="cp-frame"><img src="'+u+'?kind=clean&t='+t+'"><span class="cp-lbl on">AFTER</span><span class="cp-chk">✓</span></div><div class="cp-cap good">자막 제거됨</div></div>'
+    +'<div class="cp-cell"><div class="cp-frame"><img src="'+u+'&kind=clean"><span class="cp-lbl on">AFTER</span><span class="cp-chk">✓</span></div><div class="cp-cap good">자막 제거됨</div></div>'
     +'</div>'
+    +'<div class="cp-pgbar">'+posBtns+srcNav+'</div>'
+    +'<div class="hint" style="text-align:center">다른 장면도 넘겨서 확인해 보세요 — 추가 비용은 없어요.</div>'
     +'<button class="cp-redo" onclick="startCleanPreview()">↻ 다시 미리보기</button>';
   const sc=document.getElementById('cleanShowcase'); if(sc) sc.style.display='none';
 }
@@ -6408,6 +6438,7 @@ async function restoreCleanPreview(){
     if(MIX_JOB!==job || CLEAN_POLL) return;
     if(d.clean_regions) CLEAN_REGIONS=d.clean_regions;
     if(d.clean_status==='ready'){
+      CLEAN_SRC_N = d.clean_source_count || 1;
       renderCleanReady(job);
     } else if(d.clean_status==='cleaning'){
       const btn=document.getElementById('btnCleanPreview'); if(btn) btn.disabled=true;
@@ -6426,6 +6457,7 @@ async function startCleanPreview(){
   if(!MIX_JOB){ box.textContent='⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.'; return; }
   clearInterval(CLEAN_POLL); CLEAN_POLL=null;
   const myGen=++CLEAN_GEN, myJob=MIX_JOB;
+  CLEAN_VIEW={si:0, pos:0.5, job:myJob};   // 새로 돌리면 확인 지점도 처음(영상1·가운데)으로
   if(btn) btn.disabled=true;
   const _sc=document.getElementById('cleanShowcase'); if(_sc) _sc.style.display='none';  // 실결과 뜨는 동안 데모 숨김
   // ★진행 중에도 **완료 후와 같은 2칸 틀**로 그린다(2026-08-18 사장님 "공간활용").
@@ -6460,6 +6492,7 @@ async function pollClean(gen,job){
     if(d.clean_status==='ready'){
       clearInterval(CLEAN_POLL); CLEAN_POLL=null;
       if(d.clean_regions) CLEAN_REGIONS=d.clean_regions;   // 지워진 자막 자리(5단계 꾸미기가 씀)
+      CLEAN_SRC_N = d.clean_source_count || 1;
       renderCleanReady(job);
       if(btn) btn.disabled=false;
     } else if(d.clean_status==='failed'){
