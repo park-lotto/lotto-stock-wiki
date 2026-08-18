@@ -1300,9 +1300,44 @@
           </div>
           <div id="decoPaneTpl" style="display:none">
                 <!-- 🖼 템플릿 — 기본제공 12종. 사장님이 올린 로고(아래 이미지 오버레이)와 **별개**로 함께 얹힌다. -->
+                <!-- 📰 내용물 있는 틀 — 사장님이 가져온 '실제로 잘되는' 유튜브 포맷.
+                     빈 색띠와 달리 띠 안에 채널명·아이콘·[광고]가 들어가고, 아래에 제목·조회수 줄이 붙는다.
+                     ★그림은 서버(deco_frame)가 그린다 — CSS로 흉내내면 렌더와 어긋난다(0순위-B). -->
+                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
+                  <div style="font-size:13px;font-weight:800;margin-bottom:8px">📰 내용물 있는 틀
+                    <span style="font-size:11px;color:var(--sub);font-weight:400">— 커뮤니티 글처럼 보이게</span></div>
+                  <div id="frPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"></div>
+                  <div id="frFields" style="display:none">
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px">
+                      <label>채널명 <input id="frChannel" oninput="frUpdate()" placeholder="살림킹왕짱"
+                        style="width:130px;padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--txt)"></label>
+                      <label style="cursor:pointer"><input id="frAd" type="checkbox" onchange="frUpdate()"> [광고]</label>
+                      <label style="cursor:pointer"><input id="frIcons" type="checkbox" checked onchange="frUpdate()"> ☰ 🔍</label>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;margin-top:8px">
+                      <label>제목 <input id="frTitle" oninput="frUpdate()" placeholder="헤드카피에서 자동"
+                        style="width:260px;padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--txt)"></label>
+                      <button type="button" class="tab" onclick="frFromHeadcopy()" style="min-width:auto;padding:5px 10px;font-size:11px">↩ 헤드카피 가져오기</button>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;margin-top:8px">
+                      <label>조회수 <input id="frViews" oninput="frUpdate()" placeholder="264만"
+                        style="width:80px;padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--txt)"></label>
+                      <label>댓글 <input id="frComments" oninput="frUpdate()" placeholder="587"
+                        style="width:70px;padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--txt)"></label>
+                    </div>
+                    <!-- 띠 높이: 슬라이더는 시니어에게 어렵다(딸깍/시니어 북극성) → −/＋ 버튼을 같이 둔다 -->
+                    <div style="display:flex;gap:8px;align-items:center;font-size:12px;margin-top:8px">
+                      <span>띠 높이</span>
+                      <button type="button" class="tab" onclick="frBar(-20)" style="min-width:auto;padding:4px 12px;font-size:14px">−</button>
+                      <input id="frBar" type="range" min="0" max="400" step="10" value="190" oninput="frUpdate()" style="width:150px">
+                      <button type="button" class="tab" onclick="frBar(20)" style="min-width:auto;padding:4px 12px;font-size:14px">＋</button>
+                      <span id="frBarVal" style="color:var(--sub);min-width:52px">190px</span>
+                    </div>
+                  </div>
+                </div>
                 <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
                   <div style="font-size:13px;font-weight:800;margin-bottom:6px">🖼 템플릿
-                    <span style="font-size:11px;color:var(--sub);font-weight:400">— 영상 위에 얹는 틀</span></div>
+                    <span style="font-size:11px;color:var(--sub);font-weight:400">— 영상 위에 얹는 틀(색띠만)</span></div>
                   <div id="tplCards" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>
                   <div style="font-size:12px;color:var(--sub)">표시 구간
                     <label style="margin-left:8px;cursor:pointer"><input type="radio" name="tplSpan" value="full" checked onchange="setTemplateSpan('full')"> 영상 전체</label>
@@ -2160,7 +2195,8 @@ function renderTemplateCards(){
   // ★샘플은 크게 보여준다(2026-08-18 사장님 지시). 종전 52x92는 상단 띠가 몇 px짜리 선으로
   //   뭉개져 12장이 전부 같은 회색칸으로 보였다 — 고를 수가 없다. 9:16 그대로 키우고 이름을 붙인다.
   const CW=108, CH=Math.round(CW*16/9);   // 카드 한 장의 그림 크기(9:16 유지)
-  const none=`<button type="button" class="tab${cur?'':' on'}" onclick="pickTemplate('')"
+  const hasFrame=!!(STATE.deco&&STATE.deco.template&&STATE.deco.template.frame);
+  const none=`<button type="button" class="tab${(cur||hasFrame)?'':' on'}" onclick="pickTemplate('')"
     style="min-width:auto;padding:0;width:${CW}px;height:${CH+22}px;display:flex;
            flex-direction:column;align-items:center;justify-content:center;font-size:12px">없음</button>`;
   // ★카드 배경은 **밝은 회색**이어야 한다(2026-08-18 실화면 확인). 템플릿 PNG는 가운데가
@@ -2183,9 +2219,11 @@ function pickTemplate(id){
   if(!id){ STATE.deco.template=null; }
   else {
     const span=(STATE.deco.template&&STATE.deco.template.span)||'full';
+    // ★색띠와 '내용물 있는 틀'은 **동시에 못 쓴다**(둘 다 전체화면 오버레이라 겹치면 뭉갠다).
+    //   하나를 고르면 다른 쪽은 비운다 — 두 값이 함께 살아 있으면 렌더가 뭘 쓸지 갈린다.
     STATE.deco.template={id:id, span:span};
   }
-  renderTemplateCards(); renderTemplatePreview(); saveHeadcopy();
+  renderTemplateCards(); renderFramePresets(); renderTemplatePreview(); saveHeadcopy();
 }
 function setTemplateSpan(span){
   if(!STATE.deco||!STATE.deco.template) return;   // 고른 템플릿이 없으면 저장할 것도 없다
@@ -2193,11 +2231,100 @@ function setTemplateSpan(span){
   saveHeadcopy();
 }
 // 미리보기 — 실제 렌더와 같은 그림을 보여준다(9:16 위에 그대로 덮는다).
+// 📰 내용물 있는 틀 — spec은 STATE.deco.template.frame 하나에만 산다.
+// ★그림 URL을 만드는 곳도 여기 하나뿐이다(frameUrl) — 미리보기·카드가 같은 걸 쓴다.
+let FR_PRESETS=[];
+function frameUrl(f){
+  const q=new URLSearchParams({preset:f.preset||'news_coral', bar_h:f.bar_h??190,
+    channel:f.channel||'', title:f.title||'', views:f.views||'', comments:f.comments||'',
+    ad_badge:f.ad_badge?'1':'0', icons:f.icons?'1':'0'});
+  return '/api/produce/frame.png?'+q.toString();
+}
+async function loadFramePresets(){
+  const box=document.getElementById('frPresets'); if(!box) return;
+  if(!FR_PRESETS.length){
+    try{ const d=await (await fetch('/api/produce/frame/presets')).json(); FR_PRESETS=(d&&d.presets)||[]; }
+    catch(e){ box.innerHTML='<span class="hint" style="color:var(--fire)">틀 목록을 불러오지 못했어요</span>'; return; }
+  }
+  renderFramePresets();
+}
+function renderFramePresets(){
+  const box=document.getElementById('frPresets'); if(!box) return;
+  const f=(STATE.deco&&STATE.deco.template&&STATE.deco.template.frame)||null;
+  const cur=f?f.preset:'';
+  box.innerHTML=`<button type="button" class="tab${f?'':' on'}" onclick="frPick('')"
+      style="min-width:auto;padding:6px 12px;font-size:12px">안 씀</button>`
+    + FR_PRESETS.map(p=>`<button type="button" class="tab${cur===p.id?' on':''}" onclick="frPick('${p.id}')"
+        style="min-width:auto;padding:6px 12px;font-size:12px">
+        <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${p.bar};margin-right:6px"></span>${esc(p.name)}</button>`).join('');
+  const fields=document.getElementById('frFields');
+  if(fields) fields.style.display=f?'':'none';
+  if(f) frFill(f);
+}
+function frFill(f){
+  const g=id=>document.getElementById(id);
+  if(g('frChannel')) g('frChannel').value=f.channel||'';
+  if(g('frTitle')) g('frTitle').value=f.title||'';
+  if(g('frViews')) g('frViews').value=f.views||'';
+  if(g('frComments')) g('frComments').value=f.comments||'';
+  if(g('frAd')) g('frAd').checked=!!f.ad_badge;
+  if(g('frIcons')) g('frIcons').checked=f.icons!==false;
+  if(g('frBar')) g('frBar').value=f.bar_h??190;
+  if(g('frBarVal')) g('frBarVal').textContent=(f.bar_h??190)+'px';
+}
+function frPick(preset){
+  if(!STATE.deco) STATE.deco={extra_texts:[], motion:null};
+  if(!preset){ STATE.deco.template=null; }
+  else{
+    const old=(STATE.deco.template&&STATE.deco.template.frame)||{};
+    const span=(STATE.deco.template&&STATE.deco.template.span)||'full';
+    // 제목은 비어 있으면 헤드카피에서 한 번 가져다 놓는다(사장님이 지우면 그대로 빈칸).
+    const hc=(document.getElementById('hcText')||{}).value||'';
+    STATE.deco.template={span:span, frame:{preset:preset, bar_h:old.bar_h??190,
+      channel:old.channel||'', title:old.title||hc, views:old.views||'',
+      comments:old.comments||'', ad_badge:!!old.ad_badge, icons:old.icons!==false}};
+  }
+  renderFramePresets(); renderTemplateCards(); renderTemplatePreview(); saveHeadcopy();
+}
+function frUpdate(){
+  const f=STATE.deco&&STATE.deco.template&&STATE.deco.template.frame; if(!f) return;
+  const g=id=>document.getElementById(id);
+  f.channel=(g('frChannel')||{}).value||'';
+  f.title=(g('frTitle')||{}).value||'';
+  f.views=(g('frViews')||{}).value||'';
+  f.comments=(g('frComments')||{}).value||'';
+  f.ad_badge=!!(g('frAd')||{}).checked;
+  f.icons=!!(g('frIcons')||{}).checked;
+  f.bar_h=parseInt((g('frBar')||{}).value||190,10);
+  if(g('frBarVal')) g('frBarVal').textContent=f.bar_h+'px';
+  renderTemplatePreview(); saveHeadcopy();
+}
+function frBar(delta){
+  const el=document.getElementById('frBar'); if(!el) return;
+  el.value=Math.max(0, Math.min(400, parseInt(el.value||190,10)+delta));
+  frUpdate();
+}
+function frFromHeadcopy(){
+  const t=document.getElementById('frTitle'), hc=document.getElementById('hcText');
+  if(!t||!hc) return;
+  t.value=hc.value||'';
+  frUpdate();
+}
 function renderTemplatePreview(){
   const pv=document.getElementById('hcPreview'); if(!pv) return;
   let el=document.getElementById('tplPreview');
   const t=STATE.deco&&STATE.deco.template;
-  if(!t||!t.id){ if(el) el.style.display='none'; return; }
+  if(!t||(!t.id&&!t.frame)){ if(el) el.style.display='none'; return; }
+  // 틀(frame)이면 서버가 그린 그림을 그대로 얹는다 — 렌더가 쓰는 것과 같은 그림이다.
+  if(t.frame){
+    if(!el){
+      el=document.createElement('img'); el.id='tplPreview';
+      el.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:4';
+      pv.appendChild(el);
+    }
+    el.src=frameUrl(t.frame); el.style.display='';
+    return;
+  }
   const meta=TPL_LIST.find(x=>x.id===t.id); if(!meta) return;
   if(!el){
     el=document.createElement('img'); el.id='tplPreview';
@@ -2253,6 +2380,7 @@ function initHeadcopy(){
   syncMotionPicker();
   loadHeadcopySuggest(false);   // 진입 시 자동(같은 대본이면 서버 캐시가 받아 호출 0회)
   loadTemplates();              // 템플릿 카드(목록은 1회만 읽고 캐시)
+  loadFramePresets();           // 📰 내용물 있는 틀 프리셋(같은 탭에 함께 산다)
   renderTemplatePreview();      // 복원된 선택을 미리보기에 반영
 }
 // 모션 팩 목록(서버 packs.json과 id가 일치해야 함 — Task7에서 확정)

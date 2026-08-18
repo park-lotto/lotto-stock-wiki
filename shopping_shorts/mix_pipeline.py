@@ -1314,10 +1314,18 @@ def _template_layer(tpl, first_beat_dur=0):
     """
     from shopping_shorts import deco_templates
     tpl = tpl or {}
-    tid = tpl.get("id")
-    if not tid:
-        return None
-    p = deco_templates.abs_path(tid)
+    # ★'내용물 있는 틀'(채널명·제목·조회수)은 미리보기와 **같은 함수**가 그린다.
+    #   여기서 따로 그리면 화면과 결과가 갈린다(0순위-B). 옛 색띠 12종은 아래 경로 그대로.
+    frame = tpl.get("frame")
+    if frame:
+        from shopping_shorts import deco_frame
+        p = deco_frame.render_to(frame, deco_frame.cache_path(frame))
+        tid = "frame:" + deco_frame.cache_key(frame)
+    else:
+        tid = tpl.get("id")
+        if not tid:
+            return None
+        p = deco_templates.abs_path(tid)
     if not p or not p.exists():
         return None
     out = {"_abspath": str(p), "id": tid, "alpha": tpl.get("alpha", 1)}
