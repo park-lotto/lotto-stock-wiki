@@ -1309,6 +1309,15 @@
 
           <div style="font-size:12px;color:var(--sub);margin:10px 0 4px">😀 스티커 — 누르면 썸네일에 얹혀요 (드래그로 옮기고, 크기 조절)</div>
           <div id="thumbStickers" style="display:flex;gap:4px;flex-wrap:wrap"></div>
+          <div style="display:flex;gap:6px;align-items:center;margin-top:6px">
+            <input id="thumbStickerInput" maxlength="8" placeholder="직접 입력 — 원하는 이모지 붙여넣기 😀"
+                   onkeydown="if(event.key==='Enter'){addThumbStickerFromInput();return false}"
+                   style="flex:1;padding:7px 9px;font-size:15px">
+            <button class="tab" style="flex:0 0 auto;min-width:auto;padding:7px 13px"
+                    onclick="addThumbStickerFromInput()">얹기</button>
+          </div>
+          <div id="thumbStickerInputHint" class="hint" style="font-size:10px;opacity:.7;margin-top:3px">
+            휴대폰·윈도우 이모지판(⊞+마침표)에서 골라 붙여넣으면 돼요</div>
 
           <button class="btn-next" style="width:100%;margin:10px 0 4px;padding:10px;font-size:14px"
                   onclick="suggestThumbTitles()">🪄 원본 영상 보고 제목 추천받기</button>
@@ -7601,6 +7610,36 @@ function addThumbSticker(emoji){
   renderThumbLayers(); renderThumbCanvas();
 }
 
+// 목록에 없는 이모지를 직접 붙여넣어 얹는다(목록 24개는 자주 쓰는 것일 뿐, 제한이 아니다).
+// ★한 글자만 잘라 쓰면 안 된다 — 이모지는 서로게이트 쌍(2칸)이고 👨‍👩‍👧처럼 ZWJ로 이어붙은 것은
+//   7칸이 넘는다. charAt/slice로 자르면 쪼개져 깨진 글자(□)가 된다. Intl.Segmenter가 있으면
+//   '사람이 보는 한 글자'(grapheme)로 자르고, 없는 구형 브라우저는 Array.from(코드포인트 단위)로
+//   떨어뜨린 뒤 통째로 쓴다.
+function firstGrapheme(s){
+  const t = String(s == null ? '' : s).trim();
+  if (!t) return '';
+  try {
+    if (typeof Intl !== 'undefined' && Intl.Segmenter){
+      const seg = new Intl.Segmenter(undefined, {granularity: 'grapheme'});
+      for (const x of seg.segment(t)) return x.segment;   // 첫 덩어리만
+    }
+  } catch(e){ /* 구형 브라우저 — 아래로 폴백 */ }
+  return Array.from(t)[0] || '';
+}
+
+function addThumbStickerFromInput(){
+  const el = document.getElementById('thumbStickerInput'); if (!el) return;
+  const hint = document.getElementById('thumbStickerInputHint');
+  const one = firstGrapheme(el.value);
+  if (!one){
+    if (hint) hint.textContent = '이모지를 붙여넣고 눌러주세요';
+    return;
+  }
+  addThumbSticker(one);
+  el.value = '';
+  if (hint) hint.textContent = one + ' 얹었어요 — 미리보기에서 드래그해 옮기세요';
+}
+
 function selectThumbLayer(i){ THUMB_STATE.sel = i; renderThumbLayers(); }
 function removeThumbLayer(i){
   THUMB_STATE.layers.splice(i, 1);
@@ -7739,7 +7778,9 @@ function renderThumbLayers(){
   // (있는데 안 되는 버튼이 제일 나쁘다). 크기·회전·위치만 준다.
   if (L && L.kind === 'sticker'){
     document.getElementById('thumbEdit').innerHTML = `
-      <div style="font-size:12px;color:var(--sub);margin-bottom:4px">스티커 바꾸기</div>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:4px">스티커 바꾸기${
+        THUMB_EMOJIS.indexOf(L.emoji) < 0
+          ? ` <span style="opacity:.7">— 지금: ${L.emoji} (직접 입력한 것)</span>` : ''}</div>
       <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
         ${THUMB_EMOJIS.map(e => `<button class="tab" style="flex:0 0 auto;min-width:auto;
           padding:4px 7px;font-size:17px;${e === L.emoji ? 'outline:2px solid var(--accent2)' : ''}"
