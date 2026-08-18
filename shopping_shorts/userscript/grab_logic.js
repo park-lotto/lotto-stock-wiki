@@ -3,8 +3,25 @@
 // 로직 버전: 2026-08-18-a  (채널수집 버튼 확장 — 인스타·틱톡 + 유튜브·쓰레드)
 (function () {
   "use strict";
-  if (window.__ssGrabLoaded) return;   // 로더가 중복 실행돼도 한 번만
+  // ── 중복 실행 방지 → '새 로직이 이긴다'로 교체(2026-08-18 실사고) ──────────
+  // 종전엔 `__ssGrabLoaded`가 true면 무조건 return이라 **먼저 뜬 쪽이 이겼다**.
+  // 사장님 PC에서 옛 확장(1.0.0)이 텀퍼몽키 v2.4.0의 새 로직을 밀어내, 새 기능이
+  // 배포됐는데도 옛 버튼("채널등록")만 보였다 — 게다가 **아무 오류도 안 나서**
+  // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
+  // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
+  //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
+  var LOGIC_VER = 20260818;
+  if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
+  if (window.__ssGrabLoaded && !window.__ssGrabVer) {
+    // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
+    try {
+      var olds = document.querySelectorAll("#ss-grab-btn,#ss-chadd-btn,#ss-lens-btn,#ss-seek");
+      for (var oi = 0; oi < olds.length; oi++) olds[oi].remove();
+    } catch (e) {}
+  }
+  try { clearInterval(window.__ssGrabTimer); } catch (e) {}   // 새 버전끼리 교체될 때
   window.__ssGrabLoaded = true;
+  window.__ssGrabVer = LOGIC_VER;
   var BASE = "https://shoppingshorts.duckdns.org";
 
   // ── 설치 확인 비컨 ─────────────────────────────────────────────
@@ -823,5 +840,6 @@
   function tick() { try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
-  setInterval(tick, 2000);
+  // 핸들을 남긴다 — 더 새로운 로직이 로드되면 위 가드가 이걸 끄고 이어받는다.
+  window.__ssGrabTimer = setInterval(tick, 2000);
 })();
