@@ -64,7 +64,8 @@ def test_렌즈를_타지_않는다():
     "openUrlCard((v||'').trim())",      # 검색창 엔터가 이리로 온다(옛 렌즈 직행 아님)
     "openUrlCard()",                    # 검색창 옆 버튼
     "'/api/lens/single?url='",          # 무료 단일조회
-    "renderLens('__single__', 'cards')",  # 카드 렌더러 재사용 + 랭킹 카드 자리에 인라인
+    "renderLens('__single__', 'urlCardMount')",  # 카드 렌더러 재사용 + 전용 자리에 인라인
+    'id="urlCardBox"',                  # #cards(grid)에 넣으면 칸이 갈린다
     "lensSearchByUrl(",                 # 숏템파워검색 = 우리 렌즈(traceByUrl)
 ])
 def test_화면에_배선돼_있다(needle):
@@ -140,3 +141,21 @@ def test_스킴을_붙여_보낸다():
     assert out[0] == "https://youtube.com/shorts/ABC", \
         "서버는 hostname으로 플랫폼을 가린다 — 스킴이 없으면 422가 난다"
     assert out[1] == "https://youtu.be/ABC"
+
+
+def test_격자_안에_그리지_않는다():
+    """#cards는 display:grid — 머리줄과 렌즈 뭉치를 형제로 넣으면 좌우로 쪼개진다
+    (2026-08-18 사장님 캡처가 그 상태였다). 전용 칸에만 그린다."""
+    src = INDEX.read_text(encoding="utf-8")
+    i = src.index("async function openUrlCard(")
+    body = src[i:src.index("\nfunction closeUrlCard(", i)]
+    assert "'cards'" not in body.replace("getElementById('cards')", "grid"), \
+        "카드 격자에 직접 그리면 레이아웃이 깨진다"
+
+
+def test_랭킹으로_돌아가기가_목록을_되살린다():
+    src = INDEX.read_text(encoding="utf-8")
+    i = src.index("function closeUrlCard(")
+    body = src[i:i + 500]
+    assert "display='none'" in body and "grid.style.display=''" in body, \
+        "전용 칸을 감추고 랭킹 격자를 다시 보여야 한다"

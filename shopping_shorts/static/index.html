@@ -522,12 +522,15 @@ body.is-admin .admin-only{display:block}
          찾지 못하셨다 → 문구에 명시하고, 옆에 버튼을 둬 눈에 보이게 한다. -->
     <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0">
       <input id="rankSearch" type="text" placeholder="🔍 숏템검색 — 채널명·소재 / 🔗 영상 주소 붙여넣기"
-             oninput="setSearch(this.value)" onkeydown="if(event.key==='Enter')onSearchEnter(this.value)"
+             oninput="setSearch(this.value);_urlCardAutoClose(this.value)" onkeydown="if(event.key==='Enter')onSearchEnter(this.value)"
              style="flex:1;min-width:240px;max-width:420px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
       <button onclick="openUrlCard()" title="영상 주소를 넣으면 그 영상 카드를 보여줍니다(비슷한 영상 찾기는 그 안에서 따로)"
               style="padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt);font-weight:700;cursor:pointer;white-space:nowrap">🔗 주소로 가져오기</button>
     </div>
     <div class="cats" id="cats"></div>
+    <!-- 🔗 주소로 가져온 영상 전용 자리(2026-08-18). #cards는 display:grid라 여기에 그리면
+         머리줄과 렌즈 뭉치가 각각 한 칸씩 차지해 좌우로 갈라진다(실측). 따로 둔다. -->
+    <div id="urlCardBox" style="display:none"></div>
     <div class="cards" id="cards">
       <div class="empty">「지금 수집」을 눌러 시작하세요.</div>
     </div>
@@ -2483,17 +2486,16 @@ async function openUrlCard(urlArg){
   const pre = (typeof urlArg==='string' && urlArg.trim()) ? urlArg.trim()
             : ((document.getElementById('rankSearch')||{}).value||'').trim();
   const url = _looksLikeUrl(pre) ? _normUrl(pre) : '';   // 스킴 없는 주소도 받는다
-  const box = document.getElementById('cards');
-  if(!url){
-    if(box) box.innerHTML='<div class="empty">🔗 영상 주소를 붙여넣고 <b>엔터</b>를 누르세요.</div>';
-    return;
-  }
-  if(box) box.innerHTML='<div class="empty">🔗 영상 정보를 읽는 중… (10~20초)</div>';
+  const box = document.getElementById('urlCardBox');     // 전용 자리(#cards는 grid라 못 쓴다)
+  const grid = document.getElementById('cards');
+  if(!box) return;
+  const show = html => { box.style.display=''; box.innerHTML=html; if(grid) grid.style.display='none'; };
+  if(!url){ show('<div class="empty">🔗 영상 주소를 붙여넣고 <b>엔터</b>를 누르세요.</div>'); return; }
+  show('<div class="empty">🔗 영상 정보를 읽는 중… (10~20초)</div>');
   let d=null;
   try{ d=await (await fetch('/api/lens/single?url='+encodeURIComponent(url))).json(); }catch(e){}
   if(!(d && d.ok && d.item)){
-    if(box) box.innerHTML='<div class="empty" style="color:#e0623d">❌ '+
-      ((d&&d.error)||'가져오지 못했어요 — 주소를 다시 확인해 주세요')+'</div>';
+    show('<div class="empty" style="color:#e0623d">❌ '+((d&&d.error)||'가져오지 못했어요 — 주소를 다시 확인해 주세요')+'</div>');
     return;
   }
   const it=d.item;
@@ -2503,20 +2505,37 @@ async function openUrlCard(urlArg){
   LENS_STATE['__single__']={items:[it], on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
     sel:new Set(), shortsOnly:false, foreignOnly:false, videoOnly:false, hideOfftopic:false,
     ytLoading:false, keyword:'', caption:'', cnCands:[]};
-  renderLens('__single__', 'cards');           // 카드 자리에 그대로(팝업 없음)
-  // 카드 위아래로 '이 주소' 표시와 숏템파워검색(=우리 렌즈)을 덧댄다.
-  if(box){
-    const inner=box.innerHTML;
-    box.innerHTML =
-      `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0 10px">
-         <span style="background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12px;color:var(--sub)">🔗 주소로 가져온 영상</span>
-         <button onclick="lensSearchByUrl('${url.replace(/'/g,"\\'")}')"
-                 style="padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt);font-weight:800;cursor:pointer">🔍 숏템파워검색</button>
-         <span style="color:var(--sub);font-size:12px">비슷한 영상 찾기 — 구글렌즈를 씁니다(월 100회 한도)</span>
-         <button onclick="setSearch('');const s=document.getElementById('rankSearch'); if(s) s.value=''; render();"
-                 style="margin-left:auto;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--sub);cursor:pointer">✕ 랭킹으로 돌아가기</button>
-       </div>` + inner;
-  }
+  // 머리줄을 먼저 넣고, 렌즈 렌더러는 그 아래 전용 칸에 그린다.
+  // ★한 칸에 같이 넣지 않는다 — 렌즈 뭉치(#lensRoot)는 통짜 블록이라 형제로 두면
+  //   부모가 grid일 때 칸이 갈린다(2026-08-18 사장님 캡처: 좌우로 쪼개져 보였다).
+  box.innerHTML =
+    `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0 10px">
+       <span style="background:var(--inset);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12px;color:var(--sub)">🔗 주소로 가져온 영상</span>
+       <button onclick="lensSearchByUrl('${url.replace(/'/g,"\'")}')"
+               style="padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt);font-weight:800;cursor:pointer">🔍 숏템파워검색</button>
+       <span style="color:var(--sub);font-size:12px">비슷한 영상 찾기 — 구글렌즈를 씁니다(월 100회 한도)</span>
+       <button onclick="closeUrlCard()"
+               style="margin-left:auto;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--sub);cursor:pointer">✕ 랭킹으로 돌아가기</button>
+     </div><div id="urlCardMount"></div>`;
+  renderLens('__single__', 'urlCardMount');
+  // 단일 카드에는 렌즈 필터줄(플랫폼 칩·전체선택·검색어 조합)이 필요 없다 — 한 장뿐이라
+  // 고를 것도 거를 것도 없다. 화면만 어지럽히므로 접는다(렌더러는 그대로 재사용).
+  const root=document.getElementById('urlCardMount');
+  const bar=root && root.querySelector('#lensRoot > div');
+  if(bar) bar.style.display='none';
+}
+// 주소 카드를 띄운 채로 다른 검색어를 치면 랭킹 목록이 계속 숨겨져 "목록이 사라졌다"가 된다.
+// 링크가 아닌 글자를 치는 순간 자동으로 닫는다(닫기 버튼을 못 찾아도 빠져나올 수 있게).
+function _urlCardAutoClose(v){
+  const box=document.getElementById('urlCardBox');
+  if(box && box.style.display!=='none' && !_looksLikeUrl(v)) closeUrlCard();
+}
+function closeUrlCard(){
+  const box=document.getElementById('urlCardBox'), grid=document.getElementById('cards');
+  if(box){ box.style.display='none'; box.innerHTML=''; }
+  if(grid) grid.style.display='';
+  const s=document.getElementById('rankSearch'); if(s) s.value='';
+  try{ setSearch(''); }catch(e){}
 }
 // 숏템파워검색(주소용) — 카드의 lensSearch는 랭킹 항목(shortcode)용이라 주소엔 못 쓴다.
 // 실제 검색은 종전과 **같은** traceByUrl(=/api/lens/trace_url)을 그대로 부른다.
