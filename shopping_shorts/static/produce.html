@@ -6381,6 +6381,45 @@ async function pollPreview(gen, job){
 
 // ── 2단계 자막제거 미리보기(소스 원본 청소) ──────────────
 let CLEAN_POLL=null, CLEAN_GEN=0;
+// 완료 화면(BEFORE/AFTER 2칸)을 그리는 곳은 한 군데뿐이다 — 폴러가 끝났을 때와
+// 다른 단계 갔다 돌아왔을 때(restoreCleanPreview)가 같은 함수를 쓴다.
+function renderCleanReady(job){
+  const box=document.getElementById('cleanPreview'); if(!box) return;
+  const t=Date.now(), u='/api/produce/mix/clean_thumb/'+encodeURIComponent(job);
+  box.innerHTML='<div class="cp-compare">'
+    +'<div class="cp-cell"><div class="cp-frame"><img src="'+u+'?kind=original&t='+t+'"><span class="cp-lbl">BEFORE</span></div><div class="cp-cap">원본</div></div>'
+    +'<div class="cp-arrow">→<span>AI 제거</span></div>'
+    +'<div class="cp-cell"><div class="cp-frame"><img src="'+u+'?kind=clean&t='+t+'"><span class="cp-lbl on">AFTER</span><span class="cp-chk">✓</span></div><div class="cp-cap good">자막 제거됨</div></div>'
+    +'</div>'
+    +'<button class="cp-redo" onclick="startCleanPreview()">↻ 다시 미리보기</button>';
+  const sc=document.getElementById('cleanShowcase'); if(sc) sc.style.display='none';
+}
+// ★결과 되살리기(2026-08-18 사장님 제보: "지운 자막 결과가 다른 페이지 갔다 오면 리셋된다").
+//   cleanPreview는 DOM 안에만 있던 값이라 화면 전환으로 지워지면 끝이었다. 진짜 결과는
+//   서버 job에 남아 있으므로(clean_status=ready + clean_thumb) 3단계를 열 때마다 상태를
+//   물어 그대로 다시 그린다. cleaning이면 폴러도 이어 붙인다(창을 닫았다 와도 진행 표시).
+async function restoreCleanPreview(){
+  const box=document.getElementById('cleanPreview');
+  if(!box || !MIX_JOB || !STATE.subtitleRemoval) return;
+  if(CLEAN_POLL) return;                       // 이미 이 화면에서 돌고 있으면 건드리지 않는다
+  const job=MIX_JOB;
+  try{
+    const d=await (await fetch('/api/mix/status/'+job)).json();
+    if(MIX_JOB!==job || CLEAN_POLL) return;
+    if(d.clean_regions) CLEAN_REGIONS=d.clean_regions;
+    if(d.clean_status==='ready'){
+      renderCleanReady(job);
+    } else if(d.clean_status==='cleaning'){
+      const btn=document.getElementById('btnCleanPreview'); if(btn) btn.disabled=true;
+      const sc=document.getElementById('cleanShowcase'); if(sc) sc.style.display='none';
+      box.innerHTML='<div class="cp-run rise"><div class="cp-bar"></div>'
+        +'<div class="cp-run-lbl"><span class="cp-dot"></span>AI가 자막 영역을 자연스럽게 복원하는 중…</div>'
+        +'<div class="cp-run-sub">다른 단계 먼저 진행해도 돼요 — 끝나면 여기에 결과가 뜹니다.</div></div>';
+      const myGen=++CLEAN_GEN;
+      CLEAN_POLL=setInterval(()=>pollClean(myGen,job),3000);
+    }
+  }catch(e){ /* 상태를 못 받으면 화면 그대로 둔다 */ }
+}
 async function startCleanPreview(){
   const box=document.getElementById('cleanPreview');
   const btn=document.getElementById('btnCleanPreview');
@@ -6421,13 +6460,7 @@ async function pollClean(gen,job){
     if(d.clean_status==='ready'){
       clearInterval(CLEAN_POLL); CLEAN_POLL=null;
       if(d.clean_regions) CLEAN_REGIONS=d.clean_regions;   // 지워진 자막 자리(5단계 꾸미기가 씀)
-      const t=Date.now(), u='/api/produce/mix/clean_thumb/'+encodeURIComponent(job);
-      box.innerHTML='<div class="cp-compare">'
-        +'<div class="cp-cell"><div class="cp-frame"><img src="'+u+'?kind=original&t='+t+'"><span class="cp-lbl">BEFORE</span></div><div class="cp-cap">원본</div></div>'
-        +'<div class="cp-arrow">→<span>AI 제거</span></div>'
-        +'<div class="cp-cell"><div class="cp-frame"><img src="'+u+'?kind=clean&t='+t+'"><span class="cp-lbl on">AFTER</span><span class="cp-chk">✓</span></div><div class="cp-cap good">자막 제거됨</div></div>'
-        +'</div>'
-        +'<button class="cp-redo" onclick="startCleanPreview()">↻ 다시 미리보기</button>';
+      renderCleanReady(job);
       if(btn) btn.disabled=false;
     } else if(d.clean_status==='failed'){
       clearInterval(CLEAN_POLL); CLEAN_POLL=null;
@@ -6461,6 +6494,8 @@ function refreshSub(){
   // T7: 못 쓰는 컨트롤은 비활성 노출 대신 숨긴다 — 자막제거 켜짐+매칭됨일 때만 미리보기가 등장.
   const wrap=document.getElementById('cleanPreviewWrap');
   if(wrap) wrap.style.display = (STATE.subtitleRemoval && MIX_JOB) ? '' : 'none';
+  // 이미 끝난 제거 결과를 서버에서 되살린다(화면 전환으로 DOM이 비워져도 결과는 남는다).
+  restoreCleanPreview();
 }
 async function onSubToggle(){
   STATE.subtitleRemoval = document.getElementById('subToggle').checked;
