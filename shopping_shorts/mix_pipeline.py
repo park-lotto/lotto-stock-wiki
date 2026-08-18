@@ -266,6 +266,41 @@ def _beat_tts_path(tts_dir, beat):
     return str(Path(tts_dir) / f"beat_{beat['beat_idx']}_{key}.mp3")
 
 
+def tts_matches_narration(beat):
+    """이 비트의 mp3가 **지금 대본**으로 만든 것이냐 — 어긋나면 False(2026-08-19 실사고).
+
+    ★왜 필요한가: `beat["narration"] = ...` 를 하는 곳이 코드베이스에 20곳이 넘는다
+      (edit_plan 12곳·single_source 6곳·backbone 2곳·mix_pipeline·app). 리라이터가
+      하나 늘 때마다 "재합성도 같이 해라"를 사람이 기억하는 구조면 반드시 또 샌다.
+      실제로 2026-07-27에 파일명 해시를 넣었는데도 2026-08-19에 같은 증상이 재발했다
+      (잡 f8d373618c0f beat2: 대본은 '영양사 친구가 알려준…'인데 소리는
+       '치즈와 우유에 계란까지 톡 까서 넣으면…' — 같은 초에 만들어진 형제 잡
+       e7bf5dbccd04는 같은 대본으로 다른 파일명을 써서 대조로 확정했다).
+
+    그래서 "기억"이 아니라 **판정**을 둔다. 판정 기준은 `_beat_tts_path` 하나뿐이므로
+    파일명 규칙이 바뀌어도 두 벌이 되지 않는다(0순위-B).
+
+    fail-open 두 가지 — 과잉 경보는 경보를 무의미하게 만든다:
+      · tts_path 없음        = 아직 합성 전이다. 어긋남이 아니다.
+      · 해시 없는 옛 이름     = 2026-07-27 이전 잡(beat_0.mp3). 판정 불가라 통과시킨다
+                               (라이브 실측 758비트가 여기 해당 — 전부 빨개지면 아무도 안 본다).
+    """
+    tp = beat.get("tts_path")
+    if not tp:
+        return True
+    name = Path(tp).name
+    m = re.fullmatch(r"beat_(\d+)_([0-9a-f]{10})\.mp3", name)
+    if not m:
+        return True                     # 옛 비해시 이름 → 판정 불가(fail-open)
+    return m.group(2) == hashlib.md5(
+        (beat.get("narration") or "").encode("utf-8")).hexdigest()[:10]
+
+
+def mismatched_beats(beats):
+    """대본과 음성이 어긋난 비트 인덱스 목록 — 화면·로그가 근거로 쓴다."""
+    return [b.get("beat_idx") for b in (beats or []) if not tts_matches_narration(b)]
+
+
 def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron=None):
     """비트별로 synthesize_line 호출. beat['tts_path']를 채운다.
     연속성(previous_text/next_text)은 인접 비트의 '원문'(naturalize 전) narration을 쓴다
@@ -471,7 +506,10 @@ def _conform_beats(beats, tts_dir, *, voice, global_pron=None):
         new_n = conform_narration(beat["narration"], budget)
         if not new_n:
             continue   # 리라이트 실패 → 원문 유지, freeze 폴백(sync_gap 플래그 잔존)
-        out = Path(tts_dir) / f"beat_{beat['beat_idx']}.mp3"
+        # ★파일명은 **줄인 뒤의 대본**으로 짓는다(2026-08-19). 예전엔 해시 없는
+        #   beat_{i}.mp3라 "어느 대본의 음성인지" 알 수 없었고, 그래서 대본이 또 갈려도
+        #   tts_matches_narration이 판정을 못 해 어긋남이 조용히 통과했다.
+        out = Path(_beat_tts_path(tts_dir, {**beat, "narration": new_n}))
         try:
             synthesize_line(
                 new_n, out, voice=voice, beat_role=beat.get("role"),
@@ -1797,7 +1835,11 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
     work = Path(work_root) / job_id
     tts_dir = work / "tts"
     tts_dir.mkdir(parents=True, exist_ok=True)
-    out = tts_dir / f"beat_{beat_idx}.mp3"
+    # ★현재 대본의 해시 경로로 쓴다(2026-08-19). 톤·성우만 바꾸는 경로라 대본이 같으면
+    #   경로도 같아 **같은 파일을 덮어쓴다**(기존 동작 유지). 캐시는 tts_ver가 깬다.
+    #   대본 편집 뒤 호출되면(=/narration 경로) 새 해시로 가므로 어긋남이 남지 않는다 —
+    #   예전 beat_{i}.mp3는 어느 대본 것인지 알 수 없어 판정이 영영 불가능했다.
+    out = Path(_beat_tts_path(tts_dir, beat))
     # 이 mp3는 최종 렌더가 skip_existing으로 재사용하므로, 전역 발음교정을 여기서도
     # 적용해야 재합성한 비트만 교정이 빠지는 일이 없다(Task2 리뷰 Important).
     try:

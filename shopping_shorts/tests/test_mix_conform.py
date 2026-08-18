@@ -77,7 +77,10 @@ def test_conform_pass_rewrites_only_over_budget_beat(monkeypatch, tmp_path):
     b0, b1 = beats
     assert b0["narration"] == "짧게 줄인 문장", "초과 비트가 리라이트되지 않았다"
     assert b0["conformed"] is True
-    assert b0["tts_path"] == str(tmp_path / "beat_0.mp3"), "재TTS 경로가 비트에 반영 안 됨"
+    # ★파일명은 **줄인 뒤 대본**의 해시로 짓는다(2026-08-19). 예전엔 beat_0.mp3라
+    #   어느 대본의 음성인지 알 수 없어 어긋남 판정이 불가능했다(0순위-B: _beat_tts_path 한 곳).
+    assert b0["tts_path"] == mp._beat_tts_path(tmp_path, b0), "재TTS 경로가 비트에 반영 안 됨"
+    assert mp.tts_matches_narration(b0), "콘폼 후 대본과 음성이 어긋난 채로 남았다"
     assert b0["sync_gap"] == 0.0, "재TTS(2.2s) 후 예산(2.3s) 안인데 gap이 남았다"
     assert b0["cap_durs"] == [2.2], "콘폼 후 자막 타이밍 재동기 안 됨"
     assert b0["target_seconds"] == 2.2, "UI 표시 초 = 실제 발화초(2.2)여야 함(추정 1.05→1.5 아님)"

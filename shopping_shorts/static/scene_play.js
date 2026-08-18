@@ -295,7 +295,20 @@ function playTts(i, slot){
   if (curAud && curAud !== a) curAud.pause();      // 앞 칸 음성은 여기서 확실히 끈다
   curAud = a;
   try { a.currentTime = 0; } catch(e){}
-  const warn = () => ttsWarn('🔇 이 칸은 음성이 없어요 — 위 🔊 음성 만들기를 눌러주세요');
+  // ★"왜 안 나오나"를 갈라서 알려준다(2026-08-19). <audio>는 응답 본문을 못 읽으므로
+  //   실패했을 때만 같은 주소를 한 번 물어 상태코드로 원인을 가른다.
+  //   409 = 대본이 바뀐 뒤 재합성이 안 된 칸(서버가 옛 소리를 **일부러** 안 준다).
+  //   그냥 '음성이 없어요'로 뭉뚱그리면 사장님이 "만들기를 눌렀는데 또 딴소리"로 겪는다.
+  const warn = () => {
+    if (a._warned) return;
+    a._warned = true;
+    fetch(SL.tts(i, ttsVer(i)), {method:'GET'})
+      .then(r => ttsWarn(r.status === 409
+        ? '⚠ 이 칸은 대본이 바뀐 뒤 음성을 다시 안 뽑았어요 — 🔊 음성 만들기를 눌러주세요'
+        : '🔇 이 칸은 음성이 없어요 — 위 🔊 음성 만들기를 눌러주세요'))
+      .catch(() => ttsWarn('🔇 이 칸은 음성이 없어요 — 위 🔊 음성 만들기를 눌러주세요'));
+  };
+  a._warned = false;
   a.onerror = warn;
   a.play().catch(warn);
   // 2.5초 안에 준비가 안 되면(파일 없음) 알린다.

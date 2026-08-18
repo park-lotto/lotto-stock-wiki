@@ -34,7 +34,10 @@ def test_resynth_one_beat_overwrites_only_target(monkeypatch, tmp_path):
     b1 = plan["beats"][1]
     assert b1["cap_durs"] == [3.0]                  # 재동기됨
     assert b1["voice_override"] == ov               # 저장됨
-    assert b1["tts_path"].endswith("beat_1.mp3")
+    # ★현재 대본의 해시 경로여야 한다(2026-08-19). 옛 beat_1.mp3는 어느 대본의 음성인지
+    #   알 수 없어 "대본은 새 것 / 소리는 옛 것"을 영영 판정할 수 없었다.
+    assert b1["tts_path"] == mp._beat_tts_path(tmp_path / "job1" / "tts", b1)
+    assert mp.tts_matches_narration(b1), "재합성 후에도 대본과 음성이 어긋난 채다"
     assert "voice_override" not in plan["beats"][0]  # 비트0 무접촉
 
 
