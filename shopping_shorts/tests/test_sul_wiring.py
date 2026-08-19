@@ -34,6 +34,13 @@ def test_썰카테고리만_추출한다():
         assert app._sul_block_for_sources("오용형", src, None) == "[블록]"
         assert len(called) == 1
         assert app._sul_block_for_sources("제품정체형", src, None) == "[블록]"
+        # ★라이브 실제 모양(2026-08-19 실측): 항목 category는 '홈템'이고
+        #   썰 여부는 **고른 스파인의 fit_categories**로만 갈린다.
+        #   이걸 안 보면 배선이 살아 있어도 라이브에서 영영 안 켜진다.
+        _sul_spine = {"id": 56, "name": "유튜브 오용형", "fit_categories": ["오용형"]}
+        assert app._sul_block_for_sources("홈템", src, None, [_sul_spine]) == "[블록]"
+        assert app._sul_block_for_sources(
+            "홈템", src, None, [{"fit_categories": ["홈템"]}]) == ""
     finally:
         if _orig is not None:
             _pkg.sul_facts = _orig
@@ -65,3 +72,22 @@ def test_생성경로가_이_함수를_부른다():
     import inspect
     src = inspect.getsource(app._materials_for_generate)
     assert "_sul_block_for_sources" in src
+
+
+def test_라이브_스파인_모양으로_판정된다():
+    """실측 근거: spine 55·56의 fit_categories가 ["제품정체형"]·["오용형"]이고,
+    위키 항목 113건 중 이 카테고리를 가진 항목은 **0건**이었다(2026-08-19 서버 DB)."""
+    assert app._is_sul_context("홈템", [{"fit_categories": ["오용형"]}]) is True
+    assert app._is_sul_context("홈템", [{"fit_categories": ["제품정체형"]}]) is True
+    assert app._is_sul_context("홈템", [{"fit_categories": ["홈템", "기타"]}]) is False
+    assert app._is_sul_context("홈템", [{"fit_categories": None}]) is False
+    assert app._is_sul_context("오용형", None) is True
+    assert app._is_sul_context("", None) is False
+
+
+def test_호출부가_스파인을_넘긴다():
+    """★넘기지 않으면 게이트가 영영 안 켜진다 — 배선만 있고 죽은 상태."""
+    import inspect
+    src = inspect.getsource(app)
+    assert "spines=_picked" in src, "전체 생성이 고른 스파인을 안 넘긴다"
+    assert "spines=[style]" in src, "[바꾸기] 재생성이 스파인을 안 넘긴다"
