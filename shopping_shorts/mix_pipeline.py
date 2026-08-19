@@ -631,8 +631,10 @@ def _prepare_sources(urls, work, store=None):
                 "source_download",
                 "소스 영상 다운로드가 전부 실패했습니다 — 수집 통로가 끊겼을 수 있습니다",
                 detail, store=store)
-        except Exception:      # noqa: BLE001
-            pass
+        except Exception as _ae:      # noqa: BLE001 — 알림 실패가 본작업을 막지 않는다
+            # ★사유는 남긴다(2026-08-19 F-2). 알림이 조용히 죽으면 "사고가 났는데
+            #   아무도 모른다"가 되고, 그게 이 알림을 만든 이유(08-03 실사고)였다.
+            print(f"[ops_alert] source_download 알림 실패(무해): {_ae!r}", file=sys.stderr)
         raise RuntimeError(
             "소스 영상을 하나도 못 받았습니다 — 모든 URL 다운로드 실패:\n" + detail)
     return video_paths, captions, skipped
@@ -1260,8 +1262,8 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                 f"run_mix_job: EDL이 비어 있습니다. code={code} sources={n_src} chars={n_chars}. "
                 "plan_empty면 Gemini 키풀(소진·403 PERMISSION_DENIED)과 편집안 파싱을, "
                 "extract_empty면 소스 자막·음성 추출을 보세요.", store=store)
-        except Exception:      # noqa: BLE001
-            pass
+        except Exception as _ae:      # noqa: BLE001 — 알림 실패가 본작업을 막지 않는다
+            print(f"[ops_alert] edl_empty 알림 실패(무해): {_ae!r}", file=sys.stderr)
         raise RuntimeError(f"EDL 비어있음({code}) — {why}")
 
     # 3.5/3.6) 장면 라이브러리 자동 배치(컷어웨이 + 효과음) — ★기본 OFF(2026-08-01 실사고).

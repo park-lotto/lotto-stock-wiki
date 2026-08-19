@@ -17,7 +17,9 @@
 produce.html의 **실제 소스**를 앵커로 잘라 Node로 돌린다(test_produce_work_save.py와 같은
 방식 — 재구현이 아니다. 재구현하면 소스가 바뀌어도 테스트는 계속 통과한다).
 """
+import json
 import pathlib
+import re
 import shutil
 import subprocess
 import tempfile
@@ -316,3 +318,96 @@ def test_hydrate_survives_empty_drafts_array(js):
     """)
     import json
     assert json.loads(out)["n"] == 0
+
+
+# ── 2026-08-19 (D) 씨앗 캐리오버 가드 ─────────────────────────────────────────
+# 08-18에 같은 날 두 번 고쳤는데(f17d63a6f·00811a290) **가드 테스트가 없었다**.
+# 둘 다 "담은 영상과 무관한 대본이 나온다"로 사장님이 겪은 사고다:
+#
+#   work 3b8e5099a22e — 담긴 건 다이소 자석 네일펜 5편인데 s2.seed는 옛 작업의
+#                       홈데코랩(DbmCnyTTobw), drafts는 또 다른 작업의 카드지갑 대본
+#   work 735812dd8958 — 담긴 건 카메라 5편인데 seed는 옛 홈데코랩이 살아남아
+#                       대본이 통째로 다이소 주방청소로 나왔다
+#
+# 서버·AI PICK은 정상이었고 **화면이 옛 스냅샷을 복원해 그린 것**이었다.
+# 아래 둘이 그 방어선이다 — 없으면 다음 리팩터링에 조용히 사라진다.
+
+def test_남의_작업_스냅샷은_복원하지_않는다(js):
+    """★소유권 검사 — 스냅샷의 work_id와 지금 여는 작업이 다르면 통째로 버린다.
+
+    S2는 순수 메모리라 작업을 갈아타도 살아남는다. '따로 만들기'처럼 새 작업
+    레코드를 만드는 분기에서 곧바로 저장이 돌면 옛 작업 것이 그대로 실린다.
+    """
+    out = _run(js, """
+      S2.drafts = mkDrafts(); S2.seed = {shortcode:'DbmCnyTTobw', title:'홈데코랩'};
+      _s2Hydrate({work_id:'w-NEW', s2:{work_id:'w-OLD', drafts:mkDrafts(),
+                                       seed:{shortcode:'DbmCnyTTobw', title:'홈데코랩'}}});
+      console.log(JSON.stringify({d:S2.drafts.length, seed:S2.seed}));
+    """)
+    got = json.loads(out)
+    assert got["d"] == 0, "남의 작업 대본이 복원됐다(캐리오버)"
+    assert got["seed"] is None, "★seed까지 지워야 한다 — 남으면 새 AI PICK이 씨앗을 못 갱신한다"
+
+
+def test_스냅샷이_없으면_씨앗도_함께_비운다(js):
+    """★drafts만 지우고 seed를 남기면 새 작업 대본이 옛 소재로 나온다(735812dd8958).
+
+    s2RenderSeeds()의 `if(!S2.seed && ...)` 가드에 걸려 새 AI PICK이 씨앗을
+    갱신하지 못하기 때문이다. seed와 drafts는 **한 작업의 짝**이다(0순위-B).
+    """
+    out = _run(js, """
+      S2.drafts = mkDrafts();
+      S2.seed = {shortcode:'DbmCnyTTobw', title:'옛 작업 홈데코랩'};
+      S2.picked = [1,2]; S2.materials = {sources:[{chars:9}]};
+      _s2Hydrate({work_id:'w-NEW'});            // s2 스냅샷 없음
+      console.log(JSON.stringify({d:S2.drafts.length, seed:S2.seed,
+                                  picked:S2.picked.length, mat:S2.materials}));
+    """)
+    got = json.loads(out)
+    assert got["d"] == 0 and got["seed"] is None, f"씨앗이 캐리오버됐다: {got}"
+    assert got["picked"] == 0 and got["mat"] is None, "짝인 상태가 함께 안 지워졌다"
+
+
+def test_주인이_같으면_정상_복원된다(js):
+    """가드가 과해서 **내 작업까지** 버리면 사장님이 만든 게 사라진다."""
+    out = _run(js, """
+      _s2Hydrate({work_id:'w-1', s2:{work_id:'w-1', drafts:mkDrafts(),
+                                     seed:{shortcode:'SEED1', title:'내 씨앗'}}});
+      console.log(JSON.stringify({d:S2.drafts.length, seed:(S2.seed||{}).shortcode}));
+    """)
+    got = json.loads(out)
+    assert got["d"] == 2 and got["seed"] == "SEED1", f"내 작업이 복원 안 됐다: {got}"
+
+
+def test_옛_스냅샷은_주인을_몰라도_복원한다(js):
+    """work_id가 없는 옛 스냅샷은 그대로 살린다 — 회귀 0(주인을 알 길이 없다)."""
+    out = _run(js, """
+      _s2Hydrate({work_id:'w-1', s2:{drafts:mkDrafts(), seed:{shortcode:'OLD1'}}});
+      console.log(JSON.stringify({d:S2.drafts.length, seed:(S2.seed||{}).shortcode}));
+    """)
+    got = json.loads(out)
+    assert got["d"] == 2 and got["seed"] == "OLD1", f"옛 작업이 버려졌다: {got}"
+
+
+def test_복원_경로가_하나뿐이다():
+    """★0순위-B — 복원을 손으로 여러 곳에 적으면 한쪽만 고쳐져 어긋난다.
+
+    실제 복원 지점(작업 열기·핸드오프 수신·크로스기기 싱크)은 여럿이지만
+    **전부 _s2Hydrate 하나만** 불러야 한다. 직접 S2에 값을 꽂는 곳이 생기면 실패.
+    """
+    src = PRODUCE_HTML.read_text(encoding="utf-8")
+    body = src[src.index("function _s2Hydrate("):]
+    body = body[:body.index("\nfunction ", 10)]
+    # S2.drafts 에 값을 대입하는 곳은 _s2Hydrate 와 _s2Reset 안에만 있어야 한다
+    assigns = [m.start() for m in re.finditer(r"S2\.drafts\s*=", src)]
+    allowed = 0
+    for fn in ("function _s2Hydrate(", "function _s2Reset(", "function s2SetDrafts("):
+        i = src.find(fn)
+        if i < 0:
+            continue
+        j = src.index("\nfunction ", i + 10)
+        allowed += sum(1 for a in assigns if i < a < j)
+    # 나머지는 생성 직후 대입(정상) — 개수만 급증하지 않게 상한을 둔다.
+    assert len(assigns) - allowed <= 4, (
+        f"S2.drafts 대입이 {len(assigns)}곳(허용 함수 밖 {len(assigns)-allowed}곳)입니다. "
+        "복원은 _s2Hydrate 한 곳에서만 하세요(0순위-B).")
