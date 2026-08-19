@@ -131,9 +131,10 @@
                   border-radius:8px;padding:5px 11px;font-size:12px;cursor:pointer}
     #trimbar .act:hover{border-color:var(--accent);color:var(--accent)}
     #trimbar .hint{font-size:11.5px;color:var(--sub)}
-    /* 엔진이 만드는 <video>는 크기를 CSS에 맡긴다 — 이 규칙이 없으면 화면이 안 잡힌다. */
+    /* 엔진이 만드는 <video>는 크기를 CSS에 맡긴다 — 이 규칙이 없으면 화면이 안 잡힌다.
+       ★비율의 정의처는 scene_play.js PV_AR 한 곳 — var 폴백은 그 값과 같아야 한다. */
     #player video{width:100%;height:100%;border-radius:10px;background:#000;display:block;
-                  aspect-ratio:9/16;object-fit:contain;position:absolute;inset:0}
+                  aspect-ratio:var(--shorts-pv-ar,9/16);object-fit:contain;position:absolute;inset:0}
     #player .x:hover{color:var(--txt)}
     #subbox b{color:var(--accent)}
     .panel{display:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
@@ -432,12 +433,32 @@
     @media(max-width:1180px){.srcGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
     @media(max-width:860px){.srcGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:580px){.srcGrid{grid-template-columns:1fr}}
-    /* 진행 표시(2026-08-19) — 카드 위 한 줄. 분석이 도는 동안만 나타났다 사라진다. */
-    .srcProg{margin:0 0 10px}
-    .srcProgBar{height:4px;border-radius:99px;background:var(--line);overflow:hidden}
+    /* 진행 표시(2026-08-19, 2026-08-20 확대) — 분석이 도는 동안만 나타났다 사라진다.
+       ★사장님 지시(08-20): "분석중 돌아가는것 크게 잘보이게".
+       종전엔 12px 회색 글씨 + 4px 막대라 각주처럼 묻혔다 — 40~70초를 기다려야 하는
+       화면에서 "지금 뭔가 돌고 있다"는 **가장 중요한 정보**인데 가장 작게 그려져 있었다.
+       → 테두리 있는 패널로 올리고, 글자·막대·아이콘을 전부 키운다. */
+    .srcProg{margin:0 0 14px;padding:14px 16px;border-radius:12px;
+      background:var(--inset);border:1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+      box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent)}
+    .srcProgBar{height:10px;border-radius:99px;background:var(--line);overflow:hidden}
     .srcProgBar>i{display:block;height:100%;background:var(--accent);border-radius:99px;
       transition:width .4s ease}
-    .srcProgTxt{margin-top:5px;font-size:12px;color:var(--sub);display:flex;align-items:center;gap:6px}
+    /* 글자는 본문 크기(15px)에 굵게 — 멀리서도 읽힌다. 색도 흐린 회색(--sub) 대신 본문색. */
+    .srcProgTxt{margin-top:10px;font-size:15px;font-weight:700;color:var(--txt);
+      display:flex;align-items:center;gap:9px;line-height:1.45}
+    /* 회전 아이콘만 크게 — 움직이는 것이 하나 있으면 "멈춘 게 아니다"가 바로 읽힌다. */
+    .srcProgTxt .skm-spin{font-size:21px;flex:0 0 auto}
+    /* 진행률 숫자 — 막대 위에 크게. 몇 개 중 몇 개인지가 한눈에. */
+    .srcProgHead{display:flex;align-items:baseline;justify-content:space-between;
+      gap:10px;margin-bottom:9px}
+    .srcProgHead b{font-size:16px;color:var(--txt)}
+    .srcProgPct{font-size:20px;font-weight:800;color:var(--accent);
+      font-variant-numeric:tabular-nums;line-height:1}
+    @media(max-width:580px){
+      .srcProgTxt{font-size:14px}
+      .srcProgPct{font-size:18px}
+    }
     .srcCard{background:var(--inset);border:1px solid var(--line);border-radius:12px;
       padding:14px 18px;transition:border-color .15s;cursor:pointer;
       display:flex;flex-direction:column;min-width:0;overflow:hidden}
@@ -1674,7 +1695,9 @@
              맨 위 타임프레임 / 그 아래 [미리보기 + 영상조각]). 그래서 제작소 쪽의 이
              슬롯은 감춘다 — 요소는 남긴다(#player/#vidbox를 scene_play.js가 참조하고,
              다른 단계의 미리보기도 같은 규약을 쓴다. 지우면 그 코드가 죽는다). -->
-        <div id="mixPreviewRail" style="display:none;flex:0 0 340px;min-width:280px;max-width:340px;align-self:stretch">
+        <!-- ★폭의 정의처는 scene_play.js PV_W 한 곳(--shorts-pv-w). 340px 시절엔 장면편집 안
+             재생기(440px)와 달라, 레일이 열리고 닫힐 때마다 미리보기 크기가 널뛰었다(2026-08-20). -->
+        <div id="mixPreviewRail" style="display:none;flex:0 0 var(--shorts-pv-w,440px);min-width:280px;max-width:var(--shorts-pv-w,440px);align-self:stretch">
           <div id="mixPreviewPanel" class="previewSlot" style="display:none;min-height:520px">
             <div class="hint" style="margin-bottom:6px">🪞 ③ 미리보기 (9:16)</div>
             <div id="mixPreview"></div>
@@ -1684,7 +1707,8 @@
             <div id="player">
               <div class="phead" style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:6px">
                 <b>장면 미리보기</b><span class="x" style="cursor:pointer;color:var(--sub)" onclick="stopPlay()">닫기 ✕</span></div>
-              <div id="vidbox" onclick="togglePause(event)" style="position:relative;background:#000;border-radius:10px;overflow:hidden;aspect-ratio:9/16;max-height:520px;width:auto;margin:0 auto;cursor:pointer"></div>
+              <!-- ★max-height 클램프 금지 — 9:16 비율이 눌려 좌우 레터박스로 '틀어져' 보였다(2026-08-20). -->
+              <div id="vidbox" onclick="togglePause(event)" style="position:relative;background:#000;border-radius:10px;overflow:hidden;aspect-ratio:var(--shorts-pv-ar,9/16);width:100%;margin:0 auto;cursor:pointer"></div>
               <input type="range" id="seek" min="0" max="1000" value="0" oninput="seekInput(this.value)" style="width:100%;margin-top:8px;height:20px;cursor:pointer">
               <!-- 재생 시간(2026-08-17) — scene_play.js paintTime()이 채운다 -->
               <div id="ptime" style="font-size:12px;color:var(--sub);text-align:right;margin-top:2px;font-variant-numeric:tabular-nums;min-height:16px"></div>
@@ -4217,7 +4241,7 @@ function _pvClose(){
 function _renderPreviewVideo(job){
   const box=document.getElementById('mixPreview'); if(!box) return;
   if(typeof _pvOpen==='function') _pvOpen();
-  box.innerHTML = '<video controls muted playsinline autoplay style="display:block;width:100%;max-height:520px;object-fit:contain;border-radius:12px;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.4)"'
+  box.innerHTML = '<video controls muted playsinline autoplay style="display:block;width:100%;aspect-ratio:var(--shorts-pv-ar,9/16);object-fit:contain;border-radius:12px;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.4)"'
     + ' src="/api/produce/mix/preview/'+encodeURIComponent(job)+'?t='+Date.now()+'"></video>'
 ;   // 안내 문구 없음(2026-08-15 사장님 "랜더 아래쪽 문구들은 다 지워")
   const btn = document.getElementById('btnPreview'); if(btn) btn.disabled = false;
@@ -4583,7 +4607,7 @@ function _renderMixReviewBody(d){
     ;   // 안내 줄 삭제(2026-08-15 사장님)
   const _pvPanel=document.getElementById('mixPreviewPanel'), _pvBox=document.getElementById('mixPreview');
   if(_pvPanel) _pvPanel.style.display='';
-  if(_pvBox) _pvBox.innerHTML='<div style="aspect-ratio:9/16;max-height:520px;width:100%;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:18px"><div style="font-size:34px">🪞</div><div style="font-size:14px;line-height:1.5">오른쪽 <b style="color:var(--accent)">🎬 대본×영상믹스 확정</b>를<br>누르면 <b>여기에서</b> 영상이<br>만들어지는 걸 보실 수 있어요</div></div>';
+  if(_pvBox) _pvBox.innerHTML='<div style="aspect-ratio:var(--shorts-pv-ar,9/16);width:100%;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:18px"><div style="font-size:34px">🪞</div><div style="font-size:14px;line-height:1.5">오른쪽 <b style="color:var(--accent)">🎬 대본×영상믹스 확정</b>를<br>누르면 <b>여기에서</b> 영상이<br>만들어지는 걸 보실 수 있어요</div></div>';
 }
 // 매칭 결과 취소 → 처음부터 다시(2026-07-20 사장님). 장면이 대사와 안 맞거나 이상하게 나오면
 // 이 매칭 job을 버리고, 소스·대본을 고쳐 "🎬 영상 매칭 시작"을 다시 누를 수 있게 리셋한다.
@@ -5156,7 +5180,10 @@ async function renderSourceAnalysis(){
     // ★담긴 목록이 아직 안 잡혔는데 자동적재는 돌고 있는 순간이 있다(HANDOFF가 채워지기
     //   전에 이 함수가 먼저 불린다). 종전엔 여기서 그냥 비우고 나가 **폴링도 안 걸어**,
     //   그 뒤 분석이 다 끝나도 화면은 영영 빈 채였다 — 새로고침해야만 보였다.
-    box.innerHTML = _SRC_BUSY ? `<div class="srcProg"><div class="srcProgTxt">
+    //   ★막대는 일부러 안 그린다(2026-08-20) — 이 시점엔 담긴 목록이 아직 없어
+    //     진행률을 알 수 없다. 0%짜리 막대를 그리면 "하나도 안 됐다"는 **거짓 정보**가 된다.
+    //     대신 글자·아이콘은 아래 패널과 같은 크기로 키워 눈에 띄게만 한다.
+    box.innerHTML = _SRC_BUSY ? `<div class="srcProg"><div class="srcProgTxt" style="margin-top:0">
         <span class="skm-spin">🔄</span> 담은 영상 ${_SRC_BUSY}개를 분석하고 있어요 — 잠시만요</div></div>` : '';
     if(_SRC_BUSY){ clearTimeout(_SRC_POLL); _SRC_POLL = setTimeout(() => { renderSourceAnalysis().catch(()=>{}); }, 3000); }
     return;
@@ -5205,7 +5232,13 @@ async function renderSourceAnalysis(){
        <span style="font-size:13px;font-weight:800">🔎 담은 영상 뜯어보기</span>
        <span class="hint">${done}/${items.length}개 읽음${gaveUp ? ` · ${gaveUp}개 실패` : ''} — 어떤 재료가 모였고, 뭘 쓸 수 있는지</span>
      </div>`
+    // ★진행 패널(2026-08-20 "크게 잘보이게"). 막대 위에 "몇 개 중 몇 개 · 몇 %"를 크게
+    //   얹는다 — 40~70초를 기다리는 화면에서 사장님이 가장 알고 싶은 건 "얼마나 남았나"다.
     + (left > 0 ? `<div class="srcProg" title="분석이 끝난 영상 비율">
+         <div class="srcProgHead">
+           <b>🔄 영상 분석 중 · ${done + gaveUp}/${items.length}개 완료</b>
+           <span class="srcProgPct">${pct}%</span>
+         </div>
          <div class="srcProgBar"><i style="width:${pct}%"></i></div>
          <div class="srcProgTxt"><span class="skm-spin">🔄</span> ${busyTxt}</div>
        </div>` : '')
@@ -7185,7 +7218,7 @@ async function startPreview(){
   if(btn) btn.disabled = true;     // 렌더는 20초+ 걸린다 — 그 사이 재클릭을 막는다
   if(typeof _pvOpen==='function') _pvOpen();   // 좌측 프리뷰 자리 확보(레일까지 — 안 열면 렌더는 되는데 0x0이라 안 보인다)
   // 같은 9:16 자리에서 민트 로더가 돌게 한다(loader.js). 없으면 텍스트로 폴백.
-  box.innerHTML = '<div id="pvLoadFrame" style="aspect-ratio:9/16;width:100%;border:1px solid var(--line);border-radius:16px;background:var(--inset);display:flex;align-items:center;justify-content:center;overflow:hidden"></div>';
+  box.innerHTML = '<div id="pvLoadFrame" style="aspect-ratio:var(--shorts-pv-ar,9/16);width:100%;border:1px solid var(--line);border-radius:16px;background:var(--inset);display:flex;align-items:center;justify-content:center;overflow:hidden"></div>';
   try{
     var _pvf=document.getElementById('pvLoadFrame');
     if(window.SBLoader && _pvf) SBLoader.spinner(_pvf, {messages:['미리보기 만드는 중…','장면을 이어붙이는 중…','자막·음성 얹는 중…','거의 다 됐어요…'], bar:true});
