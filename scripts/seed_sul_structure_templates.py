@@ -39,6 +39,17 @@ CONCEAL = {
               "개발자도 예상 못 한 이 제품의 정체"],
 }
 
+# ★조사 자리를 템플릿에 명시한다(2026-08-19 실측). 원래 templates의 origin은
+#   "{본래용도} 개발된 제품이었음"이라 슬롯이 '마늘 다지기'면
+#   "마늘 다지기 개발된 제품이었음"이 된다 — 실측 전사는 "의류 태그 부착용**으로**
+#   개발된"이었다. 조사를 붙여두면 spine_fill이 받침에 맞춰 로/으로를 골라준다.
+FIX = {
+    "오용형": {
+        "origin": ["이게 원래는 {본래용도}로 개발된 제품이었음",
+                   "원래대로라면 {본래용도}로 쓰는게 정석이었음"],
+    },
+}
+
 BY_FIT = {"오용형": MISUSE, "제품정체형": CONCEAL}
 apply_ = "--apply" in sys.argv
 
@@ -53,9 +64,17 @@ for sp in st.list_spines(status="approved"):
         continue
     cur = dict(sp.get("templates") or {})
     changed = {k: v for k, v in add.items() if not cur.get(k)}
-    print("#%s %s | 채울 칸: %s (이미 있는 칸은 안 건드린다)"
-          % (sp["id"], sp["name"], list(changed) or "없음"))
-    if changed and apply_:
+    # 조사 자리 교정은 **이미 있는 칸도** 덮어쓴다(그게 고치는 목적이다).
+    fixed = {}
+    for fit, tmpl in FIX.items():
+        if fit in fits:
+            for k, v in tmpl.items():
+                if cur.get(k) != v:
+                    fixed[k] = v
+    print("#%s %s | 채울 칸: %s | 조사 교정: %s"
+          % (sp["id"], sp["name"], list(changed) or "없음", list(fixed) or "없음"))
+    if (changed or fixed) and apply_:
         cur.update(changed)
+        cur.update(fixed)
         st.set_spine_style(sp["id"], templates=cur)
 print("적용됨" if apply_ else "미적용(--apply를 붙여라)")
