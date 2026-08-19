@@ -1289,7 +1289,7 @@
             <div style="margin-top:8px;font-size:12px;color:var(--sub)">글씨 크기 <span id="hcSizeQV">64</span>px
               <input id="hcSizeQ" type="range" min="28" max="120" oninput="hcQuick('hcSize', this.value)" style="width:100%"></div>
             <div style="font-size:12px;color:var(--sub)">세로 위치 <span id="hcYQV">14</span>%
-              <input id="hcYQ" type="range" min="0" max="100" oninput="hcQuick('hcY', this.value)" style="width:100%"></div>
+              <input id="hcYQ" type="range" min="0" max="100" oninput="HC_Y_TOUCHED=true;hcQuick('hcY', this.value)" style="width:100%"></div>
             <div style="font-size:12px;color:var(--sub)">가로 위치 <span id="hcXQV">50</span>%
               <input id="hcXQ" type="range" min="0" max="100" oninput="hcQuick('hcX', this.value)" style="width:100%"></div>
             <div style="font-size:11px;color:var(--sub);margin-top:6px">줄바꿈은 문구 칸의 Enter로 정해요 — 넣은 줄 그대로 나오고, 넘치면 글씨가 자동으로 작아집니다.</div>
@@ -1346,7 +1346,7 @@
               <div style="margin-top:10px;font-size:12px;color:var(--sub)">글씨 크기 <span id="hcSizeV">64</span>px
                 <input id="hcSize" type="range" min="28" max="120" value="64" oninput="updateHC()" style="width:100%"></div>
               <div style="font-size:12px;color:var(--sub)">세로 위치 <span id="hcYV">14</span>%
-                <input id="hcY" type="range" min="0" max="100" value="14" oninput="updateHC()" style="width:100%"></div>
+                <input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;updateHC()" style="width:100%"></div>
               <div style="font-size:12px;color:var(--sub)">가로 위치 <span id="hcXV">50</span>%
                 <input id="hcX" type="range" min="0" max="100" value="50" oninput="updateHC()" style="width:100%"></div>
               <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
@@ -2710,6 +2710,9 @@ let CAP_X_PCT=50;
 let CLEAN_REGIONS=null;
 // 사장님이 자막을 직접 드래그로 옮겼나 — true면 '1번 자리' 자동정렬이 그 위치를 덮지 않는다.
 let CAP_POS_TOUCHED=false;
+// ★헤드카피 세로위치를 사장님이 한 번이라도 만졌나(2026-08-20). 만졌으면 틀을 바꿔도
+//   그 자리를 지킨다 — 안 그러면 애써 맞춰둔 위치가 매번 맨 위로 튄다.
+let HC_Y_TOUCHED=false;
 let PREVIEW_CAP_TEXT='이렇게 자막이 나와요';   // 스텝퍼가 비트별 자막으로 교체
 // ── 🎞 공용 장면 프리뷰 스텝퍼 — 비트마다 프레임+자막 넘겨보기(TTS·검수판 트랙도 재사용) ──
 let BEATS_PREVIEW=[];   // [{i,total,caption}]
@@ -2936,6 +2939,8 @@ function applyConfig(h, c){
     if(h.font){ g('hcFont').value=h.font; HC_FONT_COMMITTED=h.font; syncFontBtn(); }
     g('hcColor').value=h.color; g('hcWeight').value=h.weight!=null?h.weight:900; g('hcSize').value=h.size;
     g('hcX').value=(h.x!=null?h.x:50); g('hcY').value=h.y;
+    // 저장된 작업을 다시 열면 그 자리가 '이미 정해진 자리'다 — 틀을 바꿔도 안 튄다
+    if(h.y!=null) HC_Y_TOUCHED=true;
     g('hcOutline').checked=!!h.outline; g('hcOutColor').value=h.outline_color||'#000000'; g('hcOutW').value=h.outline_w||0;
     g('hcBox').checked=!!h.box; g('hcBoxColor').value=h.box_color||'#000000'; g('hcBoxPad').value=(h.box_pad!=null?h.box_pad:16); g('hcBoxOpacity').value=(h.box_opacity!=null?h.box_opacity:80);
     updateHC();
@@ -3336,10 +3341,26 @@ function updateHC(){
   const _boxW=Math.round(PREVIEW_W*0.92);                // 서버 max_w(0.92*_OUT_W)와 같은 비율
   const _w=el.scrollWidth;
   if(_w>_boxW && _w>0) el.style.fontSize=Math.max(9, (Math.max(9,hc.size*scale))*_boxW/_w)+'px';
-  const oc=hc.outline_color, ow=(hc.outline_w*scale).toFixed(1);
-  el.style.textShadow = hc.outline
-    ? `${ow}px ${ow}px 0 ${oc}, -${ow}px -${ow}px 0 ${oc}, ${ow}px -${ow}px 0 ${oc}, -${ow}px ${ow}px 0 ${oc}, -1px -1px 0 ${oc}, 1px -1px 0 ${oc}, -1px 1px 0 ${oc}, 1px 1px 0 ${oc}`
-    : 'none';
+  // ★외곽선은 **줄어든 실제 글자 크기**를 따라가야 한다(2026-08-20 사장님 "고정문구가 이상하다").
+  //   위에서 넘치면 폰트를 줄이는데 외곽선은 원래 hc.size로 계산해서, 글자만 작아지고
+  //   테두리는 그대로라 획 사이가 메워져 글자가 뭉개졌다. 줄어든 비율만큼 같이 줄인다.
+  const _shrunk=parseFloat(el.style.fontSize)||Math.max(9,hc.size*scale);
+  const _ratio=Math.min(1, _shrunk/Math.max(1, hc.size*scale));
+  const oc=hc.outline_color, ow=Math.max(0.5, hc.outline_w*scale*_ratio).toFixed(1);
+  // ★진짜 테두리로 그린다(2026-08-20 사장님 "고정문구가 이상하다").
+  //   전에는 text-shadow를 대각선 4방향으로만 깔았는데, 두께가 커지면 그 검은 사본이
+  //   흰 글자 **위로 올라와 글자를 통째로 메웠다**(실측: 46px 글자에 6.2px 그림자 →
+  //   화면이 새까맣게 뭉갬). paint-order:stroke fill은 테두리를 글자 **뒤에** 그려서
+  //   두꺼워져도 획이 살아 있다 — 실제 채널 영상의 그 룩이다.
+  if(hc.outline){
+    el.style.webkitTextStrokeWidth=ow+'px';
+    el.style.webkitTextStrokeColor=oc;
+    el.style.paintOrder='stroke fill';
+    el.style.textShadow='none';
+  } else {
+    el.style.webkitTextStrokeWidth='0';
+    el.style.textShadow='none';
+  }
   if(hc.box){
     el.style.background=hexA(hc.box_color, hc.box_opacity/100);
     el.style.padding=`${Math.round(hc.box_pad*scale)}px ${Math.round(hc.box_pad*1.5*scale)}px`;
@@ -3413,7 +3434,11 @@ function applyHeadcopySet(p){
     if(typeof syncQFontBtn==='function') syncQFontBtn(p.font);   // 어제 만든 폰트 미리보기 버튼도 같이
   }
   const set=(id,v)=>{ const el=g(id); if(el && v!=null) el.value=v; };
-  set('hcColor',p.color); set('hcWeight',p.weight); set('hcSize',p.size); set('hcY',p.y);
+  set('hcColor',p.color); set('hcWeight',p.weight); set('hcSize',p.size);
+  // ★자리를 한 번이라도 옮겼으면 그 자리를 지킨다(2026-08-20 사장님: "다른 템플릿을
+  //   누르면 고정문구가 초기 세팅된 맨위로 올라간다 / 지금 위치 기억으로 위치 고정").
+  //   틀마다 y를 새로 밀어넣으면 애써 맞춰둔 자리가 매번 날아간다.
+  if(!HC_Y_TOUCHED) set('hcY',p.y);
   if(g('hcOutline')) g('hcOutline').checked = p.outline!==false;
   set('hcOutColor',p.outline_color||'#000000'); set('hcOutW',p.outline_w);
   // 2줄째 형광색 = 강조 규칙으로 넣는다(렌더도 이 규칙을 읽는다 — 배선 재사용).
@@ -3432,6 +3457,7 @@ function applyHeadcopySet(p){
 }
 function alignHC(where){
   const g=id=>document.getElementById(id);
+  if(where!=='center') HC_Y_TOUCHED=true;   // 세로를 직접 정한 것
   if(where==='top') g('hcY').value=10;
   else if(where==='mid') g('hcY').value=50;
   else if(where==='bottom') g('hcY').value=88;
@@ -3445,7 +3471,7 @@ function bindHCDrag(){
   const move=e=>{ if(!drag) return; const r=pv.getBoundingClientRect();  // 세로만 이동(가로는 위치버튼으로)
     const cy=(e.touches?e.touches[0].clientY:e.clientY);
     let y=Math.round(Math.max(0,Math.min(100,(cy-r.top)/r.height*100)));
-    document.getElementById('hcY').value=y; updateHC(); };
+    document.getElementById('hcY').value=y; HC_Y_TOUCHED=true; updateHC(); };
   tx.addEventListener('mousedown', e=>{drag=true; e.preventDefault();});
   tx.addEventListener('touchstart', e=>{drag=true;}, {passive:true});
   document.addEventListener('mousemove', move);
