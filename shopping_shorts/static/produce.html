@@ -1184,6 +1184,33 @@
           <div style="font-size:13px;margin-bottom:4px">헤드카피 문구 <span class="hint" style="font-size:11px">— Enter로 줄바꿈, 길면 자동으로 줄이 나뉘어요</span></div>
           <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
             style="width:100%;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.4"></textarea>
+          <!-- ⚡빠른 조절(2026-08-19 사장님 "폰트나 색상도 지정이 되야지") — 문구를 고치는
+               바로 그 자리에서 폰트·색·크기·위치를 만진다. ★값은 여기서 따로 갖지 않는다:
+               아래 '직접 다듬기'의 진짜 입력칸(hcFont/hcColor/hcSize/hcY/hcX)에 그대로 써넣고
+               updateHC()를 부른다 — 같은 값이 두 벌이 되면 반드시 어긋난다(0순위-B). -->
+          <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px">⚡ 빠른 조절
+              <span style="font-size:11px;color:var(--sub);font-weight:400">— 미리보기에서 글자를 끌어 옮길 수도 있어요</span></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+              <label style="font-size:12px;color:var(--sub)">폰트
+                <select id="hcFontQ" onchange="hcQuick('hcFont', this.value)"
+                  style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:13px;max-width:170px"></select></label>
+              <label style="font-size:12px;color:var(--sub)">색상
+                <input id="hcColorQ" type="color" oninput="hcQuick('hcColor', this.value)"></label>
+              <label style="font-size:12px;color:var(--sub)">굵기
+                <select id="hcWeightQ" onchange="hcQuick('hcWeight', this.value)"
+                  style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:13px">
+                  <option value="400">보통</option><option value="700">굵게</option><option value="900">아주 굵게</option>
+                </select></label>
+            </div>
+            <div style="margin-top:8px;font-size:12px;color:var(--sub)">글씨 크기 <span id="hcSizeQV">64</span>px
+              <input id="hcSizeQ" type="range" min="28" max="120" oninput="hcQuick('hcSize', this.value)" style="width:100%"></div>
+            <div style="font-size:12px;color:var(--sub)">세로 위치 <span id="hcYQV">14</span>%
+              <input id="hcYQ" type="range" min="0" max="100" oninput="hcQuick('hcY', this.value)" style="width:100%"></div>
+            <div style="font-size:12px;color:var(--sub)">가로 위치 <span id="hcXQV">50</span>%
+              <input id="hcXQ" type="range" min="0" max="100" oninput="hcQuick('hcX', this.value)" style="width:100%"></div>
+            <div style="font-size:11px;color:var(--sub);margin-top:6px">줄바꿈은 문구 칸의 Enter로 정해요 — 넣은 줄 그대로 나오고, 넘치면 글씨가 자동으로 작아집니다.</div>
+          </div>
           <!-- 강조 단어(노출 유지) -->
           <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
             <div style="font-size:13px;font-weight:700;margin-bottom:2px">🎯 강조 단어 <span style="font-size:11px;color:var(--sub);font-weight:400">— 헤드카피 + 자막 공통(키워드 일치 시 자동 강조)</span></div>
@@ -3098,6 +3125,28 @@ function syncFontBtn(){ const btn=document.getElementById('hcFontBtn'); const f=
   if(btn&&f){ btn.textContent=f.name+' ▾'; btn.style.fontFamily=`'${f.css}','Pretendard',sans-serif`; } }
 document.addEventListener('click', e=>{ const p=document.getElementById('hcFontPicker'); if(p && !p.contains(e.target)) closeFontMenu(); });
 function hexA(hex,a){ const h=(hex||'#000000').replace('#',''); const r=parseInt(h.slice(0,2),16)||0,gg=parseInt(h.slice(2,4),16)||0,b=parseInt(h.slice(4,6),16)||0; return `rgba(${r},${gg},${b},${a})`; }
+// ⚡빠른 조절 → 진짜 입력칸에 써넣고 갱신한다(값의 주인은 저쪽 하나뿐).
+function hcQuick(id, val){
+  const el=document.getElementById(id); if(!el) return;
+  el.value=val;
+  // 폰트는 '고른 값'(HC_FONT_COMMITTED)이 따로 있다 — 안 맞추면 폰트 메뉴에서 마우스가
+  // 빠져나갈 때 옛 폰트로 되돌아간다(renderFontSelect의 mouseleave 복원).
+  if(id==='hcFont'){ HC_FONT_COMMITTED=val; syncFontBtn(); }
+  updateHC();
+}
+// 진짜 입력칸 → 빠른 조절 위젯으로 되비춘다(프리셋·드래그·다른 탭에서 바뀌어도 같이 움직인다).
+function hcQuickSync(hc){
+  const g=id=>document.getElementById(id);
+  const fq=g('hcFontQ'), src=g('hcFont');
+  if(fq && src && fq.options.length!==src.options.length){
+    // 폰트 목록의 정본은 HC_FONTS 하나 — 각 줄을 그 폰트로 보여준다(고르기 전에 눈으로 확인).
+    fq.innerHTML=HC_FONTS.map(f=>`<option value="${f.file}" style="font-family:'${f.css}',sans-serif">${f.name}</option>`).join('');
+  }
+  if(fq) fq.value=hc.font;
+  const set=(qid,vid,v)=>{ const q=g(qid); if(q) q.value=v; const t=vid&&g(vid); if(t) t.textContent=v; };
+  set('hcColorQ',null,hc.color); set('hcWeightQ',null,String(hc.weight));
+  set('hcSizeQ','hcSizeQV',hc.size); set('hcYQ','hcYQV',hc.y); set('hcXQ','hcXQV',hc.x);
+}
 function updateHC(){
   const g=id=>document.getElementById(id);
   const hc={
@@ -3112,7 +3161,9 @@ function updateHC(){
   const el=g('hcPreviewText');
   const scale=PREVIEW_W/VIDEO_W;
   const rules = (STATE.deco && STATE.deco.highlight_rules) || [];
-  el.style.whiteSpace='pre-wrap';   // \n 줄바꿈 표시 + 긴 줄은 폭 넘으면 자동 줄바꿈
+  // ★줄 수는 사장님이 정한다(2026-08-19 "썸네일쪽처럼 두 줄로 정렬되게"). 2줄로 쓴 문구가
+  //   자동 줄바꿈에 걸려 4줄로 깨졌다 — 재줄바꿈을 끄고, 폭을 넘으면 폰트를 줄여 맞춘다.
+  //   서버도 같은 규칙이다(video_assemble fit_lines=True).
   if(rules.length && hc.text){
     const esc2 = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
     el.innerHTML = hc.text.split('\n').map(line=>line.split(' ').map(w=>{
@@ -3128,7 +3179,10 @@ function updateHC(){
   el.style.left=hc.x+'%'; el.style.top=hc.y+'%';
   el.style.color=hc.color; el.style.fontWeight=hc.weight;
   el.style.fontSize=Math.max(9, hc.size*scale)+'px';
-  el.style.maxWidth=Math.round(PREVIEW_W*0.92)+'px';   // 서버 _wrap_to_width(0.92*_OUT_W)와 동일 비율 — 줄바꿈 지점 일치
+  el.style.whiteSpace='pre'; el.style.maxWidth='none';   // 자동 줄바꿈 없음 — 넘치면 축소
+  const _boxW=Math.round(PREVIEW_W*0.92);                // 서버 max_w(0.92*_OUT_W)와 같은 비율
+  const _w=el.scrollWidth;
+  if(_w>_boxW && _w>0) el.style.fontSize=Math.max(9, (Math.max(9,hc.size*scale))*_boxW/_w)+'px';
   const oc=hc.outline_color, ow=(hc.outline_w*scale).toFixed(1);
   el.style.textShadow = hc.outline
     ? `${ow}px ${ow}px 0 ${oc}, -${ow}px -${ow}px 0 ${oc}, ${ow}px -${ow}px 0 ${oc}, -${ow}px ${ow}px 0 ${oc}, -1px -1px 0 ${oc}, 1px -1px 0 ${oc}, -1px 1px 0 ${oc}, 1px 1px 0 ${oc}`
@@ -3138,6 +3192,7 @@ function updateHC(){
     el.style.padding=`${Math.round(hc.box_pad*scale)}px ${Math.round(hc.box_pad*1.5*scale)}px`;
     el.style.borderRadius=Math.round(10*scale*3)+'px';
   } else { el.style.background='none'; el.style.padding='0 6px'; el.style.borderRadius='0'; }
+  hcQuickSync(hc);
   if(document.getElementById('fullPresets')) renderStyleCards();
 }
 
