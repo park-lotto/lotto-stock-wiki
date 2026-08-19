@@ -163,6 +163,9 @@ def build(rows):
             "hc_box": bool(r.get("hl_box")),
             "hc_box_color": _hex(r.get("hl_box_color"), "#FFFFFF"),
             "font": fonts.get(r["channel"], DEFAULT_FONT),
+            # 흰 제목블록을 쓰는 채널인가(실측 17/20) + 그 채널다운 샘플 수치
+            "has_head": bool(r.get("sub_exists")),
+            "demo_views": "264만", "demo_comments": "587",
             "notes": (r.get("notes") or [""])[0][:70],
         })
     return out
@@ -179,6 +182,11 @@ def emit(rows):
         print(f'        "left_icon": "{r["left_icon"]}", "right_icon": "{r["right_icon"]}",')
         print(f'        "center_kind": "{r["center_kind"]}",')
         print(f'        "sub_bg": "{r["sub_bg"]}", "sub_text": "{r["sub_text"]}", "sub_h": {r["sub_h"]},')
+        # ★고르면 바로 "완성된 그림"이 나오게 기본 문구까지 싣는다(2026-08-20 사장님:
+        #   "체널영상속 프리셋이랑 세팅을 미리 해주고 거기서 수정하게").
+        #   빈 채로 두면 흰 제목블록이 아예 안 그려져 위만 띠 하나 있고 아래가 텅 빈다.
+        print(f'        "has_head": {r["has_head"]}, "demo_views": "{r["demo_views"]}",')
+        print(f'        "demo_comments": "{r["demo_comments"]}",')
         print(f'        "headcopy": _hc("{r["font"]}", {r["hc_size"]}, "{r["hc_c1"]}", '
               f'"{r["hc_c2"]}", {r["hc_y"]}, {r["hc_out_w"]}, "{r["hc_out"]}", '
               f'{r["hc_box"]}, "{r["hc_box_color"]}"),')

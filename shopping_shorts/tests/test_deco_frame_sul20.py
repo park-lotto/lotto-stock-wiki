@@ -219,3 +219,34 @@ def test_headline_size_fits_preview_width():
     """★미리보기는 720폭 기준 — 90을 넘으면 한 줄이 화면 밖으로 나간다(실측 108px)."""
     for k, v in NEW.items():
         assert v["headcopy"]["size"] <= 90, f"{k}: {v['headcopy']['size']}px는 폭을 넘는다"
+
+
+# ── 고르면 '완성된 그림'이 나온다 (2026-08-20 사장님 "세팅을 미리 해주고 거기서 수정하게") ──
+def test_preset_ships_finished_not_empty():
+    """★빈 채로 두면 흰 제목블록이 아예 안 그려져 '위에 띠 하나, 아래는 텅 빈' 그림이 된다.
+    고르는 순간 그 채널 영상처럼 보여야 하고, 사장님은 거기서 고치기만 하면 된다."""
+    heads = [k for k, v in NEW.items() if v.get("has_head")]
+    assert len(heads) >= 15, f"흰 제목블록 쓰는 채널이 너무 적다({len(heads)}/20) — 실측은 17곳"
+    for k in heads:
+        v = NEW[k]
+        assert v.get("demo_views"), f"{k}: 기본 조회수가 없으면 제목블록이 안 그려진다"
+        assert v.get("demo_comments"), f"{k}: 기본 댓글수가 없다"
+
+
+def test_finished_frame_actually_draws_head_block():
+    """★기본 세팅으로 그렸을 때 띠 아래에 실제로 흰 블록이 생기는가(그림으로 확인)."""
+    for k, v in list(NEW.items())[:6]:
+        if not v.get("has_head"):
+            continue
+        im = df.render({"preset": k, "channel": v["name"], "title": "테스트 제목입니다",
+                        "views": v["demo_views"], "comments": v["demo_comments"]})
+        # 띠 바로 아래 한 줄이 불투명해야 한다(= 흰 블록이 그려졌다)
+        y = v["bar_h"] + 10
+        assert im.getpixel((df.W // 2, y))[3] > 0, f"{k}: 띠 아래에 제목블록이 안 그려졌다"
+
+
+def test_ui_prefills_from_preset_but_keeps_manual():
+    """★기본값은 채우되 사장님이 적어둔 값은 절대 안 덮는다."""
+    seg = HTML[HTML.index("function frPick"):HTML.index("function frUpdate")]
+    assert "meta.demo_views" in seg, "고른 틀의 기본 조회수를 채워야 한다"
+    assert "old.views" in seg, "이미 적어둔 값은 그대로 둬야 한다"
