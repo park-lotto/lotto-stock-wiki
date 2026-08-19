@@ -2463,10 +2463,24 @@ function frPick(preset){
     const span=(STATE.deco.template&&STATE.deco.template.span)||'full';
     // 제목은 비어 있으면 헤드카피에서 한 번 가져다 놓는다(사장님이 지우면 그대로 빈칸).
     const hc=(document.getElementById('hcText')||{}).value||'';
-    STATE.deco.template={span:span, frame:{preset:preset, bar_h:old.bar_h??190,
+    // ★띠 높이는 그 틀이 갖고 온 실측값을 쓴다(2026-08-20). 화면이 190을 우기면
+    //   20종이 전부 같은 비율이 돼 원본을 벤치마킹한 의미가 사라진다.
+    // ★**다른 틀로 갈아탈 땐 새 틀의 높이**를 쓴다 — 앞 틀의 값을 물고 가면 어떤 틀을
+    //   골라도 처음 고른 높이 그대로다(실측: 3종을 눌렀는데 전부 268px이었다).
+    //   같은 틀을 다시 고른 경우에만 사장님이 민 값을 지킨다.
+    const meta=FR_PRESETS.find(p=>p.id===preset)||{};
+    const samePreset=(STATE.deco.template&&STATE.deco.template.frame
+                      &&STATE.deco.template.frame.preset===preset);
+    const barH = (samePreset && old.bar_h!=null) ? old.bar_h
+               : (meta.bar_h!=null ? meta.bar_h : 190);
+    STATE.deco.template={span:span, frame:{preset:preset, bar_h:barH,
       bottom_h:old.bottom_h??0,
       channel:old.channel||'', title:old.title||hc, views:old.views||'',
       comments:old.comments||'', ad_badge:!!old.ad_badge, icons:old.icons!==false}};
+    // ★틀과 글자는 한 세트(사장님: "해드카피도 이 템플릿들과 맞춰서 한 세트로").
+    //   값의 주인은 여전히 hcFont/hcSize/… 진짜 입력칸 하나 — 여기선 그 칸에 써넣고
+    //   updateHC()가 돌게 한다(0순위-B). 새 값을 STATE.headcopy에 직접 넣지 않는다.
+    if(meta.headcopy) applyHeadcopySet(meta.headcopy);
   }
   renderFramePresets(); renderTemplateCards(); renderTemplatePreview(); saveHeadcopy();
 }
@@ -3345,6 +3359,40 @@ function applyPreset(i){
   g('hcOutline').checked=!!p.outline; g('hcOutColor').value=p.outline_color||'#000000'; g('hcOutW').value=p.outline_w||0;
   g('hcBox').checked=!!p.box; g('hcBoxColor').value=p.box_color||'#000000';
   g('hcBoxPad').value=(p.box_pad!=null?p.box_pad:16); g('hcBoxOpacity').value=(p.box_opacity!=null?p.box_opacity:80);
+  updateHC();
+}
+// 🖼 틀이 갖고 온 헤드카피 세트를 입힌다(2026-08-20 사장님 "해드카피도 이 템플릿들과
+// 맞춰서 글자들이 딱 들어가야하니까 폰트크기 색상 종류 배치등을 한세트로").
+// ★applyPreset과 **같은 방식**으로 진짜 입력칸에 써넣고 updateHC()를 부른다 —
+//   STATE.headcopy를 직접 만지면 값이 두 벌이 된다(0순위-B).
+// ★문구(hcText)는 건드리지 않는다 — 틀을 바꿨다고 사장님이 쓴 글이 날아가면 안 된다.
+function applyHeadcopySet(p){
+  if(!p) return;
+  const g=id=>document.getElementById(id);
+  // ★<select>는 옵션이 없으면 .value 대입이 **조용히 무시된다**(실측: 틀을 먼저 고르면
+  //   목록이 아직 안 채워져 폰트만 안 바뀌었다). 목록부터 채우고 넣는다.
+  if(p.font && g('hcFont')){
+    if(typeof renderFontSelect==='function' && !g('hcFont').options.length) renderFontSelect();
+    g('hcFont').value=p.font; HC_FONT_COMMITTED=p.font;
+    if(typeof syncFontBtn==='function') syncFontBtn();
+    if(typeof syncQFontBtn==='function') syncQFontBtn(p.font);   // 어제 만든 폰트 미리보기 버튼도 같이
+  }
+  const set=(id,v)=>{ const el=g(id); if(el && v!=null) el.value=v; };
+  set('hcColor',p.color); set('hcWeight',p.weight); set('hcSize',p.size); set('hcY',p.y);
+  if(g('hcOutline')) g('hcOutline').checked = p.outline!==false;
+  set('hcOutColor',p.outline_color||'#000000'); set('hcOutW',p.outline_w);
+  // 2줄째 형광색 = 강조 규칙으로 넣는다(렌더도 이 규칙을 읽는다 — 배선 재사용).
+  if(p.color2 && STATE.deco){
+    const rules=(STATE.deco.highlight_rules||[]).filter(r=>!r._fromFrame);
+    const txt=((g('hcText')||{}).value||'').split('\n');
+    if(txt.length>1 && txt[1].trim()){
+      // 필드명은 addHighlightRule과 **같아야** 한다(keyword) — 다르면 조용히 무시된다
+      rules.push({keyword:txt[1].trim(), color:p.color2, box:false,
+                  box_color:'#FF2D2D', _fromFrame:true});
+    }
+    STATE.deco.highlight_rules=rules;
+    if(typeof renderHighlightRules==='function') renderHighlightRules();
+  }
   updateHC();
 }
 function alignHC(where){
