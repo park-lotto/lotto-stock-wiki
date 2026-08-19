@@ -179,3 +179,23 @@ def test_seat_tts_key_includes_version():
     body = js[js.index("function seatTts("):js.index("function playTts(")]
     assert "ttsVer(i)" in body and "'#' + v" in body, "오디오 재사용 키에 버전이 없다"
     assert "SL.tts(i, v)" in body
+
+
+def test_글자가_같아도_음성이_옛것이면_다시_뽑는다(monkeypatch, tmp_path):
+    """2026-08-19 사장님 제보의 막다른 길 — 2단계에서 자막을 고치면 narration만 바뀌고
+    mp3는 옛것이라(렌더 때 다시 뽑는 설계) 3단계가 "음성을 다시 안 뽑았어요" 경고를 띄운다.
+    그런데 3단계 편집칸엔 **이미 고친 문장**이 들어 있어, 경고대로 대본수정→저장을 해도
+    unchanged로 튕겨 아무 일도 안 일어났다. 글자가 같아도 어긋났으면 재생성해야 한다."""
+    called = {}
+    monkeypatch.setattr(app_module, "resynth_one_beat",
+                        lambda *a, **k: called.setdefault("hit", True))
+    c, store = _client(monkeypatch, tmp_path)
+    _seed(store)
+    plan = store.get_mix_job("j1")["edit_plan"]
+    # 옛 대본("딴 문장")의 해시로 만든 mp3 = 지금 narration과 어긋난 상태
+    plan["beats"][0]["tts_path"] = str(tmp_path / "beat_0_0123456789.mp3")
+    store.update_mix_job("j1", edit_plan=plan)
+    r = c.post(_url(), json={"text": _OLD})
+    assert r.status_code == 200, r.text
+    assert r.json().get("regen") is True, "어긋난 음성인데 재생성을 안 걸었다"
+    assert "hit" in called
