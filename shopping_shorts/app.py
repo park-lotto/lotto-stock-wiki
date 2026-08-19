@@ -6,6 +6,7 @@ import hmac
 import hashlib
 import ipaddress
 import json
+import logging
 import os
 import re
 import secrets
@@ -9543,6 +9544,44 @@ _AUTOLOAD_MAX_WORKERS = int(os.environ.get("SHORTS_AUTOLOAD_WORKERS", "4"))
 # ★3 → 4 (2026-08-18). 3으로 묶은 근거는 "429가 몰린다"였는데, 그 429의 진짜 원인은
 #   동시성이 아니라 **셋이 같은 키를 때린 것**이었다(키 선택이 늘 live[0]). 키를 나눠
 #   쓰게 고친 뒤라 동시성을 조금 올린다. 더 올리려면 키를 늘리는 게 정석이다.
+
+
+# ── 화면에서 난 에러를 서버가 받는다(2026-08-19 사장님 "안되는 상황에서 F12를 눌러야 되는건가?")
+#   ★사장님(그리고 고객)에게 개발자도구를 열게 하면 안 된다. 화면이 죽는 순간을 잡는 일은
+#     화면이 스스로 해야 한다 — 제보는 "안 돼요" 한마디면 충분해야 하고, 나머지는 로그가 말한다.
+#   실사고(2026-08-19): 1단계 분석 영역이 통째로 비었는데 서버 데이터는 멀쩡했다. 화면이
+#     그리다 죽었는지 확인할 방법이 없어 사장님께 콘솔을 찍어달라고 부탁해야 했다.
+#   ⚠️ 로그만 남긴다 — DB에 쌓지 않는다(남용되면 디스크가 찬다). 길이·빈도도 여기서 자른다.
+_CLIENT_ERR_SEEN = {}          # (cid, 메시지 앞부분) → 마지막 기록 시각. 같은 에러 도배 차단
+_CLIENT_ERR_WINDOW = 60.0      # 같은 에러는 1분에 한 번만 남긴다
+
+
+@app.post("/api/client_error")
+def api_client_error(request: Request, body: dict):
+    """화면에서 잡힌 JS 에러 1건을 서버 로그에 남긴다. 항상 200을 돌려준다
+    (에러 보고가 또 에러를 내면 안 된다)."""
+    try:
+        msg = str((body or {}).get("msg") or "")[:300]
+        if not msg.strip():
+            return {"ok": True}
+        where = str((body or {}).get("where") or "")[:200]
+        stack = str((body or {}).get("stack") or "")[:600]
+        page = str((body or {}).get("page") or "")[:200]
+        cid = _cid(request)
+        key = (str(cid), msg[:80])
+        now = time.time()
+        last = _CLIENT_ERR_SEEN.get(key, 0.0)
+        if now - last < _CLIENT_ERR_WINDOW:
+            return {"ok": True, "throttled": True}
+        _CLIENT_ERR_SEEN[key] = now
+        if len(_CLIENT_ERR_SEEN) > 500:        # 무한 성장 방지 — 오래된 것부터 버린다
+            for k in sorted(_CLIENT_ERR_SEEN, key=_CLIENT_ERR_SEEN.get)[:250]:
+                _CLIENT_ERR_SEEN.pop(k, None)
+        logging.getLogger("client_error").error(
+            "[화면에러] cid=%s page=%s where=%s :: %s || %s", cid, page, where, msg, stack)
+    except Exception:  # noqa: BLE001 — 보고가 실패해도 화면에 영향 주지 않는다
+        return {"ok": True}      # ★삼키되 pass는 쓰지 않는다(조용한 실패 상한 가드와 짝)
+    return {"ok": True}
 
 
 @app.post("/api/produce/autoload")
