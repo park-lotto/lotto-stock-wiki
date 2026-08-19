@@ -1463,8 +1463,11 @@
                   <div id="frPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"></div>
                   <div id="frFields" style="display:none">
                     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px">
-                      <label>채널명 <input id="frChannel" oninput="frUpdate()" placeholder="살림킹왕짱"
-                        style="width:130px;padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--txt)"></label>
+                      <!-- ★안내문은 고른 틀에 따라 바뀐다(2026-08-20). "살림킹왕짱"이 고정으로
+                           박혀 있어서, 럭키박스 틀을 골라도 살림킹왕짱이라 적혀 있어 "디자인이
+                           실제 채널이랑 안 맞는다"로 보였다. -->
+                      <label>채널명 <input id="frChannel" oninput="frUpdate()" placeholder="내 채널 이름"
+                        style="width:150px;padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--txt)"></label>
                       <label style="cursor:pointer"><input id="frAd" type="checkbox" onchange="frUpdate()"> [광고]</label>
                       <label style="cursor:pointer"><input id="frIcons" type="checkbox" checked onchange="frUpdate()"> ☰ 🔍</label>
                     </div>
@@ -2501,8 +2504,14 @@ function frPick(preset){
                : (meta.bar_h!=null ? meta.bar_h : 190);
     STATE.deco.template={span:span, frame:{preset:preset, bar_h:barH,
       bottom_h:old.bottom_h??0,
-      channel:old.channel||'', title:old.title||hc, views:old.views||'',
-      comments:old.comments||'', ad_badge:!!old.ad_badge, icons:old.icons!==false}};
+      // ★고르면 바로 '완성된 그림'이 되게 그 채널 세팅으로 채운다(2026-08-20 사장님:
+      //   "체널영상속 프리셋이랑 세팅을 미리 해주고 거기서 수정하게").
+      //   빈 채로 두면 흰 제목블록이 아예 안 그려져 위만 띠 하나 있고 아래가 텅 빈다.
+      //   ★사장님이 이미 적어둔 값(old)은 절대 안 덮는다 — 고쳐둔 게 날아가면 안 된다.
+      channel:old.channel||'', title:old.title||hc,
+      views:(old.views!=null&&old.views!=='')?old.views:(meta.has_head?(meta.demo_views||''):''),
+      comments:(old.comments!=null&&old.comments!=='')?old.comments:(meta.has_head?(meta.demo_comments||''):''),
+      ad_badge:!!old.ad_badge, icons:old.icons!==false}};
     // ★틀과 글자는 한 세트(사장님: "해드카피도 이 템플릿들과 맞춰서 한 세트로").
     //   값의 주인은 여전히 hcFont/hcSize/… 진짜 입력칸 하나 — 여기선 그 칸에 써넣고
     //   updateHC()가 돌게 한다(0순위-B). 새 값을 STATE.headcopy에 직접 넣지 않는다.
@@ -4675,7 +4684,15 @@ function _consumeProduceHandoff(){
     // ⚠️_pushWork는 예외를 삼키고 _markLocalOnly()로 끝난다(서버가 죽어도 작업을 막지
     //   않으려는 기존 판단). 그래서 성공/실패는 **WORK_ID가 채워졌는가**로 본다 —
     //   서버가 200으로 work_id를 준 경우에만 채워지므로 그게 진짜 저장 신호다.
-    Promise.resolve().then(() => (typeof _pushWork === 'function' ? _pushWork() : null)).then(() => {
+    // ★이 저장을 밖에서 붙들 수 있게 약속을 남긴다(2026-08-20 사장님 "레퍼런스에서 담아
+    //   오면 분석 카드도 진행표시도 없고, 새로고침해야 뜬다"의 진범). 이 저장은 디바운스
+    //   (_workTimer)를 **우회**하므로, 곧이어 도는 refreshStep0()이 기다릴 방법이 없었다
+    //   → aipick이 work_id 없이 나가고 → 서버(_load_work_sources)가 '계정 전체 픽'으로
+    //   폴백해 pick_id를 채워 주고 → 자동분석 분기(pick_id==null)를 통째로 건너뛰었다.
+    //   window 프로퍼티인 이유는 _PENDING_ARRIVED와 같다(let은 슬라이스 하네스에 안 보임).
+    const _pushP = Promise.resolve().then(() => (typeof _pushWork === 'function' ? _pushWork() : null));
+    try{ window._ARRIVAL_PUSH = _pushP.catch(() => {}); }catch(e){}
+    _pushP.then(() => {
       if(WORK_ID){ _clearHandoffStorage(); return; }
       const _b = document.getElementById('handoffBanner');
       if(_b) _b.innerHTML = '⚠️ 서버 저장이 안 됐어요 — <b>담은 영상은 그대로 있습니다</b>. '
@@ -4975,6 +4992,17 @@ function _poolVideoIdOf(u){
 // ── Task 4(2026-07-23): 자동담김 도착 감지 → AI PICK 또는 빈 상태 ──────────
 // 담긴(useFootage) 재료가 하나라도 있으면 서버(/api/produce/aipick)에 "지금 담긴 것 중
 // 완성도 1위가 뭐야"를 묻는다. 없으면 조회 없이 바로 빈 상태(불필요한 요청 방지).
+// 분석이 '아직 안 됐고 포기도 안 한' 담긴 영상 수(2026-08-20). 선제 진행표시와
+// 자동분석 재개 판정이 **같은 눈**으로 세야 어긋나지 않는다(0순위-B — 두 곳이 각자
+// 세면 "표시는 떴는데 분석은 안 도는" 반쪽이 또 나온다). gave_up(서버가 포기한 것)은
+// 안 센다 — 오지 않을 결과로 진행표시를 띄우거나 재분석을 또 던지면 안 된다.
+function _srcPendingCount(){
+  return HANDOFF.filter(h => {
+    if(!h.useFootage || !h.url) return false;
+    const r = _SRC_BRIEF[h.shortcode] || {};
+    return !r.ok && !r.gave_up;
+  }).length;
+}
 async function refreshStep0(){
   const hasFootage = HANDOFF.some(h=>h.useFootage);
   if(!hasFootage){ renderEmptyState(); return; }
@@ -4988,9 +5016,19 @@ async function refreshStep0(){
   //   ⚠️ 이미 다 분석된 영상뿐이면 올리지 않는다 — 멀쩡한 카드 위에 "분석 중"을
   //      띄우면 그게 더 거짓말이다(폴링이 곧 지우더라도 한 번은 깜빡인다).
   if(!_SRC_BUSY && !_SRC_QUEUED){
-    const pending = HANDOFF.filter(h => h.useFootage && h.url &&
-                                        !((_SRC_BRIEF[h.shortcode] || {}).ok)).length;
+    const pending = _srcPendingCount();
     if(pending){ _SRC_BUSY = pending; try{ renderSourceAnalysis(); }catch(e){} }
+  }
+  // ★유입 직행 저장을 기다린다(2026-08-20). 레퍼런스랭킹·즐겨찾기에서 담아 오면
+  //   _consumeProduceHandoff가 _workTimer를 비우고 _pushWork를 **직접** 밀어넣는다 —
+  //   아래 _workTimer 검사로는 그 저장을 못 붙든다. 안 기다리고 aipick을 읽으면
+  //   work_id가 아직 없어 서버가 계정 전체 픽으로 폴백하고, 도서관이 찬 계정(사장님)은
+  //   pick_id가 채워져 와서 자동분석 분기를 통째로 건너뛴다 → "담아도 분석이 안 되고
+  //   새로고침해야 뜬다"(실측: 하네스에서 aipick이 work_id 없이 나가고 autoload 0회).
+  //   진행표시는 위에서 이미 올렸으므로 기다리는 동안 화면이 비지 않는다.
+  //   ⚠️ typeof 가드 — 슬라이스 하네스엔 window가 없을 수 있다(_PENDING_ARRIVED와 동일).
+  if(typeof window !== 'undefined' && window._ARRIVAL_PUSH){
+    try{ await window._ARRIVAL_PUSH; }catch(e){}
   }
   // ★레이스 차단(2026-07-29 사장님 "담기하면 엉뚱한 8개 소스 비교, 새로고침해야 맞음"):
   //   saveWork()는 서버 저장을 1초 디바운스한다(setTimeout _pushWork). 근데 담기(pickFootage) 직후
@@ -5027,7 +5065,13 @@ async function refreshStep0(){
     // ★래치 판정을 "묶음 지문"으로(2026-08-20). 같은 영상들이면 그대로 잠겨 있고(재귀·
     //   반복호출 안전), 새 영상이 담겨 지문이 바뀌었을 때만 다시 분석한다.
     const _fkey = _footageKey();
-    if((!d || d.pick_id==null) && _fkey && _autoloadKey !== _fkey){
+    // ★pick이 있어도 **아직 분석 안 된 담긴 영상**이 남았으면 돌린다(2026-08-20).
+    //   진행 중 작업에 영상을 더 담으면 옛 재료의 pick이 살아 있어 pick_id!=null인데,
+    //   그때 여기를 건너뛰면 새 영상은 아무도 분석하지 않는다(같은 증상의 두 번째 구멍 —
+    //   "분석 대기" 카드가 영영 안 채워진다). 무한루프 방지선은 그대로다: 같은 묶음
+    //   (_fkey)이면 두 번 안 돌고, 진짜 방어선인 서버 DB(produce_autoload)가 이미 한
+    //   것·실패 상한을 걸러낸다(2026-07-26 사고의 방지 구조 불변).
+    if((!d || d.pick_id==null || _srcPendingCount() > 0) && _fkey && _autoloadKey !== _fkey){
       _autoloadKey = _fkey;
       _autoloadTried = true;       // 옛 이름도 유지 — 다른 곳에서 읽을 때를 위해
       const total = HANDOFF.filter(h=>h.useFootage && h.url).length;
@@ -9494,6 +9538,16 @@ const S2 = { seed:null, seeds:[], styles:[], picked:[], drafts:[], curDraft:0, l
 // ⚠️ styles(카드 목록)는 안 담는다 — s2LoadStyles가 서버에서 다시 읽는 시세성 데이터고,
 //    담으면 옛 스타일 목록이 화면에 굳는다. 담는 건 **사장님이 만든 것**뿐이다.
 function _s2Snapshot(){
+  // ★S2는 const라 **끌어올려지지 않는다**(2026-08-20 실사고). 이 함수는 function 선언이라
+  //   파일 앞쪽으로 끌어올려져 `typeof _s2Snapshot === 'function'` 가드를 통과하는데,
+  //   페이지 로드 중(선언줄에 닿기 전) saveWork()가 한 번이라도 돌면 여기서
+  //   `Cannot access 'S2' before initialization`(TDZ)로 죽는다.
+  //   그 아래 스크립트가 통째로 멈춰 **렌즈 결과를 화면이 못 받는다**(카운트 0 ·
+  //   "Unexpected token '<'"). 문법은 유효해 node --check가 못 잡는 런타임 오류다.
+  //   → 아직 초기화 전이면 담을 것도 없으므로 조용히 null.
+  //   ⚠️ `typeof S2 === 'undefined'`로는 못 막는다 — TDZ 변수는 typeof도 던진다(실측).
+  //      그래서 try/catch로 받는다.
+  try { S2; } catch(e){ return null; }
   if(!S2.drafts || !S2.drafts.length) return null;   // 만든 게 없으면 키 자체를 안 만든다
   // ★주인을 새긴다(2026-08-18 사장님 "2단계에서 아예 딴게 나온다").
   //   S2는 순수 메모리라 작업을 갈아타도 살아남는다. '따로 만들기'처럼 WORK_ID를 비워
