@@ -2421,8 +2421,8 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         #   슬롯이 **전부** 차는 스타일만 조립본으로 만들고, 모자라면 기존 생성기로 간다.
         #   실측 근거(같은 날): 생성기는 템플릿을 '참고'로만 써서 어미를 새로 쓰고
         #   (no_cta인데) CTA를 붙였다 — 조립본엔 그럴 자리가 없다.
-        _assembled, _asm_left = _assembled_drafts(_picked, _src, store,
-                                                  body.get("target_seconds") or 30)
+        _assembled, _asm_left, _asm_why = _assembled_drafts(
+            _picked, _src, store, body.get("target_seconds") or 30)
         _styled = list(_assembled)
         if _asm_left:
             _styled += script_generate.generate_by_styles(
@@ -2453,6 +2453,9 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                     # ★어느 경로로 만든 대본인지 화면이 말한다 — 조용한 폴백 금지.
                     "assembled": [d.get("style_name") for d in _styled
                                   if d.get("made_by") == "조립"],
+                    # ★조립을 못 했으면 **이유**를 말한다. 이유 없이 옛 경로로 조용히
+                    #   넘어가면 사장님은 왜 결과가 공허한지 알 수 없다.
+                    "assemble_skipped": _asm_why,
                     "styles": [s.get("name") for s in _picked],
                 }}
     drafts = script_generate.generate_variations(
@@ -11255,11 +11258,13 @@ def _assembled_drafts(spines, sources, store, seconds=30):
     ★어느 쪽으로 갔는지는 응답의 `materials.assembled`가 말한다(조용한 폴백 금지).
     """
     out, left = [], []
+    _why = []          # 조립을 못 한 이유(화면이 말해준다)
     try:
         from shopping_shorts import spine_fill, sul_facts
     except Exception:      # noqa: BLE001 — 조립 모듈이 없어도 기존 경로는 살아야 한다
         return [], list(spines or [])
     slots = None
+    merged = None
     for sp in (spines or []):
         # 썰 스파인이 아니면 조립 대상이 아니다(다른 스타일은 템플릿이 슬롯을 안 쓴다).
         if not _is_sul_context("", [sp]):
@@ -11277,14 +11282,21 @@ def _assembled_drafts(spines, sources, store, seconds=30):
                     f = {}
                 if f:
                     facts.append(f)
-            slots = spine_fill.slots_from_facts({}, spine_fill.merge_sul(facts)) if facts else {}
+            merged = spine_fill.merge_sul(facts) if facts else {}
+            # ★슬롯이 차는 것과 쓸 만한 것은 다르다 — 재료 자격을 먼저 본다.
+            _prob = spine_fill.sul_material_problem(merged) if merged else "영상에서 재료를 못 뽑았습니다"
+            if _prob:
+                _why.append(_prob)
+                slots = {}
+            else:
+                slots = spine_fill.slots_from_facts({}, merged)
         try:
             d = spine_fill.build_draft(sp, slots, seconds=seconds) if slots else None
         except Exception as e:      # noqa: BLE001 — 조립 실패가 생성을 막으면 안 된다
             print("조립 실패(style=%s): %s" % (sp.get("id"), str(e)[:120]))
             d = None
         (out if d else left).append(d or sp)
-    return out, left
+    return out, left, _why
 
 
 def _prefetched_facts_for_job(job, store):
