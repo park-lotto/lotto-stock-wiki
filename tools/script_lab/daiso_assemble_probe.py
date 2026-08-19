@@ -51,7 +51,12 @@ def _hangul(s):
     return len(re.sub(r"[^가-힣0-9]", "", s))
 
 
+_DRAFTS = []
+
+
 def show(name, spine, slots):
+    """조립 결과를 화면에 찍고, **gen.py와 같은 모양**으로 모아둔다.
+    새 뷰어를 만들지 않고 기존 build.py를 그대로 쓰기 위함이다(0순위-B: 보는 법을 두 벌 만들지 마라)."""
     beats, missing = spine_fill.fill(spine, slots)
     full = " ".join(b["text"] for b in beats)
     print("\n" + "=" * 72)
@@ -60,6 +65,22 @@ def show(name, spine, slots):
         print("  [%-8s] %s" % (b["role"], b["text"]))
     if missing:
         print("  ⚠️ 못 채운 칸: %s  ← 이 칸만 모델에 맡긴다" % ", ".join(missing))
+    _DRAFTS.append({
+        "style_id": spine["id"], "style_name": name,
+        "source": "슬롯 조립(모델 호출 0회)",
+        "beats": beats, "full_text": full,
+        "checks": [
+            {"name": "칸 채움", "ok": not missing,
+             "detail": "%d/%d칸%s" % (len(beats), len(spine["beat_roles"]),
+                                      (" · 못 채운 칸: " + ", ".join(missing)) if missing else "")},
+            {"name": "말 밀도", "ok": True,
+             "detail": "%d자 (이 스타일 히트작 %d자/30초 → 약 %.0f초)"
+                       % (_hangul(full), spine["chars_per_30s"],
+                          _hangul(full) / spine["chars_per_30s"] * 30)},
+            {"name": "쓴 슬롯", "ok": True, "detail": " · ".join("{%s}=%s" % (k, v) for k, v in slots.items())},
+        ],
+        "passed": not missing, "tries": [], "error": "", "sec": 0.0, "prompt": "",
+    })
 
 
 def main():
@@ -68,6 +89,18 @@ def main():
     show("다이소 내부인형 · 재료 가득(욕실세정제 5편)", DAISO_INSIDER, SLOTS_BATH)
     show("다이소 내부인형 · 재료 부족(3종만)", DAISO_INSIDER, SLOTS_THIN)
     show("★중국 샤오홍슈 수전선반 3편", DAISO_INSIDER, SLOTS_CN)
+
+    import json
+    import time
+    out_dir = BASE / "tools" / "script_lab" / "out"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    # ★파일명은 gen.py와 같은 정수 타임스탬프 — build.py가 최신 것을 고를 수 있어야 한다.
+    path = out_dir / ("%d.json" % int(time.time()))
+    path.write_text(json.dumps(
+        {"topic": "다이소형 슬롯 조립 (모델 호출 0회)",
+         "facts": "재료는 insta_facts가 영상 전사에서 뽑은 것 — 쿠팡 안 씀",
+         "seconds": 25, "drafts": _DRAFTS}, ensure_ascii=False, indent=1), encoding="utf-8")
+    print("\n저장: %s" % path)
     return 0
 
 
