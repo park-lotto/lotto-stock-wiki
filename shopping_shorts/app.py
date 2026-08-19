@@ -11252,6 +11252,12 @@ def _facts_for_job(job_id, store=None):
 #   이름은 categorize.KEYWORDS의 것과 같아야 한다(0순위-B: 이름이 어긋나면 조용히 죽는다).
 SUL_CATEGORIES = ("오용형", "제품정체형")
 
+# 인스타 조립 틀을 붙이는 카테고리(2026-08-19). 위와 같은 규약 — 스파인의 fit_categories다.
+#   ★썰(유튜브)과 **재료 출처가 다르다**: 썰은 쿠팡+유튜브 자막, 인스타는 **릴 전사만** 본다
+#     (다이소·중국 제품은 쿠팡 1:1 매칭이 안 된다는 사장님 지시 — insta_facts 모듈 주석 참조).
+#     그래서 갈래를 나눈다. 여기 없으면 인스타 재료추출(Gemini 1회)을 아예 안 돌린다.
+INSTA_CATEGORIES = ("다이소형",)
+
 
 # 재료를 뽑을 때 볼 영상 수 상한 — **여기 한 곳에서만** 정한다(0순위-B).
 # 예전엔 `[:3]`이 두 군데(_sul_block_for_sources·_assemble_sul_drafts)에 따로 박혀 있었다.
@@ -11260,23 +11266,36 @@ SUL_CATEGORIES = ("오용형", "제품정체형")
 _FACTS_MAX_SOURCES = 5
 
 
-def _is_sul_context(category, spines=None):
-    """이 생성이 썰쇼핑 틀인가.
+def _is_context(category, spines, names):
+    """이 생성이 `names` 틀인가 — 항목 카테고리와 스파인 fit_categories를 **둘 다** 본다.
 
     ★2026-08-19 라이브 실측으로 고침(처음엔 위키 항목 category만 봤다 = **영영 안 켜짐**).
       `오용형`·`제품정체형`은 **스파인의 fit_categories**다(id 56·55). 위키 항목의
       category는 홈템·기타·레시피 같은 소재 분류라, 라이브 113건 중 오용형은 **0건**이었다.
-      categorize.py는 이 이름을 항목 카테고리로도 쓸 수 있으므로 **둘 다** 본다.
+      categorize.py는 이 이름을 항목 카테고리로도 쓸 수 있으므로 둘 다 본다.
+
+    ★판정을 여기 한 벌만 둔다 — 썰·인스타가 **같은 판정**을 쓴다(0순위-B).
+      갈래마다 복사하면 한쪽만 고쳐져 "저기선 되는데 여기선 안 된다"가 난다.
     """
-    if (category or "").strip() in SUL_CATEGORIES:
+    if (category or "").strip() in names:
         return True
     for sp in (spines or []):
         if not isinstance(sp, dict):
             continue
         for f in (sp.get("fit_categories") or []):
-            if str(f).strip() in SUL_CATEGORIES:
+            if str(f).strip() in names:
                 return True
     return False
+
+
+def _is_sul_context(category, spines=None):
+    """이 생성이 썰쇼핑(유튜브) 틀인가."""
+    return _is_context(category, spines, SUL_CATEGORIES)
+
+
+def _is_insta_context(category, spines=None):
+    """이 생성이 인스타(다이소축) 틀인가."""
+    return _is_context(category, spines, INSTA_CATEGORIES)
 
 
 def _sul_block_for_sources(category, sources, store=None, spines=None):
@@ -11314,6 +11333,65 @@ def _sul_block_for_sources(category, sources, store=None, spines=None):
         return ""
 
 
+def _facts_per_source(sources, store, analyze, ckey_prefix):
+    """담긴 영상 **한 편씩** 재료를 뽑는다(캐시 포함) → [facts, ...].
+
+    ★영상 한 편 단위로 캐시한다(2026-08-19). 이 경로는 영상마다 따로 부르는데
+      (merge_sul이 어느 편에서 뭐가 나왔는지 알아야 중복을 뺀다) 캐시가 없어서
+      같은 영상을 다시 담을 때마다 또 때렸다 — 상한을 3→5로 올리면 그만큼 더
+      느려진다(사장님 "시간도 오래 걸리고"). 편 단위로 캐시하면 담긴 조합이
+      달라져도 **이미 본 영상은 재사용**된다(_sul_block_for_sources의 캐시는
+      전사를 통째로 이어붙인 키라 한 편만 바뀌어도 전부 다시 돈다).
+
+    ★썰·인스타가 **이 함수 한 벌을 공유한다**(0순위-B) — 갈리는 건 `analyze`(어느
+      추출기냐)와 캐시 접두사뿐이다. 복사해 두 벌로 두면 한쪽만 고쳐져 어긋난다.
+    """
+    facts = []
+    for x in (sources or [])[:_FACTS_MAX_SOURCES]:
+        c = (x.get("full_text") or "").strip()
+        if not c:
+            continue
+        ckey = "%s_%s" % (ckey_prefix, hashlib.md5(c.encode("utf-8")).hexdigest()[:16])
+        f = {}
+        if store is not None:
+            try:
+                f = json.loads(store.get_setting(ckey, "") or "{}") or {}
+            except Exception:      # noqa: BLE001 — 깨진 캐시로 조립을 막지 않는다
+                f = {}
+        if not f:
+            try:
+                f = analyze({"captions": [c]}) or {}
+            except Exception:      # noqa: BLE001
+                f = {}
+            # 빈 결과는 캐시하지 않는다 — 일시 실패를 굳히면 그 영상은 영영 재료가 없다.
+            if f and store is not None:
+                store.set_setting(ckey, json.dumps(f, ensure_ascii=False))
+        if f:
+            facts.append(f)
+    return facts
+
+
+def _insta_slots(sources, store):
+    """인스타(다이소축) 재료 → (슬롯, 못 한 이유). 재료는 **릴 전사만** 본다(쿠팡 안 씀).
+
+    ★장면 근거 게이트를 여기서 통과시킨다 — 전사에서 뽑은 값 중 **화면에 안 찍힌 것**을
+      버린다(사장님 "장면에도 없는 대본이 나오는 거 아닌가"). 거르는 건 값이 아니라
+      **재료 목록**이라, 하나 버려도 다음 후보가 올라와 칸이 안 빈다.
+    """
+    from shopping_shorts import insta_facts, spine_fill
+    facts = _facts_per_source(sources, store, insta_facts.analyze_insta, "insta_facts1")
+    if not facts:
+        return {}, "영상에서 재료를 못 뽑았습니다"
+    merged = spine_fill.merge_sul(facts)          # 값이 전부 리스트라 같은 합치기를 쓴다
+    # 장면 인벤토리 — 담긴 영상들의 scene_desc를 모은다(1단계 태깅이 이미 심어둔 값).
+    segs = []
+    for x in (sources or [])[:_FACTS_MAX_SOURCES]:
+        segs += [s for s in (x.get("segments") or []) if isinstance(s, dict)]
+    merged = insta_facts.gate_by_scene(merged, segs)
+    slots = spine_fill.slots_from_insta(merged)
+    return slots, ("" if slots else "재료가 화면 근거를 통과하지 못했습니다")
+
+
 def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
     """조립으로 만들 수 있는 대본들 → (조립본 목록, 조립 못 한 스파인 목록).
 
@@ -11327,52 +11405,33 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
         from shopping_shorts import spine_fill, sul_facts
     except Exception:      # noqa: BLE001 — 조립 모듈이 없어도 기존 경로는 살아야 한다
         return [], list(spines or [])
-    slots = None
-    merged = None
+    # 갈래마다 슬롯을 **한 번만** 뽑아 스파인들이 공유한다(같은 재료를 두 번 안 때린다).
+    # 썰(유튜브)과 인스타는 재료 출처가 달라 각각 따로 캐시한다.
+    slots_by_track = {}
     for sp in (spines or []):
-        # 썰 스파인이 아니면 조립 대상이 아니다(다른 스타일은 템플릿이 슬롯을 안 쓴다).
-        if not _is_sul_context("", [sp]):
+        # 조립 대상 갈래인가. 아니면 기존 생성기로 넘긴다(다른 스타일은 템플릿이 슬롯을 안 쓴다).
+        track = ("sul" if _is_sul_context("", [sp])
+                 else "insta" if _is_insta_context("", [sp]) else "")
+        if not track:
             left.append(sp)
             continue
-        if slots is None:
-            # 재료에서 슬롯을 한 번만 뽑아 스파인들이 공유한다(같은 재료를 두 번 안 때린다).
-            caps = [(x.get("full_text") or "").strip() for x in (sources or [])[:_FACTS_MAX_SOURCES]]
-            caps = [c for c in caps if c]
-            facts = []
-            for c in caps:
-                # ★영상 **한 편씩** 캐시한다(2026-08-19). 이 경로는 영상마다 따로 부르는데
-                #   (merge_sul이 어느 편에서 뭐가 나왔는지 알아야 중복을 뺀다) 캐시가 없어서
-                #   같은 영상을 다시 담을 때마다 또 때렸다 — 상한을 3→5로 올리면 그만큼 더
-                #   느려진다(사장님 "시간도 오래 걸리고"). 편 단위로 캐시하면 담긴 조합이
-                #   달라져도 **이미 본 영상은 재사용**된다(_sul_block_for_sources의 캐시는
-                #   전사를 통째로 이어붙인 키라 한 편만 바뀌어도 전부 다시 돈다).
-                ckey = "sul_facts1_%s" % hashlib.md5(c.encode("utf-8")).hexdigest()[:16]
-                f = {}
-                if store is not None:
-                    try:
-                        f = json.loads(store.get_setting(ckey, "") or "{}") or {}
-                    except Exception:      # noqa: BLE001 — 깨진 캐시로 조립을 막지 않는다
-                        f = {}
-                if not f:
-                    try:
-                        f = sul_facts.analyze_sul({"captions": [c]}) or {}
-                    except Exception:      # noqa: BLE001
-                        f = {}
-                    # 빈 결과는 캐시하지 않는다 — 일시 실패를 굳히면 그 영상은 영영 재료가 없다.
-                    if f and store is not None:
-                        store.set_setting(ckey, json.dumps(f, ensure_ascii=False))
-                if f:
-                    facts.append(f)
-            merged = spine_fill.merge_sul(facts) if facts else {}
-            # ★슬롯이 차는 것과 쓸 만한 것은 다르다 — 재료 자격을 먼저 본다.
-            _prob = spine_fill.sul_material_problem(merged) if merged else "영상에서 재료를 못 뽑았습니다"
-            if _prob:
-                _why.append(_prob)
-                slots = {}
+        if track not in slots_by_track:
+            if track == "insta":
+                slots, _prob = _insta_slots(sources, store)
             else:
+                facts = _facts_per_source(sources, store, sul_facts.analyze_sul, "sul_facts1")
+                merged = spine_fill.merge_sul(facts) if facts else {}
+                # ★슬롯이 차는 것과 쓸 만한 것은 다르다 — 재료 자격을 먼저 본다.
+                _prob = (spine_fill.sul_material_problem(merged) if merged
+                         else "영상에서 재료를 못 뽑았습니다")
                 # ★쿠팡 재료도 함께 넣는다(2026-08-19) — 은폐형은 {제품}·{효능}·{나라}가
                 #   여기서 온다. 안 넣으면 슬롯이 안 차서 영영 폴백한다.
-                slots = spine_fill.slots_from_facts(_facts_for_job(job_id, store), merged)
+                slots = ({} if _prob
+                         else spine_fill.slots_from_facts(_facts_for_job(job_id, store), merged))
+            if _prob:
+                _why.append(_prob)
+            slots_by_track[track] = slots
+        slots = slots_by_track[track]
         try:
             d = spine_fill.build_draft(sp, slots, seconds=seconds) if slots else None
         except Exception as e:      # noqa: BLE001 — 조립 실패가 생성을 막으면 안 된다
