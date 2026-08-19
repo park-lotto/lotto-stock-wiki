@@ -9955,6 +9955,14 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     # 우회할 수 있다(1단계 script 과금은 별개 자원이라 render 과금을 대체하지 못한다). 검증(위 ssrf·
     # 파싱)을 먼저 통과시킨 뒤 과금(리뷰 G1). render_charge_day를 채워 run_mix_job 실패 시 자동 환불된다.
     cid = getattr(request.state, "customer_id", 0)
+    # ★더블클릭·재전송 가드 — **과금보다 먼저**(2026-08-19 실측). 이 라우트에만 중복
+    #   가드가 없어서 30ms 간격 요청 2건이 각각 job을 만들었다(최근 7일 7쌍). 화면이
+    #   헷갈리는 데 그치지 않고 render 크레딧이 두 번 나가고 Gemini·ffmpeg가 두 벌 돌았다.
+    #   미리보기(/mix/preview)·자막제거(/mix/clean)엔 이미 같은 성격의 가드가 있었다.
+    #   판단은 store.recent_same_mix_job 한 곳에서만 한다(0순위-B).
+    _dup = Store(DB_PATH).recent_same_mix_job(cid, urls, script)
+    if _dup:
+        return {"ok": True, "job_id": _dup, "deduped": True}
     if _global_over_cap("render"):
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "global_limit",
