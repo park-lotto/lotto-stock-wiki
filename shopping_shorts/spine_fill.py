@@ -38,8 +38,18 @@ import re
 
 # 템플릿에 쓰이는 슬롯 이름. 여기 없는 이름이 템플릿에 있으면 그 템플릿은 못 쓴다
 # (모르는 슬롯을 빈칸으로 남기면 "이게 원래는  개발된 제품이었음"이 나간다).
-SLOT_NAMES = ("제품", "효능", "효능2", "효능3", "나라", "본래용도", "속성",
-              "용도", "용도2", "용도3", "용도끝", "용도들", "제품군")
+_YT_SLOT_NAMES = ("제품", "효능", "효능2", "효능3", "나라", "본래용도", "속성",
+                  "용도", "용도2", "용도3", "용도끝", "용도들", "제품군")
+
+# ★인스타 슬롯(2026-08-19). 재료 출처가 다르다 — 유튜브는 쿠팡+유튜브 자막이지만
+#   인스타는 **릴 전사만** 본다(다이소·중국 제품은 쿠팡 1:1 매칭이 안 된다는 사장님 지시).
+#   표의 정본은 `insta_facts.SLOT_SOURCE`. 파생 슬롯(대상2·대상들)만 여기서 만든다.
+#   ⚠️ 엔진(fix_josa·pick_template·fill)은 **두 플랫폼이 공용**이다. 조사 교정 같은
+#      한국어 문법 처리를 플랫폼별로 두 벌 만들면 같은 사고를 두 번 겪는다(0순위-B).
+_INSTA_SLOT_NAMES = ("사용법", "적용대상", "적용대상2", "적용대상들",
+                     "효과", "수치", "차별점", "불편함", "가격")
+
+SLOT_NAMES = _YT_SLOT_NAMES + _INSTA_SLOT_NAMES
 
 _SLOT_RE = re.compile(r"\{([^{}]+)\}")
 
@@ -217,6 +227,74 @@ def slots_from_facts(product_facts=None, sul=None):
         "용도끝": _last(sf.get("misuses")),
         "용도들": _join_cases(sf.get("misuses")),
         "제품군": _first(sf.get("category_word")),
+    }
+    return {k: v for k, v in out.items() if v}
+
+
+def bigrams(s):
+    """한글·숫자만 남긴 **2글자 조각 집합**. 두 문구가 같은 걸 가리키나 볼 때 쓴다.
+
+    형태소 분석 없이 되는 가장 단순한 방법이고, 조사·띄어쓰기 차이를 흡수한다
+    ("욕실 수전 물때" ↔ "욕실 수전을 닦는" → '욕실'·'수전'에서 겹친다).
+
+    ★여기 한 벌만 둔다 — `_join_targets`(나열 중복 판정)와
+      `insta_facts.gate_by_scene`(장면 근거 판정)이 **같은 판정을 쓴다**.
+      두 벌로 두면 한쪽만 고쳐져 어긋난다(0순위-B).
+
+    ★조각은 **낱말 안에서만** 자른다. 통째로 이어붙여 자르면 낱말 경계를 걸친
+      쓰레기 조각이 생겨 엉뚱한 게 겹친다(2026-08-19 실측: "보여주는 모습"이
+      "…보여주는 장면"과 `는모`·`여주`로 겹쳐 장면 근거 게이트를 그냥 통과했다).
+    """
+    out = set()
+    for w in re.sub(r"[^가-힣0-9]", " ", str(s or "")).split():
+        out |= {w[i:i + 2] for i in range(len(w) - 1)}
+        if len(w) == 1:
+            out.add(w)          # 한 글자 낱말도 근거는 근거다("컵"·"솔")
+    return out
+
+
+def _join_targets(items, max_n=3):
+    """적용 대상 여러 개 → "A부터 B까지" 한 덩어리.
+
+    실측 다이소 대본의 결을 그대로 쓴다 — "양말 누런 때부터 신발 찌든 때까지".
+    한 제품이 여러 곳에 번지는 게 이 축의 강점이라, 나열이 곧 설득이다.
+    1개뿐이면 나열이 아니라 그 하나가 정직하다.
+    """
+    xs = [str(x).strip() for x in (items or []) if str(x).strip()]
+    if not xs:
+        return ""
+    if len(xs) == 1:
+        return xs[0]
+    head = xs[0]
+    # ★끝은 머리와 **겹치지 않는 것**을 고른다(2026-08-19 실측).
+    #   그냥 마지막을 쓰면 "욕실 수전 물때부터 찌든 물때까지"가 나왔다 — 둘 다 물때라
+    #   나열의 맛이 없다. 실측 히트작은 다른 것끼리 묶는다("양말 누런 때부터 신발 찌든 때까지").
+    #   판정은 2글자 조각이 겹치는지로 본다(`bigrams` — 장면 근거 게이트와 공용).
+    hg = bigrams(head)
+    tail = next((x for x in reversed(xs[1:max_n]) if not (bigrams(x) & hg)), "")
+    if not tail:
+        tail = next((x for x in reversed(xs[1:]) if not (bigrams(x) & hg)), xs[-1])
+    return "%s부터 %s까지" % (head, tail)
+
+
+def slots_from_insta(facts):
+    """insta_facts 재료 → 슬롯 dict. **빈 값은 아예 담지 않는다**.
+
+    담아두면 pick_template이 "채워졌다"고 보고 빈칸이 그대로 대본에 나간다
+    (slots_from_facts와 같은 규약 — 이 원칙을 두 함수가 공유한다).
+    """
+    f = facts or {}
+    out = {
+        "사용법":     _first(f.get("how_to")),
+        "적용대상":   _first(f.get("targets")),
+        # 두 번째 대상 — "심지어 {적용대상2}까지" 같은 고조 문장에 쓴다.
+        "적용대상2":  _nth(f.get("targets"), 1),
+        "적용대상들": _join_targets(f.get("targets")),
+        "효과":       _first(f.get("effects")),
+        "수치":       _first(f.get("numbers")),
+        "차별점":     _first(f.get("edge")),
+        "불편함":     _first(f.get("pain")),
+        "가격":       _first(f.get("price")),
     }
     return {k: v for k, v in out.items() if v}
 
