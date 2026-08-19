@@ -115,6 +115,36 @@ def _join_cases(items, max_n=3):
     return "%s %s로도 쓰고요" % (head, rest)
 
 
+def merge_sul(facts_list):
+    """여러 영상에서 뽑은 썰 재료를 **한 벌로 합친다**(2026-08-19 사장님 지시).
+
+    > "같은 해외영상이나 여러영상을 가져와도 거기에 딱 들어갈 말들만 있음 되게"
+
+    ★왜 필요한가(실측): 한 편만 보면 칸이 빈다. 라이브 재료 2편을 각각 돌렸더니
+      둘 다 `misuses`(엉뚱한 사용처)가 **0건**이라 오용형 5칸 중 `cases`·`twist`가
+      통째로 못 채워졌다. 소개 영상 한 편에는 '원래 용도'는 있어도 '엉뚱한 용도'가
+      없는 게 정상이다 — 그건 여러 편을 겹쳐야 보인다.
+
+    합치는 규칙은 단순하다: 리스트는 **순서를 지키며 이어붙이고 중복만 뺀다**.
+    (점수를 매겨 고르지 않는다 — 무엇이 좋은 사례인지는 재료가 아니라 편집이 정한다)
+    """
+    out = {}
+    for f in (facts_list or []):
+        if not isinstance(f, dict):
+            continue
+        for k, v in f.items():
+            if isinstance(v, str):
+                v = [v] if v.strip() else []
+            if not isinstance(v, (list, tuple)):
+                continue
+            cur = out.setdefault(k, [])
+            for x in v:
+                x = str(x).strip()
+                if x and x not in cur:
+                    cur.append(x)
+    return out
+
+
 def slots_from_facts(product_facts=None, sul=None):
     """product_facts + sul_facts → 슬롯 dict. **빈 값은 아예 담지 않는다** —
     담아두면 템플릿이 "채워졌다"고 보고 빈칸이 그대로 나간다."""

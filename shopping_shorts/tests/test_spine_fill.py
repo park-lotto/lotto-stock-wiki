@@ -100,3 +100,34 @@ def test_슬롯이_아닌_조사는_안_건드린다():
     """★문장 전체를 훑어 고치면 원래 문장의 조사까지 바꾼다 — 치환 자리에서만 고친다."""
     out = sf.fill_one("사람들은 {속성}을 눈치채고", {"속성": "봉 없이 걸린다"})
     assert out.startswith("사람들은 ")      # '사람들은'이 '사람들는'이 되지 않는다
+
+
+# ── 여러 영상의 재료 합치기 ────────────────────────────────────────────────
+# 사장님: "같은 해외영상이나 여러영상을 가져와도 거기에 딱 들어갈 말들만 있음 되게"
+def test_여러영상_재료를_합친다():
+    """★한 편만 보면 칸이 빈다 — 실측 2편 모두 misuses가 0건이라 cases·twist가
+    통째로 못 채워졌다. 여러 편을 겹쳐야 '엉뚱한 용도'가 보인다."""
+    m = sf.merge_sul([
+        {"misuses": ["바지 밑단 줄임"], "category_word": "수선도구"},
+        {"misuses": ["커튼 길이 조절", "바지 밑단 줄임"], "original_use": ["태그 부착"]},
+        {"misuses": ["침대커버 고정"]},
+    ])
+    assert m["misuses"] == ["바지 밑단 줄임", "커튼 길이 조절", "침대커버 고정"]  # 순서 유지·중복 제거
+    slots = sf.slots_from_facts({}, m)
+    assert slots["용도들"].startswith("바지 밑단 줄임으로 쓰는가 하면")
+
+
+def test_합칠_때_깨진_항목은_건너뛴다():
+    assert sf.merge_sul([None, "문자열", {"misuses": "단일문자열"}]) == {"misuses": ["단일문자열"]}
+
+
+def test_합쳐서_빈칸이_메워진다():
+    """1편으로는 3/5칸, 3편을 합치면 5/5칸."""
+    one = {"original_use": ["태그 부착"], "hidden_property": ["옷감 손상 없음"]}
+    two = {"misuses": ["바지 밑단 줄임", "커튼 길이 조절"]}
+    spine = dict(SPINE56, templates=dict(SPINE56["templates"],
+                                         title=["제조사도 예상 못 한 활용법"],
+                                         cases=["{용도들}"]))
+    d1 = sf.coverage(spine, sf.slots_from_facts({}, one))
+    d3 = sf.coverage(spine, sf.slots_from_facts({}, sf.merge_sul([one, two])))
+    assert d1[0] == 3 and d3[0] == 5, (d1, d3)
