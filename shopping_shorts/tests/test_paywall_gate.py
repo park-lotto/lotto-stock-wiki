@@ -32,8 +32,10 @@ def test_ranking_only_blocked_helper():
     assert appmod._ranking_only_blocked("/api/reference", "POST") is True    # 같은 경로여도 POST=차단
     assert appmod._ranking_only_blocked("/api/reference/register", "GET") is True  # 등록=차단
     assert appmod._ranking_only_blocked("/api/collect", "POST") is True      # 수집=차단
-    assert appmod._ranking_only_blocked("/api/lens/search", "POST") is True
-    assert appmod._ranking_only_blocked("/api/mix/basket", "GET") is True
+    # ★2026-08-20 체험판 개방으로 정책이 바뀌었다 — 과금검사 있는 렌즈·즐겨찾기는 무료.
+    #   대신 과금검사 없는 렌즈가 계속 막히는지를 여기서 지킨다.
+    assert appmod._ranking_only_blocked("/api/lens/kw/search", "POST") is True
+    assert appmod._ranking_only_blocked("/api/mix/basket/reprobe", "POST") is True
 
 
 def test_free_user_blocked_from_paid_but_ranking_ok(tmp_path, monkeypatch):
@@ -42,7 +44,7 @@ def test_free_user_blocked_from_paid_but_ranking_ok(tmp_path, monkeypatch):
     s.set_plan(cid, "free", full_access_until=0)     # 체험 만료 → ranking_only
     c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
     assert c.get("/api/reference?platform=instagram").status_code == 200   # 랭킹 조회 OK
-    assert c.get("/api/mix/basket").status_code == 402                     # 유료 차단
+    assert c.post("/api/collect").status_code == 402                       # 수집=유료 차단
     assert c.post("/api/collect?platform=instagram").status_code == 402    # 수집 차단
 
 

@@ -1099,9 +1099,16 @@ def api_mix_basket_toggle(request: Request, body: dict, background_tasks: Backgr
                      if meta.get(k) not in (None, "")}
             if clean:
                 store.mix_basket_set_meta(sc, customer_id=cid, meta=clean)
-        if url and _grab_platform(url):
-            background_tasks.add_task(_enrich_grab, url, sc, cid)
-        _enqueue_prewarm(store, sc, url, caption=body.get("caption") or "", customer_id=cid)
+        # ★2026-08-20 체험판 개방: 담기는 열되 **유료 부작용은 무료 등급에서 끈다**.
+        #   _enrich_grab=인스타 크롤(사람 수만큼 늘면 429 → 본 수집이 죽는다.
+        #   2026-07-30 실사고), _enqueue_prewarm=Gemini 추출(실과금).
+        #   즐겨찾기는 '랭킹에 이미 뜬 영상'을 담는 것이라 다시 긁을 게 없다.
+        #   판정은 access_level 한 곳에서만 한다(0순위-B).
+        if access_level(cid) == "full":
+            if url and _grab_platform(url):
+                background_tasks.add_task(_enrich_grab, url, sc, cid)
+            _enqueue_prewarm(store, sc, url, caption=body.get("caption") or "",
+                             customer_id=cid)
     return {"ok": True, "in": in_basket, "count": len(store.mix_basket_shortcodes(customer_id=cid))}
 
 
@@ -6169,7 +6176,13 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 # ⚠️ /api/reference는 '조회(GET)'만 무료 — /api/reference/register(등록·데이터변경)는 exact 매칭이라 제외.
 #    /api/collect(수집=크롤 비용)도 제외 → 무료 등급은 마지막 수집 랭킹만 본다.
 # 메서드 무관 무료(로그인 폼 POST 등) — 전부 정확 경로.
-_FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout"}
+# ★2026-08-20 체험판 개방: 즐겨찾기 담기(POST)와 렌즈 2종을 연다.
+#   렌즈는 **과금검사(_charge_or_402 + check_and_count)가 있는 경로만** 연다 —
+#   /api/lens/kw/search·cn/search는 틱톡·샤오홍슈가 Apify 유료인데 과금검사가
+#   없어서(실측) prefix로 열면 상한 없이 샌다.
+_FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
+                   "/api/mix/basket/toggle",
+                   "/api/lens/search", "/api/lens/trace_url"}
 # GET만 무료(레퍼런스 랭킹 '조회') — POST/PUT 등 데이터변경은 같은 경로여도 차단.
 _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/api/thumb", "/api/video",
                    "/api/channel/history",   # 채널 히스토리='지난 한 달' 조회 = 랭킹 열람의 연장(무료 허용)
@@ -6177,7 +6190,12 @@ _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/a
                    #   안 열면 무료 등급이 자기 계정·포인트를 못 본다 —
                    #   충전하려면 들어올 수 있어야 하는데 충전 화면이 유료 뒤에 있는 꼴이 된다.
                    #   ⚠️ GET만이다. 키 등록(POST /api/settings/keys)은 그대로 막힌다.
-                   "/settings", "/api/settings/points", "/api/settings/keys"}
+                   "/settings", "/api/settings/points", "/api/settings/keys",
+                   # ★2026-08-20 체험판: 즐겨찾기 목록·모음집 화면.
+                   "/collection", "/api/mix/basket",
+                   # ★2026-08-20 체험판: 제작소는 HTML만 연다(소개 페이지가 뜬다).
+                   #   /api/produce/* 는 열지 않는다 — 과금 기능은 계속 막힌다.
+                   "/produce", "/produce.html"}
 # 경계있는 prefix만(과다매칭 방지 — 트레일링 슬래시).
 _FREE_PREFIX = ("/static/", "/auth/google/")
 
@@ -11986,7 +12004,9 @@ except Exception:                                  # noqa: BLE001 — 이 기능
 # no-cache: UI 배포 후 브라우저가 옛 HTML을 캐시로 재사용해 "고쳤는데 안 바뀜"이
 # 반복됨(2026-07-14 역할배정·사이드바 등 실사고) → 매 요청 서버 재검증 강제.
 _NOCACHE = {"Cache-Control": "no-cache, must-revalidate"}
-for _pg in ("discover", "find", "library", "mix", "outreach", "produce", "collection",
+# ★"produce"는 여기서 뺐다(2026-08-20) — 등급에 따라 다른 파일을 서빙해야 해서
+#   아래 _produce_page 명시 라우트로 옮겼다(voice_tune·refs와 같은 패턴).
+for _pg in ("discover", "find", "library", "mix", "outreach", "collection",
             "scene_library", "pattern_bank", "longform", "settings"):
     app.add_api_route(
         f"/{_pg}",
@@ -12024,6 +12044,21 @@ def _refs_page(request: Request):
 
 app.add_api_route("/refs", _refs_page, include_in_schema=False)
 app.add_api_route("/refs.html", _refs_page, include_in_schema=False)
+
+
+# ── 숏템 제작소(2026-08-20 체험판) — 등급에 따라 다른 화면을 준다 ──────────────
+# 사장님 지시: "숏템제작소는 열어두되 사용 자체가 안 되게".
+# full(사장님·pro·체험창)은 종전과 완전히 동일한 produce.html.
+# 그 외(ranking_only)는 API를 하나도 안 부르는 소개 페이지 → 402 JSON이 안 뜬다.
+# ★/api/produce/* 는 화이트리스트에 넣지 않는다 — HTML만 열고 과금 API는 계속 막는다.
+# ★/produce.html도 함께 등록해야 StaticFiles 마운트로 뚫리지 않는다(2026-07-22 실사고).
+def _produce_page(request: Request):
+    name = "produce.html" if access_level(_cid(request)) == "full" else "produce_intro.html"
+    return FileResponse(_STATIC / name, media_type="text/html", headers=_NOCACHE)
+
+
+app.add_api_route("/produce", _produce_page, include_in_schema=False)
+app.add_api_route("/produce.html", _produce_page, include_in_schema=False)
 
 
 # ── 역대 히트작(채널 아카이브, 2026-08-03) — 관리자 전용 ─────────────────────

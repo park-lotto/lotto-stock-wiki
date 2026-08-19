@@ -1,0 +1,300 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""체험판 제작소 소개 페이지 생성기 (2026-08-20)
+
+사장님 지시: "체험단이 볼 수 있는 페이지는 우리 샘플 중 한 개를 띄워주고, 수정 못 만지게
+하고, 이렇게 돌아가는 거다를 보여주고, 캡션 도움말 달아서 이건 뭐고 이건 뭐다 해달라".
+
+★왜 API가 아니라 '구워서 박는' 방식인가
+  `/api/produce/*`는 체험 등급에 전부 402다(과금 기능이라 여는 게 위험). 그래서 샘플을
+  API로 읽지 않고 **빌드 시점에 실제 작업 데이터를 HTML 안에 박아 넣는다**.
+  → 페이지가 부르는 API가 **0개**라 402 에러가 원천적으로 안 뜨고, 새 엔드포인트를
+    안 만드니 화이트리스트를 넓힐 일도 없다(deny-by-default를 안 흔든다).
+
+쓰는 법(샘플을 바꾸고 싶을 때만):
+    # 서버에서 실제 작업 하나를 뽑아온다
+    py tools/build_produce_intro.py --json <sample.json>
+  sample.json은 produce_works.state_json에서 뽑은 것으로, 아래 _SAMPLE와 같은 모양이다.
+  인자 없이 실행하면 이 파일에 박힌 기본 샘플로 다시 굽는다.
+
+썸네일은 인스타 CDN 주소라 그대로 쓰면 403이 난다 → `/api/thumb` 프록시를 태운다.
+그 경로는 체험 등급에도 열려 있다(실측: `_ranking_only_blocked('/api/thumb','GET')==False`).
+"""
+import argparse
+import html
+import json
+import pathlib
+import sys
+from urllib.parse import quote
+
+HERE = pathlib.Path(__file__).resolve().parent.parent
+OUT = HERE / "shopping_shorts" / "static" / "produce_intro.html"
+
+# 실제 라이브 작업(work_id 7b0491f0de…, step 8=최종렌더까지 간 것)에서 뽑은 값.
+# 손으로 지어낸 숫자가 하나도 없다 — 전부 사장님이 실제로 만든 영상의 데이터다.
+_SAMPLE = {
+    "title": "여러분, 집안 틈새 보수할 때 실리콘",
+    "product": "미세 노즐 실란트 주사기",
+    "sources": [
+        {"chars": 114, "head": "만원이면 가구 틈새 실리콘 마감이 뚝딱이여 기존 실리콘건은 너무 크잖아?"},
+        {"chars": 205, "head": "이런 거 하나 있으면 든든하죠! 집이 오래돼서 보수할 데가 많았는데 인테…"},
+        {"chars": 915, "head": "¿Sabías que la humedad del ambiente dete…"},
+    ],
+    "scene_points": 14,
+    "styles": ["단정 명령형", "가족갈등 반전형"],
+    "beats": [
+        {"role": "hook", "label": "훅", "sec": 3.9,
+         "text": "여러분, 집안 틈새 보수할 때 실리콘 건 덩치 큰 거 쓰지 마세요. 이게 진짜 난리예요!"},
+        {"role": "before", "label": "문제", "sec": 6.6,
+         "text": "저도 예전엔 큰 건으로 쏘다가 다 삐져나와서 닦느라 고생만 했거든요. "
+                 "인테리어 망치고 나면 수습도 안 돼서 얼마나 짜증나던지 몰라요."},
+        {"role": "reveal", "label": "등장", "sec": 7.3,
+         "text": "근데 인테리어 하는 친구가 이 미세 노즐 실란트 주사기를 슥 내밀더라고요. "
+                 "주사기처럼 생겨서 필요한 만큼만 딱 짜니까 힘 안 줘도 일정하게 쫙 나와요."},
+        {"role": "after", "label": "결과", "sec": 6.9,
+         "text": "덕분에 가구 모서리 틈새가 싹 메워지니까 곰손인 저도 전문가처럼 깔끔하게 끝냈거든요. "
+                 "남은 거 굳어서 버릴 일도 없어서 진짜 경제적이에요."},
+        {"role": "cta", "label": "행동유도", "sec": 4.3,
+         "text": "어디서 샀냐고들 물어봐서 댓글에 '실리콘' 남겨주시면 구매한 링크 바로 보내 드릴게요."},
+    ],
+    "sources_thumbs": [],   # --json으로 채워진다(썸네일 URL 목록)
+}
+
+_ROLE_HELP = {
+    "hook": "첫 3초. 여기서 못 잡으면 나머지를 아무리 잘 만들어도 안 봅니다.",
+    "before": "보는 사람이 겪은 불편을 먼저 말해 '내 얘기네' 하고 붙잡습니다.",
+    "reveal": "제품이 처음 나오는 자리. 광고가 아니라 '해결책'으로 들어옵니다.",
+    "after": "쓰고 나서 뭐가 달라졌는지. 사고 싶어지는 건 대개 이 대목입니다.",
+    "cta": "댓글·링크로 이어지는 마무리. 채널마다 문구가 다릅니다.",
+}
+
+
+def _thumb(url: str) -> str:
+    """인스타 CDN 주소는 직접 못 읽는다(403) → 서버 프록시를 태운다."""
+    if not url:
+        return ""
+    return "/api/thumb?url=" + quote(url, safe="")
+
+
+def _esc(s) -> str:
+    return html.escape(str(s or ""))
+
+
+def _beats_html(beats) -> str:
+    rows = []
+    for i, b in enumerate(beats, 1):
+        rows.append(f"""
+      <div class="beat">
+        <div class="beat-no">{i}</div>
+        <div class="beat-body">
+          <div class="beat-head">
+            <span class="tag tag-{_esc(b['role'])}">{_esc(b['label'])}</span>
+            <span class="sec">{b['sec']}초</span>
+          </div>
+          <p class="beat-text">{_esc(b['text'])}</p>
+          <p class="beat-help">💬 {_esc(_ROLE_HELP.get(b['role'], ''))}</p>
+        </div>
+      </div>""")
+    return "".join(rows)
+
+
+def _sources_html(sample) -> str:
+    thumbs = sample.get("sources_thumbs") or []
+    cards = []
+    for i, t in enumerate(thumbs[:5]):
+        src = _thumb(t)
+        cards.append(f'<div class="src-card"><img src="{_esc(src)}" alt="담은 영상 {i+1}" '
+                     f'loading="lazy" onerror="this.closest(\'.src-card\').style.display=\'none\'"></div>')
+    if not cards:
+        cards = ['<div class="src-card src-empty">영상</div>' for _ in range(3)]
+    return "".join(cards)
+
+
+def build(sample) -> str:
+    total = round(sum(b["sec"] for b in sample["beats"]), 1)
+    src_lines = "".join(
+        f'<li><b>{s["chars"]}자</b> <span class="muted">{_esc(s["head"])}</span></li>'
+        for s in sample["sources"])
+
+    return f"""<!doctype html>
+<meta charset="utf-8">
+<title>숏템 제작소 — 이렇게 만들어집니다</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root{{--bg:#0f1115;--card:#171a21;--card2:#1d212a;--txt:#e8eaf0;--sub:#9aa3b2;
+        --line:#262b36;--accent:#7c5cff;--ok:#2ecc71;--warn:#f5a623}}
+  *{{box-sizing:border-box}}
+  body{{margin:0;background:var(--bg);color:var(--txt);line-height:1.65;
+       font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif}}
+  .wrap{{max-width:860px;margin:0 auto;padding:28px 18px 72px}}
+  .ribbon{{background:linear-gradient(90deg,#7c5cff22,#7c5cff08);border:1px solid #7c5cff55;
+          border-radius:10px;padding:12px 16px;margin-bottom:22px;font-size:14px}}
+  .ribbon b{{color:#b9a7ff}}
+  h1{{font-size:26px;margin:0 0 6px;letter-spacing:-.4px}}
+  .lead{{color:var(--sub);margin:0 0 8px}}
+  .demo-of{{font-size:13px;color:var(--sub);margin:0 0 26px}}
+  .demo-of code{{background:var(--card2);padding:2px 7px;border-radius:5px;color:#c9d1e0}}
+
+  .step{{background:var(--card);border:1px solid var(--line);border-radius:13px;
+        padding:18px 20px;margin-bottom:14px;position:relative}}
+  .step-head{{display:flex;align-items:center;gap:9px;margin-bottom:4px;flex-wrap:wrap}}
+  .step-n{{background:var(--accent);color:#fff;font-size:12px;font-weight:800;
+          width:24px;height:24px;border-radius:50%;display:flex;align-items:center;
+          justify-content:center;flex:0 0 auto}}
+  .step-t{{font-size:17px;font-weight:800;margin:0}}
+  .done{{margin-left:auto;font-size:12px;color:var(--ok);font-weight:700;white-space:nowrap}}
+  .help{{background:#7c5cff14;border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
+        padding:9px 13px;margin:11px 0 0;font-size:13.5px;color:#cfd6e4}}
+  .help b{{color:#fff}}
+  .muted{{color:var(--sub)}}
+
+  .srcs{{display:flex;gap:9px;margin-top:12px;flex-wrap:wrap}}
+  .src-card{{width:78px;height:104px;border-radius:8px;overflow:hidden;background:var(--card2);
+           border:1px solid var(--line);flex:0 0 auto}}
+  .src-card img{{width:100%;height:100%;object-fit:cover;display:block}}
+  .src-empty{{display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--sub)}}
+  ul.srclist{{margin:12px 0 0;padding-left:18px;font-size:13.5px}}
+  ul.srclist li{{margin-bottom:3px}}
+
+  .beat{{display:flex;gap:12px;padding:13px 0;border-top:1px solid var(--line)}}
+  .beat:first-of-type{{border-top:0}}
+  .beat-no{{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--card2);
+          border:1px solid var(--line);font-size:11px;color:var(--sub);
+          display:flex;align-items:center;justify-content:center;margin-top:3px}}
+  .beat-body{{flex:1;min-width:0}}
+  .beat-head{{display:flex;align-items:center;gap:8px;margin-bottom:3px}}
+  .tag{{font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px}}
+  .tag-hook{{background:#f5a62322;color:#f5a623}}
+  .tag-before{{background:#ff6b6b22;color:#ff8787}}
+  .tag-reveal{{background:#7c5cff26;color:#b9a7ff}}
+  .tag-after{{background:#2ecc7122;color:#4ade80}}
+  .tag-cta{{background:#4dabf722;color:#74c0fc}}
+  .sec{{font-size:12px;color:var(--sub)}}
+  .beat-text{{margin:0;font-size:14.5px}}
+  .beat-help{{margin:5px 0 0;font-size:12.5px;color:var(--sub)}}
+
+  .styles{{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}}
+  .chip{{border:1px solid var(--line);background:var(--card2);border-radius:20px;
+        padding:5px 13px;font-size:13px}}
+  .chip.on{{border-color:var(--accent);background:#7c5cff1f;color:#c9bcff;font-weight:700}}
+
+  .cta{{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px}}
+  .btn{{display:inline-block;padding:12px 20px;border-radius:9px;text-decoration:none;
+       font-weight:800;font-size:14.5px}}
+  .btn.primary{{background:var(--accent);color:#fff}}
+  .btn.ghost{{border:1px solid var(--line);color:var(--txt)}}
+  .foot{{margin-top:18px;font-size:13px;color:var(--sub)}}
+  @media(max-width:520px){{ .src-card{{width:64px;height:86px}} h1{{font-size:22px}} }}
+</style>
+<div class="wrap">
+
+  <div class="ribbon">
+    👀 <b>미리보기입니다.</b> 아래는 실제로 만들어진 영상 한 편을 그대로 펼쳐놓은 것이라
+    <b>고치거나 새로 만들 수는 없습니다.</b> 이용권을 시작하면 이 과정을 직접 돌릴 수 있어요.
+  </div>
+
+  <h1>🎬 숏템 제작소는 이렇게 돌아갑니다</h1>
+  <p class="lead">영상 몇 개를 담으면 → 대본이 나오고 → 장면이 붙고 → 한 편이 완성됩니다.</p>
+  <p class="demo-of">지금 보시는 건 실제 완성작 <code>{_esc(sample['product'])}</code> 편입니다.
+     아래 숫자·문장은 전부 그 작업에서 그대로 가져온 것이에요.</p>
+
+  <div class="step">
+    <div class="step-head"><span class="step-n">1</span>
+      <p class="step-t">담은 영상을 읽습니다</p><span class="done">✓ 완료</span></div>
+    <div class="srcs">{_sources_html(sample)}</div>
+    <ul class="srclist">{src_lines}</ul>
+    <p class="help">💬 <b>이건 뭐냐면</b> — 담아둔 영상의 <b>말(자막)을 전부 받아적고</b>,
+       화면에 뭐가 나오는지까지 읽습니다. 위 숫자가 받아적은 글자 수예요.
+       <b>자막이 아예 없는 영상도</b> 화면만 보고 알아냅니다. 외국어(스페인어)도 그대로 읽어요.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-n">2</span>
+      <p class="step-t">어떤 말투로 쓸지 고릅니다</p><span class="done">✓ 완료</span></div>
+    <div class="styles">
+      <span class="chip on">✓ {_esc(sample['styles'][0])}</span>
+      <span class="chip">{_esc(sample['styles'][1])}</span>
+    </div>
+    <p class="help">💬 <b>이건 뭐냐면</b> — 잘 터진 채널들의 <b>말하는 방식</b>을 미리 학습해둔
+       틀입니다. 같은 제품이라도 틀을 바꾸면 완전히 다른 영상이 나와요.
+       이번 편은 <b>{_esc(sample['styles'][0])}</b>으로 뽑았습니다.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-n">3</span>
+      <p class="step-t">대본이 나옵니다 — 통째로가 아니라 <em>역할별</em>로</p>
+      <span class="done">✓ {total}초</span></div>
+    {_beats_html(sample['beats'])}
+    <p class="help">💬 <b>이건 뭐냐면</b> — 대본을 그냥 길게 쓰는 게 아니라
+       <b>훅 → 문제 → 등장 → 결과 → 행동유도</b> 다섯 토막으로 나눠서 씁니다.
+       토막마다 <b>몇 초짜리인지</b>가 정해져 있어서, 다음 단계에서 장면을 그 길이에 맞춰
+       잘라 붙일 수 있어요. 합쳐서 <b>{total}초</b>짜리 한 편이 됩니다.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-n">4</span>
+      <p class="step-t">대사에 맞는 장면을 골라 붙입니다</p>
+      <span class="done">✓ 장면 {sample['scene_points']}곳</span></div>
+    <p class="help">💬 <b>이건 뭐냐면</b> — 담은 영상들에서 쓸 만한 장면
+       <b>{sample['scene_points']}곳</b>을 찾아두고, 대사 내용과 맞는 자리에 자동으로 배치합니다.
+       "주사기처럼 생겨서"라고 말할 때 <b>실제로 그 장면이 나오게</b> 맞추는 일이에요.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-n">5</span>
+      <p class="step-t">원본 자막을 지우고, 목소리를 입히고, 한 편으로 굽습니다</p>
+      <span class="done">✓ 완료</span></div>
+    <p class="help">💬 <b>이건 뭐냐면</b> — 남의 영상에 박혀 있던 <b>자막을 지우고</b>
+       내 대본으로 새 자막을 답니다. 성우 목소리도 골라서 얹고, 썸네일까지 만들어
+       <b>바로 올릴 수 있는 영상 파일</b>로 내보냅니다.</p>
+  </div>
+
+  <div class="cta">
+    <a class="btn primary" href="/pricing">이용권 보기</a>
+    <a class="btn ghost" href="/">← 레퍼런스 랭킹으로</a>
+  </div>
+  <p class="foot">체험 기간에는 <b>레퍼런스 랭킹</b>과 <b>영상 즐겨찾기</b>를 자유롭게 쓰실 수 있어요.
+     마음에 드는 영상을 미리 담아두시면, 이용권을 시작할 때 그대로 이어서 만들 수 있습니다.</p>
+</div>
+"""
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--json", help="produce_works에서 뽑은 샘플 JSON(없으면 내장 기본값)")
+    ap.add_argument("--out", default=str(OUT))
+    a = ap.parse_args()
+
+    sample = dict(_SAMPLE)
+    if a.json:
+        raw = json.loads(pathlib.Path(a.json).read_text(encoding="utf-8"))
+        # 실제 작업 JSON → 이 생성기가 쓰는 모양으로 옮긴다(있는 것만 덮어쓴다).
+        if raw.get("sources"):
+            sample["sources"] = raw["sources"]
+        if raw.get("scene_points"):
+            sample["scene_points"] = raw["scene_points"]
+        if raw.get("styles"):
+            sample["styles"] = raw["styles"]
+        drafts = raw.get("drafts") or []
+        if drafts and drafts[0].get("beats"):
+            labels = {"hook": "훅", "before": "문제", "reveal": "등장",
+                      "after": "결과", "cta": "행동유도"}
+            sample["beats"] = [
+                {"role": b.get("role", ""), "label": labels.get(b.get("role", ""), b.get("role", "")),
+                 "sec": b.get("sec", 0), "text": b.get("text", "")}
+                for b in drafts[0]["beats"]]
+        sample["sources_thumbs"] = [h.get("thumbnail") for h in (raw.get("handoff") or [])
+                                    if h.get("thumbnail")]
+
+    out = pathlib.Path(a.out)
+    out.write_text(build(sample), encoding="utf-8")
+    print(f"생성 완료: {out} ({out.stat().st_size:,} bytes)")
+    body = out.read_text(encoding="utf-8")
+    # 자가검증 — 이 페이지는 API를 하나도 부르면 안 된다(체험 등급은 전부 402라서).
+    for bad in ("fetch(", "XMLHttpRequest", "<script"):
+        assert bad not in body, f"★{bad} 가 들어있다 — 이 페이지는 정적이어야 한다"
+    print("자가검증 통과: script/fetch 0건")
+
+
+if __name__ == "__main__":
+    sys.exit(main())
