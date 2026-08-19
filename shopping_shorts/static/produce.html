@@ -609,6 +609,50 @@
     }
 
     /* ══════════════════════════════════════════════════════════════════════
+       6단계(자막꾸미기) 큼직하게 — 2026-08-19 사장님 "ui크기도 더 크게 화면채우고
+       글자도 버튼들 다 크게 잘보이게"
+       ★왜 CSS 한 곳인가: 이 패널의 컨트롤은 글자크기가 **inline style**로 20곳 넘게
+         흩어져 있다. 손으로 다 고치면 반드시 몇 개를 빠뜨리고, 다음에 또 어긋난다.
+         여기 한 곳에서만 정한다(0순위-B).
+       ★!important를 쓴 이유: inline style은 특이도로는 못 이긴다. inline을 지우는 대신
+         여기서 덮는 쪽을 택했다 — 원래 값이 그 자리에 남아 있어야 무엇을 바꿨는지 보인다.
+       ★범위는 data-step="3"(=6단계) 안으로 못박는다. 다른 단계는 한 픽셀도 안 변한다.
+       ══════════════════════════════════════════════════════════════════════ */
+    .panel[data-step="3"]{ --deco-lbl:15px; --deco-ctl:16px; }
+    /* 탭 4개(문구·스타일·템플릿·효과) — 제일 먼저 누르는 것이라 제일 크게 */
+    .panel[data-step="3"] #decoTabs .tab{font-size:16px!important;padding:12px 22px!important}
+    /* 라벨·설명·힌트 — 11~13px 무리를 읽을 수 있는 크기로 */
+    .panel[data-step="3"] .hint{font-size:13px!important}
+    .panel[data-step="3"] label{font-size:var(--deco-lbl)!important}
+    /* 문구 입력칸 — 여기서 제일 오래 머문다 */
+    .panel[data-step="3"] #hcText{font-size:18px!important;padding:14px!important;line-height:1.5!important}
+    /* 고정카피 후보 카드 */
+    .panel[data-step="3"] #hcCopyCards{gap:10px!important}
+    /* 컨트롤(드롭다운·버튼)과 색상칸 */
+    .panel[data-step="3"] select,
+    .panel[data-step="3"] input[type=text]{font-size:var(--deco-ctl)!important;padding:8px 12px!important}
+    .panel[data-step="3"] input[type=color]{width:52px!important;height:34px!important;cursor:pointer}
+    /* 슬라이더 — 얇아서 잡기 어려웠다. 손잡이를 키운다 */
+    .panel[data-step="3"] input[type=range]{height:26px}
+    .panel[data-step="3"] input[type=range]::-webkit-slider-thumb{width:22px;height:22px}
+    /* 접기 제목(직접 다듬기 / 헤드카피 꾸미기 / 자막 꾸미기 …) */
+    .panel[data-step="3"] summary{font-size:16px!important;padding:11px 0!important}
+    /* 작은 버튼들(정렬·효과·강조단어 추가 등) */
+    .panel[data-step="3"] .tab{font-size:14px!important}
+    /* 🪞 미리보기 — 실제로 눈으로 보는 곳이라 가장 크게 키운다.
+       ★폭의 정의처는 --pvw 한 곳(.decoMirror) — 그 변수만 바꾼다. 높이는 aspect-ratio가 따라온다.
+       기본값(좁은 화면)은 원래대로 300px — 노트북·모바일 회귀 0. */
+    .decoMirror{--pvw:min(300px,42vh)}
+    @media (min-width:1200px){
+      .decoMirror{--pvw:min(400px,58vh)}
+    }
+    @media (min-width:1600px){
+      .decoMirror{--pvw:min(460px,64vh)}
+      .panel[data-step="3"] #decoTabs .tab{font-size:17px!important;padding:14px 26px!important}
+      .panel[data-step="3"] #hcText{font-size:19px!important}
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
        T3 · 모바일 (≤768px) — 2026-08-15 신설. 제작소엔 폭 기반 미디어쿼리가 0건이었다.
        ★사이드바는 여기서 손대지 않는다: sidebar.js가 이미 @media(max-width:760px)로
          가로띠 규칙을 갖고 있고(6개 페이지 공용 단일 소스), 여기 또 적으면 두 벌이 된다.
@@ -1131,7 +1175,10 @@
         <!-- ★폭은 여기 한 곳(--pvw)에서만 정한다(0순위-B). 미리보기만 줄였더니 아래 장면넘김
              안내문("◀ ▶ 로 장면을…")이 한 줄로 안 접혀 칸 폭을 혼자 440px로 벌렸고,
              미리보기 오른쪽에 검은 여백이 남았다. 칸·미리보기가 같은 값을 쓰게 묶는다. -->
-        <div class="previewSlot" style="flex:0 0 auto;--pvw:min(300px,42vh);width:var(--pvw)">
+        <!-- ★--pvw(폭)의 정의처는 여기 한 곳. ★값은 CSS(.decoMirror)로 옮겼다 —
+             인라인 커스텀 프로퍼티는 스타일시트가 !important로도 못 이겨서, 화면 크기별로
+             키우려면 정의 자체가 CSS에 있어야 한다(2026-08-19 사장님 "더 크게"). -->
+        <div class="previewSlot decoMirror" style="flex:0 0 auto;width:var(--pvw)">
           <div class="hint" style="margin-bottom:4px">🪞 실시간 미리보기 (9:16) — 글자를 <b>드래그</b>해 위치 이동
             <label style="cursor:pointer;margin-left:6px;color:var(--txt)"><input type="checkbox" id="sceneBg" onchange="toggleSceneBg()"> 실장면 배경</label></div>
           <!-- ★세로 크기는 화면 안에 들어와야 한다(2026-08-18 사장님 지시). 380px면 9:16이라
@@ -1192,14 +1239,24 @@
             <div style="font-size:13px;font-weight:700;margin-bottom:8px">⚡ 빠른 조절
               <span style="font-size:11px;color:var(--sub);font-weight:400">— 미리보기에서 글자를 끌어 옮길 수도 있어요</span></div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-              <label style="font-size:12px;color:var(--sub)">폰트
-                <select id="hcFontQ" onchange="hcQuick('hcFont', this.value)"
-                  style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:13px;max-width:170px"></select></label>
-              <label style="font-size:12px;color:var(--sub)">색상
-                <input id="hcColorQ" type="color" oninput="hcQuick('hcColor', this.value)"></label>
-              <label style="font-size:12px;color:var(--sub)">굵기
+              <!-- ★폰트는 '진짜 그 글씨체로' 보여준다(2026-08-19 사장님 "썸네일쪽처럼 이쁜폰트로").
+                   밋밋한 <select>는 22종이 전부 같은 고딕으로 보여 고를 수가 없었다.
+                   값의 주인은 여전히 hcFont 하나 — 여기선 hcQuick()으로만 써넣는다(0순위-B).
+                   숨은 select(hcFontQ)는 남겨둔다: hcQuickSync가 되비추는 자리이고
+                   기존 배선·테스트가 이 id를 본다. -->
+              <label style="font-size:14px;color:var(--sub)">폰트
+                <span id="hcFontQPicker" style="position:relative;display:inline-block;vertical-align:middle">
+                  <button type="button" id="hcFontQBtn" onclick="toggleQFontMenu(event)"
+                    style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:9px 14px;cursor:pointer;min-width:190px;text-align:left;font-size:17px;line-height:1.25">폰트 선택 ▾</button>
+                  <div id="hcFontQMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:60;background:var(--inset);border:1px solid var(--line);border-radius:10px;max-height:420px;overflow:auto;box-shadow:0 12px 34px rgba(0,0,0,.55);min-width:250px"></div>
+                </span>
+                <select id="hcFontQ" onchange="hcQuick('hcFont', this.value)" style="display:none"></select></label>
+              <label style="font-size:14px;color:var(--sub)">색상
+                <input id="hcColorQ" type="color" oninput="hcQuick('hcColor', this.value)"
+                  style="width:52px;height:34px;vertical-align:middle;cursor:pointer"></label>
+              <label style="font-size:14px;color:var(--sub)">굵기
                 <select id="hcWeightQ" onchange="hcQuick('hcWeight', this.value)"
-                  style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:13px">
+                  style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:15px">
                   <option value="400">보통</option><option value="700">굵게</option><option value="900">아주 굵게</option>
                 </select></label>
             </div>
@@ -3134,6 +3191,52 @@ function hcQuick(id, val){
   if(id==='hcFont'){ HC_FONT_COMMITTED=val; syncFontBtn(); }
   updateHC();
 }
+// ── ⚡빠른 조절의 폰트 미리보기 메뉴 ──────────────────────────────────────
+// 각 줄을 '그 폰트로' 그린다. 마우스만 올려도 미리보기가 그 폰트로 바뀌고(hover),
+// 고르지 않고 빠져나가면 원래대로 되돌아간다 — 눈으로 비교하고 고르라는 뜻.
+// ★값은 여기서 갖지 않는다: 전부 hcQuick('hcFont',…) 한 통로로만 나간다(0순위-B).
+var QFONT_BEFORE=null;   // 메뉴 열기 직전의 폰트(취소 시 여기로 되돌린다). ★var: 아래 클로저보다
+                         //   위에 있어야 TDZ에 안 걸린다(reference_render죽으면_전화면공백)
+function buildQFontMenu(){
+  const m=document.getElementById('hcFontQMenu'); if(!m || m._built) return;
+  m._built=true;
+  m.innerHTML=HC_FONTS.map(f=>`<div class="qFontItem" data-file="${f.file}"
+    style="padding:11px 16px;cursor:pointer;font-family:'${f.css}','Pretendard',sans-serif;font-size:20px;line-height:1.3;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,.05)"
+    onmouseenter="hoverQFont('${f.file}')" onclick="pickQFont('${f.file}')">${f.name}</div>`).join('');
+  // 안 고르고 빠져나가면 원래 폰트로 복귀(미리보기였을 뿐이다).
+  // ★되돌릴 값은 메뉴를 열 때 따로 적어둔다 — hover가 hcQuick으로 값을 이미 덮어써서
+  //   현재값을 읽으면 '되돌리기'가 아니라 '그대로 두기'가 된다.
+  m.addEventListener('mouseleave', ()=>{ if(QFONT_BEFORE) hcQuick('hcFont', QFONT_BEFORE); });
+}
+function syncQFontBtn(file){
+  const btn=document.getElementById('hcFontQBtn'); if(!btn) return;
+  const f=HC_FONTS.find(x=>x.file===file)||HC_FONTS[0]; if(!f) return;
+  btn.textContent=f.name+' ▾';
+  btn.style.fontFamily=`'${f.css}','Pretendard',sans-serif`;
+  document.querySelectorAll('#hcFontQMenu .qFontItem').forEach(el=>{
+    el.style.background = el.dataset.file===file ? 'rgba(93,169,255,.18)' : 'transparent'; });
+}
+function toggleQFontMenu(ev){ if(ev) ev.stopPropagation();
+  buildQFontMenu();
+  const m=document.getElementById('hcFontQMenu'); if(!m) return;
+  const open=m.style.display==='block';
+  if(open){ m.style.display='none'; if(QFONT_BEFORE) hcQuick('hcFont', QFONT_BEFORE); return; }
+  QFONT_BEFORE=(STATE.headcopy&&STATE.headcopy.font)||HC_FONT_COMMITTED;   // 취소용 원본
+  m.style.display='block';
+  const cur=m.querySelector(`.qFontItem[data-file="${QFONT_BEFORE}"]`);
+  if(cur) cur.scrollIntoView({block:'nearest'});
+}
+function hoverQFont(file){ hcQuick('hcFont', file); }   // 미리보기만 — 메뉴는 열어둔다
+function pickQFont(file){
+  QFONT_BEFORE=file;                 // 골랐으니 이게 새 원본 — mouseleave가 되돌리지 않게
+  hcQuick('hcFont', file);
+  const m=document.getElementById('hcFontQMenu'); if(m) m.style.display='none';
+}
+document.addEventListener('click', e=>{
+  const p=document.getElementById('hcFontQPicker'); const m=document.getElementById('hcFontQMenu');
+  if(p && m && m.style.display==='block' && !p.contains(e.target)){
+    m.style.display='none'; if(QFONT_BEFORE) hcQuick('hcFont', QFONT_BEFORE); }
+});
 // 진짜 입력칸 → 빠른 조절 위젯으로 되비춘다(프리셋·드래그·다른 탭에서 바뀌어도 같이 움직인다).
 function hcQuickSync(hc){
   const g=id=>document.getElementById(id);
@@ -3143,6 +3246,7 @@ function hcQuickSync(hc){
     fq.innerHTML=HC_FONTS.map(f=>`<option value="${f.file}" style="font-family:'${f.css}',sans-serif">${f.name}</option>`).join('');
   }
   if(fq) fq.value=hc.font;
+  buildQFontMenu(); syncQFontBtn(hc.font);
   const set=(qid,vid,v)=>{ const q=g(qid); if(q) q.value=v; const t=vid&&g(vid); if(t) t.textContent=v; };
   set('hcColorQ',null,hc.color); set('hcWeightQ',null,String(hc.weight));
   set('hcSizeQ','hcSizeQV',hc.size); set('hcYQ','hcYQV',hc.y); set('hcXQ','hcXQV',hc.x);
