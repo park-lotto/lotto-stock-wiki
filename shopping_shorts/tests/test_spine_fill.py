@@ -177,3 +177,14 @@ def test_사례가_하나면_대비구조를_안_쓴다():
              "templates": {"cases": ["초보들은 기껏해야 {용도} 정도가 전부였는데 고수들은 {용도2}까지 하더라고요",
                                      "{용도들}"]}}
     assert sf.fill(spine, slots)[0][0]["text"] == "환기로 쓰더라고요"
+
+
+def test_고조_연결어_템플릿이_사례3개면_걸린다():
+    """게이트가 '고조 심화 1회'를 요구한다. 실측 대본에도 '심지어'가 있다."""
+    tmpl = ["초보들은 기껏해야 {용도} 정도가 전부였는데 고수들은 {용도2}까지 하더라고요 심지어 {용도3}까지 한다는 거",
+            "초보들은 기껏해야 {용도} 정도가 전부였는데 고수들은 {용도2}까지 하더라고요"]
+    spine = {"beat_roles": ["cases"], "templates": {"cases": tmpl}}
+    s3 = sf.slots_from_facts({}, {"misuses": ["A하기", "B하기", "C하기"]})
+    assert "심지어" in sf.fill(spine, s3)[0][0]["text"]
+    s2 = sf.slots_from_facts({}, {"misuses": ["A하기", "B하기"]})
+    assert "심지어" not in sf.fill(spine, s2)[0][0]["text"]     # 없는 사례를 지어내지 않는다
