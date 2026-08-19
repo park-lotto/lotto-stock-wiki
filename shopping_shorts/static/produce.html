@@ -7850,8 +7850,15 @@ function renderExport(opts){
     //   파일 공유(Web Share Level 2)를 대부분 못 해 눌러도 다운로드 안내로 떨어졌고,
     //   폰으로 보내는 길은 아래 'QR로 폰에 보내기' 하나로 충분하다(그 페이지에서 카톡 선택).
     // ★PC용 QR(2026-07-23): 카톡 PC는 웹에서 mp4를 대화방에 못 넣는다 → 폰으로 넘겨 폰 카톡 네이티브 공유.
-    + (rendered?`<button class="btn-next" style="${big};border:0;cursor:pointer;background:#fee500;color:#191600" onclick="showShareQr('${j}')">🖥→📱 QR로 폰에 보내기</button>`:'')
-    + (rendered?'<div class="hint" style="margin:2px 0 8px">📱 카톡으로 보내려면 「<b>QR로 폰에 보내기</b>」를 눌러 폰으로 스캔하세요 — 폰에서 열린 화면의 공유 버튼으로 카톡을 고르면 <b>영상+썸네일</b>이 함께 갑니다. 💻 컴퓨터에 파일만 받으려면 「완성 영상(MP4)」.</div>':'')
+    // ★렌더 전에도 **버튼을 지우지 않는다**(2026-08-19 사장님 "카톡 QR로 보내기 다시 살려줘").
+    //   기능·API(showShareQr → /api/share/link)는 그대로 살아 있었는데 rendered일 때만 그려서
+    //   렌더 전 화면에선 통째로 사라져 보였다 — 옆 썸네일 칸엔 "QR로 폰에 보낼 때…" 안내가
+    //   남아 있어 더 헷갈렸다. 없애는 대신 흐리게 두고, 누르면 무엇을 먼저 할지 말해준다.
+    + `<button class="btn-next" style="${big};border:0;cursor:pointer;background:#fee500;color:#191600${rendered?'':';opacity:.5'}"
+         onclick="${rendered?`showShareQr('${j}')`:`alert('먼저 위의 「🎬 최종 렌더」를 눌러 영상을 완성해 주세요.
+완성되면 이 버튼으로 폰에 보낼 수 있어요.')`}">🖥→📱 QR로 폰에 보내기</button>`
+    + '<div class="hint" style="margin:2px 0 8px">📱 카톡으로 보내려면 「<b>QR로 폰에 보내기</b>」를 눌러 폰으로 스캔하세요 — 폰에서 열린 화면의 공유 버튼으로 카톡을 고르면 <b>영상+썸네일</b>이 함께 갑니다.'
+      + (rendered?' 💻 컴퓨터에 파일만 받으려면 「완성 영상(MP4)」.':' <b>최종 렌더 후</b>에 눌러주세요.') + '</div>'
     + `<a class="btn-prev" style="${small}" href="/api/mix/export/${j}" download>📦 캡컷용 ZIP(수동)</a>`
     + '<div class="hint" style="margin:6px 0 4px">개별 다운로드</div>'
     + `<a class="btn-prev" style="${small}" href="/api/mix/export/${j}?part=sources" download>🎬 소스 영상</a>`
