@@ -6,6 +6,29 @@
   <title>🛠 제작소 · 숏템메이커</title>
   <!-- FOUC 방지: 저장된 테마를 렌더 전에 즉시 반영(sidebar.js는 body 주입이라 늦음) -->
   <script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <!-- ★화면에서 난 에러를 서버가 받는다(2026-08-19 사장님 "안되는 상황에서 F12를 눌러야 되는건가?").
+       사장님·고객에게 개발자도구를 열게 하면 안 된다 — 제보는 "안 돼요" 한마디면 충분해야 한다.
+       ⚠️ 맨 위에 둔다: 아래 스크립트 블록이 통째로 죽는 사고(2026-07-19 충돌마커)가 실제로 있었고,
+          그때도 이 훅은 살아서 보고할 수 있어야 한다. 실패해도 화면에 영향을 주지 않는다. -->
+  <script>(function(){
+    var sent = 0;                                   // 한 화면에서 최대 5건만(도배 방지)
+    function report(msg, where, stack){
+      try{
+        if(sent >= 5 || !msg) return; sent++;
+        fetch('/api/client_error', {method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({msg:String(msg).slice(0,300), where:String(where||'').slice(0,200),
+                                stack:String(stack||'').slice(0,600), page:location.pathname})
+        }).catch(function(){});
+      }catch(e){}
+    }
+    window.addEventListener('error', function(e){
+      report(e.message, (e.filename||'') + ':' + (e.lineno||0), e.error && e.error.stack);
+    });
+    window.addEventListener('unhandledrejection', function(e){
+      var r = e.reason;
+      report((r && (r.message||r)) || '처리되지 않은 거부', 'promise', r && r.stack);
+    });
+  })();</script>
   <style>
     /* 스탁브레인 민트-블랙 투톤(다크 기본). 토큰 이름은 유지 — var(--) 참조가 자동으로 따라온다.
        퍼플/블루/틸 accent를 민트 하나로 수렴. 신규 토큰: --inset(인셋배경)·--sel-bg/--sel-fg(선택표면)·--grad·--hover */
