@@ -117,3 +117,37 @@ def test_프롬프트가_모델명을_금지한다():
     """"이건 바로 YQQ KRCB 요거트 메이커 및 그릭요거트 스트레이너"가 나왔던 자리다."""
     from shopping_shorts.sul_facts import SUL_PROMPT
     assert "브랜드·모델명을 쓰지 마라" in SUL_PROMPT
+
+
+# ── 무자막 영상(해외 원본) ────────────────────────────────────────────────
+# 사장님 지적(2026-08-19): "결국 외국 무자막에서 장면을 보면서 태깅을 하고
+# 그걸로 가능한지를 봐야 하잖아"
+# → 그전까지 이 모듈은 자막·캡션만 읽어서 무자막 영상은 재료가 0개였다.
+def test_무자막이면_장면태깅이_재료가_된다():
+    from shopping_shorts.sul_facts import _body_of
+    body = _body_of({"segments": [
+        {"scene_desc": "투명 통에 마시는 요거트를 붓는다", "action": "붓기"},
+        {"scene_desc": "뚜껑을 눌러 스프링을 압축한다", "change": "유청이 아래로 분리됨"},
+    ]})
+    assert body, "무자막 영상에서 재료 본문이 안 만들어진다"
+    assert "투명 통에" in body and "유청이 아래로 분리됨" in body
+    assert "장면1)" in body and "장면2)" in body
+
+
+def test_자막이_있으면_장면과_함께_쓴다():
+    from shopping_shorts.sul_facts import _body_of
+    body = _body_of({"captions": ["이건 유청 분리기입니다"],
+                     "segments": [{"scene_desc": "요거트를 붓는다"}]})
+    assert "이건 유청 분리기입니다" in body and "요거트를 붓는다" in body
+
+
+def test_장면이_없으면_종전과_같다():
+    """회귀 0 — segments를 안 주면 예전과 똑같은 본문."""
+    from shopping_shorts.sul_facts import _body_of
+    assert _body_of({"captions": ["가나다"]}) == "가나다"
+
+
+def test_프롬프트가_무자막_판단법을_말한다():
+    from shopping_shorts.sul_facts import SUL_PROMPT
+    assert "말이 없는 영상" in SUL_PROMPT
+    assert "장면에 없는 것은 지어내지 마라" in SUL_PROMPT
