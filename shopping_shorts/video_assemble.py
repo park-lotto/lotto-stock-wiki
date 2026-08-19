@@ -1360,8 +1360,8 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
             size = max(8, int(size * max_w / widest))
             try:
                 pil_font = ImageFont.truetype(font_disk_path, size)
-            except OSError:
-                pass
+            except OSError as e:  # noqa: BLE001 — 폰트 재적재 실패는 축소만 못 할 뿐, 그리기는 계속한다
+                print(f"[헤드카피] 폰트 축소 실패(무시): {e!r}", file=sys.stderr)
     else:
         # 폭 초과 줄 자동 줄바꿈 — 미리보기(pre-wrap)와 맞춰 최종 영상도 화면 밖으로 안 넘게.
         lines = [seg for ln in lines for seg in _wrap_to_width(ln, pil_font, max_w)]
