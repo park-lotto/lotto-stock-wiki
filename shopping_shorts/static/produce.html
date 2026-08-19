@@ -4978,6 +4978,20 @@ function _poolVideoIdOf(u){
 async function refreshStep0(){
   const hasFootage = HANDOFF.some(h=>h.useFootage);
   if(!hasFootage){ renderEmptyState(); return; }
+  // ★"멈춘 것처럼 보이지 않게" 맨 먼저 표시를 올린다(2026-08-20 사장님 지시:
+  //   "그동안에 멈춰있는것처럼 안보이려면 뭔가 진행되고있다는걸 보여줘야한다").
+  //   이 함수는 아래에서 _pushWork(저장 밀어넣기) → aipick(조회) → 자동분석 순으로
+  //   도는데, 앞 두 단계만 해도 왕복이 걸린다. 종전엔 그 사이 화면이 **완전히 비어**
+  //   담자마자 아무 일도 안 일어나는 것처럼 보였다(진행표시는 자동분석이 시작돼야
+  //   _SRC_BUSY에 찍혔다 — 시작 전 구간은 아무도 안 그렸다).
+  //   → 아직 분석 결과가 없는 영상이 있으면 **네트워크를 타기 전에** 먼저 알린다.
+  //   ⚠️ 이미 다 분석된 영상뿐이면 올리지 않는다 — 멀쩡한 카드 위에 "분석 중"을
+  //      띄우면 그게 더 거짓말이다(폴링이 곧 지우더라도 한 번은 깜빡인다).
+  if(!_SRC_BUSY && !_SRC_QUEUED){
+    const pending = HANDOFF.filter(h => h.useFootage && h.url &&
+                                        !((_SRC_BRIEF[h.shortcode] || {}).ok)).length;
+    if(pending){ _SRC_BUSY = pending; try{ renderSourceAnalysis(); }catch(e){} }
+  }
   // ★레이스 차단(2026-07-29 사장님 "담기하면 엉뚱한 8개 소스 비교, 새로고침해야 맞음"):
   //   saveWork()는 서버 저장을 1초 디바운스한다(setTimeout _pushWork). 근데 담기(pickFootage) 직후
   //   여기서 바로 aipick을 부르면, 서버 work.state.handoff가 아직 옛것(또는 빈값)이라
@@ -5010,18 +5024,33 @@ async function refreshStep0(){
     //   ⚠️ 절대 refreshStep0()을 다시 부르지 마라 — 예전 구현이 ensureScriptsForFootage()와
     //      상호 재귀를 만들어 무한루프로 크레딧을 태웠다(2026-07-26 사고, revert cb8c0fa1d).
     //      래치(_autoloadTried)는 fetch 전에 세우고, 진짜 방어선은 서버 DB(produce_autoload)다.
-    if((!d || d.pick_id==null) && !_autoloadTried){
-      _autoloadTried = true;
+    // ★래치 판정을 "묶음 지문"으로(2026-08-20). 같은 영상들이면 그대로 잠겨 있고(재귀·
+    //   반복호출 안전), 새 영상이 담겨 지문이 바뀌었을 때만 다시 분석한다.
+    const _fkey = _footageKey();
+    if((!d || d.pick_id==null) && _fkey && _autoloadKey !== _fkey){
+      _autoloadKey = _fkey;
+      _autoloadTried = true;       // 옛 이름도 유지 — 다른 곳에서 읽을 때를 위해
       const total = HANDOFF.filter(h=>h.useFootage && h.url).length;
       renderAutoloadingState(total);
-      const got = await autoloadAllFootage();     // ★여러 배치로 전부 분석(Task 1)
+      _srcAutoloadRunning = true;
+      let got;
+      // ★finally로 내린다 — 중간에 던지면 회전표시가 영영 남는다(진행표시의 거짓말).
+      try{ got = await autoloadAllFootage(); }      // ★여러 배치로 전부 분석(Task 1)
+      finally{ _srcAutoloadRunning = false; }
       _SRC_BUSY = 0; _SRC_QUEUED = 0;            // ★끝났으면 진행 표시를 내린다(안 내리면 영영 돈다)
+      got = got || {};
       if(got.analyzed){
         try{ d = await (await fetch('/api/produce/aipick'+(q==='?'?'':q))).json(); }catch(e){}
       }
     }
     renderAiPick(d, hasFootage);
   }catch(e){ renderEmptyState(); }
+  // ★위에서 **선제로 켠** 진행표시를 반드시 내린다(2026-08-20). 자동분석 분기를 탔으면
+  //   거기서 이미 껐지만, 래치가 잠겨 있거나 pick이 이미 있어 **분기를 건너뛴 경우**엔
+  //   아무도 안 꺼서 회전표시가 영영 돈다 — 빈 화면보다 나쁜 거짓말이다.
+  //   실제로 도는 중(renderAutoloadingState/renderQueuedState가 켠 것)일 때는 건드리지
+  //   않는다: 그 두 함수는 값을 새로 쓰고 자기 흐름 끝에서 스스로 내린다.
+  if(_SRC_BUSY && !_SRC_QUEUED && !_srcAutoloadRunning){ _SRC_BUSY = 0; }
   renderSourceAnalysis();     // 🔎 소스 분석 카드(2026-08-16) — 실패해도 위 흐름과 무관
 }
 
@@ -5216,6 +5245,24 @@ function _srcCard(it, i){
 // 페이지 로드당 1회 래치(모듈 변수) — HANDOFF 배열이 통째로 재대입돼도 이 값은 안 날아간다.
 // 그게 사고의 핵심이었다: 성공 표시를 HANDOFF 객체 필드에 두면 _restoreWork가 덮어 지운다.
 let _autoloadTried = false;
+// ★래치는 "페이지당 1회"가 아니라 "**같은 영상 묶음당** 1회"다(2026-08-20 사장님 제보:
+//   "들어가서 새로고침을 한번 눌러야 대본들이 아래 분석이 뜬다").
+//   종전엔 _autoloadTried가 boolean이라 한 번 켜지면 새로고침 전까지 안 풀렸다. 그런데
+//   영상을 담으면 refreshStep0()이 다시 도는데(5527·5574행) 그때는 래치가 이미 켜져 있어
+//   **자동분석을 통째로 건너뛰었다** → 카드도 "분석 중"도 안 뜨고, 새로고침해야만 보였다.
+//   화면이 늦게 그려진 게 아니라 **분석을 시작조차 안 한 것**이라 진행표시도 없었던 것이다.
+//   ⚠️ 그렇다고 래치를 없애면 안 된다 — 2026-07-26에 무한루프로 크레딧을 태운 사고의
+//      방지선이다. 그래서 "새 영상이 들어왔을 때만" 풀리게 **묶음의 지문**으로 바꾼다.
+//      같은 목록으로 몇 번을 다시 불려도 지문이 같아 그대로 잠겨 있다(재귀 안전).
+let _autoloadKey = '';             // 마지막으로 자동분석을 돌린 영상 묶음의 지문
+// 진짜 자동분석이 도는 동안만 true. refreshStep0 끝에서 "선제 표시"를 내려도 되는지
+// 가르는 데 쓴다 — 도는 중인데 내리면 40~70초짜리 작업이 멈춘 것처럼 보인다.
+let _srcAutoloadRunning = false;
+function _footageKey(){
+  // 담긴 것만, 정렬해서 — 순서만 바뀐 것은 '같은 묶음'으로 본다(불필요한 재분석 방지).
+  return HANDOFF.filter(h=>h.useFootage && h.url)
+                .map(h=>h.shortcode||h.url).sort().join('|');
+}
 // 담긴 영상을 서버에 넘겨 "대본추출 → 내 도서관 적재 → 담기"까지 한 번에 시킨다.
 // 서버가 이미 있는 것/한 번 실패한 것/상한 초과를 알아서 거른다(app.py api_produce_autoload).
 async function autoloadFootageScripts(){
