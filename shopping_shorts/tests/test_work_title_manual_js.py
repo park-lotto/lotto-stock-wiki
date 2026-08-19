@@ -15,6 +15,7 @@ import shutil
 import subprocess
 
 import pytest
+from shopping_shorts.tests.js_harness import run_js_proc
 
 PRODUCE_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"
 NODE = shutil.which("node")
@@ -40,7 +41,7 @@ const window = {{}};
 {hook}
 {body}
 """
-    r = subprocess.run([NODE, "-e", script], capture_output=True, text=True, timeout=30,
+    r = run_js_proc(script, capture_output=True, text=True, timeout=30,
                        stdin=subprocess.DEVNULL, encoding="utf-8", errors="replace")
     assert r.returncode == 0, r.stderr
     return r.stdout.strip()
@@ -106,7 +107,7 @@ def test_hook_survives_harness_without_window():
     script = ("let HANDOFF = [], cur = 2, WORK_ID = 'W1';\n"
               "let STATE = {script:'대본'};\n"      # ← window를 일부러 정의하지 않는다
               + src + hook + "console.log('alive');")
-    r = subprocess.run([NODE, "-e", script], capture_output=True, text=True, timeout=30,
+    r = run_js_proc(script, capture_output=True, text=True, timeout=30,
                        stdin=subprocess.DEVNULL, encoding="utf-8", errors="replace")
     assert r.returncode == 0, f"window 없는 하네스에서 죽는다: {r.stderr}"
     assert r.stdout.strip() == "alive"

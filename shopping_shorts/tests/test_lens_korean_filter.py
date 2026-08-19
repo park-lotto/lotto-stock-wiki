@@ -13,6 +13,7 @@ import shutil
 import subprocess
 
 import pytest
+from shopping_shorts.tests.js_harness import run_js_proc
 
 INDEX = pathlib.Path(__file__).resolve().parents[1] / "static" / "index.html"
 
@@ -43,7 +44,7 @@ def _run(setup, expr):
     body = ("const LENS_STATE={sc:{}};\nfunction renderLens(){}\n" + script + "\n"
             + _fn(src, "toggleLensForeign") + "\n" + _fn(src, "toggleLensKorean") + "\n"
             + setup + "\nconsole.log(JSON.stringify(" + expr + "));")
-    r = subprocess.run(["node", "-e", body], capture_output=True, text=True, timeout=60)
+    r = run_js_proc(body, capture_output=True, text=True, timeout=60)
     assert r.returncode == 0, r.stderr
     return json.loads(r.stdout)
 

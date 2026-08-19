@@ -4,6 +4,7 @@ import os
 import re
 import subprocess
 import tempfile
+from shopping_shorts.tests.js_harness import run_js_proc
 
 HTML = os.path.join(os.path.dirname(__file__), "..", "static", "produce.html")
 
@@ -40,7 +41,7 @@ def test_fx_plan_summary_counts_effects():
     """fxPlanSummary가 테마·효과개수를 정확히 뽑는다."""
     fn = _extract_fn("fxPlanSummary")
     script = fn + '\nconsole.log(JSON.stringify(fxPlanSummary({themeName:"warm",fx:[1,2,3]})));'
-    r = subprocess.run(["node", "-e", script], capture_output=True, text=True,
+    r = run_js_proc(script, capture_output=True, text=True,
                        stdin=subprocess.DEVNULL)
     assert r.returncode == 0, (r.stderr or "")
     out = r.stdout.strip()
@@ -51,7 +52,7 @@ def test_fx_plan_summary_empty_fx():
     """fx 없으면 count 0."""
     fn = _extract_fn("fxPlanSummary")
     script = fn + '\nconsole.log(JSON.stringify(fxPlanSummary({themeName:"tech"})));'
-    r = subprocess.run(["node", "-e", script], capture_output=True, text=True,
+    r = run_js_proc(script, capture_output=True, text=True,
                        stdin=subprocess.DEVNULL)
     assert r.returncode == 0, (r.stderr or "")
     assert '"count":0' in r.stdout, r.stdout
