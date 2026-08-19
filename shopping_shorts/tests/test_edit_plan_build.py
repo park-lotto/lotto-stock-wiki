@@ -68,8 +68,12 @@ def test_build_edit_plan_structure_locked_to_input(monkeypatch):
 
 
 def test_build_edit_plan_exhausted_returns_empty(monkeypatch):
+    # ★소진을 흉내내는 곳은 **_vault_call 한 곳**이다(2026-08-19 수리). 종전엔 comment_gen
+    #   전용키만 막아 놓았는데 build_edit_plan은 key_vault 캐스케이드를 쓰므로 막히지 않아,
+    #   이 테스트가 **실제 Gemini를 호출**하고 beats가 채워져 항상 실패했다(기준선 1건의 정체).
     monkeypatch.setattr(edit_plan.comment_gen, "_current_key_and_idx", lambda: (None, None))
     monkeypatch.setattr(edit_plan, "SHORTS_GEMINI_KEYS", ["fake_key"])
+    monkeypatch.setattr(edit_plan, "_vault_call", lambda prompt, schema, **kw: None)
     out = edit_plan.build_edit_plan(_scripts(), target_seconds=5, structure="template",
                                      video_type="product_reveal")
     assert out == {"structure": "template", "beats": [], "plagiarism_flags": [],
