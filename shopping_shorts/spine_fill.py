@@ -38,7 +38,7 @@ import re
 
 # 템플릿에 쓰이는 슬롯 이름. 여기 없는 이름이 템플릿에 있으면 그 템플릿은 못 쓴다
 # (모르는 슬롯을 빈칸으로 남기면 "이게 원래는  개발된 제품이었음"이 나간다).
-_YT_SLOT_NAMES = ("제품", "효능", "효능2", "나라", "본래용도", "속성",
+_YT_SLOT_NAMES = ("제품", "효능", "효능2", "효능3", "나라", "본래용도", "속성",
                   "용도", "용도2", "용도3", "용도끝", "용도들", "제품군")
 
 # ★인스타 슬롯(2026-08-19). 재료 출처가 다르다 — 유튜브는 쿠팡+유튜브 자막이지만
@@ -173,6 +173,11 @@ def merge_sul(facts_list):
         if not isinstance(f, dict):
             continue
         for k, v in f.items():
+            if isinstance(v, bool):
+                # ★불리언은 이어붙이는 값이 아니다 — **하나라도 false면 false**로 본다
+                #   (오용형이 아닌 영상이 섞였는데 통과시키면 대본이 공허해진다).
+                out[k] = bool(out.get(k, True)) and v
+                continue
             if isinstance(v, str):
                 v = [v] if v.strip() else []
             if not isinstance(v, (list, tuple)):
@@ -193,11 +198,20 @@ def slots_from_facts(product_facts=None, sul=None):
     why = pf.get("why") or []
     if isinstance(why, str):
         why = [why]
+    # ★쿠팡 재료가 있으면 그쪽이 먼저다(상세페이지·리뷰가 영상보다 정확하다).
+    #   없으면 **영상에서 뽑은 값**으로 채운다 — 해외 원본만 담는 경우엔 쿠팡 상품이
+    #   아예 없어서, 이 폴백이 없으면 은폐형은 조립 자체가 불가능하다(2026-08-19).
+    ben = sf.get("benefits") or []
+    if isinstance(ben, str):
+        ben = [ben]
     out = {
-        "제품": _first(pf.get("title")),
-        "효능": _first(why[0]) if len(why) > 0 else "",
-        "효능2": _first(why[1]) if len(why) > 1 else "",
-        "나라": _first(pf.get("origin")),
+        "제품": _first(pf.get("title")) or _first(sf.get("product_name")),
+        "효능": (_first(why[0]) if len(why) > 0 else "") or _nth(ben, 0),
+        "효능2": (_first(why[1]) if len(why) > 1 else "") or _nth(ben, 1),
+        # 고조('심지어 …까지')를 받는 세 번째 장점. 은폐형 twist가 쓴다 —
+        # 게이트가 고조 1회를 요구하는데 은폐형 템플릿엔 그 자리가 없었다(실측).
+        "효능3": (_first(why[2]) if len(why) > 2 else "") or _nth(ben, 2),
+        "나라": _first(pf.get("origin")) or _first(sf.get("origin_country")),
         "본래용도": _first(sf.get("original_use")),
         "속성": _first(sf.get("hidden_property")),
         "용도": _first(sf.get("misuses")),
@@ -335,6 +349,52 @@ def coverage(spine, slots):
     roles = list((spine or {}).get("beat_roles") or [])
     beats, missing = fill(spine, slots)
     return len(beats), len(roles), missing
+
+
+def sul_material_problem(sul):
+    """이 재료로 오용형 대본을 쓸 수 있나 — 못 쓰면 **이유 문자열**, 되면 ''.
+
+    ★슬롯이 차는 것과 **쓸 만한 것**은 다르다(2026-08-19 사장님 제보로 드러났다).
+      마커펜 영상으로 조립했더니 이렇게 나왔다:
+        "이게 원래는 필기구로 개발된 마카였음"          ← 원래 용도 = 제품 자체(뒤집을 게 없다)
+        "초보들은 기껏해야 돌맹이 위에 그림 그리기"      ← 펜을 펜으로 쓰는 것
+        "근데 미친 사용법은 … 자녀 필통에 선물로 넣어주기"  ← 하나도 안 놀랍다
+      틀은 완벽히 지켜졌는데 **재료가 오용형이 아니어서** 대본이 공허했다.
+      값이 차 있기만 하면 통과시키던 게 원인이다.
+
+    여기서 잡는 것은 **기계가 확실히 판정할 수 있는 것만**이다("놀라운가"는 못 잰다):
+      1) 원래 용도가 제품/제품군 이름과 사실상 같다 = 동어반복
+      2) 엉뚱한 용도가 원래 용도와 사실상 같다 = 그냥 정상 사용
+      3) 엉뚱한 용도가 2개 미만 = 대비도 반전도 못 만든다
+    나머지(정말 놀라운가)는 `sul_facts` 프롬프트가 빈 배열로 두게 지시한다.
+    """
+    sf_ = sul or {}
+    orig = [str(x).strip() for x in (sf_.get("original_use") or []) if str(x).strip()]
+    mis = [str(x).strip() for x in (sf_.get("misuses") or []) if str(x).strip()]
+    cat = str(sf_.get("category_word") or "").strip()
+
+    # ★가장 확실한 신호 — 재료를 뽑은 그 모델이 "이 영상이 오용형인가"를 직접 답한다.
+    #   문자열 규칙으로는 '필기구 ↔ 마카' 같은 동어반복을 못 잡는다(실측). 의미 판단은
+    #   의미를 아는 쪽에 맡기고, 여기서는 그 답을 **믿되 확인 가능한 것만 덧붙여** 본다.
+    if "misuse_genre" in sf_ and not sf_.get("misuse_genre"):
+        return "이 영상은 '원래 용도를 뒤집는' 오용형이 아닙니다(제품 소개·사용법 안내)"
+    if len(mis) < 2:
+        return "이 영상엔 '엉뚱한 사용법'이 %d개뿐이라 오용형 대본이 안 나옵니다" % len(mis)
+    if orig and cat and _same_thing(orig[0], cat):
+        return ("원래 용도(%s)가 제품군(%s)과 같은 말이라 뒤집을 게 없습니다" % (orig[0], cat))
+    if orig and any(_same_thing(orig[0], m) for m in mis):
+        return "엉뚱한 사용법이 원래 용도와 같은 얘기입니다(그냥 정상 사용)"
+    return ""
+
+
+def _same_thing(a, b):
+    """두 짧은 구가 사실상 같은 말인가 — 한쪽이 다른 쪽에 통째로 들어있으면 같다고 본다.
+    (형태소 분석 없이 확실한 것만 잡는다. 애매한 건 통과시킨다 — 오탐이 더 나쁘다)"""
+    a, b = (a or "").replace(" ", ""), (b or "").replace(" ", "")
+    if not a or not b:
+        return False
+    short, long_ = (a, b) if len(a) <= len(b) else (b, a)
+    return len(short) >= 2 and short in long_
 
 
 def build_draft(spine, slots, seconds=30):

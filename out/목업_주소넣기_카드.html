@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<title>목업 · 주소 넣기 → 영상 카드</title>
+<style>
+  :root{ --bg:#0d1117; --panel:#161b22; --line:#30363d; --txt:#e6edf3; --sub:#8b949e;
+         --accent:#2ea043; --blue:#1f6feb; --purple:#8250df; --gold:#b8860b; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,'Malgun Gothic',sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:22px 18px 60px}
+  .note{background:#1c2128;border:1px solid var(--line);border-left:4px solid var(--blue);
+        border-radius:8px;padding:12px 14px;font-size:13.5px;color:var(--sub);margin-bottom:18px;line-height:1.6}
+  .note b{color:var(--txt)}
+  h1{font-size:20px;margin:0 0 4px}
+  .lead{color:var(--sub);font-size:13.5px;margin:0 0 18px}
+
+  /* 검색줄 */
+  .searchbar{display:flex;gap:8px;align-items:center;background:var(--panel);border:1px solid var(--line);
+             border-radius:12px;padding:10px 12px}
+  .searchbar input{flex:1;background:#0d1117;border:1px solid var(--line);border-radius:8px;
+             color:var(--txt);padding:11px 12px;font-size:14px;outline:none}
+  .searchbar input:focus{border-color:var(--blue)}
+  .btn{border:none;border-radius:8px;padding:11px 16px;font-weight:800;font-size:14px;cursor:pointer;color:#fff}
+  .btn.blue{background:var(--blue)} .btn.ghost{background:#21262d;color:var(--txt);border:1px solid var(--line)}
+  .hint{color:var(--sub);font-size:12px;margin:8px 2px 0}
+
+  .sec{margin-top:26px}
+  .sech{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .sech .t{font-weight:800;font-size:15px}
+  .sech .d{color:var(--sub);font-size:12.5px}
+  .tagNew{background:#1f6feb22;border:1px solid #1f6feb;color:#79c0ff;font-size:11px;
+          font-weight:800;padding:2px 8px;border-radius:10px}
+
+  /* 카드 — 지금 랭킹 카드 모양 그대로 */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .card.hero{border-color:var(--blue);box-shadow:0 0 0 1px #1f6feb55}
+  .thumb{position:relative;aspect-ratio:9/16;background:linear-gradient(160deg,#f3d9e6,#e7c9d8);overflow:hidden}
+  .thumb .badgeTop{position:absolute;top:8px;left:8px;background:#d1242f;color:#fff;font-size:11px;
+        font-weight:800;padding:3px 9px;border-radius:12px}
+  .thumb .done{position:absolute;top:8px;right:8px;background:#1f9d55;color:#fff;font-size:11px;
+        font-weight:800;padding:3px 9px;border-radius:12px}
+  .thumb .capt{position:absolute;top:34px;left:0;right:0;text-align:center;color:#e94b8a;
+        font-weight:900;font-size:16px;text-shadow:0 1px 2px #fff8}
+  .thumb .play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:54px;height:54px;
+        border-radius:50%;background:#0007;display:flex;align-items:center;justify-content:center;font-size:20px}
+  .body{padding:10px 11px 12px}
+  .meta1{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--sub)}
+  .pill{background:#21262d;border:1px solid var(--line);border-radius:8px;padding:2px 7px}
+  .name{font-weight:800;font-size:15px;margin:6px 0 2px;display:flex;justify-content:space-between;align-items:center}
+  .name .cp{font-size:11px;color:var(--sub);background:#21262d;border:1px solid var(--line);
+        border-radius:8px;padding:2px 7px}
+  .sub{color:var(--sub);font-size:11.5px;display:flex;justify-content:space-between}
+  table{width:100%;border-collapse:collapse;margin:8px 0 6px;font-size:12.5px}
+  td{padding:3px 0} td:last-child{text-align:right;font-weight:800}
+  .new{color:#3fb950;font-size:11px;margin-left:4px}
+  .btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+  .btns button{border:none;border-radius:8px;padding:8px 6px;font-size:12.5px;font-weight:800;
+        cursor:pointer;color:#fff}
+  .b1{background:#2d333b} .b2{background:var(--purple)} .b3{background:var(--accent)} .b4{background:var(--gold)}
+  .why{margin-top:10px;font-size:12px;color:var(--sub);background:#0d1117;border:1px dashed var(--line);
+       border-radius:8px;padding:8px 10px;line-height:1.6}
+
+  .switch{display:flex;gap:8px;margin:0 0 14px}
+  .switch button{background:#21262d;border:1px solid var(--line);color:var(--sub);border-radius:999px;
+       padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer}
+  .switch button.on{background:#1f6feb22;border-color:var(--blue);color:#79c0ff}
+  .flow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .flow span{background:#21262d;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12.5px}
+  .flow i{color:var(--sub);font-style:normal;align-self:center}
+  .dim{opacity:.35}
+</style></head>
+<body><div class="wrap">
+
+<h1>🧪 목업 — 주소 넣으면 그 영상 카드가 뜬다</h1>
+<p class="lead">실제로 도는 화면이 아니라 <b>배치만 보는 그림</b>입니다. 아래 두 안을 눌러 비교해 보세요.</p>
+
+<div class="note">
+  <b>지금은</b> 랭킹 검색창에 주소를 넣으면 곧바로 <b>“비슷한 영상 찾기(렌즈)”</b>로 가서,
+  정작 사장님이 넣은 <b>그 영상의 카드는 안 나옵니다</b>.<br>
+  <b>제안</b> — 같은 검색창을 그대로 쓰되, 결과 맨 위에 <b>그 영상 카드 1장</b>을 먼저 띄웁니다.
+  카드는 <b>랭킹 카드를 그대로 재사용</b>합니다(👁영상보기·💬댓글소통·📥담기·🔍숏템파워검색이 이미 붙어 있음).
+</div>
+
+<div class="switch">
+  <button id="b1" class="on" onclick="setMode(1)">① 그 영상 카드만 <span style="color:#3fb950">· 렌즈 비용 0원</span></button>
+  <button id="b2" onclick="setMode(2)">② 카드 + 비슷한 영상까지</button>
+</div>
+
+<div class="searchbar">
+  <input value="https://www.instagram.com/reel/DcIrfnOzHre/" spellcheck="false">
+  <button class="btn blue">🔎 가져오기</button>
+  <button class="btn ghost">🔍 비슷한 것 찾기</button>
+</div>
+<div class="hint">💡 주소를 붙여넣고 엔터 — 영상을 받아 지표를 읽고 카드로 보여줍니다(10~20초).</div>
+
+<div class="sec">
+  <div class="sech"><span class="t">📥 넣은 영상</span><span class="tagNew">새로 생기는 부분</span>
+    <span class="d">이 카드가 지금은 없습니다</span></div>
+  <div class="cards">
+    <div class="card hero">
+      <div class="thumb">
+        <span class="badgeTop">🎯 진짜 봐야할 것</span><span class="done">완성!</span>
+        <div class="capt">조간단 자석<br>네일펜</div>
+        <div class="play">▶</div>
+      </div>
+      <div class="body">
+        <div class="meta1"><span>#1 · 홈템 · 24시간 전</span><span class="pill">🚫 차단</span></div>
+        <div class="name">채이홈 <span class="cp">📋 복사</span></div>
+        <div class="sub"><span>👥 팔로워 342,545</span><span>⏱ 29초</span></div>
+        <table>
+          <tr><td>조회수</td><td>569,324 <span class="new">신규</span></td></tr>
+          <tr><td>댓글</td><td>7,217</td></tr>
+          <tr><td>시간당댓글</td><td>477.8</td></tr>
+          <tr><td>조회수당댓글</td><td>1%</td></tr>
+          <tr><td>팔로워당댓글</td><td>2%</td></tr>
+        </table>
+        <div class="sub"><span>🛒 판매채널</span><span></span></div>
+        <div class="btns">
+          <button class="b1">👁 영상보기</button>
+          <button class="b2">💬 댓글소통</button>
+          <button class="b3">📥 담기 ✓</button>
+          <button class="b4">🔍 숏템파워검색</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="why">
+    카드를 <b>새로 만들지 않습니다</b> — 랭킹에서 쓰는 카드를 그대로 씁니다.
+    따로 만들면 나중에 한쪽만 고쳐져 서로 달라집니다(오늘 확장 사고와 같은 유형).
+  </div>
+</div>
+
+<div class="sec" id="similar">
+  <div class="sech"><span class="t">🔍 비슷한 영상</span>
+    <span class="d">지금도 있는 부분 — ②안에서만 같이 뜹니다 (렌즈 비용 발생)</span></div>
+  <div class="cards">
+    <div class="card"><div class="thumb" style="background:linear-gradient(160deg,#dfe7f5,#c9d6ea)"><div class="play">▶</div></div>
+      <div class="body"><div class="meta1"><span>#2 · 홈템</span><span class="pill">틱톡</span></div>
+        <div class="name">nail_daily</div><div class="sub"><span>👥 88,120</span><span>⏱ 22초</span></div>
+        <table><tr><td>조회수</td><td>210,400</td></tr><tr><td>댓글</td><td>1,905</td></tr></table>
+        <div class="btns"><button class="b1">👁 영상보기</button><button class="b2">💬 댓글소통</button>
+          <button class="b3">📥 담기</button><button class="b4">🔍 숏템파워검색</button></div></div></div>
+    <div class="card"><div class="thumb" style="background:linear-gradient(160deg,#f6e7cf,#e8d3ae)"><div class="play">▶</div></div>
+      <div class="body"><div class="meta1"><span>#3 · 홈템</span><span class="pill">유튜브</span></div>
+        <div class="name">셀프네일랩</div><div class="sub"><span>👥 51,300</span><span>⏱ 35초</span></div>
+        <table><tr><td>조회수</td><td>96,800</td></tr><tr><td>댓글</td><td>620</td></tr></table>
+        <div class="btns"><button class="b1">👁 영상보기</button><button class="b2">💬 댓글소통</button>
+          <button class="b3">📥 담기</button><button class="b4">🔍 숏템파워검색</button></div></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="sech"><span class="t">그 다음 흐름</span><span class="d">카드에서 이어집니다</span></div>
+  <div class="flow">
+    <span>주소 붙여넣기</span><i>→</i><span>카드 확인</span><i>→</i><span>📥 담기</span><i>→</i>
+    <span>⭐즐겨찾기에서 ✅분석완료 확인</span><i>→</i><span>🎬 제작소로 보내기</span>
+  </div>
+  <div class="why">📥담기를 누르면 <b>즐겨찾기</b>에 들어가고 서버가 알아서 분석을 겁니다.
+    창을 닫아도 계속 돌고, 다 되면 <b>✅ 분석완료</b>로 바뀝니다(오늘 만든 부분).</div>
+</div>
+
+<script>
+function setMode(m){
+  document.getElementById('b1').classList.toggle('on', m===1);
+  document.getElementById('b2').classList.toggle('on', m===2);
+  document.getElementById('similar').classList.toggle('dim', m===1);
+}
+setMode(1);
+</script>
+</div></body></html>

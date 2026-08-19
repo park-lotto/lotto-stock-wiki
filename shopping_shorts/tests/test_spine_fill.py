@@ -205,3 +205,83 @@ def test_긴_조사가_먼저_매칭된다():
     assert sf._JOSA_PAIRS[0] == ("이었", "였")
     assert sf.fill_one("{제품}이라고 부른다", {"제품": "집게"}) == "집게라고 부른다"
     assert sf.fill_one("{제품}이라고 부른다", {"제품": "수건"}) == "수건이라고 부른다"
+
+
+# ── 해외 원본만 담는 경우(2026-08-19 사장님 지시) ──────────────────────────
+# 이븐쇼핑류는 화면에 자기 자막 템플릿이 박혀 있어 그 화면을 못 쓴다 → 같은 제품의
+# 해외 원본을 담아 다시 만든다. 그때는 **쿠팡 상품이 아예 없어서** {제품}·{효능}·{나라}가
+# 영상에서 나와야 한다. 이 폴백이 없으면 은폐형은 조립 자체가 불가능하다.
+VIDEO_ONLY = {"product_name": "유청 분리 요거트 메이커",
+              "benefits": ["유청이 저절로 분리된다", "통째로 분해돼 세척이 쉽다"],
+              "origin_country": "한국", "category_word": "주방템"}
+
+
+def test_쿠팡_없이_영상만으로_은폐형_슬롯이_찬다():
+    s = sf.slots_from_facts({}, VIDEO_ONLY)
+    assert s["제품"] == "유청 분리 요거트 메이커"
+    assert s["효능"] == "유청이 저절로 분리된다"
+    assert s["효능2"] == "통째로 분해돼 세척이 쉽다"
+    assert s["나라"] == "한국"
+
+
+def test_쿠팡_재료가_있으면_그쪽이_먼저다():
+    """상세페이지·리뷰가 영상보다 정확하다. 단 **모자란 칸은 영상이 메운다**."""
+    s = sf.slots_from_facts({"title": "쿠팡상품명", "why": ["쿠팡효능"], "origin": "미국"},
+                            VIDEO_ONLY)
+    assert s["제품"] == "쿠팡상품명" and s["효능"] == "쿠팡효능" and s["나라"] == "미국"
+    assert s["효능2"] == "통째로 분해돼 세척이 쉽다"      # 쿠팡 why가 1개뿐 → 영상이 채움
+
+
+def test_여러_원본의_장점이_합쳐진다():
+    """★한 영상이 안 말한 장점을 다른 영상이 보여준다 — 그래서 원본을 여러 편 담는다."""
+    m = sf.merge_sul([
+        {"benefits": ["유청이 저절로 분리된다"], "product_name": "요거트 메이커"},
+        {"benefits": ["통째로 분해돼 세척이 쉽다", "유청이 저절로 분리된다"]},
+        {"benefits": ["뚜껑이 계량컵이 된다"]},
+    ])
+    assert m["benefits"] == ["유청이 저절로 분리된다", "통째로 분해돼 세척이 쉽다",
+                             "뚜껑이 계량컵이 된다"]        # 순서 유지·중복 제거
+    s = sf.slots_from_facts({}, m)
+    assert s["효능"] and s["효능2"] and s["효능"] != s["효능2"]
+
+
+def test_슬롯출처표가_영상폴백을_명시한다():
+    """SLOT_SOURCE는 빈칸↔추출의 계약서다 — 폴백이 생겼으면 표도 그렇게 말해야 한다."""
+    from shopping_shorts.sul_facts import SLOT_SOURCE
+    assert "sul_facts.product_name" in SLOT_SOURCE["제품"]
+    assert "sul_facts.benefits" in SLOT_SOURCE["효능"]
+
+
+def test_나라가_없어도_authority가_채워진다():
+    """★실측(2026-08-19): 해외 원본은 제조국을 잘 안 밝힌다. sul_facts가 지어내지 않고
+    비우는 건 옳은데, authority 템플릿 3개가 전부 {나라}를 요구해 그 칸이 통째로
+    비었다(영어 원본 1편 → 5/6칸). 슬롯 없는 변형을 뒤에 두면 자동으로 내려간다."""
+    tmpl = ["이걸 개발한 {나라}의 천재가 돈방석에 앉았다는데",
+            "이걸 만든 천재가 떼돈을 벌었다는데"]
+    spine = {"beat_roles": ["authority"], "templates": {"authority": tmpl}}
+    assert sf.fill(spine, {"나라": "독일"})[0][0]["text"] == \
+        "이걸 개발한 독일의 천재가 돈방석에 앉았다는데"
+    assert sf.fill(spine, {})[0][0]["text"] == "이걸 만든 천재가 떼돈을 벌었다는데"
+    assert sf.fill(spine, {})[1] == []          # 못 채운 칸 없음
+
+
+def test_은폐형_고조는_장점3개일_때만():
+    """게이트가 고조 1회를 요구한다. 장점이 2개뿐이면 지어내지 않고 기본형으로 내려간다."""
+    tmpl = ["근데 진짜 충격적인 포인트는 {효능2} 심지어 {효능3}까지 된다는 거",
+            "근데 진짜 충격적인 포인트는 {효능2}"]
+    spine = {"beat_roles": ["twist"], "templates": {"twist": tmpl}}
+    s3 = sf.slots_from_facts({}, {"benefits": ["A된다", "B된다", "C된다"]})
+    assert "심지어" in sf.fill(spine, s3)[0][0]["text"]
+    s2 = sf.slots_from_facts({}, {"benefits": ["A된다", "B된다"]})
+    assert "심지어" not in sf.fill(spine, s2)[0][0]["text"]
+
+
+def test_서술형_슬롯_뒤에_어미를_붙이지_않는다():
+    """★실측: '{효능3}까지 된다는 거'가 '아낄 수 있다까지 된다는 거'가 됐다.
+    효능·용도 슬롯은 **서술형 문장**이라 뒤에 어미를 덧붙이면 반드시 깨진다."""
+    spine = {"beat_roles": ["twist"],
+             "templates": {"twist": ["근데 진짜 충격적인 포인트는 {효능2} 심지어 {효능3}"]}}
+    s = sf.slots_from_facts({}, {"benefits": ["A", "꾸덕해진다", "비용을 아낄 수 있다"]})
+    out = sf.fill(spine, s)[0][0]["text"]
+    assert out.endswith("비용을 아낄 수 있다")
+    assert "있다까지" not in out

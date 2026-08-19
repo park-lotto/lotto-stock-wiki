@@ -6,6 +6,7 @@ import hmac
 import hashlib
 import ipaddress
 import json
+import logging
 import os
 import re
 import secrets
@@ -2421,8 +2422,8 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         #   슬롯이 **전부** 차는 스타일만 조립본으로 만들고, 모자라면 기존 생성기로 간다.
         #   실측 근거(같은 날): 생성기는 템플릿을 '참고'로만 써서 어미를 새로 쓰고
         #   (no_cta인데) CTA를 붙였다 — 조립본엔 그럴 자리가 없다.
-        _assembled, _asm_left = _assembled_drafts(_picked, _src, store,
-                                                  body.get("target_seconds") or 30)
+        _assembled, _asm_left, _asm_why = _assembled_drafts(
+            _picked, _src, store, body.get("target_seconds") or 30, job_id=_jid)
         _styled = list(_assembled)
         if _asm_left:
             _styled += script_generate.generate_by_styles(
@@ -2453,6 +2454,9 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                     # ★어느 경로로 만든 대본인지 화면이 말한다 — 조용한 폴백 금지.
                     "assembled": [d.get("style_name") for d in _styled
                                   if d.get("made_by") == "조립"],
+                    # ★조립을 못 했으면 **이유**를 말한다. 이유 없이 옛 경로로 조용히
+                    #   넘어가면 사장님은 왜 결과가 공허한지 알 수 없다.
+                    "assemble_skipped": _asm_why,
                     "styles": [s.get("name") for s in _picked],
                 }}
     drafts = script_generate.generate_variations(
@@ -4238,7 +4242,18 @@ def api_mix_scene_lab_narration(job_id: str, beat_idx: int, body: dict,
     if beat is None:
         return JSONResponse(status_code=404, content={"ok": False, "error": "비트 없음"})
     if text == (beat.get("narration") or "").strip():
-        return {"ok": True, "unchanged": True}
+        # ★글자가 그대로여도 **음성이 옛 대본 것이면** 여기서 다시 뽑는다(2026-08-19 사장님
+        #   "대본수정 눌러 다시뽑기 했는데 안 된다"). 2단계에서 자막을 고치면 narration만
+        #   바뀌고 mp3는 그대로라(렌더 때 다시 뽑는 설계) 3단계 미리보기가 "음성을 다시 안
+        #   뽑았어요" 경고를 띄운다. 그런데 3단계 편집칸엔 **이미 고친 문장**이 들어 있어
+        #   사장님이 그대로 저장하면 여기서 unchanged로 튕겨 나가 아무 일도 안 일어났다
+        #   — 경고를 없앨 방법이 앱 안에 없는 막다른 길이었다.
+        if mix_pipeline.tts_matches_narration(beat) or body.get("regen") is False:
+            return {"ok": True, "unchanged": True}
+        background_tasks.add_task(resynth_one_beat, job_id, beat_idx,
+                                  dict(job.get("voice") or {}), DB_PATH, _MIX_WORK_DIR)
+        return {"ok": True, "unchanged": True, "regen": True,
+                "tts_ver": beat.get("tts_ver") or 0}
     beat["narration"] = text
     # ★대본이 바뀌면 옛 문장 기준으로 계산된 자막 타이밍은 **전부 무효**다. 지워야
     #   _lab_captions·렌더가 새 문장으로 다시 계산한다(안 지우면 옛 구절 수에 맞춰
@@ -6219,27 +6234,24 @@ def _set_session_cookie(response, customer_id: int):
 # ★URL을 짧게(/s/{8자}) 유지해야 QR이 v3(검증범위) 안에 든다 → 긴 서명토큰 대신 메모리 저장소에
 #   짧은 id→(job,만료)를 담는다. 재기동 시 사라짐 = 24h 만료와 같은 성질(재발급하면 됨). 무상태 필요 없음.
 _SHARE_TTL = 60 * 60 * 24  # 24시간
-_SHARE_STORE: dict = {}    # sid -> (job_id, expiry_ts)
+
+# ★DB에 저장한다(2026-08-19 사장님 "카톡 QR로 보내기 다시 살려줘"). 예전엔 프로세스 메모리
+#   dict였다 — 자동배포 크론이 3분마다 새 커밋을 보고 systemctl restart 하므로, 발급한 QR이
+#   폰으로 스캔되기도 전에 죽어 '만료' 403이 떴다. 실측(라이브 서버): 발급 직후
+#   /s/{sid}·/api/share/v/{sid}·/api/share/t/{sid} 세 경로가 전부 403.
+#   저장소가 sqlite면 재시작·워커 분리와 무관하게 24시간 그대로 산다.
 
 
 def _share_put(job_id: str) -> str:
     now = int(datetime.now(timezone.utc).timestamp())
-    for k in [k for k, (_, e) in _SHARE_STORE.items() if e < now]:   # 만료 청소(누수 방지)
-        _SHARE_STORE.pop(k, None)
     sid = secrets.token_urlsafe(6)   # ~8자
-    _SHARE_STORE[sid] = (job_id, now + _SHARE_TTL)
+    Store(DB_PATH).put_share_link(sid, job_id, now + _SHARE_TTL)
     return sid
 
 
 def _share_get(sid: str):
-    v = _SHARE_STORE.get(sid)
-    if not v:
-        return None
-    job_id, exp = v
-    if int(datetime.now(timezone.utc).timestamp()) > exp:
-        _SHARE_STORE.pop(sid, None)
-        return None
-    return job_id
+    return Store(DB_PATH).get_share_link(
+        sid, int(datetime.now(timezone.utc).timestamp()))
 
 
 _SHARE_PAGE_HTML = """<!doctype html><html lang="ko"><head>
@@ -9531,6 +9543,44 @@ _AUTOLOAD_MAX_WORKERS = int(os.environ.get("SHORTS_AUTOLOAD_WORKERS", "4"))
 #   쓰게 고친 뒤라 동시성을 조금 올린다. 더 올리려면 키를 늘리는 게 정석이다.
 
 
+# ── 화면에서 난 에러를 서버가 받는다(2026-08-19 사장님 "안되는 상황에서 F12를 눌러야 되는건가?")
+#   ★사장님(그리고 고객)에게 개발자도구를 열게 하면 안 된다. 화면이 죽는 순간을 잡는 일은
+#     화면이 스스로 해야 한다 — 제보는 "안 돼요" 한마디면 충분해야 하고, 나머지는 로그가 말한다.
+#   실사고(2026-08-19): 1단계 분석 영역이 통째로 비었는데 서버 데이터는 멀쩡했다. 화면이
+#     그리다 죽었는지 확인할 방법이 없어 사장님께 콘솔을 찍어달라고 부탁해야 했다.
+#   ⚠️ 로그만 남긴다 — DB에 쌓지 않는다(남용되면 디스크가 찬다). 길이·빈도도 여기서 자른다.
+_CLIENT_ERR_SEEN = {}          # (cid, 메시지 앞부분) → 마지막 기록 시각. 같은 에러 도배 차단
+_CLIENT_ERR_WINDOW = 60.0      # 같은 에러는 1분에 한 번만 남긴다
+
+
+@app.post("/api/client_error")
+def api_client_error(request: Request, body: dict):
+    """화면에서 잡힌 JS 에러 1건을 서버 로그에 남긴다. 항상 200을 돌려준다
+    (에러 보고가 또 에러를 내면 안 된다)."""
+    try:
+        msg = str((body or {}).get("msg") or "")[:300]
+        if not msg.strip():
+            return {"ok": True}
+        where = str((body or {}).get("where") or "")[:200]
+        stack = str((body or {}).get("stack") or "")[:600]
+        page = str((body or {}).get("page") or "")[:200]
+        cid = _cid(request)
+        key = (str(cid), msg[:80])
+        now = time.time()
+        last = _CLIENT_ERR_SEEN.get(key, 0.0)
+        if now - last < _CLIENT_ERR_WINDOW:
+            return {"ok": True, "throttled": True}
+        _CLIENT_ERR_SEEN[key] = now
+        if len(_CLIENT_ERR_SEEN) > 500:        # 무한 성장 방지 — 오래된 것부터 버린다
+            for k in sorted(_CLIENT_ERR_SEEN, key=_CLIENT_ERR_SEEN.get)[:250]:
+                _CLIENT_ERR_SEEN.pop(k, None)
+        logging.getLogger("client_error").error(
+            "[화면에러] cid=%s page=%s where=%s :: %s || %s", cid, page, where, msg, stack)
+    except Exception:  # noqa: BLE001 — 보고가 실패해도 화면에 영향 주지 않는다
+        return {"ok": True}      # ★삼키되 pass는 쓰지 않는다(조용한 실패 상한 가드와 짝)
+    return {"ok": True}
+
+
 @app.post("/api/produce/autoload")
 def api_produce_autoload(request: Request, body: dict):
     """담긴 영상 중 이 고객 도서관에 없는 것을 자동으로 대본추출→도서관 적재→담기까지 한다.
@@ -9902,6 +9952,14 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     # 우회할 수 있다(1단계 script 과금은 별개 자원이라 render 과금을 대체하지 못한다). 검증(위 ssrf·
     # 파싱)을 먼저 통과시킨 뒤 과금(리뷰 G1). render_charge_day를 채워 run_mix_job 실패 시 자동 환불된다.
     cid = getattr(request.state, "customer_id", 0)
+    # ★더블클릭·재전송 가드 — **과금보다 먼저**(2026-08-19 실측). 이 라우트에만 중복
+    #   가드가 없어서 30ms 간격 요청 2건이 각각 job을 만들었다(최근 7일 7쌍). 화면이
+    #   헷갈리는 데 그치지 않고 render 크레딧이 두 번 나가고 Gemini·ffmpeg가 두 벌 돌았다.
+    #   미리보기(/mix/preview)·자막제거(/mix/clean)엔 이미 같은 성격의 가드가 있었다.
+    #   판단은 store.recent_same_mix_job 한 곳에서만 한다(0순위-B).
+    _dup = Store(DB_PATH).recent_same_mix_job(cid, urls, script)
+    if _dup:
+        return {"ok": True, "job_id": _dup, "deduped": True}
     if _global_over_cap("render"):
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "global_limit",
@@ -11158,11 +11216,24 @@ def _facts_block_for_job(job_id, store=None):
 
     ★여기서 크롤을 돌리지 않는다. 수집은 2~3분이 걸리므로 대본 생성 경로에 끼우면
       사장님이 그만큼 기다리게 된다 — 수집은 /api/product/facts/collect가 미리 해둔다."""
-    job_id = job_id.strip() if isinstance(job_id, str) else ""   # 타입을 믿지 않는다
-    if not job_id:
-        return ""
     try:
         from shopping_shorts import product_facts
+        return product_facts.prompt_block(_facts_for_job(job_id, store))
+    except Exception:      # noqa: BLE001 — 재료 조회 실패가 대본 생성을 막으면 안 된다
+        return ""
+
+
+def _facts_for_job(job_id, store=None):
+    """job에 미리 긁어둔 **제품 재료 dict**. 없으면 {}.
+
+    ★프롬프트 블록과 슬롯 조립이 **같은 재료**를 보게 하려고 함수로 뽑았다(0순위-B).
+      전에는 블록 만드는 코드 안에만 있어서, 조립은 이 재료를 아예 못 봤다 —
+      그래서 은폐형(spine 55)이 `{제품}`·`{효능}`·`{나라}`를 못 채우고 계속 폴백했다.
+    """
+    job_id = job_id.strip() if isinstance(job_id, str) else ""   # 타입을 믿지 않는다
+    if not job_id:
+        return {}
+    try:
         st = store or Store(DB_PATH)
         job = st.get_mix_job(job_id)
         facts = ((job or {}).get("product") or {}).get("facts") or {}
@@ -11171,9 +11242,9 @@ def _facts_block_for_job(job_id, store=None):
         #   담긴 영상 여러 개 중 **재료가 있는 첫 번째**를 쓴다(주제는 [대본 1]이므로 그 순서).
         if not facts:
             facts = _prefetched_facts_for_job(job, st)
-        return product_facts.prompt_block(facts)
-    except Exception:      # noqa: BLE001 — 재료 조회 실패가 대본 생성을 막으면 안 된다
-        return ""
+        return facts or {}
+    except Exception:      # noqa: BLE001
+        return {}
 
 
 # 썰쇼핑 대본 재료를 붙이는 카테고리(2026-08-19).
@@ -11243,7 +11314,7 @@ def _sul_block_for_sources(category, sources, store=None, spines=None):
         return ""
 
 
-def _assembled_drafts(spines, sources, store, seconds=30):
+def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
     """조립으로 만들 수 있는 대본들 → (조립본 목록, 조립 못 한 스파인 목록).
 
     ★조립은 **슬롯이 전부 차는 스파인**에만 쓴다. 한 칸이라도 비면 그 스파인은
@@ -11251,11 +11322,13 @@ def _assembled_drafts(spines, sources, store, seconds=30):
     ★어느 쪽으로 갔는지는 응답의 `materials.assembled`가 말한다(조용한 폴백 금지).
     """
     out, left = [], []
+    _why = []          # 조립을 못 한 이유(화면이 말해준다)
     try:
         from shopping_shorts import spine_fill, sul_facts
     except Exception:      # noqa: BLE001 — 조립 모듈이 없어도 기존 경로는 살아야 한다
         return [], list(spines or [])
     slots = None
+    merged = None
     for sp in (spines or []):
         # 썰 스파인이 아니면 조립 대상이 아니다(다른 스타일은 템플릿이 슬롯을 안 쓴다).
         if not _is_sul_context("", [sp]):
@@ -11290,14 +11363,36 @@ def _assembled_drafts(spines, sources, store, seconds=30):
                         store.set_setting(ckey, json.dumps(f, ensure_ascii=False))
                 if f:
                     facts.append(f)
-            slots = spine_fill.slots_from_facts({}, spine_fill.merge_sul(facts)) if facts else {}
+            merged = spine_fill.merge_sul(facts) if facts else {}
+            # ★슬롯이 차는 것과 쓸 만한 것은 다르다 — 재료 자격을 먼저 본다.
+            _prob = spine_fill.sul_material_problem(merged) if merged else "영상에서 재료를 못 뽑았습니다"
+            if _prob:
+                _why.append(_prob)
+                slots = {}
+            else:
+                # ★쿠팡 재료도 함께 넣는다(2026-08-19) — 은폐형은 {제품}·{효능}·{나라}가
+                #   여기서 온다. 안 넣으면 슬롯이 안 차서 영영 폴백한다.
+                slots = spine_fill.slots_from_facts(_facts_for_job(job_id, store), merged)
         try:
             d = spine_fill.build_draft(sp, slots, seconds=seconds) if slots else None
         except Exception as e:      # noqa: BLE001 — 조립 실패가 생성을 막으면 안 된다
             print("조립 실패(style=%s): %s" % (sp.get("id"), str(e)[:120]))
             d = None
-        (out if d else left).append(d or sp)
-    return out, left
+        if d:
+            out.append(d)
+        else:
+            left.append(sp)
+            # ★어느 칸이 왜 안 됐는지 말한다(2026-08-19 사장님 질문:
+            #   "해외영상들 소스를 어떤 게 몇 개 있을지 모르는 상태에서 틀을 짜놓으면
+            #    그 영상에 없는 내용이면 어떻게 하나").
+            #   답: 틀마다 요구하는 재료가 다르다 — 되는 틀을 고르면 된다.
+            #   그러려면 **어느 틀이 몇 칸 되는지**를 화면이 먼저 알려줘야 한다.
+            if slots:
+                done, total, miss = spine_fill.coverage(sp, slots)
+                if miss:
+                    _why.append("%s: %d/%d칸 — 재료에 없는 것(%s)"
+                                % (sp.get("name") or "", done, total, ", ".join(miss)))
+    return out, left, _why
 
 
 def _prefetched_facts_for_job(job, store):

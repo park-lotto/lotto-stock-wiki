@@ -42,11 +42,13 @@
 #   템플릿에 새 빈칸이 생기면 여기도 늘어야 한다 — test_sul_facts.py가 강제한다.
 #   (안 그러면 그 빈칸은 모델이 지어낸다 = 대본이 거짓말을 한다)
 SLOT_SOURCE = {
-    # 기존 product_facts가 이미 뽑는 것
-    "제품":   "product_facts.title      (상품명)",
-    "효능":   "product_facts.why[0]     (왜 좋은가)",
-    "효능2":  "product_facts.why[1]     (두 번째 셀링포인트 — 2차 반전용)",
-    "나라":   "product_facts.origin     (브랜드·기술·인증에서 나라)",
+    # 쿠팡 재료가 있으면 그쪽을 먼저 쓰고, 없으면 **영상에서** 뽑는다(2026-08-19).
+    #   해외 원본만 담는 경우(이븐쇼핑류 소재를 원본으로 다시 만드는 작업)엔 쿠팡
+    #   상품이 아예 없다 — 그때 이 칸들이 비면 은폐형은 조립 자체가 불가능하다.
+    "제품":   "product_facts.title  또는 sul_facts.product_name",
+    "효능":   "product_facts.why[0] 또는 sul_facts.benefits[0]",
+    "효능2":  "product_facts.why[1] 또는 sul_facts.benefits[1]",
+    "나라":   "product_facts.origin 또는 sul_facts.origin_country",
     # ★이 모듈이 새로 뽑는 것 (영상에서)
     "본래용도": "sul_facts.original_use   (원래 무엇을 하라고 만든 물건인가)",
     "속성":   "sul_facts.hidden_property(사람들이 눈치챈 숨은 성질)",
@@ -68,9 +70,24 @@ SUL_PROMPT = """아래는 한국 쇼핑 쇼츠 영상의 자막·설명이다. �
 뽑을 것:
 - original_use  : {본래용도} — 이 물건이 **원래** 무엇을 하라고 만들어진 것인가.
                   (예: 의류 태그 부착용, 커튼 걸이용). 영상이 안 밝히면 빈 배열.
+                  ★제품 자체나 그 제품군 이름을 여기 쓰지 마라. "마카의 원래 용도=필기구"
+                    같은 동어반복이면 뒤집을 게 없어 대본이 통째로 공허해진다(실측
+                    2026-08-19: "이게 원래는 필기구로 개발된 마카였음"). 그런 경우 빈 배열.
 - hidden_property: {속성} — 사람들이 눈치챈 **숨은 성질**. 왜 다른 용도로 쓸 수 있었나.
                   (예: 옷감이 손상되지 않는다, 봉 없이 고리만으로 걸린다)
 - misuses       : {용도} — 원래 용도가 **아닌** 실제 사용처들. 2~4개.
+                  ★★"그 물건을 그 물건답게 쓰는 것"은 여기 넣지 마라. 이 칸은
+                    **"어? 그걸 그렇게 쓴다고?" 소리가 나오는 것**만 담는다.
+                    나쁜 예(실측 2026-08-19, 마커펜): "돌에 그림 그리기"·"자녀 필통에
+                    선물로 넣어주기" — 둘 다 그냥 펜을 펜으로 쓰는 것이라 반전이 없다.
+                    좋은 예(살림킹왕짱 실측): 텐트용 선풍기를 **주방 벽에 달아** 요리 /
+                    가죽 펀칭기로 **지퍼백에 구멍 뚫어** 디스펜서 만들기.
+                  ★순서가 중요하다 — **흔한 것부터, 의외인 것을 뒤로** 정렬해라.
+                    대본이 "초보들은 기껏해야 {첫째}인데 고수들은 {둘째}까지" 하고
+                    마지막을 반전으로 쓴다. 비슷한 것 둘을 앞뒤로 놓으면 대비가 죽는다
+                    (실측 2026-08-19: "땀 식히기"와 "환기하기"가 나란히 와서 같은 말이 됐다).
+                  ★이런 게 없는 영상이면 **빈 배열로 두라**. 억지로 채우면 대본이
+                    "미친 사용법"이라 해놓고 하나도 안 놀라운 말을 하게 된다.
                   ★"어디에 어떻게 쓰는지"가 드러나게 **짧은 서술구**로 써라(명사 하나 금지).
                     좋은 예: 주방 벽에 달아서 시원하게 요리하기 / 물티슈 걸어두고 뽑아쓰기
                     나쁜 예: 환기 / 주방 벽 설치        ← 이러면 대본이 말이 안 되고 짧아진다
@@ -79,11 +96,40 @@ SUL_PROMPT = """아래는 한국 쇼핑 쇼츠 영상의 자막·설명이다. �
 - category_word : {제품군} — 제품명을 숨기고 부를 상위 분류어 한 단어.
                   (예: 주방템, 집게, 정리도구). 은폐형 훅에서 쓴다.
 - hook_points   : 어그로가 될 만한 지점 — 놀랍거나 반전인 사실 1~3개. 짧게.
+- product_name  : {제품} — 이 제품을 **한국 시청자가 알아듣는 말**로 뭐라고 부르나.
+                  ★브랜드·모델명을 쓰지 마라. 상품 페이지 제목을 그대로 옮기지 마라.
+                    좋은 예: 가정용 유청 분리기 / 그릭요거트 메이커
+                    나쁜 예: YQQ KRCB 요거트 메이커 및 그릭요거트 스트레이너  ← 실측 실패
+                    (대본에서 "이건 바로 {제품}"으로 정체를 밝히는 자리다. 모델명을 대면
+                     시청자는 그게 뭔지 모른 채 지나간다)
+- benefits      : {효능} — **시청자가 얻는 것**을 2~5개. 영상이 보여주거나 말한 것만.
+                  ★★스펙이 아니라 **이득**이다. 이 구분이 대본의 성패를 가른다.
+                    좋은 예: 통에 요거트를 붓고 냉장고에 두기만 하면 꾸덕한 그릭요거트가 된다 /
+                            사 먹는 것보다 열 배 넘게 아낀다 / 단백질이 훨씬 많다
+                    나쁜 예: 110~240볼트 전압 호환 / 21~48도 온도 조절 / BPA 프리 소재
+                            ← 전부 제품 사양이다. 실측 2026-08-19에 이런 것만 뽑혀
+                              "충격적인 포인트는 전압 호환이 가능하다"는 대본이 나왔다.
+                  ★★**놀라운 순서로 정렬해라** — 가장 강한 이득이 맨 앞이다.
+                    대본이 앞에서부터 갖다 쓴다(뒤로 갈수록 안 쓰인다).
+                  ★여러 영상을 함께 주면 **각 영상이 보여준 것을 모두** 적어라 —
+                    한 영상이 안 말한 이득을 다른 영상이 보여준다.
+- origin_country: {나라} — 브랜드·제조국이 드러나면 그 나라. 아니면 빈 문자열.
+                  ★추측하지 마라. 영상에 안 나오면 비워라(지어낸 국적이 대본에 박힌다).
+- misuse_genre  : **이 영상이 '원래 용도를 뒤집는' 오용형인가**(true/false).
+                  true = 원래 A를 하라고 만든 물건인데 사람들이 전혀 다른 B로 쓰더라,
+                         라는 반전이 실제로 있는 영상.
+                  false = 그냥 좋은 제품 소개·사용법 안내·꿀템 추천(대부분이 여기다).
+                  ★애매하면 false로 해라. true로 잘못 표시하면 "미친 사용법"이라 해놓고
+                    하나도 안 놀라운 대본이 나간다(실측 2026-08-19 마커펜 사고).
 
 JSON만 출력:
-{"original_use": [], "hidden_property": [], "misuses": [], "category_word": "", "hook_points": []}
+{"original_use": [], "hidden_property": [], "misuses": [], "category_word": "", "hook_points": [], "misuse_genre": false, "product_name": "", "benefits": [], "origin_country": ""}
 
-자막·설명:
+★말이 없는 영상(해외 시연 영상 등)이면 **화면에서 관찰된 장면 목록**만 주어진다.
+  그때는 장면 묘사·행위·변화를 근거로 판단해라. 손이 무엇을 하고 무엇이 어떻게
+  바뀌는지가 곧 그 제품의 용도이고 장점이다. 장면에 없는 것은 지어내지 마라.
+
+자막·설명·장면:
 """
 # ★.format()을 쓰지 않는다(2026-08-19 실측으로 잡음).
 #   이 프롬프트에는 {본래용도}·{속성} 같은 **설명용 중괄호**가 들어 있어서
@@ -99,6 +145,14 @@ SUL_SCHEMA = {
         "misuses": {"type": "array", "items": {"type": "string"}},
         "category_word": {"type": "string"},
         "hook_points": {"type": "array", "items": {"type": "string"}},
+        # 이 영상이 오용형 장르인가 — 조립 자격을 여기서 가른다(2026-08-19).
+        "misuse_genre": {"type": "boolean"},
+        # 은폐형(spine 55)이 쓰는 칸 — 지금까지 쿠팡 상세페이지에서만 왔다.
+        # 해외 원본 영상만 담는 경우(사장님 지시 2026-08-19)엔 쿠팡 상품이 없으므로
+        # **영상에서** 뽑아야 한다. 안 그러면 은폐형은 영영 조립이 안 된다.
+        "product_name": {"type": "string"},
+        "benefits": {"type": "array", "items": {"type": "string"}},
+        "origin_country": {"type": "string"},
     },
     # ★required를 비워둔다 — 모델이 일부를 못 채워도 나머지는 쓴다.
     #   (product_facts와 같은 원칙: 재료가 부분만 있어도 대본은 나와야 한다)
@@ -106,6 +160,32 @@ SUL_SCHEMA = {
 }
 
 _MAX_BODY = 4000
+
+
+def _segments_block(segs):
+    """장면 태깅 → 재료로 읽을 텍스트. 무자막 영상에서는 **이것만이 단서**다.
+
+    ★왜 필요한가(2026-08-19 사장님 지적): 해외 원본은 대부분 **말이 없다**(틱톡 시연
+      영상은 BGM + 손동작뿐). 그런데 이 모듈은 자막·캡션만 읽고 있어서, 무자막 영상은
+      재료가 **0개**였다 — 정작 그 영상들이 진짜 원본인데 쓸 수가 없었다.
+      1단계 추출이 이미 영상을 보고 장면마다 태깅해 둔다(scene_desc·label·use_point·
+      action·change). 그걸 그대로 읽는다 — 같은 영상을 두 번 보지 않는다.
+    """
+    if isinstance(segs, dict):
+        segs = [segs]
+    lines = []
+    for i, sg in enumerate(segs or []):
+        if not isinstance(sg, dict):
+            continue
+        bits = []
+        for key, label in (("text", "말"), ("scene_desc", "화면"), ("label", "이름"),
+                           ("use_point", "쓰임"), ("action", "행위"), ("change", "변화")):
+            v = str(sg.get(key) or "").strip()
+            if v:
+                bits.append("%s:%s" % (label, v))
+        if bits:
+            lines.append("장면%d) %s" % (i + 1, " | ".join(bits)))
+    return "\n".join(lines)
 
 
 def _body_of(raw):
@@ -121,6 +201,11 @@ def _body_of(raw):
     if isinstance(caps, str):
         caps = [caps]
     parts += [str(c).strip() for c in caps if str(c).strip()]
+    # ★장면 태깅도 재료다 — 무자막 영상은 이것만 있다.
+    seg_block = _segments_block(raw.get("segments"))
+    if seg_block:
+        parts.append("[화면에서 관찰된 장면들 — 말이 없는 영상이면 이것만이 단서다]\n"
+                     + seg_block)
     return "\n".join(parts)[:_MAX_BODY]
 
 
@@ -161,16 +246,19 @@ def analyze_sul(raw, *, log=print):
         return {}
 
     out = {}
-    for k in ("original_use", "hidden_property", "misuses", "hook_points"):
+    for k in ("original_use", "hidden_property", "misuses", "hook_points", "benefits"):
         v = data.get(k) or []
         if isinstance(v, str):
             v = [v]
         v = [str(x).strip() for x in v if str(x).strip()]
         if v:
             out[k] = v
-    cw = (data.get("category_word") or "").strip()
-    if cw:
-        out["category_word"] = cw
+    for k in ("category_word", "product_name", "origin_country"):
+        v = (data.get(k) or "").strip()
+        if v:
+            out[k] = v
+    # ★모델이 이 칸을 안 주면 **false로 본다**(없는 걸 true로 보면 옛 사고가 재발한다).
+    out["misuse_genre"] = bool(data.get("misuse_genre"))
     return out
 
 

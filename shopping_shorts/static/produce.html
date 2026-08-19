@@ -6,6 +6,29 @@
   <title>🛠 제작소 · 숏템메이커</title>
   <!-- FOUC 방지: 저장된 테마를 렌더 전에 즉시 반영(sidebar.js는 body 주입이라 늦음) -->
   <script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <!-- ★화면에서 난 에러를 서버가 받는다(2026-08-19 사장님 "안되는 상황에서 F12를 눌러야 되는건가?").
+       사장님·고객에게 개발자도구를 열게 하면 안 된다 — 제보는 "안 돼요" 한마디면 충분해야 한다.
+       ⚠️ 맨 위에 둔다: 아래 스크립트 블록이 통째로 죽는 사고(2026-07-19 충돌마커)가 실제로 있었고,
+          그때도 이 훅은 살아서 보고할 수 있어야 한다. 실패해도 화면에 영향을 주지 않는다. -->
+  <script>(function(){
+    var sent = 0;                                   // 한 화면에서 최대 5건만(도배 방지)
+    function report(msg, where, stack){
+      try{
+        if(sent >= 5 || !msg) return; sent++;
+        fetch('/api/client_error', {method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({msg:String(msg).slice(0,300), where:String(where||'').slice(0,200),
+                                stack:String(stack||'').slice(0,600), page:location.pathname})
+        }).catch(function(){});
+      }catch(e){}
+    }
+    window.addEventListener('error', function(e){
+      report(e.message, (e.filename||'') + ':' + (e.lineno||0), e.error && e.error.stack);
+    });
+    window.addEventListener('unhandledrejection', function(e){
+      var r = e.reason;
+      report((r && (r.message||r)) || '처리되지 않은 거부', 'promise', r && r.stack);
+    });
+  })();</script>
   <style>
     /* 스탁브레인 민트-블랙 투톤(다크 기본). 토큰 이름은 유지 — var(--) 참조가 자동으로 따라온다.
        퍼플/블루/틸 accent를 민트 하나로 수렴. 신규 토큰: --inset(인셋배경)·--sel-bg/--sel-fg(선택표면)·--grad·--hover */
@@ -409,6 +432,12 @@
     @media(max-width:1180px){.srcGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
     @media(max-width:860px){.srcGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:580px){.srcGrid{grid-template-columns:1fr}}
+    /* 진행 표시(2026-08-19) — 카드 위 한 줄. 분석이 도는 동안만 나타났다 사라진다. */
+    .srcProg{margin:0 0 10px}
+    .srcProgBar{height:4px;border-radius:99px;background:var(--line);overflow:hidden}
+    .srcProgBar>i{display:block;height:100%;background:var(--accent);border-radius:99px;
+      transition:width .4s ease}
+    .srcProgTxt{margin-top:5px;font-size:12px;color:var(--sub);display:flex;align-items:center;gap:6px}
     .srcCard{background:var(--inset);border:1px solid var(--line);border-radius:12px;
       padding:14px 18px;transition:border-color .15s;cursor:pointer;
       display:flex;flex-direction:column;min-width:0;overflow:hidden}
@@ -1155,6 +1184,33 @@
           <div style="font-size:13px;margin-bottom:4px">헤드카피 문구 <span class="hint" style="font-size:11px">— Enter로 줄바꿈, 길면 자동으로 줄이 나뉘어요</span></div>
           <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
             style="width:100%;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.4"></textarea>
+          <!-- ⚡빠른 조절(2026-08-19 사장님 "폰트나 색상도 지정이 되야지") — 문구를 고치는
+               바로 그 자리에서 폰트·색·크기·위치를 만진다. ★값은 여기서 따로 갖지 않는다:
+               아래 '직접 다듬기'의 진짜 입력칸(hcFont/hcColor/hcSize/hcY/hcX)에 그대로 써넣고
+               updateHC()를 부른다 — 같은 값이 두 벌이 되면 반드시 어긋난다(0순위-B). -->
+          <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px">⚡ 빠른 조절
+              <span style="font-size:11px;color:var(--sub);font-weight:400">— 미리보기에서 글자를 끌어 옮길 수도 있어요</span></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+              <label style="font-size:12px;color:var(--sub)">폰트
+                <select id="hcFontQ" onchange="hcQuick('hcFont', this.value)"
+                  style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:13px;max-width:170px"></select></label>
+              <label style="font-size:12px;color:var(--sub)">색상
+                <input id="hcColorQ" type="color" oninput="hcQuick('hcColor', this.value)"></label>
+              <label style="font-size:12px;color:var(--sub)">굵기
+                <select id="hcWeightQ" onchange="hcQuick('hcWeight', this.value)"
+                  style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:13px">
+                  <option value="400">보통</option><option value="700">굵게</option><option value="900">아주 굵게</option>
+                </select></label>
+            </div>
+            <div style="margin-top:8px;font-size:12px;color:var(--sub)">글씨 크기 <span id="hcSizeQV">64</span>px
+              <input id="hcSizeQ" type="range" min="28" max="120" oninput="hcQuick('hcSize', this.value)" style="width:100%"></div>
+            <div style="font-size:12px;color:var(--sub)">세로 위치 <span id="hcYQV">14</span>%
+              <input id="hcYQ" type="range" min="0" max="100" oninput="hcQuick('hcY', this.value)" style="width:100%"></div>
+            <div style="font-size:12px;color:var(--sub)">가로 위치 <span id="hcXQV">50</span>%
+              <input id="hcXQ" type="range" min="0" max="100" oninput="hcQuick('hcX', this.value)" style="width:100%"></div>
+            <div style="font-size:11px;color:var(--sub);margin-top:6px">줄바꿈은 문구 칸의 Enter로 정해요 — 넣은 줄 그대로 나오고, 넘치면 글씨가 자동으로 작아집니다.</div>
+          </div>
           <!-- 강조 단어(노출 유지) -->
           <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
             <div style="font-size:13px;font-weight:700;margin-bottom:2px">🎯 강조 단어 <span style="font-size:11px;color:var(--sub);font-weight:400">— 헤드카피 + 자막 공통(키워드 일치 시 자동 강조)</span></div>
@@ -3069,6 +3125,28 @@ function syncFontBtn(){ const btn=document.getElementById('hcFontBtn'); const f=
   if(btn&&f){ btn.textContent=f.name+' ▾'; btn.style.fontFamily=`'${f.css}','Pretendard',sans-serif`; } }
 document.addEventListener('click', e=>{ const p=document.getElementById('hcFontPicker'); if(p && !p.contains(e.target)) closeFontMenu(); });
 function hexA(hex,a){ const h=(hex||'#000000').replace('#',''); const r=parseInt(h.slice(0,2),16)||0,gg=parseInt(h.slice(2,4),16)||0,b=parseInt(h.slice(4,6),16)||0; return `rgba(${r},${gg},${b},${a})`; }
+// ⚡빠른 조절 → 진짜 입력칸에 써넣고 갱신한다(값의 주인은 저쪽 하나뿐).
+function hcQuick(id, val){
+  const el=document.getElementById(id); if(!el) return;
+  el.value=val;
+  // 폰트는 '고른 값'(HC_FONT_COMMITTED)이 따로 있다 — 안 맞추면 폰트 메뉴에서 마우스가
+  // 빠져나갈 때 옛 폰트로 되돌아간다(renderFontSelect의 mouseleave 복원).
+  if(id==='hcFont'){ HC_FONT_COMMITTED=val; syncFontBtn(); }
+  updateHC();
+}
+// 진짜 입력칸 → 빠른 조절 위젯으로 되비춘다(프리셋·드래그·다른 탭에서 바뀌어도 같이 움직인다).
+function hcQuickSync(hc){
+  const g=id=>document.getElementById(id);
+  const fq=g('hcFontQ'), src=g('hcFont');
+  if(fq && src && fq.options.length!==src.options.length){
+    // 폰트 목록의 정본은 HC_FONTS 하나 — 각 줄을 그 폰트로 보여준다(고르기 전에 눈으로 확인).
+    fq.innerHTML=HC_FONTS.map(f=>`<option value="${f.file}" style="font-family:'${f.css}',sans-serif">${f.name}</option>`).join('');
+  }
+  if(fq) fq.value=hc.font;
+  const set=(qid,vid,v)=>{ const q=g(qid); if(q) q.value=v; const t=vid&&g(vid); if(t) t.textContent=v; };
+  set('hcColorQ',null,hc.color); set('hcWeightQ',null,String(hc.weight));
+  set('hcSizeQ','hcSizeQV',hc.size); set('hcYQ','hcYQV',hc.y); set('hcXQ','hcXQV',hc.x);
+}
 function updateHC(){
   const g=id=>document.getElementById(id);
   const hc={
@@ -3083,7 +3161,9 @@ function updateHC(){
   const el=g('hcPreviewText');
   const scale=PREVIEW_W/VIDEO_W;
   const rules = (STATE.deco && STATE.deco.highlight_rules) || [];
-  el.style.whiteSpace='pre-wrap';   // \n 줄바꿈 표시 + 긴 줄은 폭 넘으면 자동 줄바꿈
+  // ★줄 수는 사장님이 정한다(2026-08-19 "썸네일쪽처럼 두 줄로 정렬되게"). 2줄로 쓴 문구가
+  //   자동 줄바꿈에 걸려 4줄로 깨졌다 — 재줄바꿈을 끄고, 폭을 넘으면 폰트를 줄여 맞춘다.
+  //   서버도 같은 규칙이다(video_assemble fit_lines=True).
   if(rules.length && hc.text){
     const esc2 = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
     el.innerHTML = hc.text.split('\n').map(line=>line.split(' ').map(w=>{
@@ -3099,7 +3179,10 @@ function updateHC(){
   el.style.left=hc.x+'%'; el.style.top=hc.y+'%';
   el.style.color=hc.color; el.style.fontWeight=hc.weight;
   el.style.fontSize=Math.max(9, hc.size*scale)+'px';
-  el.style.maxWidth=Math.round(PREVIEW_W*0.92)+'px';   // 서버 _wrap_to_width(0.92*_OUT_W)와 동일 비율 — 줄바꿈 지점 일치
+  el.style.whiteSpace='pre'; el.style.maxWidth='none';   // 자동 줄바꿈 없음 — 넘치면 축소
+  const _boxW=Math.round(PREVIEW_W*0.92);                // 서버 max_w(0.92*_OUT_W)와 같은 비율
+  const _w=el.scrollWidth;
+  if(_w>_boxW && _w>0) el.style.fontSize=Math.max(9, (Math.max(9,hc.size*scale))*_boxW/_w)+'px';
   const oc=hc.outline_color, ow=(hc.outline_w*scale).toFixed(1);
   el.style.textShadow = hc.outline
     ? `${ow}px ${ow}px 0 ${oc}, -${ow}px -${ow}px 0 ${oc}, ${ow}px -${ow}px 0 ${oc}, -${ow}px ${ow}px 0 ${oc}, -1px -1px 0 ${oc}, 1px -1px 0 ${oc}, -1px 1px 0 ${oc}, 1px 1px 0 ${oc}`
@@ -3109,6 +3192,7 @@ function updateHC(){
     el.style.padding=`${Math.round(hc.box_pad*scale)}px ${Math.round(hc.box_pad*1.5*scale)}px`;
     el.style.borderRadius=Math.round(10*scale*3)+'px';
   } else { el.style.background='none'; el.style.padding='0 6px'; el.style.borderRadius='0'; }
+  hcQuickSync(hc);
   if(document.getElementById('fullPresets')) renderStyleCards();
 }
 
@@ -4713,6 +4797,7 @@ async function refreshStep0(){
       const total = HANDOFF.filter(h=>h.useFootage && h.url).length;
       renderAutoloadingState(total);
       const got = await autoloadAllFootage();     // ★여러 배치로 전부 분석(Task 1)
+      _SRC_BUSY = 0; _SRC_QUEUED = 0;            // ★끝났으면 진행 표시를 내린다(안 내리면 영영 돈다)
       if(got.analyzed){
         try{ d = await (await fetch('/api/produce/aipick'+(q==='?'?'':q))).json(); }catch(e){}
       }
@@ -4730,6 +4815,14 @@ async function refreshStep0(){
 const _SRC_BRIEF = {};       // shortcode → 서버 응답. ★완성(ok)만 캐시로 굳고, 미완은 다시 묻는다
 const _SRC_INFLIGHT = new Set();   // 지금 요청 중인 shortcode — 중복 요청은 이걸로 막는다
 let _SRC_POLL = null;              // 미완이 남았을 때만 도는 재확인 타이머(끝나면 스스로 멈춘다)
+// ★자리 하나 = 그리는 함수 하나(2026-08-19, 0순위-B). 종전엔 #srcAnalysis 한 자리에
+//   renderSourceAnalysis · renderAutoloadingState · renderQueuedState **셋이 각자**
+//   innerHTML로 덮어썼다. 8초 폴링과 자동적재가 동시에 돌면 서로를 지워, 사장님이
+//   새로고침해야만 결과가 보였다(2026-08-19 제보 "분석이 안된다" — 실제로는 5분 걸려
+//   다 되어 있었는데 화면만 그 사실을 못 보여줬다).
+//   → 진행 상태는 **여기 두 값에만** 적고, 그리는 것은 renderSourceAnalysis 하나가 한다.
+let _SRC_BUSY = 0;                 // 자동적재가 돌고 있는 영상 수(0이면 안 돎)
+let _SRC_QUEUED = 0;               // 서버 자리를 기다리는 영상 수(도우인 동시 2개 제한 등)
 // ★기본은 **펼침**이다(2026-08-17 사장님 "기본으로 펼치고"). 그래서 집합의 뜻을
 //   뒤집었다 — 예전엔 '펼친 카드'를 모았는데(기본 접힘), 이제 '접은 카드'를 모은다.
 //   비어 있으면 전부 펼쳐진 상태 = 처음 화면. 누르면 그 카드만 접힌다.
@@ -4742,7 +4835,15 @@ async function renderSourceAnalysis(){
   const box = document.getElementById('srcAnalysis');
   if(!box) return;
   const items = HANDOFF.filter(h => h.useFootage);
-  if(!items.length){ box.innerHTML = ''; return; }
+  if(!items.length){
+    // ★담긴 목록이 아직 안 잡혔는데 자동적재는 돌고 있는 순간이 있다(HANDOFF가 채워지기
+    //   전에 이 함수가 먼저 불린다). 종전엔 여기서 그냥 비우고 나가 **폴링도 안 걸어**,
+    //   그 뒤 분석이 다 끝나도 화면은 영영 빈 채였다 — 새로고침해야만 보였다.
+    box.innerHTML = _SRC_BUSY ? `<div class="srcProg"><div class="srcProgTxt">
+        <span class="skm-spin">🔄</span> 담은 영상 ${_SRC_BUSY}개를 분석하고 있어요 — 잠시만요</div></div>` : '';
+    if(_SRC_BUSY){ clearTimeout(_SRC_POLL); _SRC_POLL = setTimeout(() => { renderSourceAnalysis().catch(()=>{}); }, 3000); }
+    return;
+  }
   // ★완성된 것만 캐시한다 — 아직 안 된 것은 다음에 다시 묻는다(2026-08-17 사장님
   //   "인스타 4개인데 한개만?"). 예전엔 응답을 무조건 `_SRC_BRIEF`에 넣고 재조회 조건이
   //   `!== undefined`라, **첫 조회 때 아직 분석 전이던 영상은 그 상태로 박제**됐다.
@@ -4770,11 +4871,27 @@ async function renderSourceAnalysis(){
     finally{ _SRC_INFLIGHT.delete(code); }
   }));
   const done = items.filter(it => (_SRC_BRIEF[it.shortcode] || {}).ok).length;
+  const gaveUp = items.filter(it => (_SRC_BRIEF[it.shortcode] || {}).gave_up).length;
+  const left = items.length - done - gaveUp;         // 아직 결과를 기다리는 것
+  // ★진행을 눈에 보이게(2026-08-19 사장님 지시). 분석은 영상 1개당 40~70초가 걸리고
+  //   **한 번에 하나씩** 도는데(서버 예열), 종전 화면은 "3/5개 읽음" 한 줄뿐이라
+  //   멈춘 것인지 도는 중인지 구별이 안 됐다 — 그래서 고장으로 보였다.
+  //   남은 시간은 실측 기준 1개당 1분으로 어림해 말한다(정확한 값이 아니라 '기다릴 만한지'를
+  //   알려주는 용도 — 과장하지 않도록 넉넉히 잡는다).
+  const pct = items.length ? Math.round((done + gaveUp) * 100 / items.length) : 0;
+  const eta = left > 0 ? `약 ${left}분쯤 남았어요` : '';
+  const busyTxt = _SRC_QUEUED
+    ? `${_SRC_QUEUED}개가 순서를 기다리는 중 — 앞 영상이 끝나면 자동으로 이어서 합니다`
+    : (left > 0 ? `${left}개 분석 중 — ${eta}. 이 화면에 그대로 계셔도 됩니다` : '');
   box.innerHTML =
-    `<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+    `<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
        <span style="font-size:13px;font-weight:800">🔎 담은 영상 뜯어보기</span>
-       <span class="hint">${done}/${items.length}개 읽음 — 어떤 재료가 모였고, 뭘 쓸 수 있는지</span>
+       <span class="hint">${done}/${items.length}개 읽음${gaveUp ? ` · ${gaveUp}개 실패` : ''} — 어떤 재료가 모였고, 뭘 쓸 수 있는지</span>
      </div>`
+    + (left > 0 ? `<div class="srcProg" title="분석이 끝난 영상 비율">
+         <div class="srcProgBar"><i style="width:${pct}%"></i></div>
+         <div class="srcProgTxt"><span class="skm-spin">🔄</span> ${busyTxt}</div>
+       </div>` : '')
     + `<div class="srcGrid">` + items.map((it, i) => _srcCard(it, i)).join('') + `</div>`;
 
   // ★아직 도는 게 남았으면 **스스로 다시 확인한다**(2026-08-17). 분석은 영상마다 끝나는
@@ -4786,7 +4903,7 @@ async function renderSourceAnalysis(){
     return !(r || {}).ok && !(r || {}).gave_up;
   }).length;
   clearTimeout(_SRC_POLL);
-  if(waiting){
+  if(waiting || _SRC_BUSY || _SRC_QUEUED){
     // 분석은 30초~1분 — 8초마다 보면 충분하고 서버도 안 두들긴다(저장된 것만 읽는 API라 비용 0).
     _SRC_POLL = setTimeout(() => { renderSourceAnalysis().catch(()=>{}); }, 8000);
   }
@@ -4941,30 +5058,18 @@ async function autoloadAllFootage(){
 }
 // 순서를 기다리는 중 — '실패'와 확실히 구별되게 말한다(기다리면 된다는 뜻).
 function renderQueuedState(n){
-  const el=document.getElementById('srcAnalysis') || document.getElementById('aiPick');
-  if(!el) return;
-  el.innerHTML = `<div class="skm-card empty">
-      <h2><span class="skm-spin">⏳</span> ${n}개가 순서를 기다리고 있어요</h2>
-      <div class="hint" style="text-align:center;color:var(--sub)">
-        도우인 영상은 서버가 <b>한 번에 2개씩</b> 받습니다(무거워서요).
-        앞 영상이 끝나면 <b>자동으로 이어서</b> 시작해요 — 이 화면에 그대로 계셔도 됩니다.</div>
-    </div>`;
+  _SRC_QUEUED = Number(n) || 0;      // ★상태만 — 그리기는 renderSourceAnalysis 하나가 한다
+  renderSourceAnalysis().catch(()=>{});
 }
 // 자동적재가 도는 동안 보여줄 과도 상태 — 폴백 안내를 먼저 띄웠다가 곧 카드로 바뀌면
 // 사용자가 "에러가 났다가 고쳐졌나?"로 읽는다. 분석 중임을 명시한다.
 function renderAutoloadingState(total){
-  // ★#aiPick이 아니라 #srcAnalysis에 그린다(2026-08-17 사장님 "영상분석은?").
-  //   1단계에서 #aiPickWrap은 display:none이라(9단계 개편) 여기 그리면 아무도 못 본다 —
-  //   실제로 담자마자 화면 아래가 통째로 비어 "분석이 도는지" 알 수가 없었다.
-  //   진행 표시는 그 단계의 **보이는 자리**에 있어야 한다. 끝나면 renderSourceAnalysis가
-  //   같은 자리를 카드로 덮는다(자리 하나, 상태 하나 — 두 군데에 그리지 않는다).
-  const el=document.getElementById('srcAnalysis') || document.getElementById('aiPick');
-  if(!el) return;
-  const n = Number(total)||0;
-  el.innerHTML = `<div class="skm-card empty">
-      <h2><span class="skm-spin">🔄</span> 담은 영상 ${n?('<b>'+n+'개</b> '):''}대본을 분석하고 있어요</h2>
-      <div class="hint" style="text-align:center;color:var(--sub)">처음 담은 영상은 30초~1분쯤 걸립니다. 끝나면 AI PICK 카드가 나타나요.</div>
-    </div>`;
+  // ★상태만 적는다 — 그리는 것은 renderSourceAnalysis 한 곳(위 _SRC_BUSY 주석).
+  //   종전엔 여기서 innerHTML을 통째로 갈아서, 이미 분석이 끝난 카드까지 지우고
+  //   "분석하고 있어요" 한 줄로 덮었다(그리고 폴링이 다시 카드로 덮었다 — 서로 지움).
+  _SRC_BUSY = Number(total) || 0;
+  _SRC_QUEUED = 0;
+  renderSourceAnalysis().catch(()=>{});
 }
 // 조회수·댓글 등 큰 숫자를 "240만"/"1.2억" 식으로 축약(v6 목업 표기와 동일).
 function fmtNum(n){ n=Number(n)||0; if(n>=1e8) return (n/1e8).toFixed(n%1e8?1:0)+'억'; if(n>=1e4) return (n/1e4).toFixed(n%1e4>=1000?1:0)+'만'; return n.toLocaleString(); }
@@ -7688,6 +7793,17 @@ async function shareVideo(){
   }
 }
 
+// ★렌더 전에 QR을 눌렀을 때 — 안내만 하고 끝내면 사장님은 '버튼이 죽었다'로 본다
+//   (2026-08-19 "활성 안 되는데"). 실측: 그날 job 6개가 전부 ready_for_review로,
+//   최종 렌더까지 간 적이 없었다. 그래서 이 버튼이 **렌더부터 대신 해주고**, 끝나는 즉시
+//   QR 창을 띄운다(딸깍 원칙 — 누른 사람이 원하는 결과는 '폰으로 보내기' 하나다).
+let QR_AFTER_RENDER = false;
+function qrAfterRender(){
+  if(!MIX_JOB){ alert(stepName('mix')+'에서 영상 매칭을 먼저 실행하세요'); return; }
+  if(!confirm('아직 완성 영상이 없어요.\n\n지금 최종 렌더를 시작하고, 끝나면 QR을 띄울까요?\n(보통 1~5분)')) return;
+  QR_AFTER_RENDER = true;
+  renderFinal();
+}
 // ── QR '폰으로 보내기' 모달 (2026-07-23) — PC에서 완성영상을 폰으로 넘겨 폰 카톡 네이티브 공유 ──
 async function showShareQr(job){
   let ov=document.getElementById('qrOverlay');
@@ -7738,15 +7854,25 @@ function renderExport(opts){
         ? `<button class="btn-next" style="${big};border:0;cursor:pointer;font-size:15px" onclick="sendToCapCut()">🎬 캡컷으로 보내기</button>`
           + `<a class="btn-prev" style="${small}" href="/static/capcut_setup.bat" download>⚙ 캡컷 자동설정(최초 1회)</a>`
           + `<button class="btn-prev" style="${small};border:0;cursor:pointer" onclick="resetCapCutFolder()">폴더 다시 지정</button>`
+          // ★그림 매뉴얼(2026-08-19 사장님 "이미지로 해야 이해한다"). 글로 적은 안내는 아무도
+          //   안 읽는다 — 준비 단계를 그림 4장으로 만든 페이지를 새 탭으로 연다.
+          + `<a class="btn-prev" style="${small}" href="/static/capcut_manual.html" target="_blank" rel="noopener">📖 그림으로 보는 준비 방법</a>`
           + '<div class="hint" style="margin:4px 0 10px">캡컷이 깔려 있으면 클릭 한 번으로 프로젝트가 만들어집니다. <b>처음 쓰실 때만</b>: 위 <b>⚙자동설정</b> 파일을 받아 한 번 더블클릭(캡컷은 꺼둔 채) → 캡컷 켜기 → 폴더 한 번 지정. Chrome·Edge 전용.</div>'
-        : '<div class="hint" style="margin-bottom:10px">💡 캡컷으로 바로 보내기는 <b>Chrome·Edge</b>에서만 됩니다. 지금 브라우저에선 아래 ZIP을 받아 캡컷에 올리세요.</div>')
+        : '<div class="hint" style="margin-bottom:10px">💡 캡컷으로 바로 보내기는 <b>Chrome·Edge</b>에서만 됩니다. 지금 브라우저에선 아래 ZIP을 받아 캡컷에 올리세요. '
+            + '<a href="/static/capcut_manual.html" target="_blank" rel="noopener" style="color:var(--accent2)">📖 그림으로 보는 준비 방법</a></div>')
     + (rendered?`<a class="btn-next" style="${big}" href="/api/mix/video/${j}?dl=1" download>⬇ 완성 영상(MP4)</a>`:'')
     // ★'📱 카톡·공유로 보내기' 버튼은 뺐다(2026-08-18 사장님 지시). 데스크톱 브라우저는
     //   파일 공유(Web Share Level 2)를 대부분 못 해 눌러도 다운로드 안내로 떨어졌고,
     //   폰으로 보내는 길은 아래 'QR로 폰에 보내기' 하나로 충분하다(그 페이지에서 카톡 선택).
     // ★PC용 QR(2026-07-23): 카톡 PC는 웹에서 mp4를 대화방에 못 넣는다 → 폰으로 넘겨 폰 카톡 네이티브 공유.
-    + (rendered?`<button class="btn-next" style="${big};border:0;cursor:pointer;background:#fee500;color:#191600" onclick="showShareQr('${j}')">🖥→📱 QR로 폰에 보내기</button>`:'')
-    + (rendered?'<div class="hint" style="margin:2px 0 8px">📱 카톡으로 보내려면 「<b>QR로 폰에 보내기</b>」를 눌러 폰으로 스캔하세요 — 폰에서 열린 화면의 공유 버튼으로 카톡을 고르면 <b>영상+썸네일</b>이 함께 갑니다. 💻 컴퓨터에 파일만 받으려면 「완성 영상(MP4)」.</div>':'')
+    // ★렌더 전에도 **버튼을 지우지 않는다**(2026-08-19 사장님 "카톡 QR로 보내기 다시 살려줘").
+    //   기능·API(showShareQr → /api/share/link)는 그대로 살아 있었는데 rendered일 때만 그려서
+    //   렌더 전 화면에선 통째로 사라져 보였다 — 옆 썸네일 칸엔 "QR로 폰에 보낼 때…" 안내가
+    //   남아 있어 더 헷갈렸다. 없애는 대신 흐리게 두고, 누르면 무엇을 먼저 할지 말해준다.
+    + `<button class="btn-next" style="${big};border:0;cursor:pointer;background:#fee500;color:#191600${rendered?'':';opacity:.5'}"
+         onclick="${rendered?`showShareQr('${j}')`:'qrAfterRender()'}">🖥→📱 QR로 폰에 보내기</button>`
+    + '<div class="hint" style="margin:2px 0 8px">📱 카톡으로 보내려면 「<b>QR로 폰에 보내기</b>」를 눌러 폰으로 스캔하세요 — 폰에서 열린 화면의 공유 버튼으로 카톡을 고르면 <b>영상+썸네일</b>이 함께 갑니다.'
+      + (rendered?' 💻 컴퓨터에 파일만 받으려면 「완성 영상(MP4)」.':' 아직 영상이 없으면 <b>이 버튼이 최종 렌더부터 대신 해드립니다.</b>') + '</div>'
     + `<a class="btn-prev" style="${small}" href="/api/mix/export/${j}" download>📦 캡컷용 ZIP(수동)</a>`
     + '<div class="hint" style="margin:6px 0 4px">개별 다운로드</div>'
     + `<a class="btn-prev" style="${small}" href="/api/mix/export/${j}?part=sources" download>🎬 소스 영상</a>`
@@ -7873,7 +7999,9 @@ async function pollFinal(){
       document.getElementById('finalVideo').innerHTML=`<video controls autoplay muted src="/api/mix/video/${esc(MIX_JOB)}" style="max-width:300px;border-radius:12px;margin-top:10px"></video>`;
       _finalRenderRestore('✅ 렌더 완료 — 완성 영상이 재생됩니다');
       renderExport({rendered:true});     // 렌더 완료 → 완성 MP4 다운로드 버튼까지
-      refreshFinalThumb(); }             // 썸네일 카드·버튼 라벨도 이때 맞춘다(렌더 전엔 없었다)
+      refreshFinalThumb();               // 썸네일 카드·버튼 라벨도 이때 맞춘다(렌더 전엔 없었다)
+      // QR을 누르고 기다린 경우엔 곧바로 띄운다 — 다시 찾아 누르게 하지 않는다.
+      if(QR_AFTER_RENDER){ QR_AFTER_RENDER=false; showShareQr(MIX_JOB); } }
     if(d.status==='failed'){ clearInterval(MIX_POLL); clearInterval(_rfTimer); _finalRenderRestore('❌ 렌더 실패'+(d.error?' — '+d.error:'')); }
   }catch(e){}
 }
@@ -9449,7 +9577,7 @@ function s2RenderDrafts(){
   const label=document.getElementById('s2ResultLabel');
   if(label){
     const m=S2.materials;
-    let used='';
+    let used='', used_extra=[];
     if(m){
       const srcs=(m.sources||[]).filter(s=>s.chars>0);
       const bits=[];
@@ -9460,10 +9588,20 @@ function s2RenderDrafts(){
       //   끼운 것이라 어미·CTA가 흔들리지 않는다. 이걸 안 보여주면 사장님이 왜 결과가
       //   달라졌는지 알 수 없다 — 조용한 폴백이 쳇바퀴의 뿌리였다.
       if((m.assembled||[]).length) bits.push('틀 조립 '+m.assembled.length+'안');
+      // ★조립을 못 했으면 이유를 말한다(2026-08-19 사장님 제보: 마커펜 영상으로 만든
+      //   오용형 대본이 "돌에 그림 그리기"처럼 하나도 안 놀라웠다). 재료가 안 맞는 걸
+      //   화면이 말해주지 않으면 사장님은 대본만 보고 원인을 알 수 없다.
+      if((m.assemble_skipped||[]).length) bits.push(
+        '<span style="color:var(--gold)">틀 조립 못함: '+esc(m.assemble_skipped[0])+'</span>');
+      // 사유가 여러 개면(스타일마다 다르다) 아래 줄에 전부 펼친다 — 어느 틀이 몇 칸
+      // 되는지 봐야 "이 영상들로는 어느 스타일을 골라야 하는지"를 알 수 있다.
+      if((m.assemble_skipped||[]).length>1) used_extra = m.assemble_skipped.slice(1);
       used = bits.length ? (' · 재료: '+esc(bits.join(' + '))) : ' · <span style="color:var(--gold)">재료 없음(AI가 지어냅니다)</span>';
       // ★재료 편마다 첫 문장을 보여준다 — 서로 다른 제품이 섞였는지는 이걸 봐야 안다
       //   (2026-08-17 실측: 치아바타 1편 + 도마 2편이 한 작업에 담겨 도마로 끌려갔다).
       //   맨 위 = 주제로 쓰이는 대본이다.
+      if(used_extra.length) used += '<div class="hint" style="margin-top:4px;color:var(--gold)">'
+        + used_extra.map(esc).join('<br>') + '</div>';
       if(srcs.length) used += '<div class="hint" style="margin-top:4px;line-height:1.7">'
         + srcs.map((s,i)=>(i===0?'<b>주제</b> ':'참고 ')+'“'+esc(s.head)+'…” <span style="opacity:.7">'+s.chars+'자</span>').join('<br>')
         + '</div>';

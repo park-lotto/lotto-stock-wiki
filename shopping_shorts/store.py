@@ -267,6 +267,16 @@ class Store:
                     PRIMARY KEY (customer_id, shortcode)
                 )
             """)
+            # QR '폰으로 보내기' 단축링크(2026-08-19). 예전엔 프로세스 메모리 dict라
+            # **서버가 재시작되면 발급된 QR이 전부 죽었다**(자동배포가 3분마다 재시작한다).
+            # 실측: 발급 직후 /s/{sid}·/api/share/v·/api/share/t 전부 403(만료). DB로 옮긴다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS share_links (
+                    sid TEXT PRIMARY KEY,
+                    job_id TEXT NOT NULL,
+                    expires_at INTEGER NOT NULL
+                )
+            """)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS last_run (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -3678,6 +3688,38 @@ class Store:
                 counts[bucket][status] = n
         return counts
 
+    def recent_same_mix_job(self, customer_id, urls, given_script, within_sec=30):
+        """방금(within_sec 안에) 같은 고객이 같은 대본·같은 소스로 만든 job이 있으면 그 id.
+
+        ★더블클릭·재전송으로 mix job이 **쌍으로** 생기던 것을 막는다(2026-08-19 실측:
+          최근 7일에만 7쌍. 30ms 간격으로 두 개가 생겨 둘 다 파이프라인을 완주했다).
+          단순히 화면이 헷갈리는 문제가 아니라 **render 크레딧이 두 번 나가고** Gemini·
+          ffmpeg가 두 벌 도는 낭비였다. 미리보기·자막제거 라우트엔 이미 같은 성격의
+          가드가 있었는데(중복예약 차단) 정작 job을 만드는 곳에만 없었다.
+        ⚠️ 판단은 여기 한 곳에서만 한다(0순위-B) — 호출부에서 또 세지 마라.
+        """
+        # ★시각 비교는 파이썬에서 한다 — created_at은 ISO('...T...+00:00')로 저장되는데
+        #   sqlite datetime('now')는 '... ...'(공백) 꼴이라 **문자열 비교가 늘 참**이 된다
+        #   ('T' > ' '). SQL로 자르려다 오래된 job까지 재사용할 뻔했다.
+        try:
+            key = json.dumps(list(urls or []), ensure_ascii=False)
+            with self._conn() as c:
+                row = c.execute(
+                    "SELECT job_id, created_at FROM mix_jobs WHERE customer_id=? AND urls_json=? "
+                    "AND IFNULL(given_script,'')=? ORDER BY created_at DESC LIMIT 1",
+                    (customer_id, key, (given_script or ""))
+                ).fetchone()
+            if not row:
+                return None
+            from datetime import datetime, timezone
+            born = datetime.fromisoformat(str(row[1]))
+            if born.tzinfo is None:
+                born = born.replace(tzinfo=timezone.utc)
+            age = (datetime.now(timezone.utc) - born).total_seconds()
+            return row[0] if 0 <= age <= within_sec else None
+        except (sqlite3.Error, ValueError, TypeError):
+            return None            # 가드가 실패해도 job 생성을 막지는 않는다
+
     def create_mix_job(self, job_id, urls, target_seconds, structure,
                        subtitle_removal=False, given_script=None, script_structure=None,
                        customer_id=LEGACY_CUSTOMER_ID, render_charge_day=None,
@@ -4712,6 +4754,21 @@ class Store:
             return str(row[0]) if row and row[0] is not None else None
         except sqlite3.Error:
             return None
+
+    def put_share_link(self, sid, job_id, expires_at):
+        """QR 단축링크 저장 + 만료분 청소(누수 방지)."""
+        with self._conn() as c:
+            c.execute("DELETE FROM share_links WHERE expires_at < ?", (int(expires_at) - 86400 * 0,))
+            c.execute("INSERT OR REPLACE INTO share_links(sid, job_id, expires_at) VALUES(?,?,?)",
+                      (sid, job_id, int(expires_at)))
+
+    def get_share_link(self, sid, now_ts):
+        """살아있는 링크면 job_id, 없거나 지났으면 None."""
+        with self._conn() as c:
+            r = c.execute("SELECT job_id, expires_at FROM share_links WHERE sid=?", (sid,)).fetchone()
+        if not r:
+            return None
+        return r[0] if int(r[1]) > int(now_ts) else None
 
     def enqueue(self, task, args, owner=None, prio=None):
         """작업을 대기열에 넣고 큐 id를 반환한다.
