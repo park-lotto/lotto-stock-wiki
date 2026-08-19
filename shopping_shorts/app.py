@@ -6169,7 +6169,13 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 # ⚠️ /api/reference는 '조회(GET)'만 무료 — /api/reference/register(등록·데이터변경)는 exact 매칭이라 제외.
 #    /api/collect(수집=크롤 비용)도 제외 → 무료 등급은 마지막 수집 랭킹만 본다.
 # 메서드 무관 무료(로그인 폼 POST 등) — 전부 정확 경로.
-_FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout"}
+# ★2026-08-20 체험판 개방: 즐겨찾기 담기(POST)와 렌즈 2종을 연다.
+#   렌즈는 **과금검사(_charge_or_402 + check_and_count)가 있는 경로만** 연다 —
+#   /api/lens/kw/search·cn/search는 틱톡·샤오홍슈가 Apify 유료인데 과금검사가
+#   없어서(실측) prefix로 열면 상한 없이 샌다.
+_FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
+                   "/api/mix/basket/toggle",
+                   "/api/lens/search", "/api/lens/trace_url"}
 # GET만 무료(레퍼런스 랭킹 '조회') — POST/PUT 등 데이터변경은 같은 경로여도 차단.
 _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/api/thumb", "/api/video",
                    "/api/channel/history",   # 채널 히스토리='지난 한 달' 조회 = 랭킹 열람의 연장(무료 허용)
@@ -6177,7 +6183,9 @@ _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/a
                    #   안 열면 무료 등급이 자기 계정·포인트를 못 본다 —
                    #   충전하려면 들어올 수 있어야 하는데 충전 화면이 유료 뒤에 있는 꼴이 된다.
                    #   ⚠️ GET만이다. 키 등록(POST /api/settings/keys)은 그대로 막힌다.
-                   "/settings", "/api/settings/points", "/api/settings/keys"}
+                   "/settings", "/api/settings/points", "/api/settings/keys",
+                   # ★2026-08-20 체험판: 즐겨찾기 목록·모음집 화면.
+                   "/collection", "/api/mix/basket"}
 # 경계있는 prefix만(과다매칭 방지 — 트레일링 슬래시).
 _FREE_PREFIX = ("/static/", "/auth/google/")
 
