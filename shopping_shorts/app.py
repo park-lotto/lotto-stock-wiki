@@ -11354,7 +11354,20 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
         except Exception as e:      # noqa: BLE001 — 조립 실패가 생성을 막으면 안 된다
             print("조립 실패(style=%s): %s" % (sp.get("id"), str(e)[:120]))
             d = None
-        (out if d else left).append(d or sp)
+        if d:
+            out.append(d)
+        else:
+            left.append(sp)
+            # ★어느 칸이 왜 안 됐는지 말한다(2026-08-19 사장님 질문:
+            #   "해외영상들 소스를 어떤 게 몇 개 있을지 모르는 상태에서 틀을 짜놓으면
+            #    그 영상에 없는 내용이면 어떻게 하나").
+            #   답: 틀마다 요구하는 재료가 다르다 — 되는 틀을 고르면 된다.
+            #   그러려면 **어느 틀이 몇 칸 되는지**를 화면이 먼저 알려줘야 한다.
+            if slots:
+                done, total, miss = spine_fill.coverage(sp, slots)
+                if miss:
+                    _why.append("%s: %d/%d칸 — 재료에 없는 것(%s)"
+                                % (sp.get("name") or "", done, total, ", ".join(miss)))
     return out, left, _why
 
 
