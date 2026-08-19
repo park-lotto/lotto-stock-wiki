@@ -3385,6 +3385,11 @@ async function sendToProduce(shortcode){
     url: it.url||'', shortcode: shortcode, name: it.name||it.username||'',
     thumbnail: it.thumbnail||'', caption: it.caption||'', category: it.category||'',
     play_url: it.play_url||'',   // 제작소 재료 미리보기 인라인 재생용(있을 때만)
+    // ★지표도 함께 보낸다(2026-08-20 사장님 "팔로워 댓글 조회수 썸네일에").
+    //   제작소 카드가 이 숫자로 "어떤 영상을 쓸지" 판단하게 한다. 여기서 안 실으면
+    //   제작소는 이 값을 알 길이 없어 **조용히 지표가 안 뜬다**(오류도 안 난다).
+    //   랭킹 카드가 이미 화면에 쓰고 있는 값이라 새로 긁지 않는다(요금 0).
+    views: it.views||null, comments: it.comments||null, followers: it.followers||null,
     useFootage: true, pickScript: !!script, script: script,
   };
   // ★덮어쓰지 말고 이어붙인다(2026-07-19). sendToProduce는 대본추출을 await(10~30초)라

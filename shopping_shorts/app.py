@@ -8865,6 +8865,11 @@ def _load_work_sources(work_id, cid):
     # 저장 순간에 박제돼, 저장 후 댓글이 늘면 AI PICK만 옛 숫자를 보여준다(재료카드와 불일치,
     # 참여밀도도 옛 기준). 최신값이 없으면(30일 지나 정리 등) 도서관 스냅샷으로 폴백(2026-07-26).
     fresh = store.latest_comments([w["shortcode"] for w in items])
+    # ★조회수도 같이 실어 보낸다(2026-08-20 사장님 "팔로워 댓글 조회수 썸네일에").
+    #   예전엔 아래에 `"views": None`이 **하드코딩**돼 있어서, DB에 인스타 6,364건·
+    #   유튜브 1,394건이 있는데도 화면엔 조회수가 영영 안 떴다.
+    _views = store.latest_views([w["shortcode"] for w in items],
+                                [w.get("source_url") or "" for w in items])
     sources = []
     for w in items:
         segs = w.get("segments") or []
@@ -8875,7 +8880,10 @@ def _load_work_sources(work_id, cid):
             "followers": w.get("followers") or None,
             "comments": fresh.get(w["shortcode"], w.get("comments")) or None,
             "seconds": seconds,
-            "views": None,
+            # shortcode로 먼저, 없으면 URL로(유튜브는 URL 키에 있다). 둘 다 없으면 None.
+            "views": (_views.get(w["shortcode"])
+                      or _views.get(w.get("source_url") or "")
+                      or w.get("views") or None),
             "structure": w.get("structure") or None,
             "source_url": w.get("source_url", ""),
             # ★이름·썸네일·카테고리를 서버가 직접 실어 보낸다(2026-07-26 사고). 안 실으면 pick_meta가
