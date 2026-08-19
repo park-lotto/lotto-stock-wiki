@@ -2,6 +2,7 @@
 샤오홍슈/도우인 검색 페이지 URL을 올바로(중국어 URL 인코딩) 만드는지 node 슬라이스로 검증.
 2026-07-19: Apify 인앱검색 폐기하고 무료 사이트링크로 전환하며 클릭상한 테스트를 이걸로 교체."""
 import json, pathlib, shutil, subprocess, pytest
+from shopping_shorts.tests.js_harness import run_js_proc
 
 INDEX_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "index.html"
 NODE = shutil.which("node")
@@ -26,7 +27,7 @@ def test_cn_candidate_site_links():
     """
     # stdin=DEVNULL: pytest가 stdin 핸들을 캡처/교체한 상태에서 node -e 가 그 핸들을
     # 건드려 Windows WinError 6(invalid handle)로 간헐 실패하던 것을 막는다(2026-07-19 실측).
-    out = subprocess.run([NODE, "-e", driver], capture_output=True, text=True,
+    out = run_js_proc(driver, capture_output=True, text=True,
                          stdin=subprocess.DEVNULL, timeout=20)
     assert out.returncode == 0, out.stderr
     r = json.loads(out.stdout)
@@ -54,7 +55,7 @@ def test_ig_keyword_trim_measured_cases():
     """
     # encoding 명시 필수 — 한글이 오가는데 윈도우 기본 cp949로 읽으면 깨진다
     # (형제 테스트는 URL 퍼센트인코딩이라 ASCII뿐이어서 문제가 안 났다).
-    out = subprocess.run([NODE, "-e", driver], capture_output=True, text=True,
+    out = run_js_proc(driver, capture_output=True, text=True,
                          encoding="utf-8", stdin=subprocess.DEVNULL)
     assert out.returncode == 0, out.stderr
     got = {c: (trim, short) for c, trim, short in json.loads(out.stdout)}

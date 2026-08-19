@@ -20,6 +20,7 @@ import shutil
 import subprocess
 
 import pytest
+from shopping_shorts.tests.js_harness import run_js_proc
 
 BASE = pathlib.Path(__file__).resolve().parents[1] / "static"
 PRODUCE = BASE / "produce.html"
@@ -65,7 +66,7 @@ def test_기존작업으로_보내도_영상이_버려지지_않는다():
         "console.log(JSON.stringify({arrived: arrived,"
         " codes: HANDOFF.map(function(h){return h.shortcode;}),"
         " useFootage: HANDOFF[1].useFootage}));\n")
-    r = subprocess.run(["node", "-e", script], capture_output=True, text=True, timeout=60)
+    r = run_js_proc(script, capture_output=True, text=True, timeout=60)
     assert r.returncode == 0, r.stderr
     out = json.loads(r.stdout)
     assert out["arrived"] == 1, "새 영상 1개만 들어가야 한다(중복은 안 쌓는다)"

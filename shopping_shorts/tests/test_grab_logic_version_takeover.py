@@ -15,6 +15,7 @@ import shutil
 import subprocess
 
 import pytest
+from shopping_shorts.tests.js_harness import run_js_proc
 
 LOGIC = pathlib.Path(__file__).resolve().parents[1] / "userscript" / "grab_logic.js"
 
@@ -46,7 +47,7 @@ def _run(setup):
         " cleared: cleared.length}));\n"
     )
     # return 문이 함수 안에 있어야 하므로 가드를 즉시실행 함수로 감쌌다.
-    r = subprocess.run(["node", "-e", script], capture_output=True, text=True, timeout=60)
+    r = run_js_proc(script, capture_output=True, text=True, timeout=60)
     assert r.returncode == 0, r.stderr
     import json
     return json.loads(r.stdout)

@@ -13,6 +13,7 @@ import shutil
 import subprocess
 
 import pytest
+from shopping_shorts.tests.js_harness import run_js_proc
 
 BASE = pathlib.Path(__file__).resolve().parents[1]
 LOGIC = BASE / "userscript" / "grab_logic.js"
@@ -56,7 +57,7 @@ def _run(cases):
         "  out[href] = _chQuery();\n"
         "}\n"
         "console.log(JSON.stringify(out));\n")
-    r = subprocess.run(["node", "-e", script], capture_output=True, text=True, timeout=60)
+    r = run_js_proc(script, capture_output=True, text=True, timeout=60)
     assert r.returncode == 0, r.stderr
     return json.loads(r.stdout)
 
@@ -123,7 +124,7 @@ def test_레퍼런스_등록_버튼이_영상_페이지에서만_뜬다():
               "  location={host:u.host, pathname:u.pathname, search:u.search, href:href};\n"
               "  out[href]=_isVideoPage();\n}\n"
               "console.log(JSON.stringify(out));")
-    r = subprocess.run(["node", "-e", script], capture_output=True, text=True, timeout=60)
+    r = run_js_proc(script, capture_output=True, text=True, timeout=60)
     assert r.returncode == 0, r.stderr
     out = json.loads(r.stdout)
     assert out["https://www.instagram.com/reel/ABC/"] is True
@@ -153,7 +154,7 @@ def test_화면_숫자를_읽어_붙인다():
     page = "좋아요 207개 댓글 1,202개 조회수 1.2만회 팔로워 22.1만"
     script = ("var document={body:{innerText:" + json.dumps(page) + "}};\n" + body +
               "\nconsole.log(JSON.stringify([_pageStats(), _num('195만'), _num('6.3천'), _num('')]));")
-    r = subprocess.run(["node", "-e", script], capture_output=True, text=True, timeout=60)
+    r = run_js_proc(script, capture_output=True, text=True, timeout=60)
     assert r.returncode == 0, r.stderr
     stats, man, chun, empty = json.loads(r.stdout)
     assert stats == {"views": 12000, "likes": 207, "comments": 1202, "followers": 221000}
