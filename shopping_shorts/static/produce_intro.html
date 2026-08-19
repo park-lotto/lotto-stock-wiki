@@ -1,42 +1,195 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>숏템 제작소 — 이용권 안내</title>
+<title>숏템 제작소 — 이렇게 만들어집니다</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-  :root{--bg:#0f1115;--card:#171a21;--txt:#e8eaf0;--sub:#9aa3b2;--line:#262b36;--accent:#7c5cff}
+  :root{--bg:#0f1115;--card:#171a21;--card2:#1d212a;--txt:#e8eaf0;--sub:#9aa3b2;
+        --line:#262b36;--accent:#7c5cff;--ok:#2ecc71;--warn:#f5a623}
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--txt);
-       font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif;line-height:1.6}
-  .wrap{max-width:720px;margin:0 auto;padding:32px 20px 64px}
-  h1{font-size:24px;margin:0 0 6px}
-  .lead{color:var(--sub);margin:0 0 24px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
-        padding:18px 20px;margin-bottom:12px}
-  .card h2{font-size:16px;margin:0 0 6px}
-  .card p{margin:0;color:var(--sub);font-size:14px}
-  .cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
-  .btn{display:inline-block;padding:11px 18px;border-radius:9px;text-decoration:none;
-       font-weight:700;font-size:14px}
+  body{margin:0;background:var(--bg);color:var(--txt);line-height:1.65;
+       font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif}
+  .wrap{max-width:860px;margin:0 auto;padding:28px 18px 72px}
+  .ribbon{background:linear-gradient(90deg,#7c5cff22,#7c5cff08);border:1px solid #7c5cff55;
+          border-radius:10px;padding:12px 16px;margin-bottom:22px;font-size:14px}
+  .ribbon b{color:#b9a7ff}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:-.4px}
+  .lead{color:var(--sub);margin:0 0 8px}
+  .demo-of{font-size:13px;color:var(--sub);margin:0 0 26px}
+  .demo-of code{background:var(--card2);padding:2px 7px;border-radius:5px;color:#c9d1e0}
+
+  .step{background:var(--card);border:1px solid var(--line);border-radius:13px;
+        padding:18px 20px;margin-bottom:14px;position:relative}
+  .step-head{display:flex;align-items:center;gap:9px;margin-bottom:4px;flex-wrap:wrap}
+  .step-n{background:var(--accent);color:#fff;font-size:12px;font-weight:800;
+          width:24px;height:24px;border-radius:50%;display:flex;align-items:center;
+          justify-content:center;flex:0 0 auto}
+  .step-t{font-size:17px;font-weight:800;margin:0}
+  .done{margin-left:auto;font-size:12px;color:var(--ok);font-weight:700;white-space:nowrap}
+  .help{background:#7c5cff14;border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
+        padding:9px 13px;margin:11px 0 0;font-size:13.5px;color:#cfd6e4}
+  .help b{color:#fff}
+  .muted{color:var(--sub)}
+
+  .srcs{display:flex;gap:9px;margin-top:12px;flex-wrap:wrap}
+  .src-card{width:78px;height:104px;border-radius:8px;overflow:hidden;background:var(--card2);
+           border:1px solid var(--line);flex:0 0 auto}
+  .src-card img{width:100%;height:100%;object-fit:cover;display:block}
+  .src-empty{display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--sub)}
+  ul.srclist{margin:12px 0 0;padding-left:18px;font-size:13.5px}
+  ul.srclist li{margin-bottom:3px}
+
+  .beat{display:flex;gap:12px;padding:13px 0;border-top:1px solid var(--line)}
+  .beat:first-of-type{border-top:0}
+  .beat-no{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--card2);
+          border:1px solid var(--line);font-size:11px;color:var(--sub);
+          display:flex;align-items:center;justify-content:center;margin-top:3px}
+  .beat-body{flex:1;min-width:0}
+  .beat-head{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+  .tag{font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px}
+  .tag-hook{background:#f5a62322;color:#f5a623}
+  .tag-before{background:#ff6b6b22;color:#ff8787}
+  .tag-reveal{background:#7c5cff26;color:#b9a7ff}
+  .tag-after{background:#2ecc7122;color:#4ade80}
+  .tag-cta{background:#4dabf722;color:#74c0fc}
+  .sec{font-size:12px;color:var(--sub)}
+  .beat-text{margin:0;font-size:14.5px}
+  .beat-help{margin:5px 0 0;font-size:12.5px;color:var(--sub)}
+
+  .styles{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
+  .chip{border:1px solid var(--line);background:var(--card2);border-radius:20px;
+        padding:5px 13px;font-size:13px}
+  .chip.on{border-color:var(--accent);background:#7c5cff1f;color:#c9bcff;font-weight:700}
+
+  .cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px}
+  .btn{display:inline-block;padding:12px 20px;border-radius:9px;text-decoration:none;
+       font-weight:800;font-size:14.5px}
   .btn.primary{background:var(--accent);color:#fff}
   .btn.ghost{border:1px solid var(--line);color:var(--txt)}
-  .note{margin-top:20px;font-size:13px;color:var(--sub)}
+  .foot{margin-top:18px;font-size:13px;color:var(--sub)}
+  @media(max-width:520px){ .src-card{width:64px;height:86px} h1{font-size:22px} }
 </style>
 <div class="wrap">
-  <h1>🎬 숏템 제작소</h1>
-  <p class="lead">이용권을 시작하면 열립니다. 지금은 어떤 기능인지 미리 보실 수 있어요.</p>
 
-  <div class="card"><h2>1. 영상 담기 → 자동 분석</h2>
-    <p>마음에 든 영상을 담으면 자막·장면·제품을 자동으로 뽑아냅니다.</p></div>
-  <div class="card"><h2>2. 대본 자동 생성</h2>
-    <p>잘 터진 영상들의 구조를 학습해 새 대본을 만들어 줍니다.</p></div>
-  <div class="card"><h2>3. 자막 제거·영상 믹스</h2>
-    <p>원본 자막을 지우고 새 장면을 이어 붙여 한 편으로 완성합니다.</p></div>
-  <div class="card"><h2>4. 성우 목소리·썸네일</h2>
-    <p>대본을 읽어주는 음성과 표지 이미지까지 한 번에 만듭니다.</p></div>
+  <div class="ribbon">
+    👀 <b>미리보기입니다.</b> 아래는 실제로 만들어진 영상 한 편을 그대로 펼쳐놓은 것이라
+    <b>고치거나 새로 만들 수는 없습니다.</b> 이용권을 시작하면 이 과정을 직접 돌릴 수 있어요.
+  </div>
+
+  <h1>🎬 숏템 제작소는 이렇게 돌아갑니다</h1>
+  <p class="lead">영상 몇 개를 담으면 → 대본이 나오고 → 장면이 붙고 → 한 편이 완성됩니다.</p>
+  <p class="demo-of">지금 보시는 건 실제 완성작 <code>미세 노즐 실란트 주사기</code> 편입니다.
+     아래 숫자·문장은 전부 그 작업에서 그대로 가져온 것이에요.</p>
+
+  <div class="step">
+    <div class="step-head"><span class="step-n">1</span>
+      <p class="step-t">담은 영상을 읽습니다</p><span class="done">✓ 완료</span></div>
+    <div class="srcs"><div class="src-card"><img src="/api/thumb?url=https%3A%2F%2Fscontent-icn2-1.cdninstagram.com%2Fv%2Ft15.5256-10%2F775307349_2026616161319852_467190688987665568_n.jpg%3Fstp%3Ddst-jpg_e15_tt6%26_nc_cat%3D104%26ig_cache_key%3DMzk2NTM3MjUyMjMwNDAxNjcyMQ%253D%253D.3-ccb7-5%26ccb%3D7-5%26_nc_sid%3D58cdad%26efg%3DeyJ2ZW5jb2RlX3RhZyI6IkNMSVBTLnhwaWRzLjY0MC5zZHIudmlkZW9fZGVmYXVsdF9jb3Zlcl9mcmFtZS5DMyJ9%26_nc_ohc%3DeqiYTXSm0pQQ7kNvwF3wyaP%26_nc_oc%3DAdqecGneu0TILblYu4LzMdV2jxMcXBpAW4AiyH89E_9IpYvNPqlsbGxrZp7kqk6cE8M%26_nc_ad%3Dz-m%26_nc_cid%3D0%26_nc_zt%3D23%26_nc_ht%3Dscontent-icn2-1.cdninstagram.com%26_nc_gid%3DyGEIScu80eXf6nHYt7oN1A%26_nc_ss%3D7a22e%26oh%3D00_AQFaHds6c9jVzB00nmx_pgEfhL-P_iEBboXcT7zIQpFdKQ%26oe%3D6A8AB997" alt="담은 영상 1" loading="lazy" onerror="this.closest('.src-card').style.display='none'"></div><div class="src-card"><img src="/api/thumb?url=https%3A%2F%2Fscontent-nrt6-1.cdninstagram.com%2Fv%2Ft51.71878-15%2F730088469_1695916574984735_4945552019125412080_n.jpg%3Fstp%3Ddst-jpg_e15_tt6%26_nc_ht%3Dscontent-nrt6-1.cdninstagram.com%26_nc_cat%3D111%26_nc_oc%3DQ6cZ2gHbGxsbggHjMRwSmiXkaOG2JxkRr4cc83IthD2Dz6EaQlVuBLvZZ3OOtopbYHhQOtY8HmK5S1T-c5WnPPKcQpaE%26_nc_ohc%3DAWEpNm1AaTMQ7kNvwGvMuHj%26_nc_gid%3DvEEriMWd1deKuzZpoMslmg%26edm%3DALY_pVYBAAAA%26ccb%3D7-5%26oh%3D00_AQEc5Ohx-CzJgVXMpFfZpVyNTE4bpNEh7PBUWwE3QwMxhQ%26oe%3D6A8BB198%26_nc_sid%3D57e406" alt="담은 영상 2" loading="lazy" onerror="this.closest('.src-card').style.display='none'"></div><div class="src-card"><img src="/api/thumb?url=https%3A%2F%2Fscontent-nrt6-1.cdninstagram.com%2Fv%2Ft51.82787-15%2F733271282_18011694980873134_6458972547842370935_n.jpg%3Fstp%3Ddst-jpg_e15_p480x480_tt6%26_nc_ht%3Dscontent-nrt6-1.cdninstagram.com%26_nc_cat%3D110%26_nc_oc%3DQ6cZ2gHrMM-jKC6nHULhCW80efzotJX54e5D-DGkGXB_h9Uw5EahG9mP41V4Arfcr93rNCQ1I8QeSZDKlc1q2tiro4po%26_nc_ohc%3DSI9DeQAFHmsQ7kNvwEevJJh%26_nc_gid%3DoCZ8JQh4_YKeGgZFDE57ew%26edm%3DALY_pVYBAAAA%26ccb%3D7-5%26oh%3D00_AQEr2xtYESTGqxDoOCF0ZAfqOAkshZXrM9ZRUVqBnACyPw%26oe%3D6A8B9EA3%26_nc_sid%3D57e406" alt="담은 영상 3" loading="lazy" onerror="this.closest('.src-card').style.display='none'"></div><div class="src-card"><img src="/api/thumb?url=https%3A%2F%2Fscontent-nrt6-1.cdninstagram.com%2Fv%2Ft51.71878-15%2F766373649_1391035102995324_1086685399232311157_n.jpg%3Fstp%3Ddst-jpg_e15_tt6%26_nc_ht%3Dscontent-nrt6-1.cdninstagram.com%26_nc_cat%3D100%26_nc_oc%3DQ6cZ2gHuj5BM_LbGKeh23HkJJ466Vms2TEicgMIsGNKZU6OxNypEUXIA8Axs_hKtya11IXRfqE3ulLjWUGlzJ5__st3K%26_nc_ohc%3DZUHqvJI-nWsQ7kNvwEI_YPH%26_nc_gid%3Dku9gzA-tiS2_hncrfKl71w%26edm%3DALY_pVYBAAAA%26ccb%3D7-5%26oh%3D00_AQFGFJMSmdJU8CRqG2EMPBAuYNH3h8N-PuQurukhEFITiA%26oe%3D6A8B9B9C%26_nc_sid%3D57e406" alt="담은 영상 4" loading="lazy" onerror="this.closest('.src-card').style.display='none'"></div><div class="src-card"><img src="/api/thumb?url=https%3A%2F%2Fscontent-nrt6-1.cdninstagram.com%2Fv%2Ft51.71878-15%2F626450785_771415965440040_7298140585621292470_n.jpg%3Fstp%3Ddst-jpg_e15_tt6%26_nc_ht%3Dscontent-nrt6-1.cdninstagram.com%26_nc_cat%3D100%26_nc_oc%3DQ6cZ2gGH8r0mRpwDWjRYPQuyHuEXgn5t1MtN_Ply2amfnGPmTbgx-fdVcgT80NHDRdLPLCkpMkCw2SPPwmzIO_f5Tq6X%26_nc_ohc%3DbHC-R50ZMTIQ7kNvwFGCqrS%26_nc_gid%3DVxHwN3HaNWHG2JaFVHcE8A%26edm%3DALY_pVYBAAAA%26ccb%3D7-5%26oh%3D00_AQGO9QWKFKzCWLRQGx2iPqAzJ5oN3yRq0eX1YkQccoDpqg%26oe%3D6A8B938D%26_nc_sid%3D57e406" alt="담은 영상 5" loading="lazy" onerror="this.closest('.src-card').style.display='none'"></div></div>
+    <ul class="srclist"><li><b>114자</b> <span class="muted">만원이면 가구 틈새 실리콘 마감이 뚝딱이여 기존 실리콘건은 너무 크잖아?</span></li><li><b>205자</b> <span class="muted">이런 거 하나 있으면 든든하죠! 집이 오래돼서 보수할 데가 많았는데 인테</span></li><li><b>915자</b> <span class="muted">¿Sabías que la humedad del ambiente dete</span></li></ul>
+    <p class="help">💬 <b>이건 뭐냐면</b> — 담아둔 영상의 <b>말(자막)을 전부 받아적고</b>,
+       화면에 뭐가 나오는지까지 읽습니다. 위 숫자가 받아적은 글자 수예요.
+       <b>자막이 아예 없는 영상도</b> 화면만 보고 알아냅니다. 외국어(스페인어)도 그대로 읽어요.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-n">2</span>
+      <p class="step-t">어떤 말투로 쓸지 고릅니다</p><span class="done">✓ 완료</span></div>
+    <div class="styles">
+      <span class="chip on">✓ 단정 명령형</span>
+      <span class="chip">가족갈등 반전형</span>
+    </div>
+    <p class="help">💬 <b>이건 뭐냐면</b> — 잘 터진 채널들의 <b>말하는 방식</b>을 미리 학습해둔
+       틀입니다. 같은 제품이라도 틀을 바꾸면 완전히 다른 영상이 나와요.
+       이번 편은 <b>단정 명령형</b>으로 뽑았습니다.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-n">3</span>
+      <p class="step-t">대본이 나옵니다 — 통째로가 아니라 <em>역할별</em>로</p>
+      <span class="done">✓ 29.0초</span></div>
+    
+      <div class="beat">
+        <div class="beat-no">1</div>
+        <div class="beat-body">
+          <div class="beat-head">
+            <span class="tag tag-hook">훅</span>
+            <span class="sec">3.9초</span>
+          </div>
+          <p class="beat-text">여러분, 집안 틈새 보수할 때 실리콘 건 덩치 큰 거 쓰지 마세요. 이게 진짜 난리예요!</p>
+          <p class="beat-help">💬 첫 3초. 여기서 못 잡으면 나머지를 아무리 잘 만들어도 안 봅니다.</p>
+        </div>
+      </div>
+      <div class="beat">
+        <div class="beat-no">2</div>
+        <div class="beat-body">
+          <div class="beat-head">
+            <span class="tag tag-before">문제</span>
+            <span class="sec">6.6초</span>
+          </div>
+          <p class="beat-text">저도 예전엔 큰 건으로 쏘다가 다 삐져나와서 닦느라 고생만 했거든요. 인테리어 망치고 나면 수습도 안 돼서 얼마나 짜증나던지 몰라요.</p>
+          <p class="beat-help">💬 보는 사람이 겪은 불편을 먼저 말해 &#x27;내 얘기네&#x27; 하고 붙잡습니다.</p>
+        </div>
+      </div>
+      <div class="beat">
+        <div class="beat-no">3</div>
+        <div class="beat-body">
+          <div class="beat-head">
+            <span class="tag tag-reveal">등장</span>
+            <span class="sec">7.3초</span>
+          </div>
+          <p class="beat-text">근데 인테리어 하는 친구가 이 미세 노즐 실란트 주사기를 슥 내밀더라고요. 주사기처럼 생겨서 필요한 만큼만 딱 짜니까 힘 안 줘도 일정하게 쫙 나와요.</p>
+          <p class="beat-help">💬 제품이 처음 나오는 자리. 광고가 아니라 &#x27;해결책&#x27;으로 들어옵니다.</p>
+        </div>
+      </div>
+      <div class="beat">
+        <div class="beat-no">4</div>
+        <div class="beat-body">
+          <div class="beat-head">
+            <span class="tag tag-after">결과</span>
+            <span class="sec">6.9초</span>
+          </div>
+          <p class="beat-text">덕분에 가구 모서리 틈새가 싹 메워지니까 곰손인 저도 전문가처럼 깔끔하게 끝냈거든요. 남은 거 굳어서 버릴 일도 없어서 진짜 경제적이에요.</p>
+          <p class="beat-help">💬 쓰고 나서 뭐가 달라졌는지. 사고 싶어지는 건 대개 이 대목입니다.</p>
+        </div>
+      </div>
+      <div class="beat">
+        <div class="beat-no">5</div>
+        <div class="beat-body">
+          <div class="beat-head">
+            <span class="tag tag-cta">행동유도</span>
+            <span class="sec">4.3초</span>
+          </div>
+          <p class="beat-text">어디서 샀냐고들 물어봐서 댓글에 &#x27;실리콘&#x27; 남겨주시면 구매한 링크 바로 보내 드릴게요.</p>
+          <p class="beat-help">💬 댓글·링크로 이어지는 마무리. 채널마다 문구가 다릅니다.</p>
+        </div>
+      </div>
+    <p class="help">💬 <b>이건 뭐냐면</b> — 대본을 그냥 길게 쓰는 게 아니라
+       <b>훅 → 문제 → 등장 → 결과 → 행동유도</b> 다섯 토막으로 나눠서 씁니다.
+       토막마다 <b>몇 초짜리인지</b>가 정해져 있어서, 다음 단계에서 장면을 그 길이에 맞춰
+       잘라 붙일 수 있어요. 합쳐서 <b>29.0초</b>짜리 한 편이 됩니다.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-n">4</span>
+      <p class="step-t">대사에 맞는 장면을 골라 붙입니다</p>
+      <span class="done">✓ 장면 14곳</span></div>
+    <p class="help">💬 <b>이건 뭐냐면</b> — 담은 영상들에서 쓸 만한 장면
+       <b>14곳</b>을 찾아두고, 대사 내용과 맞는 자리에 자동으로 배치합니다.
+       "주사기처럼 생겨서"라고 말할 때 <b>실제로 그 장면이 나오게</b> 맞추는 일이에요.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-n">5</span>
+      <p class="step-t">원본 자막을 지우고, 목소리를 입히고, 한 편으로 굽습니다</p>
+      <span class="done">✓ 완료</span></div>
+    <p class="help">💬 <b>이건 뭐냐면</b> — 남의 영상에 박혀 있던 <b>자막을 지우고</b>
+       내 대본으로 새 자막을 답니다. 성우 목소리도 골라서 얹고, 썸네일까지 만들어
+       <b>바로 올릴 수 있는 영상 파일</b>로 내보냅니다.</p>
+  </div>
 
   <div class="cta">
     <a class="btn primary" href="/pricing">이용권 보기</a>
     <a class="btn ghost" href="/">← 레퍼런스 랭킹으로</a>
   </div>
-  <p class="note">체험 기간에는 <b>레퍼런스 랭킹</b>과 <b>영상 즐겨찾기</b>를 자유롭게 쓰실 수 있습니다.</p>
+  <p class="foot">체험 기간에는 <b>레퍼런스 랭킹</b>과 <b>영상 즐겨찾기</b>를 자유롭게 쓰실 수 있어요.
+     마음에 드는 영상을 미리 담아두시면, 이용권을 시작할 때 그대로 이어서 만들 수 있습니다.</p>
 </div>
