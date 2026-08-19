@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 from shopping_shorts.config import GRADE_THRESHOLDS
 from shopping_shorts.categorize import categorize
+from shopping_shorts.yt_style import yt_style as _yt_style
 
 
 def hours_since(ts_iso, now=None):
@@ -33,6 +34,23 @@ def _category_of(meta, reel):
     if guess == "기타":
         return (meta.get("category") or "").strip() or guess
     return guess
+
+
+def _style_of(meta, reel):
+    """유튜브 화법 스타일 — 캡션 우선, 없으면 **채널 스타일**(2026-08-19).
+
+    `_category_of`와 같은 구조다. 유튜브 제목은 후킹이 목적이라 밋밋할 때가 많고
+    (이븐쇼핑 실측: 제목만으론 12/12가 '기타'), 이 바닥은 **채널이 화법을 지킨다**
+    (살림킹왕짱 84편이 한 공식). 그래서 캡션으로 못 잡으면 채널 스타일로 폴백한다.
+
+    ★`category`(제품축)를 덮어쓰지 않고 **나란히** 산다 — 두 축은 서로 다른
+    질문이고 교차 조회가 목적이다("썰쇼핑 중 홈템").
+    빈 문자열은 '모른다'는 뜻이다 — '기타'라는 가짜 스타일을 만들지 않는다.
+    """
+    guess = _yt_style(meta.get("name"), reel.get("caption", ""))
+    if guess:
+        return guess
+    return (meta.get("yt_style") or "").strip()
 
 
 def build_items(reels, meta, prev_comments, prev_delta, now=None, window_hours=48):
@@ -100,6 +118,8 @@ def build_items(reels, meta, prev_comments, prev_delta, now=None, window_hours=4
             # 쓸 수 있게 됐으므로 죽이지 않고 별도 지표로 남긴다.
             "fan_density": (comments / followers) if followers else 0.0,
             "category": _category_of(meta, r),
+            # 화법축(2026-08-19) — category와 나란히 간다. 유튜브 탭 필터가 이걸 읽는다.
+            "yt_style": _style_of(meta, r),
             "caption": r.get("caption", ""),
         })
     return items

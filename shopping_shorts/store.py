@@ -561,8 +561,12 @@ class Store:
             # (실측: 클레이 토끼 → "레진 파츠"). 재질을 물으면 맞히므로 따로 저장한다.
             # made_by는 '직접만들기 vs 완제품' — 만드는 영상과 파는 물건이 안 섞이게
             # 하는 결정적 신호다(사장님 제보 케이스의 핵심 오답이었다).
+            # shot_type·face_prominent(2026-08-19): 재료로 쓸 수 있는 화면인가.
+            # 직촬(리뷰어 얼굴이 주인공)은 쇼핑 얘기를 제대로 해도 재료로 못 쓴다 —
+            # 쇼핑비율만 보는 정리 규칙으로는 오히려 우량으로 살아남는다(C단계 실측 17%).
             for col, ddl in (("product", "TEXT"), ("product_at", "TEXT"),
-                             ("material", "TEXT"), ("made_by", "TEXT")):
+                             ("material", "TEXT"), ("made_by", "TEXT"),
+                             ("shot_type", "TEXT"), ("face_prominent", "INTEGER")):
                 try:
                     c.execute(f"ALTER TABLE vision_tags ADD COLUMN {col} {ddl}")
                 except sqlite3.OperationalError:
@@ -1112,7 +1116,11 @@ class Store:
                                #   재료로 주면 원본을 그대로 베낀다 — 사장님이 짚으신 지점.
                                #   3안 실측(2026-08-16): 사전 없음=말버릇 1개·게이트 실패·254자 /
                                #   사전 있음=말버릇 8개·통과·323자. 원본에 없던 "퐁신퐁신"을 새로 만들었다.
-                               ("voice_json", "TEXT")):          # {onomatopoeia,intensifier,exclaim,endings,tone_note}
+                               ("voice_json", "TEXT"),          # {onomatopoeia,intensifier,exclaim,endings,tone_note}
+                               # CTA를 쓰지 않는 스타일인가(2026-08-19). 유튜브 썰쇼핑
+                               # (이븐쇼핑·살림킹왕짱)은 CTA가 없는 게 정답이라 게이트의
+                               # CTA 검사를 건너뛰어야 한다. 기본 0 = 기존 동작(검사 O).
+                               ("no_cta", "INTEGER")):
                 try:
                     c.execute(f"ALTER TABLE spine ADD COLUMN {_col} {_ddl}")
                 except sqlite3.OperationalError:
@@ -2949,14 +2957,24 @@ class Store:
                 "top_comments": json.loads(row[8] or "[]"), "caption": row[9],
                 "status": row[10]}
 
-    def save_vision_tags(self, shortcode, subject, keywords):
-        """썸네일 비전 주제태그 저장(덮어쓰기). keywords: [str]."""
+    def save_vision_tags(self, shortcode, subject, keywords,
+                         shot_type=None, face_prominent=None):
+        """썸네일 비전 주제태그 저장(덮어쓰기). keywords: [str].
+
+        shot_type/face_prominent는 **선택**이다(2026-08-19) — 안 주면 기존 값을 유지한다.
+        기존 3-인자 호출부(vision_tagging 등)를 그대로 두기 위함이다."""
         with self._conn() as c:
             c.execute(
-                "INSERT INTO vision_tags(shortcode, subject, keywords_json, created_at) "
-                "VALUES(?,?,?,datetime('now')) ON CONFLICT(shortcode) DO UPDATE SET "
-                "subject=excluded.subject, keywords_json=excluded.keywords_json, created_at=excluded.created_at",
-                (shortcode, subject or "", json.dumps(keywords or [], ensure_ascii=False)),
+                "INSERT INTO vision_tags(shortcode, subject, keywords_json, created_at, "
+                "shot_type, face_prominent) "
+                "VALUES(?,?,?,datetime('now'),?,?) ON CONFLICT(shortcode) DO UPDATE SET "
+                "subject=excluded.subject, keywords_json=excluded.keywords_json, "
+                "created_at=excluded.created_at, "
+                # ★안 준 값은 덮어쓰지 않는다 — 옛 호출부가 판정을 지우면 안 된다.
+                "shot_type=COALESCE(excluded.shot_type, vision_tags.shot_type), "
+                "face_prominent=COALESCE(excluded.face_prominent, vision_tags.face_prominent)",
+                (shortcode, subject or "", json.dumps(keywords or [], ensure_ascii=False),
+                 shot_type, None if face_prominent is None else int(bool(face_prominent))),
             )
 
     def save_product(self, shortcode, product, category="", material="", made_by=""):
@@ -3036,10 +3054,13 @@ class Store:
             # sqlite 변수 상한(999) 회피 — 청크로 조회.
             for i in range(0, len(codes), 400):
                 chunk = codes[i:i + 400]
-                q = "SELECT shortcode, subject, keywords_json FROM vision_tags WHERE shortcode IN (%s)" % \
+                q = ("SELECT shortcode, subject, keywords_json, shot_type, face_prominent "
+                     "FROM vision_tags WHERE shortcode IN (%s)") % \
                     ",".join("?" * len(chunk))
-                for sc, subj, kj in c.execute(q, chunk).fetchall():
-                    out[sc] = {"subject": subj or "", "keywords": json.loads(kj or "[]")}
+                for sc, subj, kj, shot, face in c.execute(q, chunk).fetchall():
+                    out[sc] = {"subject": subj or "", "keywords": json.loads(kj or "[]"),
+                               # 옛 행은 이 컬럼이 NULL이다 — 빈값/False로 읽어 호출부가 안 터진다.
+                               "shot_type": shot or "", "face_prominent": bool(face)}
         return out
 
     # --- 영상 길이 캐시(reel_durations, 2026-08-04) — 랭킹 카드 ⏱ 표시용 ---
@@ -3475,7 +3496,7 @@ class Store:
             return cur.lastrowid
 
     def set_spine_style(self, spine_id, beat_roles=None, templates=None, chars_per_30s=None,
-                        voice=None):
+                        voice=None, no_cta=None):
         """스파인에 **기계가 검사할** 스타일 정보를 붙인다(2026-08-15).
 
         beat_roles = ["hook","before",...] · templates = {"hook":["...{가족}..."]} ·
@@ -3491,6 +3512,9 @@ class Store:
         if chars_per_30s is not None:
             sets.append("chars_per_30s=?")
             args.append(int(chars_per_30s))
+        if no_cta is not None:
+            sets.append("no_cta=?")
+            args.append(1 if no_cta else 0)
         if voice is not None:
             sets.append("voice_json=?")
             args.append(json.dumps(voice, ensure_ascii=False))
@@ -3506,7 +3530,7 @@ class Store:
         q = ("SELECT id, name, situation_type, character_roles_json, beat_chain_json, "
              "emotion_arc, appeal, fit_categories_json, source_count, perf_score, "
              "status, created_at, updated_at, beat_roles_json, templates_json, "
-             "chars_per_30s, voice_json FROM spine")
+             "chars_per_30s, voice_json, no_cta FROM spine")
         args = []
         if status is not None:
             q += " WHERE status=?"
@@ -3525,7 +3549,10 @@ class Store:
              "beat_roles": json.loads(r[13]) if r[13] else None,
              "templates": json.loads(r[14]) if r[14] else None,
              "chars_per_30s": r[15],
-             "voice": json.loads(r[16]) if r[16] else None}
+             "voice": json.loads(r[16]) if r[16] else None,
+             # ★게이트에 그대로 넘어가는 dict다 — 여기서 안 실으면 no_cta가 영영 None이라
+             #   유튜브 스파인이 CTA 검사에 계속 걸린다(오류가 안 나는 조용한 실패).
+             "no_cta": bool(r[17])}
             for r in rows
         ]
 
@@ -4806,19 +4833,35 @@ class Store:
                 "UPDATE job_queue SET state=?, error=?, finished_at=datetime('now') WHERE id=?",
                 ("done" if ok else "failed", None if ok else (error or "알 수 없는 오류"), qid))
 
+    #: 배포 재시작으로 죽어도 **다음 크론이 다시 큐에 넣는** 배경작업(2026-08-19).
+    #  auto_deploy.sh가 이것들은 일부러 안 기다리고 죽인다("잃는 게 없다").
+    #  그래서 이 중단은 **고장이 아니다** — 같은 'failed'로 적으면 통계가 오염된다.
+    _BACKGROUND_TASKS = ("durfill", "prewarm", "overseas")
+
     def reap_stale(self, minutes=2):
-        """heartbeat가 minutes분 넘게 안 뛴 running을 failed로 정리하고 개수를 반환한다.
+        """heartbeat가 minutes분 넘게 안 뛴 running을 정리하고 개수를 반환한다.
 
         워커가 SIGKILL로 죽으면 heartbeat가 멈춘다 — 그걸 잡아 화면에 실패를 알린다.
-        (예전엔 조용히 멈춰 '되고 있나?'를 알 수 없었다, 2026-07-29 실사고)"""
+        (예전엔 조용히 멈춰 '되고 있나?'를 알 수 없었다, 2026-07-29 실사고)
+
+        ★사유를 갈라 적는다(2026-08-19 사장님 총점검 지시). 배경작업(durfill 등)은
+          배포 재시작에 일부러 희생시키는 것이라 중단이 **정상 동작**이다. 실측:
+          durfill done 248 / '중단' 33인데 길이 캐시는 24시간에 732건이 채워지고 있었다
+          = 일은 되고 있었다. 그런데 둘 다 'failed'로 적혀 오류표 1위(43건)로 올라와
+          진짜 고장(EDL 13건 등)을 가렸다. 상태는 그대로 두되 **문구로 구분**한다
+          — 화면·집계가 '중단(재시도됨)'을 고장으로 세지 않게."""
+        marks = ",".join("?" for _ in self._BACKGROUND_TASKS)
         with self._conn() as c:
             cur = c.execute(
-                "UPDATE job_queue SET state='failed', error='워커가 중단됐습니다', "
+                "UPDATE job_queue SET state='failed', "
+                "       error=CASE WHEN task IN (" + marks + ") "
+                "                  THEN '배포 재시작으로 중단됨(자동 재시도 대상 — 고장 아님)' "
+                "                  ELSE '워커가 중단됐습니다' END, "
                 "       finished_at=datetime('now') "
                 " WHERE state='running' "
                 "   AND (heartbeat_at IS NULL "
                 "        OR datetime(heartbeat_at) < datetime('now', ?))",
-                (f"-{int(minutes)} minutes",))
+                (*self._BACKGROUND_TASKS, f"-{int(minutes)} minutes"))
             return cur.rowcount
 
     def queue_status(self, task, args_match=None):
@@ -4843,6 +4886,39 @@ class Store:
                 " WHERE id < ? AND state IN ('queued','running')", (qid,)).fetchone()[0]
             return {"id": qid, "state": state, "position": ahead, "error": error,
                     "progress": progress, "claimed_at": claimed_at}
+
+    def task_is_alive(self, task, args_match, stale_minutes=3):
+        """이 task+args 작업이 **지금 워커에서 살아 돌고 있나**(하트비트 기준).
+
+        ★왜 필요한가(2026-08-19 실사고): 화면의 '진행중 → 실패' 판정이 `updated_at`
+        경과시간(_PREVIEW_STALE_SEC=10분)만 봤다. 그런데 워커는 도는 동안
+        `job_queue.heartbeat_at`만 찍고 `mix_jobs.updated_at`은 안 건드린다 —
+        즉 **10분 넘게 걸리는 정상 작업은 무조건 '실패'로 표시**됐다.
+        실측: 자막제거 25분 작업(15:52→16:17)이 10분 시점부터 빨간 실패 문구를 띄웠고,
+        정작 결과는 성공이었다(자막 3개 전부 제거 확인). 사장님이 "왜 실패?"로 본 그 화면이다.
+
+        `reap_stale(minutes=2)`이 죽은 running을 failed로 바꾸므로, 하트비트가 살아 있다면
+        그건 **진짜로 돌고 있는 것**이다. 여유를 둬 기본 3분으로 본다(reap 2분 > 폴링 지연).
+        queued(아직 차례 대기)도 살아있는 것으로 친다 — 실패가 아니다.
+        """
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT state, heartbeat_at FROM job_queue "
+                " WHERE task=? AND args_json=? ORDER BY id DESC LIMIT 1",
+                (task, json.dumps(args_match, ensure_ascii=False))).fetchone()
+            if not row:
+                return False                      # 큐 기록이 없으면 판단 불가 → 기존 규칙에 맡긴다
+            state, hb = row
+            if state == "queued":
+                return True                       # 순번 대기 중 — 아직 시작도 안 했다
+            if state != "running":
+                return False                      # done/failed는 여기서 볼 게 없다
+            if not hb:
+                return False
+            alive = c.execute(
+                "SELECT datetime(?) > datetime('now', ?)",
+                (hb, f"-{int(stale_minutes)} minutes")).fetchone()[0]
+            return bool(alive)
 
     # ── 렌더 포인트 원장(2026-07-17, 자동매칭 고급효과 엔진 Task1) ──
     # 잔액 컬럼을 따로 두지 않고 delta 누적합으로 계산하는 원장(ledger) 방식.

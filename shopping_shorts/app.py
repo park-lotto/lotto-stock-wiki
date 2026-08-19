@@ -64,7 +64,7 @@ from shopping_shorts.media_download import (resolve_media_url, download_any, pro
                                             _is_direct_video, DouyinBusy)
 from shopping_shorts import edit_plan as _edit_plan
 from shopping_shorts import edit_plan
-from shopping_shorts import voice_presets, audio_post
+from shopping_shorts import voice_presets, audio_post, typecast_tts
 from shopping_shorts import pron_corrections
 from shopping_shorts.tts import synthesize_tts
 from shopping_shorts import tts, asr_check
@@ -3220,11 +3220,21 @@ def api_mix_status(job_id: str, request: Request):
     # 안 건드리고 응답에서만 failed로 알려 pollClean이 재시도 UI를 연다(_render_is_stale는
     # updated_at 기반·단계무관, 이미 clean 재실행 가드에서 쓰인다).
     clean_status, clean_error = job.get("clean_status"), job.get("clean_error")
-    if clean_status == "cleaning" and _render_is_stale(job):
+    # ★하트비트 우선(2026-08-19): updated_at 경과(10분)만 보면 **오래 걸리는 정상 작업**이
+    #   실패로 둔갑한다. 워커는 도는 동안 job_queue.heartbeat_at만 찍고 mix_jobs.updated_at은
+    #   안 건드리기 때문이다. 실측 사고: 25분짜리 자막제거(15:52→16:17)가 10분 시점부터
+    #   "자막 제거에 실패했어요"를 띄웠으나 결과는 성공이었다(자막 3개 전부 제거됨).
+    #   → 워커가 살아 있으면(=하트비트가 뛰면) 시간이 얼마나 걸리든 '진행 중'으로 본다.
+    #   죽은 작업은 reap_stale(2분)이 큐에서 failed로 바꾸므로 여기 걸리지 않는다.
+    if clean_status == "cleaning" and _render_is_stale(job) \
+            and not store.task_is_alive("clean", {"job_id": job_id}):
         clean_status = "failed"
         clean_error = clean_error or "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."
     preview_status, preview_error = job.get("preview_status"), job.get("preview_error")
-    if preview_status == "rendering" and _render_is_stale(job):
+    # clean과 같은 이유로 하트비트를 함께 본다(위 주석 참조) — 오래 걸리는 정상 렌더를
+    # 실패로 표시하지 않기 위해. 같은 판단을 두 곳에 다르게 적지 않는다(0순위-B).
+    if preview_status == "rendering" and _render_is_stale(job) \
+            and not store.task_is_alive("preview", {"job_id": job_id}):
         preview_status = "failed"
         preview_error = preview_error or "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."
     # 장면 우선 대본 모드(2026-07-20, Task7): 후보 요약만 내려준다 — 전체 plan(beats 등)을
@@ -3284,6 +3294,11 @@ def api_mix_status(job_id: str, request: Request):
             # 자막제거 확인용 소스 개수(2026-08-18) — 3단계가 "소스 1/N"으로 넘겨보는 데만 쓴다.
             # 경로는 안 내보내고 개수만. 청소본이 있으면 그 개수, 없으면 담은 URL 개수.
             "clean_source_count": len(job.get("clean_sources") or {}) or len(job.get("urls") or []),
+            # 진행 표시용(2026-08-19): 자막제거는 소스 1편당 수 분씩 걸려 전체 25분도 정상이다.
+            # 그동안 화면에 아무 변화가 없어 "멈췄나"로 읽혔다(사장님 제보의 절반이 이것).
+            # 끝난 소스 수 / 전체를 내려보내 "2/5 완료"로 움직이는 걸 보이게 한다.
+            "clean_done": len(job.get("clean_sources") or {}),
+            "clean_total": len(job.get("urls") or []),
             # 지워진 자막 위치(2026-07-25): 5단계 꾸미기가 자막 자동정렬·'원본 자막 있던 자리' 마커에 쓴다.
             # 좌표(%)뿐이라 안전 — 소스 경로 등 내부정보는 안 실린다.
             "clean_regions": job.get("clean_regions"),
@@ -4135,6 +4150,16 @@ def api_mix_tts(job_id: str, beat_idx: int):
         return JSONResponse(status_code=404, content={"ok": False})
     for b in job["edit_plan"]["beats"]:
         if b["beat_idx"] == beat_idx and b.get("tts_path") and Path(b["tts_path"]).exists():
+            # ★대본과 어긋난 음성은 **주지 않는다**(2026-08-19 사장님 "tts가 우리 대본을
+            #   읽고 딴소리한다"). 렌더 경로는 _synthesize_beats(skip_existing=True)가
+            #   현재 대본의 해시 경로로 스킵을 판정해 자동으로 다시 뽑지만, 미리보기는
+            #   tts_path를 **그대로** 틀어서 옛 소리가 그대로 들렸다(잡 f8d373618c0f beat2:
+            #   대본 '영양사 친구가 알려준…' / 소리 '치즈와 우유에 계란까지 톡 까서…').
+            #   조용히 틀면 사장님이 렌더까지 가서야 안다 → 여기서 드러낸다.
+            if not mix_pipeline.tts_matches_narration(b):
+                return JSONResponse(status_code=409, content={
+                    "ok": False, "stale": True,
+                    "error": "이 칸은 대본이 바뀐 뒤 음성을 다시 안 뽑았어요 — 🔊 음성 만들기를 눌러주세요"})
             return FileResponse(b["tts_path"])
     return JSONResponse(status_code=404, content={"ok": False})
 
@@ -4267,6 +4292,10 @@ def api_voice_presets(lang: str = "KR"):
             # 3~4개 variant 행은 모두 같은 값이다. 순서는 Store가 이미 정해서
             # 줬고(ORDER BY best DESC), dict가 삽입 순서를 보존하므로 여기선 보존만 한다.
             "best": bool(p.get("best", False)),
+            # 어느 엔진 성우인지 카드에 배지로 띄운다(2026-08-19). 판정은 서버가 한다 —
+            # 프론트가 group_id 접두사("tc-") 따위로 추측하면 판단이 두 곳이 된다(0순위-B).
+            "engine": ("typecast" if typecast_tts.is_typecast(p.get("model_id"))
+                       else "elevenlabs"),
             "default_variant": "stable", "variants": {},
         })
         g["variants"][p["variant"]] = {
@@ -8878,6 +8907,176 @@ def _analysis_state(store, shortcode):
     return None, {"state": "idle", "reason": "", "attempts": 0}
 
 
+def _ig_username_from_url(url):
+    """인스타 영상 URL → 그 영상 주인의 계정명(못 찾으면 "").
+
+    ★릴스 URL(/reel/CODE/)에는 계정명이 없다 — 프로필 경유 URL
+    (/{계정}/reel/CODE/)일 때만 주소만 보고 알 수 있다. 주소로 못 얻으면
+    호출부가 oEmbed/yt-dlp가 준 channel을 쓴다(같은 판단을 두 번 적지 않게
+    여기서는 '주소에서 얻을 수 있는가'만 답한다 — 0순위-B).
+    """
+    m = re.search(r"instagram\.com/([^/?#]+)/(?:reel|reels|p|tv)/", url or "", re.I)
+    if not m:
+        return ""
+    who = m.group(1).strip().lstrip("@")
+    # /reel/... 처럼 계정 자리에 예약어가 온 경우는 계정이 아니다.
+    return "" if who.lower() in ("reel", "reels", "p", "tv", "stories", "explore") else who
+
+
+def _ig_reel_one(code):
+    """인스타 **릴 1건**만 직접 읽어 수집과 같은 10키 dict로 돌려준다(없으면 None).
+
+    ★왜 프로필 스크레이프를 안 쓰나(2026-08-19 실측):
+      fetch_reels(계정)는 **최신 3건만** 판다(config.RESULTS_PER_CHANNEL=3).
+      사장님이 고른 영상은 대개 그 3건 밖이라 통째로 못 찾는다
+      (실사고: DcF2lTqzeiu 등록 → 프로필엔 최신 3건뿐이라 reels=0).
+      게다가 프로필 열기는 비싸고 연달아 부르면 인스타가 0건을 준다(실측: 2회차 0건).
+
+    그래서 **그 영상 하나만** 연다 — 다운로드·길이백필이 이미 쓰는 경로 그대로다
+    (shortcode → pk → _fetch_reel_detail). 계정명을 몰라도 되고, 오래된 영상도 잡힌다.
+    """
+    from shopping_shorts.instagram_parse import parse_reel_node, shortcode_to_pk
+    pk = shortcode_to_pk(code)
+    if not pk:
+        return None
+    from shopping_shorts.instagram_playwright import _detail_context, _fetch_reel_detail
+    with _detail_context() as ctx:
+        node = _fetch_reel_detail(ctx, pk, code)
+    if not node:
+        return None
+    # 주인(계정)은 노드가 스스로 말한다 — 표시명으로 넘겨 오염시키지 않는다.
+    owner = ((node.get("user") or {}).get("username") or "") if isinstance(node.get("user"), dict) else ""
+    return parse_reel_node(node, owner or "")
+
+
+def _ig_username_from_meta(meta):
+    """probe_grab_meta 결과 → 인스타 **계정명**(못 찾으면 "").
+
+    ★`channel`은 계정명이 아니다 — oEmbed는 **표시명**을 준다(실측 2026-08-19:
+      channel='채이홈' / 실제 계정='chae2home'). 그걸 그대로 프로필 주소에 넣으면
+      instagram.com/채이홈/reels/ 를 열어 **0건**이 돌아온다(실사고: reels=0).
+      계정명은 oEmbed 제목 'Video by {계정}'에 들어 있으므로 거기서 뽑는다.
+    ★한글·공백이 섞였으면 계정명이 아니다 — 인스타 계정은 영문·숫자·마침표·밑줄뿐.
+    """
+    m = re.search(r"video by\s+([A-Za-z0-9._]+)", (meta.get("title") or ""), re.I)
+    if m:
+        return m.group(1).strip(".")
+    ch = (meta.get("channel") or "").strip().lstrip("@")
+    # 표시명(한글·공백 포함)을 계정으로 오인해 프로필을 열지 않는다.
+    return ch if re.fullmatch(r"[A-Za-z0-9._]+", ch or "") else ""
+
+
+def _enrich_instagram_meta(url, meta, store=None):
+    """인스타 1건의 지표를 **수집과 같은 경로**로 채운다(2026-08-19).
+
+    왜: adopt는 probe_grab_meta(yt-dlp)만 썼는데, yt-dlp는 로그인 없이 인스타를 읽어
+    **조회수·팔로워·캡션이 통째로 0/빈 값**으로 온다(실측: 채이홈 DcIrfnOzHre —
+    views 0 / followers 0 / caption 'Video by chae2home'). 그러면 화면이 조회수·
+    조회수당댓글·팔로워당댓글 줄을 아예 안 그려(index.html은 값이 있을 때만 그린다)
+    수동 등록분만 다른 포맷으로 보인다.
+
+    그래서 **정규 수집이 쓰는 fetch_reels를 그대로 태운다**(0순위-B: 같은 판단을 두 번
+    적지 않는다). 세션·프록시 로테이션·파싱이 전부 수집과 동일해져, 나온 값의 모양도
+    같아진다. 실패하면 meta를 그대로 둔다 — 등록 자체는 살린다.
+
+    반환: (meta, reel) — reel은 수집이 만드는 10키 dict(없으면 None).
+    """
+    code = _media_code(url)
+    if not code:
+        return meta, None
+    import sys as _sys
+    # ① 그 영상 하나만 직접 읽는다 — 계정명이 필요 없고, 오래된 영상도 잡힌다.
+    #    ★프로필 스크레이프는 최신 3건만 파므로(RESULTS_PER_CHANNEL) 대개 못 찾는다.
+    hit = None
+    try:
+        hit = _ig_reel_one(code)
+    except Exception as e:  # noqa: BLE001 — 보강 실패가 등록을 막지 않는다
+        print(f"[adopt] 인스타 릴 1건 조회 실패 code={code}: {e!r}", file=_sys.stderr)
+    # ② 폴백: 그 채널 프로필(최신분이면 여기서 잡힌다).
+    if not hit:
+        who = _ig_username_from_url(url) or _ig_username_from_meta(meta)
+        if not who:
+            print(f"[adopt] 인스타 보강 실패: 릴 1건 조회 실패 + 계정명도 못 구함 "
+                  f"url={url} channel={meta.get('channel')!r} title={meta.get('title')!r}",
+                  file=_sys.stderr)
+            return meta, None
+        try:
+            from shopping_shorts.instagram_playwright import fetch_reels as _pw_fetch_reels
+            reels = _pw_fetch_reels([who]) or []
+        except Exception as e:  # noqa: BLE001
+            print(f"[adopt] 인스타 보강 실패(무해) who={who} url={url}: {e!r}", file=_sys.stderr)
+            return meta, None
+        hit = next((r for r in reels if (r.get("shortcode") or "") == code), None)
+        if not hit:
+            print(f"[adopt] 인스타 보강: 릴 1건·프로필 둘 다 실패 "
+                  f"who={who} code={code} reels={len(reels)}", file=_sys.stderr)
+            return meta, None
+    # ★수집이 준 값을 **정본으로** 쓴다. yt-dlp의 0/빈값이 이걸 덮으면 안 된다.
+    #   (화면 파싱값으로 빈 칸을 채우는 기존 규칙은 이 뒤에서 그대로 돈다)
+    for key, src in (("views", "videoViewCount"), ("likes", "likesCount"),
+                     ("comments", "commentsCount"), ("followers", "ownerFollowers"),
+                     ("duration", "duration")):
+        v = hit.get(src)
+        if v not in (None, "", 0):
+            meta[key] = v
+    if hit.get("caption"):
+        meta["title"] = hit["caption"]
+    if hit.get("displayUrl"):
+        meta["thumbnail"] = hit["displayUrl"]
+    if hit.get("timestamp"):
+        meta["ts"] = hit["timestamp"]
+    # 채널 표시명 — 수집 카드가 쓰는 한글 이름(ownerFullName)이 있으면 그걸 쓴다.
+    uname = hit.get("ownerUsername") or _ig_username_from_url(url) or _ig_username_from_meta(meta)
+    meta["channel"] = hit.get("ownerFullName") or meta.get("channel") or uname
+    meta["_ig_username"] = uname
+    # ★팔로워는 릴 1건 응답에 없다(실측: 그 경로는 ownerFollowers=0). 같은 채널의
+    #   수집분이 스냅샷에 있으면 거기서 가져온다 — **인스타 요청을 늘리지 않는다**.
+    #   (없으면 0으로 두고, 화면파싱값 폴백이 뒤에서 채울 수도 있다)
+    if not meta.get("followers") and store is not None and uname:
+        meta["followers"] = _ig_followers_of(store, uname) or meta.get("followers") or 0
+    return meta, hit
+
+
+def _ig_followers_of(store, uname, _allow_fetch=True):
+    """그 계정의 팔로워 수(못 구하면 0).
+
+    ★릴 1건 응답엔 팔로워가 없다(실측). 그래서 이미 가진 데이터에서 먼저 찾는다 —
+      **인스타 요청을 늘리지 않는 게 우선**이다(계정 한도).
+
+    ⚠️ 2026-08-19 실사고: 처음엔 `last_run`만 뒤졌는데, **그 채널의 첫 등록이면
+      스냅샷에 아직 아무것도 없어 0이 됐다**(DcF2lTqzeiu가 그랬다 — 같은 채널을
+      3개 등록했는데 맨 처음 것만 팔로워 0). 순서에 따라 결과가 달라지면 안 된다.
+      → 스냅샷 여러 곳을 보고, 그래도 없으면 그때만 프로필을 한 번 연다.
+    """
+    key = (uname or "").strip().lstrip("@").lower()
+    if not key:
+        return 0
+    # ① 이미 받아둔 스냅샷들(인스타 + 아카이브) — 비용 0원
+    for loader in (lambda: store.load_last_run()[0],
+                   lambda: store.load_last_run_platform("instagram")[0]):
+        try:
+            for it in (loader() or []):
+                if (it.get("username") or "").lower() == key and it.get("followers"):
+                    return int(it["followers"])
+        except Exception:      # noqa: BLE001 — 폴백 실패는 무해
+            pass
+    if not _allow_fetch:
+        return 0
+    # ② 그래도 없으면 프로필을 한 번만 연다(첫 등록 채널). 실패하면 0.
+    try:
+        from shopping_shorts.instagram_playwright import fetch_profiles
+        # ★반환은 **dict**다 {username소문자: {followers, posts, full_name}} —
+        #   리스트로 알고 순회하면 문자열이 나와 .get()에서 터진다(계약 확인함).
+        prof = fetch_profiles([key]) or {}
+        n = int((prof.get(key) or {}).get("followers") or 0)
+        if n:
+            return n
+    except Exception as e:     # noqa: BLE001
+        import sys as _sys
+        print(f"[adopt] 팔로워 조회 실패(무해) who={key}: {e!r}", file=_sys.stderr)
+    return 0
+
+
 def _adopt_into_ranking(store, platform, url, meta):
     """수동으로 찾은 영상 1건을 **지금 랭킹에 끼워 넣는다**(2026-08-18 사장님 요청).
 
@@ -8927,14 +9126,18 @@ def _adopt_into_ranking(store, platform, url, meta):
         "caption": meta.get("title") or "",
         "videoDuration": meta.get("duration") or 0,
     }
-    who = (meta.get("channel") or "").strip()
+    # ★표시명(name)과 계정명(username)은 **다른 값**이다(2026-08-19).
+    #   수집 카드는 name='채이홈'(한글 표시명) / username='chae2home'(계정)으로 담는다.
+    #   둘 다 표시명으로 채우면 카드의 "이 채널 영상만 보기"가 계정을 못 찾아 0건이 된다.
+    who_name = (meta.get("channel") or "").strip()
+    who_user = (meta.get("_ig_username") or "").strip().lstrip("@") or who_name
     if platform == "instagram":
         prev_c, prev_d = store.prev_comments, store.prev_delta
     else:
         prev_c = lambda sc: store.prev_base_platform(platform, sc)      # noqa: E731
         prev_d = lambda sc: store.prev_delta_platform(platform, sc)     # noqa: E731
-    items = build_items([reel], {"name": who, "username": who, "inpock": "",
-                                 "followers": meta.get("followers") or 0},
+    items = build_items([reel], {"name": who_name or who_user, "username": who_user,
+                                 "inpock": "", "followers": meta.get("followers") or 0},
                         prev_comments=prev_c, prev_delta=prev_d,
                         window_hours=24 * 365)
     if not items:
@@ -8947,6 +9150,26 @@ def _adopt_into_ranking(store, platform, url, meta):
         old, _at = store.load_last_run_platform(platform)
     kept = [i for i in (old or []) if i.get("shortcode") != item["shortcode"]]
     merged = [item] + kept
+    # ★등급(grade)은 **스냅샷 전체를 놓고** 매긴다(2026-08-19).
+    #   apply_grades는 speed·density를 그 리스트의 최대값으로 정규화한다 — 1건만 넣으면
+    #   자기가 최대라 무조건 최고등급이 나오고, 아예 안 부르면 grade가 None이라 카드에
+    #   채널명 옆 등급('—' 자리)이 빈 채로 남는다(실측: 채이홈 DcIrfnOzHre grade=None).
+    #   수집분과 같은 잣대로 재려면 합친 뒤에 한 번 부르는 게 맞다(0순위-B).
+    try:
+        from shopping_shorts.ranking import apply_grades
+        apply_grades(merged)
+    except Exception as e:  # noqa: BLE001 — 등급 실패가 등록을 막지 않는다
+        import sys as _sys
+        print(f"[adopt] 등급 계산 실패(무해) {url}: {e!r}", file=_sys.stderr)
+    # ⏱ 길이는 last_run에 안 담긴다 — 화면에 뜨는 🎬는 조회할 때 reel_durations
+    #   캐시에서 붙는다(_attach_durations). 이미 값을 들고 있으면 그 캐시에 넣어둬야
+    #   등록 직후 카드에도 길이가 뜬다(안 넣으면 durfill 백필을 최대 1시간 기다린다).
+    if meta.get("duration"):
+        try:
+            store.set_reel_duration(item["shortcode"], meta["duration"])
+        except Exception as e:  # noqa: BLE001 — 길이 캐시 실패가 등록을 막지 않는다
+            import sys as _sys
+            print(f"[adopt] 길이 캐시 실패(무해) {url}: {e!r}", file=_sys.stderr)
     now_iso = datetime.now(timezone.utc).isoformat()
     if platform == "instagram":
         store.save_last_run(merged, now_iso)
@@ -8975,6 +9198,16 @@ def api_reference_adopt(request: Request, url: str = "", views: int = 0, likes: 
         return HTMLResponse(_chadd_html("❌ 지원하지 않는 주소",
                                         "유튜브·틱톡·인스타·쓰레드·샤오홍슈·도우인 영상에서 눌러주세요."))
     meta = probe_grab_meta(u) or {}
+    # ★인스타는 **수집과 같은 경로**로 한 번 더 채운다(2026-08-19 사장님 요청:
+    #   "등록해도 기존 영상들이랑 동일한 포맷으로 저장되고 보이게").
+    #   yt-dlp는 로그인 없이 인스타를 읽어 조회수·팔로워·캡션이 0/빈값으로 온다.
+    #   fetch_reels(정규 수집이 쓰는 그 함수)를 태우면 같은 값·같은 모양이 나온다.
+    if platform == "instagram":
+        try:
+            meta, _hit = _enrich_instagram_meta(u, meta, store=Store(DB_PATH))
+        except Exception as e:  # noqa: BLE001 — 보강 실패가 등록을 막지 않는다
+            import sys as _sys
+            print(f"[adopt] 인스타 보강 예외(무해) {u}: {e!r}", file=_sys.stderr)
     # ★화면에서 읽어 보낸 숫자로 **빈 칸만** 채운다(2026-08-18 사장님 A안).
     #   서버는 인스타를 로그인 없이 읽어 조회수·팔로워가 0으로 온다(실측: 채이홈 항목).
     #   그러면 조회수당댓글·팔로워당댓글이 계산되지 않아 정렬에서 불리해진다.
@@ -9866,7 +10099,10 @@ def api_produce_mix_shorten(job_id: str, body: dict):
                 "note": "더 줄일 여지가 없어요(뜻 훼손 없이)"}
     # 그 비트만 재TTS(렌더와 동일 공유 경로) → 실제 발화초로 sync_gap 재계산.
     idx = beats.index(hit)
-    out = _MIX_WORK_DIR / job_id / "tts" / f"beat_{hit['beat_idx']}.mp3"
+    # ★파일명은 **줄인 뒤의 대본**으로 짓는다(2026-08-19, mix_pipeline._beat_tts_path 한 곳).
+    #   해시 없는 beat_{i}.mp3는 어느 대본의 음성인지 알 수 없어 어긋남 판정이 불가능했다.
+    out = Path(mix_pipeline._beat_tts_path(_MIX_WORK_DIR / job_id / "tts",
+                                           {**hit, "narration": new_n}))
     out.parent.mkdir(parents=True, exist_ok=True)
     try:
         mix_pipeline.synthesize_line(

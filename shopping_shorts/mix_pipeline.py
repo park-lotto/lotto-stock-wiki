@@ -8,6 +8,7 @@ import hashlib
 import re
 import subprocess
 import sys
+import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
@@ -20,6 +21,7 @@ from shopping_shorts.script_extract import extract_script
 from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC, build_edit_plan, conform_narration
 from shopping_shorts.scene_match import match_scene_assets, match_sfx
 from shopping_shorts import tts
+from shopping_shorts import typecast_tts
 from shopping_shorts import audio_post
 from shopping_shorts import config
 from shopping_shorts import usage_meter
@@ -181,7 +183,14 @@ def _voice_params(voice):
     빠지면 튜닝 작업대에서 동결한 값이 렌더에 도달하지 못한다(2026-07-15 whole-branch 리뷰 S1/S8)."""
     v = voice or _DEFAULT_VOICE
     speed = v.get("speed", 1.0)
-    extra_tempo = speed / 1.2 if speed > 1.2 else 1.0  # 1.2 초과분만 atempo로
+    model_id = v.get("model_id") or "eleven_v3"
+    # ★타입캐스트는 API가 tempo 0.5~2.0을 직접 받는다(2026-08-19). 일레븐랩스처럼
+    #   1.2 초과분을 후처리 atempo로 또 당기면 **이중 가속**이 된다(1.6배가 2.1배로
+    #   들린다). 엔진 판정은 typecast_tts.is_typecast 한 곳만 쓴다(0순위-B).
+    if typecast_tts.is_typecast(model_id):
+        extra_tempo = 1.0
+    else:
+        extra_tempo = speed / 1.2 if speed > 1.2 else 1.0  # 1.2 초과분만 atempo로
     return (v.get("voice_id"), v.get("settings"), speed, extra_tempo,
             v.get("silence_trim", "off"), v.get("naturalize_profile"),
             v.get("model_id") or "eleven_v3", v.get("pace_mode", False))
@@ -234,11 +243,16 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
                                         audio_post.measure_removed_spans(str(out_path)))
         except Exception:
             pass                  # 측정 실패 = 선형 폴백(기존 동작), 렌더는 계속
-    # 비트별 라우드니스 정규화는 실제 ElevenLabs 음성일 때만 — 키 없는 개발용 무음 mock에
+    # 비트별 라우드니스 정규화는 **실제 음성일 때만** — 키 없는 개발용 무음 mock에
     # loudnorm을 걸면 무음 바닥을 노이즈로 끌어올린다(reference_local_tts_silent_mock_trap).
+    # ★"실제 음성인가"는 그 비트가 쓰는 엔진의 키로 판정한다(2026-08-19). 종전엔
+    #   ELEVENLABS_API_KEY만 봐서, 타입캐스트 성우로 뽑은 진짜 음성이 일레븐랩스 키가
+    #   없다는 이유로 정규화를 건너뛰어 **혼자만 작게** 들렸다.
+    has_voice_key = (bool(typecast_tts.api_key()) if typecast_tts.is_typecast(model_id)
+                     else bool(config.ELEVENLABS_API_KEY))
     audio_post.post_process(str(out_path), str(out_path), tempo=extra_tempo,
                             silence_trim=trim, pace_mode=pace_mode,
-                            loudnorm=bool(config.ELEVENLABS_API_KEY))
+                            loudnorm=has_voice_key)
     return natural
 
 
@@ -250,6 +264,41 @@ def _beat_tts_path(tts_dir, beat):
     안 섞이고(A는 A파일, B는 B파일), 같은 대본은 그대로 재사용(0원)된다."""
     key = hashlib.md5((beat.get("narration") or "").encode("utf-8")).hexdigest()[:10]
     return str(Path(tts_dir) / f"beat_{beat['beat_idx']}_{key}.mp3")
+
+
+def tts_matches_narration(beat):
+    """이 비트의 mp3가 **지금 대본**으로 만든 것이냐 — 어긋나면 False(2026-08-19 실사고).
+
+    ★왜 필요한가: `beat["narration"] = ...` 를 하는 곳이 코드베이스에 20곳이 넘는다
+      (edit_plan 12곳·single_source 6곳·backbone 2곳·mix_pipeline·app). 리라이터가
+      하나 늘 때마다 "재합성도 같이 해라"를 사람이 기억하는 구조면 반드시 또 샌다.
+      실제로 2026-07-27에 파일명 해시를 넣었는데도 2026-08-19에 같은 증상이 재발했다
+      (잡 f8d373618c0f beat2: 대본은 '영양사 친구가 알려준…'인데 소리는
+       '치즈와 우유에 계란까지 톡 까서 넣으면…' — 같은 초에 만들어진 형제 잡
+       e7bf5dbccd04는 같은 대본으로 다른 파일명을 써서 대조로 확정했다).
+
+    그래서 "기억"이 아니라 **판정**을 둔다. 판정 기준은 `_beat_tts_path` 하나뿐이므로
+    파일명 규칙이 바뀌어도 두 벌이 되지 않는다(0순위-B).
+
+    fail-open 두 가지 — 과잉 경보는 경보를 무의미하게 만든다:
+      · tts_path 없음        = 아직 합성 전이다. 어긋남이 아니다.
+      · 해시 없는 옛 이름     = 2026-07-27 이전 잡(beat_0.mp3). 판정 불가라 통과시킨다
+                               (라이브 실측 758비트가 여기 해당 — 전부 빨개지면 아무도 안 본다).
+    """
+    tp = beat.get("tts_path")
+    if not tp:
+        return True
+    name = Path(tp).name
+    m = re.fullmatch(r"beat_(\d+)_([0-9a-f]{10})\.mp3", name)
+    if not m:
+        return True                     # 옛 비해시 이름 → 판정 불가(fail-open)
+    return m.group(2) == hashlib.md5(
+        (beat.get("narration") or "").encode("utf-8")).hexdigest()[:10]
+
+
+def mismatched_beats(beats):
+    """대본과 음성이 어긋난 비트 인덱스 목록 — 화면·로그가 근거로 쓴다."""
+    return [b.get("beat_idx") for b in (beats or []) if not tts_matches_narration(b)]
 
 
 def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron=None):
@@ -457,7 +506,10 @@ def _conform_beats(beats, tts_dir, *, voice, global_pron=None):
         new_n = conform_narration(beat["narration"], budget)
         if not new_n:
             continue   # 리라이트 실패 → 원문 유지, freeze 폴백(sync_gap 플래그 잔존)
-        out = Path(tts_dir) / f"beat_{beat['beat_idx']}.mp3"
+        # ★파일명은 **줄인 뒤의 대본**으로 짓는다(2026-08-19). 예전엔 해시 없는
+        #   beat_{i}.mp3라 "어느 대본의 음성인지" 알 수 없었고, 그래서 대본이 또 갈려도
+        #   tts_matches_narration이 판정을 못 해 어긋남이 조용히 통과했다.
+        out = Path(_beat_tts_path(tts_dir, {**beat, "narration": new_n}))
         try:
             synthesize_line(
                 new_n, out, voice=voice, beat_role=beat.get("role"),
@@ -563,7 +615,12 @@ def _prepare_sources(urls, work, store=None):
         video_paths[vid] = path
         captions[vid] = caption
     if not video_paths:
-        detail = "\n".join(f"· {u}: {e}" for u, e in skipped)
+        # ★기술 문구 앞에 '사람이 할 수 있는 말'을 붙인다(2026-08-19 총점검).
+        #   원문은 지우지 않는다 — 디버깅에 필요하다.
+        def _line(u, e):
+            hint = _download_fail_hint(e)
+            return f"· {u}: {hint} ({e})" if hint else f"· {u}: {e}"
+        detail = "\n".join(_line(u, e) for u, e in skipped)
         # ★사람에게 밀어 올린다(2026-08-04). 08-03엔 이 실패가 조용히 DB에만 쌓여
         # 13:45부터 다음날까지 아무도 몰랐다. 소스를 하나도 못 받았다 = 통로가
         # 끊겼다는 뜻이고, 인스타는 이걸 한두 달 주기로 한다 — 즉시 알아야 한다.
@@ -587,6 +644,69 @@ def _job_customer_id(db_path, job_id):
         return job.get("customer_id")
     except Exception:      # noqa: BLE001 — 계측용이라 실패해도 본작업은 돈다
         return None
+
+
+def _download_fail_hint(err_text):
+    """다운로드 실패 원인 → **사람이 할 수 있는 말**(모르면 "").
+
+    ★2026-08-19 총점검. 실측 28건의 실패 문구가 전부 기술 용어라 사장님은 무엇이
+      잘못됐는지 알 수 없었다. 대표 예:
+        yt-dlp 실패(rednote.com/search_result/689e…): Unsupported URL:
+          https://www.rednote.com/404?source=/404/sec_PukRxsmn&redirectPath=…
+      ← 주소가 잘못된 게 아니다(그 경로는 정상 담기 경로다, test_grab 참조).
+        **404로 넘겨진 것** = 글이 지워졌거나 로그인벽에 막힌 것이다.
+      이걸 "yt-dlp 실패"로만 보여주면 사장님은 우리 코드가 고장난 줄 안다.
+
+    ⚠️ 원문을 지우지 않는다 — 힌트를 **앞에 덧붙일 뿐**이다(디버깅 정보 보존).
+    """
+    e = (err_text or "").lower()
+    if "/404" in e or "404?source=" in e:
+        return "원본이 지워졌거나 로그인해야 볼 수 있는 글이에요(주소는 정상)"
+    if "cookies" in e and "browser" in e:
+        return "이 영상은 로그인 쿠키가 있어야 받을 수 있어요"
+    if "private" in e or "login required" in e or "sign in" in e:
+        return "비공개이거나 로그인이 필요한 영상이에요"
+    if "unsupported url" in e:
+        return "이 주소에서는 영상을 찾지 못했어요 — 영상 페이지 주소인지 확인해 주세요"
+    if "unavailable" in e or "removed" in e or "deleted" in e:
+        return "원본이 삭제됐거나 더 이상 볼 수 없는 영상이에요"
+    if "timed out" in e or "timeout" in e:
+        return "받는 데 너무 오래 걸려 중단됐어요 — 잠시 후 다시 시도해 주세요"
+    if "403" in e or "forbidden" in e:
+        return "플랫폼이 접근을 막았어요(지역제한·차단)"
+    return ""
+
+
+def _edl_empty_reason(source_scripts, plan):
+    """EDL이 빈 이유를 **갈라서** 말한다(2026-08-19 사장님 총점검 지시).
+
+    ★종전 문구는 원인 2개를 뭉갰다: "대본 추출 실패 또는 Gemini 키 소진".
+      그래서 사장님도 나도 엉뚱한 데를 봤다. 실측(라이브 13건)에서 대부분은
+      **추출이 성공한 상태**였다 — extract_json 9,091자인데 edit_plan은 0이었다.
+      즉 진짜 실패 지점은 추출이 아니라 **편집안 생성**이다.
+
+    반환: (사유코드, 사람이 읽는 문구). 판정 근거는 '지금 손에 있는 것'뿐이다 —
+    소스 대본이 실제로 비었나 / 있는데 편집안만 비었나.
+    """
+    texts = [(s.get("full_text") or "").strip() for s in (source_scripts or [])]
+    chars = sum(len(t) for t in texts)
+    got = [t for t in texts if t]
+    gen = (plan or {}).get("generator") or ""
+    if not (source_scripts or []):
+        return ("no_source",
+                "소스 영상이 없습니다 — 담긴 영상을 확인해 주세요.")
+    if not got:
+        return ("extract_empty",
+                f"소스 {len(texts)}편에서 대본을 한 글자도 못 뽑았습니다"
+                " — 자막·음성이 없거나 추출이 막혔습니다(키 소진과는 다른 문제).")
+    if chars < 50:
+        return ("extract_thin",
+                f"뽑힌 대본이 너무 짧습니다({chars}자) — 편집안을 만들 재료가 부족합니다.")
+    # ★여기가 실측 다수 경로다. 추출은 됐는데 편집안이 비었다.
+    return ("plan_empty",
+            f"대본은 {chars}자 뽑혔는데 편집안(EDL)이 비었습니다"
+            f"{' [생성기=' + gen + ']' if gen else ''}"
+            " — Gemini 응답이 비었거나(키 소진·차단·과부하) 편집안 파싱에 실패했습니다.")
 
 
 def run_mix_job(job_id, db_path, work_root):
@@ -1122,18 +1242,27 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 오보고하지 않는다 — 성공처럼 보이는 빈 리뷰화면 대신 즉시 실패로 정상 종료
     # (2026-07-12 최종 전체리뷰 Important).
     if not plan["beats"]:
+        # ★사유를 갈라서 말한다(2026-08-19). 종전엔 "추출 실패 또는 키 소진"으로 뭉개서
+        #   실측 13건 중 대부분이 **추출은 성공한 상태**(9,091자)였는데도 "추출 실패"로
+        #   보였다 — 원인이 다르면 처방도 다르므로 여기서 갈라 기록·표시한다.
+        code, why = _edl_empty_reason(source_scripts, plan)
+        n_src = len(source_scripts or [])
+        n_chars = sum(len((s.get("full_text") or "")) for s in (source_scripts or []))
+        print(f"[EDL빈원인] code={code} sources={n_src} chars={n_chars} "
+              f"generator={(plan or {}).get('generator')!r}", file=sys.stderr)
         # 같은 이유로 사람에게 올린다(2026-08-04) — 08-03엔 Gemini 키 403(project denied)로
         # 이 실패가 2건 났는데 역시 조용히 DB에만 남았다. 키 소진/차단은 사람이 손대야 풀린다.
         try:
             from shopping_shorts import ops_alert
             ops_alert.raise_alert(
                 "edl_empty",
-                "편집안(EDL)을 만들지 못했습니다 — 대본 추출 실패 또는 Gemini 키 소진/차단",
-                "run_mix_job: EDL이 비어 있습니다. Gemini 키풀 상태(소진·403 PERMISSION_DENIED)와 "
-                "대본 추출 로그를 확인하세요.", store=store)
+                f"편집안(EDL)을 만들지 못했습니다 — {why}",
+                f"run_mix_job: EDL이 비어 있습니다. code={code} sources={n_src} chars={n_chars}. "
+                "plan_empty면 Gemini 키풀(소진·403 PERMISSION_DENIED)과 편집안 파싱을, "
+                "extract_empty면 소스 자막·음성 추출을 보세요.", store=store)
         except Exception:      # noqa: BLE001
             pass
-        raise RuntimeError("EDL 비어있음 — 대본 추출 실패 또는 Gemini 키 소진으로 편집안을 만들지 못함")
+        raise RuntimeError(f"EDL 비어있음({code}) — {why}")
 
     # 3.5/3.6) 장면 라이브러리 자동 배치(컷어웨이 + 효과음) — ★기본 OFF(2026-08-01 실사고).
     #
@@ -1363,13 +1492,38 @@ def _resolve_sfx_paths(store, plan, customer_id):
     return out
 
 
+# VMake가 간헐적으로 뱉는 처리 실패 — 같은 영상을 다시 넣으면 대개 통과한다.
+# (실측 2026-07-23·08-18 두 건 모두 code 10101 "right reduce error", 잔액·인증은 정상이었다.
+#  성공 35건+ 대비 실패 3건이라 상시 고장이 아니라 간헐 오류로 본다.)
+_CLEAN_RETRY = 2          # 최초 1회 + 재시도 2회 = 최대 3번
+_CLEAN_RETRY_WAIT = 5     # 초. 곧바로 다시 때리면 같은 이유로 또 실패하기 쉽다.
+
+
 def _clean_one(item, key, work):
     """소스 하나를 VMake로 청소 → (video_id, 클린경로, 지워진자막박스|None). ThreadPool 워커용(DB 미접근).
     청소 직후 원본↔클린을 diff해 '어디가 지워졌나'를 그 자리에서 구한다 — VMake는 좌표를 안 주지만
-    우리가 before/after를 둘 다 쥐고 있어 계산 가능하다(best-effort, 실패해도 None으로 청소는 성공)."""
+    우리가 before/after를 둘 다 쥐고 있어 계산 가능하다(best-effort, 실패해도 None으로 청소는 성공).
+
+    ★간헐 실패 자동 재시도(2026-08-19): VMake는 멀쩡한 영상에도 가끔 10101을 준다.
+      예전엔 그 한 번으로 작업 전체가 실패로 끝나 사장님이 손으로 다시 눌러야 했다.
+      **재과금은 없다** — 과금은 호출부(_ensure_clean_sources)에서 소스 개수로 선차감하고
+      여기선 같은 소스를 다시 시도할 뿐이다. VMake 쪽도 실패한 작업은 크레딧을 안 깎는다
+      (실측: 실패 3건 동안 잔액이 그대로였다)."""
     vid, src = item
     out = str(Path(work) / f"clean_src_{vid}.mp4")
-    clean_path = remove_subtitles(src, key, out_path=out)
+    last = None
+    for attempt in range(_CLEAN_RETRY + 1):
+        try:
+            clean_path = remove_subtitles(src, key, out_path=out)
+            break
+        except Exception as e:
+            last = e
+            if attempt >= _CLEAN_RETRY:
+                print(f"[clean] {vid} 최종 실패({attempt + 1}회 시도): {e}", file=sys.stderr)
+                raise
+            print(f"[clean] {vid} 실패 — {_CLEAN_RETRY_WAIT}초 뒤 재시도"
+                  f"({attempt + 1}/{_CLEAN_RETRY}): {e}", file=sys.stderr)
+            time.sleep(_CLEAN_RETRY_WAIT)
     region = sub_region.detect_erased_region(src, clean_path, work)
     return vid, clean_path, region
 
@@ -1681,7 +1835,11 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
     work = Path(work_root) / job_id
     tts_dir = work / "tts"
     tts_dir.mkdir(parents=True, exist_ok=True)
-    out = tts_dir / f"beat_{beat_idx}.mp3"
+    # ★현재 대본의 해시 경로로 쓴다(2026-08-19). 톤·성우만 바꾸는 경로라 대본이 같으면
+    #   경로도 같아 **같은 파일을 덮어쓴다**(기존 동작 유지). 캐시는 tts_ver가 깬다.
+    #   대본 편집 뒤 호출되면(=/narration 경로) 새 해시로 가므로 어긋남이 남지 않는다 —
+    #   예전 beat_{i}.mp3는 어느 대본 것인지 알 수 없어 판정이 영영 불가능했다.
+    out = Path(_beat_tts_path(tts_dir, beat))
     # 이 mp3는 최종 렌더가 skip_existing으로 재사용하므로, 전역 발음교정을 여기서도
     # 적용해야 재합성한 비트만 교정이 빠지는 일이 없다(Task2 리뷰 Important).
     try:

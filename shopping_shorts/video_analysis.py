@@ -322,7 +322,13 @@ _SUBJECT_TAGS_PROMPT = """이 이미지는 한국어 쇼츠 영상의 썸네일�
 - subject: 이 영상의 주제 명사 1개(짧게. 예: 오이무침, 블루투스 스피커, 베이글, 소파).
 - keywords: 검색에 쓸 3~6개(주제 명사·핵심 재료·용도·상위 분류. 예: ["오이","다이어트반찬","여름반찬"]).
   ⚠️ 캡션에 우연히 들어간 말이 아니라 '영상이 실제로 다루는 것'만.
-- JSON만: {{"subject": "...", "keywords": ["...", ...]}}
+- ★shot_type: 이 화면이 **재료로 쓸 수 있는 그림인가**를 셋 중 하나로(2026-08-19).
+  우리는 남의 영상을 재료로 새 영상을 만든다 — 리뷰어 얼굴이 주인공이면 못 쓴다.
+  "selfshot" = 촬영자 본인·특정 인물의 얼굴·상반신이 화면의 주인공(카메라 보고 말하기, 브이로그)
+  "product"  = 제품·손·화면·자막이 중심이고 얼굴은 없거나 곁다리(손 시연, 제품 클로즈업, 자막 정보)
+  "other"    = 둘로 못 가름(풍경·동물·그래픽 등)
+- face_prominent: 사람 얼굴이 화면에서 크게 보이면 true.
+- JSON만: {{"subject": "...", "keywords": ["...", ...], "shot_type": "...", "face_prominent": true/false}}
 캡션: {caption}"""
 
 _SUBJECT_TAGS_SCHEMA = {
@@ -330,6 +336,10 @@ _SUBJECT_TAGS_SCHEMA = {
     "properties": {
         "subject": {"type": "string"},
         "keywords": {"type": "array", "items": {"type": "string"}, "minItems": 1, "maxItems": 8},
+        # 2026-08-19 추가. ★required에 넣지 않는다 — 모델이 안 채워도 주제태그(본업)는
+        # 살아야 한다. 못 받으면 빈값이 되고 정리 규칙은 '모름'으로 다룬다.
+        "shot_type": {"type": "string"},
+        "face_prominent": {"type": "boolean"},
     },
     "required": ["subject", "keywords"],
 }
@@ -366,7 +376,11 @@ def subject_tags_vision(image_bytes, caption, max_retries=3, quota_sleep=8):
             keywords = [k.strip() for k in (data.get("keywords") or []) if k and k.strip()]
             if not subject and not keywords:
                 return {}
-            return {"subject": subject, "keywords": keywords}
+            shot = (data.get("shot_type") or "").strip().lower()
+            if shot not in ("selfshot", "product", "other"):
+                shot = ""            # 모르는 값은 안 믿는다(빈값 = 판정 없음)
+            return {"subject": subject, "keywords": keywords,
+                    "shot_type": shot, "face_prominent": bool(data.get("face_prominent"))}
         except Exception as e:
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
                 comment_gen._mark_key_exhausted(idx)
