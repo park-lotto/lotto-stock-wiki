@@ -1120,7 +1120,14 @@ class Store:
                                # CTA를 쓰지 않는 스타일인가(2026-08-19). 유튜브 썰쇼핑
                                # (이븐쇼핑·살림킹왕짱)은 CTA가 없는 게 정답이라 게이트의
                                # CTA 검사를 건너뛰어야 한다. 기본 0 = 기존 동작(검사 O).
-                               ("no_cta", "INTEGER")):
+                               ("no_cta", "INTEGER"),
+                               # 훅 3초 게이트(2026-08-19). 유튜브 썰쇼핑은 완시청
+                               # 장사라 3초를 서론에 쓰면 끝이다. 기본 0 = 검사 안 함
+                               # (오탐이 미탐보다 나쁘다 — 선언한 스타일만 돈다).
+                               ("hook_3s", "INTEGER"),
+                               # 은폐형인가 — 정체를 reveal 구간까지 숨긴다(실측 5~7초).
+                               # 오용형은 처음부터 밝히므로 이 검사를 걸면 안 된다.
+                               ("hook_conceal", "INTEGER")):
                 try:
                     c.execute(f"ALTER TABLE spine ADD COLUMN {_col} {_ddl}")
                 except sqlite3.OperationalError:
@@ -3496,7 +3503,7 @@ class Store:
             return cur.lastrowid
 
     def set_spine_style(self, spine_id, beat_roles=None, templates=None, chars_per_30s=None,
-                        voice=None, no_cta=None):
+                        voice=None, no_cta=None, hook_3s=None, hook_conceal=None):
         """스파인에 **기계가 검사할** 스타일 정보를 붙인다(2026-08-15).
 
         beat_roles = ["hook","before",...] · templates = {"hook":["...{가족}..."]} ·
@@ -3515,6 +3522,12 @@ class Store:
         if no_cta is not None:
             sets.append("no_cta=?")
             args.append(1 if no_cta else 0)
+        if hook_3s is not None:
+            sets.append("hook_3s=?")
+            args.append(1 if hook_3s else 0)
+        if hook_conceal is not None:
+            sets.append("hook_conceal=?")
+            args.append(1 if hook_conceal else 0)
         if voice is not None:
             sets.append("voice_json=?")
             args.append(json.dumps(voice, ensure_ascii=False))
@@ -3530,7 +3543,7 @@ class Store:
         q = ("SELECT id, name, situation_type, character_roles_json, beat_chain_json, "
              "emotion_arc, appeal, fit_categories_json, source_count, perf_score, "
              "status, created_at, updated_at, beat_roles_json, templates_json, "
-             "chars_per_30s, voice_json, no_cta FROM spine")
+             "chars_per_30s, voice_json, no_cta, hook_3s, hook_conceal FROM spine")
         args = []
         if status is not None:
             q += " WHERE status=?"
@@ -3552,7 +3565,10 @@ class Store:
              "voice": json.loads(r[16]) if r[16] else None,
              # ★게이트에 그대로 넘어가는 dict다 — 여기서 안 실으면 no_cta가 영영 None이라
              #   유튜브 스파인이 CTA 검사에 계속 걸린다(오류가 안 나는 조용한 실패).
-             "no_cta": bool(r[17])}
+             "no_cta": bool(r[17]),
+             # ★여기서 안 실으면 게이트가 영영 안 켜진다 — 함수는 있는데 죽은 상태가
+             #   된다(2026-08-19 썰 재료 배선에서 똑같이 겪었다: 라이브에서만 죽었다).
+             "hook_3s": bool(r[18]), "hook_conceal": bool(r[19])}
             for r in rows
         ]
 
