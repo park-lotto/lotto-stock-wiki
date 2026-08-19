@@ -2423,7 +2423,7 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         #   실측 근거(같은 날): 생성기는 템플릿을 '참고'로만 써서 어미를 새로 쓰고
         #   (no_cta인데) CTA를 붙였다 — 조립본엔 그럴 자리가 없다.
         _assembled, _asm_left, _asm_why = _assembled_drafts(
-            _picked, _src, store, body.get("target_seconds") or 30)
+            _picked, _src, store, body.get("target_seconds") or 30, job_id=_jid)
         _styled = list(_assembled)
         if _asm_left:
             _styled += script_generate.generate_by_styles(
@@ -11211,11 +11211,24 @@ def _facts_block_for_job(job_id, store=None):
 
     ★여기서 크롤을 돌리지 않는다. 수집은 2~3분이 걸리므로 대본 생성 경로에 끼우면
       사장님이 그만큼 기다리게 된다 — 수집은 /api/product/facts/collect가 미리 해둔다."""
-    job_id = job_id.strip() if isinstance(job_id, str) else ""   # 타입을 믿지 않는다
-    if not job_id:
-        return ""
     try:
         from shopping_shorts import product_facts
+        return product_facts.prompt_block(_facts_for_job(job_id, store))
+    except Exception:      # noqa: BLE001 — 재료 조회 실패가 대본 생성을 막으면 안 된다
+        return ""
+
+
+def _facts_for_job(job_id, store=None):
+    """job에 미리 긁어둔 **제품 재료 dict**. 없으면 {}.
+
+    ★프롬프트 블록과 슬롯 조립이 **같은 재료**를 보게 하려고 함수로 뽑았다(0순위-B).
+      전에는 블록 만드는 코드 안에만 있어서, 조립은 이 재료를 아예 못 봤다 —
+      그래서 은폐형(spine 55)이 `{제품}`·`{효능}`·`{나라}`를 못 채우고 계속 폴백했다.
+    """
+    job_id = job_id.strip() if isinstance(job_id, str) else ""   # 타입을 믿지 않는다
+    if not job_id:
+        return {}
+    try:
         st = store or Store(DB_PATH)
         job = st.get_mix_job(job_id)
         facts = ((job or {}).get("product") or {}).get("facts") or {}
@@ -11224,9 +11237,9 @@ def _facts_block_for_job(job_id, store=None):
         #   담긴 영상 여러 개 중 **재료가 있는 첫 번째**를 쓴다(주제는 [대본 1]이므로 그 순서).
         if not facts:
             facts = _prefetched_facts_for_job(job, st)
-        return product_facts.prompt_block(facts)
-    except Exception:      # noqa: BLE001 — 재료 조회 실패가 대본 생성을 막으면 안 된다
-        return ""
+        return facts or {}
+    except Exception:      # noqa: BLE001
+        return {}
 
 
 # 썰쇼핑 대본 재료를 붙이는 카테고리(2026-08-19).
@@ -11289,7 +11302,7 @@ def _sul_block_for_sources(category, sources, store=None, spines=None):
         return ""
 
 
-def _assembled_drafts(spines, sources, store, seconds=30):
+def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
     """조립으로 만들 수 있는 대본들 → (조립본 목록, 조립 못 한 스파인 목록).
 
     ★조립은 **슬롯이 전부 차는 스파인**에만 쓴다. 한 칸이라도 비면 그 스파인은
@@ -11328,7 +11341,9 @@ def _assembled_drafts(spines, sources, store, seconds=30):
                 _why.append(_prob)
                 slots = {}
             else:
-                slots = spine_fill.slots_from_facts({}, merged)
+                # ★쿠팡 재료도 함께 넣는다(2026-08-19) — 은폐형은 {제품}·{효능}·{나라}가
+                #   여기서 온다. 안 넣으면 슬롯이 안 차서 영영 폴백한다.
+                slots = spine_fill.slots_from_facts(_facts_for_job(job_id, store), merged)
         try:
             d = spine_fill.build_draft(sp, slots, seconds=seconds) if slots else None
         except Exception as e:      # noqa: BLE001 — 조립 실패가 생성을 막으면 안 된다

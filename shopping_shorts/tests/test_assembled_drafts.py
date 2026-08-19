@@ -119,3 +119,51 @@ def test_화면이_조립못한_이유를_받는다():
     import inspect
     src = inspect.getsource(app)
     assert '"assemble_skipped"' in src
+
+
+# ── 은폐형은 쿠팡 재료가 있어야 채워진다(2026-08-19) ────────────────────────
+CONCEAL_SPINE = {
+    "id": 55, "name": "유튜브 은폐형", "fit_categories": ["제품정체형"],
+    "beat_roles": ["bait", "authority", "reveal", "benefit"],
+    "templates": {
+        "bait": ["최근 딱 봤을 때는 평범한 이 {제품군}이"],
+        "authority": ["이걸 개발한 {나라}의 천재가 돈방석에 앉았다는데"],
+        "reveal": ["이건 바로 {제품}"],
+        "benefit": ["이게 말도 안 되는 게 {효능}"],
+    },
+}
+
+
+def test_쿠팡재료가_있어야_은폐형이_조립된다(monkeypatch):
+    """★전에는 조립이 이 재료를 아예 못 봤다 — 블록 만드는 코드 안에만 있었다.
+    그래서 은폐형이 슬롯을 못 채우고 영영 폴백했다."""
+    _stub_sul(monkeypatch, {"category_word": "주방템", "misuse_genre": True,
+                            "misuses": ["A하기", "B하기"], "original_use": ["원래용도"],
+                            "hidden_property": ["숨은성질"]})
+    # 쿠팡 재료 없음 → 못 채운다
+    monkeypatch.setattr(app, "_facts_for_job", lambda *a, **k: {})
+    out, left, _why = app._assembled_drafts([CONCEAL_SPINE], [{"full_text": "자막"}], None)
+    assert out == [] and left == [CONCEAL_SPINE]
+
+    # 쿠팡 재료 있음 → 채운다
+    monkeypatch.setattr(app, "_facts_for_job", lambda *a, **k: {
+        "title": "무소음 젤펜", "origin": "미국", "why": ["딸깍 소리가 안 난다", "필기감이 좋다"]})
+    out2, left2, _ = app._assembled_drafts([CONCEAL_SPINE], [{"full_text": "자막"}], None,
+                                           job_id="j1")
+    assert len(out2) == 1 and not left2
+    txt = {b["role"]: b["text"] for b in out2[0]["beats"]}
+    assert txt["reveal"] == "이건 바로 무소음 젤펜"
+    assert txt["authority"] == "이걸 개발한 미국의 천재가 돈방석에 앉았다는데"
+    assert txt["benefit"] == "이게 말도 안 되는 게 딸깍 소리가 안 난다"
+
+
+def test_생성경로가_job_id를_넘긴다():
+    """안 넘기면 쿠팡 재료가 조립에 영영 안 닿는다."""
+    import inspect
+    assert "job_id=_jid" in inspect.getsource(app)
+
+
+def test_facts_for_job이_한_곳에서_정한다():
+    """프롬프트 블록과 조립이 같은 재료를 봐야 한다(0순위-B)."""
+    import inspect
+    assert "_facts_for_job(" in inspect.getsource(app._facts_block_for_job)
