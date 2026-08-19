@@ -409,6 +409,12 @@
     @media(max-width:1180px){.srcGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
     @media(max-width:860px){.srcGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:580px){.srcGrid{grid-template-columns:1fr}}
+    /* 진행 표시(2026-08-19) — 카드 위 한 줄. 분석이 도는 동안만 나타났다 사라진다. */
+    .srcProg{margin:0 0 10px}
+    .srcProgBar{height:4px;border-radius:99px;background:var(--line);overflow:hidden}
+    .srcProgBar>i{display:block;height:100%;background:var(--accent);border-radius:99px;
+      transition:width .4s ease}
+    .srcProgTxt{margin-top:5px;font-size:12px;color:var(--sub);display:flex;align-items:center;gap:6px}
     .srcCard{background:var(--inset);border:1px solid var(--line);border-radius:12px;
       padding:14px 18px;transition:border-color .15s;cursor:pointer;
       display:flex;flex-direction:column;min-width:0;overflow:hidden}
@@ -4713,6 +4719,7 @@ async function refreshStep0(){
       const total = HANDOFF.filter(h=>h.useFootage && h.url).length;
       renderAutoloadingState(total);
       const got = await autoloadAllFootage();     // ★여러 배치로 전부 분석(Task 1)
+      _SRC_BUSY = 0; _SRC_QUEUED = 0;            // ★끝났으면 진행 표시를 내린다(안 내리면 영영 돈다)
       if(got.analyzed){
         try{ d = await (await fetch('/api/produce/aipick'+(q==='?'?'':q))).json(); }catch(e){}
       }
@@ -4730,6 +4737,14 @@ async function refreshStep0(){
 const _SRC_BRIEF = {};       // shortcode → 서버 응답. ★완성(ok)만 캐시로 굳고, 미완은 다시 묻는다
 const _SRC_INFLIGHT = new Set();   // 지금 요청 중인 shortcode — 중복 요청은 이걸로 막는다
 let _SRC_POLL = null;              // 미완이 남았을 때만 도는 재확인 타이머(끝나면 스스로 멈춘다)
+// ★자리 하나 = 그리는 함수 하나(2026-08-19, 0순위-B). 종전엔 #srcAnalysis 한 자리에
+//   renderSourceAnalysis · renderAutoloadingState · renderQueuedState **셋이 각자**
+//   innerHTML로 덮어썼다. 8초 폴링과 자동적재가 동시에 돌면 서로를 지워, 사장님이
+//   새로고침해야만 결과가 보였다(2026-08-19 제보 "분석이 안된다" — 실제로는 5분 걸려
+//   다 되어 있었는데 화면만 그 사실을 못 보여줬다).
+//   → 진행 상태는 **여기 두 값에만** 적고, 그리는 것은 renderSourceAnalysis 하나가 한다.
+let _SRC_BUSY = 0;                 // 자동적재가 돌고 있는 영상 수(0이면 안 돎)
+let _SRC_QUEUED = 0;               // 서버 자리를 기다리는 영상 수(도우인 동시 2개 제한 등)
 // ★기본은 **펼침**이다(2026-08-17 사장님 "기본으로 펼치고"). 그래서 집합의 뜻을
 //   뒤집었다 — 예전엔 '펼친 카드'를 모았는데(기본 접힘), 이제 '접은 카드'를 모은다.
 //   비어 있으면 전부 펼쳐진 상태 = 처음 화면. 누르면 그 카드만 접힌다.
@@ -4742,7 +4757,15 @@ async function renderSourceAnalysis(){
   const box = document.getElementById('srcAnalysis');
   if(!box) return;
   const items = HANDOFF.filter(h => h.useFootage);
-  if(!items.length){ box.innerHTML = ''; return; }
+  if(!items.length){
+    // ★담긴 목록이 아직 안 잡혔는데 자동적재는 돌고 있는 순간이 있다(HANDOFF가 채워지기
+    //   전에 이 함수가 먼저 불린다). 종전엔 여기서 그냥 비우고 나가 **폴링도 안 걸어**,
+    //   그 뒤 분석이 다 끝나도 화면은 영영 빈 채였다 — 새로고침해야만 보였다.
+    box.innerHTML = _SRC_BUSY ? `<div class="srcProg"><div class="srcProgTxt">
+        <span class="skm-spin">🔄</span> 담은 영상 ${_SRC_BUSY}개를 분석하고 있어요 — 잠시만요</div></div>` : '';
+    if(_SRC_BUSY){ clearTimeout(_SRC_POLL); _SRC_POLL = setTimeout(() => { renderSourceAnalysis().catch(()=>{}); }, 3000); }
+    return;
+  }
   // ★완성된 것만 캐시한다 — 아직 안 된 것은 다음에 다시 묻는다(2026-08-17 사장님
   //   "인스타 4개인데 한개만?"). 예전엔 응답을 무조건 `_SRC_BRIEF`에 넣고 재조회 조건이
   //   `!== undefined`라, **첫 조회 때 아직 분석 전이던 영상은 그 상태로 박제**됐다.
@@ -4770,11 +4793,27 @@ async function renderSourceAnalysis(){
     finally{ _SRC_INFLIGHT.delete(code); }
   }));
   const done = items.filter(it => (_SRC_BRIEF[it.shortcode] || {}).ok).length;
+  const gaveUp = items.filter(it => (_SRC_BRIEF[it.shortcode] || {}).gave_up).length;
+  const left = items.length - done - gaveUp;         // 아직 결과를 기다리는 것
+  // ★진행을 눈에 보이게(2026-08-19 사장님 지시). 분석은 영상 1개당 40~70초가 걸리고
+  //   **한 번에 하나씩** 도는데(서버 예열), 종전 화면은 "3/5개 읽음" 한 줄뿐이라
+  //   멈춘 것인지 도는 중인지 구별이 안 됐다 — 그래서 고장으로 보였다.
+  //   남은 시간은 실측 기준 1개당 1분으로 어림해 말한다(정확한 값이 아니라 '기다릴 만한지'를
+  //   알려주는 용도 — 과장하지 않도록 넉넉히 잡는다).
+  const pct = items.length ? Math.round((done + gaveUp) * 100 / items.length) : 0;
+  const eta = left > 0 ? `약 ${left}분쯤 남았어요` : '';
+  const busyTxt = _SRC_QUEUED
+    ? `${_SRC_QUEUED}개가 순서를 기다리는 중 — 앞 영상이 끝나면 자동으로 이어서 합니다`
+    : (left > 0 ? `${left}개 분석 중 — ${eta}. 이 화면에 그대로 계셔도 됩니다` : '');
   box.innerHTML =
-    `<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+    `<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
        <span style="font-size:13px;font-weight:800">🔎 담은 영상 뜯어보기</span>
-       <span class="hint">${done}/${items.length}개 읽음 — 어떤 재료가 모였고, 뭘 쓸 수 있는지</span>
+       <span class="hint">${done}/${items.length}개 읽음${gaveUp ? ` · ${gaveUp}개 실패` : ''} — 어떤 재료가 모였고, 뭘 쓸 수 있는지</span>
      </div>`
+    + (left > 0 ? `<div class="srcProg" title="분석이 끝난 영상 비율">
+         <div class="srcProgBar"><i style="width:${pct}%"></i></div>
+         <div class="srcProgTxt"><span class="skm-spin">🔄</span> ${busyTxt}</div>
+       </div>` : '')
     + `<div class="srcGrid">` + items.map((it, i) => _srcCard(it, i)).join('') + `</div>`;
 
   // ★아직 도는 게 남았으면 **스스로 다시 확인한다**(2026-08-17). 분석은 영상마다 끝나는
@@ -4786,7 +4825,7 @@ async function renderSourceAnalysis(){
     return !(r || {}).ok && !(r || {}).gave_up;
   }).length;
   clearTimeout(_SRC_POLL);
-  if(waiting){
+  if(waiting || _SRC_BUSY || _SRC_QUEUED){
     // 분석은 30초~1분 — 8초마다 보면 충분하고 서버도 안 두들긴다(저장된 것만 읽는 API라 비용 0).
     _SRC_POLL = setTimeout(() => { renderSourceAnalysis().catch(()=>{}); }, 8000);
   }
@@ -4941,30 +4980,18 @@ async function autoloadAllFootage(){
 }
 // 순서를 기다리는 중 — '실패'와 확실히 구별되게 말한다(기다리면 된다는 뜻).
 function renderQueuedState(n){
-  const el=document.getElementById('srcAnalysis') || document.getElementById('aiPick');
-  if(!el) return;
-  el.innerHTML = `<div class="skm-card empty">
-      <h2><span class="skm-spin">⏳</span> ${n}개가 순서를 기다리고 있어요</h2>
-      <div class="hint" style="text-align:center;color:var(--sub)">
-        도우인 영상은 서버가 <b>한 번에 2개씩</b> 받습니다(무거워서요).
-        앞 영상이 끝나면 <b>자동으로 이어서</b> 시작해요 — 이 화면에 그대로 계셔도 됩니다.</div>
-    </div>`;
+  _SRC_QUEUED = Number(n) || 0;      // ★상태만 — 그리기는 renderSourceAnalysis 하나가 한다
+  renderSourceAnalysis().catch(()=>{});
 }
 // 자동적재가 도는 동안 보여줄 과도 상태 — 폴백 안내를 먼저 띄웠다가 곧 카드로 바뀌면
 // 사용자가 "에러가 났다가 고쳐졌나?"로 읽는다. 분석 중임을 명시한다.
 function renderAutoloadingState(total){
-  // ★#aiPick이 아니라 #srcAnalysis에 그린다(2026-08-17 사장님 "영상분석은?").
-  //   1단계에서 #aiPickWrap은 display:none이라(9단계 개편) 여기 그리면 아무도 못 본다 —
-  //   실제로 담자마자 화면 아래가 통째로 비어 "분석이 도는지" 알 수가 없었다.
-  //   진행 표시는 그 단계의 **보이는 자리**에 있어야 한다. 끝나면 renderSourceAnalysis가
-  //   같은 자리를 카드로 덮는다(자리 하나, 상태 하나 — 두 군데에 그리지 않는다).
-  const el=document.getElementById('srcAnalysis') || document.getElementById('aiPick');
-  if(!el) return;
-  const n = Number(total)||0;
-  el.innerHTML = `<div class="skm-card empty">
-      <h2><span class="skm-spin">🔄</span> 담은 영상 ${n?('<b>'+n+'개</b> '):''}대본을 분석하고 있어요</h2>
-      <div class="hint" style="text-align:center;color:var(--sub)">처음 담은 영상은 30초~1분쯤 걸립니다. 끝나면 AI PICK 카드가 나타나요.</div>
-    </div>`;
+  // ★상태만 적는다 — 그리는 것은 renderSourceAnalysis 한 곳(위 _SRC_BUSY 주석).
+  //   종전엔 여기서 innerHTML을 통째로 갈아서, 이미 분석이 끝난 카드까지 지우고
+  //   "분석하고 있어요" 한 줄로 덮었다(그리고 폴링이 다시 카드로 덮었다 — 서로 지움).
+  _SRC_BUSY = Number(total) || 0;
+  _SRC_QUEUED = 0;
+  renderSourceAnalysis().catch(()=>{});
 }
 // 조회수·댓글 등 큰 숫자를 "240만"/"1.2억" 식으로 축약(v6 목업 표기와 동일).
 function fmtNum(n){ n=Number(n)||0; if(n>=1e8) return (n/1e8).toFixed(n%1e8?1:0)+'억'; if(n>=1e4) return (n/1e4).toFixed(n%1e4>=1000?1:0)+'만'; return n.toLocaleString(); }

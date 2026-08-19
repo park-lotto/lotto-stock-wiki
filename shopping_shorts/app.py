@@ -4238,7 +4238,18 @@ def api_mix_scene_lab_narration(job_id: str, beat_idx: int, body: dict,
     if beat is None:
         return JSONResponse(status_code=404, content={"ok": False, "error": "비트 없음"})
     if text == (beat.get("narration") or "").strip():
-        return {"ok": True, "unchanged": True}
+        # ★글자가 그대로여도 **음성이 옛 대본 것이면** 여기서 다시 뽑는다(2026-08-19 사장님
+        #   "대본수정 눌러 다시뽑기 했는데 안 된다"). 2단계에서 자막을 고치면 narration만
+        #   바뀌고 mp3는 그대로라(렌더 때 다시 뽑는 설계) 3단계 미리보기가 "음성을 다시 안
+        #   뽑았어요" 경고를 띄운다. 그런데 3단계 편집칸엔 **이미 고친 문장**이 들어 있어
+        #   사장님이 그대로 저장하면 여기서 unchanged로 튕겨 나가 아무 일도 안 일어났다
+        #   — 경고를 없앨 방법이 앱 안에 없는 막다른 길이었다.
+        if mix_pipeline.tts_matches_narration(beat) or body.get("regen") is False:
+            return {"ok": True, "unchanged": True}
+        background_tasks.add_task(resynth_one_beat, job_id, beat_idx,
+                                  dict(job.get("voice") or {}), DB_PATH, _MIX_WORK_DIR)
+        return {"ok": True, "unchanged": True, "regen": True,
+                "tts_ver": beat.get("tts_ver") or 0}
     beat["narration"] = text
     # ★대본이 바뀌면 옛 문장 기준으로 계산된 자막 타이밍은 **전부 무효**다. 지워야
     #   _lab_captions·렌더가 새 문장으로 다시 계산한다(안 지우면 옛 구절 수에 맞춰

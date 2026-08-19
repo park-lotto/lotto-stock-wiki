@@ -1611,7 +1611,9 @@ async function saveNarr(i){
   if (!el) return;
   const text = (el.innerText || '').trim();
   if (!text){ nsay('대본이 비었어요 — 취소하거나 문장을 넣어주세요'); return; }
-  if (text === (DATA.beats[i].narration || '').trim()){ closeNarrEdit(i); return; }
+  // ★글자가 같아도 그냥 닫지 않는다 — 2단계에서 고친 문장이 이미 여기 들어와 있어서,
+  //   "음성을 다시 안 뽑았어요" 경고를 보고 대본수정→저장을 해도 여기서 튕겨 나갔다
+  //   (2026-08-19 사장님 제보). 다시 뽑을지 말지는 **서버가** 판정한다(unchanged 응답).
   const job = SL.job;
   if (!job){ nsay('작업 ID를 몰라 저장할 수 없어요'); return; }
   delete NARR_EDIT[i]; NARR_BUSY[i] = true; renderBand();
@@ -1622,6 +1624,7 @@ async function saveNarr(i){
       body: JSON.stringify({text, regen:true})});
     const j = await r.json();
     if (!j.ok) throw new Error(j.error || '저장 실패');
+    if (j.unchanged && !j.regen){ delete NARR_BUSY[i]; closeNarrEdit(i); return; }
     // 화면 데이터도 즉시 새 문장으로(서버가 이미 저장했다). 자막·길이는 아래 폴링이 갱신한다.
     DATA.beats[i].narration = text; delete NARR[i];
     nsay(`🔊 칸 ${i+1} 음성·자막 다시 뽑는 중… (10~20초)`);
