@@ -250,3 +250,16 @@ def test_슬롯출처표가_영상폴백을_명시한다():
     from shopping_shorts.sul_facts import SLOT_SOURCE
     assert "sul_facts.product_name" in SLOT_SOURCE["제품"]
     assert "sul_facts.benefits" in SLOT_SOURCE["효능"]
+
+
+def test_나라가_없어도_authority가_채워진다():
+    """★실측(2026-08-19): 해외 원본은 제조국을 잘 안 밝힌다. sul_facts가 지어내지 않고
+    비우는 건 옳은데, authority 템플릿 3개가 전부 {나라}를 요구해 그 칸이 통째로
+    비었다(영어 원본 1편 → 5/6칸). 슬롯 없는 변형을 뒤에 두면 자동으로 내려간다."""
+    tmpl = ["이걸 개발한 {나라}의 천재가 돈방석에 앉았다는데",
+            "이걸 만든 천재가 떼돈을 벌었다는데"]
+    spine = {"beat_roles": ["authority"], "templates": {"authority": tmpl}}
+    assert sf.fill(spine, {"나라": "독일"})[0][0]["text"] == \
+        "이걸 개발한 독일의 천재가 돈방석에 앉았다는데"
+    assert sf.fill(spine, {})[0][0]["text"] == "이걸 만든 천재가 떼돈을 벌었다는데"
+    assert sf.fill(spine, {})[1] == []          # 못 채운 칸 없음
