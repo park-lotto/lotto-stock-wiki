@@ -196,7 +196,10 @@ def check(style, result):
                        "detail": text[:60] or "(해당 role 없음)"})
 
     full = " ".join(b.get("text", "") for b in beats)
-    checks.append({"name": "CTA 단어유도", "ok": "남겨주세요" in full,
+    # ★라이브(script_gate.check)는 이미 어간 '남겨주'로 본다. 여기만 "남겨주세요"로 남아
+    #   있어서 정답인 "댓글에 OO 남겨주시면 ~ 보내드릴게요"를 FAIL로 잡았다(2026-08-19 실측).
+    #   같은 판단이 두 군데 적혀 어긋난 전형(0순위-B) — 라이브 기준에 맞춘다.
+    checks.append({"name": "CTA 단어유도", "ok": "남겨주" in _norm(full),
                    "detail": full[-40:]})
     # ★분량 기준도 스타일별이다 — 히트작 밀도의 70~140%를 벗어나면 그 스타일이 아니다.
     tgt = style.get("chars_per_30s") or 135
