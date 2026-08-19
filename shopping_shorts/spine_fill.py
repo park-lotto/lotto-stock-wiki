@@ -39,7 +39,7 @@ import re
 # 템플릿에 쓰이는 슬롯 이름. 여기 없는 이름이 템플릿에 있으면 그 템플릿은 못 쓴다
 # (모르는 슬롯을 빈칸으로 남기면 "이게 원래는  개발된 제품이었음"이 나간다).
 SLOT_NAMES = ("제품", "효능", "효능2", "나라", "본래용도", "속성",
-              "용도", "용도끝", "용도들", "제품군")
+              "용도", "용도2", "용도끝", "용도들", "제품군")
 
 _SLOT_RE = re.compile(r"\{([^{}]+)\}")
 
@@ -96,6 +96,13 @@ def fix_josa(value, tail):
                     want = withb if b else nob
                 return want, rest
     return "", tail
+
+
+def _nth(v, i):
+    """리스트의 i번째. 없으면 ''(그 슬롯을 쓰는 템플릿은 자동으로 안 걸린다)."""
+    if isinstance(v, (list, tuple)):
+        return str(v[i]).strip() if len(v) > i else ""
+    return str(v or "").strip() if i == 0 else ""
 
 
 def _last(v):
@@ -179,6 +186,10 @@ def slots_from_facts(product_facts=None, sul=None):
         "용도": _first(sf.get("misuses")),
         # ★twist는 cases에서 이미 말한 것을 또 말하면 안 된다(실측: 둘 다 '인테리어
         #   소품'이 나와 반전이 죽었다). 사례가 여럿이면 **마지막 것**을 반전에 쓴다.
+        # ★실측 대본의 cases는 명사 나열이 아니라 **초보 vs 고수 대비**다
+        #   ("초보 주부들은 기껏해야 환기 정도가 전부였음 / 하지만 고수 주부들은
+        #     주방 벽에 설치해서 시원하게 요리한다고"). 그래서 두 번째 사례가 필요하다.
+        "용도2": _nth(sf.get("misuses"), 1),
         "용도끝": _last(sf.get("misuses")),
         "용도들": _join_cases(sf.get("misuses")),
         "제품군": _first(sf.get("category_word")),
