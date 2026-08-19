@@ -1,0 +1,16 @@
+{
+  "date": "2026-08-14",
+  "hit_rate": null,
+  "mentioned_count": 0,
+  "matched": [],
+  "missed": [],
+  "candidates": [],
+  "thresholds": {
+    "mode": "his",
+    "vacuum_pct_max": 35.0,
+    "min_up_count": 1,
+    "require_up_gt_down": true,
+    "require_leader": false,
+    "top_n": 20
+  }
+}

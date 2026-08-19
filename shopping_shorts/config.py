@@ -84,6 +84,10 @@ INSTAGRAM_SESSION_PATH = os.getenv("INSTAGRAM_SESSION_PATH", "")
 INSTAGRAM_PW_CONTEXTS = int(os.getenv("INSTAGRAM_PW_CONTEXTS", "5"))
 # 채널 1개 처리 상한(ms). 넘으면 그 채널만 error로 접고 다음으로 간다(전체가 죽지 않게).
 INSTAGRAM_PW_TIMEOUT_MS = int(os.getenv("INSTAGRAM_PW_TIMEOUT_MS", "20000"))
+# 릴스 목록 XHR을 최대 몇 ms까지 기다리나(응답이 잡히면 즉시 진행 — 상한일 뿐이다).
+# ★2.5초 고정 대기가 수집 실패 55%의 원인이었다(2026-08-17 실측: 2.5초 5/14 → 10초 14/14).
+# 상한을 올려도 빠른 채널은 그만큼 안 기다리므로 전체 시간은 느린 채널에서만 늘어난다.
+INSTAGRAM_PW_LIST_WAIT_MS = int(os.getenv("INSTAGRAM_PW_LIST_WAIT_MS", "12000"))
 
 # 샤오홍슈 레퍼런스 채널 크롤(2026-07-29) — 로그인 세션 재사용, 서버 직결(프록시 불필요,
 # Phase 0 스파이크 검증 완료). 세션 만료 시 수동 재로그인 → 이 경로에 storageState() 재저장.
@@ -199,6 +203,12 @@ ELEVENLABS_VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWA
 # 끄면 예전(ASR) 동작 그대로. 실패 시엔 켜져 있어도 일반 엔드포인트→ASR로 2단 폴백한다.
 ELEVENLABS_TIMESTAMPS = os.getenv("ELEVENLABS_TIMESTAMPS", "1") not in ("0", "false", "False")
 
+# 타입캐스트 TTS(2026-08-19) — 일레븐랩스와 **함께** 쓰는 두 번째 백엔드. 남자 성우
+# 라인업(필재·김건·박창수·용식이)이 일레븐랩스에 없어서 붙였다. 어느 쪽으로 나갈지는
+# 프리셋의 model_id가 정한다(`ssfm-*` → 타입캐스트) — tts.py의 _is_typecast 한 곳에서만
+# 판단한다(0순위-B). 키가 없으면 기존과 같이 무음 mock으로 내려앉는다.
+TYPECAST_API_KEY = os.environ.get("TYPECAST_API_KEY", "")
+
 # ASR 라운드트립 검증(튜닝 작업대) — Whisper로 TTS를 재전사해 오독 탐지. GROQ 우선.
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 
@@ -231,6 +241,15 @@ YOUTUBE_WINDOW_HOURS = 336  # 14일
 YOUTUBE_MAX_PER_KW = 50     # 키워드당 검색 상한(YouTube API 한 호출 최대)
 RESULTS_PER_CHANNEL = 3    # 채널당 최신 상한
 ONLY_NEWER_THAN = "2 days" # Apify 날짜필터 (창 + 여유)
+
+# 채널 등급제(2026-08-17) — 과거 성적으로 방문 주기를 가른다. 상세·실측근거: channel_tier.py
+# 기본 OFF: 로직은 서버 실데이터로 검증했지만 수집 경로 통과는 미검증이라, 라이브에서
+# 하루 돌려보고 켠다(feedback_no_unverified_flag_in_live — 미검증 플래그 라이브 점화 사고).
+# 켜기: /etc/shopping-shorts.env 에 REFERENCE_TIER=1
+REFERENCE_TIER = os.getenv("REFERENCE_TIER", "") in ("1", "true", "on")
+# 재료가 부족하면 A를 넓힌다 — 코드 수정·재배포 없이 되돌릴 수 있게 env로 뺀다.
+REFERENCE_TIER_HIT_COMMENTS = int(os.getenv("REFERENCE_TIER_HIT_COMMENTS", "500"))
+REFERENCE_TIER_HIT_COUNT = int(os.getenv("REFERENCE_TIER_HIT_COUNT", "2"))
 
 # 벤치마킹 엑셀 채널 수 상한(2026-07-13, 비용 관리용). ⚠️ 2026-07-22 활동성 선별로
 # 전환하며 선별에서 미사용 — 팔로워 컷 대신 활동성(최근 업로드)으로 거른다. 기존
@@ -278,6 +297,9 @@ MIN_SHOT_SECONDS = 1.2       # 컷 하나 최소 길이 — 이보다 짧은 조
 # 한 컷을 이보다 오래 안 끈다 — 긴 정지(7초 홀드) 대신 distinct 앵글로 컷(벤치마크 ~1.1초).
 # 렌더가 이 상한으로 세그먼트를 번갈아 재생해 컷 밀도를 만든다(0=끄기·옛 동작).
 MAX_SHOT_SECONDS = 2.2
+# 1장=1컷(2026-08-14): 담은 장면을 순서대로 한 번씩만 쓴다(라운드로빈 되돌아옴 없음).
+# 길이는 나레이션을 장수로 고르게 나눠 준다. 기본 off — 켜면 영상 결과가 바뀐다.
+ONE_CLIP_PER_SEGMENT = False
 
 # 카테고리 (자동 태깅 초기 6분류)
 # ⚠️ 옛 어휘가 남아 있던 목록 — categorize.KEYWORDS와 어긋나 있었다(인테리어·생활용품은
@@ -318,3 +340,13 @@ COUPANG_RELAY_WAIT_SEC = int(os.getenv("COUPANG_RELAY_WAIT_SEC", "60"))
 # 크롬 프로필 폴더(쿠키·PCID 유지). 매번 새 프로필로 들어가면 '처음 온 손님'이라
 # 차단 임계가 훨씬 낮다. 비우면 레포 안 .coupang_profile 를 쓴다(git 비추적).
 COUPANG_PROFILE_DIR = os.getenv("COUPANG_PROFILE_DIR", "")
+
+# 도우인 로그인 세션(Playwright storage_state). 없으면 CN 검색은 Apify로 폴백한다.
+DOUYIN_SESSION_PATH = os.getenv("DOUYIN_SESSION_PATH", "/home/ubuntu/douyin_session.json")
+# 틱톡 로그인 세션(Playwright storage_state). 없으면 키워드 검색은 Apify로 폴백한다.
+# ★2026-08-17 서버 실측 — 막는 것은 IP가 아니라 **세션**이다:
+#   프록시(kr)로 검색 페이지·`/api/search/general/full/` 모두 200으로 도달하는데,
+#   응답 **본문이 비어** 있고 화면엔 로그인 모달과 "문제가 발생했습니다"가 뜬다.
+#   즉 샤오홍슈(세션 있음 → 무료 성공)와 도우인(세션 없음 → Apify)의 차이와 같다.
+#   이 파일이 생기는 순간 kw_search가 자동으로 무료 경로를 먼저 타고 비용이 0이 된다.
+TIKTOK_SESSION_PATH = os.getenv("TIKTOK_SESSION_PATH", "/home/ubuntu/tiktok_session.json")

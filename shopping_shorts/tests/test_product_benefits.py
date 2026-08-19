@@ -141,10 +141,15 @@ def test_build_inventory_line_carries_benefits():
 
 
 def test_build_inventory_no_benefits_unchanged():
-    """특장점 없는 기존 소스는 라인 포맷이 그대로(회귀 0)."""
+    """특장점 없는 기존 소스는 라인 포맷이 그대로(회귀 0).
+
+    세그 5개인 이유: 인벤토리는 첫·마지막을 버리는데 '잘라낸 뒤 3개 이상 남을 때만'
+    자른다(2026-08-14 기준 변경). 검사 대상 s1-1만 남기려면 5개가 필요하다.
+    """
     segs = [_seg("s1-0", 0, 1), _seg("s1-1", 1, 3, text="말소리", desc="컵"),
-            _seg("s1-2", 3, 5)]
+            _seg("s1-2", 3, 5), _seg("s1-3", 5, 7), _seg("s1-4", 7, 9)]
     _, block = edit_plan._build_inventory([_script("s1", segs)])
+    block = "\n".join(l for l in block.split("\n") if "[s1-1]" in l)
     # 훅 비주얼(2026-07-29): 역할(shot_role 기본 '기타')·실증(is_key 기본 N)이 별도 suffix로 붙는다.
     assert block == "[s1-1] (2s) 화면:컵 | 말:말소리 | 역할:기타 | 실증:N"
 

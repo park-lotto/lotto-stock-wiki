@@ -366,7 +366,12 @@ def restyle_prompt(beats, length_note="", style_name=None, facts_block=""):
     covers(컷 매핑)가 그대로 유효하다."""
     import json
     from shopping_shorts import style_profiles
-    cur = [{"n": i + 1, "narration": (b.get("narration") or "")}
+    # ★문장별 상한(2026-08-17 실측): 종전엔 "전체를 ±15%로"라는 **총량** 지시뿐이라
+    #   모델이 어디를 얼마나 줄일지 몰라 재시도가 무작위로 튀었다(서버 로그 실측:
+    #   1.49→1.71→1.84 / 1.54→1.76→1.39 — 줄어드는 경향 자체가 없다). 총량은 사람이
+    #   못 세지만 **문장별 상한은 셀 수 있다** → 각 문장에 max를 박아 준다.
+    cur = [{"n": i + 1, "narration": (b.get("narration") or ""),
+            "max": int(len(b.get("narration") or "") * 1.15) + 2}
            for i, b in enumerate(beats)]
     total = sum(len(c["narration"]) for c in cur)
     return (style_profiles.style_block(style_name)
@@ -379,8 +384,10 @@ def restyle_prompt(beats, length_note="", style_name=None, facts_block=""):
             "★제품이 무엇이고 어떻게 쓰는 물건인지(착용/바르는/먹는)를 절대 바꾸지 마라 — "
             "원래 문장에 없는 동사로 제품을 쓰게 하면 화면과 어긋난다. 등장 인물도 원래 "
             "문장의 인물 그대로(아내를 친구로 바꾸지 마라).\n"
-            f"3. ★전체 길이는 지금({total}자)의 ±15% 안 — 이 나레이션은 화면 길이에 묶여 "
-            "있어 길어지면 영상이 끝났는데 말이 남는다. 각 문장도 원래 문장과 비슷한 길이로. "
+            f"3. ★길이 — 아래 각 문장에 적힌 `max`가 그 문장의 **글자수 상한**이다. "
+            "n번 문장을 고쳐 쓴 뒤 글자를 세어 max 이하인지 확인하고, 넘으면 그 문장에서 "
+            f"군더더기를 덜어라(전체 합계는 {total}자 근처가 된다). 이 나레이션은 화면 "
+            "길이에 묶여 있어 길어지면 영상이 끝났는데 말이 남는다. "
             "결을 살리되 **바꿔 쓰는 것이지 늘려 쓰는 게 아니다**.\n"
             + (f"   {length_note}\n" if length_note else "")
             + "4. ★마지막 문장(CTA)은 반드시 \"댓글에 '키워드' 남겨주시면 [받는 것] "
@@ -400,7 +407,7 @@ def restyle_prompt(beats, length_note="", style_name=None, facts_block=""):
 
 
 def apply_restyle(beats, call, max_tries=3, style_name=None, report=None,
-                  facts_block=""):
+                  facts_block="", where=""):
     """스타일 리라이트 — 길이 초과·상투어는 버리지 말고 피드백 재시도(최대 3회).
 
     ★첫 구현은 길이 밖이면 조용히 원본 복귀였는데, 메종 문체가 원문보다 길어
@@ -412,32 +419,53 @@ def apply_restyle(beats, call, max_tries=3, style_name=None, report=None,
     {"ok": bool, "style": str, "why": str}. 실패가 조용히 원본으로 남으면 trio가
     전부 같은 결로 수렴하는데 로그 0줄이라 진단 불가였다(2026-08-06 서버 실측)."""
     import sys
+    import time as _time
     from shopping_shorts import style_profiles
 
+    # ★계측(2026-08-17 사장님 "시간이 너무 오래 걸린다"): 실측 결과 매칭 10분 중
+    #   9분 11초(91%)가 restyle이었다. 그런데 로그가 "재시도 소진(길이·상투어·CTA)"로
+    #   뭉뚱그려져 **무엇 때문에 다시 돌았는지**를 알 수 없어 어디를 고쳐야 할지 못 정했다.
+    #   회차마다 사유·길이비·초를 남긴다 — 원인을 알아야 그것만 정확히 고친다(추측 금지).
+    _t0 = _time.time()
+    _trace = []          # [(회차, 사유, ratio, 초)] — 아래 _done이 한 줄로 찍는다
+
     def _done(out, ok, why):
+        el = _time.time() - _t0
         if report is not None:
             report.update(ok=ok, style=style_name or style_profiles.active_style(),
-                          why=why)
-        print(f"[restyle] 스타일={style_name} {'성공' if ok else '실패'}({why})",
+                          why=why, seconds=round(el, 1), tries=len(_trace),
+                          trace=list(_trace))
+        # 예) [restyle] 스타일=maison 성공(재시도 소진) 102.3초 4회 | 1:길이초과 1.42 24.1s …
+        _tr = " | ".join("%d:%s%s %.1fs" % (n, w, ("" if r is None else " %.2f" % r), s)
+                         for n, w, r, s in _trace)
+        print(f"[restyle]{('[' + where + ']') if where else ''} 스타일={style_name} "
+              f"{'성공' if ok else '실패'}({why}) {el:.1f}초 {len(_trace)}회 | {_tr}",
               file=sys.stderr)
         return out
+
+    def _mark(n, why, ratio, t_start):
+        _trace.append((n, why, ratio, _time.time() - t_start))
 
     if not style_profiles.active_style() or not beats:
         return beats
     old_total = sum(len(b.get("narration") or "") for b in beats)
     note = ""
     best = None
+    best_why = None         # 왜 best로 잡혔나 — "길이"면 아래 압축패스를 한 번 더 태운다
     closest = None          # 구조는 멀쩡하나 길이 밖인 스타일본 중 1.0배에 가장 근접한 것
     closest_ratio = None
-    for _ in range(max_tries):
+    for _try in range(1, max_tries + 1):
+        _ts = _time.time()
         resp = call(restyle_prompt(beats, length_note=note, style_name=style_name,
                                    facts_block=facts_block),
                     RESTYLE_SCHEMA)
         got = (resp or {}).get("beats") if isinstance(resp, dict) else None
         if not got or len(got) != len(beats):
+            _mark(_try, "빈응답·비트수", None, _ts)
             return _done(best or beats, best is not None, "빈 응답·비트수 불일치")
         by_n = {int(g.get("n", 0)): (g.get("narration") or "").strip() for g in got}
         if sorted(by_n) != list(range(1, len(beats) + 1)) or not all(by_n.values()):
+            _mark(_try, "번호불일치", None, _ts)
             return _done(best or beats, best is not None, "번호 불일치·빈 나레이션")
         out = []
         for i, b in enumerate(beats):
@@ -448,37 +476,62 @@ def apply_restyle(beats, call, max_tries=3, style_name=None, report=None,
         if closest is None or abs(ratio - 1) < abs(closest_ratio - 1):
             closest, closest_ratio = out, ratio
         if ratio > 1.25:
-            note = (f"직전 결과가 원본의 {ratio:.2f}배로 너무 길었다 — 결은 유지하되 "
-                    f"군더더기를 덜어 {old_total}자 근처로 줄여라.")
-            best = best or (out if ratio <= 1.45 else None)   # 아주 심하지 않으면 예비 보관
+            _mark(_try, "길이초과", ratio, _ts)
+            # ★어느 문장이 넘쳤는지 짚어 준다(2026-08-17 실측): "전체를 줄여라"만으로는
+            #   모델이 어디를 손댈지 몰라 재시도가 무작위였다. 초과 문장과 초과 글자수를
+            #   명시하면 고칠 대상이 하나로 정해진다.
+            over = []
+            for i, b in enumerate(beats):
+                lim = int(len(b.get("narration") or "") * 1.15) + 2
+                got_len = len(by_n[i + 1])
+                if got_len > lim:
+                    over.append(f"{i + 1}번({got_len}자→{lim}자 이하)")
+            note = (f"직전 결과가 원본의 {ratio:.2f}배로 너무 길었다. "
+                    + (f"상한을 넘긴 문장: {', '.join(over)}. 그 문장들만 군더더기를 덜어라"
+                       if over else f"결은 유지하되 {old_total}자 근처로 줄여라")
+                    + " — 문장 수·순서·내용은 그대로.")
+            if best is None and ratio <= 1.45:   # 아주 심하지 않으면 예비 보관
+                best, best_why = out, "길이"
             continue
         if ratio < 0.75:
+            _mark(_try, "길이부족", ratio, _ts)
             note = f"직전 결과가 원본의 {ratio:.2f}배로 너무 짧았다 — {old_total}자 근처로."
             continue
-        if any(c in v for v in by_n.values() for c in _CLICHE):
+        _hit = [c for v in by_n.values() for c in _CLICHE if c in v]
+        if _hit:
+            _mark(_try, "상투어:" + ",".join(sorted(set(_hit))[:3]), ratio, _ts)
             note = "직전 결과에 금지 상투어(꿀템·삶의 질 등)가 남았다 — 전부 제거하라."
-            best = out
+            best, best_why = out, "상투어"
             continue
         last = by_n[len(beats)]
         if "댓글" in last and not re.search(r"드릴게요|보내드|알려드", last):
+            _mark(_try, "CTA보상없음", ratio, _ts)
             note = ("직전 결과의 마지막 CTA가 보상 없이 끝났다 — 반드시 "
                     "\"남겨주시면 [받는 것] 드릴게요\" 형태로.")
-            best = out
+            best, best_why = out, "CTA"
             continue
+        _mark(_try, "통과", ratio, _ts)
         return _done(out, True, "정상")
-    if best is not None:
-        return _done(best, True, "재시도 소진(길이·상투어·CTA)")
+    # ★길이 때문에 잡힌 best는 그냥 내보내지 않는다(2026-08-17 실측): 게이트는 1.25인데
+    #   best 보관선이 1.45라 **1.39~1.45짜리가 그대로 라이브로 나가고 있었다** — 기준이
+    #   사실상 두 개였던 셈(0순위-B). 상투어·CTA 사유는 길이가 이미 정상이라 그대로 반환.
+    if best is not None and best_why != "길이":
+        return _done(best, True, f"재시도 소진({best_why})")
     # ★마지막 압축 패스(2026-08-07): 재시도가 전부 길이 밖이면 종전엔 스타일을 통째로
     # 버리고 원본 복귀 → trio가 같은 결로 수렴("메종/채이/홈테리어 매칭이 안 됨" 실사고,
     # job 11:38 maison·chae 실패 로그). 스타일이 입혀진 최근접본을 붙잡고 "문체는 두고
     # 길이만 줄여라"를 한 번 더 태운다 — 스타일과 화면 길이를 둘 다 지키는 마지막 기회.
     if closest is not None:
         import json as _json
-        cur = [{"n": i + 1, "narration": (b.get("narration") or "")}
+        _ts = _time.time()      # 계측: 이건 max_tries 밖의 **+1회 추가 호출**이다
+        # 여기도 문장별 상한을 준다 — 총량 지시가 안 먹힌다는 실측은 이 패스에도 같다.
+        cur = [{"n": i + 1, "narration": (b.get("narration") or ""),
+                "max": int(len(beats[i].get("narration") or "") * 1.15) + 2}
                for i, b in enumerate(closest)]
         resp = call(
             ("아래 나레이션의 **문체·어미·결은 그대로** 두고, 각 문장의 군더더기만 "
-             f"덜어 전체를 {old_total}자(±15%) 안으로 맞춰라. 문장 수·순서·내용 유지, "
+             "덜어 각 문장을 그 문장의 `max` 글자수 이하로 맞춰라"
+             f"(전체 합계는 {old_total}자 근처가 된다). 문장 수·순서·내용 유지, "
              "사실 추가 금지, 마지막 문장의 댓글 CTA 형태 유지.\n"
              "JSON만: {\"beats\":[{\"n\":1,\"narration\":\"...\"}]}\n\n")
             + _json.dumps(cur, ensure_ascii=False, indent=1), RESTYLE_SCHEMA)
@@ -493,7 +546,14 @@ def apply_restyle(beats, call, max_tries=3, style_name=None, report=None,
                         nb = dict(b)
                         nb["narration"] = by_n[i + 1]
                         out.append(nb)
+                    _mark(max_tries + 1, "압축패스성공", ratio, _ts)
                     return _done(out, True, f"압축패스({closest_ratio:.2f}→{ratio:.2f}배)")
+        _mark(max_tries + 1, "압축패스실패", None, _ts)
+    # ★압축이 실패해도 예비본이 있으면 스타일을 살린다(2026-08-17 실측): 08-17 04:31
+    #   maison은 최근접 1.50배라 best(≤1.45)도 없어 원본 복귀 = 스타일 통째 폐기였다.
+    #   1.45 이하 예비본이 있으면 원본보다 그쪽이 낫다(원본 복귀는 trio 수렴 사고의 원인).
+    if best is not None:
+        return _done(best, True, "압축실패→예비본(길이 1.45배 이내)")
     return _done(beats, False,
                  f"재시도 소진(최근접 {closest_ratio:.2f}배)" if closest_ratio
                  else "재시도 소진(길이·상투어·CTA)")
@@ -1228,14 +1288,26 @@ def add_hook_opener(beats):
     first = (beats[0].get("narration") or "").strip()
     if not first:
         return beats
-    # ★'와'만 붙인다(2026-08-09 사장님 지시: "여러분이 나올 때는 ~하지 마라 / ~해라
-    #   이런 건데 지금 억지로 넣은 거야. 저렇게밖에 안 되면 빼고 와~ 이걸 넣어").
-    #   '여러분'은 **명령·권유형과 짝**이다("여러분 다이소 가면 사오세요"). 그건 훅 패턴
-    #   y_store/y_when/y_never 틀에 이미 들어 있으니 거기서 나온다.
-    #   여기서 붙이는 건 서술형 문장 앞이라 '여러분'을 얹으면 어색해진다
-    #   (실측: "여러분 시댁 놀러 갔다가 ~ 소리 질렀잖아요" — 명령형이 아닌데 부름말).
-    #   '아니'도 뺐다(few-shot에 없고 시비조로 들린다).
-    opener = "와, "
+    # ★로테이션(2026-08-11 사장님: "1번으로 수정 / 여러분이랑 와 이게 제일 무난한 훅인데").
+    #   종전엔 무조건 "와, "라 최근 6잡 중 5잡 훅이 전부 "와,"로 시작했다(실측) —
+    #   뽑을 때마다 "와 와 와"로 들리는 단조로움. 규칙:
+    #   · 질문형(?) → 안 붙인다(감탄사가 물음을 깬다)
+    #   · 명령·권유형 → "여러분 " ('여러분'은 명령·권유형과 짝, 8/9 사장님.
+    #     실측 어색례: "여러분 시댁 놀러 갔다가 ~ 소리 질렀잖아요" — 서술형엔 안 얹는다)
+    #   · 서술형 → 대본별 결정적 해시로 절반은 "와, ", 절반은 무부착(모델이 쓴 훅 그대로)
+    #   '아니'는 제외 유지(few-shot에 없고 시비조, 8/9 사장님).
+    sent_end = first.split(".")[0].split("!")[0]
+    if first.rstrip().endswith("?") or sent_end.rstrip().endswith("?"):
+        return beats
+    imperative = _re.search(r"(세요|십시오|합시다)[.!]?$", sent_end.strip())
+    if imperative:
+        opener = "여러분 "
+    else:
+        import hashlib
+        h = int(hashlib.md5(first.encode("utf-8")).hexdigest(), 16)
+        if h % 2:
+            return beats                     # 절반은 모델 훅 그대로 — 단조로움 방지
+        opener = "와, "
     beats[0]["narration"] = opener + first
     beats[0]["caption_lines"] = None
     return beats

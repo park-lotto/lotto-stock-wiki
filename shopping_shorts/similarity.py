@@ -11,6 +11,7 @@ from google import genai
 from google.genai import types
 from shopping_shorts.config import SHORTS_GEMINI_KEYS
 from shopping_shorts import comment_gen
+from shopping_shorts import usage_meter
 from pipeline.atoms import key_vault
 
 _MODEL = "gemini-3.5-flash"  # "gemini-3-flash"는 실존하지 않는 모델명이었음(2026-07-09 발견, video_analysis.py와 동일 이슈)
@@ -28,7 +29,8 @@ def _client_for_key(key):
     if key not in _client_cache:
         # 타임아웃 미지정 시 느린 Gemini 응답에 무한 대기할 수 있음(comment_gen._client_for_key
         # 참고 — 2026-07-14 실사고).
-        _client_cache[key] = genai.Client(api_key=key, http_options=types.HttpOptions(timeout=120_000))
+        _client_cache[key] = usage_meter.wrap(
+            genai.Client(api_key=key, http_options=types.HttpOptions(timeout=120_000)))
     return _client_cache[key]
 
 

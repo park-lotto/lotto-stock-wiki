@@ -1,9 +1,11 @@
 // ==UserScript==
 // @name         로또 · 원클릭 담기
 // @namespace    lotto.shopping_shorts
-// @version      2.3.0
+// @version      2.4.0
 // @description  플랫폼 영상에 '📥 담기' 버튼. ★한 번만 설치하면 됩니다 — 담기 로직은 서버에서 매번 불러오므로 이후 업데이트는 재설치 없이 자동 반영됩니다.
 // @match        https://www.youtube.com/*
+// @match        https://*.threads.com/*
+// @match        https://*.threads.net/*
 // @match        https://www.tiktok.com/*
 // @match        https://*.instagram.com/*
 // @match        https://*.xiaohongshu.com/*
@@ -24,6 +26,8 @@
 // v2.1.0: /grab(설치 안내 페이지)도 @match에 추가 — 설치가 끝나면 이 로직이 그 페이지에서
 // 실행돼 '설치됨' 표식을 남기고, 페이지가 그걸 감지해 자동으로 '완료'로 바꾼다(자가감지 신호등).
 // 이 한 줄 때문에 기존 설치자는 한 번만 재설치하면 되고, 이후 로직 변경은 여전히 재설치 불필요.
+// v2.4.0(2026-08-18): 쓰레드(threads.com/.net) 추가 — 담기·채널수집이 쓰레드에서도 돌게.
+// ★@match 변경이라 이것 역시 '한 번' 재설치가 필요하다(로직만 바뀐 게 아니다).
 (function () {
   "use strict";
   // 분 단위 캐시버스트: 서버 코드를 고치면 늦어도 1분 안에 모두 반영, 그 안에선 캐시 활용.

@@ -248,7 +248,26 @@ _CAP_OPENER_SUFFIX = ("마다",)
 _CAP_HEAD_MINCHARS = 4  # 머리 단어 앞에서 끊는 최소(앞 구절) 글자수. 짧으면 이어붙임
                         # ("이것 한" 파편 방지, "…일쑤였는데 | 이" 는 앞이 길어 끊김).
 _CAP_WRAP = 19          # 아주 긴 단일 어절 방어용(한 줄 최대 글자수, 1080px 안)
-_CAP_MIN_DUR = 0.25     # 한 구절 최소 표시시간(속도감).
+# 한 구절 최소 표시시간. 0.25는 사람이 읽을 수 있는 하한이 아니라 사실상 없는 것과 같았다
+# (2026-08-17 사장님 "자막 넘어가는 글자들이 너무 짧게 빠르게 넘어간다").
+# 실측(칸 4.4초, "요거트, 계란, 전분으로 만드는 일본식 요거트 식빵, 지금 확인해보세요!"):
+#   요거트 0.40s / 계란 0.27s / 식빵 0.27s ← 눈으로 못 읽고 번쩍인다.
+# 하한을 채운 시간은 _caption_durations가 다른 구절에서 비례로 빼 오므로 **총 길이는 안 변한다**.
+# 2026-08-17 2차: 0.7초도 "휙휙 지나간다"(사장님). 1.0초로 올린다.
+_CAP_MIN_DUR = float(os.environ.get("CAPTION_MIN_DUR", "1.0") or 1.0)
+# 쉼표에서 끊을 최소 글자수(공백 제외). 나열형("요거트, 계란, 전분으로…")에서 1~2자 파편이
+# 쏟아지던 것을 막는다 — 앞 구절이 이 길이 미만이면 쉼표를 넘겨 이어붙인다.
+# _CAP_LEAD_MINCHARS·_CAP_HEAD_MINCHARS와 **같은 방식의 방어**인데 쉼표에만 빠져 있었다.
+# 문장 끝(. ? ! …)은 대상이 아니다 — 문장 경계는 짧아도 끊는 게 맞다.
+_CAP_COMMA_MINCHARS = int(os.environ.get("CAPTION_COMMA_MINCHARS", "6") or 6)
+# ★쉼표 나열은 통째로 묶는다(2026-08-17 2차). 위 최소글자수만으로는 항목이 4개 이상일 때
+# 나열이 **중간에서** 잘렸다 — 실측 "아침, 풍신, | 빵, 나도 중 댓글 | 남겨주시면"
+# (누적 6자에 도달하는 순간 끊겨서 나열이 두 동강 난다).
+# 그래서 '쉼표로 이어진 짧은 항목들'은 이 글자수까지 한 덩어리로 붙인다.
+# 한 줄 표시 폭(_CAP_WRAP)을 넘지 않는 선에서만 — 넘으면 종전 규칙대로 끊는다.
+_CAP_LIST_MAXCHARS = int(os.environ.get("CAPTION_LIST_MAXCHARS", "18") or 18)
+# 나열 항목 하나로 볼 최대 글자수. 이보다 길면 '짧은 나열'이 아니라 정상 절이므로 종전대로.
+_CAP_LIST_ITEMCHARS = int(os.environ.get("CAPTION_LIST_ITEMCHARS", "4") or 4)
 
 # 한글 폰트 후보(먼저 발견되는 것 사용). repo에 NanumGothic을 번들하므로 서버·로컬
 # 어디서든 별도 설치 없이 자막이 나온다(env로 다른 폰트 강제 가능).
@@ -374,7 +393,45 @@ def _extend_last_clip_for_runout(plan, segs, runout=_LAST_RUNOUT):
     return plan
 
 
-def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None, max_shot=None):
+def _beat_material(beat):
+    """비트의 화면 재료(순서 구간 리스트)를 **한 곳에서** 정한다(0순위-B).
+
+    ★장면실험실 배선(2026-08-15 사장님 "거기서 어떻게 되는지를 보고 판단해야해"):
+    사람이 실험실에서 편성·트림한 결과(beat["scene_override"])가 있으면 그 구간들이 재료다.
+    원본 primary/alternates는 **그대로 두고 얹는 형태**라, scene_override를 지우면 원래대로
+    돌아간다(edit_plan.revert_scene_lab). 트림(✂ 가운데 잘라내기)은 적용 시점에 이미
+    '구멍 뺀 두 토막'으로 갈라져 들어오므로 여기서는 그냥 구간 목록일 뿐이다 —
+    아래 _plan_beat_clips의 계산 규칙은 아무것도 달라지지 않는다(재료만 바뀐다).
+    override가 없는 기존 잡은 예전과 바이트 동일하게 동작한다."""
+    over = beat.get("scene_override")
+    if over:
+        return [dict(s) for s in over if s]
+    return [s for s in ([beat.get("primary")] + list(beat.get("alternates") or [])) if s]
+
+
+def _spread_stretch(plan, eps=1e-3):
+    """늘려 채우기(scene_lab 칸별 토글 beat["stretch_fill"]) — 재료가 모자라 화면을 늘려야
+    할 때(out_dur 합 > src_dur 합), 그 부족분을 마지막 컷에 몰지 않고 **전 컷에 재료 길이
+    비례로** 나눈다(2026-08-15 사장님 "마지막 컷에만 몰아주지 않기"). 총 out_dur 합은
+    그대로라 오디오·자막 싱크 불변이고, 각 컷은 _speed_and_freeze가 균등하게 완만히
+    늘린다. 플래그가 없는 기존 잡은 이 함수에 오지도 않는다(호출부 gate)."""
+    if not plan or len(plan) < 2:
+        return plan
+    tot_out = sum(float(c.get("out_dur", 0.0)) for c in plan)
+    tot_src = sum(float(c.get("src_dur", 0.0)) for c in plan)
+    if tot_src <= eps or tot_out - tot_src <= eps:
+        return plan                      # 부족분이 없으면 그대로(재배분할 것이 없다)
+    sc = tot_out / tot_src
+    acc = 0.0
+    for c in plan[:-1]:
+        c["out_dur"] = float(c["src_dur"]) * sc
+        acc += c["out_dur"]
+    plan[-1]["out_dur"] = max(eps, tot_out - acc)   # 반올림 오차는 마지막이 흡수(합 보존)
+    return plan
+
+
+def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None, max_shot=None,
+                     one_per_seg=False):
     """비트의 순서 구간 리스트 → 나레이션 길이(tts_dur)에 맞춘 클립 계획.
     각 클립은 자기 구간 [start,end]를 절대 넘지 않는다(유출 0). 부족분은 아래 정책으로 채운다.
     반환: [{"video_id","start","src_dur","out_dur"}, ...]
@@ -391,7 +448,42 @@ def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None, max_s
     eps = 1e-3
     clips = []
     filled = 0.0
-    if max_shot and max_shot > eps and len(segments) > 1:
+    if one_per_seg and segments:
+        # ★1장 = 1컷 · 비례 배분(2026-08-14 사장님 "전체 시간을 보고 배분해서 맡기면 되는 건가").
+        #   라운드로빈은 상한(2.2초) 때문에 긴 장면을 다 못 써서 시간이 모자라고, 그래서 앞 장면으로
+        #   되돌아왔다(담김 3장인데 컷 4개). 확정 길이도 답이 아니다 — 담는 장면 길이도 칸별 나레이션
+        #   길이도 매번 달라 어떤 칸은 남고 어떤 칸은 모자란다.
+        #   그래서 **나레이션 시간을 담은 장면들에 길이 비례로 나눈다**: 남으면 비례로 줄이고,
+        #   모자라면 비례로 늘린다(각 장면이 원본 뒤를 조금씩 더 쓴다). 담은 게 전부·순서대로·
+        #   한 번씩 나오고 긴 장면은 길게, 짧은 장면은 짧게 원래 비율이 유지된다.
+        usable = [g for g in segments if (g["end"] - g["start"]) > eps]
+        # 비례로 나눴을 때 min_clip에 못 미치는 조각은 빼고 남은 것끼리 다시 나눈다(깜빡임 방지).
+        while usable:
+            total = sum(g["end"] - g["start"] for g in usable)
+            scale = tts_dur / total if total > eps else 0.0
+            too_small = [g for g in usable if (g["end"] - g["start"]) * scale < min_clip - eps]
+            if not too_small or len(usable) == 1:
+                break
+            usable = [g for g in usable if g not in too_small]
+        if usable:
+            total = sum(g["end"] - g["start"] for g in usable)
+            scale = tts_dur / total if total > eps else 0.0
+            for k, seg in enumerate(usable):
+                take = (seg["end"] - seg["start"]) * scale
+                if k == len(usable) - 1:
+                    take = max(0.0, tts_dur - filled)      # 반올림 오차는 마지막이 흡수
+                if take <= eps:
+                    continue
+                # 원본 뒤에 남은 실프레임까지만 1배속으로 읽는다(넘으면 그만큼 늘려 재생).
+                src_cap = take
+                if src_durs:
+                    room = max(0.0, src_durs.get(seg["video_id"], 0.0) - seg["start"])
+                    if room > eps:
+                        src_cap = min(take, room)
+                clips.append({"video_id": seg["video_id"], "start": seg["start"],
+                              "src_dur": src_cap, "out_dur": take})
+                filled += take
+    elif max_shot and max_shot > eps and len(segments) > 1:
         # 라운드로빈: distinct 세그먼트를 max_shot씩 번갈아 → 컷 밀도↑. 각 세그 읽기위치를 유지해
         # 다시 올 땐 이어서 재생(같은 프레임 반복 아님). 다 소진되면 아래 공통 shortfall로.
         pos = [seg["start"] for seg in segments]
@@ -446,6 +538,22 @@ def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None, max_s
                  "src_dur": max(seg["end"] - seg["start"], eps), "out_dur": tts_dur}]
 
     shortfall = tts_dur - filled
+    if shortfall > eps and one_per_seg:
+        # ★1장=1컷에서는 **되돌아오지 않는다**. 남는 시간은 마지막 컷 하나로 흡수한다:
+        #   소스에 실프레임이 남아 있으면 1배속으로 이어 붙이고(자연스럽다), 그것도 없으면
+        #   마지막 컷을 늘린다. 새 컷을 만들면 담은 장수와 컷 수가 어긋나 이 모드의 뜻이 깨진다.
+        last = clips[-1]
+        if src_durs:
+            sdur = src_durs.get(last["video_id"], 0.0)
+            avail = max(0.0, sdur - (last["start"] + last["src_dur"]))
+            real_ext = min(shortfall, avail)
+            if real_ext > eps:
+                last["src_dur"] += real_ext
+                last["out_dur"] += real_ext
+                shortfall -= real_ext
+        if shortfall > eps:
+            last["out_dur"] += shortfall      # 실프레임이 없으면 그 컷을 늘린다
+            shortfall = 0.0
     if shortfall > eps:
         # 1순위: 마지막 클립을 그 소스에 남은 실프레임으로 연장(1배속) — 릴이 배정 구간보다 길다.
         if src_durs:
@@ -631,7 +739,31 @@ def _caption_segments(narration, preset=None):
         ) or prev.endswith(_CAP_OPENER_SUFFIX)   # 도입 부사(…마다)는 글자수 무관 뒤에서 끊음
         # (c) 앞 어절이 문장부호로 끝났으면 문장 경계에서 끊는다. 쉼표도 자연 휴지라
         #     그 뒤에서 끊는다("빵 달라는 아이, | 아무 식빵이나" — 쉼표 넘겨 뭉치지 않게).
-        sent_break = cur[-1].endswith((".", "?", "!", "…", ",", "、"))
+        #     ★단 쉼표는 앞 구절이 충분히 길 때만(2026-08-17). 나열형에서 1~2자 파편이
+        #     쏟아졌다("요거트, | 계란, | 전분으로…" → 0.27초짜리가 번쩍인다).
+        #     연결어미(_CAP_LEAD_MINCHARS)·머리단어(_CAP_HEAD_MINCHARS)와 같은 방어를
+        #     쉼표에도 준다. 문장 끝(. ? ! …)은 짧아도 끊는다 — 문장 경계는 지켜야 한다.
+        hard_break = cur[-1].endswith((".", "?", "!", "…"))
+        comma_break = (cur[-1].endswith((",", "、"))
+                       and cur_chars >= _CAP_COMMA_MINCHARS)
+        # ★나열 이어가기(2026-08-17 2차): 위 최소글자수만으로는 항목이 4개 이상일 때
+        #   나열이 **중간에서** 잘렸다("아침, 풍신, | 빵, 나도 중 댓글 | 남겨주시면").
+        #   지금 구절이 '짧은 항목들이 쉼표로 이어진 나열'이면, 한 줄 폭(_CAP_LIST_MAXCHARS)
+        #   까지는 계속 붙여 나열을 한 덩어리로 유지한다.
+        #   판정: 구절 안의 모든 쉼표 항목이 짧고(_CAP_LIST_ITEMCHARS 이하), 붙여도 폭 이내.
+        if comma_break:
+            items = [x for x in " ".join(cur).replace("、", ",").split(",") if x.strip()]
+            short_list = (len(items) >= 2
+                          and all(len(x.replace(" ", "")) <= _CAP_LIST_ITEMCHARS
+                                  for x in items))
+            if short_list and len("".join(cur + [w])) <= _CAP_LIST_MAXCHARS:
+                comma_break = False      # 나열을 이어간다
+                # 나열을 이어가기로 했으면 글자수·어절수 상한도 이 폭까지 함께 풀어준다.
+                # 안 그러면 not room / not under_cap 이 대신 끊어 같은 자리에서 잘린다
+                # (실측: 상한만 남겨두면 "아침, 풍신," 뒤에서 그대로 끊겼다).
+                room = True
+                under_cap = True
+        sent_break = hard_break or comma_break
         # ★의존명사는 구절 머리가 될 수 없다(2026-08-06 실렌더 "…사 드시는 | 거 이제"):
         #   끊을 자리라도 다음 단어가 의존명사면 상한을 한 어절 넘겨서라도 데려간 뒤 끊는다.
         #   기존 병합(아래)은 '마지막 1어절 꼬리'만 잡아 중간 구절 머리는 못 막았다.
@@ -875,6 +1007,8 @@ def _apply_hook_inpoint(edit_plan, source_video_paths, work):
         beats = edit_plan.get("beats") or []
         if not beats:
             return
+        if (beats[0] or {}).get("scene_override"):
+            return   # ★실험실 편성이 있으면 사람 선택이 이긴다 — 훅 시작점 자동이동 안 함
         prim = (beats[0] or {}).get("primary")
         if not prim or prim.get("video_id") not in source_video_paths:
             return
@@ -918,9 +1052,10 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             continue
         tts_dur = _beat_effective_dur(beat, tts)
         _head_trim = beat.get("head_trim", 0.0)
-        # 순서 구간 리스트 = [primary] + alternates. 소스에 실재하고 + 디코드 가능한 것만.
+        # 순서 구간 리스트 = _beat_material(기본: [primary]+alternates / 실험실 편성이 있으면
+        # scene_override). 소스에 실재하고 + 디코드 가능한 것만.
         # 손상/빈 소스(_src_dur=0)는 여기서 걸러야 아래 -ss 렌더가 예외로 죽지 않는다(2026-07-19).
-        segs = [s for s in ([beat["primary"]] + list(beat.get("alternates", [])))
+        segs = [s for s in _beat_material(beat)
                 if s and s.get("video_id") in source_video_paths
                 and _src_dur(s["video_id"]) > 0.05]
         if not segs:
@@ -931,7 +1066,14 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
         # 재생 → 긴 정지 대신 컷(벤치마크급). 포인트 비트는 홀드가 맞으니 라운드로빈 안 함.
         from shopping_shorts import backbone as _bb, config as _cfg
         _max_shot = None if _bb.is_point_beat(beat) else getattr(_cfg, "MAX_SHOT_SECONDS", 0) or None
-        plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs, max_shot=_max_shot)
+        # 1장=1컷 모드(기본 off). 켜면 담은 장면이 순서대로 한 번씩만 나온다(되돌아옴 없음).
+        _one = bool(getattr(_cfg, "ONE_CLIP_PER_SEGMENT", False))
+        plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs, max_shot=_max_shot,
+                                one_per_seg=_one)
+        # ★늘려 채우기(실험실 칸별 토글): 부족분을 전 컷에 고르게 — 여운(runout)보다 먼저.
+        #   여운은 일부러 붙이는 무성 꼬리라 재배분 대상이 아니다. 플래그 없으면 그대로.
+        if beat.get("stretch_fill"):
+            _spread_stretch(plan)
         # 마지막 비트 여운: 실프레임 여유는 1배속으로, 부족분은 아래 slowmo/freeze 기계가 흡수.
         runout = _LAST_RUNOUT if idx == _runout_idx else 0.0
         if runout > 0:
@@ -1451,6 +1593,16 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     # 모션(전환·스티커 등 타임드 투명 레이어)과 색감 필터
     motion = deco.get("motion") or {}
     motion_layers = [L for L in (motion.get("layers") or []) if L.get("_abspath")]
+    # 🖼 꾸미기 템플릿 — 모션 레이어와 **같은 배관**에 얹는다(0순위-B: 합성 로직을
+    # 두 벌로 만들지 않는다). dur이 있으면 그 구간만(첫 장면), 없으면 영상 전체.
+    # ★deco.overlay(사장님이 올린 로고)와 **별도 슬롯**이다 — 둘 다 얹힌다.
+    tpl = deco.get("template") or {}
+    if tpl.get("_abspath"):
+        tl = {"_abspath": tpl["_abspath"], "x": 50, "y": 50,
+              "alpha": tpl.get("alpha", 1), "start": 0}
+        if tpl.get("dur"):
+            tl["dur"] = float(tpl["dur"])
+        motion_layers = list(motion_layers) + [tl]
     has_motion = bool(motion_layers)
     # 효과음(sfx): 비트별 position → 절대 오프셋(초)을 캡션과 **같은 함수**로 계산한다
     # (별도 계산 금지 — 저장위치=읽기위치). first=0.0 / last=마지막 세그먼트 직전까지의 합
@@ -1542,3 +1694,52 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, 
         shutil.copyfile(base_video, out_path)
         return out_path
     return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco, sfx_paths=sfx_paths)
+
+
+def _probe_audio_params(path):
+    """final.mp4의 오디오 규격(샘플레이트·채널). 붙일 인트로를 여기 맞춰야 -c copy가 성립한다.
+
+    ★규격이 다르면 concat -c copy는 에러 없이 통과하고도 뒷부분 소리가 깨진다 —
+    그래서 기본값으로 찍지 않고 실제 파일에서 읽는다."""
+    cmd = ["ffprobe", "-v", "error", "-select_streams", "a:0",
+           "-show_entries", "stream=sample_rate,channels",
+           "-of", "csv=p=0", str(path)]
+    try:
+        out = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8",
+                             errors="replace").stdout.strip()
+        sr, ch = out.split(",")[:2]
+        return int(sr), int(ch)
+    except Exception:
+        return 44100, 2
+
+
+def prepend_still(video_path, image_path, seconds=1.2):
+    """영상 맨 앞에 정지 이미지(썸네일) 구간을 붙인다. 성공하면 video_path를 덮어쓴다.
+
+    왜 이렇게: 비트 클립을 잇는 기존 방식과 **같은 규격**(1080x1920 libx264/aac 30fps)으로
+    인트로를 만들어 concat -c copy로 붙인다. 전체 재인코딩은 2GB 서버에서 수십 초가 걸려
+    배포 재시작에 걸려 죽던 원인이다(2026-07-12 주석과 같은 이유).
+    """
+    video_path, image_path = Path(video_path), Path(image_path)
+    if not video_path.exists() or not image_path.exists():
+        return False
+    sr, ch = _probe_audio_params(video_path)
+    work = video_path.parent
+    intro = work / "thumb_intro.mp4"
+    _run_ffmpeg([
+        "ffmpeg", "-y",
+        "-loop", "1", "-t", f"{seconds:.3f}", "-i", str(image_path),
+        "-f", "lavfi", "-t", f"{seconds:.3f}",
+        "-i", f"anullsrc=channel_layout={'stereo' if ch >= 2 else 'mono'}:sample_rate={sr}",
+        "-vf", (f"scale={_OUT_W}:{_OUT_H}:force_original_aspect_ratio=increase,"
+                f"crop={_OUT_W}:{_OUT_H}"),
+        "-r", "30", "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), *_threads_args(),
+        "-pix_fmt", "yuv420p", "-c:a", "aac", "-ar", str(sr), "-ac", str(ch),
+        "-shortest", str(intro)])
+    lst = work / "concat_intro.txt"
+    lst.write_text(f"file '{intro.as_posix()}'\nfile '{video_path.as_posix()}'\n", encoding="utf-8")
+    merged = work / "final_with_intro.mp4"
+    _run_ffmpeg(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
+                 "-c", "copy", str(merged)])
+    merged.replace(video_path)      # 같은 폴더 = 원자적 교체
+    return True

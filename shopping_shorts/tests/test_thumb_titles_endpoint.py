@@ -23,7 +23,7 @@ def test_screen_script_overrides_stale_job_script(monkeypatch, tmp_path):
     """화면 대본이 오면 job의 옛 대본 대신 그걸로 제목을 만들고, 다르면 mismatch=True."""
     seen = {}
 
-    def fake_generate(job):
+    def fake_generate(job, seed=0):      # seed=참고 훅 회전(2026-08-18 추가)
         seen["script"] = job.get("given_script")
         return [{"text": "바나나\n팬케이크", "why": "호기심"}]
 
@@ -43,8 +43,8 @@ def test_no_screen_script_falls_back_to_job(monkeypatch, tmp_path):
     """화면 대본이 없으면 job 대본을 쓰고, 불일치도 없다(경고 안 뜸)."""
     seen = {}
     monkeypatch.setattr(app_mod.thumb_title, "generate",
-                        lambda job: (seen.update(script=job.get("given_script")) or
-                                     [{"text": "밥솥\n식빵", "why": "반전"}]))
+                        lambda job, seed=0: (seen.update(script=job.get("given_script")) or
+                                             [{"text": "밥솥\n식빵", "why": "반전"}]))
     _make_job(tmp_path, "job2", given_script="밥솥 식빵 대본")
     c = _client(monkeypatch, tmp_path)
     r = c.post("/api/produce/thumb/titles", json={"job_id": "job2"})

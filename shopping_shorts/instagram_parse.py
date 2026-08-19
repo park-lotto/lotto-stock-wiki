@@ -113,6 +113,22 @@ def _best_video(node):
     return _first(node, "video_url", default="") or ""
 
 
+def _node_owner(node, username):
+    """이 릴의 **실제 주인** 계정. 없으면 요청한 계정으로 폴백.
+
+    ★오귀속 사고(2026-08-18 사장님 "영상보기를 누르면 다른 채널로 이동된다").
+      예전엔 요청한 계정(username)을 무조건 박았다. 그런데 인스타는 `/{계정}/reels/`
+      응답에 **다른 계정 릴**(추천·리믹스 등)을 섞어 내려준다 — 그게 전부 그 계정
+      것으로 저장돼, 카드엔 A 채널인데 링크를 누르면 B 채널 영상이 열렸다.
+      실측(og:url로 확인): DcKIB8UTf2g·DcIolALhSrn·DcGLHBcBClU 세 건 모두 DB엔
+      maison_homedino, 실제 주인은 chuuchuu_tem이었다. 썸네일 워터마크도 chuuchuu_tem.
+      응답이 이미 주인을 알려주므로(user.username) 추가 요청 0건으로 바로잡는다.
+    """
+    u = node.get("user")
+    real = (u.get("username") or "").strip().lstrip("@") if isinstance(u, dict) else ""
+    return real or username
+
+
 def parse_reel_node(node, username):
     """릴스 노드 1개 → 10키 dict. shortcode를 못 찾으면 None(호출부가 건너뛴다)."""
     if not isinstance(node, dict):
@@ -136,7 +152,8 @@ def parse_reel_node(node, username):
         # yt-dlp 백필(건당 수 초)로 채우던 것을 크롤이 지나가며 공짜로 채운다.
         "duration": (float(node.get("video_duration"))
                      if node.get("video_duration") else None),
-        "ownerUsername": username,
+        # ★요청한 계정이 아니라 **노드가 말하는 실제 주인**을 쓴다(_node_owner 참고).
+        "ownerUsername": _node_owner(node, username),
         # 채널 표시명(2026-08-06) — 아카이브 카드를 한글 이름으로 띄우려고 주워 담는다.
         # ★이미 받은 응답에서 꺼낼 뿐이라 **추가 요청이 0건**이다(parse_search_item도
         #   같은 user.full_name을 읽는다). 이 경로는 계정이 차단돼 세션을 돌려쓰는 중이라
@@ -144,7 +161,54 @@ def parse_reel_node(node, username):
         # 노드에 user가 없는 경우가 흔하다(응답 모양이 여러 가지) → 빈 문자열로 안전 폴백.
         "ownerFullName": ((node.get("user") or {}).get("full_name") or "")
                          if isinstance(node.get("user"), dict) else "",
+        # 팔로워(2026-08-14) — instagram_playwright가 같은 페이지 응답에서 주워
+        # 노드에 실어준 값(_owner_follower_count). 노드 자체의 user.follower_count도
+        # 드물게 있어 함께 본다. 추가 요청 0건.
+        # ★계정과 팔로워는 **짝으로** 정한다(0순위-B). _owner_follower_count는 '지금 연
+        #   프로필'의 값이라, 남의 릴이 섞여 들어왔을 때 그대로 쓰면 남의 영상에 이 채널
+        #   팔로워가 붙는다(실측: 다른 채널 영상 2장이 똑같이 47,588로 떴다).
+        #   주인이 다르면 노드 자신이 말하는 값만 쓰고, 없으면 0(화면은 0이면 안 띄운다).
+        "ownerFollowers": _int(
+            (node.get("_owner_follower_count")
+             if _node_owner(node, username) == username else 0)
+            or ((node.get("user") or {}).get("follower_count")
+                if isinstance(node.get("user"), dict) else 0)
+            or 0),
     }
+
+
+def extract_follower_count(payload):
+    """인스타 응답 → 그 계정의 팔로워 수(못 찾으면 0).
+
+    /{계정}/reels/ 를 열면 인스타가 스스로 graphql로 프로필을 함께 내려준다
+    (실측 2026-08-14: data.user.follower_count). 모양이 여러 가지라 알려진 자리를
+    먼저 보고, 없으면 얕게 훑는다. **추가 요청은 하지 않는다** — 이미 받은
+    응답에서 꺼내는 것뿐이다.
+    """
+    if not isinstance(payload, dict):
+        return 0
+    user = (payload.get("data") or {}).get("user")
+    if isinstance(user, dict):
+        n = _int(user.get("follower_count") or 0)
+        if n:
+            return n
+        # 옛 웹 모양: edge_followed_by.count
+        edge = user.get("edge_followed_by")
+        if isinstance(edge, dict) and _int(edge.get("count") or 0):
+            return _int(edge["count"])
+    # 알려진 자리에 없으면 깊이 3까지만 훑는다(전체 순회는 큰 응답에서 낭비).
+    def _walk(o, depth):
+        if depth > 3 or not isinstance(o, dict):
+            return 0
+        for k, v in o.items():
+            if k == "follower_count" and _int(v or 0):
+                return _int(v)
+            if isinstance(v, dict):
+                got = _walk(v, depth + 1)
+                if got:
+                    return got
+        return 0
+    return _walk(payload, 0)
 
 
 def extract_reel_nodes(payload):
@@ -263,4 +327,9 @@ def classify_channel_result(nodes, page_url, error):
     url = page_url or ""
     if any(h in url for h in _LOGIN_WALL_URL_HINTS):
         return "login_wall"
-    return "not_found"
+    # ★이름을 not_found → unknown으로 바꿨다(2026-08-17). 여기는 판정이 아니라
+    # **나머지 통**이다 — 채널이 없는지 확인하는 코드는 이 함수 어디에도 없다.
+    # 그런데 이름이 "채널이 없다"로 읽혀 두 번 오독됐다(08-09 199채널, 08-17 61채널).
+    # 두 번 다 채널은 멀쩡했고 원인은 우리 쪽이었다(계정↔IP 불일치 / 2.5초 고정대기).
+    # 모르면 모른다고 적어야 다음 사람이 원인을 찾으러 간다.
+    return "unknown"

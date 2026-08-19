@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "Labcorp Holdings Inc",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "315.82달러",
+      "quote": "Labcorp Holdings Inc 주식, 315.82달러로 52주 신고가 경신",
+      "sector": "바이오"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "Labcorp Holdings Inc, 52주 신고가 경신",
+      "ts": "2026-07-30 20:03",
+      "quote": "Labcorp Holdings Inc 주식, 315.82달러로 52주 신고가 경신 (Investing.com 한국어, 07-30 20:03)"
+    }
+  ],
+  "quote": "Labcorp Holdings Inc 주식, 315.82달러로 52주 신고가 경신"
+}

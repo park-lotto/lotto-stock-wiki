@@ -1,0 +1,34 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "SK하이닉스",
+      "signal": "bull",
+      "reason": "HBM4 수율 및 품질이 HBM3E 수준에 근접하며 안정화 단계에 진입함",
+      "ts": "2026-07-29",
+      "quote": "SK하이닉스 \"HBM4 수율, 전세대 수준 근접…HBM4E 내년 양산\"",
+      "sector": "반도체"
+    },
+    {
+      "name": "삼성전자",
+      "signal": "neutral",
+      "reason": "HBM4 양산 속도전에서 수율과 공급력이 승부처로 부각",
+      "ts": "2026-07-29",
+      "quote": "삼성전자·SK하이닉스·마이크론, HBM4 양산 속도전…승부처는 '수율·공급력'",
+      "sector": "반도체"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "SK하이닉스가 HBM4 수율 및 품질이 HBM3E 수준에 근접했다고 밝힘",
+      "ts": "2026-07-29",
+      "quote": "SK하이닉스 “HBM4 수율·품질, HBM3E 수준 근접”"
+    },
+    {
+      "fact": "SK하이닉스가 HBM4E 양산을 내년으로 계획 중",
+      "ts": "2026-07-29",
+      "quote": "SK하이닉스 \"HBM4 양산 수율 안정화…HBM4E 내년 본격 양산\""
+    }
+  ],
+  "quote": "SK하이닉스, 승부는 ‘HBM4 수율’에서 갈린다"
+}

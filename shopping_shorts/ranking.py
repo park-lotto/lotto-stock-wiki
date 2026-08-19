@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 from shopping_shorts.config import GRADE_THRESHOLDS
 from shopping_shorts.categorize import categorize
+from shopping_shorts.yt_style import yt_style as _yt_style
 
 
 def hours_since(ts_iso, now=None):
@@ -35,6 +36,23 @@ def _category_of(meta, reel):
     return guess
 
 
+def _style_of(meta, reel):
+    """유튜브 화법 스타일 — 캡션 우선, 없으면 **채널 스타일**(2026-08-19).
+
+    `_category_of`와 같은 구조다. 유튜브 제목은 후킹이 목적이라 밋밋할 때가 많고
+    (이븐쇼핑 실측: 제목만으론 12/12가 '기타'), 이 바닥은 **채널이 화법을 지킨다**
+    (살림킹왕짱 84편이 한 공식). 그래서 캡션으로 못 잡으면 채널 스타일로 폴백한다.
+
+    ★`category`(제품축)를 덮어쓰지 않고 **나란히** 산다 — 두 축은 서로 다른
+    질문이고 교차 조회가 목적이다("썰쇼핑 중 홈템").
+    빈 문자열은 '모른다'는 뜻이다 — '기타'라는 가짜 스타일을 만들지 않는다.
+    """
+    guess = _yt_style(meta.get("name"), reel.get("caption", ""))
+    if guess:
+        return guess
+    return (meta.get("yt_style") or "").strip()
+
+
 def build_items(reels, meta, prev_comments, prev_delta, now=None, window_hours=48):
     """reel 원본 + 채널메타 → 지표 채워진 항목 리스트 (48h 이내만).
 
@@ -56,7 +74,14 @@ def build_items(reels, meta, prev_comments, prev_delta, now=None, window_hours=4
         delta = comments if is_new else comments - prev_c
         prev_d = prev_delta(sc)
         accel = None if prev_d is None else delta - prev_d
-        followers = meta.get("followers") or 0
+        # ★팔로워는 크롤이 실어온 실시간 값을 우선한다(2026-08-14). 엑셀 메타는
+        # ①발굴 채널엔 아예 없고(실측 316건 중 212건=67% 결측) ②있어도 낡았다
+        # (roomoftem.kr 엑셀 3811 vs 실제 6653). 릴스 페이지가 내려주는 값이라
+        # 추가 요청 0건. 크롤이 못 받았을 때만 엑셀로 폴백한다.
+        followers = int(r.get("ownerFollowers") or 0) or (meta.get("followers") or 0)
+        # density가 참조하므로 dict 리터럴 밖에서 먼저 만든다(리터럴 안에선 키끼리 참조 불가).
+        likes = int(r.get("likesCount") or 0)
+        views = int(r.get("videoViewCount") or r.get("videoPlayCount") or 0)
         items.append({
             "shortcode": sc,
             "name": meta.get("name"),
@@ -67,15 +92,34 @@ def build_items(reels, meta, prev_comments, prev_delta, now=None, window_hours=4
             "video_url": r.get("videoUrl", ""),
             "url": r.get("url", ""),
             "comments": comments,
-            "likes": int(r.get("likesCount") or 0),
-            "views": int(r.get("videoViewCount") or r.get("videoPlayCount") or 0),
+            "likes": likes,
+            "views": views,
             "age_hours": round(age, 1),
             "delta": delta,
             "is_new": is_new,
             "accel": accel,
             "speed": comments / age if age > 0 else float(comments),
-            "density": (comments / followers) if followers else 0.0,
+            # 조회수당댓글 = 댓글/조회수 (2026-08-14 사장님 지시로 이름·식 통일).
+            # 세 지표를 전부 '댓글' 기준으로 맞춘다 — 시간당댓글·조회수당댓글·팔로워당댓글.
+            # 좋아요를 뺀 이유는 이름이 식을 그대로 말하게 하기 위함이다(옛 식은
+            # (좋아요+댓글)/조회수였는데 이름이 '조회수당댓글'이면 거짓말이 된다).
+            # ※타 플랫폼(유튜브 :158 등)은 여전히 (좋아요+댓글)/조회수 — 인스타만 갈렸다.
+            # 옛 정의 이력 ↓
+            # 옛 정의는 comments/followers였는데 인스타만 이 공식을 썼고(유튜브 :158·틱톡 :253·
+            # 레딧 :303·샤오홍슈 :359는 전부 조회·참여 기반), followers가 엑셀 메타에만 있어
+            # 발굴채널은 값이 아예 없다 → 실측 212/316건(67%)이 density=0으로 고착. 그 결과
+            # 배지 판정(index.html: score=vr*0.35+dr*0.50+sr*0.15)에서 density 가중이 50%인데
+            # 그 67%는 구조적으로 최상위 배지에서 배제됐다. views는 결측 0/316(실측)이라
+            # 조회 기반으로 바꾸면 팔로워 의존이 통째로 사라지고 정의도 타 플랫폼과 통일된다.
+            "density": (comments / views) if views else 0.0,
+            # 팔로워 대비 반응(2026-08-14 되살림). 조회 기반 density와 **다른 것을 본다**:
+            # density=본 사람 중 몇 %가 반응했나 / fan_density=구독자 규모 대비 얼마나
+            # 뜨거웠나(작은 채널의 대박을 잡는 눈). 팔로워가 크롤로 채워지면서 다시
+            # 쓸 수 있게 됐으므로 죽이지 않고 별도 지표로 남긴다.
+            "fan_density": (comments / followers) if followers else 0.0,
             "category": _category_of(meta, r),
+            # 화법축(2026-08-19) — category와 나란히 간다. 유튜브 탭 필터가 이걸 읽는다.
+            "yt_style": _style_of(meta, r),
             "caption": r.get("caption", ""),
         })
     return items
@@ -91,13 +135,19 @@ def _normalize(items, key):
 
 
 def apply_grades(items):
-    """속도·가속·밀도를 정규화 후 균등 종합 → grade 채움. items를 in-place 갱신."""
+    """속도·조회수밀도를 정규화 후 균등 종합 → grade 채움. items를 in-place 갱신.
+
+    가속은 2026-08-14에 종합점수에서 빠졌다(속도와 뜻이 겹침, 사장님 결정)."""
     ns = _normalize(items, "speed")
-    na = _normalize(items, "accel")
     nd = _normalize(items, "density")
     for i in items:
         sc = i["shortcode"]
-        score = (ns[sc] + na[sc] + nd[sc]) / 3.0
+        # ★가속은 종합점수에서 뺐다(2026-08-14, 사장님 결정 "속도랑 의미가 비슷하다").
+        # accel = 이번 delta − 직전 delta 인데 speed = 댓글/경과시간 과 사실상 같은 것을
+        # 본다(둘 다 '얼마나 빨리 쌓이나'). 게다가 처음 잡힌 릴스는 직전이 없어 None이라
+        # 예전엔 그게 0으로 눌려 신작이 자동 감점됐다(실측 316건 중 198건=63%).
+        # 값 자체는 계속 계산해 둔다 — 이력·조사용이고, 나중에 되살릴 수도 있다.
+        score = (ns[sc] + nd[sc]) / 2.0
         i["score"] = round(score, 3)
         i["grade"] = grade_from_scores(score)
     return items
@@ -364,4 +414,51 @@ def build_overseas_items(raw, prev_base, prev_delta, now=None, window_hours=336)
             # 보여 정렬이 no-op이 된다(2026-07-29 Critical 2).
             "text_level": r.get("text_level"),
         })
+    return items
+
+
+def fill_intensity(items, now=None):
+    """강도 지표(시간당댓글·조회수당댓글·팔로워당댓글)가 없는 항목에 채워 넣는다.
+
+    ★왜 필요한가(2026-08-17 실사고): 기간 탭(hits_since)·역대 탭(archive_hits)은
+    build_items를 안 거치고 DB에서 바로 꺼내므로 speed/density가 없다. 그런데 화면은
+    `i.speed.toFixed(1)`을 무조건 부른다 → **첫 카드에서 render가 통째로 죽고**
+    화면이 이전 상태로 얼어붙었다. 증상은 "탭을 눌러도 안 넘어간다 / 지표·카테고리도
+    안 먹는다"로 나타나 버퍼 문제처럼 보였지만, 실제로는 그리는 단계의 예외 하나였다.
+
+    식은 build_items(:83, :97)와 같은 정의를 쓴다 — 이름이 같은데 값이 다르면
+    "저기선 왜 이렇고 여기선 왜 이러냐"가 된다(0순위-B).
+      시간당댓글  = 댓글 / 경과시간
+      조회수당댓글 = 댓글 / 조회수
+      팔로워당댓글 = 댓글 / 팔로워
+    이미 값이 있으면 건드리지 않는다(수집 경로의 값이 늘 우선).
+    """
+    for it in items or []:
+        # ★썸네일 이름 맞추기(2026-08-17): 화면은 i.thumbnail을 읽는데 기간(hits_since)·
+        # 역대(archive_hits)는 컬럼명 그대로 thumb으로 준다 → 카드가 전부 검게 빈다.
+        # 같은 것을 두 이름으로 부르면 반드시 한쪽이 빠진다(0순위-B). 여기서 한 번만 맞춘다.
+        if not it.get("thumbnail") and it.get("thumb"):
+            it["thumbnail"] = it["thumb"]
+        comments = int(it.get("comments") or 0)
+        views = int(it.get("views") or 0)
+        followers = int(it.get("followers") or 0)
+        if it.get("age_hours") is None:
+            # 발행시각이 없거나 모양이 깨진 항목이 섞여 있다(아카이브 20만 건 실측).
+            # 여기서 예외가 나면 또 화면 전체가 죽으므로 0으로 떨군다.
+            try:
+                it["age_hours"] = round(
+                    hours_since(it.get("upload_ts") or it.get("posted_at") or "", now), 1)
+            except Exception:      # noqa: BLE001
+                it["age_hours"] = 0
+        if it.get("speed") is None:
+            age = it.get("age_hours") or 0
+            it["speed"] = (comments / age) if age > 0 else float(comments)
+        if it.get("density") is None:
+            it["density"] = (comments / views) if views else 0.0
+        if it.get("fan_density") is None:
+            it["fan_density"] = (comments / followers) if followers else 0.0
+        for k, v in (("delta", 0), ("accel", 0.0), ("is_new", False),
+                     ("likes", 0), ("views", 0), ("followers", 0)):
+            if it.get(k) is None:
+                it[k] = v
     return items

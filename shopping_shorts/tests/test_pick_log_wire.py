@@ -8,6 +8,7 @@ import shutil
 import subprocess
 
 import pytest
+from shopping_shorts.tests.js_harness import run_js_proc
 
 PRODUCE_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"
 NODE = shutil.which("node")
@@ -35,7 +36,7 @@ def test_logpick_sends_merged_payload_and_swallows_failure():
     }
     console.log('OK');
     """
-    out = subprocess.run([NODE, "-e", harness], capture_output=True, text=True)
+    out = run_js_proc(harness, capture_output=True, text=True)
     assert out.returncode == 0, out.stderr
     assert "OK" in out.stdout
 

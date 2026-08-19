@@ -34,6 +34,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from shopping_shorts.config import DB_PATH
 from shopping_shorts.store import Store
+from shopping_shorts import usage_meter
 
 _ITEM_GAP_S = (0.3, 0.9)     # 태깅 사이 짧은 휴식(CDN 예의)
 _BUSY_POLL_S = 60            # 렌더 양보 중 재확인 주기
@@ -103,7 +104,8 @@ def tag_one(video_analysis, store, it):
     img = video_analysis.fetch_thumb_bytes(it.get("thumbnail"))
     if not img:
         return False
-    tags = video_analysis.subject_tags_vision(img, "")
+    with usage_meter.track(op="태깅"):
+        tags = video_analysis.subject_tags_vision(img, "")
     if tags and (tags.get("subject") or tags.get("keywords")):
         store.save_vision_tags(it["shortcode"], tags.get("subject", ""),
                                tags.get("keywords", []))

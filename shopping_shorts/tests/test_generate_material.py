@@ -1,0 +1,132 @@
+"""대본 재료는 **담긴 영상 전부**여야 한다 — 3단계를 안 돌렸어도.
+
+2026-08-16 사장님 제보: 카메라 영상을 담았는데 대본에 '발뒤꿈치 각질' 얘기가 나왔다.
+실측 work ba20ea764254의 재료는 세그0 / 20자 / 216자 세 편이었는데, 화면은
+"대본 1편(20자)"이라 떴다. 재료가 job(3단계 매칭 결과)에서만 나오는데 1단계에서
+담고 바로 2단계로 가면 job이 없어, 씨앗 한 편(하필 20자)만 실렸던 것이다.
+모자란 만큼 모델이 지어냈다.
+"""
+import pathlib
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
+
+from shopping_shorts.app import _extract_from_work, _sources_for_generate
+
+
+class _Store:
+    def __init__(self, handoff, scripts):
+        self._h, self._s = handoff, scripts
+
+    def get_produce_work(self, work_id, customer_id=0):
+        return {"state": {"handoff": self._h}}
+
+    def get_script(self, sc):
+        return self._s.get(sc)
+
+
+def test_collects_every_used_video():
+    st = _Store(
+        [{"shortcode": "a", "useFootage": True},
+         {"shortcode": "b", "useFootage": True},
+         {"shortcode": "c", "useFootage": False}],          # 화면에 안 쓰는 것은 제외
+        {"a": {"full_text": "가" * 20, "segments": [{"text": "가"}]},
+         "b": {"full_text": "나" * 216, "segments": [{"text": "나"}]},
+         "c": {"full_text": "다" * 50}},
+    )
+    got = _extract_from_work("w1", 0, st)
+    assert set(got) == {"a", "b"}
+
+
+def test_skips_unanalyzed():
+    """분석이 아직 안 된 영상은 넣지 않는다(빈 재료가 자리만 차지하면 안 된다)."""
+    st = _Store([{"shortcode": "a", "useFootage": True},
+                 {"shortcode": "z", "useFootage": True}],
+                {"a": {"segments": [{"text": "가"}], "full_text": "가"}, "z": {}})
+    assert set(_extract_from_work("w1", 0, st)) == {"a"}
+
+
+def test_sources_use_all_collected_material():
+    """모은 재료가 실제로 생성 입력에 들어간다 — 여기서 끊기면 앞이 다 헛일이다."""
+    item = {"full_text": "씨앗", "structure": {}, "category": "홈템"}
+    job = {"extract": {"a": {"full_text": "가" * 20}, "b": {"full_text": "나" * 216}}}
+    srcs = _sources_for_generate(item, job)
+    texts = [s["full_text"] for s in srcs]
+    assert "나" * 216 in texts, "긴 재료가 빠지면 모델이 지어낸다"
+    assert len(texts) >= 2
+
+
+def test_missing_work_id_is_harmless():
+    """실패해도 생성은 막지 않는다(재료가 줄 뿐)."""
+    class Boom:
+        def get_produce_work(self, *a, **k):
+            raise RuntimeError("DB 오류")
+    assert _extract_from_work("w1", 0, Boom()) == {}
+
+
+def test_bad_work_id_never_breaks_generation():
+    """★재료 보강은 '있으면 좋은 것'이다 — 절대 대본 생성을 막으면 안 된다.
+
+    2026-08-16 내 실사고: body["work_id"]에 바로 .strip()을 불렀는데 dict가 와서
+    AttributeError로 500이 났다. 사장님 화면엔 '네트워크 오류'만 떴고 대본은
+    한 줄도 안 나왔다. 클라이언트가 주는 값의 타입을 믿으면 안 된다.
+    """
+    import pathlib as _p
+    src = (_p.Path(__file__).resolve().parents[1] / "app.py").read_text(encoding="utf-8")
+    i = src.index("_extract_from_work(_wid")
+    win = src[i - 700:i + 200]
+    assert "isinstance(_wid, str)" in win, "문자열인지 먼저 확인해야 한다"
+    assert "except Exception" in win, "보강이 실패해도 생성은 계속돼야 한다"
+
+
+def test_brief_can_be_dict_or_string():
+    """★영상 요약은 dict다 — 문자열로 가정하면 대본이 통째로 안 나온다.
+
+    2026-08-16 실사고: _scene_points_block이 source_brief에 바로 .strip()을 불러
+    AttributeError로 500이 났다(화면엔 '네트워크 오류'만, 대본 0줄). 옛 작업엔 이
+    값이 없어 잠자던 버그였는데, 캐시에서 최신 추출본을 끌어오자 진짜 값이 들어와 터졌다.
+    """
+    from shopping_shorts.app import _brief_line
+    got = _brief_line({"product": "고독스 C100", "role": "측광기 시연",
+                       "core": "투명 뷰파인더", "summary": "여기는 길어서 안 넣는다"})
+    assert "고독스 C100" in got and "측광기 시연" in got
+    assert "여기는 길어서" not in got, "요약 전문까지 넣으면 프롬프트가 부푼다"
+    assert _brief_line(" 옛 형식 ") == "옛 형식"          # 문자열도 견딘다
+    for bad in (None, {}, 123, []):
+        assert _brief_line(bad) == ""
+
+
+def test_scene_block_survives_real_extract():
+    """실제 추출본 모양(dict brief + 태깅 세그)을 그대로 넣어도 터지지 않는다."""
+    from shopping_shorts.app import _scene_points_block
+    job = {"extract": {"a": {
+        "source_brief": {"product": "투명 뷰파인더", "role": "촬영 시연", "core": "감성 색감"},
+        "segments": [{"label": "제품 쥐는 손", "use_point": "훅에 쓰기 좋습니다"},
+                     {"label": "결과 사진 확인", "use_point": ""}],
+    }}}
+    out = _scene_points_block(job)
+    assert "투명 뷰파인더" in out and "훅에 쓰기 좋습니다" in out
+
+
+def test_broken_segment_shape_does_not_crash():
+    """세그가 dict가 아니어도(깨진 캐시·옛 데이터) 500을 내지 않는다 —
+    source_brief dict 사고(2026-08-16)와 같은 유형의 타입 미확인을 막는다."""
+    item = {"full_text": "", "structure": {}, "category": "홈템"}
+    job = {"extract": {"a": {"full_text": "", "segments": ["문자열세그", {"text": "가"}]}}}
+    srcs = _sources_for_generate(item, job)
+    assert any("가" in s["full_text"] for s in srcs)
+
+    from shopping_shorts.app import _scene_points_block, _enrich_job_extract
+    block = _scene_points_block(
+        {"extract": {"a": {"segments": ["깨짐", {"use_point": "훅으로", "label": "제품"}]}}})
+    assert "훅으로" in block
+    # _enrich_job_extract의 _tagged도 같은 모양을 견뎌야 한다(try 밖에서 돈다)
+    _enrich_job_extract({"extract": {"a": {"segments": ["깨짐"]}}, "urls": []})
+
+
+def test_job_id_wrong_type_is_harmless():
+    """job_id가 dict로 와도(클라이언트 값) .strip() 500을 내지 않는다 —
+    body["work_id"].strip() 사고(2026-08-16)와 같은 유형."""
+    from shopping_shorts.app import _facts_block_for_job
+    assert _facts_block_for_job({"oops": 1}, store=None) == ""
+    assert _facts_block_for_job(None, store=None) == ""

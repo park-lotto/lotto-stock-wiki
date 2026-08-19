@@ -25,17 +25,42 @@ def test_inventory_exposes_shot_role_and_is_key():
     assert "역할" not in seg_map["v1-2"]["scene_desc"]
 
 
-def test_prompt_focuses_on_action_not_hook_recipe():
-    """2026-07-31 사장님 지시로 훅 비주얼 규칙(역할:완성 우선·준비동작 금지)은 걷어냈다.
+def test_화면배치_축이_프롬프트에_있다():
+    """★2026-08-17 사장님 지시로 **다시 넣었다**(07-31엔 걷어냈던 규칙).
 
-    규칙을 쌓을수록 서로 이겨서(감각어↑→어미 붕괴→훅 중복) 도돌이표가 됐기 때문.
-    대신 '중요한 액션(변화)에 집중하고 그 seg_id를 붙여라'만 남긴다 —
-    인벤토리는 역할/실증을 그대로 노출하므로 모델이 필요하면 스스로 쓴다(위 테스트).
+    07-31에 뺀 이유는 "규칙끼리 싸운다"였는데 그건 **스타일** 규칙 얘기다
+    (어미 4종·감각어 개수·역할별 글자수·자가점검). 이건 화면 배치라 문체와 안 부딪힌다.
+    그리고 사장님 지적대로 **그때와 조건이 달라졌다** — "지금은 1차 분석이 완전
+    달라졌잖아". 07-31 이후 추출에 실제로 붙은 것:
+      source_brief(0793a6604) · label(53889ed62) · use_point(95b0b5792) ·
+      change(20821d1d0) · 태깅 QA 2단계 · 커버리지 0.55→0.75
+    즉 지시가 가리킬 근거(역할·실증)가 인벤토리에 실재한다.
+
+    축은 원본이 정한다 — 쇼곰(DcAm4RETl_T) 실측 = 완성 → 조리(사용중) → 완성.
+    사장님: "훅은 시각적으로 완성된 걸 보여주고 / 분기점은 해결·결과 즉 조리 구간 /
+    CTA는 조리 완성되는 이미지들".
+
+    ⚠️ 스타일 규칙은 여전히 넣지 않는다(아래 assert) — 걷어낸 이유가 유효하다.
     """
-    src = inspect.getsource(ep._scene_first_candidates)
-    assert "중요한 액션" in src and "변화:" in src
-    assert "역할:완성" not in src          # 훅 화면을 규칙으로 못박지 않는다
-    assert "5단계" not in src              # 스파인 강제도 제거
+    # ⚠️ inspect.getsource는 **주석까지** 읽는다 — 07-31 경위를 적은 주석에 '감각어'
+    #    같은 낱말이 들어 있어 소스 검사로는 "스타일 규칙이 돌아왔나"를 못 가른다.
+    #    그래서 실제로 **모델에게 나가는 프롬프트**를 만들어서 본다(진짜 판정).
+    got = {}
+
+    def _call(prompt, schema):
+        got["p"] = prompt
+        return {"candidates": []}
+
+    ep._scene_first_candidates("[s1-1] (2.0s) 화면:x | 말:", "참고", 30, n=3, call=_call)
+    p = got.get("p", "")
+    assert "중요한 액션" in p                            # 07-31에 남긴 것은 그대로
+    assert "역할:완성" in p                              # 훅 = 완성/실증
+    assert "준비동작" in p                               # 준비 컷으로 열지 마라
+    assert "역할:사용중" in p                            # 해결·결과 = 조리 구간
+    assert "시간 순서대로" in p                          # 한 비트 안 정렬
+    # 걷어낸 **스타일** 규칙은 돌아오지 않았다(도돌이표 방지)
+    assert "감각어" not in p
+    assert "자가점검" not in p
 
 
 def test_reconcile_catches_forced_beats_even_if_fit_high():

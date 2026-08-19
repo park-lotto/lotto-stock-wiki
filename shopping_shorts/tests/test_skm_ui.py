@@ -45,20 +45,41 @@ def test_produce_links_theme_and_brands():
 # ── Task 2: 오브 단계바 — 라벨 rename + 매칭 단계 삽입 ──────────────
 # (v6 목업 정렬, 2026-07-23 후속) 자막제거가 헤드라인 오브로 복귀 — 8단계.
 def test_orb_labels_and_mapping():
-    assert '"영상/대본출력"' in HTML and '"영상대본MIX"' in HTML and '"최종렌더"' in HTML
+    assert '"영상추출/분석"' in HTML and '"영상대본MIX"' in HTML and '"최종렌더"' in HTML
     assert "ORB_TO_PANEL" in HTML and "STEP_LABELS" in HTML
-    # STEP_LABELS는 정확히 8개, 자막제거 포함(v6 목업과 정렬 — 더는 오브에서 안 빠진다)
+    # 9단계 개편(2026-08-16, 사장님 "단계를 3개로 늘려서 대본쪽도 강화"):
+    # 1단계에 뭉쳐 있던 '영상 고르기'와 'AI 대본 선택'을 갈라 대본이 자기 단계를 갖는다.
     m = re.search(r"const STEP_LABELS\s*=\s*(\[[^\]]*\])", HTML)
     assert m, "STEP_LABELS 선언을 못 찾음"
     labels = json.loads(m.group(1))
-    assert labels == ["영상/대본출력", "영상대본MIX", "고품질 자막제거", "TTS음성", "자막꾸미기", "썸네일", "SEO해시테크", "최종렌더"], labels
+    # 2026-08-16 사장님 지시로 2번째 라벨 "대본" → "대본생성"(하는 일을 이름에 넣는다).
+    # 패널 h3(data-steptitle="script")도 같이 바꿨다 — 한쪽만 고치면 오브와 제목이 어긋난다.
+    assert labels == ["영상추출/분석", "대본생성", "영상대본MIX", "고품질 자막제거", "TTS음성",
+                      "자막꾸미기", "썸네일", "SEO해시테크", "최종렌더"], labels
 
 
 def test_orb_to_panel_mapping_v6():
+    # 9단계 개편(2026-08-16): 대본(신규 패널8)이 2번째, 장면 편집(패널7)이 3번째로 밀렸다.
+    # ★물리 패널 번호는 그대로다 — cur===n 분기가 파일 곳곳에 있어 재번호는 금지.
     m = re.search(r"const ORB_TO_PANEL\s*=\s*(\[[^\]]*\])", HTML)
     assert m, "ORB_TO_PANEL 선언을 못 찾음"
     mapping = json.loads(m.group(1))
-    assert mapping == [0, 7, 1, 2, 3, 4, 5, 6], mapping
+    assert mapping == [0, 8, 7, 1, 2, 3, 4, 5, 6], mapping
+
+
+def test_패널_제목은_손으로_안_적는다():
+    """제목 번호·이름은 STEP_LABELS에서 채운다(syncPanelTitles). 손으로 적으면 순서가
+    바뀔 때마다 어긋난다 — 실제로 개편 직후 '오브 4인데 제목은 3 · 자막제거'였다."""
+    assert "function syncPanelTitles(" in HTML
+    assert 'data-steptitle="mix"' in HTML
+    assert 'data-steptitle="script"' in HTML
+    # renderSteps가 실제로 부르는지(정의만 있고 호출을 잊으면 조용히 옛 제목이 남는다)
+    start = HTML.index("function renderSteps(){")
+    assert "syncPanelTitles()" in HTML[start:start + 400]
+
+
+def test_대본_패널이_있다():
+    assert 'data-step="8"' in HTML, "신설 대본 패널(data-step=8)이 없다"
 
 
 def test_orbbar_class_used():
@@ -66,7 +87,9 @@ def test_orbbar_class_used():
 
 
 def test_panel0_title_is_video_script_not_studio():
-    assert "1 · 영상/대본출력" in HTML
+    # 9단계 개편(2026-08-16): 제목 텍스트는 syncPanelTitles가 STEP_LABELS로 채운다.
+    # HTML에 남은 건 표식(data-steptitle)과 초기 문구뿐 — 검사는 표식으로 한다.
+    assert 'data-steptitle="source"' in HTML
     assert "1 · 제작소" not in HTML
 
 
@@ -346,13 +369,27 @@ def test_match_progress_style_in_css():
     assert ".match-progress" in CSS
 
 
-def test_start_from_ai_pick_calls_set_matching_ui_before_theater():
-    # 버튼을 누른 즉시(playTheater보다 먼저) before/after 변화 + 스피너가 켜져야 한다.
+def test_start_from_ai_pick_hands_off_to_step2_without_matching():
+    """1단계는 **대본 확보까지만** 하고 2단계로 넘긴다(2026-08-18 계약 변경).
+
+    예전엔 여기서 매칭(startProduceMix)까지 걸었다. 그러면 2단계에서 대본을 새로 뽑아
+    확정해도 3단계엔 1단계에서 이미 돌아간 옛 job이 붙어 있어, 사장님 눈에는
+    "2번 대본과 3번 대본이 다르게 들어간다"로 보인다. 매칭 시작점은 3단계 한 곳뿐이다.
+    """
     start = HTML.index("async function startFromAiPick(){")
     end = HTML.index("// ── AI PICK 끝 ──")
     body = HTML[start:end]
-    assert "setMatchingUI(true" in body
-    assert body.index("setMatchingUI(true") < body.index("playTheater(")
+    assert "startProduceMix(" not in body, "1단계가 다시 매칭을 걸고 있다 — 어긋남이 재발한다"
+    assert "PANEL_TO_ORB[8]" in body, "대본 확보 후 2단계로 넘기지 않는다"
+
+
+def test_step3_entry_starts_match_when_no_job():
+    """매칭의 유일한 시작점 = 3단계 진입(붙은 job이 없을 때만). 이미 job이 있는데 대본만
+    바뀐 경우는 두 번째 과금이라 자동으로 돌지 않고 어긋남 배너로 사람이 누른다."""
+    start = HTML.index("function jump(o){")
+    end = HTML.index("function go(d){", start)
+    body = HTML[start:end]
+    assert "p===7" in body and "!MIX_JOB" in body and "startProduceMix(" in body
 
 
 def test_poll_mix_mirrors_stage_to_panel0_and_restores_button():

@@ -83,6 +83,12 @@
   .card .body{padding:12px;flex:1;display:flex;flex-direction:column}
   .card .rank{font-size:12px;color:var(--sub);display:flex;align-items:center;gap:6px}
   .card .ch{font-weight:600;font-size:14px;margin:4px 0;display:flex;align-items:center;justify-content:space-between;gap:6px}
+  /* 팔로워 줄 — 레퍼런스 랭킹 카드(index.html .folw)와 동일 포맷(2026-08-15).
+     값이 없으면 줄을 지우지 않고 '—'로 남긴다: 카드 높이가 들쭉날쭉해지지 않고
+     '이 채널은 팔로워를 못 받았다'는 사실 자체가 보인다. */
+  .card .folw{display:flex;align-items:center;gap:10px;margin:2px 0 6px;font-size:12px;
+              font-weight:700;color:var(--accent);letter-spacing:.01em;opacity:.95}
+  .card .folw .sub{color:var(--sub);font-weight:600;opacity:.9}
   .card .ch .chname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .copy{flex-shrink:0;background:var(--inset);border:1px solid var(--line);color:var(--sub);font-size:12px;padding:4px 7px;border-radius:6px;cursor:pointer;line-height:1}
   .copy:hover{color:var(--sel-fg);border-color:var(--accent)}
@@ -166,9 +172,9 @@
       <div class="status" id="dstatus">🔄 업데이트를 누르거나, 카테고리 버튼·키워드로 개별 발굴하세요.</div>
       <div class="mtabs" id="mtabs">
         <div class="mtab active" data-mt="comments" onclick="setMTab('comments')" title="댓글 수">📊 전체</div>
-        <div class="mtab" data-mt="speed" onclick="setMTab('speed')" title="댓글수 ÷ 경과시간">⚡ 속도</div>
+        <div class="mtab" data-mt="speed" onclick="setMTab('speed')" title="댓글 ÷ 경과시간 — 올라온 뒤 시간당 평균 몇 개씩 댓글이 붙었는지. ★지금 이 순간의 속도가 아니라 게시 후 누적 평균입니다">⚡ 시간당댓글</div>
         <div class="mtab" data-mt="accel" onclick="setMTab('accel')" title="이번 Δ − 직전 Δ (증가세 가속)">📈 가속</div>
-        <div class="mtab" data-mt="density" onclick="setMTab('density')" title="댓글수 ÷ 팔로워수">💥 참여밀도</div>
+        <div class="mtab" data-mt="density" onclick="setMTab('density')" title="댓글 ÷ 팔로워수 — 구독자 규모 대비 얼마나 뜨거웠는지. 작은 채널의 대박을 잡는 눈">🙌 팔로워당댓글</div>
         <span class="tab-div"></span>
         <div class="mtab" data-mt="rawcomments" onclick="setMTab('rawcomments')" title="댓글 수가 많은 순 (절대값)">💬 댓글순</div>
         <div class="mtab" data-mt="followers" onclick="setMTab('followers')" title="채널 팔로워(구독자)가 많은 순">👥 팔로워순</div>
@@ -453,12 +459,12 @@ function _renderDiscoverCards(list){
       <div class="body">
         <div class="rank"><span>#${idx+1} · ${i.category} · ${_fmtAgo(i)}</span><button class="blockbtn" title="이 채널을 영구 차단 — 지금 바로 가리고, 다음 발굴·업데이트에도 안 올라옵니다" onclick="blockChannel('${_dEsc(i.username)}','${_dEsc(i.name)}',this)">🚫 차단</button></div>
         <div class="ch"><span class="chname" title="이 채널 영상만 보기" style="cursor:pointer" onclick="dSearchChannel('${_dEsc(i.username)}')">@${i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${_dEsc(i.url)}', this)">🔗 복사</button></div>
-        <div class="rank" style="margin:-2px 0 4px">구독자 ${(i.followers||0).toLocaleString()} · 최근${DSTATE.days||2}일 ${i.recent_count||0}개</div>
+        <div class="folw"><span title="채널 팔로워(구독자) 수 — 수집이 실어온 실시간 값">👥 팔로워 ${i.followers?i.followers.toLocaleString():'—'}</span><span class="sub" title="최근 ${DSTATE.days||2}일간 이 채널이 올린 영상 수">🎬 최근${DSTATE.days||2}일 ${i.recent_count||0}개</span></div>
         ${i.views?`<div class="stat" title="조회수 — 도달 규모"><span>조회수</span><b>${i.views.toLocaleString()}</b></div>`:''}
         <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${(i.comments||0).toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>
-        <div class="stat" title="댓글수 ÷ 경과시간(시간)"><span>속도(시간당)</span><b>${(i.speed||0).toFixed(1)}</b></div>
+        <div class="stat" title="댓글 ÷ 경과시간 — 게시 후 시간당 평균"><span>시간당댓글</span><b>${(i.speed||0).toFixed(1)}</b></div>
         <div class="stat" title="이번 Δ − 직전 Δ (증가세가 빨라지는 중인지)"><span>가속</span><b>${i.accel==null?'—':(i.accel>0?'+':'')+i.accel}</b></div>
-        <div class="stat" title="댓글수 ÷ 팔로워수 (팔로워 대비 반응 비율)"><span>참여밀도</span><b>${((i.density||0)*100).toFixed(2)}%</b></div>
+        <div class="stat" title="댓글 ÷ 팔로워수 — 구독자 규모 대비 반응"><span>팔로워당댓글</span><b>${i.followers?((i.density||0)*100).toFixed(2)+'%':'—'}</b></div>
         <div class="btns">
           <button class="view" onclick="window.open('${_dEsc(i.url)}','_blank')">👁 보기</button>
           ${i.added

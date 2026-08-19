@@ -192,13 +192,106 @@ def winners_block(store, category, k=2, max_chars=420):
     return ("[★검증된 우승 대본 — 이 카테고리에서 실제로 터진 대본 전문이다. 뼈대(스파인)를 "
             "지키되, 아래 예시의 '말투·호흡·구어체 리듬·감정선'만 배워서 그 느낌으로 써라.\n"
             "  ⚠️절대 규칙: 예시의 **소재·소품·제품명·특정 단어(예: 특정 식재료·브랜드)는 "
-            "절대 가져오지 마라**. 오직 우리 영상의 소재로만 써라 — 예시가 '청양고추' 얘기여도 "
-            "우리 영상이 주방 가림막이면 청양고추는 한 글자도 넣지 마라. 훅의 '강도와 리듬'만 "
-            "흡수하고 소재는 100% 우리 것.]\n"
+            "절대 가져오지 마라**. 오직 우리 영상의 소재로만 써라 — 훅의 '강도와 리듬'만 "
+            "흡수하고 소재는 100% 우리 것.\n"
+            "  ★우리 영상의 소재는 위 [재료 대본들]의 **[대본 1]**에 나온 제품·소재 하나뿐이다. "
+            "이 블록(예시·부품)에 등장하는 어떤 제품도 우리 소재가 될 수 없다.]\n"
             + "\n\n".join(lines))
 
 
-def assemble_bank_context(store, category, k=5):
+def style_block(style, seconds=30):
+    """★스타일(스파인+beat_roles) → **칸을 못 박는** 프롬프트 블록(2026-08-15).
+
+    `spine_charter`와 다른 점이 핵심이다. charter는 "이 골격을 따르라"는 **권유**라 AI가
+    매번 새로 구성했다. 여기는 칸 이름(role)을 출력에 그대로 돌려받아 `script_gate`가
+    대조하므로, 어긋나면 재작성이 걸린다 — 부탁이 판정으로 바뀐다.
+
+    말 밀도를 함께 박는 이유(실측): 일반 기준 4.5자/초면 30초에 135자인데 채이홈 히트작은
+    264~377자였다. 규칙 위반이 아니라 아무 경고 없이 **히트작의 1/3로 헐거운** 대본이
+    나오고 있었다. 칸당 평균 글자수까지 줘야 실제로 채워진다(117자 → 269자, 실측).
+    """
+    if not style or not style.get("beat_roles"):
+        return ""
+    roles = style["beat_roles"]
+    templates = style.get("templates") or {}
+    # 칸 설명은 기존 beat_chain_json(사람이 읽는 자연어)을 순서대로 빌려 쓴다 —
+    # 같은 내용을 두 곳에 적지 않기 위해서다(0순위-B). 개수가 안 맞으면 있는 만큼만.
+    descs = style.get("beat_descs") or dict(zip(roles, style.get("beat_chain") or []))
+    lines = []
+    for i, role in enumerate(roles, 1):
+        tmpl = templates.get(role) or []
+        tail = ("\n     쓸 수 있는 문장틀(빈칸만 우리 소재에 맞게 채워라. 틀 자체를 새로 짓지 마라): "
+                + " / ".join('"%s"' % _sanitize(x) for x in tmpl)) if tmpl else ""
+        lines.append('  %d) role="%s" — %s%s' % (i, role, _sanitize(descs.get(role, "")), tail))
+    chars = style.get("chars_per_30s") or 0
+    dens = ""
+    if chars:
+        # 목표 글자수는 script_gate가 한 곳에서 정한다(0순위-B) — 프롬프트와 판정이 다른
+        # 수를 쓰면 "시킨 대로 썼는데 반려"가 난다. 그 안에 말속도 천장(8.19자/초)이 있다.
+        from shopping_shorts.script_gate import density_target
+        target = density_target(style, seconds)
+        dens = ("\n- 전체 %d초에 **%d자를 넘기지 마라** — 이 길이가 플랫폼 규격이다(히트작 밀도를 말속도로 환산한 값). "
+                "칸 하나에 평균 %d자 — 한 문장으로 끝내지 말고 2~3문장씩 써라. "
+                "말이 비면 이 스타일이 아니다." % (seconds, target, max(1, target // len(roles))))
+    return ("★[스타일: %s] — 아래 칸을 **이 순서 그대로** 채워라(순서를 바꾸거나 칸을 빼면 반려된다).\n"
+            % _sanitize(style.get("name") or "")
+            + "\n".join(lines)
+            + "\n- 각 칸의 role 값을 위와 **똑같이** 돌려줘라(검사기가 대조한다)." + dens
+            + voice_block(style))
+
+
+def voice_block(style):
+    """표현 사전 → 프롬프트 블록(2026-08-17). 없으면 ''(기존 경로 그대로 = 회귀 0).
+
+    ## 왜 이게 따로 있나 — 사실과 표현을 가른다 (사장님 모델)
+
+        사실 = "녹는다"             ← 재료(대본·리뷰·상세페이지)에서 온다
+        표현 = "사르르 / 퐁신퐁신"   ← 채널 말버릇. 스타일이 갖는다. 어느 제품에나 쓴다
+        결과 = "사르르 녹는데 퐁신퐁신해서"
+
+    합쳐진 완제품("입에서 사르르 녹는")을 **재료**로 주면 원본을 그대로 베끼게 된다.
+    갈라 놓으면 원본에 없던 표현을 **새로 만들어** 쓴다.
+
+    3안 실측(2026-08-16, 계란+요거트 빵 3편·가족갈등 반전형):
+      A 대본 통째 → 말버릇 4개(전부 원본에서 베낌)·383자
+      B 사실만    → 말버릇 1개·게이트 **실패**(고조)·254자
+      C 사실+사전 → 말버릇 **8개**·통과·**323자** ← 원본에 없던 "퐁신퐁신·쫙"을 새로 만들었다
+    ★밀도 문제도 같이 풀렸다 — 억지로 늘린 게 아니라 말맛이 살면서 자연히 붙는다.
+    """
+    v = (style or {}).get("voice") or {}
+    if not v:
+        return ""
+    rows = []
+    for key, label in (("onomatopoeia", "의성·의태어"), ("intensifier", "강조어"),
+                       ("exclaim", "감탄"), ("endings", "종결 말버릇")):
+        vals = [x for x in (v.get(key) or []) if str(x).strip()]
+        if vals:
+            rows.append("  · %s: %s" % (label, " / ".join(_sanitize(str(x)) for x in vals)))
+    tone = _sanitize(str(v.get("tone_note") or "").strip())
+    if not rows and not tone:
+        return ""
+    out = "\n★[이 스타일의 말버릇] — 아래 표현을 **사실에 얹어** 써라."
+    if tone:
+        out += "\n  · 말투: " + tone
+    if rows:
+        out += "\n" + "\n".join(rows)
+    # ★재료(사실)와 섞이지 않게 못을 박는다 — 이 구분이 무너지면 원본 베끼기로 되돌아간다.
+    out += ("\n  ※ 사실(무엇이 좋은가)은 재료에서 가져오고, 위 표현은 **말맛**으로만 얹어라. "
+            "재료 문장을 그대로 옮기지 말고, 사실 + 위 표현으로 **새 문장을 지어라**.")
+    return out
+
+
+#: 은행(학습 재료)이 재료 대본보다 몇 배까지 길어도 되는가.
+#  ★2026-08-18 사고의 물리적 원인이 이 비율이다 — 실측: 재료 750자(네일 3편) vs
+#  은행 2,822자(3.8배). 그 상태에선 은행 안의 구체적 소재 하나만 있어도 대본이
+#  그쪽으로 끌려간다(A안이 통째로 '주방 기름 가림막'). 부품이 더러워서가 아니라
+#  **학습 재료가 재료를 압도해서** 터진 것이다.
+#  1.5배로 잡은 근거: 은행은 '말투·구조'만 담당하므로 재료보다 길 이유가 없다.
+#  여유를 조금 두는 것은 스파인 헌장(뼈대)이 고정비로 들어가기 때문이다.
+_BANK_BUDGET_RATIO = 1.5
+
+
+def assemble_bank_context(store, category, k=5, source_chars=0):
     """스파인 charter + 부품 top-k + ★우승 대본 few-shot 합본. 없으면 ''(호출부는 빈 문자열이면
     기존 헌장만 써서 회귀0)."""
     # ★category 비어도(자동유형 경로는 video_type=None→"") 스파인을 건너뛰지 마라(2026-07-23
@@ -208,6 +301,30 @@ def assemble_bank_context(store, category, k=5):
     # 스파인(아크) + 말투(parts_block) + 전개 패턴(content_block) + ★우승대본 few-shot(2026-07-26) 4층 주입.
     blocks = [x for x in (spine_charter(spine), parts_block(store, k), content_block(store),
                           winners_block(store, category)) if x]
+    if not blocks:
+        return ""
+    # ★예산 초과분은 **뒤에서부터 블록 단위로** 뺀다(2026-08-18).
+    #   순서가 곧 중요도다: 스파인 헌장(뼈대) > 말버릇 > 전개 패턴 > 우승 예시 전문.
+    #   뒤로 갈수록 '실제 문장'이라 소재를 흘릴 위험이 크고, 없어도 뼈대는 살아 있다.
+    #   ⚠️글자 단위로 자르지 않는다 — 문장 중간이 잘리면 지시가 반쪽이 돼 더 나쁘다.
+    #   ⚠️첫 블록(스파인)은 무슨 일이 있어도 남긴다. 그게 없으면 스타일 자체가 사라진다.
+    #   source_chars=0(안 넘긴 옛 호출)이면 종전 그대로 = 회귀 0.
+    if source_chars and source_chars > 0:
+        budget = int(source_chars * _BANK_BUDGET_RATIO)
+        while len(blocks) > 1 and sum(len(b) for b in blocks) > budget:
+            blocks.pop()
+    # ★소재 오염 차단(2026-08-18 사장님 제보 "대본을 뽑으니 이상한 게 나온다").
+    #   실측: 담긴 재료 3편이 전부 다이소 네일펜인데 A안이 통째로 '주방 기름 가림막'으로
+    #   나왔다(work 3b8e5099a22e). 이 블록은 2,822자짜리 학습 재료라 재료 대본보다 길고
+    #   구체적인데, 부품 문장들이 소재 중립이 아니다 — 어제 저녁(08-17 21:47 KST) 승인분에
+    #   '주방 기구·주방 동선·요리 결과'처럼 소재가 박힌 것이 대량으로 들어왔다.
+    #   각 하위 블록이 저마다 "소재는 가져오지 마라"를 말해도, 블록이 4겹이면 그 경고가
+    #   중간에 묻힌다. **맨 끝에서 한 번 더 못 박는다** — 마지막 지시가 가장 강하게 남는다.
+    blocks.append(
+        "★★이 블록 전체(아크·부품·전개·우승예시)는 **말투·구조·리듬 참고용**이다. "
+        "여기 등장하는 제품·소재·장소(주방·요리 등)는 우리 영상의 소재가 아니다. "
+        "우리 소재는 오직 [재료 대본들]의 [대본 1]에 나온 것 하나뿐이며, "
+        "그와 다른 물건 이야기가 한 줄이라도 들어가면 반려된다.")
     return "\n\n".join(blocks)
 
 

@@ -270,7 +270,7 @@ async function load(append){
     // 60장뿐이라 전부 즉시 로드해도 부담이 없다.
     return `<div class="card">
       <div class="thumb">
-        <img id="th_${esc(i.shortcode)}" src="/api/thumb?url=${encodeURIComponent(i.thumbnail||'')}" onerror="this.style.visibility='hidden'" onclick="playArch(this,'${esc(i.shortcode)}','${esc(i.url)}')" title="클릭하면 바로 재생">
+        <img id="th_${esc(i.shortcode)}" src="/api/thumb?url=${encodeURIComponent(i.thumbnail||'')}${i.shortcode?('&shortcode='+encodeURIComponent(i.shortcode)):''}" onerror="this.style.visibility='hidden'" onclick="playArch(this,'${esc(i.shortcode)}','${esc(i.url)}')" title="클릭하면 바로 재생">
         <span class="views">👁 ${fmt(i.views)}</span>
         <!-- 💬 댓글수 — 이 화면의 기본 정렬 기준이자 사장님이 제일 중요하게 보는 값이라
              썸네일 위로 올린다. '댓글' 글자를 붙이는 이유: 숫자 배지가 둘 나란히 있으면
@@ -327,7 +327,10 @@ function resultCards(items, opts){
       ? `<span style="position:absolute;top:6px;right:6px;background:#0e2f2e;color:#5fe3d6;border:1px solid #1f6f6b;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:700">📦 같은 제품</span>`
       :(i.overlap!=null)?`<span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:var(--gold);font-size:11px;padding:2px 8px;border-radius:10px">겹침 ${i.overlap}</span>`
       :(i.platform?`<span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px">${esc(i.platform)}</span>`:'');
-    const thumb=i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)):'';
+    // shortcode를 함께 넘겨야 만료된 CDN URL을 /api/thumb가 oembed로 되살린다
+    // (2026-08-13: 이게 빠져서 아카이브 카드만 검게 죽었다 — 랭킹 index.html은 넘기고 있었다).
+    const thumb=i.thumbnail?('/api/thumb?url='+encodeURIComponent(i.thumbnail)
+      +(i.shortcode?('&shortcode='+encodeURIComponent(i.shortcode)):'')):'';
     // 조회수·댓글은 이제 썸네일 위 배지에 있다(아래 참조) — 여기서 또 쓰면 중복이라
     // 좋아요가 밀려 잘린다(메인 카드와 같은 정리, 2026-08-06 사장님 지적).
     // 지표가 아예 없는 렌즈 결과는 종전대로 제목을 보여준다.

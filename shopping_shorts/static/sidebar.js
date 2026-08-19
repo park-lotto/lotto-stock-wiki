@@ -43,6 +43,9 @@
     { label: "소통", items: [
       { icon: "💬", text: "인스타 소통공간", href: "/outreach" },
     ] },
+    // ★2026-08-17 '설정 > 내 설정' 그룹을 없앴다. 상단 계정 카드의 '마이페이지'와
+    //   같은 곳(/settings)인데 이름만 달라서, 사장님이 키 등록표를 못 찾으셨다.
+    //   진입점을 하나로 둔다 — 계정 카드(아래 _accountCard)와 모바일 메뉴뿐이다.
   ];
 
   // 현재 경로 정규화: '/index.html'·'/'→'/', '/mix.html'→'/mix'
@@ -71,7 +74,8 @@
     ".ss-acct-u b{color:var(--sel-fg,#6ff0d6);font-weight:700}" +
     ".ss-acct-since{font-size:11px;color:var(--sub,#8b98a9);margin-top:9px;text-align:right}" +
     ".ss-acct-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}" +
-    ".ss-acct-link{flex:1 1 0;white-space:nowrap;text-align:center;font-size:12px;color:var(--txt,#e6edf3);text-decoration:none;padding:8px 4px;border:1px solid var(--line,#1e2735);border-radius:8px;background:var(--panel,#111722)}" +
+    // 44px 터치타깃(2026-08-15) — 실측 34px이었다.
+    ".ss-acct-link{flex:1 1 0;white-space:nowrap;text-align:center;font-size:12px;color:var(--txt,#e6edf3);text-decoration:none;padding:12px 4px;min-height:44px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;border:1px solid var(--line,#1e2735);border-radius:8px;background:var(--panel,#111722)}" +
     ".ss-acct-link.wide{flex-basis:100%}" +
     ".ss-acct-link:hover{border-color:var(--accent,#37e0bd);color:var(--sel-fg,#6ff0d6)}" +
     // 브랜드 텍스트만 민트 그라디언트(이모지는 제외 — text-fill:transparent가 이모지 글리프까지 비운다)
@@ -93,7 +97,8 @@
     ".ss-work:hover{color:var(--txt,#e6edf3)}" +
     ".ss-work.ss-work-current{color:var(--sel-fg,#6ff0d6);background:var(--sel-bg,linear-gradient(90deg,#123a30,#0c221c))}" +
     ".ss-toggle{margin-top:18px;padding-top:14px;border-top:1px solid var(--line,#1e2735)}" +
-    ".ss-toggle-btn{width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--line,#1e2735);" +
+    // 44px 터치타깃(2026-08-15) — 실측 37px이었다. 60대가 주 사용자.
+    ".ss-toggle-btn{width:100%;padding:12px;min-height:44px;border-radius:9px;border:1px solid var(--line,#1e2735);" +
       "background:var(--inset,#0c1412);color:var(--txt,#e6edf3);font-size:13px;cursor:pointer;" +
       "display:flex;align-items:center;justify-content:center;gap:7px;font-family:inherit}" +
     ".ss-toggle-btn:hover{border-color:var(--accent,#37e0bd)}" +
@@ -103,9 +108,13 @@
     ".ss-work-bar{display:flex;gap:2px;margin-top:5px}" +
     ".ss-work-seg{flex:1;height:3px;border-radius:2px;background:var(--line,#1e2735)}" +
     ".ss-work-seg.on{background:var(--accent,#37e0bd)}" +
-    ".ss-work-del{flex-shrink:0;cursor:pointer;color:var(--sub,#8b98a9);opacity:0;padding:2px 4px;font-size:13px}" +
-    ".ss-work:hover .ss-work-del{opacity:.65}" +
+    // ✏ 이름수정·✕ 삭제 — 같은 자리·같은 hover 규칙(모양이 다르면 하나만 있는 줄 안다).
+    // ★모바일(터치)엔 hover가 없다 — 아래 @media에서 항상 보이게 한다.
+    ".ss-work-del,.ss-work-ren{flex-shrink:0;cursor:pointer;color:var(--sub,#8b98a9);opacity:0;padding:2px 4px;font-size:13px}" +
+    ".ss-work:hover .ss-work-del,.ss-work:hover .ss-work-ren{opacity:.65}" +
     ".ss-work-del:hover{opacity:1;color:#ff6b6b}" +
+    ".ss-work-ren:hover{opacity:1;color:var(--accent,#37e0bd)}" +
+    "@media(max-width:760px){.ss-work-del,.ss-work-ren{opacity:.65}}" +
     // 데스크톱: 상단 계정 카드에 '⚙️ 내 계정'이 있어 이 메뉴는 중복 → 숨김. 모바일은 카드가
     // 숨겨지므로(.ss-acct display:none) 이 메뉴를 노출한다(2026-07-24).
     "@media(min-width:761px){.ss-group-acct{display:none}}" +
@@ -117,7 +126,10 @@
       ".ss-nav h1{margin:0 8px 0 0;flex-shrink:0;font-size:19px;justify-content:flex-start}" +
       ".ss-group{margin:0;padding:0;background:none;border:none;display:flex;gap:6px;align-items:center}" +
       ".ss-label{display:none}" +
-      ".ss-item{margin:0;padding:6px 10px;flex-shrink:0;font-size:12px}}";
+      // 44px 터치타깃(2026-08-15) — 실측 28px이라 가로띠에서 손가락으로 누르기 작았다.
+      // 가로띠는 어차피 가로 스크롤(scrollWidth 1477 > 390)이라 높이를 키워도 안 잘린다.
+      ".ss-item{margin:0;padding:0 13px;min-height:44px;display:flex;align-items:center;" +
+        "flex-shrink:0;font-size:13px}}";
   // 버튼 쿠션감(전역, 2026-07-24) — 누르면 쏙 눌렸다 통통 튀어나옴. 사장님 선택 '쿠션' 프리셋.
   // 자체 transition 없는 주버튼(.btn-next/.btn-prev/.tab/.cta-shine 등)엔 풀 적용. 자체
   // transition을 가진 버튼은 페이지 규칙(클래스>요소)이 우선이라 배경 트랜지션을 안 밟고
@@ -170,8 +182,8 @@
   // 내 계정 메뉴 — 데스크톱에선 상단 계정 카드(_accountCard)의 '⚙️ 내 계정'과 중복이라 숨긴다.
   // 단 모바일(≤760px)에선 그 카드(.ss-acct)가 공간 부족으로 display:none이라, 이 메뉴가 /account·
   // 로그아웃에 닿는 유일한 통로다 → 모바일에만 노출(ss-item-acct + 아래 @media)(2026-07-24).
-  html += '<div class="ss-group ss-group-acct"><div class="ss-item ss-item-acct" data-ss-href="/account" data-ss-free="1"' +
-          ' onclick="location.href=\'/account\'">👤 내 계정</div></div>';
+  html += '<div class="ss-group ss-group-acct"><div class="ss-item ss-item-acct" data-ss-href="/settings" data-ss-free="1"' +
+          ' onclick="location.href=\'/settings\'">👤 마이페이지</div></div>';
 
   // 테마 토글(민트-블랙 ↔ 화이트-민트). data-theme + localStorage로 전 페이지 공유.
   // 최종 FOUC 방지는 각 페이지 <head> 인라인 스니펫이 하고(렌더 전 실행), 여기선 라벨 동기화만.
@@ -228,6 +240,39 @@
       })
       .catch(function () { window.alert("삭제 실패"); });
   };
+  // 작업 이름 바꾸기(2026-08-17) — 사장님 "내 작업에 작업명 수정할수있게".
+  // 목록이 '(제목 없음)' 여러 줄이라 어느 게 뭔지 구분이 안 됐다(자동 제목은 대본 앞 20자인데,
+  // 대본을 아직 안 뽑은 작업은 재료가 없다).
+  // ★서버가 제목을 정한다(store._work_title) — 여기서 이름을 계산하지 않고 **응답을 받아 그린다**.
+  //   두 군데서 계산하면 반드시 어긋난다(CLAUDE.md 0순위-B).
+  window.__ssRenWork = function (ev, wid) {
+    if (ev && ev.stopPropagation) ev.stopPropagation();
+    var node = document.querySelector('.ss-work[data-wid="' + wid + '"]');
+    var nameEl = node ? node.querySelector(".ss-work-name") : null;
+    // 현재 이름을 기본값으로 넣어준다 — '· '는 화면 장식이라 뺀다.
+    var now = nameEl ? nameEl.textContent.replace(/^·\s*/, "") : "";
+    if (now === "(제목 없음)") now = "";
+    var next = window.prompt("작업 이름을 입력하세요 (비우면 대본 앞부분으로 자동)", now);
+    if (next === null) return;   // 취소 — 빈 문자열('')은 '자동으로 되돌리기'라 통과시킨다
+    fetch("/api/produce/works/" + encodeURIComponent(wid) + "/rename", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: next })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.ok) { window.alert("이름을 바꾸지 못했어요"); return; }
+        var t = d.title || "(제목 없음)";
+        if (nameEl) nameEl.textContent = "· " + t;
+        var open = node ? node.querySelector(".ss-work-open") : null;
+        if (open) open.title = t;
+        // ★지금 열려 있는 작업이면 제작소에도 알린다(2026-08-17). produce.html의 STATE는
+        //   title_manual을 모르는 채라, 다음 saveWork()가 그 필드 없는 state를 덮어써
+        //   **방금 지은 이름이 조용히 사라진다**. STATE에 심어 두면 이후 저장에도 실려 나간다.
+        //   훅이 없는 페이지(제작소 밖)에선 그냥 넘어간다 — 그 페이지엔 덮어쓸 STATE가 없다.
+        try { if (window.__ssApplyWorkTitle) window.__ssApplyWorkTitle(wid, next); } catch (e) {}
+      })
+      .catch(function () { window.alert("이름을 바꾸지 못했어요"); });
+  };
   // 제작소 작업파일 목록(2026-07-17) — 사장님 제보 "내일 다시 들어와도 기록남고 그대로".
   // T6(2026-07-19): /produce 전용 가드 제거 → 전 페이지 노출. 어느 화면에서도 진행 중 작업으로
   //   바로 복귀. 숫자 'N단계'는 7칸 미니 진행바로 바꿔 진척을 형태로 보인다.
@@ -259,6 +304,10 @@
              ' title="' + name + '">' +
              '<span class="ss-work-name">· ' + name + '</span>' +
              '<span class="ss-work-bar">' + bar + '</span></span>' +
+             '<span class="ss-work-ren" title="이름 바꾸기"' +
+             // ★U+FE0F(VS16)를 반드시 붙인다 — 맨 ✏(U+270F)는 윈도우 크롬에서 **옆으로 누운
+             //   막대**로 그려진다(실측 스크린샷으로 확인). 붙이면 제대로 된 연필이 된다.
+             " onclick=\"window.__ssRenWork(event,'" + esc(w.work_id) + "')\">✏️</span>" +
              '<span class="ss-work-del" title="이 작업 삭제"' +
              " onclick=\"window.__ssDelWork(event,'" + esc(w.work_id) + "')\">✕</span>" +
              "</div>";
@@ -378,7 +427,7 @@
       '<div class="ss-acct-sub">' + escHtml(sub) + "</div>" + usage + member +
       '<div class="ss-acct-links">' +
         (admin ? '<a href="/admin" target="_blank" rel="noopener" class="ss-acct-link wide" style="color:#ffd97a;border-color:#5a4a1e">🔐 관리페이지</a>' : '') +
-        '<a href="/account" class="ss-acct-link">⚙️ 내 계정</a>' +
+        '<a href="/settings" class="ss-acct-link">👤 마이페이지</a>' +
         '<a href="#" class="ss-acct-link" onclick="window.__ssLogout();return false">↩ 로그아웃</a></div>';
     var h1 = nav.querySelector("h1");
     if (h1 && h1.nextSibling) nav.insertBefore(card, h1.nextSibling);

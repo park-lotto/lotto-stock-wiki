@@ -38,6 +38,39 @@ _STALL_LIMIT = 6         # 연속 N회 새 릴스 0이면 바닥으로 판정
 # 스크롤이 무한로딩을 못 깨우고, 같은 30스크롤에서 372건 → 12건으로 죽는다.
 # 대역폭은 조금 줄지만 데이터가 통째로 날아가므로 순손실이다.
 _BLOCKED_RESOURCES = ("image", "media", "font")
+
+
+def block_heavy_assets(page, env="PROXY_BLOCK_ASSETS"):
+    """주거용 프록시로 나가는 페이지에서 이미지·미디어·폰트를 받지 않는다.
+
+    ★한 군데에서만 정한다(0순위-B). 2026-08-06에 이 최적화를 **아카이브에만** 넣고
+    레퍼런스·발굴·프로필·도우인엔 안 넣어서, 8/09에 인스타 수집이 계정별 프록시
+    로테이션으로 바뀐 순간 293채널 × 87MB가 전부 유료 프록시로 흘렀다
+    (실측 2026-08-17: 4일에 25.4GB 소진 → 402 Payment Required, 한 달 예측 192GB).
+
+    왜 안전한가: 우리가 쓰는 데이터는 전부 `page.on("response")` graphql/xhr 후킹으로
+    들어온다(인스타 릴스·해시태그·프로필, 도우인 검색 모두 실측 확인). 이미지·폰트는
+    화면 그리기에만 쓰이고 **한 바이트도 안 쓴다**. 썸네일은 URL 문자열만 저장하므로
+    이미지 본체를 받을 이유가 없다.
+
+    ⚠️ stylesheet는 절대 넣지 마라(2026-08-06 실측): CSS를 막으면 레이아웃이 안 잡혀
+    스크롤이 무한로딩을 못 깨우고 같은 30스크롤에서 372건 → 12건으로 죽는다.
+    ⚠️ 대상 사이트가 렌더를 막아 데이터가 안 나오는 날을 대비해 env로 끌 수 있게 둔다.
+
+    실측 효과(아카이브): 26.4MB → 13.7MB(-48%), 같은 스크롤 수에서 수집 건수 동일.
+    """
+    if os.getenv(env, "1") == "0":
+        return False
+
+    def _route(route):
+        if route.request.resource_type in _BLOCKED_RESOURCES:
+            return route.abort()
+        return route.continue_()
+
+    page.route("**/*", _route)
+    return True
+
+
 _SCROLL_PAUSE_MS = 2200
 _CHANNEL_GAP_S = (15, 35)    # 채널 사이 랜덤 휴식
 _BACKOFF_S = 30 * 60         # 로그인벽/차단 의심 시 대기
@@ -160,13 +193,11 @@ def crawl_channel(username, max_scrolls=_MAX_SCROLLS, session_path=None, proxy=N
             # — 릴스 데이터는 전부 아래 _on_response의 graphql 후킹으로 들어온다.
             # 실측: 26.4MB → 13.7MB(-48%), 같은 스크롤 수에서 수집 건수 동일.
             # 인스타가 렌더를 막아 데이터가 안 나오는 날을 대비해 끌 수 있게 뒀다.
-            if os.getenv("ARCHIVE_BLOCK_ASSETS", "1") != "0":
-                def _route(route):
-                    if route.request.resource_type in _BLOCKED_RESOURCES:
-                        return route.abort()
-                    return route.continue_()
-
-                page.route("**/*", _route)
+            # ★공용 함수로 뽑았다(2026-08-17) — 같은 판단을 5벌로 두면 이번처럼
+            #   한 곳만 최적화되고 나머지가 대역폭을 태운다(0순위-B).
+            #   기존 env 이름(ARCHIVE_BLOCK_ASSETS)을 그대로 존중한다 — 서버에 이미
+            #   설정돼 있을 수 있어 이름을 바꾸면 조용히 무력화된다.
+            block_heavy_assets(page, env="ARCHIVE_BLOCK_ASSETS")
 
             def _on_response(resp):
                 if "graphql" not in resp.url and "/api/v1/clips/user/" not in resp.url:

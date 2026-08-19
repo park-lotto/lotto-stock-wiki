@@ -4,7 +4,7 @@
 자신도 이 관례를 쓰고, app.py도 마찬가지다(2026-07-23 확인). 브리프 예시 코드의 bare
 import(`from backbone import ...`)는 로컬 pytest(cwd=shopping_shorts/) 한정으로만 우연히
 동작해 서버 실행 cwd가 다르면 깨질 수 있어 코드베이스 관례로 맞췄다."""
-from shopping_shorts.backbone import pick_backbone, score_backbones
+from shopping_shorts.backbone import _BACKBONE_PLATFORMS, pick_backbone, score_backbones
 from shopping_shorts.structure_analyze import analyze_structure
 
 _SEG_COLORS = {"훅": "#facc6b", "문제제기": "#7db8f5", "공감": "#c99af5",
@@ -71,10 +71,43 @@ def _structure_view(struct_raw):
     }
 
 
+def _pending_card(s):
+    """추출 대기 중인 소스의 카드 — 점수·구조는 아직 없다는 걸 그대로 말한다."""
+    return {"video_id": s.get("video_id"), "score": None,
+            "name": s.get("name") or "", "thumbnail": s.get("thumbnail") or "",
+            "structure": None, "text": "", "pending": True}
+
+
 def build_aipick(sources, meta, forced=None):
     if not sources:
-        return {"pick_id": None, "pick_index": -1, "tiles": {}, "structure": {}, "candidates": [], "pick_meta": {}}
+        return {"pick_id": None, "pick_index": -1, "tiles": {}, "structure": {}, "candidates": [],
+                "pick_meta": {}, "pending_count": 0, "hold": False}
     meta = meta or {}
+    # ★추출 대기 소스는 채점에서 뺀다(대본이 없으니 coverage가 0으로 잡혀 순위를 더럽힌다).
+    #   단 화면에서는 카드로 남는다 — 사라지면 사장님이 "왜 2개뿐이냐"를 겪는다(2026-08-14).
+    ready = [s for s in sources if not s.get("pending")]
+    waiting = [s for s in sources if s.get("pending")]
+    if not ready:
+        # 전부 분석 중 — 아직 아무것도 확정할 수 없다. 카드만 '분석 중'으로 보여준다.
+        return {"pick_id": None, "pick_index": -1, "tiles": {}, "structure": {},
+                "candidates": [_pending_card(s) for s in waiting], "pick_meta": {},
+                "pending_count": len(waiting), "hold": True}
+    # ★메인 확정 보류(2026-08-14 사장님 "한국어 대본 축 영상이 없으면 기다리는 걸로").
+    #   백본은 인스타·유튜브(한글 대본)만 후보인데(backbone.pick_backbone), 그 후보가 아직
+    #   0이고 **분석 중인 게 남아 있으면** 지금 정하는 건 이른 판단이다 — 예전엔 전체폴백이
+    #   걸려 샤오홍슈가 메인으로 앉았다. 대기 중인 게 없으면(더 기다려도 안 온다) 종전대로 확정.
+    if waiting and not any(
+            (meta.get(s.get("video_id"), {}).get("platform") or "").lower() in _BACKBONE_PLATFORMS
+            for s in ready):
+        cards = [{"video_id": s.get("video_id"), "score": None, "name": s.get("name") or "",
+                  "thumbnail": s.get("thumbnail") or "",
+                  "structure": _structure_view(s.get("structure")) if s.get("structure") else None,
+                  "text": s.get("text") or ""} for s in ready]
+        cards += [_pending_card(s) for s in waiting]
+        return {"pick_id": None, "pick_index": -1, "tiles": {}, "structure": {},
+                "candidates": cards, "pick_meta": {},
+                "pending_count": len(waiting), "hold": True}
+    sources = ready
     scored = score_backbones(sources, meta)                 # [{video_id,coverage,engagement,score}] score desc
     pick_id = pick_backbone(sources, meta, forced=forced)    # forced(⭐메인) 우선
     idx = next((i for i, s in enumerate(sources) if str(s.get("video_id")) == str(pick_id)), 0)
@@ -119,8 +152,10 @@ def build_aipick(sources, meta, forced=None):
             # ★원문 보기(2026-07-29): 카드 클릭 전에 백본 후보 3개 대본을 미리 읽어보게.
             "text": src.get("text") or "",
         })
+    cand_out += [_pending_card(s) for s in waiting]      # 분석 중인 것도 카드로는 보인다
     return {"pick_id": pick_id, "pick_index": idx, "tiles": tiles,
             "structure": structure, "candidates": cand_out,
+            "pending_count": len(waiting), "hold": False,
             # ★pick의 원본 대본을 같이 실어 보낸다(2026-07-27 사장님 제보 "대본을 확보하지 못했습니다").
             #   프론트(startFromAiPick)는 예전에 /api/produce/picks(도서관 담김 버킷)에서만 대본을
             #   찾았는데, AI PICK 소스가 도서관 교차를 벗어나 script_extracts/reel에서도 오게 되면서

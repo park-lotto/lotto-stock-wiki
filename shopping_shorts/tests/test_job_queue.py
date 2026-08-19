@@ -124,3 +124,34 @@ def test_queue_status_includes_claimed_at(tmp_path):
     st.claim_next()
     got = st.queue_status("overseas", {})
     assert got["claimed_at"]
+
+
+def test_task_is_alive_long_running_not_failed(tmp_path):
+    """★2026-08-19 실사고 회귀: 25분째 도는 정상 작업을 '실패'로 보면 안 된다.
+
+    사고: 화면의 진행중→실패 판정이 mix_jobs.updated_at 경과(10분)만 봤는데,
+    워커는 도는 동안 job_queue.heartbeat_at만 찍고 updated_at은 안 건드린다.
+    그래서 25분 걸린 자막제거(15:52→16:17)가 10분 시점부터 "실패했어요"를 띄웠고
+    정작 결과는 성공이었다(자막 3개 전부 제거 확인).
+    → 하트비트가 뛰면 얼마나 오래 걸리든 살아있는 것으로 본다.
+    """
+    import sqlite3
+    st = Store(str(tmp_path / "t.db"))
+    args = {"job_id": "j1"}
+    qid = st.enqueue("clean", args)
+    assert st.task_is_alive("clean", args) is True      # queued = 아직 차례 대기, 실패 아님
+    st.claim_next()
+    con = sqlite3.connect(str(tmp_path / "t.db"))
+    # 25분째 돌지만 하트비트는 방금 뛰었다 = 살아있음
+    con.execute("UPDATE job_queue SET claimed_at=datetime('now','-25 minutes'), "
+                "heartbeat_at=datetime('now') WHERE id=?", (qid,))
+    con.commit()
+    assert st.task_is_alive("clean", args) is True      # ★이게 사고의 핵심
+
+    # 워커가 죽어 하트비트가 멈추면 그때는 진짜 실패로 본다
+    con.execute("UPDATE job_queue SET heartbeat_at=datetime('now','-10 minutes') WHERE id=?", (qid,))
+    con.commit(); con.close()
+    assert st.task_is_alive("clean", args) is False
+
+    # 큐 기록이 아예 없으면 판단 불가 → False(기존 규칙에 맡긴다)
+    assert st.task_is_alive("clean", {"job_id": "없는job"}) is False

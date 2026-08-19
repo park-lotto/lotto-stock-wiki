@@ -2,6 +2,10 @@
 
 ElevenLabs는 Gemini와 무관한 별도 API라 전용/공유 키풀 규칙과 무관(단일 키).
 키가 없으면 개발용 무음 mp3를 반환해 파이프라인 E2E가 키 없이도 관통되게 한다.
+
+★키는 keyroute가 고른다(2026-08-17). config.ELEVENLABS_API_KEY를 여기서 직접
+  읽으면 "사용자가 자기 키를 등록했는데 사장님 키로 나가는" 상태가 조용히 생긴다
+  — 키를 고르는 판단은 keyroute 한 곳뿐이다(CLAUDE.md 0순위-B).
 """
 import base64
 import shutil
@@ -12,6 +16,7 @@ import requests
 
 from shopping_shorts import config
 from shopping_shorts import tts_timestamps
+from shopping_shorts import typecast_tts
 
 _ENDPOINT = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
 # 같은 합성인데 응답에 문자단위 정렬이 얹혀 온다(추가 과금 없음, 2026-07-31).
@@ -44,24 +49,50 @@ def _write_silent_mp3(out_path, seconds):
 _SPEED_API_MIN, _SPEED_API_MAX = 0.7, 1.2
 
 
+def _api_key(customer_id=0):
+    """합성에 쓸 ElevenLabs 키. 사용자가 등록했으면 그 키, 아니면 사장님 키.
+    아무데도 없으면 "" — 호출부가 무음 mock으로 내려앉는다(기존 동작).
+
+    ★keyroute가 유일한 판단처다 — 여기서 따로 고르지 마라(0순위-B).
+    Store는 함수 안에서 만든다: 호출부가 synthesize_line→synthesize_best까지
+    3겹이라 store 인스턴스를 인자로 흘려보내려면 그 전부를 고쳐야 한다."""
+    from shopping_shorts import keyroute
+    from shopping_shorts.store import Store
+    keys, _ = keyroute.keys_for(Store(config.DB_PATH), customer_id,
+                                keyroute.SVC_ELEVENLABS)
+    return keys[0] if keys else ""
+
+
 def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
                    speed=None, model_id=None, seed=None,
-                   previous_text=None, next_text=None, max_retries=3):
+                   previous_text=None, next_text=None, max_retries=3,
+                   customer_id=0):
     """text → mp3(out_path). ElevenLabs 호출, 키 없으면 무음 mock. out_path 반환.
 
     voice_settings: {stability, similarity_boost, style, use_speaker_boost} (0~1).
     speed: 재생속도. API는 0.7~1.2만 허용하므로 그 범위로 clamp해 voice_settings.speed로 보냄
            (1.2 초과분은 audio_post에서 atempo로 별도 보정).
-    seed/previous_text/next_text: 선택. v3면 voice_settings에서 use_speaker_boost 자동 drop."""
+    seed/previous_text/next_text: 선택. v3면 voice_settings에서 use_speaker_boost 자동 drop.
+    customer_id: 누구 키로 합성하나. 0(기본)=사장님 키 — 기존 호출부는 안 바뀐다."""
     # ★옛 정렬 먼저 지운다 — 같은 경로에 다른 대사를 재합성하는 길이 있다(비트 재합성·
     #   콘폼). 안 지우면 새 음성에 옛 타이밍이 씌워져 자막이 통째로 밀린다.
     tts_timestamps.clear(out_path)
-    if not config.ELEVENLABS_API_KEY:
+    # ★엔진 분기(2026-08-19). 프리셋의 model_id가 `ssfm-*`면 타입캐스트다 — 판단은
+    #   typecast_tts.is_typecast 한 곳뿐이다(0순위-B). 남자 성우 라인업이 일레븐랩스에
+    #   없어서 붙였고, 일레븐랩스 경로는 아래 그대로 남는다.
+    if typecast_tts.is_typecast(model_id):
+        return _synthesize_typecast(
+            text, out_path, voice_id=voice_id, voice_settings=voice_settings,
+            speed=speed, model_id=model_id, seed=seed,
+            previous_text=previous_text, next_text=next_text,
+            max_retries=max_retries)
+    api_key = _api_key(customer_id)
+    if not api_key:
         _write_silent_mp3(out_path, _estimate_seconds(text))
         return out_path
     vid = voice_id or config.ELEVENLABS_VOICE_ID
     url = _ENDPOINT.format(voice_id=vid)
-    headers = {"xi-api-key": config.ELEVENLABS_API_KEY, "Content-Type": "application/json"}
+    headers = {"xi-api-key": api_key, "Content-Type": "application/json"}
     mid = model_id or "eleven_multilingual_v2"
     payload = {"text": text, "model_id": mid}
     settings = dict(voice_settings) if voice_settings else {}
@@ -116,6 +147,44 @@ def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
                 continue
             raise
     return out_path
+
+
+def _synthesize_typecast(text, out_path, *, voice_id, voice_settings, speed,
+                         model_id, seed, previous_text, next_text, max_retries):
+    """타입캐스트 경로. 키 없으면 무음 mock(일레븐랩스 경로와 같은 계약).
+
+    감정은 프리셋 스냅샷의 `settings.emotion`/`emotion_intensity`에서 온다. 일레븐랩스의
+    stability·similarity_boost·style은 타입캐스트에 없는 축이라 **버린다** — 억지로
+    style을 감정 강도로 환산하면 두 엔진이 서로 다른 뜻의 숫자를 공유하게 돼, 한쪽을
+    고칠 때 다른 쪽이 조용히 틀어진다(0순위-B).
+
+    ★속도는 clamp하지 않는다. 일레븐랩스는 1.2가 상한이라 초과분을 audio_post의 atempo로
+      되돌렸는데(_SPEED_API_MIN/_MAX), 타입캐스트는 API가 2.0까지 직접 받는다. 다만
+      synthesize_line이 speed>1.2면 extra_tempo를 계산해 후처리로 **또** 당기므로,
+      호출부(mix_pipeline._voice_params)가 엔진을 보고 extra_tempo를 1.0으로 두어야
+      이중 가속이 안 난다 — 그쪽에 같이 반영돼 있다."""
+    if not typecast_tts.api_key():
+        _write_silent_mp3(out_path, _estimate_seconds(text))
+        return out_path
+    s = voice_settings or {}
+    emotion = s.get("emotion") or typecast_tts.DEFAULT_EMOTION
+    intensity = s.get("emotion_intensity")
+    attempt = 0
+    while True:
+        try:
+            alignment = typecast_tts.synthesize(
+                text, out_path, voice_id=voice_id, speed=speed, emotion=emotion,
+                intensity=intensity, model_id=model_id, seed=seed,
+                previous_text=previous_text, next_text=next_text)
+            if alignment:
+                tts_timestamps.save(out_path, alignment)
+            return out_path
+        except requests.RequestException:
+            attempt += 1
+            if attempt < max_retries:
+                time.sleep(attempt * 2)
+                continue
+            raise
 
 
 def _parse_ts_response(resp):

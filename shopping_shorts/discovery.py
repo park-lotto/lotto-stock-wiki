@@ -79,6 +79,13 @@ def _rank_reels(reels, prev_comments, prev_delta, now, window_hours, profiles=No
         for it in built:
             it["discovered"] = True
             it["followers"] = followers
+            # ★발굴의 참여밀도는 '팔로워 대비'로 유지한다(2026-08-14).
+            # 랭킹은 조회 기반((좋아요+댓글)/조회수)으로 바꿨지만 — 랭킹 대상엔 팔로워가
+            # 없는 채널이 67%였기 때문 — 발굴은 목적이 다르다: "팔로워는 적은데 반응이
+            # 터지는 알짜 채널"을 찾는 것이라 분모가 팔로워여야 뜻이 산다(화면도 그렇게
+            # 설명하고 %로 표시: discover.html:171,461). 여기선 profiles_fn이 팔로워를
+            # 보장하므로 0으로 죽을 일도 없다.
+            it["density"] = (it["comments"] / followers) if followers else 0.0
             it["bio"] = prof.get("biography") or ""   # 카테고리 약한 보조신호(추가 호출 0)
             it["recent_count"] = counts.get(owner.lower(), 0)
         items.extend(built)

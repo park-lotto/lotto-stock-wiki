@@ -132,3 +132,41 @@ def test_queue_has_pending_dedupes(store):
 def _p(store):
     """테스트 Store가 쓰는 DB 경로(생성자 인자 그대로)."""
     return store.db_path
+
+
+def test_silent_video_cache_hits(store, gate, monkeypatch):
+    """★무자막(말 없음·화면 태깅만) 저장본도 유효 캐시다(2026-08-16 리뷰에서 발견).
+
+    저장 기준은 has_usable_result(말 **또는** 화면)로 바뀌었는데 캐시 판정이
+    full_text만 보면, 무자막 영상은 저장돼 있어도 매번 캐시미스로 제미니를 다시
+    태우고 시도 횟수만 쌓여 결국 영구 래치된다(서버 실측: lens_tiktok_1cfb55 —
+    태깅 저장본이 있는데 attempts=2까지 다시 탔다).
+    """
+    store.save_script("sil1", {"full_text": "", "segments": [
+        {"seg_id": "sil1-0", "start": 0.0, "end": 1.0, "text": "",
+         "scene_desc": "제품을 눌러 보여준다"}]})
+
+    import shopping_shorts.media_download as md
+
+    def boom(*a, **k):
+        raise AssertionError("유효 캐시가 있는데 다운로드·추출을 다시 태웠다")
+
+    monkeypatch.setattr(md, "download_any", boom)
+    got = prewarm.run_prewarm("sil1", "https://x", db_path=store.db_path)
+    assert got == "already"
+    assert gate["count"] == 0, "캐시 히트에 크레딧이 나가면 안 된다"
+
+
+def test_enqueue_gate_uses_shared_cache_judgment():
+    """★'유효 캐시' 기준은 한 곳에서만 정한다(2026-08-16 리뷰 후속).
+
+    예열 큐잉 게이트만 full_text로 판정해, 무자막 영상(화면 태깅만 있는 것)이
+    이미 저장돼 있는데도 매번 큐에 다시 들어갔다. 워커가 걸러 재과금은 없지만
+    같은 판단이 두 벌이면 언젠가 어긋난다(CLAUDE.md 0순위-B).
+    """
+    import pathlib
+    src = (pathlib.Path(__file__).resolve().parents[1] / "app.py").read_text(encoding="utf-8")
+    i = src.index("queue_has_pending(\"prewarm\"")
+    win = src[i - 600:i]
+    assert "has_usable_result(cached)" in win, "공용 판정을 써야 한다"
+    assert 'cached.get("full_text") or "").strip()' not in win, "옛 판정이 남아 있다"

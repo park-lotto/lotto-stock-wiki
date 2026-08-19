@@ -26,10 +26,12 @@ def test_parse_reel_node_fills_all_ten_keys():
     # duration 추가(2026-08-09 '⏱길이 전면화' 21ca1a0b4): clips API 노드의
     # video_duration을 그대로 주워 담는다(추가 요청 0건). 이 테스트는 키 집합을
     # **정확히** 대조해서 조용한 누락을 잡는 게 목적이므로, 키가 늘면 여기도 같이 늘린다.
+    # ownerFollowers 추가(2026-08-14): /{계정}/reels/ 응답에 딸려오는 팔로워 수를
+    # instagram_playwright가 노드에 실어주면 그대로 담는다(추가 요청 0건).
     assert set(d) == {
         "shortcode", "url", "timestamp", "caption", "commentsCount",
         "likesCount", "videoViewCount", "displayUrl", "videoUrl", "ownerUsername",
-        "ownerFullName", "duration",
+        "ownerFullName", "duration", "ownerFollowers",
     }
     assert d["shortcode"] == "DbMmu39Sph9"
     assert d["url"] == "https://www.instagram.com/reel/DbMmu39Sph9/"
@@ -132,9 +134,9 @@ def test_classify_error_takes_priority_over_empty():
     assert classify_channel_result([], "https://www.instagram.com/u/reels/", "Timeout") == "error"
 
 
-def test_classify_not_found_when_empty_without_error():
+def test_classify_unknown_when_empty_without_error():
     """비공개·삭제 계정 — 로그인벽과 구분해야 한다(부계정을 붙여도 안 되는 쪽)."""
-    assert classify_channel_result([], "https://www.instagram.com/u/reels/", None) == "not_found"
+    assert classify_channel_result([], "https://www.instagram.com/u/reels/", None) == "unknown"
 
 
 # ── 해시태그 탐색 발굴(2026-07-30) — 서버 실측: /explore/tags/{tag}/ 진입 시
@@ -225,4 +227,49 @@ def test_classify_gate_url_is_not_confused_with_missing_channel():
     gate = classify_channel_result(
         [], "https://www.instagram.com/accounts/update_risky_contactpoint/", None)
     gone = classify_channel_result([], "https://www.instagram.com/u/reels/", None)
-    assert gate == "login_wall" and gone == "not_found" and gate != gone
+    assert gate == "login_wall" and gone == "unknown" and gate != gone
+
+
+def test_extract_follower_count_graphql_user():
+    """실측 모양: data.user.follower_count (2026-08-14 roomoftem.kr=6653)."""
+    from shopping_shorts.instagram_parse import extract_follower_count
+    assert extract_follower_count({"data": {"user": {"follower_count": 6653}}}) == 6653
+
+
+def test_extract_follower_count_legacy_edge():
+    from shopping_shorts.instagram_parse import extract_follower_count
+    assert extract_follower_count(
+        {"data": {"user": {"edge_followed_by": {"count": 1234}}}}) == 1234
+
+
+def test_extract_follower_count_absent_is_zero():
+    from shopping_shorts.instagram_parse import extract_follower_count
+    assert extract_follower_count({"items": [{"pk": "1"}]}) == 0
+    assert extract_follower_count(None) == 0
+
+
+def test_parse_reel_node_carries_follower():
+    from shopping_shorts.instagram_parse import parse_reel_node
+    d = parse_reel_node({"code": "abc", "pk": "1", "_owner_follower_count": 6653}, "u")
+    assert d["ownerFollowers"] == 6653
+
+
+def test_reel_node_keeps_real_owner_not_requested_account():
+    """남의 릴이 섞여 오면 **그 릴의 진짜 주인**으로 저장돼야 한다.
+
+    2026-08-18 실사고: 카드엔 maison_homedino인데 [영상보기]를 누르면 chuuchuu_tem
+    영상이 열렸다(og:url 실측 3/3). 요청한 계정을 무조건 박은 게 원인.
+    팔로워도 짝으로 따라가야 한다 — 안 그러면 남의 영상에 이 채널 팔로워가 붙는다.
+    """
+    node = {"code": "DcKIB8UTf2g", "user": {"username": "chuuchuu_tem", "full_name": "츄츄템"},
+            "_owner_follower_count": 47588}
+    d = parse_reel_node(node, "maison_homedino")
+    assert d["ownerUsername"] == "chuuchuu_tem"
+    assert d["ownerFollowers"] == 0        # 연 프로필(maison)의 팔로워를 물려주면 안 된다
+
+
+def test_reel_node_falls_back_to_requested_account_when_node_has_no_owner():
+    node = {"code": "AAA111", "_owner_follower_count": 1234}
+    d = parse_reel_node(node, "maison_homedino")
+    assert d["ownerUsername"] == "maison_homedino"
+    assert d["ownerFollowers"] == 1234     # 주인이 같으면 종전대로 프로필 팔로워를 쓴다

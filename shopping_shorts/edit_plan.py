@@ -11,6 +11,7 @@ build_edit_plan(Gemini 콜)은 Task 4에서 추가.
 
 import inspect
 import json
+import math
 import os
 import re
 import sys
@@ -83,8 +84,16 @@ VIDEO_TYPES = {
         "label": "✨ 범용",
         "strategy": "이 영상은 제품/결과물을 소개한다. 가장 센 장면으로 훅을 열고 핵심을 실증한 뒤 "
                     "결과를 보여줘라. 마지막 CTA는 '댓글에 [키워드] 남겨주시면 보내드릴게요'.",
+        # ★문제상황 슬롯 추가(2026-08-17 실측). 종전 4슬롯 어디에도 before·문제가 없어
+        #   그 조각들이 **원천 제외**됐다 — 대본은 problem 비트를 만드는데(structure=free)
+        #   화면 스파인엔 그 자리가 없어 아무거나(사용중) 붙었다(0순위-B: 목록이 두 벌).
+        #   실측 job d6520c0c4c80: before 4개 보유, 그중 "요거트 다 먹고 버리려다가
+        #   깜짝 놀랐어요"(화면=도자기 컵 들고 놀라는 여성)가 problem에 딱 맞는데 사장됐고,
+        #   problem 비트엔 '사용중'(요거트 떠먹는 10초) 하나만 배정됐다.
+        #   ※조각이 없으면 _pick이 이 슬롯을 건너뛴다 → 0건 소재는 종전과 완전히 동일.
         "spine": [
             {"slot": "강한장면훅", "roles": ["완성", "after"], "key": True},
+            {"slot": "문제상황", "roles": ["before", "문제"]},
             {"slot": "핵심실증", "roles": ["사용중"], "key": True},
             {"slot": "결과", "roles": ["완성", "after"]},
             {"slot": "CTA", "roles": ["기타", "완성"]},
@@ -1472,6 +1481,21 @@ def _seg_benefits(seg):
     return [t.strip() for t in raw if isinstance(t, str) and t.strip()]
 
 
+# 인벤토리 줄에서 '쓰임:' 칸을 어떻게 쓰라는 지시(2026-08-16). 프롬프트가 세 곳이라
+# 문구를 한 곳에서만 정의한다 — 세 벌로 적으면 언젠가 어긋난다(CLAUDE.md 0순위-B).
+# ★왜 필요한가: 칸만 늘리면 모델이 안 쓴다. 실측(커피 job, A/B 각 5회) — 데이터만 넣었을 때
+#   컷 11.6→11.4·소스 2.40→2.60종으로 **차이 없음**. '말:' 칸처럼 무엇에 쓰는 칸인지
+#   말해줘야 판단 축이 된다.
+_INVENTORY_LABEL_HINT = (
+    "'쓰임:' 칸은 그 장면이 **원본 영상에서 하던 역할**이다"
+    "(예: 도입 훅 / 기능 실증 / 결과 확인 / 마무리). "
+    "'활용:' 칸은 **이 장면을 어디에 어떻게 쓰면 좋은지 이미 판단해 둔 것**이다 — "
+    "네가 다시 고민하지 말고 이 문장을 근거로 골라라. "
+    "화면 설명이 서로 비슷할 때 이 두 칸으로 갈라라 — 지금 쓰는 문장이 무슨 대목인지 보고 "
+    "그 대목에 맞는 장면을 골라라."
+)
+
+
 def _build_inventory(source_scripts):
     """소스 대본들 → (seg_map, prompt_block).
 
@@ -1482,8 +1506,12 @@ def _build_inventory(source_scripts):
     for script in source_scripts:
         vid = script.get("video_id", "")
         segs = script.get("segments", [])
-        # 첫·마지막 세그먼트 제외(CTA·썸네일 박제 차단) — 3개 이상일 때만(2개↓면 삭제 안 함).
-        usable = segs[1:-1] if len(segs) >= 3 else segs
+        # 첫·마지막 세그먼트 제외(CTA·썸네일 박제 차단).
+        # ★잘라낸 뒤 3개 이상 남을 때만 자른다(2026-08-14). 예전 기준(>=3)은 세그가 적은
+        #   소스를 통째로 죽였다 — 실측(job 1e924608af83): 자막이 듬성한 샤오홍슈 소스가
+        #   세그 3개뿐이라 첫·끝을 빼고 **1개만** 살아남았다(19개짜리 인스타는 17개가 남아
+        #   티가 안 났다). 소스를 하나 통째로 잃는 손해가 CTA 한 컷 섞일 위험보다 크다.
+        usable = segs[1:-1] if len(segs) >= 5 else segs
         for seg in usable:
             sid = seg["seg_id"]
             length = round(seg["end"] - seg["start"], 2)
@@ -1491,6 +1519,12 @@ def _build_inventory(source_scripts):
                 "video_id": vid, "seg_id": sid,
                 "start": seg["start"], "end": seg["end"],
                 "text": seg.get("text", ""), "scene_desc": seg.get("scene_desc", ""),
+                # 짧은 이름(2026-08-16). 옛 추출본엔 없어 ""(fail-open) — 아래 라인 조립이
+                # 빈 값이면 그 칸을 통째로 생략하므로 기존 잡은 종전과 완전히 같은 줄을 받는다.
+                "label": (seg.get("label") or "").strip(),
+                # 활용 포인트(2026-08-16) — "이 장면을 어디에 어떻게 쓰면 좋은가"를
+                # 추출 때 미리 판단해 둔 것. 매칭이 같은 판단을 다시 하지 않아도 된다.
+                "use_point": (seg.get("use_point") or "").strip(),
                 "action": seg.get("action"),
                 "change": (seg.get("change") or "").strip(),
                 "is_key": bool(seg.get("is_key")),
@@ -1520,9 +1554,21 @@ def _build_inventory(source_scripts):
             # ★scene_desc 문자열엔 절대 안 섞는다(_claim_key 토큰 오염) — 모션처럼 별도 suffix로만.
             _role_s = f" | 역할:{seg.get('shot_role') or '기타'}"
             _key_s = f" | 실증:{'Y' if seg.get('is_key') else 'N'}"
+            # ★짧은 이름(2026-08-16): 장면이 수십 개면 '화면:' 묘사가 서로 비슷해 고를 축이
+            #   흐려진다(실측: 완성품 5개가 전부 "크레마가 얹어진 잔/덮인 컵/표면"). 이 장면이
+            #   영상에서 하는 일을 12자로 실어 대본 문장과 **의미끼리** 견주게 한다.
+            #   ★scene_desc 문자열엔 안 섞는다 — _claim_key 토큰이 오염돼 앵커 dedup이 엉킨다
+            #   (모션·역할과 같은 이유, 위 주석 참조). 반드시 별도 suffix로만.
+            _lab = (seg.get("label") or "").strip()
+            _lab_s = f" | 쓰임:{_lab}" if _lab else ""
+            # ★활용 포인트(2026-08-16 사장님 "어떤 활용포인트를 줄까에 대한 질문까지 해야
+            #   매칭할 때 좋은 거 아닌가"): 추출 단계에서 **어디에 어떻게 쓸지**를 이미
+            #   판단해 뒀다. 매칭이 그 판단을 다시 하지 않고 읽기만 하면 된다.
+            _up = (seg.get("use_point") or "").strip()
+            _up_s = f" | 활용:{_up}" if _up else ""
             lines.append(
                 f"[{sid}] ({length}s) 화면:{seg.get('scene_desc','')} | 말:{seg.get('text','')}"
-                f"{_act_s}{_chg_s}{_ben_s}{_ml_s}{_role_s}{_key_s}"
+                f"{_lab_s}{_up_s}{_act_s}{_chg_s}{_ben_s}{_ml_s}{_role_s}{_key_s}"
             )
     return seg_map, "\n".join(lines)
 
@@ -1866,6 +1912,7 @@ _PROMPT = """너는 숏폼 쇼핑 영상 편집 감독이다. 아래 여러 소�
 인벤토리를 보고, 목표 길이 {target_seconds}초짜리 새 영상의 편집안(EDL)을 만들어라.
 
 [소스 세그먼트 인벤토리] — 각 줄이 하나의 구간이다. 대괄호 안이 seg_id다.
+{label_hint}
 {inventory}
 
 {structure_instruction}
@@ -1913,6 +1960,52 @@ _FREE_INSTR = "[구조: 자유 모드] 비트 수와 구조(role 라벨)를 네�
 # 비트로 쪼개 각 비트에 소스 영상 구간만 매칭한다.
 _SCRIPTED_N_ALT = 6   # scripted 모드: 비트당 이어붙일 구간을 넉넉히 받는다(대사 길이 채우기).
 
+# ── 화면 배치 규칙 — **두 생성 경로가 같은 것을 쓴다** (2026-08-18) ──────────────
+# ★왜 상수로 뽑나(0순위-B): 이 지식이 `_scene_first_candidates` 안에만 인라인으로 있어서
+#   **확정 대본 경로(_SCRIPTED_PROMPT)는 한 번도 못 받았다.** 그런데 08-16 저녁부터
+#   제작소는 확정 대본 경로만 탄다(mix_pipeline.py:1024 — 사장님 "어이없게 대본을 또 쓰냐").
+#   즉 사장님이 실제로 뽑는 영상은 "대사랑 어울리게 골라라" 한 줄만 받고 있었다.
+#   실측(잡 a4e619328313, generator=legacy): 훅 대사 "소리 질렀어요"에 세탁통 돌아가는
+#   클로즈업이 붙었다 — 감정만 말하는 대사엔 '어울리는 화면'이 사실상 아무거나다.
+#
+# ★같은 병이 이걸로 세 번째다(전부 "scene_first엔 있고 legacy엔 없다"):
+#     08-17 _ROLE_WANT_SHOTS / 08-18 _verify_fits / 08-18 이 블록.
+#   그래서 한 건씩 옮기지 않고 **공용 상수**로 만들어 양쪽이 같은 문장을 쓰게 한다.
+#   ⚠️ 여기를 고치면 두 경로가 함께 바뀐다 — 그게 목적이다. 한쪽에만 복사하지 마라.
+#
+# ★축은 원본이 정한다 — 쇼곰(DcAm4RETl_T) 12구간 실측이 정확히 이 모양이다:
+#     0.0~ 6.6s 결=완성   유선지 뜯기·칼로 자르기·단면 가르기
+#     6.6~15.7s 결=사용중 반죽·거품기·올리기·틀에 붓기·오븐
+#    15.7~22.3s 결=완성   단면 가르기·탄력 테스트·마무리
+#   사장님: "훅은 시각적으로 완성된 걸 보여주고 / 분기점이 되는 지점은 해결·결과
+#   부분 **즉 조리를 하는 구간**에서만 맞으면 영상이 맞아 보인다 / CTA는 조리
+#   완성되는 이미지들(오븐에서 꺼내거나 그릇에 담거나 완성되었다거나)."
+#
+# ⚠️ `_ROLE_WANT_SHOTS`(사후 판정)와 짝이다 — 이건 **사전 지시**, 그건 **잘못 골랐을 때
+#    잡아내는 것**. 둘이 다른 축을 가리키면 모델은 지시대로 하고 판정에서 벌받는다.
+_SCENE_PLACEMENT_RULES = (
+    "\n[화면 배치 — 인벤토리의 `역할:`·`실증:`을 보고 고른다]\n"
+    "- 훅(첫 비트)은 **'역할:완성' 또는 '실증:Y'**인 장면으로 연다. 준비동작·계량"
+    "(재료 붓기·무게 재기·빈 그릇·포장 뜯기)으로 훅을 열지 마라 — 스크롤이 안 멈춘다. "
+    "완성/절정 장면이 영상 뒤쪽에 있어도 첫 화면으로 당겨라(훅은 시간순을 깨도 된다).\n"
+    "- 해결·결과 비트는 **'역할:사용중'**(실제로 만들고 쓰는 구간)을 쓴다. 여기가 "
+    "완성품 그림으로 채워지면 '무엇을 하는 영상인지'가 사라진다.\n"
+    "- CTA(마지막)는 다시 **완성되는 그림**으로 닫는다(꺼내기·담기·완성 단면).\n"
+    "- 문제 비트에 맞는 장면(쓰기 전·불편)이 인벤토리에 없으면 **억지로 고르지 마라** — "
+    "그럴 땐 재료·준비 장면을 쓰거나 그 비트를 짧게 넘겨라.\n"
+    "- 한 비트에 여러 장을 붙일 땐 **같은 영상끼리 모아 시간 순서대로** 놓아라"
+    "(섞기 → 붓기 → 굽기). 순서가 뒤집히면 만드는 과정이 거꾸로 보인다.\n"
+)
+
+# 껐다 켜서 효과를 재기 위한 스위치(관리자용). 기본 켜짐 — 끄면 08-17 이전 동작이 된다.
+# UI 토글이 아니라 환경변수다: A/B 비교할 때만 쓰고 평소엔 항상 켜져 있어야 한다.
+def _scene_placement_block():
+    """화면 배치 지시문. `SCENE_GUIDE=off`면 빈 문자열(옛 동작)."""
+    if (os.getenv("SCENE_GUIDE", "on") or "on").strip().lower() in ("off", "0", "false"):
+        return ""
+    return _SCENE_PLACEMENT_RULES
+
+
 _SCRIPTED_PROMPT = """너는 숏폼 쇼핑 영상 편집 감독이다. **나레이션 대본은 이미 확정**돼 있다.
 아래 확정 대본을 자연스러운 비트(문장/구절) 단위로 나누고, 각 비트에 어울리는 소스
 영상 구간(seg_id)을 골라 편집안(EDL)을 만들어라.
@@ -1921,6 +2014,7 @@ _SCRIPTED_PROMPT = """너는 숏폼 쇼핑 영상 편집 감독이다. **나레�
 {given_script}
 
 [소스 세그먼트 인벤토리] — 각 줄이 하나의 구간이다. 대괄호 안이 seg_id다.
+{label_hint}
 {inventory}
 
 규칙(반드시 지켜라):
@@ -1933,6 +2027,8 @@ _SCRIPTED_PROMPT = """너는 숏폼 쇼핑 영상 편집 감독이다. **나레�
   걸쳐도 좋다(관련성 우선). 전부 대사 내용과 화면(scene_desc)이 어울려야 한다.
 - **[여러 영상 모두 사용] primary 구간을 한 영상에만 몰지 마라. 소스가 여러 개면 고르게 섞어라.**
 - 나레이션과 primary 구간의 화면(scene_desc)이 실제로 어울리게 골라라.
+  ★대사가 감정·상황만 말해 가리키는 사물이 없으면(훅 등) 아래 [화면 배치]를 따른다.
+{scene_placement}
 - **얼굴 클로즈업 배제:** 사람 얼굴이 크게 나오는 컷(정면 클로즈업·셀카형)은 피하고
   제품·요리·과정·결과물 화면을 우선 골라라. 얼굴만 나오는 구간은 대체 화면이 있으면 쓰지 마라.
 - **소스 구간은 반드시 인벤토리의 seg_id로만 지목**해라. 없는 seg_id 지어내지 마라.
@@ -2181,7 +2277,8 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         #   없는 사건이 나오고(실측: 훅이 '벽지가 번들거린다'인데 화면은 씻기는 장면),
         #   모델은 없는 화면을 만들 수 없으니 아무 컷이나 붙인다. 재료는 원본이다.
         "→ 스펙을 그대로 나열하지 말고, **원본 영상들이 실제로 한 말**을 재료로 이야기를 엮어라.\n\n"
-        "[우리 장면 팔레트 — 이 seg_id 화면만 쓸 수 있다. '말:' 칸이 원본에서 실제로 한 말이다]\n"
+        "[우리 장면 팔레트 — 이 seg_id 화면만 쓸 수 있다. '말:' 칸이 원본에서 실제로 한 말이다. "
+        f"{_INVENTORY_LABEL_HINT}]\n"
         f"{inventory_text}\n\n"
         "[★원본에서 가져와라 — 지어내지 마라]\n"
         "- 스토리도 대사도 **위 인벤토리의 '말:'과 '변화:'에서 가져와 재구성**하는 것이다. "
@@ -2244,8 +2341,25 @@ def _scene_first_candidates(inventory_text, reference_text, target_seconds, n=3,
         # 결과 비트에서 또 썼다. 훅은 말이 먼저 나오기 쉬워 여기서 제일 잘 어긋난다.
         "- ★훅은 특히 조심해라. 하려는 말에 맞는 화면이 없으면 **말을 바꿔라** — 화면에 있는 "
         "것으로 훅을 다시 써라. 없는 화면을 상상해서 말하지 마라.\n"
-        "- 훅에 쓴 화면을 결과 비트에서 또 쓰지 마라(같은 장면이 두 번 나오면 김이 샌다).\n\n"
-        "[길이]\n"
+        "- 훅에 쓴 화면을 결과 비트에서 또 쓰지 마라(같은 장면이 두 번 나오면 김이 샌다).\n"
+        # ★화면 배치 축(2026-08-17 사장님 지시로 **다시 넣는다**). 2026-07-31에 걷어냈던
+        #   규칙이지만, 그때와 조건이 달라졌다 — 사장님 지적: "그때랑은 많이 달라진 거
+        #   아닌가? 지금은 1차 분석이 완전 달라졌잖아."
+        #   실제로 그 뒤 추출이 이만큼 늘었다(실측, lens_instagram_r7vro4):
+        #     · source_brief(영상 단위 제품·핵심·요약)   0793a6604
+        #     · label(장면 짧은 이름) "필기감 및 번짐 방지 테스트"  53889ed62
+        #     · use_point(활용 포인트) "도입부에서 시선 사로잡기 좋음"  95b0b5792
+        #     · change(변화) "문질러도 잉크가 전혀 번지지 않는다"  20821d1d0
+        #     · 태깅 QA 2단계 + 커버리지 0.55→0.75
+        #   07-31에 걷어낸 이유는 "규칙끼리 싸운다"였는데, 그건 **스타일** 규칙 얘기다
+        #   (어미 4종·감각어 개수·글자수). 이건 화면 배치라 문체와 안 부딪히고,
+        #   무엇보다 지금은 가리킬 근거(역할·실증)가 실제로 인벤토리에 있다.
+        #
+        # ★화면 배치 규칙은 **공용 상수** `_SCENE_PLACEMENT_RULES` 하나만 쓴다(2026-08-18).
+        #   종전엔 여기 인라인으로만 있어 확정 대본 경로(_SCRIPTED_PROMPT)가 못 받았다.
+        #   근거·실측은 그 상수 위 주석에 모아뒀다.
+        + _scene_placement_block() +
+        "\n[길이]\n"
         f"- 이 영상은 {target_seconds}초짜리다. 참고 대본들의 호흡을 보고 **그중 가장 잘 읽히는 "
         f"길이**로 맞춰라(대략 {lo}~{hi}자). 기계적으로 채우지 말고 이야기가 끝나는 데서 끝내라.\n\n"
         "[형식]\n"
@@ -2450,6 +2564,21 @@ def _beat_screen_secs(beat):
     return tot
 
 
+#: 채울 때 이 길이보다 짧은 컷은 뒤로 민다(막지는 않는다 — 재고가 동나면 쓴다).
+#  1.5초 근거(2026-08-18 실측): 라이브 컷 24개 중 1초 미만이 4개였고, 사장님이
+#  "눈이 아프다"고 한 구간이 정확히 0.8~1.3초 조각들이었다. 2초로 올리면 재고가 적은
+#  소재에서 채울 게 동나 재사용 폴백(같은 컷 반복)으로 떨어진다 — 그게 더 나쁘다.
+_MIN_CUT_SECONDS = 1.5
+
+
+def _seg_secs(s):
+    """세그먼트 길이(초). 값이 없으면 0."""
+    try:
+        return max(0.0, float(s.get("end") or 0) - float(s.get("start") or 0))
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def _fill_beat_screen_time(beats, seg_map, max_alts=None):
     """비트마다 **화면 길이 합 ≥ 대사 읽는 시간**이 되게 컷을 더 붙인다(2026-07-31).
 
@@ -2500,8 +2629,42 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
             txt = f"{s.get('change') or ''} {s.get('scene_desc') or ''}"
             return len(words & set(_claim_key(txt)))
 
+        # ★이미 쓴 화면과 **같아 보이는** 것은 뒤로 민다(2026-08-16 사장님 "왜 같은데 2장이
+        #   붙지"). 소스를 여러 개 올리면 같은 장면이 소스마다 있고 seg_id가 달라, 종전의
+        #   `sid in used` 검사로는 못 걸렀다 — 그림이 같은데 두 번 나온다.
+        #   ⚠️그림 해시로는 못 가른다(실측 job 8873eeb48a08, 465쌍: 같은 장면 쌍이 거리 11인데
+        #     거리 13에 전혀 다른 쌍이 있다). 그래서 **설명이 겹치는가**로 본다.
+        #   ★막지 않고 순서만 미는 이유: 막으면 붙일 게 동나 아래 재사용 폴백으로 떨어지는데,
+        #     그건 **똑같은 컷을 그대로 또 쓰는** 것이라 더 나쁘다. 뒤로 밀면 다른 화면이
+        #     있을 때만 그것이 먼저 쓰이고, 없으면 종전과 같이 쓰인다(회귀 0).
+        def _same_look(s):
+            a = set(_claim_key(f"{s.get('label') or ''} {s.get('scene_desc') or ''} "
+                               f"{s.get('change') or ''}"))
+            if not a:
+                return 0
+            for sid0 in used:
+                u = seg_map.get(sid0) or {}
+                bset = set(_claim_key(f"{u.get('label') or ''} {u.get('scene_desc') or ''} "
+                                      f"{u.get('change') or ''}"))
+                if not bset:
+                    continue
+                if len(a & bset) / len(a | bset) >= 0.6:   # 설명이 대부분 겹친다 = 같은 그림
+                    return 1
+            return 0
+
+        # ★산만함 차단(2026-08-18 사장님 "짧은 거 여기저기서 붙여서 눈이 아프다").
+        #   실측(job 790bdd6dfe32): 컷 24개 평균 1.8초, **1초 미만 4개**, 8비트 중
+        #   5비트가 2~3개 소스 혼합 — 비트2는 s3(1.3초)→s1(2.4초)→s0(1.1초)로
+        #   1~2초마다 영상이 바뀌었다. 채우기가 '부족분만 채우고 어디서 가져올지는
+        #   안 따진' 결과다.
+        #   ①같은 소스를 **맨 앞 기준**으로 올린다(종전엔 세 번째 기준이라 힘이 없었다).
+        #     같은 영상에서 이어 쓰면 결이 안 튀고, 사장님 안("영상당 2장면씩")이 자연히 된다.
+        #   ②너무 짧은 조각은 뒤로 민다 — 막지는 않는다. 막으면 채울 게 동나 재사용
+        #     폴백(같은 컷 반복)으로 떨어지는데 그게 더 나쁘다(위 주석과 같은 판단).
         pool = sorted(seg_map.values(),
-                      key=lambda s: (-_rel(s), s.get("video_id") != home, s.get("start") or 0))
+                      key=lambda s: (s.get("video_id") != home,
+                                     _seg_secs(s) < _MIN_CUT_SECONDS,
+                                     _same_look(s), -_rel(s), s.get("start") or 0))
         alts = list(b.get("alternates") or [])
         for s in pool:
             if have >= need or len(alts) >= max_alts:
@@ -3175,6 +3338,330 @@ def _reconcile_weak_beats(beats, call=_vault_call):
     return out
 
 
+_REPICK_SCHEMA = {
+    "type": "object",
+    "properties": {"picks": {"type": "array", "items": {
+        "type": "object",
+        "properties": {"beat_idx": {"type": "integer"}, "seg_id": {"type": "string"},
+                       "fit": {"type": "integer"}},
+        "required": ["beat_idx", "seg_id", "fit"]}}},
+    "required": ["picks"],
+}
+
+
+_FILL_SCHEMA = {
+    "type": "object",
+    "properties": {"picks": {"type": "array", "items": {
+        "type": "object",
+        "properties": {"seg_id": {"type": "string"}, "fit": {"type": "integer"},
+                       "why": {"type": "string"}},
+        "required": ["seg_id", "fit"]}}},
+    "required": ["picks"],
+}
+
+
+# ── 비트 역할 → 그 칸에 어울리는 장면 결(shot_role) ────────────────────────
+# ★왜 필요한가(2026-08-17 사장님 "장면 매칭이 훅부터 기준이 뭘로 한 건지"):
+#   매칭은 "대사의 행위 = 화면의 행위"로 맞추는데, 그 판정이 동사 사전 30개
+#   (자르다·붓다·섞다·굽다…)라 **요리·살림 영상 전용**이다. 스토리형 대본은
+#   동작 동사가 없어 대사 행위가 통째로 None이 된다.
+#   실측(job 832a5ffa80d9): 5개 비트 **전부** 대사행위 None →
+#     · beat_action_mismatch는 "한쪽이 없으면 판정 보류"라 어긋남을 못 잡고
+#     · ping_pong도 "대사 행위 없으면 손 안 댐"이라 고칠 기회가 없다
+#   그래서 훅에 "OTG 케이블 연결 화면"이 붙어도 아무도 안 막았다(사실상 무작위).
+#
+# ★답은 이미 있었다: `shot_role` 태그가 5,634개(전체 83%) 채워져 있고,
+#   **장면 실험실(scene_lab.html useTags)은 이미 이 규칙으로 칸을 채운다**
+#   — 훅 칸엔 후킹용(완성·after), CTA 칸엔 CTA용. 서버 자동매칭만 그걸 안 썼다.
+#   여기서 판단을 새로 만들지 않는다 — 실험실과 **같은 표**를 쓴다(0순위-B).
+#   ⚠️ scene_lab.html의 useTags를 고치면 여기도 같이 고쳐야 한다(짝으로 움직이는 값).
+# ★축은 원본이 정한다(2026-08-17 사장님: "정답은 지금 축으로 잡혀있는 쇼곰 영상을 보면
+#   답이 나온다"). 쇼곰(DcAm4RETl_T) 12구간 실측 — **완성 → 조리 → 완성 샌드위치**다:
+#     0.0~ 6.6s  결=완성    유선지 뜯기 · 칼로 자르기 · **단면 가르기**      ← 훅
+#     6.6~15.7s  결=사용중  반죽 · 거품기 · 올리기 · 틀에 붓기 · **오븐**    ← 해결/결과(조리)
+#    15.7~22.3s  결=완성    단면 가르기 · 탄력 테스트 · 숟가락 마무리        ← CTA
+#
+#   사장님 지시 그대로: "훅은 시각적으로 완성된 걸 보여주고 / 분기점이 되는 지점은
+#   해결·결과 부분 **즉 조리를 하는 구간이 생기는 지점**에서만 맞으면 영상이 맞아 보인다 /
+#   CTA는 조리 완성되는 이미지들(오븐에 넣고 꺼내거나 그릇에 담거나 완성되었다거나)".
+#   ⚠️ 예전 표는 해결·결과를 (after, 완성)으로 봤다 — 그러면 조리 구간이 통째로 안 쓰여
+#      "완성품만 계속 나오는" 영상이 된다. 원본 축과 어긋난 건 이 줄이었다.
+#
+#   ★"문제"는 매칭이 없는 게 정상이다(사장님: "문제 같은 부분도 당연히 매칭이 되는 게
+#     없을 거야 레시피니까"). 실측으로도 이 작업 4개 영상에 before·문제 결이 **0건**이다.
+#     없는 결을 1순위로 걸어두면 모델이 억지로 아무거나 집는다 → 차선(fallback)을 준다.
+#     차선까지 없으면 대사 의미로만 고르게 둔다(억지 배정 금지).
+#   ⚠️ scene_lab.html의 useTags와 짝이다 — 한쪽만 고치면 화면과 서버가 다른 걸 고른다.
+_ROLE_WANT_SHOTS = (
+    # (역할 낱말들, 1순위 shot_role, 차선 shot_role, 사람이 읽을 설명)
+    (("훅", "hook"), ("완성", "after"), (),
+     "시선을 끄는 **완성된 그림**(단면·완성품·전후 변화)"),
+    (("cta", "마무리"), ("완성", "after"), (),
+     "완성되는 그림(오븐에서 꺼내기·그릇에 담기·완성 단면)"),
+    # ★해결·결과 = 조리(사용중) 구간. 여기가 영상이 맞아 보이는지를 가르는 분기점이다.
+    (("해결", "solution", "결과", "result", "resolution", "반전"),
+     ("사용중", "조리"), ("완성", "after"),
+     "실제로 만드는·쓰는 구간(섞기·붓기·오븐) — 여기가 맞아야 영상이 맞아 보인다"),
+    (("전개", "process", "과정", "경험", "story"), ("사용중", "조리"), (),
+     "실제로 쓰는 장면"),
+    # 레시피엔 before/문제 태그가 거의 없다 → 없으면 조리 앞부분(재료·준비)으로 대신한다.
+    (("문제", "problem", "페인", "pain"), ("before", "문제"), ("사용중", "조리"),
+     "쓰기 전 상황 — 없으면 재료·준비 장면"),
+)
+
+
+def _want_shots_for_role(role, available=None):
+    """이 역할에 어울리는 shot_role 튜플과 설명. 모르는 역할이면 (None, "").
+
+    available: 지금 후보에 **실제로 있는** shot_role 집합(선택).
+      주면 1순위가 하나도 없을 때 차선으로 내려간다 — 없는 결을 가리키면
+      모델이 억지로 아무거나 집기 때문이다(레시피의 before·문제가 정확히 그 경우).
+      차선도 없으면 (None, "")로 두어 **대사 의미로만** 고르게 한다.
+    """
+    r = (role or "").strip().lower()
+    if not r:
+        return None, ""
+    for words, shots, alt, why in _ROLE_WANT_SHOTS:
+        if not any(w in r for w in words):
+            continue
+        if available is None:
+            return shots, why
+        have = set(available or ())
+        if any(s in have for s in shots):
+            return shots, why
+        if alt and any(s in have for s in alt):
+            return alt, why + " (1순위 결이 이 영상엔 없어 차선)"
+        return None, ""      # 억지로 배정하지 않는다
+    return None, ""
+
+
+def fill_beat_scenes(narration, need_sec, seg_map, pool_ids, taken_ids=None,
+                     call=_vault_call, max_shot=2.2, min_fit=3, role=""):
+    """칸 하나를 **대사에 맞는 화면들로** 채운다 — 순서대로 여러 장.
+
+    ★왜 따로 있나(2026-08-16 사장님 "당연히 대본이랑 태깅까지 보면서 매칭을 해야지"):
+    `_repick_weak_beats`는 어긋난 비트의 **대표 화면 1장을 바꾸는** 갈래라, 비운 칸을
+    여러 장으로 채우지 못한다. 여기서는 같은 원리(대사를 주고 화면을 고르게)를 쓰되
+    **몇 장**을 순서대로 고르게 한다. 판단 기준·프롬프트 어조는 저쪽과 맞춰 둔다.
+
+    화면 쪽 단서는 추출이 이미 붙여둔 것을 그대로 준다 — 이름(label)·쓸모(use_point)·
+    화면묘사·변화·그 장면에서 나온 말. 여기서 새로 판단을 만들지 않는다(0순위-B).
+
+    실패하면 빈 목록을 돌려준다(fail-open) — 부르는 쪽이 규칙 기반 채우기로 내려간다.
+    """
+    if not narration or not seg_map or not pool_ids:
+        return []
+    try:
+        need = max(0.0, float(need_sec or 0))
+    except (TypeError, ValueError):
+        return []
+    # 한 컷은 길어야 max_shot이므로 필요한 장수는 이만큼이다(화면의 안내문과 같은 셈법).
+    want = max(1, int(math.ceil(need / max_shot))) if need > 0 else 1
+    # ★결(shot_role)을 후보 줄에 싣는다(2026-08-17) — 아래 [이 칸에 어울리는 화면]이
+    #   가리키는 값이라, 안 보여주면 모델이 무엇을 골라야 하는지 대조할 수가 없다.
+    cand_lines = "\n".join(
+        "[{sid}] {name}{sr}{desc}{ch}{up}{say} ({sec}초)".format(
+            sid=sid,
+            name=(seg_map[sid].get("label") or "").strip()[:24],
+            sr=(" | 결:" + str(seg_map[sid].get("shot_role"))[:8])
+               if seg_map[sid].get("shot_role") else "",
+            desc=(" | 화면:" + (seg_map[sid].get("scene_desc") or "")[:60])
+                 if seg_map[sid].get("scene_desc") else "",
+            ch=(" | 변화:" + seg_map[sid]["change"][:30]) if seg_map[sid].get("change") else "",
+            up=(" | 쓸모:" + seg_map[sid]["use_point"][:40]) if seg_map[sid].get("use_point") else "",
+            say=(" | 말:" + (seg_map[sid].get("text") or "")[:40]) if seg_map[sid].get("text") else "",
+            sec=round(float(seg_map[sid].get("end") or 0) - float(seg_map[sid].get("start") or 0), 1))
+        for sid in pool_ids if sid in seg_map)
+    if not cand_lines:
+        return []
+    # ★이미 이 영상에 나오는 화면을 **설명까지 붙여** 알려준다(2026-08-16 사장님 "왜 같은데
+    #   2장이 붙지"). 종전엔 담긴 것을 후보에서 빼기만 해서, 모델은 "무엇이 이미 나왔는지"를
+    #   몰랐다 — 소스를 여러 개 올리면 같은 장면이 소스마다 있어(seg_id는 다르다) 그림이
+    #   겹치는 것을 막을 방법이 없었다. 그림 해시로는 못 가른다(실측 job 8873eeb48a08:
+    #   같은 장면 쌍 거리 11인데, 거리 13에 전혀 다른 장면 쌍이 있어 문턱을 못 올린다).
+    taken_block = ""
+    _tk = [t for t in (taken_ids or []) if t in seg_map]
+    if _tk:
+        taken_block = ("\n[이미 이 영상에 나오는 화면 — 이것들과 **같은 내용**은 고르지 마라. "
+                       "소스가 달라도 같은 장면이면 안 된다]\n"
+                       + "\n".join(
+                           "- {name}{desc}".format(
+                               name=(seg_map[t].get("label") or "").strip()[:24],
+                               desc=(": " + (seg_map[t].get("scene_desc") or "")[:50])
+                                    if seg_map[t].get("scene_desc") else "")
+                           for t in _tk) + "\n")
+    # ★이 칸이 무슨 역할인지 알려준다(2026-08-17). 종전엔 역할을 안 줘서 훅이든 CTA든
+    #   똑같이 "대사에 맞는 화면"만 골랐다 — 스토리형 대사("전쟁 치를 뻔한 거 있죠?")는
+    #   가리키는 사물이 없어 사실상 아무거나 붙었다(실측: 훅에 OTG 케이블 연결 화면).
+    # ★후보에 **실제로 있는** 결만 가리킨다 — 없는 결(레시피의 before·문제)을 1순위로
+    #   걸어두면 모델이 억지로 아무거나 집는다(사장님: "문제 같은 부분도 당연히 매칭이
+    #   되는 게 없을 거야 레시피니까"). 없으면 차선으로, 그것도 없으면 지시를 빼서
+    #   대사 의미로만 고르게 한다.
+    _avail = {(seg_map[s] or {}).get("shot_role") for s in pool_ids if s in seg_map}
+    _want_shots, _want_why = _want_shots_for_role(role, available=_avail)
+    role_block = ""
+    if _want_shots:
+        role_block = (f"\n[이 칸의 역할] {role} — {_want_why}.\n"
+                      f"후보의 `결:`이 {'·'.join(_want_shots)} 인 화면을 **먼저** 본다. "
+                      "대사가 가리키는 사물이 뚜렷하지 않으면(감정·상황만 말하는 훅 등) "
+                      "역할에 맞는 결을 우선한다.\n")
+    prompt = (
+        "아래 대사가 흐르는 동안 보여줄 화면을 후보에서 골라라. **대사는 바꾸지 않는다.**\n"
+        f"[대사]\n{narration}\n{role_block}{taken_block}\n"
+        f"[조건] 이 대사는 약 {need:.1f}초다. 한 컷은 길어야 {max_shot}초라 "
+        f"**{want}장 정도**가 필요하다. 화면이 이어지도록 **보여줄 순서대로** 고른다.\n"
+        "- 대사가 말하는 것을 실제로 보여주는 화면을 고른다. 분위기만 비슷한 건 안 된다.\n"
+        "- 같은 그림이 되풀이되지 않게 서로 다른 장면을 고른다.\n"
+        f"- 맞는 게 {want}장보다 적으면 **적게 골라라**. 억지로 채우지 마라.\n"
+        "- fit은 그 화면과 대사가 맞는 정도(1~5)를 솔직하게. why는 15자 이내.\n"
+        f"\n[후보 화면]\n{cand_lines}\n\n출력은 picks 배열의 JSON만.")
+    raw = call(prompt, _FILL_SCHEMA)
+    if not raw or not isinstance(raw, dict):
+        return []
+    out, used = [], set()
+    for p in raw.get("picks", []):
+        try:
+            sid, fit = str(p["seg_id"]).strip(), int(p.get("fit") or 0)
+        except (KeyError, TypeError, ValueError):
+            continue
+        if sid in seg_map and sid in pool_ids and sid not in used and fit >= min_fit:
+            used.add(sid)
+            out.append({"seg_id": sid, "fit": fit, "why": str(p.get("why") or "")[:40]})
+    return _order_picks(out, seg_map)
+
+
+def _order_picks(picks, seg_map):
+    """고른 장면을 **소스별로 묶고 그 안에서 시간순**으로 세운다(2026-08-17 사장님 지시).
+
+    ★왜(사장님): "그 안에서 정렬을 할 거는 1번 영상 시간순 / 2번 영상 시간순 마킹하고
+      뒤죽박죽 되지 않게 해줘야 **조리 시간순 배열을 할 때도 이상함을 못 느낀다**."
+      결(완성/조리/재료)로 묶는 것까지는 맞는데, 한 칸 안에서 순서가 섞이면
+      '틀에 붓기 → 거품기로 섞기'처럼 **거꾸로 된 조리 순서**가 나온다.
+
+    ★AI가 뱉은 순서를 그대로 쓰지 않는다. 모델은 후보 목록을 훑는 순서대로 답하기 쉬워
+      시간 흐름과 무관하다. 조리는 순서가 곧 의미다 — 코드가 정한다.
+    ★소스가 섞이면 영상이 왔다갔다 하므로 **소스 단위로 뭉친다**. 소스 등장 순서는
+      먼저 고른 쪽을 앞에 둔다(AI가 판단한 '이 칸의 주된 소스'를 존중).
+    화면(scene_lab.html buildGroups)도 같은 규칙으로 정렬한다 — 짝으로 움직이는 값.
+    """
+    if len(picks) < 2:
+        return picks
+    order, seen = [], set()
+    for p in picks:                       # 소스 등장 순서 = AI가 먼저 고른 순
+        vid = (seg_map.get(p["seg_id"]) or {}).get("video_id") or ""
+        if vid not in seen:
+            seen.add(vid)
+            order.append(vid)
+    rank = {v: i for i, v in enumerate(order)}
+
+    def _key(p):
+        s = seg_map.get(p["seg_id"]) or {}
+        try:
+            start = float(s.get("start") or 0)
+        except (TypeError, ValueError):
+            start = 0.0
+        return (rank.get(s.get("video_id") or "", 0), start)
+
+    return sorted(picks, key=_key)
+
+
+def _repick_weak_beats(beats, seg_map, call=_vault_call, min_fit=4):
+    """약한 비트(fit<=3 또는 forced)의 **화면을 다시 고른다** — 인벤토리 전체에서.
+
+    ★왜 필요한가(2026-08-14 사장님 "좋은 장면을 가져오는 것에 집중"): 지금까지 약한 비트의
+    구제 수단은 `_reconcile_weak_beats` 하나뿐이었는데, 그건 **대사를 화면에 맞춰 고친다**.
+    방향이 반대다 — 대사가 원하는 화면이 인벤토리에 실제로 있어도 후보로 올라오지 않으면
+    영영 안 쓰인다. 실측(job 74d3f7a29620): "찍히는 즉시 결과 나온다"는 멘트에 `s1-13`
+    (촬영 모드 전환 버튼, fit=2)이 붙었는데, 정작 `s3-4`(촬영 직후 결과 데이터가 뜨는 화면)는
+    한 번도 안 쓰였다. 미사용 장면이 13개였다.
+
+    그래서 대본을 고치기 **전에** 화면을 먼저 다시 찾는다. 더 맞는 화면(new fit>=min_fit)을
+    찾으면 primary를 교체하고, 못 찾으면 그대로 둔다 → 기존 대본수정이 종전대로 받는다.
+    Gemini 1회(약한 비트를 모아 한 번). 대상 0개면 호출 자체를 안 한다(과금 0·회귀 0).
+    실패하면 원본 그대로(fail-open)."""
+    weak = [b for b in beats
+            if not b.get("respined")
+            and ((0 < int(b.get("fit") or 0) <= 3) or bool(b.get("forced")))]
+    if not weak or not seg_map:
+        return beats
+    # 다른 비트가 이미 쓰는 화면은 후보에서 빼 중복 컷을 만들지 않는다(primary만 — alternates는
+    # 라운드로빈 여분이라 양보 가능).
+    taken = {(b.get("primary") or {}).get("seg_id") for b in beats}
+    weak_own = {(b.get("primary") or {}).get("seg_id") for b in weak}
+    pool = [sid for sid in seg_map if sid not in (taken - weak_own)]
+    if not pool:
+        return beats
+    # 결(shot_role)을 함께 보여준다 — 아래 비트 줄의 '어울리는 결'과 대조할 수 있어야 한다.
+    # ★is_key를 후보에 표시한다(2026-08-18 사장님 "훅에 완성샷 중 제일 눈에 들어오는 걸").
+    #   1단계가 이미 '이 장면이 핵심인가'를 태깅해 두는데(채움률 62.9%), 슬롯 배치
+    #   (`_pick_for_slot`)는 그걸 쓰면서 **재픽만 안 썼다** — 또 같은 형태다(0순위-B).
+    #   그래서 재픽은 완성샷 중에서 아무거나 골랐다. 표시해 주면 고를 수 있다.
+    cand_lines = "\n".join(
+        "[{sid}]{key}{sr} 화면:{desc}{ch}{say}".format(
+            sid=sid,
+            key=" ★핵심" if seg_map[sid].get("is_key") else "",
+            sr=(" 결:" + str(seg_map[sid].get("shot_role"))[:8])
+               if seg_map[sid].get("shot_role") else "",
+            desc=(seg_map[sid].get("scene_desc") or "")[:60],
+            ch=(" | 변화:" + seg_map[sid]["change"][:30]) if seg_map[sid].get("change") else "",
+            say=(" | 말:" + (seg_map[sid].get("text") or "")[:40]) if seg_map[sid].get("text") else "")
+        for sid in pool)
+
+    def _beat_line(b):
+        # ★역할과 어울리는 결을 비트마다 붙인다(2026-08-17) — 스토리형 대사는 가리키는
+        #   사물이 없어 "대사가 말하는 것"만으로는 고를 수가 없다(실측: 훅 5/5 대사행위 None).
+        shots, why = _want_shots_for_role(b.get("role"))
+        tail = (f" [역할:{b.get('role')} — {why}. 결 {'·'.join(shots)} 우선]"
+                if shots else "")
+        return (f"[{b['beat_idx']}] 대사:{b.get('narration','')} "
+                f"(현재화면:{(b.get('primary') or {}).get('scene_desc','')}){tail}")
+
+    beat_lines = "\n".join(_beat_line(b) for b in weak)
+    prompt = (
+        "아래 비트들은 대사와 화면이 어긋난다. **대사는 절대 바꾸지 말고**, 후보 목록에서 "
+        "그 대사가 말하는 것을 실제로 보여주는 화면을 다시 골라라.\n"
+        "- 대사의 핵심 동작·결과가 화면에 실제로 보이는 것을 고른다. 분위기만 비슷한 건 안 된다.\n"
+        "- 대사가 감정·상황만 말해 가리키는 사물이 없으면(훅 등) **[역할:…]의 결**을 우선한다.\n"
+        "- ★같은 결이 여럿이면 **★핵심** 표시가 붙은 것을 고른다 — 훅·CTA는 시선을 끄는 "
+        "가장 잘 보이는 그림이어야 한다(그냥 조건만 맞는 밋밋한 컷 말고).\n"
+        "- 지금 화면보다 확실히 나은 후보가 없으면 그 비트는 **출력에서 빼라**(억지로 고르지 마라).\n"
+        "- fit은 새로 고른 화면과 대사가 맞는 정도(1~5)를 솔직하게.\n"
+        f"[비트]\n{beat_lines}\n\n[후보 화면]\n{cand_lines}\n\n출력은 picks 배열의 JSON만.")
+    raw = call(prompt, _REPICK_SCHEMA)
+    if not raw or not isinstance(raw, dict):
+        return beats
+    weak_idx = {b["beat_idx"] for b in weak}
+    picks, used = {}, set()
+    for p in raw.get("picks", []):
+        try:
+            bi, sid, fit = int(p["beat_idx"]), str(p["seg_id"]).strip(), int(p.get("fit") or 0)
+        except (KeyError, TypeError, ValueError):
+            continue
+        if bi in weak_idx and sid in seg_map and sid not in used and fit >= min_fit:
+            picks[bi] = (sid, fit)
+            used.add(sid)
+    if not picks:
+        return beats
+    out = []
+    for b in beats:
+        nb = dict(b)
+        pick = picks.get(b["beat_idx"])
+        cur = (b.get("primary") or {}).get("seg_id")
+        if pick and pick[0] != cur:
+            sid, fit = pick
+            new_primary = _ground_ref({"seg_id": sid}, seg_map)
+            if new_primary:
+                nb["primary"] = new_primary
+                nb["fit"] = fit
+                nb["forced"] = False
+                nb["repicked"] = True
+                # 새 primary가 여분에 있으면 빼고, 틀렸던 옛 primary는 되살리지 않는다.
+                nb["alternates"] = [a for a in (b.get("alternates") or [])
+                                    if a.get("seg_id") != sid]
+        out.append(nb)
+    return out
+
+
 def build_edit_plan(source_scripts, target_seconds, structure="template", video_type=None,
                     n_alternates=2, max_retries=4, quota_sleep=8, given_script=None,
                     is_recipe=False):
@@ -3194,13 +3681,18 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
         video_type = _normalize_video_type(video_type)  # 옛 key 흡수
         n_alternates = _SCRIPTED_N_ALT
         prompt = _SCRIPTED_PROMPT.format(
-            given_script=given_script.strip()[:4000], inventory=inventory, n_alternates=n_alternates)
+            given_script=given_script.strip()[:4000], inventory=inventory, n_alternates=n_alternates,
+            label_hint=_INVENTORY_LABEL_HINT,
+            # ★scene_first와 **같은 문장**을 쓴다(2026-08-18) — 이 경로엔 종전에 화면 배치
+            #   지시가 통째로 없어서 "대사랑 어울리게" 한 줄로만 골랐다.
+            scene_placement=_scene_placement_block())
     else:
         if video_type is None:
             video_type = detect_video_type(source_scripts)
         video_type = _normalize_video_type(video_type)  # 옛 key 흡수(감지값·인자 모두)
         prompt = _PROMPT.format(
             target_seconds=target_seconds, inventory=inventory, n_alternates=n_alternates,
+            label_hint=_INVENTORY_LABEL_HINT,
             char_target=int(target_seconds * _SYLLABLES_PER_SEC),
             structure_instruction=(_TEMPLATE_INSTR if structure == "template" else _FREE_INSTR),
             type_strategy=VIDEO_TYPES[video_type]["strategy"],
@@ -3213,12 +3705,31 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
         return empty
     raw.setdefault("structure", structure)
     grounded = _validate_and_ground(raw, seg_map, n_alternates, is_recipe=is_recipe)
+    # ★fit 정직화를 여기서도 한다(2026-08-18). 종전엔 scene_first 경로(build_scene_first_plan)
+    #   에만 있어, 이 옛 경로로 만든 잡은 **fit이 Gemini 자기신고 그대로 5** 였다 →
+    #   바로 아래 _repick_weak_beats(fit<=3)가 대상 0개로 헛돌았다.
+    #   실측(잡 a4e619328313, generator="legacy"): 훅에 '사용중'이 붙었는데 fit=5·evidence 없음
+    #   → 새 판정축을 배포한 뒤에 돈 잡인데도 교정이 한 건도 안 걸렸다.
+    #   ⚠️ 순서가 중요하다 — 반드시 _repick_weak_beats **앞**에서 깎아야 재픽이 그 비트를 본다.
+    grounded["beats"] = _verify_fits(grounded["beats"])
+    # ★대본을 고치기 전에 **화면부터 다시 고른다**(2026-08-14). 더 맞는 화면을 찾으면 fit이
+    #   올라가 아래 재작성 대상에서 자연히 빠지고, 못 찾은 비트만 종전대로 대사를 고친다.
+    grounded["beats"] = _repick_weak_beats(grounded["beats"], seg_map)
     grounded["beats"] = _reconcile_weak_beats(grounded["beats"])
     # 각 비트 target_seconds는 나레이션 글자수 기준으로 재계산(실제 렌더 길이 =
     # 나레이션 읽는 시간 ≈ 글자수÷_SYLLABLES_PER_SEC초). UI 표시 초와 실제 길이가 어긋나지 않게.
     for _b in grounded["beats"]:
         _n = len((_b.get("narration") or "").strip())
         _b["target_seconds"] = round(max(1.5, _n / _SYLLABLES_PER_SEC), 1)
+    # ★화면 길이 보장을 이 경로에도 배선한다(2026-08-18, 전수감사 1순위).
+    #   종전엔 scene_first 경로(_ground_candidate:2554)와 단일소스 경로에만 있었고,
+    #   확정 대본 경로(=08-16 저녁부터 실제로 도는 경로)엔 통째로 없었다.
+    #   → 프롬프트가 seg_ids를 **개수로만** 요구하므로 1.3초 컷 하나로도 통과하고,
+    #     모자란 화면을 렌더가 다음 클립으로 메우며 **비트마다 밀림이 누적**된다
+    #     (함수 주석의 실측: 말 31.9초 vs 화면 13.8초).
+    #   ⚠️반드시 target_seconds 재계산 **뒤**에 부른다 — need가 그 값이라, 앞에 두면
+    #     Gemini 자기신고 초로 재는 셈이 돼 보장이 헛돈다.
+    grounded["beats"] = _fill_beat_screen_time(grounded["beats"], seg_map)
     grounded["structure"] = structure
     grounded["detected_type"] = video_type
     grounded["affiliate_target"] = raw.get("affiliate_target", "")
@@ -3234,12 +3745,23 @@ def _verify_fits(beats):
     나와 — 화면의 '매칭 5/5' 표시, 추천점수의 avg_fit(50%), fit≤2 스왑버튼, fit≤3 약비트
     재작성이 전부 무력화돼 있었다(banana 실사고: '썰어' 대사에 '뒤집는' 화면이 fit5).
     행위 증거가 있을 때만 정직하게 깎는다: 나레이션 행위 ≠ 화면 행위(둘 다 검출) → fit≤2.
-    모호하면(행위 미검출) 보류 = 오탐 없음. ping_pong이 스왑으로 고치면 fit=5로 복원된다."""
+    모호하면(행위 미검출) 보류 = 오탐 없음. ping_pong이 스왑으로 고치면 fit=5로 복원된다.
+
+    ★두 번째 축(2026-08-18): 위 행위 판정은 **동사사전 30개**에 매달려 있어 스토리형 대본에선
+    통째로 보류된다 — 라이브 실측(잡 30개·비트 168건)에서 대사행위가 **148건(88%) None**이었다.
+    그 결과 훅·CTA 58건 중 **27건이 어긋났는데 fit>=4로 남아** 재픽(fit<=3) 대상에서 빠졌다.
+    그래서 동사가 없어도 도는 `beat_role_mismatch`(역할↔결)를 함께 본다. 둘 중 하나만 걸려도
+    깎는다 — 판정 근거는 `fit_evidence`에 남겨 어느 축이 잡았는지 사후에 가를 수 있게 한다."""
     from shopping_shorts import backbone
     for b in beats:
-        if backbone.beat_action_mismatch(b):
-            b["fit"] = min(int(b.get("fit") or 0), 2)
-            b["fit_evidence"] = "action_mismatch"
+        act_bad = backbone.beat_action_mismatch(b)
+        role_bad = backbone.beat_role_mismatch(b)
+        if not (act_bad or role_bad):
+            continue
+        b["fit"] = min(int(b.get("fit") or 0), 2)
+        b["fit_evidence"] = ("action_mismatch" if act_bad and not role_bad else
+                             "role_mismatch" if role_bad and not act_bad else
+                             "action+role_mismatch")
     return beats
 
 
@@ -3428,7 +3950,8 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         beats = single_source.apply_restyle(beats, _c,
                                             style_name=_sp0.candidate_style(i),
                                             report=_restyle_rep,
-                                            facts_block=_facts_block)
+                                            facts_block=_facts_block,
+                                            where="1소스c%d" % (i + 1))
         _hap_style = _sp0.candidate_style(i)
         # ★빈 나레이션 비트는 **커버 배정 전에** 걸러낸다(2026-08-04 라이브 실측 job
         #   bcdf871a6d57: 추천 후보가 16.8초 — 버려진 비트의 컷이 같이 사라져 하한 미달).
@@ -4130,6 +4653,10 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             # ping_pong은 화면·나레이션을 함께 재작성하므로 종전대로 슬롯 순서로 되못박는다.
             plan["beats"] = (_assign_timeline(plan["beats"], tl_groups) if ping_pong
                              else _pin_screens(plan["beats"], tl_groups))
+        # ★약한 비트 화면 재선택(2026-08-14) — 반드시 화면 못박기(_assign_timeline/_pin_screens)
+        #   **뒤**에 온다. 앞에 두면 이 두 함수가 primary/alternates를 통째로 재설정해 결과가
+        #   예외 없이 소멸한다(G2 실측이 backbone 5종에서 확인한 것과 같은 함정).
+        plan["beats"] = _repick_weak_beats(plan["beats"], seg_map, call=_call)
         plan["detected_type"] = detected
         plan["affiliate_target"] = r.get("story_event", "") or ""
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)
@@ -4148,7 +4675,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         plan["beats"] = _ss1.apply_restyle(plan["beats"], _call,
                                            style_name=_sp1.candidate_style(_ci),
                                            report=_restyle_rep,
-                                           facts_block=_sf_facts_block)
+                                           facts_block=_sf_facts_block,
+                                           where="장면우선c%d" % (_ci + 1))
         # ★홈테리어픽 서명 보장(2026-08-09, 1소스와 동일 배선): CTA 직전 문장을 합쇼체로.
         #   리라이트 **뒤**에 둔다(리라이트가 어미를 도로 요체로 되돌린다).
         #   해당 스타일이 아니면 no-op(회귀 0). 1소스 실측: 프롬프트만으론 7/10 → 보장 후 10/10.
@@ -4186,6 +4714,13 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 if not _apply_narr_fix(
                         lambda _b: _ss1.fix_fabrication_prompt(_b, _mat_sf, _fabs)):
                     break
+        # ★최종 총량 재측정(2026-08-11 사장님 "25~35초가 제일 좋다"): 위 conform(4069)은
+        #   리라이트 **전**에 돌아, 리라이트 팽창(실측 1.5~1.6배)이 재측정 없이 그대로
+        #   나갔다(실측: 목표 30초 잡이 예상 38·51초). 1소스 경로는 리라이트 뒤 최종
+        #   over_budget+코드컷이 있는데 믹스엔 없었다(0순위-B: 같은 판단이 경로마다 다름).
+        #   문장을 만지는 모든 단계(리라이트·서명보장·날조교정) 뒤에서 한 번 더 잰다 —
+        #   예산 이내면 무변경(회귀0), covers·화면 배정은 conform이 안 건드린다.
+        plan["beats"] = _conform_overflow_beats(plan["beats"], target_seconds)
         story = {k: r.get(k, "") for k in
                  ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
         rule_score = _score_candidate(plan, avoid_hooks=avoid_hooks, target_seconds=target_seconds,
@@ -4368,3 +4903,147 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         _cta_fix_narration(_c)
         _strip_mid_cta(_c)      # 비CTA 비트에 샌 댓글 유도 제거(2026-08-03 "CTA 두 번 반복")
     return {"candidates": cands, "detected_type": detected}
+
+
+# ── 장면실험실(scene_lab) 편성 반영 (2026-08-15) ─────────────────────────────────
+# 사람이 실험실(tools/scene_lab)에서 만든 칸별 편성(lists)·가운데 트림(trims)·늘려 채우기
+# (stretch)를 edit_plan에 **얹는다**. 원본 primary/alternates는 절대 건드리지 않는다 —
+# beat["scene_override"](재료 구간 목록)·beat["stretch_fill"](토글)·plan["scene_lab"]
+# (원본 payload, 근거·재적용용)만 새로 쓰고, revert_scene_lab이 그 셋을 지우면 원래대로다.
+# 렌더는 video_assemble._beat_material이, 예산은 mix_pipeline.beat_screen_budget이 읽는다.
+# 이 세 필드를 모르는 기존 코드·기존 잡은 지금과 100% 동일하게 동작한다(없으면 무시).
+
+def _lab_trim_pieces(seg, trim, eps=1e-3):
+    """장면 구간 하나를 트림 구멍 [a,b](장면 시작 기준 초) 뺀 토막들로 — 실험실
+    build.py trimPieces와 같은 규칙(0순위-B: 두 벌이 되면 어긋난다. 규칙 변경 시 양쪽 함께).
+    구멍이 없거나 전부 잘려 나가면 원본 한 토막 그대로."""
+    if not trim:
+        return [dict(seg)]
+    a, b = float(trim[0]), float(trim[1])
+    s, e = float(seg["start"]), float(seg["end"])
+    pieces = []
+    if a > eps:
+        pieces.append({**seg, "end": round(s + a, 3)})            # 앞토막 [0 ~ a]
+    if e - (s + b) > eps:
+        pieces.append({**seg, "start": round(s + b, 3)})          # 뒤토막 [b ~ 끝]
+    return pieces if pieces else [dict(seg)]
+
+
+def apply_scene_lab(plan, seg_map, edits):
+    """실험실 편성 payload를 plan에 얹는다(제자리 수정, 반환 동일 객체).
+
+    edits = {"beats": [{"beat_idx": int, "list": [seg_id...], "stretch": bool}, ...],
+             "trims": {seg_id: [a, b]}}
+    - list가 빈 칸은 건드리지 않는다(원본 유지 — 실수로 비운 칸이 렌더를 죽이지 않게).
+    - seg_map에 없는 seg_id는 조용히 거른다(환각·옛 id 방어, _ground_ref와 같은 원칙).
+    """
+    trims = edits.get("trims") or {}
+    # 🔗 합친 조각(2026-08-17) — {대표 seg_id: [뒤에 이어 붙일 seg_id...]}.
+    # 화면 mergeSpan과 같은 규칙: **대표의 end를 마지막 멤버의 end까지 늘린다.** 원본에서
+    # 붙어 있는 구간이라 이어 붙이기 = 긴 구간 하나이고, scene_override는 원래부터 임의
+    # 구간 목록이므로 새 개념이 필요 없다(0순위-B: 규칙 변경 시 scene_play.js와 함께).
+    merges = edits.get("merges") or {}
+    member_of = {}
+    for lead, mem in merges.items():
+        for m in (mem or []):
+            member_of[m] = lead
+
+    def _span(sid):
+        seg = seg_map[sid]
+        end = float(seg["end"])
+        for m in (merges.get(sid) or []):
+            other = seg_map.get(m)
+            if other and float(other["end"]) > end:
+                end = float(other["end"])
+        return end
+
+    by_idx = {b.get("beat_idx"): b for b in (plan.get("beats") or [])}
+    applied = 0
+    for eb in edits.get("beats") or []:
+        beat = by_idx.get(eb.get("beat_idx"))
+        # 멤버가 목록에 남아 있으면 대표로 바꾼다(중복 구간 방지 — 화면 doMerge와 같은 처리).
+        ids = []
+        for sid in (eb.get("list") or []):
+            sid = member_of.get(sid, sid)
+            if sid in seg_map and sid not in ids:
+                ids.append(sid)
+        if beat is None or not ids:
+            continue
+        over = []
+        for sid in ids:
+            seg = seg_map[sid]
+            entry = {"video_id": seg["video_id"], "seg_id": sid,
+                     "start": seg["start"], "end": _span(sid),
+                     "scene_desc": seg.get("scene_desc", ""),
+                     "is_key": bool(seg.get("is_key")),
+                     "shot_role": seg.get("shot_role") or "기타"}
+            over.extend(_lab_trim_pieces(entry, trims.get(sid)))
+        beat["scene_override"] = over
+        if eb.get("stretch"):
+            beat["stretch_fill"] = True
+        else:
+            beat.pop("stretch_fill", None)
+        applied += 1
+    plan["scene_lab"] = {"beats": edits.get("beats") or [], "trims": trims,
+                         "merges": merges, "applied": applied}
+    return plan
+
+
+def revert_scene_lab(plan):
+    """실험실 편성을 전부 걷어내 원래 편집안으로 되돌린다(제자리 수정)."""
+    for beat in plan.get("beats") or []:
+        beat.pop("scene_override", None)
+        beat.pop("stretch_fill", None)
+    plan.pop("scene_lab", None)
+    return plan
+
+
+# ── 확정 대본 불변식 ────────────────────────────────────────────────
+# 사장님 제보(2026-08-18): "영상이랑 대본이랑 다르게 된다".
+# 실측(job c7e208afb699): EDL 7비트 중 hook·benefit 2개의 narration이 확정 대본에
+# **없는 문장**이었다("스마트폰에 어댑터를 장착해 …모습이 정말 신기하네요" — 장면 설명
+# 말투). 대본 쪽에서는 미끼 문장과 반전 후반부가 통째로 빠져 있었다.
+# _SCRIPTED_PROMPT는 "그대로 사용해라"를 두 번 말하지만 **지켰는지 검사하는 곳이 없었다.**
+# 프롬프트를 더 강하게 쓰는 건 두더지잡기다 — 저장 직전에 불변식으로 막는다.
+_SENT_SPLIT = re.compile(r"(?<=[.!?。！？])\s+|\n+")
+
+
+def _narr_key(s):
+    """비교용 정규화 — 공백·문장부호를 지운다(어미 손질 정도는 통과시키지 않는다)."""
+    return re.sub(r"[^0-9A-Za-z가-힣]+", "", s or "")
+
+
+def script_sentences(script):
+    """확정 대본을 문장 단위로. 빈 조각은 버린다."""
+    return [s.strip() for s in _SENT_SPLIT.split(script or "") if s.strip()]
+
+
+def enforce_scripted_narration(beats, given_script):
+    """확정 대본에 없는 문장을 EDL이 지어냈으면, 빠뜨린 대본 문장으로 되돌린다.
+
+    - 판정: 비트 narration의 정규화 문자열이 대본 정규화 문자열에 들어 있으면 정상
+      (대본 한 문장을 여러 비트로 쪼개는 것은 허용 — 프롬프트가 시키는 일이다).
+    - 교정: 창작 비트를 **아직 화면에 안 쓰인 대본 문장**으로 순서대로 갈아끼운다.
+      남는 창작 비트는 그대로 둔다(지우면 화면 길이가 무너진다) — 대신 표시를 남긴다.
+    반환: (고친 beats, 바꾼 개수)
+    """
+    beats = beats or []
+    if not (given_script or "").strip() or not beats:
+        return beats, 0
+    full = _narr_key(given_script)
+    bad = [i for i, b in enumerate(beats)
+           if _narr_key(b.get("narration")) and _narr_key(b.get("narration")) not in full]
+    if not bad:
+        return beats, 0
+    used = "".join(_narr_key(b.get("narration")) for i, b in enumerate(beats) if i not in bad)
+    missing = [s for s in script_sentences(given_script)
+               if _narr_key(s) and _narr_key(s)[:12] not in used]
+    fixed = 0
+    for i in bad:
+        if not missing:
+            beats[i]["narration_invented"] = True   # 되돌릴 재료가 없다 — 흔적을 남긴다
+            continue
+        beats[i]["narration"] = missing.pop(0)
+        beats[i]["narration_restored"] = True
+        fixed += 1
+    return beats, fixed

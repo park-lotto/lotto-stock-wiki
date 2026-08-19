@@ -193,3 +193,40 @@ def test_step_explicit_zero_still_rewinds(client):
                 json={"work_id": wid, "state": {"script": "s2"}, "step": 0})
     d = client.get(f"/api/produce/works/{wid}").json()
     assert d["step"] == 0, "명시적 step=0이 무시됐다"
+
+
+# ── 이름 바꾸기(2026-08-17) ────────────────────────────────────────
+# 사장님 "내 작업에 작업명 수정할수있게". 제목 계산은 store._work_title 한 곳뿐 —
+# 이 라우트는 이름을 넘기고 확정된 제목을 돌려줄 뿐이다(CLAUDE.md 0순위-B).
+def test_rename_sets_title(client):
+    wid = client.post("/api/produce/works", json={"state": {"script": "감자 레시피"}}).json()["work_id"]
+    r = client.post(f"/api/produce/works/{wid}/rename", json={"name": "감자 A안"})
+    assert r.status_code == 200 and r.json() == {"ok": True, "title": "감자 A안"}
+    assert client.get("/api/produce/works").json()["works"][0]["title"] == "감자 A안"
+
+
+def test_rename_survives_later_save(client):
+    """★대본을 고쳐 저장해도 지은 이름이 남는다 — 이 기능의 존재 이유."""
+    wid = client.post("/api/produce/works", json={"state": {"script": "처음"}}).json()["work_id"]
+    client.post(f"/api/produce/works/{wid}/rename", json={"name": "내 이름"})
+    state = client.get(f"/api/produce/works/{wid}").json()["state"]
+    state["script"] = "고친 대본"
+    client.post("/api/produce/works", json={"work_id": wid, "state": state})
+    assert client.get("/api/produce/works").json()["works"][0]["title"] == "내 이름"
+
+
+def test_rename_empty_restores_auto_title(client):
+    wid = client.post("/api/produce/works", json={"state": {"script": "감자 레시피"}}).json()["work_id"]
+    client.post(f"/api/produce/works/{wid}/rename", json={"name": "감자 A안"})
+    r = client.post(f"/api/produce/works/{wid}/rename", json={"name": ""})
+    assert r.json()["title"] == "감자 레시피"
+
+
+def test_rename_rejects_non_string_name(client):
+    """★dict가 와도 500이 아니라 422 — 이 앱은 .strip()을 모양 확인 없이 불러 세 번 터졌다."""
+    wid = client.post("/api/produce/works", json={"state": {"script": "감자"}}).json()["work_id"]
+    assert client.post(f"/api/produce/works/{wid}/rename", json={"name": {"a": 1}}).status_code == 422
+
+
+def test_rename_missing_work_is_404(client):
+    assert client.post("/api/produce/works/없는id/rename", json={"name": "x"}).status_code == 404

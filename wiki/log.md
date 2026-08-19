@@ -1,3 +1,10 @@
+- 2026-08-18 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-08-18.md
+- 2026-08-17 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-08-17.md
+- 2026-08-16 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-08-16.md
+- 2026-08-14 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-08-14.md
+- 2026-08-13 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-08-13.md
+- 2026-08-12 — Excel ingest 완료:  → ingest_report_2026-08-12.md
+- 2026-08-11 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-08-11.md
 - 2026-08-10 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-08-10.md
 - 2026-08-09 — Excel ingest 완료:  → ingest_report_2026-08-09.md
 - 2026-08-08 — Excel ingest 완료: 추정이익변경 → ingest_report_2026-08-08.md

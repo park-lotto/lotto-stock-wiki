@@ -3,17 +3,34 @@ tubefactory와의 차별화 핵심(설계문서 §1 참고). 전용 키 풀(comm
 
 comment_gen.py와 같은 SHORTS_GEMINI_KEYS 풀을 사용하므로, 두 모듈은 같은
 shorts_gemini_state.json 상태 파일을 공유해 하루 내 키 소진 추적을 동기화한다."""
+import hashlib
 import json
+import os
 import sys
+import threading
 import time
 from google import genai
 from google.genai import types
 from shopping_shorts.config import SHORTS_GEMINI_KEYS
 from shopping_shorts import comment_gen
+from shopping_shorts import usage_meter
 from pipeline.atoms import key_vault
 
 _MODEL = "gemini-3.5-flash"  # 비디오 입력 지원 모델 — "gemini-3-flash"는 실존하지 않는 모델명이었음
 # (2026-07-09 배포 후 실단말 검증 중 404 NOT_FOUND로 발견, 실제 사용 가능 모델 목록에서 확인 후 교체)
+
+# ★렌즈(정지 이미지 1장) 전용 모델 — 영상분석용 _MODEL과 분리한다 (2026-08-16).
+#   _MODEL이 무거운 이유는 **영상 입력**을 받아야 해서다. 렌즈는 프레임 JPEG 한 장만
+#   보내므로 그 무게가 필요 없는데, 같은 파일에 있다는 이유로 딸려 쓰고 있었다.
+#   (_TRANSLATE_MODEL이 같은 이유로 이미 분리돼 있다 — 그 선례를 따른다)
+#
+#   라이브 실측(2026-08-16, 같은 프레임·같은 프롬프트·같은 스키마):
+#     속도   26.2초 → 3.0초   (cn_search_keyword_vision 3회 평균)
+#     비용   1.0122원 → 0.5208원 (입력 토큰 1,308로 동일, 단가가 정확히 절반)
+#     품질   동일 — 둘 다 '에어프라이어 감자칩 / 空气炸锅薯片'
+#     무료한도 하루 20건 → 500건 (키당. 3.5-flash가 25배 빡빡하다)
+#   ⚠️ 이 값을 _MODEL로 되돌리지 마라. 렌즈가 20초씩 걸리고 키가 금방 마른다.
+_LENS_MODEL = "gemini-3.1-flash-lite"
 
 # 5개 언어(2026-07-10, "다른 프로그램보다 정확도 떨어짐" 피드백 대응) — ko/en만
 # 검색에 쓰던 걸 5개어로 확장. zh는 원래도 생성만 하고 검색엔 안 쓰고 있었음
@@ -96,7 +113,8 @@ def _client_for_key(key):
     if key not in _client_cache:
         # 타임아웃 미지정 시 느린 Gemini 응답에 무한 대기할 수 있음(comment_gen._client_for_key
         # 참고 — 2026-07-14 실사고).
-        _client_cache[key] = genai.Client(api_key=key, http_options=types.HttpOptions(timeout=120_000))
+        _client_cache[key] = usage_meter.wrap(
+            genai.Client(api_key=key, http_options=types.HttpOptions(timeout=120_000)))
     return _client_cache[key]
 
 
@@ -304,7 +322,13 @@ _SUBJECT_TAGS_PROMPT = """이 이미지는 한국어 쇼츠 영상의 썸네일�
 - subject: 이 영상의 주제 명사 1개(짧게. 예: 오이무침, 블루투스 스피커, 베이글, 소파).
 - keywords: 검색에 쓸 3~6개(주제 명사·핵심 재료·용도·상위 분류. 예: ["오이","다이어트반찬","여름반찬"]).
   ⚠️ 캡션에 우연히 들어간 말이 아니라 '영상이 실제로 다루는 것'만.
-- JSON만: {{"subject": "...", "keywords": ["...", ...]}}
+- ★shot_type: 이 화면이 **재료로 쓸 수 있는 그림인가**를 셋 중 하나로(2026-08-19).
+  우리는 남의 영상을 재료로 새 영상을 만든다 — 리뷰어 얼굴이 주인공이면 못 쓴다.
+  "selfshot" = 촬영자 본인·특정 인물의 얼굴·상반신이 화면의 주인공(카메라 보고 말하기, 브이로그)
+  "product"  = 제품·손·화면·자막이 중심이고 얼굴은 없거나 곁다리(손 시연, 제품 클로즈업, 자막 정보)
+  "other"    = 둘로 못 가름(풍경·동물·그래픽 등)
+- face_prominent: 사람 얼굴이 화면에서 크게 보이면 true.
+- JSON만: {{"subject": "...", "keywords": ["...", ...], "shot_type": "...", "face_prominent": true/false}}
 캡션: {caption}"""
 
 _SUBJECT_TAGS_SCHEMA = {
@@ -312,6 +336,10 @@ _SUBJECT_TAGS_SCHEMA = {
     "properties": {
         "subject": {"type": "string"},
         "keywords": {"type": "array", "items": {"type": "string"}, "minItems": 1, "maxItems": 8},
+        # 2026-08-19 추가. ★required에 넣지 않는다 — 모델이 안 채워도 주제태그(본업)는
+        # 살아야 한다. 못 받으면 빈값이 되고 정리 규칙은 '모름'으로 다룬다.
+        "shot_type": {"type": "string"},
+        "face_prominent": {"type": "boolean"},
     },
     "required": ["subject", "keywords"],
 }
@@ -348,7 +376,11 @@ def subject_tags_vision(image_bytes, caption, max_retries=3, quota_sleep=8):
             keywords = [k.strip() for k in (data.get("keywords") or []) if k and k.strip()]
             if not subject and not keywords:
                 return {}
-            return {"subject": subject, "keywords": keywords}
+            shot = (data.get("shot_type") or "").strip().lower()
+            if shot not in ("selfshot", "product", "other"):
+                shot = ""            # 모르는 값은 안 믿는다(빈값 = 판정 없음)
+            return {"subject": subject, "keywords": keywords,
+                    "shot_type": shot, "face_prominent": bool(data.get("face_prominent"))}
         except Exception as e:
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
                 comment_gen._mark_key_exhausted(idx)
@@ -501,10 +533,93 @@ def fetch_thumb_bytes(url, timeout=15):
         return None
 
 
+# 렌즈 비전 호출 1회의 상한(초). 이걸 넘으면 그 호출을 끊고 다음 키로 재시도한다.
+#
+# ★왜 필요한가 (2026-08-16 라이브 실측): 같은 프레임을 6번 돌렸더니
+#   85.1s / 8.9s / 2.1s / 15.0s / 8.9s / 3.2s 로 **한 번씩 통째로 멈춘다**.
+#   85초짜리도 키를 1번만 집었다 = 재시도·429가 아니라 **단일 왕복이 그냥 안 끝난 것**.
+#   SDK 기본값은 무한대기라 사장님은 그 85초를 그대로 기다리고 있었다.
+#   (같은 성격의 사고: memory `reference_ffmpeg_무한대기` — 외부 도구엔 반드시 timeout)
+_LENS_TIMEOUT_S = float(os.environ.get("LENS_VISION_TIMEOUT", "20"))
+
+
+def _lens_http_options():
+    """google-genai HTTP 옵션 — timeout은 **밀리초**다(초로 주면 20ms가 돼 전부 실패한다)."""
+    return types.HttpOptions(timeout=int(_LENS_TIMEOUT_S * 1000))
+
+
+# ── 렌즈 비전 결과 캐시 (같은 프레임을 두 번 분석하지 않기 위함, 2026-08-16) ──
+#
+# 왜: 렌즈를 한 번 열면 프론트가 /api/lens/yt 와 /api/lens/cn/keywords 를 **동시에** 던지고,
+#     둘 다 같은 프레임으로 같은 비전을 부른다(전자는 cn_search_keyword_vision,
+#     후자는 cn_search_candidates). 그런데 cn_search_candidates 응답에 이미 product가
+#     들어있다 → 한 번만 부르고 나눠 쓰면 호출이 정확히 절반이 된다.
+#
+# ⚠️ 캐시키 함정(memory `reference_캐시키_불일치함정`): 저장 키와 조회 키가 다르면
+#    "캐시가 있는데 한 번도 안 쓰인다"가 조용히 난다. 그래서 키 만드는 곳을
+#    _frame_cache_key() **한 함수로만** 두고 양쪽이 그걸 부른다.
+_LENS_CACHE_TTL_S = 180.0        # 렌즈 한 번 여는 동안만 유효하면 된다
+_LENS_CACHE_MAX = 32
+_lens_cache = {}                 # key → (저장시각, product, zh)
+_lens_cache_lock = threading.Lock()
+
+
+def _frame_cache_key(image_bytes, caption):
+    """프레임+캡션 → 캐시 키. ★저장·조회가 반드시 이 함수를 거친다."""
+    h = hashlib.sha1(image_bytes or b"").hexdigest()
+    return f"{h}:{(caption or '')[:400]}"
+
+
+def _lens_cache_get(key):
+    now = time.time()
+    with _lens_cache_lock:
+        hit = _lens_cache.get(key)
+        if not hit:
+            return None
+        ts, product, zh = hit
+        if now - ts > _LENS_CACHE_TTL_S:
+            _lens_cache.pop(key, None)
+            return None
+        return {"product": product, "zh": zh}
+
+
+def _lens_cache_put(key, product, zh):
+    """product가 있을 때만 저장한다 — 빈 결과를 캐시하면 실패가 TTL 동안 굳는다."""
+    if not (product or "").strip():
+        return
+    with _lens_cache_lock:
+        if len(_lens_cache) >= _LENS_CACHE_MAX:      # 오래된 것부터 버린다
+            for k in sorted(_lens_cache, key=lambda k: _lens_cache[k][0])[:_LENS_CACHE_MAX // 2]:
+                _lens_cache.pop(k, None)
+        _lens_cache[key] = (time.time(), product, zh or "")
+
+
+def _is_timeout_error(e):
+    """이 예외가 '시간 초과'인가. 판정은 **여기 한 곳에서만** 한다 (CLAUDE.md 0순위-B).
+
+    타임아웃은 SDK 버전·전송계층에 따라 httpx.TimeoutException / socket.timeout /
+    TimeoutError 등 여러 타입으로 올라온다. 타입 하나만 잡으면 나머지가 조용히
+    '알 수 없는 오류'로 빠져 재시도 없이 빈 값이 된다 → 타입과 메시지를 같이 본다."""
+    if isinstance(e, TimeoutError):          # socket.timeout·asyncio.TimeoutError의 부모
+        return True
+    name = type(e).__name__.lower()
+    if "timeout" in name:                    # httpx.ReadTimeout·ConnectTimeout 등
+        return True
+    return "timeout" in str(e).lower() or "timed out" in str(e).lower()
+
+
 def cn_search_keyword_vision(image_bytes, caption, max_retries=3, quota_sleep=8):
-    """프레임 이미지(+캡션) → {"product","zh"}. 화면 글자·제품 생김새까지 반영. 실패 시 {}."""
+    """프레임 이미지(+캡션) → {"product","zh"}. 화면 글자·제품 생김새까지 반영. 실패 시 {}.
+
+    ★같은 프레임을 cn_search_candidates가 방금 분석했으면 그 결과를 그대로 쓴다
+      (렌즈 열 때 /api/lens/yt·/api/lens/cn/keywords가 동시에 오는데 둘 다 같은
+       프레임을 본다 — 비전을 두 번 부를 이유가 없다, 2026-08-16)."""
     if not image_bytes or not SHORTS_GEMINI_KEYS:
         return {}
+    ckey = _frame_cache_key(image_bytes, caption)
+    cached = _lens_cache_get(ckey)
+    if cached:
+        return cached
     prompt = _CN_VISION_PROMPT.format(caption=(caption or "(캡션 없음)")[:400])
     for attempt in range(max_retries):
         key, idx = comment_gen._next_live_key_and_idx()
@@ -513,10 +628,11 @@ def cn_search_keyword_vision(image_bytes, caption, max_retries=3, quota_sleep=8)
         try:
             client = _client_for_key(key)
             resp = client.models.generate_content(
-                model=_MODEL,
+                model=_LENS_MODEL,
                 contents=[prompt, types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")],
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
+                    http_options=_lens_http_options(),
                     response_schema={
                         "type": "object",
                         "properties": {"product": {"type": "string"}, "zh": {"type": "string"}},
@@ -525,8 +641,10 @@ def cn_search_keyword_vision(image_bytes, caption, max_retries=3, quota_sleep=8)
                 ),
             )
             data = json.loads(resp.text)
-            return {"product": (data.get("product") or "").strip(),
-                    "zh": (data.get("zh") or "").strip()}
+            product = (data.get("product") or "").strip()
+            zh = (data.get("zh") or "").strip()
+            _lens_cache_put(ckey, product, zh)
+            return {"product": product, "zh": zh}
         except Exception as e:
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
                 comment_gen._mark_key_exhausted(idx)
@@ -537,6 +655,8 @@ def cn_search_keyword_vision(image_bytes, caption, max_retries=3, quota_sleep=8)
                 # 429로 타버렸고, 결과가 조용한 빈 값이라 태거가 0/40건만 찍었다.
                 time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
                 continue
+            if _is_timeout_error(e) and attempt < max_retries - 1:
+                continue          # 멈춘 호출은 버리고 **다른 키로 즉시** 다시 (sleep 없음)
             if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
                 continue
@@ -550,6 +670,9 @@ _CN_CANDIDATES_PROMPT = """이 이미지는 한국어 쇼츠 영상의 한 장�
 - 넓은 제품+방식(예: 에어프라이어 감자칩→空气炸锅土豆片) → 좁은 제품명(예: 气泡土豆) 순으로 다양하게.
 - 화면 글자에 제품명이 있으면 최우선 반영. 서로 다른 각도의 검색어(재료·조리법·모양)를 섞어라.
 - 각 후보에 한국어 뜻(ko)을 짧게 달라(사용자가 뭘 누르는지 알게).
+- ★ko는 **한국 사람이 실제로 그렇게 부르는 말**로 **2어절 이하**. 수식어를 겹쳐 없는 말을
+  지어내지 마라 — 이 ko로 인스타·틱톡을 검색하는데, 지어낸 조합은 결과가 0건이다
+  (실측: '고독스 아동용 카메라' 0건 / '고독스 카메라' 18건).
 - JSON만: {{"product": "한국어 제품명(짧게)", \
 "candidates": [{{"ko": "한국어 뜻", "zh": "중국어 검색어"}}, ...]}}
 캡션: {caption}"""
@@ -572,12 +695,24 @@ _CN_CANDIDATES_SCHEMA = {
 }
 
 
-def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8):
-    """프레임(+캡션) → {"product": str, "candidates": [{"ko","zh"}]}. 실패/키없음 시 빈 리스트."""
+def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8, exclude=None):
+    """프레임(+캡션) → {"product": str, "candidates": [{"ko","zh"}]}. 실패/키없음 시 빈 리스트.
+
+    exclude: 이미 보여준 검색어들(ko/zh 문자열 리스트). 렌즈의 '🔄 다른 검색어'가 넘긴다 —
+    같은 프레임으로 다시 물어도 비전이 매번 비슷한 3~4개를 뽑아 '복불복'이 되던 걸 막고
+    (2026-08-14 사장님), 이미 나온 건 빼고 **다른 각도**로 뽑게 프롬프트에 박는다.
+    ★모델 출력은 확률적이라 프롬프트만으론 완벽히 안 지켜진다 → 아래에서 실제로 걸러낸다."""
     empty = {"product": "", "candidates": []}
     if not image_bytes or not SHORTS_GEMINI_KEYS:
         return empty
+    seen = {str(s).strip() for s in (exclude or []) if str(s or "").strip()}
+    seen_initial = bool(seen)   # '🔄 다른 검색어' 재요청인가 (아래 캐시 저장 판단에 쓴다)
     prompt = _CN_CANDIDATES_PROMPT.format(caption=(caption or "(캡션 없음)")[:400])
+    if seen:
+        prompt += ("\n\n※ 아래 검색어들은 **이미 사용자에게 보여준 것**이다. 이것들과 "
+                   "겹치지 않는 **완전히 다른 각도**의 후보만 만들라(재료·조리법·모양·"
+                   "브랜드·사용상황 등 아직 안 쓴 축으로):\n"
+                   + "\n".join(f"- {s}" for s in sorted(seen)[:20]))
     for attempt in range(max_retries):
         key, idx = comment_gen._next_live_key_and_idx()
         if key is None:
@@ -585,10 +720,11 @@ def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8):
         try:
             client = _client_for_key(key)
             resp = client.models.generate_content(
-                model=_MODEL,
+                model=_LENS_MODEL,
                 contents=[prompt, types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")],
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
+                    http_options=_lens_http_options(),
                     response_schema=_CN_CANDIDATES_SCHEMA,
                 ),
             )
@@ -596,9 +732,18 @@ def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8):
             cands = []
             for c in (data.get("candidates") or []):
                 ko, zh = (c.get("ko") or "").strip(), (c.get("zh") or "").strip()
-                if zh:
+                if zh and zh not in seen and (not ko or ko not in seen):
                     cands.append({"ko": ko, "zh": zh})
-            return {"product": (data.get("product") or "").strip(), "candidates": cands}
+                    seen.add(zh)          # 같은 응답 안의 중복도 막는다
+            product = (data.get("product") or "").strip()
+            # ★여기서 채워두면 /api/lens/yt가 부르는 cn_search_keyword_vision이
+            #   비전을 다시 안 부르고 이 값을 그대로 쓴다(호출 2회 → 1회).
+            #   ⚠️ exclude(=🔄 다른 검색어)로 온 요청은 캐시에 넣지 마라 —
+            #      그건 '다른 각도'를 뽑는 재요청이라 product가 흔들릴 수 있다.
+            if not seen_initial:
+                _lens_cache_put(_frame_cache_key(image_bytes, caption),
+                                product, cands[0]["zh"] if cands else "")
+            return {"product": product, "candidates": cands}
         except Exception as e:
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
                 comment_gen._mark_key_exhausted(idx)
@@ -609,11 +754,108 @@ def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8):
                 # 429로 타버렸고, 결과가 조용한 빈 값이라 태거가 0/40건만 찍었다.
                 time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
                 continue
+            if _is_timeout_error(e) and attempt < max_retries - 1:
+                continue          # 멈춘 호출은 버리고 **다른 키로 즉시** 다시 (sleep 없음)
             if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
                 time.sleep((attempt + 1) * 5)
                 continue
             return empty
     return empty
+
+
+_KW_EXPAND_PROMPT = """사용자가 찾으려는 소재: "{keyword}"
+
+이 소재의 쇼츠·릴스를 여러 SNS(인스타/틱톡/샤오홍슈/도우인)에서 찾기 위한 **검색어 조합 \
+{n}개**를 만들라. 사용자가 던진 건 짧은 소재어일 뿐이니, 실제로 결과가 잘 나오는 검색어로 \
+넓혀·좁혀 다양하게 펼쳐라.
+- 서로 **다른 축**으로: 재료 조합 / 조리·사용 방법 / 완성 형태·비주얼 / 상황·용도 / 상위 카테고리
+- 넓은 것(결과 많음) → 좁은 것(정확도 높음) 순으로 섞어라
+- ★인스타·틱톡용 한국어(ko)는 **사람들이 실제로 그렇게 부르는 말**로, **2어절 이하** 명사구.
+  '만들기·하는 법·사용법·언박싱·추천' 같은 꼬리를 붙이지 마라.
+  ★수식어를 겹쳐 **없는 말을 지어내지 마라** — 인스타 검색은 실제로 쓰이는 말에만 반응한다.
+  (실측: '고독스 아동용 카메라' 0건 / '고독스 카메라' 18건, '감성 키즈카메라' 0건 /
+   '키즈카메라' 15건. 길어서가 아니라 **아무도 그렇게 안 부르기 때문**이다)
+- 중국어(zh)는 축자번역이 아니라 중국 창작자가 실제로 쓰는 표현으로
+- ★**첫 번째 후보의 ko는 사용자가 넣은 말 그대로** "{keyword}" 여야 한다(한 글자도 바꾸지 마라).
+  그 zh는 그 말의 자연스러운 중국어 표현으로. 조합·확장은 두 번째 후보부터.
+- JSON만: {{"candidates": [{{"ko": "한국어 검색어", "zh": "중국어 검색어"}}, ...]}}"""
+
+_KW_EXPAND_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "candidates": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"ko": {"type": "string"}, "zh": {"type": "string"}},
+                "required": ["ko", "zh"],
+            },
+            "minItems": 1, "maxItems": 8,
+        },
+    },
+    "required": ["candidates"],
+}
+
+
+def expand_search_keywords(keyword, n=6, exclude=None, max_retries=3, quota_sleep=8):
+    """한국어 소재어('시금치 치아바타') → [{"ko","zh"}] 검색어 조합. 실패·키없음 시 [].
+
+    왜(2026-08-14 사장님): 렌즈의 후보 검색어는 **화면(프레임) 기반**이라 사장님이 머리로
+    떠올린 소재는 새로고침해도 안 나온다. 그래서 '키워드를 직접 넣으면 조합이 나오는' 입구를
+    따로 판다. 프레임이 필요 없으므로 렌즈를 안 열어도 쓸 수 있고, 한국어를 넣으면 중국어
+    번역까지 같이 나와 4개 플랫폼 버튼이 한 줄에 다 생긴다.
+    exclude: 이미 보여준 검색어(중복 방지 — '🔄 더'와 같은 방식).
+    ★텍스트만이라 가벼운 모델(_TRANSLATE_MODEL)을 쓴다 — 비전 쿼터를 안 먹는다."""
+    kw = (keyword or "").strip()
+    if not kw or not SHORTS_GEMINI_KEYS:
+        return []
+    seen = {str(s).strip() for s in (exclude or []) if str(s or "").strip()}
+    prompt = _KW_EXPAND_PROMPT.format(keyword=kw[:100], n=max(1, min(int(n or 6), 8)))
+    if seen:
+        prompt += ("\n\n※ 아래는 이미 보여준 검색어다. 겹치지 않는 다른 축으로만 만들라:\n"
+                   + "\n".join(f"- {s}" for s in sorted(seen)[:20]))
+    for attempt in range(max_retries):
+        key, idx = comment_gen._next_live_key_and_idx()
+        if key is None:
+            return []
+        try:
+            client = _client_for_key(key)
+            resp = client.models.generate_content(
+                model=_TRANSLATE_MODEL, contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=_KW_EXPAND_SCHEMA,
+                ),
+            )
+            data = json.loads(resp.text)
+            out = []
+            for c in (data.get("candidates") or []):
+                ko, zh = (c.get("ko") or "").strip(), (c.get("zh") or "").strip()
+                if not (ko or zh) or ko in seen or (zh and zh in seen):
+                    continue
+                out.append({"ko": ko, "zh": zh})
+                seen.update(x for x in (ko, zh) if x)
+            # ★사장님이 넣은 말 **그대로**를 반드시 1번 후보로 둔다(2026-08-16).
+            #   프롬프트로만 시키면 모델이 확률적으로 안 지킨다 — 실제로 '고독스 뷰파인더'를
+            #   넣었는데 목록엔 확장 조합만 있고 원문이 없었다. 여기서 강제한다.
+            #   (이미 보여준 것이면 seen에 있으니 다시 넣지 않는다 — '더' 눌러도 중복 안 쌓임)
+            #   zh는 비워 둔다 — 남의 후보 중국어를 빌려오면 📕/🎬 버튼이 **다른 뜻**으로
+            #   열린다. 화면은 zh가 없으면 인스타·틱톡 버튼만 그린다.
+            if kw not in {(c.get("ko") or "").strip() for c in out} and kw not in seen:
+                out.insert(0, {"ko": kw, "zh": ""})
+            return out
+        except Exception as e:
+            if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
+                comment_gen._mark_key_exhausted(idx)
+                continue
+            if key_vault.is_quota_error(e):
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
+                continue
+            if attempt < max_retries - 1 and any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded")):
+                time.sleep((attempt + 1) * 5)
+                continue
+            return []
+    return []
 
 
 _CN_JUDGE_PROMPT = """기준 제품: {product}

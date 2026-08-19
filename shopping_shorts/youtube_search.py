@@ -45,10 +45,27 @@ def _parse_items(data):
     return out
 
 
-def search(keyword, max_results=10):
-    """키워드 → [{url, title, thumbnail}, ...]. 키 풀 전체 소진 시 마지막 오류를 던진다."""
+def search(keyword, max_results=10, duration=None, language=None):
+    """키워드 → [{url, title, thumbnail}, ...]. 키 풀 전체 소진 시 마지막 오류를 던진다.
+
+    duration: "short"(4분 미만) / "medium" / "long". None이면 길이 제한 없음(기존 동작).
+    language: "ko" 등 relevanceLanguage. None이면 언어 가중 없음(기존 동작).
+
+    ★둘 다 YouTube Data API가 공짜로 주는 파라미터다 — 쿼터도 비용도 안 늘어난다
+      (검색 1회 = 100유닛으로 동일). 렌즈에서 롱폼·외국어 잡음이 섞여 들어오던 걸
+      막으려고 추가했다(2026-08-16 사장님 제보: 유튜브만 43개, 나머지는 5·1·0·1).
+      기본값을 None으로 둬서 gap_check 등 기존 호출부는 동작이 안 바뀐다."""
     if not YOUTUBE_API_KEYS:
         raise RuntimeError("youtube_search: YOUTUBE_API_KEY가 설정되지 않았습니다")
+
+    params = {
+        "part": "snippet", "q": keyword, "type": "video",
+        "maxResults": max_results,
+    }
+    if duration:
+        params["videoDuration"] = duration
+    if language:
+        params["relevanceLanguage"] = language
 
     start = _load_key_index() % len(YOUTUBE_API_KEYS)
     last_err = None
@@ -56,10 +73,7 @@ def search(keyword, max_results=10):
         idx = (start + offset) % len(YOUTUBE_API_KEYS)
         key = YOUTUBE_API_KEYS[idx]
         try:
-            resp = requests.get(_SEARCH_URL, params={
-                "part": "snippet", "q": keyword, "type": "video",
-                "maxResults": max_results, "key": key,
-            }, timeout=15)
+            resp = requests.get(_SEARCH_URL, params={**params, "key": key}, timeout=15)
             resp.raise_for_status()
         except requests.RequestException as e:
             last_err = e

@@ -26,7 +26,7 @@ def _client(tmp_path, monkeypatch, items=None, limit_reached=False):
     monkeypatch.setattr(appmod, "DB_PATH", db)
     monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
     monkeypatch.setattr(appmod, "search_similar_videos",
-                        lambda url, source_caption="": items if items is not None else [])
+                        lambda url, api_key=None, source_caption="", stats=None: items if items is not None else [])
     # imgur 업로드는 네트워크라 목킹 — None 반환 시 서버URL 폴백 경로를 탄다
     monkeypatch.setattr(appmod, "upload_frame", lambda raw: None)
     if limit_reached:
@@ -59,7 +59,7 @@ def test_lens_search_forwards_source_caption(tmp_path, monkeypatch):
     monkeypatch.setattr(appmod, "upload_frame", lambda raw: None)
     captured = {}
 
-    def fake_search(url, source_caption=""):
+    def fake_search(url, api_key=None, source_caption="", stats=None):
         captured["source_caption"] = source_caption
         return []
     monkeypatch.setattr(appmod, "search_similar_videos", fake_search)
@@ -212,8 +212,11 @@ def test_lens_yt_returns_youtube_items(tmp_path, monkeypatch):
                         lambda raw, cap: {"product": "물총", "zh": "水枪"})
     fake = [{"url": f"https://youtu.be/v{i}", "title": f"물총 리뷰 {i}",
              "thumbnail": f"https://img/{i}.jpg"} for i in range(3)]
-    monkeypatch.setattr(appmod, "youtube_search",
-                        types.SimpleNamespace(search=lambda kw, max_results=40: fake))
+    # 2026-08-16: 렌즈용 호출은 duration/language를 함께 넘긴다(롱폼·외국어 잡음 차단)
+    monkeypatch.setattr(appmod, "youtube_search", types.SimpleNamespace(
+        search=lambda kw, max_results=40, duration=None, language=None: fake))
+    # 2026-08-16: 유튜브도 유사도 채점을 받는다 — 채점이 비면 match는 None 그대로.
+    monkeypatch.setattr(appmod, "judge_same_product", lambda p, t: [])
     c = TestClient(appmod.app)
     r = c.post("/api/lens/yt",
                data={"source_caption": "물총 여름 필수템"},
@@ -225,6 +228,30 @@ def test_lens_yt_returns_youtube_items(tmp_path, monkeypatch):
     assert all(i["platform"] == "youtube" for i in d["items"])
     assert all(i["match"] is None for i in d["items"])
     assert d["keyword"] == "물총"
+
+
+def test_lens_yt_채점되면_무관한것이_match_False로_표시된다(tmp_path, monkeypatch):
+    """유튜브도 '⚠️ 다른주제 숨기기'가 먹혀야 한다(2026-08-16).
+
+    예전엔 match가 무조건 None이라 프론트가 유튜브를 한 개도 못 걸렀다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
+    monkeypatch.setattr(appmod, "cn_search_keyword_vision",
+                        lambda raw, cap: {"product": "물총", "zh": "水枪"})
+    fake = [{"url": "https://youtu.be/a", "title": "물총 리뷰", "thumbnail": ""},
+            {"url": "https://youtu.be/b", "title": "코스피 시황", "thumbnail": ""}]
+    monkeypatch.setattr(appmod, "youtube_search", types.SimpleNamespace(
+        search=lambda kw, max_results=40, duration=None, language=None: list(fake)))
+    monkeypatch.setattr(appmod, "judge_same_product", lambda p, t: ["same", "no"])
+
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/yt", data={"source_caption": "물총"},
+               files={"frame": ("f.jpg", b"\xff\xd8\xff", "image/jpeg")})
+    d = r.json()
+    byurl = {i["url"]: i for i in d["items"]}
+    assert byurl["https://youtu.be/a"]["match"] is True
+    assert byurl["https://youtu.be/b"]["match"] is False     # ★프론트가 이걸 거른다
+    assert d["items"][0]["url"] == "https://youtu.be/a"      # same 우선 정렬
 
 
 def test_lens_yt_empty_keyword_returns_empty(tmp_path, monkeypatch):
@@ -259,7 +286,7 @@ def test_lens_yt_search_failure_returns_empty(tmp_path, monkeypatch):
 # ── /api/lens/cn/keywords : 프레임 → 중국어 후보 검색어 (2026-07-19) ──
 def test_lens_cn_keywords_returns_candidates(tmp_path, monkeypatch):
     monkeypatch.setattr(appmod, "cn_search_candidates",
-                        lambda raw, cap: {"product": "감자칩",
+                        lambda raw, cap, exclude=None: {"product": "감자칩",
                                           "candidates": [{"ko": "공기튀김 감자칩", "zh": "空气炸锅土豆片"}]})
     c = TestClient(appmod.app)
     r = c.post("/api/lens/cn/keywords",
@@ -268,6 +295,109 @@ def test_lens_cn_keywords_returns_candidates(tmp_path, monkeypatch):
     d = r.json()
     assert d["ok"] and d["product"] == "감자칩"
     assert d["candidates"][0]["zh"] == "空气炸锅土豆片"
+
+
+def test_lens_cn_keywords_forwards_exclude(tmp_path, monkeypatch):
+    """🔄 다른 검색어(2026-08-14): 프론트가 보낸 '이미 본 후보'를 비전에 그대로 넘겨야
+    같은 3~4개가 또 나오는 복불복이 안 된다."""
+    seen = {}
+
+    def fake(raw, cap, exclude=None):
+        seen["exclude"] = exclude
+        return {"product": "감자칩", "candidates": [{"ko": "회오리감자", "zh": "龙卷风土豆"}]}
+    monkeypatch.setattr(appmod, "cn_search_candidates", fake)
+    c = TestClient(appmod.app)
+    d = c.post("/api/lens/cn/keywords",
+               files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_caption": "풍선감자",
+                     "exclude": "공기튀김 감자칩\n空气炸锅土豆片"}).json()
+    assert seen["exclude"] == ["공기튀김 감자칩", "空气炸锅土豆片"]
+    assert d["candidates"][0]["zh"] == "龙卷风土豆"
+
+
+def test_lens_kw_expand_returns_combos(tmp_path, monkeypatch):
+    """⌨️ 키워드 직접 넣기(2026-08-14): 한국어 소재어만 넣어도 ko+zh 조합이 나와야 한다."""
+    seen = {}
+
+    def fake(kw, n=6, exclude=None):
+        seen.update(kw=kw, n=n, exclude=exclude)
+        return [{"ko": "시금치 치아바타", "zh": "菠菜恰巴塔"},
+                {"ko": "시금치 빵", "zh": "菠菜面包"}]
+    monkeypatch.setattr(appmod, "expand_search_keywords", fake)
+    c = TestClient(appmod.app)
+    d = c.post("/api/lens/kw/expand",
+               data={"keyword": "시금치 치아바타", "exclude": "菠菜吐司", "n": 6}).json()
+    assert seen["kw"] == "시금치 치아바타" and seen["exclude"] == ["菠菜吐司"]
+    assert d["ok"] and d["keyword"] == "시금치 치아바타"
+    assert [x["zh"] for x in d["candidates"]] == ["菠菜恰巴塔", "菠菜面包"]
+
+
+def test_lens_kw_expand_empty_keyword(tmp_path, monkeypatch):
+    c = TestClient(appmod.app)
+    d = c.post("/api/lens/kw/expand", data={"keyword": "  "}).json()
+    assert d["ok"] and d["candidates"] == []
+
+
+def test_lens_kw_expand_survives_gemini_error(tmp_path, monkeypatch):
+    """비전·번역이 죽어도 렌즈 화면이 깨지면 안 된다 — 빈 리스트로 정상 응답."""
+    def boom(kw, n=6, exclude=None):
+        raise RuntimeError("quota")
+    monkeypatch.setattr(appmod, "expand_search_keywords", boom)
+    c = TestClient(appmod.app)
+    d = c.post("/api/lens/kw/expand", data={"keyword": "시금치"}).json()
+    assert d["ok"] and d["candidates"] == []
+
+
+def test_lens_search_reports_instagram_dropoff(tmp_path, monkeypatch):
+    """인스타 편차 계측(2026-08-14): 렌즈 원본 인스타 링크 중 개별 게시물이 아닌 것과
+    카드뉴스를 세어 응답 diag에 실어야 '0건'의 원인이 화면에서 갈린다."""
+    db = str(tmp_path / "t.db")
+    monkeypatch.setattr(appmod, "DB_PATH", db)
+    monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
+    monkeypatch.setattr(appmod, "upload_frame", lambda raw: None)
+    from shopping_shorts import lens_discover
+    raw_matches = [
+        {"link": "https://www.instagram.com/reel/AAA111/", "title": "릴"},
+        {"link": "https://www.instagram.com/p/BBB222/", "title": "카드뉴스"},
+        {"link": "https://www.instagram.com/popular/some-slug/", "title": "모음"},
+        {"link": "https://www.instagram.com/someuser/", "title": "프로필"},
+    ]
+    monkeypatch.setattr(lens_discover, "verify_matches", lambda items, keywords=None: items)
+    monkeypatch.setattr(appmod, "search_similar_videos",
+                        lambda url, api_key=None, source_caption="", stats=None:
+                        _run_real(lens_discover, raw_matches, stats))
+    c = TestClient(appmod.app)
+    d = _post_img(c).json()
+    assert d["diag"]["ig_raw"] == 4
+    assert d["diag"]["ig_dropped_not_post"] == 2      # /popular/, 프로필
+    assert d["diag"]["ig_photo"] == 1                 # /p/
+    # 2026-08-16부터 카드뉴스(/p/)는 **서버가 잘라낸다**(사장님 "사진은 자체 커트").
+    # 예전엔 통과시키고 프론트 토글이 가리기만 했다 → 이제 릴스 1건만 남는다.
+    assert d["diag"]["cut_photo"] == 1
+    assert len(d["items"]) == 1
+
+
+def _run_real(lens_discover, raw_matches, stats):
+    """search_similar_videos의 '후처리 루프'만 실제로 태운다(SerpApi 호출 없이).
+
+    ★로케일 1벌로 고정한다 — 2026-08-16부터 기본이 ko+en 2벌이라, 같은 가짜 응답을
+      두 번 주면 계측치(ig_raw 등)가 정확히 배로 부풀어 무엇을 세는지 흐려진다.
+      이 헬퍼를 쓰는 테스트들은 '인스타 드롭오프 계측'을 보는 것이지 로케일이 아니다."""
+    import requests
+
+    class _R:
+        status_code = 200
+        def json(self): return {"visual_matches": raw_matches}
+        def raise_for_status(self): pass
+    orig = requests.get
+    orig_locales = lens_discover._LENS_LOCALES
+    requests.get = lambda *a, **k: _R()
+    lens_discover._LENS_LOCALES = (("ko", "kr"),)
+    try:
+        return lens_discover.search_similar_videos("https://img/x.jpg", api_key="k", stats=stats)
+    finally:
+        requests.get = orig
+        lens_discover._LENS_LOCALES = orig_locales
 
 
 def test_lens_cn_keywords_empty_without_frame_or_caption(tmp_path, monkeypatch):
@@ -322,14 +452,20 @@ def test_lens_cn_search_survives_one_actor_error(tmp_path, monkeypatch):
 
 
 def test_lens_month_limit_scales_with_keys(tmp_path, monkeypatch):
-    """렌즈 월 한도 = 키 개수 × 100(무료 계정당). 설정 override 있으면 그 값."""
+    """렌즈 월 한도 = 키 개수 × 250(계정당). 설정 override 있으면 그 값.
+
+    ★250은 실측값이다(2026-08-16, SerpApi account API로 직접 확인: 두 키 다 플랜 250).
+      예전 상수 100은 실제와 달라, 카운터가 200에 닿으면 **아직 300회가 남았는데도**
+      렌즈를 막았다."""
+    per = appmod._LENS_MONTH_LIMIT_PER_KEY
+    assert per == 250, "실측 플랜과 어긋나면 멀쩡한데 막힌다"
     s = Store(str(tmp_path / "t.db"))
     import shopping_shorts.config as cfg
     monkeypatch.setattr(cfg, "SERPAPI_KEYS", ["k1"])
-    assert appmod._lens_month_limit(s) == 100
+    assert appmod._lens_month_limit(s) == per
     monkeypatch.setattr(cfg, "SERPAPI_KEYS", ["k1", "k2"])
-    assert appmod._lens_month_limit(s) == 200          # 2번째 키 넣으면 자동 200
+    assert appmod._lens_month_limit(s) == per * 2       # 2번째 키 넣으면 자동 2배
     monkeypatch.setattr(cfg, "SERPAPI_KEYS", [])
-    assert appmod._lens_month_limit(s) == 100          # 키 0개여도 최소 100
+    assert appmod._lens_month_limit(s) == per           # 키 0개여도 최소 1키분
     s.set_setting("lens_month_limit", "50")
     assert appmod._lens_month_limit(s) == 50            # 설정 override 우선

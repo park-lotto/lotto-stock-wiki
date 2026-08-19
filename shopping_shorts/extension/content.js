@@ -1,9 +1,17 @@
 // 로또 · 원클릭 담기 — 콘텐츠 스크립트(격리 월드).
 //
-// 이 확장은 **텀퍼몽키 대체품**이다. 서버의 실제 로직(grab_logic.js)을 가져와 실행하고,
-// 로직이 서버 API를 부를 수 있게 GM_xmlhttpRequest 역할의 브리지를 제공한다.
-// 로직 파일은 유저스크립트와 **같은 파일을 공유**하므로, 서버에서 로직을 고치면 확장·
-// 유저스크립트 사용자 모두 자동 반영된다(재설치 불필요).
+// 이 확장은 **텀퍼몽키 대체품**이다. 로직(grab_logic.js)을 실행하고, 로직이 서버 API를
+// 부를 수 있게 GM_xmlhttpRequest 역할의 브리지를 제공한다.
+//
+// ⚠️★로직 반영 방식이 유저스크립트와 **다르다**(2026-08-17 실사고로 바로잡은 설명).
+//   · 유저스크립트: 로더가 매번 서버 /grab_logic.js를 받아 실행 → 서버 배포 = 자동 반영
+//   · 확장:        manifest content_scripts에 **패키지 안의 grab_logic.js가 정적 등록**된다
+//                  → 서버에 배포해도 **이미 설치된 확장에는 반영되지 않는다. 재설치해야 한다.**
+//   예전 주석은 여기에 "재설치 불필요"라고 적어 두었는데 확장에는 거짓이다. 실제로
+//   도우인 영상주소 전송 기능을 배포한 뒤 "왜 안 되지"로 한참을 헤맸다(서버는 최신을
+//   서빙하고 있었고, 사장님 확장만 옛 코드였다).
+//   MV3는 원격 코드 실행을 금지하므로 이 구조를 바꿀 수 없다 — 로직을 고쳤으면
+//   **사장님께 재설치를 안내해야 한다**(zip은 요청 때마다 최신 원본으로 다시 만들어진다).
 //
 // ★★설계 핵심 — 로직을 '페이지 월드'에 주입하지 않고 **여기(격리 월드)서 직접 실행**한다.
 //   2026-08-04에 페이지 주입 방식으로 만들었다가 유튜브에서 통째로 죽는 걸 실측했다.
@@ -39,22 +47,24 @@
     // 즉시 ACK — 로직은 1.5초 안에 ACK가 없으면 '브리지 없음'으로 보고 딥링크로 폴백한다.
     window.postMessage({ __ssGmAck: true, reqId: d.reqId }, "*");
 
-    var opt = {
-      method: d.method || "GET",
-      credentials: "include",          // 로그인 쿠키 — 크레딧·회원 가드에 필요
-      headers: d.headers || {}
-    };
-    if (d.body) opt.body = d.body;
-
-    fetch(d.url, opt)
-      .then(function (r) {
-        return r.text().then(function (t) {
-          window.postMessage({ __ssGmResult: true, reqId: d.reqId,
-                               status: r.status, text: t }, "*");
-        });
-      })
-      .catch(function () {
-        window.postMessage({ __ssGmResult: true, reqId: d.reqId, status: 0, text: "" }, "*");
+    // ★요청은 **백그라운드(서비스워커)**가 대신 보낸다(2026-08-18 실사고 수정).
+    //   MV3에서 콘텐츠 스크립트의 fetch는 **그 페이지와 똑같은 CORS 규칙**을 받는다.
+    //   그래서 instagram.com에서 우리 서버로 POST를 보내면 브라우저가 먼저 OPTIONS
+    //   (사전확인)를 쏘는데, 우리 로그인 가드가 그걸 401로 막아 요청이 아예 안 나갔다.
+    //   서버 로그 실측: `"OPTIONS /api/lens/trace_url" 401` → 화면엔 "서버 연결 실패".
+    //   서비스워커는 host_permissions로 CORS를 타지 않으므로 여기서만 보내면 된다.
+    //   (서버 쪽에서 instagram.com에 credentialed CORS를 열어주는 방법도 있지만,
+    //    그건 인스타의 아무 스크립트나 우리 쿠키로 API를 부를 수 있게 되는 길이다.)
+    chrome.runtime.sendMessage(
+      { __ssRelay: true, url: d.url, method: d.method || "GET",
+        headers: d.headers || {}, body: d.body || null },
+      function (res) {
+        if (chrome.runtime.lastError || !res) {
+          window.postMessage({ __ssGmResult: true, reqId: d.reqId, status: 0, text: "" }, "*");
+          return;
+        }
+        window.postMessage({ __ssGmResult: true, reqId: d.reqId,
+                             status: res.status || 0, text: res.text || "" }, "*");
       });
   });
 

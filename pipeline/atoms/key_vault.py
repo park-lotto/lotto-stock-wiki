@@ -166,7 +166,15 @@ _active_idx: dict[str, int] = {}
 def get_client_for_key(key: str) -> genai.Client:
     # 키마다 클라이언트를 캐시 — 중복 생성 방지
     if key not in _client_cache:
-        _client_cache[key] = genai.Client(api_key=key)
+        cl = genai.Client(api_key=key)
+        # 토큰 사용량 계측(2026-08-16). key_vault는 주식위키 파이프라인도 쓰므로
+        # shopping_shorts에 하드 의존하면 안 된다 — 없으면 조용히 원본을 쓴다.
+        try:
+            from shopping_shorts import usage_meter
+            cl = usage_meter.wrap(cl)
+        except Exception:      # noqa: BLE001 — 계측은 있으면 좋고 없어도 돈다
+            pass
+        _client_cache[key] = cl
     return _client_cache[key]
 
 

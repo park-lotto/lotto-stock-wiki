@@ -86,6 +86,37 @@ def _gate():
         return None, None, None, None
 
 
+def _is_transient(err):
+    """이 실패가 **서버·상대 사정(일시)**인가, **이 영상 자체의 문제(영구)**인가.
+
+    ★래치는 "이 영상은 아무리 시도해도 안 된다"를 기억하는 장치지,
+      "지금 잠깐 안 된다"를 기억하는 장치가 아니다(autoload_rollback_attempt 주석).
+      KeyPoolExhausted만 그렇게 다뤄지고 있었는데, **구글 5xx·타임아웃·429도 같은
+      성질**이다. 그것들이 attempts를 태우면 3회에 소진돼 **다시 담기 전엔 영영
+      재시도가 안 된다**(라이브 실측 2026-08-19: 시도소진 9건).
+
+    True면 attempts를 돌려주고(다음 크론이 재시도), False면 종전대로 래치한다.
+
+    ⚠️ 애매하면 **False**(래치)다 — 진짜 못 받는 영상을 무한 재시도하면 크레딧이 샌다.
+       여기서 True로 치는 건 '분명히 일시적'이라고 말할 수 있는 신호뿐이다.
+    """
+    e = str(err or "").lower()
+    # 서버측 5xx·게이트웨이·과부하
+    if any(s in e for s in ("500 ", "502", "503", "504", "internal error",
+                            "bad gateway", "service unavailable", "gateway timeout",
+                            "overloaded", "unavailable_error", "temporarily")):
+        return True
+    # 속도 제한
+    if "429" in e or "rate limit" in e or "too many requests" in e or "quota" in e:
+        return True
+    # 네트워크·타임아웃
+    if any(s in e for s in ("timed out", "timeout", "connection reset",
+                            "connection aborted", "connection error",
+                            "temporary failure", "econnreset", "read timeout")):
+        return True
+    return False
+
+
 def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
                 category=None, db_path=None):
     """담긴 영상 1건을 미리 추출+구조분석해 캐시에 채운다. 상태 문자열을 돌려준다.
@@ -94,7 +125,8 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
           failed_download | failed_empty | failed_error | done
     예외를 밖으로 던지지 않는다 — 예열은 보조작업이라 실패해도 무해해야 한다."""
     from shopping_shorts.media_download import download_any
-    from shopping_shorts.script_extract import extract_auto, storable, KeyPoolExhausted
+    from shopping_shorts.script_extract import (extract_auto, storable, KeyPoolExhausted,
+                                                has_usable_result)
     from shopping_shorts.structure_analyze import analyze_structure
 
     code = (shortcode or "").strip()
@@ -103,8 +135,12 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
     store = Store(db_path or DB_PATH)
 
     # ①-a 이미 유효 캐시가 있으면 아무것도 안 한다(중복 과금 차단).
+    # ★판정은 has_usable_result 한 곳으로(0순위-B, 2026-08-16 저장 기준과 짝).
+    #   full_text만 보면 **무자막 영상은 저장돼 있어도 캐시미스**가 돼 매번 다시 태우고,
+    #   시도 횟수만 쌓여 결국 영구 래치된다(서버 실측: lens_tiktok_1cfb55 —
+    #   화면 태깅이 저장돼 있는데 attempts=2까지 다시 탔다).
     cached = store.get_extract(code)
-    if cached and (cached.get("full_text") or "").strip():
+    if has_usable_result(cached):
         if not cached.get("structure"):
             _fill_structure(store, code, cached.get("full_text") or "", analyze_structure)
         return "already"
@@ -131,6 +167,12 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
         try:
             video_path, dl_caption = download_any(src, str(_work_dir(code)))
         except Exception as e:  # noqa: BLE001 — 만료·비공개·차단
+            # ★일시 실패(5xx·타임아웃·429)는 래치하지 않는다(2026-08-19).
+            #   영상 탓이 아닌데 attempts를 태우면 3회에 소진돼 **다시 담기 전엔
+            #   영영 재시도가 안 된다**(라이브 실측: 시도소진 9건).
+            if _is_transient(e):
+                store.autoload_rollback_attempt(code, f"예열 다운로드 일시실패(재시도 예정): {e}")
+                return "deferred_transient"
             store.autoload_mark_error(code, f"예열 다운로드 실패: {e}")
             return "failed_download"
         try:
@@ -141,12 +183,21 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
             store.autoload_rollback_attempt(code, f"예열 보류: {e}")
             return "deferred_nokey"
         except Exception as e:  # noqa: BLE001
+            # ★구글 5xx·타임아웃은 KeyPoolExhausted와 같은 성질이다 — 서버 사정이지
+            #   영상 탓이 아니다. 래치를 돌려주고 다음 크론이 다시 하게 둔다.
+            if _is_transient(e):
+                store.autoload_rollback_attempt(code, f"예열 추출 일시실패(재시도 예정): {e}")
+                return "deferred_transient"
             store.autoload_mark_error(code, f"예열 추출 실패: {e}")
             return "failed_error"
-        full_text = (result.get("full_text") or "").strip()
-        if not full_text:                    # ③빈 대본은 저장 금지
-            store.autoload_mark_error(code, "예열: 전사 결과 없음(음성 없음·자막 불가)")
+        # ③재료가 하나도 안 나왔을 때만 버린다(2026-08-16) — 말이 없어도 화면
+        #   태깅이 나왔으면 쓸 수 있다. 판정은 script_extract 한 곳에서만 한다.
+        if not has_usable_result(result):
+            store.autoload_mark_error(code, "예열: 쓸 만한 재료가 안 나왔어요(화면·말 모두 비어 있음)")
             return "failed_empty"
+        # 구조분석은 '말'을 읽는 것이라 여전히 full_text가 필요하다(아래 _fill_structure).
+        # 무자막 영상은 빈 문자열 → 구조분석만 조용히 건너뛴다(추출·태깅은 이미 저장됐다).
+        full_text = (result.get("full_text") or "").strip()
         # storable()로 추린다 — 손으로 dict를 다시 만들면 tag_qa가 저장에서 누락된다
         # (담기 예열이 라이브 주경로라 여기서 새면 QA 점수가 아예 안 쌓인다).
         store.save_script(code, storable(result), category=category)

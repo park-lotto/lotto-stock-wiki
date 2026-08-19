@@ -7,7 +7,7 @@
 """
 import os, sys, json, glob, re, shutil, subprocess, uuid, time, threading
 from collections import deque
-from datetime import datetime
+from datetime import datetime, timedelta
 import requests
 
 # 프로젝트 루트를 sys.path에 추가 (python dashboard/server.py 로 실행 시 pipeline import 가능하게)
@@ -3357,6 +3357,71 @@ def _live_osc_fallback(code: str):
         return None
 
 
+# 빈집(수급 오실레이터)을 어디서 가져올지 **한 군데서만** 정한다.
+#
+# 엑셀 경로가 등급(A완전빈집/B반빈집/C정상/D과매수)까지 주지만, 전종목 분포가 있어야
+# 백분위가 나오므로 실시간 경로는 방향(↑재진입 등)만 준다.
+# ⚠️ 실측(2026-08-15): taerini_stock.json에 종목은 132개 있는데 **osc 키를 가진 종목이 0개**다
+#    (엑셀 산출물이 2026-05-27에서 멈춤). 그래서 "엑셀에 종목이 있다"만 보고 판단하면
+#    빈집 칸이 조용히 빈다 — 반드시 osc 값 자체가 있는지를 확인하고 없으면 실시간으로 넘긴다.
+def _vacuum_for(code: str) -> dict | None:
+    """{osc, pct, grade, trend, series, source} — 못 구하면 None."""
+    code = (code or "").strip().zfill(6) if (code or "").strip().isdigit() else (code or "").strip()
+    if not code:
+        return None
+
+    entry, source = None, ""
+    try:
+        if os.path.exists(TAERINI_STOCK_PATH):
+            with open(TAERINI_STOCK_PATH, encoding="utf-8") as f:
+                data = json.load(f)
+            cand = (data.get("stocks") or {}).get(code) or {}
+            if cand.get("osc") is not None:
+                entry, source = cand, "excel"
+    except Exception:
+        entry = None
+
+    if entry is None:
+        entry = _live_osc_fallback(code)
+        source = "live"
+    if not entry:
+        return None
+
+    # ⚠️ 두 경로가 모양이 다르다 — taerini(엑셀)는 osc 값을 평평하게 담고,
+    #    osc_live.live_osc_entry()는 {"osc": {...}} 로 한 겹 감싸 준다.
+    #    안 풀면 osc가 dict로 들어가 trend·series가 조용히 빈다(실측으로 잡음).
+    inner = entry.get("osc")
+    if isinstance(inner, dict):
+        entry = inner
+    if entry.get("osc") is None:
+        return None
+
+    pct = entry.get("pct")
+    return {
+        "osc": entry.get("osc"),
+        "pct": pct,
+        "grade": _vacuum_grade(pct),
+        "trend": entry.get("trend") or "",
+        "series": entry.get("series") or [],
+        "group": entry.get("group") or "",
+        "source": source,
+    }
+
+
+def _vacuum_grade(pct) -> str:
+    """백분위 → 등급. calc_oscillator.grade()와 같은 경계(10/25/75)를 쓴다.
+    백분위가 없으면(실시간 경로) 등급을 지어내지 않고 빈 문자열."""
+    if pct is None:
+        return ""
+    if pct <= 10:
+        return "A 완전빈집"
+    if pct <= 25:
+        return "B 반빈집"
+    if pct <= 75:
+        return "C 정상"
+    return "D 과매수"
+
+
 @app.get("/api/taerini_consensus")
 def api_taerini_consensus(code: str = ""):
     """종목별 주간 컨센 시계열(12MF/FY1/FY2) — 차트 오버레이용."""
@@ -4145,6 +4210,52 @@ def insights_page():
         return f.read()
 
 
+# ── 인사이트2 (신규 UI 초안, ★운영자 전용) ────────────────────
+# 기존 /insights 는 그대로 두고 옆에 새로 만든다. 완성되면 교체 판단.
+#
+# 접근제어: /insights2 와 /api/insights2/ 를 _USER_PAGES·_USER_API_PREFIX 에
+# **일부러 넣지 않았다** → 미들웨어(_user_allowed)가 일반 사용자를 자동 차단한다
+# (페이지는 /home 리다이렉트, API는 403). admin_page(:707)와 같은 방식.
+# 아래 _require_admin 은 그 방어선이 뚫렸을 때를 대비한 2중 잠금이다
+# (미들웨어를 나중에 누가 고치다 초안이 외부로 새는 걸 막는다).
+def _ins2_require_admin(request: Request):
+    """운영자가 아니면 True(차단해야 함). 미완성 초안이라 외부 노출 금지.
+
+    인증 OFF(로컬 개발: DASH_PASS·GOOGLE_CLIENT_ID 둘 다 없음)일 땐 통과시킨다 —
+    다른 관리자 경로(:744, :818)와 같은 판단이다. 라이브는 둘 다 설정돼 있으므로
+    _AUTH_ON=True → 아래 쿠키 검사가 그대로 걸린다(잠금 그대로).
+    """
+    if not _AUTH_ON:
+        return False
+    uid = _verify_session(request.cookies.get("dash_auth", ""))
+    return uid is None or not _is_admin(uid)
+
+
+@app.get("/stock", response_class=HTMLResponse)
+def stock_page(request: Request):
+    """종목검색 브리프. insights2와 같은 2중 잠금(초안이라 외부 노출 금지)."""
+    if _ins2_require_admin(request):
+        return RedirectResponse("/home")
+    p = os.path.join(HERE, "stock.html")
+    if not os.path.exists(p):
+        return "<h1>stock.html 준비중</h1>"
+    with open(p, encoding="utf-8") as f:
+        html = f.read()
+    return HTMLResponse(content=html, headers={"Cache-Control": "no-cache, must-revalidate"})
+
+
+@app.get("/insights2", response_class=HTMLResponse)
+def insights2_page(request: Request):
+    if _ins2_require_admin(request):
+        return RedirectResponse("/home")
+    p = os.path.join(HERE, "insights2.html")
+    if not os.path.exists(p):
+        return "<h1>insights2.html 준비중</h1>"
+    with open(p, encoding="utf-8") as f:
+        html = f.read()
+    return HTMLResponse(content=html, headers={"Cache-Control": "no-cache, must-revalidate"})
+
+
 # ── 인사이트 헬퍼 ────────────────────────────────────────────
 
 _CAT_TYPE_MAP = {
@@ -4382,6 +4493,538 @@ def api_insights_overview():
             "today": today,
             "categories": categories,
             "feed": feed_items,
+        })
+    finally:
+        conn.close()
+
+
+# ══════════════════════════════════════════════════════════════
+# 인사이트2 API — 화면 하나가 필요한 걸 한 번에 준다
+#
+# 설계 의도: 기존 /api/insights/* 는 "카테고리→소스→문서→상세" 드릴다운용이라
+# 화면을 그리려면 4번 호출해야 한다. 인사이트2는 한 화면에 다 펼치므로
+# 한 방에 필요한 모양(판세 3칸 + 영상별 발언)으로 만들어 준다.
+# ══════════════════════════════════════════════════════════════
+
+# 신호 → 부호. 화면의 초록/빨강 점이 이걸로 갈린다.
+_SIGN_MAP = {
+    "bullish": 1, "momentum": 1,
+    "bearish": -1, "risk": -1, "volatility": -1,
+    # neutral·data·catalyst 등은 0 (기본값)
+}
+
+
+def _sign_of(signal: str) -> int:
+    return _SIGN_MAP.get((signal or "").strip().lower(), 0)
+
+
+# 텔레 원자 머리말 분해 — 한 군데에서만 판단한다(0순위-B).
+#
+# 실측(2026-08-15, atoms.db): 텔레 content 상당수가 아래 모양으로 시작한다.
+#   "[중계:신한투자증권] 목표가 18,000원 매수 / 12MF BPS ..."
+#   "[중계:그로쓰리서치] 목표가 None None / 삼성바이오로직스와 셀트리온 ..."
+#   "[긍정] 구리 가격 1만 4,000달러 근접 ..."
+# 즉 머리말은 **구조 정보**(중계처·목표가·의견)인데 문자열로 박혀 있다.
+# 화면에서 걷어내기만 하면 정보를 버리는 것이고, 그대로 두면 'None None'이 보인다.
+# → 필드로 쪼개서 값이 있는 것만 배지로 쓴다. None은 자연히 사라진다.
+#
+# 8월 표본 971건 중: [중계:*] 94 / [긍정]·[중립]·[부정] 41 / 'None' 포함 140
+_RE_RELAY = re.compile(r"\[중계:([^\]]*)\]\s*")
+_RE_TP = re.compile(r"^목표가\s+(\S+)(?:\s+(\S+))?\s*/\s*")
+# 부호 접두어는 두 가지 모양으로 온다 — "[긍정] ..." 과 "긍정: ..." (실측 둘 다 존재).
+# 한쪽만 걷으면 화면에 섞여 나온다.
+_RE_TONE = re.compile(r"^(?:\[(?:긍정|중립|부정|None)\]|(?:긍정|중립|부정)\s*:)\s*")
+
+# 원자화가 값 없음을 문자열로 흘린다 — 실측(2026-08-05 텔레): 'None' 60건, 'null' 8건.
+# 판정을 여기 한 군데서만 한다(0순위-B: 같은 판단을 두 번 적지 않는다).
+_EMPTYISH = {"", "none", "null", "n/a", "-", "미정"}
+
+
+def _ins2_blank(v: str) -> bool:
+    return (v or "").strip().lower() in _EMPTYISH
+
+
+def _ins2_split_head(content: str) -> dict:
+    """{text, relay, tp, opinion} — 값이 없으면 빈 문자열."""
+    t = (content or "").strip()
+    relay = tp = opinion = ""
+
+    m = _RE_TONE.match(t)
+    if m:
+        t = t[m.end():]  # 부호는 화면의 점(dot)이 이미 보여준다 → 글자로 반복하지 않는다
+
+    m = _RE_RELAY.search(t)
+    if m:
+        if not _ins2_blank(m.group(1)):
+            relay = m.group(1).strip()
+        t = (t[:m.start()] + t[m.end():]).strip()
+
+        # '목표가 ...' 는 [중계:*] 바로 뒤에만 온다. 앞에 붙은 '글로벌 램리서치: ' 같은
+        # 문맥은 살려야 하므로, 잘라낸 자리 이후만 본다.
+        head = t[m.start():]
+        m2 = _RE_TP.match(head)
+        if m2:
+            for val, slot in ((m2.group(1), "tp"), (m2.group(2), "opinion")):
+                if _ins2_blank(val):
+                    continue
+                if slot == "tp":
+                    tp = val.strip()
+                else:
+                    opinion = val.strip()
+            t = (t[:m.start()] + head[m2.end():]).strip()
+
+    return {"text": t, "relay": relay, "tp": tp, "opinion": opinion}
+
+
+def _ins2_latest_date(conn, type_cond: str) -> str:
+    """데이터가 있는 가장 최근 날짜. 오늘 크롤이 아직이면 화면이 비니까,
+    '오늘'을 고집하지 않고 실제로 있는 마지막 날을 쓴다."""
+    row = conn.execute(
+        f"SELECT MAX(date) d FROM atoms WHERE {type_cond} AND date IS NOT NULL AND date != ''"
+    ).fetchone()
+    return (row["d"] if row and row["d"] else "") or ""
+
+
+@app.get("/api/insights2/stock")
+def api_insights2_stock(request: Request, q: str = "", days: int = 45):
+    """종목검색 한 화면 분량의 **재료**를 한 번에. ★운영자 전용(초안).
+
+    종합(5칸 문장)은 여기서 하지 않는다 — 재료와 종합을 갈라둬야
+    LLM이 죽어도 화면은 원문으로 살아남는다.
+
+    반환: {q, canonical, code, too_short, counts, atoms[], flow, vacuum}
+    """
+    if _ins2_require_admin(request):
+        return JSONResponse(content={"error": "forbidden"}, status_code=403)
+
+    q = (q or "").strip()
+    if not q:
+        return JSONResponse(content={"error": "검색어가 없습니다"}, status_code=400)
+
+    from pipeline.atoms import stock_search
+    from pipeline.atoms.codemap import code_for
+
+    conn = _ins_conn()
+    if conn is None:
+        return JSONResponse(content={"error": "atoms.db 없음"}, status_code=503)
+
+    try:
+        canonical = stock_search.canonical_name(q)
+        since = (datetime.now() - timedelta(days=max(1, days))).strftime("%Y-%m-%d")
+        rows = stock_search.search(conn, q, since=since, limit=240)
+
+        atoms, srcs = [], {}
+        for r in rows:
+            head = _ins2_split_head(r.get("content") or "")
+            srcs[r.get("source_type") or "?"] = srcs.get(r.get("source_type") or "?", 0) + 1
+            atoms.append({
+                "id": r.get("id"),
+                "date": r.get("date") or "",
+                "src": r.get("source_type") or "",
+                "who": r.get("source_name") or "",
+                "sector": r.get("sector") or "",
+                "asset": r.get("asset") or "",
+                "sign": _sign_of(r.get("signal")),
+                "signal": r.get("signal") or "",
+                "ts": (r.get("yt_timestamp") or "") or (r.get("msg_ts") or ""),
+                "deeplink": r.get("deeplink") or "",
+                "content": head["text"],
+                "relay": head["relay"],
+                "tp": head["tp"],
+                "opinion": head["opinion"],
+                "rel": r.get("rel", 0),
+            })
+
+        dates = [a["date"] for a in atoms if a["date"]]
+        code = code_for(canonical) or ""
+
+        # 수급·공매도 — 종목코드를 못 찾으면 건너뛴다(키워드가 종목이 아닐 수 있다)
+        # 둘 다 KIS 왕복이고 서로를 안 쓴다 → 순차로 돌면 대기시간이 그냥 더해진다.
+        # 스레드 2개로 겹쳐 부른다(kis_api가 전역 레이트게이트를 갖고 있어 안전).
+        flow, short, peers, vacuum = {}, {}, {}, None
+        if code:
+            def _get_flow():
+                try:
+                    import stock_flow
+                    return stock_flow.flow_summary(code)
+                except Exception as e:
+                    return {"error": f"{type(e).__name__}: {e}", "rows": []}
+
+            def _get_short():
+                try:
+                    import stock_short
+                    return stock_short.short_summary(code)
+                except Exception as e:
+                    return {"error": f"{type(e).__name__}: {e}", "series": []}
+
+            def _get_peers():
+                try:
+                    import stock_peers
+                    return stock_peers.compare(code)
+                except Exception as e:
+                    return {"found": False, "error": f"{type(e).__name__}: {e}", "peers": []}
+
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(max_workers=3) as ex:
+                fu_flow = ex.submit(_get_flow)
+                fu_short = ex.submit(_get_short)
+                fu_peers = ex.submit(_get_peers)
+                flow, short, peers = fu_flow.result(), fu_short.result(), fu_peers.result()
+            vacuum = _vacuum_for(code)
+
+        return JSONResponse(content={
+            "q": q,
+            "canonical": canonical,
+            "code": code,
+            "too_short": stock_search.is_too_short(q),
+            "counts": {
+                "atoms": len(atoms),
+                "sources": srcs,
+                "date_from": min(dates) if dates else "",
+                "date_to": max(dates) if dates else "",
+                "days": days,
+            },
+            "atoms": atoms,
+            "flow": flow,
+            "short": short,
+            "peers": peers,
+            "vacuum": vacuum,
+        })
+    finally:
+        conn.close()
+
+
+FLOW_DB_PATH = os.path.join(ROOT, "data", "flow.db")
+
+
+def _flow_by_date(code: str) -> dict:
+    """{YYYY-MM-DD: {frgn, orgn, prsn}} — 억원. 적재 전이면 빈 dict."""
+    if not code or not os.path.exists(FLOW_DB_PATH):
+        return {}
+    import sqlite3          # 이 파일은 최상위에서 sqlite3를 import하지 않는다(기존 관례)
+    try:
+        conn = sqlite3.connect(FLOW_DB_PATH, timeout=5)
+        rows = conn.execute(
+            "SELECT date, frgn, orgn, prsn FROM stock_flow_daily WHERE code=?", (code,)
+        ).fetchall()
+        conn.close()
+    except Exception:
+        return {}
+    out = {}
+    for d, f, g, p in rows:
+        # 저장은 KIS 원표기(YYYYMMDD)·백만원. 화면은 YYYY-MM-DD·억원을 쓴다.
+        out[f"{d[:4]}-{d[4:6]}-{d[6:8]}"] = {
+            "frgn": round((f or 0) / 100), "orgn": round((g or 0) / 100),
+            "prsn": round((p or 0) / 100),
+        }
+    return out
+
+
+# 「중요한 날」 점수 — 하나라도 걸리면 마커, 합이 클수록 굵게.
+# 매일 찍으면 못 보므로 사건이 있었던 날만 남긴다.
+_KEYDAY_MIN_SCORE = 2
+
+
+def _score_days(candles: list, atoms_by_date: dict, flow: dict) -> list:
+    """[{date, score, why[], chg, volx, atoms, frgn, orgn}] — 점수순."""
+    if len(candles) < 5:
+        return []
+    closes = [c.get("close") or 0 for c in candles]
+    vols = [c.get("value") or 0 for c in candles]
+    n_atoms = [len(atoms_by_date.get(c["time"], [])) for c in candles]
+    avg_atoms = (sum(n_atoms) / len(n_atoms)) if n_atoms else 0
+    frgns = sorted(abs(v["frgn"]) for v in flow.values()) if flow else []
+    big_flow = frgns[int(len(frgns) * 0.9)] if len(frgns) >= 10 else None
+
+    out = []
+    for i, c in enumerate(candles):
+        if i == 0:
+            continue
+        d = c["time"]
+        prev = closes[i - 1] or 0
+        chg = ((closes[i] / prev) - 1) * 100 if prev else 0
+        base = vols[max(0, i - 60):i]
+        volx = (vols[i] / (sum(base) / len(base))) if base and sum(base) else 0
+        na = n_atoms[i]
+        fl = flow.get(d) or {}
+
+        score, why = 0, []
+        if abs(chg) >= 5:
+            score += 3; why.append(f"{chg:+.1f}% 급등락")
+        elif abs(chg) >= 3:
+            score += 2; why.append(f"{chg:+.1f}%")
+        if volx >= 3:
+            score += 3; why.append(f"거래량 {volx:.1f}배")
+        elif volx >= 2:
+            score += 2; why.append(f"거래량 {volx:.1f}배")
+        if avg_atoms and na >= max(3, avg_atoms * 2):
+            score += 2; why.append(f"발언 {na}건")
+        if big_flow and fl and abs(fl.get("frgn", 0)) >= big_flow:
+            score += 2
+            why.append(f"외국인 {fl['frgn']:+,}억")
+        # 60일 신고가·신저가
+        win = closes[max(0, i - 59):i + 1]
+        if len(win) >= 20 and closes[i] == max(win):
+            score += 2; why.append("60일 신고가")
+        elif len(win) >= 20 and closes[i] == min(win):
+            score += 2; why.append("60일 신저가")
+
+        if score >= _KEYDAY_MIN_SCORE:
+            out.append({
+                "date": d, "score": score, "why": why,
+                "chg": round(chg, 2), "volx": round(volx, 1),
+                "atoms": na, "close": closes[i],
+                "frgn": fl.get("frgn"), "orgn": fl.get("orgn"),
+            })
+    out.sort(key=lambda x: (-x["score"], x["date"]))
+    return out
+
+
+@app.get("/api/insights2/keydays")
+def api_insights2_keydays(request: Request, q: str = "", days: int = 180, top: int = 30):
+    """차트 + 그날 있었던 일. ★운영자 전용.
+
+    반환: {code, candles[], flow{}, byDate{}, keydays[], coverage{}}
+      - byDate: 날짜별 발언(마커 호버·클릭이 이걸 쓴다)
+      - coverage: 발언·수급이 **언제부터** 있는지. 없는 구간을 화면이 흐리게 처리해야
+        "조용한 시기"로 오해하지 않는다.
+    """
+    if _ins2_require_admin(request):
+        return JSONResponse(content={"error": "forbidden"}, status_code=403)
+    q = (q or "").strip()
+    if not q:
+        return JSONResponse(content={"error": "검색어가 없습니다"}, status_code=400)
+
+    from pipeline.atoms import stock_search
+    from pipeline.atoms.codemap import code_for
+
+    canonical = stock_search.canonical_name(q)
+    code = code_for(canonical) or ""
+    if not code:
+        return JSONResponse(content={"error": f"「{canonical}」 종목코드를 찾지 못했습니다",
+                                     "canonical": canonical}, status_code=404)
+
+    # 캔들 — 이미 있는 엔드포인트를 그대로 쓴다(키움→KIS→네이버 3중 폴백이 붙어 있다)
+    try:
+        raw = json.loads(bytes(api_stock_candles(code=code, tf="D").body).decode("utf-8"))
+        candles = (raw.get("candles") or [])[-max(30, days):]
+    except Exception as e:
+        return JSONResponse(content={"error": f"캔들 조회 실패: {e}"}, status_code=503)
+
+    # 발언 — 날짜별로 묶는다
+    by_date: dict = {}
+    conn = _ins_conn()
+    if conn is not None:
+        try:
+            since = candles[0]["time"] if candles else ""
+            for r in stock_search.search(conn, q, since=since, limit=1500):
+                d = (r.get("date") or "").strip()
+                if len(d) != 10 or d.startswith("0000"):
+                    continue  # 깨진 날짜(atoms에 '0000-00-00'이 섞여 있다)는 버린다
+                head = _ins2_split_head(r.get("content") or "")
+                by_date.setdefault(d, []).append({
+                    "content": head["text"], "who": r.get("source_name") or "",
+                    "src": r.get("source_type") or "", "sign": _sign_of(r.get("signal")),
+                    "relay": head["relay"], "tp": head["tp"],
+                })
+        finally:
+            conn.close()
+
+    flow = _flow_by_date(code)
+    keydays = _score_days(candles, by_date, flow)[:max(5, top)]
+
+    # 차트 구조(A·B층) — 실패해도 화면은 캔들만으로 살아야 한다
+    try:
+        import chart_ta
+        ta = chart_ta.analyze(candles)
+        ta["lines"] = chart_ta.describe(ta)
+    except Exception as e:
+        ta = {"error": f"{type(e).__name__}: {e}"}
+
+    return JSONResponse(content={
+        "q": q, "canonical": canonical, "code": code,
+        "candles": candles,
+        "flow": flow,
+        "byDate": by_date,
+        "keydays": keydays,
+        "ta": ta,
+        "coverage": {
+            "atoms_from": min(by_date) if by_date else "",
+            "flow_from": min(flow) if flow else "",
+            "candles_from": candles[0]["time"] if candles else "",
+        },
+    })
+
+
+# 종합 결과 캐시 — 같은 종목을 다시 열 때 LLM을 또 부르지 않는다.
+# 발언은 하루 단위로 쌓이므로 날짜가 바뀌면 자연히 갱신된다.
+_BRIEF_CACHE: dict = {}
+_BRIEF_TTL = 60 * 60 * 6  # 6시간
+
+
+@app.get("/api/insights2/brief")
+def api_insights2_brief(request: Request, q: str = "", days: int = 45, force: int = 0):
+    """5칸 종합. ★운영자 전용.
+
+    LLM은 **슬롯 값만** 만든다(stock_brief 참조) — 화면을 다시 쓰게 하지 않는다.
+    실패해도 `ok:false`만 돌아가고, 화면은 /stock 재료로 그대로 그려진다.
+    """
+    if _ins2_require_admin(request):
+        return JSONResponse(content={"error": "forbidden"}, status_code=403)
+    q = (q or "").strip()
+    if not q:
+        return JSONResponse(content={"error": "검색어가 없습니다"}, status_code=400)
+
+    key = f"{q}|{days}|{datetime.now().strftime('%Y-%m-%d')}"
+    hit = _BRIEF_CACHE.get(key)
+    if hit and not force and (time.time() - hit["at"]) < _BRIEF_TTL:
+        return JSONResponse(content={**hit["data"], "cached": True})
+
+    import stock_brief
+
+    # 재료는 위 엔드포인트와 같은 함수를 쓴다 — 두 벌로 갈라지면 언젠가 어긋난다
+    src = api_insights2_stock(request, q=q, days=days)
+    if getattr(src, "status_code", 200) != 200:
+        return src
+    mat = json.loads(bytes(src.body).decode("utf-8"))
+    if mat.get("error"):
+        return JSONResponse(content=mat, status_code=400)
+
+    atoms = mat.get("atoms") or []
+    if not atoms:
+        return JSONResponse(content={"ok": False, "reason": "발언이 없습니다", "q": q})
+
+    prompt = stock_brief.build_prompt(q, atoms, mat.get("flow") or {}, mat.get("vacuum"))
+    res = _gemini_text(prompt, _summary_keys(), timeout=90)
+    if res.get("error"):
+        return JSONResponse(content={"ok": False, "reason": res["error"], "q": q})
+
+    slots = stock_brief.parse(res.get("analysis") or "")
+    data = {**slots, "q": q, "model": res.get("model", ""), "cached": False}
+    _BRIEF_CACHE[key] = {"at": time.time(), "data": data}
+    return JSONResponse(content=data)
+
+
+@app.get("/api/insights2/daily")
+def api_insights2_daily(request: Request, category: str = "youtube", date: str = ""):
+    """인사이트2 한 화면 분량을 통째로. ★운영자 전용(초안).
+
+    반환: {date, counts, market, sectors[], stocks[], videos[], atoms[]}
+      - atoms[]  : 발언 원자 (video 인덱스로 영상과 연결)
+      - sectors[]: [{name, plus, minus}]  ← 막대 그래프용
+      - videos[] : [{title, source, url, n}]
+    """
+    if _ins2_require_admin(request):
+        return JSONResponse(content={"error": "forbidden"}, status_code=403)
+
+    conn = _ins_conn()
+    if conn is None:
+        return JSONResponse(content={"error": "atoms.db 없음"}, status_code=503)
+
+    type_cond = _CAT_TYPE_MAP.get(category)
+    if type_cond is None:
+        return JSONResponse(content={"error": "unknown category"}, status_code=400)
+
+    try:
+        day = date or _ins2_latest_date(conn, type_cond)
+        if not day:
+            return JSONResponse(content={
+                "date": "", "counts": {"videos": 0, "atoms": 0, "channels": 0},
+                "market": {"plus": 0, "minus": 0, "zero": 0},
+                "sectors": [], "stocks": [], "videos": [], "atoms": [],
+            })
+
+        rows = conn.execute(
+            f"""SELECT id, date, source_name, raw_file, sector, asset, signal,
+                       content, speaker, yt_timestamp, msg_ts, deeplink
+                FROM atoms
+                WHERE {type_cond} AND date = ?
+                ORDER BY COALESCE(NULLIF(yt_timestamp,''), msg_ts, ''), raw_file, id""",
+            (day,),
+        ).fetchall()
+
+        # 영상(raw_file) 단위로 묶는다 — 화면의 썸네일 카드 하나 = raw_file 하나
+        videos, vidx = [], {}
+        atoms = []
+        for r in rows:
+            rf = r["raw_file"] or ""
+            if rf not in vidx:
+                vidx[rf] = len(videos)
+                videos.append({
+                    "title": _build_doc_title(rf, r["source_name"] or "", day, category),
+                    "source": r["source_name"] or "",
+                    "doc_key": _doc_key(category, r["source_name"] or "", day, rf),
+                    "url": "", "n": 0,
+                })
+            i = vidx[rf]
+            videos[i]["n"] += 1
+            # 영상 URL은 딥링크에서 역산 (&t= 앞부분)
+            if not videos[i]["url"] and r["deeplink"]:
+                videos[i]["url"] = str(r["deeplink"]).split("&t=")[0]
+
+            # ⏱ 시각은 소스마다 의미가 다르다 — 유튜브 yt_timestamp = 영상 재생위치(딥링크 가능),
+            # 텔레 msg_ts = 메시지 발송 시각(딥링크 없음, 시간순 정렬용). 값은 같은 칸에 담되
+            # 뜻은 ts_kind로 알린다(화면이 ▶01:53 / 🕘09:58 로 갈라 그린다).
+            head = _ins2_split_head(r["content"] or "")
+            atoms.append({
+                "video": i,
+                "ts": (r["yt_timestamp"] or "") or (r["msg_ts"] or ""),
+                "deeplink": r["deeplink"] or "",
+                "speaker": r["speaker"] or "",
+                "sector": r["sector"] or "",
+                "asset": r["asset"] or "",
+                "sign": _sign_of(r["signal"]),
+                "signal": r["signal"] or "",
+                "content": head["text"],
+                "relay": head["relay"],
+                "tp": head["tp"],
+                "opinion": head["opinion"],
+                "source": r["source_name"] or "",
+            })
+
+        # 판세 집계 — '시장'은 따로 빼고, 나머지를 섹터/종목으로 센다
+        def tally(key: str, skip=("", "기타")):
+            acc = {}
+            for a in atoms:
+                v = (a.get(key) or "").strip()
+                if not v or v in skip:
+                    continue
+                # asset은 "삼성전자, SK하이닉스" 처럼 여러 개가 한 칸에 들어있다
+                for name in ([x.strip() for x in v.split(",")] if key == "asset" else [v]):
+                    if not name or name in skip:
+                        continue
+                    d = acc.setdefault(name, {"name": name, "plus": 0, "minus": 0, "n": 0})
+                    d["n"] += 1
+                    if a["sign"] > 0:
+                        d["plus"] += 1
+                    elif a["sign"] < 0:
+                        d["minus"] += 1
+            out = list(acc.values())
+            out.sort(key=lambda d: (-(d["plus"] + d["minus"]), -d["n"], d["name"]))
+            return out
+
+        market_atoms = [a for a in atoms if (a["sector"] or "") == "시장"]
+        market = {
+            "plus": sum(1 for a in market_atoms if a["sign"] > 0),
+            "minus": sum(1 for a in market_atoms if a["sign"] < 0),
+            "zero": sum(1 for a in market_atoms if a["sign"] == 0),
+            "n": len(market_atoms),
+        }
+
+        return JSONResponse(content={
+            "date": day,
+            "ts_kind": "play" if category in ("youtube", "yt") else "clock",
+            "counts": {
+                "videos": len(videos),
+                "atoms": len(atoms),
+                "channels": len({v["source"] for v in videos if v["source"]}),
+                "with_ts": sum(1 for a in atoms if a["ts"]),
+            },
+            "market": market,
+            "sectors": tally("sector", skip=("", "기타", "시장"))[:8],
+            "stocks": tally("asset", skip=("", "기타", "시장"))[:8],
+            "videos": videos,
+            "atoms": atoms,
         })
     finally:
         conn.close()

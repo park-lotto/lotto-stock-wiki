@@ -49,7 +49,8 @@ TASKS = {
         category=a.get("category"))),
     # 랭킹 카드 ⏱ 길이 백필(2026-08-04) — /api/reference가 1시간에 1번 넣는다.
     # 실패해도 무해(run_backfill이 예외 없이 요약 문자열만 돌려준다).
-    "durfill":  lambda a: duration_backfill.run_backfill(),
+    # codes: 렌즈 조회 경로가 넘긴 명시 shortcode(2026-08-11) — 없으면 종전 피드 스캔.
+    "durfill":  lambda a: duration_backfill.run_backfill(codes=a.get("codes")),
 }
 
 # 진행 문구(phase·count)를 큐로 실어 보내는 리더 — 워커 프로세스 안에서만 읽을 수 있다

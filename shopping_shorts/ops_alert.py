@@ -40,6 +40,14 @@ def raise_alert(kind, title, detail="", *, cooldown_sec=_DEFAULT_COOLDOWN_SEC, s
     반환   : 실제로 새 알림을 올렸으면 True, 쿨다운에 걸려 건너뛰었으면 False.
     """
     try:
+        # ★테스트가 라이브 쪽지함을 오염시키지 않게(2026-08-14 실사고). 서버 크론이
+        # 매일 밤 pytest를 돌리는데(daily_ingest_autopilot), 실패경로를 검증하는
+        # 테스트(test_run_mix_job_failure_sets_status 등)가 여기까지 도달해
+        # **가짜 URL(instagram.com/reel/AAA/)로 진짜 운영사고 배너를 매일 띄웠다.**
+        # store 인자를 안 넘긴 옛 호출은 _store()가 무조건 라이브 DB를 잡는다.
+        import os
+        if os.environ.get("PYTEST_CURRENT_TEST"):
+            return False
         st = store or _store()
         now = int(time.time())
         ck = _COOLDOWN_KEY_FMT.format(kind)

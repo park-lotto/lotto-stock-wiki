@@ -1,10 +1,27 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-08-03-a  (틱톡 뷰어 카드버튼 잔존 정리 + 빈 앵커 버튼 차단)
+// 로직 버전: 2026-08-18-b  (⭐레퍼런스 등록 — 영상+채널 한 번에, 랭킹 즉시 반영)
 (function () {
   "use strict";
-  if (window.__ssGrabLoaded) return;   // 로더가 중복 실행돼도 한 번만
+  // ── 중복 실행 방지 → '새 로직이 이긴다'로 교체(2026-08-18 실사고) ──────────
+  // 종전엔 `__ssGrabLoaded`가 true면 무조건 return이라 **먼저 뜬 쪽이 이겼다**.
+  // 사장님 PC에서 옛 확장(1.0.0)이 텀퍼몽키 v2.4.0의 새 로직을 밀어내, 새 기능이
+  // 배포됐는데도 옛 버튼("채널등록")만 보였다 — 게다가 **아무 오류도 안 나서**
+  // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
+  // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
+  //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
+  var LOGIC_VER = 20260818;
+  if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
+  if (window.__ssGrabLoaded && !window.__ssGrabVer) {
+    // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
+    try {
+      var olds = document.querySelectorAll("#ss-grab-btn,#ss-chadd-btn,#ss-lens-btn,#ss-seek");
+      for (var oi = 0; oi < olds.length; oi++) olds[oi].remove();
+    } catch (e) {}
+  }
+  try { clearInterval(window.__ssGrabTimer); } catch (e) {}   // 새 버전끼리 교체될 때
   window.__ssGrabLoaded = true;
+  window.__ssGrabVer = LOGIC_VER;
   var BASE = "https://shoppingshorts.duckdns.org";
 
   // ── 설치 확인 비컨 ─────────────────────────────────────────────
@@ -28,11 +45,70 @@
     return e ? e.content : "";
   }
 
-  function openGrab(url, thumb, title) {
+  // ★지금 보는 영상의 **파일 직접 주소**(2026-08-17). 도우인은 yt-dlp가 쿠키를 요구해
+  //   페이지 URL만으로는 서버가 영상을 못 받는다(서버·PC 양쪽에서 재현 — IP 문제가 아니다).
+  //   그런데 브라우저에는 CDN 주소가 그대로 있다. 담는 순간 그걸 함께 보내면 서버가
+  //   그 주소로 바로 받는다(download_any가 video_url을 우선 쓴다).
+  //   blob:은 이 탭 안에서만 유효하므로 보내지 않는다 — 서버가 받을 수 없다.
+  var _MEDIA_HOSTS = ["zjcdn.com", "douyinvod.com", "xhscdn.com"];
+  function currentVideoSrc() {
+    try {
+      var vs = document.querySelectorAll("video");
+      for (var i = 0; i < vs.length; i++) {
+        var cand = [vs[i].currentSrc, vs[i].src];
+        var ss = vs[i].querySelectorAll("source");
+        for (var k = 0; k < ss.length; k++) cand.push(ss[k].src);
+        for (var j = 0; j < cand.length; j++) {
+          var u = cand[j] || "";
+          if (u.indexOf("https://") !== 0) continue;      // blob:·상대경로 제외
+          for (var h = 0; h < _MEDIA_HOSTS.length; h++) {
+            if (u.indexOf(_MEDIA_HOSTS[h]) >= 0) return u;
+          }
+        }
+      }
+    } catch (e) {}
+    return "";
+  }
+  // ★지금 보는 영상의 **커버 이미지**(2026-08-17 사장님 "도우인은 썸네일이 없음").
+  //   도우인 영상 페이지는 SPA라 og:image가 없다(og:title도 "观看更多精彩视频 - 抖音"
+  //   라는 기본값이 그대로 담겨 있었다 → 담긴 카드가 제목·썸네일 둘 다 기본값/빈값).
+  //   서버 보강(_enrich_grab→yt-dlp)도 도우인은 쿠키를 요구해 못 채운다.
+  //   브라우저에는 커버가 <video poster> 또는 douyinpic 이미지로 이미 떠 있으므로
+  //   담는 순간 그걸 함께 보낸다(video_url을 같이 보내는 것과 같은 원리).
+  // ⚠️호스트를 넓히지 마라 — collection.html thumbSrc()가 no-referrer 직접로드로
+  //   통과시키는 CDN(douyinpic·xhscdn)만 받는다. 나머지는 /api/thumb 프록시를 타는데
+  //   허용호스트가 아니면 400이 나 카드가 다시 빈칸이 된다.
+  var _IMG_HOSTS = ["douyinpic.com", "xhscdn.com"];
+  function _knownImg(u) {
+    if (!u || u.indexOf("https://") !== 0) return "";   // data:·blob:·상대경로 제외
+    for (var h = 0; h < _IMG_HOSTS.length; h++) if (u.indexOf(_IMG_HOSTS[h]) >= 0) return u;
+    return "";
+  }
+  function currentPoster() {
+    try {
+      var vs = document.querySelectorAll("video");
+      for (var i = 0; i < vs.length; i++) {
+        var p = _knownImg(vs[i].poster || "");
+        if (p) return p;
+      }
+      // poster가 비면 화면에서 가장 큰(=커버) 이미지를 쓴다.
+      var imgs = document.querySelectorAll("img"), best = "", bestA = 0;
+      for (var j = 0; j < imgs.length; j++) {
+        var u = _knownImg(imgs[j].currentSrc || imgs[j].src || "");
+        if (!u) continue;
+        var r = imgs[j].getBoundingClientRect(), a = r.width * r.height;
+        if (r.width >= 120 && a > bestA) { bestA = a; best = u; }
+      }
+      return best;
+    } catch (e) {}
+    return "";
+  }
+  function openGrab(url, thumb, title, videoUrl) {
     window.open(
       BASE + "/api/grab?url=" + encodeURIComponent(url) +
         "&thumbnail=" + encodeURIComponent(thumb || "") +
-        "&title=" + encodeURIComponent((title || "").slice(0, 120)),
+        "&title=" + encodeURIComponent((title || "").slice(0, 120)) +
+        (videoUrl ? "&video_url=" + encodeURIComponent(videoUrl) : ""),
       "ss_grab", "width=380,height=220"
     );
   }
@@ -57,26 +133,64 @@
     var m = location.pathname.match(/^\/([^/]+)\/?(reels\/?)?$/);
     return (m && !_IG_RESERVED[m[1]]) ? m[1] : "";
   }
+  // ── 채널수집 버튼 — 인스타·틱톡에 이어 유튜브·쓰레드까지(2026-08-18 사장님 요청) ──
+  // 플랫폼마다 '어디에 넣어야 수집이 잡느냐'가 다르다(인스타=discovered_channels,
+  // 나머지=platform_seeds account). 그 갈래는 **서버 한 곳**(/api/discover/add_by_url)
+  // 에서만 정한다 — 여기서 또 정하면 0순위-B(같은 판단 두 곳)에 걸려 언젠가 어긋난다.
+  // 여기서 정하는 건 '지금 화면에 대상이 있느냐'와 '무엇을 보내느냐'뿐이다.
+  function _chPlat() {
+    var h = location.host;
+    if (h.indexOf("instagram.com") >= 0) return "instagram";
+    if (h.indexOf("tiktok.com") >= 0) return "tiktok";
+    if (h.indexOf("youtube.com") >= 0 || h.indexOf("youtu.be") >= 0) return "youtube";
+    if (h.indexOf("threads.com") >= 0 || h.indexOf("threads.net") >= 0) return "threads";
+    return "";
+  }
+  // 쓰레드는 프로필(/@핸들)이든 게시물(/@핸들/post/코드)이든 경로 맨 앞이 핸들이다.
+  function _thProfile() {
+    var m = location.pathname.match(/^\/@([\w.\-]+)/);
+    return m ? m[1] : "";
+  }
+  // 유튜브: 채널 페이지(/@핸들·/channel/·/c/·/user/)면 그 채널, 영상(watch·shorts·live)이면
+  // URL을 서버에 맡겨 yt-dlp가 소속 채널을 해석한다.
+  function _ytTarget() {
+    var p = location.pathname;
+    if (/^\/@[\w.\-]+/.test(p) || /^\/(channel|c|user)\//.test(p)) return "channel";
+    if (/^\/(watch|shorts\/|live\/)/.test(p) || location.host.indexOf("youtu.be") >= 0) return "video";
+    return "";
+  }
+  // 서버로 보낼 질의문자열. ""이면 대상이 모호한 화면(피드·탐색)이라 버튼을 안 띄운다.
+  function _chQuery() {
+    var plat = _chPlat();
+    if (plat === "instagram") {
+      var ig = _igProfileName();
+      if (ig) return "username=" + encodeURIComponent(ig);
+      return isSinglePost() ? "url=" + encodeURIComponent(location.href) : "";
+    }
+    if (plat === "tiktok")
+      return (_ttProfile() || isSinglePost()) ? "url=" + encodeURIComponent(location.href) : "";
+    if (plat === "threads")
+      return _thProfile() ? "url=" + encodeURIComponent(location.href) : "";
+    if (plat === "youtube")
+      return _ytTarget() ? "url=" + encodeURIComponent(location.href) : "";
+    return "";
+  }
   function addChannelBtn() {
-    var host = _snsHost();
-    if (!host) return;
     if (document.getElementById("ss-chadd-btn") || !document.body) return;
-    var prof = host === "instagram" ? _igProfileName() : _ttProfile();
-    if (!isSinglePost() && !prof) return;   // 피드/탐색에선 대상이 모호해 안 띄운다
+    if (!_chQuery()) return;
     var b = document.createElement("button");
     b.id = "ss-chadd-btn";
-    b.textContent = "📌 채널등록";
-    b.title = "이 게시물의 채널을 레퍼런스 추적목록에 등록";
+    b.textContent = "📌 채널수집";
+    b.title = "이 채널을 레퍼런스 수집 목록에 등록";
     b.style.cssText =
       "position:fixed;right:18px;bottom:70px;z-index:2147483647;background:#8250df;" +
       "color:#fff;border:none;border-radius:24px;padding:10px 16px;font-size:14px;" +
       "font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer;font-family:system-ui,sans-serif";
     b.addEventListener("click", function (e) {
       e.preventDefault();
-      // 틱톡은 URL에 @핸들이 들어 있어 서버가 URL만으로 채널을 뽑는다(시드 등록).
-      var p = _snsHost() === "instagram" ? _igProfileName() : "";
-      var q = p ? "username=" + encodeURIComponent(p)
-                : "url=" + encodeURIComponent(location.href);
+      // SPA라 붙일 때와 누를 때의 화면이 다를 수 있다 — 클릭 시점에 다시 읽는다.
+      var q = _chQuery();
+      if (!q) return;
       window.open(BASE + "/api/discover/add_by_url?" + q, "ss_chadd", "width=380,height=240");
     });
     document.body.appendChild(b);
@@ -431,19 +545,86 @@
       });
   }
   function syncExtraBtns() {
-    if (!_snsHost()) return;
     var lens = document.getElementById("ss-lens-btn");
-    if (isSinglePost()) {
+    if (_snsHost() && isSinglePost()) {
       _miniBtn("ss-lens-btn", "🔍 렌즈", "이 영상으로 원본·유사 레퍼런스 역추적(화면 안에서)", 122, "#37b0e0",
                function () { _lensRun(location.href); });
     } else if (lens) { lens.remove(); }
     var coll = document.getElementById("ss-coll-btn"); if (coll) coll.remove();   // ⭐ 제거(담기와 중복)
+    // ── ⭐ 레퍼런스 등록(2026-08-18 사장님 "보다가 좋은 영상 발견하면 바로 반영해서 정렬")
+    //   담기(📥)는 내 즐겨찾기로만 가고, 채널수집(📌)은 다음 수집까지 기다려야 했다.
+    //   이 버튼은 **영상+채널을 한 번에** 넣고 그 영상을 지금 랭킹 스냅샷에 끼워 넣는다.
+    //   ★영상 페이지에서만 띄운다 — 피드·프로필에선 "어느 영상"이 정해지지 않는다.
+    var adopt = document.getElementById("ss-adopt-btn");
+    var wantAdopt = !!_chPlat() && _isVideoPage();
+    if (adopt && !wantAdopt) adopt.remove();
+    else if (!adopt && wantAdopt) {
+      _miniBtn("ss-adopt-btn", "⭐ 레퍼런스 등록",
+               "이 영상을 랭킹에 바로 넣고 채널도 등록합니다", 226, "#c9922e",
+               function () {
+                 window.open(BASE + "/api/reference/adopt?url=" + encodeURIComponent(location.href)
+                             + _pageStatsQuery(),
+                             "ss_adopt", "width=420,height=260");
+               });
+    }
+  }
+  // 이 화면이 '영상 한 편'인가 — 유튜브 쇼츠·watch, 인스타 릴스/게시물, 틱톡 video,
+  // 쓰레드 post. 채널수집(_chQuery)과 달리 프로필은 제외한다(등록할 영상이 없다).
+
+  // ── 화면에 떠 있는 숫자를 같이 보낸다(2026-08-18 사장님 A안) ─────────────────
+  // 왜: 서버(yt-dlp)는 로그인 없이 인스타를 읽어 **조회수·팔로워가 0**으로 들어왔다
+  //     (실측: 채이홈 항목 views 0 / followers 0 / 제목 "Video by chae2home").
+  //     그러면 조회수당댓글·팔로워당댓글이 계산되지 않아 정렬에서 불리해진다.
+  //     그런데 사장님 화면에는 그 숫자가 이미 떠 있다 — 담는 순간 함께 보내면 된다.
+  // ⚠️ 화면 글자를 읽는 근사치다. 못 읽으면 안 보낸다(서버는 받은 값이 없으면 종전대로).
+  function _num(t) {
+    if (!t) return 0;
+    var s = String(t).replace(/[,\s]/g, "");
+    var m = s.match(/([\d.]+)\s*(만|천|억|K|M|k|m)?/);
+    if (!m) return 0;
+    var n = parseFloat(m[1]);
+    if (!isFinite(n)) return 0;
+    var u = m[2] || "";
+    if (u === "만") n *= 10000;
+    else if (u === "천") n *= 1000;
+    else if (u === "억") n *= 100000000;
+    else if (u === "K" || u === "k") n *= 1000;
+    else if (u === "M" || u === "m") n *= 1000000;
+    return Math.round(n);
+  }
+  function _pageStats() {
+    var out = {};
+    try {
+      // 화면 글자 전체에서 '조회수 12,345' 같은 짝을 찾는다(한국어·영어 둘 다).
+      var txt = (document.body && document.body.innerText || "").slice(0, 20000);
+      var pats = [
+        ["views", /(?:조회수|조회|views?)\s*[:\s]?\s*([\d.,]+\s*[만천억KkMm]?)/],
+        ["likes", /(?:좋아요|likes?)\s*[:\s]?\s*([\d.,]+\s*[만천억KkMm]?)/],
+        ["comments", /(?:댓글|comments?)\s*[:\s]?\s*([\d.,]+\s*[만천억KkMm]?)/],
+        ["followers", /(?:팔로워|followers?)\s*[:\s]?\s*([\d.,]+\s*[만천억KkMm]?)/]
+      ];
+      for (var i = 0; i < pats.length; i++) {
+        var m = txt.match(pats[i][1]);
+        if (m) { var v = _num(m[1]); if (v > 0) out[pats[i][0]] = v; }
+      }
+    } catch (e) {}
+    return out;
+  }
+  function _pageStatsQuery() {
+    var st = _pageStats(), q = "";
+    for (var k in st) if (st[k] > 0) q += "&" + k + "=" + st[k];
+    return q;
+  }
+  function _isVideoPage() {
+    var p = location.pathname;
+    if (/\/(p|reel|reels|tv|video)\/[^/]+/.test(p)) return true;          // 인스타·틱톡
+    if (/^\/(shorts\/|watch|live\/)/.test(p)) return true;                 // 유튜브
+    if (location.host.indexOf("youtu.be") >= 0) return true;
+    return /^\/@[\w.\-]+\/post\//.test(p);                                // 쓰레드
   }
   function syncChannelBtn() {
     var b = document.getElementById("ss-chadd-btn");
-    var host = _snsHost();
-    var want = !!host && (isSinglePost() ||
-                          (host === "instagram" ? _igProfileName() : _ttProfile()));
+    var want = !!_chQuery();
     if (b && !want) b.remove();
     else if (!b && want) addChannelBtn();
   }
@@ -461,7 +642,9 @@
       "font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer;font-family:system-ui,sans-serif";
     b.addEventListener("click", function (e) {
       e.preventDefault();
-      openGrab(location.href, meta("og:image"), meta("og:title") || document.title || "");
+      openGrab(location.href, meta("og:image") || currentPoster(),
+               meta("og:title") || document.title || "",
+               currentVideoSrc());
     });
     document.body.appendChild(b);
   }
@@ -607,16 +790,51 @@
   //   돌아 페이지가 DOM 노드에 박은 그 내부 프로퍼티가 '안 보인다'(2026-07-19 실측: sandbox에선
   //   첫 카드만 간헐 성공 = 사장님이 본 "맨 앞 하나만"의 정체). unsafeWindow로도 불안정했다.
   //   → 도우인만은 페이지 '메인월드'에 자립 스크립트를 주입한다. 메인월드에선 fiber가 다 보여
-  //   20/20 카드에서 aweme_id 추출·버튼부착을 실측 확인했고, 도우인 CSP는 인라인 스크립트를
-  //   막지 않는다(실측). 주입 스크립트가 자체 interval로 유지하며, 클릭 시 BASE/api/grab로 바로
+  //   20/20 카드에서 aweme_id 추출·버튼부착을 실측 확인했다.
+  //   주입 스크립트가 자체 interval로 유지하며, 클릭 시 BASE/api/grab로 바로
   //   담는다(sandbox와의 데이터 왕래 불필요). 주입 실패 시 버튼이 안 생기고 플로팅으로 폴백된다.
+  //
+  // ⚠️★2026-08-17 정정 — "도우인 CSP는 인라인을 막지 않는다"는 옛 주석은 **틀렸다**.
+  //   막는 주체는 도우인이 아니라 **확장 자신의 CSP**다. 격리월드(콘텐츠 스크립트) 코드가
+  //   스스로 만든 <script>는 확장 CSP('unsafe-inline' 없음)의 검사를 받아 차단된다.
+  //   사장님 콘솔 실측:
+  //     grab_logic.js:716 Executing inline script violates ... 'script-src 'self'
+  //     'wasm-unsafe-eval' 'inline-speculation-rules' http://localhost:* http://127.0.0.1:*
+  //     chrome-extension://9adf66a6-.../'  → The action has been blocked.
+  //   (localhost·chrome-extension: 이 소스에 있는 CSP는 도우인이 보낼 수 없다 = 확장 것)
+  //   결과: 메인월드 도달 실패 → fiber 못 읽음 → 카드버튼 0개 → 플로팅만 남았다
+  //   ("샤오·틱톡·인스타는 되는데 도우인만 안 된다"의 정체. 나머지는 DOM만 써서 주입이 불필요).
+  //   ★해법: 확장은 manifest에 world:"MAIN" 으로 douyin_main.js를 **크롬이 직접** 주입한다
+  //   (확장 CSP의 인라인 검사를 아예 타지 않는다). 그 경우 아래 주입은 건너뛴다 —
+  //   같은 판단을 두 번 하지 않기 위해 __ssDouyinMW 플래그 하나로만 갈린다(0순위-B).
+  //   유저스크립트(텀퍼몽키)는 world 선언이 없으므로 종전 주입 경로를 그대로 쓴다.
   function _douyinMainWorld() {
     if (window.__ssDouyinMW) return;
     window.__ssDouyinMW = true;
+    // 격리월드는 페이지 window를 못 보므로 DOM에 표식을 남긴다(두 월드가 공유하는 유일한 통로).
+    // 이걸 보고 addDouyinCardBtns가 중복 주입을 멈춘다.
+    try { document.documentElement.setAttribute("data-ss-douyin-mw", "1"); } catch (e) {}
     var BASE = "https://shoppingshorts.duckdns.org";
     function isGrid() { return /(^|\/)(search|explore|tag)(\/|$|\?)/.test(location.pathname + location.search) || /\/search_result/.test(location.pathname); }
-    function openGrab(url, thumb, title) {
-      window.open(BASE + "/api/grab?url=" + encodeURIComponent(url) + "&thumbnail=" + encodeURIComponent(thumb || "") + "&title=" + encodeURIComponent((title || "").slice(0, 120)), "ss_grab", "width=380,height=220");
+    // 메인월드는 별도 스코프라 위 헬퍼를 못 쓴다 — 같은 규칙을 여기서도 지킨다.
+    // (그리드 카드는 대개 재생 전이라 빈 값이고, 그때는 종전대로 페이지 URL만 간다)
+    var _MEDIA_HOSTS = ["zjcdn.com", "douyinvod.com", "xhscdn.com"];
+    function currentVideoSrc() {
+      try {
+        var vs = document.querySelectorAll("video");
+        for (var i = 0; i < vs.length; i++) {
+          var cand = [vs[i].currentSrc, vs[i].src];
+          for (var j = 0; j < cand.length; j++) {
+            var u = cand[j] || "";
+            if (u.indexOf("https://") !== 0) continue;
+            for (var h = 0; h < _MEDIA_HOSTS.length; h++) if (u.indexOf(_MEDIA_HOSTS[h]) >= 0) return u;
+          }
+        }
+      } catch (e) {}
+      return "";
+    }
+    function openGrab(url, thumb, title, videoUrl) {
+      window.open(BASE + "/api/grab?url=" + encodeURIComponent(url) + "&thumbnail=" + encodeURIComponent(thumb || "") + "&title=" + encodeURIComponent((title || "").slice(0, 120)) + (videoUrl ? "&video_url=" + encodeURIComponent(videoUrl) : ""), "ss_grab", "width=380,height=220");
     }
     function deepFindId(o, d) {
       if (!o || d > 4) return null;
@@ -655,7 +873,7 @@
           b.addEventListener("click", function (e) {
             e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
             var id = findId(img);
-            if (id) openGrab("https://www.douyin.com/video/" + id, img.src || "", img.alt || "");
+            if (id) openGrab("https://www.douyin.com/video/" + id, img.src || "", img.alt || "", currentVideoSrc());
           }, true);
         })(img);
         box.appendChild(b);
@@ -665,6 +883,14 @@
   }
   function addDouyinCardBtns() {
     if (location.host.indexOf("douyin") < 0) return;
+    // ★확장(world:"MAIN")이 이미 메인월드에서 돌고 있으면 주입하지 않는다.
+    //   __ssDouyinMW는 메인월드에서 세워지는 플래그다. 격리월드에선 페이지 window가
+    //   분리돼 이 값이 안 보이므로, 확장 경로에선 douyin_main.js가 DOM에 표식을 남기고
+    //   여기서 그 표식을 읽는다(DOM은 두 월드가 공유한다 — 유일하게 확실한 통로).
+    try {
+      if (document.documentElement.getAttribute("data-ss-douyin-mw") === "1") return;
+    } catch (e) {}
+    if (window.__ssDouyinMW) return;         // 유저스크립트 unsafeWindow 등에서 보이는 경우
     if (window.__ssDouyinInjected) return;   // 한 번만 주입(주입된 스크립트가 자체 interval로 유지)
     window.__ssDouyinInjected = true;
     try {
@@ -672,11 +898,17 @@
       sc.textContent = "(" + _douyinMainWorld.toString() + ")();";
       (document.head || document.documentElement).appendChild(sc);
       sc.remove();
+      // ⚠️확장 CSP가 막으면 위 appendChild는 **예외를 안 던지고** 조용히 실행만 안 된다
+      //   (콘솔에 CSP 위반만 찍힌다). 그래서 catch로는 실패를 알 수 없다 —
+      //   실패해도 다음 tick에 재시도하도록 플래그를 되돌린다. 성공했다면 메인월드가
+      //   표식을 남기므로 위 return에서 걸러진다(무한 재주입 안 함).
+      window.__ssDouyinInjected = false;
     } catch (e) { window.__ssDouyinInjected = false; }   // 실패 시 다음 tick에 재시도(폴백=플로팅)
   }
 
   function tick() { try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
-  setInterval(tick, 2000);
+  // 핸들을 남긴다 — 더 새로운 로직이 로드되면 위 가드가 이걸 끄고 이어받는다.
+  window.__ssGrabTimer = setInterval(tick, 2000);
 })();

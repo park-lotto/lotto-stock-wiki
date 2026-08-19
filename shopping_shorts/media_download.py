@@ -1,7 +1,9 @@
 """소스 URL을 플랫폼별로 다운로드 — instagram=Apify, youtube/tiktok=yt-dlp(무료)."""
 import json
+import os
 import re
 import subprocess
+import threading
 import sys
 import time
 import urllib.parse
@@ -120,6 +122,15 @@ def probe_grab_meta(url, timeout=40):
     """원클릭 담기 URL → {thumbnail,title,channel,views,likes,comments,duration}(있는 것만).
     yt-dlp -j(유튜브·샤오홍슈 등은 통계까지 무료) 우선, 실패·썸네일없음 시 oEmbed(틱톡·유튜브)
     폴백. 전부 실패하면 {}. 백그라운드 보강용이라 조용히 실패."""
+    # ★쓰레드는 yt-dlp가 지원하지 않는다(2026-08-17 실측: threads extractor NONE,
+    #   generic 폴백도 Unsupported URL). 아래 yt-dlp 경로로 보내면 조용히 {}가 되어
+    #   썸네일·제목이 영영 안 채워진다. 우리 수집기로 갈라 보낸다.
+    host = (urllib.parse.urlparse(url or "").hostname or "").lower()
+    # ★app.py의 _grab_platform과 같은 방식(정확일치 또는 .호스트 서픽스)으로 판정한다.
+    #   endswith("threads.com")만 쓰면 evilthreads.com도 통과한다(0순위-B: 같은 판단
+    #   두 곳에 다르게 적지 마라).
+    if any(host == d or host.endswith("." + d) for d in ("threads.com", "threads.net")):
+        return _probe_threads_meta(url, timeout=timeout)
     out = {}
     try:
         r = subprocess.run([sys.executable, "-m", "yt_dlp", "-j", "--no-warnings",
@@ -148,6 +159,80 @@ def probe_grab_meta(url, timeout=40):
         if oe.get("author_name"):
             out.setdefault("channel", oe["author_name"])
     return {k: v for k, v in out.items() if v not in (None, "")}
+
+
+def _fetch_threads_post(url, timeout=30):
+    """쓰레드 게시물 URL → 계약 dict(threads_parse.parse_post_node) 또는 None.
+
+    ★HTML 수신 실패/노드 0건/code 불일치를 원인별로 구분해 로그를 남긴다
+    (0순위 규칙: 조용한 실패 금지). username·code는 여기서 한 번만 뽑아
+    _probe_threads_meta·_download_threads가 같은 판단을 두 번 적지 않게 한다."""
+    m = re.search(r"/@([^/]+)/post/([A-Za-z0-9_-]+)", url or "")
+    if not m:
+        print(f"[media_download] _fetch_threads_post URL 형식 아님 url={url}",
+              file=sys.stderr)
+        return None
+    username, code = m.group(1), m.group(2)
+    # ★fetch_html은 threads_parse가 정본이다(순수 HTTP, playwright 비의존) — 담기
+    #   1건마다 playwright를 끌어오지 않도록 여기서도 그쪽을 쓴다(2026-08-17 리뷰).
+    from shopping_shorts.threads_parse import extract_post_nodes, fetch_html, parse_post_node
+    html = fetch_html(url, timeout=timeout)
+    if not html:
+        print(f"[media_download] _fetch_threads_post HTML 수신 실패 code={code} url={url}",
+              file=sys.stderr)
+        return None
+    nodes = extract_post_nodes(html)
+    for node in nodes:
+        parsed = parse_post_node(node, username)
+        if parsed and parsed.get("code") == code:
+            return parsed
+    print(f"[media_download] _fetch_threads_post code 불일치(구조 변화 의심) "
+          f"code={code} nodes={len(nodes)} url={url}", file=sys.stderr)
+    return None
+
+
+def _probe_threads_meta(url, timeout=30):
+    """쓰레드 게시물 URL → {thumbnail,title,video_url}(있는 것만). 실패하면 {}(조용히
+    — 백그라운드 보강용이라 예외를 밖으로 내지 않는다. 원인은 _fetch_threads_post가 로그로 남긴다).
+
+    ★Playwright(fetch_video_url)를 안 쓴다 — 브라우저를 띄워도 {"video_url":...}만
+    돌아와 호출부(_enrich_grab)가 thumbnail/title만 저장하는 계약이라 통째로 버려졌다
+    (2026-08-17 리뷰 발견). fetch_html(HTTP만)로 받은 페이지에서 code가 일치하는
+    게시물을 찾아 thumbnail·title(캡션)까지 함께 돌려준다 — 브라우저도 안 띄워 더 빠르다."""
+    try:
+        post = _fetch_threads_post(url, timeout=timeout)
+    except Exception as e:
+        print(f"[media_download] _probe_threads_meta 실패 url={url} {e!r}",
+              file=sys.stderr)
+        return {}
+    if not post:
+        return {}
+    out = {}
+    if post.get("thumb"):
+        out["thumbnail"] = post["thumb"]
+    if post.get("caption"):
+        out["title"] = post["caption"][:120]
+    if post.get("video_url"):
+        out["video_url"] = post["video_url"]
+    return out
+
+
+def _download_threads(url, dest_dir, timeout=30):
+    """쓰레드 게시물 URL 다운로드 → (mp4경로, caption).
+
+    yt-dlp는 쓰레드를 지원하지 않는다(2026-08-17 실측: extractor 없음, generic
+    폴백도 Unsupported URL). threads_parse(HTTP만)로 게시물을 찾아 video_url을
+    뽑고, 이미 있는 직접 mp4 다운로드 경로(frame_extract.download_video —
+    _is_direct_video 분기·_download_instagram이 쓰는 것과 같은 함수)로 받는다.
+    영상이 없는 글·게시물을 못 찾은 경우엔 원인이 구분되는 에러를 낸다."""
+    from shopping_shorts.frame_extract import download_video
+    post = _fetch_threads_post(url, timeout=timeout)
+    if not post:
+        raise RuntimeError(f"쓰레드 게시물을 찾지 못했습니다: {url}")
+    video_url = post.get("video_url")
+    if not video_url:
+        raise RuntimeError(f"영상이 없는 글입니다: {url}")
+    return str(download_video(video_url, Path(dest_dir))), post.get("caption", "")
 
 
 _IG_CODE_RE = re.compile(r"instagram\.com/(?:reel|reels|p|tv)/([A-Za-z0-9_-]+)")
@@ -233,6 +318,72 @@ def _download_instagram(url, dest_dir):
         f"만료됐을 수 있습니다. 관리자 확인이 필요합니다.")
 
 
+# ★도우인 동시 실행 상한(2026-08-16 사장님 지시 "동시에 2개").
+#   서버는 4코어인데 자동적재는 고객마다 3개씩 병렬로 던진다(_AUTOLOAD_MAX_WORKERS)
+#   → 묶어두지 않으면 고객 5명이 동시에 담을 때 15개가 한꺼번에 떠 다 같이 기어가고
+#   결국 시간 초과로 **전부** 실패한다(빨리 하려다 하나도 못 얻는다).
+#   그래서 **서버 전체 기준**으로 묶는다 — 고객 수와 무관하다. 3번째부터는 줄을 선다.
+#   ※프로세스 단위 세마포어라 워커가 여러 개면 워커당 상한이다(현재 단일 프로세스).
+#
+#   ⚠️ 무거운 쪽은 **크롬이 아니라 ffmpeg 변환이다**(2026-08-17 서버 실측으로 정정).
+#      54초 영상 150.8초 중 → 크롬 기동·SSR 4.5초(3%) / 다운로드 4.4초 / **변환 141.1초(94%)**.
+#      그래서 "크롬이 무거우니 2개"라는 종전 설명은 틀렸다. 지금은 douyin_fetch가 애초에
+#      1080x1920 h264를 골라 받아 변환이 대개 0초다(같은 영상 150.8→10.6초 실측).
+#      → 이 상한은 이제 **변환이 남는 경우(1920 이하가 hevc뿐인 영상)**를 위한 안전판이다.
+#      올리고 싶으면 DOUYIN_MAX_CONCURRENT로 조절하되, 근거는 크롬이 아니라 ffmpeg다.
+_DOUYIN_SLOTS = threading.BoundedSemaphore(
+    int(os.getenv("DOUYIN_MAX_CONCURRENT", "2")))
+
+
+class DouyinBusy(RuntimeError):
+    """지금은 자리가 없다 — 실패가 아니라 **잠시 후 다시**라는 뜻.
+    화면이 이 둘을 구별해야 사장님이 '망한 건가' 하지 않는다."""
+
+
+def _download_douyin(url, dest_dir, timeout=600, wait=0):
+    """도우인 다운로드 → (mp4경로, ""). douyin_fetch를 **서브프로세스**로 돌린다 —
+    호출부(FastAPI 백그라운드)가 asyncio 루프 위라 sync_playwright를 인프로세스로
+    못 돌리기 때문(yt-dlp를 서브프로세스로 부르는 기존 패턴과 동일). 상세 근거는
+    douyin_fetch.py 도크스트링."""
+    # 자리를 못 잡으면 곧바로 물러난다 — 붙들고 기다리면 요청만 쌓이고,
+    # 화면은 그동안 아무 말도 못 한다. 물러나야 '잠시 후 다시'라고 말할 수 있다.
+    got = (_DOUYIN_SLOTS.acquire(timeout=wait) if wait
+           else _DOUYIN_SLOTS.acquire(blocking=False))
+    if not got:
+        raise DouyinBusy("도우인 영상은 한 번에 2개씩 받습니다 — 잠시 후 자동으로 시작해요")
+    try:
+        return _download_douyin_inner(url, dest_dir, timeout)
+    finally:
+        _DOUYIN_SLOTS.release()
+
+
+def _download_douyin_inner(url, dest_dir, timeout):
+    # ★제한 시간 180 → 600초(2026-08-16 실측). 45초짜리 영상이 **108초** 걸렸다
+    #   (헤드리스 크롬 기동 + 18.7MB 받기 + h264 변환). 20초짜리는 35초였다.
+    #   즉 길이에 비례해 늘어나므로 짧은 영상 기준으로 잡으면 긴 영상만 조용히 죽는다 —
+    #   실제로 사장님 화면에서 한 편만 분석되고 다른 편은 '분석 중'으로 멈춰 있었다.
+    #   ※2026-08-17에 douyin_fetch가 1080p h264를 골라 받게 되면서 대개 10초 안쪽으로 끝난다
+    #     (54초 영상 150.8→10.6초 실측). 600초는 변환이 남는 영상을 위해 그대로 둔다 —
+    #     넉넉한 상한은 비용이 0이고, 짧게 잡으면 그 영상만 조용히 죽기 때문이다.
+    try:
+        r = subprocess.run(
+            [sys.executable, "-m", "shopping_shorts.douyin_fetch", url, str(dest_dir)],
+            capture_output=True, text=True, encoding="utf-8", timeout=timeout)
+    except subprocess.TimeoutExpired:
+        # ★이유를 남긴다 — 조용히 죽으면 화면은 영원히 '분석 중'이고 아무도 원인을 모른다.
+        raise RuntimeError(
+            f"도우인 다운로드 시간 초과({timeout}초, {url}) — 영상이 길면 더 걸립니다") from None
+    if r.returncode != 0:
+        raise RuntimeError(f"도우인 다운로드 실패({url}): {(r.stderr or '')[-300:]}")
+    try:
+        path = json.loads(r.stdout.strip().splitlines()[-1])["path"]
+    except Exception as e:  # noqa: BLE001
+        raise RuntimeError(f"도우인 다운로드 출력 해석 실패({url}): {r.stdout[-200:]}") from e
+    if not Path(path).exists():
+        raise RuntimeError(f"도우인 다운로드 산출물 없음: {path}")
+    return path, ""
+
+
 def _download_ytdlp(url, dest_dir, max_attempts=3):
     """유튜브/틱톡 다운로드 → (mp4경로, caption). yt-dlp 경로는 캡션 없음(빈 문자열).
 
@@ -274,7 +425,10 @@ def _download_via_relay(url, dest_dir):
     ★서버는 파일을 만들지 않고 CPU도 안 쓴다 — 무거운 다운로드는 전부 PC로 오프로드된다."""
     import shutil
     from shopping_shorts.store import Store
-    store = Store()
+    # db_path는 필수 인자다(2026-08-11 실사고): 릴레이 경로가 프록시 도입 이후 한 번도
+    # 안 불려서, Store 시그니처가 바뀐 걸 아무도 못 밟았다 — 프록시가 죽어 릴레이로
+    # 되돌리는 순간 첫 줄에서 TypeError로 터졌다.
+    store = Store(config.DB_PATH)
     req_id = store.enqueue_yt_relay(url)
     deadline = time.monotonic() + config.YT_RELAY_POLL_TIMEOUT
     while time.monotonic() < deadline:
@@ -283,6 +437,9 @@ def _download_via_relay(url, dest_dir):
             src = Path(rec["out_path"])
             if not src.exists():
                 raise RuntimeError(f"릴레이 완료 보고했으나 파일 없음: {src}")
+            # yt-dlp 경로는 -o가 폴더를 알아서 만들지만 릴레이는 copy2라 직접 만들어야
+            # 한다(2026-08-11): 없으면 FileNotFoundError로 다운로드가 통째로 실패한다.
+            Path(dest_dir).mkdir(parents=True, exist_ok=True)
             dst = Path(dest_dir) / src.name
             if src.resolve() != dst.resolve():
                 shutil.copy2(src, dst)
@@ -301,8 +458,10 @@ def _is_direct_video(u):
     path = u.split("?", 1)[0]
     if path.endswith((".mp4", ".m4v", ".mov", ".webm")):
         return True
-    # 알려진 영상 CDN 호스트(샤오홍슈=xhscdn, 도우인=zjcdn/douyinvod). 페이지 도메인은 제외.
-    return any(h in u for h in ("xhscdn.com", "sns-video", "zjcdn.com", "douyinvod.com"))
+    # 알려진 영상 CDN 호스트(샤오홍슈=xhscdn, 도우인=zjcdn/douyinvod, 인스타·쓰레드=
+    # cdninstagram — 쓰레드 영상도 이 CDN에서 나온다). 페이지 도메인은 제외.
+    return any(h in u for h in ("xhscdn.com", "sns-video", "zjcdn.com", "douyinvod.com",
+                                "cdninstagram.com"))
 
 
 def download_any(url, dest_dir):
@@ -321,7 +480,14 @@ def download_any(url, dest_dir):
     if "xiaohongshu.com" in u and "/search_result/" in u:
         url = url.replace("/search_result/", "/explore/")
         u = url.lower()
-    if "instagram.com" in u:
+    # ★호스트 기반 판정(app.py의 _grab_platform과 같은 방식 — 0순위-B: 같은 판단을
+    #   두 곳에 다르게 적지 마라). "instagram.com" in u 같은 부분문자열 검사는
+    #   scontent-xxx.**cdninstagram**.com(인스타·쓰레드 영상 CDN)도 참이 돼, 쓰레드
+    #   mp4가 인스타 세션/쿠키 경로로 잘못 새어 들어간다(2026-08-17 리뷰 발견).
+    host = (urllib.parse.urlparse(url or "").hostname or "").lower()
+    if any(host == d or host.endswith("." + d) for d in ("threads.com", "threads.net")):
+        return _download_threads(url, dest_dir)
+    if host == "instagram.com" or host.endswith(".instagram.com"):
         return _download_instagram(url, dest_dir)
     # 직접 mp4(예: 샤오홍슈 url_720p) — 담긴 샤오홍슈 url은 rednote.com/search_result 검색결과
     # '페이지'라 yt-dlp로 못 받는다. 프론트가 이미 확보한 직접 mp4(play_url)를 넘기면 이 경로로
@@ -339,6 +505,20 @@ def download_any(url, dest_dir):
     # _proxy_arg로 프록시를 붙인다) PC 릴레이를 건너뛴다 — PC 의존 없이 고객 다중 처리 가능.
     if config.YT_RELAY_ENABLED and not config.YTDLP_PROXY and ("youtube.com" in u or "youtu.be" in u):
         return _download_via_relay(url, dest_dir)
+    # ★도우인은 yt-dlp가 서버·가정 IP 양쪽에서 "Fresh cookies needed"로 전멸(2026-08-16 실측,
+    # 최신·master 동일). 유일하게 되는 경로 = headless chromium으로 modal_id 페이지 SSR에서
+    # 서명 CDN URL을 뽑아 직접 받는 것(douyin_fetch, 서버서 1080p mp4 실증). 실패하면 종전
+    # 동작(yt-dlp) 그대로 폴백해 회귀 0.
+    if "douyin.com" in u or "iesdouyin.com" in u:
+        try:
+            return _download_douyin(url, dest_dir)
+        except DouyinBusy:
+            # ★'자리 없음'은 실패가 아니라 신호다 — 삼키고 yt-dlp로 가면 (도우인은 yt-dlp가
+            #   전멸이라) 확정 실패가 되고, 호출부의 busy 처리(app.py autoload의
+            #   `except DouyinBusy` → 래치 롤백·화면 '순서 대기')가 통째로 죽는다.
+            raise
+        except Exception:  # noqa: BLE001 — 폴백 사유일 뿐, 최종 에러는 yt-dlp가 말한다
+            pass
     if any(s in u for s in ("youtube.com", "youtu.be", "tiktok.com",
                              "xiaohongshu.com", "xhslink.com", "douyin.com",
                              "iesdouyin.com", "rednote.com")):
@@ -387,5 +567,20 @@ def resolve_media_url(platform, video_id, timeout=30):
     # 열어주는 '추가 수단'이지 필수가 아니므로, 실패 시 무쿠키가 항상 더 나은 하한선이다.
     # 세션이 살아 있으면 첫 시도에서 끝나 이 경로는 안 탄다(비용 0).
     if _cookies_arg(page):
-        return _try(cookies=False)
+        url = _try(cookies=False)
+        if url:
+            return url
+    # ★인스타 마지막 안전망(2026-08-18 사장님 제보 "신규채널 픽업 #1 카드를 누르면
+    # 인스타 새 창이 뜬다"): yt-dlp는 게시물에 따라 'empty media response'로 죽는다
+    # (실측 DcGsKVxyzPv=실패 / DcGamFcBfLr·DcFd1c0pNaf=성공 — 로그아웃 접근이
+    # 막힌 게시물). 그러면 프론트(discover.html playInstagram)가 새 탭을 열어
+    # "왜 카드 안에서 안 나오지"로 보인다.
+    # 담기 경로(_download_instagram)는 이미 세션 REST 폴백을 갖고 있었는데
+    # 미리보기 경로에만 빠져 있었다 — 같은 판단이 두 군데로 갈린 형태(0순위-B).
+    # 같은 폴백을 여기에도 붙인다. 실측: 세션 경로는 그 게시물 mp4를 정상 회수한다.
+    if platform == "instagram":
+        try:
+            return _ig_video_via_session(video_id) or ""
+        except Exception:      # noqa: BLE001 — 마지막 폴백 실패는 ""와 동치
+            return ""
     return ""

@@ -72,8 +72,67 @@ def main():
     except Exception as e:  # noqa: BLE001
         print(f"[daily_instagram_collect] 후속(비전태깅/재분류) 실패: {e!r}", file=sys.stderr)
 
+    # ★수집 직후 레퍼런스 길이 백필(2026-08-11). 수집으로 피드가 새 영상으로 갈리면
+    #   길이 캐시가 비어 아침마다 ⏱이 사라졌다(durfill은 시간당 소량이라 못 따라잡음).
+    #   여기서 새 피드가 대부분 찰 때까지 채운다 — 남은 게 전부 실패상한(삭제·비공개
+    #   릴)이면 멈춘다. ★각 패스를 서브프로세스로 격리한다: Playwright 드라이버가
+    #   대량조회 중 EPIPE로 프로세스를 통째로 죽이는 일이 있어(실측 2026-08-11),
+    #   격리하면 그 패스만 죽고 다음이 이어진다. 수집 결과는 이미 저장돼 안전하다.
+    try:
+        _backfill_reference_durations()
+    except Exception as e:  # noqa: BLE001
+        print(f"[daily_instagram_collect] 길이 백필 실패(무해): {e!r}", file=sys.stderr)
+
+    # ★채널별 결과 내역 로깅(2026-08-14). instagram_playwright가 채널마다
+    # ok/login_wall/not_found/error를 이미 집계해 service.LAST_COLLECT_TALLY로 넘기는데,
+    # 웹 UI 경로(app.py의 진행률)에서만 노출되고 크론 로그엔 한 줄도 안 남았다.
+    # 그래서 "대상 389채널 중 165채널만 기여, 224채널 0건"이 나와도 **긁다 실패한 건지
+    # 그냥 최근 48h에 안 올린 건지 구분할 수가 없었다**(실측 2026-08-14).
+    # ok는 '노드를 받았다'는 뜻이지 48h 이내라는 뜻은 아니므로, ok에서 실제 기여
+    # 채널수를 빼면 '살아있는데 최근 게시 없음'이 갈라진다.
+    try:
+        tally = dict(getattr(service, "LAST_COLLECT_TALLY", {}) or {})
+        if tally:
+            contributed = len({i.get("username") for i in items})
+            quiet = max(0, int(tally.get("ok", 0)) - contributed)
+            print(f"[daily_instagram_collect] 채널결과 {tally} · 기여 {contributed}채널 "
+                  f"· 살아있으나 48h내 게시없음 {quiet}채널")
+    except Exception as e:  # noqa: BLE001 — 로그가 수집을 죽이면 안 된다
+        print(f"[daily_instagram_collect] tally 로깅 실패(무해): {e!r}", file=sys.stderr)
+
     print(f"[daily_instagram_collect] {len(items)}건 수집 · {time.time() - t0:.1f}s")
     return 0
+
+
+def _backfill_reference_durations(max_passes=15, per=40):
+    """레퍼런스 피드 길이가 대부분 찰 때까지 run_backfill을 격리 서브프로세스로 반복."""
+    import subprocess
+    from shopping_shorts import duration_backfill as df
+
+    def _pending():
+        s = Store(DB_PATH)
+        scs = [i.get("shortcode") for i in s.load_last_run()[0] if i.get("shortcode")]
+        cached = s.duration_map(scs)
+        fails = s.duration_fail_map(scs)
+        cov = len(cached)
+        pend = sum(1 for sc in scs
+                   if sc not in cached and fails.get(sc, 0) < df.MAX_FAIL)
+        return cov, len(scs), pend
+
+    for _ in range(max_passes):
+        cov, total, pend = _pending()
+        if pend == 0:                    # 남은 건 전부 실패상한(영구불가) — 그만
+            break
+        try:
+            subprocess.run(
+                [sys.executable, "-m", "shopping_shorts.duration_backfill",
+                 "--limit", str(per)],
+                timeout=260, check=False)
+        except Exception as e:           # 서브프로세스 크래시/타임아웃 — 다음 패스로
+            print(f"[daily_instagram_collect] 백필 패스 실패(계속): {e!r}", file=sys.stderr)
+    cov, total, pend = _pending()
+    print(f"[daily_instagram_collect] 레퍼런스 길이 백필: {cov}/{total} "
+          f"(처리가능 잔여 {pend})")
 
 
 if __name__ == "__main__":

@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from google import genai
 from google.genai import types
 from pipeline.atoms import key_vault
+from shopping_shorts import usage_meter
 from shopping_shorts.config import SHORTS_GEMINI_KEYS
 
 _MODEL = "gemini-3.1-flash-lite"
@@ -143,7 +144,8 @@ def _client_for_key(key):
         # 타임아웃 미지정 시 Gemini 응답이 느릴 때(영상 업로드+추론 등) 무한 대기할 수 있어
         # 기존 재시도 로직(quota/503 등)이 아예 발동을 못 한다(2026-07-14 실사고: extracting
         # 단계가 5분+ 멈춤, 에러도 안 남음). 타임아웃을 줘서 느린 요청이 예외로 떨어지게 한다.
-        _client_cache[key] = genai.Client(api_key=key, http_options=types.HttpOptions(timeout=120_000))
+        _client_cache[key] = usage_meter.wrap(
+            genai.Client(api_key=key, http_options=types.HttpOptions(timeout=120_000)))
     return _client_cache[key]
 
 _PROMPT = """너는 인스타에서 활발히 소통하는 진짜 사람이다.
@@ -181,12 +183,17 @@ _PROMPT = """너는 인스타에서 활발히 소통하는 진짜 사람이다.
 
 
 def _current_key_and_idx():
-    """전용 풀에서 아직 안 살아있는(소진 안 된) 키 중 첫 번째. 다 소진되면 (None, None)."""
-    live = _live_key_indices()
-    if not live:
-        return None, None
-    idx = live[0]
-    return SHORTS_GEMINI_KEYS[idx], idx
+    """지금 쓸 키 하나. 다 소진되면 (None, None).
+
+    ★2026-08-18: 본문을 _next_live_key_and_idx에 위임한다(0순위-B — 키를 고르는
+      판단은 한 곳에서만). 예전엔 여기서 늘 live[0]을 돌려줘, 키가 12개여도
+      **1번 키만** 때렸다. 라운드로빈·분당간격 페이서를 2026-08-06에 만들어놓고도
+      실제 호출부 15곳(script_extract·script_generate·edit_plan…)은 전부 이 함수를
+      부르고 있어서 페이서가 통째로 놀았다.
+      영향: 1단계 자동분석은 동시 3개로 도는데(app.py _AUTOLOAD_MAX_WORKERS) 셋이
+      같은 키를 동시에 때려 분당 한도(키당 5건)에 바로 걸렸다.
+      이 위임 하나로 호출부 전부가 키를 나눠 쓴다."""
+    return _next_live_key_and_idx()
 
 
 # 라운드로빈 커서 — 호출마다 다음 라이브 키로 넘겨 부하를 분산한다. _current_key_and_idx가

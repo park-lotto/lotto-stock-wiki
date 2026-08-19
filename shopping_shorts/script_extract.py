@@ -59,6 +59,18 @@ _RESPONSE_SCHEMA = {
                     #   "프린팅이 갈라지다→매끈해지다" / "양념이 튀다·가림막이 막아주다" /
                     #   "촉감이 모찌같다". ACTION_VOCAB 30개는 전부 사람 손동작이라 하나도 못 담는다.
                     "change": {"type": "string"},
+                    # ★2026-08-16: scene_desc는 "무엇이 보이나"(묘사)라 길고, 카드 밑에 넣으면
+                    #   잘려서 안 읽힌다(실측: "메탈 플레이트 중앙의 하트 문양에서 에스프레소가
+                    #   아래에서 위로 솟아오르는 클로즈업" 31자). label은 "이 장면이 영상에서
+                    #   무슨 일을 하나"(역할)를 12자 안쪽으로 — 카드 밑에 그대로 찍고,
+                    #   대본↔장면 매칭에도 의미끼리 붙게 한다.
+                    "label": {"type": "string"},
+                    # ★2026-08-16 사장님: "어떤 활용포인트를 줄까에 대한 질문까지 해야
+                    #   매칭할 때 좋은 거 아닌가". label은 "무슨 장면인가"(정체)뿐이라
+                    #   대본 어느 대목에 쓸지는 여전히 모델이 매번 추론해야 했다.
+                    #   use_point는 **"이 장면을 어디에 어떻게 쓰면 좋은가"**(쓸모)를 미리
+                    #   판단해 둔다 — 매칭이 판단을 다시 하지 않고 읽기만 하면 된다.
+                    "use_point": {"type": "string"},
                     "has_effect": {"type": "boolean"},
                     "is_key": {"type": "boolean"},
                     "shot_role": {"type": "string",
@@ -70,11 +82,38 @@ _RESPONSE_SCHEMA = {
         },
         "full_text": {"type": "string"},
         "product_benefits": {"type": "array", "items": {"type": "string"}},
+        # ★영상 단위 요약(2026-08-16). 지금까진 최상위에 특장점 2~3개뿐이라 "이 영상이
+        #   무슨 영상인가"가 한 덩어리로 없었다. 소스가 3~8개일 때 각 소스가 전체에서
+        #   맡는 몫이 안 보여 대본 생성이 소스를 골고루 못 쓴다(실측 A/B: 3개 중 평균 2.6종).
+        #   장면 label도 이 큰 그림 위에서 지어야 어긋남이 준다.
+        "source_brief": {
+            "type": "object",
+            "properties": {
+                "product": {"type": "string"},   # 무슨 제품/결과물을 보여주는 영상인가
+                "role": {"type": "string"},      # 이 영상이 보여주는 몫(구성 확인·비교·기능 실증…)
+                "core": {"type": "string"},      # 이 영상의 요지 한 줄
+                "summary": {"type": "string"},   # 2~3문장 요약
+            },
+        },
     },
     "required": ["segments", "full_text"],
 }
 
 _PROMPT = """이 영상을 보고 시간 순서대로 세그먼트로 나눠 대본을 추출해라.
+
+★순서를 지켜라: **영상 전체를 먼저 파악**(source_brief)한 뒤, 그 큰 그림 위에서 세그먼트를
+나누고 각 장면의 쓰임(label)을 정해라. 전체를 모르면 "도입"인지 "마무리"인지 알 수 없다.
+
+[source_brief — 이 영상이 무슨 영상인지 먼저 한 덩어리로 정리한다]
+- product: 이 영상이 보여주는 **제품/결과물의 이름**(한국어). 영어·중국어 자막이어도 한국어로.
+           자막이 하나도 없어도 화면만 보고 정해라(예: "긍정 강화 보상 별 통", "휴대용 에스프레소 메이커").
+- role: 이 영상이 **무엇을 보여주는 영상인지** 한 줄(예: "제품 구성 및 조립 시연",
+        "크기·디자인 비교 확인", "기능 실증과 결과 확인", "사용 후기·반응"). 여러 소스를
+        섞어 쓸 때 이 영상이 맡을 몫을 가리는 기준이 된다.
+- core: 이 영상의 요지 한 줄(가장 중요한 장면·기능이 무엇인지).
+- summary: 2~3문장 요약. 무엇을 어떤 순서로 보여주고 무엇이 핵심 기능인지.
+★셋 다 **화면에 실제로 보이는 것**으로만 채워라. 자막·나레이션이 없어도 화면만 보고 쓴다.
+
 
 캡션(참고용, 영상 내용이 우선): {caption}
 
@@ -104,6 +143,27 @@ _PROMPT = """이 영상을 보고 시간 순서대로 세그먼트로 나눠 대
   프레임 안의 진짜 동물·사람**은 맥락일 뿐 제품이 아니다 — 이런 것에 낚여 "강아지 선풍기"처럼
   실제 제품과 무관한 이름을 지어내지 마라. 예: 손에 들고 사용 중인 선풍기 옆에 강아지 인형이나
   진짜 강아지가 보여도, 주 제품은 여전히 "선풍기"다.
+- label: ★그 구간이 **이 영상에서 하는 일**을 짧은 이름으로 붙여라(**12자 이내**, 한국어).
+  scene_desc가 "무엇이 보이나"(묘사)라면 label은 **"왜 이 장면이 여기 있나"(역할)**다.
+  ★위에서 정한 source_brief(제품·역할·핵심)를 기준으로 삼아라 — 이 영상이 맡은 몫 안에서
+  이 장면이 어느 대목인지 적는 것이다. 같은 그림이라도 맨 앞이면 "도입", 맨 뒤면 "마무리".
+  brief의 role이 "크기 비교"인 영상이면 그 비교 흐름 속 위치로 이름을 지어라.
+  형식: `대상 + 무엇을 하는 대목` (…시연 / …강조 / …확인 / …설명 / …비교 / …소개 / …예고).
+  · 좋은 예: "제품 개봉·구성품 확인" "자석 부착 시연" "크기 비교 시연" "바텀업 추출 시연"
+             "기존 제품 작동 시연" "완성품 클로즈업" "고객 반응 강조" "마무리·CTA"
+  · 나쁜 예: "손이 컵을 든다"(그냥 묘사) / "커피"(무엇을 하는지 없음) /
+             "메탈 플레이트 중앙의 하트 문양에서 커피가 솟는 클로즈업"(너무 길다)
+  ★화면에 실제로 보이는 것만으로 지어라. 안 보이는 걸 추측해 이름 붙이지 마라.
+- use_point: ★이 장면을 **새 영상에서 어디에 어떻게 쓰면 좋은지** 한 문장(한국어, 40~70자).
+  label이 "무슨 장면인가"(정체)라면 use_point는 **"어떻게 써먹나"(쓸모)**다.
+  대본의 어느 대목(훅·문제 제기·기능 설명·결과 확인·마무리)에 어울리는지와, 그 이유를
+  화면에 보이는 근거로 함께 적어라.
+  · 좋은 예: "영상 도입부에서 제품 목적과 구성품을 빠르게 보여주어 시청자의 흥미를 끌기 좋습니다"
+             "기존 방식과 나란히 보여주므로 '뭐가 다른데?'라는 의문을 푸는 대목에 쓰기 좋습니다"
+             "크레마가 차오르는 변화가 또렷해 결과를 확인시키는 마무리 대목에 어울립니다"
+  · 나쁜 예: "좋은 장면입니다"(근거 없음) / "제품을 보여줍니다"(scene_desc 반복) /
+             "훅"(한 단어 — 왜 그런지가 없다)
+  ★화면에 실제로 보이는 것을 근거로만 판단해라. 안 보이는 효능을 지어내지 마라.
 - action: 그 구간의 주요 손동작을 하나 골라라(당기다·붓다·바르다·펴다·자르다·섞다·닦다·
   누르다·끼우다·열다·담다·닫다). 해당 없으면 "없음".
 - change: ★이 구간에서 **화면 속 사물에 무슨 일이 일어났는지** 한국어 한 줄로 적어라.
@@ -167,6 +227,77 @@ def _norm_shot_role(raw):
     return _SHOT_ROLE_ALIASES.get(raw, "기타")
 
 
+# 짧은 이름(2026-08-16). 카드 밑에 그대로 찍히므로 길이를 여기서 한 번만 통제한다
+# (표시하는 쪽마다 자르면 곳마다 달라진다 — CLAUDE.md 0순위-B).
+_LABEL_MAX = 16          # 프롬프트는 12자를 요구한다. 조금 넘겨도 버리지 않되 여기서 끊는다.
+
+
+_BRIEF_KEYS = ("product", "role", "core", "summary")
+_BRIEF_MAX = {"product": 40, "role": 60, "core": 80, "summary": 400}
+
+
+def has_usable_result(result):
+    """이 추출 결과를 저장·사용할 값어치가 있나(=재료가 나왔나).
+
+    ★예전엔 `full_text`(말)만 봤다. 그래서 **말이 없는 영상은 통째로 버려졌다** —
+      도우인·틱톡의 무음 제품 영상이 여기 걸린다(2026-08-16 실측:
+      "전사 결과 없음(음성 없음·자막 불가)"로 실패 처리).
+      그런데 우리 추출은 **화면만 보고도** 장면을 태깅한다(이 파일 프롬프트가 그렇게
+      돼 있고, 실제로 자막 0자 소스가 세그 10개·label 10개로 성공한 기록이 있다).
+      즉 되는 걸 게이트가 막고 있었다.
+    그래서 **말 또는 화면 중 하나라도 건졌으면** 쓸 수 있다고 본다.
+    둘 다 없으면 종전대로 실패다(빈 대본이 캐시로 굳는 것은 여전히 막아야 한다)."""
+    if not isinstance(result, dict):
+        return False
+    if (result.get("full_text") or "").strip():
+        return True
+    segs = result.get("segments") or []
+    # 화면 묘사가 실제로 담긴 세그가 하나라도 있어야 한다(빈 껍데기 방지)
+    return any((s.get("scene_desc") or "").strip() for s in segs if isinstance(s, dict))
+
+
+def _norm_brief(raw):
+    """모델이 준 영상 단위 요약 → 표시·프롬프트용 dict(순수함수, fail-open).
+    없음/형식이상 → {}. 옛 추출본엔 이 필드가 없으므로 읽는 쪽은 빈 dict를 견뎌야 한다."""
+    if not isinstance(raw, dict):
+        return {}
+    out = {}
+    for k in _BRIEF_KEYS:
+        v = raw.get(k)
+        if not isinstance(v, str):
+            continue
+        s = " ".join(v.split())
+        if not s:
+            continue
+        cap = _BRIEF_MAX[k]
+        out[k] = s if len(s) <= cap else s[:cap - 1] + "…"
+    return out
+
+
+def _norm_label(raw):
+    """모델이 준 짧은 이름 → 표시용 한 줄(순수함수, fail-open).
+    없음/None/공백 → "". 줄바꿈은 공백으로, 너무 길면 잘라 말줄임."""
+    if not isinstance(raw, str):
+        return ""
+    s = " ".join(raw.split())            # 줄바꿈·연속공백 정리
+    if not s:
+        return ""
+    return s if len(s) <= _LABEL_MAX else s[:_LABEL_MAX - 1] + "…"
+
+
+_USE_POINT_MAX = 140     # 한 문장 권장 40~70자. 넘겨도 버리지 않되 여기서 끊는다.
+
+
+def _norm_use_point(raw):
+    """활용 포인트 → 한 줄(순수함수, fail-open). 없음/형식이상 → ""."""
+    if not isinstance(raw, str):
+        return ""
+    s = " ".join(raw.split())
+    if not s:
+        return ""
+    return s if len(s) <= _USE_POINT_MAX else s[:_USE_POINT_MAX - 1] + "…"
+
+
 def _collect_benefits(segments):
     """세그먼트별 product_benefits → 소스 단위 집계(순서 보존 중복제거, 순수함수).
     무자막 영상은 full_text가 0자라 이 집계가 대본 생성의 유일한 언어 재료다."""
@@ -176,6 +307,86 @@ def _collect_benefits(segments):
             if b not in out:
                 out.append(b)
     return out
+
+
+def _merge_too_short(raw_segments, min_clip=None):
+    """0.8초 미만 구간을 인접 구간에 합친다 — 태어날 때부터 못 쓰는 조각을 안 만든다.
+
+    ★2026-08-17 사장님 지적("0.8초 미만은 안 되게 돼 있던데 조각낼 때부터 방지 못 하나").
+      실측: 최근 80영상 1,164구간 중 131개(11.3%)가 0.8초 미만이었다. 이 조각들은
+      라운드로빈이 건너뛰어 **화면에 안 나온다** — 담아도 사라지고, 그 몫을 메우느라
+      다른 컷이 길게 늘어난다(handoff/칸채우기.md 실사고).
+      원인은 태깅이 **대사 단위**로 쪼개는 것: "도자기라" 같은 짧은 말이 0.7초 구간이 된다.
+
+    왜 늘리지 않고 합치나: 구간이 빈틈없이 붙어 있다(실측 인접쌍 505개 전부 간격 0).
+    끝을 늘리면 옆 구간을 침범한다.
+
+    합치는 규칙 — 뜻이 덜 상하는 쪽으로:
+      1) 인접(앞·뒤) 중 **같은 shot_role**이 있으면 그쪽. 화면 성격이 같아야 설명이 안 어긋난다.
+      2) 없으면 **짧은 쪽**. 긴 구간을 더 부풀리지 않는다.
+      3) 대사는 이어붙이고, 설명·이름(scene_desc·label)은 **원래 길었던 쪽** 것을 남긴다
+         — 0.7초가 4초를 밀어내면 카드 설명이 실제 화면과 어긋난다.
+    min_clip 기본값은 video_assemble._MIN_CLIP을 그대로 쓴다(같은 판단을 두 군데 적지 않는다).
+    """
+    from shopping_shorts import video_assemble as _va
+    if min_clip is None:
+        min_clip = _va._MIN_CLIP
+    segs = [dict(s) for s in (raw_segments or [])]
+    if len(segs) < 2:
+        return segs                       # 합칠 상대가 없다(원본 그대로 — 회귀 0)
+
+    def _len(s):
+        try:
+            return float(s.get("end") or 0.0) - float(s.get("start") or 0.0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _join(a, b):
+        """a·b를 하나로. 시간은 바깥쪽, 나머지는 '원래 길었던 쪽'을 대표로."""
+        big, small = (a, b) if _len(a) >= _len(b) else (b, a)
+        out = dict(big)
+        out["start"] = min(float(a.get("start") or 0.0), float(b.get("start") or 0.0))
+        out["end"] = max(float(a.get("end") or 0.0), float(b.get("end") or 0.0))
+        # 대사는 시간순으로 이어붙인다(둘 다 있으면 공백 하나로).
+        t1 = (a.get("text") or "").strip()
+        t2 = (b.get("text") or "").strip()
+        out["text"] = (t1 + " " + t2).strip() if (t1 and t2) else (t1 or t2)
+        # 실증·효과는 한쪽만 있어도 살린다(정보를 잃지 않는 방향).
+        out["is_key"] = bool(a.get("is_key")) or bool(b.get("is_key"))
+        out["has_effect"] = bool(a.get("has_effect")) or bool(b.get("has_effect"))
+        _pb = list(_norm_benefits(big.get("product_benefits")))
+        for x in _norm_benefits(small.get("product_benefits")):
+            if x not in _pb:
+                _pb.append(x)
+        out["product_benefits"] = _pb
+        return out
+
+    changed = True
+    while changed and len(segs) >= 2:
+        changed = False
+        for i, s in enumerate(segs):
+            if _len(s) >= min_clip - 1e-6:
+                continue
+            prev_s, next_s = (segs[i - 1] if i > 0 else None), (segs[i + 1] if i + 1 < len(segs) else None)
+            role = s.get("shot_role")
+            # ① 같은 역할 우선(앞을 먼저 본다 — 시간순 흐름이 덜 끊긴다)
+            pick = None
+            if prev_s is not None and prev_s.get("shot_role") == role:
+                pick = i - 1
+            elif next_s is not None and next_s.get("shot_role") == role:
+                pick = i + 1
+            else:
+                # ② 짧은 쪽
+                cands = [(j, _len(segs[j])) for j in (i - 1, i + 1) if 0 <= j < len(segs)]
+                if cands:
+                    pick = min(cands, key=lambda x: x[1])[0]
+            if pick is None:
+                continue
+            lo, hi = (pick, i) if pick < i else (i, pick)
+            segs[lo:hi + 1] = [_join(segs[lo], segs[hi])]
+            changed = True
+            break                          # 목록이 바뀌었으니 처음부터 다시 훑는다
+    return segs
 
 
 def _assign_seg_ids(video_id, raw_segments, motion_map=None):
@@ -194,6 +405,12 @@ def _assign_seg_ids(video_id, raw_segments, motion_map=None):
             "end": float(seg.get("end") or 0.0),
             "text": seg.get("text", ""),
             "scene_desc": seg.get("scene_desc", ""),
+            # 짧은 이름(2026-08-16). 옛 추출본엔 없어 ""로 떨어진다(fail-open) — 표시하는 쪽이
+            # 비면 scene_desc로 되돌아가므로 기존 잡은 지금과 똑같이 보인다.
+            "label": _norm_label(seg.get("label")),
+            # 활용 포인트(2026-08-16) — 이 장면을 어디에 어떻게 쓰면 좋은지 한 문장.
+            # 옛 추출본엔 없어 ""(fail-open) — 읽는 쪽이 빈 문자열을 견딘다.
+            "use_point": _norm_use_point(seg.get("use_point")),
             "action": raw_action,  # str 동사 or None
             # 사물이 주어인 변화·감각 한 줄(2026-07-31). 옛 추출본엔 없어서 ""로 떨어진다(fail-open)
             # — 하류(_build_inventory)가 빈 값이면 그 칸을 통째로 생략하므로 회귀 없음.
@@ -336,7 +553,11 @@ def storable(result):
     r = result or {}
     return {"full_text": r.get("full_text", "") or "",
             "segments": r.get("segments") or [],
-            "tag_qa": r.get("tag_qa") or {}}
+            "tag_qa": r.get("tag_qa") or {},
+            # 영상 단위 요약(2026-08-16) — 1단계 화면이 소스별로 이걸 보여주고,
+            # 대본 생성이 "이 소스가 맡은 몫"으로 읽는다. 여기 안 넣으면 저장 순간 버려진다
+            # (2026-08-01 tag_qa가 정확히 그렇게 사라졌던 자리다).
+            "source_brief": _norm_brief(r.get("source_brief"))}
 
 
 def _pick_better_extract(first, second, duration):
@@ -422,8 +643,12 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 ),
             )
             data = json.loads(resp.text)
-            motion_map = _compute_motion_map(video_path, _cuts, _fps, data.get("segments", []), video_id)
-            segments = _assign_seg_ids(video_id, data.get("segments", []), motion_map=motion_map)
+            # ★못 쓰는 조각을 애초에 안 만든다(2026-08-17) — 0.8초 미만은 화면에 안 나온다.
+            #   ⚠️순서 주의: motion_map이 세그먼트 순번으로 seg_id를 만들므로 **병합을 먼저** 해야
+            #   한다. 뒤에 하면 모션레벨이 엉뚱한 조각에 붙는다.
+            _segs_raw = _merge_too_short(data.get("segments", []))
+            motion_map = _compute_motion_map(video_path, _cuts, _fps, _segs_raw, video_id)
+            segments = _assign_seg_ids(video_id, _segs_raw, motion_map=motion_map)
             # 소스 단위 특장점: 모델의 최상위 요약을 우선하고, 없으면 세그별 집계로 폴백.
             # 무자막 영상(full_text 0자)이 대본 생성에서 통째로 빠지던 것을 막는 재료다.
             benefits = _norm_benefits(data.get("product_benefits")) or _collect_benefits(segments)
@@ -431,6 +656,8 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 "segments": segments,
                 "full_text": data.get("full_text", ""),
                 "product_benefits": benefits,
+                # 영상 단위 요약(2026-08-16). 없으면 {} — 읽는 쪽이 빈 dict를 견딘다.
+                "source_brief": _norm_brief(data.get("source_brief")),
             }
             # ★태깅 QA(2026-08-01). 지금까진 스키마만 통과하면 무조건 채택했다 — 프롬프트의
             #   지침(0초 훅·받아쓰기·shot_role·change)이 지켜졌는지 아무도 안 봤다. 슬롯 기반
