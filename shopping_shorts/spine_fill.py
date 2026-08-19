@@ -38,7 +38,8 @@ import re
 
 # 템플릿에 쓰이는 슬롯 이름. 여기 없는 이름이 템플릿에 있으면 그 템플릿은 못 쓴다
 # (모르는 슬롯을 빈칸으로 남기면 "이게 원래는  개발된 제품이었음"이 나간다).
-SLOT_NAMES = ("제품", "효능", "효능2", "나라", "본래용도", "속성", "용도", "용도들", "제품군")
+SLOT_NAMES = ("제품", "효능", "효능2", "나라", "본래용도", "속성",
+              "용도", "용도끝", "용도들", "제품군")
 
 _SLOT_RE = re.compile(r"\{([^{}]+)\}")
 
@@ -97,6 +98,13 @@ def fix_josa(value, tail):
     return "", tail
 
 
+def _last(v):
+    """리스트면 마지막 항목. 하나뿐이면 그것(겹침을 피할 방법이 없다)."""
+    if isinstance(v, (list, tuple)):
+        v = v[-1] if v else ""
+    return str(v or "").strip()
+
+
 def _join_cases(items, max_n=3):
     """엉뚱한 사용처 여러 개 → 사례 나열 한 문장.
 
@@ -112,7 +120,9 @@ def _join_cases(items, max_n=3):
     _j, _ = fix_josa(xs[0], "로")
     head = "%s%s 쓰는가 하면" % (xs[0], _j or "로")
     rest = ", ".join(xs[1:])
-    return "%s %s로도 쓰고요" % (head, rest)
+    # ★마지막 항목에도 조사를 맞춘다(실측: "아이들 간식용로도" — 나열 꼬리를 빼먹었다).
+    _j2, _ = fix_josa(xs[-1], "로")
+    return "%s %s%s도 쓰고요" % (head, rest, _j2 or "로")
 
 
 def merge_sul(facts_list):
@@ -127,6 +137,12 @@ def merge_sul(facts_list):
 
     합치는 규칙은 단순하다: 리스트는 **순서를 지키며 이어붙이고 중복만 뺀다**.
     (점수를 매겨 고르지 않는다 — 무엇이 좋은 사례인지는 재료가 아니라 편집이 정한다)
+
+    ⚠️ **같은 소재의 영상만 합쳐라.** 서로 다른 제품 6편을 합쳐봤더니(실측 2026-08-19)
+      "원래는 수납으로 개발됐는데 / 사진의 입체화를 눈치채고 / 아이들 간식으로 쓴다"는
+      **말이 안 되는 대본**이 나왔다. 슬롯은 다 찼지만 소재가 섞인 것이다.
+      실무 호출부는 job에 **담긴 영상들**(같은 주제로 사장님이 담은 것)을 넘기므로
+      이 조건이 자연히 지켜진다 — 아무 영상이나 넘기는 호출부를 만들지 마라.
     """
     out = {}
     for f in (facts_list or []):
@@ -161,6 +177,9 @@ def slots_from_facts(product_facts=None, sul=None):
         "본래용도": _first(sf.get("original_use")),
         "속성": _first(sf.get("hidden_property")),
         "용도": _first(sf.get("misuses")),
+        # ★twist는 cases에서 이미 말한 것을 또 말하면 안 된다(실측: 둘 다 '인테리어
+        #   소품'이 나와 반전이 죽었다). 사례가 여럿이면 **마지막 것**을 반전에 쓴다.
+        "용도끝": _last(sf.get("misuses")),
         "용도들": _join_cases(sf.get("misuses")),
         "제품군": _first(sf.get("category_word")),
     }

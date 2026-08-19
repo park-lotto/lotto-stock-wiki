@@ -131,3 +131,29 @@ def test_합쳐서_빈칸이_메워진다():
     d1 = sf.coverage(spine, sf.slots_from_facts({}, one))
     d3 = sf.coverage(spine, sf.slots_from_facts({}, sf.merge_sul([one, two])))
     assert d1[0] == 3 and d3[0] == 5, (d1, d3)
+
+
+def test_나열_마지막에도_조사가_붙는다():
+    """실측 버그: '아이들 간식용로도' — 나열 꼬리의 조사를 빼먹었다."""
+    out = sf._join_cases(["인테리어 소품", "기념일 선물", "아이들 간식용"])
+    assert out == "인테리어 소품으로 쓰는가 하면 기념일 선물, 아이들 간식용으로도 쓰고요"
+
+
+def test_twist는_cases와_다른_사례를_쓴다():
+    """실측 버그: cases도 twist도 '인테리어 소품' — 반전이 죽는다."""
+    slots = sf.slots_from_facts({}, {"misuses": ["인테리어 소품", "기념일 선물", "간식 보관"]})
+    assert slots["용도"] == "인테리어 소품"
+    assert slots["용도끝"] == "간식 보관"
+    spine = {"beat_roles": ["cases", "twist"],
+             "templates": {"cases": ["{용도들}"],
+                           "twist": ["근데 미친 사용법은 따로 있었는데 {용도끝}"]}}
+    beats, _ = sf.fill(spine, slots)
+    cases, twist = beats[0]["text"], beats[1]["text"]
+    assert "간식 보관" in twist and not twist.endswith("인테리어 소품")
+    assert cases.startswith("인테리어 소품")
+
+
+def test_사례가_하나뿐이면_겹침을_피할_수_없다():
+    """정직하게 같은 값을 쓴다 — 없는 사례를 지어내지 않는다."""
+    slots = sf.slots_from_facts({}, {"misuses": ["하나뿐"]})
+    assert slots["용도"] == slots["용도끝"] == "하나뿐"
