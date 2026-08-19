@@ -416,3 +416,65 @@ def test_스냅샷에_없으면_팔로워를_지어내지_않는다(db):
             "https://www.instagram.com/reels/ABC123/",
             {"title": "Video by chae2home", "channel": "채이홈"}, store=store)
     assert not meta.get("followers")
+
+
+# ── 2026-08-19 (4차) 실사고: 등록 순서에 따라 팔로워가 0이 됐다 ──────────────
+# 사장님이 채이홈 영상 3개를 등록했는데 **맨 처음 것만** 팔로워 0이었다.
+#   DcF2lTqzeiu(먼저) followers=0   ← 그 채널의 첫 등록이라 스냅샷에 참고할 게 없었다
+#   DcFR35CT4VU      followers=343000
+#   DcK-uwATMeP      followers=343000
+# 릴 1건 응답엔 팔로워가 없어 스냅샷에서 빌려왔는데, **첫 등록이면 빌릴 데가 없다**.
+# 순서에 따라 결과가 달라지면 안 된다 → 못 찾으면 프로필을 한 번 연다.
+
+def test_스냅샷에_있으면_인스타를_안_부른다(db):
+    """비용 우선 — 이미 가진 데이터로 되면 요청을 늘리지 않는다(계정 한도)."""
+    store = Store(db)
+    store.save_last_run([{"shortcode": "X1", "username": "chae2home", "followers": 343000}],
+                        datetime.now(timezone.utc).isoformat())
+    with patch("shopping_shorts.instagram_playwright.fetch_profiles") as fp:
+        assert ap._ig_followers_of(store, "chae2home") == 343000
+        assert fp.call_count == 0, "스냅샷으로 됐는데 인스타를 불렀다"
+
+
+def test_첫_등록이면_프로필을_연다(db):
+    """실사고 재현 — 스냅샷이 비어도 팔로워를 구해야 한다."""
+    store = Store(db)
+    with patch("shopping_shorts.instagram_playwright.fetch_profiles",
+               return_value={"chae2home": {"followers": 343158}}) as fp:
+        assert ap._ig_followers_of(store, "chae2home") == 343158
+        assert fp.call_count == 1
+
+
+def test_fetch_profiles는_dict를_준다(db):
+    """★계약 확인 — 리스트로 알고 순회하면 문자열이 나와 터진다(내가 한 번 틀렸다)."""
+    store = Store(db)
+    with patch("shopping_shorts.instagram_playwright.fetch_profiles",
+               return_value={"chae2home": {"followers": 5, "posts": 1, "full_name": "채이홈"}}):
+        assert ap._ig_followers_of(store, "chae2home") == 5
+
+
+def test_못_구하면_지어내지_않는다(db):
+    """모르는 값을 채우면 화면이 거짓 숫자를 보여준다 — 0이면 '—'로 뜨는 게 낫다."""
+    store = Store(db)
+    with patch("shopping_shorts.instagram_playwright.fetch_profiles",
+               side_effect=RuntimeError("login wall")):
+        assert ap._ig_followers_of(store, "chae2home") == 0
+    assert ap._ig_followers_of(store, "") == 0
+
+
+def test_대소문자가_달라도_찾는다(db):
+    store = Store(db)
+    store.save_last_run([{"shortcode": "X1", "username": "Chae2Home", "followers": 111}],
+                        datetime.now(timezone.utc).isoformat())
+    assert ap._ig_followers_of(store, "@chae2home") == 111
+
+
+def test_등록순서가_결과를_바꾸지_않는다(db):
+    """같은 채널 3개를 등록할 때 첫 번째만 0이 되면 안 된다(실사고의 본질)."""
+    store = Store(db)
+    got = []
+    with patch("shopping_shorts.instagram_playwright.fetch_profiles",
+               return_value={"chae2home": {"followers": 343158}}):
+        for _ in range(3):
+            got.append(ap._ig_followers_of(store, "chae2home"))
+    assert all(g == 343158 for g in got), f"순서에 따라 값이 달라진다: {got}"

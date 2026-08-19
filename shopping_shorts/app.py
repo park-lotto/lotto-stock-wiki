@@ -9033,15 +9033,48 @@ def _enrich_instagram_meta(url, meta, store=None):
     #   수집분이 스냅샷에 있으면 거기서 가져온다 — **인스타 요청을 늘리지 않는다**.
     #   (없으면 0으로 두고, 화면파싱값 폴백이 뒤에서 채울 수도 있다)
     if not meta.get("followers") and store is not None and uname:
+        meta["followers"] = _ig_followers_of(store, uname) or meta.get("followers") or 0
+    return meta, hit
+
+
+def _ig_followers_of(store, uname, _allow_fetch=True):
+    """그 계정의 팔로워 수(못 구하면 0).
+
+    ★릴 1건 응답엔 팔로워가 없다(실측). 그래서 이미 가진 데이터에서 먼저 찾는다 —
+      **인스타 요청을 늘리지 않는 게 우선**이다(계정 한도).
+
+    ⚠️ 2026-08-19 실사고: 처음엔 `last_run`만 뒤졌는데, **그 채널의 첫 등록이면
+      스냅샷에 아직 아무것도 없어 0이 됐다**(DcF2lTqzeiu가 그랬다 — 같은 채널을
+      3개 등록했는데 맨 처음 것만 팔로워 0). 순서에 따라 결과가 달라지면 안 된다.
+      → 스냅샷 여러 곳을 보고, 그래도 없으면 그때만 프로필을 한 번 연다.
+    """
+    key = (uname or "").strip().lstrip("@").lower()
+    if not key:
+        return 0
+    # ① 이미 받아둔 스냅샷들(인스타 + 아카이브) — 비용 0원
+    for loader in (lambda: store.load_last_run()[0],
+                   lambda: store.load_last_run_platform("instagram")[0]):
         try:
-            olds, _at = store.load_last_run()
-            for it in (olds or []):
-                if (it.get("username") or "").lower() == uname.lower() and it.get("followers"):
-                    meta["followers"] = it["followers"]
-                    break
+            for it in (loader() or []):
+                if (it.get("username") or "").lower() == key and it.get("followers"):
+                    return int(it["followers"])
         except Exception:      # noqa: BLE001 — 폴백 실패는 무해
             pass
-    return meta, hit
+    if not _allow_fetch:
+        return 0
+    # ② 그래도 없으면 프로필을 한 번만 연다(첫 등록 채널). 실패하면 0.
+    try:
+        from shopping_shorts.instagram_playwright import fetch_profiles
+        # ★반환은 **dict**다 {username소문자: {followers, posts, full_name}} —
+        #   리스트로 알고 순회하면 문자열이 나와 .get()에서 터진다(계약 확인함).
+        prof = fetch_profiles([key]) or {}
+        n = int((prof.get(key) or {}).get("followers") or 0)
+        if n:
+            return n
+    except Exception as e:     # noqa: BLE001
+        import sys as _sys
+        print(f"[adopt] 팔로워 조회 실패(무해) who={key}: {e!r}", file=_sys.stderr)
+    return 0
 
 
 def _adopt_into_ranking(store, platform, url, meta):
