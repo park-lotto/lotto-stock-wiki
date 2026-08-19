@@ -167,3 +167,17 @@ def test_facts_for_job이_한_곳에서_정한다():
     """프롬프트 블록과 조립이 같은 재료를 봐야 한다(0순위-B)."""
     import inspect
     assert "_facts_for_job(" in inspect.getsource(app._facts_block_for_job)
+
+
+def test_어느_칸이_왜_안됐는지_말한다(monkeypatch):
+    """★사장님 질문(2026-08-19): "영상에 없는 내용이면 어떻게 하나".
+    답은 '되는 틀을 고른다'인데, 그러려면 어느 틀이 몇 칸 되는지 먼저 보여야 한다."""
+    _stub_sul(monkeypatch, {"category_word": "주방템", "misuse_genre": True,
+                            "misuses": ["A하기", "B하기"], "original_use": ["원래용도"],
+                            "hidden_property": ["숨은성질"]})
+    monkeypatch.setattr(app, "_facts_for_job", lambda *a, **k: {})   # 쿠팡 재료 없음
+    out, left, why = app._assembled_drafts([CONCEAL_SPINE], [{"full_text": "자막"}], None)
+    assert out == [] and left == [CONCEAL_SPINE]
+    msg = " ".join(why)
+    assert "유튜브 은폐형" in msg and "칸" in msg
+    assert "reveal" in msg or "benefit" in msg, "어느 칸이 빈지 말해야 한다"
