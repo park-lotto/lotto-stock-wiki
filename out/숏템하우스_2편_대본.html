@@ -476,13 +476,13 @@
   <div class="sub">
     <h3>①-A 소재 — 랭킹 구조 읽는 법 <span class="time">3:22–4:03</span></h3>
     <div class="blk"><span class="label l-screen">화면</span>
-      <div class="screen"><span class="rec">녹화</span> 레퍼런스 랭킹 열기 → <b>기간 탭</b>(48시간·이번주·이번달·역대 히트작) 눌러가며 → <b>지표</b> 바꿔가며 정렬(시간당 댓글 / 조회당 댓글 / 팔로워당 댓글) → 옆 <b>단순 지표</b>도 한 번 → <b>카테고리</b>(홈살림가전·레시피·뷰티)</div>
+      <div class="screen"><span class="rec">녹화</span> 레퍼런스 랭킹 열기 → <b>기간 탭</b>(48시간·이번주·이번달·역대 히트작) 눌러가며 → <b>지표</b> 바꿔가며 정렬(시간당 댓글 / 조회당 댓글 / 팔로워당 댓글) → 옆 <b>단순 지표</b>도 한 번 → <b>카테고리</b> 탭(전체·썰쇼핑·홈·살림·가전·레시피·꿀팁·뷰티·기타)</div>
     </div>
     <div class="blk"><span class="label l-line">대사</span>
       <div class="line">
         <p>"첫 번째. 뭘 만들지 고민하는 시간을 없앴습니다.</p>
         <p><b>숏템메이커가</b> 다른 프로그램들에 비해 편한 부분입니다.</p>
-        <p>지금 터지는 것들이 카테고리별로 정렬돼 있습니다. 영상 크롤링 수집은 <b>매일 오전 열 시</b>에 됩니다.</p>
+        <p>지금 터지는 것들이 카테고리별로 정렬돼 있습니다. 새 영상 수집은 <b>누를 때마다</b> 돌아갑니다.</p>
         <p>먼저 기간입니다. <b>사십팔 시간, 이번 주, 이번 달, 역대 히트작</b>으로 구분했습니다.</p>
         <p>기간을 누르고 지표를 선택하면, 보기 좋게 정렬이 되실 겁니다.</p>
         <p>지표를 하나씩 볼까요.</p>
@@ -490,12 +490,12 @@
         <p><b>조회당 댓글</b>은 조회수 대비 댓글입니다. 조회수가 덜 터졌는데 댓글이 많다는 건… <b>씨티에이가 좋다</b>는 뜻입니다.</p>
         <p><b>팔로워당 댓글</b>은, 작은 채널인데 댓글이 터지는 걸 볼 수 있습니다. <b>이쪽에서 알짜가 나오는 경우가 많습니다.</b></p>
         <p>옆쪽에 단순 지표도 한번 눌러보시고요.</p>
-        <p>카테고리는 <b>홈살림가전, 레시피, 뷰티</b>로 나눴습니다."</p>
+        <p>카테고리는 <b>홈·살림·가전, 레시피·꿀팁, 뷰티, 기타</b>로 나눠 놨습니다."</p>
       </div>
     </div>
     <div class="blk"><span class="label l-cap">자막</span>
       <div class="caps">
-        <span class="cap">수집 = <b>매일 오전 10시</b></span>
+        <span class="cap">수집 = <b>누를 때마다</b></span>
         <span class="cap">48시간 · 이번주 · 이번달 · 역대</span>
         <span class="cap">시간당 댓글 = <b>반응 속도</b></span>
         <span class="cap">조회당 댓글 = <b>CTA가 좋다</b></span>
@@ -769,7 +769,8 @@
 
 <script>
 (function(){
-  var KEY='shottem_ep2_script_v2';   // v2 = 사장님 수정본 반영판(2026-08-19). v1 데이터가 새 대본을 덮지 않게 키를 올림
+  var KEY='shottem_ep2_script_v3';   // v3 = 실측 교정판(2026-08-19 밤: 수집주기·카테고리 라벨). v2 저장본이
+  // 교정된 문장을 도로 덮어쓰는 걸 막는다 — load()가 저장값을 innerHTML에 그대로 넣기 때문
   var body=document.body;
   var stateEl=document.getElementById('saveState');
 
