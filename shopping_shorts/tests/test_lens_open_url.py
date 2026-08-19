@@ -5,6 +5,7 @@
 벽 없이 열린다. _openUrl은 '원본 열기'에서만 xiaohongshu.com→rednote.com로 바꾸고, 그 외
 도메인·저장/다운로드용 url은 건드리지 않는다."""
 import json, pathlib, shutil, subprocess, pytest
+from shopping_shorts.tests.js_harness import run_js_proc
 
 INDEX_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "index.html"
 NODE = shutil.which("node")
@@ -38,7 +39,7 @@ def test_open_url_rewrites_only_xiaohongshu():
     """
     # stdin=DEVNULL: pytest가 stdin 핸들을 캡처한 상태에서 node -e 가 그 핸들을 건드려
     # Windows WinError 6(invalid handle)로 간헐 실패하던 것을 막는다(2026-07-19 실측).
-    out = subprocess.run([NODE, "-e", driver], capture_output=True, text=True,
+    out = run_js_proc(driver, capture_output=True, text=True,
                          stdin=subprocess.DEVNULL, timeout=20)
     assert out.returncode == 0, out.stderr
     r = json.loads(out.stdout)

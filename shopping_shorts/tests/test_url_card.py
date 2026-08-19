@@ -16,6 +16,7 @@ from unittest.mock import patch
 import pytest
 
 from shopping_shorts import app as ap
+from shopping_shorts.tests.js_harness import run_js_proc
 
 INDEX = pathlib.Path(__file__).resolve().parents[1] / "static" / "index.html"
 
@@ -116,7 +117,7 @@ def _run_js(exprs):
     j = src.index("function onSearchEnter(")
     body = src[i:j]
     script = body + "\nconsole.log(JSON.stringify([" + ",".join(exprs) + "]));"
-    r = _sp.run(["node", "-e", script], capture_output=True, text=True, timeout=60)
+    r = run_js_proc(script, capture_output=True, text=True, timeout=60)
     assert r.returncode == 0, r.stderr
     return _json.loads(r.stdout)
 

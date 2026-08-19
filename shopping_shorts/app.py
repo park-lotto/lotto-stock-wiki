@@ -5306,6 +5306,34 @@ def _thumb_cache_path(url: str):
 _IG_OEMBED_APP_ID = "936619743392459"
 
 
+# 유튜브 썸네일 규격 — 앞이 화질이 좋고, 뒤로 갈수록 **확실히 존재**한다.
+# mqdefault는 사실상 항상 있어서 마지막 보루 역할을 한다.
+_YT_THUMB_NAMES = ("maxresdefault.jpg", "sddefault.jpg", "hqdefault.jpg", "mqdefault.jpg")
+
+
+def _yt_thumb_alternates(url):
+    """유튜브 썸네일 URL → 같은 영상의 **다른 규격** 후보들. 유튜브가 아니면 [].
+
+    ★왜 필요한가(2026-08-19 실측): 수집된 8,797건이 **전부** `oardefault.jpg` 한 규격만
+      쓰는데, 이건 영상마다 있을 수도 없을 수도 있는 변형(original aspect ratio)이다.
+      무작위 120건 중 **9건(7.5%)이 404** → 랭킹 카드가 검은 배경에 재생버튼만 남는다
+      (사장님 제보). 카드·영상은 멀쩡하고 썸네일 이미지만 못 불러오는 것.
+
+    ★영상ID는 반드시 보존한다 — 바뀌면 **다른 영상 썸네일**이 떠서 카드↔영상이 어긋난다
+      (memory: 렌즈썸네일_구글짝지음과 같은 종류의 사고).
+    ★원래 규격은 후보에서 뺀다 — 이미 404난 주소를 또 때리면 왕복만 낭비다.
+    """
+    if not url or "ytimg.com" not in url:
+        return []                       # 인스타·틱톡 경로는 건드리지 않는다(회귀 0)
+    base, _, _query = url.partition("?")
+    head, sep, name = base.rpartition("/")
+    if not sep or not head.endswith("/vi") and "/vi/" not in head + "/":
+        # `/vi/<id>/<name>.jpg` 모양이 아니면 손대지 않는다(모르는 형태는 그대로 둔다)
+        if "/vi/" not in base:
+            return []
+    return ["%s/%s" % (head, n) for n in _YT_THUMB_NAMES if n != name]
+
+
 def _thumb_via_oembed(url: str, shortcode: str | None):
     """만료된 썸네일 URL → 공개 oembed로 새 주소를 받아 내려받고 디스크 캐시에 저장.
 
@@ -5406,6 +5434,29 @@ def api_thumb(url: str, v: str | None = None, shortcode: str | None = None):
         if got:
             return Response(content=got, media_type="image/jpeg",
                             headers={"Cache-Control": "public, max-age=86400"})
+        # ★유튜브 규격 폴백(2026-08-19) — 수집된 8,797건이 전부 `oardefault.jpg` 한 규격만
+        #   쓰는데 그 변형은 영상마다 없을 수 있다(실측 7.5%가 404 → 카드가 검게 뜸).
+        #   같은 영상의 다른 규격(hq/mq…)으로 이어서 시도한다. 성공분은 **원래 URL 키로**
+        #   캐시에 넣어 다음 요청이 즉시 히트하게 한다(재시도 왕복이 한 번으로 끝난다).
+        for alt in _yt_thumb_alternates(url):
+            try:
+                r2 = requests.get(alt, timeout=6, headers={
+                    "User-Agent": "Mozilla/5.0", "Referer": "https://www.youtube.com/"})
+                r2.raise_for_status()
+                body2, ctype2 = _thumb_to_web_format(
+                    r2.content, r2.headers.get("Content-Type", "image/jpeg"))
+                if cache is not None and ctype2.startswith("image/"):
+                    try:
+                        _THUMB_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+                        tmp2 = cache.with_suffix(".tmp")
+                        tmp2.write_bytes(body2)
+                        tmp2.replace(cache)
+                    except OSError:
+                        pass
+                return Response(content=body2, media_type=ctype2,
+                                headers={"Cache-Control": "public, max-age=86400"})
+            except Exception:
+                continue        # 이 규격도 없으면 다음 후보로
         # ★실패는 절대 캐시하지 않는다(2026-08-09). 헤더가 없으면 브라우저가 휴리스틱
         # 캐싱으로 이 404를 몇 시간 기억한다. 그 뒤 우리가 이미지를 복구해 디스크 캐시에
         # 넣어도 **브라우저가 재요청을 안 해** 카드가 계속 까맣게 남는다(실측: 서버는
