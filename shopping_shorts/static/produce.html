@@ -399,8 +399,16 @@
        두 번째 줄(70px 대기 카드만 있는 줄)에도 280px이 잡혀 **210px이 빈 채로 남았다**.
        align-items:stretch만으로도 **같은 줄 안에서는** 높이가 맞는다 — 사장님 기준
        "모서리 한 줄"은 지키면서 줄마다 제 높이를 갖는다. */
-    .srcGrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(304px,1fr));
+    /* ★가로 5개 고정(2026-08-19 사장님 "가로 5개가 들어갈수있게"). 종전 auto-fill+
+       minmax(304px)는 화면폭에 따라 4개만 들어갔다 — 담는 영상이 보통 5개라 마지막
+       하나가 늘 다음 줄로 떨어져 한눈에 안 들어왔다. 열 수를 직접 정하고, 좁은 화면
+       에서만 단계적으로 줄인다(카드가 뭉개지는 게 더 나쁘다). */
+    .srcGrid{display:grid;gap:12px;grid-template-columns:repeat(5,minmax(0,1fr));
       align-items:stretch}
+    @media(max-width:1500px){.srcGrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+    @media(max-width:1180px){.srcGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media(max-width:860px){.srcGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:580px){.srcGrid{grid-template-columns:1fr}}
     .srcCard{background:var(--inset);border:1px solid var(--line);border-radius:12px;
       padding:14px 18px;transition:border-color .15s;cursor:pointer;
       display:flex;flex-direction:column;min-width:0;overflow:hidden}
@@ -9448,6 +9456,10 @@ function s2RenderDrafts(){
       if(srcs.length) bits.push('대본 '+srcs.length+'편('+srcs.map(s=>s.chars+'자').join('·')+')');
       if(m.scene_points) bits.push('장면 '+m.scene_points+'개');
       if(m.product_facts) bits.push('쿠팡 재료');
+      // ★어느 경로로 만든 대본인지 말한다(2026-08-19). 조립본은 정해둔 틀에 재료만
+      //   끼운 것이라 어미·CTA가 흔들리지 않는다. 이걸 안 보여주면 사장님이 왜 결과가
+      //   달라졌는지 알 수 없다 — 조용한 폴백이 쳇바퀴의 뿌리였다.
+      if((m.assembled||[]).length) bits.push('틀 조립 '+m.assembled.length+'안');
       used = bits.length ? (' · 재료: '+esc(bits.join(' + '))) : ' · <span style="color:var(--gold)">재료 없음(AI가 지어냅니다)</span>';
       // ★재료 편마다 첫 문장을 보여준다 — 서로 다른 제품이 섞였는지는 이걸 봐야 안다
       //   (2026-08-17 실측: 치아바타 1편 + 도마 2편이 한 작업에 담겨 도마로 끌려갔다).
@@ -9460,7 +9472,8 @@ function s2RenderDrafts(){
       + S2.drafts.length + '안' + used + '</span>';
   }
   tabs.innerHTML=S2.drafts.map((dr,i)=>{
-    const nm=String.fromCharCode(65+i)+'안'+(dr.style_name?(' · '+esc(dr.style_name)):'');
+    const nm=String.fromCharCode(65+i)+'안'+(dr.style_name?(' · '+esc(dr.style_name)):'')
+      + (dr.made_by==='조립'?' 🧩':'');   // 🧩 = 틀에 재료만 끼운 조립본
     const g=(dr.checks&&dr.checks.length)?(dr.passed?'✅':'⚠️'):'';
     return `<button class="s2-tab${i===S2.curDraft?' on':''}" onclick="s2PickDraft(${i})">${nm} <span>${g}</span></button>`;
   }).join('');
