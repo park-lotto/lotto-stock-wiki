@@ -205,3 +205,48 @@ def test_긴_조사가_먼저_매칭된다():
     assert sf._JOSA_PAIRS[0] == ("이었", "였")
     assert sf.fill_one("{제품}이라고 부른다", {"제품": "집게"}) == "집게라고 부른다"
     assert sf.fill_one("{제품}이라고 부른다", {"제품": "수건"}) == "수건이라고 부른다"
+
+
+# ── 해외 원본만 담는 경우(2026-08-19 사장님 지시) ──────────────────────────
+# 이븐쇼핑류는 화면에 자기 자막 템플릿이 박혀 있어 그 화면을 못 쓴다 → 같은 제품의
+# 해외 원본을 담아 다시 만든다. 그때는 **쿠팡 상품이 아예 없어서** {제품}·{효능}·{나라}가
+# 영상에서 나와야 한다. 이 폴백이 없으면 은폐형은 조립 자체가 불가능하다.
+VIDEO_ONLY = {"product_name": "유청 분리 요거트 메이커",
+              "benefits": ["유청이 저절로 분리된다", "통째로 분해돼 세척이 쉽다"],
+              "origin_country": "한국", "category_word": "주방템"}
+
+
+def test_쿠팡_없이_영상만으로_은폐형_슬롯이_찬다():
+    s = sf.slots_from_facts({}, VIDEO_ONLY)
+    assert s["제품"] == "유청 분리 요거트 메이커"
+    assert s["효능"] == "유청이 저절로 분리된다"
+    assert s["효능2"] == "통째로 분해돼 세척이 쉽다"
+    assert s["나라"] == "한국"
+
+
+def test_쿠팡_재료가_있으면_그쪽이_먼저다():
+    """상세페이지·리뷰가 영상보다 정확하다. 단 **모자란 칸은 영상이 메운다**."""
+    s = sf.slots_from_facts({"title": "쿠팡상품명", "why": ["쿠팡효능"], "origin": "미국"},
+                            VIDEO_ONLY)
+    assert s["제품"] == "쿠팡상품명" and s["효능"] == "쿠팡효능" and s["나라"] == "미국"
+    assert s["효능2"] == "통째로 분해돼 세척이 쉽다"      # 쿠팡 why가 1개뿐 → 영상이 채움
+
+
+def test_여러_원본의_장점이_합쳐진다():
+    """★한 영상이 안 말한 장점을 다른 영상이 보여준다 — 그래서 원본을 여러 편 담는다."""
+    m = sf.merge_sul([
+        {"benefits": ["유청이 저절로 분리된다"], "product_name": "요거트 메이커"},
+        {"benefits": ["통째로 분해돼 세척이 쉽다", "유청이 저절로 분리된다"]},
+        {"benefits": ["뚜껑이 계량컵이 된다"]},
+    ])
+    assert m["benefits"] == ["유청이 저절로 분리된다", "통째로 분해돼 세척이 쉽다",
+                             "뚜껑이 계량컵이 된다"]        # 순서 유지·중복 제거
+    s = sf.slots_from_facts({}, m)
+    assert s["효능"] and s["효능2"] and s["효능"] != s["효능2"]
+
+
+def test_슬롯출처표가_영상폴백을_명시한다():
+    """SLOT_SOURCE는 빈칸↔추출의 계약서다 — 폴백이 생겼으면 표도 그렇게 말해야 한다."""
+    from shopping_shorts.sul_facts import SLOT_SOURCE
+    assert "sul_facts.product_name" in SLOT_SOURCE["제품"]
+    assert "sul_facts.benefits" in SLOT_SOURCE["효능"]
