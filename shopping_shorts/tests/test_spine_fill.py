@@ -274,3 +274,14 @@ def test_은폐형_고조는_장점3개일_때만():
     assert "심지어" in sf.fill(spine, s3)[0][0]["text"]
     s2 = sf.slots_from_facts({}, {"benefits": ["A된다", "B된다"]})
     assert "심지어" not in sf.fill(spine, s2)[0][0]["text"]
+
+
+def test_서술형_슬롯_뒤에_어미를_붙이지_않는다():
+    """★실측: '{효능3}까지 된다는 거'가 '아낄 수 있다까지 된다는 거'가 됐다.
+    효능·용도 슬롯은 **서술형 문장**이라 뒤에 어미를 덧붙이면 반드시 깨진다."""
+    spine = {"beat_roles": ["twist"],
+             "templates": {"twist": ["근데 진짜 충격적인 포인트는 {효능2} 심지어 {효능3}"]}}
+    s = sf.slots_from_facts({}, {"benefits": ["A", "꾸덕해진다", "비용을 아낄 수 있다"]})
+    out = sf.fill(spine, s)[0][0]["text"]
+    assert out.endswith("비용을 아낄 수 있다")
+    assert "있다까지" not in out
