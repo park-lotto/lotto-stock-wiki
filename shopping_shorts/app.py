@@ -2416,9 +2416,18 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
             if _sc:
                 _bank_ctx = bank_assemble.assemble_bank_context(
                     store, it.get("category") or "", source_chars=_sc) or _bank_ctx
-        _styled = script_generate.generate_by_styles(
-            _src, _picked, target_seconds=body.get("target_seconds") or 30,
-            bank_context=_bank_ctx, facts_block=_facts_block)
+        # ★구조 템플릿 조립을 먼저 시도한다(2026-08-19 사장님 지시: "구조템플릿 만드는게
+        #   중요해. 같은 해외영상이나 여러영상을 가져와도 거기에 딱 들어갈 말들만 있음 되게").
+        #   슬롯이 **전부** 차는 스타일만 조립본으로 만들고, 모자라면 기존 생성기로 간다.
+        #   실측 근거(같은 날): 생성기는 템플릿을 '참고'로만 써서 어미를 새로 쓰고
+        #   (no_cta인데) CTA를 붙였다 — 조립본엔 그럴 자리가 없다.
+        _assembled, _asm_left = _assembled_drafts(_picked, _src, store,
+                                                  body.get("target_seconds") or 30)
+        _styled = list(_assembled)
+        if _asm_left:
+            _styled += script_generate.generate_by_styles(
+                _src, _asm_left, target_seconds=body.get("target_seconds") or 30,
+                bank_context=_bank_ctx, facts_block=_facts_block)
         if not _styled:
             return JSONResponse(status_code=502, content={
                 "ok": False, "error": "생성 실패(키 소진 또는 응답 오류) — 잠시 후 재시도"})
@@ -2441,6 +2450,9 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                                  "head": (s.get("full_text") or "")[:40]} for s in _src],
                     "scene_points": _scene_block.count("\n· ") if _scene_block else 0,
                     "product_facts": bool(_facts_block_for_job(_jid, store)),
+                    # ★어느 경로로 만든 대본인지 화면이 말한다 — 조용한 폴백 금지.
+                    "assembled": [d.get("style_name") for d in _styled
+                                  if d.get("made_by") == "조립"],
                     "styles": [s.get("name") for s in _picked],
                 }}
     drafts = script_generate.generate_variations(
@@ -11222,6 +11234,46 @@ def _sul_block_for_sources(category, sources, store=None, spines=None):
         return sul_facts.sul_prompt_block(facts)
     except Exception:      # noqa: BLE001 — 재료 추출 실패가 대본 생성을 막으면 안 된다
         return ""
+
+
+def _assembled_drafts(spines, sources, store, seconds=30):
+    """조립으로 만들 수 있는 대본들 → (조립본 목록, 조립 못 한 스파인 목록).
+
+    ★조립은 **슬롯이 전부 차는 스파인**에만 쓴다. 한 칸이라도 비면 그 스파인은
+      기존 생성기에 넘긴다 — 반쪽 조립본을 내놓는 것보다 그게 낫다.
+    ★어느 쪽으로 갔는지는 응답의 `materials.assembled`가 말한다(조용한 폴백 금지).
+    """
+    out, left = [], []
+    try:
+        from shopping_shorts import spine_fill, sul_facts
+    except Exception:      # noqa: BLE001 — 조립 모듈이 없어도 기존 경로는 살아야 한다
+        return [], list(spines or [])
+    slots = None
+    for sp in (spines or []):
+        # 썰 스파인이 아니면 조립 대상이 아니다(다른 스타일은 템플릿이 슬롯을 안 쓴다).
+        if not _is_sul_context("", [sp]):
+            left.append(sp)
+            continue
+        if slots is None:
+            # 재료에서 슬롯을 한 번만 뽑아 스파인들이 공유한다(같은 재료를 두 번 안 때린다).
+            caps = [(x.get("full_text") or "").strip() for x in (sources or [])[:3]]
+            caps = [c for c in caps if c]
+            facts = []
+            for c in caps:
+                try:
+                    f = sul_facts.analyze_sul({"captions": [c]}) or {}
+                except Exception:      # noqa: BLE001
+                    f = {}
+                if f:
+                    facts.append(f)
+            slots = spine_fill.slots_from_facts({}, spine_fill.merge_sul(facts)) if facts else {}
+        try:
+            d = spine_fill.build_draft(sp, slots, seconds=seconds) if slots else None
+        except Exception as e:      # noqa: BLE001 — 조립 실패가 생성을 막으면 안 된다
+            print("조립 실패(style=%s): %s" % (sp.get("id"), str(e)[:120]))
+            d = None
+        (out if d else left).append(d or sp)
+    return out, left
 
 
 def _prefetched_facts_for_job(job, store):

@@ -276,3 +276,35 @@ def coverage(spine, slots):
     roles = list((spine or {}).get("beat_roles") or [])
     beats, missing = fill(spine, slots)
     return len(beats), len(roles), missing
+
+
+def build_draft(spine, slots, seconds=30):
+    """슬롯 조립 → **생성기와 같은 모양**의 대본 1안. 못 채우는 칸이 있으면 None.
+
+    ★같은 모양으로 돌려주는 이유: 화면·게이트·저장이 이미 이 모양을 다룬다
+      (`script_generate.generate_one_style` 반환형). 새 모양을 만들면 화면 코드가
+      두 갈래가 되고, 두 갈래는 언젠가 어긋난다(0순위-B).
+
+    ★칸이 하나라도 비면 아예 None을 돌려준다 — 반쪽 대본을 성공인 척 내놓는 게
+      제일 나쁘다(`generate_one_style`이 같은 원칙을 쓴다: 중괄호가 남았거나 한 칸이
+      전체를 삼킨 결과는 실패로 돌려보낸다).
+    """
+    from shopping_shorts import script_gate
+    beats, missing = fill(spine, slots)
+    if missing or not beats:
+        return None
+    script = " ".join(b["text"] for b in beats)
+    checks, _full = script_gate.check(spine, beats, seconds=seconds)
+    return {
+        "beats": beats,
+        "script": script,
+        "hook": beats[0]["text"],
+        "checks": checks,
+        "passed": script_gate.passed(checks),
+        "tries": 0,
+        "style_id": spine.get("id"),
+        "style_name": spine.get("name") or "",
+        # ★어느 경로로 만든 대본인지 **화면이 말할 수 있게** 표시한다.
+        #   조용한 폴백이 쳇바퀴의 뿌리였다(memory: reference_silent_fallback_pipeline_undo).
+        "made_by": "조립",
+    }
