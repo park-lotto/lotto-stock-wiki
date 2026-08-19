@@ -11164,6 +11164,47 @@ def _facts_block_for_job(job_id, store=None):
         return ""
 
 
+# 썰쇼핑 대본 재료를 붙이는 카테고리(2026-08-19).
+#   여기 없는 카테고리는 썰 틀을 안 쓰므로 추출을 돌리지 않는다 — Gemini 호출 1회를 아낀다.
+#   이름은 categorize.KEYWORDS의 것과 같아야 한다(0순위-B: 이름이 어긋나면 조용히 죽는다).
+SUL_CATEGORIES = ("오용형", "제품정체형")
+
+
+def _sul_block_for_sources(category, sources, store=None):
+    """썰쇼핑 스파인의 빈칸({본래용도}·{속성}·{용도}·{제품군}) 재료 -> 프롬프트 블록.
+
+    ★왜 여기서 뽑나: 이 4칸은 **쿠팡이 아니라 영상에만** 있다(handoff/썰쇼핑대본재료.md).
+      안 채우면 모델이 지어낸다 = "AI 티 나는 대본".
+    ★재료 원문의 해시로 캐시한다 — [바꾸기] 부분 재생성이 같은 재료로 다시 부를 때
+      Gemini를 또 때리지 않는다. 빈 결과는 **캐시하지 않는다**(일시 실패를 굳히면
+      그 작업은 영영 재료 없이 돈다).
+    실패해도 ''를 돌려준다 — 기존 경로 그대로라 회귀 0.
+    """
+    if (category or "").strip() not in SUL_CATEGORIES:
+        return ""
+    caps = [(s.get("full_text") or "").strip() for s in (sources or [])[:3]]
+    caps = [c for c in caps if c]
+    if not caps:
+        return ""
+    try:
+        from shopping_shorts import sul_facts
+        ckey = "sul_facts_%s" % hashlib.md5(
+            "\n".join(caps).encode("utf-8")).hexdigest()[:16]
+        facts = {}
+        if store is not None:
+            try:
+                facts = json.loads(store.get_setting(ckey, "") or "{}") or {}
+            except Exception:      # noqa: BLE001 — 깨진 캐시로 대본을 막지 않는다
+                facts = {}
+        if not facts:
+            facts = sul_facts.analyze_sul({"captions": caps}) or {}
+            if facts and store is not None:
+                store.set_setting(ckey, json.dumps(facts, ensure_ascii=False))
+        return sul_facts.sul_prompt_block(facts)
+    except Exception:      # noqa: BLE001 — 재료 추출 실패가 대본 생성을 막으면 안 된다
+        return ""
+
+
 def _prefetched_facts_for_job(job, store):
     """1단계가 미리 긁어둔 상품 재료 — 이 작업에 담긴 영상들의 캐시에서 찾는다.
 
@@ -11275,6 +11316,11 @@ def _materials_for_generate(item, body, store, cid):
     _scene_block = _scene_points_block(_job)
     if _scene_block:
         _facts_block = (_facts_block + "\n\n" + _scene_block) if _facts_block else _scene_block
+    # ★썰쇼핑 재료 주입(2026-08-19) — 오용형·제품정체형 스파인의 빈칸은 영상에만 있다.
+    #   전체 생성과 [바꾸기]가 **같은 재료**를 쓰도록 여기 한 곳에서만 붙인다(0순위-B).
+    _sul_block = _sul_block_for_sources(item.get("category") or "", _src, store)
+    if _sul_block:
+        _facts_block = (_facts_block + "\n\n" + _sul_block) if _facts_block else _sul_block
     # ★`_scene_block`도 돌려준다 — 호출부가 응답의 `materials.scene_points`(화면에 "장면 N개"로
     #   표시)를 만들 때 쓴다. 여기서 안 주면 호출부가 `_scene_points_block`을 **한 번 더**
     #   부르게 되고, 그러면 같은 판단이 두 곳이 된다(0순위-B).
