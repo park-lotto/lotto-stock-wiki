@@ -188,11 +188,17 @@ def slots_from_facts(product_facts=None, sul=None):
     why = pf.get("why") or []
     if isinstance(why, str):
         why = [why]
+    # ★쿠팡 재료가 있으면 그쪽이 먼저다(상세페이지·리뷰가 영상보다 정확하다).
+    #   없으면 **영상에서 뽑은 값**으로 채운다 — 해외 원본만 담는 경우엔 쿠팡 상품이
+    #   아예 없어서, 이 폴백이 없으면 은폐형은 조립 자체가 불가능하다(2026-08-19).
+    ben = sf.get("benefits") or []
+    if isinstance(ben, str):
+        ben = [ben]
     out = {
-        "제품": _first(pf.get("title")),
-        "효능": _first(why[0]) if len(why) > 0 else "",
-        "효능2": _first(why[1]) if len(why) > 1 else "",
-        "나라": _first(pf.get("origin")),
+        "제품": _first(pf.get("title")) or _first(sf.get("product_name")),
+        "효능": (_first(why[0]) if len(why) > 0 else "") or _nth(ben, 0),
+        "효능2": (_first(why[1]) if len(why) > 1 else "") or _nth(ben, 1),
+        "나라": _first(pf.get("origin")) or _first(sf.get("origin_country")),
         "본래용도": _first(sf.get("original_use")),
         "속성": _first(sf.get("hidden_property")),
         "용도": _first(sf.get("misuses")),

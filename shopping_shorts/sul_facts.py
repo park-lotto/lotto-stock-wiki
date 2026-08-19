@@ -42,11 +42,13 @@
 #   템플릿에 새 빈칸이 생기면 여기도 늘어야 한다 — test_sul_facts.py가 강제한다.
 #   (안 그러면 그 빈칸은 모델이 지어낸다 = 대본이 거짓말을 한다)
 SLOT_SOURCE = {
-    # 기존 product_facts가 이미 뽑는 것
-    "제품":   "product_facts.title      (상품명)",
-    "효능":   "product_facts.why[0]     (왜 좋은가)",
-    "효능2":  "product_facts.why[1]     (두 번째 셀링포인트 — 2차 반전용)",
-    "나라":   "product_facts.origin     (브랜드·기술·인증에서 나라)",
+    # 쿠팡 재료가 있으면 그쪽을 먼저 쓰고, 없으면 **영상에서** 뽑는다(2026-08-19).
+    #   해외 원본만 담는 경우(이븐쇼핑류 소재를 원본으로 다시 만드는 작업)엔 쿠팡
+    #   상품이 아예 없다 — 그때 이 칸들이 비면 은폐형은 조립 자체가 불가능하다.
+    "제품":   "product_facts.title  또는 sul_facts.product_name",
+    "효능":   "product_facts.why[0] 또는 sul_facts.benefits[0]",
+    "효능2":  "product_facts.why[1] 또는 sul_facts.benefits[1]",
+    "나라":   "product_facts.origin 또는 sul_facts.origin_country",
     # ★이 모듈이 새로 뽑는 것 (영상에서)
     "본래용도": "sul_facts.original_use   (원래 무엇을 하라고 만든 물건인가)",
     "속성":   "sul_facts.hidden_property(사람들이 눈치챈 숨은 성질)",
@@ -94,6 +96,16 @@ SUL_PROMPT = """아래는 한국 쇼핑 쇼츠 영상의 자막·설명이다. �
 - category_word : {제품군} — 제품명을 숨기고 부를 상위 분류어 한 단어.
                   (예: 주방템, 집게, 정리도구). 은폐형 훅에서 쓴다.
 - hook_points   : 어그로가 될 만한 지점 — 놀랍거나 반전인 사실 1~3개. 짧게.
+- product_name  : {제품} — 이 영상이 다루는 **제품 이름**. 한국어로.
+                  (예: 유청 분리 요거트 메이커). 영상이 안 밝히면 빈 문자열.
+- benefits      : {효능} — 이 제품의 **장점·특징**. 영상이 보여주거나 말한 것만, 2~5개.
+                  ★"뭐가 좋은지"가 드러나게 짧은 서술구로. 은폐형 대본이 이걸 쓴다.
+                    좋은 예: 유청이 저절로 분리돼 그릭요거트가 된다 / 통째로 분해돼 세척이 쉽다
+                    나쁜 예: 편리함 / 좋음        ← 대본에 넣을 수 없는 말이다
+                  ★여러 영상을 함께 주면 **각 영상이 보여준 것을 모두** 적어라 —
+                    한 영상이 안 말한 장점을 다른 영상이 보여준다.
+- origin_country: {나라} — 브랜드·제조국이 드러나면 그 나라. 아니면 빈 문자열.
+                  ★추측하지 마라. 영상에 안 나오면 비워라(지어낸 국적이 대본에 박힌다).
 - misuse_genre  : **이 영상이 '원래 용도를 뒤집는' 오용형인가**(true/false).
                   true = 원래 A를 하라고 만든 물건인데 사람들이 전혀 다른 B로 쓰더라,
                          라는 반전이 실제로 있는 영상.
@@ -102,7 +114,7 @@ SUL_PROMPT = """아래는 한국 쇼핑 쇼츠 영상의 자막·설명이다. �
                     하나도 안 놀라운 대본이 나간다(실측 2026-08-19 마커펜 사고).
 
 JSON만 출력:
-{"original_use": [], "hidden_property": [], "misuses": [], "category_word": "", "hook_points": [], "misuse_genre": false}
+{"original_use": [], "hidden_property": [], "misuses": [], "category_word": "", "hook_points": [], "misuse_genre": false, "product_name": "", "benefits": [], "origin_country": ""}
 
 자막·설명:
 """
@@ -122,6 +134,12 @@ SUL_SCHEMA = {
         "hook_points": {"type": "array", "items": {"type": "string"}},
         # 이 영상이 오용형 장르인가 — 조립 자격을 여기서 가른다(2026-08-19).
         "misuse_genre": {"type": "boolean"},
+        # 은폐형(spine 55)이 쓰는 칸 — 지금까지 쿠팡 상세페이지에서만 왔다.
+        # 해외 원본 영상만 담는 경우(사장님 지시 2026-08-19)엔 쿠팡 상품이 없으므로
+        # **영상에서** 뽑아야 한다. 안 그러면 은폐형은 영영 조립이 안 된다.
+        "product_name": {"type": "string"},
+        "benefits": {"type": "array", "items": {"type": "string"}},
+        "origin_country": {"type": "string"},
     },
     # ★required를 비워둔다 — 모델이 일부를 못 채워도 나머지는 쓴다.
     #   (product_facts와 같은 원칙: 재료가 부분만 있어도 대본은 나와야 한다)
@@ -184,16 +202,17 @@ def analyze_sul(raw, *, log=print):
         return {}
 
     out = {}
-    for k in ("original_use", "hidden_property", "misuses", "hook_points"):
+    for k in ("original_use", "hidden_property", "misuses", "hook_points", "benefits"):
         v = data.get(k) or []
         if isinstance(v, str):
             v = [v]
         v = [str(x).strip() for x in v if str(x).strip()]
         if v:
             out[k] = v
-    cw = (data.get("category_word") or "").strip()
-    if cw:
-        out["category_word"] = cw
+    for k in ("category_word", "product_name", "origin_country"):
+        v = (data.get(k) or "").strip()
+        if v:
+            out[k] = v
     # ★모델이 이 칸을 안 주면 **false로 본다**(없는 걸 true로 보면 옛 사고가 재발한다).
     out["misuse_genre"] = bool(data.get("misuse_genre"))
     return out
