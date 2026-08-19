@@ -249,6 +249,60 @@ def _product_tokens(product):
     return [t for t in out if t]
 
 
+# ── 훅 3초 게이트(2026-08-19) ─────────────────────────────────────────────
+# 왜 필요한가: 유튜브 썰쇼핑은 **완시청 장사**다(실측 댓글률 0.005% vs 인스타 2.35%,
+# 구독 1.46만 채널이 1,047만 조회). 그런데 게이트는 구간순서·문장틀·밀도만 봤다 —
+# 3초 안에 못 잡으면 나머지가 아무리 좋아도 안 본다.
+#
+# ★감으로 만들지 않았다. 라이브 스파인 55·56의 **실제 도입 문장**에서 규칙을 뽑았다:
+#     은폐형 bait : "최근 딱 봤을 때는 도저히 용도를 알기 힘든 이 제품이"
+#     오용형 origin: "이게 원래는 {본래용도} 개발된 제품이었음"
+#   둘 다 (1) 인사·예고가 없고 (2) 바로 상황을 던진다. 은폐형은 제품 정체를
+#   `reveal` 구간(4번째)까지 **숨긴다** — 실측 대본이 5~7초에 공개했다.
+#
+# ⚠️ 오탐이 미탐보다 나쁘다(CTA 사고와 같은 유형: 옳게 쓴 대본을 FAIL로 잡으면
+#   재작성 루프가 스타일을 망가뜨린다). 그래서 **스타일이 선언할 때만** 돈다.
+_INTRO_BAD = ("안녕하세요", "안녕하십니까", "반갑습니다", "오늘은", "오늘 소개",
+              "소개해드릴", "소개해드리", "소개할게", "알아보겠습니다", "준비했습니다",
+              "시작하겠습니다", "구독과 좋아요", "본격적으로")
+
+
+def hook_window(style, full, seconds=3):
+    """대본의 앞 `seconds`초에 해당하는 글자. 말속도는 **빌려 쓴다**(0순위-B) —
+    여기에 상수를 또 박으면 화면·편성과 다른 수를 말하게 된다."""
+    n = max(1, int(_speech_cps() * max(1, seconds)))
+    return norm(full or "")[:n]
+
+
+def hook_checks(style, full, product=""):
+    """훅 3초 검사 항목들. 스타일이 `hook_3s`를 선언하지 않으면 **빈 목록**
+    (검사 항목 자체를 안 만든다 = 재작성 지시문도 안 섞인다 = 회귀 0)."""
+    if not (style or {}).get("hook_3s"):
+        return []
+    win = hook_window(style, full)
+    out = []
+    if not win.strip():
+        return [{"name": "훅 3초", "ok": False,
+                 "detail": "앞 3초가 비었다 — 첫 문장부터 바로 들어가라"}]
+
+    bad = [w for w in _INTRO_BAD if w in win]
+    out.append({"name": "훅 3초 서론금지", "ok": not bad,
+                "detail": ("앞 3초에 서론이 있다(%s) — 인사·예고를 빼고 바로 "
+                           "상황을 던져라. 완시청 장사라 3초를 서론에 쓰면 끝이다."
+                           % ", ".join(bad)) if bad else "OK(%s…)" % win[:20]})
+
+    # 은폐형 전용 — 정체를 3초 안에 밝히면 훅이 죽는다(reveal은 4번째 구간이다).
+    if (style or {}).get("hook_conceal"):
+        toks = _product_tokens(product)
+        leaked = [t for t in toks if t in win]
+        out.append({"name": "훅 3초 정체은폐", "ok": not leaked,
+                    "detail": ("앞 3초에 제품 정체(%s)가 나왔다 — 은폐형은 정체를 "
+                               "`reveal` 구간까지 숨긴다(실측 5~7초 공개). "
+                               "앞에서는 '이 제품이'처럼 가려라." % ", ".join(leaked[:2]))
+                              if leaked else "OK"})
+    return out
+
+
 def check(style, beats, facts_text="", product="", seconds=30):
     """(checks, full_text) 반환. checks = [{name, ok, detail}, ...]
 
@@ -335,6 +389,9 @@ def check(style, beats, facts_text="", product="", seconds=30):
                        "detail": ("OK(%s)" % ", ".join(hit[:3])) if hit else
                                  ("대본에 「%s」 얘기가 한 번도 안 나온다 — 다른 소재로 "
                                   "샜을 가능성이 높다(재료 밖 소재 금지)" % product)})
+
+    # ★훅 3초(2026-08-19) — 스타일이 선언할 때만. 위 함수 하나가 판단을 전담한다.
+    checks += hook_checks(style, full, product)
 
     # ★수치 그라운딩(2026-08-16) — 재료를 준 경우에만. 지어낸 수치를 잡는다.
     ok_g, bad = grounding_check(full, facts_text)

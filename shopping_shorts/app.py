@@ -2399,7 +2399,7 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         # 재료 조립은 `_materials_for_generate`가 한 곳에서 정한다(0순위-B) —
         # [바꾸기] 부분 재생성(/api/script/beat/regen)도 **같은 함수**를 쓴다.
         _src, _facts_block, _job, _jid, _scene_block = _materials_for_generate(
-            it, body, store, _cid(request))
+            it, body, store, _cid(request), spines=_picked)
         # 재료가 한 편도 없으면 여기서 멈춘다 — 이 상태로 생성하면 모델이 통째로 지어낸다.
         # (씨앗의 대본 원문이 아직 안 뽑힌 영상은 1단계 분석이 끝나야 재료가 생긴다.)
         if not [x for x in (_src or []) if (x.get("full_text") or "").strip()]:
@@ -11170,7 +11170,26 @@ def _facts_block_for_job(job_id, store=None):
 SUL_CATEGORIES = ("오용형", "제품정체형")
 
 
-def _sul_block_for_sources(category, sources, store=None):
+def _is_sul_context(category, spines=None):
+    """이 생성이 썰쇼핑 틀인가.
+
+    ★2026-08-19 라이브 실측으로 고침(처음엔 위키 항목 category만 봤다 = **영영 안 켜짐**).
+      `오용형`·`제품정체형`은 **스파인의 fit_categories**다(id 56·55). 위키 항목의
+      category는 홈템·기타·레시피 같은 소재 분류라, 라이브 113건 중 오용형은 **0건**이었다.
+      categorize.py는 이 이름을 항목 카테고리로도 쓸 수 있으므로 **둘 다** 본다.
+    """
+    if (category or "").strip() in SUL_CATEGORIES:
+        return True
+    for sp in (spines or []):
+        if not isinstance(sp, dict):
+            continue
+        for f in (sp.get("fit_categories") or []):
+            if str(f).strip() in SUL_CATEGORIES:
+                return True
+    return False
+
+
+def _sul_block_for_sources(category, sources, store=None, spines=None):
     """썰쇼핑 스파인의 빈칸({본래용도}·{속성}·{용도}·{제품군}) 재료 -> 프롬프트 블록.
 
     ★왜 여기서 뽑나: 이 4칸은 **쿠팡이 아니라 영상에만** 있다(handoff/썰쇼핑대본재료.md).
@@ -11180,7 +11199,7 @@ def _sul_block_for_sources(category, sources, store=None):
       그 작업은 영영 재료 없이 돈다).
     실패해도 ''를 돌려준다 — 기존 경로 그대로라 회귀 0.
     """
-    if (category or "").strip() not in SUL_CATEGORIES:
+    if not _is_sul_context(category, spines):
         return ""
     caps = [(s.get("full_text") or "").strip() for s in (sources or [])[:3]]
     caps = [c for c in caps if c]
@@ -11275,7 +11294,7 @@ def _sources_for_generate(item, job, limit=3):
     return out[:limit]
 
 
-def _materials_for_generate(item, body, store, cid):
+def _materials_for_generate(item, body, store, cid, spines=None):
     """대본 생성에 넣을 **재료 한 벌** → (sources, facts_block, job, job_id, scene_block)
 
     ★왜 함수로 뽑았나(2026-08-17): 원래 이 조립이 `/api/wiki/generate` 안에 통째로
@@ -11318,7 +11337,7 @@ def _materials_for_generate(item, body, store, cid):
         _facts_block = (_facts_block + "\n\n" + _scene_block) if _facts_block else _scene_block
     # ★썰쇼핑 재료 주입(2026-08-19) — 오용형·제품정체형 스파인의 빈칸은 영상에만 있다.
     #   전체 생성과 [바꾸기]가 **같은 재료**를 쓰도록 여기 한 곳에서만 붙인다(0순위-B).
-    _sul_block = _sul_block_for_sources(item.get("category") or "", _src, store)
+    _sul_block = _sul_block_for_sources(item.get("category") or "", _src, store, spines)
     if _sul_block:
         _facts_block = (_facts_block + "\n\n" + _sul_block) if _facts_block else _sul_block
     # ★`_scene_block`도 돌려준다 — 호출부가 응답의 `materials.scene_points`(화면에 "장면 N개"로
@@ -11639,7 +11658,10 @@ def api_script_beat_regen(request: Request, body: dict):
         it = {"structure": _structure if isinstance(_structure, dict) else {},
               "full_text": body.get("base_script") or "",
               "category": body.get("category") or ""}
-    _src, _facts_block, _job, _jid, _scene_block = _materials_for_generate(it, body, store, cid)
+    # ★고른 스파인을 넘긴다 — 썰 재료 주입 여부는 **스파인의 fit_categories**로 갈린다
+    #   (항목 category로는 라이브에서 절대 안 켜졌다. 2026-08-19 실측).
+    _src, _facts_block, _job, _jid, _scene_block = _materials_for_generate(
+        it, body, store, cid, spines=[style])
 
     _bank_ctx = ""
     if store.get_setting("ping_pong_enabled", "") == "1":
