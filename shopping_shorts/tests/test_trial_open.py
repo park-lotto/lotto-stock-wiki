@@ -86,3 +86,32 @@ def test_paid_basket_still_runs_side_effects(tmp_path, monkeypatch):
         "shortcode": "SC_PRO", "url": "https://www.instagram.com/reel/SC_PRO/"})
     assert r.status_code == 200
     assert "prewarm" in calls              # 예열은 돈다(종전 동작 보존)
+
+
+def _produce_body(client, path):
+    r = client.get(path)
+    assert r.status_code == 200, f"{path} → {r.status_code}"
+    return r.text
+
+
+def test_produce_shows_intro_for_free_user(tmp_path, monkeypatch):
+    """무료 등급은 /produce·/produce.html 모두 소개 페이지를 받는다(402 JSON 아님)."""
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("trial3", "pw12")
+    s.set_plan(cid, "free", full_access_until=0)      # ranking_only
+    c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
+    for path in ("/produce", "/produce.html"):
+        body = _produce_body(c, path)
+        assert "이용권" in body                        # 소개 페이지다
+        assert "mixScriptPick" not in body            # 진짜 제작소 화면이 아니다
+
+
+def test_produce_unchanged_for_paid_user(tmp_path, monkeypatch):
+    """★회귀 방지 — pro는 진짜 제작소 화면을 그대로 받는다."""
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("pro2", "pw12")
+    s.set_plan(cid, "pro")                            # full
+    c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
+    body = _produce_body(c, "/produce")
+    assert "mixScriptPick" in body                    # 진짜 제작소 화면
+    assert "이용권 보기" not in body                    # 소개 페이지가 아니다
