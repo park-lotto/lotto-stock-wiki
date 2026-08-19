@@ -53,6 +53,21 @@ def load_styles():
     return json.loads(STYLES_PATH.read_text(encoding="utf-8"))["styles"]
 
 
+# ★분량 기준은 **여기 한 곳에서만** 정한다(0순위-B).
+#   프롬프트("몇 자 써라")와 게이트("몇 자면 통과")가 따로 계산하면 언젠가 어긋난다 —
+#   실제로 게이트만 seconds를 안 곱해서 25초 대본을 30초 기준으로 재고 있었다(2026-08-19).
+_DENS_LO, _DENS_HI = 0.9, 1.25
+_CHARS_PER_CLAUSE = 14.5          # 다이소 히트작 16편 실측(절당 14.5자)
+
+
+def density_band(style, seconds):
+    """(목표자수, 하한, 상한, 목표절수) — 프롬프트와 게이트가 같이 쓴다."""
+    chars = (style or {}).get("chars_per_30s") or int((seconds or 30) * 4.5)
+    target = int(chars * max(5, int(seconds or 30)) / 30.0)
+    return (target, int(target * _DENS_LO), int(target * _DENS_HI),
+            max(3, int(round(target / _CHARS_PER_CLAUSE))))
+
+
 def build_prompt(style, topic, facts, seconds):
     """스타일의 beats를 **순서대로 못 박아** 프롬프트를 만든다.
 
@@ -69,9 +84,16 @@ def build_prompt(style, topic, facts, seconds):
     # ★말 밀도는 스타일의 일부다(2026-08-15 실측). 일반 기준(4.5자/초)을 쓰면 30초에 135자가
     #   나오는데, 채이홈 히트작 실측은 264~377자 — **절반 이하**로 눌린다. 빠르게 몰아치는 것
     #   자체가 그 스타일이라, 목표 글자수는 스타일의 실적 대본에서 가져온다.
-    chars = style.get("chars_per_30s") or int(seconds * 4.5)
-    target = int(chars * seconds / 30)
-    per_beat = max(1, target // max(1, len(style["beats"])))
+    # ★"칸 하나에 평균 N자"를 빼고 **절(節) 개수**로 바꿨다(2026-08-19 실측).
+    #   다이소 히트작 16편을 재보니 절당 14.5자·13.4절인데 생성물은 13.1자·12절이었다.
+    #   칸당 글자수는 칸이 7개면 26자가 나와 "2~3문장씩 써라"와 자기모순이었고, 모델은
+    #   작은 숫자 쪽을 따랐다. 절은 문장 단위라 모델이 세기 쉽고 자기모순도 없다.
+    # ★"N자 이상"이라고만 시켰더니 첫 시도가 224·251·259·248자로 **줄곧 넘쳤다**.
+    #   게이트가 보는 밴드를 그대로 알려준다 — 통과 조건을 숨기고 맞히라고 할 이유가 없다.
+    target, lo, hi, clauses = density_band(style, seconds)
+    # ⚠️ 아래 반환문은 %-포맷 문자열이다. 프롬프트 본문에 퍼센트 기호를 쓰려면 반드시 %% 로
+    #    적어라 — "56%"를 그대로 넣었다가 TypeError로 죽었다(2026-08-19).
+
 
     return """너는 한국 인스타 릴스 대본 작가다. 아래 **구조를 순서대로** 지켜 대본을 써라.
 
@@ -82,13 +104,19 @@ def build_prompt(style, topic, facts, seconds):
 [사실 재료(지어내지 마라)] %s
 
 규칙:
-- 전체 %d초에 **%d자 안팎**으로 꽉 채워라(이 스타일 히트작의 실제 밀도다).
-  칸 하나에 **평균 %d자** — 한 문장으로 끝내지 말고 2~3문장씩 써라. 말이 비면 이 스타일이 아니다.
+- 전체 %d초 분량이다. 한글·숫자만 세어 **%d자~%d자 사이**로 써라(목표 %d자, 이 스타일 히트작의
+  실제 밀도다). 이 범위를 벗어나면 되돌려 다시 시킨다 — 넘치는 것도 실패다.
+  절(節)이 **%d개쯤** 나와야 한다 — 한 절은 '~는데', '~더니', '~거든요'처럼 끊기는 한 토막이고
+  실측 히트작은 한 절이 평균 14~15자다. 짧은 절을 여러 개 이어 붙여 몰아치듯 말해라.
+- ★**남의 말을 그대로 옮겨라.** 실측 히트작 16편 중 9편(56%%)이 등장인물의 말을 인용한다
+  ("너는 어쩜 새 양말만 사냐고 화를 내시는 거예요" / "그거 한 번에 빼는 방법도 모르냐며").
+  요약해서 "혼났어요"라고 쓰지 말고 **그 사람이 한 말을 문장으로 살려라** — 이게 분량과
+  현장감을 동시에 만든다.
 - 말하듯이 써라. 문어체 금지.
 - 각 beat의 role 값을 위와 **똑같이** 돌려줘라(게이트가 검사한다).
 - 문장틀이 주어진 role은 그 틀을 쓰되 빈칸만 소재에 맞게 바꿔라. 틀 자체를 새로 짓지 마라.
 - 사실 재료에 없는 효능·수치를 지어내지 마라.
-""" % (style["name"], "\n".join(lines), topic, facts, seconds, target, per_beat)
+""" % (style["name"], "\n".join(lines), topic, facts, seconds, lo, hi, target, clauses)
 
 
 def gen_once(style, topic, facts, seconds, extra="", max_tries=4):
@@ -119,8 +147,26 @@ def gen_once(style, topic, facts, seconds, extra="", max_tries=4):
 
 
 _REDO_HEAD = "\n\n[재작성 지시 — 방금 쓴 것이 아래를 어겼다. 그대로 고쳐라]\n"
-_REDO_TAIL = ("\n분량이 모자라면 **문장을 더 쪼개고 상황 묘사를 늘려** 채워라. "
-              "구조·문장틀은 그대로 두고 살만 붙여라.")
+_KEEP = "\n구조·문장틀·구간 순서는 **그대로 두고** 고쳐라."
+_TAIL_SHORT = ("\n분량이 모자라면 **등장인물이 한 말을 그대로 인용해** 채워라 "
+               "— 요약한 문장('혼났어요')을 실제 대사('너는 어쩜 새 양말만 사냐고 화를 내시는 거예요')로 "
+               "바꾸면 분량과 현장감이 같이 는다. 그 다음 상황 묘사를 늘려라." + _KEEP)
+_TAIL_LONG = ("\n분량이 넘쳤으면 **설명하는 절부터 지워라** — 효능을 두 번 말한 곳, 부사"
+              "('진짜·완전·너무'), 같은 뜻 반복이 먼저다. 대사 인용과 결과 대비는 이 스타일의 "
+              "핵심이니 **지우지 마라**." + _KEEP)
+
+
+def _redo_tail(bad):
+    """★실패 방향에 맞는 지시만 붙인다(2026-08-19 실측).
+
+    예전엔 항상 "모자라면 채워라"가 붙어서, **넘쳐서 실패했을 때도 채우라고 시켰다.**
+    그래서 재작성이 259자 → 166자 → 252자로 출렁이며 밴드를 못 맞췄다 —
+    프롬프트 안에 서로 반대되는 지시가 같이 있으면 모델은 둘 사이를 튕긴다.
+    """
+    dens = next((c for c in bad if c["name"].startswith("말 밀도")), None)
+    if dens is None:
+        return _KEEP                       # 밀도는 맞았다 — 분량 얘기를 꺼내지도 마라
+    return _TAIL_LONG if "넘겼다" in dens["detail"] else _TAIL_SHORT
 
 
 def gen_one(style, topic, facts, seconds, rewrites=2):
@@ -136,7 +182,7 @@ def gen_one(style, topic, facts, seconds, rewrites=2):
         res, prompt, err = gen_once(style, topic, facts, seconds, extra)
         if not res:
             break
-        checks, full = check(style, res)
+        checks, full = check(style, res, seconds)
         tries.append({"chars": len(_norm(full)),
                       "fails": [c["name"] for c in checks if not c["ok"]]})
         if all(c["ok"] for c in checks):
@@ -144,7 +190,7 @@ def gen_one(style, topic, facts, seconds, rewrites=2):
         bad = [c for c in checks if not c["ok"]]
         extra = (_REDO_HEAD
                  + "\n".join("- %s: %s" % (c["name"], c["detail"]) for c in bad)
-                 + _REDO_TAIL)
+                 + _redo_tail(bad))
     return res, prompt, err, tries
 
 
@@ -177,7 +223,7 @@ def _template_matches(text, templates):
     return False
 
 
-def check(style, result):
+def check(style, result, seconds=30):
     """불변식 검사 — 안 지키면 '재작성 대상'으로 표시한다(부탁이 아니라 판정)."""
     beats = (result or {}).get("beats") or []
     got = [b.get("role", "") for b in beats]
@@ -201,12 +247,22 @@ def check(style, result):
     #   같은 판단이 두 군데 적혀 어긋난 전형(0순위-B) — 라이브 기준에 맞춘다.
     checks.append({"name": "CTA 단어유도", "ok": "남겨주" in _norm(full),
                    "detail": full[-40:]})
-    # ★분량 기준도 스타일별이다 — 히트작 밀도의 70~140%를 벗어나면 그 스타일이 아니다.
-    tgt = style.get("chars_per_30s") or 135
-    lo, hi = int(tgt * 0.7), int(tgt * 1.4)
+    # ★버그 2건 수정(2026-08-19 실측).
+    #  ① seconds를 무시했다 — chars_per_30s를 **30초 기준 그대로** 하한에 썼다.
+    #     25초 대본을 시켜놓고(목표 188자) 30초 기준 158자를 하한으로 봤고, 15초를
+    #     시키면 목표 113자인데 하한이 158자라 **절대 통과 못 하는** 구간이 생긴다.
+    #     프롬프트의 target과 같은 식(chars*seconds/30)으로 맞춘다.
+    #  ② 하한 0.7배가 너무 헐거웠다 — 목표의 86%만 써도 PASS라 **재작성 루프가 안 돌았다**.
+    #     실측: 히트작 절당 14.5자·13.4절인데 생성물은 13.1자·12절로 전 구간 10% 미달.
+    #     구조 결함이 아니라 균일한 미달이라, 되돌려 다시 시키면 채워진다 → 하한을 올린다.
+    #     천장은 1.4→1.25. 길게 쓰는 건 영상 길이를 넘기는 문제라 여기도 조인다.
+    tgt, lo, hi, _ = density_band(style, seconds)   # ← 프롬프트와 같은 함수(0순위-B)
     n = len(_norm(full))
-    checks.append({"name": "말 밀도(%d~%d자)" % (lo, hi), "ok": lo <= n <= hi,
-                   "detail": "%d자 / 이 스타일 히트작 %d자" % (n, tgt)})
+    _d = ("%d자 — %d자에 모자란다. **%d자 이상**으로 채워라. 히트작은 이 시간에 그만큼 말한다."
+          % (n, lo, lo)) if n < lo else (
+         ("%d자 — %d자를 넘겼다. %d자 이하로 줄여라." % (n, hi, hi)) if n > hi
+         else "%d자 (목표 %d자)" % (n, tgt))
+    checks.append({"name": "말 밀도(%d~%d자)" % (lo, hi), "ok": lo <= n <= hi, "detail": _d})
     return checks, full
 
 
@@ -258,7 +314,7 @@ def main():
     for st in picked:
         t0 = time.time()
         res, prompt, err, tries = gen_one(st, args.topic, args.facts, args.seconds)
-        checks, full = check(st, res) if res else ([], "")
+        checks, full = check(st, res, args.seconds) if res else ([], "")
         passed = bool(checks) and all(c["ok"] for c in checks)
         out["drafts"].append({
             "style_id": st["id"], "style_name": st["name"],
