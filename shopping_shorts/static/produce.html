@@ -9529,6 +9529,16 @@ const S2 = { seed:null, seeds:[], styles:[], picked:[], drafts:[], curDraft:0, l
 // ⚠️ styles(카드 목록)는 안 담는다 — s2LoadStyles가 서버에서 다시 읽는 시세성 데이터고,
 //    담으면 옛 스타일 목록이 화면에 굳는다. 담는 건 **사장님이 만든 것**뿐이다.
 function _s2Snapshot(){
+  // ★S2는 const라 **끌어올려지지 않는다**(2026-08-20 실사고). 이 함수는 function 선언이라
+  //   파일 앞쪽으로 끌어올려져 `typeof _s2Snapshot === 'function'` 가드를 통과하는데,
+  //   페이지 로드 중(선언줄에 닿기 전) saveWork()가 한 번이라도 돌면 여기서
+  //   `Cannot access 'S2' before initialization`(TDZ)로 죽는다.
+  //   그 아래 스크립트가 통째로 멈춰 **렌즈 결과를 화면이 못 받는다**(카운트 0 ·
+  //   "Unexpected token '<'"). 문법은 유효해 node --check가 못 잡는 런타임 오류다.
+  //   → 아직 초기화 전이면 담을 것도 없으므로 조용히 null.
+  //   ⚠️ `typeof S2 === 'undefined'`로는 못 막는다 — TDZ 변수는 typeof도 던진다(실측).
+  //      그래서 try/catch로 받는다.
+  try { S2; } catch(e){ return null; }
   if(!S2.drafts || !S2.drafts.length) return null;   // 만든 게 없으면 키 자체를 안 만든다
   // ★주인을 새긴다(2026-08-18 사장님 "2단계에서 아예 딴게 나온다").
   //   S2는 순수 메모리라 작업을 갈아타도 살아남는다. '따로 만들기'처럼 WORK_ID를 비워
