@@ -2249,6 +2249,38 @@ class Store:
             ).fetchall()
         return {r[0]: r[1] for r in rows if r[1] is not None}
 
+    def latest_views(self, shortcodes, urls=None):
+        """shortcode/URL별 '지금' 조회수 → {키: views}. 없으면 키를 안 담는다.
+
+        ★조회수가 **두 곳에 나뉘어 있다**(2026-08-20 실측) — 한 곳만 보면 절반이 빈다:
+            reel_history       shortcode 키   인스타 6,364/6,367건
+            source_enrichment  url 키         유튜브 1,394/1,410건 · 인스타 23건
+          그래서 둘 다 본다. shortcode로 먼저 찾고, 없으면 URL로 채운다.
+
+        `latest_comments`와 같은 규약이다(오버레이용 — 없으면 호출부가 폴백한다).
+        ⚠️ 화면에 조회수를 띄우려면 이 값이 있어야 한다. 예전엔 호출부가 `views: None`을
+           **하드코딩**해서, DB에 6천 건이 있는데도 화면엔 조회수가 영영 안 떴다.
+        """
+        scs = [s for s in dict.fromkeys(shortcodes or []) if s]
+        us = [u for u in dict.fromkeys(urls or []) if u]
+        out = {}
+        with self._conn() as c:
+            if scs:
+                ph = ",".join("?" * len(scs))
+                for sc, v in c.execute(
+                    f"SELECT shortcode, views FROM reel_history WHERE shortcode IN ({ph})", scs
+                ).fetchall():
+                    if v:
+                        out[sc] = v
+            if us:
+                ph = ",".join("?" * len(us))
+                for u, v in c.execute(
+                    f"SELECT url, views FROM source_enrichment WHERE url IN ({ph})", us
+                ).fetchall():
+                    if v:
+                        out[u] = v
+        return out
+
     def save_last_run(self, items, collected_at):
         """마지막 수집 결과 전체(items + 시각)를 저장. 단일 행 덮어쓰기.
         + 수집분을 reel_history에 누적(shortcode upsert)해 48h 창에서 내려가도
