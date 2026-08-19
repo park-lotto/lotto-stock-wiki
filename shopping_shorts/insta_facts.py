@@ -128,6 +128,93 @@ def _has_foreign(s):
     return bool(_FOREIGN_RE.search(s or ""))
 
 
+# ── 장면 근거 게이트 ──────────────────────────────────────────────────────
+# ★"장면에도 없는 대본이 나오는 거 아닌가"(2026-08-19 사장님 지적) → 실측해보니 맞았다.
+#   전사는 말로만 하는 소리라, 재료에 뽑힌 값이 **화면에 안 찍힌 것**일 수 있다.
+#   그대로 조립하면 "양말 누런 때부터"라고 말하는데 화면엔 양말이 없다.
+#
+# 무엇을 거르나 — 실측이 규칙을 정해줬다(한국 5편 68컷 · 중국 3편 58컷):
+#
+#     사물·동작 슬롯 (how_to·targets·pain)  → 전부 화면에 있었다  → **검사한다**
+#     판단·추상 슬롯 (effects·numbers·edge·price) → 화면에 없다   → **면제**
+#
+#   가격·수치·차별점은 원래 카메라로 못 찍는다. 이걸 검사하면 멀쩡한 재료가 통째로 죽는다.
+#
+# ★값이 아니라 **재료 목록**을 거른다. 한 칸에 후보가 여러 개라 하나 버려도 대체가 남는다
+#   (slots_from_insta는 _first로 첫 값만 집는다 — 거기서 걸렀으면 대체가 없다).
+#   다 걸리면 그 칸만 빈다. 지금도 그렇게 돈다("못 채운 칸" 표시).
+_SCENE_GATED = ("how_to", "targets", "pain")
+
+# 근거 판정은 **2글자 조각 겹침** — `spine_fill.bigrams` 한 벌을 쓴다(0순위-B: 같은 판정을
+# 두 군데 적지 않는다). "욕실 수전 물때"는 scene_desc "욕실 수전을 닦는 모습"과 겹친다.
+#
+# ★장면 묘사에 흔한 껍데기 말은 근거에서 뺀다 — 안 빼면 '모습'·'하는'만으로 아무 값이나
+#   통과해서 게이트가 있으나 마나가 된다(scene_desc가 거의 전부 "~하는 모습"으로 끝난다).
+_STOP = ("모습", "장면", "화면", "제품", "이것", "그것",
+         "보여주는", "보여준다", "하는", "있는", "되는", "그대로")
+
+
+def _say(log, msg):
+    """로그 한 줄. 호출부가 넘긴 log가 뭐든(닫힌 파일·None) 여기서 끝난다.
+
+    ★이 한 곳만 삼킨다 — 예전엔 log를 부르는 자리마다 try/except를 붙여
+      `except: pass`가 네 벌이었다(test_silent_except_budget가 잡아냈다).
+      삼키는 자리가 늘수록 진짜 고장도 같이 묻힌다.
+    """
+    try:
+        log(msg)
+    except Exception:      # noqa: BLE001 — 로그 실패가 재료 추출을 막으면 안 된다
+        pass
+
+
+def _grams(s):
+    from shopping_shorts.spine_fill import bigrams
+    return bigrams(s)
+
+
+# 껍데기 말이 만드는 조각들 — 근거 집합에서 미리 빼둔다(매 호출 다시 만들지 않는다).
+_STOP_GRAMS = {x for w in _STOP for x in _grams(w)}
+
+
+def scene_evidence(segments):
+    """장면 인벤토리 → 근거 조각 집합. 세그먼트의 scene_desc만 본다(text는 말이라 근거가 아니다).
+
+    ★`text`를 넣으면 게이트가 무의미해진다 — 재료가 애초에 전사(=text)에서 나왔으니
+      자기 자신을 근거로 통과한다. 화면에 찍힌 것만이 근거다.
+    """
+    g = set()
+    for s in (segments or []):
+        if not isinstance(s, dict):
+            continue
+        g |= _grams(s.get("scene_desc") or "")
+    return g - _STOP_GRAMS
+
+
+def gate_by_scene(facts, segments, *, log=print):
+    """재료 중 **화면에 근거가 없는 값**을 버린다 → 거른 재료 dict.
+
+    장면 인벤토리가 비면 **그대로 돌려준다** — 근거가 없는 게 아니라 *모르는* 것이라,
+    이때 거르면 무자막·미태깅 소스에서 재료가 통째로 죽는다(조용한 전멸이 제일 나쁘다).
+    """
+    ev = scene_evidence(segments)
+    if not ev or not facts:
+        return dict(facts or {})
+    out, dropped = {}, []
+    for k, v in (facts or {}).items():
+        if k not in _SCENE_GATED:
+            out[k] = v                      # 말로만 하는 칸은 면제(위 표)
+            continue
+        xs = v if isinstance(v, (list, tuple)) else [v]
+        keep = [x for x in xs if _grams(x) & ev]
+        dropped += [x for x in xs if not (_grams(x) & ev)]
+        if keep:                            # ★빈 값은 담지 않는다(이 모듈 전체 규약)
+            out[k] = keep
+    if dropped:
+        _say(log, "[insta_facts] 화면 근거 없는 값 %d개 버림: %s"
+                  % (len(dropped), " / ".join(map(str, dropped[:3]))[:120]))
+    return out
+
+
 def _body_of(raw):
     """입력에서 대본 재료가 될 텍스트를 모은다. 없으면 ''.
 
@@ -163,10 +250,7 @@ def analyze_insta(raw, *, log=print):
     #   재료 없음(정상)과 고장(비정상)은 **화면에서 구분돼야 한다**.
     #   관련 메모리: reference_silent_fallback_pipeline_undo
     def _fail(why):
-        try:
-            log("[insta_facts] 추출 못 함: %s" % why)
-        except Exception:      # noqa: BLE001
-            pass
+        _say(log, "[insta_facts] 추출 못 함: %s" % why)
         return {}
 
     try:
@@ -192,10 +276,7 @@ def analyze_insta(raw, *, log=print):
         import json as _json
         data = _json.loads(resp.text) or {}
     except Exception as e:                  # noqa: BLE001 — 실패해도 대본은 나와야 한다
-        try:
-            log("[insta_facts] 추출 실패: %s" % str(e)[:120])
-        except Exception:
-            pass
+        _say(log, "[insta_facts] 추출 실패: %s" % str(e)[:120])
         return {}
 
     out, dropped = {}, []
@@ -209,11 +290,8 @@ def analyze_insta(raw, *, log=print):
         if keep:                            # ★빈 값은 담지 않는다 — 담으면 "채워졌다"고 보고
             out[k] = keep                   #   빈칸이 그대로 대본에 나간다(spine_fill 규약)
     if dropped:
-        try:
-            log("[insta_facts] 외국어 섞인 값 %d개 버림: %s"
-                % (len(dropped), " / ".join(dropped[:3])[:120]))
-        except Exception:      # noqa: BLE001
-            pass
+        _say(log, "[insta_facts] 외국어 섞인 값 %d개 버림: %s"
+                  % (len(dropped), " / ".join(dropped[:3])[:120]))
     return out
 
 

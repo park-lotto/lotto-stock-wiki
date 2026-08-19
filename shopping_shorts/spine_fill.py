@@ -231,6 +231,28 @@ def slots_from_facts(product_facts=None, sul=None):
     return {k: v for k, v in out.items() if v}
 
 
+def bigrams(s):
+    """한글·숫자만 남긴 **2글자 조각 집합**. 두 문구가 같은 걸 가리키나 볼 때 쓴다.
+
+    형태소 분석 없이 되는 가장 단순한 방법이고, 조사·띄어쓰기 차이를 흡수한다
+    ("욕실 수전 물때" ↔ "욕실 수전을 닦는" → '욕실'·'수전'에서 겹친다).
+
+    ★여기 한 벌만 둔다 — `_join_targets`(나열 중복 판정)와
+      `insta_facts.gate_by_scene`(장면 근거 판정)이 **같은 판정을 쓴다**.
+      두 벌로 두면 한쪽만 고쳐져 어긋난다(0순위-B).
+
+    ★조각은 **낱말 안에서만** 자른다. 통째로 이어붙여 자르면 낱말 경계를 걸친
+      쓰레기 조각이 생겨 엉뚱한 게 겹친다(2026-08-19 실측: "보여주는 모습"이
+      "…보여주는 장면"과 `는모`·`여주`로 겹쳐 장면 근거 게이트를 그냥 통과했다).
+    """
+    out = set()
+    for w in re.sub(r"[^가-힣0-9]", " ", str(s or "")).split():
+        out |= {w[i:i + 2] for i in range(len(w) - 1)}
+        if len(w) == 1:
+            out.add(w)          # 한 글자 낱말도 근거는 근거다("컵"·"솔")
+    return out
+
+
 def _join_targets(items, max_n=3):
     """적용 대상 여러 개 → "A부터 B까지" 한 덩어리.
 
@@ -247,14 +269,11 @@ def _join_targets(items, max_n=3):
     # ★끝은 머리와 **겹치지 않는 것**을 고른다(2026-08-19 실측).
     #   그냥 마지막을 쓰면 "욕실 수전 물때부터 찌든 물때까지"가 나왔다 — 둘 다 물때라
     #   나열의 맛이 없다. 실측 히트작은 다른 것끼리 묶는다("양말 누런 때부터 신발 찌든 때까지").
-    #   판정은 2글자 조각이 겹치는지로 본다(형태소 분석 없이 되는 가장 단순한 방법).
-    def _grams(s):
-        t = re.sub(r"[^가-힣0-9]", "", s)
-        return {t[i:i + 2] for i in range(len(t) - 1)}
-    hg = _grams(head)
-    tail = next((x for x in reversed(xs[1:max_n]) if not (_grams(x) & hg)), "")
+    #   판정은 2글자 조각이 겹치는지로 본다(`bigrams` — 장면 근거 게이트와 공용).
+    hg = bigrams(head)
+    tail = next((x for x in reversed(xs[1:max_n]) if not (bigrams(x) & hg)), "")
     if not tail:
-        tail = next((x for x in reversed(xs[1:]) if not (_grams(x) & hg)), xs[-1])
+        tail = next((x for x in reversed(xs[1:]) if not (bigrams(x) & hg)), xs[-1])
     return "%s부터 %s까지" % (head, tail)
 
 
