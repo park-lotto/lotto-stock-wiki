@@ -179,3 +179,43 @@ def test_design_variety_is_real():
     assert len({v["bar"] for v in NEW.values()}) >= 14, "띠 색이 너무 비슷하다"
     assert len({v["headcopy"]["color2"] for v in NEW.values()}) >= 14, "헤드라인 색이 너무 비슷하다"
     assert len({(v.get("left_icon"), v.get("right_icon")) for v in NEW.values()}) >= 4, "아이콘 조합이 단조롭다"
+
+
+# ── 헤드라인 글꼴 매칭 (2026-08-20 사장님 "폰트는 안맞췄어? 최대한 비슷한걸로") ──
+def test_headline_fonts_are_matched_per_channel():
+    """★전부 같은 글꼴이면 '맞췄다'가 아니다. 채널마다 갈려야 한다.
+
+    ★'무슨 폰트냐'고 물으면 모델이 없는 이름을 지어낸다 — 우리 글꼴 견본 시트를
+      보여주고 번호로 고르게 했다(채널당 3편 최빈값). 원장이 그 근거다.
+    """
+    fonts = {v["headcopy"]["font"] for v in NEW.values()}
+    assert len(fonts) >= 5, f"글꼴이 너무 단조롭다: {sorted(fonts)}"
+
+
+def test_headline_fonts_exist_and_come_from_ledger():
+    ledger = pathlib.Path(__file__).resolve().parents[2] / "docs" / "reference" / "썰쇼핑_헤드라인글꼴.json"
+    assert ledger.exists(), "글꼴 원장이 없다 — 값의 출처가 사라졌다"
+    import json
+    rows = json.loads(ledger.read_text(encoding="utf-8"))
+    assert len(rows) == 20, f"글꼴 원장이 20채널이어야 한다(현재 {len(rows)})"
+    for v in NEW.values():
+        assert (df._FONT_DIR / v["headcopy"]["font"]).exists(), v["headcopy"]["font"]
+
+
+def test_headline_text_is_not_eaten_by_its_outline():
+    """★글자색과 외곽선색이 같으면 두꺼운 외곽선이 글자를 먹는다.
+    (실측: 활용정점이 검은 글씨 + 검은 외곽선이라 흰 박스 위에서 뭉개졌다)"""
+    def lum(h):
+        h = h.lstrip("#")
+        r, g, b = (int(h[i:i + 2], 16) / 255 for i in (0, 2, 4))
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b
+    for k, v in NEW.items():
+        hc = v["headcopy"]
+        assert abs(lum(hc["color"]) - lum(hc["outline_color"])) >= 0.2, (
+            f"{k}: 글자({hc['color']})와 외곽선({hc['outline_color']})이 같아 글자가 먹힌다")
+
+
+def test_headline_size_fits_preview_width():
+    """★미리보기는 720폭 기준 — 90을 넘으면 한 줄이 화면 밖으로 나간다(실측 108px)."""
+    for k, v in NEW.items():
+        assert v["headcopy"]["size"] <= 90, f"{k}: {v['headcopy']['size']}px는 폭을 넘는다"

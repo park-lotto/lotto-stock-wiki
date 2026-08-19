@@ -15,7 +15,20 @@ import pathlib
 import sys
 
 H = 1920
-SRC = pathlib.Path(__file__).resolve().parents[1] / "docs" / "reference" / "썰쇼핑_영상디자인_실측.json"
+_REF = pathlib.Path(__file__).resolve().parents[1] / "docs" / "reference"
+SRC = _REF / "썰쇼핑_영상디자인_실측.json"
+# 글꼴 원장(선택). 없으면 전부 기본 글꼴로 떨어진다.
+# ★'무슨 폰트냐'고 물으면 모델이 없는 이름을 지어낸다 — 우리 글꼴 견본 시트를 보여주고
+#   **번호로 고르게** 했다(비교는 잘한다). 채널당 3편의 최빈값.
+FONT_SRC = _REF / "썰쇼핑_헤드라인글꼴.json"
+DEFAULT_FONT = "BMDOHYEON.ttf"
+
+
+def _fonts():
+    if not FONT_SRC.exists():
+        return {}
+    rows = json.loads(FONT_SRC.read_text(encoding="utf-8"))
+    return {r["channel"]: r["font"] for r in rows if r.get("font")}
 
 # 채널명 → 프리셋 id. 한글 id는 못 쓰므로 고정 표(순서가 바뀌어도 id가 안 흔들린다).
 SLUG = {
@@ -75,15 +88,40 @@ def _pct_to_px(p, fallback_px):
 
 def _font_for(size_pct):
     """글자 높이가 가로폭의 몇 %인가 → 우리 슬라이더(28~120) 값.
-    1080폭 기준 size_pct% → px, 그걸 슬라이더 범위로 자른다."""
+
+    ★상한을 90으로 둔다. 미리보기는 720폭 기준이라 90을 넘으면 한 줄이 화면 밖으로
+      나간다(실측: 108px짜리 썰칩12가 좌우로 잘렸다). 원본이 더 컸더라도 우리 문구는
+      길이가 다르므로 그대로 쓰면 안 된다 — 넘치면 어차피 렌더가 줄인다.
+    """
     try:
         px = float(size_pct) / 100 * 1080
     except (TypeError, ValueError):
         px = 90
-    return int(max(28, min(120, round(px))))
+    return int(max(28, min(90, round(px))))
+
+
+def _visible(color, outline, has_box):
+    """★어두운 글자 + 어두운 외곽선 + 박스 없음 = 영상 위에서 안 보인다.
+
+    실측: 활용정점이 검은 글씨(#000000)에 검은 외곽선이라 어두운 장면에서 사라졌다.
+    원본은 흰 박스를 깔아서 살아 있는데, 박스가 없는 조합이면 외곽선을 흰색으로 뒤집는다.
+    """
+    # ★박스가 있어도 **글자색과 외곽선색이 같으면** 두꺼운 외곽선이 글자를 먹는다
+    #   (실측: 활용정점 검은 글씨 + 검은 외곽선 → 흰 박스 위에서 글자가 뭉개졌다).
+    #   글자와 외곽선은 반드시 갈려야 한다.
+    if abs(_lum(color) - _lum(outline)) < 0.2:
+        return "#FFFFFF" if _lum(color) < 0.5 else "#000000"
+    if has_box:
+        return outline                      # 그 외엔 박스가 배경을 깔아주니 그대로 둔다
+    if _lum(color) < 0.35 and _lum(outline) < 0.35:
+        return "#FFFFFF"
+    if _lum(color) > 0.75 and _lum(outline) > 0.75:
+        return "#000000"
+    return outline
 
 
 def build(rows):
+    fonts = _fonts()
     out = []
     for r in rows:
         slug = SLUG.get(r["channel"])
@@ -118,11 +156,13 @@ def build(rows):
             "sub_h": _pct_to_px(r.get("sub_h_pct"), 0) if r.get("sub_exists") else 0,
             "hc_size": _font_for(r.get("hl_size")),
             "hc_c1": c1, "hc_c2": c2,
-            "hc_out": _hex(r.get("hl_outline"), "#000000"),
+            "hc_out": _visible(c1, _hex(r.get("hl_outline"), "#000000"),
+                               bool(r.get("hl_box"))),
             "hc_out_w": THICK.get(r.get("hl_thick"), 8),
             "hc_y": hl_y,
             "hc_box": bool(r.get("hl_box")),
             "hc_box_color": _hex(r.get("hl_box_color"), "#FFFFFF"),
+            "font": fonts.get(r["channel"], DEFAULT_FONT),
             "notes": (r.get("notes") or [""])[0][:70],
         })
     return out
@@ -139,7 +179,7 @@ def emit(rows):
         print(f'        "left_icon": "{r["left_icon"]}", "right_icon": "{r["right_icon"]}",')
         print(f'        "center_kind": "{r["center_kind"]}",')
         print(f'        "sub_bg": "{r["sub_bg"]}", "sub_text": "{r["sub_text"]}", "sub_h": {r["sub_h"]},')
-        print(f'        "headcopy": _hc("BMDOHYEON.ttf", {r["hc_size"]}, "{r["hc_c1"]}", '
+        print(f'        "headcopy": _hc("{r["font"]}", {r["hc_size"]}, "{r["hc_c1"]}", '
               f'"{r["hc_c2"]}", {r["hc_y"]}, {r["hc_out_w"]}, "{r["hc_out"]}", '
               f'{r["hc_box"]}, "{r["hc_box_color"]}"),')
         if r["notes"]:
