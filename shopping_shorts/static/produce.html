@@ -9456,6 +9456,10 @@ function s2RenderDrafts(){
       if(srcs.length) bits.push('대본 '+srcs.length+'편('+srcs.map(s=>s.chars+'자').join('·')+')');
       if(m.scene_points) bits.push('장면 '+m.scene_points+'개');
       if(m.product_facts) bits.push('쿠팡 재료');
+      // ★어느 경로로 만든 대본인지 말한다(2026-08-19). 조립본은 정해둔 틀에 재료만
+      //   끼운 것이라 어미·CTA가 흔들리지 않는다. 이걸 안 보여주면 사장님이 왜 결과가
+      //   달라졌는지 알 수 없다 — 조용한 폴백이 쳇바퀴의 뿌리였다.
+      if((m.assembled||[]).length) bits.push('틀 조립 '+m.assembled.length+'안');
       used = bits.length ? (' · 재료: '+esc(bits.join(' + '))) : ' · <span style="color:var(--gold)">재료 없음(AI가 지어냅니다)</span>';
       // ★재료 편마다 첫 문장을 보여준다 — 서로 다른 제품이 섞였는지는 이걸 봐야 안다
       //   (2026-08-17 실측: 치아바타 1편 + 도마 2편이 한 작업에 담겨 도마로 끌려갔다).
@@ -9468,7 +9472,8 @@ function s2RenderDrafts(){
       + S2.drafts.length + '안' + used + '</span>';
   }
   tabs.innerHTML=S2.drafts.map((dr,i)=>{
-    const nm=String.fromCharCode(65+i)+'안'+(dr.style_name?(' · '+esc(dr.style_name)):'');
+    const nm=String.fromCharCode(65+i)+'안'+(dr.style_name?(' · '+esc(dr.style_name)):'')
+      + (dr.made_by==='조립'?' 🧩':'');   // 🧩 = 틀에 재료만 끼운 조립본
     const g=(dr.checks&&dr.checks.length)?(dr.passed?'✅':'⚠️'):'';
     return `<button class="s2-tab${i===S2.curDraft?' on':''}" onclick="s2PickDraft(${i})">${nm} <span>${g}</span></button>`;
   }).join('');
