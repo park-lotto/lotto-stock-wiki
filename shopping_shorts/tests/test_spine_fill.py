@@ -263,3 +263,14 @@ def test_나라가_없어도_authority가_채워진다():
         "이걸 개발한 독일의 천재가 돈방석에 앉았다는데"
     assert sf.fill(spine, {})[0][0]["text"] == "이걸 만든 천재가 떼돈을 벌었다는데"
     assert sf.fill(spine, {})[1] == []          # 못 채운 칸 없음
+
+
+def test_은폐형_고조는_장점3개일_때만():
+    """게이트가 고조 1회를 요구한다. 장점이 2개뿐이면 지어내지 않고 기본형으로 내려간다."""
+    tmpl = ["근데 진짜 충격적인 포인트는 {효능2} 심지어 {효능3}까지 된다는 거",
+            "근데 진짜 충격적인 포인트는 {효능2}"]
+    spine = {"beat_roles": ["twist"], "templates": {"twist": tmpl}}
+    s3 = sf.slots_from_facts({}, {"benefits": ["A된다", "B된다", "C된다"]})
+    assert "심지어" in sf.fill(spine, s3)[0][0]["text"]
+    s2 = sf.slots_from_facts({}, {"benefits": ["A된다", "B된다"]})
+    assert "심지어" not in sf.fill(spine, s2)[0][0]["text"]

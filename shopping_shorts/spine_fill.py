@@ -38,7 +38,7 @@ import re
 
 # 템플릿에 쓰이는 슬롯 이름. 여기 없는 이름이 템플릿에 있으면 그 템플릿은 못 쓴다
 # (모르는 슬롯을 빈칸으로 남기면 "이게 원래는  개발된 제품이었음"이 나간다).
-SLOT_NAMES = ("제품", "효능", "효능2", "나라", "본래용도", "속성",
+SLOT_NAMES = ("제품", "효능", "효능2", "효능3", "나라", "본래용도", "속성",
               "용도", "용도2", "용도3", "용도끝", "용도들", "제품군")
 
 _SLOT_RE = re.compile(r"\{([^{}]+)\}")
@@ -198,6 +198,9 @@ def slots_from_facts(product_facts=None, sul=None):
         "제품": _first(pf.get("title")) or _first(sf.get("product_name")),
         "효능": (_first(why[0]) if len(why) > 0 else "") or _nth(ben, 0),
         "효능2": (_first(why[1]) if len(why) > 1 else "") or _nth(ben, 1),
+        # 고조('심지어 …까지')를 받는 세 번째 장점. 은폐형 twist가 쓴다 —
+        # 게이트가 고조 1회를 요구하는데 은폐형 템플릿엔 그 자리가 없었다(실측).
+        "효능3": (_first(why[2]) if len(why) > 2 else "") or _nth(ben, 2),
         "나라": _first(pf.get("origin")) or _first(sf.get("origin_country")),
         "본래용도": _first(sf.get("original_use")),
         "속성": _first(sf.get("hidden_property")),
