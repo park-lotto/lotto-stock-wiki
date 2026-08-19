@@ -267,6 +267,16 @@ class Store:
                     PRIMARY KEY (customer_id, shortcode)
                 )
             """)
+            # QR '폰으로 보내기' 단축링크(2026-08-19). 예전엔 프로세스 메모리 dict라
+            # **서버가 재시작되면 발급된 QR이 전부 죽었다**(자동배포가 3분마다 재시작한다).
+            # 실측: 발급 직후 /s/{sid}·/api/share/v·/api/share/t 전부 403(만료). DB로 옮긴다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS share_links (
+                    sid TEXT PRIMARY KEY,
+                    job_id TEXT NOT NULL,
+                    expires_at INTEGER NOT NULL
+                )
+            """)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS last_run (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -4744,6 +4754,21 @@ class Store:
             return str(row[0]) if row and row[0] is not None else None
         except sqlite3.Error:
             return None
+
+    def put_share_link(self, sid, job_id, expires_at):
+        """QR 단축링크 저장 + 만료분 청소(누수 방지)."""
+        with self._conn() as c:
+            c.execute("DELETE FROM share_links WHERE expires_at < ?", (int(expires_at) - 86400 * 0,))
+            c.execute("INSERT OR REPLACE INTO share_links(sid, job_id, expires_at) VALUES(?,?,?)",
+                      (sid, job_id, int(expires_at)))
+
+    def get_share_link(self, sid, now_ts):
+        """살아있는 링크면 job_id, 없거나 지났으면 None."""
+        with self._conn() as c:
+            r = c.execute("SELECT job_id, expires_at FROM share_links WHERE sid=?", (sid,)).fetchone()
+        if not r:
+            return None
+        return r[0] if int(r[1]) > int(now_ts) else None
 
     def enqueue(self, task, args, owner=None, prio=None):
         """작업을 대기열에 넣고 큐 id를 반환한다.

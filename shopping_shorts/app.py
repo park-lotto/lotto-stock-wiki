@@ -6234,27 +6234,24 @@ def _set_session_cookie(response, customer_id: int):
 # ★URL을 짧게(/s/{8자}) 유지해야 QR이 v3(검증범위) 안에 든다 → 긴 서명토큰 대신 메모리 저장소에
 #   짧은 id→(job,만료)를 담는다. 재기동 시 사라짐 = 24h 만료와 같은 성질(재발급하면 됨). 무상태 필요 없음.
 _SHARE_TTL = 60 * 60 * 24  # 24시간
-_SHARE_STORE: dict = {}    # sid -> (job_id, expiry_ts)
+
+# ★DB에 저장한다(2026-08-19 사장님 "카톡 QR로 보내기 다시 살려줘"). 예전엔 프로세스 메모리
+#   dict였다 — 자동배포 크론이 3분마다 새 커밋을 보고 systemctl restart 하므로, 발급한 QR이
+#   폰으로 스캔되기도 전에 죽어 '만료' 403이 떴다. 실측(라이브 서버): 발급 직후
+#   /s/{sid}·/api/share/v/{sid}·/api/share/t/{sid} 세 경로가 전부 403.
+#   저장소가 sqlite면 재시작·워커 분리와 무관하게 24시간 그대로 산다.
 
 
 def _share_put(job_id: str) -> str:
     now = int(datetime.now(timezone.utc).timestamp())
-    for k in [k for k, (_, e) in _SHARE_STORE.items() if e < now]:   # 만료 청소(누수 방지)
-        _SHARE_STORE.pop(k, None)
     sid = secrets.token_urlsafe(6)   # ~8자
-    _SHARE_STORE[sid] = (job_id, now + _SHARE_TTL)
+    Store(DB_PATH).put_share_link(sid, job_id, now + _SHARE_TTL)
     return sid
 
 
 def _share_get(sid: str):
-    v = _SHARE_STORE.get(sid)
-    if not v:
-        return None
-    job_id, exp = v
-    if int(datetime.now(timezone.utc).timestamp()) > exp:
-        _SHARE_STORE.pop(sid, None)
-        return None
-    return job_id
+    return Store(DB_PATH).get_share_link(
+        sid, int(datetime.now(timezone.utc).timestamp()))
 
 
 _SHARE_PAGE_HTML = """<!doctype html><html lang="ko"><head>
