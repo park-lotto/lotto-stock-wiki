@@ -1319,13 +1319,18 @@ def _wrap_to_width(line, font, max_w):
 
 
 def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
-                          highlight_rules=None, default_color="0xFFFFFF", single_line=False):
+                          highlight_rules=None, default_color="0xFFFFFF", single_line=False,
+                          fit_lines=False):
     """헤드카피/자막 한 블록을 줄 단위로 나누고, highlight_rules에 매칭되는 단어만
     별도 색·배지로 세그먼트를 쪼개 나란히 이어붙인 drawtext 필터 리스트를 반환한다.
     규칙이 없거나 매칭 0건이면 줄마다 세그먼트 1개 = 기존 _fixed_drawtext/_caption_drawtexts와
     동일한 산출물(하위호환). 폭 측정은 Pillow로 실제 폰트파일 기준 수행.
     single_line=True(자막): 절대 줄바꿈하지 않고 **한 줄**로 두되, 폭을 넘으면 폰트를
-    자동 축소해 한 줄에 맞춘다(사장님: 자막은 무조건 한 줄). 미리보기도 동일 비율로 축소."""
+    자동 축소해 한 줄에 맞춘다(사장님: 자막은 무조건 한 줄). 미리보기도 동일 비율로 축소.
+    fit_lines=True(헤드카피): 사장님이 넣은 줄바꿈을 **그대로 지킨다**. 폭을 넘으면 줄을
+    늘리지 않고 폰트를 줄여 맞춘다 — 썸네일 쪽(produce.html thumbFit)과 같은 규칙이다.
+    2026-08-19 사장님: "썸네일쪽처럼 두 줄로 정렬되게" — 2줄로 쓴 문구가 자동 줄바꿈에
+    걸려 4줄로 깨져 나왔다(캡처). 줄 수는 사장님이 정하고, 크기는 기계가 맞춘다."""
     base_style = base_style or {}
     lines = (text or "").split("\n")
     if not any(l.strip() for l in lines):
@@ -1348,6 +1353,15 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
             except OSError:
                 pass
         lines = [one]
+    elif fit_lines:
+        # 헤드카피: 줄 수는 그대로, 가장 넓은 줄이 폭에 들어가게 폰트만 줄인다.
+        widest = max((pil_font.getlength(ln) for ln in lines if ln), default=0)
+        if widest > max_w:
+            size = max(8, int(size * max_w / widest))
+            try:
+                pil_font = ImageFont.truetype(font_disk_path, size)
+            except OSError as e:  # noqa: BLE001 — 폰트 재적재 실패는 축소만 못 할 뿐, 그리기는 계속한다
+                print(f"[헤드카피] 폰트 축소 실패(무시): {e!r}", file=sys.stderr)
     else:
         # 폭 초과 줄 자동 줄바꿈 — 미리보기(pre-wrap)와 맞춰 최종 영상도 화면 밖으로 안 넘게.
         lines = [seg for ln in lines for seg in _wrap_to_width(ln, pil_font, max_w)]
@@ -1462,6 +1476,7 @@ def _headcopy_drawtext_parts(hc, work, enable=None):
     parts = _segmented_drawtext(
         hc.get("text", ""), hc, work, "hc", hc.get("x", 50), hc.get("y", 14),
         highlight_rules=hc.get("highlight_rules"), default_color="0xFF8800",
+        fit_lines=True,
     )
     if not enable:
         return parts
