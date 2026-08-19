@@ -1,299 +1,365 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""체험판 제작소 소개 페이지 생성기 (2026-08-20)
+"""체험판 제작소 '얼린 샘플 페이지' 생성기 (2026-08-20)
 
-사장님 지시: "체험단이 볼 수 있는 페이지는 우리 샘플 중 한 개를 띄워주고, 수정 못 만지게
-하고, 이렇게 돌아가는 거다를 보여주고, 캡션 도움말 달아서 이건 뭐고 이건 뭐다 해달라".
+사장님 지시(3차, 스크린샷과 함께 — 앞서 두 번 잘못 알아들었다):
+  "내가 보고 있는 페이지랑 동일한데 목업처럼 만들어서 **클릭 안 되고 API 안 나가는**
+   샘플 페이지를 html로. **9단계까지 이동되는데 내가 만들어놓은 게 채워져 있게.**
+   그 위에 네가 주석 설명 달고."
 
-★왜 API가 아니라 '구워서 박는' 방식인가
-  `/api/produce/*`는 체험 등급에 전부 402다(과금 기능이라 여는 게 위험). 그래서 샘플을
-  API로 읽지 않고 **빌드 시점에 실제 작업 데이터를 HTML 안에 박아 넣는다**.
-  → 페이지가 부르는 API가 **0개**라 402 에러가 원천적으로 안 뜨고, 새 엔드포인트를
-    안 만드니 화이트리스트를 넓힐 일도 없다(deny-by-default를 안 흔든다).
+→ 화면을 **다시 그리지 않는다**(그게 앞선 실패였다). 진짜 `produce.html`을 **그대로 복사**해서
+  ①모든 JS를 걷어내고 ②패널 전환만 하는 작은 스크립트를 새로 넣고 ③실제 작업 데이터를
+  HTML에 박아 ④주석을 얹는다. 그래서 사이드바·레이아웃·색이 전부 실물과 같다.
 
-쓰는 법(샘플을 바꾸고 싶을 때만):
-    # 서버에서 실제 작업 하나를 뽑아온다
+동작 원리
+  - `produce.html` 원본을 읽어 `<script>` 블록을 **전부 제거**한다(외부 src 포함).
+    → fetch/onclick 배선이 통째로 사라지므로 **API가 나갈 수 없다**.
+  - `onclick=` 등 인라인 핸들러를 **속성째 제거**한다(눌러도 아무 일이 없다).
+  - 그 자리에 `_FREEZE_JS`(순수 패널 전환 + 주석 배치)만 넣는다. 네트워크 호출 0.
+  - 오브↔패널 매핑은 원본과 **같은 값**을 쓴다(ORB_TO_PANEL=[0,8,7,1,2,3,4,5,6]).
+    원본이 바뀌면 여기 상수도 같이 고쳐야 한다 — 아래 _ORB_TO_PANEL 주석 참조.
+
+★왜 진짜 페이지를 서빙하지 않고 구워서 박나
+  진짜 페이지는 열리자마자 `/api/produce/*`를 여러 개 부르는데 체험 등급엔 전부 402다.
+  버튼을 하나하나 잠그는 방식은 **빠뜨린 버튼 하나가 곧 과금**이라 위험하다.
+  스크립트를 통째로 걷어내면 "부를 코드 자체가 없다" → 구조적으로 안전하다.
+
+쓰는 법:
     py tools/build_produce_intro.py --json <sample.json>
-  sample.json은 produce_works.state_json에서 뽑은 것으로, 아래 _SAMPLE와 같은 모양이다.
-  인자 없이 실행하면 이 파일에 박힌 기본 샘플로 다시 굽는다.
-
-썸네일은 인스타 CDN 주소라 그대로 쓰면 403이 난다 → `/api/thumb` 프록시를 태운다.
-그 경로는 체험 등급에도 열려 있다(실측: `_ranking_only_blocked('/api/thumb','GET')==False`).
+  sample.json은 produce_works.state_json에서 뽑은 것. 없으면 내장 기본값으로 굽는다.
 """
 import argparse
 import html
 import json
 import pathlib
+import re
 import sys
 from urllib.parse import quote
 
 HERE = pathlib.Path(__file__).resolve().parent.parent
+SRC = HERE / "shopping_shorts" / "static" / "produce.html"
 OUT = HERE / "shopping_shorts" / "static" / "produce_intro.html"
 
-# 실제 라이브 작업(work_id 7b0491f0de…, step 8=최종렌더까지 간 것)에서 뽑은 값.
-# 손으로 지어낸 숫자가 하나도 없다 — 전부 사장님이 실제로 만든 영상의 데이터다.
-_SAMPLE = {
-    "title": "여러분, 집안 틈새 보수할 때 실리콘",
-    "product": "미세 노즐 실란트 주사기",
-    "sources": [
-        {"chars": 114, "head": "만원이면 가구 틈새 실리콘 마감이 뚝딱이여 기존 실리콘건은 너무 크잖아?"},
-        {"chars": 205, "head": "이런 거 하나 있으면 든든하죠! 집이 오래돼서 보수할 데가 많았는데 인테…"},
-        {"chars": 915, "head": "¿Sabías que la humedad del ambiente dete…"},
-    ],
-    "scene_points": 14,
-    "styles": ["단정 명령형", "가족갈등 반전형"],
-    "beats": [
-        {"role": "hook", "label": "훅", "sec": 3.9,
-         "text": "여러분, 집안 틈새 보수할 때 실리콘 건 덩치 큰 거 쓰지 마세요. 이게 진짜 난리예요!"},
-        {"role": "before", "label": "문제", "sec": 6.6,
-         "text": "저도 예전엔 큰 건으로 쏘다가 다 삐져나와서 닦느라 고생만 했거든요. "
-                 "인테리어 망치고 나면 수습도 안 돼서 얼마나 짜증나던지 몰라요."},
-        {"role": "reveal", "label": "등장", "sec": 7.3,
-         "text": "근데 인테리어 하는 친구가 이 미세 노즐 실란트 주사기를 슥 내밀더라고요. "
-                 "주사기처럼 생겨서 필요한 만큼만 딱 짜니까 힘 안 줘도 일정하게 쫙 나와요."},
-        {"role": "after", "label": "결과", "sec": 6.9,
-         "text": "덕분에 가구 모서리 틈새가 싹 메워지니까 곰손인 저도 전문가처럼 깔끔하게 끝냈거든요. "
-                 "남은 거 굳어서 버릴 일도 없어서 진짜 경제적이에요."},
-        {"role": "cta", "label": "행동유도", "sec": 4.3,
-         "text": "어디서 샀냐고들 물어봐서 댓글에 '실리콘' 남겨주시면 구매한 링크 바로 보내 드릴게요."},
-    ],
-    "sources_thumbs": [],   # --json으로 채워진다(썸네일 URL 목록)
+# ★원본 produce.html의 값과 **같아야 한다**(0순위-B). 원본이 순서를 바꾸면 여기도 바꾼다.
+#   빌드 시 원본에서 실제로 읽어 대조하므로, 어긋나면 빌드가 멈춘다(아래 _check_mapping).
+_ORB_TO_PANEL = [0, 8, 7, 1, 2, 3, 4, 5, 6]
+_STEP_LABELS = ["영상추출/분석", "대본생성", "영상대본MIX", "고품질 자막제거", "TTS음성",
+                "자막꾸미기", "썸네일", "SEO해시테크", "최종렌더"]
+
+# 단계마다 얹을 주석(사장님이 요청한 "네가 다는 설명"). 오브 번호(0-based) → 문구.
+_NOTES = {
+    0: ("담은 영상을 <b>전부 받아적고</b> 화면에 뭐가 나오는지까지 읽습니다. "
+        "카드마다 <b>말 있음 284자</b>처럼 받아적은 분량이 보이고, "
+        "<b>자막이 아예 없는 영상도</b> 화면만 보고 알아냅니다(외국어도 그대로). "
+        "왼쪽 첫 칸 <b>AI PICK</b>이 대표로 뽑힌 영상이에요. 여기서 모인 게 대본의 재료가 됩니다."),
+    1: ("잘 터진 채널들의 <b>말하는 방식</b>을 학습해둔 틀 중에서 고릅니다. "
+        "같은 제품이라도 틀을 바꾸면 완전히 다른 영상이 나와요. "
+        "결과 대본은 <b>미끼·찔림·반전·증거·약속</b> 다섯 토막으로 나뉘고 토막마다 길이(초)가 정해집니다. "
+        "마음에 안 드는 곳은 <b>그 줄만</b> 다시 뽑아요 — 전체를 새로 쓸 필요가 없습니다."),
+    2: ("대사에 맞는 <b>장면을 붙이는</b> 단계입니다. 담은 영상에서 쓸 만한 장면을 찾아두고 "
+        "\"주사기처럼 생겨서\"라고 말할 때 <b>실제로 그 장면이 나오게</b> 맞춥니다."),
+    3: ("남의 영상에 박혀 있던 <b>자막을 지웁니다.</b> 지운 자리를 주변 화면으로 메워서 "
+        "티가 안 나게 만들어요. 여기가 깔끔해야 내 자막을 새로 얹을 수 있습니다."),
+    4: ("대본을 <b>성우 목소리로</b> 읽습니다. 목소리와 속도를 골라 미리 들어볼 수 있어요."),
+    5: ("자막의 <b>글씨체·색·위치</b>를 꾸밉니다. 채널 분위기에 맞춰 한 번 정해두면 계속 씁니다."),
+    6: ("영상 속 한 장면을 골라 <b>썸네일</b>을 만듭니다. 글자와 스티커를 얹을 수 있어요."),
+    7: ("<b>제목·해시태그</b>를 만듭니다. 검색으로 들어오는 사람을 늘리는 자리예요."),
+    8: ("여기까지가 <b>한 편</b>입니다. 완성 영상을 내려받거나 카톡으로 바로 보낼 수 있어요. "
+        "사람이 하는 건 '어떤 영상을 담을지' 고르기와 '마음에 안 드는 곳 바꾸기' 둘뿐입니다."),
 }
 
-_ROLE_HELP = {
-    "hook": "첫 3초. 여기서 못 잡으면 나머지를 아무리 잘 만들어도 안 봅니다.",
-    "before": "보는 사람이 겪은 불편을 먼저 말해 '내 얘기네' 하고 붙잡습니다.",
-    "reveal": "제품이 처음 나오는 자리. 광고가 아니라 '해결책'으로 들어옵니다.",
-    "after": "쓰고 나서 뭐가 달라졌는지. 사고 싶어지는 건 대개 이 대목입니다.",
-    "cta": "댓글·링크로 이어지는 마무리. 채널마다 문구가 다릅니다.",
-}
+_SAMPLE = {"product": "다이소 자석 네일펜", "sources_thumbs": []}
 
+# 얼린 페이지 전용 스크립트 — 네트워크 호출이 하나도 없다.
+_FREEZE_JS = """
+<script>
+/* ★얼린 샘플 페이지(2026-08-20) — 원본 produce.html의 JS는 전부 걷어냈고,
+   이 스크립트만 남는다. 하는 일은 **패널 전환과 주석 배치뿐**이며
+   fetch/XHR을 일절 쓰지 않는다(체험 등급은 제작 API가 전부 402라서). */
+(function(){
+  var ORB_TO_PANEL = %(orb_to_panel)s;
+  var STEP_LABELS  = %(step_labels)s;
+  var NOTES        = %(notes)s;
+  var cur = 0;
 
-def _thumb(url: str) -> str:
-    """인스타 CDN 주소는 직접 못 읽는다(403) → 서버 프록시를 태운다."""
-    if not url:
-        return ""
-    return "/api/thumb?url=" + quote(url, safe="")
+  function panels(){ return document.querySelectorAll('.panel'); }
 
+  function showPanel(orb){
+    cur = orb;
+    var want = ORB_TO_PANEL[orb];
+    panels().forEach(function(p){
+      p.classList.toggle('show', String(p.dataset.step) === String(want));
+    });
+    renderOrbs();
+    placeNote(orb);
+    var top = document.getElementById('ssTop');
+    if(top) top.scrollIntoView({behavior:'smooth', block:'start'});
+  }
 
-def _esc(s) -> str:
-    return html.escape(str(s or ""))
+  function renderOrbs(){
+    var bar = document.getElementById('ssOrbs');
+    if(!bar) return;
+    var pct = Math.round(cur / (STEP_LABELS.length - 1) * 100);
+    var h = '<div class="orbline"><div class="orbfill" style="width:'+pct+'%%"></div></div>';
+    STEP_LABELS.forEach(function(name, i){
+      var cls = i < cur ? 'orb done' : (i === cur ? 'orb cur' : 'orb');
+      h += '<div class="'+cls+'" data-orb="'+i+'"><div class="ball">'+(i<cur?'✓':(i+1))+
+           '</div><div class="lb">'+name+'</div></div>';
+    });
+    bar.innerHTML = h;
+    bar.querySelectorAll('.orb').forEach(function(o){
+      o.addEventListener('click', function(){ showPanel(+o.dataset.orb); });
+    });
+  }
 
+  /* 주석은 현재 패널 맨 위에 끼워 넣는다 — 단계를 옮기면 그 단계 설명으로 바뀐다. */
+  function placeNote(orb){
+    var old = document.getElementById('ssNote');
+    if(old) old.remove();
+    var want = ORB_TO_PANEL[orb];
+    var p = document.querySelector('.panel[data-step="'+want+'"]');
+    if(!p || !NOTES[orb]) return;
+    var d = document.createElement('div');
+    d.id = 'ssNote';
+    d.className = 'ss-note';
+    d.innerHTML = '<span class="ss-note-pin">💬</span><div><b>이 단계는 이런 걸 합니다</b><br>' +
+                  NOTES[orb] + '</div>';
+    p.insertBefore(d, p.firstChild);
+  }
 
-def _beats_html(beats) -> str:
-    rows = []
-    for i, b in enumerate(beats, 1):
-        rows.append(f"""
-      <div class="beat">
-        <div class="beat-no">{i}</div>
-        <div class="beat-body">
-          <div class="beat-head">
-            <span class="tag tag-{_esc(b['role'])}">{_esc(b['label'])}</span>
-            <span class="sec">{b['sec']}초</span>
-          </div>
-          <p class="beat-text">{_esc(b['text'])}</p>
-          <p class="beat-help">💬 {_esc(_ROLE_HELP.get(b['role'], ''))}</p>
-        </div>
-      </div>""")
-    return "".join(rows)
+  /* 눌러도 아무 일 없게 — 남아 있는 링크·폼도 죽인다(스크립트는 이미 제거됨). */
+  function deaden(){
+    document.querySelectorAll('a[href]').forEach(function(a){
+      var h = a.getAttribute('href') || '';
+      if(h.indexOf('/pricing') === 0 || h === '/') return;   // 안내 링크 2개만 살린다
+      a.removeAttribute('href');
+      a.style.cursor = 'default';
+    });
+    document.addEventListener('submit', function(e){ e.preventDefault(); }, true);
+    /* 오브 말고 다른 버튼은 눌러도 무시 */
+    document.addEventListener('click', function(e){
+      var t = e.target.closest('button, .btn, input[type=submit]');
+      if(!t) return;
+      if(t.closest('#ssOrbs') || t.closest('.ss-bar')) return;
+      e.preventDefault(); e.stopPropagation();
+      var tip = document.getElementById('ssTip');
+      if(tip){ tip.classList.add('on'); clearTimeout(window.__tipT);
+               window.__tipT = setTimeout(function(){ tip.classList.remove('on'); }, 1800); }
+    }, true);
+  }
 
-
-def _sources_html(sample) -> str:
-    thumbs = sample.get("sources_thumbs") or []
-    cards = []
-    for i, t in enumerate(thumbs[:5]):
-        src = _thumb(t)
-        cards.append(f'<div class="src-card"><img src="{_esc(src)}" alt="담은 영상 {i+1}" '
-                     f'loading="lazy" onerror="this.closest(\'.src-card\').style.display=\'none\'"></div>')
-    if not cards:
-        cards = ['<div class="src-card src-empty">영상</div>' for _ in range(3)]
-    return "".join(cards)
-
-
-def build(sample) -> str:
-    total = round(sum(b["sec"] for b in sample["beats"]), 1)
-    src_lines = "".join(
-        f'<li><b>{s["chars"]}자</b> <span class="muted">{_esc(s["head"])}</span></li>'
-        for s in sample["sources"])
-
-    return f"""<!doctype html>
-<meta charset="utf-8">
-<title>숏템 제작소 — 이렇게 만들어집니다</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-  :root{{--bg:#0f1115;--card:#171a21;--card2:#1d212a;--txt:#e8eaf0;--sub:#9aa3b2;
-        --line:#262b36;--accent:#7c5cff;--ok:#2ecc71;--warn:#f5a623}}
-  *{{box-sizing:border-box}}
-  body{{margin:0;background:var(--bg);color:var(--txt);line-height:1.65;
-       font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif}}
-  .wrap{{max-width:860px;margin:0 auto;padding:28px 18px 72px}}
-  .ribbon{{background:linear-gradient(90deg,#7c5cff22,#7c5cff08);border:1px solid #7c5cff55;
-          border-radius:10px;padding:12px 16px;margin-bottom:22px;font-size:14px}}
-  .ribbon b{{color:#b9a7ff}}
-  h1{{font-size:26px;margin:0 0 6px;letter-spacing:-.4px}}
-  .lead{{color:var(--sub);margin:0 0 8px}}
-  .demo-of{{font-size:13px;color:var(--sub);margin:0 0 26px}}
-  .demo-of code{{background:var(--card2);padding:2px 7px;border-radius:5px;color:#c9d1e0}}
-
-  .step{{background:var(--card);border:1px solid var(--line);border-radius:13px;
-        padding:18px 20px;margin-bottom:14px;position:relative}}
-  .step-head{{display:flex;align-items:center;gap:9px;margin-bottom:4px;flex-wrap:wrap}}
-  .step-n{{background:var(--accent);color:#fff;font-size:12px;font-weight:800;
-          width:24px;height:24px;border-radius:50%;display:flex;align-items:center;
-          justify-content:center;flex:0 0 auto}}
-  .step-t{{font-size:17px;font-weight:800;margin:0}}
-  .done{{margin-left:auto;font-size:12px;color:var(--ok);font-weight:700;white-space:nowrap}}
-  .help{{background:#7c5cff14;border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
-        padding:9px 13px;margin:11px 0 0;font-size:13.5px;color:#cfd6e4}}
-  .help b{{color:#fff}}
-  .muted{{color:var(--sub)}}
-
-  .srcs{{display:flex;gap:9px;margin-top:12px;flex-wrap:wrap}}
-  .src-card{{width:78px;height:104px;border-radius:8px;overflow:hidden;background:var(--card2);
-           border:1px solid var(--line);flex:0 0 auto}}
-  .src-card img{{width:100%;height:100%;object-fit:cover;display:block}}
-  .src-empty{{display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--sub)}}
-  ul.srclist{{margin:12px 0 0;padding-left:18px;font-size:13.5px}}
-  ul.srclist li{{margin-bottom:3px}}
-
-  .beat{{display:flex;gap:12px;padding:13px 0;border-top:1px solid var(--line)}}
-  .beat:first-of-type{{border-top:0}}
-  .beat-no{{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--card2);
-          border:1px solid var(--line);font-size:11px;color:var(--sub);
-          display:flex;align-items:center;justify-content:center;margin-top:3px}}
-  .beat-body{{flex:1;min-width:0}}
-  .beat-head{{display:flex;align-items:center;gap:8px;margin-bottom:3px}}
-  .tag{{font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px}}
-  .tag-hook{{background:#f5a62322;color:#f5a623}}
-  .tag-before{{background:#ff6b6b22;color:#ff8787}}
-  .tag-reveal{{background:#7c5cff26;color:#b9a7ff}}
-  .tag-after{{background:#2ecc7122;color:#4ade80}}
-  .tag-cta{{background:#4dabf722;color:#74c0fc}}
-  .sec{{font-size:12px;color:var(--sub)}}
-  .beat-text{{margin:0;font-size:14.5px}}
-  .beat-help{{margin:5px 0 0;font-size:12.5px;color:var(--sub)}}
-
-  .styles{{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}}
-  .chip{{border:1px solid var(--line);background:var(--card2);border-radius:20px;
-        padding:5px 13px;font-size:13px}}
-  .chip.on{{border-color:var(--accent);background:#7c5cff1f;color:#c9bcff;font-weight:700}}
-
-  .cta{{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px}}
-  .btn{{display:inline-block;padding:12px 20px;border-radius:9px;text-decoration:none;
-       font-weight:800;font-size:14.5px}}
-  .btn.primary{{background:var(--accent);color:#fff}}
-  .btn.ghost{{border:1px solid var(--line);color:var(--txt)}}
-  .foot{{margin-top:18px;font-size:13px;color:var(--sub)}}
-  @media(max-width:520px){{ .src-card{{width:64px;height:86px}} h1{{font-size:22px}} }}
-</style>
-<div class="wrap">
-
-  <div class="ribbon">
-    👀 <b>미리보기입니다.</b> 아래는 실제로 만들어진 영상 한 편을 그대로 펼쳐놓은 것이라
-    <b>고치거나 새로 만들 수는 없습니다.</b> 이용권을 시작하면 이 과정을 직접 돌릴 수 있어요.
-  </div>
-
-  <h1>🎬 숏템 제작소는 이렇게 돌아갑니다</h1>
-  <p class="lead">영상 몇 개를 담으면 → 대본이 나오고 → 장면이 붙고 → 한 편이 완성됩니다.</p>
-  <p class="demo-of">지금 보시는 건 실제 완성작 <code>{_esc(sample['product'])}</code> 편입니다.
-     아래 숫자·문장은 전부 그 작업에서 그대로 가져온 것이에요.</p>
-
-  <div class="step">
-    <div class="step-head"><span class="step-n">1</span>
-      <p class="step-t">담은 영상을 읽습니다</p><span class="done">✓ 완료</span></div>
-    <div class="srcs">{_sources_html(sample)}</div>
-    <ul class="srclist">{src_lines}</ul>
-    <p class="help">💬 <b>이건 뭐냐면</b> — 담아둔 영상의 <b>말(자막)을 전부 받아적고</b>,
-       화면에 뭐가 나오는지까지 읽습니다. 위 숫자가 받아적은 글자 수예요.
-       <b>자막이 아예 없는 영상도</b> 화면만 보고 알아냅니다. 외국어(스페인어)도 그대로 읽어요.</p>
-  </div>
-
-  <div class="step">
-    <div class="step-head"><span class="step-n">2</span>
-      <p class="step-t">어떤 말투로 쓸지 고릅니다</p><span class="done">✓ 완료</span></div>
-    <div class="styles">
-      <span class="chip on">✓ {_esc(sample['styles'][0])}</span>
-      <span class="chip">{_esc(sample['styles'][1])}</span>
-    </div>
-    <p class="help">💬 <b>이건 뭐냐면</b> — 잘 터진 채널들의 <b>말하는 방식</b>을 미리 학습해둔
-       틀입니다. 같은 제품이라도 틀을 바꾸면 완전히 다른 영상이 나와요.
-       이번 편은 <b>{_esc(sample['styles'][0])}</b>으로 뽑았습니다.</p>
-  </div>
-
-  <div class="step">
-    <div class="step-head"><span class="step-n">3</span>
-      <p class="step-t">대본이 나옵니다 — 통째로가 아니라 <em>역할별</em>로</p>
-      <span class="done">✓ {total}초</span></div>
-    {_beats_html(sample['beats'])}
-    <p class="help">💬 <b>이건 뭐냐면</b> — 대본을 그냥 길게 쓰는 게 아니라
-       <b>훅 → 문제 → 등장 → 결과 → 행동유도</b> 다섯 토막으로 나눠서 씁니다.
-       토막마다 <b>몇 초짜리인지</b>가 정해져 있어서, 다음 단계에서 장면을 그 길이에 맞춰
-       잘라 붙일 수 있어요. 합쳐서 <b>{total}초</b>짜리 한 편이 됩니다.</p>
-  </div>
-
-  <div class="step">
-    <div class="step-head"><span class="step-n">4</span>
-      <p class="step-t">대사에 맞는 장면을 골라 붙입니다</p>
-      <span class="done">✓ 장면 {sample['scene_points']}곳</span></div>
-    <p class="help">💬 <b>이건 뭐냐면</b> — 담은 영상들에서 쓸 만한 장면
-       <b>{sample['scene_points']}곳</b>을 찾아두고, 대사 내용과 맞는 자리에 자동으로 배치합니다.
-       "주사기처럼 생겨서"라고 말할 때 <b>실제로 그 장면이 나오게</b> 맞추는 일이에요.</p>
-  </div>
-
-  <div class="step">
-    <div class="step-head"><span class="step-n">5</span>
-      <p class="step-t">원본 자막을 지우고, 목소리를 입히고, 한 편으로 굽습니다</p>
-      <span class="done">✓ 완료</span></div>
-    <p class="help">💬 <b>이건 뭐냐면</b> — 남의 영상에 박혀 있던 <b>자막을 지우고</b>
-       내 대본으로 새 자막을 답니다. 성우 목소리도 골라서 얹고, 썸네일까지 만들어
-       <b>바로 올릴 수 있는 영상 파일</b>로 내보냅니다.</p>
-  </div>
-
-  <div class="cta">
-    <a class="btn primary" href="/pricing">이용권 보기</a>
-    <a class="btn ghost" href="/">← 레퍼런스 랭킹으로</a>
-  </div>
-  <p class="foot">체험 기간에는 <b>레퍼런스 랭킹</b>과 <b>영상 즐겨찾기</b>를 자유롭게 쓰실 수 있어요.
-     마음에 드는 영상을 미리 담아두시면, 이용권을 시작할 때 그대로 이어서 만들 수 있습니다.</p>
-</div>
+  document.addEventListener('DOMContentLoaded', function(){
+    deaden();
+    showPanel(0);
+  });
+})();
+</script>
 """
+
+_FREEZE_CSS = """
+<style>
+/* 얼린 샘플 전용 — 원본 스타일은 손대지 않고 위에 얹기만 한다. */
+  .ss-bar{position:sticky;top:0;z-index:60;background:linear-gradient(90deg,rgba(62,224,191,.16),rgba(62,224,191,.04));
+    border-bottom:1px solid rgba(62,224,191,.45);padding:10px 16px;font-size:14px;color:#dff5ef}
+  .ss-bar b{color:#3ee0bf}
+  .ss-note{display:flex;gap:10px;background:rgba(62,224,191,.10);border:1px solid rgba(62,224,191,.35);
+    border-left:4px solid #3ee0bf;border-radius:0 10px 10px 0;padding:12px 15px;margin:0 0 16px;
+    font-size:14px;line-height:1.65;color:#d5e8e3}
+  .ss-note b{color:#fff}
+  .ss-note-pin{flex:0 0 auto;font-size:16px}
+  #ssTip{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(14px);
+    background:#111a27;border:1px solid #3ee0bf66;color:#dff5ef;padding:10px 18px;border-radius:10px;
+    font-size:13.5px;opacity:0;pointer-events:none;transition:.22s;z-index:200}
+  #ssTip.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  /* 얼린 페이지에서 의미 없는 조작 버튼은 눌리지 않는 느낌으로 */
+  .panel button,.panel .btn{cursor:default!important}
+</style>
+"""
+
+
+# 사이드바는 원래 sidebar.js가 그리는데 그 스크립트를 걷어냈으므로(=거기 있던 API 호출도
+# 함께 사라진다), 같은 메뉴를 **정적 마크업**으로 다시 넣는다. 관리자 전용 항목
+# (역대 히트작·레퍼런스 채널 관리)은 체험 사용자에게 보일 이유가 없어 뺐다.
+# 링크는 실제로 쓸 수 있는 두 곳(랭킹·즐겨찾기)만 살리고 나머지는 🔒 표시만 한다.
+_SIDEBAR = """
+<style>
+  .ss-side{position:fixed;left:0;top:0;bottom:0;width:196px;background:#0d1220;
+    border-right:1px solid #1e2635;padding:16px 12px;overflow-y:auto;z-index:50}
+  .ss-side .brand{font-size:16px;font-weight:800;color:#3ee0bf;margin:0 0 12px;padding:0 4px}
+  .ss-side .grp{font-size:11px;color:#5f6a7d;font-weight:800;margin:14px 4px 6px}
+  .ss-side a,.ss-side span.it{display:flex;align-items:center;gap:8px;padding:8px 10px;
+    border-radius:8px;font-size:13.5px;color:#c3ccdb;text-decoration:none;margin-bottom:2px}
+  .ss-side a:hover{background:#151d2c}
+  .ss-side .on{background:#12352e;color:#3ee0bf;font-weight:800}
+  .ss-side .lock{margin-left:auto;font-size:10px;color:#5f6a7d}
+  .ss-acct{border:1px solid #1e2635;border-radius:10px;padding:9px 11px;margin-bottom:4px}
+  .ss-acct b{font-size:13px}
+  .ss-acct .tag{display:inline-block;background:#3ee0bf22;color:#3ee0bf;font-size:10px;
+    font-weight:800;padding:1px 7px;border-radius:20px;margin-left:5px}
+  .ss-acct .sub{font-size:11px;color:#6f7a8d;margin-top:3px}
+  body{padding-left:196px}
+  @media(max-width:900px){ .ss-side{display:none} body{padding-left:0} }
+</style>
+<aside class="ss-side">
+  <p class="brand">&#128736; 숏템메이커</p>
+  <div class="ss-acct"><b>체험 중</b><span class="tag">미리보기</span>
+    <div class="sub">랭킹 · 즐겨찾기 이용 가능</div></div>
+  <div class="grp">리서치</div>
+  <a href="/">&#128202; 레퍼런스 랭킹</a>
+  <a href="/">&#11088; 영상 즐겨찾기</a>
+  <span class="it">&#128270; 신규채널 픽업<span class="lock">&#128274;</span></span>
+  <span class="it">&#127902; 장면 라이브러리<span class="lock">&#128274;</span></span>
+  <div class="grp">제작</div>
+  <span class="it on">&#127916; 숏템 제작소</span>
+  <div class="grp">소통</div>
+  <span class="it">&#128172; 인스타 소통공간<span class="lock">&#128274;</span></span>
+</aside>
+"""
+
+
+def _thumb(url):
+    return ("/api/thumb?url=" + quote(url, safe="")) if url else ""
+
+
+def _check_mapping(src_text):
+    """원본의 ORB_TO_PANEL·STEP_LABELS와 이 파일의 상수가 같은지 대조한다.
+    어긋나면 단계가 엉뚱한 패널을 열게 되므로 **빌드를 멈춘다**(조용한 오작동 방지)."""
+    m = re.search(r"const ORB_TO_PANEL\s*=\s*\[([^\]]+)\]", src_text)
+    if m:
+        got = [int(x) for x in re.findall(r"\d+", m.group(1))]
+        if got != _ORB_TO_PANEL:
+            raise SystemExit(f"★ORB_TO_PANEL이 원본과 다르다: 원본={got} / 여기={_ORB_TO_PANEL}\n"
+                             f"  tools/build_produce_intro.py의 _ORB_TO_PANEL을 원본에 맞춰라.")
+    m = re.search(r'const STEP_LABELS\s*=\s*\[([^\]]+)\]', src_text)
+    if m:
+        got = re.findall(r'"([^"]+)"', m.group(1))
+        if got and got != _STEP_LABELS:
+            raise SystemExit(f"★STEP_LABELS가 원본과 다르다: 원본={got}\n  _STEP_LABELS를 맞춰라.")
+
+
+def _strip_scripts(t):
+    """<script>…</script>를 전부 제거(외부 src 포함). 이게 API 차단의 핵심이다."""
+    t = re.sub(r"<script\b[^>]*>.*?</script>", "", t, flags=re.S | re.I)
+    t = re.sub(r"<script\b[^>]*/?>", "", t, flags=re.I)
+    return t
+
+
+def _strip_handlers(t):
+    """인라인 이벤트 핸들러(onclick/onchange/…)를 속성째 제거."""
+    return re.sub(r"\son[a-z]+\s*=\s*(\"[^\"]*\"|'[^']*'|[^\s>]+)", "", t, flags=re.I)
+
+
+def _strip_comments(t):
+    """HTML 주석 제거. 두 가지 이유가 있다:
+      ① 원본 주석엔 내부 설계 메모·엔드포인트 이름(GET /api/produce/works 등)이 적혀 있다 —
+         체험 사용자에게 보일 이유가 없다.
+      ② 그 문자열 때문에 '이 페이지에 /api/produce가 없다'는 자가검증이 오탐한다.
+         (주석은 실행되지 않으니 위험은 아니지만, 검증을 무디게 만드는 게 더 나쁘다)"""
+    return re.sub(r"<!--.*?-->", "", t, flags=re.S)
+
+
+def _fill_sources(t, sample):
+    """1단계 '담은 영상' 칸에 실제 썸네일을 채운다(빈 화면이면 설명이 안 되니까)."""
+    thumbs = [x for x in (sample.get("sources_thumbs") or []) if x]
+    if not thumbs:
+        return t
+    cards = []
+    for i, u in enumerate(thumbs[:5]):
+        badge = ('<span class="ss-pick">AI PICK</span>' if i == 0
+                 else '<span class="ss-chk">✓</span>')
+        cards.append(
+            f'<div class="ss-vcard">{badge}'
+            f'<img src="{html.escape(_thumb(u))}" loading="lazy" alt="담은 영상 {i+1}">'
+            f'<span class="ss-play">▶</span></div>')
+    block = (
+        '<style>'
+        '.ss-vwrap{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 4px}'
+        '.ss-vcard{position:relative;width:118px;height:157px;border-radius:10px;overflow:hidden;'
+        'background:#141b2a;border:1px solid #1e2635;flex:0 0 auto}'
+        '.ss-vcard img{width:100%;height:100%;object-fit:cover;display:block}'
+        '.ss-play{position:absolute;inset:0;margin:auto;width:32px;height:32px;background:rgba(0,0,0,.5);'
+        'border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px}'
+        '.ss-pick{position:absolute;top:6px;left:6px;z-index:2;background:#f5b53f;color:#3a2800;'
+        'font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:4px}'
+        '.ss-chk{position:absolute;top:6px;right:6px;z-index:2;background:#3ee0bf;color:#063;'
+        'width:17px;height:17px;border-radius:50%;font-size:10px;font-weight:800;display:flex;'
+        'align-items:center;justify-content:center}'
+        '</style>'
+        f'<div class="ss-vwrap">{"".join(cards)}</div>'
+        '<div style="font-size:12px;color:#8b95a8;margin-bottom:6px">🎞 담은 영상 '
+        f'{len(thumbs)}개 · 화면 {len(thumbs)}개 담김 (믹스)</div>')
+    # 1단계 패널(data-step="0") 안쪽 맨 앞에 끼워 넣는다.
+    return t.replace('<section class="panel" data-step="0">',
+                     '<section class="panel" data-step="0">' + block, 1)
+
+
+def build(src_text, sample):
+    _check_mapping(src_text)
+    t = _strip_scripts(src_text)
+    t = _strip_handlers(t)
+    t = _strip_comments(t)
+    t = _fill_sources(t, sample)
+
+    # 오브 바를 우리 것으로 갈아끼운다(원본은 JS가 그렸는데 그 JS를 걷어냈으므로).
+    t = re.sub(r'<div[^>]*id="steps"[^>]*>.*?</div>',
+               '<div id="ssTop"></div><div class="orbbar" id="ssOrbs"></div>',
+               t, count=1, flags=re.S)
+    if 'id="ssOrbs"' not in t:      # id="steps"를 못 찾았을 때의 안전망
+        t = t.replace('<section class="panel"',
+                      '<div id="ssTop"></div><div class="orbbar" id="ssOrbs"></div>'
+                      '<section class="panel"', 1)
+
+    banner = (
+        '<div class="ss-bar">👀 <b>미리보기입니다.</b> 실제로 만들어진 영상 한 편이 '
+        '어떻게 만들어졌는지 <b>화면 그대로</b> 보여드립니다. '
+        '위 <b>단계를 눌러</b> 1~9단계를 둘러보세요 — <b>고치거나 새로 만들 수는 없습니다.</b> '
+        '<a href="/pricing" style="color:#3ee0bf;font-weight:800">이용권 보기 →</a></div>')
+    tip = '<div id="ssTip">🔒 미리보기라 눌러도 동작하지 않아요. 이용권을 시작하면 열립니다.</div>'
+
+    t = t.replace("</head>", _FREEZE_CSS + "</head>", 1) if "</head>" in t else _FREEZE_CSS + t
+    js = _FREEZE_JS % {
+        "orb_to_panel": json.dumps(_ORB_TO_PANEL),
+        "step_labels": json.dumps(_STEP_LABELS, ensure_ascii=False),
+        "notes": json.dumps(_NOTES, ensure_ascii=False),
+    }
+    if "<body" in t:
+        t = re.sub(r"(<body[^>]*>)",
+                   lambda m: m.group(1) + _SIDEBAR + banner, t, count=1)
+    else:
+        t = _SIDEBAR + banner + t
+    t = t.replace("</body>", tip + js + "</body>", 1) if "</body>" in t else t + tip + js
+    t = t.replace("<title>", "<title>미리보기 · ", 1)
+    return t
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--json", help="produce_works에서 뽑은 샘플 JSON(없으면 내장 기본값)")
+    ap.add_argument("--json", help="produce_works에서 뽑은 샘플 JSON")
+    ap.add_argument("--src", default=str(SRC))
     ap.add_argument("--out", default=str(OUT))
     a = ap.parse_args()
 
     sample = dict(_SAMPLE)
     if a.json:
         raw = json.loads(pathlib.Path(a.json).read_text(encoding="utf-8"))
-        # 실제 작업 JSON → 이 생성기가 쓰는 모양으로 옮긴다(있는 것만 덮어쓴다).
-        if raw.get("sources"):
-            sample["sources"] = raw["sources"]
-        if raw.get("scene_points"):
-            sample["scene_points"] = raw["scene_points"]
-        if raw.get("styles"):
-            sample["styles"] = raw["styles"]
-        drafts = raw.get("drafts") or []
-        if drafts and drafts[0].get("beats"):
-            labels = {"hook": "훅", "before": "문제", "reveal": "등장",
-                      "after": "결과", "cta": "행동유도"}
-            sample["beats"] = [
-                {"role": b.get("role", ""), "label": labels.get(b.get("role", ""), b.get("role", "")),
-                 "sec": b.get("sec", 0), "text": b.get("text", "")}
-                for b in drafts[0]["beats"]]
         sample["sources_thumbs"] = [h.get("thumbnail") for h in (raw.get("handoff") or [])
                                     if h.get("thumbnail")]
 
+    src_text = pathlib.Path(a.src).read_text(encoding="utf-8")
     out = pathlib.Path(a.out)
-    out.write_text(build(sample), encoding="utf-8")
-    print(f"생성 완료: {out} ({out.stat().st_size:,} bytes)")
+    out.write_text(build(src_text, sample), encoding="utf-8")
     body = out.read_text(encoding="utf-8")
-    # 자가검증 — 이 페이지는 API를 하나도 부르면 안 된다(체험 등급은 전부 402라서).
-    for bad in ("fetch(", "XMLHttpRequest", "<script"):
-        assert bad not in body, f"★{bad} 가 들어있다 — 이 페이지는 정적이어야 한다"
-    print("자가검증 통과: script/fetch 0건")
+
+    # ── 자가검증: 이 페이지는 API를 부를 수 '없어야' 한다 ──
+    scripts = re.findall(r"<script\b[^>]*>", body, flags=re.I)
+    assert len(scripts) == 1, f"★<script>가 {len(scripts)}개다 — 얼린 스크립트 1개만 남아야 한다"
+    for bad in ("fetch(", "XMLHttpRequest", "onclick=", "onchange=", "/api/produce"):
+        assert bad not in body, f"★{bad} 가 남아 있다 — API가 나갈 수 있다"
+    assert 'id="ssOrbs"' in body, "★오브 바가 없다 — 단계 이동이 안 된다"
+    assert body.count('class="panel') >= 9, "★패널이 9개 미만이다"
+    print(f"생성 완료: {out} ({out.stat().st_size:,} bytes)")
+    print("자가검증 통과: script 1 (frozen only) / fetch,onclick,api 0 / "
+          f"panels {body.count(chr(34) + 'class=' + chr(34))and body.count('class=' + chr(34) + 'panel')} / notes {len(_NOTES)}")
 
 
 if __name__ == "__main__":

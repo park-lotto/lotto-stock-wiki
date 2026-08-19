@@ -102,16 +102,39 @@ def test_produce_shows_intro_for_free_user(tmp_path, monkeypatch):
     c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
     for path in ("/produce", "/produce.html"):
         body = _produce_body(c, path)
-        assert "이용권" in body                        # 소개 페이지다
-        assert "mixScriptPick" not in body            # 진짜 제작소 화면이 아니다
+        # ★판정 기준(2026-08-20 변경): 미리보기는 **진짜 화면을 얼린 복사본**이라
+        #   마크업이 원본과 같다. 그래서 'mixScriptPick 유무'로는 못 가른다
+        #   (예전 기준. 얼린 페이지에도 그 문자열이 그대로 들어 있다).
+        #   진짜로 지켜야 할 성질은 **미리보기 배너가 있고 실행 코드가 없다**는 것.
+        assert "ss-bar" in body                       # 미리보기 배너
+        assert "미리보기입니다" in body
+
+
+def test_frozen_preview_cannot_call_any_api(tmp_path, monkeypatch):
+    """★핵심 안전장치 — 미리보기 페이지는 API를 부를 '코드 자체'가 없어야 한다.
+
+    버튼을 하나씩 잠그는 방식이면 221개 중 하나만 빠뜨려도 과금이 샌다.
+    그래서 <script>를 통째로 걷어내는 방식을 썼고, 그게 유지되는지 여기서 지킨다."""
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("trial4", "pw12")
+    s.set_plan(cid, "free", full_access_until=0)      # ranking_only
+    c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
+    body = _produce_body(c, "/produce")
+    assert body.count("<script") == 1                 # 얼린 스크립트 1개만
+    assert "fetch(" not in body
+    assert "XMLHttpRequest" not in body
+    assert "onclick=" not in body
+    assert "/api/produce" not in body                 # 제작 API 주소가 아예 없다
+    assert body.count('class="panel') >= 9            # 9단계는 그대로 둘러볼 수 있다
 
 
 def test_produce_unchanged_for_paid_user(tmp_path, monkeypatch):
-    """★회귀 방지 — pro는 진짜 제작소 화면을 그대로 받는다."""
+    """★회귀 방지 — pro는 진짜 제작소 화면(살아 있는 것)을 그대로 받는다."""
     s = _setup(tmp_path, monkeypatch)
     cid = s.create_customer("pro2", "pw12")
     s.set_plan(cid, "pro")                            # full
     c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
     body = _produce_body(c, "/produce")
     assert "mixScriptPick" in body                    # 진짜 제작소 화면
-    assert "이용권 보기" not in body                    # 소개 페이지가 아니다
+    assert "ss-bar" not in body                       # 미리보기 배너가 없다
+    assert body.count("<script") > 1                  # 스크립트가 살아 있다(얼린 게 아니다)
