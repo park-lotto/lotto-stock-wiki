@@ -399,8 +399,16 @@
        두 번째 줄(70px 대기 카드만 있는 줄)에도 280px이 잡혀 **210px이 빈 채로 남았다**.
        align-items:stretch만으로도 **같은 줄 안에서는** 높이가 맞는다 — 사장님 기준
        "모서리 한 줄"은 지키면서 줄마다 제 높이를 갖는다. */
-    .srcGrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(304px,1fr));
+    /* ★가로 5개 고정(2026-08-19 사장님 "가로 5개가 들어갈수있게"). 종전 auto-fill+
+       minmax(304px)는 화면폭에 따라 4개만 들어갔다 — 담는 영상이 보통 5개라 마지막
+       하나가 늘 다음 줄로 떨어져 한눈에 안 들어왔다. 열 수를 직접 정하고, 좁은 화면
+       에서만 단계적으로 줄인다(카드가 뭉개지는 게 더 나쁘다). */
+    .srcGrid{display:grid;gap:12px;grid-template-columns:repeat(5,minmax(0,1fr));
       align-items:stretch}
+    @media(max-width:1500px){.srcGrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+    @media(max-width:1180px){.srcGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media(max-width:860px){.srcGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:580px){.srcGrid{grid-template-columns:1fr}}
     .srcCard{background:var(--inset);border:1px solid var(--line);border-radius:12px;
       padding:14px 18px;transition:border-color .15s;cursor:pointer;
       display:flex;flex-direction:column;min-width:0;overflow:hidden}
