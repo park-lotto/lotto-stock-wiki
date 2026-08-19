@@ -250,3 +250,55 @@ def test_ui_prefills_from_preset_but_keeps_manual():
     seg = HTML[HTML.index("function frPick"):HTML.index("function frUpdate")]
     assert "meta.demo_views" in seg, "고른 틀의 기본 조회수를 채워야 한다"
     assert "old.views" in seg, "이미 적어둔 값은 그대로 둬야 한다"
+
+
+# ── 헤드카피가 틀에 안 가리고 글자가 안 뭉개진다 (2026-08-20 "고정문구가 이상하다") ──
+def test_headcopy_clears_the_whole_frame_not_just_the_bar():
+    """★띠만 피하면 안 된다 — 띠 아래 **흰 제목블록**까지 피해야 한다.
+
+    실측 사고: 띠(182px)만 피해 y=16%로 뒀더니 제목블록에 가려 글자 아랫부분만 나왔다.
+    ★y는 글자 블록의 **한가운데**다(미리보기가 translate(-50%,-50%)) — 블록 절반만큼
+      더 내려야 첫 줄이 온전히 보인다. 크기는 720폭 기준이라 1920으로 환산해야 한다.
+    """
+    for k, v in NEW.items():
+        im = df.render({"preset": k, "channel": v["name"],
+                        "title": "네일샵 안가요 다이소 꿀템 발견",
+                        "views": "264만", "comments": "587"})
+        x, floor = df.W // 2, 0
+        for y in range(df.H):
+            if im.getpixel((x, y))[3] > 0:
+                floor = y
+            elif floor and y > floor + 40:
+                break
+        hc = v["headcopy"]
+        block = hc["size"] * (df.H / 720) * 1.18 * 2      # 2줄 블록 높이
+        top = hc["y"] / 100 * df.H - block / 2            # 첫 줄 윗변
+        assert top >= floor, (
+            f"{k}: 헤드카피 첫 줄(y={hc['y']}%, 윗변 {top:.0f}px)이 "
+            f"틀 바닥({floor}px)에 가린다")
+
+
+def test_outline_is_thin_enough_to_read():
+    """★외곽선이 글자 크기의 10%를 넘으면 획 사이가 메워져 글자가 뭉개진다.
+    (실측: 90px 글자에 12 = 13.3% → 화면이 새까맣게 뭉갬)"""
+    for k, v in NEW.items():
+        hc = v["headcopy"]
+        ratio = hc["outline_w"] / hc["size"] * 100
+        assert ratio <= 10, f"{k}: 외곽선이 {ratio:.1f}%로 너무 두껍다(10% 이하)"
+
+
+def test_preview_draws_real_stroke_not_shadow():
+    """★text-shadow 4방향은 진짜 테두리가 아니다 — 두꺼워지면 검은 사본이 글자 위로
+    올라와 통째로 메운다. paint-order:stroke fill은 테두리를 글자 뒤에 그린다."""
+    seg = HTML[HTML.index("function updateHC"):]
+    seg = seg[:seg.index("function updateCaption")] if "function updateCaption" in seg else seg[:20000]
+    assert "paintOrder" in seg, "진짜 테두리(paint-order: stroke fill)로 그려야 한다"
+    assert "webkitTextStrokeWidth" in seg
+
+
+def test_position_is_remembered_across_templates():
+    """★자리를 옮겼으면 틀을 바꿔도 그 자리를 지킨다(맨 위로 튀면 안 된다)."""
+    assert "HC_Y_TOUCHED" in HTML
+    seg = HTML[HTML.index("function applyHeadcopySet"):HTML.index("function alignHC")]
+    assert "if(!HC_Y_TOUCHED)" in seg.replace(" ", "") or "!HC_Y_TOUCHED" in seg, (
+        "만진 적 있으면 y를 덮어쓰면 안 된다")

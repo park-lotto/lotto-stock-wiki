@@ -52,7 +52,10 @@ ICON = {
     "북마크": "bookmark", "bookmark": "bookmark", "🔖": "bookmark", "저장": "bookmark",
     "없음": "none", "none": "none", "": "none", None: "none",
 }
-THICK = {"얇음": 4, "보통": 8, "두꺼움": 12}
+# ★두께는 슬라이더 값이 아니라 **글자 크기 대비 비율**로 봐야 한다.
+#   실측 사고(2026-08-20): 두꺼움=12를 90px 글자에 주니 13%라 획 사이가 메워졌다.
+#   실제 채널은 5~8% 선이다 — 기존에 잘 돌던 프리셋(HC_PRESETS)도 그 범위.
+THICK = {"얇음": 3, "보통": 5, "두꺼움": 7}
 
 
 def _hex(v, fallback):
@@ -134,9 +137,26 @@ def build(rows):
             hl_y = int(round(float(hl_y)))
         except (TypeError, ValueError):
             hl_y = int(bar_h / H * 100) + 6
-        # ★글자가 띠에 먹히면 안 된다 — 띠 아래로 민다(원본도 그렇게 돼 있다)
-        hl_y = max(hl_y, int(bar_h / H * 100) + 1)
-        hl_y = max(0, min(100, hl_y))
+        # ★글자가 **틀 전체** 아래로 내려와야 한다 — 띠만 피하면 안 된다.
+        #   실측 사고(2026-08-20): 띠(182px)만 피해 y=16%로 뒀더니, 띠 아래 붙는
+        #   **흰 제목블록**(제목 2줄+조회수+밑줄 ≈ 300px)에 헤드라인이 통째로 가려져
+        #   글자 아랫부분만 삐져나왔다. 제목블록 높이까지 더해서 그 아래로 민다.
+        # ★흰 제목블록은 **제목이 있으면 무조건 그려진다**(render()는 title/views/comments
+        #   중 하나만 있어도 그린다). has_head가 False인 채널도 화면에서 제목을 채우면
+        #   블록이 생기므로, 자리 계산은 **항상 블록이 있다고 보고** 해야 한다.
+        #   (실측 사고: has_head=False인 3곳만 첫 줄이 계속 잘렸다)
+        # 흰 블록 = 위여백36 + 제목 2줄(78×2) + 메타52 + 아래여백24 ≈ 246px
+        # (render()의 block_h 계산과 같은 근거 — 여기서만 어림하면 어긋난다)
+        head_px = 36 + 78 * 2 + 52 + 24
+        floor_px = bar_h + head_px
+        # ★y는 글자 블록의 **한가운데**다(미리보기가 translate(-50%,-50%)로 앉힌다).
+        #   틀 바닥에 y를 맞추면 위쪽 절반이 가려진다 — 블록 높이의 **절반만큼 더** 내린다.
+        #   ★크기(hc_size)는 720폭 기준이므로 1920 화면으로 환산해야 한다.
+        #     이 환산을 빠뜨려 처음엔 20종이 전부 첫 줄이 잘렸다(실측으로 잡음).
+        size_1920 = _font_for(r.get("hl_size")) * (H / 720)
+        half_block = size_1920 * 1.18            # 2줄 블록의 절반 = 1줄 높이
+        hl_y = max(hl_y, round((floor_px + half_block) / H * 100) + 1)
+        hl_y = max(0, min(88, hl_y))              # 너무 내려가면 화면 밖
         c1 = _hex(r.get("hl_c1"), "#FFFFFF")
         c2 = _hex(r.get("hl_c2"), c1)
         # ★2줄이 1줄과 같은 색이면 '흰색+형광' 대비가 사라진다. 실측에서 같은 색이
@@ -158,7 +178,11 @@ def build(rows):
             "hc_c1": c1, "hc_c2": c2,
             "hc_out": _visible(c1, _hex(r.get("hl_outline"), "#000000"),
                                bool(r.get("hl_box"))),
-            "hc_out_w": THICK.get(r.get("hl_thick"), 8),
+            # ★두께는 글자 크기에 비례해야 한다 — 작은 글자에 고정 두께를 주면
+            #   비율이 커져 획이 메워진다(실측: 63px 글자에 8이면 12.7%).
+            #   상한 9%로 자른다.
+            "hc_out_w": min(THICK.get(r.get("hl_thick"), 5),
+                            max(2, round(_font_for(r.get("hl_size")) * 0.09))),
             "hc_y": hl_y,
             "hc_box": bool(r.get("hl_box")),
             "hc_box_color": _hex(r.get("hl_box_color"), "#FFFFFF"),
