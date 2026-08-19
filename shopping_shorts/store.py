@@ -3545,7 +3545,8 @@ class Store:
             return cur.lastrowid
 
     def set_spine_style(self, spine_id, beat_roles=None, templates=None, chars_per_30s=None,
-                        voice=None, no_cta=None, hook_3s=None, hook_conceal=None):
+                        voice=None, no_cta=None, hook_3s=None, hook_conceal=None,
+                        fit_categories=None):
         """스파인에 **기계가 검사할** 스타일 정보를 붙인다(2026-08-15).
 
         beat_roles = ["hook","before",...] · templates = {"hook":["...{가족}..."]} ·
@@ -3573,6 +3574,12 @@ class Store:
         if voice is not None:
             sets.append("voice_json=?")
             args.append(json.dumps(voice, ensure_ascii=False))
+        # ★적합 카테고리도 여기서 고칠 수 있어야 한다(2026-08-20). 예전엔 `add_spine`에서만
+        #   정해져서, 이미 심긴 행의 카테고리를 바로잡을 방법이 아예 없었다 —
+        #   잘못 심으면 시드를 다시 돌려도 영영 안 고쳐졌다.
+        if fit_categories is not None:
+            sets.append("fit_categories_json=?")
+            args.append(json.dumps(fit_categories, ensure_ascii=False))
         if not sets:
             return
         sets.append("updated_at=?")
