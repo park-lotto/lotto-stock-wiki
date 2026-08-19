@@ -44,3 +44,26 @@ def test_확정대본이_없으면_아무것도_안_한다():
 
 def test_문장분리():
     assert len(script_sentences("가나다. 라마바! 사아자?")) == 3
+
+
+def test_되돌린_비트는_옛_음성을_버린다():
+    """2026-08-19 실사고(잡 c5249702331d beat2): 대본만 되돌리고 mp3를 남겨서
+    화면 대본과 소리가 어긋났다 — 미리보기가 409로 막혀 '음성이 없다'로 보였다."""
+    beats = [
+        {"role": "problem", "narration": "둥근 글씨를 정성스럽게 써 내려갑니다",
+         "tts_path": "/w/tts/beat_0_b78d7c7f5f.mp3",
+         "caption_lines": ["옛", "자막"], "cap_durs": [1.0, 2.0], "cap_lead": 0.4},
+    ]
+    out, n = enforce_scripted_narration(beats, SCRIPT)
+    assert n == 1
+    assert out[0].get("narration_restored") is True
+    assert "tts_path" not in out[0], "되돌렸는데 옛 음성이 남았다"
+    assert out[0]["caption_lines"] is None and out[0]["cap_durs"] is None
+    assert out[0]["cap_lead"] == 0.0
+
+
+def test_대본을_지킨_비트의_음성은_건드리지_않는다():
+    beats = [{"role": "problem", "narration": "원래는 터치로만 게임을 하니까 조작감도 너무 밋밋하고,",
+              "tts_path": "/w/tts/beat_0_aaaaaaaaaa.mp3"}]
+    out, n = enforce_scripted_narration(beats, SCRIPT)
+    assert n == 0 and out[0]["tts_path"] == "/w/tts/beat_0_aaaaaaaaaa.mp3"

@@ -5045,5 +5045,34 @@ def enforce_scripted_narration(beats, given_script):
             continue
         beats[i]["narration"] = missing.pop(0)
         beats[i]["narration_restored"] = True
+        _drop_stale_tts(beats[i])
         fixed += 1
     return beats, fixed
+
+
+def _drop_stale_tts(beat):
+    """되돌린 비트의 **옛 음성을 버린다**(2026-08-19 실사고 — 잡 c5249702331d beat2).
+
+    ★왜: 위에서 창작 문장을 대본 문장으로 되돌리는데 **음성은 그대로 뒀다.** 그래서
+      대본은 '집중 하려고 하면 옆에서 들리는 소음이…'인데 mp3는 EDL이 지어낸 장면설명
+      말투('둥근 글씨를 정성스럽게 써 내려갑니다…', primary.scene_desc 파생)를 읽고 있었다.
+      tts_matches_narration이 이걸 잡아 409를 주니 사장님 화면에선 **소리가 아예 안 났다**
+      — 사장님은 대본을 건드린 적이 없는데 "음성 만들기"를 눌러야 했다.
+      즉 교정 장치가 대본만 고치고 음성을 안 고쳐서, 고치는 쪽이 새 고장을 만들었다.
+
+    ★왜 여기인가: 되돌리는 **바로 그 자리**다. 호출부(store 저장 출구)에 적으면 되돌림과
+      무효화가 두 곳으로 갈라져 언젠가 어긋난다(0순위-B). 되돌림 = 음성 폐기는 한 몸이다.
+
+    tts_path를 지우면 하류가 알아서 복구한다 — _synthesize_beats(skip_existing=True)는
+    tts_path가 없는 비트를 그 자리에서 합성하고, 미리보기 GET은 409가 아니라 404를 준다
+    (409는 '옛 소리가 있다', 404는 '아직 없다' — 뒤쪽이 사실이다).
+    자막 메타는 옛 대본 기준이라 같이 버린다(mix_pipeline.invalidate_caption_meta와 같은 판단).
+    지연 import는 순환(mix_pipeline → edit_plan)을 피하기 위한 것이다."""
+    beat.pop("tts_path", None)
+    try:
+        from shopping_shorts import mix_pipeline as _mp
+        _mp.invalidate_caption_meta(beat)
+    except Exception:      # noqa: BLE001 — 메타 정리 실패가 대본 교정을 막으면 안 된다
+        beat["caption_lines"] = None
+        beat["cap_durs"] = None
+        beat["cap_lead"] = 0.0
