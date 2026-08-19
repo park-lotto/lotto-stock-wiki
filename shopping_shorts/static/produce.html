@@ -532,6 +532,32 @@
       background:var(--accent);color:#04201b;display:flex;align-items:center;justify-content:center;
       font-size:11px;font-weight:900}
     .pool-ghost{aspect-ratio:4/5;border-radius:8px;border:2px dashed var(--line);opacity:.4}
+    /* ★지표 띠(2026-08-20 사장님 "팔로워 댓글 조회수 썸네일에").
+       어떤 영상을 고를지 판단하려면 숫자가 카드에 보여야 한다 — 예전엔 썸네일뿐이라
+       사장님이 하나씩 눌러봐야 알 수 있었다.
+       ★썸네일 **위에 얹는다**(카드를 안 키운다). 밑에 붙이면 카드가 커져 한 줄에
+       5개가 안 들어간다(사장님이 정한 5열 배치가 깨진다).
+       아래쪽 그라데이션 위에 흰 글씨 — 어떤 썸네일 위에서도 읽힌다. */
+    .pool-stat{position:absolute;left:0;right:0;bottom:0;display:flex;gap:6px;
+      justify-content:center;flex-wrap:wrap;padding:12px 4px 4px;pointer-events:none;
+      font-size:10.5px;font-weight:800;color:#fff;line-height:1.2;
+      background:linear-gradient(transparent,rgba(0,0,0,.82))}
+    .pool-stat i{font-style:normal;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.9)}
+    /* 캡션·대본 — 카드 아래 접어둔다. 펴야만 자리를 먹으므로 5열이 안 깨진다. */
+    .pool-more{margin-top:4px}
+    .pool-more>summary{cursor:pointer;font-size:11px;color:var(--sub);list-style:none;
+      padding:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pool-more>summary::-webkit-details-marker{display:none}
+    .pool-more[open]>summary{color:var(--txt)}
+    .pool-more .pm-body{font-size:11.5px;line-height:1.55;color:var(--txt);opacity:.9;
+      background:var(--inset);border:1px solid var(--line);border-radius:8px;
+      padding:8px 10px;margin-top:4px;max-height:220px;overflow:auto;white-space:pre-wrap;
+      word-break:break-word}
+    .pool-more .pm-k{display:block;font-size:10px;font-weight:800;color:var(--sub);
+      margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em}
+    .pool-more .pm-k:first-child{margin-top:0}
+    /* 카드+접힌 정보를 한 칸으로 묶는다(그리드 칸이 카드 하나를 통째로 잡게) */
+    .pool-cell{display:flex;flex-direction:column;min-width:0}
     .tiles{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
     .skm-card.empty{text-align:center;padding:26px 18px}
     .skm-card.empty h2{font-size:15px;line-height:1.5;margin:0 0 16px;color:var(--txt);font-weight:800}
@@ -4679,6 +4705,42 @@ function _recommendedBbIdx(){
 // 자동 ON) — 어떤 카드가 지금 픽인지 금색 뱃지(.pick/.pickbadge)로 보인다. 빼기는 우상단
 // ✕(hover) = dropFootage. toggleFootage/designateBackbone은 옛 경로로 남겨둔다(현재 호출부
 // 없음 — 테스트·향후 재사용 대비 휴면 유지, collectBackboneIndex는 여전히 라이브 배선).
+// ★썸네일 위 지표 3종(2026-08-20 사장님 "팔로워 댓글 조회수 썸네일에").
+//   어떤 영상을 고를지는 숫자로 정한다 — 예전엔 썸네일뿐이라 하나씩 눌러봐야 알았다.
+//   ⚠️ 없는 값은 **줄을 아예 안 그린다**(0을 쓰면 "댓글 0개"가 사실처럼 보인다).
+//     조회수는 인스타 6,364건·유튜브 1,394건이 DB에 있지만 전부는 아니다(실측 2026-08-20).
+function _poolStat(it){
+  if(!it) return '';
+  const p=[];
+  if(it.views)     p.push(`<i title="조회수">👁 ${fmtNum(it.views)}</i>`);
+  if(it.comments)  p.push(`<i title="댓글">💬 ${fmtNum(it.comments)}</i>`);
+  if(it.followers) p.push(`<i title="팔로워">👥 ${fmtNum(it.followers)}</i>`);
+  return p.length ? `<div class="pool-stat">${p.join('')}</div>` : '';
+}
+// 캡션·분석을 **접어서** 둔다 — 펴야만 자리를 먹으므로 5열 배치가 안 깨진다.
+// 분석(_SRC_BRIEF)은 1단계가 이미 받아둔 값이라 여기서 새로 부르지 않는다(요금 0).
+function _poolMore(it, i){
+  const cap=(it.caption||'').trim();
+  // ★`_SRC_BRIEF`는 이 함수보다 **아래**에서 const로 선언된다 → 초기화 전에 읽으면
+  //   TDZ ReferenceError로 renderPool이 통째로 죽고 **화면이 백지**가 된다(실측 사고 있음:
+  //   reference_render죽으면_전화면공백). 문법은 유효해 node --check도 통과한다.
+  //   호출 시점상 지금은 안전하지만, 순서가 바뀌어도 안 죽게 typeof로 막는다.
+  const b=((typeof _SRC_BRIEF!=='undefined' && _SRC_BRIEF[it.shortcode])||{});
+  const br=(b.ok && b.brief) ? b.brief : null;
+  const parts=[];
+  if(br){
+    if(br.product) parts.push(`<span class="pm-k">제품</span>${esc(br.product)}`);
+    const core=br.core||br.summary;
+    if(core) parts.push(`<span class="pm-k">무엇을 보여주나</span>${esc(core)}`);
+  }
+  if(cap) parts.push(`<span class="pm-k">캡션</span>${esc(cap)}`);
+  if(!parts.length) return '';
+  // 요약 한 줄엔 캡션 앞머리를 보여준다 — 펴기 전에도 어떤 영상인지 짐작이 간다.
+  const head=esc((br&&br.product) || cap.replace(/\s+/g,' ').slice(0,40) || '내용 보기');
+  return `<details class="pool-more" onclick="event.stopPropagation()">`
+    + `<summary title="눌러서 펴기">▾ ${head}</summary>`
+    + `<div class="pm-body">${parts.join('')}</div></details>`;
+}
 function renderPool(){
   const box=document.getElementById('poolList'); if(!box) return;
   const empty=document.getElementById('poolEmpty');
@@ -4703,11 +4765,15 @@ function renderPool(){
     //   <img>가 <video>로 **교체**돼 그 칸에서 바로 돈다(오버레이 아님 — 화면을 안 떠난다).
     //   카드 본체 클릭은 종전대로 pickFootage(메인 지정) — 배지만 stopPropagation.
     const canPlay = _poolCanPlay(it);
-    return `<div class="pool-card${it.useFootage?' on':''}${isPick?' pick':''}" onclick="pickFootage(${i})" title="${esc(it.name||('영상 '+(i+1)))}">`
+    return `<div class="pool-cell">`
+      + `<div class="pool-card${it.useFootage?' on':''}${isPick?' pick':''}" onclick="pickFootage(${i})" title="${esc(it.name||('영상 '+(i+1)))}">`
       + (it.thumbnail?`<img src="${it.thumbnail.includes('gstatic.com')?it.thumbnail:('/api/thumb?url='+encodeURIComponent(it.thumbnail))}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">`:'')
       + (canPlay?`<span class="pool-play" title="미리보기 재생" onclick="event.stopPropagation();poolPlay(this,${i})">▶</span>`:'')
       + (isPick?'<span class="pickbadge">🤖 AI PICK</span>':'<span class="badge">'+(it.useFootage?'✓':'')+'</span>')
       + `<button class="pool-x" title="빼기" onclick="event.stopPropagation();dropFootage(${i})">✕</button>`
+      + _poolStat(it)
+      + `</div>`
+      + _poolMore(it, i)
       + `</div>`;
   }).join('');
 }
@@ -5178,8 +5244,11 @@ function renderAutoloadingState(total){
 // 조회수·댓글 등 큰 숫자를 "240만"/"1.2억" 식으로 축약(v6 목업 표기와 동일).
 function fmtNum(n){ n=Number(n)||0; if(n>=1e8) return (n/1e8).toFixed(n%1e8?1:0)+'억'; if(n>=1e4) return (n/1e4).toFixed(n%1e4>=1000?1:0)+'만'; return n.toLocaleString(); }
 // AI PICK 카드 — build_aipick(aipick.py) 응답을 그대로 카드로 옮긴다.
-// ⚠️ views/views_x_followers는 저장소에 조회수 자체가 없어 항상 null(app.py 주석 확인) —
-// null인 타일은 아예 렌더하지 않는다("null배" 노출 금지). structure.segments가 비면([])
+// ⚠️ views는 **이제 값이 온다**(2026-08-20). 예전 주석은 "저장소에 조회수가 없어 항상 null"
+//    이었는데 실측해보니 틀렸다 — DB에 인스타 6,364건·유튜브 1,394건이 있었고, 서버가
+//    `views: None`을 하드코딩해 안 실어 보낸 것뿐이었다(store.latest_views로 고침).
+//    그래도 전부는 아니므로 null인 타일은 렌더하지 않는다("null배" 노출 금지).
+//    structure.segments가 비면([])
 // 스트립 없이 우아하게 넘어간다.
 // candidate.video_id → HANDOFF 인덱스(=pickFootage 인자). video_id는 shortcode와 같다
 // (renderPool의 pick 매칭도 it.shortcode===pick_id로 판별 — 같은 키 체계).
@@ -9430,7 +9499,11 @@ function s2RenderSeeds(){
   S2.seeds=[];
   if(d && d.pick_id){
     const pm=d.pick_meta||{};
-    S2.seeds.push({shortcode:d.pick_id, title:pm.title||'선택 영상', thumb:pm.thumbnail||'',
+    // ★이름은 `name`이다 — 서버가 실어 보내는 필드가 그것이다(app.py pick_meta).
+    //   예전엔 없는 필드 `title`을 읽어서, 이름이 빈 채로 캡션(해시태그·쿠팡 고지 범벅)이
+    //   그 자리를 차지했다 → 카드가 글로 꽉 차 **썸네일이 눌리고 설명이 이상**했다
+    //   (2026-08-20 사장님 제보 "여긴 왜 썸네일도 작아지고 설명도 이상하다").
+    S2.seeds.push({shortcode:d.pick_id, title:pm.name||pm.title||'선택 영상', thumb:pm.thumbnail||'',
       category:pm.category||'', followers:pm.followers, text:d.pick_text||'',
       structure:d.structure||{}, tiles:d.tiles||{}, pick:true});
   }
