@@ -10092,6 +10092,11 @@ def api_produce_frame_presets():
             "presets": [{"id": k, "name": v["name"], "bar": v["bar"],
                          "ref": v.get("ref", ""),
                          "bar_h": v.get("bar_h"),
+                         # ★고르면 바로 '완성된 그림'이 되게 기본 세팅까지 준다
+                         #   (2026-08-20 사장님: "세팅을 미리 해주고 거기서 수정하게")
+                         "has_head": v.get("has_head"),
+                         "demo_views": v.get("demo_views"),
+                         "demo_comments": v.get("demo_comments"),
                          "headcopy": v.get("headcopy")}
                         for k, v in deco_frame.PRESETS.items()],
             "defaults": deco_frame.DEFAULTS}

@@ -1483,8 +1483,11 @@
                   <div id="frPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"></div>
                   <div id="frFields" style="display:none">
                     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px">
-                      <label>채널명 <input id="frChannel" oninput="frUpdate()" placeholder="살림킹왕짱"
-                        style="width:130px;padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--txt)"></label>
+                      <!-- ★안내문은 고른 틀에 따라 바뀐다(2026-08-20). "살림킹왕짱"이 고정으로
+                           박혀 있어서, 럭키박스 틀을 골라도 살림킹왕짱이라 적혀 있어 "디자인이
+                           실제 채널이랑 안 맞는다"로 보였다. -->
+                      <label>채널명 <input id="frChannel" oninput="frUpdate()" placeholder="내 채널 이름"
+                        style="width:150px;padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--txt)"></label>
                       <label style="cursor:pointer"><input id="frAd" type="checkbox" onchange="frUpdate()"> [광고]</label>
                       <label style="cursor:pointer"><input id="frIcons" type="checkbox" checked onchange="frUpdate()"> ☰ 🔍</label>
                     </div>
@@ -2521,8 +2524,14 @@ function frPick(preset){
                : (meta.bar_h!=null ? meta.bar_h : 190);
     STATE.deco.template={span:span, frame:{preset:preset, bar_h:barH,
       bottom_h:old.bottom_h??0,
-      channel:old.channel||'', title:old.title||hc, views:old.views||'',
-      comments:old.comments||'', ad_badge:!!old.ad_badge, icons:old.icons!==false}};
+      // ★고르면 바로 '완성된 그림'이 되게 그 채널 세팅으로 채운다(2026-08-20 사장님:
+      //   "체널영상속 프리셋이랑 세팅을 미리 해주고 거기서 수정하게").
+      //   빈 채로 두면 흰 제목블록이 아예 안 그려져 위만 띠 하나 있고 아래가 텅 빈다.
+      //   ★사장님이 이미 적어둔 값(old)은 절대 안 덮는다 — 고쳐둔 게 날아가면 안 된다.
+      channel:old.channel||'', title:old.title||hc,
+      views:(old.views!=null&&old.views!=='')?old.views:(meta.has_head?(meta.demo_views||''):''),
+      comments:(old.comments!=null&&old.comments!=='')?old.comments:(meta.has_head?(meta.demo_comments||''):''),
+      ad_badge:!!old.ad_badge, icons:old.icons!==false}};
     // ★틀과 글자는 한 세트(사장님: "해드카피도 이 템플릿들과 맞춰서 한 세트로").
     //   값의 주인은 여전히 hcFont/hcSize/… 진짜 입력칸 하나 — 여기선 그 칸에 써넣고
     //   updateHC()가 돌게 한다(0순위-B). 새 값을 STATE.headcopy에 직접 넣지 않는다.
