@@ -47,6 +47,8 @@
    대본이 나온다(spine_fill.merge_sul 주석의 실측 사고).
 """
 
+import re
+
 SLOT_SOURCE = {
     # 인스타 다이소축 템플릿의 빈칸 ↔ 이 모듈이 뽑는 값. **이 표가 정본이다.**
     # 템플릿에 새 빈칸이 생기면 여기와 INSTA_SCHEMA에 같이 추가해야 한다(테스트가 강제).
@@ -111,6 +113,19 @@ INSTA_SCHEMA = {
 }
 
 _MAX_BODY = 4000
+
+# ★한자·가나가 섞인 값은 **버린다**(2026-08-19 실측).
+#   프롬프트에 "반드시 한국어로 옮겨 적어라"를 이미 넣었는데도 중국 영상 3편에서
+#   "물 고임을 방지하는 镂空(구멍 뚫린) 디자인" · "욕실瓶瓶罐罐"이 그대로 나왔다.
+#   ★프롬프트가 말해도 아무도 검사 안 하면 안 지켜진다(메모리 동명 교훈).
+#   버려도 안전한 이유: 이 재료는 값이 여러 개라 하나 버려도 같은 칸에 다른 값이 남는다.
+#   범위: CJK 통합한자 + 확장A + 히라가나·가타카나. 한글·영문·숫자는 통과시킨다
+#   (영문 브랜드명은 대본에 그대로 써도 읽힌다 — "GODOX C100").
+_FOREIGN_RE = re.compile(r"[぀-ヿ㐀-䶿一-鿿]")
+
+
+def _has_foreign(s):
+    return bool(_FOREIGN_RE.search(s or ""))
 
 
 def _body_of(raw):
@@ -183,14 +198,22 @@ def analyze_insta(raw, *, log=print):
             pass
         return {}
 
-    out = {}
+    out, dropped = {}, []
     for k in _FIELDS:
         v = data.get(k) or []
         if isinstance(v, str):
             v = [v]
         v = [str(x).strip() for x in v if str(x).strip()]
-        if v:                               # ★빈 값은 담지 않는다 — 담으면 "채워졌다"고 보고
-            out[k] = v                      #   빈칸이 그대로 대본에 나간다(spine_fill 규약)
+        keep = [x for x in v if not _has_foreign(x)]
+        dropped += [x for x in v if _has_foreign(x)]
+        if keep:                            # ★빈 값은 담지 않는다 — 담으면 "채워졌다"고 보고
+            out[k] = keep                   #   빈칸이 그대로 대본에 나간다(spine_fill 규약)
+    if dropped:
+        try:
+            log("[insta_facts] 외국어 섞인 값 %d개 버림: %s"
+                % (len(dropped), " / ".join(dropped[:3])[:120]))
+        except Exception:      # noqa: BLE001
+            pass
     return out
 
 

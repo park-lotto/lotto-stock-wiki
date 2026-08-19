@@ -50,9 +50,12 @@ def main():
     #    테스트도 같은 조건으로 맞춘다 — merge_sul 주석의 경고와 같은 얘기다.
     picked = [x for x in sys.argv[1:] if not x.startswith("-")]
     if picked:
-        q = ("select r.username, r.views, s.script_json from script_extracts s "
-             "join reel_history r on r.shortcode = s.shortcode where r.shortcode in (%s)"
-             % ",".join("?" * len(picked)))
+        # ★reel_history를 **바깥 조인**한다. 중국(도우인·샤오홍슈) 담기본은 shortcode가
+        #   `grab_xiaohongshu_…` 꼴이라 reel_history(인스타 랭킹 이력)에 아예 없다.
+        #   안쪽 조인이면 조용히 0건이 되어 "전사가 없다"로 오독한다(2026-08-19).
+        q = ("select coalesce(r.username, s.shortcode), coalesce(r.views, 0), s.script_json "
+             "from script_extracts s left join reel_history r on r.shortcode = s.shortcode "
+             "where s.shortcode in (%s)" % ",".join("?" * len(picked)))
         rows = c.execute(q, picked).fetchall()
     else:
         rows = c.execute(
@@ -62,7 +65,7 @@ def main():
     caps = []
     for u, v, sj in rows:
         t = _text(sj)
-        if len(re.sub(r"[^가-힣0-9]", "", t)) >= 60:
+        if len(re.sub(r"\s", "", t)) >= 40:   # ★한글만 세면 중국어 전사가 통째로 걸러진다
             caps.append((u, v, t))
         if len(caps) >= MAX_SOURCES:
             break
