@@ -10060,8 +10060,13 @@ def api_produce_templates():
 def api_produce_frame_presets():
     """'내용물 있는 틀' 프리셋 목록. 정의처는 deco_frame.PRESETS 하나(0순위-B)."""
     from shopping_shorts import deco_frame
+    # ★bar_h·headcopy까지 함께 준다(2026-08-20). 화면이 자기 기본값(190)을 쓰면
+    #   20종이 전부 같은 띠 높이가 돼 "원본 비율과 다르다"가 된다 — 정의처는 여기 하나.
     return {"ok": True,
-            "presets": [{"id": k, "name": v["name"], "bar": v["bar"]}
+            "presets": [{"id": k, "name": v["name"], "bar": v["bar"],
+                         "ref": v.get("ref", ""),
+                         "bar_h": v.get("bar_h"),
+                         "headcopy": v.get("headcopy")}
                         for k, v in deco_frame.PRESETS.items()],
             "defaults": deco_frame.DEFAULTS}
 
