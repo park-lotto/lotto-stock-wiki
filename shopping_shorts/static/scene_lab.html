@@ -111,7 +111,9 @@ h1{font-size:16px;margin:0;font-weight:700}
    같이 늘려(제작소 #sceneLabFrame 124vh) 한 화면에 더 많이 들어오게 했다. */
 /* ★영상을 폭 기준으로 키운 만큼(위 #vidbox) 세로가 넘칠 수 있다 — 여기서 스크롤한다.
    2026-08-16의 overflow:hidden은 영상이 남는 높이에 맞춰 줄던 시절의 짝이었다. */
-#playerhost{flex:0 0 440px;max-width:440px;overflow-y:auto;overflow-x:hidden;padding:14px 0 14px 14px;
+/* ★폭의 정의처는 scene_play.js PV_W 한 곳(--shorts-pv-w) — 제작소 레일과 같은 값을
+   받아 어디서 재생돼도 미리보기 크기가 같다(2026-08-20). 폴백은 PV_W와 같아야 한다. */
+#playerhost{flex:0 0 var(--shorts-pv-w,440px);max-width:var(--shorts-pv-w,440px);overflow-y:auto;overflow-x:hidden;padding:14px 0 14px 14px;
   display:flex;flex-direction:column;gap:8px;min-width:0;min-height:0}
 .pane.left{flex:1;min-width:0}
 .pane.rightcol{display:none}       /* 오른쪽 칼럼 폐지: 미리보기가 왼쪽으로 왔다 */
@@ -291,10 +293,10 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
    쪼그라들었다(실측 캡처). 이제 폭 고정(width:100%) + 9:16이라 높이가 따라오고,
    세로가 모자라면 #playerhost가 스크롤한다 — 작아지는 것보다 스크롤이 낫다는 판단. */
 #player #vidbox{position:relative;background:#000;border-radius:6px;overflow:hidden;
-        flex:0 0 auto;width:100%;aspect-ratio:9/16;margin:0 auto;
+        flex:0 0 auto;width:100%;aspect-ratio:var(--shorts-pv-ar,9/16);margin:0 auto;
         cursor:pointer}   /* 화면 클릭 = 정지/재생(2026-08-15) */
 #player .phead{cursor:default}   /* 오른쪽 칼럼에 고정됐다 — 더는 끌어 옮길 필요가 없다 */
-#player video{width:100%;height:100%;border-radius:6px;background:#000;display:block;aspect-ratio:9/16;object-fit:contain;position:absolute;inset:0}
+#player video{width:100%;height:100%;border-radius:6px;background:#000;display:block;aspect-ratio:var(--shorts-pv-ar,9/16);object-fit:contain;position:absolute;inset:0}
 .phead{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-bottom:6px}
 .phead .x{cursor:pointer;color:var(--dim)}
 .phead .x:hover{color:var(--bad)}
@@ -834,7 +836,7 @@ function playSegInCard(sid){
   v.dataset.sid = sid;
   v.muted = true; v.playsInline = true; v.preload = 'auto';
   v.src = SL.src(s.video_id);
-  v.style.cssText = 'position:absolute;left:0;top:0;width:100%;aspect-ratio:9/16;'
+  v.style.cssText = 'position:absolute;left:0;top:0;width:100%;aspect-ratio:var(--shorts-pv-ar,9/16);'
                   + 'object-fit:cover;background:#000;z-index:2;border-radius:8px 8px 0 0';
   card.appendChild(v);
   card.classList.add('playing');
