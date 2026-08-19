@@ -102,3 +102,18 @@ def test_프롬프트_조립이_KeyError로_죽지_않는다():
     import pytest
     with pytest.raises(KeyError):
         sul_facts.SUL_PROMPT.format(body=body)
+
+
+def test_프롬프트가_스펙과_이득을_가른다():
+    """★실측 2026-08-19: 스펙만 뽑혀 "충격적인 포인트는 전압 호환이 가능하다"는
+    대본이 나왔다. 이 지시가 빠지면 그 사고가 재발한다."""
+    from shopping_shorts.sul_facts import SUL_PROMPT
+    assert "스펙이 아니라" in SUL_PROMPT
+    assert "전압 호환" in SUL_PROMPT          # 나쁜 예를 실측 그대로 박아둔다
+    assert "놀라운 순서로 정렬" in SUL_PROMPT
+
+
+def test_프롬프트가_모델명을_금지한다():
+    """"이건 바로 YQQ KRCB 요거트 메이커 및 그릭요거트 스트레이너"가 나왔던 자리다."""
+    from shopping_shorts.sul_facts import SUL_PROMPT
+    assert "브랜드·모델명을 쓰지 마라" in SUL_PROMPT
