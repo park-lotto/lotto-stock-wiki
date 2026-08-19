@@ -51,3 +51,38 @@ def test_free_user_can_toggle_basket(tmp_path, monkeypatch):
     r = c.post("/api/mix/basket/toggle", json={"shortcode": "ABC123", "url": ""})
     assert r.status_code == 200
     assert r.json()["in"] is True
+
+
+def test_free_basket_skips_paid_side_effects(tmp_path, monkeypatch):
+    """무료 등급이 담아도 인스타 크롤·Gemini 예열이 돌지 않는다."""
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("trial2", "pw12")
+    s.set_plan(cid, "free", full_access_until=0)      # ranking_only
+    calls = []
+    monkeypatch.setattr(appmod, "_enqueue_prewarm",
+                        lambda *a, **k: calls.append("prewarm"))
+    monkeypatch.setattr(appmod, "_enrich_grab",
+                        lambda *a, **k: calls.append("grab"))
+    c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
+    r = c.post("/api/mix/basket/toggle", json={
+        "shortcode": "SC_FREE", "url": "https://www.instagram.com/reel/SC_FREE/"})
+    assert r.status_code == 200
+    assert r.json()["in"] is True          # 담기 자체는 정상 동작
+    assert calls == []                     # ★유료 부작용은 하나도 안 돈다
+
+
+def test_paid_basket_still_runs_side_effects(tmp_path, monkeypatch):
+    """★회귀 방지 — pro(full) 등급은 종전과 완전히 같이 동작한다."""
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("pro1", "pw12")
+    s.set_plan(cid, "pro")                            # full
+    calls = []
+    monkeypatch.setattr(appmod, "_enqueue_prewarm",
+                        lambda *a, **k: calls.append("prewarm"))
+    monkeypatch.setattr(appmod, "_enrich_grab",
+                        lambda *a, **k: calls.append("grab"))
+    c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
+    r = c.post("/api/mix/basket/toggle", json={
+        "shortcode": "SC_PRO", "url": "https://www.instagram.com/reel/SC_PRO/"})
+    assert r.status_code == 200
+    assert "prewarm" in calls              # 예열은 돈다(종전 동작 보존)

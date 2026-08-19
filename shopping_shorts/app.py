@@ -1099,9 +1099,16 @@ def api_mix_basket_toggle(request: Request, body: dict, background_tasks: Backgr
                      if meta.get(k) not in (None, "")}
             if clean:
                 store.mix_basket_set_meta(sc, customer_id=cid, meta=clean)
-        if url and _grab_platform(url):
-            background_tasks.add_task(_enrich_grab, url, sc, cid)
-        _enqueue_prewarm(store, sc, url, caption=body.get("caption") or "", customer_id=cid)
+        # ★2026-08-20 체험판 개방: 담기는 열되 **유료 부작용은 무료 등급에서 끈다**.
+        #   _enrich_grab=인스타 크롤(사람 수만큼 늘면 429 → 본 수집이 죽는다.
+        #   2026-07-30 실사고), _enqueue_prewarm=Gemini 추출(실과금).
+        #   즐겨찾기는 '랭킹에 이미 뜬 영상'을 담는 것이라 다시 긁을 게 없다.
+        #   판정은 access_level 한 곳에서만 한다(0순위-B).
+        if access_level(cid) == "full":
+            if url and _grab_platform(url):
+                background_tasks.add_task(_enrich_grab, url, sc, cid)
+            _enqueue_prewarm(store, sc, url, caption=body.get("caption") or "",
+                             customer_id=cid)
     return {"ok": True, "in": in_basket, "count": len(store.mix_basket_shortcodes(customer_id=cid))}
 
 
