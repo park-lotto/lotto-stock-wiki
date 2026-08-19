@@ -11182,6 +11182,13 @@ def _facts_block_for_job(job_id, store=None):
 SUL_CATEGORIES = ("오용형", "제품정체형")
 
 
+# 재료를 뽑을 때 볼 영상 수 상한 — **여기 한 곳에서만** 정한다(0순위-B).
+# 예전엔 `[:3]`이 두 군데(_sul_block_for_sources·_assemble_sul_drafts)에 따로 박혀 있었다.
+# 한쪽만 고치면 "참고 재료는 5편인데 조립 슬롯은 3편"처럼 조용히 어긋난다.
+# 5편: 사장님 지시(2026-08-19) "영상은 최대 5개까지만. 시간도 오래 걸리고 더 넣어봐야 의미없다".
+_FACTS_MAX_SOURCES = 5
+
+
 def _is_sul_context(category, spines=None):
     """이 생성이 썰쇼핑 틀인가.
 
@@ -11213,7 +11220,7 @@ def _sul_block_for_sources(category, sources, store=None, spines=None):
     """
     if not _is_sul_context(category, spines):
         return ""
-    caps = [(s.get("full_text") or "").strip() for s in (sources or [])[:3]]
+    caps = [(s.get("full_text") or "").strip() for s in (sources or [])[:_FACTS_MAX_SOURCES]]
     caps = [c for c in caps if c]
     if not caps:
         return ""
@@ -11256,14 +11263,31 @@ def _assembled_drafts(spines, sources, store, seconds=30):
             continue
         if slots is None:
             # 재료에서 슬롯을 한 번만 뽑아 스파인들이 공유한다(같은 재료를 두 번 안 때린다).
-            caps = [(x.get("full_text") or "").strip() for x in (sources or [])[:3]]
+            caps = [(x.get("full_text") or "").strip() for x in (sources or [])[:_FACTS_MAX_SOURCES]]
             caps = [c for c in caps if c]
             facts = []
             for c in caps:
-                try:
-                    f = sul_facts.analyze_sul({"captions": [c]}) or {}
-                except Exception:      # noqa: BLE001
-                    f = {}
+                # ★영상 **한 편씩** 캐시한다(2026-08-19). 이 경로는 영상마다 따로 부르는데
+                #   (merge_sul이 어느 편에서 뭐가 나왔는지 알아야 중복을 뺀다) 캐시가 없어서
+                #   같은 영상을 다시 담을 때마다 또 때렸다 — 상한을 3→5로 올리면 그만큼 더
+                #   느려진다(사장님 "시간도 오래 걸리고"). 편 단위로 캐시하면 담긴 조합이
+                #   달라져도 **이미 본 영상은 재사용**된다(_sul_block_for_sources의 캐시는
+                #   전사를 통째로 이어붙인 키라 한 편만 바뀌어도 전부 다시 돈다).
+                ckey = "sul_facts1_%s" % hashlib.md5(c.encode("utf-8")).hexdigest()[:16]
+                f = {}
+                if store is not None:
+                    try:
+                        f = json.loads(store.get_setting(ckey, "") or "{}") or {}
+                    except Exception:      # noqa: BLE001 — 깨진 캐시로 조립을 막지 않는다
+                        f = {}
+                if not f:
+                    try:
+                        f = sul_facts.analyze_sul({"captions": [c]}) or {}
+                    except Exception:      # noqa: BLE001
+                        f = {}
+                    # 빈 결과는 캐시하지 않는다 — 일시 실패를 굳히면 그 영상은 영영 재료가 없다.
+                    if f and store is not None:
+                        store.set_setting(ckey, json.dumps(f, ensure_ascii=False))
                 if f:
                     facts.append(f)
             slots = spine_fill.slots_from_facts({}, spine_fill.merge_sul(facts)) if facts else {}
