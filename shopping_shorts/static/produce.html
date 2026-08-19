@@ -4719,6 +4719,7 @@ async function refreshStep0(){
       const total = HANDOFF.filter(h=>h.useFootage && h.url).length;
       renderAutoloadingState(total);
       const got = await autoloadAllFootage();     // ★여러 배치로 전부 분석(Task 1)
+      _SRC_BUSY = 0; _SRC_QUEUED = 0;            // ★끝났으면 진행 표시를 내린다(안 내리면 영영 돈다)
       if(got.analyzed){
         try{ d = await (await fetch('/api/produce/aipick'+(q==='?'?'':q))).json(); }catch(e){}
       }
@@ -4975,7 +4976,6 @@ async function autoloadAllFootage(){
     // 상한에 걸려 못 태운 게 남았을 때만 다음 배치. 없으면 끝.
     if(!results.some(x=>x.status==='skipped_cap')) break;
   }
-  _SRC_BUSY = 0; _SRC_QUEUED = 0;    // ★끝났으면 진행 표시를 내린다(안 내리면 영영 돈다)
   return { added, already, failed, analyzed: (added>0 || already>0) };
 }
 // 순서를 기다리는 중 — '실패'와 확실히 구별되게 말한다(기다리면 된다는 뜻).
