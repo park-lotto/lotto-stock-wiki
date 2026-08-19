@@ -9577,7 +9577,7 @@ def api_client_error(request: Request, body: dict):
         logging.getLogger("client_error").error(
             "[화면에러] cid=%s page=%s where=%s :: %s || %s", cid, page, where, msg, stack)
     except Exception:  # noqa: BLE001 — 보고가 실패해도 화면에 영향 주지 않는다
-        pass
+        return {"ok": True}      # ★삼키되 pass는 쓰지 않는다(조용한 실패 상한 가드와 짝)
     return {"ok": True}
 
 
