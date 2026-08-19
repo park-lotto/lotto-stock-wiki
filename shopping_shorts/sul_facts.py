@@ -125,7 +125,11 @@ SUL_PROMPT = """아래는 한국 쇼핑 쇼츠 영상의 자막·설명이다. �
 JSON만 출력:
 {"original_use": [], "hidden_property": [], "misuses": [], "category_word": "", "hook_points": [], "misuse_genre": false, "product_name": "", "benefits": [], "origin_country": ""}
 
-자막·설명:
+★말이 없는 영상(해외 시연 영상 등)이면 **화면에서 관찰된 장면 목록**만 주어진다.
+  그때는 장면 묘사·행위·변화를 근거로 판단해라. 손이 무엇을 하고 무엇이 어떻게
+  바뀌는지가 곧 그 제품의 용도이고 장점이다. 장면에 없는 것은 지어내지 마라.
+
+자막·설명·장면:
 """
 # ★.format()을 쓰지 않는다(2026-08-19 실측으로 잡음).
 #   이 프롬프트에는 {본래용도}·{속성} 같은 **설명용 중괄호**가 들어 있어서
@@ -158,6 +162,32 @@ SUL_SCHEMA = {
 _MAX_BODY = 4000
 
 
+def _segments_block(segs):
+    """장면 태깅 → 재료로 읽을 텍스트. 무자막 영상에서는 **이것만이 단서**다.
+
+    ★왜 필요한가(2026-08-19 사장님 지적): 해외 원본은 대부분 **말이 없다**(틱톡 시연
+      영상은 BGM + 손동작뿐). 그런데 이 모듈은 자막·캡션만 읽고 있어서, 무자막 영상은
+      재료가 **0개**였다 — 정작 그 영상들이 진짜 원본인데 쓸 수가 없었다.
+      1단계 추출이 이미 영상을 보고 장면마다 태깅해 둔다(scene_desc·label·use_point·
+      action·change). 그걸 그대로 읽는다 — 같은 영상을 두 번 보지 않는다.
+    """
+    if isinstance(segs, dict):
+        segs = [segs]
+    lines = []
+    for i, sg in enumerate(segs or []):
+        if not isinstance(sg, dict):
+            continue
+        bits = []
+        for key, label in (("text", "말"), ("scene_desc", "화면"), ("label", "이름"),
+                           ("use_point", "쓰임"), ("action", "행위"), ("change", "변화")):
+            v = str(sg.get(key) or "").strip()
+            if v:
+                bits.append("%s:%s" % (label, v))
+        if bits:
+            lines.append("장면%d) %s" % (i + 1, " | ".join(bits)))
+    return "\n".join(lines)
+
+
 def _body_of(raw):
     """입력에서 대본 재료가 될 텍스트를 모은다. 없으면 ''."""
     if not raw:
@@ -171,6 +201,11 @@ def _body_of(raw):
     if isinstance(caps, str):
         caps = [caps]
     parts += [str(c).strip() for c in caps if str(c).strip()]
+    # ★장면 태깅도 재료다 — 무자막 영상은 이것만 있다.
+    seg_block = _segments_block(raw.get("segments"))
+    if seg_block:
+        parts.append("[화면에서 관찰된 장면들 — 말이 없는 영상이면 이것만이 단서다]\n"
+                     + seg_block)
     return "\n".join(parts)[:_MAX_BODY]
 
 
