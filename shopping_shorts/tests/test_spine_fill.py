@@ -157,3 +157,23 @@ def test_사례가_하나뿐이면_겹침을_피할_수_없다():
     """정직하게 같은 값을 쓴다 — 없는 사례를 지어내지 않는다."""
     slots = sf.slots_from_facts({}, {"misuses": ["하나뿐"]})
     assert slots["용도"] == slots["용도끝"] == "하나뿐"
+
+
+def test_실측구조_초보vs고수():
+    """살림킹왕짱 실제 자막에서 뽑은 결 — cases는 명사 나열이 아니라 대비 구조다."""
+    slots = sf.slots_from_facts({}, {"misuses": ["환기", "주방 벽에 설치해 요리", "빨래 건조"]})
+    assert slots["용도"] == "환기" and slots["용도2"] == "주방 벽에 설치해 요리"
+    spine = {"beat_roles": ["cases"],
+             "templates": {"cases": ["초보들은 기껏해야 {용도} 정도가 전부였는데 고수들은 {용도2}까지 하더라고요",
+                                     "{용도들}"]}}
+    assert sf.fill(spine, slots)[0][0]["text"] == \
+        "초보들은 기껏해야 환기 정도가 전부였는데 고수들은 주방 벽에 설치해 요리까지 하더라고요"
+
+
+def test_사례가_하나면_대비구조를_안_쓴다():
+    """{용도2}가 없으면 그 문장은 안 걸리고 나열형으로 내려간다 — 빈칸이 안 나간다."""
+    slots = sf.slots_from_facts({}, {"misuses": ["환기"]})
+    spine = {"beat_roles": ["cases"],
+             "templates": {"cases": ["초보들은 기껏해야 {용도} 정도가 전부였는데 고수들은 {용도2}까지 하더라고요",
+                                     "{용도들}"]}}
+    assert sf.fill(spine, slots)[0][0]["text"] == "환기로 쓰더라고요"

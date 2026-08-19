@@ -25,11 +25,25 @@ from shopping_shorts.app import DB_PATH
 from shopping_shorts.store import Store
 
 # 오용형(spine 56) — 정체는 밝히고 용도를 뒤집는다.
+# 오용형(spine 56) — 정체는 밝히고 용도를 뒤집는다.
+# ★2026-08-19 실측 갱신: 살림킹왕짱 실제 자막 6편을 받아 읽고 구조를 다시 맞췄다.
+#   (그 전 템플릿은 실측을 안 보고 만든 것이라 조립본이 123자 = 실측 234~284자의 절반이었다)
+#   실제 결:
+#     title : "제조사도 극찬한 한국 주부의 사용법"
+#     bait  : "요새 주부들 사이에서 논란이 되고 있는 아이템이 하나 있는데"   ← 칸이 아예 없었다
+#     origin: "이게 원래는 캠핑 텐트에 거는 용도로 나온 휴대용 실링팬이었음"  ← 제품군을 말한다
+#     notice: "그런데 주부들은 어디든 달 수 있다는 점에 주목하면서"
+#     cases : "초보 주부들은 기껏해야 환기 정도 하는게 전부였음.
+#              하지만 고수 주부들은 주방 벽에 설치해서 시원하게 요리한다고"  ← 초보 vs 고수 대비
+#     twist : "근데 미친 활용법은 따로 있었는데 …"
 MISUSE = {
     "title": ["제조사도 예상 못 한 {제품군} 활용법",
               "개발자도 몰랐던 {제품군} 사용법",
               "만든 사람도 예상 못 한 뜻밖의 활용법"],
-    "cases": ["{용도들}",
+    "bait": ["요새 이 {제품군} 하나로 난리가 났는데",
+             "최근 미친 아이디어 하나로 SNS 뒤집어 놓은 아이템이 하나 있는데"],
+    "cases": ["초보들은 기껏해야 {용도} 정도가 전부였는데 고수들은 {용도2}까지 하더라고요",
+              "{용도들}",
               "{용도}로 쓰더라고요"],
 }
 # 은폐형(spine 55) — 정체를 reveal까지 숨긴다. title에 제품명이 들어가면 안 된다.
@@ -45,7 +59,9 @@ CONCEAL = {
 #   개발된"이었다. 조사를 붙여두면 spine_fill이 받침에 맞춰 로/으로를 골라준다.
 FIX = {
     "오용형": {
-        "origin": ["이게 원래는 {본래용도}로 개발된 제품이었음",
+        # 제품군을 말한다 — 실측 "개발된 펀칭기였습니다" / "나온 휴대용 실링팬이었음".
+        "origin": ["이게 원래는 {본래용도}로 개발된 {제품군}이었음",
+                   "이게 원래는 {본래용도}로 개발된 제품이었음",
                    "원래대로라면 {본래용도}로 쓰는게 정석이었음"],
         # ★twist가 cases의 첫 사례를 그대로 되풀이하면 반전이 죽는다(실측:
         #   cases "인테리어 소품으로 쓰는가 하면…" / twist "…따로 있었는데 인테리어 소품").
@@ -78,8 +94,16 @@ for sp in st.list_spines(status="approved"):
                     fixed[k] = v
     print("#%s %s | 채울 칸: %s | 조사 교정: %s"
           % (sp["id"], sp["name"], list(changed) or "없음", list(fixed) or "없음"))
-    if (changed or fixed) and apply_:
+    # ★구간 자체가 모자랐다 — 실측 대본엔 title 뒤에 미끼 한 문장이 있는데
+    #   beat_roles에 그 칸이 없었다. 칸이 없으면 템플릿을 넣어도 조립에 안 실린다.
+    roles = list(sp.get("beat_roles") or [])
+    if "오용형" in fits and "bait" not in roles and "title" in roles:
+        roles.insert(roles.index("title") + 1, "bait")
+        print("     구간 추가: bait → %s" % roles)
+    else:
+        roles = None
+    if (changed or fixed or roles) and apply_:
         cur.update(changed)
         cur.update(fixed)
-        st.set_spine_style(sp["id"], templates=cur)
+        st.set_spine_style(sp["id"], templates=cur, beat_roles=roles)
 print("적용됨" if apply_ else "미적용(--apply를 붙여라)")
