@@ -9,3 +9,6 @@ out
 # 대용량 소스 영상 (로컬 전용)
 public/kakao/*.mp4
 build/
+
+# 숏템하우스 2편 소스 영상 (로컬 전용 · 바탕화면 폴더가 원본)
+public/shottem2/
