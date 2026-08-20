@@ -90,3 +90,26 @@ def test_조립을_안_쓰는_스타일엔_아무것도_안_붙인다():
     """빈 경고를 띄우면 멀쩡한 스타일이 고장 난 것처럼 보인다."""
     other = {"id": 1, "fit_categories": ["레시피"], "beat_roles": ["a", "b"], "templates": {}}
     assert A._spine_cover(other, SRC, _cached(FULL)) is None
+
+
+def test_같은_갈래는_한_번만_계산한다():
+    """★목록 API는 스파인 수만큼 이 함수를 부른다. 캐시가 없으면 같은 슬롯 계산을
+    7~10번 반복한다(라이브 실측으로 잡음 — 인스타 재료 조립 로그가 스파인마다 찍혔다).
+    드롭다운을 여는 동작이라 그만큼 그대로 기다림이 된다."""
+    calls = []
+    orig = A._slots_for_spine
+
+    def _counted(*a, **k):
+        calls.append(1)
+        return orig(*a, **k)
+
+    A._slots_for_spine = _counted
+    try:
+        cache = {}
+        st = _cached(FULL)
+        # 같은 갈래(발명품형) 스파인 3개를 잇달아 물어본다
+        for i in range(3):
+            A._spine_cover(dict(INV, id=60 + i), SRC, st, _cache=cache)
+    finally:
+        A._slots_for_spine = orig
+    assert len(calls) == 1, "갈래가 같은데 %d번 계산했다" % len(calls)

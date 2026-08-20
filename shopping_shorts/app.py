@@ -11253,7 +11253,7 @@ def api_pattern_spines(status: str = None):
     return {"ok": True, "spines": Store(DB_PATH).list_spines(status=status or None)}
 
 
-def _spine_cover(sp, sources, store, job_id=""):
+def _spine_cover(sp, sources, store, job_id="", _cache=None):
     """이 틀이 지금 재료로 몇 칸 차나 → {done, total, missing, ready, why}.
 
     사장님 아이디어(2026-08-20): **담기 전에** "필요한 장면 / 있는 것 / 없는 것"을 보여준다.
@@ -11265,8 +11265,20 @@ def _spine_cover(sp, sources, store, job_id=""):
       화면과 조립이 서로 다르게 판단하면 "된다더니 눌러보면 안 되는" 상태가 된다.
     """
     from shopping_shorts import spine_fill
+    # ★갈래별로 **한 번만** 계산한다. 슬롯은 스파인이 아니라 갈래(썰·발명품·인스타)가
+    #   정하는데, 목록 API는 스파인 수만큼 이 함수를 부른다 — 캐시가 없으면 같은 계산을
+    #   7~10번 반복한다(라이브 실측: insta 재료 조립 로그가 스파인마다 찍혔다).
+    #   `_assembled_drafts`가 `slots_by_track`으로 하는 것과 같은 방식이다.
+    _track = ("insta" if _is_insta_context("", [sp])
+              else "invention" if _is_invention_context("", [sp])
+              else "sul" if _is_sul_context("", [sp]) else "")
     try:
-        slots, prob = _slots_for_spine(sp, sources, store, job_id, cache_only=True)
+        if _cache is not None and _track in _cache:
+            slots, prob = _cache[_track]
+        else:
+            slots, prob = _slots_for_spine(sp, sources, store, job_id, cache_only=True)
+            if _cache is not None:
+                _cache[_track] = (slots, prob)
     except Exception as e:      # noqa: BLE001 — 커버리지 실패가 목록을 막지 않는다
         print("_spine_cover 실패(무해): %s" % str(e)[:100], file=sys.stderr)
         return None
@@ -11302,6 +11314,7 @@ def api_script_styles(request: Request, category: str = None, job: str = None):
     #     여는 데 영상 수만큼 Gemini를 때린다 — 고르기 전에 보는 값이라 그러면 안 된다.
     #     아직 분석 전인 영상은 그냥 "분석 전"으로 나온다.
     _srcs = []
+    _cover_cache = {}          # 갈래별 슬롯 캐시(같은 계산을 스파인마다 반복하지 않는다)
     if job:
         try:
             # 씨앗 항목({})은 안 넣는다 — 여기서 알고 싶은 건 **담긴 영상들**로 몇 칸이
@@ -11324,7 +11337,7 @@ def api_script_styles(request: Request, category: str = None, job: str = None):
             "evidence": s.get("situation_type") or "",
         })
         if _srcs:
-            out[-1]["cover"] = _spine_cover(s, _srcs, store, job)
+            out[-1]["cover"] = _spine_cover(s, _srcs, store, job, _cache=_cover_cache)
     out.sort(key=lambda x: (x["fit"] != "검증", -(x["perf_score"] or 0), -(x["source_count"] or 0)))
     return {"ok": True, "styles": out}
 
