@@ -5035,7 +5035,13 @@ def revert_scene_lab(plan):
 # 말투). 대본 쪽에서는 미끼 문장과 반전 후반부가 통째로 빠져 있었다.
 # _SCRIPTED_PROMPT는 "그대로 사용해라"를 두 번 말하지만 **지켰는지 검사하는 곳이 없었다.**
 # 프롬프트를 더 강하게 쓰는 건 두더지잡기다 — 저장 직전에 불변식으로 막는다.
-_SENT_SPLIT = re.compile(r"(?<=[.!?。！？])\s+|\n+")
+# ★한국어 구어체 대본은 마침표가 거의 없다(2026-08-20 실사고 job 087e03b69dc2).
+#   스파인이 뽑는 8칸 대본은 칸 사이가 "사오세요 / 스트레스였거든요"처럼 종결어미로만
+#   끊긴다 — 마침표만 보던 종전 정규식은 이 대본을 **2조각(141자·131자)으로만** 잘랐고,
+#   enforce_scripted_narration이 그 덩이를 2.9초짜리 hook 칸에 통째로 꽂았다.
+#   그래서 존대말 종결어미(요/죠)+공백도 문장 경계로 본다. 잘못 잘려 조각이 작아지는 쪽은
+#   피해가 없다(교체 매칭이 촌촌해질 뿐) — 안 잘리는 쪽이 칸을 통째로 망가뜨린다.
+_SENT_SPLIT = re.compile(r"(?<=[.!?。！？])\s+|(?<=[요죠])\s+|\n+")
 
 
 def _narr_key(s):
@@ -5072,6 +5078,14 @@ def enforce_scripted_narration(beats, given_script):
     for i in bad:
         if not missing:
             beats[i]["narration_invented"] = True   # 되돌릴 재료가 없다 — 흔적을 남긴다
+            continue
+        # ★그 칸이 감당 못 할 만큼 긴 조각은 꽂지 않는다(2026-08-20). 문장 분리가 또
+        #   실패하면(새로운 말투·외국어) 덩이가 통째로 들어와 화면·음성 초가 어긋난다 —
+        #   되돌리려다 더 큰 고장을 만드는 것보다 '못 되돌렸다'고 표시하는 편이 낫다.
+        _cand = missing[0]
+        _sec = beats[i].get("target_seconds") or 0
+        if _sec and len(_cand) > _sec * _SYLLABLES_PER_SEC * 2:
+            beats[i]["narration_invented"] = True
             continue
         beats[i]["narration"] = missing.pop(0)
         beats[i]["narration_restored"] = True
