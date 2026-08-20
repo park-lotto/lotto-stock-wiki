@@ -234,16 +234,51 @@ def extract_reel_nodes(payload):
             node = it.get("media") if isinstance(it.get("media"), dict) else it
             out.append(node)
         return out
-    conn = (payload.get("data") or {}).get("xdt_api__v1__clips__user__connection_v2")
-    edges = (conn or {}).get("edges")
-    if isinstance(edges, list):
+    for conn in _clips_connections(payload):
+        edges = (conn or {}).get("edges")
+        if not isinstance(edges, list):
+            continue
         out = []
         for edge in edges:
             media = ((edge or {}).get("node") or {}).get("media")
             if isinstance(media, dict):
                 out.append(media)
-        return out
+        if out:
+            return out
     return []
+
+
+def _clips_connections(payload):
+    """릴스 목록이 담겨 오는 connection 후보들 — **응답 껍데기만** 다르고 속은 같다.
+
+    ★2026-08-20 실사고: 08-19까지 130건 들어오던 인스타 수집이 08-20에 104채널 전부
+      0건이 됐다. 층을 갈라 보니 프록시 200·세션 만료 아님(351일 남음)·차단 없음·
+      릴스는 화면에 12개 렌더까지 됐다 — **껍데기 키 하나만 바뀌어** 파서가 통째로
+      못 읽은 것이다(서비스 로그의 "세션 만료 여부 확인 필요"는 08-09·08-17에 이어
+      세 번째 오진이다). 실측 대조:
+
+        옛: data.xdt_api__v1__clips__user__connection_v2.edges[].node.media
+        새: data.fetch__XDTUserDict.clips_connection.edges[].node.media
+
+      노드 속(code·play_count·like_count·comment_count·image_versions2·user)은 그대로라
+      parse_reel_node는 손대지 않았다. 즉 **바뀐 것은 길뿐이다.**
+
+    ★그래서 하나를 다른 하나로 갈아끼우지 않고 **후보를 나열해 순서대로 본다.**
+      옛 모양을 지우면 아직 옛 응답을 주는 경로(구 REST 재사용·다른 화면)가 조용히
+      죽고, 인스타가 다음에 또 바꾸면 같은 사고가 반복된다. 새 껍데기가 생기면 이
+      목록에 한 줄 더 붙이면 된다 — 판단이 여기 한 곳에만 있다(0순위-B).
+    """
+    data = payload.get("data")
+    if not isinstance(data, dict):
+        return []
+    out = []
+    conn = data.get("xdt_api__v1__clips__user__connection_v2")
+    if isinstance(conn, dict):
+        out.append(conn)
+    user = data.get("fetch__XDTUserDict")
+    if isinstance(user, dict) and isinstance(user.get("clips_connection"), dict):
+        out.append(user["clips_connection"])
+    return out
 
 
 def extract_hashtag_search_items(payload):
