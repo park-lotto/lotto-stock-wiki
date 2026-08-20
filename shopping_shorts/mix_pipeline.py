@@ -1868,6 +1868,23 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
                 preset=beat.get("caption_lines"))
             beat["cap_durs"] = _t.durs if _t else None
             beat["cap_lead"] = _t.lead_in if _t else 0.0
+        # ★싱크 마무리 — 렌더가 하던 것을 여기서도 한다(2026-08-20 실사고 job 087e03b69dc2).
+        #   대본수정으로 hook 대사가 105자가 돼 mp3가 16.8초가 됐는데 target_seconds는
+        #   옛 2.9초 그대로였다. 미리보기는 mp3 실길이를, 편성·예산은 옛 초를 따라가
+        #   **초가 두 벌**이 됐고(0순위-B), 화면이 5배 모자라 앞 장면을 되풀이했다
+        #   = 사장님이 겪은 "끝나고 계속 반복" · 자막 어긋남. 렌더까지 가야 _conform_beats가
+        #   뒤늦게 맞춰줘서 미리보기 단계에선 영영 깨져 보였다.
+        #   새 계산을 만들지 않는다 — 렌더가 쓰는 그 함수를 그대로 부른다.
+        if _rdur and _rdur > 0:
+            beat["target_seconds"] = round(_rdur, 1)
+        # 화면 예산을 넘으면 대본을 줄여 다시 굽는다(target_seconds·cap_durs·sync_gap까지
+        # _conform_beats가 갱신한다). 한 칸짜리 리스트로 부르므로 앞뒤 문맥은 없지만
+        # 판정·교정 규칙은 렌더와 완전히 같다.
+        try:
+            _conform_beats([beat], tts_dir, voice=voice_override,
+                           global_pron=pron_corrections.load(store))
+        except Exception:      # noqa: BLE001 — 교정 실패로 재합성을 죽이지 않는다
+            traceback.print_exc(file=sys.stderr)
         # 완료 신호: 단조 증가 버전. 프론트가 이 값 변화를 폴링해 '재합성 끝'을 안다
         # (mp3는 같은 경로/URL이라 겉으론 구분이 안 되므로 — 고정 4초 추측을 이 신호로 대체).
         beat["tts_ver"] = (beat.get("tts_ver") or 0) + 1

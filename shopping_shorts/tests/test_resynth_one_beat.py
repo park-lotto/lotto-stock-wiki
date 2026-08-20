@@ -77,3 +77,35 @@ def test_api_mix_tts_regen_merges_override_onto_job_voice_snapshot(monkeypatch):
     assert ov["silence_trim"] == "strong"
     # speed는 body·job 스냅샷 둘 다에 없었으니 None으로 강제되면 안 됨 — 키 자체가 없어야 함
     assert "speed" not in ov
+
+
+def test_resynth_updates_target_seconds_and_conforms(monkeypatch, tmp_path):
+    """★2026-08-20 실사고(job 087e03b69dc2): 대본수정으로 mp3가 16.8초가 됐는데
+    target_seconds는 옛 2.9초 그대로였다. 미리보기는 mp3 실길이를, 편성·예산은 옛 초를
+    따라가 초가 두 벌이 됐고, 화면이 모자라 앞 장면을 되풀이했다("끝나고 계속 반복").
+    → 재합성 뒤에는 렌더와 같은 싱크 마무리(target 갱신 + 초과분 콘폼)가 돌아야 한다."""
+    monkeypatch.setattr(mp, "synthesize_line",
+                        lambda narr, out, **kw: Path(out).write_bytes(b"MP3"))
+    monkeypatch.setattr(mp, "_probe_duration", lambda p: 16.8)   # 새 음성 실길이
+    monkeypatch.setattr(mp, "_beat_words", lambda *a, **k: [])
+    monkeypatch.setattr(mp, "conform_narration", lambda n, budget, **k: None)  # 축약 실패 = 원문 유지
+
+    plan = {"beats": [{
+        "beat_idx": 0,
+        "narration": "여러분 다이소 가면 이거 무조건 사오세요" * 3,
+        "target_seconds": 2.9,                                   # ← 옛 값
+        "primary": {"start": 0.0, "end": 2.9},                   # 화면 재료 2.9초뿐
+        "cap_durs": None,
+    }]}
+
+    class FakeStore:
+        def __init__(self, *a, **k): pass
+        def get_mix_job(self, j): return {"edit_plan": plan, "status": "ready_for_review"}
+        def update_mix_job(self, j, **f): pass
+    monkeypatch.setattr(mp, "Store", FakeStore)
+
+    mp.resynth_one_beat("job1", 0, {"voice_id": "V"}, "db", str(tmp_path))
+
+    b = plan["beats"][0]
+    assert b["target_seconds"] == 16.8, "실측 길이로 갱신 안 됨 — 초가 두 벌로 남는다"
+    assert b.get("sync_gap", 0) > 0.8, "화면 부족을 sync_gap으로 안 남기면 UI가 경고를 못 띄운다"
