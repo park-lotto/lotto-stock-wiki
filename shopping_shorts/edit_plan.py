@@ -30,6 +30,10 @@ _REQUIRED_ROLES = ["훅", "페인포인트", "반전", "실용", "CTA"]
 # 장면 스파인 먼저 재설계(2026-07-29): 카테고리마다 label(화면표시)·strategy(말투)에 더해
 # spine(슬롯 순서 배열)을 둔다. 각 슬롯은 {slot 이름, roles(허용 shot_role), key(is_key 선호)}.
 # _build_scene_spine이 이 순서대로 태깅된 장면을 배치 → 대본이 그 순서를 따른다.
+# ★roles는 **앞이 1순위인 우선순위 목록**이다(2026-08-20). 행위 축(설치·조작·도포·정리·
+#   실증)을 앞에 두고 **마지막에 `사용중`을 남긴다** — 뒤의 `사용중`이 계열 전체로
+#   넓혀져 폴백이 되므로, 그 갈래 장면이 없는 소재에서도 슬롯이 안 빈다(회귀 0).
+#   ⚠️마지막 `사용중`을 빼지 마라. 빼면 그 슬롯이 통째로 비는 소재가 생긴다.
 # 설계: docs/superpowers/specs/2026-07-29-장면스파인-먼저-재설계-design.md
 VIDEO_TYPES = {
     "recipe": {
@@ -39,8 +43,10 @@ VIDEO_TYPES = {
                     "CTA 비트는 '댓글에 [키워드] 남겨주시면 알려드릴게요'로 궁금증→댓글을 유도해라.",
         "spine": [
             {"slot": "완성훅", "roles": ["완성"], "key": True},
-            {"slot": "재료", "roles": ["사용중", "기타"]},
-            {"slot": "과정", "roles": ["사용중"]},
+            # 재료 준비는 꺼내고 담는 손 → 정리·조작이 1순위. 없으면 종전대로 사용 계열.
+            {"slot": "재료", "roles": ["정리", "조작", "사용중", "기타"]},
+            # 만드는 구간은 섞고 붓고 돌리는 손 → 조작·도포.
+            {"slot": "과정", "roles": ["조작", "도포", "사용중"]},
             {"slot": "완성샷", "roles": ["완성"]},
             {"slot": "CTA", "roles": ["기타", "완성"]},
         ],
@@ -52,7 +58,8 @@ VIDEO_TYPES = {
         "spine": [
             {"slot": "실물훅", "roles": ["완성"], "key": True},
             {"slot": "문제상황", "roles": ["문제", "기타"]},
-            {"slot": "기능실증", "roles": ["사용중"], "key": True},
+            # 도구가 문제를 푸는 걸 눈으로 보여주는 자리 → 실증이 1순위.
+            {"slot": "기능실증", "roles": ["실증", "조작", "설치", "사용중"], "key": True},
             {"slot": "결과", "roles": ["after", "완성"]},
             {"slot": "CTA", "roles": ["기타", "완성"]},
         ],
@@ -64,7 +71,8 @@ VIDEO_TYPES = {
         "spine": [
             {"slot": "완성룩훅", "roles": ["완성", "after"], "key": True},
             {"slot": "before", "roles": ["before", "문제"]},
-            {"slot": "사용", "roles": ["사용중"]},
+            # 뷰티는 바르는 손이 본체다 → 도포가 1순위.
+            {"slot": "사용", "roles": ["도포", "조작", "사용중"]},
             {"slot": "after대비", "roles": ["after", "완성"]},
             {"slot": "CTA", "roles": ["기타", "완성"]},
         ],
@@ -75,7 +83,8 @@ VIDEO_TYPES = {
                     "임팩트를 줘라. 마지막 CTA는 '댓글에 [키워드] 남겨주시면 구매링크 보내드릴게요'.",
         "spine": [
             {"slot": "before훅", "roles": ["before", "문제"], "key": True},
-            {"slot": "사용", "roles": ["사용중"]},
+            # 청소는 닦고 치우는 손 → 정리가 1순위.
+            {"slot": "사용", "roles": ["정리", "도포", "사용중"]},
             {"slot": "after", "roles": ["after", "완성"], "key": True},
             {"slot": "반전강조", "roles": ["after", "완성"]},
             {"slot": "CTA", "roles": ["기타", "완성"]},
@@ -95,7 +104,8 @@ VIDEO_TYPES = {
         "spine": [
             {"slot": "강한장면훅", "roles": ["완성", "after"], "key": True},
             {"slot": "문제상황", "roles": ["before", "문제"]},
-            {"slot": "핵심실증", "roles": ["사용중"], "key": True},
+            # 범용은 어느 갈래가 올지 모른다 → 실증만 앞세우고 나머지는 계열 폴백.
+            {"slot": "핵심실증", "roles": ["실증", "사용중"], "key": True},
             {"slot": "결과", "roles": ["완성", "after"]},
             {"slot": "CTA", "roles": ["기타", "완성"]},
         ],
@@ -131,20 +141,36 @@ def _build_scene_spine(seg_map, video_type):
     out = []
 
     def _pick(roles, want_key):
-        # 1순위: 역할 일치 + (key 선호 시) is_key. 2순위: 역할만. 3순위: 아무 미사용 seg.
+        """이 슬롯에 맞는 장면 하나. `roles`는 **앞이 1순위인 우선순위 목록**이다.
+
+        ★2026-08-20: 예전엔 roles를 한 덩어리 집합으로 봤다. 그러면 "이 자리엔 바르는
+          장면" 같은 **구분 지시를 쓸 수가 없다** — 축을 설치·조작·도포·정리·실증으로
+          쪼개 놓고도 여전히 뭉뚱그려 집었다.
+          그렇다고 roles를 좁히기만 하면, 그 갈래가 없는 소재에서 **슬롯이 통째로 빈다**
+          (아래 주석대로 억지로 안 넣기 때문이다). 그래서 좁히는 대신 **순서**를 준다:
+              ["도포", "사용중"] → 바르는 장면이 있으면 그것, 없으면 사용 계열 아무거나
+          뒤에 `사용중`을 두면 계열 전체로 넓혀지므로 **폴백이 보장된다 = 회귀 0**.
+
+        ★`in roles` 직접 비교가 아니다 — 슬롯은 `사용중` 하나로 적혀 있어도 장면은 잘게
+          태깅된다. 넓히는 판단은 `shot_roles.matches` 한 곳이 한다(0순위-B).
+        """
         cands = [s for sid, s in seg_map.items() if sid not in used]
         if not cands:
             return None
-        # ★`in roles`로 직접 비교하지 않는다 — 슬롯은 아직 `사용중` 하나로 적혀 있는데
-        #   장면은 설치·조작·도포·정리·실증으로 잘게 태깅된다(2026-08-20 축 확장).
-        #   넓히는 판단은 `shot_roles.matches` 한 곳이 한다(0순위-B).
-        pref = [s for s in cands if _shot_roles.matches(s.get("shot_role"), roles)]
+        rs = list(roles or ())
+        # ★is_key(기능·효과를 화면으로 실증하는 컷)를 **우선순위보다 먼저** 본다.
+        #   종전 동작이 그랬다(roles 전체에서 keyed를 찾았다) — 여기서 순서를 앞세우면
+        #   1순위 갈래에 실증컷이 없을 때 실증컷을 놓친다. 그건 회귀다.
         if want_key:
-            keyed = [s for s in pref if s.get("is_key")]
-            if keyed:
-                return min(keyed, key=lambda s: s.get("start", 0))
-        if pref:
-            return min(pref, key=lambda s: s.get("start", 0))
+            for r in rs:
+                keyed = [s for s in cands
+                         if _shot_roles.matches(s.get("shot_role"), [r]) and s.get("is_key")]
+                if keyed:
+                    return min(keyed, key=lambda s: s.get("start", 0))
+        for r in rs:
+            pref = [s for s in cands if _shot_roles.matches(s.get("shot_role"), [r])]
+            if pref:
+                return min(pref, key=lambda s: s.get("start", 0))
         return None  # 역할 불일치면 이 슬롯은 비운다(아무거나 억지로 안 넣는다)
 
     for slot in spine_tmpl:
