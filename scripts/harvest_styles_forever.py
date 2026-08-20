@@ -22,6 +22,7 @@ import os
 import sys
 import json
 import time
+import re
 import collections
 import itertools
 import datetime
@@ -176,6 +177,10 @@ STYLES = {
                 "harvest": lambda ts: harvest_pair(ts, ys._CELEB, ys._PRODUCT)},
     "레시피쇼핑": {"score": score_food, "min": 3,
                 "harvest": lambda ts: harvest_pair(ts, ys._FOOD, ys._PRODUCT)},
+    # 2026-08-20 신설 — 위 score_novel 주석 참고. min 3은 다른 축과 같은 눈높이.
+    # 2026-08-20 신설 — 판정·검색어 생성은 yt_style에 있다(어휘축이 사는 곳, 0순위-B).
+    "신기템": {"score": ys.score_novel, "min": 3,
+             "harvest": lambda ts: ys.harvest_novel(ts)},
 }
 BLOCK = ["뉴스", "news", "kbs", "mbc", "sbs", "jtbc", "ytn", "연합", "정치", "국회",
          "설교", "복음", "사주", "asmr", "게임", "롤", "피파", "먹튀", "토토"]

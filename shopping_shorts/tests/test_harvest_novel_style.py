@@ -1,0 +1,55 @@
+"""신기템 축(2026-08-20) — 사장님 "신박템이 안 올라온다 / 레시피가 너무 많다".
+
+실측 표본은 '꿀템 보물찾기' 채널 제목(전부 [기능 관형어]+[제품] 틀).
+"""
+import importlib.util
+import pathlib
+import sys
+
+_P = pathlib.Path(__file__).resolve().parents[2] / "scripts" / "harvest_styles_forever.py"
+sys.path.insert(0, str(_P.parent))
+_spec = importlib.util.spec_from_file_location("_hsf", _P)
+H = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(H)
+
+NOVEL = [
+    "알아서 섞어주는 자동 회전 텀블러 믹서컵 #인생템 #꿀템",
+    "늘어나고 분리되는 공간활용 화장대 #집꾸미기 #꿀템",
+    "붙여주면 깨끗해지는 자석 레인지 가드 #주방꿀템",
+    "버려졌던 공간 살려주는 곡선 코너 선반 #인테리어 #가구추천",
+]
+
+
+def test_기능관형어_제품이면_신기템이다():
+    assert H.score_novel(NOVEL) >= 3
+
+
+def test_연예인_제목은_신기템이_아니다():
+    """연예인결합 축으로 가야 한다 — 두 축이 섞이면 대본 스파인이 오염된다."""
+    celeb = ["기안84가 애정하는 선세럼 #꿀템",
+             "르세라핌 채원 강추 바디로션 #추천",
+             "강주은이 고민 끝에 선택한 여름 가방 #구매"]
+    assert H.score_novel(celeb) == 0
+
+
+def test_요리_제목은_신기템이_아니다():
+    food = ["3분이면 되는 자취요리 레시피 #꿀템",
+            "볶음 만들기 초간단 #추천",
+            "에어프라이어 반찬 만들어주는 법 #제품"]
+    assert H.score_novel(food) == 0
+
+
+def test_제품신호_없으면_안_센다():
+    """기능 관형어만으로는 안 된다 — 일상 문장이 전부 걸린다."""
+    assert H.score_novel(["기분이 좋아지는 아침 산책", "잠이 잘 오는 밤"]) == 0
+
+
+def test_검색어를_실제_제목에서_뽑는다():
+    q = H.harvest_novel(NOVEL)
+    assert q, "통과 제목에서 검색어를 하나도 못 뽑았다"
+    assert all(4 <= len(k) <= 25 for k in q), q
+
+
+def test_STYLES에_등록됐다():
+    assert "신기템" in H.STYLES
+    assert H.STYLES["신기템"]["min"] == 3
