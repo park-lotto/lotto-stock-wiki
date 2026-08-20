@@ -18,6 +18,12 @@
 전세공포(10편/6채널)는 **보류**했다 — 10편 중 2편이 오분류였다(미국 패션 벨트 = 해외발견축).
 실질 8편이라 억지로 살리면 죽은 스파인 31개 꼴이 난다.
 
+## fit_categories 첫 값은 '기계용 이름'이다
+
+`app.INSTA_CATEGORIES`에 같은 이름이 있어야 `_assembled_drafts`가 이 스파인을 조립
+대상으로 본다. 없으면 **조립을 못 하고 조용히 생성기로 폴백한다**(오류 안 남).
+뒤의 홈템·레시피는 **화면 목록에서 사람이 찾게** 하는 이름이다(spine 57과 같은 이유).
+
 ## ⚠️ 슬롯은 기존 7종만 쓴다
 
 `insta_facts.SLOT_SOURCE`가 정본이고 그 파일은 **인스타대본스파인 트랙과 공용**이라
@@ -44,7 +50,7 @@ WARN_FORBID = {
     "id": "insta_warn_forbid",
     "name": "금지경고형",
     "chars_per_30s": 311,          # 실측 중앙값(51편)
-    "fit_categories": ["레시피", "홈템"],
+    "fit_categories": ["금지경고형", "레시피", "홈템"],
     "no_cta": False,               # CTA 92% — 이 축은 CTA가 가장 강하다
     "beat_roles": ["hook", "mistake", "authority", "reason", "method", "result", "cta"],
     "templates": {
@@ -105,7 +111,7 @@ SOCIAL_PROOF = {
     "id": "insta_social_proof",
     "name": "사회증거형",
     "chars_per_30s": 323,          # 실측 중앙값(22편)
-    "fit_categories": ["홈템", "기타"],
+    "fit_categories": ["사회증거형", "홈템", "기타"],
     "no_cta": False,
     # ★problem을 넣은 이유: 6칸으로 조립하니 196자였는데 실측 밀도로는 24초에 258자가
     #   필요했다(76%). 5구간 프로필에도 전개에 문제 22%가 실제로 있다 — 없는 칸을
