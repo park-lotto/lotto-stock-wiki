@@ -16,7 +16,7 @@ th{color:#9a9aa2;font-weight:600;font-size:14px}
 .admin{background:#3a1c3d;color:#e59aff}
 .pending{background:#3d341c;color:#ffd479}
 button{border:0;border-radius:7px;padding:7px 13px;font-weight:700;font-size:13px;cursor:pointer;margin-right:4px}
-.bpro{background:#2ea043;color:#fff}.bfree{background:#6e2020;color:#fff}.bok{background:#d19b1e;color:#111}.bpay{background:#3a5bd0;color:#fff}
+.bpro{background:#2ea043;color:#fff}.bfree{background:#6e2020;color:#fff}.bok{background:#d19b1e;color:#111}.bpay{background:#3a5bd0;color:#fff}.bpt{background:#7a4bd0;color:#fff}
 .bedit{background:#5a4bd0;color:#fff}.bdel{background:#8b1a1a;color:#fff}.btrial{background:#1c6a8a;color:#fff}.badm{background:#7a3da8;color:#fff}
 .wait{border-color:#5a4a1e;background:#1a1710}.wait h2{color:#ffd479}
 .empty{color:#6a6a72;font-size:13px;padding:6px 2px}
@@ -61,7 +61,7 @@ tbody tr:hover{background:#1b1b22}
       <option value="free">일반회원</option>
     </select>
   </div>
-  <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>시작일</th><th>마감일</th><th>결제</th><th>오늘 사용(렌즈/렌더/대본)</th><th>접속7일(IP/기기)</th><th>접속/활동</th><th>조작</th></tr></thead>
+  <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>시작일</th><th>마감일</th><th>결제</th><th>포인트</th><th>오늘 사용(렌즈/렌더/대본)</th><th>접속7일(IP/기기)</th><th>접속/활동</th><th>조작</th></tr></thead>
   <tbody id=rows></tbody></table>
 </div>
 
@@ -138,6 +138,7 @@ function renderCustomers(){
       <td style="color:#8a8a92">${c.approved_at? new Date(c.approved_at*1000).toLocaleDateString('ko-KR'):'-'}</td>
       <td style="color:#8a8a92">${c.full_access_until? new Date(c.full_access_until*1000).toLocaleDateString('ko-KR'):'-'}</td>
       <td>${c.last_payment? `<span class=paylink data-cid=${c.id} style="cursor:pointer;color:#8ab4f8">${c.last_payment.amount.toLocaleString()}원 · ${c.payment_count}건</span>` : '-'}</td>
+      <td><span style="color:${(c.points||0)<=0?'#ff6b6b':'#7ee787'};font-weight:700">${c.points||0}P</span></td>
       <td>${u.lens||0}/${u.render||0}/${u.script||0}</td>
       <td>${accCell}</td>
       <td>${seenCell}</td>
@@ -145,12 +146,13 @@ function renderCustomers(){
           <button class=bedit onclick="editInfo(${c.id})">정보수정</button>
           <button class=bfree onclick="setPlan(${c.id},'free')">일반회원</button>
           <button class=btrial onclick="grantTrial(${c.id})">체험</button>
+          <button class=bpt onclick="grantPoints(${c.id})">포인트</button>
           <button class=bpro onclick="setPlan(${c.id},'pro')">pro</button>
           ${c.code_admin?'':(c.is_admin
             ? `<button class=badm onclick="setAdmin(${c.id},false)">관리자해제</button>`
             : `<button class=badm onclick="setAdmin(${c.id},true)">관리자지정</button>`)}
           ${c.is_admin?'':`<button class=bdel onclick="delCustomer(${c.id})">삭제</button>`}</td></tr>`;
-  }).join('') : '<tr><td colspan=13 class=empty>조건에 맞는 고객이 없어요</td></tr>';
+  }).join('') : '<tr><td colspan=14 class=empty>조건에 맞는 고객이 없어요</td></tr>';
 }
 async function approveCustomer(cid){
   const days = prompt('이용일수 (예: 30)', '');
@@ -224,6 +226,17 @@ async function setAdmin(cid,flag){
   const m=document.getElementById('cMsg');
   if(r.ok){m.textContent=flag?'✅ 관리자 지정됨':'✅ 관리자 해제됨';m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
   setTimeout(()=>m.textContent='',2000);
+}
+async function grantPoints(cid){
+  // 등급(체험·pro)은 게이트만 연다 — 유료 op는 포인트도 있어야 돈다(2026-08-20 402 사고).
+  const p=prompt('포인트 몇 P 줄까요? (음수=회수)', '1000');
+  if(p===null) return;
+  const r=await fetch('/api/admin/points',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({customer_id:cid, points:Number(p)||0})});
+  const m=document.getElementById('cMsg');
+  if(r.ok){const d=await r.json();m.textContent='✅ 지급됨 · 잔액 '+d.balance+'P';m.className='msg';load();}
+  else{m.textContent='❌ 실패';m.className='msg err';}
+  setTimeout(()=>m.textContent='',3000);
 }
 async function grantTrial(cid){
   const def=(CURRENT.trial_days||'7');

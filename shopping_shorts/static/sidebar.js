@@ -340,17 +340,23 @@
   // ── 유료게이트(2026-07-19): /api/me 등급으로 UI를 잠근다. sidebar.js는 6개 페이지 공유라
   //    여기 한 곳이면 전 페이지에 체험배너·🔒메뉴·만료안내가 걸린다. ──
   var _pw = { level: "full", contact: {} };
-  function _pwModal() {
+  // opts.title/opts.body가 오면 그 사유로 띄운다. 기본은 '체험 만료' 안내.
+  // ★402는 사유가 둘이다 — 등급부족(미들웨어)과 **포인트 부족**(_charge_or_402).
+  //   둘을 같은 문구로 띄우면 오진한다: 2026-08-20 체험 계정이 등급 full인데 잔액 0이라
+  //   402가 났는데 화면은 "무료 체험이 끝났어요"였다 → "체험 부여가 연동 안 됐다"로 읽혔다.
+  function _pwModal(opts) {
+    opts = opts || {};
     var ex = document.getElementById("ss-pw-modal");
-    if (ex) { ex.style.display = "flex"; return; }
+    if (ex) ex.remove();   // 사유가 다를 수 있으니 다시 그린다
     var k = _pw.contact.kakao || "", ph = _pw.contact.phone || "";
     var m = document.createElement("div");
     m.id = "ss-pw-modal";
     m.style.cssText = "position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;font-family:'Malgun Gothic',system-ui,sans-serif";
     m.innerHTML = '<div style="background:#16161c;border:1px solid #2a2a30;border-radius:16px;padding:28px 26px;max-width:340px;text-align:center;color:#e8e8ea">' +
       '<div style="font-size:40px">🔒</div>' +
-      '<div style="font-size:18px;font-weight:800;margin:10px 0 6px">무료 체험이 끝났어요</div>' +
-      '<div style="font-size:14px;color:#b8b8c0;line-height:1.6">이 기능은 결제하시면 계속 쓸 수 있어요.<br>담아둔 영상·자료는 <b>그대로 보존</b>돼요.</div>' +
+      '<div style="font-size:18px;font-weight:800;margin:10px 0 6px">' + escHtml(opts.title || "무료 체험이 끝났어요") + '</div>' +
+      '<div style="font-size:14px;color:#b8b8c0;line-height:1.6">' +
+        (opts.body ? escHtml(opts.body) : '이 기능은 결제하시면 계속 쓸 수 있어요.<br>담아둔 영상·자료는 <b>그대로 보존</b>돼요.') + '</div>' +
       '<div style="margin-top:14px;font-size:14px;color:#7db4ff">' +
         (k ? "카톡: " + escHtml(k) + "<br>" : "") +
         (ph ? "전화: " + escHtml(ph) : "") +
@@ -446,7 +452,16 @@
   var _origFetch = window.fetch;
   window.fetch = function () {
     return _origFetch.apply(this, arguments).then(function (resp) {
-      if (resp && resp.status === 402) { try { _pwModal(); } catch (e) {} }
+      if (resp && resp.status === 402) {
+        // 응답 본문을 복제해서 읽는다(원본은 호출부가 그대로 쓴다).
+        try {
+          resp.clone().json().then(function (d) {
+            var msg = (d && d.error) || "";
+            if (/포인트/.test(msg)) _pwModal({ title: "포인트가 부족해요", body: msg });
+            else _pwModal();
+          }).catch(function () { _pwModal(); });
+        } catch (e) { try { _pwModal(); } catch (e2) {} }
+      }
       return resp;
     });
   };
