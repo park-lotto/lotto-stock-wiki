@@ -5982,18 +5982,35 @@ async function pmLoadStyles(category){
   if(!sec||!row||!s1||!s2) return;
   let styles=[];
   try{
-    const d=await (await fetch('/api/script/styles'+(category?('?category='+encodeURIComponent(category)):''))).json();
+    // ★job을 함께 보낸다(2026-08-20) — 서버가 "지금 담긴 재료로 이 틀이 몇 칸 차나"를
+    //   같이 준다. 안 보내면 종전대로 칸 정보 없이 목록만 온다(회귀 0).
+    const qs=[];
+    if(category) qs.push('category='+encodeURIComponent(category));
+    if(typeof MIX_JOB!=='undefined' && MIX_JOB) qs.push('job='+encodeURIComponent(MIX_JOB));
+    const d=await (await fetch('/api/script/styles'+(qs.length?('?'+qs.join('&')):''))).json();
     styles=(d&&d.styles)||[];
   }catch(e){ styles=[]; }
   // 스타일이 하나도 없을 때만 숨긴다(빈 드롭다운은 고장으로 보인다).
   if(!styles.length){ sec.style.display='none'; row.style.display='none'; return; }
   // ★카테고리로 걸러 숨기지 않고 **등급을 표시**한다(2026-08-15 사장님 지적).
   //   숨기면 홈템 외 소재에선 기능이 없는 것처럼 보인다. 안 맞으면 경고만 달고 고르게 둔다.
+  // ★"이 틀은 지금 재료로 몇 칸 되나"를 이름 옆에 박는다(2026-08-20 사장님 아이디어:
+  //   "필요한 장면 / 있는 것 / 없는 것"). 지금까지는 대본을 **다 돌려본 뒤에야**
+  //   재료가 모자란 걸 알았다 — 그래서 일단 많이 담고 보게 됐다.
+  //   cover가 없는 스타일(조립을 안 쓰는 틀)엔 아무것도 안 붙인다.
+  const coverTxt=(c)=>{
+    if(!c) return '';
+    if(c.why) return ' · ' + c.why;                       // 분석 전 / 재료 자격 미달
+    if(c.ready) return ' · 재료 ' + c.done + '/' + c.total + '칸 ✔';
+    const miss=(c.missing||[]).join(', ');
+    return ' · 재료 ' + c.done + '/' + c.total + '칸' + (miss ? (' — 없는 것: ' + miss) : '');
+  };
   const opt=(s)=>{
     const mark = (s.fit==='검증') ? '✅ ' : '⚠️ ';
     const src  = (s.source_count||0) ? (' · 근거 '+s.source_count+'편') : '';
     const warn = (s.fit==='검증') ? '' : ' (다른 소재에서 검증)';
-    return '<option value="'+s.id+'">'+mark+esc(s.name||('스타일 '+s.id))+src+warn+'</option>';
+    return '<option value="'+s.id+'">'+mark+esc(s.name||('스타일 '+s.id))+src+warn
+           +esc(coverTxt(s.cover))+'</option>';
   };
   const list=styles.map(opt).join('');
   s1.innerHTML='<option value="">(안 고름 — 기존 방식)</option>'+list;
