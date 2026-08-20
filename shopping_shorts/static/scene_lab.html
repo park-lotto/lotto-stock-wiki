@@ -951,7 +951,23 @@ function dropCutFromBand(i, segId){
   const next = l.filter(x => x !== segId);
   if (next.length === l.length) return;      // 없는 조각 — 아무 일도 안 한다
   lists[i] = next;
+  // ★뺀 자리는 **비워 둔다**(2026-08-21 사장님 "그냥 빼면 없애줘. 그래야 사용자들도 오류로
+  //   생각안하고 다시담지 자동채우지마"). 빼고도 남은 장면이 있으면 planClips 라운드로빈이
+  //   남은 재료를 다시 굴려 **다른 썸네일이 그 자리에 나타난다** — 사용자 눈엔 삭제가 아니라
+  //   교체로 보여 "오류"로 읽힌다. 새 장면을 자동으로 담지는 않으므로(=재료는 안 늘린다)
+  //   여기서 할 일은 무슨 일이 일어났는지 **말해 주는 것**이다. 자동 채우기는 오직 버튼으로만.
+  sayDropped(i, next.length);
   render();
+}
+// 뺀 뒤 그 칸이 어떻게 됐는지 한 줄로 알린다 — 빼기 경로가 둘(타임프레임·편집목록)이라
+// 문구를 함수 하나에 둔다(0순위-B: 같은 판단을 두 번 적지 않는다).
+function sayDropped(i, left){
+  const msg = left
+    ? `🗑 칸 ${i+1}에서 장면을 뺐습니다 — 남은 ${left}장으로 다시 배치했어요(새로 담지 않았습니다). 필요하면 아래에서 담아주세요`
+    : `🗑 칸 ${i+1}을 비웠습니다 — 자동으로 채우지 않습니다. 아래 소스에서 담아주세요`;
+  nsay(msg);
+  const el = document.getElementById('savedmsg');
+  if (el) el.textContent = msg;
 }
 
 // 음성 만들기 — 칸마다 음성이 있는지 보고, 없는 것만 서버에 만들어 달라고 한다.
@@ -1793,7 +1809,14 @@ function add(sid){
   }
   l.push(sid); chosen.add(sid); render();
 }
-function delSeg(i, k){ lists[i].splice(k, 1); render(); }
+// 편집목록에서 빼기(두 번 클릭 · 팔레트로 끌어놓기). 타임프레임의 dropCutFromBand와
+// **같은 약속**이다: 뺀 자리는 자동으로 안 채운다, 대신 무슨 일이 났는지 알린다.
+function delSeg(i, k){
+  if (!lists[i] || k < 0 || k >= lists[i].length) return;
+  lists[i].splice(k, 1);
+  sayDropped(i, lists[i].length);
+  render();
+}
 // ── ✨ 자동 채우기(2026-08-15 사장님 "자동채우기버튼도 해주고") ─────────────────────
 // 토글(늘려 채우기)과 역할을 가른다: 토글 = 새 장면 없이 담긴 것을 **늘려서** 채움 /
 // 버튼 = 부족분만큼 **안 쓴 장면을 골라 담아** 진짜 재료로 채움. '담긴 장면의 남는 여유로
