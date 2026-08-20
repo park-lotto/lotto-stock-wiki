@@ -214,6 +214,25 @@ st.setdefault("rejected", {})
 st.setdefault("cycles", 0)
 for k in STYLES:
     st["styles"].setdefault(k, {})
+
+# 새 축은 **씨앗이 없으면 영영 못 큰다**(2026-08-20 신기템 신설에서 실측).
+# 사이클은 `for cid in list(pool)[-10:]`로 **이미 가진 채널의 제목에서** 다음 검색어를
+# 뽑는다 — 풀이 0이면 뽑을 제목이 없고, 검색어가 없으니 새 채널도 못 찾는다.
+# 즉 빈 풀은 스스로 못 벗어난다(썰쇼핑도 같은 이유로 '살림킹왕짱'을 심어 뒀다).
+# 씨앗은 라이브 실측으로 고른 채널이다 — score_novel 4점(12편 중), 전부 [기능
+# 관형어]+[제품] 틀. rejected에 있으면 빼준다(거절 목록에 남으면 다시 안 본다).
+_SEEDS = {
+    "신기템": {
+        "UC6FhOTXF3D0oDtOILYnkKow": {"title": "꿀템 보물찾기", "subs": 0, "score": 4},
+        "UCXQRYw25xKBXGaMfb4FnnZQ": {"title": "홈템꿀팁 | 살림, 꿀템", "subs": 0, "score": 4},
+    },
+}
+for _stl, _seed in _SEEDS.items():
+    if _stl in STYLES and not st["styles"].get(_stl):
+        st["styles"][_stl] = dict(_seed)
+        for _cid in _seed:
+            st["rejected"].pop(_cid, None)
+        log("씨앗 심음 — %s %d채널" % (_stl, len(_seed)))
 tried = set(st.get("tried") or [])
 seen = set(st.get("seen") or [])
 for k, v in st["styles"].items():
