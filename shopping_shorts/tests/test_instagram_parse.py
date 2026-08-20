@@ -273,3 +273,27 @@ def test_reel_node_falls_back_to_requested_account_when_node_has_no_owner():
     d = parse_reel_node(node, "maison_homedino")
     assert d["ownerUsername"] == "maison_homedino"
     assert d["ownerFollowers"] == 1234     # 주인이 같으면 종전대로 프로필 팔로워를 쓴다
+
+
+def test_새_껍데기_fetch_XDTUserDict도_읽는다():
+    """2026-08-20 실사고: 인스타가 릴스 목록 경로를
+    xdt_api__v1__clips__user__connection_v2 → fetch__XDTUserDict.clips_connection 으로
+    바꾸자 104채널 전부 0건이 됐다. 속(code·play_count)은 그대로였다."""
+    payload = {"data": {"fetch__XDTUserDict": {"clips_connection": {"edges": [
+        {"node": {"media": {"code": "DbqByBlKdIh", "play_count": 1800000,
+                            "like_count": 12, "comment_count": 3}}},
+    ]}}}}
+    nodes = extract_reel_nodes(payload)
+    assert len(nodes) == 1
+    got = parse_reel_node(nodes[0], "bodlelog")
+    assert got["shortcode"] == "DbqByBlKdIh"
+    assert got["videoViewCount"] == 1800000
+
+
+def test_옛_껍데기도_계속_읽는다():
+    """새 경로를 더하면서 옛 경로를 지우지 않았는지 — 지우면 옛 응답 경로가 조용히 죽는다."""
+    payload = {"data": {"xdt_api__v1__clips__user__connection_v2": {"edges": [
+        {"node": {"media": {"code": "OLDCODE1234", "play_count": 7}}},
+    ]}}}
+    nodes = extract_reel_nodes(payload)
+    assert len(nodes) == 1 and nodes[0]["code"] == "OLDCODE1234"
