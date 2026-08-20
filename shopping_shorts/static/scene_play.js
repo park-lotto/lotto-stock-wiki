@@ -11,6 +11,22 @@ const SL = {
 };
 const MAX_SHOT = 2.2, MIN_CLIP = 0.8, EPS = 1e-3, LONG_CUT = MAX_SHOT + 0.05;   // 상한을 넘긴 컷 = 소재가 모자라 늘린 것
 
+// ★미리보기(9:16) 크기의 정의처는 여기 한 곳(2026-08-20 사장님 "미리보기 썸네일 크기
+//   고치면 자꾸 틀어지고 커지고 어디서 자꾸 만지는거다").
+//   실측: 같은 '장면 미리보기'가 장면편집 안(#playerhost 440px)과 제작소 레일
+//   (#mixPreviewRail 340px + vidbox max-height:520px 클램프) **두 군데**서 각자 크기를
+//   정하고 있었고, 레일은 열림/닫힘 상태에 따라 재생 위치가 바뀌므로(_outerPlayer)
+//   작업할 때마다 미리보기가 다른 크기·비율로 나왔다(0순위-B).
+//   두 화면 다 이 파일을 읽는다 → 숫자는 여기만 두고 CSS는 var(--shorts-pv-w/-ar)로
+//   받는다. CSS의 var() 폴백은 이 값과 같아야 하며 test_preview_size_single_source.py가
+//   짝을 강제한다. 크기를 바꾸려면 아래 두 줄만 고친다.
+const PV_W  = '440px';
+const PV_AR = '9/16';
+if (typeof document !== 'undefined' && document.documentElement){
+  document.documentElement.style.setProperty('--shorts-pv-w', PV_W);
+  document.documentElement.style.setProperty('--shorts-pv-ar', PV_AR);
+}
+
 // 소스 영상 길이를 넘는 구간인가 — 실측(job 409f894230c6): s1-10이 100~104초인데
 // s1.mp4는 78.5초였다. 렌더하면 그 컷은 실체가 없다. 눈에 보이게 표시한다.
 // 최소 컷 길이(0.8초)에 못 미치는 장면 — 담아도 화면에 **안 나온다**(라운드로빈이 건너뛴다).
@@ -39,6 +55,16 @@ function ttsEl(slot){
   return audioEl._alt;
 }
 function audio(){ return curAud || ttsEl(0); }
+// ★음성을 '시계'로 쓸 수 있는가 — 판단은 여기 한 곳(0순위-B, 2026-08-20 사장님
+//   "미리보기에는 여러분까지만 나오고 다음이 안나온다").
+//   미리보기의 시계가 두 벌이었다: 화면(컷)은 seqTimer로 돌고, 자막·시간·전체재생은
+//   audio를 봤다. 음성이 없으면(합성 전 404 · 대본 바뀜 409) audio는 영영 0초·ended
+//   없음 → 자막이 첫 구절에 얼어붙고 전체재생이 그 칸에서 멈췄다. 화면만 계속 돌아
+//   "대본이 적용 안 됐다"로 보였다. 음성이 시계 노릇을 못 하면 화면 시계로 폴백한다.
+function audioUsable(){
+  const a = audio();
+  return !!(a && a.src && !a.error && a.duration > 0);
+}
 function capsOf(i){ return (DATA.captions || {})[String(i)] || []; }
 // 구간 [a,b)에 걸치는 자막 구절들 — 자르지 않고 구절 통째로 돌려준다.
 function capsIn(i, a, b){
@@ -453,13 +479,20 @@ function tickSub(){
   const box = document.getElementById('subbox');
   if (seqBeat == null){ box.innerHTML = ''; return; }
   subTimer = setInterval(() => {
-    const a = audio(), t = a.currentTime || 0;
+    // ★시계는 curT() 하나만 본다(0순위-B, 2026-08-20). 예전엔 여기만 audio를 직접 봐서
+    //   음성 없는 칸에서 자막이 첫 구절("여러분")에 얼어붙었다 — 화면은 제 타이머로
+    //   계속 돌아 "대본이 적용 안 됐다"로 보였다.
+    const a = audio(), t = curT();
     const c = capAt(seqBeat, t);
     const k = seqBounds.findIndex(([a0, b0]) => t >= a0 - 1e-3 && t < b0);
     const tag = (subPerCut && k >= 0) ? `컷 ${k+1}/${seqBounds.length}` : '';
     box.innerHTML = (tag ? `<div class="subtag">${tag}</div>` : '')
       + `<span class="said">${esc(c ? c.text : '')}</span>`;
-    if (a.ended || a.paused) clearInterval(subTimer);
+    // 종료 판정도 시계와 같은 기준: 음성이 시계면 음성이 멎을 때,
+    // 화면이 시계면 컷이 다 끝났거나 일시정지일 때.
+    const dead = audioUsable() ? (a.ended || a.paused)
+                               : (seqPaused || seqI >= seq.length);
+    if (dead) clearInterval(subTimer);
   }, 60);
 }
 
@@ -540,6 +573,14 @@ function step(){
   if (seqI >= seq.length){
     document.getElementById('pinfo').textContent = `${seqLabel} — 재생 끝 (${seq.length}컷)`;
     if (curVid) curVid.pause();
+    // ★전체 재생의 칸 넘김은 원래 audio.onended 뿐이다 — 음성 없는 칸(합성 전 404 ·
+    //   대본 바뀜 409)에선 ended가 영영 안 와 그 칸에서 멈췄다(2026-08-20 사장님
+    //   "다음이 안나온다"). 음성이 시계 노릇을 못 하면 화면(컷)이 다 끝난 여기서 넘긴다.
+    //   판단은 audioUsable() 한 곳 — 음성이 살아 있으면 예전 그대로 onended가 넘긴다.
+    if (playKey === 'all' && seqBeat != null && !audioUsable()){
+      const nx = seqBeat + 1;
+      seqTimer = setTimeout(() => { if (playKey === 'all') runAllFrom(nx); }, 250);
+    }
     return;
   }
   const c = seq[seqI];
@@ -586,7 +627,11 @@ function paintCut(){
              && !(seqI > 0 && seq[seqI - 1].seg_id === c.seg_id);
   document.getElementById('pinfo').innerHTML =
     `${seqLabel}<br>컷 ${seqI+1}/${seq.length} · ${c.dur.toFixed(1)}초` +
-    ((again && segIdx >= 0) ? ` · <b style="color:var(--warn)">${segIdx+1}번 장면이 또 나와요</b>` : '');
+    ((again && segIdx >= 0) ? ` · <b style="color:var(--warn)">${segIdx+1}번 장면이 또 나와요</b>` : '') +
+    // ★원본 자막 오해 방지(2026-08-20). 미리보기는 소스 mp4를 그대로 틀므로 원본에
+    //   구워진 자막이 화면에 그대로 보인다 — 사장님이 두 번("짜증 나더라고요",
+    //   "솔직히 기대 없이") "대본과 딴소리"로 읽으셨다. 내 자막은 subbox에만 얹힌다.
+    `<br><span style="opacity:.6">🎞 화면에 박힌 글자는 원본 영상의 자막이에요 — 내 대본 자막은 흰 글씨로 따로 떠요</span>`;
   document.querySelectorAll('.item.playing').forEach(el => el.classList.remove('playing'));
   if (seqBeat != null && segIdx >= 0){
     const be = document.querySelectorAll('#film .beat')[seqBeat];
@@ -642,7 +687,9 @@ function paintTime(){
 }
 function curT(){
   if (!seq.length) return 0;
-  if (seqBeat != null) return audio().currentTime || 0;   // 음성이 시계(자막과 같은 기준)
+  // 음성이 시계(자막과 같은 기준) — 단 음성이 살아 있을 때만(audioUsable).
+  // 음성이 없으면 아래 화면(컷 진행) 시계로 폴백한다 — 0:00에 얼어붙지 않게(2026-08-20).
+  if (seqBeat != null && audioUsable()) return audio().currentTime || 0;
   // ★재생이 끝난 뒤에도 **지금 화면이 서 있는 자리**를 돌려준다(2026-08-15 사장님
   //   "여기부터 여기까지 자르기를 했는데 뭐가 바뀌는거지?"). 예전엔 끝나면 무조건 총길이를
   //   돌려줘서, 다 본 뒤 진행바를 옮겨 잘라도 두 지점이 같은 값이 되어 조용히 취소됐다.
@@ -663,7 +710,9 @@ function seekTo(t){
   if (!seq.length) return;
   clearTimeout(seqTimer);
   const a = audio();
-  if (seqBeat != null && a.src){
+  // ★음성이 죽었을 때(404·409) a.currentTime은 항상 0이다 — 그걸 '실제 안착점'으로
+  //   되읽으면 어디로 끌든 0초로 튕긴다. 음성이 시계일 때만 음성을 맞춘다(2026-08-20).
+  if (seqBeat != null && audioUsable()){
     a.currentTime = t;
     // ★브라우저가 아직 버퍼 안 된 구간 시크를 조용히 당겨 앉힌다(첫 재생 직후 실측:
     //   6.5초 요청 → 5.7초 안착). 음성이 시계이므로 **실제 앉은 지점**을 다시 읽어

@@ -1099,9 +1099,16 @@ def api_mix_basket_toggle(request: Request, body: dict, background_tasks: Backgr
                      if meta.get(k) not in (None, "")}
             if clean:
                 store.mix_basket_set_meta(sc, customer_id=cid, meta=clean)
-        if url and _grab_platform(url):
-            background_tasks.add_task(_enrich_grab, url, sc, cid)
-        _enqueue_prewarm(store, sc, url, caption=body.get("caption") or "", customer_id=cid)
+        # ★2026-08-20 체험판 개방: 담기는 열되 **유료 부작용은 무료 등급에서 끈다**.
+        #   _enrich_grab=인스타 크롤(사람 수만큼 늘면 429 → 본 수집이 죽는다.
+        #   2026-07-30 실사고), _enqueue_prewarm=Gemini 추출(실과금).
+        #   즐겨찾기는 '랭킹에 이미 뜬 영상'을 담는 것이라 다시 긁을 게 없다.
+        #   판정은 access_level 한 곳에서만 한다(0순위-B).
+        if access_level(cid) == "full":
+            if url and _grab_platform(url):
+                background_tasks.add_task(_enrich_grab, url, sc, cid)
+            _enqueue_prewarm(store, sc, url, caption=body.get("caption") or "",
+                             customer_id=cid)
     return {"ok": True, "in": in_basket, "count": len(store.mix_basket_shortcodes(customer_id=cid))}
 
 
@@ -6169,7 +6176,13 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 # ⚠️ /api/reference는 '조회(GET)'만 무료 — /api/reference/register(등록·데이터변경)는 exact 매칭이라 제외.
 #    /api/collect(수집=크롤 비용)도 제외 → 무료 등급은 마지막 수집 랭킹만 본다.
 # 메서드 무관 무료(로그인 폼 POST 등) — 전부 정확 경로.
-_FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout"}
+# ★2026-08-20 체험판 개방: 즐겨찾기 담기(POST)와 렌즈 2종을 연다.
+#   렌즈는 **과금검사(_charge_or_402 + check_and_count)가 있는 경로만** 연다 —
+#   /api/lens/kw/search·cn/search는 틱톡·샤오홍슈가 Apify 유료인데 과금검사가
+#   없어서(실측) prefix로 열면 상한 없이 샌다.
+_FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
+                   "/api/mix/basket/toggle",
+                   "/api/lens/search", "/api/lens/trace_url"}
 # GET만 무료(레퍼런스 랭킹 '조회') — POST/PUT 등 데이터변경은 같은 경로여도 차단.
 _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/api/thumb", "/api/video",
                    "/api/channel/history",   # 채널 히스토리='지난 한 달' 조회 = 랭킹 열람의 연장(무료 허용)
@@ -6177,7 +6190,12 @@ _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/a
                    #   안 열면 무료 등급이 자기 계정·포인트를 못 본다 —
                    #   충전하려면 들어올 수 있어야 하는데 충전 화면이 유료 뒤에 있는 꼴이 된다.
                    #   ⚠️ GET만이다. 키 등록(POST /api/settings/keys)은 그대로 막힌다.
-                   "/settings", "/api/settings/points", "/api/settings/keys"}
+                   "/settings", "/api/settings/points", "/api/settings/keys",
+                   # ★2026-08-20 체험판: 즐겨찾기 목록·모음집 화면.
+                   "/collection", "/api/mix/basket",
+                   # ★2026-08-20 체험판: 제작소는 HTML만 연다(소개 페이지가 뜬다).
+                   #   /api/produce/* 는 열지 않는다 — 과금 기능은 계속 막힌다.
+                   "/produce", "/produce.html"}
 # 경계있는 prefix만(과다매칭 방지 — 트레일링 슬래시).
 _FREE_PREFIX = ("/static/", "/auth/google/")
 
@@ -8865,6 +8883,11 @@ def _load_work_sources(work_id, cid):
     # 저장 순간에 박제돼, 저장 후 댓글이 늘면 AI PICK만 옛 숫자를 보여준다(재료카드와 불일치,
     # 참여밀도도 옛 기준). 최신값이 없으면(30일 지나 정리 등) 도서관 스냅샷으로 폴백(2026-07-26).
     fresh = store.latest_comments([w["shortcode"] for w in items])
+    # ★조회수도 같이 실어 보낸다(2026-08-20 사장님 "팔로워 댓글 조회수 썸네일에").
+    #   예전엔 아래에 `"views": None`이 **하드코딩**돼 있어서, DB에 인스타 6,364건·
+    #   유튜브 1,394건이 있는데도 화면엔 조회수가 영영 안 떴다.
+    _views = store.latest_views([w["shortcode"] for w in items],
+                                [w.get("source_url") or "" for w in items])
     sources = []
     for w in items:
         segs = w.get("segments") or []
@@ -8875,7 +8898,10 @@ def _load_work_sources(work_id, cid):
             "followers": w.get("followers") or None,
             "comments": fresh.get(w["shortcode"], w.get("comments")) or None,
             "seconds": seconds,
-            "views": None,
+            # shortcode로 먼저, 없으면 URL로(유튜브는 URL 키에 있다). 둘 다 없으면 None.
+            "views": (_views.get(w["shortcode"])
+                      or _views.get(w.get("source_url") or "")
+                      or w.get("views") or None),
             "structure": w.get("structure") or None,
             "source_url": w.get("source_url", ""),
             # ★이름·썸네일·카테고리를 서버가 직접 실어 보낸다(2026-07-26 사고). 안 실으면 pick_meta가
@@ -10060,8 +10086,18 @@ def api_produce_templates():
 def api_produce_frame_presets():
     """'내용물 있는 틀' 프리셋 목록. 정의처는 deco_frame.PRESETS 하나(0순위-B)."""
     from shopping_shorts import deco_frame
+    # ★bar_h·headcopy까지 함께 준다(2026-08-20). 화면이 자기 기본값(190)을 쓰면
+    #   20종이 전부 같은 띠 높이가 돼 "원본 비율과 다르다"가 된다 — 정의처는 여기 하나.
     return {"ok": True,
-            "presets": [{"id": k, "name": v["name"], "bar": v["bar"]}
+            "presets": [{"id": k, "name": v["name"], "bar": v["bar"],
+                         "ref": v.get("ref", ""),
+                         "bar_h": v.get("bar_h"),
+                         # ★고르면 바로 '완성된 그림'이 되게 기본 세팅까지 준다
+                         #   (2026-08-20 사장님: "세팅을 미리 해주고 거기서 수정하게")
+                         "has_head": v.get("has_head"),
+                         "demo_views": v.get("demo_views"),
+                         "demo_comments": v.get("demo_comments"),
+                         "headcopy": v.get("headcopy")}
                         for k, v in deco_frame.PRESETS.items()],
             "defaults": deco_frame.DEFAULTS}
 
@@ -11252,24 +11288,50 @@ def _facts_for_job(job_id, store=None):
 #   이름은 categorize.KEYWORDS의 것과 같아야 한다(0순위-B: 이름이 어긋나면 조용히 죽는다).
 SUL_CATEGORIES = ("오용형", "제품정체형")
 
+# 인스타 조립 틀을 붙이는 카테고리(2026-08-19). 위와 같은 규약 — 스파인의 fit_categories다.
+#   ★썰(유튜브)과 **재료 출처가 다르다**: 썰은 쿠팡+유튜브 자막, 인스타는 **릴 전사만** 본다
+#     (다이소·중국 제품은 쿠팡 1:1 매칭이 안 된다는 사장님 지시 — insta_facts 모듈 주석 참조).
+#     그래서 갈래를 나눈다. 여기 없으면 인스타 재료추출(Gemini 1회)을 아예 안 돌린다.
+INSTA_CATEGORIES = ("다이소형",)
 
-def _is_sul_context(category, spines=None):
-    """이 생성이 썰쇼핑 틀인가.
+
+# 재료를 뽑을 때 볼 영상 수 상한 — **여기 한 곳에서만** 정한다(0순위-B).
+# 예전엔 `[:3]`이 두 군데(_sul_block_for_sources·_assemble_sul_drafts)에 따로 박혀 있었다.
+# 한쪽만 고치면 "참고 재료는 5편인데 조립 슬롯은 3편"처럼 조용히 어긋난다.
+# 5편: 사장님 지시(2026-08-19) "영상은 최대 5개까지만. 시간도 오래 걸리고 더 넣어봐야 의미없다".
+_FACTS_MAX_SOURCES = 5
+
+
+def _is_context(category, spines, names):
+    """이 생성이 `names` 틀인가 — 항목 카테고리와 스파인 fit_categories를 **둘 다** 본다.
 
     ★2026-08-19 라이브 실측으로 고침(처음엔 위키 항목 category만 봤다 = **영영 안 켜짐**).
       `오용형`·`제품정체형`은 **스파인의 fit_categories**다(id 56·55). 위키 항목의
       category는 홈템·기타·레시피 같은 소재 분류라, 라이브 113건 중 오용형은 **0건**이었다.
-      categorize.py는 이 이름을 항목 카테고리로도 쓸 수 있으므로 **둘 다** 본다.
+      categorize.py는 이 이름을 항목 카테고리로도 쓸 수 있으므로 둘 다 본다.
+
+    ★판정을 여기 한 벌만 둔다 — 썰·인스타가 **같은 판정**을 쓴다(0순위-B).
+      갈래마다 복사하면 한쪽만 고쳐져 "저기선 되는데 여기선 안 된다"가 난다.
     """
-    if (category or "").strip() in SUL_CATEGORIES:
+    if (category or "").strip() in names:
         return True
     for sp in (spines or []):
         if not isinstance(sp, dict):
             continue
         for f in (sp.get("fit_categories") or []):
-            if str(f).strip() in SUL_CATEGORIES:
+            if str(f).strip() in names:
                 return True
     return False
+
+
+def _is_sul_context(category, spines=None):
+    """이 생성이 썰쇼핑(유튜브) 틀인가."""
+    return _is_context(category, spines, SUL_CATEGORIES)
+
+
+def _is_insta_context(category, spines=None):
+    """이 생성이 인스타(다이소축) 틀인가."""
+    return _is_context(category, spines, INSTA_CATEGORIES)
 
 
 def _sul_block_for_sources(category, sources, store=None, spines=None):
@@ -11284,7 +11346,7 @@ def _sul_block_for_sources(category, sources, store=None, spines=None):
     """
     if not _is_sul_context(category, spines):
         return ""
-    caps = [(s.get("full_text") or "").strip() for s in (sources or [])[:3]]
+    caps = [(s.get("full_text") or "").strip() for s in (sources or [])[:_FACTS_MAX_SOURCES]]
     caps = [c for c in caps if c]
     if not caps:
         return ""
@@ -11307,6 +11369,65 @@ def _sul_block_for_sources(category, sources, store=None, spines=None):
         return ""
 
 
+def _facts_per_source(sources, store, analyze, ckey_prefix):
+    """담긴 영상 **한 편씩** 재료를 뽑는다(캐시 포함) → [facts, ...].
+
+    ★영상 한 편 단위로 캐시한다(2026-08-19). 이 경로는 영상마다 따로 부르는데
+      (merge_sul이 어느 편에서 뭐가 나왔는지 알아야 중복을 뺀다) 캐시가 없어서
+      같은 영상을 다시 담을 때마다 또 때렸다 — 상한을 3→5로 올리면 그만큼 더
+      느려진다(사장님 "시간도 오래 걸리고"). 편 단위로 캐시하면 담긴 조합이
+      달라져도 **이미 본 영상은 재사용**된다(_sul_block_for_sources의 캐시는
+      전사를 통째로 이어붙인 키라 한 편만 바뀌어도 전부 다시 돈다).
+
+    ★썰·인스타가 **이 함수 한 벌을 공유한다**(0순위-B) — 갈리는 건 `analyze`(어느
+      추출기냐)와 캐시 접두사뿐이다. 복사해 두 벌로 두면 한쪽만 고쳐져 어긋난다.
+    """
+    facts = []
+    for x in (sources or [])[:_FACTS_MAX_SOURCES]:
+        c = (x.get("full_text") or "").strip()
+        if not c:
+            continue
+        ckey = "%s_%s" % (ckey_prefix, hashlib.md5(c.encode("utf-8")).hexdigest()[:16])
+        f = {}
+        if store is not None:
+            try:
+                f = json.loads(store.get_setting(ckey, "") or "{}") or {}
+            except Exception:      # noqa: BLE001 — 깨진 캐시로 조립을 막지 않는다
+                f = {}
+        if not f:
+            try:
+                f = analyze({"captions": [c]}) or {}
+            except Exception:      # noqa: BLE001
+                f = {}
+            # 빈 결과는 캐시하지 않는다 — 일시 실패를 굳히면 그 영상은 영영 재료가 없다.
+            if f and store is not None:
+                store.set_setting(ckey, json.dumps(f, ensure_ascii=False))
+        if f:
+            facts.append(f)
+    return facts
+
+
+def _insta_slots(sources, store):
+    """인스타(다이소축) 재료 → (슬롯, 못 한 이유). 재료는 **릴 전사만** 본다(쿠팡 안 씀).
+
+    ★장면 근거 게이트를 여기서 통과시킨다 — 전사에서 뽑은 값 중 **화면에 안 찍힌 것**을
+      버린다(사장님 "장면에도 없는 대본이 나오는 거 아닌가"). 거르는 건 값이 아니라
+      **재료 목록**이라, 하나 버려도 다음 후보가 올라와 칸이 안 빈다.
+    """
+    from shopping_shorts import insta_facts, spine_fill
+    facts = _facts_per_source(sources, store, insta_facts.analyze_insta, "insta_facts1")
+    if not facts:
+        return {}, "영상에서 재료를 못 뽑았습니다"
+    merged = spine_fill.merge_sul(facts)          # 값이 전부 리스트라 같은 합치기를 쓴다
+    # 장면 인벤토리 — 담긴 영상들의 scene_desc를 모은다(1단계 태깅이 이미 심어둔 값).
+    segs = []
+    for x in (sources or [])[:_FACTS_MAX_SOURCES]:
+        segs += [s for s in (x.get("segments") or []) if isinstance(s, dict)]
+    merged = insta_facts.gate_by_scene(merged, segs)
+    slots = spine_fill.slots_from_insta(merged)
+    return slots, ("" if slots else "재료가 화면 근거를 통과하지 못했습니다")
+
+
 def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
     """조립으로 만들 수 있는 대본들 → (조립본 목록, 조립 못 한 스파인 목록).
 
@@ -11320,35 +11441,33 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
         from shopping_shorts import spine_fill, sul_facts
     except Exception:      # noqa: BLE001 — 조립 모듈이 없어도 기존 경로는 살아야 한다
         return [], list(spines or [])
-    slots = None
-    merged = None
+    # 갈래마다 슬롯을 **한 번만** 뽑아 스파인들이 공유한다(같은 재료를 두 번 안 때린다).
+    # 썰(유튜브)과 인스타는 재료 출처가 달라 각각 따로 캐시한다.
+    slots_by_track = {}
     for sp in (spines or []):
-        # 썰 스파인이 아니면 조립 대상이 아니다(다른 스타일은 템플릿이 슬롯을 안 쓴다).
-        if not _is_sul_context("", [sp]):
+        # 조립 대상 갈래인가. 아니면 기존 생성기로 넘긴다(다른 스타일은 템플릿이 슬롯을 안 쓴다).
+        track = ("sul" if _is_sul_context("", [sp])
+                 else "insta" if _is_insta_context("", [sp]) else "")
+        if not track:
             left.append(sp)
             continue
-        if slots is None:
-            # 재료에서 슬롯을 한 번만 뽑아 스파인들이 공유한다(같은 재료를 두 번 안 때린다).
-            caps = [(x.get("full_text") or "").strip() for x in (sources or [])[:3]]
-            caps = [c for c in caps if c]
-            facts = []
-            for c in caps:
-                try:
-                    f = sul_facts.analyze_sul({"captions": [c]}) or {}
-                except Exception:      # noqa: BLE001
-                    f = {}
-                if f:
-                    facts.append(f)
-            merged = spine_fill.merge_sul(facts) if facts else {}
-            # ★슬롯이 차는 것과 쓸 만한 것은 다르다 — 재료 자격을 먼저 본다.
-            _prob = spine_fill.sul_material_problem(merged) if merged else "영상에서 재료를 못 뽑았습니다"
-            if _prob:
-                _why.append(_prob)
-                slots = {}
+        if track not in slots_by_track:
+            if track == "insta":
+                slots, _prob = _insta_slots(sources, store)
             else:
+                facts = _facts_per_source(sources, store, sul_facts.analyze_sul, "sul_facts1")
+                merged = spine_fill.merge_sul(facts) if facts else {}
+                # ★슬롯이 차는 것과 쓸 만한 것은 다르다 — 재료 자격을 먼저 본다.
+                _prob = (spine_fill.sul_material_problem(merged) if merged
+                         else "영상에서 재료를 못 뽑았습니다")
                 # ★쿠팡 재료도 함께 넣는다(2026-08-19) — 은폐형은 {제품}·{효능}·{나라}가
                 #   여기서 온다. 안 넣으면 슬롯이 안 차서 영영 폴백한다.
-                slots = spine_fill.slots_from_facts(_facts_for_job(job_id, store), merged)
+                slots = ({} if _prob
+                         else spine_fill.slots_from_facts(_facts_for_job(job_id, store), merged))
+            if _prob:
+                _why.append(_prob)
+            slots_by_track[track] = slots
+        slots = slots_by_track[track]
         try:
             d = spine_fill.build_draft(sp, slots, seconds=seconds) if slots else None
         except Exception as e:      # noqa: BLE001 — 조립 실패가 생성을 막으면 안 된다
@@ -11890,7 +12009,9 @@ except Exception:                                  # noqa: BLE001 — 이 기능
 # no-cache: UI 배포 후 브라우저가 옛 HTML을 캐시로 재사용해 "고쳤는데 안 바뀜"이
 # 반복됨(2026-07-14 역할배정·사이드바 등 실사고) → 매 요청 서버 재검증 강제.
 _NOCACHE = {"Cache-Control": "no-cache, must-revalidate"}
-for _pg in ("discover", "find", "library", "mix", "outreach", "produce", "collection",
+# ★"produce"는 여기서 뺐다(2026-08-20) — 등급에 따라 다른 파일을 서빙해야 해서
+#   아래 _produce_page 명시 라우트로 옮겼다(voice_tune·refs와 같은 패턴).
+for _pg in ("discover", "find", "library", "mix", "outreach", "collection",
             "scene_library", "pattern_bank", "longform", "settings"):
     app.add_api_route(
         f"/{_pg}",
@@ -11928,6 +12049,21 @@ def _refs_page(request: Request):
 
 app.add_api_route("/refs", _refs_page, include_in_schema=False)
 app.add_api_route("/refs.html", _refs_page, include_in_schema=False)
+
+
+# ── 숏템 제작소(2026-08-20 체험판) — 등급에 따라 다른 화면을 준다 ──────────────
+# 사장님 지시: "숏템제작소는 열어두되 사용 자체가 안 되게".
+# full(사장님·pro·체험창)은 종전과 완전히 동일한 produce.html.
+# 그 외(ranking_only)는 API를 하나도 안 부르는 소개 페이지 → 402 JSON이 안 뜬다.
+# ★/api/produce/* 는 화이트리스트에 넣지 않는다 — HTML만 열고 과금 API는 계속 막는다.
+# ★/produce.html도 함께 등록해야 StaticFiles 마운트로 뚫리지 않는다(2026-07-22 실사고).
+def _produce_page(request: Request):
+    name = "produce.html" if access_level(_cid(request)) == "full" else "produce_intro.html"
+    return FileResponse(_STATIC / name, media_type="text/html", headers=_NOCACHE)
+
+
+app.add_api_route("/produce", _produce_page, include_in_schema=False)
+app.add_api_route("/produce.html", _produce_page, include_in_schema=False)
 
 
 # ── 역대 히트작(채널 아카이브, 2026-08-03) — 관리자 전용 ─────────────────────

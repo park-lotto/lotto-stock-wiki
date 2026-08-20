@@ -1,0 +1,200 @@
+<title>쿠팡 상품 연결 6단계</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@500;600;700&display=swap">
+
+<style>
+  :root{
+    --ground:#FBF9F6;
+    --card:#FFFFFF;
+    --inset:#F2EEE8;
+    --ink:#1E1A17;
+    --muted:#6E6259;
+    --faint:#9C9187;
+    --rail:#E4DCD2;
+    --accent:#C8452B;
+    --accent-soft:#FBEDE9;
+    --teal:#1B6E60;
+    --teal-soft:#E7F2EF;
+    --shadow:0 1px 2px rgba(30,26,23,.04), 0 10px 28px rgba(30,26,23,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#16130F; --card:#201C18; --inset:#2A241D;
+      --ink:#F3EEE7; --muted:#B3A79B; --faint:#8B8073; --rail:#3A332B;
+      --accent:#F0785C; --accent-soft:#331F1A;
+      --teal:#5FC4B0; --teal-soft:#152A26;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#16130F; --card:#201C18; --inset:#2A241D;
+    --ink:#F3EEE7; --muted:#B3A79B; --faint:#8B8073; --rail:#3A332B;
+    --accent:#F0785C; --accent-soft:#331F1A;
+    --teal:#5FC4B0; --teal-soft:#152A26;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.3);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--ground);color:var(--ink);
+    font-family:"IBM Plex Sans KR","Malgun Gothic",system-ui,sans-serif;
+    font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:620px;margin:0 auto;padding:48px 20px 80px}
+
+  h1{
+    font-family:"Gowun Dodum","Malgun Gothic",serif;font-weight:400;
+    font-size:clamp(30px,7vw,42px);line-height:1.3;
+    margin:0 0 10px;text-wrap:balance;
+  }
+  .sub{font-size:16px;color:var(--muted);margin:0 0 40px}
+
+  /* ── 단계 카드 ── */
+  .step{
+    background:var(--card);border:1px solid var(--rail);border-radius:18px;
+    padding:22px;margin-bottom:14px;box-shadow:var(--shadow);
+  }
+  .top{display:flex;gap:14px;align-items:center}
+  .num{
+    flex:0 0 auto;width:38px;height:38px;border-radius:50%;
+    background:var(--accent-soft);color:var(--accent);
+    font-size:19px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .step.teal .num{background:var(--teal-soft);color:var(--teal)}
+  .emo{flex:0 0 auto;font-size:34px;line-height:1}
+  .say{font-size:19px;font-weight:600;line-height:1.45;text-wrap:balance;margin:0}
+  .say .btn{
+    display:inline-block;background:var(--inset);border:1px solid var(--rail);
+    border-radius:8px;padding:1px 9px;white-space:nowrap;
+  }
+  .tip{
+    margin:12px 0 0;padding-left:52px;
+    font-size:14.5px;color:var(--muted);font-weight:500;
+  }
+
+  /* ── 캡처 자리 ── */
+  .shot{
+    margin-top:16px;border:2px dashed var(--rail);border-radius:12px;
+    background:var(--inset);
+    min-height:150px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:6px;text-align:center;padding:20px;
+  }
+  .shot .ic{font-size:26px;opacity:.5}
+  .shot .txt{font-size:13px;color:var(--faint);font-weight:600;letter-spacing:.02em}
+
+  /* ── 화살표 ── */
+  .down{text-align:center;font-size:22px;color:var(--rail);margin:0 0 14px;line-height:1}
+
+  /* ── 딱 하나의 경고 ── */
+  .alert{
+    background:var(--accent-soft);
+    border:2px solid var(--accent);border-radius:18px;
+    padding:26px 24px;margin:34px 0 14px;text-align:center;
+  }
+  .alert .ic{font-size:40px;line-height:1;display:block;margin-bottom:10px}
+  .alert .big{
+    font-family:"Gowun Dodum",serif;font-size:26px;line-height:1.4;
+    color:var(--accent);margin:0 0 8px;text-wrap:balance;
+  }
+  .alert .small{font-size:15px;color:var(--ink);margin:0;font-weight:500}
+
+  footer{
+    margin-top:44px;padding-top:20px;border-top:1px solid var(--rail);
+    font-size:13px;color:var(--faint);text-align:center;
+  }
+  @media (max-width:480px){
+    .wrap{padding:36px 16px 64px}
+    .say{font-size:17.5px}
+    .emo{font-size:29px}
+    .tip{padding-left:0}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<h1>쿠팡 상품 연결<br>6단계</h1>
+<p class="sub">위에서부터 순서대로 따라만 하세요.</p>
+
+<div class="step">
+  <div class="top">
+    <div class="num">1</div>
+    <div class="emo">🖥️</div>
+    <p class="say"><span class="btn">쿠팡도우미.bat</span> 더블클릭</p>
+  </div>
+  <p class="tip">검은 창은 켜 둔 채로 두세요.</p>
+  <div class="shot"><span class="ic">🖼️</span><span class="txt">여기에 캡처 — 검은 창</span></div>
+</div>
+
+<p class="down">▼</p>
+
+<div class="step">
+  <div class="top">
+    <div class="num">2</div>
+    <div class="emo">🛒</div>
+    <p class="say"><b>8단계</b>에서 상품 카드 클릭</p>
+  </div>
+  <p class="tip">안 나오면 쿠팡에서 찾아 주소를 붙여넣기.</p>
+  <div class="shot"><span class="ic">🖼️</span><span class="txt">여기에 캡처 — 8단계 🛒 상품 확정</span></div>
+</div>
+
+<p class="down">▼</p>
+
+<div class="step">
+  <div class="top">
+    <div class="num">3</div>
+    <div class="emo">🔗</div>
+    <p class="say"><span class="btn">파트너스에서 링크 만들기</span></p>
+  </div>
+  <p class="tip">나온 주소를 <b>파트너스 추적 링크</b> 칸에 붙여넣기.</p>
+  <div class="shot"><span class="ic">🖼️</span><span class="txt">여기에 캡처 — 파트너스 링크 칸</span></div>
+</div>
+
+<p class="down">▼</p>
+
+<div class="step">
+  <div class="top">
+    <div class="num">4</div>
+    <div class="emo">💾</div>
+    <p class="say"><span class="btn">저장</span> 누르기</p>
+  </div>
+  <p class="tip">인포크에 넣을 4줄이 자동으로 나옵니다.</p>
+  <div class="shot"><span class="ic">🖼️</span><span class="txt">여기에 캡처 — 자동으로 나온 4줄</span></div>
+</div>
+
+<p class="down">▼</p>
+
+<div class="step">
+  <div class="top">
+    <div class="num">5</div>
+    <div class="emo">📝</div>
+    <p class="say"><span class="btn">🛒 쿠팡 링크 + 고지문구 붙이기</span></p>
+  </div>
+  <p class="tip">한 번만 누르면 설명란에 자동으로 들어갑니다.</p>
+  <div class="shot"><span class="ic">🖼️</span><span class="txt">여기에 캡처 — 설명란 버튼</span></div>
+</div>
+
+<p class="down">▼</p>
+
+<div class="step teal">
+  <div class="top">
+    <div class="num">6</div>
+    <div class="emo">📦</div>
+    <p class="say"><b>9단계</b> → <span class="btn">링크 복사 + 인포크 열기</span></p>
+  </div>
+  <p class="tip">인포크에 4줄 붙여넣고 <b>☑ 등록 완료</b> 체크.</p>
+  <div class="shot"><span class="ic">🖼️</span><span class="txt">여기에 캡처 — 9단계 인포크 상자</span></div>
+</div>
+
+<div class="alert">
+  <span class="ic">⚠️</span>
+  <p class="big">3단계를 빼먹으면<br>수수료가 0원입니다</p>
+  <p class="small">상품 이름 옆에 <b>“파트너스 링크 ✓”</b> 가 떠야 정상입니다.</p>
+</div>
+
+<footer>숏템메이커 · 쿠팡 상품 연결</footer>
+
+</div>
