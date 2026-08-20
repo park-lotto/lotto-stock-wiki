@@ -38,9 +38,13 @@ class TestSourcesForGenerate:
         assert out and out[0]["full_text"] == "가 나"
 
     def test_상한을_넘지_않는다(self):
+        # ★숫자를 여기 다시 적지 않는다 — 상한은 script_generate.SOURCE_MAX 한 곳에서만
+        #   정한다(0순위-B). 예전엔 이 테스트가 3을 박아 둬, 상한을 올리면 코드가 맞는데
+        #   테스트가 틀리는 상태가 됐다(2026-08-20 게이트가 실제로 여기서 막았다).
+        from shopping_shorts.script_generate import SOURCE_MAX
         it = {"category": "", "full_text": "1", "structure": {}}
-        job = _job({"v%d" % i: {"full_text": str(i + 2)} for i in range(5)})
-        assert len(_sources_for_generate(it, job)) == 3
+        job = _job({"v%d" % i: {"full_text": str(i + 2)} for i in range(SOURCE_MAX + 3)})
+        assert len(_sources_for_generate(it, job)) == SOURCE_MAX
 
 
 class TestScenePointsBlock:
