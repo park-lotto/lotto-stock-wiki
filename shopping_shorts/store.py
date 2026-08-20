@@ -404,8 +404,15 @@ class Store:
             # 키워드 추측 정확도가 실측 54%(13건 중 7건)인데 학습 코퍼스의 다수를
             # 차지해(생활용품 79%·인테리어 80%가 추측) 통계가 오염된다. 출처를 남겨야
             # ①사용자 교정을 AI가 덮지 않고 ②나중에 추측만 골라 재분류·가중치 조정이 된다.
+            # hook_axis(2026-08-20): 이 영상의 **훅 문형 축**. 대본 스타일 자동선택이
+            # 이 값을 쓴다(`hook_axis.AXIS_TO_SPINE`). 종전 자동선택은 목록 앞 2개를
+            # 그냥 집어 영상 내용과 무관했다. 저장해 두면 화면이 담기 단계에서 미리
+            # 보여줄 수 있고, 매번 다시 판정하지 않는다.
+            # ⚠️판정 규칙이 바뀌면 이 값은 낡는다 — 재판정 스크립트로 다시 채워라
+            #   (scripts/backfill_hook_axis.py).
             for col, ddl in (("category", "TEXT"), ("structure_json", "TEXT"),
-                              ("structure_analyzed_at", "TEXT"), ("category_source", "TEXT")):
+                              ("structure_analyzed_at", "TEXT"), ("category_source", "TEXT"),
+                              ("hook_axis", "TEXT")):
                 try:
                     c.execute(f"ALTER TABLE script_extracts ADD COLUMN {col} {ddl}")
                 except sqlite3.OperationalError:
@@ -2478,8 +2485,30 @@ class Store:
     def save_script(self, shortcode, script, category=None):
         """대본추출 결과({segments, full_text}) 저장(덮어쓰기). category가 오면
         같이 저장(학습소재 통계의 그룹핑 키, 2026-07-13). 구조분석은 별도
-        save_extract_structure()로 나중에 채워진다."""
+        save_extract_structure()로 나중에 채워진다.
+
+        ★훅 문형 축(2026-08-20)도 여기서 같이 남긴다 — 저장 **단일 출구**라
+          어느 경로로 전사가 들어와도 빠지지 않는다(0순위-B: 부르는 쪽마다 적으면
+          반드시 한 곳이 빠진다).
+        """
+        try:
+            from shopping_shorts.hook_axis import axis_of
+            axis = axis_of(script) or None
+        except Exception:      # noqa: BLE001 — 축 판정 실패가 전사 저장을 막으면 안 된다
+            axis = None
         with self._conn() as c:
+            if axis:
+                c.execute(
+                    "INSERT INTO script_extracts(shortcode, script_json, extracted_at, hook_axis) "
+                    "VALUES(?,?,datetime('now'),?) ON CONFLICT(shortcode) DO UPDATE SET "
+                    "script_json=excluded.script_json, extracted_at=excluded.extracted_at, "
+                    "hook_axis=excluded.hook_axis",
+                    (shortcode, json.dumps(script, ensure_ascii=False), axis),
+                )
+                if category is not None:
+                    c.execute("UPDATE script_extracts SET category=? WHERE shortcode=?",
+                              (category, shortcode))
+                return
             if category is not None:
                 c.execute(
                     "INSERT INTO script_extracts(shortcode, script_json, extracted_at, category) "
@@ -2766,16 +2795,39 @@ class Store:
         return list(reversed(chain))
 
     def get_script(self, shortcode):
-        """저장된 대본추출 결과. 없으면 None. 있으면 {segments, full_text, extracted_at}."""
+        """저장된 대본추출 결과. 없으면 None.
+        있으면 {segments, full_text, extracted_at, hook_axis, hook_spine}.
+
+        ★hook_axis/hook_spine(2026-08-20): 이 영상의 훅 문형 축과 그 축이 고르는 대본
+          스타일. **읽는 출구가 여기 하나**라 이 값을 쓰는 화면·API가 전부 같이 받는다
+          (부르는 쪽마다 조회하면 반드시 한 곳이 빠진다 = 0순위-B).
+        ★DB에 값이 없으면(옛 전사) 그 자리에서 판정해 채워 넣는다 — 백필을 아직 안 돌린
+          DB에서도 화면이 비지 않는다. 단 **DB에 쓰지는 않는다**(읽기 경로에서 쓰면
+          느려지고 잠금이 는다). 채우는 건 scripts/backfill_hook_axis.py가 한다.
+        """
         with self._conn() as c:
             row = c.execute(
-                "SELECT script_json, extracted_at FROM script_extracts WHERE shortcode=?",
+                "SELECT script_json, extracted_at, hook_axis FROM script_extracts "
+                "WHERE shortcode=?",
                 (shortcode,),
             ).fetchone()
         if not row:
             return None
         data = json.loads(row[0])
         data["extracted_at"] = row[1]
+        axis = row[2] or ""
+        if not axis:
+            try:
+                from shopping_shorts.hook_axis import axis_of
+                axis = axis_of(data) or ""
+            except Exception:      # noqa: BLE001 — 판정 실패가 조회를 막으면 안 된다
+                axis = ""
+        data["hook_axis"] = axis
+        try:
+            from shopping_shorts.hook_axis import AXIS_TO_SPINE
+            data["hook_spine"] = AXIS_TO_SPINE.get(axis, "")
+        except Exception:      # noqa: BLE001
+            data["hook_spine"] = ""
         return data
 
     # ── S급 대본 위키(도서관) — customer_id별로 독립(2026-07-13 멀티테넌시) ──
