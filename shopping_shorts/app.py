@@ -11253,8 +11253,35 @@ def api_pattern_spines(status: str = None):
     return {"ok": True, "spines": Store(DB_PATH).list_spines(status=status or None)}
 
 
+def _spine_cover(sp, sources, store, job_id=""):
+    """이 틀이 지금 재료로 몇 칸 차나 → {done, total, missing, ready, why}.
+
+    사장님 아이디어(2026-08-20): **담기 전에** "필요한 장면 / 있는 것 / 없는 것"을 보여준다.
+    지금까지는 대본을 다 돌려본 **뒤에야** "재료가 모자랍니다"를 알았다 — 그만큼 기다린
+    뒤에 안다는 뜻이고, 그래서 일단 많이 담고 보게 된다(무분별 수집).
+
+    ★재료 추출을 여기서 돌리지 않는다(cache_only) — 목록을 여는 동작이지 생성이 아니다.
+    ★칸 판정은 `_slots_for_spine` + `spine_fill.coverage` 한 벌만 쓴다(0순위-B).
+      화면과 조립이 서로 다르게 판단하면 "된다더니 눌러보면 안 되는" 상태가 된다.
+    """
+    from shopping_shorts import spine_fill
+    try:
+        slots, prob = _slots_for_spine(sp, sources, store, job_id, cache_only=True)
+    except Exception as e:      # noqa: BLE001 — 커버리지 실패가 목록을 막지 않는다
+        print("_spine_cover 실패(무해): %s" % str(e)[:100], file=sys.stderr)
+        return None
+    total = len(sp.get("beat_roles") or [])
+    if not slots:
+        # 조립 대상이 아닌 스타일은 prob이 ''다 — 그때는 아무것도 안 보여준다(빈 경고 금지).
+        return None if not prob else {"done": 0, "total": total, "missing": [],
+                                      "ready": False, "why": prob}
+    done, total, miss = spine_fill.coverage(sp, slots)
+    return {"done": done, "total": total, "missing": miss,
+            "ready": not miss, "why": ""}
+
+
 @app.get("/api/script/styles")
-def api_script_styles(category: str = None):
+def api_script_styles(request: Request, category: str = None, job: str = None):
     """대본 생성에서 고를 수 있는 **스타일** 목록(2026-08-15).
 
     조건: 승인됨 + beat_roles가 붙어 있음(=기계가 검사 가능).
@@ -11266,8 +11293,23 @@ def api_script_styles(category: str = None):
         fit="검증"  = 이 소재에서 실제로 통한 스타일
         fit="타소재" = 다른 소재에서 검증됨(써도 되지만 어울림은 확인 필요)
       정렬은 검증 먼저, 그다음 실적순 — 첫 번째가 곧 추천이다."""
-    styles = Store(DB_PATH).list_style_spines(category=None)     # 잠그지 않고 전부
+    store = Store(DB_PATH)
+    styles = store.list_style_spines(category=None)     # 잠그지 않고 전부
     cat = (category or "").strip()
+    # ★job이 오면 "지금 담긴 재료로 이 틀이 몇 칸 차나"를 함께 준다(2026-08-20 사장님
+    #   아이디어: "필요한 장면 / 있는 것 / 없는 것을 보여줘라" — 무분별 수집 방지).
+    #   ⚠️**이미 뽑아둔 재료만** 쓴다(cache_only). 여기서 추출을 돌리면 드롭다운 한 번
+    #     여는 데 영상 수만큼 Gemini를 때린다 — 고르기 전에 보는 값이라 그러면 안 된다.
+    #     아직 분석 전인 영상은 그냥 "분석 전"으로 나온다.
+    _srcs = []
+    if job:
+        try:
+            # 씨앗 항목({})은 안 넣는다 — 여기서 알고 싶은 건 **담긴 영상들**로 몇 칸이
+            # 차느냐다. job의 extract가 곧 담긴 영상의 분석 결과다.
+            _srcs = _sources_for_generate({}, store.get_mix_job(job) or {})
+        except Exception as e:      # noqa: BLE001 — 커버리지 실패가 목록을 막지 않는다
+            print("styles coverage 재료 조회 실패(무해): %s" % str(e)[:100], file=sys.stderr)
+            _srcs = []
     out = []
     for s in styles:
         fits = s.get("fit_categories") or []
@@ -11281,6 +11323,8 @@ def api_script_styles(category: str = None):
             # 사용자가 이름만 보고는 못 고른다 — 어디서 나왔고 얼마나 통했는지를 함께 준다.
             "evidence": s.get("situation_type") or "",
         })
+        if _srcs:
+            out[-1]["cover"] = _spine_cover(s, _srcs, store, job)
     out.sort(key=lambda x: (x["fit"] != "검증", -(x["perf_score"] or 0), -(x["source_count"] or 0)))
     return {"ok": True, "styles": out}
 
@@ -11435,7 +11479,7 @@ def _sul_block_for_sources(category, sources, store=None, spines=None):
         return ""
 
 
-def _facts_per_source(sources, store, analyze, ckey_prefix):
+def _facts_per_source(sources, store, analyze, ckey_prefix, cache_only=False):
     """담긴 영상 **한 편씩** 재료를 뽑는다(캐시 포함) → [facts, ...].
 
     ★영상 한 편 단위로 캐시한다(2026-08-19). 이 경로는 영상마다 따로 부르는데
@@ -11447,6 +11491,11 @@ def _facts_per_source(sources, store, analyze, ckey_prefix):
 
     ★썰·인스타가 **이 함수 한 벌을 공유한다**(0순위-B) — 갈리는 건 `analyze`(어느
       추출기냐)와 캐시 접두사뿐이다. 복사해 두 벌로 두면 한쪽만 고쳐져 어긋난다.
+
+    cache_only=True면 **캐시에 있는 것만** 쓰고 없으면 건너뛴다(모델을 안 부른다).
+      화면이 "지금 재료로 어느 틀이 몇 칸 차나"를 미리 보여줄 때 쓴다 —
+      그건 사장님이 **고르기 전에** 보는 값이라 여기서 Gemini를 부르면
+      드롭다운 하나 여는 데 몇 초씩 걸리고 키까지 태운다.
     """
     facts = []
     for x in (sources or [])[:_FACTS_MAX_SOURCES]:
@@ -11460,7 +11509,7 @@ def _facts_per_source(sources, store, analyze, ckey_prefix):
                 f = json.loads(store.get_setting(ckey, "") or "{}") or {}
             except Exception:      # noqa: BLE001 — 깨진 캐시로 조립을 막지 않는다
                 f = {}
-        if not f:
+        if not f and not cache_only:
             try:
                 f = analyze({"captions": [c]}) or {}
             except Exception:      # noqa: BLE001
@@ -11471,6 +11520,47 @@ def _facts_per_source(sources, store, analyze, ckey_prefix):
         if f:
             facts.append(f)
     return facts
+
+
+def _slots_for_spine(sp, sources, store, job_id="", cache_only=False):
+    """이 스파인이 쓰는 **슬롯 dict**와 못 한 이유 → (slots, problem).
+
+    갈래(썰·발명품·인스타)마다 재료 추출기도 자격 검사도 다르다. 그 분기를 **여기 한
+    곳**에 둔다(0순위-B) — 조립 경로(`_assembled_drafts`)와 화면이 보는 커버리지
+    (`/api/script/styles`)가 서로 다르게 판단하면 "화면은 된다는데 눌러보면 안 되는"
+    상태가 된다. 그건 고쳐도 또 어긋난다.
+
+    cache_only=True면 이미 뽑아둔 재료만 쓴다(모델 호출 0회).
+    """
+    from shopping_shorts import sul_facts, spine_fill
+    if _is_insta_context("", [sp]):
+        if cache_only:
+            facts = _facts_per_source(sources, store, insta_facts_analyze(), "insta_facts1",
+                                      cache_only=True)
+            if not facts:
+                return {}, "아직 분석 전입니다"
+        return _insta_slots(sources, store)
+
+    invention = _is_invention_context("", [sp])
+    if not (invention or _is_sul_context("", [sp])):
+        return {}, ""          # 조립 대상이 아닌 스타일 — 커버리지도 안 잰다
+    facts = _facts_per_source(sources, store, sul_facts.analyze_sul, "sul_facts1",
+                              cache_only=cache_only)
+    if not facts:
+        return {}, ("아직 분석 전입니다" if cache_only else "영상에서 재료를 못 뽑았습니다")
+    merged = spine_fill.merge_sul(facts)
+    prob = (spine_fill.invention_material_problem(merged) if invention
+            else spine_fill.sul_material_problem(merged))
+    if prob:
+        return {}, prob
+    return spine_fill.slots_from_facts(_facts_for_job(job_id, store) if job_id else None,
+                                       merged), ""
+
+
+def insta_facts_analyze():
+    """인스타 추출기 참조 — 임포트를 한 줄로 모은다(순환 임포트를 피한다)."""
+    from shopping_shorts import insta_facts
+    return insta_facts.analyze_insta
 
 
 def _insta_slots(sources, store):
