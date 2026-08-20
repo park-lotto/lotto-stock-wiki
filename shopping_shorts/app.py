@@ -102,6 +102,19 @@ app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 
 @app.on_event("startup")
+def _source_max():
+    """대본 생성에 넣는 재료 영상 상한. 정하는 곳은 `script_generate.SOURCE_MAX` **한 곳**뿐이다.
+
+    0순위-B: 예전엔 같은 3이 여기 4곳 + script_generate 3곳 = 7벌로 흩어져 있었다.
+    임포트가 실패해도 생성을 죽이지 않는다(종전 값 3으로 떨어진다).
+    """
+    try:
+        from shopping_shorts.script_generate import SOURCE_MAX
+        return SOURCE_MAX
+    except Exception:      # noqa: BLE001 — 상한 조회 실패가 대본 생성을 막으면 안 된다
+        return 3
+
+
 def _seed_voice_presets():
     """기동 시 큐레이션 프리셋을 DB로 upsert(idempotent)."""
     try:
@@ -2413,7 +2426,7 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         #   (실측 사고: 재료 750자 vs 은행 2,822자 → 대본이 은행 소재로 끌려감).
         #   여기서 source_chars를 넘겨 은행이 재료의 1.5배를 넘지 않게 자른다.
         if _bank_ctx:
-            _sc = sum(len((s.get("full_text") or "")) for s in (_src or [])[:3])
+            _sc = sum(len((s.get("full_text") or "")) for s in (_src or [])[:_source_max()])
             if _sc:
                 _bank_ctx = bank_assemble.assemble_bank_context(
                     store, it.get("category") or "", source_chars=_sc) or _bank_ctx
@@ -11284,7 +11297,7 @@ def _sul_block_for_sources(category, sources, store=None, spines=None):
     """
     if not _is_sul_context(category, spines):
         return ""
-    caps = [(s.get("full_text") or "").strip() for s in (sources or [])[:3]]
+    caps = [(s.get("full_text") or "").strip() for s in (sources or [])[:_source_max()]]
     caps = [c for c in caps if c]
     if not caps:
         return ""
@@ -11329,7 +11342,7 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
             continue
         if slots is None:
             # 재료에서 슬롯을 한 번만 뽑아 스파인들이 공유한다(같은 재료를 두 번 안 때린다).
-            caps = [(x.get("full_text") or "").strip() for x in (sources or [])[:3]]
+            caps = [(x.get("full_text") or "").strip() for x in (sources or [])[:_source_max()]]
             caps = [c for c in caps if c]
             facts = []
             for c in caps:
@@ -11393,15 +11406,19 @@ def _prefetched_facts_for_job(job, store):
     return {}
 
 
-def _sources_for_generate(item, job, limit=3):
+def _sources_for_generate(item, job, limit=None):
     """대본 생성에 넣을 **재료 대본 목록**. 담긴 영상 전부(최대 limit편) + 씨앗 항목.
 
     ★왜 여러 편인가(2026-08-17 사장님 지시): 한 편만 넣으면 그 한 편의 인물·상황에
       끌려가 편협해지고, **어느 편을 고르느냐가 결과를 좌우**한다(사용자는 뭐가 좋은
       대본인지 모른다). 담긴 것을 다 넣으면 고를 일이 없어진다 = 복불복이 사라진다.
-    ★`_mix_source_block`이 원래 `sources[:3]`으로 3편까지 받게 돼 있다 — 그릇에 맞춰 채운다.
+    ★상한은 `script_generate.SOURCE_MAX`가 **혼자** 정한다(0순위-B). 여기서 3을 다시
+      적어 두면 그릇(_mix_source_block)만 늘려도 여기가 잘라 버린다 — 실제로 그랬다.
     ★job이 없으면(위키 직행 등) 종전대로 항목 하나. 회귀 0.
     """
+    if limit is None:
+        from shopping_shorts.script_generate import SOURCE_MAX
+        limit = SOURCE_MAX
     out, seen = [], set()
 
     def _add(name, full_text, structure, product="", segments=None):
@@ -11814,7 +11831,7 @@ def api_script_beat_regen(request: Request, body: dict):
     if store.get_setting("ping_pong_enabled", "") == "1":
         # 전체 생성과 **같은 예산**을 건다(0순위-B: 한쪽만 걸면 [바꾸기]로 만든 칸만
         # 은행 소재로 끌려가 전체와 결이 어긋난다).
-        _sc = sum(len((s.get("full_text") or "")) for s in (_src or [])[:3])
+        _sc = sum(len((s.get("full_text") or "")) for s in (_src or [])[:_source_max()])
         _bank_ctx = bank_assemble.assemble_bank_context(
             store, it.get("category") or "", source_chars=_sc) or ""
 
