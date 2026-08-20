@@ -944,8 +944,14 @@ function bandDrop(i, segId, ev){
 }
 function dropCutFromBand(i, segId){
   const l = lists[i] || [];
-  const k = l.indexOf(segId);
-  if (k >= 0) delSeg(i, k);
+  // ★같은 조각이 여러 컷으로 되풀이될 수 있다(늘려 채움 · 라운드로빈이 여러 바퀴).
+  //   예전엔 indexOf로 **첫 항목 하나만** 지워, 화면엔 그 조각이 그대로 남고 배치만
+  //   다시 계산돼 "빠지는 게 아니라 새로운 게 들어간다"로 보였다(2026-08-20 사장님).
+  //   두 번 클릭 = "이 조각을 이 칸에서 뺀다" — 그 칸의 그 조각을 전부 지운다.
+  const next = l.filter(x => x !== segId);
+  if (next.length === l.length) return;      // 없는 조각 — 아무 일도 안 한다
+  lists[i] = next;
+  render();
 }
 
 // 음성 만들기 — 칸마다 음성이 있는지 보고, 없는 것만 서버에 만들어 달라고 한다.
@@ -1052,7 +1058,7 @@ function renderBand(){
              ondragend="itemDragEnd()"
              ondragover="if(dragFrom){event.preventDefault();event.dataTransfer.dropEffect='move';}"
              ondrop="bandDrop(${i}, '${c.seg_id}', event)"
-             onclick="bandCutClick('${c.seg_id}', event)"
+             onclick="bandCutClick(${i}, '${c.seg_id}', event)"
              ondblclick="event.stopPropagation();clearTimeout(clickTimer);dropCutFromBand(${i}, '${c.seg_id}')"
              title="${segMark(c.seg_id)} = 영상 ${srcNo(c.seg_id)}의 ${segNo(c.seg_id)}번째 조각 · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 누르면 이 조각만 미리보기 · 끌어서 순서 바꾸기 · 아래 소스로 끌면 빼기 · 두 번 클릭도 빼기">
              <img src="${SL.thumb(c.seg_id)}" loading="lazy"><span class="n">${segMark(c.seg_id)}</span><span class="s">${c.dur.toFixed(1)}</span
@@ -1457,10 +1463,15 @@ function clickPlay(sid, ev){
 //   예전엔 조각을 눌러도 부모(.tbeat)로 버블해 **칸 전체**가 재생돼, 한 컷만 보고 싶을 때
 //   방법이 없었다. 대본(.tbsay)·칸 여백은 그대로 부모로 버블 = 칸 전체 재생(기존 그대로).
 //   두 번 클릭(빼기)과 겹치지 않게 소스 카드와 **같은 규칙**으로 230ms 기다린다.
-function bandCutClick(sid, ev){
+function bandCutClick(i, sid, ev){
   if (ev) ev.stopPropagation();
   clearTimeout(clickTimer);
-  clickTimer = setTimeout(() => playSegHere(sid), 230);
+  // ★조각을 누르면 그 칸이 '지금 담기는 칸'이 된다(2026-08-20). 종전엔 stopPropagation으로
+  //   부모(.tbeat)의 selBeat이 막혀, 칸의 조각을 만지고 팔레트에서 새 장면을 담으면
+  //   **이전에 고른 칸**에 들어갔다 = "새로운 게 들어간다".
+  // ★sel 변경을 타이머 안에 둔 이유: 클릭 즉시 render()하면 DOM이 갈려 두 번째
+  //   클릭이 새 노드로 가 dblclick(빼기)이 성립하지 않는다.
+  clickTimer = setTimeout(() => { if (sel !== i) selBeat(i); playSegHere(sid); }, 230);
 }
 let _byRoleCache = {};               // 화면에 보이는 조각 목록(상단 이어 보기용)
 let palDrag = null;                  // 지금 끌고 있는 팔레트 장면
@@ -1775,7 +1786,11 @@ function add(sid){
   }
   const l = lists[sel];
   if (!l) return;
-  if (l.includes(sid)) return;          // 중복 금지 — 같은 화면 되풀이 방지
+  if (l.includes(sid)){                 // 중복 금지 — 같은 화면 되풀이 방지
+    // ★조용한 무시는 고장으로 보인다(2026-08-20). 왜 안 담기는지 한 줄 알린다.
+    if (typeof nsay === 'function') nsay(`이미 ${sel+1}번 칸에 담긴 장면이에요 — 다른 칸을 먼저 골라주세요`);
+    return;
+  }
   l.push(sid); chosen.add(sid); render();
 }
 function delSeg(i, k){ lists[i].splice(k, 1); render(); }
