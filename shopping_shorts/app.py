@@ -2018,7 +2018,17 @@ def api_produce_extract_from_url(request: Request, body: dict, background_tasks:
             structure = None
         if structure:
             store.save_extract_structure(code, structure)
-        return {"ok": True, "cached": False, **result, "category": category, "structure": structure}
+        # ★훅 문형 축을 같이 실어 보낸다(2026-08-20). 캐시 경로는 `**cached`(=get_script)가
+        #   이미 싣고 있는데 여기만 빠지면 **새로 추출한 영상에서만 화면이 비는** 어긋남이
+        #   난다(0순위-B: 같은 값을 두 경로가 다르게 내보내면 반드시 티가 난다).
+        try:
+            from shopping_shorts import hook_axis as _hx
+            _axis = _hx.axis_of(result) or ""
+            _spine = _hx.AXIS_TO_SPINE.get(_axis, "")
+        except Exception:      # noqa: BLE001 — 축 판정 실패가 추출 응답을 막으면 안 된다
+            _axis = _spine = ""
+        return {"ok": True, "cached": False, **result, "category": category,
+                "structure": structure, "hook_axis": _axis, "hook_spine": _spine}
     finally:
         if not ok:
             refund_credit(cid, "script")
