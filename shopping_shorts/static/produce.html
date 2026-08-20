@@ -4191,8 +4191,7 @@ async function _restoreWork(workId){
       //   서버 잡은 계속 도는데 복원 경로가 폴링을 재시작하지 않아 UI만 잊었다.
       //   진행 중 상태면 폴링·패널0 표시를 되살린다 — 완료/실패면 종전대로(아무 것도 안 함).
       if(s && s.ok && ['queued','downloading','extracting','planning','tts'].includes(s.status)){
-        if(MIX_POLL) clearInterval(MIX_POLL);
-        MIX_POLL=setInterval(pollMix,2500);
+        setMixPoll(pollMix,2500);
         try{ if(typeof updateMatchProgress==='function') updateMatchProgress(MIX_LABEL[s.status]||s.status); }catch(e){}
         try{ if(typeof setMatchingUI==='function') setMatchingUI(true); }catch(e){}
         pollMix();
@@ -4607,7 +4606,14 @@ function _renderMixReviewBody(d){
     ;   // 안내 줄 삭제(2026-08-15 사장님)
   const _pvPanel=document.getElementById('mixPreviewPanel'), _pvBox=document.getElementById('mixPreview');
   if(_pvPanel) _pvPanel.style.display='';
+  // ★렌더 중이거나 결과가 붙어 있으면 안내문으로 덮지 않는다(2026-08-20).
+  //   이 함수는 폴링마다 다시 불리는데 끝에서 무조건 안내문을 써서, 확정 직후 로더도
+  //   완성된 영상도 1초 만에 지워졌다. 폴러 고아 수정(setMixPoll)과 짝인 2차 방어다.
+  //   ※<video> 유무로 막으면 안 된다 — 재매칭은 옆 영상을 치우고 안내문을 다시 띄워야 
+  //   게이트가 잠긴다(회귀테스트 C3). 보호는 '렌더 중'일 때만.
+  if(_pvBox && PREVIEW_STATUS !== 'rendering'){
   if(_pvBox) _pvBox.innerHTML='<div style="aspect-ratio:var(--shorts-pv-ar,9/16);width:100%;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:18px"><div style="font-size:34px">🪞</div><div style="font-size:14px;line-height:1.5">오른쪽 <b style="color:var(--accent)">🎬 대본×영상믹스 확정</b>를<br>누르면 <b>여기에서</b> 영상이<br>만들어지는 걸 보실 수 있어요</div></div>';
+  }
 }
 // 매칭 결과 취소 → 처음부터 다시(2026-07-20 사장님). 장면이 대사와 안 맞거나 이상하게 나오면
 // 이 매칭 job을 버리고, 소스·대본을 고쳐 "🎬 영상 매칭 시작"을 다시 누를 수 있게 리셋한다.
@@ -6364,9 +6370,20 @@ async function startProduceMix(){
         st._sblPipe.set(0, '영상 다운로드 중… <b>1/4</b>');
       }
     }catch(_){ st._sblPipe = null; }
-    MIX_POLL=setInterval(pollMix,2500); pollMix();
+    setMixPoll(pollMix,2500); pollMix();
     refreshNextBtn();   // 새 job은 아직 미리보기가 없다 — 다시 잠근다
   }catch(e){ st.textContent='❌ 네트워크 오류'; }
+}
+// ★MIX_POLL 예약은 반드시 여기로(2026-08-20 사장님 "믹스확정을 누르면 안되고 다시 원래대로").
+//   같은 변수에 새 setInterval을 넣는 곳이 3군데였는데 아무도 앞의 것을 안 죽여서, 핸들을
+//   잃은 **고아 폴러**가 계속 살아 매초 loadMixReview()를 불렀다. loadMixReview는 끝에서
+//   PREVIEW_STATUS=null · clearInterval(PREVIEW_POLL) · ++PREVIEW_GEN을 하므로 확정 직후
+//   로더도 완성된 영상도 지워지고 진행 중인 요청까지 무효가 됐다(실측: preview_status=ready
+//   인데 화면은 안내문). 예약 전 죽이기를 한 곳에 묶어 고아가 생길 자리를 없앤다.
+function setMixPoll(fn, ms){
+  clearInterval(MIX_POLL);
+  MIX_POLL = setInterval(fn, ms);
+  return MIX_POLL;
 }
 async function pollMix(){
   try{
@@ -8379,7 +8396,7 @@ async function renderFinal(){
   const r=await fetch('/api/mix/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:MIX_JOB, thumb_intro:_intro})});
   const d=await r.json().catch(()=>({ok:false}));
   if(!r.ok||!d.ok){ _finalRenderRestore('❌ 렌더 시작 실패'); document.getElementById('finalVideo').innerHTML=''; return; }
-  MIX_POLL=setInterval(pollFinal,3000); pollFinal();
+  setMixPoll(pollFinal,3000); pollFinal();
 }
 async function pollFinal(){
   try{
