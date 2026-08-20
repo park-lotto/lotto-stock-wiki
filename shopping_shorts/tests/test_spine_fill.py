@@ -153,10 +153,13 @@ def test_twist는_cases와_다른_사례를_쓴다():
     assert cases.startswith("인테리어 소품")
 
 
-def test_사례가_하나뿐이면_겹침을_피할_수_없다():
-    """정직하게 같은 값을 쓴다 — 없는 사례를 지어내지 않는다."""
+def test_사례가_하나뿐이면_반전_몫을_비운다():
+    """2026-08-20 변경 — 예전엔 같은 값을 용도·용도끝에 다 넣어 cases와 twist가
+    **같은 문장을 두 번** 말했다. 이제는 반전 몫을 비워 twist 템플릿이 안 걸리게 하고,
+    호출부가 그 칸을 모델에 맡긴다(겹친 문장을 내놓는 것보다 낫다)."""
     slots = sf.slots_from_facts({}, {"misuses": ["하나뿐"]})
-    assert slots["용도"] == slots["용도끝"] == "하나뿐"
+    assert slots["용도"] == "하나뿐"
+    assert not slots.get("용도끝")     # 빈 값은 아예 담기지 않는다
 
 
 def test_실측구조_초보vs고수():
@@ -181,13 +184,22 @@ def test_사례가_하나면_대비구조를_안_쓴다():
 
 def test_고조_연결어_템플릿이_사례3개면_걸린다():
     """게이트가 '고조 심화 1회'를 요구한다. 실측 대본에도 '심지어'가 있다."""
+    # ★2026-08-20: 반전 몫을 먼저 떼면서 cases가 쓰는 사례가 하나씩 줄었다. 그대로 두면
+    #   사용처 3개(실측 오용형 20편 중 6편 = 30%)에서 '심지어'가 사라져 게이트에 걸린다.
+    #   → **2슬롯짜리에도 고조어를 넣은 변형**을 앞에 둬서 그 구간을 살린다.
     tmpl = ["초보들은 기껏해야 {용도} 정도가 전부였는데 고수들은 {용도2}까지 하더라고요 심지어 {용도3}까지 한다는 거",
+            "초보들은 기껏해야 {용도} 정도가 전부였는데 고수들은 심지어 {용도2}까지 하더라고요",
             "초보들은 기껏해야 {용도} 정도가 전부였는데 고수들은 {용도2}까지 하더라고요"]
     spine = {"beat_roles": ["cases"], "templates": {"cases": tmpl}}
+    # 사용처 4개 → cases가 3개를 쓴다(용도·용도2·용도3). 고조어 1회.
+    s4 = sf.slots_from_facts({}, {"misuses": ["A하기", "B하기", "C하기", "D하기"]})
+    assert sf.fill(spine, s4)[0][0]["text"].count("심지어") == 1
+    # 사용처 3개 → cases가 2개를 쓰고 나머지 1개는 반전 몫. 그래도 고조어 1회.
     s3 = sf.slots_from_facts({}, {"misuses": ["A하기", "B하기", "C하기"]})
-    assert "심지어" in sf.fill(spine, s3)[0][0]["text"]
+    assert sf.fill(spine, s3)[0][0]["text"].count("심지어") == 1
+    # 사용처 2개 → cases가 1개뿐이라 대비 문장 자체가 안 걸린다(없는 사례를 지어내지 않는다).
     s2 = sf.slots_from_facts({}, {"misuses": ["A하기", "B하기"]})
-    assert "심지어" not in sf.fill(spine, s2)[0][0]["text"]     # 없는 사례를 지어내지 않는다
+    assert not sf.fill(spine, s2)[0]
 
 
 def test_서술격조사_이었음이_안_깨진다():
@@ -285,3 +297,52 @@ def test_서술형_슬롯_뒤에_어미를_붙이지_않는다():
     out = sf.fill(spine, s)[0][0]["text"]
     assert out.endswith("비용을 아낄 수 있다")
     assert "있다까지" not in out
+
+
+class TestCasesTwistNoOverlap:
+    """★나열(cases)과 반전(twist)이 **같은 사용처를 두 번 말하면 안 된다**.
+
+    2026-08-20 재발 버그: `용도끝`을 그냥 마지막 항목으로 뽑아서, 사용처가 2~3개면
+    cases가 이미 말한 것을 twist가 그대로 반복했다(반전이 죽는다).
+    히트작 200편 오용형 정밀분해 20편의 사용처 개수는 2개 5편·3개 6편 = **55%가 이 구간**.
+    """
+
+    CASES = ["초보들은 기껏해야 {용도} 정도가 전부였는데 고수들은 {용도2}까지 하더라고요 "
+             "심지어 {용도3}까지 한다는 거",
+             "초보들은 기껏해야 {용도} 정도가 전부였는데 고수들은 {용도2}까지 하더라고요",
+             "{용도들}", "{용도}로 쓰더라고요"]
+    SPINE = {"beat_roles": ["cases", "twist"],
+             "templates": {"cases": CASES,
+                           "twist": ["근데 미친 사용법은 따로 있었는데 {용도끝}"]}}
+    ALL = ["빨래 바구니", "슬라이딩 신발장", "2층 수납함", "화분 걸이", "책상 정리대"]
+
+    def _beats(self, n):
+        slots = sf.slots_from_facts(None, {"misuses": self.ALL[:n]})
+        beats, missing = sf.fill(self.SPINE, slots)
+        return {b["role"]: b["text"] for b in beats}, missing, slots
+
+    def test_사용처_2개부터_5개까지_반전이_안_겹친다(self):
+        for n in (2, 3, 4, 5):
+            _b, _m, slots = self._beats(n)
+            said = [slots.get(k) for k in ("용도", "용도2", "용도3") if slots.get(k)]
+            assert slots["용도끝"] not in said, "사용처 %d개에서 반전이 나열과 겹쳤다" % n
+
+    def test_반전은_언제나_마지막_사용처다(self):
+        """실측: 오용형 20편 중 클라이맥스가 마지막인 편이 14편. 원본의 결이다."""
+        for n in (2, 3, 4, 5):
+            _b, _m, slots = self._beats(n)
+            assert slots["용도끝"] == self.ALL[n - 1]
+
+    def test_사용처_1개면_반전을_비워_모델에_넘긴다(self):
+        """겹친 문장을 억지로 내놓는 것보다 missing으로 넘기는 게 낫다."""
+        beats, missing, slots = self._beats(1)
+        assert "twist" in missing
+        assert not slots.get("용도끝")
+        assert "cases" in beats          # 나열은 그대로 나온다(회귀 0)
+
+    def test_나열은_반전_몫을_빼고_채운다(self):
+        """사용처 4개 → cases가 3개(용도·용도2·용도3), twist가 남은 1개."""
+        beats, _m, slots = self._beats(4)
+        assert (slots["용도"], slots["용도2"], slots["용도3"]) == tuple(self.ALL[:3])
+        assert "심지어 2층 수납함" in beats["cases"]
+        assert "화분 걸이" in beats["twist"]
