@@ -21,6 +21,7 @@ from google.genai import types
 
 from pipeline.atoms import key_vault
 from shopping_shorts import comment_gen
+from shopping_shorts import shot_roles as _shot_roles
 from shopping_shorts.config import SHORTS_GEMINI_KEYS
 
 _REQUIRED_ROLES = ["훅", "페인포인트", "반전", "실용", "CTA"]
@@ -134,7 +135,10 @@ def _build_scene_spine(seg_map, video_type):
         cands = [s for sid, s in seg_map.items() if sid not in used]
         if not cands:
             return None
-        pref = [s for s in cands if (s.get("shot_role") in roles)]
+        # ★`in roles`로 직접 비교하지 않는다 — 슬롯은 아직 `사용중` 하나로 적혀 있는데
+        #   장면은 설치·조작·도포·정리·실증으로 잘게 태깅된다(2026-08-20 축 확장).
+        #   넓히는 판단은 `shot_roles.matches` 한 곳이 한다(0순위-B).
+        pref = [s for s in cands if _shot_roles.matches(s.get("shot_role"), roles)]
         if want_key:
             keyed = [s for s in pref if s.get("is_key")]
             if keyed:

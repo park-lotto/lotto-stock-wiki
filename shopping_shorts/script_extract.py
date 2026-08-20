@@ -215,16 +215,14 @@ def _norm_benefits(raw):
     return [s.strip() for s in raw if isinstance(s, str) and s.strip()]
 
 
-# 장면 스파인(2026-07-29): shot_role 확장어휘. 옛 추출본('조리')은 '사용중'으로 흡수하고,
-# 알 수 없는 값은 '기타'로 떨어뜨린다(fail-open — 스파인 배치가 크래시 없이 돈다).
-_SHOT_ROLE_VOCAB = {"before", "사용중", "after", "완성", "문제", "기타"}
-_SHOT_ROLE_ALIASES = {"조리": "사용중"}
+# 장면 스파인(2026-07-29): shot_role 어휘. **여기서 다시 적지 않는다** —
+# 2026-08-20부터 `shot_roles` 모듈 한 곳이 정한다(0순위-B). 여기 따로 두던 시절엔
+# 어휘를 늘려도 이 집합이 몰라서 새 값이 전부 '기타'로 떨어졌다.
+from shopping_shorts import shot_roles as _shot_roles
 
 
 def _norm_shot_role(raw):
-    if raw in _SHOT_ROLE_VOCAB:
-        return raw
-    return _SHOT_ROLE_ALIASES.get(raw, "기타")
+    return _shot_roles.normalize(raw)
 
 
 # 짧은 이름(2026-08-16). 카드 밑에 그대로 찍히므로 길이를 여기서 한 번만 통제한다

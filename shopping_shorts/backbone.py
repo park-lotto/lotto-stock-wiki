@@ -9,6 +9,7 @@ import re
 from collections import Counter
 
 from shopping_shorts import action_dict
+from shopping_shorts import shot_roles as _shot_roles
 from shopping_shorts import pattern_bank
 
 _SYLLABLES_PER_SEC = 5.7      # edit_plan과 동일(한국어 초당 음절)
@@ -64,6 +65,8 @@ def _seg_dur(seg):
 
 # 비트 성격 ↔ 어울리는 shot_role(2026-08-01 실사고). 마무리 자리에 조리 과정이 다시
 # 나오면 "조리 재방송"이 된다 — 사장님 실측 제보: 완성품→조리→완성품→조리→완성품.
+# ⚠️ 여기 값도 `사용중` 하나로 적혀 있지만, 실제 매칭은 `shot_roles.expand`가 넓혀준다
+#    (설치·조작·도포·정리·실증). 새 갈래를 여기 다시 적지 마라 — 두 벌이 된다.
 _BEAT_ROLE_SHOTS = {
     "cta": ("완성", "after"),
     "결과": ("완성", "after"),
@@ -104,7 +107,9 @@ def _broll_segs(pool_sources, src_count, exclude_seg_ids, prefer_video=None, min
     #   ★버리지 않고 **순서만** 미룬다 — 이 함수가 채울 재료를 줄이면 렌더가 정지/슬로우로
     #   때우는 프리즈가 돌아온다(이 구역의 두더지잡기 이력). 맞는 계열이 없으면 종전대로
     #   전부 후보로 남는다.
-    segs.sort(key=lambda c: (bool(want_shots) and c.get("shot_role") not in want_shots,
+    # ★`not in want_shots` 직접 비교가 아니다 — 잘게 쪼갠 갈래도 같은 계열로 본다
+    #   (0순위-B: 넓히는 판단은 shot_roles 한 곳).
+    segs.sort(key=lambda c: (bool(want_shots) and not _shot_roles.matches(c.get("shot_role"), want_shots),
                              c.get("video_id") != prefer_video,      # 같은 소스 먼저(False<True)
                              src_count.get(c.get("video_id"), 0),
                              _seg_dur(c) < min_shot,                  # 너무 짧은 파편은 뒤로
@@ -257,9 +262,13 @@ def beat_role_mismatch(beat):
     sr = ((beat.get("primary") or {}).get("shot_role") or "").strip()
     if not sr:
         return False
+    from shopping_shorts import shot_roles as _shot_roles
     for words, shots, alt, _why in edit_plan._ROLE_WANT_SHOTS:
         if any(w in role for w in words):
-            return sr not in (set(shots) | set(alt))
+            # ★`사용중`을 요구하는 칸은 잘게 쪼갠 갈래(설치·조작·도포·정리·실증)도 맞는
+            #   것으로 본다(2026-08-20). 안 그러면 새 축으로 태깅된 멀쩡한 화면을
+            #   "어긋남"으로 보고 계속 갈아치운다 — 오탐이 곧 재픽이라 눈에 안 띈다.
+            return not _shot_roles.matches(sr, tuple(shots) + tuple(alt))
     return False      # 표에 없는 역할 → 보류
 
 
