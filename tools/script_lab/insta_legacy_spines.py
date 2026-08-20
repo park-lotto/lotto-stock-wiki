@@ -63,7 +63,7 @@ KIN_TESTIMONY = {
     "fit_categories": ["지인증언형", "홈템"],
     "no_cta": False,
     "beat_roles": ["hook", "situation", "remark", "reveal",
-                   "doubt", "proof", "result", "reaction", "cta"],
+                   "doubt", "proof", "result", "escalation", "reaction", "cta"],
     "templates": {
         # 원문: "저 이거 때문에 진짜 충격 먹었어요" / "친구네 집 갔다가 충격 받았어요"
         "hook": [
@@ -102,6 +102,16 @@ KIN_TESTIMONY = {
             "와 {효과} 거 있죠",
             "와 그 자리에서 바로 달라지는 거 있죠",
         ],
+        # ★고조 칸(2026-08-20 실측으로 추가). script_gate가 "심지어/더 대박인 건" 같은
+        #   고조 연결어를 **정확히 1회** 요구한다(_ESCALATORS). 이 칸이 없으면 재료가
+        #   아무리 넉넉해도 게이트를 못 넘는다 — 실측: 6축 중 5축이 여기서 전부 실패했고
+        #   다이소형만 price 칸에 "심지어 {가격}밖에 안 해서"를 갖고 있어 통과했다.
+        #   ⚠️고조어는 대본 전체에 **한 번만** 나와야 한다(남발하면 게이트가 되레 막는다).
+        "escalation": [
+            "심지어 {차별점}까지 되니까 더 놀랐어요",
+            "심지어 {가격}밖에 안 하는 거 있죠",
+            "심지어 이게 한 번으로 끝나는 게 아니더라고요",
+        ],
         # 원문: "어디서 산 거냐고 섭섭해하시길래"
         "reaction": [
             "어디서 산 거냐고 섭섭해하시길래 하나 더 주문했어요",
@@ -130,7 +140,7 @@ DIRECTIVE = {
     "fit_categories": ["권유지시형", "레시피", "홈템"],
     "no_cta": False,
     "beat_roles": ["hook", "method", "steps", "texture",
-                   "usage", "benefit", "witness", "cta"],
+                   "usage", "escalation", "benefit", "witness", "cta"],
     "templates": {
         "hook": [
             "여러분 {적용대상}은 무조건 이렇게 드세요",
@@ -155,6 +165,15 @@ DIRECTIVE = {
         "usage": [
             "{적용대상들} 곁들여 먹으면 진짜 맛있어요",
             "이것저것 곁들여 먹으면 진짜 맛있어요",
+        ],
+        # ★고조 칸(2026-08-20 실측으로 추가). script_gate가 "심지어/더 대박인 건" 같은
+        #   고조 연결어를 **정확히 1회** 요구한다(_ESCALATORS). 이 칸이 없으면 재료가
+        #   아무리 넉넉해도 게이트를 못 넘는다 — 실측: 6축 중 5축이 여기서 전부 실패했고
+        #   다이소형만 price 칸에 "심지어 {가격}밖에 안 해서"를 갖고 있어 통과했다.
+        #   ⚠️고조어는 대본 전체에 **한 번만** 나와야 한다(남발하면 게이트가 되레 막는다).
+        "escalation": [
+            "심지어 {차별점}이라 손도 안 가는 거 있죠",
+            "심지어 실패할 수가 없는 거 있죠",
         ],
         # 원문: "몸에 안 좋은 감자튀김 대신 아이 간식으로도 딱이고"
         "benefit": [
@@ -184,7 +203,8 @@ DISCOVERY = {
     "chars_per_30s": 327,
     "fit_categories": ["물건발견형", "홈템", "기타"],
     "no_cta": False,
-    "beat_roles": ["hook", "origin", "targets", "spread", "scale", "proof", "result", "cta"],
+    "beat_roles": ["hook", "origin", "targets", "spread", "scale", "proof",
+                   "result", "escalation", "cta"],
     "templates": {
         # 원문: "아니 교도소에서 만든 비누를 줄 서서 산다고?"
         "hook": [
@@ -220,6 +240,15 @@ DISCOVERY = {
         "result": [
             "와 진짜 {효과} 거 있죠",
             "와 이게 되는 거 있죠",
+        ],
+        # ★고조 칸(2026-08-20 실측으로 추가). script_gate가 "심지어/더 대박인 건" 같은
+        #   고조 연결어를 **정확히 1회** 요구한다(_ESCALATORS). 이 칸이 없으면 재료가
+        #   아무리 넉넉해도 게이트를 못 넘는다 — 실측: 6축 중 5축이 여기서 전부 실패했고
+        #   다이소형만 price 칸에 "심지어 {가격}밖에 안 해서"를 갖고 있어 통과했다.
+        #   ⚠️고조어는 대본 전체에 **한 번만** 나와야 한다(남발하면 게이트가 되레 막는다).
+        "escalation": [
+            "심지어 {적용대상들} 전부 되는 거라 더 놀랐어요",
+            "심지어 이거 하나로 끝나는 거 있죠",
         ],
         "cta": [
             "궁금하면 댓글에 나도 남겨주세요",
