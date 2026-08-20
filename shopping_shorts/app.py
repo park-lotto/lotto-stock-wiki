@@ -2372,6 +2372,7 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     #   기존 경로와 다른 점: 같은 프롬프트를 n번 굴리는 게 아니라 **스타일마다 프롬프트가 갈려**
     #   서로 다른 구조가 보장되고, 어긴 결과는 재작성이 걸린다.
     _style_ids = [int(x) for x in (body.get("style_ids") or []) if str(x).isdigit()]
+    _auto_picked = None        # 자동 선택이었을 때만 채워진다(사람이 고른 건 재정렬 안 한다)
     # ★'AI에게 맡김'도 스타일 경로를 탄다(2026-08-17 사장님 제보 "AI로 뽑으면 이모티콘 없어짐").
     #   스타일을 안 고르면 옛 생성기로 가는데, 그 경로는 **칸(beats)을 안 준다** → 화면이
     #   어느 줄이 훅인지 몰라 역할 라벨이 빈다. 그러면 이 화면의 존재 이유가 통째로 죽는다.
@@ -2385,6 +2386,9 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
             _n_auto = 2
         _auto = store.list_style_spines(category=it.get("category") or None) \
             or store.list_style_spines(category=None)
+        # ★여기서는 아직 재료(_src)가 없다 — 축 판정은 재료가 생긴 뒤에 한다(아래 _hx 블록).
+        #   자동으로 골랐다는 것만 표시해 둔다.
+        _auto_picked = _auto
         _style_ids = [s["id"] for s in _auto[:_n_auto]]
     if _style_ids:
         # ★카테고리로 거르지 않는다(2026-08-17 사장님 제보로 수정).
@@ -2429,6 +2433,28 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         #   슬롯이 **전부** 차는 스타일만 조립본으로 만들고, 모자라면 기존 생성기로 간다.
         #   실측 근거(같은 날): 생성기는 템플릿을 '참고'로만 써서 어미를 새로 쓰고
         #   (no_cta인데) CTA를 붙였다 — 조립본엔 그럴 자리가 없다.
+        # ★메인 영상의 훅 문형으로 스타일 순서를 정한다(2026-08-20 사장님 지시:
+        #   "영상 분석 시 점수를 매길 때 지금 만든 스타일이 있으면 그렇게 하면 되나").
+        #   종전엔 자동 선택이 **목록 앞 2개**를 그냥 집었다 — `list_style_spines`는
+        #   정렬을 안 하므로 영상 내용과 무관했다.
+        #   판정 근거: 전사 535편 실측(축 커버리지 72%). 정본은 `hook_axis` 하나다.
+        #   ⚠️**사람이 고른 경우는 건드리지 않는다**(_auto_picked가 None). 고른 걸 뒤집으면
+        #     2026-08-17 "고른 스타일이 조용히 사라진" 사고와 같은 종류가 된다.
+        #   ⚠️여기에 둔 이유: 재료(_src)는 위쪽 _materials_for_generate 뒤에야 생긴다.
+        #     재료 없는 자리에서 부르면 NameError가 except에 삼켜져 **아무 일도 안 하는**
+        #     조용한 폴백이 된다(memory: reference_silent_fallback_pipeline_undo).
+        _axis_pick = ""
+        if _auto_picked:
+            try:
+                from shopping_shorts import hook_axis as _hx
+                _main_src = next((x for x in (_src or [])
+                                  if (x.get("full_text") or "").strip()), {})
+                _axis_pick = _hx.axis_of(_main_src)
+                _ranked = _hx.rank_spines(_auto_picked, _main_src)
+                if _ranked:
+                    _picked = _ranked[:len(_picked)] or _picked
+            except Exception as _e:      # noqa: BLE001 — 축 판정 실패가 생성을 막으면 안 된다
+                print("축 판정 건너뜀: %s" % str(_e)[:120])
         _assembled, _asm_left, _asm_why = _assembled_drafts(
             _picked, _src, store, body.get("target_seconds") or 30, job_id=_jid)
         _styled = list(_assembled)
@@ -2465,6 +2491,8 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                     #   넘어가면 사장님은 왜 결과가 공허한지 알 수 없다.
                     "assemble_skipped": _asm_why,
                     "styles": [s.get("name") for s in _picked],
+                    # ★어떻게 골랐는지 화면이 말할 수 있게(조용한 폴백 금지).
+                    "style_axis": _axis_pick or "",
                 }}
     drafts = script_generate.generate_variations(
         it.get("structure") or {}, it.get("full_text") or "", elem_modes, category_lookup, **_gen_kw)
