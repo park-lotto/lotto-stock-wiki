@@ -1,0 +1,117 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "라이프 타임 그룹",
+      "signal": "bull",
+      "reason": "호실적",
+      "ts": "2026-07-31",
+      "quote": "BofA, 라이프 타임 그룹 호실적에 목표주가 상향 조정",
+      "sector": "소비내수"
+    },
+    {
+      "name": "SK하이닉스",
+      "signal": "bull",
+      "reason": "AI 성장세",
+      "ts": "2026-07-30",
+      "quote": "SK하이닉스 목표주가 줄하향 속 일부 증권사는 상향…“AI 성장세 여전”",
+      "sector": "반도체"
+    },
+    {
+      "name": "C.H. 로빈슨",
+      "signal": "bull",
+      "reason": "실적 호조",
+      "ts": "2026-07-31",
+      "quote": "스티펠, C.H. 로빈슨 목표주가 상향 조정…실적 호조 영향",
+      "sector": "기타"
+    },
+    {
+      "name": "Amazon.com",
+      "signal": "bull",
+      "reason": "AWS 강력 성장세",
+      "ts": "2026-07-31",
+      "quote": "파이퍼 샌들러, AWS 강력 성장세에 Amazon.com 목표주가 상향",
+      "sector": "IT"
+    },
+    {
+      "name": "마이크로소프트",
+      "signal": "bull",
+      "reason": "애저 성장세",
+      "ts": "2026-07-30",
+      "quote": "번스타인, 애저 성장세에 마이크로소프트 목표주가 상향",
+      "sector": "IT"
+    },
+    {
+      "name": "콴타 서비스",
+      "signal": "bull",
+      "reason": "강력한 실적",
+      "ts": "2026-07-31",
+      "quote": "강력한 실적에 번스타인, 콴타 서비스 목표 주가 상향",
+      "sector": "전력"
+    },
+    {
+      "name": "라이브네이션",
+      "signal": "bull",
+      "reason": "강력한 팬 증가세 및 견고한 실적",
+      "ts": "2026-07-31",
+      "quote": "벤치마크, 강력한 팬 증가세에 라이브네이션 목표주가 상향",
+      "sector": "소비내수"
+    },
+    {
+      "name": "크록스",
+      "signal": "bull",
+      "reason": "Q2 실적 호조",
+      "ts": "2026-07-31",
+      "quote": "UBS, 크록스 Q2 실적 호조에 목표주가 상향 조정",
+      "sector": "소비내수"
+    },
+    {
+      "name": "치폴레",
+      "signal": "bull",
+      "reason": "매출 모멘텀",
+      "ts": "2026-07-31",
+      "quote": "UBS, 매출 모멘텀에 치폴레 목표주가 상향 조정",
+      "sector": "소비내수"
+    },
+    {
+      "name": "Cigna",
+      "signal": "bull",
+      "reason": "특수 사업 부문 강세",
+      "ts": "2026-07-31",
+      "quote": "Guggenheim, Cigna 목표주가 상향…특수 사업 부문 강세에",
+      "sector": "바이오"
+    },
+    {
+      "name": "모빌아이",
+      "signal": "bull",
+      "reason": "성장 전망",
+      "ts": "2026-07-30",
+      "quote": "타이그레스 파이낸셜, 성장 전망에 모빌아이 목표주가 상향",
+      "sector": "자동차"
+    },
+    {
+      "name": "Grid Dynamics",
+      "signal": "bull",
+      "reason": "AI 성장세",
+      "ts": "2026-07-31",
+      "quote": "니덤, AI 성장세에 Grid Dynamics 목표주가 상향",
+      "sector": "IT"
+    },
+    {
+      "name": "코후",
+      "signal": "bull",
+      "reason": "강력한 HPC 수요",
+      "ts": "2026-07-31",
+      "quote": "니덤, 강력한 HPC 수요에 코후 목표주가 상향 조정",
+      "sector": "반도체"
+    },
+    {
+      "name": "Procore",
+      "signal": "bull",
+      "reason": "마진 전망 긍정적",
+      "ts": "2026-07-31",
+      "quote": "DA 데이비슨, Procore 목표주가 상향…마진 전망 긍정적",
+      "sector": "IT"
+    }
+  ]
+}
