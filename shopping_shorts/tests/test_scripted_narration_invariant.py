@@ -67,3 +67,31 @@ def test_대본을_지킨_비트의_음성은_건드리지_않는다():
               "tts_path": "/w/tts/beat_0_aaaaaaaaaa.mp3"}]
     out, n = enforce_scripted_narration(beats, SCRIPT)
     assert n == 0 and out[0]["tts_path"] == "/w/tts/beat_0_aaaaaaaaaa.mp3"
+
+
+def test_구어체_대본도_칸별로_쪼개진다():
+    """★2026-08-20 실사고(job 087e03b69dc2). 스파인이 뽑는 8칸 구어체 대본은 칸 사이가
+    종결어미로만 끊겨 마침표가 하나뿐이다. 마침표만 보던 분리기는 2조각(141자·131자)으로만
+    잘랐고, 그 덩이가 2.9초짜리 hook 칸에 통째로 들어가 화면·음성 초가 어긋났다
+    ('끝나고 계속 반복'). 칸 수만큼 갈라져야 한다."""
+    from shopping_shorts.edit_plan import script_sentences
+    script = ("여러분 다이소 가면 이거 무조건 사오세요 "
+              "아니 아무리 닦아도 안 지워지는 샤워부스 물때 때문에 진짜 스트레스였거든요 "
+              "저희 언니가 다이소 점장인데 뿌옇게 굳은 샤워부스 물때 잡는 걸로 가장 많이 나가는 게 바로 이 제품이라는 거예요 "
+              "방법도 진짜 간단해요. 크림을 스펀지에 묻혀 살살 문지르기, 이게 끝이에요 "
+              "와 뿌옇게 굳은 샤워부스 물때부터 운동화까지 뿌옇던 유리가 새것처럼 투명해지는 거 있죠 "
+              "심지어 저렴한 가격밖에 안 해서 더 놀랐어요 "
+              "댓글에 정보 남겨주시면 제품 정보 바로 보내드릴게요")
+    parts = script_sentences(script)
+    assert len(parts) >= 7, f"구어체 대본이 {len(parts)}조각으로만 잘렸다 — 칸에 덩이가 들어간다"
+    assert max(len(p) for p in parts) < 80, "조각 하나가 너무 길다 — 칸 예산을 넘긴다"
+
+
+def test_칸_예산을_넘는_조각은_안_꽂는다():
+    """분리가 또 실패해도(새 말투·외국어) 덩이를 칸에 통째로 넣지 않는다 — 2차 방어."""
+    from shopping_shorts.edit_plan import enforce_scripted_narration
+    long_script = "아주아주 긴 한 문장인데 마침표가 없어서 통째로 남는 대본이다" * 6
+    beats = [{"beat_idx": 0, "narration": "EDL이 지어낸 문장", "target_seconds": 2.9}]
+    out, fixed = enforce_scripted_narration(beats, long_script)
+    assert fixed == 0, "예산의 두 배가 넘는 덩이를 꽂았다"
+    assert out[0].get("narration_invented"), "못 되돌렸다는 표시가 없다"
