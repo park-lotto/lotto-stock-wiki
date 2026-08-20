@@ -92,3 +92,68 @@ def yt_style(name, caption="", channel_styles=None):
     if has_product and _hits(cap_t, _FOOD) > 0:
         return "레시피쇼핑"
     return ""
+
+
+import collections as _collections
+import re as _re
+
+
+def _h(t, words):
+    """제목에 그 어휘축 신호가 몇 개 있나. harvest_styles_forever._h와 같은 판단이라
+    여기 한 곳에 둔다(0순위-B) — 스크립트 쪽은 이 함수를 부른다."""
+    lt = str(t).lower()
+    return sum(1 for w in words if w in lt)
+
+# ── 신기템(2026-08-20) ──────────────────────────────────────────────────
+# 사장님 "신박템 이런쪽으로 좀 많이 올라오면 좋겠다 / 레시피가 너무 많아".
+# 실측으로 갈라보니 이 장르는 **연예인도 요리도 없이 '물건이 뭘 해주는지'로 끈다**
+# (꿀템 보물찾기 12편 실측 — 전부 이 틀):
+#     알아서 섞어주는      자동 회전 텀블러 믹서컵
+#     늘어나고 분리되는    공간활용 화장대
+#     붙여주면 깨끗해지는  자석 레인지 가드
+#     버려졌던 공간 살려주는 곡선 코너 선반
+# 즉 공식은 [기능 관형어] + [제품]이다. 제품 신호(_PRODUCT)만으로는 못 가른다 —
+# 연예인결합·레시피도 전부 제품을 팔기 때문이다. 기능 관형어가 이 축의 지문이다.
+#
+# ★썰쇼핑(제품정체형·오용형)과 다르다: 그쪽은 정체를 숨기거나 용도를 뒤집는 '구성'이고,
+#   이쪽은 숨기는 것 없이 기능을 바로 말한다. 그래서 score_sul과 겹치지 않는다.
+# 실측 오탐 검사(2026-08-20): 기존 3축 채널 12곳 중 신기템으로 잡힌 곳 **0**.
+# 표본 판정(후보 7채널): 진짜 신기템 1곳만 4점, 나머지 6곳 전부 0점.
+_NOVEL_FUNC = _re.compile(r"(주는|해주는|되는|지는|없는|나는|시켜|막아|살려|잡아|덜어)")
+
+
+def score_novel(titles, name=""):
+    """기능 관형어 + 제품 신호. 연예인·요리 신호가 있으면 그 축이므로 세지 않는다."""
+    n = 0
+    for t in titles:
+        t = str(t)
+        if _h(t, _CELEB) or _h(t, _FOOD):
+            continue
+        if _NOVEL_FUNC.search(t) and _h(t, _PRODUCT):
+            n += 1
+    return n
+
+
+def harvest_novel(titles):
+    """통과 채널 제목에서 **기능 관형어구 + 뒤 명사**를 그대로 새 검색어로 뽑는다.
+
+    harvest_pair(고정 단어 × 고정 단어)를 안 쓰는 이유: 이 축의 관형어는 조합이
+    사실상 무한하다("알아서 섞어주는"·"버려졌던 공간 살려주는"). 목록으로 적으면
+    반드시 빠진다 — 실제로 팔린 제목에서 통째로 주워 오는 편이 정확하다.
+    """
+    out = _collections.Counter()
+    for t in titles:
+        t = str(t)
+        if _h(t, _CELEB) or _h(t, _FOOD):
+            continue
+        for m in _NOVEL_FUNC.finditer(t):
+            tail = t[m.end():].strip().split()
+            head = t[:m.start()].strip().split()
+            if not tail or not head:
+                continue
+            q = "%s%s %s" % (head[-1], m.group(0), tail[0])
+            if 4 <= len(q) <= 25:
+                out[q] += 1
+    return out
+
+
