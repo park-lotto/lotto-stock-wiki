@@ -128,6 +128,59 @@ def _has_foreign(s):
     return bool(_FOREIGN_RE.search(s or ""))
 
 
+# ── 가격 칸은 숫자여야 한다 ────────────────────────────────────────────────
+# ★사장님 지적(2026-08-21, 라이브 작업 b6db20544505): 두 안 모두 이렇게 나갔다.
+#     "심지어 저렴한 가격밖에 안 하는 거 있죠"   (spine 54 escalation)
+#     "심지어 저렴한 가격밖에 안 해서 더 놀랐어요" (spine 57 price)
+#   {가격} 자리에 들어간 값이 "저렴한 가격" — 숫자가 아니라 **형용사**다.
+#   시청자에겐 아무 정보도 안 주면서 "가격을 말했다"는 티만 낸다.
+#
+# 왜 안 걸렸나 — 보호막 두 개를 **둘 다** 비껴간다:
+#     장면 근거 게이트(_SCENE_GATED)  → price는 면제(카메라로 못 찍으니 당연하다)
+#     script_gate 문장틀 검사         → 틀만 보지 값이 말이 되는지는 안 본다
+#                                       (라이브 로그에 "price 문장틀 준수 ok:true"로 찍혔다)
+#
+# ★프롬프트가 말해도 아무도 검사 안 하면 안 지켜진다 — 프롬프트엔 이미
+#   "얼마인가. 영상이 밝힌 것만."이 적혀 있었다. effects가 명사형으로 새던 것
+#   (2026-08-19 함정 #3)과 같은 뿌리다. 그래서 여기서는 **판정**으로 막는다.
+#
+# 왜 돈 단위를 같이 요구하나: 숫자만 보면 "5분"·"3개"(numbers 재료)를 가격으로 읽는다.
+_MONEY_RE = re.compile(r"(?:\d|[일이삼사오육칠팔구십백천만])\s*[,\d]*\s*(?:원|만원|천원)")
+
+
+def is_price(s):
+    """이 값이 **진짜 가격**인가 — 숫자와 돈 단위가 함께 있어야 한다.
+
+    통과: 천 원 · 오천 원 · 단돈 몇 천 원 · 3000원 · 1,000원 · 만 원도 안 하는
+    탈락: 저렴한 가격 · 가성비 좋은 가격 · 부담 없는 가격 · 싼 가격 · 5분 · 3개
+    """
+    return bool(_MONEY_RE.search(s or ""))
+
+
+def drop_fake_price(facts, log=lambda *a: None):
+    """가격이 아닌 값을 price 재료에서 버린다(외국어 필터와 같은 원칙).
+
+    ★버려도 안전한 이유: 한 칸에 후보가 여러 개라 하나 버려도 대체가 남는다.
+      다 걸리면 그 칸이 비고, 그때는 **가격 얘기를 아예 안 하는 게** 이 축의 정직함이다
+      (spine 54는 슬롯 없는 대체 변형이 받고, spine 57은 그 칸이 빠진다).
+
+    ★빈 리스트로 남기지 않는다 — 담으면 "채워졌다"고 보고 빈칸이 그대로 나간다(spine_fill 규약).
+    """
+    if not isinstance(facts, dict) or not facts.get("price"):
+        return facts
+    keep = [x for x in facts["price"] if is_price(x)]
+    dropped = [x for x in facts["price"] if not is_price(x)]
+    if dropped:
+        _say(log, "[insta_facts] 가격이 아닌 값 %d개 버림: %s"
+                  % (len(dropped), " / ".join(dropped[:3])[:120]))
+    out = dict(facts)
+    if keep:
+        out["price"] = keep
+    else:
+        out.pop("price", None)
+    return out
+
+
 # ── 장면 근거 게이트 ──────────────────────────────────────────────────────
 # ★"장면에도 없는 대본이 나오는 거 아닌가"(2026-08-19 사장님 지적) → 실측해보니 맞았다.
 #   전사는 말로만 하는 소리라, 재료에 뽑힌 값이 **화면에 안 찍힌 것**일 수 있다.
@@ -292,7 +345,9 @@ def analyze_insta(raw, *, log=print):
     if dropped:
         _say(log, "[insta_facts] 외국어 섞인 값 %d개 버림: %s"
                   % (len(dropped), " / ".join(dropped[:3])[:120]))
-    return out
+    # ★가격 칸은 숫자여야 한다 — "저렴한 가격"이 라이브에 나갔다(2026-08-21).
+    #   외국어 필터와 같은 자리에서 거른다: 값이 여럿이라 하나 버려도 대체가 남는다.
+    return drop_fake_price(out, log=log)
 
 
 def insta_prompt_block(facts, max_items=5):
