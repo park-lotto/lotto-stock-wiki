@@ -8085,6 +8085,31 @@ def _admin_customer_activity(request: Request, customer_id: int):
     return {"ok": True, "activity": Store(DB_PATH).recent_activity(customer_id, 12)}
 
 
+# 체험 계정 기본 포인트(화면 단위 P). admin 설정 trial_grant_points로 조정.
+# 내역 근거(2026-08-20 사장님 "렌즈 10P 이런 식으로"): 렌즈 10P + 영상 30P + 대본 10P = 50P.
+# 부족하면 관리자가 '포인트' 버튼으로 충전한다(사장님 지시).
+_TRIAL_GRANT_P_DEFAULT = 50
+
+
+def _trial_topup(store, customer_id):
+    """체험을 부여할 때 기본 포인트까지 **채운다**(top-up). 지급한 P를 돌려준다(0=이미 충분).
+
+    ★왜 '지급'이 아니라 '채우기'인가: 체험 버튼을 두 번 누르면 두 번 쌓인다. 잔액이
+      기준보다 적을 때 **차액만** 넣으면 몇 번을 눌러도 기준선 하나로 수렴한다.
+    ★왜 필요한가: 등급(full)만 열고 잔액이 0이면 유료 op가 _charge_or_402에서 402로
+      막힌다 — 화면엔 '체험이 끝났어요'로 보여 오진을 부른다(2026-08-20 실사고)."""
+    try:
+        target_p = float(store.get_setting("trial_grant_points", _TRIAL_GRANT_P_DEFAULT))
+    except (TypeError, ValueError):
+        target_p = _TRIAL_GRANT_P_DEFAULT
+    target = int(round(target_p * 100))          # 내부값 = 포인트×100
+    cur = points.balance(store, customer_id)
+    if cur >= target:
+        return 0
+    points.add(store, customer_id, target - cur, "trial_grant")
+    return pricing.to_display(target - cur)
+
+
 @app.post("/api/admin/set_plan")
 async def _admin_set_plan(request: Request):
     denied = _require_admin(request)
@@ -8100,16 +8125,18 @@ async def _admin_set_plan(request: Request):
         return JSONResponse({"error": "plan=free|pro"}, status_code=422)
     days = body.get("days")
     st = Store(DB_PATH)
+    granted = None
     if plan == "pro":
         st.set_plan(cid, "pro")                         # 결제 승격 = 전기능 무기한
     elif days:
         until = int(datetime.now(timezone.utc).timestamp()) + int(days) * 86400
         st.set_plan(cid, "free", full_access_until=until)   # 체험 창 재부여
+        granted = _trial_topup(st, cid)                 # ★등급만 열면 잔액 0으로 402가 난다
     else:
         st.set_plan(cid, "free", full_access_until=0)   # 즉시 무료(랭킹만)로 내림
     import sys as _s
-    print(f"[admin] set_plan cid={cid} plan={plan} days={days}", file=_s.stderr)  # 변경 로그
-    return {"ok": True}
+    print(f"[admin] set_plan cid={cid} plan={plan} days={days} topup={granted}", file=_s.stderr)  # 변경 로그
+    return {"ok": True, "granted": granted, "balance": pricing.to_display(points.balance(st, cid))}
 
 
 @app.post("/api/admin/points")
