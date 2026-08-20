@@ -7985,6 +7985,9 @@ def _admin_customers(request: Request):
         cu["access_7d"] = st.access_summary(cu["id"], since7)   # {ips, devices} 최근 7일 고유 수
         cu["is_admin"] = _is_admin(cu["id"])                    # 관리자 배지용
         cu["code_admin"] = _code_admin(cu["id"])                # 코드 고정 관리자(UI 토글 불가)
+        # 포인트 잔액(화면 단위 P) — 등급이 full이어도 잔액 0이면 유료 op가 402로 막힌다.
+        # 관리자가 그 상태를 목록에서 바로 보게 한다(2026-08-20 체험 계정 402 사고).
+        cu["points"] = pricing.to_display(points.balance(st, cu["id"]))
         # last_seen은 store.list_customers가 이미 넣어줌 → 프론트가 '접속중/N분전' 계산
         out.append(cu)
     return {"ok": True, "customers": out, "settings": st.all_settings()}
@@ -8107,6 +8110,35 @@ async def _admin_set_plan(request: Request):
     import sys as _s
     print(f"[admin] set_plan cid={cid} plan={plan} days={days}", file=_s.stderr)  # 변경 로그
     return {"ok": True}
+
+
+@app.post("/api/admin/points")
+async def _admin_points(request: Request):
+    """관리자가 계정에 포인트를 지급/회수한다 (2026-08-20).
+
+    ★왜 필요한가: 체험(set_plan)·pro 승격은 **등급 게이트**만 연다. 유료 op는 그 다음
+      관문인 포인트 차감(_charge_or_402)을 또 통과해야 한다. 지금까지 포인트를 주는
+      경로가 UI에도 API에도 없어서, 체험을 부여해도 잔액 0 → 402가 났다
+      (실측 2026-08-20: cid 5·9 level=full인데 balance=0으로 렌즈가 막힘).
+    body: {customer_id, points}  points는 **화면 단위 P**(음수=회수). 내부값은 ×100."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+        amount_p = float(body.get("points"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id·points 필요"}, status_code=422)
+    if amount_p == 0:
+        return JSONResponse({"error": "0P는 의미 없어요"}, status_code=422)
+    delta = int(round(amount_p * 100))       # 내부값 = 포인트×100 (pricing.py)
+    st = Store(DB_PATH)
+    points.add(st, cid, delta, "admin_grant")
+    bal = points.balance(st, cid)
+    import sys as _s
+    print(f"[admin] points cid={cid} delta={delta} balance={bal}", file=_s.stderr)
+    return {"ok": True, "balance": pricing.to_display(bal)}
 
 
 @app.post("/api/admin/approve")
