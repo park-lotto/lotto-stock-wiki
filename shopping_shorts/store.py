@@ -2488,8 +2488,15 @@ class Store:
         save_extract_structure()로 나중에 채워진다.
 
         ★훅 문형 축(2026-08-20)도 여기서 같이 남긴다 — 저장 **단일 출구**라
-          어느 경로로 전사가 들어와도 빠지지 않는다(0순위-B: 부르는 쪽마다 적으면
-          반드시 한 곳이 빠진다).
+          어느 경로로 전사가 들어와도 빠지지 않는다.
+
+        ★★SQL을 **한 벌로만** 쓴다(2026-08-20 리뷰 지적으로 고침). 처음엔 axis 유무·
+          category 유무로 INSERT문을 3벌 두었는데, 미판정 분기가 hook_axis를 안 건드려
+          **재추출로 축이 사라져도 옛 축이 DB에 남았다**(실측: 금지경고 → 미판정으로
+          바뀌었는데 DB엔 '금지경고'가 그대로, get_script도 그 낡은 값을 줬다).
+          같은 판단이 세 군데 적히면 반드시 한 곳이 어긋난다(0순위-B).
+          → axis는 **항상** 덮어쓴다(못 갈랐으면 NULL로). category는 넘어온 값이
+            있을 때만 바꾸고, 없으면 기존 값을 유지한다(COALESCE).
         """
         try:
             from shopping_shorts.hook_axis import axis_of
@@ -2497,33 +2504,17 @@ class Store:
         except Exception:      # noqa: BLE001 — 축 판정 실패가 전사 저장을 막으면 안 된다
             axis = None
         with self._conn() as c:
-            if axis:
-                c.execute(
-                    "INSERT INTO script_extracts(shortcode, script_json, extracted_at, hook_axis) "
-                    "VALUES(?,?,datetime('now'),?) ON CONFLICT(shortcode) DO UPDATE SET "
-                    "script_json=excluded.script_json, extracted_at=excluded.extracted_at, "
-                    "hook_axis=excluded.hook_axis",
-                    (shortcode, json.dumps(script, ensure_ascii=False), axis),
-                )
-                if category is not None:
-                    c.execute("UPDATE script_extracts SET category=? WHERE shortcode=?",
-                              (category, shortcode))
-                return
-            if category is not None:
-                c.execute(
-                    "INSERT INTO script_extracts(shortcode, script_json, extracted_at, category) "
-                    "VALUES(?,?,datetime('now'),?) ON CONFLICT(shortcode) DO UPDATE SET "
-                    "script_json=excluded.script_json, extracted_at=excluded.extracted_at, "
-                    "category=excluded.category",
-                    (shortcode, json.dumps(script, ensure_ascii=False), category),
-                )
-            else:
-                c.execute(
-                    "INSERT INTO script_extracts(shortcode, script_json, extracted_at) "
-                    "VALUES(?,?,datetime('now')) ON CONFLICT(shortcode) DO UPDATE SET "
-                    "script_json=excluded.script_json, extracted_at=excluded.extracted_at",
-                    (shortcode, json.dumps(script, ensure_ascii=False)),
-                )
+            c.execute(
+                "INSERT INTO script_extracts(shortcode, script_json, extracted_at, "
+                "                            category, hook_axis) "
+                "VALUES(?,?,datetime('now'),?,?) ON CONFLICT(shortcode) DO UPDATE SET "
+                "script_json=excluded.script_json, extracted_at=excluded.extracted_at, "
+                # category는 넘어왔을 때만 바꾼다 — 안 넘어오면 기존 값 유지
+                "category=COALESCE(excluded.category, script_extracts.category), "
+                # ★hook_axis는 항상 덮어쓴다(NULL 포함) — 낡은 축이 남지 않게
+                "hook_axis=excluded.hook_axis",
+                (shortcode, json.dumps(script, ensure_ascii=False), category, axis),
+            )
 
     def update_extract_category(self, shortcode, category, source=None):
         """category만 UPDATE — script_json은 절대 안 건드린다(2026-07-15, C-1 재발방지).

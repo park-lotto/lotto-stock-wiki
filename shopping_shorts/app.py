@@ -2460,9 +2460,23 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                 _main_src = next((x for x in (_src or [])
                                   if (x.get("full_text") or "").strip()), {})
                 _axis_pick = _hx.axis_of(_main_src)
-                _ranked = _hx.rank_spines(_auto_picked, _main_src)
-                if _ranked:
-                    _picked = _ranked[:len(_picked)] or _picked
+                _want = _hx.AXIS_TO_SPINE.get(_axis_pick, "")
+                # ★축이 고른 스파인이 **카테고리 목록에 아예 없을 수 있다**(2026-08-20 리뷰
+                #   지적). _auto_picked는 항목 카테고리로 이미 걸러진 목록이라, 예컨대
+                #   카테고리가 '레시피'인데 축이 사회증거(fit=사회증거형·홈템·기타)면
+                #   그 스파인은 목록에 없어 재정렬이 **아무 일도 안 한다**.
+                #   그런데 응답의 style_axis는 '사회증거'로 나가 화면이 거짓말을 한다.
+                #   → 목록에 없으면 축 적용을 **포기하고 그렇게 말한다**(조용한 폴백 금지).
+                #   ⚠️카테고리 잠금을 뚫지 않는다 — 그 잠금은 "무선 이어폰에 시월드형"
+                #     같은 어색한 조합을 막으려고 2026-08-15에 넣은 것이다.
+                if _want and not any((s.get("name") or "") == _want for s in _auto_picked):
+                    print("축 판정 %r → 스파인 %r 이 카테고리 목록에 없어 적용 안 함"
+                          % (_axis_pick, _want))
+                    _axis_pick = ""
+                else:
+                    _ranked = _hx.rank_spines(_auto_picked, _main_src)
+                    if _ranked:
+                        _picked = _ranked[:len(_picked)]
             except Exception as _e:      # noqa: BLE001 — 축 판정 실패가 생성을 막으면 안 된다
                 print("축 판정 건너뜀: %s" % str(_e)[:120])
         _assembled, _asm_left, _asm_why = _assembled_drafts(
