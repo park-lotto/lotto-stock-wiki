@@ -39,7 +39,9 @@ import re
 # 템플릿에 쓰이는 슬롯 이름. 여기 없는 이름이 템플릿에 있으면 그 템플릿은 못 쓴다
 # (모르는 슬롯을 빈칸으로 남기면 "이게 원래는  개발된 제품이었음"이 나간다).
 _YT_SLOT_NAMES = ("제품", "효능", "효능2", "효능3", "나라", "본래용도", "속성",
-                  "용도", "용도2", "용도3", "용도끝", "용도들", "제품군")
+                  "용도", "용도2", "용도3", "용도끝", "용도들", "제품군",
+                  # 발명품형(2026-08-20). 이 갈래 23편의 힘이 전부 여기서 나온다.
+                  "계기")
 
 # ★인스타 슬롯(2026-08-19). 재료 출처가 다르다 — 유튜브는 쿠팡+유튜브 자막이지만
 #   인스타는 **릴 전사만** 본다(다이소·중국 제품은 쿠팡 1:1 매칭이 안 된다는 사장님 지시).
@@ -258,6 +260,9 @@ def slots_from_facts(product_facts=None, sul=None):
         "용도끝": _last_use,
         "용도들": _join_cases(_cases),
         "제품군": _first(sf.get("category_word")),
+        # ★없으면 담기지 않는다(out 마지막에서 빈 값을 턴다) → 계기를 요구하는 템플릿이
+        #   자동으로 안 걸리고, 계기 없는 변형이 대신 걸린다. 미담을 지어내지 않는다.
+        "계기": _first(sf.get("origin_story")),
     }
     return {k: v for k, v in out.items() if v}
 
@@ -399,6 +404,32 @@ def coverage(spine, slots):
     roles = list((spine or {}).get("beat_roles") or [])
     beats, missing = fill(spine, slots)
     return len(beats), len(roles), missing
+
+
+def invention_material_problem(sul):
+    """이 재료로 **발명품형** 대본을 쓸 수 있나 — 못 쓰면 이유 문자열, 되면 ''.
+
+    ★썰(오용형)과 자격이 다르다. 오용형은 "원래 용도를 뒤집는가"(`misuse_genre`)를 묻지만
+      발명품형은 뒤집는 이야기가 아니다 — **왜 태어났고 뭐가 대단한가**다.
+      같은 검사를 재사용하면 `misuse_genre=false`라 이 갈래는 영영 막힌다.
+
+    발명품형 틀이 실제로 요구하는 것(`tools/seed_spine_invention.py`의 templates):
+      benefit={효능} · escalate={효능2} · twist={효능3}  → **장점 3개**가 있어야 끝까지 찬다
+      title={제품}                                      → 제품명이 있어야 소재 일치 검사를 넘는다
+    {계기}는 **필수가 아니다** — 없으면 계기를 안 쓰는 story 변형이 대신 걸린다
+    (없는 미담을 지어내는 것보다 그게 낫다).
+    """
+    sf_ = sul or {}
+    ben = sf_.get("benefits") or []
+    if isinstance(ben, str):
+        ben = [ben]
+    ben = [str(x).strip() for x in ben if str(x).strip()]
+    if not str(sf_.get("product_name") or "").strip():
+        return "제품명을 못 뽑았습니다(발명품형은 제목에 제품명이 들어가야 합니다)"
+    if len(ben) < 3:
+        return ("장점이 %d개뿐입니다 — 발명품형은 핵심기능·고조·반전에 각각 하나씩 "
+                "총 3개가 필요합니다" % len(ben))
+    return ""
 
 
 def sul_material_problem(sul):

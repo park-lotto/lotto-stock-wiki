@@ -11288,6 +11288,13 @@ def _facts_for_job(job_id, store=None):
 #   이름은 categorize.KEYWORDS의 것과 같아야 한다(0순위-B: 이름이 어긋나면 조용히 죽는다).
 SUL_CATEGORIES = ("오용형", "제품정체형")
 
+# 발명품형(2026-08-20 신설, spine "유튜브 발명품형"). **썰쇼핑과 갈래를 나눈다.**
+#   재료는 같은 `sul_facts`에서 오지만 **자격 검사가 다르다** — 썰(오용형)은
+#   "원래 용도를 뒤집는가"를 묻는데, 발명품형은 뒤집는 이야기가 아니라
+#   "왜 태어났고 뭐가 대단한가"다. 같은 검사에 걸면 `misuse_genre=false`라서
+#   **영영 조립이 안 된다**(스파인만 있고 죽어 있는 상태가 된다).
+INVENTION_CATEGORIES = ("발명품형",)
+
 # 인스타 조립 틀을 붙이는 카테고리(2026-08-19). 위와 같은 규약 — 스파인의 fit_categories다.
 #   ★썰(유튜브)과 **재료 출처가 다르다**: 썰은 쿠팡+유튜브 자막, 인스타는 **릴 전사만** 본다
 #     (다이소·중국 제품은 쿠팡 1:1 매칭이 안 된다는 사장님 지시 — insta_facts 모듈 주석 참조).
@@ -11349,6 +11356,11 @@ def _is_insta_context(category, spines=None):
     return _is_context(category, spines, INSTA_CATEGORIES)
 
 
+def _is_invention_context(category, spines=None):
+    """이 생성이 발명품형(유튜브) 틀인가."""
+    return _is_context(category, spines, INVENTION_CATEGORIES)
+
+
 def _sul_block_for_sources(category, sources, store=None, spines=None):
     """썰쇼핑 스파인의 빈칸({본래용도}·{속성}·{용도}·{제품군}) 재료 -> 프롬프트 블록.
 
@@ -11359,7 +11371,8 @@ def _sul_block_for_sources(category, sources, store=None, spines=None):
       그 작업은 영영 재료 없이 돈다).
     실패해도 ''를 돌려준다 — 기존 경로 그대로라 회귀 0.
     """
-    if not _is_sul_context(category, spines):
+    # 발명품형도 같은 sul_facts 재료를 쓴다 — 블록을 안 붙이면 모델이 지어낸다.
+    if not (_is_sul_context(category, spines) or _is_invention_context(category, spines)):
         return ""
     caps = [(s.get("full_text") or "").strip() for s in (sources or [])[:_FACTS_MAX_SOURCES]]
     caps = [c for c in caps if c]
@@ -11462,6 +11475,7 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
     for sp in (spines or []):
         # 조립 대상 갈래인가. 아니면 기존 생성기로 넘긴다(다른 스타일은 템플릿이 슬롯을 안 쓴다).
         track = ("sul" if _is_sul_context("", [sp])
+                 else "invention" if _is_invention_context("", [sp])
                  else "insta" if _is_insta_context("", [sp]) else "")
         if not track:
             left.append(sp)
@@ -11469,6 +11483,14 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
         if track not in slots_by_track:
             if track == "insta":
                 slots, _prob = _insta_slots(sources, store)
+            elif track == "invention":
+                facts = _facts_per_source(sources, store, sul_facts.analyze_sul, "sul_facts1")
+                merged = spine_fill.merge_sul(facts) if facts else {}
+                # ★썰과 **다른 자격 검사**를 쓴다(위 INVENTION_CATEGORIES 주석 참조).
+                _prob = (spine_fill.invention_material_problem(merged) if merged
+                         else "영상에서 재료를 못 뽑았습니다")
+                slots = ({} if _prob
+                         else spine_fill.slots_from_facts(_facts_for_job(job_id, store), merged))
             else:
                 facts = _facts_per_source(sources, store, sul_facts.analyze_sul, "sul_facts1")
                 merged = spine_fill.merge_sul(facts) if facts else {}
