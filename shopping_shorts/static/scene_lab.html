@@ -1283,6 +1283,12 @@ function render(){
              onclick="event.stopPropagation();${SL.server ? `selBeat(${i});playBeatHere(${i}, event)` : ''}"
              style="${SL.server ? 'cursor:default' : ''}"
              title="${SL.server ? '대본 수정은 위 ① 새 대본 고르기에서' : '눌러서 대본을 바로 고칠 수 있어요'}">${esc(narrOf(i))}</div></div>
+        <!-- ⏱ 소재 부족 경고(2026-08-20) — 대사가 화면 예산보다 길면 남는 시간을 앞 장면
+             되풀이로 채운다("끝나고 계속 반복"). 서버가 재합성 때 재 둔 sync_gap을 그대로
+             보여준다 — 판정을 JS로 다시 하지 않는다(0순위-B). -->
+        ${(b.sync_gap && b.sync_gap > 0.8) ? `<div class="why" style="color:var(--bad,#ff6b6b);border-color:#5a2020;background:#2a1313">
+             ⏱ 대사가 화면보다 <b>${b.sync_gap}초</b> 깁니다 — 남는 동안 앞 장면이 되풀이됩니다.
+             장면을 더 담거나 대본을 줄여주세요</div>` : ''}
         ${narrChanged(i) ? `<div class="why" style="color:var(--warn);border-color:#5a4520;background:#2a2113">
              ✏ 대본 수정됨 · 예상 ${estSec(narrOf(i)).toFixed(1)}초(원래 ${(b.target_seconds||0).toFixed(1)}초)
              — 음성·자막은 다시 뽑아야 반영됩니다
