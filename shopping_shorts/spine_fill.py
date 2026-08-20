@@ -129,6 +129,36 @@ def _last(v):
     return str(v or "").strip()
 
 
+def _cases_and_last(items):
+    """엉뚱한 사용처 목록 → (나열에 쓸 것들, 반전에 쓸 마지막 하나).
+
+    ★왜 나누나(2026-08-20 실측으로 잡은 재발 버그): `용도끝`을 그냥 **마지막 항목**으로
+      뽑고 있었는데, `cases`도 앞에서 3개까지 쓴다. 사용처가 2~3개면 cases가 이미 말한
+      것을 twist가 그대로 반복해 **반전이 죽는다**.
+
+        misuses 3개 → cases "…고수들은 슬라이딩 신발장까지 심지어 **2층 수납함**까지"
+                      twist "근데 미친 사용법은 따로 있었는데 **2층 수납함**"   ← 같은 말
+
+      "twist는 cases에서 이미 말한 것을 또 말하면 안 된다"는 규칙은 원래 주석에 적혀
+      있었지만, 뽑는 방식이 그걸 못 지켰다(적어두는 것만으로는 안 지켜진다).
+      히트작 200편 중 오용형 정밀분해 20편의 사용처 개수 분포가 2개 5편·3개 6편이라
+      **절반 이상(55%)이 이 구간**이었다.
+
+    ★실측 순서와도 맞는다: 20편의 등장 순서가 거의 `나열 → 고조 → 클라이맥스`이고,
+      클라이맥스가 마지막인 편이 14/20이다. 마지막 하나를 반전에 남겨두는 게 원본의 결이다.
+
+    사용처가 1개뿐이면 반전을 만들 재료가 없다 → 반전 몫을 비운다. 그러면 twist 템플릿이
+    안 걸려 `missing`으로 넘어가고, 호출부가 모델에 맡긴다(겹친 문장을 내놓는 것보다 낫다).
+    """
+    xs = items
+    if isinstance(xs, str):
+        xs = [xs]
+    xs = [str(x).strip() for x in (xs or []) if str(x).strip()]
+    if len(xs) < 2:
+        return xs, ""
+    return xs[:-1], xs[-1]
+
+
 def _join_cases(items, max_n=3):
     """엉뚱한 사용처 여러 개 → 사례 나열 한 문장.
 
@@ -204,6 +234,7 @@ def slots_from_facts(product_facts=None, sul=None):
     ben = sf.get("benefits") or []
     if isinstance(ben, str):
         ben = [ben]
+    _cases, _last_use = _cases_and_last(sf.get("misuses"))
     out = {
         "제품": _first(pf.get("title")) or _first(sf.get("product_name")),
         "효능": (_first(why[0]) if len(why) > 0 else "") or _nth(ben, 0),
@@ -214,18 +245,18 @@ def slots_from_facts(product_facts=None, sul=None):
         "나라": _first(pf.get("origin")) or _first(sf.get("origin_country")),
         "본래용도": _first(sf.get("original_use")),
         "속성": _first(sf.get("hidden_property")),
-        "용도": _first(sf.get("misuses")),
-        # ★twist는 cases에서 이미 말한 것을 또 말하면 안 된다(실측: 둘 다 '인테리어
-        #   소품'이 나와 반전이 죽었다). 사례가 여럿이면 **마지막 것**을 반전에 쓴다.
+        # ★cases와 twist는 **겹치면 안 된다**. 그래서 반전 몫을 먼저 떼어낸 뒤
+        #   나머지만 나열에 준다(`_cases_and_last`). 아래 슬롯은 전부 그 결과를 쓴다.
+        "용도": _nth(_cases, 0),
         # ★실측 대본의 cases는 명사 나열이 아니라 **초보 vs 고수 대비**다
         #   ("초보 주부들은 기껏해야 환기 정도가 전부였음 / 하지만 고수 주부들은
         #     주방 벽에 설치해서 시원하게 요리한다고"). 그래서 두 번째 사례가 필요하다.
-        "용도2": _nth(sf.get("misuses"), 1),
+        "용도2": _nth(_cases, 1),
         # 고조 연결어('심지어')를 받는 세 번째 사례. 실측 대본에 그대로 있다
         #   ("…걸어버리면서 심지어 물티슈까지 걸어두고"). 게이트도 고조 1회를 요구한다.
-        "용도3": _nth(sf.get("misuses"), 2),
-        "용도끝": _last(sf.get("misuses")),
-        "용도들": _join_cases(sf.get("misuses")),
+        "용도3": _nth(_cases, 2),
+        "용도끝": _last_use,
+        "용도들": _join_cases(_cases),
         "제품군": _first(sf.get("category_word")),
     }
     return {k: v for k, v in out.items() if v}
