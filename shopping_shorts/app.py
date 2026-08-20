@@ -2420,7 +2420,7 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         #   (실측 사고: 재료 750자 vs 은행 2,822자 → 대본이 은행 소재로 끌려감).
         #   여기서 source_chars를 넘겨 은행이 재료의 1.5배를 넘지 않게 자른다.
         if _bank_ctx:
-            _sc = sum(len((s.get("full_text") or "")) for s in (_src or [])[:3])
+            _sc = sum(len((s.get("full_text") or "")) for s in (_src or [])[:_FACTS_MAX_SOURCES])
             if _sc:
                 _bank_ctx = bank_assemble.assemble_bank_context(
                     store, it.get("category") or "", source_chars=_sc) or _bank_ctx
@@ -11295,11 +11295,19 @@ SUL_CATEGORIES = ("오용형", "제품정체형")
 INSTA_CATEGORIES = ("다이소형",)
 
 
-# 재료를 뽑을 때 볼 영상 수 상한 — **여기 한 곳에서만** 정한다(0순위-B).
-# 예전엔 `[:3]`이 두 군데(_sul_block_for_sources·_assemble_sul_drafts)에 따로 박혀 있었다.
-# 한쪽만 고치면 "참고 재료는 5편인데 조립 슬롯은 3편"처럼 조용히 어긋난다.
-# 5편: 사장님 지시(2026-08-19) "영상은 최대 5개까지만. 시간도 오래 걸리고 더 넣어봐야 의미없다".
-_FACTS_MAX_SOURCES = 5
+# 재료로 볼 영상 수 상한 — 값을 정하는 곳은 `script_generate.SOURCE_MAX` **한 곳**뿐이다.
+# 여기 이름은 옛 호출부를 위해 남긴 별칭일 뿐, 숫자를 다시 적지 않는다(0순위-B).
+#
+# ⚠️2026-08-20에 실제로 어긋나 있었다: 이 상수는 5인데 **프롬프트에 실리는 그릇**
+#   (script_generate `_mix_source_block(sources[:3])` 3곳)과 `_sources_for_generate(limit=3)`,
+#   은행 예산 `_sc`가 전부 3이었다 → "재료는 5편 뽑고 3편만 넣는" 상태.
+#   숫자를 두 벌로 적었기 때문에 생긴 일이라, 값을 한 곳으로 모아서 없앴다.
+#
+# 5편의 근거 두 가지가 같은 값을 가리킨다:
+#  · 사장님 지시(2026-08-19) "영상은 최대 5개까지만. 더 넣어봐야 의미없다"
+#  · 히트작 200편 실측(2026-08-20, raw/analysis/썰쇼핑_히트작200_2026-08-20):
+#    필요 장면 평균 3.3 / 중앙값 3 / **범위 2~5**
+_FACTS_MAX_SOURCES = script_generate.SOURCE_MAX
 
 
 def _is_context(category, spines, names):
@@ -11512,7 +11520,7 @@ def _prefetched_facts_for_job(job, store):
     return {}
 
 
-def _sources_for_generate(item, job, limit=3):
+def _sources_for_generate(item, job, limit=_FACTS_MAX_SOURCES):
     """대본 생성에 넣을 **재료 대본 목록**. 담긴 영상 전부(최대 limit편) + 씨앗 항목.
 
     ★왜 여러 편인가(2026-08-17 사장님 지시): 한 편만 넣으면 그 한 편의 인물·상황에
@@ -11933,7 +11941,7 @@ def api_script_beat_regen(request: Request, body: dict):
     if store.get_setting("ping_pong_enabled", "") == "1":
         # 전체 생성과 **같은 예산**을 건다(0순위-B: 한쪽만 걸면 [바꾸기]로 만든 칸만
         # 은행 소재로 끌려가 전체와 결이 어긋난다).
-        _sc = sum(len((s.get("full_text") or "")) for s in (_src or [])[:3])
+        _sc = sum(len((s.get("full_text") or "")) for s in (_src or [])[:_FACTS_MAX_SOURCES])
         _bank_ctx = bank_assemble.assemble_bank_context(
             store, it.get("category") or "", source_chars=_sc) or ""
 

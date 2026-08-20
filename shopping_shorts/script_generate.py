@@ -23,6 +23,21 @@ _MODEL = comment_gen._MODEL
 # 전부 활용해 소진 사고를 피한다(2026-07-13).
 _GEN_GROUP = "general"
 
+# ★대본 생성에 넣는 재료 영상의 상한 — **이 한 곳에서만** 정한다(0순위-B).
+#   app.py의 `_FACTS_MAX_SOURCES`는 이 값을 빌려 쓰는 별칭이다(숫자를 다시 안 적는다).
+#
+#   2026-08-20 실측 사고: app.py는 5인데 여기 그릇이 `sources[:3]`이라 **5편 뽑아 3편만
+#   넣고** 있었다. 같은 판단을 두 벌로 적으면 반드시 어긋난다.
+#
+#   5의 근거 두 가지가 같은 값을 가리킨다:
+#    · 사장님 지시(2026-08-19) "영상은 최대 5개까지만. 더 넣어봐야 의미없다"
+#    · 히트작 200편 실측(raw/analysis/썰쇼핑_히트작200_2026-08-20):
+#      필요 장면 평균 3.3 / 중앙값 3 / 범위 2~5
+#
+#   ⚠️더 올리지 마라: 재료 1편당 프롬프트 ~2.8천자(본문 800 + 장면 20줄)라
+#     5편이 이미 ~14천자다.
+SOURCE_MAX = 5
+
 
 def _style_extra():
     """채널 스타일 블록(style_profiles, 2026-08-05). 실패해도 생성을 죽이지 않는다."""
@@ -311,7 +326,7 @@ def generate_mix(sources, target_seconds=30, n=3, max_key_tries=3, bank_context=
     n = max(1, min(int(n or 3), 5))
     seconds = max(5, min(int(target_seconds or 30), 90))
     words = max(15, round(seconds * 2.3))
-    prompt = (_MIX_PROMPT.format(sources=_mix_source_block(sources[:3]), seconds=seconds, words=words, n=n,
+    prompt = (_MIX_PROMPT.format(sources=_mix_source_block(sources[:SOURCE_MAX]), seconds=seconds, words=words, n=n,
                                  bank=("\n\n" + bank_context) if bank_context else "")
               + _style_extra())   # ★채널 스타일(2026-08-05) — format 뒤에 붙인다({} 무관)
     return _verify_and_fix(_generate_drafts(prompt), seconds)
@@ -374,7 +389,7 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     head = bank_assemble.style_block(style, seconds=seconds)
     if not head:
         return None
-    base = (_MIX_PROMPT.format(sources=_mix_source_block((sources or [])[:3]),
+    base = (_MIX_PROMPT.format(sources=_mix_source_block((sources or [])[:SOURCE_MAX]),
                                seconds=seconds, words=max(15, round(seconds * 2.3)), n=1,
                                bank=("\n\n" + bank_context) if bank_context else "")
             + _style_extra()
@@ -565,7 +580,7 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
         "그중 **딱 한 칸(한두 문장)만** 다시 쓰는 일을 한다.\n"
         "★새 대본을 쓰는 게 아니다. 훅부터 CTA까지 다 쓰지 마라 — **그 칸 하나만** 쓴다.\n\n"
         "[이 대본의 재료 — 무엇에 대한 영상인지 알기 위한 참고자료다]\n"
-        + _mix_source_block((sources or [])[:3])
+        + _mix_source_block((sources or [])[:SOURCE_MAX])
         + (("\n\n" + bank_context) if bank_context else "")
         + _style_extra()
         + (("\n" + facts_block) if facts_block else "")
