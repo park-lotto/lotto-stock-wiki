@@ -2536,7 +2536,7 @@ class Store:
         with self._conn() as c:
             row = c.execute(
                 "SELECT script_json, extracted_at, category, structure_json, "
-                "structure_analyzed_at, category_source "
+                "structure_analyzed_at, category_source, hook_axis "
                 "FROM script_extracts WHERE shortcode=?",
                 (shortcode,),
             ).fetchone()
@@ -2548,7 +2548,9 @@ class Store:
         data["structure"] = json.loads(row[3]) if row[3] else None
         data["structure_analyzed_at"] = row[4]
         data["category_source"] = row[5]
-        return data
+        # ★제작소의 **캐시 분기**(app.py /api/produce/extract_from_url)가 이 함수를 쓴다 —
+        #   여기 빠뜨리면 **캐시 히트 때만** 화면에 축이 안 나온다(2026-08-20 라이브에서 실제로 그랬다).
+        return self._attach_hook_axis(data, row[6])
 
     def get_reel_meta(self, shortcode):
         """reel_history의 이 영상 최신 메타(name·category·url·thumb·comments·views).
@@ -2785,6 +2787,33 @@ class Store:
             cur = self.get_draft(cur["parent_draft_id"]) if cur["parent_draft_id"] else None
         return list(reversed(chain))
 
+    @staticmethod
+    def _attach_hook_axis(data, stored_axis):
+        """전사 dict에 훅 문형 축을 붙인다 — **읽는 출구가 둘이라 함수로 뽑았다**.
+
+        ★2026-08-20 실사고: `get_script`에만 축을 붙였는데 제작소 캐시 분기는
+          `get_extract`를 쓴다. 그래서 캐시 히트 때만 화면에 축이 안 나왔다
+          (라이브 브라우저에서 hook_axis 키 자체가 없는 걸로 잡았다).
+          같은 판단이 두 군데면 반드시 한 곳이 빠진다(0순위-B).
+          세 번째 읽기 경로가 생기면 그것도 이 함수를 부르게 하라.
+        ★DB에 값이 없으면 그 자리에서 판정하되 **쓰지는 않는다**(읽기 경로에서 쓰면
+          느려지고 잠금이 는다). 채우는 건 scripts/backfill_hook_axis.py가 한다.
+        """
+        axis = stored_axis or ""
+        if not axis:
+            try:
+                from shopping_shorts.hook_axis import axis_of
+                axis = axis_of(data) or ""
+            except Exception:      # noqa: BLE001 — 판정 실패가 조회를 막으면 안 된다
+                axis = ""
+        data["hook_axis"] = axis
+        try:
+            from shopping_shorts.hook_axis import AXIS_TO_SPINE
+            data["hook_spine"] = AXIS_TO_SPINE.get(axis, "")
+        except Exception:      # noqa: BLE001
+            data["hook_spine"] = ""
+        return data
+
     def get_script(self, shortcode):
         """저장된 대본추출 결과. 없으면 None.
         있으면 {segments, full_text, extracted_at, hook_axis, hook_spine}.
@@ -2806,20 +2835,7 @@ class Store:
             return None
         data = json.loads(row[0])
         data["extracted_at"] = row[1]
-        axis = row[2] or ""
-        if not axis:
-            try:
-                from shopping_shorts.hook_axis import axis_of
-                axis = axis_of(data) or ""
-            except Exception:      # noqa: BLE001 — 판정 실패가 조회를 막으면 안 된다
-                axis = ""
-        data["hook_axis"] = axis
-        try:
-            from shopping_shorts.hook_axis import AXIS_TO_SPINE
-            data["hook_spine"] = AXIS_TO_SPINE.get(axis, "")
-        except Exception:      # noqa: BLE001
-            data["hook_spine"] = ""
-        return data
+        return self._attach_hook_axis(data, row[2])
 
     # ── S급 대본 위키(도서관) — customer_id별로 독립(2026-07-13 멀티테넌시) ──
     def save_to_wiki(self, item, script, structure, customer_id=LEGACY_CUSTOMER_ID):
