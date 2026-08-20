@@ -346,3 +346,41 @@ class TestCasesTwistNoOverlap:
         assert (slots["용도"], slots["용도2"], slots["용도3"]) == tuple(self.ALL[:3])
         assert "심지어 2층 수납함" in beats["cases"]
         assert "화분 걸이" in beats["twist"]
+
+
+class TestInventionMaterial:
+    """발명품형(2026-08-20 신설)의 재료 자격 — **썰과 다른 검사**를 쓴다.
+
+    ★왜 따로 두나: 썰(오용형)의 `sul_material_problem`은 "원래 용도를 뒤집는가"
+      (`misuse_genre`)를 묻는다. 발명품형은 뒤집는 이야기가 아니라 "왜 태어났고 뭐가
+      대단한가"라서, 같은 검사에 걸면 `misuse_genre=false`로 **영영 조립이 안 된다**
+      (스파인만 있고 죽어 있는 상태 — 오류가 안 나서 눈에 안 띈다).
+    """
+
+    OK = {"product_name": "나이키 플라이이즈",
+          "benefits": ["발만 밀어 넣으면 신어진다", "뒤꿈치만 밟으면 벗겨진다", "만성통증 환자도 쓴다"]}
+
+    def test_장점_3개와_제품명이_있으면_통과(self):
+        assert sf.invention_material_problem(self.OK) == ""
+
+    def test_장점이_모자라면_막는다(self):
+        """benefit·escalate·twist에 하나씩 = 3개가 있어야 끝까지 찬다."""
+        m = dict(self.OK, benefits=self.OK["benefits"][:2])
+        assert "장점이 2개" in sf.invention_material_problem(m)
+
+    def test_제품명이_없으면_막는다(self):
+        """제목이 {제품}을 쓴다 — 없으면 게이트의 '소재 일치' 검사에서 떨어진다."""
+        m = {k: v for k, v in self.OK.items() if k != "product_name"}
+        assert "제품명" in sf.invention_material_problem(m)
+
+    def test_오용형_자격과_섞이지_않는다(self):
+        """발명품형 재료(misuses 없음)를 썰 검사에 넣으면 막히는 게 정상이다.
+        그 반대도 마찬가지 — 그래서 갈래를 나눴다."""
+        assert sf.invention_material_problem(self.OK) == ""
+        assert sf.sul_material_problem(self.OK) != ""
+
+    def test_계기는_필수가_아니다(self):
+        """없으면 계기를 안 쓰는 story 변형이 걸린다 — 미담을 지어내는 것보다 낫다."""
+        assert sf.invention_material_problem(self.OK) == ""      # origin_story 없음
+        slots = sf.slots_from_facts(None, self.OK)
+        assert "계기" not in slots

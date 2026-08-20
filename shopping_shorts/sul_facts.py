@@ -54,6 +54,10 @@ SLOT_SOURCE = {
     "속성":   "sul_facts.hidden_property(사람들이 눈치챈 숨은 성질)",
     "용도":   "sul_facts.misuses        (엉뚱하게 쓰는 실제 사례들)",
     "제품군": "sul_facts.category_word  (제품을 안 밝힐 때 쓸 상위 분류어)",
+    # 발명품형(2026-08-20 신설)이 쓰는 칸. 히트작 200편 중 이 갈래 23편의 **힘이 전부
+    # 여기서 나온다** — "뇌성마비 소년의 편지 한 통에 탄생한" / "비만 오면 짐 챙기다
+    # 생지옥 되던 육아맘에 빡쳐서 탄생한". 사람 이야기가 없으면 그냥 제품 소개가 된다.
+    "계기":   "sul_facts.origin_story    (왜·누구 때문에 만들어졌나)",
 }
 
 SUL_PROMPT = """아래는 한국 쇼핑 쇼츠 영상의 자막·설명이다. 이 영상으로 **썰쇼핑 대본**을
@@ -115,6 +119,12 @@ SUL_PROMPT = """아래는 한국 쇼핑 쇼츠 영상의 자막·설명이다. �
                     한 영상이 안 말한 이득을 다른 영상이 보여준다.
 - origin_country: {나라} — 브랜드·제조국이 드러나면 그 나라. 아니면 빈 문자열.
                   ★추측하지 마라. 영상에 안 나오면 비워라(지어낸 국적이 대본에 박힌다).
+- origin_story  : {계기} — **이 제품이 왜, 누구 때문에 만들어졌나**(개발 비화·탄생 배경).
+                  실측 예: "혼자서 신발을 신고 싶다는 뇌성마비 소년의 편지 한 통에 탄생",
+                          "비만 오면 짐 챙기다 생지옥 되던 육아맘의 불편에서 출발".
+                  ★영상이 개발 배경을 말할 때만 채워라. **없으면 빈 문자열**이다 —
+                    지어낸 미담이 대본에 박히면 그게 가장 큰 사고다(확인할 길도 없다).
+                  ★"천재가 만들었다" 같은 수식만 있고 계기가 없으면 비워라.
 - misuse_genre  : **이 영상이 '원래 용도를 뒤집는' 오용형인가**(true/false).
                   true = 원래 A를 하라고 만든 물건인데 사람들이 전혀 다른 B로 쓰더라,
                          라는 반전이 실제로 있는 영상.
@@ -123,7 +133,7 @@ SUL_PROMPT = """아래는 한국 쇼핑 쇼츠 영상의 자막·설명이다. �
                     하나도 안 놀라운 대본이 나간다(실측 2026-08-19 마커펜 사고).
 
 JSON만 출력:
-{"original_use": [], "hidden_property": [], "misuses": [], "category_word": "", "hook_points": [], "misuse_genre": false, "product_name": "", "benefits": [], "origin_country": ""}
+{"original_use": [], "hidden_property": [], "misuses": [], "category_word": "", "hook_points": [], "misuse_genre": false, "product_name": "", "benefits": [], "origin_country": "", "origin_story": ""}
 
 ★말이 없는 영상(해외 시연 영상 등)이면 **화면에서 관찰된 장면 목록**만 주어진다.
   그때는 장면 묘사·행위·변화를 근거로 판단해라. 손이 무엇을 하고 무엇이 어떻게
@@ -144,6 +154,8 @@ SUL_SCHEMA = {
         "hidden_property": {"type": "array", "items": {"type": "string"}},
         "misuses": {"type": "array", "items": {"type": "string"}},
         "category_word": {"type": "string"},
+        # 발명품형 {계기}. 없으면 빈 문자열 — 억지로 채우면 미담을 지어낸다.
+        "origin_story": {"type": "string"},
         "hook_points": {"type": "array", "items": {"type": "string"}},
         # 이 영상이 오용형 장르인가 — 조립 자격을 여기서 가른다(2026-08-19).
         "misuse_genre": {"type": "boolean"},
@@ -253,7 +265,7 @@ def analyze_sul(raw, *, log=print):
         v = [str(x).strip() for x in v if str(x).strip()]
         if v:
             out[k] = v
-    for k in ("category_word", "product_name", "origin_country"):
+    for k in ("category_word", "product_name", "origin_country", "origin_story"):
         v = (data.get(k) or "").strip()
         if v:
             out[k] = v
@@ -285,6 +297,7 @@ def sul_prompt_block(facts, max_items=4):
         _line("misuses", "엉뚱한 사용처(실제 사례)"),
         _line("category_word", "상위 분류어(제품명을 숨길 때 쓸 말)"),
         _line("hook_points", "어그로 포인트(놀라운 사실)"),
+        _line("origin_story", "탄생 배경(왜·누구 때문에 만들어졌나 — 없으면 이 줄이 없다)"),
     ])
     if not body:
         return ""
