@@ -96,3 +96,12 @@ def test_신기템은_영상_제목도_본다(tmp_path):
     assert items[0]["style"] == "신기템"
     assert items[1]["style"] == "", "같은 채널이라도 게임 영상은 축이 아니다"
     assert items[2]["style"] == "", "같은 채널이라도 트로트는 축이 아니다"
+
+
+def test_영문_딴장르도_막는다(tmp_path):
+    """2026-08-21 2차 실측 — 한글 차단어만 넣었더니 같은 트로트 채널의 영문 제목이 통과했다."""
+    from shopping_shorts.app import _attach_channel_style
+    st = _store(tmp_path)
+    items = [{"username": "UCabc123", "caption": "Success Affirmation Trot: One Small Step"}]
+    _attach_channel_style(items, st, "youtube")
+    assert items[0]["style"] == ""
