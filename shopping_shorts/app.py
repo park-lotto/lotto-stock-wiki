@@ -5755,6 +5755,61 @@ def api_lens_locales():
     return {"ok": True, "locales": out}
 
 
+_LENS_SRC_MAX = int(os.environ.get("LENS_SRC_MAX", "900"))   # 검색어 소재 글자 상한
+
+
+def _lens_source_text(url, front_caption="", store=None):
+    """검색어를 만들 **소재 텍스트** — 프론트 캡션 + DB 캡션 + 대본을 합친다.
+
+    왜(2026-08-22 사장님 "썸네일 캡션 대본을 빠르게 스캔해서"): 지금까지 검색어는
+    사실상 **썸네일 1장만** 보고 만들어져 제품을 잘못 짚었다. 라이브 실측 3건 중 2건:
+      · 다이소 바닥 흠집 보수제 → "스틱청소기"(전혀 다른 제품)
+      · 흰 양말 과탄산소다      → "이염 방지 시트"
+    캡션을 넣자 둘 다 정확해졌고, 대본까지 넣으니 '과탄산소다'라는 **정확한 제품명**이
+    나왔다(그 단어는 캡션엔 없고 대본에만 있었다).
+
+    ★캡션은 reel_history엔 거의 비어 있다(실측 300건 중 1건). 진짜 캡션은
+      source_enrichment(1,260건)에 있는데 **아무도 안 읽고 있었다** — 여기서 읽는다.
+    ★보강은 부가기능이다 — DB가 없거나 터져도 검색은 살아야 하므로 전부 감싼다."""
+    parts = []
+    if (front_caption or "").strip():
+        parts.append(front_caption.strip())
+    st = store
+    if st is None:
+        try:
+            st = Store(DB_PATH)
+        except Exception as e:               # noqa: BLE001 — DB 없으면 프론트 캡션만 쓴다
+            import sys as _sys
+            print(f"[경고] 렌즈 소재 Store 열기 실패(무시): {e!r}", file=_sys.stderr)
+            st = None
+    if st is not None and url:
+        try:
+            # max_age_days=None: 오래된 캡션도 제품 힌트로는 그대로 쓸모 있다
+            enr = st.get_enrichment(url, max_age_days=None) or {}
+            cap = (enr.get("caption") or "").strip()
+            if cap and cap not in parts:
+                parts.append(cap)
+        except Exception as e:               # noqa: BLE001 — 보강 실패로 검색을 죽이지 않는다
+            import sys as _sys
+            print(f"[경고] 렌즈 캡션 조회 실패(무시): {e!r}", file=_sys.stderr)
+        try:
+            # 대본은 shortcode로 찾는다. 인스타(/reel·/p·/tv)·유튜브(/shorts)·틱톡(/video)
+            # 뿐 아니라 호스트가 다른 URL도 마지막 경로 조각을 코드로 본다 — 못 찾으면
+            # 그냥 대본이 없는 것으로 지나간다(아래 sd가 빈 값이라 안전).
+            m = (_IG_SC_RE.search(url)
+                 or re.search(r"/(?:video|shorts|reel|reels|p|tv)/([A-Za-z0-9_-]+)", url))
+            sc = m.group(1) if m else ""
+            if sc:
+                sd = st.get_script(sc) or {}
+                txt = (sd.get("full_text") or "").strip()
+                if txt:
+                    parts.append(txt)
+        except Exception as e:               # noqa: BLE001 — 대본이 없어도 검색은 돈다
+            import sys as _sys
+            print(f"[경고] 렌즈 대본 조회 실패(무시): {e!r}", file=_sys.stderr)
+    return "\n".join(parts)[:_LENS_SRC_MAX]
+
+
 def _parse_lens_locales(raw):
     """프론트가 보낸 "ko:kr,ja:jp" → [("ko","kr"), ("ja","jp")]. 비면 [](=전체).
 
@@ -6129,10 +6184,13 @@ async def api_lens_cn(request: Request, frame: UploadFile = File(None),
 
 @app.post("/api/lens/cn/keywords")
 async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
-                                source_caption: str = Form(""), exclude: str = Form("")):
+                                source_caption: str = Form(""), exclude: str = Form(""),
+                                source_url: str = Form("")):
     """프레임(+캡션) → 중국어 후보 검색어 리스트. Gemini 비전 1회, Apify 안 부름.
     프론트가 렌즈 열 때 호출해 후보 버튼을 그린다(2026-07-19)."""
-    if frame is None and not (source_caption or "").strip():
+    # ★source_url이 있으면 캡션이 비어도 진행한다 — DB에서 캡션·대본을 찾아올 수 있다
+    #   (프론트 캡션은 거의 항상 비어 있다: 실측 300건 중 1건).
+    if frame is None and not (source_caption or "").strip() and not (source_url or "").strip():
         return {"ok": True, "product": "", "candidates": []}
     raw = None
     if frame is not None:
@@ -6146,7 +6204,10 @@ async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
         # ★ to_thread 필수 — cn_search_candidates는 Gemini SDK를 **블로킹**으로 부른다.
         #   async def 안에서 그냥 부르면 이벤트루프가 그 5~10초 동안 통째로 멈춰,
         #   프론트가 동시에 던진 /api/lens/yt가 뒤에서 줄을 서 20초가 됐다(2026-08-16 실측).
-        v = await asyncio.to_thread(cn_search_candidates, raw, source_caption, exclude=seen)
+        # ★썸네일 1장만 보면 제품을 잘못 짚는다(실측 3건 중 2건). DB에 있는
+        #   캡션·대본을 합쳐 소재를 넉넉히 준다 — 비용 0(이미 저장된 것).
+        src = await asyncio.to_thread(_lens_source_text, source_url, source_caption)
+        v = await asyncio.to_thread(cn_search_candidates, raw, src, exclude=seen)
     except Exception:
         v = {}
     return {"ok": True, "product": v.get("product", ""),
