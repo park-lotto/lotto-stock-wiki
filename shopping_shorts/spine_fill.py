@@ -182,6 +182,57 @@ def _join_cases(items, max_n=3):
     return "%s %s%s도 쓰고요" % (head, rest, _j2 or "로")
 
 
+def split_by_subject(facts_list):
+    """재료 목록 → (**주 소재** 편들, 딴 소재 편들).
+
+    ★왜 필요한가(2026-08-21 실사고). `merge_sul` 주석에 "같은 소재의 영상만 합쳐라"라고
+      적혀 있었고, 근거로 "실무 호출부는 담긴 영상들을 넘기므로 **자연히 지켜진다**"고 돼
+      있었다. 그 가정이 실제로 깨졌다 — 사장님이 구명 팔찌 6편 사이에 **미니 다리미** 한
+      편을 담자 재료에 `170도 자동 온도 조절`·`다리미`가 그대로 섞여 들어왔다.
+      적어두는 것만으로는 안 지켜진다. 그래서 **검사로 바꾼다.**
+
+    판정은 `bigrams` 한 벌을 그대로 쓴다(0순위-B) — 제품명+분류어의 2글자 조각이
+    다른 편들과 하나도 안 겹치면 딴 소재로 본다.
+
+    ★**다수결이다.** 가장 많이 겹치는 무리를 주 소재로 삼는다. 편수가 같으면 **앞쪽**이
+      이긴다 — 호출부가 씨앗(주제를 정하는 영상)을 맨 앞에 넣기 때문이다.
+    ★버리는 게 아니라 **갈라서 돌려준다.** 조용히 버리면 "왜 이 영상은 안 쓰였나"를
+      아무도 모른다(조용한 폴백 금지). 호출부가 화면에 말해줄 수 있게 둘 다 준다.
+    ★한 편뿐이면 비교 대상이 없다 — 그대로 통과시킨다.
+    """
+    rows = [f for f in (facts_list or []) if isinstance(f, dict)]
+    if len(rows) < 2:
+        return rows, []
+
+    def _key(f):
+        parts = []
+        for k in ("product_name", "category_word"):
+            v = f.get(k)
+            if isinstance(v, (list, tuple)):
+                v = v[0] if v else ""
+            if str(v or "").strip():
+                parts.append(str(v).strip())
+        return bigrams(" ".join(parts))
+
+    keys = [_key(f) for f in rows]
+    # 서로 겹치는 편수를 센다(자기 자신은 빼고).
+    score = [sum(1 for j, b in enumerate(keys) if j != i and (a & b))
+             for i, a in enumerate(keys)]
+    best = max(score) if score else 0
+    if best == 0:
+        return rows, []          # 아무 편도 안 겹친다 = 판정 불가 → 종전대로 전부 쓴다
+    main = [rows[i] for i, sc in enumerate(score) if sc == best]
+    # 주 소재 무리와 하나라도 겹치면 같은 편으로 본다(표현이 조금 달라도 살린다).
+    mkey = set()
+    for i, sc in enumerate(score):
+        if sc == best:
+            mkey |= keys[i]
+    keep, drop = [], []
+    for i, f in enumerate(rows):
+        (keep if (keys[i] & mkey) else drop).append(f)
+    return keep, drop
+
+
 def merge_sul(facts_list):
     """여러 영상에서 뽑은 썰 재료를 **한 벌로 합친다**(2026-08-19 사장님 지시).
 
