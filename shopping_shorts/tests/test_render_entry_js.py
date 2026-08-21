@@ -66,6 +66,27 @@ def test_확정본탭이_잠겨있지_않다():
     assert "innerHTML = ''" in body, "clearConfirm이 내용을 안 비운다(옛 영상이 남는다)"
 
 
+def test_빈칸_거절도_확정본자리에_뜬다():
+    """실패 경로도 성공 경로와 **같은 자리**로 간다(계획서가 빠뜨린 것).
+
+    탭이 렌더 입구가 된 뒤로 사장님은 탭을 눌러 확정본 자리에 와 있다. 빈 칸이 있어
+    startPreview가 일찍 return하면, 토스트는 몇 초 뒤 사라지고 그 자리엔 **빈 칸만**
+    남는다 = "눌렀는데 아무 일도 안 난다". 그래서 사유를 그 자리에 쓴다(_pvFail).
+
+    짝: 칸이 채워지면 그 문구를 **걷어야** 한다 — 안 걷으면 #confirmBody가 계속
+    "비어 있지 않음"이라 _askRender가 영영 렌더를 안 건다(조용한 사망).
+    """
+    pro = _code("produce.html")
+    body = pro.split("async function startPreview()")[1].split("\nasync function")[0]
+    # 빈칸 분기는 `return;`으로 끝난다 — 중괄호로 자르면 안쪽 try{}에 먼저 걸린다.
+    empty = body.split("EMPTY_BEATS.length){")[1].split("return;")[0]
+    assert "_pvFail" in empty, "빈 칸 거절 사유가 확정본 자리에 안 뜬다(빈 칸만 남는다)"
+
+    clean = pro.split("function sceneLabEmptyBeats(")[1].split("\nfunction ")[0]
+    assert "confirmBody" in clean, \
+        "칸이 채워져도 거절 문구를 안 걷는다 — _askRender가 영영 렌더를 안 건다"
+
+
 def test_아래카드가_위카드와_같은비율():
     """아래 소스 카드가 9:16이면 세로로 길어 스크롤이 끝없다(2026-08-22 사장님
     "썸네일 크기를 위쪽 내 영상 전체 크기랑 동일하게").

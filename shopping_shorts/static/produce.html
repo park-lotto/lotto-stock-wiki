@@ -6881,6 +6881,18 @@ function sceneLabEmptyBeats(list){
       ? (EMPTY_BEATS.map(i => i + 1).join("·") + "번 칸에 장면을 담아주세요")
       : "";
   }
+  // ★빈 칸이 다 채워지면 확정본 자리의 **거절 문구를 걷어낸다**(2026-08-22).
+  //   startPreview의 빈칸 분기가 그 자리에 사유를 써 두는데, 안 걷으면 #confirmBody가
+  //   계속 "비어 있지 않음"이라 _askRender가 영영 렌더를 안 건다(탭을 눌러도 무반응).
+  //   ⚠️걷는 조건은 **거절 문구일 때만**이다 — 로더나 완성된 <video>를 지우면 안 된다.
+  if (!EMPTY_BEATS.length && typeof _labCall === 'function'){
+    try{
+      const _f = document.getElementById('sceneLabFrame');
+      const _w = _f && _f.contentWindow;
+      const _b = _w && _w.document && _w.document.getElementById('confirmBody');
+      if (_b && /칸에 장면을 먼저 담아주세요/.test(_b.innerHTML)) _b.innerHTML = '';
+    }catch(e){ console.warn('빈칸 안내 정리 실패', e); }
+  }
   const hint = document.getElementById("emptyBeatHint");
   if (hint){
     hint.style.display = EMPTY_BEATS.length ? "" : "none";
@@ -7584,7 +7596,15 @@ async function startPreview(){
   // typeof 가드: 게이트 하네스는 이 파일의 **함수 부분집합**만 node로 돌려
   // EMPTY_BEATS 선언이 그 범위 밖이다 — 맨손으로 쓰면 ReferenceError로 죽는다(2026-08-20 실측).
   if (typeof EMPTY_BEATS !== "undefined" && EMPTY_BEATS.length){
-    try{ toast(EMPTY_BEATS.map(i=>i+1).join("·") + "번 칸에 장면을 먼저 담아주세요"); }catch(e){}
+    const _msg = EMPTY_BEATS.map(i=>i+1).join("·") + "번 칸에 장면을 먼저 담아주세요";
+    try{ toast(_msg); }catch(e){}
+    // ★이 **실패 경로도** 확정본 자리에 사유를 남긴다(2026-08-22).
+    //   탭이 렌더 입구가 된 뒤로는 사장님이 탭을 눌러 여기 와 있다 — 여기서 그냥
+    //   return하면 토스트는 몇 초 뒤 사라지고 **빈 칸만** 남아 "눌렀는데 아무 일도
+    //   안 난다"가 된다. 자리를 옮길 땐 성공 경로뿐 아니라 실패 경로도 같이 옮긴다
+    //   (0순위-B / _pvFail 주석과 같은 이유).
+    if (typeof _pvFail === 'function') _pvFail('⚠️ ' + esc(_msg));
+    if(btn) btn.disabled = false;
     return;
   }
   if(btn) btn.disabled = true;     // 렌더는 20초+ 걸린다 — 그 사이 재클릭을 막는다
