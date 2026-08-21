@@ -32,22 +32,31 @@ import os
 from shopping_shorts import mix_pipeline, script_gate
 
 
-def test_default_voice_speed_matches_maison():
-    """기본 보이스 배속 = 2.2 (메종 8.45자/초에 맞춘 값, 실측 8.75)."""
-    assert mix_pipeline._DEFAULT_VOICE["speed"] == 2.2, \
-        "기본 배속이 2.2가 아니다 — 메종 밀도가 안 나온다"
+def test_default_voice_speed_is_listened_value():
+    """기본 보이스 배속 = 1.6 (2026-08-22 사장님 청취 확정).
+
+    ★규명 완료: 메종 8.45자/초는 맞는 값이지만 **배속으로 따라가면 안 되는 값**이었다.
+      같은 대본(메종 전사 191자)을 우리 TTS 1.6으로 읽히니 28.0초(사람 22.6초) —
+      순수 발화속도가 24% 느리다. 그 격차를 배속으로 메우려다 2.2까지 올렸고
+      사장님이 청취에서 반려했다.
+      진짜 차이는 **무음**이었다: 사람 원본은 무음 0.00초(임계 -30/-38/-45 전부 0구간),
+      우리는 2.54초/20구간. 무음컷을 -30dB/0.05로 세게 하니 배속 1.6 그대로
+      34.8초 → 29.3초가 됐다. 길이는 배속이 아니라 무음으로 맞춘다.
+    """
+    assert mix_pipeline._DEFAULT_VOICE["speed"] == 1.6, \
+        "기본 배속이 1.6이 아니다 (2026-08-22 사장님 청취 확정)"
 
 
 def test_speech_speed_estimate_follows_voice():
     """길이 추정 배속이 실제 보이스를 따라간다(둘이 어긋나면 길이 계산이 틀린다)."""
     got = script_gate._speech_cps()
-    # speed 2.2 실측 8.75자/초 — ±6% 안. 종전 8.21(=5.7×1.44)은 이 창 밖이라 잡힌다.
-    assert 8.2 < got <= 9.3, "추정 말속도 %.2f자/초가 실측 8.75와 다르다" % got
+    # speed 1.6 + 무음컷 조합 실측 7.41자/초 — 무음컷을 빼고 재면 6.3으로 낮게 잡힌다.
+    assert 7.0 <= got <= 7.9, "추정 말속도 %.2f자/초가 실측 7.41과 다르다" % got
 
 
 def test_25s_target_holds_maison_density():
     """25초 목표에서 메종만큼(211자 내외) 담긴다 — 짧게 잘리지 않는다."""
     style = {"beat_roles": ["hook", "cta"], "chars_per_30s": 300, "templates": {}}
     tgt = script_gate.density_target(style, seconds=25)
-    # 메종 실측 8.45자/초 × 25초 = 211자. 종전 상수로는 205자에서 잘렸다.
-    assert tgt >= 211, "25초 목표 글자수가 %d자 — 메종(211자)보다 적어 말이 빈다" % tgt
+    # 확정 조합 7.41자/초 × 25초 ≈ 185자. 이보다 적으면 말이 빈다.
+    assert 170 <= tgt <= 200, "25초 목표 글자수가 %d자 — 실측 185자 근처여야 한다" % tgt
