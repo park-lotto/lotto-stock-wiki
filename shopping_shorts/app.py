@@ -8024,7 +8024,9 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_event_hours", "limit_lens", "limit_r
                        "global_cap_lens", "global_cap_render", "global_cap_script",
                        "contact_kakao", "contact_phone", "pay_url",
                        "bank_name", "bank_account", "bank_holder", "deposit_note",
-                       "biz_name", "biz_owner", "biz_regno", "biz_addr", "biz_sales_no", "biz_email"}
+                       "biz_name", "biz_owner", "biz_regno", "biz_addr", "biz_sales_no", "biz_email",
+                       # 조립 끄기 — "1"이면 틀 조립을 건너뛰고 전부 생성기로(2026-08-21)
+                       "assemble_off"}
 
 
 @app.get("/api/admin/customers")
@@ -11903,7 +11905,22 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
     ★조립은 **슬롯이 전부 차는 스파인**에만 쓴다. 한 칸이라도 비면 그 스파인은
       기존 생성기에 넘긴다 — 반쪽 조립본을 내놓는 것보다 그게 낫다.
     ★어느 쪽으로 갔는지는 응답의 `materials.assembled`가 말한다(조용한 폴백 금지).
+
+    ★설정 `assemble_off=1`이면 **조립을 아예 안 한다**(2026-08-21 사장님).
+      조립은 틀을 글자 그대로 쓰고 빈칸만 치환하므로, 빈칸 값의 형태가 제각각이면
+      조사·어미가 안 맞물려 비문이 된다("불꽃이 올라오는 있더라고요").
+      생성기는 틀을 **참고만** 하고 문장을 직접 쓰며(bank_assemble.style_block),
+      구조는 role 대조로 똑같이 강제된다 — 즉 조립의 이점은 '모델 호출 0회'뿐이다.
+      기본값은 꺼지지 않음(회귀 0). admin에서 켜면 전부 생성기로 간다.
     """
+    # store가 None일 수 있다(테스트가 그렇게 부른다) — 없으면 종전대로 조립한다.
+    try:
+        _off = str((store.get_setting("assemble_off") if store else "") or "") == "1"
+    except Exception:      # noqa: BLE001 — 설정 조회 실패가 생성을 막지 않는다
+        _off = False
+    if _off:
+        print("assemble_off=1 → 조립 건너뛰고 전부 생성기로", file=sys.stderr)
+        return [], list(spines or [])
     out, left = [], []
     _why = []          # 조립을 못 한 이유(화면이 말해준다)
     try:
