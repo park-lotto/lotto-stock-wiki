@@ -1574,9 +1574,9 @@ def _speech_speed():
       speed와 실측 자/초는 **비례하지 않는다**: 1.6→6.51 · 1.8→7.26 · 2.0→7.66 · 2.2→8.75.
     env `SCRIPT_SPEECH_SPEED`로 되돌릴 수 있다(1.44를 주면 종전 동작)."""
     try:
-        v = float(os.environ.get("SCRIPT_SPEECH_SPEED", "1.54") or 1.54)
+        v = float(os.environ.get("SCRIPT_SPEECH_SPEED", "1.30") or 1.30)
     except (TypeError, ValueError):
-        v = 1.54
+        v = 1.30
     return min(2.0, max(1.0, v))
 
 
