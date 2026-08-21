@@ -1399,6 +1399,7 @@ function render(){
   document.getElementById('k-own-wrap').className =
     'kpi ' + (!chosen.size ? '' : own >= 80 ? 'goodv' : 'warnv');
   saveWork();          // 무엇을 바꾸든 그리는 순간 저장된다
+  notifyEmptyBeats();  // ★빈 칸을 바깥(제작소)에 알린다 — 아래 함수 주석 참조
   updatePlayBtns();    // 버튼을 다시 그렸으니 ▶/⏸ 표시 복원
   if (seq.length && playKey) paintCut();   // 재생 중 재렌더 시 카드 강조 복원
 }
@@ -1786,6 +1787,25 @@ function copyScript(){
   navigator.clipboard.writeText(txt).then(
     () => { const el = document.getElementById('savedmsg'); if (el) el.textContent = '📋 대본을 복사했습니다 — 제작소에 붙여넣으면 음성·자막이 새로 만들어집니다'; },
     () => {});
+}
+// ★빈 칸을 밖(제작소)에 알린다(2026-08-21 사장님 "새로고침하고 해도 적용되나").
+//   서버는 **빈 칸을 일부러 반영하지 않는다**(edit_plan.apply_scene_lab: `if not ids: continue`).
+//   그래서 화면은 '장면 없음'인데 서버 편집안엔 옛 조각이 남아, 그대로 확정하면
+//   **옛 장면이 렌더된다**(실측 job 14e75ac6024a: 화면 빈 칸 vs 서버 override 3.2초).
+//   ⚠빈 칸을 그대로 서버에 넣으면 더 나쁘다 — 렌더가 재료 없는 비트를 통째로 건너뛰어
+//   (video_assemble.py `if not segs: continue`) 그 칸의 **대사까지 사라진다**.
+//   그래서 고치는 곳은 저장이 아니라 **조용한 어깋남**이다: 빈 칸이 있으면
+//   제작소가 확정 버튼을 막고 몇 번 칸인지 알려준다.
+function notifyEmptyBeats(){
+  try{
+    const empty = [];
+    for (let i = 0; i < DATA.beats.length; i++){
+      const ids = (lists[i] || []).filter(id => DATA.segments[id] && !tooShort(id));
+      if (!ids.length) empty.push(i);
+    }
+    const up = _outerPlayer();
+    if (up && typeof up.sceneLabEmptyBeats === 'function') up.sceneLabEmptyBeats(empty);
+  }catch(e){}
 }
 function selBeat(i){ sel = i; render(); }
 // 고정줄 버튼에 쓸 짧은 칸 이름 — 대본 첫 어절(최대 6자). 대본을 고쳤으면 고친 것으로.
