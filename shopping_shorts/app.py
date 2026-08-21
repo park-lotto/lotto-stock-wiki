@@ -11913,7 +11913,12 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
       구조는 role 대조로 똑같이 강제된다 — 즉 조립의 이점은 '모델 호출 0회'뿐이다.
       기본값은 꺼지지 않음(회귀 0). admin에서 켜면 전부 생성기로 간다.
     """
-    if str(store.get_setting("assemble_off") or "") == "1":
+    # store가 None일 수 있다(테스트가 그렇게 부른다) — 없으면 종전대로 조립한다.
+    try:
+        _off = str((store.get_setting("assemble_off") if store else "") or "") == "1"
+    except Exception:      # noqa: BLE001 — 설정 조회 실패가 생성을 막지 않는다
+        _off = False
+    if _off:
         print("assemble_off=1 → 조립 건너뛰고 전부 생성기로", file=sys.stderr)
         return [], list(spines or [])
     out, left = [], []
