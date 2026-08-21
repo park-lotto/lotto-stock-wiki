@@ -832,6 +832,12 @@
     font-size:15px;font-weight:800;line-height:1.35;min-height:24px}
   .s2-card .t .sp{flex:1 0 0;min-width:0}
   .s2-card .t .nm{word-break:keep-all}
+  /* ★소재 배지는 **제목과 다른 줄**에 둔다(2026-08-21 사장님: "다른것들처럼 동일하게
+     가는게 나을꺼같은데"). 종전엔 제목줄에 섞여 있어 배지 개수(1~3개)에 따라 줄 수가
+     달라졌고, 그래서 카드마다 첫 대사 위치가 어긋나 보였다.
+     min-height로 한 줄 자리를 항상 잡아 두면 배지가 없어도 칸이 맞는다. */
+  .s2-card .s2-tags{display:flex;align-items:center;gap:4px;flex-wrap:wrap;
+    min-height:22px;margin-top:6px}
   /* 플랫폼 배지 — 제목 앞에 [유튜브]/[인스타]를 붙여 한눈에 가른다 */
   /* 플랫폼 배지 — 채워서 또렷하게. 이 카드가 어느 판에서 통한 틀인지가 첫눈에 들어와야 한다. */
   .s2-plat{flex:none;font-size:10.5px;font-weight:800;border-radius:999px;padding:3px 9px;
@@ -10084,7 +10090,8 @@ function s2RenderStyles(){
     const lead = s2Ex(tpl, leadRole) || sit || '';
     const leadTag = first==='title' ? '📌 제목 후킹' : '🎣 첫 후킹';
     return `<div class="s2-card${on?' sel':''}" onclick="s2ToggleStyle(${st.id})" title="${esc(st.situation_type||'')}">
-      <div class="t">${platBadge}<span class="nm">${esc(nm)}</span><span class="sp"></span>${badge}</div>
+      <div class="t">${platBadge}<span class="nm">${esc(nm)}</span></div>
+      <div class="s2-tags">${badge}</div>
       ${lead?`<div class="s2-lead"><span class="s2-leadtag">${leadTag}</span><span class="qq">“</span>${s2Tmpl(lead)}<span class="qq">”</span></div>`:''}
       <div class="s2-meta"></div>
       <button type="button" class="s2-exbtn" onclick="s2ToggleEx(event,${st.id})">${open?'▴ 접기':'▾ 구조·스토리라인 보기'}</button>
