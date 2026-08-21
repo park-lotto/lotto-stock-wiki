@@ -2367,6 +2367,40 @@ def api_wiki_subject(request: Request, shortcode: str):
     return {"ok": True, "subject": subject}
 
 
+def _gen_fail_message(reasons, asm_why=""):
+    """대본이 0개일 때 **왜**인지 화면에 말해준다(2026-08-22 신설).
+
+    종전엔 원인과 무관하게 늘 "생성 실패(키 소진 또는 응답 오류) — 잠시 후 재시도"였다.
+    실측(2026-08-22): 로그에 429·quota가 한 건도 없는데 이 문구가 떴다. 사장님은 키가
+    되살아나길 기다리며 재시도만 반복했지만, 키는 처음부터 멀쩡했으므로 영원히 안 풀린다.
+    **틀린 원인은 틀린 처방을 부른다** — 그래서 사유별로 갈라 말한다.
+
+    reasons: generate_by_styles가 채워 준 [{kind, keys, detail}, ...]
+    asm_why: 틀 조립이 실패한 이유(있으면 곁들인다 — 재료 부족일 때 진짜 원인인 경우가 있다)
+    """
+    kinds = {r.get("kind") for r in (reasons or [])}
+    if "no_keys" in kinds:
+        return ("AI 키가 하나도 안 남았습니다 — 오늘 한도를 다 썼거나 키가 잠겼습니다. "
+                "관리페이지에서 키 상태를 확인해 주세요.")
+    if "exhausted" in kinds:
+        return ("AI 키가 모두 소진됐습니다(하루 한도). 잠시 후 다시 시도하거나 "
+                "관리페이지에서 키를 확인해 주세요.")
+    if "rate_limit" in kinds:
+        return "AI 호출이 순간적으로 몰렸습니다(분당 한도) — 1~2분 뒤 다시 시도해 주세요."
+    if "api_error" in kinds:
+        det = next((r.get("detail") for r in (reasons or [])
+                    if r.get("kind") == "api_error" and r.get("detail")), "")
+        # ★키 문제가 아니다. '잠시 후 재시도'라고 말하지 않는다 — 기다려도 안 풀린다.
+        return "AI 응답 오류입니다(키 문제가 아닙니다)%s" % ((" — %s" % det) if det else "")
+    if "empty" in kinds:
+        return ("AI가 조건에 맞는 문장을 만들지 못했습니다 — 스타일을 바꾸거나 "
+                "담긴 영상(재료)을 늘려서 다시 시도해 주세요."
+                + ((" (틀 조립: %s)" % asm_why) if asm_why else ""))
+    # 여기까지 왔으면 애초에 시도조차 안 됐다(고른 스타일이 카테고리에 다 걸러진 경우 등).
+    return ("만들 수 있는 대본이 없습니다 — 고른 스타일이 이 카테고리에 맞지 않을 수 있어요."
+            + ((" (%s)" % asm_why) if asm_why else ""))
+
+
 @app.post("/api/wiki/generate")
 def api_wiki_generate(request: Request, shortcode: str, body: dict):
     """도서관 S급 1개의 구조를 빌려 새 20초 대본 초안 생성(모드 remake/transplant, 4단 요소 모드).
@@ -2529,13 +2563,20 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         _assembled, _asm_left, _asm_why = _assembled_drafts(
             _picked, _src, store, body.get("target_seconds") or 30, job_id=_jid)
         _styled = list(_assembled)
+        _gen_reasons = []
         if _asm_left:
             _styled += script_generate.generate_by_styles(
                 _src, _asm_left, target_seconds=body.get("target_seconds") or 30,
-                bank_context=_bank_ctx, facts_block=_facts_block)
+                bank_context=_bank_ctx, facts_block=_facts_block,
+                reasons=_gen_reasons)
         if not _styled:
+            # ★원인별로 다르게 말한다(2026-08-22). 종전엔 무슨 일이 나든 "키 소진 또는
+            #   응답 오류"만 떴다 — 실측(08-22)에서 키가 멀쩡한데도 그 문구가 떠서
+            #   사장님이 키 회복을 기다리며 재시도만 반복했다. 원인을 못 가르는 문구는
+            #   "잠시 후 재시도"라는 **틀린 처방**까지 같이 준다.
             return JSONResponse(status_code=502, content={
-                "ok": False, "error": "생성 실패(키 소진 또는 응답 오류) — 잠시 후 재시도"})
+                "ok": False, "error": _gen_fail_message(_gen_reasons, _asm_why),
+                "reasons": _gen_reasons})
         _cid_ = _cid(request)
         for dr in _styled:
             did = uuid.uuid4().hex[:12]
