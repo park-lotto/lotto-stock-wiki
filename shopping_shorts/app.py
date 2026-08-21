@@ -2561,12 +2561,12 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
             except Exception as _e:      # noqa: BLE001 — 축 판정 실패가 생성을 막으면 안 된다
                 print("축 판정 건너뜀: %s" % str(_e)[:120])
         _assembled, _asm_left, _asm_why = _assembled_drafts(
-            _picked, _src, store, body.get("target_seconds") or 30, job_id=_jid)
+            _picked, _src, store, body.get("target_seconds") or 25, job_id=_jid)
         _styled = list(_assembled)
         _gen_reasons = []
         if _asm_left:
             _styled += script_generate.generate_by_styles(
-                _src, _asm_left, target_seconds=body.get("target_seconds") or 30,
+                _src, _asm_left, target_seconds=body.get("target_seconds") or 25,
                 bank_context=_bank_ctx, facts_block=_facts_block,
                 reasons=_gen_reasons)
         if not _styled:
@@ -2926,7 +2926,7 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
     blocked = _ssrf_guard(*urls)      # 이 URL들은 run_mix_job이 그대로 다운로드한다
     if blocked:
         return blocked
-    target = int(body.get("target_seconds") or 30)
+    target = int(body.get("target_seconds") or 25)
     structure = body.get("structure") if body.get("structure") in ("template", "free") else "template"
     subtitle_removal = bool(body.get("subtitle_removal", False))
     scene_first = bool(body.get("scene_first", False))
@@ -3080,7 +3080,7 @@ def api_mix_candidate_clone(request: Request, body: dict):
     global_incr_and_alert("render")
     urls = src.get("urls") or []
     new_id = uuid.uuid4().hex[:12]
-    store.create_mix_job(new_id, urls, src.get("target_seconds") or 30,
+    store.create_mix_job(new_id, urls, src.get("target_seconds") or 25,
                          src.get("structure") or "free",
                          subtitle_removal=bool(src.get("subtitle_removal")),
                          given_script=src.get("given_script"),
@@ -10229,7 +10229,7 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     # 1개면 그 영상 안에서 구간 순서편집(재배치), 2개 이상이면 여러 영상을 섞는
     # 믹스 — build_edit_plan(edit_plan.py)의 세그먼트 인벤토리 매칭이 소스 개수와
     # 무관하게 동작해서 이 유효성검사만 완화하면 별도 분기 없이 그대로 지원된다(2026-07-14).
-    target = int(body.get("target_seconds") or 30)
+    target = int(body.get("target_seconds") or 25)
     subtitle_removal = bool(body.get("subtitle_removal", False))
     script_structure = body.get("script_structure") or None
     if not isinstance(script_structure, dict):
@@ -12571,7 +12571,7 @@ def api_script_beat_regen(request: Request, body: dict):
         out = script_generate.regen_one_beat(
             _src, style, role, beats,
             template=body.get("template") or "",
-            target_seconds=body.get("target_seconds") or 30,
+            target_seconds=body.get("target_seconds") or 25,
             bank_context=_bank_ctx, facts_block=_facts_block)
     except Exception as e:  # noqa: BLE001 — 실패해도 화면이 살아야 한다(원본 문장 유지)
         print(f"beat regen 실패(style={style_id}, role={role}): {e}")
