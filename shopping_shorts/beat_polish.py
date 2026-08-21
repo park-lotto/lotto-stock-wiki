@@ -112,8 +112,12 @@ def _reject(old, new):
     """이 교정을 버려야 하나 → 이유 문자열(쓸 만하면 '')."""
     if "{" in new or "}" in new:
         return "빈칸이 남음"
-    if sorted(_NUM_RE.findall(old)) != sorted(_NUM_RE.findall(new)):
-        return "수치가 바뀜"
+    # ★지어내기만 막는다 — **새 수치가 생기면** 버리고, 줄어드는 건 허용한다.
+    #   개수까지 같아야 한다고 보면 **중복 제거를 막는다**(2026-08-21 실측:
+    #   "5분 만에 만에 끝났는데 5분 만에 숯불이…" → 모델이 "5분 만에 숯불이…"로
+    #   제대로 고쳤는데 5분이 2개→1개로 줄어 내 검사가 원본으로 되돌렸다).
+    if set(_NUM_RE.findall(new)) - set(_NUM_RE.findall(old)):
+        return "원본에 없던 수치가 생김"
     if len(new) > len(old) * 1.35 + 6:
         return "너무 길어짐"
     if len(new) < len(old) * 0.55:

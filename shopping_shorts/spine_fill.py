@@ -399,6 +399,23 @@ def pick_template(templates, slots):
     return ts[0] if ts else ""
 
 
+def _dedup_words(text):
+    """바로 이어지는 같은 말 한 번을 지운다 — 틀과 값이 같은 말을 둘 다 가질 때 생긴다.
+
+    실측(2026-08-21): 틀 "{수치} 만에 끝났는데" + 값 "5분 만에" → "5분 만에 만에 끝났는데".
+    다듬기(모델)에만 맡기지 않는다 — 이런 모양은 기계가 확실하게 잡는다.
+    ⚠뜻이 있어 연달하는 말(“아주 아주” “더 더”)은 남긴다.
+    """
+    KEEP = {"아주", "더", "매우", "진짜", "좀", "꾱", "자꾸", "또"}
+    words = (text or "").split(" ")
+    out = []
+    for w in words:
+        if out and w and w == out[-1] and w not in KEEP:
+            continue
+        out.append(w)
+    return " ".join(out)
+
+
 def fill_one(template, slots):
     """템플릿 한 줄에 슬롯을 끼운다(조사까지 맞춰서).
 
@@ -417,7 +434,7 @@ def fill_one(template, slots):
             out.append(josa)
             i = len(src) - len(rest)
     out.append(src[i:])
-    return "".join(out).strip()
+    return _dedup_words("".join(out).strip())
 
 
 def usable_templates(templates, slots):
