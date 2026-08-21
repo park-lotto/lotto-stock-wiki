@@ -529,6 +529,9 @@ body.is-admin .admin-only{display:block}
     </div>
     <!-- 카테고리 줄 — 라벨은 renderCtypes()가 함께 그린다(2026-08-17 사장님 "기간/강도지표/단순지표/카테고리") -->
     <div class="ctypes" id="ctypes"></div>
+    <!-- 발굴 축(유튜브 전용) — 채널을 축별로 모아온 결과를 랭킹에서 바로 고른다.
+         2026-08-21 사장님 "신기템이 어디서 볼 수 있나". 인스타·쓰레드는 이 축이 없어 숨는다. -->
+    <div class="ctypes" id="styles" style="display:none"></div>
     <!-- 검색 + 주소 넣기(2026-08-18 사장님). 주소는 원래도 엔터로 됐지만 "검색"처럼 보여
          찾지 못하셨다 → 문구에 명시하고, 옆에 버튼을 둬 눈에 보이게 한다. -->
     <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0">
@@ -638,7 +641,7 @@ const CTYPES = [
 //   (test_ranking_style_filter.py가 이 짝을 검사한다)
 const TOPIC_CTYPE = {홈템:"홈템", 가전:"홈템", 레시피:"비법형", 뷰티:"혼합형", 기타:"기타",
                      제품정체형:"썰쇼핑", 오용형:"썰쇼핑"};
-let STATE = {items:[], tab:"comments", ctype:"전체", cat:"전체", q:"",
+let STATE = {items:[], tab:"comments", ctype:"전체", cat:"전체", q:"", style:"",
              filters:_loadFilters()};
 // 걸러내기 상태는 브라우저에 기억시킨다 — 새로고침마다 다시 켜게 하면 아무도 안 쓴다.
 function _loadFilters(){
@@ -710,6 +713,8 @@ function updatePlatformCopy(p){
 function ttMode(){ const r=document.querySelector('input[name="ttmode"]:checked'); return r?r.value:'account'; }
 function switchPlatform(p, el){
   PLATFORM=p;
+  // ★축은 플랫폼마다 다르다 — 남겨두면 인스타에서 '신기템' 필터가 살아 목록이 통째로 빈다.
+  STATE.style="";
   updatePlatformCopy(p);
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
@@ -1175,6 +1180,24 @@ function renderCtypes(){
     '<span class="tab-grp">카테고리</span>' + CTYPES.map(c =>
     `<div class="ctype ${c.key===STATE.ctype?'active':''}" onclick="setCtype('${c.key}')">${c.label}</div>`).join("");
 }
+// 발굴 스타일 줄(유튜브만). 라벨은 발굴이 실제로 매긴 이름 그대로 쓴다 — 화면에서만
+// 예쁘게 바꾸면 나중에 축이 늘 때 이름이 두 벌이 된다(0순위-B).
+const STYLE_LABELS = {신기템:"🆕 신기템", 썰쇼핑:"🎬 썰쇼핑",
+                      연예인결합:"⭐ 연예인", 레시피쇼핑:"🍳 레시피"};
+function renderStyles(){
+  const el = document.getElementById("styles");
+  if (!el) return;
+  if (PLATFORM !== "youtube"){ el.style.display="none"; el.innerHTML=""; return; }
+  // 이번 수집에 **실제로 있는 축만** 버튼으로 낸다 — 눌러도 0건인 버튼은 고장으로 보인다.
+  const have = new Set(STATE.items.map(i => i.style).filter(Boolean));
+  if (!have.size){ el.style.display="none"; el.innerHTML=""; return; }
+  const keys = Object.keys(STYLE_LABELS).filter(k => have.has(k));
+  el.style.display = "";
+  el.innerHTML = '<span class="tab-grp">발굴 축</span>'
+    + [["", "✨ 전체"], ...keys.map(k => [k, STYLE_LABELS[k]])].map(([k, lbl]) =>
+        `<div class="ctype ${k===STATE.style?'active':''}" onclick="setStyle('${k}')">${lbl}</div>`).join("");
+}
+function setStyle(k){ exitChannelView({silent:true}); STATE.style=k; renderStyles(); render(); }
 function renderCats(){
   const el = document.getElementById("cats");
   const cur = CTYPES.find(c=>c.key===STATE.ctype);
@@ -1622,6 +1645,8 @@ function render(opts){
   // 왜: "오이" 쳤는데 지금 켠 '비법·꿀팁형' 탭에 없으면 안 잡히던 문제. 검색은 전역이어야 한다.
   if(!searching){
     if(STATE.ctype!=="전체") items = items.filter(i=> TOPIC_CTYPE[i.category]===STATE.ctype);
+    // 발굴 축 필터(유튜브). 빈 값=전체 — 축이 없는 항목(미등록 채널)도 그대로 보인다.
+    if(STATE.style) items = items.filter(i => i.style === STATE.style);
     if(STATE.cat!=="전체")   items = items.filter(i=> i.category===STATE.cat);
   } else {
     items = items.filter(i=> matchesSearch(i, STATE.q));
@@ -1963,6 +1988,7 @@ async function doCollect(category){
     let res = d;
     if(d.async && d.job_id){ res = await _pollCollect(d.job_id); }
     STATE.items = res.items;
+    try{ renderStyles(); }catch(e){}   // 이번 목록에 있는 축만 버튼으로
     if((res.count||0)===0){
       // 0건은 성공처럼 보이면 안 된다(2026-07-25): Apify 전 계정이 월 한도(403)로
       // 소진되면 채널 수집이 조용히 빈 리스트가 돼 여기로 온다 — 새 릴스가 없어서인지
@@ -2168,6 +2194,7 @@ async function loadLast(){
   }
   const d = await (await fetch(url)).json();
   STATE.items = d.items || [];   // 결과 없어도 무조건 갈아끼움 — 이전 플랫폼 카드 잔존 방지
+  try{ renderStyles(); }catch(e){}   // 이번 목록에 있는 축만 버튼으로
   render();
   const st = document.getElementById("status");
   if(!STATE.items.length){
@@ -3880,7 +3907,7 @@ async function commitScene(){
   finally{ btn.disabled = false; btn.textContent = '💾 라이브러리에 저장'; }
 }
 
-renderCtypes(); renderCats(); renderFilterButtons(); loadLast(); loadRefAdded(); updatePlatformCopy(PLATFORM);
+renderCtypes(); renderCats(); renderStyles(); renderFilterButtons(); loadLast(); loadRefAdded(); updatePlatformCopy(PLATFORM);
 
 // ── 관리자(사장님 cid0) 전용 운영버튼(2026-07-22) ──
 // 수집·전수조사·레퍼런스등록은 크롤 비용이 드는 운영 액션이라 관리자만 쓴다.

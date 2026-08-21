@@ -726,11 +726,33 @@ def api_reference(platform: str = "instagram", days: int = 0, min_comments: int 
     if blocked:
         items = [i for i in items
                  if (i.get("username") or "").strip().lstrip("@").lower() not in blocked]
+    _attach_channel_style(items, store, platform)   # 유튜브: 발굴 축(신기템 등)을 화면 필터로
     _attach_vision_tags(items, store)   # 백그라운드로 채워진 주제태그를 실어 보냄(검색 정확도 승격)
     _attach_durations(items, store)     # ⏱ 영상 길이 캐시 결합 + 빈 곳 백필 예약
     if platform == "instagram":
         _attach_posted_at(items)        # 'X시간 전' 실시간 계산용 발행시각
     return {"ok": True, "items": items, "collected_at": collected_at}
+
+
+def _attach_channel_style(items, store, platform):
+    """유튜브 랭킹 항목에 발굴 스타일(썰쇼핑·신기템 등)을 붙인다(2026-08-21).
+
+    사장님 "신기템이 어디서 볼 수 있나" — 발굴은 축별로 채널을 모으는데 랭킹은 그걸
+    전혀 안 봤다. 실측하니 오늘 수집분 9,499건 중 이미 신기템 채널 영상이 77건 들어와
+    있었다(연예인결합 1,034 · 썰쇼핑 626 · 레시피쇼핑 311). 즉 **데이터는 이미 있고
+    이름표만 없었다** — 새 수집 경로를 만들 일이 아니었다.
+
+    ★유튜브만 붙인다: username이 곧 channel_id라 바로 맞는다. 인스타는 username이
+      핸들이라 이 표와 축이 다르다(그쪽은 사람이 지정하는 카테고리를 쓴다).
+    ★조회는 store.channel_style_map() 한 곳에서만 한다(0순위-B).
+    """
+    if platform != "youtube" or not items:
+        return
+    styles = store.channel_style_map()
+    if not styles:
+        return
+    for it in items:
+        it["style"] = styles.get((it.get("username") or "").strip(), "")
 
 
 @app.get("/api/seeds")

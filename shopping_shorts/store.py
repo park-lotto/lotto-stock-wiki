@@ -1812,6 +1812,19 @@ class Store:
         with self._conn() as c:
             c.execute("DELETE FROM platform_seeds WHERE platform=? AND value=?", (platform, value))
 
+    def channel_style_map(self):
+        """channel_id → 발굴 스타일(썰쇼핑·신기템 등). 발굴 전 환경이면 빈 dict.
+
+        ★조회를 여기 한 곳에 둔다(0순위-B) — 시드 목록(list_seeds)과 랭킹(app)이
+          같은 표를 각자 읽으면 언젠가 한쪽만 고쳐진다.
+        """
+        with self._conn() as c:
+            try:
+                return {r[0]: r[1] for r in c.execute(
+                    "SELECT channel_id, style FROM channel_styles")}
+            except sqlite3.Error:
+                return {}
+
     def list_seeds(self, platform):
         """플랫폼 시드 목록. 유튜브는 발굴 스타일(썰쇼핑·신기템 등)을 함께 준다.
 
@@ -1832,6 +1845,8 @@ class Store:
                         "SELECT channel_id, style, title FROM channel_styles")}
                 except sqlite3.Error:
                     styles = {}      # 발굴을 한 번도 안 돌린 환경(테이블 없음) — 빈칸으로 둔다
+                    # 주: 스타일만 필요한 곳은 channel_style_map()을 쓴다. 여기는 채널명도
+                    #     함께 필요해 한 번의 조회로 둘을 가져온다(왕복 2회를 피한다).
         out = []
         for kind, value, added in rows:
             item = {"kind": kind, "value": value, "added_at": added or ""}
