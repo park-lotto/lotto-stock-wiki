@@ -1995,7 +1995,12 @@ def api_produce_extract_from_url(request: Request, body: dict, background_tasks:
     body_category = (body.get("category") or "").strip() or None
     name = body.get("name") or ""
     store = Store(DB_PATH)
-    cached = store.get_extract(code)
+    # ★대본 다시 뽑기(2026-08-21 사장님 요청). 캐시가 있으면 늘 그것을 돌려줘서, 추출이
+    #   엉뚱하게 됐거나 영상이 바뀌어도 **다시 뽑을 방법이 앱 안에 없었다**.
+    #   force면 캐시를 건너뛰고 아래 정식 추출 경로로 내려간다 — 크레딧 차감·일일한도·
+    #   실패 시 환불이 전부 그 경로에 이미 있으므로 과금 규칙이 따로 갈리지 않는다.
+    force = bool(body.get("force"))
+    cached = None if force else store.get_extract(code)
     if cached:
         caption_for_infer = body.get("caption") or cached.get("full_text", "")
         category = body_category or cached.get("category") or categorize(name, caption_for_infer) or None

@@ -5955,8 +5955,11 @@ let PM_FROM_WIKI=null;
 // "재료는 남의 영상 것, shortcode만 위키 것"인 무관한 리메이크가 나온다(리뷰 I-1).
 // 두 진입점 모두 시작 시 ++PM_GEN, await 뒤 자기 번호(myGen)가 최신인지 확인한다.
 let PM_GEN=0;
-async function openScriptModal(i){
+async function openScriptModal(i, force){
   const it=HANDOFF[i]; if(!it||!it.url){ alert('영상 URL이 없습니다'); return; }
+  // ★다시 뽑기(2026-08-21): 캐시를 건너뛰고 새로 추출한다. AI를 다시 부르므로
+  //   횟수를 쓴다 — 실수로 눌러 소모되지 않게 한 번 묻는다.
+  if(force && !confirm('대본을 처음부터 다시 뽑을까요? 지금 저장된 대본은 새 결과로 바뀌고, 대본 추출 횟수를 1회 씁니다.')) return;
   const myGen=++PM_GEN;
   PM_IDX=i; PM_URL=it.url; PM_SHORTCODE=it.shortcode||''; PM_CATEGORY=it.category||'';
   PM_BASE_STRUCT=null; PM_BASE_SCRIPT=''; PM_FROM_WIKI=null;   // HANDOFF 유래 — 위키담기 대상이 있다
@@ -5969,7 +5972,7 @@ async function openScriptModal(i){
   try{
     const r=await fetch('/api/produce/extract_from_url',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({url:it.url, shortcode:it.shortcode||undefined, category:it.category||undefined,
-        caption:it.caption||undefined, name:it.name||undefined})});
+        caption:it.caption||undefined, name:it.name||undefined, force: force||undefined})});
     const d=await r.json();
     if(PM_GEN!==myGen) return;   // 그 사이 다른 진입점(mix)이 모달을 가져갔다 — d.ok든 아니든 손대지 않는다
     if(!d.ok){ document.getElementById('pmResults').innerHTML=`<div class="hint" style="color:var(--fire)">${esc(d.error||'추출 실패')}</div>`; return; }
@@ -5991,7 +5994,10 @@ async function openScriptModal(i){
     const _axLine = _ax ? `<div class="hint" style="margin-top:4px">🎯 훅 문형 <b>${esc(_ax)}</b>`
         + (_sp ? ` → 대본 틀 <b>${esc(_sp)}</b>` : ' <span style="opacity:.7">(맞는 틀 없음 — 기본 스타일로)</span>')
         + `</div>` : '<div class="hint" style="margin-top:4px;opacity:.7">🎯 훅 문형 판정 안 됨 — 기본 스타일로 갑니다</div>';
-    document.getElementById('pmResults').innerHTML=`<div class="hint">✅ 원본 대본 확보. 아래에서 요소를 조절해 새 초안을 만들거나, <button class="btn-next" style="padding:4px 10px" onclick="pmUseRaw()">원본 대본 그대로 확정 →</button></div>`+_axLine;
+    // ★'다시 뽑기'를 여기 둔다 — 대본이 이상하다고 느끼는 바로 그 자리다(2026-08-21).
+    //   d.cached면 저장된 것을 보여준 것이므로 특히 필요하다.
+    const _again = `<button class="btn" style="padding:4px 10px;margin-left:8px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="openScriptModal(${i}, true)" title="캐시를 버리고 영상에서 새로 추출합니다(횟수 1회 사용)">↻ 대본 다시 뽑기</button>`;
+    document.getElementById('pmResults').innerHTML=`<div class="hint">✅ 원본 대본 확보${d.cached?' <span style="opacity:.7">(저장된 것)</span>':''}. 아래에서 요소를 조절해 새 초안을 만들거나, <button class="btn-next" style="padding:4px 10px" onclick="pmUseRaw()">원본 대본 그대로 확정 →</button>${_again}</div>`+_axLine;
     await pmLoadElementOptions(PM_CATEGORY);
     if(typeof pmLoadStyles==='function') pmLoadStyles(PM_CATEGORY);
     if(PM_GEN!==myGen) return;   // 요소옵션 로딩 중에도 가져갈 수 있다 — 그 뒤 소재프리필까지 막는다
