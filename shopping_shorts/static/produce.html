@@ -1548,6 +1548,19 @@
                     </select></label>
                   <label style="font-size:12px;color:var(--sub)">투명도 <input id="wmAlpha" type="range" min="20" max="100" value="60" oninput="updateDeco()"></label>
                 </div>
+                <!-- 🔴 [광고] 표시 — 틀(템플릿)에 들어가는 값이지만 공통 기능이라 여기 둔다
+                     (2026-08-22 사장님 지시). ★값의 주인은 숨은 frAd 하나 —
+                     여기선 그 칸에 써넣고 frUpdate()를 부른다(0순위-B). -->
+                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+                  <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                    <input id="adBadgeOn" type="checkbox" onchange="setAdBadge(this.checked)">
+                    <b>[광고] 표시</b>
+                    <span style="font-size:11px;color:var(--sub);font-weight:400">— 틀 오른쪽 위(돋보기 위)에 붙어요</span>
+                  </label>
+                  <div id="adBadgeHint" class="hint" style="font-size:11px;margin-top:4px;display:none">템플릿 탭에서 틀을 먼저 고르세요.</div>
+                </div>
+                <!-- 숨은 진짜 칸: frFill/frUpdate가 이 id를 읽고 쓴다(지우면 배선이 끊긴다) -->
+                <label hidden style="display:none"><input id="frAd" type="checkbox" onchange="frUpdate()"></label>
                 <!-- 추가 텍스트: 사장님 지시로 화면에서 뺌(2026-08-22).
                      ★#extraTextList는 남긴다 — renderExtraTexts()가 이 자리를 찾고,
                      예전 작업에 저장된 extra_texts는 렌더에 그대로 살아있다. -->
@@ -1582,7 +1595,6 @@
                            실제 채널이랑 안 맞는다"로 보였다. -->
                       <label>채널명 <input id="frChannel" oninput="frUpdate()" placeholder="내 채널 이름"
                         style="width:150px;padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--txt)"></label>
-                      <label style="cursor:pointer"><input id="frAd" type="checkbox" onchange="frUpdate()"> [광고]</label>
                       <label style="cursor:pointer"><input id="frIcons" type="checkbox" checked onchange="frUpdate()"> ☰ 🔍</label>
                     </div>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;margin-top:8px">
@@ -1610,6 +1622,28 @@
                       <input id="frBottom" type="range" min="0" max="400" step="10" value="0" oninput="frUpdate()" style="width:150px">
                       <button type="button" class="tab" onclick="frBar('frBottom',20)" style="min-width:auto;padding:4px 12px;font-size:14px">＋</button>
                       <span id="frBottomVal" style="color:var(--sub);min-width:52px">0px</span>
+                    </div>
+                    <!-- 🎨 글자 꾸미기(2026-08-22 신설) — 제목·채널명의 폰트·크기·가로위치.
+                         ★크기 0 = '자동'(프리셋이 정한 값). 0을 "0px"로 읽으면 글자가 사라진다. -->
+                    <div style="border-top:1px dashed var(--line);margin-top:10px;padding-top:10px">
+                      <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px">🎨 글자 꾸미기</div>
+                      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px">
+                        <span style="min-width:44px">제목</span>
+                        <select id="frTtFont" onchange="frUpdate()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px"></select>
+                        <span>크기 <b id="frTtSizeV" style="color:var(--sub)">자동</b></span>
+                        <input id="frTtSize" type="range" min="0" max="140" step="2" value="0" oninput="frUpdate()" style="width:110px">
+                        <span>가로 <b id="frTtXV" style="color:var(--sub)">50%</b></span>
+                        <input id="frTtX" type="range" min="0" max="100" value="50" oninput="frUpdate()" style="width:110px">
+                      </div>
+                      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;margin-top:8px">
+                        <span style="min-width:44px">채널명</span>
+                        <select id="frChFont" onchange="frUpdate()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px"></select>
+                        <span>크기 <b id="frChSizeV" style="color:var(--sub)">자동</b></span>
+                        <input id="frChSize" type="range" min="0" max="140" step="2" value="0" oninput="frUpdate()" style="width:110px">
+                        <span>가로 <b id="frChXV" style="color:var(--sub)">50%</b></span>
+                        <input id="frChX" type="range" min="0" max="100" value="50" oninput="frUpdate()" style="width:110px">
+                      </div>
+                      <div class="hint" style="font-size:11px;margin-top:6px">크기를 맨 왼쪽(자동)에 두면 틀이 정한 크기를 씁니다.</div>
                     </div>
                   </div>
                 </div>
@@ -2565,7 +2599,10 @@ function frameUrl(f){
   const q=new URLSearchParams({preset:f.preset||'news_coral', bar_h:f.bar_h??190,
     bottom_h:f.bottom_h??0,
     channel:f.channel||'', title:f.title||'', views:f.views||'', comments:f.comments||'',
-    ad_badge:f.ad_badge?'1':'0', icons:f.icons?'1':'0'});
+    ad_badge:f.ad_badge?'1':'0', icons:f.icons?'1':'0',
+    // 글자 꾸미기(2026-08-22) — 빈값/0이면 서버가 프리셋 기본으로 되돌린다
+    ch_font:f.ch_font||'', ch_size:f.ch_size??0, ch_x:f.ch_x??50,
+    title_font:f.title_font||'', title_size:f.title_size??0, title_x:f.title_x??50});
   return '/api/produce/frame.png?'+q.toString();
 }
 async function loadFramePresets(){
@@ -2594,7 +2631,8 @@ function renderFramePresets(){
         esc(p.name))).join('');
   const fields=document.getElementById('frFields');
   if(fields) fields.style.display=f?'':'none';
-  if(f) frFill(f);
+  fillFrameFontSelects();
+  if(f) frFill(f); else syncAdBadge();
 }
 function frFill(f){
   const g=id=>document.getElementById(id);
@@ -2608,6 +2646,18 @@ function frFill(f){
   if(g('frBarVal')) g('frBarVal').textContent=(f.bar_h??190)+'px';
   if(g('frBottom')) g('frBottom').value=f.bottom_h??0;
   if(g('frBottomVal')) g('frBottomVal').textContent=(f.bottom_h??0)+'px';
+  // 글자 꾸미기 — 저장된 값이 없으면 '자동'(0/50)으로 되돌린다
+  if(g('frChFont')) g('frChFont').value=f.ch_font||'';
+  if(g('frChSize')) g('frChSize').value=f.ch_size??0;
+  if(g('frChX')) g('frChX').value=f.ch_x??50;
+  if(g('frTtFont')) g('frTtFont').value=f.title_font||'';
+  if(g('frTtSize')) g('frTtSize').value=f.title_size??0;
+  if(g('frTtX')) g('frTtX').value=f.title_x??50;
+  if(g('frChSizeV')) g('frChSizeV').textContent=(f.ch_size?f.ch_size+'px':'자동');
+  if(g('frTtSizeV')) g('frTtSizeV').textContent=(f.title_size?f.title_size+'px':'자동');
+  if(g('frChXV')) g('frChXV').textContent=(f.ch_x??50)+'%';
+  if(g('frTtXV')) g('frTtXV').textContent=(f.title_x??50)+'%';
+  fillFrameFontSelects(); syncAdBadge();
 }
 function frPick(preset){
   if(!STATE.deco) STATE.deco={extra_texts:[], motion:null};
@@ -2655,6 +2705,17 @@ function frUpdate(){
   f.icons=!!(g('frIcons')||{}).checked;
   f.bar_h=parseInt((g('frBar')||{}).value||190,10);
   f.bottom_h=parseInt((g('frBottom')||{}).value||0,10);
+  // 글자 꾸미기 — 값의 주인은 이 입력칸들 하나뿐(0순위-B)
+  f.ch_font=(g('frChFont')||{}).value||'';
+  f.ch_size=parseInt((g('frChSize')||{}).value||0,10);
+  f.ch_x=parseInt((g('frChX')||{}).value||50,10);
+  f.title_font=(g('frTtFont')||{}).value||'';
+  f.title_size=parseInt((g('frTtSize')||{}).value||0,10);
+  f.title_x=parseInt((g('frTtX')||{}).value||50,10);
+  const lab=(id,v,suf)=>{ const t=g(id); if(t) t.textContent=(v?v+suf:'자동'); };
+  lab('frChSizeV',f.ch_size,'px'); lab('frTtSizeV',f.title_size,'px');
+  if(g('frChXV')) g('frChXV').textContent=f.ch_x+'%';
+  if(g('frTtXV')) g('frTtXV').textContent=f.title_x+'%';
   if(g('frBarVal')) g('frBarVal').textContent=f.bar_h+'px';
   if(g('frBottomVal')) g('frBottomVal').textContent=f.bottom_h+'px';
   renderTemplatePreview(); saveHeadcopy();
@@ -2726,6 +2787,35 @@ function bindFrameHandle(el, inputId){
   };
   el.addEventListener('mousedown',start);
   el.addEventListener('touchstart',start,{passive:false});
+}
+// [광고] 표시 — 자막 탭에 둔 스위치. 값의 주인은 숨은 frAd 하나다(0순위-B).
+function setAdBadge(on){
+  const real=document.getElementById('frAd');
+  const hint=document.getElementById('adBadgeHint');
+  const hasFrame=!!(STATE.deco&&STATE.deco.template&&STATE.deco.template.frame);
+  if(!hasFrame){   // 고른 틀이 없으면 붙일 자리가 없다 — 되돌리고 알려준다
+    if(hint) hint.style.display=on?'':'none';
+    const box=document.getElementById('adBadgeOn'); if(box) box.checked=false;
+    return;
+  }
+  if(hint) hint.style.display='none';
+  if(real) real.checked=!!on;
+  frUpdate();
+}
+// 틀을 고르거나 작업을 다시 열 때 스위치를 실제 값에 맞춘다
+function syncAdBadge(){
+  const box=document.getElementById('adBadgeOn'); if(!box) return;
+  const f=STATE.deco&&STATE.deco.template&&STATE.deco.template.frame;
+  box.checked=!!(f&&f.ad_badge);
+  const hint=document.getElementById('adBadgeHint'); if(hint) hint.style.display='none';
+}
+// 틀 글자용 폰트 목록 — 정본은 HC_FONTS 하나(0순위-B). '자동'은 프리셋 기본을 뜻한다.
+function fillFrameFontSelects(){
+  ['frTtFont','frChFont'].forEach(id=>{
+    const el=document.getElementById(id); if(!el||el.options.length) return;
+    el.innerHTML='<option value="">자동(틀 기본)</option>'
+      + HC_FONTS.map(f=>`<option value="${f.file}">${f.name}</option>`).join('');
+  });
 }
 function frFromHeadcopy(){
   const t=document.getElementById('frTitle'), hc=document.getElementById('hcText');
