@@ -850,6 +850,14 @@
   .s2-ex ol li{margin-bottom:2px;word-break:keep-all}
   .s2-ex ol li b{color:var(--txt);font-weight:700}
   .s2-ex .arc{color:var(--txt);font-weight:700}
+  /* ★접힌 카드의 주인공 = 실제로 나가는 첫 문장(2026-08-21 사장님 지시).
+     역할어·근거 수치는 고를 때 안 읽힌다 — "아 이거 많이 봤는데" 소리가 나오는
+     그 문장을 크게 보여줘야 고를 수 있다. 나머지는 전부 펼침으로 내렸다. */
+  .s2-lead{margin:10px 0 0;font-size:14.5px;font-weight:800;line-height:1.5;color:var(--gold);word-break:keep-all}
+  .s2-lead .qq{color:var(--gold);opacity:.55;font-weight:700}
+  .s2-leadtag{display:block;margin-bottom:4px;font-size:10px;font-weight:800;letter-spacing:.03em;
+    color:var(--s2-sub);opacity:.9}
+  .s2-leadtag::before,.s2-leadtag::after{content:none}
   /* 훅 한 줄 + 스토리 구조 한 줄 */
   .s2-hook{margin-top:8px;font-size:11.5px;line-height:1.55;color:var(--s2-sub);word-break:keep-all}
   .s2-hook b{color:var(--txt);font-weight:700}
@@ -10036,7 +10044,11 @@ function s2RenderStyles(){
     }).filter(Boolean).join('');
     const open = !!S2_OPEN[st.id];
     const exBody = !open ? '' : `<div class="s2-ex" onclick="event.stopPropagation()">
-      ${st.emotion_arc?`<div>💗 감정선 <span class="arc">${esc(st.emotion_arc)}</span></div>`:''}
+      ${sit?`<div class="s2-quote plain" style="margin:0 0 8px">${esc(sit)}</div>`:''}
+      ${hookLine}
+      ${flow}
+      ${d?`<div style="margin-top:6px;opacity:.8">${esc(d)}</div>`:''}
+      ${st.emotion_arc?`<div class="sec">💗 감정선 <span class="arc">${esc(st.emotion_arc)}</span></div>`:''}
       ${titleEx?`<div class="sec"><h6>📌 제목은 이렇게</h6><div class="q">"${s2Tmpl(titleEx)}"</div></div>`:''}
       ${lineEx?`<div class="sec"><h6>🎣 첫 대사는 이렇게</h6><div class="q">"${s2Tmpl(lineEx)}"</div></div>`:''}
       ${storyLi?`<div class="sec"><h6>📖 스토리라인</h6><ol>${storyLi}</ol></div>`:''}
@@ -10044,13 +10056,16 @@ function s2RenderStyles(){
       ${(st.appeal && String(st.appeal).replace(/\s/g,'')!==nm.replace(/\s/g,'') && String(st.appeal).length>nm.length+4)
         ?`<div class="sec"><h6>💡 왜 통하나</h6><div>${esc(st.appeal).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')}</div></div>`:''}
     </div>`;
+    // 접힌 카드에는 **실제로 화면에 나갈 첫 문장**만 크게 둔다.
+    // 유튜브형은 화면 제목이 그 역할이고, 릴스형은 첫 대사가 그 역할이다.
+    const leadRole = first==='title' ? 'title' : first;
+    const lead = s2Ex(tpl, leadRole) || sit || '';
+    const leadTag = first==='title' ? '📌 화면 제목' : '🎣 첫 대사';
     return `<div class="s2-card${on?' sel':''}" onclick="s2ToggleStyle(${st.id})" title="${esc(st.situation_type||'')}">
       <div class="t">${platBadge}<span class="nm">${esc(nm)}</span><span class="sp"></span>${badge}</div>
-      ${sit?`<div class="s2-quote plain">${esc(sit)}</div>`:''}
-      ${hookLine}
-      ${flow}
-      <div class="s2-meta"><span class="d">${esc(d)}</span></div>
-      <button type="button" class="s2-exbtn" onclick="s2ToggleEx(event,${st.id})">${open?'▴ 예시 접기':'▾ 제목·훅·스토리라인 보기'}</button>
+      ${lead?`<div class="s2-lead"><span class="s2-leadtag">${leadTag}</span><span class="qq">“</span>${s2Tmpl(lead)}<span class="qq">”</span></div>`:''}
+      <div class="s2-meta"></div>
+      <button type="button" class="s2-exbtn" onclick="s2ToggleEx(event,${st.id})">${open?'▴ 접기':'▾ 구조·스토리라인 보기'}</button>
       ${exBody}
     </div>`;
   }).join('');
