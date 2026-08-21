@@ -1322,12 +1322,12 @@
         <div style="flex:1;min-width:300px">
           <!-- 🗂 4탭 — 우측 컨트롤만 가른다. 좌측 미러는 탭 밖(항상 보인다). -->
           <div id="decoTabs" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
-            <button type="button" class="tab on" data-decotab="copy" onclick="decoTab('copy')" style="min-width:auto;padding:7px 14px;font-size:12px">✍ 문구</button>
-            <button type="button" class="tab" data-decotab="style" onclick="decoTab('style')" style="min-width:auto;padding:7px 14px;font-size:12px">🎯 스타일</button>
+            <button type="button" class="tab on" data-decotab="style" onclick="decoTab('style')" style="min-width:auto;padding:7px 14px;font-size:12px">💬 자막</button>
+            <button type="button" class="tab" data-decotab="copy" onclick="decoTab('copy')" style="min-width:auto;padding:7px 14px;font-size:12px">🎨 헤드카피</button>
             <button type="button" class="tab" data-decotab="tpl" onclick="decoTab('tpl')" style="min-width:auto;padding:7px 14px;font-size:12px">🖼 템플릿</button>
             <button type="button" class="tab" data-decotab="fx" onclick="decoTab('fx')" style="min-width:auto;padding:7px 14px;font-size:12px">✨ 효과</button>
           </div>
-          <div id="decoPaneCopy">
+          <div id="decoPaneCopy" style="display:none">
           <!-- ✍ 고정카피 후보 — 대본에서 AI가 뽑는다. ★누를 때만 textarea에 들어간다
                (2026-07-19에 '자동 재채움'을 일부러 없앴다 — 자동으로 밀어넣으면 그 버그가 되살아난다) -->
           <div id="hcCopyBox" style="margin-bottom:10px">
@@ -1389,8 +1389,72 @@
             <div id="highlightRuleList" style="margin-top:6px"></div>
             <button class="tab" onclick="addHighlightRule()" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:12px;margin-top:4px">+ 강조 단어 추가</button>
           </div>
+
+          <!-- 🎨 헤드카피 꾸미기 — 스타일(자막) 탭에서 여기로 옮김(2026-08-22 사장님:
+               "스타일 안에 헤드카피는 삭제해 / 문구가 헤드카피니까").
+               ★마크업을 그대로 옮겼다 — id·핸들러 무수정(값의 주인은 그대로). -->
+          <div style="border-top:1px dashed var(--line);padding-top:10px;margin-top:4px">
+            <div style="font-size:13px;font-weight:800;margin-bottom:8px">🎨 헤드카피 꾸미기</div>
+
+              <div id="hcPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"></div>
+
+                <!-- ① 글씨 -->
+                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">① 글씨</div>
+                  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+                    <span style="font-size:12px;color:var(--sub)">폰트
+                      <span id="hcFontPicker" style="position:relative;display:inline-block;vertical-align:middle">
+                        <button type="button" id="hcFontBtn" onclick="toggleFontMenu(event)"
+                          style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer;min-width:150px;text-align:left;font-size:13px">폰트 선택 ▾</button>
+                        <div id="hcFontMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:60;background:var(--inset);border:1px solid var(--line);border-radius:8px;max-height:340px;overflow:auto;box-shadow:0 12px 34px rgba(0,0,0,.55);min-width:190px"></div>
+                      </span>
+                      <select id="hcFont" onchange="updateHC()" style="display:none"></select></span>
+                    <label style="font-size:12px;color:var(--sub)">색상
+                      <input id="hcColor" type="color" value="#FF8800" oninput="updateHC()" style="vertical-align:middle;cursor:pointer"></label>
+                    <label style="font-size:12px;color:var(--sub)">굵기
+                      <select id="hcWeight" onchange="updateHC()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px">
+                        <option value="700">굵게</option><option value="900" selected>아주 굵게</option><option value="400">보통</option>
+                      </select></label>
+                  </div>
+                  <div style="margin-top:8px;font-size:12px;color:var(--sub)">크기 <b id="hcSizeV">64</b>px
+                    <input id="hcSize" type="range" min="28" max="120" value="64" oninput="updateHC()" style="width:100%"></div>
+                </div>
+
+                <!-- ② 자리 -->
+                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">② 자리</div>
+                  <div style="font-size:12px;color:var(--sub)">세로 위치 <b id="hcYV">14</b>%
+                    <input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;updateHC()" style="width:100%"></div>
+                  <div style="font-size:12px;color:var(--sub)">가로 위치 <b id="hcXV">50</b>%
+                    <input id="hcX" type="range" min="0" max="100" value="50" oninput="updateHC()" style="width:100%"></div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+                    <span style="font-size:12px;color:var(--sub);align-self:center">한 번에</span>
+                    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('top')">⬆ 위</button>
+                    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('mid')">중간</button>
+                    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('bottom')">⬇ 하단</button>
+                    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('center')">↔ 가운데</button>
+                  </div>
+                  <div class="hint" style="margin-top:6px;font-size:11px">💡 미리보기에서 글자를 <b>드래그</b>해도 옮겨져요.</div>
+                </div>
+
+                <!-- ③ 테두리 · 박스 -->
+                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">③ 테두리 · 박스</div>
+                  <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                    <input id="hcOutline" type="checkbox" checked onchange="updateHC()"> 외곽선
+                    <input id="hcOutColor" type="color" value="#000000" oninput="updateHC()">
+                    <span style="color:var(--sub);font-size:12px">두께 <input id="hcOutW" type="range" min="0" max="12" value="6" oninput="updateHC()"></span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
+                    <input id="hcBox" type="checkbox" onchange="updateHC()"> 배경 박스
+                    <input id="hcBoxColor" type="color" value="#000000" oninput="updateHC()">
+                    <span style="color:var(--sub);font-size:12px">여백 <input id="hcBoxPad" type="range" min="0" max="40" value="16" oninput="updateHC()"></span>
+                    <span style="color:var(--sub);font-size:12px">투명도 <input id="hcBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateHC()"></span>
+                  </label>
+                </div>
+                          </div>
           </div>
-          <div id="decoPaneStyle" style="display:none">
+          <div id="decoPaneStyle">
           <!-- 🎯 완성 스타일 카드(Task2가 renderStyleCards로 채움) -->
           <div style="font-size:13px;font-weight:800;margin-bottom:6px">🎯 완성 스타일 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 그대로 완성</span></div>
           <div id="fullPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>
@@ -1478,71 +1542,10 @@
               </div>
               </details>
 
-              <!-- ── 🎨 헤드카피(상단 큰 글씨) ── -->
-              <details style="border-top:1px dashed var(--line)">
-                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">🎨 헤드카피(상단 큰 글씨) 꾸미기</summary>
-                <div style="padding:2px 0 12px">
-              <div id="hcPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"></div>
-
-                <!-- ① 글씨 -->
-                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
-                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">① 글씨</div>
-                  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-                    <span style="font-size:12px;color:var(--sub)">폰트
-                      <span id="hcFontPicker" style="position:relative;display:inline-block;vertical-align:middle">
-                        <button type="button" id="hcFontBtn" onclick="toggleFontMenu(event)"
-                          style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer;min-width:150px;text-align:left;font-size:13px">폰트 선택 ▾</button>
-                        <div id="hcFontMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:60;background:var(--inset);border:1px solid var(--line);border-radius:8px;max-height:340px;overflow:auto;box-shadow:0 12px 34px rgba(0,0,0,.55);min-width:190px"></div>
-                      </span>
-                      <select id="hcFont" onchange="updateHC()" style="display:none"></select></span>
-                    <label style="font-size:12px;color:var(--sub)">색상
-                      <input id="hcColor" type="color" value="#FF8800" oninput="updateHC()" style="vertical-align:middle;cursor:pointer"></label>
-                    <label style="font-size:12px;color:var(--sub)">굵기
-                      <select id="hcWeight" onchange="updateHC()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px">
-                        <option value="700">굵게</option><option value="900" selected>아주 굵게</option><option value="400">보통</option>
-                      </select></label>
-                  </div>
-                  <div style="margin-top:8px;font-size:12px;color:var(--sub)">크기 <b id="hcSizeV">64</b>px
-                    <input id="hcSize" type="range" min="28" max="120" value="64" oninput="updateHC()" style="width:100%"></div>
-                </div>
-
-                <!-- ② 자리 -->
-                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
-                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">② 자리</div>
-                  <div style="font-size:12px;color:var(--sub)">세로 위치 <b id="hcYV">14</b>%
-                    <input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;updateHC()" style="width:100%"></div>
-                  <div style="font-size:12px;color:var(--sub)">가로 위치 <b id="hcXV">50</b>%
-                    <input id="hcX" type="range" min="0" max="100" value="50" oninput="updateHC()" style="width:100%"></div>
-                  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
-                    <span style="font-size:12px;color:var(--sub);align-self:center">한 번에</span>
-                    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('top')">⬆ 위</button>
-                    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('mid')">중간</button>
-                    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('bottom')">⬇ 하단</button>
-                    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('center')">↔ 가운데</button>
-                  </div>
-                  <div class="hint" style="margin-top:6px;font-size:11px">💡 미리보기에서 글자를 <b>드래그</b>해도 옮겨져요.</div>
-                </div>
-
-                <!-- ③ 테두리 · 박스 -->
-                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
-                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">③ 테두리 · 박스</div>
-                  <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-                    <input id="hcOutline" type="checkbox" checked onchange="updateHC()"> 외곽선
-                    <input id="hcOutColor" type="color" value="#000000" oninput="updateHC()">
-                    <span style="color:var(--sub);font-size:12px">두께 <input id="hcOutW" type="range" min="0" max="12" value="6" oninput="updateHC()"></span>
-                  </label>
-                  <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
-                    <input id="hcBox" type="checkbox" onchange="updateHC()"> 배경 박스
-                    <input id="hcBoxColor" type="color" value="#000000" oninput="updateHC()">
-                    <span style="color:var(--sub);font-size:12px">여백 <input id="hcBoxPad" type="range" min="0" max="40" value="16" oninput="updateHC()"></span>
-                    <span style="color:var(--sub);font-size:12px">투명도 <input id="hcBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateHC()"></span>
-                  </label>
-                </div>
-                </div>
-              </details>
-
-              <!-- ── 🎬 모션 팩 ── -->
-              <details style="border-top:1px dashed var(--line)">
+              <!-- ── 🎬 모션 팩 ── 사장님 지시로 감춤(2026-08-22).
+                   ★삭제 아님: STATE.deco.motion.pack_id 배선이 살아있어야 완성 스타일이
+                   지정한 모션과 옛 작업이 그대로 렌더된다. -->
+              <details hidden style="border-top:1px dashed var(--line);display:none">
                 <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">🎬 모션 팩</summary>
                 <div style="padding:2px 0 12px">
                   <select id="motionPack" onchange="pickMotionPack(this.value)" style="width:100%;padding:6px;border-radius:6px">
@@ -2597,11 +2600,18 @@ function renderFramePresets(){
   const box=document.getElementById('frPresets'); if(!box) return;
   const f=(STATE.deco&&STATE.deco.template&&STATE.deco.template.frame)||null;
   const cur=f?f.preset:'';
-  box.innerHTML=`<button type="button" class="tab${f?'':' on'}" onclick="frPick('')"
-      style="min-width:auto;padding:6px 12px;font-size:12px">안 씀</button>`
-    + FR_PRESETS.map(p=>`<button type="button" class="tab${cur===p.id?' on':''}" onclick="frPick('${p.id}')"
-        style="min-width:auto;padding:6px 12px;font-size:12px">
-        <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${p.bar};margin-right:6px"></span>${esc(p.name)}</button>`).join('');
+  // ★격자로 고정한다(2026-08-22 사장님 "프리셋쪽이 두서없이 난잡").
+  //   flex-wrap이면 이름 길이에 따라 줄마다 칸 수가 달라져 들쭉날쭉해 보인다.
+  //   2열 고정 + 이름 한 줄 자르기 + 넘치면 스크롤 → 어느 폭에서도 줄이 맞는다.
+  const chip=(on,onclick,swatch,label)=>`<button type="button" class="tab${on?' on':''}" onclick="${onclick}"
+      style="min-width:0;width:100%;padding:7px 10px;font-size:12px;display:flex;align-items:center;gap:6px;text-align:left">
+      ${swatch}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span></button>`;
+  box.style.cssText='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;'
+    +'max-height:206px;overflow-y:auto;margin-bottom:10px;padding-right:2px';
+  box.innerHTML = chip(!f, "frPick('')", '', '안 씀')
+    + FR_PRESETS.map(p=>chip(cur===p.id, `frPick('${p.id}')`,
+        `<span style="flex:0 0 auto;display:inline-block;width:10px;height:10px;border-radius:2px;background:${p.bar}"></span>`,
+        esc(p.name))).join('');
   const fields=document.getElementById('frFields');
   if(fields) fields.style.display=f?'':'none';
   if(f) frFill(f);
@@ -2674,6 +2684,69 @@ function frBar(id, delta){
   el.value=Math.max(0, Math.min(400, parseInt(el.value||0,10)+delta));
   frUpdate();
 }
+// ── 🖱 띠 높이 드래그 조절(2026-08-22 사장님 "끄트머리 잡고 잡아당기면 조정되게") ──
+// 서버가 그린 틀 그림(#tplPreview)은 pointer-events:none이라 그 위를 잡을 수 없다.
+// → 띠 경계에 **투명 손잡이**를 얹고, 끌면 슬라이더 값을 고쳐 frUpdate()를 부른다.
+// ★값의 주인은 여전히 frBar/frBottom 입력칸 하나다(0순위-B) — 여기선 그 칸에 써넣기만 한다.
+// ★띠 높이는 **1920 기준 px**이다(deco_frame.py: W,H=1080,1920).
+//   미리보기는 폭이 변하는 반응형이라 배율을 상수로 박으면 안 되고, 그때그때 실제 높이로 환산한다.
+const FR_MAX_BAR=400;   // 슬라이더 상한과 같은 값
+function frDragScale(){
+  const pv=document.getElementById('hcPreview');
+  const h=pv?pv.getBoundingClientRect().height:0;
+  return h>0 ? (1920/h) : 0;     // 화면 1px이 영상 몇 px인가
+}
+function syncFrameHandles(){
+  const pv=document.getElementById('hcPreview'); if(!pv) return;
+  const t=STATE.deco&&STATE.deco.template;
+  const on=!!(t&&t.frame);
+  ['frHandleTop','frHandleBottom'].forEach(id=>{
+    let el=document.getElementById(id);
+    if(!on){ if(el) el.style.display='none'; return; }
+    if(!el){
+      el=document.createElement('div');
+      el.id=id;
+      // z-index는 틀 그림(4)보다 위. 높이 14px의 얇은 띠 — 손이 닿되 화면은 안 가린다.
+      el.style.cssText='position:absolute;left:0;width:100%;height:14px;cursor:ns-resize;z-index:6;'
+        +'display:flex;align-items:center;justify-content:center';
+      el.innerHTML='<div style="width:44px;height:4px;border-radius:3px;background:rgba(255,255,255,.85);'
+        +'box-shadow:0 0 0 1px rgba(0,0,0,.45)"></div>';
+      el.title='끌어서 띠 높이 조절';
+      pv.appendChild(el);
+      bindFrameHandle(el, id==='frHandleTop'?'frBar':'frBottom');
+    }
+    el.style.display='flex';   // ★''로 두면 cssText의 flex까지 지워져 막대가 왼쪽에 붙는다
+    const scale=frDragScale(); if(!scale) return;
+    const f=t.frame;
+    if(id==='frHandleTop') el.style.top=Math.max(0,(f.bar_h??190)/scale-7)+'px';
+    else                   el.style.bottom=Math.max(0,(f.bottom_h??0)/scale-7)+'px';
+  });
+}
+function bindFrameHandle(el, inputId){
+  const start=(ev)=>{
+    ev.preventDefault();
+    const input=document.getElementById(inputId); if(!input) return;
+    const scale=frDragScale(); if(!scale) return;
+    const isTop=(inputId==='frBar');
+    const pt=e=>(e.touches&&e.touches[0])?e.touches[0].clientY:e.clientY;
+    const y0=pt(ev), v0=parseInt(input.value||0,10);
+    const move=e=>{
+      const dy=(pt(e)-y0)*scale;              // 화면 이동량 → 영상 px
+      // 위 띠는 아래로 끌면 커지고, 아래 띠는 위로 끌면 커진다(사장님 지시 그대로).
+      const v=Math.round((isTop ? v0+dy : v0-dy)/10)*10;
+      input.value=Math.max(0, Math.min(FR_MAX_BAR, v));
+      frUpdate();
+    };
+    const up=()=>{
+      document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up);
+      document.removeEventListener('touchmove',move); document.removeEventListener('touchend',up);
+    };
+    document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
+    document.addEventListener('touchmove',move,{passive:false}); document.addEventListener('touchend',up);
+  };
+  el.addEventListener('mousedown',start);
+  el.addEventListener('touchstart',start,{passive:false});
+}
 function frFromHeadcopy(){
   const t=document.getElementById('frTitle'), hc=document.getElementById('hcText');
   if(!t||!hc) return;
@@ -2693,8 +2766,10 @@ function renderTemplatePreview(){
       pv.appendChild(el);
     }
     el.src=frameUrl(t.frame); el.style.display='';
+    syncFrameHandles();
     return;
   }
+  syncFrameHandles();
   const meta=TPL_LIST.find(x=>x.id===t.id); if(!meta) return;
   if(!el){
     el=document.createElement('img'); el.id='tplPreview';
