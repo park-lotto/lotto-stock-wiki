@@ -7,7 +7,12 @@
 //   그대로 남아 결과가 영영 안 보이게 됐다.
 const fs = require('fs');
 const path = require('path');
-const src = fs.readFileSync(path.join(__dirname, '../static/produce.html'), 'utf8');
+// ★원본 위치는 env로 덮어쓸 수 있다(2026-08-21). js_harness.run_js는 이 소스를
+//   **임시 .js 파일**로 옮겨 실행하므로 __dirname이 temp 폴더가 되고, 그러면
+//   '../static/produce.html'이 엉뚱한 곳(AppData\Local\static\...)을 가리켜 ENOENT로 죽는다.
+//   `node shopping_shorts/tests/test_preview_visible.js` 직접 실행은 종전 그대로 돈다.
+const src = fs.readFileSync(
+  process.env.PRODUCE_HTML || path.join(__dirname, '../static/produce.html'), 'utf8');
 const code = src.split('\n').filter(l => !l.trim().startsWith('//')).join('\n');
 
 let p = 0, f = 0;
