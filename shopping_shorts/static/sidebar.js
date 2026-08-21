@@ -472,6 +472,27 @@
   //
   //   판정은 여기 한 곳에서만 한다(0순위-B). 잠긴 메뉴를 눌렀을 때 뜨는 모달은
   //   _pwLockSidebar가 __ssShowPaywall을 직접 부르므로 이 규칙과 무관하게 그대로 산다.
+  // 402의 **사유는 서버가 정한다**(2026-08-21). 화면이 사유를 다시 판단하면 어긋난다
+  // (0순위-B). 실사고: 체험판 계정이 마감일 8/28로 멀쩡히 남아 있는데 잠긴 기능을 누를
+  // 때마다 "무료 체험이 끝났어요"를 봤다 — 서버는 정확히 "유료 기능이에요"라고 보냈는데
+  // 화면이 그 문장을 버리고 만료 문구를 재사용한 탓이다.
+  //
+  // ★체험판(plan=trial)은 기간과 무관하게 랭킹 전용이다(app.py access_level, 2026-08-21
+  //   사장님 확정) — 즉 '막혔다'와 '끝났다'는 애초에 다른 말이다. 섞으면 사장님도
+  //   고객도 "결제했는데 왜 막히지 / 체험 중인데 왜 끝났대"로 읽는다.
+  function _pwReason(d) {
+    var msg = (d && d.error) || "";
+    var lvl = (d && d.level) || "";
+    if (/포인트/.test(msg)) return { title: "포인트가 부족해요", body: msg };
+    if (lvl === "ranking_only") {
+      return { title: "체험판에서는 잠긴 기능이에요",
+               body: (msg || "유료 기능이에요.") +
+                     " 체험 기간은 그대로 남아 있고, 레퍼런스 랭킹은 계속 쓰실 수 있어요." };
+    }
+    // 사유를 모르면 서버 문장이라도 그대로 보여준다. 기본 만료 문구는 마지막 수단이다.
+    return msg ? { body: msg } : {};
+  }
+
   var _lastGesture = 0;
   ["pointerdown", "keydown", "click", "submit"].forEach(function (ev) {
     // capture 단계 — 페이지 핸들러가 stopPropagation을 걸어도 우리는 먼저 본다.
@@ -497,11 +518,8 @@
         }
         // 응답 본문을 복제해서 읽는다(원본은 호출부가 그대로 쓴다).
         try {
-          resp.clone().json().then(function (d) {
-            var msg = (d && d.error) || "";
-            if (/포인트/.test(msg)) _pwModal({ title: "포인트가 부족해요", body: msg });
-            else _pwModal();
-          }).catch(function () { _pwModal(); });
+          resp.clone().json().then(function (d) { _pwModal(_pwReason(d)); })
+                             .catch(function () { _pwModal(); });
         } catch (e) { try { _pwModal(); } catch (e2) {} }
       }
       return resp;
