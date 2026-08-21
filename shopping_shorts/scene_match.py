@@ -128,11 +128,18 @@ def _pick_role_asset(pool, narration):
 # 클립 역할패스(_role_pass)와 알고리즘이 거의 같으나 **중복 허용**(used 세트 없음)이 유일한 차이.
 # 조건분기를 넣느니 짧은 함수로 분리한다(YAGNI·단순성, 스펙 §3.4).
 
-_SFX_POSITION = {"hook": "first"}   # 명시 안 된 역할은 전부 "last"(기본값이 안전측)
+# 타점 통제어휘 — 렌더(video_assemble._burn_captions)가 이 이름으로 실제 초를 계산한다.
+# 여기와 렌더 둘 중 한쪽만 늘리면 조용히 기본값(last)으로 떨어진다(0순위-B).
+SFX_POSITIONS = ("first", "last", "transition")
+
+# 훅은 **다음 칸으로 넘어가는 순간**에 둔다(2026-08-21 사장님 "훅에서 다음 넘어가거나
+# 이럴때"). 이븐쇼핑류가 장면이 바뀌는 그 지점에 띠용을 얹는 방식이다.
+# 나머지 역할은 종전대로 칸의 마지막 자막("last") — 문장을 맺는 자리라 자연스럽다.
+_SFX_POSITION = {"hook": "transition"}
 
 
 def _sfx_position(beat_role):
-    """비트 안 효과음 타점 이름. hook은 첫 세그먼트("first"), 나머지는 마지막("last").
+    """이 역할의 **기본** 타점 이름. 사람이 칸마다 바꿀 수 있다(api_produce_mix_sfx).
     실제 몇 초인지는 렌더(_burn_captions)가 계산한다 — 여기선 위치 이름만."""
     return _SFX_POSITION.get(beat_role, "last")
 
@@ -155,6 +162,11 @@ def match_sfx(plan, assets):
     for a in cands:
         by_role.setdefault(a["role"], []).append(a)
     for beat in plan["beats"]:
+        # ★사람이 고르거나 옮긴 것은 건드리지 않는다(2026-08-21). 재매칭은 대본이 바뀔
+        #   때마다 도는데(mix_pipeline), 무조건 덮으면 사장님이 칸에서 바꾼 효과음이
+        #   조용히 되돌아간다 — "바꿨는데 그대로"로 겪는다.
+        if (beat.get("sfx") or {}).get("match_type") == "manual":
+            continue
         compatible = _ROLE_FALLBACK.get(beat.get("role") or "")
         if not compatible:
             continue   # 이 비트 역할은 효과음 자리가 아님 → 빈 채로

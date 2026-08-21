@@ -10452,9 +10452,19 @@ def api_produce_mix_shorten(job_id: str, body: dict):
 
 @app.post("/api/produce/mix/{job_id}/sfx")
 def api_produce_mix_sfx(job_id: str, request: Request, body: dict):
-    """검수판에서 비트의 효과음(beat["sfx"])을 제거한다(스펙 §6 — "이 효과음 빼기").
-    역할 매칭은 점수·제안 큐가 없어(자동배치 아니면 빈 채) v1은 제거만 지원 —
-    되살리려면 다시 매칭한다. 컷어웨이 토글과 같은 구조(대상 키만 sfx)."""
+    """비트의 효과음을 빼거나·바꾸거나·타점을 옮긴다(2026-08-21 사장님 "빼거나 다른거
+    넣거나. 장면처럼").
+
+    body:
+      {beat_idx}                        → 빼기(종전 동작 그대로)
+      {beat_idx, asset_id}              → 그 효과음으로 교체(없던 칸이면 새로 넣기)
+      {beat_idx, position:"transition"} → 타점만 옮기기(효과음은 그대로)
+    asset_id·position을 함께 줘도 된다.
+
+    ★asset_id는 **내 자산인지 확인하고** 쓴다 — 남의 효과음 id를 넣으면 렌더가 그 파일을
+      읽으러 간다(_resolve_sfx_paths). 소유권 검사는 store.get_scene_asset이 한다.
+    ★position은 통제어휘(scene_match.SFX_POSITIONS)만 받는다. 렌더가 모르는 이름이 들어오면
+      조용히 기본값(last)으로 떨어져 "바꿨는데 그대로"가 된다."""
     store = Store(DB_PATH)
     job = store.get_mix_job(job_id)
     if not job:
@@ -10468,9 +10478,31 @@ def api_produce_mix_sfx(job_id: str, request: Request, body: dict):
     hit = next((b for b in beats if b.get("beat_idx") == bi), None)
     if hit is None:
         return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 범위 밖"})
-    hit.pop("sfx", None)
+    aid = body.get("asset_id")
+    pos = body.get("position")
+    if aid is None and pos is None:
+        hit.pop("sfx", None)                       # 종전 동작 — 빼기
+        store.update_mix_job(job_id, edit_plan=plan)
+        return {"ok": True}
+    from shopping_shorts import scene_match as _sm
+    if pos is not None and pos not in _sm.SFX_POSITIONS:
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": f"position은 {'/'.join(_sm.SFX_POSITIONS)}만"})
+    cur = dict(hit.get("sfx") or {})
+    if aid is not None:
+        cid = job.get("customer_id", 0)
+        asset = store.get_scene_asset(int(aid), customer_id=cid)
+        if not asset or asset.get("asset_type") != "sfx":
+            return JSONResponse(status_code=422, content={
+                "ok": False, "error": "그 효과음을 찾을 수 없어요"})
+        cur["asset_id"] = int(aid)
+        cur["match_type"] = "manual"               # 사람이 고른 것 — 재매칭이 덮지 않게 표시
+        cur.setdefault("position", _sm._sfx_position(hit.get("role")))
+    if pos is not None:
+        cur["position"] = pos
+    hit["sfx"] = cur
     store.update_mix_job(job_id, edit_plan=plan)
-    return {"ok": True}
+    return {"ok": True, "sfx": cur}
 
 
 @app.get("/api/produce/mix/{job_id}/bank_injected")

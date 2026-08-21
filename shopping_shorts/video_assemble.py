@@ -1631,7 +1631,19 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
             continue
         segs = _caption_segments(b["narration"], preset=b.get("caption_lines"))
         seg_durs = _caption_durations(segs, b["dur"], real_durs=b.get("cap_durs"))
-        offset = 0.0 if sfx.get("position") == "first" else sum(seg_durs[:-1])
+        # 타점 3종(2026-08-21 사장님 "훅에서 다음 넘어갈 때"):
+        #   first      = 칸 시작
+        #   last       = 칸의 마지막 자막(기본)
+        #   transition = **칸이 끝나는 순간** = 다음 칸이 시작하는 지점. 이븐쇼핑류가
+        #                장면 전환에 띠용을 얹는 그 자리다. 다음 칸의 t0와 같은 값이라
+        #                따로 더할 게 없다(마지막 칸이면 영상 끝이라 amix가 잘라준다).
+        pos = sfx.get("position")
+        if pos == "first":
+            offset = 0.0
+        elif pos == "transition":
+            offset = b["dur"]
+        else:
+            offset = sum(seg_durs[:-1])
         sfx_events.append((path, b["t0"] + offset))
     has_sfx = bool(sfx_events)
     if not has_bgm and not has_overlay and not has_motion and not has_sfx:
