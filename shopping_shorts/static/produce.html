@@ -776,8 +776,11 @@
   :root[data-theme="light"] .panel[data-step="8"]{--s2-sub:#4a635d}
   .s2-label{font-size:12px;color:var(--s2-sub);text-transform:uppercase;letter-spacing:.04em;height:24px;line-height:24px;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .s2-band{margin-bottom:24px}
-  .s2-cardrow{display:flex;gap:16px;align-items:stretch;flex-wrap:wrap}
-  .s2-cardrow>*{flex:1 1 0;min-width:216px}
+  /* ★grid로 고정한다(2026-08-21). flex+flex:1 1 0은 wrap 후 **마지막 줄 카드가 남은 폭을
+     통째로 나눠 먹어** 2개만 남으면 절반씩 거대해졌다(실측: 9개+2개 배치에서 아래 2개가 5배).
+     grid auto-fill은 줄이 안 차도 칸 폭을 유지하므로 모든 카드가 같은 크기다. */
+  .s2-cardrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(216px,1fr));gap:16px;align-items:stretch}
+  .s2-cardrow>*{min-width:0}
   /* ① 씨앗 카드 */
   .s2-scard{border:1px solid var(--line);border-radius:12px;background:var(--inset);padding:16px;
     cursor:pointer;position:relative;transition:.15s;display:flex;flex-direction:column}
@@ -819,8 +822,21 @@
     transition:.15s;display:flex;flex-direction:column;position:relative}
   .s2-card:hover{border-color:var(--accent2)}
   .s2-card.sel{border-color:var(--accent);background:var(--sel-bg)}
-  .s2-card .t{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;height:24px;white-space:nowrap;overflow:hidden}
-  .s2-card .t .sp{flex:1}
+  .s2-card .t{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;min-height:24px;white-space:nowrap}
+  .s2-card .t .sp{flex:1;min-width:4px}
+  /* ★이름만 줄어들게 한다 — 전에는 .t 통째로 overflow:hidden이라 이름이 길면
+     오른쪽 '⚠️ 타소재' 배지가 잘려나갔다(실측: 다이소 내부인형 카드). */
+  .s2-card .t .nm{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  /* 플랫폼 배지 — 제목 앞에 [유튜브]/[인스타]를 붙여 한눈에 가른다 */
+  .s2-plat{flex:none;font-size:10px;font-weight:800;border-radius:5px;padding:2px 6px;white-space:nowrap;letter-spacing:.02em}
+  .s2-plat.yt{color:#ff6b6b;background:rgba(255,107,107,.14)}
+  .s2-plat.ig{color:#e879c7;background:rgba(232,121,199,.14)}
+  /* 훅 한 줄 + 스토리 구조 한 줄 */
+  .s2-hook{margin-top:8px;font-size:11.5px;line-height:1.55;color:var(--s2-sub);word-break:keep-all}
+  .s2-hook b{color:var(--txt);font-weight:700}
+  .s2-flow{margin-top:6px;font-size:11px;line-height:1.7;color:var(--s2-sub);word-break:keep-all}
+  .s2-flow i{font-style:normal;color:var(--txt);font-weight:600}
+  .s2-flow .ar{opacity:.45;margin:0 3px}
   .s2-badge{flex:none;font-size:10.5px;font-weight:700;border-radius:6px;padding:2px 7px;white-space:nowrap}
   .s2-badge.ok{color:var(--ok);background:rgba(55,224,189,.12)}
   .s2-badge.warn{color:var(--gold);background:rgba(240,196,83,.12)}
@@ -924,7 +940,7 @@
   .s2-modes button{padding:6px 12px;font-size:12px;background:var(--inset);border:1px solid var(--line);color:var(--txt);cursor:pointer}
   .s2-modes button.on{background:var(--sel-bg);border-color:var(--accent);color:var(--sel-fg)}
   @media(max-width:760px){
-    .panel[data-step="8"] .s2-cardrow>*{min-width:100%}
+    .panel[data-step="8"] .s2-cardrow{grid-template-columns:1fr}
     .s2-row-in{grid-template-columns:88px 1fr}
     .s2-swap{grid-column:2;justify-self:end;padding:8px 16px}
     .s2-tabs{gap:8px}
@@ -9712,9 +9728,47 @@ function _s2Hydrate(w){
 }
 // 역할 라벨 — 내부값(beat_roles)은 hook/before/reveal/after/cta, 화면 이름은 여기서 붙인다.
 // ★사장님 지시 "재미있게". 모르는 역할은 그 값을 그대로 쓴다(빈 칸으로 두지 않는다).
-const S2_ROLE = {hook:'🎣 미끼', before:'😰 찔림', problem:'😰 찔림', reveal:'💡 반전',
-  twist:'💡 반전', after:'✨ 증거', result:'✨ 결과', proof:'✨ 증거', demo:'🔧 시연',
-  conflict:'🔥 갈등', cta:'📢 약속'};
+// ★서버 승인 스파인 9개의 beat_roles를 전수 조사해 **실제 쓰이는 34종을 전부** 채웠다
+//   (2026-08-21). 전에는 11종만 있어 method·steps·texture 같은 나머지가 영어 원문으로
+//   화면에 그대로 노출됐다("미끼 method steps texture"). 새 역할어가 생기면 여기에 추가하라 —
+//   빠지면 s2RoleName이 '· 영어'로 흘려보낸다(막지는 않는다).
+const S2_ROLE = {
+  // 여는 말
+  hook:'🎣 첫말', title:'📌 제목', bait:'🪝 미끼', story:'📖 사연', origin:'🌱 유래',
+  situation:'🏠 상황', problem:'😰 문제', before:'😰 문제', mistake:'❌ 실수',
+  notice:'👀 발견', ask:'❓ 질문',
+  // 받치는 근거
+  authority:'🏅 권위', proof:'✨ 증거', after:'✨ 증거', witness:'👤 증언', cases:'📂 사례',
+  targets:'🎯 대상', spread:'📈 확산', scale:'📊 규모',
+  // 꺾는 지점
+  reveal:'💡 반전', twist:'🔄 재반전', conflict:'🔥 갈등',
+  // 보여주는 방법
+  method:'🔧 방법', steps:'📝 단계', demo:'🔧 시연', texture:'🤏 질감', usage:'🍽 활용',
+  mechanism:'⚙️ 원리', ease:'👌 간편', reason:'📖 이유',
+  // 닫는 말
+  benefit:'💎 효과', result:'✅ 결과', escalation:'🔥 고조', escalate:'🔥 고조',
+  regret:'😔 후회', price:'💰 가격', cta:'📢 약속'
+};
+// 첫 역할 = 그 스타일이 **어떻게 여는가**(훅). 사람 말로 한 줄 풀어준다.
+const S2_HOOKWAY = {
+  hook:'첫 대사로 바로 친다', title:'화면 제목으로 잡는다',
+  bait:'정체를 숨겨 궁금하게', story:'사람 이야기로 연다',
+  origin:'어디서 나왔는지부터', situation:'상황을 그려주고 연다',
+  problem:'문제부터 찌른다', mistake:'흔한 실수를 짚는다',
+  notice:'눈에 띈 것을 짚는다', ask:'질문을 던진다'
+};
+// 플랫폼 판정 — 이름에 '유튜브', 설명에 '인스타/릴스'가 박혀 있다(서버 실측).
+// 둘 다 없으면 **아무 배지도 안 단다**. 모르는 걸 아는 척 라벨링하지 않는다.
+function s2Platform(st){
+  const n=String(st.name||''), t=String(st.situation_type||'');
+  if(/유튜브|youtube/i.test(n+t)) return 'yt';
+  if(/인스타|릴스|reels/i.test(n+t)) return 'ig';
+  return '';
+}
+// 배지로 뺀 플랫폼 말머리는 이름·설명에서 지운다(같은 말이 두 번 보이지 않게).
+function s2StripPlat(txt){
+  return String(txt||'').replace(/^\s*(유튜브|인스타(그램)?)\s*(릴스)?\s*[·\-–]?\s*/,'').trim();
+}
 function s2RoleName(r){ return S2_ROLE[r] || ('· ' + (r||'')); }
 // 문장틀의 {빈칸}을 눈에 보이게 — "여긴 우리 소재로 채워진다"를 화면이 말해준다.
 function s2Tmpl(t){
@@ -9876,12 +9930,30 @@ function s2RenderStyles(){
     const nth=on?(' · '+String.fromCharCode(65+S2.picked.indexOf(st.id))+'안'):'';
     const badge=st.fit==='검증'?`<span class="s2-badge ok">✅ 검증${nth}</span>`
                                :`<span class="s2-badge warn">⚠️ 타소재${nth}</span>`;
-    const roles=(st.beat_roles||[]).map(r=>`<span class="r">${esc(s2RoleName(r).replace(/^\S+\s/,''))}</span>`).join('');
+    // 플랫폼은 제목 **앞**에 배지로. 이름·설명에 박힌 말머리는 지워 중복을 없앤다.
+    const plat=s2Platform(st);
+    const platBadge = plat ? `<span class="s2-plat ${plat}">${plat==='yt'?'유튜브':'인스타'}</span>` : '';
+    const nm = plat ? s2StripPlat(st.name) : String(st.name||'');
+    // 설명이 말머리를 뺀 뒤 이름과 같아지면(인스타 3종이 그렇다) 빈 줄로 두지 말고 감춘다.
+    let sit = plat ? s2StripPlat(st.situation_type||'') : String(st.situation_type||'');
+    if(sit && sit.replace(/\s/g,'')===nm.replace(/\s/g,'')) sit='';
+    // ★훅 = 첫 역할, 구조 = 역할 체인 전체. "어떻게 열고 어떻게 굴러가나"를 카드가 말하게 한다.
+    const chain=(st.beat_roles||[]);
+    const first=chain[0]||'';
+    const hookWay=S2_HOOKWAY[first]||'';
+    const hookLine = first
+      ? `<div class="s2-hook">🎣 훅 · <b>${esc(s2RoleName(first).replace(/^\S+\s/,''))}</b>${hookWay?(' — '+esc(hookWay)):''}</div>`
+      : '';
+    const flow = chain.length
+      ? `<div class="s2-flow">📖 구조 ` + chain.map(r=>`<i>${esc(s2RoleName(r).replace(/^\S+\s/,''))}</i>`).join('<span class="ar">›</span>') + `</div>`
+      : '';
     const d=[st.source_count?('근거 '+st.source_count+'편'):'', st.chars_per_30s?(st.chars_per_30s+'자/30초'):''].filter(Boolean).join(' · ');
     return `<div class="s2-card${on?' sel':''}" onclick="s2ToggleStyle(${st.id})" title="${esc(st.situation_type||'')}">
-      <div class="t">${esc(st.name)} <span class="sp"></span>${badge}</div>
-      <div class="s2-quote plain">${esc(st.situation_type||'')}</div>
-      <div class="s2-meta">${roles}<span class="d">${esc(d)}</span></div>
+      <div class="t">${platBadge}<span class="nm">${esc(nm)}</span><span class="sp"></span>${badge}</div>
+      ${sit?`<div class="s2-quote plain">${esc(sit)}</div>`:''}
+      ${hookLine}
+      ${flow}
+      <div class="s2-meta"><span class="d">${esc(d)}</span></div>
     </div>`;
   }).join('');
   row.innerHTML=auto+cards;
