@@ -105,3 +105,28 @@ def test_영문_딴장르도_막는다(tmp_path):
     items = [{"username": "UCabc123", "caption": "Success Affirmation Trot: One Small Step"}]
     _attach_channel_style(items, st, "youtube")
     assert items[0]["style"] == ""
+
+
+def test_레시피는_영상이_요리일_때만(tmp_path):
+    """2026-08-21 사장님 "레시피에 들어간건 매칭이 많이 안돼".
+
+    실측: 레시피 축 311건 중 실제 레시피 87건(28%)뿐. 범인은 '만들기'였다 —
+    슬라임·캔디백 공예가 전부 "만들기"라 통째로 들어왔다(키포kipo 채널).
+    """
+    import sqlite3
+    from shopping_shorts.app import _attach_channel_style
+    st = Store(str(tmp_path / "r.db"))
+    with sqlite3.connect(st.db_path) as c:
+        c.execute("CREATE TABLE IF NOT EXISTS channel_styles ("
+                  "channel_id TEXT PRIMARY KEY, title TEXT, style TEXT, set_at TEXT)")
+        c.execute("INSERT INTO channel_styles VALUES(?,?,?,?)",
+                  ("UCfood", "키포kipo", "레시피쇼핑", ""))
+    items = [
+        {"username": "UCfood", "caption": "에어프라이어 반찬 만들기 초간단 #추천"},
+        {"username": "UCfood", "caption": "다이소 재료로 구슬 파삭 캔디백 만들기 #슬라임"},
+        {"username": "UCfood", "caption": "ASMR 다이소재료로 식빵 크런치 스퀴시"},
+    ]
+    _attach_channel_style(items, st, "youtube")
+    assert items[0]["style"] == "레시피쇼핑"
+    assert items[1]["style"] == "", "공예 '만들기'는 요리가 아니다"
+    assert items[2]["style"] == "", "ASMR 스퀴시는 요리가 아니다"
