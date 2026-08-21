@@ -11919,7 +11919,8 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
     except Exception:      # noqa: BLE001 — 설정 조회 실패가 생성을 막지 않는다
         _off = False
     if _off:
-        print("assemble_off=1 → 조립 건너뛰고 전부 생성기로", file=sys.stderr)
+        import sys as _sys       # ★이 함수 안에서 sys가 안 보인다(라이브 500 실사고). 지연 임포트한다.
+        print("assemble_off=1 → 조립 건너뛰고 전부 생성기로", file=_sys.stderr)
         return [], list(spines or [])
     out, left = [], []
     _why = []          # 조립을 못 한 이유(화면이 말해준다)
