@@ -11689,6 +11689,19 @@ def _facts_per_source(sources, store, analyze, ckey_prefix, cache_only=False):
     return facts
 
 
+def _subject_names(facts):
+    """걸러낸 편들의 제품명 — 화면이 "무엇을 뺐는지" 말할 수 있게(조용한 폴백 금지)."""
+    out = []
+    for f in (facts or []):
+        v = (f or {}).get("product_name")
+        if isinstance(v, (list, tuple)):
+            v = v[0] if v else ""
+        v = str(v or "").strip()
+        if v and v not in out:
+            out.append(v)
+    return ", ".join(out[:3]) or "제품명 미상"
+
+
 def _slots_for_spine(sp, sources, store, job_id="", cache_only=False):
     """이 스파인이 쓰는 **슬롯 dict**와 못 한 이유 → (slots, problem).
 
@@ -11716,6 +11729,10 @@ def _slots_for_spine(sp, sources, store, job_id="", cache_only=False):
                               cache_only=cache_only)
     if not facts:
         return {}, ("아직 분석 전입니다" if cache_only else "영상에서 재료를 못 뽑았습니다")
+    # ★소재가 다른 영상을 빼고 합친다(2026-08-21). 예전엔 "담긴 건 같은 주제일 것"이라고
+    #   가정만 했는데, 사장님이 구명 팔찌 6편 사이에 미니 다리미 한 편을 담자
+    #   `170도 자동 온도 조절`이 그대로 재료가 됐다. 적어두는 것으로는 안 지켜진다.
+    facts, _off = spine_fill.split_by_subject(facts)
     merged = spine_fill.merge_sul(facts)
     # ★슬롯을 **먼저** 만든다 — 은폐형·발명품형은 {제품}·{효능}·{나라}를 쿠팡 재료에서도
     #   받는다. 영상 재료만 보고 판정하면 쿠팡으로 채워지는 소재를 통째로 막는다(2026-08-21 회귀).
@@ -11788,6 +11805,12 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
                 slots, _prob = _insta_slots(sources, store)
             elif track in ("invention", "conceal"):
                 facts = _facts_per_source(sources, store, sul_facts.analyze_sul, "sul_facts1")
+                # ★소재가 다른 영상은 재료에서 뺀다 — 빼고 나면 **왜 뺐는지 말한다**
+                #   (조용히 버리면 "왜 이 영상은 안 쓰였나"를 아무도 모른다).
+                facts, _off = spine_fill.split_by_subject(facts)
+                if _off:
+                    _why.append("소재가 다른 영상 %d편은 재료에서 뺐습니다(%s)"
+                                % (len(_off), _subject_names(_off)))
                 merged = spine_fill.merge_sul(facts) if facts else {}
                 # ★썰과 **다른 자격 검사**를 쓴다(위 INVENTION_CATEGORIES 주석 참조).
                 # ★슬롯을 먼저 만들고 그 위에서 판정한다(쿠팡 재료도 함께 본다).
@@ -11803,6 +11826,12 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
                 slots = _s
             else:
                 facts = _facts_per_source(sources, store, sul_facts.analyze_sul, "sul_facts1")
+                # ★소재가 다른 영상은 재료에서 뺀다 — 빼고 나면 **왜 뺐는지 말한다**
+                #   (조용히 버리면 "왜 이 영상은 안 쓰였나"를 아무도 모른다).
+                facts, _off = spine_fill.split_by_subject(facts)
+                if _off:
+                    _why.append("소재가 다른 영상 %d편은 재료에서 뺐습니다(%s)"
+                                % (len(_off), _subject_names(_off)))
                 merged = spine_fill.merge_sul(facts) if facts else {}
                 # ★슬롯이 차는 것과 쓸 만한 것은 다르다 — 재료 자격을 먼저 본다.
                 _prob = (spine_fill.sul_material_problem(merged) if merged
