@@ -10526,25 +10526,26 @@ def api_produce_mix_poster(job_id: str):
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "매칭 먼저"})
     work = _MIX_WORK_DIR / job_id
-    poster = work / "poster.jpg"
+    beats = (job["edit_plan"] or {}).get("beats") or []
+    if not beats:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "매칭 먼저"})
+    # ★첫 칸의 화면 = beatframe(0)과 **같은 그림**이어야 한다(2026-08-21).
+    #   종전엔 이 라우트만 따로 계산해서 두 가지가 어긋났다:
+    #   ① primary(AI 원본)만 봐서 3단계 편성(scene_override)을 무시했다
+    #      — 꾸미기 스타일 카드·실장면 배경이 3단계와 다른 그림으로 떴다.
+    #   ② 청소본(clean_sources)을 안 봐서 자막제거를 켜도 **원본 자막이 살아 있었다**
+    #      — beatframe은 2026-07-21에 이미 고친 버그가 여기만 남아 있었다.
+    #   ③ 캐시가 poster.jpg 한 이름이라 편성·청소를 바꿔도 옛 그림이 그대로였다.
+    #   그래서 계산을 새로 하지 않고 _extract_beat_frame 한 곳에 맡긴다(0순위-B).
+    clean_map = job.get("clean_sources") or {}
+    _seg0 = (video_assemble._beat_material(beats[0]) or [beats[0].get("primary") or {}])[0] or {}
+    _key = f"{_seg0.get('video_id') or '-'}@{round(float(_seg0.get('start') or 0), 2)}"
+    _key = re.sub(r"[^0-9a-zA-Z@.\-]", "_", _key)
+    poster = work / f"poster_{_key}{'_clean' if clean_map else ''}.jpg"
     if not poster.exists():
-        beats = (job["edit_plan"] or {}).get("beats") or []
-        src, ss = None, 0.0
-        if beats:
-            pr = beats[0].get("primary") or {}
-            vid = pr.get("video_id")
-            ss = float(pr.get("start") or 0)
-            if vid:
-                src = next((work / vid).glob("*.mp4"), None)
-        if src is None:  # 폴백: 이미 렌더된 결과물
-            src = next(work.glob("final.mp4"), None) or next(work.glob("mix_raw.mp4"), None)
-        if src is None:
-            return JSONResponse(status_code=404, content={"ok": False, "error": "소스 영상 없음"})
-        subprocess.run(["ffmpeg", "-y", "-ss", str(ss), "-i", str(src),
-                        "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920",
-                        "-frames:v", "1", str(poster)], capture_output=True)
+        _extract_beat_frame(work, beats[0], poster, clean_sources=clean_map)
     if not poster.exists():
-        return JSONResponse(status_code=404, content={"ok": False})
+        return JSONResponse(status_code=404, content={"ok": False, "error": "소스 영상 없음"})
     return FileResponse(str(poster), media_type="image/jpeg")
 
 
