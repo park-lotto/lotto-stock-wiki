@@ -11605,7 +11605,10 @@ INVENTION_CATEGORIES = ("발명품형",)
 #   슬롯 이름 불일치로 건너뛰어짐). 조립되면 훅에 사족을 붙일 자리가 물리적으로 없다.
 #   ⚠️사람이 고르는 소재 이름(홈템·레시피·기타)과 **다른 이름**을 쓴다(spine 57의 교훈).
 INSTA_CATEGORIES = ("다이소형", "금지경고형", "사회증거형",
-                    "지인증언형", "권유지시형", "물건발견형", "정체의문형", "무지후회형")
+                    "지인증언형", "권유지시형", "물건발견형", "정체의문형", "무지후회형",
+                    # ★나열형(2026-08-21) — 한 제품을 파는 게 아니라 여러 제품을 훑는다.
+                    #   재료를 합치지 않고 **편별로** 쓰는 유일한 갈래다.
+                    "나열형")
 
 
 # 재료로 볼 영상 수 상한 — 값을 정하는 곳은 `script_generate.SOURCE_MAX` **한 곳**뿐이다.
@@ -11775,6 +11778,11 @@ def _slots_for_spine(sp, sources, store, job_id="", cache_only=False):
                                       cache_only=True)
             if not facts:
                 return {}, "아직 분석 전입니다"
+        if sp.get("is_list"):
+            # 나열형은 재료를 안 합친다 — 커버리지는 **첫 편**을 대표로 잰다
+            # (항목 한 칸이 무엇을 요구하는지가 그대로 보인다).
+            sets, prob = _insta_slot_sets(sources, store, cache_only=cache_only)
+            return (sets[0] if sets else {}), prob
         return _insta_slots(sources, store)
 
     invention = _is_invention_context("", [sp])
@@ -11830,6 +11838,34 @@ def _insta_slots(sources, store):
     return slots, ("" if slots else "재료가 화면 근거를 통과하지 못했습니다")
 
 
+def _insta_slot_sets(sources, store, cache_only=False):
+    """인스타 **나열형** 재료 → (편별 슬롯 세트 목록, 못 한 이유).
+
+    ★`_insta_slots`와 갈라놓은 이유: 나열형은 항목마다 **다른 제품**이라 재료를 합치면
+      안 된다(merge_sul은 "담긴 건 한 제품"을 전제로 값을 섞는다). 그래서 편별로 따로
+      슬롯을 만들고, 장면 근거도 **그 편의 화면**으로만 검사한다 — 남의 영상에 찍힌
+      물건으로 이 항목을 정당화하면 게이트가 있으나 마나다.
+    """
+    from shopping_shorts import insta_facts, spine_fill
+    srcs = (sources or [])[:_FACTS_MAX_SOURCES]
+    facts = _facts_per_source(srcs, store, insta_facts.analyze_insta, "insta_facts1",
+                              cache_only=cache_only)
+    if not facts:
+        return [], ("아직 분석 전입니다" if cache_only else "영상에서 재료를 못 뽑았습니다")
+    sets = []
+    # _facts_per_source는 전사가 빈 영상을 건너뛰므로 편수가 어긋날 수 있다.
+    # 짝이 맞는 만큼만 쓴다 — 어긋난 채로 장면을 붙이면 남의 화면으로 검사하게 된다.
+    for f, src in zip(facts, srcs):
+        segs = [x for x in (src.get("segments") or []) if isinstance(x, dict)]
+        one = insta_facts.gate_by_scene(f, segs)
+        sl = spine_fill.slots_from_insta(one)
+        if sl:
+            sets.append(sl)
+    if len(sets) < 2:
+        return [], "나열형은 화면 근거가 있는 영상이 2편 이상 필요합니다(현재 %d편)" % len(sets)
+    return sets, ""
+
+
 def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
     """조립으로 만들 수 있는 대본들 → (조립본 목록, 조립 못 한 스파인 목록).
 
@@ -11852,12 +11888,17 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
         track = ("sul" if _is_sul_context("", [sp])
                  else "invention" if _is_invention_context("", [sp])
                  else "conceal" if _is_conceal_context("", [sp])
-                 else "insta" if _is_insta_context("", [sp]) else "")
+                 else ("insta_list" if sp.get("is_list") else "insta")
+                 if _is_insta_context("", [sp]) else "")
         if not track:
             left.append(sp)
             continue
         if track not in slots_by_track:
-            if track == "insta":
+            if track == "insta_list":
+                # 나열형만 **합치지 않은** 편별 재료를 쓴다. slots 자리에 슬롯 세트
+                # 목록이 들어간다 — 아래 조립도 build_list_draft로 갈린다.
+                slots, _prob = _insta_slot_sets(sources, store)
+            elif track == "insta":
                 slots, _prob = _insta_slots(sources, store)
             elif track in ("invention", "conceal"):
                 facts = _facts_per_source(sources, store, sul_facts.analyze_sul, "sul_facts1")
@@ -11912,9 +11953,15 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
             # ★seed=job_id — 같은 재료·같은 틀이라도 job마다 다른 변형에서 시작한다.
             #   없으면 항상 1번 문장이 걸려 몇 편을 뽑아도 첫 대사가 같았다.
             #   job_id 해시라 같은 job을 다시 돌리면 같은 대본이 나온다(재현성 유지).
-            d = (spine_fill.build_draft(sp, slots, seconds=seconds, source_text=_src_text,
-                                        seed=str(job_id or ""))
-                 if (slots and not _blocked) else None)
+            if not (slots and not _blocked):
+                d = None
+            elif track == "insta_list":
+                # 항목 수는 fill_list가 길이에 맞춰 줄인다(최소 2개).
+                d = spine_fill.build_list_draft(sp, slots, seconds=seconds,
+                                                source_text=_src_text)
+            else:
+                d = spine_fill.build_draft(sp, slots, seconds=seconds, source_text=_src_text,
+                                           seed=str(job_id or ""))
         except Exception as e:      # noqa: BLE001 — 조립 실패가 생성을 막으면 안 된다
             print("조립 실패(style=%s): %s" % (sp.get("id"), str(e)[:120]))
             d = None

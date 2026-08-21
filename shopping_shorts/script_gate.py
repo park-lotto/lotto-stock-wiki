@@ -328,15 +328,33 @@ def check(style, beats, facts_text="", product="", seconds=30):
     beats = beats or []
     want = list(style.get("beat_roles") or [])
     got = [b.get("role", "") for b in beats]
-    checks = [{"name": "구간 순서", "ok": got == want,
-               "detail": "기대 %s / 실제 %s" % (want, got)}]
+    # ★나열형(is_list)은 item이 **편수만큼 반복**된다(item1·item2·…) — 서사형처럼
+    #   순서를 1:1로 맞추면 항상 실패한다(2026-08-21 실측).
+    #   item 반복을 하나로 접어서 비교한다. 나머지 칸의 순서는 그대로 본다.
+    if style.get("is_list"):
+        folded, prev = [], ""
+        for r in got:
+            base = "item" if r.startswith("item") else r
+            if base != prev:
+                folded.append(base)
+            prev = base
+        got_cmp = folded
+    else:
+        got_cmp = got
+    checks = [{"name": "구간 순서", "ok": got_cmp == want,
+               "detail": "기대 %s / 실제 %s" % (want, got_cmp)}]
 
     templates = style.get("templates") or {}
     for role in want:
         tmpl = templates.get(role) or []
         if not tmpl:
             continue
-        hit = [b for b in beats if b.get("role") == role]
+        # ★나열형은 item이 item1·item2…로 나뉜다 — 접두어로 찾아야 '해당 구간 없음'이
+        #   안 뜬다(2026-08-21). 서사형은 종전대로 정확히 일치하는 것만 본다.
+        if style.get("is_list") and role == "item":
+            hit = [b for b in beats if (b.get("role") or "").startswith("item")]
+        else:
+            hit = [b for b in beats if b.get("role") == role]
         text = hit[0].get("text", "") if hit else ""
         checks.append({"name": "%s 문장틀 준수" % role,
                        "ok": bool(text) and template_matches(text, tmpl),
@@ -400,6 +418,11 @@ def check(style, beats, facts_text="", product="", seconds=30):
     # ★고조 심화(2026-08-16) — 헌장은 "한 단계 더 올라가는 문장을 반드시 하나, 한 번만".
     #   0회면 밋밋하고, 2회 이상이면 남발이라 오히려 죽는다(헌장 문구 그대로).
     esc = _escalation(full)
+    # ★나열형은 고조를 **안 쓴다** — 실측 9편 전부 고조어 0회(2026-08-21).
+    #   서사가 없어 "한 단계 더 올라가는 문장"을 놓을 자리가 없다.
+    #   여기서 면제하지 않으면 나열형은 영영 통과 못 한다.
+    if style.get("is_list"):
+        esc = 1 if esc == 0 else esc      # 0회는 정상 / 남발(2회+)은 그대로 잡는다
     checks.append({"name": "고조 심화(1회)", "ok": esc == 1,
                    "detail": ("고조 연결어가 없다 — 해결 뒤에 '심지어/더 대박인 건'으로 "
                               "새로운 장점 하나를 더 얹어라" if esc == 0
