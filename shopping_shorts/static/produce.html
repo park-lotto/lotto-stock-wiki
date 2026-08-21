@@ -1445,10 +1445,11 @@
           <button type="button" id="moreStylesBtn" onclick="toggleMoreStyles()" class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;margin-bottom:10px">+ 더보기</button>
           <!-- ⭐ 내 프리셋 — 헤드카피+자막을 통째로 저장한다. 헤드카피가 딴 탭으로 간 뒤에도
                '한 방에 완성' 갈래라 완성 스타일 바로 밑에 둔다(2026-08-22 간결화). -->
+          <div style="font-size:13px;font-weight:800;margin:10px 0 6px">⭐ 내 프리셋 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 바로 적용</span></div>
           <div id="myPresets" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px"></div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-            <input id="myPresetName" type="text" placeholder="이름 (헤드카피+자막 전체)" style="flex:1;min-width:130px;background:#0a1017;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 10px;font-size:13px">
-            <button class="tab" onclick="saveMyPreset()" style="flex:0 0 auto;min-width:auto;padding:7px 14px;font-size:12px;white-space:nowrap;background:var(--sel-bg);border-color:var(--accent)">💾 저장</button>
+            <input id="myPresetName" type="text" placeholder="이 스타일 이름" style="flex:1;min-width:130px;background:#0a1017;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 10px;font-size:13px">
+            <button class="tab" onclick="saveMyPreset()" style="flex:0 0 auto;min-width:auto;padding:7px 14px;font-size:12px;white-space:nowrap;background:var(--sel-bg);border-color:var(--accent)">💾 지금 스타일 저장</button>
           </div>
           <!-- ★기본 펼침(2026-08-18). 사장님이 "폰트·색상·크기 조정이 없다"고 하셨는데
                실제로는 여기 다 있었다 — 접힘 안에 또 접혀 있어 못 찾으신 것이다.
@@ -2617,18 +2618,34 @@ function renderFramePresets(){
   const box=document.getElementById('frPresets'); if(!box) return;
   const f=(STATE.deco&&STATE.deco.template&&STATE.deco.template.frame)||null;
   const cur=f?f.preset:'';
-  // ★격자로 고정한다(2026-08-22 사장님 "프리셋쪽이 두서없이 난잡").
-  //   flex-wrap이면 이름 길이에 따라 줄마다 칸 수가 달라져 들쭉날쭉해 보인다.
-  //   2열 고정 + 이름 한 줄 자르기 + 넘치면 스크롤 → 어느 폭에서도 줄이 맞는다.
-  const chip=(on,onclick,swatch,label)=>`<button type="button" class="tab${on?' on':''}" onclick="${onclick}"
-      style="min-width:0;width:100%;padding:7px 10px;font-size:12px;display:flex;align-items:center;gap:6px;text-align:left">
-      ${swatch}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span></button>`;
-  box.style.cssText='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;'
-    +'max-height:206px;overflow-y:auto;margin-bottom:10px;padding-right:2px';
-  box.innerHTML = chip(!f, "frPick('')", '', '안 씀')
-    + FR_PRESETS.map(p=>chip(cur===p.id, `frPick('${p.id}')`,
-        `<span style="flex:0 0 auto;display:inline-block;width:10px;height:10px;border-radius:2px;background:${p.bar}"></span>`,
-        esc(p.name))).join('');
+  // ★글자만 나열하면 뭐가 뭔지 모른다(2026-08-22 사장님 "시각화 보기편하게").
+  //   각 틀을 **9:16 축소판**으로 그린다 — 띠 색·띠 높이·제목 블록이 한눈에 보인다.
+  //   높이는 실제 bar_h(1920 기준)를 비율로 환산해 **틀마다 다르게** 그린다.
+  const TH=76;                     // 축소판 높이(px). 9:16이라 폭은 자동 43px
+  const card=(on,onclick,thumb,label)=>`<button type="button" class="tab${on?' on':''}" onclick="${onclick}"
+      style="min-width:0;width:100%;padding:6px 4px;font-size:11px;display:flex;flex-direction:column;
+             align-items:center;gap:5px;line-height:1.25">
+      ${thumb}
+      <span style="width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center">${label}</span></button>`;
+  // 한 틀의 축소판: 위 띠(색) + 제목 블록(흰) + 나머지(영상 자리)
+  const thumbOf=p=>{
+    const barPct=Math.max(3, Math.min(45, ((p.bar_h!=null?p.bar_h:190)/1920)*100));
+    const head=p.has_head
+      ? `<div style="position:absolute;left:0;right:0;top:${barPct}%;height:16%;background:#fff;
+           border-bottom:1px solid #d8d8d8"></div>` : '';
+    return `<div style="position:relative;width:${Math.round(TH*9/16)}px;height:${TH}px;border-radius:4px;
+        overflow:hidden;background:#c9ced6;border:1px solid rgba(255,255,255,.18);flex:0 0 auto">
+        <div style="position:absolute;left:0;right:0;top:0;height:${barPct}%;background:${p.bar}"></div>
+        ${head}</div>`;
+  };
+  const noneThumb=`<div style="width:${Math.round(TH*9/16)}px;height:${TH}px;border-radius:4px;
+      border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;
+      color:var(--sub);font-size:10px;flex:0 0 auto">없음</div>`;
+  // 축소판이 커졌으니 한 줄에 4칸(폭이 좁으면 자동으로 줄어든다)
+  box.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px;'
+    +'max-height:280px;overflow-y:auto;margin-bottom:10px;padding-right:2px';
+  box.innerHTML = card(!f, "frPick('')", noneThumb, '안 씀')
+    + FR_PRESETS.map(p=>card(cur===p.id, `frPick('${p.id}')`, thumbOf(p), esc(p.name))).join('');
   const fields=document.getElementById('frFields');
   if(fields) fields.style.display=f?'':'none';
   fillFrameFontSelects();
