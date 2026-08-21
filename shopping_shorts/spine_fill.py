@@ -402,6 +402,19 @@ def _measured(beats):
     return len(_sg.norm(" ".join(b["text"] for b in beats)))
 
 
+def _has_escalator(text):
+    """이 문장에 고조 연결어('심지어' 등)가 들어 있나 — script_gate에서 빌려 온다.
+
+    ★길이를 맞추려고 변형을 바꿀 때 **고조 문장을 갈아치우면 안 된다**(2026-08-21 실사고).
+      script_gate는 고조어가 **정확히 1회**일 것을 요구하는데, 다이소형은 그 1회가
+      price 칸에만 있다("심지어 {가격}밖에 안 해서"). 30초로 늘리려던 엔진이 그 칸을
+      더 긴 다른 변형으로 바꿔 고조가 0회가 됐고 게이트가 반려했다 —
+      **길이를 맞추려다 다른 규칙을 깬 것**이다.
+    """
+    from shopping_shorts import script_gate as _sg
+    return _sg._escalation(text or "") > 0
+
+
 def fill(spine, slots, seconds=None):
     """스파인 + 슬롯 → (beats, missing)
 
@@ -449,7 +462,12 @@ def fill(spine, slots, seconds=None):
             for t in ts:
                 if t == chosen[role]:
                     continue
-                new = len(fill_one(t, slots))
+                new_text = fill_one(t, slots)
+                # ★고조어 유무가 바뀌는 교체는 하지 않는다 — 개수가 1회에서 벗어나면
+                #   길이는 맞아도 게이트가 반려한다(위 _has_escalator 주석의 실사고).
+                if _has_escalator(new_text) != _has_escalator(fill_one(chosen[role], slots)):
+                    continue
+                new = len(new_text)
                 delta = new - cur
                 if n > hi and delta < 0 and n + delta >= lo and -delta > best_gain:
                     best, best_gain = (role, t), -delta
