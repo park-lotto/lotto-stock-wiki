@@ -547,6 +547,95 @@ def fill(spine, slots, seconds=None, seed=""):
     return _beats(), missing
 
 
+def fill_list(spine, slot_sets, seconds=None):
+    """**나열형** 조립 — 제품 N개를 순서대로 소개한다. (beats, missing)
+
+    ★왜 fill과 따로 두나(2026-08-21)
+      기존 8축은 전부 **제품 하나의 서사**(문제→발견→실증→결과)라 재료도 한 벌로
+      합쳐 쓴다(`merge_sul`). 리스트형은 정반대다 — 담긴 영상 **편마다 다른 제품**이고
+      그걸 각각 유지해야 한다. 같은 함수에 억지로 넣으면 두 규약이 한 곳에서 싸운다.
+      ⚠️`fill`은 한 줄도 건드리지 않았다 — 유튜브·인스타 8축 회귀 0.
+
+    ★실측 근거(전사 9편/6채널): "나만 몰랐던 쿠팡 꿀템 다섯 개 빠르게 알려드릴게요"
+      → "첫 번째 …입니다 / 두 번째 …입니다" 로 항목이 이어진다. 길이 51~75초.
+      서사가 없어 훅·CTA 말고는 전부 같은 모양의 항목 문장이다.
+
+    spine.beat_roles = ["intro", "item", "cta"] 처럼 **item 하나만** 적는다.
+    item은 slot_sets 개수만큼 반복된다(항목마다 그 편의 슬롯을 쓴다).
+    """
+    roles = list((spine or {}).get("beat_roles") or [])
+    templates = (spine or {}).get("templates") or {}
+    sets = [s for s in (slot_sets or []) if s]
+    if not sets:
+        return [], roles
+    ORDINALS = ("첫 번째", "두 번째", "세 번째", "네 번째", "다섯 번째",
+                "여섯 번째", "일곱 번째", "여덟 번째", "아홉 번째", "열 번째")
+    beats, missing = [], []
+    merged = {}
+    for st in sets:                       # intro·cta는 아무 편 재료나 쓸 수 있게 합쳐 둔다
+        for k, v in st.items():
+            merged.setdefault(k, v)
+    for role in roles:
+        if role != "item":
+            t = pick_template(templates.get(role), merged)
+            text = fill_one(t, merged) if t else ""
+            (beats.append({"role": role, "text": text}) if text else missing.append(role))
+            continue
+        for i, st in enumerate(sets[:len(ORDINALS)]):
+            # ★항목마다 **다른 변형**을 돌려 쓴다(2026-08-21 실측으로 추가).
+            #   전부 첫 변형을 쓰면 "…두고두고 쓰기 좋더라고요"가 항목마다 반복돼
+            #   조립 티가 그대로 난다.
+            #   ⚠️단, **슬롯을 가장 많이 쓰는 변형끼리만** 돌린다. 그냥 i%len으로 돌리면
+            #     재료가 다 있는데도 폴백(슬롯 적은 변형)이 걸려 "이건 동상 걱정 없는
+            #     건데"처럼 제품명이 빠진다(실측). 폴백은 재료가 모자랄 때만 걸려야 한다.
+            usable = usable_templates(templates.get("item"), st)
+            if usable:
+                _mx = max(len(slots_in(x)) for x in usable)
+                rich = [x for x in usable if len(slots_in(x)) == _mx]
+                t = rich[i % len(rich)]
+            else:
+                t = ""
+            if not t:
+                continue                  # 재료가 모자란 항목은 **건너뛴다**(빈칸을 내보내지 않는다)
+            text = fill_one(t, st)
+            if text:
+                beats.append({"role": "item%d" % (i + 1),
+                              "text": "%s %s" % (ORDINALS[i], text)})
+        if not any(b["role"].startswith("item") for b in beats):
+            missing.append("item")
+    # ★목표 초가 있으면 **항목 수를 거기 맞춰 자른다**(2026-08-21).
+    #   나열형은 길이를 항목 수가 정한다(실측: 3항목 24~30초 · 4항목 30~35초 ·
+    #   5항목 35~45초). 담긴 영상이 5편인데 20초를 시키면 넘칠 수밖에 없다 —
+    #   그때 **사장님이 고른 길이**를 지키고 항목을 줄이는 게 맞다(반대로 하면
+    #   "30초 시켰는데 50초가 나온다"는 그 사고가 다시 난다).
+    #   ⚠️최소 2항목은 남긴다 — 1개면 나열이 아니다.
+    if seconds and beats:
+        _lo, _hi = target_range(spine, seconds)
+        while _measured(beats) > _hi:
+            idx = [k for k, b in enumerate(beats) if b["role"].startswith("item")]
+            if len(idx) <= 2:
+                break
+            beats.pop(idx[-1])
+    return beats, missing
+
+
+def build_list_draft(spine, slot_sets, seconds=30, source_text=""):
+    """나열형 조립 → build_draft와 **같은 모양**의 결과(화면·게이트가 이미 다루는 형태)."""
+    from shopping_shorts import script_gate
+    beats, missing = fill_list(spine, slot_sets, seconds=seconds)
+    if missing or not beats:
+        return None
+    script = " ".join(b["text"] for b in beats)
+    checks, _full = script_gate.check(spine, beats, seconds=seconds,
+                                      facts_text=(source_text or ""))
+    return {
+        "beats": beats, "script": script, "hook": beats[0]["text"],
+        "checks": checks, "passed": script_gate.passed(checks), "tries": 0,
+        "style_id": spine.get("id"), "style_name": spine.get("name") or "",
+        "made_by": "조립",
+    }
+
+
 def coverage(spine, slots):
     """이 재료로 이 스파인의 몇 칸을 채울 수 있나 — (채운 수, 전체 수, 못 채운 역할).
     화면이 "재료가 모자라다"를 **미리** 말해줄 수 있게 하는 값이다
