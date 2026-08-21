@@ -6287,6 +6287,14 @@ _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
                    "/api/lens/search", "/api/lens/trace_url"}
 # GET만 무료(레퍼런스 랭킹 '조회') — POST/PUT 등 데이터변경은 같은 경로여도 차단.
 _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/api/thumb", "/api/video",
+                   # ★/api/media (2026-08-21). 랭킹 카드의 영상을 누르면 프론트가 이걸로
+                   #   재생용 mp4 주소를 받는다 — 하는 일은 주소 반환뿐이고 /api/video·
+                   #   /api/thumb과 같은 급인데 이것만 빠져 있었다. 그래서 "랭킹은 열어준다"
+                   #   면서 랭킹 화면에서 영상을 누르면 402가 났고, 사장님이 실제로 누른
+                   #   요청이라 잠금 안내까지 정상적으로 떴다(체험 계정 3명 실측).
+                   #   ⚠️ 랭킹 열람에 필요한 조회 API는 셋이 한 세트다 — 하나만 빼면
+                   #      화면이 반쯤 죽는다. 여기 넣고 뺄 땐 셋을 같이 본다.
+                   "/api/media",
                    "/api/channel/history",   # 채널 히스토리='지난 한 달' 조회 = 랭킹 열람의 연장(무료 허용)
                    # ★2026-08-17 마이페이지(/settings)로 /account를 합치면서 함께 연다.
                    #   안 열면 무료 등급이 자기 계정·포인트를 못 본다 —

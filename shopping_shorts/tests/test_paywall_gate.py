@@ -26,6 +26,11 @@ def test_ranking_only_blocked_helper():
     assert appmod._ranking_only_blocked("/account", "GET") is False   # 무료 등급도 자기 계정 열람
     assert appmod._ranking_only_blocked("/pricing", "GET") is False   # 요금 페이지 공개
     assert appmod._ranking_only_blocked("/api/thumb", "GET") is False
+    # ★랭킹 열람에 필요한 조회 3종은 한 세트다(2026-08-21). /api/media만 빠져 있어
+    #   랭킹 화면에서 영상을 누르면 402가 났다 — 체험 계정 3명이 잠금 안내를 봤다.
+    assert appmod._ranking_only_blocked("/api/video", "GET") is False
+    assert appmod._ranking_only_blocked("/api/media", "GET") is False
+    assert appmod._ranking_only_blocked("/api/media", "POST") is True   # 조회만 무료
     assert appmod._ranking_only_blocked("/static/app.js", "GET") is False
     assert appmod._ranking_only_blocked("/api/login", "POST") is False      # 로그인 폼=무료
     # 차단돼야 하는 것들
