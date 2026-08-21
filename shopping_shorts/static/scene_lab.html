@@ -19,7 +19,10 @@ body{margin:0;background:var(--bg);color:var(--ink);
 #topzone{flex:none}                 /* 타임프레임 — 맨 위 고정(가로로만 스크롤) */
 .wrap{flex:1;min-height:0}          /* 소스 — 남은 높이를 다 쓰고 여기서만 세로 스크롤 */
 footer{flex:none}
-header{padding:12px 18px;border-bottom:1px solid var(--line);display:flex;
+/* ★위아래 12 → 8px(2026-08-22 사장님 "이것들도 최대한 위쪽으로 · 스크롤 최소화").
+   머리글은 제목 한 줄뿐이라 여백을 줄여도 답답하지 않고, 줄인 8px이 그대로
+   아래 팔레트 높이가 된다. 0으로 만들지 않는다(4/8의 배수 유지). */
+header{padding:8px 18px;border-bottom:1px solid var(--line);display:flex;
        align-items:center;gap:18px;flex-wrap:wrap;background:var(--panel)}
 h1{font-size:16px;margin:0;font-weight:700}
 .sub{color:var(--dim);font-size:12px}
@@ -32,7 +35,8 @@ h1{font-size:16px;margin:0;font-weight:700}
 /* ★2026-08-16 사장님 배치: 맨 위 타임프레임이 **썸네일 왼쪽 끝부터 오른쪽 끝까지**
    전체 폭 한 줄. 그 아래가 [미리보기 + 영상조각]이다. 예전엔 여기가 2열이라
    타임프레임이 미리보기(300px) 옆에서 시작해 왼쪽 끝까지 안 갔다. */
-#topzone{display:block;margin:0 0 10px}
+/* 아래 여백 10 → 8px(2026-08-22 · 8의 배수). 타임프레임과 팔레트 사이는 한 칸이면 된다. */
+#topzone{display:block;margin:0 0 8px}
 #timeband{border:1px solid var(--line);border-radius:10px;background:var(--panel);
   margin:0;padding:8px 10px 10px;min-width:0}
 .tbhead{display:flex;align-items:baseline;gap:10px;font-size:12.5px;margin-bottom:7px;flex-wrap:wrap}
@@ -118,11 +122,15 @@ h1{font-size:16px;margin:0;font-weight:700}
    2026-08-16의 overflow:hidden은 영상이 남는 높이에 맞춰 줄던 시절의 짝이었다. */
 /* ★폭의 정의처는 scene_play.js PV_W 한 곳(--shorts-pv-w) — 제작소 레일과 같은 값을
    받아 어디서 재생돼도 미리보기 크기가 같다(2026-08-20). 폴백은 PV_W와 같아야 한다. */
-#playerhost{flex:0 0 var(--shorts-pv-w,440px);max-width:var(--shorts-pv-w,440px);overflow-y:auto;overflow-x:hidden;padding:14px 0 14px 14px;
+/* 위아래 padding 14 → 8px(2026-08-22 "최대한 위쪽으로") — 탭이 8px만큼 위로 온다.
+   왼쪽 14px은 그대로(팔레트와 붙지 않게 하는 가름선 역할). */
+#playerhost{flex:0 0 var(--shorts-pv-w,440px);max-width:var(--shorts-pv-w,440px);overflow-y:auto;overflow-x:hidden;padding:8px 0 8px 14px;
   display:flex;flex-direction:column;gap:8px;min-width:0;min-height:0}
 .pane.left{flex:1;min-width:0}
 .pane.rightcol{display:none}       /* 오른쪽 칼럼 폐지: 미리보기가 왼쪽으로 왔다 */
-.pane{overflow-y:auto;height:100%;padding:14px}
+/* 위아래 14 → 8px(2026-08-22 "최대한 위쪽으로"). 좌우는 14px 유지 — 카드가 상자
+   테두리에 붙으면 "모서리 한 줄"이 깨진다(사장님 정렬 기준). */
+.pane{overflow-y:auto;height:100%;padding:8px 14px}
 .pane.left{background:var(--panel);border:1px solid var(--line);border-radius:10px}
 .srcgroup{margin-bottom:18px}
 /* ★담을 칸 고정줄(2026-08-17 사장님 "영상2번 3번도 써야하는데 스크롤 내리면 다시 올라와야 돼서
@@ -174,8 +182,12 @@ h1{font-size:16px;margin:0;font-weight:700}
 .seg .cutbtn:hover{background:var(--warn);color:#3a2a08;transform:scale(1.04)}
 /* ★4:5로 자른다(2026-08-16). 9:16 그대로면 카드가 세로로 길어 한 화면에 9개뿐이라
    장면 30~50개를 훑으려면 스크롤이 끝없이 길어진다(실측: 팔레트 1821px = 화면의 1.8배).
-   여기선 "어떤 그림인지 알아보고 고르는" 게 목적이고, 전체 프레임은 재생으로 본다. */
-.seg img{width:100%;display:block;aspect-ratio:4/5;object-fit:cover}
+   여기선 "어떤 그림인지 알아보고 고르는" 게 목적이고, 전체 프레임은 재생으로 본다.
+   ★비율의 정의처는 --card-ar **한 곳**이다(2026-08-22). 위(.seg)만 4/5로 고치고
+     아래(.item)는 9/16으로 남겨둔 탓에 아래 팔레트만 계속 세로로 길었다 —
+     같은 판단을 두 군데 적으면 반드시 어긋난다(0순위-B). 값을 바꾸려면 여기만. */
+:root{--card-ar:4/5}
+.seg img{width:100%;display:block;aspect-ratio:var(--card-ar,4/5);object-fit:cover}
 .seg .meta{padding:6px 7px;font-size:12px;color:var(--ink);line-height:1.45;display:flex;flex-direction:column;gap:3px}
 /* 짧은 이름(2026-08-16) — "이 장면이 무엇을 하는가"를 한 줄로. 밑의 긴 묘사(.d)는
    2줄에서 잘려 안 읽히므로, 눈이 먼저 닿는 자리에 굵게 놓는다. 없으면 안 그린다. */
@@ -240,7 +252,11 @@ h1{font-size:16px;margin:0;font-weight:700}
 .item{position:relative;border:1px solid var(--line);border-radius:6px;overflow:hidden;
       background:#000;cursor:pointer}
 .item:hover{border-color:var(--accent)}
-.item img{width:100%;display:block;aspect-ratio:9/16;object-fit:cover}
+/* ★위 타임프레임 카드(.seg img)와 **같은 비율**을 쓴다(2026-08-22 사장님 "썸네일 크기를
+   위쪽 내 영상 전체 크기랑 동일하게"). 9:16이면 카드가 세로로 길어 팔레트가 화면의 몇
+   배로 늘어난다 — 위쪽은 이미 2026-08-16에 같은 이유로 4/5로 줄였는데 여기만 안 고쳐져
+   있었다(0순위-B). 비율은 --card-ar 한 곳에서 정한다(.seg img 위 주석 참조). */
+.item img{width:100%;display:block;aspect-ratio:var(--card-ar,4/5);object-fit:cover}
 .item .n{position:absolute;left:5px;top:5px;background:#000c;color:#fff;
       font-size:11.5px;font-weight:700;padding:2px 7px;border-radius:4px;z-index:2}
 .item .rep,.item .lng{position:absolute;right:5px;top:5px;font-size:10.5px;font-weight:700;
@@ -413,8 +429,11 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
          ※data-pane 값(draft/confirm)은 CSS·JS가 쓰는 키라 **바꾸지 마라** — 보이는
            글자만 바꾼다(이름과 배선을 함께 바꾸면 어디가 깨졌는지 못 가른다). -->
     <button type="button" class="pvTab on" data-pane="draft" onclick="pvTab('draft')">미리보기</button>
-    <button type="button" class="pvTab" data-pane="confirm" onclick="pvTab('confirm')" disabled
-            title="자막과 음성까지 얹은 진짜 결과 — 🎬 대본×영상믹스 확정을 누르면 만들어져요">자막+음성 완성본</button>
+    <!-- ★disabled를 뗐다(2026-08-22 사장님 "이거 2개는 삭제하고 … 이걸 누르면 랜더되는걸로").
+         예전엔 별도 [🎬 대본×영상믹스 확정] 버튼이 렌더를 걸고, 결과가 생겨야 이 탭이 열렸다.
+         이제 이 탭 자신이 **렌더 입구**다 — 언제나 누를 수 있어야 한다. -->
+    <button type="button" class="pvTab" data-pane="confirm" onclick="pvTab('confirm')"
+            title="자막과 음성까지 얹은 진짜 결과 — 누르면 만들어져요(20초쯤)">자막+음성 완성본</button>
   </div>
   <div class="lbl" style="display:flex;align-items:center;gap:14px"><button class="act play" id="pball" onclick="playAll(event)">▶️ 전체 재생</button><label style="cursor:pointer" title="전체에 적용: 장면마다 컷 하나씩, 멘트 시간을 길이 비례로 나눕니다."><input type="checkbox" onchange="toggleOne(this.checked)"> 1장=1컷</label></div>
   <!-- 재생 전 안내(2026-08-16) — 미리보기 칸이 통째로 비어 있으면 "여기가 뭐 하는
@@ -495,7 +514,26 @@ function pvTab(which){
     if (v) { try{ v.pause(); }catch(e){} }
   } else {
     try{ if (typeof stopPlay === 'function') stopPlay(); }catch(e){}   // 가조립 재생 정지
+    _askRender();                                    // ★탭이 렌더 입구다(2026-08-22)
   }
+}
+// ★'자막+음성 완성본' 탭이 렌더 입구다(2026-08-22 사장님 "이걸 누르면 랜더되는걸로").
+//   예전엔 별도 [🎬 대본×영상믹스 확정] 버튼이 있었는데 탭과 역할이 겹쳐 지웠다.
+//   ⚠️서버 렌더는 20초+ 걸리는 **유료** 작업이다 — 이미 만들어둔 게 있으면 다시 안 만든다.
+//   판정은 #confirmBody가 **비었는가** 하나로 한다. 로더가 도는 중이면 그 HTML이
+//   들어 있어 비지 않으므로, 실수로 탭을 두 번 눌러도 렌더가 두 번 돌지 않는다.
+//   ★부모를 찾을 때 _outerPlayer()를 쓰면 안 된다 — 그 함수는 부모가 좌측 레일
+//     (#mixPreviewRail)을 감췄으면 null을 준다. _RAIL_OFF=true라 평소 늘 감춰져 있어
+//     여기서 쓰면 렌더가 **영영 안 걸린다**. 여긴 "재생을 어디서 하나"가 아니라
+//     "부모에게 렌더를 시킨다"라서 판정 기준이 다르다(0순위-B: 다른 판단은 따로 둔다).
+function _askRender(){
+  var body = document.getElementById('confirmBody');
+  if (!body || body.innerHTML.trim()) return;        // 이미 있다(또는 만드는 중) — 그대로 본다
+  try{
+    var up = window.parent;
+    if (up && up !== window && typeof up.startPreview === 'function'){ up.startPreview(); return; }
+  }catch(e){ console.warn('렌더 요청 실패', e); }
+  body.innerHTML = '<div class="cfLoad">⚠️ 제작소 화면에서 열어야 만들 수 있어요</div>';
 }
 function _cfEnable(on){
   var b = document.querySelector('.pvTab[data-pane="confirm"]');
@@ -522,20 +560,24 @@ function showConfirmVideo(src){
   _cfEnable(true);
   pvTab('confirm');
 }
-// 재매칭 등으로 확정본이 무효가 됐다 — 탭을 잠그고 가조립으로 되돌린다.
+// 재매칭 등으로 확정본이 무효가 됐다 — **내용만 비우고** 가조립으로 되돌린다.
+// ★탭을 다시 잠그지 않는다(2026-08-22). 이제 이 탭이 렌더 입구라 항상 눌러야 한다.
+//   비워두면 다음에 탭을 누를 때 _askRender가 새로 렌더한다 — 의도한 동작이다.
+//   ⚠️비우는 것은 그대로 필수다: 안 비우면 새 매칭인데 **옛 영상**이 남는다.
 function clearConfirm(){
   var body = document.getElementById('confirmBody');
   if (body) body.innerHTML = '';
   var host = document.getElementById('playerhost');
   if (host) host.setAttribute('data-pane', 'draft');
   var b = document.querySelector('.pvTab[data-pane="confirm"]');
-  if (b){ b.disabled = true; b.classList.remove('on'); }
+  if (b) b.classList.remove('on');
   var d = document.querySelector('.pvTab[data-pane="draft"]');
   if (d) d.classList.add('on');
 }
 // ★window에 붙여야 부모가 부를 수 있다 — function 선언은 window 속성이 되지만
 //   명시해 둔다(이 저장소에서 let/const 전역을 바깥에서 못 읽어 사고가 난 전례가 있다).
 window.pvTab = pvTab;
+window._askRender = _askRender;
 window.showConfirmLoading = showConfirmLoading;
 window.showConfirmVideo = showConfirmVideo;
 window.clearConfirm = clearConfirm;
