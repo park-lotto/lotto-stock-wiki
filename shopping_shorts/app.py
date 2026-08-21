@@ -5739,7 +5739,12 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
             functools.partial(search_similar_videos, image_url,
                               api_key=_lens_api_keys(cid),
                               source_caption=source_caption, stats=diag))
-        items = _lens_finalize(rows, store)
+        # ★채점(Gemini)은 **블로킹**이다 → to_thread. 여기서 그냥 부르면 이벤트루프가
+        #   몇 초 멈춰, 프론트가 동시에 던진 /api/lens/cn/keywords가 뒤에서 굶는다
+        #   (위 SerpApi·비전 호출과 같은 이유). 채점을 끝낸 뒤 _lens_finalize엔
+        #   caption=None으로 넘겨 **두 번 채점하지 않는다**.
+        await asyncio.to_thread(_lens_judge, rows, source_caption)
+        items = _lens_finalize(rows, store, caption=None)
         store.bump_lens(month)
         # diag: 인스타 결과가 0/왕창으로 튀는 이유를 화면에서 갈라 보기 위한 계측(2026-08-14).
         return {"ok": True, "items": items, "count": len(items), "diag": diag}
@@ -5762,7 +5767,31 @@ _IG_SC_RE = re.compile(r"instagram\.com/(?:reel|reels|p|tv)/([A-Za-z0-9_-]+)")
 _LENS_DURFILL_LAST = 0.0   # 렌즈발 길이 백필 예약 게이트(10분) — _DURFILL_LAST와 같은 결
 
 
-def _lens_finalize(items, store):
+def _lens_judge(items, caption):
+    """렌즈 결과에 AI 유사도 채점을 얹는다(sim/match). 실패·불가 시 조용히 그대로 둔다.
+
+    왜(2026-08-21 사장님 "검색 정확도가 떨어진 것 같다"): 샤오홍슈·도우인(/api/lens/cn)과
+    유튜브(/api/lens/yt)는 이미 judge_same_product로 채점하는데 **메인 렌즈에만 없었다**.
+    그래서 렌즈 본 결과의 match는 lens_discover._title_matches(캡션 2자 토큰이 제목에
+    부분포함되면 True)에만 의존했다 — 오탐이 쉽고, 중국어·영어 제목은 아예 안 맞아
+    False가 되니 프론트 '⚠️ 다른주제 숨기기'를 기본 꺼둘 수밖에 없었다.
+    같은 함수를 그대로 쓴다(0순위-B: 판정을 새로 짜지 않는다).
+
+    ★부가기능이다 — 채점이 비거나 터져도 렌즈 결과는 그대로 산다."""
+    if not items or not (caption or "").strip():
+        return                      # 기준이 없으면 채점 자체가 무의미 → Gemini 호출 안 함
+    try:
+        verdicts = judge_same_product(caption, [i.get("title", "") for i in items])
+    except Exception:               # noqa: BLE001 — 채점 실패로 검색을 죽이지 않는다
+        return
+    if len(verdicts) != len(items):
+        return                      # 개수가 어긋나면 짝이 밀린다 → 통째로 버린다
+    for it, vd in zip(items, verdicts):
+        it["sim"] = vd
+        it["match"] = True if vd == "same" else (False if vd == "no" else None)
+
+
+def _lens_finalize(items, store, caption=""):
     try:
         sc_of = {}
         for it in items:
@@ -5797,7 +5826,15 @@ def _lens_finalize(items, store):
         import sys as _sys
         import traceback as _tb
         _tb.print_exc(file=_sys.stderr)
-    items.sort(key=lambda i: 0 if i.get("platform") == "instagram" else 1)
+    # ★채점은 정렬 **전에** 한다 — sim이 있어야 관련도순으로 세울 수 있다.
+    #   caption=None이면 호출부가 이미 채점을 끝냈다는 뜻(async 경로가 스레드에서 먼저 돌린다).
+    if caption is not None:
+        _lens_judge(items, caption)
+    # 정렬 키 2개: ①관련도(same→similar/미채점→no) ②같은 관련도면 인스타 먼저.
+    #   채점이 없으면(캡션 없음·실패) 모두 같은 1등급이 되어 **종전 인스타 우선 그대로**다.
+    _rank = {"same": 0, "similar": 1, "no": 2}
+    items.sort(key=lambda i: (_rank.get(i.get("sim"), 1),
+                              0 if i.get("platform") == "instagram" else 1))
     return items
 
 
@@ -5895,7 +5932,7 @@ def api_lens_trace_url(request: Request, body: dict):
                 "ok": False, "error": "영상/썸네일을 가져오지 못했습니다(봇차단·만료·미지원 URL)"})
         items = _lens_finalize(
             search_similar_videos(image_url, api_key=_lens_api_keys(cid),
-                                  source_caption=caption), store)
+                                  source_caption=caption), store, caption=caption)
         # 📕🎬 중국앱 키워드 후보(비전). 렌즈 유사영상은 프론트가 프레임으로 뽑지만 trace는
         # 프레임이 서버에만 있다(유튜브는 아예 썸네일 URL·caption 없음) → 서버가 image_url에서
         # 바이트를 받아 직접 만든다. cn_search_candidates는 image_bytes가 없으면 빈 리스트라

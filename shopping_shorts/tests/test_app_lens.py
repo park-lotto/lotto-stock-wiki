@@ -469,3 +469,92 @@ def test_lens_month_limit_scales_with_keys(tmp_path, monkeypatch):
     assert appmod._lens_month_limit(s) == per           # 키 0개여도 최소 1키분
     s.set_setting("lens_month_limit", "50")
     assert appmod._lens_month_limit(s) == 50            # 설정 override 우선
+
+
+# ── /api/lens/search 유사도 채점 (2026-08-21) ────────────────────────────
+# 왜: 샤오홍슈·도우인(/api/lens/cn)과 유튜브(/api/lens/yt)엔 judge_same_product가
+#     붙어 있는데 **메인 렌즈에만 빠져 있었다**. 그래서 렌즈 본 결과는 옛 문자열
+#     매칭(_title_matches: 2자 토큰 부분포함)에만 의존했고, 프론트의
+#     '⚠️ 다른주제 숨기기'가 거의 못 걸렀다. 같은 함수를 그대로 쓴다(0순위-B).
+
+def test_lens_search_채점되면_무관한것이_match_False로_표시된다(tmp_path, monkeypatch):
+    """메인 렌즈도 AI 유사도 채점을 받는다 — ⚠️다른주제 배지가 정확해진다."""
+    items = [
+        {"platform": "instagram", "url": "https://www.instagram.com/reel/AAA/",
+         "title": "물총 리뷰", "match": None},
+        {"platform": "instagram", "url": "https://www.instagram.com/reel/BBB/",
+         "title": "코스피 시황", "match": None},
+    ]
+    c, _ = _client(tmp_path, monkeypatch, items=items)
+    monkeypatch.setattr(appmod, "judge_same_product", lambda p, t: ["same", "no"])
+    d = c.post("/api/lens/search", files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_caption": "물총"}).json()
+    byurl = {i["url"]: i for i in d["items"]}
+    assert byurl["https://www.instagram.com/reel/AAA/"]["match"] is True
+    assert byurl["https://www.instagram.com/reel/BBB/"]["match"] is False   # ★프론트가 거른다
+    assert byurl["https://www.instagram.com/reel/AAA/"]["sim"] == "same"
+
+
+def test_lens_search_관련도순_정렬되고_인스타우선은_유지된다(tmp_path, monkeypatch):
+    """정렬 키 2개: ①관련도(same→similar→no) ②같은 관련도면 인스타 먼저.
+
+    기존 동작(인스타 우선)을 깨지 않으면서 관련도를 **위 순위**로 얹는다."""
+    items = [
+        {"platform": "instagram", "url": "https://www.instagram.com/reel/NO/",
+         "title": "무관", "match": None},
+        {"platform": "youtube", "url": "https://youtu.be/SAME", "title": "딱 그것", "match": None},
+        {"platform": "instagram", "url": "https://www.instagram.com/reel/SAME/",
+         "title": "딱 그것 인스타", "match": None},
+    ]
+    c, _ = _client(tmp_path, monkeypatch, items=items)
+    monkeypatch.setattr(appmod, "judge_same_product", lambda p, t: ["no", "same", "same"])
+    d = c.post("/api/lens/search", files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_caption": "물총"}).json()
+    urls = [i["url"] for i in d["items"]]
+    # same 둘이 앞, 그 안에서 인스타가 유튜브보다 먼저, no는 맨 뒤
+    assert urls == ["https://www.instagram.com/reel/SAME/",
+                    "https://youtu.be/SAME",
+                    "https://www.instagram.com/reel/NO/"]
+
+
+def test_lens_search_채점실패해도_결과는_그대로_나온다(tmp_path, monkeypatch):
+    """채점이 빈 배열(키 소진·모델 실패)이면 기존 동작 그대로 — 결과를 죽이지 않는다."""
+    items = [
+        {"platform": "youtube", "url": "https://youtu.be/x", "title": "a", "match": None},
+        {"platform": "instagram", "url": "https://www.instagram.com/reel/CCC/",
+         "title": "b", "match": None},
+    ]
+    c, _ = _client(tmp_path, monkeypatch, items=items)
+    monkeypatch.setattr(appmod, "judge_same_product", lambda p, t: [])
+    d = c.post("/api/lens/search", files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_caption": "물총"}).json()
+    assert d["count"] == 2
+    assert d["items"][0]["platform"] == "instagram"      # 폴백 = 종전 인스타 우선 정렬
+
+
+def test_lens_search_채점이_예외를_던져도_검색은_산다(tmp_path, monkeypatch):
+    """채점은 부가기능이다 — 터져도 렌즈 결과를 통째로 죽이면 안 된다."""
+    items = [{"platform": "instagram", "url": "https://www.instagram.com/reel/DDD/",
+              "title": "a", "match": None}]
+    c, _ = _client(tmp_path, monkeypatch, items=items)
+
+    def _boom(p, t):
+        raise RuntimeError("gemini down")
+    monkeypatch.setattr(appmod, "judge_same_product", _boom)
+    d = c.post("/api/lens/search", files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_caption": "물총"}).json()
+    assert d["ok"] is True and d["count"] == 1
+
+
+def test_lens_search_캡션없으면_채점을_아예_안_부른다(tmp_path, monkeypatch):
+    """기준 제품이 없으면 채점은 무의미하다 — 헛돈(Gemini 호출)을 쓰지 않는다."""
+    called = []
+    items = [{"platform": "instagram", "url": "https://www.instagram.com/reel/EEE/",
+              "title": "a", "match": None}]
+    c, _ = _client(tmp_path, monkeypatch, items=items)
+    monkeypatch.setattr(appmod, "judge_same_product",
+                        lambda p, t: called.append(1) or ["same"])
+    d = c.post("/api/lens/search",
+               files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")}).json()   # 캡션 없음
+    assert d["ok"] is True
+    assert called == []          # ★한 번도 안 불렀다
