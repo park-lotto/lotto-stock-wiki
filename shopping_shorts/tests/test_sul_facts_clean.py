@@ -59,3 +59,19 @@ class TestCleanShort:
         else:
             assert "origin_country" not in out
             assert out.get("product_name") == "구명 팔찌"
+
+
+class TestEmptyWords:
+    """'값이 없다'를 **글자로** 답하는 경우 — 짧아서 길이 필터엔 안 걸린다.
+
+    2026-08-21 실측: 오염 필터를 넣고 재추출했더니 `origin_country = 'null'`이 남았다.
+    4자라 그냥 통과했고, 그대로면 "null에서 바이럴이 터지며 매출이 폭발했다는데"가 나간다.
+    """
+
+    def test_빈값_표현을_버린다(self):
+        for v in ("null", "None", "N/A", "없음", "미상", "unknown", '"null"'):
+            assert SF._clean_short(v, 12) == "", "빈값 표현이 통과했다: %r" % v
+
+    def test_국가명은_그대로_통과한다(self):
+        for v in ("한국", "중국", "미국", "일본", "독일", "프랑스"):
+            assert SF._clean_short(v, 12) == v
