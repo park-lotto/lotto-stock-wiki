@@ -11223,7 +11223,12 @@ def api_seo_generate(body: dict):
     captions = body.get("captions") or []
     stats = body.get("keyword_stats") or []
 
-    seo = seo_generate.generate(job, captions=captions, only=only,
+    # ★SEO도 **영상이 말하는 대본**으로 짓는다(2026-08-21). 종전엔 job.given_script
+    #   (1단계 원본)를 그대로 봐서, 3단계에서 후보를 고르거나 대본을 고쳐도 제목·설명·
+    #   해시태그가 옛 원본 기준으로 나왔다 — 썸네일이 2026-07-26에 겪은 그 사고와 같은 구조.
+    job_for_seo = dict(job)
+    job_for_seo["given_script"] = _video_script(job)
+    seo = seo_generate.generate(job_for_seo, captions=captions, only=only,
                                 locked=locked, keyword_stats=stats)
     if not seo:
         return JSONResponse(status_code=502, content={"ok": False, "error": "생성 실패"})
@@ -11234,6 +11239,22 @@ def api_seo_generate(body: dict):
     seo["keyword_stats"] = stats
     seo["generated_at"] = datetime.now(timezone.utc).isoformat()
     return {"seo": seo}
+
+
+def _video_script(job, screen_script=""):
+    """★영상이 **실제로 말하는** 대본 — 판단은 여기 한 곳(0순위-B).
+
+    고른 후보(edit_plan)의 beat 나레이션이 진실의 축이다. job.given_script는 1단계 원본이라
+    3단계에서 후보를 고르거나 대본을 고치면 영상과 달라진다.
+    2026-07-26 실사고: 썸네일 제목이 원본을 보고 지어져 **세탁 영상에 '다이소 큐티클' 네일
+    제목**이 나왔다. 그때 썸네일만 고쳤고, 같은 계산이 SEO에는 없어서 8단계 제목·설명·
+    해시태그는 여전히 옛 원본으로 지어지고 있었다(2026-08-21 점검에서 발견).
+    edit_plan이 없으면(구 흐름) 화면 대본 → 원본 순으로 폴백한다."""
+    plan_script = " ".join(
+        (b.get("narration") or "").strip()
+        for b in ((job.get("edit_plan") or {}).get("beats") or [])
+    ).strip()
+    return plan_script or (screen_script or "").strip() or (job.get("given_script") or "").strip()
 
 
 @app.post("/api/produce/thumb/titles")
@@ -11257,12 +11278,8 @@ def api_thumb_titles(body: dict):
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     screen_script = (body.get("script") or "").strip()
     job_script = (job.get("given_script") or "").strip()
-    # 영상이 실제로 말하는 대본 = 고른 후보(edit_plan)의 beat 나레이션을 이어붙인 것.
-    plan_script = " ".join(
-        (b.get("narration") or "").strip()
-        for b in ((job.get("edit_plan") or {}).get("beats") or [])
-    ).strip()
-    used_script = plan_script or screen_script or job_script
+    # 영상이 실제로 말하는 대본 — 계산은 _video_script 한 곳(SEO도 같은 것을 본다).
+    used_script = _video_script(job, screen_script)
     if not used_script:
         return JSONResponse(status_code=422, content={
             "ok": False, "error": "대본이 비어 있어요 — 1단계에서 대본을 확정하세요"})
