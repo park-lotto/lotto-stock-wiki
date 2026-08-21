@@ -1264,12 +1264,60 @@ def _trim_all_beats(beats):
     return beats
 
 
+def _pin_by_src_video(beats, groups):
+    """항목이 **자기 영상**의 화면을 갖도록 못박는다(2026-08-21, 나열형).
+
+    ★왜 필요한가 — 실측으로 드러났다
+      `_assign_timeline`은 비트를 그룹에 **위치순**으로 나눠 준다. 담긴 영상이 곧
+      순서인 서사형(8축)에선 그게 정답이지만, 나열형은 항목마다 **다른 제품**이라
+      말과 화면이 짝지어져야 한다. intro·cta가 그룹 자리를 한 칸씩 밀어서
+      실측 3항목 중 2항목이 남의 제품 화면을 달았다(신발건조기 말에 우산 화면).
+
+    `src_video`를 선언한 비트에만 적용한다 — 그걸 다는 건 `spine_fill.fill_list`
+    뿐이라 다른 갈래의 동작은 한 줄도 안 바뀐다. 못박은 비트는 `screen_pinned`로
+    표시해 뒤따르는 인덱스 분배에서 빠진다(CTA 핀과 같은 장치를 쓴다).
+
+    그 영상의 세그가 하나도 없으면 **못박지 않고 표시를 남긴다**(조용한 폴백 금지) —
+    화면이 어긋난 채 나가는 것보다 어긋났다는 사실이 보이는 게 낫다.
+    """
+    # 영상 id를 뽑는 규칙은 backbone 한 곳에만 있다(0순위-B) — 여기서 다시 적지 않는다.
+    from shopping_shorts.backbone import _vid_of as _backbone_vid
+    want = [b for b in beats if b.get("src_video")]
+    if not want or not groups:
+        return beats
+    by_vid = {}
+    for g in groups:
+        for seg in g:
+            by_vid.setdefault(_backbone_vid(seg), []).append(seg)
+    used = set()
+    for b in want:
+        segs = [s for s in by_vid.get(b.get("src_video")) or []
+                if s.get("seg_id") not in used]
+        if not segs:
+            # 이 항목의 영상에서 쓸 화면이 없다 — 아래 인덱스 분배에 맡기되 흔적을 남긴다.
+            b["src_video_miss"] = True
+            print("나열형 화면: %s 의 화면을 못 찾았다(항목=%s)"
+                  % (b.get("src_video"), (b.get("narration") or "")[:20]))
+            continue
+        segs = _order_clips_by_words(b.get("narration") or "", segs)
+        pick = segs[0]
+        used.add(pick.get("seg_id"))
+        rest = _trim_rest_to_narration(b, pick, [s for s in segs if s is not pick])
+        b["primary"] = dict(pick)
+        b["alternates"] = [dict(s) for s in rest]
+        b["screen_pinned"] = True
+        _flag_offtopic(b, [pick] + rest)
+    return beats
+
+
 def _pin_screens(beats, groups):
     """화면 확정의 단일 관문(0순위-B: 같은 판단은 한 곳에서만).
 
     모델 배정이 불변식을 지키면 **그대로 존중**(대사-화면 결합 보존, offtopic 플래그만
     갱신), 아니면 종전 그대로 시간 등분(_assign_timeline). SCENE_BINDING=0으로 즉시
     종전 동작 복귀."""
+    # ★항목↔영상 못박기를 **먼저** 한다 — 아래 두 갈래 중 어디로 가든 지켜져야 한다.
+    beats = _pin_by_src_video(beats, groups)
     if os.getenv("SCENE_BINDING", "1") != "0" and _model_binding_ok(beats, groups):
         for b in beats:
             _flag_offtopic(b, [c for c in [b.get("primary")] + list(b.get("alternates") or []) if c])
