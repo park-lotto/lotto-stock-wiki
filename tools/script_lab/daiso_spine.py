@@ -35,7 +35,7 @@ DAISO_INSIDER = {
     #   저쪽이 안 고친 이유는 이 파일이 다른 트랙 소유라서다(0순위-B: 두 군데서 정하지 않는다).
     #   여기가 정본이고 scripts/seed_daiso_spine.py가 이 값을 읽어가므로 한 줄만 고치면 DB까지 간다.
     "chars_per_30s": 297,          # 다이소지목축 62편 실측 중앙값
-    "fit_categories": ["홈템"],
+    "fit_categories": ["홈템", "뷰티"],   # 뷰티 추가(2026-08-21): 뷰티 소재 87편 중 다이소지목이 20편
     "no_cta": False,               # ★인스타는 CTA가 본체다(댓글률 2.35% vs 유튜브 0.005%)
     "beat_roles": ["hook", "problem", "reveal", "proof", "demo", "result", "price", "cta"],
     "templates": {
