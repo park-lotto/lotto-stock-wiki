@@ -1096,7 +1096,9 @@ function renderBand(){
                  ondrop="beatDrop(${i}, event)"
                  title="누르면 재생 · 아래 소스를 끌어다 놓거나 두 번 클릭하면 이 칸에 담깁니다">
         <div class="h"><b>${i+1}. ${b.role || '칸'}</b><span class="d ${
-             lack > 0.1 ? (stretching ? 'dwarn' : 'dbad') : 'dok'}" title="${
+             lack > 0.1 ? (stretching ? 'dwarn' : 'dbad')
+             : f.over > 0.1 ? 'dwarn'      /* 남는 재료도 노란불 — 담았는데 안 나오는 상태다 */
+             : 'dok'}" title="${
              f.empty
                ? `이 칸엔 장면이 없어 자막 ${need.toFixed(1)}초 동안 화면이 비어 있습니다. 아래 소스에서 장면을 담아주세요.`
                : lack > 0.1
@@ -1107,7 +1109,12 @@ function renderBand(){
                    + (f.over > 0.1 ? ` 남는 ${f.over.toFixed(1)}초는 안 나옵니다.` : '')
              }">${have.toFixed(1)}/${need.toFixed(1)}초${
              f.empty ? ' · 장면 없음'
-               : lack > 0.1 ? (stretching ? ' · 늘려 채움' : ` · ${lack.toFixed(1)}초 모자람`) : ''}</span>${sel === i ? '<span class="picked">여기에 담깁니다</span>' : ''}
+               : lack > 0.1 ? (stretching ? ' · 늘려 채움' : ` · ${lack.toFixed(1)}초 모자람`)
+               // ★남는 재료도 말해준다(2026-08-21 사장님 실측 job a1765d7766e5: CTA 칸에
+               //   2.7초 말하는데 9.2초를 담아 6.5초가 안 나왔다. 잡 전체로 45.1초 중
+               //   11.8초가 버려졌다). 종전엔 '모자람'만 뜨고 '남음'은 툴팁에만 있어,
+               //   담아도 안 나온다는 사실을 화면에서 알 길이 없었다.
+               : f.over > 0.1 ? ` · ${f.over.toFixed(1)}초는 안 나와요` : ''}</span>${sel === i ? '<span class="picked">여기에 담깁니다</span>' : ''}
           <span class="tbtools" onclick="event.stopPropagation()">
             <label title="재료가 모자랄 때 마지막 컷만 늘리지 않고 전체를 고르게 늘립니다"><input type="checkbox" ${STRETCH[i] ? 'checked' : ''} onchange="toggleStretch(${i}, this.checked)"> 늘려 채우기</label>
             <!-- ★칸 순서 바꾸기(◀▶)를 뺐다(2026-08-17 사장님 "필요없는 기능이고 그자리에
