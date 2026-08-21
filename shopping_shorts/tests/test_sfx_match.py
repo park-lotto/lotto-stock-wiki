@@ -24,8 +24,41 @@ def _sfx(aid, role, subject="x", keywords=None):
 
 # ── _sfx_position ──────────────────────────────────────────────
 
-def test_sfx_position_hook_is_first():
-    assert scene_match._sfx_position("hook") == "first"
+def test_sfx_position_hook_is_transition():
+    """훅은 **다음 칸으로 넘어가는 순간**이 기본이다(2026-08-21 사장님 "훅에서 다음
+    넘어가거나 이럴때"). 종전 기본은 "first"(칸 시작)였는데, 이븐쇼핑류는 장면이
+    바뀌는 지점에 효과음을 얹는다 — 그쪽이 사장님이 만들려는 결이다.
+    사람이 칸마다 바꿀 수 있으므로 여기 값은 어디까지나 **기본값**이다."""
+    assert scene_match._sfx_position("hook") == "transition"
+
+
+def test_sfx_positions_통제어휘():
+    """렌더(video_assemble)가 이 이름들로 실제 초를 계산한다 — 한쪽만 늘리면
+    조용히 기본값(last)으로 떨어진다."""
+    assert set(scene_match.SFX_POSITIONS) == {"first", "last", "transition"}
+
+
+def test_사람이_고른_효과음은_재매칭이_안_덮는다():
+    """재매칭은 대본이 바뀔 때마다 도는데 덮으면 '바꿨는데 그대로'가 된다."""
+    plan = {"beats": [{"beat_idx": 0, "role": "hook", "narration": "훅 문장",
+                       "sfx": {"asset_id": 99, "match_type": "manual", "position": "first"}}]}
+    out = scene_match.match_sfx(plan, [_sfx(7, "훅")])
+    assert out["beats"][0]["sfx"] == {"asset_id": 99, "match_type": "manual",
+                                      "position": "first"}
+
+
+def test_렌더가_전환_타점을_칸_끝으로_계산한다():
+    """position 이름을 실제 초로 옮기는 지점. 전체 렌더는 ffmpeg가 필요해 소스로 확인한다."""
+    import pathlib
+    import re
+    src = (pathlib.Path(__file__).resolve().parents[1]
+           / "video_assemble.py").read_text(encoding="utf-8")
+    m = re.search(r'pos = sfx\.get\("position"\)(.*?)sfx_events\.append', src, re.S)
+    assert m, "타점 분기를 찾지 못했다"
+    body = m.group(1)
+    assert 'pos == "first"' in body and "offset = 0.0" in body
+    assert 'pos == "transition"' in body and 'offset = b["dur"]' in body
+    assert "sum(seg_durs[:-1])" in body, "기본(last) 계산이 사라졌다"
 
 
 def test_sfx_position_others_are_last():
@@ -67,7 +100,7 @@ def test_match_sfx_places_by_role():
     sfx = out["beats"][0]["sfx"]
     assert sfx["asset_id"] == 7
     assert sfx["match_type"] == "role"
-    assert sfx["position"] == "first"   # hook → first
+    assert sfx["position"] == "transition"   # hook → 다음 칸으로 넘어가는 순간(2026-08-21)
 
 
 def test_match_sfx_non_hook_position_last():
