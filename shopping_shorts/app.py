@@ -526,6 +526,10 @@ async def api_yt_relay_deliver(req_id: str, key: str = Form(""),
 # 여기 없는 값이 들어오면 화면 필터(TOPIC_CTYPE)에서 매핑이 없어 어느 버튼에도 안 뜬다.
 _PINNABLE_CATEGORIES = ("홈템", "레시피", "뷰티", "기타")   # 2026-07-31 가전→홈템 병합
 
+# 기계용 이름 중 **화면에 보여줄 것**만 표시명으로 (2026-08-21).
+# 다이소는 소재 분류는 아니지만 사장님·고객이 바로 아는 말이라 배지에 띄운다.
+_TOPIC_DISPLAY = {"다이소형": "다이소"}
+
 _VISION_TAG_CAP = 60  # 1회 수집당 새 태깅 상한(비용 가드). 초과분은 다음 수집 때.
 _TRANSLATE_CAP = 40      # 수집직후 백그라운드 소재 번역(_translate_new_subjects, Task3)의 1회 상한. 이 엔드포인트는 안 씀.
 _TRANSLATE_MAXLEN = 40   # 번역 요청 소재 길이 상한(비정상 입력 방어).
@@ -11459,7 +11463,12 @@ def api_script_styles(request: Request, category: str = None, job: str = None):
         #   fit_categories에는 **기계용 이름**(지인증언형·오용형…)과 **사람이 고르는 소재**
         #   (홈템·레시피·뷰티·기타)가 섞여 있다 — 소재만 갈라 보낸다.
         #   ⚠️가르는 목록을 화면에 또 적지 않는다(0순위-B). 서버 상수가 정본이다.
-        fit_topics = [x for x in fits if x in _PINNABLE_CATEGORIES]
+        # ★'다이소형'은 기계용 이름이지만 **사람도 아는 말**이라 배지에 보여준다
+        #   (2026-08-21 사장님: "다이소형으로 바꿔주고"). 다른 기계용 이름
+        #   (지인증언형·정체의문형…)은 내부 라벨이라 화면에 내보내지 않는다.
+        #   ⚠️_PINNABLE_CATEGORIES 자체는 건드리지 않는다 — categorize가 쓰는 정본이다.
+        fit_topics = [_TOPIC_DISPLAY.get(x, x) for x in fits
+                      if x in _PINNABLE_CATEGORIES or x in _TOPIC_DISPLAY]
         out.append({
             "id": s["id"], "name": s["name"], "situation_type": s["situation_type"],
             "beat_roles": s["beat_roles"], "chars_per_30s": s["chars_per_30s"],
