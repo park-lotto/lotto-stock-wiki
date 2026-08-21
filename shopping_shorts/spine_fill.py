@@ -484,6 +484,17 @@ def _has_escalator(text):
     return _sg._escalation(text or "") > 0
 
 
+def _opening(t):
+    """문장의 도입부(첫 어절) — 앞 칸과 같은 말로 열리는지 보려는 것.
+
+    실측(2026-08-21): 효과 칸 "더 소름 돋는 건…" 바로 다음 고조 칸 "더 대박인 건…" —
+    연속 두 칸이 같은 말로 열려 리듬이 죽고 "아까 한 말 또 하네"로 읽힌다.
+    변형을 늘리면서 생긴 문제다 — 후보가 많아지면 이런 조합도 같이 늘어난다.
+    """
+    w = (t or "").strip().split(" ")
+    return w[0] if w else ""
+
+
 def _rotate_idx(seed, role, n):
     """이 job·이 칸에서 몇 번째 변형으로 시작할까 — 0..n-1.
 
@@ -516,6 +527,7 @@ def fill(spine, slots, seconds=None, seed=""):
     roles = list((spine or {}).get("beat_roles") or [])
     templates = (spine or {}).get("templates") or {}
     cands, chosen, missing = {}, {}, []
+    _prev_open = ""      # 바로 앞 칸의 도입부(같은 말로 연속해 열지 않게)
     for role in roles:
         ts = usable_templates(templates.get(role), slots)
         # 채워 넣었을 때 실제로 글자가 남는 후보만(빈 문장은 못 쓴다)
@@ -525,7 +537,17 @@ def fill(spine, slots, seconds=None, seed=""):
             continue
         cands[role] = ts
         # seed가 없으면 ts[0] — 종전과 완전히 같다(회귀 0). 있으면 job마다 다른 변형에서 시작.
-        chosen[role] = ts[_rotate_idx(seed, role, len(ts))]
+        _pick = ts[_rotate_idx(seed, role, len(ts))]
+        # ★앞 칸과 같은 말로 열리면 다른 변형으로 돌린다(없으면 그대로 둔다).
+        if _prev_open and _opening(_pick) == _prev_open:
+            _base = _rotate_idx(seed, role, len(ts))
+            for _k in range(1, len(ts)):
+                _alt = ts[(_base + _k) % len(ts)]
+                if _opening(_alt) != _prev_open:
+                    _pick = _alt
+                    break
+        chosen[role] = _pick
+        _prev_open = _opening(_pick)
 
     def _beats():
         return [{"role": r, "text": fill_one(chosen[r], slots)}
