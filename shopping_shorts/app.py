@@ -10557,7 +10557,14 @@ def _extract_beat_frame(work, beat, out_path, clean_sources=None):
     살아있던 버그 수정(2026-07-21 사장님 제보). 최종렌더·캡컷·썸네일은 이미 청소본을
     쓰는데(app.py:2145·2214) 이 미리보기 프레임만 원본 glob을 써서 자막이 남았었다."""
     import subprocess
-    pr = beat.get("primary") or {}
+    # ★3단계에서 편성한 화면(scene_override)이 있으면 **그 첫 조각**이 이 칸의 첫 화면이다
+    #   (2026-08-21 사장님 "3단계 렌더에선 괜찮았는데 꾸미기 오니까 화면이 왜 이러지").
+    #   종전엔 primary(AI 원본)만 봐서, 편성을 바꾼 칸은 3단계와 **다른 그림**이 떴다.
+    #   실측 job b4a571f559f7: 7번 칸 primary=s2 8.6초(깨진 프레임) / 편성=s1 21.1초(정상).
+    #   재료를 고르는 판단은 video_assemble._beat_material 한 곳에 있다 — 그것을 그대로 쓴다
+    #   (렌더·미리보기가 같은 함수를 봐야 두 화면이 안 갈린다).
+    _segs = video_assemble._beat_material(beat)
+    pr = (_segs[0] if _segs else beat.get("primary")) or {}
     vid = pr.get("video_id")
     ss = float(pr.get("start") or 0)
     src = None
@@ -10616,7 +10623,12 @@ def api_produce_mix_beatframe(job_id: str, i: int):
     # 분리(_clean)해, 자막제거 전에 캐시된 원본 프레임이 남아 미리보기에 지운 자막이 살아
     # 있는 것처럼 보이는 캐시 오염을 막는다(2026-07-21 제보).
     clean_map = job.get("clean_sources") or {}
-    out = work / "beatframes" / f"{i}{'_clean' if clean_map else ''}.jpg"
+    # ★캐시 이름에 **그 칸이 실제로 쓰는 소스·시각**을 넣는다(2026-08-21). 종전엔 칸 번호만
+    #   써서, 3단계에서 편성을 바꿔도 옛 프레임이 그대로 나왔다(조용한 어긋남).
+    _seg0 = (video_assemble._beat_material(beats[i]) or [beats[i].get("primary") or {}])[0] or {}
+    _key = f"{_seg0.get('video_id') or '-'}@{round(float(_seg0.get('start') or 0), 2)}"
+    _key = re.sub(r"[^0-9a-zA-Z@.\-]", "_", _key)
+    out = work / "beatframes" / f"{i}_{_key}{'_clean' if clean_map else ''}.jpg"
     if not out.exists():
         _extract_beat_frame(work, beats[i], out, clean_sources=clean_map)
     if not out.exists():
