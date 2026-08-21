@@ -11356,6 +11356,7 @@ def _spine_cover(sp, sources, store, job_id="", _cache=None):
     #   `_assembled_drafts`가 `slots_by_track`으로 하는 것과 같은 방식이다.
     _track = ("insta" if _is_insta_context("", [sp])
               else "invention" if _is_invention_context("", [sp])
+              else "conceal" if _is_conceal_context("", [sp])
               else "sul" if _is_sul_context("", [sp]) else "")
     try:
         if _cache is not None and _track in _cache:
@@ -11466,7 +11467,14 @@ def _facts_for_job(job_id, store=None):
 # 썰쇼핑 대본 재료를 붙이는 카테고리(2026-08-19).
 #   여기 없는 카테고리는 썰 틀을 안 쓰므로 추출을 돌리지 않는다 — Gemini 호출 1회를 아낀다.
 #   이름은 categorize.KEYWORDS의 것과 같아야 한다(0순위-B: 이름이 어긋나면 조용히 죽는다).
-SUL_CATEGORIES = ("오용형", "제품정체형")
+SUL_CATEGORIES = ("오용형",)
+
+# 은폐형(spine "유튜브 은폐형"). **썰(오용형)과 갈래를 나눈다** — 2026-08-21 실측으로 분리.
+#   예전엔 SUL_CATEGORIES에 같이 있어 `sul_material_problem`(="원래 용도를 뒤집는가")을
+#   탔다. 은폐형은 뒤집는 이야기가 아니라 **정체를 숨겼다 밝히는** 갈래라 `misuse_genre=false`고,
+#   그래서 사장님 구명 팔찌 소재에서 "이 영상은 오용형이 아닙니다"로 **통째로 막혔다.**
+#   발명품형에서 같은 문제를 고쳤는데 여기만 남아 있었다.
+CONCEAL_CATEGORIES = ("제품정체형",)
 
 # 발명품형(2026-08-20 신설, spine "유튜브 발명품형"). **썰쇼핑과 갈래를 나눈다.**
 #   재료는 같은 `sul_facts`에서 오지만 **자격 검사가 다르다** — 썰(오용형)은
@@ -11541,6 +11549,11 @@ def _is_invention_context(category, spines=None):
     return _is_context(category, spines, INVENTION_CATEGORIES)
 
 
+def _is_conceal_context(category, spines=None):
+    """이 생성이 은폐형(유튜브) 틀인가."""
+    return _is_context(category, spines, CONCEAL_CATEGORIES)
+
+
 def _sul_block_for_sources(category, sources, store=None, spines=None):
     """썰쇼핑 스파인의 빈칸({본래용도}·{속성}·{용도}·{제품군}) 재료 -> 프롬프트 블록.
 
@@ -11552,7 +11565,8 @@ def _sul_block_for_sources(category, sources, store=None, spines=None):
     실패해도 ''를 돌려준다 — 기존 경로 그대로라 회귀 0.
     """
     # 발명품형도 같은 sul_facts 재료를 쓴다 — 블록을 안 붙이면 모델이 지어낸다.
-    if not (_is_sul_context(category, spines) or _is_invention_context(category, spines)):
+    if not (_is_sul_context(category, spines) or _is_invention_context(category, spines)
+            or _is_conceal_context(category, spines)):
         return ""
     caps = [(s.get("full_text") or "").strip() for s in (sources or [])[:_FACTS_MAX_SOURCES]]
     caps = [c for c in caps if c]
@@ -11640,19 +11654,25 @@ def _slots_for_spine(sp, sources, store, job_id="", cache_only=False):
         return _insta_slots(sources, store)
 
     invention = _is_invention_context("", [sp])
-    if not (invention or _is_sul_context("", [sp])):
+    conceal = _is_conceal_context("", [sp])
+    if not (invention or conceal or _is_sul_context("", [sp])):
         return {}, ""          # 조립 대상이 아닌 스타일 — 커버리지도 안 잰다
     facts = _facts_per_source(sources, store, sul_facts.analyze_sul, "sul_facts1",
                               cache_only=cache_only)
     if not facts:
         return {}, ("아직 분석 전입니다" if cache_only else "영상에서 재료를 못 뽑았습니다")
     merged = spine_fill.merge_sul(facts)
-    prob = (spine_fill.invention_material_problem(merged) if invention
+    # ★슬롯을 **먼저** 만든다 — 은폐형·발명품형은 {제품}·{효능}·{나라}를 쿠팡 재료에서도
+    #   받는다. 영상 재료만 보고 판정하면 쿠팡으로 채워지는 소재를 통째로 막는다(2026-08-21 회귀).
+    _slots = spine_fill.slots_from_facts(
+        _facts_for_job(job_id, store) if job_id else None, merged)
+    # 갈래마다 자격이 다르다 — 여기 한 곳에서 고른다(0순위-B).
+    prob = (spine_fill.invention_material_problem(_slots) if invention
+            else spine_fill.conceal_material_problem(_slots) if conceal
             else spine_fill.sul_material_problem(merged))
     if prob:
         return {}, prob
-    return spine_fill.slots_from_facts(_facts_for_job(job_id, store) if job_id else None,
-                                       merged), ""
+    return _slots, ""
 
 
 def insta_facts_analyze():
@@ -11698,10 +11718,12 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
     # 갈래마다 슬롯을 **한 번만** 뽑아 스파인들이 공유한다(같은 재료를 두 번 안 때린다).
     # 썰(유튜브)과 인스타는 재료 출처가 달라 각각 따로 캐시한다.
     slots_by_track = {}
+    probs_by_track = {}      # 갈래별 자격 미달 사유(조립을 막되 안내는 한다)
     for sp in (spines or []):
         # 조립 대상 갈래인가. 아니면 기존 생성기로 넘긴다(다른 스타일은 템플릿이 슬롯을 안 쓴다).
         track = ("sul" if _is_sul_context("", [sp])
                  else "invention" if _is_invention_context("", [sp])
+                 else "conceal" if _is_conceal_context("", [sp])
                  else "insta" if _is_insta_context("", [sp]) else "")
         if not track:
             left.append(sp)
@@ -11709,14 +11731,21 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
         if track not in slots_by_track:
             if track == "insta":
                 slots, _prob = _insta_slots(sources, store)
-            elif track == "invention":
+            elif track in ("invention", "conceal"):
                 facts = _facts_per_source(sources, store, sul_facts.analyze_sul, "sul_facts1")
                 merged = spine_fill.merge_sul(facts) if facts else {}
                 # ★썰과 **다른 자격 검사**를 쓴다(위 INVENTION_CATEGORIES 주석 참조).
-                _prob = (spine_fill.invention_material_problem(merged) if merged
-                         else "영상에서 재료를 못 뽑았습니다")
-                slots = ({} if _prob
-                         else spine_fill.slots_from_facts(_facts_for_job(job_id, store), merged))
+                # ★슬롯을 먼저 만들고 그 위에서 판정한다(쿠팡 재료도 함께 본다).
+                _s = (spine_fill.slots_from_facts(_facts_for_job(job_id, store), merged)
+                      if merged else {})
+                _check = (spine_fill.invention_material_problem
+                          if track == "invention" else spine_fill.conceal_material_problem)
+                _prob = _check(_s) if merged else "영상에서 재료를 못 뽑았습니다"
+                # ★자격 미달이어도 슬롯은 버리지 않는다 — 조립은 안 하되 **어느 칸이 왜
+                #   안 됐는지**는 말해야 한다(2026-08-19 사장님 질문: "영상에 없는
+                #   내용이면 어떻게 하나" → 답은 '되는 틀을 고른다'이고, 그러려면 어느 틀이
+                #   몇 칸 되는지가 먼저 보여야 한다). 조립 여부는 아래 `_blocked`가 막는다.
+                slots = _s
             else:
                 facts = _facts_per_source(sources, store, sul_facts.analyze_sul, "sul_facts1")
                 merged = spine_fill.merge_sul(facts) if facts else {}
@@ -11729,10 +11758,15 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
                          else spine_fill.slots_from_facts(_facts_for_job(job_id, store), merged))
             if _prob:
                 _why.append(_prob)
+            probs_by_track[track] = _prob
             slots_by_track[track] = slots
         slots = slots_by_track[track]
+        # 자격 미달(_prob)인 갈래는 슬롯이 있어도 조립하지 않는다 — 슬롯은 아래에서
+        # "어느 칸이 비는지" 안내하는 데만 쓴다.
+        _blocked = bool(probs_by_track.get(track))
         try:
-            d = spine_fill.build_draft(sp, slots, seconds=seconds) if slots else None
+            d = (spine_fill.build_draft(sp, slots, seconds=seconds)
+                 if (slots and not _blocked) else None)
         except Exception as e:      # noqa: BLE001 — 조립 실패가 생성을 막으면 안 된다
             print("조립 실패(style=%s): %s" % (sp.get("id"), str(e)[:120]))
             d = None

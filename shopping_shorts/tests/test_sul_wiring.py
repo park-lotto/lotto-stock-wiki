@@ -78,7 +78,12 @@ def test_라이브_스파인_모양으로_판정된다():
     """실측 근거: spine 55·56의 fit_categories가 ["제품정체형"]·["오용형"]이고,
     위키 항목 113건 중 이 카테고리를 가진 항목은 **0건**이었다(2026-08-19 서버 DB)."""
     assert app._is_sul_context("홈템", [{"fit_categories": ["오용형"]}]) is True
-    assert app._is_sul_context("홈템", [{"fit_categories": ["제품정체형"]}]) is True
+    # ★2026-08-21: 은폐형(제품정체형)을 썰에서 **갈라냈다**. 같은 트랙에 두면
+    #   `sul_material_problem`(="원래 용도를 뒤집는가")을 타서 통째로 막힌다 —
+    #   은폐형은 뒤집는 갈래가 아니라 정체를 숨겼다 밝히는 갈래다.
+    #   실측: 사장님 구명 팔찌 소재에서 "이 영상은 오용형이 아닙니다"로 차단됐다.
+    assert app._is_sul_context("홈템", [{"fit_categories": ["제품정체형"]}]) is False
+    assert app._is_conceal_context("홈템", [{"fit_categories": ["제품정체형"]}]) is True
     assert app._is_sul_context("홈템", [{"fit_categories": ["홈템", "기타"]}]) is False
     assert app._is_sul_context("홈템", [{"fit_categories": None}]) is False
     assert app._is_sul_context("오용형", None) is True
