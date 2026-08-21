@@ -454,3 +454,36 @@ def test_402_after_user_click_shows_modal():
                " console.log(_modalShown() ? 'shown' : 'none');",
                harness_override=_PW_HARNESS)
     assert out == "shown"
+
+
+# ── 402 문구는 서버가 준 사유대로(2026-08-21) ──
+# 체험판은 기간과 무관하게 랭킹 전용이라(app.py access_level) '막혔다'와 '끝났다'는 다른 말이다.
+
+def _pw_harness_402(body_json):
+    return ("""
+console.debug = () => {};
+window.fetch = async () => ({ status: 402, clone: () => ({ json: async () => (%s) }) });
+const _stub = { onclick: null, style: {}, remove(){}, appendChild(){} };
+const _origGet = document.getElementById.bind(document);
+document.getElementById = (id) => (id === 'ss-pw-close' ? _stub : _origGet(id));
+function _modalHtml(){ const m = _created.find(o => o.id === 'ss-pw-modal'); return m ? m.innerHTML : ''; }
+""" % body_json)
+
+
+def _modal_html_after_click(body_json):
+    return _run("_gesture('click'); await window.fetch('/api/lens/cn/keywords');"
+                " await new Promise(r=>setTimeout(r,0)); console.log(_modalHtml());",
+                harness_override=_pw_harness_402(body_json))
+
+
+def test_ranking_only_402_does_not_say_trial_ended():
+    """체험 기간이 남은 랭킹 전용 계정에 '끝났어요'라고 하면 안 된다(오진의 근원)."""
+    html = _modal_html_after_click("{ error: '유료 기능이에요. 결제하면 열려요.', level: 'ranking_only' }")
+    assert "끝났어요" not in html
+    assert "잠긴 기능" in html
+
+
+def test_points_402_still_says_points():
+    """포인트 부족 분기는 그대로 살아 있어야 한다(2026-08-20 수정 회귀 방지)."""
+    html = _modal_html_after_click("{ error: '포인트가 부족합니다 (필요 10P, 보유 0P)' }")
+    assert "포인트가 부족해요" in html
