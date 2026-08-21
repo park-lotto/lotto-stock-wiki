@@ -931,6 +931,15 @@
   .s2-chk{display:block;font-size:11px;font-weight:400;color:var(--ok);margin-top:4px}
   .s2-swap{justify-self:stretch;font-size:12px;color:var(--accent);background:none;border:1px solid var(--line);border-radius:8px;padding:8px 0;text-align:center;white-space:nowrap;cursor:pointer}
   .s2-swap:hover{border-color:var(--accent)}
+  /* ★줄 삭제(2026-08-22 사장님 "여기서 대본을 어떻게 지우나"). 종전엔 글자를 전부 지워
+     빈 칸으로 두는 방법뿐이었는데, 화면엔 빈 행이 그대로 남아 지워졌는지 알 수 없었다.
+     [바꾸기]와 같은 칸에 세로로 쌓는다 — 칸 폭(88px)은 그대로라 다른 줄이 안 밀린다. */
+  .s2-acts{justify-self:stretch;display:flex;flex-direction:column;gap:4px}
+  .s2-acts .s2-swap{width:100%}
+  .s2-del{font-size:12px;color:var(--s2-sub);background:none;border:1px solid var(--line);
+    border-radius:8px;padding:6px 0;text-align:center;white-space:nowrap;cursor:pointer}
+  .s2-del:hover{color:var(--fire);border-color:var(--fire)}
+  .s2-row.s2-busy .s2-del{pointer-events:none;opacity:.4}
   /* 게이트 실패 = 성적표가 아니라 "고칠 곳 안내" */
   .s2-fix{border-top:1px dashed var(--line);padding:16px 0}
   .s2-fix .fx-t{font-size:13px;font-weight:700;color:var(--fire)}
@@ -982,6 +991,10 @@
     .panel[data-step="8"] .s2-cardrow{grid-template-columns:1fr}
     .s2-row-in{grid-template-columns:88px 1fr}
     .s2-swap{grid-column:2;justify-self:end;padding:8px 16px}
+    /* 좁은 화면에선 [바꾸기]·[🗑]을 가로로 눕혀 문장 아래 오른쪽 끝에 붙인다. */
+    .s2-acts{grid-column:2;justify-self:end;flex-direction:row;gap:8px}
+    .s2-acts .s2-swap{width:auto;padding:8px 16px}
+    .s2-del{padding:8px 12px}
     .s2-tabs{gap:8px}
     .si-top{flex-wrap:wrap}
     .si-quote{white-space:normal}
@@ -10305,7 +10318,11 @@ function s2DraftHtml(dr,i){
       <div class="s2-row-in">
         <div class="s2-role"><div class="rn">${esc(s2RoleName(b.role))}</div><span id="s2sec-${i}-${j}">${s2SecTag(s2SecOf(b.text))}</span></div>
         <div class="s2-sent" contenteditable="true" oninput="s2EditBeat(${i},${j},this)">${esc(b.text||'')}${chk}</div>
-        <button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>
+        <div class="s2-acts">
+          <button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>
+          <button class="s2-del" title="이 줄을 대본에서 아주 뺍니다 — 3단계에서 이 장면 칸도 안 생깁니다"
+            onclick="s2DelBeat(${i},${j})">🗑 빼기</button>
+        </div>
       </div>
       <div class="s2-bank" id="s2b-${i}-${j}"><div class="hint">불러오는 중…</div></div>
     </div>`;
@@ -10339,6 +10356,43 @@ function s2EditBeat(i,j,el){
   dr.script=beats.map(b=>b.text).filter(Boolean).join('\n');
   try{ s2RefreshSec(i,j); }catch(e){}   // 고친 즉시 그 칸·합계 초를 다시 쓴다
   saveWork();   // ★손으로 고친 문장도 남긴다(디바운스 1초 — 타이핑마다 서버로 안 나간다)
+}
+// ── 🗑 줄 빼기(2026-08-22 사장님 "여기서 대본을 어떻게 지우나") ────────────────────
+// 종전엔 방법이 **글자를 전부 지워 빈 칸으로 두는 것**뿐이었다. script는 빈 칸을 걸러
+// 만들어지니(s2EditBeat) 확정하면 실제로 빠지긴 했는데, 화면엔 빈 행이 그대로 남아
+// 지워졌는지 알 수 없었고 역할 라벨(효과·증언…)도 그대로라 "안 지워진다"로 보였다.
+//
+// ★s2Beats는 dr.beats가 비면 script를 쪼갠 **새 배열**을 만들어 준다(옛 생성기 경로).
+//   그 배열을 splice해도 dr에는 아무것도 안 남는다 — 그래서 지우기 전에 dr.beats로
+//   **못박아 둔다**. 안 그러면 이 경로에서만 조용히 아무 일도 안 일어난다.
+function s2DelBeat(i,j){
+  const dr=S2.drafts[i]; if(!dr) return;
+  const row=document.getElementById(`s2r-${i}-${j}`);
+  if(row && row.classList.contains('s2-busy')) return;   // 재생성 도는 칸은 손대지 않는다
+  const beats=s2Beats(dr).slice();                       // 파생 배열이어도 여기서 실체가 된다
+  if(!beats[j]) return;
+  // 마지막 한 줄까지 빼면 대본이 통째로 사라져 확정도 못 한다(s2Confirm이 빈 대본을 막는다).
+  // 지울 게 아니라 **고쳐 쓸** 상황이므로 여기서 갈라 말해준다.
+  if(beats.filter(x=>((x&&x.text)||'').trim()).length<=1){
+    toast('마지막 한 줄은 뺄 수 없어요 — 문장을 고쳐서 쓰세요'); return;
+  }
+  const b=beats[j];
+  const label=s2RoleName(b.role||'').replace(/^·\s*/,'') || '이 줄';
+  const txt=(b.text||'').trim();
+  const head=txt.slice(0,24)+(txt.length>24?'…':'');
+  if(!confirm(label+' — "'+head+'"\n\n이 줄을 대본에서 뺍니다. 계속할까요?')) return;
+  beats.splice(j,1);
+  dr.beats=beats;
+  // script는 beats에서 다시 만든다 — 두 벌을 따로 고치지 않는다(0순위-B, s2EditBeat와 동일).
+  dr.script=beats.map(x=>x.text).filter(Boolean).join('\n');
+  // ★게이트 판정(dr.checks/passed)은 옛 문장 기준이라 무효다. 그대로 두면 없어진 칸을
+  //   가리키며 "hook 문장틀 준수" 같은 빨간 줄이 남는다. 다시 검사할 길이 화면엔 없으니
+  //   **표시를 지운다** — 모르면 비운다(짐작해서 통과 뱃지를 붙이지 않는다).
+  dr.checks=[]; dr.passed=false;
+  s2CloseBanks();
+  s2RenderDrafts();
+  saveWork();   // 손으로 고친 문장과 같은 취급 — 돈 든 결과다
+  toast('🗑 '+label+' 줄을 뺐습니다 · 남은 '+beats.length+'줄');
 }
 // [바꾸기] — 그 스타일이 가진 **문장틀**을 준다(은행 완성문장이 아니다: 쌀밥 대본에
 // 삼겹살 훅이 뜨던 문제. 빈칸은 이 대본 소재로 채워 쓴다 — app.py:9288 설명 참조).
