@@ -28,10 +28,26 @@ def test_자리_판정처가_하나다():
 
 
 def test_확정_경로가_판정처를_쓴다():
-    """startPreview는 자기가 display를 만지지 말고 _pvShow('video')를 불러야 한다."""
+    """startPreview는 자기가 display를 만지지 말고 **자리 여는 함수**를 불러야 한다.
+
+    ★2026-08-22 단언 조정 — 지우지 말고 읽어라.
+    원래 이 단언은 `_pvShow('video')` 문자열 하나만 봤다. 그런데 사장님 지시로
+    ("왜 따로 또 자리를 차지하냐고. 저걸 누르면 미리보기 재생했던 곳에서 하라니까")
+    로더가 갈 자리가 **부모 좌측 레일 → 장면편집(iframe) 안 확정본 탭**으로 옮겨졌다.
+    이제 startPreview는 `_labCall('showConfirmLoading', ...)`을 먼저 부르고, 그게
+    실패했을 때만 옛 자리로 `_pvShow('fallback')` 한다.
+
+    이 단언이 지키려는 건 함수 이름이 아니라 **"innerHTML을 쓰기 전에 그 자리를
+    먼저 연다"**는 규약이다(안 지키면 2026-08-18의 0×0 재발). 그래서 두 경로를
+    **모두** 요구한다 — 어느 한쪽만 남아도 FAIL이다:
+      · 주 경로  = _labCall('showConfirmLoading' ...)   ← 이게 빠지면 옛 자리로 회귀
+      · 폴백 경로 = _pvShow(...)                        ← 이게 빠지면 iframe 없을 때 0×0
+    """
     code = _code()
     body = code.split("async function startPreview()")[1].split("\nasync function")[0]
-    assert "_pvShow('video')" in body, "startPreview가 _pvShow('video')를 안 부른다"
+    assert "_labCall('showConfirmLoading'" in body, \
+        "startPreview가 로더를 장면편집 안 자리로 안 넘긴다(2026-08-22 사장님 지시)"
+    assert "_pvShow(" in body, "startPreview 폴백이 자리를 안 연다(0×0 재발)"
 
 
 def test_가조립_경로가_판정처를_쓴다():

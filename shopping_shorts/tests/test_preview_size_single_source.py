@@ -75,7 +75,9 @@ def test_미리보기_비율_리터럴이_되살아나지_않았다():
     # produce: #player video CSS · 렌더결과 video · 자리표시 · 로더 frame
     for pat, name in (
         (r"#player video\{[^}]*\}", "produce #player video"),
-        (r"_renderPreviewVideo[\s\S]{0,400}?<video[^>]*>", "렌더 결과 video"),
+        # 2026-08-22: 확정 결과를 장면편집 안으로 넘기는 분기·주석이 앞에 붙어 창을
+        # 400자에서 900자로 넓혔다(검사 대상은 그대로 그 아래 <video> 태그다).
+        (r"_renderPreviewVideo[\s\S]{0,900}?<video[^>]*>", "렌더 결과 video"),
         (r"pvLoadFrame[^>]*>", "로더 frame"),
     ):
         m = re.search(pat, PROD, re.S)
@@ -84,10 +86,14 @@ def test_미리보기_비율_리터럴이_되살아나지_않았다():
         assert "--shorts-pv-ar" in seg, f"{name}이 비율 변수를 안 쓴다"
         assert not re.search(r"aspect-ratio:\s*9/16\s*[;\"']", seg), f"{name}에 9/16 리터럴"
         assert "max-height:520px" not in seg, f"{name}에 520px 클램프가 되살아났다"
-    # scene_lab: #vidbox · #player video
+    # scene_lab: #vidbox · #player video · 확정본 패널(2026-08-22 신설)
+    # ★확정 결과가 이 파일로 옮겨오면서 9:16 상자가 **두 개 더** 생겼다(영상·로더).
+    #   여기 안 걸면 그 둘만 비율 리터럴로 갈라져도 아무도 못 잡는다.
     for pat, name in (
         (r"#player #vidbox\{[^}]*\}", "scene_lab #vidbox"),
         (r"#player video\{[^}]*\}", "scene_lab #player video"),
+        (r"#confirmBody video\{[^}]*\}", "scene_lab 확정본 video"),
+        (r"#confirmBody \.cfLoad\{[^}]*\}", "scene_lab 확정본 로더"),
     ):
         m = re.search(pat, LAB, re.S)
         assert m, f"{name}을 못 찾았다"

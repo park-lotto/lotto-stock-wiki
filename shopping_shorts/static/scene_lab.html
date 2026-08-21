@@ -491,10 +491,15 @@ function _cfEnable(on){
   if (b) b.disabled = !on;
 }
 // 렌더 시작 — 로더를 이 자리에 띄우고 확정본 탭으로 넘어간다.
+// ★렌더 **실패 문구**도 이 자리로 온다(부모 _pvFail). 그래서 ⏳를 무조건 붙이면
+//   "⏳ ⚠️ 렌더 실패"가 돼 아직 도는 것처럼 읽힌다 — 부른 쪽이 이미 아이콘을
+//   붙였으면 그대로 쓴다(2026-08-22).
 function showConfirmLoading(msg){
   var body = document.getElementById('confirmBody');
   if (!body) return;
-  body.innerHTML = '<div class="cfLoad">⏳ ' + (msg || '미리보기 만드는 중…') + '</div>';
+  var m = msg || '미리보기 만드는 중…';
+  var hasIcon = /^\s*(⏳|⚠️|❌)/.test(m);
+  body.innerHTML = '<div class="cfLoad">' + (hasIcon ? '' : '⏳ ') + m + '</div>';
   _cfEnable(true);
   pvTab('confirm');
 }

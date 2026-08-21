@@ -13,6 +13,7 @@ no-op으로 스텁해 **startPreview·pollPreview가 한 줄도 실행되지 않
 비동기 배선을 실제로 구동한다.
 """
 import pathlib
+import re
 import shutil
 import subprocess
 
@@ -424,13 +425,26 @@ def test_preview_gate_scenarios(name, scenario, tmp_path):
 
 
 def test_preview_video_is_muted_by_default():
-    """★사장님 지시: 음소거가 기본값. 열면 조용하고, 원하면 켠다(스펙 §4.2)."""
+    """★사장님 지시: 음소거가 기본값. 열면 조용하고, 원하면 켠다(스펙 §4.2).
+
+    2026-08-22 조정: 예전엔 `mix/preview/`의 **첫 등장** 앞 300자를 봤는데, 확정 결과를
+    장면편집 안으로 옮기면서 그 첫 등장이 URL을 조립하는 `const src = ...` 줄이 됐다
+    (video 태그는 그 아래). 위치 대신 **_renderPreviewVideo가 실제로 그리는 태그**를
+    직접 집는다 — 위아래로 줄이 늘어도 안 깨지고, 검사하려던 것은 그대로다.
+    ★확정 결과 재생 자리가 장면편집(scene_lab)으로 옮겨졌으므로 **거기 태그도** 같이
+    본다(2026-08-22). 안 그러면 이제 사장님이 실제로 보는 쪽이 검사 밖에 남는다.
+    """
     html = PRODUCE_HTML.read_text(encoding="utf-8")
-    i = html.find("mix/preview/")
-    assert i != -1, "미리보기 <video>가 없다"
-    tag = html[max(0, i - 300): i + 100]
-    assert "muted" in tag, f"미리보기 video에 muted가 없다 — 열자마자 소리가 난다: {tag[-160:]!r}"
-    assert "controls" in tag, "controls가 없다 — 음소거 해제·탐색을 못 한다"
+    assert "mix/preview/" in html, "미리보기 URL이 없다"
+    body = html.split("function _renderPreviewVideo(")[1].split("\n// 편집안")[0]
+    checked = re.findall(r"<video [^>]*>", body)
+    lab = (PRODUCE_HTML.parent / "scene_lab.html").read_text(encoding="utf-8")
+    lab_body = lab.split("function showConfirmVideo(")[1].split("\nfunction ")[0]
+    checked += re.findall(r"<video [^>]*>", lab_body)
+    assert len(checked) >= 2, f"미리보기 video를 못 찾았다(찾은 것: {checked!r})"
+    for tag in checked:
+        assert "muted" in tag, f"미리보기 video에 muted가 없다 — 열자마자 소리가 난다: {tag!r}"
+        assert "controls" in tag, f"controls가 없다 — 음소거 해제·탐색을 못 한다: {tag!r}"
 
 
 def test_preview_url_has_cache_buster():
