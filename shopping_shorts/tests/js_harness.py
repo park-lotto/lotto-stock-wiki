@@ -77,7 +77,7 @@ def run_js(code, timeout=30, check=True):
 
 
 def run_js_proc(code, **kw):
-    """`subprocess.run([node, "-e", code], **kw)` 자리를 그대로 대신한다.
+    """인라인 node 실행(-e 방식) 호출 자리를 그대로 대신한다.
 
     반환이 **CompletedProcess**라 기존 호출부의 `r.returncode` / `r.stdout` /
     `r.stderr` 처리를 한 줄도 안 고치고 바꿔 끼울 수 있다(회귀 최소화가 목적).

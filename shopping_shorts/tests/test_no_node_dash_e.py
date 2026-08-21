@@ -28,8 +28,12 @@ _EXEMPT = {"test_no_node_dash_e.py"}
 
 #: `subprocess.run([NODE, "-e", js])` / `["node", "-e", ...]` 등 인라인 호출 형태.
 #: 리스트 원소로 "-e"가 오는 경우만 잡는다 — 주석 속 산문은 걸리지 않게.
+#: ★변수 이름이 소문자면 통과하던 구멍을 메웠다(2026-08-21). test_seo_insta_caption이
+#:   `node = shutil.which("node")` 뒤 `[node, "-e", script]`로 불러 가드를 빠져나갔고,
+#:   그 파일이 stdin 없이 node를 띄워 게이트가 WinError 6으로 간헐 실패했다.
+#:   이제 **리스트 원소로 "-e"가 오는 모든 형태**를 잡는다(리터럴·대문자·소문자 변수).
 _PATTERN = re.compile(r"""["'](?:node|NODE)["']\s*,\s*["']-e["']"""
-                      r"""|NODE\s*,\s*["']-e["']""")
+                      r"""|[A-Za-z_][A-Za-z_0-9]*\s*,\s*["']-e["']""")
 
 
 def test_node_dash_e_를_직접_쓰지_않는다():
