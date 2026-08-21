@@ -1144,7 +1144,11 @@ class Store:
                                ("hook_3s", "INTEGER"),
                                # 은폐형인가 — 정체를 reveal 구간까지 숨긴다(실측 5~7초).
                                # 오용형은 처음부터 밝히므로 이 검사를 걸면 안 된다.
-                               ("hook_conceal", "INTEGER")):
+                               ("hook_conceal", "INTEGER"),
+                               # 나열형인가 — 항목(item) 칸을 편수만큼 반복해 조립한다
+                               # (2026-08-21). 구조가 다른 유일한 틀이라 게이트의 구간
+                               # 순서·고조 검사가 여기서 갈린다. 기본 0 = 기존 동작.
+                               ("is_list", "INTEGER")):
                 try:
                     c.execute(f"ALTER TABLE spine ADD COLUMN {_col} {_ddl}")
                 except sqlite3.OperationalError:
@@ -3648,7 +3652,7 @@ class Store:
 
     def set_spine_style(self, spine_id, beat_roles=None, templates=None, chars_per_30s=None,
                         voice=None, no_cta=None, hook_3s=None, hook_conceal=None,
-                        fit_categories=None):
+                        fit_categories=None, is_list=None):
         """스파인에 **기계가 검사할** 스타일 정보를 붙인다(2026-08-15).
 
         beat_roles = ["hook","before",...] · templates = {"hook":["...{가족}..."]} ·
@@ -3667,6 +3671,9 @@ class Store:
         if no_cta is not None:
             sets.append("no_cta=?")
             args.append(1 if no_cta else 0)
+        if is_list is not None:
+            sets.append("is_list=?")
+            args.append(1 if is_list else 0)
         if hook_3s is not None:
             sets.append("hook_3s=?")
             args.append(1 if hook_3s else 0)
@@ -3694,7 +3701,7 @@ class Store:
         q = ("SELECT id, name, situation_type, character_roles_json, beat_chain_json, "
              "emotion_arc, appeal, fit_categories_json, source_count, perf_score, "
              "status, created_at, updated_at, beat_roles_json, templates_json, "
-             "chars_per_30s, voice_json, no_cta, hook_3s, hook_conceal FROM spine")
+             "chars_per_30s, voice_json, no_cta, hook_3s, hook_conceal, is_list FROM spine")
         args = []
         if status is not None:
             q += " WHERE status=?"
@@ -3719,7 +3726,9 @@ class Store:
              "no_cta": bool(r[17]),
              # ★여기서 안 실으면 게이트가 영영 안 켜진다 — 함수는 있는데 죽은 상태가
              #   된다(2026-08-19 썰 재료 배선에서 똑같이 겪었다: 라이브에서만 죽었다).
-             "hook_3s": bool(r[18]), "hook_conceal": bool(r[19])}
+             "hook_3s": bool(r[18]), "hook_conceal": bool(r[19]),
+             # ★안 실으면 조립 경로가 나열형을 못 알아본다(no_cta와 같은 함정).
+             "is_list": bool(r[20])}
             for r in rows
         ]
 

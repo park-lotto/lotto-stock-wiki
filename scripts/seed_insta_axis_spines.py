@@ -33,7 +33,10 @@ sys.path.insert(0, str(BASE))
 from shopping_shorts.app import DB_PATH                             # noqa: E402
 from shopping_shorts.store import Store                             # noqa: E402
 from shopping_shorts.spine_fill import SLOT_NAMES, slots_in         # noqa: E402
-from tools.script_lab.insta_axis_spines import AXIS_SPINES          # noqa: E402
+from tools.script_lab.insta_axis_spines import AXIS_SPINES, LIST_SPINES   # noqa: E402
+
+# ★나열형도 같은 절차로 심는다 — 구조만 다르지 심는 법은 같다(0순위-B).
+SPINES = AXIS_SPINES + LIST_SPINES
 
 # 53 단정 명령형 — 실측 무조건지시축 327자/30초(16편). 현재 240자.
 DENSITY_FIX = {53: 327}
@@ -52,7 +55,12 @@ def check(sp):
         if role not in sp["templates"]:
             bad.append("%s: 템플릿이 없다" % role)
         elif not any(not slots_in(t) for t in sp["templates"][role]):
-            bad.append("%s: 슬롯 없는 폴백이 없다(재료 부족 시 칸이 빈다)" % role)
+            # ★나열형의 item 칸은 예외다. 다른 틀은 칸이 비면 대본에 구멍이 나서 폴백이
+            #   필요하지만, 나열형은 항목이 여러 개라 **재료 없는 항목을 통째로 건너뛰는
+            #   것**이 정답이다(fill_list). 여기에 슬롯 없는 폴백을 두면 "두 번째, ..."
+            #   하고 제품 이름이 없는 항목이 그대로 나간다 — 폴백이 오히려 해롭다.
+            if not (sp.get("is_list") and role == "item"):
+                bad.append("%s: 슬롯 없는 폴백이 없다(재료 부족 시 칸이 빈다)" % role)
     return bad
 
 
@@ -64,7 +72,7 @@ def main():
 
     print("DB : %s" % DB_PATH)
     fail = False
-    for sp in AXIS_SPINES:
+    for sp in SPINES:
         bad = check(sp)
         found = next((s for s in existing if (s.get("name") or "") == sp["name"]), None)
         print("\n[%s]  %s" % (sp["name"], "이미 있음(id=%s) → 갱신" % found["id"] if found else "새로 만든다"))
@@ -87,7 +95,7 @@ def main():
         print("\n(미리보기다. 실제로 심으려면 --apply)")
         return 0
 
-    for sp in AXIS_SPINES:
+    for sp in SPINES:
         found = next((s for s in existing if (s.get("name") or "") == sp["name"]), None)
         if found:
             sid = found["id"]
@@ -110,8 +118,11 @@ def main():
             chars_per_30s=sp["chars_per_30s"],
             no_cta=sp["no_cta"],
             fit_categories=sp["fit_categories"],
+            # ★나열형 플래그. 안 넘기면 DB엔 0이라 조립 경로가 일반 틀로 취급한다.
+            is_list=bool(sp.get("is_list")),
         )
-        print("✅ %s — spine id=%s" % (sp["name"], sid))
+        print("✅ %s — spine id=%s%s" % (sp["name"], sid,
+                                        " (나열형)" if sp.get("is_list") else ""))
 
     for sid, dens in DENSITY_FIX.items():
         row = next((s for s in existing if s.get("id") == sid), None)
