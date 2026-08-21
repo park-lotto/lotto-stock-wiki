@@ -285,6 +285,11 @@ _INSTRUCTION_SMELL = (
     "정보 없음", "알 수 없음", "해당 없음", "참고로", "※", "주의:", "N/A", "없음(",
 )
 
+# 모델이 "값이 없다"를 **글자로** 답하는 표현(2026-08-21 실측: origin_country='null').
+#   짧아서 길이 필터를 그냥 통과한다 — 두면 "null에서 바이럴이 터지며"가 대본에 나간다.
+_EMPTY_WORDS = {"null", "none", "n/a", "na", "nan", "nil", "undefined", "unknown",
+                "없음", "미상", "불명", "해당없음", "빈문자열", "빈값", "공백", "무"}
+
 
 def _clean_short(raw, limit):
     """짧은 값 칸 하나를 **믿을 수 있을 때만** 통과시킨다. 아니면 ''.
@@ -305,6 +310,9 @@ def _clean_short(raw, limit):
     """
     v = ("" if raw is None else str(raw)).strip()
     if not v:
+        return ""
+    # ★"빈 값"을 글자로 답한 경우를 먼저 턴다 — 짧아서 길이 필터엔 안 걸린다.
+    if v.strip("\"'`.,-_ ").lower() in _EMPTY_WORDS:
         return ""
     low = v.replace(" ", "")
     for w in _INSTRUCTION_SMELL:
