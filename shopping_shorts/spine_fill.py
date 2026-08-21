@@ -343,13 +343,8 @@ def pick_template(templates, slots):
       실측 예: bait 변형 3개 중 하나는 {제품군}을 요구하고 둘은 슬롯이 없다 —
       제품군을 못 뽑은 영상에서도 미끼 문장은 나온다.
     """
-    for t in (templates or []):
-        need = slots_in(t)
-        if any(n not in SLOT_NAMES for n in need):
-            continue                       # 모르는 슬롯이 있는 템플릿은 건너뛴다
-        if all(slots.get(n) for n in need):
-            return t
-    return ""
+    ts = usable_templates(templates, slots)
+    return ts[0] if ts else ""
 
 
 def fill_one(template, slots):
@@ -373,28 +368,97 @@ def fill_one(template, slots):
     return "".join(out).strip()
 
 
-def fill(spine, slots):
+def usable_templates(templates, slots):
+    """이 재료로 **쓸 수 있는** 문장 후보 전부 — pick_template과 같은 자격 규칙.
+
+    ★pick_template은 '첫 번째'만 돌려주지만 길이를 맞추려면 **후보 전체**가 필요하다.
+      자격 규칙을 여기 다시 적지 않고 같은 조건을 한 번만 쓴다(0순위-B).
+    """
+    out = []
+    for t in (templates or []):
+        need = slots_in(t)
+        if any(n not in SLOT_NAMES for n in need):
+            continue                       # 모르는 슬롯이 있는 템플릿은 건너뛴다
+        if all(slots.get(n) for n in need):
+            out.append(t)
+    return out
+
+
+def target_range(spine, seconds):
+    """이 스파인·이 길이의 목표 글자수 (lo, hi) — **script_gate에서 빌려 온다**.
+
+    ★값을 여기 다시 계산하지 않는다. 판정(script_gate.check)과 조립이 서로 다른 수를
+      쓰면 "시킨 대로 만들었는데 반려"가 난다(0순위-B). density_target 주석이 같은 말을 한다.
+    """
+    from shopping_shorts import script_gate as _sg
+    tgt = _sg.density_target(spine, seconds)
+    cap = int(_sg._speech_cps() * max(5, min(int(seconds or 30), 90)))
+    return int(tgt * _sg.DENSITY_LO), min(int(tgt * _sg.DENSITY_HI), cap)
+
+
+def _measured(beats):
+    """게이트가 세는 방식과 **같게** 센다(script_gate.norm — 공백·문장부호 제외)."""
+    from shopping_shorts import script_gate as _sg
+    return len(_sg.norm(" ".join(b["text"] for b in beats)))
+
+
+def fill(spine, slots, seconds=None):
     """스파인 + 슬롯 → (beats, missing)
 
     beats  = [{"role": ..., "text": ...}]  — 채워진 칸만. **한 칸에 한 문장**이다.
     missing= 슬롯이 모자라 못 채운 역할들(호출부가 모델에 맡기거나 재료를 더 뽑는다).
 
     ★CTA가 붙을 자리가 없다 — 템플릿에 없으면 나올 수 없다. 그게 이 방식의 요점이다.
+
+    ★seconds를 주면 **목표 길이에 맞춰 변형을 고른다**(2026-08-21).
+      종전엔 "슬롯이 차는 첫 문장"만 골라 길이를 아예 안 봤다 — 그래서 틀 하나가
+      한 길이에만 맞았다(실측 2026-08-21: 20초 목표면 6축 중 4축이 초과로 반려,
+      30초 목표면 재료가 적을 때 6축 전부 미달).
+      ⚠️seconds가 없으면 **종전과 완전히 같게** 동작한다(유튜브 경로 회귀 0).
     """
     roles = list((spine or {}).get("beat_roles") or [])
     templates = (spine or {}).get("templates") or {}
-    beats, missing = [], []
+    cands, chosen, missing = {}, {}, []
     for role in roles:
-        t = pick_template(templates.get(role), slots)
-        if not t:
+        ts = usable_templates(templates.get(role), slots)
+        # 채워 넣었을 때 실제로 글자가 남는 후보만(빈 문장은 못 쓴다)
+        ts = [t for t in ts if fill_one(t, slots)]
+        if not ts:
             missing.append(role)
             continue
-        text = fill_one(t, slots)
-        if text:
-            beats.append({"role": role, "text": text})
-        else:
-            missing.append(role)
-    return beats, missing
+        cands[role] = ts
+        chosen[role] = ts[0]               # 종전 규칙 = 첫 번째
+
+    def _beats():
+        return [{"role": r, "text": fill_one(chosen[r], slots)}
+                for r in roles if r in chosen]
+
+    if not seconds or not chosen:
+        return _beats(), missing
+
+    lo, hi = target_range(spine, seconds)
+    # 목표 안으로 들어올 때까지 **한 칸씩** 바꾼다. 매번 가장 크게 줄이는(늘리는) 쪽을
+    # 고르되, 반대쪽 한계를 넘기는 교체는 하지 않는다.
+    for _ in range(len(roles) * 3 + 6):    # 상한 — 무한루프 방지
+        n = _measured(_beats())
+        if lo <= n <= hi:
+            break
+        best, best_gain = None, 0
+        for role, ts in cands.items():
+            cur = len(fill_one(chosen[role], slots))
+            for t in ts:
+                if t == chosen[role]:
+                    continue
+                new = len(fill_one(t, slots))
+                delta = new - cur
+                if n > hi and delta < 0 and n + delta >= lo and -delta > best_gain:
+                    best, best_gain = (role, t), -delta
+                elif n < lo and delta > 0 and n + delta <= hi and delta > best_gain:
+                    best, best_gain = (role, t), delta
+        if not best:
+            break                          # 더 손댈 변형이 없다 — 게이트가 판정하게 둔다
+        chosen[best[0]] = best[1]
+    return _beats(), missing
 
 
 def coverage(spine, slots):
@@ -490,7 +554,7 @@ def build_draft(spine, slots, seconds=30):
       전체를 삼킨 결과는 실패로 돌려보낸다).
     """
     from shopping_shorts import script_gate
-    beats, missing = fill(spine, slots)
+    beats, missing = fill(spine, slots, seconds=seconds)
     if missing or not beats:
         return None
     script = " ".join(b["text"] for b in beats)
