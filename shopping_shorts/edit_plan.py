@@ -5034,8 +5034,12 @@ def apply_scene_lab(plan, seg_map, edits):
         else:
             beat.pop("stretch_fill", None)
         applied += 1
+    # ★이 편성이 서버에 얹힌 시각(2026-08-21). 화면(localStorage)과 서버 중 어느 쪽이
+    #   최신인지 가르는 유일한 기준이다 — mix_jobs.updated_at은 음성 생성 같은 다른
+    #   이유로도 움직여서 편성 시각으로 쓸 수 없다.
     plan["scene_lab"] = {"beats": edits.get("beats") or [], "trims": trims,
-                         "merges": merges, "applied": applied}
+                         "merges": merges, "applied": applied,
+                         "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
     return plan
 
 
