@@ -34,6 +34,7 @@ CTA가 붙을 자리가 없고, 어미가 흔들릴 자리도 없다.
 
 `{용도들}`만 파생 슬롯이다 — misuses 여러 개를 사례 나열 문장으로 잇는다.
 """
+import hashlib
 import re
 
 # 템플릿에 쓰이는 슬롯 이름. 여기 없는 이름이 템플릿에 있으면 그 템플릿은 못 쓴다
@@ -415,7 +416,22 @@ def _has_escalator(text):
     return _sg._escalation(text or "") > 0
 
 
-def fill(spine, slots, seconds=None):
+def _rotate_idx(seed, role, n):
+    """이 job·이 칸에서 몇 번째 변형으로 시작할까 — 0..n-1.
+
+    ★why: 종전엔 무조건 ts[0]이었다. 재료가 넉넉한 영상에서는 1번 문장이 항상
+      슬롯을 다 채우므로 **몇 편을 뽑아도 첫 대사가 같았다**(실측 2026-08-21:
+      70개 칸 중 37개가 후보 2개 이하인데, 후보를 늘려도 순서가 안 바뀌면 소용없다).
+    ★랜덤이 아니라 seed 해시다 — 같은 job을 다시 돌리면 같은 대본이 나온다(재현성).
+      role을 섞어 넣어 한 대본 안에서 칸마다 다른 번호가 걸리게 한다.
+    """
+    if not seed or n <= 1:
+        return 0
+    h = hashlib.md5(("%s|%s" % (seed, role)).encode("utf-8")).hexdigest()
+    return int(h[:8], 16) % n
+
+
+def fill(spine, slots, seconds=None, seed=""):
     """스파인 + 슬롯 → (beats, missing)
 
     beats  = [{"role": ..., "text": ...}]  — 채워진 칸만. **한 칸에 한 문장**이다.
@@ -440,7 +456,8 @@ def fill(spine, slots, seconds=None):
             missing.append(role)
             continue
         cands[role] = ts
-        chosen[role] = ts[0]               # 종전 규칙 = 첫 번째
+        # seed가 없으면 ts[0] — 종전과 완전히 같다(회귀 0). 있으면 job마다 다른 변형에서 시작.
+        chosen[role] = ts[_rotate_idx(seed, role, len(ts))]
 
     def _beats():
         return [{"role": r, "text": fill_one(chosen[r], slots)}
@@ -583,7 +600,7 @@ def _same_thing(a, b):
     return len(short) >= 2 and short in long_
 
 
-def build_draft(spine, slots, seconds=30, source_text=""):
+def build_draft(spine, slots, seconds=30, source_text="", seed=""):
     """슬롯 조립 → **생성기와 같은 모양**의 대본 1안. 못 채우는 칸이 있으면 None.
 
     ★같은 모양으로 돌려주는 이유: 화면·게이트·저장이 이미 이 모양을 다룬다
@@ -595,7 +612,7 @@ def build_draft(spine, slots, seconds=30, source_text=""):
       전체를 삼킨 결과는 실패로 돌려보낸다).
     """
     from shopping_shorts import script_gate
-    beats, missing = fill(spine, slots, seconds=seconds)
+    beats, missing = fill(spine, slots, seconds=seconds, seed=seed)
     if missing or not beats:
         return None
     script = " ".join(b["text"] for b in beats)
