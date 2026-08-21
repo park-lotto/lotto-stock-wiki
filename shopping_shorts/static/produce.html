@@ -10117,11 +10117,20 @@ function s2ToggleStyle(id){
 // ── 생성 ─────────────────────────────────────────────────────
 // ★생성 경로는 기존 pmRunGen과 **같은 엔드포인트**를 쓴다(판정·프롬프트가 한 벌, 0순위-B).
 async function s2Generate(){
+  // ★누른 버튼을 잡아둔다(2026-08-21 사장님 "전체 다시 만들기를 눌러도 안 된다").
+  //   종전엔 진행·오류 표시가 **상단 s2GenBtn/s2GenHint에만** 나갔다. 결과 대본 아래의
+  //   '전체 다시 만들기'로 누르면 그 표시가 화면 밖이라, 15~40초 동안 누른 자리에서는
+  //   아무 일도 안 일어난 것처럼 보였다 — 동작은 하는데 안 하는 것처럼 보인 것이다.
+  const _hit = (window.event && window.event.currentTarget) || null;
+  const _hitOrig = _hit ? _hit.textContent : '';
+  const _hitOn = (txt, dis) => { if(_hit && _hit!==document.getElementById('s2GenBtn')){
+      _hit.disabled=!!dis; _hit.textContent=txt; } };
   const s=S2.seed;
   if(!s || !s.shortcode){ toast('먼저 씨앗 영상을 고르세요 (직접 쓴 대본은 아직 생성 대상이 아닙니다)'); return; }
   const btn=document.getElementById('s2GenBtn'), hint=document.getElementById('s2GenHint');
   const orig=btn?btn.textContent:'';
   if(btn){ btn.disabled=true; btn.textContent='⏳ 대본 만드는 중… (15~40초)'; }
+  _hitOn('⏳ 다시 만드는 중… (15~40초)', true);
   if(hint) hint.textContent='';
   try{
     const body={mode:'A', my_topic:'', subject:'', n:2, elem_modes:{},
@@ -10140,7 +10149,11 @@ async function s2Generate(){
     else body.auto_style=true;
     const d=await (await fetch('/api/wiki/generate?shortcode='+encodeURIComponent(s.shortcode),
       {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
-    if(!d.ok){ if(hint) hint.innerHTML='<span style="color:var(--fire)">⚠️ '+esc(d.error||'생성 실패')+'</span>'; return; }
+    if(!d.ok){
+      if(hint) hint.innerHTML='<span style="color:var(--fire)">⚠️ '+esc(d.error||'생성 실패')+'</span>';
+      toast('⚠️ '+(d.error||'생성 실패'));   // 화면 아래에서 눌렀어도 보이게
+      return;
+    }
     S2.drafts=d.drafts||[]; S2.curDraft=0; S2.materials=d.materials||null;
     S2.cps=d.cps||null;   // 글자→초 환산계수(서버 상수). 없으면 초 표시를 아예 안 한다
     // ★고른 스타일 수와 나온 안의 수가 다르면 조용히 넘어가지 마라 — 실제로 2개를 골랐는데
@@ -10153,8 +10166,14 @@ async function s2Generate(){
     // ★만들자마자 남긴다(2026-08-17). 여기서 저장 안 하면 확정(s2Confirm) 전에 새로고침한
     //   순간 **돈 들여 뽑은 대본이 통째로 날아간다** — 사장님 제보의 핵심 경로다.
     saveWork();
-  }catch(e){ if(hint) hint.innerHTML='<span style="color:var(--fire)">네트워크 오류</span>'; }
-  finally{ if(btn){ btn.disabled=false; btn.textContent=orig; } }
+  }catch(e){
+    if(hint) hint.innerHTML='<span style="color:var(--fire)">네트워크 오류</span>';
+    toast('⚠️ 네트워크 오류 — 다시 시도해주세요');
+  }
+  finally{
+    if(btn){ btn.disabled=false; btn.textContent=orig; }
+    _hitOn(_hitOrig, false);
+  }
 }
 // ── ③ 결과 대본 ───────────────────────────────────────────────
 // beats가 있으면(스타일 경로) 역할 행으로, 없으면(기존 생성) 문단을 행으로 나눈다.
