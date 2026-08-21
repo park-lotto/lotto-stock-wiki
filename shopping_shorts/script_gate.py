@@ -233,8 +233,16 @@ def grounding_check(full, facts_text):
     bad = []
     for num, unit in _NUM_UNIT.findall(full or ""):
         token = norm(num + unit)
-        # 재료에 같은 숫자+단위가 있으면 통과. 숫자만 있어도 인정(단위 표기가 흔들린다)
-        if token in hay or norm(num) in hay:
+        # 재료에 같은 숫자+단위가 있으면 통과. 숫자만 있어도 인정(단위 표기가 흔들린다).
+        # ★단, 숫자만 볼 때는 **숫자 경계**를 본다(2026-08-21 실측으로 고침).
+        #   종전엔 부분 문자열이라 뜻이 전혀 달라도 통과했다:
+        #     대본 "체취의 53%"  + 재료 "가격 5300원"   → 5300 안의 53이 걸려 통과
+        #     대본 "20년 경력"   + 재료 "조회수 20만회"  → 통과
+        #   실측: 라이브 대본 754편 중 44편(5%)에 지어낸 연차가 있었고
+        #   값이 20년·30년으로 흔들렸다(daiso_spine.py가 경고한 그 함정).
+        #   ⚠️완화 자체를 없애지는 않는다 — 단위 표기가 실제로 흔들리기 때문이다
+        #     ("5분"/"5 분"/"오분"). 경계만 본다.
+        if token in hay or re.search(r"(?<!\d)%s(?!\d)" % re.escape(norm(num)), hay):
             continue
         bad.append(num + unit)
     return (not bad), bad
