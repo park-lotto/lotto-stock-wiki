@@ -1613,14 +1613,15 @@
                     </div>
                   </div>
                 </div>
-                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
-                  <div style="font-size:13px;font-weight:800;margin-bottom:6px">🖼 템플릿
-                    <span style="font-size:11px;color:var(--sub);font-weight:400">— 영상 위에 얹는 틀(색띠만)</span></div>
-                  <div id="tplCards" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>
-                  <div style="font-size:12px;color:var(--sub)">표시 구간
-                    <label style="margin-left:8px;cursor:pointer"><input type="radio" name="tplSpan" value="full" checked onchange="setTemplateSpan('full')"> 영상 전체</label>
-                    <label style="margin-left:8px;cursor:pointer"><input type="radio" name="tplSpan" value="first" onchange="setTemplateSpan('first')"> 첫 장면만</label>
-                  </div>
+                <!-- 🖼 색띠 템플릿 카드줄: 사장님 지시로 감춤(2026-08-22 "이미 위에 있으니").
+                     ★삭제 아님 — renderTemplateCards()가 이 자리를 찾고, 예전 작업이
+                     색띠 템플릿(STATE.deco.template.id)을 쓰고 있으면 그대로 렌더된다. -->
+                <div id="tplCards" hidden style="display:none"></div>
+                <!-- ★'표시 구간'은 남긴다: setTemplateSpan은 색띠 전용이 아니라
+                     STATE.deco.template 전체(위쪽 '내용물 있는 틀' 포함)에 걸린다. -->
+                <div style="font-size:12px;color:var(--sub);margin-bottom:12px">표시 구간
+                  <label style="margin-left:8px;cursor:pointer"><input type="radio" name="tplSpan" value="full" checked onchange="setTemplateSpan('full')"> 영상 전체</label>
+                  <label style="margin-left:8px;cursor:pointer"><input type="radio" name="tplSpan" value="first" onchange="setTemplateSpan('first')"> 첫 장면만</label>
                 </div>
                 <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-top:1px dashed var(--line);padding-top:12px">
                   <span style="font-size:13px;font-weight:600">🖼 이미지 오버레이</span>
