@@ -909,8 +909,14 @@
     white-space:nowrap;overflow:hidden;cursor:pointer}
   .s2-tab.on{background:var(--sel-bg);border-color:var(--accent);color:var(--sel-fg)}
   #s2Root.mode-side .s2-tabs{display:none}
-  .s2-dhead{display:flex;align-items:center;gap:16px;height:24px;margin-bottom:8px}
-  .s2-dname{font-size:12px;color:var(--s2-sub);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* ★안 제목을 크게(2026-08-22 사장님 지시). 좌우 보기에서 어느 쪽이 A안·B안인지가
+     제일 먼저 보여야 하는데 12px 흐린 회색이라 옆의 '✅ 구조 지킴'보다도 안 띄었다.
+     높이도 24 → 28px(글자가 커지면 잘린다). uppercase는 한글엔 효과가 없어 뺐다. */
+  .s2-dhead{display:flex;align-items:center;gap:16px;height:28px;margin-bottom:8px}
+  .s2-dname{font-size:16px;font-weight:800;color:var(--txt);letter-spacing:0;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* 스타일 이름(· 유튜브 발명품형)은 안 이름보다 한 급 낮게 — 'A안'이 주인공이다. */
+  .s2-dname .sty{font-size:13px;font-weight:600;color:var(--s2-sub)}
   .s2-gate{margin-left:auto;font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
   .s2-gate.pass{color:var(--ok)}
   .s2-gate.fail{color:var(--fire)}
@@ -1950,7 +1956,10 @@
       <div class="sub">쓸 대본을 고르고 다듬습니다.</div>
       <!-- ★모드 클래스(mode-tab/mode-side)는 이 컨테이너에 붙는다 — 목업은 단독 페이지라
            body에 붙였지만 여기선 한 패널일 뿐이라 전역을 더럽히면 안 된다. -->
-      <div id="s2Root" class="mode-tab">
+      <!-- ★기본 보기 = 좌우(2026-08-22 사장님 지시). 두 안을 나란히 놓고 고르는 게
+           기본 사용법인데 기본값이 탭이라 매번 손으로 바꿔야 했다.
+           ⚠️아래 버튼의 class="on"과 **짝**이다 — 한쪽만 고치면 화면과 버튼이 어긋난다. -->
+      <div id="s2Root" class="mode-side">
 
         <!-- ① 재료 — ★고르는 자리가 아니다(2026-08-17 사장님 지시로 '씨앗 선택' 폐지).
              대본 1편을 지정하면 그 편에 끌려가 편협해지고, 무엇보다 **어느 편을 고르냐가
@@ -1994,8 +2003,8 @@
             <div class="s2-label" id="s2ResultLabel">③ 결과 대본</div>
             <div class="s2-modes">
               보기
-              <button id="s2ModeTab" class="on" onclick="s2SetMode('tab')">🗂 탭</button>
-              <button id="s2ModeSide" onclick="s2SetMode('side')">↔ 좌우</button>
+              <button id="s2ModeTab" onclick="s2SetMode('tab')">🗂 탭</button>
+              <button id="s2ModeSide" class="on" onclick="s2SetMode('side')">↔ 좌우</button>
             </div>
           </div>
           <div class="s2-tabs" id="s2Tabs"></div>
@@ -10710,7 +10719,7 @@ function s2DraftHtml(dr,i){
          <button class="fx-re" onclick="s2Generate()">🔄 전체 다시 만들기</button>
        </div>` : '';
   return `<div class="s2-draft ${i===0?'da':'db'}${i===S2.curDraft?' on':''}" id="s2d-${i}">
-    <div class="s2-dhead"><span class="s2-dname">${String.fromCharCode(65+i)}안${dr.style_name?(' · '+esc(dr.style_name)):''}</span>
+    <div class="s2-dhead"><span class="s2-dname">${String.fromCharCode(65+i)}안${dr.style_name?(`<span class="sty"> · ${esc(dr.style_name)}</span>`):''}</span>
       <span id="s2tot-${i}" title="우리 보이스 실측 속도로 환산한 예상 길이 — 릴스 기본은 30초 이내">${s2SecTag(s2DraftSec(dr), 30)}</span>${gate}</div>
     ${rows}${fix}
     <div class="s2-dfoot">
