@@ -686,8 +686,10 @@ def build_list_draft(spine, slot_sets, seconds=30, source_text=""):
     if missing or not beats:
         return None
     script = " ".join(b["text"] for b in beats)
+    # ★assembled=True — 이건 조립 대본이다. '문장틀 준수'는 조립에만 묻는다
+    #   (2026-08-22). 생성기 경로는 틀을 참고만 하므로 그 검사가 오히려 해가 된다.
     checks, _full = script_gate.check(spine, beats, seconds=seconds,
-                                      facts_text=(source_text or ""))
+                                      facts_text=(source_text or ""), assembled=True)
     # ★게이트를 통과한 **뒤에** 문장을 다듬는다(2026-08-21).
     #   순서가 반대면 둘이 서로 싸운다 — script_gate의 '문장틀 준수'는
     #   `template_matches`로 템플릿 **원문과 대조**하므로, 다듬은 문장은 당연히
@@ -836,8 +838,10 @@ def build_draft(spine, slots, seconds=30, source_text="", seed=""):
     #     배선은 없느니만 못하다 — 있는데 안 걸리는 판정이 가격 칸 사고의 뿌리였다.
     #   → 호출부가 source_text(담긴 영상 전사)를 넘겨야 진짜 검사가 된다. 안 넘기면
     #     종전과 같이 검사를 건너뛴다(오탐으로 정상 대본을 막지 않는다).
+    # ★assembled=True — 이건 조립 대본이다. '문장틀 준수'는 조립에만 묻는다
+    #   (2026-08-22). 생성기 경로는 틀을 참고만 하므로 그 검사가 오히려 해가 된다.
     checks, _full = script_gate.check(spine, beats, seconds=seconds,
-                                      facts_text=(source_text or ""))
+                                      facts_text=(source_text or ""), assembled=True)
     # ★게이트를 통과한 뒤에 문장을 다듬는다(2026-08-21). 순서가 반대면 둘이 서로 싸운다 —
     #   script_gate의 '문장틀 준수'는 template_matches로 템플릿 **원문과 대조**하므로
     #   다듬은 문장은 당연히 안 맞아 "이 스타일에서 벗어났어요" 경고가 떠버렸다(사장님 화면 실측).

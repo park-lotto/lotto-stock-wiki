@@ -317,13 +317,15 @@ def hook_checks(style, full, product=""):
     return out
 
 
-def check(style, beats, facts_text="", product="", seconds=30):
+def check(style, beats, facts_text="", product="", seconds=30, assembled=False):
     """(checks, full_text) 반환. checks = [{name, ok, detail}, ...]
 
     style: {"beat_roles": [...], "templates": {role: [...]}, "chars_per_30s": int}
     beats: [{"role": "...", "text": "..."}, ...]  ← 모델이 돌려준 것
     facts_text: 이 대본에 준 **재료 원문**(product_facts 등). 주면 수치 그라운딩을
         검사한다. 안 주면 그 검사는 건너뛴다 — 기존 호출부는 그대로 = 회귀 0.
+    assembled: 이 대본이 **조립**(spine_fill)으로 만들어졌나. 조립만 '문장틀 준수'를
+        묻는다 — 아래 그 검사 주석 참조. 기본 False = 생성기.
     """
     beats = beats or []
     want = list(style.get("beat_roles") or [])
@@ -344,7 +346,17 @@ def check(style, beats, facts_text="", product="", seconds=30):
     checks = [{"name": "구간 순서", "ok": got_cmp == want,
                "detail": "기대 %s / 실제 %s" % (want, got_cmp)}]
 
-    templates = style.get("templates") or {}
+    # ★'문장틀 준수'는 **조립 대본에만** 묻는다(2026-08-22 실측).
+    #   이 검사는 대본을 템플릿 원문과 **글자 단위로** 대조한다(template_matches).
+    #   조립(spine_fill)은 틀을 글자 그대로 쓰므로 옳다. 그러나 생성기는 틀을
+    #   **참고만** 하고 문장을 새로 쓴다 — assemble_off=1(사장님 지시)로 지금은
+    #   전부 생성기다. 그대로 두면 **잘 쓸수록 떨어진다**.
+    #   라이브 실측(스콘 소재 실제 대본 6편): 비문 0건인데 6편 전부 게이트 실패
+    #   (cta 83% · escalation 67% · hook 67%가 '문장틀 준수'로 떨어졌다).
+    #   피해가 두 겹이다 — ①무의미한 ⚠️가 화면을 덮어 진짜 문제를 가린다
+    #   ②재작성 루프가 "틀에 맞춰라"로 돌아 생성기의 장점을 도로 깎는다.
+    #   ⚠️없애지 않는다. 조립은 종전대로 검사한다(회귀 0).
+    templates = (style.get("templates") or {}) if assembled else {}
     for role in want:
         tmpl = templates.get(role) or []
         if not tmpl:

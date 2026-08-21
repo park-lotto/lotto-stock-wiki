@@ -521,7 +521,9 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
     picked = (template or "").strip()
     want = [picked] if picked and picked in templates else list(templates)
 
-    descs = style.get("beat_descs") or dict(zip(roles, style.get("beat_chain") or []))
+    # ★짝짓기는 bank_assemble.beat_descs 한 곳에서만 정한다(0순위-B) — 예전엔 여기와
+    #   style_block 두 군데에 같은 zip()이 적혀 있었고, 둘 다 조용히 끊겼다.
+    descs = bank_assemble.beat_descs(style)
     # ★분량은 **지금 그 칸에 있던 문장 길이**에 맞춘다(2026-08-17 실측 수정).
     #   처음엔 전체 생성과 같은 '칸 평균'(chars_per_30s ÷ 칸수)을 줬는데, 한 칸만 다시 쓸
     #   때는 그게 틀렸다 — 칸마다 제 길이가 다르기 때문이다. 실측에서 한 문장짜리 훅이
