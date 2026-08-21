@@ -1244,6 +1244,26 @@ def _model_binding_ok(beats, groups):
     return True
 
 
+def _trim_all_beats(beats):
+    """★화면 확정의 **마지막 출구** — 어느 경로로 배정됐든 과적재를 여기서 한 번에 막는다.
+
+    2026-08-21 사장님 실측(job a1765d7766e5): CTA 칸이 **2.7초 말하는데 재료 9.2초**
+    (조각 5개)를 받아 6.5초가 화면에 안 나왔다. 잡 전체로는 재료 45.1초 중 11.8초
+    (4분의 1)가 버려졌다.
+
+    원인: 과적재 차단(_trim_rest_to_narration, 2026-08-01)이 배정 경로 **셋 중 하나**
+    (_assign_timeline)에만 붙어 있었다 — 모델 배정을 존중하는 분기와 _assign_blocks는
+    그대로 통과했다. 같은 판단이 한 곳에만 있어야 한다는 규칙(0순위-B)을 어긴 자리였다.
+
+    이미 잘린 비트를 다시 넘겨도 결과는 같다(멱등 — 예산 안이면 하나도 안 자른다)."""
+    for b in beats or []:
+        pick = b.get("primary")
+        if not pick:
+            continue
+        b["alternates"] = _trim_rest_to_narration(b, pick, list(b.get("alternates") or []))
+    return beats
+
+
 def _pin_screens(beats, groups):
     """화면 확정의 단일 관문(0순위-B: 같은 판단은 한 곳에서만).
 
@@ -1253,8 +1273,8 @@ def _pin_screens(beats, groups):
     if os.getenv("SCENE_BINDING", "1") != "0" and _model_binding_ok(beats, groups):
         for b in beats:
             _flag_offtopic(b, [c for c in [b.get("primary")] + list(b.get("alternates") or []) if c])
-        return beats
-    return _assign_timeline(beats, groups)
+        return _trim_all_beats(beats)          # ← 과적재 차단은 경로와 무관하게 항상
+    return _trim_all_beats(_assign_timeline(beats, groups))
 
 
 def _assign_timeline(beats, groups):
@@ -1478,7 +1498,7 @@ def _assign_blocks(beats, blocks):
             pos += n
             b["primary"] = dict(chunk[0])
             b["alternates"] = [dict(s) for s in chunk[1:]]
-    return beats
+    return _trim_all_beats(beats)              # 덩어리를 통째로 주던 경로도 같은 차단을 거친다
 
 
 # 한글 1글자 ≈ 1음절이므로 "글자수 ÷ 이 값"이 실제 발화 시간(초)이다.
