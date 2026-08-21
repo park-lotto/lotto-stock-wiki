@@ -650,6 +650,7 @@ def build_list_draft(spine, slot_sets, seconds=30, source_text=""):
         "checks": checks, "passed": script_gate.passed(checks), "tries": 0,
         "style_id": spine.get("id"), "style_name": spine.get("name") or "",
         "made_by": "조립",
+        "polish": _polish_note,
     }
 
 
@@ -772,6 +773,11 @@ def build_draft(spine, slots, seconds=30, source_text="", seed=""):
     beats, missing = fill(spine, slots, seconds=seconds, seed=seed)
     if missing or not beats:
         return None
+    # ★틀은 조립이 잡고 문장은 모델이 쓴다(2026-08-21). 조립본은 뜻은 맞는데
+    #   빈칸 값의 형태가 제각각이라 조사·어미가 어깋난다. 자세한 이유는 beat_polish 문서.
+    #   실패하면 조립 원본 그대로 간다 — 어느 쪽으로 갔는지는 polish에 남는다.
+    from shopping_shorts import beat_polish
+    beats, _polish_note = beat_polish.polish(beats, spine.get("name") or "")
     script = " ".join(b["text"] for b in beats)
     # ★수치 근거 검사를 조립 경로에도 건다(2026-08-21). 종전엔 facts_text를 안 넘겨
     #   `grounding_check`가 통째로 건너뛰어졌다 — 생성기 경로만 검사받고 조립은 무검사였다.
