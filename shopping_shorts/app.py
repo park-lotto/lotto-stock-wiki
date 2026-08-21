@@ -57,6 +57,7 @@ from shopping_shorts import mix_pipeline
 from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, retype_mix_job,
                                           _source_video_id, resynth_tts_job, resynth_one_beat,
                                           run_clean_sources, _resolve_sources)
+from shopping_shorts import lens_discover
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
 from shopping_shorts import cn_search, kw_search, douyin_search, xiaohongshu_search
 from shopping_shorts import youtube_search
@@ -5732,9 +5733,48 @@ def api_media(platform: str, id: str):
     return {"ok": bool(url), "url": url}
 
 
+# 로케일 → 화면에 보일 이름. 여기 없는 로케일은 코드를 그대로 이름으로 쓴다
+# (LENS_LOCALES에 새 나라를 넣어도 칩이 뜨긴 한다 — 이름만 못생길 뿐).
+_LENS_LOCALE_LABELS = {
+    "ko:kr": "🇰🇷 한국", "en:us": "🇺🇸 미국",
+    "zh-cn:tw": "🇨🇳 중국", "ja:jp": "🇯🇵 일본",
+    "vi:vn": "🇻🇳 베트남", "th:th": "🇹🇭 태국", "id:id": "🇮🇩 인니",
+}
+
+
+@app.get("/api/lens/locales")
+def api_lens_locales():
+    """렌즈가 돌릴 수 있는 나라 목록. 프론트가 이걸로 칩을 그린다.
+
+    ★서버 설정(LENS_LOCALES)을 그대로 노출한다 — 프론트에 나라를 하드코딩하면
+      서버 env를 바꿨을 때 화면과 어긋난다(0순위-B)."""
+    out = []
+    for hl, cc in lens_discover._LENS_LOCALES:
+        key = f"{hl}:{cc}"
+        out.append({"key": key, "label": _LENS_LOCALE_LABELS.get(key, key)})
+    return {"ok": True, "locales": out}
+
+
+def _parse_lens_locales(raw):
+    """프론트가 보낸 "ko:kr,ja:jp" → [("ko","kr"), ("ja","jp")]. 비면 [](=전체).
+
+    실제로 어느 나라를 돌릴지 **정하는 건 lens_discover._resolve_locales**다(0순위-B).
+    여기서는 문자열을 튜플로 바꾸기만 한다 — 유효성·빈값 폴백을 두 곳에 적으면 어긋난다."""
+    out = []
+    for part in (raw or "").split(","):
+        part = part.strip()
+        if not part or ":" not in part:
+            continue
+        hl, _, cc = part.partition(":")
+        hl, cc = hl.strip(), cc.strip()
+        if hl and cc:
+            out.append((hl, cc))
+    return out
+
+
 @app.post("/api/lens/search")
 async def api_lens_search(request: Request, frame: UploadFile = File(...),
-                           source_caption: str = Form("")):
+                           source_caption: str = Form(""), locales: str = Form("")):
     """멈춘 프레임 캡처 이미지 → 구글렌즈 → 5플랫폼 유사영상. 월 호출가드(429 lens_limit).
 
     캡처본을 find_frames/lens/{uuid}.jpg로 저장하고 기존 /api/find/frame 서빙
@@ -5779,7 +5819,8 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
         rows = await asyncio.to_thread(
             functools.partial(search_similar_videos, image_url,
                               api_key=_lens_api_keys(cid),
-                              source_caption=source_caption, stats=diag))
+                              source_caption=source_caption, stats=diag,
+                              locales=_parse_lens_locales(locales)))
         # ★채점(Gemini)은 **블로킹**이다 → to_thread. 여기서 그냥 부르면 이벤트루프가
         #   몇 초 멈춰, 프론트가 동시에 던진 /api/lens/cn/keywords가 뒤에서 굶는다
         #   (위 SerpApi·비전 호출과 같은 이유). 채점을 끝낸 뒤 _lens_finalize엔
