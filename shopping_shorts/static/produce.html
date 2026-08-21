@@ -1332,7 +1332,7 @@
                (2026-07-19에 '자동 재채움'을 일부러 없앴다 — 자동으로 밀어넣으면 그 버그가 되살아난다) -->
           <div id="hcCopyBox" style="margin-bottom:10px">
             <div style="font-size:13px;font-weight:800;margin-bottom:6px">✍ 고정카피
-              <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 아래 칸에 들어갑니다</span>
+              <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 아래로</span>
               <button type="button" class="tab" onclick="loadHeadcopySuggest(true)"
                 style="min-width:auto;padding:3px 10px;font-size:11px;margin-left:6px">↻ 다시 뽑기</button>
               <!-- ★넣을 수만 있고 뺄 수가 없었다(2026-08-18 사장님 지적). 한 번 넣으면
@@ -1343,7 +1343,7 @@
             <div id="hcCopyCards" style="display:flex;gap:6px;flex-wrap:wrap"></div>
             <div id="hcCopyMsg" class="hint" style="margin-top:4px"></div>
           </div>
-          <div style="font-size:13px;margin-bottom:4px">헤드카피 문구 <span class="hint" style="font-size:11px">— Enter로 줄바꿈, 길면 자동으로 줄이 나뉘어요</span></div>
+          <div style="font-size:13px;margin-bottom:4px">헤드카피 문구</div>
           <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
             style="width:100%;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.4"></textarea>
           <!-- ⚡빠른 조절(2026-08-19 사장님 "폰트나 색상도 지정이 되야지") — 문구를 고치는
@@ -1351,8 +1351,8 @@
                아래 '직접 다듬기'의 진짜 입력칸(hcFont/hcColor/hcSize/hcY/hcX)에 그대로 써넣고
                updateHC()를 부른다 — 같은 값이 두 벌이 되면 반드시 어긋난다(0순위-B). -->
           <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
-            <div style="font-size:13px;font-weight:700;margin-bottom:8px">⚡ 빠른 조절
-              <span style="font-size:11px;color:var(--sub);font-weight:400">— 미리보기에서 글자를 끌어 옮길 수도 있어요</span></div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px">🎨 글씨 · 자리
+              <span style="font-size:11px;color:var(--sub);font-weight:400">— 미리보기에서 끌어도 옮겨져요</span></div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
               <!-- ★폰트는 '진짜 그 글씨체로' 보여준다(2026-08-19 사장님 "썸네일쪽처럼 이쁜폰트로").
                    밋밋한 <select>는 22종이 전부 같은 고딕으로 보여 고를 수가 없었다.
@@ -1381,11 +1381,18 @@
               <input id="hcYQ" type="range" min="0" max="100" oninput="HC_Y_TOUCHED=true;hcQuick('hcY', this.value)" style="width:100%"></div>
             <div style="font-size:12px;color:var(--sub)">가로 위치 <span id="hcXQV">50</span>%
               <input id="hcXQ" type="range" min="0" max="100" oninput="hcQuick('hcX', this.value)" style="width:100%"></div>
-            <div style="font-size:11px;color:var(--sub);margin-top:6px">줄바꿈은 문구 칸의 Enter로 정해요 — 넣은 줄 그대로 나오고, 넘치면 글씨가 자동으로 작아집니다.</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center">
+              <span style="font-size:12px;color:var(--sub)">한 번에</span>
+              <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('top')">⬆ 위</button>
+              <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('mid')">중간</button>
+              <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('bottom')">⬇ 하단</button>
+              <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('center')">↔ 가운데</button>
+            </div>
+            <div style="font-size:11px;color:var(--sub);margin-top:6px">줄바꿈은 문구 칸에서 Enter로 정해요.</div>
           </div>
           <!-- 강조 단어(노출 유지) -->
           <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
-            <div style="font-size:13px;font-weight:700;margin-bottom:2px">🎯 강조 단어 <span style="font-size:11px;color:var(--sub);font-weight:400">— 헤드카피 + 자막 공통(키워드 일치 시 자동 강조)</span></div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:2px">🎯 강조 단어 <span style="font-size:11px;color:var(--sub);font-weight:400">— 헤드카피·자막 공통</span></div>
             <div id="highlightRuleList" style="margin-top:6px"></div>
             <button class="tab" onclick="addHighlightRule()" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:12px;margin-top:4px">+ 강조 단어 추가</button>
           </div>
@@ -1394,52 +1401,29 @@
                "스타일 안에 헤드카피는 삭제해 / 문구가 헤드카피니까").
                ★마크업을 그대로 옮겼다 — id·핸들러 무수정(값의 주인은 그대로). -->
           <div style="border-top:1px dashed var(--line);padding-top:10px;margin-top:4px">
-            <div style="font-size:13px;font-weight:800;margin-bottom:8px">🎨 헤드카피 꾸미기</div>
+
 
               <div id="hcPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"></div>
 
-                <!-- ① 글씨 -->
-                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
-                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">① 글씨</div>
-                  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-                    <span style="font-size:12px;color:var(--sub)">폰트
-                      <span id="hcFontPicker" style="position:relative;display:inline-block;vertical-align:middle">
-                        <button type="button" id="hcFontBtn" onclick="toggleFontMenu(event)"
-                          style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer;min-width:150px;text-align:left;font-size:13px">폰트 선택 ▾</button>
-                        <div id="hcFontMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:60;background:var(--inset);border:1px solid var(--line);border-radius:8px;max-height:340px;overflow:auto;box-shadow:0 12px 34px rgba(0,0,0,.55);min-width:190px"></div>
-                      </span>
-                      <select id="hcFont" onchange="updateHC()" style="display:none"></select></span>
-                    <label style="font-size:12px;color:var(--sub)">색상
-                      <input id="hcColor" type="color" value="#FF8800" oninput="updateHC()" style="vertical-align:middle;cursor:pointer"></label>
-                    <label style="font-size:12px;color:var(--sub)">굵기
-                      <select id="hcWeight" onchange="updateHC()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px">
-                        <option value="700">굵게</option><option value="900" selected>아주 굵게</option><option value="400">보통</option>
-                      </select></label>
-                  </div>
-                  <div style="margin-top:8px;font-size:12px;color:var(--sub)">크기 <b id="hcSizeV">64</b>px
-                    <input id="hcSize" type="range" min="28" max="120" value="64" oninput="updateHC()" style="width:100%"></div>
+                <!-- ★①글씨·②자리는 ⚡빠른 조절과 같은 값을 만지는 중복이라 화면에서 뺐다
+                     (2026-08-22 사장님 "여기 중복이야"). ★삭제가 아니라 숨김이다 —
+                     updateHC()가 이 칸들을 읽어 값을 만들고, applyConfig()가 여기에 써넣는다.
+                     빠른 조절은 hcQuick()으로 이 칸에 값을 넣는 **미러**일 뿐이다(0순위-B). -->
+                <div hidden style="display:none">
+                  <span id="hcFontPicker"><button type="button" id="hcFontBtn" onclick="toggleFontMenu(event)">폰트</button>
+                    <div id="hcFontMenu" style="display:none"></div></span>
+                  <select id="hcFont" onchange="updateHC()"></select>
+                  <input id="hcColor" type="color" value="#FF8800" oninput="updateHC()">
+                  <select id="hcWeight" onchange="updateHC()">
+                    <option value="700">굵게</option><option value="900" selected>아주 굵게</option><option value="400">보통</option>
+                  </select>
+                  <span id="hcSizeV">64</span><input id="hcSize" type="range" min="28" max="120" value="64" oninput="updateHC()">
+                  <span id="hcYV">14</span><input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;updateHC()">
+                  <span id="hcXV">50</span><input id="hcX" type="range" min="0" max="100" value="50" oninput="updateHC()">
                 </div>
-
-                <!-- ② 자리 -->
-                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
-                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">② 자리</div>
-                  <div style="font-size:12px;color:var(--sub)">세로 위치 <b id="hcYV">14</b>%
-                    <input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;updateHC()" style="width:100%"></div>
-                  <div style="font-size:12px;color:var(--sub)">가로 위치 <b id="hcXV">50</b>%
-                    <input id="hcX" type="range" min="0" max="100" value="50" oninput="updateHC()" style="width:100%"></div>
-                  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
-                    <span style="font-size:12px;color:var(--sub);align-self:center">한 번에</span>
-                    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('top')">⬆ 위</button>
-                    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('mid')">중간</button>
-                    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('bottom')">⬇ 하단</button>
-                    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('center')">↔ 가운데</button>
-                  </div>
-                  <div class="hint" style="margin-top:6px;font-size:11px">💡 미리보기에서 글자를 <b>드래그</b>해도 옮겨져요.</div>
-                </div>
-
                 <!-- ③ 테두리 · 박스 -->
                 <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
-                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">③ 테두리 · 박스</div>
+                  <div style="font-size:13px;font-weight:700;margin-bottom:8px">🎨 테두리 · 박스</div>
                   <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
                     <input id="hcOutline" type="checkbox" checked onchange="updateHC()"> 외곽선
                     <input id="hcOutColor" type="color" value="#000000" oninput="updateHC()">
