@@ -488,30 +488,53 @@ def coverage(spine, slots):
     return len(beats), len(roles), missing
 
 
-def invention_material_problem(sul):
-    """이 재료로 **발명품형** 대본을 쓸 수 있나 — 못 쓰면 이유 문자열, 되면 ''.
+def _benefit_material_problem(slots, need, kind, why):
+    """장점 나열로 굴러가는 갈래의 공용 자격 검사 → 못 쓰면 이유 문자열, 되면 ''.
 
     ★썰(오용형)과 자격이 다르다. 오용형은 "원래 용도를 뒤집는가"(`misuse_genre`)를 묻지만
-      발명품형은 뒤집는 이야기가 아니다 — **왜 태어났고 뭐가 대단한가**다.
-      같은 검사를 재사용하면 `misuse_genre=false`라 이 갈래는 영영 막힌다.
+      이 갈래들은 뒤집는 이야기가 아니다 — **뭐가 대단한가**다. 같은 검사를 재사용하면
+      `misuse_genre=false`라 영영 막힌다(스파인은 있는데 죽어 있고 **오류도 안 난다**).
 
-    발명품형 틀이 실제로 요구하는 것(`tools/seed_spine_invention.py`의 templates):
-      benefit={효능} · escalate={효능2} · twist={효능3}  → **장점 3개**가 있어야 끝까지 찬다
-      title={제품}                                      → 제품명이 있어야 소재 일치 검사를 넘는다
+    ★**슬롯을 받는다**(2026-08-21 회귀로 고침). 처음엔 영상 재료(`sul_facts`)의
+      `product_name`·`benefits`를 직접 봤는데, 은폐형은 {제품}·{효능}·{나라}를 **쿠팡
+      재료에서도** 받는다(`slots_from_facts(product_facts, sul)`). 영상 쪽만 보면
+      쿠팡으로 채워지는 소재를 통째로 막는다 — 실제로 회귀 테스트가 그걸 잡았다.
+      슬롯은 두 재료를 합친 결과라, **템플릿이 실제로 쓰는 것**과 정확히 같다.
+
+    `need` = 필요한 효능 칸 수. **템플릿이 요구하는 슬롯에서 나온 수다**(추측 금지):
+      발명품형 3개 — benefit={효능} · escalate={효능2} · twist={효능3}
+      은폐형   2개 — benefit={효능} · twist={효능2}   (효능3은 twist 변형에만 있어 선택)
+    제품명은 둘 다 필수다(제목·정체공개가 {제품}을 쓴다).
+    """
+    sl = slots or {}
+    if not str(sl.get("제품") or "").strip():
+        return "제품명을 못 뽑았습니다(%s은 제목에 제품명이 들어가야 합니다)" % kind
+    have = sum(1 for k in ("효능", "효능2", "효능3") if str(sl.get(k) or "").strip())
+    if have < need:
+        return "장점이 %d개뿐입니다 — %s은 %s 총 %d개가 필요합니다" % (
+            have, kind, why, need)
+    return ""
+
+
+def invention_material_problem(slots):
+    """발명품형(spine "유튜브 발명품형") 자격. 효능 3칸 + 제품명.
+
     {계기}는 **필수가 아니다** — 없으면 계기를 안 쓰는 story 변형이 대신 걸린다
     (없는 미담을 지어내는 것보다 그게 낫다).
     """
-    sf_ = sul or {}
-    ben = sf_.get("benefits") or []
-    if isinstance(ben, str):
-        ben = [ben]
-    ben = [str(x).strip() for x in ben if str(x).strip()]
-    if not str(sf_.get("product_name") or "").strip():
-        return "제품명을 못 뽑았습니다(발명품형은 제목에 제품명이 들어가야 합니다)"
-    if len(ben) < 3:
-        return ("장점이 %d개뿐입니다 — 발명품형은 핵심기능·고조·반전에 각각 하나씩 "
-                "총 3개가 필요합니다" % len(ben))
-    return ""
+    return _benefit_material_problem(
+        slots, 3, "발명품형", "핵심기능·고조·반전에 각각 하나씩")
+
+
+def conceal_material_problem(slots):
+    """은폐형(spine "유튜브 은폐형") 자격. 효능 2칸 + 제품명.
+
+    ★라이브 spine 55의 templates에서 센 수다: reveal={제품} · benefit={효능} ·
+      twist={효능2}. {효능3}은 twist 변형 3개 중 하나에만 있어 없어도 칸이 찬다.
+      {나라}·{제품군}도 없는 변형이 있어 필수가 아니다.
+    """
+    return _benefit_material_problem(
+        slots, 2, "은폐형", "핵심효능·반전에 각각 하나씩")
 
 
 def sul_material_problem(sul):

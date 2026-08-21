@@ -349,38 +349,87 @@ class TestCasesTwistNoOverlap:
 
 
 class TestInventionMaterial:
-    """발명품형(2026-08-20 신설)의 재료 자격 — **썰과 다른 검사**를 쓴다.
+    """발명품형 재료 자격 — **썰과 다른 검사**를 쓴다.
 
-    ★왜 따로 두나: 썰(오용형)의 `sul_material_problem`은 "원래 용도를 뒤집는가"
-      (`misuse_genre`)를 묻는다. 발명품형은 뒤집는 이야기가 아니라 "왜 태어났고 뭐가
-      대단한가"라서, 같은 검사에 걸면 `misuse_genre=false`로 **영영 조립이 안 된다**
-      (스파인만 있고 죽어 있는 상태 — 오류가 안 나서 눈에 안 띈다).
+    ★썰(오용형)의 `sul_material_problem`은 "원래 용도를 뒤집는가"(`misuse_genre`)를 묻는다.
+      발명품형은 뒤집는 이야기가 아니라 "왜 태어났고 뭐가 대단한가"라서, 같은 검사에 걸면
+      `misuse_genre=false`로 **영영 조립이 안 된다**(오류가 안 나서 눈에 안 띈다).
+    ★**슬롯을 받는다**(2026-08-21) — {제품}·{효능}은 영상 재료뿐 아니라 **쿠팡 재료**에서도
+      온다. 영상 쪽만 보면 쿠팡으로 채워지는 소재를 통째로 막는다(회귀 테스트가 잡았다).
     """
 
-    OK = {"product_name": "나이키 플라이이즈",
-          "benefits": ["발만 밀어 넣으면 신어진다", "뒤꿈치만 밟으면 벗겨진다", "만성통증 환자도 쓴다"]}
+    OK = {"제품": "나이키 플라이이즈", "효능": "발만 넣으면 신어진다",
+          "효능2": "뒤꿈치만 밟으면 벗겨진다", "효능3": "만성통증 환자도 쓴다"}
 
-    def test_장점_3개와_제품명이_있으면_통과(self):
+    def test_효능_3칸과_제품명이_있으면_통과(self):
         assert sf.invention_material_problem(self.OK) == ""
 
-    def test_장점이_모자라면_막는다(self):
-        """benefit·escalate·twist에 하나씩 = 3개가 있어야 끝까지 찬다."""
-        m = dict(self.OK, benefits=self.OK["benefits"][:2])
+    def test_효능이_모자라면_막는다(self):
+        """benefit·escalate·twist에 하나씩 = 3칸이 차야 끝까지 간다."""
+        m = {k: v for k, v in self.OK.items() if k != "효능3"}
         assert "장점이 2개" in sf.invention_material_problem(m)
 
     def test_제품명이_없으면_막는다(self):
         """제목이 {제품}을 쓴다 — 없으면 게이트의 '소재 일치' 검사에서 떨어진다."""
-        m = {k: v for k, v in self.OK.items() if k != "product_name"}
+        m = {k: v for k, v in self.OK.items() if k != "제품"}
         assert "제품명" in sf.invention_material_problem(m)
 
-    def test_오용형_자격과_섞이지_않는다(self):
-        """발명품형 재료(misuses 없음)를 썰 검사에 넣으면 막히는 게 정상이다.
-        그 반대도 마찬가지 — 그래서 갈래를 나눴다."""
-        assert sf.invention_material_problem(self.OK) == ""
-        assert sf.sul_material_problem(self.OK) != ""
+    def test_쿠팡_재료로_채워져도_통과한다(self):
+        """★2026-08-21 회귀: 영상 재료(sul_facts)만 보던 검사가 이 경로를 막았다."""
+        pf = {"title": "무소음 젤펜", "origin": "미국",
+              "why": ["딸깍 소리가 안 난다", "필기감이 좋다", "잉크가 안 번진다"]}
+        slots = sf.slots_from_facts(pf, {})          # 영상 재료는 비어 있다
+        assert sf.invention_material_problem(slots) == ""
 
     def test_계기는_필수가_아니다(self):
         """없으면 계기를 안 쓰는 story 변형이 걸린다 — 미담을 지어내는 것보다 낫다."""
-        assert sf.invention_material_problem(self.OK) == ""      # origin_story 없음
-        slots = sf.slots_from_facts(None, self.OK)
-        assert "계기" not in slots
+        assert "계기" not in self.OK
+        assert sf.invention_material_problem(self.OK) == ""
+
+
+class TestConcealMaterial:
+    """은폐형 자격 — 오용형과도, 발명품형과도 다르다 (2026-08-21 분리).
+
+    ★발명품형을 갈라놓을 때 은폐형에 같은 문제가 그대로 남아 있었다. 사장님이 담아주신
+      구명 팔찌 소재(6편)에서 은폐형이 "이 영상은 오용형이 아닙니다"로 **통째로 막혔다**.
+    ★필요 효능 2칸은 라이브 spine 55의 templates에서 센 수다(추측 아님):
+      reveal={제품} · benefit={효능} · twist={효능2}.
+    """
+
+    TWO = {"제품": "손목 구명조끼", "효능": "익수 시 즉각 구조된다", "효능2": "구명조끼보다 가볍다"}
+
+    def test_효능_2칸이면_통과(self):
+        assert sf.conceal_material_problem(self.TWO) == ""
+
+    def test_효능_1칸이면_막는다(self):
+        one = {k: v for k, v in self.TWO.items() if k != "효능2"}
+        assert "장점이 1개" in sf.conceal_material_problem(one)
+
+    def test_제품명이_없으면_막는다(self):
+        m = {k: v for k, v in self.TWO.items() if k != "제품"}
+        assert "제품명" in sf.conceal_material_problem(m)
+
+    def test_발명품형보다_기준이_낮다(self):
+        """은폐형 2칸 / 발명품형 3칸 — 템플릿이 요구하는 슬롯 수가 다르다."""
+        assert sf.conceal_material_problem(self.TWO) == ""
+        assert sf.invention_material_problem(self.TWO) != ""
+
+    def test_오용형_검사와_섞이지_않는다(self):
+        """★이번 수리의 핵심 — 같은 재료가 한쪽은 통과, 한쪽은 차단이어야 한다."""
+        sul = {"product_name": "손목 구명조끼", "misuse_genre": False,
+               "benefits": ["익수 시 즉각 구조된다", "구명조끼보다 가볍다"]}
+        assert sf.conceal_material_problem(self.TWO) == ""
+        assert sf.sul_material_problem(sul) != ""
+
+
+def test_갈래_판정이_서로_안_섞인다():
+    """카테고리 이름이 어긋나면 조립이 조용히 죽는다 — 여기서 못 박는다."""
+    import shopping_shorts.app as A
+    for cat, want in (("오용형", "sul"), ("제품정체형", "conceal"),
+                      ("발명품형", "invention"), ("다이소형", "insta")):
+        sp = [{"fit_categories": [cat]}]
+        got = ("sul" if A._is_sul_context("", sp)
+               else "conceal" if A._is_conceal_context("", sp)
+               else "invention" if A._is_invention_context("", sp)
+               else "insta" if A._is_insta_context("", sp) else "")
+        assert got == want, "%s → %s (기대 %s)" % (cat, got, want)
