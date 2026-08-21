@@ -1182,8 +1182,12 @@ function renderCtypes(){
 }
 // 발굴 스타일 줄(유튜브만). 라벨은 발굴이 실제로 매긴 이름 그대로 쓴다 — 화면에서만
 // 예쁘게 바꾸면 나중에 축이 늘 때 이름이 두 벌이 된다(0순위-B).
-const STYLE_LABELS = {신기템:"🆕 신기템", 썰쇼핑:"🎬 썰쇼핑",
+// ★신기템은 잠시 숨긴다(2026-08-21 사장님 "신기템은 일단 탭 숨겨놓고").
+//   판정·수집은 그대로 돈다 — 화면에서만 뺀다. 여기 한 줄을 되살리면 즉시 돌아온다.
+//   지우지 않는 이유: 지우면 나중에 왜 없는지 아무도 모른다(2026-07-21 platformTabs 선례).
+const STYLE_LABELS = {썰쇼핑:"🎬 썰쇼핑",
                       연예인결합:"⭐ 연예인", 레시피쇼핑:"🍳 레시피"};
+const STYLE_HIDDEN = {신기템:"🆕 신기템"};   // 되살리려면 위 목록으로 옮긴다
 function renderStyles(){
   const el = document.getElementById("styles");
   if (!el) return;

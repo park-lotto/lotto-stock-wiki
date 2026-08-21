@@ -144,7 +144,9 @@ def score_celeb(titles, name=""):
 
 
 def score_food(titles, name=""):
-    return sum(1 for t in titles if _h(t, ys._FOOD) and _h(t, ys._PRODUCT))
+    # 음식 판정은 yt_style 한 곳에서만 한다(0순위-B) — '만들기' 오탐 처방이 두 벌이 되면
+    # 채널은 걸러지는데 랭킹은 안 걸러지는 어긋남이 난다(2026-08-21).
+    return sum(1 for t in titles if ys.is_food_title(t) and _h(t, ys._PRODUCT))
 
 
 def harvest_sul(titles):

@@ -762,6 +762,12 @@ def _attach_channel_style(items, store, platform):
         #   (제품정체형·오용형), 연예인·레시피는 채널 성격이 곧 영상 성격이라 실측상 문제가 없었다.
         if st == "신기템" and not _ys.is_novel_video(it.get("caption")):
             st = ""
+        # ★레시피도 같은 이유로 영상을 본다(2026-08-21 사장님 "레시피에 들어간건 매칭이
+        #   많이 안돼"). 실측: 레시피 축 311건 중 실제 레시피 87건(28%)뿐이고 홈템 127·
+        #   기타 90이 섞여 있었다. 채널이 레시피 축이어도 그 편이 요리가 아니면 안 준다.
+        #   판정은 채널 발굴(score_food)이 쓰는 그 함수 그대로다(0순위-B).
+        elif st == "레시피쇼핑" and not _ys.is_food_title(it.get("caption") or ""):
+            st = ""
         it["style"] = st
 
 
