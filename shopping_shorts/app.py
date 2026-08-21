@@ -11921,7 +11921,10 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
     if _off:
         import sys as _sys       # ★이 함수 안에서 sys가 안 보인다(라이브 500 실사고). 지연 임포트한다.
         print("assemble_off=1 → 조립 건너뛰고 전부 생성기로", file=_sys.stderr)
-        return [], list(spines or [])
+        # ★반환값은 **3개**다(out, left, why). 2개로 돌려보내 라이브가 500으로 죽었다
+        #   (ValueError: not enough values to unpack). docstring만 보고 2개로 착각한 탃 —
+        #   호출부(app.py:2529)를 봤으면 바로 보였다.
+        return [], list(spines or []), ["설정에서 틀 조립을 꺼두었습니다 — 전부 생성기로 만듭니다"]
     out, left = [], []
     _why = []          # 조립을 못 한 이유(화면이 말해준다)
     try:
