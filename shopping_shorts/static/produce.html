@@ -779,8 +779,10 @@
   /* ★grid로 고정한다(2026-08-21). flex+flex:1 1 0은 wrap 후 **마지막 줄 카드가 남은 폭을
      통째로 나눠 먹어** 2개만 남으면 절반씩 거대해졌다(실측: 9개+2개 배치에서 아래 2개가 5배).
      grid auto-fill은 줄이 안 차도 칸 폭을 유지하므로 모든 카드가 같은 크기다. */
-  /* align-items:start — stretch면 한 카드를 펼칠 때 **같은 줄 카드가 통째로 늘어나** 빈 칸이 생겼다(실측). */
-  .s2-cardrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(216px,1fr));gap:16px;align-items:start}
+  /* ★박스 크기는 항상 같다(stretch). 펼침(.s2-ex)은 카드 흐름에서 빼내 **위에 띄우므로**
+     한 장을 펼쳐도 같은 줄 카드가 늘어나지 않는다 — start로 두면 접힌 카드 높이가
+     제각각이 돼 지저분했다(2026-08-21 사장님 지적). */
+  .s2-cardrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(216px,1fr));gap:16px;align-items:stretch}
   .s2-cardrow>*{min-width:0}
   /* ① 씨앗 카드 */
   .s2-scard{border:1px solid var(--line);border-radius:12px;background:var(--inset);padding:16px;
@@ -836,7 +838,11 @@
   .s2-exbtn{margin-top:10px;align-self:flex-start;font-size:11px;font-weight:700;color:var(--s2-sub);
     background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:3px 9px;cursor:pointer}
   .s2-exbtn:hover{border-color:var(--accent2);color:var(--txt)}
-  .s2-ex{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);font-size:11.5px;line-height:1.65;color:var(--s2-sub)}
+  .s2-ex{position:absolute;top:calc(100% - 6px);left:0;right:0;z-index:30;
+    max-height:min(58vh,520px);overflow:auto;overscroll-behavior:contain;
+    padding:12px 14px 14px;background:var(--panel);border:1px solid var(--accent2);border-radius:0 0 12px 12px;
+    box-shadow:0 14px 32px rgba(0,0,0,.45);font-size:11.5px;line-height:1.65;color:var(--s2-sub);cursor:default}
+  .s2-card:has(.s2-ex){z-index:31}
   .s2-ex h6{margin:0 0 3px;font-size:11px;font-weight:800;color:var(--txt)}
   .s2-ex .q{color:var(--gold);font-weight:600;word-break:keep-all}
   .s2-ex .sec{margin-top:9px}
@@ -9812,12 +9818,19 @@ function s2Platform(st){
   if(/인스타|릴스|reels/i.test(n+t)) return 'ig';
   return '';
 }
-// 접힘 상태 기억 — 카드마다 따로. 기본은 접힘(고르는 화면이 길어지면 안 된다).
-const S2_OPEN = {};
+// 펼친 카드 **하나**만 기억한다. 떠 있는 패널이 여럿이면 서로를 가린다.
+let S2_OPEN_ID = null;
+const S2_OPEN = new Proxy({}, {get:(_,k)=>String(S2_OPEN_ID)===String(k)});   // 기존 참조 호환
 function s2ToggleEx(ev, id){
   ev.stopPropagation();              // ★카드 onclick(스타일 선택)과 겹치지 않게
-  S2_OPEN[id] = !S2_OPEN[id];
+  S2_OPEN_ID = (String(S2_OPEN_ID)===String(id)) ? null : id;
   s2RenderStyles();
+  // 아랫줄 카드를 펼치면 떠오른 패널이 화면 밖에 있다 — 열었으면 보이는 곳까지 데려온다.
+  if(S2_OPEN_ID!=null) requestAnimationFrame(()=>{
+    const ex=document.querySelector('#s2StyleRow .s2-ex'); if(!ex) return;
+    const r=ex.getBoundingClientRect();
+    if(r.bottom > window.innerHeight - 12) ex.scrollIntoView({block:'end', behavior:'smooth'});
+  });
 }
 // 문장 예시 하나 — 여러 개 중 첫 번째만. {빈칸}은 s2Tmpl이 눈에 보이게 칠한다.
 function s2Ex(templates, role){
@@ -10022,7 +10035,7 @@ function s2RenderStyles(){
       return `<li><b>${esc(s2RoleName(r).replace(/^\S+\s/,''))}</b> <span class="q">"${s2Tmpl(ex)}"</span></li>`;
     }).filter(Boolean).join('');
     const open = !!S2_OPEN[st.id];
-    const exBody = !open ? '' : `<div class="s2-ex">
+    const exBody = !open ? '' : `<div class="s2-ex" onclick="event.stopPropagation()">
       ${st.emotion_arc?`<div>💗 감정선 <span class="arc">${esc(st.emotion_arc)}</span></div>`:''}
       ${titleEx?`<div class="sec"><h6>📌 제목은 이렇게</h6><div class="q">"${s2Tmpl(titleEx)}"</div></div>`:''}
       ${lineEx?`<div class="sec"><h6>🎣 첫 대사는 이렇게</h6><div class="q">"${s2Tmpl(lineEx)}"</div></div>`:''}
