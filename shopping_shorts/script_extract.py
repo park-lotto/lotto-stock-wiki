@@ -18,6 +18,7 @@ from pipeline.atoms import key_vault
 from shopping_shorts import action_dict
 from shopping_shorts import comment_gen
 from shopping_shorts import scene_cut
+from shopping_shorts import shot_roles as _shot_roles
 from shopping_shorts import tag_qa
 from shopping_shorts.config import SHORTS_GEMINI_KEYS
 from shopping_shorts.video_analysis import _MODEL, _wait_until_active
@@ -73,8 +74,12 @@ _RESPONSE_SCHEMA = {
                     "use_point": {"type": "string"},
                     "has_effect": {"type": "boolean"},
                     "is_key": {"type": "boolean"},
-                    "shot_role": {"type": "string",
-                                  "enum": ["before", "사용중", "after", "완성", "문제", "기타"]},
+                    # ★어휘를 여기 다시 적지 않는다(0순위-B). 2026-08-21 실사고:
+                    #   `shot_roles` 모듈을 만들고 frame_script만 고쳤는데, **실제 태깅은
+                    #   이 경로**라 새 축(설치·조작·도포·정리·실증)이 하나도 안 나왔다.
+                    #   재태깅으로 5,015건을 갈라놨는데 **새로 분석되는 것은 전부 옛 어휘**로
+                    #   돌아왔다 — 축 확장이 통째로 무력화된 상태였다.
+                    "shot_role": {"type": "string", "enum": list(_shot_roles.SHOT_ROLES)},
                     "product_benefits": {"type": "array", "items": {"type": "string"}},
                 },
                 "required": ["start", "end", "text", "scene_desc"],
@@ -183,13 +188,7 @@ _PROMPT = """이 영상을 보고 시간 순서대로 세그먼트로 나눠 대
   구간이면 true. 단순 도입 상황·인물 등장·감상·완성 인사·CTA·링크유도면 false. (원본 제작자가
   "이 대사에 이 장면"으로 맞춰둔 실증 페어를 골라내려는 것 — 대사가 기능을 설명하며 화면이 그걸
   보여주면 true. 애매하면 false.)
-- shot_role: 화면의 성격을 하나 골라라(장면 스파인 슬롯 배치에 쓴다):
-  · "before" = 사용 전/문제 있는 상태(더러움·부스스한 룩·엉킴 등)
-  · "사용중" = 손이 재료/도구를 다루는 과정(조리·바르기·닦기·조립)
-  · "after"  = 사용 후 개선된 상태(before와 대비되는 깨끗/완성 룩)
-  · "완성"   = 완성된 결과물이 화면 주인공(완성 요리·완성품 클로즈업)
-  · "문제"   = 문제 상황을 보여주는 장면(불편·한계 부각)
-  · "기타"   = 그 외(인물 등장·배경·인사·CTA)
+{_SHOT_ROLE_GUIDE}
 - product_benefits: **자막도 나레이션도 없어도** 그 구간 화면만 보고 이 제품/도구의 **특장점을
   한국어 문장 1~2개**로 뽑아라(예: "터치 한 번에 자동으로 열린다", "좁은 틈에 쏙 들어가 공간을
   아낀다", "고급스러운 마감"). 요리·살림 소재면 방법 설명 대신 **결과의 매력**을 적어라(예:
@@ -216,9 +215,8 @@ def _norm_benefits(raw):
 
 
 # 장면 스파인(2026-07-29): shot_role 어휘. **여기서 다시 적지 않는다** —
-# 2026-08-20부터 `shot_roles` 모듈 한 곳이 정한다(0순위-B). 여기 따로 두던 시절엔
-# 어휘를 늘려도 이 집합이 몰라서 새 값이 전부 '기타'로 떨어졌다.
-from shopping_shorts import shot_roles as _shot_roles
+# `shot_roles` 모듈 한 곳이 정한다(0순위-B). 임포트는 파일 맨 위에 있다 —
+# 위쪽 JSON 스키마(_SCHEMA)가 모듈 로드 시점에 그 목록을 쓰기 때문이다.
 
 
 def _norm_shot_role(raw):
@@ -599,8 +597,12 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
     boundary_hint, _cuts, _fps = _boundary_hint(video_path)
     if not use_boundaries:
         boundary_hint = ""
-    base_prompt = _PROMPT.format(caption=caption or "(캡션 없음)",
-                                 boundaries=boundary_hint or "(감지 실패 — 화면·주제 변화로 판단)")
+    base_prompt = _PROMPT.format(
+        caption=caption or "(캡션 없음)",
+        boundaries=boundary_hint or "(감지 실패 — 화면·주제 변화로 판단)",
+        # ★설명 문구도 어휘 목록에서 만든다(0순위-B) — 여기 손으로 적어두면 축을 늘려도
+        #   모델은 옛 목록만 보고 답한다. 그게 2026-08-21에 실제로 일어난 일이다.
+        _SHOT_ROLE_GUIDE=_shot_roles.guide_block())
     prompt = base_prompt
     model = _MODEL
     primary_503 = 0

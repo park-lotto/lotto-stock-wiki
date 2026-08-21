@@ -116,3 +116,18 @@ def expand(roles):
 def matches(role, roles):
     """장면의 shot_role이 이 슬롯이 요구하는 결에 드는가."""
     return normalize(role) in expand(roles)
+
+
+def guide_block(bullet="  · "):
+    """추출 프롬프트에 넣을 shot_role 설명 블록 — **어휘 목록에서 만든다**.
+
+    ★2026-08-21 실사고로 생겼다. 이 모듈을 만들 때 `frame_script`만 고쳤는데,
+      **실제 태깅은 `script_extract`**라 새 축이 하나도 안 나왔다. 재태깅으로 5,015건을
+      갈라놨는데 그 뒤 새로 분석되는 것은 전부 옛 어휘로 돌아왔다 = 축 확장 무력화.
+      실측: 오늘 01:22~01:26에 분석된 3편이 before/사용중/after만 달고 나왔고,
+      "레버를 작동시키는 모습"(조작)조차 '사용중'이었다.
+      → 설명 문구도 여기서 만든다. 어휘를 늘리면 프롬프트가 **자동으로** 따라온다.
+    """
+    head = "- shot_role: 화면의 성격을 하나 골라라(장면 스파인 슬롯 배치에 쓴다):"
+    lines = ['%s"%s" = %s' % (bullet, r, DESCRIPTIONS[r]) for r in SHOT_ROLES]
+    return chr(10).join([head] + lines)

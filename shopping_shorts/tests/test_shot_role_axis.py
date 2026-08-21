@@ -76,3 +76,53 @@ class TestSlotPriority:
             _seg(4, "설치", "뚜껑에 끼워 고정한다", True),          # key다
             _seg(5, "after", "열린 병")])
         assert p["기능실증"] == "뚜껑에 끼워 고정한다"
+
+
+class TestPromptAndSchemaFollowVocab:
+    """★태깅이 실제로 새 축을 쓰는가 — 2026-08-21 실사고 재발 방지.
+
+    `shot_roles` 모듈을 만들 때 `frame_script`만 고쳤는데 **실제 태깅은 `script_extract`**라
+    새 축이 하나도 안 나왔다. 재태깅으로 5,015건을 갈라놨는데 그 뒤 새로 분석되는 것은
+    전부 옛 어휘로 돌아왔다 = 축 확장이 통째로 무력화된 상태였다.
+    실측: 01:22~01:26에 분석된 3편이 before/사용중/after만 달고 나왔고,
+    "레버를 작동시키는 모습"(조작)조차 '사용중'이었다.
+
+    ★프롬프트와 스키마가 **어휘 목록에서 만들어지는지**를 검사한다. 손으로 적어둔 목록은
+      어휘를 늘려도 안 따라온다 — 그게 이 사고의 뿌리다.
+    """
+
+    def test_추출_스키마_enum이_어휘와_같다(self):
+        from shopping_shorts import script_extract as SE
+        enum = _find_enum(SE._RESPONSE_SCHEMA)
+        assert enum is not None, "shot_role enum을 못 찾았다"
+        assert list(enum) == list(SR.SHOT_ROLES)
+
+    def test_추출_프롬프트에_모든_갈래가_들어간다(self):
+        from shopping_shorts import script_extract as SE
+        pr = SE._PROMPT.format(caption="c", boundaries="b",
+                               _SHOT_ROLE_GUIDE=SR.guide_block())
+        assert "{_SHOT_ROLE_GUIDE}" not in pr          # 치환이 실제로 됐다
+        for r in SR.SHOT_ROLES:
+            assert '"%s"' % r in pr, "프롬프트에 %s가 없다" % r
+
+    def test_프레임태깅_스키마도_어휘와_같다(self):
+        from shopping_shorts import frame_script as FS
+        enum = _find_enum(FS._TAGS_SCHEMA)
+        assert list(enum) == list(SR.SHOT_ROLES)
+
+
+def _find_enum(node):
+    """중첩 JSON 스키마에서 shot_role의 enum을 찾는다(구조가 바뀌어도 따라간다)."""
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if k == "shot_role" and isinstance(v, dict) and "enum" in v:
+                return v["enum"]
+            found = _find_enum(v)
+            if found is not None:
+                return found
+    elif isinstance(node, list):
+        for v in node:
+            found = _find_enum(v)
+            if found is not None:
+                return found
+    return None

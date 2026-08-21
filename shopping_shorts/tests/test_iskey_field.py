@@ -30,5 +30,12 @@ def test_assign_seg_ids_preserves_iskey():
 
 
 def test_prompt_mentions_iskey():
-    assert "is_key" in script_extract._PROMPT
-    assert "shot_role" in script_extract._PROMPT
+    """★**완성된** 프롬프트를 본다(2026-08-21). shot_role 설명은 어휘 목록에서 만들어
+    `{_SHOT_ROLE_GUIDE}` 자리에 끼워지므로, 원본 템플릿 문자열에는 그 단어가 없다.
+    모델이 실제로 받는 건 format을 마친 쪽이라 그걸 검사해야 검사가 유효하다."""
+    from shopping_shorts import shot_roles as _sr
+    prompt = script_extract._PROMPT.format(
+        caption="(캡션 없음)", boundaries="(없음)",
+        _SHOT_ROLE_GUIDE=_sr.guide_block())
+    assert "is_key" in prompt
+    assert "shot_role" in prompt
